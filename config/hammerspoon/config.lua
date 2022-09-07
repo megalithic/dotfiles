@@ -78,7 +78,7 @@ local apps = {
     bundleID = "net.kovidgoyal.kitty",
     name = "kitty",
     key = "k",
-    quitter = false,
+    quitter = true,
     localBindings = {},
     rules = {
       { "", 1, "maximized" },

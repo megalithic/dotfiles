@@ -280,12 +280,12 @@ end
 
 -- [convenience mappings] ------------------------------------------------------
 
-if not vim.env.TMUX then
-  nnoremap("<C-h>", "<cmd>wincmd h<CR>")
-  nnoremap("<C-j>", "<cmd>wincmd j<CR>")
-  nnoremap("<C-k>", "<cmd>wincmd k<CR>")
-  nnoremap("<C-l>", "<cmd>wincmd l<CR>")
-end
+-- if not vim.env.TMUX then
+--   nnoremap("<C-h>", "<cmd>wincmd h<CR>")
+--   nnoremap("<C-j>", "<cmd>wincmd j<CR>")
+--   nnoremap("<C-k>", "<cmd>wincmd k<CR>")
+--   nnoremap("<C-l>", "<cmd>wincmd l<CR>")
+-- end
 
 nmap("gb", string.format("<cmd>ls<CR>:b<space>%s", mega.replace_termcodes("<tab>")), "current buffers")
 nmap("gs", "i<CR><ESC>^mwgk:silent! s/\v +$//<CR>:noh<CR>`w", "split line")
@@ -428,15 +428,27 @@ xnoremap > >gv
 nnoremap <lt>> V`]<
 nnoremap ><lt> V`]>
 nnoremap =- V`]=
-
-" Better save and quit
-silent! unmap <leader>w
-nnoremap <silent><leader>w :write<CR>
-nnoremap <silent><leader>W :write !sudo -S tee > /dev/null %<CR>
-cmap w!! w !sudo tee > /dev/null %
-nnoremap <leader>q :q<CR>
-
 ]])
+
+nnoremap("<leader>w", function()
+  vim.cmd("write")
+  do
+    local ok, n = require("notify")
+    if ok and n then n.dismiss() end
+  end
+end, "write buffer and stuff")
+
+nnoremap("<leader>W", function()
+  vim.cmd("write !sudo -S tee > /dev/null %")
+  do
+    local ok, n = require("notify")
+    if ok and n then n.dismiss() end
+  end
+end, "sudo write buffer and stuff")
+
+nnoremap("<leader>q", function() vim.cmd("q") end, "quit")
+
+nnoremap("<leader>Q", function() vim.cmd("q!") end, "quit!!11!!!")
 
 -- map <leader>s <cmd>exe "%s/\\v\<" .. expand("<cword>") .. ">/" .. input("Replace \"" .. expand("<cword>") .. "\" by? ") .. "/g"<cr>
 

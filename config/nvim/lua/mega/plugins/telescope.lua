@@ -354,13 +354,14 @@ return function()
   -- nmap("<leader>fa", builtin.live_grep, "live grep string")
   -- nmap("<leader>fs", builtin.live_grep, "live grep string")
   nmap("<leader>fa", "<cmd>lua require('telescope').extensions.live_grep_args.live_grep_args()<cr>", "live grep args")
+  nmap("<leader>fw", "<cmd>lua require('telescope').extensions.habitats.habitats()<cr>", "open habitats workspaces")
 
   nmap("<leader>fvh", builtin.highlights, "highlights")
   nmap("<leader>fva", builtin.autocommands, "autoccommands")
   nmap("<leader>fvo", builtin.vim_options, "options")
 
-  nmap("<leader>fts", tmux_sessions, "sessions")
-  nmap("<leader>ftw", tmux_windows, "windows")
+  -- nmap("<leader>fts", tmux_sessions, "sessions")
+  -- nmap("<leader>ftw", tmux_windows, "windows")
 
   nmap("<leader>f?", builtin.help_tags, "help")
   nmap("<leader>fh", builtin.help_tags, "help")

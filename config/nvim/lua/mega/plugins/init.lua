@@ -136,8 +136,9 @@ local PKGS = {
   "rmagatti/auto-session",
   "ahmedkhalf/project.nvim",
   "mg979/vim-visual-multi",
-  -- "natecraddock/sessions.nvim",
-  -- "natecraddock/workspaces.nvim",
+  "natecraddock/sessions.nvim",
+  "natecraddock/workspaces.nvim",
+  "ryansch/habitats.nvim",
   -- "mbbill/undotree",
   -- "danymat/neogen",
   -- "smjonas/live-command.nvim",
@@ -698,32 +699,32 @@ function M.config()
   --   }
   -- end)
 
-  conf("project", {
-    detection_methods = { "pattern", "lsp" },
-    ignore_lsp = { "null-ls" },
-    patterns = { ".git" },
-  })
+  -- conf("project", {
+  --   detection_methods = { "pattern", "lsp" },
+  --   ignore_lsp = { "null-ls" },
+  --   patterns = { ".git" },
+  -- })
 
-  conf("auto-session", function()
-    fmt = string.format
-    local data = vim.fn.stdpath("data")
-    require("auto-session").setup({
-      log_level = "error",
-      auto_session_root_dir = fmt("%s/session/auto/", data),
-      -- ignore project/code directories as I choose those myself
-      auto_restore_enabled = not vim.startswith(vim.fn.getcwd(), vim.env.PROJECTS_DIR or "~/code"),
-      auto_session_suppress_dirs = {
-        vim.env.HOME,
-        vim.env.PROJECTS_DIR,
-        fmt("%s/Desktop", vim.env.HOME),
-        fmt("%s/site/pack/packer/opt/*", data),
-        fmt("%s/site/pack/packer/start/*", data),
-        fmt("%s/site/pack/paqs/opt/*", data),
-        fmt("%s/site/pack/paqs/start/*", data),
-      },
-      auto_session_use_git_branch = true, -- FIXME: potentially causes inconsistent results
-    })
-  end)
+  -- conf("auto-session", function()
+  --   fmt = string.format
+  --   local data = vim.fn.stdpath("data")
+  --   require("auto-session").setup({
+  --     log_level = "error",
+  --     auto_session_root_dir = fmt("%s/session/auto/", data),
+  --     -- ignore project/code directories as I choose those myself
+  --     auto_restore_enabled = not vim.startswith(vim.fn.getcwd(), vim.env.PROJECTS_DIR or "~/code"),
+  --     auto_session_suppress_dirs = {
+  --       vim.env.HOME,
+  --       vim.env.PROJECTS_DIR,
+  --       fmt("%s/Desktop", vim.env.HOME),
+  --       fmt("%s/site/pack/packer/opt/*", data),
+  --       fmt("%s/site/pack/packer/start/*", data),
+  --       fmt("%s/site/pack/paqs/opt/*", data),
+  --       fmt("%s/site/pack/paqs/start/*", data),
+  --     },
+  --     auto_session_use_git_branch = true, -- FIXME: potentially causes inconsistent results
+  --   })
+  -- end)
 
   -- conf("sessions", {
   --   events = { "WinEnter" },
@@ -741,6 +742,7 @@ function M.config()
   --     },
   --   },
   -- })
+  conf("habitats", {})
 end
 
 return M

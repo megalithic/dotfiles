@@ -254,8 +254,9 @@ function __request() {
       exit 1
     }
   else
+    # tcp:localhost:45876
     __log 'Executing request command' "warn"
-    /usr/local/bin/kitty @ --to tcp:localhost:45876 launch --type=background /usr/local/bin/zsh -ic "${request_cmd} &!" || {
+    /usr/local/bin/kitty @ --to unix:/tmp/mykitty launch --type=background /usr/local/bin/zsh -ic "${request_cmd} &!" || {
       __log "OOPS! Failed to make slack request" "error"
       exit 1
     }
