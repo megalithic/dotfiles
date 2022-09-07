@@ -187,6 +187,7 @@ case "$(uname)" in
     export HOMEBREW_CASK_OPTS="--appdir=/Applications"
     export HOMEBREW_NO_INSTALL_CLEANUP=TRUE
     export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=FALSE
+    export HOMEBREW_INSTALL_FROM_API=1
     export BREW_PATH="$HOMEBREW_PREFIX/Homebrew"
     export BREW_CASK_PATH="/opt/homebrew-cask/Caskroom"
 

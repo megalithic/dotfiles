@@ -64,6 +64,7 @@ return function()
       border = {},
       borderchars = { " ", " ", " ", " ", " ", " ", " ", " " },
       -- borderchars = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
+      winblend = 0,
       prompt_prefix = "  ",
       selection_caret = "» ", -- ❯
       cycle_layout_list = { "flex", "horizontal", "vertical", "bottom_pane", "center" },
@@ -130,7 +131,6 @@ return function()
           prompt_position = "top",
         },
       },
-      winblend = 0,
       dynamic_preview_title = true,
       results_title = false,
       selection_strategy = "reset",
