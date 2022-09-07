@@ -5,33 +5,20 @@
 
 set -euo pipefail
 
-sessions_path="$HOME/.config/kitty/sessions"
+sessions_path="$HOME/.config/kitty/tabs"
 
-selected_session=$(fd conf "$sessions_path" |
-  sed "s~$sessions_path/~~" |
+selected_session=$(fd sh "$sessions_path" |
+  xargs basename | sed 's/\.[^.]*$//' |
+  # sed "s~$sessions_path/~~" |
+  # echo "$sessions_path" | xargs basename | sed 's/\.[^.]*$//' |
   fzf-tmux --cycle --layout=reverse --preview-window="hidden" --prompt ' new or existing session  ' |
   sed "s~^~$sessions_path/~")
 
 if [[ -n $selected_session ]]; then
   tab_name=$(echo "$selected_session" | xargs basename | sed 's/\.[^.]*$//')
-  # echo "$tab_name found"
-  # kitty @ focus-tab --match title:"$tab_name" 2>/dev/null || kitty @ new-window --new-tab --tab-title "$tab_name" --cwd "$selected_session"
-  echo "Switching to $tab_name session.."
-  # kitty --session "$selected_session" @ launch --os-window-title "$tab_name" --title "$tab_name" &
-  kitty @ focus-tab --match title:"$tab_name" 2>/dev/null || kitty @ new-window --new-tab --tab-title "$tab_name" --cwd "$selected_session"
+
+  # focus existing tab
+  kitty @ focus-tab --match title:"$tab_name" 2>/dev/null ||
+    # create a new tab and source our project/session/workspace shell script
+    kitty @ launch --type tab --tab-title "$tab_name" --title "$tab_name" /usr/local/bin/zsh -ic "source $sessions_path/$tab_name.sh; /usr/local/bin/zsh"
 fi
-
-# function kt -d "kitty tab from ~/Dev/*"
-#   set -l path $HOME/Dev
-#   set -l selected_dir (
-#     find $path/* -maxdepth 1 -mindepth 1 -type d |
-#       sed "s~$path/~~" |
-#       fzf-tmux -p --cycle --layout=reverse --prompt 't> ' |
-#       sed "s~^~$path/~"
-#   )
-
-#   if test -n "$selected_dir"
-#     set -l tab_name (echo $selected_dir | sed "s~$path/~~")
-#     kitty @ focus-tab --match title:$tab_name 2>/dev/null || kitty @ new-window --new-tab --tab-title $tab_name --cwd $selected_dir
-#   end
-# end
