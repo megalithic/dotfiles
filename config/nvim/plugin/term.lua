@@ -7,6 +7,37 @@ local term_buf_id = nil_buf_id
 local term_win_id = nil
 local term_tab_id = nil
 
+local create_float = function(buf_id, size)
+  local parsed_size = (size / 100)
+  local win_id = api.nvim_open_win(buf_id, true, {
+    relative = "editor",
+    style = "minimal",
+    border = mega.get_border(),
+    width = math.floor(parsed_size * vim.o.columns),
+    height = math.floor(parsed_size * vim.o.lines),
+    row = math.floor(0.1 * vim.o.lines),
+    col = math.floor(0.1 * vim.o.columns),
+    zindex = 99,
+  })
+  vim.opt_local.relativenumber = false
+  vim.opt_local.number = false
+  vim.opt_local.signcolumn = "no"
+  api.nvim_buf_set_option(buf_id, "filetype", "megaterm")
+  api.nvim_win_set_option(
+    win_id,
+    "winhl",
+    table.concat({
+      "Normal:NormalFloat",
+      "FloatBorder:FloatBorder",
+      "CursorLine:Visual",
+      "Search:None",
+    }, ",")
+  )
+
+  vim.cmd("setlocal bufhidden=wipe")
+  return win_id
+end
+
 local cmd_opts = {
   ["horizontal"] = {
     new = "botright new",
@@ -27,69 +58,15 @@ local cmd_opts = {
     winc = "L",
   },
   ["tab"] = {
-    new = "tabnew",
+    new = "tabedit new",
     split = "tabnext",
   },
   ["float"] = {
     new = function(size)
-      local parsed_size = (size / 100)
       term_buf_id = api.nvim_create_buf(true, true)
-      term_win_id = api.nvim_open_win(term_buf_id, true, {
-        relative = "editor",
-        style = "minimal",
-        border = mega.get_border(),
-        width = math.floor(parsed_size * vim.o.columns),
-        height = math.floor(parsed_size * vim.o.lines),
-        row = math.floor(0.1 * vim.o.lines),
-        col = math.floor(0.1 * vim.o.columns),
-        zindex = 99,
-      })
-      vim.opt_local.relativenumber = false
-      vim.opt_local.number = false
-      vim.opt_local.signcolumn = "no"
-      api.nvim_buf_set_option(term_buf_id, "filetype", "megaterm")
-      api.nvim_win_set_option(
-        term_win_id,
-        "winhl",
-        table.concat({
-          "Normal:NormalFloat",
-          "FloatBorder:FloatBorder",
-          "CursorLine:Visual",
-          "Search:None",
-        }, ",")
-      )
-
-      vim.cmd("setlocal bufhidden=wipe")
+      term_win_id = create_float(term_buf_id, size)
     end,
-    split = function(size, bufnr)
-      local parsed_size = (size / 100)
-      term_win_id = api.nvim_open_win(bufnr, true, {
-        relative = "editor",
-        style = "minimal",
-        border = mega.get_border(),
-        width = math.floor(parsed_size * vim.o.columns),
-        height = math.floor(parsed_size * vim.o.lines),
-        row = math.floor(0.1 * vim.o.lines),
-        col = math.floor(0.1 * vim.o.columns),
-        zindex = 99,
-      })
-      vim.opt_local.relativenumber = false
-      vim.opt_local.number = false
-      vim.opt_local.signcolumn = "no"
-      api.nvim_buf_set_option(bufnr, "filetype", "megaterm")
-      api.nvim_win_set_option(
-        term_win_id,
-        "winhl",
-        table.concat({
-          "Normal:NormalFloat",
-          "FloatBorder:FloatBorder",
-          "CursorLine:Visual",
-          "Search:None",
-        }, ",")
-      )
-
-      vim.cmd("setlocal bufhidden=wipe")
-    end,
+    split = function(size, bufnr) term_win_id = create_float(bufnr, size) end,
     size = 80,
   },
 }
@@ -102,9 +79,9 @@ local cmd_opts = {
 ---@field go_back boolean?
 ---@field open boolean?
 
----Take a users command arguments in the format "cmd='git commit' dir=~/dotfiles"
+---Take a users command arguments in the format "cmd='git commit' dir=~/.dotfiles"
 ---and parse this into a table of arguments
----{cmd = "git commit", dir = "~/dotfiles"}
+---{cmd = "git commit", dir = "~/.dotfiles"}
 ---@see https://stackoverflow.com/a/27007701
 ---@param args string
 ---@return ParsedArgs
@@ -203,7 +180,7 @@ local function handle_existing(cmd, opts)
   elseif opts.direction == "tab" then
     local c = fmt("%s%s", term_tab_id, cmd.split)
     api.nvim_command(c)
-    term_win_id = api.nvim_get_current_win()
+    term_win_id = nil -- api.nvim_get_current_win()
   else
     local c = fmt(
       "%s %s | wincmd %s | lua vim.api.nvim_win_set_%s(0, %s)",
@@ -221,7 +198,7 @@ local function handle_existing(cmd, opts)
     on_after_open(term_buf_id, winnr)
   else
     api.nvim_command([[normal! G]])
-    if cmd.direction ~= "float" then vim.cmd(winnr .. [[wincmd p]]) end
+    if opts.direction ~= "float" then vim.cmd(winnr .. [[wincmd p]]) end
   end
 end
 
@@ -246,6 +223,7 @@ local function handle_new(cmd, opts)
     vim.opt_local.number = false
     vim.opt_local.signcolumn = "no"
     api.nvim_buf_set_option(term_buf_id, "filetype", "megaterm")
+    vim.bo.bufhidden = "wipe"
   else
     local c = fmt("%s | wincmd %s | lua vim.api.nvim_win_set_%s(0, %s)", cmd.new, cmd.winc, cmd.dimension, size)
     api.nvim_command(c)
@@ -269,7 +247,13 @@ local function handle_new(cmd, opts)
     on_after_open(term_buf_id, winnr)
   else
     api.nvim_command([[normal! G]])
-    if cmd.direction ~= "float" then vim.cmd(winnr .. [[wincmd p]]) end
+    if opts.direction ~= "float" then vim.cmd(winnr .. [[wincmd p]]) end
+  end
+
+  if opts.direction == "tab" then
+    term_win_id = nil
+    term_buf_id = nil_buf_id
+    term_tab_id = nil
   end
 end
 
@@ -278,7 +262,7 @@ function mega.term.open(opts)
   local direction = opts["direction"] or "horizontal"
   local cmd = cmd_opts[direction]
 
-  if fn.bufexists(term_buf_id) ~= 1 then
+  if fn.bufexists(term_buf_id) ~= 1 or direction == "tab" then
     handle_new(cmd, opts)
   elseif fn.win_gotoid(term_win_id) ~= 1 then
     handle_existing(cmd, opts)
@@ -320,7 +304,7 @@ function mega.term.toggle(opts)
   if not parsed.cmd then parsed["cmd"] = "zsh -i" end
   if not parsed.on_after_open then parsed["on_after_open"] = function() vim.cmd("startinsert") end end
 
-  if fn.win_gotoid(term_win_id) == 1 then
+  if fn.win_gotoid(term_win_id) == 1 and parsed.direction ~= "tab" then
     mega.term.hide()
   else
     mega.term.open(parsed)

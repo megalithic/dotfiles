@@ -199,7 +199,7 @@ return function()
       },
       find_files = {
         hidden = true,
-        find_command = { "/usr/local/bin/fd", "--type", "f", "--no-ignore-vcs" },
+        find_command = { "fd", "--type", "f", "--no-ignore-vcs" },
         on_input_filter_cb = file_extension_filter,
       },
       keymaps = dropdown({
@@ -224,19 +224,19 @@ return function()
         },
       },
       reloader = dropdown({}),
-      file_browser = {
-        theme = "ivy",
-        -- disables netrw and use telescope-file-browser in its place
-        hijack_netrw = true,
-        mappings = {
-          ["i"] = {
-            -- your custom insert mode mappings
-          },
-          ["n"] = {
-            -- your custom normal mode mappings
-          },
-        },
-      },
+      -- file_browser = {
+      --   theme = "ivy",
+      --   -- disables netrw and use telescope-file-browser in its place
+      --   hijack_netrw = true,
+      --   mappings = {
+      --     ["i"] = {
+      --       -- your custom insert mode mappings
+      --     },
+      --     ["n"] = {
+      --       -- your custom normal mode mappings
+      --     },
+      --   },
+      -- },
     },
   })
 
@@ -392,5 +392,5 @@ return function()
   require("telescope").load_extension("zf-native")
   require("telescope").load_extension("live_grep_args")
   require("telescope").load_extension("luasnip")
-  require("telescope").load_extension("file_browser")
+  -- require("telescope").load_extension("file_browser")
 end

@@ -280,12 +280,18 @@ end
 
 -- [convenience mappings] ------------------------------------------------------
 
--- if not vim.env.TMUX then
---   nnoremap("<C-h>", "<cmd>wincmd h<CR>")
---   nnoremap("<C-j>", "<cmd>wincmd j<CR>")
---   nnoremap("<C-k>", "<cmd>wincmd k<CR>")
---   nnoremap("<C-l>", "<cmd>wincmd l<CR>")
--- end
+-- go-to split (also, if in kitty, see nvim-kitty-navigator)
+nnoremap("<C-h>", "<cmd>wincmd h<CR>", "split: go left")
+nnoremap("<C-j>", "<cmd>wincmd j<CR>", "split: go down")
+nnoremap("<C-k>", "<cmd>wincmd k<CR>", "split: go up")
+nnoremap("<C-l>", "<cmd>wincmd l<CR>", "split: go right")
+
+-- jump to tab
+for i = 0, 9 do
+  if i + 1 >= 10 then break end
+  local key_string = tostring(i + 1)
+  nnoremap("<localleader>" .. key_string, fmt("<cmd>%stabnext<cr>", key_string), fmt("tab: jump to tab %s", key_string))
+end
 
 nmap("gb", string.format("<cmd>ls<CR>:b<space>%s", mega.replace_termcodes("<tab>")), "current buffers")
 nmap("gs", "i<CR><ESC>^mwgk:silent! s/\v +$//<CR>:noh<CR>`w", "split line")
@@ -430,32 +436,14 @@ nnoremap ><lt> V`]>
 nnoremap =- V`]=
 ]])
 
-nnoremap("<leader>w", function()
-  -- do
-  --   local ok, n = pcall(require, "notify")
-  --   if ok then n.dismiss() end
-  -- end
-  -- do
-  --   local ok, mj = pcall(require, "mini.jump")
-  --   if ok then mj.stop_jumping() end
-  -- end
-  vim.api.nvim_command("write")
-end, "write buffer and stuff")
-
-nnoremap("<leader>W", function()
-  -- do
-  --   local ok, n = pcall(require, "notify")
-  --   if ok then n.dismiss() end
-  -- end
-  -- do
-  --   local ok, mj = pcall(require, "mini.jump")
-  --   if ok then mj.stop_jumping() end
-  -- end
-  vim.api.nvim_command("write !sudo -S tee > /dev/null %")
-end, "sudo write buffer and stuff")
+nnoremap("<leader>w", function() vim.api.nvim_command("write") end, "write buffer and stuff")
+nnoremap(
+  "<leader>W",
+  function() vim.api.nvim_command("write !sudo -S tee > /dev/null %") end,
+  "sudo write buffer and stuff"
+)
 
 nnoremap("<leader>q", function() vim.cmd("q") end, "quit")
-
 nnoremap("<leader>Q", function() vim.cmd("q!") end, "quit!!11!!!")
 
 -- map <leader>s <cmd>exe "%s/\\v\<" .. expand("<cword>") .. ">/" .. input("Replace \"" .. expand("<cword>") .. "\" by? ") .. "/g"<cr>

@@ -170,6 +170,7 @@ local PKGS = {
   "tpope/vim-scriptease",
   -- "aca/wezterm.nvim",
   { "knubie/vim-kitty-navigator", run = "cp -L ./*.py ~/.dotfiles/config/kitty" },
+  -- @trial: "jghauser/kitty-runner.nvim",
   "RRethy/nvim-align",
   "junegunn/vim-easy-align",
   ------------------------------------------------------------------------------
