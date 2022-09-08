@@ -318,7 +318,7 @@ return function()
 
   local function luasnips() require("telescope").extensions.luasnip.luasnip(dropdown({})) end
   local function workspaces()
-    require("telescope").extensions.habitats.habitats(dropdown({
+    require("telescope").extensions.workspaces.workspaces(dropdown({
       mappings = {
         i = {
           -- FIXME: this is not working as expected
@@ -358,7 +358,6 @@ return function()
   -- nmap("<leader>fa", builtin.live_grep, "live grep string")
   -- nmap("<leader>fs", builtin.live_grep, "live grep string")
   nmap("<leader>fa", "<cmd>lua require('telescope').extensions.live_grep_args.live_grep_args()<cr>", "live grep args")
-  -- nmap("<leader>fw", "<cmd>lua require('telescope').extensions.habitats.habitats()<cr>", "open habitats workspaces")
   nmap("<leader>fw", workspaces, "open workspaces")
 
   nmap("<leader>fvh", builtin.highlights, "highlights")

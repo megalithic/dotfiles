@@ -730,7 +730,7 @@ function M.config()
   -- end)
 
   conf("sessions", {
-    events = { "WinEnter" },
+    events = { "VimLeavePre" },
     session_filepath = vim.fn.stdpath("data") .. "/sessions/default",
   })
 

@@ -4,7 +4,7 @@ return function()
   }
 
   local special = {
-    ["ft"] = "megaterm",
+    ["megaterm"] = "megaterm",
   }
 
   -- NOTE: these are deprecated..
@@ -16,12 +16,6 @@ return function()
     local ft = vim.api.nvim_buf_get_option(bufid, "filetype")
 
     return special[ft] or name or filename.unique(winid)
-
-    -- if ft == "megaterm" then
-    --   return "megaterm"
-    -- else
-    --   return name or filename.unique(winid)
-    -- end
   end
 
   local function get_win_name(winid, name) return get_special_name_for_win(winid, name) end
@@ -52,7 +46,6 @@ return function()
     if ws_ok and ws then return ws end
 
     return ""
-    -- return require("workspaces").name() or ""
   end
 
   local tabline = {

@@ -36,9 +36,11 @@ do
     --   command = function(args)
     --     vim.schedule_wrap(function()
     --       local ws = get_workspace_if_exists()
-    --       if ws and type(ws) == "table" then
+    --       if ws and type(ws) == "table" and args.file == "" then
     --         P(ws.name)
     --         require("workspaces").open(ws.name)
+    --       else
+    --         require("mega.start").start()
     --       end
     --     end, 0)
     --   end,

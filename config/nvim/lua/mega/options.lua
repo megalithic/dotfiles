@@ -311,7 +311,7 @@ vim.opt.sessionoptions = {
   "globals",
   -- "help",
   -- "tabpages",
-  -- "terminal"
+  "terminal",
   "winpos",
   "winsize",
 }
