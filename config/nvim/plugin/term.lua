@@ -137,7 +137,7 @@ local function create_keymaps(bufnr, winnr)
   end, opts)
 
   tmap("<esc>", [[<C-\><C-n>]], opts)
-  tmap("<C-c>", [[<C-\><C-n>]], opts)
+  -- tmap("<C-c>", [[<C-\><C-n>]], opts)
   tmap("<C-h>", [[<Cmd>wincmd h<CR>]], opts)
   tmap("<C-j>", [[<Cmd>wincmd j<CR>]], opts)
   tmap("<C-k>", [[<Cmd>wincmd k<CR>]], opts)
