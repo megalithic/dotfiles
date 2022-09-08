@@ -76,22 +76,22 @@ local function is_ignored()
   return should_ignore
 end
 
-local normal_bg = require("mega.lush_theme.colors").bg0
-local cursorline_bg = require("mega.lush_theme.colors").bg1
-local blink_bg = require("mega.lush_theme.colors").bg_blue
+local normal_bg = mega.colors.bg0
+local cursorline_bg = mega.colors.bg1
+local blink_bg = mega.colors.bg_blue
 
 local function highlight_cursorline()
   if blink_active then
-    vim.cmd("highlight! CursorLine guibg=" .. blink_bg)
+    vim.api.nvim_set_hl(0, "CursorLine", { bg = blink_bg.hex })
   else
-    vim.cmd("highlight! CursorLine guibg=" .. cursorline_bg)
+    vim.api.nvim_set_hl(0, "CursorLine", { bg = cursorline_bg.hex })
   end
-  vim.cmd("highlight! CursorLineNr guibg=" .. cursorline_bg)
+  vim.api.nvim_set_hl(0, "CursorLineNr", { bg = cursorline_bg.hex })
 end
 
 local function unhighlight_cursorline()
-  vim.cmd("highlight! CursorLine guibg=" .. normal_bg)
-  vim.cmd("highlight! CursorLineNr guibg=" .. normal_bg)
+  vim.api.nvim_set_hl(0, "CursorLine", { bg = normal_bg.hex })
+  vim.api.nvim_set_hl(0, "CursorLineNr", { bg = normal_bg.hex })
 end
 
 local function timer_start()
