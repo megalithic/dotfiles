@@ -224,19 +224,19 @@ return function()
         },
       },
       reloader = dropdown({}),
-      -- file_browser = {
-      --   theme = "ivy",
-      --   -- disables netrw and use telescope-file-browser in its place
-      --   hijack_netrw = true,
-      --   mappings = {
-      --     ["i"] = {
-      --       -- your custom insert mode mappings
-      --     },
-      --     ["n"] = {
-      --       -- your custom normal mode mappings
-      --     },
-      --   },
-      -- },
+      file_browser = {
+        theme = "ivy",
+        -- disables netrw and use telescope-file-browser in its place
+        hijack_netrw = true,
+        mappings = {
+          ["i"] = {
+            -- your custom insert mode mappings
+          },
+          ["n"] = {
+            -- your custom normal mode mappings
+          },
+        },
+      },
     },
   })
 
@@ -316,31 +316,13 @@ return function()
     })
   end
 
-  -- local function frecency()
-  --   telescope.extensions.frecency.frecency(dropdown({
-  --     -- NOTE: remove default text as it's slow
-  --     -- default_text = ':CWD:',
-  --     winblend = 10,
-  --     border = true,
-  --     previewer = false,
-  --     shorten_path = false,
-  --   }))
-  -- end
-
   local function luasnips() require("telescope").extensions.luasnip.luasnip(dropdown({})) end
+  local function workspaces() require("telescope").extensions.workspaces.workspaces(dropdown({})) end
 
   local function installed_plugins()
     builtin.find_files({
       prompt_title = "~ installed plugins ~",
       cwd = fn.stdpath("data") .. "/site/pack/paqs",
-    })
-  end
-
-  local function tmux_sessions() telescope.extensions.tmux.sessions({}) end
-
-  local function tmux_windows()
-    telescope.extensions.tmux.windows({
-      entry_format = "#S: #T",
     })
   end
 
@@ -359,7 +341,7 @@ return function()
 
   nmap("<leader>fL", luasnips, "luasnip: available snippets")
   nmap("<leader>fM", builtin.man_pages, "man pages")
-  nmap("<leader>fm", builtin.man_pages, "oldfiles (mru)")
+  nmap("<leader>fm", builtin.oldfiles, "oldfiles (mru)")
   nmap("<leader>fk", builtin.keymaps, "keymaps")
   nmap("<leader>fP", installed_plugins, "installed plugins")
   nmap("<leader>fo", builtin.buffers, "opened buffers")
@@ -367,15 +349,12 @@ return function()
   -- nmap("<leader>fa", builtin.live_grep, "live grep string")
   -- nmap("<leader>fs", builtin.live_grep, "live grep string")
   nmap("<leader>fa", "<cmd>lua require('telescope').extensions.live_grep_args.live_grep_args()<cr>", "live grep args")
-  nmap("<leader>fw", "<cmd>lua require('telescope').extensions.habitats.habitats()<cr>", "open habitats workspaces")
+  -- nmap("<leader>fw", "<cmd>lua require('telescope').extensions.habitats.habitats()<cr>", "open habitats workspaces")
+  nmap("<leader>fw", workspaces, "open workspaces")
 
   nmap("<leader>fvh", builtin.highlights, "highlights")
   nmap("<leader>fva", builtin.autocommands, "autoccommands")
   nmap("<leader>fvo", builtin.vim_options, "options")
-
-  -- nmap("<leader>fts", tmux_sessions, "sessions")
-  -- nmap("<leader>ftw", tmux_windows, "windows")
-
   nmap("<leader>f?", builtin.help_tags, "help")
   nmap("<leader>fh", builtin.help_tags, "help")
 
@@ -388,9 +367,10 @@ return function()
   nmap("<leader>lS", builtin.lsp_workspace_symbols, "telescope: workspace symbols")
   nmap("<leader>lw", builtin.lsp_dynamic_workspace_symbols, "telescope: dynamic workspace symbols")
 
-  require("telescope").load_extension("fzf")
-  require("telescope").load_extension("zf-native")
-  require("telescope").load_extension("live_grep_args")
-  require("telescope").load_extension("luasnip")
-  -- require("telescope").load_extension("file_browser")
+  telescope.load_extension("fzf")
+  telescope.load_extension("zf-native")
+  telescope.load_extension("live_grep_args")
+  telescope.load_extension("luasnip")
+  telescope.load_extension("workspaces")
+  telescope.load_extension("file_browser")
 end

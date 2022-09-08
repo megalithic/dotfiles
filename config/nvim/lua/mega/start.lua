@@ -72,6 +72,23 @@ end
 
 local function recent_files() return filter_oldfiles("", ":p:~") end
 
+local function workspaces()
+  local ok, ws = pcall(require, "workspaces")
+  local spaces = {}
+
+  if ok then
+    for i, space in ipairs(ws.get()) do
+      table.insert(spaces, {
+        key = i,
+        cmd = "Workspaces open " .. space.name,
+        disp = space.name, --cap_path_length(vim.fn.fnamemodify(space.name, fmt)),
+      })
+    end
+  end
+
+  return spaces
+end
+
 -- REF: https://patorjk.com/software/taag/#p=display&f=Elite&t=MEGALITHIC
 local function header()
   return [[
@@ -101,6 +118,7 @@ local sections = {
   { title = "Commands", show = commands },
   { title = string.format("Recent Files in %s", cur_dir), show = current_dir_files() },
   { title = "Recent Files", show = recent_files() },
+  { title = "Workspaces", show = workspaces() },
 }
 
 local boundaries = {}
