@@ -215,9 +215,13 @@ local function handle_new(cmd, opts)
     local c = fmt("%s", cmd.new)
     api.nvim_command(c)
 
-    term_win_id = api.nvim_get_current_win()
-    term_buf_id = api.nvim_get_current_buf()
-    term_tab_id = api.nvim_get_current_tabpage()
+    term_win_id = nil
+    term_buf_id = nil_buf_id
+    term_tab_id = nil
+
+    -- term_win_id = api.nvim_get_current_win()
+    -- term_buf_id = api.nvim_get_current_buf()
+    -- term_tab_id = api.nvim_get_current_tabpage()
 
     vim.opt_local.relativenumber = false
     vim.opt_local.number = false
@@ -413,7 +417,7 @@ if vim.g.term_plugin then
   nnoremap("<leader>tt", "<cmd>T<cr>", "term")
   nnoremap("<leader>tf", "<cmd>T direction=float<cr>", "term (float)")
   nnoremap("<leader>tv", "<cmd>T direction=vertical<cr>", "term (vertical)")
-  nnoremap("<leader>ttt", "<cmd>T direction=tab<cr>", "term (tab)")
+  nnoremap("<leader>tp", "<cmd>T direction=tab<cr>", "term (tab-persistent)")
   nnoremap("<leader>tre", "<cmd>TermElixir<cr>", "repl > elixir")
   nnoremap("<leader>trr", "<cmd>TermRuby<cr>", "repl > ruby")
   nnoremap("<leader>trl", "<cmd>TermLua<cr>", "repl > lua")

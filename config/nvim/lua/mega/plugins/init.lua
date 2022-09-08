@@ -387,7 +387,7 @@ function M.config()
 
     -- remove h,j,k,l from hops list of keys
     hop.setup({ keys = "etovxqpdygfbzcisuran" })
-    mega.nnoremap("s", function() hop.hint_char1({ multi_windows = false }) end)
+    mega.nnoremap("s", function() hop.hint_char2({ multi_windows = false }) end)
   end)
 
   -- conf("tint", function()
