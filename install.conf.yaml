@@ -111,7 +111,7 @@
       if: "[ `uname` = Darwin ]"
     ~/.config/kitty:
       force: true
-      if: "[ `uname` = Darwin ]"
+      # if: "[ `uname` = Darwin ]"
       path: config/kitty
     ~/.config/nvim:
       force: true
