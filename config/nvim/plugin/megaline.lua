@@ -601,7 +601,12 @@ function M.s_workspace(args)
   if is_truncated(args.trunc_width) then return "" end
   local ws_name = require("workspaces").name() or ""
   return unpack(
-    item(fmt("[%s]", ws_name), "StMetadataPrefix", { prefix = "", suffix = " ", before = " ", after = " " })
+    item_if(
+      fmt("[%s]", ws_name),
+      ws_name ~= "",
+      "StMetadataPrefix",
+      { prefix = "", suffix = " ", before = " ", after = " " }
+    )
   )
 end
 
