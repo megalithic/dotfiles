@@ -597,6 +597,14 @@ function M.s_lsp_clients(args)
   return add(unpack(lsp_clients))
 end
 
+function M.s_workspace(args)
+  if is_truncated(args.trunc_width) then return "" end
+  local ws_name = require("workspaces").name() or ""
+  return unpack(
+    item(fmt("[%s]", ws_name), "StMetadataPrefix", { prefix = "", suffix = " ", before = " ", after = " " })
+  )
+end
+
 function M.s_git(args)
   if M.abnormal_buffer() then return "" end
 
@@ -864,6 +872,8 @@ function _G.__statusline()
       -- lsp clients
       -- FIXME: not unpacking correctly; debug further
       -- M.s_lsp_clients({ trunc_width = 120 }),
+      -- habitat/workspace
+      M.s_workspace({ trunc_width = 120 }),
       -- diagnostics
       { hl = "Statusline", strings = { diag_error, diag_warn, diag_info, diag_hint } },
       -- git status/branch

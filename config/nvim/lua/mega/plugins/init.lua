@@ -139,7 +139,7 @@ local PKGS = {
   "mg979/vim-visual-multi",
   "natecraddock/sessions.nvim",
   "natecraddock/workspaces.nvim",
-  "ryansch/habitats.nvim",
+  "megalithic/habitats.nvim",
   -- "mbbill/undotree",
   -- "danymat/neogen",
   -- "smjonas/live-command.nvim",

@@ -47,14 +47,23 @@ return function()
     return string.format(" %s %s ", icon, get_win_name(winid))
   end
 
-  local function workspace_name() return require("workspaces").name() or "" end
+  local function workspace_name()
+    local ws_ok, ws = pcall(function() return require("workspaces").name() end)
+    if ws_ok and ws then return ws end
+
+    return ""
+    -- return require("workspaces").name() or ""
+  end
 
   local tabline = {
     hl = { fg = mega.colors.grey1.hex, bg = mega.colors.bg1.hex },
     layout = config.layout,
     head = {
       { mega.icons.misc.lblock, hl = { fg = mega.colors.bg1.hex, bg = mega.colors.bg2.hex } },
-      { workspace_name(), hl = { fg = mega.colors.grey2.hex, bg = mega.colors.bg2.hex } },
+      {
+        workspace_name(),
+        hl = { fg = mega.colors.grey2.hex, bg = mega.colors.bg2.hex },
+      },
     },
     active_tab = {
       label = function(tabid)

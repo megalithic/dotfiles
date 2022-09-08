@@ -443,8 +443,8 @@ nnoremap(
   "sudo write buffer and stuff"
 )
 
-nnoremap("<leader>q", function() vim.cmd("q") end, "quit")
-nnoremap("<leader>Q", function() vim.cmd("q!") end, "quit!!11!!!")
+nnoremap("<leader>q", "<cmd>q<cr>", "quit")
+nnoremap("<leader>Q", "<cmd>q!<cr>", "quit!!11!!!")
 
 -- map <leader>s <cmd>exe "%s/\\v\<" .. expand("<cword>") .. ">/" .. input("Replace \"" .. expand("<cword>") .. "\" by? ") .. "/g"<cr>
 

@@ -317,7 +317,16 @@ return function()
   end
 
   local function luasnips() require("telescope").extensions.luasnip.luasnip(dropdown({})) end
-  local function workspaces() require("telescope").extensions.workspaces.workspaces(dropdown({})) end
+  local function workspaces()
+    require("telescope").extensions.habitats.habitats(dropdown({
+      mappings = {
+        i = {
+          -- FIXME: this is not working as expected
+          ["<CR>"] = actions.select_default,
+        },
+      },
+    }))
+  end
 
   local function installed_plugins()
     builtin.find_files({
