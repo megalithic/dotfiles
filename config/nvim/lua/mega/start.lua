@@ -77,12 +77,13 @@ local function workspaces()
   local spaces = {}
 
   if ok then
-    for i, space in ipairs(ws.get()) do
+    for _, space in ipairs(ws.get()) do
       table.insert(spaces, {
-        key = i,
+        key = total_paths - counter,
         cmd = "Workspaces open " .. space.name,
         disp = space.name, --cap_path_length(vim.fn.fnamemodify(space.name, fmt)),
       })
+      counter = counter - 1
     end
   end
 
