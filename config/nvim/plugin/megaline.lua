@@ -83,7 +83,7 @@ end
 local function get_megaterm_name(_, buf)
   local shell = fnamemodify(vim.env.SHELL, ":t")
   local mode = M.modes[api.nvim_get_mode().mode]
-  return fmt("megaterm(%s)[%s]⋮%s", shell, buf, mode.short)
+  return fmt("megaterm(%s)[%s]⋮%s", shell, buf, mode.long)
   -- return fmt("Terminal(%s)[%s]", shell, api.nvim_buf_get_var(buf, "cmd") or buf)
 end
 -- Capture the type of the neo tree buffer opened

@@ -3,31 +3,43 @@ return function()
     layout = "active_wins_at_tail",
   }
 
+  local special = {
+    ["ft"] = "megaterm",
+  }
+
   -- NOTE: these are deprecated..
   local filename = require("tabby.filename")
   local util = require("tabby.util")
 
-  local function get_win_name(winid)
+  local function get_special_name_for_win(winid, name)
     local bufid = vim.api.nvim_win_get_buf(winid)
     local ft = vim.api.nvim_buf_get_option(bufid, "filetype")
 
-    if ft == "megaterm" then
-      return "megaterm"
-    else
-      return filename.unique(winid)
-    end
+    return special[ft] or name or filename.unique(winid)
+
+    -- if ft == "megaterm" then
+    --   return "megaterm"
+    -- else
+    --   return name or filename.unique(winid)
+    -- end
   end
+
+  local function get_win_name(winid, name) return get_special_name_for_win(winid, name) end
 
   local function tab_label(tabid, active)
     local icon = active and "" or ""
     local number = vim.api.nvim_tabpage_get_number(tabid)
+    local name = util.get_tab_name(tabid)
 
-    if active then
-      return string.format(" %s %d ", icon, number)
-    else
-      local name = util.get_tab_name(tabid)
-      return string.format(" %s %d: %s ", icon, number, name)
-    end
+    local tab_name = get_special_name_for_win(vim.api.nvim_tabpage_get_win(tabid), name)
+
+    -- if active then
+    --   return string.format(" %s %d: %s ", icon, number)
+    -- else
+    --   return string.format(" %s %d: %s ", icon, number, name)
+    -- end
+
+    return string.format(" %s %d: %s ", icon, number, tab_name)
   end
 
   local function win_label(winid, top)
@@ -35,11 +47,14 @@ return function()
     return string.format(" %s %s ", icon, get_win_name(winid))
   end
 
+  local function workspace_name() return require("workspaces").name() or "" end
+
   local tabline = {
     hl = { fg = mega.colors.grey1.hex, bg = mega.colors.bg1.hex },
     layout = config.layout,
     head = {
       { mega.icons.misc.lblock, hl = { fg = mega.colors.bg1.hex, bg = mega.colors.bg2.hex } },
+      { workspace_name(), hl = { fg = mega.colors.grey2.hex, bg = mega.colors.bg2.hex } },
     },
     active_tab = {
       label = function(tabid)
