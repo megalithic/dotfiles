@@ -9,16 +9,11 @@ sessions_path="$HOME/.config/kitty/tabs"
 
 selected_session=$(fd sh "$sessions_path" |
   xargs basename | sed 's/\.[^.]*$//' |
-  # sed "s~$sessions_path/~~" |
-  # echo "$sessions_path" | xargs basename | sed 's/\.[^.]*$//' |
-  fzf-tmux --cycle --layout=reverse --preview-window="hidden" --prompt ' new or existing session  ' |
-  sed "s~^~$sessions_path/~")
+  fzf-tmux --cycle --layout=reverse --preview-window="hidden" --prompt ' new or existing session  ')
 
 if [[ -n $selected_session ]]; then
-  tab_name=$(echo "$selected_session" | xargs basename | sed 's/\.[^.]*$//')
-
   # focus existing tab
-  kitty @ focus-tab --match title:"$tab_name" 2>/dev/null ||
+  kitty @ focus-tab --match title:"$selected_session" 2>/dev/null ||
     # create a new tab and source our project/session/workspace shell script
-    kitty @ launch --type tab --tab-title "$tab_name" --title "$tab_name" /usr/local/bin/zsh -ic "source $sessions_path/$tab_name.sh; /usr/local/bin/zsh"
+    kitty @ launch --type tab --tab-title "$selected_session" --title "$selected_session" /usr/local/bin/zsh -ic "source $sessions_path/$selected_session.sh; /usr/local/bin/zsh"
 fi
