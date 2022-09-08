@@ -215,13 +215,9 @@ local function handle_new(cmd, opts)
     local c = fmt("%s", cmd.new)
     api.nvim_command(c)
 
-    term_win_id = nil
-    term_buf_id = nil_buf_id
-    term_tab_id = nil
-
-    -- term_win_id = api.nvim_get_current_win()
-    -- term_buf_id = api.nvim_get_current_buf()
-    -- term_tab_id = api.nvim_get_current_tabpage()
+    term_win_id = api.nvim_get_current_win()
+    term_buf_id = api.nvim_get_current_buf()
+    term_tab_id = api.nvim_get_current_tabpage()
 
     vim.opt_local.relativenumber = false
     vim.opt_local.number = false
