@@ -38,7 +38,7 @@ local create_float = function(buf_id, size)
   return win_id
 end
 
-local cmd_opts = {
+local default_opts = {
   ["horizontal"] = {
     new = "botright new",
     split = "rightbelow sbuffer",
@@ -237,6 +237,7 @@ local function handle_new(cmd, opts)
     api.nvim_buf_set_option(term_buf_id, "filetype", "megaterm")
   end
 
+  api.nvim_buf_set_var(term_buf_id, "cmd", opts.cmd)
   create_keymaps(term_buf_id, term_win_id)
 
   if precmd ~= nil then init_cmd = fmt("%s; %s", precmd, init_cmd) end
@@ -257,15 +258,15 @@ local function handle_new(cmd, opts)
   end
 end
 
-function mega.term.open(opts)
-  opts = opts or {}
-  local direction = opts["direction"] or "horizontal"
-  local cmd = cmd_opts[direction]
+function mega.term.open(args)
+  args = args or {}
+  local direction = args["direction"] or "horizontal"
+  local cmd_opts = default_opts[direction]
 
   if fn.bufexists(term_buf_id) ~= 1 or direction == "tab" then
-    handle_new(cmd, opts)
+    handle_new(cmd_opts, args)
   elseif fn.win_gotoid(term_win_id) ~= 1 then
-    handle_existing(cmd, opts)
+    handle_existing(cmd_opts, args)
   end
 end
 
@@ -311,6 +312,8 @@ function mega.term.toggle(opts)
   end
 end
 
+mega.command("T", function(opts) mega.term.toggle(opts.args) end, { nargs = "*" })
+
 mega.command("Term", function()
   mega.term.toggle({
     winnr = vim.fn.winnr(),
@@ -318,8 +321,6 @@ mega.command("Term", function()
     on_after_open = function(bufnr, _winnr) vim.cmd("startinsert") end,
   })
 end)
-
-mega.command("T", function(opts) mega.term.toggle(opts.args) end, { nargs = "*" })
 
 mega.command("TermElixir", function()
   local precmd = ""
@@ -332,7 +333,7 @@ mega.command("TermElixir", function()
     cmd = "iex"
   end
 
-  mega.term_open({
+  mega.term.open({
     cmd = cmd,
     precmd = precmd,
     on_exit = function() end,
@@ -354,7 +355,7 @@ mega.command("TermRuby", function()
     cmd = "irb"
   end
 
-  mega.term_open({
+  mega.term.open({
     cmd = cmd,
     precmd = precmd,
     on_exit = function() end,
@@ -369,7 +370,7 @@ end)
 mega.command("TermLua", function()
   local cmd = "lua"
 
-  mega.term_open({
+  mega.term.open({
     cmd = cmd,
     direction = "horizontal",
     on_exit = function() end,
@@ -384,7 +385,7 @@ end)
 mega.command("TermPython", function()
   local cmd = "python"
 
-  mega.term_open({
+  mega.term.open({
     cmd = cmd,
     on_exit = function() end,
     ---@diagnostic disable-next-line: unused-local
@@ -398,7 +399,7 @@ end)
 mega.command("TermNode", function()
   local cmd = "node"
 
-  mega.term_open({
+  mega.term.open({
     cmd = cmd,
     on_exit = function() end,
     ---@diagnostic disable-next-line: unused-local

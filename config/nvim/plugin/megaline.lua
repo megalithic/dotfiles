@@ -71,6 +71,77 @@ local function is_truncated(trunc)
   return check
 end
 
+local function matches(str, list)
+  return #vim.tbl_filter(function(item) return item == str or string.match(str, item) end, list) > 0
+end
+
+--- @param hl string
+local function wrap_hl(hl)
+  assert(hl, "A highlight name must be specified")
+  return "%#" .. hl .. "#"
+end
+
+--- Creates a spacer statusline component i.e. for padding
+--- or to represent an empty component
+--- @param size integer | nil
+--- @param filler string | nil
+local function spacer(size, filler)
+  filler = filler or " "
+  if size and size >= 1 then
+    local space = string.rep(filler, size)
+    return { space, #space }
+  else
+    return { "", 0 }
+  end
+end
+
+--- @param component string | number
+--- @param hl string
+--- @param opts table
+local function item(component, hl, opts)
+  -- do not allow empty values to be shown note 0 is considered empty
+  -- since if there is nothing of something I don't need to see it
+  if not component or component == "" or component == 0 then return spacer() end
+  opts = opts or {}
+  local before = opts.before or ""
+  local after = opts.after or " "
+  local prefix = opts.prefix or ""
+  local prefix_size = strwidth(prefix)
+  local suffix = opts.suffix or ""
+  local suffix_size = strwidth(suffix)
+
+  local prefix_color = opts.prefix_color or hl
+  prefix = prefix ~= "" and wrap_hl(prefix_color) .. prefix .. " " or ""
+
+  local suffix_color = opts.suffix_color or hl
+  suffix = suffix ~= "" and wrap_hl(suffix_color) .. suffix .. " " or ""
+
+  --- handle numeric inputs etc.
+  if type(component) ~= "string" then component = tostring(component) end
+
+  if opts.max_size and component and #component >= opts.max_size then
+    component = component:sub(1, opts.max_size - 1) .. "…"
+  end
+
+  local parts = { before, prefix, wrap_hl(hl), component, suffix, "%*", after }
+  return { table.concat(parts), #component + #before + #after + prefix_size + suffix_size }
+end
+
+--- @param sl_item string | number
+--- @param condition boolean
+--- @param hl string
+--- @param opts table
+local function item_if(sl_item, condition, hl, opts)
+  if not condition then return spacer() end
+  return item(sl_item, hl, opts)
+end
+
+-- local function matches(str, list)
+--   return #vim.tbl_filter(function(item)
+--     return item == str or string.match(str, item)
+--   end, list) > 0
+-- end
+
 -- local inactive = vim.api.nvim_get_current_win() ~= curwin
 -- local minimal = plain or inactive or not focused
 
@@ -83,8 +154,14 @@ end
 local function get_megaterm_name(_, buf)
   local shell = fnamemodify(vim.env.SHELL, ":t")
   local mode = M.modes[api.nvim_get_mode().mode]
-  return fmt("megaterm(%s)[%s]⋮%s", shell, buf, mode.long)
-  -- return fmt("Terminal(%s)[%s]", shell, api.nvim_buf_get_var(buf, "cmd") or buf)
+  -- return fmt("megaterm(%s)[%s] ⋮ %s", shell, buf, mode.short)
+  return unpack(
+    item(
+      fmt("megaterm(%s)[%s] ⋮ %s", shell, api.nvim_buf_get_var(buf, "cmd") or buf, mode.short),
+      mode.hl,
+      { before = "" }
+    )
+  )
 end
 -- Capture the type of the neo tree buffer opened
 local function get_neotree_name(fname, _)
@@ -182,77 +259,6 @@ local exception_types = {
     kittybuf = "Kitty Scrollback Buffer",
   },
 }
-
-local function matches(str, list)
-  return #vim.tbl_filter(function(item) return item == str or string.match(str, item) end, list) > 0
-end
-
---- @param hl string
-local function wrap_hl(hl)
-  assert(hl, "A highlight name must be specified")
-  return "%#" .. hl .. "#"
-end
-
---- Creates a spacer statusline component i.e. for padding
---- or to represent an empty component
---- @param size integer | nil
---- @param filler string | nil
-local function spacer(size, filler)
-  filler = filler or " "
-  if size and size >= 1 then
-    local space = string.rep(filler, size)
-    return { space, #space }
-  else
-    return { "", 0 }
-  end
-end
-
---- @param component string | number
---- @param hl string
---- @param opts table
-local function item(component, hl, opts)
-  -- do not allow empty values to be shown note 0 is considered empty
-  -- since if there is nothing of something I don't need to see it
-  if not component or component == "" or component == 0 then return spacer() end
-  opts = opts or {}
-  local before = opts.before or ""
-  local after = opts.after or " "
-  local prefix = opts.prefix or ""
-  local prefix_size = strwidth(prefix)
-  local suffix = opts.suffix or ""
-  local suffix_size = strwidth(suffix)
-
-  local prefix_color = opts.prefix_color or hl
-  prefix = prefix ~= "" and wrap_hl(prefix_color) .. prefix .. " " or ""
-
-  local suffix_color = opts.suffix_color or hl
-  suffix = suffix ~= "" and wrap_hl(suffix_color) .. suffix .. " " or ""
-
-  --- handle numeric inputs etc.
-  if type(component) ~= "string" then component = tostring(component) end
-
-  if opts.max_size and component and #component >= opts.max_size then
-    component = component:sub(1, opts.max_size - 1) .. "…"
-  end
-
-  local parts = { before, prefix, wrap_hl(hl), component, suffix, "%*", after }
-  return { table.concat(parts), #component + #before + #after + prefix_size + suffix_size }
-end
-
---- @param sl_item string | number
---- @param condition boolean
---- @param hl string
---- @param opts table
-local function item_if(sl_item, condition, hl, opts)
-  if not condition then return spacer() end
-  return item(sl_item, hl, opts)
-end
-
--- local function matches(str, list)
---   return #vim.tbl_filter(function(item)
---     return item == str or string.match(str, item)
---   end, list) > 0
--- end
 
 --- @param ctx table
 function M.is_plain(ctx)
@@ -522,8 +528,8 @@ M.modes = setmetatable({
   ['c']    = { long = 'Command',  short = 'C',   hl = 'StModeCommand' },
   ['r']    = { long = 'Prompt',   short = 'P',   hl = 'StModeOther' },
   ['!']    = { long = 'Shell',    short = 'Sh',  hl = 'StModeOther' },
-  ['t']    = { long = 'Terminal', short = 'TI',   hl = 'StModeOther' },
-  ['nt']    = { long = 'N-Terminal', short = 'TN',   hl = 'StModeNormal' },
+  ['t']    = { long = 'Terminal', short = 'T-I',   hl = 'StModeOther' },
+  ['nt']    = { long = 'N-Terminal', short = 'T-N',   hl = 'StModeNormal' },
 }, {
   -- By default return 'Unknown' but this shouldn't be needed
   __index = function()
