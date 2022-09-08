@@ -12,17 +12,39 @@ local augroup = mega.augroup
 local fmt = string.format
 local contains = vim.tbl_contains
 
-augroup("Startup", {
-  {
-    event = { "VimEnter" },
-    pattern = { "*" },
-    once = true,
-    command = function()
-      -- our basic dashboard/startify/alpha:
-      require("mega.start").start()
-    end,
-  },
-})
+do
+  local function get_workspace_if_exists()
+    local ws = nil
+    local workspaces = require("workspaces").get()
+    local cwd = vim.fn.getcwd() .. "/"
+    for _, workspace in pairs(workspaces) do
+      if cwd == workspace.path then ws = workspace end
+    end
+
+    return ws
+  end
+  augroup("Startup", {
+    {
+      event = { "VimEnter" },
+      pattern = { "*" },
+      once = true,
+      command = function() require("mega.start").start() end,
+    },
+    -- {
+    --   event = { "VimEnter" },
+    --   pattern = { "*" },
+    --   command = function(args)
+    --     vim.schedule_wrap(function()
+    --       local ws = get_workspace_if_exists()
+    --       if ws and type(ws) == "table" then
+    --         P(ws.name)
+    --         require("workspaces").open(ws.name)
+    --       end
+    --     end, 0)
+    --   end,
+    -- },
+  })
+end
 
 augroup("CheckOutsideTime", {
   {

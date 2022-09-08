@@ -729,25 +729,25 @@ function M.config()
   --   })
   -- end)
 
-  -- conf("sessions", {
-  --   events = { "WinEnter" },
-  --   session_filepath = vim.fn.stdpath("data") .. "/sessions/default",
-  -- })
+  conf("sessions", {
+    events = { "WinEnter" },
+    session_filepath = vim.fn.stdpath("data") .. "/sessions/default",
+  })
 
-  -- conf("workspaces", {
-  --   path = vim.fn.stdpath("data") .. "/workspaces",
-  --   hooks = {
-  --     open_pre = {
-  --       "SessionsStop",
-  --       "silent %bdelete!",
-  --     },
-  --     open = {
-  --       function() require("sessions").load(nil, { silent = true }) end,
-  --     },
-  --   },
-  -- })
+  conf("workspaces", {
+    path = vim.fn.stdpath("data") .. "/workspaces",
+    hooks = {
+      open_pre = {
+        "SessionsStop",
+        "silent %bdelete!",
+      },
+      open = {
+        function() require("sessions").load(nil, { silent = true }) end,
+      },
+    },
+  })
 
-  conf("habitats", {})
+  -- conf("habitats", {})
 end
 
 return M

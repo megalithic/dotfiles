@@ -148,7 +148,6 @@ return function()
       },
     })
   end
-
   local function run(method, args)
     return function()
       local dap = require("dap")
@@ -165,7 +164,7 @@ return function()
  ^ ^              _q_: exit
 ]]
 
-  local dap_hydra = Hydra({
+  Hydra({
     hint = hint,
     config = {
       color = "pink",
@@ -197,11 +196,11 @@ return function()
     },
   })
 
-  mega.augroup("HydraDap", {
-    event = "User",
-    user = "DapStarted",
-    command = function()
-      vim.schedule(function() dap_hydra:activate() end)
-    end,
-  })
+  -- mega.augroup("HydraDap", {
+  --   event = "User",
+  --   user = "DapStarted",
+  --   command = function()
+  --     vim.schedule(function() dap_hydra:activate() end)
+  --   end,
+  -- })
 end

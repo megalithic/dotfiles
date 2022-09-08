@@ -9,6 +9,11 @@ return function()
       topdelete = { hl = "GitSignsDelete", text = "▌" },
       changedelete = { hl = "GitSignsChange", text = "▌" },
     },
+    _threaded_diff = true,
+    _extmark_signs = true,
+    preview_config = {
+      border = mega.get_border(),
+    },
     word_diff = false,
     numhl = false,
     current_line_blame = false,
