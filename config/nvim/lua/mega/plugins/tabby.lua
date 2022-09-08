@@ -42,10 +42,10 @@ return function()
   end
 
   local function workspace_name()
-    local ws_ok, ws = pcall(function() return require("workspaces").name() end)
-    if ws_ok and ws then return ws end
+    -- local ws_ok, ws = pcall(function() return require("workspaces").name() end)
+    -- if ws_ok and ws then return ws end
 
-    return ""
+    return vim.g.workspace or ""
   end
 
   local tabline = {

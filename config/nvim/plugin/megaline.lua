@@ -600,6 +600,8 @@ end
 function M.s_workspace(args)
   if is_truncated(args.trunc_width) then return "" end
   local ws_name = require("workspaces").name() or ""
+  vim.g.workspace = ws_name
+
   return unpack(
     item_if(
       fmt("[%s]", ws_name),
@@ -871,14 +873,14 @@ function _G.__statusline()
         suffix = string.rep(" ", 5),
         priority = 5,
       })),
+      -- habitat/workspace
+      M.s_workspace({ trunc_width = 120 }),
       --------------------------------------------------------------------------
       "%=", -- end middle seciond/begin right alignment
       --------------------------------------------------------------------------
       -- lsp clients
       -- FIXME: not unpacking correctly; debug further
       -- M.s_lsp_clients({ trunc_width = 120 }),
-      -- habitat/workspace
-      M.s_workspace({ trunc_width = 120 }),
       -- diagnostics
       { hl = "Statusline", strings = { diag_error, diag_warn, diag_info, diag_hint } },
       -- git status/branch

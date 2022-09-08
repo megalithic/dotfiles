@@ -702,33 +702,6 @@ function M.config()
   --   }
   -- end)
 
-  -- conf("project", {
-  --   detection_methods = { "pattern", "lsp" },
-  --   ignore_lsp = { "null-ls" },
-  --   patterns = { ".git" },
-  -- })
-
-  -- conf("auto-session", function()
-  --   fmt = string.format
-  --   local data = vim.fn.stdpath("data")
-  --   require("auto-session").setup({
-  --     log_level = "error",
-  --     auto_session_root_dir = fmt("%s/session/auto/", data),
-  --     -- ignore project/code directories as I choose those myself
-  --     auto_restore_enabled = not vim.startswith(vim.fn.getcwd(), vim.env.PROJECTS_DIR or "~/code"),
-  --     auto_session_suppress_dirs = {
-  --       vim.env.HOME,
-  --       vim.env.PROJECTS_DIR,
-  --       fmt("%s/Desktop", vim.env.HOME),
-  --       fmt("%s/site/pack/packer/opt/*", data),
-  --       fmt("%s/site/pack/packer/start/*", data),
-  --       fmt("%s/site/pack/paqs/opt/*", data),
-  --       fmt("%s/site/pack/paqs/start/*", data),
-  --     },
-  --     auto_session_use_git_branch = true, -- FIXME: potentially causes inconsistent results
-  --   })
-  -- end)
-
   conf("sessions", {
     events = { "VimLeavePre" },
     session_filepath = vim.fn.stdpath("data") .. "/sessions/default",
@@ -738,11 +711,21 @@ function M.config()
     path = vim.fn.stdpath("data") .. "/workspaces",
     hooks = {
       open_pre = {
-        "SessionsStop",
-        "silent %bdelete!",
+        function()
+          local open_files = require("mega.utils").get_open_filelist()
+          if open_files == nil or #open_files == 0 or (#open_files == 1 and open_files[1] == "") then
+            vim.cmd("SessionsStop")
+            vim.cmd("silent %bdelete!")
+          end
+        end,
       },
       open = {
-        function() require("sessions").load(nil, { silent = true }) end,
+        function()
+          local open_files = require("mega.utils").get_open_filelist()
+          if open_files == nil or #open_files == 0 or (#open_files == 1 and open_files[1] == "") then
+            require("sessions").load(nil, { silent = true })
+          end
+        end,
       },
     },
   })

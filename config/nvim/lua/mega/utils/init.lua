@@ -158,4 +158,25 @@ function M.lsp.elixirls_cmd(opts)
   return language_server_cmd(opts)
 end
 
+function M.get_open_filelist(cwd)
+  local Path = require("plenary.path")
+  -- local flatten = vim.tbl_flatten
+  local filter = vim.tbl_filter
+
+  cwd = cwd or vim.loop.cwd()
+
+  local bufnrs = filter(function(b)
+    if 1 ~= vim.fn.buflisted(b) then return false end
+    return true
+  end, vim.api.nvim_list_bufs())
+  if not next(bufnrs) then return end
+
+  local filelist = {}
+  for _, bufnr in ipairs(bufnrs) do
+    local file = vim.api.nvim_buf_get_name(bufnr)
+    table.insert(filelist, Path:new(file):make_relative(cwd))
+  end
+  return filelist
+end
+
 return M
