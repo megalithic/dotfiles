@@ -202,7 +202,7 @@ else
   http_cmd="/usr/local/bin/http -qq"
 fi
 
-[[ $VERBOSE == "true" || $DEBUG == "true" ]] && [[ $POPUP == "true" ]] && fzf_cmd="fzf" || fzf_cmd="fzf-tmux"
+[[ $VERBOSE == "true" || $DEBUG == "true" ]] && [[ $POPUP == "true" ]] && fzf_cmd="/usr/local/bin/fzf" || fzf_cmd="/usr/local/bin/fzf-tmux"
 
 declare -a request_data
 declare -a gone_messages

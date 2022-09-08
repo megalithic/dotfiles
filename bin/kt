@@ -7,9 +7,9 @@ set -euo pipefail
 
 sessions_path="$HOME/.config/kitty/tabs"
 
-selected_session=$(fd sh "$sessions_path" |
+selected_session=$(/usr/local/bin/fd sh "$sessions_path" |
   xargs basename | sed 's/\.[^.]*$//' |
-  fzf-tmux --cycle --layout=reverse --preview-window="hidden" --prompt ' new or existing session  ')
+  /usr/local/bin/fzf --cycle --layout=reverse --preview-window="hidden" --prompt ' new or existing session  ')
 
 if [[ -n $selected_session ]]; then
   # focus existing tab
