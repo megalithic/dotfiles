@@ -32,7 +32,7 @@ packer.startup({
     use({ "anuvyklack/hydra.nvim" })
     use({ "rcarriga/nvim-notify" })
     use({ "nanozuki/tabby.nvim" })
-    -- use({ "levouh/tint.nvim" })
+    use({ "levouh/tint.nvim", event = "BufRead" })
 
     -- use_local({ "tiagovla/tokyodark.nvim", ext = "tokyodark" })
     -- use({ "nvim-lualine/lualine.nvim", after = "nvim-web-devicons", ext = "lualine" })

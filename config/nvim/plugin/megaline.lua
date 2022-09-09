@@ -25,7 +25,7 @@ mega.augroup("megaline", {
     event = { "WinEnter", "BufEnter" },
     command = function()
       vim.g.vim_in_focus = true
-      vim.go.statusline = "%{%v:lua.__statusline()%}"
+      vim.o.statusline = "%{%v:lua.__statusline()%}"
     end,
   },
   {
@@ -901,5 +901,7 @@ function _G.__statusline()
     return "%#StInactive#%F %m%="
   end
 end
+
+vim.o.statusline = "%{%v:lua.__statusline()%}"
 
 return M
