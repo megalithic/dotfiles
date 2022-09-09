@@ -455,3 +455,7 @@ fi
 # -- REF: https://github.com/Jelmerro/Vieb/blob/master/FAQ.md#mac
 alias sign="sudo codesign --force --deep --sign -"
 # https://github.com/Jelmerro/Vieb/releases/download/7.2.0/Vieb-7.2.0-mac.zip
+
+# handy things that iuse for work
+alias tmlaunch="~/.dotfiles/bin/tmux-launch"
+alias tmexpo="sh tmux-launch expo 'cd ~/code/outstand/mobile; expo start'"

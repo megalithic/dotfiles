@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 
-cd ~/code/outstand/mobile || return
-nvim -c "lua require('workspaces').open('mobile')"
+cd ~/code/outstand/mobile
 
-# launch expo.. figure this junk out
-# ~/.dotfiles/bin/tmux-launch expo "cd ~/code/outstand/mobile; expo start"
-# /usr/local/bin/zsh
+
+# sh ~/.dotfiles/bin/tmux-launch -d expo "cd ~/code/outstand/mobile; expo start"
+nvim -c "lua require('workspaces').open('mobile')"

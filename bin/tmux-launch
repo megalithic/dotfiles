@@ -2,11 +2,54 @@
 
 set -euo pipefail
 
+# START_DETACHED="false"
+
+function __help() {
+  printf -- "\n"
+  printf -- "  Usage: %s [options] session_name [command]\n" "tmux-launch"
+  printf -- "\n"
+  printf -- "  Example:\n"
+  printf -- "    tmux-launch expo \"cd ~/code/my_app; expo start\"\n"
+  printf -- "\n"
+  printf -- "  Options:\n"
+  printf -- "    -h   This help text you're presently reading. 😄\n"
+  printf -- "    -d   Start with session detached\n"
+}
+
+if [[ -z "${1:-}" ]]; then
+  __help
+  exit 1
+fi
+
+while getopts "hd" OPTION; do
+  case $OPTION in
+    h)
+      __help
+      exit 0
+      ;;
+    d)
+      # START_DETACHED="true"
+      ;;
+    \?)
+      echo "Invalid Option: -$OPTARG" 1>&2
+      exit 1
+      ;;
+
+  esac
+done
+
+echo "$1"
+
+shift $((OPTIND - 1))
+
 session_name="${1:-}"
 shift
-# shift "$(($OPTIND - 1))"
+
+echo "$session_name"
 
 cmd="${*:-}"
+
+echo "$cmd"
 
 if ! tmux has-session -t "$session_name" 2>/dev/null; then
   tmux -2 new-session -d -s "$session_name"
@@ -14,14 +57,19 @@ else
   tmux -2 attach-session -t "$session_name"
 fi
 
-# launch custom command when we attach or create new
+# launch custom command when we attach or create new session
 if [[ -n "$cmd" ]]; then
   tmux -2 send-keys -t "$session_name" "$cmd" C-m
 fi
 
 tmux -2 select-window -t "$session_name:1"
 tmux -2 select-pane -t "$session_name:1.1"
-tmux -2 attach-session -t "$session_name"
 
-# tmux -2 send-keys -t "$session_name" "tmux set status off" C-m
-# tmux -2 set status off
+# if [[ "$START_DETACHED" == "false" ]]; then
+#   tmux -2 detach-session
+# else
+#   tmux -2 attach-session -t "$session_name"
+# fi
+
+tmux -2 set status off
+tmux -2 send-keys -t "$session_name" "tmux set status off" C-m
