@@ -368,6 +368,7 @@ vim.o.sidescroll = 1
 -----------------------------------------------------------------------------//
 vim.opt.spellsuggest:prepend({ 12 })
 vim.o.spelloptions = "camel"
+-- vim.opt.spelloptions:append({ "camel", "noplainbuffer" })
 vim.o.spellcapcheck = "" -- don't check for capital letters at start of sentence
 vim.o.dictionary = "/usr/share/dict/words"
 
