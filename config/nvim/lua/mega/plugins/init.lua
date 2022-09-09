@@ -87,7 +87,6 @@ local PKGS = {
   "RRethy/nvim-treesitter-textsubjects",
   "David-Kunz/treesitter-unit",
   { "nvim-treesitter/nvim-treesitter-context" },
-  "lewis6991/spellsitter.nvim",
   ------------------------------------------------------------------------------
   -- (FZF/telescope/file/document navigation) --
   "nvim-neo-tree/neo-tree.nvim",
@@ -349,9 +348,6 @@ function M.config()
       end
     end,
   })
-
-  -- TODO: determine if we want/use spellsitter
-  -- conf("spellsitter", {})
 
   conf("colorizer", function()
     require("colorizer").setup({
