@@ -181,6 +181,7 @@ do
           or client.name == "rust_analyzer"
           or client.name == "clangd"
           or client.name == "shellcheck"
+          or client.name == "bashls"
         )
       then
         return
