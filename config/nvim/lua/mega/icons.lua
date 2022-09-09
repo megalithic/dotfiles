@@ -41,12 +41,12 @@ return {
     --   TypeParameter = "",
     -- },
     kind = {
-      Text = " text", -- Text
+      Text = " text", -- Text
       Method = " method", -- Method
       Function = " function", -- Function
       Constructor = " constructor", -- Constructor
       Field = "ﰠ field", -- Field
-      Variable = " variable", -- Variable
+      Variable = " variable", -- Variable, alts: 
       Class = " class", -- Class
       Interface = "ﰮ interface", -- Interface
       Module = " module", -- Module
@@ -62,7 +62,7 @@ return {
       Folder = " folder", -- Folder
       EnumMember = " enum member", -- EnumMember
       Constant = " const", -- Constant
-      Struct = "פּ struct", -- Struct
+      Struct = "פּ struct", -- Struct, alts: 
       Event = "鬒event", -- Event
       Operator = "\u{03a8} operator", -- Operator
       TypeParameter = " type param", -- TypeParameter

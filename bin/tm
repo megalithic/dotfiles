@@ -89,7 +89,6 @@ __root="$(cd "$(dirname "${__dir}")" && pwd)"
 __invocation="$(printf %q "${__file}")$( (($#)) && printf ' %q' "$@" || true)"
 
 POPUP="false"
-CMD="${CMD:-}"
 
 # -- check for our dependencies..
 (command -v fzf &>/dev/null) && FZF_FOUND="installed" || FZF_FOUND="not installed"
@@ -104,7 +103,6 @@ function __help() {
   printf -- "    -c              Custom command(s) to run upon session creation\n"
   printf -- "\n"
   printf -- "  Dependencies:\n"
-  printf -- "    tmux            (%s)\n" "$TMUX_RUNNING"
   printf -- "    fzf             (%s)\n" "$FZF_FOUND"
   printf -- "\n"
 
@@ -118,7 +116,7 @@ if [[ $FZF_FOUND == "not installed" ]]; then
   exit 1
 fi
 
-while getopts "phc:" OPTION; do
+while getopts "ph:" OPTION; do
   case $OPTION in
 
     p)
@@ -128,11 +126,11 @@ while getopts "phc:" OPTION; do
     h)
       __help
       ;;
-    c)
-      CMD="$OPTARG"
-      echo "custom cmd set: $OPTARG"
-      exit 0
-      ;;
+    # c)
+    #   CMD="$OPTARG"
+    #   echo "custom cmd set: $OPTARG"
+    #   exit 0
+    #   ;;
 
     \?)
       # NOTE: this covers the case where an optarg may not be provided
@@ -146,10 +144,13 @@ while getopts "phc:" OPTION; do
       ;;
   esac
 done
-# shift $((OPTIND - 1))
-shift "$(($OPTIND - 1))"
+shift $((OPTIND - 1))
+# shift "$(($OPTIND - 1))"
 # -- this is our given session_name param, sans options
 session_name="${1:-}"
+shift
+
+CMD="${*:-}"
 
 # -- handle options
 [[ $POPUP == "true" ]] && fzf_cmd="fzf" || fzf_cmd="fzf-tmux"
@@ -158,6 +159,7 @@ session_name="${1:-}"
 function try_session() {
   local session="$1"
 
+  # no session given; bail out
   if [[ -z "$session" ]]; then
     exit 0
   fi
@@ -168,6 +170,8 @@ function try_session() {
     tmux -2 attach-session -t "$session"
   fi
 
+  tmux -2 send-keys -t "$session" "tmux set status off" C-m
+
   # launch custom command when we attach or create new session
   if [[ -n "$CMD" ]]; then
     tmux -2 send-keys -t "$session" "$CMD" C-m
@@ -175,9 +179,9 @@ function try_session() {
 
   tmux -2 select-window -t "$session:1"
   tmux -2 select-pane -t "$session:1.1"
+  tmux -2 attach-session -t "$session_name"
 
   tmux -2 set status off
-  tmux -2 send-keys -t "$session" "tmux set status off" C-m
 }
 
 function fuzzy_find() {

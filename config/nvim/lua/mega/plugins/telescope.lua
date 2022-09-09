@@ -159,12 +159,6 @@ return function()
           },
         },
       },
-      fzf = {
-        fuzzy = true, -- false will only do exact matching
-        override_generic_sorter = true, -- override the generic sorter
-        override_file_sorter = true, -- override the file sorter
-        case_mode = "smart_case", -- or "ignore_case" or "respect_case"
-      },
     },
     pickers = {
       buffers = dropdown({
@@ -375,7 +369,6 @@ return function()
   nmap("<leader>lS", builtin.lsp_workspace_symbols, "telescope: workspace symbols")
   nmap("<leader>lw", builtin.lsp_dynamic_workspace_symbols, "telescope: dynamic workspace symbols")
 
-  telescope.load_extension("fzf")
   telescope.load_extension("zf-native")
   telescope.load_extension("live_grep_args")
   telescope.load_extension("luasnip")

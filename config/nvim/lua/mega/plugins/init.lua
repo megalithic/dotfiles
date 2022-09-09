@@ -92,11 +92,10 @@ local PKGS = {
   "nvim-neo-tree/neo-tree.nvim",
   { "mrbjarksen/neo-tree-diagnostics.nvim" },
   { "s1n7ax/nvim-window-picker" },
+
   { "nvim-telescope/telescope.nvim" },
-  { "nvim-telescope/telescope-fzf-native.nvim", run = "make" },
   "nvim-telescope/telescope-file-browser.nvim",
   "natecraddock/telescope-zf-native.nvim",
-  "camgraff/telescope-tmux.nvim",
   "nvim-telescope/telescope-live-grep-args.nvim",
   "benfowler/telescope-luasnip.nvim",
   -- "windwp/nvim-spectre",
@@ -135,7 +134,7 @@ local PKGS = {
   "akinsho/toggleterm.nvim",
   "rmagatti/auto-session",
   "ahmedkhalf/project.nvim",
-  "mg979/vim-visual-multi",
+  -- "mg979/vim-visual-multi",
   "natecraddock/sessions.nvim",
   "natecraddock/workspaces.nvim",
   "megalithic/habitats.nvim",
@@ -168,7 +167,7 @@ local PKGS = {
   -- :Time     <- measure how long it takes to run some stuff.
   "tpope/vim-scriptease",
   -- "aca/wezterm.nvim",
-  { "knubie/vim-kitty-navigator", run = "cp -L ./*.py ~/.dotfiles/config/kitty" },
+  { "knubie/vim-kitty-navigator" },
   -- @trial: "jghauser/kitty-runner.nvim",
   "RRethy/nvim-align",
   "junegunn/vim-easy-align",
@@ -298,6 +297,7 @@ function M.config()
 
   vim.cmd("packadd cfilter")
 
+  conf("golden_size", { config = "golden_size" })
   conf("gitsigns", { config = "gitsigns" })
   conf("telescope", { config = "telescope" })
   conf("toggleterm", { config = "toggleterm" })
@@ -409,69 +409,6 @@ function M.config()
   --     end,
   --   })
   -- end)
-
-  conf("golden_size", function()
-    local gs = require("golden_size")
-
-    -- local function ignore_by(type, types)
-    --   local t = api.nvim_buf_get_option(api.nvim_get_current_buf(), type)
-    --   for _, type in pairs(types) do
-    --     if type == t then
-    --       return 1
-    --     end
-    --   end
-    -- end
-
-    local function ignore_by_buftype(types)
-      local bt = api.nvim_buf_get_option(api.nvim_get_current_buf(), "buftype")
-      for _, type in pairs(types) do
-        if type == bt then return 1 end
-      end
-    end
-
-    local function ignore_by_filetype(types)
-      local ft = api.nvim_buf_get_option(api.nvim_get_current_buf(), "filetype")
-      for _, type in pairs(types) do
-        if type == ft then return 1 end
-      end
-    end
-
-    gs.set_ignore_callbacks({
-      {
-        ignore_by_filetype,
-        {
-          "help",
-          "terminal",
-          "megaterm",
-          "dirbuf",
-          "Trouble",
-          "qf",
-          "neo-tree",
-        },
-      },
-      {
-        ignore_by_buftype,
-        {
-          "help",
-          "acwrite",
-          "Undotree",
-          "quickfix",
-          "nerdtree",
-          "current",
-          "Vista",
-          "Trouble",
-          "LuaTree",
-          "NvimTree",
-          "terminal",
-          "dirbuf",
-          "tsplayground",
-          "neo-tree",
-        },
-      },
-      { gs.ignore_float_windows }, -- default one, ignore float windows
-      { gs.ignore_by_window_flag }, -- default one, ignore windows with w:ignore_gold_size=1
-    })
-  end)
 
   conf("nvim-autopairs", function()
     require("nvim-autopairs").setup({
