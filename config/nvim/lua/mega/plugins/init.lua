@@ -32,7 +32,7 @@ local PKGS = {
   "anuvyklack/hydra.nvim",
   "rcarriga/nvim-notify",
   "nanozuki/tabby.nvim",
-  -- "levouh/tint.nvim",
+  "levouh/tint.nvim",
   ------------------------------------------------------------------------------
   -- (LSP/completion) --
   "neovim/nvim-lspconfig",
@@ -386,6 +386,7 @@ function M.config()
     mega.nnoremap("s", function() hop.hint_char2({ multi_windows = false }) end)
   end)
 
+  -- FIXME: this breaks my cursorline plugin :(
   -- conf("tint", function()
   --   require("tint").setup({
   --     tint = -50,
@@ -395,13 +396,15 @@ function M.config()
   --       "Comment",
   --       "Panel.*",
   --       "Telescope.*",
+  --       'Bqf.*',
+  --       "Cursor.*",
   --     },
   --     window_ignore_function = function(win_id)
   --       if vim.wo[win_id].diff or vim.fn.win_gettype(win_id) ~= "" then return true end
   --       local buf = vim.api.nvim_win_get_buf(win_id)
   --       local b = vim.bo[buf]
   --       local ignore_bt = { "megaterm", "terminal", "prompt", "nofile" }
-  --       local ignore_ft = { "neo-tree", "packer", "diff", "megaterm", "toggleterm", "Neogit.*", "Telescope.*" }
+  --       local ignore_ft = { "neo-tree", "packer", "diff", "megaterm", "toggleterm", "Neogit.*", "Telescope.*", "qf" }
   --       return mega.any(b.bt, ignore_bt) or mega.any(b.ft, ignore_ft)
   --     end,
   --   })
