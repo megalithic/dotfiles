@@ -32,7 +32,7 @@ local PKGS = {
   "anuvyklack/hydra.nvim",
   "rcarriga/nvim-notify",
   "nanozuki/tabby.nvim",
-  -- "levouh/tint.nvim",
+  "levouh/tint.nvim",
   ------------------------------------------------------------------------------
   -- (LSP/completion) --
   "neovim/nvim-lspconfig",
@@ -65,10 +65,10 @@ local PKGS = {
   "b0o/schemastore.nvim",
   { "kevinhwang91/nvim-bqf" },
   { url = "https://gitlab.com/yorickpeterse/nvim-pqf" },
-  "mhartington/formatter.nvim",
   "antoinemadec/FixCursorHold.nvim", -- Needed while issue https://github.com/neovim/neovim/issues/12587 is still open
   "ojroques/nvim-bufdel",
   "abecodes/tabout.nvim",
+  "mhartington/formatter.nvim",
   "mrshmllow/document-color.nvim",
   ------------------------------------------------------------------------------
   -- (TS/treesitter) --
@@ -92,11 +92,10 @@ local PKGS = {
   "nvim-neo-tree/neo-tree.nvim",
   { "mrbjarksen/neo-tree-diagnostics.nvim" },
   { "s1n7ax/nvim-window-picker" },
+
   { "nvim-telescope/telescope.nvim" },
-  { "nvim-telescope/telescope-fzf-native.nvim", run = "make" },
   "nvim-telescope/telescope-file-browser.nvim",
   "natecraddock/telescope-zf-native.nvim",
-  "camgraff/telescope-tmux.nvim",
   "nvim-telescope/telescope-live-grep-args.nvim",
   "benfowler/telescope-luasnip.nvim",
   -- "windwp/nvim-spectre",
@@ -133,9 +132,9 @@ local PKGS = {
   "editorconfig/editorconfig-vim",
   { "zenbro/mirror.vim", opt = true },
   "akinsho/toggleterm.nvim",
-  "rmagatti/auto-session",
-  "ahmedkhalf/project.nvim",
-  "mg979/vim-visual-multi",
+  -- "rmagatti/auto-session",
+  -- "ahmedkhalf/project.nvim",
+  -- "mg979/vim-visual-multi",
   "natecraddock/sessions.nvim",
   "natecraddock/workspaces.nvim",
   "megalithic/habitats.nvim",
@@ -168,7 +167,7 @@ local PKGS = {
   -- :Time     <- measure how long it takes to run some stuff.
   "tpope/vim-scriptease",
   -- "aca/wezterm.nvim",
-  { "knubie/vim-kitty-navigator", run = "cp -L ./*.py ~/.dotfiles/config/kitty" },
+  { "knubie/vim-kitty-navigator" },
   -- @trial: "jghauser/kitty-runner.nvim",
   "RRethy/nvim-align",
   "junegunn/vim-easy-align",
@@ -196,7 +195,7 @@ local PKGS = {
   "antew/vim-elm-analyse",
   "tjdevries/nlua.nvim",
   "norcalli/nvim.lua",
-  "euclidianace/betterlua.vim",
+  -- "euclidianace/betterlua.vim",
   "folke/lua-dev.nvim",
   "andrejlevkovitch/vim-lua-format",
   "milisims/nvim-luaref",
@@ -294,10 +293,14 @@ end
 -- [ plugin configs ] -----------------------------------------------------------
 
 function M.config()
-  if pcall(require, "paq") then vim.opt.runtimepath:remove("~/.local/share/nvim/site/pack/packer") end
+  if not vim.g.use_packer then
+    -- vim.opt.runtimepath:remove("~/.local/share/nvim/site/pack/*/start")
+    vim.opt.runtimepath:remove("~/.local/share/nvim/site/pack/packer")
+  end
 
   vim.cmd("packadd cfilter")
 
+  conf("golden_size", { config = "golden_size" })
   conf("gitsigns", { config = "gitsigns" })
   conf("telescope", { config = "telescope" })
   conf("toggleterm", { config = "toggleterm" })
@@ -386,6 +389,7 @@ function M.config()
     mega.nnoremap("s", function() hop.hint_char2({ multi_windows = false }) end)
   end)
 
+  -- FIXME: this breaks my cursorline plugin :(
   -- conf("tint", function()
   --   require("tint").setup({
   --     tint = -50,
@@ -395,80 +399,19 @@ function M.config()
   --       "Comment",
   --       "Panel.*",
   --       "Telescope.*",
+  --       'Bqf.*',
+  --       "Cursor.*",
   --     },
   --     window_ignore_function = function(win_id)
   --       if vim.wo[win_id].diff or vim.fn.win_gettype(win_id) ~= "" then return true end
   --       local buf = vim.api.nvim_win_get_buf(win_id)
   --       local b = vim.bo[buf]
   --       local ignore_bt = { "megaterm", "terminal", "prompt", "nofile" }
-  --       local ignore_ft = { "neo-tree", "packer", "diff", "megaterm", "toggleterm", "Neogit.*", "Telescope.*" }
+  --       local ignore_ft = { "neo-tree", "packer", "diff", "megaterm", "toggleterm", "Neogit.*", "Telescope.*", "qf" }
   --       return mega.any(b.bt, ignore_bt) or mega.any(b.ft, ignore_ft)
   --     end,
   --   })
   -- end)
-
-  conf("golden_size", function()
-    local gs = require("golden_size")
-
-    -- local function ignore_by(type, types)
-    --   local t = api.nvim_buf_get_option(api.nvim_get_current_buf(), type)
-    --   for _, type in pairs(types) do
-    --     if type == t then
-    --       return 1
-    --     end
-    --   end
-    -- end
-
-    local function ignore_by_buftype(types)
-      local bt = api.nvim_buf_get_option(api.nvim_get_current_buf(), "buftype")
-      for _, type in pairs(types) do
-        if type == bt then return 1 end
-      end
-    end
-
-    local function ignore_by_filetype(types)
-      local ft = api.nvim_buf_get_option(api.nvim_get_current_buf(), "filetype")
-      for _, type in pairs(types) do
-        if type == ft then return 1 end
-      end
-    end
-
-    gs.set_ignore_callbacks({
-      {
-        ignore_by_filetype,
-        {
-          "help",
-          "terminal",
-          "megaterm",
-          "dirbuf",
-          "Trouble",
-          "qf",
-          "neo-tree",
-        },
-      },
-      {
-        ignore_by_buftype,
-        {
-          "help",
-          "acwrite",
-          "Undotree",
-          "quickfix",
-          "nerdtree",
-          "current",
-          "Vista",
-          "Trouble",
-          "LuaTree",
-          "NvimTree",
-          "terminal",
-          "dirbuf",
-          "tsplayground",
-          "neo-tree",
-        },
-      },
-      { gs.ignore_float_windows }, -- default one, ignore float windows
-      { gs.ignore_by_window_flag }, -- default one, ignore windows with w:ignore_gold_size=1
-    })
-  end)
 
   conf("nvim-autopairs", function()
     require("nvim-autopairs").setup({

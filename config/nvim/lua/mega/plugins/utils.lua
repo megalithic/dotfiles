@@ -1,38 +1,64 @@
--- REF: https://github.com/rstacruz/vimfiles
+-- @HT tiagovla/.dotfiles for this packer boilerplate
 
+local fn = vim.fn
 local fmt = string.format
-local M = {}
 
--- Checks if a given package is available
-function M.has_pkg(name)
-  local path = vim.fn.stdpath("data") .. "/site/pack/packer/start/" .. name
-  return vim.fn.empty(vim.fn.glob(path)) == 0
+-- ---A thin wrapper around vim.notify to add packer details to the message
+-- ---@param msg string
+local function packer_notify(msg, level) vim.notify(msg, level, { title = "Packer" }) end
+
+local function bootstrap_packer(rtp_method)
+  rtp_method = rtp_method or "start"
+  local PACKER_INSTALL_PATH = fmt("%s/site/pack/packer/%s/packer.nvim", fn.stdpath("data"), rtp_method)
+
+  if fn.empty(fn.glob(PACKER_INSTALL_PATH)) > 0 then
+    packer_notify("Downloading packer.nvim...")
+    packer_notify(
+      fn.system({ "git", "clone", "--depth", "1", "https://github.com/wbthomason/packer.nvim", PACKER_INSTALL_PATH })
+    )
+    vim.cmd.packadd({ "packer.nvim", bang = true })
+    -- require("packer").sync()
+    return true
+    -- else
+    --   vim.cmd.packadd({ "packer.nvim", bang = true })
+  end
+  return false
 end
 
--- Loads a module using require(), but does nothing if the module is not present
--- Used for conditionally configuring a plugin depending on whether it's installed
-function M.conf(module_name, callback, opts)
-  -- first try to load an external config...
-  if opts == nil then
-    P("no opts")
-    return pcall(require, fmt("mega.plugins.%s", module_name))
+local function load(path)
+  require("mega.plugins." .. path)
+  local ok_conf, res = pcall(require, "mega.plugins." .. path)
+  if ok_conf then
+    return res
   else
-    -- else, pass in custom function
-    local status, mod = pcall(require, module_name)
-    if status then
-      if opts and opts["defer"] then
-        vim.defer_fn(function() callback(mod) end, 1000)
-      else
-        callback(mod)
-      end
-    end
+    packer_notify(fmt("Could not load %s", path))
+    return {}
   end
 end
 
-function M.which(bin) return vim.fn.executable(bin) == 1 end
+local function use(spec)
+  if spec.ext then
+    local config_ext = load(spec.ext)
+    spec = vim.tbl_deep_extend("force", spec, config_ext)
+    spec.ext = nil
+  end
 
----A thin wrapper around vim.notify to add packer details to the message
----@param msg string
-function M.packer_notify(msg, level) vim.notify(msg, level, { title = "Packer" }) end
+  require("packer").use(spec)
+end
 
-return M
+-- hard coded local plugins path
+local function use_local(spec)
+  local sp = vim.split(spec[1], "/")
+  local repo_path = vim.fn.expand(fmt("%s/%s", vim.env.CODE, sp[#sp]), nil, nil)
+  if vim.fn.isdirectory(repo_path) == 1 then
+    spec[1] = repo_path
+  else
+    packer_notify(fmt("Could not load local %s, using online instead.", repo_path))
+  end
+
+  use(spec)
+end
+
+local function conf(name) return require(fmt("mega.plugins.%s", name)) end
+
+return { use, use_local, bootstrap_packer, packer_notify, conf }

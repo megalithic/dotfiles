@@ -1,6 +1,9 @@
 -- Inspiration
 -- 1. nvim-cursorline
 
+if not mega then return end
+if vim.g.disable_plugins then return end
+
 local M = {
   -- FIXME: presently, i believe LSP things are delaying the blink
   -- exceedingly longer than defined here:
@@ -71,7 +74,6 @@ local function is_ignored()
     or vim.tbl_contains(M.buftype_exclusions, vim.bo.buftype)
     or vim.tbl_contains(M.filetype_exclusions, vim.bo.filetype)
     or is_floating_win()
-  -- or vim.g.is_work
 
   return should_ignore
 end
@@ -82,16 +84,16 @@ local blink_bg = mega.colors.bg_blue
 
 local function highlight_cursorline()
   if blink_active then
-    vim.api.nvim_set_hl(0, "CursorLine", { bg = blink_bg.hex })
+    vim.cmd("highlight! CursorLine guibg=" .. blink_bg)
   else
-    vim.api.nvim_set_hl(0, "CursorLine", { bg = cursorline_bg.hex })
+    vim.cmd("highlight! CursorLine guibg=" .. cursorline_bg)
   end
-  vim.api.nvim_set_hl(0, "CursorLineNr", { bg = cursorline_bg.hex })
+  vim.cmd("highlight! CursorLineNr guibg=" .. cursorline_bg)
 end
 
 local function unhighlight_cursorline()
-  vim.api.nvim_set_hl(0, "CursorLine", { bg = normal_bg.hex })
-  vim.api.nvim_set_hl(0, "CursorLineNr", { bg = normal_bg.hex })
+  vim.cmd("highlight! CursorLine guibg=" .. normal_bg)
+  vim.cmd("highlight! CursorLineNr guibg=" .. normal_bg)
 end
 
 local function timer_start()

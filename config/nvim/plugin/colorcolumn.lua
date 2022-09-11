@@ -1,6 +1,9 @@
 -- Inspiration
 -- 1. nvim-cursorline
 
+if not mega then return end
+if vim.g.disable_plugins then return end
+
 local contains = vim.tbl_contains
 local api = vim.api
 

@@ -2,6 +2,9 @@
 -- This plugin is meant to work with the tmux-navigate tmux navigation plugin.
 --
 
+if not mega then return end
+if vim.g.disable_plugins then return end
+
 if not vim.env.TMUX then return end
 
 function Tmux_navigate_directions()

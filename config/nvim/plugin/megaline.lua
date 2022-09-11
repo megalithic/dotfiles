@@ -1,6 +1,9 @@
 -- I've taken various aspects of my statusline from the following amazing devs:
 -- @akinsho, @echasnovski, @lukas-reineke, @kristijanhusak
 
+if not mega then return end
+if vim.g.disable_plugins then return end
+
 local M = {}
 
 local fn = vim.fn
@@ -25,7 +28,7 @@ mega.augroup("megaline", {
     event = { "WinEnter", "BufEnter" },
     command = function()
       vim.g.vim_in_focus = true
-      vim.go.statusline = "%{%v:lua.__statusline()%}"
+      vim.o.statusline = "%{%v:lua.__statusline()%}"
     end,
   },
   {
@@ -901,5 +904,7 @@ function _G.__statusline()
     return "%#StInactive#%F %m%="
   end
 end
+
+vim.o.statusline = "%{%v:lua.__statusline()%}"
 
 return M

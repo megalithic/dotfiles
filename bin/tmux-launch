@@ -21,14 +21,11 @@ if [[ -z "${1:-}" ]]; then
   exit 1
 fi
 
-while getopts "hd" OPTION; do
+while getopts "h" OPTION; do
   case $OPTION in
     h)
       __help
       exit 0
-      ;;
-    d)
-      # START_DETACHED="true"
       ;;
     \?)
       echo "Invalid Option: -$OPTARG" 1>&2

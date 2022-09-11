@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 
 cd ~/.dotfiles || return
-tmux-launch weechat "weechat"
+~/.dotfiles/bin/tm weechat weechat
 /usr/local/bin/zsh

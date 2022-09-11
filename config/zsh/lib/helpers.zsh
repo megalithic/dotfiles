@@ -1,7 +1,7 @@
 #!/usr/bin/env zsh
 # shellcheck shell=bash
 
-# set -euo pipefail
+set -euo pipefail
 
 bold=$(tput bold)
 underline=$(tput sgr 0 1)
