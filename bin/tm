@@ -1,136 +1,29 @@
 #!/usr/bin/env bash
 
-# set -euo pipefail
-
-# function __help() {
-#   printf -- "\n"
-#   printf -- "  Usage: %s [options] session_name [command]\n" "tmux-launch"
-#   printf -- "\n"
-#   printf -- "  Example:\n"
-#   printf -- "    tmux-launch expo \"cd ~/code/my_app; expo start\"\n"
-#   printf -- "\n"
-#   printf -- "  Options:\n"
-#   printf -- "    -h   This help text you're presently reading. 😄\n"
-# }
-
-# if [[ -z "${1:-}" ]]; then
-#   __help
-#   exit 1
-# fi
-
-# while getopts "h" OPTION; do
-#   case $OPTION in
-#     h)
-#       __help
-#       exit 0
-#       ;;
-#     \?)
-#       echo "Invalid Option: -$OPTARG" 1>&2
-#       exit 1
-#       ;;
-
-#   esac
-# done
-# shift $((OPTIND - 1))
-
-# session_name="${1:-}"
-# shift
-
-# cmd="${*:-}"
-
-# if ! tmux has-session -t "$session_name" 2>/dev/null; then
-#   tmux -2 new-session -d -s "$session_name"
-# else
-#   tmux -2 attach-session -t "$session_name"
-# fi
-
-# # launch custom command when we attach or create new session
-# if [[ -n "$cmd" ]]; then
-#   tmux -2 send-keys -t "$session_name" "$cmd" C-m
-# fi
-
-# tmux -2 select-window -t "$session_name:1"
-# tmux -2 select-pane -t "$session_name:1.1"
-
-# tmux -2 set status off
-# tmux -2 send-keys -t "$session_name" "tmux set status off" C-m
-
-################################################################################
-
-#
-# What in tarnation is this?
-#
-# CLI tool to create new tmux layout/session, or switch to running tmux
-# session.
-#
-# ftm [options] [SESSION_NAME | FUZZY_PATTERN]
-#
-# Running `ftm` with no argument will let you fuzzy-find a running session name
-#
-# Passing an argument to `ftm` will switch to that session if it exists or
-# create it
-#
-# Dependencies:
-#   Required: `fzf`
-#
-# TODO:
-#   - not able to create a new session when at exactly 2 active sessions; must
-#   rely on `ftm [EXPLICIT_SESSION_NAME]` instead of the fzf TUI.
-#
-
 set -euo pipefail
 
-# -- set some useful vars for executable info:
-__dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-__file="${__dir}/$(basename "${BASH_SOURCE[0]}")"
-__base="$(basename "${__file}" .sh)"
-__root="$(cd "$(dirname "${__dir}")" && pwd)"
-# shellcheck disable=SC2034,SC2015
-__invocation="$(printf %q "${__file}")$( (($#)) && printf ' %q' "$@" || true)"
+[[ -f "$ZDOTDIR/lib/helpers.zsh" ]] && source "$ZDOTDIR/lib/helpers.zsh"
 
-POPUP="false"
-
-# -- check for our dependencies..
-(command -v fzf &>/dev/null) && FZF_FOUND="installed" || FZF_FOUND="not installed"
+# clean_exit defined in helpers.zsh
+trap 'clean_exit $? $LINENO' EXIT
 
 # -- friendly help if -h option given
 function __help() {
-  printf -- "Usage: %s [options] [SESSION_NAME | FUZZY_PATTERN]\n" "$__base"
+  printf -- "Usage: %s [options] [SESSION_NAME | FUZZY_PATTERN]\n" "tm"
   printf -- "\n"
-  printf -- "  Options:\n"
-  printf -- "    -p              Run fzf normally for tmux' popup feature, else fzf-tmux\n"
-  printf -- "    -h              This help text you're presently reading 😄\n"
-  printf -- "    -c              Custom command(s) to run upon session creation\n"
-  printf -- "\n"
-  printf -- "  Dependencies:\n"
-  printf -- "    fzf             (%s)\n" "$FZF_FOUND"
+  printf -- "Options:\n"
+  printf -- "  -h              This help text you're presently reading 😄\n"
   printf -- "\n"
 
   exit 0
 }
 
-# -- halt if we don't have FZF installed
-if [[ $FZF_FOUND == "not installed" ]]; then
-  printf -- "ERROR: %s requires FZF to be installed" "$__base"
-  __help
-  exit 1
-fi
-
-while getopts "ph:" OPTION; do
+while getopts "h" OPTION; do
   case $OPTION in
-
-    p)
-      POPUP="true"
-      ;;
 
     h)
       __help
       ;;
-    # c)
-    #   CMD="$OPTARG"
-    #   echo "custom cmd set: $OPTARG"
-    #   exit 0
-    #   ;;
 
     \?)
       # NOTE: this covers the case where an optarg may not be provided
@@ -138,22 +31,15 @@ while getopts "ph:" OPTION; do
       echo "Invalid Option: -$OPTARG" 1>&2
       exit 1
       ;;
-    :)
-      echo "Invalid Option: -$OPTARG requires an argument" 1>&2
-      exit 1
-      ;;
   esac
 done
-shift $((OPTIND - 1))
-# shift "$(($OPTIND - 1))"
+shift "$((OPTIND - 1))"
+
 # -- this is our given session_name param, sans options
 session_name="${1:-}"
 shift
 
-CMD="${*:-}"
-
-# -- handle options
-[[ $POPUP == "true" ]] && fzf_cmd="fzf" || fzf_cmd="fzf-tmux"
+cmd="${*:-}"
 
 # -- try to change to an existing session; otherwise, create a new one
 function try_session() {
@@ -170,11 +56,9 @@ function try_session() {
     tmux -2 attach-session -t "$session"
   fi
 
-  tmux -2 send-keys -t "$session" "tmux set status off" C-m
-
   # launch custom command when we attach or create new session
-  if [[ -n "$CMD" ]]; then
-    tmux -2 send-keys -t "$session" "$CMD" C-m
+  if [[ -n "$cmd" ]]; then
+    tmux -2 send-keys -t "$session" "$cmd" C-m
   fi
 
   tmux -2 select-window -t "$session:1"
@@ -187,27 +71,28 @@ function try_session() {
 function fuzzy_find() {
   # -- prepare for fuzzy-finding!!
   sessions_list=$(tmux list-sessions -F "#S")
-  current_session="$(tmux display-message -p '#S')"
   sessions_count=$(echo "$sessions_list" | wc -l | sed -e 's/^[[:space:]]*//')
   preview_cmd="echo {} | sed 's/:.*$//' | xargs -I{} tmux capture-pane -ep -t {}"
 
   # -- do certain things based upon only one active session
   if [[ $sessions_count == 1 ]]; then
     fzf_prompt_text=" create new session  "
-    fzf_header_text=""
   else
     fzf_prompt_text=" new or existing session  "
-    fzf_header_text="ﯲ active: $(tput sitm)$(tput setaf 5)$current_session$(tput sgr 0)"
   fi
 
   # -- get our session from fzf (grabs the the active pane from each session as preview, too!)
-  try_session "$(echo "$sessions_list" | $fzf_cmd --reverse --border=none --padding="1" --preview-window="hidden" --prompt="$fzf_prompt_text" --header="$fzf_header_text" --bind="enter:replace-query+print-query" --preview="$preview_cmd")"
+  try_session "$(echo "$sessions_list" | fzf --reverse --border=none --padding="1" --preview-window="hidden" --prompt="$fzf_prompt_text" --bind="enter:replace-query+print-query" --preview="$preview_cmd")"
 }
 
 # -- if we pass in a session_name: attach/switch to it or, create new session
 if [[ -n "$session_name" ]]; then
   try_session "$session_name"
   exit 0
-else
+fi
+
+if [[ -z "$session" && -z "$cmd" ]]; then
   fuzzy_find
 fi
+
+fuzzy_find

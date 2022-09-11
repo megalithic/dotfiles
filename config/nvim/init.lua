@@ -6,7 +6,9 @@ if impatient_ok then impatient.enable_profile() end
 
 -- [ settings ] ----------------------------------------------------------------
 
-vim.g.term_plugin = true
+vim.g.use_packer = true
+vim.g.disable_plugins = false
+vim.g.use_term_plugin = true
 
 -- [ loaders ] -----------------------------------------------------------------
 
@@ -19,4 +21,9 @@ end
 
 R("mega.globals")
 R("mega.options")
-R("mega.plugins").config()
+
+if vim.g.use_packer then
+  R("mega.plugins.packer")
+else
+  R("mega.plugins").config()
+end

@@ -5,6 +5,9 @@
 -- https://github.com/akinsho/dotfiles/blob/main/.config/nvim/plugin/autocommands.lua
 --
 
+if not mega then return end
+if vim.g.disable_plugins then return end
+
 local vcmd = vim.cmd
 local fn = vim.fn
 local api = vim.api

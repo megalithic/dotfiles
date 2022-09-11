@@ -1,6 +1,9 @@
 -- I've taken various aspects of my statusline from the following amazing devs:
 -- @akinsho, @echasnovski, @lukas-reineke, @kristijanhusak
 
+if not mega then return end
+if vim.g.disable_plugins then return end
+
 local M = {}
 
 local fn = vim.fn

@@ -65,10 +65,10 @@ local PKGS = {
   "b0o/schemastore.nvim",
   { "kevinhwang91/nvim-bqf" },
   { url = "https://gitlab.com/yorickpeterse/nvim-pqf" },
-  "mhartington/formatter.nvim",
   "antoinemadec/FixCursorHold.nvim", -- Needed while issue https://github.com/neovim/neovim/issues/12587 is still open
   "ojroques/nvim-bufdel",
   "abecodes/tabout.nvim",
+  "mhartington/formatter.nvim",
   "mrshmllow/document-color.nvim",
   ------------------------------------------------------------------------------
   -- (TS/treesitter) --
@@ -132,8 +132,8 @@ local PKGS = {
   "editorconfig/editorconfig-vim",
   { "zenbro/mirror.vim", opt = true },
   "akinsho/toggleterm.nvim",
-  "rmagatti/auto-session",
-  "ahmedkhalf/project.nvim",
+  -- "rmagatti/auto-session",
+  -- "ahmedkhalf/project.nvim",
   -- "mg979/vim-visual-multi",
   "natecraddock/sessions.nvim",
   "natecraddock/workspaces.nvim",
@@ -195,7 +195,7 @@ local PKGS = {
   "antew/vim-elm-analyse",
   "tjdevries/nlua.nvim",
   "norcalli/nvim.lua",
-  "euclidianace/betterlua.vim",
+  -- "euclidianace/betterlua.vim",
   "folke/lua-dev.nvim",
   "andrejlevkovitch/vim-lua-format",
   "milisims/nvim-luaref",
@@ -293,7 +293,10 @@ end
 -- [ plugin configs ] -----------------------------------------------------------
 
 function M.config()
-  if pcall(require, "paq") then vim.opt.runtimepath:remove("~/.local/share/nvim/site/pack/packer") end
+  if not vim.g.use_packer then
+    -- vim.opt.runtimepath:remove("~/.local/share/nvim/site/pack/*/start")
+    vim.opt.runtimepath:remove("~/.local/share/nvim/site/pack/packer")
+  end
 
   vim.cmd("packadd cfilter")
 

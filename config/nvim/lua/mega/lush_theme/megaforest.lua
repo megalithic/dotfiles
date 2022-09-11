@@ -438,7 +438,7 @@ return lush(function()
     TSVariable({ Fg }),
     TSVariableBuiltin({ PurpleItalic }),
     TSComment({ fg = light_grey, gui = "italic" }),
-    TSError({ fg = "NONE", bg = "NONE", gui = "undercurl", sp = red }), -- ErrorText
+    TSError({ gui = "undercurl", sp = red }), -- ErrorText
     -- highlight FIXME/TODO/NOTE/REF: comments
     commentTSWarning({ fg = orange, gui = "bold" }),
     commentTSDanger({ bg = red, fg = bg_dark, gui = "bold" }),

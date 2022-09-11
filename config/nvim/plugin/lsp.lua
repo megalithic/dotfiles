@@ -1,3 +1,6 @@
+if not mega then return end
+if vim.g.disable_plugins then return end
+
 local fn = vim.fn
 local api = vim.api
 local lsp = vim.lsp

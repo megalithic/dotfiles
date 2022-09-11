@@ -1,3 +1,6 @@
+if not mega then return end
+if vim.g.disable_plugins then return end
+
 local fmt = string.format
 local api = vim.api
 local fn = vim.fn
@@ -44,7 +47,7 @@ local default_opts = {
     split = "rightbelow sbuffer",
     dimension = "height",
     dim = "vim.api.nvim_win_set_height",
-    size = 25,
+    size = 20,
     res = "resize",
     winc = "J",
   },
@@ -410,7 +413,7 @@ mega.command("TermNode", function()
   })
 end)
 
-if vim.g.term_plugin then
+if vim.g.use_term_plugin then
   nnoremap("<leader>tt", "<cmd>T<cr>", "term")
   nnoremap("<leader>tf", "<cmd>T direction=float<cr>", "term (float)")
   nnoremap("<leader>tv", "<cmd>T direction=vertical<cr>", "term (vertical)")

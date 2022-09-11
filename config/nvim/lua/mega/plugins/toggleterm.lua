@@ -59,8 +59,7 @@ return function()
   mega.command("Btop", function() btop:toggle() end)
 
   local has_wk, wk = mega.require("which-key")
-  if has_wk and not vim.g.term_plugin then
-    P("shouldn't load")
+  if has_wk and not vim.g.use_term_plugin then
     wk.register({
       t = {
         name = "terminal",

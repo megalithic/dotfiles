@@ -668,7 +668,7 @@ end
 
 ---Reload lua modules
 ---@param path string
----@param recursive string
+---@param recursive boolean
 function mega.invalidate(path, recursive)
   if recursive then
     for key, value in pairs(package.loaded) do

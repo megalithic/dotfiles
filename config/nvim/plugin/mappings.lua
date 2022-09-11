@@ -23,6 +23,9 @@
 -- https://github.com/mbriggs/nvim/blob/main/lua/mb/which-key.lua
 -- https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/whichkey.lua
 
+if not mega then return end
+if vim.g.disable_plugins then return end
+
 local fn = vim.fn
 local exec = mega.exec
 -- NOTE: all convenience mode mappers are on the _G global; so no local assigns needed

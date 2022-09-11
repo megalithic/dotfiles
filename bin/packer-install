@@ -41,7 +41,8 @@ install_plugins() {
 
 sync_plugins() {
   # nvim --headless -u NONE -c 'lua require("mega.plugins.packer").sync_all()' -c ':quit'
-  nvim +PackerCompile +PackerSync
+  # nvim +PackerCompile +PackerSync
+  PACKER_NON_INTERACTIVE=true nvim --headless -c 'autocmd User PackerComplete quitall' -c 'PackerSync'
 }
 
 do_install() {
