@@ -353,6 +353,9 @@ export PROMPT='$(__prompt_eval)'
 export RPROMPT='%F{yellow}%{$__DOTS[ITALIC_ON]%}${cmd_exec_time}%{$__DOTS[ITALIC_OFF]%}%f %F{240}%*%f'
 # Spell checking & auto correction prompt
 export SPROMPT="zsh: correct %F{red}'%R'%f to %F{blue}'%r'%f [%B%Uy%u%bes, %B%Un%u%bo, %B%Ue%u%bdit, %B%Ua%u%bbort]?"
+# To capturing errors arising from set -x in a script
+# @REF: https://www.reddit.com/r/bash/comments/xcejrb/comment/io52img/?utm_source=share&utm_medium=web2x&context=3
+export PS4='${BASH_SOURCE[0]}:$LINENO '
 
 # -- EXECUTION TIME ------------------------------------------------------------
 # inspired by https://github.com/sindresorhus/pure/blob/81dd496eb380aa051494f93fd99322ec796ec4c2/pure.zsh#L47
