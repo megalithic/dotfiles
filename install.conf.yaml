@@ -16,6 +16,7 @@
     link:
       create: true
       relink: true
+      force: true
     shell:
       stdout: true
       stderr: true
@@ -48,6 +49,7 @@
     ~/:
       force: true
     ~/.config:
+      force: true
       recursive: true
 
 - shell:

@@ -9,6 +9,10 @@ if impatient_ok then impatient.enable_profile() end
 vim.g.use_packer = false
 vim.g.disable_plugins = false
 vim.g.use_term_plugin = true
+vim.g.colorscheme = "megaforest"
+vim.g.mapleader = ","
+vim.g.maplocalleader = " "
+vim.g.default_colorcolumn = "81"
 
 -- [ loaders ] -----------------------------------------------------------------
 

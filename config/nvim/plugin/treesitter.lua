@@ -1,3 +1,4 @@
+-- if true then return end
 if not mega then return end
 if vim.g.disable_plugins then return end
 
@@ -70,14 +71,6 @@ require("nvim-treesitter.configs").setup({
   },
   indent = { enable = true },
   autotag = { enable = true, filetype = { "html", "xml", "heex" } },
-  tree_docs = {
-    enable = true,
-    keymaps = {
-      doc_node_at_cursor = "gdd",
-      doc_all_in_range = "gdd",
-      edit_doc_at_cursor = "gde",
-    },
-  },
   context_commentstring = {
     enable = true,
     enable_autocmd = false,
@@ -94,7 +87,7 @@ require("nvim-treesitter.configs").setup({
     enable = true,
     disable = { "json", "jsonc", "html" },
     extended_mode = true, -- Highlight also non-parentheses delimiters, boolean or table: lang -> boolean
-    max_file_lines = nil, -- Do not enable for files with more than 1000 lines, int
+    max_file_lines = 2000, -- Do not enable for files with more than 1000 lines, int
   },
   incremental_selection = {
     enable = true,
@@ -133,7 +126,8 @@ require("nvim-treesitter.configs").setup({
     },
   },
 })
-mega.conf("nvim-ts-autotag", {
+
+require("nvim-ts-autotag").setup({
   filetypes = {
     "html",
     "xml",

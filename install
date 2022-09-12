@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-# set -x # turns on tracing! thanks @ryansch
+set -x # turns on tracing! thanks @ryansch
 
 # Check script is being executed appropriatly
 if [[ -z ${BASH_SOURCE} ]]; then

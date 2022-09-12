@@ -26,13 +26,14 @@ local PKGS = {
   "lukas-reineke/virt-column.nvim",
   "MunifTanjim/nui.nvim",
   "folke/which-key.nvim",
-  { "echasnovski/mini.nvim" },
+  "echasnovski/mini.nvim",
   "phaazon/hop.nvim",
   "jghauser/fold-cycle.nvim",
   "anuvyklack/hydra.nvim",
   "rcarriga/nvim-notify",
   "nanozuki/tabby.nvim",
   "levouh/tint.nvim",
+  "lukas-reineke/indent-blankline.nvim",
   ------------------------------------------------------------------------------
   -- (LSP/completion) --
   "neovim/nvim-lspconfig",
@@ -42,7 +43,6 @@ local PKGS = {
   "nvim-lua/popup.nvim",
   { "hrsh7th/nvim-cmp", branch = "main" },
   "hrsh7th/cmp-nvim-lsp",
-  -- "hrsh7th/cmp-nvim-lua",
   "saadparwaiz1/cmp_luasnip",
   "hrsh7th/cmp-cmdline",
   "dmitmel/cmp-cmdline-history",
@@ -52,12 +52,10 @@ local PKGS = {
   "f3fora/cmp-spell",
   "hrsh7th/cmp-nvim-lsp-document-symbol",
   "hrsh7th/cmp-nvim-lsp-signature-help",
-  "ray-x/cmp-treesitter",
   "rcarriga/cmp-dap",
   "L3MON4D3/LuaSnip",
   "rafamadriz/friendly-snippets",
   "ray-x/lsp_signature.nvim",
-  -- "Issafalcon/lsp-overloads.nvim",
   "lewis6991/hover.nvim",
   "nvim-lua/lsp_extensions.nvim",
   "jose-elias-alvarez/nvim-lsp-ts-utils",
@@ -76,24 +74,22 @@ local PKGS = {
     "nvim-treesitter/nvim-treesitter",
     run = function() vim.cmd("TSUpdate") end,
   },
-  { "nvim-treesitter/playground" },
+  "nvim-treesitter/playground",
   -- "nvim-treesitter/nvim-treesitter-refactor",
   -- "nvim-treesitter/nvim-treesitter-textobjects",
-  "nvim-treesitter/nvim-tree-docs",
   "JoosepAlviste/nvim-ts-context-commentstring",
   "windwp/nvim-ts-autotag",
   "p00f/nvim-ts-rainbow",
   "mfussenegger/nvim-treehopper",
   "RRethy/nvim-treesitter-textsubjects",
   "David-Kunz/treesitter-unit",
-  { "nvim-treesitter/nvim-treesitter-context" },
+  "nvim-treesitter/nvim-treesitter-context",
   ------------------------------------------------------------------------------
   -- (FZF/telescope/file/document navigation) --
   "nvim-neo-tree/neo-tree.nvim",
-  { "mrbjarksen/neo-tree-diagnostics.nvim" },
-  { "s1n7ax/nvim-window-picker" },
-
-  { "nvim-telescope/telescope.nvim" },
+  "mrbjarksen/neo-tree-diagnostics.nvim",
+  "s1n7ax/nvim-window-picker",
+  "nvim-telescope/telescope.nvim",
   "nvim-telescope/telescope-file-browser.nvim",
   "natecraddock/telescope-zf-native.nvim",
   "nvim-telescope/telescope-live-grep-args.nvim",
@@ -106,11 +102,10 @@ local PKGS = {
   "mattn/webapi-vim",
   "akinsho/git-conflict.nvim",
   "itchyny/vim-gitbranch",
-  "rhysd/git-messenger.vim",
   "tpope/vim-fugitive",
-  { "lewis6991/gitsigns.nvim" }, -- conf via autocmd
-  { "ruifm/gitlinker.nvim" },
-  { "ruanyl/vim-gh-line" },
+  "lewis6991/gitsigns.nvim",
+  "ruifm/gitlinker.nvim",
+  "ruanyl/vim-gh-line",
   ------------------------------------------------------------------------------
   -- (DEV, development, et al) --
   -- "rgroli/other.nvim",
@@ -189,13 +184,12 @@ local PKGS = {
   { "mickael-menu/zk-nvim" },
   -- @trial phaazon/mind.nvim
   -- "renerocksai/telekasten.nvim",
-  "elixir-editors/vim-elixir",
+  -- "elixir-editors/vim-elixir",
   "tpope/vim-rails",
   "ngscheurich/edeex.nvim",
   "antew/vim-elm-analyse",
   "tjdevries/nlua.nvim",
   "norcalli/nvim.lua",
-  -- "euclidianace/betterlua.vim",
   "folke/lua-dev.nvim",
   "andrejlevkovitch/vim-lua-format",
   "milisims/nvim-luaref",
@@ -324,6 +318,43 @@ function M.config()
   })
 
   conf("startuptime", function() vim.g.startuptime_tries = 15 end)
+
+  conf("indent_blankline", {
+    char = "│", -- ┆ ┊ 
+    show_foldtext = false,
+    context_char = "▎",
+    char_priority = 12,
+    show_current_context = true,
+    show_current_context_start = true,
+    show_current_context_start_on_current_line = false,
+    show_first_indent_level = true,
+    filetype_exclude = {
+      "dbout",
+      "neo-tree-popup",
+      "dap-repl",
+      "startify",
+      "dashboard",
+      "log",
+      "fugitive",
+      "gitcommit",
+      "packer",
+      "vimwiki",
+      "markdown",
+      "txt",
+      "vista",
+      "help",
+      "NvimTree",
+      "git",
+      "TelescopePrompt",
+      "undotree",
+      "flutterToolsOutline",
+      "norg",
+      "org",
+      "orgagenda",
+      "", -- for all buffers without a file type
+    },
+    buftype_exclude = { "terminal", "nofile" },
+  })
 
   conf("Comment", {
     ignore = "^$", -- ignores empty lines
@@ -587,13 +618,6 @@ function M.config()
 
   -- conf("hclipboard", function() require("hclipboard").start() end)
 
-  conf("git-messenger", function()
-    vim.g.git_messenger_floating_win_opts = { border = mega.get_border() }
-    vim.g.git_messenger_no_default_mappings = true
-    vim.g.git_messenger_max_popup_width = 100
-    vim.g.git_messenger_max_popup_height = 100
-  end)
-
   conf("numb", {})
 
   conf("bufdel", {
@@ -629,7 +653,7 @@ function M.config()
         require("notify.render")[style](...)
       end,
     })
-    vim.notify = notify
+    -- vim.notify = notify
   end)
 
   conf("autolist", {})

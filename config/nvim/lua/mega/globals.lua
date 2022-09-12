@@ -31,11 +31,6 @@ local function get_hostname()
   return hostname
 end
 
-vim.g.mapleader = "," -- remap leader to `,`
-vim.g.maplocalleader = " " -- remap localleader to `<Space>`
-vim.g.colorscheme = "megaforest"
-vim.g.default_colorcolumn = "81" -- global var, mark column 81
-
 vim.g.os = vim.loop.os_uname().sysname
 vim.g.is_macos = vim.g.os == "Darwin"
 vim.g.is_linux = vim.g.os == "Linux"

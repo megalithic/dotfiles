@@ -418,13 +418,13 @@ augroup("Windows", {
   },
 })
 
-augroup("Mini", {
-  {
-    event = { "FileType" },
-    command = function()
-      vim.cmd(
-        "if index(['help', 'startify', 'dashboard', 'packer', 'neogitstatus', 'NvimTree', 'neo-tree', 'Trouble', 'DirBuf', 'markdown', 'megaterm'], &ft) != -1 || index(['nofile', 'terminal', 'megaterm', 'lsp-installer', 'lspinfo', 'markdown'], &bt) != -1 | let b:miniindentscope_disable=v:true | endif"
-      )
-    end,
-  },
-})
+-- augroup("Mini", {
+--   {
+--     event = { "FileType" },
+--     command = function()
+--       vim.cmd(
+--         "if index(['help', 'startify', 'dashboard', 'packer', 'neogitstatus', 'NvimTree', 'neo-tree', 'Trouble', 'DirBuf', 'markdown', 'megaterm'], &ft) != -1 || index(['nofile', 'terminal', 'megaterm', 'lsp-installer', 'lspinfo', 'markdown'], &bt) != -1 | let b:miniindentscope_disable=v:true | endif"
+--       )
+--     end,
+--   },
+-- })

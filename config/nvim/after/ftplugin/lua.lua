@@ -1,6 +1,8 @@
 -- FIXME: does this need to be moved to after/ftplugin/lua.lua instead?
 -- REF: https://github.com/akinsho/dotfiles/commit/2b552db145205d66acf6e8eac56c2130496f5e60
 
+if true then return end
+
 local fmt = string.format
 local fn = vim.fn
 
