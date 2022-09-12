@@ -12,13 +12,15 @@ local conf = require("mega.globals").conf
 -- vim.opt.runtimepath:append '~/path/to/your/plugin'
 
 local PKGS = {
+  -- ( Core ) ------------------------------------------------------------------
   "savq/paq-nvim",
-  ------------------------------------------------------------------------------
-  -- (profiling/speed improvements) --
   "dstein64/vim-startuptime",
   "lewis6991/impatient.nvim",
-  ------------------------------------------------------------------------------
-  -- (UI/appearance/visuals) --
+  "nvim-lua/plenary.nvim",
+  "nvim-lua/popup.nvim",
+  "antoinemadec/FixCursorHold.nvim", -- @REF: https://github.com/neovim/neovim/issues/12587
+
+  -- ( UI ) --------------------------------------------------------------------
   "rktjmp/lush.nvim",
   "NvChad/nvim-colorizer.lua",
   "dm1try/golden_size",
@@ -26,24 +28,24 @@ local PKGS = {
   "lukas-reineke/virt-column.nvim",
   "MunifTanjim/nui.nvim",
   "folke/which-key.nvim",
-  -- "echasnovski/mini.nvim",
-  "phaazon/hop.nvim",
-  -- "ggandor/leap-ast.nvim",
-  -- "ggandor/leap.nvim",
-  -- "ggandor/flit.nvim",
-  "jghauser/fold-cycle.nvim",
   "anuvyklack/hydra.nvim",
   "rcarriga/nvim-notify",
   "nanozuki/tabby.nvim",
   "levouh/tint.nvim",
   "lukas-reineke/indent-blankline.nvim",
-  ------------------------------------------------------------------------------
-  -- (LSP/completion) --
+  "mrshmllow/document-color.nvim",
+
+  -- ( LSP ) -------------------------------------------------------------------
   "neovim/nvim-lspconfig",
   "williamboman/mason.nvim",
   "williamboman/mason-lspconfig.nvim",
-  "nvim-lua/plenary.nvim",
-  "nvim-lua/popup.nvim",
+  "ray-x/lsp_signature.nvim",
+  "nvim-lua/lsp_extensions.nvim",
+  "jose-elias-alvarez/nvim-lsp-ts-utils",
+  "jose-elias-alvarez/null-ls.nvim",
+  "b0o/schemastore.nvim",
+
+  -- ( Completion ) ------------------------------------------------------------
   { "hrsh7th/nvim-cmp", branch = "main" },
   "hrsh7th/cmp-nvim-lsp",
   "saadparwaiz1/cmp_luasnip",
@@ -58,28 +60,10 @@ local PKGS = {
   "rcarriga/cmp-dap",
   "L3MON4D3/LuaSnip",
   "rafamadriz/friendly-snippets",
-  "ray-x/lsp_signature.nvim",
-  "lewis6991/hover.nvim",
-  "nvim-lua/lsp_extensions.nvim",
-  "jose-elias-alvarez/nvim-lsp-ts-utils",
-  "jose-elias-alvarez/null-ls.nvim",
-  "b0o/schemastore.nvim",
-  { "kevinhwang91/nvim-bqf" },
-  { url = "https://gitlab.com/yorickpeterse/nvim-pqf" },
-  "antoinemadec/FixCursorHold.nvim", -- Needed while issue https://github.com/neovim/neovim/issues/12587 is still open
-  "ojroques/nvim-bufdel",
-  "abecodes/tabout.nvim",
-  "mhartington/formatter.nvim",
-  "mrshmllow/document-color.nvim",
-  ------------------------------------------------------------------------------
-  -- (TS/treesitter) --
-  {
-    "nvim-treesitter/nvim-treesitter",
-    run = function() vim.cmd("TSUpdate") end,
-  },
+
+  -- ( Treesitter ) ------------------------------------------------------------
+  { "nvim-treesitter/nvim-treesitter", run = function() vim.cmd("TSUpdate") end },
   "nvim-treesitter/playground",
-  -- "nvim-treesitter/nvim-treesitter-refactor",
-  -- "nvim-treesitter/nvim-treesitter-textobjects",
   "JoosepAlviste/nvim-ts-context-commentstring",
   "windwp/nvim-ts-autotag",
   "p00f/nvim-ts-rainbow",
@@ -87,20 +71,28 @@ local PKGS = {
   "RRethy/nvim-treesitter-textsubjects",
   "David-Kunz/treesitter-unit",
   "nvim-treesitter/nvim-treesitter-context",
-  ------------------------------------------------------------------------------
-  -- (FZF/telescope/file/document navigation) --
+
+  -- ( Navigation ) ------------------------------------------------------------
   "nvim-neo-tree/neo-tree.nvim",
   "mrbjarksen/neo-tree-diagnostics.nvim",
   "s1n7ax/nvim-window-picker",
+  "phaazon/hop.nvim",
+  "kevinhwang91/nvim-bqf",
+  { url = "https://gitlab.com/yorickpeterse/nvim-pqf" },
+  -- "echasnovski/mini.nvim",
+  -- "ggandor/leap-ast.nvim",
+  -- "ggandor/leap.nvim",
+  -- "ggandor/flit.nvim",
+  -- "jghauser/fold-cycle.nvim",
+
+  -- ( Telescope ) -------------------------------------------------------------
   "nvim-telescope/telescope.nvim",
   "nvim-telescope/telescope-file-browser.nvim",
   "natecraddock/telescope-zf-native.nvim",
   "nvim-telescope/telescope-live-grep-args.nvim",
   "benfowler/telescope-luasnip.nvim",
-  -- "windwp/nvim-spectre",
-  ------------------------------------------------------------------------------
-  -- (GIT) --
-  -- {"keith/gist.vim", run = "chmod -HR 0600 ~/.netrc"}, -- TODO: find lua replacement (i don't want python)
+
+  -- ( Git ) -------------------------------------------------------------------
   "TimUntersberger/neogit",
   "mattn/webapi-vim",
   "akinsho/git-conflict.nvim",
@@ -109,111 +101,102 @@ local PKGS = {
   "lewis6991/gitsigns.nvim",
   "ruifm/gitlinker.nvim",
   "ruanyl/vim-gh-line",
-  ------------------------------------------------------------------------------
-  -- (DEV, development, et al) --
-  -- "rgroli/other.nvim",
-  -- "glepnir/template.nvim",
+
+  -- ( Testing/Debugging ) -----------------------------------------------------
   "tpope/vim-projectionist",
-  -- @trial "tjdevries/edit_alternate.vim", -- REF: https://github.com/tjdevries/config_manager/blob/master/xdg_config/nvim/lua/tj/plugins.lua#L467-L480
   "vim-test/vim-test",
-  "mfussenegger/nvim-dap", -- REF: https://github.com/dbernheisel/dotfiles/blob/master/.config/nvim/lua/dbern/test.lua
+  "mfussenegger/nvim-dap",
   "rcarriga/nvim-dap-ui",
   "theHamsta/nvim-dap-virtual-text",
   "jbyuki/one-small-step-for-vimkind",
   "suketa/nvim-dap-ruby",
   "mxsdev/nvim-dap-vscode-js",
-  -- { "microsoft/vscode-js-debug", opt = true, run = "npm install --legacy-peer-deps; npm run-script compile" },
   { "microsoft/vscode-react-native", opt = true },
+  -- { "microsoft/vscode-js-debug", opt = true, run = "npm install --legacy-peer-deps; npm run-script compile" },
   -- { "sultanahamer/nvim-dap-reactnative", opt = true },
+
+  -- ( Development ) -----------------------------------------------------------
   "tpope/vim-ragtag",
-  -- @trial { "mrjones2014/dash.nvim", run = "make install", opt = true },
   "editorconfig/editorconfig-vim",
   { "zenbro/mirror.vim", opt = true },
   "akinsho/toggleterm.nvim",
-  -- "rmagatti/auto-session",
-  -- "ahmedkhalf/project.nvim",
   -- "mg979/vim-visual-multi",
   "natecraddock/sessions.nvim",
   "natecraddock/workspaces.nvim",
   "megalithic/habitats.nvim",
-  -- "mbbill/undotree",
-  -- "danymat/neogen",
-  -- "smjonas/live-command.nvim",
-  ------------------------------------------------------------------------------
-  -- (REST) --
   "nacro90/numb.nvim",
   "andymass/vim-matchup",
   "windwp/nvim-autopairs",
   "alvan/vim-closetag",
-  { "numToStr/Comment.nvim" },
-  -- "tpope/vim-abolish",
+  "numToStr/Comment.nvim",
+  "kylechui/nvim-surround",
   "tpope/vim-eunuch",
   "tpope/vim-abolish",
   "tpope/vim-rhubarb",
   "tpope/vim-repeat",
-  -- "tpope/vim-surround",
   "tpope/vim-unimpaired",
   "tpope/vim-apathy",
-  "kylechui/nvim-surround",
-  "lambdalisue/suda.vim",
+  "tpope/vim-scriptease",
+  -- "tpope/vim-abolish",
+  -- "lambdalisue/suda.vim",
   "EinfachToll/DidYouMean",
   "wsdjeg/vim-fetch", -- vim path/to/file.ext:12:3
-  "ConradIrwin/vim-bracketed-paste", -- FIXME: delete?
-  -- "kevinhwang91/nvim-hclipboard", -- FIXME: throwing errors in weird situations
-  -- :Messages <- view messages in quickfix list
-  -- :Verbose  <- view verbose output in preview window.
-  -- :Time     <- measure how long it takes to run some stuff.
-  "tpope/vim-scriptease",
-  -- "aca/wezterm.nvim",
-  { "knubie/vim-kitty-navigator" },
+  "aca/wezterm.nvim",
+  "knubie/vim-kitty-navigator",
   -- @trial: "jghauser/kitty-runner.nvim",
-  "RRethy/nvim-align",
   "junegunn/vim-easy-align",
-  ------------------------------------------------------------------------------
-  -- (LANGS, syntax, et al) --
+
+  -- ( Notes/Docs ) ------------------------------------------------------------
   "ixru/nvim-markdown",
-  -- "rhysd/vim-gfm-syntax",
   "gaoDean/autolist.nvim",
+  "lukas-reineke/headlines.nvim",
   { "iamcco/markdown-preview.nvim", run = "cd app && yarn install", opt = true },
-  "ellisonleao/glow.nvim",
+  "mickael-menu/zk-nvim",
+  -- "ellisonleao/glow.nvim",
   -- "dkarter/bullets.vim",
   -- "dhruvasagar/vim-table-mode",
-  "lukas-reineke/headlines.nvim",
+  -- "rhysd/vim-gfm-syntax",
   -- @trial https://github.com/ekickx/clipboard-image.nvim
   -- @trial https://github.com/preservim/vim-wordy
   -- @trial https://github.com/jghauser/follow-md-links.nvim
   -- @trial https://github.com/jakewvincent/mkdnflow.nvim
   -- @trial https://github.com/jubnzv/mdeval.nvim
-  { "mickael-menu/zk-nvim" },
   -- @trial phaazon/mind.nvim
   -- "renerocksai/telekasten.nvim",
+
+  -- ( Languages/Syntax ) ------------------------------------------------------
   -- "elixir-editors/vim-elixir",
-  "tpope/vim-rails",
-  "ngscheurich/edeex.nvim",
-  "antew/vim-elm-analyse",
-  "tjdevries/nlua.nvim",
-  "norcalli/nvim.lua",
-  "folke/lua-dev.nvim",
-  "andrejlevkovitch/vim-lua-format",
-  "milisims/nvim-luaref",
-  "ii14/emmylua-nvim",
-  "MaxMEllon/vim-jsx-pretty",
-  "heavenshell/vim-jsdoc",
-  "jxnblk/vim-mdx-js",
-  "kchmck/vim-coffee-script",
-  "briancollins/vim-jst",
-  "skwp/vim-html-escape",
-  "pedrohdz/vim-yaml-folds",
-  "avakhov/vim-yaml",
-  "chr4/nginx.vim",
-  "nanotee/luv-vimdocs",
-  "fladson/vim-kitty",
-  "SirJson/fzf-gitignore",
-  "axelvc/template-string.nvim",
+  -- "tpope/vim-rails",
+  -- "ngscheurich/edeex.nvim",
+  -- "antew/vim-elm-analyse",
+  -- "tjdevries/nlua.nvim",
+  -- "norcalli/nvim.lua",
+  -- "folke/lua-dev.nvim",
+  -- "andrejlevkovitch/vim-lua-format",
+  -- "milisims/nvim-luaref",
+  -- "ii14/emmylua-nvim",
+  -- "MaxMEllon/vim-jsx-pretty",
+  -- "heavenshell/vim-jsdoc",
+  -- "jxnblk/vim-mdx-js",
+  -- "kchmck/vim-coffee-script",
+  -- "briancollins/vim-jst",
+  -- "skwp/vim-html-escape",
+  -- "pedrohdz/vim-yaml-folds",
+  -- "avakhov/vim-yaml",
+  -- "chr4/nginx.vim",
+  -- "nanotee/luv-vimdocs",
+  -- "fladson/vim-kitty",
+  -- "SirJson/fzf-gitignore",
+  -- "axelvc/template-string.nvim",
 
   -- @trial:
   -- napmn/react-extract.nvim
   -- sultanahamer/nvim-dap-reactnative
+
+  -- ( Misc ) ------------------------------------------------------------------
+  "ojroques/nvim-bufdel",
+  "abecodes/tabout.nvim",
+  "mhartington/formatter.nvim",
 }
 
 local M = {
@@ -416,13 +399,6 @@ function M.config()
   --   keymaps = { f = "f", F = "F", t = "t", T = "T" },
   -- })
 
-  -- REF: https://github.com/smjonas/live-command.nvim#gear-usage-and-customization
-  -- conf("live_command", {
-  --   commands = {
-  --     Norm = { cmd = "norm" },
-  --   },
-  -- })
-
   -- FIXME: this breaks my cursorline plugin :(
   -- conf("tint", function()
   --   require("tint").setup({
@@ -492,19 +468,12 @@ function M.config()
 
   conf("template-string", {})
 
-  -- FIXME:
-  --Error executing vim.schedule lua callback: /usr/local/share/nvim/runtime/lua/vim/lsp/util.lua:1569: Window was closed immediately
-  -- stack traceback:
-  --         [C]: in function 'nvim_open_win'
-  --         /usr/local/share/nvim/runtime/lua/vim/lsp/util.lua:1569: in function 'open_floating_preview'
-  --         ...paqs/start/lsp_signature.nvim/lua/lsp_signature/init.lua:471: in function 'handler'
-  --         /usr/local/share/nvim/runtime/lua/vim/lsp.lua:1241: in function ''
-  --         vim/_editor.lua: in function <vim/_editor.lua:0>
   conf("lsp_signature", {
     bind = true,
     fix_pos = false,
     auto_close_after = 15, -- close after 15 seconds
     hint_enable = false,
+    floating_window = true,
     handler_opts = { border = mega.get_border() },
     -- bind = true,
     -- always_trigger = false,
@@ -520,20 +489,6 @@ function M.config()
     -- },
     -- zindex = 99, -- Keep signature popup below the completion PUM
     -- toggle_key = "<C-k>",
-  })
-
-  conf("hover", {
-    init = function()
-      -- Require providers
-      require("hover.providers.lsp")
-      require("hover.providers.gh")
-      require("hover.providers.man")
-      require("hover.providers.dictionary")
-    end,
-    preview_opts = {
-      border = mega.get_border(),
-    },
-    title = true,
   })
 
   conf("vim-matchup", function()
@@ -562,7 +517,15 @@ function M.config()
   end)
 
   -- REF: https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/init.lua#L815-L832
-  conf("gitlinker", {})
+  conf("gitlinker", function()
+    local linker = require("gitlinker")
+    linker.setup({ mappings = "<localleader>gu" })
+    mega.nnoremap(
+      "<localleader>go",
+      function() linker.get_repo_url({ action_callback = require("gitlinker.actions").open_in_browser }) end,
+      "gitlinker: open in browser"
+    )
+  end)
 
   conf("vim-easy-align", function()
     -- n : interactive EasyAlign for a motion/text object (e.g. gaip)
@@ -597,18 +560,7 @@ function M.config()
     mega.nnoremap("<localleader>gc", function() neogit.open({ "commit" }) end)
     mega.nnoremap("<localleader>gl", neogit.popups.pull.create)
     mega.nnoremap("<localleader>gp", neogit.popups.push.create)
-
-    require("which-key").register({
-      ["<localleader>g"] = {
-        s = "neogit: open status buffer",
-        c = "neogit: open commit buffer",
-        l = "neogit: open pull popup",
-        p = "neogit: open push popup",
-      },
-    })
   end)
-
-  conf("fold-cycle", {})
 
   conf("pqf", {
     signs = {
@@ -619,8 +571,6 @@ function M.config()
     },
   })
 
-  -- conf("hclipboard", function() require("hclipboard").start() end)
-
   conf("numb", {})
 
   conf("bufdel", {
@@ -630,11 +580,6 @@ function M.config()
 
   conf("fzf_gitignore", function() vim.g.fzf_gitignore_no_maps = true end)
   conf("vim-kitty-navigator", { enabled = not vim.env.TMUX })
-
-  -- conf("neogen", function()
-  --   require("neogen").setup({ snippet_engine = "luasnip" })
-  --   mega.nnoremap("<localleader>cg", require("neogen").generate, "comment: generate")
-  -- end)
 
   conf("notify", function()
     local notify = require("notify")

@@ -7,27 +7,20 @@ if impatient_ok then impatient.enable_profile() end
 -- [ settings ] ----------------------------------------------------------------
 
 vim.g.disable_plugins = {
+  mappings = false,
   autocmds = false,
   megaline = false,
-  quickfix = false,
-  env = true,
-  lsp = false,
   treesitter = false,
-  mappings = false,
+  lsp = false,
+  term = false,
   cursorline = false,
   colorcolumn = false,
   numbers = false,
+  quickfix = false,
   folds = false,
-  term = false,
   tmux = false,
+  env = true,
 }
-
--- vim.g.disable_all_plugins = false
--- if vim.g.disable_all_plugins then
---   for plugin, _ in pairs(vim.g.disable_plugins) do
---     vim.g.disable_plugins[plugin] = true
---   end
--- end
 
 vim.g.use_packer = false
 vim.g.use_term_plugin = true

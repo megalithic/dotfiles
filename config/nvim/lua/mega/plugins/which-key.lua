@@ -141,7 +141,7 @@ return function()
         "gitsigns: blame current line",
       },
       h = {
-        name = "+gitsigns hunk",
+        name = "+hunks",
         s = { gs.stage_hunk, "stage" },
         u = { gs.undo_stage_hunk, "undo stage" },
         r = { gs.reset_hunk, "reset hunk" },
@@ -221,7 +221,16 @@ return function()
       name = "debugger",
     },
     ["<localleader>g"] = {
-      name = "gitsigns",
+      name = "git",
+      r = {
+        name = "gitsigns: reset hunk",
+      },
+      o = "gitlinker: open in browser",
+      u = "gitlinker: copy to clipboard",
+      s = "neogit: open status buffer",
+      c = "neogit: open commit buffer",
+      l = "neogit: open pull popup",
+      p = "neogit: open push popup",
     },
     c = {
       name = "git-conflict",

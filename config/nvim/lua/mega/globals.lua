@@ -275,7 +275,10 @@ function mega.conf(plugin_conf_name, opts)
   if enabled then
     if type(config) == "table" then
       local ok, loader = pcall(require, plugin_conf_name)
-      if not ok then return end
+      if not ok then
+        vim.notify(fmt("Loader %s not found.", plugin_conf_name), "ERROR")
+        return
+      end
 
       -- does it have a setup key to execute?
       if vim.tbl_get(loader, "setup") ~= nil then

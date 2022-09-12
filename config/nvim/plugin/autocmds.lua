@@ -74,6 +74,7 @@ do
     "log",
     "tsplayground",
     "startuptime",
+    "preview",
     "qf",
     "man",
     "terminal",
