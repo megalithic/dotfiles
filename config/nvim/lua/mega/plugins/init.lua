@@ -26,8 +26,11 @@ local PKGS = {
   "lukas-reineke/virt-column.nvim",
   "MunifTanjim/nui.nvim",
   "folke/which-key.nvim",
-  "echasnovski/mini.nvim",
+  -- "echasnovski/mini.nvim",
   "phaazon/hop.nvim",
+  -- "ggandor/leap-ast.nvim",
+  -- "ggandor/leap.nvim",
+  -- "ggandor/flit.nvim",
   "jghauser/fold-cycle.nvim",
   "anuvyklack/hydra.nvim",
   "rcarriga/nvim-notify",
@@ -303,6 +306,7 @@ function M.config()
   conf("luasnip", { config = "luasnip" })
   conf("projectionist", { config = "projectionist" })
   conf("vim-test", { config = "vim-test" })
+  conf("hop", { config = "hop" })
   -- conf("mini", { config = "mini" })
   conf("zk", { config = "zk" })
   conf("dap", { config = "dap" })
@@ -405,20 +409,18 @@ function M.config()
     })
   end)
 
+  -- conf("flit", {
+  --   multiline = false,
+  --   eager_ops = true, -- jump right to the ([count]th) target (no labels)
+  --   keymaps = { f = "f", F = "F", t = "t", T = "T" },
+  -- })
+
   -- REF: https://github.com/smjonas/live-command.nvim#gear-usage-and-customization
   -- conf("live_command", {
   --   commands = {
   --     Norm = { cmd = "norm" },
   --   },
   -- })
-
-  conf("hop", function()
-    local hop = require("hop")
-
-    -- remove h,j,k,l from hops list of keys
-    hop.setup({ keys = "etovxqpdygfbzcisuran" })
-    mega.nnoremap("s", function() hop.hint_char2({ multi_windows = false }) end)
-  end)
 
   -- FIXME: this breaks my cursorline plugin :(
   -- conf("tint", function()
@@ -653,7 +655,7 @@ function M.config()
         require("notify.render")[style](...)
       end,
     })
-    -- vim.notify = notify
+    vim.notify = notify
   end)
 
   conf("autolist", {})

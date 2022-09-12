@@ -8,7 +8,7 @@ _G.fmt = string.format
 _G.logger = require("mega.logger")
 _G.mega = mega
   or {
-    functions = {},
+    fn = {},
     dirs = {},
     mappings = {},
     term = {},

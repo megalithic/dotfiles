@@ -370,8 +370,8 @@ local function on_attach(client, bufnr)
   -- Live color highlighting; handy for tailwindcss
   -- HT: kabouzeid
   if client.server_capabilities.colorProvider then
-    -- require("mega.lsp.document_colors").buf_attach(bufnr, { single_column = true, col_count = 2 })
     if client.name == "tailwindcss" then
+      -- require("mega.lsp.document_colors").buf_attach(bufnr, { single_column = true, col_count = 2 })
       require("document-color").buf_attach(bufnr, { mode = "single" })
       do
         local ok, colorizer = pcall(require, "colorizer")

@@ -10,7 +10,7 @@ vim.g.disable_plugins = {
   autocmds = false,
   megaline = false,
   quickfix = false,
-  env = false,
+  env = true,
   lsp = false,
   treesitter = false,
   mappings = false,
@@ -21,6 +21,13 @@ vim.g.disable_plugins = {
   term = false,
   tmux = false,
 }
+
+-- vim.g.disable_all_plugins = false
+-- if vim.g.disable_all_plugins then
+--   for plugin, _ in pairs(vim.g.disable_plugins) do
+--     vim.g.disable_plugins[plugin] = true
+--   end
+-- end
 
 vim.g.use_packer = false
 vim.g.use_term_plugin = true

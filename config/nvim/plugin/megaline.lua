@@ -28,13 +28,13 @@ mega.augroup("megaline", {
     event = { "WinEnter", "BufEnter" },
     command = function()
       vim.g.vim_in_focus = true
-      vim.o.statusline = "%{%v:lua.__statusline()%}"
+      -- vim.o.statusline = "%{%v:lua.__statusline()%}"
     end,
   },
-  {
-    event = { "VimResized" },
-    command = function() vim.cmd("redrawstatus") end,
-  },
+  -- {
+  --   event = { "VimResized" },
+  --   command = function() vim.cmd("redrawstatus") end,
+  -- },
   {
     event = { "BufWritePre" },
     command = function()
