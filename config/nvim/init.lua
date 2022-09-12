@@ -6,7 +6,7 @@ if impatient_ok then impatient.enable_profile() end
 
 -- [ settings ] ----------------------------------------------------------------
 
-vim.g.use_packer = true
+vim.g.use_packer = false
 vim.g.disable_plugins = false
 vim.g.use_term_plugin = true
 

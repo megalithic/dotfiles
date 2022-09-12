@@ -8,11 +8,11 @@
 if not mega then return end
 if vim.g.disable_plugins then return end
 
+fmt = fmt or string.format
 local vcmd = vim.cmd
 local fn = vim.fn
 local api = vim.api
 local augroup = mega.augroup
-local fmt = string.format
 local contains = vim.tbl_contains
 
 do
@@ -228,11 +228,11 @@ augroup("Plugins/Paq", {
     buffer = 0,
     command = mega.open_plugin_url,
   },
-  {
-    event = { "User" },
-    pattern = { "PaqDoneSync" },
-    command = function() vim.cmd("Messages | Cfilter Paq") end,
-  },
+  -- {
+  --   event = { "User" },
+  --   pattern = { "PaqDoneSync" },
+  --   command = function() vim.cmd("Messages | Cfilter Paq") end,
+  -- },
 })
 
 augroup("YankHighlightedRegion", {

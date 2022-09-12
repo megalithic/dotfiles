@@ -340,8 +340,6 @@ cnoremap("<C-f>", [[getcmdpos() > strlen(getcmdline())? &cedit: "\<Lt>Right>"]],
 -- see :h cmdline-editing
 cnoremap("<Esc>b", [[<S-Left>]])
 cnoremap("<Esc>f", [[<S-Right>]])
--- Insert escaped '/' while inputting a search pattern
-cnoremap("/", [[getcmdtype() == "/" ? "\/" : "/"]], { expr = true })
 
 inoremap("<C-a>", "<Home>")
 inoremap("<C-e>", "<End>")

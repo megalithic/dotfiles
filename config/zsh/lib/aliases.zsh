@@ -449,6 +449,9 @@ if [[ $PLATFORM == "linux" ]]; then
 
   # REF: https://www.digitalocean.com/community/tutorials/how-to-list-and-delete-iptables-firewall-rules
   alias rules="sudo iptables -L -nv"
+
+  alias dsk='eval $(desk load)'
+  alias kitty="$HOME/.dotfiles/bin/kitty_remote"
 fi
 
 # macos / signing apps
@@ -459,4 +462,3 @@ alias sign="sudo codesign --force --deep --sign -"
 # handy things that iuse for work
 alias tmlaunch="~/.dotfiles/bin/tmux-launch"
 alias tmexpo="sh tmux-launch expo 'cd ~/code/outstand/mobile; expo start'"
-alias dsk='eval $(desk load)'

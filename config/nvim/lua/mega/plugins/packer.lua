@@ -21,7 +21,7 @@ require("packer").startup({
     use({ "lewis6991/impatient.nvim" })
     use({ "nvim-lua/plenary.nvim" })
     use({ "nvim-lua/popup.nvim" })
-    use({ "dstein64/vim-startuptime" })
+    use({ "dstein64/vim-startuptime", cmd = { "StartupTime" } })
     use({ "mattn/webapi-vim" })
     use({ "antoinemadec/FixCursorHold.nvim" }) -- Needed while issue https://github.com/neovim/neovim/issues/12587 is still open
 
@@ -384,6 +384,7 @@ require("packer").startup({
     },
     auto_clean = true,
     compile_on_sync = true,
+    max_jobs = vim.fn.has("win32") == 1 and 5 or nil,
     profile = {
       enable = true,
       threshold = 1,
