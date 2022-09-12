@@ -373,18 +373,9 @@ augroup("GitConflicts", {
       vim.cmd("LspStop")
       vim.cmd([[GitConflictListQf]]) -- | Telescope quickfix theme=get_ivy]])
 
-      require("which-key").register({
-        c = {
-          name = "git-conflict",
-          ["0"] = "Resolve with _None",
-          t = "Resolve with _Theirs",
-          o = "Resolve with _Ours",
-          b = "Resolve with _Both",
-          q = { "<cmd>GitConflictListQf<CR>", "Send conflicts to _Quickfix" },
-        },
-        ["[c"] = { "<cmd>GitConflictPrevConflict<CR>", "go to prev conflict" },
-        ["]c"] = { "<cmd>GitConflictNextConflict<CR>", "go to next conflict" },
-      })
+      mega.nnoremap("cq", "<cmd>GitConflictListQf<CR>", "send conflicts to qf")
+      mega.nnoremap("[c", "<cmd>GitConflictPrevConflict<CR>", "go to prev conflict")
+      mega.nnoremap("]c", "<cmd>GitConflictNextConflict<CR>", "go to next conflict")
     end,
   },
   {

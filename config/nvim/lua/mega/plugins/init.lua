@@ -297,6 +297,7 @@ function M.config()
 
   vim.cmd("packadd cfilter")
 
+  conf("which-key", { config = "which-key" })
   conf("golden_size", { config = "golden_size" })
   conf("gitsigns", { config = "gitsigns" })
   conf("telescope", { config = "telescope" })

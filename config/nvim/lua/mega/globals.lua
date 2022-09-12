@@ -171,6 +171,7 @@ end
 ---@param opts table?
 ---@return boolean, any
 function mega.require(module, opts)
+  -- P(fmt("module being required: %s", module))
   opts = opts or { silent = true }
   local ok, result = pcall(require, module)
   if not ok and not opts.silent then
@@ -360,8 +361,8 @@ local function mapper(mode, o)
     -- If the label is all that was passed in, set the opts automagically
     opts = type(opts) == "string" and { label = opts } or opts and vim.deepcopy(opts) or {}
     if opts.label or opts.desc then
-      local ok, wk = mega.require("which-key", { silent = true })
-      if ok then wk.register({ [lhs] = opts.label or opts.desc }, { mode = mode }) end
+      -- local ok, wk = mega.require("which-key", { silent = true })
+      -- if ok then wk.register({ [lhs] = opts.label or opts.desc }, { mode = mode }) end
       if opts.label and not opts.desc then opts.desc = opts.label end
       opts.label = nil
     end
