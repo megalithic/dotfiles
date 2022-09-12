@@ -1,5 +1,5 @@
 if not mega then return end
-if vim.g.disable_plugins then return end
+if vim.g.disable_plugins["env"] then return end
 
 local api = vim.api
 local fn = vim.fn

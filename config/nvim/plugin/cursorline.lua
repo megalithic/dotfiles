@@ -2,7 +2,7 @@
 -- 1. nvim-cursorline
 
 if not mega then return end
-if vim.g.disable_plugins then return end
+if vim.g.disable_plugins["cursorline"] then return end
 
 local M = {
   -- FIXME: presently, i believe LSP things are delaying the blink

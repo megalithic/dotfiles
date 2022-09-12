@@ -2,7 +2,7 @@
 -- @akinsho, @echasnovski, @lukas-reineke, @kristijanhusak
 
 if not mega then return end
-if vim.g.disable_plugins then return end
+if vim.g.disable_plugins["megaline"] then return end
 
 local M = {}
 

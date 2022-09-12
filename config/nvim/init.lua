@@ -6,8 +6,23 @@ if impatient_ok then impatient.enable_profile() end
 
 -- [ settings ] ----------------------------------------------------------------
 
+vim.g.disable_plugins = {
+  autocmds = false,
+  megaline = false,
+  quickfix = false,
+  env = false,
+  lsp = false,
+  treesitter = false,
+  mappings = false,
+  cursorline = false,
+  colorcolumn = false,
+  numbers = false,
+  folds = false,
+  term = false,
+  tmux = false,
+}
+
 vim.g.use_packer = false
-vim.g.disable_plugins = false
 vim.g.use_term_plugin = true
 vim.g.colorscheme = "megaforest"
 vim.g.mapleader = ","

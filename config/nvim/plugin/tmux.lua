@@ -3,9 +3,8 @@
 --
 
 if not mega then return end
-if vim.g.disable_plugins then return end
-
 if not vim.env.TMUX then return end
+if vim.g.disable_plugins["tmux"] then return end
 
 function Tmux_navigate_directions()
   local pos = vim.api.nvim_win_get_position(0)

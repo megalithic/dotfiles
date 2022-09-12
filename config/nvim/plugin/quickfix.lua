@@ -1,3 +1,6 @@
+if not mega then return end
+if vim.g.disable_plugins["quickfix"] then return end
+
 local fn = vim.fn
 
 local gftf_fmt_item = function(fname, lnum, col, qtype, text)

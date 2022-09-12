@@ -24,7 +24,7 @@
 -- https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/whichkey.lua
 
 if not mega then return end
--- if vim.g.disable_plugins then return end
+if vim.g.disable_plugins["mappings"] then return end
 
 local fn = vim.fn
 local exec = mega.exec
