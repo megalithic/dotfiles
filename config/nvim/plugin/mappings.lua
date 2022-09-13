@@ -314,8 +314,9 @@ for _, binding in ipairs(rl_bindings) do
   cnoremap(binding.lhs, binding.rhs, binding.opts or {})
 end
 
--- don't yank the currently pasted text
-vim.cmd([[xnoremap <expr> p 'pgv"' . v:register . 'y']])
+-- don't yank the currently pasted text // thanks @theprimeagen
+-- vim.cmd([[xnoremap <expr> p 'pgv"' . v:register . 'y']])
+xnoremap("p", "\"_dP", "paste with saved register contents")
 
 -- yank to empty register for D, c, etc.
 nnoremap("x", "\"_x")

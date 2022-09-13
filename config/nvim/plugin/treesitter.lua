@@ -62,12 +62,24 @@ require("nvim-treesitter.configs").setup({
   },
   highlight = {
     enable = true,
+    use_languagetree = true,
+    -- disable = function(lang, bufnr) -- Disable in large files
+    --   -- Remove the org part to use TS highlighter for some of the highlights (Experimental)
+    --   return lang == "org" or vim.api.nvim_buf_line_count(bufnr) > 5000
+    -- end,
     -- Setting this to true will run `:h syntax` and tree-sitter at the same time.
     -- Set this to `true` if you depend on 'syntax' being enabled (like for indentation).
     -- Using this option may slow down your editor, and you may see some duplicate highlights.
     -- Instead of true it can also be a list of languages
-    additional_vim_regex_highlighting = {},
-    use_languagetree = true,
+    -- https://github.com/nvim-treesitter/nvim-treesitter/pull/1042
+    -- https://www.reddit.com/r/neovim/comments/ok9frp/v05_treesitter_does_anyone_have_python_indent/h57kxuv/?context=3
+    -- Required since TS highlighter doesn't support all syntax features (conceal)
+    additional_vim_regex_highlighting = {
+      "python",
+      "lua",
+      "vim",
+      "zsh",
+    },
   },
   indent = { enable = true },
   autotag = { enable = true, filetype = { "html", "xml", "heex" } },
