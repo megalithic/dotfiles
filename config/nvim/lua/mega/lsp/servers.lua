@@ -437,6 +437,7 @@ return function(on_attach)
 
       lsp_setup(server_name, opts)
     end,
+    -- TODO: @trial: https://github.com/jose-elias-alvarez/typescript.nvim
     tsserver = function(server_name)
       local function do_organize_imports()
         local params = {
