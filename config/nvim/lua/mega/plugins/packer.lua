@@ -11,7 +11,7 @@ local mega = require("mega.globals")
 local PACKER_COMPILED_PATH = fmt("%s/packer/packer_compiled.lua", vim.fn.stdpath("cache"))
 local PACKER_SNAPSHOTS_PATH = fmt("%s/packer/snapshots/", vim.fn.stdpath("cache"))
 
-local bootstrapped = bootstrap_packer("start")
+local bootstrapped = bootstrap_packer("start", PACKER_COMPILED_PATH)
 
 vim.cmd.packadd({ "cfilter", bang = true })
 
@@ -270,7 +270,7 @@ require("packer").startup({
     -- use({ "lvimuser/lsp-inlayhints.nvim" })
 
     -- ( Git ) -----------------------------------------------------------------
-    use({ "lewis6991/gitsigns.nvim", config = conf("gitsigns") })
+    use({ "lewis6991/gitsigns.nvim", event = { "BufRead" }, config = conf("gitsigns") })
     use({
       "TimUntersberger/neogit",
       cmd = "Neogit",
@@ -393,7 +393,7 @@ require("packer").startup({
       "numToStr/Comment.nvim",
       event = "BufRead",
       config = function()
-        require("comment").setup({
+        require("Comment").setup({
 
           ignore = "^$", -- ignores empty lines
           --@param ctx CommentCtx
@@ -483,7 +483,7 @@ require("packer").startup({
     use({ "EinfachToll/DidYouMean" })
     use({ "wsdjeg/vim-fetch" }) -- vim path/to/file.ext:12:3
     use({ "ConradIrwin/vim-bracketed-paste" }) -- FIXME: delete?
-    use({ "tpope/vim-scriptease" })
+    -- use({ "tpope/vim-scriptease" })
     use({ "axelvc/template-string.nvim" })
     -- @trial: "jghauser/kitty-runner.nvim"
 

@@ -54,7 +54,7 @@ end
 augroup("CheckOutsideTime", {
   {
     -- automatically check for changed files outside vim
-    event = { "WinEnter", "FocusGained" },
+    event = { "BufEnter", "FocusGained" },
     pattern = { "*" },
     command = "checktime",
   },

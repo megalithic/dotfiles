@@ -16,18 +16,18 @@ local icons = mega.icons
 local H = require("mega.utils.highlights")
 
 mega.augroup("megaline", {
-  {
-    event = { "FocusGained" },
-    command = function() vim.g.vim_in_focus = true end,
-  },
-  {
-    event = { "FocusLost" },
-    command = function() vim.g.vim_in_focus = false end,
-  },
-  {
-    event = { "VimResized" },
-    command = function() vim.cmd("redrawstatus") end,
-  },
+  -- {
+  --   event = { "BufEnter", "WinEnter" },
+  --   command = function() vim.g.vim_in_focus = true end,
+  -- },
+  -- {
+  --   event = { "BufLeave", "WinLeave" },
+  --   command = function() vim.g.vim_in_focus = false end,
+  -- },
+  -- {
+  --   event = { "VimResized" },
+  --   command = function() vim.cmd("redrawstatus") end,
+  -- },
   {
     event = { "BufWritePre" },
     command = function()
@@ -783,6 +783,7 @@ function M.hydra()
   return hydra.is_active(), data
 end
 
+-- local function is_focused() return vim.g.statusline_winid == vim.fn.win_getid() end
 local function is_focused() return tonumber(vim.g.actual_curwin) == vim.api.nvim_get_current_win() end
 
 -- do the statusline things for the activate window
@@ -810,7 +811,7 @@ function _G.__render_statusline()
   M.ctx = ctx
 
   local plain = M.is_plain(ctx)
-  local focused = vim.g.vim_in_focus and is_focused()
+  local focused = is_focused() -- and vim.g.vim_in_focus
   -- local focused = vim.g.vim_in_focus or is_focused()
   -- if not plain and focused and not disabled then
 

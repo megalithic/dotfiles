@@ -1,24 +1,25 @@
 return function()
-  local map = vim.keymap.set
   local hop = require("hop")
-  local jump_target = hop.jump_target
-  local last_chars
+  -- local map = vim.keymap.set
+  -- local jump_target = hop.jump_target
+  -- local last_chars
 
-  local function repeatable_hop(chars)
-    assert(chars ~= nil)
-    last_chars = chars
-    hop.hint_with(
-      jump_target.jump_targets_by_scanning_lines(jump_target.regex_by_case_searching(chars, true, {})),
-      hop.opts
-    )
-    vim.fn["repeat#set"](":lua mega.fn.hop_repeater()\r")
-    -- vim.cmd([[silent! call repeat#set(":lua mega.fn.hop_repeater()\r", -1)]])
-  end
+  -- @REF: https://github.com/phaazon/hop.nvim/issues/58#issuecomment-1244661113
+  -- local function repeatable_hop(chars)
+  --   assert(chars ~= nil)
+  --   last_chars = chars
+  --   hop.hint_with(
+  --     jump_target.jump_targets_by_scanning_lines(jump_target.regex_by_case_searching(chars, true, {})),
+  --     hop.opts
+  --   )
+  --   vim.fn["repeat#set"](":lua mega.fn.hop_repeater()\r")
+  --   -- vim.cmd([[silent! call repeat#set(":lua mega.fn.hop_repeater()\r", -1)]])
+  -- end
 
-  mega.fn.hop_repeater = function()
-    if last_chars == nil then return end
-    repeatable_hop(last_chars)
-  end
+  -- mega.fn.hop_repeater = function()
+  --   if last_chars == nil then return end
+  --   repeatable_hop(last_chars)
+  -- end
 
   -- remove h,j,k,l from hops list of keys
   hop.setup({ keys = "etovxqpdygfbzcisuran" })

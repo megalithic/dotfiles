@@ -7,16 +7,16 @@ local fmt = string.format
 -- ---@param msg string
 local function packer_notify(msg, level) vim.notify(msg, level, { title = "Packer" }) end
 
-local function bootstrap_packer(rtp_method)
+local function bootstrap_packer(rtp_method, compiled_path)
   rtp_method = rtp_method or "start"
   local PACKER_INSTALL_PATH = fmt("%s/site/pack/packer/%s/packer.nvim", fn.stdpath("data"), rtp_method)
 
-  -- vim.fn.delete(compiled_path)
   if fn.empty(fn.glob(PACKER_INSTALL_PATH)) > 0 then
     packer_notify("Downloading packer.nvim...")
     packer_notify(
       fn.system({ "git", "clone", "--depth", "1", "https://github.com/wbthomason/packer.nvim", PACKER_INSTALL_PATH })
     )
+    vim.fn.delete(compiled_path)
     vim.cmd.packadd({ "packer.nvim", bang = true })
     -- require("packer").sync()
     return true

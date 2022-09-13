@@ -16,6 +16,7 @@ vim.g.disable_plugins = {
   colorcolumn = false,
   numbers = false,
   quickfix = false,
+  simplef = false,
   folds = false,
   tmux = false,
   env = true,
@@ -41,7 +42,7 @@ R("mega.globals")
 R("mega.options")
 
 if vim.g.use_packer then
-  R("mega.plugins.packer")
+  vim.defer_fn(function() R("mega.plugins.packer") end, 0)
 else
   R("mega.plugins").config()
 end

@@ -709,6 +709,8 @@ return lush(function()
 
     -- Luasnip*Node{Active,Passive,SnippetPassive}
 
+    SimpleF({ fg = magenta, bg = bg_dark, gui = "bold,underline" }),
+
     ---- :help indent-blankline ------------------------------------------------
 
     IndentBlanklineChar({ fg = bg2, bg = "NONE" }),
