@@ -189,7 +189,10 @@ nnoremap ><lt> V`]>
 nnoremap =- V`]=
 ]])
 
-nnoremap("<leader>w", function() vim.api.nvim_command("write") end, "write buffer and stuff")
+nnoremap("<leader>w", function(args)
+  P(args)
+  vim.api.nvim_command("silent! write")
+end, "write buffer and stuff")
 nnoremap(
   "<leader>W",
   function() vim.api.nvim_command("write !sudo -S tee > /dev/null %") end,

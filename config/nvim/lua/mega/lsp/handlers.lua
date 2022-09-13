@@ -90,97 +90,96 @@ lsp.handlers["window/showMessage"] = function(_, result, ctx)
   })
 end
 
+do
+  local nnotify_ok, nnotify = pcall(require, "notify")
 
+  if nnotify_ok and nnotify then
+    local client_notifs = {}
 
--- do
---   local nnotify_ok, nnotify = pcall(require, "notify")
+    local function get_notif_data(client_id, token)
+      if not client_notifs[client_id] then client_notifs[client_id] = {} end
 
---   if nnotify_ok and nnotify then
---     local client_notifs = {}
+      if not client_notifs[client_id][token] then client_notifs[client_id][token] = {} end
 
---     local function get_notif_data(client_id, token)
---       if not client_notifs[client_id] then client_notifs[client_id] = {} end
+      return client_notifs[client_id][token]
+    end
 
---       if not client_notifs[client_id][token] then client_notifs[client_id][token] = {} end
+    local spinner_frames = { "⣾", "⣽", "⣻", "⢿", "⡿", "⣟", "⣯", "⣷" }
 
---       return client_notifs[client_id][token]
---     end
+    local function update_spinner(client_id, token)
+      local notif_data = get_notif_data(client_id, token)
 
---     local spinner_frames = { "⣾", "⣽", "⣻", "⢿", "⡿", "⣟", "⣯", "⣷" }
+      if notif_data.spinner then
+        local new_spinner = (notif_data.spinner + 1) % #spinner_frames
+        notif_data.spinner = new_spinner
+        notif_data.notification = nnotify(nil, nil, {
+          hide_from_history = true,
+          icon = spinner_frames[new_spinner],
+          replace = notif_data.notification,
+        })
 
---     local function update_spinner(client_id, token)
---       local notif_data = get_notif_data(client_id, token)
+        vim.defer_fn(function() update_spinner(client_id, token) end, 100)
+      end
+    end
 
---       if notif_data.spinner then
---         local new_spinner = (notif_data.spinner + 1) % #spinner_frames
---         notif_data.spinner = new_spinner
---         notif_data.notification = nnotify(nil, nil, {
---           hide_from_history = true,
---           icon = spinner_frames[new_spinner],
---           replace = notif_data.notification,
---         })
+    local function format_title(title, client_name) return client_name .. (#title > 0 and ": " .. title or "") end
 
---         vim.defer_fn(function() update_spinner(client_id, token) end, 100)
---       end
---     end
+    local function format_message(message, percentage)
+      return (percentage and percentage .. "%\t" or "") .. (message or "")
+    end
 
---     local function format_title(title, client_name) return client_name .. (#title > 0 and ": " .. title or "") end
+    vim.lsp.handlers["$/progress"] = function(_, result, ctx)
+      local client_id = ctx.client_id
+      local client = vim.lsp.get_client_by_id(client_id)
+      if
+        client
+        and (
+          client.name == "elixirls"
+          or client.name == "sumneko_lua"
+          or client.name == "rust_analyzer"
+          or client.name == "clangd"
+          or client.name == "shellcheck"
+          or client.name == "bashls"
+        )
+      then
+        return
+      end
 
---     local function format_message(message, percentage)
---       return (percentage and percentage .. "%\t" or "") .. (message or "")
---     end
+      local val = result.value
 
---     vim.lsp.handlers["$/progress"] = function(_, result, ctx)
---       local client_id = ctx.client_id
---       local client = vim.lsp.get_client_by_id(client_id)
---       if
---         client
---         and (
---           client.name == "elixirls"
---           or client.name == "sumneko_lua"
---           or client.name == "rust_analyzer"
---           or client.name == "clangd"
---           or client.name == "shellcheck"
---           or client.name == "bashls"
---         )
---       then
---         return
---       end
---       local val = result.value
+      if not val.kind then return end
 
---       if not val.kind then return end
+      local notif_data = get_notif_data(client_id, result.token)
 
---       local notif_data = get_notif_data(client_id, result.token)
+      if val.kind == "begin" then
+        local message = format_message(val.message, val.percentage)
 
---       if val.kind == "begin" then
---         local message = format_message(val.message, val.percentage)
+        notif_data.notification = nnotify(message, "info", {
+          title = format_title(val.title, vim.lsp.get_client_by_id(client_id).name),
+          icon = spinner_frames[1],
+          timeout = false,
+          hide_from_history = false,
+        })
 
---         notif_data.notification = nnotify(message, "info", {
---           title = format_title(val.title, vim.lsp.get_client_by_id(client_id).name),
---           icon = spinner_frames[1],
---           timeout = false,
---           hide_from_history = false,
---         })
+        notif_data.spinner = 1
+        update_spinner(client_id, result.token)
+      elseif val.kind == "report" and notif_data then
+        notif_data.notification = nnotify(format_message(val.message, val.percentage), "info", {
+          replace = notif_data.notification,
+          hide_from_history = false,
+        })
+      elseif val.kind == "end" and notif_data then
+        notif_data.notification = nnotify(val.message and format_message(val.message) or "Complete", "info", {
+          icon = "",
+          replace = notif_data.notification,
+          timeout = 3000,
+        })
 
---         notif_data.spinner = 1
---         update_spinner(client_id, result.token)
---       elseif val.kind == "report" and notif_data then
---         notif_data.notification = nnotify(format_message(val.message, val.percentage), "info", {
---           replace = notif_data.notification,
---           hide_from_history = false,
---         })
---       elseif val.kind == "end" and notif_data then
---         notif_data.notification = nnotify(val.message and format_message(val.message) or "Complete", "info", {
---           icon = "",
---           replace = notif_data.notification,
---           timeout = 3000,
---         })
-
---         notif_data.spinner = nil
---       end
---     end
---   end
--- end
+        notif_data.spinner = nil
+      end
+    end
+  end
+end
 
 -- lsp.handlers["textDocument/definition"] = function(_, result)
 --   if result == nil or vim.tbl_isempty(result) then
