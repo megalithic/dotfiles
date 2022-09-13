@@ -25,9 +25,23 @@ vim.g.disable_plugins = {
 vim.g.use_packer = true
 vim.g.use_term_plugin = true
 vim.g.colorscheme = "megaforest"
+vim.g.default_colorcolumn = "81"
 vim.g.mapleader = ","
 vim.g.maplocalleader = " "
-vim.g.default_colorcolumn = "81"
+
+-- [ globals ] -----------------------------------------------------------------
+
+local namespace = {
+  fn = {},
+  dirs = {},
+  mappings = {},
+  term = {},
+  lsp = {},
+  colors = require("mega.lush_theme.colors"),
+  icons = require("mega.icons"),
+}
+
+_G.mega = mega or namespace
 
 -- [ loaders ] -----------------------------------------------------------------
 

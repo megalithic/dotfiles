@@ -17,7 +17,7 @@
 # FIXME: we've gone way out of control now; get curl or httpie working; don't use
 # both, please. Confirm you only need one or the other and kill the other.
 
-set -x
+# set -x
 set -euo pipefail
 
 # TODO: figure out how to better use exit trapping
@@ -235,14 +235,14 @@ function __request() {
   local data
 
   [[ $VERBOSE == "true" || $DEBUG == "true" ]] && __log "new slack status activity: $STATUS_PARAM"
-  if [[ $api_cmd == "http" ]]; then
-    data=$(printf -- "%s " "${request_data[@]}")
-    request_cmd="$http_cmd -A bearer -a $SLACK_TOKEN $request_format --response-charset=utf-8 --print=B POST "$api_url/$feature" ${data}"
-  elif [[ $api_cmd == "curl" ]]; then
-    request_data+=("token=$SLACK_TOKEN")
-    data=$(printf -- "--data %s " "${request_data[@]}")
-    request_cmd="$curl_cmd --show-error --include ${data}"$api_url/$feature""
-  fi
+  # if [[ $api_cmd == "http" ]]; then
+  data=$(printf -- "%s " "${request_data[@]}")
+  request_cmd="$http_cmd -A bearer -a $SLACK_TOKEN $request_format --response-charset=utf-8 --print=B POST "$api_url/$feature" ${data}"
+  # elif [[ $api_cmd == "curl" ]]; then
+  #   request_data+=("token=$SLACK_TOKEN")
+  #   data=$(printf -- "--data %s " "${request_data[@]}")
+  #   request_cmd="$curl_cmd --show-error --include ${data}"$api_url/$feature""
+  # fi
 
   [[ $VERBOSE == "true" || $DEBUG == "true" ]] && __log "request_cmd used: $request_cmd"
 

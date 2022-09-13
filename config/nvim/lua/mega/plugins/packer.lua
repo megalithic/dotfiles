@@ -263,9 +263,44 @@ require("packer").startup({
     use({ "jose-elias-alvarez/nvim-lsp-ts-utils" })
     use({ "b0o/schemastore.nvim" })
     use({ "mrshmllow/document-color.nvim" })
+    use({
+      "j-hui/fidget.nvim",
+      config = function()
+        require("fidget").setup({
+          text = {
+            spinner = "dots_pulse",
+            done = "",
+          },
+          window = {
+            blend = 10,
+            -- relative = "editor",
+          },
+          sources = { -- Sources to configure
+            ["elixirls"] = { -- Name of source
+              ignore = true, -- Ignore notifications from this source
+            },
+            ["markdown"] = { -- Name of source
+              ignore = true, -- Ignore notifications from this source
+            },
+          },
+          align = {
+            bottom = false,
+            right = true,
+          },
+          fmt = {
+            stack_upwards = false,
+          },
+        })
+        require("mega.globals").augroup("CloseFidget", {
+          {
+            event = { "VimLeavePre", "LspDetach" },
+            command = "silent! FidgetClose",
+          },
+        })
+      end,
+    })
     -- use({ "lewis6991/hover.nvim" })
     -- use({ "folke/lua-dev.nvim", module = "lua-dev" })
-    -- use({ "j-hui/fidget.nvim", ext = "fidget" })
     -- use({ "microsoft/python-type-stubs", opt = true })
     -- use({ "lvimuser/lsp-inlayhints.nvim" })
 
