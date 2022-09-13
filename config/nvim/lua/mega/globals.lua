@@ -171,9 +171,17 @@ end
 ---@param opts table?
 ---@return boolean, any
 function mega.require(module, opts)
-  -- P(fmt("module being required: %s", module))
+  local function pc(func, ...)
+    local args = { ... }
+    return xpcall(func and function() return func(unpack(args)) end, function(err)
+      if err:find("DevIcon") or err:find("mason") or err:find("Invalid highlight") then return err end
+      vim.api.nvim_echo({ { err, "ErrorMsg" }, { debug.traceback("", 3), "Normal" } }, true, {})
+      return err
+    end)
+  end
+
   opts = opts or { silent = true }
-  local ok, result = pcall(require, module)
+  local ok, result = pc(require, module)
   if not ok and not opts.silent then
     if opts.message then result = opts.message .. "\n" .. result end
     vim.notify(result, vim.log.levels.ERROR, { title = fmt("Error requiring: %s", module) })
@@ -223,11 +231,13 @@ function mega.conf(plugin_conf_name, opts)
   local fn_at_index = nil
 
   local function string_loader(str)
-    local has_external_config, found_external_config = pcall(require, fmt("mega.plugins.%s", str))
-    if has_external_config then
-      if not silent then P(fmt("%s external config: %s", str, vim.inspect(config))) end
-      return found_external_config
-    end
+    -- local has_external_config, found_external_config = pcall(require, fmt("mega.plugins.%s", str))
+    -- if has_external_config then
+    --   if not silent then P(fmt("%s external config: %s", str, vim.inspect(config))) end
+    --   return found_external_config
+    -- end
+
+    return require(fmt("mega.plugins.%s", str))
   end
 
   if type(opts) == "table" then
@@ -274,11 +284,13 @@ function mega.conf(plugin_conf_name, opts)
 
   if enabled then
     if type(config) == "table" then
-      local ok, loader = pcall(require, plugin_conf_name)
-      if not ok then
-        vim.notify(fmt("Loader %s not found.", plugin_conf_name), "ERROR")
-        return
-      end
+      -- local ok, loader = pcall(require, plugin_conf_name)
+      -- if not ok then
+      --   -- vim.notify(fmt("Loader %s not found.", plugin_conf_name), "ERROR")
+      --   return
+      -- end
+
+      local loader = require(plugin_conf_name)
 
       -- does it have a setup key to execute?
       if vim.tbl_get(loader, "setup") ~= nil then

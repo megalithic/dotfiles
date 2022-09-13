@@ -25,16 +25,9 @@ mega.augroup("megaline", {
     command = function() vim.g.vim_in_focus = false end,
   },
   {
-    event = { "WinEnter", "BufEnter" },
-    command = function()
-      vim.g.vim_in_focus = true
-      -- vim.o.statusline = "%{%v:lua.__statusline()%}"
-    end,
+    event = { "VimResized" },
+    command = function() vim.cmd("redrawstatus") end,
   },
-  -- {
-  --   event = { "VimResized" },
-  --   command = function() vim.cmd("redrawstatus") end,
-  -- },
   {
     event = { "BufWritePre" },
     command = function()
@@ -625,27 +618,26 @@ function M.s_git(args)
   if M.abnormal_buffer() then return "" end
 
   local status = vim.b.gitsigns_status_dict or {}
-  local signs = is_truncated(args.trunc_width) and "" or (vim.b.gitsigns_status or "")
-  local branch = status.head
-
-  if is_truncated(args.trunc_width) then branch = mega.truncate(branch or "", 11, false) end
-
+  local branch = is_truncated(args.trunc_width) and mega.truncate(status.head or "", 11, false) or status.head
   local head_str = unpack(item(branch, "StGitBranch", {
     before = "  ",
     after = "",
     prefix = is_truncated(80) and "" or icons.git.symbol,
     prefix_color = "StGitSymbol",
   }))
-  local added_str =
-    unpack(item(status.added, "StMetadataPrefix", { prefix = icons.git.add, prefix_color = "StGitSignsAdd" }))
-  local changed_str =
-    unpack(item(status.changed, "StMetadataPrefix", { prefix = icons.git.change, prefix_color = "StGitSignsChange" }))
-  local removed_str =
-    unpack(item(status.removed, "StMetadataPrefix", { prefix = icons.git.remove, prefix_color = "StGitSignsDelete" }))
+  return head_str
 
-  if signs == "" then return head_str end
+  -- local signs = is_truncated(args.trunc_width) and "" or (vim.b.gitsigns_status or "")
+  -- local added_str =
+  --   unpack(item(status.added, "StMetadataPrefix", { prefix = icons.git.add, prefix_color = "StGitSignsAdd" }))
+  -- local changed_str =
+  --   unpack(item(status.changed, "StMetadataPrefix", { prefix = icons.git.change, prefix_color = "StGitSignsChange" }))
+  -- local removed_str =
+  --   unpack(item(status.removed, "StMetadataPrefix", { prefix = icons.git.remove, prefix_color = "StGitSignsDelete" }))
 
-  return fmt("%s %s%s%s", head_str, added_str, changed_str, removed_str)
+  -- if signs == "" then return head_str end
+
+  -- return fmt("%s %s%s%s", head_str, added_str, changed_str, removed_str)
 end
 
 local function diagnostic_info(ctx)
@@ -794,7 +786,7 @@ end
 local function is_focused() return tonumber(vim.g.actual_curwin) == vim.api.nvim_get_current_win() end
 
 -- do the statusline things for the activate window
-function _G.__statusline()
+function _G.__render_statusline()
   -- use the statusline global variable which is set inside of statusline
   -- functions to the window for *that* statusline
   local curwin = vim.g.statusline_winid or 0
@@ -905,6 +897,6 @@ function _G.__statusline()
   end
 end
 
-vim.o.statusline = "%{%v:lua.__statusline()%}"
+vim.o.statusline = "%{%v:lua.__render_statusline()%}"
 
 return M

@@ -1,8 +1,7 @@
 -- [ speed ] -------------------------------------------------------------------
 
 vim.api.nvim_create_augroup("vimrc", {})
-local impatient_ok, impatient = pcall(require, "impatient")
-if impatient_ok then impatient.enable_profile() end
+require("impatient")
 
 -- [ settings ] ----------------------------------------------------------------
 
@@ -22,7 +21,7 @@ vim.g.disable_plugins = {
   env = true,
 }
 
-vim.g.use_packer = false
+vim.g.use_packer = true
 vim.g.use_term_plugin = true
 vim.g.colorscheme = "megaforest"
 vim.g.mapleader = ","

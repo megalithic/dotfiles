@@ -11,6 +11,7 @@ local function bootstrap_packer(rtp_method)
   rtp_method = rtp_method or "start"
   local PACKER_INSTALL_PATH = fmt("%s/site/pack/packer/%s/packer.nvim", fn.stdpath("data"), rtp_method)
 
+  -- vim.fn.delete(compiled_path)
   if fn.empty(fn.glob(PACKER_INSTALL_PATH)) > 0 then
     packer_notify("Downloading packer.nvim...")
     packer_notify(
@@ -24,6 +25,13 @@ local function bootstrap_packer(rtp_method)
   end
   return false
 end
+
+-- function _G.packer_upgrade()
+--   vim.fn.delete(PACKER_INSTALL_PATH, "rf")
+--   bootstrap_packer("start", PACKER_COMPILED_PATH)
+-- end
+--
+-- vim.cmd.command({ "PackerUpgrade", ":call v:lua.packer_upgrade()", bang = true })
 
 local function load(path)
   require("mega.plugins." .. path)

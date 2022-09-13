@@ -96,8 +96,8 @@ local PKGS = {
   "TimUntersberger/neogit",
   "mattn/webapi-vim",
   "akinsho/git-conflict.nvim",
-  "itchyny/vim-gitbranch",
-  "tpope/vim-fugitive",
+  -- "itchyny/vim-gitbranch",
+  -- "tpope/vim-fugitive",
   "lewis6991/gitsigns.nvim",
   "ruifm/gitlinker.nvim",
   "ruanyl/vim-gh-line",
@@ -579,7 +579,7 @@ function M.config()
   })
 
   conf("fzf_gitignore", function() vim.g.fzf_gitignore_no_maps = true end)
-  conf("vim-kitty-navigator", { enabled = not vim.env.TMUX })
+  -- conf("vim-kitty-navigator", { enabled = not vim.env.TMUX })
 
   conf("notify", function()
     local notify = require("notify")
