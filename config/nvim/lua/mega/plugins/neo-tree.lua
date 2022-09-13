@@ -31,9 +31,8 @@ return function()
       {
         event = "neo_tree_buffer_leave",
         handler = function()
-          require("golden_size").on_win_enter()
           require("virt-column").refresh()
-          vim.cmd([[wincmd =]])
+          require("golden_size").on_win_enter()
           vim.cmd("highlight! Cursor blend=0")
         end,
       },
@@ -84,6 +83,8 @@ return function()
         ["<c-o>"] = "open_with_window_picker",
         ["<c-s>"] = "split_with_window_picker",
         ["<CR>"] = "vsplit_with_window_picker",
+        ["<esc>"] = "revert_preview",
+        ["P"] = { "toggle_preview", config = { use_float = true } },
       },
     },
   })
