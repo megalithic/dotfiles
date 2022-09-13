@@ -354,6 +354,27 @@ local function setup_highlights(client, bufnr)
   end
 end
 
+local function setup_tools()
+  local tools = {
+    "cbfmt",
+    "clang-format",
+    "elm-format",
+    "yamlfmt",
+    "prettierd",
+    "stylua",
+    "selene",
+    "eslint_d",
+    "shellcheck",
+    "shfmt",
+  }
+
+  local mr = require("mason-registry")
+  for _, tool in ipairs(tools) do
+    local p = mr.get_package(tool)
+    if not p:is_installed() then p:install() end
+  end
+end
+
 -- [ ON_ATTACH ] ---------------------------------------------------------------
 
 ---Add buffer local mappings, autocommands, tagfunc, etc for attaching servers
@@ -409,6 +430,7 @@ local function on_attach(client, bufnr)
   setup_diagnostics()
   setup_mappings(client, bufnr)
   setup_highlights(client, bufnr)
+  setup_tools()
 
   api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
 end
