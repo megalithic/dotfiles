@@ -549,8 +549,8 @@ require("packer").startup({
     -- use({ "avakhov/vim-yaml" })
     -- use({ "chr4/nginx.vim" })
     -- use({ "nanotee/luv-vimdocs" })
-    -- use({ "fladson/vim-kitty" })
-    -- use({ "SirJson/fzf-gitignore" })
+    use({ "fladson/vim-kitty" })
+    use({ "SirJson/fzf-gitignore" })
 
     if bootstrapped then require("packer").sync() end
   end,

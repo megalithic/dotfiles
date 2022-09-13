@@ -17,7 +17,7 @@
 # FIXME: we've gone way out of control now; get curl or httpie working; don't use
 # both, please. Confirm you only need one or the other and kill the other.
 
-# set -x
+set -x
 set -euo pipefail
 
 # TODO: figure out how to better use exit trapping
@@ -79,7 +79,7 @@ http_cmd=""
 request_format="--json" # or --form
 
 # -- checks for needed dependencies
-(command -v "$(which curl)" &>/dev/null) && CURL_FOUND="installed" || CURL_FOUND="not installed"
+(command -v /usr/local/bin/curlie &>/dev/null) && CURL_FOUND="installed" || CURL_FOUND="not installed"
 (command -v /usr/local/bin/fzf &>/dev/null) && FZF_FOUND="installed" || FZF_FOUND="not installed"
 (command -v /usr/local/bin/jq &>/dev/null) && JQ_FOUND="installed" || JQ_FOUND="not installed"
 (command -v /usr/local/bin/http &>/dev/null) && HTTPIE_FOUND="installed" || HTTPIE_FOUND="not installed"
@@ -195,10 +195,10 @@ STATUS_PARAM="${1:-}"
 
 # -- handle options
 if [[ $VERBOSE == "true" || $DEBUG == "true" ]]; then
-  curl_cmd="$(which curl) --verbose"
+  curl_cmd="/usr/local/bin/curlie --verbose"
   http_cmd="/usr/local/bin/http -vv --all --debug"
 else
-  curl_cmd="$(which curl) --silent --output /dev/null"
+  curl_cmd="/usr/local/bin/curlie --silent --output /dev/null"
   http_cmd="/usr/local/bin/http -qq"
 fi
 
