@@ -102,14 +102,26 @@ end
 --   return nil
 -- end
 
-function obj.on()
+function obj.on(slack_status)
   local task = hs.task.new(obj.cmd, function(stdTask, stdOut, stdErr) info("dnd on") end, { "on" })
   task:start()
+
+  if slack_status then
+    local cmd = os.getenv("HOME") .. "/.dotfiles/bin/slck"
+    hs.task
+      .new(cmd, function(stdTask, stdOut, stdErr) info("slack set to " .. slack_status) end, { slack_status })
+      :start()
+  end
 end
 
 function obj.off()
   local task = hs.task.new(obj.cmd, function(stdTask, stdOut, stdErr) info("dnd off") end, { "off" })
   task:start()
+
+  do
+    local cmd = os.getenv("HOME") .. "/.dotfiles/bin/slck"
+    hs.task.new(cmd, function(stdTask, stdOut, stdErr) info("slack set to dnd off") end, { "-D" }):start()
+  end
 end
 
 function obj:init(opts)
