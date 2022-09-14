@@ -2,7 +2,10 @@
 -- @akinsho, @echasnovski, @lukas-reineke, @kristijanhusak
 
 if not mega then return end
-if vim.g.disable_plugins["megaline"] then return end
+if not vim.g.enabled_plugin["megaline"] then
+  vim.o.statusline = "%2{mode()} | %f %m %r %= %{&spelllang} %y %8(%l,%c%) %8p%%"
+  return
+end
 
 local M = {}
 
@@ -28,10 +31,14 @@ mega.augroup("megaline", {
   --   event = { "VimResized" },
   --   command = function() vim.cmd("redrawstatus") end,
   -- },
-  {
-    event = { "BufEnter", "WinEnter", "BufLeave", "WinLeave" },
-    command = function() vim.o.statusline = "%{%v:lua.__render_statusline()%}" end,
-  },
+  -- {
+  --   event = { "BufEnter", "WinEnter", "BufLeave", "WinLeave" },
+  --   once = true,
+  --   command = function(args)
+  --     P(args)
+  --     vim.o.statusline = "%{%v:lua.__render_statusline()%}"
+  --   end,
+  -- },
   {
     event = { "BufWritePre" },
     command = function()
@@ -413,13 +420,14 @@ function M.filetype(ctx, opts)
   local f_name, f_extension = vim.fn.expand("%:t") or ctx.bufname, vim.fn.expand("%:e")
   f_extension = f_extension ~= "" and f_extension or vim.bo.filetype
 
-  local icons_loaded, devicons = pcall(require, "nvim-web-devicons")
-  if icons_loaded then
-    _, icon_hl = devicons.get_icon(f_name, f_extension)
-    -- to get color rendering working propertly, we have to use the get_icon_color/3 fn
-    icon, icon_color = devicons.get_icon_color(f_name, f_extension, { default = true })
-    hl = M.highlight_ft_icon(icon_color, icon_hl, opts.icon_bg)
-  end
+  -- local icons_loaded, devicons = pcall(require, "nvim-web-devicons")
+  local devicons = require("nvim-web-devicons")
+  -- if icons_loaded then
+  _, icon_hl = devicons.get_icon(f_name, f_extension)
+  -- to get color rendering working propertly, we have to use the get_icon_color/3 fn
+  icon, icon_color = devicons.get_icon_color(f_name, f_extension, { default = true })
+  hl = M.highlight_ft_icon(icon_color, icon_hl, opts.icon_bg)
+  -- end
 
   return icon, hl
 end
@@ -546,18 +554,18 @@ function M.s_mode(args)
 end
 
 function M.s_hydra(args)
-  local ok, _ = pcall(require, "hydra")
+  -- local ok, _ = pcall(require, "hydra")
 
   if is_truncated(args.trunc_width) then return "" end
 
-  if ok then
-    local hydra_statusline = require("hydra.statusline")
-    return unpack(
-      item_if(hydra_statusline.get_name(), hydra_statusline.is_active(), "StMetadata", { before = "", after = " " })
-    )
-  end
+  -- if ok then
+  local hydra_statusline = require("hydra.statusline")
+  return unpack(
+    item_if(hydra_statusline.get_name(), hydra_statusline.is_active(), "StMetadata", { before = "", after = " " })
+  )
+  -- end
 
-  return ""
+  -- return ""
 end
 
 ---Return a sorted list of lsp client names and their priorities
@@ -770,8 +778,9 @@ function M.s_lineinfo(args)
 end
 
 function M.hydra()
-  local ok, hydra = pcall(require, "hydra.statusline")
-  if not ok then return false, {} end
+  -- local ok, hydra = pcall(require, "hydra.statusline")
+  local hydra = require("hydra.statusline")
+  -- if not ok then return false, {} end
   local colors = {
     red = "HydraRedSt",
     blue = "HydraBlueSt",
@@ -880,7 +889,7 @@ function _G.__render_statusline()
         priority = 5,
       })),
       -- habitat/workspace
-      M.s_workspace({ trunc_width = 120 }),
+      -- M.s_workspace({ trunc_width = 120 }),
       --------------------------------------------------------------------------
       "%=", -- end middle seciond/begin right alignment
       --------------------------------------------------------------------------
@@ -888,7 +897,7 @@ function _G.__render_statusline()
       -- FIXME: not unpacking correctly; debug further
       -- M.s_lsp_clients({ trunc_width = 120 }),
       -- diagnostics
-      { hl = "Statusline", strings = { diag_error, diag_warn, diag_info, diag_hint } },
+      -- { hl = "Statusline", strings = { diag_error, diag_warn, diag_info, diag_hint } },
       -- git status/branch
       M.s_git({ trunc_width = 120 }),
       -- line information
@@ -901,5 +910,7 @@ function _G.__render_statusline()
     return "%#StInactive#%F %m%="
   end
 end
+
+vim.o.statusline = "%{%v:lua.__render_statusline()%}"
 
 return M

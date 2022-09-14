@@ -1,6 +1,6 @@
 -- if true then return end
 if not mega then return end
-if vim.g.disable_plugins["treesitter"] then return end
+if not vim.g.enabled_plugin["treesitter"] then return end
 
 local ts_ok, _ = pcall(require, "nvim-treesitter")
 if not ts_ok then return end

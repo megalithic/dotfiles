@@ -5,21 +5,21 @@ require("impatient")
 
 -- [ settings ] ----------------------------------------------------------------
 
-vim.g.disable_plugins = {
-  mappings = false,
-  autocmds = false,
-  megaline = true,
-  treesitter = false,
-  lsp = false,
-  term = false,
-  cursorline = false,
-  colorcolumn = false,
-  numbers = false,
-  quickfix = false,
-  simplef = false,
-  folds = false,
-  tmux = false,
-  env = true,
+vim.g.enabled_plugin = {
+  mappings = true,
+  autocmds = true,
+  megaline = false,
+  treesitter = true,
+  lsp = true,
+  term = true,
+  cursorline = true,
+  colorcolumn = true,
+  numbers = true,
+  quickfix = true,
+  simplef = true,
+  folds = true,
+  tmux = true,
+  env = false,
 }
 
 vim.g.use_packer = true

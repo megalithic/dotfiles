@@ -2,7 +2,7 @@
 -- 1. nvim-cursorline
 
 if not mega then return end
-if vim.g.disable_plugins["colorcolumn"] then return end
+if not vim.g.enabled_plugin["colorcolumn"] then return end
 
 local contains = vim.tbl_contains
 local api = vim.api

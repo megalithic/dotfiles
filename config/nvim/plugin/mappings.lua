@@ -24,7 +24,7 @@
 -- https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/whichkey.lua
 
 if not mega then return end
-if vim.g.disable_plugins["mappings"] then return end
+if not vim.g.enabled_plugin["mappings"] then return end
 
 local fn = vim.fn
 local exec = mega.exec
@@ -228,7 +228,7 @@ nnoremap([[<Esc>]], function()
   vim.cmd("syntax sync fromstart")
   mega.close_float_wins()
   vim.cmd("echo ''")
-  mega.blink_cursorline()
+  if vim.g.enabled_plugin["cursorline"] then mega.blink_cursorline() end
 
   -- do
   --   local ok, mj = pcall(require, "mini.jump")

@@ -2,7 +2,7 @@
 -- 1. nvim-cursorline
 
 if not mega then return end
-if vim.g.disable_plugins["cursorline"] then return end
+if not vim.g.enabled_plugin["cursorline"] then return end
 
 local M = {
   -- FIXME: presently, i believe LSP things are delaying the blink
@@ -217,7 +217,6 @@ mega.augroup("ToggleCursorLine", {
     command = function() disable_cursorline() end,
   },
   {
-    buffer = 0,
     event = { "InsertEnter", "CursorMovedI" },
     command = function()
       vim.opt_local.cursorlineopt = "number"
@@ -225,7 +224,6 @@ mega.augroup("ToggleCursorLine", {
     end,
   },
   {
-    buffer = 0,
     event = { "CursorMoved" },
     command = function() cursor_moved() end,
   },

@@ -1,5 +1,5 @@
 if not mega then return end
-if vim.g.disable_plugins["quickfix"] then return end
+if not vim.g.enabled_plugin["quickfix"] then return end
 
 local fn = vim.fn
 
