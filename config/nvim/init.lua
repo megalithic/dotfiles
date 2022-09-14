@@ -8,7 +8,7 @@ require("impatient")
 vim.g.disable_plugins = {
   mappings = false,
   autocmds = false,
-  megaline = false,
+  megaline = true,
   treesitter = false,
   lsp = false,
   term = false,

@@ -91,6 +91,7 @@ lsp.handlers["window/showMessage"] = function(_, result, ctx)
 end
 
 do
+  if true then return end
   local nnotify_ok, nnotify = pcall(require, "notify")
 
   if nnotify_ok and nnotify then

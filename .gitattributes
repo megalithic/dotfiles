@@ -6,3 +6,4 @@ config/weechat/plugins.conf filter=crypt diff=crypt merge=crypt
 config/weechat/sec.conf filter=crypt diff=crypt merge=crypt
 misc/fonts/**/*.*tf filter=crypt diff=crypt merge=crypt
 config/zsh/lib/local.zsh filter=crypt diff=crypt merge=crypt
+bin/slck filter=crypt diff=crypt merge=crypt

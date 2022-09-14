@@ -29,6 +29,10 @@ mega.augroup("megaline", {
   --   command = function() vim.cmd("redrawstatus") end,
   -- },
   {
+    event = { "BufEnter", "WinEnter", "BufLeave", "WinLeave" },
+    command = function() vim.o.statusline = "%{%v:lua.__render_statusline()%}" end,
+  },
+  {
     event = { "BufWritePre" },
     command = function()
       if not vim.g.is_saving and vim.bo.modified then
@@ -897,7 +901,5 @@ function _G.__render_statusline()
     return "%#StInactive#%F %m%="
   end
 end
-
-vim.o.statusline = "%{%v:lua.__render_statusline()%}"
 
 return M

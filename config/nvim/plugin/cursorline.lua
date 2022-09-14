@@ -217,6 +217,7 @@ mega.augroup("ToggleCursorLine", {
     command = function() disable_cursorline() end,
   },
   {
+    buffer = 0,
     event = { "InsertEnter", "CursorMovedI" },
     command = function()
       vim.opt_local.cursorlineopt = "number"
@@ -224,6 +225,7 @@ mega.augroup("ToggleCursorLine", {
     end,
   },
   {
+    buffer = 0,
     event = { "CursorMoved" },
     command = function() cursor_moved() end,
   },
