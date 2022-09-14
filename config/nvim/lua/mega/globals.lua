@@ -161,17 +161,17 @@ end
 ---@param opts table?
 ---@return boolean, any
 function mega.require(module, opts)
-  local function pc(func, ...)
-    local args = { ... }
-    return xpcall(func and function() return func(unpack(args)) end, function(err)
-      if err:find("DevIcon") or err:find("mason") or err:find("Invalid highlight") then return err end
-      vim.api.nvim_echo({ { err, "ErrorMsg" }, { debug.traceback("", 3), "Normal" } }, true, {})
-      return err
-    end)
-  end
+  -- local function pc(func, ...)
+  --   local args = { ... }
+  --   return xpcall(func and function() return func(unpack(args)) end, function(err)
+  --     if err:find("DevIcon") or err:find("mason") or err:find("Invalid highlight") then return err end
+  --     vim.api.nvim_echo({ { err, "ErrorMsg" }, { debug.traceback("", 3), "Normal" } }, true, {})
+  --     return err
+  --   end)
+  -- end
 
   opts = opts or { silent = true }
-  local ok, result = pc(require, module)
+  local ok, result = pcall(require, module)
   if not ok and not opts.silent then
     if opts.message then result = opts.message .. "\n" .. result end
     vim.notify(result, vim.log.levels.ERROR, { title = fmt("Error requiring: %s", module) })

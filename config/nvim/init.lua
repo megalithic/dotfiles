@@ -1,7 +1,6 @@
 -- [ speed ] -------------------------------------------------------------------
 
 vim.api.nvim_create_augroup("vimrc", {})
-require("impatient")
 
 -- [ settings ] ----------------------------------------------------------------
 
@@ -9,7 +8,7 @@ vim.g.enabled_plugin = {
   mappings = true,
   autocmds = true,
   megaline = false,
-  treesitter = true,
+  treesitter = false, -- presently loading via packer config
   lsp = true,
   term = true,
   cursorline = true,
@@ -31,7 +30,7 @@ vim.g.maplocalleader = " "
 
 -- [ globals ] -----------------------------------------------------------------
 
-local namespace = {
+local ns = {
   fn = {},
   dirs = {},
   mappings = {},
@@ -41,7 +40,7 @@ local namespace = {
   icons = require("mega.icons"),
 }
 
-_G.mega = mega or namespace
+_G.mega = mega or ns
 
 -- [ loaders ] -----------------------------------------------------------------
 
@@ -56,7 +55,10 @@ R("mega.globals")
 R("mega.options")
 
 if vim.g.use_packer then
-  vim.defer_fn(function() R("mega.plugins.packer") end, 0)
+  -- vim.defer_fn(function() R("mega.plugins.packer") end, 0)
+  R("mega.plugins.packer")
 else
   R("mega.plugins").config()
 end
+
+R("mega.megaline")

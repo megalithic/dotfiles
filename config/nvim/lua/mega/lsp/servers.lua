@@ -2,7 +2,10 @@ return function(on_attach)
   local fn = vim.fn
   local api = vim.api
   local lsp = vim.lsp
-  local lspconfig = require("lspconfig")
+
+  local ok_lsp, lspconfig = mega.require("lspconfig")
+  if not ok_lsp then return end
+
   local mason_lspconfig = require("mason-lspconfig")
   local lsputil = require("lspconfig.util")
 

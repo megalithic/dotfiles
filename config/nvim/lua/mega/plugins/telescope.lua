@@ -3,7 +3,7 @@ return function()
 
   local fn = vim.fn
   local actions = require("telescope.actions")
-  local lga_actions = require("telescope-live-grep-args.actions")
+  -- local lga_actions = require("telescope-live-grep-args.actions")
   local themes = require("telescope.themes")
 
   mega.augroup("TelescopePreviews", {
@@ -148,17 +148,17 @@ return function()
       },
     },
     extensions = {
-      live_grep_args = {
-        auto_quoting = true, -- enable/disable auto-quoting
-        mappings = {
-          i = {
-            ["<C-k>"] = lga_actions.quote_prompt(),
-            ["<C-l>g"] = lga_actions.quote_prompt({ postfix = " --iglob " }),
-            ["<C-l>t"] = lga_actions.quote_prompt({ postfix = " -t" }),
-            ["<C-l>n"] = lga_actions.quote_prompt({ postfix = " --no-ignore " }),
-          },
-        },
-      },
+      -- live_grep_args = {
+      --   auto_quoting = true, -- enable/disable auto-quoting
+      --   mappings = {
+      --     i = {
+      --       ["<C-k>"] = lga_actions.quote_prompt(),
+      --       ["<C-l>g"] = lga_actions.quote_prompt({ postfix = " --iglob " }),
+      --       ["<C-l>t"] = lga_actions.quote_prompt({ postfix = " -t" }),
+      --       ["<C-l>n"] = lga_actions.quote_prompt({ postfix = " --no-ignore " }),
+      --     },
+      --   },
+      -- },
     },
     pickers = {
       buffers = dropdown({
@@ -349,9 +349,9 @@ return function()
   nmap("<leader>fP", installed_plugins, "installed plugins")
   nmap("<leader>fo", builtin.buffers, "opened buffers")
   nmap("<leader>fr", builtin.resume, "resume last picker")
-  -- nmap("<leader>fa", builtin.live_grep, "live grep string")
-  -- nmap("<leader>fs", builtin.live_grep, "live grep string")
-  nmap("<leader>fa", "<cmd>lua require('telescope').extensions.live_grep_args.live_grep_args()<cr>", "live grep args")
+  nmap("<leader>fa", builtin.live_grep, "live grep string")
+  nmap("<leader>fs", builtin.live_grep, "live grep string")
+  -- nmap("<leader>fa", "<cmd>lua require('telescope').extensions.live_grep_args.live_grep_args()<cr>", "live grep args")
   nmap("<leader>fw", workspaces, "open workspaces")
 
   nmap("<leader>fvh", builtin.highlights, "highlights")
@@ -370,7 +370,7 @@ return function()
   nmap("<leader>lw", builtin.lsp_dynamic_workspace_symbols, "telescope: dynamic workspace symbols")
 
   telescope.load_extension("zf-native")
-  telescope.load_extension("live_grep_args")
+  -- telescope.load_extension("live_grep_args")
   telescope.load_extension("luasnip")
   telescope.load_extension("workspaces")
   telescope.load_extension("file_browser")

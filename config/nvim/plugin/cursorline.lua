@@ -78,9 +78,9 @@ local function is_ignored()
   return should_ignore
 end
 
-local normal_bg = mega.colors.bg0
-local cursorline_bg = mega.colors.bg1
-local blink_bg = mega.colors.bg_blue
+local normal_bg = type(mega.colors) ~= "table" and "NONE" or mega.colors.bg0
+local cursorline_bg = type(mega.colors) ~= "table" and "NONE" or mega.colors.bg1
+local blink_bg = type(mega.colors) ~="table" and "NONE" or mega.colors.bg_blue
 
 local function highlight_cursorline()
   if blink_active then

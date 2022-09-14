@@ -907,13 +907,7 @@ function _G.__render_statusline()
   end
 end
 
-function M.file_or_lsp_status()
-  local messages = vim.lsp.util.get_progress_messages()
-  local mode = api.nvim_get_mode().mode
-  if mode ~= "n" or vim.tbl_isempty(messages) then
-    P("should have things")
-    return M.s_filename({ trunc_width = 120 })
-  end
+local function get_lsp_status(messages)
   local percentage
   local result = {}
   for _, msg in pairs(messages) do
@@ -931,34 +925,99 @@ function M.file_or_lsp_status()
   end
 end
 
-if not vim.g.enabled_plugin["megaline"] then
-  -- function _G.statusline()
-  --   local parts = {
-  --     [[%{luaeval("require'mega.icons'.misc.lblock")}]],
-  --     "%2{mode()}",
-  --     -- [[%{luaeval("require'mega.megaline'.s_mode()"}]],
-  --     [[%<  %{luaeval("require'mega.megaline'.file_or_lsp_status()")} %m%r%=]],
-  --     "%#warningmsg#",
-  --     "%{&paste?'[paste] ':''}",
-  --     "%*",
-
-  --     "%#warningmsg#",
-  --     "%{&ff!='unix'?'['.&ff.'] ':''}",
-  --     "%*",
-
-  --     "%#warningmsg#",
-  --     "%{(&fenc!='utf-8'&&&fenc!='')?'['.&fenc.'] ':''}",
-  --     "%*",
-  --     [[%{luaeval("require'mega.statusline'.dap_status()")}]],
-  --     [[%{luaeval("require'mega.statusline'.diagnostic_status()")}]],
-  --   }
-  --   return table.concat(parts, "")
-  -- end
-
-  -- vim.cmd([[set statusline=%!v:lua.statusline()]])
-  -- -- vim.o.statusline = "%{%v:lua.__render_statusline()%}"
-  -- -- vim.o.statusline = "%2{mode()} | %f %m %r %= %{&spelllang} %y %8(%l,%c%) %8p%%"
-  return
-else
-  vim.o.statusline = "%{%v:lua.__render_statusline()%}"
+function M.seg(hl, contents)
+  hl = hl or "Statusline"
+  return fmt("%#%s#%s%F", hl, contents)
 end
+
+function M.seg_space(hl, contents)
+  contents = contents or " "
+  return M.seg(hl, contents)
+end
+
+function M.seg_prefix(truncate_at)
+  local mode_info = M.modes[api.nvim_get_mode().mode]
+  local prefix = is_truncated(truncate_at) and mode_info.short or mode_info.long
+  return M.seg(mode_info.hl, prefix)
+end
+
+function M.seg_mode(truncate_at)
+  local mode_info = M.modes[api.nvim_get_mode().mode]
+  local mode = is_truncated(truncate_at) and mega.icons.misc.lblock or ""
+  return M.seg(mode_info.hl, string.upper(mode))
+end
+
+function M.seg_file_or_lsp_status(trunc_width)
+  local messages = vim.lsp.util.get_progress_messages()
+  local mode = api.nvim_get_mode().mode
+  if mode ~= "n" or vim.tbl_isempty(messages) then
+    return vim.fn.fnamemodify(vim.uri_to_fname(vim.uri_from_bufnr(api.nvim_get_current_buf())), ":.")
+    -- local ctx = M.ctx
+    -- local segments = M.file(ctx, 120)
+    -- local dir, parent, file = segments.dir, segments.parent, segments.file
+    -- local dir_item = item(dir.item, dir.hl, dir.opts)
+    -- local parent_item = item(parent.item, parent.hl, parent.opts)
+    -- local file_hl = ctx.modified and "StModified" or file.hl
+    -- local file_item = item(file.item, file_hl, file.opts)
+
+    -- return fmt("%s%s%s", unpack(dir_item), unpack(parent_item), unpack(file_item))
+  end
+
+  return get_lsp_status(messages)
+end
+
+function _G.__statusline()
+  -- use the statusline global variable which is set inside of statusline
+  -- functions to the window for *that* statusline
+  local curwin = vim.g.statusline_winid or 0
+  local curbuf = api.nvim_win_get_buf(curwin)
+  -- local available_space = vim.o.columns
+
+  local ctx = {
+    bufnum = curbuf,
+    winid = curwin,
+    bufname = api.nvim_buf_get_name(curbuf),
+    preview = vim.wo[curwin].previewwindow,
+    readonly = vim.bo[curbuf].readonly,
+    filetype = vim.bo[curbuf].ft,
+    buftype = vim.bo[curbuf].bt,
+    modified = vim.bo[curbuf].modified,
+    fileformat = vim.bo[curbuf].fileformat,
+    shiftwidth = vim.bo[curbuf].shiftwidth,
+    expandtab = vim.bo[curbuf].expandtab,
+  }
+
+  M.ctx = ctx
+
+  local parts = {
+    [[%<]],
+    -- [[%{luaeval("require'mega.megaline'.seg_prefix(100)"}]],
+    "%2{mode()}",
+    [[%{luaeval("require'mega.megaline'.seg_space()")}]],
+    -- [[%{luaeval("require'mega.megaline'.seg_mode(120)"}]],
+    [[%{luaeval("require'mega.megaline'.seg_file_or_lsp_status(120)")}]],
+    [[%{luaeval("require'mega.megaline'.seg_space()")}]],
+    [[%m%r]],
+    [[%=]],
+    "%#warningmsg#hi",
+    "%{&paste?'[paste] ':''}",
+    "%*",
+
+    "%#warningmsg#",
+    "%{&ff!='unix'?'['.&ff.'] ':''}",
+    "%*",
+
+    "%#warningmsg#",
+    "%{(&fenc!='utf-8'&&&fenc!='')?'['.&fenc.'] ':''}",
+    "%*",
+    [[%{luaeval("require'mega.statusline'.dap_status()")}]],
+    [[%{luaeval("require'mega.statusline'.diagnostic_status()")}]],
+  }
+  return table.concat(parts, "")
+end
+
+-- vim.cmd([[set statusline=%!v:lua.statusline()]])
+-- vim.o.statusline = "%{%v:lua.__statusline()%}"
+vim.o.statusline = "%2{mode()} | %f %m %r %= %{&spelllang} %y %8(%l,%c%) %8p%%"
+
+return M
