@@ -224,11 +224,6 @@ function M.s_search_result()
   return fmt("%s %d/%d", icons.misc.search, result.current, result.total)
 end
 
-function M.abnormal_buffer()
-  -- For more information see ":h buftype"
-  return vim.bo.buftype ~= ""
-end
-
 -- Mode
 -- Custom `^V` and `^S` symbols to make this file appropriate for copy-paste
 -- (otherwise those symbols are not displayed).
@@ -261,6 +256,17 @@ M.modes = setmetatable({
   end,
 })
 -- stylua: ignore end
+
+local function is_abnormal_buffer()
+  -- For more information see ":h buftype"
+  return vim.bo.buftype ~= ""
+end
+
+local function is_valid_git()
+  local status = vim.b.gitsigns_status_dict or {}
+  local is_valid = status and status.head ~= nil
+  return is_valid and status or is_valid
+end
 
 local function get_diagnostics()
   local function count(id) return #vim.diagnostic.get(0, { severity = id }) end
@@ -415,10 +421,21 @@ local function seg_line_info(truncate_at)
   })
 end
 
+local function seg_git_symbol(truncate_at)
+  if is_abnormal_buffer() or not is_valid_git() then return "" end
+
+  local symbol = is_truncated(truncate_at) and "" or mega.icons.git.symbol
+  return seg(symbol, "StGitSymbol")
+end
+
 local function seg_git_status(truncate_at)
-  local status = vim.b.gitsigns_status_dict or {}
+  if is_abnormal_buffer() then return "" end
+
+  local status = is_valid_git()
+  if not status then return "" end
+
   local branch = is_truncated(truncate_at) and mega.truncate(status.head or "", 11, false) or status.head
-  return seg(fmt("%s %s", mega.icons.git.symbol, branch), "StGitBranch")
+  return seg(branch, "StGitBranch")
 end
 
 local function is_focused() return tonumber(vim.g.actual_curwin) == vim.api.nvim_get_current_win() end
@@ -441,7 +458,7 @@ function _G.__statusline()
     expandtab = vim.bo[bufnr].expandtab,
   }
 
-  if not is_focused() then return "%#StInactive#%F %m%=" end
+  if not is_focused() then return "%#StInactive# %2{mode()} | %F %m %r %= %{&spelllang} %y %8(%l,%c%) %8p%%" end
 
   if is_plain() then
     local parts = {
@@ -475,6 +492,8 @@ function _G.__statusline()
     seg("%*"),
     seg_lsp_status(120),
     seg_spacer(2),
+    seg_git_symbol(80),
+    seg_spacer(1),
     seg_git_status(120),
     [[%{luaeval("require'mega.statusline'.dap_status()")}]],
     seg_line_info(75),
@@ -484,7 +503,6 @@ function _G.__statusline()
 end
 
 vim.o.cmdheight = 2
--- vim.cmd([[set statusline=%!v:lua.statusline()]])
 vim.o.statusline = "%{%v:lua.__statusline()%}"
 -- vim.o.statusline = "%2{mode()} | %f %m %r %= %{&spelllang} %y %8(%l,%c%) %8p%%"
 
