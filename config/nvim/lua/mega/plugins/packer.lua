@@ -1,10 +1,5 @@
 local fmt = string.format
 
-if vim.g.use_packer then
-  -- vim.opt.runtimepath:remove("~/.local/share/nvim/site/pack/*/start/*")
-  vim.opt.runtimepath:remove("~/.local/share/nvim/site/pack/paqs")
-end
-
 local _use, use_local, bootstrap_packer, packer_notify, conf = unpack(require("mega.plugins.utils"))
 local mega = require("mega.globals")
 
@@ -14,6 +9,8 @@ local PACKER_SNAPSHOTS_PATH = fmt("%s/packer/snapshots/", vim.fn.stdpath("cache"
 local bootstrapped = bootstrap_packer("start", PACKER_COMPILED_PATH)
 
 vim.cmd.packadd({ "cfilter", bang = true })
+
+mega.require("impatient")
 
 require("packer").startup({
   function(use)
@@ -28,7 +25,7 @@ require("packer").startup({
     -- ( UI ) ------------------------------------------------------------------
     use({ "rktjmp/lush.nvim" })
     use({ "dm1try/golden_size", config = conf("golden_size") })
-    use({ "kyazdani42/nvim-web-devicons", after = "lush.nvim" })
+    use({ "kyazdani42/nvim-web-devicons", config = function() require("nvim-web-devicons").setup() end })
     use({
       "NvChad/nvim-colorizer.lua",
       event = "BufRead",
@@ -58,7 +55,7 @@ require("packer").startup({
     use({ "MunifTanjim/nui.nvim" })
     use({ "folke/which-key.nvim", config = conf("which-key") })
     -- use({ "echasnovski/mini.nvim", config = conf("mini"), after = "nvim-treesitter" })
-    use({ "phaazon/hop.nvim" })
+    use({ "phaazon/hop.nvim", config = conf("hop") })
     -- use({ "jghauser/fold-cycle.nvim" })
     use({ "anuvyklack/hydra.nvim", config = conf("hydra") })
     use({ "rcarriga/nvim-notify", config = conf("notify") })
@@ -67,13 +64,13 @@ require("packer").startup({
       "lukas-reineke/indent-blankline.nvim",
       config = function()
         require("indent_blankline").setup({
-          char = "│", -- ┆ ┊ 
+          char = "│", -- alts: ┆ ┊  ▎
           show_foldtext = false,
           context_char = "▎",
           char_priority = 12,
           show_current_context = true,
           show_current_context_start = true,
-          show_current_context_start_on_current_line = false,
+          show_current_context_start_on_current_line = true,
           show_first_indent_level = true,
           filetype_exclude = {
             "dbout",
@@ -138,23 +135,21 @@ require("packer").startup({
       module_pattern = "telescope.*",
       config = conf("telescope"),
       event = "CursorHold",
-      requires = {
-        {
-          "nvim-telescope/telescope-file-browser.nvim",
-          after = "telescope.nvim",
-          config = function() require("telescope").load_extension("file_browser") end,
-        },
-        {
-          "natecraddock/telescope-zf-native.nvim",
-          after = "telescope.nvim",
-          config = function() require("telescope").load_extension("zf-native") end,
-        },
-        {
-          "benfowler/telescope-luasnip.nvim",
-          after = "telescope.nvim",
-          config = function() require("telescope").load_extension("luasnip") end,
-        },
-      },
+    })
+    use({
+      "nvim-telescope/telescope-file-browser.nvim",
+      after = "telescope.nvim",
+      config = function() require("telescope").load_extension("file_browser") end,
+    })
+    use({
+      "natecraddock/telescope-zf-native.nvim",
+      after = "telescope.nvim",
+      config = function() require("telescope").load_extension("zf-native") end,
+    })
+    use({
+      "benfowler/telescope-luasnip.nvim",
+      after = "telescope.nvim",
+      config = function() require("telescope").load_extension("luasnip") end,
     })
 
     -- ( Navigation ) ----------------------------------------------------------
@@ -171,7 +166,6 @@ require("packer").startup({
       requires = {
         "nvim-lua/plenary.nvim",
         "MunifTanjim/nui.nvim",
-        { "kyazdani42/nvim-web-devicons", config = function() require("nvim-web-devicons").setup() end },
         { "mrbjarksen/neo-tree-diagnostics.nvim", module = "neo-tree.sources.diagnostics" },
         { "s1n7ax/nvim-window-picker" },
       },
@@ -196,33 +190,36 @@ require("packer").startup({
     use({
       "nvim-treesitter/nvim-treesitter",
       run = ":TSUpdate",
+      -- run = function()
+      --   if vim.fn.exists(":TSUpdate") == 2 then vim.cmd(":TSUpdate") end
+      -- end,
+      cmd = { "TSUpdate", "TSInstallSync" },
       event = { "BufRead", "BufNewFile" },
-      requires = {
-        { "RRethy/nvim-treesitter-textsubjects", after = "nvim-treesitter" },
-        { "nvim-treesitter/nvim-tree-docs", after = "nvim-treesitter" },
-        { "JoosepAlviste/nvim-ts-context-commentstring", after = "nvim-treesitter" },
-        { "windwp/nvim-ts-autotag", after = "nvim-treesitter" },
-        { "p00f/nvim-ts-rainbow", after = "nvim-treesitter" },
-        { "mfussenegger/nvim-treehopper", after = "nvim-treesitter" },
-        { "David-Kunz/treesitter-unit", after = "nvim-treesitter" },
-        { "nvim-treesitter/nvim-treesitter-textobjects" },
-        {
-          "nvim-treesitter/nvim-treesitter-context",
-          after = "nvim-treesitter",
-          -- config = function()
-          --   require("treesitter-context").setup({
-          --     multiline_threshold = 4,
-          --     separator = { "─", "ContextBorder" }, -- alts: ▁ ─ ▄
-          --     mode = "topline",
-          --   })
-          -- end,
-        },
-        {
-          "nvim-treesitter/playground",
-          after = "nvim-treesitter",
-          cmd = { "TSPlaygroundToggle", "TSHighlightCapturesUnderCursor" },
-        },
-      },
+      config = conf("treesitter"),
+    })
+    use({ "nvim-treesitter/nvim-treesitter-textobjects", after = "nvim-treesitter" })
+    use({ "RRethy/nvim-treesitter-textsubjects", after = "nvim-treesitter" })
+    use({ "nvim-treesitter/nvim-tree-docs", after = "nvim-treesitter" })
+    use({ "JoosepAlviste/nvim-ts-context-commentstring", after = "nvim-treesitter" })
+    use({ "windwp/nvim-ts-autotag", after = "nvim-treesitter" })
+    use({ "p00f/nvim-ts-rainbow", after = "nvim-treesitter" })
+    use({ "mfussenegger/nvim-treehopper", after = "nvim-treesitter" })
+    use({ "David-Kunz/treesitter-unit", after = "nvim-treesitter" })
+    use({
+      "nvim-treesitter/nvim-treesitter-context",
+      after = "nvim-treesitter",
+      -- config = function()
+      --   require("treesitter-context").setup({
+      --     multiline_threshold = 4,
+      --     separator = { "─", "ContextBorder" }, -- alts: ▁ ─ ▄
+      --     mode = "topline",
+      --   })
+      -- end,
+    })
+    use({
+      "nvim-treesitter/playground",
+      cmd = { "TSPlaygroundToggle", "TSHighlightCapturesUnderCursor" },
+      after = "nvim-treesitter",
     })
 
     -- ( LSP ) -----------------------------------------------------------------
@@ -238,7 +235,7 @@ require("packer").startup({
         require("lsp_signature").setup({
           bind = true,
           fix_pos = false,
-          auto_close_after = 15, -- close after 15 seconds
+          -- auto_close_after = 15, -- close after 15 seconds
           hint_enable = false,
           -- floating_window = true,
           handler_opts = { border = border() },
@@ -263,42 +260,43 @@ require("packer").startup({
     use({ "jose-elias-alvarez/nvim-lsp-ts-utils" })
     use({ "b0o/schemastore.nvim" })
     use({ "mrshmllow/document-color.nvim" })
-    use({
-      "j-hui/fidget.nvim",
-      config = function()
-        require("fidget").setup({
-          text = {
-            spinner = "dots_pulse",
-            done = "",
-          },
-          window = {
-            blend = 10,
-            -- relative = "editor",
-          },
-          sources = { -- Sources to configure
-            ["elixirls"] = { -- Name of source
-              ignore = true, -- Ignore notifications from this source
-            },
-            ["markdown"] = { -- Name of source
-              ignore = true, -- Ignore notifications from this source
-            },
-          },
-          align = {
-            bottom = false,
-            right = true,
-          },
-          fmt = {
-            stack_upwards = false,
-          },
-        })
-        require("mega.globals").augroup("CloseFidget", {
-          {
-            event = { "VimLeavePre", "LspDetach" },
-            command = "silent! FidgetClose",
-          },
-        })
-      end,
-    })
+    -- use({
+    --   "j-hui/fidget.nvim",
+    --   disable = true,
+    --   config = function()
+    --     require("fidget").setup({
+    --       text = {
+    --         spinner = "dots_pulse",
+    --         done = "",
+    --       },
+    --       window = {
+    --         blend = 10,
+    --         -- relative = "editor",
+    --       },
+    --       sources = { -- Sources to configure
+    --         ["elixirls"] = { -- Name of source
+    --           ignore = true, -- Ignore notifications from this source
+    --         },
+    --         ["markdown"] = { -- Name of source
+    --           ignore = true, -- Ignore notifications from this source
+    --         },
+    --       },
+    --       align = {
+    --         bottom = false,
+    --         right = true,
+    --       },
+    --       fmt = {
+    --         stack_upwards = false,
+    --       },
+    --     })
+    --     require("mega.globals").augroup("CloseFidget", {
+    --       {
+    --         event = { "VimLeavePre", "LspDetach" },
+    --         command = "silent! FidgetClose",
+    --       },
+    --     })
+    --   end,
+    -- })
     -- use({ "lewis6991/hover.nvim" })
     -- use({ "folke/lua-dev.nvim", module = "lua-dev" })
     -- use({ "microsoft/python-type-stubs", opt = true })
@@ -501,10 +499,44 @@ require("packer").startup({
         -- https://github.com/rafamadriz/NeoCode/blob/main/lua/modules/plugins/completion.lua#L130-L192
       end,
     })
-    use({ "nacro90/numb.nvim" })
-    use({ "natecraddock/sessions.nvim" })
-    use({ "natecraddock/workspaces.nvim" })
-    use({ "megalithic/habitats.nvim" })
+    use({ "nacro90/numb.nvim", config = function() require("numb").setup() end })
+    use({
+      "natecraddock/sessions.nvim",
+      config = function()
+        require("sessions").setup({
+          events = { "VimLeavePre" },
+          session_filepath = vim.fn.stdpath("data") .. "/sessions/default",
+        })
+      end,
+    })
+    use({
+      "natecraddock/workspaces.nvim",
+      config = function()
+        require("workspaces").setup({
+          path = vim.fn.stdpath("data") .. "/workspaces",
+          hooks = {
+            open_pre = {
+              function()
+                local open_files = require("mega.utils").get_open_filelist()
+                if open_files == nil or #open_files == 0 or (#open_files == 1 and open_files[1] == "") then
+                  vim.cmd("SessionsStop")
+                  vim.cmd("silent %bdelete!")
+                end
+              end,
+            },
+            open = {
+              function()
+                local open_files = require("mega.utils").get_open_filelist()
+                if open_files == nil or #open_files == 0 or (#open_files == 1 and open_files[1] == "") then
+                  require("sessions").load(nil, { silent = true })
+                end
+              end,
+            },
+          },
+        })
+      end,
+    })
+    use({ "megalithic/habitats.nvim", config = function() require("habitats").setup({}) end })
     use({ "editorconfig/editorconfig-vim" })
     use({ "mhartington/formatter.nvim" })
     use({ "alvan/vim-closetag" })
@@ -514,6 +546,7 @@ require("packer").startup({
     use({ "tpope/vim-repeat" })
     use({ "tpope/vim-unimpaired" })
     use({ "tpope/vim-apathy" })
+    use({ "tpope/vim-scriptease" })
     use({ "lambdalisue/suda.vim" })
     use({ "EinfachToll/DidYouMean" })
     use({ "wsdjeg/vim-fetch" }) -- vim path/to/file.ext:12:3
@@ -548,10 +581,30 @@ require("packer").startup({
     -- ( Notes/Docs ) ----------------------------------------------------------
     use({ "ixru/nvim-markdown" })
     use({ "iamcco/markdown-preview.nvim", ft = "md", run = "cd app && yarn install" })
-    use({ "mickael-menu/zk-nvim" })
+    use({ "mickael-menu/zk-nvim", config = conf("zk") })
     use({ "gaoDean/autolist.nvim" })
     use({ "ellisonleao/glow.nvim" })
-    use({ "lukas-reineke/headlines.nvim" })
+    use({
+      "lukas-reineke/headlines.nvim",
+      config = function()
+        require("headlines").setup({
+          markdown = {
+            source_pattern_start = "^```",
+            source_pattern_end = "^```$",
+            dash_pattern = "^---+$",
+            dash_highlight = "Dash",
+            dash_string = "", -- alts:  靖並   ﮆ 
+            headline_pattern = "^#+",
+            headline_highlights = { "Headline1", "Headline2", "Headline3", "Headline4", "Headline5", "Headline6" },
+            codeblock_highlight = "CodeBlock",
+          },
+          yaml = {
+            dash_pattern = "^---+$",
+            dash_highlight = "Dash",
+          },
+        })
+      end,
+    })
     -- @trial phaazon/mind.nvim
     -- @trial "renerocksai/telekasten.nvim"
     -- @trial ekickx/clipboard-image.nvim
@@ -585,7 +638,7 @@ require("packer").startup({
     -- use({ "chr4/nginx.vim" })
     -- use({ "nanotee/luv-vimdocs" })
     use({ "fladson/vim-kitty" })
-    use({ "SirJson/fzf-gitignore" })
+    use({ "SirJson/fzf-gitignore", config = function() vim.g.fzf_gitignore_no_maps = true end })
 
     if bootstrapped then require("packer").sync() end
   end,
@@ -626,6 +679,7 @@ if not vim.g.packer_compiled_loaded and vim.loop.fs_stat(PACKER_COMPILED_PATH) t
 end
 
 mega.nnoremap("<leader>ps", "<Cmd>PackerSync<CR>", "packer: sync")
+-- mega.nnoremap("<leader>pc", "<Cmd>PackerCompile<CR>", "packer: compile")
 
 local function reload()
   mega.invalidate("mega.plugins", true)

@@ -1,6 +1,7 @@
 return function()
   local dap_ok, dap = pcall(require, "dap")
   if not dap_ok then return end
+  -- P("loaded dap")
 
   -- extra dap plugins/extensions/adapters
   mega.conf("dap-ruby", {})

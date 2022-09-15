@@ -1,5 +1,5 @@
 if not mega then return end
-if vim.g.disable_plugins["lsp"] then return end
+if not vim.g.enabled_plugin["lsp"] then return end
 
 local fn = vim.fn
 local api = vim.api
@@ -122,7 +122,6 @@ local function setup_commands()
       })
     end
   end
-
   command("LspDiagnostics", make_diagnostic_qf_updater())
   nnoremap("<leader>ll", "<Cmd>LspDiagnostics<CR>", "lsp: toggle quickfix diagnostics")
 end
@@ -131,15 +130,15 @@ end
 ---@param client table<string, any>
 ---@param bufnr number
 local function setup_autocommands(client, bufnr)
-  augroup("LspCodeLens", {
-    {
-      event = { "BufEnter", "CursorHold", "InsertLeave" }, -- CursorHoldI
-      buffer = 0,
-      command = function()
-        if not vim.tbl_isempty(vim.lsp.codelens.get(bufnr)) then vim.lsp.codelens.refresh() end
-      end,
-    },
-  })
+  -- augroup("LspCodeLens", {
+  --   {
+  --     event = { "BufEnter", "CursorHold", "InsertLeave" }, -- CursorHoldI
+  --     buffer = 0,
+  --     command = function()
+  --       if not vim.tbl_isempty(vim.lsp.codelens.get(bufnr)) then vim.lsp.codelens.refresh() end
+  --     end,
+  --   },
+  -- })
 
   -- augroup("LspSignatureHelp", {
   --   {
@@ -169,6 +168,7 @@ local function setup_autocommands(client, bufnr)
   augroup("LspDiagnostics", {
     {
       event = { "CursorHold" },
+      buffer = 0,
       desc = "Show diagnostics",
       command = function() diagnostic_popup() end,
     },

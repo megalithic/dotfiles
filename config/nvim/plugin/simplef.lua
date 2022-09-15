@@ -1,5 +1,5 @@
 if not mega then return end
-if vim.g.disable_plugins["simplef"] then return end
+if not vim.g.enabled_plugin["simplef"] then return end
 
 local ns = vim.api.nvim_create_namespace("custom_find")
 

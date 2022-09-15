@@ -106,7 +106,8 @@ local commands = {
   { key = "f", disp = " Find files", cmd = "lua require('telescope.builtin').find_files()" },
   { key = "s", disp = " Sync plugins", cmd = "lua mega.sync_plugins()" },
   { key = "c", disp = " Clean plugins", cmd = "PaqClean" },
-  { key = "t", disp = " Time startup", cmd = "StartupTime" },
+  -- { key = "t", disp = " Time startup", cmd = "StartupTime" },
+  { key = "t", disp = " Terminal (tab)", cmd = "T direction=tab" },
   { key = "q", disp = " Quit", cmd = "q!" },
 }
 

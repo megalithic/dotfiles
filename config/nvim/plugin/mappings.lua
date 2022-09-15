@@ -24,7 +24,7 @@
 -- https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/whichkey.lua
 
 if not mega then return end
-if vim.g.disable_plugins["mappings"] then return end
+if not vim.g.enabled_plugin["mappings"] then return end
 
 local fn = vim.fn
 local exec = mega.exec
@@ -32,6 +32,8 @@ local api = vim.api
 -- NOTE: all convenience mode mappers are on the _G global; so no local assigns needed
 
 -- [convenience mappings] ------------------------------------------------------
+
+-- nnoremap("<C-t>", "<cmd>tabnew<cr>", "tabs: new")
 
 -- go-to split (also, if in kitty, see nvim-kitty-navigator)
 nnoremap("<C-h>", "<cmd>wincmd h<CR>", "split: go left")
@@ -187,7 +189,10 @@ nnoremap ><lt> V`]>
 nnoremap =- V`]=
 ]])
 
-nnoremap("<leader>w", function() vim.api.nvim_command("write") end, "write buffer and stuff")
+nnoremap("<leader>w", function(args)
+  P(args)
+  vim.api.nvim_command("silent! write")
+end, "write buffer and stuff")
 nnoremap(
   "<leader>W",
   function() vim.api.nvim_command("write !sudo -S tee > /dev/null %") end,
@@ -223,7 +228,7 @@ nnoremap([[<Esc>]], function()
   vim.cmd("syntax sync fromstart")
   mega.close_float_wins()
   vim.cmd("echo ''")
-  mega.blink_cursorline()
+  if vim.g.enabled_plugin["cursorline"] then mega.blink_cursorline() end
 
   -- do
   --   local ok, mj = pcall(require, "mini.jump")

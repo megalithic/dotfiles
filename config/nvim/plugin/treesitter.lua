@@ -1,11 +1,11 @@
 -- if true then return end
 if not mega then return end
-if vim.g.disable_plugins["treesitter"] then return end
+if not vim.g.enabled_plugin["treesitter"] then return end
 
-local ts_ok, _ = pcall(require, "nvim-treesitter")
+local ts_ok, _ = mega.require("nvim-treesitter")
 if not ts_ok then return end
 
-vim.opt.indentexpr = "nvim_treesitter#indent()"
+P("treesitter is installed")
 
 local treesitter_parsers = require("nvim-treesitter.parsers")
 local ft_to_parser = treesitter_parsers.filetype_to_parsername
@@ -82,7 +82,20 @@ require("nvim-treesitter.configs").setup({
     },
   },
   indent = { enable = true },
-  autotag = { enable = true, filetype = { "html", "xml", "heex" } },
+  autotag = {
+    enable = true,
+    filetype = {
+      "html",
+      "xml",
+      "javascript",
+      "typescriptreact",
+      "javascriptreact",
+      "vue",
+      "elixir",
+      "eelixir",
+      "heex",
+    },
+  },
   context_commentstring = {
     enable = true,
     enable_autocmd = false,
@@ -178,26 +191,12 @@ require("nvim-treesitter.configs").setup({
   },
 })
 
-require("nvim-ts-autotag").setup({
-  filetypes = {
-    "html",
-    "xml",
-    "javascript",
-    "typescriptreact",
-    "javascriptreact",
-    "vue",
-    "elixir",
-    "eelixir",
-    "heex",
-  },
-})
-
 -- nvim-treehopper
 require("tsht").config.hint_keys = { "h", "j", "f", "d", "n", "v", "s", "l", "a" }
 
-mega.conf("treesitter-context", {
-  enable = false,
-  multiline_threshold = 4,
-  separator = { "▁", "TreesitterContextBorder" }, -- ─▁
-  mode = "topline",
-})
+-- mega.conf("treesitter-context", {
+--   enable = false,
+--   multiline_threshold = 4,
+--   separator = { "▁", "TreesitterContextBorder" }, -- ─▁
+--   mode = "topline",
+-- })

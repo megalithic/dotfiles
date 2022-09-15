@@ -2,7 +2,9 @@
 -- 1. nvim-cursorline
 
 if not mega then return end
-if vim.g.disable_plugins["colorcolumn"] then return end
+if not vim.g.enabled_plugin["colorcolumn"] then return end
+
+local vc_ok, vc = mega.require("virt-column")
 
 local contains = vim.tbl_contains
 local api = vim.api
@@ -68,7 +70,6 @@ local function set_colorcolumn(leaving)
 
   if contains(M.column_clear, vim.bo.filetype) or not_eligible or (leaving and not is_last_win) or small_window then
     vim.wo.colorcolumn = ""
-    local vc_ok, vc = mega.require("virt-column")
     if vc_ok then vc.setup_buffer({ virtcolumn = vim.wo.colorcolumn }) end
 
     return
@@ -76,8 +77,6 @@ local function set_colorcolumn(leaving)
 
   if vim.wo.colorcolumn == "" then
     vim.wo.colorcolumn = tostring(vim.g.default_colorcolumn)
-
-    local vc_ok, vc = mega.require("virt-column")
     if vc_ok then vc.setup_buffer({ virtcolumn = vim.wo.colorcolumn }) end
   end
 end
@@ -87,7 +86,7 @@ local function disable_colorcolumn(leaving) set_colorcolumn(leaving) end
 local function enable_colorcolumn() set_colorcolumn() end
 
 -- initial setup of virt-column; required for this plugin
-mega.conf("virt-column", { config = { char = "│" } })
+if vc_ok then vc.setup({ config = { char = "│" } }) end
 
 mega.augroup("ToggleColorColumn", {
   {

@@ -53,7 +53,7 @@ return {
       Property = "", -- Property
       Unit = "", -- Unit
       Value = "", -- Value
-      Enum = "了", -- Enum -- alts: 
+      Enum = "", -- Enum -- alts: 了
       Keyword = "", -- Keyword
       Snippet = "", -- Snippet
       Color = "", -- Color

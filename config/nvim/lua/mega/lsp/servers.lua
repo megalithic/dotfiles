@@ -2,7 +2,10 @@ return function(on_attach)
   local fn = vim.fn
   local api = vim.api
   local lsp = vim.lsp
-  local lspconfig = require("lspconfig")
+
+  local ok_lsp, lspconfig = mega.require("lspconfig")
+  if not ok_lsp then return end
+
   local mason_lspconfig = require("mason-lspconfig")
   local lsputil = require("lspconfig.util")
 
@@ -437,6 +440,7 @@ return function(on_attach)
 
       lsp_setup(server_name, opts)
     end,
+    -- TODO: @trial: https://github.com/jose-elias-alvarez/typescript.nvim
     tsserver = function(server_name)
       local function do_organize_imports()
         local params = {

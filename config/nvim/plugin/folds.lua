@@ -3,7 +3,7 @@
 -----------------------------------------------------------------------------//
 
 if not mega then return end
-if vim.g.disable_plugins["folds"] then return end
+if not vim.g.enabled_plugin["folds"] then return end
 
 local fn = vim.fn
 local api = vim.api

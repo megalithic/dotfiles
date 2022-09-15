@@ -1,5 +1,5 @@
 if not mega then return end
-if vim.g.disable_plugins["term"] then return end
+if not vim.g.enabled_plugin["term"] then return end
 
 local fmt = string.format
 local api = vim.api

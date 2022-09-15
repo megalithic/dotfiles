@@ -1,28 +1,26 @@
 -- [ speed ] -------------------------------------------------------------------
 
 vim.api.nvim_create_augroup("vimrc", {})
-require("impatient")
 
 -- [ settings ] ----------------------------------------------------------------
 
-vim.g.disable_plugins = {
-  mappings = false,
-  autocmds = false,
-  megaline = false,
+vim.g.enabled_plugin = {
+  mappings = true,
+  autocmds = true,
+  megaline = true,
   treesitter = false,
-  lsp = false,
-  term = false,
-  cursorline = false,
-  colorcolumn = false,
-  numbers = false,
-  quickfix = false,
-  simplef = false,
-  folds = false,
-  tmux = false,
-  env = true,
+  lsp = true,
+  term = true,
+  cursorline = true,
+  colorcolumn = true,
+  numbers = true,
+  quickfix = true,
+  simplef = true,
+  folds = true,
+  tmux = true,
+  env = false,
 }
 
-vim.g.use_packer = true
 vim.g.use_term_plugin = true
 vim.g.colorscheme = "megaforest"
 vim.g.default_colorcolumn = "81"
@@ -31,7 +29,7 @@ vim.g.maplocalleader = " "
 
 -- [ globals ] -----------------------------------------------------------------
 
-local namespace = {
+local ns = {
   fn = {},
   dirs = {},
   mappings = {},
@@ -41,7 +39,7 @@ local namespace = {
   icons = require("mega.icons"),
 }
 
-_G.mega = mega or namespace
+_G.mega = mega or ns
 
 -- [ loaders ] -----------------------------------------------------------------
 
@@ -54,9 +52,5 @@ end
 
 R("mega.globals")
 R("mega.options")
-
-if vim.g.use_packer then
-  vim.defer_fn(function() R("mega.plugins.packer") end, 0)
-else
-  R("mega.plugins").config()
-end
+-- vim.defer_fn(function() R("mega.plugins.packer") end, 0)
+R("mega.plugins.packer")

@@ -3,7 +3,7 @@ return function()
 
   local icons = mega.icons
 
-  mega.nnoremap("<C-N>", "<Cmd>Neotree toggle reveal position=left<CR>")
+  mega.nnoremap("<C-t>", "<Cmd>Neotree toggle reveal position=left<CR>")
 
   require("neo-tree").setup({
     sources = {
