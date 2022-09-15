@@ -33,7 +33,7 @@ local api = vim.api
 
 -- [convenience mappings] ------------------------------------------------------
 
-nnoremap("<C-t>", "<cmd>tabnew<cr>", "tabs: new")
+-- nnoremap("<C-t>", "<cmd>tabnew<cr>", "tabs: new")
 
 -- go-to split (also, if in kitty, see nvim-kitty-navigator)
 nnoremap("<C-h>", "<cmd>wincmd h<CR>", "split: go left")

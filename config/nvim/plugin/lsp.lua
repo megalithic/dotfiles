@@ -168,6 +168,7 @@ local function setup_autocommands(client, bufnr)
   augroup("LspDiagnostics", {
     {
       event = { "CursorHold" },
+      buffer = 0,
       desc = "Show diagnostics",
       command = function() diagnostic_popup() end,
     },

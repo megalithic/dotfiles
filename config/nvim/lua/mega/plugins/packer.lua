@@ -19,7 +19,7 @@ require("packer").startup({
     use({ "nvim-lua/plenary.nvim" })
     use({ "nvim-lua/popup.nvim" })
     use({ "dstein64/vim-startuptime", cmd = { "StartupTime" }, config = function() vim.g.startuptime_tries = 15 end })
-    -- use({ "antoinemadec/FixCursorHold.nvim", config = function() vim.g.cursorhold_updatetime = 100 end }) -- Needed while issue https://github.com/neovim/neovim/issues/12587 is still open
+    use({ "antoinemadec/FixCursorHold.nvim", config = function() vim.g.cursorhold_updatetime = 100 end }) -- Needed while issue https://github.com/neovim/neovim/issues/12587 is still open
     use({ "mattn/webapi-vim" })
 
     -- ( UI ) ------------------------------------------------------------------
