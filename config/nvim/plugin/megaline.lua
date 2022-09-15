@@ -308,11 +308,24 @@ local function get_lsp_status(messages)
 end
 
 local function get_hydra_status()
-  -- local ok, dap = mega.require("dap")
-  -- if not ok then return "" end
-  -- local status = dap.status()
-  -- if status ~= "" then return status .. " | " end
-  return ""
+  local ok, hydra = mega.require("hydra.statusline")
+  if not ok then return "" end
+
+  local colors = {
+    red = "HydraRedSt",
+    blue = "HydraBlueSt",
+    amaranth = "HydraAmaranthSt",
+    teal = "HydraTealSt",
+    pink = "HydraPinkSt",
+  }
+  local data = {
+    name = hydra.get_name() or "UNKNOWN",
+    hint = hydra.get_hint(),
+    color = colors[hydra.get_color()],
+  }
+
+  if not hydra.is_active() then return "" end
+  return seg(fmt("%s %s", mega.icons.misc.hydra, string.upper(data.name)), data.color)
 end
 
 local function get_dap_status()
@@ -508,6 +521,11 @@ function _G.__statusline()
     -- unpack(item_if("Saving…", vim.g.is_saving, "StComment", { before = " " })),
     seg([[%=]]),
     seg(get_hydra_status()),
+    -- unpack(item_if(hydra.name:upper(), hydra_active, hydra.color, {
+    --   prefix = string.rep(" ", 5) .. "🐙",
+    --   suffix = string.rep(" ", 5),
+    --   priority = 5,
+    -- })),
     seg([[%=]]),
     seg("", "warningmsg"),
     seg("%{&paste?'[paste] ':''}"),

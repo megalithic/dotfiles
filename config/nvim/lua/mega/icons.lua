@@ -194,6 +194,7 @@ return {
     calendar = "",
     fold_open = "",
     fold_close = "",
+    hydra = "🐙",
   },
   virtual_text = "",
   mode_term = "ﲵ",
