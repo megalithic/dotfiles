@@ -8,7 +8,7 @@ vim.g.enabled_plugin = {
   mappings = true,
   autocmds = true,
   megaline = true,
-  treesitter = false,
+  treesitter = false, -- loading via packer config; TODO: remove from plugin?
   lsp = true,
   term = true,
   cursorline = true,
@@ -17,7 +17,7 @@ vim.g.enabled_plugin = {
   quickfix = true,
   simplef = true,
   folds = true,
-  tmux = true,
+  tmux = false,
   env = false,
 }
 
