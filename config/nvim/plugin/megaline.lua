@@ -336,6 +336,8 @@ local function get_dap_status()
   return ""
 end
 
+local function get_search_results() return "" end
+
 local function parse_filename(truncate_at)
   local function buf_expand(bufnr, mod) return expand("#" .. bufnr .. mod) end
 
@@ -459,6 +461,8 @@ local function seg_modified()
   return seg(mega.icons.modified, "StModified")
 end
 
+local function seg_search_results() return get_search_results() end
+
 local function seg_git_symbol(truncate_at)
   if is_abnormal_buffer() or not is_valid_git() then return "" end
 
@@ -518,6 +522,7 @@ function _G.__statusline()
     seg_filename(120),
     seg_modified(),
     seg("%r", "StModified"),
+    seg_search_results(),
     -- unpack(item_if("Saving…", vim.g.is_saving, "StComment", { before = " " })),
     seg([[%=]]),
     seg(get_hydra_status()),

@@ -129,22 +129,25 @@ function mega.term.parse(args)
 end
 
 -- REF: https://github.com/outstand/titan.nvim/blob/main/lua/titan/plugins/toggleterm.lua
-local function create_keymaps(bufnr, winnr)
+local function create_keymaps(bufnr, winnr, direction)
   local opts = { buffer = bufnr, silent = false }
   -- quit terminal and go back to last window
-  nmap("q", function()
-    api.nvim_buf_delete(bufnr, { force = true })
-    bufnr = nil_buf_id
-    -- jump back to our last window
-    vim.cmd(winnr .. [[wincmd p]])
-  end, opts)
+  -- TODO: do we want this ONLY for non tab terminals?
+  if direction ~= "tab" then
+    nmap("q", function()
+      api.nvim_buf_delete(bufnr, { force = true })
+      bufnr = nil_buf_id
+      -- jump back to our last window
+      vim.cmd(winnr .. [[wincmd p]])
+    end, opts)
+  end
 
   tmap("<esc>", [[<C-\><C-n>]], opts)
-  -- tmap("<C-c>", [[<C-\><C-n>]], opts)
   tmap("<C-h>", [[<Cmd>wincmd h<CR>]], opts)
   tmap("<C-j>", [[<Cmd>wincmd j<CR>]], opts)
   tmap("<C-k>", [[<Cmd>wincmd k<CR>]], opts)
   tmap("<C-l>", [[<Cmd>wincmd l<CR>]], opts)
+  -- tmap("<C-c>", [[<C-\><C-n>]], opts) -- NOTE: keep this disbled so we can C-c in a shell
 end
 
 local function create_term(cmd, opts)
@@ -241,7 +244,7 @@ local function handle_new(cmd, opts)
   end
 
   api.nvim_buf_set_var(term_buf_id, "cmd", opts.cmd)
-  create_keymaps(term_buf_id, term_win_id)
+  create_keymaps(term_buf_id, term_win_id, opts.direction)
 
   if precmd ~= nil then init_cmd = fmt("%s; %s", precmd, init_cmd) end
 

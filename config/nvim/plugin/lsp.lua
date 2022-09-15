@@ -205,17 +205,17 @@ local function setup_mappings(client, bufnr)
   -- nnoremap("gK", require("hover").hover_select, desc("lsp: hover (select)"))
   inoremap("<c-k>", vim.lsp.buf.signature_help, desc("lsp: signature help"))
   imap("<c-k>", vim.lsp.buf.signature_help, desc("lsp: signature help"))
-  nnoremap("<leader>li", [[<cmd>LspInfo<CR>]], desc("lsp: show client info"))
-  nnoremap("<leader>lm", [[<cmd>Mason<CR>]], desc("lsp: show mason info"))
+  nnoremap("<leader>lic", [[<cmd>LspInfo<CR>]], desc("connected client info"))
+  nnoremap("<leader>lim", [[<cmd>Mason<CR>]], desc("mason info"))
   nnoremap(
-    "<leader>lic",
+    "<leader>lis",
     [[<cmd>lua =vim.lsp.get_active_clients()[1].server_capabilities<CR>]],
-    desc("lsp: show server capabilities")
+    desc("server capabilities")
   )
-  -- nnoremap("<leader>ll", [[<cmd>LspLog<CR>]], desc("lsp: show log"))
+  nnoremap("<leader>lil", [[<cmd>lua vim.cmd("vnew " .. vim.lsp.get_log_path())<CR>]], desc("lsp logs (vsplit)"))
   nnoremap("<leader>rf", vim.lsp.buf.format, desc("lsp: format buffer"))
-  nnoremap("=", function() vim.lsp.buf.format({ async = true }) end, desc("lsp: format buffer"))
-  vnoremap("=", vim.lsp.buf.range_formatting, desc("lsp: format buffer range"))
+  nnoremap("=", function() vim.lsp.buf.format({ buffer = bufnr, async = true }) end, desc("lsp: format buffer"))
+  vnoremap("=", function() vim.lsp.buf.format({ buffer = bufnr, async = true }) end, desc("lsp: format buffer range"))
 end
 
 -- [ FORMATTING ] ---------------------------------------------------------------

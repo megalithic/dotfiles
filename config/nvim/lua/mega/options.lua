@@ -198,7 +198,7 @@ vim.o.synmaxcol = 1024 -- don't syntax highlight long lines
 -- vim.o.signcolumn = "auto:2-5"
 vim.o.signcolumn = "auto:3-9"
 vim.o.ruler = false
-vim.o.cmdheight = 0 -- Set command line height to two lines
+vim.o.cmdheight = 1 -- Set command line height to two lines
 vim.o.showbreak = [[↪ ]] -- Options include -> '…', '↳ ', '→','↪ '
 vim.o.showbreak = string.rep(" ", 3) -- Make it so that long lines wrap smartly
 vim.o.lazyredraw = true -- should make scrolling faster
@@ -419,7 +419,7 @@ local disabled_built_ins = {
   "vimball",
   "vimballPlugin",
   "zip",
-  "zipPlugin",
+  -- "zipPlugin",
 }
 for _, plugin in pairs(disabled_built_ins) do
   vim.g["loaded_" .. plugin] = 1

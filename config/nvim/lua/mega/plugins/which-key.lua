@@ -170,11 +170,11 @@ return function()
       D = { "telescope: diagnostics" },
       t = { "telescope: type definitions" },
       r = { "telescope: references" },
-      i = { "telescope: implementations" },
       s = { "telescope: document symbols" },
       S = { "telescope: workspace symbols" },
       w = { "telescope: dynamic workspace symbols" },
       n = { "lsp: rename" },
+      i = { name = "lsp: info" },
     },
     ["<leader>m"] = {
       name = "markdown",

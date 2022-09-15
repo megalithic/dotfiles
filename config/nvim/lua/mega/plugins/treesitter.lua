@@ -115,7 +115,7 @@ return function()
       lookahead = true,
       select = {
         enable = true,
-        include_surrounding_whitespace = true,
+        include_surrounding_whitespace = false,
         keymaps = {
           ["af"] = "@function.outer",
           ["if"] = "@function.inner",
