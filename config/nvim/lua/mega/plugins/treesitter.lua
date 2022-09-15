@@ -1,6 +1,6 @@
 return function()
-  local ts_ok, _ = mega.require("nvim-treesitter")
-  if not ts_ok then return end
+  -- local ts_ok, _ = mega.require("nvim-treesitter")
+  -- if not ts_ok then return end
 
   vim.opt.indentexpr = "nvim_treesitter#indent()"
 

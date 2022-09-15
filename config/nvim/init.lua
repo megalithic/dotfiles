@@ -7,7 +7,7 @@ vim.api.nvim_create_augroup("vimrc", {})
 vim.g.enabled_plugin = {
   mappings = true,
   autocmds = true,
-  megaline = false, -- FIXME: reenable after rewrite is complete
+  megaline = true,
   treesitter = false,
   lsp = true,
   term = true,
@@ -21,7 +21,6 @@ vim.g.enabled_plugin = {
   env = false,
 }
 
-vim.g.use_packer = true
 vim.g.use_term_plugin = true
 vim.g.colorscheme = "megaforest"
 vim.g.default_colorcolumn = "81"
@@ -53,11 +52,5 @@ end
 
 R("mega.globals")
 R("mega.options")
-
-if vim.g.use_packer then
-  vim.defer_fn(function() R("mega.plugins.packer") end, 0)
-else
-  R("mega.plugins").config()
-end
-
-R("mega.megaline")
+-- vim.defer_fn(function() R("mega.plugins.packer") end, 0)
+R("mega.plugins.packer")
