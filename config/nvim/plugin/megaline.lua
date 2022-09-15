@@ -3,7 +3,7 @@
 
 if not mega then return end
 if not vim.g.enabled_plugin["megaline"] then
-  vim.o.statusline = "%#StInactive# %2{mode()} | %F %m %r %= %{&spelllang} %y %8(%l,%c%) %8p%%"
+  vim.o.statusline = "%#Statusline# %2{mode()} | %F %m %r %= %{&spelllang} %y %8(%l,%c%) %8p%%"
 end
 
 local M = {}
