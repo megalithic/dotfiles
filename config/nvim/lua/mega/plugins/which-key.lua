@@ -69,7 +69,49 @@ return function()
     -- },
   })
 
-  local gs = require("gitsigns")
+  local ok_gs, gs = mega.require("gitsigns")
+  if ok_gs then
+    require("which-key").register({
+      g = {
+        name = "git",
+        g = { "<cmd>Git<CR>", "Fugitive" },
+        H = "browse at line",
+        O = "browse repo",
+        B = "browse blame at line",
+        r = {
+          name = "+reset",
+          e = "gitsigns: reset entire buffer",
+        },
+        b = {
+          function() gs.blame_line({ full = true }) end,
+          "gitsigns: blame current line",
+        },
+        h = {
+          name = "+hunks",
+          s = { gs.stage_hunk, "stage" },
+          u = { gs.undo_stage_hunk, "undo stage" },
+          r = { gs.reset_hunk, "reset hunk" },
+          p = { gs.preview_hunk, "preview current hunk" },
+          d = { gs.diffthis, "diff this line" },
+          D = {
+            function() gs.diffthis("~") end,
+            "diff this with ~",
+          },
+          b = {
+            name = "+blame",
+            l = "gitsigns: blame current line",
+            d = "gitsigns: toggle word diff",
+            b = {
+              function() gs.blame_line({ full = true }) end,
+              "blame current line",
+            },
+          },
+        },
+        w = "gitsigns: stage entire buffer",
+        m = "gitsigns: list modified in quickfix",
+      },
+    }, { prefix = "<leader>" })
+  end
 
   -- Normal Mode {{{1
   local n_mappings = {
@@ -125,44 +167,6 @@ return function()
       },
       ["?"] = { "help" },
       h = { "help" },
-    },
-    ["<leader>g"] = {
-      name = "git",
-      g = { "<cmd>Git<CR>", "Fugitive" },
-      H = "browse at line",
-      O = "browse repo",
-      B = "browse blame at line",
-      r = {
-        name = "+reset",
-        e = "gitsigns: reset entire buffer",
-      },
-      b = {
-        function() gs.blame_line({ full = true }) end,
-        "gitsigns: blame current line",
-      },
-      h = {
-        name = "+hunks",
-        s = { gs.stage_hunk, "stage" },
-        u = { gs.undo_stage_hunk, "undo stage" },
-        r = { gs.reset_hunk, "reset hunk" },
-        p = { gs.preview_hunk, "preview current hunk" },
-        d = { gs.diffthis, "diff this line" },
-        D = {
-          function() gs.diffthis("~") end,
-          "diff this with ~",
-        },
-        b = {
-          name = "+blame",
-          l = "gitsigns: blame current line",
-          d = "gitsigns: toggle word diff",
-          b = {
-            function() gs.blame_line({ full = true }) end,
-            "blame current line",
-          },
-        },
-      },
-      w = "gitsigns: stage entire buffer",
-      m = "gitsigns: list modified in quickfix",
     },
     ["<leader>l"] = {
       name = "+lsp",
