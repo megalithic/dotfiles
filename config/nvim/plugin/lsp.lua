@@ -438,7 +438,7 @@ end
 -- [ SERVERS ] -----------------------------------------------------------------
 
 -- setup null-ls
-require("mega.lsp.null_ls")(on_attach)
+-- require("mega.lsp.null_ls")(on_attach)
 
 -- setup lsp servers via mason
 require("mega.lsp.servers")(on_attach)

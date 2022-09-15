@@ -226,7 +226,7 @@ require("packer").startup({
     use({ "neovim/nvim-lspconfig" })
     use({ "williamboman/mason.nvim" })
     use({ "williamboman/mason-lspconfig.nvim" })
-    use({ "jose-elias-alvarez/null-ls.nvim" })
+    use({ "jose-elias-alvarez/null-ls.nvim", config = conf("null-ls") })
     use({
       "ray-x/lsp_signature.nvim",
       after = "nvim-lspconfig",
