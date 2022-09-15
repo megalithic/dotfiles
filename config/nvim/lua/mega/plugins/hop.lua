@@ -23,7 +23,14 @@ return function()
 
   -- remove h,j,k,l from hops list of keys
   hop.setup({ keys = "etovxqpdygfbzcisuran" })
-  nnoremap("s", function() hop.hint_char2({ multi_windows = false }) end)
+  nnoremap(
+    "s",
+    function() hop.hint_char2({ multi_windows = false, direction = require("hop.hint").HintDirection.AFTER_CURSOR }) end
+  )
+  nnoremap(
+    "S",
+    function() hop.hint_char2({ multi_windows = false, direction = require("hop.hint").HintDirection.BEFORE_CURSOR }) end
+  )
 
   -- map(
   --   { "x", "n", "o" },

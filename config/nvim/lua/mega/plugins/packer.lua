@@ -55,7 +55,7 @@ require("packer").startup({
     use({ "MunifTanjim/nui.nvim" })
     use({ "folke/which-key.nvim", config = conf("which-key") })
     -- use({ "echasnovski/mini.nvim", config = conf("mini"), after = "nvim-treesitter" })
-    use({ "phaazon/hop.nvim" })
+    use({ "phaazon/hop.nvim", config = conf("hop") })
     -- use({ "jghauser/fold-cycle.nvim" })
     use({ "anuvyklack/hydra.nvim", config = conf("hydra") })
     use({ "rcarriga/nvim-notify", config = conf("notify") })
@@ -499,10 +499,44 @@ require("packer").startup({
         -- https://github.com/rafamadriz/NeoCode/blob/main/lua/modules/plugins/completion.lua#L130-L192
       end,
     })
-    use({ "nacro90/numb.nvim" })
-    use({ "natecraddock/sessions.nvim" })
-    use({ "natecraddock/workspaces.nvim" })
-    use({ "megalithic/habitats.nvim" })
+    use({ "nacro90/numb.nvim", config = function() require("numb").setup() end })
+    use({
+      "natecraddock/sessions.nvim",
+      config = function()
+        require("sessions").setup({
+          events = { "VimLeavePre" },
+          session_filepath = vim.fn.stdpath("data") .. "/sessions/default",
+        })
+      end,
+    })
+    use({
+      "natecraddock/workspaces.nvim",
+      config = function()
+        require("workspaces").setup({
+          path = vim.fn.stdpath("data") .. "/workspaces",
+          hooks = {
+            open_pre = {
+              function()
+                local open_files = require("mega.utils").get_open_filelist()
+                if open_files == nil or #open_files == 0 or (#open_files == 1 and open_files[1] == "") then
+                  vim.cmd("SessionsStop")
+                  vim.cmd("silent %bdelete!")
+                end
+              end,
+            },
+            open = {
+              function()
+                local open_files = require("mega.utils").get_open_filelist()
+                if open_files == nil or #open_files == 0 or (#open_files == 1 and open_files[1] == "") then
+                  require("sessions").load(nil, { silent = true })
+                end
+              end,
+            },
+          },
+        })
+      end,
+    })
+    use({ "megalithic/habitats.nvim", config = function() require("habitats").setup({}) end })
     use({ "editorconfig/editorconfig-vim" })
     use({ "mhartington/formatter.nvim" })
     use({ "alvan/vim-closetag" })
@@ -512,6 +546,7 @@ require("packer").startup({
     use({ "tpope/vim-repeat" })
     use({ "tpope/vim-unimpaired" })
     use({ "tpope/vim-apathy" })
+    use({ "tpope/vim-scriptease" })
     use({ "lambdalisue/suda.vim" })
     use({ "EinfachToll/DidYouMean" })
     use({ "wsdjeg/vim-fetch" }) -- vim path/to/file.ext:12:3
@@ -603,7 +638,7 @@ require("packer").startup({
     -- use({ "chr4/nginx.vim" })
     -- use({ "nanotee/luv-vimdocs" })
     use({ "fladson/vim-kitty" })
-    use({ "SirJson/fzf-gitignore" })
+    use({ "SirJson/fzf-gitignore", config = function() vim.g.fzf_gitignore_no_maps = true end })
 
     if bootstrapped then require("packer").sync() end
   end,

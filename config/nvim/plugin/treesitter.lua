@@ -4,9 +4,8 @@ if not vim.g.enabled_plugin["treesitter"] then return end
 
 local ts_ok, _ = mega.require("nvim-treesitter")
 if not ts_ok then return end
-P("treesitter is installed")
 
-vim.opt.indentexpr = "nvim_treesitter#indent()"
+P("treesitter is installed")
 
 local treesitter_parsers = require("nvim-treesitter.parsers")
 local ft_to_parser = treesitter_parsers.filetype_to_parsername

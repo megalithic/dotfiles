@@ -149,6 +149,12 @@ return function()
           ["[C"] = "@class.outer",
         },
       },
+      lsp_interop = {
+        enable = true,
+        peek_definition_code = {
+          ["gD"] = "@function.outer",
+        },
+      },
     },
     incremental_selection = {
       enable = true,

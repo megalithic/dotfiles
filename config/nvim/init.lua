@@ -7,8 +7,8 @@ vim.api.nvim_create_augroup("vimrc", {})
 vim.g.enabled_plugin = {
   mappings = true,
   autocmds = true,
-  megaline = false,
-  treesitter = false, -- presently loading via packer config
+  megaline = false, -- FIXME: reenable after rewrite is complete
+  treesitter = false,
   lsp = true,
   term = true,
   cursorline = true,
@@ -55,8 +55,7 @@ R("mega.globals")
 R("mega.options")
 
 if vim.g.use_packer then
-  -- vim.defer_fn(function() R("mega.plugins.packer") end, 0)
-  R("mega.plugins.packer")
+  vim.defer_fn(function() R("mega.plugins.packer") end, 0)
 else
   R("mega.plugins").config()
 end
