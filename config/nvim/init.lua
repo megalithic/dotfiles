@@ -52,5 +52,5 @@ end
 
 R("mega.globals")
 R("mega.options")
--- vim.defer_fn(function() R("mega.plugins.packer") end, 0)
-R("mega.plugins.packer")
+vim.defer_fn(function() R("mega.plugins.packer") end, 0)
+-- R("mega.plugins.packer")
