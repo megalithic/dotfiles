@@ -13,7 +13,7 @@ return function()
     sources = {
       format.trim_whitespace.with({ filetypes = { "*" } }),
       format.prettier.with({
-        filetypes = { "html", "json", "yaml", "graphql", "markdown" },
+        filetypes = { "html", "json", "yaml", "graphql", "markdown", "css", "scss", "sass" },
         condition = function() return mega.executable("prettier") end,
       }),
       -- format.prettierd.with({
