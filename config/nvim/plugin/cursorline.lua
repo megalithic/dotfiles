@@ -80,7 +80,7 @@ end
 
 local normal_bg = type(mega.colors) ~= "table" and "NONE" or mega.colors.bg0
 local cursorline_bg = type(mega.colors) ~= "table" and "NONE" or mega.colors.bg1
-local blink_bg = type(mega.colors) ~="table" and "NONE" or mega.colors.bg_blue
+local blink_bg = type(mega.colors) ~= "table" and "NONE" or mega.colors.bg_blue
 
 local function highlight_cursorline()
   if blink_active then

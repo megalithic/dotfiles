@@ -23,17 +23,35 @@ return function()
     event_handlers = {
       {
         event = "neo_tree_buffer_enter",
-        handler = function()
-          vim.cmd("highlight! Cursor blend=100")
+        handler = function(args) vim.cmd("highlight! Cursor blend=100") end,
+      },
+      {
+        event = "neo_tree_buffer_leave",
+        handler = function(args) vim.cmd("highlight! Cursor blend=0") end,
+      },
+      {
+        event = "neo_tree_window_before_open",
+        handler = function(args) end,
+      },
+      {
+        event = "neo_tree_window_after_open",
+        handler = function(args)
+          vim.cmd("wincmd =")
           vim.api.nvim_win_set_width(0, 50)
         end,
       },
       {
-        event = "neo_tree_buffer_leave",
-        handler = function()
-          -- require("virt-column").refresh()
-          -- require("golden_size").on_win_enter()
-          vim.cmd("highlight! Cursor blend=0")
+        event = "neo_tree_window_before_close",
+        handler = function(args) end,
+      },
+      {
+        event = "neo_tree_window_after_close",
+        handler = function(args)
+          vim.cmd("wincmd =")
+          require("virt-column").refresh()
+          require("golden_size").on_win_enter()
+          mega.blink_cursorline()
+          vim.cmd("e")
         end,
       },
     },
@@ -98,6 +116,6 @@ return function()
         buftype = { "terminal", "quickfix", "nofile" },
       },
     },
-    other_win_hl_color = mega.colors.purple,
+    other_win_hl_color = mega.colors.dark_red,
   })
 end
