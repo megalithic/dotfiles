@@ -450,7 +450,7 @@ mega.augroup("LspSetupCommands", {
       -- if the buffer is invalid we should not try and attach to it
       if not api.nvim_buf_is_valid(bufnr) or not args.data then return end
       local client = lsp.get_client_by_id(args.data.client_id)
-      P(fmt("Lsp client, %s, attached", client.name))
+      -- P(fmt("Lsp client, %s, attached", client.name))
       -- on_attach(client, bufnr)
       -- if client_overrides[client.name] then client_overrides[client.name](client, bufnr) end
     end,
