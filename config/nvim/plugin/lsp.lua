@@ -365,6 +365,7 @@ local function setup_tools()
     "clang-format",
     "elm-format",
     "yamlfmt",
+    "prettier",
     "prettierd",
     "stylua",
     "selene",
