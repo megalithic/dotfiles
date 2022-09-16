@@ -161,7 +161,7 @@ require("packer").startup({
     use({
       "nvim-neo-tree/neo-tree.nvim",
       config = conf("neo-tree"),
-      keys = { "<C-N>" },
+      keys = { "<C-t>" },
       cmd = { "NeoTree" },
       requires = {
         "nvim-lua/plenary.nvim",

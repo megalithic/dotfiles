@@ -31,8 +31,8 @@ return function()
       {
         event = "neo_tree_buffer_leave",
         handler = function()
-          require("virt-column").refresh()
-          require("golden_size").on_win_enter()
+          -- require("virt-column").refresh()
+          -- require("golden_size").on_win_enter()
           vim.cmd("highlight! Cursor blend=0")
         end,
       },
