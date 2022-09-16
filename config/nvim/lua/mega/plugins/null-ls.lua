@@ -1,18 +1,15 @@
 return function()
-  local ok, nls = pcall(require, "null-ls")
-  if not ok then return end
+  -- local ok, null = pcall(require, "null-ls")
+  -- if not ok then return end
+  local null = require("null-ls")
 
-  local format = nls.builtins.formatting
-  local diag = nls.builtins.diagnostics
+  local format = null.builtins.formatting
+  local diag = null.builtins.diagnostics
   -- local actions = nls.builtins.code_actions
   -- local completion = nls.builtins.completion
 
-  nls.setup({
-    debug = false,
-    -- on_attach = on_attach,
+  null.setup({
     debounce = 150,
-    autostart = true,
-    save_after_format = false,
     sources = {
       format.trim_whitespace.with({ filetypes = { "*" } }),
       format.prettierd.with({
