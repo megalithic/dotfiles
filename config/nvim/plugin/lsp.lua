@@ -130,6 +130,10 @@ end
 ---@param client table<string, any>
 ---@param bufnr number
 local function setup_autocommands(client, bufnr)
+  if not client then
+    local msg = fmt("Unable to setup LSP autocommands, client for %d is missing", bufnr)
+    return vim.notify(msg, "error", { title = "LSP Setup" })
+  end
   -- augroup("LspCodeLens", {
   --   {
   --     event = { "BufEnter", "CursorHold", "InsertLeave" }, -- CursorHoldI
@@ -178,8 +182,9 @@ local function setup_autocommands(client, bufnr)
   augroup("LspFormat", {
     {
       event = { "BufWritePre" },
-      command = function()
-        format({ async = false, bufnr = 0 }) -- prefer `false` here
+      -- buffer = bufnr,
+      command = function(args)
+        format({ async = false, bufnr = args.buf }) -- prefer `false` here
       end,
     },
   })
@@ -434,6 +439,37 @@ local function on_attach(client, bufnr)
 
   api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
 end
+
+mega.augroup("LspSetupCommands", {
+  {
+    event = { "LspAttach" },
+    desc = "setup the language server autocommands",
+    command = function(args)
+      local bufnr = args.buf
+      -- if the buffer is invalid we should not try and attach to it
+      if not api.nvim_buf_is_valid(bufnr) or not args.data then return end
+      local client = lsp.get_client_by_id(args.data.client_id)
+      P(fmt("Lsp client, %s, attached", client.name))
+      -- on_attach(client, bufnr)
+      -- if client_overrides[client.name] then client_overrides[client.name](client, bufnr) end
+    end,
+  },
+  {
+    event = { "LspDetach" },
+    desc = "Clean up after detached LSP",
+    command = function(args)
+      local client_id = args.data.client_id
+      -- P(fmt("Lsp client_id, %s, detached", client_id)) -- this echos to the term on vimleave
+      -- if not vim.b.lsp_events or not client_id then return end
+      -- for _, state in pairs(vim.b.lsp_events) do
+      --   if #state.clients == 1 and state.clients[1] == client_id then
+      --     api.nvim_clear_autocmds({ group = state.group_id, buffer = args.buf })
+      --   end
+      --   vim.tbl_filter(function(id) return id ~= client_id end, state.clients)
+      -- end
+    end,
+  },
+})
 
 -- [ SERVERS ] -----------------------------------------------------------------
 

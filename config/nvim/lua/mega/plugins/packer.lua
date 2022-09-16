@@ -538,7 +538,7 @@ require("packer").startup({
     })
     use({ "megalithic/habitats.nvim", config = function() require("habitats").setup({}) end })
     use({ "editorconfig/editorconfig-vim" })
-    use({ "mhartington/formatter.nvim" })
+    use({ "mhartington/formatter.nvim", config = conf("formatter") })
     use({ "alvan/vim-closetag" })
     use({ "tpope/vim-eunuch" })
     use({ "tpope/vim-abolish" })
