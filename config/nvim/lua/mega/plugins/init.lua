@@ -1,22 +1,17 @@
-local fmt = string.format
-
-local packer_notify, conf = unpack(require("mega.plugins.utils"))
-local mega = require("mega.globals")
-
 local PACKER_COMPILED_PATH = fmt("%s/packer/packer_compiled.lua", vim.fn.stdpath("cache"))
 local PACKER_SNAPSHOTS_PATH = fmt("%s/packer/snapshots/", vim.fn.stdpath("cache"))
 
-local packer = require("mega.plugins.utils")
+local mega = _G.mega or require("mega.globals")
 
-vim.cmd.packadd({ "cfilter", bang = true })
-mega.require("impatient")
+local packer = require("mega.plugins.utils")
+local packer_notify = packer.notify
 
 local config = {
   display = {
-    -- open_cmd = "silent topleft 65vnew",
-    open_fn = function() return require("packer.util").float({ border = mega.get_border() }) end,
+    -- open_fn = function() return require("packer.util").float({ border = mega.get_border() }) end,
+    open_cmd = "silent topleft 65vnew",
   },
-  opt_default = true,
+  -- opt_default = true,
   auto_reload_compiled = false,
   non_interactive = vim.env.PACKER_NON_INTERACTIVE or false,
   compile_path = PACKER_COMPILED_PATH,
@@ -32,7 +27,6 @@ local config = {
     enable = true,
     threshold = 1,
   },
-
   -- list of plugins that should be taken from ~/code
   -- this is NOT packer functionality!
   local_plugins = {
@@ -44,8 +38,11 @@ local config = {
 }
 
 local function plugins(use)
-  -- Packer can manage itself as an optional plugin
-  use({ "wbthomason/packer.nvim" })
+  --print(fmt("use plugin within plugins: %s", I(use)))
+  -- packer can manage itself as an optional plugin
+  use({ "wbthomason/packer.nvim", opt = true })
+
+  -- ( CORE ) ------------------------------------------------------------------
   use({ "lewis6991/impatient.nvim" })
   use({ "nvim-lua/plenary.nvim" })
   use({ "nvim-lua/popup.nvim" })
@@ -53,9 +50,9 @@ local function plugins(use)
   use({ "antoinemadec/FixCursorHold.nvim", config = function() vim.g.cursorhold_updatetime = 100 end }) -- Needed while issue https://github.com/neovim/neovim/issues/12587 is still open
   use({ "mattn/webapi-vim" })
 
-  -- ( UI ) ------------------------------------------------------------------
+  -- ( UI ) --------------------------------------------------------------------
   use({ "rktjmp/lush.nvim" })
-  use({ "dm1try/golden_size", config = conf("golden_size") })
+  use({ "dm1try/golden_size", ext = "golden_size" })
   use({ "kyazdani42/nvim-web-devicons", config = function() require("nvim-web-devicons").setup() end })
   use({
     "NvChad/nvim-colorizer.lua",
@@ -84,13 +81,13 @@ local function plugins(use)
   })
   use({ "lukas-reineke/virt-column.nvim" })
   use({ "MunifTanjim/nui.nvim" })
-  use({ "folke/which-key.nvim", config = conf("which-key") })
-  -- use({ "echasnovski/mini.nvim", config = conf("mini"), after = "nvim-treesitter" })
-  use({ "phaazon/hop.nvim", config = conf("hop") })
+  use({ "folke/which-key.nvim", ext = "which-key" })
+  -- use({ "echasnovski/mini.nvim", ext="mini", after = "nvim-treesitter" })
+  use({ "phaazon/hop.nvim", ext = "hop" })
   -- use({ "jghauser/fold-cycle.nvim" })
-  use({ "anuvyklack/hydra.nvim", config = conf("hydra") })
-  use({ "rcarriga/nvim-notify", config = conf("notify") })
-  use({ "nanozuki/tabby.nvim", config = conf("tabby") })
+  use({ "anuvyklack/hydra.nvim", ext = "hydra" })
+  use({ "rcarriga/nvim-notify", ext = "notify" })
+  use({ "nanozuki/tabby.nvim", ext = "tabby" })
   use({
     "lukas-reineke/indent-blankline.nvim",
     config = function()
@@ -160,38 +157,55 @@ local function plugins(use)
   --   end,
   -- })
 
-  -- ( Telescope ) -----------------------------------------------------------
+  -- ( Telescope ) -------------------------------------------------------------
   use({
     "nvim-telescope/telescope.nvim",
-    module_pattern = "telescope.*",
-    config = conf("telescope"),
+    -- module_pattern = "telescope.*",
+    ext = "telescope",
     event = "CursorHold",
+    requires = {
+      {
+        "nvim-telescope/telescope-file-browser.nvim",
+        after = "telescope.nvim",
+        -- config = function() require("telescope").load_extension("file_browser") end,
+      },
+      {
+        "natecraddock/telescope-zf-native.nvim",
+        after = "telescope.nvim",
+        -- config = function() require("telescope").load_extension("zf-native") end,
+      },
+      {
+        "benfowler/telescope-luasnip.nvim",
+        after = "telescope.nvim",
+        -- config = function() require("telescope").load_extension("luasnip") end,
+      },
+    },
   })
-  use({
-    "nvim-telescope/telescope-file-browser.nvim",
-    after = "telescope.nvim",
-    config = function() require("telescope").load_extension("file_browser") end,
-  })
-  use({
-    "natecraddock/telescope-zf-native.nvim",
-    after = "telescope.nvim",
-    config = function() require("telescope").load_extension("zf-native") end,
-  })
-  use({
-    "benfowler/telescope-luasnip.nvim",
-    after = "telescope.nvim",
-    config = function() require("telescope").load_extension("luasnip") end,
-  })
+  -- use({
+  --   "nvim-telescope/telescope-file-browser.nvim",
+  --   after = "telescope.nvim",
+  --   config = function() require("telescope").load_extension("file_browser") end,
+  -- })
+  -- use({
+  --   "natecraddock/telescope-zf-native.nvim",
+  --   after = "telescope.nvim",
+  --   config = function() require("telescope").load_extension("zf-native") end,
+  -- })
+  -- use({
+  --   "benfowler/telescope-luasnip.nvim",
+  --   after = "telescope.nvim",
+  --   config = function() require("telescope").load_extension("luasnip") end,
+  -- })
 
-  -- ( Navigation ) ----------------------------------------------------------
+  -- ( Navigation ) ------------------------------------------------------------
   use({
     "knubie/vim-kitty-navigator",
-    run = "cp ./*.py ~/.config/kitty/",
+    -- run = "cp ./*.py ~/.config/kitty/",
     cond = function() return not vim.env.TMUX end,
   })
   use({
     "nvim-neo-tree/neo-tree.nvim",
-    config = conf("neo-tree"),
+    ext = "neo-tree",
     keys = { "<C-t>" },
     cmd = { "NeoTree" },
     requires = {
@@ -217,7 +231,7 @@ local function plugins(use)
     end,
   })
 
-  -- ( Treesitter ) ----------------------------------------------------------
+  -- ( Treesitter ) ------------------------------------------------------------
   use({
     "nvim-treesitter/nvim-treesitter",
     run = ":TSUpdate",
@@ -226,7 +240,7 @@ local function plugins(use)
     -- end,
     cmd = { "TSUpdate", "TSInstallSync" },
     event = { "BufRead", "BufNewFile" },
-    config = conf("treesitter"),
+    ext = "treesitter",
   })
   use({ "nvim-treesitter/nvim-treesitter-textobjects", after = "nvim-treesitter" })
   use({ "RRethy/nvim-treesitter-textsubjects", after = "nvim-treesitter" })
@@ -253,11 +267,13 @@ local function plugins(use)
     after = "nvim-treesitter",
   })
 
-  -- ( LSP ) -----------------------------------------------------------------
+  -- ( LSP ) -------------------------------------------------------------------
   use({ "williamboman/mason.nvim", requires = { "nvim-lspconfig", "williamboman/mason-lspconfig.nvim" } })
   use({ "williamboman/mason-lspconfig.nvim" })
-  use({ "neovim/nvim-lspconfig", module_pattern = "lspconfig.*" })
-  use({ "jose-elias-alvarez/null-ls.nvim", config = conf("null-ls") })
+  use({
+    "neovim/nvim-lspconfig", --[[module_pattern = "lspconfig.*"]]
+  })
+  use({ "jose-elias-alvarez/null-ls.nvim", ext = "null-ls" })
   use({
     "ray-x/lsp_signature.nvim",
     after = "nvim-lspconfig",
@@ -333,8 +349,8 @@ local function plugins(use)
   -- use({ "microsoft/python-type-stubs", opt = true })
   -- use({ "lvimuser/lsp-inlayhints.nvim" })
 
-  -- ( Git ) -----------------------------------------------------------------
-  use({ "lewis6991/gitsigns.nvim", event = { "BufRead" }, config = conf("gitsigns") })
+  -- ( Git ) -------------------------------------------------------------------
+  use({ "lewis6991/gitsigns.nvim", event = { "BufRead" }, ext = "gitsigns" })
   use({
     "TimUntersberger/neogit",
     cmd = "Neogit",
@@ -362,7 +378,7 @@ local function plugins(use)
     end,
     requires = "plenary.nvim",
   })
-  -- use({ "sindrets/diffview.nvim", config = conf("diffview") })
+  -- use({ "sindrets/diffview.nvim", ext="diffview" })
   use({
     "akinsho/git-conflict.nvim",
     config = function()
@@ -415,19 +431,19 @@ local function plugins(use)
     end,
   })
 
-  -- ( Completion ) ----------------------------------------------------------
+  -- ( Completion ) ------------------------------------------------------------
   use({ "rafamadriz/friendly-snippets", event = "InsertEnter" })
   use({ "L3MON4D3/LuaSnip", after = "friendly-snippets", module = "luasnip" })
   use({
     "hrsh7th/nvim-cmp",
+    ext = "cmp",
     after = "LuaSnip",
-    config = conf("cmp"),
     module = "cmp",
     event = "InsertEnter",
     requires = {
       { "saadparwaiz1/cmp_luasnip", after = "nvim-cmp" },
       { "hrsh7th/cmp-buffer", after = "nvim-cmp" },
-      { "hrsh7th/cmp-nvim-lsp", after = "nvim-cmp" },
+      { "hrsh7th/cmp-nvim-lsp", after = "nvim-cmp", module = "cmp_nvim_lsp" },
       -- { "hrsh7th/cmp-nvim-lua", after = "nvim-cmp" },
       { "hrsh7th/cmp-path", after = "nvim-cmp" },
       { "hrsh7th/cmp-emoji", after = "nvim-cmp" },
@@ -439,11 +455,11 @@ local function plugins(use)
   })
   -- use_local({ "tiagovla/zotex.nvim", after = "nvim-cmp", ext = "zotex" }) -- experimental
 
-  -- ( Testing/Debugging ) ---------------------------------------------------
-  use({ "vim-test/vim-test", config = conf("vim-test") })
-  use({ "mfussenegger/nvim-dap", module = "dap", config = conf("dap") })
+  -- ( Testing/Debugging ) -----------------------------------------------------
+  use({ "vim-test/vim-test", ext = "vim-test" })
+  use({ "mfussenegger/nvim-dap", module = "dap", ext = "dap" })
   use({ "theHamsta/nvim-dap-virtual-text", after = "nvim-dap" })
-  use({ "rcarriga/nvim-dap-ui", config = conf("dapui"), after = "nvim-dap" })
+  use({ "rcarriga/nvim-dap-ui", ext = "dapui", after = "nvim-dap" })
   use({ "jbyuki/one-small-step-for-vimkind", after = "nvim-dap" })
   use({ "suketa/nvim-dap-ruby", after = "nvim-dap" })
   use({ "mxsdev/nvim-dap-vscode-js", after = "nvim-dap" })
@@ -451,7 +467,7 @@ local function plugins(use)
   -- use({ "microsoft/vscode-react-native", after = "nvim-dap" })
   use({ "Pocco81/DAPInstall.nvim", after = "nvim-dap" })
 
-  -- ( Development ) ---------------------------------------------------------
+  -- ( Development ) -----------------------------------------------------------
   use({ "danymat/neogen" })
   use({
     "numToStr/Comment.nvim",
@@ -486,7 +502,7 @@ local function plugins(use)
       })
     end,
   })
-  use({ "tpope/vim-projectionist", config = conf("projectionist") })
+  use({ "tpope/vim-projectionist", ext = "projectionist" })
   use({
     "andymass/vim-matchup",
     config = function()
@@ -502,6 +518,7 @@ local function plugins(use)
   })
   use({
     "windwp/nvim-autopairs",
+    after = "nvim-cmp",
     config = function()
       require("nvim-autopairs").setup({
         disable_filetype = { "TelescopePrompt" },
@@ -567,9 +584,9 @@ local function plugins(use)
       })
     end,
   })
-  use({ "megalithic/habitats.nvim", config = function() require("habitats").setup({}) end })
+  use({ "megalithic/habitats.nvim", after = "telescope.nvim", config = function() require("habitats").setup({}) end })
   use({ "editorconfig/editorconfig-vim" })
-  use({ "mhartington/formatter.nvim", config = conf("formatter") })
+  use({ "mhartington/formatter.nvim", ext = "formatter" })
   use({ "alvan/vim-closetag" })
   use({ "tpope/vim-eunuch" })
   use({ "tpope/vim-abolish" })
@@ -586,7 +603,7 @@ local function plugins(use)
   use({ "axelvc/template-string.nvim" })
   -- @trial: "jghauser/kitty-runner.nvim"
 
-  -- ( Motions/Textobjects ) -------------------------------------------------
+  -- ( Motions/Textobjects ) ---------------------------------------------------
   use({
     "kylechui/nvim-surround",
     config = function()
@@ -600,6 +617,7 @@ local function plugins(use)
   })
   use({
     "abecodes/tabout.nvim",
+    after = "nvim-treesitter",
     config = function()
       require("tabout").setup({
 
@@ -609,10 +627,10 @@ local function plugins(use)
     end,
   })
 
-  -- ( Notes/Docs ) ----------------------------------------------------------
+  -- ( Notes/Docs ) ------------------------------------------------------------
   use({ "ixru/nvim-markdown" })
   use({ "iamcco/markdown-preview.nvim", ft = "md", run = "cd app && yarn install" })
-  use({ "mickael-menu/zk-nvim", config = conf("zk") })
+  use({ "mickael-menu/zk-nvim", ext = "zk", after = "telescope.nvim" })
   use({ "gaoDean/autolist.nvim" })
   use({ "ellisonleao/glow.nvim" })
   use({
@@ -647,7 +665,7 @@ local function plugins(use)
   -- "dhruvasagar/vim-table-mode"
   -- "rhysd/vim-gfm-syntax"
 
-  -- ( Syntax/Languages ) ----------------------------------------------------
+  -- ( Syntax/Languages ) ------------------------------------------------------
   -- use({ "elixir-editors/vim-elixir" })
   -- use({ "tpope/vim-rails" })
   -- use({ "ngscheurich/edeex.nvim" })
@@ -670,7 +688,6 @@ local function plugins(use)
   -- use({ "nanotee/luv-vimdocs" })
   use({ "fladson/vim-kitty" })
   use({ "SirJson/fzf-gitignore", config = function() vim.g.fzf_gitignore_no_maps = true end })
-  -- if bootstrapped then require("packer").sync() end
 end
 
 mega.command("PackerCompiledEdit", function() vim.cmd.edit(PACKER_COMPILED_PATH) end)
@@ -687,5 +704,8 @@ end
 
 mega.nnoremap("<leader>ps", "<Cmd>PackerSync<CR>", "packer: sync")
 mega.nnoremap("<leader>pc", "<Cmd>PackerCompile<CR>", "packer: compile")
+
+vim.cmd.packadd({ "cfilter", bang = true })
+mega.require("impatient")
 
 return packer.setup(config, plugins)

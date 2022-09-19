@@ -7,9 +7,9 @@ local PACKER_INSTALL_PATH = fmt("%s/site/pack/packer/%s/packer.nvim", fn.stdpath
 
 -- ---A thin wrapper around vim.notify to add packer details to the message
 -- ---@param msg string
-function M.packer_notify(msg, level) vim.notify(msg, level, { title = "Packer" }) end
+function M.notify(msg, level) vim.notify(msg, level, { title = "Packer" }) end
 
--- function M.conf(name) return require(fmt("mega.plugins.%s", name)) end
+function M.conf(name) return require(fmt("mega.plugins.%s", name)) end
 
 local function reload()
   mega.invalidate("mega.plugins", true)
@@ -33,19 +33,27 @@ local function setup_autocmds()
     {
       event = { "User" },
       pattern = { "PackerCompileDone" },
-      command = function() M.packer_notify("Compilation finished", "info") end,
+      command = function() M.notify("Compilation finished", "info") end,
     },
   })
 end
 
 function M.bootstrap()
-  local fn = vim.fn
   if fn.empty(fn.glob(PACKER_INSTALL_PATH)) > 0 then
-    fn.system({ "git", "clone", "https://github.com/wbthomason/packer.nvim", PACKER_INSTALL_PATH })
-    vim.cmd("packadd packer.nvim")
+    M.notify("Downloading packer.nvim...")
+    M.notify(
+      fn.system({ "git", "clone", "--depth", "1", "https://github.com/wbthomason/packer.nvim", PACKER_INSTALL_PATH })
+    )
+    vim.fn.delete(PACKER_COMPILED_PATH)
+    vim.cmd.packadd({ "packer.nvim", bang = true })
+
+    -- require("packer").sync()
+    return true
   end
-  vim.cmd([[packadd packer.nvim]])
+
+  vim.cmd.packadd({ "packer.nvim", bang = true })
   setup_autocmds()
+  return false
 end
 
 function M.get_name(pkg)
@@ -65,7 +73,7 @@ function M.process_local_plugins(spec)
       if M.has_local(name) then
         return local_pkg
       else
-        M.packer_notify("Local package " .. name .. " not found", "ERROR")
+        M.notify("Local package " .. name .. " not found", "ERROR")
       end
     end
     return spec
@@ -78,12 +86,11 @@ function M.process_local_plugins(spec)
   return spec
 end
 
+-- processes external config strings
 function M.process_ext_configs(spec)
-  if spec.ext then
-    local config_ext = load(spec.ext)
-    spec = vim.tbl_deep_extend("force", spec, config_ext)
-    spec.ext = nil
-  end
+  if spec.ext then spec.config = M.conf(spec.ext) end
+  --print(I(spec))
+
   return spec
 end
 
@@ -91,7 +98,6 @@ function M.wrap(use)
   return function(spec)
     spec = M.process_local_plugins(spec)
     spec = M.process_ext_configs(spec)
-
     use(spec)
   end
 end
@@ -100,15 +106,24 @@ function M.setup(config, plugins_fn)
   -- HACK: see https://github.com/wbthomason/packer.nvim/issues/180
   vim.fn.setenv("MACOSX_DEPLOYMENT_TARGET", "10.15")
 
-  M.bootstrap()
+  local bootstrapped = M.bootstrap()
   local packer = require("packer")
   packer.init(config)
   M.local_plugins = config.local_plugins or {}
+  -- return packer.startup(
+  --   function(use)
+  --     use = M.wrap(use)
+  --     plugins_fn(use)
+  --   end
+  -- )
   return packer.startup({
     function(use)
       use = M.wrap(use)
+      -- print(I(use))
       plugins_fn(use)
+      if bootstrapped then require("packer").sync() end
     end,
+    --  config=config
   })
 end
 

@@ -190,7 +190,7 @@ nnoremap =- V`]=
 ]])
 
 nnoremap("<leader>w", function(args)
-  P(args)
+  -- P(args)
   vim.api.nvim_command("silent! write")
 end, "write buffer and stuff")
 nnoremap(

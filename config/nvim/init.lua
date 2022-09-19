@@ -8,7 +8,6 @@ vim.g.enabled_plugin = {
   mappings = true,
   autocmds = true,
   megaline = true,
-  treesitter = false, -- loading via packer config; TODO: remove from plugin?
   lsp = true,
   term = true,
   cursorline = true,
@@ -17,6 +16,7 @@ vim.g.enabled_plugin = {
   quickfix = true,
   simplef = true,
   folds = true,
+  treesitter = false, -- loading via packer config; TODO: remove from plugin?
   tmux = false,
   env = false,
 }
@@ -53,4 +53,7 @@ end
 R("mega.globals")
 R("mega.options")
 -- vim.defer_fn(function() R("mega.plugins.packer") end, 0)
-R("mega.plugins.packer")
+-- R("mega.plugins.packer")
+
+-- vim.defer_fn(function() R("mega.plugins") end, 0)
+R("mega.plugins")

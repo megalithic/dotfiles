@@ -66,8 +66,8 @@ function _G.P(...)
     table.insert(objects, vim.inspect(v))
   end
 
-  local p_logger = logger.new({ level = "debug" })
-  p_logger.info(table.concat(objects, "\n"))
+  -- local p_logger = logger.new({ level = "debug" })
+  -- p_logger.info(table.concat(objects, "\n"))
   return ...
 end
 

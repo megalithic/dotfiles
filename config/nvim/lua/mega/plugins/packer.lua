@@ -30,13 +30,6 @@ local function bootstrap_packer()
   return false
 end
 
--- function _G.packer_upgrade()
---   vim.fn.delete(PACKER_INSTALL_PATH, "rf")
---   bootstrap_packer("start", PACKER_COMPILED_PATH)
--- end
---
--- vim.cmd.command({ "PackerUpgrade", ":call v:lua.packer_upgrade()", bang = true })
-
 local function load(path)
   require("mega.plugins." .. path)
   local ok_conf, res = pcall(require, "mega.plugins." .. path)
@@ -713,8 +706,8 @@ require("packer").startup({
   config = {
     display = {
       -- open_cmd = "silent topleft 65vnew",
-      open_fn = function() return require("packer.util").float({ border = mega.get_border() }) end,
-      prompt_border = mega.get_border(),
+      -- open_fn = function() return require("packer.util").float({ border = mega.get_border() }) end,
+      -- prompt_border = mega.get_border(),
     },
     non_interactive = vim.env.PACKER_NON_INTERACTIVE or false,
     compile_path = PACKER_COMPILED_PATH,

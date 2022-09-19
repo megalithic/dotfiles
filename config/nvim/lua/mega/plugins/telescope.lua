@@ -1,5 +1,6 @@
 return function()
   local telescope = require("telescope")
+  -- print(fmt("Telescope loaded: %s", I(telescope)))
 
   local fn = vim.fn
   local actions = require("telescope.actions")
