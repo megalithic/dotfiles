@@ -49,11 +49,12 @@ return function()
     view = {
       entries = { name = "custom", direction = "bottom_up" },
     },
-    sources = cmp.config.sources({
+    sources = {
       { name = "nvim_lsp_document_symbol" },
-    }, {
+    },
+    {
       { name = "buffer" },
-    }),
+    },
   }
 
   local cmp_window = {
@@ -114,24 +115,31 @@ return function()
     },
     -- see more configured sources in ftplugins/<filetype>.lua
     sources = cmp.config.sources({
-      { name = "luasnip" },
       { name = "nvim_lsp" },
+      { name = "luasnip" },
       -- { name = "nvim_lsp_signature_help" },
       -- { name = "treesitter" },
       -- { name = "buffer", keyword_length = 3 },
       { name = "path" },
+      {
+        name = "rg",
+        keyword_length = 4,
+        max_item_count = 10,
+        option = { additional_arguments = "--max-depth 8" },
+      },
     }, {
       {
         name = "buffer",
         keyword_length = 2,
         options = {
-          get_bufnrs = function()
-            local bufs = {}
-            for _, win in ipairs(api.nvim_list_wins()) do
-              bufs[api.nvim_win_get_buf(win)] = true
-            end
-            return vim.tbl_keys(bufs)
-          end,
+          get_bufnrs = function() return vim.api.nvim_list_bufs() end,
+          -- get_bufnrs = function()
+          --   local bufs = {}
+          --   for _, win in ipairs(api.nvim_list_wins()) do
+          --     bufs[api.nvim_win_get_buf(win)] = true
+          --   end
+          --   return vim.tbl_keys(bufs)
+          -- end,
         },
       },
     }),
@@ -162,6 +170,7 @@ return function()
             emoji = "[emo]",
             cmdline = "[cmd]",
             cmdline_history = "[hist]",
+            rg = "[rg]",
           })[entry.source.name] or entry.source.name
         end
 
@@ -179,6 +188,15 @@ return function()
       -- { name = "cmdline_history", priority = 10, max_item_count = 5 },
     }),
   })
+  -- cmp.setup.cmdline("/", search_sources)
+  -- cmp.setup.cmdline("?", search_sources)
+  -- cmp.setup.cmdline(":", {
+  --   sources = {
+  --     { name = "cmdline", keyword_pattern = [=[[^[:blank:]\!]*]=] },
+  --     { name = "path" },
+  --     -- { name = "cmdline_history", priority = 10, max_item_count = 5 },
+  --   },
+  -- })
 
   -- FT specific cmp configs
   cmp.setup.filetype({ "gitcommit", "NeogitCommitMessage" }, {

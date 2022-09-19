@@ -21,7 +21,7 @@ local default_config = {
   highlights = true,
 
   -- Should write to a file
-  use_file = true,
+  use_file = false,
 
   -- Should write to the quickfix list
   use_quickfix = false,

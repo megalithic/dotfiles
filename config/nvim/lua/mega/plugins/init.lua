@@ -47,7 +47,6 @@ local function plugins(use)
   use({ "nvim-lua/plenary.nvim" })
   use({ "nvim-lua/popup.nvim" })
   use({ "dstein64/vim-startuptime", cmd = { "StartupTime" }, config = function() vim.g.startuptime_tries = 15 end })
-  use({ "antoinemadec/FixCursorHold.nvim", config = function() vim.g.cursorhold_updatetime = 100 end }) -- Needed while issue https://github.com/neovim/neovim/issues/12587 is still open
   use({ "mattn/webapi-vim" })
 
   -- ( UI ) --------------------------------------------------------------------
@@ -271,6 +270,7 @@ local function plugins(use)
   -- ( LSP ) -------------------------------------------------------------------
   use({ "williamboman/mason.nvim", requires = { "nvim-lspconfig", "williamboman/mason-lspconfig.nvim" } })
   use({ "williamboman/mason-lspconfig.nvim" })
+  -- TODO: https://github.com/akinsho/dotfiles/commit/6940c6dcf66e08fcaf31da6b4ffba06697ec6f43
   use({
     "neovim/nvim-lspconfig", --[[module_pattern = "lspconfig.*"]]
   })
@@ -452,9 +452,10 @@ local function plugins(use)
       { "hrsh7th/cmp-cmdline", after = "nvim-cmp" },
       { "hrsh7th/cmp-nvim-lsp-signature-help", after = "nvim-cmp" },
       { "hrsh7th/cmp-nvim-lsp-document-symbol", after = "nvim-cmp" },
+      { "dmitmel/cmp-cmdline-history", after = "nvim-cmp" },
+      { "lukas-reineke/cmp-rg", tag = "*", after = "nvim-cmp" },
     },
   })
-  -- use_local({ "tiagovla/zotex.nvim", after = "nvim-cmp", ext = "zotex" }) -- experimental
 
   -- ( Testing/Debugging ) -----------------------------------------------------
   use({ "vim-test/vim-test", ext = "vim-test" })
@@ -623,7 +624,8 @@ local function plugins(use)
   })
   use({
     "abecodes/tabout.nvim",
-    after = "nvim-treesitter",
+    wants = { "nvim-treesitter" },
+    after = { "nvim-cmp" },
     config = function()
       require("tabout").setup({
 
