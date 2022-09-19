@@ -70,15 +70,15 @@ end
 
 lsp.handlers["textDocument/hover"] = lsp.with(hover_handler, opts)
 -- lsp.handlers["textDocument/hover"] = lsp.with(lsp.handlers.hover, opts)
-local signature_help_opts = mega.table_merge(opts, {
-  -- anchor = "SW",
-  -- relative = "cursor",
-  -- row = -1,
-  border = mega.get_border(),
-  max_width = max_width,
-  max_height = max_height,
-})
-lsp.handlers["textDocument/signatureHelp"] = lsp.with(lsp.handlers.signature_help, signature_help_opts)
+-- local signature_help_opts = mega.table_merge(opts, {
+--   -- anchor = "SW",
+--   -- relative = "cursor",
+--   -- row = -1,
+--   border = mega.get_border(),
+--   max_width = max_width,
+--   max_height = max_height,
+-- })
+-- lsp.handlers["textDocument/signatureHelp"] = lsp.with(lsp.handlers.signature_help, signature_help_opts)
 
 lsp.handlers["window/showMessage"] = function(_, result, ctx)
   local client = lsp.get_client_by_id(ctx.client_id)

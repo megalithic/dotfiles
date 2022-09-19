@@ -121,29 +121,29 @@ return function(on_attach)
   -- require("mason").setup()
 
   -- NEAT! @REF: https://github.com/folke/dot/blob/master/config/nvim/lua/config/mason.lua
-  -- mason_lspconfig.setup({
-  --   automatic_installation = true,
-  --   ensure_installed = {
-  --     "bashls",
-  --     "clangd",
-  --     "cssls",
-  --     "dockerls",
-  --     "elixirls",
-  --     "elmls",
-  --     "html",
-  --     "jsonls",
-  --     "pyright",
-  --     "rust_analyzer",
-  --     "solargraph",
-  --     "sumneko_lua",
-  --     "tailwindcss",
-  --     "terraformls",
-  --     "tsserver",
-  --     "vimls",
-  --     "yamlls",
-  --     "zk",
-  --   },
-  -- })
+  mason_lspconfig.setup({
+    automatic_installation = true,
+    ensure_installed = {
+      "bashls",
+      "clangd",
+      "cssls",
+      "dockerls",
+      "elixirls",
+      "elmls",
+      "html",
+      "jsonls",
+      "pyright",
+      "rust_analyzer",
+      "solargraph",
+      "sumneko_lua",
+      "tailwindcss",
+      "terraformls",
+      "tsserver",
+      "vimls",
+      "yamlls",
+      "zk",
+    },
+  })
 
   mason_lspconfig.setup_handlers({
     -- The first entry (without a key) will be the default handler

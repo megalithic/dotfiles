@@ -134,40 +134,28 @@ local function setup_autocommands(client, bufnr)
     local msg = fmt("Unable to setup LSP autocommands, client for %d is missing", bufnr)
     return vim.notify(msg, "error", { title = "LSP Setup" })
   end
-  -- augroup("LspCodeLens", {
-  --   {
-  --     event = { "BufEnter", "CursorHold", "InsertLeave" }, -- CursorHoldI
-  --     buffer = 0,
-  --     command = function()
-  --       if not vim.tbl_isempty(vim.lsp.codelens.get(bufnr)) then vim.lsp.codelens.refresh() end
-  --     end,
-  --   },
-  -- })
+  augroup("LspCodeLens", {
+    {
+      event = { "BufEnter", "CursorHold", "InsertLeave" }, -- CursorHoldI
+      buffer = 0,
+      command = function()
+        if not vim.tbl_isempty(vim.lsp.codelens.get(bufnr)) then vim.lsp.codelens.refresh() end
+      end,
+    },
+  })
 
-  -- augroup("LspSignatureHelp", {
-  --   {
-  --     event = { "CursorHoldI" },
-  --     buffer = 0,
-  --     command = function() vim.lsp.buf.signature_help() end,
-  --   },
-  -- })
-
-  -- augroup("LspDocumentHighlight", {
-  --   {
-  --     event = { "CursorHold", "CursorHoldI" },
-  --     buffer = bufnr,
-  --     command = function()
-  --       vim.lsp.buf.document_highlight()
-  --     end,
-  --   },
-  --   {
-  --     event = { "CursorMoved", "BufLeave" },
-  --     buffer = bufnr,
-  --     command = function()
-  --       vim.lsp.buf.clear_references()
-  --     end,
-  --   },
-  -- })
+  augroup("LspDocumentHighlight", {
+    {
+      event = { "CursorHold", "CursorHoldI" },
+      buffer = bufnr,
+      command = function() vim.lsp.buf.document_highlight() end,
+    },
+    {
+      event = { "CursorMoved", "BufLeave" },
+      buffer = bufnr,
+      command = function() vim.lsp.buf.clear_references() end,
+    },
+  })
   --
   augroup("LspDiagnostics", {
     {
@@ -208,8 +196,8 @@ local function setup_mappings(client, bufnr)
   nnoremap("gn", require("mega.lsp.rename").rename, desc("lsp: rename"))
   nnoremap("K", hover, desc("lsp: hover"))
   -- nnoremap("gK", require("hover").hover_select, desc("lsp: hover (select)"))
-  inoremap("<c-k>", vim.lsp.buf.signature_help, desc("lsp: signature help"))
-  imap("<c-k>", vim.lsp.buf.signature_help, desc("lsp: signature help"))
+  inoremap("<C-K>", vim.lsp.buf.signature_help, desc("lsp: signature help"))
+  imap("<C-K>", vim.lsp.buf.signature_help, desc("lsp: signature help"))
   nnoremap("<leader>lic", [[<cmd>LspInfo<CR>]], desc("connected client info"))
   nnoremap("<leader>lim", [[<cmd>Mason<CR>]], desc("mason info"))
   nnoremap(
@@ -415,22 +403,6 @@ local function on_attach(client, bufnr)
   if client.server_capabilities.documentFormattingProvider then
     vim.bo[bufnr].formatexpr = "v:lua.vim.lsp.formatexpr()"
   end
-
-  --- Guard against servers without the signatureHelper capability
-  -- if client.server_capabilities.signatureHelpProvider then
-  --   require("lsp-overloads").setup(client, {
-  --     ui = {
-  --       -- The border to use for the signature popup window. Accepts same border values as |nvim_open_win()|.
-  --       border = mega.get_border(),
-  --     },
-  --     keymaps = {
-  --       next_signature = "<C-j>",
-  --       previous_signature = "<C-k>",
-  --       next_parameter = "<C-l>",
-  --       previous_parameter = "<C-h>",
-  --     },
-  --   })
-  -- end
 
   require("mega.lsp.handlers")
   setup_formatting(client, bufnr)

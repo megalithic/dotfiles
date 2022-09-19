@@ -38,8 +38,6 @@ local config = {
 }
 
 local function plugins(use)
-  --print(fmt("use plugin within plugins: %s", I(use)))
-  -- packer can manage itself as an optional plugin
   use({ "wbthomason/packer.nvim", opt = true })
 
   -- ( CORE ) ------------------------------------------------------------------
@@ -235,43 +233,64 @@ local function plugins(use)
   use({
     "nvim-treesitter/nvim-treesitter",
     run = ":TSUpdate",
-    -- run = function()
-    --   if vim.fn.exists(":TSUpdate") == 2 then vim.cmd(":TSUpdate") end
-    -- end,
     cmd = { "TSUpdate", "TSInstallSync" },
-    event = { "BufRead", "BufNewFile" },
+    -- event = { "BufRead", "BufNewFile" },
     ext = "treesitter",
+    requires = {
+      { "nvim-treesitter/nvim-treesitter-textobjects", after = "nvim-treesitter" },
+      { "RRethy/nvim-treesitter-textsubjects", after = "nvim-treesitter" },
+      { "nvim-treesitter/nvim-tree-docs", after = "nvim-treesitter" },
+      { "JoosepAlviste/nvim-ts-context-commentstring", after = "nvim-treesitter" },
+      { "windwp/nvim-ts-autotag", after = "nvim-treesitter" },
+      { "p00f/nvim-ts-rainbow", after = "nvim-treesitter" },
+      { "mfussenegger/nvim-treehopper", after = "nvim-treesitter" },
+      { "David-Kunz/treesitter-unit", after = "nvim-treesitter" },
+      {
+        "nvim-treesitter/nvim-treesitter-context",
+        after = "nvim-treesitter",
+        -- config = function()
+        --   require("treesitter-context").setup({
+        --     multiline_threshold = 4,
+        --     separator = { "─", "ContextBorder" }, -- alts: ▁ ─ ▄
+        --     mode = "topline",
+        --   })
+        -- end,
+      },
+      {
+        "nvim-treesitter/playground",
+        cmd = { "TSPlaygroundToggle", "TSHighlightCapturesUnderCursor" },
+        after = "nvim-treesitter",
+      },
+    },
   })
-  use({ "nvim-treesitter/nvim-treesitter-textobjects", after = "nvim-treesitter" })
-  use({ "RRethy/nvim-treesitter-textsubjects", after = "nvim-treesitter" })
-  use({ "nvim-treesitter/nvim-tree-docs", after = "nvim-treesitter" })
-  use({ "JoosepAlviste/nvim-ts-context-commentstring", after = "nvim-treesitter" })
-  use({ "windwp/nvim-ts-autotag", after = "nvim-treesitter" })
-  use({ "p00f/nvim-ts-rainbow", after = "nvim-treesitter" })
-  use({ "mfussenegger/nvim-treehopper", after = "nvim-treesitter" })
-  use({ "David-Kunz/treesitter-unit", after = "nvim-treesitter" })
-  use({
-    "nvim-treesitter/nvim-treesitter-context",
-    after = "nvim-treesitter",
-    -- config = function()
-    --   require("treesitter-context").setup({
-    --     multiline_threshold = 4,
-    --     separator = { "─", "ContextBorder" }, -- alts: ▁ ─ ▄
-    --     mode = "topline",
-    --   })
-    -- end,
-  })
-  use({
-    "nvim-treesitter/playground",
-    cmd = { "TSPlaygroundToggle", "TSHighlightCapturesUnderCursor" },
-    after = "nvim-treesitter",
-  })
+  -- use({ "nvim-treesitter/nvim-treesitter-textobjects", after = "nvim-treesitter" })
+  -- use({ "RRethy/nvim-treesitter-textsubjects", after = "nvim-treesitter" })
+  -- use({ "nvim-treesitter/nvim-tree-docs", after = "nvim-treesitter" })
+  -- use({ "JoosepAlviste/nvim-ts-context-commentstring", after = "nvim-treesitter" })
+  -- use({ "windwp/nvim-ts-autotag", after = "nvim-treesitter" })
+  -- use({ "p00f/nvim-ts-rainbow", after = "nvim-treesitter" })
+  -- use({ "mfussenegger/nvim-treehopper", after = "nvim-treesitter" })
+  -- use({ "David-Kunz/treesitter-unit", after = "nvim-treesitter" })
+  -- use({
+  --   "nvim-treesitter/nvim-treesitter-context",
+  --   after = "nvim-treesitter",
+  --   -- config = function()
+  --   --   require("treesitter-context").setup({
+  --   --     multiline_threshold = 4,
+  --   --     separator = { "─", "ContextBorder" }, -- alts: ▁ ─ ▄
+  --   --     mode = "topline",
+  --   --   })
+  --   -- end,
+  -- })
+  -- use({
+  --   "nvim-treesitter/playground",
+  --   cmd = { "TSPlaygroundToggle", "TSHighlightCapturesUnderCursor" },
+  --   after = "nvim-treesitter",
+  -- })
 
   -- ( LSP ) -------------------------------------------------------------------
   -- use({ "williamboman/mason.nvim", requires = { "nvim-lspconfig", "williamboman/mason-lspconfig.nvim" } })
   -- use({ "williamboman/mason-lspconfig.nvim" })
-  -- TODO: https://github.com/akinsho/dotfiles/commit/6940c6dcf66e08fcaf31da6b4ffba06697ec6f43
-
   use({
     {
       "williamboman/mason.nvim",
@@ -282,37 +301,7 @@ local function plugins(use)
       },
       config = function()
         require("mason").setup({ ui = { border = _G.mega.get_border(), log_level = vim.log.levels.DEBUG } })
-        require("mason-lspconfig").setup({
-          automatic_installation = true,
-          ensure_installed = {
-            "bashls",
-            "clangd",
-            "cssls",
-            "dockerls",
-            "elixirls",
-            "elmls",
-            "html",
-            "jsonls",
-            "pyright",
-            "rust_analyzer",
-            "solargraph",
-            "sumneko_lua",
-            "tailwindcss",
-            "terraformls",
-            "tsserver",
-            "vimls",
-            "yamlls",
-            "zk",
-          },
-        })
-
         require("mega.lsp.servers")()
-        -- require("mason-lspconfig").setup_handlers({
-        --   function(name)
-        --     local config = get_config(name)
-        --     if config then require("lspconfig")[name].setup(config) end
-        --   end,
-        -- })
       end,
     },
     {
@@ -329,41 +318,31 @@ local function plugins(use)
       end,
     },
   })
-
   use({
     "neovim/nvim-lspconfig",
     module_pattern = "lspconfig.*",
     config = function() require("lspconfig.ui.windows").default_options.border = _G.mega.get_border() end,
   })
-
   use({ "jose-elias-alvarez/null-ls.nvim", ext = "null-ls", requires = { "nvim-lua/plenary.nvim" } })
-
   use({
     "ray-x/lsp_signature.nvim",
     after = "nvim-lspconfig",
     config = function()
-      local border = require("mega.globals").get_border
       require("lsp_signature").setup({
         bind = true,
         fix_pos = false,
-        -- auto_close_after = 15, -- close after 15 seconds
+        auto_close_after = 5, -- close after 15 seconds
         hint_enable = false,
-        -- floating_window = true,
-        handler_opts = { border = border() },
-        -- bind = true,
-        -- always_trigger = false,
-        -- fix_pos = false,
-        -- auto_close_after = 5,
-        -- hint_enable = false,
-        -- handler_opts = {
-        --   anchor = "SW",
-        --   relative = "cursor",
-        --   row = -1,
-        --   focus = false,
-        --   border = mega.get_border(),
-        -- },
-        -- zindex = 99, -- Keep signature popup below the completion PUM
-        -- toggle_key = "<C-k>",
+        handler_opts = {
+          anchor = "SW",
+          relative = "cursor",
+          row = -1,
+          focus = false,
+          border = _G.mega.get_border(),
+        },
+        zindex = 99, -- Keep signature popup below the completion PUM
+        toggle_key = "<C-K>",
+        select_signature_key = "<M-N>",
       })
     end,
   })

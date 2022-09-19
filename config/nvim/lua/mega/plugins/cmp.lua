@@ -97,13 +97,13 @@ return function()
       ["<C-Space>"] = cmp.mapping.complete(),
       ["<CR>"] = cmp.mapping.confirm({ select = false }),
       ["<C-e>"] = cmp.mapping.close(),
-      ["<C-k>"] = cmp.mapping(function(fallback)
-        if cmp.open_docs_preview() then
-          cmp.close()
-        else
-          fallback()
-        end
-      end),
+      -- ["<C-K>"] = cmp.mapping(function(fallback)
+      --   if cmp.open_docs_preview() then
+      --     cmp.close()
+      --   else
+      --     fallback()
+      --   end
+      -- end),
       -- ["<C-e>"] = function(fallback)
       --   if cmp.visible() then
       --     cmp.confirm({ select = true })
