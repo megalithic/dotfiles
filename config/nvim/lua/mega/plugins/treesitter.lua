@@ -114,6 +114,15 @@ return function()
       extended_mode = true, -- Highlight also non-parentheses delimiters, boolean or table: lang -> boolean
       max_file_lines = 2000, -- Do not enable for files with more than 1000 lines, int
     },
+    textsubjects = {
+      enable = true,
+      prev_selection = ",",
+      keymaps = {
+        ["."] = "textsubjects-smart",
+        [";"] = "textsubjects-container-outer",
+        ["i;"] = "textsubjects-container-inner",
+      },
+    },
     textobjects = {
       lookahead = true,
       select = {
@@ -126,9 +135,8 @@ return function()
           ["ic"] = "@class.inner",
           ["aC"] = "@conditional.outer",
           ["iC"] = "@conditional.inner",
-          -- FIXME: this is unusable
-          -- https://github.com/nvim-treesitter/nvim-treesitter-textobjects/issues/133 is resolved
-          -- ['ax'] = '@comment.outer',
+          ["ix"] = "@comment.inner",
+          ["ax"] = "@comment.outer",
         },
       },
       swap = {
