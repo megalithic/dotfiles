@@ -215,9 +215,10 @@ local function plugins(use)
       { "s1n7ax/nvim-window-picker" },
     },
   })
-  use({ "kevinhwang91/nvim-bqf" })
+  use({ "kevinhwang91/nvim-bqf", ft = "qf" })
   use({
     "https://gitlab.com/yorickpeterse/nvim-pqf",
+    event = "BufReadPre",
     config = function()
       local icons = require("mega.icons")
       require("pqf").setup({
@@ -519,6 +520,7 @@ local function plugins(use)
   use({
     "windwp/nvim-autopairs",
     after = "nvim-cmp",
+    requires = "nvim-cmp",
     config = function()
       require("nvim-autopairs").setup({
         disable_filetype = { "TelescopePrompt" },
@@ -547,7 +549,11 @@ local function plugins(use)
       -- https://github.com/rafamadriz/NeoCode/blob/main/lua/modules/plugins/completion.lua#L130-L192
     end,
   })
-  use({ "nacro90/numb.nvim", config = function() require("numb").setup() end })
+  use({
+    "nacro90/numb.nvim",
+    event = "CmdlineEnter",
+    config = function() require("numb").setup() end,
+  })
   use({
     "natecraddock/sessions.nvim",
     config = function()
@@ -584,7 +590,7 @@ local function plugins(use)
       })
     end,
   })
-  use({ "megalithic/habitats.nvim", after = "telescope.nvim", config = function() require("habitats").setup({}) end })
+  use({ "ryansch/habitats.nvim", after = "telescope.nvim", config = function() require("habitats").setup({}) end })
   use({ "editorconfig/editorconfig-vim" })
   use({ "mhartington/formatter.nvim", ext = "formatter" })
   use({ "alvan/vim-closetag" })
