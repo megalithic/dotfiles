@@ -1,6 +1,9 @@
 local fn = vim.fn
 local fmt = string.format
 
+-- Manually load runtime Man plugin to use Neovim as my man pager
+vim.api.nvim_command("runtime! plugin/man.vim")
+
 -----------------------------------------------------------------------------//
 -- Message output on vim actions {{{1
 -----------------------------------------------------------------------------//
@@ -368,7 +371,7 @@ vim.o.sidescroll = 1
 -- Spelling {{{1
 -----------------------------------------------------------------------------//
 vim.opt.spellsuggest:prepend({ 12 })
-vim.o.spelloptions = "camel"
+vim.o.spelloptions = "camel,noplainbuffer"
 -- vim.opt.spelloptions:append({ "camel", "noplainbuffer" })
 vim.o.spellcapcheck = "" -- don't check for capital letters at start of sentence
 vim.o.dictionary = "/usr/share/dict/words"

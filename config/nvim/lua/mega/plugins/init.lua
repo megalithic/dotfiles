@@ -84,6 +84,14 @@ local function plugins(use)
   -- use({ "jghauser/fold-cycle.nvim" })
   use({ "anuvyklack/hydra.nvim", ext = "hydra" })
   use({ "rcarriga/nvim-notify", ext = "notify" })
+  use({
+    "vigoux/notifier.nvim",
+    config = function()
+      require("notifier").setup({
+        component_name_recall = true,
+      })
+    end,
+  })
   use({ "nanozuki/tabby.nvim", ext = "tabby" })
   use({
     "lukas-reineke/indent-blankline.nvim",
@@ -232,7 +240,8 @@ local function plugins(use)
   -- ( Treesitter ) ------------------------------------------------------------
   use({
     "nvim-treesitter/nvim-treesitter",
-    run = ":TSUpdate",
+    -- run = ":TSUpdate",
+    run = function() require("nvim-treesitter.install").update({ with_sync = true }) end,
     cmd = { "TSUpdate", "TSInstallSync" },
     -- event = { "BufRead", "BufNewFile" },
     ext = "treesitter",
@@ -494,10 +503,10 @@ local function plugins(use)
       { "hrsh7th/cmp-path", after = "nvim-cmp" },
       { "hrsh7th/cmp-emoji", after = "nvim-cmp" },
       { "f3fora/cmp-spell", after = "nvim-cmp" },
-      { "hrsh7th/cmp-cmdline", after = "nvim-cmp" },
+      { "hrsh7th/cmp-cmdline", after = "nvim-cmp", event = "CmdlineEnter" },
       { "hrsh7th/cmp-nvim-lsp-signature-help", after = "nvim-cmp" },
       { "hrsh7th/cmp-nvim-lsp-document-symbol", after = "nvim-cmp" },
-      { "dmitmel/cmp-cmdline-history", after = "nvim-cmp" },
+      { "dmitmel/cmp-cmdline-history", after = "nvim-cmp", event = "CmdlineEnter" },
       { "lukas-reineke/cmp-rg", tag = "*", after = "nvim-cmp" },
     },
   })

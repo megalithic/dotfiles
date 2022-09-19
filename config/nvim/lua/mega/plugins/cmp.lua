@@ -82,7 +82,12 @@ return function()
       expand = function(args) ls.lsp_expand(args.body) end,
     },
     window = {
-      completion = cmp.config.window.bordered(cmp_window),
+      -- completion = cmp.config.window.bordered(cmp_window),
+      completion = {
+        winhighlight = "Normal:Pmenu,FloatBorder:Pmenu,Search:None",
+        col_offset = -3,
+        side_padding = 0,
+      },
       documentation = cmp.config.window.bordered(cmp_window),
     },
     mapping = {

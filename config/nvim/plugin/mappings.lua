@@ -235,11 +235,8 @@ nnoremap([[<Esc>]], function()
   --   if ok then mj.stop_jumping() end
   -- end
 
-  -- do
-  --   local ok, n = pcall(require, "notify")
-  --   if ok then n.dismiss() end
-  -- end
-  require("notify").dismiss()
+  local ok, n = mega.require("notify")
+  if ok then n.dismiss() end
 end, { silent = true, desc = "Clear UI" })
 
 -- Use operator pending mode to visually select the whole buffer

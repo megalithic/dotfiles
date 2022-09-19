@@ -228,8 +228,63 @@ mapkey("::", "#8Open commands", function () {
 // -- Clipboard
 unmap("yg");
 unmap("ygh");
-mapkey("ygh", "Copy GitHub repo base", function () {
-  Clipboard.write(actions.parseRepo(window.location.href).repoPluginPath);
+
+////////////////////////////////////////////////////////////////
+// github default shortcut lists                              //
+// https:help.github.com/articles/using-keyboard-shortcuts/   //
+////////////////////////////////////////////////////////////////
+
+const mapkeyGithub = (...args) => mapkey(...args, { domain: /github\.com/i });
+
+mapkeyGithub("yg", "git clone - git clone address", () =>
+  Clipboard.write("git clone " + window.location.href + ".git")
+);
+
+mapkeyGithub("yp", "Copy project path", () => {
+  const path = new URL(window.location.href).pathname.split("/");
+  Clipboard.write(`${path[1]}/${path[2]}`);
+});
+
+mapkeyGithub("ygh", "Copy project path", () => {
+  const path = new URL(window.location.href).pathname.split("/");
+  // mapkey("ygh", "Copy GitHub repo base", function () {
+  Clipboard.write(`${path[1]}/${path[2]}`);
+  // Clipboard.write(actions.parseRepo(window.location.href).repoPluginPath);
+});
+
+mapkeyGithub("yv", "Copy for vim", () => {
+  const path = new URL(window.location.href).pathname.split("/");
+  Clipboard.write(`use({"${path[1]}/${path[2]}"})`);
+});
+
+mapkeyGithub("gC", "Go to the code tab", () => {
+  document.querySelectorAll(".js-selected-navigation-item.reponav-item")[0].click();
+});
+
+mapkeyGithub("gI", "Go to the Issues tab", () => {
+  document.querySelectorAll(".js-selected-navigation-item.reponav-item")[1].click();
+});
+
+mapkeyGithub("gP", "Go to the Pull requests tab", () => {
+  document.querySelectorAll(".js-selected-navigation-item.reponav-item")[2].click();
+});
+
+mapkeyGithub("gB", "Go to the Projects tab", () => {
+  document.querySelectorAll(".js-selected-navigation-item.reponav-item")[3].click();
+});
+
+mapkeyGithub("gW", "Go to the Wiki tab", () => {
+  document.querySelectorAll(".js-selected-navigation-item.reponav-item")[4].click();
+});
+
+mapkeyGithub("gO", "Go to the Overview tab", () => {
+  document.querySelectorAll(".UnderlineNav-item")[0].click();
+});
+mapkeyGithub("gR", "Go to the Repository tab", () => {
+  document.querySelectorAll(".UnderlineNav-item")[1].click();
+});
+mapkeyGithub("gS", "Go to the Stars tab", () => {
+  document.querySelectorAll(".UnderlineNav-item")[2].click();
 });
 
 api.mapkey("ye", "Copy src URL of an image", function () {

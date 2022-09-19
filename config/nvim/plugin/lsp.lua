@@ -140,7 +140,7 @@ local function setup_autocommands(client, bufnr)
   augroup("LspCodeLens", {
     {
       event = { "BufEnter", "CursorHold", "InsertLeave" }, -- CursorHoldI
-      buffer = 0,
+      buffer = bufnr,
       command = function()
         if not vim.tbl_isempty(vim.lsp.codelens.get(bufnr)) then vim.lsp.codelens.refresh() end
       end,
@@ -165,7 +165,7 @@ local function setup_autocommands(client, bufnr)
   augroup("LspDiagnostics", {
     {
       event = { "CursorHold" },
-      buffer = 0,
+      buffer = bufnr,
       desc = "Show diagnostics",
       command = function() diagnostic_popup() end,
     },
