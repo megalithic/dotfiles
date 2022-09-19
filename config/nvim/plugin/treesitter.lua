@@ -2,10 +2,11 @@
 if not mega then return end
 if not vim.g.enabled_plugin["treesitter"] then return end
 
-local ts_ok, _ = mega.require("nvim-treesitter")
-if not ts_ok then return end
+-- local ts_ok, _ = mega.require("nvim-treesitter")
+-- if not ts_ok then return end
 
-P("treesitter is installed")
+-- vim.defer_fn(function()
+vim.opt.indentexpr = "nvim_treesitter#indent()"
 
 local treesitter_parsers = require("nvim-treesitter.parsers")
 local ft_to_parser = treesitter_parsers.filetype_to_parsername
@@ -118,7 +119,7 @@ require("nvim-treesitter.configs").setup({
     lookahead = true,
     select = {
       enable = true,
-      include_surrounding_whitespace = true,
+      include_surrounding_whitespace = false,
       keymaps = {
         ["af"] = "@function.outer",
         ["if"] = "@function.inner",
@@ -150,6 +151,12 @@ require("nvim-treesitter.configs").setup({
       goto_previous_start = {
         ["[m"] = "@function.outer",
         ["[C"] = "@class.outer",
+      },
+    },
+    lsp_interop = {
+      enable = true,
+      peek_definition_code = {
+        ["gD"] = "@function.outer",
       },
     },
   },
@@ -193,6 +200,19 @@ require("nvim-treesitter.configs").setup({
 
 -- nvim-treehopper
 require("tsht").config.hint_keys = { "h", "j", "f", "d", "n", "v", "s", "l", "a" }
+mega.augroup("TreehopperMaps", {
+  {
+    event = { "FileType" },
+    command = function(args)
+      -- FIXME: this issue should be handled inside the plugin rather than manually
+      local langs = require("nvim-treesitter.parsers").available_parsers()
+      if vim.tbl_contains(langs, vim.bo[args.buf].filetype) then
+        mega.omap("m", ":<C-U>lua require('tsht').nodes()<CR>", { buffer = args.buf })
+        mega.vnoremap("m", ":lua require('tsht').nodes()<CR>", { buffer = args.buf })
+      end
+    end,
+  },
+})
 
 -- mega.conf("treesitter-context", {
 --   enable = false,
@@ -200,3 +220,4 @@ require("tsht").config.hint_keys = { "h", "j", "f", "d", "n", "v", "s", "l", "a"
 --   separator = { "▁", "TreesitterContextBorder" }, -- ─▁
 --   mode = "topline",
 -- })
+-- end, 0)
