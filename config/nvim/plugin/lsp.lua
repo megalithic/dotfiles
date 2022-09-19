@@ -371,7 +371,7 @@ local function setup_tools()
   for _, tool in ipairs(tools) do
     local p = mr.get_package(tool)
     if not p:is_installed() then
-      P(fmt("package %s not found; installing...", p))
+      -- P(fmt("package %s not found; installing...", p))
       p:install()
     end
   end
