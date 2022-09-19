@@ -27,56 +27,55 @@ vim.cmd([[
   " 2. https://github.com/romainl/vim-qf/blob/2e385e6d157314cb7d0385f8da0e1594a06873c5/autoload/qf.vim#L22
 ]])
 
-mega.conf("bqf", function()
-  local bqf = require("bqf")
-
-  local fugitive_pv_timer
-  local preview_fugitive = function(bufnr, qwinid, bufname)
-    local is_loaded = vim.api.nvim_buf_is_loaded(bufnr)
-    if fugitive_pv_timer and fugitive_pv_timer:get_due_in() > 0 then
-      fugitive_pv_timer:stop()
-      fugitive_pv_timer = nil
-    end
-    fugitive_pv_timer = vim.defer_fn(function()
-      if not is_loaded then
-        vim.api.nvim_buf_call(bufnr, function() vim.cmd(("do fugitive BufReadCmd %s"):format(bufname)) end)
-      end
-      require("bqf.preview.handler").open(qwinid, nil, true)
-      vim.api.nvim_buf_set_option(require("bqf.preview.session").float_bufnr(), "filetype", "git")
-    end, is_loaded and 0 or 60)
-    return true
-  end
-
-  bqf.setup({
-    auto_enable = true,
-    auto_resize_height = true,
-    preview = {
-      auto_preview = true,
-      win_height = 15,
-      win_vheight = 15,
-      delay_syntax = 80,
-      border_chars = { "┃", "┃", "━", "━", "┏", "┓", "┗", "┛", "█" },
-      ---@diagnostic disable-next-line: unused-local
-      should_preview_cb = function(bufnr, qwinid)
-        local bufname = vim.api.nvim_buf_get_name(bufnr)
-        local fsize = vim.fn.getfsize(bufname)
-        if fsize > 100 * 1024 then
-          -- skip file size greater than 100k
-          return false
-        elseif bufname:match("^fugitive://") then
-          return preview_fugitive(bufnr, qwinid, bufname)
-        end
-
-        return true
-      end,
-    },
-    filter = {
-      fzf = {
-        extra_opts = { "--bind", "ctrl-o:toggle-all", "--delimiter", "│" },
-      },
-    },
-  })
-end)
-
 nnoremap("<C-n>", [[:cnext<cr>]], { buffer = 0, label = "QF: next" })
 nnoremap("<C-p>", [[:cprevious<cr>]], { buffer = 0, label = "QF: previous" })
+
+local ok_bqf, bqf = mega.require("bqf")
+if not ok_bqf then return end
+
+local fugitive_pv_timer
+local preview_fugitive = function(bufnr, qwinid, bufname)
+  local is_loaded = vim.api.nvim_buf_is_loaded(bufnr)
+  if fugitive_pv_timer and fugitive_pv_timer:get_due_in() > 0 then
+    fugitive_pv_timer:stop()
+    fugitive_pv_timer = nil
+  end
+  fugitive_pv_timer = vim.defer_fn(function()
+    if not is_loaded then
+      vim.api.nvim_buf_call(bufnr, function() vim.cmd(("do fugitive BufReadCmd %s"):format(bufname)) end)
+    end
+    require("bqf.preview.handler").open(qwinid, nil, true)
+    vim.api.nvim_buf_set_option(require("bqf.preview.session").float_bufnr(), "filetype", "git")
+  end, is_loaded and 0 or 60)
+  return true
+end
+
+bqf.setup({
+  auto_enable = true,
+  auto_resize_height = true,
+  preview = {
+    auto_preview = true,
+    win_height = 15,
+    win_vheight = 15,
+    delay_syntax = 80,
+    border_chars = { "┃", "┃", "━", "━", "┏", "┓", "┗", "┛", "█" },
+    ---@diagnostic disable-next-line: unused-local
+    should_preview_cb = function(bufnr, qwinid)
+      local bufname = vim.api.nvim_buf_get_name(bufnr)
+      local fsize = vim.fn.getfsize(bufname)
+      if fsize > 100 * 1024 then
+        -- skip file size greater than 100k
+        return false
+      elseif bufname:match("^fugitive://") then
+        return preview_fugitive(bufnr, qwinid, bufname)
+      end
+
+      return true
+    end,
+  },
+  filter = {
+    fzf = {
+      extra_opts = { "--bind", "ctrl-o:toggle-all", "--delimiter", "│" },
+    },
+  },
+})
