@@ -159,7 +159,7 @@ local function plugins(use)
   -- ( Telescope ) -------------------------------------------------------------
   use({
     "nvim-telescope/telescope.nvim",
-    -- module_pattern = "telescope.*",
+    module_pattern = "telescope.*",
     ext = "telescope",
     event = "CursorHold",
     requires = {
@@ -268,13 +268,76 @@ local function plugins(use)
   })
 
   -- ( LSP ) -------------------------------------------------------------------
-  use({ "williamboman/mason.nvim", requires = { "nvim-lspconfig", "williamboman/mason-lspconfig.nvim" } })
-  use({ "williamboman/mason-lspconfig.nvim" })
+  -- use({ "williamboman/mason.nvim", requires = { "nvim-lspconfig", "williamboman/mason-lspconfig.nvim" } })
+  -- use({ "williamboman/mason-lspconfig.nvim" })
   -- TODO: https://github.com/akinsho/dotfiles/commit/6940c6dcf66e08fcaf31da6b4ffba06697ec6f43
+
   use({
-    "neovim/nvim-lspconfig", --[[module_pattern = "lspconfig.*"]]
+    {
+      "williamboman/mason.nvim",
+      event = "BufRead",
+      requires = {
+        "nvim-lspconfig",
+        "williamboman/mason-lspconfig.nvim",
+      },
+      config = function()
+        require("mason").setup({ ui = { border = _G.mega.get_border(), log_level = vim.log.levels.DEBUG } })
+        require("mason-lspconfig").setup({
+          automatic_installation = true,
+          ensure_installed = {
+            "bashls",
+            "clangd",
+            "cssls",
+            "dockerls",
+            "elixirls",
+            "elmls",
+            "html",
+            "jsonls",
+            "pyright",
+            "rust_analyzer",
+            "solargraph",
+            "sumneko_lua",
+            "tailwindcss",
+            "terraformls",
+            "tsserver",
+            "vimls",
+            "yamlls",
+            "zk",
+          },
+        })
+
+        require("mega.lsp.servers")()
+        -- require("mason-lspconfig").setup_handlers({
+        --   function(name)
+        --     local config = get_config(name)
+        --     if config then require("lspconfig")[name].setup(config) end
+        --   end,
+        -- })
+      end,
+    },
+    {
+      "jayp0521/mason-null-ls.nvim",
+      requires = {
+        "williamboman/mason.nvim",
+        "jose-elias-alvarez/null-ls.nvim",
+      },
+      after = "mason.nvim",
+      config = function()
+        require("mason-null-ls").setup({
+          automatic_installation = true,
+        })
+      end,
+    },
   })
-  use({ "jose-elias-alvarez/null-ls.nvim", ext = "null-ls" })
+
+  use({
+    "neovim/nvim-lspconfig",
+    module_pattern = "lspconfig.*",
+    config = function() require("lspconfig.ui.windows").default_options.border = _G.mega.get_border() end,
+  })
+
+  use({ "jose-elias-alvarez/null-ls.nvim", ext = "null-ls", requires = { "nvim-lua/plenary.nvim" } })
+
   use({
     "ray-x/lsp_signature.nvim",
     after = "nvim-lspconfig",

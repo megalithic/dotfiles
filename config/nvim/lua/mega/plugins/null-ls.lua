@@ -16,26 +16,25 @@ return function()
         filetypes = { "html", "json", "yaml", "graphql", "markdown", "css", "scss", "sass" },
         condition = function() return mega.executable("prettier") end,
       }),
-      -- format.prettierd.with({
-      --   filetypes = {
-      --     "javascript",
-      --     "javascriptreact",
-      --     "typescript",
-      --     "typescriptreact",
-      --     "css",
-      --     "scss",
-      --     "eruby",
-      --     "html",
-      --     "json",
-      --     "jsonc",
-      --     "yaml",
-      --     "graphql",
-      --     "markdown",
-      --   },
-      --   condition = function() return mega.executable("prettierd") end,
-      -- }),
+      format.prettierd.with({
+        filetypes = {
+          "javascript",
+          "javascriptreact",
+          "typescript",
+          "typescriptreact",
+          "css",
+          "scss",
+          "eruby",
+          "html",
+          "json",
+          "jsonc",
+          "yaml",
+          "graphql",
+          "markdown",
+        },
+        condition = function() return mega.executable("prettierd") end,
+      }),
       format.fixjson.with({ filetypes = { "jsonc", "json" } }),
-      -- format.isort,
       format.cbfmt:with({
         condition = function() return mega.executable("cbfmt") end,
       }),
@@ -61,28 +60,16 @@ return function()
           }
         end,
       }),
+      format.beautysh,
+      format.shellharden,
       format.elm_format,
-      -- FIXME: doesn't work on heex for some reason
-      -- format.mix.with({ extra_filetypes = { "heex", "phoenix-html" } }),
-      -- format.surface.with({ filetypes = { "elixir", "eelixir", "heex", "html.heex", "surface" } }),
-      -- format.rustywind.with({
-      --   filetypes = {
-      --     "javascript",
-      --     "javascriptreact",
-      --     "typescript",
-      --     "typescriptreact",
-      --     "html",
-      --     "heex",
-      --     "elixir",
-      --     "eelixir",
-      --     "surface",
-      --   },
+      format.jq,
+      format.markdownlint,
+      -- format.shfmt.with({
+      --   extra_args = { "-i", "2", "-ci" }, -- suggested: { "-i", "2", "-ci" } or { "-ci", "-s", "-bn", "-i", "2" }
+      --   -- extra_args = { "-ci", "-s", "-bn", "-i", "2" }, -- suggested: { "-i", "2", "-ci" }
+      --   filetypes = { "sh", "bash" },
       -- }),
-      format.shfmt.with({
-        extra_args = { "-i", "2", "-ci" }, -- suggested: { "-i", "2", "-ci" } or { "-ci", "-s", "-bn", "-i", "2" }
-        -- extra_args = { "-ci", "-s", "-bn", "-i", "2" }, -- suggested: { "-i", "2", "-ci" }
-        filetypes = { "sh", "bash" },
-      }),
       diag.flake8.with({
         extra_args = function(_) return { "--max-line-lenth", vim.opt_local.colorcolumn:get()[1] or "88" } end,
       }),
@@ -92,6 +79,7 @@ return function()
       diag.zsh.with({
         filetypes = { "zsh" },
       }),
+      -- diag.editorconfig_checker.with({ command = "editorconfig-checker" }),
       -- b.diagnostics.credo,
     },
   })

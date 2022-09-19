@@ -377,7 +377,10 @@ local function setup_tools()
   local mr = require("mason-registry")
   for _, tool in ipairs(tools) do
     local p = mr.get_package(tool)
-    if not p:is_installed() then p:install() end
+    if not p:is_installed() then
+      P(fmt("package %s not found; installing...", p))
+      p:install()
+    end
   end
 end
 
@@ -451,7 +454,7 @@ mega.augroup("LspSetupCommands", {
       if not api.nvim_buf_is_valid(bufnr) or not args.data then return end
       local client = lsp.get_client_by_id(args.data.client_id)
       -- P(fmt("Lsp client, %s, attached", client.name))
-      -- on_attach(client, bufnr)
+      on_attach(client, bufnr)
       -- if client_overrides[client.name] then client_overrides[client.name](client, bufnr) end
     end,
   },
@@ -478,4 +481,4 @@ mega.augroup("LspSetupCommands", {
 -- require("mega.lsp.null_ls")(on_attach)
 
 -- setup lsp servers via mason
-require("mega.lsp.servers")(on_attach)
+-- require("mega.lsp.servers")(on_attach)

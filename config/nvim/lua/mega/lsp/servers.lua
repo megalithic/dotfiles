@@ -114,36 +114,36 @@ return function(on_attach)
   local server_opts = {}
   server_opts.flags = { debounce_text_changes = 150 }
   server_opts.capabilities = get_server_capabilities()
-  server_opts.on_attach = on_attach
+  -- server_opts.on_attach = on_attach
 
   -- [ SERVERS ] ---------------------------------------------------------------
 
-  require("mason").setup()
+  -- require("mason").setup()
 
   -- NEAT! @REF: https://github.com/folke/dot/blob/master/config/nvim/lua/config/mason.lua
-  mason_lspconfig.setup({
-    automatic_installation = true,
-    ensure_installed = {
-      "bashls",
-      "clangd",
-      "cssls",
-      "dockerls",
-      "elixirls",
-      "elmls",
-      "html",
-      "jsonls",
-      "pyright",
-      "rust_analyzer",
-      "solargraph",
-      "sumneko_lua",
-      "tailwindcss",
-      "terraformls",
-      "tsserver",
-      "vimls",
-      "yamlls",
-      "zk",
-    },
-  })
+  -- mason_lspconfig.setup({
+  --   automatic_installation = true,
+  --   ensure_installed = {
+  --     "bashls",
+  --     "clangd",
+  --     "cssls",
+  --     "dockerls",
+  --     "elixirls",
+  --     "elmls",
+  --     "html",
+  --     "jsonls",
+  --     "pyright",
+  --     "rust_analyzer",
+  --     "solargraph",
+  --     "sumneko_lua",
+  --     "tailwindcss",
+  --     "terraformls",
+  --     "tsserver",
+  --     "vimls",
+  --     "yamlls",
+  --     "zk",
+  --   },
+  -- })
 
   mason_lspconfig.setup_handlers({
     -- The first entry (without a key) will be the default handler
@@ -154,7 +154,6 @@ return function(on_attach)
     end,
     cssls = function(server_name)
       local opts = vim.tbl_extend("keep", server_opts, {
-        -- cmd = { "vscode-css-language-server", "--stdio" },
         filetypes = { "css", "scss" },
         settings = {
           css = {
