@@ -1009,6 +1009,8 @@ function mega.clear_commandline()
   end
 end
 
+function mega.defer_packer() require("mega.plugins.utils").packer_deferred() end
+
 -- [ commands ] ----------------------------------------------------------------
 do
   local command = mega.command
