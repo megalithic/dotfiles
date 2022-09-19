@@ -134,6 +134,9 @@ local function setup_autocommands(client, bufnr)
     local msg = fmt("Unable to setup LSP autocommands, client for %d is missing", bufnr)
     return vim.notify(msg, "error", { title = "LSP Setup" })
   end
+
+  local supports_highlight = (client and client.server_capabilities.documentHighlightProvider == true)
+
   augroup("LspCodeLens", {
     {
       event = { "BufEnter", "CursorHold", "InsertLeave" }, -- CursorHoldI
@@ -148,7 +151,9 @@ local function setup_autocommands(client, bufnr)
     {
       event = { "CursorHold", "CursorHoldI" },
       buffer = bufnr,
-      command = function() vim.lsp.buf.document_highlight() end,
+      command = function()
+        if supports_highlight then vim.lsp.buf.document_highlight() end
+      end,
     },
     {
       event = { "CursorMoved", "BufLeave" },

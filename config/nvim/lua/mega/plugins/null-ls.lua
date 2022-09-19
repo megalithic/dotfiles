@@ -60,16 +60,19 @@ return function()
           }
         end,
       }),
-      format.beautysh,
+      format.beautysh.with({
+        extra_args = { "-i", "2" },
+        condition = function() return mega.executable("beautysh") end,
+      }),
       format.shellharden,
       format.elm_format,
       format.jq,
       format.markdownlint,
-      -- format.shfmt.with({
-      --   extra_args = { "-i", "2", "-ci" }, -- suggested: { "-i", "2", "-ci" } or { "-ci", "-s", "-bn", "-i", "2" }
-      --   -- extra_args = { "-ci", "-s", "-bn", "-i", "2" }, -- suggested: { "-i", "2", "-ci" }
-      --   filetypes = { "sh", "bash" },
-      -- }),
+      format.shfmt.with({
+        extra_args = { "-i", "2", "-ci" }, -- suggested: { "-i", "2", "-ci" } or { "-ci", "-s", "-bn", "-i", "2" }
+        -- extra_args = { "-ci", "-s", "-bn", "-i", "2" }, -- suggested: { "-i", "2", "-ci" }
+        filetypes = { "sh", "bash" },
+      }),
       diag.flake8.with({
         extra_args = function(_) return { "--max-line-lenth", vim.opt_local.colorcolumn:get()[1] or "88" } end,
       }),
