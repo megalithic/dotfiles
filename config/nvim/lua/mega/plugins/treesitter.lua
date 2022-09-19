@@ -1,3 +1,6 @@
+-- @REF
+-- https://github.com/vsedov/nvim/blob/master/lua/modules/lang/treesitter.lua
+
 return function()
   -- local ts_ok, _ = mega.require("nvim-treesitter")
   -- if not ts_ok then return end
