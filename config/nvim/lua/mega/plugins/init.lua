@@ -79,11 +79,10 @@ local function plugins(use)
   use({ "lukas-reineke/virt-column.nvim" })
   use({ "MunifTanjim/nui.nvim" })
   use({ "folke/which-key.nvim", ext = "which-key" })
-  -- use({ "echasnovski/mini.nvim", ext="mini", after = "nvim-treesitter" })
   use({ "phaazon/hop.nvim", ext = "hop" })
-  -- use({ "jghauser/fold-cycle.nvim" })
+  -- use({ "echasnovski/mini.nvim", ext="mini", after = "nvim-treesitter" })
   use({ "anuvyklack/hydra.nvim", ext = "hydra" })
-  use({ "rcarriga/nvim-notify", ext = "notify" })
+  -- use({ "rcarriga/nvim-notify", ext = "notify" })
   use({
     "vigoux/notifier.nvim",
     config = function()
