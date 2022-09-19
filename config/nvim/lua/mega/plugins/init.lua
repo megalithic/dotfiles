@@ -89,6 +89,13 @@ local function plugins(use)
       require("notifier").setup({
         component_name_recall = true,
       })
+
+      _G.mega.augroup("CloseNotifier", {
+        {
+          event = { "VimLeavePre", "LspDetach" },
+          command = "silent! NotifierClear",
+        },
+      })
     end,
   })
   use({ "nanozuki/tabby.nvim", ext = "tabby" })

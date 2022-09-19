@@ -82,11 +82,17 @@ return function()
       expand = function(args) ls.lsp_expand(args.body) end,
     },
     window = {
-      -- completion = cmp.config.window.bordered(cmp_window),
       completion = {
-        winhighlight = "Normal:Pmenu,FloatBorder:Pmenu,Search:None",
-        col_offset = -3,
-        side_padding = 0,
+        winhighlight = table.concat({
+          "Normal:NormalFloat",
+          "FloatBorder:TelescopePromptBorder",
+          "CursorLine:Visual",
+          "Search:None",
+        }, ","),
+        zindex = 1001,
+        col_offset = 0,
+        border = mega.get_border(),
+        side_padding = 1,
       },
       documentation = cmp.config.window.bordered(cmp_window),
     },
