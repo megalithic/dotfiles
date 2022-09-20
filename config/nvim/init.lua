@@ -18,7 +18,6 @@ vim.g.enabled_plugin = {
   env = false,
 }
 
-vim.g.use_term_plugin = true
 vim.g.colorscheme = "megaforest"
 vim.g.default_colorcolumn = "81"
 vim.g.mapleader = ","
