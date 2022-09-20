@@ -146,7 +146,6 @@ local function setup_autocommands(client, bufnr)
       end,
     },
   })
-
   augroup("LspDocumentHighlight", {
     {
       event = { "CursorHold", "CursorHoldI" },
@@ -161,17 +160,24 @@ local function setup_autocommands(client, bufnr)
       command = function() vim.lsp.buf.clear_references() end,
     },
   })
-  --
   augroup("LspDiagnostics", {
     {
-      event = { "CursorHold" },
+      event = { "CursorHold", "CursorHoldI" },
       buffer = bufnr,
       desc = "Show diagnostics",
       command = function() diagnostic_popup() end,
     },
+    {
+      event = { "DiagnosticChanged" },
+      buffer = bufnr,
+      desc = "Handle diagnostics changes",
+      command = function()
+        vim.diagnostic.setloclist({ open = false })
+        diagnostic_popup()
+        if vim.tbl_isempty(vim.fn.getloclist(0)) then vim.cmd([[lclose]]) end
+      end,
+    },
   })
-
-  -- format on save
   augroup("LspFormat", {
     {
       event = { "BufWritePre" },
@@ -264,6 +270,7 @@ local function setup_diagnostics()
 
   --- Restricts nvim's diagnostic signs to only the single most severe one per line
   --- @see `:help vim.diagnostic`
+  -- TODO: https://github.com/kristijanhusak/neovim-config/blob/master/nvim/lua/partials/lsp.lua#L152-L159
   local ns = api.nvim_create_namespace("severe-diagnostics")
   local function max_diagnostic(callback)
     return function(_, bufnr, _, opts)
