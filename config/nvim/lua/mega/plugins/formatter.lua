@@ -4,13 +4,62 @@ return function()
   local fn = vim.fn
   local api = vim.api
 
-  local prettierConfig = function()
+  -- local prettierConfig = function()
+  --   return {
+  --     exe = "prettier",
+  --     args = { "--stdin-filepath", fn.shellescape(api.nvim_buf_get_name(0)), "--single-quote" },
+  --     stdin = true,
+  --   }
+  -- end
+
+  local function prettier()
+    P("attempting prettier")
     return {
       exe = "prettier",
-      args = { "--stdin-filepath", fn.shellescape(api.nvim_buf_get_name(0)), "--single-quote" },
+      args = {
+        "--stdin-filepath",
+        vim.fn.shellescape(vim.api.nvim_buf_get_name(0)),
+      },
       stdin = true,
     }
   end
+
+  -- local function eslint()
+  --   P("attempting eslint")
+  --   return {
+  --     exe = "eslint",
+  --     args = {
+  --       "--fix-dry-run",
+  --       "--stdin",
+  --       "--stdin-filename",
+  --       vim.fn.shellescape(vim.api.nvim_buf_get_name(0)),
+  --     },
+  --     stdin = true,
+  --   }
+  -- end
+
+  local function prettier_d()
+    P("attempting prettier_d")
+    return {
+      exe = "prettierd",
+      args = { vim.fn.shellescape(vim.api.nvim_buf_get_name(0)) },
+      stdin = true,
+    }
+  end
+
+  -- local function eslint_d()
+  --   P("attempting eslint_d")
+  --   return {
+  --     exe = "eslint_d",
+  --     args = {
+  --       "--fix-to-stdout",
+  --       "--stdin",
+  --       "--stdin-filename",
+  --       vim.fn.shellescape(vim.api.nvim_buf_get_name(0)),
+  --     },
+  --     stdin = true,
+  --   }
+  -- end
 
   local formatterConfig = {
     lua = {
@@ -114,11 +163,12 @@ return function()
     "svg",
   }
   for _, ft in ipairs(commonFT) do
-    formatterConfig[ft] = { prettierConfig }
+    formatterConfig[ft] = { prettier_d }
   end
   -- Setup functions
   formatter.setup({
     logging = true,
+    log_level = vim.log.levels.DEBUG,
     filetype = formatterConfig,
   })
 end

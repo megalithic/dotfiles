@@ -82,21 +82,22 @@ local function plugins(use)
   -- use({ "echasnovski/mini.nvim", ext="mini", after = "nvim-treesitter" })
   use({ "anuvyklack/hydra.nvim", ext = "hydra" })
   -- use({ "rcarriga/nvim-notify", ext = "notify" })
-  -- use({
-  --   "vigoux/notifier.nvim",
-  --   config = function()
-  --     require("notifier").setup({
-  --       component_name_recall = true,
-  --     })
+  use({
+    "vigoux/notifier.nvim",
+    cond = function() return vim.g.notifier_enabled end,
+    config = function()
+      require("notifier").setup({
+        component_name_recall = true,
+      })
 
-  --     _G.mega.augroup("CloseNotifier", {
-  --       {
-  --         event = { "VimLeavePre", "LspDetach" },
-  --         command = "silent! NotifierClear",
-  --       },
-  --     })
-  --   end,
-  -- })
+      _G.mega.augroup("CloseNotifier", {
+        {
+          event = { "VimLeavePre", "LspDetach" },
+          command = "silent! NotifierClear",
+        },
+      })
+    end,
+  })
   use({ "nanozuki/tabby.nvim", ext = "tabby" })
   use({
     "lukas-reineke/indent-blankline.nvim",
@@ -509,11 +510,34 @@ local function plugins(use)
     module = "dap",
     ext = "dap",
   })
-  use({ "theHamsta/nvim-dap-virtual-text", after = "nvim-dap" })
+  use({
+    "theHamsta/nvim-dap-virtual-text",
+    after = "nvim-dap",
+    config = function()
+      require("nvim-dap-virtual-text").setup({
+        commented = true,
+      })
+    end,
+  })
   use({ "rcarriga/nvim-dap-ui", ext = "dapui", after = "nvim-dap" })
   use({ "jbyuki/one-small-step-for-vimkind", after = "nvim-dap" })
-  use({ "suketa/nvim-dap-ruby", after = "nvim-dap" })
-  use({ "mxsdev/nvim-dap-vscode-js", after = "nvim-dap" })
+  use({ "suketa/nvim-dap-ruby", after = "nvim-dap", config = function() require("dap-ruby").setup() end })
+  use({
+    "mxsdev/nvim-dap-vscode-js",
+    after = "nvim-dap",
+    config = function()
+      require("dap-vscode-js").setup({
+        log_file_level = vim.log.levels.TRACE,
+        adapters = {
+          "pwa-node",
+          "pwa-chrome",
+          "pwa-msedge",
+          "node-terminal",
+          "pwa-extensionHost",
+        }, -- which adapters to register in nvim-dap
+      })
+    end,
+  })
   use({ "sultanahamer/nvim-dap-reactnative", after = "nvim-dap" })
   -- use({ "microsoft/vscode-react-native", after = "nvim-dap" })
   use({ "Pocco81/DAPInstall.nvim", after = "nvim-dap" })

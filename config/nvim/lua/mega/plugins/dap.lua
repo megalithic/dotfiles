@@ -7,11 +7,6 @@ return function()
   -- P("loaded dap")
 
   -- extra dap plugins/extensions/adapters
-  mega.conf("dap-ruby", {})
-  mega.conf("nvim-dap-virtual-text", {
-    commented = true,
-  })
-
   local fn = vim.fn
 
   local function repl_toggle() require("dap").repl.toggle(nil, "botright split") end
@@ -103,17 +98,6 @@ return function()
       args = {},
     })
   end
-
-  require("dap-vscode-js").setup({
-    log_file_level = vim.log.levels.TRACE,
-    adapters = {
-      "pwa-node",
-      "pwa-chrome",
-      "pwa-msedge",
-      "node-terminal",
-      "pwa-extensionHost",
-    }, -- which adapters to register in nvim-dap
-  })
 
   dap.adapters.node2 = function(cb, config)
     if config.preLaunchTask then vim.fn.system(config.preLaunchTask) end
