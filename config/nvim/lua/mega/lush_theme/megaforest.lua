@@ -444,6 +444,7 @@ return lush(function()
     commentTSDanger({ bg = red, fg = bg_dark, gui = "bold" }),
     commentTSNote({ fg = cyan, gui = "italic" }),
     commentTSRef({ fg = bright_blue }),
+
     CommentTasksTodo({ commentTSWarning }),
     CommentTasksFixme({ commentTSDanger }),
     CommentTasksNote({ commentTSNote }),
@@ -829,6 +830,12 @@ return lush(function()
 
     FidgetTitle({ fg = orange }),
     FidgetTask({ fg = grey2, bg = bg1.darken(10) }),
+
+    ---- :help: notifier.nvim  -------------------------------------------------
+
+    NotifierTitle({ fg = orange }),
+    NotifierContent({ fg = grey2, bg = bg1.darken(10) }),
+    NotifierContentDim({ fg = grey1, bg = bg1.darken(10), gui = "italic" }),
 
     ---- :help: bqf.txt --------------------------------------------------------
 
