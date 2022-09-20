@@ -2,7 +2,7 @@
 -- TODO: Could almost certainly make this a lot faster, especially by using Luv more directly in the
 -- MRU logic, making make_sections() construct the full table of strings first and then call
 -- set_lines only once (still need to deal with highlights), maybe making file info fill in async
-local icons = require("nvim-web-devicons")
+local ok_icons, icons = mega.require("nvim-web-devicons")
 
 local counter = 15
 local total_paths = 15
@@ -52,10 +52,11 @@ local function filter_oldfiles(prefix, fmt)
     then
       local escaped_path = vim.fn.fnameescape(absolute_path)
       files[absolute_path] = true
+      local maybe_icon = ok_icons and icons.get_icon(escaped_path, vim.fn.fnamemodify(escaped_path, ":e"), { default = true }) or ""
       oldfiles[#oldfiles + 1] = {
         key = total_paths - counter,
         cmd = "edit " .. escaped_path,
-        disp = icons.get_icon(escaped_path, vim.fn.fnamemodify(escaped_path, ":e"), { default = true })
+        disp = maybe_icon
           .. " "
           .. cap_path_length(vim.fn.fnamemodify(absolute_path, fmt)),
         editing = true,

@@ -12,10 +12,25 @@ return function()
     debounce = 150,
     sources = {
       format.trim_whitespace.with({ filetypes = { "*" } }),
-      format.prettier.with({
-        filetypes = { "html", "json", "yaml", "graphql", "markdown", "css", "scss", "sass" },
-        condition = function() return mega.executable("prettier") end,
-      }),
+      -- format.prettier.with({
+      --   filetypes = {
+      --     "javascript",
+      --     "javascriptreact",
+      --     "typescript",
+      --     "typescriptreact",
+      --     "css",
+      --     "scss",
+      --     "eruby",
+      --     "html",
+      --     "svg",
+      --     "json",
+      --     "jsonc",
+      --     "yaml",
+      --     "graphql",
+      --     "markdown",
+      --   },
+      --   condition = function() return mega.executable("prettier") end,
+      -- }),
       format.prettierd.with({
         filetypes = {
           "javascript",
@@ -26,6 +41,7 @@ return function()
           "scss",
           "eruby",
           "html",
+          "svg",
           "json",
           "jsonc",
           "yaml",

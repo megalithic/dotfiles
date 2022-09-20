@@ -257,7 +257,7 @@ cask "figma"
 cask "firefox"
 cask "flux"
 cask "google-chrome"
-# cask "forklift" # replaced with marta for now
+cask "forklift" # replaced with marta for now
 cask "hazel"
 cask "hammerspoon", greedy: true
 cask "intel-power-gadget" # requires restart with security allow (intel things)
@@ -271,7 +271,7 @@ cask "keycastr"
 cask "kitty", greedy: true
 cask "little-snitch4" # requires kernel extension, see notes from install message
 cask "loom"
-cask "marta"
+# cask "marta"
 cask "micro-snitch"
 cask "microsoft-edge"
 cask "mos"

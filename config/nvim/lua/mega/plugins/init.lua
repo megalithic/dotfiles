@@ -1,6 +1,5 @@
 local PACKER_COMPILED_PATH = fmt("%s/packer/packer_compiled.lua", vim.fn.stdpath("cache"))
 local PACKER_SNAPSHOTS_PATH = fmt("%s/packer/snapshots/", vim.fn.stdpath("cache"))
-
 local mega = _G.mega or require("mega.globals")
 
 local packer = require("mega.plugins.utils")
@@ -142,25 +141,103 @@ local function plugins(use)
 
   -- ( Telescope ) -------------------------------------------------------------
   use({
-    "nvim-telescope/telescope.nvim",
-    module_pattern = "telescope.*",
-    ext = "telescope",
-    event = "CursorHold",
-    requires = {
-      {
-        "nvim-telescope/telescope-file-browser.nvim",
-        after = "telescope.nvim",
-      },
-      {
-        "natecraddock/telescope-zf-native.nvim",
-        after = "telescope.nvim",
-      },
-      {
-        "benfowler/telescope-luasnip.nvim",
-        after = "telescope.nvim",
-      },
+    {
+      "nvim-telescope/telescope.nvim",
+      module_pattern = "telescope.*",
+      ext = "telescope",
+      cmd = "Telescope",
+      -- event = "CursorHold",
+    },
+    {
+      "nvim-telescope/telescope-file-browser.nvim",
+      after = "telescope.nvim",
+    },
+    {
+      "natecraddock/telescope-zf-native.nvim",
+      after = "telescope.nvim",
+    },
+    {
+      "benfowler/telescope-luasnip.nvim",
+      after = "telescope.nvim",
+    },
+    {
+      "ryansch/habitats.nvim",
+      after = "telescope-file-browser.nvim",
+      config = function() require("habitats").setup({}) end,
     },
   })
+  -- use({
+  --   "nvim-telescope/telescope.nvim",
+  --   -- module_pattern = "telescope.*",
+  --   ext = "telescope",
+  --   -- cmd = "Telescope",
+  --   event = "CursorHold",
+  --   requires = {
+  --     "nvim-lua/popup.nvim",
+  --     "nvim-lua/plenary.nvim",
+  --     "nvim-telescope/telescope-file-browser.nvim",
+  --     "natecraddock/telescope-zf-native.nvim",
+  --     "benfowler/telescope-luasnip.nvim",
+  --   },
+  --   wants = {
+  --     "popup.nvim",
+  --     "plenary.nvim",
+  --     "telescope-file-browser.nvim",
+  --     "telescope-zf-native.nvim",
+  --     "telescope-luasnip.nvim",
+  --     "habitats.nvim",
+  --   },
+  --   {
+  --     "nvim-telescope/telescope-file-browser.nvim",
+  --     after = "telescope.nvim",
+  --   },
+  --   {
+  --     "natecraddock/telescope-zf-native.nvim",
+  --     after = "telescope.nvim",
+  --   },
+  --   {
+  --     "benfowler/telescope-luasnip.nvim",
+  --     after = "telescope.nvim",
+  --   },
+  --   {
+  --     "ryansch/habitats.nvim",
+  --     after = "telescope-file-browser.nvim",
+  --     config = function() require("habitats").setup({}) end,
+  --   },
+  -- })
+  -- use({
+  --   {
+  --     "nvim-telescope/telescope.nvim",
+  --     requires = {
+  --       "nvim-lua/popup.nvim",
+  --       "nvim-lua/plenary.nvim",
+  --       "telescope-frecency.nvim",
+  --       "telescope-fzf-native.nvim",
+  --       "nvim-telescope/telescope-ui-select.nvim",
+  --     },
+  --     wants = {
+  --       "popup.nvim",
+  --       "plenary.nvim",
+  --       "telescope-frecency.nvim",
+  --       "telescope-fzf-native.nvim",
+  --     },
+  --     setup = [[require('config.telescope_setup')]],
+  --     config = [[require('config.telescope')]],
+  --     cmd = "Telescope",
+  --     module = "telescope",
+  --   },
+  --   {
+  --     "nvim-telescope/telescope-frecency.nvim",
+  --     after = "telescope.nvim",
+  --     requires = "tami5/sqlite.lua",
+  --   },
+  --   {
+  --     "nvim-telescope/telescope-fzf-native.nvim",
+  --     run = "make",
+  --   },
+  --   "crispgm/telescope-heading.nvim",
+  --   "nvim-telescope/telescope-file-browser.nvim",
+  -- })
 
   -- ( Navigation ) ------------------------------------------------------------
   use({
@@ -542,7 +619,6 @@ local function plugins(use)
       })
     end,
   })
-  use({ "ryansch/habitats.nvim", after = "telescope.nvim", config = function() require("habitats").setup({}) end })
   use({ "editorconfig/editorconfig-vim" })
   use({ "mhartington/formatter.nvim", ext = "formatter" })
   use({ "alvan/vim-closetag" })
