@@ -14,6 +14,7 @@ local config = {
   auto_reload_compiled = false,
   non_interactive = vim.env.PACKER_NON_INTERACTIVE or false,
   compile_path = PACKER_COMPILED_PATH,
+  ensure_dependencies = true,
   snapshot_path = PACKER_SNAPSHOTS_PATH,
   preview_updates = true,
   git = {
@@ -81,21 +82,21 @@ local function plugins(use)
   -- use({ "echasnovski/mini.nvim", ext="mini", after = "nvim-treesitter" })
   use({ "anuvyklack/hydra.nvim", ext = "hydra" })
   -- use({ "rcarriga/nvim-notify", ext = "notify" })
-  use({
-    "vigoux/notifier.nvim",
-    config = function()
-      require("notifier").setup({
-        component_name_recall = true,
-      })
+  -- use({
+  --   "vigoux/notifier.nvim",
+  --   config = function()
+  --     require("notifier").setup({
+  --       component_name_recall = true,
+  --     })
 
-      _G.mega.augroup("CloseNotifier", {
-        {
-          event = { "VimLeavePre", "LspDetach" },
-          command = "silent! NotifierClear",
-        },
-      })
-    end,
-  })
+  --     _G.mega.augroup("CloseNotifier", {
+  --       {
+  --         event = { "VimLeavePre", "LspDetach" },
+  --         command = "silent! NotifierClear",
+  --       },
+  --     })
+  --   end,
+  -- })
   use({ "nanozuki/tabby.nvim", ext = "tabby" })
   use({
     "lukas-reineke/indent-blankline.nvim",
@@ -141,24 +142,26 @@ local function plugins(use)
 
   -- ( Telescope ) -------------------------------------------------------------
   use({
-    {
-      "nvim-telescope/telescope.nvim",
-      module_pattern = "telescope.*",
-      ext = "telescope",
-      cmd = "Telescope",
-      -- event = "CursorHold",
-    },
+    "nvim-telescope/telescope.nvim",
+    module_pattern = "telescope.*",
+    ext = "telescope",
+    event = "CursorHold",
+  })
+  use({
     {
       "nvim-telescope/telescope-file-browser.nvim",
       after = "telescope.nvim",
+      config = function() require("telescope").load_extension("file_browser") end,
     },
     {
       "natecraddock/telescope-zf-native.nvim",
       after = "telescope.nvim",
+      config = function() require("telescope").load_extension("zf-native") end,
     },
     {
       "benfowler/telescope-luasnip.nvim",
       after = "telescope.nvim",
+      config = function() require("telescope").load_extension("luasnip") end,
     },
     {
       "ryansch/habitats.nvim",
@@ -276,14 +279,15 @@ local function plugins(use)
 
   -- ( Treesitter ) ------------------------------------------------------------
   use({
-    {
-      "nvim-treesitter/nvim-treesitter",
-      -- run = ":TSUpdate",
-      run = function() require("nvim-treesitter.install").update({ with_sync = true }) end,
-      -- cmd = { "TSUpdate", "TSInstallSync" },
-      -- event = { "BufRead", "BufNewFile" },
-      ext = "treesitter",
-    },
+    "nvim-treesitter/nvim-treesitter",
+    run = ":TSUpdate",
+    -- run = function() require("nvim-treesitter.install").update({ with_sync = true }) end,
+    cmd = { "TSUpdate", "TSInstallSync" },
+    -- event = { "BufRead", "BufNewFile" },
+    ext = "treesitter",
+  })
+
+  use({
     { "nvim-treesitter/nvim-treesitter-textobjects", after = "nvim-treesitter" },
     { "RRethy/nvim-treesitter-textsubjects", after = "nvim-treesitter" },
     { "nvim-treesitter/nvim-tree-docs", after = "nvim-treesitter" },
@@ -488,11 +492,11 @@ local function plugins(use)
   -- ( Testing/Debugging ) -----------------------------------------------------
   use({ "vim-test/vim-test", ext = "vim-test" })
   use({
-    {
-      "mfussenegger/nvim-dap",
-      module = "dap",
-      ext = "dap",
-    },
+    "mfussenegger/nvim-dap",
+    module = "dap",
+    ext = "dap",
+  })
+  use({
     { "theHamsta/nvim-dap-virtual-text", after = "nvim-dap" },
     { "rcarriga/nvim-dap-ui", ext = "dapui", after = "nvim-dap" },
     { "jbyuki/one-small-step-for-vimkind", after = "nvim-dap" },

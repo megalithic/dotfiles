@@ -9,7 +9,10 @@ local PACKER_INSTALL_PATH = fmt("%s/site/pack/packer/%s/packer.nvim", fn.stdpath
 -- ---@param msg string
 function M.notify(msg, level) vim.notify(msg, level, { title = "Packer" }) end
 
-function M.conf(name) return require(fmt("mega.plugins.%s", name)) end
+function M.conf(name)
+  -- P(name)
+  return require(fmt("mega.plugins.%s", name))
+end
 
 local function reload()
   mega.invalidate("mega.plugins", true)
@@ -38,13 +41,13 @@ local function setup_autocmds()
   })
 end
 
-function M.bootstrap()
+function M.bootstrap(compile_path)
   if fn.empty(fn.glob(PACKER_INSTALL_PATH)) > 0 then
     M.notify("Downloading packer.nvim...")
     M.notify(
       fn.system({ "git", "clone", "--depth", "1", "https://github.com/wbthomason/packer.nvim", PACKER_INSTALL_PATH })
     )
-    vim.fn.delete(PACKER_COMPILED_PATH)
+    vim.fn.delete(compile_path)
     vim.cmd.packadd({ "packer.nvim", bang = true })
 
     -- require("packer").sync()
@@ -106,7 +109,7 @@ function M.setup(config, plugins_fn)
   -- HACK: see https://github.com/wbthomason/packer.nvim/issues/180
   vim.fn.setenv("MACOSX_DEPLOYMENT_TARGET", "10.15")
 
-  local bootstrapped = M.bootstrap()
+  local bootstrapped = M.bootstrap(config.compile_path)
   local packer = require("packer")
   packer.init(config)
   M.local_plugins = config.local_plugins or {}

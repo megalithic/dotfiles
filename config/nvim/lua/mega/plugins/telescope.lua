@@ -1,6 +1,5 @@
 return function()
   local telescope = require("telescope")
-  print(fmt("Telescope loaded: %s", I(telescope)))
 
   local fn = vim.fn
   local actions = require("telescope.actions")
@@ -370,10 +369,6 @@ return function()
   nmap("<leader>lS", builtin.lsp_workspace_symbols, "telescope: workspace symbols")
   nmap("<leader>lw", builtin.lsp_dynamic_workspace_symbols, "telescope: dynamic workspace symbols")
 
-  telescope.load_extension("zf-native")
-  -- telescope.load_extension("live_grep_args")
-  telescope.load_extension("luasnip")
   -- telescope.load_extension("habitats")
   telescope.load_extension("workspaces")
-  telescope.load_extension("file_browser")
 end
