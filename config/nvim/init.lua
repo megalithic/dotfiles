@@ -25,17 +25,16 @@ vim.g.maplocalleader = " "
 
 -- [ globals ] -----------------------------------------------------------------
 
-local ns = {
-  fn = {},
-  dirs = {},
-  mappings = {},
-  term = {},
-  lsp = {},
-  colors = require("mega.lush_theme.colors"),
-  icons = require("mega.icons"),
-}
-
-_G.mega = mega or ns
+_G.mega = mega
+  or {
+    fn = {},
+    dirs = {},
+    mappings = {},
+    term = {},
+    lsp = {},
+    colors = require("mega.lush_theme.colors"),
+    icons = require("mega.icons"),
+  }
 
 -- [ loaders ] -----------------------------------------------------------------
 
