@@ -87,7 +87,7 @@ local commands = {
   { key = "r", disp = "  Recent files", cmd = "Telescope oldfiles" },
   -- { key = "s", disp = "  Start Prosession", cmd = "Prosession .", editing = true },
   { key = "g", disp = "  NeoGit", cmd = "Neogit" },
-  { key = "t", disp = " Terminal (tab)", cmd = "T direction=tab" },
+  { key = "t", disp = "  Terminal (tab)", cmd = "T direction=tab" },
   -- { key = "t", disp = "  Time startup", cmd = "StartupTime" },
   { key = "q", disp = "  Quit", cmd = "qa" },
 }
