@@ -49,7 +49,6 @@ local function plugins(use)
 
   -- ( UI ) --------------------------------------------------------------------
   use({ "rktjmp/lush.nvim" })
-  use({ "dm1try/golden_size", ext = "golden_size" })
   use({ "kyazdani42/nvim-web-devicons", config = function() require("nvim-web-devicons").setup() end })
   use({
     "NvChad/nvim-colorizer.lua",
@@ -140,33 +139,6 @@ local function plugins(use)
       })
     end,
   })
-  -- use({
-  --   "levouh/tint.nvim",
-  --   event = "BufRead",
-  --   config = function()
-  --     require("tint").setup({
-  --       tint = -50,
-  --       highlight_ignore_patterns = {
-  --         "WinSeparator",
-  --         "St.*",
-  --         "Comment",
-  --         "Panel.*",
-  --         "Telescope.*",
-  --         "Bqf.*",
-  --         "Cursor.*",
-  --       },
-  --       window_ignore_function = function(win_id)
-  --         if vim.wo[win_id].diff or vim.fn.win_gettype(win_id) ~= "" then return true end
-  --         local buf = vim.api.nvim_win_get_buf(win_id)
-  --         local b = vim.bo[buf]
-  --         local ignore_bt = { "megaterm", "terminal", "prompt", "nofile" }
-  --         local ignore_ft =
-  --           { "neo-tree", "packer", "diff", "megaterm", "toggleterm", "Neogit.*", "Telescope.*", "qf" }
-  --         return mega.any(b.bt, ignore_bt) or mega.any(b.ft, ignore_ft)
-  --       end,
-  --     })
-  --   end,
-  -- })
 
   -- ( Telescope ) -------------------------------------------------------------
   use({
@@ -178,35 +150,17 @@ local function plugins(use)
       {
         "nvim-telescope/telescope-file-browser.nvim",
         after = "telescope.nvim",
-        -- config = function() require("telescope").load_extension("file_browser") end,
       },
       {
         "natecraddock/telescope-zf-native.nvim",
         after = "telescope.nvim",
-        -- config = function() require("telescope").load_extension("zf-native") end,
       },
       {
         "benfowler/telescope-luasnip.nvim",
         after = "telescope.nvim",
-        -- config = function() require("telescope").load_extension("luasnip") end,
       },
     },
   })
-  -- use({
-  --   "nvim-telescope/telescope-file-browser.nvim",
-  --   after = "telescope.nvim",
-  --   config = function() require("telescope").load_extension("file_browser") end,
-  -- })
-  -- use({
-  --   "natecraddock/telescope-zf-native.nvim",
-  --   after = "telescope.nvim",
-  --   config = function() require("telescope").load_extension("zf-native") end,
-  -- })
-  -- use({
-  --   "benfowler/telescope-luasnip.nvim",
-  --   after = "telescope.nvim",
-  --   config = function() require("telescope").load_extension("luasnip") end,
-  -- })
 
   -- ( Navigation ) ------------------------------------------------------------
   use({
@@ -278,34 +232,8 @@ local function plugins(use)
       },
     },
   })
-  -- use({ "nvim-treesitter/nvim-treesitter-textobjects", after = "nvim-treesitter" })
-  -- use({ "RRethy/nvim-treesitter-textsubjects", after = "nvim-treesitter" })
-  -- use({ "nvim-treesitter/nvim-tree-docs", after = "nvim-treesitter" })
-  -- use({ "JoosepAlviste/nvim-ts-context-commentstring", after = "nvim-treesitter" })
-  -- use({ "windwp/nvim-ts-autotag", after = "nvim-treesitter" })
-  -- use({ "p00f/nvim-ts-rainbow", after = "nvim-treesitter" })
-  -- use({ "mfussenegger/nvim-treehopper", after = "nvim-treesitter" })
-  -- use({ "David-Kunz/treesitter-unit", after = "nvim-treesitter" })
-  -- use({
-  --   "nvim-treesitter/nvim-treesitter-context",
-  --   after = "nvim-treesitter",
-  --   -- config = function()
-  --   --   require("treesitter-context").setup({
-  --   --     multiline_threshold = 4,
-  --   --     separator = { "─", "ContextBorder" }, -- alts: ▁ ─ ▄
-  --   --     mode = "topline",
-  --   --   })
-  --   -- end,
-  -- })
-  -- use({
-  --   "nvim-treesitter/playground",
-  --   cmd = { "TSPlaygroundToggle", "TSHighlightCapturesUnderCursor" },
-  --   after = "nvim-treesitter",
-  -- })
 
   -- ( LSP ) -------------------------------------------------------------------
-  -- use({ "williamboman/mason.nvim", requires = { "nvim-lspconfig", "williamboman/mason-lspconfig.nvim" } })
-  -- use({ "williamboman/mason-lspconfig.nvim" })
   use({
     {
       "williamboman/mason.nvim",
@@ -368,43 +296,6 @@ local function plugins(use)
   use({ "jose-elias-alvarez/nvim-lsp-ts-utils" })
   use({ "b0o/schemastore.nvim" })
   use({ "mrshmllow/document-color.nvim" })
-  -- use({
-  --   "j-hui/fidget.nvim",
-  --   disable = true,
-  --   config = function()
-  --     require("fidget").setup({
-  --       text = {
-  --         spinner = "dots_pulse",
-  --         done = "",
-  --       },
-  --       window = {
-  --         blend = 10,
-  --         -- relative = "editor",
-  --       },
-  --       sources = { -- Sources to configure
-  --         ["elixirls"] = { -- Name of source
-  --           ignore = true, -- Ignore notifications from this source
-  --         },
-  --         ["markdown"] = { -- Name of source
-  --           ignore = true, -- Ignore notifications from this source
-  --         },
-  --       },
-  --       align = {
-  --         bottom = false,
-  --         right = true,
-  --       },
-  --       fmt = {
-  --         stack_upwards = false,
-  --       },
-  --     })
-  --     require("mega.globals").augroup("CloseFidget", {
-  --       {
-  --         event = { "VimLeavePre", "LspDetach" },
-  --         command = "silent! FidgetClose",
-  --       },
-  --     })
-  --   end,
-  -- })
   -- use({ "lewis6991/hover.nvim" })
   -- use({ "folke/lua-dev.nvim", module = "lua-dev" })
   -- use({ "microsoft/python-type-stubs", opt = true })

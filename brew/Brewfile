@@ -169,7 +169,7 @@ brew "stack"
 # brew "starship"
 brew "stow"
 brew "sketchybar", restart_service: true if OS.mac? # sketchybar
-brew "svim", restart_service: true if OS.mac? # sketchyvim
+# brew "svim", restart_service: true if OS.mac? # sketchyvim
 brew "switchaudio-osx" if OS.mac?
 brew "terminal-notifier" if OS.mac?
 brew "the_silver_searcher"
@@ -311,7 +311,7 @@ mas "Fantastical", id: 975937182
 # mas "Drafts", id: 1435957248
 mas "Battery Indicator", id: 1206020918
 mas "Brother iPrint&Scan", id: 1193539993
-mas "RocketSim", id: 1504940162
+# mas "RocketSim", id: 1504940162
 # mas "Vimari", id: 1480933944
 
 # mas "Things", id: 904280696 # might be bailing from this

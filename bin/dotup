@@ -79,7 +79,7 @@ update() {
 
   # log "paq-nvim install.." && ./bin/paq-install -u
 
-  log "packer.nvim install.." && ./bin/packer-install -u
+  # log "packer.nvim install.." && ./bin/packer-install -u
 
   if [[ "$(uname)" == "Darwin" ]]; then
     log "elixir-ls install.." &&

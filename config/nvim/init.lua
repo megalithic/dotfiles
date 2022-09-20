@@ -9,6 +9,7 @@ vim.g.enabled_plugin = {
   term = true,
   cursorline = true,
   colorcolumn = true,
+  windows = true,
   numbers = true,
   quickfix = true,
   simplef = true,

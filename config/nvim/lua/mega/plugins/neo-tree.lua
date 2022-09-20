@@ -49,7 +49,7 @@ return function()
         handler = function(args)
           vim.cmd("wincmd =")
           require("virt-column").refresh()
-          require("golden_size").on_win_enter()
+          mega.resize_windows()
           mega.blink_cursorline()
           vim.cmd("e")
         end,
