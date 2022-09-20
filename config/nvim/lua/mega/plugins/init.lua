@@ -276,37 +276,37 @@ local function plugins(use)
 
   -- ( Treesitter ) ------------------------------------------------------------
   use({
-    "nvim-treesitter/nvim-treesitter",
-    -- run = ":TSUpdate",
-    run = function() require("nvim-treesitter.install").update({ with_sync = true }) end,
-    cmd = { "TSUpdate", "TSInstallSync" },
-    -- event = { "BufRead", "BufNewFile" },
-    ext = "treesitter",
-    requires = {
-      { "nvim-treesitter/nvim-treesitter-textobjects", after = "nvim-treesitter" },
-      { "RRethy/nvim-treesitter-textsubjects", after = "nvim-treesitter" },
-      { "nvim-treesitter/nvim-tree-docs", after = "nvim-treesitter" },
-      { "JoosepAlviste/nvim-ts-context-commentstring", after = "nvim-treesitter" },
-      { "windwp/nvim-ts-autotag", after = "nvim-treesitter" },
-      { "p00f/nvim-ts-rainbow", after = "nvim-treesitter" },
-      { "mfussenegger/nvim-treehopper", after = "nvim-treesitter" },
-      { "David-Kunz/treesitter-unit", after = "nvim-treesitter" },
-      {
-        "nvim-treesitter/nvim-treesitter-context",
-        after = "nvim-treesitter",
-        -- config = function()
-        --   require("treesitter-context").setup({
-        --     multiline_threshold = 4,
-        --     separator = { "─", "ContextBorder" }, -- alts: ▁ ─ ▄
-        --     mode = "topline",
-        --   })
-        -- end,
-      },
-      {
-        "nvim-treesitter/playground",
-        cmd = { "TSPlaygroundToggle", "TSHighlightCapturesUnderCursor" },
-        after = "nvim-treesitter",
-      },
+    {
+      "nvim-treesitter/nvim-treesitter",
+      -- run = ":TSUpdate",
+      run = function() require("nvim-treesitter.install").update({ with_sync = true }) end,
+      -- cmd = { "TSUpdate", "TSInstallSync" },
+      -- event = { "BufRead", "BufNewFile" },
+      ext = "treesitter",
+    },
+    { "nvim-treesitter/nvim-treesitter-textobjects", after = "nvim-treesitter" },
+    { "RRethy/nvim-treesitter-textsubjects", after = "nvim-treesitter" },
+    { "nvim-treesitter/nvim-tree-docs", after = "nvim-treesitter" },
+    { "JoosepAlviste/nvim-ts-context-commentstring", after = "nvim-treesitter" },
+    { "windwp/nvim-ts-autotag", after = "nvim-treesitter" },
+    { "p00f/nvim-ts-rainbow", after = "nvim-treesitter" },
+    { "mfussenegger/nvim-treehopper", after = "nvim-treesitter" },
+    { "David-Kunz/treesitter-unit", after = "nvim-treesitter" },
+    {
+      "nvim-treesitter/nvim-treesitter-context",
+      after = "nvim-treesitter",
+      -- config = function()
+      --   require("treesitter-context").setup({
+      --     multiline_threshold = 4,
+      --     separator = { "─", "ContextBorder" }, -- alts: ▁ ─ ▄
+      --     mode = "topline",
+      --   })
+      -- end,
+    },
+    {
+      "nvim-treesitter/playground",
+      cmd = { "TSPlaygroundToggle", "TSHighlightCapturesUnderCursor" },
+      after = "nvim-treesitter",
     },
   })
 
@@ -487,15 +487,21 @@ local function plugins(use)
 
   -- ( Testing/Debugging ) -----------------------------------------------------
   use({ "vim-test/vim-test", ext = "vim-test" })
-  use({ "mfussenegger/nvim-dap", module = "dap", ext = "dap" })
-  use({ "theHamsta/nvim-dap-virtual-text", after = "nvim-dap" })
-  use({ "rcarriga/nvim-dap-ui", ext = "dapui", after = "nvim-dap" })
-  use({ "jbyuki/one-small-step-for-vimkind", after = "nvim-dap" })
-  use({ "suketa/nvim-dap-ruby", after = "nvim-dap" })
-  use({ "mxsdev/nvim-dap-vscode-js", after = "nvim-dap" })
-  use({ "sultanahamer/nvim-dap-reactnative", after = "nvim-dap" })
-  -- use({ "microsoft/vscode-react-native", after = "nvim-dap" })
-  use({ "Pocco81/DAPInstall.nvim", after = "nvim-dap" })
+  use({
+    {
+      "mfussenegger/nvim-dap",
+      module = "dap",
+      ext = "dap",
+    },
+    { "theHamsta/nvim-dap-virtual-text", after = "nvim-dap" },
+    { "rcarriga/nvim-dap-ui", ext = "dapui", after = "nvim-dap" },
+    { "jbyuki/one-small-step-for-vimkind", after = "nvim-dap" },
+    { "suketa/nvim-dap-ruby", after = "nvim-dap" },
+    { "mxsdev/nvim-dap-vscode-js", after = "nvim-dap" },
+    { "sultanahamer/nvim-dap-reactnative", after = "nvim-dap" },
+    -- { "microsoft/vscode-react-native", after = "nvim-dap" },
+    { "Pocco81/DAPInstall.nvim", after = "nvim-dap" },
+  })
 
   -- ( Development ) -----------------------------------------------------------
   use({ "danymat/neogen" })
