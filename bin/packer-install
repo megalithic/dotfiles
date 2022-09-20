@@ -24,7 +24,7 @@ __invocation="$(printf %q "${__file}")$( (($#)) && printf ' %q' "$@" || true)"
 
 FORCE_INSTALL="false"
 
-packer_rtp_type="start" # "opt" or "start"
+packer_rtp_type="opt" # "opt" or "start"
 packer_path="${XDG_DATA_HOME}/nvim/site/pack/packer/$packer_rtp_type/packer.nvim"
 
 remove_existing() {
@@ -52,9 +52,9 @@ do_install() {
     remove_existing
   fi
   do_clone &&
-    install_plugins &&
-    log_ok "completed installing packer.nvim and plugins into $packer_path" ||
-    exit 1
+  install_plugins &&
+  log_ok "completed installing packer.nvim and plugins into $packer_path" ||
+  exit 1
 }
 
 while getopts "ufrsc" OPTION; do
@@ -63,8 +63,8 @@ while getopts "ufrsc" OPTION; do
     u)
       log "updating packer plugins.."
       sync_plugins &&
-        (echo "" && log_ok "finished updating packer plugins.") ||
-        (echo "" && log_error "something went wrong while updating packer plugins; exiting.")
+      (echo "" && log_ok "finished updating packer plugins.") ||
+      (echo "" && log_error "something went wrong while updating packer plugins; exiting.")
       exit 1
       ;;
 
@@ -90,8 +90,8 @@ while getopts "ufrsc" OPTION; do
     c)
       log "cleaning previous packer.nvim install.."
       remove_existing &&
-        (echo "" && log_ok "finished cleaning previous packer.nvim install.") ||
-        (echo "" && log_error "something went wrong while cleaning previous packer.nvim install; exiting.")
+      (echo "" && log_ok "finished cleaning previous packer.nvim install.") ||
+      (echo "" && log_error "something went wrong while cleaning previous packer.nvim install; exiting.")
       exit 1
       ;;
 
