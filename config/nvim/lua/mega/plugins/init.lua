@@ -148,26 +148,24 @@ local function plugins(use)
     event = "CursorHold",
   })
   use({
-    {
-      "nvim-telescope/telescope-file-browser.nvim",
-      after = "telescope.nvim",
-      config = function() require("telescope").load_extension("file_browser") end,
-    },
-    {
-      "natecraddock/telescope-zf-native.nvim",
-      after = "telescope.nvim",
-      config = function() require("telescope").load_extension("zf-native") end,
-    },
-    {
-      "benfowler/telescope-luasnip.nvim",
-      after = "telescope.nvim",
-      config = function() require("telescope").load_extension("luasnip") end,
-    },
-    {
-      "ryansch/habitats.nvim",
-      after = "telescope-file-browser.nvim",
-      config = function() require("habitats").setup({}) end,
-    },
+    "nvim-telescope/telescope-file-browser.nvim",
+    after = "telescope.nvim",
+    config = function() require("telescope").load_extension("file_browser") end,
+  })
+  use({
+    "natecraddock/telescope-zf-native.nvim",
+    after = "telescope.nvim",
+    config = function() require("telescope").load_extension("zf-native") end,
+  })
+  use({
+    "benfowler/telescope-luasnip.nvim",
+    after = "telescope.nvim",
+    config = function() require("telescope").load_extension("luasnip") end,
+  })
+  use({
+    "ryansch/habitats.nvim",
+    after = "telescope-file-browser.nvim",
+    config = function() require("habitats").setup({}) end,
   })
   -- use({
   --   "nvim-telescope/telescope.nvim",
@@ -286,32 +284,47 @@ local function plugins(use)
     -- event = { "BufRead", "BufNewFile" },
     ext = "treesitter",
   })
-
+  use({ "nvim-treesitter/nvim-treesitter-textobjects", after = "nvim-treesitter" })
+  use({ "RRethy/nvim-treesitter-textsubjects", after = "nvim-treesitter" })
+  use({ "nvim-treesitter/nvim-tree-docs", after = "nvim-treesitter" })
+  use({ "JoosepAlviste/nvim-ts-context-commentstring", after = "nvim-treesitter" })
+  use({ "windwp/nvim-ts-autotag", after = "nvim-treesitter" })
+  use({ "p00f/nvim-ts-rainbow", after = "nvim-treesitter" })
   use({
-    { "nvim-treesitter/nvim-treesitter-textobjects", after = "nvim-treesitter" },
-    { "RRethy/nvim-treesitter-textsubjects", after = "nvim-treesitter" },
-    { "nvim-treesitter/nvim-tree-docs", after = "nvim-treesitter" },
-    { "JoosepAlviste/nvim-ts-context-commentstring", after = "nvim-treesitter" },
-    { "windwp/nvim-ts-autotag", after = "nvim-treesitter" },
-    { "p00f/nvim-ts-rainbow", after = "nvim-treesitter" },
-    { "mfussenegger/nvim-treehopper", after = "nvim-treesitter" },
-    { "David-Kunz/treesitter-unit", after = "nvim-treesitter" },
-    {
-      "nvim-treesitter/nvim-treesitter-context",
-      after = "nvim-treesitter",
-      -- config = function()
-      --   require("treesitter-context").setup({
-      --     multiline_threshold = 4,
-      --     separator = { "─", "ContextBorder" }, -- alts: ▁ ─ ▄
-      --     mode = "topline",
-      --   })
-      -- end,
-    },
-    {
-      "nvim-treesitter/playground",
-      cmd = { "TSPlaygroundToggle", "TSHighlightCapturesUnderCursor" },
-      after = "nvim-treesitter",
-    },
+    "mfussenegger/nvim-treehopper",
+    after = "nvim-treesitter",
+    config = function()
+      require("tsht").config.hint_keys = { "h", "j", "f", "d", "n", "v", "s", "l", "a" }
+      _G.mega.augroup("TreehopperMaps", {
+        {
+          event = { "FileType" },
+          command = function(args)
+            if vim.tbl_contains(require("nvim-treesitter.parsers").available_parsers(), vim.bo[args.buf].filetype) then
+              _G.mega.omap("m", ":<C-U>lua require('tsht').nodes()<CR>", { buffer = args.buf })
+              _G.mega.vnoremap("m", ":lua require('tsht').nodes()<CR>", { buffer = args.buf })
+            end
+          end,
+        },
+      })
+    end,
+  })
+  use({ "David-Kunz/treesitter-unit", after = "nvim-treesitter" })
+  use({
+    "nvim-treesitter/nvim-treesitter-context",
+    after = "nvim-treesitter",
+    -- config = function()
+    --   require("treesitter-context").setup({
+    --     multiline_threshold = 4,
+    --     separator = { "─", "ContextBorder" }, -- alts: ▁ ─ ▄
+    --     separator = { "▁", "TreesitterContextBorder" }, -- ─▁
+    --     mode = "topline",
+    --   })
+    -- end,
+  })
+  use({
+    "nvim-treesitter/playground",
+    cmd = { "TSPlaygroundToggle", "TSHighlightCapturesUnderCursor" },
+    after = "nvim-treesitter",
   })
 
   -- ( LSP ) -------------------------------------------------------------------
@@ -496,16 +509,14 @@ local function plugins(use)
     module = "dap",
     ext = "dap",
   })
-  use({
-    { "theHamsta/nvim-dap-virtual-text", after = "nvim-dap" },
-    { "rcarriga/nvim-dap-ui", ext = "dapui", after = "nvim-dap" },
-    { "jbyuki/one-small-step-for-vimkind", after = "nvim-dap" },
-    { "suketa/nvim-dap-ruby", after = "nvim-dap" },
-    { "mxsdev/nvim-dap-vscode-js", after = "nvim-dap" },
-    { "sultanahamer/nvim-dap-reactnative", after = "nvim-dap" },
-    -- { "microsoft/vscode-react-native", after = "nvim-dap" },
-    { "Pocco81/DAPInstall.nvim", after = "nvim-dap" },
-  })
+  use({ "theHamsta/nvim-dap-virtual-text", after = "nvim-dap" })
+  use({ "rcarriga/nvim-dap-ui", ext = "dapui", after = "nvim-dap" })
+  use({ "jbyuki/one-small-step-for-vimkind", after = "nvim-dap" })
+  use({ "suketa/nvim-dap-ruby", after = "nvim-dap" })
+  use({ "mxsdev/nvim-dap-vscode-js", after = "nvim-dap" })
+  use({ "sultanahamer/nvim-dap-reactnative", after = "nvim-dap" })
+  -- use({ "microsoft/vscode-react-native", after = "nvim-dap" })
+  use({ "Pocco81/DAPInstall.nvim", after = "nvim-dap" })
 
   -- ( Development ) -----------------------------------------------------------
   use({ "danymat/neogen" })

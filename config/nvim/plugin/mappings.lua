@@ -374,10 +374,6 @@ nmap("<leader>x", mega.save_and_exec)
 -- [plugin mappings] -----------------------------------------------------------
 
 -- # treesitter
--- ( ts treehopper )
-omap("m", ":<C-U>lua require('tsht').nodes()<CR>")
-vnoremap("m", ":'<'>lua require('tsht').nodes()<CR>")
-
 -- ( ts units )
 xnoremap("iu", ":lua require\"treesitter-unit\".select()<CR>")
 xnoremap("au", ":lua require\"treesitter-unit\".select(true)<CR>")

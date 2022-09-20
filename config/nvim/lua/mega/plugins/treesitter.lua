@@ -210,27 +210,4 @@ return function()
       },
     },
   })
-
-  -- nvim-treehopper
-  require("tsht").config.hint_keys = { "h", "j", "f", "d", "n", "v", "s", "l", "a" }
-  mega.augroup("TreehopperMaps", {
-    {
-      event = { "FileType" },
-      command = function(args)
-        -- FIXME: this issue should be handled inside the plugin rather than manually
-        local langs = require("nvim-treesitter.parsers").available_parsers()
-        if vim.tbl_contains(langs, vim.bo[args.buf].filetype) then
-          mega.omap("m", ":<C-U>lua require('tsht').nodes()<CR>", { buffer = args.buf })
-          mega.vnoremap("m", ":lua require('tsht').nodes()<CR>", { buffer = args.buf })
-        end
-      end,
-    },
-  })
-
-  -- mega.conf("treesitter-context", {
-  --   enable = false,
-  --   multiline_threshold = 4,
-  --   separator = { "▁", "TreesitterContextBorder" }, -- ─▁
-  --   mode = "topline",
-  -- })
 end
