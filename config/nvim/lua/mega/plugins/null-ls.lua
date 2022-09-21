@@ -9,7 +9,8 @@ return function()
   -- local completion = nls.builtins.completion
 
   null.setup({
-    debounce = 150,
+    debounce = vim.g.is_local_dev and 200 or 500,
+    default_timeout = vim.g.is_local_dev and 500 or 2000,
     sources = {
       format.trim_whitespace.with({ filetypes = { "*" } }),
       format.prettier.with({

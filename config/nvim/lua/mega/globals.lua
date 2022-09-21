@@ -27,6 +27,9 @@ vim.g.is_linux = vim.g.os == "Linux"
 vim.g.is_windows = vim.g.os == "Windows"
 vim.g.is_work = get_hostname() == "seth-dev"
 
+vim.g.is_remote_dev = vim.trim(vim.fn.system("hostname")) == "seth-dev"
+vim.g.is_local_dev = vim.trim(vim.fn.system("hostname")) ~= "seth-dev"
+
 vim.g.open_command = vim.g.is_macos and "open" or "xdg-open"
 
 vim.g.dotfiles = vim.env.DOTS or fn.expand("~/.dotfiles")
