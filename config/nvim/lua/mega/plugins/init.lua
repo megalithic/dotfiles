@@ -164,6 +164,11 @@ local function plugins(use)
     config = function() require("telescope").load_extension("luasnip") end,
   })
   use({
+    "nvim-telescope/telescope-live-grep-args.nvim",
+    after = "telescope.nvim",
+    config = function() require("telescope").load_extension("live_grep_args") end,
+  })
+  use({
     "ryansch/habitats.nvim",
     after = "telescope-file-browser.nvim",
     config = function() require("habitats").setup({}) end,
@@ -698,7 +703,8 @@ local function plugins(use)
     "kylechui/nvim-surround",
     config = function()
       require("nvim-surround").setup({
-
+        move_cursor = true,
+        keymaps = { visual = "s" },
         highlight = { -- Highlight before inserting/changing surrounds
           duration = 1,
         },
@@ -711,7 +717,6 @@ local function plugins(use)
     after = { "nvim-cmp" },
     config = function()
       require("tabout").setup({
-
         ignore_beginning = false,
         completion = false,
       })

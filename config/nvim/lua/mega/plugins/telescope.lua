@@ -321,7 +321,7 @@ return function()
       },
     }))
   end
-
+  local function live_grep_args() telescope.extensions.live_grep_args.live_grep_args(ivy()) end
   local function installed_plugins()
     builtin.find_files({
       prompt_title = "~ installed plugins ~",
@@ -349,9 +349,9 @@ return function()
   nmap("<leader>fP", installed_plugins, "installed plugins")
   nmap("<leader>fo", builtin.buffers, "opened buffers")
   nmap("<leader>fr", builtin.resume, "resume last picker")
-  nmap("<leader>fa", builtin.live_grep, "live grep string")
   nmap("<leader>fs", builtin.live_grep, "live grep string")
-  -- nmap("<leader>fa", "<cmd>lua require('telescope').extensions.live_grep_args.live_grep_args()<cr>", "live grep args")
+  -- nmap("<leader>fa", builtin.live_grep, "live grep string")
+  nmap("<leader>fa", live_grep_args, "live grep args")
   nmap("<leader>fw", workspaces, "open workspaces")
 
   nmap("<leader>fvh", builtin.highlights, "highlights")
@@ -368,6 +368,15 @@ return function()
   nmap("<leader>ls", builtin.lsp_document_symbols, "telescope: document symbols")
   nmap("<leader>lS", builtin.lsp_workspace_symbols, "telescope: workspace symbols")
   nmap("<leader>lw", builtin.lsp_dynamic_workspace_symbols, "telescope: dynamic workspace symbols")
+
+  nmap("<leader>a", live_grep_args, "live grep args")
+  -- nmap("<leader>a", "<cmd>lua require('telescope.builtin').live_grep()<cr>", "live grep for a word")
+  nmap("<leader>A", [[<cmd>lua require('telescope.builtin').grep_string()<cr>]], "grep for word under cursor")
+  vmap(
+    "<leader>A",
+    [[y:lua require("telescope.builtin").grep_string({ search = '<c-r>"' })<cr>]],
+    "grep for visual selection"
+  )
 
   -- telescope.load_extension("habitats")
   telescope.load_extension("workspaces")

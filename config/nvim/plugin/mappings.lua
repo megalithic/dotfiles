@@ -392,15 +392,6 @@ nmap("<F5>", "<cmd>lua mega.sync_plugins()<cr>", "paq: sync plugins")
 -- end)
 -- nmap("-", "<Nop>") -- disable this mapping globally, only map in dirbuf ftplugin
 
--- # telescope
-nmap("<leader>a", "<cmd>lua require('telescope.builtin').live_grep()<cr>", "telescope: live grep for a word")
-nmap("<leader>A", [[<cmd>lua require('telescope.builtin').grep_string()<cr>]], "telescope: grep for word under cursor")
-vmap(
-  "<leader>A",
-  [[y:lua require("telescope.builtin").grep_string({ search = '<c-r>"' })<cr>]],
-  "telescope: grep for visual selection"
-)
-
 -- # formatter.nvim
 nmap("<leader>F", [[<cmd>FormatWrite<cr>]], "format file")
 
