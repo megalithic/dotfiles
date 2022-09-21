@@ -169,7 +169,7 @@ brew "stack"
 # brew "starship"
 brew "stow"
 brew "sketchybar", restart_service: true if OS.mac? # sketchybar
-# brew "svim", restart_service: true if OS.mac? # sketchyvim
+brew "svim" if OS.mac? # restart_service: true if OS.mac? # sketchyvim
 brew "switchaudio-osx" if OS.mac?
 brew "terminal-notifier" if OS.mac?
 brew "the_silver_searcher"
