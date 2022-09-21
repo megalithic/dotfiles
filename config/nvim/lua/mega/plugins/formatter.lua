@@ -163,7 +163,7 @@ return function()
     "svg",
   }
   for _, ft in ipairs(commonFT) do
-    formatterConfig[ft] = { prettier_d }
+    formatterConfig[ft] = { prettier }
   end
   -- Setup functions
   formatter.setup({

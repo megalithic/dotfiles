@@ -414,8 +414,9 @@ local function seg_lsp_status(truncate_at)
 
   if vim.tbl_isempty(messages) then return get_diagnostics() end
 
-  -- return get_lsp_status(messages)
-  return ""
+  if vim.g.notifier_enabled then return "" end
+
+  return get_lsp_status(messages)
 end
 
 local function seg_lineinfo(truncate_at)
