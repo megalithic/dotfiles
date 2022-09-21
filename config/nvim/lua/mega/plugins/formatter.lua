@@ -4,16 +4,7 @@ return function()
   local fn = vim.fn
   local api = vim.api
 
-  -- local prettierConfig = function()
-  --   return {
-  --     exe = "prettier",
-  --     args = { "--stdin-filepath", fn.shellescape(api.nvim_buf_get_name(0)), "--single-quote" },
-  --     stdin = true,
-  --   }
-  -- end
-
   local function prettier()
-    P("attempting prettier")
     return {
       exe = "prettier",
       args = {
@@ -24,22 +15,20 @@ return function()
     }
   end
 
-  -- local function eslint()
-  --   P("attempting eslint")
-  --   return {
-  --     exe = "eslint",
-  --     args = {
-  --       "--fix-dry-run",
-  --       "--stdin",
-  --       "--stdin-filename",
-  --       vim.fn.shellescape(vim.api.nvim_buf_get_name(0)),
-  --     },
-  --     stdin = true,
-  --   }
-  -- end
+  local function eslint()
+    return {
+      exe = "eslint",
+      args = {
+        "--fix-dry-run",
+        "--stdin",
+        "--stdin-filename",
+        vim.fn.shellescape(vim.api.nvim_buf_get_name(0)),
+      },
+      stdin = true,
+    }
+  end
 
   local function prettier_d()
-    P("attempting prettier_d")
     return {
       exe = "prettierd",
       args = { vim.fn.shellescape(vim.api.nvim_buf_get_name(0)) },
@@ -47,21 +36,30 @@ return function()
     }
   end
 
-  -- local function eslint_d()
-  --   P("attempting eslint_d")
-  --   return {
-  --     exe = "eslint_d",
-  --     args = {
-  --       "--fix-to-stdout",
-  --       "--stdin",
-  --       "--stdin-filename",
-  --       vim.fn.shellescape(vim.api.nvim_buf_get_name(0)),
-  --     },
-  --     stdin = true,
-  --   }
-  -- end
+  local function eslint_d()
+    return {
+      exe = "eslint_d",
+      args = {
+        "--fix-to-stdout",
+        "--stdin",
+        "--stdin-filename",
+        vim.fn.shellescape(vim.api.nvim_buf_get_name(0)),
+      },
+      stdin = true,
+    }
+  end
 
-  local formatterConfig = {
+  local config = {
+    ["*"] = {
+      function()
+        return {
+          -- remove trailing whitespace
+          exe = "sed",
+          args = { "-i", "'s/[ \t]*$//'" },
+          stdin = false,
+        }
+      end,
+    },
     lua = {
       function()
         return {
@@ -88,7 +86,6 @@ return function()
       end,
     },
     rust = {
-      -- Rustfmt
       function()
         return {
           exe = "rustfmt",
@@ -98,7 +95,6 @@ return function()
       end,
     },
     swift = {
-      -- Swiftlint
       function()
         return {
           exe = "swift-format",
@@ -135,17 +131,8 @@ return function()
         }
       end,
     },
-    ["*"] = {
-      function()
-        return {
-          -- remove trailing whitespace
-          exe = "sed",
-          args = { "-i", "'s/[ \t]*$//'" },
-          stdin = false,
-        }
-      end,
-    },
   }
+
   local commonFT = {
     "css",
     "scss",
@@ -163,12 +150,12 @@ return function()
     "svg",
   }
   for _, ft in ipairs(commonFT) do
-    formatterConfig[ft] = { prettier }
+    config[ft] = { prettier }
   end
-  -- Setup functions
+
   formatter.setup({
     logging = true,
     log_level = vim.log.levels.DEBUG,
-    filetype = formatterConfig,
+    filetype = config,
   })
 end

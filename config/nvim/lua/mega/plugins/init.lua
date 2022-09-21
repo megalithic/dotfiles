@@ -289,7 +289,7 @@ local function plugins(use)
   use({ "RRethy/nvim-treesitter-textsubjects", after = "nvim-treesitter" })
   use({ "nvim-treesitter/nvim-tree-docs", after = "nvim-treesitter" })
   use({ "JoosepAlviste/nvim-ts-context-commentstring", after = "nvim-treesitter" })
-  use({ "windwp/nvim-ts-autotag", after = "nvim-treesitter" })
+  use({ "jadengis/nvim-ts-autotag", after = "nvim-treesitter" })
   use({ "p00f/nvim-ts-rainbow", after = "nvim-treesitter" })
   use({
     "mfussenegger/nvim-treehopper",
@@ -607,6 +607,17 @@ local function plugins(use)
           lua = { "string", "source" },
           javascript = { "string", "template_string" },
           java = false,
+        },
+        fast_wrap = {
+          map = "<C-,>",
+          chars = { "{", "[", "(", "\"", "'" },
+          pattern = string.gsub([[ [%'%"%)%>%]%)%}%,] ]], "%s+", ""),
+          offset = 0, -- Offset from pattern match
+          end_key = "$",
+          keys = "qwertyuiopzxcvbnmasdfghjkl",
+          check_comma = true,
+          highlight = "PmenuSel",
+          highlight_grey = "LineNr",
         },
       })
       require("nvim-autopairs").add_rules(require("nvim-autopairs.rules.endwise-ruby"))
