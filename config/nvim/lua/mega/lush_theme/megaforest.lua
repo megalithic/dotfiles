@@ -205,7 +205,7 @@ return lush(function()
 
     ---- sidebar  -----------------------------------------------------
 
-    PanelBackground({ fg=grey2, bg = bg0.darken(8) }),
+    PanelBackground({ fg=fg.darken(10), bg = bg0.darken(8) }),
     PanelHeading({ PanelBackground, gui = "bold" }),
     PanelVertSplit({ VertSplit, bg = bg0.darken(8) }),
     PanelStNC({ PanelVertSplit }),
