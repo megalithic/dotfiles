@@ -174,7 +174,7 @@ local function setup_autocommands(client, bufnr)
       command = function()
         vim.diagnostic.setloclist({ open = false })
         diagnostic_popup()
-        if vim.tbl_isempty(vim.fn.getloclist(0)) then vim.cmd([[lclose]]) end
+        -- if vim.tbl_isempty(vim.fn.getloclist(0)) then vim.cmd([[lclose]]) end
       end,
     },
   })

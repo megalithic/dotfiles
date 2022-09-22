@@ -414,6 +414,7 @@ local function plugins(use)
   --     })
   --   end,
   -- })
+
   use({ "nvim-lua/lsp_extensions.nvim" })
   use({ "jose-elias-alvarez/nvim-lsp-ts-utils" })
   use({ "b0o/schemastore.nvim" })
