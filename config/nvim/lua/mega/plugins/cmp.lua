@@ -76,7 +76,9 @@ return function()
       end,
     },
     experimental = {
-      ghost_text = false,
+      ghost_text = {
+        hl_group = "LspCodeLens",
+      },
     },
     snippet = {
       expand = function(args) ls.lsp_expand(args.body) end,

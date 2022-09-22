@@ -344,7 +344,12 @@ local function plugins(use)
         "williamboman/mason-lspconfig.nvim",
       },
       config = function()
-        require("mason").setup({ ui = { border = _G.mega.get_border(), log_level = vim.log.levels.DEBUG } })
+        require("mason").setup({
+          ui = {
+            border = _G.mega.get_border(),
+            log_level = vim.log.levels.DEBUG,
+          },
+        })
         require("mega.lsp.servers")()
       end,
     },

@@ -257,33 +257,33 @@ mapkeyGithub("yv", "Copy for vim", () => {
   Clipboard.write(`use({"${path[1]}/${path[2]}"})`);
 });
 
-mapkeyGithub("gC", "Go to the code tab", () => {
+mapkeyGithub(";gC", "Go to the code tab", () => {
   document.querySelectorAll(".js-selected-navigation-item.reponav-item")[0].click();
 });
 
-mapkeyGithub("gI", "Go to the Issues tab", () => {
+mapkeyGithub(";gI", "Go to the Issues tab", () => {
   document.querySelectorAll(".js-selected-navigation-item.reponav-item")[1].click();
 });
 
-mapkeyGithub("gP", "Go to the Pull requests tab", () => {
+mapkeyGithub(";gP", "Go to the Pull requests tab", () => {
   document.querySelectorAll(".js-selected-navigation-item.reponav-item")[2].click();
 });
 
-mapkeyGithub("gB", "Go to the Projects tab", () => {
+mapkeyGithub(";gB", "Go to the Projects tab", () => {
   document.querySelectorAll(".js-selected-navigation-item.reponav-item")[3].click();
 });
 
-mapkeyGithub("gW", "Go to the Wiki tab", () => {
+mapkeyGithub(";gW", "Go to the Wiki tab", () => {
   document.querySelectorAll(".js-selected-navigation-item.reponav-item")[4].click();
 });
 
-mapkeyGithub("gO", "Go to the Overview tab", () => {
+mapkeyGithub(";gO", "Go to the Overview tab", () => {
   document.querySelectorAll(".UnderlineNav-item")[0].click();
 });
-mapkeyGithub("gR", "Go to the Repository tab", () => {
+mapkeyGithub(";gR", "Go to the Repository tab", () => {
   document.querySelectorAll(".UnderlineNav-item")[1].click();
 });
-mapkeyGithub("gS", "Go to the Stars tab", () => {
+mapkeyGithub(";gS", "Go to the Stars tab", () => {
   document.querySelectorAll(".UnderlineNav-item")[2].click();
 });
 

@@ -354,6 +354,8 @@ return lush(function()
     LspCodeLens({ DiagnosticInfo, fg = bg_dark }), -- Used to color the virtual text of the codelens,
     LspCodeLensSeparator({ DiagnosticHint }),
 
+    LspInfoBorder({ FloatBorder }),
+
     ---- :help notify ----------------------------------------------------------
 
     NotifyERRORBorder({ NotifyFloat }),
