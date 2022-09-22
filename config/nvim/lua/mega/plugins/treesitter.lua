@@ -84,17 +84,6 @@ return function()
     indent = { enable = true },
     autotag = {
       enable = true,
-      -- filetype = {
-      --   "html",
-      --   "xml",
-      --   "javascript",
-      --   "typescriptreact",
-      --   "javascriptreact",
-      --   "vue",
-      --   "elixir",
-      --   "eelixir",
-      --   "heex",
-      -- },
     },
     context_commentstring = {
       enable = true,

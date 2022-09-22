@@ -417,6 +417,7 @@ local function on_attach(client, bufnr)
   end
 
   require("mega.lsp.handlers")
+  if client.server_capabilities.signatureHelpProvider then require("mega.lsp.signature").setup(client) end
   setup_formatting(client, bufnr)
   setup_commands()
   setup_autocommands(client, bufnr)

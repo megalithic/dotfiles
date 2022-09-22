@@ -376,28 +376,44 @@ local function plugins(use)
     config = function() require("lspconfig.ui.windows").default_options.border = _G.mega.get_border() end,
   })
   use({ "jose-elias-alvarez/null-ls.nvim", ext = "null-ls", requires = { "nvim-lua/plenary.nvim" } })
-  use({
-    "ray-x/lsp_signature.nvim",
-    after = "nvim-lspconfig",
-    config = function()
-      require("lsp_signature").setup({
-        bind = true,
-        fix_pos = false,
-        auto_close_after = 5, -- close after 15 seconds
-        hint_enable = false,
-        handler_opts = {
-          anchor = "SW",
-          relative = "cursor",
-          row = -1,
-          focus = false,
-          border = _G.mega.get_border(),
-        },
-        zindex = 99, -- Keep signature popup below the completion PUM
-        toggle_key = "<C-K>",
-        select_signature_key = "<M-N>",
-      })
-    end,
-  })
+
+  -- use({
+  --   "issafalcon/lsp-overloads.nvim",
+  --   after = "nvim-lspconfig",
+  --   config = function()
+  --     require("lsp-overloads").setup({
+  --       ui = {
+  --         -- The border to use for the signature popup window. Accepts same border values as |nvim_open_win()|.
+  --         border = mega.get_border(),
+  --       },
+  --     })
+  --   end,
+  -- })
+
+  -- use({
+  --   "ray-x/lsp_signature.nvim",
+  --   after = "nvim-lspconfig",
+  --   config = function()
+  --     require("lsp_signature").setup({
+  --       bind = true,
+  --       fix_pos = true,
+  --       auto_close_after = 5, -- close after 15 seconds
+  --       hint_enable = false,
+  --       floating_window_above_cur_line = true,
+  --       doc_lines = 0,
+  --       handler_opts = {
+  --         anchor = "SW",
+  --         relative = "cursor",
+  --         row = -1,
+  --         focus = false,
+  --         border = _G.mega.get_border(),
+  --       },
+  --       zindex = 99, -- Keep signature popup below the completion PUM
+  --       toggle_key = "<C-K>",
+  --       select_signature_key = "<M-N>",
+  --     })
+  --   end,
+  -- })
   use({ "nvim-lua/lsp_extensions.nvim" })
   use({ "jose-elias-alvarez/nvim-lsp-ts-utils" })
   use({ "b0o/schemastore.nvim" })
@@ -725,6 +741,15 @@ local function plugins(use)
       require("tabout").setup({
         ignore_beginning = false,
         completion = false,
+        tabouts = {
+          { open = "'", close = "'" },
+          { open = "\"", close = "\"" },
+          { open = "`", close = "`" },
+          { open = "(", close = ")" },
+          { open = "[", close = "]" },
+          { open = "{", close = "}" },
+          { open = "<", close = ">" },
+        },
       })
     end,
   })

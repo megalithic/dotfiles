@@ -48,4 +48,4 @@ end
 
 R("mega.globals")
 R("mega.options")
-vim.schedule(function() R("mega.plugins") end)
+vim.defer_fn(function() R("mega.plugins") end, 0)
