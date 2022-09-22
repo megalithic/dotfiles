@@ -1,4 +1,5 @@
-local PACKER_COMPILED_PATH = fmt("%s/packer/packer_compiled.lua", vim.fn.stdpath("cache"))
+-- local PACKER_COMPILED_PATH = fmt("%s/packer/packer_compiled.lua", vim.fn.stdpath("cache"))
+local PACKER_COMPILED_PATH = fmt("%s/plugin/packer_compiled.lua", vim.fn.stdpath("config"))
 local PACKER_SNAPSHOTS_PATH = fmt("%s/packer/snapshots/", vim.fn.stdpath("cache"))
 local mega = _G.mega or require("mega.globals")
 
@@ -286,7 +287,7 @@ local function plugins(use)
     "nvim-treesitter/nvim-treesitter",
     run = ":TSUpdate",
     -- run = function() require("nvim-treesitter.install").update({ with_sync = true }) end,
-    cmd = { "TSUpdate", "TSInstallSync" },
+    -- cmd = { "TSUpdate", "TSInstallSync" },
     -- event = { "BufRead", "BufNewFile" },
     ext = "treesitter",
   })

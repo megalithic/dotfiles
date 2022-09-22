@@ -49,7 +49,6 @@ function M.bootstrap(compile_path)
     )
     vim.fn.delete(compile_path)
     vim.cmd.packadd({ "packer.nvim", bang = true })
-
     -- require("packer").sync()
     return true
   end
@@ -113,21 +112,13 @@ function M.setup(config, plugins_fn)
   local packer = require("packer")
   packer.init(config)
   M.local_plugins = config.local_plugins or {}
-  -- return packer.startup(
-  --   function(use)
-  --     use = M.wrap(use)
-  --     plugins_fn(use)
-  --   end
-  -- )
-  return packer.startup({
+  packer.startup({
     function(use)
       use = M.wrap(use)
-      -- print(I(use))
       plugins_fn(use)
-      if bootstrapped then require("packer").sync() end
     end,
-    --  config=config
   })
+  if bootstrapped then require("packer").sync() end
 end
 
 return M

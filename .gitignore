@@ -19,6 +19,7 @@ config/tmux/plugins
 *~
 config/gh/hosts.yml
 **/packer_compiled.lua
+packer_compiled.lua
 
 # gnupg/gpg
 config/gnupg/**/*
