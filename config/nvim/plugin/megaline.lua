@@ -562,7 +562,7 @@ function _G.__statusline()
     -- end left alignment
     seg([[%=]]),
     seg(get_hydra_status()),
-    seg(get_substitution_status()),
+    -- seg(get_substitution_status()),
     seg([[%=]]),
     -- begin right alignment
     seg("%*"),
