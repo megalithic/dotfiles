@@ -1,0 +1,103 @@
+theme = "everforest_dark_soft"
+
+[editor]
+# 行号类型 absolute / relative
+# line-number = "relative"
+# 标尺
+# rulers = [80]
+
+# 真彩支持
+# 使用 infocmp | rg color 检查是否支持 256color [终端控制命令 infocmp](http://manual.51yip.com/shell/terminalccmds.html)
+# 使用 tmux 的时候,追加配置
+# set -g default-terminal "tmux-256color"
+# set -ga terminal-overrides ',xterm-256color:Tc'
+# 需要 export TERM=xterm-256color
+true-color = true
+
+# [pr#1623] 自定义了类型 diff-sign
+# 查看代码 view/src/editor # Config > default
+gutters = ["diagnostics", "line-numbers"]
+
+auto-completion = true
+cursorline = true
+color-modes = true
+idle-timeout = 40
+
+[editor.cursor-shape]
+insert = "bar"
+normal = "block"
+select = "underline"
+
+[editor.lsp]
+# 服务器语言信息提示
+display-messages = true
+
+# [editor.whitespace]
+# render = "all"
+
+# all / none
+[editor.whitespace.render]
+space = "all"
+tab = "all"
+newline = "all"
+
+[editor.whitespace.characters]
+space = "·"
+nbsp = "⍽"
+tab = "→"
+newline = "⏎"
+
+[editor.indent-guides]
+render = true
+character = "│"
+# character = "╎"
+
+[editor.statusline]
+left = ["mode", "spacer", "spinner", "file-name"]
+center = ["diagnostics"]
+right = [
+  "selections",
+  "position",
+  "position-percentage",
+  "file-encoding",
+  "file-line-ending",
+  "file-type",
+]
+separator = "│"
+
+# [editor.explorer]
+# style = "tree"
+# position = "embed"
+# column-width = 30
+
+# [keys.normal]
+# ",w" = ":w"
+# "C-j" = "save_selection"
+# "C-r" = ":reload"
+# "C-z" = "normal_mode"     # replace suspend
+# ",q" = ":quit"
+# "A-/" = "toggle_comments"
+# "\\" = ":reflow"
+# "X" = "extend_line_above"
+# "A-." = "completion"
+# # "Z" = { "Z" = ":quit!" }
+
+# # macos 自动切换到英文环境
+# # 这里使用 自定义键盘 abc1 , 是对alacritty 和 macos 的注音标记 dead key 兼容
+# # "esc" = [":sh macism com.apple.keylayout.ABC", "normal_mode"]
+# # 这里使用消除 macos dead key 的自定义 keyboard layout
+# "esc" = "normal_mode"
+# # dev [pr#]
+# "g" = { "D" = ["goto_definition_other_window"] }
+
+# space
+# [keys.normal.space]
+# "x" = ":buffer-close"
+# "w" = { "r" = ":config-reload" }
+# # dev
+# "." = "file_picker_in_buffer_directory"
+
+# [keys.insert]
+# "esc" = "normal_mode"
+
+# [keys.select]
