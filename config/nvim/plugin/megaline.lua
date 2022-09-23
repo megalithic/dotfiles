@@ -311,6 +311,26 @@ local function get_hydra_status()
   return seg(fmt("%s %s", mega.icons.misc.hydra, string.upper(data.name)), data.color)
 end
 
+local function get_substitution_status()
+  local ok, cool = mega.require("cool-substitute.status")
+  if not ok then return "" end
+
+  -- P(fmt("cool writing active: %s", vim.g.cool_substitute_is_active))
+  -- P(fmt("cool applying active: %s", vim.g.cool_substitute_is_applying))
+
+  if not cool.status_with_icons() then return "" end
+  -- local hl = ""
+  -- if vim.g.cool_substitute_is_active then
+  --   hl = H.set_hl("StSubstitution", { bg = cool.status_color() })
+  -- elseif vim.g.cool_substitute_is_applying then
+  -- end
+  -- local writingHl = H.set_hl("StCoolSubWriting", { bg = cool.status_color() })
+  -- local applyingHl = H.set_hl("StCoolSubWriting", { bg = cool.status_color() })
+  -- P(cool.status_color())
+  H.set_hl("StSubstitution", { foreground = cool.status_color() })
+  return seg(cool.status_with_icons(), "StSubstitution")
+end
+
 local function get_dap_status()
   local ok, dap = mega.require("dap")
   if not ok then return "" end
@@ -542,6 +562,7 @@ function _G.__statusline()
     -- end left alignment
     seg([[%=]]),
     seg(get_hydra_status()),
+    seg(get_substitution_status()),
     seg([[%=]]),
     -- begin right alignment
     seg("%*"),
