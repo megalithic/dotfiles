@@ -319,14 +319,14 @@ local function plugins(use)
   use({
     "nvim-treesitter/nvim-treesitter-context",
     after = "nvim-treesitter",
-    -- config = function()
-    --   require("treesitter-context").setup({
-    --     multiline_threshold = 4,
-    --     separator = { "─", "ContextBorder" }, -- alts: ▁ ─ ▄
-    --     separator = { "▁", "TreesitterContextBorder" }, -- ─▁
-    --     mode = "topline",
-    --   })
-    -- end,
+    config = function()
+      require("treesitter-context").setup({
+        multiline_threshold = 4,
+        -- separator = { "─", "ContextBorder" }, -- alts: ▁ ─ ▄
+        separator = { "▁", "TreesitterContextBorder" }, -- alts: ▁ ─ ▄─▁
+        mode = "topline",
+      })
+    end,
   })
   use({
     "nvim-treesitter/playground",
@@ -632,7 +632,17 @@ local function plugins(use)
     config = function()
       require("cool-substitute").setup({
         setup_keybindings = true,
+        mappings = {
+          start = "gm", -- Mark word / region
+          start_and_edit = "gM", -- Mark word / region and also edit
+          start_and_edit_word = "g!M", -- Mark word / region and also edit.  Edit only full word.
+          start_word = "g!m", -- Mark word / region. Edit only full word
+          apply_substitute_and_next = "<C-m>", -- Start substitution / Go to next substitution
+          apply_substitute_and_prev = "<C-M>", -- same as M but backwards
+        },
+
         ---  DEFAULTS:
+        -- mappings = {
         --   start = 'gm', -- Mark word / region
         --   start_and_edit = 'gM', -- Mark word / region and also edit
         --   start_and_edit_word = 'g!M', -- Mark word / region and also edit.  Edit only full word.
