@@ -41,14 +41,33 @@
       }
       body > div > section {
         transition: transform 0.5s;
+        display: flex;
+        align-items: center;
+        align-content: center;
+        flex-direction: column;
+        justify-content: center;
       }
       body > div > section:hover {
-        transform: scale(1.5);
+        transform: scale(1.2);
         cursor: pointer;
       }
       figure {
+        margin: 0 0 0.5rem;
+        border: 2px solid rgba(0, 0, 0, 1%);
+        outline: 1px solid rgba(255, 255, 255, 3%);
+        padding: 0.5rem;
+        height: 60px;
+        width: 60px;
+        border-radius: 100%;
+        background: rgba(0, 0, 0, 10%);
+        display: flex;
+        align-items: center;
+        align-content: center;
+        flex-direction: column;
+        justify-content: center;
+      }
+      figure > span {
         font-size: 2rem;
-        margin: 0;
       }
       h1 {
         font-size: 1rem;
@@ -88,11 +107,12 @@
   <body>
     <div id="content" class="center" tabindex="-1">
       <section>
-        <figure>🗿</figure>
+        <figure><span>🗿</span></figure>
         <h1>megatab</h1>
         <p id="ip"></p>
       </section>
     </div>
+
     <script type="text/javascript">
       const getIp = () => {
         fetch("https://api.ipify.org?format=json")
@@ -101,6 +121,7 @@
             console.log(data);
             if (typeof data !== "undefined") {
               document.querySelector("#ip").innerText = data.ip;
+              handleClip(true);
             }
           });
       };
@@ -112,7 +133,7 @@
 
           window.dispatchEvent(
             new KeyboardEvent("keydown", {
-              key: "t",
+              key: "Escape",
             })
           );
         }
@@ -128,7 +149,6 @@
       const handleLoaded = () => {
         mimicKeys(false);
         getIp(true);
-        handleClip(true);
       };
 
       if (["complete", "loaded", "interactive"].indexOf(document.readyState) >= 0) {
