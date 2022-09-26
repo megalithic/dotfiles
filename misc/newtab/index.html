@@ -40,7 +40,7 @@
         text-align: center;
       }
       body > div > section {
-        transition: transform 0.5s;
+        transition: all 0.5s;
         display: flex;
         align-items: center;
         align-content: center;
@@ -48,12 +48,12 @@
         justify-content: center;
       }
       body > div > section:hover {
-        transform: scale(1.2);
+        transform: scale(0.95);
         cursor: pointer;
       }
       figure {
-        margin: 0 0 0.5rem;
-        border: 2px solid rgba(0, 0, 0, 1%);
+        margin: 0 0 0.75rem;
+        border: 2px solid rgba(0, 0, 0, 2%);
         outline: 1px solid rgba(255, 255, 255, 3%);
         padding: 0.5rem;
         height: 60px;
@@ -66,15 +66,28 @@
         flex-direction: column;
         justify-content: center;
       }
+      body > div > section:hover figure {
+        outline: 1px solid rgba(255, 255, 255, 6%);
+      }
       figure > span {
         font-size: 2rem;
       }
       h1 {
         font-size: 1rem;
-        margin: 0;
+        margin: 0 0 0.5rem;
       }
-      p {
-        font-size: 0.75rem;
+      code {
+        margin: 0;
+        display: flex;
+        align-items: center;
+        align-content: center;
+        justify-content: center;
+      }
+      strong {
+        color: green;
+        display: block;
+        margin-left: 0.25rem;
+        text-shadow: none;
       }
 
       @media (prefers-color-scheme: dark) {
@@ -86,9 +99,12 @@
         h1 {
           text-shadow: 1px 1px 2px rgba(0, 0, 0, 90%);
         }
-        p {
+        code {
           color: #555555;
           text-shadow: 1px 1px 1px rgba(0, 0, 0, 25%);
+        }
+        figure > span {
+          text-shadow: 0px 0px 12px rgba(0, 0, 0, 20%);
         }
       }
       @media (prefers-color-scheme: light) {
@@ -104,24 +120,33 @@
       }
     </style>
   </head>
+
   <body>
-    <div id="content" class="center" tabindex="-1">
+    <div id="content" tabindex="-1">
       <section>
         <figure><span>🗿</span></figure>
         <h1>megatab</h1>
-        <p id="ip"></p>
+        <code id="ip"></code>
       </section>
     </div>
 
     <script type="text/javascript">
+      let ip = "";
+      let timeout;
       const getIp = () => {
         fetch("https://api.ipify.org?format=json")
           .then((response) => response.json())
           .then((data) => {
-            console.log(data);
             if (typeof data !== "undefined") {
-              document.querySelector("#ip").innerText = data.ip;
+              ip = data.ip;
+
+              document.querySelector("#ip").innerText = ip;
               handleClip(true);
+
+              timeout = window.setTimeout(() => {
+                document.querySelector("#ip").innerText = ip;
+                document.clearTimeout(timeout);
+              }, 3000);
             }
           });
       };
@@ -141,8 +166,10 @@
       const handleClip = (enabled) => {
         if (enabled) {
           const ipEl = document.querySelector("#ip");
+          const content = ipEl.innerText;
           ipEl.parentElement.addEventListener("click", () => {
-            navigator.clipboard.writeText(ipEl.innerText);
+            navigator.clipboard.writeText(content);
+            ipEl.innerHTML = content + " <strong>✓</strong>";
           });
         }
       };
