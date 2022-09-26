@@ -1,6 +1,13 @@
+<!-- @REFS: -->
 <!-- https://blog.alllex.me/posts/2022-08-21-new-tab -->
-<!-- /etc/apache2/httpd.conf -->
 <!-- https://gist.github.com/JoeyBurzynski/617fb6201335779f8424ad9528b72c41 -->
+<!-- https://stackoverflow.com/questions/29150384/how-to-allow-cross-domain-request-in-apache2 -->
+
+<!-- @TOOLS: -->
+<!-- /etc/apache2/httpd.conf -->
+<!-- sudo apachectl -k restart -->
+<!-- sudo launchctl load -w /System/Library/LaunchDaemons/org.apache.httpd.plist -->
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -27,13 +34,18 @@
         justify-content: center;
         align-items: center;
       }
-
       body > div {
         margin: auto;
         padding: 1em 2em;
         text-align: center;
       }
-
+      body > div > section {
+        transition: transform 0.5s;
+      }
+      body > div > section:hover {
+        transform: scale(1.5);
+        cursor: pointer;
+      }
       figure {
         font-size: 2rem;
         margin: 0;
@@ -41,6 +53,9 @@
       h1 {
         font-size: 1rem;
         margin: 0;
+      }
+      p {
+        font-size: 0.75rem;
       }
 
       @media (prefers-color-scheme: dark) {
@@ -51,6 +66,10 @@
         }
         h1 {
           text-shadow: 1px 1px 2px rgba(0, 0, 0, 90%);
+        }
+        p {
+          color: #555555;
+          text-shadow: 1px 1px 1px rgba(0, 0, 0, 25%);
         }
       }
       @media (prefers-color-scheme: light) {
@@ -68,9 +87,11 @@
   </head>
   <body>
     <div id="content" class="center" tabindex="-1">
-      <figure>🗿</figure>
-      <h1>megatab</h1>
-      <p id="ip"></p>
+      <section>
+        <figure>🗿</figure>
+        <h1>megatab</h1>
+        <p id="ip"></p>
+      </section>
     </div>
     <script type="text/javascript">
       const getIp = () => {
@@ -79,7 +100,7 @@
           .then((data) => {
             console.log(data);
             if (typeof data !== "undefined") {
-              document.querySelector("#ip").innerText(data.ip);
+              document.querySelector("#ip").innerText = data.ip;
             }
           });
       };
@@ -96,9 +117,18 @@
           );
         }
       };
+      const handleClip = (enabled) => {
+        if (enabled) {
+          const ipEl = document.querySelector("#ip");
+          ipEl.parentElement.addEventListener("click", () => {
+            navigator.clipboard.writeText(ipEl.innerText);
+          });
+        }
+      };
       const handleLoaded = () => {
         mimicKeys(false);
-        getIp(false);
+        getIp(true);
+        handleClip(true);
       };
 
       if (["complete", "loaded", "interactive"].indexOf(document.readyState) >= 0) {
