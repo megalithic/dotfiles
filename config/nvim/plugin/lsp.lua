@@ -167,16 +167,16 @@ local function setup_autocommands(client, bufnr)
       desc = "Show diagnostics",
       command = function() diagnostic_popup() end,
     },
-    {
-      event = { "DiagnosticChanged" },
-      buffer = bufnr,
-      desc = "Handle diagnostics changes",
-      command = function()
-        vim.diagnostic.setloclist({ open = false })
-        diagnostic_popup()
-        -- if vim.tbl_isempty(vim.fn.getloclist(0)) then vim.cmd([[lclose]]) end
-      end,
-    },
+    -- {
+    --   event = { "DiagnosticChanged" },
+    --   buffer = bufnr,
+    --   desc = "Handle diagnostics changes",
+    --   command = function()
+    --     vim.diagnostic.setloclist({ open = false })
+    --     diagnostic_popup()
+    --     -- if vim.tbl_isempty(vim.fn.getloclist(0)) then vim.cmd([[lclose]]) end
+    --   end,
+    -- },
   })
   augroup("LspFormat", {
     {

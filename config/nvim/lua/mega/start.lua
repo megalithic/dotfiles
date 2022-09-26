@@ -52,13 +52,13 @@ local function filter_oldfiles(prefix, fmt)
     then
       local escaped_path = vim.fn.fnameescape(absolute_path)
       files[absolute_path] = true
-      local maybe_icon = ok_icons and icons.get_icon(escaped_path, vim.fn.fnamemodify(escaped_path, ":e"), { default = true }) or ""
+      local maybe_icon = ok_icons
+          and icons.get_icon(escaped_path, vim.fn.fnamemodify(escaped_path, ":e"), { default = true })
+        or ""
       oldfiles[#oldfiles + 1] = {
         key = total_paths - counter,
         cmd = "edit " .. escaped_path,
-        disp = maybe_icon
-          .. " "
-          .. cap_path_length(vim.fn.fnamemodify(absolute_path, fmt)),
+        disp = maybe_icon .. " " .. cap_path_length(vim.fn.fnamemodify(absolute_path, fmt)),
         editing = true,
       }
       counter = counter - 1
@@ -89,7 +89,7 @@ local commands = {
   -- { key = "s", disp = "  Start Prosession", cmd = "Prosession .", editing = true },
   { key = "g", disp = "  NeoGit", cmd = "Neogit" },
   { key = "t", disp = "  Terminal (tab)", cmd = "T direction=tab" },
-  -- { key = "t", disp = "  Time startup", cmd = "StartupTime" },
+  { key = "T", disp = "  Time startup", cmd = "StartupTime" },
   { key = "q", disp = "  Quit", cmd = "qa" },
 }
 

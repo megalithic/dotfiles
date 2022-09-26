@@ -572,7 +572,7 @@ function _G.__statusline()
     seg("%{(&fenc!='utf-8'&&&fenc!='')?'['.&fenc.'] ':''}", "warningmsg"),
     seg("%*"),
     seg_spacer(2),
-    seg_lsp_status(120),
+    seg_lsp_status(100),
     seg_spacer(2),
     seg_git_symbol(80),
     seg_spacer(1),

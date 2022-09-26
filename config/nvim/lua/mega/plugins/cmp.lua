@@ -188,13 +188,19 @@ return function()
     },
   })
 
-  cmp.setup.cmdline("/", search_sources)
-  cmp.setup.cmdline("?", search_sources)
+  -- cmp.setup.cmdline("/", search_sources)
+  -- cmp.setup.cmdline("?", search_sources)
+  cmp.setup.cmdline({ "/", "?" }, {
+    mapping = cmp.mapping.preset.cmdline(),
+    sources = {
+      sources = cmp.config.sources({ { name = "nvim_lsp_document_symbol" } }, { { name = "buffer" } }),
+    },
+  })
   cmp.setup.cmdline(":", {
     sources = cmp.config.sources({
       { name = "cmdline", keyword_pattern = [=[[^[:blank:]\!]*]=] },
       { name = "path" },
-      -- { name = "cmdline_history", priority = 10, max_item_count = 5 },
+      { name = "cmdline_history", priority = 10, max_item_count = 3 },
     }),
   })
   -- cmp.setup.cmdline("/", search_sources)
@@ -216,15 +222,15 @@ return function()
     { name = "buffer" },
   })
 
-  cmp.setup.filetype("lua", {
-    sources = {
-      { name = "luasnip" },
-      { name = "nvim_lua" },
-      { name = "nvim_lsp" },
-      { name = "path" },
-    },
-    { name = "buffer" },
-  })
+  -- cmp.setup.filetype("lua", {
+  --   sources = {
+  --     { name = "luasnip" },
+  --     { name = "nvim_lua" },
+  --     { name = "nvim_lsp" },
+  --     { name = "path" },
+  --   },
+  --   { name = "buffer" },
+  -- })
 
   cmp.setup.filetype({ "dap-repl", "dapui_watches" }, {
     sources = {

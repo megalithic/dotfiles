@@ -132,8 +132,9 @@ function mega.auto_mkdir()
     local create_dir = fn.input(fmt("[?] Parent dir [%s] doesn't exist; create it? (y/n) ", dir))
     if create_dir == "y" or create_dir == "yes" then
       fn.mkdir(dir, "p")
-      vcmd("bufdo e")
-      -- vcmd("redraw!")
+      vim.cmd("bufdo e!")
+      vim.cmd("e!")
+      vim.cmd("redraw!")
     end
   end
 end
@@ -185,6 +186,25 @@ function mega.require(module, opts)
     vim.notify(result, vim.log.levels.ERROR, { title = fmt("Error requiring: %s", module) })
   end
   return ok, result
+end
+
+--- Call the given function and use `vim.notify` to notify of any errors
+--- this function is a wrapper around `xpcall` which allows having a single
+--- error handler for all errors
+---@param msg string|nil
+---@param func function
+---@vararg any
+---@return boolean, any
+---@overload fun(fun: function, ...): boolean, any
+function mega.wrap_err(msg, func, ...)
+  local args = { ... }
+  if type(msg) == "function" then
+    args, func, msg = { func, unpack(args) }, msg, nil
+  end
+  return xpcall(func, function(err)
+    msg = msg and fmt("%s:\n%s", msg, err) or err
+    vim.schedule(function() vim.notify(msg, L.ERROR, { title = "ERROR" }) end)
+  end, unpack(args))
 end
 
 -- ---@alias Plug table<(string | number), string>
