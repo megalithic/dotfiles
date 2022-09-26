@@ -52,6 +52,26 @@
     </style>
   </head>
   <body>
-    <div class="center">🗿 megablank</div>
+    <div id="content" class="center" tabindex="-1">🗿 megatab</div>
+    <script type="text/javascript">
+      let doConnect = () => {
+        window.addEventListener("keydown", (e) => {
+          console.log(e);
+        });
+
+        // auto-execute surfingkeys' `t` keypress event
+        window.dispatchEvent(
+          new KeyboardEvent("keydown", {
+            key: "t",
+          })
+        );
+      };
+
+      if (["complete", "loaded", "interactive"].indexOf(document.readyState) >= 0) {
+        doConnect();
+      } else {
+        document.addEventListener("DOMContentLoaded", () => doConnect());
+      }
+    </script>
   </body>
 </html>
