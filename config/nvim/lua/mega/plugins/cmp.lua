@@ -66,6 +66,7 @@ return function()
       "Search:None",
     }, ","),
   }
+
   cmp.setup({
     preselect = cmp.PreselectMode.None,
     view = { entries = "custom" },

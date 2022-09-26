@@ -552,6 +552,7 @@ function _G.__statusline()
     seg_spacer(1),
     seg_filename(120),
     seg_modified(),
+    seg_spacer(1),
     seg("%r", "StModified"),
     seg_spacer(1),
     seg("%{&paste?'[paste] ':''}", "warningmsg"),

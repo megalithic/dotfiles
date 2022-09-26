@@ -41,6 +41,7 @@ vim.filetype.add({
     [".*%.gradle"] = "groovy",
     [".*%.env%..*"] = "env",
     [".*%.jst.eco"] = "jst",
+    [".*%.html.en"] = "html",
   },
   -- ['.*tmux.*conf$'] = 'tmux',
 })

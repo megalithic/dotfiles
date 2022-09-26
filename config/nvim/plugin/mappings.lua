@@ -193,12 +193,7 @@ nnoremap("<leader>w", function(args)
   -- P(args)
   vim.api.nvim_command("silent! write")
 end, "write buffer and stuff")
-nnoremap(
-  "<leader>W",
-  function() vim.api.nvim_command("write !sudo -S tee > /dev/null %") end,
-  "sudo write buffer and stuff"
-)
-
+nnoremap("<leader>W", "<cmd>SudaWrite<cr>", "sudo write buffer and stuff")
 nnoremap("<leader>q", "<cmd>q<cr>", "quit")
 nnoremap("<leader>Q", "<cmd>q!<cr>", "quit!!11!!!")
 

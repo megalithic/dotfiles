@@ -230,6 +230,8 @@ alias wezup="brew upgrade --cask wezterm-nightly --no-quarantine --greedy-latest
 alias ezmk="nvim $HOME/code/zmk-config/config/leeloo.keymap"
 alias eqmk="nvim $HOME/code/megalithic_qmk/keyboards/atreus62/keymaps/megalithic/keymap.c"
 
+alias ebt="nvim $DOTS/misc/newtab/index.html"
+
 # kitty session connections:
 alias kapp="et -c 'cd ~/code/app && ls; exec /usr/bin/zsh' seth-dev; /usr/local/bin/zsh"
 alias katlas="et -c 'cd ~/code/atlas && ls; exec /usr/bin/zsh' seth-dev; /usr/local/bin/zsh"

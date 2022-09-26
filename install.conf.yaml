@@ -203,6 +203,10 @@
       force: true
       if: "[ `uname` = Darwin ]"
       path: config/surfingkeys/surfingkeys.json
+    # /Library/WebServer/Documents/index.html.en:
+    #   force: true
+    #   if: "[ `uname` = Darwin ]"
+    #   path: misc/newtab/index.html
 
 - shell:
     - description: GnuPG (gpg) setup..
