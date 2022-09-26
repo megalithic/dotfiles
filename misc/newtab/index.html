@@ -1,12 +1,13 @@
 <!-- https://blog.alllex.me/posts/2022-08-21-new-tab -->
 <!-- /etc/apache2/httpd.conf -->
+<!-- https://gist.github.com/JoeyBurzynski/617fb6201335779f8424ad9528b72c41 -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>🗿 megablank</title>
+    <title>🗿 megatab</title>
 
     <style>
       html,
@@ -16,13 +17,6 @@
         margin: 0;
         padding: 0;
         height: 100%;
-        max-width: 100vh;
-      }
-
-      .center {
-        margin: auto;
-        padding: 1em 2em;
-        text-shadow: 1px 1px 2px rgb(0 0 0 / 20%);
       }
       body {
         display: block;
@@ -33,12 +27,30 @@
         justify-content: center;
         align-items: center;
       }
+
+      body > div {
+        margin: auto;
+        padding: 1em 2em;
+        text-align: center;
+      }
+
+      figure {
+        font-size: 2rem;
+        margin: 0;
+      }
+      h1 {
+        font-size: 1rem;
+        margin: 0;
+      }
+
       @media (prefers-color-scheme: dark) {
         html,
         body {
           background-color: #35363a;
           color: #e0e0e0;
-          text-shadow: 1px 1px 2px rgb(255 255 255 / 20%);
+        }
+        h1 {
+          text-shadow: 1px 1px 2px rgba(0, 0, 0, 90%);
         }
       }
       @media (prefers-color-scheme: light) {
@@ -46,31 +58,53 @@
         body {
           background-color: white;
           color: #35363a;
-          text-shadow: 1px 1px 2px rgb(0 0 0 / 20%);
+        }
+
+        h1 {
+          text-shadow: 1px 1px 2px rgba(0, 0, 0, 20%);
         }
       }
     </style>
   </head>
   <body>
-    <div id="content" class="center" tabindex="-1">🗿 megatab</div>
+    <div id="content" class="center" tabindex="-1">
+      <figure>🗿</figure>
+      <h1>megatab</h1>
+      <p id="ip"></p>
+    </div>
     <script type="text/javascript">
-      let doConnect = () => {
-        window.addEventListener("keydown", (e) => {
-          console.log(e);
-        });
+      const getIp = () => {
+        fetch("https://api.ipify.org?format=json")
+          .then((response) => response.json())
+          .then((data) => {
+            console.log(data);
+            if (typeof data !== "undefined") {
+              document.querySelector("#ip").innerText(data.ip);
+            }
+          });
+      };
+      const mimicKeys = (enabled) => {
+        if (enabled) {
+          window.addEventListener("keydown", (e) => {
+            console.log(e);
+          });
 
-        // auto-execute surfingkeys' `t` keypress event
-        window.dispatchEvent(
-          new KeyboardEvent("keydown", {
-            key: "t",
-          })
-        );
+          window.dispatchEvent(
+            new KeyboardEvent("keydown", {
+              key: "t",
+            })
+          );
+        }
+      };
+      const handleLoaded = () => {
+        mimicKeys(false);
+        getIp(true);
       };
 
       if (["complete", "loaded", "interactive"].indexOf(document.readyState) >= 0) {
-        doConnect();
+        handleLoaded();
       } else {
-        document.addEventListener("DOMContentLoaded", () => doConnect());
+        document.addEventListener("DOMContentLoaded", () => handleLoaded());
       }
     </script>
   </body>

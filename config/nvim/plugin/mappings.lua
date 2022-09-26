@@ -336,12 +336,12 @@ imap("!", "!<C-g>u")
 imap("?", "?<C-g>u")
 
 -- REF: https://github.com/mhinz/vim-galore/blob/master/README.md#saner-behavior-of-n-and-n
-nnoremap("n", "'Nn'[v:searchforward].'zzzv'.'<Esc><Cmd>lua mega.blink_cursorline(150)<CR>'", { expr = true })
-xnoremap("n", "'Nn'[v:searchforward].'zzzv'.'<Esc><Cmd>lua mega.blink_cursorline(150)<CR>'", { expr = true })
-onoremap("n", "'Nn'[v:searchforward].'zzzv'.'<Esc><Cmd>lua mega.blink_cursorline(150)<CR>'", { expr = true })
-nnoremap("N", "'nN'[v:searchforward].'zzzv'.'<Esc><Cmd>lua mega.blink_cursorline(150)<CR>'", { expr = true })
-xnoremap("N", "'nN'[v:searchforward].'zzzv'.'<Esc><Cmd>lua mega.blink_cursorline(150)<CR>'", { expr = true })
-onoremap("N", "'nN'[v:searchforward].'zzzv'.'<Esc><Cmd>lua mega.blink_cursorline(150)<CR>'", { expr = true })
+nnoremap("n", "'Nn'[v:searchforward].'zzzv'.'<Esc><Cmd>lua mega.hl_search_blink(0.3)<CR>'", { expr = true })
+xnoremap("n", "'Nn'[v:searchforward].'zzzv'.'<Esc><Cmd>lua mega.hl_search_blink(0.3)<CR>'", { expr = true })
+onoremap("n", "'Nn'[v:searchforward].'zzzv'.'<Esc><Cmd>lua mega.hl_search_blink(0.3)<CR>'", { expr = true })
+nnoremap("N", "'nN'[v:searchforward].'zzzv'.'<Esc><Cmd>lua mega.hl_search_blink(0.3)<CR>'", { expr = true })
+xnoremap("N", "'nN'[v:searchforward].'zzzv'.'<Esc><Cmd>lua mega.hl_search_blink(0.3)<CR>'", { expr = true })
+onoremap("N", "'nN'[v:searchforward].'zzzv'.'<Esc><Cmd>lua mega.hl_search_blink(0.3)<CR>'", { expr = true })
 
 -- REF: https://github.com/mhinz/vim-galore/blob/master/README.md#saner-command-line-history
 cnoremap("<C-n>", [[wildmenumode() ? "\<c-n>" : "\<down>"]], { expr = true })

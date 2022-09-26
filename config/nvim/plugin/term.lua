@@ -147,6 +147,7 @@ local function create_keymaps(bufnr, winnr, direction)
   tmap("<C-j>", [[<Cmd>wincmd j<CR>]], opts)
   tmap("<C-k>", [[<Cmd>wincmd k<CR>]], opts)
   tmap("<C-l>", [[<Cmd>wincmd l<CR>]], opts)
+  -- vim.cmd([[tnoremap <expr> <C-R> '<C-\><C-N>"'.nr2char(getchar()).'pi']])
   -- tmap("<C-c>", [[<C-\><C-n>]], opts) -- NOTE: keep this disbled so we can C-c in a shell
 end
 
