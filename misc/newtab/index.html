@@ -25,6 +25,7 @@
         padding: 0;
         height: 100%;
       }
+
       body {
         display: block;
         font-family: "JetBrains Mono", "Liberation Mono", Monaco, Menlo, Inconsolata, "Andale Mono", monospace;
@@ -34,23 +35,27 @@
         justify-content: center;
         align-items: center;
       }
-      body > div {
+
+      #content {
         margin: auto;
         padding: 1em 2em;
         text-align: center;
       }
-      body > div > section {
-        transition: all 0.5s;
+
+      section {
+        transition: all 0.2s;
         display: flex;
         align-items: center;
         align-content: center;
         flex-direction: column;
         justify-content: center;
       }
-      body > div > section:hover {
+
+      section:hover {
         transform: scale(0.95);
         cursor: pointer;
       }
+
       figure {
         margin: 0 0 0.75rem;
         border: 2px solid rgba(0, 0, 0, 2%);
@@ -65,33 +70,36 @@
         justify-content: center;
         overflow: hidden;
       }
-      body > div > section:hover figure {
+
+      section:hover figure {
         outline: 1px solid rgba(255, 255, 255, 6%);
       }
-      body > div > section:hover code {
-        color: #777777;
+
+      section:hover {
+        opacity: 0.7;
       }
-      figure > span {
-        font-size: 2rem;
-      }
+
       figure > svg {
         position: relative;
-        bottom: -5px;
-        height: 100px;
-        width: 100px;
+        bottom: -8px;
+        height: 90px;
+        width: 90px;
+        scale: 0.9;
       }
+
       h1 {
         font-size: 1rem;
         margin: 0 0 0.5rem;
       }
+
       code {
         margin: 0;
         display: flex;
         align-items: center;
         align-content: center;
         justify-content: center;
-        transition: color 0.2s ease-in-out;
       }
+
       strong {
         color: green;
         display: block;
@@ -109,11 +117,8 @@
           text-shadow: 1px 1px 2px rgba(0, 0, 0, 90%);
         }
         code {
-          color: #555555;
+          color: #777777;
           text-shadow: 1px 1px 1px rgba(0, 0, 0, 25%);
-        }
-        figure > span {
-          text-shadow: 0px 0px 12px rgba(0, 0, 0, 20%);
         }
       }
       @media (prefers-color-scheme: light) {
@@ -502,7 +507,7 @@
 
     <script type="text/javascript">
       let ip = "";
-      let timeout;
+
       const getIp = () => {
         fetch("https://api.ipify.org?format=json")
           .then((response) => response.json())
@@ -512,14 +517,10 @@
 
               document.querySelector("#ip").innerText = ip;
               handleClip(true);
-
-              timeout = window.setTimeout(() => {
-                document.querySelector("#ip").innerText = ip;
-                window.clearTimeout(timeout);
-              }, 3000);
             }
           });
       };
+
       const mimicKeys = (enabled) => {
         if (enabled) {
           window.addEventListener("keydown", (e) => {
@@ -533,16 +534,25 @@
           );
         }
       };
+
       const handleClip = (enabled) => {
         if (enabled) {
           const ipEl = document.querySelector("#ip");
           const content = ipEl.innerText;
+          let timeout;
+
           ipEl.parentElement.addEventListener("click", () => {
             navigator.clipboard.writeText(content);
             ipEl.innerHTML = content + " <strong>✓</strong>";
+
+            timeout = window.setTimeout(() => {
+              document.querySelector("#ip").innerText = content;
+              window.clearTimeout(timeout);
+            }, 1000);
           });
         }
       };
+
       const handleLoaded = () => {
         mimicKeys(false);
         getIp(true);
