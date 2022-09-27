@@ -45,18 +45,6 @@ return function()
   --   },
   -- }
 
-  local search_sources = {
-    view = {
-      entries = { name = "custom", direction = "bottom_up" },
-    },
-    sources = {
-      { name = "nvim_lsp_document_symbol" },
-    },
-    {
-      { name = "buffer" },
-    },
-  }
-
   local cmp_window = {
     border = mega.get_border(),
     winhighlight = table.concat({
@@ -139,8 +127,11 @@ return function()
     }, {
       {
         name = "buffer",
-        keyword_length = 2,
+        keyword_length = 5,
+        max_item_count = 5, -- only show up to 5 items.
         options = {
+          keyword_length = 5,
+          max_item_count = 5, -- only show up to 5 items.
           get_bufnrs = function() return vim.api.nvim_list_bufs() end,
           -- get_bufnrs = function()
           --   local bufs = {}
@@ -188,9 +179,10 @@ return function()
     },
   })
 
-  -- cmp.setup.cmdline("/", search_sources)
-  -- cmp.setup.cmdline("?", search_sources)
   cmp.setup.cmdline({ "/", "?" }, {
+    view = {
+      entries = { name = "custom", direction = "bottom_up" },
+    },
     mapping = cmp.mapping.preset.cmdline(),
     sources = {
       sources = cmp.config.sources({ { name = "nvim_lsp_document_symbol" } }, { { name = "buffer" } }),
@@ -203,17 +195,7 @@ return function()
       { name = "cmdline_history", priority = 10, max_item_count = 3 },
     }),
   })
-  -- cmp.setup.cmdline("/", search_sources)
-  -- cmp.setup.cmdline("?", search_sources)
-  -- cmp.setup.cmdline(":", {
-  --   sources = {
-  --     { name = "cmdline", keyword_pattern = [=[[^[:blank:]\!]*]=] },
-  --     { name = "path" },
-  --     -- { name = "cmdline_history", priority = 10, max_item_count = 5 },
-  --   },
-  -- })
 
-  -- FT specific cmp configs
   cmp.setup.filetype({ "gitcommit", "NeogitCommitMessage" }, {
     sources = {
       -- { name = "spell" },

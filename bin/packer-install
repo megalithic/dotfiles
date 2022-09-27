@@ -17,10 +17,10 @@ set -euo pipefail
 # -- set some useful vars for executable info:
 __dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 __file="${__dir}/$(basename "${BASH_SOURCE[0]}")"
-__base="$(basename ${__file} .sh)"
-__root="$(cd "$(dirname "${__dir}")" && pwd)"
+__base="$(basename "$__file" .sh)"
+__root="$(cd "$(dirname "$__dir")" && pwd)"
 # shellcheck disable=SC2034,SC2015
-__invocation="$(printf %q "${__file}")$( (($#)) && printf ' %q' "$@" || true)"
+__invocation="$(printf %q "$__file")$( (($#)) && printf ' %q' "$@" || true)"
 
 FORCE_INSTALL="false"
 
@@ -32,7 +32,7 @@ remove_existing() {
 }
 
 do_clone() {
-  git clone https://github.com/wbthomason/packer.nvim.git "$packer_path"
+  git clone --depth=1 https://github.com/wbthomason/packer.nvim.git "$packer_path"
 }
 
 install_plugins() {
