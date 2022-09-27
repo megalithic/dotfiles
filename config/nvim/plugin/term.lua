@@ -275,8 +275,6 @@ function mega.term.open(args)
   local direction = args["direction"] or "horizontal"
   local cmd_opts = default_opts[direction]
 
-  P(fmt("term.open args: %s", I(args)))
-
   if fn.bufexists(term_buf_id) ~= 1 or direction == "tab" or args.temp then
     handle_new(cmd_opts, args)
   elseif fn.win_gotoid(term_win_id) ~= 1 then
