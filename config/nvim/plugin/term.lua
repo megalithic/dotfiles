@@ -216,6 +216,11 @@ local function handle_new(cmd, opts)
   local on_after_open = opts.on_after_open or nil
   local winnr = opts.winnr
 
+  if vim.api.nvim_buf_is_valid(term_buf_id) and opts.temp then
+    vim.api.nvim_buf_delete(term_buf_id, { force = true })
+    term_buf_id = nil_buf_id
+  end
+
   if opts.direction == "float" then
     cmd.new(size)
   elseif opts.direction == "tab" then
@@ -270,7 +275,9 @@ function mega.term.open(args)
   local direction = args["direction"] or "horizontal"
   local cmd_opts = default_opts[direction]
 
-  if fn.bufexists(term_buf_id) ~= 1 or direction == "tab" then
+  P(fmt("term.open args: %s", I(args)))
+
+  if fn.bufexists(term_buf_id) ~= 1 or direction == "tab" or args.temp then
     handle_new(cmd_opts, args)
   elseif fn.win_gotoid(term_win_id) ~= 1 then
     handle_existing(cmd_opts, args)
@@ -416,6 +423,8 @@ mega.command("TermNode", function()
     end,
   })
 end)
+
+-- FIXME: we don't rerun the test command anymore (we need to)
 
 nnoremap("<leader>tt", "<cmd>T<cr>", "term")
 nnoremap("<leader>tf", "<cmd>T direction=float<cr>", "term (float)")

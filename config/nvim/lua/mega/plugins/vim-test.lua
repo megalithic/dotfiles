@@ -34,6 +34,7 @@ return function()
         cmd = cmd,
         precmd = "eval $(desk load)",
         notifier = terminal_notifier,
+        temp = true,
       })
     end,
     termfloat = function(cmd)
@@ -43,6 +44,7 @@ return function()
         direction = "float",
         precmd = "eval $(desk load)",
         notifier = terminal_notifier,
+        temp = true,
       })
     end,
     termvsplit = function(cmd)
@@ -52,6 +54,7 @@ return function()
         precmd = "eval $(desk load)",
         direction = "vertical",
         notifier = terminal_notifier,
+        temp = true,
       })
     end,
   }
