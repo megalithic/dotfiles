@@ -569,6 +569,16 @@ local function plugins(use)
   use({ "sultanahamer/nvim-dap-reactnative", after = "nvim-dap" })
   -- use({ "microsoft/vscode-react-native", after = "nvim-dap" })
   use({ "Pocco81/DAPInstall.nvim", after = "nvim-dap" })
+  use({
+    "jayp0521/mason-nvim-dap.nvim",
+    after = "nvim-dap",
+    config = function()
+      require("mason-nvim-dap").setup({
+        ensure_installed = { "python", "node2", "chrome", "firefox" },
+        automatic_installation = true,
+      })
+    end,
+  })
 
   -- ( Development ) -----------------------------------------------------------
   use({ "danymat/neogen" })

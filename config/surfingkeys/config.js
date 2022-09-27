@@ -42,6 +42,7 @@ const {
   Normal,
   RUNTIME,
 } = api;
+window.skApi = api;
 
 function dbg(s) {
   console.log("[megakeys]: " + s);
@@ -523,7 +524,9 @@ settings.theme = `
   }
   .sk_theme #sk_omnibarSearchArea {
     border-top-color: var(--border);
-    border-bottom-color: var(--border);
+    border-bottom-color: transparent;
+    margin: 0;
+    padding: 5px 10px;
   }
   .sk_theme #sk_omnibarSearchArea input,
   .sk_theme #sk_omnibarSearchArea span {
@@ -542,7 +545,7 @@ settings.theme = `
   .sk_theme .separator:after {
     content: "\u1405";
     display: inline-block;
-    margin-left: -5px;
+    margin-left: -10px;
     margin-right: 5px;
     color: var(--accent-fg);
   }
