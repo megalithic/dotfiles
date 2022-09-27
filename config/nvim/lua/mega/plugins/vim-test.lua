@@ -29,7 +29,7 @@ return function()
 
   vim.g["test#custom_strategies"] = {
     termsplit = function(cmd)
-      mega.term_open({
+      mega.term.open({
         winnr = vim.fn.winnr(),
         cmd = cmd,
         precmd = "eval $(desk load)",
@@ -37,7 +37,7 @@ return function()
       })
     end,
     termfloat = function(cmd)
-      mega.term_open({
+      mega.term.open({
         winnr = vim.fn.winnr(),
         cmd = cmd,
         direction = "float",
@@ -46,7 +46,7 @@ return function()
       })
     end,
     termvsplit = function(cmd)
-      mega.term_open({
+      mega.term.open({
         winnr = vim.fn.winnr(),
         cmd = cmd,
         precmd = "eval $(desk load)",

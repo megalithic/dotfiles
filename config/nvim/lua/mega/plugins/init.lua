@@ -640,6 +640,8 @@ local function plugins(use)
     -- * To change all occurrences, press ga
     "otavioschwanck/cool-substitute.nvim",
     config = function()
+      if true then return end
+
       require("cool-substitute").setup({
         setup_keybindings = true,
         mappings = {
