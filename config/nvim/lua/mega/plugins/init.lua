@@ -910,6 +910,7 @@ end
 
 mega.nnoremap("<leader>ps", "<Cmd>PackerSync<CR>", "packer: sync")
 mega.nnoremap("<leader>pc", "<Cmd>PackerCompile<CR>", "packer: compile")
+mega.nnoremap("<leader>px", "<Cmd>PackerClean<CR>", "packer: clean")
 
 vim.cmd.packadd({ "cfilter", bang = true })
 mega.require("impatient")
