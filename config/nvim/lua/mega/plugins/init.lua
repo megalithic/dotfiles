@@ -85,7 +85,6 @@ local function plugins(use)
   -- use({ "rcarriga/nvim-notify", ext = "notify" })
   use({
     "vigoux/notifier.nvim",
-    commit = "74affe017cc046f899a857ab5f5b9b92d6d10743",
     cond = function() return vim.g.notifier_enabled end,
     config = function()
       require("notifier").setup({

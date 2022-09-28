@@ -36,7 +36,7 @@ local function setup_autocmds()
     {
       event = { "User" },
       pattern = { "PackerCompileDone" },
-      command = function() M.notify("Compilation finished", "info") end,
+      command = function() M.notify("Compilation finished") end,
     },
   })
 end
