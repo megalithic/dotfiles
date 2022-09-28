@@ -756,6 +756,7 @@ local function plugins(use)
   })
   use({
     "natecraddock/workspaces.nvim",
+    after = "telescope.nvim",
     config = function()
       require("workspaces").setup({
         path = vim.fn.stdpath("data") .. "/workspaces",
@@ -779,6 +780,7 @@ local function plugins(use)
           },
         },
       })
+      require("telescope").load_extension("workspaces")
     end,
   })
   use({ "editorconfig/editorconfig-vim" })

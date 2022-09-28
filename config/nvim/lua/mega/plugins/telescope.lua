@@ -3,8 +3,9 @@ return function()
 
   local fn = vim.fn
   local actions = require("telescope.actions")
-  -- local lga_actions = require("telescope-live-grep-args.actions")
+  local lga_actions = require("telescope-live-grep-args.actions")
   local themes = require("telescope.themes")
+  local action_state = require("telescope.actions.state")
 
   mega.augroup("TelescopePreviews", {
     {
@@ -26,6 +27,77 @@ return function()
         -- preview = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
       },
     })
+  end
+
+  -- TODO: support multiple file opens
+  -- https://github.com/b0o/nvim-conf/blob/8abde1b6a1e728747af165f813308e4dea24a76f/lua/user/plugin/telescope.lua
+  -- https://github.com/nvim-telescope/telescope.nvim/issues/1048#issuecomment-1225975038
+
+  -- Based on https://github.com/nvim-telescope/telescope.nvim/issues/1048#issuecomment-1225975038
+  local function multiopen(method)
+    return function(prompt_bufnr)
+      local edit_file_cmd_map = {
+        vertical = "vsplit",
+        horizontal = "split",
+        tab = "tabedit",
+        default = "edit",
+      }
+      local edit_buf_cmd_map = {
+        vertical = "vert sbuffer",
+        horizontal = "sbuffer",
+        tab = "tab sbuffer",
+        default = "buffer",
+      }
+      local picker = action_state.get_current_picker(prompt_bufnr)
+      local multi_selection = picker:get_multi_selection()
+
+      if #multi_selection > 1 then
+        require("telescope.pickers").on_close_prompt(prompt_bufnr)
+        pcall(vim.api.nvim_set_current_win, picker.original_win_id)
+
+        for i, entry in ipairs(multi_selection) do
+          local filename, row, col
+
+          if entry.path or entry.filename then
+            filename = entry.path or entry.filename
+
+            row = entry.row or entry.lnum
+            col = vim.F.if_nil(entry.col, 1)
+          elseif not entry.bufnr then
+            local value = entry.value
+            if not value then return end
+
+            if type(value) == "table" then value = entry.display end
+
+            local sections = vim.split(value, ":")
+
+            filename = sections[1]
+            row = tonumber(sections[2])
+            col = tonumber(sections[3])
+          end
+
+          local entry_bufnr = entry.bufnr
+
+          if entry_bufnr then
+            if not vim.api.nvim_buf_get_option(entry_bufnr, "buflisted") then
+              vim.api.nvim_buf_set_option(entry_bufnr, "buflisted", true)
+            end
+            local command = i == 1 and "buffer" or edit_buf_cmd_map[method]
+            pcall(vim.cmd, string.format("%s %s", command, vim.api.nvim_buf_get_name(entry_bufnr)))
+          else
+            local command = i == 1 and "edit" or edit_file_cmd_map[method]
+            if vim.api.nvim_buf_get_name(0) ~= filename or command ~= "edit" then
+              filename = require("plenary.path"):new(vim.fn.fnameescape(filename)):normalize(vim.loop.cwd())
+              pcall(vim.cmd, string.format("%s %s", command, filename))
+            end
+          end
+
+          if row and col then pcall(vim.api.nvim_win_set_cursor, 0, { row, col - 1 }) end
+        end
+      else
+        actions["select_" .. method](prompt_bufnr)
+      end
+    end
   end
 
   ---@param opts table
@@ -53,8 +125,8 @@ return function()
   local function stopinsert(callback)
     return function(prompt_bufnr)
       vim.cmd.stopinsert()
-      callback(prompt_bufnr)
-      -- vim.schedule(function() callback(prompt_bufnr) end)
+      -- callback(prompt_bufnr)
+      vim.schedule(function() callback(prompt_bufnr) end)
     end
   end
 
@@ -75,9 +147,9 @@ return function()
           ["<c-c>"] = function() vim.cmd.stopinsert() end,
           ["<esc>"] = actions.close,
           -- ["<cr>"] = actions.select_vertical,
-          ["<CR>"] = stopinsert(actions.select_vertical),
-          ["<c-o>"] = actions.select_default,
-          ["<c-s>"] = actions.select_horizontal,
+          ["<CR>"] = stopinsert(multiopen("vertical")),
+          ["<c-o>"] = stopinsert(multiopen("default")),
+          ["<c-s>"] = stopinsert(multiopen("horizontal")),
           ["<c-b>"] = actions.preview_scrolling_up,
           ["<c-f>"] = actions.preview_scrolling_down,
           ["<c-u>"] = actions.preview_scrolling_up,
@@ -148,17 +220,17 @@ return function()
       },
     },
     extensions = {
-      -- live_grep_args = {
-      --   auto_quoting = true, -- enable/disable auto-quoting
-      --   mappings = {
-      --     i = {
-      --       ["<C-k>"] = lga_actions.quote_prompt(),
-      --       ["<C-l>g"] = lga_actions.quote_prompt({ postfix = " --iglob " }),
-      --       ["<C-l>t"] = lga_actions.quote_prompt({ postfix = " -t" }),
-      --       ["<C-l>n"] = lga_actions.quote_prompt({ postfix = " --no-ignore " }),
-      --     },
-      --   },
-      -- },
+      live_grep_args = {
+        auto_quoting = true, -- enable/disable auto-quoting
+        mappings = {
+          i = {
+            ["<C-k>"] = lga_actions.quote_prompt(),
+            ["<C-l>g"] = lga_actions.quote_prompt({ postfix = " --iglob " }),
+            ["<C-l>t"] = lga_actions.quote_prompt({ postfix = " -t" }),
+            ["<C-l>n"] = lga_actions.quote_prompt({ postfix = " --no-ignore " }),
+          },
+        },
+      },
     },
     pickers = {
       buffers = dropdown({
@@ -321,11 +393,11 @@ return function()
       },
     }))
   end
-  local function live_grep_args() telescope.extensions.live_grep_args.live_grep_args(ivy()) end
+  local function live_grep_args(opts) telescope.extensions.live_grep_args.live_grep_args(ivy(opts)) end
   local function installed_plugins()
-    builtin.find_files({
-      prompt_title = "~ installed plugins ~",
-      cwd = fn.stdpath("data") .. "/site/pack/paqs",
+    builtins.find_files({
+      prompt_title = "Installed plugins",
+      cwd = vim.fn.stdpath("data") .. "/site/pack/packer",
     })
   end
 
@@ -351,7 +423,7 @@ return function()
   nmap("<leader>fr", builtin.resume, "resume last picker")
   nmap("<leader>fs", builtin.live_grep, "live grep string")
   -- nmap("<leader>fa", builtin.live_grep, "live grep string")
-  nmap("<leader>fa", live_grep_args, "live grep args")
+  nmap("<leader>fa", "<cmd>lua require('telescope').extensions.live_grep_args.live_grep_args()<CR>", "live grep args")
   nmap("<leader>fw", workspaces, "open workspaces")
 
   nmap("<leader>fvh", builtin.highlights, "highlights")
@@ -377,7 +449,4 @@ return function()
     [[y:lua require("telescope.builtin").grep_string({ search = '<c-r>"' })<cr>]],
     "grep for visual selection"
   )
-
-  -- telescope.load_extension("habitats")
-  telescope.load_extension("workspaces")
 end
