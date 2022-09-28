@@ -484,9 +484,9 @@ add-zsh-hook preexec () {
 
 
 # open most recent dir, when not in nvim
-if [[ -z "$NVIM" ]]; then
-  cdr
-fi
+# if [[ -z "$NVIM" ]]; then
+#   cdr
+# fi
 
 # Edit line in vim with v whilst in normal mod in vi mode
 autoload -Uz edit-command-line;

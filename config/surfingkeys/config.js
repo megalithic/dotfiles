@@ -237,10 +237,6 @@ unmap("ygh");
 
 const mapkeyGithub = (...args) => mapkey(...args, { domain: /github\.com/i });
 
-mapkeyGithub("yg", "git clone - git clone address", () =>
-  Clipboard.write("git clone " + window.location.href + ".git")
-);
-
 mapkeyGithub("yp", "Copy project path", () => {
   const path = new URL(window.location.href).pathname.split("/");
   Clipboard.write(`${path[1]}/${path[2]}`);
@@ -252,6 +248,10 @@ mapkeyGithub("ygh", "Copy project path", () => {
   Clipboard.write(`${path[1]}/${path[2]}`);
   // Clipboard.write(actions.parseRepo(window.location.href).repoPluginPath);
 });
+
+mapkeyGithub("ygc", "git clone - git clone address", () =>
+  Clipboard.write("git clone " + window.location.href + ".git")
+);
 
 mapkeyGithub("yv", "Copy for vim", () => {
   const path = new URL(window.location.href).pathname.split("/");

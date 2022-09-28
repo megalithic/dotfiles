@@ -83,6 +83,42 @@ local function plugins(use)
   -- use({ "echasnovski/mini.nvim", ext="mini", after = "nvim-treesitter" })
   use({ "anuvyklack/hydra.nvim", ext = "hydra" })
   -- use({ "rcarriga/nvim-notify", ext = "notify" })
+
+  -- use({
+  --   "levouh/tint.nvim",
+  --   config = function()
+  --     require("tint").setup({
+  --       tint = -30,
+  --       highlight_ignore_patterns = {
+  --         "WinSeparator",
+  --         "St.*",
+  --         "Comment",
+  --         "Panel.*",
+  --         "Telescope.*",
+  --         "Bqf.*",
+  --         "CursorLine",
+  --         "CursorLine.*",
+  --       },
+  --       window_ignore_function = function(win_id)
+  --         if vim.wo[win_id].diff or vim.fn.win_gettype(win_id) ~= "" then return true end
+  --         local buf = vim.api.nvim_win_get_buf(win_id)
+  --         local b = vim.bo[buf]
+  --         local ignore_bt = { "terminal", "prompt", "nofile" }
+  --         local ignore_ft = {
+  --           "neo-tree",
+  --           "packer",
+  --           "diff",
+  --           "toggleterm",
+  --           "Neogit.*",
+  --           "Telescope.*",
+  --           "qf",
+  --         }
+  --         return require("mega.globals").any(b.bt, ignore_bt) or require("mega.globals").any(b.ft, ignore_ft)
+  --       end,
+  --     })
+  --   end,
+  -- })
+
   use({
     "vigoux/notifier.nvim",
     cond = function() return vim.g.notifier_enabled end,
@@ -174,78 +210,6 @@ local function plugins(use)
     after = "telescope-file-browser.nvim",
     config = function() require("habitats").setup({}) end,
   })
-  -- use({
-  --   "nvim-telescope/telescope.nvim",
-  --   -- module_pattern = "telescope.*",
-  --   ext = "telescope",
-  --   -- cmd = "Telescope",
-  --   event = "CursorHold",
-  --   requires = {
-  --     "nvim-lua/popup.nvim",
-  --     "nvim-lua/plenary.nvim",
-  --     "nvim-telescope/telescope-file-browser.nvim",
-  --     "natecraddock/telescope-zf-native.nvim",
-  --     "benfowler/telescope-luasnip.nvim",
-  --   },
-  --   wants = {
-  --     "popup.nvim",
-  --     "plenary.nvim",
-  --     "telescope-file-browser.nvim",
-  --     "telescope-zf-native.nvim",
-  --     "telescope-luasnip.nvim",
-  --     "habitats.nvim",
-  --   },
-  --   {
-  --     "nvim-telescope/telescope-file-browser.nvim",
-  --     after = "telescope.nvim",
-  --   },
-  --   {
-  --     "natecraddock/telescope-zf-native.nvim",
-  --     after = "telescope.nvim",
-  --   },
-  --   {
-  --     "benfowler/telescope-luasnip.nvim",
-  --     after = "telescope.nvim",
-  --   },
-  --   {
-  --     "ryansch/habitats.nvim",
-  --     after = "telescope-file-browser.nvim",
-  --     config = function() require("habitats").setup({}) end,
-  --   },
-  -- })
-  -- use({
-  --   {
-  --     "nvim-telescope/telescope.nvim",
-  --     requires = {
-  --       "nvim-lua/popup.nvim",
-  --       "nvim-lua/plenary.nvim",
-  --       "telescope-frecency.nvim",
-  --       "telescope-fzf-native.nvim",
-  --       "nvim-telescope/telescope-ui-select.nvim",
-  --     },
-  --     wants = {
-  --       "popup.nvim",
-  --       "plenary.nvim",
-  --       "telescope-frecency.nvim",
-  --       "telescope-fzf-native.nvim",
-  --     },
-  --     setup = [[require('config.telescope_setup')]],
-  --     config = [[require('config.telescope')]],
-  --     cmd = "Telescope",
-  --     module = "telescope",
-  --   },
-  --   {
-  --     "nvim-telescope/telescope-frecency.nvim",
-  --     after = "telescope.nvim",
-  --     requires = "tami5/sqlite.lua",
-  --   },
-  --   {
-  --     "nvim-telescope/telescope-fzf-native.nvim",
-  --     run = "make",
-  --   },
-  --   "crispgm/telescope-heading.nvim",
-  --   "nvim-telescope/telescope-file-browser.nvim",
-  -- })
 
   -- ( Navigation ) ------------------------------------------------------------
   use({
@@ -567,7 +531,7 @@ local function plugins(use)
   })
   use({ "sultanahamer/nvim-dap-reactnative", after = "nvim-dap" })
   -- use({ "microsoft/vscode-react-native", after = "nvim-dap" })
-  use({ "Pocco81/DAPInstall.nvim", after = "nvim-dap" })
+  -- use({ "Pocco81/DAPInstall.nvim", after = "nvim-dap" })
   use({
     "jayp0521/mason-nvim-dap.nvim",
     after = "nvim-dap",
