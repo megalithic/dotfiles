@@ -22,7 +22,7 @@ vim.g.colorscheme = "megaforest"
 vim.g.default_colorcolumn = "81"
 vim.g.mapleader = ","
 vim.g.maplocalleader = " "
-vim.g.notifier_enabled = true
+vim.g.notifier_enabled = false
 
 -- [ globals ] -----------------------------------------------------------------
 

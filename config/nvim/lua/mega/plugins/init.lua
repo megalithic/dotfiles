@@ -300,39 +300,38 @@ local function plugins(use)
 
   -- ( LSP ) -------------------------------------------------------------------
   use({
-    {
-      "williamboman/mason.nvim",
-      event = "BufRead",
-      requires = {
-        "nvim-lspconfig",
-        "williamboman/mason-lspconfig.nvim",
-      },
-      config = function()
-        require("mason").setup({
-          ui = {
-            border = _G.mega.get_border(),
-            log_level = vim.log.levels.DEBUG,
-          },
-        })
-        require("mega.lsp.servers")()
-      end,
+    "williamboman/mason.nvim",
+    event = "BufRead",
+    requires = {
+      "nvim-lspconfig",
+      "williamboman/mason-lspconfig.nvim",
     },
-    {
-      "jayp0521/mason-null-ls.nvim",
-      requires = {
-        "williamboman/mason.nvim",
-        "jose-elias-alvarez/null-ls.nvim",
-      },
-      after = "mason.nvim",
-      config = function()
-        require("mason-null-ls").setup({
-          automatic_installation = true,
-          ensure_installed = {
-            "beautysh",
-          },
-        })
-      end,
-    },
+    config = function()
+      require("mason").setup({
+        ui = {
+          border = _G.mega.get_border(),
+          log_level = vim.log.levels.DEBUG,
+        },
+      })
+      require("mega.lsp.servers")()
+    end,
+    -- },
+    -- {
+    --   "jayp0521/mason-null-ls.nvim",
+    --   requires = {
+    --     "williamboman/mason.nvim",
+    --     "jose-elias-alvarez/null-ls.nvim",
+    --   },
+    --   after = "mason.nvim",
+    --   config = function()
+    --     require("mason-null-ls").setup({
+    --       automatic_installation = true,
+    --       ensure_installed = {
+    --         "beautysh",
+    --       },
+    --     })
+    --   end,
+    -- },
   })
   use({
     "neovim/nvim-lspconfig",
@@ -532,16 +531,16 @@ local function plugins(use)
   use({ "sultanahamer/nvim-dap-reactnative", after = "nvim-dap" })
   -- use({ "microsoft/vscode-react-native", after = "nvim-dap" })
   -- use({ "Pocco81/DAPInstall.nvim", after = "nvim-dap" })
-  use({
-    "jayp0521/mason-nvim-dap.nvim",
-    after = "nvim-dap",
-    config = function()
-      require("mason-nvim-dap").setup({
-        ensure_installed = { "python", "node2", "chrome", "firefox" },
-        automatic_installation = true,
-      })
-    end,
-  })
+  -- use({
+  --   "jayp0521/mason-nvim-dap.nvim",
+  --   after = "nvim-dap",
+  --   config = function()
+  --     require("mason-nvim-dap").setup({
+  --       ensure_installed = { "python", "node2", "chrome", "firefox" },
+  --       automatic_installation = true,
+  --     })
+  --   end,
+  -- })
 
   -- ( Development ) -----------------------------------------------------------
   use({ "danymat/neogen" })
