@@ -94,7 +94,7 @@ return function()
         o = "toggle_node",
         ["/"] = "noop",
         ["n"] = "noop",
-        ["g/"] = "fuzzy_finder",
+        ["<c-/>"] = "fuzzy_finder",
         -- ["<c-o>"] = "open",
         -- ["<c-s>"] = "open_split",
         -- ["<CR>"] = "open_vsplit",
