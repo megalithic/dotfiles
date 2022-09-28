@@ -5,7 +5,6 @@ vim.g.enabled_plugin = {
   autocmds = true,
   megaline = true,
   lsp = true,
-  treesitter = false, -- loading via packer config; TODO: remove from plugin?
   term = true,
   cursorline = true,
   colorcolumn = true,
@@ -22,7 +21,7 @@ vim.g.colorscheme = "megaforest"
 vim.g.default_colorcolumn = "81"
 vim.g.mapleader = ","
 vim.g.maplocalleader = " "
-vim.g.notifier_enabled = false
+vim.g.notifier_enabled = true
 
 -- [ globals ] -----------------------------------------------------------------
 

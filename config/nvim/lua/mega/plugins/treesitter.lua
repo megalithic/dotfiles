@@ -159,20 +159,10 @@ return function()
     incremental_selection = {
       enable = true,
       keymaps = {
-        -- mappings for incremental selection (visual mappings)
-        -- init_selection = "<leader>gv", -- maps in normal mode to init the node/scope selection
-        -- node_incremental = "<leader>gv", -- increment to the upper named parent
-        -- node_decremental = "<leader>gV", -- decrement to the previous node
-        -- scope_incremental = "grc", -- (grc) increment to the upper scope (as defined in locals.scm)
-
-        init_selection = "gnn", -- maps in normal mode to init the node/scope selection
-        scope_incremental = "gnn", -- increment to the upper scope (as defined in locals.scm)
-        node_incremental = "<TAB>", -- increment to the upper named parent
-        node_decremental = "<S-TAB>", -- decrement to the previous node
-
-        -- init_selection = "<CR>", -- maps in normal mode to init the node/scope selection
-        -- node_incremental = "<CR>", -- increment to the upper named parent
-        -- node_decremental = "<SPC>", -- decrement to the previous node
+        init_selection = "gN", -- maps in normal mode to init the node/scope selection
+        scope_incremental = "gN", -- increment to the upper scope (as defined in locals.scm)
+        node_incremental = "gn", -- increment to the upper named parent
+        node_decremental = "gnn", -- decrement to the previous node
       },
     },
     query_linter = {
