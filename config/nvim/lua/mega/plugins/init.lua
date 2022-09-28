@@ -459,7 +459,6 @@ local function plugins(use)
     "akinsho/git-conflict.nvim",
     config = function()
       require("git-conflict").setup({
-
         disable_diagnostics = true,
         highlights = {
           incoming = "DiffText",

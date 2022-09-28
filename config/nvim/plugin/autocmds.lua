@@ -367,11 +367,11 @@ augroup("GitConflicts", {
   {
     event = { "User" },
     pattern = { "GitConflictDetected" },
-    command = function()
+    command = function(args)
       vim.notify("Conflicts detected.")
-      vim.diagnostic.disable(0)
+      vim.diagnostic.disable(args.buf)
       vim.cmd("LspStop")
-      vim.cmd([[GitConflictListQf]]) -- | Telescope quickfix theme=get_ivy]])
+      vim.cmd("GitConflictListQf") -- | Telescope quickfix theme=get_ivy]])
 
       mega.nnoremap("cq", "<cmd>GitConflictListQf<CR>", "send conflicts to qf")
       mega.nnoremap("[c", "<cmd>GitConflictPrevConflict<CR>", "go to prev conflict")
@@ -381,15 +381,11 @@ augroup("GitConflicts", {
   {
     event = { "User" },
     pattern = { "GitConflictResolved" },
-    command = function()
+    command = function(args)
       vim.notify("Conflicts resolved.")
-      vim.diagnostic.enable(0)
+      vim.diagnostic.enable(args.buf)
       vim.cmd("LspStart")
       vim.cmd("cclose")
-
-      -- vim.keymap.set("n", "cww", function()
-      --   engage.conflict_buster()
-      -- end)
     end,
   },
 })
