@@ -501,10 +501,14 @@
               ></path>
             </g>
           </svg>
-          <!-- <span>🗿</span> -->
         </figure>
         <h1>megatab</h1>
         <code id="ip"></code>
+        <p id="weather">
+          <span></span>
+          <em></em>
+          <img />
+        </p>
       </section>
     </div>
 
@@ -556,9 +560,34 @@
         }
       };
 
+      const getWeather = () => {
+        fetch("https://wttr.in/hoover?u&format=j1")
+          .then((response) => response.json())
+          .then((data) => {
+            if (typeof data !== "undefined") {
+              const w = data.current_condition[0];
+              const wEl = document.querySelector("#weather");
+
+              wEl.querySelector("span").innerText = w.temp_F;
+              if (w.temp_F !== w.FeelsLikeF) {
+                wEl.querySelector("em").innerText = w.FeelsLikeF;
+              }
+
+              const wIconUrl = w.weatherIconUrl[0].value;
+              const wIconEl = wEl.querySelector("img");
+              if (wIconUrl !== "") {
+                wIconEl.setAttribute("src", wIconUrl);
+              } else {
+                wIconEl.remove();
+              }
+            }
+          });
+      };
+
       const handleLoaded = () => {
         mimicKeys(false);
         getIp(true);
+        getWeather(true);
       };
 
       if (["complete", "loaded", "interactive"].indexOf(document.readyState) >= 0) {
