@@ -7,11 +7,10 @@ local packer = require("mega.plugins.utils")
 local packer_notify = packer.notify
 
 local config = {
-  display = {
-    -- open_fn = function() return require("packer.util").float({ border = mega.get_border() }) end,
-    open_cmd = "silent topleft 65vnew",
-  },
   -- opt_default = true,
+  display = {
+    open_cmd = "silent topleft 45vnew",
+  },
   auto_reload_compiled = false,
   non_interactive = vim.env.PACKER_NON_INTERACTIVE or false,
   compile_path = PACKER_COMPILED_PATH,

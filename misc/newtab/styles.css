@@ -1,0 +1,133 @@
+html,
+body {
+  background-color: white;
+  color: #35363a;
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  display: block;
+  font-family: "JetBrains Mono", "Liberation Mono", Monaco, Menlo, Inconsolata, "Andale Mono", monospace;
+  font-size: 1em;
+  line-height: 1.5;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#content {
+  margin: auto;
+  padding: 1em 2em;
+  text-align: center;
+}
+
+section {
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  align-content: center;
+  flex-direction: column;
+  justify-content: center;
+}
+
+section:hover {
+  transform: scale(0.95);
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+section:hover #logo {
+  border: 2px solid rgba(0, 0, 0, 10%);
+  /* outline: 1px solid rgba(255, 255, 255, 6%); */
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 6%); /* safari support */
+}
+
+#logo {
+  margin: 0 0 0.75rem;
+  border: 2px solid rgba(0, 0, 0, 2%);
+  /* outline: 1px solid rgba(255, 255, 255, 4%); */
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 4%); /* safari support */
+  padding: 0;
+  border-radius: 100%;
+  background: rgba(0, 0, 0, 10%);
+  display: flex;
+  align-items: center;
+  align-content: center;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+}
+
+#logo > img {
+  position: relative;
+  bottom: -8px;
+  height: 90px;
+  width: 90px;
+  scale: 0.9;
+}
+
+h1 {
+  font-size: 1rem;
+  margin: 0 0 0.5rem;
+}
+
+/* --- (IP) ------------------------------------------------------------------*/
+#ip {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  align-content: center;
+  justify-content: center;
+}
+
+strong.confirmation {
+  color: green;
+  display: block;
+  margin-left: 0.25rem;
+  text-shadow: none;
+}
+
+/* --- (WEATHER) -------------------------------------------------------------*/
+#weather {
+  font-size: 0.85rem;
+  opacity: 0.75;
+}
+#weather img.show {
+  display: block;
+}
+#weather img.hide {
+  display: none;
+}
+#weather strong {
+  color: #999999;
+}
+
+@media (prefers-color-scheme: dark) {
+  html,
+  body {
+    background-color: #35363a;
+    color: #e0e0e0;
+  }
+
+  h1 {
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 90%);
+  }
+
+  #ip {
+    color: #777777;
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 25%);
+  }
+}
+@media (prefers-color-scheme: light) {
+  html,
+  body {
+    background-color: white;
+    color: #35363a;
+  }
+
+  h1 {
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 20%);
+  }
+}
