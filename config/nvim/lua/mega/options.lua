@@ -455,6 +455,7 @@ mega.exec([[
 -- Random Other Things {{{1
 -----------------------------------------------------------------------------//
 -- vim.opt.shortmess = "IToOlxfitnw" -- https://neovim.io/doc/user/options.html#'shortmess'
+vim.opt.iskeyword:append("-")
 vim.g.no_man_maps = true
 vim.g.vim_json_syntax_conceal = false
 vim.g.vim_json_conceal = false

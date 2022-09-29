@@ -1,12 +1,17 @@
+const loader = document.querySelector(".loader");
 async function get(url) {
   console.debug(`querying ${url}`);
+  loader.style = "display: block;";
   const response = await fetch(url, {
     method: "GET",
   });
   if (!response.ok) {
+    loader.style = "display: block;";
+    loader.innerText = "¯\\_(ツ)_/¯";
     throw new Error(`HTTP error! status: ${response.status}`);
   }
   const data = await response.json();
+  loader.style = "display: none;";
   return data;
 }
 
@@ -46,7 +51,7 @@ const clip = (enabled) => {
       timeout = window.setTimeout(() => {
         document.querySelector("#ip").innerText = content;
         window.clearTimeout(timeout);
-      }, 1000);
+      }, 2000);
     });
   }
 };

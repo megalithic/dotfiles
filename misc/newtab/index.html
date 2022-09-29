@@ -3,6 +3,7 @@
 <!-- https://gist.github.com/JoeyBurzynski/617fb6201335779f8424ad9528b72c41 -->
 <!-- https://stackoverflow.com/questions/29150384/how-to-allow-cross-domain-request-in-apache2 -->
 <!-- https://rapidapi.com/guides/fetch-api-async-await -->
+<!-- https://dmitripavlutin.com/javascript-fetch-async-await/ -->
 
 <!-- @TOOLS: -->
 <!-- /etc/apache2/httpd.conf -->
@@ -15,7 +16,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>🗿 megatab</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🗿</text></svg>"
+    />
+    <title>megatab</title>
     <link rel="stylesheet" type="text/css" href="styles.css" />
   </head>
 
@@ -26,6 +31,7 @@
           <img src="logo.svg" />
         </figure>
         <h1>megatab</h1>
+        <small class="loader">…</small>
         <code id="ip"></code>
         <p id="weather">
           <img />

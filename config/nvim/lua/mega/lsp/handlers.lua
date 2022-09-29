@@ -68,7 +68,14 @@ local function hover_handler(_, result, ctx, config)
   return bufnr
 end
 
-lsp.handlers["textDocument/hover"] = lsp.with(hover_handler, opts)
+lsp.handlers["textDocument/hover"] = function(...)
+  local handler = lsp.with(hover_handler, {
+    border = mega.get_border(),
+    max_width = max_width,
+    max_height = max_height,
+  })
+  vim.b.lsp_hover_buf, vim.b.lsp_hover_win = handler(...)
+end
 -- lsp.handlers["textDocument/hover"] = lsp.with(lsp.handlers.hover, opts)
 -- local signature_help_opts = mega.table_merge(opts, {
 --   -- anchor = "SW",
