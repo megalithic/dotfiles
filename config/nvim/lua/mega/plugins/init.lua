@@ -139,7 +139,12 @@ local function plugins(use)
   use({
     "lukas-reineke/indent-blankline.nvim",
     config = function()
-      require("indent_blankline").setup({
+      local ibl = require("indent_blankline")
+
+      local refresh = ibl.refresh
+      ibl.refresh = require("mega.globals").debounce(100, refresh)
+
+      ibl.setup({
         char = "│", -- alts: ┆ ┊  ▎
         show_foldtext = false,
         context_char = "▎",

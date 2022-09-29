@@ -1,20 +1,5 @@
-// SurfingKeys Config
-// ----------------------------------------------------------------------------
-// REFS:
-// - https://jo-so.de/2021-01/Surfingkeys.js
-// - https://github.com/Foldex/surfingkeys-config/blob/master/config.js
-// - https://gist.github.com/Stvad/02d3d40b08e9505c548e00bba05ccea0
-// - https://github.com/b0o/surfingkeys-conf
-// - https://github.com/mindgitrwx/personal_configures/blob/master/Surfingkeys-config-ko-dev.js
-// - https://github.com/loyalpartner/surfingkeys-config/blob/master/surfingkeys.js
-// - https://github.com/j-hui/pokerus/blob/main/surfingkeys.config/surfingkeys/surfingkeys.js
-//
-// TODO:
-// - https://brookhong.github.io/2018/11/18/bring-focus-back-to-page-content-from-address-bar.html
-// - https://github.com/brookhong/Surfingkeys/wiki/FAQ#how-to-go-to-nth-tab
-// - https://github.com/glacambre/firenvim
-//
-// - vivaldi support: https://gist.github.com/coramuirgen/94ba1d587cb2093c71f6ef4f0b371069
+// enable url reading in safari sk extension:
+// document.getElementById("localPathForSettings").style.display = ""
 
 const actions = {};
 const util = {};
@@ -42,7 +27,6 @@ const {
   Normal,
   RUNTIME,
 } = api;
-window.skApi = api;
 
 function dbg(s) {
   console.log("[megakeys]: " + s);
@@ -103,43 +87,12 @@ Hints.style(
   "text"
 );
 
-// -- Change hints styles
-// Hints.characters = "asdfgqwertvbn";
-// Hints.style(
-//   'border: solid 1px #ff79c6; color:#44475a; background: #f1fa8c; background-color: #f1fa8c; font-size: 10pt; font-family: "Jetbrains Mono"'
-// );
-// Hints.style('border: solid 8px #ff79c6;padding: 1px;background: #f1fa8c; font-family: "Jetbrains Mono"', "text");
-
-// -----------------------------------------------------------------------------------------------------------------------
-// -- [ VISUAL ]
-// -----------------------------------------------------------------------------------------------------------------------
 // set visual-mode style
 Visual.style("marks", "background-color: #A3BE8C; border: 1px solid #3B4252 !important; text-decoration: underline;");
 Visual.style(
   "cursor",
   "background-color: #E5E9F0 !important; border: 1px solid #6272a4 !important; border-bottom: 2px solid green !important; padding: 2px !important; outline: 1px solid rgba(255,255,255,.75) !important;"
 );
-// -- Change search marks and cursor
-// Visual.style("marks", "background-color: #f1fa8c;");
-// Visual.style(
-//   "cursor",
-//   "background-color: #6272a4 !important; color: #f8f8f2 !important; border:1px red; font-weight:bold"
-// );
-
-// -----------------------------------------------------------------------------------------------------------------------
-// -- [ MAPPINGS ]
-// -----------------------------------------------------------------------------------------------------------------------
-
-/* Chord prefix mnemonics:
- *
- *   (r)eload: related to current page
- *   (z)oom: related to page resolution
- *   (:): related to omnibar
- *   (g)oto: links, input, and other graphical interaction
- *   (s)croll: select scroll elements
- *   (y)ank: pull to clipboard
- *
- */
 
 // -- UNMAPS
 // (Unused; unmap these first so they can be mapped to other things)
@@ -184,6 +137,9 @@ unmap("sw");
 unmap("ss");
 unmap("sh");
 unmap("sy");
+
+unmap("<Ctrl-t>");
+unmap("<Ctrl-g>");
 
 // -- VISUAL
 vmap("H", "0");
@@ -244,9 +200,7 @@ mapkeyGithub("yp", "Copy project path", () => {
 
 mapkeyGithub("ygh", "Copy project path", () => {
   const path = new URL(window.location.href).pathname.split("/");
-  // mapkey("ygh", "Copy GitHub repo base", function () {
   Clipboard.write(`${path[1]}/${path[2]}`);
-  // Clipboard.write(actions.parseRepo(window.location.href).repoPluginPath);
 });
 
 mapkeyGithub("ygc", "git clone - git clone address", () =>
@@ -359,43 +313,6 @@ actions.sendToInstapaper = () => {
 };
 unmap(";i");
 mapkey(";i", "-> Send to Instapaper", actions.sendToInstapaper);
-
-util.getCurrentLocation = (prop = "href") => {
-  if (typeof window === "undefined") {
-    return "";
-  }
-  return window.location[prop];
-};
-
-actions.parseRepo = (url = util.getCurrentLocation(), rootOnly = false) => {
-  const u = url instanceof URL ? url : new URL(url);
-  const [user, repo, ...rest] = u.pathname.split("/").filter((s) => s !== "");
-  const isRoot = rest.length === 0;
-  const cond =
-    u.origin === util.getCurrentLocation("origin") &&
-    typeof user === "string" &&
-    user.length > 0 &&
-    typeof repo === "string" &&
-    repo.length > 0 &&
-    (isRoot || rootOnly === false) &&
-    /^([a-zA-Z0-9]+-?)+$/.test(user);
-  // && !ghReservedNames.check(user);
-  return cond
-    ? {
-        type: "repo",
-        user,
-        repo,
-        owner: user,
-        name: repo,
-        href: url,
-        url: u,
-        repoBase: `/${user}/${repo}`,
-        repoPluginPath: `${user}/${repo}`,
-        repoRoot: isRoot,
-        repoPath: rest,
-      }
-    : null;
-};
 
 // add search engines
 // REF: https://gist.github.com/chixing/82767d49380294ad7b298554e2c0e59b

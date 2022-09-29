@@ -485,7 +485,7 @@ end
 local function seg_modified()
   if not M.ctx.modified then return "" end
 
-  return seg(mega.icons.modified, "StModified")
+  return seg(fmt("[%s]", mega.icons.modified), "StModified")
 end
 
 local function seg_search_results(truncate_at)
