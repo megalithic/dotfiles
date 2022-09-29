@@ -314,6 +314,15 @@ return function(on_attach)
               version = "LuaJIT",
             },
             format = { enable = false },
+            hint = {
+              enable = true,
+              arrayIndex = "Disable", -- "Enable", "Auto", "Disable"
+              await = true,
+              paramName = "Disable", -- "All", "Literal", "Disable"
+              paramType = false,
+              semicolon = "Disable", -- "All", "SameLine", "Disable"
+              setType = true,
+            },
             diagnostics = {
               globals = {
                 "vim",
@@ -473,13 +482,24 @@ return function(on_attach)
         settings = {
           typescript = {
             inlayHints = {
-              includeInlayEnumMemberValueHints = true,
-              includeInlayFunctionLikeReturnTypeHints = true,
+              includeInlayParameterNameHints = "all",
+              includeInlayParameterNameHintsWhenArgumentMatchesName = false,
               includeInlayFunctionParameterTypeHints = true,
-              includeInlayParameterNameHints = "all", -- 'none' | 'literals' | 'all';
-              includeInlayParameterNameHintsWhenArgumentMatchesName = true,
-              includeInlayPropertyDeclarationTypeHints = true,
               includeInlayVariableTypeHints = true,
+              includeInlayPropertyDeclarationTypeHints = true,
+              includeInlayFunctionLikeReturnTypeHints = true,
+              includeInlayEnumMemberValueHints = true,
+            },
+          },
+          javascript = {
+            inlayHints = {
+              includeInlayParameterNameHints = "all",
+              includeInlayParameterNameHintsWhenArgumentMatchesName = false,
+              includeInlayFunctionParameterTypeHints = true,
+              includeInlayVariableTypeHints = true,
+              includeInlayPropertyDeclarationTypeHints = true,
+              includeInlayFunctionLikeReturnTypeHints = true,
+              includeInlayEnumMemberValueHints = true,
             },
           },
         },
