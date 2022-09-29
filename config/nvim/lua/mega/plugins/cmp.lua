@@ -219,4 +219,10 @@ return function()
       { name = "dap" },
     },
   })
+
+  if mega.require("nvim-autopairs") then
+    require("cmp").event:on("confirm_done", require("nvim-autopairs.completion.cmp").on_confirm_done())
+    -- REF: neat stuff:
+    -- https://github.com/rafamadriz/NeoCode/blob/main/lua/modules/plugins/completion.lua#L130-L192
+  end
 end

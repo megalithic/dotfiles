@@ -253,6 +253,7 @@ local function plugins(use)
   -- ( Treesitter ) ------------------------------------------------------------
   use({
     "nvim-treesitter/nvim-treesitter",
+    event = "User PackerDeferred",
     run = ":TSUpdate",
     -- run = function() require("nvim-treesitter.install").update({ with_sync = true }) end,
     -- cmd = { "TSUpdate", "TSInstallSync" },
@@ -664,8 +665,8 @@ local function plugins(use)
   -- })
   use({
     "windwp/nvim-autopairs",
-    after = "nvim-cmp",
-    requires = "nvim-cmp",
+    after = "nvim-treesitter",
+    event = "User PackerDeferred",
     config = function()
       require("nvim-autopairs").setup({
         disable_filetype = { "TelescopePrompt" },
@@ -699,10 +700,6 @@ local function plugins(use)
         endwise("function%(.*%)$", "end", "lua", nil),
         endwise(" do$", "end", "elixir", nil),
       })
-
-      require("cmp").event:on("confirm_done", require("nvim-autopairs.completion.cmp").on_confirm_done())
-      -- REF: neat stuff:
-      -- https://github.com/rafamadriz/NeoCode/blob/main/lua/modules/plugins/completion.lua#L130-L192
     end,
   })
   use({

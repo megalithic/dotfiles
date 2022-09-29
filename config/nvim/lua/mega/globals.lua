@@ -1082,7 +1082,7 @@ function mega.hl_search_blink(delay)
   -- vim.cmd("redraw")
 end
 
-function mega.defer_packer() require("mega.plugins.utils").packer_deferred() end
+function mega.packer_deferred() vim.cmd([[do User PackerDeferred]]) end
 
 -- [ commands ] ----------------------------------------------------------------
 do
