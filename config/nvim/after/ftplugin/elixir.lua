@@ -32,3 +32,21 @@ vim.cmd([[
           \ ',{:},\[:\],(:)'
   endif
 ]])
+
+mega.augroup("FtPluginElixir", {
+  {
+    event = { "User" },
+    pattern = { "ProjectionistDetect" },
+    command = function(args)
+      vim.cmd([[
+        let s:base_dir = resolve(expand("<sfile>:p:h"))
+        let s:proj_jsn = s:base_dir . "/elixir_projectionist.json"
+        let l:json = readfile(s:proj_jsn)
+        let l:dict = projectionist#json_parse(l:json)
+        call projectionist#append(getcwd(), l:dict)
+
+        echo "elixir_projectionist loaded.."
+      ]])
+    end,
+  },
+})
