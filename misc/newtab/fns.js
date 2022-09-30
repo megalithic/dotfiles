@@ -1,25 +1,47 @@
-const loader = document.querySelector(".loader");
-const shrug = "¯\\_(ツ)_/¯";
+const default_title = "megatab";
+const loading_indicator = "…";
+const shrug_indicator = "¯\\_(ツ)_/¯";
+
+const loader = (parent, enabled, indicator) => {
+  indicator = indicator || loading_indicator;
+  const parentEl = (typeof parent == "string" && document.querySelector(parent)) || parent;
+  let loaderEl;
+
+  if (parent && parentEl) {
+    if (enabled) {
+      loaderEl = document.createElement("small");
+      loaderEl.classList.add("loader");
+      loaderEl.innerText = indicator;
+      parentEl.prepend(loaderEl);
+    } else {
+      loaderEl = document.querySelector("small.loader");
+      if (loaderEl) {
+        loaderEl.remove();
+      }
+    }
+  }
+};
+
 async function get(url) {
   console.debug(`querying ${url}`);
-  loader.style = "display: block;";
   const response = await fetch(url, {
     method: "GET",
   });
   if (!response.ok) {
-    loader.style = "display: block;";
-    loader.innerText = shrug;
+    document.title = `${default_title}`;
     throw new Error(`HTTP error! status: ${response.status}`);
   }
   const data = await response.json();
-  loader.style = "display: none;";
   return data;
 }
 
 const ip = () => {
+  const ipEl = document.querySelector("#ip");
+  loader(ipEl, true);
   get("https://api.ipify.org?format=json").then((data) => {
     if (typeof data !== "undefined") {
-      document.querySelector("#ip").innerText = data.ip;
+      ipEl.innerText = data.ip;
+      loader(ipEl, false);
       clip(true);
     }
   });
@@ -57,50 +79,59 @@ const clip = (enabled) => {
   }
 };
 
-const weather = () => {
-  const request = () => {
-    get("https://wttr.in/hoover?u&format=j1")
-      .then((data) => {
-        if (typeof data !== "undefined") {
-          const w = data.current_condition[0];
-          const wEl = document.querySelector("#weather");
+const weather = (enabled) => {
+  if (enabled) {
+    const wEl = document.querySelector("#weather");
+    const request = () => {
+      loader(wEl, true);
+      get("https://wttr.in/hoover?u&format=j1")
+        .then((data) => {
+          if (typeof data !== "undefined") {
+            const w = data.current_condition[0];
+            loader(wEl, false);
 
-          wEl.querySelector("span").innerText = `${w.temp_F}°`;
-          if (w.temp_F !== w.FeelsLikeF) {
-            wEl.querySelector("strong").innerText = `(${w.FeelsLikeF}°)`;
-          }
-          if (w.weatherDesc[0].value !== "") {
-            wEl.querySelector("em").innerText = `${w.weatherDesc[0].value}`;
-            switch (w.weatherDesc[0].value) {
-              case "Sunny":
-                wEl.querySelector("em").style = "color: orange;";
-                break;
-              default:
-                console.debug(`weather condition: ${w.weatherDesc[0].value}`);
+            wEl.querySelector("span").innerText = `${w.temp_F}°`;
+            document.title = `${default_title} (${w.temp_F}°)`; // ⋮
+            if (w.temp_F !== w.FeelsLikeF) {
+              wEl.querySelector("strong").innerText = `(${w.FeelsLikeF}°)`;
+            }
+            if (w.weatherDesc[0].value !== "") {
+              wEl.querySelector("em").innerText = `${w.weatherDesc[0].value}`;
+              switch (w.weatherDesc[0].value) {
+                case "Sunny":
+                  wEl.querySelector("em").style = "color: orange;";
+                  break;
+                case "Partly cloudy":
+                  wEl.querySelector("em").style =
+                    "background: linear-gradient(to right, #7FC7FA, #F3BD53); -webkit-background-clip: text; -webkit-text-fill-color: transparent;";
+                  break;
+                default:
+                  console.debug(`weather condition: ${w.weatherDesc[0].value}\r\n${data}`);
+              }
+            }
+
+            const wIconUrl = w.weatherIconUrl[0].value;
+            const wIconEl = wEl.querySelector("img");
+            if (wIconUrl !== "") {
+              wIconEl.classList.add("show");
+              wIconEl.classList.remove("hide");
+              wIconEl.setAttribute("src", wIconUrl);
+            } else {
+              wIconEl.classList.add("hide");
+              wIconEl.classList.remove("show");
             }
           }
+        })
+        .catch(() => {
+          document.title = `${default_title}`;
+          loader(wEl, true, shrug_indicator);
+        });
+    };
+    request();
 
-          const wIconUrl = w.weatherIconUrl[0].value;
-          const wIconEl = wEl.querySelector("img");
-          if (wIconUrl !== "") {
-            wIconEl.classList.add("show");
-            wIconEl.classList.remove("hide");
-            wIconEl.setAttribute("src", wIconUrl);
-          } else {
-            wIconEl.classList.add("hide");
-            wIconEl.classList.remove("show");
-          }
-        }
-      })
-      .catch(() => {
-        const wEl = document.querySelector("#weather");
-        wEl.querySelector("span").innerText = shrug;
-      });
-  };
-  request();
-
-  const delay = 1000 * 60 * 15;
-  window.setInterval(request, delay);
+    const delay = 1000 * 60 * 15;
+    window.setInterval(request, delay);
+  }
 };
 
 const handleLoaded = () => {
