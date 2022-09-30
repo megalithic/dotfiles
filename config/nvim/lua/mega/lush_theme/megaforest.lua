@@ -309,8 +309,8 @@ return lush(function()
     DiagnosticDefaultInfo({ DiagnosticInfo }),
     DiagnosticDefaultHint({ DiagnosticHint }),
 
-    DiagnosticVirtualTextError({ DiagnosticError, fg = DiagnosticError.fg.darken(40) }),
-    DiagnosticVirtualTextWarn({ DiagnosticWarn, fg = DiagnosticWarn.fg.darken(40) }),
+    DiagnosticVirtualTextError({ DiagnosticError, fg = DiagnosticError.fg.darken(30) }),
+    DiagnosticVirtualTextWarn({ DiagnosticWarn, fg = DiagnosticWarn.fg.darken(30) }),
     DiagnosticVirtualTextInfo({ DiagnosticInfo, fg = DiagnosticInfo.fg.darken(40) }),
     DiagnosticVirtualTextHint({ DiagnosticHint, fg = DiagnosticHint.fg.darken(40) }),
 
@@ -351,7 +351,7 @@ return lush(function()
     LspReferenceRead({ bg = "NONE", gui = "underline" }),
     LspReferenceWrite({ DiagnosticInfo, gui = "underline,bold,italic" }),
 
-    LspCodeLens({ DiagnosticInfo, fg = bg_dark }), -- Used to color the virtual text of the codelens,
+    LspCodeLens({ DiagnosticInfo, fg = bg2 }), -- Used to color the virtual text of the codelens,
     LspCodeLensSeparator({ DiagnosticHint }),
 
     LspInfoBorder({ FloatBorder }),

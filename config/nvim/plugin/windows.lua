@@ -10,6 +10,8 @@ local ft_ignores = {
   "Trouble",
   "qf",
   "neo-tree",
+  "packer",
+  "startuptime",
 }
 
 local bt_ignores = {
@@ -27,6 +29,8 @@ local bt_ignores = {
   "dirbuf",
   "tsplayground",
   "neo-tree",
+  "packer",
+  "startuptime",
 }
 
 -- local function ignore_float_windows()

@@ -1,6 +1,10 @@
 -- HT: @williamboman
 -- https://github.com/williamboman/nvim-config/blob/main/plugin/diagnostics/virtual_text.lua
 
+-- TODO:
+-- 1. pull from vim.diagnostic.config for virtual text settings;
+-- 2. disable "native" virtual_text settings after we grab the config;
+
 ---@class Diagnostic
 ---@field bufnr integer?
 ---@field lnum integer
@@ -114,10 +118,10 @@ local function redraw_extmarks(bufnr, trigger_ns)
       end
 
       if not virt_texts_by_ns[diagnostic.namespace] then virt_texts_by_ns[diagnostic.namespace] = {} end
-      table.insert(
-        virt_texts_by_ns[diagnostic.namespace],
-        { diagnostic_indicator, virtual_text_highlight_map[diagnostic.severity] }
-      )
+      table.insert(virt_texts_by_ns[diagnostic.namespace], {
+        fmt("%s ", mega.icons.lsp[string.lower(vim.diagnostic.severity[diagnostic.severity])]),
+        virtual_text_highlight_map[diagnostic.severity],
+      })
 
       if not primary_diagnostic or primary_diagnostic.severity > diagnostic.severity then
         primary_diagnostic = diagnostic
@@ -132,15 +136,17 @@ local function redraw_extmarks(bufnr, trigger_ns)
     end
 
     for ns, virt_texts in pairs(virt_texts_by_ns) do
-      vim.api.nvim_buf_set_extmark(bufnr, ns, line, 0, {
-        hl_mode = "combine",
-        priority = 100,
-        line_hl_group = line_highlight_map[primary_diagnostic.severity],
-        -- cursorline_hl_group = TODO lighter variants?,
-        virt_text = virt_texts,
-        -- TODO virt text pos calculation only applies to one ns
-        virt_text_pos = get_virt_text_pos(bufnr, line, virt_texts),
-      })
+      if primary_diagnostic.severity == vim.diagnostic.severity.ERROR then
+        vim.api.nvim_buf_set_extmark(bufnr, ns, line, 0, {
+          hl_mode = "combine",
+          priority = 100,
+          line_hl_group = line_highlight_map[primary_diagnostic.severity],
+          -- cursorline_hl_group = TODO lighter variants?,
+          virt_text = virt_texts,
+          -- TODO virt text pos calculation only applies to one ns
+          virt_text_pos = get_virt_text_pos(bufnr, line, virt_texts),
+        })
+      end
     end
   end
 end

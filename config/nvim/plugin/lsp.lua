@@ -26,14 +26,14 @@ require("vim.lsp.log").set_format_func(vim.inspect)
 
 -- [ HELPERS ] -----------------------------------------------------------------
 
--- Show the popup diagnostics window, but only once for the current cursor location
+-- Show the popup diagnostics window, but only once for the current cursor/line location
 -- by checking whether the word under the cursor has changed.
 local function diagnostic_popup(args)
   local cword = vim.fn.expand("<cword>")
   if cword ~= vim.w.lsp_diagnostics_cword then
     vim.w.lsp_diagnostics_cword = cword
     if vim.b.lsp_hover_win and api.nvim_win_is_valid(vim.b.lsp_hover_win) then return end
-    vim.diagnostic.open_float(args.buf, { scope = "cursor", focus = false })
+    vim.diagnostic.open_float(args.buf, { scope = "line", focus = false })
   end
 end
 
