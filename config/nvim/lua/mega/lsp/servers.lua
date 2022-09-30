@@ -196,7 +196,7 @@ return function(on_attach)
     end,
     elixirls = function(server_name)
       local opts = vim.tbl_extend("keep", server_opts, {
-        filetypes = { "elixir", "eelixir", "heex" },
+        filetypes = { "elixir", "eelixir", "heex", "eex", "surface" },
         settings = {
           elixirLS = {
             mixEnv = "test",
@@ -208,6 +208,7 @@ return function(on_attach)
           },
         },
       })
+
 
       lsp_cmd_override(server_name, opts, ".elixir-ls-release/language_server.sh")
 

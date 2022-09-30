@@ -432,6 +432,83 @@ local function on_attach(client, bufnr)
   api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
 end
 
+local client_overrides = {
+  elixirls = function(client, bufnr)
+    local manipulate_pipes = function(direction, client)
+      local row, col = mega.get_cursor_position()
+
+      client.request_sync("workspace/executeCommand", {
+        command = "manipulatePipes:serverid",
+        arguments = { direction, "file://" .. vim.api.nvim_buf_get_name(0), row, col },
+      }, nil, 0)
+    end
+
+    local function from_pipe(c)
+      return function() manipulate_pipes("fromPipe", c) end
+    end
+
+    local function to_pipe(c)
+      return function() manipulate_pipes("toPipe", c) end
+    end
+
+    local function restart(c)
+      return function()
+        c.request_sync("workspace/executeCommand", {
+          command = "restart:serverid",
+          arguments = {},
+        }, nil, 0)
+
+        vim.cmd([[w | edit]])
+      end
+    end
+
+    local function expand_macro(c)
+      return function()
+        local params = vim.lsp.util.make_given_range_params()
+
+        local text = vim.api.nvim_buf_get_text(
+          0,
+          params.range.start.line,
+          params.range.start.character,
+          params.range["end"].line,
+          params.range["end"].character,
+          {}
+        )
+
+        local resp = c.request_sync("workspace/executeCommand", {
+          command = "expandMacro:serverid",
+          arguments = { params.textDocument.uri, vim.fn.join(text, "\n"), params.range.start.line },
+        }, nil, 0)
+
+        local content = {}
+        if resp["result"] then
+          for k, v in pairs(resp.result) do
+            vim.list_extend(content, { "# " .. k, "" })
+            vim.list_extend(content, vim.split(v, "\n"))
+          end
+        else
+          table.insert(content, "Error")
+        end
+
+        vim.schedule(
+          function() vim.lsp.util.open_floating_preview(vim.lsp.util.trim_empty_lines(content), "elixir", {}) end
+        )
+      end
+    end
+
+    local add_user_cmd = vim.api.nvim_buf_create_user_command
+    vim.api.nvim_create_autocmd({ "BufEnter", "CursorHold", "InsertLeave" }, {
+      buffer = bufnr,
+      callback = vim.lsp.codelens.refresh,
+    })
+
+    add_user_cmd(bufnr, "ElixirFromPipe", from_pipe(client), {})
+    add_user_cmd(bufnr, "ElixirToPipe", to_pipe(client), {})
+    add_user_cmd(bufnr, "ElixirRestart", restart(client), {})
+    add_user_cmd(bufnr, "ElixirExpandMacro", expand_macro(client), { range = true })
+  end,
+}
+
 mega.augroup("LspSetupCommands", {
   {
     event = { "LspAttach" },
@@ -441,9 +518,8 @@ mega.augroup("LspSetupCommands", {
       -- if the buffer is invalid we should not try and attach to it
       if not api.nvim_buf_is_valid(bufnr) or not args.data then return end
       local client = lsp.get_client_by_id(args.data.client_id)
-      -- P(fmt("Lsp client, %s, attached", client.name))
       on_attach(client, bufnr)
-      -- if client_overrides[client.name] then client_overrides[client.name](client, bufnr) end
+      if client_overrides[client.name] then client_overrides[client.name](client, bufnr) end
     end,
   },
   {

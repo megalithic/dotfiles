@@ -1084,6 +1084,14 @@ end
 
 function mega.packer_deferred() vim.cmd([[do User PackerDeferred]]) end
 
+function mega.get_cursor_position()
+  local rowcol = vim.api.nvim_win_get_cursor(0)
+  local row = rowcol[1] - 1
+  local col = rowcol[2]
+
+  return row, col
+end
+
 -- [ commands ] ----------------------------------------------------------------
 do
   local command = mega.command
