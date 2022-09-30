@@ -94,7 +94,8 @@ strong.confirmation {
   position: fixed;
   bottom: 1rem;
 }
-#weather img.show {
+#weather img,
+img.show {
   display: block;
 }
 #weather img.hide {

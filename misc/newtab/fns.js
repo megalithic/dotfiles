@@ -1,4 +1,5 @@
 const loader = document.querySelector(".loader");
+const shrug = "¯\\_(ツ)_/¯";
 async function get(url) {
   console.debug(`querying ${url}`);
   loader.style = "display: block;";
@@ -7,7 +8,7 @@ async function get(url) {
   });
   if (!response.ok) {
     loader.style = "display: block;";
-    loader.innerText = "¯\\_(ツ)_/¯";
+    loader.innerText = shrug;
     throw new Error(`HTTP error! status: ${response.status}`);
   }
   const data = await response.json();
@@ -58,38 +59,43 @@ const clip = (enabled) => {
 
 const weather = () => {
   const request = () => {
-    get("https://wttr.in/hoover?u&format=j1").then((data) => {
-      if (typeof data !== "undefined") {
-        const w = data.current_condition[0];
-        const wEl = document.querySelector("#weather");
+    get("https://wttr.in/hoover?u&format=j1")
+      .then((data) => {
+        if (typeof data !== "undefined") {
+          const w = data.current_condition[0];
+          const wEl = document.querySelector("#weather");
 
-        wEl.querySelector("span").innerText = `${w.temp_F}°`;
-        if (w.temp_F !== w.FeelsLikeF) {
-          wEl.querySelector("strong").innerText = `(${w.FeelsLikeF}°)`;
-        }
-        if (w.weatherDesc[0].value !== "") {
-          wEl.querySelector("em").innerText = `${w.weatherDesc[0].value}`;
-          switch (w.weatherDesc[0].value) {
-            case "Sunny":
-              wEl.querySelector("em").style = "color: orange;";
-              break;
-            default:
-              console.debug(`weather condition: ${w.weatherDesc[0].value}`);
+          wEl.querySelector("span").innerText = `${w.temp_F}°`;
+          if (w.temp_F !== w.FeelsLikeF) {
+            wEl.querySelector("strong").innerText = `(${w.FeelsLikeF}°)`;
+          }
+          if (w.weatherDesc[0].value !== "") {
+            wEl.querySelector("em").innerText = `${w.weatherDesc[0].value}`;
+            switch (w.weatherDesc[0].value) {
+              case "Sunny":
+                wEl.querySelector("em").style = "color: orange;";
+                break;
+              default:
+                console.debug(`weather condition: ${w.weatherDesc[0].value}`);
+            }
+          }
+
+          const wIconUrl = w.weatherIconUrl[0].value;
+          const wIconEl = wEl.querySelector("img");
+          if (wIconUrl !== "") {
+            wIconEl.classList.add("show");
+            wIconEl.classList.remove("hide");
+            wIconEl.setAttribute("src", wIconUrl);
+          } else {
+            wIconEl.classList.add("hide");
+            wIconEl.classList.remove("show");
           }
         }
-
-        const wIconUrl = w.weatherIconUrl[0].value;
-        const wIconEl = wEl.querySelector("img");
-        if (wIconUrl !== "") {
-          wIconEl.classList.add("show");
-          wIconEl.classList.remove("hide");
-          wIconEl.setAttribute("src", wIconUrl);
-        } else {
-          wIconEl.classList.add("hide");
-          wIconEl.classList.remove("show");
-        }
-      }
-    });
+      })
+      .catch(() => {
+        const wEl = document.querySelector("#weather");
+        wEl.querySelector("span").innerText = shrug;
+      });
   };
   request();
 
