@@ -444,6 +444,8 @@ if [[ $PLATFORM == "linux" ]]; then
     alias pbcopy="lemonade copy"
     alias pbpaste="lemonade paste"
     alias open="lemonade open"
+    alias xclip="lemonade copy"
+    alias xsel="lemonade copy"
   fi
   alias distro="cat /etc/*release"
   alias ports="netstat -lntu"
