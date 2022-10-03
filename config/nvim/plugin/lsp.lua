@@ -365,7 +365,7 @@ end
 local function setup_tools()
   local tools = {
     "cbfmt",
-    "clang-format",
+    -- "clang-format",
     "elm-format",
     "yamlfmt",
     "prettier",
