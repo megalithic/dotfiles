@@ -81,8 +81,40 @@ local function plugins(use)
   use({ "phaazon/hop.nvim", ext = "hop" })
   -- use({ "echasnovski/mini.nvim", ext="mini", after = "nvim-treesitter" })
   use({ "anuvyklack/hydra.nvim", ext = "hydra" })
-  -- use({ "rcarriga/nvim-notify", ext = "notify" })
+  use({
+    "rcarriga/nvim-notify",
+    ext = "notify",
+    cond = function() return vim.g.notifier_enabled and vim.o.cmdheight == 0 end,
+  })
+  use({
+    "vigoux/notifier.nvim",
+    cond = function() return vim.g.notifier_enabled and vim.o.cmdheight == 1 end,
+    config = function()
+      require("notifier").setup({
+        component_name_recall = true,
+      })
 
+      _G.mega.augroup("CloseNotifier", {
+        {
+          event = { "VimLeavePre", "LspDetach" },
+          command = "silent! NotifierClear",
+        },
+      })
+    end,
+  })
+  use({
+    "folke/noice.nvim",
+    cond = function() return vim.o.cmdheight == 1 end,
+    event = "VimEnter",
+    config = function()
+      require("noice").setup({
+        cmdline = {
+          view = "cmdline",
+          menu = "wild",
+        },
+      })
+    end,
+  })
   -- use({
   --   "levouh/tint.nvim",
   --   config = function()
@@ -118,22 +150,6 @@ local function plugins(use)
   --   end,
   -- })
 
-  use({
-    "vigoux/notifier.nvim",
-    cond = function() return vim.g.notifier_enabled end,
-    config = function()
-      require("notifier").setup({
-        component_name_recall = true,
-      })
-
-      _G.mega.augroup("CloseNotifier", {
-        {
-          event = { "VimLeavePre", "LspDetach" },
-          command = "silent! NotifierClear",
-        },
-      })
-    end,
-  })
   use({ "nanozuki/tabby.nvim", ext = "tabby" })
   use({
     "lukas-reineke/indent-blankline.nvim",

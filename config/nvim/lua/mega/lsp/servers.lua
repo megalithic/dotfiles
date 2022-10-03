@@ -209,7 +209,6 @@ return function(on_attach)
         },
       })
 
-
       lsp_cmd_override(server_name, opts, ".elixir-ls-release/language_server.sh")
 
       lsp_setup(server_name, opts)
@@ -510,6 +509,7 @@ return function(on_attach)
 
       lsp_setup(server_name, opts)
     end,
+    vimls = function(server_name) lsp_setup(server_name, { init_options = { isNeovim = true } }) end,
     yamlls = function(server_name)
       local opts = vim.tbl_extend("keep", server_opts, {
         settings = {

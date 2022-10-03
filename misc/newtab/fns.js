@@ -103,7 +103,7 @@ const weather = (enabled) => {
                   break;
                 case "Partly cloudy":
                   wEl.querySelector("em").style =
-                    "background: linear-gradient(to right, #7FC7FA, #F3BD53); -webkit-background-clip: text; -webkit-text-fill-color: transparent;";
+                    "background: linear-gradient(to right, #B5E0FC, #F3BD53); -webkit-background-clip: text; -webkit-text-fill-color: transparent;";
                   break;
                 default:
                   console.debug(`weather condition: ${w.weatherDesc[0].value}\r\n${data}`);

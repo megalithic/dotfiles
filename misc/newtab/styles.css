@@ -58,11 +58,11 @@ section {
 }
 
 #logo:hover {
-  transform: translateY(2px) scale(0.95);
-  background: rgba(0, 0, 0, 15%);
+  transform: scale(0.98) translateY(2px);
+  /* background: rgba(0, 0, 0, 10%); */
   cursor: pointer;
-  opacity: 0.9;
-  border: 2px solid rgba(0, 0, 0, 15%);
+  /* opacity: 0.9; */
+  border: 2px solid rgba(0, 0, 0, 10%);
   /* outline: 1px solid rgba(255, 255, 255, 6%); */
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 6%); /* safari support */
 }
