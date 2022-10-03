@@ -443,7 +443,7 @@ local function validate_autocmd(name, cmd)
   if #incorrect == 0 then return end
   vim.schedule(
     function()
-      vim.notify("Incorrect keys: " .. table.concat(incorrect, ", "), "error", {
+      vim.notify("Incorrect keys: " .. table.concat(incorrect, ", "), vim.log.levels.ERROR, {
         title = fmt("Autocmd: %s", name),
       })
     end
