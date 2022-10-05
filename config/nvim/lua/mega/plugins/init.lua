@@ -82,6 +82,11 @@ local function plugins(use)
   -- use({ "echasnovski/mini.nvim", ext="mini", after = "nvim-treesitter" })
   use({ "anuvyklack/hydra.nvim", ext = "hydra" })
   use({
+    "phaazon/notisys.nvim",
+    branch = "v0.1",
+    config = function() require("notisys").setup() end,
+  })
+  use({
     "rcarriga/nvim-notify",
     ext = "notify",
     cond = function() return vim.g.notifier_enabled and vim.o.cmdheight == 0 end,

@@ -32,6 +32,13 @@ return function()
         },
         condition = function() return mega.executable("prettier") end,
       }),
+      format.mix.with({
+        filetypes = {
+          "heex",
+          "eex",
+          "surface",
+        },
+      }),
       -- format.prettierd.with({
       --   filetypes = {
       --     "javascript",

@@ -225,6 +225,7 @@ end
 
 -- [ FORMATTING ] ---------------------------------------------------------------
 
+-- FIXME: deal with formatting exclusions for null to format vs. the in-built formatting for a client
 local function setup_formatting(client, bufnr)
   -- disable formatting for the following language-servers (let null-ls takeover):
   local disabled_lsp_formatting = { "tailwindcss", "html", "tsserver", "ls_emmet", "zk", "sumneko_lua" }
