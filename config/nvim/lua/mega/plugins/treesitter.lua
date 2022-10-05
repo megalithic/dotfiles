@@ -158,12 +158,12 @@ return function()
     },
     incremental_selection = {
       enable = true,
-      keymaps = {
-        init_selection = "gN", -- maps in normal mode to init the node/scope selection
-        scope_incremental = "gN", -- increment to the upper scope (as defined in locals.scm)
-        node_incremental = "gn", -- increment to the upper named parent
-        node_decremental = "gnn", -- decrement to the previous node
-      },
+      -- keymaps = {
+      --   init_selection = "gN", -- maps in normal mode to init the node/scope selection
+      --   scope_incremental = "gN", -- increment to the upper scope (as defined in locals.scm)
+      --   node_incremental = "gnn", -- increment to the upper named parent
+      --   node_decremental = "gnn", -- decrement to the previous node
+      -- },
     },
     query_linter = {
       enable = true,

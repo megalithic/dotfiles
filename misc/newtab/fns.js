@@ -105,8 +105,12 @@ const weather = (enabled) => {
                   wEl.querySelector("em").style =
                     "background: linear-gradient(to right, #B5E0FC, #F3BD53); -webkit-background-clip: text; -webkit-text-fill-color: transparent;";
                   break;
+                case "Mist":
+                  wEl.querySelector("em").style =
+                    "background: linear-gradient(to bottom, #7FC7FA, #FFFFFF 65%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;";
+                  break;
                 default:
-                  console.debug(`weather condition: ${w.weatherDesc[0].value}\r\n${data}`);
+                  console.debug(`weather condition: ${w.weatherDesc[0].value}`);
               }
             }
 

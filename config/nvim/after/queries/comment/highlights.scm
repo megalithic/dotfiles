@@ -1,4 +1,4 @@
-; extends
+;; extends
 
 (tag ((name) @_name (#match? @_name "TODO") (":" @CommentTasksTodo)))
 (tag ((name) @_name (#match? @_name "FIXME") (":" @CommentTasksFixme)))

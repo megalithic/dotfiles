@@ -104,7 +104,7 @@ local function plugins(use)
   })
   use({
     "folke/noice.nvim",
-    cond = function() return vim.o.cmdheight == 1 end,
+    cond = function() return vim.o.cmdheight == 0 end,
     event = "VimEnter",
     config = function()
       require("noice").setup({
@@ -269,7 +269,7 @@ local function plugins(use)
   -- ( Treesitter ) ------------------------------------------------------------
   use({
     "nvim-treesitter/nvim-treesitter",
-    event = "User PackerDeferred",
+    -- event = "User PackerDeferred",
     run = ":TSUpdate",
     -- run = function() require("nvim-treesitter.install").update({ with_sync = true }) end,
     -- cmd = { "TSUpdate", "TSInstallSync" },
@@ -824,18 +824,9 @@ local function plugins(use)
     config = function()
       require("headlines").setup({
         markdown = {
-          source_pattern_start = "^```",
-          source_pattern_end = "^```$",
-          dash_pattern = "^---+$",
-          dash_highlight = "Dash",
           dash_string = "", -- alts:  靖並   ﮆ 
-          headline_pattern = "^#+",
           headline_highlights = { "Headline1", "Headline2", "Headline3", "Headline4", "Headline5", "Headline6" },
           codeblock_highlight = "CodeBlock",
-        },
-        yaml = {
-          dash_pattern = "^---+$",
-          dash_highlight = "Dash",
         },
       })
     end,

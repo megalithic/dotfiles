@@ -19,6 +19,8 @@ local fullSkip = true
 
 local api = hs.spotify
 
+local function spotifyRunning() return hs.application.get("Spotify") and hs.application.get("Spotify"):isRunning() end
+
 -- launch or focus
 local function openSpotify() hs.application.launchOrFocus(SPOTIFY) end
 
@@ -128,6 +130,8 @@ local function updateTitle()
 end
 
 function obj:init()
+  if not spotifyRunning() then return self end
+
   obj.menubar = hs.menubar.new()
   obj.menubar:setTitle(updateTitle())
 
@@ -135,10 +139,23 @@ function obj:init()
 end
 
 function obj:start()
+  if not spotifyRunning() then
+    obj.menubar:setTitle("")
+    return self
+  end
+
   -- TODO; kill apple music to open spotify instead; genius
   -- REF: https://github.com/mrjones2014/dotfiles/blob/master/.config/hammerspoon/apple-music-spotify-redirect.lua
   obj.menubar:setTitle(updateTitle())
-  obj.updateTimer = hs.timer.new(obj.refreshInterval, function() obj.menubar:setTitle(updateTitle()) end):start()
+  obj.updateTimer = hs.timer
+    .new(obj.refreshInterval, function()
+      if spotifyRunning() then
+        obj.menubar:setTitle(updateTitle())
+      else
+        obj.menubar:setTitle("")
+      end
+    end)
+    :start()
 
   return self
 end
