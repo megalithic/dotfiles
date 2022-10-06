@@ -202,6 +202,7 @@ vim.o.synmaxcol = 1024 -- don't syntax highlight long lines
 vim.o.signcolumn = "yes:1"
 -- vim.o.signcolumn = "auto:3-9"
 vim.o.ruler = false
+vim.o.splitkeep = "screen"
 vim.o.cmdheight = 1 -- Set command line height to two lines
 vim.o.showbreak = [[↪ ]] -- Options include -> '…', '↳ ', '→','↪ '
 vim.o.showbreak = string.rep(" ", 3) -- Make it so that long lines wrap smartly

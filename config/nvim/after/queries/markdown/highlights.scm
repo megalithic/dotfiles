@@ -1,4 +1,5 @@
 ;; extends
+
 ; (fenced_code_block (info_string) @MDTSFencedCodeBlockInfo) @MDTSFencedCodeBlock
 ; (fenced_code_block_delimiter) @MDTSFencedCodeBlock
 ; (

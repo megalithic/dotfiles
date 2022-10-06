@@ -3,6 +3,7 @@
 -- # REFS:
 -- - https://github.com/svitax/fennec-gruvbox.nvim/blob/master/lua/lush_theme/fennec-gruvbox.lua
 -- - https://github.com/mcchrish/zenbones.nvim/blob/main/lua/zenbones/specs/dark.lua
+-- FIXME:
 
 -- `megaforest` built with,
 --
@@ -119,9 +120,47 @@ vim.g.VM_Extend_hl = "Visual"
 vim.g.VM_Cursor_hl = "Cursor"
 vim.g.VM_Insert_hl = "Cursor"
 
-return lush(function()
-  return {
+local lushify_custom_ts = function()
+  -- highlight WARN/FIXME/TODO/NOTE/REF: comments
 
+  -- TSCommentRef({ fg = red, gui = "underline" }),
+  -- TSCommentFix({ bg = dark_red }),
+  -- TSCommentTodo({ bg = dark_orange }),
+  -- TSCommentNote({ commentTSNote }),
+
+  -- NOTE: custom treesitter highlight/queries nodes:
+  local hlmap = {}
+
+  hlmap["@comment.fix"] = { bg = red, fg = bg_dark, gui = "bold,underline" }
+  hlmap["@comment.todo"] = { fg = dark_orange, gui = "bold" }
+  hlmap["@comment.warn"] = { fg = orange, gui = "bold" }
+  hlmap["@comment.note"] = { fg = teal, gui = "italic" }
+  hlmap["@comment.ref"] = { fg = bright_blue, gui = "italic" }
+
+  -- hlmap["@comment.hack"] = { bg = red, fg = bg_dark, gui = "bold" }
+  -- hlmap["@comment.user"] = { bg = red, fg = bg_dark, gui = "bold" }
+  -- hlmap["@comment.issue"] = { bg = red, fg = bg_dark, gui = "bold" }
+  -- hlmap["@comment.test"] = { bg = red, fg = bg_dark, gui = "bold" }
+
+  for group, colors in pairs(hlmap) do
+    vim.cmd(
+      string.format(
+        "highlight %s guifg=%s guibg=%s guisp=%s gui=%s blend=%s",
+        group,
+        colors.fg or "none",
+        colors.bg or "none",
+        colors.sp or "none",
+        colors.style or colors.gui or "none",
+        colors.blend or 0
+      )
+    )
+  end
+end
+
+return lush(function()
+  -- lushify_custom_ts()
+
+  return {
     ---- :help highlight-default -------------------------------
 
     Background({ bg = bg0 }),
@@ -205,7 +244,7 @@ return lush(function()
 
     ---- sidebar  -----------------------------------------------------
 
-    PanelBackground({ fg=fg.darken(10), bg = bg0.darken(8) }),
+    PanelBackground({ fg = fg.darken(10), bg = bg0.darken(8) }),
     PanelHeading({ PanelBackground, gui = "bold" }),
     PanelVertSplit({ VertSplit, bg = bg0.darken(8) }),
     PanelStNC({ PanelVertSplit }),
@@ -441,28 +480,17 @@ return lush(function()
     TSVariableBuiltin({ PurpleItalic }),
     TSComment({ fg = light_grey, gui = "italic" }),
     TSError({ gui = "undercurl", sp = red }), -- ErrorText
-    -- highlight FIXME/TODO/NOTE/REF: comments
-    commentTSWarning({ fg = orange, gui = "bold" }),
-    commentTSDanger({ bg = red, fg = bg_dark, gui = "bold" }),
-    commentTSNote({ fg = cyan, gui = "italic" }),
-    commentTSRef({ fg = bright_blue }),
 
-    CommentTasksTodo({ commentTSWarning }),
-    CommentTasksFixme({ commentTSDanger }),
-    CommentTasksNote({ commentTSNote }),
-    CommentTasksRef({ commentTSRef }),
+    -- highlight WARN/FIXME/TODO/NOTE/REF: comments
 
-    TSWarning({ fg = commentTSWarning.fg }),
-    TSDanger({}),
-    TSNote({ fg = commentTSNote.fg }),
+    commentTSDanger({ bg = red, fg = bg_dark, gui = "bold,underline" }),
+    commentTSWarning({ fg = orange, gui = "bold"}),
+    commentTSNote({ fg = teal, gui = "italic" }),
+    commentTSRef({ fg = cyan }),
 
-    -- { 'TSKeywordReturn', { italic = true, foreground = keyword_fg } },
-    -- { 'TSParameter', { italic = true, bold = true, foreground = 'NONE' } },
-    -- { 'TSError', { undercurl = true, sp = error_line, foreground = 'NONE' } },
-    -- -- highlight FIXME comments
-    -- { 'commentTSWarning', { background = P.light_red, foreground = 'fg', bold = true } },
-    -- { 'commentTSDanger', { background = L.hint, foreground = '#1B2229', bold = true } },
-    -- { 'commentTSNote', { background = L.info, foreground = '#1B2229', bold = true } },
+    TSWarning({ commentTSWarning }),
+    TSDanger({ commentTSDanger }),
+    TSNote({ commentTSNote }),
 
     ---- :help treesitter-context ----------------------------------------------
 

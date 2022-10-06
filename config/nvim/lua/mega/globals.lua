@@ -55,6 +55,8 @@ vim.opt.runtimepath:remove("~/.local/share/src")
 
 -- [ utils ] -------------------------------------------------------------------
 
+-- TODO: https://www.reddit.com/r/neovim/comments/xv3v68/tip_nvimnotify_can_be_used_to_display_print/
+
 -- inspect the contents of an object very quickly
 -- in your code or from the command-line:
 -- @see: https://www.reddit.com/r/neovim/comments/p84iu2/useful_functions_to_explore_lua_objects/
@@ -842,16 +844,18 @@ function mega.profile(filename)
 end
 
 function mega.showCursorHighlights()
-  local ft = vim.bo.filetype
-  local is_ts_enabled = require("nvim-treesitter.configs").is_enabled("highlight", ft)
-    and require("nvim-treesitter.configs").is_enabled("playground", ft)
-  if is_ts_enabled then
-    require("nvim-treesitter-playground.hl-info").show_hl_captures()
-  else
-    local synstack = vim.fn.synstack(vim.fn.line("."), vim.fn.col("."))
-    local lmap = vim.fn.map(synstack, "synIDattr(v:val, \"name\")")
-    vim.notify(vim.fn.join(vim.fn.reverse(lmap), " "))
-  end
+  vim.cmd("TSHighlightCapturesUnderCursor")
+  -- local ft = vim.bo.filetype
+  -- local is_ts_enabled = require("nvim-treesitter.configs").is_enabled("highlight", ft)
+  --   and require("nvim-treesitter.configs").is_enabled("playground", ft)
+  -- if is_ts_enabled then
+  --   -- require("nvim-treesitter-playground.hl-info").show_hl_captures()
+  --   vim.cmd("TSHighlightCapturesUnderCursor")
+  -- else
+  --   local synstack = vim.fn.synstack(vim.fn.line("."), vim.fn.col("."))
+  --   local lmap = vim.fn.map(synstack, "synIDattr(v:val, \"name\")")
+  --   vim.notify(vim.fn.join(vim.fn.reverse(lmap), " "))
+  -- end
 end
 
 mega.nightly = mega.has("nvim-0.7")

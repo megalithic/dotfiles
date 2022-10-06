@@ -32,13 +32,6 @@ return function()
         },
         condition = function() return mega.executable("prettier") end,
       }),
-      format.mix.with({
-        filetypes = {
-          "heex",
-          "eex",
-          "surface",
-        },
-      }),
       -- format.prettierd.with({
       --   filetypes = {
       --     "javascript",
@@ -70,6 +63,13 @@ return function()
               upward = true,
             }))
         end,
+      }),
+      format.mix.with({
+        filetypes = {
+          "heex",
+          "eex",
+          "surface",
+        },
       }),
       format.isort,
       format.black.with({

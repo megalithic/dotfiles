@@ -169,7 +169,7 @@ return function()
             spell = "[spl]",
             emoji = "[emo]",
             cmdline = "[cmd]",
-            cmdline_history = "[hist]",
+            -- cmdline_history = "[hist]",
             rg = "[rg]",
           })[entry.source.name] or entry.source.name
         end
@@ -192,7 +192,7 @@ return function()
     sources = cmp.config.sources({
       { name = "cmdline", keyword_pattern = [=[[^[:blank:]\!]*]=] },
       { name = "path" },
-      { name = "cmdline_history", priority = 10, max_item_count = 3 },
+      -- { name = "cmdline_history", priority = 10, max_item_count = 3 },
     }),
   })
 

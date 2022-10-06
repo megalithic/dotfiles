@@ -37,3 +37,6 @@
   .
   (string (quoted_content) @javascript)
   (#eq? @_comment "# javascript"))
+
+((comment) @injection.content
+ (#set! injection.language "comment"))
