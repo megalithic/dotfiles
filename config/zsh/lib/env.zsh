@@ -26,7 +26,7 @@ ZDOTDIR="$XDG_CONFIG_HOME/zsh"
 ZSH_CACHE_DIR="$XDG_CACHE_HOME/zsh"
 
 if [ ! -d "$ZSH_CACHE_DIR" ]; then
-	mkdir -p "$ZSH_CACHE_DIR"
+  mkdir -p "$ZSH_CACHE_DIR"
 fi
 # / =================== from .zshenv ===========================================
 
@@ -52,10 +52,10 @@ case `uname` in
     [ -f "/usr/local/bin/brew" ] && eval "$(/usr/local/bin/brew shellenv)"
     # -- M1 mac:
     [ -f "/opt/homebrew/bin/brew" ] && eval "$(/opt/homebrew/bin/brew shellenv)"
-  ;;
+    ;;
   Linux)
     [ -d "/home/linuxbrew/.linuxbrew" ] && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-  ;;
+    ;;
 esac
 
 export BREW_PREFIX="$(brew --prefix)"
@@ -83,7 +83,7 @@ export LS_COLORS="$(vivid generate nord)"
 # -- editors
 if which nvim >/dev/null; then
   if [ -n "${NVIM_LISTEN_ADDRESS+x}" ]; then
-  # if [ -n "$NVIM_LISTEN_ADDRESS" ]; then
+    # if [ -n "$NVIM_LISTEN_ADDRESS" ]; then
     # FIXME: move to the latest nvim-remote api:
     # https://github.com/ahmedelgabri/dotfiles/commit/b5d0824c60f19ab52a391e0c33930ddad9767910
     export EDITOR="nvr -cc split --remote-wait +'set bufhidden=wipe'"
@@ -217,7 +217,7 @@ case "$(uname)" in
       # REF: https://github.com/asdf-vm/asdf-erlang#osx
       export KERL_CONFIGURE_OPTIONS="--disable-debug --without-javac --with-ssl=$(brew --prefix)/opt/openssl@1.1)"
     fi
-  ;;
+    ;;
   Linux)
     # Java -----------------------------------------------------------------------
     # Use Java 8 because -> https://stackoverflow.com/a/49759126
@@ -226,198 +226,198 @@ case "$(uname)" in
     path+=(
       ${JAVA_HOME}/bin(N-/)
     )
-    export KERL_CONFIGURE_OPTIONS="--disable-debug --without-javac"
-    export PATH="/home/linuxbrew/.linuxbrew/opt/openssl@1.1/bin:$PATH"
-    export BROWSER="xdg-open"
+      export KERL_CONFIGURE_OPTIONS="--disable-debug --without-javac"
+      export PATH="/home/linuxbrew/.linuxbrew/opt/openssl@1.1/bin:$PATH"
+      export BROWSER="xdg-open"
 
 
-    if which lemonade >/dev/null; then
-      export BROWSER="lemonade open"
-    fi
-  ;;
-esac
+      if which lemonade >/dev/null; then
+        export BROWSER="lemonade open"
+      fi
+      ;;
+  esac
 
-# by default: export WORDCHARS='*?_-.[]~=/&;!#$%^(){}<>'
-# we take out the slash, period, angle brackets, dash here.
-export WORDCHARS='*?_[]~=&;!#$%^(){}'
-export ACK_COLOR_MATCH='red'
-export CC=/usr/bin/gcc
+  # by default: export WORDCHARS='*?_-.[]~=/&;!#$%^(){}<>'
+  # we take out the slash, period, angle brackets, dash here.
+  export WORDCHARS='*?_[]~=&;!#$%^(){}'
+  export ACK_COLOR_MATCH='red'
+  export CC=/usr/bin/gcc
 
-# reduce ESC key delay to 0.1
-export KEYTIMEOUT=1
+  # reduce ESC key delay to 0.1
+  export KEYTIMEOUT=1
 
-# so I can run USPTO/jboss stuff sensibly
-export JAVA_OPTS="$JAVA_OPTS -Xms2048M -Xmx4096M -XX:MaxPermSize=512M -Djboss.vfs.forceCopy=false"
+  # so I can run USPTO/jboss stuff sensibly
+  export JAVA_OPTS="$JAVA_OPTS -Xms2048M -Xmx4096M -XX:MaxPermSize=512M -Djboss.vfs.forceCopy=false"
 
-# This resolves issues install the mysql, postgres, and other gems with native non universal binary extensions
-export ARCHFLAGS='-arch x86_64'
+  # This resolves issues install the mysql, postgres, and other gems with native non universal binary extensions
+  export ARCHFLAGS='-arch x86_64'
 
-# CTAGS Sorting in VIM/Emacs is better behaved with this in place
-export LC_COLLATE=C
+  # CTAGS Sorting in VIM/Emacs is better behaved with this in place
+  export LC_COLLATE=C
 
-# Custom GC options for custom compiled 1.9.3 rubies
-export RUBY_GC_MALLOC_LIMIT=1000000000
-export RUBY_GC_HEAP_FREE_SLOTS=500000
-export RUBY_GC_HEAP_INIT_SLOTS=40000
+  # Custom GC options for custom compiled 1.9.3 rubies
+  export RUBY_GC_MALLOC_LIMIT=1000000000
+  export RUBY_GC_HEAP_FREE_SLOTS=500000
+  export RUBY_GC_HEAP_INIT_SLOTS=40000
 
-export NODEJS_CHECK_SIGNATURES=no # https://github.com/asdf-vm/asdf-nodejs#use
+  export NODEJS_CHECK_SIGNATURES=no # https://github.com/asdf-vm/asdf-nodejs#use
 
-export SSL_CERT_FILE=''
-unset SSL_CERT_FILE
+  export SSL_CERT_FILE=''
+  unset SSL_CERT_FILE
 
-export CURL_CA_BUNDLE=''
+  export CURL_CA_BUNDLE=''
 
-#
-# yubikey
-# GNUpg setup: https://github.com/drduh/YubiKey-Guide#create-temporary-working-directory-for-gpg
-# export GNUPGHOME=$(mktemp -d) #; echo $GNUPGHOME
-# export GNUPGHOME="$HOME/.gnupg"
-# https://github.com/asdf-vm/asdf-nodejs#using-a-dedicated-openpgp-keyring
-# export GNUPGHOME="${ASDF_DIR:-$HOME/.asdf}/keyrings/nodejs" && mkdir -p "$GNUPGHOME" && chmod 0700 "$GNUPGHOME"
+  #
+  # yubikey
+  # GNUpg setup: https://github.com/drduh/YubiKey-Guide#create-temporary-working-directory-for-gpg
+  # export GNUPGHOME=$(mktemp -d) #; echo $GNUPGHOME
+  # export GNUPGHOME="$HOME/.gnupg"
+  # https://github.com/asdf-vm/asdf-nodejs#using-a-dedicated-openpgp-keyring
+  # export GNUPGHOME="${ASDF_DIR:-$HOME/.asdf}/keyrings/nodejs" && mkdir -p "$GNUPGHOME" && chmod 0700 "$GNUPGHOME"
 
-# export MYSQL=/usr/local/mysql/bin
-# export PATH=$PATH:$MYSQL
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:.:/usr/local/lib
+  # export MYSQL=/usr/local/mysql/bin
+  # export PATH=$PATH:$MYSQL
+  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:.:/usr/local/lib
 
-# elixir and erlang things for `iex`, etc:
-export ERL_AFLAGS="-kernel shell_history enabled"
+  # elixir and erlang things for `iex`, etc:
+  export ERL_AFLAGS="-kernel shell_history enabled"
 
-# -- paths ---------------------------------------------------------------------
-typeset -agU cdpath fpath manpath infopath path
+  # -- paths ---------------------------------------------------------------------
+  typeset -agU cdpath fpath manpath infopath path
 
-# Set the the list of directories that cd searches.
-cdpath=(
-  $HOME/code
-  $cdpath
-)
+  # Set the the list of directories that cd searches.
+  cdpath=(
+    $HOME/code
+    $cdpath
+  )
 
-# Set the list of directories that info searches for manuals.
-infopath=(
-  /usr/local/share/info
-  /usr/share/info
-  $infopath
-)
+  # Set the list of directories that info searches for manuals.
+  infopath=(
+    /usr/local/share/info
+    /usr/share/info
+    $infopath
+  )
 
-# Set the list of directories that man searches for manuals.
-manpath=(
-  /usr/local/share/man
-  /usr/share/man
-  ${HOMEBREW_PREFIX}/opt/*/libexec/gnuman(N-/)
-  $manpath
-)
-for man_file in /etc/manpaths.d/*(.N); do
-  manpath+=($(<$man_file))
-done
-unset man_file
+  # Set the list of directories that man searches for manuals.
+  manpath=(
+    /usr/local/share/man
+    /usr/share/man
+    ${HOMEBREW_PREFIX}/opt/*/libexec/gnuman(N-/)
+    $manpath
+  )
+  for man_file in /etc/manpaths.d/*(.N); do
+    manpath+=($(<$man_file))
+  done
+  unset man_file
 
-# Set the list of directories that Zsh searches for programs.
-# "${HOME}/.asdf/installs/elixir/`asdf current elixir | awk '{print $1}'`/.mix"
-path=(
-  ./bin
-  ./.bin
-  ./vendor/bundle/bin
-  $HOME/bin
-  $HOME/.bin
-  $HOME/.emacs.d/bin
-  ${HOME}/.local/bin(N-/)
-  ${DOTS}/bin(N-/)
-  $PRIVATES/bin
-  $ASDF_DIR
-  $ASDF_BIN
-  $ASDF_SHIMS
-  $ASDF_INSTALLS
-  $ASDF_LUAROCKS
-  # ${HOME}/neovim/bin(N-/)
-  $GOBIN
-  ${GOPATH}/bin(N-/)
-  $CARGOPATH
-  $CARGOBIN
-  /usr/local/{bin,sbin}
-  /usr/local/share/npm/bin
-  /usr/local/lib/node_modules
-  /usr/local/opt/libffi/lib
-  /usr/local/opt/gnu-sed/libexec/gnubin
-  # /usr/local/opt/imagemagick@6/bin
-  # /usr/local/opt/qt@5.5/bin
-  # /usr/local/opt/mysql@5.6/bin
-  # /usr/local/opt/postgresql@9.5/bin
-  # /Applications/Postgres.app/Contents/Versions/9.5/bin
+  # Set the list of directories that Zsh searches for programs.
+  # "${HOME}/.asdf/installs/elixir/`asdf current elixir | awk '{print $1}'`/.mix"
+  path=(
+    ./bin
+    ./.bin
+    ./vendor/bundle/bin
+    $HOME/bin
+    $HOME/.bin
+    $HOME/.emacs.d/bin
+    ${HOME}/.local/bin(N-/)
+    ${DOTS}/bin(N-/)
+    $PRIVATES/bin
+    $ASDF_DIR
+    $ASDF_BIN
+    $ASDF_SHIMS
+    $ASDF_INSTALLS
+    $ASDF_LUAROCKS
+    # ${HOME}/neovim/bin(N-/)
+    $GOBIN
+    ${GOPATH}/bin(N-/)
+    $CARGOPATH
+    $CARGOBIN
+    /usr/local/{bin,sbin}
+    /usr/local/share/npm/bin
+    /usr/local/lib/node_modules
+    /usr/local/opt/libffi/lib
+    /usr/local/opt/gnu-sed/libexec/gnubin
+    # /usr/local/opt/imagemagick@6/bin
+    # /usr/local/opt/qt@5.5/bin
+    # /usr/local/opt/mysql@5.6/bin
+    # /usr/local/opt/postgresql@9.5/bin
+    # /Applications/Postgres.app/Contents/Versions/9.5/bin
 
-  # /usr/local/opt/openssl@1.1/bin
-  /usr/{bin,sbin}
-  /{bin,sbin}
+    # /usr/local/opt/openssl@1.1/bin
+    /usr/{bin,sbin}
+    /{bin,sbin}
 
-  ${HOMEBREW_PREFIX}/opt/curl/bin(N-/)
-  ${HOMEBREW_PREFIX}/opt/openssl@*/bin(Nn[-1]-/)
-  ${HOMEBREW_PREFIX}/opt/gnu-sed/libexec/gnubin(N-/)
-  ${HOMEBREW_PREFIX}/opt/coreutils/libexec/gnubin(N-/)
-  ${HOMEBREW_PREFIX}/opt/python@3.10/libexec/bin(Nn[-1]-/)
-  ${HOMEBREW_PREFIX}/opt/python@3.9/libexec/bin(Nn[-1]-/)
-  ${HOMEBREW_CELLAR}/git/*/share/git-core/contrib/git-jump(Nn[-1]-/)
+    ${HOMEBREW_PREFIX}/opt/curl/bin(N-/)
+    ${HOMEBREW_PREFIX}/opt/openssl@*/bin(Nn[-1]-/)
+    ${HOMEBREW_PREFIX}/opt/gnu-sed/libexec/gnubin(N-/)
+    ${HOMEBREW_PREFIX}/opt/coreutils/libexec/gnubin(N-/)
+    ${HOMEBREW_PREFIX}/opt/python@3.10/libexec/bin(Nn[-1]-/)
+    ${HOMEBREW_PREFIX}/opt/python@3.9/libexec/bin(Nn[-1]-/)
+    ${HOMEBREW_CELLAR}/git/*/share/git-core/contrib/git-jump(Nn[-1]-/)
 
-  ${CARGO_HOME}/bin(N-/)
-  $HOME/.asdf/installs/rust/stable/bin
+    ${CARGO_HOME}/bin(N-/)
+    $HOME/.asdf/installs/rust/stable/bin
 
-  ${GOBIN}(N-/)
+    ${GOBIN}(N-/)
 
-  ${HOME}/Library/Python/3.10/bin(Nn[-1]-/)
-  ${HOME}/Library/Python/2.*/bin(Nn[-1]-/)
-  /usr/local/lib/python3.10/site-packages(N-/)
-  /usr/local/lib/python3.9/site-packages(N-/)
-  /usr/local/lib/python2.*/bin(Nn[-1]-/)
-  /usr/local/lib/python2.*/site-packages(N-/)
-  /usr/local/opt/python@3.*/bin(Nn[-1]-/)
-  /usr/local/opt/python@2.*/bin(Nn[-1]-/)
-  /usr/local/{bin,sbin}
-  $path
-)
-export PATH
+    ${HOME}/Library/Python/3.10/bin(Nn[-1]-/)
+    ${HOME}/Library/Python/3.9/bin(Nn[-1]-/)
+    ${HOME}/Library/Python/2.*/bin(Nn[-1]-/)
+    /usr/local/lib/python3.10/site-packages(N-/)
+    /usr/local/lib/python3.9/site-packages(N-/)
+    /usr/local/lib/python2.*/bin(Nn[-1]-/)
+    /usr/local/lib/python2.*/site-packages(N-/)
+    /usr/local/opt/python@3.*/bin(Nn[-1]-/)
+    /usr/local/opt/python@2.*/bin(Nn[-1]-/)
+    /usr/local/{bin,sbin}
+    $path
+  )
+  export PATH
 
-for path_file in /etc/paths.d/*(.N); do
-  path+=($(<$path_file))
-done
-unset path_file
+  for path_file in /etc/paths.d/*(.N); do
+    path+=($(<$path_file))
+  done
+  unset path_file
 
-fpath+=(
-  "$ZDOTDIR"
-  "$HOMEBREW_PREFIX/share/zsh/site-functions"
-  "$ZDOTDIR/prompt"
-  "$ZDOTDIR/completions"
-  "$ZDOTDIR/plugins"
-  "$ZDOTDIR/funcs"
-  "$DOTS/bin"
-  "${ASDF_DIR}/completions"
-  "${fpath[@]}"
-  # "$fpath"
-)
-export FPATH
+  fpath+=(
+    "$ZDOTDIR"
+    "$HOMEBREW_PREFIX/share/zsh/site-functions"
+    "$ZDOTDIR/prompt"
+    "$ZDOTDIR/completions"
+    "$ZDOTDIR/plugins"
+    "$ZDOTDIR/funcs"
+    "$DOTS/bin"
+    "${ASDF_DIR}/completions"
+    "${fpath[@]}"
+    # "$fpath"
+  )
+  export FPATH
 
-# -- zsh plugins
-# ------------------------------------------------------------------------------
-export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#465258,bold,underline"
-export ZSH_AUTOSUGGEST_MANUAL_REBIND=1  # make prompt faster
-export ZSH_AUTOSUGGEST_USE_ASYNC=1
-# export ZSH_AUTOSUGGEST_STRATEGY=(history completion) # or match_prev_cmd
+  # -- zsh plugins
+  # ------------------------------------------------------------------------------
+  export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#465258,bold,underline"
+  export ZSH_AUTOSUGGEST_MANUAL_REBIND=1  # make prompt faster
+  export ZSH_AUTOSUGGEST_USE_ASYNC=1
+  # export ZSH_AUTOSUGGEST_STRATEGY=(history completion) # or match_prev_cmd
   export ZSH_AUTOSUGGEST_STRATEGY=("match_prev_cmd" "completion")
-export _ZO_DATA_DIR="$XDG_DATA_HOME/zoxide"
-export _ZO_ECHO=1
+  export _ZO_DATA_DIR="$XDG_DATA_HOME/zoxide"
+  export _ZO_ECHO=1
 
-HISTORY_SUBSTRING_SEARCH_HIGHLIGHT_FOUND='fg=red,bold'
-HISTORY_SUBSTRING_SEARCH_HIGHLIGHT_NOT_FOUND='bg=red,fg=black,bold'
-# HISTORY_SUBSTRING_SEARCH_GLOBBING_FLAGS='i'
-# HISTORY_SUBSTRING_SEARCH_ENSURE_UNIQUE=''
-# HISTORY_SUBSTRING_SEARCH_FUZZY=''
+  HISTORY_SUBSTRING_SEARCH_HIGHLIGHT_FOUND='fg=red,bold'
+  HISTORY_SUBSTRING_SEARCH_HIGHLIGHT_NOT_FOUND='bg=red,fg=black,bold'
+  # HISTORY_SUBSTRING_SEARCH_GLOBBING_FLAGS='i'
+  # HISTORY_SUBSTRING_SEARCH_ENSURE_UNIQUE=''
+  # HISTORY_SUBSTRING_SEARCH_FUZZY=''
 
-##Remove % at end of print when not using \n
-PROMPT_EOL_MARK=""
+  ##Remove % at end of print when not using \n
+  PROMPT_EOL_MARK=""
 
-# use .localrc/local.zsh for SUPER SECRET stuff
-if [[ -f "$ZDOTDIR/lib/local.zsh" && "$(uname)" == "Darwin" ]]; then
-  source "$ZDOTDIR/lib/local.zsh"
-fi
+  # use .localrc/local.zsh for SUPER SECRET stuff
+  if [[ -f "$ZDOTDIR/lib/local.zsh" && "$(uname)" == "Darwin" ]]; then
+    source "$ZDOTDIR/lib/local.zsh"
+  fi
 
-if [ -f "$HOME/.localrc" ]; then
-  source "$HOME/.localrc"
-fi
-
+  if [ -f "$HOME/.localrc" ]; then
+    source "$HOME/.localrc"
+  fi
 

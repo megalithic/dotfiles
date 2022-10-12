@@ -35,6 +35,7 @@ saws
 setuptools
 solargraph-utils.py
 typing
+ueberzug
 websocket-client
 west
 wheel

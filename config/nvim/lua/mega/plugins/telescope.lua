@@ -3,6 +3,7 @@ return function()
 
   local fn = vim.fn
   local actions = require("telescope.actions")
+  local previewers = require("telescope.previewers")
   local lga_actions = require("telescope-live-grep-args.actions")
   local themes = require("telescope.themes")
   local action_state = require("telescope.actions.state")
@@ -208,7 +209,10 @@ return function()
       selection_strategy = "reset",
       sorting_strategy = "descending",
       use_less = true,
-      color_devicons = true,
+      color_devicons = false,
+      file_previewer = previewers.cat.new,
+      grep_previewer = previewers.cat.new,
+      qflist_previewer = previewers.cat.new,
       vimgrep_arguments = {
         "rg",
         "--hidden",

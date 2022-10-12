@@ -484,7 +484,7 @@ return lush(function()
     -- highlight WARN/FIXME/TODO/NOTE/REF: comments
 
     commentTSDanger({ bg = red, fg = bg_dark, gui = "bold,underline" }),
-    commentTSWarning({ fg = orange, gui = "bold"}),
+    commentTSWarning({ fg = orange, gui = "bold" }),
     commentTSNote({ fg = teal, gui = "italic" }),
     commentTSRef({ fg = cyan }),
 
@@ -841,6 +841,22 @@ return lush(function()
     TelescopeSelectionCaret({ fg = fg, bg = bg3 }),
     TelescopeResults({ bg = "NONE" }),
     TelescopeResultsTitle({ fg = bg0, bg = fg, gui = "bold" }),
+
+    ---- :help fzf-lua ---------------------------------------------------------
+
+    FzfLuaNormal({ TelescopeNormal }),
+    FzfLuaBorder({ TelescopeBorder }),
+    FzfLuaCursor({}),
+    FzfLuaCursorLine({}),
+    FzfLuaCursorLineNr({}),
+    FzfLuaSearch({}),
+    FzfLuaTitle({ TelescopeTitle }),
+    FzfLuaScrollBorderEmpty({}),
+    FzfLuaScrollBorderFull({}),
+    FzfLuaScrollFloatEmpty({}),
+    FzfLuaScrollFloatFull({}),
+    FzfLuaHelpNormal({}),
+    FzfLuaHelpBorder({}),
 
     ---- :help: trouble.txt ----------------------------------------------------
 

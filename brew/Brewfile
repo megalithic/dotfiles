@@ -193,6 +193,7 @@ brew "libyubikey" if OS.mac?
 brew "pam_yubico" if OS.mac?
 brew "vivid"
 brew "vim"
+brew "viu" # used with fzf-lua for image rendering
 brew "ykman"
 brew "yubikey-personalization" if OS.mac?
 brew "yj"

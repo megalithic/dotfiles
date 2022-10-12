@@ -1116,6 +1116,15 @@ do
   command("RenameFile", [[noautocmd clear | :execute "Rename " .input('rename to -> ') | :e ]])
   command("Flash", function() mega.blink_cursorline() end)
   command("P", "<cmd>lua P(<args>)", { nargs = "?" })
+
+  vim.cmd([[command! PackerInstall packadd packer.nvim | lua require('packer').install()]])
+  vim.cmd([[command! PackerUpdate packadd packer.nvim | lua require('packer').update()]])
+  vim.cmd([[command! PackerSync packadd packer.nvim | lua require('packer').sync()]])
+  vim.cmd([[command! PackerClean packadd packer.nvim | lua require('packer').clean()]])
+  vim.cmd([[command! PackerCompile packadd packer.nvim | lua require('packer').compile()]])
+  vim.cmd([[command! PC PackerCompile]])
+  vim.cmd([[command! PS PackerStatus]])
+  vim.cmd([[command! PU PackerSync]])
 end
 
 return mega

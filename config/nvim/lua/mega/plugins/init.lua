@@ -237,6 +237,9 @@ local function plugins(use)
     config = function() require("habitats").setup({}) end,
   })
 
+  -- ( FZF ) -------------------------------------------------------------------
+  use({ "ibhagwan/fzf-lua", ext = "fzf" })
+
   -- ( Navigation ) ------------------------------------------------------------
   use({
     "knubie/vim-kitty-navigator",
