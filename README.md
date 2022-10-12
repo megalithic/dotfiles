@@ -49,7 +49,7 @@ This dotfiles repo is managed by [dotbot](https://github.com/anishathalye/dotbot
 
 I have tried to be platform agnostic, but the majority of scripts that run here are for MacOS (specifically MacOS Monterey, _non-M1_, at the time of this commit -- I'll update here when I move to ARM), with a handful of Debian/Ubuntu Linux specific platform scripts and provisions. This means that certain tools/binaries I rely on may or may not install/configure on Linux. Though, I have tested it reasonably well on Ubuntu-based Linode and DigitalOcean instances.
 
-#### 🐉 Thar be dragons..
+#### 🐉 Thar be dragons
 
 I am pushing updates _constantly_, so there are **NO** guarantees of stability with my config!
 
@@ -71,7 +71,7 @@ A few of the _must-have_ tools I roll with:
 - `megaforest` for all the colours/themes
 - [jetbrains mono](https://www.jetbrains.com/lp/mono/) font ([nerd-fonts](https://github.com/ryanoasis/nerd-fonts#font-patcher) patched)
 - [hammerspoon](https://github.com/megalithic/dotfiles/tree/master/hammerspoon)
-- [karabiner-elements](https://github.com/tekezo/Karabiner-Elements) ([leeloo zmk](https://github.com/megalithic/zmk-config)/[atreus62 qmk](https://github.com/megalithic/qmk_firmware/tree/master/keyboards/atreus62/keymaps/megalithic))
+- [karabiner-elements](https://github.com/tekezo/Karabiner-Elements) ([leeloo ZMK](https://github.com/megalithic/zmk-config)/[atreus62 QMK](https://github.com/megalithic/qmk_firmware/tree/master/keyboards/atreus62/keymaps/megalithic))
 - [gpg/yubikey/encryption](https://github.com/drduh/YubiKey-Guide)
 - system-wide `vim`-esque control
   - [surfingkeys](https://github.com/brookhong/Surfingkeys)

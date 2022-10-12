@@ -14,7 +14,7 @@ const loader = (parent, enabled, indicator) => {
       loaderEl.innerText = indicator;
       parentEl.prepend(loaderEl);
     } else {
-      loaderEl = document.querySelector("small.loader");
+      loaderEl = document.querySelector(".loader");
       if (loaderEl) {
         loaderEl.remove();
       }
@@ -97,6 +97,11 @@ const weather = (enabled) => {
             }
             if (w.weatherDesc[0].value !== "") {
               wEl.querySelector("em").innerText = `${w.weatherDesc[0].value}`;
+
+              // REF:
+              // - https://unicode-table.com/en/emoji/travel-and-places/sky-and-weather/
+              // - https://www.alt-codes.net/weather-symbols.php
+              // - https://github.com/chubin/wttr.in/issues/130#issuecomment-313024249
               switch (w.weatherDesc[0].value) {
                 case "Sunny":
                   wEl.querySelector("em").style = "color: orange;";
@@ -108,6 +113,14 @@ const weather = (enabled) => {
                 case "Mist":
                   wEl.querySelector("em").style =
                     "background: linear-gradient(to bottom, #7FC7FA, #FFFFFF 65%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;";
+                  break;
+                case "Light rain":
+                  wEl.querySelector("em").innerHTML = wEl.querySelector("em").innerHTML + " &#x1F327;";
+                  break;
+                case "Rain, mist":
+                  wEl.querySelector("em").style =
+                    "background: linear-gradient(90deg, #3377B6, #ffffff 85%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;";
+                  wEl.querySelector("em").innerHTML = wEl.querySelector("em").innerHTML + " &#x1F327;";
                   break;
                 default:
                   console.debug(`weather condition: ${w.weatherDesc[0].value}`);
@@ -138,10 +151,15 @@ const weather = (enabled) => {
   }
 };
 
+const focus = (selector) => {
+  document.querySelector(selector).focus();
+};
+
 const handleLoaded = () => {
   mimic(false);
   ip(true);
   weather(true);
+  // focus("#content");
 };
 
 if (["complete", "loaded", "interactive"].indexOf(document.readyState) >= 0) {
