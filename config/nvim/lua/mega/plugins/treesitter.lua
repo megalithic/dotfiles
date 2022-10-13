@@ -63,19 +63,10 @@ return function()
     highlight = {
       enable = true,
       disable = function(lang, bufnr)
-        local disabled_langs = {
-          "svg",
-          "json",
-          "heex",
-        }
-        return vim.tbl_contains(disabled_langs, lang)
-          and (vim.api.nvim_buf_line_count(bufnr) >= 5000 or vim.fn.getfsize(vim.fn.expand("%")) > 50 * 1024)
+        return (vim.api.nvim_buf_line_count(bufnr) >= 5000 or vim.fn.getfsize(vim.fn.expand("%")) >= 50 * 1024)
+        -- and vim.tbl_contains({ "svg", "json", "heex" }, lang)
       end,
       use_languagetree = true,
-      -- disable = function(lang, bufnr) -- Disable in large files
-      --   -- Remove the org part to use TS highlighter for some of the highlights (Experimental)
-      --   return lang == "org" or vim.api.nvim_buf_line_count(bufnr) > 5000
-      -- end,
       -- Setting this to true will run `:h syntax` and tree-sitter at the same time.
       -- Set this to `true` if you depend on 'syntax' being enabled (like for indentation).
       -- Using this option may slow down your editor, and you may see some duplicate highlights.
