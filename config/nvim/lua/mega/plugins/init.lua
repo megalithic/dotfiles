@@ -386,6 +386,7 @@ local function plugins(use)
   })
 
   use({ "jose-elias-alvarez/null-ls.nvim", ext = "null-ls", requires = { "nvim-lua/plenary.nvim" } })
+  use({ "SmiteshP/nvim-navic", after = "nvim-lspconfig", requires = "neovim/nvim-lspconfig" })
 
   -- use({
   --   "issafalcon/lsp-overloads.nvim",

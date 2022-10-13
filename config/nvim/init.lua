@@ -15,7 +15,7 @@ vim.g.enabled_plugin = {
   folds = true,
   tmux = false,
   env = false,
-  winbar = false, -- broke, rework completely
+  winbar = true, -- broke, rework completely
 }
 
 vim.g.colorscheme = "megaforest"

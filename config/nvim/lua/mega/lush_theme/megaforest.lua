@@ -806,8 +806,8 @@ return lush(function()
 
     ---- :help winbar  ---------------------------------------------------------
 
-    WinBar({ fg = bg0, bg = yellow, gui = "italic" }),
-    WinBarNC({ fg = fg, bg = bg_yellow, gui = "italic" }),
+    WinBar({ fg = fg, bg = bg1, gui = "italic" }),
+    WinBarNC({ fg = fg, bg = bg_dark, gui = "italic" }),
 
     ---- :help ts-rainbow  -----------------------------------------------------
 

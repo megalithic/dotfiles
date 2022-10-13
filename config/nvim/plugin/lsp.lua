@@ -416,6 +416,11 @@ local function on_attach(client, bufnr)
     end
   end
 
+  if caps.documentSymbolProvider then
+    local ok, navic = mega.require("nvim-navic")
+    navic.attach(client, bufnr)
+  end
+
   if caps.semanticTokensProvider and caps.semanticTokensProvider.full then
     local augroup = vim.api.nvim_create_augroup("SemanticTokens", {})
     vim.api.nvim_create_autocmd("TextChanged", {

@@ -12,7 +12,7 @@ return function()
     {
       event = { "User" },
       pattern = { "TelescopePreviewerLoaded" },
-      command = "setlocal number wrap",
+      command = "setlocal number wrap numberwidth=5 norelativenumber",
     },
   })
 
@@ -199,7 +199,7 @@ return function()
         },
         bottom_pane = {
           height = 0.5,
-          preview_cutoff = 1,
+          preview_cutoff = 120,
           preview_width = 0.65,
           prompt_position = "top",
         },

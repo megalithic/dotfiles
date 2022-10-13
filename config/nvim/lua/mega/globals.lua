@@ -815,7 +815,7 @@ function mega.get_border(hl)
 end
 
 function mega.sync_plugins()
-  P("paq-nvim: syncing plugins..")
+  P("packer: syncing plugins..")
   package.loaded["mega.plugins"] = nil
   -- require("mega.plugins").sync_all()
   vim.cmd("PackerSync")
