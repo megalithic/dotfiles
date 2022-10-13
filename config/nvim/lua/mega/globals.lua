@@ -86,6 +86,15 @@ function _G.dump(...)
   print(unpack(objects))
 end
 
+_G.Path = {
+  join = function(...) return table.concat({ ... }, "/") end,
+  relative = function(path) return vim.fn.fnamemodify(path, ":~:.") end,
+}
+
+_G.Clipboard = {
+  copy = function(str) vim.fn.jobstart(string.format("echo -n %q | pbcopy", str), { detach = true }) end,
+}
+
 function mega.dump_colors(filter)
   local defs = {}
   for hl_name, hl in pairs(vim.api.nvim__get_hl_defs(0)) do
@@ -815,7 +824,7 @@ function mega.get_border(hl)
 end
 
 function mega.sync_plugins()
-  P("packer: syncing plugins..")
+  vim.notify("packer: syncing plugins..", vim.log.levels.INFO)
   package.loaded["mega.plugins"] = nil
   -- require("mega.plugins").sync_all()
   vim.cmd("PackerSync")

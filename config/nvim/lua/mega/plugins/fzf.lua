@@ -2,7 +2,11 @@ return function()
   local res, fzf_lua = pcall(require, "fzf-lua")
   if not res then return end
 
-  local img_prev_bin = vim.fn.executable("viu") == 1 and { "viu", "-b", "-t" } or { "ueberzug" }
+  local img_prev_bin = vim.fn.executable("viu") == 1 and { "viu", "-bt" } or { "catimg" }
+  -- local img_prev_bin = vim.fn.executable("ueberzug") == 1 and { "ueberzug" }
+  --   or { "kitty", "+kitten", "icat" }
+  --   or { "viu", "-b", "-t" }
+  -- local img_prev_bin = { "kitty", "+kitten", "icat" } or { "viu", "-b", "-t" }
   -- local img_prev_bin = vim.fn.executable("ueberzug") == 1 and { "ueberzug" } or { "viu", "-b" }
 
   -- return first matching highlight or nil
@@ -47,18 +51,17 @@ return function()
     fzf_colors = fzf_colors,
     winopts = {
       split = "belowright new",
-      -- split         = "aboveleft vnew",
-      -- height = 0.85,
-      -- width = 0.80,
-      -- row = 0.35,
-      -- col = 0.55,
+      height = 0.35,
+      width = 0.80,
+      row = 0.35,
+      col = 0.55,
       border = { " ", " ", " ", " ", " ", " ", " ", " " },
       preview = {
         layout = "flex",
         flip_columns = 130,
         scrollbar = "float",
-        -- scrolloff        = '-1',
-        -- scrollchars      = {'█', '░' },
+        scrolloff = "-1",
+        scrollchars = { "█", "░" },
       },
       -- on_create        = function()
       --   print("on_create")
@@ -66,9 +69,9 @@ return function()
     },
     winopts_fn = function()
       local hl = {
-        border = hl_match({ "NightflySteelBlue" }),
-        cursorline = hl_match({ "NightflyVisual" }),
-        cursorlinenr = hl_match({ "NightflyVisual" }),
+        border = hl_match({ "FloatBorder" }),
+        cursorline = hl_match({ "CursorLine" }),
+        cursorlinenr = hl_match({ "CursorLineNr" }),
       }
       return { hl = hl }
     end,
@@ -87,10 +90,12 @@ return function()
     files = {
       fd_opts = "--no-ignore --color=never --type f --hidden --follow --no-ignore-vcs --exclude .git",
       action = { ["ctrl-l"] = fzf_lua.actions.arg_add },
+      previewer = "builtin",
     },
     grep = {
       rg_glob = true,
       rg_opts = "--hidden --column --line-number --no-heading" .. " --color=always --smart-case -g '!.git'",
+      previewer = "builtin",
     },
     git = {
       status = {
@@ -129,4 +134,6 @@ return function()
   --     },
   --   })
   -- end
+
+  -- nmap("<c-p>", "<cmd>FzfLua files<cr>", "fzf: find files")
 end

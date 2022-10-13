@@ -96,7 +96,7 @@ local function plugins(use)
       require("flit").setup({
         keys = { f = "f", F = "F", t = "t", T = "T" },
         -- A string like "nv", "nvo", "o", etc.
-        labeled_modes = "nv",
+        labeled_modes = "nvo",
         multiline = false,
       })
     end,
@@ -296,6 +296,11 @@ local function plugins(use)
     after = "telescope.nvim",
     config = function() require("telescope").load_extension("live_grep_args") end,
   })
+  -- use({
+  --   "nvim-telescope/telescope-media-files.nvim",
+  --   after = "telescope.nvim",
+  --   config = function() require("telescope").load_extension("media_files") end,
+  -- })
   use({
     "ryansch/habitats.nvim",
     after = "telescope-file-browser.nvim",

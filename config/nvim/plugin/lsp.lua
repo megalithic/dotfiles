@@ -179,6 +179,23 @@ local function setup_autocommands(client, bufnr)
     --   end,
     -- },
   })
+  if client.server_capabilities.signatureHelpProvider then
+    augroup("LspFormat", {
+      event = { "CursorHoldI" },
+      buffer = bufnr,
+      callback = function()
+        vim.defer_fn(function()
+          local line = vim.api.nvim_get_current_line()
+          line = vim.trim(line:sub(1, vim.api.nvim_win_get_cursor(0)[2] + 1))
+          local len = line:len()
+          local char_post = line:sub(len, len)
+          local char_pre = line:sub(len - 1, len - 1)
+          local show_signature = char_pre == "(" or char_pre == "," or char_post == ")"
+          if show_signature then vim.lsp.buf.signature_help() end
+        end, 500)
+      end,
+    })
+  end
   augroup("LspFormat", {
     {
       event = { "BufWritePre" },
@@ -416,10 +433,10 @@ local function on_attach(client, bufnr)
     end
   end
 
-  if caps.documentSymbolProvider then
-    local ok, navic = mega.require("nvim-navic")
-    navic.attach(client, bufnr)
-  end
+  -- if caps.documentSymbolProvider then
+  --   local ok, navic = mega.require("nvim-navic")
+  --   navic.attach(client, bufnr)
+  -- end
 
   if caps.semanticTokensProvider and caps.semanticTokensProvider.full then
     local augroup = vim.api.nvim_create_augroup("SemanticTokens", {})

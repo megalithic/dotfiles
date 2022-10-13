@@ -862,8 +862,8 @@ return lush(function()
     FzfLuaScrollBorderFull({}),
     FzfLuaScrollFloatEmpty({}),
     FzfLuaScrollFloatFull({}),
-    FzfLuaHelpNormal({}),
-    FzfLuaHelpBorder({}),
+    FzfLuaHelpNormal({ TelescopePreviewNormal }),
+    FzfLuaHelpBorder({ TelescopePreviewBorder }),
 
     ---- :help: trouble.txt ----------------------------------------------------
 

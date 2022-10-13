@@ -1,3 +1,5 @@
+-- REF:
+-- - https://github.com/fdschmidt93/dotfiles/blob/master/nvim/.config/nvim/lua/fds/plugins/telescope/init.lua
 return function()
   local telescope = require("telescope")
 
@@ -101,6 +103,21 @@ return function()
     end
   end
 
+  local conditional_buffer_preview = function(filepath, bufnr, opts)
+    opts = opts or {}
+    local max_filesize = 50 * 1024
+
+    filepath = vim.fn.expand(filepath)
+    vim.loop.fs_stat(filepath, function(_, stat)
+      if not stat then return end
+      if stat.size > max_filesize then
+        return
+      else
+        previewers.buffer_previewer_maker(filepath, bufnr, opts)
+      end
+    end)
+  end
+
   ---@param opts table
   ---@return table
   local function dropdown(opts) return themes.get_dropdown(get_border(opts)) end
@@ -153,7 +170,7 @@ return function()
           ["<c-s>"] = stopinsert(multiopen("horizontal")),
           ["<c-b>"] = actions.preview_scrolling_up,
           ["<c-f>"] = actions.preview_scrolling_down,
-          ["<c-u>"] = actions.preview_scrolling_up,
+          ["<c-u>"] = actions.preview_scrolling_up, -- alts: ["<c-u>"] = false
           ["<c-d>"] = actions.preview_scrolling_down,
           -- ["<c-e>"] = layout_actions.toggle_preview,
           ["<c-/>"] = actions.which_key,
@@ -168,7 +185,9 @@ return function()
       file_ignore_patterns = {
         "%.jpg",
         "%.jpeg",
+        "%.gif",
         "%.png",
+        "%.webp",
         "%.otf",
         "%.ttf",
         "config/hammerspoon/Spoons/.*",
@@ -213,9 +232,11 @@ return function()
       -- file_previewer = previewers.cat.new,
       -- grep_previewer = previewers.cat.new,
       -- qflist_previewer = previewers.cat.new,
+      buffer_preview_maker = conditional_buffer_preview,
       preview = {
         treesitter = {
-          enable = false,
+          enable = true,
+          -- disable = { "heex", "svg", "json", "json5", "jsonc" },
         },
       },
       vimgrep_arguments = {
@@ -233,10 +254,11 @@ return function()
         auto_quoting = true, -- enable/disable auto-quoting
         mappings = {
           i = {
-            ["<C-k>"] = lga_actions.quote_prompt(),
-            ["<C-l>g"] = lga_actions.quote_prompt({ postfix = " --iglob " }),
-            ["<C-l>t"] = lga_actions.quote_prompt({ postfix = " -t" }),
-            ["<C-l>n"] = lga_actions.quote_prompt({ postfix = " --no-ignore " }),
+            ["<c-q>"] = lga_actions.quote_prompt({ postfix = " -t" }),
+            -- ["<c-q>"] = lga_actions.quote_prompt(),
+            -- ["<c-l>g"] = lga_actions.quote_prompt({ postfix = " --iglob " }),
+            -- ["<c-l>t"] = lga_actions.quote_prompt({ postfix = " -t" }),
+            -- ["<c-l>n"] = lga_actions.quote_prompt({ postfix = " --no-ignore " }),
           },
         },
       },
@@ -257,10 +279,61 @@ return function()
       oldfiles = dropdown({
         on_input_filter_cb = file_extension_filter,
       }),
+      grep_string = ivy({
+        -- only sort top 50 entries
+        temp__scrolling_limit = 50,
+      }),
       live_grep = ivy({
         max_results = 500,
         file_ignore_patterns = { ".git/", "%.lock" },
-        on_input_filter_cb = file_extension_filter,
+        on_input_filter_cb = function(prompt)
+          -- if prompt starts with escaped @ then treat it as a literal
+          if (prompt):sub(1, 2) == "\\@" then return { prompt = prompt:sub(2):gsub("%s", ".*") } end
+          -- if prompt starts with, for example, @rs
+          -- only search files that end in *.rs
+          local result = string.match(prompt, "@%a*%s")
+          if not result then
+            return {
+              prompt = prompt:gsub("%s", ".*"),
+              updated_finder = require("telescope.finders").new_job(
+                function(new_prompt)
+                  return vim.tbl_flatten({
+                    require("telescope.config").values.vimgrep_arguments,
+                    "--",
+                    new_prompt,
+                  })
+                end,
+                require("telescope.make_entry").gen_from_vimgrep({}),
+                nil,
+                nil
+              ),
+            }
+          end
+
+          local result_len = #result
+
+          result = result:sub(2)
+          result = vim.trim(result)
+
+          if result == "js" or result == "ts" then result = string.format("{%s,%sx}", result, result) end
+
+          return {
+            prompt = prompt:sub(result_len + 1):gsub("%s", ".*"),
+            updated_finder = require("telescope.finders").new_job(
+              function(new_prompt)
+                return vim.tbl_flatten({
+                  require("telescope.config").values.vimgrep_arguments,
+                  string.format("-g*.%s", result),
+                  "--",
+                  new_prompt,
+                })
+              end,
+              require("telescope.make_entry").gen_from_vimgrep({}),
+              nil,
+              nil
+            ),
+          }
+        end,
       }),
       current_buffer_fuzzy_find = dropdown({
         previewer = false,
@@ -274,8 +347,63 @@ return function()
       },
       find_files = {
         hidden = true,
-        find_command = { "fd", "--type", "f", "--no-ignore-vcs" },
+        -- find_command = { "fd", "--type", "f", "--no-ignore-vcs", "--strip-cwd-prefix" },
+        find_command = {
+          "rg",
+          "--hidden",
+          "--no-heading",
+          "--with-filename",
+          "--files",
+          "--column",
+          "--smart-case",
+          "--ignore-file",
+          (Path.join(vim.env.HOME, ".dotfiles", "misc", "tool-ignores")),
+          "--iglob",
+          "!.git",
+        },
         on_input_filter_cb = file_extension_filter,
+        -- on_input_filter_cb = function(prompt)
+        --   if prompt:sub(#prompt) == "@" then
+        --     vim.schedule(function()
+        --       local prompt_bufnr = vim.api.nvim_get_current_buf()
+        --       actions.select_default(prompt_bufnr)
+        --       require("telescope.builtin").current_buffer_fuzzy_find()
+        --       -- properly enter prompt in insert mode
+        --       vim.cmd([[normal! A]])
+        --     end)
+        --   else
+        --     local find_colon = string.find(prompt, ":")
+        --     if find_colon then
+        --       local ret = string.sub(prompt, 1, find_colon - 1)
+        --       vim.schedule(function()
+        --         local prompt_bufnr = vim.api.nvim_get_current_buf()
+        --         local picker = action_state.get_current_picker(prompt_bufnr)
+        --         local lnum = tonumber(prompt:sub(find_colon + 1))
+        --         if type(lnum) == "number" then
+        --           local win = picker.previewer.state.winid
+        --           local bufnr = picker.previewer.state.bufnr
+        --           local line_count = vim.api.nvim_buf_line_count(bufnr)
+        --           vim.api.nvim_win_set_cursor(win, { math.max(1, math.min(lnum, line_count)), 0 })
+        --         end
+        --       end)
+        --       return { prompt = ret }
+        --     end
+        --   end
+        -- end,
+        -- attach_mappings = function()
+        --   actions.select_default:enhance({
+        --     post = function()
+        --       -- if we found something, go to line
+        --       local prompt = action_state.get_current_line()
+        --       local find_colon = string.find(prompt, ":")
+        --       if find_colon then
+        --         local lnum = tonumber(prompt:sub(find_colon + 1))
+        --         vim.api.nvim_win_set_cursor(0, { lnum, 0 })
+        --       end
+        --     end,
+        --   })
+        --   return true
+        -- end,
       },
       keymaps = dropdown({
         layout_config = {
@@ -304,12 +432,8 @@ return function()
         -- disables netrw and use telescope-file-browser in its place
         hijack_netrw = true,
         mappings = {
-          ["i"] = {
-            -- your custom insert mode mappings
-          },
-          ["n"] = {
-            -- your custom normal mode mappings
-          },
+          ["i"] = {},
+          ["n"] = {},
         },
       },
     },
@@ -402,7 +526,7 @@ return function()
       },
     }))
   end
-  local function live_grep_args(opts) telescope.extensions.live_grep_args.live_grep_args(ivy(opts)) end
+  -- local function live_grep_args(opts) telescope.extensions.live_grep_args.live_grep_args(ivy(opts)) end
   local function installed_plugins()
     builtins.find_files({
       prompt_title = "Installed plugins",
@@ -432,7 +556,7 @@ return function()
   nmap("<leader>fr", builtin.resume, "resume last picker")
   nmap("<leader>fs", builtin.live_grep, "live grep string")
   -- nmap("<leader>fa", builtin.live_grep, "live grep string")
-  nmap("<leader>fa", "<cmd>lua require('telescope').extensions.live_grep_args.live_grep_args()<CR>", "live grep args")
+  -- nmap("<leader>fa", "<cmd>lua require('telescope').extensions.live_grep_args.live_grep_args()<CR>", "live grep args")
   nmap("<leader>fw", workspaces, "open workspaces")
 
   nmap("<leader>fvh", builtin.highlights, "highlights")
@@ -450,7 +574,9 @@ return function()
   nmap("<leader>lS", builtin.lsp_workspace_symbols, "telescope: workspace symbols")
   nmap("<leader>lw", builtin.lsp_dynamic_workspace_symbols, "telescope: dynamic workspace symbols")
 
-  nmap("<leader>a", live_grep_args, "live grep args")
+  nmap("<leader>a", builtin.live_grep, "live grep")
+  nmap("<leader>A", builtin.grep_string, "grep under cursor")
+  -- nmap("<leader>a", live_grep_args, "live grep args")
   -- nmap("<leader>a", "<cmd>lua require('telescope.builtin').live_grep()<cr>", "live grep for a word")
   nmap("<leader>A", [[<cmd>lua require('telescope.builtin').grep_string()<cr>]], "grep for word under cursor")
   vmap(
