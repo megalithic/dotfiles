@@ -121,6 +121,9 @@ const weather = (enabled) => {
                   wEl.querySelector("em").style =
                     "background: linear-gradient(90deg, #3377B6, #ffffff 85%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;";
                   wEl.querySelector("em").innerHTML = wEl.querySelector("em").innerHTML + " &#x1F327;";
+                case "Overcast":
+                  wEl.querySelector("em").style =
+                    "background: linear-gradient(to bottom, #666666, #ffffff 85%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;";
                   break;
                 default:
                   console.debug(`weather condition: ${w.weatherDesc[0].value}`);

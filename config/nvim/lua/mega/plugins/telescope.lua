@@ -210,9 +210,9 @@ return function()
       sorting_strategy = "descending",
       use_less = true,
       color_devicons = false,
-      file_previewer = previewers.cat.new,
-      grep_previewer = previewers.cat.new,
-      qflist_previewer = previewers.cat.new,
+      -- file_previewer = previewers.cat.new,
+      -- grep_previewer = previewers.cat.new,
+      -- qflist_previewer = previewers.cat.new,
       vimgrep_arguments = {
         "rg",
         "--hidden",

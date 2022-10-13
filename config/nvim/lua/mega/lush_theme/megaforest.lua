@@ -756,6 +756,13 @@ return lush(function()
     MiniJump({ fg = magenta, bg = bg_dark, gui = "bold,underline" }),
     MiniJump2dSpot({ fg = white, bg = bg_dark, gui = "bold" }),
 
+    ---- :help leap.txt --------------------------------------------------------
+
+    LeapBackdrop({ fg = "#707070" }),
+    LeapLabelPrimary({ bg = "NONE", fg = "#ccff88", italic = true }),
+    LeapLabelSecondary({ bg = "NONE", fg = "#99ccff" }),
+    LeapLabelSelected({ bg = "NONE", fg = "Magenta" }),
+
     ---- :help tabline ---------------------------------------------------------
 
     -- TabLine({ fg = grey2, bg = bg3 }), -- tab pages line, not active tab page label
@@ -806,8 +813,8 @@ return lush(function()
 
     ---- :help winbar  ---------------------------------------------------------
 
-    WinBar({ fg = fg, bg = bg1, gui = "italic" }),
-    WinBarNC({ fg = fg, bg = bg_dark, gui = "italic" }),
+    WinBar({ StatusLine, gui = "italic" }),
+    WinBarNC({ StInactive }),
 
     ---- :help ts-rainbow  -----------------------------------------------------
 

@@ -11,11 +11,11 @@ vim.g.enabled_plugin = {
   windows = true,
   numbers = true,
   quickfix = true,
-  simplef = true,
+  simplef = false, -- WIP: trialing flit/leap
   folds = true,
   tmux = false,
   env = false,
-  winbar = true, -- broke, rework completely
+  winbar = false, -- TODO
 }
 
 vim.g.colorscheme = "megaforest"

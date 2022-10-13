@@ -80,6 +80,18 @@ local function plugins(use)
   use({ "MunifTanjim/nui.nvim" })
   use({ "folke/which-key.nvim", ext = "which-key" })
   use({ "phaazon/hop.nvim", ext = "hop" })
+  use({ "ggandor/leap.nvim" })
+  use({
+    "ggandor/flit.nvim",
+    keys = { { "t", "f" } },
+    wants = { "leap.nvim" },
+    after = "leap.nvim",
+    config = function()
+      require("flit").setup({
+        multiline = false,
+      })
+    end,
+  })
   -- use({ "echasnovski/mini.nvim", ext="mini", after = "nvim-treesitter" })
   use({ "anuvyklack/hydra.nvim", ext = "hydra" })
   use({
@@ -114,9 +126,53 @@ local function plugins(use)
     event = "VimEnter",
     config = function()
       require("noice").setup({
+        popupmenu = {
+          backend = "cmp",
+        },
         cmdline = {
           view = "cmdline",
           menu = "wild",
+        },
+        views = {
+          split = {
+            win_options = {
+              winhighlight = { Normal = "Normal" },
+            },
+          },
+          cmdline_popup = {
+            position = {
+              row = 10,
+              col = "50%",
+            },
+          },
+          popupmenu = {
+            relative = "editor",
+            position = {
+              row = 13,
+              col = "50%",
+            },
+            size = {
+              width = 60,
+              height = 10,
+            },
+            border = {
+              style = require("mega.globals").get_border(),
+              padding = { 0, 1 },
+            },
+            win_options = {
+              winhighlight = { Normal = "NormalFloat", FloatBorder = "FloatBorder" },
+            },
+          },
+        },
+        routes = {
+          {
+            filter = { event = "msg_show", kind = "search_count" },
+            opts = { skip = true },
+          },
+          {
+            filter = { event = "msg_show", kind = "", find = "written" },
+            opts = { skip = true },
+          },
         },
       })
     end,
@@ -792,7 +848,14 @@ local function plugins(use)
   use({ "mhartington/formatter.nvim", ext = "formatter" })
   use({ "alvan/vim-closetag" })
   use({ "tpope/vim-eunuch" })
-  use({ "tpope/vim-abolish" })
+  use({
+    "tpope/vim-abolish",
+    config = function()
+      nnoremap("<localleader>[", ":S/<C-R><C-W>//<LEFT>", { silent = false })
+      nnoremap("<localleader>]", ":%S/<C-r><C-w>//c<left><left>", { silent = false })
+      xnoremap("<localleader>[", [["zy:'<'>S/<C-r><C-o>"//c<left><left>]], { silent = false })
+    end,
+  })
   use({ "tpope/vim-rhubarb" })
   use({ "tpope/vim-repeat" })
   use({ "tpope/vim-unimpaired" })
