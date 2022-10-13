@@ -213,6 +213,11 @@ return function()
       -- file_previewer = previewers.cat.new,
       -- grep_previewer = previewers.cat.new,
       -- qflist_previewer = previewers.cat.new,
+      preview = {
+        treesitter = {
+          enable = false,
+        },
+      },
       vimgrep_arguments = {
         "rg",
         "--hidden",

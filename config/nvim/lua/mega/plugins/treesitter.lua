@@ -68,7 +68,8 @@ return function()
           "json",
           "heex",
         }
-        return vim.tbl_contains(disabled_langs, lang) and vim.api.nvim_buf_line_count(bufnr) > 50000
+        return vim.tbl_contains(disabled_langs, lang)
+          and (vim.api.nvim_buf_line_count(bufnr) >= 5000 or vim.fn.getfsize(vim.fn.expand("%")) > 50 * 1024)
       end,
       use_languagetree = true,
       -- disable = function(lang, bufnr) -- Disable in large files
