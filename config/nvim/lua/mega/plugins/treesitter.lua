@@ -23,6 +23,7 @@ return function()
   ft_to_parser.keymap = "devicetree"
   ft_to_parser.zsh = "bash"
   ft_to_parser.kittybuf = "bash"
+  ft_to_parser.eelixir = "eex"
 
   require("nvim-treesitter.configs").setup({
     auto_install = true,
@@ -73,8 +74,16 @@ return function()
     highlight = {
       enable = true,
       disable = function(lang, bufnr)
-        return (vim.api.nvim_buf_line_count(bufnr) >= 5000 or vim.fn.getfsize(vim.fn.expand("%")) >= 50 * 1024)
-        -- and vim.tbl_contains({ "svg", "json", "heex" }, lang)
+        local is_too_long = vim.api.nvim_buf_line_count(bufnr) >= 5000
+        local is_too_large = false
+        local is_ignored_lang = vim.tbl_contains({ "svg", "json", "heex" }, lang)
+
+        local max_filesize = 50 * 1024 -- 50 KB
+        local ok, stats = pcall(vim.loop.fs_stat, vim.api.nvim_buf_get_name(bufnr))
+        if ok and stats and stats.size > max_filesize then is_too_large = true end
+
+        return (is_too_long or is_too_large)
+        -- and is_ignored_lang
       end,
       use_languagetree = true,
       -- Setting this to true will run `:h syntax` and tree-sitter at the same time.
