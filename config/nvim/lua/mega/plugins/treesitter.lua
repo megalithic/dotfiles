@@ -62,6 +62,14 @@ return function()
     },
     highlight = {
       enable = true,
+      disable = function(lang, bufnr)
+        local disabled_langs = {
+          "svg",
+          "json",
+          "heex",
+        }
+        return vim.tbl_contains(disabled_langs, lang) and vim.api.nvim_buf_line_count(bufnr) > 50000
+      end,
       use_languagetree = true,
       -- disable = function(lang, bufnr) -- Disable in large files
       --   -- Remove the org part to use TS highlighter for some of the highlights (Experimental)

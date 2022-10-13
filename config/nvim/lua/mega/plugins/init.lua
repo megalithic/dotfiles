@@ -80,14 +80,23 @@ local function plugins(use)
   use({ "MunifTanjim/nui.nvim" })
   use({ "folke/which-key.nvim", ext = "which-key" })
   use({ "phaazon/hop.nvim", ext = "hop" })
-  use({ "ggandor/leap.nvim" })
+  use({
+    "ggandor/leap.nvim",
+    config = function()
+      require("leap").setup({
+        equivalence_classes = { " \t\r\n", "([{", ")]}", "`\"'" },
+      })
+    end,
+  })
   use({
     "ggandor/flit.nvim",
-    keys = { { "t", "f" } },
     wants = { "leap.nvim" },
     after = "leap.nvim",
     config = function()
       require("flit").setup({
+        keys = { f = "f", F = "F", t = "t", T = "T" },
+        -- A string like "nv", "nvo", "o", etc.
+        labeled_modes = "nv",
         multiline = false,
       })
     end,
@@ -371,7 +380,7 @@ local function plugins(use)
     after = "nvim-treesitter",
     config = function()
       require("treesitter-context").setup({
-        multiline_threshold = 4,
+        multiline_threshold = 2,
         -- separator = { "─", "ContextBorder" }, -- alts: ▁ ─ ▄
         separator = { "▁", "TreesitterContextBorder" }, -- alts: ▁ ─ ▄─▁
         mode = "topline",

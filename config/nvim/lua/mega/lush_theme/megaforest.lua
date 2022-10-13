@@ -759,7 +759,7 @@ return lush(function()
     ---- :help leap.txt --------------------------------------------------------
 
     LeapBackdrop({ fg = "#707070" }),
-    LeapLabelPrimary({ bg = "NONE", fg = "#ccff88", italic = true }),
+    LeapLabelPrimary({ bg = "NONE", fg = "#ccff88", gui = "italic" }),
     LeapLabelSecondary({ bg = "NONE", fg = "#99ccff" }),
     LeapLabelSelected({ bg = "NONE", fg = "Magenta" }),
 
