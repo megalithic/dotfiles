@@ -817,7 +817,8 @@ end
 function mega.sync_plugins()
   P("paq-nvim: syncing plugins..")
   package.loaded["mega.plugins"] = nil
-  require("mega.plugins").sync_all()
+  -- require("mega.plugins").sync_all()
+  vim.cmd("PackerSync")
 end
 
 function mega.list_plugins()

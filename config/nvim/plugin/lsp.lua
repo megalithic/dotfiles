@@ -16,7 +16,7 @@ local max_height = math.min(math.floor(vim.o.lines * 0.3), 30)
 vim.opt.completeopt = { "menu", "menuone", "noselect", "noinsert" }
 vim.opt.shortmess:append("c") -- Don't pass messages to |ins-completion-menu|
 
-vim.lsp.set_log_level("ERROR")
+require("vim.lsp.log").set_level(vim.log.levels.ERROR) -- opts: OFF
 require("vim.lsp.log").set_format_func(vim.inspect)
 
 -- NOTE:
@@ -399,11 +399,13 @@ local function on_attach(client, bufnr)
     return
   end
 
+  local caps = client.server_capabilities
+
   if client.config.flags then client.config.flags.allow_incremental_sync = true end
 
   -- Live color highlighting; handy for tailwindcss
   -- HT: kabouzeid
-  if client.server_capabilities.colorProvider then
+  if caps.colorProvider then
     if client.name == "tailwindcss" then
       -- require("mega.lsp.document_colors").buf_attach(bufnr, { single_column = true, col_count = 2 })
       require("document-color").buf_attach(bufnr, { mode = "single" })
@@ -414,14 +416,23 @@ local function on_attach(client, bufnr)
     end
   end
 
-  if client.server_capabilities.definitionProvider then vim.bo[bufnr].tagfunc = "v:lua.vim.lsp.tagfunc" end
-
-  if client.server_capabilities.documentFormattingProvider then
-    vim.bo[bufnr].formatexpr = "v:lua.vim.lsp.formatexpr()"
+  if caps.semanticTokensProvider and caps.semanticTokensProvider.full then
+    local augroup = vim.api.nvim_create_augroup("SemanticTokens", {})
+    vim.api.nvim_create_autocmd("TextChanged", {
+      group = augroup,
+      buffer = bufnr,
+      callback = function() vim.lsp.buf.semantic_tokens_full() end,
+    })
+    -- fire it first time on load as well
+    vim.lsp.buf.semantic_tokens_full()
   end
 
+  if caps.definitionProvider then vim.bo[bufnr].tagfunc = "v:lua.vim.lsp.tagfunc" end
+
+  if caps.documentFormattingProvider then vim.bo[bufnr].formatexpr = "v:lua.vim.lsp.formatexpr()" end
+
   require("mega.lsp.handlers")
-  if client.server_capabilities.signatureHelpProvider then require("mega.lsp.signature").setup(client) end
+  if caps.signatureHelpProvider then require("mega.lsp.signature").setup(client) end
   setup_formatting(client, bufnr)
   setup_commands()
   setup_autocommands(client, bufnr)

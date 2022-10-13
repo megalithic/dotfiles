@@ -377,7 +377,7 @@ onoremap("au", ":<c-u>lua require\"treesitter-unit\".select(true)<CR>")
 
 -- # paq
 -- map("n", "<F5>", mega.sync_plugins())
-nmap("<F5>", "<cmd>lua mega.sync_plugins()<cr>", "paq: sync plugins")
+nmap("<F5>", "<cmd>lua mega.sync_plugins()<cr>", "packer: sync plugins")
 
 -- -- # dirbuf.nvim
 -- nmap("<C-t>", function()
