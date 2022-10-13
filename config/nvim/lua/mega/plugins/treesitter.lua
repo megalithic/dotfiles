@@ -23,7 +23,7 @@ return function()
   ft_to_parser.keymap = "devicetree"
   ft_to_parser.zsh = "bash"
   ft_to_parser.kittybuf = "bash"
-  ft_to_parser.eelixir = "eex"
+  ft_to_parser.eelixir = "html_eex"
 
   require("nvim-treesitter.configs").setup({
     auto_install = true,
@@ -35,26 +35,26 @@ return function()
       "comment",
       "devicetree",
       "dockerfile",
-      "eex",
+      "eex", -- doesn't seem to work, using `html_eex` below, too
       "elixir",
       "elm",
       "erlang",
       "fish",
       "go",
       "graphql",
-      "html",
-      "html_eex",
       "heex",
       "help",
+      "html",
+      "html_eex",
       "javascript",
-      "markdown",
-      "markdown_inline",
       "jsdoc",
       "json",
       "jsonc",
       "json5",
       "lua",
       "make",
+      "markdown",
+      "markdown_inline",
       "nix",
       "perl",
       "python",
@@ -98,8 +98,6 @@ return function()
         "lua",
         "vim",
         "zsh",
-        "eex",
-        "eelixir",
       },
     },
     indent = { enable = true },
