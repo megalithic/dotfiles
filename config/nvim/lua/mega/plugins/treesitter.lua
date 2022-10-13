@@ -98,6 +98,8 @@ return function()
         "lua",
         "vim",
         "zsh",
+        "eex",
+        "eelixir",
       },
     },
     indent = { enable = true },
