@@ -218,15 +218,35 @@ return function(on_attach)
     end,
     html = function(server_name)
       local opts = vim.tbl_extend("keep", server_opts, {
-        filetypes = { "html", "javascriptreact", "typescriptreact", "eelixir", "html.heex", "heex", "html_heex" },
+        filetypes = {
+          "html",
+          "javascriptreact",
+          "typescriptreact",
+          "eelixir",
+          "html.heex",
+          "heex",
+          "html_heex",
+          "html_eex",
+        },
         init_options = {
-          configurationSection = { "html", "css", "javascript", "eelixir", "heex", "html.heex", "html_heex" },
+          configurationSection = {
+            "html",
+            "css",
+            "javascript",
+            "eelixir",
+            "heex",
+            "html.heex",
+            "html_heex",
+            "html_eex",
+          },
           embeddedLanguages = {
             css = true,
             javascript = true,
             elixir = true,
+            eelixir = true,
             heex = true,
             html_heex = true,
+            html_eex = true,
           },
         },
       })
