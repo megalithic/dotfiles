@@ -130,6 +130,7 @@ brew "mosh", args: ["HEAD"] if OS.mac?
 # brew "mutagen"
 brew "mycli"
 brew "mysql"
+brew "nb" if OS.mac?
 brew "ncurses"
 # brew "neovim", args: ["HEAD"] # building from source now
 # brew "neovim-remote" # pip3'd
@@ -168,8 +169,8 @@ brew "ssh-copy-id"
 brew "stack"
 # brew "starship"
 brew "stow"
-brew "sketchybar", restart_service: true if OS.mac? # sketchybar
-brew "svim" if OS.mac? # restart_service: true if OS.mac? # sketchyvim
+# brew "sketchybar", restart_service: true if OS.mac? # sketchybar
+# brew "svim" if OS.mac? # restart_service: true if OS.mac? # sketchyvim
 brew "switchaudio-osx" if OS.mac?
 brew "terminal-notifier" if OS.mac?
 brew "the_silver_searcher"

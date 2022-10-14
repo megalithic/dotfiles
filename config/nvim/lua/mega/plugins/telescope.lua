@@ -254,7 +254,7 @@ return function()
         auto_quoting = true, -- enable/disable auto-quoting
         mappings = {
           i = {
-            ["<c-q>"] = lga_actions.quote_prompt({ postfix = " -t" }),
+            ["<c-y>"] = lga_actions.quote_prompt({ postfix = " -t" }),
             -- ["<c-q>"] = lga_actions.quote_prompt(),
             -- ["<c-l>g"] = lga_actions.quote_prompt({ postfix = " --iglob " }),
             -- ["<c-l>t"] = lga_actions.quote_prompt({ postfix = " -t" }),

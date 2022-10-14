@@ -72,7 +72,7 @@ return function(on_attach)
     end
   end
 
-  local function lsp_setup(server_name, opts) lspconfig[server_name].setup(opts) end
+  local function lsp_setup(server_name, opts) lspconfig[server_name].setup(opts or {}) end
 
   -- all the server capabilities we could want
   local function get_server_capabilities()
@@ -133,8 +133,11 @@ return function(on_attach)
       "dockerls",
       "elixirls",
       "elmls",
+      "emmet_ls",
+      "erlangls",
       "html",
       "jsonls",
+      "marksman",
       "pyright",
       "rust_analyzer",
       "solargraph",
@@ -272,6 +275,7 @@ return function(on_attach)
 
       lsp_setup(server_name, opts)
     end,
+    marksman = function(server_name) lsp_setup(server_name) end,
     pyright = function(server_name)
       local opts = vim.tbl_extend("keep", server_opts, {
         single_file_support = false,

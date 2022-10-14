@@ -9,11 +9,11 @@ sessions_path="$HOME/.config/kitty/tabs"
 
 selected_session=$(/usr/local/bin/fd sh "$sessions_path" |
   xargs basename | sed 's/\.[^.]*$//' |
-  /usr/local/bin/fzf --cycle --layout=reverse --preview-window="hidden" --prompt ' new or existing session  ')
+/usr/local/bin/fzf --cycle --layout=reverse --preview-window="hidden" --prompt ' new or existing session  ')
 
 if [[ -n $selected_session ]]; then
   # focus existing tab
   kitty @ focus-tab --match title:"$selected_session" 2>/dev/null ||
-    # create a new tab and source our project/session/workspace shell script
-    kitty @ launch --type tab --tab-title "$selected_session" --title "$selected_session" /usr/local/bin/zsh -ic "source $sessions_path/$selected_session.sh; /usr/local/bin/zsh"
+  # create a new tab and source our project/session/workspace shell script
+  kitty @ launch --type tab --tab-title "$selected_session" --title "$selected_session" /usr/local/bin/zsh -ic "source $sessions_path/$selected_session.sh; /usr/local/bin/zsh"
 fi

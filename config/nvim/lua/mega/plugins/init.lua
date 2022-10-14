@@ -631,6 +631,10 @@ local function plugins(use)
   use({ "jbyuki/one-small-step-for-vimkind", after = "nvim-dap" })
   use({ "suketa/nvim-dap-ruby", after = "nvim-dap", config = function() require("dap-ruby").setup() end })
   use({
+    "microsoft/vscode-js-debug",
+    run = "npm install --legacy-peer-deps && npm run compile",
+  })
+  use({
     "mxsdev/nvim-dap-vscode-js",
     after = "nvim-dap",
     config = function()
@@ -642,13 +646,12 @@ local function plugins(use)
           "pwa-msedge",
           "node-terminal",
           "pwa-extensionHost",
-        }, -- which adapters to register in nvim-dap
+        },
       })
     end,
   })
   use({ "sultanahamer/nvim-dap-reactnative", after = "nvim-dap" })
   -- use({ "microsoft/vscode-react-native", after = "nvim-dap" })
-  -- use({ "Pocco81/DAPInstall.nvim", after = "nvim-dap" })
   -- use({
   --   "jayp0521/mason-nvim-dap.nvim",
   --   after = "nvim-dap",
