@@ -84,7 +84,7 @@ const weather = (enabled) => {
     const wEl = document.querySelector("#weather");
     const request = () => {
       loader(wEl, true);
-      get("https://wttr.in/35244?u&format=j1")
+      get("https://wttr.in?u&format=j1")
         .then((data) => {
           if (typeof data !== "undefined") {
             const w = data.current_condition[0];

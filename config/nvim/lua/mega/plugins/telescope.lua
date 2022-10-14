@@ -10,6 +10,34 @@ return function()
   local themes = require("telescope.themes")
   local action_state = require("telescope.actions.state")
 
+  local fd_find_command = { "fd", "--type", "f", "--no-ignore-vcs", "--strip-cwd-prefix" }
+  local rg_find_command = {
+    "rg",
+    "--files",
+    "--no-ignore-vcs",
+    "--hidden",
+    "--no-heading",
+    "--with-filename",
+    "--column",
+    "--smart-case",
+    -- "--ignore-file",
+    -- (Path.join(vim.env.HOME, ".dotfiles", "misc", "tool-ignores")),
+    "--iglob",
+    "!.git",
+  }
+
+  local find_files_cmd = rg_find_command
+  local grep_files_cmd = {
+    "rg",
+    "--hidden",
+    "--no-ignore-vcs",
+    "--no-heading",
+    "--with-filename",
+    "--line-number",
+    "--column",
+    "--smart-case",
+  }
+
   mega.augroup("TelescopePreviews", {
     {
       event = { "User" },
@@ -183,10 +211,10 @@ return function()
         },
       },
       file_ignore_patterns = {
-        "%.jpg",
-        "%.jpeg",
-        "%.gif",
-        "%.png",
+        -- "%.png",
+        -- "%.jpg",
+        -- "%.jpeg",
+        -- "%.gif",
         "%.webp",
         "%.otf",
         "%.ttf",
@@ -238,16 +266,37 @@ return function()
           enable = true,
           -- disable = { "heex", "svg", "json", "json5", "jsonc" },
         },
+        mime_hook = function(filepath, bufnr, opts)
+          local is_image = function(filepath)
+            local image_extensions = { "png", "jpg", "jpeg", "gif" } -- Supported image formats
+            local split_path = vim.split(filepath:lower(), ".", { plain = true })
+            local extension = split_path[#split_path]
+            return vim.tbl_contains(image_extensions, extension)
+          end
+          if is_image(filepath) then
+            local term = vim.api.nvim_open_term(bufnr, {})
+            local function send_output(_, data, _)
+              for _, d in ipairs(data) do
+                vim.api.nvim_chan_send(term, d .. "\r\n")
+              end
+            end
+
+            vim.fn.jobstart({
+              "viu",
+              "-w",
+              "40",
+              "-b",
+              filepath,
+            }, {
+              on_stdout = send_output,
+              stdout_buffered = true,
+            })
+          else
+            require("telescope.previewers.utils").set_preview_message(bufnr, opts.winid, "Binary cannot be previewed")
+          end
+        end,
       },
-      vimgrep_arguments = {
-        "rg",
-        "--hidden",
-        "--no-heading",
-        "--with-filename",
-        "--line-number",
-        "--column",
-        "--smart-case",
-      },
+      vimgrep_arguments = grep_files_cmd,
     },
     extensions = {
       live_grep_args = {
@@ -347,20 +396,7 @@ return function()
       },
       find_files = {
         hidden = true,
-        -- find_command = { "fd", "--type", "f", "--no-ignore-vcs", "--strip-cwd-prefix" },
-        find_command = {
-          "rg",
-          "--hidden",
-          "--no-heading",
-          "--with-filename",
-          "--files",
-          "--column",
-          "--smart-case",
-          "--ignore-file",
-          (Path.join(vim.env.HOME, ".dotfiles", "misc", "tool-ignores")),
-          "--iglob",
-          "!.git",
-        },
+        find_command = find_files_cmd,
         on_input_filter_cb = file_extension_filter,
         -- on_input_filter_cb = function(prompt)
         --   if prompt:sub(#prompt) == "@" then

@@ -357,11 +357,14 @@ mega.command("TermElixir", function()
   })
 end)
 
-mega.command("TermRuby", function()
+mega.command("TermRuby", function(args)
   local precmd = ""
   local cmd = ""
   if require("mega.utils").root_has_file("Deskfile") then precmd = "eval $(desk load)" end
-  if require("mega.utils").root_has_file("Gemfile") then
+
+  if args.bang then
+    cmd = fmt("ruby %s", vim.fn.expand("%"))
+  elseif require("mega.utils").root_has_file("Gemfile") then
     cmd = "rails c"
   else
     cmd = "irb"
@@ -377,7 +380,7 @@ mega.command("TermRuby", function()
       vim.cmd("startinsert")
     end,
   })
-end)
+end, { bang = true })
 
 mega.command("TermLua", function()
   local cmd = "lua"
@@ -430,6 +433,7 @@ nnoremap("<leader>tv", "<cmd>T direction=vertical<cr>", "term (vertical)")
 nnoremap("<leader>tp", "<cmd>T direction=tab<cr>", "term (tab-persistent)")
 nnoremap("<leader>tre", "<cmd>TermElixir<cr>", "repl > elixir")
 nnoremap("<leader>trr", "<cmd>TermRuby<cr>", "repl > ruby")
+nnoremap("<leader>trR", "<cmd>TermRuby!<cr>", "repl > ruby (current file)")
 nnoremap("<leader>trl", "<cmd>TermLua<cr>", "repl > lua")
 nnoremap("<leader>trn", "<cmd>TermNode<cr>", "repl > node")
 nnoremap("<leader>trp", "<cmd>TermPython<cr>", "repl > python")
