@@ -920,6 +920,55 @@ local function plugins(use)
   -- use({ "nanotee/luv-vimdocs" })
   use({ "fladson/vim-kitty" })
   use({ "SirJson/fzf-gitignore", config = function() vim.g.fzf_gitignore_no_maps = true end })
+
+  use({
+    "glacambre/firenvim",
+    run = function() vim.fn["firenvim#install"](0) end,
+    opt = true,
+    config = function()
+      if not vim.g.started_by_firenvim then return end
+
+      local fn = vim.fn
+      local map = vim.keymap.set
+
+      vim.cmd.packadd("firenvim", { bang = true })
+
+      vim.g.firenvim_config = {
+        globalSettings = {
+          alt = "all",
+        },
+        localSettings = {
+          [".*"] = {
+            cmdline = "neovim",
+            content = "text",
+            priority = 0,
+            selector = "textarea",
+            takeover = "never",
+          },
+          ["https?://github.com/"] = {
+            takeover = "always",
+            priority = 1,
+          },
+        },
+        autocmds = {
+          { "BufEnter", "github.com", "setlocal filetype=markdown" },
+        },
+      }
+
+      vim.cmd([[set laststatus=0]])
+      vim.cmd([[set textwidth=0]])
+      vim.cmd([[set nonumber norelativenumber]])
+      map("n", "<Esc><Esc>", fn["firenvim#focus_page"])
+      map("n", "<C-Z>", fn["firenvim#hide_frame"])
+
+      function _G.FirenvimSetup(channel)
+        local channel_info = vim.api.nvim_get_chan_info(channel)
+        if channel_info.client and channel_info.client.name == "Firenvim" then vim.opt.laststatus = 0 end
+      end
+
+      vim.cmd("autocmd UIEnter * call v:lua.FirenvimSetup(deepcopy(v:event.chan))")
+    end,
+  })
 end
 
 mega.command("PackerCompiledEdit", function() vim.cmd.edit(PACKER_COMPILED_PATH) end)

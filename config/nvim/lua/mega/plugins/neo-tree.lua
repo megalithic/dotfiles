@@ -50,7 +50,7 @@ return function()
           vim.cmd("wincmd =")
           require("virt-column").refresh()
           mega.resize_windows()
-          mega.blink_cursorline()
+          mega.blink_cursorline(250)
           vim.cmd("e")
         end,
       },

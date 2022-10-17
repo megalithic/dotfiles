@@ -220,25 +220,20 @@ end
 
 mega.augroup("ToggleCursorLine", {
   {
-    event = { "VimEnter" },
-    once = true,
-    command = function() enable_cursorline(true) end,
-  },
-  {
     event = { "BufEnter", "WinEnter", "FocusGained" },
     command = function()
       -- require("tint").untint(vim.api.nvim_get_current_win())
       enable_cursorline(true)
     end,
   },
-  -- {
-  --   event = { "InsertLeave", "FocusLost" },
-  --   command = function()
-  --     -- require("tint").untint(vim.api.nvim_get_current_win())
-  --     enable_cursorline(false)
-  --     -- require("tint").refresh()
-  --   end,
-  -- },
+  {
+    event = { "InsertLeave", "FocusLost" },
+    command = function()
+      -- require("tint").untint(vim.api.nvim_get_current_win())
+      enable_cursorline(false)
+      -- require("tint").refresh()
+    end,
+  },
   {
     event = { "BufLeave", "WinLeave" },
     command = function()
@@ -246,18 +241,18 @@ mega.augroup("ToggleCursorLine", {
       disable_cursorline()
     end,
   },
-  {
-    event = { "InsertEnter", "CursorMovedI" },
-    command = function()
-      vim.opt_local.cursorlineopt = "number"
-      vim.opt_local.cursorline = true
-    end,
-  },
-  {
-    event = { "CursorMoved" },
-    command = function()
-      disable_cursorline()
-      --cursor_moved()
-    end,
-  },
+  -- {
+  --   event = { "InsertEnter", "CursorMovedI" },
+  --   command = function()
+  --     vim.opt_local.cursorlineopt = "number"
+  --     vim.opt_local.cursorline = true
+  --   end,
+  -- },
+  -- {
+  --   event = { "CursorMoved" },
+  --   command = function()
+  --     disable_cursorline()
+  --     --cursor_moved()
+  --   end,
+  -- },
 })

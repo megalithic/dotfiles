@@ -145,7 +145,7 @@ return lush(function(injected_functions)
     CursorColumn({ fg = "NONE", bg = bg1 }), -- Screen-column at the cursor, when 'cursorcolumn' is set.
     CursorLine({ fg = "NONE", bg = bg1 }), -- Screen-line at the cursor, when 'cursorline' is set.  Low-priority if foreground (ctermfg OR fg) is not set.
     CursorWord({ fg = "NONE", bg = "NONE", gui = "bold,underline" }),
-    CursorLineNr({ fg = brown, bg = bg3, gui = "bold,italic,underline" }), -- Like LineNr when 'cursorline' or 'relativenumber' is set for the cursor line.
+    CursorLineNr({ fg = brown, bg = bg2, gui = "bold,italic" }), -- Like LineNr when 'cursorline' or 'relativenumber' is set for the cursor line.
     CursorLineNrNC({ fg = "NONE", bg = bg1, gui = "NONE" }), -- Like LineNr when 'cursorline' or 'relativenumber' is set for the cursor line.
     CursorLineSign({ CursorLineNr, gui = "NONE" }),
     Directory({ fg = green, bg = "NONE" }), -- directory names (and other special names in listings)
