@@ -8,5 +8,5 @@
   "description": "Neovim UI client from Surfingkeys",
   "name": "surfingkeys",
   "type": "stdio",
-  "path": "/Users/seth/.config/surfingkeys/server_start.sh"
+  "path": "/Users/seth/.dotfiles/config/surfingkeys/server_start.sh"
 }

@@ -203,56 +203,24 @@ local function cursor_moved()
   end
 end
 
--- local function toggle_tint(should_tint)
---   local ok, tint = mega.require("tint")
---   if ok then
---     -- FIXME: full stop! disable for now
---     tint.disable()
-
---     -- tint.enable()
---     if should_tint then
---       tint.tint(vim.api.nvim_get_current_win())
---     else
---       tint.untint(vim.api.nvim_get_current_win())
---     end
---   end
--- end
-
 mega.augroup("ToggleCursorLine", {
   {
     event = { "BufEnter", "WinEnter", "FocusGained" },
-    command = function()
-      -- require("tint").untint(vim.api.nvim_get_current_win())
-      enable_cursorline(true)
-    end,
+    command = function() enable_cursorline(true) end,
   },
   {
     event = { "InsertLeave", "FocusLost" },
-    command = function()
-      -- require("tint").untint(vim.api.nvim_get_current_win())
-      enable_cursorline(false)
-      -- require("tint").refresh()
-    end,
+    command = function() enable_cursorline(false) end,
   },
   {
     event = { "BufLeave", "WinLeave" },
+    command = function() disable_cursorline() end,
+  },
+  {
+    event = { "InsertEnter", "CursorMovedI" },
     command = function()
-      -- require("tint").tint(vim.api.nvim_get_current_win())
-      disable_cursorline()
+      vim.opt_local.cursorlineopt = "number"
+      vim.opt_local.cursorline = true
     end,
   },
-  -- {
-  --   event = { "InsertEnter", "CursorMovedI" },
-  --   command = function()
-  --     vim.opt_local.cursorlineopt = "number"
-  --     vim.opt_local.cursorline = true
-  --   end,
-  -- },
-  -- {
-  --   event = { "CursorMoved" },
-  --   command = function()
-  --     disable_cursorline()
-  --     --cursor_moved()
-  --   end,
-  -- },
 })

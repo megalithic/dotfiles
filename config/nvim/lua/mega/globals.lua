@@ -1071,7 +1071,7 @@ function mega.clear_commandline()
     if timer then timer:stop() end
     timer = vim.defer_fn(function()
       if fn.mode() == "n" then vim.cmd([[echon '']]) end
-    end, 5000)
+    end, 2500)
   end
 end
 

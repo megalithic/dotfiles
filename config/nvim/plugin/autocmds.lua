@@ -27,12 +27,12 @@ do
     return ws
   end
   augroup("Startup", {
-    {
-      event = { "VimEnter" },
-      pattern = { "*" },
-      once = true,
-      command = function() require("mega.start").start() end,
-    },
+    -- {
+    --   event = { "VimEnter" },
+    --   pattern = { "*" },
+    --   once = true,
+    --   command = function() require("mega.start").start() end,
+    -- },
     -- {
     --   event = { "VimEnter" },
     --   pattern = { "*" },

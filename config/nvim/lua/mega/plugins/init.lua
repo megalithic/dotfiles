@@ -924,14 +924,9 @@ local function plugins(use)
   use({
     "glacambre/firenvim",
     run = function() vim.fn["firenvim#install"](0) end,
-    opt = true,
     config = function()
       if not vim.g.started_by_firenvim then return end
-
-      local fn = vim.fn
-      local map = vim.keymap.set
-
-      vim.cmd.packadd("firenvim", { bang = true })
+      vim.opt.guifont = "JetBrainsMono Nerd Font Mono:h20"
 
       vim.g.firenvim_config = {
         globalSettings = {
@@ -952,21 +947,76 @@ local function plugins(use)
         },
         autocmds = {
           { "BufEnter", "github.com", "setlocal filetype=markdown" },
+          { "BufEnter", "leetcode.com_*.js", "setlocal filetype=typescript" },
         },
       }
 
-      vim.cmd([[set laststatus=0]])
-      vim.cmd([[set textwidth=0]])
-      vim.cmd([[set nonumber norelativenumber]])
-      map("n", "<Esc><Esc>", fn["firenvim#focus_page"])
-      map("n", "<C-Z>", fn["firenvim#hide_frame"])
+      -- local function firenvim_setup()
+      --   vim.notify("FIRENVIM!")
+      --   vim.opt.laststatus = 0
 
-      function _G.FirenvimSetup(channel)
-        local channel_info = vim.api.nvim_get_chan_info(channel)
-        if channel_info.client and channel_info.client.name == "Firenvim" then vim.opt.laststatus = 0 end
-      end
+      --   if vim.api.nvim_get_option("lines") < 5 then
+      --     vim.opt.number = false
+      --     vim.opt.relativenumber = false
+      --     vim.opt.signcolumn = "no"
+      --     vim.o.showtabline = 0
+      --     vim.cmd("startinsert")
+      --   end
 
-      vim.cmd("autocmd UIEnter * call v:lua.FirenvimSetup(deepcopy(v:event.chan))")
+      --   vim.opt.wrap = true
+      --   vim.opt.linebreak = true
+
+      --   require("mega.global").nmap("<Esc><Esc>", vim.fn["firenvim#focus_page"])
+      --   require("mega.global").nmap("<C-Z>", vim.fn["firenvim#hide_frame"])
+      -- end
+
+      require("mega.globals").augroup("FireNvim", {
+        {
+          event = { "BufEnter" },
+          command = function()
+            vim.opt.wrap = true
+            vim.opt.linebreak = true
+            vim.opt.laststatus = 0
+            vim.opt.showtabline = 0
+            vim.opt_local.relativenumber = false
+            vim.opt_local.signcolumn = "no"
+            vim.opt_local.cursorlineopt = "number"
+            vim.opt_local.cursorline = true
+
+            if vim.api.nvim_buf_line_count(0) < 5 then
+              vim.cmd([[exec 'norm gg']])
+              if vim.fn.prevnonblank(".") ~= vim.fn.line(".") then vim.cmd([[startinsert]]) end
+            end
+
+            require("mega.globals").nmap("<Esc><Esc>", vim.fn["firenvim#focus_page"])
+            require("mega.globals").nmap("<C-Z>", vim.fn["firenvim#hide_frame"])
+          end,
+        },
+      })
+
+      -- function _G.FirenvimSetup(channel)
+      --   local channel_info = vim.api.nvim_get_chan_info(channel)
+      --   if channel_info.client and channel_info.client.name == "Firenvim" then
+      --     vim.notify("firenvim!!!!!!!!!!!!!!!!!!!!!!")
+      --     vim.opt.laststatus = 0
+
+      --     if vim.api.nvim_get_option("lines") < 5 then
+      --       vim.opt.number = false
+      --       vim.opt.relativenumber = false
+      --       vim.opt.signcolumn = "no"
+      --       vim.o.showtabline = 0
+      --       vim.cmd("startinsert")
+      --     end
+
+      --     vim.opt.wrap = true
+      --     vim.opt.linebreak = true
+      --   end
+      -- end
+
+      -- map("n", "<Esc><Esc>", vim.fn["firenvim#focus_page"])
+      -- map("n", "<C-Z>", vim.fn["firenvim#hide_frame"])
+
+      -- vim.cmd("autocmd UIEnter * call v:lua.FirenvimSetup(deepcopy(v:event.chan))")
     end,
   })
 end
