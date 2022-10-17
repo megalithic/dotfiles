@@ -75,7 +75,7 @@ function M.rename()
       params.newName = new_name
       lsp.buf_request(0, "textDocument/rename", params)
     else
-      mega.warn("Rename text matches; try again.")
+      vim.notify("Rename text matches; try again.", vim.log.levels.WARN, { title = "LSP" })
     end
   end
 

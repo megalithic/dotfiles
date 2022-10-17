@@ -944,6 +944,10 @@ local function plugins(use)
             takeover = "always",
             priority = 1,
           },
+          ["https?://stackoverflow.com/"] = {
+            takeover = "always",
+            priority = 1,
+          },
         },
         autocmds = {
           { "BufEnter", "github.com", "setlocal filetype=markdown" },

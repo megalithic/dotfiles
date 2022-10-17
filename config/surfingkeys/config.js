@@ -567,3 +567,25 @@ settings.theme = `
       animation: 0s ease-in-out 1 forwards collapseRichHints;
   }
   `;
+
+const handleLoaded = () => {
+  // window.addEventListener("click", (evt) => {
+  //   if (evt.target.nodeName === "TEXTAREA") {
+  //     let el = evt.target;
+  //     // el.style = `height: ${el.clientHeight + 500}px`;
+  //     el.style = `height: 800px`;
+  //   }
+  // });
+
+  // force all textareas to be a little bigger..
+  let textareas = document.querySelectorAll("textarea");
+  textareas.forEach((el) => {
+    el.style = `min-height: 500px`;
+  });
+};
+
+if (["complete", "loaded", "interactive"].indexOf(document.readyState) >= 0) {
+  handleLoaded();
+} else {
+  document.addEventListener("DOMContentLoaded", () => handleLoaded());
+}

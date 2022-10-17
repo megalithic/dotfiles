@@ -56,11 +56,6 @@ local M = {
   prev_row = 0,
 }
 
-local DISABLED = 0
-local CURSOR = 1
-local WINDOW = 2
-
-local status = CURSOR
 local blink_active = false
 
 local timer = vim.loop.new_timer()
@@ -96,19 +91,6 @@ local function unhighlight_cursorline()
   vim.cmd("highlight! CursorLineNr guibg=" .. normal_bg)
 end
 
-local function timer_start()
-  if not is_ignored() then
-    timer:start(
-      M.cursorline_delay,
-      0,
-      vim.schedule_wrap(function()
-        highlight_cursorline()
-        status = CURSOR
-      end)
-    )
-  end
-end
-
 local function set_cursorline()
   if not is_ignored() then
     vim.opt_local.cursorline = true
@@ -122,43 +104,27 @@ end
 function mega.blink_cursorline(delay)
   if is_ignored() then return end
 
-  local blink_timer = vim.loop.new_timer()
+  timer = vim.loop.new_timer()
   blink_active = true
+
   vim.opt_local.cursorlineopt = "screenline,number"
   highlight_cursorline()
 
-  blink_timer:start(
+  timer:start(
     delay or M.blink_delay,
     0,
     vim.schedule_wrap(function()
       unhighlight_cursorline()
       set_cursorline()
-      blink_timer:stop()
-      blink_timer:close()
+      if timer then
+        timer:stop()
+        timer:close()
+        timer = nil
+      end
       blink_active = false
       highlight_cursorline()
     end)
   )
-end
-
-local function should_change_cursorline()
-  local should_blink = false
-  local should_change = false
-
-  local cursor = vim.api.nvim_win_get_cursor(0)
-  local current_row = cursor[1]
-  local current_col = cursor[2]
-
-  -- local col_diff = math.abs(current_col - M.prev_col)
-  local row_diff = math.abs(current_row - M.prev_row)
-
-  should_blink = row_diff >= M.minimal_jump
-  should_change = current_row ~= M.prev_row
-
-  M.prev_col = current_col
-  M.prev_row = current_row
-
-  return should_change, should_blink
 end
 
 local function disable_cursorline()
@@ -166,7 +132,6 @@ local function disable_cursorline()
 
   vim.opt_local.cursorlineopt = "number" -- optionally -> "screenline,number"
   vim.opt_local.cursorline = false
-  status = WINDOW
   blink_active = false
 end
 
@@ -179,28 +144,6 @@ local function enable_cursorline(should_blink)
 
   set_cursorline()
   highlight_cursorline()
-  status = WINDOW
-end
-
-local function cursor_moved()
-  local should_change, should_blink = should_change_cursorline()
-
-  if is_ignored() or not should_change then return end
-
-  if status == WINDOW then
-    status = CURSOR
-    return
-  end
-
-  vim.opt_local.cursorlineopt = "screenline,number"
-  timer_start()
-
-  if should_blink then mega.blink_cursorline() end
-
-  if status == CURSOR and M.cursorline_delay ~= 0 then
-    unhighlight_cursorline()
-    status = DISABLED
-  end
 end
 
 mega.augroup("ToggleCursorLine", {

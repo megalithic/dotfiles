@@ -147,20 +147,22 @@ local function setup_autocommands(client, bufnr)
       end,
     },
   })
-  augroup("LspDocumentHighlight", {
-    {
-      event = { "CursorHold", "CursorHoldI" },
-      buffer = bufnr,
-      command = function()
-        if supports_highlight then vim.lsp.buf.document_highlight() end
-      end,
-    },
-    {
-      event = { "CursorMoved", "BufLeave" },
-      buffer = bufnr,
-      command = function() vim.lsp.buf.clear_references() end,
-    },
-  })
+
+  -- augroup("LspDocumentHighlight", {
+  --   {
+  --     event = { "CursorHold", "CursorHoldI" },
+  --     buffer = bufnr,
+  --     command = function()
+  --       if supports_highlight then vim.lsp.buf.document_highlight() end
+  --     end,
+  --   },
+  --   {
+  --     event = { "CursorMoved", "BufLeave" },
+  --     buffer = bufnr,
+  --     command = function() vim.lsp.buf.clear_references() end,
+  --   },
+  -- })
+
   augroup("LspDiagnostics", {
     {
       event = { "CursorHold" },

@@ -289,8 +289,8 @@ nnoremap("<leader><leader>", "<C-^>")
 cnoremap("<C-p>", "<Up>", { desc = "Line Up (command-mode)" })
 cnoremap("<C-n>", "<Down>", { desc = "Line Down (command-mode)" })
 
-nnoremap("<C-f>", "<C-f>zz")
-nnoremap("<C-b>", "<C-b>zz")
+nnoremap("<C-f>", "<C-f>zz<Esc><Cmd>lua mega.blink_cursorline(75)<CR>")
+nnoremap("<C-b>", "<C-b>zz<Esc><Cmd>lua mega.blink_cursorline(75)<CR>")
 
 vnoremap([[J]], [[5j]], "Jump down")
 vnoremap([[K]], [[5k]], "Jump up")
@@ -336,12 +336,19 @@ imap("!", "!<C-g>u")
 imap("?", "?<C-g>u")
 
 -- REF: https://github.com/mhinz/vim-galore/blob/master/README.md#saner-behavior-of-n-and-n
-nnoremap("n", "'Nn'[v:searchforward].'zzzv'.'<Esc><Cmd>lua mega.hl_search_blink(0.3)<CR>'", { expr = true })
-xnoremap("n", "'Nn'[v:searchforward].'zzzv'.'<Esc><Cmd>lua mega.hl_search_blink(0.3)<CR>'", { expr = true })
-onoremap("n", "'Nn'[v:searchforward].'zzzv'.'<Esc><Cmd>lua mega.hl_search_blink(0.3)<CR>'", { expr = true })
-nnoremap("N", "'nN'[v:searchforward].'zzzv'.'<Esc><Cmd>lua mega.hl_search_blink(0.3)<CR>'", { expr = true })
-xnoremap("N", "'nN'[v:searchforward].'zzzv'.'<Esc><Cmd>lua mega.hl_search_blink(0.3)<CR>'", { expr = true })
-onoremap("N", "'nN'[v:searchforward].'zzzv'.'<Esc><Cmd>lua mega.hl_search_blink(0.3)<CR>'", { expr = true })
+-- nnoremap("n", "'Nn'[v:searchforward].'zzzv'.'<Esc><Cmd>lua mega.blink_cursorline(150)<CR>'", { expr = true })
+-- xnoremap("n", "'Nn'[v:searchforward].'zzzv'.'<Esc><Cmd>lua mega.blink_cursorline(150)<CR>'", { expr = true })
+-- onoremap("n", "'Nn'[v:searchforward].'zzzv'.'<Esc><Cmd>lua mega.blink_cursorline(150)<CR>'", { expr = true })
+-- nnoremap("N", "'nN'[v:searchforward].'zzzv'.'<Esc><Cmd>lua mega.blink_cursorline(150)<CR>'", { expr = true })
+-- xnoremap("N", "'nN'[v:searchforward].'zzzv'.'<Esc><Cmd>lua mega.blink_cursorline(150)<CR>'", { expr = true })
+-- onoremap("N", "'nN'[v:searchforward].'zzzv'.'<Esc><Cmd>lua mega.blink_cursorline(150)<CR>'", { expr = true })
+
+nnoremap("n", "nzzzv<esc><cmd>lua mega.blink_cursorline(50)<cr>")
+xnoremap("n", "nzzzv<esc><cmd>lua mega.blink_cursorline(50)<cr>")
+onoremap("n", "nzzzv<esc><cmd>lua mega.blink_cursorline(50)<cr>")
+nnoremap("N", "Nzzzv<esc><cmd>lua mega.blink_cursorline(50)<cr>")
+xnoremap("N", "Nzzzv<esc><cmd>lua mega.blink_cursorline(50)<cr>")
+onoremap("N", "Nzzzv<esc><cmd>lua mega.blink_cursorline(50)<cr>")
 
 -- REF: https://github.com/mhinz/vim-galore/blob/master/README.md#saner-command-line-history
 cnoremap("<C-n>", [[wildmenumode() ? "\<c-n>" : "\<down>"]], { expr = true })
