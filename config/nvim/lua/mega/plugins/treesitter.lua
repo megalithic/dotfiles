@@ -101,9 +101,7 @@ return function()
       },
     },
     indent = { enable = true },
-    autotag = {
-      enable = true,
-    },
+    autotag = { enable = true },
     context_commentstring = {
       enable = true,
       enable_autocmd = false,
@@ -137,14 +135,14 @@ return function()
         enable = true,
         include_surrounding_whitespace = false,
         keymaps = {
-          ["af"] = "@function.outer",
-          ["if"] = "@function.inner",
-          ["ac"] = "@class.outer",
-          ["ic"] = "@class.inner",
-          ["aC"] = "@conditional.outer",
-          ["iC"] = "@conditional.inner",
           ["ix"] = "@comment.inner",
           ["ax"] = "@comment.outer",
+          ["af"] = { query = "@function.outer", desc = "ts: all function" },
+          ["if"] = { query = "@function.inner", desc = "ts: inner function" },
+          ["ac"] = { query = "@class.outer", desc = "ts: all class" },
+          ["ic"] = { query = "@class.inner", desc = "ts: inner class" },
+          ["aC"] = { query = "@conditional.outer", desc = "ts: all conditional" },
+          ["iC"] = { query = "@conditional.inner", desc = "ts: inner conditional" },
         },
       },
       swap = {

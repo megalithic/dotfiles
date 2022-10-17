@@ -206,7 +206,7 @@ vim.o.splitkeep = "screen"
 vim.o.cmdheight = 1 -- Set command line height to two lines
 vim.o.showbreak = [[↪ ]] -- Options include -> '…', '↳ ', '→','↪ '
 vim.o.showbreak = string.rep(" ", 3) -- Make it so that long lines wrap smartly
-vim.o.lazyredraw = true -- should make scrolling faster
+vim.o.lazyredraw = false -- should make scrolling faster; disabled for noice.nvim
 vim.o.ttyfast = true -- more faster scrolling (thanks @morganick!)
 --- This is used to handle markdown code blocks where the language might
 --- be set to a value that isn't equivalent to a vim filetype

@@ -111,6 +111,7 @@ local function plugins(use)
   use({
     "rcarriga/nvim-notify",
     ext = "notify",
+    module = "notify",
     cond = function() return vim.g.notifier_enabled and vim.o.cmdheight == 0 end,
   })
   use({
@@ -129,89 +130,13 @@ local function plugins(use)
       })
     end,
   })
-  use({
-    "folke/noice.nvim",
-    cond = function() return vim.o.cmdheight == 0 end,
-    requires = { "MunifTanjim/nui.nvim", "rcarriga/nvim-notify" },
-    event = "VimEnter",
-    config = function()
-      require("noice").setup({
-        popupmenu = {
-          backend = "cmp",
-        },
-        cmdline = {
-          view = "cmdline",
-          menu = "wild",
-        },
-        views = {
-          split = {
-            win_options = {
-              winhighlight = { Normal = "Normal" },
-            },
-          },
-          cmdline_popup = {
-            position = {
-              row = 10,
-              col = "50%",
-            },
-          },
-          popupmenu = {
-            relative = "editor",
-            position = {
-              row = 13,
-              col = "50%",
-            },
-            size = {
-              width = 60,
-              height = 10,
-            },
-            border = {
-              style = require("mega.globals").get_border(),
-              padding = { 0, 1 },
-            },
-            win_options = {
-              winhighlight = { Normal = "NormalFloat", FloatBorder = "FloatBorder" },
-            },
-          },
-        },
-        routes = {
-          {
-            filter = { event = "msg_show", kind = "search_count" },
-            opts = { skip = true },
-          },
-          {
-            filter = { event = "msg_show", kind = "", find = "written" },
-            opts = { skip = true },
-          },
-          {
-            view = "mini",
-            filter = {
-              any = {
-                {
-                  event = "msg_show",
-                  kind = {
-                    "",
-                    "echo",
-                    "echomsg",
-                    "echoerr",
-                    "lua_error",
-                    "rpc_error",
-                    "return_prompt",
-                    "quickfix",
-                    "wmsg",
-                  },
-                },
-              },
-            },
-          },
-        },
-      })
-    end,
-  })
+
   -- use({
   --   "levouh/tint.nvim",
+  --   -- cond = not vim.g.enabled_plugin["cursorline"],
   --   config = function()
-  --     require("tint").setup({
+  --     local tint = require("tint")
+  --     tint.setup({
   --       tint = -30,
   --       highlight_ignore_patterns = {
   --         "WinSeparator",
@@ -239,6 +164,7 @@ local function plugins(use)
   --         }
   --         return require("mega.globals").any(b.bt, ignore_bt) or require("mega.globals").any(b.ft, ignore_ft)
   --       end,
+  --       tint.disable(),
   --     })
   --   end,
   -- })
