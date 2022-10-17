@@ -18,5 +18,6 @@ return function()
       require("notify.render")[style](...)
     end,
   })
-  vim.notify = nnotify
+
+  -- vim.notify = nnotify
 end
