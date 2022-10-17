@@ -105,7 +105,7 @@ return function(on_attach)
     }
 
     local nvim_lsp_ok, cmp_nvim_lsp = mega.require("cmp_nvim_lsp")
-    if nvim_lsp_ok then capabilities = cmp_nvim_lsp.update_capabilities(capabilities) end
+    if nvim_lsp_ok then capabilities = cmp_nvim_lsp.default_capabilities(capabilities) end
 
     -- local nvim_tokens_ok, nvim_semantic_tokens = mega.require("nvim-semantic-tokens")
     -- if nvim_tokens_ok then capabilities = nvim_semantic_tokens.update_capabilities(capabilities) end

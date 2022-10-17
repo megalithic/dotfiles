@@ -3,7 +3,8 @@
 -- # REFS:
 -- - https://github.com/svitax/fennec-gruvbox.nvim/blob/master/lua/lush_theme/fennec-gruvbox.lua
 -- - https://github.com/mcchrish/zenbones.nvim/blob/main/lua/zenbones/specs/dark.lua
--- FIXME:
+-- - https://github.com/rktjmp/lush.nvim/issues/109
+-- # FIXME:
 
 -- `megaforest` built with,
 --
@@ -120,45 +121,8 @@ vim.g.VM_Extend_hl = "Visual"
 vim.g.VM_Cursor_hl = "Cursor"
 vim.g.VM_Insert_hl = "Cursor"
 
-local lushify_custom_ts = function()
-  -- highlight WARN/FIXME/TODO/NOTE/REF: comments
-
-  -- TSCommentRef({ fg = red, gui = "underline" }),
-  -- TSCommentFix({ bg = dark_red }),
-  -- TSCommentTodo({ bg = dark_orange }),
-  -- TSCommentNote({ commentTSNote }),
-
-  -- NOTE: custom treesitter highlight/queries nodes:
-  local hlmap = {}
-
-  hlmap["@comment.fix"] = { bg = red, fg = bg_dark, gui = "bold,underline" }
-  hlmap["@comment.todo"] = { fg = dark_orange, gui = "bold" }
-  hlmap["@comment.warn"] = { fg = orange, gui = "bold" }
-  hlmap["@comment.note"] = { fg = teal, gui = "italic" }
-  hlmap["@comment.ref"] = { fg = bright_blue, gui = "italic" }
-
-  -- hlmap["@comment.hack"] = { bg = red, fg = bg_dark, gui = "bold" }
-  -- hlmap["@comment.user"] = { bg = red, fg = bg_dark, gui = "bold" }
-  -- hlmap["@comment.issue"] = { bg = red, fg = bg_dark, gui = "bold" }
-  -- hlmap["@comment.test"] = { bg = red, fg = bg_dark, gui = "bold" }
-
-  for group, colors in pairs(hlmap) do
-    vim.cmd(
-      string.format(
-        "highlight %s guifg=%s guibg=%s guisp=%s gui=%s blend=%s",
-        group,
-        colors.fg or "none",
-        colors.bg or "none",
-        colors.sp or "none",
-        colors.style or colors.gui or "none",
-        colors.blend or 0
-      )
-    )
-  end
-end
-
-return lush(function()
-  -- lushify_custom_ts()
+return lush(function(injected_functions)
+  local sym = injected_functions.sym
 
   return {
     ---- :help highlight-default -------------------------------
@@ -433,64 +397,66 @@ return lush(function()
 
     ---- :help nvim-treesitter-highlights (external plugin) ----
 
-    TSAnnotation({ Purple }),
-    TSAttribute({ Purple }),
-    TSBoolean({ Purple }),
-    TSCharacter({ Yellow }),
-    TSConditional({ Red }),
-    TSConstBuiltin({ PurpleItalic }),
-    TSConstMacro({ Purple }),
-    TSConstant({ PurpleItalic }),
-    TSConstructor({ Fg }),
-    TSEmphasis({ fg = "NONE", bg = "NONE", gui = "italic" }),
-    TSException({ Red }),
-    TSField({ Green }),
-    TSFloat({ Purple }),
-    TSFuncBuiltin({ Green }),
-    TSFuncMacro({ Green }),
-    TSFunction({ Green }),
-    TSInclude({ PurpleItalic }),
-    TSKeyword({ Red, gui = "bold" }),
-    TSKeywordFunction({ Red, gui = "bold,italic" }),
-    TSLabel({ Orange }),
-    TSMethod({ Green }),
-    TSNamespace({ BlueItalic, fg = bright_blue }),
-    TSNumber({ Purple }),
-    TSOperator({ Orange }),
-    TSParameter({ Fg }),
-    TSParameterReference({ Fg }),
-    TSProperty({ Green }),
-    TSPunctBracket({ Fg }),
-    TSPunctDelimiter({ Grey }),
-    TSPunctSpecial({ Fg }),
-    TSRepeat({ Red }),
-    TSString({ Yellow }),
-    TSStringRegex({ Blue }),
-    TSStringEscape({ Purple }),
-    TSStrong({ fg = "NONE", bg = "NONE", gui = "bold" }),
-    TSStructure({ Orange }),
-    TSTag({ Orange }),
-    TSTagDelimiter({ Green }),
-    TSText({ Green }),
-    TSType({ Aqua }),
-    TSTypeBuiltin({ BlueItalic }),
-    TSUnderline({ fg = "NONE", bg = "NONE", gui = "underline" }),
-    TSURI({ fg = blue, bg = "NONE", gui = "underline" }),
-    TSVariable({ Fg }),
-    TSVariableBuiltin({ PurpleItalic }),
-    TSComment({ fg = light_grey, gui = "italic" }),
-    TSError({ gui = "undercurl", sp = red }), -- ErrorText
+    sym("@annotation") {Purple},
+    sym("@attribute") {Purple},
+    sym("@boolean") {Purple},
+    sym("@character") {Yellow},
+    sym("@conditional") {Red},
+    sym("@const.builtin") {PurpleItalic},
+    sym("@const.macro") {Purple},
+    sym("@constant") {PurpleItalic},
+    sym("@constructor") {Fg},
+    sym("@emphasis") { fg = "NONE", bg = "NONE", gui = "italic" },
+    sym("@exception") {Red},
+    sym("@field") {Green},
+    sym("@float") {Purple},
+    sym("@func.builtin") {Green},
+    sym("@func.macro") {Green},
+    sym("@function") {Green},
+    sym("@include") {PurpleItalic},
+    sym("@keyword") {Red, gui="bold"},
+    sym("@keyword.function") {Red, gui="bold,italic"},
+    sym("@label") {Orange},
+    sym("@method") {Green},
+    sym("@namespace") {BlueItalic, fg=bright_blue},
+    sym("@number") {Purple},
+    sym("@operator") {Orange},
+    sym("@parameter") {Fg},
+    sym("@parameter.reference") {Fg},
+    sym("@property") {Green},
+    sym("@punct.bracket") {Fg},
+    sym("@punct.delimiter") {Grey},
+    sym("@punct.special") {Fg},
+    sym("@repeat") {Red},
+    sym("@string") {Yellow},
+    sym("@string.regex") {Blue},
+    sym("@string.escape") {Purple},
+    sym("@strong") { fg = "NONE", bg = "NONE", gui = "bold" },
+    sym("@structure") {Orange},
+    sym("@tag") {Orange},
+    sym("@tag.delimiter") {Green},
+    sym("@text") {Green},
+    sym("@type") {Aqua},
+    sym("@type.builtin") {BlueItalic},
+    sym("@underline") { fg = "NONE", bg = "NONE", gui = "underline" },
+    sym("@uri") { fg = blue, bg = "NONE", gui = "underline" },
+    sym("@variable") {Fg},
+    sym("@variable.builtin") { PurpleItalic },
+    sym("@comment") { fg = light_grey, gui = "italic" },
+    sym("@error") { gui = "undercurl", sp = red },
 
-    -- highlight WARN/FIXME/TODO/NOTE/REF: comments
+    -- -- highlight WARN/FIXME/TODO/NOTE/REF: comments
 
-    commentTSDanger({ bg = red, fg = bg_dark, gui = "bold,underline" }),
-    commentTSWarning({ fg = orange, gui = "bold" }),
-    commentTSNote({ fg = teal, gui = "italic" }),
-    commentTSRef({ fg = cyan }),
+    sym("@comment.fix")  { bg = red, fg = bg_dark, gui = "bold,underline" },
+    sym("@comment.warn")  { fg = orange, gui = "bold" },
+    sym("@comment.note")  { fg = teal, gui = "italic" },
+    sym("@comment.todo")  { fg = dark_orange, gui = "bold" },
+    sym("@comment.ref")  { fg = bright_blue, gui = "italic" },
 
-    TSWarning({ commentTSWarning }),
-    TSDanger({ commentTSDanger }),
-    TSNote({ commentTSNote }),
+    sym("@text.danger") { sym("@comment.fix") },
+    sym("@text.warning") { sym("@comment.warn") },
+    sym("@text.todo")  { sym("@comment.todo") },
+    sym("@text.note")  { fg = teal, gui = "italic" },
 
     ---- :help treesitter-context ----------------------------------------------
 
@@ -501,15 +467,17 @@ return lush(function()
     TreesitterContextBorder({ fg = bg_dark, bg = TreesitterContext.bg }),
 
     -- TS: Markdown
-    markdownTSPunctSpecial({ Special }),
-    markdownTSStringEscape({ SpecialKey }),
-    markdownTSTextReference({ Identifier, gui = "underline" }),
-    markdownTSEmphasis({ fg = grey1, bg = "NONE", gui = "italic" }),
-    markdownTSTitle({ Statement, bg = bg1 }),
-    markdownTSLiteral({ Type }),
-    markdownTSURI({ TSURI }),
+    -- sym("@markdown.punct.special") {Special},
+    -- sym("@markdown.punct.special") { Special },
+    -- sym("@markdown.string.escape") { SpecialKey },
+    -- sym("@markdown.text.reference") { Identifier, gui = "underline" },
+    -- sym("@markdown.emphasis") { fg = grey1, bg = "NONE", gui = "italic" },
+    -- sym("@markdown.title") { Statement, bg = bg1 },
+    -- sym("@markdown.literal") { Type },
+    -- sym("@markdown.uri") { sym("@uri") },
+
     markdownCode({ fg = grey1, bg = bg1 }),
-    markdownLinkText({ markdownTSTextReference }),
+    -- markdownLinkText({ sym("@markdown.text.reference") }),
 
     ---- :help gitcommit -------------------------------------------
 

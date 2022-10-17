@@ -132,6 +132,7 @@ local function plugins(use)
   use({
     "folke/noice.nvim",
     cond = function() return vim.o.cmdheight == 0 end,
+    requires = { "MunifTanjim/nui.nvim", "rcarriga/nvim-notify" },
     event = "VimEnter",
     config = function()
       require("noice").setup({
@@ -181,6 +182,27 @@ local function plugins(use)
           {
             filter = { event = "msg_show", kind = "", find = "written" },
             opts = { skip = true },
+          },
+          {
+            view = "mini",
+            filter = {
+              any = {
+                {
+                  event = "msg_show",
+                  kind = {
+                    "",
+                    "echo",
+                    "echomsg",
+                    "echoerr",
+                    "lua_error",
+                    "rpc_error",
+                    "return_prompt",
+                    "quickfix",
+                    "wmsg",
+                  },
+                },
+              },
+            },
           },
         },
       })
