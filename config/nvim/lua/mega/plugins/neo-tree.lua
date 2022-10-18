@@ -54,6 +54,14 @@ return function()
           vim.cmd("e")
         end,
       },
+      {
+        event = "neo_tree_popup_buffer_enter",
+        handler = function(args) vim.cmd("highlight! Cursor blend=0") end,
+      },
+      {
+        event = "neo_tree_popup_buffer_leave",
+        handler = function(args) vim.cmd("highlight! Cursor blend=100") end,
+      },
     },
     filesystem = {
       hijack_netrw_behavior = "open_current",

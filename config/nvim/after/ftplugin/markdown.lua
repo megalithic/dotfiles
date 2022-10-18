@@ -135,22 +135,22 @@ mega.conf("bullets.vim", function()
   vim.g.bullets_set_mappings = 0
   -- vim.g.bullets_outline_levels = { "num" }
 
-  vim.cmd([[
-        " Disable default bullets.vim mappings, clashes with other mappings
-        let g:bullets_set_mappings = 0
-        " let g:bullets_checkbox_markers = '✗○◐●✓'
-        let g:bullets_checkbox_markers = ' .oOx'
+  -- vim.cmd([[
+  --       " Disable default bullets.vim mappings, clashes with other mappings
+  --       let g:bullets_set_mappings = 0
+  --       " let g:bullets_checkbox_markers = '✗○◐●✓'
+  --       let g:bullets_checkbox_markers = ' .oOx'
 
-        " Add custom bullets mappings that don't clash with other mappings
-        function! InsertNewBullet()
-          InsertNewBullet
-          return ''
-        endfunction
+  --       " Add custom bullets mappings that don't clash with other mappings
+  --       function! InsertNewBullet()
+  --         InsertNewBullet
+  --         return ''
+  --       endfunction
 
-          " \ inoremap <buffer><expr> <cr> (pumvisible() ? '<C-y>' : '<C-]><C-R>=InsertNewBullet()<cr>')|
-        autocmd FileType markdown,text,gitcommit
-          \ nnoremap <silent><buffer> o :InsertNewBullet<cr>|
-          \ nnoremap cx :ToggleCheckbox<cr>
-          \ nmap <C-x> :ToggleCheckbox<cr>
-      ]])
+  --         " \ inoremap <buffer><expr> <cr> (pumvisible() ? '<C-y>' : '<C-]><C-R>=InsertNewBullet()<cr>')|
+  --       autocmd FileType markdown,text,gitcommit
+  --         \ nnoremap <silent><buffer> o :InsertNewBullet<cr>|
+  --         \ nnoremap cx :ToggleCheckbox<cr>
+  --         \ nmap <C-x> :ToggleCheckbox<cr>
+  --     ]])
 end)

@@ -134,7 +134,7 @@ return function(on_attach)
       "elixirls",
       "elmls",
       "emmet_ls",
-      "erlangls",
+      "erlang-ls",
       "html",
       "jsonls",
       "marksman",
