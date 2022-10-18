@@ -1,0 +1,7 @@
+{
+  "name": "firenvim",
+  "description": "Turn your browser into a Neovim GUI.",
+  "path": "/Users/seth/.local/share/firenvim/firenvim",
+  "type": "stdio",
+  "allowed_origins": ["chrome-extension://egpjdkipkomnmjhjmdamaniclmdlobbo/"]
+}

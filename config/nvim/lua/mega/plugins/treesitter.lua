@@ -74,15 +74,8 @@ return function()
     highlight = {
       enable = true,
       disable = function(lang, bufnr)
-        local is_too_long = vim.api.nvim_buf_line_count(bufnr) >= 5000
-        local is_too_large = false
-        local is_ignored_lang = vim.tbl_contains({ "svg", "json", "heex" }, lang)
-
-        local max_filesize = 50 * 1024 -- 50 KB
-        local ok, stats = pcall(vim.loop.fs_stat, vim.api.nvim_buf_get_name(bufnr))
-        if ok and stats and stats.size > max_filesize then is_too_large = true end
-
-        return (is_too_long or is_too_large)
+        -- local is_ignored_lang = vim.tbl_contains({ "svg", "json", "heex" }, lang)
+        return mega.is_chonky(bufnr)
         -- and is_ignored_lang
       end,
       use_languagetree = true,

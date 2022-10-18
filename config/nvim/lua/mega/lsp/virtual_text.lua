@@ -4,6 +4,7 @@
 -- TODO:
 -- 1. pull from vim.diagnostic.config for virtual text settings;
 -- 2. disable "native" virtual_text settings after we grab the config;
+-- 3. update to his latest code things.
 
 ---@class Diagnostic
 ---@field bufnr integer?

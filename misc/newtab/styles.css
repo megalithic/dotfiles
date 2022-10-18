@@ -9,7 +9,7 @@ body {
 
 body {
   display: block;
-  font-family: "JetBrains Mono", "Liberation Mono", Monaco, Menlo, Inconsolata, "Andale Mono", monospace;
+  font-family: "JetBrains Mono", serif;
   font-size: 1em;
   line-height: 1.5;
   display: flex;

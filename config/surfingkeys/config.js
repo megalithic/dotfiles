@@ -568,24 +568,72 @@ settings.theme = `
   }
   `;
 
-const handleLoaded = () => {
-  // window.addEventListener("click", (evt) => {
-  //   if (evt.target.nodeName === "TEXTAREA") {
-  //     let el = evt.target;
-  //     // el.style = `height: ${el.clientHeight + 500}px`;
-  //     el.style = `height: 800px`;
-  //   }
-  // });
+// -----------------------------------------------------------------------------
+// CUSTOM "IIFE"-like FNS
+// -----------------------------------------------------------------------------
+const inspect = (obj) => {
+  return JSON.stringify(obj, null, 4);
+};
 
-  // force all textareas to be a little bigger..
-  let textareas = document.querySelectorAll("textarea");
-  textareas.forEach((el) => {
-    el.style = `min-height: 500px`;
-  });
+const embiggenInputs = () => {
+  const isBlacklisted = (domain) => {
+    return domain && domain.test(new URL(window.location.href).host);
+  };
+
+  const blacklisted = [/outstand\.com/i, /outstand\.test/i];
+  const ignored = blacklisted.find((domain) => isBlacklisted(domain));
+
+  if (typeof ignored === "undefined") {
+    // const firenvim = document.querySelector("body span[tabindex='-1']");
+    // console.debug(inspect(firenvim));
+    // Give a slight delay, some sites, like linear.app, do some dom things,
+    // so it doesn't show just yet..
+    window.setTimeout(() => {
+      const textareas = document.querySelectorAll("textarea");
+      textareas.forEach((el) => {
+        el.style = `min-height: 250px`;
+      });
+
+      const divs = document.querySelectorAll("div[contenteditable=true]");
+      divs.forEach((el) => {
+        el.style = `min-height: 250px`;
+      });
+    }, 1000);
+  }
+};
+
+// const handleFocus = () => {
+//   document.addEventListener("focus", (evt) => {
+//     console.log("focus");
+//     window.setTimeout(() => {
+//       const firenvim = document.querySelector("body span[tabindex='-1']");
+//       console.log("firenvim?");
+//       console.debug(inspect(firenvim));
+//     }, 2000);
+//     // console.debug(`initial click ${evt.target}`);
+//     if (evt.target.nodeName === "TEXTAREA") {
+//       console.debug(evt.target);
+//       // let el = evt.target;
+//       // // el.style = `height: ${el.clientHeight + 500}px`;
+//       // el.style = `height: 800px`;
+//       evt.target.style = `min-height: 250px`;
+//     } else {
+//       let textareas = document.querySelectorAll("textarea");
+//       textareas.forEach((el) => {
+//         el.style = ``;
+//       });
+//     }
+//   });
+// };
+
+const handleLoaded = (evt) => {
+  console.debug(`loaded via ${inspect(evt)}`);
+  embiggenInputs();
+  // handleFocus();
 };
 
 if (["complete", "loaded", "interactive"].indexOf(document.readyState) >= 0) {
   handleLoaded();
 } else {
-  document.addEventListener("DOMContentLoaded", () => handleLoaded());
+  document.addEventListener("DOMContentLoaded", (evt) => handleLoaded(evt));
 }

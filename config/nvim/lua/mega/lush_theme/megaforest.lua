@@ -388,11 +388,12 @@ return lush(function(injected_functions)
 
     Headline1({ fg = green, bg = bg_green, gui = "bold,italic,underline" }),
     Headline2({ fg = yellow, bg = bg_yellow, gui = "bold,italic" }),
-    Headline3({ fg = red, bg = bg_red, gui = "bold" }),
+    Headline3({ fg = red, bg = bg1, gui = "bold" }),
     Headline4({ fg = purple, bg = bg1, gui = "bold" }),
     Headline5({ fg = blue, bg = bg0, gui = "italic" }),
     Headline6({ fg = orange, bg = bg0, gui = "NONE" }),
     Dash({ fg = bg2, gui = "bold" }),
+    sym("@dash")({Dash}),
     CodeBlock({ bg = bg1 }),
 
     ---- :help nvim-treesitter-highlights (external plugin) ----

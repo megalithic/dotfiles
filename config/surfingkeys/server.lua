@@ -519,8 +519,6 @@ function! SurfingkeysWrite()
 endfunction
 au BufWriteCmd surfingkeys://* call SurfingkeysWrite()
 
-" lua print("from surfingkeys?")
-
 nnoremap <silent> <M-i> :call SurfingkeysNotify("Enter")<CR>
 nnoremap <silent> <Space>E :call SurfingkeysNotify("Enter", "E")<CR>
 nnoremap <silent> <Space>R :call SurfingkeysNotify("Enter", "R")<CR>

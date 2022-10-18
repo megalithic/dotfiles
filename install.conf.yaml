@@ -195,22 +195,34 @@
       force: true
       if: "[ `uname` = Darwin ]"
       path: config/surfingkeys/surfingkeys.json
+    ~/Library/Application Support/Google/Chrome/NativeMessagingHosts/firenvim.json:
+      force: true
+      if: "[ `uname` = Darwin ]"
+      path: config/surfingkeys/firenvim.json
     ~/Library/Application Support/Chromium/NativeMessagingHosts/surfingkeys.json:
       force: true
       if: "[ `uname` = Darwin ]"
       path: config/surfingkeys/surfingkeys.json
+    ~/Library/Application Support/Chromium/NativeMessagingHosts/firenvim.json:
+      force: true
+      if: "[ `uname` = Darwin ]"
+      path: config/surfingkeys/firenvim.json
     ~/Library/Application Support/BraveSoftware/Brave-Browser/NativeMessagingHosts/surfingkeys.json:
       force: true
       if: "[ `uname` = Darwin ]"
       path: config/surfingkeys/surfingkeys.json
+    ~/Library/Application Support/BraveSoftware/Brave-Browser/NativeMessagingHosts/firenvim.json:
+      force: true
+      if: "[ `uname` = Darwin ]"
+      path: config/surfingkeys/firenvim.json
     ~/Library/Application Support/BraveSoftware/Brave-Browser-Dev/NativeMessagingHosts/surfingkeys.json:
       force: true
       if: "[ `uname` = Darwin ]"
       path: config/surfingkeys/surfingkeys.json
-    # /Library/WebServer/Documents/index.html.en:
-    #   force: true
-    #   if: "[ `uname` = Darwin ]"
-    #   path: misc/newtab/index.html
+    ~/Library/Application Support/BraveSoftware/Brave-Browser-Dev/NativeMessagingHosts/firenvim.json:
+      force: true
+      if: "[ `uname` = Darwin ]"
+      path: config/surfingkeys/firenvim.json
 
 - shell:
     - description: GnuPG (gpg) setup..

@@ -50,13 +50,19 @@ local function plugins(use)
 
   -- ( UI ) --------------------------------------------------------------------
   use({ "rktjmp/lush.nvim" })
+  use({
+    "mcchrish/zenbones.nvim",
+    requires = "rktjmp/lush.nvim",
+    -- cond = function() return vim.g.started_by_firenvim ~= nil end,
+    -- config = function() vim.cmd.colorscheme("forestbones") end,
+  })
   use({ "kyazdani42/nvim-web-devicons", config = function() require("nvim-web-devicons").setup() end })
   use({
     "NvChad/nvim-colorizer.lua",
-    event = "BufRead",
+    -- event = "BufRead",
     config = function()
       require("colorizer").setup({
-        filetypes = { "*", "!svg" },
+        filetypes = { "*" },
         user_default_options = {
           RGB = false, -- #RGB hex codes
           RRGGBB = true, -- #RRGGBB hex codes
@@ -73,6 +79,17 @@ local function plugins(use)
         },
         -- all the sub-options of filetypes apply to buftypes
         buftypes = {},
+      })
+
+      require("mega.globals").augroup("Colorizer", {
+        {
+          event = { "BufReadPost" },
+          command = function(args)
+            if require("mega.globals").is_chonky(vim.api.nvim_get_current_buf()) then
+              vim.cmd("ColorizerDetachFromBuffer")
+            end
+          end,
+        },
       })
     end,
   })
@@ -878,10 +895,25 @@ local function plugins(use)
     "lukas-reineke/headlines.nvim",
     config = function()
       require("headlines").setup({
+        -- markdown = {
+        --   dash_string = "", -- alts:  靖並   ﮆ 
+        --   headline_highlights = { "Headline1", "Headline2", "Headline3", "Headline4", "Headline5", "Headline6" },
+        --   codeblock_highlight = "CodeBlock",
+        --   dash_highlight = "Dash",
+        -- },
         markdown = {
+          source_pattern_start = "^```",
+          source_pattern_end = "^```$",
+          dash_pattern = "-",
+          dash_highlight = "Dash",
           dash_string = "", -- alts:  靖並   ﮆ 
+          headline_pattern = "^#+",
           headline_highlights = { "Headline1", "Headline2", "Headline3", "Headline4", "Headline5", "Headline6" },
           codeblock_highlight = "CodeBlock",
+        },
+        yaml = {
+          dash_pattern = "^---+$",
+          dash_highlight = "Dash",
         },
       })
     end,
@@ -924,104 +956,7 @@ local function plugins(use)
   use({
     "glacambre/firenvim",
     run = function() vim.fn["firenvim#install"](0) end,
-    config = function()
-      if not vim.g.started_by_firenvim then return end
-      vim.opt.guifont = "JetBrainsMono Nerd Font Mono:h20"
-
-      vim.g.firenvim_config = {
-        globalSettings = {
-          alt = "all",
-        },
-        localSettings = {
-          [".*"] = {
-            cmdline = "neovim",
-            content = "text",
-            priority = 0,
-            selector = "textarea",
-            takeover = "never",
-          },
-          ["https?://github.com/"] = {
-            takeover = "always",
-            priority = 1,
-          },
-          ["https?://stackoverflow.com/"] = {
-            takeover = "always",
-            priority = 1,
-          },
-        },
-        autocmds = {
-          { "BufEnter", "github.com", "setlocal filetype=markdown" },
-          { "BufEnter", "leetcode.com_*.js", "setlocal filetype=typescript" },
-        },
-      }
-
-      -- local function firenvim_setup()
-      --   vim.notify("FIRENVIM!")
-      --   vim.opt.laststatus = 0
-
-      --   if vim.api.nvim_get_option("lines") < 5 then
-      --     vim.opt.number = false
-      --     vim.opt.relativenumber = false
-      --     vim.opt.signcolumn = "no"
-      --     vim.o.showtabline = 0
-      --     vim.cmd("startinsert")
-      --   end
-
-      --   vim.opt.wrap = true
-      --   vim.opt.linebreak = true
-
-      --   require("mega.global").nmap("<Esc><Esc>", vim.fn["firenvim#focus_page"])
-      --   require("mega.global").nmap("<C-Z>", vim.fn["firenvim#hide_frame"])
-      -- end
-
-      require("mega.globals").augroup("FireNvim", {
-        {
-          event = { "BufEnter" },
-          command = function()
-            vim.opt.wrap = true
-            vim.opt.linebreak = true
-            vim.opt.laststatus = 0
-            vim.opt.showtabline = 0
-            vim.opt_local.relativenumber = false
-            vim.opt_local.signcolumn = "no"
-            vim.opt_local.cursorlineopt = "number"
-            vim.opt_local.cursorline = true
-
-            if vim.api.nvim_buf_line_count(0) < 5 then
-              vim.cmd([[exec 'norm gg']])
-              if vim.fn.prevnonblank(".") ~= vim.fn.line(".") then vim.cmd([[startinsert]]) end
-            end
-
-            require("mega.globals").nmap("<Esc><Esc>", vim.fn["firenvim#focus_page"])
-            require("mega.globals").nmap("<C-Z>", vim.fn["firenvim#hide_frame"])
-          end,
-        },
-      })
-
-      -- function _G.FirenvimSetup(channel)
-      --   local channel_info = vim.api.nvim_get_chan_info(channel)
-      --   if channel_info.client and channel_info.client.name == "Firenvim" then
-      --     vim.notify("firenvim!!!!!!!!!!!!!!!!!!!!!!")
-      --     vim.opt.laststatus = 0
-
-      --     if vim.api.nvim_get_option("lines") < 5 then
-      --       vim.opt.number = false
-      --       vim.opt.relativenumber = false
-      --       vim.opt.signcolumn = "no"
-      --       vim.o.showtabline = 0
-      --       vim.cmd("startinsert")
-      --     end
-
-      --     vim.opt.wrap = true
-      --     vim.opt.linebreak = true
-      --   end
-      -- end
-
-      -- map("n", "<Esc><Esc>", vim.fn["firenvim#focus_page"])
-      -- map("n", "<C-Z>", vim.fn["firenvim#hide_frame"])
-
-      -- vim.cmd("autocmd UIEnter * call v:lua.FirenvimSetup(deepcopy(v:event.chan))")
-    end,
+    ext = "firenvim",
   })
 end
 

@@ -69,6 +69,7 @@ local function is_ignored()
     or vim.tbl_contains(M.buftype_exclusions, vim.bo.buftype)
     or vim.tbl_contains(M.filetype_exclusions, vim.bo.filetype)
     or is_floating_win()
+    or mega.is_chonky()
 
   return should_ignore
 end

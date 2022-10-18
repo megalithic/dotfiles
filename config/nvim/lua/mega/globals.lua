@@ -1075,6 +1075,18 @@ function mega.clear_commandline()
   end
 end
 
+function mega.is_chonky(bufnr)
+  bufnr = bufnr or vim.api.nvim_get_current_buf()
+  local is_too_long = vim.api.nvim_buf_line_count(bufnr) >= 5000
+  local is_too_large = false
+
+  local max_filesize = 50 * 1024 -- 50 KB
+  local ok, stats = pcall(vim.loop.fs_stat, vim.api.nvim_buf_get_name(bufnr))
+  if ok and stats and stats.size > max_filesize then is_too_large = true end
+
+  return (is_too_long or is_too_large)
+end
+
 function mega.hl_search_blink(delay)
   mega.blink_cursorline(delay * 1000)
   -- local ns = vim.api.nvim_create_namespace("HLSearch")

@@ -134,10 +134,10 @@ return function(on_attach)
       "elixirls",
       "elmls",
       "emmet_ls",
-      "erlang-ls",
+      -- "erlang_ls",
       "html",
       "jsonls",
-      "marksman",
+      -- "marksman",
       "pyright",
       "rust_analyzer",
       "solargraph",
@@ -275,7 +275,7 @@ return function(on_attach)
 
       lsp_setup(server_name, opts)
     end,
-    marksman = function(server_name) lsp_setup(server_name) end,
+    -- marksman = function(server_name) lsp_setup(server_name) end,
     pyright = function(server_name)
       local opts = vim.tbl_extend("keep", server_opts, {
         single_file_support = false,

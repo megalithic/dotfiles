@@ -19,15 +19,15 @@ export NB_ENCRYPTION_TOOL="${NB_ENCRYPTION_TOOL:-openssl}" # or gpg
 
 export NB_DEFAULT_EXTENSION="${NB_DEFAULT_EXTENSION:-md}"
 export NB_LIMIT="${NB_LIMIT:-15}"
-export NB_DIR="${NB_DIR:-$HOME/Documents/_notes/notebooks}"
+export NB_DIR="${NB_DIR:-$HOME/Documents/_nb/notebooks}"
 
 export NB_HEADER="${NB_HEADER:-2}" # 0-3
 export NB_FOOTER="${NB_FOOTER:-1}" # 0-3
 
-export NB_COLOR_PRIMARY="${NB_COLOR_PRIMARY:-1}"
-export NB_COLOR_SECONDARY="${NB_COLOR_SECONDARY:-239}"
-export NB_COLOR_THEME="${NB_COLOR_THEME:-catppuccin}"
-export NB_SYNTAX_THEME="${NB_SYNTAX_THEME:-Catppuccin}"
+# export NB_COLOR_PRIMARY="${NB_COLOR_PRIMARY:-1}"
+# export NB_COLOR_SECONDARY="${NB_COLOR_SECONDARY:-239}"
+export NB_COLOR_THEME="${NB_COLOR_THEME:-ocean}"
+# export NB_SYNTAX_THEME="${NB_SYNTAX_THEME:-Ocean}"
 
 export NB_ACE_ENABLED=1
 export BROWSER="w3m"
