@@ -118,13 +118,12 @@ local function plugins(use)
       })
     end,
   })
-  -- use({ "echasnovski/mini.nvim", ext="mini", after = "nvim-treesitter" })
+  -- use({ "echasnovski/mini.nvim", ext = "mini", after = "nvim-treesitter" })
   use({ "anuvyklack/hydra.nvim", ext = "hydra" })
-  use({
-    "phaazon/notisys.nvim",
-    branch = "v0.1",
-    config = function() require("notisys").setup() end,
-  })
+  -- use({
+  --   "phaazon/notisys.nvim",
+  --   config = function() require("notisys").setup() end,
+  -- })
   use({
     "rcarriga/nvim-notify",
     ext = "notify",
@@ -857,7 +856,7 @@ local function plugins(use)
     config = function()
       require("nvim-surround").setup({
         move_cursor = true,
-        keymaps = { visual = "s" },
+        keymaps = { visual = "S" },
         highlight = { -- Highlight before inserting/changing surrounds
           duration = 1,
         },

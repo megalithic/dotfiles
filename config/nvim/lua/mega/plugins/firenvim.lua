@@ -64,7 +64,8 @@ return function()
         vim.opt_local.cursorline = true
 
         vim.cmd([[exec 'norm gg']]) -- test: 聆
-        if vim.api.nvim_buf_line_count(vim.api.nvim_get_current_buf()) <= 2 then
+
+        if vim.api.nvim_buf_line_count(0) <= 2 then
           -- if vim.fn.prevnonblank(".") ~= vim.fn.line(".") then vim.cmd([[startinsert]]) end
           vim.cmd([[startinsert]])
         end
