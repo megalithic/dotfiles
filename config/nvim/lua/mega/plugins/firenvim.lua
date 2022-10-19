@@ -22,10 +22,10 @@ return function()
         takeover = "always",
         priority = 1,
       },
-      ["https?://gitter.im/"] = {
-        takeover = "always",
-        priority = 1,
-      },
+      -- ["https?://gitter.im/"] = {
+      --   takeover = "never",
+      --   priority = 1,
+      -- },
     },
     autocmds = {
       { "BufEnter", "github.com_*.txt", "setlocal filetype=markdown" },
@@ -85,10 +85,22 @@ return function()
         -- TODO: https://github.com/glacambre/firenvim/issues/1438
         -- require("mega.globals").nnoremap("<C-i>", "<cmd>call firenvim#hide_frame() | call firenvim#focus_input()<CR>")
         -- require("mega.globals").inoremap("<C-i>", "<cmd>call firenvim#hide_frame() | call firenvim#focus_input()<CR>")
-        require("mega.globals").inoremap("<C-c>", "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR>")
-        require("mega.globals").nnoremap("<C-c>", "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR>")
-        require("mega.globals").nnoremap("<C-z>", "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR>")
-        require("mega.globals").nnoremap("q", "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR>")
+        require("mega.globals").inoremap(
+          "<C-c>",
+          "<cmd>norm ggdGa | call firenvim#hide_frame() | call firenvim#focus_page()<CR>"
+        )
+        require("mega.globals").nnoremap(
+          "<C-c>",
+          "<cmd>norm ggdGa | call firenvim#hide_frame() | call firenvim#focus_page()<CR>"
+        )
+        require("mega.globals").nnoremap(
+          "<C-z>",
+          "<cmd>norm ggdGa | call firenvim#hide_frame() | call firenvim#focus_page()<CR>"
+        )
+        require("mega.globals").nnoremap(
+          "q",
+          "<cmd>norm ggdGa | call firenvim#hide_frame() | call firenvim#focus_page()<CR>"
+        )
         -- require("mega.globals").nnoremap("<C-z>", "=write<CR>=call firenvim#hide_frame()<CR>")
         -- vim.defer_fn(function() vim.opt.guifont = "FiraCode Nerd Font Mono:h22" end, 1000)
         vim.opt.guifont = "JetBrainsMono_Nerd_Font_Mono:h22"

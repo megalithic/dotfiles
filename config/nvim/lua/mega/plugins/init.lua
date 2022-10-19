@@ -118,7 +118,7 @@ local function plugins(use)
       })
     end,
   })
-  -- use({ "echasnovski/mini.nvim", ext = "mini", after = "nvim-treesitter" })
+  use({ "echasnovski/mini.nvim", ext = "mini", after = "nvim-treesitter" })
   use({ "anuvyklack/hydra.nvim", ext = "hydra" })
   -- use({
   --   "phaazon/notisys.nvim",

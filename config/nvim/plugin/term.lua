@@ -138,7 +138,7 @@ local function create_keymaps(bufnr, winnr, direction)
       api.nvim_buf_delete(bufnr, { force = true })
       bufnr = nil_buf_id
       -- jump back to our last window
-      vim.cmd(winnr .. [[wincmd p]])
+      vim.cmd([[wincmd p]])
     end, opts)
   end
 
@@ -171,6 +171,7 @@ local function create_term(cmd, opts)
           -- TODO: send results to quickfixlist
           api.nvim_buf_delete(term_buf_id, { force = true })
           term_buf_id = nil_buf_id
+          vim.cmd([[wincmd p]])
         end
       end
     end,
@@ -205,7 +206,7 @@ local function handle_existing(cmd, opts)
     on_after_open(term_buf_id, winnr)
   else
     api.nvim_command([[normal! G]])
-    if opts.direction ~= "float" then vim.cmd(winnr .. [[wincmd p]]) end
+    if opts.direction ~= "float" then vim.cmd([[wincmd p]]) end
   end
 end
 
@@ -260,7 +261,7 @@ local function handle_new(cmd, opts)
     on_after_open(term_buf_id, winnr)
   else
     api.nvim_command([[normal! G]])
-    if opts.direction ~= "float" then vim.cmd(winnr .. [[wincmd p]]) end
+    if opts.direction ~= "float" then vim.cmd([[wincmd p]]) end
   end
 
   if opts.direction == "tab" then
@@ -319,6 +320,7 @@ function mega.term.toggle(opts)
 
   if fn.win_gotoid(term_win_id) == 1 and parsed.direction ~= "tab" then
     mega.term.hide()
+    vim.cmd([[wincmd p]])
   else
     mega.term.open(parsed)
   end
@@ -348,7 +350,6 @@ mega.command("TermElixir", function()
   mega.term.open({
     cmd = cmd,
     precmd = precmd,
-    on_exit = function() end,
     ---@diagnostic disable-next-line: unused-local
     on_after_open = function(bufnr, _winnr)
       api.nvim_buf_set_var(bufnr, "cmd", cmd)
@@ -373,7 +374,6 @@ mega.command("TermRuby", function(args)
   mega.term.open({
     cmd = cmd,
     precmd = precmd,
-    on_exit = function() end,
     ---@diagnostic disable-next-line: unused-local
     on_after_open = function(bufnr, _winnr)
       api.nvim_buf_set_var(bufnr, "cmd", cmd)
@@ -388,7 +388,6 @@ mega.command("TermLua", function()
   mega.term.open({
     cmd = cmd,
     direction = "horizontal",
-    on_exit = function() end,
     ---@diagnostic disable-next-line: unused-local
     on_after_open = function(bufnr, _winnr)
       api.nvim_buf_set_var(bufnr, "cmd", cmd)
@@ -402,7 +401,6 @@ mega.command("TermPython", function()
 
   mega.term.open({
     cmd = cmd,
-    on_exit = function() end,
     ---@diagnostic disable-next-line: unused-local
     on_after_open = function(bufnr, _winnr)
       api.nvim_buf_set_var(bufnr, "cmd", cmd)
@@ -416,7 +414,6 @@ mega.command("TermNode", function()
 
   mega.term.open({
     cmd = cmd,
-    on_exit = function() end,
     ---@diagnostic disable-next-line: unused-local
     on_after_open = function(bufnr, _winnr)
       api.nvim_buf_set_var(bufnr, "cmd", cmd)
