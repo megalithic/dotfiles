@@ -5,7 +5,7 @@ set -euo pipefail
 [[ -f "$ZDOTDIR/lib/helpers.zsh" ]] && source "$ZDOTDIR/lib/helpers.zsh"
 
 # clean_exit defined in helpers.zsh
-trap 'clean_exit $? $LINENO' EXIT
+# trap 'clean_exit $? $LINENO' EXIT
 
 # -- friendly help if -h option given
 function __help() {
@@ -13,17 +13,27 @@ function __help() {
   printf -- "\n"
   printf -- "Options:\n"
   printf -- "  -h  This help text you're presently reading 😄\n"
+  printf -- "  -a  Immediately attach to the created session\n"
+  printf -- "\n"
   printf -- "Examples:\n"
   printf -- "  duc processes htop\n"
   printf -- "  duc weechat weechat\n"
   printf -- "  duc logs dev logs -f\n"
   printf -- "\n"
+  printf -- "#protip:\n"
+  printf -- "  <C-\\> to detach from active session\n"
+  printf -- "\n"
 
   exit 0
 }
 
-while getopts "h" OPTION; do
+IMMEDIATELY_ATTACH="true"
+
+while getopts "hb" OPTION; do
   case $OPTION in
+    b)
+      IMMEDIATELY_ATTACH="false"
+      ;;
 
     h)
       __help
@@ -43,24 +53,32 @@ shift "$((OPTIND - 1))"
 session_name="${1:-}"
 shift
 
-# cmd="${*:-}"
-cmd="$*"
+cmd="${*:-}"
 
 # -- try to change to an existing session; otherwise, create a new one
 function try_session() {
   local session="$1"
+  local session_create_opt="-c"
 
   # no session given; bail out
   if [[ -z "$session" ]]; then
     exit 0
   fi
 
+  if [[ $IMMEDIATELY_ATTACH == "false" ]]; then
+    session_create_opt="-n"
+  fi
+
   if abduco -l | grep -q "$session"; then
     echo "session $session exists"
     abduco -a "$session"
+  elif [[ -n "$cmd" ]]; then
+    # FIXME: why is this not working? `$cmd` isn't running :sadpanda:
+    echo "session $session DOES NOT exist; creating with command $cmd.."
+    command abduco "$session_create_opt" "$session" "$cmd"
   else
-    echo "session $session DOES NOT exist; creating.."
-    abduco -c "$session" "$cmd"
+    echo "could not attach to or create new session named $session; exiting.."
+    exit 1
   fi
 
   exit 0
@@ -68,15 +86,11 @@ function try_session() {
 
 function fuzzy_find() {
   # -- prepare for fuzzy-finding!!
-  sessions_list=$(abduco -l | awk -F" " 'FNR > 1 {print $5}')
-  sessions_count=$(echo "$sessions_list" | wc -l | sed -e 's/^[[:space:]]*//')
+  # REF: finds the attached session abduco -l | awk '$1 ~ /^\*/'
+  sessions_list=$(abduco | tail -n+2 | cut -f 4)
+  # sessions_count=$(echo "$sessions_list" | wc -l | sed -e 's/^[[:space:]]*//')
 
-  # -- do certain things based upon only one active session
-  if [[ $sessions_count == 1 ]]; then
-    fzf_prompt_text=" create new session  "
-  else
-    fzf_prompt_text=" new or existing session  "
-  fi
+  fzf_prompt_text=" attach to session  "
 
   # -- get our session from fzf (grabs the the active pane from each session as preview, too!)
   selected="$(echo "$sessions_list" | fzf --reverse --border=none --padding="1" --preview-window="hidden" --prompt="$fzf_prompt_text" --bind="enter:replace-query+print-query")"

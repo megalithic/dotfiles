@@ -81,6 +81,21 @@ function _G.P(...)
   return ...
 end
 
+function _G.PT(tbl, indent)
+  if not indent then indent = 2 end
+  for k, v in pairs(tbl) do
+    local formatting = string.rep("  ", indent) .. k .. ": "
+    if type(v) == "table" then
+      print(formatting)
+      _G.PT(v, indent + 1)
+    elseif type(v) == "boolean" then
+      print(formatting .. tostring(v))
+    else
+      print(formatting .. v)
+    end
+  end
+end
+
 function _G.dump(...)
   local objects = vim.tbl_map(vim.inspect, { ... })
   print(unpack(objects))

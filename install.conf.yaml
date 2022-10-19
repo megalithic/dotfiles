@@ -252,11 +252,14 @@
         log "Attempting to install neovim from source..";
         ~/.dotfiles/bin/nvim-install -f;
 
-        log "Attempting to install paq-nvim..";
-        ~/.dotfiles/bin/paq-install -f;
+        log "Attempting to install packer.nvim..";
+        ~/.dotfiles/bin/packer-install -f;
 
         log "Attempting to install elixirls-master..";
         ~/.dotfiles/bin/elixirls-install master;
+
+        log "Attempting to install abduco..";
+        ~/.dotfiles/bin/abduco-install;
 
         log "Attempting to install lua/luarocks packages..";
         ~/.dotfiles/asdf/lua.sh;

@@ -136,7 +136,7 @@ zstyle ':fzf-tab:*' show-group brief # brief, full, none
 # zstyle ':fzf-tab:*' fzf-command ftb-tmux-popup
 # zstyle ':fzf-tab:complete:cd:*' popup-pad 30 0
 FZF_TAB_GROUP_COLORS=(
-    $'\033[94m' $'\033[32m' $'\033[33m' $'\033[35m' $'\033[31m' $'\033[38;5;27m' $'\033[36m' \
+  $'\033[94m' $'\033[32m' $'\033[33m' $'\033[35m' $'\033[31m' $'\033[38;5;27m' $'\033[36m' \
     $'\033[38;5;100m' $'\033[38;5;98m' $'\033[91m' $'\033[38;5;80m' $'\033[92m' \
     $'\033[38;5;214m' $'\033[38;5;165m' $'\033[38;5;124m' $'\033[38;5;120m'
 )
@@ -176,26 +176,26 @@ zstyle ':fzf-tab:complete:systemctl-*:*' fzf-preview 'SYSTEMD_COLORS=1 systemctl
 
 ## Variables
 zstyle ':fzf-tab:complete:(-command-|-parameter-|-brace-parameter-|export|unset|expand):*' \
-    fzf-preview 'echo ${(P)word}'
+  fzf-preview 'echo ${(P)word}'
 
 ## Git
 zstyle ':fzf-tab:complete:git-(add|diff|restore):*' fzf-preview \
-    'git diff $word | delta'
+  'git diff $word | delta'
 zstyle ':fzf-tab:complete:git-log:*' fzf-preview \
-    'git log --color=always $word'
+  'git log --color=always $word'
 zstyle ':fzf-tab:complete:git-help:*' fzf-preview \
-    'git help $word | bat -plman --color=always'
+  'git help $word | bat -plman --color=always'
 zstyle ':fzf-tab:complete:git-show:*' fzf-preview \
-    'case "$" in
+  'case "$" in
     "commit tag") git show --color=always $word ;;
     *) git show --color=always $word | delta ;;
-    esac'
+esac'
 zstyle ':fzf-tab:complete:git-checkout:*' fzf-preview \
-    'case "$" in
+  'case "$" in
     "modified file") git diff $word | delta ;;
     "recent commit object name") git show --color=always $word | delta ;;
     *) git log --color=always $word ;;
-    esac'
+esac'
 
 # ignore useless commands and functions
 zstyle ':completion:*:functions' ignored-patterns '(_*|pre(cmd|exec)|prompt_*)'
@@ -203,3 +203,29 @@ zstyle ':completion:*:functions' ignored-patterns '(_*|pre(cmd|exec)|prompt_*)'
 # ignore multiple entries.
 zstyle ':completion:*:(rm|kill|diff):*' ignore-line other
 zstyle ':completion:*:rm:*' file-patterns '*:all-files'
+
+
+# function _abduco() {
+#   case $2 in
+#     -*) # Option
+#       COMPREPLY=($(compgen -W ' \
+  #                         -n -nf \
+  #                         -c -cf -cr \
+  #                         -f -fn -fc -fcr \
+  #                         -A -Ar \
+  #                         -a -ar \
+  #                         -l -lr \
+  #                         -r -rc -rcf -rA -ra -rl \
+  #                         -e -e^ \
+  #                         -v \
+  #         ' -- $2))
+#         ;;
+#       *) # Session
+#         local sessions=$(abduco | tail -n+2 | cut -f 3)
+#         COMPREPLY=($(compgen -W "$sessions" -- $2))
+#         [ -n "$2" ] && compopt -o plusdirs
+#         ;;
+#     esac
+#   }
+
+#   command -F _abduco abduco

@@ -186,6 +186,11 @@ mapkey("::", "#8Open commands", function () {
 unmap("yg");
 unmap("ygh");
 
+// -- disable neovim related things
+unmap(";v");
+unmap("<Ctrl-i>");
+unmap("<Ctrl-Alt-i>");
+
 ////////////////////////////////////////////////////////////////
 // github default shortcut lists                              //
 // https:help.github.com/articles/using-keyboard-shortcuts/   //
@@ -580,7 +585,7 @@ const embiggenInputs = () => {
     return domain && domain.test(new URL(window.location.href).host);
   };
 
-  const blacklisted = [/outstand\.com/i, /outstand\.test/i];
+  const blacklisted = [/outstand\.com/i, /outstand\.test/i, /linear\.app/i];
   const ignored = blacklisted.find((domain) => isBlacklisted(domain));
 
   if (typeof ignored === "undefined") {
@@ -591,12 +596,12 @@ const embiggenInputs = () => {
     window.setTimeout(() => {
       const textareas = document.querySelectorAll("textarea");
       textareas.forEach((el) => {
-        el.style = `min-height: 250px`;
+        el.style = `min-height: 300px`;
       });
 
       const divs = document.querySelectorAll("div[contenteditable=true]");
       divs.forEach((el) => {
-        el.style = `min-height: 250px`;
+        el.style = `min-height: 300px`;
       });
     }, 1000);
   }
