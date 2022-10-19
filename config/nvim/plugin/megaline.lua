@@ -557,7 +557,7 @@ function _G.__statusline()
     seg("%r", "StModified"),
     seg_spacer(1),
     seg("%{&paste?'[paste] ':''}", "warningmsg"),
-    seg_spacer(1),
+    -- seg_spacer(1),
     seg("Saving…", "StComment", vim.g.is_saving),
     seg_spacer(1),
     seg_search_results(120),

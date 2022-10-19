@@ -124,33 +124,64 @@ end
 vim.fn.matchadd("matchURL", [[http[s]\?:\/\/[[:alnum:]%\/_#.-]*]])
 vim.cmd(string.format("hi matchURL guifg=%s", require("mega.lush_theme.colors").bright_blue))
 
-mega.conf("bullets.vim", function()
-  vim.g.bullets_enabled_file_types = {
-    "markdown",
-    "text",
-    "gitcommit",
-    "scratch",
+local ok, ms = mega.require("mini.surround")
+if ok then
+  vim.b.minisurround_config = {
+    custom_surroundings = {
+      l = {
+        output = function()
+          local clipboard = vim.fn.getreg("+"):gsub("\n", "")
+          return { left = "[", right = "](" .. clipboard .. ")" }
+        end,
+      },
+      L = {
+        output = function()
+          local link_name = ms.user_input("Enter the link name: ")
+          return {
+            left = "[" .. link_name .. "](",
+            right = ")",
+          }
+        end,
+      },
+      ["b"] = { -- Surround for bold
+        input = { "%*%*().-()%*%*" },
+        output = { left = "**", right = "**" },
+      },
+      ["i"] = { -- Surround for italics
+        input = { "%*().-()%*" },
+        output = { left = "*", right = "*" },
+      },
+    },
   }
-  vim.g.bullets_checkbox_markers = " ○◐✗"
-  vim.g.bullets_set_mappings = 0
-  -- vim.g.bullets_outline_levels = { "num" }
+end
 
-  -- vim.cmd([[
-  --       " Disable default bullets.vim mappings, clashes with other mappings
-  --       let g:bullets_set_mappings = 0
-  --       " let g:bullets_checkbox_markers = '✗○◐●✓'
-  --       let g:bullets_checkbox_markers = ' .oOx'
+-- mega.conf("bullets.vim", function()
+--   vim.g.bullets_enabled_file_types = {
+--     "markdown",
+--     "text",
+--     "gitcommit",
+--     "scratch",
+--   }
+--   vim.g.bullets_checkbox_markers = " ○◐✗"
+--   vim.g.bullets_set_mappings = 0
+--   -- vim.g.bullets_outline_levels = { "num" }
 
-  --       " Add custom bullets mappings that don't clash with other mappings
-  --       function! InsertNewBullet()
-  --         InsertNewBullet
-  --         return ''
-  --       endfunction
+--   -- vim.cmd([[
+--   --       " Disable default bullets.vim mappings, clashes with other mappings
+--   --       let g:bullets_set_mappings = 0
+--   --       " let g:bullets_checkbox_markers = '✗○◐●✓'
+--   --       let g:bullets_checkbox_markers = ' .oOx'
 
-  --         " \ inoremap <buffer><expr> <cr> (pumvisible() ? '<C-y>' : '<C-]><C-R>=InsertNewBullet()<cr>')|
-  --       autocmd FileType markdown,text,gitcommit
-  --         \ nnoremap <silent><buffer> o :InsertNewBullet<cr>|
-  --         \ nnoremap cx :ToggleCheckbox<cr>
-  --         \ nmap <C-x> :ToggleCheckbox<cr>
-  --     ]])
-end)
+--   --       " Add custom bullets mappings that don't clash with other mappings
+--   --       function! InsertNewBullet()
+--   --         InsertNewBullet
+--   --         return ''
+--   --       endfunction
+
+--   --         " \ inoremap <buffer><expr> <cr> (pumvisible() ? '<C-y>' : '<C-]><C-R>=InsertNewBullet()<cr>')|
+--   --       autocmd FileType markdown,text,gitcommit
+--   --         \ nnoremap <silent><buffer> o :InsertNewBullet<cr>|
+--   --         \ nnoremap cx :ToggleCheckbox<cr>
+--   --         \ nmap <C-x> :ToggleCheckbox<cr>
+--   --     ]])
+-- end)

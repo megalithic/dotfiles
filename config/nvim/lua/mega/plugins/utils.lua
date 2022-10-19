@@ -7,7 +7,7 @@ local PACKER_INSTALL_PATH = fmt("%s/site/pack/packer/%s/packer.nvim", fn.stdpath
 
 -- ---A thin wrapper around vim.notify to add packer details to the message
 -- ---@param msg string
-function M.notify(msg, level) vim.notify(msg, level, { title = "Packer" }) end
+function M.notify(msg, level) vim.notify(msg, level, { title = "packer" }) end
 
 function M.conf(name)
   -- P(name)

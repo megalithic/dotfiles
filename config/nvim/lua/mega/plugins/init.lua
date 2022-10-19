@@ -851,18 +851,18 @@ local function plugins(use)
   -- @trial: "jghauser/kitty-runner.nvim"
 
   -- ( Motions/Textobjects ) ---------------------------------------------------
-  use({
-    "kylechui/nvim-surround",
-    config = function()
-      require("nvim-surround").setup({
-        move_cursor = true,
-        keymaps = { visual = "S" },
-        highlight = { -- Highlight before inserting/changing surrounds
-          duration = 1,
-        },
-      })
-    end,
-  })
+  -- use({
+  --   "kylechui/nvim-surround",
+  --   config = function()
+  --     require("nvim-surround").setup({
+  --       move_cursor = true,
+  --       keymaps = { visual = "S" },
+  --       highlight = { -- Highlight before inserting/changing surrounds
+  --         duration = 1,
+  --       },
+  --     })
+  --   end,
+  -- })
   use({
     "abecodes/tabout.nvim",
     wants = { "nvim-treesitter" },

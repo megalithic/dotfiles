@@ -839,7 +839,7 @@ function mega.get_border(hl)
 end
 
 function mega.sync_plugins()
-  vim.notify("syncing plugins..", vim.log.levels.INFO, { title = "Packer" })
+  require("mega.plugins.utils").notify("syncing plugins..")
   package.loaded["mega.plugins"] = nil
   vim.cmd("PackerSync")
 end
