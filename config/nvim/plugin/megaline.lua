@@ -182,7 +182,7 @@ local exception_types = {
     megaterm = function(_, buf)
       local shell = fnamemodify(vim.env.SHELL, ":t")
       local mode = MODES[api.nvim_get_mode().mode]
-      local mode_hl = mode.short == "T-I" and "StModeInsert" or "StModeNormal"
+      local mode_hl = mode.short == "T-I" and "StModeTermInsert" or "StModeTermNormal"
       return seg(fmt("megaterm(%s)[%s]", shell, api.nvim_buf_get_var(buf, "cmd") or buf), mode_hl)
       -- return seg(fmt("megaterm(%s)[%s] ⋮ %s", shell, api.nvim_buf_get_var(buf, "cmd") or buf, mode.short), mode_hl)
     end,

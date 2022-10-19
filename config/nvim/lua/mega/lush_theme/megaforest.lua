@@ -138,6 +138,8 @@ return lush(function(injected_functions)
     VirtColumn({ fg = bg2 }), -- used with virt-column.nvim
     Conceal({ fg = grey1, bg = "NONE" }), -- placeholder characters substituted for concealed text (see 'conceallevel')
     Cursor({ fg = "NONE", bg = "NONE", gui = "reverse" }), -- character under the cursor
+    TermCursor({ Cursor }), -- cursor in a focused terminal
+    TermCursorNC({ Cursor }), -- cursor in an unfocused terminal
     lCursor({ Cursor }), -- the character under the cursor when |language-mapping| is used (see 'guicursor')
     iCursor({ Cursor }),
     vCursor({ Cursor }),
@@ -148,14 +150,32 @@ return lush(function(injected_functions)
     CursorLineNr({ fg = brown, bg = bg2, gui = "bold,italic" }), -- Like LineNr when 'cursorline' or 'relativenumber' is set for the cursor line.
     CursorLineNrNC({ fg = "NONE", bg = bg1, gui = "NONE" }), -- Like LineNr when 'cursorline' or 'relativenumber' is set for the cursor line.
     CursorLineSign({ CursorLineNr, gui = "NONE" }),
-    Directory({ fg = green, bg = "NONE" }), -- directory names (and other special names in listings)
-
-    Comment({ fg = grey1, bg = "NONE", gui = "italic" }),
-    TermCursor({ Cursor }), -- cursor in a focused terminal
-    TermCursorNC({ Cursor }), -- cursor in an unfocused terminal
-    ErrorMsg({ fg = red, bg = "NONE", gui = "bold,underline" }), -- error messages on the command line
     VertSplit({ fg = bg4, bg = "NONE" }), -- the column separating vertically split windows
     WinSeparator({ VertSplit, fg = bg2, gui = "bold" }),
+
+    ---- :help megaterm  -----------------------------------------------------
+
+    DarkenedPanel({ bg = bg1 }),
+    DarkenedStatusline({ bg = bg1 }),
+    DarkenedStatuslineNC({ gui = "italic", bg = bg1 }),
+
+    ---- sidebar  -----------------------------------------------------
+
+    PanelBackground({ fg = fg.darken(10), bg = bg0.darken(8) }),
+    PanelHeading({ PanelBackground, gui = "bold" }),
+    PanelVertSplit({ VertSplit, bg = bg0.darken(8) }),
+    PanelStNC({ PanelVertSplit }),
+    PanelSt({ bg = bg_blue.darken(20) }),
+
+    -- { "PanelBackground", { background = bg_color } },
+    -- { "PanelHeading", { background = bg_color, bold = true } },
+    -- { "PanelVertSplit", { foreground = split_color, background = bg_color } },
+    -- { "PanelStNC", { background = bg_color, foreground = split_color } },
+    -- { "PanelSt", { background = st_color } },
+
+    Comment({ fg = grey1, bg = "NONE", gui = "italic" }),
+    Directory({ fg = green, bg = "NONE" }), -- directory names (and other special names in listings)
+    ErrorMsg({ fg = red, bg = "NONE", gui = "bold,underline" }), -- error messages on the command line
     Folded({ Comment, gui = "bold,italic" }), -- line used for closed folds
     FoldColumn({ fg = grey1, bg = bg1 }), -- 'foldcolumn'
     -- Neither the sign column or end of buffer highlights require an explicit background
@@ -166,7 +186,7 @@ return lush(function(injected_functions)
     IncSearch({ fg = bg0, bg = red }), -- 'incsearch' highlighting; also used for the text replaced with ":s///c"
     CurSearch({ IncSearch }),
     Search({ fg = bg0, bg = green, gui = "italic,bold" }), -- Last search pattern highlighting (see 'hlsearch').  Also used for similar items that need to stand out.
-    Substitute({ fg = bg0, bg = yellow, guid = "strikethrough,bold" }), -- |:substitute| replacement text highlighting
+    Substitute({ fg = bg0, bg = yellow, gui = "strikethrough,bold" }), -- |:substitute| replacement text highlighting
     Beacon({ bg = blue }),
     LineNr({ fg = grey0, bg = "NONE" }), -- Line number for ":number" and ":#" commands, and when 'number' or 'relativenumber' option is set.
     MatchParen({ fg = "NONE", bg = bg4 }), -- The character under the cursor or just before it, if it is a paired bracket, and its match. |pi_paren.txt|
@@ -199,26 +219,6 @@ return lush(function(injected_functions)
     SpellCap({ fg = blue, bg = "NONE", gui = "undercurl", sp = blue }),
     SpellLocal({ fg = cyan, bg = "NONE", gui = "undercurl", sp = cyan }),
     SpellRare({ fg = purple, bg = "NONE", gui = "undercurl", sp = purple }), -- Word that is recognized by the spellchecker as one that is hardly ever used.  |spell| Combined with the highlighting used otherwise.
-
-    ---- :help toggleterm  -----------------------------------------------------
-
-    DarkenedPanel({ bg = bg1 }),
-    DarkenedStatusline({ bg = bg1 }),
-    DarkenedStatuslineNC({ gui = "italic", bg = bg1 }),
-
-    ---- sidebar  -----------------------------------------------------
-
-    PanelBackground({ fg = fg.darken(10), bg = bg0.darken(8) }),
-    PanelHeading({ PanelBackground, gui = "bold" }),
-    PanelVertSplit({ VertSplit, bg = bg0.darken(8) }),
-    PanelStNC({ PanelVertSplit }),
-    PanelSt({ bg = bg_blue.darken(20) }),
-
-    -- { "PanelBackground", { background = bg_color } },
-    -- { "PanelHeading", { background = bg_color, bold = true } },
-    -- { "PanelVertSplit", { foreground = split_color, background = bg_color } },
-    -- { "PanelStNC", { background = bg_color, foreground = split_color } },
-    -- { "PanelSt", { background = st_color } },
 
     -- These groups are not listed as default vim groups,
     -- but they are defacto standard group names for syntax highlighting.
@@ -393,7 +393,7 @@ return lush(function(injected_functions)
     Headline5({ fg = blue, bg = bg0, gui = "italic" }),
     Headline6({ fg = orange, bg = bg0, gui = "NONE" }),
     Dash({ fg = bg2, gui = "bold" }),
-    sym("@dash")({Dash}),
+    sym("@dash")({ Dash }),
     CodeBlock({ bg = bg1 }),
 
     ---- :help nvim-treesitter-highlights (external plugin) ----
@@ -752,6 +752,8 @@ return lush(function(injected_functions)
     StModeVisual({ bg = bg1, fg = magenta, gui = "bold" }),
     StModeReplace({ bg = bg1, fg = dark_red, gui = "bold" }),
     StModeCommand({ bg = bg1, fg = green, gui = "bold" }),
+    StModeTermNormal({ StModeNormal }),
+    StModeTermInsert({ bg = green, fg = PanelBackground.bg, gui = "underline", sp = green }),
     StMetadata({ Comment, bg = bg1 }),
     StMetadataPrefix({ Comment, bg = bg1, gui = "NONE" }),
     StIndicator({ fg = dark_blue, bg = bg1 }),

@@ -10,9 +10,9 @@ local term_buf_id = nil_buf_id
 local term_win_id = nil
 local term_tab_id = nil
 
-local create_float = function(buf_id, size)
+local create_float = function(bufnr, size)
   local parsed_size = (size / 100)
-  local win_id = api.nvim_open_win(buf_id, true, {
+  local winnr = api.nvim_open_win(bufnr, true, {
     relative = "editor",
     style = "minimal",
     border = mega.get_border(),
@@ -25,9 +25,9 @@ local create_float = function(buf_id, size)
   vim.opt_local.relativenumber = false
   vim.opt_local.number = false
   vim.opt_local.signcolumn = "no"
-  api.nvim_buf_set_option(buf_id, "filetype", "megaterm")
+  api.nvim_buf_set_option(bufnr, "filetype", "megaterm")
   api.nvim_win_set_option(
-    win_id,
+    winnr,
     "winhl",
     table.concat({
       "Normal:NormalFloat",
@@ -38,7 +38,7 @@ local create_float = function(buf_id, size)
   )
 
   vim.cmd("setlocal bufhidden=wipe")
-  return win_id
+  return winnr
 end
 
 local default_opts = {
@@ -143,12 +143,13 @@ local function create_keymaps(bufnr, winnr, direction)
   end
 
   tmap("<esc>", [[<C-\><C-n>]], opts)
+  -- TODO: find a way to be more intelligent about these (e.g., how can we use `wincmd p` and know that we're goign to the right thing from the term)
   tmap("<C-h>", [[<Cmd>wincmd h<CR>]], opts)
   tmap("<C-j>", [[<Cmd>wincmd j<CR>]], opts)
   tmap("<C-k>", [[<Cmd>wincmd k<CR>]], opts)
   tmap("<C-l>", [[<Cmd>wincmd l<CR>]], opts)
-  -- vim.cmd([[tnoremap <expr> <C-R> '<C-\><C-N>"'.nr2char(getchar()).'pi']])
-  -- tmap("<C-c>", [[<C-\><C-n>]], opts) -- NOTE: keep this disbled so we can C-c in a shell
+  -- NOTE: keep this disbled so we can C-c in a shell to halt a running process:
+  -- tmap("<C-c>", [[<C-\><C-n>]], opts)
 end
 
 local function create_term(cmd, opts)
@@ -246,8 +247,20 @@ local function handle_new(cmd, opts)
 
     vim.opt_local.relativenumber = false
     vim.opt_local.number = false
-    vim.opt_local.signcolumn = "no"
+    vim.opt_local.signcolumn = "yes:1"
     api.nvim_buf_set_option(term_buf_id, "filetype", "megaterm")
+
+    api.nvim_win_set_option(
+      term_win_id,
+      "winhl",
+      table.concat({
+        "Normal:PanelBackground",
+        "CursorLine:PanelBackground",
+        "CursorLineNr:PanelBackground",
+        "CursorLineSign:PanelBackground",
+        "SignColumn:PanelBackground",
+      }, ",")
+    )
   end
 
   api.nvim_buf_set_var(term_buf_id, "cmd", opts.cmd)
