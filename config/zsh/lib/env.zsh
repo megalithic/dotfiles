@@ -273,6 +273,8 @@ case "$(uname)" in
 
   export CURL_CA_BUNDLE=''
 
+  export ABDUCO_CMD="echo 'abduco started'"
+
   #
   # yubikey
   # GNUpg setup: https://github.com/drduh/YubiKey-Guide#create-temporary-working-directory-for-gpg

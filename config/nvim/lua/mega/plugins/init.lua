@@ -59,7 +59,7 @@ local function plugins(use)
   use({ "kyazdani42/nvim-web-devicons", config = function() require("nvim-web-devicons").setup() end })
   use({
     "NvChad/nvim-colorizer.lua",
-    -- event = "BufRead",
+    event = { "CursorHold", "CursorMoved", "InsertEnter" },
     config = function()
       require("colorizer").setup({
         filetypes = { "*" },

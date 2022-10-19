@@ -27,7 +27,7 @@ case $1 in
     fi
     ;;
 
-  docs)
+  d)
     shift
     if grep --quiet -E "ex_doc.*only: :docs" mix.exs; then
       MIX_ENV=docs mix docs -f html --open "$@"
@@ -40,15 +40,30 @@ case $1 in
     iex -S mix phx.server
     ;;
 
-  format)
+  f)
     if [[ -f .formatter.exs ]]; then
       inputs=$(grep "inputs:" .formatter.exs)
 
       if [[ -n "$inputs" ]] && [[ "$inputs" != *"inputs: []"* ]]; then
-        shift;
+        shift
         mix format "$@"
       fi
     fi
+    ;;
+
+  h)
+    printf -- "Usage: %s [subcommand]\n" "m"
+    printf -- "\n"
+    printf -- "Subcommands:\n"
+    printf -- "  h  This help text you're presently reading 😄\n"
+    printf -- "  d  generates and opens docs\n"
+    printf -- "  s  runs iex -S mix phx.server\n"
+    printf -- "  f  runs mix format\n"
+    printf -- "  setup  sets up the project\n"
+    printf -- "  _  runs iex with/without mix\n"
+    printf -- "\n"
+
+    exit 0
     ;;
 
   *)

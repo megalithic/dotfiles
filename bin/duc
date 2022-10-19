@@ -43,7 +43,8 @@ shift "$((OPTIND - 1))"
 session_name="${1:-}"
 shift
 
-cmd="${*:-}"
+# cmd="${*:-}"
+cmd="$*"
 
 # -- try to change to an existing session; otherwise, create a new one
 function try_session() {
