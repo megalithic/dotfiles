@@ -10,7 +10,7 @@ return function()
 
   null.setup({
     debounce = vim.g.is_local_dev and 200 or 500,
-    default_timeout = vim.g.is_local_dev and 500 or 2000,
+    default_timeout = vim.g.is_local_dev and 500 or 5000,
     sources = {
       format.trim_whitespace.with({ filetypes = { "*" } }),
       format.prettier.with({
@@ -65,11 +65,21 @@ return function()
         end,
       }),
       format.mix.with({
-        filetypes = {
-          "heex",
-          "eex",
-          "surface",
-        },
+        extra_filetypes = { "eelixir", "heex" },
+        args = { "format", "-" },
+        extra_args = function(_params)
+          local version_output = vim.fn.system("elixir -v")
+          local minor_version = vim.fn.matchlist(version_output, "Elixir \\d.\\(\\d\\+\\)")[2]
+
+          local extra_args = {}
+
+          -- tells the formatter the filename for the code passed to it via stdin.
+          -- This allows formatting heex files correctly. Only available for
+          -- Elixir >= 1.14
+          if tonumber(minor_version, 10) >= 14 then extra_args = { "--stdin-filename", "$FILENAME" } end
+
+          return extra_args
+        end,
       }),
       format.isort,
       format.black.with({
@@ -107,7 +117,17 @@ return function()
         filetypes = { "zsh" },
       }),
       -- diag.editorconfig_checker.with({ command = "editorconfig-checker" }),
-      -- b.diagnostics.credo,
+      diag.credo.with({
+        -- run credo in strict mode even if strict mode is not enabled in
+        -- .credo.exs
+        extra_args = { "--strict" },
+        -- only register credo source if it is installed in the current project
+        condition = function(_utils)
+          local cmd = { "rg", ":credo", "mix.exs" }
+          local credo_installed = ("" == vim.fn.system(cmd))
+          return not credo_installed
+        end,
+      }),
     },
   })
 end

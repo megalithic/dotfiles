@@ -24,19 +24,19 @@ local function setup_autocmds()
     {
       event = { "BufWritePost" },
       pattern = { "*/mega/plugins/*.lua" },
-      desc = "Packer setup and reload",
+      desc = "setup and reloaded",
       command = reload,
     },
     {
       event = { "User" },
       pattern = { "VimrcReloaded" },
-      desc = "Packer setup and reload",
+      desc = "setup and reloaded",
       command = reload,
     },
     {
       event = { "User" },
       pattern = { "PackerCompileDone" },
-      command = function() M.notify("Compilation finished") end,
+      command = function() M.notify("compilation finished") end,
     },
   })
 end
