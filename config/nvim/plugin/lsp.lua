@@ -564,6 +564,8 @@ mega.augroup("LspSetupCommands", {
     desc = "Clean up after detached LSP",
     command = function(args)
       local client_id = args.data.client_id
+      -- P(I(args))
+      -- vim.notify(fmt("%s lsp client detached", I(args.data)), vim.log.levels.WARN, { title = "lsp" })
       -- P(fmt("Lsp client_id, %s, detached", client_id)) -- this echos to the term on vimleave
       -- if not vim.b.lsp_events or not client_id then return end
       -- for _, state in pairs(vim.b.lsp_events) do

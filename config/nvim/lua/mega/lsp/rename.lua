@@ -45,7 +45,11 @@ do
           local bufnr = vim.uri_to_bufnr(doc_change.textDocument.uri)
           parse_edits(entries, bufnr, doc_change.edits)
         else
-          vim.notify(("Failed to parse TextDocumentEdit of kind: %s"):format(doc_change.kind or "N/A"))
+          vim.notify(
+            fmt("Failed to parse TextDocumentEdit of kind: %s", doc_change.kind or "N/A"),
+            vim.log.levels.WARN,
+            { title = "lsp" }
+          )
         end
       end
     end
@@ -75,7 +79,7 @@ function M.rename()
       params.newName = new_name
       lsp.buf_request(0, "textDocument/rename", params)
     else
-      vim.notify("Rename text matches; try again.", vim.log.levels.WARN, { title = "LSP" })
+      vim.notify("Rename text matches; try again.", vim.log.levels.WARN, { title = "lsp" })
     end
   end
 

@@ -377,6 +377,7 @@ local function plugins(use)
           log_level = vim.log.levels.DEBUG,
         },
       })
+
       require("mega.lsp.servers")()
     end,
     -- },

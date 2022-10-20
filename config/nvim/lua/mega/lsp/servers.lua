@@ -72,8 +72,6 @@ return function(on_attach)
     end
   end
 
-  local function lsp_setup(server_name, opts) lspconfig[server_name].setup(opts or {}) end
-
   -- all the server capabilities we could want
   local function get_server_capabilities()
     local capabilities = lsp.protocol.make_client_capabilities()
@@ -117,12 +115,15 @@ return function(on_attach)
   local server_opts = {}
   server_opts.flags = { debounce_text_changes = 150 }
   server_opts.capabilities = get_server_capabilities()
+  server_opts.single_file_support = true
   -- server_opts.on_attach = on_attach
 
+  local function lsp_setup(server_name, opts)
+    opts = vim.tbl_extend("keep", opts or {}, server_opts)
+    lspconfig[server_name].setup(opts)
+  end
+
   -- [ SERVERS ] ---------------------------------------------------------------
-
-  -- require("mason").setup()
-
   -- NEAT! @REF: https://github.com/folke/dot/blob/master/config/nvim/lua/config/mason.lua
   mason_lspconfig.setup({
     automatic_installation = true,
@@ -133,8 +134,9 @@ return function(on_attach)
       "dockerls",
       "elixirls",
       "elmls",
+      "ember",
       "emmet_ls",
-      -- "erlang_ls",
+      "erlangls",
       "html",
       "jsonls",
       -- "marksman",
@@ -148,6 +150,46 @@ return function(on_attach)
       "vimls",
       "yamlls",
       "zk",
+
+      -- -- Null LS
+      -- "actionlint",
+      -- "codespell",
+      -- "eslint_d",
+      -- "prettierd",
+      -- "rubocop",
+      -- "shellcheck",
+      -- "shfmt",
+      -- "stylua",
+      -- "yamllint",
+
+      -- -- LSPs
+
+      -- "ansible-language-server",
+      -- "arduino-language-server",
+      -- "bash-language-server",
+      -- "clangd",
+      -- "cmake-language-server",
+      -- "css-lsp",
+      -- "dockerfile-language-server",
+      -- "elixir-ls",
+      -- "elm-language-server",
+      -- "erlang-ls",
+      -- "eslint-lsp",
+      -- "gopls",
+      -- "html-lsp",
+      -- "json-lsp",
+      -- "lua-language-server",
+      -- "prosemd-lsp",
+      -- "rust-analyzer",
+      -- "solargraph",
+      -- "sqlls",
+      -- "tailwindcss-language-server",
+      -- "taplo",
+      -- "terraform-ls",
+      -- "typescript-language-server",
+      -- "vim-language-server",
+      -- "yaml-language-server",
+      -- "zls",
     },
   })
 
@@ -220,6 +262,7 @@ return function(on_attach)
       lsp_setup(server_name, opts)
     end,
     emmet_ls = function(server_name) lsp_setup(server_name) end,
+    erlangls = function(server_name) lsp_setup(server_name) end,
     html = function(server_name)
       local opts = vim.tbl_extend("keep", server_opts, {
         filetypes = {
