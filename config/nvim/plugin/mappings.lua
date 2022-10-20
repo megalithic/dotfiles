@@ -279,8 +279,8 @@ nnoremap("<leader>o", ":<C-u>call append(line(\".\"), repeat([\"\"], v:count1))<
 nnoremap("<leader>O", ":<C-u>call append(line(\".\")-1, repeat([\"\"], v:count1))<CR>")
 
 -- Jumplist mutations and dealing with word wrapped lines
-nnoremap("k", "v:count == 0 ? 'gk' : (v:count > 5 ? \"m'\" . v:count : '') . 'k'", { expr = true })
-nnoremap("j", "v:count == 0 ? 'gj' : (v:count > 5 ? \"m'\" . v:count : '') . 'j'", { expr = true })
+-- nnoremap("k", "v:count == 0 ? 'gk' : (v:count > 5 ? \"m'\" . v:count : '') . 'k'", { expr = true })
+-- nnoremap("j", "v:count == 0 ? 'gj' : (v:count > 5 ? \"m'\" . v:count : '') . 'j'", { expr = true })
 
 -- Fast previous buffer switching
 nnoremap("<leader><leader>", "<C-^>")
@@ -343,12 +343,12 @@ imap("?", "?<C-g>u")
 -- xnoremap("N", "'nN'[v:searchforward].'zzzv'.'<Esc><Cmd>lua mega.blink_cursorline(150)<CR>'", { expr = true })
 -- onoremap("N", "'nN'[v:searchforward].'zzzv'.'<Esc><Cmd>lua mega.blink_cursorline(150)<CR>'", { expr = true })
 
-nnoremap("n", "nzzzv<esc><cmd>lua mega.blink_cursorline(50)<cr>")
-xnoremap("n", "nzzzv<esc><cmd>lua mega.blink_cursorline(50)<cr>")
-onoremap("n", "nzzzv<esc><cmd>lua mega.blink_cursorline(50)<cr>")
-nnoremap("N", "Nzzzv<esc><cmd>lua mega.blink_cursorline(50)<cr>")
-xnoremap("N", "Nzzzv<esc><cmd>lua mega.blink_cursorline(50)<cr>")
-onoremap("N", "Nzzzv<esc><cmd>lua mega.blink_cursorline(50)<cr>")
+nnoremap("n", "nzz<esc><cmd>lua mega.blink_cursorline(50)<cr>")
+xnoremap("n", "nzz<esc><cmd>lua mega.blink_cursorline(50)<cr>")
+onoremap("n", "nzz<esc><cmd>lua mega.blink_cursorline(50)<cr>")
+nnoremap("N", "Nzz<esc><cmd>lua mega.blink_cursorline(50)<cr>")
+xnoremap("N", "Nzz<esc><cmd>lua mega.blink_cursorline(50)<cr>")
+onoremap("N", "Nzz<esc><cmd>lua mega.blink_cursorline(50)<cr>")
 
 -- REF: https://github.com/mhinz/vim-galore/blob/master/README.md#saner-command-line-history
 cnoremap("<C-n>", [[wildmenumode() ? "\<c-n>" : "\<down>"]], { expr = true })
