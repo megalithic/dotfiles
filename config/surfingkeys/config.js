@@ -637,8 +637,8 @@ const handleLoaded = (evt) => {
   // handleFocus();
 };
 
-if (["complete", "loaded", "interactive"].indexOf(document.readyState) >= 0) {
-  handleLoaded();
-} else {
-  document.addEventListener("DOMContentLoaded", (evt) => handleLoaded(evt));
-}
+// if (["complete", "loaded", "interactive"].indexOf(document.readyState) >= 0) {
+//   handleLoaded();
+// } else {
+//   document.addEventListener("DOMContentLoaded", (evt) => handleLoaded(evt));
+// }

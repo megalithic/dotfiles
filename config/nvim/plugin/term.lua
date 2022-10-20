@@ -340,6 +340,8 @@ function mega.term.toggle(opts)
 end
 
 mega.command("T", function(opts) mega.term.toggle(opts.args) end, { nargs = "*" })
+mega.command("Tv", function() vim.cmd([[T direction=vertical size=90]]) end)
+mega.command("Tf", function() vim.cmd([[T direction=float]]) end)
 
 mega.command("Term", function()
   mega.term.toggle({
@@ -439,7 +441,7 @@ end)
 
 nnoremap("<leader>tt", "<cmd>T<cr>", "term")
 nnoremap("<leader>tf", "<cmd>T direction=float<cr>", "term (float)")
-nnoremap("<leader>tv", "<cmd>T direction=vertical<cr>", "term (vertical)")
+nnoremap("<leader>tv", "<cmd>T direction=vertical size=90<cr>", "term (vertical)")
 nnoremap("<leader>tp", "<cmd>T direction=tab<cr>", "term (tab-persistent)")
 nnoremap("<leader>tre", "<cmd>TermElixir<cr>", "repl > elixir")
 nnoremap("<leader>trr", "<cmd>TermRuby<cr>", "repl > ruby")
