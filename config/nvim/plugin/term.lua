@@ -10,6 +10,19 @@ local term_buf_id = nil_buf_id
 local term_win_id = nil
 local term_tab_id = nil
 
+local set_win_hls = function(winnr, hls)
+  hls = hls
+    or {
+      "Normal:PanelBackground",
+      "CursorLine:PanelBackground",
+      "CursorLineNr:PanelBackground",
+      "CursorLineSign:PanelBackground",
+      "SignColumn:PanelBackground",
+      "FloatBorder:PanelBorder",
+    }
+  api.nvim_win_set_option(winnr, "winhl", table.concat(hls, ","))
+end
+
 local create_float = function(bufnr, size)
   local parsed_size = (size / 100)
   local winnr = api.nvim_open_win(bufnr, true, {
@@ -26,16 +39,13 @@ local create_float = function(bufnr, size)
   vim.opt_local.number = false
   vim.opt_local.signcolumn = "no"
   api.nvim_buf_set_option(bufnr, "filetype", "megaterm")
-  api.nvim_win_set_option(
-    winnr,
-    "winhl",
-    table.concat({
-      "Normal:NormalFloat",
-      "FloatBorder:FloatBorder",
-      "CursorLine:Visual",
-      "Search:None",
-    }, ",")
-  )
+
+  set_win_hls(winnr, {
+    "Normal:NormalFloat",
+    "FloatBorder:FloatBorder",
+    "CursorLine:Visual",
+    "Search:None",
+  })
 
   vim.cmd("setlocal bufhidden=wipe")
   return winnr
@@ -250,17 +260,7 @@ local function handle_new(cmd, opts)
     vim.opt_local.signcolumn = "yes:1"
     api.nvim_buf_set_option(term_buf_id, "filetype", "megaterm")
 
-    api.nvim_win_set_option(
-      term_win_id,
-      "winhl",
-      table.concat({
-        "Normal:PanelBackground",
-        "CursorLine:PanelBackground",
-        "CursorLineNr:PanelBackground",
-        "CursorLineSign:PanelBackground",
-        "SignColumn:PanelBackground",
-      }, ",")
-    )
+    set_win_hls(term_win_id)
   end
 
   api.nvim_buf_set_var(term_buf_id, "cmd", opts.cmd)

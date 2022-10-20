@@ -138,7 +138,7 @@ return lush(function(injected_functions)
     VirtColumn({ fg = bg2 }), -- used with virt-column.nvim
     Conceal({ fg = grey1, bg = "NONE" }), -- placeholder characters substituted for concealed text (see 'conceallevel')
     Cursor({ fg = "NONE", bg = "NONE", gui = "reverse" }), -- character under the cursor
-    TermCursor({ Cursor, bg=yellow }), -- cursor in a focused terminal
+    TermCursor({ Cursor, bg = yellow }), -- cursor in a focused terminal
     TermCursorNC({ Cursor }), -- cursor in an unfocused terminal
     lCursor({ Cursor }), -- the character under the cursor when |language-mapping| is used (see 'guicursor')
     iCursor({ Cursor }),
@@ -162,6 +162,7 @@ return lush(function(injected_functions)
     ---- sidebar  -----------------------------------------------------
 
     PanelBackground({ fg = fg.darken(10), bg = bg0.darken(8) }),
+    PanelBorder({ fg = PanelBackground.bg }),
     PanelHeading({ PanelBackground, gui = "bold" }),
     PanelVertSplit({ VertSplit, bg = bg0.darken(8) }),
     PanelStNC({ PanelVertSplit }),
