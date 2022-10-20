@@ -133,6 +133,12 @@ return function()
 
     require("mini.surround").setup({
       mappings = {
+        add = "ys",
+        delete = "ds",
+        -- find = "",
+        -- find_left = "",
+        -- highlight = "",
+        replace = "cs",
         -- add = "yp",
         -- visual_add = "P",
         -- delete = "dp",

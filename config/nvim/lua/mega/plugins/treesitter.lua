@@ -35,6 +35,7 @@ return function()
       "comment",
       "devicetree",
       "dockerfile",
+      "diff",
       "eex", -- doesn't seem to work, using `html_eex` below, too
       "elixir",
       "elm",

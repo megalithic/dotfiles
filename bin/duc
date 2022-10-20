@@ -75,7 +75,7 @@ function try_session() {
     exit 0
   fi
 
-  if [[ $IMMEDIATELY_ATTACH == "false" ]]; then
+  if [[ "$IMMEDIATELY_ATTACH" == "false" ]]; then
     session_create_opt="-n"
   fi
 
