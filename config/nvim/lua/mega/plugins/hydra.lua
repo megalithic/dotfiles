@@ -176,7 +176,7 @@ return function()
     },
     name = "dap",
     mode = { "n", "x" },
-    body = "<leader>dh",
+    body = "<leader>D",
     heads = {
       { "n", run("step_over"), { silent = true } },
       { "i", run("step_into"), { silent = true } },

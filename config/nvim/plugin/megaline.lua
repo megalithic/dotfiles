@@ -492,6 +492,24 @@ local function seg_search_results(truncate_at)
   return seg(fmt(" %s ", get_search_results()), "StCount", not is_truncated(truncate_at) and vim.v.hlsearch > 0)
 end
 
+local function seg_opened_terms(truncate_at)
+  local function is_valid(buf_num)
+    if not buf_num or buf_num < 1 then return false end
+    local exists = vim.api.nvim_buf_is_valid(buf_num)
+    return vim.bo[buf_num].buflisted and exists
+  end
+
+  ---@return number[]
+  ---@diagnostic disable-next-line: return-type-mismatch
+  local function get_valid_buffers() return vim.tbl_filter(is_valid, vim.api.nvim_list_bufs()) end
+  local bufs = {}
+  for i, buf_id in ipairs(get_valid_buffers()) do
+    table.insert(bufs, vim.api.nvim_buf_get_name(buf_id))
+  end
+  -- P(get_valid_buffers())
+  return seg(fmt(" %s ", unpack(bufs)), "StCount", not is_truncated(truncate_at))
+end
+
 local function seg_git_symbol(truncate_at)
   if is_abnormal_buffer() or not is_valid_git() then return "" end
 
@@ -561,6 +579,8 @@ function _G.__statusline()
     seg("Saving…", "StComment", vim.g.is_saving),
     seg_spacer(1),
     seg_search_results(120),
+    seg_spacer(1),
+    -- seg_opened_terms(120),
     -- end left alignment
     seg([[%=]]),
     seg(get_hydra_status()),
