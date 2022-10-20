@@ -320,7 +320,8 @@ local function setup_diagnostics()
   --   hide = function(_, bufnr) virt_text_handler.hide(ns, bufnr) end,
   -- })
 
-  require("mega.lsp.virtual_text")
+  -- FIXME:
+  -- require("mega.lsp.virtual_text")
 
   diagnostic.config({
     signs = {
@@ -330,10 +331,10 @@ local function setup_diagnostics()
       severity = { min = "HINT", max = "ERROR" },
     },
     underline = true,
-    -- TODO: https://github.com/akinsho/dotfiles/commit/dd1518bb8d60f9ae13686b85d8ea40762893c3c9
     severity_sort = true,
     -- Show virtual text only for errors
-    virtual_text = false, -- { spacing = 1, prefix = "", severity = { min = "ERROR", max = "ERROR" } },
+    -- virtual_text = false, -- { spacing = 1, prefix = "", severity = { min = "ERROR", max = "ERROR" } },
+    virtual_text = { spacing = 1, prefix = "", severity = { min = "ERROR", max = "ERROR" } },
     update_in_insert = false,
     float = {
       show_header = true,
