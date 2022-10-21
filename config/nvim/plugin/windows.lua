@@ -76,7 +76,7 @@ end
 
 mega.augroup("WindowsGoldenResizer", {
   {
-    event = { "WinEnter", "VimResized" },
+    event = { "WinEnter", "WinLeave", "VimResized" },
     command = function() mega.resize_windows() end,
   },
 })
