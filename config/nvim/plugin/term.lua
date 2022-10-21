@@ -201,12 +201,20 @@ local function handle_existing(cmd, opts)
     api.nvim_command(c)
     term_win_id = nil -- api.nvim_get_current_win()
   else
+    mega.augroup("Megaterm", {
+      {
+        event = { "WinEnter", "WinLeave" },
+        command = function() vim.cmd([[fmt("lua vim.api.nvim_win_set_%s(%s, %s)", cmd.dimension, term_win_id, size)]]) end,
+      },
+    })
+
     local c = fmt(
-      "%s %s | wincmd %s | lua vim.api.nvim_win_set_%s(0, %s)",
+      "%s %s | wincmd %s | lua vim.api.nvim_win_set_%s(%s, %s)",
       cmd.split,
       term_buf_id,
       cmd.winc,
       cmd.dimension,
+      term_win_id,
       size
     )
     api.nvim_command(c)
