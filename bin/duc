@@ -70,23 +70,27 @@ function try_session() {
   local session="$1"
   local session_create_opt="-c"
 
+  if [[ "$IMMEDIATELY_ATTACH" == "false" ]]; then
+    session_create_opt="-n"
+  fi
+
   # no session given; bail out
   if [[ -z "$session" ]]; then
     exit 0
   fi
 
-  if [[ "$IMMEDIATELY_ATTACH" == "false" ]]; then
-    session_create_opt="-n"
-  fi
-
   if abduco -l | grep -q "$session"; then
     log_info "attaching to session $session..."
     sleep 0.3
-    abduco -A "$session"
+    abduco -a "$session"
   elif [[ -n "$cmd" ]]; then
-    log_warn "creating session $session; with command $cmd..."
+    log_warn "creating session $session ($session_create_opt); with command: $cmd"
     sleep 0.3
     echo "${cmd[@]}" | xargs abduco "$session_create_opt" "$session"
+
+    if [[ "$IMMEDIATELY_ATTACH" == "true" ]]; then
+      abduco -a "$session"
+    fi
   else
     log_error "could not attach to or create new session named $session; exiting.."
     exit 1
