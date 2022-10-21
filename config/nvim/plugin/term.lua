@@ -41,8 +41,8 @@ local create_float = function(bufnr, size)
   api.nvim_buf_set_option(bufnr, "filetype", "megaterm")
 
   set_win_hls(winnr, {
-    "Normal:NormalFloat",
-    "FloatBorder:FloatBorder",
+    "Normal:PanelBackground",
+    "FloatBorder:PanelBorder",
     "CursorLine:Visual",
     "Search:None",
   })
@@ -207,7 +207,7 @@ local function handle_existing(cmd, opts)
       term_buf_id,
       cmd.winc,
       cmd.dimension,
-      term_win_id,
+      vim.api.nvim_win_is_valid(term_win_id) and term_win_id or 0,
       size
     )
     api.nvim_command(c)
@@ -250,7 +250,7 @@ local function handle_new(cmd, opts)
     api.nvim_buf_set_option(term_buf_id, "filetype", "megaterm")
     vim.bo.bufhidden = "wipe"
   else
-    local c = fmt("%s | wincmd %s | lua vim.api.nvim_win_set_%s(0, %s)", cmd.new, cmd.winc, cmd.dimension, size)
+    local c = fmt("%s | wincmd %s | lua vim.api.nvim_win_set_%s(%s, %s)", cmd.new, cmd.winc, cmd.dimension, 0, size)
     api.nvim_command(c)
 
     term_win_id = api.nvim_get_current_win()
@@ -296,18 +296,25 @@ function mega.term.open(args)
     handle_existing(cmd_opts, args)
   end
 
-  mega.augroup("MegatermResizer", {
-    {
-      event = { "WinEnter", "WinLeave" },
-      command = function(args)
-        if vim.api.nvim_win_is_valid(term_win_id) then
-          vim.cmd(
-            fmt("lua vim.api.nvim_win_set_%s(%s, %s)", cmd_opts.dimension, term_win_id, args.size or cmd_opts.size)
-          )
-        end
-      end,
-    },
-  })
+  -- FIXME: i just want the dang term wins to stay consistent sized
+  -- mega.augroup("MegatermResizer", {
+  --   {
+  --     event = { "WinEnter", "WinLeave" },
+  --     command = function(evt)
+  --       P(I(evt))
+  --       if vim.api.nvim_win_is_valid(term_win_id) then
+  --         local buf = vim.bo[vim.api.nvim_win_get_buf(term_win_id)]
+  --         if buf.filetype == "megaterm" then
+  --           -- local window = vim.wo[win]
+  --           local size = args.size or cmd_opts.size
+  --           local dimension = cmd_opts.dimension
+  --           vim.cmd(fmt("lua vim.api.nvim_win_set_%s(%s, %s)", dimension, term_win_id, size))
+  --           -- if evt.event == "WinEnter" then vim.cmd([[:e | execute 'normal! g`"']]) end
+  --         end
+  --       end
+  --     end,
+  --   },
+  -- })
 end
 
 function mega.term.hide()
