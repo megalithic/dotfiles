@@ -57,7 +57,7 @@ local default_opts = {
     split = "rightbelow sbuffer",
     dimension = "height",
     dim = "vim.api.nvim_win_set_height",
-    size = 20,
+    size = vim.fn.winheight(0) > 50 and 22 or 18,
     res = "resize",
     winc = "J",
   },
@@ -66,7 +66,7 @@ local default_opts = {
     split = "rightbelow sbuffer",
     dimension = "width",
     dim = "vim.api.nvim_win_set_width",
-    size = 70,
+    size = vim.o.columns > 210 and 90 or 70,
     res = "vertical-resize",
     winc = "L",
   },
@@ -201,13 +201,6 @@ local function handle_existing(cmd, opts)
     api.nvim_command(c)
     term_win_id = nil -- api.nvim_get_current_win()
   else
-    mega.augroup("Megaterm", {
-      {
-        event = { "WinEnter", "WinLeave" },
-        command = function() vim.cmd([[fmt("lua vim.api.nvim_win_set_%s(%s, %s)", cmd.dimension, term_win_id, size)]]) end,
-      },
-    })
-
     local c = fmt(
       "%s %s | wincmd %s | lua vim.api.nvim_win_set_%s(%s, %s)",
       cmd.split,
@@ -302,6 +295,19 @@ function mega.term.open(args)
   elseif fn.win_gotoid(term_win_id) ~= 1 then
     handle_existing(cmd_opts, args)
   end
+
+  mega.augroup("MegatermResizer", {
+    {
+      event = { "WinEnter", "WinLeave" },
+      command = function(args)
+        if vim.api.nvim_win_is_valid(term_win_id) then
+          vim.cmd(
+            fmt("lua vim.api.nvim_win_set_%s(%s, %s)", cmd_opts.dimension, term_win_id, args.size or cmd_opts.size)
+          )
+        end
+      end,
+    },
+  })
 end
 
 function mega.term.hide()
@@ -348,7 +354,7 @@ function mega.term.toggle(opts)
 end
 
 mega.command("T", function(opts) mega.term.toggle(opts.args) end, { nargs = "*" })
-mega.command("Tv", function() vim.cmd([[T direction=vertical size=90]]) end)
+mega.command("Tv", function() vim.cmd([[T direction=vertical]]) end)
 mega.command("Tf", function() vim.cmd([[T direction=float]]) end)
 
 mega.command("Term", function()
@@ -449,7 +455,7 @@ end)
 
 nnoremap("<leader>tt", "<cmd>T<cr>", "term")
 nnoremap("<leader>tf", "<cmd>T direction=float<cr>", "term (float)")
-nnoremap("<leader>tv", "<cmd>T direction=vertical size=90<cr>", "term (vertical)")
+nnoremap("<leader>tv", "<cmd>T direction=vertical<cr>", "term (vertical)")
 nnoremap("<leader>tp", "<cmd>T direction=tab<cr>", "term (tab-persistent)")
 nnoremap("<leader>tre", "<cmd>TermElixir<cr>", "repl > elixir")
 nnoremap("<leader>trr", "<cmd>TermRuby<cr>", "repl > ruby")

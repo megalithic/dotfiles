@@ -205,8 +205,10 @@ local exception_types = {
 ---@return boolean: Whether to truncate.
 local function is_truncated(trunc)
   -- Use -1 to default to 'not truncated'
+  -- get's just the current split window
   local check = api.nvim_win_get_width(0) < (trunc or -1)
 
+  -- gets the whole nvim window
   if vim.api.nvim_get_option("laststatus") == 3 then check = vim.o.columns < (trunc or -1) end
 
   return check
