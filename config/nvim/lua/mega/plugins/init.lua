@@ -242,6 +242,7 @@ local function plugins(use)
     -- run = "cp ./*.py ~/.config/kitty/",
     cond = function() return not vim.env.TMUX end,
   })
+  -- use({ "elihunter173/dirbuf.nvim", config = function() require("dirbuf").setup({}) end })
   use({
     "nvim-neo-tree/neo-tree.nvim",
     ext = "neo-tree",

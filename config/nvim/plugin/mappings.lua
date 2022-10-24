@@ -33,8 +33,6 @@ local api = vim.api
 
 -- [convenience mappings] ------------------------------------------------------
 
--- nnoremap("<C-t>", "<cmd>tabnew<cr>", "tabs: new")
-
 -- go-to split (also, if in kitty, see nvim-kitty-navigator)
 nnoremap("<C-h>", "<cmd>wincmd h<CR>", "split: go left")
 nnoremap("<C-j>", "<cmd>wincmd j<CR>", "split: go down")
@@ -387,7 +385,7 @@ onoremap("au", ":<c-u>lua require\"treesitter-unit\".select(true)<CR>")
 nmap("<F5>", "<cmd>lua mega.sync_plugins()<cr>", "packer: sync plugins")
 
 -- -- # dirbuf.nvim
--- nmap("<C-t>", function()
+-- nnoremap("<C-t>", function()
 --   local buf = vim.api.nvim_buf_get_name(0)
 --   vim.cmd([[vertical topleft split|vertical resize 60]])
 --   require("dirbuf").open(buf)
