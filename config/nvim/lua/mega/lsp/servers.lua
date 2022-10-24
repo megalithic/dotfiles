@@ -433,6 +433,9 @@ return function(on_attach)
                 "tnoremap",
               },
             },
+            unusedLocalExclude = {
+              "_*",
+            },
             completion = { keywordSnippet = "Replace", callSnippet = "Replace" },
             workspace = {
               -- Don't analyze code from submodules

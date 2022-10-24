@@ -23,6 +23,42 @@ local set_win_hls = function(winnr, hls)
   api.nvim_win_set_option(winnr, "winhl", table.concat(hls, ","))
 end
 
+local set_autocommands = function()
+  -- FIXME: i just want the dang term wins to stay consistent sized
+  mega.augroup("MegatermResizer", {
+    {
+      event = { "BufEnter" },
+      pattern = { "term://*#megaterm#*" },
+      nested = true,
+      command = function(evt)
+        -- vim.opt_local.relativenumber = false
+        -- vim.opt_local.number = false
+        -- vim.opt_local.signcolumn = "yes:1"
+
+        -- api.nvim_buf_set_option(term_buf_id, "filetype", "megaterm")
+
+        -- set_win_hls(term_win_id)
+        -- P(evt)
+        -- local info = vim.api.nvim_get_mode()
+        -- if info and (info.mode == "n" or info.mode == "nt") then vim.cmd("normal! G") end
+        -- -- P(I(evt))
+        P("we're in bufenter")
+        if vim.api.nvim_win_is_valid(term_win_id) and vim.bo[args.buf] == vim.api.nvim_win_get_buf(term_win_id) then
+          local buf = vim.bo[vim.api.nvim_win_get_buf(term_win_id)]
+          if buf.filetype == "megaterm" then
+            P("we're in a valid megaterm buffer on enter")
+            -- local window = vim.wo[win]
+            -- local size = args.size or cmd_opts.size
+            -- local dimension = cmd_opts.dimension
+            -- vim.cmd(fmt("lua vim.api.nvim_win_set_%s(%s, %s)", dimension, term_win_id, size))
+            -- if evt.event == "WinEnter" then vim.cmd([[:e | execute 'normal! g`"']]) end
+          end
+        end
+      end,
+    },
+  })
+end
+
 local create_float = function(bufnr, size)
   local parsed_size = (size / 100)
   local winnr = api.nvim_open_win(bufnr, true, {
@@ -139,7 +175,7 @@ function mega.term.parse(args)
 end
 
 -- REF: https://github.com/outstand/titan.nvim/blob/main/lua/titan/plugins/toggleterm.lua
-local function create_keymaps(bufnr, winnr, direction)
+local function set_keymaps(bufnr, winnr, direction)
   local opts = { buffer = bufnr, silent = false }
   -- quit terminal and go back to last window
   -- TODO: do we want this ONLY for non tab terminals?
@@ -158,6 +194,8 @@ local function create_keymaps(bufnr, winnr, direction)
   tmap("<C-j>", [[<Cmd>wincmd j<CR>]], opts)
   tmap("<C-k>", [[<Cmd>wincmd k<CR>]], opts)
   tmap("<C-l>", [[<Cmd>wincmd l<CR>]], opts)
+  -- TODO: want a `<C-r>` or `;,` to pull up last executed command in the term
+  -- TODO: want a `<C-b>` to auto scroll back and `<C-f>` to auto scroll forward in insert mode
   -- NOTE: keep this disbled so we can C-c in a shell to halt a running process:
   -- tmap("<C-c>", [[<C-\><C-n>]], opts)
 end
@@ -189,39 +227,6 @@ local function create_term(cmd, opts)
   })
 end
 
-local function handle_existing(cmd, opts)
-  local size = opts["size"] or cmd.size
-  local on_after_open = opts.on_after_open or nil
-  local winnr = opts.winnr
-
-  if opts.direction == "float" then
-    cmd.split(size, term_buf_id)
-  elseif opts.direction == "tab" then
-    local c = fmt("%s%s", term_tab_id, cmd.split)
-    api.nvim_command(c)
-    term_win_id = nil -- api.nvim_get_current_win()
-  else
-    local c = fmt(
-      "%s %s | wincmd %s | lua vim.api.nvim_win_set_%s(%s, %s)",
-      cmd.split,
-      term_buf_id,
-      cmd.winc,
-      cmd.dimension,
-      vim.api.nvim_win_is_valid(term_win_id) and term_win_id or 0,
-      size
-    )
-    api.nvim_command(c)
-    term_win_id = api.nvim_get_current_win()
-  end
-
-  if on_after_open ~= nil and type(on_after_open) == "function" then
-    on_after_open(term_buf_id, winnr)
-  else
-    api.nvim_command([[normal! G]])
-    if opts.direction ~= "float" then vim.cmd([[wincmd p]]) end
-  end
-end
-
 local function handle_new(cmd, opts)
   local size = opts["size"] or cmd.size
   local init_cmd = opts.cmd or "zsh -i"
@@ -237,8 +242,7 @@ local function handle_new(cmd, opts)
   if opts.direction == "float" then
     cmd.new(size)
   elseif opts.direction == "tab" then
-    local c = fmt("%s", cmd.new)
-    api.nvim_command(c)
+    api.nvim_command(fmt("%s", cmd.new))
 
     term_win_id = api.nvim_get_current_win()
     term_buf_id = api.nvim_get_current_buf()
@@ -250,8 +254,9 @@ local function handle_new(cmd, opts)
     api.nvim_buf_set_option(term_buf_id, "filetype", "megaterm")
     vim.bo.bufhidden = "wipe"
   else
-    local c = fmt("%s | wincmd %s | lua vim.api.nvim_win_set_%s(%s, %s)", cmd.new, cmd.winc, cmd.dimension, 0, size)
-    api.nvim_command(c)
+    api.nvim_command(
+      fmt("%s | wincmd %s | lua vim.api.nvim_win_set_%s(%s, %s)", cmd.new, cmd.winc, cmd.dimension, 0, size)
+    )
 
     term_win_id = api.nvim_get_current_win()
     term_buf_id = api.nvim_get_current_buf()
@@ -265,7 +270,7 @@ local function handle_new(cmd, opts)
   end
 
   api.nvim_buf_set_var(term_buf_id, "cmd", opts.cmd)
-  create_keymaps(term_buf_id, term_win_id, opts.direction)
+  set_keymaps(term_buf_id, term_win_id, opts.direction)
 
   if precmd ~= nil then init_cmd = fmt("%s; %s", precmd, init_cmd) end
 
@@ -285,6 +290,40 @@ local function handle_new(cmd, opts)
   end
 end
 
+local function handle_existing(cmd, opts)
+  local size = opts["size"] or cmd.size
+  local on_after_open = opts.on_after_open or nil
+  local winnr = opts.winnr
+
+  if opts.direction == "float" then
+    cmd.split(size, term_buf_id)
+  elseif opts.direction == "tab" then
+    local c = fmt("%s%s", term_tab_id, cmd.split)
+    api.nvim_command(c)
+    term_win_id = nil -- api.nvim_get_current_win()
+  else
+    api.nvim_command(
+      fmt(
+        "%s %s | wincmd %s | lua vim.api.nvim_win_set_%s(%s, %s)",
+        cmd.split,
+        term_buf_id,
+        cmd.winc,
+        cmd.dimension,
+        vim.api.nvim_win_is_valid(term_win_id) and term_win_id or 0,
+        size
+      )
+    )
+    term_win_id = api.nvim_get_current_win()
+  end
+
+  if on_after_open ~= nil and type(on_after_open) == "function" then
+    on_after_open(term_buf_id, winnr)
+  else
+    api.nvim_command([[normal! G]])
+    if opts.direction ~= "float" then vim.cmd([[wincmd p]]) end
+  end
+end
+
 function mega.term.open(args)
   args = args or {}
   local direction = args["direction"] or "horizontal"
@@ -296,25 +335,7 @@ function mega.term.open(args)
     handle_existing(cmd_opts, args)
   end
 
-  -- FIXME: i just want the dang term wins to stay consistent sized
-  -- mega.augroup("MegatermResizer", {
-  --   {
-  --     event = { "WinEnter", "WinLeave" },
-  --     command = function(evt)
-  --       P(I(evt))
-  --       if vim.api.nvim_win_is_valid(term_win_id) then
-  --         local buf = vim.bo[vim.api.nvim_win_get_buf(term_win_id)]
-  --         if buf.filetype == "megaterm" then
-  --           -- local window = vim.wo[win]
-  --           local size = args.size or cmd_opts.size
-  --           local dimension = cmd_opts.dimension
-  --           vim.cmd(fmt("lua vim.api.nvim_win_set_%s(%s, %s)", dimension, term_win_id, size))
-  --           -- if evt.event == "WinEnter" then vim.cmd([[:e | execute 'normal! g`"']]) end
-  --         end
-  --       end
-  --     end,
-  --   },
-  -- })
+  set_autocommands()
 end
 
 function mega.term.hide()

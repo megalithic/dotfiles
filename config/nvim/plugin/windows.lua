@@ -33,34 +33,30 @@ local bt_ignores = {
   "startuptime",
 }
 
--- local function ignore_float_windows()
---   local current_config = vim.api.nvim_win_get_config(0)
---   if current_config["relative"] ~= "" then return 1 end
--- end
+local function ignored_by_window_resize_flag()
+  local ignore_golden_resize = false
 
--- local function ignore_by_window_flag()
---   local ignore_golden_size = 0
+  local ok, result = pcall(vim.api.nvim_win_get_var, 0, "ignore_golden_resize")
+  if ok then ignore_golden_resize = result end
 
---   local status, result = pcall(vim.api.nvim_win_get_var, 0, "ignore_golden_size")
---   if status then ignore_golden_size = result end
-
---   if ignore_golden_size == 1 then
---     return 1
---   else
---     return 0
---   end
--- end
+  return ignore_golden_resize
+end
 
 local function is_floating_win() return vim.fn.win_gettype() == "popup" end
 
-local function is_ignored()
-  return vim.tbl_contains(bt_ignores, vim.bo.buftype)
-    or vim.tbl_contains(ft_ignores, vim.bo.filetype)
+local function is_ignored(bufnr)
+  local should_ignore = vim.tbl_contains(bt_ignores, vim.bo[bufnr].buftype)
+    or vim.tbl_contains(ft_ignores, vim.bo[bufnr].filetype)
+    or vim.bo[bufnr].filetype == ""
+    or ignored_by_window_resize_flag()
     or is_floating_win()
+
+  -- P(fmt("should ignore (%s): %s", should_ignore, vim.bo[bufnr].filetype, vim.bo[bufnr].buftype))
+  return should_ignore
 end
 
-function mega.resize_windows()
-  if is_ignored() then return end
+function mega.resize_windows(bufnr)
+  if is_ignored(bufnr) then return end
 
   local columns = vim.api.nvim_get_option("columns")
   local rows = vim.api.nvim_get_option("lines")
@@ -103,6 +99,9 @@ mega.command("AutoResize", mega.auto_resize(), { nargs = "?" })
 mega.augroup("WindowsGoldenResizer", {
   {
     event = { "WinEnter", "VimResized" },
-    command = function() mega.resize_windows() end,
+    command = function(args)
+      -- P(vim.bo[args.buf].filetype)
+      mega.resize_windows(args.buf)
+    end,
   },
 })

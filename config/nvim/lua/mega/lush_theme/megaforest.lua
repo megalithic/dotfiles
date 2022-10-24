@@ -863,7 +863,7 @@ return lush(function(injected_functions)
     ---- :help: notifier.nvim  -------------------------------------------------
 
     NotifierTitle({ fg = orange }),
-    NotifierContent({ fg = grey2, bg = bg1.darken(10) }),
+    NotifierContent({ NormalFloat }),
     NotifierContentDim({ fg = grey1, bg = bg1.darken(10), gui = "italic" }),
 
     ---- :help: bqf.txt --------------------------------------------------------

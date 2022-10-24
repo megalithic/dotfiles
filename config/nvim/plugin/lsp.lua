@@ -84,7 +84,7 @@ end
 
 -- [ COMMANDS ] ----------------------------------------------------------------
 
-local function setup_commands()
+local function setup_commands(bufnr)
   FormatRange = function()
     local start_pos = api.nvim_buf_get_mark(0, "<")
     local end_pos = api.nvim_buf_get_mark(0, ">")
@@ -94,7 +94,7 @@ local function setup_commands()
 
   command("LspLog", function() vim.cmd("vnew " .. vim.lsp.get_log_path()) end)
 
-  command("LspFormat", function() format({ bufnr = 0, async = false }) end)
+  command("LspFormat", function() format({ bufnr = bufnr, async = false }) end)
 
   -- A helper function to auto-update the quickfix list when new diagnostics come
   -- in and close it once everything is resolved. This functionality only runs while
@@ -463,7 +463,7 @@ local function on_attach(client, bufnr)
   require("mega.lsp.handlers")
   if caps.signatureHelpProvider then require("mega.lsp.signature").setup(client) end
   setup_formatting(client, bufnr)
-  setup_commands()
+  setup_commands(bufnr)
   setup_autocommands(client, bufnr)
   setup_diagnostics()
   setup_mappings(client, bufnr)

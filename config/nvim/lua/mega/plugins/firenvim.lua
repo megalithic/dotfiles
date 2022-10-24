@@ -97,6 +97,7 @@ return function()
       -- require("mega.globals").nnoremap("<C-z>", "=write<CR>=call firenvim#hide_frame()<CR>")
       -- vim.defer_fn(function() vim.opt.guifont = "FiraCode Nerd Font Mono:h22" end, 1000)
       vim.opt.guifont = "JetBrainsMono_Nerd_Font_Mono:h22"
+      vim.cmd("set lines=20")
       vim.cmd([[exec "norm gg"]]) -- test: 聆
 
       -- print(string.format("lines: %d", vim.api.nvim_buf_line_count(0)))

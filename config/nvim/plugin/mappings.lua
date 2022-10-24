@@ -60,8 +60,11 @@ nmap("<localleader>tf", "<cmd>TestFile<cr>", "run _all tests in file")
 nmap("<localleader>tl", "<cmd>TestLast<cr>", "run _last test")
 nmap("<localleader>tt", "<cmd>TestLast<cr>", "run _last test")
 nmap("<localleader>tv", "<cmd>TestVisit<cr>", "run test file _visit")
-nmap("<localleader>tp", "<cmd>:A<cr>", "open alt (edit)")
-nmap("<localleader>tP", "<cmd>:AV<cr>", "open alt (vsplit)")
+nmap("<localleader>tp", "<cmd>A<cr>", "open alt (edit)")
+nmap("<localleader>tP", "<cmd>AV<cr>", "open alt (vsplit)")
+
+nmap("<localleader>f", "<cmd>Format<cr>", "run file formatter")
+nmap("<localleader>F", "<cmd>LspFormat<cr>", "run lsp formatter")
 
 -- make the tab key match bracket pairs
 exec("silent! unmap [%", true)
