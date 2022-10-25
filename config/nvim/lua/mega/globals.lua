@@ -1157,6 +1157,11 @@ do
   command("SaveAsFile", [[noautocmd clear | :execute "saveas %:p:h/" .input('save as -> ') | :e ]])
   command("RenameFile", [[noautocmd clear | :execute "Rename " .input('rename to -> ') | :e ]])
   command("Flash", function() mega.blink_cursorline() end)
+  command("P", function(opts)
+    vim.g.enable_vim_debug = true
+    vim.cmd(fmt("lua P(%s)", opts.args))
+    vim.g.enable_vim_debug = false
+  end, { nargs = "*" })
   -- command("P", "<cmd>lua P(<args>)", { nargs = "?" })
   -- command("P", function(opts)
   --   local opts = opts.args or "¯\\_(ツ)_/¯"

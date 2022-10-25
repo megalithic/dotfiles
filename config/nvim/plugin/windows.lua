@@ -60,29 +60,24 @@ end
 
 function mega.resize_windows(bufnr)
   P(fmt("resize_windows filetype: %s", vim.bo[bufnr].filetype))
+  if is_ignored(bufnr) then return end
 
   local columns = vim.api.nvim_get_option("columns")
   local rows = vim.api.nvim_get_option("lines")
   local current_height = vim.api.nvim_win_get_height(0)
   local current_width = vim.api.nvim_win_get_width(0)
 
-  if is_ignored(bufnr) then
-    ignored_height = current_height
-    ignored_width = current_width
-    vim.api.nvim_win_set_height(0, ignored_height)
-    vim.api.nvim_win_set_width(0, ignored_width)
-    -- vim.cmd(fmt("let &winwidth=%d", ignored_width))
-    -- vim.cmd(fmt("let &winheight=%d", ignored_height))
+  -- ignored_height = current_height
+  -- ignored_width = current_width
+  -- vim.api.nvim_win_set_height(0, ignored_height)
+  -- vim.api.nvim_win_set_width(0, ignored_width)
+  -- vim.cmd(fmt("let &winwidth=%d", ignored_width))
+  -- vim.cmd(fmt("let &winheight=%d", ignored_height))
 
-    return
-  else
-  end
-
+  local golden_height = math.floor(rows / GOLDEN_RATIO)
   local golden_width = math.floor(columns / GOLDEN_RATIO)
 
   if current_width < golden_width then vim.api.nvim_win_set_width(0, golden_width) end
-
-  local golden_height = math.floor(rows / GOLDEN_RATIO)
   if current_height < golden_height then vim.api.nvim_win_set_height(0, golden_height) end
 end
 
