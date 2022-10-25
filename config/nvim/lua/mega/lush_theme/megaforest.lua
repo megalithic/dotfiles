@@ -462,7 +462,8 @@ return lush(function(injected_functions)
     sym("@text.danger")({ sym("@comment.fix") }),
     sym("@text.warning")({ sym("@comment.warn") }),
     sym("@text.todo")({ sym("@comment.todo") }),
-    sym("@text.note")({ fg = teal, gui = "italic" }),
+    sym("@text.note")({ sym("@comment.note") }),
+    sym("@text.ref")({ sym("@comment.ref") }),
 
     ---- :help treesitter-context ----------------------------------------------
 
@@ -572,6 +573,12 @@ return lush(function(injected_functions)
     DiffDelete({ fg = "NONE", bg = bg_red }), -- diff mode: Deleted line |diff.txt|
     DiffText({ fg = "NONE", bg = bg_blue }), -- diff mode: Changed text within a changed line |diff.txt|
     DiffBase({ fg = "NONE", bg = bg_dark }), -- diff mode: Changed text within a changed line |diff.txt|
+
+    sym("@text.diff.add")({ DiffAdd }),
+    sym("@text.diff.change")({ DiffChange }),
+    sym("@text.diff.delete")({ DiffDelete }),
+    sym("@text.diff.text")({ DiffText }),
+    sym("@text.diff.base")({ DiffBase }),
 
     --- netrw: there's no comprehensive list of highlights... --
 

@@ -18,6 +18,12 @@ vim.g.enabled_plugin = {
   winbar = false, -- FIXME: add more!
 }
 
+for plugin, _ in pairs(vim.g.enabled_plugin) do
+  if not vim.tbl_contains({ "autocmds", "mappings", "quickfix" }, plugin) and vim.g.started_by_firenvim then
+    plugin = false
+  end
+end
+
 vim.g.colorscheme = "megaforest"
 vim.g.default_colorcolumn = "81"
 vim.g.mapleader = ","

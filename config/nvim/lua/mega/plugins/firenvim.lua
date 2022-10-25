@@ -12,7 +12,7 @@ return function()
         priority = 0,
         selector = "textarea",
         takeover = "never",
-        filename = "/tmp/{hostname}_{pathname%10}.{extension}",
+        -- filename = "/tmp/{hostname}_{pathname%10}.{extension}",
       },
       ["https?://github.com/"] = {
         takeover = "always",
@@ -97,7 +97,7 @@ return function()
       -- require("mega.globals").nnoremap("<C-z>", "=write<CR>=call firenvim#hide_frame()<CR>")
       -- vim.defer_fn(function() vim.opt.guifont = "FiraCode Nerd Font Mono:h22" end, 1000)
       vim.opt.guifont = "JetBrainsMono_Nerd_Font_Mono:h22"
-      vim.cmd("set lines=20")
+      -- if vim.o.lines < 30 then vim.o.lines = 30 end
       vim.cmd([[exec "norm gg"]]) -- test: 聆
 
       -- print(string.format("lines: %d", vim.api.nvim_buf_line_count(0)))
@@ -118,20 +118,14 @@ return function()
   end
 
   function OnUIEnter(event)
-    if IsFirenvimActive(event) then
-      print("onuienter")
-      firenvim_onload()
-    end
+    if IsFirenvimActive(event) then firenvim_onload() end
   end
+  vim.cmd([[autocmd UIEnter * :call luaeval('OnUIEnter(vim.fn.deepcopy(vim.v.event))')]])
 
-  -- vim.cmd([[autocmd UIEnter * :call luaeval('OnUIEnter(vim.fn.deepcopy(vim.v.event))')]])
   require("mega.globals").augroup("Firenvim", {
     {
-      event = { "BufEnter" },
-      command = function()
-        -- print("bufenter")
-        firenvim_onload()
-      end,
+      event = { "BufEnter", "FocusGained" },
+      command = function() firenvim_onload() end,
     },
   })
 end

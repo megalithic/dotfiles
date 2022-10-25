@@ -158,15 +158,4 @@ function M.plugin(name, hls)
   })
 end
 
-mega.augroup("UserHighlights", {
-  {
-    event = { "ColorScheme" },
-    command = function()
-      M.all({
-        { ["@text.ref"] = { foreground = C.cyan } },
-      })
-    end,
-  },
-})
-
 return M

@@ -65,6 +65,8 @@ vim.opt.runtimepath:remove("~/.local/share/src")
 -- in commandline: :lua P(vim.loop)
 ---@vararg any
 function _G.P(...)
+  if not vim.g.enable_vim_debug then return end
+
   local objects, v = {}, nil
   for i = 1, select("#", ...) do
     v = select(i, ...)
@@ -82,6 +84,8 @@ function _G.P(...)
 end
 
 function _G.PT(tbl, indent)
+  if not vim.g.enable_vim_debug then return end
+
   if not indent then indent = 2 end
   for k, v in pairs(tbl) do
     local formatting = string.rep("  ", indent) .. k .. ": "
@@ -97,6 +101,8 @@ function _G.PT(tbl, indent)
 end
 
 function _G.dump(...)
+  if not vim.g.enable_vim_debug then return end
+
   local objects = vim.tbl_map(vim.inspect, { ... })
   print(unpack(objects))
 end

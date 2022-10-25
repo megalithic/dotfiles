@@ -369,7 +369,7 @@ function mega.term.toggle(opts)
   end
 
   if not parsed.winnr then parsed["winnr"] = vim.fn.winnr() end -- api.nvim_get_current_win()
-  if not parsed.cmd then parsed["cmd"] = "zsh -i" end
+  if not parsed.cmd then parsed["cmd"] = "zsh" end
   if not parsed.on_after_open then parsed["on_after_open"] = function() vim.cmd("startinsert") end end
 
   if fn.win_gotoid(term_win_id) == 1 and parsed.direction ~= "tab" then

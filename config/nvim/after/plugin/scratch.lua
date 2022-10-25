@@ -16,10 +16,11 @@ do
   end
 
   local default_opts = {
-    cmd = "zsh -i",
+    cmd = "zsh",
     direction = "horizontal",
     start_insert = true,
   }
+
   local split_opts = {
     ["horizontal"] = {
       new = "botright new",
