@@ -86,13 +86,11 @@ local create_float = function(bufnr, size)
   vim.cmd("setlocal bufhidden=wipe")
   return winnr
 end
-
 local default_opts = {
   ["horizontal"] = {
     new = "botright new",
     split = "rightbelow sbuffer",
     dimension = "height",
-    dim = "vim.api.nvim_win_set_height",
     size = vim.fn.winheight(0) > 50 and 22 or 18,
     res = "resize",
     winc = "J",
@@ -101,7 +99,6 @@ local default_opts = {
     new = "botright vnew",
     split = "rightbelow sbuffer",
     dimension = "width",
-    dim = "vim.api.nvim_win_set_width",
     size = vim.o.columns > 210 and 90 or 70,
     res = "vertical-resize",
     winc = "L",
@@ -248,6 +245,8 @@ local function handle_new(cmd, opts)
     term_buf_id = api.nvim_get_current_buf()
     term_tab_id = api.nvim_get_current_tabpage()
 
+    -- Focus first file:line:col pattern in the terminal output
+    -- vim.keymap.set('n', 'F', [[:call search('\f\+:\d\+:\d\+')<CR>]], { buffer = true, silent = true })
     vim.opt_local.relativenumber = false
     vim.opt_local.number = false
     vim.opt_local.signcolumn = "no"

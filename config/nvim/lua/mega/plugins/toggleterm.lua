@@ -1,4 +1,7 @@
 return function()
+  -- use our own if we have it enabled
+  if vim.g.enabled_plugin["term"] then return end
+
   local tt = require("toggleterm")
   -- TODO: send visual lines to toggleterm:
   --      https://github.com/akinsho/toggleterm.nvim/issues/172
@@ -58,20 +61,44 @@ return function()
 
   mega.command("Btop", function() btop:toggle() end)
 
-  local has_wk, wk = mega.require("which-key")
-  if has_wk and not vim.g.enabled_plugin["term"] then
-    wk.register({
-      t = {
-        name = "terminal",
-        t = { "<cmd>ToggleTerm direction=horizontal<cr>", "Horizontal" },
-        f = { "<cmd>ToggleTerm direction=float<cr>", "Float" },
-        h = { "<cmd>ToggleTerm direction=horizontal<cr>", "Horizontal" },
-        v = { "<cmd>ToggleTerm size=80 direction=vertical<cr>", "Vertical" },
-      },
-    }, {
-      prefix = "<leader>",
-    })
+  nnoremap("<leader>tt", "<cmd>ToggleTerm direction=horizontal<cr>", "toggleterm")
+  nnoremap("<leader>tf", "<cmd>ToggleTerm direction=float<cr>", "toggleterm (float)")
+  nnoremap("<leader>tv", "<cmd>ToggleTerm direction=vertical<cr>", "toggleterm (vertical)")
+  nnoremap("<leader>tp", "<cmd>ToggleTerm direction=tab<cr>", "toggleterm (tab-persistent)")
+
+  function _G.set_terminal_keymaps()
+    local opts = { buffer = 0 }
+    tmap("<esc>", [[<C-\><C-n>]], opts)
+    tmap("<C-h>", [[<Cmd>wincmd h<CR>]], opts)
+    tmap("<C-j>", [[<Cmd>wincmd j<CR>]], opts)
+    tmap("<C-k>", [[<Cmd>wincmd k<CR>]], opts)
+    tmap("<C-l>", [[<Cmd>wincmd l<CR>]], opts)
   end
+
+  -- if you only want these mappings for toggle term use term://*toggleterm#* instead
+  vim.cmd("autocmd! TermOpen term://* lua set_terminal_keymaps()")
+
+  -- nnoremap("<leader>tre", "<cmd>TermElixir<cr>", "repl > elixir")
+  -- nnoremap("<leader>trr", "<cmd>TermRuby<cr>", "repl > ruby")
+  -- nnoremap("<leader>trR", "<cmd>TermRuby!<cr>", "repl > ruby (current file)")
+  -- nnoremap("<leader>trl", "<cmd>TermLua<cr>", "repl > lua")
+  -- nnoremap("<leader>trn", "<cmd>TermNode<cr>", "repl > node")
+  -- nnoremap("<leader>trp", "<cmd>TermPython<cr>", "repl > python")
+  --
+  -- local has_wk, wk = mega.require("which-key")
+  -- if has_wk and not vim.g.enabled_plugin["term"] then
+  --   wk.register({
+  --     t = {
+  --       name = "terminal",
+  --       t = { "<cmd>ToggleTerm direction=horizontal<cr>", "Horizontal" },
+  --       f = { "<cmd>ToggleTerm direction=float<cr>", "Float" },
+  --       h = { "<cmd>ToggleTerm direction=horizontal<cr>", "Horizontal" },
+  --       v = { "<cmd>ToggleTerm size=80 direction=vertical<cr>", "Vertical" },
+  --     },
+  --   }, {
+  --     prefix = "<leader>",
+  --   })
+  -- end
 end
 
 -- return function()

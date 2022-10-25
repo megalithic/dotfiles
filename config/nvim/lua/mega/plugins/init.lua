@@ -592,6 +592,7 @@ local function plugins(use)
   -- })
 
   -- ( Development ) -----------------------------------------------------------
+  use({ "akinsho/toggleterm.nvim", ext = "toggleterm" })
   use({ "danymat/neogen" })
   use({
     "numToStr/Comment.nvim",

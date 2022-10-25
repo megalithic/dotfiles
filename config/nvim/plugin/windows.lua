@@ -33,6 +33,9 @@ local bt_ignores = {
   "startuptime",
 }
 
+local ignored_height = nil
+local ignored_width = nil
+
 local function ignored_by_window_resize_flag()
   local ignore_golden_resize = false
 
@@ -51,17 +54,30 @@ local function is_ignored(bufnr)
     or ignored_by_window_resize_flag()
     or is_floating_win()
 
-  -- P(fmt("should ignore (%s): %s", should_ignore, vim.bo[bufnr].filetype, vim.bo[bufnr].buftype))
+  P(fmt("resize_windows should ignore (%s): %s", should_ignore, vim.bo[bufnr].filetype, vim.bo[bufnr].buftype))
   return should_ignore
 end
 
 function mega.resize_windows(bufnr)
-  if is_ignored(bufnr) then return end
+  P(fmt("resize_windows filetype: %s", vim.bo[bufnr].filetype))
 
   local columns = vim.api.nvim_get_option("columns")
   local rows = vim.api.nvim_get_option("lines")
   local current_height = vim.api.nvim_win_get_height(0)
   local current_width = vim.api.nvim_win_get_width(0)
+
+  if is_ignored(bufnr) then
+    ignored_height = current_height
+    ignored_width = current_width
+    vim.api.nvim_win_set_height(0, ignored_height)
+    vim.api.nvim_win_set_width(0, ignored_width)
+    -- vim.cmd(fmt("let &winwidth=%d", ignored_width))
+    -- vim.cmd(fmt("let &winheight=%d", ignored_height))
+
+    return
+  else
+  end
+
   local golden_width = math.floor(columns / GOLDEN_RATIO)
 
   if current_width < golden_width then vim.api.nvim_win_set_width(0, golden_width) end
@@ -96,12 +112,27 @@ function mega.auto_resize()
 end
 
 mega.command("AutoResize", mega.auto_resize(), { nargs = "?" })
+
 mega.augroup("WindowsGoldenResizer", {
   {
     event = { "WinEnter", "VimResized" },
+    command = function(args) mega.resize_windows(args.buf) end,
+  },
+  {
+    event = { "WinLeave" },
     command = function(args)
-      -- P(vim.bo[args.buf].filetype)
-      mega.resize_windows(args.buf)
+      if is_ignored(args.buf) then
+        P(fmt("resize_windows winleave: %s(%d)", vim.api.nvim_buf_get_name(args.buf), args.buf))
+        -- if ignored_height ~= nil then vim.api.nvim_command(vim.api.nvim_win_set_height(0, ignored_height)) end
+        -- if ignored_width ~= nil then vim.api.nvim_command(vim.api.nvim_win_set_width(0, ignored_width)) end
+        -- vim.cmd(fmt("let &winwidth=%d", ignored_width))
+        -- vim.cmd(fmt("let &winheight=%d", ignored_height))
+      end
+
+      -- if ignored_height ~= nil then vim.api.nvim_command(vim.api.nvim_win_set_height(0, ignored_height)) end
+      -- if ignored_width ~= nil then vim.api.nvim_command(vim.api.nvim_win_set_width(0, ignored_width)) end
+      -- vim.cmd(fmt("let &winwidth=%d", ignored_width))
+      -- vim.cmd(fmt("let &winheight=%d", ignored_height))
     end,
   },
 })
