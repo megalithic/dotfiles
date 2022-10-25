@@ -14,6 +14,12 @@ do
     terms[bufnr] = vim.tbl_extend("force", opts, { winnr = winnr, bufnr = bufnr })
     P(I(terms))
   end
+  local function delete_term(bufnr)
+    if terms[bufnr] then
+      terms[bufnr] = nil
+      P(I(terms))
+    end
+  end
 
   local default_opts = {
     cmd = "zsh",
@@ -74,7 +80,7 @@ do
     if direction ~= "tab" then
       nmap("q", function()
         vim.api.nvim_buf_delete(bufnr, { force = true })
-        bufnr = nil
+        delete_term(bufnr)
         -- jump back to our last window
         vim.cmd([[wincmd p]])
       end, opts)

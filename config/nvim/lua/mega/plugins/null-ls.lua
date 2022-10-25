@@ -10,7 +10,7 @@ return function()
 
   null.setup({
     debounce = vim.g.is_local_dev and 200 or 500,
-    default_timeout = vim.g.is_local_dev and 500 or 10000,
+    -- default_timeout = vim.g.is_local_dev and 500 or 10000,
     sources = {
       format.trim_whitespace.with({ filetypes = { "*" } }),
       format.prettier.with({
