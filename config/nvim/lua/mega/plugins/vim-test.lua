@@ -35,6 +35,7 @@ return function()
         precmd = "eval $(desk load)",
         notifier = terminal_notifier,
         temp = true,
+        focus_on_open = false,
       })
     end,
     termfloat = function(cmd)
@@ -55,6 +56,7 @@ return function()
         direction = "vertical",
         notifier = terminal_notifier,
         temp = true,
+        focus_on_open = false,
       })
     end,
   }

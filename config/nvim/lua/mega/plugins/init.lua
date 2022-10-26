@@ -150,11 +150,12 @@ local function plugins(use)
   use({ "nanozuki/tabby.nvim", ext = "tabby" })
   use({
     "lukas-reineke/indent-blankline.nvim",
+    cond = false,
     config = function()
       local ibl = require("indent_blankline")
 
-      local refresh = ibl.refresh
-      ibl.refresh = require("mega.globals").debounce(100, refresh)
+      -- local refresh = ibl.refresh
+      -- ibl.refresh = require("mega.globals").debounce(100, refresh)
 
       ibl.setup({
         char = "│", -- alts: ┆ ┊  ▎

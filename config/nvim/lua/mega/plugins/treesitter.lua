@@ -67,6 +67,7 @@ return function()
       "scss",
       "scheme",
       "surface",
+      "teal",
       "toml",
       "tsx",
       "typescript",

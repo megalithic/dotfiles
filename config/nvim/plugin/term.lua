@@ -502,6 +502,8 @@ else
   if not mega then return end
   if not vim.g.enabled_plugin["term"] then return end
 
+  vim.g.debug_enabled = true
+
   local fmt = string.format
   local api = vim.api
   local fn = vim.fn
@@ -516,6 +518,7 @@ else
   local function is_valid_window(winnr) return vim.api.nvim_win_is_valid(winnr) end
   local function find_windows_by_bufnr(bufnr) return fn.win_findbuf(bufnr) end
 
+  --
   --- @class TermOpts
   --- @field direction? "horizontal"|"vertical"|"float"|"tab"
   --- @field size? number
@@ -524,8 +527,13 @@ else
   --- @field on_open? function
   --- @field on_exit? function
   --- @field notifier? function
+  --- @field focus_on_open? boolean,
+  --- @field move_on_direction_change? boolean,
   --- @field caller_winnr? number
   --- @field start_insert? boolean
+  --- @field temp? boolean
+  --
+
   --- @param winnr number
   --- @param bufnr number
   --- @param tabnr? number
@@ -764,7 +772,7 @@ else
 
   local function create_term(opts)
     -- REF: https://github.com/seblj/dotfiles/commit/fcdfc17e2987631cbfd4727c9ba94e6294948c40#diff-bbe1851dbfaaa99c8fdbb7229631eafc4f8048e09aa116ef3ad59cde339ef268L56-R90
-    local cmd = opts.precmd and fmt("%s; %s", opts.precmd, opts.cmd) or opts.cmd
+    local cmd = opts.pre_cmd and fmt("%s; %s", opts.pre_cmd, opts.cmd) or opts.cmd
     vim.fn.termopen(cmd, {
       ---@diagnostic disable-next-line: unused-local
       on_exit = function(jobid, exit_code, event)
@@ -837,7 +845,7 @@ else
   end
 
   local function new_term(opts)
-    if is_valid_buffer(term_buf_id) then
+    if is_valid_buffer(term_buf_id) and opts.temp then
       unset_term()
       -- vim.api.nvim_buf_delete(term_buf_id, { force = true })
       -- term_buf_id = nil_buf_id
@@ -880,6 +888,7 @@ else
     opts = vim.tbl_extend("keep", split_opts[opts.direction], opts)
     opts = vim.tbl_extend("keep", opts, { caller_winnr = vim.fn.winnr() })
     opts = vim.tbl_extend("keep", opts, { focus_on_open = true })
+    opts = vim.tbl_extend("keep", opts, { move_on_direction_change = true })
 
     return opts
   end
@@ -902,18 +911,13 @@ else
     end
   end
 
-  --- @class TermOpts
-  --- @field cmd string,
-  --- @field precmd string,
-  --- @field direction "horizontal"|"vertical"|"float"|"tab",
-  --- @field on_open function,
-  --- @field on_exit function,
-  --- @field focus_on_open? boolean,
-  --- @field winnr number,
-  --- @field notifier function,
-  --- @field height integer,
-  --- @field width integer,
-  --- @field persist boolean,
+  local function move_term(opts)
+    local orig_buf_id = term_buf_id
+    local orig_win_id = term_win_id
+
+    hide_term()
+    new_or_open_term(opts)
+  end
 
   --- Toggles open, or hides a custom terminal
   --- @param args TermOpts|string
@@ -932,7 +936,7 @@ else
     end
 
     if fn.win_gotoid(term_win_id) == 1 and parsed_opts.direction ~= "tab" then
-      if term.direction and parsed_opts.direction ~= term.direction then
+      if term.direction and parsed_opts.direction ~= term.direction and parsed_opts.move_on_direction_change then
         P(
           fmt(
             "hiding this term (%s) but with a different direction expected (%s). %d/%d",
@@ -942,6 +946,7 @@ else
             term_buf_id
           )
         )
+        move_term(parsed_opts)
       end
 
       hide_term()
@@ -959,4 +964,6 @@ else
   nnoremap("<leader>tf", "<cmd>T direction=float<cr>", "term (float)")
   nnoremap("<leader>tv", "<cmd>T direction=vertical<cr>", "term (vertical)")
   nnoremap("<leader>tp", "<cmd>T direction=tab<cr>", "term (tab-persistent)")
+
+  -- vim.g.debug_enabled = true
 end

@@ -11,6 +11,7 @@ return function()
   null.setup({
     debounce = vim.g.is_local_dev and 200 or 500,
     default_timeout = vim.g.is_local_dev and 500 or 3000,
+    root_dir = require("null-ls.utils").root_pattern(".null-ls-root", ".neoconf.json", ".git"),
     sources = {
       format.trim_whitespace.with({ filetypes = { "*" } }),
       format.prettier.with({
