@@ -183,8 +183,15 @@ local exception_types = {
       local shell = fnamemodify(vim.env.SHELL, ":t")
       local mode = MODES[api.nvim_get_mode().mode]
       local mode_hl = mode.short == "T-I" and "StModeTermInsert" or "StModeTermNormal"
-      return seg(fmt("megaterm(%s)[%s]", shell, api.nvim_buf_get_var(buf, "cmd") or buf), mode_hl)
-      -- return seg(fmt("megaterm(%s)[%s] ⋮ %s", shell, api.nvim_buf_get_var(buf, "cmd") or buf, mode.short), mode_hl)
+      return seg(
+        fmt(
+          "megaterm#%d(%s)[%s]",
+          api.nvim_buf_get_var(buf, "term_buf"),
+          shell,
+          api.nvim_buf_get_var(buf, "term_cmd") or buf
+        ),
+        mode_hl
+      )
     end,
     ["dap-repl"] = "Debugger REPL",
     kittybuf = "Kitty Scrollback Buffer",

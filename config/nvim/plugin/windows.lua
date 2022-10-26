@@ -54,12 +54,12 @@ local function is_ignored(bufnr)
     or ignored_by_window_resize_flag()
     or is_floating_win()
 
-  P(fmt("resize_windows should ignore (%s): %s", should_ignore, vim.bo[bufnr].filetype, vim.bo[bufnr].buftype))
+  -- P(fmt("resize_windows should ignore (%s): %s", should_ignore, vim.bo[bufnr].filetype, vim.bo[bufnr].buftype))
   return should_ignore
 end
 
 function mega.resize_windows(bufnr)
-  P(fmt("resize_windows filetype: %s", vim.bo[bufnr].filetype))
+  -- P(fmt("resize_windows filetype: %s", vim.bo[bufnr].filetype))
   if is_ignored(bufnr) then return end
 
   local columns = vim.api.nvim_get_option("columns")
@@ -116,13 +116,13 @@ mega.augroup("WindowsGoldenResizer", {
   {
     event = { "WinLeave" },
     command = function(args)
-      if is_ignored(args.buf) then
-        P(fmt("resize_windows winleave: %s(%d)", vim.api.nvim_buf_get_name(args.buf), args.buf))
-        -- if ignored_height ~= nil then vim.api.nvim_command(vim.api.nvim_win_set_height(0, ignored_height)) end
-        -- if ignored_width ~= nil then vim.api.nvim_command(vim.api.nvim_win_set_width(0, ignored_width)) end
-        -- vim.cmd(fmt("let &winwidth=%d", ignored_width))
-        -- vim.cmd(fmt("let &winheight=%d", ignored_height))
-      end
+      -- if is_ignored(args.buf) then
+      --   P(fmt("resize_windows winleave: %s(%d)", vim.api.nvim_buf_get_name(args.buf), args.buf))
+      --   -- if ignored_height ~= nil then vim.api.nvim_command(vim.api.nvim_win_set_height(0, ignored_height)) end
+      --   -- if ignored_width ~= nil then vim.api.nvim_command(vim.api.nvim_win_set_width(0, ignored_width)) end
+      --   -- vim.cmd(fmt("let &winwidth=%d", ignored_width))
+      --   -- vim.cmd(fmt("let &winheight=%d", ignored_height))
+      -- end
 
       -- if ignored_height ~= nil then vim.api.nvim_command(vim.api.nvim_win_set_height(0, ignored_height)) end
       -- if ignored_width ~= nil then vim.api.nvim_command(vim.api.nvim_win_set_width(0, ignored_width)) end

@@ -28,13 +28,14 @@ require("vim.lsp.log").set_format_func(vim.inspect)
 
 -- Show the popup diagnostics window, but only once for the current cursor/line location
 -- by checking whether the word under the cursor has changed.
-local function diagnostic_popup(args)
-  local cword = vim.fn.expand("<cword>")
-  if cword ~= vim.w.lsp_diagnostics_cword then
-    vim.w.lsp_diagnostics_cword = cword
-    if vim.b.lsp_hover_win and api.nvim_win_is_valid(vim.b.lsp_hover_win) then return end
-    vim.diagnostic.open_float(args.buf, { scope = "line", focus = false })
-  end
+local function diagnostic_popup(bufnr)
+  -- local cword = vim.fn.expand("<cword>")
+  -- if cword ~= vim.w.lsp_diagnostics_cword then
+  --   vim.w.lsp_diagnostics_cword = cword
+  --   if vim.b.lsp_hover_win and api.nvim_win_is_valid(vim.b.lsp_hover_win) then return end
+  --   vim.diagnostic.open_float(args.buf, { scope = "line", focus = false })
+  -- end
+  vim.diagnostic.open_float(bufnr, { scope = "line", focus = false })
 end
 
 local format_exclusions = {}
@@ -168,7 +169,7 @@ local function setup_autocommands(client, bufnr)
       event = { "CursorHold" },
       buffer = bufnr,
       desc = "Show diagnostics",
-      command = function(args) diagnostic_popup(args) end,
+      command = function(args) diagnostic_popup(args.buf) end,
     },
     -- {
     --   event = { "DiagnosticChanged" },
@@ -538,11 +539,6 @@ local client_overrides = {
     end
 
     local add_user_cmd = vim.api.nvim_buf_create_user_command
-    vim.api.nvim_create_autocmd({ "BufEnter", "CursorHold", "InsertLeave" }, {
-      buffer = bufnr,
-      callback = vim.lsp.codelens.refresh,
-    })
-
     add_user_cmd(bufnr, "ElixirFromPipe", from_pipe(client), {})
     add_user_cmd(bufnr, "ElixirToPipe", to_pipe(client), {})
     add_user_cmd(bufnr, "ElixirRestart", restart(client), {})

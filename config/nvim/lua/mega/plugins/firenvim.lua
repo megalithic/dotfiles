@@ -86,10 +86,7 @@ return function()
         "<C-c>",
         "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR><Esc>norm! ggdGa<CR>"
       )
-      require("mega.globals").nnoremap(
-        "<C-z>",
-        "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR><Esc>norm! ggdGa<CR>"
-      )
+      require("mega.globals").nnoremap("<C-z>", "<cmd>call firenvim#hide_frame() | call firenvim#focus_input()<CR>")
       require("mega.globals").nnoremap(
         "q",
         "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR><Esc>norm! ggdGa<CR>"
@@ -108,10 +105,10 @@ return function()
   end
 
   function IsFirenvimActive(event)
-    if vim.g.enable_vim_debug then print("IsFirenvimActive, event: ", vim.inspect(event)) end
+    if vim.g.debug_enabled then print("IsFirenvimActive, event: ", vim.inspect(event)) end
     if vim.fn.exists("*nvim_get_chan_info") == 0 then return 0 end
     local ui = vim.api.nvim_get_chan_info(event.chan)
-    if vim.g.enable_vim_debug then print("IsFirenvimActive, ui: ", vim.inspect(ui)) end
+    if vim.g.debug_enabled then print("IsFirenvimActive, ui: ", vim.inspect(ui)) end
     local is_firenvim_active_in_browser = (ui["client"] ~= nil and ui["client"]["name"] ~= nil)
     if vim.g.enable_vim_debug then print("is_firenvim_active_in_browser: ", is_firenvim_active_in_browser) end
     return is_firenvim_active_in_browser
@@ -124,7 +121,7 @@ return function()
 
   require("mega.globals").augroup("Firenvim", {
     {
-      event = { "BufEnter", "FocusGained" },
+      event = { "BufEnter" },
       command = function() firenvim_onload() end,
     },
   })

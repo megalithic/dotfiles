@@ -56,6 +56,14 @@ return function()
   }
 
   cmp.setup({
+    -- enabled = function()
+    --   local bt = vim.api.nvim_buf_get_option(0, "buftype")
+    --   -- local ctx = require("cmp.config.context")
+    --   local enable_if = not vim.g.started_by_firenvim and not bt == "prompt"
+    --   -- and not ctx.in_treesitter_capture("comment")
+    --   -- and not ctx.in_syntax_group("Comment") -- disable completion if the cursor is `Comment` syntax group.
+    --   return enable_if
+    -- end,
     preselect = cmp.PreselectMode.None,
     view = { entries = "custom" },
     completion = {

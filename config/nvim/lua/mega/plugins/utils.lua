@@ -75,7 +75,7 @@ function M.process_local_plugins(spec)
       if M.has_local(name) then
         return local_pkg
       else
-        M.notify("Local package " .. name .. " not found", "ERROR")
+        M.notify("Local package " .. name .. " not found", vim.log.levels.ERROR)
       end
     end
     return spec

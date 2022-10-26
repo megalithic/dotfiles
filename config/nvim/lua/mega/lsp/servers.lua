@@ -136,7 +136,7 @@ return function(on_attach)
       "elmls",
       "ember",
       "emmet_ls",
-      "erlangls",
+      -- "erlangls",
       "html",
       "jsonls",
       -- "marksman",

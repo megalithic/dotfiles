@@ -88,7 +88,8 @@ return function()
 
   -- [ adapters ] --------------------------------------------------------------
 
-  dap.adapters.nlua = function(cb, config) cb({ type = "server", host = config.host, port = config.port }) end
+  dap.adapters.nlua =
+    function(cb, config) cb({ type = "server", host = config.host or "127.0.0.1", port = config.port or 8088 }) end
 
   dap.adapters.mix_task = function(cb, config)
     if config.preLaunchTask then vim.fn.system(config.preLaunchTask) end

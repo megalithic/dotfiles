@@ -6,6 +6,7 @@ vim.g.enabled_plugin = {
   megaline = true,
   lsp = true,
   term = true,
+  repls = true,
   cursorline = true,
   colorcolumn = true,
   windows = true,
@@ -29,7 +30,7 @@ vim.g.default_colorcolumn = "81"
 vim.g.mapleader = ","
 vim.g.maplocalleader = " "
 vim.g.notifier_enabled = true
-vim.g.enable_vim_debug = false
+vim.g.debug_enabled = false
 
 -- [ globals ] -----------------------------------------------------------------
 

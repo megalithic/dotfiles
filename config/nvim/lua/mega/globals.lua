@@ -65,7 +65,7 @@ vim.opt.runtimepath:remove("~/.local/share/src")
 -- in commandline: :lua P(vim.loop)
 ---@vararg any
 function _G.P(...)
-  if not vim.g.enable_vim_debug then return end
+  if not vim.g.debug_enabled then return end
 
   local objects, v = {}, nil
   for i = 1, select("#", ...) do
@@ -84,7 +84,7 @@ function _G.P(...)
 end
 
 function _G.PT(tbl, indent)
-  if not vim.g.enable_vim_debug then return end
+  if not vim.g.debug_enabled then return end
 
   if not indent then indent = 2 end
   for k, v in pairs(tbl) do
@@ -101,7 +101,7 @@ function _G.PT(tbl, indent)
 end
 
 function _G.dump(...)
-  if not vim.g.enable_vim_debug then return end
+  if not vim.g.debug_enabled then return end
 
   local objects = vim.tbl_map(vim.inspect, { ... })
   print(unpack(objects))
@@ -1080,6 +1080,14 @@ function mega.find(haystack, matcher)
   return found
 end
 
+function mega.tlen(t)
+  local len = 0
+  for _ in pairs(t) do
+    len = len + 1
+  end
+  return len
+end
+
 --- automatically clear commandline messages after a few seconds delay
 --- source: http://unix.stackexchange.com/a/613645
 ---@return function
@@ -1158,9 +1166,9 @@ do
   command("RenameFile", [[noautocmd clear | :execute "Rename " .input('rename to -> ') | :e ]])
   command("Flash", function() mega.blink_cursorline() end)
   command("P", function(opts)
-    vim.g.enable_vim_debug = true
+    vim.g.debug_enabled = true
     vim.cmd(fmt("lua P(%s)", opts.args))
-    vim.g.enable_vim_debug = false
+    vim.g.debug_enabled = false
   end, { nargs = "*" })
   -- command("P", "<cmd>lua P(<args>)", { nargs = "?" })
   -- command("P", function(opts)
