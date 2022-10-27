@@ -270,6 +270,7 @@ local function get_diagnostics()
   if vim.tbl_isempty(vim.lsp.get_active_clients({ bufnr = 0 })) then return "" end
 
   local diags = {
+    { num = require("null-ls").enabled, sign = mega.icons.lsp.kind.Null, hl = "StModeInsert" },
     { num = count(vim.diagnostic.severity.ERROR), sign = mega.icons.lsp.error, hl = "StError" },
     { num = count(vim.diagnostic.severity.WARN), sign = mega.icons.lsp.warn, hl = "StWarn" },
     { num = count(vim.diagnostic.severity.INFO), sign = mega.icons.lsp.info, hl = "StInfo" },
@@ -277,7 +278,9 @@ local function get_diagnostics()
   }
 
   for _, d in ipairs(diags) do
-    if d.num > 0 then return seg(fmt("%s %s", d.sign, d.num), d.hl) end
+    local val = d.num
+    if type(d.num) == "boolean" then val = d.num and "on" or "off" end
+    if d.num == true or d.num > 0 then return seg(fmt("%s %s", d.sign, val), d.hl) end
   end
 
   return ""
@@ -440,13 +443,17 @@ local function seg_mode(truncate_at)
   return seg(string.upper(mode), mode_info.hl)
 end
 
+-- FIXME: find a better way to mix single use and diagnostics use
+local function seg_formatters_status() return seg(mega.icons.lsp.kind.Null, "StModeInsert", require("null-ls").enabled) end
+
 local function seg_lsp_status(truncate_at)
-  if is_truncated(truncate_at) then return "" end
+  if is_truncated(truncate_at) then return seg_formatters_status() end
+
   local messages = vim.lsp.util.get_progress_messages()
 
   if vim.tbl_isempty(messages) then return get_diagnostics() end
 
-  if vim.g.notifier_enabled and vim.o.cmdheight == 1 then return "" end
+  if vim.g.notifier_enabled and vim.o.cmdheight == 1 then return seg_formatters_status() end
 
   return get_lsp_status(messages)
 end
@@ -602,8 +609,6 @@ function _G.__statusline()
     seg("%*"),
     seg("%{(&fenc!='utf-8'&&&fenc!='')?'['.&fenc.'] ':''}", "warningmsg"),
     seg("%*"),
-    seg_spacer(1),
-    seg(mega.icons.lsp.kind.Null, "StModeInsert", require("null-ls").enabled),
     seg_spacer(2),
     seg_lsp_status(100),
     seg_spacer(2),

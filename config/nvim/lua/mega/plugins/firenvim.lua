@@ -47,15 +47,22 @@ return function()
     vim.defer_fn(function()
       vim.cmd.colorscheme("forestbones")
 
-      local ok, headlines = mega.require("headlines")
-      if ok then
-        headlines.setup({
-          markdown = {
-            headline_highlights = false,
-            dash_highlight = false,
-            codeblock_highlight = false,
-          },
-        })
+      do
+        local ok, headlines = mega.require("headlines")
+        if ok then
+          headlines.setup({
+            markdown = {
+              headline_highlights = false,
+              dash_highlight = false,
+              codeblock_highlight = false,
+            },
+          })
+        end
+      end
+
+      do
+        local ok, cmp = mega.require("cmp")
+        if ok then cmp.setup({ autocomplete = false }) end
       end
 
       vim.opt.wrap = true
@@ -98,10 +105,10 @@ return function()
       vim.cmd([[exec "norm gg"]]) -- test: 聆
 
       -- print(string.format("lines: %d", vim.api.nvim_buf_line_count(0)))
-      if vim.api.nvim_buf_line_count(0) == 1 and vim.fn.prevnonblank(".") ~= vim.fn.line(".") then
-        vim.cmd([[startinsert]])
-      end
-    end, 500)
+      -- if vim.api.nvim_buf_line_count(0) == 1 and vim.fn.prevnonblank(".") ~= vim.fn.line(".") then
+      --   vim.cmd([[startinsert]])
+      -- end
+    end, 750)
   end
 
   function IsFirenvimActive(event)

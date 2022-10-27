@@ -1,17 +1,13 @@
 return function()
   local system = vim.fn.system
 
-  local function terminal_notifier(cmd, exit)
-    -- local tmux_display_message = require("mega.utils").ext.tmux.display_message
-
+  local function terminal_notifier(term_cmd, exit)
     if exit == 0 then
       vim.notify("Test(s) passed.", vim.log.levels.INFO)
-      -- tmux_display_message("Success!")
-      system(string.format([[terminal-notifier -title "Neovim" -subtitle "%s" -message "Success\!"]], cmd))
+      system(string.format([[terminal-notifier -title "Neovim" -subtitle "%s" -message "Success\!"]], term_cmd))
     else
       vim.notify("Test(s) failed.", vim.log.levels.ERROR)
-      -- tmux_display_message("Failure!")
-      system(string.format([[terminal-notifier -title "Neovim" -subtitle "%s" -message "Failure\!"]], cmd))
+      system(string.format([[terminal-notifier -title "Neovim" -subtitle "%s" -message "Failure\!"]], term_cmd))
     end
   end
 
@@ -36,9 +32,6 @@ return function()
       start_insert = false,
       focus_on_open = false,
       move_on_direction_change = false,
-      on_exit = function(job_id, exit_code, event, job_cmd, caller_winnr, term_buf_id)
-        P(fmt("test run exited with: %s", I({ job_id, exit_code, event, job_cmd, caller_winnr, term_buf_id })))
-      end,
     }, extra_opts or {})
   end
 
