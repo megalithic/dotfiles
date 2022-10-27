@@ -101,7 +101,7 @@ return function()
       if vim.api.nvim_buf_line_count(0) == 1 and vim.fn.prevnonblank(".") ~= vim.fn.line(".") then
         vim.cmd([[startinsert]])
       end
-    end, 1000)
+    end, 500)
   end
 
   function IsFirenvimActive(event)

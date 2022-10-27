@@ -212,7 +212,7 @@ end
 
 -- [ MAPPINGS ] ----------------------------------------------------------------
 
-local function setup_mappings(client, bufnr)
+local function setup_keymaps(client, bufnr)
   local desc = function(desc) return { desc = desc, buffer = bufnr } end
 
   nnoremap("[d", function() diagnostic.goto_prev({ float = true }) end, desc("lsp: prev diagnostic"))
@@ -222,8 +222,8 @@ local function setup_mappings(client, bufnr)
   nnoremap("gt", vim.lsp.buf.type_definition, desc("lsp: type definition"))
   nnoremap("gi", vim.lsp.buf.implementation, desc("lsp: implementation"))
   nnoremap("gI", vim.lsp.buf.incoming_calls, desc("lsp: incoming calls"))
-  nnoremap("<leader>lc", vim.lsp.buf.code_action, desc("lsp: code action"))
-  xnoremap("<leader>lc", "<esc><Cmd>lua vim.lsp.buf.range_code_action()<CR>", desc("lsp: code action"))
+  nnoremap("<leader>lc", vim.lsp.buf.code_action, desc("code action"))
+  xnoremap("<leader>lc", "<esc><Cmd>lua vim.lsp.buf.range_code_action()<CR>", desc("code action"))
   nnoremap("gl", vim.lsp.codelens.run, desc("lsp: code lens"))
   nnoremap("gn", require("mega.lsp.rename").rename, desc("lsp: rename"))
   nnoremap("K", hover, desc("lsp: hover"))
@@ -242,7 +242,8 @@ local function setup_mappings(client, bufnr)
     desc("server capabilities")
   )
   nnoremap("<leader>lil", [[<cmd>lua vim.cmd("vnew " .. vim.lsp.get_log_path())<CR>]], desc("lsp logs (vsplit)"))
-  nnoremap("<leader>rf", vim.lsp.buf.format, desc("lsp: format buffer"))
+  nnoremap("<leader>lf", vim.lsp.buf.format, desc("format buffer"))
+  nnoremap("<leader>lft", [[<cmd>ToggleNullFormatters<cr>]], desc("toggle formatting"))
   nnoremap("=", function() vim.lsp.buf.format({ buffer = bufnr, async = true }) end, desc("lsp: format buffer"))
   vnoremap("=", function() vim.lsp.buf.format({ buffer = bufnr, async = true }) end, desc("lsp: format buffer range"))
 end
@@ -467,7 +468,7 @@ local function on_attach(client, bufnr)
   setup_commands(bufnr)
   setup_autocommands(client, bufnr)
   setup_diagnostics()
-  setup_mappings(client, bufnr)
+  setup_keymaps(client, bufnr)
   setup_highlights(client, bufnr)
   setup_tools()
 

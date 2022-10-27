@@ -131,4 +131,13 @@ return function()
       }),
     },
   })
+
+  null.enabled = true
+  local toggle_null_formatters = function()
+    null.enabled = not null.enabled
+    mega.lsp.null_formatters_enabled = not null.enabled
+    null.toggle({ methods = null.methods.FORMATTING })
+  end
+
+  mega.command("ToggleNullFormatters", toggle_null_formatters)
 end

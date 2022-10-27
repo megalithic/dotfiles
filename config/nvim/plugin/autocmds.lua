@@ -417,7 +417,14 @@ augroup("LspDiagnosticExclusions", {
 do
   vim.keymap.set({ "n", "v", "o", "i", "c" }, "<Plug>(StopHL)", "execute(\"nohlsearch\")[-1]", { expr = true })
   local function stop_hl()
-    if vim.v.hlsearch == 0 or api.nvim_get_mode().mode ~= "n" then return end
+    if
+      vim.v.hlsearch == 0
+      or vim.api.nvim_get_mode().mode ~= "n"
+      or vim.api.nvim_get_mode().mode ~= "nt"
+      or vim.api.nvim_get_mode().mode ~= "t"
+    then
+      return
+    end
     api.nvim_feedkeys(mega.replace_termcodes("<Plug>(StopHL)"), "m", false)
   end
   local function hl_search()
@@ -437,7 +444,10 @@ do
     },
     {
       event = { "InsertEnter" },
-      command = function() stop_hl() end,
+      command = function(evt)
+        if vim.bo[evt.buf].filetype == "megaterm" then return end
+        stop_hl()
+      end,
     },
     {
       event = { "OptionSet" },

@@ -185,7 +185,8 @@ local exception_types = {
       local mode_hl = mode.short == "T-I" and "StModeTermInsert" or "StModeTermNormal"
       return seg(
         fmt(
-          "megaterm#%d(%s)[%s]",
+          "%s|megaterm#%d(%s)[%s]",
+          api.nvim_get_mode().mode,
           api.nvim_buf_get_var(buf, "term_buf"),
           shell,
           api.nvim_buf_get_var(buf, "term_cmd") or buf
@@ -601,6 +602,8 @@ function _G.__statusline()
     seg("%*"),
     seg("%{(&fenc!='utf-8'&&&fenc!='')?'['.&fenc.'] ':''}", "warningmsg"),
     seg("%*"),
+    seg_spacer(1),
+    seg(mega.icons.lsp.kind.Null, "StModeInsert", require("null-ls").enabled),
     seg_spacer(2),
     seg_lsp_status(100),
     seg_spacer(2),
