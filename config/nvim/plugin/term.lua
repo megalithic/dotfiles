@@ -270,15 +270,16 @@ end
 
 local function create_term(opts)
   -- REF: https://github.com/seblj/dotfiles/commit/fcdfc17e2987631cbfd4727c9ba94e6294948c40#diff-bbe1851dbfaaa99c8fdbb7229631eafc4f8048e09aa116ef3ad59cde339ef268L56-R90
-  local cmd = opts.pre_cmd and fmt("%s; %s", opts.pre_cmd, opts.cmd) or opts.cmd
-  vim.fn.termopen(cmd, {
+  local term_cmd = opts.pre_cmd and fmt("%s; %s", opts.pre_cmd, opts.cmd) or opts.cmd
+  vim.fn.termopen(term_cmd, {
     ---@diagnostic disable-next-line: unused-local
-    on_exit = function(jobid, exit_code, event)
+    on_exit = function(job_id, exit_code, event)
+      if opts.notifier ~= nil and type(opts.notifier) == "function" then opts.notifier(term_cmd, exit_code) end
+
       -- if we get a custom on_exit, run it instead...
       if opts.on_exit ~= nil and type(opts.on_exit) == "function" then
-        opts.on_exit(jobid, exit_code, event, cmd, opts.caller_winnr, term_buf_id)
+        opts.on_exit(job_id, exit_code, event, term_cmd, opts.caller_winnr, term_buf_id)
       else
-        if opts.notifier ~= nil and type(opts.notifier) == "function" then opts.notifier(cmd, exit_code) end
         -- test passed/process ended with an "ok" exit code, so let's close it.
         if exit_code == 0 then
           unset_term()
@@ -302,8 +303,6 @@ local function create_win(opts)
     )
     set_term(api.nvim_get_current_win(), api.nvim_get_current_buf(), nil, opts)
   end
-
-  P(fmt("term_tab_id: %s", term_tab_id))
 
   api.nvim_set_current_buf(term_buf_id)
   api.nvim_win_set_buf(term_win_id, term_buf_id)

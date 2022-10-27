@@ -16,6 +16,7 @@ mega.command("TermElixir", function(args)
   mega.term.open({
     cmd = cmd,
     pre_cmd = pre_cmd,
+    temp = true,
     ---@diagnostic disable-next-line: unused-local
     on_after_open = function(bufnr, _winnr)
       vim.api.nvim_buf_set_var(bufnr, "term_cmd", cmd)
@@ -40,6 +41,7 @@ mega.command("TermRuby", function(args)
   mega.term.open({
     cmd = cmd,
     pre_cmd = pre_cmd,
+    temp = true,
     ---@diagnostic disable-next-line: unused-local
     on_after_open = function(bufnr, _winnr)
       vim.api.nvim_buf_set_var(bufnr, "term_cmd", cmd)
@@ -54,6 +56,7 @@ mega.command("TermLua", function()
   mega.term.open({
     cmd = cmd,
     direction = "horizontal",
+    temp = true,
     ---@diagnostic disable-next-line: unused-local
     on_after_open = function(bufnr, _winnr)
       vim.api.nvim_buf_set_var(bufnr, "term_cmd", cmd)
@@ -67,6 +70,7 @@ mega.command("TermPython", function()
 
   mega.term.open({
     cmd = cmd,
+    temp = true,
     ---@diagnostic disable-next-line: unused-local
     on_after_open = function(bufnr, _winnr)
       vim.api.nvim_buf_set_var(bufnr, "term_cmd", cmd)
@@ -81,6 +85,7 @@ mega.command("TermNode", function(args)
 
   mega.term.open({
     cmd = cmd,
+    temp = true,
     ---@diagnostic disable-next-line: unused-local
     on_after_open = function(bufnr, _winnr)
       vim.api.nvim_buf_set_var(bufnr, "term_cmd", cmd)

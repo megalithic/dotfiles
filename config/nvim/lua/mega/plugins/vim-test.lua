@@ -35,6 +35,9 @@ return function()
       temp = true,
       start_insert = false,
       focus_on_open = false,
+      on_exit = function(job_id, exit_code, event, job_cmd, caller_winnr, term_buf_id)
+        P(fmt("test run exited with: %s", I({ job_id, exit_code, event, job_cmd, caller_winnr, term_buf_id })))
+      end,
     }, extra_opts or {})
   end
 
