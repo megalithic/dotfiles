@@ -2,15 +2,15 @@ return function()
   local system = vim.fn.system
 
   local function terminal_notifier(cmd, exit)
-    local tmux_display_message = require("mega.utils").ext.tmux.display_message
+    -- local tmux_display_message = require("mega.utils").ext.tmux.display_message
 
     if exit == 0 then
       vim.notify("Test(s) passed.", vim.log.levels.INFO)
-      tmux_display_message("Success!")
+      -- tmux_display_message("Success!")
       system(string.format([[terminal-notifier -title "Neovim" -subtitle "%s" -message "Success\!"]], cmd))
     else
       vim.notify("Test(s) failed.", vim.log.levels.ERROR)
-      tmux_display_message("Failure!")
+      -- tmux_display_message("Failure!")
       system(string.format([[terminal-notifier -title "Neovim" -subtitle "%s" -message "Failure\!"]], cmd))
     end
   end

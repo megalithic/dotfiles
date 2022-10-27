@@ -41,12 +41,13 @@ local function set_term(winnr, bufnr, tabnr, opts)
   term_buf_id = bufnr
   term_tab_id = tabnr
 
+  -- FIXME: only care about the term global; get rid of the term_*_id globals
   term = vim.tbl_extend("force", opts, { winnr = winnr, bufnr = bufnr, tabnr = tabnr })
   return term
 end
 
-local function unset_term()
-  if api.nvim_buf_is_loaded(term_buf_id) then api.nvim_buf_delete(term_buf_id, { force = true }) end
+local function unset_term(should_delete)
+  if should_delete and api.nvim_buf_is_loaded(term_buf_id) then api.nvim_buf_delete(term_buf_id, { force = true }) end
   term_buf_id = nil_buf_id
   term_win_id = nil
   term_tab_id = nil
@@ -58,8 +59,7 @@ end
 ---@field cmd string?
 ---@field dir string?
 ---@field size number?
----@field go_back boolean?
----@field open boolean?
+---@field move_on_direction_change boolean?
 
 ---Take a users command arguments in the format "cmd='git commit' dir=~/.dotfiles"
 ---and parse this into a table of arguments
@@ -97,7 +97,7 @@ local function command_parser(args)
         local key, value = arg[1], arg[2]
         if key == "size" then
           value = tonumber(value)
-        elseif key == "go_back" or key == "open" then
+        elseif vim.tbl_contains({ "move_on_direction_change" }, key) then
           value = value ~= "0"
         end
         result[key] = value
@@ -133,6 +133,7 @@ local function set_term_opts()
     -- vim.keymap.set('n', 'F', [[:call search('\f\+:\d\+:\d\+')<CR>]], { buffer = true, silent = true })
     vim.opt_local.signcolumn = "no"
     vim.bo.bufhidden = "wipe"
+    vim.cmd("setlocal bufhidden=wipe")
   end
 end
 
@@ -302,6 +303,8 @@ local function create_win(opts)
     set_term(api.nvim_get_current_win(), api.nvim_get_current_buf(), nil, opts)
   end
 
+  P(fmt("term_tab_id: %s", term_tab_id))
+
   api.nvim_set_current_buf(term_buf_id)
   api.nvim_win_set_buf(term_win_id, term_buf_id)
 end
@@ -319,7 +322,7 @@ local function on_open()
     })
     vim.wo[term_win_id].winblend = 0
   end
-  set_win_size()
+  if vim.tbl_contains({ "vertical", "horizontal" }, term.direction) then set_win_size() end
   set_keymaps()
   set_autocommands()
 
@@ -343,6 +346,7 @@ end
 
 local function new_term(opts)
   if is_valid_buffer(term_buf_id) and opts.temp then
+    P("presently new terming, and about to unset term")
     unset_term()
     -- vim.api.nvim_buf_delete(term_buf_id, { force = true })
     -- term_buf_id = nil_buf_id
@@ -353,7 +357,7 @@ local function new_term(opts)
   on_open()
 
   -- we only want new tab terms each time
-  if opts.direction == "tab" then unset_term() end
+  if opts.direction == "tab" then unset_term(false) end
 end
 
 local function open_term(opts)
@@ -401,19 +405,16 @@ local function new_or_open_term(opts)
   if not opts.focus_on_open then vim.cmd([[wincmd p]]) end
 end
 
-local function hide_term()
+local function hide_term(is_moving)
   if fn.win_gotoid(term_win_id) == 1 then
     api.nvim_command("hide")
-    vim.cmd([[wincmd p]])
+    if not is_moving then vim.cmd([[wincmd p]]) end
   end
 end
 
 local function move_term(opts)
-  local orig_buf_id = term_buf_id
-  local orig_win_id = term_win_id
-
-  hide_term()
-  new_or_open_term(opts)
+  hide_term(true)
+  vim.cmd(fmt("T direction=%s", opts.direction))
 end
 
 --- Toggles open, or hides a custom terminal
@@ -427,13 +428,14 @@ function mega.term.toggle(args)
     vim.validate({
       size = { parsed_opts.size, "number", true },
       direction = { parsed_opts.direction, "string", true },
+      move_on_direction_change = { parsed_opts.move_on_direction_change, "boolean", true },
     })
 
     if parsed_opts.size then parsed_opts.size = tonumber(parsed_opts.size) end
   end
 
   if fn.win_gotoid(term_win_id) == 1 and parsed_opts.direction ~= "tab" then
-    if term.direction and parsed_opts.direction ~= term.direction and parsed_opts.move_on_direction_change then
+    if parsed_opts.direction and parsed_opts.direction ~= term.direction and parsed_opts.move_on_direction_change then
       P(
         fmt(
           "hiding this term (%s) but with a different direction expected (%s). %d/%d",
@@ -444,9 +446,9 @@ function mega.term.toggle(args)
         )
       )
       move_term(parsed_opts)
+    else
+      hide_term()
     end
-
-    hide_term()
   else
     new_or_open_term(parsed_opts)
   end
@@ -457,7 +459,7 @@ mega.term.open = new_or_open_term
 mega.command("T", function(opts) mega.term.toggle(opts.args) end, { nargs = "*" })
 
 -- [KEYMAPS] ------------------------------------------------------------------
-nnoremap("<leader>tt", "<cmd>T<cr>", "term")
-nnoremap("<leader>tf", "<cmd>T direction=float<cr>", "term (float)")
-nnoremap("<leader>tv", "<cmd>T direction=vertical<cr>", "term (vertical)")
+nnoremap("<leader>tt", "<cmd>T direction=horizontal move_on_direction_change=true<cr>", "term")
+nnoremap("<leader>tf", "<cmd>T direction=float move_on_direction_change=true<cr>", "term (float)")
+nnoremap("<leader>tv", "<cmd>T direction=vertical move_on_direction_change=true<cr>", "term (vertical)")
 nnoremap("<leader>tp", "<cmd>T direction=tab<cr>", "term (tab-persistent)")

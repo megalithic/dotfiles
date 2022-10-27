@@ -66,7 +66,6 @@ vim.opt.runtimepath:remove("~/.local/share/src")
 ---@vararg any
 function _G.P(...)
   if not vim.g.debug_enabled then return end
-
   local objects, v = {}, nil
   for i = 1, select("#", ...) do
     v = select(i, ...)
