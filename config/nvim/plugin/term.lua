@@ -502,8 +502,6 @@ else
   if not mega then return end
   if not vim.g.enabled_plugin["term"] then return end
 
-  vim.g.debug_enabled = true
-
   local fmt = string.format
   local api = vim.api
   local fn = vim.fn
@@ -964,6 +962,4 @@ else
   nnoremap("<leader>tf", "<cmd>T direction=float<cr>", "term (float)")
   nnoremap("<leader>tv", "<cmd>T direction=vertical<cr>", "term (vertical)")
   nnoremap("<leader>tp", "<cmd>T direction=tab<cr>", "term (tab-persistent)")
-
-  -- vim.g.debug_enabled = true
 end

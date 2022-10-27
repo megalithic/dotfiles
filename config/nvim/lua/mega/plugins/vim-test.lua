@@ -1,16 +1,15 @@
 return function()
-  local fmt = string.format
   local system = vim.fn.system
 
   local function terminal_notifier(cmd, exit)
     local tmux_display_message = require("mega.utils").ext.tmux.display_message
 
     if exit == 0 then
-      vim.notify("Test(s) passed.", "info")
+      vim.notify("Test(s) passed.", vim.log.levels.INFO)
       tmux_display_message("Success!")
       system(string.format([[terminal-notifier -title "Neovim" -subtitle "%s" -message "Success\!"]], cmd))
     else
-      vim.notify("Test(s) failed.", "error")
+      vim.notify("Test(s) failed.", vim.log.levels.ERROR)
       tmux_display_message("Failure!")
       system(string.format([[terminal-notifier -title "Neovim" -subtitle "%s" -message "Failure\!"]], cmd))
     end
@@ -27,38 +26,22 @@ return function()
   vim.g["test#filename_modifier"] = ":."
   vim.g["test#preserve_screen"] = 0
 
+  local term_opts = function(cmd, extra_opts)
+    return vim.tbl_extend("force", {
+      winnr = vim.fn.winnr(),
+      cmd = cmd,
+      pre_cmd = "eval $(desk load)",
+      notifier = terminal_notifier,
+      temp = true,
+      start_insert = false,
+      focus_on_open = false,
+    }, extra_opts or {})
+  end
+
   vim.g["test#custom_strategies"] = {
-    termsplit = function(cmd)
-      mega.term.open({
-        winnr = vim.fn.winnr(),
-        cmd = cmd,
-        precmd = "eval $(desk load)",
-        notifier = terminal_notifier,
-        temp = true,
-        focus_on_open = false,
-      })
-    end,
-    termfloat = function(cmd)
-      mega.term.open({
-        winnr = vim.fn.winnr(),
-        cmd = cmd,
-        direction = "float",
-        precmd = "eval $(desk load)",
-        notifier = terminal_notifier,
-        temp = true,
-      })
-    end,
-    termvsplit = function(cmd)
-      mega.term.open({
-        winnr = vim.fn.winnr(),
-        cmd = cmd,
-        precmd = "eval $(desk load)",
-        direction = "vertical",
-        notifier = terminal_notifier,
-        temp = true,
-        focus_on_open = false,
-      })
-    end,
+    termsplit = function(cmd) mega.term.open(term_opts(cmd)) end,
+    termvsplit = function(cmd) mega.term.open(term_opts(cmd, { direction = "vertical" })) end,
+    termfloat = function(cmd) mega.term.open(term_opts(cmd, { direction = "float", focus_on_open = true })) end,
   }
 
   vim.g["test#strategy"] = {

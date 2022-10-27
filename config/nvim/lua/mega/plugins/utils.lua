@@ -98,7 +98,7 @@ end
 
 function M.wrap(use)
   return function(spec)
-    spec = M.process_local_plugins(spec)
+    if vim.g.is_local_dev then spec = M.process_local_plugins(spec) end
     spec = M.process_ext_configs(spec)
     use(spec)
   end
