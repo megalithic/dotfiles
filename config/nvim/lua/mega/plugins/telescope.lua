@@ -156,7 +156,7 @@ return function()
     -- if prompt starts with escaped @ then treat it as a literal
     if (prompt):sub(1, 2) == "\\@" then return { prompt = prompt:sub(2) } end
 
-    local result = vim.split(prompt, " ")
+    local result = vim.split(prompt, " ", {})
     -- if prompt starts with, for example:
     --    prompt: @lua <search_term>
     -- then only search files ending in *.lua

@@ -65,6 +65,7 @@ brew "coreutils" if OS.mac?
 brew "curl"
 brew "dbus"
 brew "defaultbrowser" if OS.mac?
+brew "deno"
 brew "diff-so-fancy"
 brew "dnsmasq"
 brew "dockutil" if OS.mac?

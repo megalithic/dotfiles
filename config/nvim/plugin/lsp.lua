@@ -44,7 +44,8 @@ local function formatting_filter(client) return not vim.tbl_contains(format_excl
 ---@param opts table<string, any>
 local function format(opts)
   opts = opts or {}
-  -- if vim.fn.bufloaded(bufnr) then
+  if (#vim.lsp.get_active_clients({ bufnr = opts.bufnr or vim.api.nvim_get_current_buf() })) < 1 then return end
+
   vim.lsp.buf.format({
     bufnr = opts.bufnr,
     async = opts.async, -- NOTE: this is super dangerous. no sir; i don't like it.

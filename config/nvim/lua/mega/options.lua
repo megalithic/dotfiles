@@ -17,6 +17,7 @@ vim.opt.shortmess = {
   F = true, -- Don't give file info when editing a file, NOTE: this breaks autocommand messages
   s = true,
   c = true,
+  C = true, -- Don't show "Scanning..." messages
   W = true, -- Don't show [w] or written when writing
 }
 -----------------------------------------------------------------------------//
@@ -118,6 +119,9 @@ vim.opt.formatoptions = vim.opt.formatoptions
   + "n" -- Indent past the formatlistpat, not underneath it.
   + "j" -- Auto-remove comments if possible.
   - "2" -- I'm not in gradeschool anymore
+
+-- from folke: FIXME: validate these!
+vim.o.formatoptions = "jcroqlnt" -- tcqj
 -----------------------------------------------------------------------------//
 -- Folds {{{1
 -----------------------------------------------------------------------------//

@@ -77,7 +77,7 @@ return function()
       vim.opt_local.cursorline = true
 
       require("mega.globals").nnoremap(
-        "<Esc>",
+        "<Esc><Esc>",
         "<cmd>wall | call firenvim#hide_frame() | call firenvim#press_keys('<LT>Esc>') | call firenvim#focus_page()<CR>"
       )
       require("mega.globals").inoremap(

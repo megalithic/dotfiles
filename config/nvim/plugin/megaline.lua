@@ -18,6 +18,9 @@ local icons = mega.icons
 local H = require("mega.utils.highlights")
 
 vim.g.is_saving = false
+local search_count_timer
+--- Timer to update the search count as the file is travelled
+function M.update_search_count(timer) end
 
 mega.augroup("megaline", {
   {
@@ -25,7 +28,26 @@ mega.augroup("megaline", {
     command = function()
       if not vim.g.is_saving and vim.bo.modified then
         vim.g.is_saving = true
+        vim.cmd([[checktime]])
         vim.defer_fn(function() vim.g.is_saving = false end, 1000)
+      end
+    end,
+  },
+  {
+    event = { "CursorMoved" },
+    pattern = { "*" },
+    command = function()
+      if vim.o.hlsearch then
+        local timer = vim.loop.new_timer()
+        search_count_timer = timer
+        timer:start(0, 200, function()
+          vim.schedule(function()
+            if timer == search_count_timer then
+              fn.searchcount({ recompute = 1, maxcount = 0, timeout = 100 })
+              vim.cmd.redrawstatus()
+            end
+          end)
+        end)
       end
     end,
   },

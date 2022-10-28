@@ -162,7 +162,7 @@ const handleLoaded = () => {
   mimic(false);
   ip(true);
   weather(true);
-  // focus("#content");
+  // focus("#test");
 };
 
 if (["complete", "loaded", "interactive"].indexOf(document.readyState) >= 0) {

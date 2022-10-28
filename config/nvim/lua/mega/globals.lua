@@ -1135,6 +1135,7 @@ function mega.hl_search_blink(delay)
   -- vim.cmd("redraw")
 end
 
+-- NOTE: This fn defers sourcing of most time consuming commands (mostly plugins). This is done by using `vim.schedule(f)` which defers execution of `f` until Vim is loaded. This doesn't affect general usability; it decreases time before showing fully functional start screen (or asked file).
 function mega.packer_deferred() vim.cmd([[do User PackerDeferred]]) end
 
 function mega.get_cursor_position()

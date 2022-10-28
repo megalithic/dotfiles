@@ -81,13 +81,11 @@ local function plugins(use)
         buftypes = {},
       })
 
-      require("mega.globals").augroup("Colorizer", {
+      _G.mega.augroup("Colorizer", {
         {
           event = { "BufReadPost" },
           command = function(args)
-            if require("mega.globals").is_chonky(vim.api.nvim_get_current_buf()) then
-              vim.cmd("ColorizerDetachFromBuffer")
-            end
+            if _G.mega.is_chonky(vim.api.nvim_get_current_buf()) then vim.cmd("ColorizerDetachFromBuffer") end
           end,
         },
       })
@@ -128,7 +126,7 @@ local function plugins(use)
     "rcarriga/nvim-notify",
     ext = "notify",
     module = "notify",
-    cond = function() return vim.g.notifier_enabled and vim.o.cmdheight == 0 end,
+    -- cond = function() return vim.g.notifier_enabled and vim.o.cmdheight == 0 end,
   })
   use({
     "vigoux/notifier.nvim",
@@ -155,7 +153,7 @@ local function plugins(use)
       local ibl = require("indent_blankline")
 
       -- local refresh = ibl.refresh
-      -- ibl.refresh = require("mega.globals").debounce(100, refresh)
+      -- ibl.refresh = _G.mega.debounce(100, refresh)
 
       ibl.setup({
         char = "│", -- alts: ┆ ┊  ▎
@@ -365,6 +363,11 @@ local function plugins(use)
   use({
     "neovim/nvim-lspconfig",
     module_pattern = "lspconfig.*",
+    requires = {
+      -- having this one installed just makes neovim api docs available
+      -- via LSP, don't need to actually do anything with it
+      "folke/neodev.nvim",
+    },
     config = function() require("lspconfig.ui.windows").default_options.border = _G.mega.get_border() end,
   })
 
@@ -853,6 +856,28 @@ local function plugins(use)
   -- ( Notes/Docs ) ------------------------------------------------------------
   use({ "ixru/nvim-markdown" })
   use({ "iamcco/markdown-preview.nvim", ft = "md", run = "cd app && yarn install" })
+  use({
+    "toppair/peek.nvim",
+    run = "deno task --quiet build:fast",
+    config = function()
+      local peek = require("peek")
+      peek.setup()
+
+      vim.api.nvim_create_user_command("PeekOpen", function()
+        if not peek.is_open() and vim.bo[vim.api.nvim_get_current_buf()].filetype == "markdown" then
+          vim.fn.system([[hs -c 'require("wm.snap").send_window_right(hs.window.find("^Peek preview$"))']])
+          peek.open()
+        end
+      end, {})
+
+      vim.api.nvim_create_user_command("PeekClose", function()
+        if peek.is_open() then
+          -- vim.fn.system("i3-msg move left")
+          peek.close()
+        end
+      end, {})
+    end,
+  })
   use({ "mickael-menu/zk-nvim", ext = "zk", after = "telescope.nvim" })
   use({ "gaoDean/autolist.nvim" })
   use({ "ellisonleao/glow.nvim" })
