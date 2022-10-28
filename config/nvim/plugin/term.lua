@@ -170,16 +170,53 @@ local set_autocommands = function()
   })
 end
 
-local create_float = function(bufnr, size)
+local create_float = function(bufnr, size, caller_winnr)
   local parsed_size = (size / 100)
+  local width = math.ceil(parsed_size * vim.o.columns)
+  local height = math.ceil(parsed_size * vim.o.lines)
+  -- local row = math.ceil(0.1 * vim.o.lines)
+  -- local col = math.ceil(0.1 * vim.o.columns)
+  local row = (math.ceil(vim.o.lines - height) / 2) - 1
+  local col = (math.ceil(vim.o.columns - width) / 2) - 1
+
+  if false then
+    width = math.ceil(math.min(vim.o.columns, math.max(size, vim.o.columns - 20)))
+    height = math.ceil(math.min(vim.o.lines, math.max(size, vim.o.lines - 10)))
+    row = (math.ceil(vim.o.lines - height) / 2) - 1
+    col = (math.ceil(vim.o.columns - width) / 2) - 1
+  end
+
+  -- P(I({
+  --   mine = {
+  --     size = size,
+  --     parsed_size = parsed_size,
+  --     width = math.ceil(parsed_size * vim.o.columns),
+  --     height = math.ceil(parsed_size * vim.o.lines),
+  --     row = math.ceil(0.1 * vim.o.lines),
+  --     col = math.ceil(0.1 * vim.o.columns),
+  --   },
+  --   theirs = {
+  --     size = size,
+  --     width = width,
+  --     height = height,
+  --     row = row,
+  --     col = col,
+  --   },
+  -- }))
+
   local winnr = api.nvim_open_win(bufnr, true, {
+    -- win = caller_winnr,
     relative = "editor",
     style = "minimal",
     border = mega.get_border(),
-    width = math.floor(parsed_size * vim.o.columns),
-    height = math.floor(parsed_size * vim.o.lines),
-    row = math.floor(0.1 * vim.o.lines),
-    col = math.floor(0.1 * vim.o.columns),
+    width = width,
+    height = height,
+    row = row,
+    col = col,
+    -- width = math.floor(parsed_size * vim.o.columns),
+    -- height = math.floor(parsed_size * vim.o.lines),
+    -- row = math.floor(0.1 * vim.o.lines),
+    -- col = math.floor(0.1 * vim.o.columns),
     zindex = 99,
   })
 
@@ -214,16 +251,16 @@ local split_opts = {
     split = "tabnext",
   },
   ["float"] = {
-    new = function(size)
+    new = function(size, caller_winnr)
       term_buf_id = api.nvim_create_buf(true, true)
-      term_win_id = create_float(term_buf_id, size)
+      term_win_id = create_float(term_buf_id, size, caller_winnr)
       return term_win_id, term_buf_id
     end,
     split = function(size, bufnr)
       term_win_id = create_float(bufnr, size)
       return term_win_id, bufnr
     end,
-    size = 80,
+    size = 90,
   },
 }
 
@@ -276,7 +313,7 @@ end
 
 local function create_win(opts)
   if opts.direction == "float" then
-    local winnr, bufnr = opts.new(opts.size)
+    local winnr, bufnr = opts.new(opts.size, opts.caller_winnr)
     set_term(winnr, bufnr, nil, opts)
   elseif opts.direction == "tab" then
     api.nvim_command(fmt("%s", opts.new))

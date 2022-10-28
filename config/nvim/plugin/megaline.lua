@@ -185,8 +185,7 @@ local exception_types = {
       local mode_hl = mode.short == "T-I" and "StModeTermInsert" or "StModeTermNormal"
       return seg(
         fmt(
-          "%s|megaterm#%d(%s)[%s]",
-          api.nvim_get_mode().mode,
+          "megaterm#%d(%s)[%s]",
           api.nvim_buf_get_var(buf, "term_buf"),
           shell,
           api.nvim_buf_get_var(buf, "term_cmd") or buf

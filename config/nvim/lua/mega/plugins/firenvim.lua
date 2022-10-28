@@ -43,8 +43,10 @@ return function()
     },
   }
 
-  local firenvim_onload = function()
+  local firenvim_onload = function(evt)
+    vim.notify(fmt("firenvim_onload: %s", evt.event))
     vim.defer_fn(function()
+      vim.notify("firenvim_onload_defer_fn")
       vim.cmd.colorscheme("forestbones")
 
       do
@@ -78,13 +80,6 @@ return function()
         "<Esc>",
         "<cmd>wall | call firenvim#hide_frame() | call firenvim#press_keys('<LT>Esc>') | call firenvim#focus_page()<CR>"
       )
-      -- require("mega.globals").nnoremap(
-      --   "<leader><CR>",
-      --   "<cmd>wall | call firenvim#hide_frame() | call firenvim#press_keys('<LT>Esc>') | call firenvim#focus_page()<CR>"
-      -- )
-      -- TODO: https://github.com/glacambre/firenvim/issues/1438
-      -- require("mega.globals").nnoremap("<C-i>", "<cmd>call firenvim#hide_frame() | call firenvim#focus_input()<CR>")
-      -- require("mega.globals").inoremap("<C-i>", "<cmd>call firenvim#hide_frame() | call firenvim#focus_input()<CR>")
       require("mega.globals").inoremap(
         "<C-c>",
         "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR><Esc>norm! ggdGa<CR>"
@@ -93,12 +88,14 @@ return function()
         "<C-c>",
         "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR><Esc>norm! ggdGa<CR>"
       )
-      require("mega.globals").nnoremap("<C-z>", "<cmd>call firenvim#hide_frame() | call firenvim#focus_input()<CR>")
+      require("mega.globals").nnoremap(
+        "<C-z>",
+        "<cmd>wall | call firenvim#hide_frame() | call firenvim#focus_input()<CR>"
+      )
       require("mega.globals").nnoremap(
         "q",
         "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR><Esc>norm! ggdGa<CR>"
       )
-      -- require("mega.globals").nnoremap("<C-z>", "=write<CR>=call firenvim#hide_frame()<CR>")
       -- vim.defer_fn(function() vim.opt.guifont = "FiraCode Nerd Font Mono:h22" end, 1000)
       vim.opt.guifont = "JetBrainsMono_Nerd_Font_Mono:h22"
       -- if vim.o.lines < 30 then vim.o.lines = 30 end
@@ -122,14 +119,14 @@ return function()
   end
 
   function OnUIEnter(event)
-    if IsFirenvimActive(event) then firenvim_onload() end
+    if IsFirenvimActive(event) then firenvim_onload({ event = "UIEnter" }) end
   end
   vim.cmd([[autocmd UIEnter * :call luaeval('OnUIEnter(vim.fn.deepcopy(vim.v.event))')]])
 
   require("mega.globals").augroup("Firenvim", {
     {
       event = { "BufEnter" },
-      command = function() firenvim_onload() end,
+      command = function(evt) firenvim_onload(evt) end,
     },
   })
 end
