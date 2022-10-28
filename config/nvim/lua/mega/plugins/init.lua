@@ -254,6 +254,7 @@ local function plugins(use)
       { "s1n7ax/nvim-window-picker" },
     },
   })
+  -- TODO: investigate folke/trouble.nvim again
   use({ "kevinhwang91/nvim-bqf", ft = "qf" })
   use({
     "https://gitlab.com/yorickpeterse/nvim-pqf",
@@ -861,21 +862,17 @@ local function plugins(use)
     run = "deno task --quiet build:fast",
     config = function()
       local peek = require("peek")
-      peek.setup()
+      peek.setup({})
 
-      vim.api.nvim_create_user_command("PeekOpen", function()
+      _G.mega.command("Peek", function()
         if not peek.is_open() and vim.bo[vim.api.nvim_get_current_buf()].filetype == "markdown" then
-          vim.fn.system([[hs -c 'require("wm.snap").send_window_right(hs.window.find("^Peek preview$"))']])
           peek.open()
-        end
-      end, {})
-
-      vim.api.nvim_create_user_command("PeekClose", function()
-        if peek.is_open() then
-          -- vim.fn.system("i3-msg move left")
+          -- vim.fn.system([[hs -c 'require("wm.snap").send_window_right(hs.window.find("Peek preview"))']])
+          -- vim.fn.system([[hs -c 'require("wm.snap").send_window_left(hs.application.find("kitty"):mainWindow())']])
+        else
           peek.close()
         end
-      end, {})
+      end)
     end,
   })
   use({ "mickael-menu/zk-nvim", ext = "zk", after = "telescope.nvim" })
