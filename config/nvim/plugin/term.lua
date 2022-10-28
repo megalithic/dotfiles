@@ -264,22 +264,18 @@ local split_opts = {
   },
 }
 
--- REF: https://github.com/outstand/titan.nvim/blob/main/lua/titan/plugins/toggleterm.lua
 local function set_keymaps()
   local keymap_opts = { buffer = term_buf_id, silent = false }
-  -- quit terminal and go back to last window
-  -- TODO: do we want this ONLY for non tab terminals?
   if term.direction ~= "tab" then
     nmap("q", function()
       api.nvim_buf_delete(term_buf_id, { force = true })
       term_buf_id = nil_buf_id
-      -- jump back to our last window
       vim.cmd([[wincmd p]])
     end, keymap_opts)
   end
 
   tmap("<esc>", [[<C-\><C-n>]], keymap_opts)
-  -- TODO: find a way to be more intelligent about these (e.g., how can we use `wincmd p` and know that we're goign to the right thing from the term)
+  -- TODO: :h wincmd; TL;DR - winnr .. wincmd w
   tmap("<C-h>", [[<Cmd>wincmd h<CR>]], keymap_opts)
   tmap("<C-j>", [[<Cmd>wincmd j<CR>]], keymap_opts)
   tmap("<C-k>", [[<Cmd>wincmd k<CR>]], keymap_opts)
@@ -435,6 +431,9 @@ end
 --- Toggles open, or hides a custom terminal
 --- @param args TermOpts|string
 function mega.term.toggle(args)
+  -- be sure to clear our search highlights and other UI adornments
+  mega.clear_ui()
+
   local parsed_opts = args or {}
 
   if type(args) == "string" then

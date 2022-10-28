@@ -32,138 +32,106 @@ local opts = {
   },
 }
 
--- NOTE: the hover handler returns the bufnr,winnr so can be used for mappings
--- WIP: colorize color things in a hover buffer with nvim-colorizer?
--- local function hover_handler(_, result, ctx, config)
---   config = config or {}
---   config.focus_id = ctx.method
---   if not (result and result.contents) then
---     vim.notify("No information available")
---     return
---   end
+do
+  local function hover_handler(_, result, ...)
+    -- M.hover_orig(_, result, ...)
+    if not (result and result.contents) then
+      mega.notify("No information available", vim.log.levels.WARN)
+      return
+    end
 
---   local util = require("vim.lsp.util")
+    local contents = result.contents
 
---   local lines = util.convert_input_to_markdown_lines(result.contents)
---   lines = util.trim_empty_lines(lines)
---   if vim.tbl_isempty(lines) then
---     vim.notify("No information available")
---     return
---   end
+    if not vim.tbl_islist(contents) then contents = { contents } end
 
---   local bufnr = util.open_floating_preview(lines, "markdown", config)
---   -- local lines = vim.split(result.contents.value, "\n")
+    local parts = {}
 
---   -- local ok, _ = pcall(require, "colorizer")
---   -- if ok then
---   --   require("colorizer").highlight_buffer(
---   --     bufnr,
---   --     nil,
---   --     vim.list_slice(lines, 2, #lines),
---   --     0,
---   --     require("colorizer").get_buffer_options(0)
---   --   )
---   -- end
+    for _, content in ipairs(contents) do
+      if type(content) == "string" then
+        table.insert(parts, content)
+      elseif content.language then
+        table.insert(parts, ("```%s\n%s\n```"):format(content.language, content.value))
+      elseif content.kind == "markdown" then
+        table.insert(parts, content.value)
+      elseif content.kind == "plaintext" then
+        table.insert(parts, ("```\n%s\n```"):format(content.value))
+      end
+    end
 
---   return bufnr
--- end
--- lsp.handlers["textDocument/hover"] = function(...)
---   local handler = lsp.with(hover_handler, {
---     border = mega.get_border(),
---     max_width = max_width,
---     max_height = max_height,
---   })
---   vim.b.lsp_hover_buf, vim.b.lsp_hover_win = handler(...)
--- end
+    local text = table.concat(parts, "\n")
+    text = text:gsub("\n\n", "\n")
+    text = text:gsub("\n%s*\n```", "\n```")
+    text = text:gsub("```\n%s*\n", "```\n")
 
--- local function format_markdown(contents)
---   if type(contents) ~= "table" or not vim.tbl_islist(contents) then
---     contents = { contents }
---   end
+    local lines = vim.split(text, "\n")
 
---   local parts = {}
+    local width = 50
+    for _, line in pairs(lines) do
+      width = math.max(width, vim.api.nvim_strwidth(line))
+    end
 
---   for _, content in ipairs(contents) do
---     if type(content) == "string" then
---       table.insert(parts, ("```\n%s\n```"):format(content))
---     elseif content.language then
---       table.insert(parts, ("```%s\n%s\n```"):format(content.language, content.value))
---     elseif content.kind == "markdown" then
---       table.insert(parts, content.value)
---     elseif content.kind == "plaintext" then
---       table.insert(parts, ("```\n%s\n```"):format(content.value))
---     end
---   end
+    for l, line in ipairs(lines) do
+      if line:find("^[%*%-_][%*%-_][%*%-_]+$") then lines[l] = ("─"):rep(width) end
+    end
 
---   return vim.split(table.concat(parts, "\n"), "\n")
--- end
+    text = table.concat(lines, "\n")
 
-local function hover_handler(_, result, ...)
-  local notify = require("notify")
-  -- M.hover_orig(_, result, ...)
-  if not (result and result.contents) then
-    notify("No information available", vim.log.levels.WARN)
-    return
-  end
+    local n_ok, notify = pcall(require, "notify")
+    if n_ok and vim.g.notifier_enabled and vim.o.cmdheight == 0 then
+      local open = true
+      P("we're in a custom folke hover")
+      notify(text, vim.log.levels.INFO, {
+        title = "Hover",
+        keep = function() return open end,
+        on_open = function(win)
+          local buf = vim.api.nvim_win_get_buf(win)
+          vim.api.nvim_buf_set_option(buf, "filetype", "markdown")
+          vim.api.nvim_win_set_option(win, "spell", false)
 
-  local contents = result.contents
+          vim.api.nvim_create_autocmd("CursorMoved", {
+            callback = function()
+              open = false
+              if not open then notify.dismiss() end
+            end,
+            once = true,
+          })
+        end,
+      })
+    else
+      local bufnr = require("vim.lsp.util").open_floating_preview(lines, "markdown", config)
+      P("we're in a custom non-folke hover")
+      -- local lines = vim.split(result.contents.value, "\n")
 
-  if not vim.tbl_islist(contents) then contents = { contents } end
+      -- local ok, _ = pcall(require, "colorizer")
+      -- if ok then
+      --   require("colorizer").highlight_buffer(
+      --     bufnr,
+      --     nil,
+      --     vim.list_slice(lines, 2, #lines),
+      --     0,
+      --     require("colorizer").get_buffer_options(0)
+      --   )
+      -- end
 
-  local parts = {}
-
-  for _, content in ipairs(contents) do
-    if type(content) == "string" then
-      table.insert(parts, content)
-    elseif content.language then
-      table.insert(parts, ("```%s\n%s\n```"):format(content.language, content.value))
-    elseif content.kind == "markdown" then
-      table.insert(parts, content.value)
-    elseif content.kind == "plaintext" then
-      table.insert(parts, ("```\n%s\n```"):format(content.value))
+      return bufnr
     end
   end
-
-  local text = table.concat(parts, "\n")
-  text = text:gsub("\n\n", "\n")
-  text = text:gsub("\n%s*\n```", "\n```")
-  text = text:gsub("```\n%s*\n", "```\n")
-
-  local lines = vim.split(text, "\n")
-
-  local width = 50
-  for _, line in pairs(lines) do
-    width = math.max(width, vim.api.nvim_strwidth(line))
-  end
-
-  for l, line in ipairs(lines) do
-    if line:find("^[%*%-_][%*%-_][%*%-_]+$") then lines[l] = ("─"):rep(width) end
-  end
-
-  text = table.concat(lines, "\n")
-
-  local open = true
-
-  notify(text, vim.log.levels.INFO, {
-    title = "Hover",
-    keep = function() return open end,
-    on_open = function(win)
-      local buf = vim.api.nvim_win_get_buf(win)
-      vim.api.nvim_buf_set_option(buf, "filetype", "markdown")
-      vim.api.nvim_win_set_option(win, "spell", false)
-
-      vim.api.nvim_create_autocmd("CursorMoved", {
-        callback = function()
-          open = false
-          if not open then notify.dismiss() end
-        end,
-        once = true,
+  local orig_hover_handler = lsp.handlers["textDocument/hover"]
+  if pcall(require, "notify") == true then
+    lsp.handlers["textDocument/hover"] = lsp.with(hover_handler, opts)
+  else
+    lsp.handlers["textDocument/hover"] = function(...)
+      local handler = lsp.with(hover_handler, {
+        border = mega.get_border(),
+        max_width = max_width,
+        max_height = max_height,
+        pad_top = 2,
+        pad_bottom = 2,
       })
-    end,
-  })
+      vim.b.lsp_hover_buf, vim.b.lsp_hover_win = handler(...)
+    end
+  end
 end
-local orig_hover_handler = lsp.handlers["textDocument/hover"]
-lsp.handlers["textDocument/hover"] = lsp.with(hover_handler, opts)
 
 -- local signature_help_opts = mega.table_merge(opts, {
 --   -- anchor = "SW",
@@ -275,6 +243,13 @@ do
       end
     end
   end
+end
+
+vim.lsp.util.convert_input_to_markdown_lines = function(input, contents)
+  contents = contents or {}
+  local ret = require("mega.utils").format_markdown(input)
+  vim.list_extend(contents, ret)
+  return ret
 end
 
 -- lsp.handlers["textDocument/definition"] = function(_, result)

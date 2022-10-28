@@ -233,4 +233,10 @@ return function()
     -- REF: neat stuff:
     -- https://github.com/rafamadriz/NeoCode/blob/main/lua/modules/plugins/completion.lua#L130-L192
   end
+
+  require("cmp.entry").get_documentation = function(self)
+    local item = self:get_completion_item()
+    if item.documentation then return require("mega.utils").format_markdown(item.documentation) end
+    return {}
+  end
 end

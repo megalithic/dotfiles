@@ -126,7 +126,7 @@ local function plugins(use)
     "rcarriga/nvim-notify",
     ext = "notify",
     module = "notify",
-    -- cond = function() return vim.g.notifier_enabled and vim.o.cmdheight == 0 end,
+    cond = function() return vim.g.notifier_enabled and vim.o.cmdheight == 0 end,
   })
   use({
     "vigoux/notifier.nvim",

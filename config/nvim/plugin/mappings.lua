@@ -217,23 +217,7 @@ vmap("<C-r>", [["hy:%Subvert/<C-r>h//gc<left><left><left>]])
 -- - Clear command-line
 -- - Close floating windows
 nmap([[<Esc>]], [[<Nop>]])
-nnoremap([[<Esc>]], function()
-  -- vcmd([[nnoremap <silent><ESC> :syntax sync fromstart<CR>:nohlsearch<CR>:redrawstatus!<CR><ESC> ]])
-  vim.cmd("nohlsearch")
-  vim.cmd("diffupdate")
-  vim.cmd("syntax sync fromstart")
-  mega.close_float_wins()
-  vim.cmd("echo ''")
-  if vim.g.enabled_plugin["cursorline"] then mega.blink_cursorline() end
-
-  -- do
-  --   local ok, mj = pcall(require, "mini.jump")
-  --   if ok then mj.stop_jumping() end
-  -- end
-
-  local ok, n = mega.require("notify")
-  if ok then n.dismiss() end
-end, { silent = true, desc = "Clear UI" })
+nnoremap([[<Esc>]], function() mega.clear_ui() end, { silent = true, desc = "Clear UI" })
 
 -- Use operator pending mode to visually select the whole buffer
 -- e.g. dA = delete buffer ALL, yA = copy whole buffer ALL

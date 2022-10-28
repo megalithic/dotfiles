@@ -21,6 +21,26 @@ local function fileicon()
   return icon, hl
 end
 
+function M.format_markdown(contents)
+  if type(contents) ~= "table" or not vim.tbl_islist(contents) then contents = { contents } end
+
+  local parts = {}
+
+  for _, content in ipairs(contents) do
+    if type(content) == "string" then
+      table.insert(parts, ("```\n%s\n```"):format(content))
+    elseif content.language then
+      table.insert(parts, ("```%s\n%s\n```"):format(content.language, content.value))
+    elseif content.kind == "markdown" then
+      table.insert(parts, content.value)
+    elseif content.kind == "plaintext" then
+      table.insert(parts, ("```\n%s\n```"):format(content.value))
+    end
+  end
+
+  return vim.split(table.concat(parts, "\n"), "\n")
+end
+
 function M.ext.title_string()
   if not hl_ok then return end
   local dir = fn.fnamemodify(fn.getcwd(), ":t")

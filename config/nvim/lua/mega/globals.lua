@@ -1146,6 +1146,24 @@ function mega.get_cursor_position()
   return row, col
 end
 
+function mega.clear_ui()
+  -- vcmd([[nnoremap <silent><ESC> :syntax sync fromstart<CR>:nohlsearch<CR>:redrawstatus!<CR><ESC> ]])
+  vim.cmd("nohlsearch")
+  vim.cmd("diffupdate")
+  vim.cmd("syntax sync fromstart")
+  mega.close_float_wins()
+  vim.cmd("echo ''")
+  if vim.g.enabled_plugin["cursorline"] then mega.blink_cursorline() end
+
+  -- do
+  --   local ok, mj = pcall(require, "mini.jump")
+  --   if ok then mj.stop_jumping() end
+  -- end
+
+  local ok, n = mega.require("notify")
+  if ok then n.dismiss() end
+end
+
 -- [ commands ] ----------------------------------------------------------------
 do
   local command = mega.command
