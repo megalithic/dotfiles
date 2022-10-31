@@ -560,7 +560,7 @@ local function plugins(use)
       })
     end,
   })
-  use({ "megalithic/nvim-dap-ui", branch = "fix/use_log_level_enums_for_vim_notify", ext = "dapui", after = "nvim-dap" })
+  use({ "rcarriga/nvim-dap-ui", ext = "dapui", after = "nvim-dap" })
   use({ "jbyuki/one-small-step-for-vimkind", after = "nvim-dap" })
   use({ "suketa/nvim-dap-ruby", after = "nvim-dap", config = function() require("dap-ruby").setup() end })
   use({
