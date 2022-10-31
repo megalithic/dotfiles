@@ -749,11 +749,11 @@ function mega.save_and_exec()
   if vim.bo.filetype == "vim" then
     vcmd("silent! write")
     vcmd("source %")
-    vim.notify("wrote and sourced vim file..")
+    vim.notify("wrote and sourced vim file..", vim.log.levels.INFO, { title = "nvim" })
   elseif vim.bo.filetype == "lua" then
     vcmd("silent! write")
     vcmd("luafile %")
-    vim.notify("wrote and sourced lua file..")
+    vim.notify("wrote and sourced lua file..", vim.log.levels.INFO, { title = "nvim" })
   end
 end
 
