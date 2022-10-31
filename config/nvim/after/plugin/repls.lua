@@ -94,6 +94,10 @@ mega.command("TermNode", function(args)
   })
 end, { bang = true })
 
+nnoremap("<leader>rs", "<cmd>TSendCurrentLine<cr>", "send current line to active repl")
+vnoremap("<leader>rs", "<cmd>TSendVisualSelection<cr>", "send visual selection to active repl")
+vnoremap("<leader>rS", "<cmd>TSendVisualLines<cr>", "send visual lines to active repl")
+
 nnoremap("<leader>re", "<cmd>TermElixir<cr>", "elixir")
 nnoremap("<leader>rE", "<cmd>TermElixir!<cr>", "elixir (current file)")
 nnoremap("<leader>rr", "<cmd>TermRuby<cr>", "ruby")

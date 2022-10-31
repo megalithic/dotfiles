@@ -46,7 +46,7 @@ return function()
   -- }
 
   local cmp_window = {
-    border = mega.get_border(),
+    border = "none", --mega.get_border(),
     winhighlight = table.concat({
       "Normal:NormalFloat",
       "FloatBorder:FloatBorder",

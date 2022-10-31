@@ -1,3 +1,7 @@
+-- @attribution: this initially was a blend of several basic and complicated term
+-- plugin ideas; ultimately, I've taken many brilliant ideas from @akinsho and @kassio
+-- and created my own version for my specific needs. they are the real ones here.
+
 if not mega then return end
 if not vim.g.enabled_plugin["term"] then return end
 
@@ -29,6 +33,7 @@ local function find_windows_by_bufnr(bufnr) return fn.win_findbuf(bufnr) end
 --- @field caller_winnr? number
 --- @field start_insert? boolean
 --- @field temp? boolean
+--- @field job_id? number
 --
 
 --- @param winnr number
@@ -288,7 +293,7 @@ end
 local function create_term(opts)
   -- REF: https://github.com/seblj/dotfiles/commit/fcdfc17e2987631cbfd4727c9ba94e6294948c40#diff-bbe1851dbfaaa99c8fdbb7229631eafc4f8048e09aa116ef3ad59cde339ef268L56-R90
   local term_cmd = opts.pre_cmd and fmt("%s; %s", opts.pre_cmd, opts.cmd) or opts.cmd
-  vim.fn.termopen(term_cmd, {
+  term.job_id = vim.fn.termopen(term_cmd, {
     ---@diagnostic disable-next-line: unused-local
     on_exit = function(job_id, exit_code, event)
       if opts.notifier ~= nil and type(opts.notifier) == "function" then opts.notifier(term_cmd, exit_code) end
@@ -461,8 +466,115 @@ function mega.term.toggle(args)
 end
 mega.term.open = new_or_open_term
 
+---@param mode "visual" | "motion"
+---@return table
+local function get_line_selection(mode)
+  local start_char, end_char = unpack(({
+    visual = { "'<", "'>" },
+    motion = { "'[", "']" },
+  })[mode])
+
+  -- Get the start and the end of the selection
+  local start_line, start_col = unpack(fn.getpos(start_char), 2, 3)
+  local end_line, end_col = unpack(fn.getpos(end_char), 2, 3)
+  local selected_lines = api.nvim_buf_get_lines(0, start_line - 1, end_line, false)
+  return {
+    start_pos = { start_line, start_col },
+    end_pos = { end_line, end_col },
+    selected_lines = selected_lines,
+  }
+end
+
+local function get_visual_selection(res)
+  local mode = fn.visualmode()
+  -- line-visual
+  -- return lines encompassed by the selection; already in res object
+  if mode == "V" then return res.selected_lines end
+
+  if mode == "v" then
+    -- regular-visual
+    -- return the buffer text encompassed by the selection
+    local start_line, start_col = unpack(res.start_pos)
+    local end_line, end_col = unpack(res.end_pos)
+    -- exclude the last char in text if "selection" is set to "exclusive"
+    if vim.opt.selection:get() == "exclusive" then end_col = end_col - 1 end
+    return api.nvim_buf_get_text(0, start_line - 1, start_col - 1, end_line - 1, end_col, {})
+  end
+
+  -- block-visual
+  -- return the lines encompassed by the selection, each truncated by the start and end columns
+  if mode == "\x16" then
+    local _, start_col = unpack(res.start_pos)
+    local _, end_col = unpack(res.end_pos)
+    -- exclude the last col of the block if "selection" is set to "exclusive"
+    if vim.opt.selection:get() == "exclusive" then end_col = end_col - 1 end
+    -- exchange start and end columns for proper substring indexing if needed
+    -- e.g. instead of str:sub(10, 5), do str:sub(5, 10)
+    if start_col > end_col then
+      start_col, end_col = end_col, start_col
+    end
+    -- iterate over lines, truncating each one
+    return vim.tbl_map(function(line) return line:sub(start_col, end_col) end, res.selected_lines)
+  end
+end
+
+--- @param selection_type string
+--- @param trim_spaces boolean
+--- @param cmd_data table<string, any>
+local function send_lines_to_terminal(selection_type, trim_spaces, cmd_data)
+  local id = tonumber(cmd_data.args) or 1
+  trim_spaces = trim_spaces == nil or trim_spaces
+
+  vim.validate({
+    selection_type = { selection_type, "string", true },
+    trim_spaces = { trim_spaces, "boolean", true },
+    terminal_id = { id, "number", true },
+  })
+
+  local current_window = api.nvim_get_current_win() -- save current window
+
+  local lines = {}
+  -- Beginning of the selection: line number, column number
+  local start_line, start_col
+  if selection_type == "single_line" then
+    start_line, start_col = unpack(api.nvim_win_get_cursor(0))
+    table.insert(lines, fn.getline(start_line))
+  elseif selection_type == "visual_lines" then
+    local res = get_line_selection("visual")
+    start_line, start_col = unpack(res.start_pos)
+    lines = res.selected_lines
+  elseif selection_type == "visual_selection" then
+    local res = get_line_selection("visual")
+    start_line, start_col = unpack(res.start_pos)
+    lines = get_visual_selection(res)
+  end
+
+  if not lines or not next(lines) then return end
+
+  for _, line in ipairs(lines) do
+    local l = trim_spaces and line:gsub("^%s+", ""):gsub("%s+$", "") or line
+    -- M.exec(l, id)
+    vim.fn.chansend(term.job_id, l)
+  end
+
+  -- Jump back with the cursor where we were at the beginning of the selection
+  api.nvim_set_current_win(current_window)
+  api.nvim_win_set_cursor(current_window, { start_line, start_col })
+end
+
 -- [COMMANDS] ------------------------------------------------------------------
 mega.command("T", function(opts) mega.term.toggle(opts.args) end, { nargs = "*" })
+mega.command("TSendCurrentLine", function(args) send_lines_to_terminal("single_line", true, args) end, { nargs = "?" })
+mega.command(
+  "TSendVisualLines",
+  function(args) send_lines_to_terminal("visual_lines", true, args) end,
+  { range = true, nargs = "?" }
+)
+mega.command(
+  "TSendVisualSelection",
+  function(args) send_lines_to_terminal("visual_selection", true, args) end,
+  { range = true, nargs = "?" }
+)
 
 -- [KEYMAPS] ------------------------------------------------------------------
 nnoremap("<leader>tt", "<cmd>T direction=horizontal move_on_direction_change=true<cr>", "term")
