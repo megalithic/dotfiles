@@ -129,11 +129,12 @@ local function set_term_opts()
   pcall(vim.api.nvim_buf_set_option, term_buf_id, "buftype", "terminal")
 
   if vim.tbl_contains({ "float", "tab" }, term.direction) then
-    -- Focus first file:line:col pattern in the terminal output
-    -- vim.keymap.set('n', 'F', [[:call search('\f\+:\d\+:\d\+')<CR>]], { buffer = true, silent = true })
     vim.opt_local.signcolumn = "no"
     vim.bo.bufhidden = "wipe"
     vim.cmd("setlocal bufhidden=wipe")
+  else
+    vim.opt_local.winfixwidth = true
+    vim.opt_local.winfixheight = true
   end
 end
 
@@ -145,30 +146,30 @@ local function set_win_size(bufnr)
   end
 end
 
-local set_autocommands = function()
-  mega.augroup("MegatermResizer", {
-    {
-      event = { "WinLeave" },
-      buffer = term_buf_id,
-      command = function(evt) set_win_size(evt.buf) end,
-    },
-    {
-      event = { "WinEnter" },
-      buffer = term_buf_id,
-      command = function(evt) set_win_size(evt.buf) end,
-    },
-    {
-      event = { "TermOpen" },
-      pattern = { "term://*" },
-      command = function(evt) end,
-    },
-    {
-      event = { "BufEnter" },
-      pattern = { "term://*" },
-      command = function(evt) end,
-    },
-  })
-end
+-- local set_autocommands = function()
+--   mega.augroup("MegatermResizer", {
+--     {
+--       event = { "WinLeave" },
+--       buffer = term_buf_id,
+--       command = function(evt) set_win_size(evt.buf) end,
+--     },
+--     {
+--       event = { "WinEnter" },
+--       buffer = term_buf_id,
+--       command = function(evt) set_win_size(evt.buf) end,
+--     },
+--     {
+--       event = { "TermOpen" },
+--       pattern = { "term://*" },
+--       command = function(evt) end,
+--     },
+--     {
+--       event = { "BufEnter" },
+--       pattern = { "term://*" },
+--       command = function(evt) end,
+--     },
+--   })
+-- end
 
 local create_float = function(bufnr, size, caller_winnr)
   local parsed_size = (size / 100)
@@ -340,7 +341,7 @@ local function on_open()
   end
   if vim.tbl_contains({ "vertical", "horizontal" }, term.direction) then set_win_size() end
   set_keymaps()
-  set_autocommands()
+  -- set_autocommands()
 
   -- custom on_open
   if term.on_open ~= nil and term(term.on_open) == "function" then

@@ -55,7 +55,9 @@ vim.opt.runtimepath:remove("~/.local/share/src")
 
 -- [ utils ] -------------------------------------------------------------------
 
--- TODO: https://www.reddit.com/r/neovim/comments/xv3v68/tip_nvimnotify_can_be_used_to_display_print/
+-- TODO:
+-- https://www.reddit.com/r/neovim/comments/xv3v68/tip_nvimnotify_can_be_used_to_display_print/
+-- https://github.com/kassio/dotfiles/tree/main/config/xdg/nvim/lua/my/utils
 
 -- inspect the contents of an object very quickly
 -- in your code or from the command-line:

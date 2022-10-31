@@ -32,6 +32,7 @@ vim.o.ttimeoutlen = 10
 -----------------------------------------------------------------------------//
 vim.o.splitbelow = true
 vim.o.splitright = true
+vim.o.splitkeep = "screen"
 vim.o.eadirection = "hor"
 -- exclude usetab as we do not want to jump to buffers in already open tabs
 -- do not use split or vsplit to ensure we don't open any new windows
@@ -206,7 +207,6 @@ vim.o.synmaxcol = 1024 -- don't syntax highlight long lines
 vim.o.signcolumn = "yes:1"
 -- vim.o.signcolumn = "auto:3-9"
 vim.o.ruler = false
-vim.o.splitkeep = "screen"
 vim.o.cmdheight = 1 -- Set command line height to two lines
 vim.o.showbreak = [[↪ ]] -- Options include -> '…', '↳ ', '→','↪ '
 vim.o.showbreak = string.rep(" ", 3) -- Make it so that long lines wrap smartly
