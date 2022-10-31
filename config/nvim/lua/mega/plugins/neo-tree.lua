@@ -44,16 +44,16 @@ return function()
         event = "neo_tree_window_before_close",
         handler = function(args) end,
       },
-      {
-        event = "neo_tree_window_after_close",
-        handler = function(args)
-          vim.cmd("wincmd =")
-          require("virt-column").refresh()
-          mega.resize_windows()
-          mega.blink_cursorline(250)
-          vim.cmd("e")
-        end,
-      },
+      -- {
+      --   event = "neo_tree_window_after_close",
+      --   handler = function(args)
+      --     -- vim.cmd("wincmd =")
+      --     -- require("virt-column").refresh()
+      --     -- -- _G.mega.resize_windows()
+      --     -- _G.mega.blink_cursorline(250)
+      --     -- vim.cmd("e")
+      --   end,
+      -- },
       {
         event = "neo_tree_popup_buffer_enter",
         handler = function(args) vim.cmd("highlight! Cursor blend=0") end,

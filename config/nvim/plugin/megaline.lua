@@ -287,11 +287,10 @@ end
 -- ( GETTERS ) -----------------------------------------------------------------
 
 local function get_diagnostics()
-  local function count(id) return #vim.diagnostic.get(0, { severity = id }) end
+  local function count(lvl) return #vim.diagnostic.get(0, { severity = lvl }) end
   if vim.tbl_isempty(vim.lsp.get_active_clients({ bufnr = 0 })) then return "" end
 
   local diags = {
-    { num = require("null-ls").enabled, sign = mega.icons.lsp.kind.Null, hl = "StModeInsert" },
     { num = count(vim.diagnostic.severity.ERROR), sign = mega.icons.lsp.error, hl = "StError" },
     { num = count(vim.diagnostic.severity.WARN), sign = mega.icons.lsp.warn, hl = "StWarn" },
     { num = count(vim.diagnostic.severity.INFO), sign = mega.icons.lsp.info, hl = "StInfo" },
@@ -299,9 +298,7 @@ local function get_diagnostics()
   }
 
   for _, d in ipairs(diags) do
-    local val = d.num
-    if type(d.num) == "boolean" then val = d.num and "on" or "off" end
-    if d.num == true or d.num > 0 then return seg(fmt("%s %s", d.sign, val), d.hl) end
+    if d.num > 0 then return seg(fmt("%s %s", d.sign, d.num), d.hl) end
   end
 
   return ""
@@ -468,13 +465,13 @@ end
 local function seg_formatters_status() return seg(mega.icons.lsp.kind.Null, "StModeInsert", require("null-ls").enabled) end
 
 local function seg_lsp_status(truncate_at)
-  if is_truncated(truncate_at) then return seg_formatters_status() end
+  if is_truncated(truncate_at) then return "" end
 
   local messages = vim.lsp.util.get_progress_messages()
 
   if vim.tbl_isempty(messages) then return get_diagnostics() end
 
-  if vim.g.notifier_enabled and vim.o.cmdheight == 1 then return seg_formatters_status() end
+  if vim.g.notifier_enabled and vim.o.cmdheight == 1 then return "" end
 
   return get_lsp_status(messages)
 end
@@ -632,6 +629,8 @@ function _G.__statusline()
     seg("%*"),
     seg_spacer(2),
     seg_lsp_status(100),
+    seg_spacer(1),
+    seg_formatters_status(),
     seg_spacer(2),
     seg_git_symbol(80),
     seg_spacer(1),
