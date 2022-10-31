@@ -28,7 +28,7 @@ mega.augroup("megaline", {
     command = function()
       if not vim.g.is_saving and vim.bo.modified then
         vim.g.is_saving = true
-        vim.cmd([[checktime]])
+        -- vim.cmd([[checktime]])
         vim.defer_fn(function() vim.g.is_saving = false end, 1000)
       end
     end,
@@ -471,7 +471,7 @@ local function seg_lsp_status(truncate_at)
 
   if vim.tbl_isempty(messages) then return get_diagnostics() end
 
-  if vim.g.notifier_enabled and vim.o.cmdheight == 1 then return "" end
+  -- if vim.g.notifier_enabled and vim.o.cmdheight == 1 then return "" end
 
   return get_lsp_status(messages)
 end

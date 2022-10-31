@@ -1196,6 +1196,14 @@ do
   --   _G.P(opts)
   -- end, { nargs = "?" })
 
+  mega.command("PackerUpgrade", function()
+    vim.schedule(function()
+      -- vim.g.PACKER_NON_INTERACTIVE = true
+      require("mega.plugins.utils").bootstrap()
+      require("mega.plugins.utils").sync()
+    end)
+  end)
+
   vim.cmd([[command! PackerInstall packadd packer.nvim | lua require('packer').install()]])
   vim.cmd([[command! PackerUpdate packadd packer.nvim | lua require('packer').update()]])
   vim.cmd([[command! PackerSync packadd packer.nvim | lua require('packer').sync()]])
@@ -1204,7 +1212,8 @@ do
   vim.cmd([[command! PC PackerCompile]])
   vim.cmd([[command! PS PackerStatus]])
   vim.cmd([[command! PU PackerSync]])
-  vim.cmd([[command! Noti Mess | NotifierReplay!]])
+  vim.cmd([[command! Noti Mess | Notifications]])
+  -- vim.cmd([[command! Noti Mess | NotifierReplay!]])
 end
 
 return mega

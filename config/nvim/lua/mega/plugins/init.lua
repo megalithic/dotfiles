@@ -1,4 +1,3 @@
--- FIXME: thins!
 -- local PACKER_COMPILED_PATH = fmt("%s/packer/packer_compiled.lua", vim.fn.stdpath("cache"))
 local PACKER_COMPILED_PATH = fmt("%s/plugin/packer_compiled.lua", vim.fn.stdpath("config"))
 local PACKER_SNAPSHOTS_PATH = fmt("%s/packer/snapshots/", vim.fn.stdpath("cache"))
@@ -10,10 +9,10 @@ local packer_notify = packer.notify
 local config = {
   -- opt_default = true,
   display = {
-    open_cmd = "silent topleft 45vnew",
+    open_cmd = "silent topleft 50vnew",
   },
   auto_reload_compiled = false,
-  non_interactive = vim.env.PACKER_NON_INTERACTIVE or false,
+  non_interactive = vim.g.PACKER_NON_INTERACTIVE or vim.env.PACKER_NON_INTERACTIVE or false,
   compile_path = PACKER_COMPILED_PATH,
   ensure_dependencies = true,
   snapshot_path = PACKER_SNAPSHOTS_PATH,
@@ -32,7 +31,6 @@ local config = {
   -- this is NOT packer functionality!
   local_plugins = {
     megalithic = true,
-    ["nvim-dap-ui"] = true,
     -- ["nvim-lspconfig"] = false,
     -- ["nvim-treesitter"] = true,
   },
@@ -126,24 +124,24 @@ local function plugins(use)
     "rcarriga/nvim-notify",
     ext = "notify",
     module = "notify",
-    cond = function() return vim.g.notifier_enabled and vim.o.cmdheight == 0 end,
+    cond = function() return vim.g.notifier_enabled end,
   })
-  use({
-    "vigoux/notifier.nvim",
-    cond = function() return vim.g.notifier_enabled and vim.o.cmdheight == 1 end,
-    config = function()
-      require("notifier").setup({
-        component_name_recall = true,
-      })
+  -- use({
+  --   "vigoux/notifier.nvim",
+  --   cond = function() return vim.g.notifier_enabled and vim.o.cmdheight == 1 end,
+  --   config = function()
+  --     require("notifier").setup({
+  --       component_name_recall = true,
+  --     })
 
-      _G.mega.augroup("CloseNotifier", {
-        {
-          event = { "VimLeavePre", "LspDetach" },
-          command = "silent! NotifierClear",
-        },
-      })
-    end,
-  })
+  --     _G.mega.augroup("CloseNotifier", {
+  --       {
+  --         event = { "VimLeavePre", "LspDetach" },
+  --         command = "silent! NotifierClear",
+  --       },
+  --     })
+  --   end,
+  -- })
 
   use({ "nanozuki/tabby.nvim", ext = "tabby" })
   use({
@@ -882,12 +880,6 @@ local function plugins(use)
     "lukas-reineke/headlines.nvim",
     config = function()
       require("headlines").setup({
-        -- markdown = {
-        --   dash_string = "", -- alts:  靖並   ﮆ 
-        --   headline_highlights = { "Headline1", "Headline2", "Headline3", "Headline4", "Headline5", "Headline6" },
-        --   codeblock_highlight = "CodeBlock",
-        --   dash_highlight = "Dash",
-        -- },
         markdown = {
           source_pattern_start = "^```",
           source_pattern_end = "^```$",
@@ -917,6 +909,7 @@ local function plugins(use)
   -- "rhysd/vim-gfm-syntax"
 
   -- ( Syntax/Languages ) ------------------------------------------------------
+  use({ "ii14/emmylua-nvim" })
   -- use({ "elixir-editors/vim-elixir" })
   -- use({ "tpope/vim-rails" })
   -- use({ "ngscheurich/edeex.nvim" })

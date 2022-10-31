@@ -53,9 +53,9 @@ return function()
         condition = function() return mega.executable("prettierd") end,
       }),
       format.fixjson.with({ filetypes = { "jsonc", "json" } }),
-      format.cbfmt:with({
-        condition = function() return mega.executable("cbfmt") end,
-      }),
+      -- format.cbfmt:with({
+      --   condition = function() return mega.executable("cbfmt") end,
+      -- }),
       format.stylua.with({ -- sumneko now formats!
         condition = function()
           return mega.executable("stylua")
@@ -95,10 +95,10 @@ return function()
           }
         end,
       }),
-      format.beautysh.with({
-        extra_args = { "-i", "2" },
-        condition = function() return mega.executable("beautysh") end,
-      }),
+      -- format.beautysh.with({
+      --   extra_args = { "-i", "2" },
+      --   condition = function() return mega.executable("beautysh") end,
+      -- }),
       format.shellharden,
       format.elm_format,
       format.jq,

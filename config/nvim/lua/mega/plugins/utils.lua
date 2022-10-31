@@ -38,6 +38,14 @@ local function setup_autocmds()
       pattern = { "PackerCompileDone" },
       command = function() M.notify("compilation finished") end,
     },
+    {
+      event = { "User" },
+      pattern = { "PackerComplete" },
+      command = function()
+        M.notify("packer sync finished")
+        -- vim.cmd("quitall!")
+      end,
+    },
   })
 end
 
@@ -102,6 +110,25 @@ function M.wrap(use)
     spec = M.process_ext_configs(spec)
     use(spec)
   end
+end
+
+function M.sync()
+  -- HACK: see https://github.com/wbthomason/packer.nvim/issues/180
+  vim.fn.setenv("MACOSX_DEPLOYMENT_TARGET", "10.15")
+
+  vim.cmd.packadd({ "packer.nvim", bang = true })
+  setup_autocmds()
+
+  local packer = require("packer")
+  require("packer").sync()
+  -- require("packer").sync(nil, {
+  --   auto_reload_compiled = true,
+  --   preview_updates = true,
+  --   display = {
+  --     non_interactive = false, -- If true, disable display windows for all operations
+  --     open_fn = function() return require("packer.util").float({ border = mega.get_border() }) end,
+  --   },
+  -- })
 end
 
 function M.setup(config, plugins_fn)

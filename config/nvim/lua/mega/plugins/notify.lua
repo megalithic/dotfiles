@@ -14,10 +14,17 @@ return function()
     end,
     render = function(...)
       local notif = select(2, ...)
-      local style = notif.title[1] == "" and "minimal" or "default"
+      local style = notif.title[1] == "" and "minimal" or "minimal"
       require("notify.render")[style](...)
     end,
   })
 
-  -- vim.notify = nnotify
+  -- _G.mega.augroup("CloseNotifier", {
+  --   {
+  --     event = { "VimLeavePre", "LspDetach" },
+  --     command = "silent! NotifierClear",
+  --   },
+  -- })
+
+  vim.notify = nnotify
 end
