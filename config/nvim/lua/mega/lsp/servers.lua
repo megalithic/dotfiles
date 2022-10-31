@@ -363,6 +363,7 @@ return function(on_attach)
       local plenary = ("%s/start/plenary.nvim"):format(plugins)
       -- local paq = ('%s/opt/paq-nvim'):format(plugins)
 
+      -- require("neodev").setup({})
       local opts = vim.tbl_extend("keep", server_opts, {
         handlers = {
           -- Don't open quickfix list in case of multiple definitions. At the

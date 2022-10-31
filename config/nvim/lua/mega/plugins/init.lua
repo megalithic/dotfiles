@@ -84,7 +84,7 @@ local function plugins(use)
       _G.mega.augroup("Colorizer", {
         {
           event = { "BufReadPost" },
-          command = function(args)
+          command = function()
             if _G.mega.is_chonky(vim.api.nvim_get_current_buf()) then vim.cmd("ColorizerDetachFromBuffer") end
           end,
         },

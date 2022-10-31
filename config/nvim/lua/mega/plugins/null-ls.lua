@@ -10,7 +10,7 @@ return function()
 
   null.setup({
     debounce = vim.g.is_local_dev and 200 or 500,
-    default_timeout = 250, -- vim.g.is_local_dev and 500 or 3000,
+    default_timeout = 500, -- vim.g.is_local_dev and 500 or 3000,
     -- root_dir = require("null-ls.utils").root_pattern(".null-ls-root", ".neoconf.json", ".git"),
     sources = {
       format.trim_whitespace.with({ filetypes = { "*" } }),
@@ -65,23 +65,23 @@ return function()
             }))
         end,
       }),
-      format.mix.with({
-        extra_filetypes = { "eelixir", "heex" },
-        args = { "format", "-" },
-        extra_args = function(_params)
-          local version_output = vim.fn.system("elixir -v")
-          local minor_version = vim.fn.matchlist(version_output, "Elixir \\d.\\(\\d\\+\\)")[2]
+      -- format.mix.with({
+      --   extra_filetypes = { "eelixir", "heex" },
+      --   args = { "format", "-" },
+      --   extra_args = function(_params)
+      --     local version_output = vim.fn.system("elixir -v")
+      --     local minor_version = vim.fn.matchlist(version_output, "Elixir \\d.\\(\\d\\+\\)")[2]
 
-          local extra_args = {}
+      --     local extra_args = {}
 
-          -- tells the formatter the filename for the code passed to it via stdin.
-          -- This allows formatting heex files correctly. Only available for
-          -- Elixir >= 1.14
-          if tonumber(minor_version, 10) >= 14 then extra_args = { "--stdin-filename", "$FILENAME" } end
+      --     -- tells the formatter the filename for the code passed to it via stdin.
+      --     -- This allows formatting heex files correctly. Only available for
+      --     -- Elixir >= 1.14
+      --     if tonumber(minor_version, 10) >= 14 then extra_args = { "--stdin-filename", "$FILENAME" } end
 
-          return extra_args
-        end,
-      }),
+      --     return extra_args
+      --   end,
+      -- }),
       format.isort,
       format.black.with({
         extra_args = function(_)
