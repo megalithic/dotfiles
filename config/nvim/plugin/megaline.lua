@@ -287,8 +287,8 @@ end
 -- ( GETTERS ) -----------------------------------------------------------------
 
 local function get_diagnostics()
-  local function count(lvl) return #vim.diagnostic.get(0, { severity = lvl }) end
-  if vim.tbl_isempty(vim.lsp.get_active_clients({ bufnr = 0 })) then return "" end
+  local function count(lvl) return #vim.diagnostic.get(M.ctx.bufnr, { severity = lvl }) end
+  if vim.tbl_isempty(vim.lsp.get_active_clients({ bufnr = M.ctx.bufnr })) then return "" end
 
   local diags = {
     { num = count(vim.diagnostic.severity.ERROR), sign = mega.icons.lsp.error, hl = "StError" },
@@ -297,11 +297,12 @@ local function get_diagnostics()
     { num = count(vim.diagnostic.severity.HINT), sign = mega.icons.lsp.hint, hl = "StHint" },
   }
 
+  local segments = ""
   for _, d in ipairs(diags) do
-    if d.num > 0 then return seg(fmt("%s %s", d.sign, d.num), d.hl) end
+    if d.num > 0 then segments = fmt("%s %s", segments, seg(fmt("%s %s", d.sign, d.num), d.hl)) end
   end
 
-  return ""
+  return segments
 end
 
 local function get_lsp_status(messages)
@@ -471,6 +472,7 @@ local function seg_lsp_status(truncate_at)
 
   if vim.tbl_isempty(messages) then return get_diagnostics() end
 
+  -- TODO: keep this if we move lsp progress to nvim-notify
   -- if vim.g.notifier_enabled and vim.o.cmdheight == 1 then return "" end
 
   return get_lsp_status(messages)

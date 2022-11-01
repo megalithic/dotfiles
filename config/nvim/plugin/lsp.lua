@@ -337,11 +337,11 @@ local function setup_diagnostics()
       -- Only for warnings and errors
       severity = { min = "HINT", max = "ERROR" },
     },
-    underline = true,
+    underline = { severity = { min = "HINT" } },
     severity_sort = true,
     -- Show virtual text only for errors
     -- virtual_text = false, -- { spacing = 1, prefix = "", severity = { min = "ERROR", max = "ERROR" } },
-    virtual_text = { spacing = 1, prefix = "", severity = { min = "ERROR", max = "ERROR" } },
+    virtual_text = { spacing = 1, prefix = "•", severity = { min = "WARN", max = "ERROR" } },
     update_in_insert = false,
     float = {
       show_header = true,
