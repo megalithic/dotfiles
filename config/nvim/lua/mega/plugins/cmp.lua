@@ -125,14 +125,7 @@ return function()
       -- { name = "nvim_lsp_signature_help" },
       -- { name = "treesitter" },
       -- { name = "buffer", keyword_length = 3 },
-      { name = "path" },
-      -- {
-      --   name = "rg",
-      --   keyword_length = 4,
-      --   max_item_count = 10,
-      --   option = { additional_arguments = "--max-depth 8" },
-      -- },
-    }, {
+      { name = "path", option = { trailing_slash = true } },
       {
         name = "buffer",
         keyword_length = 5,
@@ -140,7 +133,8 @@ return function()
         options = {
           keyword_length = 5,
           max_item_count = 5, -- only show up to 5 items.
-          get_bufnrs = function() return vim.api.nvim_list_bufs() end,
+          -- get_bufnrs = function() return vim.api.nvim_list_bufs() end,
+          get_bufnrs = function() return vim.tbl_map(vim.api.nvim_win_get_buf, vim.api.nvim_list_wins()) end,
           -- get_bufnrs = function()
           --   local bufs = {}
           --   for _, win in ipairs(api.nvim_list_wins()) do
@@ -150,6 +144,30 @@ return function()
           -- end,
         },
       },
+      -- {
+      --   name = "rg",
+      --   keyword_length = 4,
+      --   max_item_count = 10,
+      --   option = { additional_arguments = "--max-depth 8" },
+      -- },
+      -- }, {
+      --   {
+      --     name = "buffer",
+      --     keyword_length = 5,
+      --     max_item_count = 5, -- only show up to 5 items.
+      --     options = {
+      --       keyword_length = 5,
+      --       max_item_count = 5, -- only show up to 5 items.
+      --       get_bufnrs = function() return vim.api.nvim_list_bufs() end,
+      --       -- get_bufnrs = function()
+      --       --   local bufs = {}
+      --       --   for _, win in ipairs(api.nvim_list_wins()) do
+      --       --     bufs[api.nvim_win_get_buf(win)] = true
+      --       --   end
+      --       --   return vim.tbl_keys(bufs)
+      --       -- end,
+      --     },
+      --   },
     }),
     formatting = {
       deprecated = true,

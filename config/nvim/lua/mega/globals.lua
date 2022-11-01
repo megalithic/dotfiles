@@ -263,6 +263,10 @@ function mega.ftplugin_conf(name, callback)
   end
 end
 
+function mega.plugin_setup(plugin_name, setup_tbl)
+  import(plugin_name, function(module) module.setup(setup_tbl) end)
+end
+
 --- @class ConfigOpts
 --- @field config table|function|string
 --- @field enabled? boolean

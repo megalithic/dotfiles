@@ -45,6 +45,7 @@ local function plugins(use)
   use({ "nvim-lua/popup.nvim" })
   use({ "dstein64/vim-startuptime", cmd = { "StartupTime" }, config = function() vim.g.startuptime_tries = 15 end })
   use({ "mattn/webapi-vim" })
+  use({ "miversen33/import.nvim" }) -- A better Lua 'require()'
 
   -- ( UI ) --------------------------------------------------------------------
   use({ "rktjmp/lush.nvim" })
@@ -116,32 +117,12 @@ local function plugins(use)
   })
   use({ "echasnovski/mini.nvim", ext = "mini", after = "nvim-treesitter" })
   use({ "anuvyklack/hydra.nvim", ext = "hydra" })
-  -- use({
-  --   "phaazon/notisys.nvim",
-  --   config = function() require("notisys").setup() end,
-  -- })
   use({
     "rcarriga/nvim-notify",
     ext = "notify",
     module = "notify",
     cond = function() return vim.g.notifier_enabled end,
   })
-  -- use({
-  --   "vigoux/notifier.nvim",
-  --   cond = function() return vim.g.notifier_enabled and vim.o.cmdheight == 1 end,
-  --   config = function()
-  --     require("notifier").setup({
-  --       component_name_recall = true,
-  --     })
-
-  --     _G.mega.augroup("CloseNotifier", {
-  --       {
-  --         event = { "VimLeavePre", "LspDetach" },
-  --         command = "silent! NotifierClear",
-  --       },
-  --     })
-  --   end,
-  -- })
 
   use({ "nanozuki/tabby.nvim", ext = "tabby" })
   use({
@@ -252,7 +233,39 @@ local function plugins(use)
       { "s1n7ax/nvim-window-picker" },
     },
   })
-  -- TODO: investigate folke/trouble.nvim again
+  use({
+    "folke/trouble.nvim",
+    cmd = "TroubleToggle",
+    keys = { "<leader>E", "<leader>le" },
+    config = function()
+      _G.mega.plugin_setup("trouble", {
+        auto_preview = false,
+        use_diagnostic_signs = true,
+        auto_close = true,
+        action_keys = {
+          close = { "q", "<Esc>", "<C-q>", "<C-c>" },
+          refresh = "R",
+          jump = { "<Space>" },
+          open_split = { "<c-s>" },
+          open_vsplit = { "<c-v>" },
+          open_tab = { "<c-t>" },
+          jump_close = { "<CR>" },
+          toggle_mode = "m",
+          toggle_preview = "P",
+          hover = { "gh" },
+          preview = "p",
+          close_folds = { "h", "zM", "zm" },
+          open_folds = { "l", "zR", "zr" },
+          toggle_fold = { "zA", "za" },
+          previous = "k",
+          next = "j",
+          cancel = nil,
+        },
+      })
+      _G.mega.nmap("<leader>E", "<cmd>TroubleToggle<CR>")
+      _G.mega.nmap("<leader>le", "<cmd>TroubleToggle<CR>", "Toggle Trouble")
+    end,
+  })
   use({ "kevinhwang91/nvim-bqf", ft = "qf" })
   use({
     "https://gitlab.com/yorickpeterse/nvim-pqf",
@@ -958,5 +971,6 @@ mega.nnoremap("<leader>px", "<Cmd>PackerClean<CR>", "packer: clean")
 
 vim.cmd.packadd({ "cfilter", bang = true })
 mega.require("impatient")
+mega.require("import")
 
 return packer.setup(config, plugins)
