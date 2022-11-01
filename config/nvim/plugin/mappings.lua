@@ -29,6 +29,7 @@ if not vim.g.enabled_plugin["mappings"] then return end
 local fn = vim.fn
 local exec = mega.exec
 local api = vim.api
+local map = vim.keymap.set
 -- NOTE: all convenience mode mappers are on the _G global; so no local assigns needed
 
 -- [convenience mappings] ------------------------------------------------------
@@ -45,6 +46,10 @@ for i = 0, 9 do
   local key_string = tostring(i + 1)
   nnoremap("<localleader>" .. key_string, fmt("<cmd>%stabnext<cr>", key_string), fmt("tab: jump to tab %s", key_string))
 end
+map("", "<C-Right>", ":tabn<CR>", { desc = "next tab" })
+map("", "<C-Left>", ":tabp<CR>", { desc = "prev tab" })
+map("", "<C-Up>", ":+tabmove<CR>", { desc = "move tab right" })
+map("", "<C-Down>", ":-tabmove<CR>", { desc = "move tab left" })
 
 nmap("gb", string.format("<cmd>ls<CR>:b<space>%s", mega.replace_termcodes("<tab>")), "current buffers")
 nmap("gs", "i<CR><ESC>^mwgk:silent! s/\v +$//<CR>:noh<CR>`w", "split line")
