@@ -104,6 +104,7 @@ brew "gnu-sed" if OS.mac?
 brew "gotop"
 brew "gpg" # required for asdf-nodejs
 brew "grc"
+brew "gum" # for super dope scripts
 brew "heroku" if OS.mac?
 brew "highlight"
 brew "hopenpgp-tools"
