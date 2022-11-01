@@ -233,39 +233,39 @@ local function plugins(use)
       { "s1n7ax/nvim-window-picker" },
     },
   })
-  use({
-    "folke/trouble.nvim",
-    cmd = "TroubleToggle",
-    keys = { "<leader>E", "<leader>le" },
-    config = function()
-      _G.mega.plugin_setup("trouble", {
-        auto_preview = false,
-        use_diagnostic_signs = true,
-        auto_close = true,
-        action_keys = {
-          close = { "q", "<Esc>", "<C-q>", "<C-c>" },
-          refresh = "R",
-          jump = { "<Space>" },
-          open_split = { "<c-s>" },
-          open_vsplit = { "<c-v>" },
-          open_tab = { "<c-t>" },
-          jump_close = { "<CR>" },
-          toggle_mode = "m",
-          toggle_preview = "P",
-          hover = { "gh" },
-          preview = "p",
-          close_folds = { "h", "zM", "zm" },
-          open_folds = { "l", "zR", "zr" },
-          toggle_fold = { "zA", "za" },
-          previous = "k",
-          next = "j",
-          cancel = nil,
-        },
-      })
-      _G.mega.nmap("<leader>E", "<cmd>TroubleToggle<CR>")
-      _G.mega.nmap("<leader>le", "<cmd>TroubleToggle<CR>", "Toggle Trouble")
-    end,
-  })
+  -- use({
+  --   "folke/trouble.nvim",
+  --   cmd = "TroubleToggle",
+  --   keys = { "<leader>E", "<leader>le" },
+  --   config = function()
+  --     _G.mega.plugin_setup("trouble", {
+  --       auto_preview = false,
+  --       use_diagnostic_signs = true,
+  --       auto_close = true,
+  --       action_keys = {
+  --         close = { "q", "<Esc>", "<C-q>", "<C-c>" },
+  --         refresh = "R",
+  --         jump = { "<Space>" },
+  --         open_split = { "<c-s>" },
+  --         open_vsplit = { "<c-v>" },
+  --         open_tab = { "<c-t>" },
+  --         jump_close = { "<CR>" },
+  --         toggle_mode = "m",
+  --         toggle_preview = "P",
+  --         hover = { "gh" },
+  --         preview = "p",
+  --         close_folds = { "h", "zM", "zm" },
+  --         open_folds = { "l", "zR", "zr" },
+  --         toggle_fold = { "zA", "za" },
+  --         previous = "k",
+  --         next = "j",
+  --         cancel = nil,
+  --       },
+  --     })
+  --     _G.mega.nmap("<leader>E", "<cmd>TroubleToggle<CR>")
+  --     _G.mega.nmap("<leader>le", "<cmd>TroubleToggle<CR>", "Toggle Trouble")
+  --   end,
+  -- })
   use({ "kevinhwang91/nvim-bqf", ft = "qf" })
   use({
     "https://gitlab.com/yorickpeterse/nvim-pqf",

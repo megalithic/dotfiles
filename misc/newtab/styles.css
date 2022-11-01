@@ -153,6 +153,7 @@ img.show {
   }
 }
 .logo-bob {
+  transition: all 0.2s;
   display: inline-block;
   vertical-align: middle;
   -webkit-transform: perspective(1px) translateZ(0);

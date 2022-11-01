@@ -8,9 +8,8 @@ local M = {
     kitty = {},
   },
   lsp = {},
+  hl = {},
 }
-local windows = {}
-
 local function fileicon()
   local name = fn.bufname()
   local icon, hl
@@ -198,5 +197,30 @@ function M.get_open_filelist(cwd)
   end
   return filelist
 end
+
+function M.hl.get(name)
+  local ok, data = pcall(vim.api.nvim_get_hl_by_name, name, true)
+
+  if not ok then
+    vim.notify(fmt("Failed to find highlight by name \"%s\"", name), vim.log.levels.ERROR, { title = "nvim" })
+    return {}
+  end
+
+  return data
+end
+
+function M.hl.set(group, color)
+  local ok, msg = pcall(vim.api.nvim_set_hl, 0, group, color)
+
+  if not ok then
+    vim.notify(
+      fmt("Failed to set highlight (%s): group %s | color: %s", msg, group, I(color)),
+      vim.log.levels.ERROR,
+      { title = "nvim" }
+    )
+  end
+end
+
+function M.hl.extend(target, source, opts) M.hl.set(target, vim.tbl_extend("force", M.hl.get(source), opts or {})) end
 
 return M

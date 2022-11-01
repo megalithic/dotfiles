@@ -94,7 +94,7 @@ return function()
     max_height = function() return math.floor(vim.o.lines * 0.8) end,
     on_open = function(winnr)
       if vim.api.nvim_win_is_valid(winnr) then
-        vim.api.nvim_win_set_config(winnr, { border = "" })
+        vim.api.nvim_win_set_config(winnr, { border = "", focusable = false })
         vim.api.nvim_buf_set_option(vim.api.nvim_win_get_buf(winnr), "filetype", "markdown")
       end
     end,

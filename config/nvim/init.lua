@@ -12,7 +12,6 @@ vim.g.enabled_plugin = {
   windows = true,
   numbers = true,
   quickfix = true,
-  simplef = false, -- WIP: trialing flit/leap
   folds = true,
   tmux = false,
   env = false,
