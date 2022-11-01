@@ -18,6 +18,7 @@ vim.g.enabled_plugin = {
   winbar = false, -- FIXME: add more!
 }
 
+-- disable certain plugins for firenvim
 for plugin, _ in pairs(vim.g.enabled_plugin) do
   if not vim.tbl_contains({ "autocmds", "mappings", "quickfix" }, plugin) and vim.g.started_by_firenvim then
     plugin = false

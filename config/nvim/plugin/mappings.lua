@@ -282,6 +282,9 @@ cnoremap("<C-n>", "<Down>", { desc = "Line Down (command-mode)" })
 nnoremap("<C-f>", "<C-f>zz<Esc><Cmd>lua mega.blink_cursorline(75)<CR>")
 nnoremap("<C-b>", "<C-b>zz<Esc><Cmd>lua mega.blink_cursorline(75)<CR>")
 
+nnoremap("<C-u>", "<C-u>zz<Esc><Cmd>lua mega.blink_cursorline(75)<CR>")
+nnoremap("<C-d>", "<C-d>zz<Esc><Cmd>lua mega.blink_cursorline(75)<CR>")
+
 vnoremap([[J]], [[5j]], "Jump down")
 vnoremap([[K]], [[5k]], "Jump up")
 

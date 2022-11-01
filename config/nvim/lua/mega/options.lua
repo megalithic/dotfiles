@@ -498,6 +498,9 @@ do
   -- if not ok then
   --   vim.schedule(function() vim.notify(fmt("Colorscheme failed to load because: %s", msg), "error") end)
   -- end
+
+  -- nvim as man pager
+  vim.cmd("runtime ftplugin/man.vim")
 end
 
 -- vim:foldmethod=marker
