@@ -47,7 +47,8 @@
 
   c = commit
   cv = commit -v
-  cm = commit -m
+  ; cm = commit -m
+  cm = !git commit -m "$(gum input --placeholder 'Summary of changes')" -m "$(gum write --placeholder 'Details of changes (Ctrl+d to finish)')"
   ca = commit --amend
   cp = commit -p
 
