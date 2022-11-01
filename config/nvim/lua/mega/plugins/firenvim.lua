@@ -46,7 +46,7 @@ return function()
   local firenvim_onload = function(evt)
     vim.notify(fmt("firenvim_onload: %s", evt.event), vim.log.levels.DEBUG, { title = "firenvim" })
     vim.defer_fn(function()
-      vim.notify("firenvim_onload_defer_fn", vim.log.levels.DEBUG({ title = "firenvim" }))
+      vim.notify("firenvim_onload_defer_fn", vim.log.levels.DEBUG, { title = "firenvim" })
       vim.cmd.colorscheme("forestbones")
 
       do

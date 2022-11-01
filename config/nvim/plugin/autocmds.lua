@@ -51,6 +51,47 @@ do
   })
 end
 
+do
+  -- Skeletons (Templates)
+  -- REF:
+  -- - https://github.com/disrupted/dotfiles/blob/master/.config/nvim/plugin/skeletons.lua
+  -- - https://vimtricks.com/p/vim-file-templates/
+  -- - https://github.com/chrisgrieser/dotfiles/blob/main/.config/nvim/lua/options-and-autocmds.lua#L155-L177
+  local augroup = vim.api.nvim_create_augroup
+  local autocmd = vim.api.nvim_create_autocmd
+  augroup("Templates", {})
+  local filestypesWithSkeletons = { "lua", "sh", "applescript", "js", "ex", "rb" }
+  for i = 1, #filestypesWithSkeletons do
+    local ft = filestypesWithSkeletons[i]
+    autocmd("BufNewFile", {
+      group = "Templates",
+      pattern = "*." .. ft,
+      command = "0r ~/.config/nvim/templates/skeleton." .. ft .. " | normal! G",
+    })
+    -- BufReadPost + empty file as additional condition to also auto-insert
+    -- skeletons created by other apps
+    -- autocmd("BufReadPost", {
+    --   group = "Templates",
+    --   pattern = "*." .. ft,
+    --   callback = function()
+    --     local fileIsEmpty = fn.getfsize(fn.expand("%")) < 2 -- 2 to account for linebreak
+    --     if fileIsEmpty then vim.cmd("0r ~/.config/nvim/templates/skeleton." .. ft .. " | normal! G") end
+    --   end,
+    -- })
+  end
+  -- mega.augroup("Skeletons", {
+  --   {
+  --     event = { "BufNewFile" },
+  --     desc = "Load skeleton when creating new file",
+  --     command = function(args)
+  --       -- local ft = vim.api.nvim_buf_get_option(args.buf, "filetype")
+  --       -- local skeleton = skeletons[ft]
+  --       -- vim.cmd("read " .. skeleton .. " | 1delete_")
+  --     end,
+  --   },
+  -- })
+end
+
 augroup("CheckOutsideTime", {
   {
     -- automatically check for changed files outside vim
