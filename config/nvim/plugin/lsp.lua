@@ -332,16 +332,22 @@ local function setup_diagnostics()
 
   diagnostic.config({
     signs = {
-      -- With highest priority
       priority = 9999,
-      -- Only for warnings and errors
       severity = { min = "HINT", max = "ERROR" },
     },
     underline = { severity = { min = "HINT" } },
     severity_sort = true,
-    -- Show virtual text only for errors
-    -- virtual_text = false, -- { spacing = 1, prefix = "", severity = { min = "ERROR", max = "ERROR" } },
-    virtual_text = { spacing = 1, prefix = "•", severity = { min = "WARN", max = "ERROR" } },
+    virtual_text = {
+      spacing = 1,
+      prefix = "",
+      source = "if_many", -- or "always", "if_many" (for more than one source)
+      severity = { min = "WARN", max = "ERROR" },
+      format = function(d)
+        local lvl = diagnostic.severity[d.severity]
+        local icon = mega.icons.lsp[lvl:lower()]
+        return fmt("%s %s", icon, d.message)
+      end,
+    },
     update_in_insert = false,
     float = {
       show_header = true,
