@@ -261,7 +261,19 @@ return function(on_attach)
 
       lsp_setup(server_name, opts)
     end,
-    emmet_ls = function(server_name) lsp_setup(server_name) end,
+    emmet_ls = function(server_name)
+      local opts = vim.tbl_extend("keep", server_opts, {
+        settings = {
+          includeLanguages = {
+            ["html-eex"] = "html",
+            ["phoenix-heex"] = "html",
+            eelixir = "html",
+          },
+        },
+      })
+
+      lsp_setup(server_name, opts)
+    end,
     erlangls = function(server_name) lsp_setup(server_name) end,
     html = function(server_name)
       local opts = vim.tbl_extend("keep", server_opts, {

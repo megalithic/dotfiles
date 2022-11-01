@@ -263,9 +263,10 @@ function mega.ftplugin_conf(name, callback)
   end
 end
 
-function mega.plugin_setup(plugin_name, setup_tbl)
-  import(plugin_name, function(module) module.setup(setup_tbl) end)
-end
+-- function mega.plugin_setup(plugin_name, setup_tbl)
+--   local ok, plugin = mega.require(plugin_name)
+--   import(plugin_name, function(module) module.setup(setup_tbl) end)
+-- end
 
 --- @class ConfigOpts
 --- @field config table|function|string
@@ -284,16 +285,6 @@ function mega.conf(plugin_conf_name, opts)
   local silent = true
   local defer = false
   local fn_at_index = nil
-
-  local function string_loader(str)
-    -- local has_external_config, found_external_config = pcall(require, fmt("mega.plugins.%s", str))
-    -- if has_external_config then
-    --   if not silent then P(fmt("%s external config: %s", str, vim.inspect(config))) end
-    --   return found_external_config
-    -- end
-
-    return require(fmt("mega.plugins.%s", str))
-  end
 
   if type(opts) == "table" then
     -- config props go straight to the plugin setup
@@ -320,11 +311,6 @@ function mega.conf(plugin_conf_name, opts)
     defer = (opts.defer == nil) and false or opts.defer
 
     if not silent then P(fmt("%s (config table): %s", plugin_conf_name, vim.inspect(config))) end
-
-    -- handle what to do when opts.config is simply a string "name" to use for loading external config
-    if type(opts.config) == "string" then config = string_loader(opts.config) end
-  elseif type(opts) == "string" then
-    config = string_loader(opts)
   elseif type(opts) == "function" then
     config = opts
     enabled = true

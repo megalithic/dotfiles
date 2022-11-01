@@ -55,12 +55,68 @@ mega.augroup("megaline", {
 
 -- ( SETTERS ) -----------------------------------------------------------------
 
-local function seg(contents, hl, cond)
+--- @param hl string
+local function wrap(hl)
+  assert(hl, "A highlight name must be specified")
+  return "%#" .. hl .. "#"
+end
+
+local function seg(contents, hl, cond, opts)
+  if type(hl) == "table" then
+    opts = hl
+    hl = "Statusline"
+    cond = true
+  else
+    hl = hl or "Statusline"
+  end
+
+  -- effectively shifting the cond argument and using the table as opts
+  if type(cond) == "table" then
+    opts = cond
+    cond = true
+  end
+
   if cond ~= nil and not cond then return "" end
 
-  hl = hl or "Statusline"
-  local segment = "%#" .. hl .. "#" .. contents
-  return segment
+  --[[
+
+  -- |  -- --- --  | --
+  |  |  |   |   |  |  |
+  M  F  P   C   P  S  M
+
+  M - margin
+  F - prefix characters
+  P - padding
+  C - content
+  P - padding
+  S - suffix characters
+  M - margin
+
+  --]]
+
+  opts = vim.tbl_extend("force", {
+    margin = { 0, 0 },
+    prefix = "",
+    prefix_hl = "Statusline",
+    padding = { 0, 0 },
+    suffix = "",
+    suffix_hl = "Statusline",
+  }, opts or {})
+
+  -- local segment = "%#" .. hl .. "#" .. contents
+
+  return table.concat({
+    string.rep(" ", opts.margin[1]),
+    wrap(opts.prefix_hl),
+    opts.prefix,
+    wrap(hl),
+    string.rep(" ", opts.padding[1]),
+    contents,
+    string.rep(" ", opts.padding[2]),
+    wrap(opts.suffix_hl),
+    opts.suffix,
+    string.rep(" ", opts.margin[2]),
+  })
 end
 
 --- variable sized spacer
@@ -278,15 +334,10 @@ local function is_valid_git()
   return is_valid and status or is_valid
 end
 
---- @param hl string
-local function wrap_hl(hl)
-  assert(hl, "A highlight name must be specified")
-  return "%#" .. hl .. "#"
-end
-
 -- ( GETTERS ) -----------------------------------------------------------------
 
-local function get_diagnostics()
+local function get_diagnostics(seg_formatters_status)
+  seg_formatters_status = seg_formatters_status or ""
   local function count(lvl) return #vim.diagnostic.get(M.ctx.bufnr, { severity = lvl }) end
   if vim.tbl_isempty(vim.lsp.get_active_clients({ bufnr = M.ctx.bufnr })) then return "" end
 
@@ -302,7 +353,7 @@ local function get_diagnostics()
     if d.num > 0 then segments = fmt("%s %s", segments, seg(fmt("%s %s", d.sign, d.num), d.hl)) end
   end
 
-  return segments
+  return seg(segments .. " " .. seg_formatters_status, { margin = { 1, 1 } })
 end
 
 local function get_lsp_status(messages)
@@ -316,11 +367,14 @@ local function get_lsp_status(messages)
     end
     if msg.percentage then percentage = math.max(percentage or 0, msg.percentage) end
   end
+  local content = ""
   if percentage then
-    return string.format("%03d: %s", percentage, table.concat(result, ", "))
+    content = string.format("%03d: %s", percentage, table.concat(result, ", "))
   else
-    return table.concat(result, ", ")
+    content = table.concat(result, ", ")
   end
+
+  return seg(content, { margin = { 1, 1 } })
 end
 
 local function get_hydra_status()
@@ -447,7 +501,10 @@ local function seg_filename(truncate_at)
 
   local file_hl = M.ctx.modified and "StModified" or file.hl
 
-  return fmt("%s%s%s", seg(dir.item, dir.hl), seg(parent.item, parent.hl), seg(file.item, file_hl))
+  return seg(
+    fmt("%s%s%s", seg(dir.item, dir.hl), seg(parent.item, parent.hl), seg(file.item, file_hl)),
+    { margin = { 1, 1 } }
+  )
 end
 
 local function seg_prefix(truncate_at)
@@ -459,18 +516,17 @@ end
 local function seg_mode(truncate_at)
   local mode_info = MODES[api.nvim_get_mode().mode]
   local mode = is_truncated(truncate_at) and mode_info.short or mode_info.long
-  return seg(string.upper(mode), mode_info.hl)
+  return seg(string.upper(mode), mode_info.hl, { margin = { 1, 1 } })
 end
-
--- FIXME: find a better way to mix single use and diagnostics use
-local function seg_formatters_status() return seg(mega.icons.lsp.kind.Null, "StModeInsert", require("null-ls").enabled) end
 
 local function seg_lsp_status(truncate_at)
   if is_truncated(truncate_at) then return "" end
 
   local messages = vim.lsp.util.get_progress_messages()
 
-  if vim.tbl_isempty(messages) then return get_diagnostics() end
+  if vim.tbl_isempty(messages) then
+    return get_diagnostics(seg(mega.icons.lsp.kind.Null, "StModeInsert", require("null-ls").enabled))
+  end
 
   -- TODO: keep this if we move lsp progress to nvim-notify
   -- if vim.g.notifier_enabled and vim.o.cmdheight == 1 then return "" end
@@ -497,36 +553,43 @@ local function seg_lineinfo(truncate_at)
 
   local current_line = "%l"
   local last_line = "%L"
-  local current_col = "%-3c"
+  local current_col = "%-c" -- alts: "%-3c" (for padding of 3)
 
   -- Use virtual column number to allow update when paste last column
   if is_truncated(truncate_at) then return "%l/%L:%v" end
 
-  return table.concat({
-    "  ",
-    wrap_hl(prefix_color),
-    prefix,
-    " ",
-    wrap_hl(current_hl),
-    current_line,
-    wrap_hl(sep_hl),
-    sep,
-    wrap_hl(total_hl),
-    last_line,
-    wrap_hl(col_hl),
-    ":",
-    current_col,
-  })
+  return seg(
+    table.concat({
+      wrap(prefix_color),
+      prefix,
+      " ",
+      wrap(current_hl),
+      current_line,
+      wrap(sep_hl),
+      sep,
+      wrap(total_hl),
+      last_line,
+      wrap(col_hl),
+      ":",
+      current_col,
+    }),
+    { margin = { 1, 0 } }
+  )
 end
 
 local function seg_modified()
   if not M.ctx.modified then return "" end
 
-  return seg(fmt("[%s]", mega.icons.modified), "StModified")
+  return seg(fmt("[%s]", mega.icons.modified), "StModified", { margin = { 0, 1 } })
 end
 
 local function seg_search_results(truncate_at)
-  return seg(fmt(" %s ", get_search_results()), "StCount", not is_truncated(truncate_at) and vim.v.hlsearch > 0)
+  return seg(
+    fmt("%s", get_search_results()),
+    "StCount",
+    not is_truncated(truncate_at) and vim.v.hlsearch > 0,
+    { margin = { 1, 1 }, padding = { 1, 1 } }
+  )
 end
 
 local function seg_opened_terms(truncate_at)
@@ -561,7 +624,7 @@ local function seg_git_status(truncate_at)
   if not status then return "" end
 
   local branch = is_truncated(truncate_at) and mega.truncate(status.head or "", 11, false) or status.head
-  return seg(branch, "StGitBranch")
+  return seg(branch, "StGitBranch", { margin = { 1, 1 }, prefix = seg_git_symbol(80), padding = { 1, 0 } })
 end
 
 local function is_focused() return tonumber(vim.g.actual_curwin) == vim.api.nvim_get_current_win() end
@@ -590,33 +653,26 @@ function _G.__statusline()
 
   if is_plain() then
     local parts = {
-      seg_filename(120),
-      seg(" %m %r", "StModified"),
-      -- end left alignment
+      seg([[%<]]),
+      seg_filename(),
+      seg(fmt("[%s]", mega.icons.modified), "StModified", M.ctx.modified, { margin = { 0, 1 } }), -- alts: "%m"
+      seg(mega.icons.misc.lock, "StModified", M.ctx.readonly, { margin = { 0, 1 } }), -- alts: "%r"
       "%=",
     }
 
     return table.concat(parts, "")
   end
 
-  local parts = {
+  return table.concat({
     seg([[%<]]),
     seg_prefix(100),
-    seg_spacer(1),
     seg_mode(120),
-    seg_spacer(1),
-    seg_spacer(1),
     seg_filename(120),
-    seg_modified(),
-    seg_spacer(1),
-    seg("%r", "StModified"),
-    seg_spacer(1),
-    seg("%{&paste?'[paste] ':''}", "warningmsg"),
-    -- seg_spacer(1),
-    seg("Saving…", "StComment", vim.g.is_saving),
-    seg_spacer(1),
+    seg(fmt("[%s]", mega.icons.modified), "StModified", M.ctx.modified, { margin = { 0, 1 } }), -- alts: "%m"
+    seg(mega.icons.misc.lock, "StModified", M.ctx.readonly, { margin = { 0, 1 } }), -- alts: "%r"
+    -- seg("%{&paste?'[paste] ':''}", "warningmsg", { margin = { 1, 1 } }),
+    seg("Saving…", "StComment", vim.g.is_saving, { margin = { 0, 1 } }),
     seg_search_results(120),
-    seg_spacer(1),
     -- seg_opened_terms(120),
     -- end left alignment
     seg([[%=]]),
@@ -629,19 +685,11 @@ function _G.__statusline()
     seg("%*"),
     seg("%{(&fenc!='utf-8'&&&fenc!='')?'['.&fenc.'] ':''}", "warningmsg"),
     seg("%*"),
-    seg_spacer(2),
     seg_lsp_status(100),
-    seg_spacer(1),
-    seg_formatters_status(),
-    seg_spacer(2),
-    seg_git_symbol(80),
-    seg_spacer(1),
     seg_git_status(120),
     seg(get_dap_status()),
     seg_lineinfo(75),
-  }
-
-  return table.concat(parts, "")
+  })
 end
 
 vim.o.statusline = "%{%v:lua.__statusline()%}"

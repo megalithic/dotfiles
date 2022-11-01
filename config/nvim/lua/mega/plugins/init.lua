@@ -45,7 +45,7 @@ local function plugins(use)
   use({ "nvim-lua/popup.nvim" })
   use({ "dstein64/vim-startuptime", cmd = { "StartupTime" }, config = function() vim.g.startuptime_tries = 15 end })
   use({ "mattn/webapi-vim" })
-  use({ "miversen33/import.nvim" }) -- A better Lua 'require()'
+  -- use({ "miversen33/import.nvim" }) -- A better Lua 'require()'
 
   -- ( UI ) --------------------------------------------------------------------
   use({ "rktjmp/lush.nvim" })
@@ -87,6 +87,16 @@ local function plugins(use)
             if _G.mega.is_chonky(vim.api.nvim_get_current_buf()) then vim.cmd("ColorizerDetachFromBuffer") end
           end,
         },
+      })
+    end,
+  })
+  use({
+    "doums/monark.nvim",
+    opt = true,
+    config = function()
+      _G.mega.conf("monark", {
+        timeout = 1000,
+        offset = -2,
       })
     end,
   })
@@ -971,6 +981,6 @@ mega.nnoremap("<leader>px", "<Cmd>PackerClean<CR>", "packer: clean")
 
 vim.cmd.packadd({ "cfilter", bang = true })
 mega.require("impatient")
-mega.require("import")
+-- mega.require("import")
 
 return packer.setup(config, plugins)
