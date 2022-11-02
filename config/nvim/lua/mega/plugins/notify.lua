@@ -99,15 +99,17 @@ return function()
       end
     end,
     render = function(bufnr, notif, hls, _cfg)
-      -- P(I(notif))
       local ns = require("notify.render.base").namespace()
+      local title = (notif.title and mega.tlen(notif.title) > 0 and notif.title[1] ~= "") and notif.title[1] or "nvim"
+      local message = notif.message[1] and notif.message[1] or ""
+
       vim.api.nvim_buf_set_lines(bufnr, 0, 1, false, { "" })
       vim.api.nvim_buf_set_extmark(bufnr, ns, 0, 0, {
         virt_text = {
           { " " },
-          { notif.title[1], hls.title },
+          { title, hls.title },
           { " ⋮ " },
-          { notif.message[1], hls.body },
+          { message, hls.body },
         },
         virt_text_win_col = 0,
         priority = 10,
