@@ -94,6 +94,7 @@ local function plugins(use)
   use({ "MunifTanjim/nui.nvim" })
   use({ "folke/which-key.nvim", ext = "which-key" })
   use({ "phaazon/hop.nvim", ext = "hop" })
+  -- @trial multi-cursor: https://github.com/brendalf/dotfiles/blob/master/.config/nvim/lua/core/multi-cursor.lua
   use({
     "ggandor/leap.nvim",
     config = function()
@@ -531,14 +532,14 @@ local function plugins(use)
   })
 
   -- ( Completion ) ------------------------------------------------------------
-  use({ "rafamadriz/friendly-snippets", event = "InsertEnter" })
+  use({ "rafamadriz/friendly-snippets" })
   use({ "L3MON4D3/LuaSnip", after = "friendly-snippets", module = "luasnip" })
   use({
     "hrsh7th/nvim-cmp",
     ext = "cmp",
     after = "LuaSnip",
     module = "cmp",
-    event = "InsertEnter",
+    -- event = "InsertEnter",
     requires = {
       { "saadparwaiz1/cmp_luasnip", after = "nvim-cmp" },
       { "hrsh7th/cmp-buffer", after = "nvim-cmp" },
@@ -547,10 +548,10 @@ local function plugins(use)
       { "hrsh7th/cmp-path", after = "nvim-cmp" },
       { "hrsh7th/cmp-emoji", after = "nvim-cmp" },
       { "f3fora/cmp-spell", after = "nvim-cmp" },
-      { "hrsh7th/cmp-cmdline", after = "nvim-cmp", event = "CmdlineEnter" },
+      { "hrsh7th/cmp-cmdline", after = "nvim-cmp" },
       { "hrsh7th/cmp-nvim-lsp-signature-help", after = "nvim-cmp" },
       { "hrsh7th/cmp-nvim-lsp-document-symbol", after = "nvim-cmp" },
-      { "dmitmel/cmp-cmdline-history", after = "nvim-cmp", event = "CmdlineEnter" },
+      { "dmitmel/cmp-cmdline-history", after = "nvim-cmp" },
       { "lukas-reineke/cmp-rg", tag = "*", after = "nvim-cmp" },
     },
   })
