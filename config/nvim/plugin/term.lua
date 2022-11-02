@@ -176,6 +176,7 @@ end
 --   })
 -- end
 
+-- TODO: https://github.com/brendalf/mix.nvim/blob/main/lua/mix/window.lua#L1-L26
 local create_float = function(bufnr, size, caller_winnr)
   local parsed_size = (size / 100)
   local width = math.ceil(parsed_size * vim.o.columns)
@@ -282,10 +283,18 @@ local function set_keymaps()
 
   tmap("<esc>", [[<C-\><C-n>]], keymap_opts)
   -- TODO: :h wincmd; TL;DR - winnr .. wincmd w
-  tmap("<C-h>", [[<Cmd>wincmd h<CR>]], keymap_opts)
-  tmap("<C-j>", [[<Cmd>wincmd j<CR>]], keymap_opts)
-  tmap("<C-k>", [[<Cmd>wincmd k<CR>]], keymap_opts)
-  tmap("<C-l>", [[<Cmd>wincmd l<CR>]], keymap_opts)
+  tmap("<C-h>", fmt([[<Cmd>%swincmd h<CR>]], term.caller_winnr), keymap_opts)
+  tmap("<C-j>", fmt([[<Cmd>%swincmd j<CR>]], term.caller_winnr), keymap_opts)
+  tmap("<C-k>", fmt([[<Cmd>%swincmd k<CR>]], term.caller_winnr), keymap_opts)
+  tmap("<C-l>", fmt([[<Cmd>%swincmd l<CR>]], term.caller_winnr), keymap_opts)
+  -- tmap("<C-h>", fmt([[<Cmd>%swincmd w<CR>]], term.caller_winnr), keymap_opts)
+  -- tmap("<C-j>", fmt([[<Cmd>%swincmd w<CR>]], term.caller_winnr), keymap_opts)
+  -- tmap("<C-k>", fmt([[<Cmd>%swincmd w<CR>]], term.caller_winnr), keymap_opts)
+  -- tmap("<C-l>", fmt([[<Cmd>%swincmd w<CR>]], term.caller_winnr), keymap_opts)
+  -- tmap("<C-h>", [[<Cmd>wincmd p<CR>]], keymap_opts)
+  -- tmap("<C-j>", [[<Cmd>wincmd p<CR>]], keymap_opts)
+  -- tmap("<C-k>", [[<Cmd>wincmd p<CR>]], keymap_opts)
+  -- tmap("<C-l>", [[<Cmd>wincmd p<CR>]], keymap_opts)
   -- TODO: want a `<C-r>` or `;,` to pull up last executed command in the term
   -- TODO: want a `<C-b>` to auto scroll back and `<C-f>` to auto scroll forward in insert mode
 end
@@ -553,7 +562,6 @@ local function send_lines_to_terminal(selection_type, trim_spaces, cmd_data)
 
   for _, line in ipairs(lines) do
     local l = trim_spaces and line:gsub("^%s+", ""):gsub("%s+$", "") or line
-    -- M.exec(l, id)
     vim.fn.chansend(term.job_id, l)
   end
 

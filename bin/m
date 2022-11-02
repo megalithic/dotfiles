@@ -1,17 +1,25 @@
 #!/usr/bin/env bash
 
+[[ -f "$HOME/.config/zsh/lib/helpers.zsh" ]] && source "$HOME/.config/zsh/lib/helpers.zsh"
+
 # gleefully thieved from https://github.com/mhanberg/.dotfiles/blob/4cd05cb9c0985363a65657a43b12fa9a017686f1/bin/m
 # who stole it without remorse from https://github.com/wojtekmach/dotfiles/blob/master/bin/m
 
 set -e
+[[ -v DEBUG ]] && set -x
 
-if [ -f mix.lock ] && [ ! -d deps ]; then
+if [[ -f mix.lock ]] && [[ ! -d deps ]]; then
   mix deps.get
+fi
+
+if [[ -f .env ]]; then
+  log_ok "found .env file at root; sourcing.."
+  source .env
 fi
 
 case $1 in
   "")
-    if [ -f mix.exs ]; then
+    if [[ -f mix.exs ]]; then
       iex -S mix
     else
       iex
