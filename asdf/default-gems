@@ -7,6 +7,7 @@ fastri
 foreman
 github-auth
 language_server
+erb_lint
 neovim
 nokogiri
 pry
