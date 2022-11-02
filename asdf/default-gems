@@ -8,6 +8,7 @@ foreman
 github-auth
 language_server
 erb_lint
+rufo
 neovim
 nokogiri
 pry

@@ -153,6 +153,9 @@ return function()
     },
   }
 
+  config["eruby"] = { config["ruby"] }
+  config["erb"] = { config["ruby"] }
+
   local commonFT = {
     "css",
     "scss",

@@ -1,4 +1,4 @@
-return function(on_attach)
+return function()
   local fn = vim.fn
   local api = vim.api
   local lsp = vim.lsp
@@ -116,7 +116,6 @@ return function(on_attach)
   server_opts.flags = { debounce_text_changes = 150 }
   server_opts.capabilities = get_server_capabilities()
   server_opts.single_file_support = true
-  -- server_opts.on_attach = on_attach
 
   local function lsp_setup(server_name, opts)
     opts = vim.tbl_extend("keep", opts or {}, server_opts)
@@ -286,6 +285,7 @@ return function(on_attach)
           "heex",
           "html_heex",
           "html_eex",
+          "eruby",
         },
         init_options = {
           configurationSection = {
@@ -297,16 +297,13 @@ return function(on_attach)
             "html.heex",
             "html_heex",
             "html_eex",
+            "eruby",
           },
           embeddedLanguages = {
             css = true,
             javascript = true,
-            elixir = true,
-            eelixir = true,
-            heex = true,
-            html_heex = true,
-            html_eex = true,
           },
+          provideFormatter = true,
         },
       })
 
@@ -351,10 +348,12 @@ return function(on_attach)
     end,
     solargraph = function(server_name)
       local opts = vim.tbl_extend("keep", server_opts, {
+        single_file_support = false,
         settings = {
           solargraph = {
             diagnostics = true,
             useBundler = true,
+            formatting = true,
             folding = false,
             logLevel = "debug",
           },

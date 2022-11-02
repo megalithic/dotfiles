@@ -28,6 +28,8 @@ neovim
 prettier
 prettier-plugin-eex
 prettier-plugin-tailwindcss
+@prettier/plugin-ruby
+prettier-plugin-erb
 pyright
 rustywind
 stylelint
