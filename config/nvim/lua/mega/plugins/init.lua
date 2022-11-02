@@ -90,16 +90,6 @@ local function plugins(use)
       })
     end,
   })
-  use({
-    "doums/monark.nvim",
-    opt = true,
-    config = function()
-      _G.mega.conf("monark", {
-        timeout = 1000,
-        offset = -2,
-      })
-    end,
-  })
   use({ "lukas-reineke/virt-column.nvim" })
   use({ "MunifTanjim/nui.nvim" })
   use({ "folke/which-key.nvim", ext = "which-key" })

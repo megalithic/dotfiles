@@ -44,9 +44,9 @@ return function()
   }
 
   local firenvim_onload = function(evt)
-    vim.notify(fmt("firenvim_onload: %s", evt.event), vim.log.levels.DEBUG, { title = "firenvim" })
-    vim.defer_fn(function()
-      vim.notify("firenvim_onload_defer_fn", vim.log.levels.DEBUG, { title = "firenvim" })
+    -- vim.notify(fmt("firenvim_onload: %s", evt.event), vim.log.levels.DEBUG, { title = "firenvim" })
+    vim.schedule_wrap(function()
+      -- vim.notify("firenvim_onload_defer_fn", vim.log.levels.DEBUG, { title = "firenvim" })
       vim.cmd.colorscheme("forestbones")
 
       do
@@ -105,7 +105,7 @@ return function()
       -- if vim.api.nvim_buf_line_count(0) == 1 and vim.fn.prevnonblank(".") ~= vim.fn.line(".") then
       --   vim.cmd([[startinsert]])
       -- end
-    end, 750)
+    end)
   end
 
   function IsFirenvimActive(event)
