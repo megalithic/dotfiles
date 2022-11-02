@@ -14,5 +14,11 @@
   "tabWidth": 2,
   "trailingComma": "es5",
   "useTabs": false,
-  "vueIndentScriptAndStyle": false
+  "vueIndentScriptAndStyle": false,
+  "plugins": [
+    "@prettier/plugin-ruby",
+    "prettier-plugin-eex",
+    "prettier-plugin-erb",
+    "prettier-plugin-tailwindcss"
+  ]
 }

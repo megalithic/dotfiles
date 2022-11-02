@@ -40,6 +40,8 @@ vim.filetype.add({
     ["default-*%-packages"] = "conf",
     [".*%.gradle"] = "groovy",
     [".*%.env%..*"] = "env",
+    [".*%.prettierrc%..*"] = "jsonc",
+    [".*%.eslintrc%..*"] = "jsonc",
     [".*%.jst.eco"] = "jst",
     [".*%.html.en"] = "html",
   },
