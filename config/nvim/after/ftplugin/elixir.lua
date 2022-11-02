@@ -58,12 +58,15 @@ end
 
 local mix_exs_path_cache = nil
 
--- local M = {
---   mix_exs_path_cache = nil,
--- }
+local function desk_cmd()
+  local deskfile_cmd = ""
+  local deskfile_path = require("mega.utils").root_has_file("Deskfile")
+  if deskfile_path then deskfile_cmd = "eval $(desk load); " end
+  return deskfile_cmd
+end
 
 local function refresh_completions()
-  local cmd = "mix help | awk -F ' ' '{printf \"%s\\n\", $2}' | grep -E \"[^-#]\\w+\""
+  local cmd = desk_cmd() .. "mix help | awk -F ' ' '{printf \"%s\\n\", $2}' | grep -E \"[^-#]\\w+\""
 
   vim.g.mix_complete_list = vim.fn.system(cmd)
 
@@ -92,7 +95,7 @@ local function run_mix(action, args)
 
   if mix_exs_path then cd_cmd = table.concat({ "cd", mix_exs_path, "&&" }, " ") end
 
-  local cmd = { cd_cmd, "mix", action, args_as_str }
+  local cmd = { cd_cmd, desk_cmd(), "mix", action, args_as_str }
 
   return vim.fn.system(table.concat(cmd, " "))
 end

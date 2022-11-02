@@ -522,7 +522,6 @@ local function plugins(use)
         vim.g["gh_line_map"] = "<leader>gH"
         vim.g["gh_line_blame_map"] = "<leader>gB"
         vim.g["gh_repo_map"] = "<leader>gO"
-
         -- Use a custom program to open link:
         -- let g:gh_open_command = 'open '
         -- Copy link to a clipboard instead of opening a browser:

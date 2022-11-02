@@ -446,8 +446,9 @@ return function(on_attach)
                 "xmap",
                 "xnoremap",
               },
+              unusedLocalExclude = { "_*" },
             },
-            unusedLocalExclude = { "_*" },
+
             completion = { keywordSnippet = "Replace", callSnippet = "Replace" },
             workspace = {
               -- Don't analyze code from submodules

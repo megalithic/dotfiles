@@ -43,29 +43,25 @@ return function()
     },
   }
 
-  local firenvim_onload = function(evt)
-    -- vim.notify(fmt("firenvim_onload: %s", evt.event), vim.log.levels.DEBUG, { title = "firenvim" })
-    vim.schedule_wrap(function()
-      -- vim.notify("firenvim_onload_defer_fn", vim.log.levels.DEBUG, { title = "firenvim" })
+  local firenvim_onload = function(_evt)
+    vim.defer_fn(function()
       vim.cmd.colorscheme("forestbones")
 
-      do
-        local ok, headlines = mega.require("headlines")
-        if ok then
-          headlines.setup({
-            markdown = {
-              headline_highlights = false,
-              dash_highlight = false,
-              codeblock_highlight = false,
-            },
-          })
-        end
+      -- disable headlines (until we update colours for forestbones)
+      local ok_headlines, headlines = mega.require("headlines")
+      if ok_headlines then
+        headlines.setup({
+          markdown = {
+            headline_highlights = false,
+            dash_highlight = false,
+            codeblock_highlight = false,
+          },
+        })
       end
 
-      do
-        local ok, cmp = mega.require("cmp")
-        if ok then cmp.setup({ autocomplete = false }) end
-      end
+      -- disable cmp autocomplete
+      local ok_cmp, cmp = mega.require("cmp")
+      if ok_cmp then cmp.setup({ autocomplete = false }) end
 
       vim.opt.wrap = true
       vim.opt.linebreak = true
@@ -105,7 +101,7 @@ return function()
       -- if vim.api.nvim_buf_line_count(0) == 1 and vim.fn.prevnonblank(".") ~= vim.fn.line(".") then
       --   vim.cmd([[startinsert]])
       -- end
-    end)
+    end, 750)
   end
 
   function IsFirenvimActive(event)
