@@ -1,39 +1,32 @@
 return function()
-  -- local ok, null = pcall(require, "null-ls")
-  -- if not ok then return end
-  local null = require("null-ls")
+  local nls = require("null-ls")
 
-  local format = null.builtins.formatting
-  local diag = null.builtins.diagnostics
+  local format = nls.builtins.formatting
+  local diag = nls.builtins.diagnostics
   -- local actions = nls.builtins.code_actions
   -- local completion = nls.builtins.completion
+  -- local helpers = require("null-ls.helpers")
 
-  null.setup({
+  -- NOTE: this is/was the only formatter that would work for eruby files;
+  -- none of the built-ins would do the trick.
+  local erb_format = {
+    method = nls.methods.FORMATTING,
+    filetypes = { "eruby" },
+    generator = nls.formatter({
+      command = "erb-format",
+      args = { "--stdin-filename", "$FILENAME" }, --vim.fn.shellescape(vim.api.nvim_buf_get_name(0)) },
+      to_stdin = true,
+    }),
+  }
+  nls.register(erb_format)
+
+  nls.setup({
     debounce = vim.g.is_local_dev and 200 or 500,
     default_timeout = 500, -- vim.g.is_local_dev and 500 or 3000,
     -- root_dir = require("null-ls.utils").root_pattern(".null-ls-root", ".neoconf.json", ".git"),
     sources = {
       format.trim_whitespace.with({ filetypes = { "*" } }),
-      format.prettier.with({
-        filetypes = {
-          "javascript",
-          "javascriptreact",
-          "typescript",
-          "typescriptreact",
-          "css",
-          "scss",
-          "eruby",
-          "html",
-          "svg",
-          "json",
-          "jsonc",
-          "yaml",
-          "graphql",
-          "markdown",
-        },
-        condition = function() return mega.executable("prettier") end,
-      }),
-      -- format.prettierd.with({
+      -- format.prettier.with({
       --   filetypes = {
       --     "javascript",
       --     "javascriptreact",
@@ -50,19 +43,28 @@ return function()
       --     "graphql",
       --     "markdown",
       --   },
-      --   condition = function() return mega.executable("prettierd") end,
+      --   condition = function() return mega.executable("prettier") end,
       -- }),
+      format.prettierd.with({
+        filetypes = {
+          "javascript",
+          "javascriptreact",
+          "typescript",
+          "typescriptreact",
+          "css",
+          "scss",
+          "eruby",
+          "html",
+          "svg",
+          "json",
+          "jsonc",
+          "yaml",
+          "graphql",
+          "markdown",
+        },
+        condition = function() return mega.executable("prettierd") end,
+      }),
       format.fixjson.with({ filetypes = { "jsonc", "json" } }),
-      -- format.rufo.with({
-      --   filetypes = { "eruby" },
-      --   additional_filetypes = { "eruby" },
-      --   condition = function() return mega.executable("rufo") end,
-      -- }),
-      -- format.erb_lint.with({
-      --   filetypes = { "eruby" },
-      --   additional_filetypes = { "eruby" },
-      --   condition = function() return mega.executable("erblint") end,
-      -- }),
       format.cbfmt:with({
         condition = function() return mega.executable("cbfmt") end,
       }),
@@ -142,11 +144,11 @@ return function()
     },
   })
 
-  null.enabled = true
+  nls.enabled = true
   local toggle_null_formatters = function()
-    null.enabled = not null.enabled
-    mega.lsp.null_formatters_enabled = not null.enabled
-    null.toggle({ methods = null.methods.FORMATTING })
+    nls.enabled = not nls.enabled
+    mega.lsp.null_formatters_enabled = not nls.enabled
+    nls.toggle({ methods = nls.methods.FORMATTING })
   end
 
   mega.command("ToggleNullFormatters", toggle_null_formatters)

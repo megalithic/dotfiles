@@ -138,7 +138,7 @@ return function()
           args = {
             "--fix-layout",
             "--stdin",
-            require("formatter.util").escape_path(require("formatter.util").get_current_buffer_file_name()),
+            vim.fn.shellescape(vim.api.nvim_buf_get_name(0)),
             "--format",
             "files",
           },
@@ -151,10 +151,21 @@ return function()
         }
       end,
     },
+    -- NOTE: this is/was the only formatter that would work for eruby files;
+    -- none of the built-ins would do the trick.
+    eruby = {
+      function()
+        return {
+          exe = "erb-format",
+          args = {
+            "--stdin-filename",
+            vim.fn.shellescape(vim.api.nvim_buf_get_name(0)),
+          },
+          stdin = true,
+        }
+      end,
+    },
   }
-
-  config["eruby"] = { config["ruby"] }
-  config["erb"] = { config["ruby"] }
 
   local commonFT = {
     "css",
