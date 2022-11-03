@@ -14,11 +14,6 @@ function M.conf(name)
   return require(fmt("mega.plugins.%s", name))
 end
 
-local function reload()
-  mega.invalidate("mega.plugins", true)
-  require("packer").compile()
-end
-
 local function setup_autocmds()
   mega.augroup("PackerSetupInit", {
     {

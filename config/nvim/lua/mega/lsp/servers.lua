@@ -266,7 +266,7 @@ return function()
           includeLanguages = {
             ["html-eex"] = "html",
             ["phoenix-heex"] = "html",
-            eelixir = "html",
+            eruby = "html",
           },
         },
       })

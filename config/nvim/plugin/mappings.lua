@@ -46,10 +46,10 @@ for i = 0, 9 do
   local key_string = tostring(i + 1)
   nnoremap("<localleader>" .. key_string, fmt("<cmd>%stabnext<cr>", key_string), fmt("tab: jump to tab %s", key_string))
 end
-map({ "i", "n", "t" }, "<C-Right>", ":tabn<CR>", { desc = "next tab" })
-map({ "i", "n", "t" }, "<C-Left>", ":tabp<CR>", { desc = "prev tab" })
-map({ "i", "n", "t" }, "<C-Up>", ":+tabmove<CR>", { desc = "move tab right" })
-map({ "i", "n", "t" }, "<C-Down>", ":-tabmove<CR>", { desc = "move tab left" })
+map({ "i", "n", "t" }, "<C-Right>", ":tabn<CR>", { desc = "next tab", remap = true })
+map({ "i", "n", "t" }, "<C-Left>", ":tabp<CR>", { desc = "prev tab", remap = true })
+map({ "i", "n", "t" }, "<C-Up>", ":+tabmove<CR>", { desc = "move tab right", remap = true })
+map({ "i", "n", "t" }, "<C-Down>", ":-tabmove<CR>", { desc = "move tab left", remap = true })
 
 nmap("gb", string.format("<cmd>ls<CR>:b<space>%s", mega.replace_termcodes("<tab>")), "current buffers")
 nmap("gs", "i<CR><ESC>^mwgk:silent! s/\v +$//<CR>:noh<CR>`w", "split line")

@@ -51,6 +51,10 @@ ghurl() {
 }
 
 function __close_all_apps() {
+  if [[ "$(uname)" != "Darwin" ]]; then
+    exit 0
+  fi
+
   apps=$(osascript -e 'tell application "System Events" to get name of (processes where background only is false)' | awk -F ', ' '{for(i=1;i<=NF;i++) printf "%s;", $i}')
   while [ "$apps" ] ;do
     app=${apps%%;*}
@@ -62,8 +66,8 @@ function __close_all_apps() {
     [ "$apps" = "$app" ] && \
       apps='' || \
       apps="${apps#*;}"
-    done
-  }
+  done
+}
 
 function reboot() {
   __close_all_apps
@@ -235,26 +239,26 @@ function fgstash() {
   local out q k sha
   while out=$(
     git stash list --pretty="%C(yellow)%h %>(14)%Cgreen%cr %C(blue)%gs" |
-      fzf --ansi --no-sort --query="$q" --print-query \
+    fzf --ansi --no-sort --query="$q" --print-query \
       --expect=ctrl-d,ctrl-b
-          ); do
-          mapfile -t out <<<"$out"
-          q="${out[0]}"
-          k="${out[1]}"
-          sha="${out[-1]}"
-          sha="${sha%% *}"
-          [[ -z "$sha" ]] && continue
-          if [[ "$k" == 'ctrl-d' ]]; then
-            git diff $sha
-          elif [[ "$k" == 'ctrl-b' ]]; then
-            git stash branch "stash-$sha" $sha
-            break
-          else
-            git stash show -p $sha
-          fi
-        done
-      }
-    alias fstash=fgstash
+    ); do
+    mapfile -t out <<<"$out"
+    q="${out[0]}"
+    k="${out[1]}"
+    sha="${out[-1]}"
+    sha="${sha%% *}"
+    [[ -z "$sha" ]] && continue
+    if [[ "$k" == 'ctrl-d' ]]; then
+      git diff $sha
+    elif [[ "$k" == 'ctrl-b' ]]; then
+      git stash branch "stash-$sha" $sha
+      break
+    else
+      git stash show -p $sha
+    fi
+  done
+}
+alias fstash=fgstash
 
 # Test whether a given command exists
 # Adapted from http://stackoverflow.com/questions/592620/check-if-a-program-exists-from-a-bash-script/3931779#3931779
@@ -327,7 +331,7 @@ path() {
     sub(\"/local\", \"$fg_no_bold[yellow]/local$reset_color\"); \
     sub(\"/.rvm\",  \"$fg_no_bold[red]/.rvm$reset_color\"); \
     print }"
-  }
+}
 
 fpath() {
   echo $FPATH | tr ":" "\n" | \
@@ -338,7 +342,7 @@ fpath() {
     sub(\"/local\", \"$fg_no_bold[yellow]/local$reset_color\"); \
     sub(\"/.rvm\",  \"$fg_no_bold[red]/.rvm$reset_color\"); \
     print }"
-  }
+}
 
 mcd() { mkdir -p $1 && cd $1 }
 alias cdm=mcd
@@ -356,8 +360,8 @@ codi() {
       hi ColorColumn ctermbg=NONE |\
         hi VertSplit ctermbg=NONE |\
         hi NonText ctermfg=0 |\
-        Codi $syntax" "$@"
-      }
+    Codi $syntax" "$@"
+}
 
 # iron.nvim
 # Usage: repl [filetype] [filename]
@@ -371,7 +375,7 @@ iron() {
     hi VertSplit ctermbg=NONE |\
     hi NonText ctermfg=0 |\
     call IronStartRepl('$syntax', 0, 1)"
-  }
+}
 
 ## FZF FUNCTIONS ##
 
@@ -394,10 +398,10 @@ fh() {
 fgb() {
   local branches branch
   branches=$(git for-each-ref --count=30 --sort=-committerdate refs/heads/ --format="%(refname:short)") &&
-    branch=$(echo "$branches" |
-    fzf-tmux -d $(( 2 + $(wc -l <<< "$branches") )) +m) &&
-    git checkout $(echo "$branch" | sed "s/.* //" | sed "s#remotes/[^/]*/##")
-  }
+  branch=$(echo "$branches" |
+  fzf-tmux -d $(( 2 + $(wc -l <<< "$branches") )) +m) &&
+  git checkout $(echo "$branch" | sed "s/.* //" | sed "s#remotes/[^/]*/##")
+}
 
 # tm [SESSION_NAME | FUZZY PATTERN] - delete tmux session
 # Running `tm` will let you fuzzy-find a session mame to delete
@@ -431,8 +435,8 @@ fzstash() {
   local out q k sha
   while out=$(
     git stash list --pretty="%C(yellow)%h %>(14)%Cgreen%cr %C(blue)%gs" |
-      fzf --ansi --no-sort --query="$q" --print-query \
-      --expect=ctrl-d,ctrl-b);
+    fzf --ansi --no-sort --query="$q" --print-query \
+    --expect=ctrl-d,ctrl-b);
   do
     mapfile -t out <<< "$out"
     q="${out[0]}"
@@ -455,15 +459,15 @@ fzstash() {
 #
 # Usage: palette
 palette() {
-    local -a colors
-    for i in {000..255}; do
-        colors+=("%F{$i}$i%f")
-    done
-    print -cP $colors
+  local -a colors
+  for i in {000..255}; do
+    colors+=("%F{$i}$i%f")
+  done
+  print -cP $colors
 }
 
 # Usage: printc COLOR_CODE
 printc() {
-    local color="%F{$1}"
-    echo -E ${(qqqq)${(%)color}}
+  local color="%F{$1}"
+  echo -E ${(qqqq)${(%)color}}
 }

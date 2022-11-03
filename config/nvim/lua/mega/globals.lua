@@ -117,21 +117,6 @@ _G.Clipboard = {
   copy = function(str) vim.fn.jobstart(string.format("echo -n %q | pbcopy", str), { detach = true }) end,
 }
 
-function _G.recompile()
-  if vim.bo.buftype == "" then
-    if vim.fn.exists(":LspStop") ~= 0 then vim.cmd("LspStop") end
-
-    for name, _ in pairs(package.loaded) do
-      if name:match("^user") then package.loaded[name] = nil end
-    end
-
-    dofile(vim.env.MYVIMRC)
-    vim.cmd("PackerCompile")
-  else
-    vim.notify("not able to recompile in this buffer", vim.log.levels.WARN, { title = "packer" })
-  end
-end
-
 function mega.dump_colors(filter)
   local defs = {}
   for hl_name, hl in pairs(vim.api.nvim__get_hl_defs(0)) do
@@ -152,6 +137,12 @@ function mega.dump_colors(filter)
   end
   dump(defs)
 end
+
+function _G.reload()
+  mega.invalidate("mega.plugins", true)
+  vim.cmd("PackerCompile")
+end
+_G.recompile = _G.reload
 
 local installed
 ---Check if a plugin is on the system; whether or not it is loaded
