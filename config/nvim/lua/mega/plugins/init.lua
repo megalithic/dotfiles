@@ -1,7 +1,7 @@
 -- local PACKER_COMPILED_PATH = fmt("%s/packer/packer_compiled.lua", vim.fn.stdpath("cache"))
 local PACKER_COMPILED_PATH = fmt("%s/plugin/packer_compiled.lua", vim.fn.stdpath("config"))
 local PACKER_SNAPSHOTS_PATH = fmt("%s/packer/snapshots/", vim.fn.stdpath("cache"))
-local mega = _G.mega or require("mega.globals")
+vim.g.PACKER_COMPILED_PATH = PACKER_COMPILED_PATH
 
 local packer = require("mega.plugins.utils")
 local packer_notify = packer.notify
@@ -11,6 +11,7 @@ local config = {
   display = {
     open_cmd = "silent topleft 50vnew",
   },
+  disable_commands = true,
   auto_reload_compiled = false,
   non_interactive = vim.g.PACKER_NON_INTERACTIVE or vim.env.PACKER_NON_INTERACTIVE or false,
   compile_path = PACKER_COMPILED_PATH,

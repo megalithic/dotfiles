@@ -14,7 +14,7 @@ return function()
     filetypes = { "eruby" },
     generator = nls.formatter({
       command = "erb-format",
-      args = { "--stdin-filename", "$FILENAME" }, --vim.fn.shellescape(vim.api.nvim_buf_get_name(0)) },
+      args = { "--stdin-filename", "$FILENAME" },
       to_stdin = true,
     }),
   }
@@ -22,29 +22,10 @@ return function()
 
   nls.setup({
     debounce = vim.g.is_local_dev and 200 or 500,
-    default_timeout = 500, -- vim.g.is_local_dev and 500 or 3000,
+    default_timeout = vim.g.is_local_dev and 500 or 2000,
     -- root_dir = require("null-ls.utils").root_pattern(".null-ls-root", ".neoconf.json", ".git"),
     sources = {
       format.trim_whitespace.with({ filetypes = { "*" } }),
-      -- format.prettier.with({
-      --   filetypes = {
-      --     "javascript",
-      --     "javascriptreact",
-      --     "typescript",
-      --     "typescriptreact",
-      --     "css",
-      --     "scss",
-      --     "eruby",
-      --     "html",
-      --     "svg",
-      --     "json",
-      --     "jsonc",
-      --     "yaml",
-      --     "graphql",
-      --     "markdown",
-      --   },
-      --   condition = function() return mega.executable("prettier") end,
-      -- }),
       format.prettierd.with({
         filetypes = {
           "javascript",
@@ -68,7 +49,7 @@ return function()
       format.cbfmt:with({
         condition = function() return mega.executable("cbfmt") end,
       }),
-      format.stylua.with({ -- sumneko now formats!
+      format.stylua.with({
         condition = function()
           return mega.executable("stylua")
             and not vim.tbl_isempty(vim.fs.find({ ".stylua.toml", "stylua.toml" }, {
@@ -117,7 +98,6 @@ return function()
       format.markdownlint,
       format.shfmt.with({
         extra_args = { "-i", "2", "-ci" }, -- suggested: { "-i", "2", "-ci" } or { "-ci", "-s", "-bn", "-i", "2" }
-        -- extra_args = { "-ci", "-s", "-bn", "-i", "2" }, -- suggested: { "-i", "2", "-ci" }
         filetypes = { "sh", "bash" },
       }),
       diag.flake8.with({

@@ -117,6 +117,21 @@ _G.Clipboard = {
   copy = function(str) vim.fn.jobstart(string.format("echo -n %q | pbcopy", str), { detach = true }) end,
 }
 
+function _G.recompile()
+  if vim.bo.buftype == "" then
+    if vim.fn.exists(":LspStop") ~= 0 then vim.cmd("LspStop") end
+
+    for name, _ in pairs(package.loaded) do
+      if name:match("^user") then package.loaded[name] = nil end
+    end
+
+    dofile(vim.env.MYVIMRC)
+    vim.cmd("PackerCompile")
+  else
+    vim.notify("not able to recompile in this buffer", vim.log.levels.WARN, { title = "packer" })
+  end
+end
+
 function mega.dump_colors(filter)
   local defs = {}
   for hl_name, hl in pairs(vim.api.nvim__get_hl_defs(0)) do
@@ -1180,11 +1195,6 @@ do
     vim.cmd(fmt("lua P(%s)", opts.args))
     vim.g.debug_enabled = false
   end, { nargs = "*" })
-  -- command("P", "<cmd>lua P(<args>)", { nargs = "?" })
-  -- command("P", function(opts)
-  --   local opts = opts.args or "¯\\_(ツ)_/¯"
-  --   _G.P(opts)
-  -- end, { nargs = "?" })
 
   mega.command("PackerUpgrade", function()
     vim.schedule(function()
@@ -1193,17 +1203,24 @@ do
       require("mega.plugins.utils").sync()
     end)
   end)
+  mega.command("PackerCompile", function()
+    vim.cmd("packadd! packer.nvim")
+    vim.notify("waiting for compilation", vim.log.levels.INFO, { title = "packer" })
+    require("packer").compile()
+    vim.cmd.source(vim.g.PACKER_COMPILED_PATH)
+    vim.g.packer_compiled_loaded = true
+  end, { nargs = "*" })
+  mega.command("Recompile", function() recompile() end, { nargs = "*" })
 
-  vim.cmd([[command! PackerInstall packadd packer.nvim | lua require('packer').install()]])
-  vim.cmd([[command! PackerUpdate packadd packer.nvim | lua require('packer').update()]])
-  vim.cmd([[command! PackerSync packadd packer.nvim | lua require('packer').sync()]])
-  vim.cmd([[command! PackerClean packadd packer.nvim | lua require('packer').clean()]])
-  vim.cmd([[command! PackerCompile packadd packer.nvim | lua require('packer').compile()]])
+  vim.cmd([[command! PackerInstall packadd! packer.nvim | lua require('packer').install()]])
+  vim.cmd([[command! PackerUpdate packadd! packer.nvim | lua require('packer').update()]])
+  vim.cmd([[command! PackerSync packadd! packer.nvim | lua require('packer').sync()]])
+  vim.cmd([[command! PackerClean packadd! packer.nvim | lua require('packer').clean()]])
+  vim.cmd([[command! PR Recompile]])
   vim.cmd([[command! PC PackerCompile]])
   vim.cmd([[command! PS PackerStatus]])
   vim.cmd([[command! PU PackerSync]])
   vim.cmd([[command! Noti Mess | Notifications]])
-  -- vim.cmd([[command! Noti Mess | NotifierReplay!]])
 end
 
 return mega
