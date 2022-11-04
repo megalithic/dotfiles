@@ -73,7 +73,7 @@ return function()
       vim.opt_local.cursorline = true
 
       require("mega.globals").nnoremap(
-        "<Esc><Esc>",
+        "<Esc>",
         "<cmd>wall | call firenvim#hide_frame() | call firenvim#press_keys('<LT>Esc>') | call firenvim#focus_page()<CR>"
       )
       require("mega.globals").nnoremap(
@@ -92,15 +92,12 @@ return function()
         "q",
         "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR><Esc>norm! ggdGa<CR>"
       )
-      -- vim.defer_fn(function() vim.opt.guifont = "FiraCode Nerd Font Mono:h22" end, 1000)
       vim.opt.guifont = "JetBrainsMono_Nerd_Font_Mono:h22"
       -- if vim.o.lines < 30 then vim.o.lines = 30 end
-      vim.cmd([[exec "norm gg"]]) -- test: 聆
+      vim.cmd([[exec "norm gg"]])
 
-      -- print(string.format("lines: %d", vim.api.nvim_buf_line_count(0)))
-      -- if vim.api.nvim_buf_line_count(0) == 1 and vim.fn.prevnonblank(".") ~= vim.fn.line(".") then
-      --   vim.cmd([[startinsert]])
-      -- end
+      local buf_lines = vim.api.nvim_buf_get_lines(0, 0, -1, true)
+      if _G.mega(buf_lines) == 1 and buf_lines[1] == "" then vim.cmd([[startinsert]]) end
     end, 750)
   end
 
