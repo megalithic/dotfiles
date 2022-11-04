@@ -9,11 +9,11 @@ local packer_notify = packer.notify
 local config = {
   -- opt_default = true,
   display = {
-    open_cmd = "silent topleft 50vnew",
+    open_cmd = "silent topleft 60vnew",
+    -- non_interactive = vim.env.PACKER_NON_INTERACTIVE or vim.g.PACKER_NON_INTERACTIVE or false,
   },
   disable_commands = true,
   auto_reload_compiled = false,
-  non_interactive = vim.g.PACKER_NON_INTERACTIVE or vim.env.PACKER_NON_INTERACTIVE or false,
   compile_path = PACKER_COMPILED_PATH,
   ensure_dependencies = true,
   snapshot_path = PACKER_SNAPSHOTS_PATH,
@@ -972,6 +972,11 @@ mega.nnoremap("<leader>px", "<Cmd>PackerClean<CR>", "packer: clean")
 
 vim.cmd.packadd({ "cfilter", bang = true })
 mega.require("impatient")
--- mega.require("import")
 
+-- return {
+--   config = config,
+--   plugins = plugins,
+--   setup = function() return packer.setup(config, plugins) end,
+-- }
+--
 return packer.setup(config, plugins)

@@ -9,10 +9,7 @@ local PACKER_INSTALL_PATH = fmt("%s/site/pack/packer/%s/packer.nvim", fn.stdpath
 -- ---@param msg string
 function M.notify(msg, level) vim.notify(msg, level, { title = "packer" }) end
 
-function M.conf(name)
-  -- P(name)
-  return require(fmt("mega.plugins.%s", name))
-end
+function M.conf(name) return require(fmt("mega.plugins.%s", name)) end
 
 local function setup_autocmds()
   mega.augroup("PackerSetupInit", {
@@ -20,13 +17,13 @@ local function setup_autocmds()
       event = { "BufWritePost" },
       pattern = { "*/mega/plugins/*.lua" },
       desc = "setup and reloaded",
-      command = reload,
+      command = mega.reload,
     },
     {
       event = { "User" },
       pattern = { "VimrcReloaded" },
       desc = "setup and reloaded",
-      command = reload,
+      command = mega.reload,
     },
     {
       event = { "User" },
@@ -37,8 +34,10 @@ local function setup_autocmds()
       event = { "User" },
       pattern = { "PackerComplete" },
       command = function()
-        M.notify("packer sync finished")
-        -- vim.cmd("quitall!")
+        M.notify("updates finished")
+        vim.defer_fn(function()
+          if vim.env.PACKER_NON_INTERACTIVE then vim.cmd("quitall!") end
+        end, 100)
       end,
     },
   })
@@ -52,7 +51,6 @@ function M.bootstrap(compile_path)
     )
     vim.fn.delete(compile_path)
     vim.cmd.packadd({ "packer.nvim", bang = true })
-    -- require("packer").sync()
     return true
   end
 
@@ -94,8 +92,6 @@ end
 -- processes external config strings
 function M.process_ext_configs(spec)
   if spec.ext then spec.config = M.conf(spec.ext) end
-  --print(I(spec))
-
   return spec
 end
 
@@ -107,7 +103,7 @@ function M.wrap(use)
   end
 end
 
-function M.sync()
+function M.sync(config, plugins)
   -- HACK: see https://github.com/wbthomason/packer.nvim/issues/180
   vim.fn.setenv("MACOSX_DEPLOYMENT_TARGET", "10.15")
 
@@ -115,15 +111,11 @@ function M.sync()
   setup_autocmds()
 
   local packer = require("packer")
-  require("packer").sync()
-  -- require("packer").sync(nil, {
-  --   auto_reload_compiled = true,
-  --   preview_updates = true,
-  --   display = {
-  --     non_interactive = false, -- If true, disable display windows for all operations
-  --     open_fn = function() return require("packer.util").float({ border = mega.get_border() }) end,
-  --   },
-  -- })
+  if config and plugins then
+    packer.sync(config, plugins)
+  else
+    packer.sync()
+  end
 end
 
 function M.setup(config, plugins_fn)

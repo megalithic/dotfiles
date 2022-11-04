@@ -138,11 +138,11 @@ function mega.dump_colors(filter)
   dump(defs)
 end
 
-function _G.reload()
+function mega.reload()
   mega.invalidate("mega.plugins", true)
   vim.cmd("PackerCompile")
 end
-_G.recompile = _G.reload
+mega.recompile = mega.reload
 
 local installed
 ---Check if a plugin is on the system; whether or not it is loaded
@@ -1190,25 +1190,36 @@ do
 
   mega.command("PackerUpgrade", function()
     vim.schedule(function()
-      -- vim.g.PACKER_NON_INTERACTIVE = true
       require("mega.plugins.utils").bootstrap()
+      -- local config = vim.tbl_extend("force", require("mega.plugins").config, {
+      --   display = {
+      --     -- open_cmd = "silent topleft 60vnew",
+      --     open_fn = require("packer.util").float,
+      --     non_interactive = vim.env.PACKER_NON_INTERACTIVE or vim.g.PACKER_NON_INTERACTIVE or false,
+      --   },
+      -- })
+
+      -- local plugins = require("mega.plugins").plugins
+      -- require("mega.plugins.utils").sync(config, plugins)
       require("mega.plugins.utils").sync()
     end)
   end)
   mega.command("PackerCompile", function()
     vim.cmd("packadd! packer.nvim")
-    vim.notify("waiting for compilation", vim.log.levels.INFO, { title = "packer" })
+    vim.notify("waiting for compilation..", vim.log.levels.INFO, { title = "packer" })
     require("packer").compile()
     vim.cmd.source(vim.g.PACKER_COMPILED_PATH)
     vim.g.packer_compiled_loaded = true
   end, { nargs = "*" })
-  mega.command("Recompile", function() recompile() end, { nargs = "*" })
+  mega.command("Recompile", function() mega.recompile() end, { nargs = "*" })
+  mega.command("Reload", function() mega.reload() end, { nargs = "*" })
 
   vim.cmd([[command! PackerInstall packadd! packer.nvim | lua require('packer').install()]])
   vim.cmd([[command! PackerUpdate packadd! packer.nvim | lua require('packer').update()]])
   vim.cmd([[command! PackerSync packadd! packer.nvim | lua require('packer').sync()]])
   vim.cmd([[command! PackerClean packadd! packer.nvim | lua require('packer').clean()]])
   vim.cmd([[command! PR Recompile]])
+  vim.cmd([[command! PR Reload]])
   vim.cmd([[command! PC PackerCompile]])
   vim.cmd([[command! PS PackerStatus]])
   vim.cmd([[command! PU PackerSync]])
