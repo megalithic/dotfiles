@@ -15,10 +15,4 @@
   "trailingComma": "es5",
   "useTabs": false,
   "vueIndentScriptAndStyle": false,
-  "plugins": [
-    "@prettier/plugin-ruby",
-    "prettier-plugin-eex",
-    "prettier-plugin-erb",
-    "prettier-plugin-tailwindcss"
-  ]
 }
