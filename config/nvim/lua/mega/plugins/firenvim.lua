@@ -43,62 +43,68 @@ return function()
     },
   }
 
-  local firenvim_onload = function(_evt)
-    vim.defer_fn(function()
-      vim.cmd.colorscheme("forestbones")
+  local firenvim_onload = function(evt)
+    -- vim.defer_fn(function()
+    vim.cmd.colorscheme("forestbones")
 
-      -- disable headlines (until we update colours for forestbones)
-      local ok_headlines, headlines = mega.require("headlines")
-      if ok_headlines then
-        headlines.setup({
-          markdown = {
-            headline_highlights = false,
-            dash_highlight = false,
-            codeblock_highlight = false,
-          },
-        })
-      end
+    -- disable headlines (until we update colours for forestbones)
+    local ok_headlines, headlines = mega.require("headlines")
+    if ok_headlines then
+      headlines.setup({
+        markdown = {
+          headline_highlights = false,
+          dash_highlight = false,
+          codeblock_highlight = false,
+        },
+      })
+    end
 
-      -- disable cmp autocomplete
-      local ok_cmp, cmp = mega.require("cmp")
-      if ok_cmp then cmp.setup({ autocomplete = false }) end
+    -- disable cmp autocomplete
+    local ok_cmp, cmp = mega.require("cmp")
+    if ok_cmp then cmp.setup({ autocomplete = false }) end
 
-      vim.opt.wrap = true
-      vim.opt.linebreak = true
-      vim.opt.laststatus = 0
-      vim.opt.showtabline = 0
-      vim.opt_local.relativenumber = false
-      vim.opt_local.signcolumn = "no"
-      vim.opt_local.cursorlineopt = "screenline,number"
-      vim.opt_local.cursorline = true
+    vim.opt.wrap = true
+    vim.opt.linebreak = true
+    vim.opt.laststatus = 0
+    vim.opt.showtabline = 0
+    vim.opt_local.relativenumber = false
+    vim.opt_local.signcolumn = "no"
+    vim.opt_local.cursorlineopt = "screenline,number"
+    vim.opt_local.cursorline = true
 
-      require("mega.globals").nnoremap(
-        "<Esc>",
-        "<cmd>wall | call firenvim#hide_frame() | call firenvim#press_keys('<LT>Esc>') | call firenvim#focus_page()<CR>"
-      )
-      require("mega.globals").nnoremap(
-        "<C-z>",
-        "<cmd>wall | call firenvim#hide_frame() | call firenvim#focus_input()<CR>"
-      )
-      require("mega.globals").inoremap(
-        "<C-c>",
-        "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR><Esc>norm! ggdGa<CR>"
-      )
-      require("mega.globals").nnoremap(
-        "<C-c>",
-        "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR><Esc>norm! ggdGa<CR>"
-      )
-      require("mega.globals").nnoremap(
-        "q",
-        "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR><Esc>norm! ggdGa<CR>"
-      )
-      vim.opt.guifont = "JetBrainsMono_Nerd_Font_Mono:h22"
-      -- if vim.o.lines < 30 then vim.o.lines = 30 end
-      vim.cmd([[exec "norm gg"]])
+    require("mega.globals").nnoremap(
+      "<Esc>",
+      "<cmd>wall | call firenvim#hide_frame() | call firenvim#press_keys('<LT>Esc>') | call firenvim#focus_page()<CR>"
+    )
+    require("mega.globals").nnoremap(
+      "<C-z>",
+      "<cmd>wall | call firenvim#hide_frame() | call firenvim#focus_input()<CR>"
+    )
+    require("mega.globals").inoremap(
+      "<C-c>",
+      "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR><Esc>norm! ggdGa<CR>"
+    )
+    require("mega.globals").nnoremap(
+      "<C-c>",
+      "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR><Esc>norm! ggdGa<CR>"
+    )
+    require("mega.globals").nnoremap(
+      "q",
+      "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR><Esc>norm! ggdGa<CR>"
+    )
+    vim.opt.guifont = "JetBrainsMono_Nerd_Font_Mono:h22"
+    -- if vim.o.lines < 30 then vim.o.lines = 30 end
+    vim.cmd([[exec "norm gg"]])
 
-      local buf_lines = vim.api.nvim_buf_get_lines(0, 0, -1, true)
-      if _G.mega(buf_lines) == 1 and buf_lines[1] == "" then vim.cmd([[startinsert]]) end
-    end, 750)
+    -- vim.defer_fn(function()
+    local bufnr = evt.buf or 0
+    local buf_lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, true)
+    local buf_name = vim.api.nvim_buf_get_name(bufnr)
+
+    P(fmt("%s (%s): %s (%s)", vim.api.nvim_buf_get_name(bufnr), bufnr, _G.mega.tlen(buf_lines), #buf_lines))
+    if buf_name ~= "" and _G.mega.tlen(buf_lines) == 1 and buf_lines[1] == "" then vim.cmd([[startinsert]]) end
+    -- end, 100)
+    -- end, 750)
   end
 
   function IsFirenvimActive(event)
@@ -112,14 +118,20 @@ return function()
   end
 
   function OnUIEnter(event)
-    if IsFirenvimActive(event) then firenvim_onload({ event = "UIEnter" }) end
+    if IsFirenvimActive(event) then
+      P("OnUIEnter")
+      firenvim_onload({ event = "UIEnter" })
+    end
   end
-  vim.cmd([[autocmd UIEnter * :call luaeval('OnUIEnter(vim.fn.deepcopy(vim.v.event))')]])
+  -- vim.cmd([[autocmd UIEnter * :call luaeval('OnUIEnter(vim.fn.deepcopy(vim.v.event))')]])
 
   require("mega.globals").augroup("Firenvim", {
     {
       event = { "BufEnter" },
-      command = function(evt) firenvim_onload(evt) end,
+      command = function(evt)
+        P("BufEnter")
+        firenvim_onload(evt)
+      end,
     },
   })
 end

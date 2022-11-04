@@ -1160,6 +1160,7 @@ function mega.clear_ui()
 
   local ok, n = mega.require("notify")
   if ok then n.dismiss() end
+  mega.clear_commandline()
 end
 
 -- [ commands ] ----------------------------------------------------------------
