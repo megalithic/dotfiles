@@ -147,6 +147,41 @@ local function enable_cursorline(should_blink)
   highlight_cursorline()
 end
 
+-- local function should_change_cursorline()
+--   local should_blink = false
+--   local should_change = false
+
+--   local cursor = vim.api.nvim_win_get_cursor(0)
+--   local current_row = cursor[1]
+--   local current_col = cursor[2]
+
+--   local col_diff = math.abs(current_col - M.prev_col)
+--   local row_diff = math.abs(current_row - M.prev_row)
+
+--   should_blink = row_diff >= M.minimal_jump
+--   should_change = current_row ~= M.prev_row
+
+--   M.prev_col = current_col
+--   M.prev_row = current_row
+
+--   return should_change, should_blink
+-- end
+
+-- local function cursor_moved()
+--   local should_change, should_blink = should_change_cursorline()
+
+--   if is_ignored() or not should_change then return end
+
+--   vim.opt_local.cursorlineopt = "screenline,number"
+--   timer_start()
+
+--   if should_blink then mega.blink_cursorline() end
+
+--   if M.cursorline_delay ~= 0 then
+--     unhighlight_cursorline()
+--   end
+-- end
+
 mega.augroup("ToggleCursorLine", {
   {
     event = { "BufEnter", "WinEnter", "FocusGained" },
@@ -167,4 +202,8 @@ mega.augroup("ToggleCursorLine", {
       vim.opt_local.cursorline = true
     end,
   },
+  -- {
+  --   event = { "CursorMoved" },
+  --   command = function() cursor_moved() end,
+  -- },
 })

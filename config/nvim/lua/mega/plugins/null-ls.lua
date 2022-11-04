@@ -26,7 +26,7 @@ return function()
     -- root_dir = require("null-ls.utils").root_pattern(".null-ls-root", ".neoconf.json", ".git"),
     sources = {
       format.trim_whitespace.with({ filetypes = { "*" } }),
-      format.prettierd.with({
+      format.prettier.with({
         filetypes = {
           "javascript",
           "javascriptreact",
@@ -34,7 +34,6 @@ return function()
           "typescriptreact",
           "css",
           "scss",
-          "eruby",
           "html",
           "svg",
           "json",
@@ -43,7 +42,7 @@ return function()
           "graphql",
           "markdown",
         },
-        condition = function() return mega.executable("prettierd") end,
+        condition = function() return mega.executable("prettier") end,
       }),
       format.fixjson.with({ filetypes = { "jsonc", "json" } }),
       format.cbfmt:with({
