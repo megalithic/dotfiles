@@ -7,7 +7,7 @@ return function()
     },
     localSettings = {
       [".*"] = {
-        cmdline = "neovim",
+        cmdline = "firenvim",
         content = "text",
         priority = 0,
         selector = "textarea",
@@ -101,7 +101,7 @@ return function()
     local buf_lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, true)
     local buf_name = vim.api.nvim_buf_get_name(bufnr)
 
-    P(fmt("%s (%s): %s (%s)", vim.api.nvim_buf_get_name(bufnr), bufnr, _G.mega.tlen(buf_lines), #buf_lines))
+    -- P(fmt("%s (%s): %s (%s)", vim.api.nvim_buf_get_name(bufnr), bufnr, _G.mega.tlen(buf_lines), #buf_lines))
     if buf_name ~= "" and _G.mega.tlen(buf_lines) == 1 and buf_lines[1] == "" then vim.cmd([[startinsert]]) end
     -- end, 100)
     -- end, 750)
@@ -119,7 +119,7 @@ return function()
 
   function OnUIEnter(event)
     if IsFirenvimActive(event) then
-      P("OnUIEnter")
+      -- P("OnUIEnter")
       firenvim_onload({ event = "UIEnter" })
     end
   end
@@ -129,7 +129,7 @@ return function()
     {
       event = { "BufEnter" },
       command = function(evt)
-        P("BufEnter")
+        -- P("BufEnter")
         firenvim_onload(evt)
       end,
     },
