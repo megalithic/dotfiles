@@ -476,6 +476,7 @@ return function()
         handlers = {
           ["tailwindcss/getConfiguration"] = function(_, _, params, _, bufnr, _)
             lsp.buf_notify(bufnr, "tailwindcss/getConfigurationResponse", { _id = params._id })
+            P("tailwindcss getConfiguration callback")
           end,
         },
         settings = {
@@ -485,7 +486,6 @@ return function()
             ["html-eex"] = "html",
             ["phoenix-heex"] = "html",
             heex = "html",
-            eelixir = "html",
             elm = "html",
             erb = "html",
           },
@@ -515,7 +515,6 @@ return function()
           "sass",
           "html",
           "heex",
-          "elixir",
           "javascript",
           "javascriptreact",
           "typescript",

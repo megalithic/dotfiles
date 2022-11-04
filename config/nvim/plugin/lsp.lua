@@ -560,36 +560,26 @@ mega.augroup("LspSetupCommands", {
     desc = "setup the language server autocommands",
     command = function(args)
       local bufnr = args.buf
-      -- skip invalid buffers
       if not api.nvim_buf_is_valid(bufnr) or not args.data then return end
       local client = lsp.get_client_by_id(args.data.client_id)
       on_attach(client, bufnr)
       if client_overrides[client.name] then client_overrides[client.name](client, bufnr) end
     end,
   },
-  {
-    event = { "LspDetach" },
-    desc = "Clean up after detached LSP",
-    command = function(args)
-      local client_id = args.data.client_id
-      -- P(I(args))
-      -- vim.notify(fmt("%s lsp client detached", I(args.data)), vim.log.levels.WARN, { title = "lsp" })
-      -- P(fmt("Lsp client_id, %s, detached", client_id)) -- this echos to the term on vimleave
-      -- if not vim.b.lsp_events or not client_id then return end
-      -- for _, state in pairs(vim.b.lsp_events) do
-      --   if #state.clients == 1 and state.clients[1] == client_id then
-      --     api.nvim_clear_autocmds({ group = state.group_id, buffer = args.buf })
-      --   end
-      --   vim.tbl_filter(function(id) return id ~= client_id end, state.clients)
-      -- end
-    end,
-  },
+  -- {
+  --   event = { "LspDetach" },
+  --   desc = "Clean up after detached LSP",
+  --   command = function(args)
+  --     -- local client_id = args.data.client_id
+  --     -- vim.notify(fmt("%s lsp client detached", I(args.data)), vim.log.levels.WARN, { title = "lsp" })
+  --     -- P(fmt("Lsp client_id, %s, detached", client_id)) -- this echos to the term on vimleave
+  --     -- if not vim.b.lsp_events or not client_id then return end
+  --     -- for _, state in pairs(vim.b.lsp_events) do
+  --     --   if #state.clients == 1 and state.clients[1] == client_id then
+  --     --     api.nvim_clear_autocmds({ group = state.group_id, buffer = args.buf })
+  --     --   end
+  --     --   vim.tbl_filter(function(id) return id ~= client_id end, state.clients)
+  --     -- end
+  --   end,
+  -- },
 })
-
--- [ SERVERS ] -----------------------------------------------------------------
-
--- setup null-ls
--- require("mega.lsp.null_ls")(on_attach)
-
--- setup lsp servers via mason
--- require("mega.lsp.servers")(on_attach)
