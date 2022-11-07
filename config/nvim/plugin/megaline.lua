@@ -473,14 +473,14 @@ local function parse_filename(truncate_at)
 end
 
 local function get_filename_parts(truncate_at)
-  local filename_hl = "StFilename"
   local directory_hl = "StDirectory"
   local parent_hl = "StParentDirectory"
+  local filename_hl = "StFilename"
 
   if H.winhighlight_exists(M.ctx.winid, "Normal", "StatusLine") then
     directory_hl = H.adopt_winhighlight(M.ctx.winid, "StatusLine", "StCustomDirectory", "StTitle")
-    filename_hl = H.adopt_winhighlight(M.ctx.winid, "StatusLine", "StCustomFilename", "StTitle")
     parent_hl = H.adopt_winhighlight(M.ctx.winid, "StatusLine", "StCustomParentDir", "StTitle")
+    filename_hl = H.adopt_winhighlight(M.ctx.winid, "StatusLine", "StCustomFilename", "StTitle")
   end
 
   local directory, parent, file = parse_filename(truncate_at)
@@ -581,12 +581,6 @@ local function seg_lineinfo(truncate_at)
     }),
     { margin = { 1, 1 } }
   )
-end
-
-local function seg_modified()
-  if not M.ctx.modified then return "" end
-
-  return seg(fmt("[%s]", mega.icons.modified), "StModified", { margin = { 0, 1 } })
 end
 
 local function seg_search_results(truncate_at)

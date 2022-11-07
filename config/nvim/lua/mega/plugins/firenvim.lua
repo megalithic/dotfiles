@@ -127,8 +127,10 @@ return function()
     {
       event = { "BufEnter" },
       command = function(evt)
-        P("BufEnter")
-        vim.schedule_wrap(function() firenvim_onload(evt) end)
+        if evt.buf and vim.api.nvim_buf_get_name(evt.buf) then
+          P(fmt("BufEnter: %s", vim.api.nvim_buf_get_name(evt.buf)))
+          firenvim_onload(evt)
+        end
       end,
     },
   })

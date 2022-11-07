@@ -302,7 +302,7 @@ end
 local function create_term(opts)
   -- REF: https://github.com/seblj/dotfiles/commit/fcdfc17e2987631cbfd4727c9ba94e6294948c40#diff-bbe1851dbfaaa99c8fdbb7229631eafc4f8048e09aa116ef3ad59cde339ef268L56-R90
   local term_cmd = opts.pre_cmd and fmt("%s; %s", opts.pre_cmd, opts.cmd) or opts.cmd
-  term.job_id = vim.fn.termopen(term_cmd, {
+  vim.fn.termopen(term_cmd, {
     ---@diagnostic disable-next-line: unused-local
     on_exit = function(job_id, exit_code, event)
       if opts.notifier ~= nil and type(opts.notifier) == "function" then opts.notifier(term_cmd, exit_code) end
@@ -531,6 +531,8 @@ end
 --- @param trim_spaces boolean
 --- @param cmd_data table<string, any>
 local function send_lines_to_terminal(selection_type, trim_spaces, cmd_data)
+  if term.job_id == nil then return end
+
   local id = tonumber(cmd_data.args) or 1
   trim_spaces = trim_spaces == nil or trim_spaces
 

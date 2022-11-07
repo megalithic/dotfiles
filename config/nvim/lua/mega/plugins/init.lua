@@ -52,6 +52,7 @@ local function plugins(use)
     -- cond = function() return vim.g.started_by_firenvim ~= nil end,
     -- config = function() vim.cmd.colorscheme("forestbones") end,
   })
+  use({ "neanias/everforest-nvim" })
   use({ "kyazdani42/nvim-web-devicons", config = function() require("nvim-web-devicons").setup() end })
   use({
     "NvChad/nvim-colorizer.lua",
@@ -883,7 +884,10 @@ local function plugins(use)
     end,
   })
   use({ "mickael-menu/zk-nvim", ext = "zk", after = "telescope.nvim" })
-  use({ "gaoDean/autolist.nvim" })
+  use({
+    "gaoDean/autolist.nvim",
+    config = function() require("autolist").setup({ normal_mappings = { invert = { "<C-x>" } } }) end,
+  })
   use({ "ellisonleao/glow.nvim" })
   use({
     "lukas-reineke/headlines.nvim",

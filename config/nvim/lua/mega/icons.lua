@@ -202,7 +202,7 @@ return {
   col_sep = "",
   sep = "⋮",
   perc_sep = "",
-  modified = "", -- alts: ✎ ○∘●綠●∘■ □ ▪ ▫● ◯ ◔ ◕ ◌ ◎ ◦ ◆ ◇ ∘∙
+  modified = "", -- alts: ✿✸✎ ○∘●綠●∘■ □ ▪ ▫● ◯ ◔ ◕ ◌ ◎ ◦ ◆ ◇ ∘∙
 
   mode = "",
   vcs = "",
