@@ -513,6 +513,12 @@ local function seg_prefix(truncate_at)
   return seg(prefix, mode_info.hl)
 end
 
+local function seg_suffix(truncate_at)
+  local mode_info = MODES[api.nvim_get_mode().mode]
+  local prefix = is_truncated(truncate_at) and "" or mega.icons.misc.rblock
+  return seg(prefix, mode_info.hl)
+end
+
 local function seg_mode(truncate_at)
   local mode_info = MODES[api.nvim_get_mode().mode]
   local mode = is_truncated(truncate_at) and mode_info.short or mode_info.long
@@ -573,7 +579,7 @@ local function seg_lineinfo(truncate_at)
       ":",
       current_col,
     }),
-    { margin = { 1, 0 } }
+    { margin = { 1, 1 } }
   )
 end
 
@@ -689,6 +695,7 @@ function _G.__statusline()
     seg_git_status(120),
     seg(get_dap_status()),
     seg_lineinfo(75),
+    seg_suffix(100),
   })
 end
 

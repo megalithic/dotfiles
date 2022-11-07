@@ -11,6 +11,7 @@ local preferred = {
   terms = { "kitty", "wezterm", "alacritty", "iTerm", "Terminal.app" },
   browsers = {
     hs.urlevent.getDefaultHandler("https"),
+    "Chromium",
     "Brave Browser Dev",
     "Firefox",
     "Vivaldi",
@@ -94,6 +95,19 @@ local apps = {
       { "", 1, "maximized" },
     },
   },
+
+  ["org.chromium.Chromium"] = {
+    bundleID = "org.chromium.Chromium",
+    name = "Chromium",
+    key = "j",
+    quitter = true,
+    localBindings = {},
+    tags = { "browsers" },
+    rules = {
+      { "", 1, "maximized" },
+    },
+  },
+
   ["org.mozilla.firefox"] = {
     bundleID = "org.mozilla.firefox",
     name = "Firefox",
@@ -127,7 +141,7 @@ local apps = {
   ["com.brave.Browser.dev"] = {
     bundleID = "com.brave.Browser.dev",
     name = "Brave Browser Dev",
-    key = "j",
+    -- key = "j",
     quitter = true,
     localBindings = {},
     tags = { "browsers" },

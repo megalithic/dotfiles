@@ -3,7 +3,6 @@
 local fn = vim.fn
 local fmt = string.format
 local M = { local_plugins = {} }
-local PACKER_INSTALL_PATH = fmt("%s/site/pack/packer/%s/packer.nvim", fn.stdpath("data"), "opt")
 
 -- ---A thin wrapper around vim.notify to add packer details to the message
 -- ---@param msg string
@@ -36,20 +35,25 @@ local function setup_autocmds()
       command = function()
         M.notify("updates finished")
         vim.defer_fn(function()
-          if vim.env.PACKER_NON_INTERACTIVE then vim.cmd("quitall!") end
+          -- if vim.env.PACKER_NON_INTERACTIVE then vim.cmd("quitall!") end
         end, 100)
       end,
     },
   })
 end
 
-function M.bootstrap(compile_path)
-  if fn.empty(fn.glob(PACKER_INSTALL_PATH)) > 0 then
+function M.bootstrap()
+  if fn.empty(fn.glob(vim.g.packer_install_path)) > 0 then
     M.notify("Downloading packer.nvim...")
-    M.notify(
-      fn.system({ "git", "clone", "--depth", "1", "https://github.com/wbthomason/packer.nvim", PACKER_INSTALL_PATH })
-    )
-    vim.fn.delete(compile_path)
+    M.notify(fn.system({
+      "git",
+      "clone",
+      "--depth",
+      "1",
+      "https://github.com/wbthomason/packer.nvim",
+      vim.g.packer_install_path,
+    }))
+    vim.fn.delete(vim.g.packer_compiled_path)
     vim.cmd.packadd({ "packer.nvim", bang = true })
     return true
   end

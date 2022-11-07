@@ -220,6 +220,7 @@ alias eb="nvim $DOTS/brew/Brewfile"
 alias essh="nvim $PRIVATES/home/ssh/config"
 
 alias ek="nvim $DOTS/config/kitty/kitty.conf"
+alias ekm="nvim $DOTS/config/kitty/maps.conf"
 alias eks="nvim $DOTS/config/kitty/sessions/default.session"
 
 alias eq="nvim $DOTS/home/qutebrowser/config.py"

@@ -48,6 +48,8 @@ eval_result = [:green, :bright]
 eval_error = [[:red, :bright, "\ue3bf ERROR - "]]
 eval_info = [:blue, :bright]
 
+Application.put_env(:elixir, :dbg_callback, {Macro, :dbg, []})
+
 defmodule IExHelpers do
   def whats_this?(term) when is_nil(term), do: "Type: Nil"
   def whats_this?(term) when is_binary(term), do: "Type: Binary"
@@ -68,10 +70,11 @@ IEx.configure(
     eval_result: eval_result,
     eval_error: eval_error,
     eval_info: eval_info
-  ],
+  ]
   # default_prompt: default_prompt,
   # alive_prompt: alive_prompt
 )
+
 #
 # # Phoenix Support
 # import_if_available(Plug.Conn)

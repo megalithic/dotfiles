@@ -1,8 +1,3 @@
--- local PACKER_COMPILED_PATH = fmt("%s/packer/packer_compiled.lua", vim.fn.stdpath("cache"))
-local PACKER_COMPILED_PATH = fmt("%s/plugin/packer_compiled.lua", vim.fn.stdpath("config"))
-local PACKER_SNAPSHOTS_PATH = fmt("%s/packer/snapshots/", vim.fn.stdpath("cache"))
-vim.g.PACKER_COMPILED_PATH = PACKER_COMPILED_PATH
-
 local packer = require("mega.plugins.utils")
 local packer_notify = packer.notify
 
@@ -10,14 +5,15 @@ local config = {
   -- opt_default = true,
   display = {
     open_cmd = "silent topleft 60vnew",
-    -- non_interactive = vim.env.PACKER_NON_INTERACTIVE or vim.g.PACKER_NON_INTERACTIVE or false,
+    non_interactive = false, --(vim.env.PACKER_NON_INTERACTIVE ~= nil and tonumber(vim.env.PACKER_NON_INTERACTIVE) == 1) and true or false,
   },
   disable_commands = true,
   auto_reload_compiled = false,
-  compile_path = PACKER_COMPILED_PATH,
+  compile_path = vim.g.packer_compiled_path,
   ensure_dependencies = true,
-  snapshot_path = PACKER_SNAPSHOTS_PATH,
-  preview_updates = true,
+  snapshot_path = vim.g.packer_snapshot_path,
+  preview_updates = (vim.env.PACKER_NON_INTERACTIVE ~= nil and tonumber(vim.env.PACKER_NON_INTERACTIVE) == 1) and false
+    or true,
   git = {
     clone_timeout = 600,
   },
@@ -356,24 +352,23 @@ local function plugins(use)
 
       require("mega.lsp.servers")()
     end,
-    -- },
-    -- {
-    --   "jayp0521/mason-null-ls.nvim",
-    --   requires = {
-    --     "williamboman/mason.nvim",
-    --     "jose-elias-alvarez/null-ls.nvim",
-    --   },
-    --   after = "mason.nvim",
-    --   config = function()
-    --     require("mason-null-ls").setup({
-    --       automatic_installation = true,
-    --       ensure_installed = {
-    --         "beautysh",
-    --       },
-    --     })
-    --   end,
-    -- },
   })
+  -- use({
+  --   "jayp0521/mason-null-ls.nvim",
+  --   requires = {
+  --     "williamboman/mason.nvim",
+  --     "jose-elias-alvarez/null-ls.nvim",
+  --   },
+  --   after = "mason.nvim",
+  --   config = function()
+  --     require("mason-null-ls").setup({
+  --       automatic_installation = true,
+  --       ensure_installed = {
+  --         "beautysh",
+  --       },
+  --     })
+  --   end,
+  -- })
   use({
     "neovim/nvim-lspconfig",
     module_pattern = "lspconfig.*",
@@ -954,15 +949,15 @@ local function plugins(use)
   })
 end
 
-mega.command("PackerCompiledEdit", function() vim.cmd.edit(PACKER_COMPILED_PATH) end)
+mega.command("PackerCompiledEdit", function() vim.cmd.vnew(vim.g.packer_compiled_path) end)
 
 mega.command("PackerCompiledDelete", function()
-  vim.fn.delete(PACKER_COMPILED_PATH)
-  packer_notify(string.format("Deleted %s", PACKER_COMPILED_PATH))
+  vim.fn.delete(vim.g.packer_compiled_path)
+  packer_notify(string.format("deleted %s", vim.g.packer_compiled_path))
 end)
 
-if not vim.g.packer_compiled_loaded and vim.loop.fs_stat(PACKER_COMPILED_PATH) then
-  vim.cmd.source(PACKER_COMPILED_PATH)
+if not vim.g.packer_compiled_loaded and vim.loop.fs_stat(vim.g.packer_compiled_path) then
+  vim.cmd.source(vim.g.packer_compiled_path)
   vim.g.packer_compiled_loaded = true
 end
 
@@ -973,10 +968,4 @@ mega.nnoremap("<leader>px", "<Cmd>PackerClean<CR>", "packer: clean")
 vim.cmd.packadd({ "cfilter", bang = true })
 mega.require("impatient")
 
--- return {
---   config = config,
---   plugins = plugins,
---   setup = function() return packer.setup(config, plugins) end,
--- }
---
 return packer.setup(config, plugins)

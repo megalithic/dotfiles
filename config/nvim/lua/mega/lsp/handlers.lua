@@ -33,7 +33,7 @@ local opts = {
 }
 
 do
-  local function hover_handler(_, result, ...)
+  local function hover_handler(_, result, _ctx, config)
     -- M.hover_orig(_, result, ...)
     if not (result and result.contents) then
       mega.notify("No information available", vim.log.levels.WARN)
@@ -99,7 +99,6 @@ do
       })
     else
       local bufnr = require("vim.lsp.util").open_floating_preview(lines, "markdown", config)
-      P("we're in a custom non-folke hover")
       -- local lines = vim.split(result.contents.value, "\n")
 
       -- local ok, _ = pcall(require, "colorizer")

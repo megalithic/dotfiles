@@ -32,6 +32,10 @@ vim.g.is_local_dev = vim.trim(vim.fn.system("hostname")) ~= "seth-dev"
 
 vim.g.open_command = vim.g.is_macos and "open" or "xdg-open"
 
+vim.g.packer_compiled_path = fmt("%s/plugin/packer_compiled.lua", vim.fn.stdpath("config")) -- alts: fmt("%s/packer/packer_compiled.lua", vim.fn.stdpath("cache"))
+vim.g.packer_install_path = fmt("%s/site/pack/packer/%s/packer.nvim", fn.stdpath("data"), "opt")
+vim.g.packer_snapshot_path = fmt("%s/packer/snapshots/", vim.fn.stdpath("cache"))
+
 vim.g.dotfiles = vim.env.DOTS or fn.expand("~/.dotfiles")
 vim.g.home = os.getenv("HOME")
 vim.g.vim_path = fmt("%s/.config/nvim", vim.g.home)
@@ -1187,32 +1191,42 @@ do
     vim.cmd(fmt("lua P(%s)", opts.args))
     vim.g.debug_enabled = false
   end, { nargs = "*" })
+  command("PackerUpgrade", function()
+    P(
+      fmt(
+        "interactive out schedule? %s",
+        (vim.env.PACKER_NON_INTERACTIVE ~= nil and tonumber(vim.env.PACKER_NON_INTERACTIVE) == 1)
+      )
+    )
 
-  mega.command("PackerUpgrade", function()
     vim.schedule(function()
+      P(
+        fmt(
+          "%s, previewing updates: %s",
+          vim.env.PACKER_NON_INTERACTIVE,
+          (vim.env.PACKER_NON_INTERACTIVE ~= nil and tonumber(vim.env.PACKER_NON_INTERACTIVE) == 1) and false or true
+        )
+      )
+      P(
+        fmt(
+          "interactive in schedule? %s",
+          (vim.env.PACKER_NON_INTERACTIVE ~= nil and tonumber(vim.env.PACKER_NON_INTERACTIVE) == 1)
+        )
+      )
       require("mega.plugins.utils").bootstrap()
-      -- local config = vim.tbl_extend("force", require("mega.plugins").config, {
-      --   display = {
-      --     -- open_cmd = "silent topleft 60vnew",
-      --     open_fn = require("packer.util").float,
-      --     non_interactive = vim.env.PACKER_NON_INTERACTIVE or vim.g.PACKER_NON_INTERACTIVE or false,
-      --   },
-      -- })
-
-      -- local plugins = require("mega.plugins").plugins
-      -- require("mega.plugins.utils").sync(config, plugins)
       require("mega.plugins.utils").sync()
     end)
   end)
-  mega.command("PackerCompile", function()
+  command("PackerCompile", function()
     vim.cmd("packadd! packer.nvim")
     vim.notify("waiting for compilation..", vim.log.levels.INFO, { title = "packer" })
     require("packer").compile()
-    vim.cmd.source(vim.g.PACKER_COMPILED_PATH)
+    vim.cmd.source(vim.g.packer_compiled_path)
     vim.g.packer_compiled_loaded = true
   end, { nargs = "*" })
-  mega.command("Recompile", function() mega.recompile() end, { nargs = "*" })
-  mega.command("Reload", function() mega.reload() end, { nargs = "*" })
+  command("Recompile", function() mega.recompile() end, { nargs = "*" })
+  command("Reload", function() mega.reload() end, { nargs = "*" })
+  command("Noti", [[Mess | Notifications]])
 
   vim.cmd([[command! PackerInstall packadd! packer.nvim | lua require('packer').install()]])
   vim.cmd([[command! PackerUpdate packadd! packer.nvim | lua require('packer').update()]])
@@ -1223,7 +1237,6 @@ do
   vim.cmd([[command! PC PackerCompile]])
   vim.cmd([[command! PS PackerStatus]])
   vim.cmd([[command! PU PackerSync]])
-  vim.cmd([[command! Noti Mess | Notifications]])
 end
 
 return mega

@@ -638,11 +638,11 @@ const handleLoaded = (evt) => {
 };
 
 const runningAt = (() => {
-    let getBackgroundPage = chrome?.extension?.getBackgroundPage;
-    if (getBackgroundPage){
-        return getBackgroundPage() === window ? 'BACKGROUND' : 'POPUP';
-    }
-    return chrome?.runtime?.onMessage ? 'CONTENT' : 'WEB';
+  let getBackgroundPage = chrome?.extension?.getBackgroundPage;
+  if (getBackgroundPage) {
+    return getBackgroundPage() === window ? "BACKGROUND" : "POPUP";
+  }
+  return chrome?.runtime?.onMessage ? "CONTENT" : "WEB";
 })();
 
 // if (["complete", "loaded", "interactive"].indexOf(document.readyState) >= 0) {

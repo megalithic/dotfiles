@@ -7,7 +7,7 @@ return function()
     },
     localSettings = {
       [".*"] = {
-        cmdline = "firenvim",
+        cmdline = "neovim",
         content = "text",
         priority = 0,
         selector = "textarea",
@@ -44,7 +44,6 @@ return function()
   }
 
   local firenvim_onload = function(evt)
-    -- vim.defer_fn(function()
     vim.cmd.colorscheme("forestbones")
 
     -- disable headlines (until we update colours for forestbones)
@@ -102,9 +101,8 @@ return function()
     local buf_name = vim.api.nvim_buf_get_name(bufnr)
 
     -- P(fmt("%s (%s): %s (%s)", vim.api.nvim_buf_get_name(bufnr), bufnr, _G.mega.tlen(buf_lines), #buf_lines))
+    -- if vim.fn.getline(1) == "" then vim.cmd([[startinsert]]) end
     if buf_name ~= "" and _G.mega.tlen(buf_lines) == 1 and buf_lines[1] == "" then vim.cmd([[startinsert]]) end
-    -- end, 100)
-    -- end, 750)
   end
 
   function IsFirenvimActive(event)
@@ -129,8 +127,8 @@ return function()
     {
       event = { "BufEnter" },
       command = function(evt)
-        -- P("BufEnter")
-        firenvim_onload(evt)
+        P("BufEnter")
+        vim.schedule_wrap(function() firenvim_onload(evt) end)
       end,
     },
   })
