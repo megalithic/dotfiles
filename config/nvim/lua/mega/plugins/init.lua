@@ -608,6 +608,16 @@ local function plugins(use)
   use({ "akinsho/toggleterm.nvim", ext = "toggleterm" })
   use({ "danymat/neogen" })
   use({
+    "kristijanhusak/vim-dadbod-ui",
+    requires = "tpope/vim-dadbod",
+    cmd = { "DBUI", "DBUIToggle", "DBUIAddConnection" },
+    setup = function()
+      vim.g.db_ui_use_nerd_fonts = 1
+      vim.g.db_ui_show_database_icon = 1
+      -- _G.mega.nnoremap("<leader>db", "<cmd>DBUIToggle<CR>", "dadbod: toggle")
+    end,
+  })
+  use({
     "numToStr/Comment.nvim",
     event = "BufRead",
     config = function()
@@ -732,7 +742,7 @@ local function plugins(use)
         enable_check_bracket_line = true, -- Check for closing brace so it will not add a close pair
         disable_in_macro = false,
         close_triple_quotes = true,
-        check_ts = true,
+        check_ts = false,
         ts_config = {
           lua = { "string", "source" },
           javascript = { "string", "template_string" },
