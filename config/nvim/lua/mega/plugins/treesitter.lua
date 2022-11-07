@@ -42,6 +42,7 @@ return function()
       "embedded_template",
       "erlang",
       "fish",
+      "git_rebase",
       "go",
       "graphql",
       "heex",

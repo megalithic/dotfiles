@@ -16,7 +16,7 @@ mega.command("TermElixir", function(args)
   mega.term.open({
     cmd = cmd,
     pre_cmd = pre_cmd,
-    temp = true,
+    -- temp = true,
     ---@diagnostic disable-next-line: unused-local
     on_after_open = function(bufnr, _winnr)
       vim.api.nvim_buf_set_var(bufnr, "term_cmd", cmd)
@@ -103,7 +103,7 @@ nnoremap("<leader>rE", "<cmd>TermElixir!<cr>", "elixir (current file)")
 nnoremap("<leader>rr", "<cmd>TermRuby<cr>", "ruby")
 nnoremap("<leader>rR", "<cmd>TermRuby!<cr>", "ruby (current file)")
 nnoremap("<leader>rl", "<cmd>TermLua<cr>", "lua")
--- nnoremap("<leader>rL", "<cmd>TermLua!<cr>", "lua (current file)")
+nnoremap("<leader>rL", "<cmd>TermLua!<cr>", "lua (current file)")
 nnoremap("<leader>rn", "<cmd>TermNode<cr>", "node")
 nnoremap("<leader>rN", "<cmd>TermNode!<cr>", "node (current file)")
 nnoremap("<leader>rp", "<cmd>TermPython<cr>", "python")

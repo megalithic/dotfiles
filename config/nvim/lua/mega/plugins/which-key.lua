@@ -194,7 +194,7 @@ return function()
       L = { "<cmd>:Vlive<cr>", "Open Live for LiveView (vsplit)" },
     },
     ["<leader>r"] = {
-      name = " repls",
+      name = "repls",
     },
     ["<leader>t"] = {
       name = "terminal",

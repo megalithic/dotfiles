@@ -1,24 +1,10 @@
-Application.put_env(:elixir, :ansi_enabled, true)
+# REF:
+# - https://github.com/cr0t/dotfiles/blob/master/dot.iex.exs
+# - https://samuelmullen.com/articles/customizing_elixirs_iex/
+# - https://www.adiiyengar.com/blog/20180709/my-iex-exs
+# - https://github.com/blackode/elixir-tips#iex-custom-configuration---iex-decoration
+# - https://github.com/blackode/custom-iex.git
 #
-# # Get queue length for the IEx process
-# # This is fun to see while playing with nodes
-# queue_length = fn ->
-#   self()
-#   |> Process.info()
-#   |> Keyword.get(:message_queue_len)
-# end
-#
-# prefix =
-#   IO.ANSI.black_background() <>
-#     IO.ANSI.green() <>
-#     "%prefix" <>
-#     IO.ANSI.reset()
-#
-# counter =
-#   IO.ANSI.black_background() <>
-#     IO.ANSI.green() <>
-#     "-%node-(%counter)" <>
-#     IO.ANSI.reset()
 #
 # # IO.ANSI.light_black_background() <>
 # info = IO.ANSI.light_black() <> "\uf6ef #{queue_length.()}" <> IO.ANSI.reset()
@@ -34,23 +20,61 @@ Application.put_env(:elixir, :ansi_enabled, true)
 #     "\ue315 " <>
 #     IO.ANSI.reset()
 #
-# default_prompt = prefix <> counter <> IO.ANSI.black() <> "│" <> IO.ANSI.reset() <> info <> last
-#
-# alive_prompt =
-#   prefix <>
-#     counter <>
-#     IO.ANSI.black() <>
-#     "│" <> IO.ANSI.reset() <> info <> IO.ANSI.black() <> "│" <> IO.ANSI.reset() <> alive <> last
-#
 history_size = 100
 
+# Color Variables
+# blue_ansi = IO.ANSI.blue()
+green_ansi = IO.ANSI.green()
+reset_ansi = IO.ANSI.reset()
+white_background = IO.ANSI.white_background()
 eval_result = [:green, :bright]
 eval_error = [[:red, :bright, "\ue3bf ERROR - "]]
 eval_info = [:blue, :bright]
 
-Application.put_env(:elixir, :dbg_callback, {Macro, :dbg, []})
+defmodule H do
+  @moduledoc """
+  Defines a few helper methods to enchance visual appearance and available
+  functionality of the IEx.
+  ### Extra Information
+  First time I've learned about customizations to `.iex.exs` here:
+  - https://www.youtube.com/watch?v=E0bmtcYrz9M
+  Here is a couple of good articles:
+  - https://samuelmullen.com/articles/customizing_elixirs_iex/
+  - https://www.adiiyengar.com/blog/20180709/my-iex-exs
+  """
 
-defmodule IExHelpers do
+  @tips_and_tricks [
+    ":observer.start() - a GUI for BEAM",
+    "runtime_info <:memory|:applications|...> - sometimes useful data",
+    "IEx.configure(inspect: [limit: :infinity]) - show everything"
+  ]
+
+  # Lookup an app in the started applications list
+  def is_app_started?(app) when is_atom(app) do
+    Application.started_applications()
+    |> Enum.any?(&(elem(&1, 0) == app))
+  end
+
+  # Message queue length for the IEx process: nice to see when playing with
+  # remote nodes (distributed Erlang)
+  def queue_length do
+    self()
+    |> Process.info()
+    |> Keyword.get(:message_queue_len)
+  end
+
+  # Wrap given text in bright ANSI colors and print
+  def print_bright(text) do
+    (IO.ANSI.bright() <> text <> IO.ANSI.reset())
+    |> IO.puts()
+  end
+
+  def print_tips_n_tricks() do
+    print_bright("\n--- Tips & Tricks:")
+
+    Enum.map(@tips_and_tricks, &IO.puts/1)
+  end
+
   def whats_this?(term) when is_nil(term), do: "Type: Nil"
   def whats_this?(term) when is_binary(term), do: "Type: Binary"
   def whats_this?(term) when is_boolean(term), do: "Type: Boolean"
@@ -62,7 +86,15 @@ defmodule IExHelpers do
   def logger_info(), do: Logger.configure(level: :info)
 end
 
-# Configuring IEx
+prefix = IO.ANSI.green() <> "%prefix" <> IO.ANSI.reset()
+counter = IO.ANSI.green() <> "-%node-(%counter)" <> IO.ANSI.reset()
+info = IO.ANSI.light_blue() <> " #{H.queue_length()}" <> IO.ANSI.reset()
+last = IO.ANSI.yellow() <> "" <> IO.ANSI.reset()
+alive = IO.ANSI.bright() <> IO.ANSI.yellow() <> "⚡" <> IO.ANSI.reset()
+
+default_prompt = prefix <> counter <> " " <> info <> " " <> last
+alive_prompt = prefix <> counter <> " " <> info <> " " <> alive <> last
+
 IEx.configure(
   inspect: [limit: :infinity, pretty: true, charlists: :as_lists],
   history_size: history_size,
@@ -70,79 +102,58 @@ IEx.configure(
     eval_result: eval_result,
     eval_error: eval_error,
     eval_info: eval_info
-  ]
-  # default_prompt: default_prompt,
-  # alive_prompt: alive_prompt
+  ],
+  continuation_prompt: "    ",
+  alive_prompt: alive_prompt,
+  default_prompt: default_prompt
 )
 
-#
-# # Phoenix Support
-# import_if_available(Plug.Conn)
-# import_if_available(Phoenix.HTML)
-#
-# phoenix_app =
-#   :application.info()
-#   |> Keyword.get(:running)
-#   |> Enum.reject(fn {_x, y} ->
-#     y == :undefined
-#   end)
-#   |> Enum.find(fn {x, _y} ->
-#     x |> Atom.to_string() |> String.match?(~r{_web})
-#   end)
-#
-# # Check if phoenix app is found
-# case phoenix_app do
-#   nil ->
-#     IO.puts(
-#       IO.ANSI.light_black() <>
-#         IO.ANSI.faint() <> IO.ANSI.italic() <> "\uf05a  No Phoenix App found"
-#     )
-#
-#   {app, _pid} ->
-#     IO.puts("\uf05a  Phoenix app found: #{app}")
-#
-#     ecto_app =
-#       app
-#       |> Atom.to_string()
-#       |> (&Regex.split(~r{_web}, &1)).()
-#       |> Enum.at(0)
-#       |> String.to_atom()
-#
-#     exists =
-#       :application.info()
-#       |> Keyword.get(:running)
-#       |> Enum.reject(fn {_x, y} ->
-#         y == :undefined
-#       end)
-#       |> Enum.map(fn {x, _y} -> x end)
-#       |> Enum.member?(ecto_app)
-#
-#     # Check if Ecto app exists or running
-#     case exists do
-#       false ->
-#         IO.puts(
-#           IO.ANSI.light_black() <>
-#             IO.ANSI.faint() <>
-#             IO.ANSI.italic() <> "\uf05a  Ecto app #{ecto_app} doesn't exist or isn't running"
-#         )
-#
-#       true ->
-#         IO.puts(
-#           IO.ANSI.light_black() <>
-#             IO.ANSI.faint() <> IO.ANSI.italic() <> "\uf05a  Ecto app found: #{ecto_app}"
-#         )
-#
-#         # Ecto Support
-#         import_if_available(Ecto.Query)
-#         import_if_available(Ecto.Changeset)
-#
-#         # Alias Repo
-#         repo = ecto_app |> Application.get_env(:ecto_repos) |> Enum.at(0)
-#
-#         quote do
-#           alias unquote(repo), as: Repo
-#         end
-#     end
-# end
-#
+H.print_bright("\n---  Phoenix & Ecto:")
+
+phoenix_started? = H.is_app_started?(:phoenix)
+ecto_started? = H.is_app_started?(:ecto)
+
+phoenix_info =
+  if phoenix_started? do
+    IO.ANSI.green() <> "running" <> IO.ANSI.reset()
+  else
+    IO.ANSI.yellow() <> "not detected" <> IO.ANSI.reset()
+  end
+
+IO.puts("Phoenix: #{phoenix_info}")
+
+ecto_info =
+  if ecto_started? do
+    IO.ANSI.green() <> "running" <> IO.ANSI.reset()
+  else
+    IO.ANSI.yellow() <> "not detected" <> IO.ANSI.reset()
+  end
+
+repo_info =
+  if ecto_started? do
+    repo =
+      Mix.Project.get().project()[:app]
+      |> Application.get_env(:ecto_repos)
+      |> Enum.at(0)
+      |> Atom.to_string()
+      |> String.replace(~r/^Elixir\./, "")
+
+    IO.ANSI.faint() <> "(`alias #{repo}, as: Repo`)" <> IO.ANSI.reset()
+  else
+    ""
+  end
+
+if ecto_started? do
+  import_if_available(Ecto.Query)
+  import_if_available(Ecto.Changeset)
+end
+
+IO.puts("Ecto: #{ecto_info} #{repo_info}")
+
+# One extra empty line before command line
+IO.puts("")
+
+Application.put_env(:elixir, :dbg_callback, {Macro, :dbg, []})
+Application.put_env(:elixir, :ansi_enabled, true)
+
 # vim:ft=elixir

@@ -1,3 +1,32 @@
+# https://tekin.co.uk/2020/10/better-git-diff-output-for-ruby-python-elixir-and-more
+*.c     diff=cpp
+*.h     diff=cpp
+*.c++   diff=cpp
+*.h++   diff=cpp
+*.cpp   diff=cpp
+*.hpp   diff=cpp
+*.cc    diff=cpp
+*.hh    diff=cpp
+*.m     diff=objc
+*.mm    diff=objc
+*.cs    diff=csharp
+*.css   diff=css
+*.html  diff=html
+*.xhtml diff=html
+*.ex    diff=elixir
+*.exs   diff=elixir
+*.go    diff=golang
+*.php   diff=php
+*.pl    diff=perl
+*.py    diff=python
+*.md    diff=markdown
+*.rb    diff=ruby
+*.rake  diff=ruby
+*.rs    diff=rust
+*.lisp  diff=lisp
+*.el    diff=lisp
+*.gpg   binary
+
 .gitattributes !filter !diff !merge
 config/weechat/bitlbee.irc.conf filter=crypt diff=crypt merge=crypt
 config/weechat/weechat.conf filter=crypt diff=crypt merge=crypt

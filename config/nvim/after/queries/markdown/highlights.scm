@@ -17,16 +17,6 @@
 (block_quote_marker) @quote
 (block_quote (paragraph (inline (block_continuation) @quote)))
 
-; TODO: https://github.com/akinsho/org-bullets.nvim/blob/main/lua/org-bullets.lua#L167-L188
-; handle these conceals with regex matches instead:
-
-; alts: ▪ ●
-
-((list_marker_star) @conceal (#set! conceal "✸ ") (#eq? @conceal "* "))
-((list_marker_plus) @conceal (#set! conceal "✿ ") (#eq? @conceal "+ "))
-((list_marker_minus) @conceal (#set! conceal " ") (#eq? @conceal "- "))
-((list_marker_dot) @conceal (#set! conceal "• ") (#eq? @conceal ". "))
-
 (list_item [
   (list_marker_plus)
   (list_marker_minus)
@@ -38,5 +28,16 @@
     (task_list_marker_unchecked)
 ](#set! conceal ""))
 
-((task_list_marker_checked) @conceal (#set! conceal ""))
-((task_list_marker_unchecked) @conceal (#set! conceal ""))
+; TODO: https://github.com/akinsho/org-bullets.nvim/blob/main/lua/org-bullets.lua#L167-L188
+; handle these conceals with regex matches instead:
+
+; alts: ▪ ●
+
+((list_marker_star) @conceal (#set! conceal "✸ ") (#eq? @conceal "* "))
+((list_marker_plus) @conceal (#set! conceal "✿ ") (#eq? @conceal "+ "))
+((list_marker_minus) @conceal (#set! conceal " ") (#eq? @conceal "- "))
+((list_marker_dot) @conceal (#set! conceal "• ") (#eq? @conceal ". "))
+((task_list_marker_checked) (#set! conceal " ") (#eq? @conceal "- [x] "))
+((task_list_marker_unchecked) (#set! conceal " ") (#eq? @conceal "- [ ] "))
+; ((task_list_marker_checked) @conceal (#set! conceal ""))
+; ((task_list_marker_unchecked) @conceal (#set! conceal ""))
