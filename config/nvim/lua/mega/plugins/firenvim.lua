@@ -92,17 +92,22 @@ return function()
       "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR><Esc>norm! ggdGa<CR>"
     )
     vim.opt.guifont = "JetBrainsMono_Nerd_Font_Mono:h22"
-    -- if vim.o.lines < 30 then vim.o.lines = 30 end
-    vim.cmd([[exec "norm gg"]])
 
-    -- vim.defer_fn(function()
+    -- P(fmt("lines: %s, win_height: %s", vim.o.lines, vim.api.nvim_win_get_height(vim.api.nvim_get_current_win())))
+
     local bufnr = evt.buf or 0
     local buf_lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, true)
     local buf_name = vim.api.nvim_buf_get_name(bufnr)
 
-    -- P(fmt("%s (%s): %s (%s)", vim.api.nvim_buf_get_name(bufnr), bufnr, _G.mega.tlen(buf_lines), #buf_lines))
-    -- if vim.fn.getline(1) == "" then vim.cmd([[startinsert]]) end
-    if buf_name ~= "" and _G.mega.tlen(buf_lines) == 1 and buf_lines[1] == "" then vim.cmd([[startinsert]]) end
+    -- start in insert mode if we're an empty buffer
+    if buf_name ~= "" and _G.mega.tlen(buf_lines) <= 2 and buf_lines[1] == "" then
+      vim.cmd([[startinsert]])
+    else
+      vim.cmd([[exec "norm gg"]])
+    end
+
+    -- expand the firenvim window larger than it should be, (if it's presently less than 25 lines)
+    if vim.o.lines < 15 then vim.o.lines = 15 end
   end
 
   function IsFirenvimActive(event)
