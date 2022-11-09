@@ -59,7 +59,7 @@ local function plugins(use)
     event = { "CursorHold", "CursorMoved", "InsertEnter" },
     config = function()
       require("colorizer").setup({
-        filetypes = { "*" },
+        filetypes = { "*", "!gitcommit", "!NeogitCommitMessage" },
         user_default_options = {
           RGB = false, -- #RGB hex codes
           RRGGBB = true, -- #RRGGBB hex codes
