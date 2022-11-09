@@ -91,14 +91,17 @@ if which nvim >/dev/null; then
     export MANPAGER="/usr/local/bin/nvr -c 'Man!' -o -"
   else
     export EDITOR="nvim"
-    export VISUAL="nvim"
-    export MANPAGER="/usr/local/bin/nvim -c 'Man!' -o -"
+    export VISUAL="$EDITOR"
+    export MANPAGER="$EDITOR +Man!"
+    export ELIXIR_EDITOR="$EDITOR +__LINE__ __FILE__"
+    export PLUG_EDITOR=$ELIXIR_EDITOR
+    export ECTO_EDITOR=$ELIXIR_EDITOR
+    # export MANPAGER="/usr/local/bin/nvim -c 'Man!' -o -"
   fi
 
   export NVIMRUNTIME="/usr/local/share/nvim/runtime"
   export NVIM_TUI_ENABLE_TRUE_COLOR=1
-  export MANPAGER="${EDITOR} +Man!"
-  export ALTERNATE_EDITOR="vim"
+  export ALTERNATE_EDITOR="\vim"
 else
   export EDITOR="vim"
   export VISUAL="vim"

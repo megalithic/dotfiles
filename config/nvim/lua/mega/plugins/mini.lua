@@ -195,5 +195,6 @@ return function()
     --     idle_stop = 10000000,
     --   },
     -- })
+    require("mini.pairs").setup({})
   end, 0)
 end

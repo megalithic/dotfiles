@@ -731,45 +731,45 @@ local function plugins(use)
   --     })
   --   end,
   -- })
-  use({
-    "windwp/nvim-autopairs",
-    after = "nvim-treesitter",
-    event = "User PackerDeferred",
-    config = function()
-      require("nvim-autopairs").setup({
-        disable_filetype = { "TelescopePrompt" },
-        -- enable_afterquote = true, -- To use bracket pairs inside quotes
-        enable_check_bracket_line = true, -- Check for closing brace so it will not add a close pair
-        disable_in_macro = false,
-        close_triple_quotes = true,
-        check_ts = false,
-        ts_config = {
-          lua = { "string", "source" },
-          javascript = { "string", "template_string" },
-          java = false,
-        },
-        fast_wrap = {
-          map = "<C-,>",
-          chars = { "{", "[", "(", "\"", "'" },
-          pattern = string.gsub([[ [%'%"%)%>%]%)%}%,] ]], "%s+", ""),
-          offset = 0, -- Offset from pattern match
-          end_key = "$",
-          keys = "qwertyuiopzxcvbnmasdfghjkl",
-          check_comma = true,
-          highlight = "PmenuSel",
-          highlight_grey = "LineNr",
-        },
-      })
-      require("nvim-autopairs").add_rules(require("nvim-autopairs.rules.endwise-ruby"))
-      local endwise = require("nvim-autopairs.ts-rule").endwise
-      require("nvim-autopairs").add_rules({
-        endwise("do$", "end", "lua", nil),
-        endwise("then$", "end", "lua", "if_statement"),
-        endwise("function%(.*%)$", "end", "lua", nil),
-        endwise(" do$", "end", "elixir", nil),
-      })
-    end,
-  })
+  -- use({
+  --   "windwp/nvim-autopairs",
+  --   after = "nvim-treesitter",
+  --   event = "User PackerDeferred",
+  --   -- config = function()
+  --   --   require("nvim-autopairs").setup({
+  --   --     disable_filetype = { "TelescopePrompt" },
+  --   --     -- enable_afterquote = true, -- To use bracket pairs inside quotes
+  --   --     enable_check_bracket_line = true, -- Check for closing brace so it will not add a close pair
+  --   --     disable_in_macro = false,
+  --   --     close_triple_quotes = true,
+  --   --     check_ts = false,
+  --   --     ts_config = {
+  --   --       lua = { "string", "source" },
+  --   --       javascript = { "string", "template_string" },
+  --   --       java = false,
+  --   --     },
+  --   --     fast_wrap = {
+  --   --       map = "<C-,>",
+  --   --       chars = { "{", "[", "(", "\"", "'" },
+  --   --       pattern = string.gsub([[ [%'%"%)%>%]%)%}%,] ]], "%s+", ""),
+  --   --       offset = 0, -- Offset from pattern match
+  --   --       end_key = "$",
+  --   --       keys = "qwertyuiopzxcvbnmasdfghjkl",
+  --   --       check_comma = true,
+  --   --       highlight = "PmenuSel",
+  --   --       highlight_grey = "LineNr",
+  --   --     },
+  --   --   })
+  --   --   require("nvim-autopairs").add_rules(require("nvim-autopairs.rules.endwise-ruby"))
+  --   --   local endwise = require("nvim-autopairs.ts-rule").endwise
+  --   --   require("nvim-autopairs").add_rules({
+  --   --     endwise("do$", "end", "lua", nil),
+  --   --     endwise("then$", "end", "lua", "if_statement"),
+  --   --     endwise("function%(.*%)$", "end", "lua", nil),
+  --   --     endwise(" do$", "end", "elixir", nil),
+  --   --   })
+  --   -- end,
+  -- })
   use({
     "nacro90/numb.nvim",
     event = "CmdlineEnter",

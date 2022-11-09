@@ -8,6 +8,15 @@ matches:
   - trigger: Zoe
     replace: Zoë
     word: true
+  - trigger: dashbaord
+    replace: dashboard
+    word: true
+  - trigger: dashbroad
+    replace: dashboard
+    word: true
+  - trigger: dashbarod
+    replace: dashboard
+    word: true
   - trigger: ":zoom:"
     replace: "https://us02web.zoom.us/j/2264962052?pwd=ZHB1bCszbTliMVl4OWtzYkpYQjE5Zz09"
     word: true

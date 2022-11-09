@@ -487,7 +487,10 @@ vim.o.guifont = "JetBrains Mono:h12"
 -- Abbreviations/Cabbreviations {{{1
 -----------------------------------------------------------------------------//
 -- REF: https://github.com/lukas-reineke/lsp-format.nvim#wq-will-not-format
-vim.cmd([[cabbrev wq execute "lua vim.lsp.buf.format()" <bar> wq]])
+-- vim.cmd([[cabbrev wq execute "lua vim.lsp.buf.format()" <bar> wq]])
+vim.cmd.abbrev([[dashbarod dashboard]])
+vim.cmd.abbrev([[dashbaord dashboard]])
+vim.cmd.abbrev([[dashbroad dashboard]])
 
 -- [ colorscheme ] -------------------------------------------------------------
 do
