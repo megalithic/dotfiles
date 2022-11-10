@@ -120,8 +120,8 @@ return function()
     },
     -- see more configured sources in ftplugins/<filetype>.lua
     sources = cmp.config.sources({
-      { name = "nvim_lsp" },
-      { name = "luasnip" },
+      { name = "nvim_lsp", max_item_count = 10 },
+      { name = "luasnip", max_item_count = 10 },
       -- { name = "nvim_lsp_signature_help" },
       -- { name = "treesitter" },
       -- { name = "buffer", keyword_length = 3 },
@@ -131,8 +131,6 @@ return function()
         keyword_length = 5,
         max_item_count = 5, -- only show up to 5 items.
         options = {
-          keyword_length = 5,
-          max_item_count = 5, -- only show up to 5 items.
           -- get_bufnrs = function() return vim.api.nvim_list_bufs() end,
           get_bufnrs = function() return vim.tbl_map(vim.api.nvim_win_get_buf, vim.api.nvim_list_wins()) end,
           -- get_bufnrs = function()
@@ -230,15 +228,21 @@ return function()
     { name = "buffer" },
   })
 
-  -- cmp.setup.filetype("lua", {
-  --   sources = {
-  --     { name = "luasnip" },
-  --     { name = "nvim_lua" },
-  --     { name = "nvim_lsp" },
-  --     { name = "path" },
-  --   },
-  --   { name = "buffer" },
-  -- })
+  cmp.setup.filetype("lua", {
+    sources = {
+      { name = "luasnip" },
+      { name = "nvim_lua" },
+      { name = "nvim_lsp" },
+      { name = "path" },
+    },
+    { name = "buffer" },
+  })
+
+  cmp.setup.filetype({ "sql", "mysql", "plsql" }, {
+    sources = {
+      { name = "vim-dadbod-completion" },
+    },
+  })
 
   cmp.setup.filetype({ "dap-repl", "dapui_watches" }, {
     sources = {

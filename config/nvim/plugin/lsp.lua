@@ -333,15 +333,15 @@ local function setup_diagnostics()
   diagnostic.config({
     signs = {
       priority = 9999,
-      severity = { min = "HINT" },
+      severity = { min = diagnostic.severity.HINT },
     },
-    underline = { severity = { min = "HINT" } },
+    underline = { severity = { min = diagnostic.severity.HINT } },
     severity_sort = true,
     virtual_text = {
       spacing = 1,
       prefix = "",
       source = "if_many", -- or "always", "if_many" (for more than one source)
-      severity = { min = "ERROR" },
+      severity = { min = diagnostic.severity.ERROR },
       format = function(d)
         local lvl = diagnostic.severity[d.severity]
         local icon = mega.icons.lsp[lvl:lower()]

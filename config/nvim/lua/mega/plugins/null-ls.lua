@@ -38,7 +38,6 @@ return function()
           "svg",
           "json",
           "jsonc",
-          "yaml",
           "graphql",
           "markdown",
         },

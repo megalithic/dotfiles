@@ -3,12 +3,32 @@
 return function()
   local telescope = require("telescope")
 
-  local fn = vim.fn
+  local function setup_custom_actions(actions, builtin)
+    local transform_mod = require("telescope.actions.mt").transform_mod
+    return transform_mod({
+      jump_to_symbol = function(prompt_bufnr)
+        actions.file_edit(prompt_bufnr)
+        local valid_clients = #vim.tbl_filter(
+          function(client) return client.server_capabilities.documentSymbolProvider end,
+          vim.lsp.get_active_clients()
+        ) > 0
+        if valid_clients and vim.lsp.buf.server_ready() then return builtin.lsp_document_symbols() end
+        return builtin.current_buffer_tags()
+      end,
+      jump_to_line = function(prompt_bufnr)
+        actions.file_edit(prompt_bufnr)
+        vim.defer_fn(function() vim.api.nvim_feedkeys(":", "n", true) end, 100)
+      end,
+    })
+  end
+
+  local builtin = require("telescope.builtin")
   local actions = require("telescope.actions")
   local previewers = require("telescope.previewers")
   local lga_actions = require("telescope-live-grep-args.actions")
   local themes = require("telescope.themes")
   local action_state = require("telescope.actions.state")
+  local custom_actions = setup_custom_actions(actions, builtin)
 
   local fd_find_command = { "fd", "--type", "f", "--no-ignore-vcs", "--strip-cwd-prefix" }
   local rg_find_command = {
@@ -189,7 +209,7 @@ return function()
       mappings = {
         i = {
           ["<c-q>"] = actions.send_selected_to_qflist,
-          ["<c-l>"] = actions.send_to_qflist,
+          -- ["<c-l>"] = actions.send_to_qflist,
           ["<c-c>"] = function() vim.cmd.stopinsert() end,
           ["<esc>"] = actions.close,
           -- ["<cr>"] = actions.select_vertical,
@@ -203,6 +223,8 @@ return function()
           -- ["<c-e>"] = layout_actions.toggle_preview,
           ["<c-/>"] = actions.which_key,
           ["<Tab>"] = actions.toggle_selection,
+          ["<C-s>"] = custom_actions.jump_to_symbol,
+          ["<C-l>"] = custom_actions.jump_to_line,
         },
         n = {
           ["<c-q>"] = actions.send_selected_to_qflist,

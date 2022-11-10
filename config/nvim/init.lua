@@ -13,8 +13,8 @@ vim.g.enabled_plugin = {
   numbers = true,
   quickfix = true,
   folds = true,
+  env = true,
   tmux = false,
-  env = false,
   winbar = false, -- FIXME: add more!
 }
 
@@ -61,4 +61,13 @@ R("mega.options")
 vim.schedule(function()
   mega.packer_deferred()
   R("mega.plugins")
+
+  -- loads a local .nvimrc for our current working directory
+  local local_vimrc = vim.fn.getcwd() .. "/.nvimrc"
+  if vim.loop.fs_stat(local_vimrc) then
+    vim.cmd.source(local_vimrc)
+    vim.notify(fmt("Read **%s**", local_vimrc), vim.log.levels.INFO, {
+      title = "Nvim Local .nvimrc",
+    })
+  end
 end)

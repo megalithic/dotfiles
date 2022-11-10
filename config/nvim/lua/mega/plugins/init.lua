@@ -529,7 +529,7 @@ local function plugins(use)
 
   -- ( Completion ) ------------------------------------------------------------
   use({ "rafamadriz/friendly-snippets" })
-  use({ "L3MON4D3/LuaSnip", after = "friendly-snippets", module = "luasnip" })
+  use({ "L3MON4D3/LuaSnip", after = "friendly-snippets", module = "luasnip", ext = "luasnip" })
   use({
     "hrsh7th/nvim-cmp",
     ext = "cmp",
@@ -549,6 +549,7 @@ local function plugins(use)
       { "hrsh7th/cmp-nvim-lsp-document-symbol", after = "nvim-cmp" },
       { "dmitmel/cmp-cmdline-history", after = "nvim-cmp" },
       { "lukas-reineke/cmp-rg", tag = "*", after = "nvim-cmp" },
+      { "kristijanhusak/vim-dadbod-completion", after = "nvim-cmp" },
     },
   })
 
@@ -608,6 +609,7 @@ local function plugins(use)
   use({ "akinsho/toggleterm.nvim", ext = "toggleterm" })
   use({ "danymat/neogen" })
   use({
+    -- TODO: https://github.com/avucic/dotfiles/blob/master/nvim_user/.config/nvim/lua/user/configs/dadbod.lua
     "kristijanhusak/vim-dadbod-ui",
     requires = "tpope/vim-dadbod",
     cmd = { "DBUI", "DBUIToggle", "DBUIAddConnection" },
