@@ -15,7 +15,9 @@ vim.opt.shortmess = {
   T = true, -- truncate non-file messages in middle
   f = true, -- (file x of x) instead of just (x of x
   F = true, -- Don't give file info when editing a file, NOTE: this breaks autocommand messages
-  s = true,
+  s = true, -- Disable 'Search hit BOTTOM, continuing at TOP'
+  Cs = true, -- Disable "[1/5]", "Pattern not found", etc.
+  FW = true, -- Disable message after editing/writing file
   c = true,
   C = true, -- Don't show "Scanning..." messages
   W = true, -- Don't show [w] or written when writing
@@ -161,7 +163,6 @@ end
 -----------------------------------------------------------------------------//
 vim.o.wildcharm = fn.char2nr(mega.replace_termcodes([[<Tab>]]))
 vim.o.wildmode = "longest:full,full" -- Shows a menu bar as opposed to an enormous list
-vim.o.wildignorecase = true -- Ignore case when completing file names and directories
 -- Binary
 vim.opt.wildignore = {
   "*.aux",
@@ -190,6 +191,9 @@ vim.opt.wildignore = {
   "tags.lock",
 }
 vim.o.wildoptions = "pum"
+vim.o.wildignorecase = true -- Case insensitive file/directory completion
+vim.opt.path:append("**") -- Lets `find` search recursively into subfolders
+vim.o.cedit = "<C-y>" -- Enter Command-line Mode from command-mode
 vim.o.pumblend = 3 -- Make popup window translucent
 vim.o.pumheight = 20 -- completion menu height
 -----------------------------------------------------------------------------//

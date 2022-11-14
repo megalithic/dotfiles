@@ -37,6 +37,7 @@ vim.filetype.add({
     [".*%.conf"] = "conf",
     [".*%.theme"] = "conf",
     [".*ignore"] = "conf",
+    [".nvimrc"] = "lua",
     ["default-*%-packages"] = "conf",
     [".*%.gradle"] = "groovy",
     [".*%.env%..*"] = "env",

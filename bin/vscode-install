@@ -1,0 +1,176 @@
+#!/usr/bin/env bash
+
+if [[ -z $XDG_DATA_HOME ]]; then
+  export XDG_DATA_HOME="$HOME/.local/share"
+fi
+if [[ -z $XDG_CONFIG_HOME ]]; then
+  export XDG_CONFIG_HOME="$HOME/.config"
+fi
+
+[[ -f "${XDG_CONFIG_HOME}/zsh/lib/helpers.zsh" ]] && source "${XDG_CONFIG_HOME}/zsh/lib/helpers.zsh"
+
+set -euo pipefail
+
+# -- set some useful vars for executable info:
+__dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+__file="${__dir}/$(basename "${BASH_SOURCE[0]}")"
+__base="$(basename "$__file" .sh)"
+__root="$(cd "$(dirname "$__dir")" && pwd)"
+# shellcheck disable=SC2034,SC2015
+__invocation="$(printf %q "$__file")$( (($#)) && printf ' %q' "$@" || true)"
+
+log_info "Installing Visual Studio code extensions and config."
+
+# code -v >/dev/null
+if [[ $(code -v >/dev/null) -eq 0 ]]; then
+  read -r -p "Do you want to install VSC extensions? [y|N] " configresponse
+  if [[ $configresponse =~ ^(y|yes|Y) ]]; then
+    log_ok "Installing extensions please wait..."
+    # code --install-extension TwentyChung.jsx
+    # code --install-extension anseki.vscode-color
+    # code --install-extension bibhasdn.django-html
+    # code --install-extension christian-kohler.npm-intellisense
+    # code --install-extension dbaeumer.vscode-eslint
+    # code --install-extension donjayamanne.python
+    # code --install-extension dzannotti.vscode-babel-coloring
+    # code --install-extension eg2.vscode-npm-script
+    # code --install-extension qinjia.seti-icons
+    # code --install-extension t-sauer.autolinting-for-javascript
+    # code --install-extension timothymclane.react-redux-es6-snippets
+    # code --install-extension Zignd.html-css-class-completion
+    # code --install-extension abusaidm.html-snippets
+    # code --install-extension christian-kohler.path-intellisense
+    # code --install-extension mohsen1.prettify-json
+    # code --install-extension robinbentley.sass-indented
+    # code --install-extension mrmlnc.vscode-scss
+    # code --install-extension cssho.vscode-svgviewer
+    # code --install-extension bogdan-sinitsa.theme-dark-monokai
+    # code --install-extension whtouche.vscode-js-console-utils
+    # code --install-extension wix.vscode-import-cost
+
+    log_ok "Extensions for VSC have been installed. Please restart your VSC."
+  else
+    log_ok "Skipping extension install."
+  fi
+
+  read -r -p "Do you want to overwrite user config? [y|N] " configresponse
+  if [[ $configresponse =~ ^(y|yes|Y) ]]; then
+    read -r -p "Do you want to back up your current user config? [Y|n] " backupresponse
+    if [[ $backupresponse =~ ^(n|no|N) ]]; then
+      log_ok "Skipping user config save."
+    else
+      cp "$HOME"/Library/Application\ Support/Code/User/settings.json "$HOME"/Library/Application\ Support/Code/User/settings.backup.json
+      log_ok "Your previous config has been saved to: $HOME/Library/Application Support/Code/User/settings.backup.json"
+    fi
+    cp "$DOTS"/vscode/settings.json "$HOME"/Library/Application\ Support/Code/User/settings.json
+
+    log_ok "New user config has been written. Please restart your VSC."
+  else
+    log_warn "Skipping user config overwriting."
+  fi
+else
+  log_error "It looks like the command 'code' isn't accessible."
+  log_error "Please make sure you have Visual Studio Code installed"
+  log_error "And that you executed this procedure: https://code.visualstudio.com/docs/setup/mac"
+fi
+
+# FORCE_INSTALL="false"
+
+# remove_brew_nvim() {
+#   if brew ls --versions neovim >/dev/null; then
+#     read -p "$(tput bold)$(tput setaf 5)[?] remove homebrew version of neovim (Y/n)?$(tput sgr 0) " yn
+#     case $yn in
+#       [Yy]*)
+#         brew uninstall -f --ignore-dependencies neovim neovim-remote || exit 1
+#         ;;
+#       "")
+#         brew uninstall -f --ignore-dependencies neovim neovim-remote || exit 1
+#         ;;
+#       [Nn]*)
+#         log_warn "opted out of homebrew neovim removal"
+#         ;;
+#       *)
+#         log_warn "please answer [y]es or [n]o."
+#         exec "$__invocation"
+#         ;;
+#     esac
+#   fi
+# }
+
+# update() {
+#   cd "${XDG_DATA_HOME}/src/neovim" && log_ok "cd neovim successful"
+#   git checkout master && log_ok "git checkout master successful"
+#   git fetch && log_ok "git fetch successful"
+#   git log --color --pretty=oneline --abbrev-commit HEAD@{1}.. | sed 's/^/  /'
+# }
+
+# clone() {
+#   if [[ ! -d "${XDG_DATA_HOME}/src/neovim" ]]; then
+#     git clone git@github.com:neovim/neovim.git && log_ok "git clone neovim successful"
+#     cd neovim && log_ok "cd neovim successful"
+#     # do it all and then exit cleanly...
+#     update && build && remove_brew_nvim && popd >/dev/null && exit 0
+#   fi
+# }
+
+# do_build() {
+#   git up && log_ok "git up successful"
+
+#   # TODO: do we need to reinstall these each time??
+#   case "$(uname)" in
+#     Linux)
+#       # REF: https://github.com/neovim/neovim/wiki/Building-Neovim#ubuntu--debian
+#       sudo apt-get install ninja-build gettext libtool libtool-bin autoconf automake cmake g++ pkg-config unzip curl doxygen
+#       ;;
+#     Darwin)
+#       # REF: https://github.com/neovim/neovim/wiki/Building-Neovim#macos--homebrew
+#       brew install ninja libtool automake cmake pkg-config gettext curl
+#       ;;
+#   esac
+
+#   if [[ -d "${XDG_DATA_HOME}/src/neovim/.deps" ]]; then
+#     sudo rm -rf "${XDG_DATA_HOME}/src/neovim/.deps" && log_ok "remove .deps successful"
+#   fi
+
+#   sudo make distclean || exit 1 && log_ok "distclean successful"
+#   sudo make CMAKE_BUILD_TYPE=RelWithDebInfo || exit 1 && log_ok "make successful"
+#   sudo make install || exit 1 && log_ok "successfully built and installed neovim"
+
+#   log "installing neovim-remote via python (pip3).."
+#   # $(brew --prefix)/opt/python@3.9/bin/python3.9 -m pip install --upgrade pip
+#   python3 -m pip install --upgrade pip
+#   pip3 install neovim-remote
+# }
+
+# build() {
+#   if [[ $(git rev-parse HEAD) == $(git rev-parse @{u}) && $FORCE_INSTALL == "false" ]]; then
+#     log_warn "neovim already up to date on origin/master; skipping."
+#   elif [[ $(git rev-parse HEAD) != $(git rev-parse @{u}) || $FORCE_INSTALL == "true" ]]; then
+#     do_build || exit 1
+#   fi
+# }
+
+# while getopts "fp" OPTION; do
+#   case $OPTION in
+
+#     p)
+#       nvim "+StartupTime" && log_ok "nvim startup profiling completed successfully"
+#       # nvim --startuptime /tmp/startuptime.txt "+e /tmp/startuptime.txt"
+#       exit 0
+#       ;;
+
+#     f)
+#       FORCE_INSTALL="true"
+#       ;;
+
+#     ?)
+#       echo "Invalid Option: -$OPTARG" 1>&2
+#       exit 1
+#       ;;
+
+#   esac
+# done
+# shift $((OPTIND - 1))
+
+# pushd "${XDG_DATA_HOME}/src" >/dev/null && log_ok "cd ~/.local/share/src successful"
+# clone && update && build && remove_brew_nvim popd >/dev/null

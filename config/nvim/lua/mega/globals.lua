@@ -1138,7 +1138,7 @@ function mega.hl_search_blink(delay)
 end
 
 -- NOTE: This fn defers sourcing of most time consuming commands (mostly plugins). This is done by using `vim.schedule(f)` which defers execution of `f` until Vim is loaded. This doesn't affect general usability; it decreases time before showing fully functional start screen (or asked file).
-function mega.packer_deferred() vim.cmd([[do User PackerDeferred]]) end
+function mega.packer_deferred() if vim.g.vscode ~= 1 then vim.cmd([[do User PackerDeferred]]) end end
 
 function mega.get_cursor_position()
   local rowcol = vim.api.nvim_win_get_cursor(0)
@@ -1227,6 +1227,11 @@ do
   command("Recompile", function() mega.recompile() end, { nargs = "*" })
   command("Reload", function() mega.reload() end, { nargs = "*" })
   command("Noti", [[Mess | Notifications]])
+
+  command("DBUI", function()
+    vim.cmd("DotEnv")
+    vim.cmd("DBUI")
+  end, { nargs = "*" })
 
   vim.cmd([[command! PackerInstall packadd! packer.nvim | lua require('packer').install()]])
   vim.cmd([[command! PackerUpdate packadd! packer.nvim | lua require('packer').update()]])

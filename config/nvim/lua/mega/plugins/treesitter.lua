@@ -67,6 +67,7 @@ return function()
       "rust",
       "scss",
       "scheme",
+      "sql",
       "surface",
       "teal",
       "toml",
@@ -76,7 +77,7 @@ return function()
       "yaml",
     },
     highlight = {
-      enable = true,
+      enable = vim.g.vscode ~= 1,
       disable = function(lang, bufnr)
         -- local is_ignored_lang = vim.tbl_contains({ "svg", "json", "heex" }, lang)
         return mega.is_chonky(bufnr)
@@ -99,6 +100,7 @@ return function()
     },
     indent = { enable = true },
     autotag = { enable = true },
+    endwise = { enable = true },
     context_commentstring = {
       enable = true,
       enable_autocmd = false,

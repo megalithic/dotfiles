@@ -24,10 +24,10 @@
 
 ((list_marker_star) @conceal (#set! conceal "✸ ") (#eq? @conceal "* "))
 ((list_marker_plus) @conceal (#set! conceal "✿ ") (#eq? @conceal "+ "))
-((list_marker_minus) @conceal (#set! conceal " ") (#eq? @conceal "- "))
+; ((list_marker_minus) @conceal (#set! conceal " ") (#eq? @conceal "- "))
 ((list_marker_dot) @conceal (#set! conceal "• ") (#eq? @conceal ". "))
-((task_list_marker_checked) (#set! conceal " ") (#eq? @conceal "- [x] "))
-((task_list_marker_unchecked) (#set! conceal " ") (#eq? @conceal "- [ ] "))
+; ((task_list_marker_checked) (#set! conceal " ") (#eq? @conceal "- [x] "))
+; ((task_list_marker_unchecked) (#set! conceal " ") (#eq? @conceal "- [ ] "))
 ((task_list_marker_checked) @conceal (#set! conceal ""))
 ((task_list_marker_unchecked) @conceal (#set! conceal ""))
 

@@ -1,6 +1,8 @@
 local packer = require("mega.plugins.utils")
 local packer_notify = packer.notify
 
+if vim.g.vscode == 1 then return end
+
 local config = {
   -- opt_default = true,
   display = {
@@ -296,6 +298,7 @@ local function plugins(use)
   use({ "RRethy/nvim-treesitter-textsubjects", after = "nvim-treesitter" })
   use({ "nvim-treesitter/nvim-tree-docs", after = "nvim-treesitter" })
   use({ "JoosepAlviste/nvim-ts-context-commentstring", after = "nvim-treesitter" })
+  use({ "RRethy/nvim-treesitter-endwise", after = "nvim-treesitter" })
   use({ "jadengis/nvim-ts-autotag", after = "nvim-treesitter" })
   use({ "p00f/nvim-ts-rainbow", after = "nvim-treesitter" })
   use({

@@ -129,6 +129,7 @@ return function()
     ensure_installed = {
       "bashls",
       "clangd",
+      "cmake",
       "cssls",
       "dockerls",
       "elixirls",
@@ -136,12 +137,14 @@ return function()
       "ember",
       "emmet_ls",
       -- "erlangls",
+      "gopls",
       "html",
       "jsonls",
       -- "marksman",
       "pyright",
       "rust_analyzer",
       "solargraph",
+      -- "sqlls",
       "sumneko_lua",
       "tailwindcss",
       "terraformls",
@@ -149,46 +152,7 @@ return function()
       "vimls",
       "yamlls",
       "zk",
-
-      -- -- Null LS
-      -- "actionlint",
-      -- "codespell",
-      -- "eslint_d",
-      -- "prettierd",
-      -- "rubocop",
-      -- "shellcheck",
-      -- "shfmt",
-      -- "stylua",
-      -- "yamllint",
-
-      -- -- LSPs
-
-      -- "ansible-language-server",
-      -- "arduino-language-server",
-      -- "bash-language-server",
-      -- "clangd",
-      -- "cmake-language-server",
-      -- "css-lsp",
-      -- "dockerfile-language-server",
-      -- "elixir-ls",
-      -- "elm-language-server",
-      -- "erlang-ls",
-      -- "eslint-lsp",
-      -- "gopls",
-      -- "html-lsp",
-      -- "json-lsp",
-      -- "lua-language-server",
-      -- "prosemd-lsp",
-      -- "rust-analyzer",
-      -- "solargraph",
-      -- "sqlls",
-      -- "tailwindcss-language-server",
-      -- "taplo",
-      -- "terraform-ls",
-      -- "typescript-language-server",
-      -- "vim-language-server",
-      -- "yaml-language-server",
-      -- "zls",
+      "zls",
     },
   })
 
@@ -464,6 +428,7 @@ return function()
 
       lsp_setup(server_name, opts)
     end,
+    sqlls = function(server_name) lsp_setup(server_name) end,
     tailwindcss = function(server_name)
       local opts = vim.tbl_extend("keep", server_opts, {
         init_options = {

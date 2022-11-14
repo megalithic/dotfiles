@@ -187,6 +187,10 @@
     ~/.default-gems: asdf/default-gems
     ~/.default-npm-packages: asdf/default-npm-packages
     ~/.default-python-packages: asdf/default-python-packages
+    ~/Library/Application Support/Code/User/settings.json:
+      force: true
+      if: "[ `uname` = Darwin ]"
+      path: misc/vscode/settings.json
     ~/Library/Application Support/MailMate/Resources/KeyBindings/Mega.plist:
       force: true
       if: "[ `uname` = Darwin ]"
@@ -223,6 +227,7 @@
       force: true
       if: "[ `uname` = Darwin ]"
       path: config/surfingkeys/firenvim.json
+
 
 - shell:
     - description: GnuPG (gpg) setup..

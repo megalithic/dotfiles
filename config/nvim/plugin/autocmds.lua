@@ -442,7 +442,7 @@ augroup("LspDiagnosticExclusions", {
 })
 
 do
-  vim.keymap.set({ "n", "v", "o", "i", "c" }, "<Plug>(StopHL)", "execute(\"nohlsearch\")[-1]", { expr = true })
+  vim.keymap.set({ "n", "v", "o", "i", "c", "t" }, "<Plug>(StopHL)", "execute(\"nohlsearch\")[-1]", { expr = true })
   local function stop_hl()
     if vim.v.hlsearch == 0 or api.nvim_get_mode().mode ~= "n" then return end
     api.nvim_feedkeys(mega.replace_termcodes("<Plug>(StopHL)"), "m", false)

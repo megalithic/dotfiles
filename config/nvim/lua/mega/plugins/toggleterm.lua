@@ -59,7 +59,15 @@ return function()
     on_open = float_handler,
   })
 
+  local elixir_iex = Terminal:new({
+    cmd = "m",
+    hidden = "false",
+    direction = "horizontal",
+    -- on_open = float_handler,
+  })
+
   mega.command("Btop", function() btop:toggle() end)
+  mega.command("Iex", function() elixir_iex:toggle() end)
 
   nnoremap("<leader>tt", "<cmd>ToggleTerm direction=horizontal<cr>", "toggleterm")
   nnoremap("<leader>tf", "<cmd>ToggleTerm direction=float<cr>", "toggleterm (float)")
