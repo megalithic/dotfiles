@@ -14,7 +14,7 @@ vim.g.enabled_plugin = {
   quickfix = true,
   folds = true,
   env = true,
-  vscode = true,
+  vscode = false,
   tmux = false,
   winbar = false, -- FIXME: add more!
 }

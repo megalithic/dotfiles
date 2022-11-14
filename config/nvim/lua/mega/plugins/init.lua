@@ -1,7 +1,7 @@
 local packer = require("mega.plugins.utils")
 local packer_notify = packer.notify
 
-if vim.g.vscode == 1 then return end
+-- if vim.g.vscode == 1 then return end
 
 local config = {
   -- opt_default = true,
@@ -198,6 +198,7 @@ local function plugins(use)
   })
   use({
     "nvim-telescope/telescope-live-grep-args.nvim",
+    cond = vim.g.vscode ~= 1,
     after = "telescope.nvim",
     config = function() require("telescope").load_extension("live_grep_args") end,
   })
@@ -575,10 +576,10 @@ local function plugins(use)
   use({ "rcarriga/nvim-dap-ui", ext = "dapui", after = "nvim-dap" })
   use({ "jbyuki/one-small-step-for-vimkind", after = "nvim-dap" })
   use({ "suketa/nvim-dap-ruby", after = "nvim-dap", config = function() require("dap-ruby").setup() end })
-  use({
-    "microsoft/vscode-js-debug",
-    run = "npm install --legacy-peer-deps && npm run compile",
-  })
+  -- use({
+  --   "microsoft/vscode-js-debug",
+  --   run = "npm install --legacy-peer-deps && npm run compile",
+  -- })
   use({
     "mxsdev/nvim-dap-vscode-js",
     after = "nvim-dap",

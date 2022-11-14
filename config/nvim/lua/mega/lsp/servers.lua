@@ -211,7 +211,7 @@ return function()
         settings = {
           elixirLS = {
             mixEnv = "test",
-            fetchDeps = false,
+            fetchDeps = true,
             dialyzerEnabled = true,
             dialyzerFormat = "dialyxir_short",
             enableTestLenses = false,
