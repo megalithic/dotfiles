@@ -242,7 +242,7 @@ local function setup_keymaps(client, bufnr)
     [[<cmd>lua =vim.lsp.get_active_clients()[1].server_capabilities<CR>]],
     desc("server capabilities")
   )
-  nnoremap("<leader>lil", [[<cmd>lua vim.cmd("vnew " .. vim.lsp.get_log_path())<CR>]], desc("lsp logs (vsplit)"))
+  nnoremap("<leader>lil", [[<cmd>LspLog<CR>]], desc("logs (vsplit)"))
   nnoremap("<leader>lf", vim.lsp.buf.format, desc("format buffer"))
   nnoremap("<leader>lft", [[<cmd>ToggleNullFormatters<cr>]], desc("toggle formatting"))
   nnoremap("=", function() vim.lsp.buf.format({ buffer = bufnr, async = true }) end, desc("lsp: format buffer"))

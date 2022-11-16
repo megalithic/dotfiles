@@ -7,7 +7,7 @@
   "extensions.experimental.affinity": {
     "asvetliakov.vscode-neovim": 1
   },
-  "debug.console.fontFamily": "'JetBrainsMono Nerd Font', monospace",
+  "debug.console.fontFamily": "'JetBrainsMono Nerd Font Mono', monospace",
   "diffEditor.renderSideBySide": false,
   "editor.accessibilitySupport": "off",
   "editor.bracketPairColorization.enabled": false,

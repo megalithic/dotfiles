@@ -328,3 +328,5 @@ let g:loaded_zipPlugin    = 1
 
 """ Custom Commands
 command! Code execute ":!code -g %:p\:" . line('.') . ":" . col('.')
+
+autocmd VimEnter * cnoremap q q!|nnoremap q q!

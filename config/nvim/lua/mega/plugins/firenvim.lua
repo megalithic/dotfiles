@@ -91,7 +91,8 @@ return function()
       "q",
       "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR><Esc>norm! ggdGa<CR>"
     )
-    vim.opt.guifont = "JetBrainsMono_Nerd_Font_Mono:h22"
+    -- vim.opt.guifont = "JetBrainsMono_Nerd_Font_Mono:h22"
+    vim.opt.guifont = "JetBrainsMono Nerd Font Mono:h22"
 
     -- P(fmt("lines: %s, win_height: %s", vim.o.lines, vim.api.nvim_win_get_height(vim.api.nvim_get_current_win())))
 

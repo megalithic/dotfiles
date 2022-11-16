@@ -4,7 +4,8 @@ const shrug_indicator = "¯\\_(ツ)_/¯";
 
 const loader = (parent, enabled, indicator) => {
   indicator = indicator || loading_indicator;
-  const parentEl = (typeof parent == "string" && document.querySelector(parent)) || parent;
+  const parentEl =
+    (typeof parent == "string" && document.querySelector(parent)) || parent;
   let loaderEl;
 
   if (parent && parentEl) {
@@ -115,12 +116,14 @@ const weather = (enabled) => {
                     "background: linear-gradient(to bottom, #7FC7FA, #FFFFFF 65%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;";
                   break;
                 case "Light rain":
-                  wEl.querySelector("em").innerHTML = wEl.querySelector("em").innerHTML + " &#x1F327;";
+                  wEl.querySelector("em").innerHTML =
+                    wEl.querySelector("em").innerHTML + " &#x1F327;";
                   break;
                 case "Rain, mist":
                   wEl.querySelector("em").style =
                     "background: linear-gradient(90deg, #3377B6, #ffffff 85%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;";
-                  wEl.querySelector("em").innerHTML = wEl.querySelector("em").innerHTML + " &#x1F327;";
+                  wEl.querySelector("em").innerHTML =
+                    wEl.querySelector("em").innerHTML + " &#x1F327;";
                 case "Overcast":
                   wEl.querySelector("em").style =
                     "background: linear-gradient(to bottom, #666666, #ffffff 85%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;";
@@ -158,11 +161,38 @@ const focus = (selector) => {
   document.querySelector(selector).focus();
 };
 
+const stars = (user) =>
+  get(`https://api.github.com/users/${user}/starred`).then((data) => {
+    if (typeof data !== "undefined") {
+      console.log({ raw: data });
+      const starred = data.map((s) => ({
+        origin_user: s.owner.login,
+        origin_id: s.id,
+        origin_url: s.html_url,
+        origin_created_at: s.created_at,
+        content: s.description,
+        title: s.name,
+        tags: s.topics.concat(s.language),
+        meta: {
+          isFork: s.fork,
+          git_url: s.git_url,
+          ssh_url: s.ssh_url,
+          repo_name: s.name,
+          repo_full_name: s.full_name,
+        },
+      }));
+
+      console.log({ starred });
+    }
+  });
+
 const handleLoaded = () => {
   mimic(false);
   ip(true);
   weather(true);
   // focus("#test");
+  //
+  window.stars = stars;
 };
 
 if (["complete", "loaded", "interactive"].indexOf(document.readyState) >= 0) {

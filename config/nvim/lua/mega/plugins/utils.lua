@@ -14,7 +14,7 @@ local function setup_autocmds()
   mega.augroup("PackerSetupInit", {
     {
       event = { "BufWritePost" },
-      pattern = { "*/mega/plugins/*.lua" },
+      pattern = { "*/mega/plugins/*.lua", "*/mega/lsp/servers.lua" },
       desc = "setup and reloaded",
       command = mega.reload,
     },

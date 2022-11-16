@@ -142,12 +142,12 @@ return function()
           -- end,
         },
       },
-      -- {
-      --   name = "rg",
-      --   keyword_length = 4,
-      --   max_item_count = 10,
-      --   option = { additional_arguments = "--max-depth 8" },
-      -- },
+      {
+        name = "rg",
+        keyword_length = 4,
+        max_item_count = 10,
+        option = { additional_arguments = "--max-depth 8" },
+      },
       -- }, {
       --   {
       --     name = "buffer",
@@ -256,9 +256,9 @@ return function()
     -- https://github.com/rafamadriz/NeoCode/blob/main/lua/modules/plugins/completion.lua#L130-L192
   end
 
-  require("cmp.entry").get_documentation = function(self)
-    local item = self:get_completion_item()
-    if item.documentation then return require("mega.utils").format_markdown(item.documentation) end
-    return {}
-  end
+  -- require("cmp.entry").get_documentation = function(self)
+  --   local item = self:get_completion_item()
+  --   if item.documentation then return require("mega.utils").format_markdown(item.documentation) end
+  --   return {}
+  -- end
 end

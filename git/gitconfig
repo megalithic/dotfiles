@@ -47,8 +47,8 @@
 
   c = commit
   cv = commit -v
-  ; cm = commit -m
-  cm = !git commit -m "$(gum input)" -m "$(gum write)"
+  cm = commit -m
+  ; cm = !git commit -m "$(gum input)" -m "$(gum write)"
   ca = commit --amend
   cp = commit -p
 

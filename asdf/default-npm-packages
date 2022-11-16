@@ -25,6 +25,7 @@ ls_emmet
 lua-fmt
 markdownlint
 neovim
+node-fetch
 prettier
 prettier-plugin-eex
 prettier-plugin-tailwindcss

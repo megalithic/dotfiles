@@ -93,29 +93,19 @@ local function plugins(use)
   use({ "lukas-reineke/virt-column.nvim" })
   use({ "MunifTanjim/nui.nvim" })
   use({ "folke/which-key.nvim", ext = "which-key" })
-  use({ "phaazon/hop.nvim", ext = "hop" })
-  -- @trial multi-cursor: https://github.com/brendalf/dotfiles/blob/master/.config/nvim/lua/core/multi-cursor.lua
   use({
-    "ggandor/leap.nvim",
+    "nvim-zh/colorful-winsep.nvim",
     config = function()
-      require("leap").setup({
-        equivalence_classes = { " \t\r\n", "([{", ")]}", "`\"'" },
+      require("colorful-winsep").setup({
+        highlight = {
+          guibg = "NONE",
+          guifg = mega.colors.grey0.hex,
+          -- guifg = "#1F3442",
+        },
       })
     end,
   })
-  use({
-    "ggandor/flit.nvim",
-    wants = { "leap.nvim" },
-    after = "leap.nvim",
-    config = function()
-      require("flit").setup({
-        keys = { f = "f", F = "F", t = "t", T = "T" },
-        -- A string like "nv", "nvo", "o", etc.
-        labeled_modes = "nvo",
-        multiline = false,
-      })
-    end,
-  })
+
   use({ "echasnovski/mini.nvim", ext = "mini", after = "nvim-treesitter" })
   use({ "anuvyklack/hydra.nvim", ext = "hydra" })
   use({
@@ -124,7 +114,6 @@ local function plugins(use)
     module = "notify",
     cond = function() return vim.g.notifier_enabled end,
   })
-
   use({ "nanozuki/tabby.nvim", ext = "tabby" })
   use({
     "lukas-reineke/indent-blankline.nvim",
@@ -174,6 +163,31 @@ local function plugins(use)
     end,
   })
 
+  -- ( Movements ) -------------------------------------------------------------
+  use({ "phaazon/hop.nvim", ext = "hop" })
+  -- @trial multi-cursor: https://github.com/brendalf/dotfiles/blob/master/.config/nvim/lua/core/multi-cursor.lua
+  use({
+    "ggandor/leap.nvim",
+    config = function()
+      require("leap").setup({
+        equivalence_classes = { " \t\r\n", "([{", ")]}", "`\"'" },
+      })
+    end,
+  })
+  use({
+    "ggandor/flit.nvim",
+    wants = { "leap.nvim" },
+    after = "leap.nvim",
+    config = function()
+      require("flit").setup({
+        keys = { f = "f", F = "F", t = "t", T = "T" },
+        -- A string like "nv", "nvo", "o", etc.
+        labeled_modes = "nvo",
+        multiline = false,
+      })
+    end,
+  })
+
   -- ( Telescope ) -------------------------------------------------------------
   use({
     "nvim-telescope/telescope.nvim",
@@ -207,11 +221,11 @@ local function plugins(use)
     after = "telescope.nvim",
     config = function() require("telescope").load_extension("media_files") end,
   })
-  use({
-    "ryansch/habitats.nvim",
-    after = "telescope-file-browser.nvim",
-    config = function() require("habitats").setup({}) end,
-  })
+  -- use({
+  --   "ryansch/habitats.nvim",
+  --   after = "telescope-file-browser.nvim",
+  --   config = function() require("habitats").setup({}) end,
+  -- })
 
   -- ( FZF ) -------------------------------------------------------------------
   use({ "ibhagwan/fzf-lua", ext = "fzf" })
@@ -539,7 +553,6 @@ local function plugins(use)
     ext = "cmp",
     after = "LuaSnip",
     module = "cmp",
-    -- event = "InsertEnter",
     requires = {
       { "saadparwaiz1/cmp_luasnip", after = "nvim-cmp" },
       { "hrsh7th/cmp-buffer", after = "nvim-cmp" },
@@ -879,7 +892,7 @@ local function plugins(use)
   })
 
   -- ( Notes/Docs ) ------------------------------------------------------------
-  use({ "ixru/nvim-markdown" })
+  -- use({ "ixru/nvim-markdown" })
   use({ "iamcco/markdown-preview.nvim", ft = "md", run = "cd app && yarn install" })
   use({
     "toppair/peek.nvim",
@@ -902,7 +915,7 @@ local function plugins(use)
   use({ "mickael-menu/zk-nvim", ext = "zk", after = "telescope.nvim" })
   use({
     "gaoDean/autolist.nvim",
-    config = function() require("autolist").setup({ normal_mappings = { invert = { "<C-x>" } } }) end,
+    config = function() require("autolist").setup({ normal_mappings = { invert = { "<c-c>" } } }) end,
   })
   use({ "ellisonleao/glow.nvim" })
   use({
@@ -939,7 +952,7 @@ local function plugins(use)
 
   -- ( Syntax/Languages ) ------------------------------------------------------
   use({ "ii14/emmylua-nvim" })
-  -- use({ "elixir-editors/vim-elixir" })
+  use({ "elixir-editors/vim-elixir" })
   -- use({ "tpope/vim-rails" })
   -- use({ "ngscheurich/edeex.nvim" })
   -- use({ "antew/vim-elm-analyse" })
