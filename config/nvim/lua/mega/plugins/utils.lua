@@ -27,7 +27,13 @@ local function setup_autocmds()
     {
       event = { "User" },
       pattern = { "PackerCompileDone" },
-      command = function() M.notify("compilation finished") end,
+      command = function()
+        if not vim.g.packer_compiled_loaded and vim.loop.fs_stat(vim.g.packer_compiled_path) then
+          vim.cmd.source(vim.g.packer_compiled_path)
+          vim.g.packer_compiled_loaded = true
+        end
+        M.notify("compilation finished")
+      end,
     },
     {
       event = { "User" },
@@ -35,7 +41,7 @@ local function setup_autocmds()
       command = function()
         M.notify("updates finished")
         vim.defer_fn(function()
-          -- if vim.env.PACKER_NON_INTERACTIVE then vim.cmd("quitall!") end
+          if vim.env.PACKER_NON_INTERACTIVE then vim.cmd("quitall!") end
         end, 100)
       end,
     },

@@ -1,8 +1,6 @@
 local packer = require("mega.plugins.utils")
 local packer_notify = packer.notify
 
--- if vim.g.vscode == 1 then return end
-
 local config = {
   -- opt_default = true,
   display = {
@@ -51,8 +49,6 @@ local function plugins(use)
   use({
     "mcchrish/zenbones.nvim",
     requires = "rktjmp/lush.nvim",
-    -- cond = function() return vim.g.started_by_firenvim ~= nil end,
-    -- config = function() vim.cmd.colorscheme("forestbones") end,
   })
   use({ "neanias/everforest-nvim" })
   use({ "kyazdani42/nvim-web-devicons", config = function() require("nvim-web-devicons").setup() end })
@@ -963,12 +959,33 @@ local function plugins(use)
   })
 end
 
+-- [ COMMANDS ] ----------------------------------------------------------------
 mega.command("PackerCompiledEdit", function() vim.cmd.vnew(vim.g.packer_compiled_path) end)
-
 mega.command("PackerCompiledDelete", function()
   vim.fn.delete(vim.g.packer_compiled_path)
   packer_notify(string.format("deleted %s", vim.g.packer_compiled_path))
 end)
+mega.command("PackerUpgrade", function()
+  vim.schedule(function()
+    require("mega.plugins.utils").bootstrap()
+    require("mega.plugins.utils").sync()
+  end)
+end)
+mega.command("PackerCompile", function()
+  vim.cmd("packadd! packer.nvim")
+  vim.notify("waiting for compilation..", vim.log.levels.INFO, { title = "packer" })
+  require("packer").compile()
+end, { nargs = "*" })
+mega.command("Recompile", function() mega.recompile() end, { nargs = "*" })
+mega.command("Reload", function() mega.reload() end, { nargs = "*" })
+mega.command("PR", [[Recompile]], { nargs = "*" })
+mega.command("PC", [[PackerCompile]], { nargs = "*" })
+mega.command("PS", [[PackerSync]], { nargs = "*" })
+mega.command("PU", [[PackerSync]], { nargs = "*" })
+mega.command("PackerInstall", [[packadd! packer.nvim | lua require('packer').install()]], { nargs = "*" })
+mega.command("PackerUpdate", [[packadd! packer.nvim | lua require('packer').update()]], { nargs = "*" })
+mega.command("PackerSync", [[packadd! packer.nvim | lua require('packer').sync()]], { nargs = "*" })
+mega.command("PackerClean", [[packadd! packer.nvim | lua require('packer').clean()]], { nargs = "*" })
 
 if not vim.g.packer_compiled_loaded and vim.loop.fs_stat(vim.g.packer_compiled_path) then
   vim.cmd.source(vim.g.packer_compiled_path)
@@ -977,6 +994,7 @@ end
 
 mega.nnoremap("<leader>ps", "<Cmd>PackerSync<CR>", "packer: sync")
 mega.nnoremap("<leader>pc", "<Cmd>PackerCompile<CR>", "packer: compile")
+mega.nnoremap("<leader>pr", "<Cmd>Reload<CR>", "packer: reload")
 mega.nnoremap("<leader>px", "<Cmd>PackerClean<CR>", "packer: clean")
 
 vim.cmd.packadd({ "cfilter", bang = true })

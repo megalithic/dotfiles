@@ -1191,57 +1191,12 @@ do
     vim.cmd(fmt("lua P(%s)", opts.args))
     vim.g.debug_enabled = false
   end, { nargs = "*" })
-  command("PackerUpgrade", function()
-    P(
-      fmt(
-        "interactive out schedule? %s",
-        (vim.env.PACKER_NON_INTERACTIVE ~= nil and tonumber(vim.env.PACKER_NON_INTERACTIVE) == 1)
-      )
-    )
-
-    vim.schedule(function()
-      P(
-        fmt(
-          "%s, previewing updates: %s",
-          vim.env.PACKER_NON_INTERACTIVE,
-          (vim.env.PACKER_NON_INTERACTIVE ~= nil and tonumber(vim.env.PACKER_NON_INTERACTIVE) == 1) and false or true
-        )
-      )
-      P(
-        fmt(
-          "interactive in schedule? %s",
-          (vim.env.PACKER_NON_INTERACTIVE ~= nil and tonumber(vim.env.PACKER_NON_INTERACTIVE) == 1)
-        )
-      )
-      require("mega.plugins.utils").bootstrap()
-      require("mega.plugins.utils").sync()
-    end)
-  end)
-  command("PackerCompile", function()
-    vim.cmd("packadd! packer.nvim")
-    vim.notify("waiting for compilation..", vim.log.levels.INFO, { title = "packer" })
-    require("packer").compile()
-    vim.cmd.source(vim.g.packer_compiled_path)
-    vim.g.packer_compiled_loaded = true
-  end, { nargs = "*" })
-  command("Recompile", function() mega.recompile() end, { nargs = "*" })
-  command("Reload", function() mega.reload() end, { nargs = "*" })
   command("Noti", [[Mess | Notifications]])
 
   command("DBUI", function()
     vim.cmd("DotEnv")
     vim.cmd("DBUI")
   end, { nargs = "*" })
-
-  vim.cmd([[command! PackerInstall packadd! packer.nvim | lua require('packer').install()]])
-  vim.cmd([[command! PackerUpdate packadd! packer.nvim | lua require('packer').update()]])
-  vim.cmd([[command! PackerSync packadd! packer.nvim | lua require('packer').sync()]])
-  vim.cmd([[command! PackerClean packadd! packer.nvim | lua require('packer').clean()]])
-  vim.cmd([[command! PR Recompile]])
-  vim.cmd([[command! PR Reload]])
-  vim.cmd([[command! PC PackerCompile]])
-  vim.cmd([[command! PS PackerStatus]])
-  vim.cmd([[command! PU PackerSync]])
 end
 
 return mega

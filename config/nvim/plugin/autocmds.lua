@@ -8,7 +8,7 @@
 if not mega then return end
 if not vim.g.enabled_plugin["autocmds"] then return end
 
-fmt = fmt or string.format
+_G.fmt = fmt or string.format
 local vcmd = vim.cmd
 local fn = vim.fn
 local api = vim.api
@@ -27,12 +27,15 @@ do
     return ws
   end
   augroup("Startup", {
-    -- {
-    --   event = { "VimEnter" },
-    --   pattern = { "*" },
-    --   once = true,
-    --   command = function() require("mega.start").start() end,
-    -- },
+    {
+      event = { "VimEnter" },
+      pattern = { "*" },
+      once = true,
+      command = function()
+        vim.cmd([[if argc() == 0 | vert help news | exec '79wincmd|' | endif]])
+        -- require("mega.start").start()
+      end,
+    },
     -- {
     --   event = { "VimEnter" },
     --   pattern = { "*" },
