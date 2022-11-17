@@ -416,22 +416,22 @@ local function plugins(use)
       })
     end,
   })
-  use({
-    "jayp0521/mason-null-ls.nvim",
-    requires = {
-      "williamboman/mason.nvim",
-      "jose-elias-alvarez/null-ls.nvim",
-    },
-    after = "mason.nvim",
-    config = function()
-      require("mason-null-ls").setup({
-        automatic_installation = true,
-        ensure_installed = {
-          "beautysh",
-        },
-      })
-    end,
-  })
+  -- use({
+  --   "jayp0521/mason-null-ls.nvim",
+  --   requires = {
+  --     "williamboman/mason.nvim",
+  --     "jose-elias-alvarez/null-ls.nvim",
+  --   },
+  --   after = "mason.nvim",
+  --   config = function()
+  --     require("mason-null-ls").setup({
+  --       automatic_installation = true,
+  --       ensure_installed = {
+  --         "beautysh",
+  --       },
+  --     })
+  --   end,
+  -- })
   use({
     "neovim/nvim-lspconfig",
     module_pattern = "lspconfig.*",
