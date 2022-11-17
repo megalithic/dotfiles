@@ -114,6 +114,7 @@ brew "hub"
 brew "ical-buddy" if OS.mac?
 brew "jo"
 brew "jq"
+brew "kerl"
 brew "lazydocker"
 brew "lazygit"
 brew "libnotify" if OS.linux?

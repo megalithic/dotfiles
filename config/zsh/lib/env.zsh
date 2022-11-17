@@ -222,6 +222,7 @@ case "$(uname)" in
       # https://github.com/erlang/otp/issues/4821#issuecomment-961308734
       # export KERL_CONFIGURE_OPTIONS="--disable-debug --without-javac --with-ssl=$(brew --prefix)/opt/openssl@1.1)"
       export KERL_CONFIGURE_OPTIONS="--disable-hipe --disable-sctp --enable-darwin-64bit --enable-kernel-poll --enable-shared-zlib --enable-smp-support --enable-threads --enable-wx --with-ssl=$(brew --prefix openssl@1.1) --without-docs --without-javac --without-jinterface --without-odbc"
+      export KERL_BUILD_DOCS=yes
 
       # FIXME: asdf install erlang ->
       # EGREP=egrep CC=clang CPP="clang -E" KERL_USE_AUTOCONF=0 KERL_CONFIGURE_OPTIONS="--disable-hipe --disable-sctp --enable-darwin-64bit --enable-kernel-poll --enable-shared-zlib --enable-smp-support --enable-threads --enable-wx --with-ssl=$(brew --prefix openssl@1.1) --without-docs --without-javac --without-jinterface --without-odbc" asdf install erlang _version_

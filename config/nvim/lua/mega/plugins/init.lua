@@ -396,7 +396,7 @@ local function plugins(use)
         ensure_installed = {
           "bashls",
           "clangd",
-          "cmake",
+          -- "cmake",
           "cssls",
           "dockerls",
           "elixirls",
