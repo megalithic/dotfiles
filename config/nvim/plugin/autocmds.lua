@@ -195,7 +195,7 @@ do
       -- Last place of cursor position.
       -- When editing a file, always jump to the last known cursor position.
       -- Don't do it for commit messages, when the position is invalid.
-      event = { "BufWinEnter" },
+      event = { "BufEnter", "BufWinEnter", "WinEnter" },
       command = function()
         -- REF:
         -- https://github.com/novasenco/nvim.config/blob/main/autoload/autocmd.vim#L34
