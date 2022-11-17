@@ -95,6 +95,7 @@ local function plugins(use)
   use({ "folke/which-key.nvim", ext = "which-key" })
   use({
     "nvim-zh/colorful-winsep.nvim",
+    cond = false,
     config = function()
       require("colorful-winsep").setup({
         highlight = {
@@ -302,7 +303,7 @@ local function plugins(use)
   -- ( Treesitter ) ------------------------------------------------------------
   use({
     "nvim-treesitter/nvim-treesitter",
-    -- event = "User PackerDeferred",
+    event = "User PackerDeferred",
     run = ":TSUpdate",
     -- run = function() require("nvim-treesitter.install").update({ with_sync = true }) end,
     -- cmd = { "TSUpdate", "TSInstallSync" },
@@ -362,32 +363,79 @@ local function plugins(use)
       "williamboman/mason-lspconfig.nvim",
     },
     config = function()
+      -- require("mason").setup({
+      --   ui = {
+      --     border = _G.mega.get_border(),
+      --     log_level = vim.log.levels.DEBUG,
+      --   },
+      -- })
+
+      -- require("mega.lsp.servers")()
+      local get_config = require("mega.lsp.servers")
       require("mason").setup({
         ui = {
           border = _G.mega.get_border(),
           log_level = vim.log.levels.DEBUG,
         },
       })
-
-      require("mega.lsp.servers")()
+      require("mason-lspconfig").setup({
+        automatic_installation = true,
+        ensure_installed = {
+          "bashls",
+          "clangd",
+          "cmake",
+          "cssls",
+          "dockerls",
+          "elixirls",
+          "elmls",
+          "ember",
+          "emmet_ls",
+          -- "erlangls",
+          "gopls",
+          "html",
+          "jsonls",
+          -- "marksman",
+          "pyright",
+          "rust_analyzer",
+          "solargraph",
+          -- "sqlls",
+          "sumneko_lua",
+          "tailwindcss",
+          "terraformls",
+          "tsserver",
+          "vimls",
+          "yamlls",
+          "zk",
+          "zls",
+        },
+      })
+      require("mason-lspconfig").setup_handlers({
+        function(name)
+          local cfg = get_config(name)
+          if cfg then
+            -- vim.notify(fmt("Found lsp config for %s", name), vim.log.levels.INFO, { title = "mason-lspconfig" })
+            require("lspconfig")[name].setup(cfg)
+          end
+        end,
+      })
     end,
   })
-  -- use({
-  --   "jayp0521/mason-null-ls.nvim",
-  --   requires = {
-  --     "williamboman/mason.nvim",
-  --     "jose-elias-alvarez/null-ls.nvim",
-  --   },
-  --   after = "mason.nvim",
-  --   config = function()
-  --     require("mason-null-ls").setup({
-  --       automatic_installation = true,
-  --       ensure_installed = {
-  --         "beautysh",
-  --       },
-  --     })
-  --   end,
-  -- })
+  use({
+    "jayp0521/mason-null-ls.nvim",
+    requires = {
+      "williamboman/mason.nvim",
+      "jose-elias-alvarez/null-ls.nvim",
+    },
+    after = "mason.nvim",
+    config = function()
+      require("mason-null-ls").setup({
+        automatic_installation = true,
+        ensure_installed = {
+          "beautysh",
+        },
+      })
+    end,
+  })
   use({
     "neovim/nvim-lspconfig",
     module_pattern = "lspconfig.*",
@@ -551,22 +599,22 @@ local function plugins(use)
   use({
     "hrsh7th/nvim-cmp",
     ext = "cmp",
-    after = "LuaSnip",
+    -- after = "LuaSnip",
     module = "cmp",
     requires = {
       { "saadparwaiz1/cmp_luasnip", after = "nvim-cmp" },
       { "hrsh7th/cmp-buffer", after = "nvim-cmp" },
       { "hrsh7th/cmp-nvim-lsp", after = "nvim-cmp", module = "cmp_nvim_lsp" },
-      -- { "hrsh7th/cmp-nvim-lua", after = "nvim-cmp" },
+      { "hrsh7th/cmp-nvim-lua", after = "nvim-cmp" },
       { "hrsh7th/cmp-path", after = "nvim-cmp" },
       { "hrsh7th/cmp-emoji", after = "nvim-cmp" },
       { "f3fora/cmp-spell", after = "nvim-cmp" },
       { "hrsh7th/cmp-cmdline", after = "nvim-cmp" },
       { "hrsh7th/cmp-nvim-lsp-signature-help", after = "nvim-cmp" },
       { "hrsh7th/cmp-nvim-lsp-document-symbol", after = "nvim-cmp" },
-      { "dmitmel/cmp-cmdline-history", after = "nvim-cmp" },
-      { "lukas-reineke/cmp-rg", tag = "*", after = "nvim-cmp" },
-      { "kristijanhusak/vim-dadbod-completion", after = "nvim-cmp" },
+      -- { "dmitmel/cmp-cmdline-history", after = "nvim-cmp" },
+      { "lukas-reineke/cmp-rg", after = "nvim-cmp" },
+      -- { "kristijanhusak/vim-dadbod-completion", after = "nvim-cmp" },
     },
   })
 
@@ -683,73 +731,6 @@ local function plugins(use)
       }
     end,
   })
-  -- use({
-  --   -- HELP: https://github.com/otavioschwanck/cool-substitute.nvim#quickstart
-  --   -- * Press gm or M to mark word / region. M will also delete the word.
-  --   -- * Do anything you want, change with r, e, add something at beggining of line, etc
-  --   -- * press M or <C-b> to go finish the editing record and go forward / backward
-  --   -- * Keep pressing M or <C-b> to go applying the changes in selection
-  --   -- * Press <ENTER> to mark match at cursor to be ignored
-  --   -- * Navigate without changing with Ctrl + j and Ctrl + k
-  --   -- * To change all occurrences, press ga
-  --   "otavioschwanck/cool-substitute.nvim",
-  --   config = function()
-  --     if true then return end
-
-  --     require("cool-substitute").setup({
-  --       setup_keybindings = true,
-  --       mappings = {
-  --         start = "gm", -- Mark word / region
-  --         start_and_edit = "gM", -- Mark word / region and also edit
-  --         start_and_edit_word = "g!M", -- Mark word / region and also edit.  Edit only full word.
-  --         start_word = "g!m", -- Mark word / region. Edit only full word
-  --         apply_substitute_and_next = "<C-m>", -- Start substitution / Go to next substitution
-  --         apply_substitute_and_prev = "<C-M>", -- same as M but backwards
-  --       },
-
-  --       ---  DEFAULTS:
-  --       -- mappings = {
-  --       --   start = 'gm', -- Mark word / region
-  --       --   start_and_edit = 'gM', -- Mark word / region and also edit
-  --       --   start_and_edit_word = 'g!M', -- Mark word / region and also edit.  Edit only full word.
-  --       --   start_word = 'g!m', -- Mark word / region. Edit only full word
-  --       --   apply_substitute_and_next = 'M', -- Start substitution / Go to next substitution
-  --       --   apply_substitute_and_prev = '<C-b>', -- same as M but backwards
-  --       --   apply_substitute_all = 'ga', -- Substitute all
-  --       --   force_terminate_substitute = 'g!!', -- Terminate macro (if some bug happens)
-  --       --   terminate_substitute = '<esc>', -- Terminate macro
-  --       --   skip_substitute = '<cr>', -- Skip this occurrence
-  --       --   goto_next = '<C-j>', -- Go to next occurence
-  --       --   goto_previous = '<C-k>', -- Go to previous occurrence
-  --       -- },
-  --       -- reg_char = 'o', -- letter to save macro (Dont use number or uppercase here)
-  --       -- mark_char = 't', -- mark the position at start of macro
-  --       -- writing_substitution_color = "#ECBE7B", -- for status line
-  --       -- applying_substitution_color = "#98be65", -- for status line
-  --       -- edit_word_when_starting_with_substitute_key = true -- (press M to mark and edit when not executing anything anything)
-  --       --- OVERRIDES:
-  --       -- mappings = {
-  --       --   start = "<leader>sw", -- Mark word / region
-  --       --   start_word = "<leader>sW", -- Mark word / region. Edit only full word
-  --       --   -- start_and_edit = '<leader>cw', -- Mark word / region and also edit
-  --       --   -- start_and_edit_word = '<leader>cW', -- Mark word / region and also edit.  Edit only full word.
-  --       --   apply_substitute_and_next = "?", -- Start substitution / Go to next substitution
-  --       --   apply_substitute_and_prev = "!", -- same as M but backwards
-  --       --   apply_substitute_all = "g?", -- Substitute all
-  --       --   force_terminate_substitute = "<leader>sc", -- Terminate macro (if some bug happens)
-  --       --   terminate_substitute = "<esc>",
-  --       --   skip_substitute = "<cr>",
-  --       --   goto_next = "<C-j>",
-  --       --   goto_previous = "<C-k>",
-  --       -- },
-  --       -- reg_char = "s", -- letter to save macro (Dont use number or uppercase here)
-  --       -- mark_char = "s", -- mark the position at start of macro
-  --       -- writing_substitution_color = "#ECBE7B", -- for status line
-  --       -- applying_substitution_color = "#98be65", -- for status line
-  --       -- edit_word_when_starting_with_substitute_key = true, -- (press M to mark and edit when not executing anything anything)
-  --     })
-  --   end,
-  -- })
   -- use({
   --   "windwp/nvim-autopairs",
   --   after = "nvim-treesitter",

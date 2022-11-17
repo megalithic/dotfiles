@@ -16,8 +16,8 @@ local max_height = math.min(math.floor(vim.o.lines * 0.3), 30)
 vim.opt.completeopt = { "menu", "menuone", "noselect", "noinsert" }
 vim.opt.shortmess:append("c") -- Don't pass messages to |ins-completion-menu|
 
-require("vim.lsp.log").set_level("ERROR") -- opts: OFF
-require("vim.lsp.log").set_format_func(vim.inspect)
+-- require("vim.lsp.log").set_level("ERROR") -- opts: OFF
+-- require("vim.lsp.log").set_format_func(vim.inspect)
 
 -- NOTE:
 -- To learn what capabilities are available you can run the following command in

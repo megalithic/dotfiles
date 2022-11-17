@@ -4,7 +4,7 @@ return function()
   local fmt = string.format
   local api = vim.api
 
-  local ls = require("luasnip")
+  local ok_ls, ls = mega.require("luasnip")
 
   -- [nvim-cmp] --
   local has_words_before = function()
@@ -15,7 +15,7 @@ return function()
   local function tab(fallback)
     if cmp.visible() then
       cmp.select_next_item()
-    elseif ls and ls.expand_or_locally_jumpable() then
+    elseif ok_ls and ls and ls.expand_or_locally_jumpable() then
       ls.expand_or_jump()
     elseif has_words_before() then
       cmp.complete()
@@ -27,7 +27,7 @@ return function()
   local function shift_tab(fallback)
     if cmp.visible() then
       cmp.select_prev_item()
-    elseif ls and ls.jumpable(-1) then
+    elseif ok_ls and ls and ls.jumpable(-1) then
       ls.jump(-1)
     else
       fallback()
@@ -65,7 +65,7 @@ return function()
     --   return enable_if
     -- end,
     preselect = cmp.PreselectMode.None,
-    view = { entries = "custom" },
+    -- view = { entries = "custom" },
     completion = {
       keyword_length = 1,
       get_trigger_characters = function(trigger_characters)
@@ -119,54 +119,28 @@ return function()
       -- end,
     },
     -- see more configured sources in ftplugins/<filetype>.lua
-    sources = cmp.config.sources({
-      { name = "nvim_lsp", max_item_count = 10 },
-      { name = "luasnip", max_item_count = 10 },
-      -- { name = "nvim_lsp_signature_help" },
-      -- { name = "treesitter" },
-      -- { name = "buffer", keyword_length = 3 },
-      { name = "path", option = { trailing_slash = true } },
-      {
-        name = "buffer",
-        keyword_length = 5,
-        max_item_count = 5, -- only show up to 5 items.
-        options = {
-          -- get_bufnrs = function() return vim.api.nvim_list_bufs() end,
-          get_bufnrs = function() return vim.tbl_map(vim.api.nvim_win_get_buf, vim.api.nvim_list_wins()) end,
-          -- get_bufnrs = function()
-          --   local bufs = {}
-          --   for _, win in ipairs(api.nvim_list_wins()) do
-          --     bufs[api.nvim_win_get_buf(win)] = true
-          --   end
-          --   return vim.tbl_keys(bufs)
-          -- end,
-        },
-      },
-      {
-        name = "rg",
-        keyword_length = 4,
-        max_item_count = 10,
-        option = { additional_arguments = "--max-depth 8" },
-      },
-      -- }, {
-      --   {
-      --     name = "buffer",
-      --     keyword_length = 5,
-      --     max_item_count = 5, -- only show up to 5 items.
-      --     options = {
-      --       keyword_length = 5,
-      --       max_item_count = 5, -- only show up to 5 items.
-      --       get_bufnrs = function() return vim.api.nvim_list_bufs() end,
-      --       -- get_bufnrs = function()
-      --       --   local bufs = {}
-      --       --   for _, win in ipairs(api.nvim_list_wins()) do
-      --       --     bufs[api.nvim_win_get_buf(win)] = true
-      --       --   end
-      --       --   return vim.tbl_keys(bufs)
-      --       -- end,
-      --     },
-      --   },
-    }),
+    -- sources = cmp.config.sources({
+    --   { name = "nvim_lsp", max_item_count = 10 },
+    --   { name = "luasnip", max_item_count = 10 },
+    --   { name = "nvim_lsp_signature_help" },
+    --   -- { name = "treesitter" },
+    --   -- { name = "buffer", keyword_length = 3 },
+    --   { name = "path", option = { trailing_slash = true } },
+    --   {
+    --     name = "buffer",
+    --     keyword_length = 5,
+    --     max_item_count = 5, -- only show up to 5 items.
+    --     options = {
+    --       get_bufnrs = function() return vim.tbl_map(vim.api.nvim_win_get_buf, vim.api.nvim_list_wins()) end,
+    --     },
+    --   },
+    --   {
+    --     name = "rg",
+    --     keyword_length = 4,
+    --     max_item_count = 10,
+    --     option = { additional_arguments = "--max-depth 8" },
+    --   },
+    -- }),
     formatting = {
       deprecated = true,
       -- fields = { "kind", "abbr", "menu" }, -- determines order of menu items
@@ -184,34 +158,56 @@ return function()
           item.menu = entry.source.source.client.name
         else
           item.menu = ({
-            luasnip = "[lsnip]",
-            -- nvim_lua = "[nlua]",
             nvim_lsp = "[lsp]",
+            luasnip = "[lsnip]",
+            nvim_lua = "[nlua]",
             nvim_lsp_signature_help = "[sig]",
             path = "[path]",
+            rg = "[rg]",
             buffer = "[buf]",
             spell = "[spl]",
-            emoji = "[emo]",
             cmdline = "[cmd]",
-            -- cmdline_history = "[hist]",
-            rg = "[rg]",
+            cmdline_history = "[cmdhist]",
+            emoji = "[emo]",
           })[entry.source.name] or entry.source.name
         end
 
         return item
       end,
     },
+    sources = cmp.config.sources({
+      { name = "nvim_lsp" },
+      { name = "luasnip" },
+      { name = "path", option = { trailing_slash = true } },
+      {
+        name = "rg",
+        keyword_length = 4,
+        max_item_count = 10,
+        option = { additional_arguments = "--max-depth 8" },
+      },
+    }, {
+      {
+        name = "buffer",
+        keyword_length = 4,
+        max_item_count = 5, -- only show up to 5 items.
+        options = {
+          get_bufnrs = function() return vim.tbl_map(vim.api.nvim_win_get_buf, vim.api.nvim_list_wins()) end,
+        },
+      },
+      { name = "spell" },
+    }),
   })
 
   cmp.setup.cmdline({ "/", "?" }, {
-    view = {
-      entries = { name = "custom", direction = "bottom_up" },
-    },
+    -- view = {
+    --   entries = { name = "custom", direction = "bottom_up" },
+    -- },
     mapping = cmp.mapping.preset.cmdline(),
     sources = {
       sources = cmp.config.sources({ { name = "nvim_lsp_document_symbol" } }, { { name = "buffer" } }),
     },
   })
+
   cmp.setup.cmdline(":", {
     sources = cmp.config.sources({
       { name = "cmdline", keyword_pattern = [=[[^[:blank:]\!]*]=] },
@@ -228,21 +224,21 @@ return function()
     { name = "buffer" },
   })
 
-  cmp.setup.filetype("lua", {
-    sources = {
-      { name = "luasnip" },
-      { name = "nvim_lua" },
-      { name = "nvim_lsp" },
-      { name = "path" },
-    },
-    { name = "buffer" },
-  })
+  -- cmp.setup.filetype("lua", {
+  --   sources = {
+  --     { name = "luasnip" },
+  --     { name = "nvim_lua" },
+  --     { name = "nvim_lsp" },
+  --     { name = "path" },
+  --   },
+  --   { name = "buffer" },
+  -- })
 
-  cmp.setup.filetype({ "sql", "mysql", "plsql" }, {
-    sources = {
-      { name = "vim-dadbod-completion" },
-    },
-  })
+  -- cmp.setup.filetype({ "sql", "mysql", "plsql" }, {
+  --   sources = {
+  --     { name = "vim-dadbod-completion" },
+  --   },
+  -- })
 
   cmp.setup.filetype({ "dap-repl", "dapui_watches" }, {
     sources = {
@@ -250,15 +246,15 @@ return function()
     },
   })
 
-  if mega.require("nvim-autopairs") then
-    require("cmp").event:on("confirm_done", require("nvim-autopairs.completion.cmp").on_confirm_done())
-    -- REF: neat stuff:
-    -- https://github.com/rafamadriz/NeoCode/blob/main/lua/modules/plugins/completion.lua#L130-L192
-  end
-
-  -- require("cmp.entry").get_documentation = function(self)
-  --   local item = self:get_completion_item()
-  --   if item.documentation then return require("mega.utils").format_markdown(item.documentation) end
-  --   return {}
+  -- if mega.require("nvim-autopairs") then
+  --   require("cmp").event:on("confirm_done", require("nvim-autopairs.completion.cmp").on_confirm_done())
+  --   -- REF: neat stuff:
+  --   -- https://github.com/rafamadriz/NeoCode/blob/main/lua/modules/plugins/completion.lua#L130-L192
   -- end
+
+  require("cmp.entry").get_documentation = function(self)
+    local item = self:get_completion_item()
+    if item.documentation then return require("mega.utils").format_markdown(item.documentation) end
+    return {}
+  end
 end

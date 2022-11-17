@@ -169,8 +169,7 @@ function M.lsp.elixirls_cmd(opts)
     },
   })
 
-  opts.fallback_dir = opts.fallback_dir or vim.env.XDG_DATA_HOME or "~/.local/share"
-  opts.fallback_dir = string.format("%s/lsp/elixir-ls/%s", opts.fallback_dir, cmd)
+  opts.fallback_dir = string.format("%s/lsp/elixir-ls/%s", vim.env.XDG_DATA_HOME, cmd)
 
   -- P(fmt("opts: %s", I(opts)))
 

@@ -8,6 +8,8 @@ return function()
       delete = { hl = "GitSignsDelete", text = "▎" },
       topdelete = { hl = "GitSignsDelete", text = "▌" },
       changedelete = { hl = "GitSignsChange", text = "▌" },
+      untracked = { hl = "GitSignsAdd", text = "│" },
+      -- untracked = { hl = "GitSignsAdd", text = "▍", numhl = "GitSignsAddNr", linehl = "GitSignsAddLn" },
     },
     _threaded_diff = true,
     _extmark_signs = true,

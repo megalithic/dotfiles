@@ -62,7 +62,6 @@ R("mega.options")
 vim.schedule(function()
   mega.packer_deferred()
   R("mega.plugins")
-
   -- loads a local .nvimrc for our current working directory
   -- local local_vimrc = vim.fn.getcwd() .. "/.nvimrc"
   -- if vim.loop.fs_stat(local_vimrc) then
