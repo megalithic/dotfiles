@@ -32,7 +32,7 @@ return function()
       "c",
       "cpp",
       "css",
-      -- "comment", -- see styler.nvim
+      "comment", -- see styler.nvim
       "devicetree",
       "dockerfile",
       "diff",

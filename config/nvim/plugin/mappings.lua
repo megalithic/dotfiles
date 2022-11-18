@@ -68,7 +68,10 @@ nmap("<localleader>tv", "<cmd>TestVisit<cr>", "run test file _visit")
 nmap("<localleader>tp", "<cmd>A<cr>", "open alt (edit)")
 nmap("<localleader>tP", "<cmd>AV<cr>", "open alt (vsplit)")
 
-nmap("<localleader>f", "<cmd>FormatWrite<cr>", "run file formatter")
+nmap("<localleader>f", function()
+  vim.cmd("FormatWrite")
+  vim.defer_fn(function() vim.cmd("e") end, 500)
+end, "run file formatter")
 nmap("<localleader>F", "<cmd>LspFormat<cr>", "run lsp formatter")
 
 -- make the tab key match bracket pairs

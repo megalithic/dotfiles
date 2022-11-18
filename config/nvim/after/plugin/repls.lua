@@ -22,7 +22,6 @@ mega.command("TermElixir", function(args)
       vim.api.nvim_buf_set_var(bufnr, "term_cmd", cmd)
       vim.cmd("startinsert")
     end,
-    on_exit = function(job_id, exit_code, event) print(fmt("job_id/exit_code/event: %s/%s/%s", job_id, exit_code, event)) end,
   })
 end, { bang = true })
 

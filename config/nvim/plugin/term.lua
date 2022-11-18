@@ -313,10 +313,12 @@ local function create_term(opts)
       else
         -- test passed/process ended with an "ok" exit code, so let's close it.
         -- just know, some processes, like `rspec` don't give real exit codes for failed/errored tests. :/
-        if exit_code == 0 or exit_code == 127 or exit_code == 130 then
-          unset_term(true)
-          vim.cmd([[wincmd p]])
-        end
+        vim.defer_fn(function()
+          if vim.tbl_contains({ 0, 127, 129, 130 }, exit_code) then
+            unset_term(true)
+            -- vim.cmd(fmt([[%swincmd p]], opts.caller_winnr))
+          end
+        end, 100)
       end
     end,
   })

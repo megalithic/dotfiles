@@ -179,7 +179,7 @@ local servers = {
         css = true,
         javascript = true,
       },
-      provideFormatter = true,
+      provideFormatter = false,
     },
   },
   tsserver = function()
