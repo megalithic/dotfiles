@@ -695,6 +695,7 @@ local function plugins(use)
   use({
     "chipsenkbeil/distant.nvim",
     tag = "v0.2",
+    run = ":DistantInstall",
     config = function()
       require("distant").setup({
         -- Applies Chip's personal settings to every machine you connect to
@@ -936,6 +937,7 @@ local function plugins(use)
   use({ "ellisonleao/glow.nvim" })
   use({
     "lukas-reineke/headlines.nvim",
+    after = "nvim-treesitter",
     config = function()
       require("headlines").setup({
         markdown = {

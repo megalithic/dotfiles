@@ -32,8 +32,10 @@ do
       pattern = { "*" },
       once = true,
       command = function()
-        vim.cmd([[if argc() == 0 | vert help news | exec '79wincmd|' | endif]])
-        -- require("mega.start").start()
+        if not vim.g.started_by_firenvim then
+          vim.cmd([[if argc() == 0 | vert help news | exec '79wincmd|' | endif]])
+          -- require("mega.start").start()
+        end
       end,
     },
     -- {

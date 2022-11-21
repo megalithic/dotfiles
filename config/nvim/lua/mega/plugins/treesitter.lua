@@ -15,15 +15,17 @@ return function()
     },
     maintainers = { "@rockerBOO" },
   }
-  parser_config.gitcommit = {
-    install_info = {
-      url = "https://github.com/gbprod/tree-sitter-gitcommit",
-      files = { "src/parser.c", "src/scanner.c" },
-      branch = "main",
-    },
-    filetype = "gitcommit",
-    maintainers = { "@gbprod" },
-  }
+  -- TODO: determine colours and such; presently like what i have over using this.
+  -- parser_config.gitcommit = {
+  --   install_info = {
+  --     url = "https://github.com/gbprod/tree-sitter-gitcommit",
+  --     files = { "src/parser.c", "src/scanner.c" },
+  --     branch = "main",
+  --   },
+  --   filetype = "gitcommit",
+  --   maintainers = { "@gbprod" },
+  -- }
+
   local treesitter_parsers = require("nvim-treesitter.parsers")
   local ft_to_parser = treesitter_parsers.filetype_to_parsername
 
@@ -51,7 +53,7 @@ return function()
       "erlang",
       "fish",
       "git_rebase",
-      "gitcommit",
+      -- "gitcommit",
       "go",
       "graphql",
       "heex",
