@@ -15,7 +15,15 @@ return function()
     },
     maintainers = { "@rockerBOO" },
   }
-
+  parser_config.gitcommit = {
+    install_info = {
+      url = "https://github.com/gbprod/tree-sitter-gitcommit",
+      files = { "src/parser.c", "src/scanner.c" },
+      branch = "main",
+    },
+    filetype = "gitcommit",
+    maintainers = { "@gbprod" },
+  }
   local treesitter_parsers = require("nvim-treesitter.parsers")
   local ft_to_parser = treesitter_parsers.filetype_to_parsername
 
@@ -43,6 +51,7 @@ return function()
       "erlang",
       "fish",
       "git_rebase",
+      "gitcommit",
       "go",
       "graphql",
       "heex",

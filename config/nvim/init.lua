@@ -26,7 +26,7 @@ for plugin, _ in pairs(vim.g.enabled_plugin) do
   end
 end
 
-vim.g.colorscheme = "megaforest"
+vim.g.colorscheme = "megaforest" -- alts: rose-pine, forestbones, tokyonight-storm
 vim.g.default_colorcolumn = "81"
 vim.g.mapleader = ","
 vim.g.maplocalleader = " "
