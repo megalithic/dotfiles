@@ -4,7 +4,7 @@
 # tmux.conf file; however, `brew info et` needs `et` also, so this is a dirty
 # hack to give me both:
 
-set -euo pipefail
+# set -euo pipefail
 
 PARAM="${1:-}"
 

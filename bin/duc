@@ -34,8 +34,12 @@ function __help() {
 
 IMMEDIATELY_ATTACH="true"
 
-while getopts "hbl" OPTION; do
+while getopts "hibl" OPTION; do
   case $OPTION in
+    i)
+      "$HOME"/.dotfiles/bin/abduco-install
+      exit 0
+      ;;
     b)
       IMMEDIATELY_ATTACH="false"
       ;;

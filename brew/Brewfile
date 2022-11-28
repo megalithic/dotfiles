@@ -22,7 +22,7 @@ tap "olets/tap"
 tap "federico-terzi/espanso" if OS.mac? # legacy version (pre 2.x)
 # tap "espanso/espanso" if OS.mac?
 tap "mhanberg/zk" if OS.mac?
-tap "wez/wezterm" if OS.mac?
+# tap "wez/wezterm" if OS.mac?
 tap "FelixKratz/formulae" if OS.mac? # sketchyvim
 
 # -- for qmk_toolbox --
@@ -63,6 +63,7 @@ brew "ccls" # c-lang lsp vs., c-lang lsp in llvm
 brew "cmake" if OS.mac?
 brew "coreutils" if OS.mac?
 brew "curl"
+brew "curlie"
 brew "dbus"
 brew "defaultbrowser" if OS.mac?
 brew "deno"
@@ -155,8 +156,8 @@ brew "postgresql" if OS.mac?
 # initdb /usr/local/var/postgres -E utf8
 brew "python@3.7", link: false
 brew "python@3.8", link: false
-brew "python@3.9", link: true
-brew "python@3.10", link: false
+brew "python@3.9", link: false
+brew "python@3.10", link: true
 brew "readline"
 brew "reattach-to-user-namespace" if OS.mac?
 brew "ren"

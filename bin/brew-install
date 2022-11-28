@@ -17,13 +17,35 @@ set -euo pipefail
 # -- set some useful vars for executable info:
 __dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 __file="${__dir}/$(basename "${BASH_SOURCE[0]}")"
-__base="$(basename ${__file} .sh)"
-__root="$(cd "$(dirname "${__dir}")" && pwd)"
+__base="$(basename "$__file" .sh)"
+__root="$(cd "$(dirname "$__dir")" && pwd)"
 # shellcheck disable=SC2034,SC2015
-__invocation="$(printf %q "${__file}")$( (($#)) && printf ' %q' "$@" || true)"
+__invocation="$(printf %q "$__file")$( (($#)) && printf ' %q' "$@" || true)"
 
-while getopts "f" OPTION; do
+do_update() {
+  export NONINTERACTIVE=1
+  brew update
+  brew outdated
+  brew upgrade --force --verbose --debug
+}
+
+do_install() {
+  log "installing homebrew ($(uname)).."
+  NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" &&
+  log_ok "completed installing brew." ||
+  exit 1
+
+  if [[ "$?" == 0 ]]; then
+    brew bundle --verbose --debug --force --file=~/.dotfiles/brew/Brewfile
+  fi
+}
+
+while getopts "uf" OPTION; do
   case $OPTION in
+    u)
+      do_update
+      exit 0
+      ;;
 
     f)
       do_install && do_update
@@ -38,20 +60,6 @@ while getopts "f" OPTION; do
   esac
 done
 shift $((OPTIND - 1))
-
-do_update() {
-  export NONINTERACTIVE=1
-  brew update
-  brew outdated
-  brew upgrade
-}
-
-do_install() {
-  log "installing homebrew ($(uname)).."
-  NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" &&
-    log_ok "completed installing brew." ||
-    exit 1
-}
 
 if type "brew" &>/dev/null; then
   log_warn "brew already installed; updating instead."

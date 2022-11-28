@@ -16,6 +16,10 @@ SRC_PATH="${XDG_DATA_HOME}/src/abduco"
 REPO_PATH="https://github.com/legionus/abduco.git"
 
 do_install() {
+  if [[ -d "$SRC_PATH" ]]; then
+    rm -rf "$SRC_PATH"
+  fi
+
   log "cloning and installing abduco"
   git clone --depth=1 "$REPO_PATH" "$SRC_PATH" &&
   log_ok "cloned to $SRC_PATH" &&

@@ -15,46 +15,47 @@ local api = vim.api
 local augroup = mega.augroup
 local contains = vim.tbl_contains
 
-do
-  local function get_workspace_if_exists()
-    local ws = nil
-    local workspaces = require("workspaces").get()
-    local cwd = vim.fn.getcwd() .. "/"
-    for _, workspace in pairs(workspaces) do
-      if cwd == workspace.path then ws = workspace end
-    end
+-- do
+--   local function get_workspace_if_exists()
+--     local ws = nil
+--     local workspaces = require("workspaces").get()
+--     local cwd = vim.fn.getcwd() .. "/"
+--     for _, workspace in pairs(workspaces) do
+--       if cwd == workspace.path then ws = workspace end
+--     end
 
-    return ws
-  end
-  augroup("Startup", {
-    {
-      event = { "VimEnter" },
-      pattern = { "*" },
-      once = true,
-      command = function()
-        if not vim.g.started_by_firenvim then
-          vim.cmd([[if argc() == 0 | vert help news | exec '79wincmd|' | endif]])
-          -- require("mega.start").start()
-        end
-      end,
-    },
-    -- {
-    --   event = { "VimEnter" },
-    --   pattern = { "*" },
-    --   command = function(args)
-    --     vim.schedule_wrap(function()
-    --       local ws = get_workspace_if_exists()
-    --       if ws and type(ws) == "table" and args.file == "" then
-    --         P(ws.name)
-    --         require("workspaces").open(ws.name)
-    --       else
-    --         require("mega.start").start()
-    --       end
-    --     end, 0)
-    --   end,
-    -- },
-  })
-end
+--     return ws
+--   end
+
+--   augroup("Startup", {
+--     {
+--       event = { "VimEnter" },
+--       pattern = { "*" },
+--       once = true,
+--       command = function()
+--         if not vim.g.started_by_firenvim then
+--           vim.cmd([[if argc() == 0 | vert help news | exec '79wincmd|' | endif]])
+--           -- require("mega.start").start()
+--         end
+--       end,
+--     },
+--     -- {
+--     --   event = { "VimEnter" },
+--     --   pattern = { "*" },
+--     --   command = function(args)
+--     --     vim.schedule_wrap(function()
+--     --       local ws = get_workspace_if_exists()
+--     --       if ws and type(ws) == "table" and args.file == "" then
+--     --         P(ws.name)
+--     --         require("workspaces").open(ws.name)
+--     --       else
+--     --         require("mega.start").start()
+--     --       end
+--     --     end, 0)
+--     --   end,
+--     -- },
+--   })
+-- end
 
 -- Skeletons (Templates)
 -- REF:
@@ -193,24 +194,24 @@ do
         mega.auto_mkdir()
       end,
     },
-    {
-      -- Last place of cursor position.
-      -- When editing a file, always jump to the last known cursor position.
-      -- Don't do it for commit messages, when the position is invalid.
-      event = { "BufEnter", "BufWinEnter", "WinEnter" },
-      command = function()
-        -- REF:
-        -- https://github.com/novasenco/nvim.config/blob/main/autoload/autocmd.vim#L34
-        -- https://github.com/akinsho/dotfiles/blob/main/.config/nvim/plugin/autocommands.lua#L401-L419
-        if vim.bo.ft ~= "gitcommit" and vim.fn.win_gettype() ~= "popup" then
-          local last_place_mark = vim.api.nvim_buf_get_mark(0, "\"")
-          local line_nr = last_place_mark[1]
-          local last_line = vim.api.nvim_buf_line_count(0)
+    -- {
+    --   -- Last place of cursor position.
+    --   -- When editing a file, always jump to the last known cursor position.
+    --   -- Don't do it for commit messages, when the position is invalid.
+    --   event = { "BufEnter", "BufWinEnter", "WinEnter" },
+    --   command = function()
+    --     -- REF:
+    --     -- https://github.com/novasenco/nvim.config/blob/main/autoload/autocmd.vim#L34
+    --     -- https://github.com/akinsho/dotfiles/blob/main/.config/nvim/plugin/autocommands.lua#L401-L419
+    --     if vim.bo.ft ~= "gitcommit" and vim.fn.win_gettype() ~= "popup" then
+    --       local last_place_mark = vim.api.nvim_buf_get_mark(0, "\"")
+    --       local line_nr = last_place_mark[1]
+    --       local last_line = vim.api.nvim_buf_line_count(0)
 
-          if line_nr > 0 and line_nr <= last_line then vim.api.nvim_win_set_cursor(0, last_place_mark) end
-        end
-      end,
-    },
+    --       if line_nr > 0 and line_nr <= last_line then vim.api.nvim_win_set_cursor(0, last_place_mark) end
+    --     end
+    --   end,
+    -- },
     {
       event = { "BufLeave" },
       pattern = { "*" },

@@ -83,7 +83,16 @@ function obj:stop(opts)
 
   if obj.modal then obj.modal:exit() end
 
-  local function onStop()
+  if
+    _appObj
+    and (event == hs.application.watcher.hidden or event == hs.application.watcher.deactivated)
+    and (#_appObj:allWindows() == 0 or (#_appObj:allWindows() == 1 and _appObj:getWindow("") ~= nil))
+  then
+    -- make Zoom kill itself when I leave a meeting or there's just the "ending meeting" window like when someone else kills the meeting.
+    _appObj:kill()
+    -- FIXME: verify this needs or doesn't need to be called when we invoke `:kill()` on an hs.application object:
+    -- onStop()
+  elseif event == hs.application.watcher.terminated then
     L.req("lib.menubar.ptt").setState("push-to-talk")
     L.req("lib.dnd").off()
 
@@ -99,19 +108,6 @@ function obj:stop(opts)
         if kitty_win ~= nil then kitty_win:moveToUnit(hs.layout.maximized) end
       end
     end
-  end
-
-  if
-    _appObj
-    and (event == hs.application.watcher.hidden or event == hs.application.watcher.deactivated)
-    and (#_appObj:allWindows() == 0 or (#_appObj:allWindows() == 1 and _appObj:getWindow("") ~= nil))
-  then
-    -- make Zoom kill itself when I leave a meeting or there's just the "ending meeting" window like when someone else kills the meeting.
-    _appObj:kill()
-    -- FIXME: verify this needs or doesn't need to be called when we invoke `:kill()` on an hs.application object:
-    -- onStop()
-  elseif event == hs.application.watcher.terminated then
-    onStop()
   end
 
   return self

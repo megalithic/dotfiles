@@ -42,6 +42,16 @@ local function plugins(use)
   use({ "nvim-lua/popup.nvim" })
   use({ "dstein64/vim-startuptime", cmd = { "StartupTime" }, config = function() vim.g.startuptime_tries = 15 end })
   use({ "mattn/webapi-vim" })
+  use({
+    "ethanholz/nvim-lastplace",
+    config = function()
+      require("nvim-lastplace").setup({
+        lastplace_ignore_buftype = { "quickfix", "nofile", "help" },
+        lastplace_ignore_filetype = { "gitcommit", "gitrebase", "svn", "hgcommit" },
+        lastplace_open_folds = true,
+      })
+    end,
+  })
   -- use({ "miversen33/import.nvim" }) -- A better Lua 'require()'
 
   -- ( UI ) --------------------------------------------------------------------
@@ -228,11 +238,11 @@ local function plugins(use)
   use({ "ibhagwan/fzf-lua", ext = "fzf" })
 
   -- ( Navigation ) ------------------------------------------------------------
-  use({
-    "knubie/vim-kitty-navigator",
-    -- run = "cp ./*.py ~/.config/kitty/",
-    cond = function() return not vim.env.TMUX end,
-  })
+  -- use({
+  --   "knubie/vim-kitty-navigator",
+  --   -- run = "cp ./*.py ~/.config/kitty/",
+  --   cond = function() return not vim.env.TMUX end,
+  -- })
   -- use({ "elihunter173/dirbuf.nvim", config = function() require("dirbuf").setup({}) end })
   use({
     "nvim-neo-tree/neo-tree.nvim",

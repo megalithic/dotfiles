@@ -49,10 +49,10 @@ auth() {
 
 update() {
   log "update git submodules (recursively).." &&
-    git submodule update --init --recursive
+  git submodule update --init --recursive
 
   log "create missing folders and symlinks.." &&
-    ./install --only create link
+  ./install --only create link
 
   if [[ "$(uname)" == "Darwin" ]]; then
     log "update xcode cli tools.."
@@ -60,16 +60,16 @@ update() {
   fi
 
   log "homebrew install.." &&
-    ./bin/brew-install &&
-    ./install --only brewfile
+  ./bin/brew-install -u
+  # ./install --only brewfile
 
   log "asdf install.." &&
-    ./bin/asdf-install
+  ./bin/asdf-install
 
   if [[ "$(uname)" == "Darwin" ]]; then
     log "post-homebrew.."
     log "remove brew-installed ruby.." &&
-      brew uninstall --ignore-dependencies --force ruby
+    brew uninstall --ignore-dependencies --force ruby
 
     # FIXME: find a better way to ensure i'm leaving 3.3, and only removing newer versions.
     # log "remove latest weechat and relink to 3.3" &&
@@ -85,14 +85,14 @@ update() {
 
   if [[ "$(uname)" == "Darwin" ]]; then
     log "elixir-ls install.." &&
-      ./bin/elixirls-install master
+    ./bin/elixirls-install master
 
     # log "kitty icon update.." &&
     # ./config/kitty/update_icon.sh
   fi
 
   log "github auth login.." &&
-    ./bin/gh-login
+  ./bin/gh-login
 }
 
 yay() {
