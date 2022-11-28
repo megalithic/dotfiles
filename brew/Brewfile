@@ -22,7 +22,7 @@ tap "olets/tap"
 tap "federico-terzi/espanso" if OS.mac? # legacy version (pre 2.x)
 # tap "espanso/espanso" if OS.mac?
 tap "mhanberg/zk" if OS.mac?
-# tap "wez/wezterm" if OS.mac?
+tap "wez/wezterm" if OS.mac?
 tap "FelixKratz/formulae" if OS.mac? # sketchyvim
 
 # -- for qmk_toolbox --
@@ -77,6 +77,7 @@ brew "docker-machine" # , restart_service: true, link: false
 brew "duck" # cli for cyberduck
 # brew "elixir-ls" # disabled for now, as we're manually installing via dotbot
 brew "espanso" if OS.mac?
+brew "MisterTea/et/et"
 brew "exa"
 brew "exercism" if OS.mac?
 brew "fasd"

@@ -1,0 +1,23 @@
+#!/bin/sh
+#
+# REF: https://github.com/junegunn/fzf/discussions/2760#discussioncomment-4239679
+
+outpipe=$(mktemp -u)
+mkfifo -m 600 "$outpipe"
+
+if [ ! -t 0 ]; then
+  infile=$(mktemp /tmp/fzf-kitty.XXXXXX)
+  while read -r line; do
+    echo "$line" >>"$infile"
+  done
+fi
+
+kitty @launch --cwd "$PWD" --env "PATH=$PATH" --env "INFILE=$infile" --env "OUTPIPE=$outpipe" _fzf-kitty-to "$@" >/dev/null
+
+read -r line <"$outpipe"
+
+if [ ! -t 0 ]; then
+  rm "$infile"
+fi
+rm "$outpipe"
+echo "$line"
