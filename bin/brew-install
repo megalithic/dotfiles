@@ -24,8 +24,8 @@ __invocation="$(printf %q "$__file")$( (($#)) && printf ' %q' "$@" || true)"
 
 do_update() {
   export NONINTERACTIVE=1
-  brew update
-  brew outdated
+  brew update --verbose --debug
+  brew outdated --verbose --debug
   brew upgrade --force --verbose --debug
 }
 

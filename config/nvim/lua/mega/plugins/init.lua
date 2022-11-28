@@ -238,11 +238,11 @@ local function plugins(use)
   use({ "ibhagwan/fzf-lua", ext = "fzf" })
 
   -- ( Navigation ) ------------------------------------------------------------
-  -- use({
-  --   "knubie/vim-kitty-navigator",
-  --   -- run = "cp ./*.py ~/.config/kitty/",
-  --   cond = function() return not vim.env.TMUX end,
-  -- })
+  use({
+    "knubie/vim-kitty-navigator",
+    -- run = "cp ./*.py ~/.config/kitty/",
+    cond = function() return not vim.env.TMUX end,
+  })
   -- use({ "elihunter173/dirbuf.nvim", config = function() require("dirbuf").setup({}) end })
   use({
     "nvim-neo-tree/neo-tree.nvim",

@@ -6,7 +6,9 @@ SCRIPT_NAME = "fzf"
 SCRIPT_AUTHOR = "Trygve Aaberge <trygveaa@gmail.com>"
 SCRIPT_VERSION = "0.1.0"
 SCRIPT_LICENSE = "MIT"
-SCRIPT_DESC = "Switch buffer using fzf (currently only works inside tmux and kitty)"
+SCRIPT_DESC = (
+    "Switch buffer using fzf (currently only works inside tmux and kitty)"
+)
 REPO_URL = "https://github.com/trygveaa/weechat-fzf"
 
 
@@ -28,7 +30,11 @@ def fzf_process_cb(
     # print_log("Debugging.. data: {}".format(data))
     # print_log("Debugging.. command: {}".format(command))
 
-    if return_code == weechat.WEECHAT_HOOK_PROCESS_ERROR or return_code == 2 or err:
+    if (
+        return_code == weechat.WEECHAT_HOOK_PROCESS_ERROR
+        or return_code == 2
+        or err
+    ):
         print_error("Error running fzf (code {}): {}".format(return_code, err))
         return weechat.WEECHAT_RC_OK
     if out != "":
@@ -44,7 +50,9 @@ def fzf_tmux_command_cb(data: str, buffer: str, args: str) -> int:
         "fzf-tmux -- --delimiter='\t' --with-nth=3.. "
         "--preview='tail -$LINES {2} 2>/dev/null'"
     )
-    hook = weechat.hook_process_hashtable(cmd, {"stdin": "1"}, 0, "fzf_process_cb", "")
+    hook = weechat.hook_process_hashtable(
+        cmd, {"stdin": "1"}, 0, "fzf_process_cb", ""
+    )
     for buffer_info in buffers():
         weechat.hook_set(hook, "stdin", "\t".join(buffer_info) + "\n")
     weechat.hook_set(hook, "stdin_close", "")
@@ -53,12 +61,18 @@ def fzf_tmux_command_cb(data: str, buffer: str, args: str) -> int:
 
 def fzf_kitty_command_cb(data: str, buffer: str, args: str) -> int:
     # "kitty @ launch --type=overlay --keep-focus --hold --stdin-source=@last_cmd_output --stdin-add-formatting--stdin-add-line-wrap-markers \""
+    # cmd = (
+    #     "kitty @ launch --type=overlay --keep-focus --hold "
+    #     "fzf -- --delimiter='\t' --with-nth=3.. "
+    #     "--preview='tail -$LINES {2} 2>/dev/null'"
+    # )
     cmd = (
-        "kitty @ launch --type=overlay --keep-focus --hold "
-        "fzf -- --delimiter='\t' --with-nth=3.. "
+        "fzf-kitty -- --delimiter='\t' --with-nth=3.. "
         "--preview='tail -$LINES {2} 2>/dev/null'"
     )
-    hook = weechat.hook_process_hashtable(cmd, {"stdin": "1"}, 0, "fzf_process_cb", "")
+    hook = weechat.hook_process_hashtable(
+        cmd, {"stdin": "1"}, 0, "fzf_process_cb", ""
+    )
     # print_log("Debugging.. hook: {}".format(hook))
     for buffer_info in buffers():
         weechat.hook_set(hook, "stdin", "\t".join(buffer_info) + "\n")
@@ -86,7 +100,13 @@ def buffers() -> Iterator[Tuple[str, str, str, str]]:
 
 def main() -> None:
     if not weechat.register(
-        SCRIPT_NAME, SCRIPT_AUTHOR, SCRIPT_VERSION, SCRIPT_LICENSE, SCRIPT_DESC, "", ""
+        SCRIPT_NAME,
+        SCRIPT_AUTHOR,
+        SCRIPT_VERSION,
+        SCRIPT_LICENSE,
+        SCRIPT_DESC,
+        "",
+        "",
     ):
         return
 
