@@ -9,8 +9,8 @@ local augroup = mega.augroup
 local fmt = string.format
 local diagnostic = vim.diagnostic
 
-local max_width = math.min(math.floor(vim.o.columns * 0.7), 100)
-local max_height = math.min(math.floor(vim.o.lines * 0.3), 30)
+local max_width = math.min(math.floor(vim.o.columns * 0.7), 100) or 100
+local max_height = math.min(math.floor(vim.o.lines * 0.3), 30) or 30
 
 local opts = {
   border = mega.get_border(),

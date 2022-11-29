@@ -155,6 +155,7 @@ brew "pigz"
 brew "pinentry-mac" if OS.mac?
 brew "postgresql" if OS.mac?
 # initdb /usr/local/var/postgres -E utf8
+# psql -> CREATE USER postgres SUPERUSER;
 brew "python@3.7", link: false
 brew "python@3.8", link: false
 brew "python@3.9", link: false
