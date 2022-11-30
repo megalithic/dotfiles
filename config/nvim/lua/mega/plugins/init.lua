@@ -630,8 +630,8 @@ local function plugins(use)
   use({
     "hrsh7th/nvim-cmp",
     ext = "cmp",
-    -- after = "LuaSnip",
-    module = "cmp",
+    event = { "InsertEnter" },
+    keys = { { "v", ":" }, { "n", ":" } },
     requires = {
       { "saadparwaiz1/cmp_luasnip", after = "nvim-cmp" },
       { "hrsh7th/cmp-buffer", after = "nvim-cmp" },
@@ -640,7 +640,7 @@ local function plugins(use)
       { "hrsh7th/cmp-path", after = "nvim-cmp" },
       { "hrsh7th/cmp-emoji", after = "nvim-cmp" },
       { "f3fora/cmp-spell", after = "nvim-cmp" },
-      { "hrsh7th/cmp-cmdline", after = "nvim-cmp" },
+      { "hrsh7th/cmp-cmdline", after = "nvim-cmp", event = { "CmdlineEnter" } },
       { "hrsh7th/cmp-nvim-lsp-signature-help", after = "nvim-cmp" },
       { "hrsh7th/cmp-nvim-lsp-document-symbol", after = "nvim-cmp" },
       -- { "dmitmel/cmp-cmdline-history", after = "nvim-cmp" },
@@ -945,6 +945,7 @@ local function plugins(use)
     config = function() require("autolist").setup({ normal_mappings = { invert = { "<c-c>" } } }) end,
   })
   use({ "ellisonleao/glow.nvim" })
+  use({ "ekickx/clipboard-image.nvim" })
   use({
     "lukas-reineke/headlines.nvim",
     after = "nvim-treesitter",

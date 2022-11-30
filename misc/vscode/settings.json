@@ -90,5 +90,6 @@
   "typescript.tsserver.log": "off",
   "workbench.editorAssociations": {
     "*.pdf": "latex-workshop-pdf-hook"
-  }
+  },
+  "explorer.confirmDelete": false
 }

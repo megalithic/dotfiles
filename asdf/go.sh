@@ -7,10 +7,10 @@ set -euo pipefail
 # -- set some useful vars for executable info:
 __dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 __file="${__dir}/$(basename "${BASH_SOURCE[0]}")"
-__base="$(basename ${__file} .sh)"
-__root="$(cd "$(dirname "${__dir}")" && pwd)"
+__base="$(basename "$__file" .sh)"
+__root="$(cd "$(dirname "$__dir")" && pwd)"
 # shellcheck disable=SC2034,SC2015
-__invocation="$(printf %q "${__file}")$( (($#)) && printf ' %q' "$@" || true)"
+__invocation="$(printf %q "$__file")$( (($#)) && printf ' %q' "$@" || true)"
 
 do_install() {
   # TODO: https://golang.org/doc/go-get-install-deprecation
@@ -23,18 +23,18 @@ do_install() {
   if (has go); then
     # (! has luacheck) && luarocks install luacheck
     # -- install gopls
-    GO111MODULE=on go get golang.org/x/tools/gopls@latest
+    GO111MODULE=on go install golang.org/x/tools/gopls@latest
 
     # -- install misspell
-    GO111MODULE=on go get -u github.com/client9/misspell/cmd/misspell
+    GO111MODULE=on go install github.com/client9/misspell/cmd/misspell
 
     # -- install zk
     GO111MODULE=on go get -tags "fts5 icu" -u github.com/mickael-menu/zk@HEAD
 
     # -- install lemonade from copy/paste over tcp
-    GO111MODULE=on go get -u github.com/lemonade-command/lemonade@HEAD
+    GO111MODULE=on go install github.com/lemonade-command/lemonade@HEAD
 
-    GO111MODULE=on go get -u github.com/guysherman/kittymux/go
+    GO111MODULE=on go install github.com/guysherman/kittymux/go
 
     # TODO: still need to install zk from source?
     # zk_build_path="$HOME/code/oss/zk"

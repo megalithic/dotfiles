@@ -29,6 +29,8 @@ matches:
   - trigger: ":nope"
     replace: ಠ_ಠ
     word: true
+  - trigger: ":sweat:"
+    replace: 😅
   - trigger: ":heart:"
     replace: ❤️
     word: true

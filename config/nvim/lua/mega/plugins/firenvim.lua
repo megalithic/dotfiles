@@ -71,6 +71,14 @@ return function()
     vim.opt_local.cursorlineopt = "screenline,number"
     vim.opt_local.cursorline = true
 
+    vim.cmd([[
+      tmap <D-v> <C-w>"+
+      nnoremap <D-v> "+p
+      vnoremap <D-v> "+p
+      inoremap <D-v> <C-R><C-O>+
+      cnoremap <D-v> <C-R><C-O>+
+    ]])
+
     require("mega.globals").nnoremap(
       "<Esc>",
       "<cmd>wall | call firenvim#hide_frame() | call firenvim#press_keys('<LT>Esc>') | call firenvim#focus_page()<CR>"
