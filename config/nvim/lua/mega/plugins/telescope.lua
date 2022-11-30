@@ -249,6 +249,7 @@ return function()
         "%yarn.lock",
         "%package-lock.json",
         "^node_modules/.*",
+        "^app/assets/builds/.*",
       },
       -- :help telescope.defaults.path_display
       path_display = { "absolute", "truncate" },
