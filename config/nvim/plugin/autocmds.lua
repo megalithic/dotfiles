@@ -404,7 +404,7 @@ augroup("GitConflicts", {
       vim.notify("Conflicts detected.")
       vim.diagnostic.disable(args.buf)
       vim.cmd("LspStop")
-      vim.cmd("GitConflictListQf") -- | Telescope quickfix theme=get_ivy]])
+      -- vim.cmd("GitConflictListQf") -- | Telescope quickfix theme=get_ivy]])
 
       mega.nnoremap("cq", "<cmd>GitConflictListQf<CR>", "send conflicts to qf")
       mega.nnoremap("[c", "<cmd>GitConflictPrevConflict<CR>", "go to prev conflict")
