@@ -38,6 +38,9 @@ localrc
 **/.zsh_sessions
 .chpwd-recent-dirs
 cache
+yarn.lock
+package-lock.json
 *~
+app/assets/builds
 
 # vim:ft=gitignore:tw=0

@@ -309,7 +309,7 @@ local function plugins(use)
   -- ( Treesitter ) ------------------------------------------------------------
   use({
     "nvim-treesitter/nvim-treesitter",
-    event = "User PackerDeferred",
+    -- event = "User PackerDeferred",
     run = ":TSUpdate",
     -- run = function() require("nvim-treesitter.install").update({ with_sync = true }) end,
     -- cmd = { "TSUpdate", "TSInstallSync" },

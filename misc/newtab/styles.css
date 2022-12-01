@@ -31,6 +31,12 @@ section {
   justify-content: center;
 }
 
+#canonize {
+  color: #e39b7b;
+  position: fixed;
+  bottom: 1rem;
+}
+
 #logo {
   transition: all 0.2s;
   margin: 0 0 0.75rem;
@@ -97,7 +103,7 @@ strong.confirmation {
   opacity: 0.75;
   margin: 0.5rem 0 0;
   position: fixed;
-  bottom: 1.5rem;
+  bottom: 3rem;
 }
 #weather img,
 img.show {

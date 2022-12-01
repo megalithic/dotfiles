@@ -36,17 +36,17 @@ osascript -e 'tell application "System Preferences" to quit'
 
 # handy folders we always use/seem to need
 if [ ! -d "$HOME/code" ]; then
-	mkdir -p $HOME/code
+  mkdir -p $HOME/code
 fi
 if [ ! -d "$HOME/tmp" ]; then
-	mkdir -p $HOME/tmp
+  mkdir -p $HOME/tmp
 fi
 
 # Keep-alive: update existing `sudo` time stamp until `osx/osx.sh` has finished
 while true; do
-	sudo -n true
-	sleep 60
-	kill -0 "$$" || exit
+  sudo -n true
+  sleep 60
+  kill -0 "$$" || exit
 done 2>/dev/null &
 
 # Set standby delay to 24 hours (default is 1 hour)
@@ -62,6 +62,10 @@ sudo nvram SystemAudioVolume=" "
 defaults write NSGlobalDomain com.apple.sound.beep.flash -int 0
 defaults write NSGlobalDomain com.apple.sound.uiaudio.enabled -int 0
 
+# disable the power chime when plugging in charger
+defaults write com.apple.PowerChime ChimeOnAllHardware -bool false; killall PowerChime
+sudo nvram StartupMute=%01
+
 # Allow apps downloaded from "Anywhere"
 sudo spctl --master-disable
 
@@ -72,8 +76,8 @@ defaults write com.apple.LaunchServices LSQuarantine -bool false
 # sudo scutil --set HostName $COMPUTER_NAME
 # sudo scutil --set LocalHostName $COMPUTER_NAME
 # sudo defaults write \
-#   /Library/Preferences/SystemConfiguration/com.apple.smb.server \
-#   NetBIOSName -string $COMPUTER_NAME
+  #   /Library/Preferences/SystemConfiguration/com.apple.smb.server \
+  #   NetBIOSName -string $COMPUTER_NAME
 
 # Create symlink for iCloud Drive to ~
 ln -sfv ~/Library/Mobile\ Documents/com\~apple\~CloudDocs/ ~/iCloud
@@ -472,31 +476,31 @@ set +x
 ##
 
 dock_apps_to_remove=(
-	"Launchpad"
-	"Mail"
-	"Contacts"
-	"Notes"
-	"Reminders"
-	"Maps"
-	"Photos"
-	"FaceTime"
-	"iTunes"
-	"iBooks"
-	"App Store"
-	"System Preferences"
-	"Calendar"
-	"Safari"
+  "Launchpad"
+  "Mail"
+  "Contacts"
+  "Notes"
+  "Reminders"
+  "Maps"
+  "Photos"
+  "FaceTime"
+  "iTunes"
+  "iBooks"
+  "App Store"
+  "System Preferences"
+  "Calendar"
+  "Safari"
 )
 for app in "${dock_apps_to_remove[@]}"; do
-	log "removing \"${app}\" from the dock."
+  log "removing \"${app}\" from the dock."
 
-	# remove apps from dock
-	# osascript -e 'tell application "System Events" to make login item at end with properties {path:"/Applications/${app}.app", hidden:true}' > /dev/null
-	dockutil --remove "${app}" && log_ok "done" || log_error "unable to remove ${app} from the dock"
+  # remove apps from dock
+  # osascript -e 'tell application "System Events" to make login item at end with properties {path:"/Applications/${app}.app", hidden:true}' > /dev/null
+  dockutil --remove "${app}" && log_ok "done" || log_error "unable to remove ${app} from the dock"
 done
 
 function app_is_running {
-	osascript -so -e "application \"$1\" is running"
+  osascript -so -e "application \"$1\" is running"
 }
 
 # function ask {
@@ -516,41 +520,41 @@ function app_is_running {
 # }
 
 apps_to_restart=(
-	"Activity Monitor"
-	"Address Book"
-	"Calendar"
-	"cfprefsd"
-	"Contacts"
-	"Dock"
-	"Finder"
-	"Google Chrome"
-	"Photos"
-	"Safari"
-	"SystemUIServer"
+  "Activity Monitor"
+  "Address Book"
+  "Calendar"
+  "cfprefsd"
+  "Contacts"
+  "Dock"
+  "Finder"
+  "Google Chrome"
+  "Photos"
+  "Safari"
+  "SystemUIServer"
 )
 
 for app in "${apps_to_restart[@]}"; do
-	if [[ "$(app_is_running "${app}")" == "true" ]]; then
-		log "\"${app}\" needs to be restarted; proceeding to quit"
-		killall "${app}" &>/dev/null && log_ok "DONE"
-	fi
+  if [[ "$(app_is_running "${app}")" == "true" ]]; then
+    log "\"${app}\" needs to be restarted; proceeding to quit"
+    killall "${app}" &>/dev/null && log_ok "DONE"
+  fi
 done
 
 apps_to_launch=(
-	"1Password 7"
-	"Alfred 4"
-	"Bartender 4"
-	"BetterTouchTool"
-	"Brave Browser"
-	"Contexts"
-	"Docker"
-	# "Dropbox"
-	# "ExpressVPN"
-	"Fantastical"
-	"Hammerspoon"
-	# "iStat Menus"
-	"Karabiner-Elements"
-	"kitty"
+  "1Password 7"
+  "Alfred 4"
+  "Bartender 4"
+  "BetterTouchTool"
+  "Brave Browser"
+  "Contexts"
+  "Docker"
+  # "Dropbox"
+  # "ExpressVPN"
+  "Fantastical"
+  "Hammerspoon"
+  # "iStat Menus"
+  "Karabiner-Elements"
+  "kitty"
 )
 # for app in "${apps_to_launch[@]}"; do
 #   if [[ ! "$(app_is_running "${app}")" == "true" ]]; then
@@ -561,24 +565,24 @@ apps_to_launch=(
 # done
 
 apps_to_startup=(
-	"1Password 7"
-	"Alfred 4"
-	"Bartender 4"
-	"BetterTouchTool"
-	"Contexts"
-	"Docker"
-	# "Dropbox"
-	"Fantastical"
-	"Hammerspoon"
-	# "Hazel"
-	# "iStat Menus"
-	"Karabiner-Elements"
+  "1Password 7"
+  "Alfred 4"
+  "Bartender 4"
+  "BetterTouchTool"
+  "Contexts"
+  "Docker"
+  # "Dropbox"
+  "Fantastical"
+  "Hammerspoon"
+  # "Hazel"
+  # "iStat Menus"
+  "Karabiner-Elements"
 )
 for app in "${apps_to_startup[@]}"; do
-	log "setting to \"${app}\" to launch at startup."
+  log "setting to \"${app}\" to launch at startup."
 
-	# Enable apps at startup
-	osascript -e 'tell application "System Events" to make login item at end with properties {path:"/Applications/${app}.app", hidden:true}' >/dev/null && log_ok "DONE"
+  # Enable apps at startup
+  osascript -e 'tell application "System Events" to make login item at end with properties {path:"/Applications/${app}.app", hidden:true}' >/dev/null && log_ok "DONE"
 done
 
 # Set brave as default browser!
