@@ -401,7 +401,7 @@ augroup("GitConflicts", {
     event = { "User" },
     pattern = { "GitConflictDetected" },
     command = function(args)
-      vim.notify("Conflicts detected.")
+      mega.notify("Conflicts detected.")
       vim.diagnostic.disable(args.buf)
       vim.cmd("LspStop")
       -- vim.cmd("GitConflictListQf") -- | Telescope quickfix theme=get_ivy]])
@@ -415,7 +415,7 @@ augroup("GitConflicts", {
     event = { "User" },
     pattern = { "GitConflictResolved" },
     command = function(args)
-      vim.notify("Conflicts resolved.")
+      mega.notify("Conflicts resolved.")
       vim.diagnostic.enable(args.buf)
       vim.cmd("LspStart")
       vim.cmd("cclose")
