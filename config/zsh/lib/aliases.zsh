@@ -164,6 +164,7 @@ if type nvim >/dev/null 2>&1; then
   alias barevim="nvim -u NONE"
   alias packs="cd \"${XDG_DATA_HOME:-$HOME/.local/share}\"/nvim/site/pack/"
   alias rmpaqs="packs; rm -rf paqs; cd -"
+  alias ngit="nvim -c \":Neogit kind=replace\""
   [ -n "$NVIM_LISTEN_ADDRESS" ] && alias nvim=nvr -cc split --remote-wait +'set bufhidden=wipe'
 
   # suffix aliases set the program type to use to open a particular file with an extension
