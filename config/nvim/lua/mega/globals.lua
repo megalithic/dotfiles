@@ -1127,10 +1127,10 @@ function mega.should_disable_ts(opts)
   local lang = opts["lang"] or vim.bo[bufnr].filetype
 
   local is_ignored_lang = vim.tbl_contains(mega.ts_ignored_langs, lang)
-  local should_disable = mega.is_chonky(bufnr) and is_ignored_lang
+  local should_disable = mega.is_chonky(bufnr, filepath) and is_ignored_lang
   if should_disable then P(fmt("disabling ts highlight for %s", lang)) end
 
-  return should_disable, ignored_langs
+  return should_disable
 end
 
 function mega.hl_search_blink(delay)
