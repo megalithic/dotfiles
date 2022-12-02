@@ -438,7 +438,7 @@ local function on_attach(client, bufnr)
 
   -- Live color highlighting; handy for tailwindcss
   -- HT: kabouzeid
-  if caps.colorProvider then
+  if type(caps.provider) == "boolean" and caps.colorProvider then
     if client.name == "tailwindcss" then
       -- require("mega.lsp.document_colors").buf_attach(bufnr, { single_column = true, col_count = 2 })
       require("document-color").buf_attach(bufnr, { mode = "single" })

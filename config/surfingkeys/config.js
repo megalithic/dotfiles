@@ -103,6 +103,8 @@ mapkey("w", "Move current tab to another window", function () {
   Front.openOmnibar({ type: "Windows" });
 });
 
+unmap("<Meta-k>"); // search
+
 unmap(":"); // Lets me map chords beginning with ':'
 iunmap(":"); // disable emoji completion
 vunmap("t"); // disable google translate of visually selected

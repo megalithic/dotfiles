@@ -150,6 +150,19 @@ local servers = {
         eruby = "html",
       },
     },
+    filetypes = {
+      "html",
+      "javascriptreact",
+      "typescriptreact",
+      "eelixir",
+      "html.heex",
+      "heex",
+      "html_heex",
+      "html_eex",
+      "phoenix-heex",
+      "phoenix_heex",
+      "eruby",
+    },
   },
   html = {
     filetypes = {
@@ -161,6 +174,8 @@ local servers = {
       "heex",
       "html_heex",
       "html_eex",
+      "phoenix-heex",
+      "phoenix_heex",
       "eruby",
     },
     init_options = {
@@ -173,6 +188,8 @@ local servers = {
         "html.heex",
         "html_heex",
         "html_eex",
+        "phoenix-heex",
+        "phoenix_heex",
         "eruby",
       },
       embeddedLanguages = {

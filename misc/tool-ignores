@@ -42,5 +42,6 @@ yarn.lock
 package-lock.json
 *~
 app/assets/builds
+erl_crash.dump
 
 # vim:ft=gitignore:tw=0
