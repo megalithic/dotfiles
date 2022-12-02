@@ -92,13 +92,7 @@ return function()
     },
     highlight = {
       enable = vim.g.vscode ~= 1,
-      disable = function(lang, bufnr)
-        local is_ignored_lang = vim.tbl_contains({ "svg", "json", "heex", "jsonc" }, lang)
-        local should_disable = mega.is_chonky(bufnr) and is_ignored_lang
-        if should_disable then P(fmt("disabling ts highlight for %s", lang)) end
-
-        return should_disable
-      end,
+      disable = function(lang, bufnr) return mega.should_disable_ts({ lang = lang, bufnr = bufnr }) end,
       use_languagetree = true,
       -- Setting this to true will run `:h syntax` and tree-sitter at the same time.
       -- Set this to `true` if you depend on 'syntax' being enabled (like for indentation).

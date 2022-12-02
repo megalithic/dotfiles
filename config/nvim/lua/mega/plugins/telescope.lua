@@ -153,17 +153,21 @@ return function()
 
   local conditional_buffer_preview = function(filepath, bufnr, opts)
     opts = opts or {}
-    local max_filesize = 50 * 1024
+    -- local max_filesize = 50 * 1024
 
-    filepath = vim.fn.expand(filepath)
-    vim.loop.fs_stat(filepath, function(_, stat)
-      if not stat then return end
-      if stat.size > max_filesize then
-        return
-      else
-        previewers.buffer_previewer_maker(filepath, bufnr, opts)
-      end
-    end)
+    -- filepath = vim.fn.expand(filepath)
+    -- vim.loop.fs_stat(filepath, function(_, stat)
+    --   if not stat then return end
+    --   if stat.size > max_filesize then
+    --     return
+    --   else
+    --     previewers.buffer_previewer_maker(filepath, bufnr, opts)
+    --   end
+    -- end)
+
+    if not mega.should_disable_ts({ filepath = filepath, bufnr = bufnr }) then
+      previewers.buffer_previewer_maker(filepath, bufnr, opts)
+    end
   end
 
   ---@param opts table
@@ -240,7 +244,6 @@ return function()
         "%.webp",
         "%.otf",
         "%.ttf",
-        vim.g.is_remote_dev and "^apps/pages/fixture/vcr_cassettes/*.json" or "",
       },
       -- :help telescope.defaults.path_display
       path_display = { "absolute", "truncate" },
@@ -278,37 +281,37 @@ return function()
       preview = {
         treesitter = {
           enable = true,
-          -- disable = { "heex", "svg", "json", "json5", "jsonc" },
+          disable = mega.ts_ignored_langs,
         },
-        mime_hook = function(filepath, bufnr, opts)
-          local is_image = function(filepath)
-            local image_extensions = { "png", "jpg", "jpeg", "gif" } -- Supported image formats
-            local split_path = vim.split(filepath:lower(), ".", { plain = true })
-            local extension = split_path[#split_path]
-            return vim.tbl_contains(image_extensions, extension)
-          end
-          if is_image(filepath) then
-            local term = vim.api.nvim_open_term(bufnr, {})
-            local function send_output(_, data, _)
-              for _, d in ipairs(data) do
-                vim.api.nvim_chan_send(term, d .. "\r\n")
-              end
-            end
+        -- mime_hook = function(filepath, bufnr, opts)
+        --   local is_image = function(filepath)
+        --     local image_extensions = { "png", "jpg", "jpeg", "gif" } -- Supported image formats
+        --     local split_path = vim.split(filepath:lower(), ".", { plain = true })
+        --     local extension = split_path[#split_path]
+        --     return vim.tbl_contains(image_extensions, extension)
+        --   end
+        --   if is_image(filepath) then
+        --     local term = vim.api.nvim_open_term(bufnr, {})
+        --     local function send_output(_, data, _)
+        --       for _, d in ipairs(data) do
+        --         vim.api.nvim_chan_send(term, d .. "\r\n")
+        --       end
+        --     end
 
-            vim.fn.jobstart({
-              "viu",
-              "-w",
-              "40",
-              "-b",
-              filepath,
-            }, {
-              on_stdout = send_output,
-              stdout_buffered = true,
-            })
-          else
-            require("telescope.previewers.utils").set_preview_message(bufnr, opts.winid, "Binary cannot be previewed")
-          end
-        end,
+        --     vim.fn.jobstart({
+        --       "viu",
+        --       "-w",
+        --       "40",
+        --       "-b",
+        --       filepath,
+        --     }, {
+        --       on_stdout = send_output,
+        --       stdout_buffered = true,
+        --     })
+        --   else
+        --     require("telescope.previewers.utils").set_preview_message(bufnr, opts.winid, "Binary cannot be previewed")
+        --   end
+        -- end,
       },
       vimgrep_arguments = grep_files_cmd,
     },

@@ -44,6 +44,7 @@ _G.mega = mega
     lsp = {},
     colors = require("mega.lush_theme.colors"),
     icons = require("mega.icons"),
+    ts_ignored_langs = { "svg", "json", "heex", "jsonc" },
     -- original vim.notify: REF: https://github.com/folke/dot/commit/b0f6a2db608cb090b969e2ef5c018b86d11fc4d6
     notify = vim.notify,
   }

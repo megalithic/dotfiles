@@ -1105,16 +1105,32 @@ function mega.clear_commandline()
   end
 end
 
-function mega.is_chonky(bufnr)
+function mega.is_chonky(bufnr, filepath)
   bufnr = bufnr or vim.api.nvim_get_current_buf()
+  filepath = filepath or vim.api.nvim_buf_get_name(bufnr)
   local is_too_long = vim.api.nvim_buf_line_count(bufnr) >= 5000
   local is_too_large = false
 
   local max_filesize = 50 * 1024 -- 50 KB
-  local ok, stats = pcall(vim.loop.fs_stat, vim.api.nvim_buf_get_name(bufnr))
+  local ok, stats = pcall(vim.loop.fs_stat, filepath)
   if ok and stats and stats.size > max_filesize then is_too_large = true end
 
+  if is_too_long or is_too_large then P(fmt("is too long (%s) or, is too chonky (%s)", is_too_long, is_too_large)) end
+
   return (is_too_long or is_too_large)
+end
+
+function mega.should_disable_ts(opts)
+  opts = opts or {}
+  local bufnr = opts["bufnr"] or vim.api.nvim_get_current_buf()
+  local filepath = opts["filepath"] or vim.api.nvim_buf_get_name(bufnr)
+  local lang = opts["lang"] or vim.bo[bufnr].filetype
+
+  local is_ignored_lang = vim.tbl_contains(mega.ts_ignored_langs, lang)
+  local should_disable = mega.is_chonky(bufnr) and is_ignored_lang
+  if should_disable then P(fmt("disabling ts highlight for %s", lang)) end
+
+  return should_disable, ignored_langs
 end
 
 function mega.hl_search_blink(delay)
