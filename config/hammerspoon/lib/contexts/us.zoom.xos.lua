@@ -55,7 +55,7 @@ function obj:start(opts)
       local zoom = hs.application.get("zoom.us")
 
       hs.timer.waitUntil(function() return zoom:getWindow("Zoom Meeting") end, function()
-        L.req("lib.dnd").on()
+        L.req("lib.dnd").on("zoom")
         hs.spotify.pause()
         L.req("lib.menubar.ptt").setState("push-to-talk")
         L.req("lib.browser").killTabsByDomain("us02web.zoom.us")

@@ -81,9 +81,9 @@ return function()
   -- SNIPPETS
   ls.cleanup() -- clears all snippets for writing snippets
 
-  add("all", {
-    snip({ trig = "!!", wordTrig = false }, "{\n\t$0\n\\}"),
-  }, { type = "autosnippets" })
+  -- add("all", {
+  --   snip({ trig = "!!", wordTrig = false }, "{\n\t$0\n\\}"),
+  -- }, { type = "autosnippets" })
 
   add("all", {
     snip("modeline", "vim: filetype=bash"),

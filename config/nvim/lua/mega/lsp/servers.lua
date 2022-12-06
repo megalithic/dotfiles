@@ -92,6 +92,7 @@ local servers = {
   cssls = {
     settings = {
       css = {
+        validate = false,
         lint = {
           unknownProperties = "ignore",
           unknownAtRules = "ignore",
