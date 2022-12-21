@@ -24,9 +24,9 @@ __invocation="$(printf %q "$__file")$( (($#)) && printf ' %q' "$@" || true)"
 
 do_update() {
   export NONINTERACTIVE=1
-  brew update --verbose --debug
-  brew outdated --verbose --debug
-  brew upgrade --force --verbose --debug
+  brew update --verbose
+  brew outdated --verbose
+  brew upgrade --force --verbose
 }
 
 do_install() {
@@ -36,7 +36,7 @@ do_install() {
   exit 1
 
   if [[ "$?" == 0 ]]; then
-    brew bundle --verbose --debug --force --file=~/.dotfiles/brew/Brewfile
+    brew bundle --verbose --force --file=~/.dotfiles/brew/Brewfile
   fi
 }
 

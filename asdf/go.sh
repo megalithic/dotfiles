@@ -29,7 +29,7 @@ do_install() {
     GO111MODULE=on go install github.com/client9/misspell/cmd/misspell
 
     # -- install zk
-    GO111MODULE=on go get -tags "fts5 icu" -u github.com/mickael-menu/zk@HEAD
+    # GO111MODULE=on go get -tags "fts5 icu" -u github.com/mickael-menu/zk@HEAD
 
     # -- install lemonade from copy/paste over tcp
     GO111MODULE=on go install github.com/lemonade-command/lemonade@HEAD

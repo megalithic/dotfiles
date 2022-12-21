@@ -60,8 +60,7 @@ update() {
   fi
 
   log "homebrew install.." &&
-  ./bin/brew-install && # -u &&
-  ./install --only brewfile
+  ./bin/brew-install -u
 
   log "asdf install.." &&
   ./bin/asdf-install

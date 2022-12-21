@@ -97,22 +97,22 @@ do
           })
         end,
       })
-    else
-      local bufnr = require("vim.lsp.util").open_floating_preview(lines, "markdown", config)
-      -- local lines = vim.split(result.contents.value, "\n")
+    -- else
+    --   local bufnr = require("vim.lsp.util").open_floating_preview(lines, "markdown", config)
+    --   -- local lines = vim.split(result.contents.value, "\n")
 
-      -- local ok, _ = pcall(require, "colorizer")
-      -- if ok then
-      --   require("colorizer").highlight_buffer(
-      --     bufnr,
-      --     nil,
-      --     vim.list_slice(lines, 2, #lines),
-      --     0,
-      --     require("colorizer").get_buffer_options(0)
-      --   )
-      -- end
+    --   -- local ok, _ = pcall(require, "colorizer")
+    --   -- if ok then
+    --   --   require("colorizer").highlight_buffer(
+    --   --     bufnr,
+    --   --     nil,
+    --   --     vim.list_slice(lines, 2, #lines),
+    --   --     0,
+    --   --     require("colorizer").get_buffer_options(0)
+    --   --   )
+    --   -- end
 
-      return bufnr
+    --   return bufnr
     end
   end
   local orig_hover_handler = lsp.handlers["textDocument/hover"]

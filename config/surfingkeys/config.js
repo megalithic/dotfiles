@@ -41,6 +41,8 @@ settings.hintAlign = "left";
 settings.hintExplicit = true;
 settings.hintShiftNonActive = true;
 settings.smoothScroll = false;
+// settings.enableAutoFocus = false;
+settings.stealFocusOnLoad = false; // allows canonize.app to work for %k
 settings.omnibarSuggestionTimeout = 500;
 settings.richHintsForKeystroke = 1;
 settings.omnibarPosition = "middle";
@@ -88,7 +90,10 @@ Hints.style(
 );
 
 // set visual-mode style
-Visual.style("marks", "background-color: #A3BE8C; border: 1px solid #3B4252 !important; text-decoration: underline;");
+Visual.style(
+  "marks",
+  "background-color: #A3BE8C; border: 1px solid #3B4252 !important; text-decoration: underline;"
+);
 Visual.style(
   "cursor",
   "background-color: #E5E9F0 !important; border: 1px solid #6272a4 !important; border-bottom: 2px solid green !important; padding: 2px !important; outline: 1px solid rgba(255,255,255,.75) !important;"
@@ -220,23 +225,33 @@ mapkeyGithub("yv", "Copy for vim", () => {
 });
 
 mapkeyGithub(";gC", "Go to the code tab", () => {
-  document.querySelectorAll(".js-selected-navigation-item.reponav-item")[0].click();
+  document
+    .querySelectorAll(".js-selected-navigation-item.reponav-item")[0]
+    .click();
 });
 
 mapkeyGithub(";gI", "Go to the Issues tab", () => {
-  document.querySelectorAll(".js-selected-navigation-item.reponav-item")[1].click();
+  document
+    .querySelectorAll(".js-selected-navigation-item.reponav-item")[1]
+    .click();
 });
 
 mapkeyGithub(";gP", "Go to the Pull requests tab", () => {
-  document.querySelectorAll(".js-selected-navigation-item.reponav-item")[2].click();
+  document
+    .querySelectorAll(".js-selected-navigation-item.reponav-item")[2]
+    .click();
 });
 
 mapkeyGithub(";gB", "Go to the Projects tab", () => {
-  document.querySelectorAll(".js-selected-navigation-item.reponav-item")[3].click();
+  document
+    .querySelectorAll(".js-selected-navigation-item.reponav-item")[3]
+    .click();
 });
 
 mapkeyGithub(";gW", "Go to the Wiki tab", () => {
-  document.querySelectorAll(".js-selected-navigation-item.reponav-item")[4].click();
+  document
+    .querySelectorAll(".js-selected-navigation-item.reponav-item")[4]
+    .click();
 });
 
 mapkeyGithub(";gO", "Go to the Overview tab", () => {

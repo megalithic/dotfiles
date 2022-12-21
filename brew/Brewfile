@@ -21,7 +21,7 @@ tap "isacikgoz/taps"
 tap "olets/tap"
 tap "federico-terzi/espanso" if OS.mac? # legacy version (pre 2.x) -- preferred!
 # tap "espanso/espanso" if OS.mac?
-tap "mhanberg/zk" if OS.mac?
+# tap "mhanberg/zk" if OS.mac?
 tap "wez/wezterm" if OS.mac?
 tap "FelixKratz/formulae" if OS.mac? # sketchyvim
 tap "mutagen-io/mutagen" # mutagen is handled via remote-dev@outstand
@@ -205,7 +205,8 @@ brew "ykman"
 brew "yubikey-personalization" if OS.mac?
 brew "yj"
 brew "zellij"
-brew "mhanberg/zk/zk", args: ["build-from-source"] if OS.mac?
+# brew "mhanberg/zk/zk", args: ["build-from-source"] if OS.mac?
+brew "zk", args: ["HEAD"] if OS.mac?
 brew "zoxide"
 brew "zsh"
 brew "zsh-autosuggestions"
@@ -224,7 +225,7 @@ tap "homebrew/cask-fonts" if OS.mac?
 tap "homebrew/cask-drivers" if OS.mac?
 
 # - fonts
-cask "font-jetbrains-mono"
+# REF: nerd fonts: https://gist.github.com/davidteren/898f2dcccd42d9f8680ec69a3a5d350e?permalink_comment_id=4396827#gistcomment-4396827
 cask "font-jetbrains-mono-nerd-font"
 cask "font-ia-writer-quattro"
 cask "font-victor-mono-nerd-font"
@@ -234,6 +235,7 @@ cask "font-cascadia-code"
 cask "font-cascadia-code-pl"
 cask "font-cascadia-mono"
 cask "font-cascadia-mono-pl"
+cask "font-caskaydia-cove-nerd-font"
 
 # - gui
 cask "1password"
@@ -295,6 +297,7 @@ cask "slack"
 cask "soundsource", greedy: true
 cask "spotify"
 cask "tableplus"
+cask "tailscale" if OS.mac?
 cask "thingsmacsandboxhelper"
 # cask "vagrant"
 # cask "vimac"  # FIXME: this requires a click-based install (https://install.appcenter.ms/users/dexterleng/apps/vimac/distribution_groups/sparkle)

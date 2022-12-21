@@ -166,6 +166,13 @@ local servers = {
     },
   },
   html = {
+    settings = {
+      includeLanguages = {
+        ["html-eex"] = "html",
+        ["phoenix-heex"] = "html",
+        eruby = "html",
+      },
+    },
     filetypes = {
       "html",
       "javascriptreact",

@@ -53,6 +53,7 @@ map({ "i", "n", "t" }, "<C-Down>", ":-tabmove<CR>", { desc = "move tab left", re
 
 nmap("gb", string.format("<cmd>ls<CR>:b<space>%s", mega.replace_termcodes("<tab>")), "current buffers")
 nmap("gs", "i<CR><ESC>^mwgk:silent! s/\v +$//<CR>:noh<CR>`w", "split line")
+nmap("J", "<nop>")
 nmap("gj", "mzJ`z", "join lines")
 nmap("gx", mega.open_uri, "open uri under cursor")
 

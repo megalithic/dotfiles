@@ -136,4 +136,4 @@ local function setup_mix()
   end
 end
 
-setup_mix()
+-- setup_mix()
