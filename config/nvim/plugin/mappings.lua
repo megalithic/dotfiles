@@ -71,7 +71,7 @@ nmap("<localleader>tP", "<cmd>AV<cr>", "open alt (vsplit)")
 
 nmap("<localleader>f", function()
   vim.cmd("FormatWrite")
-  vim.defer_fn(function() vim.cmd("e") end, 500)
+  -- vim.defer_fn(function() vim.cmd("e") end, 500)
 end, "run file formatter")
 nmap("<localleader>F", "<cmd>LspFormat<cr>", "run lsp formatter")
 
