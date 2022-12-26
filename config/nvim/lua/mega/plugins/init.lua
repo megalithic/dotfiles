@@ -320,6 +320,7 @@ return {
   -- },
 
   -- ( LSP ) -------------------------------------------------------------------
+  -- TODO: https://github.com/folke/dot/tree/master/config/nvim/lua/config/plugins/lsp
   {
     "williamboman/mason.nvim",
     event = "BufRead",
@@ -385,22 +386,22 @@ return {
       })
     end,
   },
-  -- {
-  --   "jayp0521/mason-null-ls.nvim",
-  --   dependencies = {
-  --     "williamboman/mason.nvim",
-  --     "jose-elias-alvarez/null-ls.nvim",
-  --   },
-  --   dependencies = "mason.nvim",
-  --   config = function()
-  --     require("mason-null-ls").setup({
-  --       automatic_installation = true,
-  --       ensure_installed = {
-  --         "beautysh",
-  --       },
-  --     })
-  --   end,
-  -- },
+  {
+    "jayp0521/mason-null-ls.nvim",
+    dependencies = {
+      "williamboman/mason.nvim",
+      "jose-elias-alvarez/null-ls.nvim",
+    },
+    dependencies = "mason.nvim",
+    config = function()
+      require("mason-null-ls").setup({
+        automatic_installation = true,
+        ensure_installed = {
+          "beautysh",
+        },
+      })
+    end,
+  },
   {
     "neovim/nvim-lspconfig",
     dependencies = {
@@ -467,8 +468,10 @@ return {
   --   end,
   -- },
 
-  { "nvim-lua/lsp_extensions.nvim" },
-  { "jose-elias-alvarez/nvim-lsp-ts-utils" },
+   "nvim-lua/lsp_extensions.nvim" ,
+  "jose-elias-alvarez/typescript.nvim",
+  "MunifTanjim/nui.nvim",
+  "williamboman/mason-lspconfig.nvim",
   "b0o/schemastore.nvim",
   "mrshmllow/document-color.nvim",
   -- { "lewis6991/hover.nvim" },
