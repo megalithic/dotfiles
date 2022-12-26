@@ -531,7 +531,10 @@ local function seg_lsp_status(truncate_at)
   local messages = vim.lsp.util.get_progress_messages()
 
   if vim.tbl_isempty(messages) then
-    return get_diagnostics(seg(mega.icons.lsp.kind.Null, "StModeInsert", require("null-ls").enabled))
+    local ok_nls, nls = mega.require("null-ls")
+    local enabled = ok_nls and nls.enabled
+
+    return get_diagnostics(seg(mega.icons.lsp.kind.Null, "StModeInsert", enabled))
   end
 
   -- TODO: keep this if we move lsp progress to nvim-notify
@@ -676,7 +679,7 @@ function _G.__statusline()
     -- seg_opened_terms(120),
     -- end left alignment
     seg([[%=]]),
-    seg(get_hydra_status()),
+    -- seg(get_hydra_status()),
     -- seg(get_substitution_status()),
     seg([[%=]]),
     -- begin right alignment
@@ -687,7 +690,7 @@ function _G.__statusline()
     seg("%*"),
     seg_lsp_status(100),
     seg_git_status(120),
-    seg(get_dap_status()),
+    -- seg(get_dap_status()),
     seg_lineinfo(75),
     seg_suffix(100),
   })

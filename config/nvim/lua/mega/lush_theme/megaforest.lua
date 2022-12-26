@@ -27,7 +27,7 @@
 
 local lush = require("lush")
 
-local C = mega.colors
+local C = require("mega.lush_theme.colors")
 
 local bg_dark = C.bg_dark
 local bg0 = C.bg0

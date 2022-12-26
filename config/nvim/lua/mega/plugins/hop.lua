@@ -1,4 +1,5 @@
-return function()
+local M = {"phaazon/hop.nvim"}
+function M.config()
   local hop = require("hop")
   -- local map = vim.keymap.set
   -- local jump_target = hop.jump_target
@@ -133,3 +134,5 @@ return function()
   -- -- ↓ see "g@l"
   -- expr = true})
 end
+
+return M

@@ -1,4 +1,8 @@
-return function()
+
+  local M = {
+    "rcarriga/nvim-notify",
+  }
+function M.config()
   local nnotify = require("notify")
   local stages_util = require("notify.stages.util")
 
@@ -129,3 +133,5 @@ return function()
 
   vim.notify = nnotify
 end
+
+return M

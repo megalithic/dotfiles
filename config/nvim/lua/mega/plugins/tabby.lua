@@ -1,4 +1,6 @@
-return function()
+local M = 
+  { "nanozuki/tabby.nvim"}
+function M.config()
   local config = {
     layout = "active_wins_at_tail",
   }
@@ -99,3 +101,4 @@ return function()
     tabline = tabline,
   })
 end
+ return M

@@ -1,4 +1,6 @@
-return function()
+local M = { "rcarriga/nvim-dap-ui", dependencies = "nvim-dap" }
+
+function M.config()
   local dapui_ok, dapui = pcall(require, "dapui")
   if not dapui_ok then return end
 
@@ -17,3 +19,5 @@ return function()
     dap.listeners.before.event_exited["dapui_config"] = function() dapui.close() end
   end
 end
+
+return M

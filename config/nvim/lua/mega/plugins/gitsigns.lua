@@ -1,4 +1,6 @@
-return function()
+
+  local M  = { "lewis6991/gitsigns.nvim", event = { "BufRead" }}
+function M.config()
   local gs = require("gitsigns")
 
   gs.setup({
@@ -50,3 +52,5 @@ return function()
     },
   })
 end
+
+return M

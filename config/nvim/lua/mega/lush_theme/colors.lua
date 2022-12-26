@@ -1,6 +1,7 @@
-local ok, lush = pcall(require, "lush")
-if not ok then return end
+-- local ok, lush = pcall(require, "lush")
+-- if not ok then return end
 
+local lush = require("lush")
 local hsluv = lush.hsluv
 
 local C = { lsp = {} }

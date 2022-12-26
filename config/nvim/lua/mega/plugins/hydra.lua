@@ -1,4 +1,6 @@
-return function()
+local M = 
+  { "anuvyklack/hydra.nvim"}
+function M.config()
   local Hydra = require("hydra")
   local border = mega.get_border()
 
@@ -204,3 +206,5 @@ return function()
   --   end,
   -- })
 end
+
+return M

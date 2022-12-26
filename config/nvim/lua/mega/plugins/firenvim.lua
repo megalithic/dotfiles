@@ -1,4 +1,10 @@
-return function()
+local M = {
+  "glacambre/firenvim",
+  lazy = false,
+  build = function() vim.fn["firenvim#install"](0) end,
+}
+
+function M.config()
   if not vim.g.started_by_firenvim then return end
 
   vim.g.firenvim_config = {
@@ -119,33 +125,15 @@ return function()
     if vim.o.lines < 15 then vim.o.lines = 15 end
   end
 
-  function IsFirenvimActive(event)
-    if vim.g.debug_enabled then print("IsFirenvimActive, event: ", vim.inspect(event)) end
-    if vim.fn.exists("*nvim_get_chan_info") == 0 then return 0 end
-    local ui = vim.api.nvim_get_chan_info(event.chan)
-    if vim.g.debug_enabled then print("IsFirenvimActive, ui: ", vim.inspect(ui)) end
-    local is_firenvim_active_in_browser = (ui["client"] ~= nil and ui["client"]["name"] ~= nil)
-    if vim.g.enable_vim_debug then print("is_firenvim_active_in_browser: ", is_firenvim_active_in_browser) end
-    return is_firenvim_active_in_browser
-  end
-
-  function OnUIEnter(event)
-    if IsFirenvimActive(event) then
-      -- P("OnUIEnter")
-      firenvim_onload({ event = "UIEnter" })
-    end
-  end
-  -- vim.cmd([[autocmd UIEnter * :call luaeval('OnUIEnter(vim.fn.deepcopy(vim.v.event))')]])
-
   require("mega.globals").augroup("Firenvim", {
     {
-      event = { "BufEnter" },
+      event = { "UIEnter" },
+      once = true,
       command = function(evt)
-        if evt.buf and vim.api.nvim_buf_get_name(evt.buf) then
-          P(fmt("BufEnter: %s", vim.api.nvim_buf_get_name(evt.buf)))
-          firenvim_onload(evt)
-        end
+        if evt.buf and vim.api.nvim_buf_get_name(evt.buf) then firenvim_onload(evt) end
       end,
     },
   })
 end
+
+return M

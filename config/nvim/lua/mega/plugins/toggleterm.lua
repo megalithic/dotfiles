@@ -1,4 +1,5 @@
-return function()
+  local M = { "akinsho/toggleterm.nvim"}
+function M.config()
   -- use our own if we have it enabled
   if vim.g.enabled_plugin["term"] then return end
 
@@ -180,3 +181,5 @@ end
 --   as.command('Btop', function() btop:toggle() end)
 
 --   as.nnoremap('<leader>lg', function() lazygit:toggle() end, 'toggleterm: toggle lazygit')
+
+return M

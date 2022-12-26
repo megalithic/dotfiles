@@ -1,4 +1,8 @@
-return function()
+local M = {
+   "folke/which-key.nvim"
+ }
+
+function M.config()
   local has_wk, wk = mega.require("which-key")
   if not has_wk then return end
 
@@ -265,3 +269,5 @@ return function()
   wk.register(n_mappings, { mode = "n" })
   wk.register(v_mappings, { mode = "v" })
 end
+
+return M

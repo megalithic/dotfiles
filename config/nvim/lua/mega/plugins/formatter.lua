@@ -1,4 +1,6 @@
-return function()
+local M = {"mhartington/formatter.nvim"}
+
+function M.config()
   local formatter = require("formatter")
 
   local fn = vim.fn
@@ -193,3 +195,5 @@ return function()
     filetype = config,
   })
 end
+
+ return M

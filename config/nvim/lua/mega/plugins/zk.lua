@@ -1,4 +1,5 @@
-return function()
+  local M = { "mickael-menu/zk-nvim", dependencies = "telescope.nvim"}
+function M.config()
   local zk = require("zk")
 
   local util = require("zk.util")
@@ -69,3 +70,5 @@ return function()
 
   require("telescope").load_extension("zk")
 end
+
+ return M

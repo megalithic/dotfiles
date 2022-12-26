@@ -1,4 +1,5 @@
-return function()
+local M = { "vim-test/vim-test" }
+function M.config()
   local system = vim.fn.system
 
   local function terminal_notifier(term_cmd, exit)
@@ -49,3 +50,5 @@ return function()
     last = "termsplit",
   }
 end
+
+return M

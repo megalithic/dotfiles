@@ -2,7 +2,17 @@
 -- - https://github.com/chrisgrieser/dotfiles/blob/main/.config/nvim/lua/snippets.lua
 -- - https://github.com/dcampos/nvim-snippy
 -- - https://github.com/sbulav/dotfiles/blob/master/nvim/lua/config/snippets.lua
-return function()
+local M = {
+  "L3MON4D3/LuaSnip",
+  dependencies = {
+    "rafamadriz/friendly-snippets",
+    config = function()
+      require("luasnip.loaders.from_vscode").lazy_load()
+    end,
+  },
+}
+
+function M.config()
   local ls = require("luasnip")
   local add = ls.add_snippets
   local snip = ls.parser.parse_snippet -- lsp-style-snippets for future-proofness
@@ -269,3 +279,5 @@ return function()
   require("luasnip.loaders.from_vscode").lazy_load()
   -- require("luasnip.loaders.from_vscode").lazy_load({ paths = "./snippets" })
 end
+
+return M
