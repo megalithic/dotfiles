@@ -78,12 +78,12 @@ function _G.P(...)
     table.insert(objects, vim.inspect(v))
   end
 
-  -- if pcall(require, "plenary") then
-  --   local p_logger = logger.new({ level = "debug" })
-  --   p_logger.info(table.concat(objects, "\n"))
-  -- else
-  print(...)
-  -- end
+  if pcall(require, "plenary") then
+    local p_logger = logger.new({ level = "debug" })
+    p_logger.info(table.concat(objects, "\n"))
+  else
+    print(...)
+  end
 
   return ...
 end

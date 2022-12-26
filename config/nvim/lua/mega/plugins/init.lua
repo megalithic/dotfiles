@@ -51,7 +51,7 @@ return {
   "mattn/webapi-vim",
   {
     "ethanholz/nvim-lastplace",
-    lazy=false,
+    lazy = false,
     config = function()
       require("nvim-lastplace").setup({
         lastplace_ignore_buftype = { "quickfix", "nofile", "help" },
@@ -62,20 +62,22 @@ return {
   },
 
   -- ( UI ) --------------------------------------------------------------------
-  {"rktjmp/lush.nvim",lazy=false, config=function()
-    require('lush')(require('mega.lush_theme.megaforest'))
-  end},
-  {'rose-pine/neovim', lazy=false, config=function()
-require('rose-pine').setup({
-	--- @usage 'main' | 'moon'
-	dark_variant = 'main',
-	bold_vert_split = false,
-	dim_nc_background = false,
-	disable_background = true,
-	disable_float_background = false,
-	disable_italics = false,
-    })
-  end},
+  { "rktjmp/lush.nvim", lazy = false, config = function() require("lush")(require("mega.lush_theme.megaforest")) end },
+  {
+    "rose-pine/neovim",
+    lazy = false,
+    config = function()
+      require("rose-pine").setup({
+        --- @usage 'main' | 'moon'
+        dark_variant = "main",
+        bold_vert_split = false,
+        dim_nc_background = false,
+        disable_background = true,
+        disable_float_background = false,
+        disable_italics = false,
+      })
+    end,
+  },
   {
     "mcchrish/zenbones.nvim",
     dependencies = "rktjmp/lush.nvim",
@@ -182,25 +184,24 @@ require('rose-pine').setup({
 
   -- ( Movements ) -------------------------------------------------------------
   -- @trial multi-cursor: https://github.com/brendalf/dotfiles/blob/master/.config/nvim/lua/core/multi-cursor.lua
---  {
---    "ggandor/flit.nvim",
---    dependencies = { "leap.nvim",
---    config = function()
---      require("leap").setup({
---        equivalence_classes = { " \t\r\n", "([{", ")]}", "`\"'" },
---      })
---    end,
---  },
---    config = function()
---      require("flit").setup({
---        keys = { f = "f", F = "F", t = "t", T = "T" },
---        -- A string like "nv", "nvo", "o", etc.
---        labeled_modes = "nvo",
---        multiline = false,
---      })
---    end,
---  },
-
+  --  {
+  --    "ggandor/flit.nvim",
+  --    dependencies = { "leap.nvim",
+  --    config = function()
+  --      require("leap").setup({
+  --        equivalence_classes = { " \t\r\n", "([{", ")]}", "`\"'" },
+  --      })
+  --    end,
+  --  },
+  --    config = function()
+  --      require("flit").setup({
+  --        keys = { f = "f", F = "F", t = "t", T = "T" },
+  --        -- A string like "nv", "nvo", "o", etc.
+  --        labeled_modes = "nvo",
+  --        multiline = false,
+  --      })
+  --    end,
+  --  },
 
   -- ( FZF ) -------------------------------------------------------------------
   -- { "ibhagwan/fzf-lua", config = lazy.conf("fzf") },
@@ -784,7 +785,7 @@ require('rose-pine').setup({
   { "tpope/vim-repeat" },
   { "tpope/vim-unimpaired" },
   { "tpope/vim-apathy" },
-  { "tpope/vim-scriptease" },
+  { "tpope/vim-scriptease", cmd = { "Messages", "Mess" } },
   { "lambdalisue/suda.vim" },
   { "EinfachToll/DidYouMean" },
   { "wsdjeg/vim-fetch" }, -- vim path/to/file.ext:12:3
@@ -887,10 +888,10 @@ require('rose-pine').setup({
   -- "rhysd/vim-gfm-syntax".
 
   -- ( Syntax/Languages ) ------------------------------------------------------
-   "ii14/emmylua-nvim" ,
-   {"elixir-editors/vim-elixir", lazy=false}, -- nvim exceptions thrown when not installed
-   "kchmck/vim-coffee-script" ,
-   "briancollins/vim-jst" ,
+  "ii14/emmylua-nvim",
+  { "elixir-editors/vim-elixir", lazy = false }, -- nvim exceptions thrown when not installed
+  "kchmck/vim-coffee-script",
+  "briancollins/vim-jst",
   -- { "tpope/vim-rails" },
   -- { "ngscheurich/edeex.nvim" },
   -- { "antew/vim-elm-analyse" },
@@ -908,7 +909,6 @@ require('rose-pine').setup({
   -- { "avakhov/vim-yaml" },
   -- { "chr4/nginx.vim" },
   -- { "nanotee/luv-vimdocs" },
-   "fladson/vim-kitty" ,
+  "fladson/vim-kitty",
   { "SirJson/fzf-gitignore", config = function() vim.g.fzf_gitignore_no_maps = true end },
 }
-

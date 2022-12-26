@@ -71,5 +71,4 @@ C.lsp.warn = C.dark_orange
 C.lsp.hint = C.bright_blue
 C.lsp.info = C.teal
 
-P(C)
 return C
