@@ -64,32 +64,18 @@ return {
   -- ( UI ) --------------------------------------------------------------------
   { "rktjmp/lush.nvim", lazy = false, config = function() require("lush")(require("mega.lush_theme.megaforest")) end },
   {
-    "rose-pine/neovim",
-    lazy = false,
-    config = function()
-      require("rose-pine").setup({
-        --- @usage 'main' | 'moon'
-        dark_variant = "main",
-        bold_vert_split = false,
-        dim_nc_background = false,
-        disable_background = true,
-        disable_float_background = false,
-        disable_italics = false,
-      })
-    end,
-  },
-  {
     "mcchrish/zenbones.nvim",
+    lazy = false,
     dependencies = "rktjmp/lush.nvim",
   },
-  "neanias/everforest-nvim",
   { "kyazdani42/nvim-web-devicons", config = function() require("nvim-web-devicons").setup() end },
   {
     "NvChad/nvim-colorizer.lua",
     event = { "CursorHold", "CursorMoved", "InsertEnter" },
     config = function()
       require("colorizer").setup({
-        filetypes = { "*", "!gitcommit", "!NeogitCommitMessage" },
+        filetypes = { "*", "!lazy", "!gitcommit", "!NeogitCommitMessage" },
+        buftype = { "*", "!prompt", "!nofile" },
         user_default_options = {
           RGB = false, -- #RGB hex codes
           RRGGBB = true, -- #RRGGBB hex codes
