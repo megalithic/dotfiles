@@ -874,7 +874,7 @@ return {
   -- "rhysd/vim-gfm-syntax".
 
   -- ( Syntax/Languages ) ------------------------------------------------------
-  "ii14/emmylua-nvim",
+  { "ii14/emmylua-nvim", ft = "lua" },
   { "elixir-editors/vim-elixir", lazy = false }, -- nvim exceptions thrown when not installed
   "kchmck/vim-coffee-script",
   "briancollins/vim-jst",
@@ -895,6 +895,6 @@ return {
   -- { "avakhov/vim-yaml" },
   -- { "chr4/nginx.vim" },
   -- { "nanotee/luv-vimdocs" },
-  "fladson/vim-kitty",
+  { "fladson/vim-kitty", ft = "kitty" },
   { "SirJson/fzf-gitignore", config = function() vim.g.fzf_gitignore_no_maps = true end },
 }
