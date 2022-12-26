@@ -1,6 +1,7 @@
-local ok, lush = pcall(require, "lush")
-if not ok then return end
+-- local ok, lush = pcall(require, "lush")
+-- if not ok then return end
 
+local lush = require("lush")
 local hsluv = lush.hsluv
 
 local C = { lsp = {} }
@@ -70,4 +71,5 @@ C.lsp.warn = C.dark_orange
 C.lsp.hint = C.bright_blue
 C.lsp.info = C.teal
 
+P(C)
 return C

@@ -62,7 +62,9 @@ local function setMenubarTitle()
     title = updateTitle()
   end
 
-  obj.menubar:setTitle(title)
+  if obj.menubar then
+    obj.menubar:setTitle(title)
+  end
 end
 
 function obj:init()

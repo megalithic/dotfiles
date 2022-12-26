@@ -83,7 +83,6 @@ vim.g.vim_markdown_no_default_key_mappings = 1
 vim.cmd([[map <Plug> <Plug>Markdown_FollowLink]])
 
 -- ## iamcco/markdown-preview.nvim
-vim.cmd([[packadd! markdown-preview.nvim]])
 vim.g.mkdp_auto_start = 0
 vim.g.mkdp_auto_close = 1
 

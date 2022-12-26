@@ -26,7 +26,7 @@ for plugin, _ in pairs(vim.g.enabled_plugin) do
   end
 end
 
-vim.g.colorscheme = "megaforest" -- alts: rose-pine, forestbones, tokyonight-storm
+vim.g.colorscheme = "rose-pine" -- alts: rose-pine, forestbones, tokyonight-storm
 vim.g.default_colorcolumn = "81"
 vim.g.mapleader = ","
 vim.g.maplocalleader = " "
@@ -35,33 +35,24 @@ vim.g.debug_enabled = false
 
 -- [ globals ] -----------------------------------------------------------------
 
-_G.mega = mega
-  or {
-    fn = {},
-    dirs = {},
-    mappings = {},
-    term = {},
-    lsp = {},
-    colors = require("mega.lush_theme.colors"),
-    icons = require("mega.icons"),
-    ts_ignored_langs = { "svg", "json", "heex", "jsonc" },
-    -- original vim.notify: REF: https://github.com/folke/dot/commit/b0f6a2db608cb090b969e2ef5c018b86d11fc4d6
-    notify = vim.notify,
-  }
+_G.mega = {
+  fn = {},
+  dirs = {},
+  mappings = {},
+  term = {},
+  lsp = {},
+  icons = require("mega.icons"),
+  ts_ignored_langs = { "svg", "json", "heex", "jsonc" },
+  -- original vim.notify: REF: https://github.com/folke/dot/commit/b0f6a2db608cb090b969e2ef5c018b86d11fc4d6
+  notify = vim.notify,
+}
 
 -- [ loaders ] -----------------------------------------------------------------
 
-local reload_ok, reload = pcall(require, "plenary.reload")
-RELOAD = reload_ok and reload.reload_module or function(...) return ... end
-function R(name)
-  RELOAD(name)
-  return require(name)
-end
-
-R("mega.globals")
-R("mega.options")
-vim.defer_fn(function()
-  mega.packer_deferred()
-  R("mega.plugins")
-  -- R("mega.local")
-end, 100)
+require("mega.globals")
+require("mega.options")
+require("mega.lazy").setup()
+vim.api.nvim_create_autocmd("User", {
+  pattern = "VeryLazy",
+  callback = function() mega.colors = require("mega.lush_theme.colors") end,
+})

@@ -1,7 +1,8 @@
-return function()
+local M = { "echasnovski/mini.nvim", dependencies = "nvim-treesitter" }
+
+M.config = function()
   -- if true then return end
 
-  vim.defer_fn(function()
     -- local miniAiDiagnostics = function()
     --   local diagnostics = vim.diagnostic.get(0)
     --   diagnostics = vim.tbl_map(function(diagnostic)
@@ -196,5 +197,6 @@ return function()
     --   },
     -- })
     require("mini.pairs").setup({})
-  end, 0)
 end
+
+return M

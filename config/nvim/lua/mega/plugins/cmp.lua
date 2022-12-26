@@ -1,4 +1,39 @@
-return function()
+-- local M = {
+--   "hrsh7th/nvim-cmp",
+--   event = "InsertEnter",
+--   dependencies = {
+--     "hrsh7th/cmp-nvim-lsp",
+--     "hrsh7th/cmp-buffer",
+--     "hrsh7th/cmp-emoji",
+--     "hrsh7th/cmp-cmdline",
+--     "dmitmel/cmp-cmdline-history",
+--     "hrsh7th/cmp-path",
+--     "saadparwaiz1/cmp_luasnip",
+--   },
+-- }
+
+
+  local M = {
+    "hrsh7th/nvim-cmp",
+    event = { "InsertEnter" },
+    dependencies = {
+      { "saadparwaiz1/cmp_luasnip"},
+      { "hrsh7th/cmp-buffer"},
+      { "hrsh7th/cmp-nvim-lsp"},
+      { "hrsh7th/cmp-nvim-lua"},
+      { "hrsh7th/cmp-path"},
+      { "hrsh7th/cmp-emoji"},
+      { "f3fora/cmp-spell"},
+      { "hrsh7th/cmp-cmdline", event = { "CmdlineEnter" } },
+      { "hrsh7th/cmp-nvim-lsp-signature-help"},
+      { "hrsh7th/cmp-nvim-lsp-document-symbol"},
+      -- { "dmitmel/cmp-cmdline-history"},
+      { "lukas-reineke/cmp-rg"},
+      -- { "kristijanhusak/vim-dadbod-completion"},
+    },
+  }
+
+function M.config()
   local cmp = require("cmp")
 
   local fmt = string.format
@@ -258,3 +293,5 @@ return function()
     return {}
   end
 end
+
+return M

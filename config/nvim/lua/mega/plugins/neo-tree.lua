@@ -1,4 +1,26 @@
-return function()
+local M = {
+  "nvim-neo-tree/neo-tree.nvim",
+  keys = { "<C-t>" },
+  cmd = { "NeoTree" },
+  dependencies = {
+    "nvim-lua/plenary.nvim",
+    "MunifTanjim/nui.nvim",
+    "mrbjarksen/neo-tree-diagnostics.nvim"
+--   { "s1n7ax/nvim-window-picker", config= {
+--     autoselect_one = true,
+--     include_current = false,
+--     filter_rules = {
+--       bo = {
+--         filetype = { "neo-tree-popup", "quickfix", "incline" },
+--         buftype = { "terminal", "quickfix", "nofile" },
+--       },
+--     },
+--     other_win_hl_color = mega.colors.dark_red,
+--     }  }
+ }
+}
+
+function M.config()
   vim.g.neo_tree_remove_legacy_commands = 1
 
   local icons = mega.icons
@@ -99,27 +121,17 @@ return function()
         ["/"] = "noop",
         ["n"] = "noop",
         ["<c-/>"] = "fuzzy_finder",
-        -- ["<c-o>"] = "open",
-        -- ["<c-s>"] = "open_split",
-        -- ["<CR>"] = "open_vsplit",
-        ["<c-o>"] = "open_with_window_picker",
-        ["<c-s>"] = "split_with_window_picker",
-        ["<CR>"] = "vsplit_with_window_picker",
+        ["<c-o>"] = "open",
+        ["<c-s>"] = "open_split",
+        ["<CR>"] = "open_vsplit",
+        -- ["<c-o>"] = "open_with_window_picker",
+        -- ["<c-s>"] = "split_with_window_picker",
+        -- ["<CR>"] = "vsplit_with_window_picker",
         ["<esc>"] = "revert_preview",
         ["P"] = { "toggle_preview", config = { use_float = true } },
       },
     },
   })
-
-  mega.conf("window-picker", {
-    autoselect_one = true,
-    include_current = false,
-    filter_rules = {
-      bo = {
-        filetype = { "neo-tree-popup", "quickfix", "incline" },
-        buftype = { "terminal", "quickfix", "nofile" },
-      },
-    },
-    other_win_hl_color = mega.colors.dark_red,
-  })
 end
+
+return M

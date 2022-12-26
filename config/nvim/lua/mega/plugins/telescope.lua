@@ -1,6 +1,41 @@
 -- REF:
 -- - https://github.com/fdschmidt93/dotfiles/blob/master/nvim/.config/nvim/lua/fds/plugins/telescope/init.lua
-return function()
+
+local M = {
+    "nvim-telescope/telescope.nvim",
+    cmd = { "Telescope" },
+    event = { "CursorHold" },
+    dependencies = {
+      {
+        "nvim-telescope/telescope-file-browser.nvim",
+        dependencies = "telescope.nvim",
+        config = function() require("telescope").load_extension("file_browser") end,
+      },
+      {
+        "natecraddock/telescope-zf-native.nvim",
+        dependencies = "telescope.nvim",
+        config = function() require("telescope").load_extension("zf-native") end,
+      },
+      {
+        "benfowler/telescope-luasnip.nvim",
+        dependencies = "telescope.nvim",
+        config = function() require("telescope").load_extension("luasnip") end,
+      },
+      {
+        "nvim-telescope/telescope-live-grep-args.nvim",
+        lazy = vim.g.vscode ~= 1,
+        dependencies = "telescope.nvim",
+        config = function() require("telescope").load_extension("live_grep_args") end,
+      },
+      {
+        "nvim-telescope/telescope-media-files.nvim",
+        dependencies = "telescope.nvim",
+        config = function() require("telescope").load_extension("media_files") end,
+      }
+    }
+  }
+
+function M.config()
   local telescope = require("telescope")
 
   local function setup_custom_actions(actions, builtin)
@@ -639,3 +674,5 @@ return function()
     "grep for visual selection"
   )
 end
+
+return M

@@ -1,7 +1,16 @@
 -- @REF
 -- https://github.com/vsedov/nvim/blob/master/lua/modules/lang/treesitter.lua
 
-return function()
+local M = {
+    "nvim-treesitter/nvim-treesitter",
+    build = ":TSUpdate",
+    event = "BufReadPost",
+    -- dependencies = {
+    --   "nvim-treesitter/nvim-treesitter-textobjects",
+    -- },
+  }
+
+function M.config()
   -- local ts_ok, _ = mega.require("nvim-treesitter")
   -- if not ts_ok then return end
 
@@ -216,3 +225,5 @@ return function()
     },
   })
 end
+
+return M

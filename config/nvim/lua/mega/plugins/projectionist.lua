@@ -1,4 +1,7 @@
-return function()
+ local M = {
+
+  "tpope/vim-projectionist"}
+function M.config()
   vim.g.projectionist_heuristics = {
     ["mix.exs"] = {
       ["lib/**/views/*_view.ex"] = {
@@ -249,3 +252,4 @@ return function()
   --     }
   --   ]])
 end
+ return M

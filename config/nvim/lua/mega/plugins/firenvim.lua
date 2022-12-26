@@ -1,4 +1,9 @@
-return function()
+local M = {
+    "glacambre/firenvim",
+    build = function() vim.fn["firenvim#install"](0) end,
+  }
+
+function M.config()
   if not vim.g.started_by_firenvim then return end
 
   vim.g.firenvim_config = {
@@ -149,3 +154,5 @@ return function()
     },
   })
 end
+
+return M
