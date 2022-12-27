@@ -211,11 +211,6 @@ mega.augroup("ToggleCursorLine", {
     command = function() enable_cursorline(true) end,
   },
   {
-    event = { "User" },
-    pattern = { "VeryLazy" },
-    command = function() enable_cursorline(true) end,
-  },
-  {
     event = { "InsertLeave", "FocusLost" },
     command = function() enable_cursorline(false) end,
   },

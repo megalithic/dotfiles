@@ -18,6 +18,7 @@
   "document-color.nvim": { "branch": "main", "commit": "74c487f0e5accfaae033755451b9e367220693fd" },
   "editorconfig-vim": { "branch": "master", "commit": "30ddc057f71287c3ac2beca876e7ae6d5abe26a0" },
   "emmylua-nvim": { "branch": "master", "commit": "b7e0dc546aa65615d230656050faded69c1f003e" },
+  "everforest-nvim": { "branch": "main", "commit": "939330bc925f3f98015c6bc2697439a2e9ff4792" },
   "firenvim": { "branch": "master", "commit": "17a189f0f1e2d4197e00cd56dbeaed8c268bac8c" },
   "formatter.nvim": { "branch": "master", "commit": "8a4c961330cc4688087f23d18fa7d2f1af9a4902" },
   "friendly-snippets": { "branch": "main", "commit": "1a6a02350568d6830bcfa167c72f9b6e75e454ae" },

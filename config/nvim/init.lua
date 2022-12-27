@@ -46,13 +46,10 @@ _G.mega = mega
     term = {},
     lsp = {},
     icons = require("mega.icons"),
-    -- colors = require("mega.lush_theme.colors"),
     ts_ignored_langs = { "svg", "json", "heex", "jsonc" },
     -- original vim.notify: REF: https://github.com/folke/dot/commit/b0f6a2db608cb090b969e2ef5c018b86d11fc4d6
     notify = vim.notify,
   }
-
-_G.__ = _G.mega
 
 -- [ loaders ] -----------------------------------------------------------------
 
@@ -60,7 +57,3 @@ require("mega.globals")
 require("mega.debug")
 require("mega.options")
 require("mega.lazy").setup()
-vim.api.nvim_create_autocmd("User", {
-  pattern = "VeryLazy",
-  callback = function() mega.colors = require("mega.lush_theme.colors") end,
-})

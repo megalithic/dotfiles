@@ -95,7 +95,7 @@ function M.setup()
     },
     install = {
       missing = true,
-      colorscheme = { vim.g.colorscheme, "habamax" },
+      colorscheme = { vim.g.colorscheme, "everforest" },
     },
     dev = { patterns = { "megalithic" } },
     performance = {
@@ -104,7 +104,6 @@ function M.setup()
         -- disable_events = {},
       },
       rtp = {
-        paths = { "~/.dotfiles/config/nvim/plugin" },
         disabled_plugins = {
           "gzip",
           "zip",

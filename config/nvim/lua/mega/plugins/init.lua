@@ -58,11 +58,36 @@ return {
   },
 
   -- ( UI ) --------------------------------------------------------------------
-  { "rktjmp/lush.nvim", lazy = false, config = function() require("lush")(require("mega.lush_theme.megaforest")) end },
+  {
+    "rktjmp/lush.nvim",
+    lazy = false,
+    priority = 999,
+    config = function()
+      require("lush")(require("mega.lush_theme.megaforest"))
+      mega.colors = require("mega.lush_theme.colors")
+    end,
+  },
   {
     "mcchrish/zenbones.nvim",
     lazy = false,
     dependencies = "rktjmp/lush.nvim",
+  },
+  {
+    "neanias/everforest-nvim",
+    lazy = false,
+    config = function()
+      require("everforest").setup({
+        -- Controls the "hardness" of the background. Options are "soft", "medium" or "hard".
+        -- Default is "medium".
+        background = "soft",
+        -- How much of the background should be transparent. Options are 0, 1 or 2.
+        -- Default is 0.
+        --
+        -- 2 will have more UI components be transparent (e.g. status line
+        -- background).
+        transparent_background_level = 0,
+      })
+    end,
   },
   { "kyazdani42/nvim-web-devicons", config = function() require("nvim-web-devicons").setup() end },
   {
@@ -103,19 +128,6 @@ return {
   },
   "lukas-reineke/virt-column.nvim",
   "MunifTanjim/nui.nvim",
-  -- {
-  --   "nvim-zh/colorful-winsep.nvim",
-  --   lazy = false,
-  --   config = function()
-  --     require("colorful-winsep").setup({
-  --       highlight = {
-  --         guibg = "NONE",
-  --         guifg = _G.mega.colors.grey0.hex,
-  --         -- guifg = "#1F3442",
-  --       },
-  --     })
-  --   end,
-  -- },
 
   -- {
   --   "lukas-reineke/indent-blankline.nvim",
@@ -556,7 +568,17 @@ return {
   --     })
   --   end,
   -- },
-  { "danymat/neogen" },
+  {
+    "danymat/neogen",
+    keys = {
+      {
+        "<leader>cc",
+        function() require("neogen").generate({}) end,
+        desc = "Neogen Comment",
+      },
+    },
+    config = { snippet_engine = "luasnip" },
+  },
   {
     -- TODO: https://github.com/avucic/dotfiles/blob/master/nvim_user/.config/nvim/lua/user/configs/dadbod.lua
     "kristijanhusak/vim-dadbod-ui",
