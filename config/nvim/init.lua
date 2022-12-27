@@ -1,10 +1,10 @@
 -- [ settings ] ----------------------------------------------------------------
-
+-- vim.go.loadplugins = true
 vim.g.enabled_plugin = {
   mappings = true,
   autocmds = true,
   megaline = true,
-  lsp = false,
+  lsp = true,
   term = true,
   repls = true,
   cursorline = true,
@@ -18,6 +18,9 @@ vim.g.enabled_plugin = {
   tmux = false,
   winbar = false, -- FIXME: add more!
 }
+-- vim.cmd([[
+--   :luafile ~/.config/nvim/lua/lazyinit.lua
+-- ]])
 
 -- disable certain plugins for firenvim
 for plugin, _ in pairs(vim.g.enabled_plugin) do
@@ -50,6 +53,7 @@ _G.mega = {
 -- [ loaders ] -----------------------------------------------------------------
 
 require("mega.globals")
+require("mega.debug")
 require("mega.options")
 require("mega.lazy").setup()
 vim.api.nvim_create_autocmd("User", {

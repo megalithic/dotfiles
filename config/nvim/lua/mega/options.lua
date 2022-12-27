@@ -22,6 +22,8 @@ vim.opt.shortmess = {
   C = true, -- Don't show "Scanning..." messages
   W = true, -- Don't show [w] or written when writing
 }
+
+vim.o.shortmess = "filnxtToOFWIcC"
 -----------------------------------------------------------------------------//
 -- Timings {{{1
 -----------------------------------------------------------------------------//
@@ -363,6 +365,7 @@ vim.o.shada = [[!,'100,<0,s100,h]]
 -- BACKUP AND SWAPS {{{
 -------------------------------------------------------------------------------
 vim.o.backup = false
+vim.opt.backupdir = vim.fn.stdpath("state") .. "/backup"
 vim.o.writebackup = false
 if fn.isdirectory(vim.o.undodir) == 0 then fn.mkdir(vim.o.undodir, "p") end
 vim.o.undofile = true

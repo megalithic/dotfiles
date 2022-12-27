@@ -1,5 +1,4 @@
-
-  local M  = { "lewis6991/gitsigns.nvim", event = { "BufRead" }}
+local M = { "lewis6991/gitsigns.nvim", event = { "BufReadPre" } }
 function M.config()
   local gs = require("gitsigns")
 

@@ -24,8 +24,8 @@ end
 -- ---@param msg string
 function M.notify(msg, level) vim.notify(msg, level, { title = "lazy" }) end
 
-function M.conf(name) 
-  return function() 
+function M.conf(name)
+  return function()
     -- P(name)
   end
 end
@@ -87,16 +87,24 @@ function M.setup()
   -- REF:
   -- https://github.com/M3dry/Dotfiles/blob/master/.config/nvim/lua/m3dry/plugins.lua
   require("lazy").setup("mega.plugins", {
-    -- debug = true,
+    debug = false,
     defaults = { lazy = true },
     checker = { enabled = true },
+    diff = {
+      cmd = "terminal_git",
+    },
     install = {
       missing = true,
-      colorscheme = { vim.g.colorscheme },
+      colorscheme = { vim.g.colorscheme, "habamax" },
     },
-    -- dev = { patterns = { "megalithic" } },
+    dev = { patterns = { "megalithic" } },
     performance = {
+      cache = {
+        enabled = true,
+        -- disable_events = {},
+      },
       rtp = {
+        paths = { "~/.dotfiles/config/nvim/plugin" },
         disabled_plugins = {
           "gzip",
           "zip",
@@ -119,6 +127,11 @@ function M.setup()
           "spellfile",
           "tohtml",
         },
+      },
+    },
+    ui = {
+      custom_keys = {
+        ["<localleader>d"] = function(plugin) dd(plugin) end,
       },
     },
   })

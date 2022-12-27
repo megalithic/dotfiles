@@ -62,7 +62,7 @@ return {
   },
 
   -- ( UI ) --------------------------------------------------------------------
-  { "rktjmp/lush.nvim", lazy = false, config = function() require("lush")(require("mega.lush_theme.megaforest")) end },
+  { "rktjmp/lush.nvim", config = function() require("lush")(require("mega.lush_theme.megaforest")) end },
   {
     "mcchrish/zenbones.nvim",
     lazy = false,
@@ -196,7 +196,7 @@ return {
   {
     "knubie/vim-kitty-navigator",
     -- build = "cp ./*.py ~/.config/kitty/",
-    -- lazy = function() return not vim.env.TMUX end,
+    cond = not vim.env.TMUX,
   },
   -- { "elihunter173/dirbuf.nvim", config = function() require("dirbuf").setup({}) end },
   -- {
@@ -468,7 +468,7 @@ return {
   --   end,
   -- },
 
-   "nvim-lua/lsp_extensions.nvim" ,
+  "nvim-lua/lsp_extensions.nvim",
   "jose-elias-alvarez/typescript.nvim",
   "MunifTanjim/nui.nvim",
   "williamboman/mason-lspconfig.nvim",
