@@ -1,7 +1,3 @@
-local mega = require("mega.globals")
-local lazy = require("mega.lazy")
-local lazy_notify = lazy.notify
-
 -- [ COMMANDS ] ----------------------------------------------------------------
 -- mega.command("PackerCompiledEdit", function() vim.cmd.vnew(vim.g.packer_compiled_path) end)
 -- mega.command("PackerCompiledDelete", function()
@@ -62,7 +58,7 @@ return {
   },
 
   -- ( UI ) --------------------------------------------------------------------
-  { "rktjmp/lush.nvim", config = function() require("lush")(require("mega.lush_theme.megaforest")) end },
+  { "rktjmp/lush.nvim", lazy = false, config = function() require("lush")(require("mega.lush_theme.megaforest")) end },
   {
     "mcchrish/zenbones.nvim",
     lazy = false,
@@ -71,7 +67,8 @@ return {
   { "kyazdani42/nvim-web-devicons", config = function() require("nvim-web-devicons").setup() end },
   {
     "NvChad/nvim-colorizer.lua",
-    event = { "CursorHold", "CursorMoved", "InsertEnter" },
+    -- event = { "CursorHold", "CursorMoved", "InsertEnter" },
+    event = { "BufReadPre" },
     config = function()
       require("colorizer").setup({
         filetypes = { "*", "!lazy", "!gitcommit", "!NeogitCommitMessage" },
@@ -248,76 +245,6 @@ return {
       })
     end,
   },
-
-  -- ( Treesitter ) ------------------------------------------------------------
-  { "nvim-treesitter/nvim-treesitter-textobjects", dependencies = "nvim-treesitter" },
-  { "RRethy/nvim-treesitter-textsubjects", dependencies = "nvim-treesitter" },
-  { "nvim-treesitter/nvim-tree-docs", dependencies = "nvim-treesitter" },
-  { "JoosepAlviste/nvim-ts-context-commentstring", dependencies = "nvim-treesitter" },
-  { "RRethy/nvim-treesitter-endwise", dependencies = "nvim-treesitter" },
-  { "jadengis/nvim-ts-autotag", dependencies = "nvim-treesitter" },
-  { "p00f/nvim-ts-rainbow", dependencies = "nvim-treesitter" },
-  {
-    "mfussenegger/nvim-treehopper",
-    dependencies = "nvim-treesitter",
-    config = function()
-      require("tsht").config.hint_keys = { "h", "j", "f", "d", "n", "v", "s", "l", "a" }
-      _G.mega.augroup("TreehopperMaps", {
-        {
-          event = { "FileType" },
-          command = function(args)
-            if vim.tbl_contains(require("nvim-treesitter.parsers").available_parsers(), vim.bo[args.buf].filetype) then
-              _G.mega.omap("m", ":<C-U>lua require('tsht').nodes()<CR>", { buffer = args.buf })
-              _G.mega.vnoremap("m", ":lua require('tsht').nodes()<CR>", { buffer = args.buf })
-            end
-          end,
-        },
-      })
-    end,
-  },
-  { "David-Kunz/treesitter-unit", dependencies = "nvim-treesitter" },
-  {
-    "nvim-treesitter/nvim-treesitter-context",
-    dependencies = "nvim-treesitter",
-    config = function()
-      require("treesitter-context").setup({
-        multiline_threshold = 2,
-        -- separator = { "─", "ContextBorder" }, -- alts: ▁ ─ ▄
-        separator = { "▁", "TreesitterContextBorder" }, -- alts: ▁ ─ ▄─▁
-        mode = "topline",
-      })
-    end,
-  },
-  {
-    "nvim-treesitter/playground",
-    cmd = { "TSPlaygroundToggle", "TSHighlightCapturesUnderCursor" },
-    dependencies = "nvim-treesitter",
-  },
-  -- {
-  --   "folke/paint.nvim",
-  --   config = function()
-  --     require("paint").setup({
-  --       highlights = {
-  --         {
-  --           -- filter can be a table of buffer options that should match,
-  --           -- or a function called with buf as param that should return true.
-  --           -- The example below will paint @something in comments with Constant
-  --           filter = { filetype = "lua" },
-  --           pattern = "%s*%-%-%s*(@%w+)",
-  --           hl = "Todo",
-  --         },
-  --         {
-  --           -- filter can be a table of buffer options that should match,
-  --           -- or a function called with buf as param that should return true.
-  --           -- The example below will paint @something in comments with Constant
-  --           filter = { filetype = "lua" },
-  --           pattern = "%s*%-%-%-%s*(@%w+)",
-  --           hl = "Constant",
-  --         },
-  --       },
-  --     })
-  --   end,
-  -- },
 
   -- ( LSP ) -------------------------------------------------------------------
   -- TODO: https://github.com/folke/dot/tree/master/config/nvim/lua/config/plugins/lsp
@@ -505,11 +432,12 @@ return {
       mega.nnoremap("<localleader>gl", neogit.popups.pull.create)
       mega.nnoremap("<localleader>gp", neogit.popups.push.create)
     end,
-    dependencies = "plenary.nvim",
+    dependencies = "nvim-lua/plenary.nvim",
   },
   -- { "sindrets/diffview.nvim" },
   {
     "akinsho/git-conflict.nvim",
+    event = "VeryLazy",
     config = function()
       require("git-conflict").setup({
         disable_diagnostics = true,
@@ -521,40 +449,49 @@ return {
       })
     end,
   },
-  -- { "itchyny/vim-gitbranch" },
-  -- { "rhysd/git-messenger.vim" },
-  -- { "tpope/vim-fugitive" },
   {
     "ruifm/gitlinker.nvim",
-    dependencies = "plenary.nvim",
+    dependencies = "nvim-lua/plenary.nvim",
     keys = {
-      { "n", "<localleader>gu", "gitlinker: copy to clipboard" },
-      { "n", "<localleader>go", "gitlinker: open in browser" },
+      { "<localleader>gu", mode = "n" },
+      { "<localleader>gu", mode = "v" },
+      "<localleader>go",
+      "<leader>gH",
+      { "<localleader>go", mode = "n" },
+      { "<localleader>go", mode = "v" },
     },
     config = function()
-      local linker = require("gitlinker")
-      linker.setup({ mappings = "<localleader>gu" })
+      require("gitlinker").setup({ mappings = nil })
+
+      local function linker() return require("gitlinker") end
+      local function browser_open() return { action_callback = require("gitlinker.actions").open_in_browser } end
+      dd(fmt("mega.nnoremap: %s", I(mega.nnoremap)))
+      mega.nnoremap(
+        "<localleader>gu",
+        function() linker().get_buf_range_url("n") end,
+        "gitlinker: copy line to clipboard"
+      )
+      mega.vnoremap(
+        "<localleader>gu",
+        function() linker().get_buf_range_url("v") end,
+        "gitlinker: copy range to clipboard"
+      )
       mega.nnoremap(
         "<localleader>go",
-        function() linker.get_repo_url({ action_callback = require("gitlinker.actions").open_in_browser }) end,
+        function() linker().get_repo_url(browser_open()) end,
         "gitlinker: open in browser"
       )
-    end,
-  },
-  {
-    "ruanyl/vim-gh-line",
-    config = function()
-      if vim.fn.exists("g:loaded_gh_line") then
-        vim.g["gh_line_map_default"] = 0
-        vim.g["gh_line_blame_map_default"] = 0
-        vim.g["gh_line_map"] = "<leader>gH"
-        vim.g["gh_line_blame_map"] = "<leader>gB"
-        vim.g["gh_repo_map"] = "<leader>gO"
-        -- Use a custom program to open link:
-        -- let g:gh_open_command = 'open '
-        -- Copy link to a clipboard instead of opening a browser:
-        -- let g:gh_open_command = 'fn() { echo "$@" | pbcopy; }; fn '
-      end
+      mega.nnoremap("<leader>gH", function() linker().get_repo_url(browser_open()) end, "gitlinker: open in browser")
+      mega.nnoremap(
+        "<localleader>go",
+        function() linker().get_buf_range_url("n", browser_open()) end,
+        "gitlinker: open current line in browser"
+      )
+      mega.vnoremap(
+        "<localleader>go",
+        function() linker().get_buf_range_url("v", browser_open()) end,
+        "gitlinker: open current selection in browser"
+      )
     end,
   },
 
@@ -818,10 +755,11 @@ return {
 
   -- ( Notes/Docs ) ------------------------------------------------------------
   -- { "ixru/nvim-markdown" },
-  { "iamcco/markdown-preview.nvim", ft = "md", build = "cd app && yarn install" },
+  { "iamcco/markdown-preview.nvim", ft = "markdown", build = "cd app && yarn install" },
   {
     "toppair/peek.nvim",
     build = "deno task --quiet build:fast",
+    ft = { "markdown" },
     config = function()
       local peek = require("peek")
       peek.setup({})
@@ -839,12 +777,14 @@ return {
   },
   {
     "gaoDean/autolist.nvim",
+    ft = { "markdown" },
     config = function() require("autolist").setup({ normal_mappings = { invert = { "<c-c>" } } }) end,
   },
-  { "ellisonleao/glow.nvim" },
+  { "ellisonleao/glow.nvim", ft = { "markdown" } },
   { "ekickx/clipboard-image.nvim" },
   {
     "lukas-reineke/headlines.nvim",
+    ft = { "markdown" },
     dependencies = "nvim-treesitter",
     config = function()
       require("headlines").setup({

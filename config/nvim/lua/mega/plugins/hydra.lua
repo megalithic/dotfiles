@@ -1,5 +1,5 @@
-local M = 
-  { "anuvyklack/hydra.nvim"}
+local M = { "anuvyklack/hydra.nvim", lazy = false }
+
 function M.config()
   local Hydra = require("hydra")
   local border = mega.get_border()

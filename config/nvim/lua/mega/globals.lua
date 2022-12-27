@@ -52,11 +52,6 @@ mega.dirs.org = fn.expand(mega.dirs.docs .. "/_org")
 mega.dirs.zettel = fn.expand("$ZK_NOTEBOOK_DIR")
 mega.dirs.zk = mega.dirs.zettel
 
--- [ runtimepath (rtp) ] -------------------------------------------------------
-
-vim.opt.runtimepath:remove("~/.cache")
-vim.opt.runtimepath:remove("~/.local/share/src")
-
 -- [ utils ] -------------------------------------------------------------------
 
 -- TODO:

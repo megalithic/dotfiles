@@ -1,5 +1,5 @@
 -- [ settings ] ----------------------------------------------------------------
--- vim.go.loadplugins = true
+
 vim.g.enabled_plugin = {
   mappings = true,
   autocmds = true,
@@ -29,7 +29,7 @@ for plugin, _ in pairs(vim.g.enabled_plugin) do
   end
 end
 
-vim.g.colorscheme = "rose-pine" -- alts: rose-pine, forestbones, tokyonight-storm
+vim.g.colorscheme = "megaforest" -- alts: rose-pine, forestbones, tokyonight-storm
 vim.g.default_colorcolumn = "81"
 vim.g.mapleader = ","
 vim.g.maplocalleader = " "
@@ -38,17 +38,21 @@ vim.g.debug_enabled = false
 
 -- [ globals ] -----------------------------------------------------------------
 
-_G.mega = {
-  fn = {},
-  dirs = {},
-  mappings = {},
-  term = {},
-  lsp = {},
-  icons = require("mega.icons"),
-  ts_ignored_langs = { "svg", "json", "heex", "jsonc" },
-  -- original vim.notify: REF: https://github.com/folke/dot/commit/b0f6a2db608cb090b969e2ef5c018b86d11fc4d6
-  notify = vim.notify,
-}
+_G.mega = mega
+  or {
+    fn = {},
+    dirs = {},
+    mappings = {},
+    term = {},
+    lsp = {},
+    icons = require("mega.icons"),
+    -- colors = require("mega.lush_theme.colors"),
+    ts_ignored_langs = { "svg", "json", "heex", "jsonc" },
+    -- original vim.notify: REF: https://github.com/folke/dot/commit/b0f6a2db608cb090b969e2ef5c018b86d11fc4d6
+    notify = vim.notify,
+  }
+
+_G.__ = _G.mega
 
 -- [ loaders ] -----------------------------------------------------------------
 

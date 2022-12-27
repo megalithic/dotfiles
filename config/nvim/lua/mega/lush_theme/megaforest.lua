@@ -5,6 +5,7 @@
 -- - https://github.com/mcchrish/zenbones.nvim/blob/main/lua/zenbones/specs/dark.lua
 -- - https://github.com/rktjmp/lush.nvim/issues/109
 -- # FIXME:
+-- https://github.com/rktjmp/lush-template/blob/main/lua/lush_theme/lush_template.lua
 
 -- `megaforest` built with,
 --

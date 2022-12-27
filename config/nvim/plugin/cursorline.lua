@@ -182,9 +182,37 @@ end
 --   end
 -- end
 
+-- vim.api.nvim_create_autocmd({ "BufEnter", "WinEnter", "FocusGained" }, {
+--   callback = function()
+--     enable_cursorline(true)
+--     -- local ok, cl = pcall(vim.api.nvim_win_get_var, 0, "auto-cursorline")
+--     -- if ok and cl then
+--     --   vim.wo.cursorline = true
+--     --   vim.api.nvim_win_del_var(0, "auto-cursorline")
+--     -- end
+--   end,
+-- })
+-- vim.api.nvim_create_autocmd({ "BufLeave", "WinLeave" }, {
+--   callback = function() disable_cursorline() end,
+-- })
+-- vim.api.nvim_create_autocmd({ "InsertLeave", "FocusLost" }, {
+--   callback = function() enable_cursorline(false) end,
+-- })
+-- vim.api.nvim_create_autocmd({ "InsertEnter", "CursorMovedI" }, {
+--   callback = function()
+--     vim.opt_local.cursorlineopt = "number"
+--     vim.opt_local.cursorline = true
+--   end,
+-- })
+
 mega.augroup("ToggleCursorLine", {
   {
     event = { "BufEnter", "WinEnter", "FocusGained" },
+    command = function() enable_cursorline(true) end,
+  },
+  {
+    event = { "User" },
+    pattern = { "VeryLazy" },
     command = function() enable_cursorline(true) end,
   },
   {

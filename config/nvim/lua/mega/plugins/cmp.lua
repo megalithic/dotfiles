@@ -12,26 +12,25 @@
 --   },
 -- }
 
-
-  local M = {
-    "hrsh7th/nvim-cmp",
-    event = { "InsertEnter" },
-    dependencies = {
-      { "saadparwaiz1/cmp_luasnip"},
-      { "hrsh7th/cmp-buffer"},
-      { "hrsh7th/cmp-nvim-lsp"},
-      { "hrsh7th/cmp-nvim-lua"},
-      { "hrsh7th/cmp-path"},
-      { "hrsh7th/cmp-emoji"},
-      { "f3fora/cmp-spell"},
-      { "hrsh7th/cmp-cmdline", event = { "CmdlineEnter" } },
-      { "hrsh7th/cmp-nvim-lsp-signature-help"},
-      { "hrsh7th/cmp-nvim-lsp-document-symbol"},
-      -- { "dmitmel/cmp-cmdline-history"},
-      { "lukas-reineke/cmp-rg"},
-      -- { "kristijanhusak/vim-dadbod-completion"},
-    },
-  }
+local M = {
+  "hrsh7th/nvim-cmp",
+  event = { "InsertEnter" },
+  dependencies = {
+    { "saadparwaiz1/cmp_luasnip" },
+    { "hrsh7th/cmp-buffer" },
+    { "hrsh7th/cmp-nvim-lsp" },
+    { "hrsh7th/cmp-nvim-lua" },
+    { "hrsh7th/cmp-path" },
+    { "hrsh7th/cmp-emoji" },
+    { "f3fora/cmp-spell" },
+    { "hrsh7th/cmp-cmdline", event = { "CmdlineEnter" } },
+    { "hrsh7th/cmp-nvim-lsp-signature-help" },
+    { "hrsh7th/cmp-nvim-lsp-document-symbol" },
+    -- { "dmitmel/cmp-cmdline-history"},
+    { "lukas-reineke/cmp-rg" },
+    -- { "kristijanhusak/vim-dadbod-completion"},
+  },
+}
 
 function M.config()
   local cmp = require("cmp")
@@ -91,14 +90,11 @@ function M.config()
   }
 
   cmp.setup({
-    -- enabled = function()
-    --   local bt = vim.api.nvim_buf_get_option(0, "buftype")
-    --   -- local ctx = require("cmp.config.context")
-    --   local enable_if = not vim.g.started_by_firenvim and not bt == "prompt"
-    --   -- and not ctx.in_treesitter_capture("comment")
-    --   -- and not ctx.in_syntax_group("Comment") -- disable completion if the cursor is `Comment` syntax group.
-    --   return enable_if
-    -- end,
+    enabled = function()
+      if vim.bo.buftype == "prompt" or vim.g.started_by_firenvim then return false end
+
+      return true
+    end,
     preselect = cmp.PreselectMode.None,
     -- view = { entries = "custom" },
     completion = {

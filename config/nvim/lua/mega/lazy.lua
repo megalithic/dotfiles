@@ -136,7 +136,7 @@ function M.setup()
     },
   })
 
-  vim.keymap.set("n", "<leader>pp", "<cmd>:Lazy<cr>")
+  vim.keymap.set("n", "<leader>lp", "<cmd>:Lazy<cr>")
 end
 
 return M

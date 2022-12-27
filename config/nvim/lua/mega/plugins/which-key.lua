@@ -1,6 +1,7 @@
 local M = {
-   "folke/which-key.nvim"
- }
+  "folke/which-key.nvim",
+  lazy = false,
+}
 
 function M.config()
   local has_wk, wk = mega.require("which-key")
