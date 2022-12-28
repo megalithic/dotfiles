@@ -55,7 +55,7 @@ function M.dump(value, opts)
   opts.loc = opts.loc or M.get_loc()
   local msg = vim.inspect(value)
   local function notify()
-    vim.notify(msg, vim.log.levels.INFO, {
+    mega.notify(msg, vim.log.levels.INFO, {
       title = "Debug: " .. opts.loc,
       on_open = function(win)
         vim.wo[win].conceallevel = 3

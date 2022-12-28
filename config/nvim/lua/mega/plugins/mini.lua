@@ -24,7 +24,7 @@ function mini.surround()
       delete = "ds",
       -- find = "",
       -- find_left = "",
-      highlight = "hs",
+      -- highlight = "",
       replace = "cs",
       -- add = "yp",
       -- visual_add = "P",

@@ -52,9 +52,9 @@ map({ "i", "n", "t" }, "<C-Up>", ":+tabmove<CR>", { desc = "move tab right", rem
 map({ "i", "n", "t" }, "<C-Down>", ":-tabmove<CR>", { desc = "move tab left", remap = true })
 
 nmap("gb", string.format("<cmd>ls<CR>:b<space>%s", mega.replace_termcodes("<tab>")), "current buffers")
-nmap("gs", "i<CR><ESC>^mwgk:silent! s/\v +$//<CR>:noh<CR>`w", "split line")
 nmap("J", "<nop>")
-nmap("gj", "mzJ`z", "join lines")
+-- nmap("gs", "i<CR><ESC>^mwgk:silent! s/\v +$//<CR>:noh<CR>`w", "split line")
+-- nmap("gj", "mzJ`z", "join lines")
 nmap("gx", mega.open_uri, "open uri under cursor")
 
 nmap("zs", mega.showCursorHighlights, "show syntax highlights under cursor")

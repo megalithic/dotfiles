@@ -2,38 +2,38 @@
 -- - https://github.com/fdschmidt93/dotfiles/blob/master/nvim/.config/nvim/lua/fds/plugins/telescope/init.lua
 
 local M = {
-    "nvim-telescope/telescope.nvim",
-    cmd = { "Telescope" },
-    event = { "CursorHold" },
-    dependencies = {
-      {
-        "nvim-telescope/telescope-file-browser.nvim",
-        dependencies = "telescope.nvim",
-        config = function() require("telescope").load_extension("file_browser") end,
-      },
-      {
-        "natecraddock/telescope-zf-native.nvim",
-        dependencies = "telescope.nvim",
-        config = function() require("telescope").load_extension("zf-native") end,
-      },
-      {
-        "benfowler/telescope-luasnip.nvim",
-        dependencies = "telescope.nvim",
-        config = function() require("telescope").load_extension("luasnip") end,
-      },
-      {
-        "nvim-telescope/telescope-live-grep-args.nvim",
-        lazy = vim.g.vscode ~= 1,
-        dependencies = "telescope.nvim",
-        config = function() require("telescope").load_extension("live_grep_args") end,
-      },
-      {
-        "nvim-telescope/telescope-media-files.nvim",
-        dependencies = "telescope.nvim",
-        config = function() require("telescope").load_extension("media_files") end,
-      }
-    }
-  }
+  "nvim-telescope/telescope.nvim",
+  cmd = { "Telescope" },
+  event = { "CursorHold" },
+  dependencies = {
+    {
+      "nvim-telescope/telescope-file-browser.nvim",
+      dependencies = "telescope.nvim",
+      config = function() require("telescope").load_extension("file_browser") end,
+    },
+    {
+      "natecraddock/telescope-zf-native.nvim",
+      dependencies = "telescope.nvim",
+      config = function() require("telescope").load_extension("zf-native") end,
+    },
+    {
+      "benfowler/telescope-luasnip.nvim",
+      dependencies = "telescope.nvim",
+      config = function() require("telescope").load_extension("luasnip") end,
+    },
+    {
+      "nvim-telescope/telescope-live-grep-args.nvim",
+      lazy = vim.g.vscode ~= 1,
+      dependencies = "telescope.nvim",
+      config = function() require("telescope").load_extension("live_grep_args") end,
+    },
+    {
+      "nvim-telescope/telescope-media-files.nvim",
+      dependencies = "telescope.nvim",
+      config = function() require("telescope").load_extension("media_files") end,
+    },
+  },
+}
 
 function M.config()
   local telescope = require("telescope")
@@ -316,7 +316,13 @@ function M.config()
       preview = {
         treesitter = {
           enable = true,
-          disable = mega.ts_ignored_langs,
+          disable = (function()
+            if mega.should_disable_ts() then
+              return mega.ts_ignored_langs
+            else
+              return {}
+            end
+          end)(),
         },
         -- mime_hook = function(filepath, bufnr, opts)
         --   local is_image = function(filepath)

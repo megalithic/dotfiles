@@ -720,13 +720,34 @@ return {
   },
   { "editorconfig/editorconfig-vim" },
   { "alvan/vim-closetag" },
-  { "tpope/vim-eunuch" },
+  {
+    "chrisgrieser/nvim-genghis",
+    dependencies = "stevearc/dressing.nvim",
+    keys = { "<localleader>yp", "<localleader>yn", "<localleader>yf", "<localleader>rf", "<localleader>df" },
+    cmd = { "Rename", "Delete" },
+    config = function()
+      local genghis = require("genghis")
+      mega.nnoremap("<localleader>yp", genghis.copyFilepath, { desc = "Copy filepath" })
+      mega.nnoremap("<localleader>yn", genghis.copyFilename, { desc = "Copy filename" })
+      mega.nnoremap("<localleader>yf", genghis.duplicateFile, { desc = "Duplicate file" })
+      mega.nnoremap("<localleader>rf", genghis.renameFile, { desc = "Rename file" })
+      mega.nnoremap("<localleader>cx", genghis.chmodx, { desc = "Chmod +x file" })
+      mega.nnoremap(
+        "<localleader>df",
+        function() genghis.trashFile({ trashLocation = "$HOME/.Trash" }) end,
+        { desc = "Delete to trash" }
+      ) -- default: "$HOME/.Trash".
+      -- mega.nmap("<localleader>mf", genghis.moveAndRenameFile)
+      -- mega.nmap("<localleader>nf", genghis.createNewFile)
+      -- mega.nmap("<localleader>x", genghis.moveSelectionToNewFile)
+    end,
+  },
   {
     "tpope/vim-abolish",
     config = function()
-      nnoremap("<localleader>[", ":S/<C-R><C-W>//<LEFT>", { silent = false })
-      nnoremap("<localleader>]", ":%S/<C-r><C-w>//c<left><left>", { silent = false })
-      xnoremap("<localleader>[", [["zy:'<'>S/<C-r><C-o>"//c<left><left>]], { silent = false })
+      mega.nnoremap("<localleader>[", ":S/<C-R><C-W>//<LEFT>", { silent = false })
+      mega.nnoremap("<localleader>]", ":%S/<C-r><C-w>//c<left><left>", { silent = false })
+      mega.xnoremap("<localleader>[", [["zy:'<'>S/<C-r><C-o>"//c<left><left>]], { silent = false })
     end,
   },
   { "tpope/vim-rhubarb" },
@@ -755,6 +776,18 @@ return {
   --     })
   --   end,
   -- },
+  {
+    "Wansmer/treesj",
+    dependencies = { "nvim-treesitter/nvim-treesitter" },
+    cmd = { "TSJSplit", "TSJJoin", "TSJToggle" },
+    keys = { "gs", "gj" },
+    config = function()
+      require("treesj").setup({ use_default_keymaps = false })
+
+      mega.nnoremap("gs", ":TSJSplit", "Split lines")
+      mega.nnoremap("gj", ":TSJJoin", "Join lines")
+    end,
+  },
   {
     "abecodes/tabout.nvim",
     dependencies = { "nvim-treesitter", "nvim-cmp" },

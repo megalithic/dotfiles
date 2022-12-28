@@ -422,8 +422,8 @@ local function mapper(mode, o)
     -- If the label is all that was passed in, set the opts automagically
     opts = type(opts) == "string" and { label = opts } or opts and vim.deepcopy(opts) or {}
     if opts.label or opts.desc then
-      -- local ok, wk = mega.require("which-key", { silent = true })
-      -- if ok then wk.register({ [lhs] = opts.label or opts.desc }, { mode = mode }) end
+      local ok, wk = mega.require("which-key", { silent = true })
+      if ok and wk then wk.register({ [lhs] = opts.label or opts.desc }, { mode = mode }) end
       if opts.label and not opts.desc then opts.desc = opts.label end
       opts.label = nil
     end
@@ -1195,11 +1195,18 @@ do
     [[noautocmd clear | silent! execute "!cp '%:p' '%:p:h/%:t:r-copy.%:e'"<bar>redraw<bar>echo "Copied " . expand('%:t') . ' to ' . expand('%:t:r') . '-copy.' . expand('%:e')]]
   )
   command("SaveAsFile", [[noautocmd clear | :execute "saveas %:p:h/" .input('save as -> ') | :e ]])
-  command("RenameFile", [[noautocmd clear | :execute "Rename " .input('rename to -> ') | :e ]])
+  -- command("RenameFile", [[noautocmd clear | :execute "Rename " .input('rename to -> ') | :e ]])
+  command("Rename", [[lua require("genghis").renameFile()]])
+  command("Delete", [[lua require("genghis").trashFile()]])
   command("Flash", function() mega.blink_cursorline() end)
   command("P", function(opts)
     vim.g.debug_enabled = true
     vim.cmd(fmt("lua P(%s)", opts.args))
+    vim.g.debug_enabled = false
+  end, { nargs = "*" })
+  command("D", function(opts)
+    vim.g.debug_enabled = true
+    vim.cmd(fmt("lua d(%s)", opts.args))
     vim.g.debug_enabled = false
   end, { nargs = "*" })
   command("Noti", [[Mess | Notifications]])

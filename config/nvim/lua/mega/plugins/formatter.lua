@@ -1,4 +1,4 @@
-local M = {"mhartington/formatter.nvim"}
+local M = { "mhartington/formatter.nvim", keys = { "<localleader>f" }, cmd = { "Format", "FormatWrite" } }
 
 function M.config()
   local formatter = require("formatter")
@@ -196,4 +196,4 @@ function M.config()
   })
 end
 
- return M
+return M

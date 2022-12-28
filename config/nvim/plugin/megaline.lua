@@ -630,14 +630,10 @@ local function seg_git_status(truncate_at)
   return seg(branch, "StGitBranch", { margin = { 1, 1 }, prefix = seg_git_symbol(80), padding = { 1, 0 } })
 end
 
-local function seg_startup_time()
-  -- local stats = require("lazy").stats()
-  -- local ms = (math.floor(stats.startuptime * 100 + 0.5) / 100)
-  -- return vim.defer_fn(
-  --   function() seg(ms, "StGitBranch", { margin = { 1, 1 }, prefix = " ", suffix = "ms", padding = { 1, 0 } }) end,
-  --   1
-  -- )
-  return ""
+local function seg_startuptime()
+  local stats = require("lazy").stats()
+  local ms = (math.floor(stats.startuptime * 100 + 0.5) / 100)
+  return seg(ms, "StComment", { margin = { 1, 1 }, prefix = " ", suffix = "ms", padding = { 0, 0 } })
 end
 
 local function is_focused() return tonumber(vim.g.actual_curwin) == vim.api.nvim_get_current_win() end
@@ -702,7 +698,7 @@ function _G.__statusline()
     seg_git_status(120),
     -- seg(get_dap_status()),
     seg_lineinfo(75),
-    seg_startup_time(),
+    -- seg_startuptime(),
     seg_suffix(100),
   })
 end
