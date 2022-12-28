@@ -1215,6 +1215,11 @@ do
     vim.cmd("DotEnv")
     vim.cmd("DBUI")
   end, { nargs = "*" })
+
+  command("CopyBranch", function()
+    vim.cmd([[silent !git branch --show-current | tr -d '[:space:]' | (pbcopy || lemonade copy)]])
+    vim.notify(string.format("copied to clipboard: %s", vim.fn.getreg("+")))
+  end)
 end
 
 return mega

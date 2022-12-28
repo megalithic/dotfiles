@@ -69,6 +69,9 @@ nmap("<localleader>tv", "<cmd>TestVisit<cr>", "run test file _visit")
 nmap("<localleader>tp", "<cmd>A<cr>", "open alt (edit)")
 nmap("<localleader>tP", "<cmd>AV<cr>", "open alt (vsplit)")
 
+nmap("<localleader>yg", "<cmd>CopyBranch<cr>", { desc = "Copy current git branch" })
+nmap("<localleader>ygh", "<cmd>CopyBranch<cr>", { desc = "Copy current git branch" })
+
 nmap("<localleader>f", function()
   vim.cmd("FormatWrite")
   -- vim.defer_fn(function() vim.cmd("e") end, 500)
