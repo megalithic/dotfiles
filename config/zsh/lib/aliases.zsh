@@ -434,7 +434,7 @@ alias nerd="echo -ne \\u"
 alias nf="echo -ne \\u"
 
 # -- linux-specific aliases..
-if [[ $PLATFORM == "linux" ]]; then
+if [[ $(uname) == "Linux" ]]; then
   alias pbcopy="xclip -sel clip"
   alias pbpaste='xclip -sel clip -o'
   # TODO: why do we have this luamake entry
