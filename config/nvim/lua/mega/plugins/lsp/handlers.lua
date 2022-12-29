@@ -1,3 +1,9 @@
+-- local util = require("util")
+
+local M = {}
+
+function M.setup()
+
 local fn = vim.fn
 local api = vim.api
 local lsp = vim.lsp
@@ -273,3 +279,6 @@ end
 --     jumpto(result)
 --   end
 -- end
+end
+
+return M

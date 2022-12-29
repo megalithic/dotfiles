@@ -1,4 +1,5 @@
 local M = {}
+
 local augroup = vim.api.nvim_create_augroup
 local autocmd = vim.api.nvim_create_autocmd
 local util = require("vim.lsp.util")

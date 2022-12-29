@@ -116,6 +116,18 @@ _G.Clipboard = {
   copy = function(str) vim.fn.jobstart(string.format("echo -n %q | pbcopy", str), { detach = true }) end,
 }
 
+function mega.warn(msg, name)
+  vim.notify(msg, vim.log.levels.WARN, { title = name or "nvim" })
+end
+
+function mega.error(msg, name)
+  vim.notify(msg, vim.log.levels.ERROR, { title = name or "nvim" })
+end
+
+function mega.info(msg, name)
+  vim.notify(msg, vim.log.levels.INFO, { title = name or "nvim" })
+end
+
 function mega.dump_colors(filter)
   local defs = {}
   for hl_name, hl in pairs(vim.api.nvim__get_hl_defs(0)) do

@@ -128,6 +128,75 @@ return {
   },
   "lukas-reineke/virt-column.nvim",
   "MunifTanjim/nui.nvim",
+  {
+    "folke/styler.nvim",
+    event = "VeryLazy",
+    enabled = false,
+    config = {
+      themes = {
+        markdown = { colorscheme = "forestbones" },
+        help = { colorscheme = "forestbones", background = "dark" },
+        -- noice = { colorscheme = "gruvbox", background = "dark" },
+      },
+    },
+  },
+  {
+    "folke/paint.nvim",
+    enabled = false,
+    event = "BufReadPre",
+    config = function()
+      require("paint").setup({
+        highlights = {
+          {
+            filter = { filetype = "lua" },
+            pattern = "%s*%-%-%-%s*(@%w+)",
+            hl = "Constant",
+          },
+          {
+            filter = { filetype = "lua" },
+            pattern = "%s*%-%-%[%[(@%w+)",
+            hl = "Constant",
+          },
+          {
+            filter = { filetype = "lua" },
+            pattern = "%s*%-%-%-%s*@field%s+(%S+)",
+            hl = "@field",
+          },
+          {
+            filter = { filetype = "lua" },
+            pattern = "%s*%-%-%-%s*@class%s+(%S+)",
+            hl = "@variable.builtin",
+          },
+          {
+            filter = { filetype = "lua" },
+            pattern = "%s*%-%-%-%s*@alias%s+(%S+)",
+            hl = "@keyword",
+          },
+          {
+            filter = { filetype = "lua" },
+            pattern = "%s*%-%-%-%s*@param%s+(%S+)",
+            hl = "@parameter",
+          },
+        },
+      })
+    end,
+  },
+
+  {
+    "stevearc/dressing.nvim",
+    init = function()
+      ---@diagnostic disable-next-line: duplicate-set-field
+      vim.ui.select = function(...)
+        require("lazy").load({ plugins = { "dressing.nvim" } })
+        return vim.ui.select(...)
+      end
+      ---@diagnostic disable-next-line: duplicate-set-field
+      vim.ui.input = function(...)
+        require("lazy").load({ plugins = { "dressing.nvim" } })
+        return vim.ui.input(...)
+      end
+    end,
+  },
 
   -- {
   --   "lukas-reineke/indent-blankline.nvim",
@@ -260,114 +329,119 @@ return {
 
   -- ( LSP ) -------------------------------------------------------------------
   -- TODO: https://github.com/folke/dot/tree/master/config/nvim/lua/config/plugins/lsp
-  {
-    "williamboman/mason.nvim",
-    event = "BufRead",
-    dependencies = {
-      "nvim-lspconfig",
-      "williamboman/mason-lspconfig.nvim",
-    },
-    config = function()
-      -- require("mason").setup({
-      --   ui = {
-      --     border = _G.mega.get_border(),
-      --     log_level = vim.log.levels.DEBUG,
-      --   },
-      -- })
+  -- {
+  --   "williamboman/mason.nvim",
+  --   event = "BufRead",
+  --   dependencies = {
+  --     "nvim-lspconfig",
+  --     "williamboman/mason-lspconfig.nvim",
+  --   },
+  --   config = function()
+  --     -- require("mason").setup({
+  --     --   ui = {
+  --     --     border = _G.mega.get_border(),
+  --     --     log_level = vim.log.levels.DEBUG,
+  --     --   },
+  --     -- })
+  --
+  --     -- require("mega.lsp.servers")()
+  --     local get_config = require("mega.lsp.servers")
+  --     require("mason").setup({
+  --       ui = {
+  --         border = _G.mega.get_border(),
+  --         log_level = vim.log.levels.DEBUG,
+  --       },
+  --     })
+  --     require("mason-lspconfig").setup({
+  --       automatic_installation = true,
+  --       ensure_installed = {
+  --         "bashls",
+  --         "clangd",
+  --         -- "cmake",
+  --         "cssls",
+  --         "dockerls",
+  --         "elixirls",
+  --         "elmls",
+  --         "ember",
+  --         "emmet_ls",
+  --         -- "erlangls",
+  --         "gopls",
+  --         "html",
+  --         "jsonls",
+  --         -- "marksman",
+  --         "pyright",
+  --         "rust_analyzer",
+  --         "solargraph",
+  --         -- "sqlls",
+  --         "sumneko_lua",
+  --         "tailwindcss",
+  --         "terraformls",
+  --         "tsserver",
+  --         "vimls",
+  --         "yamlls",
+  --         "zk",
+  --         "zls",
+  --       },
+  --     })
+  --     require("mason-lspconfig").setup_handlers({
+  --       function(name)
+  --         local cfg = get_config(name)
+  --         if cfg then
+  --           -- vim.notify(fmt("Found lsp config for %s", name), vim.log.levels.INFO, { title = "mason-lspconfig" })
+  --           require("lspconfig")[name].setup(cfg)
+  --         end
+  --       end,
+  --     })
+  --   end,
+  -- },
+  -- {
+  --   "jayp0521/mason-null-ls.nvim",
+  --   dependencies = {
+  --     "williamboman/mason.nvim",
+  --     "jose-elias-alvarez/null-ls.nvim",
+  --   },
+  --   dependencies = "mason.nvim",
+  --   config = function()
+  --     require("mason-null-ls").setup({
+  --       automatic_installation = true,
+  --       ensure_installed = {
+  --         "beautysh",
+  --       },
+  --     })
+  --   end,
+  -- },
+  -- {
+  --   "neovim/nvim-lspconfig",
+  --   dependencies = {
+  --     -- having this one installed just makes neovim api docs available
+  --     -- via LSP, don't need to actually do anything with it
+  --     "folke/neodev.nvim",
+  --   },
+  --   config = function() require("lspconfig.ui.windows").default_options.border = _G.mega.get_border() end,
+  -- },
 
-      -- require("mega.lsp.servers")()
-      local get_config = require("mega.lsp.servers")
-      require("mason").setup({
-        ui = {
-          border = _G.mega.get_border(),
-          log_level = vim.log.levels.DEBUG,
-        },
-      })
-      require("mason-lspconfig").setup({
-        automatic_installation = true,
-        ensure_installed = {
-          "bashls",
-          "clangd",
-          -- "cmake",
-          "cssls",
-          "dockerls",
-          "elixirls",
-          "elmls",
-          "ember",
-          "emmet_ls",
-          -- "erlangls",
-          "gopls",
-          "html",
-          "jsonls",
-          -- "marksman",
-          "pyright",
-          "rust_analyzer",
-          "solargraph",
-          -- "sqlls",
-          "sumneko_lua",
-          "tailwindcss",
-          "terraformls",
-          "tsserver",
-          "vimls",
-          "yamlls",
-          "zk",
-          "zls",
-        },
-      })
-      require("mason-lspconfig").setup_handlers({
-        function(name)
-          local cfg = get_config(name)
-          if cfg then
-            -- vim.notify(fmt("Found lsp config for %s", name), vim.log.levels.INFO, { title = "mason-lspconfig" })
-            require("lspconfig")[name].setup(cfg)
-          end
-        end,
-      })
-    end,
-  },
   {
-    "jayp0521/mason-null-ls.nvim",
-    dependencies = {
-      "williamboman/mason.nvim",
-      "jose-elias-alvarez/null-ls.nvim",
-    },
-    dependencies = "mason.nvim",
+    "SmiteshP/nvim-navic",
     config = function()
-      require("mason-null-ls").setup({
-        automatic_installation = true,
-        ensure_installed = {
-          "beautysh",
-        },
-      })
-    end,
-  },
-  {
-    "neovim/nvim-lspconfig",
-    dependencies = {
-      -- having this one installed just makes neovim api docs available
-      -- via LSP, don't need to actually do anything with it
-      "folke/neodev.nvim",
-    },
-    config = function() require("lspconfig.ui.windows").default_options.border = _G.mega.get_border() end,
-  },
-
-  {
-    "theHamsta/nvim-semantic-tokens",
-    dependencies = "nvim-lspconfig",
-    config = function()
-      require("nvim-semantic-tokens").setup({
-        preset = "default",
-        -- highlighters is a list of modules following the interface of nvim-semantic-tokens.table-highlighter or
-        -- function with the signature: highlight_token(ctx, token, highlight) where
-        --        ctx (as defined in :h lsp-handler)
-        --        token  (as defined in :h vim.lsp.semantic_tokens.on_full())
-        --        highlight (a helper function that you can call (also multiple times) with the determined highlight group(s) as the only parameter)
-        highlighters = { require("nvim-semantic-tokens.table-highlighter") },
-      })
+      vim.g.navic_silence = true
+      require("nvim-navic").setup({ separator = " ", highlight = true, depth_limit = 5 })
     end,
   },
 
-  { "SmiteshP/nvim-navic", dependencies = "neovim/nvim-lspconfig" },
+  {
+    "ThePrimeagen/refactoring.nvim",
+    keys = {
+      {
+        "<leader>r",
+        function() require("refactoring").select_refactor() end,
+        mode = "v",
+        noremap = true,
+        silent = true,
+        expr = false,
+      },
+    },
+    config = {},
+  },
 
   -- {
   --   "issafalcon/lsp-overloads.nvim",
@@ -790,8 +864,8 @@ return {
   },
   {
     "abecodes/tabout.nvim",
-    keys = { "<Tab>" },
-    dependencies = { "nvim-treesitter", "nvim-cmp" },
+    event = { "VeryLazy" },
+    dependencies = { "nvim-treesitter/nvim-treesitter", "hrsh7th/nvim-cmp" },
     config = function()
       require("tabout").setup({
         ignore_beginning = false,

@@ -1,7 +1,9 @@
+local M = {
+  "rcarriga/nvim-notify",
+  -- event = { "VeryLazy" },
+  lazy = false,
+}
 
-  local M = {
-    "rcarriga/nvim-notify",
-  }
 function M.config()
   local nnotify = require("notify")
   local stages_util = require("notify.stages.util")

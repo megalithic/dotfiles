@@ -2,38 +2,47 @@ local M = {
   "jose-elias-alvarez/null-ls.nvim",
 }
 
--- function M.setup(options)
---   local nls = require("null-ls")
---   nls.setup({
---     debounce = 150,
---     save_after_format = false,
---     sources = {
---       -- nls.builtins.formatting.prettierd,
---       nls.builtins.formatting.stylua,
---       nls.builtins.formatting.fish_indent,
---       -- nls.builtins.formatting.fixjson.with({ filetypes = { "jsonc" } }),
---       -- nls.builtins.formatting.eslint_d,
---       -- nls.builtins.diagnostics.shellcheck,
---       nls.builtins.formatting.shfmt,
---       nls.builtins.diagnostics.markdownlint,
---       -- nls.builtins.diagnostics.luacheck,
---       nls.builtins.formatting.prettierd.with({
---         filetypes = { "markdown" }, -- only runs `deno fmt` for markdown
---       }),
---       nls.builtins.diagnostics.selene.with({
---         condition = function(utils)
---           return utils.root_has_file({ "selene.toml" })
---         end,
---       }),
---       -- nls.builtins.code_actions.gitsigns,
---       nls.builtins.formatting.isort,
---       nls.builtins.formatting.black,
---       nls.builtins.diagnostics.flake8,
---     },
---     on_attach = options.on_attach,
---     root_dir = require("null-ls.utils").root_pattern(".null-ls-root", ".neoconf.json", ".git"),
---   })
--- end
+function M.setup_bak(options)
+  local nls = require("null-ls")
+  nls.setup({
+    debounce = 150,
+    save_after_format = false,
+    sources = {
+      -- nls.builtins.formatting.prettierd,
+      nls.builtins.formatting.stylua,
+      nls.builtins.formatting.fish_indent,
+      -- nls.builtins.formatting.fixjson.with({ filetypes = { "jsonc" } }),
+      -- nls.builtins.formatting.eslint_d,
+      -- nls.builtins.diagnostics.shellcheck,
+      nls.builtins.formatting.shfmt,
+      nls.builtins.diagnostics.markdownlint,
+      -- nls.builtins.diagnostics.luacheck,
+      nls.builtins.formatting.prettierd.with({
+        filetypes = { "markdown" }, -- only runs `deno fmt` for markdown
+      }),
+      -- nls.builtins.diagnostics.selene.with({
+      --   condition = function(utils)
+      --     return utils.root_has_file({ "selene.toml" })
+      --   end,
+      -- }),
+      -- nls.builtins.code_actions.gitsigns,
+      nls.builtins.formatting.isort,
+      nls.builtins.formatting.black,
+      nls.builtins.diagnostics.flake8,
+    },
+    on_attach = options.on_attach,
+    root_dir = require("null-ls.utils").root_pattern(".null-ls-root", ".neoconf.json", ".git"),
+  })
+
+  -- nls.enabled = true
+  -- local toggle_null_formatters = function()
+  --   nls.enabled = not nls.enabled
+  --   mega.lsp.null_formatters_enabled = not nls.enabled
+  --   nls.toggle({ methods = nls.methods.FORMATTING })
+  -- end
+  --
+  -- mega.command("ToggleNullFormatters", toggle_null_formatters)
+end
 
 function M.has_formatter(ft)
   local sources = require("null-ls.sources")
@@ -41,7 +50,7 @@ function M.has_formatter(ft)
   return #available > 0
 end
 
-function M.config()
+function M.setup(opts)
   local nls = require("null-ls")
 
   local format = nls.builtins.formatting
@@ -64,12 +73,12 @@ function M.config()
   nls.register(erb_format)
 
   nls.setup({
-    debounce = vim.g.is_local_dev and 200 or 500,
-    default_timeout = vim.g.is_local_dev and 500 or 2000,
-    -- root_dir = require("null-ls.utils").root_pattern(".null-ls-root", ".neoconf.json", ".git"),
+    debounce = 150,
+    root_dir = require("null-ls.utils").root_pattern(".null-ls-root", ".neoconf.json", ".git"),
+    on_attach = opts.on_attach,
     sources = {
       format.trim_whitespace.with({ filetypes = { "*" } }),
-      format.prettier.with({
+      format.prettierd.with({
         filetypes = {
           "javascript",
           "javascriptreact",
@@ -77,6 +86,7 @@ function M.config()
           "typescriptreact",
           "css",
           "scss",
+          "sass",
           "html",
           "svg",
           "json",
@@ -84,7 +94,7 @@ function M.config()
           "graphql",
           "markdown",
         },
-        condition = function() return mega.executable("prettier") end,
+        condition = function() return mega.executable("prettierd") end,
       }),
       format.fixjson.with({ filetypes = { "jsonc", "json" } }),
       format.cbfmt:with({
@@ -174,4 +184,4 @@ function M.config()
 
   mega.command("ToggleNullFormatters", toggle_null_formatters)
 end
- return M
+return M

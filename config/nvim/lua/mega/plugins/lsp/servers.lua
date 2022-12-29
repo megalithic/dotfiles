@@ -1,6 +1,5 @@
------------------------------------------------------------------------------//
--- Language servers
------------------------------------------------------------------------------//
+local M = {}
+
 local fn, fmt, lsp = vim.fn, string.format, vim.lsp
 local ok_lsp, lspconfig = mega.require("lspconfig")
 if not ok_lsp then return end
@@ -58,33 +57,6 @@ local function lsp_cmd_override(cmd_paths, args)
       return vim.list_extend({ vim.fn.expand(dir) }, args)
     end
   end
-end
-
--- This function allows reading a per project "settings.json" file in the `.vim` directory of the project.
----@param client table<string, any>
----@return boolean
-local function on_init(client)
-  local settings = client.workspace_folders[1].name .. "/.vim/settings.json"
-
-  if fn.filereadable(settings) == 0 then return true end
-  local ok, json = pcall(fn.readfile, settings)
-  if not ok then return true end
-
-  local overrides = vim.json.decode(table.concat(json, "\n"))
-
-  for name, config in pairs(overrides) do
-    if name == client.name then
-      client.config = vim.tbl_deep_extend("force", client.config, config)
-      client.notify("workspace/didChangeConfiguration")
-
-      vim.schedule(function()
-        local path = fn.fnamemodify(settings, ":~:.")
-        local msg = fmt("loaded local settings for %s from %s", client.name, path)
-        vim.notify_once(msg, vim.log.levels.INFO, { title = "LSP Settings" })
-      end)
-    end
-  end
-  return true
 end
 
 local servers = {
@@ -272,17 +244,33 @@ local servers = {
     },
     init_options = { provideFormatter = false },
     single_file_support = true,
+    on_new_config = function(new_config)
+      new_config.settings.json.schemas = new_config.settings.json.schemas or {}
+      vim.list_extend(new_config.settings.json.schemas, require("schemastore").json.schemas())
+    end,
     settings = {
       json = {
         format = { enable = false },
-        schemas = require("schemastore").json.schemas(),
+        -- schemas = require("schemastore").json.schemas(),
+        validate = { enable = true },
       },
     },
   },
   bashls = true,
   vimls = { init_options = { isNeovim = true } },
+  teal_ls = true,
   terraformls = true,
-  rust_analyzer = true,
+  rust_analyzer = {
+    settings = {
+      ["rust-analyzer"] = {
+        cargo = { allFeatures = true },
+        checkOnSave = {
+          command = "clippy",
+          extraArgs = { "--no-deps" },
+        },
+      },
+    },
+  },
   marksman = true,
   pyright = {
     single_file_support = false,
@@ -384,7 +372,14 @@ local servers = {
             path = path,
             version = "LuaJIT",
           },
-          format = { enable = false },
+          format = {
+            enable = false,
+            defaultConfig = {
+              indent_style = "space",
+              indent_size = "2",
+              continuation_indent_size = "2",
+            },
+          },
           hint = {
             enable = true,
             arrayIndex = "Disable", -- "Enable", "Auto", "Disable"
@@ -434,9 +429,36 @@ local servers = {
               "xmap",
               "xnoremap",
             },
+            groupSeverity = {
+              strong = "Warning",
+              strict = "Warning",
+            },
+            groupFileStatus = {
+              ["ambiguity"] = "Opened",
+              ["await"] = "Opened",
+              ["codestyle"] = "None",
+              ["duplicate"] = "Opened",
+              ["global"] = "Opened",
+              ["luadoc"] = "Opened",
+              ["redefined"] = "Opened",
+              ["strict"] = "Opened",
+              ["strong"] = "Opened",
+              ["type-check"] = "Opened",
+              ["unbalanced"] = "Opened",
+              ["unused"] = "Opened",
+            },
             unusedLocalExclude = { "_*" },
           },
-          completion = { keywordSnippet = "Replace", callSnippet = "Replace" },
+          completion = {
+            keywordSnippet = "Replace",
+            workspaceWord = true,
+            callSnippet = "Both",
+          },
+          misc = {
+            parameters = {
+              "--log-level=trace",
+            },
+          },
           workspace = {
             ignoreSubmodules = true,
             library = { fn.expand("$VIMRUNTIME/lua"), emmy, packer, plenary },
@@ -517,60 +539,6 @@ local servers = {
   },
 }
 
--- all the server capabilities we could want
-local function get_server_capabilities()
-  local capabilities = lsp.protocol.make_client_capabilities()
-  capabilities.offsetEncoding = { "utf-16" }
-  capabilities.textDocument.codeLens = { dynamicRegistration = false }
-  -- TODO: what is dynamicRegistration doing here? should I not always set to true?
-  capabilities.textDocument.colorProvider = { dynamicRegistration = false }
-  capabilities.textDocument.completion.completionItem.documentationFormat = { "markdown" }
-  capabilities.textDocument.foldingRange = {
-    dynamicRegistration = false,
-    lineFoldingOnly = true,
-  }
-  capabilities.textDocument.codeAction = {
-    dynamicRegistration = false,
-    codeActionLiteralSupport = {
-      codeActionKind = {
-        valueSet = {
-          "",
-          "quickfix",
-          "refactor",
-          "refactor.extract",
-          "refactor.inline",
-          "refactor.rewrite",
-          "source",
-          "source.organizeImports",
-        },
-      },
-    },
-  }
+function M.setup() return servers end
 
-  local nvim_lsp_ok, cmp_nvim_lsp = mega.require("cmp_nvim_lsp")
-  if nvim_lsp_ok then capabilities = cmp_nvim_lsp.default_capabilities(capabilities) end
-
-  -- local nvim_tokens_ok, nvim_semantic_tokens = mega.require("nvim-semantic-tokens")
-  -- if nvim_tokens_ok then capabilities = nvim_semantic_tokens.update_capabilities(capabilities) end
-
-  return capabilities
-end
-
----Get the configuration for a specific language server
----@param name string
----@return table<string, any>?
-return function(name)
-  local config = servers[name]
-  if not config then return end
-  local t = type(config)
-  if t == "boolean" then config = {} end
-  if t == "function" then config = config() end
-  config.on_init = on_init
-  config.flags = { debounce_text_changes = 150 }
-  -- config.capabilities = config.capabilities or vim.lsp.protocol.make_client_capabilities()
-  -- config.capabilities.textDocument.foldingRange = { dynamicRegistration = false, lineFoldingOnly = true }
-  -- local ok, cmp_nvim_lsp = mega.require("cmp_nvim_lsp")
-  -- if ok then cmp_nvim_lsp.default_capabilities(config.capabilities) end
-  config.capabilities = get_server_capabilities()
-  return config
-end
+return M
