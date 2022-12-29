@@ -37,6 +37,8 @@ function mini.surround()
     -- n_lines = 200,
     -- search_method = "cover_or_nearest", -- alts: cover_or_next
   })
+
+  mega.xnoremap("S", [[:<C-u>lua MiniSurround.add('visual')<CR>]])
 end
 
 function mini.jump() require("mini.jump").setup({}) end
