@@ -58,6 +58,23 @@ clone() {
   fi
 }
 
+do_pip_install() {
+  log "installing neovim-remote via python (pip3).."
+  # $(brew --prefix)/opt/python@3.9/bin/python3.9 -m pip install --upgrade pip
+  python3 -m pip install --upgrade pip
+  pip3 install neovim-remote
+}
+
+do_lazy_install() {
+  log "running lazy.nvim package manager.."
+  rm -rfv ~/.cache/nvim/packer/packer_compiled.lua ~/.local/share/nvim/site/pack/packer ~/.local/share/nvim/lazy ~/.local/state/nvim/lazy
+  if [[ -e "$HOME/.dotfiles/config/nvim/lazy-lock.json" ]]; then
+    nvim --headless "+Lazy! restore" +qa
+  else
+    nvim --headless "+Lazy! sync" +qa
+  fi
+}
+
 do_build() {
   git up && log_ok "git up successful"
 
@@ -80,12 +97,6 @@ do_build() {
   sudo make distclean || exit 1 && log_ok "distclean successful"
   sudo make CMAKE_BUILD_TYPE=RelWithDebInfo || exit 1 && log_ok "make successful"
   sudo make install || exit 1 && log_ok "successfully built and installed neovim"
-
-  log "installing neovim-remote via python (pip3).."
-  # $(brew --prefix)/opt/python@3.9/bin/python3.9 -m pip install --upgrade pip
-  python3 -m pip install --upgrade pip
-  pip3 install neovim-remote
-  # nvim --headless "+Lazy! sync" +qa
 }
 
 build() {
@@ -119,4 +130,4 @@ done
 shift $((OPTIND - 1))
 
 pushd "${XDG_DATA_HOME}/src" >/dev/null && log_ok "cd ~/.local/share/src successful"
-clone && update && build && remove_brew_nvim popd >/dev/null
+clone && update && build && do_pip_install && do_lazy_install && remove_brew_nvim popd >/dev/null

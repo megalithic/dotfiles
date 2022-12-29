@@ -257,9 +257,6 @@
         log "Attempting to install neovim from source..";
         ~/.dotfiles/bin/nvim-install -f;
 
-        log "Attempting to install lazy.nvim..";
-        nvim --headless "+Lazy! sync" +qa
-
         log "Attempting to install elixirls-master..";
         ~/.dotfiles/bin/elixirls-install master;
 

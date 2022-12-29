@@ -784,12 +784,13 @@ return {
     config = function()
       require("treesj").setup({ use_default_keymaps = false })
 
-      mega.nnoremap("gs", ":TSJSplit", "Split lines")
-      mega.nnoremap("gj", ":TSJJoin", "Join lines")
+      mega.nnoremap("gs", ":TSJSplit<cr>", "Split lines")
+      mega.nnoremap("gj", ":TSJJoin<cr>", "Join lines")
     end,
   },
   {
     "abecodes/tabout.nvim",
+    keys = { "<Tab>" },
     dependencies = { "nvim-treesitter", "nvim-cmp" },
     config = function()
       require("tabout").setup({

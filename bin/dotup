@@ -77,7 +77,6 @@ update() {
   fi
 
   log "neovim install.." && ./bin/nvim-install
-  log "lazy.nvim update.. " && nvim --headless "+Lazy! sync" +qa
 
   # log "paq-nvim install.." && ./bin/paq-install -u
 
