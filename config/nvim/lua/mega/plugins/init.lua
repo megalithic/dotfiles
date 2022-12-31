@@ -487,6 +487,14 @@ return {
   "williamboman/mason-lspconfig.nvim",
   "b0o/schemastore.nvim",
   "mrshmllow/document-color.nvim",
+  {
+    "folke/trouble.nvim",
+    cmd = { "TroubleToggle", "Trouble" },
+    config = {
+      auto_open = false,
+      use_diagnostic_signs = true, -- en
+    },
+  },
   -- { "lewis6991/hover.nvim" },
   -- { "folke/lua-dev.nvim", module = "lua-dev" },
   -- { "microsoft/python-type-stubs", lazy = true },

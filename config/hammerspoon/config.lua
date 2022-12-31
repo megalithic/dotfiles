@@ -32,7 +32,7 @@ local watchers = { "status", "bluetooth", "dock", "audio", "wifi", "url", "downl
 
 local transientApps = {
   ["LaunchBar"] = { allowRoles = "AXSystemDialog" },
-  ["1Password 7"] = { allowTitles = "1Password mini" },
+  -- ["1Password 7"] = { allowTitles = "1Password mini" },
   ["Spotlight"] = { allowRoles = "AXSystemDialog" },
   ["Paletro"] = { allowRoles = "AXSystemDialog" },
   ["Contexts"] = false,
@@ -266,7 +266,7 @@ local apps = {
   ["com.agilebits.onepassword7"] = {
     bundleID = "com.agilebits.onepassword7",
     name = "1Password",
-    key = "1",
+    -- key = "1",
     hideAfter = 1,
     rules = {
       { "", 1, "centeredMedium" },
