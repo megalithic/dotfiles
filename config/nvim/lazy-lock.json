@@ -83,7 +83,7 @@
   "suda.vim": { "branch": "master", "commit": "2fc45dc4bcafb245b613ebd6847a244924735cc6" },
   "tabby.nvim": { "branch": "main", "commit": "187b604da1a6452c700ce21fdf340ffbea956298" },
   "tabout.nvim": { "branch": "master", "commit": "c37ce26f316a2df693140450b8def41e89c0f57e" },
-  "telescope-fzf-native.nvim": { "branch": "main", "commit": "fab3e2212e206f4f8b3bbaa656e129443c9b802e" },
+  "telescope-zf-native.nvim": { "branch": "master", "commit": "1ec5d8fc2d59a2ee13f59268e35d72e7040f5ed9" },
   "telescope.nvim": { "branch": "master", "commit": "a606bd10c79ec5989c76c49cc6f736e88b63f0da" },
   "template-string.nvim": { "branch": "main", "commit": "fa94fd309f511ac19bcba0b4390104520f07a08d" },
   "toggleterm.nvim": { "branch": "main", "commit": "b02a1674bd0010d7982b056fd3df4f717ff8a57a" },

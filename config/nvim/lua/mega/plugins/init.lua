@@ -706,6 +706,7 @@ return {
   },
   {
     "andymass/vim-matchup",
+    event = "BufReadPre",
     config = function()
       vim.g.matchup_surround_enabled = true
       vim.g.matchup_matchparen_deferred = true

@@ -735,7 +735,8 @@ return {
   cmd = { "Telescope" },
 
   dependencies = {
-    { "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
+    "natecraddock/telescope-zf-native.nvim",
+    -- { "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
   },
   keys = {
     { "<leader><space>", project_files, desc = "Find File" },
@@ -820,7 +821,35 @@ return {
         selection_caret = " ",
         winblend = borderless and 0 or 10,
       },
+      extensions = {
+        ["zf-native"] = {
+          -- options for sorting file-like items
+          file = {
+            -- override default telescope file sorter
+            enable = true,
+
+            -- highlight matching text in results
+            highlight_results = true,
+
+            -- enable zf filename match priority
+            match_filename = true,
+          },
+
+          -- options for sorting all other items
+          generic = {
+            -- override default telescope generic item sorter
+            enable = true,
+
+            -- highlight matching text in results
+            highlight_results = true,
+
+            -- disable zf filename match priority
+            match_filename = false,
+          },
+        },
+      },
     })
-    telescope.load_extension("fzf")
+
+    telescope.load_extension("zf-native")
   end,
 }
