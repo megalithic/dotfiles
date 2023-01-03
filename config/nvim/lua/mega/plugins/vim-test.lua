@@ -1,4 +1,12 @@
-local M = { "vim-test/vim-test" }
+local M = { "vim-test/vim-test", cmd = {
+  "TestNearest",
+  "TestFile",
+  "TestLast",
+  "TestVisit",
+  "A",
+  "AV",
+} }
+
 function M.config()
   local system = vim.fn.system
 
