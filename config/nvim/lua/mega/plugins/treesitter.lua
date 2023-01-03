@@ -36,6 +36,7 @@ return {
       "JoosepAlviste/nvim-ts-context-commentstring",
       "RRethy/nvim-treesitter-endwise",
       "jadengis/nvim-ts-autotag",
+      -- WARN: no longer maintained..
       "p00f/nvim-ts-rainbow",
       "David-Kunz/treesitter-unit",
     },

@@ -116,6 +116,36 @@ function _G.windows()
   end)
 end
 
+function _G.screens()
+  hs.fnutils.each(
+    hs.screen.allScreens(),
+    function(s)
+      print(hs.inspect({
+        name = s:name(),
+        id = s:id(),
+        position = s:position(),
+        frame = s:frame(),
+      }))
+    end
+  )
+end
+
+function _G.usb()
+  hs.fnutils.each(hs.usb.attachedDevices(), function(usb)
+    print(hs.inspect(usb))
+    -- print(
+    --   hs.inspect(
+    --     {
+    --       productID = usb:productID(),
+    --       productName = usb:productName(),
+    --       vendorID = usb:vendorID(),
+    --       vendorName = usb:vendorName()
+    --     }
+    --   )
+    -- )
+  end)
+end
+
 _G.CONFIG_KEY = "_mega_config"
 
 -- [ CONSOLE SETTINGS ] ---------------------------------------------------------

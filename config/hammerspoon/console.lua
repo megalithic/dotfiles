@@ -77,7 +77,7 @@ function obj:init(opts)
   end
 
   AudioInput = function()
-    d = hs.audiodevice.defaultInputDevice()
+    local d = hs.audiodevice.defaultInputDevice()
     print(
       hs.inspect(
         {
@@ -92,7 +92,7 @@ function obj:init(opts)
   end
 
   AudioOutput = function()
-    d = hs.audiodevice.defaultOutputDevice()
+    local d = hs.audiodevice.defaultOutputDevice()
     print(
       hs.inspect(
         {

@@ -128,59 +128,59 @@ return {
   },
   "lukas-reineke/virt-column.nvim",
   "MunifTanjim/nui.nvim",
-  {
-    "folke/styler.nvim",
-    event = "VeryLazy",
-    enabled = false,
-    config = {
-      themes = {
-        markdown = { colorscheme = "forestbones" },
-        help = { colorscheme = "forestbones", background = "dark" },
-        -- noice = { colorscheme = "gruvbox", background = "dark" },
-      },
-    },
-  },
-  {
-    "folke/paint.nvim",
-    enabled = false,
-    event = "BufReadPre",
-    config = function()
-      require("paint").setup({
-        highlights = {
-          {
-            filter = { filetype = "lua" },
-            pattern = "%s*%-%-%-%s*(@%w+)",
-            hl = "Constant",
-          },
-          {
-            filter = { filetype = "lua" },
-            pattern = "%s*%-%-%[%[(@%w+)",
-            hl = "Constant",
-          },
-          {
-            filter = { filetype = "lua" },
-            pattern = "%s*%-%-%-%s*@field%s+(%S+)",
-            hl = "@field",
-          },
-          {
-            filter = { filetype = "lua" },
-            pattern = "%s*%-%-%-%s*@class%s+(%S+)",
-            hl = "@variable.builtin",
-          },
-          {
-            filter = { filetype = "lua" },
-            pattern = "%s*%-%-%-%s*@alias%s+(%S+)",
-            hl = "@keyword",
-          },
-          {
-            filter = { filetype = "lua" },
-            pattern = "%s*%-%-%-%s*@param%s+(%S+)",
-            hl = "@parameter",
-          },
-        },
-      })
-    end,
-  },
+  -- {
+  --   "folke/styler.nvim",
+  --   event = "VeryLazy",
+  --   enabled = false,
+  --   config = {
+  --     themes = {
+  --       markdown = { colorscheme = "forestbones" },
+  --       help = { colorscheme = "forestbones", background = "dark" },
+  --       -- noice = { colorscheme = "gruvbox", background = "dark" },
+  --     },
+  --   },
+  -- },
+  -- {
+  --   "folke/paint.nvim",
+  --   enabled = false,
+  --   event = "BufReadPre",
+  --   config = function()
+  --     require("paint").setup({
+  --       highlights = {
+  --         {
+  --           filter = { filetype = "lua" },
+  --           pattern = "%s*%-%-%-%s*(@%w+)",
+  --           hl = "Constant",
+  --         },
+  --         {
+  --           filter = { filetype = "lua" },
+  --           pattern = "%s*%-%-%[%[(@%w+)",
+  --           hl = "Constant",
+  --         },
+  --         {
+  --           filter = { filetype = "lua" },
+  --           pattern = "%s*%-%-%-%s*@field%s+(%S+)",
+  --           hl = "@field",
+  --         },
+  --         {
+  --           filter = { filetype = "lua" },
+  --           pattern = "%s*%-%-%-%s*@class%s+(%S+)",
+  --           hl = "@variable.builtin",
+  --         },
+  --         {
+  --           filter = { filetype = "lua" },
+  --           pattern = "%s*%-%-%-%s*@alias%s+(%S+)",
+  --           hl = "@keyword",
+  --         },
+  --         {
+  --           filter = { filetype = "lua" },
+  --           pattern = "%s*%-%-%-%s*@param%s+(%S+)",
+  --           hl = "@parameter",
+  --         },
+  --       },
+  --     })
+  --   end,
+  -- },
 
   {
     "stevearc/dressing.nvim",
@@ -559,7 +559,6 @@ return {
 
       local function linker() return require("gitlinker") end
       local function browser_open() return { action_callback = require("gitlinker.actions").open_in_browser } end
-      dd(fmt("mega.nnoremap: %s", I(mega.nnoremap)))
       mega.nnoremap(
         "<localleader>gu",
         function() linker().get_buf_range_url("n") end,

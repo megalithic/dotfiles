@@ -722,6 +722,14 @@ local function project_files(opts)
   require("telescope.builtin").find_files(ivy(opts))
 end
 
+local function stopinsert(callback)
+  return function(prompt_bufnr)
+    vim.cmd.stopinsert()
+    -- callback(prompt_bufnr)
+    vim.schedule(function() callback(prompt_bufnr) end)
+  end
+end
+
 return {
   "nvim-telescope/telescope.nvim",
   cmd = { "Telescope" },
@@ -795,6 +803,12 @@ return {
         mappings = {
           i = {
             ["<esc>"] = require("telescope.actions").close,
+            -- ["<CR>"] = stopinsert(multiopen("vertical")),
+            -- ["<c-o>"] = stopinsert(multiopen("default")),
+            -- ["<c-s>"] = stopinsert(multiopen("horizontal")),
+            ["<cr>"] = require("telescope.actions").select_vertical,
+            ["<c-o>"] = require("telescope.actions").select_default,
+            ["<c-s>"] = require("telescope.actions").select_horizontal,
             ["<c-t>"] = function(...) return require("trouble.providers.telescope").open_with_trouble(...) end,
             ["<C-i>"] = function(...) project_files({ no_ignore = true }) end,
             ["<C-h>"] = function(...) project_files({ hidden = true }) end,
