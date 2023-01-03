@@ -24,6 +24,10 @@ function M.init()
         takeover = "always",
         priority = 1,
       },
+      ["https?://github.com/users/megalithic/projects"] = {
+        takeover = "never",
+        priority = 1,
+      },
       ["https?://stackoverflow.com/"] = {
         takeover = "always",
         priority = 1,
