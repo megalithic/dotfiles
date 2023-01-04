@@ -53,21 +53,10 @@ map({ "i", "n", "t" }, "<C-Down>", ":-tabmove<CR>", { desc = "move tab left", re
 
 nmap("gb", string.format("<cmd>ls<CR>:b<space>%s", mega.replace_termcodes("<tab>")), "current buffers")
 nmap("J", "<nop>")
--- nmap("gs", "i<CR><ESC>^mwgk:silent! s/\v +$//<CR>:noh<CR>`w", "split line")
--- nmap("gj", "mzJ`z", "join lines")
 nmap("gx", mega.open_uri, "open uri under cursor")
 
 nmap("zs", mega.showCursorHighlights, "show syntax highlights under cursor")
 nmap("zS", mega.showCursorHighlights, "show syntax highlights under cursor")
-
-nnoremap("<localleader>tn", "<cmd>TestNearest<cr>", "run _test under cursor")
-nnoremap("<localleader>ta", "<cmd>TestFile<cr>", "run _all tests in file")
-nnoremap("<localleader>tf", "<cmd>TestFile<cr>", "run _all tests in file")
-nnoremap("<localleader>tl", "<cmd>TestLast<cr>", "run _last test")
-nnoremap("<localleader>tt", "<cmd>TestLast<cr>", "run _last test")
-nnoremap("<localleader>tv", "<cmd>TestVisit<cr>", "run test file _visit")
-nnoremap("<localleader>tp", "<cmd>A<cr>", "open alt (edit)")
-nnoremap("<localleader>tP", "<cmd>AV<cr>", "open alt (vsplit)")
 
 nmap("<localleader>yg", "<cmd>CopyBranch<cr>", { desc = "Copy current git branch" })
 nmap("<localleader>ygh", "<cmd>CopyBranch<cr>", { desc = "Copy current git branch" })
