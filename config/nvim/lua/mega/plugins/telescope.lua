@@ -731,6 +731,22 @@ local function stopinsert(callback)
   end
 end
 
+local function file_extension_filter(prompt)
+  -- if prompt starts with escaped @ then treat it as a literal
+  if (prompt):sub(1, 2) == "\\@" then return { prompt = prompt:sub(2) } end
+
+  local result = vim.split(prompt, " ", {})
+  -- if prompt starts with, for example:
+  --    prompt: @lua <search_term>
+  -- then only search files ending in *.lua
+  if #result == 2 and result[1]:sub(1, 1) == "@" and (#result[1] == 2 or #result[1] == 3 or #result[1] == 4) then
+    print(result[2], result[1]:sub(2))
+    return { prompt = result[2] .. "." .. result[1]:sub(2) }
+  else
+    return { prompt = prompt }
+  end
+end
+
 return {
   "nvim-telescope/telescope.nvim",
   cmd = { "Telescope" },
@@ -848,6 +864,63 @@ return {
             match_filename = false,
           },
         },
+      },
+      pickers = {
+        find_files = {
+          on_input_filter_cb = file_extension_filter,
+        },
+        live_grep = ivy({
+          -- max_results = 500,
+          -- file_ignore_patterns = { ".git/", "%.lock" },
+          on_input_filter_cb = function(prompt)
+            -- if prompt starts with escaped @ then treat it as a literal
+            if (prompt):sub(1, 2) == "\\@" then return { prompt = prompt:sub(2):gsub("%s", ".*") } end
+            -- if prompt starts with, for example, @rs
+            -- only search files that end in *.rs
+            local result = string.match(prompt, "@%a*%s")
+            if not result then
+              return {
+                prompt = prompt:gsub("%s", ".*"),
+                updated_finder = require("telescope.finders").new_job(
+                  function(new_prompt)
+                    return vim.tbl_flatten({
+                      require("telescope.config").values.vimgrep_arguments,
+                      "--",
+                      new_prompt,
+                    })
+                  end,
+                  require("telescope.make_entry").gen_from_vimgrep({}),
+                  nil,
+                  nil
+                ),
+              }
+            end
+
+            local result_len = #result
+
+            result = result:sub(2)
+            result = vim.trim(result)
+
+            if result == "js" or result == "ts" then result = string.format("{%s,%sx}", result, result) end
+
+            return {
+              prompt = prompt:sub(result_len + 1):gsub("%s", ".*"),
+              updated_finder = require("telescope.finders").new_job(
+                function(new_prompt)
+                  return vim.tbl_flatten({
+                    require("telescope.config").values.vimgrep_arguments,
+                    string.format("-g*.%s", result),
+                    "--",
+                    new_prompt,
+                  })
+                end,
+                require("telescope.make_entry").gen_from_vimgrep({}),
+                nil,
+                nil
+              ),
+            }
+          end,
+        }),
       },
     })
 
