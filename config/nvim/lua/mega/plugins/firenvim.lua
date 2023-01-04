@@ -89,6 +89,8 @@ function M.init()
       })
     end
 
+    require("autolist").setup({ normal_mappings = { invert = { "<c-c>" } } })
+
     vim.opt.wrap = true
     vim.opt.linebreak = true
     vim.opt.laststatus = 0

@@ -860,14 +860,30 @@ return {
   -- },
   {
     "Wansmer/treesj",
-    dependencies = { "nvim-treesitter/nvim-treesitter" },
-    cmd = { "TSJSplit", "TSJJoin", "TSJToggle" },
-    keys = { "gs", "gj" },
+    dependencies = { "nvim-treesitter/nvim-treesitter", "AndrewRadev/splitjoin.vim" },
+    cmd = { "TSJSplit", "TSJJoin", "TSJToggle", "SplitjoinJoin", "SplitjoinSplit" },
+    keys = { "gs", "gj", "gS", "gJ" },
     config = function()
       require("treesj").setup({ use_default_keymaps = false })
 
-      mega.nnoremap("gs", ":TSJSplit<cr>", "Split lines")
-      mega.nnoremap("gj", ":TSJJoin<cr>", "Join lines")
+      local langs = require("treesj.langs")["presets"]
+
+      vim.api.nvim_create_autocmd({ "FileType" }, {
+        pattern = "*",
+        callback = function()
+          if langs[vim.bo.filetype] then
+            mega.nnoremap("gS", ":TSJSplit<cr>", { desc = "Split lines", buffer = true })
+            mega.nnoremap("gJ", ":TSJJoin<cr>", { desc = "Join lines", buffer = true })
+            mega.nnoremap("gs", ":TSJSplit<cr>", { desc = "Split lines", buffer = true })
+            mega.nnoremap("gj", ":TSJJoin<cr>", { desc = "Join lines", buffer = true })
+          else
+            mega.nnoremap("gS", ":SplitjoinSplit<cr>", { desc = "Split lines", buffer = true })
+            mega.nnoremap("gJ", ":SplitjoinJoin<cr>", { desc = "Join lines", buffer = true })
+            mega.nnoremap("gs", ":SplitjoinSplit<cr>", { desc = "Split lines", buffer = true })
+            mega.nnoremap("gj", ":SplitjoinJoin<cr>", { desc = "Join lines", buffer = true })
+          end
+        end,
+      })
     end,
   },
   {
