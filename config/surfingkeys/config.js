@@ -35,7 +35,7 @@ function dbg(s) {
 // -----------------------------------------------------------------------------------------------------------------------
 // -- [ SETTINGS ]
 // -----------------------------------------------------------------------------------------------------------------------
-settings.defaultSearchEngine = "b"; // duck duck go
+settings.defaultSearchEngine = "n"; // duck duck go
 settings.focusAfterClosed = "right";
 settings.hintAlign = "left";
 settings.hintExplicit = true;
@@ -345,6 +345,21 @@ addSearchAlias(
   "https://search.brave.com/search?q=",
   "s",
   "https://search.brave.com/search?q=",
+  function (response) {
+    var res = JSON.parse(response.text);
+    return res.map(function (r) {
+      return r.phrase;
+    });
+  }
+);
+
+removeSearchAlias("n");
+addSearchAlias(
+  "n",
+  "neeva",
+  "https://neeva.com/search?q=",
+  "s",
+  "https://neeva.com/search?q=",
   function (response) {
     var res = JSON.parse(response.text);
     return res.map(function (r) {
