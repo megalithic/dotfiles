@@ -60,10 +60,10 @@ function M.config()
   -- https://github.com/roginfarrer/dotfiles/blob/main/nvim/.config/nvim/lua/rf/plugins/vim-test.lua#L19
   -- vim.g["test#strategy"] = "neovim"
   -- vim.g["test#javascript#jest#file_pattern"] = "\v(__tests__/.*|(spec|test)).(js|jsx|coffee|ts|tsx)$"
-  -- vim.g["test#ruby#use_binstubs"] = 0
-  -- vim.g["test#ruby#bundle_exec"] = 0
+  vim.g["test#ruby#use_binstubs"] = 0
+  vim.g["test#ruby#bundle_exec"] = 0
   -- vim.g["test#filename_modifier"] = ":."
-  -- vim.g["test#preserve_screen"] = 0
+  vim.g["test#preserve_screen"] = 0
 
   vim.g["test#custom_strategies"] = {
     termsplit = function(cmd) mega.term.open(term_opts(cmd)) end,
@@ -91,11 +91,11 @@ function M.config()
     --   last = "termsplit",
     -- },
     -- Disallow strategies to clear the screen
-    preserve_screen = 1,
-    ruby = {
-      use_binstubs = 0,
-      bundle_exec = 0,
-    },
+    -- preserve_screen = 1,
+    -- ruby = {
+    --   use_binstubs = 0,
+    --   bundle_exec = 0,
+    -- },
   })
 
   mega.nnoremap("<localleader>tn", "<cmd>TestNearest<cr>", "run _test under cursor")
