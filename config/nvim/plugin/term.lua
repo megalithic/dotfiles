@@ -311,11 +311,12 @@ local function create_term(opts)
       if opts.on_exit ~= nil and type(opts.on_exit) == "function" then
         opts.on_exit(job_id, exit_code, event, term_cmd, opts.caller_winnr, term_buf_id)
       else
-        -- test passed/process ended with an "ok" exit code, so let's close it.
-        -- just know, some processes, like `rspec` don't give real exit codes for failed/errored tests. :/
         vim.defer_fn(function()
-          P(fmt("%s/%s/%s", job_id, exit_code, event))
-          if vim.tbl_contains({ 0, 127, 129, 130 }, exit_code) then unset_term(true) end
+          if vim.tbl_contains({ 0, 127, 129, 130 }, exit_code) then
+            unset_term(true)
+          else
+            P(fmt("%s/%s/%s", job_id, exit_code, event))
+          end
         end, 100)
       end
     end,

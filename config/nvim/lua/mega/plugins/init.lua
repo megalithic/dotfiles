@@ -61,7 +61,7 @@ return {
   {
     "rktjmp/lush.nvim",
     lazy = false,
-    priority = 999,
+    priority = 1000,
     config = function()
       require("lush")(require("mega.lush_theme.megaforest"))
       mega.colors = require("mega.lush_theme.colors")

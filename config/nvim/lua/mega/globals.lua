@@ -149,6 +149,12 @@ function mega.reload()
 end
 mega.recompile = mega.reload
 
+function mega.installed_plugins()
+  local ok, lazy = pcall(require, "lazy")
+  if not ok then return 0 end
+  return lazy.stats().count
+end
+
 local installed
 ---Check if a plugin is on the system; whether or not it is loaded
 ---@param plugin_name string

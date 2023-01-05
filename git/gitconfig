@@ -341,9 +341,10 @@ fzf = !"                                                                        
   ; pager = `brew --prefix git`/share/git-core/contrib/diff-highlight/diff-highlight | less
   pager = delta --dark --diff-so-fancy # https://github.com/dandavison/delta
   whitespace=fix,-indent-with-non-tab,trailing-space,cr-at-eol
-	editor = nvim
-  excludesfile ="~/.dotfiles/git/.gitignore_global"
+	; editor = nvim
 	autocrlf = input
+  editor = "nvr --remote-wait-silent" # or nvim
+  excludesfile ="~/.dotfiles/git/.gitignore_global"
 
 [apply]
   whitespace = fix

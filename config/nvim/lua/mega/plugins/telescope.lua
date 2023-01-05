@@ -718,8 +718,8 @@ local function ivy(opts) return require("telescope.themes").get_ivy(get_border(o
 ---@param opts? table
 local function project_files(opts)
   opts = opts or {}
-  opts.cwd = require("mega.utils").get_root()
-  vim.notify(fmt("current project files root: %s", opts.cwd), vim.log.levels.DEBUG, { title = "telescope" })
+  -- opts.cwd = require("mega.utils").get_root()
+  -- vim.notify(fmt("current project files root: %s", opts.cwd), vim.log.levels.DEBUG, { title = "telescope" })
   require("telescope.builtin").find_files(ivy(opts))
 end
 
