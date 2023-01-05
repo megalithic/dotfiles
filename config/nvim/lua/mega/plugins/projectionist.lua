@@ -1,29 +1,11 @@
- local M = {
+local M = {
+  "tpope/vim-projectionist",
+  ft = { "elixir", "javascript", "typescript" },
+}
 
-  "tpope/vim-projectionist"}
 function M.config()
   vim.g.projectionist_heuristics = {
     ["mix.exs"] = {
-      ["lib/**/views/*_view.ex"] = {
-        type = "view",
-        alternate = "test/{dirname}/views/{basename}_view_test.exs",
-        template = {
-          "defmodule {dirname|camelcase|capitalize}.{basename|camelcase|capitalize}View do",
-          "  use {dirname|camelcase|capitalize}, :view",
-          "end",
-        },
-      },
-      ["test/**/views/*_view_test.exs"] = {
-        alternate = "lib/{dirname}/views/{basename}_view.ex",
-        type = "test",
-        template = {
-          "defmodule {dirname|camelcase|capitalize}.{basename|camelcase|capitalize}ViewTest do",
-          "  use ExUnit.Case, async: true",
-          "",
-          "  alias {dirname|camelcase|capitalize}.{basename|camelcase|capitalize}View",
-          "end",
-        },
-      },
       --         "*_live.ex": {
       --           "type": "live",
       --           "alternate": "test/{dirname}/live/{basename}_live_test.exs",
@@ -54,6 +36,24 @@ function M.config()
       --           ],
       --           "template": ["<h1 style=\"color: #C7AA8D; font-size:3em;\">{basename}.heex template</h1>"]
       --         }
+      ["lib/**/live/*_live.ex"] = {
+        type = "live",
+        alternate = "test/{dirname}/live/{basename}_live_test.exs",
+        template = {
+          "defmodule {dirname|camelcase|capitalize}.{basename|camelcase|capitalize}Live do",
+          "  use {dirname|camelcase|capitalize}, :live_view",
+          "end",
+        },
+      },
+      ["test/**/live/*_live_test.exs"] = {
+        type = "test",
+        alternate = "lib/{dirname}/live/{basename}_live.ex",
+        template = {
+          "defmodule {dirname|camelcase|capitalize}.{basename|camelcase|capitalize}LiveTest do",
+          "  use {dirname|camelcase|capitalize}.ConnCase, async: true",
+          "end",
+        },
+      },
       ["lib/**/controllers/*_controller.ex"] = {
         type = "controller",
         alternate = "test/{dirname}/controllers/{basename}_controller_test.exs",
@@ -252,4 +252,4 @@ function M.config()
   --     }
   --   ]])
 end
- return M
+return M

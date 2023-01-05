@@ -800,13 +800,11 @@ return {
       require("telescope").load_extension("workspaces")
     end,
   },
-  { "editorconfig/editorconfig-vim" },
   { "alvan/vim-closetag" },
   {
     "chrisgrieser/nvim-genghis",
-    dependencies = "stevearc/dressing.nvim",
-    keys = { "<localleader>yp", "<localleader>yn", "<localleader>yf", "<localleader>rf", "<localleader>df" },
-    cmd = { "Rename", "Delete" },
+    dependencies = { "stevearc/dressing.nvim", { "tpope/vim-eunuch", event = "VeryLazy" } },
+    event = "VeryLazy",
     config = function()
       local genghis = require("genghis")
       mega.nnoremap("<localleader>yp", genghis.copyFilepath, { desc = "Copy filepath" })

@@ -753,7 +753,7 @@ return {
 
   dependencies = {
     "natecraddock/telescope-zf-native.nvim",
-    -- { "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
+    -- "danielvolchek/tailiscope.nvim"
   },
   keys = {
     { "<leader><space>", project_files, desc = "Find File" },

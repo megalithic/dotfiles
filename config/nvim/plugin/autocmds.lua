@@ -73,7 +73,7 @@ mega.augroup("Skeletons", {
 
       if vim.tbl_contains(skeletons, ft) then
         if
-          vim.fn.filereadable(fmt("~/.config/nvim/templates/skeleton.%s", ext))
+          pcall(vim.fn, { "filereadable", fmt("~/.config/nvim/templates/skeleton.%s", ext) })
           -- and pcall(vim.cmd, (fmt("0r ~/.config/nvim/templates/skeleton.%s | normal! G", ext)))
         then
           vim.cmd(fmt("0r ~/.config/nvim/templates/skeleton.%s | normal! G", ext))

@@ -116,17 +116,11 @@ _G.Clipboard = {
   copy = function(str) vim.fn.jobstart(string.format("echo -n %q | pbcopy", str), { detach = true }) end,
 }
 
-function mega.warn(msg, name)
-  vim.notify(msg, vim.log.levels.WARN, { title = name or "nvim" })
-end
+function mega.warn(msg, name) vim.notify(msg, vim.log.levels.WARN, { title = name or "nvim" }) end
 
-function mega.error(msg, name)
-  vim.notify(msg, vim.log.levels.ERROR, { title = name or "nvim" })
-end
+function mega.error(msg, name) vim.notify(msg, vim.log.levels.ERROR, { title = name or "nvim" }) end
 
-function mega.info(msg, name)
-  vim.notify(msg, vim.log.levels.INFO, { title = name or "nvim" })
-end
+function mega.info(msg, name) vim.notify(msg, vim.log.levels.INFO, { title = name or "nvim" }) end
 
 function mega.dump_colors(filter)
   local defs = {}
@@ -958,34 +952,6 @@ function mega.debounce_trailing(func, ms, first)
   return wrapped_fn, timer
 end
 
------------------------------------------------------------------------------//
--- Autoresize
------------------------------------------------------------------------------//
--- Auto resize Vim splits to active split to 70% -
--- https://stackoverflow.com/questions/11634804/vim-auto-resize-focused-window
-function mega.auto_resize()
-  local auto_resize_on = false
-  return function(args)
-    if not auto_resize_on then
-      local factor = args and tonumber(args) or 70
-      local fraction = factor / 10
-      -- NOTE: mutating &winheight/&winwidth are key to how
-      -- this functionality works, the API fn equivalents do
-      -- not work the same way
-      vim.cmd(fmt("let &winheight=&lines * %d / 10 ", fraction))
-      vim.cmd(fmt("let &winwidth=&columns * %d / 10 ", fraction))
-      auto_resize_on = true
-      vim.notify("Auto resize ON")
-    else
-      vim.cmd("let &winheight=30")
-      vim.cmd("let &winwidth=30")
-      vim.cmd("wincmd =")
-      auto_resize_on = false
-      vim.notify("Auto resize OFF")
-    end
-  end
-end
-
 function mega.flash_cursorline()
   -- local cursorline_state = vim.opt.cursorline:get()
   vim.opt.cursorline = true
@@ -1197,7 +1163,6 @@ do
     command! -nargs=1 Rg lua require("telescope.builtin").grep_string({ search = vim.api.nvim_eval('"<args>"') })
   ]])
 
-  command("AutoResize", mega.auto_resize(), { nargs = "?" })
   command("Todo", [[noautocmd silent! grep! 'TODO\|FIXME\|BUG\|HACK' | copen]])
   command("ReloadModule", function(tbl) require("plenary.reload").reload_module(tbl.args) end, {
     nargs = 1,
@@ -1207,9 +1172,9 @@ do
     [[noautocmd clear | silent! execute "!cp '%:p' '%:p:h/%:t:r-copy.%:e'"<bar>redraw<bar>echo "Copied " . expand('%:t') . ' to ' . expand('%:t:r') . '-copy.' . expand('%:e')]]
   )
   command("SaveAsFile", [[noautocmd clear | :execute "saveas %:p:h/" .input('save as -> ') | :e ]])
-  -- command("RenameFile", [[noautocmd clear | :execute "Rename " .input('rename to -> ') | :e ]])
-  command("Rename", [[lua require("genghis").renameFile()]])
-  command("Delete", [[lua require("genghis").trashFile()]])
+  command("RenameFile", [[noautocmd clear | :execute "Rename " .input('rename to -> ') | :e ]])
+  -- command("Rename", [[lua require("genghis").renameFile()]])
+  -- command("Delete", [[lua require("genghis").trashFile()]])
   command("Flash", function() mega.blink_cursorline() end)
   command("P", function(opts)
     vim.g.debug_enabled = true
