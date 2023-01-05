@@ -92,6 +92,10 @@ function M.config()
     -- },
     -- Disallow strategies to clear the screen
     preserve_screen = 1,
+    ruby = {
+      use_binstubs = 0,
+      bundle_exec = 0,
+    },
   })
 
   mega.nnoremap("<localleader>tn", "<cmd>TestNearest<cr>", "run _test under cursor")
