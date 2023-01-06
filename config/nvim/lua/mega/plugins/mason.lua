@@ -12,9 +12,9 @@ M.tools = {
   "shellcheck",
   "deno",
   "shfmt",
-  "black",
-  "isort",
-  "flake8",
+  -- "black",
+  -- "isort",
+  -- "flake8",
   "cbfmt",
   "elm-format",
   "yamlfmt",
@@ -26,9 +26,7 @@ function M.check()
   local mr = require("mason-registry")
   for _, tool in ipairs(M.tools) do
     local p = mr.get_package(tool)
-    if not p:is_installed() then
-      p:install()
-    end
+    if not p:is_installed() then p:install() end
   end
 end
 

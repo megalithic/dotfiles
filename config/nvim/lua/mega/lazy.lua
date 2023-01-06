@@ -89,7 +89,7 @@ function M.setup()
   require("lazy").setup("mega.plugins", {
     debug = false,
     defaults = { lazy = true },
-    checker = { enabled = true },
+    checker = { enabled = false },
     diff = {
       cmd = "terminal_git",
     },

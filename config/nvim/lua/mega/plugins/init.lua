@@ -842,7 +842,7 @@ return {
   { "tpope/vim-scriptease", cmd = { "Messages", "Mess" } },
   { "lambdalisue/suda.vim" },
   { "EinfachToll/DidYouMean" },
-  { "wsdjeg/vim-fetch" }, -- vim path/to/file.ext:12:3
+  { "wsdjeg/vim-fetch", event = "BufReadPre" }, -- vim path/to/file.ext:12:3
   { "ConradIrwin/vim-bracketed-paste" }, -- FIXME: delete?
   -- { "tpope/vim-scriptease" },
   { "axelvc/template-string.nvim" },
