@@ -536,7 +536,7 @@ return {
   },
   {
     "akinsho/git-conflict.nvim",
-    event = "VeryLazy",
+    lazy = false,
     config = function()
       require("git-conflict").setup({
         disable_diagnostics = true,
