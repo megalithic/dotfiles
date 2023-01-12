@@ -705,10 +705,12 @@ local function get_border(border_opts)
     },
   })
 end
+_G.telescope_get_border = get_border
 
 local function dropdown(opts) return require("telescope.themes").get_dropdown(get_border(opts)) end
 
 local function ivy(opts) return require("telescope.themes").get_ivy(get_border(opts)) end
+_G.telescope_ivy = ivy
 
 -- Gets the root dir from either:
 -- * connected lsp
@@ -838,13 +840,15 @@ local M = {
       "<leader>A",
       function() require("telescope.builtin").grep_string(ivy({})) end,
       desc = "grep under cursor",
+      mode = "n",
     },
-
-    --   vmap(
-    --     "<leader>A",
-    --     [[y:lua require("telescope.builtin").grep_string({ search = '<c-r>"' })<cr>]],
-    --     "grep for visual selection"
-    --   )
+    { "<leader>A", mode = "v" },
+    -- {
+    --   "<leader>A",
+    --   [[y<ESC>:lua require("telescope.builtin").grep_string(require("telescope.themes").get_ivy(require("mega.globals").get_border({ default_text = '<c-r>0' })))<cr>]],
+    --   desc = "grep visual selection",
+    --   mode = "v",
+    -- },
     {
       "<leader>fl",
       function()
@@ -1003,6 +1007,12 @@ local M = {
     })
 
     telescope.load_extension("zf-native")
+
+    mega.vmap(
+      "<leader>A",
+      [[y<cmd>lua require("telescope.builtin").grep_string(telescope_ivy({ search = '<c-r>"' }))<cr>]],
+      { desc = "grep for visual selection", silent = true }
+    )
   end,
 }
 
