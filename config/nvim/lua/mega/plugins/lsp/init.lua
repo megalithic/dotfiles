@@ -172,20 +172,19 @@ local function setup_autocommands(client, bufnr)
   augroup("LspDiagnostics", {
     {
       event = { "CursorHold" },
-      buffer = bufnr,
       desc = "Show diagnostics",
       command = function(args) diagnostic_popup(args.buf) end,
     },
-    -- {
-    --   event = { "DiagnosticChanged" },
-    --   buffer = bufnr,
-    --   desc = "Handle diagnostics changes",
-    --   command = function()
-    --     vim.diagnostic.setloclist({ open = false })
-    --     diagnostic_popup()
-    --     -- if vim.tbl_isempty(vim.fn.getloclist(0)) then vim.cmd([[lclose]]) end
-    --   end,
-    -- },
+    {
+      event = { "DiagnosticChanged" },
+      -- buffer = bufnr,
+      desc = "Handle diagnostics changes",
+      command = function()
+        vim.diagnostic.setloclist({ open = false })
+        diagnostic_popup()
+        if vim.tbl_isempty(vim.fn.getloclist(0)) then vim.cmd([[lclose]]) end
+      end,
+    },
   })
   if client.server_capabilities.signatureHelpProvider then
     augroup("LspFormat", {

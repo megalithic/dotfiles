@@ -127,6 +127,7 @@ local servers = {
       "html",
       "javascriptreact",
       "typescriptreact",
+      "elixir",
       "eelixir",
       "html.heex",
       "heex",
@@ -474,6 +475,7 @@ local servers = {
   tailwindcss = {
     init_options = {
       userLanguages = {
+        eelixir = "phoenix-heex",
         elixir = "phoenix-heex",
         eruby = "erb",
         heex = "phoenix-heex",
@@ -491,6 +493,7 @@ local servers = {
         typescriptreact = "javascript",
         ["html-eex"] = "html",
         ["phoenix-heex"] = "html",
+        elixir = "html",
         heex = "html",
         elm = "html",
         erb = "html",
@@ -521,6 +524,8 @@ local servers = {
       "sass",
       "html",
       "heex",
+      "elixir",
+      "eelixir",
       "javascript",
       "javascriptreact",
       "typescript",

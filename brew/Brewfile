@@ -114,6 +114,7 @@ brew "hopenpgp-tools"
 brew "htop"
 brew "httpie"
 brew "hub"
+brew "hyperfine"
 brew "ical-buddy" if OS.mac?
 brew "jo"
 brew "jq"

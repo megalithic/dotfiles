@@ -264,9 +264,9 @@ local apps = {
     },
   },
   ["com.agilebits.onepassword7"] = {
-    bundleID = "com.agilebits.onepassword7",
+    bundleID = "com.1password.1password",
     name = "1Password",
-    -- key = "1",
+    key = "1",
     hideAfter = 1,
     rules = {
       { "", 1, "centeredMedium" },

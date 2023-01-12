@@ -839,6 +839,12 @@ local M = {
       function() require("telescope.builtin").grep_string(ivy({})) end,
       desc = "grep under cursor",
     },
+
+    --   vmap(
+    --     "<leader>A",
+    --     [[y:lua require("telescope.builtin").grep_string({ search = '<c-r>"' })<cr>]],
+    --     "grep for visual selection"
+    --   )
     {
       "<leader>fl",
       function()

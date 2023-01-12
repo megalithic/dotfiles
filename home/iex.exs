@@ -110,12 +110,74 @@ IEx.configure(
 
 H.print_bright("\n---  Phoenix & Ecto:")
 
+# # Phoenix Support
+# import_if_available(Plug.Conn)
+# import_if_available(Phoenix.HTML)
+
+#       Mix.Project.get().project()[:app]
+# phoenix_app =
+#   :application.info()
+#   |> Keyword.get(:running)
+#   |> Enum.reject(fn {_x, y} ->
+#     y == :undefined
+#   end)
+#   |> Enum.find(fn {x, _y} ->
+#     x |> Atom.to_string() |> String.match?(~r{_web})
+#   end)
+#
+# # Check if phoenix app is found
+# case phoenix_app do
+#   nil ->
+#     IO.puts("Phoenix #{IO.ANSI.yellow() <> "not detected" <> IO.ANSI.reset()}")
+#
+#   {app, _pid} ->
+#     IO.puts("Phoenix detected: #{IO.ANSI.green() <> app <> IO.ANSI.reset()}")
+#
+#     ecto_app =
+#       app
+#       |> Atom.to_string()
+#       |> (&Regex.split(~r{_web}, &1)).()
+#       |> Enum.at(0)
+#       |> String.to_atom()
+#
+#     ecto_exists =
+#       :application.info()
+#       |> Keyword.get(:running)
+#       |> Enum.reject(fn {_x, y} ->
+#         y == :undefined
+#       end)
+#       |> Enum.map(fn {x, _y} -> x end)
+#       |> Enum.member?(ecto_app)
+#
+#     # Check if Ecto app exists or running
+#     case ecto_exists do
+#       false ->
+#         IO.puts("Ecto app #{ecto_app} doesn't exist or isn't running")
+#
+#       true ->
+#         IO.puts("Ecto app found: #{ecto_app}")
+#
+#         # Ecto Support
+#         import_if_available(Ecto.Query)
+#         import_if_available(Ecto.Changeset)
+#
+#         # Alias Repo
+#         repo = ecto_app |> Application.get_env(:ecto_repos) |> Enum.at(0)
+#
+#         quote do
+#           alias unquote(repo), as: Repo
+#         end
+#     end
+# end
+
 phoenix_started? = H.is_app_started?(:phoenix)
 ecto_started? = H.is_app_started?(:ecto)
 
 phoenix_info =
   if phoenix_started? do
-    IO.ANSI.green() <> "running" <> IO.ANSI.reset()
+    app_name = Mix.Project.get().project()[:app]
+
+    IO.ANSI.green() <> "running (#{app_name}_web)" <> IO.ANSI.reset()
   else
     IO.ANSI.yellow() <> "not detected" <> IO.ANSI.reset()
   end
@@ -146,6 +208,15 @@ repo_info =
 if ecto_started? do
   import_if_available(Ecto.Query)
   import_if_available(Ecto.Changeset)
+
+  repo =
+    Mix.Project.get().project()[:app]
+    |> Application.get_env(:ecto_repos)
+    |> Enum.at(0)
+
+  quote do
+    alias unquote(repo), as: Repo
+  end
 end
 
 IO.puts("Ecto: #{ecto_info} #{repo_info}")
