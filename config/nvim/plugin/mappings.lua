@@ -34,6 +34,10 @@ local map = vim.keymap.set
 
 -- [convenience mappings] ------------------------------------------------------
 
+-- deal with word wrap nicely
+vim.keymap.set("n", "k", "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = true })
+vim.keymap.set("n", "j", "v:count == 0 ? 'gj' : 'j'", { expr = true, silent = true })
+
 -- go-to split (also, if in kitty, see nvim-kitty-navigator)
 nnoremap("<C-h>", "<cmd>wincmd h<CR>", "split: go left")
 nnoremap("<C-j>", "<cmd>wincmd j<CR>", "split: go down")
@@ -63,6 +67,26 @@ nmap("<localleader>ygh", "<cmd>CopyBranch<cr>", { desc = "Copy current git branc
 
 nnoremap("<localleader>f", "<cmd>LspFormatWrite<cr>", "run lsp formatter")
 -- nnoremap("<localleader>F", "<cmd>LspFormat<cr>", "run lsp formatter")
+
+-- -- These create newlines like o and O but stay in normal mode
+-- map.mode_group('n', {
+--   { 'zj', 'o<Esc>k' },
+--   { 'zk', 'O<Esc>j' },
+-- }, { silent = true })
+--
+-- -- Move lines in visual mode
+-- map.mode_group('v', {
+--   { 'J', ":m '>+1<cr>gv=gv" },
+--   { 'K', ":m '<-2<cr>gv=gv" },
+-- }, { noremap = true })
+--
+-- -- better undo breakpoints
+-- map.mode_group('i', {
+--   { ',', ',<c-g>u' },
+--   { '.', '.<c-g>u' },
+--   { '!', '!<c-g>u' },
+--   { '?', '?<c-g>u' },
+-- }, { noremap = true })
 
 -- make the tab key match bracket pairs
 exec("silent! unmap [%", true)
@@ -254,6 +278,7 @@ end, { expr = true, desc = "Special Line Delete" })
 -- selections
 nnoremap("gv", "`[v`]", "reselect pasted content")
 nnoremap("<leader>V", "V`]", "reselect pasted content")
+nnoremap("gp", "`[v`]", "reselect pasted content")
 nnoremap("gV", "ggVG", "select whole buffer")
 nnoremap("<leader>v", "ggVG", "select whole buffer")
 

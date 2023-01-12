@@ -35,7 +35,7 @@ function dbg(s) {
 // -----------------------------------------------------------------------------------------------------------------------
 // -- [ SETTINGS ]
 // -----------------------------------------------------------------------------------------------------------------------
-settings.defaultSearchEngine = "n"; // duck duck go
+settings.defaultSearchEngine = "b"; // (b)rave, (n)eeva, etc
 settings.focusAfterClosed = "right";
 settings.hintAlign = "left";
 settings.hintExplicit = true;
