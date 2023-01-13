@@ -89,7 +89,7 @@ return {
       })
     end,
   },
-  { "kyazdani42/nvim-web-devicons", config = function() require("nvim-web-devicons").setup() end },
+  { "nvim-tree/nvim-web-devicons", config = function() require("nvim-web-devicons").setup() end },
   {
     "NvChad/nvim-colorizer.lua",
     -- event = { "CursorHold", "CursorMoved", "InsertEnter" },

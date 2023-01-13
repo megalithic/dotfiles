@@ -85,6 +85,7 @@ local M = {
 
   dependencies = {
     "natecraddock/telescope-zf-native.nvim",
+    "nvim-telescope/telescope-live-grep-args.nvim",
     -- "danielvolchek/tailiscope.nvim"
   },
   keys = {
@@ -92,7 +93,10 @@ local M = {
     { "<leader>ff", project_files, desc = "find files" },
     {
       "<leader>a",
-      function() require("telescope.builtin").live_grep(ivy({})) end,
+      function()
+        -- require("telescope.builtin").live_grep(ivy({}))
+        require("telescope").extensions.live_grep_args.live_grep_args(ivy({}))
+      end,
       desc = "live grep",
     },
     {
@@ -122,6 +126,8 @@ local M = {
   config = function()
     local telescope = require("telescope")
     local transform_mod = require("telescope.actions.mt").transform_mod
+    local actions = require("telescope.actions")
+    local lga_actions = require("telescope-live-grep-args.actions")
 
     local custom_actions = transform_mod({
       multi_selection_open_vertical = function(prompt_bufnr) multiopen(prompt_bufnr, "vertical") end,
@@ -162,6 +168,16 @@ local M = {
         winblend = 0,
       },
       extensions = {
+        live_grep_args = {
+          auto_quoting = true, -- enable/disable auto-quoting
+          mappings = { -- extend mappings
+            i = {
+              ["<C-s>"] = actions.to_fuzzy_refine,
+              ["<C-k>"] = lga_actions.quote_prompt(),
+              ["<C-i>"] = lga_actions.quote_prompt({ postfix = " --iglob " }),
+            },
+          },
+        },
         ["zf-native"] = {
           file = {
             enable = true,
@@ -182,6 +198,11 @@ local M = {
         live_grep = ivy({
           -- max_results = 500,
           -- file_ignore_patterns = { ".git/", "%.lock" },
+          mappings = {
+            i = {
+              ["<C-s>"] = actions.to_fuzzy_refine,
+            },
+          },
           on_input_filter_cb = function(prompt)
             -- if prompt starts with escaped @ then treat it as a literal
             if (prompt):sub(1, 2) == "\\@" then return { prompt = prompt:sub(2):gsub("%s", ".*") } end

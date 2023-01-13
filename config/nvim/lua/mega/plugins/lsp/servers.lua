@@ -150,6 +150,7 @@ local servers = {
       "html",
       "javascriptreact",
       "typescriptreact",
+      "elixir",
       "eelixir",
       "html.heex",
       "heex",
