@@ -93,9 +93,9 @@ if which nvim >/dev/null; then
     export EDITOR="nvim"
     export VISUAL="$EDITOR"
     export MANPAGER="$EDITOR +Man!"
-    export ELIXIR_EDITOR="$EDITOR +__LINE__ __FILE__"
-    export PLUG_EDITOR=$ELIXIR_EDITOR
-    export ECTO_EDITOR=$ELIXIR_EDITOR
+    # export ELIXIR_EDITOR="$EDITOR +__LINE__ __FILE__"
+    # export PLUG_EDITOR=$ELIXIR_EDITOR
+    # export ECTO_EDITOR=$ELIXIR_EDITOR
     # export MANPAGER="/usr/local/bin/nvim -c 'Man!' -o -"
   fi
 

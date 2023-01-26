@@ -4,8 +4,9 @@
 
 vim.cmd([[setlocal iskeyword+=!,?]])
 
-nnoremap("<leader>ed", [[orequire IEx; IEx.pry; #respawn() to leave pry<ESC>:w<CR>]])
+-- nnoremap("<leader>ed", [[orequire IEx; IEx.pry; #respawn() to leave pry<ESC>:w<CR>]])
 nnoremap("<leader>ep", [[o|><ESC>a]])
+nnoremap("<leader>ed", [[o|>dbg()<ESC>a]])
 nnoremap("<leader>ei", [[o|> IO.inspect()<ESC>i]])
 nnoremap("<leader>eil", [[o|> IO.inspect(label: "")<ESC>hi]])
 inoremap("<leader>eil", [[o|> <ESC>a]])
@@ -16,6 +17,7 @@ vim.cmd([[iabbrev ep    \|>]])
 vim.cmd([[iabbrev epry  require IEx; IEx.pry]])
 vim.cmd([[iabbrev ei    IO.inspect]])
 vim.cmd([[iabbrev eputs IO.puts]])
+vim.cmd([[iabbrev ed    dbg()]])
 
 -- get back matchit things for elixir (from elixir.vim)
 -- https://github.com/elixir-editors/vim-elixir/blob/master/ftplugin/elixir.vim#L6-L16

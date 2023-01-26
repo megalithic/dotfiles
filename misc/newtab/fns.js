@@ -80,6 +80,7 @@ const clip = (enabled) => {
   }
 };
 
+// REF: https://pirateweather.net/?utm_source=hackernewsletter&utm_medium=email&utm_term=show_hn
 const weather = (enabled) => {
   if (enabled) {
     const wEl = document.querySelector("#weather");

@@ -368,6 +368,20 @@ addSearchAlias(
   }
 );
 
+addSearchAlias(
+  "hd",
+  "hexdocs",
+  "https://hexdocs.pm/",
+  "",
+  "https://hexdocs.pm/",
+  function (response) {
+    var res = JSON.parse(response.text);
+    return res.map(function (r) {
+      return r.phrase;
+    });
+  }
+);
+
 // set theme
 settings.theme = `
   :root {

@@ -26,8 +26,8 @@ local M = {
     { "hrsh7th/cmp-cmdline", event = { "CmdlineEnter" } },
     { "hrsh7th/cmp-nvim-lsp-signature-help" },
     { "hrsh7th/cmp-nvim-lsp-document-symbol" },
-    -- { "dmitmel/cmp-cmdline-history"},
     { "lukas-reineke/cmp-rg" },
+    -- { "dmitmel/cmp-cmdline-history"},
     -- { "kristijanhusak/vim-dadbod-completion"},
   },
 }
@@ -177,8 +177,18 @@ function M.config()
       -- fields = { "kind", "abbr", "menu" }, -- determines order of menu items
       fields = { "abbr", "kind", "menu" },
       format = function(entry, item)
-        -- item.kind = mega.icons.lsp.kind[item.kind]
-        item.kind = fmt("%s %s", mega.icons.lsp.kind[item.kind], item.kind)
+        if item.kind == "Color" and entry.completion_item.documentation then
+          local _, _, r, g, b = string.find(entry.completion_item.documentation, "^rgb%((%d+), (%d+), (%d+)")
+          if r then
+            local color = string.format("%02x", r) .. string.format("%02x", g) .. string.format("%02x", b)
+            local hl_group = "Tw_" .. color
+            if vim.fn.hlID(hl_group) < 1 then vim.api.nvim_set_hl(0, hl_group, { fg = "#" .. color }) end
+            item.kind = ""
+            item.kind_hl_group = hl_group
+          end
+        else
+          item.kind = fmt("%s %s", mega.icons.lsp.kind[item.kind], item.kind)
+        end
 
         -- local max_length = 20
         local max_length = math.floor(vim.o.columns * 0.5)

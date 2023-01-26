@@ -68,6 +68,11 @@ return {
     end,
   },
   {
+    "JoosepAlviste/palenightfall.nvim",
+    lazy = false,
+    config = vim.g.colorscheme == "palenightfall",
+  },
+  {
     "mcchrish/zenbones.nvim",
     lazy = false,
     dependencies = "rktjmp/lush.nvim",
@@ -108,6 +113,7 @@ return {
           hsl_fn = true, -- CSS hsl() and hsla() functions
           -- css = true, -- Enable all CSS features: rgb_fn, hsl_fn, names, RGB, RRGGBB
           css_fn = true, -- Enable all CSS *functions*: rgb_fn, hsl_fn
+          sass = { enable = false, parsers = { css } }, -- Enable sass colors
           -- Available modes for `mode`: foreground, background,  virtualtext
           mode = "background", -- Set the display mode.
           virtualtext = "■",
@@ -274,8 +280,57 @@ return {
   {
     "knubie/vim-kitty-navigator",
     -- build = "cp ./*.py ~/.config/kitty/",
-    cond = not vim.env.TMUX,
+    cond = not vim.env.TMUX and not vim.env.ZELLIJ,
   },
+  {
+    "Lilja/zellij.nvim",
+    cond = vim.env.ZELLIJ,
+    config = function()
+      require("zellij").setup({})
+      local function edgeDetect(direction)
+        local currWin = vim.api.nvim_get_current_win()
+        vim.api.nvim_command("wincmd " .. direction)
+        local newWin = vim.api.nvim_get_current_win()
+
+        -- You're at the edge when you just moved direction and the window number is the same
+        print("ol winN ")
+        print(currWin)
+        print(" new ")
+        print(newWin)
+        print(" same? ")
+        print(currWin == newWin)
+        return currWin == newWin
+      end
+
+      local function zjCall(direction)
+        local directionTranslation = {
+          h = "left",
+          j = "down",
+          k = "up",
+          l = "right",
+        }
+        -- local cmd  = "zellij action move-focus-or-tab " .. directionTranslation[direction]
+        local cmd = "zellij action move-focus-or-tab " .. directionTranslation[direction]
+        local cmd2 = "zellij --help"
+        print("cmd")
+        print(cmd)
+        local c = vim.fn.system(cmd)
+        print(c)
+        local c2 = vim.fn.system("ls -l")
+        print(c2)
+      end
+
+      local function zjNavigate(direction)
+        if edgeDetect(direction) then zjCall(direction) end
+      end
+
+      vim.keymap.set("n", "<C-h>", function() zjNavigate("h") end)
+      vim.keymap.set("n", "<C-j", function() zjNavigate("j") end)
+      vim.keymap.set("n", "<C-k", function() zjNavigate("k") end)
+      vim.keymap.set("n", "<C-l", function() zjNavigate("l") end)
+    end,
+  },
+  -- { "sunaku/tmux-navigate", cond = vim.env.TMUX },
   -- { "elihunter173/dirbuf.nvim", config = function() require("dirbuf").setup({}) end },
   -- {
   --   "folke/trouble.nvim",
@@ -495,7 +550,30 @@ return {
       use_diagnostic_signs = true, -- en
     },
   },
-  -- { "lewis6991/hover.nvim" },
+  {
+    "lewis6991/hover.nvim",
+    keys = { "K", "gK" },
+    config = function()
+      require("hover").setup({
+        init = function()
+          -- Require providers
+          require("hover.providers.lsp")
+          -- require('hover.providers.gh')
+          -- require('hover.providers.gh_user')
+          -- require('hover.providers.jira')
+          -- require('hover.providers.man')
+          -- require('hover.providers.dictionary')
+        end,
+        preview_opts = {
+          border = require("mega.globals").get_border(),
+        },
+        -- Whether the contents of a currently open hover window should be moved
+        -- to a :h preview-window when pressing the hover keymap.
+        preview_window = false,
+        title = true,
+      })
+    end,
+  },
   -- { "folke/lua-dev.nvim", module = "lua-dev" },
   -- { "microsoft/python-type-stubs", lazy = true },
   -- { "lvimuser/lsp-inlayhints.nvim" },
@@ -914,6 +992,16 @@ return {
   -- { "ixru/nvim-markdown" },
   { "iamcco/markdown-preview.nvim", ft = "markdown", build = "cd app && yarn install" },
   {
+    "evanpurkhiser/image-paste.nvim",
+    ft = "markdown",
+    -- keys = {
+    --   { { "<C-v>", function() require("image-paste").paste_image() end }, mode = "i" },
+    -- },
+    config = {
+      imgur_client_id = "2974b259fd073e2",
+    },
+  },
+  {
     "toppair/peek.nvim",
     build = "deno task --quiet build:fast",
     ft = { "markdown" },
@@ -978,6 +1066,7 @@ return {
   { "elixir-editors/vim-elixir", lazy = false }, -- nvim exceptions thrown when not installed
   "kchmck/vim-coffee-script",
   "briancollins/vim-jst",
+  { "imsnif/kdl.vim", ft = "kdl" },
   -- { "tpope/vim-rails" },
   -- { "ngscheurich/edeex.nvim" },
   -- { "antew/vim-elm-analyse" },

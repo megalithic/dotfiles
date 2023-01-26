@@ -480,3 +480,5 @@ end
 
 nnoremap("<leader>lq", function() mega.toggle_list("quickfix") end, "lists: toggle quickfix")
 nnoremap("<leader>lc", function() mega.toggle_list("location") end, "lists: toggle location")
+
+imap("<C-v>", function() require("image-paste").paste_image() end, { desc = "paste image from clipboard" })

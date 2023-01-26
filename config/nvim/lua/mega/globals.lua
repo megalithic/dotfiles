@@ -433,6 +433,8 @@ local function mapper(mode, o)
   return function(lhs, rhs, opts)
     -- If the label is all that was passed in, set the opts automagically
     opts = type(opts) == "string" and { label = opts } or opts and vim.deepcopy(opts) or {}
+
+    -- if not opts.has or client.server_capabilities[opts.has .. "Provider"] then
     if opts.label or opts.desc then
       local ok, wk = mega.require("which-key", { silent = true })
       if ok and wk then wk.register({ [lhs] = opts.label or opts.desc }, { mode = mode }) end

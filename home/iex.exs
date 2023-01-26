@@ -20,6 +20,16 @@
 #     "\ue315 " <>
 #     IO.ANSI.reset()
 #
+
+# if :mix not in Enum.map(Application.loaded_applications(), &elem(&1, 0)) do
+#   Mix.install([
+#     :decimal,
+#     {:req, path: "~/src/req"},
+#     {:easyxml, path: "~/src/easyxml"},
+#     {:easyhtml, path: "~/src/easyhtml"}
+#   ])
+# end
+
 history_size = 100
 
 # Color Variables
@@ -227,9 +237,9 @@ IO.puts("")
 Application.put_env(:elixir, :dbg_callback, {Macro, :dbg, []})
 Application.put_env(:elixir, :ansi_enabled, true)
 
-if function_exported?(Mix, :__info__, 1) and Mix.env() == :dev do
-  # if statement guards you from running it in prod, which could result in loss of logs.
-  Logger.configure_backend(:console, device: Process.group_leader())
-end
+# if function_exported?(Mix, :__info__, 1) and Mix.env() == :dev do
+#   # if statement guards you from running it in prod, which could result in loss of logs.
+#   Logger.configure_backend(:console, device: Process.group_leader())
+# end
 
 # vim:ft=elixir

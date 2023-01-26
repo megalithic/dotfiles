@@ -87,6 +87,7 @@ local M = {
     "natecraddock/telescope-zf-native.nvim",
     "nvim-telescope/telescope-live-grep-args.nvim",
     -- "danielvolchek/tailiscope.nvim"
+    -- "danielfalk/smart-open.nvim"
   },
   keys = {
     { "<leader><space>", project_files, desc = "Find File" },

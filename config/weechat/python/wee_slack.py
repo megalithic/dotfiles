@@ -1,37 +1,41 @@
 # Copyright (c) 2014-2016 Ryan Huber <rhuber@gmail.com>
 # Copyright (c) 2015-2018 Tollef Fog Heen <tfheen@err.no>
-# Copyright (c) 2015-2022 Trygve Aaberge <trygveaa@gmail.com>
+# Copyright (c) 2015-2023 Trygve Aaberge <trygveaa@gmail.com>
 # Released under the MIT license.
 
 from __future__ import print_function, unicode_literals
 
-import copy
-import errno
-import hashlib
-import json
-import os
-import random
-import re
-import socket
-import ssl
-import string
-import sys
-import textwrap
-import time
-import traceback
 from collections import OrderedDict, namedtuple
 from datetime import date, datetime, timedelta
 from functools import partial, wraps
 from io import StringIO
 from itertools import chain, count, islice
 
+import copy
+import errno
+import textwrap
+import time
+import json
+import hashlib
+import os
+import re
+import sys
+import traceback
+import ssl
+import random
+import socket
+import string
+
 # Prevent websocket from using numpy (it's an optional dependency). We do this
 # because numpy causes python (and thus weechat) to crash when it's reloaded.
 # See https://github.com/numpy/numpy/issues/11925
 sys.modules["numpy"] = None
 
-from websocket import (ABNF, WebSocketConnectionClosedException,  # noqa: E402
-                       create_connection)
+from websocket import (  # noqa: E402
+    ABNF,
+    create_connection,
+    WebSocketConnectionClosedException,
+)
 
 try:
     basestring  # Python 2
@@ -41,8 +45,14 @@ except NameError:  # Python 3
     basestring = unicode = str
 
 try:
-    from collections.abc import (ItemsView, Iterable, KeysView, Mapping,
-                                 Reversible, ValuesView)
+    from collections.abc import (
+        ItemsView,
+        Iterable,
+        KeysView,
+        Mapping,
+        Reversible,
+        ValuesView,
+    )
 except ImportError:
     from collections import ItemsView, Iterable, KeysView, Mapping, ValuesView
 
@@ -66,9 +76,9 @@ except ImportError:
 
 SCRIPT_NAME = "slack"
 SCRIPT_AUTHOR = "Trygve Aaberge <trygveaa@gmail.com>"
-SCRIPT_VERSION = "2.9.0"
+SCRIPT_VERSION = "2.9.1"
 SCRIPT_LICENSE = "MIT"
-SCRIPT_DESC = "Extends weechat for typing notification/search/etc on slack.com"
+SCRIPT_DESC = "Extends WeeChat for typing notification/search/etc on slack.com"
 REPO_URL = "https://github.com/wee-slack/wee-slack"
 
 TYPING_DURATION = 6
@@ -169,7 +179,7 @@ def slack_buffer_required(f):
 def utf8_decode(f):
     """
     Decode all arguments from byte strings to unicode strings. Use this for
-    functions called from outside of this script, e.g. callbacks from weechat.
+    functions called from outside of this script, e.g. callbacks from WeeChat.
     """
 
     @wraps(f)
@@ -559,7 +569,7 @@ class EventRouter(object):
     def store_context(self, data):
         """
         A place to store data and vars needed by callback returns. We need this because
-        weechat's "callback_data" has a limited size and weechat will crash if you exceed
+        WeeChat's "callback_data" has a limited size and WeeChat will crash if you exceed
         this size.
         """
         identifier = "".join(
@@ -572,7 +582,7 @@ class EventRouter(object):
     def retrieve_context(self, identifier):
         """
         A place to retrieve data and vars needed by callback returns. We need this because
-        weechat's "callback_data" has a limited size and weechat will crash if you exceed
+        WeeChat's "callback_data" has a limited size and WeeChat will crash if you exceed
         this size.
         """
         return self.context.get(identifier)
@@ -658,19 +668,19 @@ class EventRouter(object):
             self.receive(message_json)
 
     def http_check_ratelimited(self, request_metadata, response):
-        headers_end_index = response.index("\r\n\r\n")
-        headers = response[:headers_end_index].split("\r\n")
-        http_status = headers[0].split(" ")[1]
+        parts = response.split("\r\n\r\nHTTP/")
+        last_header_part, body = parts[-1].split("\r\n\r\n", 1)
+        header_lines = last_header_part.split("\r\n")
+        http_status = header_lines[0].split(" ")[1]
 
         if http_status == "429":
-            for header in headers[1:]:
+            for header in header_lines[1:]:
                 name, value = header.split(":", 1)
                 if name.lower() == "retry-after":
                     retry_after = int(value.strip())
                     request_metadata.retry_time = time.time() + retry_after
                     return "", "ratelimited"
 
-        body = response[headers_end_index + 4 :]
         return body, ""
 
     def retry_request(self, request_metadata, data, return_code, err):
@@ -715,7 +725,7 @@ class EventRouter(object):
         """
         complete
         Receives the result of an http request we previously handed
-        off to weechat (weechat bundles libcurl). Weechat can fragment
+        off to WeeChat (WeeChat bundles libcurl). WeeChat can fragment
         replies, so it buffers them until the reply is complete.
         It is then populated with metadata here so we can identify
         where the request originated and route properly.
@@ -891,7 +901,7 @@ def handle_next(data, remaining_calls):
 
 class WeechatController(object):
     """
-    Encapsulates our interaction with weechat
+    Encapsulates our interaction with WeeChat
     """
 
     def __init__(self, eventrouter):
@@ -906,7 +916,7 @@ class WeechatController(object):
     def register_buffer(self, buffer_ptr, channel):
         """
         complete
-        Adds a weechat buffer to the list of handled buffers for this EventRouter
+        Adds a WeeChat buffer to the list of handled buffers for this EventRouter
         """
         if isinstance(buffer_ptr, basestring):
             self.buffers[buffer_ptr] = channel
@@ -916,7 +926,7 @@ class WeechatController(object):
     def unregister_buffer(self, buffer_ptr, update_remote=False, close_buffer=False):
         """
         complete
-        Adds a weechat buffer to the list of handled buffers for this EventRouter
+        Adds a WeeChat buffer to the list of handled buffers for this EventRouter
         """
         channel = self.buffers.get(buffer_ptr)
         if channel:
@@ -945,7 +955,7 @@ def local_process_async_slack_api_request(request, event_router):
     """
     complete
     Sends an API request to Slack. You'll need to give this a well formed SlackRequest object.
-    DEBUGGING!!! The context here cannot be very large. Weechat will crash.
+    DEBUGGING!!! The context here cannot be very large. WeeChat will crash.
     """
     if not event_router.shutting_down:
         weechat_request = "url:{}".format(request.request_string())
@@ -1012,7 +1022,7 @@ def buffer_renamed_cb(data, signal, current_buffer):
 @utf8_decode
 def buffer_closing_callback(data, signal, current_buffer):
     """
-    Receives a callback from weechat when a buffer is being closed.
+    Receives a callback from WeeChat when a buffer is being closed.
     """
     EVENTROUTER.weechat_controller.unregister_buffer(current_buffer, True, False)
     return w.WEECHAT_RC_OK
@@ -1084,7 +1094,7 @@ def input_text_for_buffer_cb(data, modifier, current_buffer, string):
 @utf8_decode
 def buffer_switch_callback(data, signal, current_buffer):
     """
-    Every time we change channels in weechat, we call this to:
+    Every time we change channels in WeeChat, we call this to:
     1) set read marker 2) determine if we have already populated
     channel history data 3) set presence to active
     """
@@ -1365,7 +1375,7 @@ def usergroups_completion_cb(data, completion_item, current_buffer, completion):
 def complete_next_cb(data, current_buffer, command):
     """Extract current word, if it is equal to a nick, prefix it with @ and
     rely on nick_completion_cb adding the @-prefixed versions to the
-    completion lists, then let Weechat's internal completion do its
+    completion lists, then let WeeChat's internal completion do its
     thing
     """
     current_channel = EVENTROUTER.weechat_controller.buffers.get(current_buffer)
@@ -2388,7 +2398,7 @@ class SlackChannel(SlackChannelCommon):
 
     def create_buffer(self):
         """
-        Creates the weechat buffer where the channel magic happens.
+        Creates the WeeChat buffer where the channel magic happens.
         """
         if not self.channel_buffer:
             self.active = True
@@ -2934,7 +2944,7 @@ class SlackPrivateChannel(SlackGroupChannel):
 class SlackMPDMChannel(SlackChannel):
     """
     An MPDM channel is a special instance of a 'group' channel.
-    We change the name to look less terrible in weechat.
+    We change the name to look less terrible in WeeChat.
     """
 
     def __init__(self, eventrouter, team_users, myidentifier, **kwargs):
@@ -3173,7 +3183,7 @@ class SlackThreadChannel(SlackChannelCommon):
 
     def create_buffer(self):
         """
-        Creates the weechat buffer where the thread magic happens.
+        Creates the WeeChat buffer where the thread magic happens.
         """
         if not self.channel_buffer:
             self.channel_buffer = w.buffer_new(
@@ -3397,8 +3407,8 @@ class SlackMessage(object):
         if "edited" in self.message_json:
             text += " " + colorize_string(config.color_edited_suffix, "(edited)")
 
-        text += unfurl_refs(unwrap_attachments(self.message_json, text))
-        text += unfurl_refs(unwrap_files(self.message_json, text))
+        text += unfurl_refs(unwrap_attachments(self, text))
+        text += unfurl_refs(unwrap_files(self, self.message_json, text))
         text = unhtmlescape(text.lstrip().replace("\t", "    "))
 
         text += create_reactions_string(
@@ -4641,10 +4651,10 @@ def unhtmlescape(text):
     return text.replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&")
 
 
-def unwrap_attachments(message_json, text_before):
+def unwrap_attachments(message, text_before):
     text_before_unescaped = unhtmlescape(text_before)
     attachment_texts = []
-    a = message_json.get("attachments")
+    a = message.message_json.get("attachments")
     if a:
         if text_before:
             attachment_texts.append("")
@@ -4655,7 +4665,9 @@ def unwrap_attachments(message_json, text_before):
             # $author: (if rest of line is non-empty) $title ($title_link) OR $from_url
             # $author: (if no $author on previous line) $text
             # $fields
-            if "original_url" in attachment and not config.link_previews:
+            if not config.link_previews and (
+                "original_url" in attachment or attachment.get("is_app_unfurl")
+            ):
                 continue
             t = []
             prepend_title_text = ""
@@ -4726,7 +4738,7 @@ def unwrap_attachments(message_json, text_before):
                 else:
                     t.append(field["value"])
 
-            files = unwrap_files(attachment, None)
+            files = unwrap_files(message, attachment, None)
             if files:
                 t.append(files)
 
@@ -4769,7 +4781,7 @@ def unwrap_attachments(message_json, text_before):
     return "\n".join(attachment_texts)
 
 
-def unwrap_files(message_json, text_before):
+def unwrap_files(message, message_json, text_before):
     files_texts = []
     for f in message_json.get("files", []):
         if f.get("mode", "") == "tombstone":
@@ -4779,6 +4791,11 @@ def unwrap_files(message_json, text_before):
                 config.color_deleted,
                 "(This file is hidden because the workspace has passed its storage limit.)",
             )
+        elif f.get("mimetype") == "application/vnd.slack-docs":
+            url = "{}?origin_team={}&origin_channel={}".format(
+                f["permalink"], message.team.identifier, message.channel.identifier
+            )
+            text = "{} ({})".format(url, f["title"])
         elif (
             f.get("url_private", None) is not None and f.get("title", None) is not None
         ):
@@ -5242,10 +5259,10 @@ def command_register(data, current_buffer, args):
     if not code:
         if nothirdparty:
             nothirdparty_note = ""
-            last_step = "You will see a message that the site can't be reached, this is expected. The URL for the page will have a code in it of the form `?code=<code>`. Copy the code after the equals sign, return to weechat and run `/slack register -nothirdparty <code>`."
+            last_step = "You will see a message that the site can't be reached, this is expected. The URL for the page will have a code in it of the form `?code=<code>`. Copy the code after the equals sign, return to WeeChat and run `/slack register -nothirdparty <code>`."
         else:
             nothirdparty_note = "\nNote that by default GitHub Pages will see a temporary code used to create your token (but not the token itself). If you're worried about this, you can use the -nothirdparty option, though the process will be a bit less user friendly."
-            last_step = "The web page will show a command in the form `/slack register <code>`. Run this command in weechat."
+            last_step = "The web page will show a command in the form `/slack register <code>`. Run this command in WeeChat."
         message = (
             textwrap.dedent(
                 """
@@ -6402,7 +6419,7 @@ class PluginConfig(object):
         "auto_open_threads": Setting(
             default="false",
             desc="Automatically open threads when mentioned or in"
-            "response to own messages.",
+            " response to own messages.",
         ),
         "background_load_all_history": Setting(
             default="true",
@@ -6520,7 +6537,7 @@ class PluginConfig(object):
         ),
         "render_bold_as": Setting(
             default="bold",
-            desc="When receiving bold text from Slack, render it as this in weechat.",
+            desc="When receiving bold text from Slack, render it as this in WeeChat.",
         ),
         "render_emoji_as_string": Setting(
             default="false",
@@ -6528,13 +6545,13 @@ class PluginConfig(object):
             " if your terminal doesn't support emojis, or set to 'both' if you want to"
             " see both renderings. Note that even though this is"
             " disabled by default, you need to place {}/blob/master/weemoji.json in your"
-            " weechat directory to enable rendering emojis as emoji characters.".format(
+            " WeeChat directory to enable rendering emojis as emoji characters.".format(
                 REPO_URL
             ),
         ),
         "render_italic_as": Setting(
             default="italic",
-            desc="When receiving bold text from Slack, render it as this in weechat."
+            desc="When receiving bold text from Slack, render it as this in WeeChat."
             ' If your terminal lacks italic support, consider using "underline" instead.',
         ),
         "send_typing_notice": Setting(
@@ -7088,7 +7105,7 @@ if __name__ == "__main__":
         if weechat_version < 0x2020000:
             w.prnt(
                 "",
-                "\nERROR: Weechat version 2.2+ is required to use {}.\n\n".format(
+                "\nERROR: WeeChat version 2.2+ is required to use {}.\n\n".format(
                     SCRIPT_NAME
                 ),
             )

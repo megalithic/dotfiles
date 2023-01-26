@@ -75,14 +75,17 @@ local function hover()
     vim.cmd([[execute printf('h %s', expand('<cword>'))]])
     -- require("hover").hover_select()
   else
+    P("custom float ?")
     if existing_float_win and vim.api.nvim_win_is_valid(existing_float_win) then
+      P("existing customf loat")
       vim.b.lsp_floating_preview = nil
       local preview_buffer = vim.api.nvim_win_get_buf(existing_float_win)
       local pwin = get_preview_window()
       vim.api.nvim_win_set_buf(pwin, preview_buffer)
       vim.api.nvim_win_close(existing_float_win, true)
     else
-      vim.lsp.buf.hover()
+      P("nope, new buf hover")
+      vim.lsp.buf.hover(nil, { focus = false, focusable = false })
       -- require("hover").hover()
     end
   end
@@ -218,6 +221,10 @@ end
 
 local function setup_keymaps(client, bufnr)
   local desc = function(desc) return { desc = desc, buffer = bufnr } end
+  -- local maybe = function(spec, has)
+  --   if not has or client.server_capabilities[has .. "Provider"] then
+  --   end
+  -- end
 
   nnoremap("[d", function() diagnostic.goto_prev({ float = true }) end, desc("lsp: prev diagnostic"))
   nnoremap("]d", function() diagnostic.goto_next({ float = true }) end, desc("lsp: next diagnostic"))
@@ -230,14 +237,25 @@ local function setup_keymaps(client, bufnr)
   xnoremap("<leader>lc", "<esc><Cmd>lua vim.lsp.buf.range_code_action()<CR>", desc("code action"))
   nnoremap("gl", vim.lsp.codelens.run, desc("lsp: code lens"))
   nnoremap("gn", require("mega.plugins.lsp.rename").rename, desc("lsp: rename"))
-  nnoremap("K", hover, desc("lsp: hover"))
-  -- nnoremap("gK", require("hover").hover_select, desc("lsp: hover (select)"))
+
+  -- maybe(nmap("K", vim.lsp.buf.hover, desc("lsp: hover"), "Hover"))
+  nmap("K", vim.lsp.buf.hover, desc("lsp: hover"))
+  nmap("gK", vim.lsp.buf.signature_help, desc("lsp: signature help"))
+  imap("<c-k>", vim.lsp.buf.signature_help, desc("lsp: signature help"))
+  -- { "gK", vim.lsp.buf.signature_help, desc = "Signature Help", has = "signatureHelp" },
+  -- { "<c-k>", vim.lsp.buf.signature_help, mode = "i", desc = "Signature Help", has = "signatureHelp" },
+
+  -- Setup keymaps
+  -- nmap("K", require("hover").hover, { desc = "hover.nvim" })
+  -- nmap("gK", require("hover").hover_select, desc("lsp: hover (select)"))
+  -- nmap("K", function() vim.lsp.buf.hover() end, { desc = "lsp: hover" })
+  -- nnoremap("K", hover, desc("lsp: hover"))
   -- inoremap("<C-k>", vim.lsp.buf.signature_help, desc("lsp: signature help"))
   -- imap("<C-k>", vim.lsp.buf.signature_help, desc("lsp: signature help"))
-  imap("<C-k>", function()
-    vim.lsp.buf.signature_help()
-    return ""
-  end, { expr = true })
+  -- imap("<C-k>", function()
+  --   vim.lsp.buf.signature_help()
+  --   return ""
+  -- end, { expr = true })
   nnoremap("<leader>lic", [[<cmd>LspInfo<CR>]], desc("connected client info"))
   nnoremap("<leader>lim", [[<cmd>Mason<CR>]], desc("mason info"))
   nnoremap(
@@ -544,7 +562,7 @@ function M.config()
     if caps.documentFormattingProvider then vim.bo[bufnr].formatexpr = "v:lua.vim.lsp.formatexpr()" end
 
     require("mega.plugins.lsp.handlers").setup()
-    if caps.signatureHelpProvider then require("mega.plugins.lsp.signature").setup(client) end
+    -- if caps.signatureHelpProvider then require("mega.plugins.lsp.signature").setup(client) end
     setup_formatting(client, bufnr)
     setup_commands(bufnr)
     setup_autocommands(client, bufnr)

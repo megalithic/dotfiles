@@ -12,6 +12,7 @@ function M.config()
     return function(state)
       local next_height = state.message.height -- + 2
       local next_row = stages_util.available_slot(state.open_windows, next_height, direction)
+      dd(next_row)
       if not next_row then return nil end
       return {
         relative = "editor",
@@ -19,7 +20,7 @@ function M.config()
         width = state.message.width,
         height = state.message.height,
         col = vim.opt.columns:get(),
-        row = next_row,
+        row = next_row - 1,
         border = "",
         style = "minimal",
         opacity = opacity,
@@ -91,9 +92,9 @@ function M.config()
     end
   end
 
+  local base_stages = require("notify.stages.fade_in_slide_out")("bottom_up")
   nnotify.setup({
     timeout = 3000,
-    stages = stages("static", "bottom_up"),
     top_down = false,
     background_colour = "NotifyFloat",
     max_width = function() return math.floor(vim.o.columns * 0.8) end,
@@ -104,6 +105,16 @@ function M.config()
         vim.api.nvim_buf_set_option(vim.api.nvim_win_get_buf(winnr), "filetype", "markdown")
       end
     end,
+    -- render = "minimal",
+    -- stages = {
+    --   function(...)
+    --     local opts = base_stages[1](...)
+    --     if opts then opts.border = "none" end
+    --     return opts
+    --   end,
+    --   unpack(base_stages, 2),
+    -- },
+    stages = stages("static", "bottom_up"),
     render = function(bufnr, notif, hls, _cfg)
       local ns = require("notify.render.base").namespace()
       local title = (notif.title and mega.tlen(notif.title) > 0 and notif.title[1] ~= "") and notif.title[1] or "nvim"

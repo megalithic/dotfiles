@@ -337,7 +337,7 @@ colors.tab_bar = {
     fg_color = palette.blue,
     bg_color = palette.bright_background,
     intensity = "Bold",
-    weight = "ExtraBold",
+    -- weight = "ExtraBold",
     italic = true,
   },
   inactive_tab_edge = palette.bright_background,
@@ -373,6 +373,7 @@ colors.tab_bar = {
 
 local fonts = {
   -- font = font_with_fallback({ family = "JetBrainsMono Nerd Font Mono", weight = "Bold" }, {}),
+
   font = wezterm.font("JetBrainsMono Nerd Font Mono", { weight = "Medium", stretch = "Normal", style = "Normal" }),
   font_rules = {
     {
@@ -399,6 +400,7 @@ local fonts = {
       font = wezterm.font("JetBrainsMono Nerd Font", { weight = "Thin" }),
     },
   },
+  harfbuzz_features = { "calt=0", "clig=0", "liga=0" },
   allow_square_glyphs_to_overflow_width = "Always", -- alts: WhenFollowedBySpace, Always
   custom_block_glyphs = true,
   freetype_load_target = "Light",
@@ -530,7 +532,7 @@ local mappings = {
 --- [ TABS ] -------------------------------------------------------------------
 local tabs = {
   use_fancy_tab_bar = false,
-  hide_tab_bar_if_only_one_tab = false,
+  hide_tab_bar_if_only_one_tab = true,
   tab_max_width = 300,
   tab_bar_at_bottom = false,
   tab_bar_style = {},
@@ -549,6 +551,7 @@ local windows = {
     bottom = "15px",
   },
   window_close_confirmation = "NeverPrompt",
+
   adjust_window_size_when_changing_font_size = false,
   window_background_image_hsb = {
     brightness = 1.0,
@@ -587,7 +590,17 @@ local domains = {
 local mouse = {}
 
 --- [ MISC ] -------------------------------------------------------------------
+
+-- local ssh_domains = {}
+-- for host, _config in pairs(wezterm.enumerate_ssh_hosts()) do
+--   table.insert(ssh_domains, {
+--     name = host,
+--     remote_address = host,
+--   })
+-- end
+
 local misc = {
+  front_end = "WebGpu",
   default_cwd = homedir .. "/.dotfiles",
   default_prog = { "/usr/local/bin/zsh", "-l" },
   default_workspace = "default",
@@ -660,6 +673,22 @@ local misc = {
       format = "https://www.github.com/$1/$3",
     },
   },
+
+  -- ssh_domains = ssh_domains,
+  -- font = wezterm.font_with_fallback({
+  --   family = "JetBrainsMono Nerd Font Mono",
+  --   weight = "Medium",
+  -- }),
+  -- font_size = 14,
+  max_fps = 120,
+  -- line_height = 1.1,
+  disable_default_key_bindings = true,
+  show_new_tab_button_in_tab_bar = false,
+  inactive_pane_hsb = {
+    saturation = 0.8,
+    brightness = 0.75, --is_dark() and 0.75 or 0.85,
+  },
+  exit_behavior = "Close",
 }
 
 local function merge_all(...)
@@ -673,16 +702,177 @@ local function merge_all(...)
 end
 
 local config = merge_all(
-  misc,
   windows,
   tabs,
   panes,
-  domains,
+  -- domains,
   { colors = colors },
   fonts,
-  mappings,
+  -- mappings,
   mouse,
+  misc,
   {} -- so the last table can have an ending comma for git diffs :)
 )
 
 return config
+
+-- local wezterm = require("wezterm")
+--
+-- local prog = "/usr/local/bin/zsh"
+-- --
+-- -- if wezterm.hostname() == "Eriks-MBP" or wezterm.hostname() == "DESKTOP-BL0DJVK.localdomain" then
+-- -- 	prog = "/opt/homebrew/bin/fish"
+-- -- end
+-- -- if wezterm.hostname() == "DESKTOP-7DQK874" then
+-- -- 	prog = "wsl.exe"
+-- -- end
+--
+-- return {
+--   default_prog = { prog },
+--   -- font = wezterm.font("Fira Code"),
+--   font = wezterm.font("JetBrainsMono Nerd Font Mono"),
+--   window_padding = {
+--     bottom = 0,
+--     left = "0.2cell",
+--     right = "0.2cell",
+--     top = "0.4cell",
+--   },
+--   send_composed_key_when_left_alt_is_pressed = true,
+--   color_scheme = "tokyonight",
+--   keys = {
+--     {
+--       key = "r",
+--       mods = "CMD|SHIFT",
+--       action = wezterm.action.ReloadConfiguration,
+--     },
+--   },
+-- }
+--
+-- local ssh_domains = {}
+-- for host, _config in pairs(wezterm.enumerate_ssh_hosts()) do
+--   table.insert(ssh_domains, {
+--     name = host,
+--     remote_address = host,
+--   })
+-- end
+--
+-- return {
+--   ssh_domains = ssh_domains,
+--   font = wezterm.font_with_fallback({
+--     family = "JetBrainsMono Nerd Font Mono",
+--     weight = "Medium",
+--   }),
+--   font_size = 14,
+--   max_fps = 120,
+--   line_height = 1.1,
+--   disable_default_key_bindings = true,
+--   show_new_tab_button_in_tab_bar = false,
+--   inactive_pane_hsb = {
+--     saturation = 0.8,
+--     brightness = 0.75, --is_dark() and 0.75 or 0.85,
+--   },
+--   exit_behavior = "Close",
+--   pane_focus_follows_mouse = false,
+--   warn_about_missing_glyphs = false,
+--   show_update_window = false,
+--   check_for_updates = false,
+--   exit_behavior = "Close",
+--   window_decorations = "TITLE",
+--   window_close_confirmation = "NeverPrompt",
+--   audible_bell = "Disabled",
+--   window_padding = {
+--     left = 0,
+--     right = 0,
+--     top = 0,
+--     bottom = 0,
+--   },
+--   initial_cols = 148,
+--   initial_rows = 40,
+--   inactive_pane_hsb = {
+--     saturation = 0.8,
+--     brightness = 0.75, --is_dark() and 0.75 or 0.85,
+--   },
+--   enable_scroll_bar = false,
+--   tab_bar_at_bottom = true,
+--   use_fancy_tab_bar = false,
+--   show_new_tab_button_in_tab_bar = false,
+--   window_background_opacity = 0.9,
+--   tab_max_width = 50,
+--   hide_tab_bar_if_only_one_tab = true,
+--   disable_default_key_bindings = true,
+--   colors = colors,
+--   -- color_scheme = is_dark() and "Dracula" or "Dracula",
+--   -- colors = {
+--   --   cursor_fg = is_dark() and colors.base or colors.crust,
+--   --   tab_bar = {
+--   --     background = "#282a36",
+--   --     active_tab = {
+--   --       bg_color = "#414868",
+--   --       fg_color = "#c0caf5",
+--   --       intensity = "Normal",
+--   --       underline = "None",
+--   --       italic = false,
+--   --       strikethrough = false,
+--   --     },
+--   --     inactive_tab = {
+--   --       bg_color = "#282a36",
+--   --       fg_color = "#a9b1d6",
+--   --     },
+--   --     inactive_tab_hover = {
+--   --       bg_color = "#6272a4",
+--   --       fg_color = "#f8f8f2",
+--   --       italic = true,
+--   --     },
+--   --     new_tab = {
+--   --       bg_color = "#282a36",
+--   --       fg_color = "#f8f8f2",
+--   --     },
+--   --     new_tab_hover = {
+--   --       bg_color = "#ff79c6",
+--   --       fg_color = "#f8f8f2",
+--   --       italic = true,
+--   --     },
+--   --   },
+--   -- },
+--   keys = mappings.keys,
+--   -- keys = {
+--   --   { key = "v", mods = "SHIFT|CTRL", action = "Paste" },
+--   --   { key = "c", mods = "SHIFT|CTRL", action = "Copy" },
+--   --   { key = "x", mods = "ALT", action = wezterm.action.ActivateCopyMode },
+--   --
+--   --   { key = "n", mods = "ALT", action = wezterm.action({ SpawnTab = "CurrentPaneDomain" }) },
+--   --   { key = "c", mods = "ALT", action = wezterm.action({ CloseCurrentPane = { confirm = false } }) },
+--   --   { key = "Tab", mods = "CTRL|SHIFT", action = wezterm.action({ ActivateTabRelative = -1 }) },
+--   --   { key = "Tab", mods = "CTRL", action = wezterm.action({ ActivateTabRelative = 1 }) },
+--   --   { key = "PageUp", mods = "CTRL|SHIFT", action = wezterm.action.MoveTabRelative(-1) },
+--   --   { key = "PageDown", mods = "CTRL|SHIFT", action = wezterm.action.MoveTabRelative(1) },
+--   --
+--   --   { key = "F11", mods = "", action = wezterm.action.ToggleFullScreen },
+--   --   { key = "=", mods = "ALT", action = wezterm.action.IncreaseFontSize },
+--   --   { key = "-", mods = "ALT", action = wezterm.action.DecreaseFontSize },
+--   --   { key = "L", mods = "CTRL", action = wezterm.action.ShowDebugOverlay },
+--   --
+--   --   { key = "LeftArrow", mods = "ALT|SHIFT", action = wezterm.action.AdjustPaneSize({ "Left", 1 }) },
+--   --   { key = "DownArrow", mods = "ALT|SHIFT", action = wezterm.action.AdjustPaneSize({ "Down", 1 }) },
+--   --   { key = "UpArrow", mods = "ALT|SHIFT", action = wezterm.action.AdjustPaneSize({ "Up", 1 }) },
+--   --   { key = "RightArrow", mods = "ALT|SHIFT", action = wezterm.action.AdjustPaneSize({ "Right", 1 }) },
+--   --
+--   --   { key = "LeftArrow", mods = "ALT", action = wezterm.action.ActivatePaneDirection("Left") },
+--   --   { key = "DownArrow", mods = "ALT", action = wezterm.action.ActivatePaneDirection("Down") },
+--   --   { key = "UpArrow", mods = "ALT", action = wezterm.action.ActivatePaneDirection("Up") },
+--   --   { key = "RightArrow", mods = "ALT", action = wezterm.action.ActivatePaneDirection("Right") },
+--   --
+--   --   { key = "v", mods = "ALT", action = wezterm.action({ SplitHorizontal = { domain = "CurrentPaneDomain" } }) },
+--   --   { key = "s", mods = "ALT", action = wezterm.action({ SplitVertical = { domain = "CurrentPaneDomain" } }) },
+--   --
+--   --   { key = "1", mods = "ALT", action = wezterm.action({ ActivateTab = 0 }) },
+--   --   { key = "2", mods = "ALT", action = wezterm.action({ ActivateTab = 1 }) },
+--   --   { key = "3", mods = "ALT", action = wezterm.action({ ActivateTab = 2 }) },
+--   --   { key = "4", mods = "ALT", action = wezterm.action({ ActivateTab = 3 }) },
+--   --   { key = "5", mods = "ALT", action = wezterm.action({ ActivateTab = 4 }) },
+--   --   { key = "6", mods = "ALT", action = wezterm.action({ ActivateTab = 5 }) },
+--   --   { key = "7", mods = "ALT", action = wezterm.action({ ActivateTab = 6 }) },
+--   --   { key = "8", mods = "ALT", action = wezterm.action({ ActivateTab = 7 }) },
+--   --   { key = "9", mods = "ALT", action = wezterm.action({ ActivateTab = 8 }) },
+--   -- },
+-- }

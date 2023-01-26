@@ -469,3 +469,5 @@ alias sign="sudo codesign --force --deep --sign -"
 # handy things that iuse for work
 alias tmlaunch="~/.dotfiles/bin/tmux-launch"
 alias tmexpo="sh tmux-launch expo 'cd ~/code/outstand/mobile; expo start'"
+
+alias compress="c() { zip -f "$1".zip "$1"} && c $1"

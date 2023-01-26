@@ -21,8 +21,8 @@ local preferred = {
     "Google Chrome",
     "Safari",
   },
-  personal = { "Messages", "Signal" },
-  chat = { "Slack" },
+  personal = { "Messages" },
+  chat = { "Slack", "Signal" },
   media = { "Spotify" },
   vpn = { "Cloudflare WARP" },
 }
@@ -89,7 +89,7 @@ local apps = {
     bundleID = "com.github.wez.wezterm",
     name = "wezterm",
     -- key = "k",
-    quitter = true,
+    -- quitter = true,
     localBindings = {},
     rules = {
       { "", 1, "maximized" },
@@ -258,7 +258,7 @@ local apps = {
     name = "Signal",
     key = "w",
     distraction = true,
-    tags = { "personal" },
+    tags = { "chat" },
     rules = {
       { "", 2, "right50" },
     },

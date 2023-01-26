@@ -4,6 +4,7 @@ vim.g.enabled_plugin = {
   mappings = true,
   autocmds = true,
   megaline = true,
+  statuscolumn = true,
   lsp = false,
   term = true,
   repls = true,
@@ -15,7 +16,7 @@ vim.g.enabled_plugin = {
   folds = true,
   env = true,
   vscode = false,
-  tmux = false,
+  tmux = true,
   winbar = false, -- FIXME: add more!
 }
 -- vim.cmd([[
@@ -29,7 +30,7 @@ for plugin, _ in pairs(vim.g.enabled_plugin) do
   end
 end
 
-vim.g.colorscheme = "megaforest" -- alts: rose-pine, forestbones, tokyonight-storm
+vim.g.colorscheme = "megaforest" -- alts: megaforest, palenightfall, rose-pine, forestbones, tokyonight-storm
 vim.g.default_colorcolumn = "81"
 vim.g.mapleader = ","
 vim.g.maplocalleader = " "

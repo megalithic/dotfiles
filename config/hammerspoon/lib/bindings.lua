@@ -128,9 +128,9 @@ function obj:start()
 
   -- [ group bindings ] --------------------------------------------------------
 
-  group(bindings.apps, "m", "personal") -- e.g., Messages, Signal, etd
+  group(bindings.apps, "m", "personal") -- e.g., Messages, etd
   group(bindings.apps, "j", "browsers") -- e.g., brave, vivaldi, safari, firefox, etc
-  group(bindings.apps, "s", "chat") -- e.g., slack, discord, etc
+  group(bindings.apps, "s", "chat") -- e.g., slack, discord, signal, etc
 
   -- [ utility bindings ] ------------------------------------------------------
 
