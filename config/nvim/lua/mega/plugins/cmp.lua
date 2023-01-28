@@ -204,7 +204,7 @@ function M.config()
             nvim_lua = "[nlua]",
             nvim_lsp_signature_help = "[sig]",
             path = "[path]",
-            rg = "[rg]",
+            -- rg = "[rg]",
             buffer = "[buf]",
             spell = "[spl]",
             cmdline = "[cmd]",
@@ -220,12 +220,12 @@ function M.config()
       { name = "nvim_lsp" },
       { name = "luasnip" },
       { name = "path", option = { trailing_slash = true } },
-      {
-        name = "rg",
-        keyword_length = 4,
-        max_item_count = 10,
-        option = { additional_arguments = "--max-depth 8" },
-      },
+      -- {
+      --   name = "rg",
+      --   keyword_length = 4,
+      --   max_item_count = 10,
+      --   option = { additional_arguments = "--max-depth 8" },
+      -- },
     }, {
       {
         name = "buffer",

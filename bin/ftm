@@ -26,10 +26,10 @@ set -euo pipefail
 # -- set some useful vars for executable info:
 __dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 __file="${__dir}/$(basename "${BASH_SOURCE[0]}")"
-__base="$(basename "${__file}" .sh)"
-__root="$(cd "$(dirname "${__dir}")" && pwd)"
+__base="$(basename "$__file" .sh)"
+__root="$(cd "$(dirname "$__dir")" && pwd)"
 # shellcheck disable=SC2034,SC2015
-__invocation="$(printf %q "${__file}")$( (($#)) && printf ' %q' "$@" || true)"
+__invocation="$(printf %q "$__file")$( (($#)) && printf ' %q' "$@" || true)"
 
 TMUX="${TMUX:-}"
 POPUP="false"
@@ -119,7 +119,7 @@ function get_layouts() {
 # -- change to the given existing session
 function to_session() {
   local session="$1"
-  tmux $change -t "$session"
+  tmux "$change" -t "$session"
 }
 
 # -- new session with pre-defined layout, OR just new basic tmux session
@@ -130,12 +130,12 @@ function new_session() {
     (sh "$layouts_dir/$session.zsh" &&
       to_session "$session" ||
       tmux new-session -d -s "$session" &&
-      to_session "$session") && exit
+    to_session "$session") && exit
   else
     (sh "$layouts_dir/default.zsh" "$session" &&
       to_session "$session" ||
       tmux new-session -d -s "$session" &&
-      to_session "$session") && exit
+    to_session "$session") && exit
   fi
 }
 
@@ -175,7 +175,7 @@ function fuzzy_find() {
   fi
 
   # -- get our session from fzf (grabs the the active pane from each session as preview, too!)
-  try_session "$(echo "$sessions_list" | grep -v "^$(tmux display-message -p '#S')\$" | $fzf_cmd --reverse --border=none --padding="1" --preview-window="hidden" --prompt="$fzf_prompt_text" --header="$fzf_header_text" --bind="enter:replace-query+print-query" --preview="$preview_cmd")"
+  try_session "$(echo "$sessions_list" | grep -v "^$(tmux display-message -p '#S')\$" | "$fzf_cmd" --reverse --border=none --padding="1" --preview-window="hidden" --prompt="$fzf_prompt_text" --header="$fzf_header_text" --bind="enter:replace-query+print-query" --preview="$preview_cmd")"
 }
 
 # -- if we pass in a session_name: attach/switch to it or, create new session

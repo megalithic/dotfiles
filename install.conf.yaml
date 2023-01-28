@@ -121,6 +121,9 @@
     ~/.config/nvim:
       force: true
       path: config/nvim
+    ~/.config/ngrok:
+      force: true
+      path: config/ngrok
     ~/.config/ripgrep:
       force: true
       path: config/ripgrep

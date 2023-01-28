@@ -75,7 +75,7 @@ function M.init()
   end
 
   local function on_uienter(evt)
-    vim.cmd.colorscheme("forestbones")
+    -- vim.cmd.colorscheme("forestbones")
 
     -- disable headlines (until we update colours for forestbones)
     local ok_headlines, headlines = mega.require("headlines")

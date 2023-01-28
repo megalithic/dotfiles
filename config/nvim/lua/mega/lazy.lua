@@ -95,7 +95,7 @@ function M.setup()
     },
     install = {
       missing = true,
-      colorscheme = { vim.g.colorscheme, "everforest" },
+      colorscheme = { vim.g.colorscheme, "forestbones" },
     },
     dev = { patterns = { "megalithic" } },
     performance = {

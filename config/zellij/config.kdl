@@ -301,16 +301,16 @@ plugins {
 theme = "megaforest"
 themes {
     megaforest {
-        fg "#D8DEE9"
-        bg "#2E3440"
-        black "#3B4252"
-        red "#BF616A"
-        green "#A3BE8C"
-        yellow "#EBCB8B"
-        blue "#81A1C1"
-        magenta "#B48EAD"
-        cyan "#88C0D0"
+        fg "#d8caac"
+        bg "#3c474d"
+        black "#2b3339"
+        red "#e67e80"
+        green "#a7c080"
+        yellow "#d9bb80"
+        blue "#7fbbb3"
+        magenta "#d39bb6"
+        cyan "#87c095"
         white "#E5E9F0"
-        orange "#D08770"
+        orange "#e39b7b"
     }
 }

@@ -510,3 +510,5 @@ fzf = !"                                                                        
   # A local gitconfig, outside of version control.
   # If the file doesn't exist it is silently ignored
   path = ~/.gitconfig_local
+[init]
+	defaultBranch = main
