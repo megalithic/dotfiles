@@ -24,7 +24,6 @@ tap "federico-terzi/espanso" if OS.mac? # legacy version (pre 2.x) -- preferred!
 # tap "mhanberg/zk" if OS.mac?
 tap "wez/wezterm" if OS.mac?
 tap "FelixKratz/formulae" if OS.mac? # sketchyvim
-tap "mutagen-io/mutagen" # mutagen is handled via remote-dev@outstand
 
 # -- for qmk_toolbox --
 # brew tap osx-cross/avr;
@@ -47,8 +46,8 @@ tap "mutagen-io/mutagen" # mutagen is handled via remote-dev@outstand
 
 # -- cli --
 
-brew "ansible" if OS.mac?
-# brew "asdf"
+# brew "ansible" if OS.mac?
+brew "asdf"
 brew "asciidoctor" if OS.mac?
 brew "autoconf"
 brew "automake"
@@ -78,7 +77,6 @@ brew "docker-machine" # , restart_service: true, link: false
 brew "duck" # cli for cyberduck
 # brew "elixir-ls" # disabled for now, as we're manually installing via dotbot
 brew "espanso" if OS.mac?
-brew "MisterTea/et/et"
 brew "exa"
 brew "exercism" if OS.mac?
 brew "fasd"
@@ -91,7 +89,6 @@ brew "fontforge" if OS.mac?
 brew "fop" # used for asdf erlang
 brew "fx" # jq but better
 brew "fzf" # -> $(brew --prefix)/opt/fzf/install
-brew "fzy"
 brew "gawk"
 brew "gdb"
 brew "gist"
@@ -108,7 +105,6 @@ brew "gotop"
 brew "gpg" # required for asdf-nodejs
 brew "grc"
 brew "gum" # for super dope scripts
-brew "heroku" if OS.mac?
 brew "highlight"
 brew "hopenpgp-tools"
 brew "htop"
@@ -132,10 +128,7 @@ brew "luv"
 brew "mas" if OS.mac?
 brew "mkcert"
 brew "moreutils"
-brew "mosh", args: ["HEAD"] if OS.mac?
-brew "mutagen"
 brew "mycli"
-brew "mysql"
 brew "nb" if OS.mac?
 brew "ncurses"
 # brew "neovim", args: ["HEAD"] # building from source now
@@ -154,17 +147,20 @@ brew "pgcli"
 brew "pkg-config"
 brew "pigz"
 brew "pinentry-mac" if OS.mac?
-brew "postgresql" if OS.mac?
+# --
+# POST-install for postgresql:
 # initdb /usr/local/var/postgres -E utf8
 # psql -> CREATE USER postgres SUPERUSER;
-brew "python@3.7", link: false
-brew "python@3.8", link: false
-brew "python@3.9", link: false
-brew "python@3.10", link: true
+brew "postgresql@15", link: true if OS.mac?
+#--
+# brew "python@3.7", link: false
+# brew "python@3.8", link: false
+# brew "python@3.9", link: false
+# brew "python@3.10", link: false
+brew "python@3.11", link: true
 brew "readline"
 brew "reattach-to-user-namespace" if OS.mac?
 brew "ren"
-brew "redis"
 brew "ripgrep"
 brew "ruby-build" # needed for asdf/ruby
 brew "rust"
@@ -205,7 +201,7 @@ brew "viu" # used with fzf-lua for image rendering
 brew "ykman"
 brew "yubikey-personalization" if OS.mac?
 brew "yj"
-brew "zellij"
+# brew "zellij"
 # brew "mhanberg/zk/zk", args: ["build-from-source"] if OS.mac?
 brew "zk", args: ["HEAD"] if OS.mac?
 brew "zoxide"
@@ -241,15 +237,13 @@ cask "font-caskaydia-cove-nerd-font"
 # - gui
 cask "1password"
 cask "1password-cli"
-cask "acorn" # image editor
 cask "alfred"
-cask "android-studio" if OS.mac?
-cask "backblaze"
+# cask "android-studio" if OS.mac?
+# cask "backblaze"
 cask "balenaetcher"
 cask "bartender"
 cask "bettertouchtool"
-# cask "box-drive"
-cask "brave-browser"
+cask "brave-browser-dev"
 cask "cameracontroller"
 cask "cloudflare-warp"
 cask "colorsnapper"
@@ -265,15 +259,15 @@ cask "dropbox"
 # cask "discord"
 # cask "expressvpn"
 cask "figma"
-cask "firefox"
+cask "firefox-developer-edition"
 cask "flux"
-cask "google-chrome"
+# cask "google-chrome"
 cask "forklift" # replaced with marta for now
 cask "hazel"
 cask "hammerspoon", greedy: true
 cask "intel-power-gadget" # requires restart with security allow (intel things)
 cask "insomnia"
-cask "inkscape"
+# cask "inkscape"
 cask "istat-menus"
 cask "itsycal"
 cask "kap"
@@ -286,20 +280,19 @@ cask "loom"
 cask "micro-snitch"
 cask "microsoft-edge"
 cask "mos"
-cask "ngrok"
+# cask "ngrok"
 cask "notion"
 cask "obsidian"
 # cask "oracle-jdk"
 cask "postico"
 # cask "qmk-toolbox"
-# cask "qutebrowser" # sudo xattr -dr com.apple.quarantine /Applications/qutebrowser.app
+cask "qutebrowser" if OS.mac? # sudo xattr -dr com.apple.quarantine /Applications/qutebrowser.app
 cask "signal"
 cask "slack"
 cask "soundsource", greedy: true
 cask "spotify"
 cask "tableplus"
-cask "tailscale" if OS.mac?
-cask "thingsmacsandboxhelper"
+# cask "thingsmacsandboxhelper"
 # cask "vagrant"
 # cask "vimac"  # FIXME: this requires a click-based install (https://install.appcenter.ms/users/dexterleng/apps/vimac/distribution_groups/sparkle)
 cask "the-unarchiver"

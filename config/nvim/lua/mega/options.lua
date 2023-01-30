@@ -55,7 +55,8 @@ vim.opt.fillchars = {
   diff = "╱", -- alts: = ⣿ ░ ─
   msgsep = " ", -- alts: ‾ ─
   foldopen = mega.icons.misc.fold_open, -- alts: ▾
-  foldsep = "│",
+  -- foldsep = "│",
+  foldsep = " ",
   foldclose = mega.icons.misc.fold_close, -- alts: ▸
 }
 -----------------------------------------------------------------------------//
@@ -71,7 +72,7 @@ vim.opt.diffopt = vim.opt.diffopt
     "context:4",
     "algorithm:histogram",
     "indent-heuristic",
-    -- "linematch:60",
+    "linematch:60",
   }
 -----------------------------------------------------------------------------//
 -- Format Options {{{1
@@ -310,6 +311,8 @@ vim.opt.guicursor = {
 }
 -- ]])
 
+-- vim.wo.number = true
+-- vim.wo.relativenumber = true
 -- NOTE: plugin/cursorline.lua has more...
 vim.o.cursorline = true -- Show a line where the current cursor is
 vim.o.cursorlineopt = "number" -- optionally -> "screenline,number,both"

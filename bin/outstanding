@@ -1,8 +1,0 @@
-#!/bin/bash
-
-set -euo pipefail
-
-if [[ "$(uname)" == "Linux" && "$(hostname)" == "seth-dev" ]]; then
-  dev update
-  ln -sfv "$DOTS/git/gitconfig_work" ~/.gitconfig_work
-fi

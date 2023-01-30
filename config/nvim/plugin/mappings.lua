@@ -59,8 +59,9 @@ nmap("gb", string.format("<cmd>ls<CR>:b<space>%s", mega.replace_termcodes("<tab>
 nmap("J", "<nop>")
 nmap("gx", mega.open_uri, "open uri under cursor")
 
-nmap("zs", mega.showCursorHighlights, "show syntax highlights under cursor")
+-- nmap("zs", mega.showCursorHighlights, "show syntax highlights under cursor")
 nmap("zS", mega.showCursorHighlights, "show syntax highlights under cursor")
+nnoremap("zs", "<cmd>Inspect<cr>", "Inspect the cursor position")
 
 nmap("<localleader>yg", "<cmd>CopyBranch<cr>", { desc = "Copy current git branch" })
 nmap("<localleader>ygh", "<cmd>CopyBranch<cr>", { desc = "Copy current git branch" })

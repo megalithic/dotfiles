@@ -102,6 +102,11 @@ local M = {
     },
     {
       "<leader>A",
+      function() require("telescope.builtin").grep_string(ivy({})) end,
+      desc = "grep under cursor",
+    },
+    {
+      "<leader>A",
       function()
         local pattern = require("mega.utils").get_visual_selection()
         require("telescope.builtin").grep_string(ivy({ search = pattern }))

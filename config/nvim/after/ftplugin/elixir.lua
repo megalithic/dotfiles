@@ -17,7 +17,7 @@ vim.cmd([[iabbrev ep    \|>]])
 vim.cmd([[iabbrev epry  require IEx; IEx.pry]])
 vim.cmd([[iabbrev ei    IO.inspect]])
 vim.cmd([[iabbrev eputs IO.puts]])
-vim.cmd([[iabbrev ed    dbg()]])
+vim.cmd([[iabbrev ed    dbg()<ESC>hi]])
 
 -- get back matchit things for elixir (from elixir.vim)
 -- https://github.com/elixir-editors/vim-elixir/blob/master/ftplugin/elixir.vim#L6-L16

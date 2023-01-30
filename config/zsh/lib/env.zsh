@@ -193,8 +193,7 @@ case "$(uname)" in
     export HOMEBREW_CASK_OPTS="--appdir=/Applications"
     export HOMEBREW_NO_INSTALL_CLEANUP=TRUE
     export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=FALSE
-    # FIXME: presently failing for svim and other build-from-source formulae
-    # export HOMEBREW_INSTALL_FROM_API=1
+    export HOMEBREW_NO_INSTALL_FROM_API=1
     export BREW_PATH="$HOMEBREW_PREFIX/Homebrew"
     export BREW_CASK_PATH="/opt/homebrew-cask/Caskroom"
 
@@ -207,6 +206,7 @@ case "$(uname)" in
       # export CPPFLAGS="$CPPFLAGS -I$(brew --prefix)/opt/libffi/include"
       export PKG_CONFIG_PATH="$PKG_CONFIG_PATH $(brew --prefix)/opt/libffi/lib/pkgconfig"
       export PKG_CONFIG_PATH="$PKG_CONFIG_PATH $(brew --prefix)/opt/openssl@1.1/lib/pkgconfig"
+
       # export ERLANG_OPENSSL_PATH="/usr/local/opt/openssl@1.1"
       # export ERLANG_OPENSSL_PATH="/usr/local/opt/openssl@3"
 
@@ -261,6 +261,12 @@ case "$(uname)" in
 
   # This resolves issues install the mysql, postgres, and other gems with native non universal binary extensions
   export ARCHFLAGS='-arch x86_64'
+
+
+  # postgresql
+  # export LDFLAGS="-L/usr/local/opt/postgresql@15/lib"
+  # export CPPFLAGS="-I/usr/local/opt/postgresql@15/include"
+  # export PKG_CONFIG_PATH="/usr/local/opt/postgresql@15/lib/pkgconfig"
 
   # CTAGS Sorting in VIM/Emacs is better behaved with this in place
   export LC_COLLATE=C
@@ -349,6 +355,8 @@ case "$(uname)" in
     /usr/local/lib/node_modules
     /usr/local/opt/libffi/lib
     /usr/local/opt/gnu-sed/libexec/gnubin
+    /usr/local/opt/postgresql@15/bin
+
     # /usr/local/opt/imagemagick@6/bin
     # /usr/local/opt/qt@5.5/bin
     # /usr/local/opt/mysql@5.6/bin

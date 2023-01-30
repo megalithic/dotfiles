@@ -14,6 +14,7 @@ function M.config()
     },
     _threaded_diff = true,
     _extmark_signs = true,
+    _signs_staged_enable = true,
     preview_config = {
       border = mega.get_border(),
     },

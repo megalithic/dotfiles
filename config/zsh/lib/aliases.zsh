@@ -202,7 +202,7 @@ alias ezf="nvim $DOTS/config/zsh/**/funcs.zsh"
 alias ezo="nvim $DOTS/config/zsh/**/opts.zsh"
 alias eze="nvim $DOTS/config/zsh/**/env.zsh"
 alias ezkb="nvim $DOTS/config/zsh/**/keybindings.zsh"
-alias ezl="nvim $PRIVATES/home/localrc"
+alias ezl="nvim $DOTS/config/zsh/**/local.zsh"
 
 alias ev="nvim $DOTS/config/nvim/init.lua"
 alias evv="nvim $DOTS/config/nvim/vimrc"

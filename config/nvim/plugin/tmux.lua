@@ -1,5 +1,6 @@
 -- NOTE:
 -- This plugin is meant to work with the tmux-navigate tmux navigation plugin.
+-- REF: maybe try: https://github.com/numToStr/Navigator.nvim
 --
 
 if not mega then return end

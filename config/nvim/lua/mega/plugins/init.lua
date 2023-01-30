@@ -60,7 +60,7 @@ return {
   -- ( UI ) --------------------------------------------------------------------
   {
     "rktjmp/lush.nvim",
-    lazy = false,
+    lazy = true,
     priority = 1000,
     config = function()
       require("lush")(require("mega.lush_theme.megaforest"))
@@ -615,6 +615,7 @@ return {
   {
     "akinsho/git-conflict.nvim",
     lazy = false,
+    dependencies = "rktjmp/lush.nvim",
     config = function()
       require("git-conflict").setup({
         disable_diagnostics = true,
@@ -1088,6 +1089,7 @@ return {
   "kchmck/vim-coffee-script",
   "briancollins/vim-jst",
   { "imsnif/kdl.vim", ft = "kdl" },
+  { "chr4/nginx.vim", ft = "nginx" },
   -- { "tpope/vim-rails" },
   -- { "ngscheurich/edeex.nvim" },
   -- { "antew/vim-elm-analyse" },

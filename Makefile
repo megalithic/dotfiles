@@ -17,6 +17,7 @@ up: ## Runs the main update script (idempotent); use after `make install`
 
 install: ## Runs the main dotbot install script (not for updating)
 	./install
+  ./macos
 
 xcode: ## Install Xcode + CLI tools
 	$(HOME)/.dotfiles/bin/xcode-install -f

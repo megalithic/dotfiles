@@ -35,7 +35,7 @@ tmux -2 select-layout -t "$SESSION":2 main-vertical
 tmux -2 select-pane -t "$SESSION":2.1
 
 # Window "services"
-tmux -2 send-keys -t "$SESSION":3.1 m s C-m
+tmux -2 send-keys -t "$SESSION":3.1 m\ s C-m
 # tmux -2 send-keys -t "$SESSION":3.1 ssh\ seth-dev C-m
 # tmux -2 send-keys -t "$SESSION":3.1 cd\ \~/code/"$SESSION" C-m
 # tmux -2 send-keys -t "$SESSION":3.1 eval\ \$\(desk\ load\) C-m
@@ -44,7 +44,7 @@ tmux -2 send-keys -t "$SESSION":3.1 m s C-m
 tmux -2 splitw -c "$CWD" -t "$SESSION":3
 tmux -2 select-layout -t "$SESSION":3 tiled
 
-tmux -2 send-keys -t "$SESSION":3.2 ngrok http 4002 C-m
+tmux -2 send-keys -t "$SESSION":3.2 ngrok\ http\ 4002 C-m
 # tmux -2 send-keys -t "$SESSION":3.2 ssh\ seth-dev C-m
 # tmux -2 send-keys -t "$SESSION":3.2 cd\ \~/code/"$SESSION" C-m
 # tmux -2 send-keys -t "$SESSION":3.2 eval\ \$\(desk\ load\)\;\ iex\ -S\ mix C-m

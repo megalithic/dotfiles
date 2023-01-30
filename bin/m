@@ -26,6 +26,16 @@ case $1 in
     fi
     ;;
 
+  new)
+    # if grep --quiet -E " new: \[" mix.exs; then
+    shift
+    mix archive.install hex phx_new 1.7.0-rc.2
+    mix phx.new . --app "$@"
+    # else
+    #   mix deps.get && mix compile
+    # fi
+    ;;
+
   setup)
     if grep --quiet -E " setup: \[" mix.exs; then
       shift
@@ -34,7 +44,6 @@ case $1 in
       mix deps.get && mix compile
     fi
     ;;
-
   d)
     shift
     if grep --quiet -E "ex_doc.*only: :docs" mix.exs; then
