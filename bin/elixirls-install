@@ -20,6 +20,8 @@ __root="$(cd "$(dirname "$__dir")" && pwd)"
 __invocation="$(printf %q "$__file")$( (($#)) && printf ' %q' "$@" || true)"
 
 ELIXIRLS_PATH="${XDG_DATA_HOME}/lsp/elixir-ls"
+mkdir -p "$ELIXIRLS_PATH"
+
 VERSION="${1:-stable}"
 TARGET=""
 BINARY=""
