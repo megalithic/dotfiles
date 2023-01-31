@@ -169,7 +169,7 @@ brew "qt" if OS.mac?
 brew "shellcheck"
 brew "shfmt"
 brew "ssh-copy-id"
-brew "stack"
+# brew "stack"
 # brew "starship"
 brew "stow"
 # brew "sketchybar", restart_service: true if OS.mac? # sketchybar
@@ -181,7 +181,7 @@ brew "tidy-html5"
 brew "timg" if OS.mac? # for image rendering in kitty
 brew "tldr"
 brew "tmux", args: ["HEAD"] if OS.mac? # , args: ["HEAD"]
-brew "transcrypt" if OS.mac?
+brew "transcrypt", args: ["HEAD"] if OS.mac?
 brew "trash" if OS.mac?
 brew "tree"
 brew "tree-sitter"
@@ -274,10 +274,10 @@ cask "kap"
 cask "karabiner-elements"
 cask "keycastr"
 cask "kitty", greedy: true
-cask "little-snitch4" # requires kernel extension, see notes from install message
+# cask "little-snitch4" # requires kernel extension, see notes from install message
 cask "loom"
 # cask "marta"
-cask "micro-snitch"
+# cask "micro-snitch"
 cask "microsoft-edge"
 cask "mos"
 # cask "ngrok"
@@ -291,7 +291,7 @@ cask "signal"
 cask "slack"
 cask "soundsource", greedy: true
 cask "spotify"
-cask "tableplus"
+# cask "tableplus"
 # cask "thingsmacsandboxhelper"
 # cask "vagrant"
 # cask "vimac"  # FIXME: this requires a click-based install (https://install.appcenter.ms/users/dexterleng/apps/vimac/distribution_groups/sparkle)
