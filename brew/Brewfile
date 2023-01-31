@@ -279,6 +279,7 @@ cask "kitty", greedy: true
 cask "loom"
 # cask "marta"
 # cask "micro-snitch"
+cask "mailmate-beta"
 cask "microsoft-edge"
 cask "mos" # mouse thingy
 # cask "ngrok"
