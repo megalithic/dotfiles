@@ -9,7 +9,7 @@ fi
 
 [[ -f "${XDG_CONFIG_HOME}/zsh/lib/helpers.zsh" ]] && source "${XDG_CONFIG_HOME}/zsh/lib/helpers.zsh"
 
-set -euo pipefail
+# set -euo pipefail
 
 # clean_exit defined in helpers.zsh
 # trap 'clean_exit $? $LINENO' EXIT
@@ -31,7 +31,9 @@ do_update() {
 
 do_install() {
   log "installing homebrew ($(uname)).."
+  export NONINTERACTIVE=1
   NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" &&
+  # /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" &&
   log_ok "completed installing brew." ||
   exit 1
 

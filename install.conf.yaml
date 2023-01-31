@@ -31,7 +31,7 @@
     - description:
       quiet: true
       command: >-
-        ~/.dotfiles/bin/dotbanner;
+        source ~/.dotfiles/config/zsh/lib/helpers.zsh && ~/.dotfiles/bin/dotbanner;
 
 - create:
     - ~/code
@@ -56,22 +56,22 @@
     - description: Decrypting repo..
       quiet: true
       command: >-
-        ~/.dotfiles/bin/transdec;
+        source ~/.dotfiles/config/zsh/lib/helpers.zsh && ~/.dotfiles/bin/transdec;
 
     - description: Installing submodules..
       quiet: true
       command: >-
-        git submodule update --init --recursive;
+        source ~/.dotfiles/config/zsh/lib/helpers.zsh && git submodule update --init --recursive;
 
     - description: Attempting to install Homebrew..
       quiet: true
       command: >-
-        ~/.dotfiles/bin/brew-install -f;
+        source ~/.dotfiles/config/zsh/lib/helpers.zsh && ~/.dotfiles/bin/brew-install -f;
 
     - description: Attempting to install ASDF..
       quiet: true
       command: >-
-        ~/.dotfiles/bin/asdf-install -f;
+        source ~/.dotfiles/config/zsh/lib/helpers.zsh && ~/.dotfiles/bin/asdf-install -f;
 
 - link:
     # ----- home
@@ -238,15 +238,15 @@
       command: >-
         chmod 0700 ~/.config/gnupg;
 
-- brewfile:
-    file: brew/Brewfile
+# - brewfile:
+#     file: brew/Brewfile
 
 - shell:
     - description: Attempting post-install commands..
       quiet: true
       command: >-
         echo "Attempting to source helpers.zsh..";
-        source $HOME/.config/zsh/lib/helpers.zsh;
+        source ~/.dotfiles/config/zsh/lib/helpers.zsh;
 
         log "Attempting to install all git submodules..";
         git submodule update --init --recursive

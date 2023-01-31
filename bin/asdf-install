@@ -51,7 +51,8 @@ install_plugins() {
   #     https://github.com/asdf-community/asdf-link
 
   set +o pipefail +e
-  for plugin in erlang elixir nodejs ruby elm golang lua rust python; do
+  # for plugin in erlang elixir nodejs ruby elm golang lua rust python; do
+  for plugin in erlang elixir nodejs ruby golang lua rust; do
     log "installing asdf plugin: $plugin"
 
     asdf plugin add "$plugin" "https://github.com/asdf-vm/asdf-$plugin.git"
