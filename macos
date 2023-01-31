@@ -544,10 +544,11 @@ done
 
 apps_to_launch=(
   "1Password"
-  "Alfred 4"
+  "Alfred 5"
   "Bartender 4"
   "BetterTouchTool"
   "Brave Browser Dev"
+  "Cloudflare WARP"
   "Colorsnapper2"
   "Contexts"
   # "Dropbox"
@@ -557,6 +558,7 @@ apps_to_launch=(
   "iStat Menus"
   "Karabiner-Elements"
   "kitty"
+  "Messages"
 )
 for app in "${apps_to_launch[@]}"; do
   if [[ ! "$(app_is_running "${app}")" == "true" ]]; then
@@ -568,9 +570,10 @@ done
 
 apps_to_startup=(
   "1Password"
-  "Alfred 4"
+  "Alfred 5"
   "Bartender 4"
   "BetterTouchTool"
+  "Cloudflare WARP"
   "Colorsnapper2"
   "Contexts"
   # "Dropbox"
