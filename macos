@@ -1,4 +1,4 @@
-#!/usr/bin/env zsh
+#!/bin/zsh
 #
 # REF:
 # - https://github.com/akinsho/dotfiles/commit/f7e40d7bf018488d49e5f83f3ceef9e4b0d41d48
@@ -6,6 +6,8 @@
 # - https://github.com/caarlos0/dotfiles.fish/blob/main/macos/set-defaults.sh
 # TODO:
 # - https://www.youtube.com/watch?v=psPgSN1bPLY&t=349s
+
+[[ -f "$HOME/.dotfiles/config/zsh/lib/helpers.zsh" ]] && source "$HOME/.dotfiles/config/zsh/lib/helpers.zsh"
 
 # Close any open System Preferences panes, to prevent them from overriding
 # settings we’re about to change

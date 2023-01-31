@@ -12,6 +12,19 @@ if [[ -z ${BASH_SOURCE} ]]; then
   exit 1
 fi
 
+[[ -f "$HOME/.dotfiles/config/zsh/lib/helpers.zsh" ]] && source "$HOME/.dotfiles/config/zsh/lib/helpers.zsh"
+
+  # gather sudo privileges:
+  log_warn "needs sudo for things:"
+  sudo -v || exit 1
+
+  # Keep-alive: update existing `sudo` time stamp until setup has finished
+  while true; do
+    sudo -n true
+    sleep 60
+    kill -0 "$$" || exit
+  done 2>/dev/null &
+
 BASEDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 CONFIG="install.conf.yaml"

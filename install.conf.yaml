@@ -31,7 +31,7 @@
     - description:
       quiet: true
       command: >-
-        source ~/.dotfiles/config/zsh/lib/helpers.zsh && ~/.dotfiles/bin/dotbanner;
+        ~/.dotfiles/bin/dotbanner;
 
 - create:
     - ~/code
@@ -40,6 +40,8 @@
     - ~/.config
     - ~/.cache
     - ~/.cache/zsh
+    - ~/.cache/nvim
+    - ~/.cache/nvim/undo
     - ~/.local/state
     - ~/.local/share/packages
     - ~/.local/share/src
@@ -53,25 +55,26 @@
       recursive: true
 
 - shell:
-    - description: Decrypting repo..
-      quiet: true
-      command: >-
-        source ~/.dotfiles/config/zsh/lib/helpers.zsh && ~/.dotfiles/bin/transdec;
-
     - description: Installing submodules..
       quiet: true
       command: >-
-        source ~/.dotfiles/config/zsh/lib/helpers.zsh && git submodule update --init --recursive;
+        git submodule update --init --recursive;
 
     - description: Attempting to install Homebrew..
       quiet: true
       command: >-
-        source ~/.dotfiles/config/zsh/lib/helpers.zsh && ~/.dotfiles/bin/brew-install -f;
+        ~/.dotfiles/bin/brew-install -f;
+
+    - description: Decrypting repo..
+      quiet: true
+      command: >-
+        ~/.dotfiles/bin/transdec;
+
 
     - description: Attempting to install ASDF..
       quiet: true
       command: >-
-        source ~/.dotfiles/config/zsh/lib/helpers.zsh && ~/.dotfiles/bin/asdf-install -f;
+        ~/.dotfiles/bin/asdf-install -f;
 
 - link:
     # ----- home
@@ -294,9 +297,6 @@
         log "Attempting to do platform-specific configs..";
         [[ $(uname) == "Darwin" ]] && ./macos;
         [[ $(uname) == "Linux" ]] && ./linux;
-
-        # @see: https://github.com/ahmedelgabri/dotfiles#notes
-        # [/usr/local/bin/zsh -ic "compaudit | xargs chmod g-w", Handle compaudit insecure directories] # https://stackoverflow.com/a/22753363/213904
 
 - ghe:
     - mislav/gh-branch

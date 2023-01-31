@@ -7,9 +7,9 @@ if [[ -z $XDG_CONFIG_HOME ]]; then
   export XDG_CONFIG_HOME="$HOME/.config"
 fi
 
-[[ -f "${XDG_CONFIG_HOME}/zsh/lib/helpers.zsh" ]] && source "${XDG_CONFIG_HOME}/zsh/lib/helpers.zsh"
+[[ -f "~/.dotfiles/config/zsh/lib/helpers.zsh" ]] && source "~/.dotfiles/config/zsh/lib/helpers.zsh"
 
-set -euo pipefail
+#set -euo pipefail
 
 # -- set some useful vars for executable info:
 __dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

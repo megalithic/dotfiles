@@ -1,4 +1,6 @@
-#!/bin/bash
+#!/bin/zsh
+
+#set -x
 
 if [[ -z $XDG_DATA_HOME ]]; then
   export XDG_DATA_HOME="$HOME/.local/share"
@@ -7,7 +9,7 @@ if [[ -z $XDG_CONFIG_HOME ]]; then
   export XDG_CONFIG_HOME="$HOME/.config"
 fi
 
-[[ -f "${XDG_CONFIG_HOME}/zsh/lib/helpers.zsh" ]] && source "${XDG_CONFIG_HOME}/zsh/lib/helpers.zsh"
+[[ -f "$HOME/.dotfiles/config/zsh/lib/helpers.zsh" ]] && source "$HOME/.dotfiles/config/zsh/lib/helpers.zsh"
 
 # set -euo pipefail
 
@@ -33,7 +35,7 @@ do_install() {
   log "installing homebrew ($(uname)).."
   export NONINTERACTIVE=1
   NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" &&
-  # /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" &&
+  #/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" &&
   log_ok "completed installing brew." ||
   exit 1
 

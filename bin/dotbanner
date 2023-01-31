@@ -1,9 +1,9 @@
-#!/usr/bin/env bash
+#!/bin/zsh
 
 # https://vaneyckt.io/posts/safer_bash_scripts_with_set_euxo_pipefail/
-set -Eueo pipefail
+#set -Eueo pipefail
 
-[[ -f "${XDG_CONFIG_HOME}/zsh/lib/helpers.zsh" ]] && source "${XDG_CONFIG_HOME}/zsh/lib/helpers.zsh"
+[[ -f "$HOME/.dotfiles/config/zsh/lib/helpers.zsh" ]] && source "$HOME/.dotfiles/config/zsh/lib/helpers.zsh"
 
 command cat <<EOF
 ${green}
@@ -15,7 +15,7 @@ ${green}
 ░${reset}
 EOF
 
-if [ -d "$DOTS/.git" ]; then
+if [ -d "~/.dotfiles/.git" ]; then
   command cat <<EOF
 ${blue}░  
 ░

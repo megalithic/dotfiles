@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/zsh
 
 if [[ -z $XDG_DATA_HOME ]]; then
   export XDG_DATA_HOME="$HOME/.local/share"
@@ -7,9 +7,9 @@ if [[ -z $XDG_CONFIG_HOME ]]; then
   export XDG_CONFIG_HOME="$HOME/.config"
 fi
 
-[[ -f "${XDG_CONFIG_HOME}/zsh/lib/helpers.zsh" ]] && source "${XDG_CONFIG_HOME}/zsh/lib/helpers.zsh"
+[[ -f "$HOME/.dotfiles/config/zsh/lib/helpers.zsh" ]] && source "$HOME/.dotfiles/config/zsh/lib/helpers.zsh"
 
-set -euo pipefail
+# set -euo pipefail
 
 # -- set some useful vars for executable info:
 __dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -66,5 +66,7 @@ do_install() {
     exit 1
   fi
 }
+
+asdf reshim elixir
 
 do_install || exit 1
