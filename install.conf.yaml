@@ -303,7 +303,7 @@
         [[ $(uname) == "Darwin" ]] && chown -R seth ~/.config;
 
 
-- ghe:
-    - mislav/gh-branch
-    - dlvhdr/gh-prs
-    - yusukebe/gh-markdown-preview
+# - ghe:
+#     - mislav/gh-branch
+#     - dlvhdr/gh-prs
+#     - yusukebe/gh-markdown-preview
