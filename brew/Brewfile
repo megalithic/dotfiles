@@ -281,21 +281,16 @@ cask "loom"
 # cask "micro-snitch"
 cask "mailmate-beta"
 cask "microsoft-edge"
-cask "mos" # mouse thingy
 # cask "ngrok"
 # cask "notion"
 cask "obsidian"
 # cask "oracle-jdk"
-cask "postico"
-# cask "qmk-toolbox"
 cask "qutebrowser" if OS.mac? # sudo xattr -dr com.apple.quarantine /Applications/qutebrowser.app
 cask "signal"
 cask "slack"
 cask "soundsource", greedy: true
 cask "spotify"
-# cask "tableplus"
 # cask "thingsmacsandboxhelper"
-# cask "vagrant"
 # cask "vimac"  # FIXME: this requires a click-based install (https://install.appcenter.ms/users/dexterleng/apps/vimac/distribution_groups/sparkle)
 cask "the-unarchiver"
 cask "utm" # similar parallels
@@ -303,7 +298,7 @@ cask "utm" # similar parallels
 # cask "virtualbox" # requires restart with security allow (oracle things)
 # cask "witch" # using contexts in stead
 # cask "yubico-authenticator"
-# cask "wez/wezterm/wezterm-nightly"
+cask "wez/wezterm/wezterm-nightly"
 cask "yubico-yubikey-manager"
 cask "yubico-yubikey-piv-manager"
 cask "zoom"

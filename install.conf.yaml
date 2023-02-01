@@ -201,6 +201,7 @@
       force: true
       if: "[ `uname` = Darwin ]"
       path: misc/mailmate/megabindings.plist
+      # POST-symlink: ensure you add `, Mega` to the keybind settings in Mailmate
     ~/Library/Application Support/Google/Chrome/NativeMessagingHosts/surfingkeys.json:
       force: true
       if: "[ `uname` = Darwin ]"

@@ -214,6 +214,7 @@ local apps = {
     rules = {
       { "", 2, "left50" },
       { "Inbox", 2, "maximized" },
+      { "All Messages", 2, "maximized" },
     },
   },
 

@@ -23,6 +23,8 @@ packer_compiled.lua
 
 home/ssh/seth-megabook
 home/ssh/seth-megabook.pub
+home/ssh/known_hosts
+home/ssh/known_hosts.old
 
 # gnupg/gpg
 config/gnupg/**/*
