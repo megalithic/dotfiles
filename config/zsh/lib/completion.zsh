@@ -26,9 +26,9 @@ compdef g=git
 # compaudit | xargs chmod g-w
 
 # Kitty completions
-if [[ "$TERM" == "xterm-kitty" && "$(uname)" == "Darwin" ]]; then
-  kitty + complete setup zsh | source /dev/stdin
-fi
+# if [[ "$TERM" == "xterm-kitty" && "$(uname)" == "Darwin" ]]; then
+#   kitty + complete setup zsh | source /dev/stdin
+# fi
 
 # Colorize completions using default `ls` colors.
 # zstyle ':completion:*' list-colors ''

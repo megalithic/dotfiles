@@ -216,10 +216,19 @@ local apps = {
       { "Inbox", 2, "maximized" },
     },
   },
+
+  ["com.binarynights.ForkLift-3"] = {
+    bundleID = "com.binarynights.ForkLift-3",
+    name = "ForkLift",
+    key = "f",
+    rules = {
+      { "", 1, "centeredLarge" },
+    },
+  },
   ["com.apple.finder"] = {
     bundleID = "com.apple.finder",
     name = "Finder",
-    key = "f",
+    -- key = "f",
     rules = {
       { "Finder", 1, "centeredMedium" },
     },

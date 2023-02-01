@@ -21,6 +21,9 @@ config/gh/hosts.yml
 **/packer_compiled.lua
 packer_compiled.lua
 
+home/ssh/seth-megabook
+home/ssh/seth-megabook.pub
+
 # gnupg/gpg
 config/gnupg/**/*
 !config/gnupg/gpg-agent.conf

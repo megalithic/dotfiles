@@ -12,11 +12,13 @@
 *.cs    diff=csharp
 *.css   diff=css
 *.html  diff=html
-*.xhtml diff=html
 *.ex    diff=elixir
 *.exs   diff=elixir
+*.html.heex diff=phoenix_html
+*.heex   diff=phoenix_html
 *.go    diff=golang
 *.php   diff=php
+*.lua   diff=lua
 *.pl    diff=perl
 *.py    diff=python
 *.md    diff=markdown
@@ -39,4 +41,4 @@ bin/slck filter=crypt diff=crypt merge=crypt
 config/ngrok/ngrok.yml filter=crypt diff=crypt merge=crypt
 config/newtab/etc_apache2_httpd.conf filter=crypt diff=crypt merge=crypt
 misc/megalithic_dev.conf filter=crypt diff=crypt merge=crypt
-
+home/ssh/config filter=crypt diff=crypt merge=crypt

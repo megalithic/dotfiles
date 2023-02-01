@@ -45,7 +45,8 @@
     - ~/.local/state
     - ~/.local/share/packages
     - ~/.local/share/src
-    - ~/.ssh
+    - ~/.ssh:
+      mode: 0700
 
 - clean:
     ~/:
@@ -301,3 +302,12 @@
         [[ $(uname) == "Darwin" ]] && sudo chown -R "$(whoami)":admin ~/.local;
         [[ $(uname) == "Darwin" ]] && sudo chown -R "$(whoami)":admin ~/.cache;
         [[ $(uname) == "Darwin" ]] && sudo chown -R "$(whoami)":admin ~/.config;
+
+
+        log "Correctly chown/chmod ~/.ssh files";
+        sudo chmod 0700 ~/.ssh;
+        sudo chmod -R 0600 ~/.ssh;
+        sudo chmod 0644 ~/.ssh/*.pub;
+        sudo chmod 0644 ~/.ssh/config;
+        sudo chmod 0644 ~/.ssh/authorized_keys;
+        sudo chown -R $(whoami) ~/.ssh;
