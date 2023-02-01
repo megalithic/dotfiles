@@ -12,7 +12,6 @@ function M.config()
     return function(state)
       local next_height = state.message.height -- + 2
       local next_row = stages_util.available_slot(state.open_windows, next_height, direction)
-      dd(next_row)
       if not next_row then return nil end
       return {
         relative = "editor",

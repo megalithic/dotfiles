@@ -219,7 +219,7 @@ alias ehs="nvim $DOTS/config/hammerspoon/config.lua"
 alias eh="nvim $DOTS/config/hammerspoon/init.lua"
 alias eg="nvim $DOTS/git/gitconfig"
 alias eb="nvim $DOTS/brew/Brewfile"
-alias essh="nvim $PRIVATES/home/ssh/config"
+alias essh="nvim $DOTS/home/ssh/config"
 
 alias ek="nvim $DOTS/config/kitty/kitty.conf"
 alias ekm="nvim $DOTS/config/kitty/maps.conf"

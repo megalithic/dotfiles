@@ -272,6 +272,13 @@
         log "Attempting to install golang packages..";
         ~/.dotfiles/asdf/go.sh;
 
+        log "Attempting to install perl packages..";
+        cpan install Pod::Parser && log_ok "DONE configuring perl"
+
+        log "Attempting to install python packages..";
+        python3 -m pip install --upgrade pip
+        cat $HOME/.default-python-packages | xargs pip3 install --upgrade --user
+
         log "Attempting to run post-fzf install step..";
         yes | $(brew --prefix)/opt/fzf/install;
 
