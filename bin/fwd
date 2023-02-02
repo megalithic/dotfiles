@@ -1,0 +1,82 @@
+#!/bin/zsh
+
+set -euo pipefail
+[[ -v DEBUG ]] && set -x
+
+[[ -f "$HOME/.config/zsh/lib/helpers.zsh" ]] && source "$HOME/.config/zsh/lib/helpers.zsh"
+
+# TODO: figure out how to better use exit trapping
+# ----
+# trap 'clean_exit $? $LINENO' EXIT
+# trap ctrl_c INT # trap ctrl-c and call ctrl_c()
+
+# function clean_exit {
+# 	set +x
+# 	if [[ $1 != "0" ]]; then
+# 		printf -- "FATAL error code %s occurred on line %s" "$1" "$2"
+# 	fi
+# }
+
+# clean_exit defined in helpers.zsh
+trap 'clean_exit $? $LINENO' EXIT
+
+function __help() {
+  printf -- "\n"
+  printf -- "${green}${bold}USAGE:${reset} %s [options | port_no]\n" "fwd"
+  printf -- "\n"
+  printf -- "${grey}${bold}OPTIONS:${reset}\n"
+  printf -- "  -h            view this help text\n"
+  printf -- "  -s            get ssh tunnel status\n"
+  printf -- "  -x            exit ssh tunnel\n"
+  printf -- "\n"
+  printf -- "${grey}${bold}EXAMPLES:${reset}\n"
+  printf -- "  fwd 4000\n"
+  printf -- "  fwd -s\n"
+  printf -- "  fwd -x\n"
+  printf -- "\n"
+  printf -- "${grey}${bold}DEPENDENCIES:${reset}\n"
+  printf -- "  control_file  (%s)\n" "$FWD_CONTROL_FILE"
+  printf -- "  remote_host   (%s)\n" "$FWD_CONNECTION"
+  printf -- "\n"
+
+  exit 0
+}
+
+# REF: to kill the sshd connect:
+# https://www.neowin.net/forum/topic/74672-how-to-kill-a-users-ssh-connection/
+# https://gist.github.com/scy/6781836
+# https://mpharrigan.com/2016/05/17/background-ssh.html
+# who # or..
+# last # or..
+# grep -E "Accepted publickey" /var/log/auth.log # or..
+# ps -u replicant
+# kill -1 <pid_of_sshd_process_from_above_command>
+
+while getopts "hsx" OPTION; do
+  case $OPTION in
+    h)
+      __help
+      ;;
+    s)
+      ssh -S "$FWD_CONTROL_FILE" -O check "$FWD_CONNECTION"
+      exit 0
+      ;;
+    x)
+      ssh -S "$FWD_CONTROL_FILE" -O exit "$FWD_CONNECTION"
+      exit 0
+      ;;
+    \?)
+      # NOTE: this covers the case where an optarg may not be provided
+      # and will exit errored
+      echo "Invalid Option: -$OPTARG" 1>&2
+      exit 1
+      ;;
+  esac
+done
+# shift $((OPTIND - 1))
+shift "$(($OPTIND - 1))"
+# -- this is our given session_name param, sans options
+PORT="${1:-4000}"
+
+log_info "Forwarding traffic $FWD_REMOTE_HOST:8888 <-> localhost:$PORT; <C-c> to abort."
+ssh -M -S "$FWD_CONTROL_FILE" -fNT -R 8888:localhost:$PORT "$FWD_CONNECTION"
