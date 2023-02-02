@@ -286,6 +286,7 @@ cask "microsoft-edge"
 # cask "notion"
 cask "obsidian"
 # cask "oracle-jdk"
+cask "postbird" if OS.mac?
 cask "qutebrowser" if OS.mac? # sudo xattr -dr com.apple.quarantine /Applications/qutebrowser.app
 cask "signal"
 cask "slack"

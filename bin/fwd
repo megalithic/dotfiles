@@ -78,5 +78,14 @@ shift "$(($OPTIND - 1))"
 # -- this is our given session_name param, sans options
 PORT="${1:-4000}"
 
-log_info "Forwarding traffic $FWD_REMOTE_HOST:8888 <-> localhost:$PORT; fwd -x to exit"
+command cat <<EOF
+${green} Forwarding traffic $FWD_REMOTE_HOST:8888 <-> localhost:$PORT
+${blue} 
+${white} $(echo "Options:")
+${grey}   $(echo "fwd -x -> exit")
+${grey}   $(echo "fwd -s -> status")
+${reset}
+EOF
+
+# TODO: check for running control
 ssh -M -S "$FWD_CONTROL_FILE" -fNT -R 8888:localhost:$PORT "$FWD_CONNECTION"
