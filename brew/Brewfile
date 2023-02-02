@@ -152,13 +152,14 @@ brew "pinentry-mac" if OS.mac?
 # initdb /usr/local/var/postgres -E utf8
 # psql -> CREATE USER postgres SUPERUSER;
 brew "postgresql@14", link: true if OS.mac?
-brew "postgresql@15", link: false if OS.mac?
+# brew "postgresql@15", link: false if OS.mac?
 #--
 # brew "python@3.7", link: false
 # brew "python@3.8", link: false
 # brew "python@3.9", link: false
 # brew "python@3.10", link: false
 brew "python@3.11", link: true
+brew "python3", link: false
 brew "readline"
 brew "reattach-to-user-namespace" if OS.mac?
 brew "ren"
@@ -189,7 +190,7 @@ brew "tree-sitter"
 brew "ugit" # undo several git scenarios
 brew "urlview"
 brew "viu"
-brew "weechat" if OS.mac?
+brew "weechat" if OS.mac? # can also -> args: ["build-from-source"]
 brew "wget"
 brew "wifi-password" if OS.mac?
 brew "wxwidgets" # for erlang

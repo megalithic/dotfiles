@@ -331,6 +331,8 @@ case "$(uname)" in
   # Set the list of directories that Zsh searches for programs.
   # "${HOME}/.asdf/installs/elixir/`asdf current elixir | awk '{print $1}'`/.mix"
   path=(
+    /usr/local/opt/python@3.11/libexec/bin/python3
+    /usr/local/opt/python@3.11/Frameworks/Python.framework/Versions/3.11/
     ./bin
     ./.bin
     ./vendor/bundle/bin
@@ -371,6 +373,7 @@ case "$(uname)" in
     ${HOMEBREW_PREFIX}/opt/openssl@*/bin(Nn[-1]-/)
     ${HOMEBREW_PREFIX}/opt/gnu-sed/libexec/gnubin(N-/)
     ${HOMEBREW_PREFIX}/opt/coreutils/libexec/gnubin(N-/)
+    ${HOMEBREW_PREFIX}/opt/python@3.11/libexec/bin(Nn[-1]-/)
     ${HOMEBREW_PREFIX}/opt/python@3.10/libexec/bin(Nn[-1]-/)
     ${HOMEBREW_PREFIX}/opt/python@3.9/libexec/bin(Nn[-1]-/)
     ${HOMEBREW_CELLAR}/git/*/share/git-core/contrib/git-jump(Nn[-1]-/)
@@ -380,9 +383,11 @@ case "$(uname)" in
 
     ${GOBIN}(N-/)
 
+    ${HOME}/Library/Python/3.11/bin(Nn[-1]-/)
     ${HOME}/Library/Python/3.10/bin(Nn[-1]-/)
     ${HOME}/Library/Python/3.9/bin(Nn[-1]-/)
     ${HOME}/Library/Python/2.*/bin(Nn[-1]-/)
+    /usr/local/lib/python3.11/site-packages(N-/)
     /usr/local/lib/python3.10/site-packages(N-/)
     /usr/local/lib/python3.9/site-packages(N-/)
     /usr/local/lib/python2.*/bin(Nn[-1]-/)

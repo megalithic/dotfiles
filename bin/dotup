@@ -65,29 +65,21 @@ update() {
   log "asdf install.." &&
   ./bin/asdf-install
 
-  if [[ "$(uname)" == "Darwin" ]]; then
-    log "post-homebrew.."
-    log "remove brew-installed ruby.." &&
-    brew uninstall --ignore-dependencies --force ruby
+  log "Attempting to install perl packages.." &&
+  cpan install Pod::Parser && log_ok "DONE configuring perl"
 
-    # FIXME: find a better way to ensure i'm leaving 3.3, and only removing newer versions.
-    # log "remove latest weechat and relink to 3.3" &&
-    #   # NOTE: presently weechat 3.3 is the only one that works for my setup. ¯\_(ツ)_/¯
-    #   brew uninstall weechat && brew link weechat
-  fi
+  log "Attempting to install python packages.." &&
+  ~/.dotfiles/asdf/python.sh
+
+  # if [[ "$(uname)" == "Darwin" ]]; then
+  #   log "post-homebrew.."
+  # fi
 
   log "neovim install.." && ./bin/nvim-install
-
-  # log "paq-nvim install.." && ./bin/paq-install -u
-
-  # log "packer.nvim install.." && ./bin/packer-install -u
 
   if [[ "$(uname)" == "Darwin" ]]; then
     log "elixir-ls install.." &&
     ./bin/elixirls-install master
-
-    # log "kitty icon update.." &&
-    # ./config/kitty/update_icon.sh
   fi
 
   log "github auth login.." &&

@@ -24,6 +24,7 @@ setopt PROMPT_SUBST
 setopt CORRECT
 setopt COMPLETE_IN_WORD
 setopt IGNORE_EOF
+setopt IGNOREEOF
 setopt AUTO_RESUME          # Treat single word simple commands without redirection as candidates for resumption of an existing job.
 setopt INTERACTIVE_COMMENTS # Allow comments starting with `#` even in interactive shells.
 setopt NO_FLOW_CONTROL      # disable start (C-s) and stop (C-q) characters

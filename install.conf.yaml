@@ -277,14 +277,10 @@
         cpan install Pod::Parser && log_ok "DONE configuring perl"
 
         log "Attempting to install python packages..";
-        python3 -m pip install --upgrade pip
-        cat $HOME/.default-python-packages | xargs pip3 install --upgrade --user
+        ~/.dotfiles/asdf/python.sh;
 
         log "Attempting to run post-fzf install step..";
         yes | $(brew --prefix)/opt/fzf/install;
-
-        log "Attempting to update kitty app icon..";
-        ~/.dotfiles/config/kitty/update_icon.sh;
 
         log "Attempting to symlink gitconfig_macos..";
         [[ $(uname) == "Darwin" ]] && ln -sfv "$DOTS/git/gitconfig_macos" ~/.gitconfig_macos;
