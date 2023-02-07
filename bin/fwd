@@ -7,15 +7,15 @@ set -euo pipefail
 
 # TODO: figure out how to better use exit trapping
 # ----
-# trap 'clean_exit $? $LINENO' EXIT
-# trap ctrl_c INT # trap ctrl-c and call ctrl_c()
+trap 'clean_exit $? $LINENO' EXIT
+trap ctrl_c INT # trap ctrl-c and call ctrl_c()
 
-# function clean_exit {
-# 	set +x
-# 	if [[ $1 != "0" ]]; then
-# 		printf -- "FATAL error code %s occurred on line %s" "$1" "$2"
-# 	fi
-# }
+function clean_exit {
+  set +x
+  if [[ $1 != "0" ]]; then
+    printf -- "FATAL error code %s occurred on line %s" "$1" "$2"
+  fi
+}
 
 # clean_exit defined in helpers.zsh
 trap 'clean_exit $? $LINENO' EXIT
@@ -42,16 +42,6 @@ function __help() {
   exit 0
 }
 
-# REF: to kill the sshd connect:
-# https://www.neowin.net/forum/topic/74672-how-to-kill-a-users-ssh-connection/
-# https://gist.github.com/scy/6781836
-# https://mpharrigan.com/2016/05/17/background-ssh.html
-# who # or..
-# last # or..
-# grep -E "Accepted publickey" /var/log/auth.log # or..
-# ps -u replicant
-# kill -1 <pid_of_sshd_process_from_above_command>
-
 __status() {
   command cat <<EOF
 
@@ -76,6 +66,11 @@ while getopts "hsx" OPTION; do
       exit 0
       ;;
     x)
+      # REF: to kill the sshd connection on remote:
+      #   ps -u <user>
+      #   kill -1 <pid_of_sshd_process_from_above_command>
+
+      echo "${white}Exiting.."
       ssh -S "$FWD_CONTROL_FILE" -O exit "$FWD_CONNECTION" 2>/dev/null
       __status
       exit 0
@@ -92,6 +87,7 @@ done
 shift "$(($OPTIND - 1))"
 PORT="${1:-4000}"
 
+echo "${white}Connecting.."
 ssh -M -S "$FWD_CONTROL_FILE" -fNT -R 8888:localhost:$PORT "$FWD_CONNECTION" 2>/dev/null &&
 command cat <<EOF
 $(__status)
