@@ -55,7 +55,7 @@ end
 
 function mini.ai()
   local ai = require("mini.ai")
-  require("mini.ai").setup({
+  ai.setup({
     n_lines = 500,
     -- search_method = "cover_or_next",
     custom_textobjects = {
@@ -65,6 +65,18 @@ function mini.ai()
       }, {}),
       f = ai.gen_spec.treesitter({ a = "@function.outer", i = "@function.inner" }, {}),
       c = ai.gen_spec.treesitter({ a = "@class.outer", i = "@class.inner" }, {}),
+    },
+    mappings = {
+      around = "a",
+      inside = "i",
+
+      around_next = "an",
+      inside_next = "in",
+      around_last = "al",
+      inside_last = "il",
+
+      goto_left = "",
+      goto_right = "",
     },
   })
 
@@ -86,12 +98,33 @@ function mini.ai()
   map("o", "block")
 end
 
+function mini.align()
+  require("mini.align").setup({
+    mappings = {
+      start = "ga",
+      start_with_preview = "gA",
+    },
+  })
+end
+
+function mini.indentscope()
+  require("mini.indentscope").setup({
+    symbol = "▏", -- │ ▏
+    draw = {
+      delay = 50,
+      -- animation = require("mini.indentscope").gen_animation("none"),
+    },
+  })
+end
+
 function mini.config()
   -- mini.jump()
   mini.surround()
   mini.ai()
   mini.pairs()
   mini.comment()
+  mini.align()
+  mini.indentscope()
   -- mini.animate()
 end
 
