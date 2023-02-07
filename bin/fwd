@@ -43,6 +43,7 @@ function __help() {
 }
 
 __status() {
+  # NOTE: JetBrains Mono Nerd Fonts is used for many of the glyphs..
   command cat <<EOF
 
 ${grey}░$([[ -e "$FWD_CONTROL_FILE" ]] && echo "${blue} Forwarding traffic $FWD_REMOTE_HOST:8888 <-> localhost:$PORT" || echo "${white} fwd - an ngrok alternative${reset}")
