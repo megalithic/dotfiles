@@ -56,6 +56,11 @@ if $(exa &>/dev/null); then
   alias l="exa -lahF --icons --group-directories-first --git"
 fi
 
+if $(erdtree &>/dev/null); then
+  alias tree="erdtree"
+  # alias tree="erdtree -I 'dotbot|node_modules|cache|test_*'"
+fi
+
 alias s="ls"
 alias last='ls *(.om[1])'
 # alias bat='BAT_CONFIG_PATH="~/.batrc" BAT_THEME="base16" bat'
@@ -81,9 +86,6 @@ alias dus='du -sckx * | sort -nr'
 alias top='top -o cpu'
 has htop && alias top='htop -s PERCENT_CPU'
 alias icat="kitty +kitten icat"
-
-# TODO: pull ignored folders from `config/fd/ignore`:
-alias tree="tree -I 'dotbot|node_modules|cache|test_*'"
 
 # alias back="slack back; dnd off"
 # alias gone="slack gone; dnd on"

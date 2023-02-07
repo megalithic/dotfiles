@@ -193,7 +193,7 @@ vim.opt.wildignore = {
   ".DS_Store",
   "tags.lock",
 }
-vim.o.wildoptions = "pum"
+vim.opt.wildoptions = { "pum", "fuzzy" }
 vim.o.wildignorecase = true -- Case insensitive file/directory completion
 vim.opt.path:append("**") -- Lets `find` search recursively into subfolders
 vim.o.cedit = "<C-y>" -- Enter Command-line Mode from command-mode

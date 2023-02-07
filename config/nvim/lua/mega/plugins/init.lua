@@ -254,24 +254,6 @@ return {
 
   -- ( Movements ) -------------------------------------------------------------
   -- @trial multi-cursor: https://github.com/brendalf/dotfiles/blob/master/.config/nvim/lua/core/multi-cursor.lua
-  --  {
-  --    "ggandor/flit.nvim",
-  --    dependencies = { "leap.nvim",
-  --    config = function()
-  --      require("leap").setup({
-  --        equivalence_classes = { " \t\r\n", "([{", ")]}", "`\"'" },
-  --      })
-  --    end,
-  --  },
-  --    config = function()
-  --      require("flit").setup({
-  --        keys = { f = "f", F = "F", t = "t", T = "T" },
-  --        -- A string like "nv", "nvo", "o", etc.
-  --        labeled_modes = "nvo",
-  --        multiline = false,
-  --      })
-  --    end,
-  --  },
 
   -- ( FZF ) -------------------------------------------------------------------
   -- { "ibhagwan/fzf-lua", config = lazy.conf("fzf") },

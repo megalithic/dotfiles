@@ -34,7 +34,7 @@ function __help() {
   printf -- "  fwd -s\n"
   printf -- "  fwd -x\n"
   printf -- "\n"
-  printf -- "${grey}${bold}DEPENDENCIES:${reset}\n"
+  printf -- "${grey}${bold}REQUIRED ENV:${reset}\n"
   printf -- "  control_file  (%s)\n" "$FWD_CONTROL_FILE"
   printf -- "  remote_host   (%s)\n" "$FWD_CONNECTION"
   printf -- "\n"
@@ -52,17 +52,32 @@ function __help() {
 # ps -u replicant
 # kill -1 <pid_of_sshd_process_from_above_command>
 
+__status() {
+  command cat <<EOF
+
+${grey}░$([[ -e "$FWD_CONTROL_FILE" ]] && echo "${blue} Forwarding traffic $FWD_REMOTE_HOST:8888 <-> localhost:$PORT" || echo "${white} fwd - an ngrok alternative${reset}")
+${grey}░${blue} 
+${grey}░${white} $(echo "Options:")
+${grey}░${grey}   $(echo "fwd -x -> exit")
+${grey}░${grey}   $(echo "fwd -s -> status")
+${grey}░${white} $(echo "Status:")
+${grey}░${grey}   $([[ -e "$FWD_CONTROL_FILE" ]] && echo "${green}connected${reset}" || echo "${yellow}disconnected${reset}")
+EOF
+}
+
 while getopts "hsx" OPTION; do
   case $OPTION in
     h)
       __help
       ;;
     s)
-      ssh -S "$FWD_CONTROL_FILE" -O check "$FWD_CONNECTION"
+      ssh -S "$FWD_CONTROL_FILE" -O check "$FWD_CONNECTION" 2>/dev/null
+      __status
       exit 0
       ;;
     x)
-      ssh -S "$FWD_CONTROL_FILE" -O exit "$FWD_CONNECTION"
+      ssh -S "$FWD_CONTROL_FILE" -O exit "$FWD_CONNECTION" 2>/dev/null
+      __status
       exit 0
       ;;
     \?)
@@ -73,19 +88,11 @@ while getopts "hsx" OPTION; do
       ;;
   esac
 done
-# shift $((OPTIND - 1))
+
 shift "$(($OPTIND - 1))"
-# -- this is our given session_name param, sans options
 PORT="${1:-4000}"
 
+ssh -M -S "$FWD_CONTROL_FILE" -fNT -R 8888:localhost:$PORT "$FWD_CONNECTION" 2>/dev/null &&
 command cat <<EOF
-${green} Forwarding traffic $FWD_REMOTE_HOST:8888 <-> localhost:$PORT
-${blue} 
-${white} $(echo "Options:")
-${grey}   $(echo "fwd -x -> exit")
-${grey}   $(echo "fwd -s -> status")
-${reset}
+$(__status)
 EOF
-
-# TODO: check for running control
-ssh -M -S "$FWD_CONTROL_FILE" -fNT -R 8888:localhost:$PORT "$FWD_CONNECTION"

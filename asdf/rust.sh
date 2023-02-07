@@ -34,6 +34,7 @@ do_install() {
     cargo install taplo-lsp # https://taplo.tamasfe.dev/lsp/
     cargo install cbfmt
     cargo install shellharden
+    cargo install --git https://github.com/solidiquis/erdtree
   fi
 }
 

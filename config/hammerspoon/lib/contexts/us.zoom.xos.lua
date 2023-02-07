@@ -58,7 +58,7 @@ function obj:start(opts)
         L.req("lib.dnd").on("zoom")
         hs.spotify.pause()
         L.req("lib.menubar.ptt").setState("push-to-talk")
-        L.req("lib.browser").killTabsByDomain("us02web.zoom.us")
+        L.req("lib.browser").killTabsByDomain("us05web.zoom.us")
 
         local target_close_window = zoom:getWindow("Zoom")
         if target_close_window ~= nil then target_close_window:close() end

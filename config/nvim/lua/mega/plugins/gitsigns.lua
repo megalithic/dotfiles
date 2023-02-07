@@ -1,9 +1,15 @@
 local M = { "lewis6991/gitsigns.nvim", event = { "BufReadPre" } }
 function M.config()
   local gs = require("gitsigns")
-
+  local right_block = "🮉"
   gs.setup({
     signs = {
+      -- add = { hl = "GitSignsAdd", text = right_block }, -- alts: ┃, │, ▌, ▎
+      -- change = { hl = "GitSignsChange", text = right_block }, -- alts: ║▎
+      -- delete = { hl = "GitSignsDelete", text = right_block },
+      -- topdelete = { hl = "GitSignsDelete", text = right_block },
+      -- changedelete = { hl = "GitSignsChange", text = right_block },
+      -- untracked = { hl = "GitSignsAdd", text = right_block },
       add = { hl = "GitSignsAdd", text = "▎" }, -- alts: ┃, │, ▌, ▎
       change = { hl = "GitSignsChange", text = "▎" }, -- alts: ║▎
       delete = { hl = "GitSignsDelete", text = "▎" },

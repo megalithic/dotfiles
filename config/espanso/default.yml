@@ -17,7 +17,8 @@ matches:
   - trigger: ":rene"
     replace: "René"
   - trigger: ":zoom:"
-    replace: "https://us02web.zoom.us/j/2264962052?pwd=ZHB1bCszbTliMVl4OWtzYkpYQjE5Zz09"
+    replace: "https://us05web.zoom.us/j/5285798035?pwd=R0djd0E3RTFHQkt3WDBhbHBOK1gvUT09"
+    # replace: "https://us05web.zoom.us/j/88652010836?pwd=R0djd0E3RTFHQkt3WDBhbHBOK1gvUT09"
   - trigger: ":tm:"
     replace: "™"
   - trigger: ":shrug:"
@@ -64,6 +65,8 @@ matches:
     replace: "🤦"
   - trigger: ":hands:"
     replace: "🙌🏼"
+  - trigger: ":smile:"
+    replace: "😃"
 
   # Dates
   - trigger: ":date:"
