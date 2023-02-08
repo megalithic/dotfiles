@@ -46,10 +46,10 @@ log '-> executing command: "ssh-add -K '$key_path"\""
 case "$(uname)" in
   Darwin)
     ssh-add -K "$key_path"
-  ;;
+    ;;
   Linux)
     ssh-add "$key_path"
-  ;;
+    ;;
 esac
 
 sleep 0.5
@@ -68,3 +68,4 @@ case $continue_reply in
 esac
 
 log "-> if you did add your key to github, you can verify with: 'ssh -T git@github.com'"
+log_warn "-> ensure you also add your key to your DO instance.."
