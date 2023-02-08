@@ -95,8 +95,8 @@ local M = {
     {
       "<leader>a",
       function()
-        -- require("telescope.builtin").live_grep(ivy({}))
-        require("telescope").extensions.live_grep_args.live_grep_args(ivy({}))
+        require("telescope.builtin").live_grep(ivy({}))
+        -- require("telescope").extensions.live_grep_args.live_grep_args(ivy({}))
       end,
       desc = "live grep",
     },
