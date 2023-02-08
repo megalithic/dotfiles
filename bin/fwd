@@ -5,15 +5,13 @@ set -euo pipefail
 
 [[ -f "$HOME/.config/zsh/lib/helpers.zsh" ]] && source "$HOME/.config/zsh/lib/helpers.zsh"
 
-# TODO: figure out how to better use exit trapping
-# ----
 trap 'clean_exit $? $LINENO' EXIT
 trap ctrl_c INT # trap ctrl-c and call ctrl_c()
 
 function clean_exit {
   set +x
   if [[ $1 != "0" ]]; then
-    printf -- "FATAL error code %s occurred on line %s" "$1" "$2"
+    printf -- "[ERROR] (%s) occurred on line %s" "$1" "$2"
   fi
 }
 
@@ -35,7 +33,7 @@ function __help() {
   printf -- "  fwd -x\n"
   printf -- "\n"
   printf -- "${grey}${bold}REQUIRED ENV:${reset}\n"
-  printf -- "  control_file  (%s)\n" "$FWD_CONTROL_FILE"
+  printf -- "  control_file  (%s)\n" "${FWD_CONTROL_FILE}"
   printf -- "  remote_host   (%s)\n" "$FWD_CONNECTION"
   printf -- "\n"
 
@@ -46,13 +44,13 @@ __status() {
   # NOTE: JetBrains Mono Nerd Fonts is used for many of the glyphs..
   command cat <<EOF
 
-${grey}░$([[ -e "$FWD_CONTROL_FILE" ]] && echo "${blue} Forwarding traffic $FWD_REMOTE_HOST:8888 <-> localhost:$PORT" || echo "${white} fwd - an ngrok alternative${reset}")
+${grey}░$([[ -e "${FWD_CONTROL_FILE}" ]] && echo "${blue} Forwarding traffic $FWD_REMOTE_HOST:8888 <-> localhost:$PORT" || echo "${white} fwd - an ngrok alternative${reset}")
 ${grey}░${blue} 
 ${grey}░${white} $(echo "Options:")
 ${grey}░${grey}   $(echo "fwd -x -> exit")
 ${grey}░${grey}   $(echo "fwd -s -> status")
 ${grey}░${white} $(echo "Status:")
-${grey}░${grey}   $([[ -e "$FWD_CONTROL_FILE" ]] && echo "${green}connected${reset}" || echo "${yellow}disconnected${reset}")
+${grey}░${grey}   $([[ -e "${FWD_CONTROL_FILE}" ]] && echo "${green}connected${reset}" || echo "${yellow}disconnected${reset}")
 EOF
 }
 
@@ -62,23 +60,18 @@ while getopts "hsx" OPTION; do
       __help
       ;;
     s)
-      ssh -S "$FWD_CONTROL_FILE" -O check "$FWD_CONNECTION" 2>/dev/null
+      echo "${white}Checking status.."
+      ssh -S "${FWD_CONTROL_FILE}" -O check "$FWD_CONNECTION" 2>/dev/null
       __status
       exit 0
       ;;
     x)
-      # REF: to kill the sshd connection on remote:
-      #   ps -u <user>
-      #   kill -1 <pid_of_sshd_process_from_above_command>
-
       echo "${white}Exiting.."
-      ssh -S "$FWD_CONTROL_FILE" -O exit "$FWD_CONNECTION" 2>/dev/null
+      ssh -S "${FWD_CONTROL_FILE}" -O exit "$FWD_CONNECTION" 2>/dev/null
       __status
       exit 0
       ;;
     \?)
-      # NOTE: this covers the case where an optarg may not be provided
-      # and will exit errored
       echo "Invalid Option: -$OPTARG" 1>&2
       exit 1
       ;;
@@ -88,8 +81,11 @@ done
 shift "$(($OPTIND - 1))"
 PORT="${1:-4000}"
 
-echo "${white}Connecting.."
-ssh -M -S "$FWD_CONTROL_FILE" -fNT -R 8888:localhost:$PORT "$FWD_CONNECTION" 2>/dev/null &&
+if [[ ! -e "${FWD_CONTROL_FILE}" ]]; then
+  echo "${white}Connecting.."
+  ssh -M -S "${FWD_CONTROL_FILE}" -fNT -R 8888:localhost:$PORT "$FWD_CONNECTION" 2>/dev/null &&
+fi
+
 command cat <<EOF
 $(__status)
 EOF
