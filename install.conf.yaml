@@ -61,6 +61,12 @@
       command: >-
         git submodule update --init --recursive;
 
+    - description: Install xcode and related things..
+      quiet: true
+      if: "[ `uname` = Darwin ]"
+      command: >-
+        ~/.dotfiles/bin/xcode-install -f
+
     - description: Attempting to install Homebrew..
       quiet: true
       command: >-
@@ -318,7 +324,10 @@
         command cat <<EOF
         ${blue}░  Installation complete (possibly with errors?)
         ${blue}░  
-        ░
+        ${blue}░
+        ${blue}░  Setup SSH key for this machine:
+        ${blue}░  ${white}  - ~/.dotfiles/bin/ssh-setup
+        ${blue}░
         ${blue}░  Manually open/setup the following:
         ${blue}░  ${white}  - espanso
         ${blue}░  ${white}  - postgresql
