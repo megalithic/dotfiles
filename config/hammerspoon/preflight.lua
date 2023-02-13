@@ -146,6 +146,28 @@ function _G.usb()
   end)
 end
 
+function _G.audioInput()
+  local d = hs.audiodevice.defaultInputDevice()
+  print(hs.inspect({
+    name = d:name(),
+    uid = d:uid(),
+    muted = d:muted(),
+    volume = d:volume(),
+    device = d,
+  }))
+end
+
+function _G.audioOutput()
+  local d = hs.audiodevice.defaultOutputDevice()
+  print(hs.inspect({
+    name = d:name(),
+    uid = d:uid(),
+    muted = d:muted(),
+    volume = d:volume(),
+    device = d,
+  }))
+end
+
 _G.CONFIG_KEY = "_mega_config"
 
 -- [ CONSOLE SETTINGS ] ---------------------------------------------------------

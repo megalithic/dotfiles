@@ -341,17 +341,26 @@ local utils = {
 }
 
 local dock = {
+
   ["target"] = {
-    productID = 25907,
-    productName = "CalDigit Thunderbolt 3 Audio",
+    productID = 21760,
+    productName = "TS4 USB3.2 Gen2 HUB",
     vendorID = 8584,
-    vendorName = "CalDigit, Inc.",
+    vendorName = "CalDigit, Inc",
+    -- productID = 25907,
+    -- productName = "CalDigit Thunderbolt 3 Audio",
+    -- vendorID = 8584,
+    -- vendorName = "CalDigit, Inc.",
   },
   ["keyboard"] = {
-    productID = 24674,
-    productName = "Atreus62",
-    vendorID = 65261,
-    vendorName = "Profet",
+    productID = 24926,
+    productName = "Leeloo",
+    vendorID = 7504,
+    vendorName = "ZMK Project",
+    -- productID = 24674,
+    -- productName = "Atreus62",
+    -- vendorID = 65261,
+    -- vendorName = "Profet",
   },
   ["docked"] = {
     wifi = "off", -- wifi status
