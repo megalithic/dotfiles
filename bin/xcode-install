@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-[[ -f "$HOME/.config/zsh/lib/helpers.zsh" ]] && source "$HOME/.config/zsh/lib/helpers.zsh"
+[[ -f "$HOME/.dotfiles/config/zsh/lib/helpers.zsh" ]] && source "$HOME/dotfiles/config/zsh/lib/helpers.zsh"
 
 if [[ $(uname) != "Darwin" ]]; then
   log_warn "xcode-install requires MacOS (darwin); skipping."
@@ -12,10 +12,10 @@ fi
 # -- set some useful vars for executable info:
 __dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 __file="${__dir}/$(basename "${BASH_SOURCE[0]}")"
-__base="$(basename ${__file} .sh)"
-__root="$(cd "$(dirname "${__dir}")" && pwd)"
+__base="$(basename "$__file" .sh)"
+__root="$(cd "$(dirname "$__dir")" && pwd)"
 # shellcheck disable=SC2034,SC2015
-__invocation="$(printf %q "${__file}")$( (($#)) && printf ' %q' "$@" || true)"
+__invocation="$(printf %q "$__file")$( (($#)) && printf ' %q' "$@" || true)"
 
 FORCE_INSTALL="false"
 
@@ -35,9 +35,9 @@ do_install() {
 
 do_post_install() {
   sudo xcode-select -switch /Library/Developer/CommandLineTools &&
-    # softwareupdate --all --install --force --agree-to-license &&
-    log_ok "finished setting up more things for Xcode CLI tools" ||
-    log_error "failed to setup Xcode CLI tools things.."
+  # softwareupdate --all --install --force --agree-to-license &&
+  log_ok "finished setting up more things for Xcode CLI tools" ||
+  log_error "failed to setup Xcode CLI tools things.."
   sudo xcode-select -switch /Applications/Xcode.app
 }
 
@@ -62,5 +62,5 @@ if [[ -d "/Library/Developer/CommandLineTools" && $FORCE_INSTALL == "false" ]]; 
 else
   (do_install && do_post_install) & # run in background
   PID=$!                            # catch the last PID
-  wait $PID                         # wait for installers in the background to end
+  wait "$PID"                       # wait for installers in the background to end
 fi
