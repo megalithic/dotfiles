@@ -35,15 +35,21 @@ do_install() {
   log "installing homebrew ($(uname)).."
   export NONINTERACTIVE=1
   NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" &&
-  #/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" &&
   log_ok "completed installing brew." ||
   exit 1
+
+  if [ $(arch) = "arm64" ]; then
+    brew_prefix='/opt/homebrew'
+    eval $(/opt/homebrew/bin/brew shellenv)
+  else
+    brew_prefix='/usr/local'
+    eval $(/usr/local/bin/brew shellenv)
+  fi
 
   if [[ "$?" == 0 ]]; then
     brew bundle --verbose --force --file=~/.dotfiles/brew/Brewfile
   fi
 }
-
 while getopts "uf" OPTION; do
   case $OPTION in
     u)

@@ -61,10 +61,10 @@ esac
 
 if [ $(arch) = "arm64" ]; then
   brew_prefix='/opt/homebrew'
-
   eval $(/opt/homebrew/bin/brew shellenv)
 else
   brew_prefix='/usr/local'
+  eval $(/usr/local/bin/brew shellenv)
 fi
 
 export BREW_PREFIX="${brew_prefix}"
