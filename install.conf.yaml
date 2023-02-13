@@ -46,7 +46,7 @@
     - ~/.local/share/packages
     - ~/.local/share/src
     - ~/.ssh:
-      mode: 0700
+        mode: 0700
 
 - clean:
     ~/:
