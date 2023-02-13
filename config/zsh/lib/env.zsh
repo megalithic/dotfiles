@@ -58,7 +58,17 @@ case `uname` in
     ;;
 esac
 
-export BREW_PREFIX="$(brew --prefix)"
+
+if [ $(arch) = "arm64" ]; then
+  brew_prefix='/opt/homebrew'
+
+  eval $(/opt/homebrew/bin/brew shellenv)
+else
+  brew_prefix='/usr/local'
+fi
+
+export BREW_PREFIX="${brew_prefix}"
+# export BREW_PREFIX="$(brew --prefix)"
 export HOMEBREW_PREFIX="$BREW_PREFIX"
 
 path=(
@@ -184,8 +194,10 @@ case "$(uname)" in
 
     export SYNC_DIR="${HOME}/Dropbox"
     export ICLOUD_DIR="$HOME/Library/Mobile Documents/com~apple~CloudDocs"
-    export DOCUMENTS_DIR="$ICLOUD_DIR/Documents"
-    export ZK_NOTEBOOK_DIR="$DOCUMENTS_DIR/_notes"
+    export ICLOUD_DOCUMENTS_DIR="${ICLOUD_DIR}/Documents"
+    export DOCUMENTS_DIR="${ICLOUD_DOCUMENTS_DIR}"
+    export OBSIDIAN_VAULT_DIR="${ICLOUD_DIR}/Documents/_notes/vault"
+    export ZK_NOTEBOOK_DIR="$DOCUMENTS_DIR/_notes/_notes"
     export ZK_CONFIG_DIR="$XDG_CONFIG_HOME/zk"
 
     export BROWSER="open"

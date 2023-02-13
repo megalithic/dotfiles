@@ -19,9 +19,6 @@ vim.g.enabled_plugin = {
   tmux = true,
   winbar = false, -- FIXME: add more!
 }
--- vim.cmd([[
---   :luafile ~/.config/nvim/lua/lazyinit.lua
--- ]])
 
 -- disable certain plugins for firenvim
 for plugin, _ in pairs(vim.g.enabled_plugin) do

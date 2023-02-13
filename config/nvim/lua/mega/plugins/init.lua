@@ -1,44 +1,3 @@
--- [ COMMANDS ] ----------------------------------------------------------------
--- mega.command("PackerCompiledEdit", function() vim.cmd.vnew(vim.g.packer_compiled_path) end)
--- mega.command("PackerCompiledDelete", function()
---   vim.fn.delete(vim.g.packer_compiled_path)
---   lazy_notify(string.format("deleted %s", vim.g.packer_compiled_path))
--- end)
--- mega.command("PackerUpgrade", function()
---   vim.schedule(function()
---     require("mega.plugins.utils").bootstrap()
---     require("mega.plugins.utils").sync()
---   end)
--- end)
--- mega.command("PackerCompile", function()
---   vim.cmd("packadd! packer.nvim")
---   vim.notify("waiting for compilation..", vim.log.levels.INFO, { title = "packer" })
---   require("packer").compile()
--- end, { nargs = "*" })
--- mega.command("Recompile", function() mega.recompile() end, { nargs = "*" })
--- mega.command("Reload", function() mega.reload() end, { nargs = "*" })
--- mega.command("PR", [[Recompile]], { nargs = "*" })
--- mega.command("PC", [[PackerCompile]], { nargs = "*" })
--- mega.command("PS", [[PackerSync]], { nargs = "*" })
--- mega.command("PU", [[PackerSync]], { nargs = "*" })
--- mega.command("PackerInstall", [[packadd! packer.nvim | lua require('packer').install()]], { nargs = "*" })
--- mega.command("PackerUpdate", [[packadd! packer.nvim | lua require('packer').update()]], { nargs = "*" })
--- mega.command("PackerSync", [[packadd! packer.nvim | lua require('packer').sync()]], { nargs = "*" })
--- mega.command("PackerClean", [[packadd! packer.nvim | lua require('packer').clean()]], { nargs = "*" })
---
--- if not vim.g.packer_compiled_loaded and vim.loop.fs_stat(vim.g.packer_compiled_path) then
---   vim.cmd.source(vim.g.packer_compiled_path)
---   vim.g.packer_compiled_loaded = true
--- end
---
--- mega.nnoremap("<leader>ps", "<Cmd>PackerSync<CR>", "packer: sync")
--- mega.nnoremap("<leader>pc", "<Cmd>PackerCompile<CR>", "packer: compile")
--- mega.nnoremap("<leader>pr", "<Cmd>Reload<CR>", "packer: reload")
--- mega.nnoremap("<leader>px", "<Cmd>PackerClean<CR>", "packer: clean")
-
--- vim.cmd.packadd({ "cfilter", bang = true })
--- mega.require("impatient")
-
 return {
   -- ( CORE ) ------------------------------------------------------------------
   "nvim-lua/plenary.nvim",
@@ -113,7 +72,7 @@ return {
           hsl_fn = true, -- CSS hsl() and hsla() functions
           -- css = true, -- Enable all CSS features: rgb_fn, hsl_fn, names, RGB, RRGGBB
           css_fn = true, -- Enable all CSS *functions*: rgb_fn, hsl_fn
-          sass = { enable = false, parsers = { css } }, -- Enable sass colors
+          sass = { enable = false, parsers = { "css" } }, -- Enable sass colors
           -- Available modes for `mode`: foreground, background,  virtualtext
           mode = "background", -- Set the display mode.
           virtualtext = "■",
@@ -189,6 +148,18 @@ return {
   -- },
 
   {
+    "folke/zen-mode.nvim",
+    cmd = "ZenMode",
+    opts = {
+      plugins = {
+        gitsigns = true,
+        tmux = true,
+        kitty = { enabled = false, font = "+2" },
+      },
+    },
+    keys = { { "<localleader>z", "<cmd>ZenMode<cr>", desc = "Zen Mode" } },
+  },
+  {
     "stevearc/dressing.nvim",
     init = function()
       ---@diagnostic disable-next-line: duplicate-set-field
@@ -203,60 +174,56 @@ return {
       end
     end,
   },
+  {
+    "lukas-reineke/indent-blankline.nvim",
+    event = "VeryLazy",
+    config = function()
+      local ibl = require("indent_blankline")
 
-  -- {
-  --   "lukas-reineke/indent-blankline.nvim",
-  --   lazy = false,
-  --   config = function()
-  --     local ibl = require("indent_blankline")
+      -- local refresh = ibl.refresh
+      -- ibl.refresh = _G.mega.debounce(100, refresh)
 
-  --     -- local refresh = ibl.refresh
-  --     -- ibl.refresh = _G.mega.debounce(100, refresh)
-
-  --     ibl.setup({
-  --       char = "│", -- alts: ┆ ┊  ▎
-  --       show_foldtext = false,
-  --       context_char = "▎",
-  --       char_priority = 12,
-  --       show_current_context = true,
-  --       show_current_context_start = true,
-  --       show_current_context_start_on_current_line = true,
-  --       show_first_indent_level = true,
-  --       filetype_exclude = {
-  --         "dbout",
-  --         "neo-tree-popup",
-  --         "dap-repl",
-  --         "startify",
-  --         "dashboard",
-  --         "log",
-  --         "fugitive",
-  --         "gitcommit",
-  --         "packer",
-  --         "vimwiki",
-  --         "markdown",
-  --         "txt",
-  --         "vista",
-  --         "help",
-  --         "NvimTree",
-  --         "git",
-  --         "TelescopePrompt",
-  --         "undotree",
-  --         "flutterToolsOutline",
-  --         "norg",
-  --         "org",
-  --         "orgagenda",
-  --         "", -- for all buffers without a file type
-  --       },
-  --       buftype_exclude = { "terminal", "nofile" },
-  --     })
-  --   end,
-  -- },
+      ibl.setup({
+        char = "│", -- alts: ┆ ┊  ▎
+        show_foldtext = false,
+        context_char = "▎",
+        char_priority = 12,
+        show_current_context = true,
+        show_current_context_start = true,
+        show_current_context_start_on_current_line = true,
+        show_first_indent_level = true,
+        filetype_exclude = {
+          "dbout",
+          "neo-tree-popup",
+          "dap-repl",
+          "startify",
+          "dashboard",
+          "log",
+          "fugitive",
+          "gitcommit",
+          "packer",
+          "vimwiki",
+          "markdown",
+          "txt",
+          "vista",
+          "help",
+          "NvimTree",
+          "git",
+          "TelescopePrompt",
+          "undotree",
+          "flutterToolsOutline",
+          "norg",
+          "org",
+          "orgagenda",
+          "", -- for all buffers without a file type
+        },
+        buftype_exclude = { "terminal", "nofile" },
+      })
+    end,
+  },
 
   -- ( Movements ) -------------------------------------------------------------
   -- @trial multi-cursor: https://github.com/brendalf/dotfiles/blob/master/.config/nvim/lua/core/multi-cursor.lua
-
-  -- ( FZF ) -------------------------------------------------------------------
-  -- { "ibhagwan/fzf-lua", config = lazy.conf("fzf") },
 
   -- ( Navigation ) ------------------------------------------------------------
   {
@@ -463,21 +430,6 @@ return {
       vim.g.navic_silence = true
       require("nvim-navic").setup({ separator = " ", highlight = true, depth_limit = 5 })
     end,
-  },
-
-  {
-    "ThePrimeagen/refactoring.nvim",
-    keys = {
-      {
-        "<leader>r",
-        function() require("refactoring").select_refactor() end,
-        mode = "v",
-        noremap = true,
-        silent = true,
-        expr = false,
-      },
-    },
-    config = {},
   },
 
   -- {
@@ -784,45 +736,6 @@ return {
       }
     end,
   },
-  -- {
-  --   "windwp/nvim-autopairs",
-  --   dependencies = "nvim-treesitter",
-  --   event = "User PackerDeferred",
-  --   -- config = function()
-  --   --   require("nvim-autopairs").setup({
-  --   --     disable_filetype = { "TelescopePrompt" },
-  --   --     -- enable_afterquote = true, -- To use bracket pairs inside quotes
-  --   --     enable_check_bracket_line = true, -- Check for closing brace so it will not add a close pair
-  --   --     disable_in_macro = false,
-  --   --     close_triple_quotes = true,
-  --   --     check_ts = false,
-  --   --     ts_config = {
-  --   --       lua = { "string", "source" },
-  --   --       javascript = { "string", "template_string" },
-  --   --       java = false,
-  --   --     },
-  --   --     fast_wrap = {
-  --   --       map = "<C-,>",
-  --   --       chars = { "{", "[", "(", "\"", "'" },
-  --   --       pattern = string.gsub([[ [%'%"%)%>%]%)%}%,] ]], "%s+", ""),
-  --   --       offset = 0, -- Offset from pattern match
-  --   --       end_key = "$",
-  --   --       keys = "qwertyuiopzxcvbnmasdfghjkl",
-  --   --       check_comma = true,
-  --   --       highlight = "PmenuSel",
-  --   --       highlight_grey = "LineNr",
-  --   --     },
-  --   --   })
-  --   --   require("nvim-autopairs").add_rules(require("nvim-autopairs.rules.endwise-ruby"))
-  --   --   local endwise = require("nvim-autopairs.ts-rule").endwise
-  --   --   require("nvim-autopairs").add_rules({
-  --   --     endwise("do$", "end", "lua", nil),
-  --   --     endwise("then$", "end", "lua", "if_statement"),
-  --   --     endwise("function%(.*%)$", "end", "lua", nil),
-  --   --     endwise(" do$", "end", "elixir", nil),
-  --   --   })
-  --   -- end,
-  -- }),
   {
     "nacro90/numb.nvim",
     event = "CmdlineEnter",
@@ -910,25 +823,13 @@ return {
   -- @trial: "jghauser/kitty-runner.nvim"
 
   -- ( Motions/Textobjects ) ---------------------------------------------------
-  -- {
-  --   "kylechui/nvim-surround",
-  --   config = function()
-  --     require("nvim-surround").setup({
-  --       move_cursor = true,
-  --       keymaps = { visual = "S" },
-  --       highlight = { -- Highlight before inserting/changing surrounds
-  --         duration = 1,
-  --       },
-  --     })
-  --   end,
-  -- },
   {
     "Wansmer/treesj",
     dependencies = { "nvim-treesitter/nvim-treesitter", "AndrewRadev/splitjoin.vim" },
     cmd = { "TSJSplit", "TSJJoin", "TSJToggle", "SplitjoinJoin", "SplitjoinSplit" },
     keys = { "gs", "gj", "gS", "gJ" },
     config = function()
-      require("treesj").setup({ use_default_keymaps = false })
+      require("treesj").setup({ use_default_keymaps = false, max_join_length = 150 })
 
       local langs = require("treesj.langs")["presets"]
 
@@ -936,6 +837,7 @@ return {
         pattern = "*",
         callback = function()
           if langs[vim.bo.filetype] then
+            dd("using treesj for %s", langs[vim.bo.filetype])
             mega.nnoremap("gS", ":TSJSplit<cr>", { desc = "Split lines", buffer = true })
             mega.nnoremap("gJ", ":TSJJoin<cr>", { desc = "Join lines", buffer = true })
             mega.nnoremap("gs", ":TSJSplit<cr>", { desc = "Split lines", buffer = true })
@@ -1030,7 +932,68 @@ return {
     config = function() require("autolist").setup({ normal_mappings = { invert = { "<c-c>" } } }) end,
   },
   { "ellisonleao/glow.nvim", ft = { "markdown" } },
-  { "ekickx/clipboard-image.nvim" },
+  { "ekickx/clipboard-image.nvim", ft = { "markdown" } },
+
+  -- {
+  --   "epwalsh/obsidian.nvim",
+  --   lazy = false,
+  --   -- event = "VeryLazy",
+  --   config = function()
+  --     require("obsidian").setup({
+  --       dir = vim.g.obsidian_vault_path,
+  --       daily_notes = {
+  --         folder = "dailies",
+  --       },
+  --       notes_subdir = "notes",
+  --       highlight = {
+  --         enable = true,
+  --         additional_vim_regex_highlighting = { "markdown" },
+  --       },
+  --       completion = {
+  --         nvim_cmp = true, -- if using nvim-cmp, otherwise set to false
+  --       },
+  --       use_advanceduri = true,
+  --       note_id_func = function(title)
+  --         -- Create note IDs in a Zettelkasten format with a timestamp and a suffix.
+  --         local suffix = ""
+  --         if title ~= nil then
+  --           -- If title is given, transform it into valid file name.
+  --           suffix = title:gsub(" ", "-"):gsub("[^A-Za-z0-9-]", ""):lower()
+  --         else
+  --           -- If title is nil, just add 4 random uppercase letters to the suffix.
+  --           for _ = 1, 4 do
+  --             suffix = suffix .. string.char(math.random(65, 90))
+  --           end
+  --         end
+  --         return tostring(os.time()) .. "-" .. suffix
+  --       end,
+  --     })
+  --     mega.nmap("gf", function()
+  --       if require("obsidian").util.cursor_on_markdown_link() then
+  --         return "<cmd>ObsidianFollowLink<CR>"
+  --       else
+  --         return "gf"
+  --       end
+  --     end, { desc = "obsidian: follow link", expr = true })
+  --     mega.vmap("gl", function()
+  --       -- if require("obsidian").util.cursor_on_markdown_link() then
+  --       --   return "<cmd>ObsidianFollowLink<CR>"
+  --       -- else
+  --       --   return "gf"
+  --       -- end
+  --     end, { desc = "obsidian: create link" })
+  --
+  --     vim.keymap.set("n", "<leader>zo", "<cmd>ObsidianOpen<cr>")
+  --     vim.keymap.set("n", "<leader>zn", "<cmd>ObsidianNew<cr>")
+  --     vim.keymap.set("n", "<leader>zf", "<cmd>ObsidianSearch<cr>")
+  --     -- vim.keymap.set("n", "<leader>zll", "<cmd>ObsidianLink<cr>")
+  --     -- vim.keymap.set("n", "<leader>zln", "<cmd>ObsidianLinkNew<cr>")
+  --
+  --     vim.keymap.set("v", "<leader>zll", ":ObsidianLink<CR>")
+  --     vim.keymap.set("v", "<leader>zln", ":ObsidianLinkNew<CR>")
+  --     vim.keymap.set("v", "<leader>zb", ":ObsidianBacklinks<CR>")
+  --   end,
+  -- },
   {
     "lukas-reineke/headlines.nvim",
     ft = { "markdown" },

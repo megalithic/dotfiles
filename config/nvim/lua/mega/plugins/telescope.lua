@@ -13,6 +13,34 @@ local function get_border(border_opts)
 end
 _G.telescope_get_border = get_border
 
+local fd_find_command = { "fd", "--type", "f", "--no-ignore-vcs", "--strip-cwd-prefix" }
+local rg_find_command = {
+  "rg",
+  "--files",
+  "--no-ignore-vcs",
+  "--hidden",
+  "--no-heading",
+  "--with-filename",
+  "--column",
+  "--smart-case",
+  -- "--ignore-file",
+  -- (Path.join(vim.env.HOME, ".dotfiles", "misc", "tool-ignores")),
+  "--iglob",
+  "!.git",
+}
+
+local find_files_cmd = rg_find_command
+local grep_files_cmd = {
+  "rg",
+  "--hidden",
+  "--no-ignore-vcs",
+  "--no-heading",
+  "--with-filename",
+  "--line-number",
+  "--column",
+  "--smart-case",
+}
+
 local function dropdown(opts) return require("telescope.themes").get_dropdown(get_border(opts)) end
 
 local function ivy(opts) return require("telescope.themes").get_ivy(get_border(opts)) end
@@ -86,6 +114,7 @@ local M = {
   dependencies = {
     "natecraddock/telescope-zf-native.nvim",
     "nvim-telescope/telescope-live-grep-args.nvim",
+    "nvim-telescope/telescope-file-browser.nvim",
     -- "danielvolchek/tailiscope.nvim"
     -- "danielfalk/smart-open.nvim"
   },
@@ -127,6 +156,11 @@ local M = {
       "<leader>fb",
       function() require("telescope.builtin").buffers(dropdown({})) end,
       desc = "find open buffers",
+    },
+    {
+      "<leader>fn",
+      function() require("telescope").extensions.file_browser.file_browser(ivy({ path = vim.g.obsidian_vault_path })) end,
+      desc = "browse: obsidian notes",
     },
   },
   config = function()
@@ -172,6 +206,8 @@ local M = {
         prompt_prefix = " ",
         selection_caret = " ",
         winblend = 0,
+
+        vimgrep_arguments = grep_files_cmd,
       },
       extensions = {
         live_grep_args = {
@@ -199,6 +235,7 @@ local M = {
       },
       pickers = {
         find_files = {
+          find_command = find_files_cmd,
           on_input_filter_cb = file_extension_filter,
         },
         live_grep = ivy({
@@ -261,6 +298,7 @@ local M = {
       },
     })
 
+    telescope.load_extension("file_browser")
     telescope.load_extension("zf-native")
   end,
 }

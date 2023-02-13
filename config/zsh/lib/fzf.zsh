@@ -6,24 +6,24 @@
 # https://github.com/junegunn/fzf/wiki/Configuring-shell-key-bindings
 # https://gist.github.com/junegunn/8b572b8d4b5eddd8b85e5f4d40f17236
 
-# TODO: need a condition to make this cleaner
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+# TODO:
+# perf gains to be had here: https://github.com/ranelpadon/configs/blob/master/zshrc/rg_fzf_bat.sh
 
 export FZF_TMUX_HEIGHT='20%'
 export FZF_DEFAULT_OPTS="
-  --inline-info
-  --select-1
-  --ansi
-  --extended
-  --bind ctrl-j:ignore,ctrl-k:ignore
-  --bind ctrl-f:page-down,ctrl-b:page-up,ctrl-j:down,ctrl-k:up
-  --cycle
-  --no-multi
-  --no-border
-  --preview-window=right:60%:wrap
-  --margin=0,0
-  --preview 'bat --color=always --style=header,grid --line-range :300 {}'
-  "
+--inline-info
+--select-1
+--ansi
+--extended
+--bind ctrl-j:ignore,ctrl-k:ignore
+--bind ctrl-f:page-down,ctrl-b:page-up,ctrl-j:down,ctrl-k:up
+--cycle
+--no-multi
+--no-border
+--preview-window=right:60%:wrap
+--margin=0,0
+--preview 'bat --color=always --style=header,grid --line-range :300 {}'
+"
 
 _fzf_megaforest() {
   local color00='#323d43'
@@ -44,11 +44,11 @@ _fzf_megaforest() {
   local color0F='#d65d0e'
 
   # --color=bg+:$color01,bg:$color00,spinner:$color0C,hl:$color0D
-  export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS
-  --color=bg+:$color01,spinner:$color0C,hl:$color0A
-  --color=fg:$color04,header:$color0D,info:$color0A,pointer:$color0C
-  --color=marker:$color0C,fg+:$color06,prompt:$color0A,hl+:$color0F
-  "
+export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS
+--color=bg+:$color01,spinner:$color0C,hl:$color0A
+--color=fg:$color04,header:$color0D,info:$color0A,pointer:$color0C
+--color=marker:$color0C,fg+:$color06,prompt:$color0A,hl+:$color0F
+"
 }
 
 _fzf_megaforest

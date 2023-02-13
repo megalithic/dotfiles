@@ -273,10 +273,6 @@ alias notes="cd $HOME/Library/Mobile\ Documents/com\~apple\~CloudDocs/Documents/
 alias nvim-plugins="cd ~/.local/share/nvim/site/pack/paqs/start"
 # alias icloud="cd $HOME/Library/Mobile\ Documents/com~apple~CloudDocs"
 
-# POSTGRES
-# -----------------------------------------------------------------------------
-alias fixpg="kill $(head -1 /usr/local/var/postgres/postmaster.pid)"
-
 # MISC
 # -----------------------------------------------------------------------------
 alias rm="rm -v"

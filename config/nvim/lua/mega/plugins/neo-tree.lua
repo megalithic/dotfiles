@@ -1,31 +1,31 @@
 local M = {
   "nvim-neo-tree/neo-tree.nvim",
-  keys = { "<C-t>" },
+  keys = {
+    { "<leader>et", "<cmd>Neotree toggle reveal position=left<cr>", desc = "Toggle Neo-Tree" },
+  },
   cmd = { "NeoTree" },
   dependencies = {
     "nvim-lua/plenary.nvim",
     "MunifTanjim/nui.nvim",
-    "mrbjarksen/neo-tree-diagnostics.nvim"
---   { "s1n7ax/nvim-window-picker", config= {
---     autoselect_one = true,
---     include_current = false,
---     filter_rules = {
---       bo = {
---         filetype = { "neo-tree-popup", "quickfix", "incline" },
---         buftype = { "terminal", "quickfix", "nofile" },
---       },
---     },
---     other_win_hl_color = mega.colors.dark_red,
---     }  }
- }
+    "mrbjarksen/neo-tree-diagnostics.nvim",
+    --   { "s1n7ax/nvim-window-picker", config= {
+    --     autoselect_one = true,
+    --     include_current = false,
+    --     filter_rules = {
+    --       bo = {
+    --         filetype = { "neo-tree-popup", "quickfix", "incline" },
+    --         buftype = { "terminal", "quickfix", "nofile" },
+    --       },
+    --     },
+    --     other_win_hl_color = mega.colors.dark_red,
+    --     }  }
+  },
 }
 
 function M.config()
   vim.g.neo_tree_remove_legacy_commands = 1
 
   local icons = mega.icons
-
-  mega.nnoremap("<C-t>", "<Cmd>Neotree toggle reveal position=left<CR>")
 
   require("neo-tree").setup({
     sources = {
@@ -42,45 +42,45 @@ function M.config()
     close_if_last_window = true, -- Close Neo-tree if it is the last window left in the tab
     enable_git_status = true,
     git_status_async = true,
-    event_handlers = {
-      {
-        event = "neo_tree_buffer_enter",
-        handler = function(args) vim.cmd("highlight! Cursor blend=100") end,
-      },
-      {
-        event = "neo_tree_buffer_leave",
-        handler = function(args) vim.cmd("highlight! Cursor blend=0") end,
-      },
-      {
-        event = "neo_tree_window_before_open",
-        handler = function(args) end,
-      },
-      {
-        event = "neo_tree_window_after_open",
-        handler = function(args)
-          vim.cmd("wincmd =")
-          vim.api.nvim_win_set_width(0, 50)
-        end,
-      },
-      {
-        event = "neo_tree_window_before_close",
-        handler = function(args) end,
-      },
-      -- {
-      --   event = "neo_tree_window_after_close",
-      --   handler = function(args)
-      --     -- vim.cmd("wincmd =")
-      --     -- require("virt-column").refresh()
-      --     -- -- _G.mega.resize_windows()
-      --     -- _G.mega.blink_cursorline(250)
-      --     -- vim.cmd("e")
-      --   end,
-      -- },
-      {
-        event = "neo_tree_popup_buffer_enter",
-        handler = function(args) vim.cmd("highlight! Cursor blend=0") end,
-      },
-    },
+    -- event_handlers = {
+    --   {
+    --     event = "neo_tree_buffer_enter",
+    --     handler = function(args) vim.cmd("highlight! Cursor blend=100") end,
+    --   },
+    --   {
+    --     event = "neo_tree_buffer_leave",
+    --     handler = function(args) vim.cmd("highlight! Cursor blend=0") end,
+    --   },
+    --   {
+    --     event = "neo_tree_window_before_open",
+    --     handler = function(args) end,
+    --   },
+    --   {
+    --     event = "neo_tree_window_after_open",
+    --     handler = function(args)
+    --       vim.cmd("wincmd =")
+    --       vim.api.nvim_win_set_width(0, 50)
+    --     end,
+    --   },
+    --   {
+    --     event = "neo_tree_window_before_close",
+    --     handler = function(args) end,
+    --   },
+    --   -- {
+    --   --   event = "neo_tree_window_after_close",
+    --   --   handler = function(args)
+    --   --     -- vim.cmd("wincmd =")
+    --   --     -- require("virt-column").refresh()
+    --   --     -- -- _G.mega.resize_windows()
+    --   --     -- _G.mega.blink_cursorline(250)
+    --   --     -- vim.cmd("e")
+    --   --   end,
+    --   -- },
+    --   {
+    --     event = "neo_tree_popup_buffer_enter",
+    --     handler = function(args) vim.cmd("highlight! Cursor blend=0") end,
+    --   },
+    -- },
     filesystem = {
       hijack_netrw_behavior = "open_current",
       use_libuv_file_watcher = true,

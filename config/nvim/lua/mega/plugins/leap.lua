@@ -16,6 +16,7 @@ local function leap_config() require("leap").setup({ equivalence_classes = { " \
 return {
   {
     "ggandor/leap.nvim",
+    dependencies = { "tpope/vim-repeat" },
     keys = { { "s", leap_keys } },
     config = leap_config,
   },

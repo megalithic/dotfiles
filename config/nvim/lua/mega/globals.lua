@@ -42,11 +42,16 @@ vim.g.vim_path = fmt("%s/.config/nvim", vim.g.home)
 vim.g.cache_path = fmt("%s/.cache/nvim", vim.g.home)
 vim.g.local_state_path = fmt("%s/.local/state/nvim", vim.g.home)
 vim.g.local_share_path = fmt("%s/.local/share/nvim", vim.g.home)
+vim.g.icloud_path = vim.env.ICLOUD_DIR
+vim.g.icloud_documents_path = vim.env.ICLOUD_DOCUMENTS_DIR
+vim.g.obsidian_vault_path = vim.env.OBSIDIAN_VAULT_DIR
+vim.g.notes_path = fmt("%s/_notes", vim.g.icloud_documents_path)
+vim.g.neorg_path = fmt("%s/_neorg", vim.g.icloud_documents_path)
 
 mega.dirs.dots = vim.g.dotfiles
 mega.dirs.privates = fn.expand("$PRIVATES")
 mega.dirs.code = fn.expand("$HOME/code")
-mega.dirs.icloud = fn.expand("$ICLOUD_DIR")
+mega.dirs.icloud = vim.g.icloud_path
 mega.dirs.docs = fn.expand("$DOCUMENTS_DIR")
 mega.dirs.org = fn.expand(mega.dirs.docs .. "/_org")
 mega.dirs.zettel = fn.expand("$ZK_NOTEBOOK_DIR")
@@ -1229,6 +1234,7 @@ do
   )
   command("SaveAsFile", [[noautocmd clear | :execute "saveas %:p:h/" .input('save as -> ') | :e ]])
   command("RenameFile", [[noautocmd clear | :execute "Rename " .input('rename to -> ') | :e ]])
+  command("Rename", [[RenameFile]])
   -- command("Rename", [[lua require("genghis").renameFile()]])
   -- command("Delete", [[lua require("genghis").trashFile()]])
   command("Flash", function() mega.blink_cursorline() end)

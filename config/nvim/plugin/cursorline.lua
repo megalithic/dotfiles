@@ -51,6 +51,7 @@ local M = {
     ".git/COMMIT_EDITMSG",
     "startify",
     "prompt",
+    "neorg://Quick Actions",
   },
   prev_col = 0,
   prev_row = 0,

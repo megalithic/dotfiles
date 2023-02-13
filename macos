@@ -29,8 +29,10 @@ set -x
 # https://www.cultofmac.com/646404/secret-mac-settings/
 # ------------------
 
-COMPUTER_NAME := 'megabook'
-COMPUTER_NAME="megabook"
+if [[ ! $(arch) = "arm64" ]]; then
+  COMPUTER_NAME := 'megabook'
+  COMPUTER_NAME="megabook"
+fi
 
 # Close any open System Preferences panes, to prevent them from overriding
 # settings we’re about to change

@@ -189,8 +189,9 @@ local function setup_autocommands(client, bufnr)
       end,
     },
   })
+
   if client.server_capabilities.signatureHelpProvider then
-    augroup("LspFormat", {
+    augroup("LspSignature", {
       event = { "CursorHoldI" },
       buffer = bufnr,
       callback = function()
@@ -206,6 +207,7 @@ local function setup_autocommands(client, bufnr)
       end,
     })
   end
+
   augroup("LspFormat", {
     {
       event = { "BufWritePre" },
@@ -239,9 +241,9 @@ local function setup_keymaps(client, bufnr)
   nnoremap("gn", require("mega.plugins.lsp.rename").rename, desc("lsp: rename"))
 
   -- maybe(nmap("K", vim.lsp.buf.hover, desc("lsp: hover"), "Hover"))
-  nmap("K", vim.lsp.buf.hover, desc("lsp: hover"))
-  nmap("gK", vim.lsp.buf.signature_help, desc("lsp: signature help"))
-  imap("<c-k>", vim.lsp.buf.signature_help, desc("lsp: signature help"))
+  nnoremap("K", vim.lsp.buf.hover, desc("lsp: hover"))
+  nnoremap("<c-h>", vim.lsp.buf.signature_help, desc("lsp: signature help"))
+  inoremap("<c-h>", vim.lsp.buf.signature_help, desc("lsp: signature help"))
   -- { "gK", vim.lsp.buf.signature_help, desc = "Signature Help", has = "signatureHelp" },
   -- { "<c-k>", vim.lsp.buf.signature_help, mode = "i", desc = "Signature Help", has = "signatureHelp" },
 

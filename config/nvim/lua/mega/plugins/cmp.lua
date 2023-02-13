@@ -90,6 +90,9 @@ function M.config()
   }
 
   cmp.setup({
+    matching = {
+      disallow_partial_fuzzy_matching = false,
+    },
     enabled = function()
       if vim.bo.buftype == "prompt" or vim.g.started_by_firenvim then return false end
 
@@ -207,6 +210,7 @@ function M.config()
             -- rg = "[rg]",
             buffer = "[buf]",
             spell = "[spl]",
+            neorg = "[neorg]",
             cmdline = "[cmd]",
             cmdline_history = "[cmdhist]",
             emoji = "[emo]",

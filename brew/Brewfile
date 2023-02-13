@@ -60,6 +60,7 @@ brew "broot"
 brew "browsh" if OS.mac?
 brew "btop"
 brew "ccls" # c-lang lsp vs., c-lang lsp in llvm
+brew "chafa" # image renderer for telescope/bat/fzf/etc
 brew "cmake" if OS.mac?
 brew "coreutils" if OS.mac?
 brew "curl"
@@ -288,6 +289,7 @@ cask "obsidian"
 # cask "oracle-jdk"
 cask "postbird" if OS.mac?
 cask "qutebrowser" if OS.mac? # sudo xattr -dr com.apple.quarantine /Applications/qutebrowser.app
+cask "raycast" if OS.mac?
 cask "signal"
 cask "slack"
 cask "soundsource", greedy: true

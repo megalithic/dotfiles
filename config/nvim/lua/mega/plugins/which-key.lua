@@ -138,7 +138,6 @@ function M.config()
       d = { [[:DuplicateFile<cr>]], "duplicate current file" },
       D = { [[<cmd>Delete!<cr>]], "delete file" },
       yp = { [[:let @+ = expand("%")<CR>]], "yank path to clipboard" },
-      t = { [[:Neotree toggle reveal<cr>]], "toggle neo-tree" },
     },
     -- ["<leader>f"] = {
     --   name = "telescope",

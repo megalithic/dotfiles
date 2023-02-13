@@ -124,7 +124,7 @@ function mini.config()
   mini.pairs()
   mini.comment()
   mini.align()
-  mini.indentscope()
+  -- mini.indentscope()
   -- mini.animate()
 end
 

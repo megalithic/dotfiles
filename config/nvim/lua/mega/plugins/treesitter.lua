@@ -45,12 +45,11 @@ return {
       "RRethy/nvim-treesitter-endwise",
       "jadengis/nvim-ts-autotag",
       -- WARN: no longer maintained..
-      "p00f/nvim-ts-rainbow",
+      { "mrjones2014/nvim-ts-rainbow" },
       "David-Kunz/treesitter-unit",
     },
     config = function()
-      -- local ts_ok, _ = mega.require("nvim-treesitter")
-      -- if not ts_ok then return end
+      require("nvim-treesitter.install").compilers = { "gcc-12" }
 
       vim.opt.indentexpr = "nvim_treesitter#indent()"
 
@@ -149,6 +148,7 @@ return {
           -- https://www.reddit.com/r/neovim/comments/ok9frp/v05_treesitter_does_anyone_have_python_indent/h57kxuv/?context=3
           -- Required since TS highlighter doesn't support all syntax features (conceal)
           additional_vim_regex_highlighting = {
+            "markdown",
             "python",
             "lua",
             "vim",
@@ -231,12 +231,12 @@ return {
         },
         incremental_selection = {
           enable = true,
-          -- keymaps = {
-          --   init_selection = "gN", -- maps in normal mode to init the node/scope selection
-          --   scope_incremental = "gN", -- increment to the upper scope (as defined in locals.scm)
-          --   node_incremental = "gnn", -- increment to the upper named parent
-          --   node_decremental = "gnn", -- decrement to the previous node
-          -- },
+          keymaps = {
+            init_selection = "gN", -- maps in normal mode to init the node/scope selection
+            scope_incremental = "gN", -- increment to the upper scope (as defined in locals.scm)
+            node_incremental = "gnn", -- increment to the upper named parent
+            node_decremental = "gnN", -- decrement to the previous node
+          },
         },
         query_linter = {
           enable = true,

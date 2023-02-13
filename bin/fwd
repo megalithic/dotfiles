@@ -40,6 +40,10 @@ function __help() {
   exit 0
 }
 
+# __timestamp() {
+# date -j -f %s
+# }
+
 __status() {
   # NOTE: JetBrains Mono Nerd Fonts is used for many of the glyphs..
   command cat <<EOF
@@ -68,6 +72,7 @@ while getopts "hsx" OPTION; do
     x)
       echo "${white}Exiting.."
       ssh -S "${FWD_CONTROL_FILE}" -O exit "$FWD_CONNECTION" 2>/dev/null
+      rm ${TIMESTAMP_FILE}
       __status
       exit 0
       ;;
@@ -80,12 +85,18 @@ done
 
 shift "$(($OPTIND - 1))"
 PORT="${1:-4000}"
+# TIMESTAMP_DISPLAY=""
+# TIMESTAMP=""
+# TIMESTAMP_FILE=""
 
 if [[ ! -e "${FWD_CONTROL_FILE}" ]]; then
   echo "${white}Connecting.."
+  # TIMESTAMP=$([[ "$(uname)" == "Darwin" ]] && gdate +%s.%N || date +%s.%N)
+  # TIMESTAMP_FILE="${FWD_CONTROL_FILE}_${TIMESTAMP}"
+  # touch ${TIMESTAMP_FILE}
+
   ssh -M -S "${FWD_CONTROL_FILE}" -fNT -R 8888:localhost:$PORT "$FWD_CONNECTION" 2>/dev/null &&
 fi
-
 command cat <<EOF
 $(__status)
 EOF

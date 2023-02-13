@@ -307,55 +307,81 @@ if not vim.g.enabled_plugin["megacolumn"] then return end
 local fn, v, api = vim.fn, vim.v, vim.api
 
 local space = " "
+local shade = "░"
 local separator = "▏" -- '│'
+local fold_opened = "▼"
+local fold_closed = "▶"
+local sep_hl = "%#StatusColSep#"
 
 mega.statuscolumn = {}
 
+---@param group string
+---@param text string
+---@return string
+local function hl(group, text) return "%#" .. group .. "#" .. text .. "%*" end
+
+local function click(name, item) return "%@v:lua.mega.statuscolumn." .. name .. "@" .. item end
+
+---@param buf number
 ---@return {name:string, text:string, texthl:string}[]
-local function get_signs()
-  local buf = api.nvim_win_get_buf(vim.g.statusline_winid)
+local function get_signs(buf)
   return vim.tbl_map(
     function(sign) return fn.sign_getdefined(sign.name)[1] end,
     fn.sign_getplaced(buf, { group = "*", lnum = v.lnum })[1].signs
   )
 end
 
+function mega.statuscolumn.toggle_breakpoint(_, _, _, mods)
+  local ok, dap = pcall(require, "dap")
+  if not ok then return end
+  if mods:find("c") then
+    vim.ui.input({ prompt = "Breakpoint condition: " }, function(input) dap.set_breakpoint(input) end)
+  else
+    dap.toggle_breakpoint()
+  end
+end
+
 local function fdm()
-  local is_folded = fn.foldlevel(v.lnum) > fn.foldlevel(v.lnum - 1)
-  return is_folded and (fn.foldclosed(v.lnum) == -1 and "▼" or "⏵") or " "
+  if fn.foldlevel(v.lnum) <= fn.foldlevel(v.lnum - 1) then return space end
+  return fn.foldclosed(v.lnum) == -1 and fold_closed or fold_opened
 end
 
-local function nr()
-  local num = (not mega.empty(v.relnum) and v.relnum or v.lnum)
-  return fn.substitute(num, "\\d\\zs\\ze\\" .. "%(\\d\\d\\d\\)\\+$", ",", "g")
+local function is_virt_line() return v.virtnum < 0 end
+
+local function nr(win)
+  if is_virt_line() then return shade end -- virtual line
+  local num = vim.wo[win].relativenumber and not mega.empty(v.relnum) and v.relnum or v.lnum
+  local lnum = fn.substitute(num, "\\d\\zs\\ze\\" .. "%(\\d\\d\\d\\)\\+$", ",", "g")
+  local num_width = (vim.wo[win].numberwidth - 1) - api.nvim_strwidth(lnum)
+  local padding = string.rep(space, num_width)
+  return click("toggle_breakpoint", padding .. lnum)
 end
 
--- Format the git sign i.e. remove the extra padding that is added
----@param sign {texthl: string, text: string}
----@return string
-local function format_git_sign(sign)
-  if not sign then return " " end
-  return "%#" .. sign.texthl .. "#" .. sign.text:gsub(" ", "") .. "%*"
+local function sep()
+  local separator_hl = not is_virt_line() and mega.empty(v.relnum) and sep_hl or ""
+  return separator_hl .. separator
 end
 
 function mega.statuscolumn.render()
+  local curwin = api.nvim_get_current_win()
+  local curbuf = api.nvim_win_get_buf(curwin)
+
   local sign, git_sign
-  -- This is dependent on using normal signs (rather than extmarks) for git signs
-  for _, s in ipairs(get_signs()) do
+  for _, s in ipairs(get_signs(curbuf)) do
     if s.name:find("GitSign") then
       git_sign = s
     else
       sign = s
     end
   end
-
   local components = {
-    sign and ("%#" .. sign.texthl .. "#" .. sign.text .. "%*") or " ",
-    [[%=]],
-    nr(),
+    sign and hl(sign.texthl, sign.text:gsub(space, "")) or space,
+    "%=",
     space,
-    format_git_sign(git_sign),
-    separator,
+    nr(curwin),
+    space,
+    git_sign and hl(git_sign.texthl, git_sign.text:gsub(space, "")) or space,
+    sep(),
     fdm(),
     space,
   }
@@ -388,7 +414,7 @@ local excluded = {
   "NeogitRebaseTodo",
 }
 
-vim.o.statuscolumn = [[%!v:lua.mega.statuscolumn.render()]]
+vim.o.statuscolumn = "%{%v:lua.mega.statuscolumn.render()%}"
 
 mega.augroup("StatusCol", {
   {

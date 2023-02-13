@@ -1,10 +1,15 @@
-local M = { "ibhagwan/fzf-lua", cmd = { "FzfLua" } }
+local M =
+  { "ibhagwan/fzf-lua", cmd = { "FzfLua" }, keys = { { "<C-p>", "<cmd>FzfLua files<cr>", desc = "fzf: files" } } }
 
 function M.config()
   local res, fzf_lua = pcall(require, "fzf-lua")
   if not res then return end
 
-  local img_prev_bin = vim.fn.executable("viu") == 1 and { "viu", "-bt" } or { "catimg" }
+  -- local img_prev_bin = vim.fn.executable("ueberzug") == 1 and { "ueberzug" }
+  local img_prev_bin = vim.fn.executable("chafa") == 1 and { "chafa" }
+    or vim.fn.executable("viu") == 1 and { "viu", "-b" }
+    or nil
+  -- local img_prev_bin = vim.fn.executable("viu") == 1 and { "viu", "-bt" } or { "catimg" }
   -- local img_prev_bin = vim.fn.executable("ueberzug") == 1 and { "ueberzug" }
   --   or { "kitty", "+kitten", "icat" }
   --   or { "viu", "-b", "-t" }
@@ -46,10 +51,10 @@ function M.config()
   end
 
   -- custom devicons setup file to be loaded when `multiprocess = true`
-  fzf_lua.config._devicons_setup = "~/.config/nvim/lua/plugins/devicons.lua"
+  -- fzf_lua.config._devicons_setup = "~/.config/nvim/lua/plugins/devicons.lua"
 
   fzf_lua.setup({
-    -- fzf_bin = fzf_bin,
+    -- fzf_bin = { opts = { ["--no-separator"] = "" } },
     fzf_colors = fzf_colors,
     winopts = {
       split = "belowright new",
@@ -86,6 +91,7 @@ function M.config()
           ["png"] = img_prev_bin,
           ["jpg"] = img_prev_bin,
           ["jpeg"] = img_prev_bin,
+          ["svg"] = { "chafa" },
         },
       },
     },

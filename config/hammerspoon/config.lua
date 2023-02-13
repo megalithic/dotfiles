@@ -221,7 +221,7 @@ local apps = {
   ["com.binarynights.ForkLift-3"] = {
     bundleID = "com.binarynights.ForkLift-3",
     name = "ForkLift",
-    key = "f",
+    -- key = "f",
     rules = {
       { "", 1, "centeredLarge" },
     },
@@ -229,7 +229,7 @@ local apps = {
   ["com.apple.finder"] = {
     bundleID = "com.apple.finder",
     name = "Finder",
-    -- key = "f",
+    key = "f",
     rules = {
       { "Finder", 1, "centeredMedium" },
     },
