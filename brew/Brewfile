@@ -192,6 +192,7 @@ brew "ugit" # undo several git scenarios
 brew "urlview"
 brew "viu"
 brew "weechat" if OS.mac? # can also -> args: ["build-from-source"]
+brew "wez/wezterm/wezterm-nightly"
 brew "wget"
 brew "wifi-password" if OS.mac?
 brew "wxwidgets" # for erlang
@@ -302,7 +303,6 @@ cask "utm" # similar parallels
 # cask "virtualbox" # requires restart with security allow (oracle things)
 # cask "witch" # using contexts in stead
 # cask "yubico-authenticator"
-cask "wez/wezterm/wezterm-nightly"
 cask "yubico-yubikey-manager"
 cask "yubico-yubikey-piv-manager"
 cask "zoom"

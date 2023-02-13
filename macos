@@ -553,8 +553,6 @@ apps_to_launch=(
   "Cloudflare WARP"
   "Colorsnapper2"
   "Contexts"
-  # "Dropbox"
-  # "ExpressVPN"
   "Fantastical"
   "Hammerspoon"
   "iStat Menus"
@@ -566,6 +564,7 @@ for app in "${apps_to_launch[@]}"; do
   if [[ ! "$(app_is_running "${app}")" == "true" ]]; then
     echo "Launching \"${app}\"."
     open /Applications/${app}.app
+    sleep 2
     echo
   fi
 done
@@ -578,10 +577,8 @@ apps_to_startup=(
   "Cloudflare WARP"
   "Colorsnapper2"
   "Contexts"
-  # "Dropbox"
   "Fantastical"
   "Hammerspoon"
-  # "Hazel"
   "iStat Menus"
   "Karabiner-Elements"
 )

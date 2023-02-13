@@ -307,7 +307,6 @@
         [[ $(uname) == "Darwin" ]] && sudo chown -R "$(whoami)":admin ~/.cache;
         [[ $(uname) == "Darwin" ]] && sudo chown -R "$(whoami)":admin ~/.config;
 
-
         log "Correctly chown/chmod ~/.ssh files";
         sudo chmod 0700 ~/.ssh;
         sudo chmod -R 0600 ~/.ssh;
@@ -315,3 +314,30 @@
         sudo chmod 0644 ~/.ssh/config;
         sudo chmod 0644 ~/.ssh/authorized_keys;
         sudo chown -R $(whoami) ~/.ssh;
+
+        command cat <<EOF
+        ${blue}░  Installation complete (possibly with errors?)
+        ${blue}░  
+        ░
+        ${blue}░  Manually open/setup the following:
+        ${blue}░  ${white}  - espanso
+        ${blue}░  ${white}  - postgresql
+        ${blue}░  ${white}  - mailmate
+        ${blue}░  ${white}  - signal
+        ${blue}░  ${white}  - slack
+        ${blue}░  ${white}  - bettertouchtool
+        ${blue}░  ${white}  - forklift
+        ${blue}░
+        ${blue}░  Install licenses for the following:
+        ${blue}░  ${white}  - alfred
+        ${blue}░  ${white}  - contexts
+        ${blue}░  ${white}  - mailmate
+        ${blue}░  ${white}  - dash
+        ${blue}░  ${white}  - bartender
+        ${blue}░  ${white}  - bettertouchtool
+        ${blue}░  ${white}  - colorsnapper
+        ${blue}░  ${white}  - forklift
+        ${blue}░  ${white}  - soundsource
+        ${blue}░
+        ${reset}
+        EOF

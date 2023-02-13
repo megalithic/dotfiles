@@ -20,6 +20,8 @@ if [ -d "~/.dotfiles/.git" ]; then
 ${blue}░  
 ░
 ░  $(echo "host:    $(hostname)")
+░  $(echo "os:      $(uname)")
+░  $(echo "arch:    $(arch)")
 ░  $(git --git-dir "$DOTS/.git" --work-tree "$DOTS" log -n 1 --pretty=format:'%C(yellow)commit:  %h')
 ░  $(git --git-dir "$DOTS/.git" --work-tree "$DOTS" log -n 1 --pretty=format:'%C(red)date:    %ad' --date=short)
 ░  $(git --git-dir "$DOTS/.git" --work-tree "$DOTS" log -n 1 --pretty=format:'%C(cyan)author:  %an')
