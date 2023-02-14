@@ -21,15 +21,27 @@ __invocation="$(printf %q "$__file")$( (($#)) && printf ' %q' "$@" || true)"
 
 FORCE_INSTALL="false"
 
+if [[ "$(arch)" == "arm64" ]]; then
+  eval "$(/opt/homebrew/bin/brew shellenv)"
+else
+  eval "$(/usr/local/bin/brew shellenv)"
+fi
+
+brew_bin="/usr/local/bin/brew"
+
+if [[ "$(arch)" == "arm64" ]]; then
+  brew_bin="/opt/homebrew/bin/brew"
+fi
+
 remove_brew_nvim() {
-  if brew ls --versions neovim >/dev/null; then
+  if "$brew_bin" ls --versions neovim >/dev/null; then
     read -p "$(tput bold)$(tput setaf 5)[?] remove homebrew version of neovim (Y/n)?$(tput sgr 0) " yn
     case $yn in
       [Yy]*)
-        brew uninstall -f --ignore-dependencies neovim neovim-remote || exit 1
+        "$brew_bin" uninstall -f --ignore-dependencies neovim neovim-remote || exit 1
         ;;
       "")
-        brew uninstall -f --ignore-dependencies neovim neovim-remote || exit 1
+        "$brew_bin" uninstall -f --ignore-dependencies neovim neovim-remote || exit 1
         ;;
       [Nn]*)
         log_warn "opted out of homebrew neovim removal"
@@ -86,7 +98,7 @@ do_build() {
       ;;
     Darwin)
       # REF: https://github.com/neovim/neovim/wiki/Building-Neovim#macos--homebrew
-      brew install ninja libtool automake cmake pkg-config gettext curl
+      "$brew_bin" install ninja libtool automake cmake pkg-config gettext curl
       ;;
   esac
 

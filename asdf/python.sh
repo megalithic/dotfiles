@@ -3,15 +3,19 @@
 
 [[ -f "$HOME/.dotfiles/config/zsh/lib/helpers.zsh" ]] && source "$HOME/.dotfiles/config/zsh/lib/helpers.zsh"
 
-set -euo pipefail
+case `uname` in
+  Darwin)
+    # -- intel mac:
+    [ -f "/usr/local/bin/brew" ] && eval "$(/usr/local/bin/brew shellenv)"
+    # -- M1 mac:
+    [ -f "/opt/homebrew/bin/brew" ] && eval "$(/opt/homebrew/bin/brew shellenv)"
+    ;;
+  Linux)
+    [ -d "/home/linuxbrew/.linuxbrew" ] && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+    ;;
+esac
 
-# -- set some useful vars for executable info:
-__dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-__file="${__dir}/$(basename "${BASH_SOURCE[0]}")"
-__base="$(basename "$__file" .sh)"
-__root="$(cd "$(dirname "$__dir")" && pwd)"
-# shellcheck disable=SC2034,SC2015
-__invocation="$(printf %q "$__file")$( (($#)) && printf ' %q' "$@" || true)"
+set -euo pipefail
 
 do_install() {
   python3 -m pip install --upgrade pip
@@ -28,7 +32,8 @@ do_install() {
   pip3 -m pip install --upgrade  -r "$HOME/.default-python-packages"
   # cat "$HOME/.default-python-packages" | xargs pip3 install --upgrade
   # sudo /Library/Frameworks/Python.framework/Versions/3.11/bin/pip3 -m pip install --upgrade  -r "$HOME/.default-python-packages"
-  /usr/local/opt/python@3.11/bin/python3.11 -m pip install --upgrade  -r "$HOME/.default-python-packages"
+  [ -f "/usr/local/bin/brew" ] && /usr/local/opt/python@3.11/bin/python3.11 -m pip install --upgrade  -r "$HOME/.default-python-packages"
+  [ -f "/opt/homebrew/bin/brew" ] && /opt/homebrew/opt/python@3.11/bin/python3.11 -m pip install --upgrade  -r "$HOME/.default-python-packages"
   # sudo cat "$HOME/.default-python-packages" | xargs /Library/Frameworks/Python.framework/Versions/3.11/bin/pip3 install --upgrade
 
   asdf reshim python

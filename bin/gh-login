@@ -2,6 +2,12 @@
 
 set -euo pipefail
 
-if ! gh auth status; then
-  gh auth login
+gh_bin="/usr/local/bin/gh"
+
+if [[ "$(arch)" == "arm64" ]]; then
+  gh_bin="/opt/homebrew/bin/gh"
+fi
+
+if ! "$gh_bin" auth status; then
+  "$gh_bin" auth login
 fi

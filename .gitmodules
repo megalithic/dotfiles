@@ -50,6 +50,3 @@
 [submodule "config/zsh/plugins/zsh-defer"]
 	path = config/zsh/plugins/zsh-defer
 	url = https://github.com/romkatv/zsh-defer
-[submodule "config/hammerspoon/Spoons/VimMode.spoon"]
-	path = config/hammerspoon/Spoons/VimMode.spoon
-	url = https://github.com/dbalatero/VimMode.spoon

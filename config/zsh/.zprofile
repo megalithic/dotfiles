@@ -18,17 +18,17 @@
 # # Homebrew
 # #-------------------------------------------------------------------------------
 
-# case `uname` in
-#   Darwin)
-#     # -- intel mac:
-#     [ -f "/usr/local/bin/brew" ] && eval "$(/usr/local/bin/brew shellenv)"
-#     # -- M1 mac:
-#     [ -f "/opt/homebrew/bin/brew" ] && eval "$(/opt/homebrew/bin/brew shellenv)"
-#   ;;
-#   Linux)
-#     [ -d "/home/linuxbrew/.linuxbrew" ] && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-#   ;;
-# esac
+case `uname` in
+  Darwin)
+    # -- intel mac:
+    [ -f "/usr/local/bin/brew" ] && eval "$(/usr/local/bin/brew shellenv)"
+    # -- M1 mac:
+    [ -f "/opt/homebrew/bin/brew" ] && eval "$(/opt/homebrew/bin/brew shellenv)"
+    ;;
+  Linux)
+    [ -d "/home/linuxbrew/.linuxbrew" ] && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+    ;;
+esac
 
 # #-------------------------------------------------------------------------------
 # #               $PATH Updates

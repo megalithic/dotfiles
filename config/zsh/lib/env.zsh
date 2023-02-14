@@ -58,12 +58,11 @@ case `uname` in
     ;;
 esac
 
-
-if [ $(arch) = "arm64" ]; then
+brew_prefix='/usr/local'
+if [[ "$(arch)" == "arm64" ]]; then
   brew_prefix='/opt/homebrew'
   eval $(/opt/homebrew/bin/brew shellenv)
 else
-  brew_prefix='/usr/local'
   eval $(/usr/local/bin/brew shellenv)
 fi
 
@@ -407,6 +406,7 @@ case "$(uname)" in
     /usr/local/opt/python@3.*/bin(Nn[-1]-/)
     /usr/local/opt/python@2.*/bin(Nn[-1]-/)
     /usr/local/{bin,sbin}
+    /opt/homebrew/bin
     $path
   )
   export PATH

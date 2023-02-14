@@ -38,11 +38,9 @@ do_install() {
   log_ok "completed installing brew." ||
   exit 1
 
-  if [ $(arch) = "arm64" ]; then
-    brew_prefix='/opt/homebrew'
+  if [[ "$(arch)" == "arm64" ]]; then
     eval $(/opt/homebrew/bin/brew shellenv)
   else
-    brew_prefix='/usr/local'
     eval $(/usr/local/bin/brew shellenv)
   fi
 

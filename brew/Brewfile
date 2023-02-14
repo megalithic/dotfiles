@@ -187,7 +187,7 @@ brew "tmux", args: ["HEAD"] if OS.mac? # , args: ["HEAD"]
 brew "transcrypt" if OS.mac?
 brew "trash" if OS.mac?
 brew "tree"
-brew "tree-sitter"
+brew "tree-sitter", args: ["HEAD"]
 brew "ugit" # undo several git scenarios
 brew "urlview"
 brew "viu"
