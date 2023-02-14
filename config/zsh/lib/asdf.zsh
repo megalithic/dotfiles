@@ -6,7 +6,7 @@ asdf_exec=""
 if [[ -f /home/linuxbrew/.linuxbrew/opt/asdf/libexec/asdf.sh ]]; then
   asdf_exec=/home/linuxbrew/.linuxbrew/opt/asdf/libexec/asdf.sh
 else
-  asdf_exec="$ASDF_DIR/asdf.sh"
+  asdf_exec="$HOME/.asdf/asdf.sh"
 fi
 
 source $asdf_exec

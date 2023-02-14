@@ -12,4 +12,8 @@ echo -n "transcrypt password: "
 read -sr password
 echo
 
-transcrypt -c "${cipher:-aes-256-cbc}" -p "$password"
+if [ $(arch) = "arm64" ]; then
+  /opt/homebrew/bin/transcrypt -c "${cipher:-aes-256-cbc}" -p "$password"
+else
+  /usr/local/bin/transcrypt -c "${cipher:-aes-256-cbc}" -p "$password"
+fi
