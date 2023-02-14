@@ -192,7 +192,6 @@ brew "ugit" # undo several git scenarios
 brew "urlview"
 brew "viu"
 brew "weechat" if OS.mac? # can also -> args: ["build-from-source"]
-brew "wez/wezterm/wezterm-nightly"
 brew "wget"
 brew "wifi-password" if OS.mac?
 brew "wxwidgets" # for erlang
@@ -269,7 +268,8 @@ cask "flux"
 cask "forklift" # replaced with marta for now
 cask "hazel"
 cask "hammerspoon", greedy: true
-cask "intel-power-gadget" # requires restart with security allow (intel things)
+# FIXME: needs an !arm64 check
+# cask "intel-power-gadget" # requires restart with security allow (intel things)
 cask "insomnia"
 # cask "inkscape"
 cask "istat-menus"
@@ -299,11 +299,13 @@ cask "spotify"
 # cask "vimac"  # FIXME: this requires a click-based install (https://install.appcenter.ms/users/dexterleng/apps/vimac/distribution_groups/sparkle)
 cask "the-unarchiver"
 cask "utm" # similar parallels
+cask "wez/wezterm/wezterm-nightly"
 # cask "usb-overdrive" # causes issues with QMK keyboards
 # cask "virtualbox" # requires restart with security allow (oracle things)
 # cask "witch" # using contexts in stead
 # cask "yubico-authenticator"
-cask "yubico-yubikey-manager"
+# FIXME: needs an !arm64 check
+# cask "yubico-yubikey-manager"
 cask "yubico-yubikey-piv-manager"
 cask "zoom"
 

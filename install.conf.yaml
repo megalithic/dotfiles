@@ -45,8 +45,7 @@
     - ~/.local/state
     - ~/.local/share/packages
     - ~/.local/share/src
-    - ~/.ssh:
-        mode: 0700
+    - ~/.ssh
 
 - clean:
     ~/:
@@ -71,11 +70,6 @@
       quiet: true
       command: >-
         ~/.dotfiles/bin/brew-install -f;
-
-    - description: Decrypting repo..
-      quiet: true
-      command: >-
-        ~/.dotfiles/bin/transdec;
 
     - description: Attempting to install ASDF..
       quiet: true
@@ -241,6 +235,8 @@
       if: "[ `uname` = Darwin ]"
       path: config/surfingkeys/firenvim.json
 
+- brewfile:
+    file: brew/Brewfile
 
 - shell:
     - description: GnuPG (gpg) setup..
@@ -248,8 +244,11 @@
       command: >-
         chmod 0700 ~/.config/gnupg;
 
-# - brewfile:
-#     file: brew/Brewfile
+- shell:
+    - description: Decrypting repo..
+      quiet: true
+      command: >-
+        ~/.dotfiles/bin/transdec;
 
 - shell:
     - description: Attempting post-install commands..
@@ -263,6 +262,9 @@
 
         log "Attempting to set zsh as default shell..";
         [[ $(echo $SHELL) == $(which zsh) ]] && log_warn "$(which zsh) already set as the default shell; skipping." || sudo chsh -s `which zsh` `whoami`;
+
+        log "Attempting to install asdf, again..";
+        ~/.dotfiles/bin/asdf-install -f;
 
         log "Attempting to install neovim from source..";
         ~/.dotfiles/bin/nvim-install -f;
@@ -280,7 +282,8 @@
         ~/.dotfiles/asdf/go.sh;
 
         log "Attempting to install perl packages..";
-        cpan install Pod::Parser && log_ok "DONE configuring perl"
+        export PERL_MM_USE_DEFAULT=1
+        PERL_MM_USE_DEFAULT=1 cpan install Pod::Parser && log_ok "DONE configuring perl"
 
         log "Attempting to install python packages..";
         ~/.dotfiles/asdf/python.sh;

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-[[ -f "$XDG_CONFIG_HOME/zsh/lib/helpers.zsh" ]] && source "$XDG_CONFIG_HOME/zsh/lib/helpers.zsh"
+source "${HOME}/.dotfiles/config/zsh/lib/helpers.zsh"
 
 set -euo pipefail
 

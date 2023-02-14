@@ -7,7 +7,7 @@ if [[ -z $XDG_CONFIG_HOME ]]; then
   export XDG_CONFIG_HOME="$HOME/.config"
 fi
 
-[[ -f "~/.dotfiles/config/zsh/lib/helpers.zsh" ]] && source "~/.dotfiles/config/zsh/lib/helpers.zsh"
+source "${HOME}/.dotfiles/config/zsh/lib/helpers.zsh"
 
 #set -euo pipefail
 

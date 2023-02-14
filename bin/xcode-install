@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-[[ -f "$HOME/.dotfiles/config/zsh/lib/helpers.zsh" ]] && source "$HOME/dotfiles/config/zsh/lib/helpers.zsh"
+source "${HOME}/.dotfiles/config/zsh/lib/helpers.zsh"
 
 if [[ $(uname) != "Darwin" ]]; then
   log_warn "xcode-install requires MacOS (darwin); skipping."

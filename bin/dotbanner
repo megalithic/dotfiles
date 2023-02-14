@@ -3,7 +3,7 @@
 # https://vaneyckt.io/posts/safer_bash_scripts_with_set_euxo_pipefail/
 #set -Eueo pipefail
 
-[[ -f "$HOME/.dotfiles/config/zsh/lib/helpers.zsh" ]] && source "$HOME/.dotfiles/config/zsh/lib/helpers.zsh"
+source "${HOME}/.dotfiles/config/zsh/lib/helpers.zsh"
 
 command cat <<EOF
 ${green}
