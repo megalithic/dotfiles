@@ -286,6 +286,7 @@ cask "mailmate-beta"
 cask "microsoft-edge"
 # cask "ngrok"
 # cask "notion"
+cask "obs-beta"
 cask "obsidian"
 # cask "oracle-jdk"
 cask "postbird" if OS.mac?

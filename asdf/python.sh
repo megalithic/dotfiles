@@ -18,6 +18,9 @@ esac
 set -euo pipefail
 
 do_install() {
+  python -m pip install --upgrade pip
+  python -m pip install --upgrade -r "$HOME/.default-python-packages"
+
   python3 -m pip install --upgrade pip
   python3 -m pip install --upgrade -r "$HOME/.default-python-packages"
   # cat "$HOME/.default-python-packages" | xargs python3 -m pip install --upgrade
@@ -32,8 +35,8 @@ do_install() {
   pip3 -m pip install --upgrade  -r "$HOME/.default-python-packages"
   # cat "$HOME/.default-python-packages" | xargs pip3 install --upgrade
   # sudo /Library/Frameworks/Python.framework/Versions/3.11/bin/pip3 -m pip install --upgrade  -r "$HOME/.default-python-packages"
-  [ -f "/usr/local/bin/brew" ] && /usr/local/opt/python@3.11/bin/python3.11 -m pip install --upgrade  -r "$HOME/.default-python-packages"
-  [ -f "/opt/homebrew/bin/brew" ] && /opt/homebrew/opt/python@3.11/bin/python3.11 -m pip install --upgrade  -r "$HOME/.default-python-packages"
+  [[ -f "/usr/local/bin/brew" ]] && /usr/local/opt/python@3.11/bin/python3.11 -m pip install --upgrade  -r "$HOME/.default-python-packages"
+  [[ -f "/opt/homebrew/bin/brew" ]] && /opt/homebrew/opt/python@3.11/bin/python3.11 -m pip install --upgrade  -r "$HOME/.default-python-packages"
   # sudo cat "$HOME/.default-python-packages" | xargs /Library/Frameworks/Python.framework/Versions/3.11/bin/pip3 install --upgrade
 
   asdf reshim python

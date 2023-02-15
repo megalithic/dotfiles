@@ -290,8 +290,7 @@
         ~/.dotfiles/asdf/go.sh;
 
         log "Attempting to install perl packages..";
-        #export PERL_MM_USE_DEFAULT=1;
-        PERL_MM_USE_DEFAULT=1 cpan install Pod::Parser && log_ok "DONE configuring perl";
+        ~/.dotfiles/asdf/perl.sh;
 
         log "Attempting to install python packages..";
         ~/.dotfiles/asdf/python.sh;

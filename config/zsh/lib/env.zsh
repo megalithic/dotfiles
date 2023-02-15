@@ -342,8 +342,9 @@ case "$(uname)" in
   # Set the list of directories that Zsh searches for programs.
   # "${HOME}/.asdf/installs/elixir/`asdf current elixir | awk '{print $1}'`/.mix"
   path=(
-    /usr/local/opt/python@3.11/libexec/bin/python3
-    /usr/local/opt/python@3.11/Frameworks/Python.framework/Versions/3.11/
+    /opt/homebrew/bin
+    ${HOMEBREW_PREFIX}/opt/python@3.11/libexec/bin/python3
+    ${HOMEBREW_PREFIX}/opt/python@3.11/Frameworks/Python.framework/Versions/3.11
     ./bin
     ./.bin
     ./vendor/bundle/bin
@@ -366,9 +367,9 @@ case "$(uname)" in
     /usr/local/{bin,sbin}
     /usr/local/share/npm/bin
     /usr/local/lib/node_modules
-    /usr/local/opt/libffi/lib
-    /usr/local/opt/gnu-sed/libexec/gnubin
-    /usr/local/opt/postgresql@15/bin
+    ${HOMEBREW_PREFIX}/opt/libffi/lib
+    ${HOMEBREW_PREFIX}/opt/gnu-sed/libexec/gnubin
+    ${HOMEBREW_PREFIX}/opt/postgresql@15/bin
 
     # /usr/local/opt/imagemagick@6/bin
     # /usr/local/opt/qt@5.5/bin
@@ -398,15 +399,14 @@ case "$(uname)" in
     ${HOME}/Library/Python/3.10/bin(Nn[-1]-/)
     ${HOME}/Library/Python/3.9/bin(Nn[-1]-/)
     ${HOME}/Library/Python/2.*/bin(Nn[-1]-/)
-    /usr/local/lib/python3.11/site-packages(N-/)
-    /usr/local/lib/python3.10/site-packages(N-/)
-    /usr/local/lib/python3.9/site-packages(N-/)
-    /usr/local/lib/python2.*/bin(Nn[-1]-/)
-    /usr/local/lib/python2.*/site-packages(N-/)
-    /usr/local/opt/python@3.*/bin(Nn[-1]-/)
-    /usr/local/opt/python@2.*/bin(Nn[-1]-/)
-    /usr/local/{bin,sbin}
-    /opt/homebrew/bin
+    ${HOMEBREW_PREFIX}/lib/python3.11/site-packages(N-/)
+    ${HOMEBREW_PREFIX}/lib/python3.10/site-packages(N-/)
+    ${HOMEBREW_PREFIX}/lib/python3.9/site-packages(N-/)
+    ${HOMEBREW_PREFIX}/lib/python2.*/bin(Nn[-1]-/)
+    ${HOMEBREW_PREFIX}/lib/python2.*/site-packages(N-/)
+    ${HOMEBREW_PREFIX}/opt/python@3.*/bin(Nn[-1]-/)
+    ${HOMEBREW_PREFIX}/opt/python@2.*/bin(Nn[-1]-/)
+    ${HOMEBREW_PREFIX}/{bin,sbin}
     $path
   )
   export PATH
