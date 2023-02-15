@@ -196,7 +196,7 @@ case "$(uname)" in
     export ICLOUD_DOCUMENTS_DIR="${ICLOUD_DIR}/Documents"
     export DOCUMENTS_DIR="${ICLOUD_DOCUMENTS_DIR}"
     export OBSIDIAN_VAULT_DIR="${ICLOUD_DIR}/Documents/_notes/vault"
-    export ZK_NOTEBOOK_DIR="$DOCUMENTS_DIR/_notes/_notes"
+    export ZK_NOTEBOOK_DIR="$DOCUMENTS_DIR/_notes"
     export ZK_CONFIG_DIR="$XDG_CONFIG_HOME/zk"
 
     export BROWSER="open"
@@ -418,15 +418,15 @@ case "$(uname)" in
 
   fpath+=(
     "$ZDOTDIR"
-    "$HOMEBREW_PREFIX/share/zsh/site-functions"
-    "$ZDOTDIR/prompt"
-    "$ZDOTDIR/completions"
-    "$ZDOTDIR/plugins"
-    "$ZDOTDIR/funcs"
-    "$DOTS/bin"
+    "${HOMEBREW_PREFIX}/share/zsh/site-functions"
+    "${ZDOTDIR}/prompt"
+    "${ZDOTDIR}/completions"
+    "${ZDOTDIR}/plugins"
+    "${ZDOTDIR}/funcs"
+    "${DOTS}/bin"
     "${ASDF_DIR}/completions"
     "${fpath[@]}"
-    # "$fpath"
+    "$fpath"
   )
   export FPATH
 

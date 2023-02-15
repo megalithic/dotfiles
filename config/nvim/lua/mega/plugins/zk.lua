@@ -28,6 +28,7 @@ return {
       },
     })
 
+    local util = require("zk.util")
     local commands = require("zk.commands")
     local api = require("zk.api")
 
@@ -55,31 +56,44 @@ return {
       end
     end
 
-    commands.add("ZkOrphans", make_edit_fn({ orphan = true }, { title = "Zk Orphans" }))
-    commands.add("ZkRecents", make_edit_fn({ createdAfter = "1 week ago" }, { title = "Zk Recents" }))
+    local desc = function(desc) return { desc = desc, silent = true } end
 
-    local opts = { noremap = true, silent = false }
-
-    -- Create a new note after asking for its title.
-    vim.api.nvim_set_keymap("n", "<space>zn", "<Cmd>ZkNew { title = vim.fn.input('Title: ') }<CR>", opts)
-
-    -- Open notes.
-    vim.api.nvim_set_keymap("n", "<space>zo", "<Cmd>ZkNotes { sort = { 'modified' } }<CR>", opts)
-    -- Open notes associated with the selected tags.
-    vim.api.nvim_set_keymap("n", "<space>zt", "<Cmd>ZkTags<CR>", opts)
-
-    -- Search for the notes matching a given query.
-    vim.api.nvim_set_keymap(
-      "n",
-      "<space>zf",
-      "<Cmd>ZkNotes { sort = { 'modified' }, match = vim.fn.input('Search: ') }<CR>",
-      opts
+    commands.add("ZkOrphans", make_edit_fn({ orphan = true }, { title = "zk orphans" }))
+    commands.add("ZkRecents", make_edit_fn({ createdAfter = "1 week ago" }, { title = "zk recents" }))
+    commands.add("ZkLiveGrep", function(options)
+      -- options = options or {}
+      -- local notebook_path = options.notebook_path or util.resolve_notebook_path(0)
+      -- local notebook_root = util.notebook_root(notebook_path) or vim.env.ZK_NOTEBOOK_DIR
+      -- if notebook_root then
+      --   require("telescope.builtin").live_grep(
+      --     _G.telescope_ivy({ cwd = notebook_root, search_dirs = { notebook_root }, prompt_title = "zk live grep" })
+      --   )
+      -- else
+      --   vim.notify("No notebook found", vim.log.levels.ERROR)
+      -- end
+      require("telescope.builtin").live_grep(_G.telescope_ivy({
+        cwd = vim.env.ZK_NOTEBOOK_DIR,
+        -- search_dirs = { vim.env.ZK_NOTEBOOK_DIR },
+        prompt_title = "zk live grep",
+      }))
+    end)
+    --
+    --
+    -- -- Create a new note after asking for its title.
+    mega.nnoremap("<leader>zn", "<Cmd>ZkNew { title = vim.fn.input('Title: ') }<CR>", desc("zk: new note"))
+    mega.nnoremap("<leader>zf", "<Cmd>ZkNotes { sort = { 'modified' } }<CR>", desc("zk: find notes"))
+    mega.nnoremap(
+      "<leader>zf",
+      function() require("telescope").extensions.zk.notes(_G.telescope_ivy({ sort = { "modified" } })) end
     )
-    -- Search for the notes matching the current visual selection.
-    vim.api.nvim_set_keymap("v", "<space>zf", ":'<,'>ZkMatch<CR>", opts)
-
-    -- Run ZkRecents
-    vim.api.nvim_set_keymap("n", "<space>zr", "<Cmd>ZkRecents<CR>", opts)
+    mega.nnoremap("<leader>z/", "<cmd>ZkLiveGrep<CR>", desc("zk: live grep"))
+    -- mega.nnoremap(
+    --   "<leader>zg",
+    --   "<Cmd>ZkNotes { sort = { 'modified' }, match = vim.fn.input('Search: ') }<CR>",
+    --   desc("zk: search notes")
+    -- )
+    mega.vnoremap("<leader>zg", ":'<,'>ZkMatch<CR>", desc("zk: search notes matching selection"))
+    mega.nnoremap("<leader>zr", "<Cmd>ZkRecents<CR>", desc("zk: find recent notes"))
 
     local function yankName(options, picker_options)
       zk.pick_notes(options, picker_options, function(notes)
@@ -96,36 +110,36 @@ return {
     end
 
     commands.add("ZkInsertLink", function(options) yankName(options, { title = "ZkInsertLink" }) end)
-
-    -- Journaling stuff
-    commands.add("ZkDailyEntry", function(opts)
-      local today = os.date("%Y%m%d")
-      local today_human = os.date("%Y-%m-%d")
-      local entry_path = "journal/" .. today .. ".md"
-
-      api.list(nil, { select = { "path" }, hrefs = { entry_path } }, function(err, res)
-        assert(res ~= nil, tostring(err))
-
-        if mega.tlen(res) == 0 then
-          api.new(nil, {
-            title = today_human,
-            dir = "journal",
-            date = "today",
-            template = "journal.md",
-          }, function(err, res)
-            assert(res ~= nil, tostring(err))
-
-            local dir = dirname(res.path)
-            local new_path = dir .. "/" .. basename(entry_path)
-            os.rename(res.path, new_path)
-
-            vim.cmd("e " .. new_path)
-          end)
-        else
-          vim.cmd("e " .. res[1]["path"])
-        end
-      end)
-    end)
+    --
+    -- -- Journaling stuff
+    -- commands.add("ZkDailyEntry", function(opts)
+    --   local today = os.date("%Y%m%d")
+    --   local today_human = os.date("%Y-%m-%d")
+    --   local entry_path = "journal/" .. today .. ".md"
+    --
+    --   api.list(nil, { select = { "path" }, hrefs = { entry_path } }, function(err, res)
+    --     assert(res ~= nil, tostring(err))
+    --
+    --     if mega.tlen(res) == 0 then
+    --       api.new(nil, {
+    --         title = today_human,
+    --         dir = "journal",
+    --         date = "today",
+    --         template = "journal.md",
+    --       }, function(err, res)
+    --         assert(res ~= nil, tostring(err))
+    --
+    --         local dir = dirname(res.path)
+    --         local new_path = dir .. "/" .. basename(entry_path)
+    --         os.rename(res.path, new_path)
+    --
+    --         vim.cmd("e " .. new_path)
+    --       end)
+    --     else
+    --       vim.cmd("e " .. res[1]["path"])
+    --     end
+    --   end)
+    -- end)
 
     require("telescope").load_extension("zk")
   end,

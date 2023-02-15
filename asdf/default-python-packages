@@ -33,6 +33,7 @@ saws
 setuptools
 solargraph-utils.py
 typing
+term-image
 websocket-client
 west
 wheel

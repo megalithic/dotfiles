@@ -269,7 +269,7 @@
         git submodule update --init --recursive
 
         log "Attempting to set zsh as default shell..";
-        [[ $(echo $SHELL) == $(which zsh) ]] && log_warn "$(which zsh) already set as the default shell; skipping." || sudo chsh -s `which zsh` `whoami`;
+        [[ $(echo $SHELL) == $(which zsh) ]] && log_warn "$(which zsh) already set as the default shell; skipping." || sudo chsh -s $(which zsh) $(whoami);
 
         # log "Attempting to install asdf, again..";
         #~/.dotfiles/bin/asdf-install -f;

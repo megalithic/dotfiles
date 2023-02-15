@@ -83,13 +83,13 @@ return {
       ft_to_parser.eelixir = "html_eex"
 
       require("nvim-treesitter.configs").setup({
-        auto_install = true,
+        auto_install = false,
         ensure_installed = {
           "bash",
           "c",
           "cpp",
           "css",
-          "comment", -- see styler.nvim
+          -- "comment", -- see styler.nvim
           "devicetree",
           "dockerfile",
           "diff",
@@ -110,6 +110,7 @@ return {
           "html",
           "html_eex",
           "javascript",
+          "jq",
           "jsdoc",
           "json",
           "jsonc",

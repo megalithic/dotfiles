@@ -6,7 +6,8 @@ function M.config()
   if not res then return end
 
   -- local img_prev_bin = vim.fn.executable("ueberzug") == 1 and { "ueberzug" }
-  local img_prev_bin = vim.fn.executable("chafa") == 1 and { "chafa" }
+  local img_prev_bin = vim.fn.executable("term-image") == 1 and { "term-image" }
+    or vim.fn.executable("chafa") == 1 and { "chafa" }
     or vim.fn.executable("viu") == 1 and { "viu", "-b" }
     or nil
   -- local img_prev_bin = vim.fn.executable("viu") == 1 and { "viu", "-bt" } or { "catimg" }

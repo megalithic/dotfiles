@@ -269,14 +269,14 @@ alias dl="cd $HOME/Downloads/"
 alias icloud="cd $HOME/Library/Mobile\ Documents/com\~apple\~CloudDocs"
 alias idocs="cd $HOME/Library/Mobile\ Documents/com\~apple\~CloudDocs/Documents"
 alias zknotes="cd $HOME/Library/Mobile\ Documents/com\~apple\~CloudDocs/Documents/_notes"
+alias inotes="${zknotes}"
 alias notes="cd $HOME/Library/Mobile\ Documents/com\~apple\~CloudDocs/Documents/_notes"
 alias nvim-plugins="cd ~/.local/share/nvim/site/pack/paqs/start"
-# alias icloud="cd $HOME/Library/Mobile\ Documents/com~apple~CloudDocs"
 
 # MISC
 # -----------------------------------------------------------------------------
 alias rm="rm -v"
-[[ "$(uname)" == "Darwin" ]] && alias rm="/usr/local/bin/trash"
+[[ "$(uname)" == "Darwin" ]] && alias rm="${HOMEBREW_PREFIX}/bin/trash"
 alias dash="open dash://" # lang:query
 alias pyserve="python -m SimpleHTTPServer"
 # alias srv=server

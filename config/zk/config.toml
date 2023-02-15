@@ -15,7 +15,7 @@ language = "en"
 # The default title used for new note, if no `--title` flag is provided.
 default-title = "quick thought"
 # Template used to generate a note's filename, without extension.
-filename = "{{date now 'timestamp'}}"
+filename = "{{format-date now 'timestamp'}}"
 # The file extension used for the notes.
 extension = "md"
 # Template used to generate a note's content.
@@ -38,10 +38,10 @@ author = "Seth Messer"
 [group.journal]
 paths = [ "journal/daily", "journal/weekly" ]
 [group.journal.daily.note]
-filename = "{{date now}}"
+filename = "{{format-date now}}"
 template = "daily.md"
 [group.journal.weekly.note]
-filename = "{{date now}}"
+filename = "{{format-date now}}"
 template = "weekly.md"
 
 ## -- meetings

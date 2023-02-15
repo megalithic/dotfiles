@@ -157,7 +157,7 @@ return {
         kitty = { enabled = false, font = "+2" },
       },
     },
-    keys = { { "<localleader>z", "<cmd>ZenMode<cr>", desc = "Zen Mode" } },
+    keys = { { "<localleader>zz", "<cmd>ZenMode<cr>", desc = "Zen Mode" } },
   },
   {
     "stevearc/dressing.nvim",
@@ -929,7 +929,25 @@ return {
   {
     "gaoDean/autolist.nvim",
     ft = { "markdown" },
-    config = function() require("autolist").setup({ normal_mappings = { invert = { "<c-c>" } } }) end,
+    config = function()
+      local autolist = require("autolist")
+      autolist.setup()
+      autolist.create_mapping_hook("i", "<CR>", autolist.new)
+      autolist.create_mapping_hook("i", "<Tab>", autolist.indent)
+      autolist.create_mapping_hook("i", "<S-Tab>", autolist.indent, "<C-D>")
+      autolist.create_mapping_hook("n", "o", autolist.new)
+      autolist.create_mapping_hook("n", "O", autolist.new_before)
+      autolist.create_mapping_hook("n", ">>", autolist.indent)
+      autolist.create_mapping_hook("n", "<<", autolist.indent)
+      autolist.create_mapping_hook("n", "<C-r>", autolist.force_recalculate)
+      autolist.create_mapping_hook("n", "<leader>x", autolist.invert_entry, "")
+      autolist.create_mapping_hook("n", "<C-c>", autolist.invert_entry, "")
+      vim.api.nvim_create_autocmd("TextChanged", {
+        pattern = "*",
+        callback = function() vim.cmd.normal({ autolist.force_recalculate(nil, nil), bang = false }) end,
+      })
+      -- require("autolist").setup({ normal_mappings = { invert = { "<c-c>" } } })
+    end,
   },
   { "ellisonleao/glow.nvim", ft = { "markdown" } },
   { "ekickx/clipboard-image.nvim", ft = { "markdown" } },

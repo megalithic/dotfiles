@@ -23,7 +23,7 @@ import-sort-parser-typescript
 import-sort-style-renke
 ls_emmet
 lua-fmt
-markdownlint
+markdownlint-cli
 neovim
 node-fetch
 prettier
