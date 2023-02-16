@@ -46,6 +46,7 @@ git_ahead_icon="⇡"        # alts: 
 git_behind_icon="⇣"       # alts: 
 git_renamed_icon=""
 deskfile_icon=""         # alts:    ◲  🚀
+nix_shell_icon=""        # alts:
 background_job_icon=""   # alts: ✦
 root_icon=""
 
@@ -328,8 +329,11 @@ function _prompt_path() {
 }
 
 function _prompt_deskfile_loaded() {
-  # [[ $+commands[desk] && -f "./Deskfile" ]] && eval $(desk load)
   [[ $+commands[desk] && -f "./Deskfile" && -n $DESK_NAME ]] && echo "%F{243}[%f%F{#ffffff}$deskfile_icon%f %F{245}$DESK_NAME%f%F{243}]%f"
+}
+
+function _prompt_nix_shell_loaded() {
+  [[ -n $IN_NIX_SHELL ]] && echo "%F{243}[%f%F{#ffffff}$nix_shell_icon%f%F{243}]%f"
 }
 
 function _prompt_sudo() {
@@ -343,7 +347,7 @@ function __prompt_eval() {
   local top="$(_prompt_sudo)$(_prompt_ssh)$(_prompt_path)${_git_status_prompt:-$placeholder}"
   # local top="%B%F{magenta}%1~%f%b${_git_status_prompt:-$placeholder}"
   local character="%(1j.%F{cyan}%j$background_job_icon%f.)%(?.${dots_prompt_icon}.${dots_prompt_failure_icon})"
-  local bottom=$([[ -n "$vim_mode" ]] && echo "$(_prompt_deskfile_loaded)$vim_mode" || echo "$(_prompt_deskfile_loaded)$character")
+  local bottom=$([[ -n "$vim_mode" ]] && echo "$(_prompt_nix_shell_loaded)$vim_mode" || echo "$(_prompt_nix_shell_loaded)$character")
   local newline=$'\n'
   echo $newline$top$newline$bottom
 }
