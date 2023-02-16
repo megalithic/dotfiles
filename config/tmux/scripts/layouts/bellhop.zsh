@@ -35,19 +35,12 @@ tmux -2 select-pane -t "$SESSION":2.1
 # Window "services"
 tmux -2 send-keys -t "$SESSION":3.1 nix-shell\ --run\ zsh C-m
 tmux -2 send-keys -t "$SESSION":3.1 overmind\ start C-m
-# tmux -2 send-keys -t "$SESSION":3.1 ssh\ seth-dev C-m
-# tmux -2 send-keys -t "$SESSION":3.1 cd\ \~/code/"$SESSION" C-m
-# tmux -2 send-keys -t "$SESSION":3.1 eval\ \$\(desk\ load\) C-m
-# tmux -2 send-keys -t "$SESSION":3.1 dev\ down\ --remove-orphans\;\ dev\ up\ -d\ \&\&\ dev\ logs\ -f C-m
 
 tmux -2 splitw -c "$CWD" -t "$SESSION":3
 tmux -2 select-layout -t "$SESSION":3 tiled
 
 tmux -2 send-keys -t "$SESSION":3.2 nix-shell\ --run\ zsh C-m
 tmux -2 send-keys -t "$SESSION":3.2 iex\ -S\ mix\ phx.server C-m
-# tmux -2 send-keys -t "$SESSION":3.2 ssh\ seth-dev C-m
-# tmux -2 send-keys -t "$SESSION":3.2 cd\ \~/code/"$SESSION" C-m
-# tmux -2 send-keys -t "$SESSION":3.2 eval\ \$\(desk\ load\)\;\ iex\ -S\ mix C-m
 
 tmux -2 select-layout -t "$SESSION":3 tiled
 
@@ -55,8 +48,5 @@ tmux -2 select-layout -t "$SESSION":3 even-horizontal
 tmux -2 select-pane -t "$SESSION":3.1
 
 # focus
-
 tmux -2 select-window -t "$SESSION":2
 tmux -2 select-pane -t "$SESSION":2.1
-
-# Run on_project_exit command.
