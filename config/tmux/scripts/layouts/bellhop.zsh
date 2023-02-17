@@ -34,6 +34,7 @@ tmux -2 select-pane -t "$SESSION":2.1
 
 # Window "services"
 tmux -2 send-keys -t "$SESSION":3.1 nix-shell\ --run\ zsh C-m
+tmux -2 send-keys -t "$SESSION":3.1 rm\ .overmind.sock C-m
 tmux -2 send-keys -t "$SESSION":3.1 overmind\ start C-m
 
 tmux -2 splitw -c "$CWD" -t "$SESSION":3
