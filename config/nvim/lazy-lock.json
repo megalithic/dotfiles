@@ -1,5 +1,4 @@
 {
-  "Comment.nvim": { "branch": "master", "commit": "6821b3ae27a57f1f3cf8ed030e4a55d70d0c4e43" },
   "DidYouMean": { "branch": "master", "commit": "a98fb17ba16aa2eb69b3f9cc7a70e8a736890e4e" },
   "LuaSnip": { "branch": "master", "commit": "58fbfc627a93281a77f7d161d4ff702e639677b1" },
   "autolist.nvim": { "branch": "main", "commit": "f8b4c11b79b0fef77a64b03810839a1abbbc67d5" },
@@ -45,6 +44,7 @@
   "markdown-preview.nvim": { "branch": "master", "commit": "02cc3874738bc0f86e4b91f09b8a0ac88aef8e96" },
   "mason-lspconfig.nvim": { "branch": "main", "commit": "93e58e100f37ef4fb0f897deeed20599dae9d128" },
   "mason.nvim": { "branch": "main", "commit": "7dd606b0b4981631c804c981b626189e191d49ca" },
+  "mini.comment": { "branch": "main", "commit": "9fc3fe43129e8c2611bd21b8f50af8c0d0742533" },
   "mini.indentscope": { "branch": "main", "commit": "d3e907b13298b0fc60db289fb804be7e9c561922" },
   "mini.nvim": { "branch": "main", "commit": "369f16f29559cb15931d3d5acfcf253969f74066" },
   "neo-tree-diagnostics.nvim": { "branch": "main", "commit": "b1825e82bef78657ef364d2419926e414fd7eb20" },

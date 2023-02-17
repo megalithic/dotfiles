@@ -416,7 +416,7 @@ case "$(uname)" in
   done
   unset path_file
 
-  fpath+=(
+  fpath=(
     "$ZDOTDIR"
     "${HOMEBREW_PREFIX}/share/zsh/site-functions"
     "${HOMEBREW_PREFIX}/share/zsh/functions"
