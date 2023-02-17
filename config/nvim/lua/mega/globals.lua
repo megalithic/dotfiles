@@ -1234,7 +1234,7 @@ do
   )
   command("SaveAsFile", [[noautocmd clear | :execute "saveas %:p:h/" .input('save as -> ') | :e ]])
   command("RenameFile", [[noautocmd clear | :execute "Rename " .input('rename to -> ') | :e ]])
-  command("Rename", [[RenameFile]])
+  -- command("Rename", [[RenameFile]])
   -- command("Rename", [[lua require("genghis").renameFile()]])
   -- command("Delete", [[lua require("genghis").trashFile()]])
   command("Flash", function() mega.blink_cursorline() end)

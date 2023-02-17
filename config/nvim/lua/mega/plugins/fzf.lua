@@ -3,7 +3,7 @@ local M = {
   cmd = { "FzfLua" },
   keys = {
     { "<leader>ff", "<cmd>FzfLua files<cr>", desc = "fzf: files" },
-    { "<leader>a", "<cmd>FzfLua live_grep<cr>", desc = "fzf: live grep" },
+    { "<leader>a", "<cmd>FzfLua live_grep exec_empty_query=true<cr>", desc = "fzf: live grep" },
     { "<leader>A", "<cmd>FzfLua grep_cword<cr>", desc = "fzf: grep cursor" },
     { "<leader>A", "<cmd>FzfLua grep_visual<cr>", desc = "fzf: grep selection", mode = "v" },
     { "<leader>fb", "<cmd>FzfLua buffers<cr>", desc = "fzf: buffers" },
@@ -102,6 +102,7 @@ function M.config()
           ["jpeg"] = img_prev_bin,
           ["svg"] = { "chafa" },
         },
+        treesitter = { enable = true },
       },
     },
     actions = {
@@ -131,8 +132,7 @@ function M.config()
     },
     grep = {
       rg_glob = true,
-      rg_opts = "--hidden --column --line-number --no-ignore-vcs --no-heading"
-        .. " --color=always --smart-case -g '!.git'",
+      rg_opts = "--hidden --column --line-number --no-ignore-vcs --no-heading --color=always --smart-case -g '!.git'",
       previewer = "builtin",
     },
     git = {

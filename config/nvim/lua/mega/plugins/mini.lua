@@ -99,9 +99,27 @@ function mini.indentscope()
   require("mini.indentscope").setup({
     symbol = "▏", -- │ ▏
     draw = {
-      delay = 50,
-      -- animation = require("mini.indentscope").gen_animation("none"),
+      delay = 0,
+      animation = require("mini.indentscope").gen_animation.none(),
     },
+    options = { try_as_border = true },
+  })
+
+  vim.api.nvim_create_autocmd("FileType", {
+    pattern = {
+      "help",
+      "alpha",
+      "dashboard",
+      "neo-tree",
+      "Trouble",
+      "lazy",
+      "mason",
+      "fzf",
+      "fzf-lua",
+      "fzflua",
+      "megaterm",
+    },
+    callback = function() vim.b.miniindentscope_disable = true end,
   })
 end
 
@@ -112,6 +130,7 @@ function mini.config()
   mini.pairs()
   mini.comment()
   mini.align()
+  mini.indentscope()
 end
 
 function mini.init()

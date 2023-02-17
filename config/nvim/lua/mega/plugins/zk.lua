@@ -68,56 +68,64 @@ return {
 
     commands.add("ZkOrphans", make_edit_fn({ orphan = true }, { title = "zk orphans" }))
     commands.add("ZkRecents", make_edit_fn({ createdAfter = "1 week ago" }, { title = "zk recents" }))
-    commands.add("ZkLiveGrep", function(options)
-      -- options = options or {}
-      -- local notebook_path = options.notebook_path or util.resolve_notebook_path(0)
-      -- local notebook_root = util.notebook_root(notebook_path) or vim.env.ZK_NOTEBOOK_DIR
-      -- if notebook_root then
-      --   require("telescope.builtin").live_grep(
-      --     _G.telescope_ivy({ cwd = notebook_root, search_dirs = { notebook_root }, prompt_title = "zk live grep" })
-      --   )
-      -- else
-      --   vim.notify("No notebook found", vim.log.levels.ERROR)
-      -- end
-      require("telescope.builtin").live_grep(_G.telescope_ivy({
-        cwd = vim.env.ZK_NOTEBOOK_DIR,
-        -- search_dirs = { vim.env.ZK_NOTEBOOK_DIR },
-        prompt_title = "zk live grep",
-      }))
-    end)
-    --
-    --
+    mega.zk_live_grep = function(opts)
+      local fzf_lua = require("fzf-lua")
+      opts = opts or {}
+      opts.prompt = "search notes "
+      opts.git_icons = true
+      opts.file_icons = true
+      opts.color_icons = true
+      -- setup default actions for edit, quickfix, etc
+      opts.actions = fzf_lua.defaults.actions.files
+      -- see preview overview for more info on previewers
+      opts.previewer = "builtin"
+      opts.fn_transform = function(x) return fzf_lua.make_entry.file(x, opts) end
+      -- we only need 'fn_preprocess' in order to display 'git_icons'
+      -- it runs once before the actual command to get modified files
+      -- 'make_entry.file' uses 'opts.diff_files' to detect modified files
+      -- will probaly make this more straight forward in the future
+      opts.fn_preprocess = function(o)
+        opts.diff_files = fzf_lua.make_entry.preprocess(o).diff_files
+        return opts
+      end
+      return fzf_lua.fzf_live(
+        function(q) return "rg --column --color=always -- " .. vim.fn.shellescape(q or "") end,
+        opts
+      )
+    end
+    commands.add("ZkLiveGrep", mega.zk_live_grep)
+
     -- -- Create a new note after asking for its title.
-    mega.nnoremap("<leader>zn", "<Cmd>ZkNew { title = vim.fn.input('Title: ') }<CR>", desc("zk: new note"))
+    mega.nnoremap("<leader>zn", "<Cmd>ZkNew { title = vim.fn.input('title: ') }<CR>", desc("zk: new note"))
+    -- t = { "<cmd>ZkNewFromContentSelection<cr>", "new from selection" },
+    mega.vnoremap("<leader>zn", function()
+      vim.ui.select({ "Title", "Content" }, { prompt = "Set selection as:" }, function(choice)
+        if choice == "Title" then
+          vim.cmd([['<,'>ZkNewFromTitleSelection]])
+        elseif choice == "Content" then
+          vim.cmd([['<,'>ZkNewFromContentSelection]])
+        end
+      end)
+    end, desc("zk: new note from selection"))
+
     mega.nnoremap("<leader>zf", "<Cmd>ZkNotes { sort = { 'modified' } }<CR>", desc("zk: find notes"))
     -- mega.nnoremap(
     --   "<leader>zf",
     --   function() require("telescope").extensions.zk.notes(_G.telescope_ivy({ sort = { "modified" } })) end
     -- )
-    mega.nnoremap("<leader>z/", "<cmd>ZkLiveGrep<CR>", desc("zk: live grep"))
-    -- mega.nnoremap(
-    --   "<leader>zg",
-    --   "<Cmd>ZkNotes { sort = { 'modified' }, match = vim.fn.input('Search: ') }<CR>",
-    --   desc("zk: search notes")
-    -- )
+    mega.nnoremap(
+      "<leader>z/",
+      function() mega.zk_live_grep({ exec_empty_query = true, cwd = vim.env.ZK_NOTEBOOK_DIR }) end,
+      desc("zk: live grep")
+    )
+    mega.nnoremap(
+      "<leader>zg",
+      "<Cmd>ZkNotes { sort = { 'modified' }, match = vim.fn.input('Search: ') }<CR>",
+      desc("zk: search notes")
+    )
     mega.vnoremap("<leader>zg", ":'<,'>ZkMatch<CR>", desc("zk: search notes matching selection"))
     mega.nnoremap("<leader>zr", "<Cmd>ZkRecents<CR>", desc("zk: find recent notes"))
 
-    local function yankName(options, picker_options)
-      zk.pick_notes(options, picker_options, function(notes)
-        local pos = vim.api.nvim_win_get_cursor(0)[2]
-        local line = vim.api.nvim_get_current_line()
-
-        if picker_options.multi_select == false then notes = { notes } end
-        for _, note in ipairs(notes) do
-          local trimmed_path = note.path:match("[0-9]*.md")
-          local nline = line:sub(0, pos) .. "[" .. note.title .. "]" .. "(" .. trimmed_path .. ")" .. line:sub(pos + 1)
-          vim.api.nvim_set_current_line(nline)
-        end
-      end)
-    end
-
-    -- commands.add("ZkInsertLink", function(options) yankName(options, { title = "ZkInsertLink" }) end)
     mega.nnoremap("gl", "<Cmd>ZkInsertLink<CR>", desc("zk: insert link"))
     mega.vnoremap("gl", ":'<,'>ZkInsertLinkAtSelection<CR>", desc("zk: insert link (selected)"))
     mega.vnoremap("gL", ":'<,'>ZkInsertLinkAtSelection {match = true}<CR>", desc("zk: insert link (search selected)"))

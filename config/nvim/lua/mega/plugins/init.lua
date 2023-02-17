@@ -135,42 +135,53 @@ return {
     "lukas-reineke/indent-blankline.nvim",
     event = { "BufReadPost", "BufNewFile" },
     opts = {
-      -- char = "▏",
       char = "│", -- alts: ┆ ┊  ▎
-      filetype_exclude = { "help", "alpha", "dashboard", "neo-tree", "Trouble", "lazy" },
+      --       show_foldtext = false,
+      --       context_char = "▎",
+      --       char_priority = 12,
+      --       show_current_context = true,
+      --       show_current_context_start = true,
+      --       show_current_context_start_on_current_line = true,
+      --       show_first_indent_level = true,
+      filetype_exclude = {
+        "help",
+        "alpha",
+        "dashboard",
+        "neo-tree",
+        "Trouble",
+        "lazy",
+        "fzf",
+        "fzf-lua",
+        "fzflua",
+        "megaterm",
+        "dbout",
+        "neo-tree-popup",
+        "dap-repl",
+        "startify",
+        "dashboard",
+        "log",
+        "fugitive",
+        "gitcommit",
+        "packer",
+        "vimwiki",
+        "markdown",
+        "txt",
+        "vista",
+        "help",
+        "NvimTree",
+        "git",
+        "TelescopePrompt",
+        "undotree",
+        "flutterToolsOutline",
+        "norg",
+        "org",
+        "orgagenda",
+        "", -- for all buffers without a file type
+      },
+      buftype_exclude = { "terminal", "nofile" },
       show_trailing_blankline_indent = false,
       show_current_context = false,
     },
-  },
-
-  -- active indent guide and indent text objects
-  {
-    "echasnovski/mini.indentscope",
-    version = false, -- wait till new 0.7.0 release to put it back on semver
-    event = { "BufReadPre", "BufNewFile" },
-    opts = {
-      -- symbol = "▏",
-      symbol = "│",
-      options = { try_as_border = true },
-    },
-    config = function(_, opts)
-      vim.api.nvim_create_autocmd("FileType", {
-        pattern = { "help", "alpha", "dashboard", "neo-tree", "Trouble", "lazy", "mason" },
-        callback = function() vim.b.miniindentscope_disable = true end,
-      })
-      require("mini.indentscope").setup(opts)
-    end,
-  },
-
-  {
-    "echasnovski/mini.comment",
-    event = "VeryLazy",
-    opts = {
-      hooks = {
-        pre = function() require("ts_context_commentstring.internal").update_commentstring({}) end,
-      },
-    },
-    config = function(_, opts) require("mini.comment").setup(opts) end,
   },
   -- {
   --   "lukas-reineke/indent-blankline.nvim",
@@ -779,6 +790,7 @@ return {
     end,
   },
   { "alvan/vim-closetag" },
+  { "tpope/vim-eunuch", event = "VeryLazy" },
   {
     "chrisgrieser/nvim-genghis",
     dependencies = { "stevearc/dressing.nvim", { "tpope/vim-eunuch", event = "VeryLazy" } },
