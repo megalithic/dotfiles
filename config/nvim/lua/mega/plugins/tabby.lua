@@ -2,7 +2,7 @@ local M = {
   "nanozuki/tabby.nvim",
   event = { "BufReadPost" },
   dependencies = { "rktjmp/lush.nvim" },
-  cond = not vim.env.TMUX and not vim.g.started_by_firenvim,
+  cond = not vim.g.started_by_firenvim,
 }
 
 function M.config()

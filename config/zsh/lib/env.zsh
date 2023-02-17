@@ -419,10 +419,12 @@ case "$(uname)" in
   fpath+=(
     "$ZDOTDIR"
     "${HOMEBREW_PREFIX}/share/zsh/site-functions"
+    "${HOMEBREW_PREFIX}/share/zsh/functions"
     "${ZDOTDIR}/prompt"
     "${ZDOTDIR}/completions"
     "${ZDOTDIR}/plugins"
     "${ZDOTDIR}/funcs"
+    "${ZDOTDIR}/lib/fns"
     "${DOTS}/bin"
     "${ASDF_DIR}/completions"
     "${fpath[@]}"

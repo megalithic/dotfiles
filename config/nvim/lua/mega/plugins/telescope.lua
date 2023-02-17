@@ -113,36 +113,32 @@ local M = {
 
   dependencies = {
     "natecraddock/telescope-zf-native.nvim",
-    "nvim-telescope/telescope-live-grep-args.nvim",
     "nvim-telescope/telescope-file-browser.nvim",
     -- "danielvolchek/tailiscope.nvim"
     -- "danielfalk/smart-open.nvim"
   },
   keys = {
     { "<leader><space>", project_files, desc = "Find File" },
-    { "<leader>ff", project_files, desc = "find files" },
-    {
-      "<leader>a",
-      function()
-        require("telescope.builtin").live_grep(ivy({}))
-        -- require("telescope").extensions.live_grep_args.live_grep_args(ivy({}))
-      end,
-      desc = "live grep",
-    },
-    {
-      "<leader>A",
-      function() require("telescope.builtin").grep_string(ivy({})) end,
-      desc = "grep under cursor",
-    },
-    {
-      "<leader>A",
-      function()
-        local pattern = require("mega.utils").get_visual_selection()
-        require("telescope.builtin").grep_string(ivy({ search = pattern }))
-      end,
-      desc = "grep visual selection",
-      mode = "v",
-    },
+    -- { "<leader>ff", project_files, desc = "find files" },
+    -- {
+    --   "<leader>a",
+    --   function() require("telescope.builtin").live_grep(ivy({})) end,
+    --   desc = "live grep",
+    -- },
+    -- {
+    --   "<leader>A",
+    --   function() require("telescope.builtin").grep_string(ivy({})) end,
+    --   desc = "grep under cursor",
+    -- },
+    -- {
+    --   "<leader>A",
+    --   function()
+    --     local pattern = require("mega.utils").get_visual_selection()
+    --     require("telescope.builtin").grep_string(ivy({ search = pattern }))
+    --   end,
+    --   desc = "grep visual selection",
+    --   mode = "v",
+    -- },
     {
       "<leader>fl",
       function()
@@ -152,11 +148,11 @@ local M = {
       end,
       desc = "find plugin file",
     },
-    {
-      "<leader>fb",
-      function() require("telescope.builtin").buffers(dropdown({})) end,
-      desc = "find open buffers",
-    },
+    -- {
+    --   "<leader>fb",
+    --   function() require("telescope.builtin").buffers(dropdown({})) end,
+    --   desc = "find open buffers",
+    -- },
     {
       "<leader>fn",
       function() require("telescope").extensions.file_browser.file_browser(ivy({ path = vim.g.obsidian_vault_path })) end,
@@ -167,7 +163,6 @@ local M = {
     local telescope = require("telescope")
     local transform_mod = require("telescope.actions.mt").transform_mod
     local actions = require("telescope.actions")
-    local lga_actions = require("telescope-live-grep-args.actions")
 
     local custom_actions = transform_mod({
       multi_selection_open_vertical = function(prompt_bufnr) multiopen(prompt_bufnr, "vertical") end,
@@ -210,16 +205,6 @@ local M = {
         vimgrep_arguments = grep_files_cmd,
       },
       extensions = {
-        live_grep_args = {
-          auto_quoting = true, -- enable/disable auto-quoting
-          mappings = { -- extend mappings
-            i = {
-              ["<C-s>"] = actions.to_fuzzy_refine,
-              ["<C-k>"] = lga_actions.quote_prompt(),
-              ["<C-i>"] = lga_actions.quote_prompt({ postfix = " --iglob " }),
-            },
-          },
-        },
         ["zf-native"] = {
           file = {
             enable = true,
@@ -243,6 +228,7 @@ local M = {
           -- file_ignore_patterns = { ".git/", "%.lock" },
           mappings = {
             i = {
+              ["<C-f>"] = actions.to_fuzzy_refine,
               ["<C-s>"] = actions.to_fuzzy_refine,
             },
           },

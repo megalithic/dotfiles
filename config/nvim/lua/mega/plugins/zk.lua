@@ -1,15 +1,23 @@
 return {
   "mickael-menu/zk-nvim",
-  event = "VeryLazy",
   dependencies = {
-    "nvim-telescope/telescope.nvim",
+    { "ibhagwan/fzf-lua" },
+    {
+      "junegunn/fzf.vim",
+      dependencies = {
+        { "junegunn/fzf" },
+      },
+    },
+    { "vijaymarupudi/nvim-fzf" },
   },
+  event = "VeryLazy",
+  enabled = true,
   config = function()
     local zk = require("zk")
     zk.setup({
       -- can be "telescope", "fzf" or "select" (`vim.ui.select`)
       -- it's recommended to use "telescope" or "fzf"
-      picker = "telescope",
+      picker = "fzf",
 
       lsp = {
         -- `config` is passed to `vim.lsp.start_client(config)`
@@ -82,10 +90,10 @@ return {
     -- -- Create a new note after asking for its title.
     mega.nnoremap("<leader>zn", "<Cmd>ZkNew { title = vim.fn.input('Title: ') }<CR>", desc("zk: new note"))
     mega.nnoremap("<leader>zf", "<Cmd>ZkNotes { sort = { 'modified' } }<CR>", desc("zk: find notes"))
-    mega.nnoremap(
-      "<leader>zf",
-      function() require("telescope").extensions.zk.notes(_G.telescope_ivy({ sort = { "modified" } })) end
-    )
+    -- mega.nnoremap(
+    --   "<leader>zf",
+    --   function() require("telescope").extensions.zk.notes(_G.telescope_ivy({ sort = { "modified" } })) end
+    -- )
     mega.nnoremap("<leader>z/", "<cmd>ZkLiveGrep<CR>", desc("zk: live grep"))
     -- mega.nnoremap(
     --   "<leader>zg",
@@ -109,7 +117,25 @@ return {
       end)
     end
 
-    commands.add("ZkInsertLink", function(options) yankName(options, { title = "ZkInsertLink" }) end)
+    -- commands.add("ZkInsertLink", function(options) yankName(options, { title = "ZkInsertLink" }) end)
+    mega.nnoremap("gl", "<Cmd>ZkInsertLink<CR>", desc("zk: insert link"))
+    mega.vnoremap("gl", ":'<,'>ZkInsertLinkAtSelection<CR>", desc("zk: insert link (selected)"))
+    mega.vnoremap("gL", ":'<,'>ZkInsertLinkAtSelection {match = true}<CR>", desc("zk: insert link (search selected)"))
+
+    -- { "<Leader>zi", "<cmd>ZkInsertLink<CR>", desc = "[l]inking: [i]nsert link at cursor" },
+    -- {
+    --   "<Leader>zi",
+    --   ":'<,'>ZkInsertLinkAtSelection<CR>",
+    --   desc = "[l]inking: [i]nsert link around selected text",
+    --   mode = "v",
+    -- },
+    -- {
+    --   "<Leader>zI",
+    --   ":'<,'>ZkInsertLinkAtSelection {match = true}<CR>",
+    --   desc = "[l]inking: insert link, [s]earching for selected text",
+    --   mode = "v",
+    -- },
+
     --
     -- -- Journaling stuff
     -- commands.add("ZkDailyEntry", function(opts)

@@ -93,60 +93,15 @@ return {
   },
   "lukas-reineke/virt-column.nvim",
   "MunifTanjim/nui.nvim",
-  -- {
-  --   "folke/styler.nvim",
-  --   event = "VeryLazy",
-  --   enabled = false,
-  --   config = {
-  --     themes = {
-  --       markdown = { colorscheme = "forestbones" },
-  --       help = { colorscheme = "forestbones", background = "dark" },
-  --       -- noice = { colorscheme = "gruvbox", background = "dark" },
-  --     },
-  --   },
-  -- },
-  -- {
-  --   "folke/paint.nvim",
-  --   enabled = false,
-  --   event = "BufReadPre",
-  --   config = function()
-  --     require("paint").setup({
-  --       highlights = {
-  --         {
-  --           filter = { filetype = "lua" },
-  --           pattern = "%s*%-%-%-%s*(@%w+)",
-  --           hl = "Constant",
-  --         },
-  --         {
-  --           filter = { filetype = "lua" },
-  --           pattern = "%s*%-%-%[%[(@%w+)",
-  --           hl = "Constant",
-  --         },
-  --         {
-  --           filter = { filetype = "lua" },
-  --           pattern = "%s*%-%-%-%s*@field%s+(%S+)",
-  --           hl = "@field",
-  --         },
-  --         {
-  --           filter = { filetype = "lua" },
-  --           pattern = "%s*%-%-%-%s*@class%s+(%S+)",
-  --           hl = "@variable.builtin",
-  --         },
-  --         {
-  --           filter = { filetype = "lua" },
-  --           pattern = "%s*%-%-%-%s*@alias%s+(%S+)",
-  --           hl = "@keyword",
-  --         },
-  --         {
-  --           filter = { filetype = "lua" },
-  --           pattern = "%s*%-%-%-%s*@param%s+(%S+)",
-  --           hl = "@parameter",
-  --         },
-  --       },
-  --     })
-  --   end,
-  -- },
-
+  {
+    "folke/todo-comments.nvim",
+    event = "VeryLazy",
+    dependencies = { "nvim-treesitter/nvim-treesitter" },
+    config = function()
+      require("todo-comments").setup()
+      -- mega.command("TodoDots", ("TodoQuickFix cwd=%s keywords=TODO,FIXME"):format(vim.g.vim_dir))
+    end,
+  },
   {
     "folke/zen-mode.nvim",
     cmd = "ZenMode",
@@ -174,53 +129,86 @@ return {
       end
     end,
   },
+
+  -- indent guides for Neovim
   {
     "lukas-reineke/indent-blankline.nvim",
-    event = "VeryLazy",
-    config = function()
-      local ibl = require("indent_blankline")
+    event = { "BufReadPost", "BufNewFile" },
+    opts = {
+      -- char = "▏",
+      char = "│", -- alts: ┆ ┊  ▎
+      filetype_exclude = { "help", "alpha", "dashboard", "neo-tree", "Trouble", "lazy" },
+      show_trailing_blankline_indent = false,
+      show_current_context = false,
+      show_current_context_start = true,
+    },
+  },
 
-      -- local refresh = ibl.refresh
-      -- ibl.refresh = _G.mega.debounce(100, refresh)
-
-      ibl.setup({
-        char = "│", -- alts: ┆ ┊  ▎
-        show_foldtext = false,
-        context_char = "▎",
-        char_priority = 12,
-        show_current_context = true,
-        show_current_context_start = true,
-        show_current_context_start_on_current_line = true,
-        show_first_indent_level = true,
-        filetype_exclude = {
-          "dbout",
-          "neo-tree-popup",
-          "dap-repl",
-          "startify",
-          "dashboard",
-          "log",
-          "fugitive",
-          "gitcommit",
-          "packer",
-          "vimwiki",
-          "markdown",
-          "txt",
-          "vista",
-          "help",
-          "NvimTree",
-          "git",
-          "TelescopePrompt",
-          "undotree",
-          "flutterToolsOutline",
-          "norg",
-          "org",
-          "orgagenda",
-          "", -- for all buffers without a file type
-        },
-        buftype_exclude = { "terminal", "nofile" },
+  -- active indent guide and indent text objects
+  {
+    "echasnovski/mini.indentscope",
+    version = false, -- wait till new 0.7.0 release to put it back on semver
+    event = { "BufReadPre", "BufNewFile" },
+    opts = {
+      -- symbol = "▏",
+      symbol = "│",
+      options = { try_as_border = true },
+    },
+    config = function(_, opts)
+      vim.api.nvim_create_autocmd("FileType", {
+        pattern = { "help", "alpha", "dashboard", "neo-tree", "Trouble", "lazy", "mason" },
+        callback = function() vim.b.miniindentscope_disable = true end,
       })
+      require("mini.indentscope").setup(opts)
     end,
   },
+  -- {
+  --   "lukas-reineke/indent-blankline.nvim",
+  --   event = { "BufReadPost", "BufNewFile" },
+  --   config = function()
+  --     local ibl = require("indent_blankline")
+  --
+  --     -- local refresh = ibl.refresh
+  --     -- ibl.refresh = _G.mega.debounce(100, refresh)
+  --
+  --     ibl.setup({
+  --       char = "│", -- alts: ┆ ┊  ▎
+  --       show_foldtext = false,
+  --       context_char = "▎",
+  --       char_priority = 12,
+  --       show_current_context = true,
+  --       show_current_context_start = true,
+  --       show_current_context_start_on_current_line = true,
+  --       show_first_indent_level = true,
+  --       filetype_exclude = {
+  --         "dbout",
+  --         "neo-tree-popup",
+  --         "dap-repl",
+  --         "startify",
+  --         "dashboard",
+  --         "log",
+  --         "fugitive",
+  --         "gitcommit",
+  --         "packer",
+  --         "vimwiki",
+  --         "markdown",
+  --         "txt",
+  --         "vista",
+  --         "help",
+  --         "NvimTree",
+  --         "git",
+  --         "TelescopePrompt",
+  --         "undotree",
+  --         "flutterToolsOutline",
+  --         "norg",
+  --         "org",
+  --         "orgagenda",
+  --         "", -- for all buffers without a file type
+  --       },
+  --       buftype_exclude = { "terminal", "nofile" },
+  --     })
+  --   end,
+  -- },
 
   -- ( Movements ) -------------------------------------------------------------
   -- @trial multi-cursor: https://github.com/brendalf/dotfiles/blob/master/.config/nvim/lua/core/multi-cursor.lua
@@ -426,6 +414,7 @@ return {
 
   {
     "SmiteshP/nvim-navic",
+    lazy = true,
     config = function()
       vim.g.navic_silence = true
       require("nvim-navic").setup({ separator = " ", highlight = true, depth_limit = 5 })
@@ -900,9 +889,9 @@ return {
   {
     "evanpurkhiser/image-paste.nvim",
     ft = "markdown",
-    -- keys = {
-    --   { { "<C-v>", function() require("image-paste").paste_image() end }, mode = "i" },
-    -- },
+    keys = {
+      { "<C-v>", function() require("image-paste").paste_image() end, mode = "i" },
+    },
     config = {
       imgur_client_id = "2974b259fd073e2",
     },
@@ -950,7 +939,6 @@ return {
     end,
   },
   { "ellisonleao/glow.nvim", ft = { "markdown" } },
-  { "ekickx/clipboard-image.nvim", ft = { "markdown" } },
 
   -- {
   --   "epwalsh/obsidian.nvim",
@@ -1037,7 +1025,6 @@ return {
   },
   -- @trial phaazon/mind.nvim
   -- @trial "renerocksai/telekasten.nvim"
-  -- @trial ekickx/clipboard-image.nvim
   -- @trial preservim/vim-wordy
   -- @trial jghauser/follow-md-links.nvim
   -- @trial jakewvincent/mkdnflow.nvim

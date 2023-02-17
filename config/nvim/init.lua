@@ -17,7 +17,7 @@ vim.g.enabled_plugin = {
   env = true,
   vscode = false,
   tmux = true,
-  winbar = false, -- FIXME: add more!
+  winbar = false,
 }
 
 -- disable certain plugins for firenvim
@@ -39,6 +39,7 @@ vim.g.debug_enabled = false
 _G.mega = mega
   or {
     fn = {},
+    fzf = {},
     dirs = {},
     mappings = {},
     term = {},

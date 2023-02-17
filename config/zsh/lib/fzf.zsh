@@ -7,6 +7,7 @@
 # https://gist.github.com/junegunn/8b572b8d4b5eddd8b85e5f4d40f17236
 
 # TODO:
+# https://www.reddit.com/r/vim/comments/10mh48r/fuzzy_search/
 # perf gains to be had here: https://github.com/ranelpadon/configs/blob/master/zshrc/rg_fzf_bat.sh
 
 export FZF_TMUX_HEIGHT='20%'

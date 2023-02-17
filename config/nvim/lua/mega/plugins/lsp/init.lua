@@ -242,8 +242,8 @@ local function setup_keymaps(client, bufnr)
 
   -- maybe(nmap("K", vim.lsp.buf.hover, desc("lsp: hover"), "Hover"))
   nnoremap("K", vim.lsp.buf.hover, desc("lsp: hover"))
-  nnoremap("<c-h>", vim.lsp.buf.signature_help, desc("lsp: signature help"))
-  inoremap("<c-h>", vim.lsp.buf.signature_help, desc("lsp: signature help"))
+  nnoremap("gK", vim.lsp.buf.signature_help, desc("lsp: signature help"))
+  inoremap("<c-k>", vim.lsp.buf.signature_help, desc("lsp: signature help"))
   -- { "gK", vim.lsp.buf.signature_help, desc = "Signature Help", has = "signatureHelp" },
   -- { "<c-k>", vim.lsp.buf.signature_help, mode = "i", desc = "Signature Help", has = "signatureHelp" },
 

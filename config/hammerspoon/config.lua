@@ -42,14 +42,19 @@ local transientApps = {
 local networks = { "shaolin" }
 
 local displays = {
-  laptop = "Color LCD",
+  -- laptop = "Color LCD",
+  laptop = "Built-in Retina Display",
   external = "LG UltraFine",
 }
+
+-- if hs.network.configuration:hostname() == "megabookpro" then
+--   displays.laptop = "Built-in Retina Display"
+--   print(displays.laptop)
+-- end
 
 local dirs = {
   screenshots = os.getenv("HOME") .. "/screenshots",
 }
-
 
 -- stylua: ignore start
 --- REF: https://github.com/asmagill/hammerspoon_asm/blob/master/extras/init.lua
@@ -79,7 +84,7 @@ local apps = {
     bundleID = "net.kovidgoyal.kitty",
     name = "kitty",
     key = "k",
-    quitter = false,
+    quitter = true,
     localBindings = {},
     rules = {
       { "", 1, "maximized" },

@@ -1,5 +1,14 @@
-local M =
-  { "ibhagwan/fzf-lua", cmd = { "FzfLua" }, keys = { { "<C-p>", "<cmd>FzfLua files<cr>", desc = "fzf: files" } } }
+local M = {
+  "ibhagwan/fzf-lua",
+  cmd = { "FzfLua" },
+  keys = {
+    { "<leader>ff", "<cmd>FzfLua files<cr>", desc = "fzf: files" },
+    { "<leader>a", "<cmd>FzfLua live_grep<cr>", desc = "fzf: live grep" },
+    { "<leader>A", "<cmd>FzfLua grep_cword<cr>", desc = "fzf: grep cursor" },
+    { "<leader>A", "<cmd>FzfLua grep_visual<cr>", desc = "fzf: grep selection", mode = "v" },
+    { "<leader>fb", "<cmd>FzfLua buffers<cr>", desc = "fzf: buffers" },
+  },
+}
 
 function M.config()
   local res, fzf_lua = pcall(require, "fzf-lua")
@@ -58,11 +67,10 @@ function M.config()
     -- fzf_bin = { opts = { ["--no-separator"] = "" } },
     fzf_colors = fzf_colors,
     winopts = {
-      split = "belowright new",
       height = 0.35,
-      width = 0.80,
-      row = 0.35,
-      col = 0.55,
+      width = 1.00,
+      row = 1,
+      col = 1,
       border = { " ", " ", " ", " ", " ", " ", " ", " " },
       preview = {
         layout = "flex",
@@ -96,14 +104,35 @@ function M.config()
         },
       },
     },
+    actions = {
+      files = {
+        ["ctrl-o"] = fzf_lua.actions.file_edit_or_qf,
+        ["ctrl-l"] = fzf_lua.actions.arg_add,
+        ["ctrl-s"] = fzf_lua.actions.file_split,
+        ["default"] = fzf_lua.actions.file_vsplit,
+        ["ctrl-t"] = fzf_lua.actions.file_tabedit,
+        ["ctrl-q"] = fzf_lua.actions.file_sel_to_qf,
+        ["alt-q"] = fzf_lua.actions.file_sel_to_ll,
+      },
+      grep = {
+        ["ctrl-o"] = fzf_lua.actions.file_edit_or_qf,
+        ["ctrl-l"] = fzf_lua.actions.arg_add,
+        ["ctrl-s"] = fzf_lua.actions.file_split,
+        ["default"] = fzf_lua.actions.file_vsplit,
+        ["ctrl-t"] = fzf_lua.actions.file_tabedit,
+        ["ctrl-q"] = fzf_lua.actions.file_sel_to_qf,
+        ["alt-q"] = fzf_lua.actions.file_sel_to_ll,
+      },
+    },
     files = {
-      fd_opts = "--no-ignore --color=never --type f --hidden --follow --no-ignore-vcs --exclude .git",
+      fd_opts = "--color=never --type f --hidden --follow --no-ignore-vcs --strip-cwd-prefix --exclude .git",
       action = { ["ctrl-l"] = fzf_lua.actions.arg_add },
       previewer = "builtin",
     },
     grep = {
       rg_glob = true,
-      rg_opts = "--hidden --column --line-number --no-heading" .. " --color=always --smart-case -g '!.git'",
+      rg_opts = "--hidden --column --line-number --no-ignore-vcs --no-heading"
+        .. " --color=always --smart-case -g '!.git'",
       previewer = "builtin",
     },
     git = {

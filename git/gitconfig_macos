@@ -13,6 +13,10 @@
 [gpg]
 	; program = /usr/local/bin/gpg
 
+[gpg "ssh"]
+  program = "/Applications/1Password.app/Contents/MacOS/op-ssh-sign"
+	allowedSignersFile = /Users/seth/.ssh/allowed_signers
+
 [credential]
 	helper = osxkeychain
   ; helper =

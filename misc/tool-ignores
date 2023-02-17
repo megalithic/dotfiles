@@ -1,6 +1,7 @@
 .yarn
 .git
 .elixir_ls
+**/.elixir_ls
 node_modules
 _build
 tags
@@ -43,5 +44,8 @@ package-lock.json
 *~
 app/assets/builds
 erl_crash.dump
+.nix-mix
+.nix-hex
+**/*.zwc
 
 # vim:ft=gitignore:tw=0

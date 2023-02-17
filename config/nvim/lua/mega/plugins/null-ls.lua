@@ -15,7 +15,7 @@ function M.setup_bak(options)
       -- nls.builtins.formatting.eslint_d,
       -- nls.builtins.diagnostics.shellcheck,
       nls.builtins.formatting.shfmt,
-      nls.builtins.diagnostics.markdownlint,
+      -- nls.builtins.diagnostics.markdownlint,
       -- nls.builtins.diagnostics.luacheck,
       nls.builtins.formatting.prettierd.with({
         filetypes = { "markdown" }, -- only runs `deno fmt` for markdown
@@ -146,7 +146,7 @@ function M.setup(opts)
       format.shellharden,
       format.elm_format,
       format.jq,
-      format.markdownlint,
+      -- format.markdownlint,
       format.shfmt.with({
         extra_args = { "-i", "2", "-ci" }, -- suggested: { "-i", "2", "-ci" } or { "-ci", "-s", "-bn", "-i", "2" }
         filetypes = { "sh", "bash" },

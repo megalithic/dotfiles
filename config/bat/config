@@ -1,5 +1,6 @@
 # Set the theme to "TwoDark"
---theme="Forest%20Night%20Italic"
+--theme="Everforest Dark"
+# --theme="Forest%20Night%20Italic"
 
 # Show line numbers, Git modifications and file header (but no grid)
 --style="numbers,changes"

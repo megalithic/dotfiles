@@ -154,7 +154,7 @@ if ok then
   }
 end
 
-if require("zk.util").notebook_root(vim.fn.expand("%:p")) ~= nil then
+if not vim.g.started_by_firenvim and require("zk.util").notebook_root(vim.fn.expand("%:p")) ~= nil then
   local desc = function(desc) return { desc = desc, noremap = true, silent = false, buffer = 0 } end
 
   -- Open the link under the caret.

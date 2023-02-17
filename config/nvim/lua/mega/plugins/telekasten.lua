@@ -137,7 +137,7 @@ local function config()
   mega.augroup("Telekasten", {
     {
       event = { "BufEnter" },
-      pattern = { string.format("%s", vim.g.notes_path) },
+      pattern = { string.format("%s/**md", vim.g.notes_path) },
       command = function()
         dd("made it into telekasten bufenter")
         mega.nmap("gf", "<cmd>Telekasten follow_link<CR>", { desc = "telekasten: follow link" })
@@ -150,9 +150,8 @@ end
 return {
   {
     "renerocksai/telekasten.nvim",
-    -- ft = "norg",
     event = "VeryLazy",
     config = config,
-    cond = false,
+    enabled = false,
   },
 }

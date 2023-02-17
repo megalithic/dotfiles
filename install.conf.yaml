@@ -344,7 +344,7 @@
         #${blue}░  ${white}  - ~/.dotfiles/bin/ssh-setup
         #${blue}░
         #${blue}░  Manually open/setup the following:
-        #${blue}░  ${white}  - espanso
+        #${blue}░  ${white}  - espanso (espanso register; espanso start)
         #${blue}░  ${white}  - postgresql
         #${blue}░  ${white}  - mailmate
         #${blue}░  ${white}  - signal
