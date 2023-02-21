@@ -85,26 +85,10 @@ return {
     mega.zk_live_grep = function(opts)
       opts = opts or {}
       opts.prompt = "search notes "
-      -- opts.git_icons = true
       opts.file_icons = true
-      -- opts.color_icons = true
-      -- setup default actions for edit, quickfix, etc
       opts.actions = fzf_lua.defaults.actions.files
-      -- see preview overview for more info on previewers
       opts.previewer = "builtin"
-      opts.fn_transform = function(x)
-        -- dd(fmt("zk_live_grep > fn_transform(x): %s", vim.inspect(x)))
-        return fzf_lua.make_entry.file(x, opts)
-      end
-      -- we only need 'fn_preprocess' in order to display 'git_icons'
-      -- it runs once before the actual command to get modified files
-      -- 'make_entry.file' uses 'opts.diff_files' to detect modified files
-      -- will probaly make this more straight forward in the future
-      -- opts.fn_preprocess = function(o)
-      --   -- dd(fmt("zk_live_grep > fn_preprocess(o): %s", vim.inspect(o)))
-      --   opts.diff_files = fzf_lua.make_entry.preprocess(o).diff_files
-      --   return opts
-      -- end
+      opts.fn_transform = function(x) return fzf_lua.make_entry.file(x, opts) end
 
       return fzf_lua.fzf_live(
         function(q) return "rg --column --color=always -- " .. vim.fn.shellescape(q or "") end,
@@ -159,7 +143,7 @@ return {
 
     mega.nnoremap(
       "<leader>z/",
-      function() mega.zk_live_grep({ exec_empty_query = true, cwd = vim.env.ZK_NOTEBOOK_DIR }) end,
+      function() mega.zk_live_grep({ exec_empty_query = false, cwd = vim.env.ZK_NOTEBOOK_DIR }) end,
       desc("zk: live grep")
     )
     mega.nnoremap(
