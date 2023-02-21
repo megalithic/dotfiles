@@ -477,6 +477,7 @@ for _, mode in ipairs({ "n", "x", "i", "v", "o", "t", "s", "c" }) do
   mega[mode .. "noremap"] = mapper(mode, noremap_opts)
   _G[mode .. "noremap"] = mega[mode .. "noremap"]
 end
+_G.map = vim.keymap.set
 
 --- Validate the keys passed to as.augroup are valid
 ---@param name string
@@ -903,7 +904,7 @@ function mega.showCursorHighlights()
   -- end
 end
 
-mega.nightly = mega.has("nvim-0.7")
+mega.nightly = mega.has("nvim-0.9")
 
 function mega.debounce(ms, fn)
   local timer = vim.loop.new_timer()

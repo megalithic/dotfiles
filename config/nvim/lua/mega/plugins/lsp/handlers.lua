@@ -147,15 +147,16 @@ function M.setup()
   -- })
   -- lsp.handlers["textDocument/signatureHelp"] = lsp.with(lsp.handlers.signature_help, signature_help_opts)
 
-  lsp.handlers["window/showMessage"] = function(_, result, ctx)
-    local client = lsp.get_client_by_id(ctx.client_id)
-    local lvl = ({ "ERROR", "WARN", "INFO", "DEBUG", "OFF" })[result.type]
-    vim.notify(result.message, vim.log.levels[lvl], {
-      title = "LSP | " .. client.name,
-      timeout = 8000,
-      keep = function() return lvl == "ERROR" or lvl == "WARN" end,
-    })
-  end
+  -- NOTE: presently noice.nvim handles this
+  -- lsp.handlers["window/showMessage"] = function(_, result, ctx)
+  --   local client = lsp.get_client_by_id(ctx.client_id)
+  --   local lvl = ({ "ERROR", "WARN", "INFO", "DEBUG", "OFF" })[result.type]
+  --   vim.notify(result.message, vim.log.levels[lvl], {
+  --     title = "LSP | " .. client.name,
+  --     timeout = 8000,
+  --     keep = function() return lvl == "ERROR" or lvl == "WARN" end,
+  --   })
+  -- end
 
   do
     if true then return end

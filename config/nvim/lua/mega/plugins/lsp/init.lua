@@ -12,6 +12,7 @@ local M = {
   event = "BufReadPre",
   dependencies = {
     "hrsh7th/cmp-nvim-lsp",
+    -- "ray-x/lsp_signature.nvim",
     -- { "folke/neoconf.nvim", cmd = "Neoconf", config = true },
     -- {
     --   "folke/neodev.nvim",
@@ -240,24 +241,9 @@ local function setup_keymaps(client, bufnr)
   nnoremap("gl", vim.lsp.codelens.run, desc("lsp: code lens"))
   nnoremap("gn", require("mega.plugins.lsp.rename").rename, desc("lsp: rename"))
 
-  -- maybe(nmap("K", vim.lsp.buf.hover, desc("lsp: hover"), "Hover"))
   nnoremap("K", vim.lsp.buf.hover, desc("lsp: hover"))
   nnoremap("gK", vim.lsp.buf.signature_help, desc("lsp: signature help"))
   inoremap("<c-k>", vim.lsp.buf.signature_help, desc("lsp: signature help"))
-  -- { "gK", vim.lsp.buf.signature_help, desc = "Signature Help", has = "signatureHelp" },
-  -- { "<c-k>", vim.lsp.buf.signature_help, mode = "i", desc = "Signature Help", has = "signatureHelp" },
-
-  -- Setup keymaps
-  -- nmap("K", require("hover").hover, { desc = "hover.nvim" })
-  -- nmap("gK", require("hover").hover_select, desc("lsp: hover (select)"))
-  -- nmap("K", function() vim.lsp.buf.hover() end, { desc = "lsp: hover" })
-  -- nnoremap("K", hover, desc("lsp: hover"))
-  -- inoremap("<C-k>", vim.lsp.buf.signature_help, desc("lsp: signature help"))
-  -- imap("<C-k>", vim.lsp.buf.signature_help, desc("lsp: signature help"))
-  -- imap("<C-k>", function()
-  --   vim.lsp.buf.signature_help()
-  --   return ""
-  -- end, { expr = true })
   nnoremap("<leader>lic", [[<cmd>LspInfo<CR>]], desc("connected client info"))
   nnoremap("<leader>lim", [[<cmd>Mason<CR>]], desc("mason info"))
   nnoremap(
@@ -553,6 +539,14 @@ function M.config()
         end
       end
     end
+    --
+    -- require("lsp_signature").on_attach({
+    --   bind = true,
+    --   handler_opts = {
+    --     border = mega.get_border(),
+    --   },
+    --   hint_enabled = false,
+    -- }, bufnr)
 
     -- if caps.documentSymbolProvider then
     --   local ok, navic = mega.require("nvim-navic")

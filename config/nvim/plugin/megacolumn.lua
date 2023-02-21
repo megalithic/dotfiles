@@ -104,6 +104,10 @@ local excluded = {
   "fugitive",
   "list",
   "NvimTree",
+  "lazy",
+  "fzf",
+  "fzflua",
+  "fzf-lua",
   "startify",
   "help",
   "orgagenda",
@@ -118,7 +122,7 @@ vim.o.statuscolumn = "%{%v:lua.mega.ui.statuscolumn.render()%}"
 
 mega.augroup("MegaColumn", {
   {
-    event = { "BufEnter", "FileType" },
+    event = { "BufEnter", "FileType", "WinEnter" },
     command = function(args)
       local buf = vim.bo[args.buf]
       if buf.bt ~= "" or vim.tbl_contains(excluded, buf.ft) then vim.opt_local.statuscolumn = "" end

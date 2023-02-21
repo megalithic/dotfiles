@@ -56,7 +56,7 @@ function M.config()
   end
 
   local tabline = {
-    hl = { fg = mega.colors.grey1.hex, bg = mega.colors.bg1.hex },
+    hl = { fg = mega.colors.grey1.hex, bg = mega.colors.bg_dark.hex },
     layout = config.layout,
     head = {
       { mega.icons.misc.lblock, hl = { fg = mega.colors.bg1.hex, bg = mega.colors.bg2.hex } },

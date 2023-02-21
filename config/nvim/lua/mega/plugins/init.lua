@@ -356,6 +356,19 @@ return {
 
   -- ( LSP ) -------------------------------------------------------------------
   -- TODO: https://github.com/folke/dot/tree/master/config/nvim/lua/config/plugins/lsp
+  {
+    "ray-x/lsp_signature.nvim",
+    event = "InsertEnter",
+    opts = {
+      bind = true,
+      fix_pos = false,
+      auto_close_after = 10, -- close after 15 seconds
+      hint_enable = false,
+      handler_opts = { border = mega.get_border() },
+      toggle_key = "<C-K>",
+      select_signature_key = "<M-N>",
+    },
+  },
   -- {
   --   "williamboman/mason.nvim",
   --   event = "BufRead",
