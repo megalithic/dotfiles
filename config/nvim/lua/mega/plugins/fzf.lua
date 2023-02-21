@@ -40,26 +40,22 @@ function M.config()
   end
 
   local fzf_colors = function(opts)
-    local binary = opts and opts.fzf_bin
     local colors = {
-      ["fg"] = { "fg", "Normal" },
-      ["bg"] = { "bg", "Normal" },
-      ["hl"] = { "fg", hl_match({ "NightflyViolet", "Directory" }) },
-      ["fg+"] = { "fg", "Normal" },
-      ["bg+"] = { "bg", hl_match({ "NightflyVisual", "CursorLine" }) },
+      ["fg"] = { "fg", "TelescopeNormal" },
+      ["bg"] = { "bg", "TelescopeNormal" },
+      ["hl"] = { "fg", hl_match({ "Directory" }) },
+      ["fg+"] = { "fg", "TelescopeNormal" },
+      ["bg+"] = { "bg", hl_match({ "CursorLine" }) },
       ["hl+"] = { "fg", "CmpItemKindVariable" },
-      ["info"] = { "fg", hl_match({ "NightflyPeach", "WarningMsg" }) },
-      -- ["prompt"] = { "fg", "SpecialKey" },
+      ["info"] = { "fg", hl_match({ "WarningMsg" }) },
+      -- ["prompt"] = { "fg", "SpecialKey", "bg", "TelescopePrompt" },
       ["pointer"] = { "fg", "DiagnosticError" },
       ["marker"] = { "fg", "DiagnosticError" },
       ["spinner"] = { "fg", "Label" },
-      ["header"] = { "fg", "Comment" },
-      ["gutter"] = { "bg", "Normal" },
+      ["header"] = { "fg", "TelescopePrompt" },
+      ["gutter"] = { "bg", "TelescopeSelectionCaret" },
     }
-    if binary == "sk" and vim.fn.executable(binary) == 1 then
-      colors["matched_bg"] = { "bg", "Normal" }
-      colors["current_match_bg"] = { "bg", hl_match({ "NightflyVisual", "CursorLine" }) }
-    end
+
     return colors
   end
 
@@ -86,14 +82,14 @@ function M.config()
       --   print("on_create")
       -- end,
     },
-    winopts_fn = function()
-      local hl = {
-        border = hl_match({ "FloatBorder" }),
-        cursorline = hl_match({ "CursorLine" }),
-        cursorlinenr = hl_match({ "CursorLineNr" }),
-      }
-      return { hl = hl }
-    end,
+    -- winopts_fn = function()
+    --   local hl = {
+    --     border = hl_match({ "FloatBorder" }),
+    --     cursorline = hl_match({ "CursorLine" }),
+    --     cursorlinenr = hl_match({ "CursorLineNr" }),
+    --   }
+    --   return { hl = hl }
+    -- end,
     previewers = {
       bat = { theme = "Forest%20Night%20Italic" },
       builtin = {

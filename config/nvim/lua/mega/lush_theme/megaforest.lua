@@ -835,13 +835,13 @@ return lush(function(injected_functions)
 
     ---- :help fzf-lua ---------------------------------------------------------
 
-    FzfLuaNormal({ TelescopeNormal }),
+    FzfLuaNormal({ TelescopePreviewNormal }),
     FzfLuaBorder({ TelescopeBorder }),
-    FzfLuaCursor({}),
-    FzfLuaCursorLine({}),
-    FzfLuaCursorLineNr({}),
-    FzfLuaSearch({}),
-    FzfLuaTitle({ TelescopeTitle }),
+    FzfLuaCursor({ TelescopeNormal }),
+    FzfLuaCursorLine({ TelescopeNormal }),
+    FzfLuaCursorLineNr({ TelescopeNormal }),
+    FzfLuaSearch({ TelescopePrompt }),
+    FzfLuaTitle({ TelescopeResultsTitle }),
     FzfLuaScrollBorderEmpty({}),
     FzfLuaScrollBorderFull({}),
     FzfLuaScrollFloatEmpty({}),

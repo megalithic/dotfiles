@@ -147,16 +147,17 @@ return {
   {
     "lukas-reineke/indent-blankline.nvim",
     event = { "BufReadPost", "BufNewFile" },
-    enabled = false,
+    enabled = true,
     opts = {
       char = "│", -- alts: ┆ ┊  ▎
       --       show_foldtext = false,
       --       context_char = "▎",
       --       char_priority = 12,
-      --       show_current_context = true,
-      --       show_current_context_start = true,
-      --       show_current_context_start_on_current_line = true,
-      --       show_first_indent_level = true,
+      show_current_context = true,
+      show_current_context_start = true,
+      show_current_context_start_on_current_line = true,
+      show_trailing_blankline_indent = false,
+      show_first_indent_level = true,
       filetype_exclude = {
         "help",
         "alpha",
@@ -193,57 +194,8 @@ return {
         "", -- for all buffers without a file type
       },
       buftype_exclude = { "terminal", "nofile" },
-      show_trailing_blankline_indent = false,
-      show_current_context = false,
     },
   },
-  -- {
-  --   "lukas-reineke/indent-blankline.nvim",
-  --   event = { "BufReadPost", "BufNewFile" },
-  --   config = function()
-  --     local ibl = require("indent_blankline")
-  --
-  --     -- local refresh = ibl.refresh
-  --     -- ibl.refresh = _G.mega.debounce(100, refresh)
-  --
-  --     ibl.setup({
-  --       char = "│", -- alts: ┆ ┊  ▎
-  --       show_foldtext = false,
-  --       context_char = "▎",
-  --       char_priority = 12,
-  --       show_current_context = true,
-  --       show_current_context_start = true,
-  --       show_current_context_start_on_current_line = true,
-  --       show_first_indent_level = true,
-  --       filetype_exclude = {
-  --         "dbout",
-  --         "neo-tree-popup",
-  --         "dap-repl",
-  --         "startify",
-  --         "dashboard",
-  --         "log",
-  --         "fugitive",
-  --         "gitcommit",
-  --         "packer",
-  --         "vimwiki",
-  --         "markdown",
-  --         "txt",
-  --         "vista",
-  --         "help",
-  --         "NvimTree",
-  --         "git",
-  --         "TelescopePrompt",
-  --         "undotree",
-  --         "flutterToolsOutline",
-  --         "norg",
-  --         "org",
-  --         "orgagenda",
-  --         "", -- for all buffers without a file type
-  --       },
-  --       buftype_exclude = { "terminal", "nofile" },
-  --     })
-  --   end,
-  -- },
 
   -- ( Movements ) -------------------------------------------------------------
   -- @trial multi-cursor: https://github.com/brendalf/dotfiles/blob/master/.config/nvim/lua/core/multi-cursor.lua
@@ -369,96 +321,6 @@ return {
       select_signature_key = "<M-N>",
     },
   },
-  -- {
-  --   "williamboman/mason.nvim",
-  --   event = "BufRead",
-  --   dependencies = {
-  --     "nvim-lspconfig",
-  --     "williamboman/mason-lspconfig.nvim",
-  --   },
-  --   config = function()
-  --     -- require("mason").setup({
-  --     --   ui = {
-  --     --     border = _G.mega.get_border(),
-  --     --     log_level = vim.log.levels.DEBUG,
-  --     --   },
-  --     -- })
-  --
-  --     -- require("mega.lsp.servers")()
-  --     local get_config = require("mega.lsp.servers")
-  --     require("mason").setup({
-  --       ui = {
-  --         border = _G.mega.get_border(),
-  --         log_level = vim.log.levels.DEBUG,
-  --       },
-  --     })
-  --     require("mason-lspconfig").setup({
-  --       automatic_installation = true,
-  --       ensure_installed = {
-  --         "bashls",
-  --         "clangd",
-  --         -- "cmake",
-  --         "cssls",
-  --         "dockerls",
-  --         "elixirls",
-  --         "elmls",
-  --         "ember",
-  --         "emmet_ls",
-  --         -- "erlangls",
-  --         "gopls",
-  --         "html",
-  --         "jsonls",
-  --         -- "marksman",
-  --         "pyright",
-  --         "rust_analyzer",
-  --         "solargraph",
-  --         -- "sqlls",
-  --         "sumneko_lua",
-  --         "tailwindcss",
-  --         "terraformls",
-  --         "tsserver",
-  --         "vimls",
-  --         "yamlls",
-  --         "zk",
-  --         "zls",
-  --       },
-  --     })
-  --     require("mason-lspconfig").setup_handlers({
-  --       function(name)
-  --         local cfg = get_config(name)
-  --         if cfg then
-  --           -- vim.notify(fmt("Found lsp config for %s", name), vim.log.levels.INFO, { title = "mason-lspconfig" })
-  --           require("lspconfig")[name].setup(cfg)
-  --         end
-  --       end,
-  --     })
-  --   end,
-  -- },
-  -- {
-  --   "jayp0521/mason-null-ls.nvim",
-  --   dependencies = {
-  --     "williamboman/mason.nvim",
-  --     "jose-elias-alvarez/null-ls.nvim",
-  --   },
-  --   dependencies = "mason.nvim",
-  --   config = function()
-  --     require("mason-null-ls").setup({
-  --       automatic_installation = true,
-  --       ensure_installed = {
-  --         "beautysh",
-  --       },
-  --     })
-  --   end,
-  -- },
-  -- {
-  --   "neovim/nvim-lspconfig",
-  --   dependencies = {
-  --     -- having this one installed just makes neovim api docs available
-  --     -- via LSP, don't need to actually do anything with it
-  --     "folke/neodev.nvim",
-  --   },
-  --   config = function() require("lspconfig.ui.windows").default_options.border = _G.mega.get_border() end,
-  -- },
 
   {
     "SmiteshP/nvim-navic",
@@ -468,19 +330,6 @@ return {
       require("nvim-navic").setup({ separator = " ", highlight = true, depth_limit = 5 })
     end,
   },
-
-  -- {
-  --   "issafalcon/lsp-overloads.nvim",
-  --   dependencies = "nvim-lspconfig",
-  --   config = function()
-  --     require("lsp-overloads").setup({
-  --       ui = {
-  --         -- The border to use for the signature popup window. Accepts same border values as |nvim_open_win()|.
-  --         border = mega.get_border(),
-  --       },
-  --     })
-  --   end,
-  -- },
 
   -- {
   --   "ray-x/lsp_signature.nvim",

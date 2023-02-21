@@ -88,6 +88,7 @@ local function enable_colorcolumn() set_colorcolumn() end
 -- initial setup of virt-column; required for this plugin
 if vc_ok then vc.setup({ config = { char = "│" } }) end
 
+-- REF: https://github.com/m4xshen/smartcolumn.nvim/blob/main/lua/smartcolumn.lua
 mega.augroup("ToggleColorColumn", {
   {
     -- Update the cursor column to match current window size
@@ -99,11 +100,3 @@ mega.augroup("ToggleColorColumn", {
     command = function() disable_colorcolumn(true) end,
   },
 })
-
--- mega.augroup("ToggleColorColumn", {
---   {
---     -- Update the cursor column to match current window size
---     event = { "BufEnter", "WinNew", "WinClosed", "FileType", "VimResized", "WinLeave", "BufLeave" },
---     command = check_color_column,
---   },
--- })

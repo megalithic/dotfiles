@@ -107,7 +107,7 @@ end
 
 function mini.indentscope()
   require("mini.indentscope").setup({
-    symbol = "▏", -- │ ▏
+    symbol = "│", -- │ ▏▏
     draw = {
       delay = 0,
       animation = require("mini.indentscope").gen_animation.none(),
@@ -125,6 +125,8 @@ function mini.indentscope()
       "lazy",
       "mason",
       "fzf",
+      "dirbuf",
+      "terminal",
       "fzf-lua",
       "fzflua",
       "megaterm",
@@ -140,7 +142,7 @@ function mini.config()
   mini.pairs()
   mini.comment()
   mini.align()
-  mini.indentscope()
+  -- mini.indentscope()
 end
 
 function mini.init()

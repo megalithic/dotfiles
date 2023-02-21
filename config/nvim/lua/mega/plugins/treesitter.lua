@@ -10,18 +10,18 @@ return {
       nmap("K", require("ts-node-action").node_action, { desc = "Trigger Node Action" })
     end,
   },
-  {
-    "nvim-treesitter/nvim-treesitter-context",
-    event = "BufReadPre",
-    config = function()
-      require("treesitter-context").setup({
-        multiline_threshold = 2,
-        -- separator = { "─", "ContextBorder" }, -- alts: ▁ ─ ▄
-        separator = { "▁", "TreesitterContextBorder" }, -- alts: ▁ ─ ▄─▁
-        mode = "topline",
-      })
-    end,
-  },
+  -- {
+  --   "nvim-treesitter/nvim-treesitter-context",
+  --   event = "BufReadPre",
+  --   config = function()
+  --     require("treesitter-context").setup({
+  --       multiline_threshold = 2,
+  --       -- separator = { "─", "ContextBorder" }, -- alts: ▁ ─ ▄
+  --       separator = { "▁", "TreesitterContextBorder" }, -- alts: ▁ ─ ▄─▁
+  --       mode = "topline",
+  --     })
+  --   end,
+  -- },
   { "nvim-treesitter/playground", cmd = { "TSPlaygroundToggle", "TSHighlightCapturesUnderCursor" } },
   {
     "mfussenegger/nvim-treehopper",
