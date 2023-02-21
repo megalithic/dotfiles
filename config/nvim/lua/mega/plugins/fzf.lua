@@ -1,12 +1,15 @@
 local M = {
   "ibhagwan/fzf-lua",
   cmd = { "FzfLua" },
+  dependencies = { "vijaymarupudi/nvim-fzf", "nvim-tree/nvim-web-devicons" },
   keys = {
     { "<leader>ff", "<cmd>FzfLua files<cr>", desc = "fzf: files" },
     { "<leader>a", "<cmd>FzfLua live_grep exec_empty_query=true<cr>", desc = "fzf: live grep" },
     { "<leader>A", "<cmd>FzfLua grep_cword<cr>", desc = "fzf: grep cursor" },
     { "<leader>A", "<cmd>FzfLua grep_visual<cr>", desc = "fzf: grep selection", mode = "v" },
     { "<leader>fb", "<cmd>FzfLua buffers<cr>", desc = "fzf: buffers" },
+    { "<C-u>", function() require("fzf-lua.win").preview_scroll(-1) end, desc = "fzf: scroll preview up" },
+    { "<C-d>", function() require("fzf-lua.win").preview_scroll(1) end, desc = "fzf: scroll preview down" },
   },
 }
 

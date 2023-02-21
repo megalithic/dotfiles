@@ -43,16 +43,26 @@ end
 
 function mini.ai()
   local ai = require("mini.ai")
+  local gen_spec = ai.gen_spec
   ai.setup({
     n_lines = 500,
     -- search_method = "cover_or_next",
     custom_textobjects = {
-      o = ai.gen_spec.treesitter({
+      o = gen_spec.treesitter({
         a = { "@block.outer", "@conditional.outer", "@loop.outer" },
         i = { "@block.inner", "@conditional.inner", "@loop.inner" },
       }, {}),
-      f = ai.gen_spec.treesitter({ a = "@function.outer", i = "@function.inner" }, {}),
-      c = ai.gen_spec.treesitter({ a = "@class.outer", i = "@class.inner" }, {}),
+      f = gen_spec.treesitter({ a = "@function.outer", i = "@function.inner" }, {}),
+      c = gen_spec.treesitter({ a = "@class.outer", i = "@class.inner" }, {}),
+      -- scope
+      s = gen_spec.treesitter({
+        a = { "@function.outer", "@class.outer", "@testitem.outer" },
+        i = { "@function.inner", "@class.inner", "@testitem.inner" },
+      }),
+      S = gen_spec.treesitter({
+        a = { "@function.name", "@class.name", "@testitem.name" },
+        i = { "@function.name", "@class.name", "@testitem.name" },
+      }),
     },
     mappings = {
       around = "a",
@@ -68,7 +78,7 @@ function mini.ai()
     },
   })
 
-  local map = function(text_obj, desc)
+  local ai_map = function(text_obj, desc)
     for _, side in ipairs({ "left", "right" }) do
       for dir, d in pairs({ prev = "[", next = "]" }) do
         local lhs = d .. (side == "right" and text_obj:upper() or text_obj:lower())
@@ -81,9 +91,9 @@ function mini.ai()
     end
   end
 
-  map("f", "function")
-  map("c", "class")
-  map("o", "block")
+  ai_map("f", "function")
+  ai_map("c", "class")
+  ai_map("o", "block")
 end
 
 function mini.align()
