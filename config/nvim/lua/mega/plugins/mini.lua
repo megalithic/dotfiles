@@ -107,7 +107,7 @@ end
 
 function mini.indentscope()
   require("mini.indentscope").setup({
-    symbol = "│", -- │ ▏▏
+    symbol = "", -- │ ▏▏
     draw = {
       delay = 0,
       animation = require("mini.indentscope").gen_animation.none(),
@@ -130,6 +130,18 @@ function mini.indentscope()
       "fzf-lua",
       "fzflua",
       "megaterm",
+      "nofile",
+      "terminal",
+      "megaterm",
+      "lsp-installer",
+      "lspinfo",
+      "markdown",
+      "help",
+      "startify",
+      "packer",
+      "neogitstatus",
+      "DirBuf",
+      "markdown",
     },
     callback = function() vim.b.miniindentscope_disable = true end,
   })
@@ -142,7 +154,7 @@ function mini.config()
   mini.pairs()
   mini.comment()
   mini.align()
-  -- mini.indentscope()
+  mini.indentscope()
 end
 
 function mini.init()
