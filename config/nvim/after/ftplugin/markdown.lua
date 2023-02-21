@@ -123,8 +123,29 @@ end
 vim.fn.matchadd("matchURL", [[http[s]\?:\/\/[[:alnum:]%\/_#.-]*]])
 vim.cmd(string.format("hi matchURL guifg=%s", require("mega.lush_theme.colors").bright_blue))
 
-local ok, ms = mega.require("mini.surround")
-if ok then
+mega.nmap("<localleader>p", "<Plug>MarkdownPreviewToggle", { buffer = 0, silent = true })
+
+local cmp_ok, cmp = mega.require("nvim-cmp")
+if cmp_ok then
+  if not vim.g.started_by_firenvim then
+    cmp.setup.filetype("markdown", {
+      sources = cmp.config.sources({
+        { name = "dictionary" },
+        { name = "spell" },
+        { name = "emoji" },
+      }, {
+        { name = "buffer" },
+      }),
+    })
+  else
+    cmp.setup.filetype("markdown", {
+      sources = cmp.config.sources({}),
+    })
+  end
+end
+
+local ms_ok, ms = mega.require("mini.surround")
+if ms_ok then
   vim.b.minisurround_config = {
     custom_surroundings = {
       l = {

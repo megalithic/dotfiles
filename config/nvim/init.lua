@@ -4,7 +4,7 @@ vim.g.enabled_plugin = {
   mappings = true,
   autocmds = true,
   megaline = true,
-  megacolumn = false,
+  megacolumn = true,
   lsp = false,
   term = true,
   repls = true,
@@ -38,6 +38,7 @@ vim.g.debug_enabled = false
 
 _G.mega = mega
   or {
+    ui = {},
     fn = {},
     fzf = {},
     dirs = {},

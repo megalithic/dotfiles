@@ -1,23 +1,24 @@
 if not mega then return end
 if not vim.g.enabled_plugin["megacolumn"] then return end
-
+--
 local fn, v, api = vim.fn, vim.v, vim.api
+local ui, separators = mega.ui, mega.icons.separators
 
 local space = " "
-local shade = "░"
-local separator = "▏" -- '│'
+local shade = separators.light_shade_block
+local separator = separators.left_thin_block -- '│'
 local fold_opened = "▽" -- '▼'
 local fold_closed = "▷" -- '▶'
 local sep_hl = "%#StatusColSep#"
 
-_G.__megacolumn = {}
+ui.statuscolumn = {}
 
 ---@param group string
 ---@param text string
 ---@return string
 local function hl(group, text) return "%#" .. group .. "#" .. text .. "%*" end
 
-local function click(name, item) return "%@v:lua.__megacolumn." .. name .. "@" .. item end
+local function click(name, item) return "%@v:lua.mega.ui.statuscolumn." .. name .. "@" .. item end
 
 ---@param buf number
 ---@return {name:string, text:string, texthl:string}[]
@@ -28,7 +29,7 @@ local function get_signs(buf)
   )
 end
 
-function __megacolumn.toggle_breakpoint(_, _, _, mods)
+function ui.statuscolumn.toggle_breakpoint(_, _, _, mods)
   local ok, dap = pcall(require, "dap")
   if not ok then return end
   if mods:find("c") then
@@ -59,7 +60,7 @@ local function sep()
   return separator_hl .. separator
 end
 
-function __megacolumn.render()
+function ui.statuscolumn.render()
   local curwin = api.nvim_get_current_win()
   local curbuf = api.nvim_win_get_buf(curwin)
 
@@ -71,6 +72,7 @@ function __megacolumn.render()
       sign = s
     end
   end
+
   local components = {
     "%=",
     space,
@@ -86,14 +88,40 @@ function __megacolumn.render()
   return table.concat(components, "")
 end
 
-vim.o.statuscolumn = "%{%v:lua.__megacolumn.render()%}"
+local excluded = {
+  "neo-tree",
+  "NeogitStatus",
+  "NeogitCommitMessage",
+  "undotree",
+  "log",
+  "man",
+  "dap-repl",
+  "markdown",
+  "vimwiki",
+  "vim-plug",
+  "gitcommit",
+  "toggleterm",
+  "fugitive",
+  "list",
+  "NvimTree",
+  "startify",
+  "help",
+  "orgagenda",
+  "org",
+  "himalaya",
+  "Trouble",
+  "NeogitCommitMessage",
+  "NeogitRebaseTodo",
+}
 
-mega.augroup("StatusCol", {
+vim.o.statuscolumn = "%{%v:lua.mega.ui.statuscolumn.render()%}"
+
+mega.augroup("MegaColumn", {
   {
     event = { "BufEnter", "FileType" },
     command = function(args)
       local buf = vim.bo[args.buf]
-      if ui.settings.get(buf.ft, "statuscolumn", "ft") == false then vim.opt_local.statuscolumn = "" end
+      if buf.bt ~= "" or vim.tbl_contains(excluded, buf.ft) then vim.opt_local.statuscolumn = "" end
     end,
   },
 })

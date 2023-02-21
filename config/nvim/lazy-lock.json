@@ -87,6 +87,7 @@
   "schemastore.nvim": { "branch": "main", "commit": "a4798a9fb5fd3ac8e132065597b397cab347d3ca" },
   "sessions.nvim": { "branch": "master", "commit": "65a93344a85b226b7e29efc6ae231c4e5614804e" },
   "splitjoin.vim": { "branch": "main", "commit": "cdc1eb05496c2ecdeea7c7bf7ab0b6ab5b421f24" },
+  "statuscol.nvim": { "branch": "main", "commit": "49a3bdab3e9cf23982724c1e888a6296fca4c8b9" },
   "suda.vim": { "branch": "master", "commit": "08abd39dfe1cee681b8ce3e7321da5fa03e045c1" },
   "tabby.nvim": { "branch": "main", "commit": "9065c65138b59ea8182024216a5bbcf0d77baebb" },
   "tabout.nvim": { "branch": "master", "commit": "c37ce26f316a2df693140450b8def41e89c0f57e" },

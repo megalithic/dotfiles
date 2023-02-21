@@ -102,11 +102,10 @@ return {
       local notes = {}
       local list_opts = { select = { "title", "path", "absPath" } }
 
-      local builtin = require("fzf-lua.previewer.builtin")
-
-      local Preview = builtin.buffer_or_file:extend()
-      function Preview:new(o, opts, fzf_win)
-        Preview.super.new(self, o, opts, fzf_win)
+      -- custom "builtin"/treesitter previewer since i need to break apart of the note's absPath/title
+      local Preview = require("fzf-lua.previewer.builtin").buffer_or_file:extend()
+      function Preview:new(o, options, fzf_win)
+        Preview.super.new(self, o, options, fzf_win)
         setmetatable(self, Preview)
         return self
       end
@@ -135,6 +134,8 @@ return {
           local title = note.title or note.path
           table.insert(notes, table.concat({ note.absPath, title }, delimiter))
         end
+
+        -- TODO: determine if we need to wrap this in a coroutine at some point
         fzf_lua.fzf_exec(notes, opts)
       end)
     end

@@ -53,6 +53,19 @@ return {
       })
     end,
   },
+  {
+    "luukvbaal/statuscol.nvim",
+    event = "BufReadPost",
+    enabled = false,
+    config = function()
+      require("statuscol").setup({
+        setopt = true,
+        order = "FSNs",
+        relculright = true,
+        foldfunc = "builtin",
+      })
+    end,
+  },
   { "nvim-tree/nvim-web-devicons", config = function() require("nvim-web-devicons").setup() end },
   {
     "NvChad/nvim-colorizer.lua",
