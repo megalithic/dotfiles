@@ -34,33 +34,6 @@ local M = {
   },
 }
 
----Set or unset the color column depending on the filetype of the buffer and its eligibility
--- local function check_color_column()
---   for _, win in ipairs(api.nvim_list_wins()) do
---     local buffer = vim.bo[api.nvim_win_get_buf(win)]
---     local window = vim.wo[win]
---     if vim.fn.win_gettype() == "" and not vim.tbl_contains(M.column_ignore, buffer.filetype) then
---       local too_small = api.nvim_win_get_width(win) <= buffer.textwidth + 1
---       local is_excluded = vim.tbl_contains(M.column_clear, buffer.filetype)
---       if is_excluded or too_small then
---         window.colorcolumn = ""
---         local vc_ok, vc = mega.safe_require("virt-column")
---         if vc_ok then
---           vc.setup_buffer({ virtcolumn = window.colorcolumn })
---         end
---       elseif window.colorcolumn == "" then
---         window.colorcolumn = tostring(vim.g.default_colorcolumn)
---         window.colorcolumn = "+1"
-
---         local vc_ok, vc = mega.safe_require("virt-column")
---         if vc_ok then
---           vc.setup_buffer({ virtcolumn = window.colorcolumn })
---         end
---       end
---     end
---   end
--- end
-
 local function set_colorcolumn(leaving)
   if contains(M.column_ignore, vim.bo.filetype) then return end
 
@@ -81,9 +54,15 @@ local function set_colorcolumn(leaving)
   end
 end
 
-local function disable_colorcolumn(leaving) set_colorcolumn(leaving) end
+local function disable_colorcolumn(leaving)
+  vim.cmd("IndentBlanklineDisable")
+  set_colorcolumn(leaving)
+end
 
-local function enable_colorcolumn() set_colorcolumn() end
+local function enable_colorcolumn()
+  vim.cmd("IndentBlanklineEnable")
+  set_colorcolumn()
+end
 
 -- initial setup of virt-column; required for this plugin
 if vc_ok then vc.setup({ config = { char = "│" } }) end
