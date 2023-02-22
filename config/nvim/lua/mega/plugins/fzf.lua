@@ -4,7 +4,7 @@ local M = {
   dependencies = { "vijaymarupudi/nvim-fzf", "nvim-tree/nvim-web-devicons" },
   keys = {
     { "<leader>ff", "<cmd>FzfLua files<cr>", desc = "fzf: files" },
-    { "<leader>a", "<cmd>FzfLua live_grep exec_empty_query=true<cr>", desc = "fzf: live grep" },
+    { "<leader>a", "<cmd>FzfLua live_grep_glob exec_empty_query=true<cr>", desc = "fzf: live grep" },
     { "<leader>A", "<cmd>FzfLua grep_cword<cr>", desc = "fzf: grep cursor" },
     { "<leader>A", "<cmd>FzfLua grep_visual<cr>", desc = "fzf: grep selection", mode = "v" },
     { "<leader>fb", "<cmd>FzfLua buffers<cr>", desc = "fzf: buffers" },
@@ -107,7 +107,8 @@ function M.config()
     actions = {
       files = {
         ["ctrl-o"] = fzf_lua.actions.file_edit_or_qf,
-        ["ctrl-l"] = fzf_lua.actions.arg_add,
+        ["ctrl-x"] = fzf_lua.actions.arg_add,
+        ["ctrl-g"] = fzf_lua.actions.arg_add,
         ["ctrl-s"] = fzf_lua.actions.file_split,
         ["default"] = fzf_lua.actions.file_vsplit,
         ["ctrl-t"] = fzf_lua.actions.file_tabedit,
@@ -122,11 +123,12 @@ function M.config()
         ["ctrl-t"] = fzf_lua.actions.file_tabedit,
         ["ctrl-q"] = fzf_lua.actions.file_sel_to_qf,
         ["alt-q"] = fzf_lua.actions.file_sel_to_ll,
+        ["ctrl-g"] = fzf_lua.actions.grep_lgrep,
       },
     },
     files = {
       fd_opts = "--color=never --type f --hidden --follow --no-ignore-vcs --strip-cwd-prefix --exclude .git",
-      action = { ["ctrl-l"] = fzf_lua.actions.arg_add },
+      action = { ["ctrl-g"] = fzf_lua.actions.arg_add },
       previewer = "builtin",
     },
     grep = {
