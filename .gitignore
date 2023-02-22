@@ -21,10 +21,8 @@ config/gh/hosts.yml
 **/packer_compiled.lua
 packer_compiled.lua
 
-home/ssh/seth-megabook
-home/ssh/seth-megabook.pub
-home/ssh/known_hosts
-home/ssh/known_hosts.old
+home/ssh/*
+!home/ssh/config
 
 # gnupg/gpg
 config/gnupg/**/*

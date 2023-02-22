@@ -21,13 +21,13 @@ set -euo pipefail
 # -- set some useful vars for executable info:
 __dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 __file="${__dir}/$(basename "${BASH_SOURCE[0]}")"
-__base="$(basename ${__file} .sh)"
-__root="$(cd "$(dirname "${__dir}")" && pwd)"
+__base="$(basename "$__file" .sh)"
+__root="$(cd "$(dirname "$__dir")" && pwd)"
 # shellcheck disable=SC2034,SC2015
-__invocation="$(printf %q "${__file}")$( (($#)) && printf ' %q' "$@" || true)"
+__invocation="$(printf %q "$__file")$( (($#)) && printf ' %q' "$@" || true)"
 
 DEBUG="false"
-YEAR="2022"
+YEAR=""
 (command -v fzf &>/dev/null) && FZF_FOUND="installed" || FZF_FOUND="not installed"
 
 function __help() {
@@ -76,7 +76,8 @@ shift $((OPTIND - 1))
 title_param="${*:-}"
 
 # bits and pieces to build out the til/post path and markdown file
-current_year="${YEAR:-$(date +"%Y")}"
+current_year="$(date +"%Y")"
+echo "$current_year"
 month_day="$(date +"%m-%d")"
 slugged_title="$(echo "$title_param" | iconv -c -t ascii//TRANSLIT | sed -E 's/[~^]+//g' | sed -E 's/[^a-zA-Z0-9]+/-/g' | sed -E 's/^-+|-+$//g' | tr "[:upper:]" "[:lower:]")"
 parent="$HOME/code/megalithic.io/priv"
@@ -99,14 +100,16 @@ function __info() {
 
 template() {
   title_cased=$(echo "$title_param" | sed 's/.*/\L&/; s/[a-z]*/\u&/g')
-  echo "%{"
-  printf -- "  title: \"%s\",\n" "$title_cased"
-  printf -- '  tags: ["til"],\n'
-  printf -- '  description: """\n'
-  printf -- "  \n"
-  printf -- '  """\n'
-  printf -- "}\n"
-  printf -- "---"
+  command cat <<EOF
+%{
+  title: "${title_cased}",
+  tags: ["til"],
+  description: """
+
+  """
+}
+---
+EOF
 }
 
 nvim_cmd() {
@@ -119,7 +122,7 @@ nvim_cmd() {
 }
 
 create() {
-  if [[ ! -d $current_year_posts ]]; then
+  if [[ ! -d "$current_year_posts" ]]; then
     mkdir -p "$current_year_posts"
   fi
 
