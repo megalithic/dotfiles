@@ -319,6 +319,8 @@ local function create_term(opts)
           end
         end, 100)
       end
+
+      vim.cmd([[wincmd p]])
     end,
   })
 end
@@ -412,6 +414,7 @@ local function open_term(opts)
 end
 
 local function build_defaults(opts)
+  dd(vim.fn.winnr())
   opts = vim.tbl_extend("force", default_opts, opts or {})
   opts = vim.tbl_extend("keep", split_opts[opts.direction], opts)
   opts = vim.tbl_extend("keep", opts, { caller_winnr = vim.fn.winnr() })

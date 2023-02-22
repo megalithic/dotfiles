@@ -10,7 +10,7 @@ return {
     config = function()
       require("nvim-lastplace").setup({
         lastplace_ignore_buftype = { "quickfix", "nofile", "help" },
-        lastplace_ignore_filetype = { "gitcommit", "gitrebase", "svn", "hgcommit" },
+        lastplace_ignore_filetype = { "gitcommit", "gitrebase", "svn", "hgcommit", "terminal", "megaterm" },
         lastplace_open_folds = true,
       })
     end,
@@ -578,44 +578,6 @@ return {
     "nacro90/numb.nvim",
     event = "CmdlineEnter",
     config = function() require("numb").setup() end,
-  },
-  {
-    "natecraddock/sessions.nvim",
-    config = function()
-      require("sessions").setup({
-        events = { "VimLeavePre" },
-        session_filepath = vim.fn.stdpath("data") .. "/sessions/default",
-      })
-    end,
-  },
-  {
-    "natecraddock/workspaces.nvim",
-    dependencies = "telescope.nvim",
-    config = function()
-      require("workspaces").setup({
-        path = vim.fn.stdpath("data") .. "/workspaces",
-        hooks = {
-          open_pre = {
-            function()
-              local open_files = require("mega.utils").get_open_filelist()
-              if open_files == nil or #open_files == 0 or (#open_files == 1 and open_files[1] == "") then
-                vim.cmd("SessionsStop")
-                vim.cmd("silent %bdelete!")
-              end
-            end,
-          },
-          open = {
-            function()
-              local open_files = require("mega.utils").get_open_filelist()
-              if open_files == nil or #open_files == 0 or (#open_files == 1 and open_files[1] == "") then
-                require("sessions").load(nil, { silent = true })
-              end
-            end,
-          },
-        },
-      })
-      require("telescope").load_extension("workspaces")
-    end,
   },
   { "alvan/vim-closetag" },
   { "tpope/vim-eunuch", event = "VeryLazy" },
