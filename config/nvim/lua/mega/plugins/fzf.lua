@@ -68,7 +68,7 @@ function M.config()
     winopts = {
       height = 0.35,
       width = 1.00,
-      row = 1,
+      row = 0.94,
       col = 1,
       border = { " ", " ", " ", " ", " ", " ", " ", " " },
       preview = {

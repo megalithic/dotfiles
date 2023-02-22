@@ -841,7 +841,7 @@ return lush(function(injected_functions)
     FzfLuaCursorLine({ TelescopeNormal }),
     FzfLuaCursorLineNr({ TelescopeNormal }),
     FzfLuaSearch({ TelescopePrompt }),
-    FzfLuaTitle({ TelescopeResultsTitle }),
+    FzfLuaTitle({ fg = bg0, bg = C.bg_cyan, gui = "italic" }),
     FzfLuaScrollBorderEmpty({}),
     FzfLuaScrollBorderFull({}),
     FzfLuaScrollFloatEmpty({}),

@@ -118,7 +118,7 @@ local M = {
     -- "danielfalk/smart-open.nvim"
   },
   keys = {
-    { "<leader><space>", project_files, desc = "Find File" },
+    { "<C-p>", project_files, desc = "Find File" },
     -- { "<leader>ff", project_files, desc = "find files" },
     -- {
     --   "<leader>a",
