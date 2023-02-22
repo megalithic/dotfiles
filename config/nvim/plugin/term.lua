@@ -277,7 +277,6 @@ local function set_keymaps()
     nmap("q", function()
       api.nvim_buf_delete(term_buf_id, { force = true })
       term_buf_id = nil_buf_id
-      vim.cmd([[wincmd p]])
     end, keymap_opts)
   end
 
