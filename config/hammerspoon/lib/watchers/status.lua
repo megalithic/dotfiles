@@ -20,8 +20,10 @@ local function checkLeelooConnection()
 end
 
 local function usbHandler(device)
+  dbg(fmt(":: [status] usb: %s", I(device)))
   if device.productName == DockConfig.target.productName then
     obj.statusMonitor.dock = (device.eventType == "added")
+    dbg(fmt(":: [status] usb: %s", I((device.eventType == "added"))))
     obj.statusMonitor.leeloo = checkLeelooConnection()
   end
 end
@@ -29,6 +31,7 @@ end
 local function screenHandler() obj.statusMonitor.display = hs.screen.find(DisplaysConfig.external) ~= nil end
 
 function obj:start()
+  info("[status] watching for status, usb, screen updates")
   obj.statusMonitor = hs.watchable.new("status", false) -- don't allow bi-directional status updates
   obj.usbWatcher = hs.usb.watcher.new(usbHandler):start()
   obj.screenWatcher = hs.screen.watcher.new(screenHandler):start()

@@ -130,8 +130,10 @@ function M.config()
       previewer = "builtin",
     },
     grep = {
-      rg_glob = true,
       rg_opts = "--hidden --column --line-number --no-ignore-vcs --no-heading --color=always --smart-case -g '!.git'",
+      rg_glob = true, -- enable glob parsing by default to all
+      glob_flag = "--iglob", -- for case sensitive globs use '--glob'
+      glob_separator = "%s%-%-", -- query separator pattern (lua): ' --'
       previewer = "builtin",
     },
     git = {

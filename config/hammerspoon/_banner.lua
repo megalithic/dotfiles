@@ -18,5 +18,6 @@ if hs.processInfo.debugBuild then
 else
   info("░  Release Version: " .. hs.processInfo.version)
 end
+info("░  Hostname: " .. hostname())
 info("----------------------------------------------------")
 P()

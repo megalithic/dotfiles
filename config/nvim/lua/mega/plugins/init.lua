@@ -308,19 +308,19 @@ return {
 
   -- ( LSP ) -------------------------------------------------------------------
   -- TODO: https://github.com/folke/dot/tree/master/config/nvim/lua/config/plugins/lsp
-  {
-    "ray-x/lsp_signature.nvim",
-    event = "InsertEnter",
-    opts = {
-      bind = true,
-      fix_pos = false,
-      auto_close_after = 10, -- close after 15 seconds
-      hint_enable = false,
-      handler_opts = { border = mega.get_border() },
-      toggle_key = "<C-K>",
-      select_signature_key = "<M-N>",
-    },
-  },
+  -- {
+  --   "ray-x/lsp_signature.nvim",
+  --   event = "InsertEnter",
+  --   opts = {
+  --     bind = true,
+  --     fix_pos = false,
+  --     auto_close_after = 10, -- close after 15 seconds
+  --     hint_enable = false,
+  --     handler_opts = { border = mega.get_border() },
+  --     toggle_key = "<C-K>",
+  --     select_signature_key = "<M-N>",
+  --   },
+  -- },
 
   {
     "SmiteshP/nvim-navic",
@@ -331,30 +331,31 @@ return {
     end,
   },
 
-  -- {
-  --   "ray-x/lsp_signature.nvim",
-  --   dependencies = "nvim-lspconfig",
-  --   config = function()
-  --     require("lsp_signature").setup({
-  --       bind = true,
-  --       fix_pos = true,
-  --       auto_close_after = 5, -- close after 15 seconds
-  --       hint_enable = false,
-  --       floating_window_above_cur_line = true,
-  --       doc_lines = 0,
-  --       handler_opts = {
-  --         anchor = "SW",
-  --         relative = "cursor",
-  --         row = -1,
-  --         focus = false,
-  --         border = _G.mega.get_border(),
-  --       },
-  --       zindex = 99, -- Keep signature popup below the completion PUM
-  --       toggle_key = "<C-K>",
-  --       select_signature_key = "<M-N>",
-  --     })
-  --   end,
-  -- },
+  {
+    "ray-x/lsp_signature.nvim",
+    event = "VeryLazy",
+    dependencies = "nvim-lspconfig",
+    config = function()
+      require("lsp_signature").setup({
+        bind = true,
+        fix_pos = true,
+        auto_close_after = 5, -- close after 15 seconds
+        hint_enable = false,
+        floating_window_above_cur_line = true,
+        doc_lines = 0,
+        handler_opts = {
+          anchor = "SW",
+          relative = "cursor",
+          row = -1,
+          focus = false,
+          border = _G.mega.get_border(),
+        },
+        zindex = 99, -- Keep signature popup below the completion PUM
+        toggle_key = "<C-K>",
+        select_signature_key = "<M-N>",
+      })
+    end,
+  },
 
   "nvim-lua/lsp_extensions.nvim",
   "jose-elias-alvarez/typescript.nvim",
@@ -525,7 +526,6 @@ return {
     end,
   },
   { "sultanahamer/nvim-dap-reactnative", dependencies = "nvim-dap" },
-  -- { "microsoft/vscode-react-native", dependencies = "nvim-dap" },
   -- {
   --   "jayp0521/mason-nvim-dap.nvim",
   --   dependencies = "nvim-dap",
@@ -538,21 +538,6 @@ return {
   -- },
 
   -- ( Development ) -----------------------------------------------------------
-  -- {
-  --   "chipsenkbeil/distant.nvim",
-  --   tag = "v0.2",
-  --   build = ":DistantInstall",
-  --   config = function()
-  --     require("distant").setup({
-  --       -- Applies Chip's personal settings to every machine you connect to
-  --       --
-  --       -- 1. Ensures that distant servers terminate with no connections
-  --       -- 2. Provides navigation bindings for remote directories
-  --       -- 3. Provides keybinding to jump into a remote file's parent directory
-  --       ["*"] = require("distant.settings").chip_default(),
-  --     })
-  --   end,
-  -- },
   {
     "danymat/neogen",
     keys = {
@@ -575,39 +560,6 @@ return {
       -- _G.mega.nnoremap("<leader>db", "<cmd>DBUIToggle<CR>", "dadbod: toggle")
     end,
   },
-  -- {
-  --   "numToStr/Comment.nvim",
-  --   event = "BufRead",
-  --   config = function()
-  --     require("Comment").setup({
-  --
-  --       ignore = "^$", -- ignores empty lines
-  --       --@param ctx CommentCtx
-  --       pre_hook = function(ctx)
-  --         -- Only calculate commentstring for tsx filetypes
-  --         if vim.bo.filetype == "typescriptreact" then
-  --           local U = require("Comment.utils")
-  --
-  --           -- Determine whether to use linewise or blockwise commentstring
-  --           local type = ctx.ctype == U.ctype.line and "__default" or "__multiline"
-  --
-  --           -- Determine the location where to calculate commentstring from
-  --           local location = nil
-  --           if ctx.ctype == U.ctype.block then
-  --             location = require("ts_context_commentstring.utils").get_cursor_location()
-  --           elseif ctx.cmotion == U.cmotion.v or ctx.cmotion == U.cmotion.V then
-  --             location = require("ts_context_commentstring.utils").get_visual_start_location()
-  --           end
-  --
-  --           return require("ts_context_commentstring.internal").calculate_commentstring({
-  --             key = type,
-  --             location = location,
-  --           })
-  --         end
-  --       end,
-  --     })
-  --   end,
-  -- },
   {
     "andymass/vim-matchup",
     event = "BufReadPre",
@@ -724,7 +676,6 @@ return {
         pattern = "*",
         callback = function()
           if langs[vim.bo.filetype] then
-            dd("using treesj for %s", langs[vim.bo.filetype])
             mega.nnoremap("gS", ":TSJSplit<cr>", { desc = "Split lines", buffer = true })
             mega.nnoremap("gJ", ":TSJJoin<cr>", { desc = "Join lines", buffer = true })
             mega.nnoremap("gs", ":TSJSplit<cr>", { desc = "Split lines", buffer = true })
@@ -765,19 +716,6 @@ return {
         ignore_beginning = true, --[[ if the cursor is at the beginning of a filled element it will rather tab out than shift the content ]]
         exclude = {}, -- tabout will ignore these filetypes
       })
-      -- require("tabout").setup({
-      --   ignore_beginning = false,
-      --   completion = false,
-      --   tabouts = {
-      --     { open = "'", close = "'" },
-      --     { open = "\"", close = "\"" },
-      --     { open = "`", close = "`" },
-      --     { open = "(", close = ")" },
-      --     { open = "[", close = "]" },
-      --     { open = "{", close = "}" },
-      --     { open = "<", close = ">" },
-      --   },
-      -- })
     end,
   },
 
@@ -837,67 +775,6 @@ return {
     end,
   },
   { "ellisonleao/glow.nvim", ft = { "markdown" } },
-
-  -- {
-  --   "epwalsh/obsidian.nvim",
-  --   lazy = false,
-  --   -- event = "VeryLazy",
-  --   config = function()
-  --     require("obsidian").setup({
-  --       dir = vim.g.obsidian_vault_path,
-  --       daily_notes = {
-  --         folder = "dailies",
-  --       },
-  --       notes_subdir = "notes",
-  --       highlight = {
-  --         enable = true,
-  --         additional_vim_regex_highlighting = { "markdown" },
-  --       },
-  --       completion = {
-  --         nvim_cmp = true, -- if using nvim-cmp, otherwise set to false
-  --       },
-  --       use_advanceduri = true,
-  --       note_id_func = function(title)
-  --         -- Create note IDs in a Zettelkasten format with a timestamp and a suffix.
-  --         local suffix = ""
-  --         if title ~= nil then
-  --           -- If title is given, transform it into valid file name.
-  --           suffix = title:gsub(" ", "-"):gsub("[^A-Za-z0-9-]", ""):lower()
-  --         else
-  --           -- If title is nil, just add 4 random uppercase letters to the suffix.
-  --           for _ = 1, 4 do
-  --             suffix = suffix .. string.char(math.random(65, 90))
-  --           end
-  --         end
-  --         return tostring(os.time()) .. "-" .. suffix
-  --       end,
-  --     })
-  --     mega.nmap("gf", function()
-  --       if require("obsidian").util.cursor_on_markdown_link() then
-  --         return "<cmd>ObsidianFollowLink<CR>"
-  --       else
-  --         return "gf"
-  --       end
-  --     end, { desc = "obsidian: follow link", expr = true })
-  --     mega.vmap("gl", function()
-  --       -- if require("obsidian").util.cursor_on_markdown_link() then
-  --       --   return "<cmd>ObsidianFollowLink<CR>"
-  --       -- else
-  --       --   return "gf"
-  --       -- end
-  --     end, { desc = "obsidian: create link" })
-  --
-  --     vim.keymap.set("n", "<leader>zo", "<cmd>ObsidianOpen<cr>")
-  --     vim.keymap.set("n", "<leader>zn", "<cmd>ObsidianNew<cr>")
-  --     vim.keymap.set("n", "<leader>zf", "<cmd>ObsidianSearch<cr>")
-  --     -- vim.keymap.set("n", "<leader>zll", "<cmd>ObsidianLink<cr>")
-  --     -- vim.keymap.set("n", "<leader>zln", "<cmd>ObsidianLinkNew<cr>")
-  --
-  --     vim.keymap.set("v", "<leader>zll", ":ObsidianLink<CR>")
-  --     vim.keymap.set("v", "<leader>zln", ":ObsidianLinkNew<CR>")
-  --     vim.keymap.set("v", "<leader>zb", ":ObsidianBacklinks<CR>")
-  --   end,
-  -- },
   {
     "lukas-reineke/headlines.nvim",
     ft = { "markdown" },

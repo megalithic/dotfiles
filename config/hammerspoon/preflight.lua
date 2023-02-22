@@ -131,23 +131,34 @@ function _G.screens()
 end
 
 function _G.usb()
-  hs.fnutils.each(hs.usb.attachedDevices(), function(usb)
-    print(hs.inspect(usb))
-    -- print(
-    --   hs.inspect(
-    --     {
-    --       productID = usb:productID(),
-    --       productName = usb:productName(),
-    --       vendorID = usb:vendorID(),
-    --       vendorName = usb:vendorName()
-    --     }
-    --   )
-    -- )
-  end)
+  hs.fnutils.each(
+    hs.usb.attachedDevices(),
+    function(d)
+      print(hs.inspect({
+        productID = d.productID,
+        productName = d.productName,
+        vendorID = d.vendorID,
+        vendorName = d.vendorName,
+      }))
+    end
+  )
 end
 
 function _G.audioInput()
+  hs.fnutils.each(
+    hs.audiodevice.allInputDevices(),
+    function(d)
+      print(hs.inspect({
+        name = d:name(),
+        uid = d:uid(),
+        muted = d:muted(),
+        volume = d:volume(),
+        device = d,
+      }))
+    end
+  )
   local d = hs.audiodevice.defaultInputDevice()
+  warn("current input device: ")
   print(hs.inspect({
     name = d:name(),
     uid = d:uid(),
@@ -158,7 +169,20 @@ function _G.audioInput()
 end
 
 function _G.audioOutput()
+  hs.fnutils.each(
+    hs.audiodevice.allOutputDevices(),
+    function(d)
+      print(hs.inspect({
+        name = d:name(),
+        uid = d:uid(),
+        muted = d:muted(),
+        volume = d:volume(),
+        device = d,
+      }))
+    end
+  )
   local d = hs.audiodevice.defaultOutputDevice()
+  warn("current output device: ")
   print(hs.inspect({
     name = d:name(),
     uid = d:uid(),
@@ -166,6 +190,18 @@ function _G.audioOutput()
     volume = d:volume(),
     device = d,
   }))
+end
+
+function _G.hostname()
+  local hostname = ""
+  local handle = io.popen("hostname")
+
+  if handle then
+    hostname = handle:read("*l")
+    handle:close()
+  end
+
+  return hostname
 end
 
 _G.CONFIG_KEY = "_mega_config"

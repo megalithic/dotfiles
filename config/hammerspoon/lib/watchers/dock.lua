@@ -31,6 +31,11 @@ local function leelooHandler(watcher, path, key, oldValue, isConnected)
       [[/Library/Application Support/org.pqrs/Karabiner-Elements/bin/karabiner_cli]],
       function() end, -- Fake callback
       function(task, stdOut, stdErr)
+        if stdErr then
+          error(fmt("[dock] error occurred for setProfile: %s", stdErr))
+        else
+          debug(fmt("[dock] setProfile output: %s", stdOut))
+        end
         -- dbg(fmt(":: setProfile -> task: %s, stdOut: %s, stdErr: %s", task, stdOut, stdErr))
         local continue = stdOut == ""
         return continue
@@ -41,46 +46,66 @@ local function leelooHandler(watcher, path, key, oldValue, isConnected)
   end
 
   if isConnected then
-    success("[dock] leeloo connected")
     setProfile(DockConfig.docked.profile)
+    success("[dock] leeloo connected")
   else
-    warn("[dock] leeloo disconnected")
     setProfile(DockConfig.undocked.profile)
+    warn("[dock] leeloo disconnected")
   end
 end
 
-local function dockHandler(watcher, path, key, oldValue, isConnected)
-  local function setWifi(state) hs.execute("networksetup -setairportpower airport " .. state, true) end
+function obj.setWifi(state)
+  hs.execute("networksetup -setairportpower airport " .. state, true)
+  success(fmt("[dock] wifi set to %s", state))
+end
 
-  local function setInput(state)
-    local task = hs.task.new(
-      "/usr/local/bin/SwitchAudioSource",
-      function() end, -- Fake callback
-      function(task, stdOut, stdErr)
-        local continue = stdOut == string.format([[input audio device set to "%s"]], state)
-        return continue
-      end,
-      { "-t", "input", "-s", state }
-    )
-    task:start()
+function obj.setInput(state)
+  local bin = hostname() == "megabookpro" and "/opt/homebrew/bin/SwitchAudioSource"
+    or "/usr/local/bin/SwitchAudioSource"
+  local task = hs.task.new(
+    bin,
+    function() end, -- Fake callback
+    function(task, stdOut, stdErr)
+      local continue = stdOut == string.format([[input audio device set to "%s"]], state)
+      success(fmt("[dock] audio input set to %s", state))
+      return continue
+    end,
+    { "-t", "input", "-s", state }
+  )
+  task:start()
+end
+
+local function dockHandler(watcher, path, key, oldValue, isConnected)
+  info("[dock] handling docking state changes")
+
+  local dock = function()
+    obj.setWifi(DockConfig.docked.wifi)
+    obj.setInput(DockConfig.docked.input)
+    hs.notify.new({ title = "dock watcher", subTitle = fmt("%s connected", DockConfig.target.productName) }):send()
+    success("[dock] dock connected")
+    -- WM.layoutRunningApps(Config.bindings.apps)
+  end
+
+  local undock = function()
+    obj.setWifi(DockConfig.undocked.wifi)
+    obj.setInput(DockConfig.undocked.input)
+    hs.notify.new({ title = "dock watcher", subTitle = fmt("%s disconnected", DockConfig.target.productName) }):send()
+    warn("[dock] dock disconnected")
+    -- WM.layoutRunningApps(Config.bindings.apps)
   end
 
   if isConnected then
-    hs.timer.doAfter(1, function()
-      setWifi(DockConfig.docked.wifi)
-      setInput(DockConfig.docked.input)
-      success("[dock] dock connected")
-      hs.notify.new({ title = "dock watcher", subTitle = fmt("%s connected", DockConfig.target.productName) }):send()
-      -- WM.layoutRunningApps(Config.bindings.apps)
-    end)
+    if watcher == nil then
+      dock()
+    else
+      hs.timer.doAfter(1, dock)
+    end
   else
-    hs.timer.doAfter(1, function()
-      setWifi(DockConfig.undocked.wifi)
-      setInput(DockConfig.undocked.input)
-      warn("[dock] dock disconnected")
-      hs.notify.new({ title = "dock watcher", subTitle = fmt("%s disconnected", DockConfig.target.productName) }):send()
-      -- WM.layoutRunningApps(Config.bindings.apps)
-    end)
+    if watcher == nil then
+      undock()
+    else
+      hs.timer.doAfter(1, undock)
+    end
   end
 end
 
@@ -88,6 +113,9 @@ function obj:start()
   obj.watchers.dock = hs.watchable.watch("status.dock", dockHandler)
   obj.watchers.display = hs.watchable.watch("status.display", displayHandler)
   obj.watchers.leeloo = hs.watchable.watch("status.leeloo", leelooHandler)
+
+  -- run dock handler on start
+  dockHandler(nil, nil, nil, nil, obj.watchers.dock._active)
 
   return self
 end

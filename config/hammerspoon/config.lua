@@ -348,14 +348,10 @@ local utils = {
 local dock = {
 
   ["target"] = {
-    productID = 21760,
-    productName = "TS4 USB3.2 Gen2 HUB",
-    vendorID = 8584,
-    vendorName = "CalDigit, Inc",
-    -- productID = 25907,
-    -- productName = "CalDigit Thunderbolt 3 Audio",
-    -- vendorID = 8584,
-    -- vendorName = "CalDigit, Inc.",
+    productID = 4675,
+    productName = "Audioengine HD3",
+    vendorID = 2578,
+    vendorName = "Audioengine",
   },
   ["keyboard"] = {
     productID = 24926,
@@ -372,13 +368,13 @@ local dock = {
     profile = "leeloo", -- Karabiner-Elements profile name
     input = "Samson GoMic", -- microphone source
     -- https://github.com/dbalatero/dotfiles/blob/master/hammerspoon/headphones.lua
-    output = "megapods", -- speaker source
+    output = "R-Phonak hearing aid", -- speaker source
   },
   ["undocked"] = {
     wifi = "on",
     profile = "internal",
-    input = "MacBook Pro Microphone",
-    output = "MacBook Pro Speakers",
+    input = "R-Phonak hearing aid",
+    output = "R-Phonak hearing aid",
   },
 }
 
