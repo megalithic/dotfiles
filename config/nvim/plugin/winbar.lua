@@ -100,51 +100,66 @@ _G.__winbar = M
 
 -- __winbar.activate()
 
-local blocked_fts = {
-  "NeogitStatus",
-  "DiffviewFiles",
-  "NeogitCommitMessage",
-  "toggleterm",
-  "megaterm",
-  "gitcommit",
-  "DressingInput",
-  "org",
-}
-
-local allowed_fts = { "toggleterm", "neo-tree", "megaterm" }
-local allowed_buftypes = { "terminal" }
-
-local function set_winbar()
-  mega.foreach(function(w)
-    local buf, win = vim.bo[api.nvim_win_get_buf(w)], vim.wo[w]
-    local bt, ft, is_diff = buf.buftype, buf.filetype, win.diff
-    local ignored = contains(allowed_fts, ft) or contains(allowed_buftypes, bt)
-    if not ignored then
-      if
-        not contains(blocked_fts, ft)
-        and fn.win_gettype(api.nvim_win_get_number(w)) == ""
-        and bt == ""
-        and ft ~= ""
-        and not is_diff
-      then
-        win.winbar = "  %{%v:lua.require'nvim-navic'.get_location()%}"
-      elseif is_diff then
-        win.winbar = nil
-      end
-    end
-  end, api.nvim_tabpage_list_wins(0))
+-- local blocked_fts = {
+--   "NeogitStatus",
+--   "DiffviewFiles",
+--   "NeogitCommitMessage",
+--   "toggleterm",
+--   "megaterm",
+--   "gitcommit",
+--   "DressingInput",
+--   "org",
+-- }
+--
+-- local allowed_fts = { "toggleterm", "neo-tree", "megaterm" }
+-- local allowed_buftypes = { "terminal" }
+--
+-- local function set_winbar()
+--   mega.foreach(function(w)
+--     local buf, win = vim.bo[api.nvim_win_get_buf(w)], vim.wo[w]
+--     local bt, ft, is_diff = buf.buftype, buf.filetype, win.diff
+--     local ignored = contains(allowed_fts, ft) or contains(allowed_buftypes, bt)
+--     if not ignored then
+--       if
+--         not contains(blocked_fts, ft)
+--         and fn.win_gettype(api.nvim_win_get_number(w)) == ""
+--         and bt == ""
+--         and ft ~= ""
+--         and not is_diff
+--       then
+--         win.winbar = "  %{%v:lua.require'nvim-navic'.get_location()%}"
+--       elseif is_diff then
+--         win.winbar = nil
+--       end
+--     end
+--   end, api.nvim_tabpage_list_wins(0))
+-- end
+--
+-- mega.augroup("AttachWinbar", {
+--   {
+--     event = { "BufWinEnter", "TabNew", "TabEnter", "BufEnter", "WinClosed" },
+--     desc = "Toggle winbar",
+--     command = set_winbar,
+--   },
+--   {
+--     event = { "User" },
+--     pattern = { "DiffviewDiffBufRead", "DiffviewDiffBufWinEnter" },
+--     desc = "Toggle winbar",
+--     command = set_winbar,
+--   },
+-- })
+--
+function __get_winbar()
+  local bufnr = vim.api.nvim_get_current_buf()
+  if vim.bo[bufnr].buftype == "terminal" then
+    return table.concat({
+      "terminal",
+      -- string.match(vim.fn.expand('%'), '//%d+:(%S+)$'),
+      "%=",
+      string.format("[%d/%d]", vim.b[bufnr].terminal_index or -1, vim.g.terminal_count or -1),
+    })
+  end
+  return "%f %h%w%m%r %=%(%l,%c%V %= %P%)"
 end
 
-mega.augroup("AttachWinbar", {
-  {
-    event = { "BufWinEnter", "TabNew", "TabEnter", "BufEnter", "WinClosed" },
-    desc = "Toggle winbar",
-    command = set_winbar,
-  },
-  {
-    event = { "User" },
-    pattern = { "DiffviewDiffBufRead", "DiffviewDiffBufWinEnter" },
-    desc = "Toggle winbar",
-    command = set_winbar,
-  },
-})
+vim.o.winbar = "%{%v:lua.__get_winbar()%}"

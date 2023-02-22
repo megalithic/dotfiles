@@ -108,7 +108,7 @@ local servers = {
           fetchDeps = true,
           dialyzerEnabled = true,
           dialyzerFormat = "dialyxir_short",
-          enableTestLenses = false,
+          enableTestLenses = true,
           suggestSpecs = true,
         },
       },
