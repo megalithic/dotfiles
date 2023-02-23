@@ -454,7 +454,7 @@ return lush(function(injected_functions)
 
     -- -- highlight WARN/FIXME/TODO/NOTE/REF: comments
 
-    sym("@comment.fix")({ bg = red, fg = bg_dark, gui = "bold,underline" }),
+    sym("@comment.fix")({ bg = red, fg = "#000000", gui = "bold,underline" }),
     sym("@comment.warn")({ fg = orange, gui = "bold" }),
     sym("@comment.note")({ fg = teal, gui = "italic" }),
     sym("@comment.todo")({ fg = dark_orange, gui = "bold" }),

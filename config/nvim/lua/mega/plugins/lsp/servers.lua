@@ -362,6 +362,7 @@ local servers = {
     table.insert(path, "lua/?.lua")
     table.insert(path, "lua/?/init.lua")
 
+    -- FIXME: use lazy location now
     local plugins = ("%s/site/pack/packer"):format(fn.stdpath("data"))
     local emmy = ("%s/start/emmylua-nvim"):format(plugins)
     local plenary = ("%s/start/plenary.nvim"):format(plugins)

@@ -17,11 +17,11 @@ function M.config()
 
   local function terminal_notifier(term_cmd, exit)
     if exit == 0 then
-      vim.notify("Test(s) passed.", vim.log.levels.INFO)
-      system(string.format([[terminal-notifier -title "Neovim" -message "Success!"]], term_cmd))
+      vim.notify("test(s) passed 👍", vim.log.levels.INFO)
+      system(string.format([[terminal-notifier -title "Neovim [vim-test]" -message "test(s) passed"]], term_cmd))
     else
-      vim.notify("Test(s) failed.", vim.log.levels.ERROR)
-      system(string.format([[terminal-notifier -title "Neovim" -message "Failure!"]], term_cmd))
+      vim.notify("test(s) failed 👎", vim.log.levels.ERROR)
+      system(string.format([[terminal-notifier -title "Neovim [vim-test]" -message "test(s) failed"]], term_cmd))
     end
   end
 

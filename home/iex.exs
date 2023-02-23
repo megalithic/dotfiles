@@ -206,9 +206,16 @@ repo_info =
     repo =
       Mix.Project.get().project()[:app]
       |> Application.get_env(:ecto_repos)
-      |> Enum.at(0)
-      |> Atom.to_string()
-      |> String.replace(~r/^Elixir\./, "")
+      |> case do
+        repo ->
+          repo
+          |> Enum.at(0)
+          |> Atom.to_string()
+          |> String.replace(~r/^Elixir\./, "")
+
+        _ ->
+          ""
+      end
 
     IO.ANSI.faint() <> "(`alias #{repo}, as: Repo`)" <> IO.ANSI.reset()
   else

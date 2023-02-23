@@ -239,6 +239,19 @@ local apps = {
       { "Finder", 1, "centeredMedium" },
     },
   },
+  ["com.pop.pop.app"] = {
+    bundleID = "com.pop.pop.app",
+    name = "Pop",
+    -- key = "z",
+    -- launcher = function()
+    --   if hs.application.find("us.zoom.xos") then
+    --     hs.application.launchOrFocusByBundleID("us.zoom.xos")
+    --   else
+    --     require("lib.browser").jump("meet.google.com|hangouts.google.com.call")
+    --   end
+    -- end,
+    launchMode = "focus",
+  },
   ["us.zoom.xos"] = {
     bundleID = "us.zoom.xos",
     name = "zoom.us",

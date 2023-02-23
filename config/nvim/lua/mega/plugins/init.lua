@@ -714,7 +714,7 @@ return {
 
   -- ( Syntax/Languages ) ------------------------------------------------------
   { "ii14/emmylua-nvim", ft = "lua" },
-  -- { "elixir-editors/vim-elixir", ft = { "markdown" } }, -- nvim exceptions thrown when not installed
+  { "elixir-editors/vim-elixir", ft = { "markdown" } }, -- nvim exceptions thrown when not installed
   "kchmck/vim-coffee-script",
   "briancollins/vim-jst",
   { "imsnif/kdl.vim", ft = "kdl" },

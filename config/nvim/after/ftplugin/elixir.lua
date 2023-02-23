@@ -6,7 +6,7 @@ vim.cmd([[setlocal iskeyword+=!,?]])
 
 -- nnoremap("<leader>ed", [[orequire IEx; IEx.pry; #respawn() to leave pry<ESC>:w<CR>]])
 nnoremap("<leader>ep", [[o|><ESC>a]])
-nnoremap("<leader>ed", [[o|>dbg()<ESC>a]])
+nnoremap("<leader>ed", [[o|> dbg()<ESC>a]])
 nnoremap("<leader>ei", [[o|> IO.inspect()<ESC>i]])
 nnoremap("<leader>eil", [[o|> IO.inspect(label: "")<ESC>hi]])
 inoremap("<leader>eil", [[o|> <ESC>a]])

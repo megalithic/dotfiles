@@ -231,7 +231,7 @@ local create_float = function(bufnr, size, caller_winnr)
 end
 
 local default_opts = {
-  cmd = "zsh",
+  cmd = fmt("%s/bin/zsh", vim.env.HOMEBREW_PREFIX),
   direction = "horizontal",
   start_insert = true,
 }
@@ -413,7 +413,6 @@ local function open_term(opts)
 end
 
 local function build_defaults(opts)
-  dd(vim.fn.winnr())
   opts = vim.tbl_extend("force", default_opts, opts or {})
   opts = vim.tbl_extend("keep", split_opts[opts.direction], opts)
   opts = vim.tbl_extend("keep", opts, { caller_winnr = vim.fn.winnr() })

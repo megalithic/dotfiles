@@ -135,7 +135,7 @@ function M.config()
       name = "edit files",
       r = { [[<cmd>RenameFile<cr>]], "rename file to <input>" },
       s = { [[<cmd>SaveAsFile<cr>]], "save file as <input>" },
-      d = { [[:DuplicateFile<cr>]], "duplicate current file" },
+      -- d = { [[:DuplicateFile<cr>]], "duplicate current file" },
       D = { [[<cmd>Delete!<cr>]], "delete file" },
       yp = { [[:let @+ = expand("%")<CR>]], "yank path to clipboard" },
     },

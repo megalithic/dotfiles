@@ -2,10 +2,10 @@ if not mega then return end
 if not vim.g.enabled_plugin["repls"] then return end
 
 mega.command("TermElixir", function(args)
-  local pre_cmd = ""
+  -- local pre_cmd = ""
   local cmd = "iex"
   -- load up our Deskfile if we have one..
-  if require("mega.utils").root_has_file("Deskfile") then pre_cmd = "eval $(desk load)" end
+  -- if require("mega.utils").root_has_file("Deskfile") then pre_cmd = "eval $(desk load)" end
 
   if args.bang then
     cmd = fmt("elixir %s", vim.fn.expand("%"))
@@ -15,7 +15,7 @@ mega.command("TermElixir", function(args)
 
   mega.term.open({
     cmd = cmd,
-    pre_cmd = pre_cmd,
+    -- pre_cmd = pre_cmd,
     -- temp = true,
     ---@diagnostic disable-next-line: unused-local
     on_after_open = function(bufnr, _winnr)
@@ -26,9 +26,9 @@ mega.command("TermElixir", function(args)
 end, { bang = true })
 
 mega.command("TermRuby", function(args)
-  local pre_cmd = ""
+  -- local pre_cmd = ""
   local cmd = ""
-  if require("mega.utils").root_has_file("Deskfile") then pre_cmd = "eval $(desk load)" end
+  -- if require("mega.utils").root_has_file("Deskfile") then pre_cmd = "eval $(desk load)" end
 
   if args.bang then
     cmd = fmt("ruby %s", vim.fn.expand("%"))
@@ -40,7 +40,7 @@ mega.command("TermRuby", function(args)
 
   mega.term.open({
     cmd = cmd,
-    pre_cmd = pre_cmd,
+    -- pre_cmd = pre_cmd,
     temp = true,
     ---@diagnostic disable-next-line: unused-local
     on_after_open = function(bufnr, _winnr)
