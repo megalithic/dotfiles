@@ -19,7 +19,6 @@ function M.config()
     if exit == 0 then
       vim.notify("Test(s) passed.", vim.log.levels.INFO)
       system(string.format([[terminal-notifier -title "Neovim" -message "Success!"]], term_cmd))
-      -- system(string.format([[terminal-notifier -title "Neovim" -subtitle "%s" -message "Success\!"]], term_cmd))
     else
       vim.notify("Test(s) failed.", vim.log.levels.ERROR)
       system(string.format([[terminal-notifier -title "Neovim" -message "Failure!"]], term_cmd))
@@ -30,7 +29,7 @@ function M.config()
     return vim.tbl_extend("force", {
       winnr = vim.fn.winnr(),
       cmd = cmd,
-      pre_cmd = "eval $(desk load)",
+      -- pre_cmd = "eval $(desk load)",
       notifier = terminal_notifier,
       temp = true,
       start_insert = false,

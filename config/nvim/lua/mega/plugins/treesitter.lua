@@ -10,18 +10,73 @@ return {
       nmap("K", require("ts-node-action").node_action, { desc = "Trigger Node Action" })
     end,
   },
-  -- {
-  --   "nvim-treesitter/nvim-treesitter-context",
-  --   event = "BufReadPre",
-  --   config = function()
-  --     require("treesitter-context").setup({
-  --       multiline_threshold = 2,
-  --       -- separator = { "─", "ContextBorder" }, -- alts: ▁ ─ ▄
-  --       separator = { "▁", "TreesitterContextBorder" }, -- alts: ▁ ─ ▄─▁
-  --       mode = "topline",
-  --     })
-  --   end,
-  -- },
+  {
+    "laytan/tailwind-sorter.nvim",
+    dependencies = {
+      "nvim-treesitter/nvim-treesitter",
+      "nvim-lua/plenary.nvim",
+    },
+    build = "cd formatter && npm i && npm run build",
+    config = {
+      on_save_enabled = true,
+      on_save_pattern = { "*.html", "*.heex", "*.ex" },
+    },
+  },
+  {
+    "nvim-treesitter/nvim-treesitter-context",
+    enabled = false,
+    event = "BufReadPre",
+    config = function()
+      require("treesitter-context").setup({
+        multiline_threshold = 2,
+        -- separator = { "─", "ContextBorder" }, -- alts: ▁ ─ ▄
+        separator = { "▁", "TreesitterContextBorder" }, -- alts: ▁ ─ ▄─▁
+        mode = "cursor",
+        max_lines = 0, -- How many lines the window should span. Values <= 0 mean no limit.
+        trim_scope = "outer",
+        patterns = { -- Match patterns for TS nodes. These get wrapped to match at word boundaries.
+          -- For all filetypes
+          -- Note that setting an entry here replaces all other patterns for this entry.
+          -- By setting the 'default' entry below, you can control which nodes you want to
+          -- appear in the context window.
+          default = {
+            "class",
+            "function",
+            "method",
+            "for",
+            "while",
+            "if",
+            "switch",
+            "case",
+          },
+          rust = {
+            "impl_item",
+            "struct",
+            "enum",
+          },
+          markdown = {
+            "section",
+          },
+          elixir = {
+            "anonymous_function",
+            "arguments",
+            "block",
+            "do_block",
+            "list",
+            "map",
+            "tuple",
+            "quoted_content",
+          },
+          json = {
+            "pair",
+          },
+          yaml = {
+            "block_mapping_pair",
+          },
+        },
+      })
+    end,
+  },
   { "nvim-treesitter/playground", cmd = { "TSPlaygroundToggle", "TSHighlightCapturesUnderCursor" } },
   {
     "mfussenegger/nvim-treehopper",
@@ -149,7 +204,6 @@ return {
           -- https://www.reddit.com/r/neovim/comments/ok9frp/v05_treesitter_does_anyone_have_python_indent/h57kxuv/?context=3
           -- Required since TS highlighter doesn't support all syntax features (conceal)
           additional_vim_regex_highlighting = {
-            "markdown",
             "python",
             "lua",
             "vim",
@@ -163,6 +217,29 @@ return {
           enable = true,
           enable_autocmd = false,
           config = {
+            typescript = {
+              __default = "// %s",
+              jsx_element = "{/* %s */}",
+              jsx_fragment = "{/* %s */}",
+              jsx_attribute = "// %s",
+              comment = "// %s",
+              __multiline = "/* %s */",
+            },
+            javascript = {
+              __default = "// %s",
+              jsx_element = "{/* %s */}",
+              jsx_fragment = "{/* %s */}",
+              jsx_attribute = "// %s",
+              comment = "// %s",
+              __multiline = "/* %s */",
+            },
+            elixir = {
+              __default = "# %s",
+              quoted_content = "<!-- %s -->",
+            },
+            heex = {
+              __default = "<!-- %s -->",
+            },
             lua = "-- %s",
             fish = "# %s",
             toml = "# %s",

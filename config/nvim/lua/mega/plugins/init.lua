@@ -256,39 +256,6 @@ return {
   },
   -- { "sunaku/tmux-navigate", cond = vim.env.TMUX },
   -- { "elihunter173/dirbuf.nvim", config = function() require("dirbuf").setup({}) end },
-  -- {
-  --   "folke/trouble.nvim",
-  --   cmd = "TroubleToggle",
-  --   keys = { "<leader>E", "<leader>le" },
-  --   config = function()
-  --     _G.mega.plugin_setup("trouble", {
-  --       auto_preview = false,
-  --       use_diagnostic_signs = true,
-  --       auto_close = true,
-  --       action_keys = {
-  --         close = { "q", "<Esc>", "<C-q>", "<C-c>" },
-  --         refresh = "R",
-  --         jump = { "<Space>" },
-  --         open_split = { "<c-s>" },
-  --         open_vsplit = { "<c-v>" },
-  --         open_tab = { "<c-t>" },
-  --         jump_close = { "<CR>" },
-  --         toggle_mode = "m",
-  --         toggle_preview = "P",
-  --         hover = { "gh" },
-  --         preview = "p",
-  --         close_folds = { "h", "zM", "zm" },
-  --         open_folds = { "l", "zR", "zr" },
-  --         toggle_fold = { "zA", "za" },
-  --         previous = "k",
-  --         next = "j",
-  --         cancel = nil,
-  --       },
-  --     })
-  --     _G.mega.nmap("<leader>E", "<cmd>TroubleToggle<CR>")
-  --     _G.mega.nmap("<leader>le", "<cmd>TroubleToggle<CR>", "Toggle Trouble")
-  --   end,
-  -- },
   { "kevinhwang91/nvim-bqf", ft = "qf" },
   {
     url = "https://gitlab.com/yorickpeterse/nvim-pqf",
@@ -307,30 +274,6 @@ return {
   },
 
   -- ( LSP ) -------------------------------------------------------------------
-  -- TODO: https://github.com/folke/dot/tree/master/config/nvim/lua/config/plugins/lsp
-  -- {
-  --   "ray-x/lsp_signature.nvim",
-  --   event = "InsertEnter",
-  --   opts = {
-  --     bind = true,
-  --     fix_pos = false,
-  --     auto_close_after = 10, -- close after 15 seconds
-  --     hint_enable = false,
-  --     handler_opts = { border = mega.get_border() },
-  --     toggle_key = "<C-K>",
-  --     select_signature_key = "<M-N>",
-  --   },
-  -- },
-
-  {
-    "SmiteshP/nvim-navic",
-    lazy = true,
-    config = function()
-      vim.g.navic_silence = true
-      require("nvim-navic").setup({ separator = " ", highlight = true, depth_limit = 5 })
-    end,
-  },
-
   {
     "ray-x/lsp_signature.nvim",
     event = "VeryLazy",
@@ -339,7 +282,7 @@ return {
       require("lsp_signature").setup({
         bind = true,
         fix_pos = true,
-        auto_close_after = 5, -- close after 15 seconds
+        auto_close_after = 10, -- close after 15 seconds
         hint_enable = false,
         floating_window_above_cur_line = true,
         doc_lines = 0,
@@ -356,7 +299,6 @@ return {
       })
     end,
   },
-
   "nvim-lua/lsp_extensions.nvim",
   "jose-elias-alvarez/typescript.nvim",
   "MunifTanjim/nui.nvim",
@@ -617,7 +559,7 @@ return {
   { "tpope/vim-scriptease", cmd = { "Messages", "Mess" } },
   { "lambdalisue/suda.vim" },
   { "EinfachToll/DidYouMean" },
-  { "wsdjeg/vim-fetch", event = "BufReadPre" }, -- vim path/to/file.ext:12:3
+  { "wsdjeg/vim-fetch", lazy = false }, -- vim path/to/file.ext:12:3
   { "ConradIrwin/vim-bracketed-paste" }, -- FIXME: delete?
   -- { "tpope/vim-scriptease" },
   { "axelvc/template-string.nvim" },
@@ -772,28 +714,11 @@ return {
 
   -- ( Syntax/Languages ) ------------------------------------------------------
   { "ii14/emmylua-nvim", ft = "lua" },
-  { "elixir-editors/vim-elixir", lazy = false }, -- nvim exceptions thrown when not installed
+  -- { "elixir-editors/vim-elixir", ft = { "markdown" } }, -- nvim exceptions thrown when not installed
   "kchmck/vim-coffee-script",
   "briancollins/vim-jst",
   { "imsnif/kdl.vim", ft = "kdl" },
   { "chr4/nginx.vim", ft = "nginx" },
-  -- { "tpope/vim-rails" },
-  -- { "ngscheurich/edeex.nvim" },
-  -- { "antew/vim-elm-analyse" },
-  -- { "tjdevries/nlua.nvim" },
-  -- { "norcalli/nvim.lua" },
-  -- -- { "euclidianace/betterlua.vim" },
-  -- -- { "folke/lua-dev.nvim" },
-  -- { "milisims/nvim-luaref" },
-  -- { "ii14/emmylua-nvim" },
-  -- { "MaxMEllon/vim-jsx-pretty" },
-  -- { "heavenshell/vim-jsdoc" },
-  -- { "jxnblk/vim-mdx-js" },
-  -- { "skwp/vim-html-escape" },
-  -- { "pedrohdz/vim-yaml-folds" },
-  -- { "avakhov/vim-yaml" },
-  -- { "chr4/nginx.vim" },
-  -- { "nanotee/luv-vimdocs" },
   { "fladson/vim-kitty", ft = "kitty" },
   { "SirJson/fzf-gitignore", config = function() vim.g.fzf_gitignore_no_maps = true end },
 }

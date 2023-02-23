@@ -109,6 +109,9 @@ function obj:start()
       local mods = cfg.mods or {}
       if cfg.key then
         Hyper:bind(mods, cfg.key, function()
+          -- if cfg.launcher ~= nil then
+          --   cfg.launcher()
+          -- else
           if cfg.launchMode ~= nil then
             if cfg.launchMode == "focus" then
               launcher.focusOnly(cfg.bundleID)
@@ -118,6 +121,7 @@ function obj:start()
           else
             launcher.toggle(cfg.bundleID, false)
           end
+          -- end
         end)
       end
       if cfg.localBindings and #cfg.localBindings > 0 then

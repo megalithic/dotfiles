@@ -71,11 +71,11 @@ if vc_ok then vc.setup({ config = { char = "│" } }) end
 mega.augroup("ToggleColorColumn", {
   {
     -- Update the cursor column to match current window size
-    event = { "WinEnter", "BufEnter", "VimResized", "FileType" }, -- BufWinEnter instead of WinEnter?
+    event = { "FocusGained", "WinEnter", "BufEnter", "VimResized", "FileType" }, -- BufWinEnter instead of WinEnter?
     command = function() enable_colorcolumn() end,
   },
   {
-    event = { "WinLeave", "BufLeave" },
+    event = { "FocusLost", "WinLeave", "BufLeave" },
     command = function() disable_colorcolumn(true) end,
   },
 })

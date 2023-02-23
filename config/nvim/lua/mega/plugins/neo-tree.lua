@@ -96,6 +96,9 @@ function M.config()
       },
     },
     default_component_configs = {
+      indent = {
+        with_markers = false,
+      },
       icon = {
         folder_empty = "",
       },

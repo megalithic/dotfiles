@@ -16,6 +16,7 @@ vim.o.makeprg = [[open %]]
 
 -- continuous meeting note datetime entry
 vim.cmd([[iabbrev <expr> mdate "### ".strftime("%Y-%m-%d %H:%M:%S")]])
+vim.cmd.iabbrev("<buffer>", "zTODO", "<span style=\"color:red\">TODO:</span><Esc>F<i")
 
 -- TODO: convert these to vim.opt and vim.opt_local
 vim.cmd([[

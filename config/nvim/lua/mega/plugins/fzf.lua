@@ -8,8 +8,8 @@ local M = {
     { "<leader>A", "<cmd>FzfLua grep_cword<cr>", desc = "fzf: grep cursor" },
     { "<leader>A", "<cmd>FzfLua grep_visual<cr>", desc = "fzf: grep selection", mode = "v" },
     { "<leader>fb", "<cmd>FzfLua buffers<cr>", desc = "fzf: buffers" },
-    { "<C-u>", function() require("fzf-lua.win").preview_scroll(-1) end, desc = "fzf: scroll preview up" },
-    { "<C-d>", function() require("fzf-lua.win").preview_scroll(1) end, desc = "fzf: scroll preview down" },
+    -- { "<C-u>", function() require("fzf-lua.win").preview_scroll(-1) end, desc = "fzf: scroll preview up" },
+    -- { "<C-d>", function() require("fzf-lua.win").preview_scroll(1) end, desc = "fzf: scroll preview down" },
   },
 }
 
@@ -102,6 +102,10 @@ function M.config()
           ["svg"] = { "chafa" },
         },
         treesitter = { enable = true },
+        -- syntax = true, -- preview syntax highlight?
+        -- syntax_limit_l = 0, -- syntax limit (lines), 0=nolimit
+        -- syntax_limit_b = 1024 * 1024 * 10, -- syntax limit (bytes), 0=nolimit
+        -- limit_b = 1024 * 1024 * 50, -- preview limit (bytes), 0=nolimit
       },
     },
     actions = {

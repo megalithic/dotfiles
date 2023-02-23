@@ -12,6 +12,7 @@ local M = {
   event = "BufReadPre",
   dependencies = {
     "hrsh7th/cmp-nvim-lsp",
+    "smjonas/inc-rename.nvim",
     -- "ray-x/lsp_signature.nvim",
     -- { "folke/neoconf.nvim", cmd = "Neoconf", config = true },
     -- {
@@ -191,23 +192,23 @@ local function setup_autocommands(client, bufnr)
     },
   })
 
-  if client.server_capabilities.signatureHelpProvider then
-    augroup("LspSignature", {
-      event = { "CursorHoldI" },
-      buffer = bufnr,
-      callback = function()
-        vim.defer_fn(function()
-          local line = vim.api.nvim_get_current_line()
-          line = vim.trim(line:sub(1, vim.api.nvim_win_get_cursor(0)[2] + 1))
-          local len = line:len()
-          local char_post = line:sub(len, len)
-          local char_pre = line:sub(len - 1, len - 1)
-          local show_signature = char_pre == "(" or char_pre == "," or char_post == ")"
-          if show_signature then vim.lsp.buf.signature_help() end
-        end, 500)
-      end,
-    })
-  end
+  -- if client.server_capabilities.signatureHelpProvider then
+  --   augroup("LspSignature", {
+  --     event = { "CursorHoldI" },
+  --     buffer = bufnr,
+  --     callback = function()
+  --       vim.defer_fn(function()
+  --         local line = vim.api.nvim_get_current_line()
+  --         line = vim.trim(line:sub(1, vim.api.nvim_win_get_cursor(0)[2] + 1))
+  --         local len = line:len()
+  --         local char_post = line:sub(len, len)
+  --         local char_pre = line:sub(len - 1, len - 1)
+  --         local show_signature = char_pre == "(" or char_pre == "," or char_post == ")"
+  --         if show_signature then vim.lsp.buf.signature_help() end
+  --       end, 500)
+  --     end,
+  --   })
+  -- end
 
   augroup("LspFormat", {
     {
@@ -240,7 +241,8 @@ local function setup_keymaps(client, bufnr)
   nnoremap("<leader>lc", vim.lsp.buf.code_action, desc("code action"))
   xnoremap("<leader>lc", "<esc><Cmd>lua vim.lsp.buf.range_code_action()<CR>", desc("code action"))
   nnoremap("gl", vim.lsp.codelens.run, desc("lsp: code lens"))
-  nnoremap("gn", require("mega.plugins.lsp.rename").rename, desc("lsp: rename"))
+  -- nnoremap("gn", require("mega.plugins.lsp.rename").rename, desc("lsp: rename"))
+  nnoremap("gn", "<cmd>IncRename<cr>", desc("lsp: rename"))
 
   nnoremap("K", vim.lsp.buf.hover, desc("lsp: hover"))
   nnoremap("gK", vim.lsp.buf.signature_help, desc("lsp: signature help"))
@@ -540,14 +542,25 @@ function M.config()
         end
       end
     end
-    --
-    -- require("lsp_signature").on_attach({
-    --   bind = true,
-    --   handler_opts = {
-    --     border = mega.get_border(),
-    --   },
-    --   hint_enabled = false,
-    -- }, bufnr)
+
+    require("lsp_signature").on_attach({
+      bind = true,
+      fix_pos = true,
+      auto_close_after = 10, -- close after 15 seconds
+      hint_enable = false,
+      floating_window_above_cur_line = true,
+      doc_lines = 0,
+      handler_opts = {
+        anchor = "SW",
+        relative = "cursor",
+        row = -1,
+        focus = false,
+        border = _G.mega.get_border(),
+      },
+      zindex = 99, -- Keep signature popup below the completion PUM
+      toggle_key = "<C-K>",
+      select_signature_key = "<M-N>",
+    }, bufnr)
 
     -- if caps.documentSymbolProvider then
     --   local ok, navic = mega.require("nvim-navic")

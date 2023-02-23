@@ -16,6 +16,25 @@ local dbg = function(...)
   end
 end
 
+function obj.jump(url)
+  if browser and hs.fnutils.contains(obj.browsers, browser:name()) then
+    hs.osascript.javascript([[
+    (function() {
+      var browser = Application(']] .. browser:name() .. [[');
+      browser.activate();
+      for (win of browser.windows()) {
+        var tabIndex =
+          win.tabs().findIndex(tab => tab.url().match(/]] .. url .. [[/));
+        if (tabIndex != -1) {
+          win.activeTabIndex = (tabIndex + 1);
+          win.index = 1;
+        }
+      }
+    })();
+    ]])
+  end
+end
+
 function obj.splitTab()
   -- Move current window to the left half
   local snap = L.req("lib.wm.snap")
