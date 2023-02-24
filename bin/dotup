@@ -78,7 +78,7 @@ update() {
   ./bin/asdf-install
 
   log "Attempting to install perl packages.." &&
-  .dotfiles/asdf/perl.sh;
+  ~/.dotfiles/asdf/perl.sh
 
   log "Attempting to install python packages.." &&
   ~/.dotfiles/asdf/python.sh

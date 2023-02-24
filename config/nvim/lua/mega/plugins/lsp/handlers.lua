@@ -37,126 +37,16 @@ function M.setup()
     },
   }
 
-  -- do
-  --   local function hover_handler(_, result, _ctx, config)
-  --     -- M.hover_orig(_, result, ...)
-  --     if not (result and result.contents) then
-  --       mega.notify("No information available", vim.log.levels.WARN)
-  --       return
-  --     end
-  --
-  --     local contents = result.contents
-  --
-  --     if not vim.tbl_islist(contents) then contents = { contents } end
-  --
-  --     local parts = {}
-  --
-  --     for _, content in ipairs(contents) do
-  --       if type(content) == "string" then
-  --         table.insert(parts, content)
-  --       elseif content.language then
-  --         table.insert(parts, ("```%s\n%s\n```"):format(content.language, content.value))
-  --       elseif content.kind == "markdown" then
-  --         table.insert(parts, content.value)
-  --       elseif content.kind == "plaintext" then
-  --         table.insert(parts, ("```\n%s\n```"):format(content.value))
-  --       end
-  --     end
-  --
-  --     local text = table.concat(parts, "\n")
-  --     text = text:gsub("\n\n", "\n")
-  --     text = text:gsub("\n%s*\n```", "\n```")
-  --     text = text:gsub("```\n%s*\n", "```\n")
-  --
-  --     local lines = vim.split(text, "\n")
-  --
-  --     local width = 50
-  --     for _, line in pairs(lines) do
-  --       width = math.max(width, vim.api.nvim_strwidth(line))
-  --     end
-  --
-  --     for l, line in ipairs(lines) do
-  --       if line:find("^[%*%-_][%*%-_][%*%-_]+$") then lines[l] = ("─"):rep(width) end
-  --     end
-  --
-  --     text = table.concat(lines, "\n")
-  --
-  --     local n_ok, notify = pcall(require, "notify")
-  --     if n_ok and vim.g.notifier_enabled and vim.o.cmdheight == 0 then
-  --       local open = true
-  --       P("we're in a custom folke hover")
-  --       notify(text, vim.log.levels.INFO, {
-  --         title = "Hover",
-  --         keep = function() return open end,
-  --         on_open = function(win)
-  --           local buf = vim.api.nvim_win_get_buf(win)
-  --           vim.api.nvim_buf_set_option(buf, "filetype", "markdown")
-  --           vim.api.nvim_win_set_option(win, "spell", false)
-  --
-  --           vim.api.nvim_create_autocmd("CursorMoved", {
-  --             callback = function()
-  --               open = false
-  --               if not open then notify.dismiss() end
-  --             end,
-  --             once = true,
-  --           })
-  --         end,
-  --       })
-  --       -- else
-  --       --   local bufnr = require("vim.lsp.util").open_floating_preview(lines, "markdown", config)
-  --       --   -- local lines = vim.split(result.contents.value, "\n")
-  --
-  --       --   -- local ok, _ = pcall(require, "colorizer")
-  --       --   -- if ok then
-  --       --   --   require("colorizer").highlight_buffer(
-  --       --   --     bufnr,
-  --       --   --     nil,
-  --       --   --     vim.list_slice(lines, 2, #lines),
-  --       --   --     0,
-  --       --   --     require("colorizer").get_buffer_options(0)
-  --       --   --   )
-  --       --   -- end
-  --
-  --       --   return bufnr
-  --     end
-  --   end
-  --   -- local orig_hover_handler = lsp.handlers["textDocument/hover"]
-  --   -- if pcall(require, "notify") == true then
-  --   --   lsp.handlers["textDocument/hover"] = lsp.with(hover_handler, opts)
-  --   -- else
-  --   lsp.handlers["textDocument/hover"] = function(...)
-  --     local handler = lsp.with(hover_handler, {
-  --       border = mega.get_border(),
-  --       max_width = max_width,
-  --       max_height = max_height,
-  --       pad_top = 2,
-  --       pad_bottom = 2,
-  --     })
-  --     vim.b.lsp_hover_buf, vim.b.lsp_hover_win = handler(...)
-  --   end
-  --   -- end
-  -- end
-
-  -- local signature_help_opts = mega.table_merge(opts, {
-  --   -- anchor = "SW",
-  --   -- relative = "cursor",
-  --   -- row = -1,
-  --   border = mega.get_border(),
-  --   max_width = max_width,
-  --   max_height = max_height,
-  -- })
-  -- lsp.handlers["textDocument/signatureHelp"] = lsp.with(lsp.handlers.signature_help, signature_help_opts)
-
-  -- NOTE: presently noice.nvim handles this
-  -- lsp.handlers["window/showMessage"] = function(_, result, ctx)
-  --   local client = lsp.get_client_by_id(ctx.client_id)
-  --   local lvl = ({ "ERROR", "WARN", "INFO", "DEBUG", "OFF" })[result.type]
-  --   vim.notify(result.message, vim.log.levels[lvl], {
-  --     title = "LSP | " .. client.name,
-  --     timeout = 8000,
-  --     keep = function() return lvl == "ERROR" or lvl == "WARN" end,
-  --   })
-  -- end
+  -- NOTE: disable for noice
+  lsp.handlers["window/showMessage"] = function(_, result, ctx)
+    local client = lsp.get_client_by_id(ctx.client_id)
+    local lvl = ({ "ERROR", "WARN", "INFO", "DEBUG", "OFF" })[result.type]
+    vim.notify(result.message, vim.log.levels[lvl], {
+      title = "LSP | " .. client.name,
+      timeout = 8000,
+      keep = function() return lvl == "ERROR" or lvl == "WARN" end,
+    })
+  end
 
   do
     if true then return end

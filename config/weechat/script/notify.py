@@ -63,7 +63,7 @@ def notify_show(data, bufferp, uber_empty, tagsn, isdisplayed,
             weechat.config_get_plugin('show_priv_msg') == "on"):
         show_notification(prefix, message)
 
-    elif (ishilight == "1" and 
+    elif (ishilight == "1" and
             weechat.config_get_plugin('show_hilights') == "on"):
         buffer = (weechat.buffer_get_string(bufferp, "short_name") or
                 weechat.buffer_get_string(bufferp, "name"))

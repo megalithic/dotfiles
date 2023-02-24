@@ -118,7 +118,10 @@ do
   local smart_close_buftypes = {} -- Don't include no file buffers as diff buffers are nofile
 
   local function smart_close()
-    if fn.winnr("$") ~= 1 then api.nvim_win_close(0, true) end
+    if fn.winnr("$") ~= 1 then
+      api.nvim_win_close(0, true)
+      vim.cmd("wincmd p")
+    end
   end
 
   augroup("SmartClose", {
