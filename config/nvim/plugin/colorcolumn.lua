@@ -55,12 +55,12 @@ local function set_colorcolumn(leaving)
 end
 
 local function disable_colorcolumn(leaving)
-  if not vim.g.started_by_firenvim then vim.cmd("IndentBlanklineDisable") end
+  if not vim.g.started_by_firenvim and vim.g.loaded_indent_blankline then vim.cmd("IndentBlanklineDisable") end
   set_colorcolumn(leaving)
 end
 
 local function enable_colorcolumn()
-  if not vim.g.started_by_firenvim then vim.cmd("IndentBlanklineEnable") end
+  if not vim.g.started_by_firenvim and vim.g.loaded_indent_blankline then vim.cmd("IndentBlanklineEnable") end
   set_colorcolumn()
 end
 

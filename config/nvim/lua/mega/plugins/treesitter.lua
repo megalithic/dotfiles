@@ -107,35 +107,33 @@ return {
       require("nvim-treesitter.install").compilers = { "gcc-12" }
 
       vim.opt.indentexpr = "nvim_treesitter#indent()"
+      --
+      -- local parser_config = require("nvim-treesitter.parsers").get_parser_configs()
+      -- parser_config.html_eex = {
+      --   install_info = {
+      --     url = "https://github.com/rockerBOO/tree-sitter-html-eex",
+      --     files = { "src/parser.c", "src/scanner.cc" },
+      --   },
+      --   maintainers = { "@rockerBOO" },
+      -- }
+      --
+      -- -- TODO: determine colours and such; presently like what i have over using this.
+      -- parser_config.gitcommit = {
+      --   install_info = {
+      --     url = "https://github.com/gbprod/tree-sitter-gitcommit",
+      --     files = { "src/parser.c", "src/scanner.c" },
+      --     branch = "main",
+      --   },
+      --   filetype = "gitcommit",
+      --   maintainers = { "@gbprod" },
+      -- }
 
-      local parser_config = require("nvim-treesitter.parsers").get_parser_configs()
-      parser_config.html_eex = {
-        install_info = {
-          url = "https://github.com/rockerBOO/tree-sitter-html-eex",
-          files = { "src/parser.c", "src/scanner.cc" },
-        },
-        maintainers = { "@rockerBOO" },
-      }
-
-      -- TODO: determine colours and such; presently like what i have over using this.
-      parser_config.gitcommit = {
-        install_info = {
-          url = "https://github.com/gbprod/tree-sitter-gitcommit",
-          files = { "src/parser.c", "src/scanner.c" },
-          branch = "main",
-        },
-        filetype = "gitcommit",
-        maintainers = { "@gbprod" },
-      }
-
-      local treesitter_parsers = require("nvim-treesitter.parsers")
-      local ft_to_parser = treesitter_parsers.filetype_to_parsername
-
-      ft_to_parser.json = "jsonc"
-      ft_to_parser.keymap = "devicetree"
-      ft_to_parser.zsh = "bash"
-      ft_to_parser.kittybuf = "bash"
-      ft_to_parser.eelixir = "html_eex"
+      local ft_to_parser = vim.treesitter.language.register
+      ft_to_parser("json", "jsonc")
+      ft_to_parser("keymap", "devicetree")
+      ft_to_parser("zsh", "bash")
+      ft_to_parser("kittybuf", "bash")
+      -- ft_to_parser("eelixir", "html_eex")
 
       require("nvim-treesitter.configs").setup({
         auto_install = false,
@@ -163,7 +161,7 @@ return {
           "heex",
           "help",
           "html",
-          "html_eex",
+          -- "html_eex",
           "javascript",
           "jq",
           "jsdoc",

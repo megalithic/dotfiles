@@ -12,7 +12,76 @@ local M = {
   event = "BufReadPre",
   dependencies = {
     "hrsh7th/cmp-nvim-lsp",
-    "smjonas/inc-rename.nvim",
+    {
+      "smjonas/inc-rename.nvim",
+      cmd = "IncRename",
+      config = {
+        input_buffer_type = "dressing",
+      },
+    },
+    {
+      "ray-x/lsp_signature.nvim",
+      event = "VeryLazy",
+      dependencies = "nvim-lspconfig",
+      config = function()
+        require("lsp_signature").setup({
+          bind = true,
+          fix_pos = true,
+          auto_close_after = 10, -- close after 15 seconds
+          hint_enable = false,
+          floating_window_above_cur_line = true,
+          doc_lines = 0,
+          handler_opts = {
+            anchor = "SW",
+            relative = "cursor",
+            row = -1,
+            focus = false,
+            border = _G.mega.get_border(),
+          },
+          zindex = 99, -- Keep signature popup below the completion PUM
+          toggle_key = "<C-K>",
+          select_signature_key = "<M-N>",
+        })
+      end,
+    },
+    { "nvim-lua/lsp_extensions.nvim" },
+    { "jose-elias-alvarez/typescript.nvim" },
+    { "MunifTanjim/nui.nvim" },
+    { "williamboman/mason-lspconfig.nvim" },
+    { "b0o/schemastore.nvim" },
+    { "mrshmllow/document-color.nvim" },
+    {
+      "folke/trouble.nvim",
+      cmd = { "TroubleToggle", "Trouble" },
+      config = {
+        auto_open = false,
+        use_diagnostic_signs = true, -- en
+      },
+    },
+    {
+      "lewis6991/hover.nvim",
+      keys = { "K", "gK" },
+      config = function()
+        require("hover").setup({
+          init = function()
+            -- Require providers
+            require("hover.providers.lsp")
+            -- require('hover.providers.gh')
+            -- require('hover.providers.gh_user')
+            -- require('hover.providers.jira')
+            -- require('hover.providers.man')
+            -- require('hover.providers.dictionary')
+          end,
+          preview_opts = {
+            border = require("mega.globals").get_border(),
+          },
+          -- Whether the contents of a currently open hover window should be moved
+          -- to a :h preview-window when pressing the hover keymap.
+          preview_window = false,
+          title = true,
+        })
+      end,
+    },
     -- "ray-x/lsp_signature.nvim",
     -- { "folke/neoconf.nvim", cmd = "Neoconf", config = true },
     -- {
@@ -224,7 +293,10 @@ end
 -- [ MAPPINGS ] ----------------------------------------------------------------
 
 local function setup_keymaps(client, bufnr)
-  local desc = function(desc) return { desc = desc, buffer = bufnr } end
+  local desc = function(desc, expr)
+    expr = expr ~= nil and expr or false
+    return { desc = desc, buffer = bufnr, expr = expr }
+  end
   -- local maybe = function(spec, has)
   --   if not has or client.server_capabilities[has .. "Provider"] then
   --   end
@@ -241,8 +313,22 @@ local function setup_keymaps(client, bufnr)
   nnoremap("<leader>lc", vim.lsp.buf.code_action, desc("code action"))
   xnoremap("<leader>lc", "<esc><Cmd>lua vim.lsp.buf.range_code_action()<CR>", desc("code action"))
   nnoremap("gl", vim.lsp.codelens.run, desc("lsp: code lens"))
-  -- nnoremap("gn", require("mega.plugins.lsp.rename").rename, desc("lsp: rename"))
-  nnoremap("gn", "<cmd>IncRename<cr>", desc("lsp: rename"))
+  nnoremap("gn", require("mega.plugins.lsp.rename").rename, desc("lsp: rename"))
+  -- nnoremap("gn", function()
+  --   local bufnr = vim.api.nvim_get_current_buf()
+  --   vim.ui.input({
+  --     prompt = "New name: ",
+  --     highlight = function(new_name)
+  --       vim.api.nvim_buf_set_lines(bufnr, 0, 1, false, { new_name })
+  --       return {}
+  --     end,
+  --   }, function() print("Executing...") end)
+  --   -- require("inc_rename")
+  --   -- return ":IncRename " .. vim.fn.expand("<cword>")
+  -- end, desc("lsp: rename", true))
+
+  -- nnoremap("gn", function() return ":IncRename " .. vim.fn.expand("<cword>") end, desc("lsp: rename", true))
+  -- nnoremap("gn", "<cmd>IncRename<cr>", desc("lsp: rename"))
 
   nnoremap("K", vim.lsp.buf.hover, desc("lsp: hover"))
   nnoremap("gK", vim.lsp.buf.signature_help, desc("lsp: signature help"))

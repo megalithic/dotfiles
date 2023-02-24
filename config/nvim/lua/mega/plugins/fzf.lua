@@ -82,6 +82,7 @@ function M.config()
       --   print("on_create")
       -- end,
     },
+    color_icons = false,
     -- winopts_fn = function()
     --   local hl = {
     --     border = hl_match({ "FloatBorder" }),

@@ -242,7 +242,7 @@ local apps = {
   ["com.pop.pop.app"] = {
     bundleID = "com.pop.pop.app",
     name = "Pop",
-    -- key = "z",
+    key = "z",
     -- launcher = function()
     --   if hs.application.find("us.zoom.xos") then
     --     hs.application.launchOrFocusByBundleID("us.zoom.xos")

@@ -40,7 +40,7 @@ L.load("lib.menubar.spotify"):start()
 L.load("lib.watchers"):start()
 L.load("lib.wm"):start()
 L.load("lib.quitter"):start({ mode = "double" })
-L.req("clipboard")
+L.req("lib.clipboard")
 L.req("lib.scrot")
 L.req("_scratch")
 

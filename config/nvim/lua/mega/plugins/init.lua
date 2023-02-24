@@ -1,12 +1,12 @@
 return {
   -- ( CORE ) ------------------------------------------------------------------
-  "nvim-lua/plenary.nvim",
-  "nvim-lua/popup.nvim",
+  { "nvim-lua/plenary.nvim", event = "VeryLazy" },
+  { "nvim-lua/popup.nvim", event = "VeryLazy" },
   { "dstein64/vim-startuptime", cmd = { "StartupTime" }, config = function() vim.g.startuptime_tries = 15 end },
-  "mattn/webapi-vim",
+  { "mattn/webapi-vim", event = "VeryLazy" },
   {
     "ethanholz/nvim-lastplace",
-    lazy = false,
+    event = { "BufReadPre" },
     config = function()
       require("nvim-lastplace").setup({
         lastplace_ignore_buftype = { "quickfix", "nofile", "help" },
@@ -53,23 +53,9 @@ return {
       })
     end,
   },
-  {
-    "luukvbaal/statuscol.nvim",
-    event = "BufReadPost",
-    enabled = false,
-    config = function()
-      require("statuscol").setup({
-        setopt = true,
-        order = "FSNs",
-        relculright = true,
-        foldfunc = "builtin",
-      })
-    end,
-  },
   { "nvim-tree/nvim-web-devicons", config = function() require("nvim-web-devicons").setup() end },
   {
     "NvChad/nvim-colorizer.lua",
-    -- event = { "CursorHold", "CursorMoved", "InsertEnter" },
     event = { "BufReadPre" },
     config = function()
       require("colorizer").setup({
@@ -104,11 +90,11 @@ return {
       })
     end,
   },
-  "lukas-reineke/virt-column.nvim",
-  "MunifTanjim/nui.nvim",
+  { "lukas-reineke/virt-column.nvim", config = true, event = "VeryLazy" },
   {
     "folke/todo-comments.nvim",
     event = "VeryLazy",
+    enabled = false,
     dependencies = { "nvim-treesitter/nvim-treesitter" },
     config = function()
       require("todo-comments").setup()
@@ -126,21 +112,6 @@ return {
       },
     },
     keys = { { "<localleader>zz", "<cmd>ZenMode<cr>", desc = "Zen Mode" } },
-  },
-  {
-    "stevearc/dressing.nvim",
-    init = function()
-      ---@diagnostic disable-next-line: duplicate-set-field
-      vim.ui.select = function(...)
-        require("lazy").load({ plugins = { "dressing.nvim" } })
-        return vim.ui.select(...)
-      end
-      ---@diagnostic disable-next-line: duplicate-set-field
-      vim.ui.input = function(...)
-        require("lazy").load({ plugins = { "dressing.nvim" } })
-        return vim.ui.input(...)
-      end
-    end,
   },
 
   -- indent guides for Neovim
@@ -203,56 +174,9 @@ return {
   -- ( Navigation ) ------------------------------------------------------------
   {
     "knubie/vim-kitty-navigator",
+    event = "VeryLazy",
     -- build = "cp ./*.py ~/.config/kitty/",
     cond = not vim.env.TMUX and not vim.env.ZELLIJ,
-  },
-  {
-    "Lilja/zellij.nvim",
-    cond = vim.env.ZELLIJ,
-    config = function()
-      require("zellij").setup({})
-      local function edgeDetect(direction)
-        local currWin = vim.api.nvim_get_current_win()
-        vim.api.nvim_command("wincmd " .. direction)
-        local newWin = vim.api.nvim_get_current_win()
-
-        -- You're at the edge when you just moved direction and the window number is the same
-        print("ol winN ")
-        print(currWin)
-        print(" new ")
-        print(newWin)
-        print(" same? ")
-        print(currWin == newWin)
-        return currWin == newWin
-      end
-
-      local function zjCall(direction)
-        local directionTranslation = {
-          h = "left",
-          j = "down",
-          k = "up",
-          l = "right",
-        }
-        -- local cmd  = "zellij action move-focus-or-tab " .. directionTranslation[direction]
-        local cmd = "zellij action move-focus-or-tab " .. directionTranslation[direction]
-        local cmd2 = "zellij --help"
-        print("cmd")
-        print(cmd)
-        local c = vim.fn.system(cmd)
-        print(c)
-        local c2 = vim.fn.system("ls -l")
-        print(c2)
-      end
-
-      local function zjNavigate(direction)
-        if edgeDetect(direction) then zjCall(direction) end
-      end
-
-      vim.keymap.set("n", "<C-h>", function() zjNavigate("h") end)
-      vim.keymap.set("n", "<C-j", function() zjNavigate("j") end)
-      vim.keymap.set("n", "<C-k", function() zjNavigate("k") end)
-      vim.keymap.set("n", "<C-l", function() zjNavigate("l") end)
-    end,
   },
   -- { "sunaku/tmux-navigate", cond = vim.env.TMUX },
   -- { "elihunter173/dirbuf.nvim", config = function() require("dirbuf").setup({}) end },
@@ -272,74 +196,6 @@ return {
       })
     end,
   },
-
-  -- ( LSP ) -------------------------------------------------------------------
-  {
-    "ray-x/lsp_signature.nvim",
-    event = "VeryLazy",
-    dependencies = "nvim-lspconfig",
-    config = function()
-      require("lsp_signature").setup({
-        bind = true,
-        fix_pos = true,
-        auto_close_after = 10, -- close after 15 seconds
-        hint_enable = false,
-        floating_window_above_cur_line = true,
-        doc_lines = 0,
-        handler_opts = {
-          anchor = "SW",
-          relative = "cursor",
-          row = -1,
-          focus = false,
-          border = _G.mega.get_border(),
-        },
-        zindex = 99, -- Keep signature popup below the completion PUM
-        toggle_key = "<C-K>",
-        select_signature_key = "<M-N>",
-      })
-    end,
-  },
-  "nvim-lua/lsp_extensions.nvim",
-  "jose-elias-alvarez/typescript.nvim",
-  "MunifTanjim/nui.nvim",
-  "williamboman/mason-lspconfig.nvim",
-  "b0o/schemastore.nvim",
-  "mrshmllow/document-color.nvim",
-  {
-    "folke/trouble.nvim",
-    cmd = { "TroubleToggle", "Trouble" },
-    config = {
-      auto_open = false,
-      use_diagnostic_signs = true, -- en
-    },
-  },
-  {
-    "lewis6991/hover.nvim",
-    keys = { "K", "gK" },
-    config = function()
-      require("hover").setup({
-        init = function()
-          -- Require providers
-          require("hover.providers.lsp")
-          -- require('hover.providers.gh')
-          -- require('hover.providers.gh_user')
-          -- require('hover.providers.jira')
-          -- require('hover.providers.man')
-          -- require('hover.providers.dictionary')
-        end,
-        preview_opts = {
-          border = require("mega.globals").get_border(),
-        },
-        -- Whether the contents of a currently open hover window should be moved
-        -- to a :h preview-window when pressing the hover keymap.
-        preview_window = false,
-        title = true,
-      })
-    end,
-  },
-  -- { "folke/lua-dev.nvim", module = "lua-dev" },
-  -- { "microsoft/python-type-stubs", lazy = true },
-  -- { "lvimuser/lsp-inlayhints.nvim" },
 
   -- ( Git ) -------------------------------------------------------------------
   {
@@ -377,7 +233,7 @@ return {
   },
   {
     "akinsho/git-conflict.nvim",
-    lazy = false,
+    event = "VeryLazy",
     dependencies = "rktjmp/lush.nvim",
     config = function()
       require("git-conflict").setup({
@@ -392,6 +248,7 @@ return {
   },
   {
     "ruifm/gitlinker.nvim",
+    event = "VeryLazy",
     dependencies = "nvim-lua/plenary.nvim",
     keys = {
       { "<localleader>gu", mode = "n" },
@@ -439,20 +296,27 @@ return {
   {
     "theHamsta/nvim-dap-virtual-text",
     dependencies = "nvim-dap",
+    event = "VeryLazy",
     config = function()
       require("nvim-dap-virtual-text").setup({
         commented = true,
       })
     end,
   },
-  { "jbyuki/one-small-step-for-vimkind", dependencies = "nvim-dap" },
-  { "suketa/nvim-dap-ruby", dependencies = "nvim-dap", config = function() require("dap-ruby").setup() end },
+  { "jbyuki/one-small-step-for-vimkind", dependencies = "nvim-dap", event = "VeryLazy" },
+  {
+    "suketa/nvim-dap-ruby",
+    event = "VeryLazy",
+    dependencies = "nvim-dap",
+    config = function() require("dap-ruby").setup() end,
+  },
   -- {
   --   "microsoft/vscode-js-debug",
   --   build = "npm install --legacy-peer-deps && npm run compile",
   -- },
   {
     "mxsdev/nvim-dap-vscode-js",
+    event = "VeryLazy",
     dependencies = "nvim-dap",
     config = function()
       require("dap-vscode-js").setup({
@@ -467,7 +331,7 @@ return {
       })
     end,
   },
-  { "sultanahamer/nvim-dap-reactnative", dependencies = "nvim-dap" },
+  { "sultanahamer/nvim-dap-reactnative", dependencies = "nvim-dap", event = "VeryLazy" },
   -- {
   --   "jayp0521/mason-nvim-dap.nvim",
   --   dependencies = "nvim-dap",
@@ -480,8 +344,11 @@ return {
   -- },
 
   -- ( Development ) -----------------------------------------------------------
+
+  { "mg979/vim-visual-multi", branch = "master", event = { "BufReadPost", "BufNewFile" } },
   {
     "danymat/neogen",
+    event = "VeryLazy",
     keys = {
       {
         "<leader>cc",
@@ -494,14 +361,17 @@ return {
   {
     -- TODO: https://github.com/avucic/dotfiles/blob/master/nvim_user/.config/nvim/lua/user/configs/dadbod.lua
     "kristijanhusak/vim-dadbod-ui",
+    event = "VeryLazy",
     dependencies = "tpope/vim-dadbod",
     cmd = { "DBUI", "DBUIToggle", "DBUIAddConnection" },
-    setup = function()
+    init = function()
       vim.g.db_ui_use_nerd_fonts = 1
       vim.g.db_ui_show_database_icon = 1
+      vim.g.db_ui_auto_execute_table_helpers = 1
       -- _G.mega.nnoremap("<leader>db", "<cmd>DBUIToggle<CR>", "dadbod: toggle")
     end,
   },
+  { "alvan/vim-closetag", ft = { "html", "liquid", "javascriptreact", "typescriptreact" } },
   {
     "andymass/vim-matchup",
     event = "BufReadPre",
@@ -525,7 +395,30 @@ return {
   { "tpope/vim-eunuch", event = "VeryLazy" },
   {
     "chrisgrieser/nvim-genghis",
-    dependencies = { "stevearc/dressing.nvim", { "tpope/vim-eunuch", event = "VeryLazy" } },
+    dependencies = {
+      {
+        "stevearc/dressing.nvim",
+        event = "VeryLazy",
+        config = {
+          input = {
+            enabled = true,
+            override = function(conf)
+              conf.col = -1
+              conf.row = 0
+              return conf
+            end,
+          },
+        },
+        -- init = function()
+        --   ---@diagnostic disable-next-line: duplicate-set-field
+        --   vim.ui.input = function(...)
+        --     require("lazy").load({ plugins = { "dressing.nvim" } })
+        --     return vim.ui.input(...)
+        --   end
+        -- end,
+      },
+      { "tpope/vim-eunuch", event = "VeryLazy" },
+    },
     event = "VeryLazy",
     config = function()
       local genghis = require("genghis")

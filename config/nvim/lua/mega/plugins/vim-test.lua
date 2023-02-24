@@ -8,7 +8,7 @@ local M = {
     "A",
     "AV",
   },
-  event = "VeryLazy",
+  event = { "BufReadPost", "BufNewFile" },
   dependencies = { "tpope/vim-projectionist" },
 }
 

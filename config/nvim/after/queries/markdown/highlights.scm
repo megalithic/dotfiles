@@ -41,3 +41,5 @@
     (task_list_marker_checked)
     (task_list_marker_unchecked)
 ](#set! conceal ""))
+
+(code_span) @nospell
