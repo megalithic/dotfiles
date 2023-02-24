@@ -80,13 +80,23 @@ return {
   { "nvim-treesitter/playground", cmd = { "TSPlaygroundToggle", "TSHighlightCapturesUnderCursor" } },
   {
     "mfussenegger/nvim-treehopper",
-    keys = { { "m", mode = { "o", "x" } } },
-    config = function()
-      vim.cmd([[
-        omap     <silent> m :<C-U>lua require('tsht').nodes()<CR>
-        xnoremap <silent> m :lua require('tsht').nodes()<CR>
-      ]])
-    end,
+    keys = {
+      {
+        "m",
+        function() require("tsht").nodes() end,
+        desc = "treehopper: toggle",
+        mode = "o",
+        noremap = false,
+        silent = true,
+      },
+      {
+        "m",
+        ":lua require('tsht').nodes()<CR>",
+        desc = "treehopper: toggle",
+        mode = "x",
+        silent = true,
+      },
+    },
   },
   {
     "nvim-treesitter/nvim-treesitter",

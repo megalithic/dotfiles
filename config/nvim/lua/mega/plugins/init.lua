@@ -92,6 +92,27 @@ return {
   },
   { "lukas-reineke/virt-column.nvim", config = true, event = "VeryLazy" },
   {
+    "stevearc/dressing.nvim",
+    event = "VeryLazy",
+    config = {
+      input = {
+        enabled = true,
+        override = function(conf)
+          conf.col = -1
+          conf.row = 0
+          return conf
+        end,
+      },
+    },
+    -- init = function()
+    --   ---@diagnostic disable-next-line: duplicate-set-field
+    --   vim.ui.input = function(...)
+    --     require("lazy").load({ plugins = { "dressing.nvim" } })
+    --     return vim.ui.input(...)
+    --   end
+    -- end,
+  },
+  {
     "folke/todo-comments.nvim",
     event = "VeryLazy",
     enabled = false,
@@ -180,6 +201,13 @@ return {
   },
   -- { "sunaku/tmux-navigate", cond = vim.env.TMUX },
   -- { "elihunter173/dirbuf.nvim", config = function() require("dirbuf").setup({}) end },
+  {
+    "prichrd/netrw.nvim",
+    ft = "netrw",
+    dependencies = {
+      "nvim-tree/nvim-web-devicons",
+    },
+  },
   { "kevinhwang91/nvim-bqf", ft = "qf" },
   {
     url = "https://gitlab.com/yorickpeterse/nvim-pqf",
@@ -195,6 +223,14 @@ return {
         },
       })
     end,
+  },
+  {
+    "folke/trouble.nvim",
+    cmd = { "TroubleToggle", "Trouble" },
+    config = {
+      auto_open = false,
+      use_diagnostic_signs = true, -- en
+    },
   },
 
   -- ( Git ) -------------------------------------------------------------------
@@ -344,8 +380,28 @@ return {
   -- },
 
   -- ( Development ) -----------------------------------------------------------
-
-  { "mg979/vim-visual-multi", branch = "master", event = { "BufReadPost", "BufNewFile" } },
+  {
+    "kevinhwang91/nvim-hclipboard",
+    event = "InsertCharPre",
+    config = function() require("hclipboard").start() end,
+  },
+  {
+    "mg979/vim-visual-multi",
+    keys = { { "<C-e>", mode = { "n", "x" } }, "\\j", "\\k" },
+    enabled = false,
+    event = { "BufReadPost", "BufNewFile" },
+    init = function()
+      vim.g.VM_highlight_matches = "underline"
+      vim.g.VM_theme = "codedark"
+      vim.g.VM_maps = {
+        ["Find Word"] = "<C-E>",
+        ["Find Under"] = "<C-E>",
+        ["Find Subword Under"] = "<C-E>",
+        ["Select Cursor Down"] = "\\j",
+        ["Select Cursor Up"] = "\\k",
+      }
+    end,
+  },
   {
     "danymat/neogen",
     event = "VeryLazy",
@@ -371,7 +427,7 @@ return {
       -- _G.mega.nnoremap("<leader>db", "<cmd>DBUIToggle<CR>", "dadbod: toggle")
     end,
   },
-  { "alvan/vim-closetag", ft = { "html", "liquid", "javascriptreact", "typescriptreact" } },
+  { "alvan/vim-closetag", ft = { "elixir", "heex", "html", "liquid", "javascriptreact", "typescriptreact" } },
   {
     "andymass/vim-matchup",
     event = "BufReadPre",
@@ -391,72 +447,63 @@ return {
     event = "CmdlineEnter",
     config = function() require("numb").setup() end,
   },
-  { "alvan/vim-closetag" },
-  { "tpope/vim-eunuch", event = "VeryLazy" },
-  {
-    "chrisgrieser/nvim-genghis",
-    dependencies = {
-      {
-        "stevearc/dressing.nvim",
-        event = "VeryLazy",
-        config = {
-          input = {
-            enabled = true,
-            override = function(conf)
-              conf.col = -1
-              conf.row = 0
-              return conf
-            end,
-          },
-        },
-        -- init = function()
-        --   ---@diagnostic disable-next-line: duplicate-set-field
-        --   vim.ui.input = function(...)
-        --     require("lazy").load({ plugins = { "dressing.nvim" } })
-        --     return vim.ui.input(...)
-        --   end
-        -- end,
-      },
-      { "tpope/vim-eunuch", event = "VeryLazy" },
-    },
-    event = "VeryLazy",
-    config = function()
-      local genghis = require("genghis")
-      mega.nnoremap("<localleader>yp", genghis.copyFilepath, { desc = "Copy filepath" })
-      mega.nnoremap("<localleader>yn", genghis.copyFilename, { desc = "Copy filename" })
-      mega.nnoremap("<localleader>yf", genghis.duplicateFile, { desc = "Duplicate file" })
-      mega.nnoremap("<localleader>rf", genghis.renameFile, { desc = "Rename file" })
-      mega.nnoremap("<localleader>cx", genghis.chmodx, { desc = "Chmod +x file" })
-      mega.nnoremap(
-        "<localleader>df",
-        function() genghis.trashFile({ trashLocation = "$HOME/.Trash" }) end,
-        { desc = "Delete to trash" }
-      ) -- default: "$HOME/.Trash".
-      -- mega.nmap("<localleader>mf", genghis.moveAndRenameFile)
-      -- mega.nmap("<localleader>nf", genghis.createNewFile)
-      -- mega.nmap("<localleader>x", genghis.moveSelectionToNewFile)
-    end,
-  },
+  { "tpope/vim-eunuch", cmd = { "Move", "Rename", "Remove", "Delete", "Mkdir" } },
+  -- {
+  --   "chrisgrieser/nvim-genghis",
+  --   -- dependencies = {
+  --   --   { "tpope/vim-eunuch", event = "VeryLazy" },
+  --   -- },
+  --   event = "VeryLazy",
+  --   config = function()
+  --     local genghis = require("genghis")
+  --     mega.nnoremap("<localleader>yp", genghis.copyFilepath, { desc = "Copy filepath" })
+  --     mega.nnoremap("<localleader>yn", genghis.copyFilename, { desc = "Copy filename" })
+  --     mega.nnoremap("<localleader>yf", genghis.duplicateFile, { desc = "Duplicate file" })
+  --     mega.nnoremap("<localleader>rf", genghis.renameFile, { desc = "Rename file" })
+  --     mega.nnoremap("<localleader>cx", genghis.chmodx, { desc = "Chmod +x file" })
+  --     mega.nnoremap(
+  --       "<localleader>df",
+  --       function() genghis.trashFile({ trashLocation = "$HOME/.Trash" }) end,
+  --       { desc = "Delete to trash" }
+  --     ) -- default: "$HOME/.Trash".
+  --     -- mega.nmap("<localleader>mf", genghis.moveAndRenameFile)
+  --     -- mega.nmap("<localleader>nf", genghis.createNewFile)
+  --     -- mega.nmap("<localleader>x", genghis.moveSelectionToNewFile)
+  --   end,
+  -- },
   {
     "tpope/vim-abolish",
+    event = "CmdlineEnter",
     config = function()
       mega.nnoremap("<localleader>[", ":S/<C-R><C-W>//<LEFT>", { silent = false })
       mega.nnoremap("<localleader>]", ":%S/<C-r><C-w>//c<left><left>", { silent = false })
       mega.xnoremap("<localleader>[", [["zy:'<'>S/<C-r><C-o>"//c<left><left>]], { silent = false })
     end,
   },
-  { "tpope/vim-rhubarb" },
-  { "tpope/vim-repeat" },
-  { "tpope/vim-unimpaired" },
-  { "tpope/vim-apathy" },
+  { "tpope/vim-rhubarb", event = { "VeryLazy" } },
+  { "tpope/vim-repeat", event = { "VeryLazy" } },
+  { "tpope/vim-unimpaired", event = { "VeryLazy" } },
+  { "tpope/vim-apathy", event = { "VeryLazy" } },
   { "tpope/vim-scriptease", cmd = { "Messages", "Mess" } },
-  { "lambdalisue/suda.vim" },
-  { "EinfachToll/DidYouMean" },
-  { "wsdjeg/vim-fetch", lazy = false }, -- vim path/to/file.ext:12:3
+  { "lambdalisue/suda.vim", event = { "VeryLazy" } },
+  { "EinfachToll/DidYouMean", event = { "BufNewFile" }, init = function() vim.g.dym_use_fzf = true end },
+  { "wsdjeg/vim-fetch", event = { "BufReadPre" } }, -- vim path/to/file.ext:12:3
   { "ConradIrwin/vim-bracketed-paste" }, -- FIXME: delete?
-  -- { "tpope/vim-scriptease" },
-  { "axelvc/template-string.nvim" },
-  -- @trial: "jghauser/kitty-runner.nvim"
+  {
+    "linty-org/readline.nvim",
+    keys = {
+      { "<M-f>", function() require("readline").forward_word() end, mode = "!" },
+      { "<M-b>", function() require("readline").backward_word() end, mode = "!" },
+      { "<C-a>", function() require("readline").beginning_of_line() end, mode = "!" },
+      { "<C-e>", function() require("readline").end_of_line() end, mode = "!" },
+      { "<M-d>", function() require("readline").kill_word() end, mode = "!" },
+      { "<M-BS>", function() require("readline").backward_kill_word() end, mode = "!" },
+      { "<C-w>", function() require("readline").unix_word_rubout() end, mode = "!" },
+      { "<C-k>", function() require("readline").kill_line() end, mode = "!" },
+      { "<C-u>", function() require("readline").backward_kill_line() end, mode = "!" },
+    },
+  },
+  { "axelvc/template-string.nvim", ft = { "typescript", "javascript", "typescriptreact", "javascriptreact" } },
 
   -- ( Motions/Textobjects ) ---------------------------------------------------
   {
@@ -517,8 +564,12 @@ return {
   },
 
   -- ( Notes/Docs ) ------------------------------------------------------------
-  -- { "ixru/nvim-markdown" },
   { "iamcco/markdown-preview.nvim", ft = "markdown", build = "cd app && yarn install" },
+  {
+    "ekickx/clipboard-image.nvim",
+    ft = "markdown",
+    config = true,
+  },
   {
     "evanpurkhiser/image-paste.nvim",
     ft = "markdown",

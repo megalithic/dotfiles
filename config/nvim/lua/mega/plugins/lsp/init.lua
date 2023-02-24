@@ -45,19 +45,21 @@ local M = {
       end,
     },
     { "nvim-lua/lsp_extensions.nvim" },
-    { "jose-elias-alvarez/typescript.nvim" },
+    {
+      "jose-elias-alvarez/typescript.nvim",
+      ft = { "typescript", "typescriptreact" },
+      dependencies = { "jose-elias-alvarez/null-ls.nvim" },
+      config = function()
+        -- require("typescript").setup({ server = require("as.servers")("tsserver") })
+        require("null-ls").register({
+          sources = { require("typescript.extensions.null-ls.code-actions") },
+        })
+      end,
+    },
     { "MunifTanjim/nui.nvim" },
     { "williamboman/mason-lspconfig.nvim" },
     { "b0o/schemastore.nvim" },
-    { "mrshmllow/document-color.nvim" },
-    {
-      "folke/trouble.nvim",
-      cmd = { "TroubleToggle", "Trouble" },
-      config = {
-        auto_open = false,
-        use_diagnostic_signs = true, -- en
-      },
-    },
+    { "mrshmllow/document-color.nvim", event = "BufReadPre" },
     {
       "lewis6991/hover.nvim",
       keys = { "K", "gK" },
