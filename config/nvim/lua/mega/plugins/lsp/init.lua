@@ -668,6 +668,9 @@ function M.config()
     setup_keymaps(client, bufnr)
     setup_highlights(client, bufnr)
 
+    -- fully disable semantic tokens highlighting
+    client.server_capabilities.semanticTokensProvider = nil
+
     vim.api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
 
     if client_overrides[client.name] then client_overrides[client.name](client, bufnr) end
@@ -683,6 +686,8 @@ function M.config()
     -- TODO: what is dynamicRegistration doing here? should I not always set to true?
     capabilities.textDocument.colorProvider = { dynamicRegistration = false }
     capabilities.textDocument.completion.completionItem.documentationFormat = { "markdown" }
+    -- disable semantic token highlighting
+    capabilities.textDocument.semanticTokensProvider = false
     capabilities.textDocument.foldingRange = {
       dynamicRegistration = false,
       lineFoldingOnly = true,
@@ -707,9 +712,6 @@ function M.config()
 
     local nvim_lsp_ok, cmp_nvim_lsp = mega.require("cmp_nvim_lsp")
     if nvim_lsp_ok then capabilities = cmp_nvim_lsp.default_capabilities(capabilities) end
-
-    -- local nvim_tokens_ok, nvim_semantic_tokens = mega.require("nvim-semantic-tokens")
-    -- if nvim_tokens_ok then capabilities = nvim_semantic_tokens.update_capabilities(capabilities) end
 
     return capabilities
   end

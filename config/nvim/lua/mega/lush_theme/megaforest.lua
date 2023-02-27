@@ -1,86 +1,23 @@
----@diagnostic disable: undefined-global
-
--- # REFS:
--- - https://github.com/svitax/fennec-gruvbox.nvim/blob/master/lua/lush_theme/fennec-gruvbox.lua
--- - https://github.com/mcchrish/zenbones.nvim/blob/main/lua/zenbones/specs/dark.lua
--- - https://github.com/rktjmp/lush.nvim/issues/109
--- # FIXME:
--- https://github.com/rktjmp/lush-template/blob/main/lua/lush_theme/lush_template.lua
-
--- `megaforest` built with,
---
---        ,gggg,
---       d8" "8I                         ,dPYb,
---       88  ,dP                         IP'`Yb
---    8888888P"                          I8  8I
---       88                              I8  8'
---       88        gg      gg    ,g,     I8 dPgg,
---  ,aa,_88        I8      8I   ,8'8,    I8dP" "8I
--- dP" "88P        I8,    ,8I  ,8'  Yb   I8P    I8
--- Yb,_,d88b,,_   ,d8b,  ,d8b,,8'_   8) ,d8     I8,
---  "Y8P"  "Y888888P'"Y88P"`Y8P' "YY8P8P88P     `Y8
---
--- @megalithic
---
--- credits:
---  * @sainnhe for everforest
---  * @mhanberg for thicc_forest
-
 local lush = require("lush")
 
 local C = require("mega.lush_theme.colors")
 
-local bg_dark = C.bg_dark
-local bg0 = C.bg0
-local bg1 = C.bg1
-local bg2 = C.bg2
-local bg3 = C.bg3
-local bg4 = C.bg4
-local bg5 = C.bg5
-local bg_visual = C.bg_visual
-local bg_red = C.bg_red
-local bg_green = C.bg_green
-local bg_blue = C.bg_blue
-local bg_yellow = C.bg_yellow
-local bg_purple = C.bg_purple
-local dark_grey = C.dark_grey
-local light_grey = C.light_grey
-local grey0 = C.grey0
-local grey1 = C.grey1
-local grey2 = C.grey2
-local fg = C.fg
-local red = C.red
-local dark_red = C.dark_red
-local dark_blue = C.dark_blue
-local pale_red = C.pale_red
-local light_red = C.light_red
-local orange = C.orange
-local dark_orange = C.dark_orange
-local bright_yellow = C.bright_yellow
-local bright_blue = C.bright_blue
-local bright_blue_alt = C.bright_blue_alt
-local yellow = C.yellow
-local green = C.green
-local bright_green = C.bright_green
-local dark_green = C.dark_green
-local cyan = C.cyan
-local teal = C.teal
-local aqua = C.aqua
-local blue = C.blue
-local purple = C.purple
-local brown = C.brown
-local magenta = C.magenta
-local white = C.white
+-- local palette = require("mega.lush_theme.palette")
+-- local palette = mega.wrap_err(require, "mega.lush_theme.palette")
+-- local spec = palette.spec
+-- local gui = palette.gui_combine
+-- local cfg = palette.cfg
+-- local clrs = palette.clrs
 
 local tc = {
-  black = bg0,
-  red = red,
-  yellow = yellow,
-  green = green,
-  cyan = aqua,
-  blue = blue,
-  purple = purple,
-  white = fg,
+  black = C.bg0,
+  red = C.red,
+  yellow = C.yellow,
+  green = C.green,
+  cyan = C.aqua,
+  blue = C.blue,
+  purple = C.purple,
+  white = C.fg,
 }
 
 vim.g.terminal_color_0 = tostring(tc.black)
@@ -122,186 +59,162 @@ vim.g.VM_Extend_hl = "Visual"
 vim.g.VM_Cursor_hl = "Cursor"
 vim.g.VM_Insert_hl = "Cursor"
 
-return lush(function(injected_functions)
+---@diagnostic disable: undefined-global
+local theme = lush(function(injected_functions)
   local sym = injected_functions.sym
 
   return {
-    ---- :help highlight-default -------------------------------
-
-    Background({ bg = bg0 }),
-    BackgroundLight({ bg = bg1 }),
-    BackgroundExtraLight({ bg = bg2 }),
-    Visual({ fg = "NONE", bg = bg_visual }), -- Visual mode selection
-    VisualNOS({ fg = "NONE", bg = bg_visual }), -- Visual mode selection when vim is "Not Owning the Selection".
-    WarningMsg({ fg = yellow, bg = "NONE" }), -- warning messages
-    Whitespace({ fg = bg3, bg = "NONE" }), -- "nbsp", "space", "tab" and "trail" in 'listchars'
-    ColorColumn({ fg = "NONE", bg = bg2 }), -- used for the columns set with 'colorcolumn'
-    VirtColumn({ fg = bg2 }), -- used with virt-column.nvim
-    Conceal({ fg = grey1, bg = "NONE" }), -- placeholder characters substituted for concealed text (see 'conceallevel')
-    Cursor({ fg = "NONE", bg = "NONE", gui = "reverse" }), -- character under the cursor
-    TermCursor({ Cursor, bg = yellow }), -- cursor in a focused terminal
+    Background({ bg = C.bg0 }),
+    BackgroundLight({ bg = C.bg1 }),
+    BackgroundExtraLight({ bg = C.bg2 }),
+    Visual({ fg = C.transparent, bg = C.bg_visual }), -- Visual mode selection
+    VisualNOS({ fg = C.transparent, bg = C.bg_visual }), -- Visual mode selection when vim is "Not Owning the Selection".
+    WarningMsg({ fg = C.yellow, bg = C.transparent }), -- warning messages
+    Whitespace({ fg = C.bg3, bg = C.transparent }), -- "nbsp", "space", "tab" and "trail" in 'listchars'
+    ColorColumn({ fg = C.transparent, bg = C.bg0 }), -- used for the columns set with 'colorcolumn'
+    Conceal({ fg = C.grey1, bg = C.transparent }), -- placeholder characters substituted for concealed text (see 'conceallevel')
+    Cursor({ fg = C.transparent, bg = C.transparent, gui = "reverse" }), -- character under the cursor
+    TermCursor({ Cursor, bg = C.yellow }), -- cursor in a focused terminal
     TermCursorNC({ Cursor }), -- cursor in an unfocused terminal
     lCursor({ Cursor }), -- the character under the cursor when |language-mapping| is used (see 'guicursor')
     iCursor({ Cursor }),
     vCursor({ Cursor }),
     CursorIM({ Cursor }), -- like Cursor, but used when in IME mode |CursorIM|
-    CursorColumn({ fg = "NONE", bg = bg1 }), -- Screen-column at the cursor, when 'cursorcolumn' is set.
-    CursorLine({ fg = "NONE", bg = bg1 }), -- Screen-line at the cursor, when 'cursorline' is set.  Low-priority if foreground (ctermfg OR fg) is not set.
-    CursorWord({ fg = "NONE", bg = "NONE", gui = "bold,underline" }),
-    CursorLineNr({ fg = brown, bg = bg2, gui = "bold,italic" }), -- Like LineNr when 'cursorline' or 'relativenumber' is set for the cursor line.
-    CursorLineNrNC({ fg = "NONE", bg = bg1, gui = "NONE" }), -- Like LineNr when 'cursorline' or 'relativenumber' is set for the cursor line.
-    CursorLineSign({ CursorLineNr, gui = "NONE" }),
-    VertSplit({ fg = bg4, bg = "NONE" }), -- the column separating vertically split windows
-    WinSeparator({ VertSplit, fg = bg2, gui = "bold" }),
+    CursorColumn({ fg = C.transparent, bg = C.bg2 }), -- Screen-column at the cursor, when 'cursorcolumn' is set.
+    CursorLine({ fg = C.transparent, bg = C.bg2 }), -- Screen-line at the cursor, when 'cursorline' is set.  Low-priority if foreground (ctermfg OR fg) is not set.
+    CursorWord({ fg = C.transparent, bg = C.transparent, gui = "bold,underline" }),
+    CursorLineNr({ fg = C.brown, bg = C.bg2, gui = "bold,italic" }), -- Like LineNr when 'cursorline' or 'relativenumber' is set for the cursor line.
+    CursorLineNrNC({ fg = C.transparent, bg = C.bg2, gui = C.transparent }), -- Like LineNr when 'cursorline' or 'relativenumber' is set for the cursor line.
+    CursorLineSign({ CursorLineNr, gui = C.transparent }),
+    VertSplit({ fg = C.bg4, bg = C.transparent }), -- the column separating vertically split windows
+    WinSeparator({ VertSplit, fg = C.bg2, gui = "bold" }),
 
-    ---- :help megaterm  -----------------------------------------------------
-
-    DarkenedPanel({ bg = bg1 }),
-    DarkenedStatusline({ bg = bg1 }),
-    DarkenedStatuslineNC({ gui = "italic", bg = bg1 }),
-
-    ---- sidebar  -----------------------------------------------------
-
-    PanelBackground({ fg = fg.darken(10), bg = bg0.darken(8) }),
-    PanelBorder({ fg = PanelBackground.bg.darken(10), bg = PanelBackground.bg }),
-    PanelHeading({ PanelBackground, gui = "bold" }),
-    PanelVertSplit({ VertSplit, bg = bg0.darken(8) }),
-    PanelStNC({ PanelVertSplit }),
-    PanelSt({ bg = bg_blue.darken(20) }),
-
-    -- { "PanelBackground", { background = bg_color } },
-    -- { "PanelHeading", { background = bg_color, bold = true } },
-    -- { "PanelVertSplit", { foreground = split_color, background = bg_color } },
-    -- { "PanelStNC", { background = bg_color, foreground = split_color } },
-    -- { "PanelSt", { background = st_color } },
-
-    Comment({ fg = grey1, bg = "NONE", gui = "italic" }),
-    Directory({ fg = green, bg = "NONE" }), -- directory names (and other special names in listings)
-    ErrorMsg({ fg = red, bg = "NONE", gui = "bold,underline" }), -- error messages on the command line
+    Comment({ fg = C.grey1, bg = C.transparent, gui = "italic" }),
+    Directory({ fg = C.green, bg = C.transparent }), -- directory names (and other special names in listings)
+    ErrorMsg({ fg = C.red, bg = C.transparent, gui = "bold,underline" }), -- error messages on the command line
     Folded({ Comment, gui = "bold,italic" }), -- line used for closed folds
-    FoldColumn({ fg = grey1, bg = bg1 }), -- 'foldcolumn'
+    FoldColumn({ fg = C.grey1, bg = C.bg1 }), -- 'foldcolumn'
     -- Neither the sign column or end of buffer highlights require an explicit background
     -- they should both just use the background that is in the window they are in.
     -- if either are specified this can lead to issues when a winhighlight is set
-    SignColumn({ fg = fg, bg = "NONE" }), -- column where |signs| are displayed
-    EndOfBuffer({ fg = bg2, bg = "NONE" }), -- filler lines (~) after the end of the buffer.  By default, this is highlighted like |hl-NonText|.
-    IncSearch({ fg = bg0, bg = red }), -- 'incsearch' highlighting; also used for the text replaced with ":s///c"
+    SignColumn({ fg = C.fg, bg = C.transparent }), -- column where |signs| are displayed
+    EndOfBuffer({ fg = C.bg2, bg = C.transparent }), -- filler lines (~) after the end of the buffer.  By default, this is highlighted like |hl-NonText|.
+    IncSearch({ fg = C.bg0, bg = C.red }), -- 'incsearch' highlighting; also used for the text replaced with ":s///c"
     CurSearch({ IncSearch }),
-    Search({ fg = bg0, bg = green, gui = "italic,bold" }), -- Last search pattern highlighting (see 'hlsearch').  Also used for similar items that need to stand out.
-    Substitute({ fg = bg0, bg = yellow, gui = "strikethrough,bold" }), -- |:substitute| replacement text highlighting
-    Beacon({ bg = blue }),
-    LineNr({ fg = grey0, bg = "NONE" }), -- Line number for ":number" and ":#" commands, and when 'number' or 'relativenumber' option is set.
-    MatchParen({ fg = "NONE", bg = bg4 }), -- The character under the cursor or just before it, if it is a paired bracket, and its match. |pi_paren.txt|
-    ModeMsg({ fg = fg, bg = "NONE", gui = "bold" }), -- 'showmode' message (e.g., "-- INSERT -- ")
-    MsgArea({ bg = bg0 }), -- Area for messages and cmdline
-    MsgSeparator({ bg = bg0 }), -- Separator for scrolled messages, `msgsep` flag of 'display'
-    MoreMsg({ fg = yellow, bg = "NONE", gui = "bold" }), -- |more-prompt|
+    Search({ fg = C.bg0, bg = C.green, gui = "italic,bold" }), -- Last search pattern highlighting (see 'hlsearch').  Also used for similar items that need to stand out.
+    Substitute({ fg = C.bg0, bg = C.yellow, gui = "strikethrough,bold" }), -- |:substitute| replacement text highlighting
+    LineNr({ fg = C.grey0, bg = C.transparent }), -- Line number for ":number" and ":#" commands, and when 'number' or 'relativenumber' option is set.
+    MatchParen({ fg = C.transparent, bg = C.bg4 }), -- The character under the cursor or just before it, if it is a paired bracket, and its match. |pi_paren.txt|
+    ModeMsg({ fg = C.fg, bg = C.transparent, gui = "bold" }), -- 'showmode' message (e.g., "-- INSERT -- ")
+    MsgArea({ bg = C.bg0 }), -- Area for messages and cmdline
+    MsgSeparator({ bg = C.bg0 }), -- Separator for scrolled messages, `msgsep` flag of 'display'
+    MoreMsg({ fg = C.yellow, bg = C.transparent, gui = "bold" }), -- |more-prompt|
     FoldMoreMsg({ Comment, gui = "italic,bold" }), -- |more-prompt|
-    NonText({ fg = bg4, bg = "NONE" }), -- '@' at the end of the window, characters from 'showbreak' and other characters that do not really exist in the text (e.g., ">" displayed when a double-wide character doesn't fit at the end of the line). See also |hl-EndOfBuffer|.
-    Normal({ fg = fg, bg = "NONE" }), -- normal text
+    NonText({ fg = C.bg4, bg = C.transparent }), -- '@' at the end of the window, characters from 'showbreak' and other characters that do not really exist in the text (e.g., ">" displayed when a double-wide character doesn't fit at the end of the line). See also |hl-EndOfBuffer|.
+    Normal({ fg = C.fg, bg = C.transparent }), -- normal text
     -- NormalNC     { }, -- normal text in non-current windows
-    Pmenu({ fg = fg, bg = bg2 }), -- Popup menu: normal item.
-    PmenuSel({ fg = green, bg = bg3 }), -- Popup menu: selected item.
-    PmenuSbar({ fg = "NONE", bg = bg2 }), -- Popup menu: scrollbar.
-    PmenuThumb({ fg = "NONE", bg = grey1 }), -- Popup menu: Thumb of the scrollbar.
+    Pmenu({ fg = C.fg, bg = C.bg2 }), -- Popup menu: normal item.
+    PmenuSel({ fg = C.green, bg = C.bg3 }), -- Popup menu: selected item.
+    PmenuSbar({ fg = C.transparent, bg = C.bg2 }), -- Popup menu: scrollbar.
+    PmenuThumb({ fg = C.transparent, bg = C.grey1 }), -- Popup menu: Thumb of the scrollbar.
     WildMenu({ PmenuSel }), -- current match in 'wildmenu' completion
     NormalFloat({ Pmenu }), -- Normal text in floating windows.
-    FloatBorder({ Pmenu, fg = bg_dark }),
-    NotifyFloat({ bg = bg2.darken(10), fg = bg2.darken(10) }),
+    FloatBorder({ Pmenu, fg = C.bg_dark }),
+    NotifyFloat({ bg = C.bg2.darken(10), fg = C.bg2.darken(10) }),
     FloatTitle({ Visual }),
-    Question({ fg = yellow, bg = "NONE" }), -- |hit-enter| prompt and yes/no questions
-    -- QuickFixLine({ fg = "NONE", bg = PmenuSbar.bg, gui = "bold,italic" }), -- Current |quickfix| item in the quickfix window. Combined with |hl-CursorLine| when the cursor is there.
-    -- QuickFixLine({ fg = "NONE", bg = bg_visual.darken(20), gui = "bold,italic" }), -- Current |quickfix| item in the quickfix window. Combined with |hl-CursorLine| when the cursor is there.
-    -- QuickFixLine({ fg = purple, bg = "NONE", gui = "bold" }), -- Current |quickfix| item in the quickfix window. Combined with |hl-CursorLine| when the cursor is there.
-    SpecialKey({ fg = bg3, bg = "NONE" }), -- Unprintable characters: text displayed differently from what it really is.  But not 'listchars' whitespace. |hl-Whitespace| SpellBad  Word that is not recognized by the spellchecker. |spell| Combined with the highlighting used otherwise.  SpellCap  Word that should start with a capital. |spell| Combined with the highlighting used otherwise.  SpellLocal  Word that is recognized by the spellchecker as one that is used in another region. |spell| Combined with the highlighting used otherwise.
+    Question({ fg = C.yellow, bg = C.transparent }), -- |hit-enter| prompt and yes/no questions
+    -- QuickFixLine({ fg = transparent, bg = PmenuSbar.bg, gui = "bold,italic" }), -- Current |quickfix| item in the quickfix window. Combined with |hl-CursorLine| when the cursor is there.
+    -- QuickFixLine({ fg = transparent, bg = bg_visual.darken(20), gui = "bold,italic" }), -- Current |quickfix| item in the quickfix window. Combined with |hl-CursorLine| when the cursor is there.
+    -- QuickFixLine({ fg = purple, bg = transparent, gui = "bold" }), -- Current |quickfix| item in the quickfix window. Combined with |hl-CursorLine| when the cursor is there.
+    SpecialKey({ fg = C.bg3, bg = C.transparent }), -- Unprintable characters: text displayed differently from what it really is.  But not 'listchars' whitespace. |hl-Whitespace| SpellBad  Word that is not recognized by the spellchecker. |spell| Combined with the highlighting used otherwise.  SpellCap  Word that should start with a capital. |spell| Combined with the highlighting used otherwise.  SpellLocal  Word that is recognized by the spellchecker as one that is used in another region. |spell| Combined with the highlighting used otherwise.
 
     ---- :help spell -------------------------------------------
 
-    SpellBad({ fg = red, bg = "NONE", gui = "underdouble", sp = red }),
-    SpellCap({ fg = blue, bg = "NONE", gui = "undercurl", sp = blue }),
-    SpellLocal({ fg = cyan, bg = "NONE", gui = "undercurl", sp = cyan }),
-    SpellRare({ fg = purple, bg = "NONE", gui = "undercurl", sp = purple }), -- Word that is recognized by the spellchecker as one that is hardly ever used.  |spell| Combined with the highlighting used otherwise.
+    SpellBad({ fg = C.red, bg = C.transparent, gui = C.transparent, sp = C.red }),
+    SpellCap({ fg = C.blue, bg = C.transparent, gui = "undercurl", sp = C.blue }),
+    SpellLocal({ fg = C.cyan, bg = C.transparent, gui = "undercurl", sp = C.cyan }),
+    SpellRare({ fg = C.purple, bg = C.transparent, gui = "undercurl", sp = C.purple }), -- Word that is recognized by the spellchecker as one that is hardly ever used.  |spell| Combined with the highlighting used otherwise.
 
     -- These groups are not listed as default vim groups,
     -- but they are defacto standard group names for syntax highlighting.
     -- commented out groups should chain up to their "preferred" group by
     -- default,
     -- Uncomment and edit if you want more specific syntax highlighting.
-    Boolean({ fg = purple, bg = "NONE" }),
-    Number({ fg = purple, bg = "NONE" }),
-    Float({ fg = purple, bg = "NONE" }),
-    PreProc({ fg = purple, bg = "NONE", gui = "italic" }),
-    PreCondit({ fg = purple, bg = "NONE", gui = "italic" }),
-    Include({ fg = purple, bg = "NONE", gui = "italic" }),
-    Define({ fg = purple, bg = "NONE", gui = "italic" }),
-    Conditional({ fg = red, bg = "NONE", gui = "italic" }),
-    Repeat({ fg = red, bg = "NONE", gui = "italic" }),
-    Keyword({ fg = red, bg = "NONE", gui = "italic" }),
-    Typedef({ fg = red, bg = "NONE", gui = "italic" }),
-    Exception({ fg = red, bg = "NONE", gui = "italic" }),
-    Statement({ fg = red, bg = "NONE", gui = "italic" }),
-    Error({ fg = red, bg = "NONE" }),
-    StorageClass({ fg = orange, bg = "NONE" }),
-    Tag({ fg = orange, bg = "NONE" }),
-    Label({ fg = orange, bg = "NONE" }),
-    Structure({ fg = orange, bg = "NONE" }),
-    Operator({ fg = orange, bg = "NONE" }),
-    Title({ fg = orange, bg = "NONE", gui = "bold" }),
-    Special({ fg = fg.darken(20), bg = "NONE", gui = "bold" }),
-    SpecialChar({ fg = yellow, bg = "NONE" }),
-    Type({ fg = yellow, bg = "NONE" }),
-    Class({ fg = orange }),
-    Module({ fg = green, bg = "NONE" }),
-    Method({ fg = purple }),
-    Function({ fg = green, bg = "NONE" }),
-    String({ fg = green, bg = "NONE" }),
-    Character({ fg = green, bg = "NONE" }),
-    Constant({ fg = aqua, bg = "NONE" }),
-    Macro({ fg = aqua, bg = "NONE" }),
-    Identifier({ fg = blue, bg = "NONE" }),
-    SpecialComment({ fg = grey1, bg = "NONE", gui = "italic" }),
-    Todo({ fg = purple, bg = "NONE", gui = "italic" }),
-    Delimiter({ fg = fg, bg = "NONE" }),
-    Ignore({ fg = grey1, bg = "NONE" }),
-    Debug({ fg = orange, bg = "NONE" }), --    debugging statements
-    debugPC({ fg = bg0, bg = green }), --    debugging statements
-    debugBreakpoint({ fg = bg0, bg = red }), --    debugging statements
+    Boolean({ fg = C.purple, bg = C.transparent }),
+    Number({ fg = C.purple, bg = C.transparent }),
+    Float({ fg = C.purple, bg = C.transparent }),
+    PreProc({ fg = C.purple, bg = C.transparent, gui = "italic" }),
+    PreCondit({ fg = C.purple, bg = C.transparent, gui = C.transparent }),
+    Include({ fg = C.purple, bg = C.transparent, gui = "italic" }),
+    Define({ fg = C.purple, bg = C.transparent, gui = "italic" }),
+    Conditional({ fg = C.red, bg = C.transparent, gui = "italic" }),
+    Repeat({ fg = C.red, bg = C.transparent, gui = C.transparent }),
+    Keyword({ fg = C.red, bg = C.transparent, gui = "italic" }),
+    Typedef({ fg = C.red, bg = C.transparent, gui = "italic" }),
+    Exception({ fg = C.red, bg = C.transparent, gui = "italic" }),
+    Statement({ fg = C.red, bg = C.transparent, gui = "italic" }),
+    Error({ fg = C.red, bg = C.transparent }),
+    StorageClass({ fg = C.orange, bg = C.transparent }),
+    Tag({ fg = C.orange, bg = C.transparent }),
+    Label({ fg = C.orange, bg = C.transparent }),
+    Structure({ fg = C.orange, bg = C.transparent }),
+    Operator({ fg = C.orange, bg = C.transparent }),
+    Title({ fg = C.orange, bg = C.transparent, gui = "bold" }),
+    Special({ fg = C.fg.darken(20), bg = C.transparent, gui = "bold" }),
+    SpecialChar({ fg = C.yellow, bg = C.transparent }),
+    Type({ fg = C.yellow, bg = C.transparent }),
+    Class({ fg = C.orange }),
+    Module({ fg = C.green, bg = C.transparent }),
+    Method({ fg = C.purple }),
+    Function({ fg = C.green, bg = C.transparent }),
+    String({ fg = C.green, bg = C.transparent }),
+    Character({ fg = C.green, bg = C.transparent }),
+    Constant({ fg = C.aqua, bg = C.transparent }),
+    Macro({ fg = C.aqua, bg = C.transparent }),
+    Identifier({ fg = C.blue, bg = C.transparent }),
+    SpecialComment({ fg = C.grey1, bg = C.transparent, gui = "italic" }),
+    Todo({ fg = C.purple, bg = C.transparent, gui = "italic" }),
+    Delimiter({ fg = C.fg, bg = C.transparent }),
+    Ignore({ fg = C.grey1, bg = C.transparent }),
+    Debug({ fg = C.orange, bg = C.transparent }), --    debugging statements
+    debugPC({ fg = C.bg0, bg = C.green }), --    debugging statements
+    debugBreakpoint({ fg = C.bg0, bg = C.red }), --    debugging statements
     Bold({ gui = "bold" }),
     Italic({ gui = "italic" }),
-    Underlined({ fg = "NONE", bg = "NONE", gui = "underline" }),
-    CurrentWord({ bg = fg, fg = bg0 }),
-    Fg({ fg = fg, bg = "NONE" }),
-    Grey({ fg = grey1, bg = "NONE" }),
-    Red({ fg = red, bg = "NONE" }),
-    Orange({ fg = orange, bg = "NONE" }),
-    Yellow({ fg = yellow, bg = "NONE" }),
-    Green({ fg = green, bg = "NONE" }),
-    Aqua({ fg = aqua, bg = "NONE" }),
-    Blue({ fg = blue, bg = "NONE" }),
-    Purple({ fg = purple, bg = "NONE" }),
-    RedItalic({ fg = red, bg = "NONE", gui = "italic" }),
-    OrangeItalic({ fg = orange, bg = "NONE", gui = "italic" }),
-    YellowItalic({ fg = yellow, bg = "NONE", gui = "italic" }),
-    GreenItalic({ fg = green, bg = "NONE", gui = "italic" }),
-    AquaItalic({ fg = cyan, bg = "NONE", gui = "italic" }),
-    BlueItalic({ fg = blue, bg = "NONE", gui = "italic" }),
-    PurpleItalic({ fg = purple, bg = "NONE", gui = "italic" }),
-    PurpleBold({ fg = purple, bg = "NONE", gui = "bold" }),
+    Underlined({ fg = C.transparent, bg = "NONE", gui = "underline" }),
+    CurrentWord({ bg = C.fg, fg = C.bg0 }),
+    Fg({ fg = C.fg, bg = C.transparent }),
+    Grey({ fg = C.grey1, bg = C.transparent }),
+    Red({ fg = C.red, bg = C.transparent }),
+    Orange({ fg = C.orange, bg = C.transparent }),
+    Yellow({ fg = C.yellow, bg = C.transparent }),
+    Green({ fg = C.green, bg = C.transparent }),
+    Aqua({ fg = C.aqua, bg = C.transparent }),
+    Blue({ fg = C.blue, bg = C.transparent }),
+    Purple({ fg = C.purple, bg = C.transparent }),
+    RedItalic({ fg = C.red, bg = C.transparent, gui = "italic" }),
+    OrangeItalic({ fg = C.orange, bg = C.transparent, gui = "italic" }),
+    YellowItalic({ fg = C.yellow, bg = C.transparent, gui = "italic" }),
+    GreenItalic({ fg = C.green, bg = C.transparent, gui = "italic" }),
+    AquaItalic({ fg = C.cyan, bg = C.transparent, gui = "italic" }),
+    BlueItalic({ fg = C.blue, bg = C.transparent, gui = "italic" }),
+    PurpleItalic({ fg = C.purple, bg = C.transparent, gui = "italic" }),
+    PurpleBold({ fg = C.purple, bg = C.transparent, gui = "bold" }),
 
-    RedSign({ fg = red, bg = bg1 }),
-    OrangeSign({ fg = orange, bg = bg1 }),
-    YellowSign({ fg = yellow, bg = bg1 }),
-    GreenSign({ fg = green, bg = bg1 }),
-    AquaSign({ fg = cyan, bg = bg1 }),
-    BlueSign({ fg = blue, bg = bg1 }),
-    PurpleSign({ fg = purple, bg = bg1 }),
+    RedSign({ fg = C.red, bg = C.bg1 }),
+    OrangeSign({ fg = C.orange, bg = C.bg1 }),
+    YellowSign({ fg = C.yellow, bg = C.bg1 }),
+    GreenSign({ fg = C.green, bg = C.bg1 }),
+    AquaSign({ fg = C.cyan, bg = C.bg1 }),
+    BlueSign({ fg = C.blue, bg = C.bg1 }),
+    PurpleSign({ fg = C.purple, bg = C.bg1 }),
 
     ---- :help diagnostic-highlight ----------------------------
 
-    DiagnosticError({ fg = red, bg = "NONE" }),
-    DiagnosticWarn({ fg = orange, bg = "NONE" }),
-    DiagnosticInfo({ fg = cyan, bg = "NONE" }),
-    DiagnosticHint({ fg = grey2, bg = "NONE" }),
+    DiagnosticError({ fg = C.red, bg = C.transparent }),
+    DiagnosticWarn({ fg = C.orange, bg = C.transparent }),
+    DiagnosticInfo({ fg = C.cyan, bg = C.transparent }),
+    DiagnosticHint({ fg = C.grey2, bg = C.transparent }),
 
     -- REF: https://github.com/neovim/neovim/pull/15585
     DiagnosticFloatingError({ DiagnosticError }),
@@ -341,22 +254,22 @@ return lush(function(injected_functions)
 
     -- affects individual bits of code that are errored:
     DiagnosticUnderlineError({
-      fg = "NONE",
-      bg = bg_dark,
+      fg = C.transparent,
+      bg = C.bg_dark,
       sp = DiagnosticError.fg,
       gui = "undercurl,bold",
     }),
-    DiagnosticUnderlineWarn({ fg = "NONE", bg = bg_dark, sp = DiagnosticWarn.fg, gui = "undercurl" }),
-    DiagnosticUnderlineInfo({ fg = "NONE", bg = bg_dark, sp = DiagnosticInfo.fg, gui = "undercurl" }),
-    DiagnosticUnderlineHint({ fg = "NONE", bg = bg_dark, sp = DiagnosticHint.fg, gui = "undercurl" }),
+    DiagnosticUnderlineWarn({ fg = C.transparent, bg = C.bg_dark, sp = DiagnosticWarn.fg, gui = "undercurl" }),
+    DiagnosticUnderlineInfo({ fg = C.transparent, bg = C.bg_dark, sp = DiagnosticInfo.fg, gui = "undercurl" }),
+    DiagnosticUnderlineHint({ fg = C.transparent, bg = C.bg_dark, sp = DiagnosticHint.fg, gui = "undercurl" }),
 
     ---- :help lsp-highlight -----------------------------------
 
-    LspReferenceText({ bg = "NONE", gui = "underline" }),
-    LspReferenceRead({ bg = "NONE", gui = "underline" }),
+    LspReferenceText({ bg = C.transparent, gui = "underline" }),
+    LspReferenceRead({ bg = C.transparent, gui = "underline" }),
     LspReferenceWrite({ DiagnosticInfo, gui = "underline,bold,italic" }),
 
-    LspCodeLens({ DiagnosticInfo, fg = bg2 }), -- Used to color the virtual text of the codelens,
+    LspCodeLens({ DiagnosticInfo, fg = C.bg2 }), -- Used to color the virtual text of the codelens,
     LspCodeLensSeparator({ DiagnosticHint }),
 
     LspInfoBorder({ FloatBorder }),
@@ -367,18 +280,18 @@ return lush(function(injected_functions)
     NotifyWARNBorder({ NotifyFloat }),
     NotifyINFOBorder({ NotifyFloat }),
     NotifyDEBUGBorder({ NotifyFloat }),
-    NotifyERRORBody({ NotifyFloat, fg = grey2 }),
-    NotifyWARNBody({ NotifyFloat, fg = grey2 }),
-    NotifyINFOBody({ NotifyFloat, fg = grey2 }),
-    NotifyDEBUGBody({ NotifyFloat, fg = grey2 }),
-    NotifyERRORIcon({ fg = red }),
-    NotifyWARNIcon({ fg = orange }),
-    NotifyINFOIcon({ fg = green }),
-    NotifyDEBUGIcon({ fg = grey2 }),
-    NotifyERRORTitle({ fg = red }),
-    NotifyWARNTitle({ fg = orange }),
-    NotifyINFOTitle({ fg = green }),
-    NotifyDEBUGTitle({ fg = grey2 }),
+    NotifyERRORBody({ NotifyFloat, fg = C.grey2 }),
+    NotifyWARNBody({ NotifyFloat, fg = C.grey2 }),
+    NotifyINFOBody({ NotifyFloat, fg = C.grey2 }),
+    NotifyDEBUGBody({ NotifyFloat, fg = C.grey2 }),
+    NotifyERRORIcon({ fg = C.red }),
+    NotifyWARNIcon({ fg = C.orange }),
+    NotifyINFOIcon({ fg = C.green }),
+    NotifyDEBUGIcon({ fg = C.grey2 }),
+    NotifyERRORTitle({ fg = C.red }),
+    NotifyWARNTitle({ fg = C.orange }),
+    NotifyINFOTitle({ fg = C.green }),
+    NotifyDEBUGTitle({ fg = C.grey2 }),
 
     ---- :help health ----------------------------
 
@@ -388,15 +301,15 @@ return lush(function(injected_functions)
 
     ---- :help headlines.txt -------------------------------------------
 
-    Headline1({ fg = green, bg = bg_green, gui = "bold,italic,underline" }),
-    Headline2({ fg = yellow, bg = bg_yellow, gui = "bold,italic" }),
-    Headline3({ fg = red, bg = bg1, gui = "bold" }),
-    Headline4({ fg = purple, bg = bg1, gui = "bold" }),
-    Headline5({ fg = blue, bg = bg0, gui = "italic" }),
-    Headline6({ fg = orange, bg = bg0, gui = "NONE" }),
-    Dash({ fg = bg2, gui = "bold" }),
+    Headline1({ fg = C.green, bg = C.bg_green, gui = "bold,italic,underline" }),
+    Headline2({ fg = C.yellow, bg = C.bg_yellow, gui = "bold,italic" }),
+    Headline3({ fg = C.red, bg = C.bg1, gui = "bold" }),
+    Headline4({ fg = C.purple, bg = C.bg1, gui = "bold" }),
+    Headline5({ fg = C.blue, bg = C.bg0, gui = "italic" }),
+    Headline6({ fg = C.orange, bg = C.bg0, gui = C.transparent }),
+    Dash({ fg = C.bg2, gui = "bold" }),
     sym("@dash")({ Dash }),
-    CodeBlock({ bg = bg1 }),
+    CodeBlock({ bg = C.bg1 }),
 
     ---- :help nvim-treesitter-highlights (external plugin) ----
     -- https://github.com/folke/tokyonight.nvim/blob/main/lua/tokyonight/treesitter.lua#L20
@@ -410,25 +323,26 @@ return lush(function(injected_functions)
     sym("@const.macro")({ Purple }),
     sym("@constant")({ PurpleItalic }),
     sym("@constructor")({ Fg }),
-    sym("@emphasis")({ fg = "NONE", bg = "NONE", gui = "italic" }),
+    sym("@emphasis")({ fg = C.transparent, bg = "NONE", gui = "italic" }),
     sym("@exception")({ Red }),
-    sym("@field")({ Green }),
+    sym("@field")({ fg = C.cyan }),
     sym("@float")({ Purple }),
     sym("@function")({ Green }),
     sym("@function.builtin")({ Green }),
     sym("@function.macro")({ Green }),
-    sym("@function.call")({ Green }),
+    sym("@function.call")({ Blue }),
     sym("@include")({ PurpleItalic }),
-    sym("@keyword")({ Red, gui = "bold" }),
-    sym("@keyword.function")({ Red, gui = "bold,italic" }),
+    sym("@keyword")({ Red, gui = "" }),
+    sym("@keyword.function")({ fg = C.pale_red, gui = "bold,italic" }),
+    sym("@keyword.return")({ fg = C.pale_red, gui = "bold,italic" }),
     sym("@label")({ Orange }),
     sym("@method")({ Green }),
-    sym("@namespace")({ BlueItalic, fg = bright_blue }),
+    sym("@namespace")({ BlueItalic, fg = C.bright_blue }),
     sym("@number")({ Purple }),
     sym("@operator")({ Orange }),
     sym("@parameter")({ Fg }),
     sym("@parameter.reference")({ Fg }),
-    sym("@property")({ Green }),
+    sym("@property")({ fg = C.cyan }),
     sym("@punct.bracket")({ Fg }),
     sym("@punct.delimiter")({ Grey }),
     sym("@punct.special")({ Fg }),
@@ -437,7 +351,7 @@ return lush(function(injected_functions)
     sym("@string.regex")({ Blue }),
     sym("@string.escape")({ Purple }),
     sym("@string.special")({ Purple }),
-    sym("@strong")({ fg = "NONE", bg = "NONE", gui = "bold" }),
+    sym("@strong")({ fg = C.transparent, bg = "NONE", gui = "bold" }),
     sym("@structure")({ Orange }),
     sym("@symbol")({ Green }),
     sym("@tag")({ Orange }),
@@ -445,20 +359,20 @@ return lush(function(injected_functions)
     sym("@text")({ Green }),
     sym("@type")({ Aqua }),
     sym("@type.builtin")({ BlueItalic }),
-    sym("@underline")({ fg = "NONE", bg = "NONE", gui = "underline" }),
-    sym("@uri")({ fg = blue, bg = "NONE", gui = "underline" }),
-    sym("@variable")({ Fg }),
+    sym("@underline")({ fg = C.transparent, bg = "NONE", gui = "underline" }),
+    sym("@uri")({ fg = C.blue, bg = C.transparent, gui = "underline" }),
+    sym("@variable")({ fg = C.fg }),
     sym("@variable.builtin")({ PurpleItalic }),
-    sym("@comment")({ fg = light_grey, gui = "italic" }),
-    sym("@error")({ gui = "undercurl", sp = red }),
+    sym("@comment")({ fg = C.light_grey, gui = "italic" }),
+    sym("@error")({ gui = "undercurl", sp = C.red }),
 
     -- -- highlight WARN/FIXME/TODO/NOTE/REF: comments
 
-    sym("@comment.fix")({ bg = red, fg = "#000000", gui = "bold,underline" }),
-    sym("@comment.warn")({ fg = orange, gui = "bold" }),
-    sym("@comment.note")({ fg = teal, gui = "italic" }),
-    sym("@comment.todo")({ fg = dark_orange, gui = "bold" }),
-    sym("@comment.ref")({ fg = bright_blue, gui = "italic" }),
+    sym("@comment.fix")({ bg = C.red, fg = C.bg_dark, gui = "bold,underline" }),
+    sym("@comment.warn")({ bg = C.orange, fg = C.bg_dark, gui = "bold" }),
+    sym("@comment.note")({ bg = C.teal, fg = C.bg_dark, gui = "italic" }),
+    sym("@comment.todo")({ bg = C.dark_orange, fg = C.bg_dark, gui = "bold" }),
+    sym("@comment.ref")({ bg = C.bright_blue, fg = C.bg_dark, gui = "italic" }),
 
     sym("@text.danger")({ sym("@comment.fix") }),
     sym("@text.warning")({ sym("@comment.warn") }),
@@ -468,23 +382,23 @@ return lush(function(injected_functions)
 
     ---- :help treesitter-context ----------------------------------------------
 
-    TreesitterContext({ bg = bg1 }),
+    TreesitterContext({ bg = C.bg1 }),
     -- ContextBorder = { foreground = dim, background = dimmer },
     -- TreesitterContext = { inherit = 'Normal', background = dimmer },
-    TreesitterContextLineNumber({ CursorLineNr, bg = TreesitterContext.bg, gui = "NONE" }),
-    TreesitterContextBorder({ fg = bg_dark, bg = TreesitterContext.bg }),
+    TreesitterContextLineNumber({ CursorLineNr, bg = TreesitterContext.bg, gui = C.transparent }),
+    TreesitterContextBorder({ fg = C.bg_dark, bg = TreesitterContext.bg }),
 
     -- TS: Markdown
     -- sym("@markdown.punct.special") {Special},
     -- sym("@markdown.punct.special") { Special },
     -- sym("@markdown.string.escape") { SpecialKey },
     -- sym("@markdown.text.reference") { Identifier, gui = "underline" },
-    -- sym("@markdown.emphasis") { fg = grey1, bg = "NONE", gui = "italic" },
+    -- sym("@markdown.emphasis") { fg = grey1, bg = transparent, gui = "italic" },
     -- sym("@markdown.title") { Statement, bg = bg1 },
     -- sym("@markdown.literal") { Type },
     -- sym("@markdown.uri") { sym("@uri") },
 
-    markdownCode({ fg = grey1, bg = bg1 }),
+    markdownCode({ fg = C.grey1, bg = C.bg1 }),
     -- markdownLinkText({ sym("@markdown.text.reference") }),
 
     ---- :help gitcommit -------------------------------------------
@@ -569,11 +483,11 @@ return lush(function(injected_functions)
     diffLine({ Grey }),
     diffIndexLine({ Purple }),
 
-    DiffAdd({ fg = "NONE", bg = bg_green }), -- diff mode: Added line |diff.txt|
-    DiffChange({ fg = "NONE", bg = bg_yellow }), -- diff mode: Changed line |diff.txt|
-    DiffDelete({ fg = "NONE", bg = bg_red }), -- diff mode: Deleted line |diff.txt|
-    DiffText({ fg = "NONE", bg = bg_blue }), -- diff mode: Changed text within a changed line |diff.txt|
-    DiffBase({ fg = "NONE", bg = bg_dark }), -- diff mode: Changed text within a changed line |diff.txt|
+    DiffAdd({ fg = C.transparent, bg = C.bg_green }), -- diff mode: Added line |diff.txt|
+    DiffChange({ fg = C.transparent, bg = C.bg_yellow }), -- diff mode: Changed line |diff.txt|
+    DiffDelete({ fg = C.transparent, bg = C.bg_red }), -- diff mode: Deleted line |diff.txt|
+    DiffText({ fg = C.transparent, bg = C.bg_blue }), -- diff mode: Changed text within a changed line |diff.txt|
+    DiffBase({ fg = C.transparent, bg = C.bg_dark }), -- diff mode: Changed text within a changed line |diff.txt|
 
     sym("@text.diff.add")({ DiffAdd }),
     sym("@text.diff.change")({ DiffChange }),
@@ -635,11 +549,11 @@ return lush(function(injected_functions)
 
     ---- :help help -------------------------------------------
 
-    helpNote({ fg = purple, gui = "bold" }),
-    helpHeadline({ fg = red, gui = "bold" }),
-    helpHeader({ fg = orange, gui = "bold" }),
-    helpURL({ fg = green, gui = "underline" }),
-    helpHyperTextEntry({ fg = yellow, gui = "bold" }),
+    helpNote({ fg = C.purple, gui = "bold" }),
+    helpHeadline({ fg = C.red, gui = "bold" }),
+    helpHeader({ fg = C.orange, gui = "bold" }),
+    helpURL({ fg = C.green, gui = "underline" }),
+    helpHyperTextEntry({ fg = C.yellow, gui = "bold" }),
     helpHyperTextJump({ Yellow }),
     helpCommand({ Aqua }),
     helpExample({ Green }),
@@ -655,46 +569,46 @@ return lush(function(injected_functions)
     -- CmpItemMenu({ NonText }),
     -- CmpItemAbbrMatch({ PmenuSel, gui = "underline", sp = purple }),
     -- CmpItemAbbrMatchFuzzy({ fg = fg, gui = "italic" }),
-    CmpItemAbbrDeprecated({ fg = grey1, gui = "strikethrough" }),
+    CmpItemAbbrDeprecated({ fg = C.grey1, gui = "strikethrough" }),
 
-    CmpDocumentation({ fg = fg, bg = bg1 }),
-    CmpDocumentationBorder({ fg = fg, bg = bg1 }),
+    CmpDocumentation({ fg = C.fg, bg = C.bg1 }),
+    CmpDocumentationBorder({ fg = C.fg, bg = C.bg1 }),
 
-    CmpItemAbbr({ fg = fg }),
-    CmpItemAbbrMatch({ fg = cyan, gui = "bold,italic" }),
-    CmpItemAbbrMatchFuzzy({ fg = yellow }),
+    CmpItemAbbr({ fg = C.fg }),
+    CmpItemAbbrMatch({ fg = C.cyan, gui = "bold,italic" }),
+    CmpItemAbbrMatchFuzzy({ fg = C.yellow }),
     CmpItemMenu({ NonText, gui = "italic" }),
 
-    CmpItemKind({ fg = blue }),
-    CmpItemKindText({ fg = fg }),
-    CmpItemKindMethod({ fg = blue }),
+    CmpItemKind({ fg = C.blue }),
+    CmpItemKindText({ fg = C.fg }),
+    CmpItemKindMethod({ fg = C.blue }),
     CmpItemKindFunction({ CmpItemKindMethod }),
-    CmpItemKindConstructor({ fg = cyan }),
-    CmpItemKindField({ fg = fg }),
-    CmpItemKindVariable({ fg = red }),
-    CmpItemKindClass({ fg = yellow }),
+    CmpItemKindConstructor({ fg = C.cyan }),
+    CmpItemKindField({ fg = C.fg }),
+    CmpItemKindVariable({ fg = C.red }),
+    CmpItemKindClass({ fg = C.yellow }),
     CmpItemKindInterface({ CmpItemKindClass }),
     -- CmpItemKindModule({ Include }),
-    CmpItemKindProperty({ fg = red }),
+    CmpItemKindProperty({ fg = C.red }),
     -- CmpItemKindUnit({ Constant }),
-    CmpItemKindValue({ fg = orange }),
+    CmpItemKindValue({ fg = C.orange }),
     -- CmpItemKindEnum({ Type }),
-    CmpItemKindKeyword({ fg = purple }),
-    CmpItemKindSnippet({ fg = green }),
+    CmpItemKindKeyword({ fg = C.purple }),
+    CmpItemKindSnippet({ fg = C.green }),
     -- CmpItemKindVColor({}),
     -- CmpItemKindFile({ Dictionary }),
     -- CmpItemKindReference({ PreProc }),
     -- CmpItemKindFolder({}),
     -- CmpItemKindEnumMember({}),
-    CmpItemKindConstant({ fg = green }),
+    CmpItemKindConstant({ fg = C.green }),
     -- CmpItemKindStruct({ Type }),
     -- CmpItemKindEvent({ Variable }),
     -- CmpItemKindOperator({ Operator }),
     -- CmpItemKindTypeParameter({ Type }),
 
-    CmpBorderedWindow_Normal({ Normal, bg = bg1 }),
-    CmpBorderedWindow_FloatBorder({ Normal, fg = bg1, bg = bg1 }),
-    CmpBorderedWindow_CursorLine({ Visual, bg = bg1 }),
+    CmpBorderedWindow_Normal({ Normal, bg = C.bg1 }),
+    CmpBorderedWindow_FloatBorder({ Normal, fg = C.bg1, bg = C.bg1 }),
+    CmpBorderedWindow_CursorLine({ Visual, bg = C.bg1 }),
 
     -- nvim-dap
     -- DebugBreakpoint({ fg = cs.red }),
@@ -722,28 +636,28 @@ return lush(function(injected_functions)
 
     -- Luasnip*Node{Active,Passive,SnippetPassive}
 
-    SimpleF({ fg = magenta, bg = bg_dark, gui = "bold,underline" }),
+    SimpleF({ fg = C.magenta, bg = C.bg_dark, gui = "bold,underline" }),
 
     ---- :help indent-blankline ------------------------------------------------
 
-    IndentBlanklineChar({ fg = bg2, bg = "NONE" }),
-    IndentBlanklineContextChar({ fg = teal.darken(35), bg = "NONE" }),
-    IndentBlanklineContextStart({ sp = teal.darken(35), bg = "NONE", gui = "underline" }),
+    IndentBlanklineChar({ fg = C.bg2, bg = C.transparent }),
+    IndentBlanklineContextChar({ fg = C.teal.darken(35), bg = C.transparent }),
+    IndentBlanklineContextStart({ sp = C.teal.darken(35), bg = C.transparent, gui = "underline" }),
 
     ---- :help mini.indentscope ------------------------------------------------
-    MiniIndentscopeSymbol({ fg = teal, bg = "NONE" }),
+    MiniIndentscopeSymbol({ fg = C.teal, bg = C.transparent }),
 
     ---- :help mini.jump.txt / mini.jump2d.txt  --------------------------------
 
-    MiniJump({ fg = magenta, bg = bg_dark, gui = "bold,underline" }),
-    MiniJump2dSpot({ fg = white, bg = bg_dark, gui = "bold" }),
+    MiniJump({ fg = C.magenta, bg = C.bg_dark, gui = "bold,underline" }),
+    MiniJump2dSpot({ fg = C.white, bg = C.bg_dark, gui = "bold" }),
 
     ---- :help leap.txt --------------------------------------------------------
 
     LeapBackdrop({ fg = "#707070" }),
-    LeapLabelPrimary({ bg = "NONE", fg = "#ccff88", gui = "italic" }),
-    LeapLabelSecondary({ bg = "NONE", fg = "#99ccff" }),
-    LeapLabelSelected({ bg = "NONE", fg = "Magenta" }),
+    LeapLabelPrimary({ bg = C.transparent, fg = "#ccff88", gui = "italic" }),
+    LeapLabelSecondary({ bg = C.transparent, fg = "#99ccff" }),
+    LeapLabelSelected({ bg = C.transparent, fg = "Magenta" }),
 
     ---- :help tabline ---------------------------------------------------------
 
@@ -751,43 +665,64 @@ return lush(function(injected_functions)
     -- TabLineFill({ fg = grey1, bg = bg1 }), -- tab pages line, where there are no labels
     -- TabLineSel({ fg = bg0, bg = green }), -- tab pages line, active tab page label
 
+    ---- :help megaterm  -----------------------------------------------------
+
+    DarkenedPanel({ bg = C.bg1 }),
+    DarkenedStatusline({ bg = C.bg1 }),
+    DarkenedStatuslineNC({ gui = "italic", bg = C.bg1 }),
+
+    ---- sidebar  -----------------------------------------------------
+
+    PanelBackground({ fg = C.fg.darken(10), bg = C.bg0.darken(8) }),
+    PanelBorder({ fg = PanelBackground.bg.darken(10), bg = PanelBackground.bg }),
+    PanelHeading({ PanelBackground, gui = "bold" }),
+    PanelVertSplit({ VertSplit, bg = C.bg0.darken(8) }),
+    PanelStNC({ PanelVertSplit }),
+    PanelSt({ bg = C.bg_blue.darken(20) }),
+
+    -- { "PanelBackground", { background = bg_color } },
+    -- { "PanelHeading", { background = bg_color, bold = true } },
+    -- { "PanelVertSplit", { foreground = split_color, background = bg_color } },
+    -- { "PanelStNC", { background = bg_color, foreground = split_color } },
+    -- { "PanelSt", { background = st_color } },
+
     ---- megaline -- :help statusline ------------------------------------------
 
-    StatusLine({ fg = grey1, bg = bg1 }), -- status line of current window
-    StatusLineNC({ fg = grey1, bg = bg0 }), -- status lines of not-current windows Note: if this is equal to "StatusLine" Vim will use "^^^" in the status line of the current window.
-    StInactive({ fg = bg_dark.lighten(20), bg = bg_dark, gui = "italic" }),
-    StModeNormal({ bg = bg1, fg = bg5, gui = "NONE" }),
-    StModeInsert({ bg = bg1, fg = green, gui = "bold" }),
-    StModeVisual({ bg = bg1, fg = magenta, gui = "bold" }),
-    StModeReplace({ bg = bg1, fg = dark_red, gui = "bold" }),
-    StModeCommand({ bg = bg1, fg = green, gui = "bold" }),
+    StatusLine({ fg = C.grey1, bg = C.bg1 }), -- status line of current window
+    StatusLineNC({ fg = C.grey1, bg = C.bg0 }), -- status lines of not-current windows Note: if this is equal to "StatusLine" Vim will use "^^^" in the status line of the current window.
+    StInactive({ fg = C.bg_dark.lighten(20), bg = C.bg_dark, gui = "italic" }),
+    StModeNormal({ bg = C.bg1, fg = C.bg5, gui = C.transparent }),
+    StModeInsert({ bg = C.bg1, fg = C.green, gui = "bold" }),
+    StModeVisual({ bg = C.bg1, fg = C.magenta, gui = "bold" }),
+    StModeReplace({ bg = C.bg1, fg = C.dark_red, gui = "bold" }),
+    StModeCommand({ bg = C.bg1, fg = C.green, gui = "bold" }),
     StModeTermNormal({ StModeNormal }),
-    StModeTermInsert({ bg = green, fg = PanelBackground.bg, gui = "underline", sp = green }),
-    StMetadata({ Comment, bg = bg1 }),
-    StMetadataPrefix({ Comment, bg = bg1, gui = "NONE" }),
-    StIndicator({ fg = dark_blue, bg = bg1 }),
-    StModified({ fg = pale_red, bg = bg1, gui = "bold,italic" }),
-    StGitSymbol({ fg = light_red, bg = bg1 }),
-    StGitBranch({ fg = blue, bg = bg1 }),
-    StGitSigns({ fg = dark_blue, bg = bg1 }),
-    StGitSignsAdd({ GreenSign, bg = bg1 }),
-    StGitSignsDelete({ RedSign, bg = bg1 }),
-    StGitSignsChange({ OrangeSign, bg = bg1 }),
-    StNumber({ fg = purple, bg = bg1 }),
-    StCount({ fg = bg0, bg = blue, gui = "bold" }),
-    StPrefix({ fg = fg, bg = bg2 }),
-    StDirectory({ bg = bg1, fg = grey0, gui = "italic" }),
-    StParentDirectory({ bg = bg1, fg = blue, gui = "" }),
-    StFilename({ bg = bg1, fg = fg, gui = "bold" }),
-    StFilenameInactive({ fg = light_grey, bg = bg1, gui = "italic,bold" }),
-    StIdentifier({ fg = blue, bg = bg1 }),
-    StTitle({ bg = bg1, fg = grey2, gui = "bold" }),
-    StComment({ Comment, bg = bg1 }),
-    StClient({ bg = bg1, fg = fg, gui = "bold" }),
-    StError({ fg = pale_red, bg = bg1 }),
-    StWarn({ fg = orange, bg = bg1 }),
-    StInfo({ fg = cyan, bg = bg1, gui = "bold" }),
-    StHint({ fg = bg5, bg = bg1 }),
+    StModeTermInsert({ bg = C.green, fg = PanelBackground.bg, gui = "underline", sp = C.green }),
+    StMetadata({ Comment, bg = C.bg1 }),
+    StMetadataPrefix({ Comment, bg = C.bg1, gui = C.transparent }),
+    StIndicator({ fg = C.dark_blue, bg = C.bg1 }),
+    StModified({ fg = C.pale_red, bg = C.bg1, gui = "bold,italic" }),
+    StGitSymbol({ fg = C.light_red, bg = C.bg1 }),
+    StGitBranch({ fg = C.blue, bg = C.bg1 }),
+    StGitSigns({ fg = C.dark_blue, bg = C.bg1 }),
+    StGitSignsAdd({ GreenSign, bg = C.bg1 }),
+    StGitSignsDelete({ RedSign, bg = C.bg1 }),
+    StGitSignsChange({ OrangeSign, bg = C.bg1 }),
+    StNumber({ fg = C.purple, bg = C.bg1 }),
+    StCount({ fg = C.bg0, bg = C.blue, gui = "bold" }),
+    StPrefix({ fg = C.fg, bg = C.bg2 }),
+    StDirectory({ bg = C.bg1, fg = C.grey0, gui = "italic" }),
+    StParentDirectory({ bg = C.bg1, fg = C.blue, gui = "" }),
+    StFilename({ bg = C.bg1, fg = C.fg, gui = "bold" }),
+    StFilenameInactive({ fg = C.light_grey, bg = C.bg1, gui = "italic,bold" }),
+    StIdentifier({ fg = C.blue, bg = C.bg1 }),
+    StTitle({ bg = C.bg1, fg = C.grey2, gui = "bold" }),
+    StComment({ Comment, bg = C.bg1 }),
+    StClient({ bg = C.bg1, fg = C.fg, gui = "bold" }),
+    StError({ fg = C.pale_red, bg = C.bg1 }),
+    StWarn({ fg = C.orange, bg = C.bg1 }),
+    StInfo({ fg = C.cyan, bg = C.bg1, gui = "bold" }),
+    StHint({ fg = C.bg5, bg = C.bg1 }),
     ---- hydra
     --HydraRedSt({ HydraRed, gui = "reverse" }),
     --HydraBlueSt({ HydraBlue, gui = "reverse" }),
@@ -802,36 +737,36 @@ return lush(function(injected_functions)
 
     ---- :help ts-rainbow  -----------------------------------------------------
 
-    rainbowcol1({ fg = red }),
-    rainbowcol2({ fg = yellow }),
-    rainbowcol3({ fg = green }),
-    rainbowcol4({ fg = blue }),
-    rainbowcol5({ fg = cyan }),
-    rainbowcol6({ fg = magenta }),
-    rainbowcol7({ fg = purple }),
+    rainbowcol1({ fg = C.red }),
+    rainbowcol2({ fg = C.yellow }),
+    rainbowcol3({ fg = C.green }),
+    rainbowcol4({ fg = C.blue }),
+    rainbowcol5({ fg = C.cyan }),
+    rainbowcol6({ fg = C.magenta }),
+    rainbowcol7({ fg = C.purple }),
 
     ---- :help telescope -------------------------------------------------------
 
-    TelescopeNormal({ bg = bg3.darken(25) }),
-    TelescopeBorder({ fg = bg0, bg = bg3.darken(25) }),
+    TelescopeNormal({ bg = C.bg3.darken(25) }),
+    TelescopeBorder({ fg = C.bg0, bg = C.bg3.darken(25) }),
     TelescopeMatching({ Title }),
     TelescopeTitle({ Normal, gui = "bold" }),
 
-    TelescopePreviewTitle({ fg = bg0, bg = dark_green, gui = "italic" }),
+    TelescopePreviewTitle({ fg = C.bg0, bg = C.dark_green, gui = "italic" }),
     -- darkens the whole preview panel + my faux-no-border
-    TelescopePreviewBorder({ bg = PanelBackground.bg, fg = "NONE" }),
-    TelescopePreviewNormal({ bg = PanelBackground.bg, fg = "NONE" }),
+    TelescopePreviewBorder({ bg = PanelBackground.bg, fg = C.transparent }),
+    TelescopePreviewNormal({ bg = PanelBackground.bg, fg = C.transparent }),
 
-    TelescopePrompt({ bg = bg2.darken(10) }),
-    TelescopePromptPrefix({ Statement, bg = bg2.darken(10) }),
-    TelescopePromptBorder({ fg = bg2.darken(10), bg = bg2.darken(10) }),
-    TelescopePromptNormal({ fg = fg, bg = bg2.darken(10) }),
-    TelescopePromptTitle({ fg = bg0, bg = dark_red }),
+    TelescopePrompt({ bg = C.bg2.darken(10) }),
+    TelescopePromptPrefix({ Statement, bg = C.bg2.darken(10) }),
+    TelescopePromptBorder({ fg = C.bg2.darken(10), bg = C.bg2.darken(10) }),
+    TelescopePromptNormal({ fg = C.fg, bg = C.bg2.darken(10) }),
+    TelescopePromptTitle({ fg = C.bg0, bg = C.dark_red }),
 
-    TelescopeSelection({ bg = bg3, gui = "bold,italic" }),
-    TelescopeSelectionCaret({ fg = fg, bg = bg3 }),
-    TelescopeResults({ bg = "NONE" }),
-    TelescopeResultsTitle({ fg = bg0, bg = fg, gui = "bold" }),
+    TelescopeSelection({ bg = C.bg3, gui = "bold,italic" }),
+    TelescopeSelectionCaret({ fg = C.fg, bg = C.bg3 }),
+    TelescopeResults({ bg = C.transparent }),
+    TelescopeResultsTitle({ fg = C.bg0, bg = C.fg, gui = "bold" }),
 
     ---- :help fzf-lua ---------------------------------------------------------
 
@@ -841,7 +776,7 @@ return lush(function(injected_functions)
     FzfLuaCursorLine({ TelescopeNormal }),
     FzfLuaCursorLineNr({ TelescopeNormal }),
     FzfLuaSearch({ TelescopePrompt }),
-    FzfLuaTitle({ fg = bg0, bg = C.bg_cyan, gui = "italic" }),
+    FzfLuaTitle({ fg = C.bg0, bg = C.bg_cyan, gui = "italic" }),
     FzfLuaScrollBorderEmpty({}),
     FzfLuaScrollBorderFull({}),
     FzfLuaScrollFloatEmpty({}),
@@ -854,30 +789,30 @@ return lush(function(injected_functions)
     TroubleNormal({ PanelBackground }),
     TroubleText({ PanelBackground }),
     TroubleIndent({ PanelVertSplit }),
-    TroubleFoldIcon({ fg = yellow, gui = "bold" }),
+    TroubleFoldIcon({ fg = C.yellow, gui = "bold" }),
     TroubleLocation({ fg = Comment.fg }),
-    TroublePreview({ bg = bg_visual, gui = "bold,italic,underline" }),
+    TroublePreview({ bg = C.bg_visual, gui = "bold,italic,underline" }),
 
     ---- :help: dap ------------------------------------------------------------
 
-    DapBreakpoint({ fg = light_red }),
-    DapStopped({ fg = green }),
+    DapBreakpoint({ fg = C.light_red }),
+    DapStopped({ fg = C.green }),
 
     ---- :help: fidget.txt -----------------------------------------------------
 
-    FidgetTitle({ fg = orange }),
-    FidgetTask({ fg = grey2, bg = bg1.darken(10) }),
+    FidgetTitle({ fg = C.orange }),
+    FidgetTask({ fg = C.grey2, bg = C.bg1.darken(10) }),
 
     ---- :help: notifier.nvim  -------------------------------------------------
 
-    NotifierTitle({ fg = orange }),
+    NotifierTitle({ fg = C.orange }),
     NotifierContent({ NormalFloat }),
-    NotifierContentDim({ fg = grey1, bg = bg1.darken(10), gui = "italic" }),
+    NotifierContentDim({ fg = C.grey1, bg = C.bg1.darken(10), gui = "italic" }),
 
     ---- :help: bqf.txt --------------------------------------------------------
 
     BqfPreviewFloat({ PanelBackground }), -- or WinSeparator
-    BqfPreviewBorder({ PanelBackground, fg = bg_blue }), -- or WinSeparator
+    BqfPreviewBorder({ PanelBackground, fg = C.bg_blue }), -- or WinSeparator
     -- hi BqfPreviewBorder guifg=#50a14f ctermfg=71
     -- hi link BqfPreviewRange Search
 
@@ -888,13 +823,13 @@ return lush(function(injected_functions)
     NeoTreeIndentMarker({ Comment }),
     NeoTreeNormal({ PanelBackground }),
     NeoTreeNormalNC({ PanelBackground }),
-    NeoTreeRootName({ fg = cyan, gui = "bold,italic,underline" }),
-    NeoTreeFileNameOpened({ bg = fg, fg = fg, gui = "underline,bold" }),
+    NeoTreeRootName({ fg = C.cyan, gui = "bold,italic,underline" }),
+    NeoTreeFileNameOpened({ bg = C.fg, fg = C.fg, gui = "underline,bold" }),
     NeoTreeCursorLine({ Visual }),
     NeoTreeStatusLine({ PanelSt }),
-    NeoTreeTitleBar({ fg = red, bg = bg_dark }),
-    NeoTreeFloatBorder({ PanelBackground, fg = bg0 }),
-    NeoTreeFloatTitle({ fg = Comment.fg, bg = bg2 }),
+    NeoTreeTitleBar({ fg = C.red, bg = C.bg_dark }),
+    NeoTreeFloatBorder({ PanelBackground, fg = C.bg0 }),
+    NeoTreeFloatTitle({ fg = Comment.fg, bg = C.bg2 }),
     NeoTreeTabActive({ bg = PanelBackground.bg, gui = "bold" }),
     NeoTreeTabInactive({ bg = PanelBackground.bg.darken(15), fg = Comment.fg }),
     NeoTreeTabSeparatorInactive({ bg = PanelBackground.bg.darken(15), fg = PanelBackground.bg }),
@@ -902,16 +837,16 @@ return lush(function(injected_functions)
 
     ---- :help git-signs.txt ---------------------------------------------------
 
-    GitSignsAdd({ GreenSign, bg = "NONE" }),
-    GitSignsDelete({ RedSign, bg = "NONE" }),
-    GitSignsChange({ OrangeSign, bg = "NONE" }),
+    GitSignsAdd({ GreenSign, bg = C.transparent }),
+    GitSignsDelete({ RedSign, bg = C.transparent }),
+    GitSignsChange({ OrangeSign, bg = C.transparent }),
 
     ---- tmux-popup ------------------------------------------------------------
 
     TmuxPopupNormal({ bg = "#3d494f" }),
 
-    ---- :hackkkks -------------------------------------------------------------
-
-    Megaforest({ lush = C }),
+    VirtColumn({ Whitespace, bg = C.bg0 }), -- FIXME: used with virt-column.nvim
   }
 end)
+
+return theme

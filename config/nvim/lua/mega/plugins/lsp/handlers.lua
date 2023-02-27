@@ -43,8 +43,8 @@ function M.setup()
     local lvl = ({ "ERROR", "WARN", "INFO", "DEBUG", "OFF" })[result.type]
     vim.notify(result.message, vim.log.levels[lvl], {
       title = "LSP | " .. client.name,
-      timeout = 8000,
-      keep = function() return lvl == "ERROR" or lvl == "WARN" end,
+      timeout = 3000,
+      keep = function() return lvl == "ERROR" end,
     })
   end
 

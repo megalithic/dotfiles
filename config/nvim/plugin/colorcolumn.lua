@@ -43,14 +43,14 @@ local function set_colorcolumn(leaving)
 
   if contains(M.column_clear, vim.bo.filetype) or not_eligible or (leaving and not is_last_win) or small_window then
     vim.wo.colorcolumn = ""
-    if vc_ok then vc.setup_buffer({ virtcolumn = vim.wo.colorcolumn }) end
+    if vc_ok then vc.setup_buffer({ char = "", virtcolumn = vim.wo.colorcolumn }) end
 
     return
   end
 
   if vim.wo.colorcolumn == "" then
     vim.wo.colorcolumn = tostring(vim.g.default_colorcolumn)
-    if vc_ok then vc.setup_buffer({ virtcolumn = vim.wo.colorcolumn }) end
+    if vc_ok then vc.setup_buffer({ char = "│", virtcolumn = vim.wo.colorcolumn }) end
   end
 end
 
@@ -63,10 +63,7 @@ local function enable_colorcolumn()
   if not vim.g.started_by_firenvim and vim.g.loaded_indent_blankline then vim.cmd("IndentBlanklineEnable") end
   set_colorcolumn()
 end
-
--- initial setup of virt-column; required for this plugin
-if vc_ok then vc.setup({ config = { char = "│" } }) end
-
+--
 -- REF: https://github.com/m4xshen/smartcolumn.nvim/blob/main/lua/smartcolumn.lua
 mega.augroup("ToggleColorColumn", {
   {

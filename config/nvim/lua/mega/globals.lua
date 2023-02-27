@@ -221,24 +221,15 @@ function mega.opt(o, v, scopes)
 end
 
 ---Require a module using `pcall` and report any errors
----@param module string | table
+---@param module string
 ---@param opts table?
 ---@return boolean, any
 function mega.require(module, opts)
-  -- local function pc(func, ...)
-  --   local args = { ... }
-  --   return xpcall(func and function() return func(unpack(args)) end, function(err)
-  --     if err:find("DevIcon") or err:find("mason") or err:find("Invalid highlight") then return err end
-  --     vim.api.nvim_echo({ { err, "ErrorMsg" }, { debug.traceback("", 3), "Normal" } }, true, {})
-  --     return err
-  --   end)
-  -- end
-
-  opts = opts or { silent = true }
+  opts = opts or { silent = false }
   local ok, result = pcall(require, module)
   if not ok and not opts.silent then
     if opts.message then result = opts.message .. "\n" .. result end
-    vim.notify(result, vim.log.levels.ERROR, { title = fmt("Error requiring: %s", module) })
+    vim.notify(result, L.ERROR, { title = fmt("Error requiring: %s", module) })
   end
   return ok, result
 end
@@ -246,7 +237,7 @@ end
 --- Call the given function and use `vim.notify` to notify of any errors
 --- this function is a wrapper around `xpcall` which allows having a single
 --- error handler for all errors
----@param msg string|nil
+---@param msg string
 ---@param func function
 ---@vararg any
 ---@return boolean, any
@@ -1249,7 +1240,8 @@ do
     vim.cmd(fmt("lua d(%s)", opts.args))
     vim.g.debug_enabled = false
   end, { nargs = "*" })
-  command("Noti", [[Mess | Notifications]])
+  -- command("Noti", [[Notifications]])
+  command("Noti", [[Messages | Notifications]])
 
   command("DBUI", function()
     vim.cmd("DotEnv")

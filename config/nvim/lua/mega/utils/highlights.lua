@@ -1,10 +1,35 @@
-local fmt = string.format
-local fn = vim.fn
-local api = vim.api
-local C = mega.colors
-local levels = vim.log.levels
+local api, notify, fmt = vim.api, vim.notify, string.format
 
-local M = {}
+mega.highlight = { win_hl = {} }
+
+---@alias ErrorMsg {msg: string}
+
+---@class HighlightAttributes
+---@field from string
+---@field attr 'foreground' | 'fg' | 'background' | 'bg'
+---@field alter integer
+
+---@class HighlightKeys
+---@field blend integer
+---@field foreground string | HighlightAttributes
+---@field background string | HighlightAttributes
+---@field fg string | HighlightAttributes
+---@field bg string | HighlightAttributes
+---@field sp string | HighlightAttributes
+---@field bold boolean
+---@field italic boolean
+---@field undercurl boolean
+---@field underline boolean
+---@field underdot boolean
+
+---@class NvimHighlightData
+---@field foreground string
+---@field background string
+---@field bold boolean
+---@field italic boolean
+---@field undercurl boolean
+---@field underline boolean
+---@field underdot boolean
 
 ---Convert a hex color to RGB
 ---@param color string
@@ -19,12 +44,11 @@ end
 local function alter(attr, percent) return math.floor(attr * (100 + percent) / 100) end
 
 ---@source https://stackoverflow.com/q/5560248
----@see: https://stackoverflow.com/a/37797380
----Darken a specified hex color
----@param color string
----@param percent number
+---see: https://stackoverflow.com/a/37797380
+---@param color string A hex color
+---@param percent integer a negative number darkens and a positive one brightens
 ---@return string
-function M.alter_color(color, percent)
+function mega.highlight.alter_color(color, percent)
   local r, g, b = hex_to_rgb(color)
   if not r or not g or not b then return "NONE" end
   r, g, b = alter(r, percent), alter(g, percent), alter(b, percent)
@@ -32,130 +56,144 @@ function M.alter_color(color, percent)
   return fmt("#%02x%02x%02x", r, g, b)
 end
 
---- Check if the current window has a winhighlight
---- which includes the specific target highlight
---- @param win_id integer
---- @vararg string
---- @return boolean, string
-function M.winhighlight_exists(win_id, ...)
-  local win_hl = vim.wo[win_id].winhighlight
-  for _, target in ipairs({ ... }) do
-    if win_hl:match(target) ~= nil then return true, win_hl end
-  end
-  return false, win_hl
-end
-
 ---@param group_name string A highlight group name
-local function get_hl(group_name)
+local function get_highlight(group_name)
   local ok, hl = pcall(api.nvim_get_hl_by_name, group_name, true)
-  if ok then
-    hl.foreground = hl.foreground and "#" .. bit.tohex(hl.foreground, 6)
-    hl.background = hl.background and "#" .. bit.tohex(hl.background, 6)
-    hl[true] = nil -- BUG: API returns a true key which errors during the merge
-    return hl
-  end
-  return {}
-end
-
----A mechanism to allow inheritance of the winhighlight of a specific
----group in a window
----@param win_id number
----@param target string
----@param name string
----@param fallback string
-function M.adopt_winhighlight(win_id, target, name, fallback)
-  local win_hl_name = name .. win_id
-  local _, win_hl = M.winhighlight_exists(win_id, target)
-  local hl_exists = fn.hlexists(win_hl_name) > 0
-  if hl_exists then return win_hl_name end
-  local parts = vim.split(win_hl, ",")
-  local found = mega.find(parts, function(part) return part:match(target) end)
-  if not found then return fallback end
-  local hl_group = vim.split(found, ":")[2]
-  local bg = M.get_hl(hl_group, "bg")
-  M.set_hl(win_hl_name, { background = bg, inherit = fallback })
-  return win_hl_name
-end
-
----This helper takes a table of highlights and converts any highlights
----specified as `highlight_prop = { from = 'group'}` into the underlying colour
----by querying the highlight property of the from group so it can be used when specifying highlights
----as a shorthand to derive the right color.
----For example:
----```lua
----  M.set_hl({ MatchParen = {foreground = {from = 'ErrorMsg'}}})
----```
----This will take the foreground colour from ErrorMsg and set it to the foreground of MatchParen.
----@param opts table<string, string|boolean|table<string,string>>
-local function convert_hl_to_val(opts)
-  for name, value in pairs(opts) do
-    if type(value) == "table" and value.from then opts[name] = M.get_hl(value.from, vim.F.if_nil(value.attr, name)) end
-  end
-end
-
----@param name string
----@param opts table
-function M.set_hl(name, opts)
-  assert(name and opts, "Both 'name' and 'opts' must be specified")
-  local hl = get_hl(opts.inherit or name)
-  convert_hl_to_val(opts)
-  opts.inherit = nil
-  local ok, msg = pcall(api.nvim_set_hl, 0, name, vim.tbl_deep_extend("force", hl, opts))
-  if not ok then vim.notify(fmt("Failed to set %s because: %s", name, msg)) end
+  if not ok then return {} end
+  hl.foreground = hl.foreground and "#" .. bit.tohex(hl.foreground, 6)
+  hl.background = hl.background and "#" .. bit.tohex(hl.background, 6)
+  hl[true] = nil -- BUG: API returns a true key which errors during the merge
+  return hl
 end
 
 ---Get the value a highlight group whilst handling errors, fallbacks as well as returning a gui value
+---If no attribute is specified return the entire highlight table
 ---in the right format
 ---@param group string
----@param attribute string
+---@param attribute string?
 ---@param fallback string?
----@return string
-function M.get_hl(group, attribute, fallback)
-  if not group then
-    vim.notify("Cannot get a highlight without specifying a group", levels.ERROR)
-    return "NONE"
-  end
-  local hl = get_hl(group)
-  attribute = ({ fg = "foreground", bg = "background" })[attribute] or attribute
-  local color = hl[attribute] or fallback
-  if not color then
-    vim.schedule(function() vim.notify(fmt("%s %s does not exist", group, attribute), levels.INFO) end)
-    return "NONE"
-  end
-  -- convert the decimal RGBA value from the hl by name to a 6 character hex + padding if needed
-  return color
+---@return string, ErrorMsg?
+---@overload fun(group: string): NvimHighlightData, ErrorMsg?
+function mega.highlight.get(group, attribute, fallback)
+  assert(group, "cannot get a highlight without specifying a group name")
+  local data = get_highlight(group)
+  if not attribute then return data end
+  local attr = ({ fg = "foreground", bg = "background" })[attribute] or attribute
+  local color = data[attr] or fallback
+  if color then return color end
+  return "NONE", { msg = fmt("failed to get highlight %s for attribute %s", group, attribute) }
 end
 
-function M.clear_hl(name)
+--- Sets a neovim highlight with some syntactic sugar. It takes a highlight table and converts
+--- any highlights specified as `GroupName = { from = 'group'}` into the underlying colour
+--- by querying the highlight property of the from group so it can be used when specifying highlights
+--- as a shorthand to derive the right color.
+--- For example:
+--- ```lua
+---   M.set({ MatchParen = {foreground = {from = 'ErrorMsg'}}})
+--- ```
+--- This will take the foreground colour from ErrorMsg and set it to the foreground of MatchParen.
+--- NOTE: this function must NOT mutate the options table as these are re-used when the colorscheme
+--- is updated
+---@param name string
+---@param opts HighlightKeys
+---@overload fun(namespace: integer, name: string, opts: HighlightKeys): ErrorMsg[]?
+---@return ErrorMsg[]?
+function mega.highlight.set(namespace, name, opts)
+  if type(namespace) == "string" and type(name) == "table" then
+    opts, name, namespace = name, namespace, 0
+  end
+
+  vim.validate({
+    opts = { opts, "table" },
+    name = { name, "string" },
+    namespace = { namespace, "number" },
+  })
+
+  local hl = get_highlight(opts.inherit or name)
+  local errs = {}
+
+  for attr, value in pairs(opts) do
+    if type(value) == "table" and value.from then
+      local new_attr, err = mega.highlight.get(value.from, value.attr or attr)
+      if value.alter then new_attr = mega.highlight.alter_color(new_attr, value.alter) end
+      if err then table.insert(errs, err) end
+      hl[attr] = new_attr
+    elseif attr ~= "inherit" then
+      hl[attr] = value
+    end
+  end
+
+  if not pcall(api.nvim_set_hl, namespace, name, hl) then
+    table.insert(errs, { msg = fmt("failed to set highlight %s with values %s", name, hl) })
+  end
+  if #errs > 0 then return errs end
+end
+
+--- Set window local highlights
+---@param name string
+---@param win_id number
+---@param hls HighlightKeys[]
+function mega.highlight.set_winhl(name, win_id, hls)
+  local namespace = api.nvim_create_namespace(name)
+  mega.highlight.all(hls, namespace)
+  api.nvim_win_set_hl_ns(win_id, namespace)
+end
+
+function mega.highlight.clear(name)
   assert(name, "name is required to clear a highlight")
   api.nvim_set_hl(0, name, {})
 end
 
 ---Apply a list of highlights
----@param hls table<string, table<string, boolean|string>>
-function M.all(hls)
-  for name, hl in pairs(hls) do
-    M.set_hl(name, hl)
-  end
+---@param hls table<string, HighlightKeys>
+---@param namespace integer?
+function mega.highlight.all(hls, namespace)
+  local errors = mega.fold(function(errors, hl)
+    local curr_errors = mega.highlight.set(namespace or 0, next(hl))
+    if curr_errors then vim.list_extend(errors, curr_errors) end
+    return errors
+  end, hls)
+  if #errors > 0 then notify(mega.fold(function(acc, err) return acc .. "\n" .. err.msg end, errors, ""), "error") end
 end
-
-function M.group(name, opts) vim.api.nvim_set_hl(0, name, opts) end
 
 ---------------------------------------------------------------------------------
 -- Plugin highlights
 ---------------------------------------------------------------------------------
+--- Takes the overrides for each theme and merges the lists, avoiding duplicates and ensuring
+--- priority is given to specific themes rather than the fallback
+---@param theme table<string, table<string, string>>
+---@return table<string, string>
+local function add_theme_overrides(theme)
+  local res, seen = {}, {}
+  local list = vim.list_extend(theme[vim.g.colors_name] or {}, theme["*"] or {})
+  for _, hl in ipairs(list) do
+    local n = next(hl)
+    if not seen[n] then res[#res + 1] = hl end
+    seen[n] = true
+  end
+  return res
+end
 ---Apply highlights for a plugin and refresh on colorscheme change
 ---@param name string plugin name
----@vararg table<string, table> map of highlights
-function M.plugin(name, hls)
-  name = name:gsub("^%l", string.upper) -- capitalise the name for autocommand convention sake
-  M.all(hls)
+---@param opts table<string, table> map of highlights
+function mega.highlight.plugin(name, opts)
+  -- Options can be specified by theme name so check if they have been or there is a general
+  -- definition otherwise use the opts as is
+  if opts.theme then
+    opts = add_theme_overrides(opts.theme)
+    if not next(opts) then return end
+  end
+  -- capitalise the name for autocommand convention sake
+  name = name:gsub("^%l", string.upper)
+  mega.highlight.all(opts)
   mega.augroup(fmt("%sHighlightOverrides", name), {
     {
-      event = { "ColorScheme" },
-      command = function() M.all(hls) end,
+      event = "ColorScheme",
+      command = function()
+        -- Defer resetting these highlights to ensure they apply after other overrides
+        vim.defer_fn(function() mega.highlight.all(opts) end, 1)
+      end,
     },
   })
 end
-
-return M

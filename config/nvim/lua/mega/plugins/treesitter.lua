@@ -2,14 +2,14 @@
 -- https://github.com/vsedov/nvim/blob/master/lua/modules/lang/treesitter.lua
 
 return {
-  {
-    "ckolkey/ts-node-action",
-    dependencies = { "nvim-treesitter" },
-    config = function()
-      require("ts-node-action").setup()
-      nmap("K", require("ts-node-action").node_action, { desc = "Trigger Node Action" })
-    end,
-  },
+  -- {
+  --   "ckolkey/ts-node-action",
+  --   dependencies = { "nvim-treesitter" },
+  --   config = function()
+  --     require("ts-node-action").setup()
+  --     nmap("K", require("ts-node-action").node_action, { desc = "Trigger Node Action" })
+  --   end,
+  -- },
   {
     "laytan/tailwind-sorter.nvim",
     dependencies = {
@@ -22,61 +22,61 @@ return {
       on_save_pattern = { "*.html", "*.heex", "*.ex" },
     },
   },
-  {
-    "nvim-treesitter/nvim-treesitter-context",
-    enabled = false,
-    event = "BufReadPre",
-    config = function()
-      require("treesitter-context").setup({
-        multiline_threshold = 2,
-        -- separator = { "─", "ContextBorder" }, -- alts: ▁ ─ ▄
-        separator = { "▁", "TreesitterContextBorder" }, -- alts: ▁ ─ ▄─▁
-        mode = "cursor",
-        max_lines = 0, -- How many lines the window should span. Values <= 0 mean no limit.
-        trim_scope = "outer",
-        patterns = { -- Match patterns for TS nodes. These get wrapped to match at word boundaries.
-          -- For all filetypes
-          -- Note that setting an entry here replaces all other patterns for this entry.
-          -- By setting the 'default' entry below, you can control which nodes you want to
-          -- appear in the context window.
-          default = {
-            "class",
-            "function",
-            "method",
-            "for",
-            "while",
-            "if",
-            "switch",
-            "case",
-          },
-          rust = {
-            "impl_item",
-            "struct",
-            "enum",
-          },
-          markdown = {
-            "section",
-          },
-          elixir = {
-            "anonymous_function",
-            "arguments",
-            "block",
-            "do_block",
-            "list",
-            "map",
-            "tuple",
-            "quoted_content",
-          },
-          json = {
-            "pair",
-          },
-          yaml = {
-            "block_mapping_pair",
-          },
-        },
-      })
-    end,
-  },
+  -- {
+  --   "nvim-treesitter/nvim-treesitter-context",
+  --   enabled = false,
+  --   event = "BufReadPre",
+  --   config = function()
+  --     require("treesitter-context").setup({
+  --       multiline_threshold = 2,
+  --       -- separator = { "─", "ContextBorder" }, -- alts: ▁ ─ ▄
+  --       separator = { "▁", "TreesitterContextBorder" }, -- alts: ▁ ─ ▄─▁
+  --       mode = "cursor",
+  --       max_lines = 0, -- How many lines the window should span. Values <= 0 mean no limit.
+  --       trim_scope = "outer",
+  --       patterns = { -- Match patterns for TS nodes. These get wrapped to match at word boundaries.
+  --         -- For all filetypes
+  --         -- Note that setting an entry here replaces all other patterns for this entry.
+  --         -- By setting the 'default' entry below, you can control which nodes you want to
+  --         -- appear in the context window.
+  --         default = {
+  --           "class",
+  --           "function",
+  --           "method",
+  --           "for",
+  --           "while",
+  --           "if",
+  --           "switch",
+  --           "case",
+  --         },
+  --         rust = {
+  --           "impl_item",
+  --           "struct",
+  --           "enum",
+  --         },
+  --         markdown = {
+  --           "section",
+  --         },
+  --         elixir = {
+  --           "anonymous_function",
+  --           "arguments",
+  --           "block",
+  --           "do_block",
+  --           "list",
+  --           "map",
+  --           "tuple",
+  --           "quoted_content",
+  --         },
+  --         json = {
+  --           "pair",
+  --         },
+  --         yaml = {
+  --           "block_mapping_pair",
+  --         },
+  --       },
+  --     })
+  --   end,
+  -- },
   { "nvim-treesitter/playground", cmd = { "TSPlaygroundToggle", "TSHighlightCapturesUnderCursor" } },
   {
     "mfussenegger/nvim-treehopper",
@@ -109,34 +109,14 @@ return {
       "JoosepAlviste/nvim-ts-context-commentstring",
       "RRethy/nvim-treesitter-endwise",
       "jadengis/nvim-ts-autotag",
-      -- WARN: no longer maintained..
       { "mrjones2014/nvim-ts-rainbow" },
       "David-Kunz/treesitter-unit",
     },
     config = function()
+      -- for apple silicon
       require("nvim-treesitter.install").compilers = { "gcc-12" }
 
       vim.opt.indentexpr = "nvim_treesitter#indent()"
-      --
-      -- local parser_config = require("nvim-treesitter.parsers").get_parser_configs()
-      -- parser_config.html_eex = {
-      --   install_info = {
-      --     url = "https://github.com/rockerBOO/tree-sitter-html-eex",
-      --     files = { "src/parser.c", "src/scanner.cc" },
-      --   },
-      --   maintainers = { "@rockerBOO" },
-      -- }
-      --
-      -- -- TODO: determine colours and such; presently like what i have over using this.
-      -- parser_config.gitcommit = {
-      --   install_info = {
-      --     url = "https://github.com/gbprod/tree-sitter-gitcommit",
-      --     files = { "src/parser.c", "src/scanner.c" },
-      --     branch = "main",
-      --   },
-      --   filetype = "gitcommit",
-      --   maintainers = { "@gbprod" },
-      -- }
 
       local ft_to_parser = vim.treesitter.language.register
       ft_to_parser("json", "jsonc")
@@ -152,7 +132,7 @@ return {
           "c",
           "cpp",
           "css",
-          "comment", -- see styler.nvim
+          "comment",
           "devicetree",
           "dockerfile",
           "diff",
@@ -213,7 +193,7 @@ return {
           -- Required since TS highlighter doesn't support all syntax features (conceal)
           additional_vim_regex_highlighting = {
             "python",
-            "lua",
+            -- "lua",
             "vim",
             "zsh",
           },
@@ -244,9 +224,19 @@ return {
             elixir = {
               __default = "# %s",
               quoted_content = "<!-- %s -->",
+              component = "<!-- %s -->",
             },
             heex = {
               __default = "<!-- %s -->",
+              component = "<!-- %s -->",
+              self_closing_component = "<!-- %s -->",
+              __multiline = "<!-- %s -->",
+            },
+            html = {
+              __default = "<!-- %s -->",
+              component = "<!-- %s -->",
+              self_closing_component = "<!-- %s -->",
+              __multiline = "<!-- %s -->",
             },
             lua = "-- %s",
             fish = "# %s",
@@ -262,15 +252,6 @@ return {
           extended_mode = true, -- Highlight also non-parentheses delimiters, boolean or table: lang -> boolean
           max_file_lines = 2000, -- Do not enable for files with more than 1000 lines, int
         },
-        -- textsubjects = {
-        --   enable = true,
-        --   prev_selection = ",",
-        --   keymaps = {
-        --     ["."] = "textsubjects-smart",
-        --     -- [";"] = "textsubjects-container-outer",
-        --     -- ["i;"] = "textsubjects-container-inner",
-        --   },
-        -- },
         textobjects = {
           lookahead = true,
           select = {

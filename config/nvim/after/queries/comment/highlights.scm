@@ -80,6 +80,9 @@
 ((tag ((name) @comment.warn))
  (#any-of? @comment.warn "WARN" "WARNING" "XXX"))
 
+((tag ((name) @text.warn))
+ (#any-of? text.warn "WARN" "WARNING" "XXX"))
+
 ((tag ((name) @comment.note))
  (#any-of? @comment.note "NOTE" "INFO"))
 

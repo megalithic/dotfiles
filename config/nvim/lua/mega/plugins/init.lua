@@ -1,9 +1,6 @@
 return {
   -- ( CORE ) ------------------------------------------------------------------
-  { "nvim-lua/plenary.nvim", event = "VeryLazy" },
-  { "nvim-lua/popup.nvim", event = "VeryLazy" },
   { "dstein64/vim-startuptime", cmd = { "StartupTime" }, config = function() vim.g.startuptime_tries = 15 end },
-  { "mattn/webapi-vim", event = "VeryLazy" },
   {
     "ethanholz/nvim-lastplace",
     event = { "BufReadPre" },
@@ -17,41 +14,96 @@ return {
   },
 
   -- ( UI ) --------------------------------------------------------------------
+  -- lazy.nvim colorscheme setup info:
+  -- REF: https://github.com/folke/lazy.nvim
   {
     "rktjmp/lush.nvim",
-    lazy = true,
+    lazy = false,
     priority = 1000,
-    config = function()
-      require("lush")(require("mega.lush_theme.megaforest"))
-      mega.colors = require("mega.lush_theme.colors")
-    end,
   },
-  -- {
-  --   "JoosepAlviste/palenightfall.nvim",
-  --   lazy = false,
-  --   config = vim.g.colorscheme == "palenightfall",
-  -- },
+  {
+    "rose-pine/neovim",
+    name = "rose-pine",
+    lazy = false,
+    priority = 999,
+    config = true,
+  },
+  {
+    "JoosepAlviste/palenightfall.nvim",
+    lazy = false,
+    priority = 999,
+    config = true,
+  },
   {
     "mcchrish/zenbones.nvim",
     lazy = false,
+    priority = 999,
     dependencies = "rktjmp/lush.nvim",
   },
   {
-    "neanias/everforest-nvim",
-    lazy = false,
+    "sainnhe/everforest",
+    init = function()
+      vim.opt.termguicolors = true
+      -- mega.colors = require("mega.lush_theme.colors")
+
+      vim.g.everforest_diagnostic_virtual_text = "colored"
+      vim.g.everforest_enable_italic = true
+      vim.g.everforest_colors_override = {
+        bg0 = { "NONE", "NONE" }, --"#273433", "235"
+        bg1 = { "#394C4A", "236" },
+        bg2 = { "#425755", "237" },
+        bg3 = { "#4B6361", "238" },
+        bg4 = { "#56716F", "239" },
+      }
+    end,
     config = function()
-      require("everforest").setup({
-        -- Controls the "hardness" of the background. Options are "soft", "medium" or "hard".
-        -- Default is "medium".
-        background = "soft",
-        -- How much of the background should be transparent. Options are 0, 1 or 2.
-        -- Default is 0.
-        --
-        -- 2 will have more UI components be transparent (e.g. status line
-        -- background).
-        transparent_background_level = 0,
+      vim.api.nvim_create_autocmd("User LazyColorscheme", {
+        group = vim.api.nvim_create_augroup("lazy_colorscheme", { clear = true }),
+        once = true,
+        callback = function()
+          vim.cmd([[highlight! link @symbol Blue]])
+          vim.cmd([[highlight! link @constant PurpleItalic]])
+
+          local palette = vim.fn["everforest#get_palette"]("soft", vim.g.everforest_colors_override)
+          local hl = function(...) vim.api.nvim_set_hl(0, ...) end
+
+          hl("NavicIconsFile", { default = true, fg = palette.fg[1], bg = nil })
+          hl("NavicIconsModule", { default = true, fg = palette.yellow[1], bg = nil })
+          hl("NavicIconsNamespace", { default = true, fg = palette.fg[1], bg = nil })
+          hl("NavicIconsPackage", { default = true, fg = palette.fg[1], bg = nil })
+          hl("NavicIconsClass", { default = true, fg = palette.orange[1], bg = nil })
+          hl("NavicIconsMethod", { default = true, fg = palette.blue[1], bg = nil })
+          hl("NavicIconsProperty", { default = true, fg = palette.green[1], bg = nil })
+          hl("NavicIconsField", { default = true, fg = palette.green[1], bg = nil })
+          hl("NavicIconsConstructor", { default = true, fg = palette.orange[1], bg = nil })
+          hl("NavicIconsEnum", { default = true, fg = palette.orange[1], bg = nil })
+          hl("NavicIconsInterface", { default = true, fg = palette.orange[1], bg = nil })
+          hl("NavicIconsFunction", { default = true, fg = palette.blue[1], bg = nil })
+          hl("NavicIconsVariable", { default = true, fg = palette.purple[1], bg = nil })
+          hl("NavicIconsConstant", { default = true, fg = palette.purple[1], bg = nil })
+          hl("NavicIconsString", { default = true, fg = palette.green[1], bg = nil })
+          hl("NavicIconsNumber", { default = true, fg = palette.orange[1], bg = nil })
+          hl("NavicIconsBoolean", { default = true, fg = palette.orange[1], bg = nil })
+          hl("NavicIconsArray", { default = true, fg = palette.orange[1], bg = nil })
+          hl("NavicIconsObject", { default = true, fg = palette.orange[1], bg = nil })
+          hl("NavicIconsKey", { default = true, fg = palette.purple[1], bg = nil })
+          hl("NavicIconsKeyword", { default = true, fg = palette.purple[1], bg = nil })
+          hl("NavicIconsNull", { default = true, fg = palette.orange[1], bg = nil })
+          hl("NavicIconsEnumMember", { default = true, fg = palette.green[1], bg = nil })
+          hl("NavicIconsStruct", { default = true, fg = palette.orange[1], bg = nil })
+          hl("NavicIconsEvent", { default = true, fg = palette.orange[1], bg = nil })
+          hl("NavicIconsOperator", { default = true, fg = palette.fg[1], bg = nil })
+          hl("NavicIconsTypeParameter", { default = true, fg = palette.green[1], bg = nil })
+          hl("NavicText", { default = true, fg = palette.fg[1], bg = nil })
+          hl("NavicSeparator", { default = true, fg = palette.fg[1], bg = nil })
+          hl("NotifyFloat", { default = true, fg = palette.fg[1], bg = nil })
+        end,
+
+        vim.api.nvim_exec_autocmds("User LazyColorscheme", {}),
       })
     end,
+    priority = 1000,
+    lazy = true,
   },
   { "nvim-tree/nvim-web-devicons", config = function() require("nvim-web-devicons").setup() end },
   {
@@ -90,7 +142,7 @@ return {
       })
     end,
   },
-  { "lukas-reineke/virt-column.nvim", config = true, event = "VeryLazy" },
+  { "lukas-reineke/virt-column.nvim", config = { char = "│" }, lazy = false },
   {
     "stevearc/dressing.nvim",
     event = "VeryLazy",
@@ -473,7 +525,7 @@ return {
   -- },
   {
     "tpope/vim-abolish",
-    event = "CmdlineEnter",
+    event = { "VeryLazy" },
     config = function()
       mega.nnoremap("<localleader>[", ":S/<C-R><C-W>//<LEFT>", { silent = false })
       mega.nnoremap("<localleader>]", ":%S/<C-r><C-w>//c<left><left>", { silent = false })
@@ -484,7 +536,7 @@ return {
   { "tpope/vim-repeat", event = { "VeryLazy" } },
   { "tpope/vim-unimpaired", event = { "VeryLazy" } },
   { "tpope/vim-apathy", event = { "VeryLazy" } },
-  { "tpope/vim-scriptease", cmd = { "Messages", "Mess" } },
+  { "tpope/vim-scriptease", event = { "VeryLazy" }, cmd = { "Messages", "Mess", "Noti" } },
   { "lambdalisue/suda.vim", event = { "VeryLazy" } },
   { "EinfachToll/DidYouMean", event = { "BufNewFile" }, init = function() vim.g.dym_use_fzf = true end },
   { "wsdjeg/vim-fetch", event = { "BufReadPre" } }, -- vim path/to/file.ext:12:3

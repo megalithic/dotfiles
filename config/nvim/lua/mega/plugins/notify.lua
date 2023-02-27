@@ -4,6 +4,8 @@ local M = {
   cond = vim.g.notifier_enabled and not vim.g.started_by_firenvim,
 }
 
+-- REF: https://github.com/rcarriga/nvim-notify/wiki/Usage-Recipes
+
 function M.config()
   local nnotify = require("notify")
   local stages_util = require("notify.stages.util")

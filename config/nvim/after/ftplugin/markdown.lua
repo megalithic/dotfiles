@@ -125,7 +125,7 @@ vim.fn.matchadd("matchURL", [[http[s]\?:\/\/[[:alnum:]%\/_#.-]*]])
 vim.cmd(string.format("hi matchURL guifg=%s", require("mega.lush_theme.colors").bright_blue))
 
 mega.nmap("<localleader>p", "<Plug>MarkdownPreviewToggle", { buffer = 0, silent = true })
-
+-- REF: https://github.com/ekickx/clipboard-image.nvim/discussions/15
 -- mega.augroup("ClipboardImageLocations", {
 --   {
 --     event = { "BufReadPre" },

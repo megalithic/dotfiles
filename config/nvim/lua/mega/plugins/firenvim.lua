@@ -131,7 +131,7 @@ function M.init()
     )
 
     -- disable cmp autocomplete
-    require("cmp").setup({ autocomplete = false })
+    require("cmp").setup.buffer({ enabled = false })
   end
 
   require("mega.globals").augroup("Firenvim", {
