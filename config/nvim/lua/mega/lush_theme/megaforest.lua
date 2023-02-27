@@ -384,7 +384,7 @@ local theme = lush(function(injected_functions)
     sym("@comment")({ fg = C.light_grey, gui = "italic" }),
     sym("@error")({ gui = "undercurl", sp = C.red }),
 
-    -- -- highlight WARN/FIXME/TODO/NOTE/REF: comments
+    -- highlight WARN:/FIXME:/TODO:/NOTE:/REF: comments
 
     sym("@comment.fix")({ bg = C.red, fg = C.bg_dark, gui = "bold,underline" }),
     sym("@comment.warn")({ bg = C.orange, fg = C.bg1, gui = "bold" }),
@@ -393,7 +393,7 @@ local theme = lush(function(injected_functions)
     sym("@comment.ref")({ fg = C.bright_blue, bg = C.bg_dark, gui = "italic" }),
 
     sym("@text.danger")({ sym("@comment.fix") }),
-    sym("@text.warning")({ sym("@comment.warn") }),
+    sym("@text.warn")({ sym("@comment.warn") }),
     sym("@text.todo")({ sym("@comment.todo") }),
     sym("@text.note")({ sym("@comment.note") }),
     sym("@text.ref")({ sym("@comment.ref") }),

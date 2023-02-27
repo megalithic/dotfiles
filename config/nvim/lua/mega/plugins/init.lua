@@ -533,7 +533,7 @@ return {
     end,
   },
   { "tpope/vim-rhubarb", event = { "VeryLazy" } },
-  { "tpope/vim-repeat", event = { "VeryLazy" } },
+  { "tpope/vim-repeat", keys = { "." } },
   { "tpope/vim-unimpaired", event = { "VeryLazy" } },
   { "tpope/vim-apathy", event = { "VeryLazy" } },
   { "tpope/vim-scriptease", event = { "VeryLazy" }, cmd = { "Messages", "Mess", "Noti" } },

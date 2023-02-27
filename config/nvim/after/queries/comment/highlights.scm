@@ -53,6 +53,7 @@
 ; (tag ((name) @_name (#match? @_name "FIXME") (":" @CommentTasksFixme)))
 ; (tag ((name) @_name (#match? @_name "NOTE") (":"  @CommentTasksNote)))
 ; (tag ((name) @_name (#match? @_name "REF") (":"  @CommentTasksRef)))
+; (tag ((name) @_name (#match? @_name "WARN") (":"  @CommentTasksRef)))
 
 
 
@@ -78,10 +79,10 @@
  (#any-of? @comment.hack "HACK"))
 
 ((tag ((name) @comment.warn))
- (#any-of? @comment.warn "WARN" "WARNING" "XXX"))
+ (#any-of? @comment.warn "WARN"))
 
 ((tag ((name) @text.warn))
- (#any-of? text.warn "WARN" "WARNING" "XXX"))
+ (#any-of? @text.warn "WARN"))
 
 ((tag ((name) @comment.note))
  (#any-of? @comment.note "NOTE" "INFO"))
@@ -93,7 +94,7 @@
  (#any-of? @text.ref "REF"))
 
 ((tag ((name) @text.test))
- (#any-of? @text.test "TEST" "TESTING"))
+ (#any-of? @text.test "TEST"))
 
 ("text" @text.test
- (#any-of? @text.test "TEST" "TESTING"))
+ (#any-of? @text.test "TEST"))

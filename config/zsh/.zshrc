@@ -31,6 +31,7 @@ prompt megalithic                  # Set prompt
 
 # -- scripts/libs/etc
 for file in $ZLIB/{keybindings,opts,aliases,funcs,ssh,tmux,kitty,gpg}.zsh; do
+  # for funcs: https://github.com/akinsho/dotfiles/commit/01816d72160e96921e2af9bc3f1c52be7d1f1502
   [[ -r "$file" && -f "$file" ]] && source "$file"
 done
 unset file
