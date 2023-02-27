@@ -368,7 +368,7 @@ local theme = lush(function(injected_functions)
     sym("@text")({ Green }),
     sym("@text.strong")({ Green, gui = "bold" }),
     sym("@text.emphasis")({ Green, gui = "italic" }),
-    sym("@text.underline")({ Green, gui = "underline" }),
+    sym("@text.underline")({ Aqua, gui = "underline" }),
     sym("@text.strike")({ Green, gui = "strikethrough" }),
     sym("@text.math")({ Green }),
     sym("@text.environment")({ Green }),
