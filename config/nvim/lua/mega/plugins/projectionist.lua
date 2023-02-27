@@ -1,5 +1,6 @@
 local M = {
   "tpope/vim-projectionist",
+  event = { "BufReadPost", "BufNewFile" },
   ft = { "elixir", "javascript", "typescript" },
 }
 

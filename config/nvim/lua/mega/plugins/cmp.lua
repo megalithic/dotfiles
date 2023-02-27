@@ -30,6 +30,7 @@ local M = {
     -- { "dmitmel/cmp-cmdline-history"},
     -- { "kristijanhusak/vim-dadbod-completion"},
   },
+  init = function() vim.opt.completeopt = { "menu", "menuone", "noselect", "noinsert" } end,
 }
 
 function M.config()

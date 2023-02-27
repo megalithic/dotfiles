@@ -51,7 +51,7 @@ return {
           vim.cmd([[highlight! link @symbol Blue]])
           vim.cmd([[highlight! link @constant PurpleItalic]])
 
-          local palette = vim.fn["everforest#get_palette"]("soft", vim.g.everforest_colors_override)
+          local palette = vim.fn["everforest#get_palette"]("medium", vim.g.everforest_colors_override)
           local hl = function(...) vim.api.nvim_set_hl(0, ...) end
 
           hl("NavicIconsFile", { default = true, fg = palette.fg[1], bg = nil })
@@ -181,14 +181,14 @@ return {
     enabled = true,
     opts = {
       char = "│", -- alts: ┆ ┊  ▎
-      --       show_foldtext = false,
-      --       context_char = "▎",
-      --       char_priority = 12,
+      show_foldtext = false,
+      context_char = "▎",
+      char_priority = 12,
       show_current_context = true,
       show_current_context_start = true,
       show_current_context_start_on_current_line = true,
-      show_trailing_blankline_indent = false,
-      show_first_indent_level = true,
+      show_trailing_blankline_indent = true,
+      show_first_indent_level = false,
       filetype_exclude = {
         "help",
         "alpha",
@@ -371,17 +371,21 @@ return {
   {
     "theHamsta/nvim-dap-virtual-text",
     dependencies = "nvim-dap",
-    event = "VeryLazy",
+    -- event = "VeryLazy",
     config = function()
       require("nvim-dap-virtual-text").setup({
         commented = true,
       })
     end,
   },
-  { "jbyuki/one-small-step-for-vimkind", dependencies = "nvim-dap", event = "VeryLazy" },
+  {
+    "jbyuki/one-small-step-for-vimkind",
+    dependencies = "nvim-dap",
+    -- event = "VeryLazy"
+  },
   {
     "suketa/nvim-dap-ruby",
-    event = "VeryLazy",
+    -- event = "VeryLazy",
     dependencies = "nvim-dap",
     config = function() require("dap-ruby").setup() end,
   },
@@ -391,7 +395,7 @@ return {
   -- },
   {
     "mxsdev/nvim-dap-vscode-js",
-    event = "VeryLazy",
+    -- event = "VeryLazy",
     dependencies = "nvim-dap",
     config = function()
       require("dap-vscode-js").setup({
@@ -406,7 +410,11 @@ return {
       })
     end,
   },
-  { "sultanahamer/nvim-dap-reactnative", dependencies = "nvim-dap", event = "VeryLazy" },
+  {
+    "sultanahamer/nvim-dap-reactnative",
+    dependencies = "nvim-dap",
+    -- event = "VeryLazy"
+  },
   -- {
   --   "jayp0521/mason-nvim-dap.nvim",
   --   dependencies = "nvim-dap",

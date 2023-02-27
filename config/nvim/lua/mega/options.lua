@@ -270,7 +270,6 @@ vim.o.softtabstop = 2
 -- vim.o.debug = "msg"
 vim.o.gdefault = true
 vim.o.confirm = true -- make vim prompt me to save before doing destructive things
-vim.opt.completeopt = { "menuone", "noselect" }
 vim.o.hlsearch = true
 vim.o.autowriteall = true -- will automatically :write before running commands and changing files
 vim.opt.clipboard = { "unnamedplus" }

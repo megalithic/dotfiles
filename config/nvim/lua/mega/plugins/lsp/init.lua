@@ -500,7 +500,6 @@ function M.config()
   local max_width = math.min(math.floor(vim.o.columns * 0.7), 100)
   local max_height = math.min(math.floor(vim.o.lines * 0.3), 30)
 
-  vim.opt.completeopt = { "menu", "menuone", "noselect", "noinsert" }
   vim.opt.shortmess:append("c") -- Don't pass messages to |ins-completion-menu|
 
   require("mason")
