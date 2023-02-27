@@ -1,3 +1,5 @@
+; extends
+
 (comment) @comment
 (generated_comment) @comment
 (title) @text.title
