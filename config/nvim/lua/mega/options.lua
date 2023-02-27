@@ -280,19 +280,6 @@ vim.opt.clipboard = { "unnamedplus" }
 -- 3 = global statusline
 vim.o.laststatus = 2
 vim.o.statusline = ""
--- fallback in the event our statusline plugins fail to load
--- vim.opt.statusline = table.concat({
---   "%2{toupper(mode())} ",
---   "f", -- relative path
---   "m", -- modified flag
---   "r",
---   "=",
---   "{&spelllang}",
---   "%{get(b:,'gitsigns_status','')}",
---   "y", -- filetype
---   "8(%l,%c%)", -- line, column
---   "8p%% ", -- file percentage
--- }, " %")
 -----------------------------------------------------------------------------//
 -- Emoji {{{1
 -----------------------------------------------------------------------------//
@@ -314,8 +301,8 @@ vim.opt.guicursor = {
 -- vim.wo.number = true
 -- vim.wo.relativenumber = true
 -- NOTE: plugin/cursorline.lua has more...
-vim.o.cursorline = true -- Show a line where the current cursor is
-vim.o.cursorlineopt = "number" -- optionally -> "screenline,number,both"
+vim.wo.cursorline = true -- Show a line where the current cursor is
+vim.wo.cursorlineopt = "both" -- optionally -> "screenline,number,both"
 -----------------------------------------------------------------------------//
 -- Utilities {{{1
 -----------------------------------------------------------------------------//

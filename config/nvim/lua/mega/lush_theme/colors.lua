@@ -59,7 +59,7 @@ local bg_thicc = "#273433"
 local bg_hard = "#2b3339"
 local bg_medium = "#2b3339"
 
-C.transparent = "NONE"
+C.transparent = nil
 C.bg0 = hsluv("#323d43")
 C.bg1 = C.bg0.lighten(5) -- #3c474d
 C.bg2 = C.bg0.lighten(10) -- #465258

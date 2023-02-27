@@ -22,19 +22,6 @@ return {
     priority = 1000,
   },
   {
-    "rose-pine/neovim",
-    name = "rose-pine",
-    lazy = false,
-    priority = 999,
-    config = true,
-  },
-  {
-    "JoosepAlviste/palenightfall.nvim",
-    lazy = false,
-    priority = 999,
-    config = true,
-  },
-  {
     "mcchrish/zenbones.nvim",
     lazy = false,
     priority = 999,

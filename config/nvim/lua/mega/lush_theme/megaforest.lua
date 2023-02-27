@@ -81,11 +81,11 @@ local theme = lush(function(injected_functions)
     vCursor({ Cursor }),
     CursorIM({ Cursor }), -- like Cursor, but used when in IME mode |CursorIM|
     CursorColumn({ fg = C.transparent, bg = C.bg2 }), -- Screen-column at the cursor, when 'cursorcolumn' is set.
-    CursorLine({ fg = C.transparent, bg = C.bg2 }), -- Screen-line at the cursor, when 'cursorline' is set.  Low-priority if foreground (ctermfg OR fg) is not set.
     CursorWord({ fg = C.transparent, bg = C.transparent, gui = "bold,underline" }),
-    CursorLineNr({ fg = C.brown, bg = C.bg2, gui = "bold,italic" }), -- Like LineNr when 'cursorline' or 'relativenumber' is set for the cursor line.
-    CursorLineNrNC({ fg = C.transparent, bg = C.bg2, gui = C.transparent }), -- Like LineNr when 'cursorline' or 'relativenumber' is set for the cursor line.
-    CursorLineSign({ CursorLineNr, gui = C.transparent }),
+    CursorLine({ bg = C.bg2 }), -- Screen-line at the cursor, when 'cursorline' is set.  Low-priority if foreground (ctermfg OR fg) is not set.
+    CursorLineNr({ CursorLine, fg = C.brown, gui = "bold,italic" }), -- Like LineNr when 'cursorline' or 'relativenumber' is set for the cursor line.
+    -- CursorLineNrNC({ CursorLine, fg = C.transparent, bg = C.bg2 }), -- Like LineNr when 'cursorline' or 'relativenumber' is set for the cursor line.
+    -- CursorLineSign({ CursorLine }),
     VertSplit({ fg = C.bg4, bg = C.transparent }), -- the column separating vertically split windows
     WinSeparator({ VertSplit, fg = C.bg2, gui = "bold" }),
 
@@ -401,10 +401,8 @@ local theme = lush(function(injected_functions)
     ---- :help treesitter-context ----------------------------------------------
 
     TreesitterContext({ bg = C.bg1 }),
-    -- ContextBorder = { foreground = dim, background = dimmer },
-    -- TreesitterContext = { inherit = 'Normal', background = dimmer },
-    TreesitterContextLineNumber({ CursorLineNr, bg = TreesitterContext.bg, gui = C.transparent }),
-    TreesitterContextBorder({ fg = C.bg_dark, bg = TreesitterContext.bg }),
+    -- TreesitterContextLineNumber({ CursorLineNr, bg = TreesitterContext.bg, gui = C.transparent }),
+    -- TreesitterContextBorder({ fg = C.bg_dark, bg = TreesitterContext.bg }),
 
     -- TS: Markdown
     -- sym("@markdown.punct.special") {Special},
