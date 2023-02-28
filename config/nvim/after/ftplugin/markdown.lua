@@ -89,7 +89,6 @@ vim.g.mkdp_auto_close = 1
 
 -- ## used with my zk popups in tmux
 if vim.env.TMUX_POPUP then
-  P("popup true")
   vim.opt_local.signcolumn = "no"
   vim.opt_local.cursorline = false
   vim.opt_local.number = false
@@ -109,14 +108,6 @@ if vim.env.TMUX_POPUP then
     }, ",")
   )
 
-  -- local ok, zm = pcall(require, "zen-mode")
-  -- if ok then
-  --   zm.open({
-  --     window = {
-  --       width = 0.85,
-  --     },
-  --   })
-  -- end
   vim.cmd("hi MsgArea guibg=#3d494f")
 end
 

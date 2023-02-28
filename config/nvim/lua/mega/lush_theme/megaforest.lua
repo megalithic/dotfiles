@@ -366,15 +366,16 @@ local theme = lush(function(injected_functions)
     sym("@tag.delimiter")({ Green }),
     sym("@tag.attribute")({ Green }),
     sym("@text")({ Green }),
-    sym("@text.strong")({ Green, gui = "bold" }),
-    sym("@text.emphasis")({ Green, gui = "italic" }),
-    sym("@text.underline")({ Aqua, gui = "underline" }),
-    sym("@text.strike")({ Green, gui = "strikethrough" }),
+    sym("@text.strong")({ gui = "bold" }),
+    sym("@text.emphasis")({ gui = "italic" }),
+    sym("@text.underline")({ gui = "underline" }),
+    sym("@text.strike")({ gui = "strikethrough" }),
     sym("@text.math")({ Green }),
     sym("@text.environment")({ Green }),
     sym("@text.environment.name")({ Green }),
     sym("@text.title")({ sym("@text.underline") }),
     sym("@text.uri")({ fg = C.blue }),
+    sym("@text.quote")({ fg = C.fg.da(30), gui = "italic" }),
     sym("@text.reference")({ fg = C.cyan }),
     sym("@type")({ Aqua }),
     sym("@type.builtin")({ BlueItalic }),
@@ -411,35 +412,12 @@ local theme = lush(function(injected_functions)
     -- sym("@markdown.string.escape") { SpecialKey },
     -- sym("@markdown.text.reference") { Identifier, gui = "underline" },
     -- sym("@markdown.emphasis") { fg = grey1, bg = transparent, gui = "italic" },
-    -- sym("@markdown.title") { Statement, bg = bg1 },
+    sym("@markdown.title")({ Statement, bg = C.bg1, fg = C.red }),
     -- sym("@markdown.literal") { Type },
     -- sym("@markdown.uri") { sym("@uri") },
 
     markdownCode({ fg = C.grey1, bg = C.bg1 }),
     -- markdownLinkText({ sym("@markdown.text.reference") }),
-
-    ---- :help gitcommit -------------------------------------------
-
-    -- M.highlight("gitcommitComment", { fg = M.colors.gutter_fg_grey, gui = "italic,bold" })
-    -- M.highlight("gitcommitUnmerged", { fg = M.colors.green })
-    -- M.highlight("gitcommitOnBranch", {})
-    -- M.highlight("gitcommitBranch", { fg = M.colors.purple })
-    -- M.highlight("gitcommitDiscardedType", { fg = M.colors.red })
-    -- M.highlight("gitcommitSelectedType", { fg = M.colors.green })
-    -- M.highlight("gitcommitHeader", {})
-    -- M.highlight("gitcommitUntrackedFile", { fg = M.colors.cyan })
-    -- M.highlight("gitcommitDiscardedFile", { fg = M.colors.red })
-    -- M.highlight("gitcommitSelectedFile", { fg = M.colors.green })
-    -- M.highlight("gitcommitUnmergedFile", { fg = M.colors.yellow })
-    -- M.highlight("gitcommitFile", {})
-    -- M.highlight("gitcommitSummary", { fg = M.colors.white })
-    -- M.highlight("gitcommitOverflow", { fg = M.colors.red })
-    -- M.link("gitcommitUntracked", "gitcommitComment")
-    -- M.link("gitcommitDiscarded", "gitcommitComment")
-    -- M.link("gitcommitSelected", "gitcommitComment")
-    -- M.link("gitcommitDiscardedArrow", "gitcommitDiscardedFile")
-    -- M.link("gitcommitSelectedArrow", "gitcommitSelectedFile")
-    -- M.link("gitcommitUnmergedArrow", "gitcommitUnmergedFile")
 
     ---- :yaml -----------------------------------------------------------------
 
@@ -697,12 +675,6 @@ local theme = lush(function(injected_functions)
     PanelStNC({ PanelVertSplit }),
     PanelSt({ bg = C.bg_blue.darken(20) }),
 
-    -- { "PanelBackground", { background = bg_color } },
-    -- { "PanelHeading", { background = bg_color, bold = true } },
-    -- { "PanelVertSplit", { foreground = split_color, background = bg_color } },
-    -- { "PanelStNC", { background = bg_color, foreground = split_color } },
-    -- { "PanelSt", { background = st_color } },
-
     ---- megaline -- :help statusline ------------------------------------------
 
     StatusLine({ fg = C.grey1, bg = C.bg1 }), -- status line of current window
@@ -740,12 +712,6 @@ local theme = lush(function(injected_functions)
     StWarn({ fg = C.orange, bg = C.bg1 }),
     StInfo({ fg = C.cyan, bg = C.bg1, gui = "bold" }),
     StHint({ fg = C.bg5, bg = C.bg1 }),
-    ---- hydra
-    --HydraRedSt({ HydraRed, gui = "reverse" }),
-    --HydraBlueSt({ HydraBlue, gui = "reverse" }),
-    --HydraAmaranthSt({ HydraAmaranth, gui = "reverse" }),
-    --HydraTealSt({ HydraTeal, gui = "reverse" }),
-    --HydraPinkSt({ HydraPink, gui = "reverse" }),
 
     ---- :help winbar  ---------------------------------------------------------
 
@@ -830,8 +796,6 @@ local theme = lush(function(injected_functions)
 
     BqfPreviewFloat({ PanelBackground }), -- or WinSeparator
     BqfPreviewBorder({ PanelBackground, fg = C.bg_blue }), -- or WinSeparator
-    -- hi BqfPreviewBorder guifg=#50a14f ctermfg=71
-    -- hi link BqfPreviewRange Search
 
     qfPosition({ Todo }),
 
@@ -862,7 +826,9 @@ local theme = lush(function(injected_functions)
 
     TmuxPopupNormal({ bg = "#3d494f" }),
 
-    VirtColumn({ Whitespace, bg = C.bg0 }), -- FIXME: used with virt-column.nvim
+    ---- virt-column ------------------------------------------------------------
+
+    VirtColumn({ Whitespace, bg = C.bg0 }),
   }
 end)
 

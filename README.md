@@ -19,13 +19,13 @@ _If you want to kick the tires, you can simply:_
 git clone https://github.com/megalithic/dotfiles.git ~/.dotfiles && cd ~/.dotfiles && make install
 ```
 
-_If you want to update an existing install:_
+_If you want to update an existing installation:_
 
 ```bash
 make -C ~/.dotfiles up
 ```
 
-_For platform specific installs:_
+_For platform specific installations:_
 
 ```bash
 cd ~/.dotfiles && make macos # or, `linux`
