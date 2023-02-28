@@ -15,29 +15,14 @@ inoremap("<leader>eil", [[o|> IO.inspect(label: "")<ESC>hi]])
 
 vim.cmd([[iabbrev ep    \|>]])
 vim.cmd([[iabbrev epry  require IEx; IEx.pry]])
-vim.cmd([[iabbrev ei    IO.inspect]])
-vim.cmd([[iabbrev eputs IO.puts]])
-vim.cmd([[iabbrev ed    dbg()<ESC>]])
+vim.cmd([[iabbrev ei    IO.inspect()<ESC>i]])
+vim.cmd([[iabbrev eputs IO.puts()<ESC>i]])
+vim.cmd([[iabbrev ed    dbg()<ESC>i]])
+vim.cmd.iabbrev(":skip:  @tag :skip")
+vim.cmd.iabbrev("tskip   @tag :skip")
 
--- get back matchit things for elixir (from elixir.vim)
--- https://github.com/elixir-editors/vim-elixir/blob/master/ftplugin/elixir.vim#L6-L16
-vim.cmd([[
-  " Matchit support
-  if exists('loaded_matchit') && !exists('b:match_words')
-    let b:match_ignorecase = 0
-
-    let b:match_words = '\:\@<!\<\%(do\|fn\)\:\@!\>' .
-          \ ':' .
-          \ '\<\%(else\|elsif\|catch\|after\|rescue\)\:\@!\>' .
-          \ ':' .
-          \ '\:\@<!\<end\>' .
-          \ ',{:},\[:\],(:)'
-  endif
-]])
-
--- TODO:
+-- REF:
 -- https://github.com/mhanberg/elixir.nvim/tree/main/lua/elixir/mix
-
 local function root_dir(fname)
   local lspconfig = require("lspconfig")
   local lsputil = require("lspconfig.util")

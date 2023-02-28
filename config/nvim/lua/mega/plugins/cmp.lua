@@ -27,6 +27,7 @@ local M = {
     { "hrsh7th/cmp-nvim-lsp-signature-help" },
     { "hrsh7th/cmp-nvim-lsp-document-symbol" },
     { "lukas-reineke/cmp-rg" },
+    { "davidsierradz/cmp-conventionalcommits" },
     -- { "dmitmel/cmp-cmdline-history"},
     -- { "kristijanhusak/vim-dadbod-completion"},
   },
@@ -68,17 +69,6 @@ function M.config()
       fallback()
     end
   end
-
-  -- local buffer_source = {
-  --   name = "buffer",
-  --   option = {
-  --     keyword_length = 5,
-  --     max_item_count = 5, -- only show up to 5 items.
-  --     get_bufnrs = function()
-  --       return vim.api.nvim_list_bufs()
-  --     end,
-  --   },
-  -- }
 
   local cmp_window = {
     border = "none", --mega.get_border(),
@@ -264,13 +254,13 @@ function M.config()
 
   cmp.setup.filetype({ "gitcommit", "NeogitCommitMessage" }, {
     sources = {
-      -- { name = "spell" },
+      { name = "conventionalcommits" },
       { name = "path" },
     },
     { name = "buffer" },
   })
 
-  -- cmp.setup.filetype("lua", {
+  -- cmp.setup.filetype({"lua"}, {
   --   sources = {
   --     { name = "luasnip" },
   --     { name = "nvim_lua" },
@@ -291,12 +281,6 @@ function M.config()
       { name = "dap" },
     },
   })
-
-  -- if mega.require("nvim-autopairs") then
-  --   require("cmp").event:on("confirm_done", require("nvim-autopairs.completion.cmp").on_confirm_done())
-  --   -- REF: neat stuff:
-  --   -- https://github.com/rafamadriz/NeoCode/blob/main/lua/modules/plugins/completion.lua#L130-L192
-  -- end
 
   require("cmp.entry").get_documentation = function(self)
     local item = self:get_completion_item()

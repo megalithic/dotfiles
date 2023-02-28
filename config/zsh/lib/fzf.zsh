@@ -3,28 +3,37 @@
 # https://github.com/junegunn/fzf/wiki/Color-schemes#color-configuration
 # interactive color picker for fzf themes: https://minsw.github.io/fzf-color-picker/
 #
+# REF:
 # https://github.com/junegunn/fzf/wiki/Configuring-shell-key-bindings
 # https://gist.github.com/junegunn/8b572b8d4b5eddd8b85e5f4d40f17236
+# https://sourcegraph.com/github.com/junegunn/fzf/-/blob/ADVANCED.md#--height
+# https://pragmaticpineapple.com/four-useful-fzf-tricks-for-your-terminal/#4-preview-files-before-selecting-them
 
 # TODO:
 # https://www.reddit.com/r/vim/comments/10mh48r/fuzzy_search/
 # perf gains to be had here: https://github.com/ranelpadon/configs/blob/master/zshrc/rg_fzf_bat.sh
 
-export FZF_TMUX_HEIGHT='20%'
+export FZF_TMUX_HEIGHT='30%'
 export FZF_DEFAULT_OPTS="
 --inline-info
 --select-1
 --ansi
+--no-border
+--reverse
 --extended
 --bind ctrl-j:ignore,ctrl-k:ignore
 --bind ctrl-f:page-down,ctrl-b:page-up,ctrl-j:down,ctrl-k:up
 --cycle
---no-multi
---no-border
 --preview-window=right:60%:wrap
 --margin=0,0
---preview 'bat --color=always --style=header,grid --line-range :300 {}'
+--padding=1,1
+--preview='bat --color=always --style=header,grid --line-range :300 {}'
+--prompt=' '
+--pointer=' '
+--marker=' '
 "
+# --no-multi
+# --reverse
 
 _fzf_megaforest() {
   local color00='#323d43'
@@ -46,11 +55,15 @@ _fzf_megaforest() {
 
   # --color=bg+:$color01,bg:$color00,spinner:$color0C,hl:$color0D
 export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS
---color=bg+:$color01,spinner:$color0C,hl:$color0A
---color=fg:$color04,header:$color0D,info:$color0A,pointer:$color0C
---color=marker:$color0C,fg+:$color06,prompt:$color0A,hl+:$color0F
+--color=bg+:$color01,spinner:$color0C,hl:$color0A,gutter:$color01,separator:0
+--color=fg:$color04,header:$color0D,info:$color0A,pointer:$color0C,query:7
+--color=marker:$color0E,fg+:$color06,prompt:$color0A,hl+:$color0F,label:6
 "
 }
+
+# set -U FZF_DEFAULT_OPTS "--reverse --no-info --prompt=' ' --pointer='' --marker=' ' --ansi --color gutter:-1,bg+:-1,header:4,separator:0,info:0,label:4,border:4,prompt:7,pointer:5,query:7,prompt:7"
+export FZF_CTRL_R_OPTS='--header="command history" --preview-window="hidden"'
+# export FZF_TMUX_OPTS="$FZF_DEFAULT_OPTS" #"-p --no-info --ansi --color gutter:-1,bg+:-1,header:4,separator:0,info:0,label:4,border:4,prompt:7,pointer:5,query:7,prompt:7"
 
 _fzf_megaforest
 

@@ -55,11 +55,12 @@ function M.config()
     termsplit = function(cmd) mega.term.open(term_opts(cmd)) end,
     termvsplit = function(cmd) mega.term.open(term_opts(cmd, { direction = "vertical" })) end,
     termfloat = function(cmd) mega.term.open(term_opts(cmd, { direction = "float", focus_on_open = true })) end,
+    termtab = function(cmd) mega.term.open(term_opts(cmd, { direction = "tab", focus_on_open = true })) end,
   }
 
   vim.g["test#strategy"] = {
     nearest = "termsplit",
-    file = "termfloat",
+    file = "termtab",
     suite = "termfloat",
     last = "termsplit",
   }

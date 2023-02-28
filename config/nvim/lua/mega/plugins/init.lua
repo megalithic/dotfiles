@@ -481,12 +481,12 @@ return {
     config = function()
       vim.g.matchup_surround_enabled = true
       vim.g.matchup_matchparen_deferred = true
-      vim.g.matchup_matchparen_offscreen = {
-        method = "popup",
-        fullwidth = true,
-        highlight = "Normal",
-        border = "shadow",
-      }
+      -- vim.g.matchup_matchparen_offscreen =  {
+      --   method = "popup",
+      --   fullwidth = true,
+      --   highlight = "Normal",
+      --   border = "shadow",
+      -- }
     end,
   },
   {

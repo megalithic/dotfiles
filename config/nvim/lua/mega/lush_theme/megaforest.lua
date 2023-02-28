@@ -389,8 +389,8 @@ local theme = lush(function(injected_functions)
 
     sym("@comment.fix")({ bg = C.red, fg = C.bg_dark, gui = "bold,underline" }),
     sym("@comment.warn")({ bg = C.orange, fg = C.bg1, gui = "bold" }),
-    sym("@comment.todo")({ fg = C.grey0, bg = C.bg1, gui = "bold" }),
-    sym("@comment.note")({ fg = C.teal, bg = C.bg_dark, gui = "italic" }),
+    sym("@comment.todo")({ fg = C.orange, bg = C.bg1, gui = nil }),
+    sym("@comment.note")({ fg = C.grey0, bg = C.bg_dark, gui = "italic" }),
     sym("@comment.ref")({ fg = C.bright_blue, bg = C.bg_dark, gui = "italic" }),
 
     sym("@text.danger")({ sym("@comment.fix") }),
@@ -658,8 +658,8 @@ local theme = lush(function(injected_functions)
     ---- :help indent-blankline ------------------------------------------------
 
     IndentBlanklineChar({ fg = C.bg2, bg = C.transparent }),
-    IndentBlanklineContextChar({ fg = C.teal.darken(35), bg = C.transparent }),
-    IndentBlanklineContextStart({ sp = C.teal.darken(35), bg = C.transparent, gui = "underline" }),
+    IndentBlanklineContextChar({ fg = C.bg_blue, bg = C.transparent }),
+    IndentBlanklineContextStart({ sp = C.bg_blue, bg = C.transparent, gui = "underline" }),
 
     ---- :help mini.indentscope ------------------------------------------------
     MiniIndentscopeSymbol({ fg = C.teal, bg = C.transparent }),

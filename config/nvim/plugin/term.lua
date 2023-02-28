@@ -430,7 +430,7 @@ local function new_or_open_term(opts)
     open_term(opts)
   end
 
-  if not opts.focus_on_open then vim.cmd([[wincmd p]]) end
+  if not opts.focus_on_open then vim.cmd("wincmd p") end
 end
 
 local function hide_term(is_moving)
