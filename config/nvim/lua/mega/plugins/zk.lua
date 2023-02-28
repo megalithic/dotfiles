@@ -10,25 +10,32 @@ return {
     },
     { "vijaymarupudi/nvim-fzf" },
   },
-  event = "VeryLazy",
   enabled = true,
+  cmd = {
+    "ZkNotes",
+    "ZkLiveGrep",
+    "ZkTags",
+    "ZkInsertLink",
+    "ZkMatch",
+    "ZkOrphans",
+    "ZkFindNotes",
+    "ZkNew",
+    "ZkNewFromTitleSelection",
+    "ZkInsertLinkAtSelection",
+    "ZkNewFromContentSelection",
+  },
+  keys = { "<leader>zn", "<leader>zf", "<leader>z/" },
   config = function()
     local zk = require("zk")
     zk.setup({
-      -- can be "telescope", "fzf" or "select" (`vim.ui.select`)
-      -- it's recommended to use "telescope" or "fzf"
       picker = "fzf",
 
       lsp = {
-        -- `config` is passed to `vim.lsp.start_client(config)`
         config = {
           cmd = { "zk", "lsp" },
           name = "zk",
-          -- on_attach = require("mega.lsp").on_attach,
-          -- etc, see `:h vim.lsp.start_client()`
         },
 
-        -- automatically attach buffers in a zk notebook that match the given filetypes
         auto_attach = {
           enabled = true,
           filetypes = { "markdown" },
@@ -41,16 +48,6 @@ return {
     local commands = require("zk.commands")
     local api = require("zk.api")
     local fzf_lua = require("fzf-lua")
-
-    --Get dirname of file
-    ---@param file string
-    ---@return string The full dirname for the file
-    local function dirname(file) return file:gsub("(.*)(/.*)$", "%1") end
-
-    --Get basename of file
-    ---@param file string
-    ---@return string The full basename for the file
-    local function basename(file) return file:gsub("(.*/)(.*)$", "%2") end
 
     local function make_edit_fn(defaults, picker_options)
       return function(options)
@@ -68,23 +65,75 @@ return {
 
     local desc = function(desc) return { desc = desc, silent = true } end
 
-    mega.nnoremap("<leader>zn", "<Cmd>ZkNew { title = vim.fn.input('title: ') }<CR>", desc("zk: new note"))
-    mega.vnoremap("<leader>zn", function()
-      vim.ui.select({ "Title", "Content" }, { prompt = "Set selection as:" }, function(choice)
-        if choice == "Title" then
-          vim.cmd([['<,'>ZkNewFromTitleSelection]])
-        elseif choice == "Content" then
-          vim.cmd([['<,'>ZkNewFromContentSelection]])
-        end
-      end)
-    end, desc("zk: new note from selection"))
+    function insert_line_at_cursor(text, newline)
+      local cursor = vim.api.nvim_win_get_cursor(0)
+      local row = cursor[1]
+      local column = cursor[2]
 
-    commands.add("ZkOrphans", make_edit_fn({ orphan = true }, { title = "zk orphans" }))
-    commands.add("ZkRecents", make_edit_fn({ createdAfter = "1 week ago" }, { title = "zk recents" }))
+      if not newline then
+        vim.api.nvim_buf_set_text(0, row - 1, column, row - 1, column, { text })
+      else
+        vim.api.nvim_buf_set_lines(0, row, row, false, { text })
+      end
+    end
+
+    function insert_tag_at_cursor(text, newline)
+      local tag = string.match(text, "([#%a-]+)")
+      insert_line_at_cursor(tag, newline)
+    end
+
+    -- function ZettelkastenSearch()
+    --   require("fzf-lua").fzf_live("textgrep", {
+    --     actions = require("fzf-lua").defaults.actions.files,
+    --     previewer = "builtin",
+    --     exec_empty_query = true,
+    --     fzf_opts = {
+    --       ["--exact"] = "",
+    --       ["--ansi"] = "",
+    --       ["--tac"] = "",
+    --       ["--no-multi"] = "",
+    --       ["--no-info"] = "",
+    --       ["--phony"] = "",
+    --       ["--bind"] = "change:reload:textgrep \"{q}\"",
+    --     },
+    --   })
+    -- end
+    --
+    -- function ZettelkastenRelatedTags()
+    --   require("fzf-lua").fzf_exec("zk-related-tags \"" .. vim.fn.bufname("%") .. "\"", {
+    --     actions = { ["default"] = function(selected, opts) insert_tag_at_cursor(selected[1], true) end },
+    --     fzf_opts = { ["--exact"] = "", ["--nth"] = "2" },
+    --   })
+    -- end
+    --
+    -- function ZettelkastenTags()
+    --   require("fzf-lua").fzf_exec("zkt-raw", {
+    --     actions = { ["default"] = function(selected, opts) insert_tag_at_cursor(selected[1], true) end },
+    --     fzf_opts = { ["--exact"] = "", ["--nth"] = "2" },
+    --   })
+    -- end
+    --
+    -- function CompleteZettelkastenPath()
+    --   require("fzf-lua").fzf_exec("rg --files -t md | sed 's/^/[[/g' | sed 's/$/]]/'", {
+    --     actions = { ["default"] = function(selected, opts) insert_line_at_cursor(selected[1], false) end },
+    --   })
+    -- end
+    --
+    -- function CompleteZettelkastenTag()
+    --   require("fzf-lua").fzf_exec("zkt-raw", {
+    --     actions = { ["default"] = function(selected, opts) insert_tag_at_cursor(selected[1], false) end },
+    --     fzf_opts = {
+    --       ["--exact"] = "",
+    --       ["--nth"] = "2",
+    --       ["--print-query"] = "",
+    --       ["--multi"] = "",
+    --     },
+    --   })
+    -- end
 
     mega.zk_live_grep = function(opts)
       opts = opts or {}
-      opts.prompt = "search notes "
+      opts.prompt = "search notes  "
       opts.file_icons = true
       opts.actions = fzf_lua.defaults.actions.files
       opts.previewer = "builtin"
@@ -95,7 +144,6 @@ return {
         opts
       )
     end
-    commands.add("ZkLiveGrep", mega.zk_live_grep)
 
     mega.zk_find_notes = function(opts)
       local delimiter = "\x01"
@@ -118,7 +166,7 @@ return {
       end
 
       opts = opts or {}
-      opts.prompt = "find notes "
+      opts.prompt = "find notes  "
       opts.file_icons = true
       opts.actions = fzf_lua.defaults.actions.files
       opts.previewer = Preview
@@ -139,8 +187,24 @@ return {
         fzf_lua.fzf_exec(notes, opts)
       end)
     end
+
+    commands.add("ZkOrphans", make_edit_fn({ orphan = true }, { title = "zk orphans" }))
+    commands.add("ZkRecents", make_edit_fn({ createdAfter = "1 week ago" }, { title = "zk recents" }))
+    commands.add("ZkLiveGrep", mega.zk_live_grep)
     commands.add("ZkFindNotes", mega.zk_find_notes)
-    mega.nnoremap("<leader>zf", mega.zk_find_notes, desc("zk: find notes"))
+
+    mega.nnoremap("<leader>zf", "<cmd>ZkNotes<cr>", desc("zk: find notes"))
+    -- mega.nnoremap("<leader>zf", mega.zk_find_notes, desc("zk: find notes"))
+    mega.nnoremap("<leader>zn", "<Cmd>ZkNew { title = vim.fn.input('title: ') }<CR>", desc("zk: new note"))
+    mega.vnoremap("<leader>zn", function()
+      vim.ui.select({ "Title", "Content" }, { prompt = "Set selection as:" }, function(choice)
+        if choice == "Title" then
+          vim.cmd([['<,'>ZkNewFromTitleSelection]])
+        elseif choice == "Content" then
+          vim.cmd([['<,'>ZkNewFromContentSelection]])
+        end
+      end)
+    end, desc("zk: new note from selection"))
 
     mega.nnoremap(
       "<leader>z/",

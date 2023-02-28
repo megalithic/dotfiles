@@ -22,6 +22,13 @@ return {
     priority = 1000,
   },
   {
+    "rose-pine/neovim",
+    name = "rose-pine",
+    lazy = false,
+    priority = 1000,
+    config = true,
+  },
+  {
     "mcchrish/zenbones.nvim",
     lazy = false,
     priority = 999,

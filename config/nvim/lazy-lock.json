@@ -88,6 +88,7 @@
   "playground": { "branch": "master", "commit": "4044b53c4d4fcd7a78eae20b8627f78ce7dc6f56" },
   "plenary.nvim": { "branch": "master", "commit": "253d34830709d690f013daf2853a9d21ad7accab" },
   "readline.nvim": { "branch": "master", "commit": "cab666cbd026dea9c817182e22255ecb3b3419b1" },
+  "rose-pine": { "branch": "main", "commit": "4d6b2a2fe4a0fea30c7808559b06be46624bc587" },
   "schemastore.nvim": { "branch": "main", "commit": "6f2ffb8420422db9a6c43dbce7227f0fdb9fcf75" },
   "splitjoin.vim": { "branch": "main", "commit": "e6af44293c55431d78cc2ddd4335ed68e6fcf6ed" },
   "suda.vim": { "branch": "master", "commit": "08abd39dfe1cee681b8ce3e7321da5fa03e045c1" },

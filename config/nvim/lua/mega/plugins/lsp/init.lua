@@ -668,7 +668,7 @@ function M.config()
     setup_highlights(client, bufnr)
 
     -- fully disable semantic tokens highlighting
-    client.server_capabilities.semanticTokensProvider = nil
+    client.server_capabilities.semanticTokensProvider = false
 
     vim.api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
 
@@ -686,7 +686,7 @@ function M.config()
     capabilities.textDocument.colorProvider = { dynamicRegistration = false }
     capabilities.textDocument.completion.completionItem.documentationFormat = { "markdown" }
     -- disable semantic token highlighting
-    capabilities.textDocument.semanticTokensProvider = false
+    -- capabilities.textDocument.semanticTokensProvider = false
     capabilities.textDocument.foldingRange = {
       dynamicRegistration = false,
       lineFoldingOnly = true,

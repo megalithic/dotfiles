@@ -1,7 +1,40 @@
 local M = {
   "ibhagwan/fzf-lua",
   cmd = { "FzfLua" },
-  dependencies = { "vijaymarupudi/nvim-fzf", "nvim-tree/nvim-web-devicons" },
+  dependencies = {
+    "vijaymarupudi/nvim-fzf",
+    "nvim-tree/nvim-web-devicons",
+    {
+      "junegunn/fzf",
+      init = function()
+        -- vim.env.FZF_DEFAULT_OPTS = "--reverse"
+        vim.g.fzf_commands_expect = "enter"
+        vim.g.fzf_layout = {
+          window = {
+            width = 1.0,
+            height = 0.4,
+            yoffset = 1,
+            highlight = "Normal",
+          },
+        }
+        vim.g.fzf_colors = {
+          fg = { "fg", "TelescopeNormal" },
+          bg = { "bg", "TelescopeNormal" },
+          hl = { "fg", "Green" },
+          ["fg+"] = { "fg", "CursorLine", "CursorColumn", "Normal" },
+          ["bg+"] = { "bg", "CursorLine", "CursorColumn" },
+          ["hl+"] = { "fg", "Cyan" },
+          info = { "fg", "Aqua" },
+          prompt = { "fg", "Orange" },
+          pointer = { "fg", "Blue" },
+          marker = { "fg", "Yellow" },
+          spinner = { "fg", "Yellow" },
+          header = { "fg", "Grey" },
+          border = { "bg", "BackgroundLight" },
+        }
+      end,
+    },
+  },
   keys = {
     { "<leader>ff", "<cmd>FzfLua files<cr>", desc = "fzf: files" },
     { "<leader>a", "<cmd>FzfLua live_grep_glob exec_empty_query=true<cr>", desc = "fzf: live grep" },
@@ -21,13 +54,8 @@ function M.config()
   local img_prev_bin = vim.fn.executable("term-image") == 1 and { "term-image" }
     or vim.fn.executable("chafa") == 1 and { "chafa" }
     or vim.fn.executable("viu") == 1 and { "viu", "-b" }
-    or nil
-  -- local img_prev_bin = vim.fn.executable("viu") == 1 and { "viu", "-bt" } or { "catimg" }
-  -- local img_prev_bin = vim.fn.executable("ueberzug") == 1 and { "ueberzug" }
-  --   or { "kitty", "+kitten", "icat" }
-  --   or { "viu", "-b", "-t" }
-  -- local img_prev_bin = { "kitty", "+kitten", "icat" } or { "viu", "-b", "-t" }
-  -- local img_prev_bin = vim.fn.executable("ueberzug") == 1 and { "ueberzug" } or { "viu", "-b" }
+    or { "catimg" }
+    or { "kitty", "+kitten", "icat" }
 
   -- return first matching highlight or nil
   local function hl_match(t)
@@ -48,11 +76,12 @@ function M.config()
       ["bg+"] = { "bg", hl_match({ "CursorLine" }) },
       ["hl+"] = { "fg", "CmpItemKindVariable" },
       ["info"] = { "fg", hl_match({ "WarningMsg" }) },
-      -- ["prompt"] = { "fg", "SpecialKey", "bg", "TelescopePrompt" },
+      ["prompt"] = { "fg", "Orange" },
       ["pointer"] = { "fg", "DiagnosticError" },
       ["marker"] = { "fg", "DiagnosticError" },
       ["spinner"] = { "fg", "Label" },
       ["header"] = { "fg", "TelescopePrompt" },
+      ["border"] = { "fg", "TelescopeBorder" },
       ["gutter"] = { "bg", "TelescopeSelectionCaret" },
     }
 
@@ -64,6 +93,9 @@ function M.config()
 
   fzf_lua.setup({
     -- fzf_bin = { opts = { ["--no-separator"] = "" } },
+    fzf_opts = {
+      ["--border"] = "none",
+    },
     fzf_colors = fzf_colors,
     winopts = {
       height = 0.35,
@@ -171,15 +203,15 @@ function M.config()
   })
 
   -- register fzf-lua as vim.ui.select interface
-  -- if vim.ui then
-  --   fzf_lua.register_ui_select({
-  --     winopts = {
-  --       win_height = 0.30,
-  --       win_width = 0.70,
-  --       win_row = 0.40,
-  --     },
-  --   })
-  -- end
+  if vim.ui then
+    fzf_lua.register_ui_select({
+      winopts = {
+        win_height = 0.30,
+        win_width = 0.70,
+        win_row = 0.40,
+      },
+    })
+  end
 
   -- nmap("<c-p>", "<cmd>FzfLua files<cr>", "fzf: find files")
 end

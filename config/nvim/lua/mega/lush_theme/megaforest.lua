@@ -39,21 +39,6 @@ vim.g.terminal_color_15 = tostring(tc.white)
 vim.g.terminal_color_background = tostring(tc.black)
 vim.g.terminal_color_foreground = tostring(tc.white)
 
-vim.g.fzf_colors = {
-  fg = { "fg", "Normal" },
-  bg = { "bg", "Normal" },
-  hl = { "fg", "Green" },
-  ["fg+"] = { "fg", "CursorLine", "CursorColumn", "Normal" },
-  ["bg+"] = { "bg", "CursorLine", "CursorColumn" },
-  ["hl+"] = { "fg", "Cyan" },
-  info = { "fg", "Aqua" },
-  prompt = { "fg", "Orange" },
-  pointer = { "fg", "Blue" },
-  marker = { "fg", "Yellow" },
-  spinner = { "fg", "Yellow" },
-  header = { "fg", "Grey" },
-}
-
 vim.g.VM_Mono_hl = "Cursor"
 vim.g.VM_Extend_hl = "Visual"
 vim.g.VM_Cursor_hl = "Cursor"
@@ -328,12 +313,12 @@ local theme = lush(function(injected_functions)
     sym("@constructor")({ Fg }),
     sym("@emphasis")({ fg = C.transparent, bg = "NONE", gui = "italic" }),
     sym("@exception")({ Red }),
-    sym("@field")({ fg = C.cyan.li(5) }),
+    sym("@field")({ fg = C.green }),
     sym("@float")({ Purple }),
-    sym("@function")({ Green }),
+    sym("@function")({ Blue }),
     sym("@function.builtin")({ Green }),
     sym("@function.macro")({ Green }),
-    sym("@function.call")({ Blue }),
+    sym("@function.call")({ fg = C.cyan }),
     sym("@include")({ PurpleItalic }),
     sym("@interface")({ Purple }),
     sym("@keyword")({ Red, gui = "" }),
@@ -348,7 +333,7 @@ local theme = lush(function(injected_functions)
     sym("@operator")({ Orange }),
     sym("@parameter")({ Fg }),
     sym("@parameter.reference")({ Fg }),
-    sym("@property")({ fg = C.cyan }),
+    sym("@property")({ fg = C.cyan.li(5) }),
     sym("@punctuation")({ Fg }),
     sym("@punctuation.bracket")({ sym("@punctuation") }),
     sym("@punctuation.delimiter")({ sym("@punctuation") }),

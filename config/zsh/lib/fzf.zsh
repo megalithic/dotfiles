@@ -13,7 +13,7 @@
 # https://www.reddit.com/r/vim/comments/10mh48r/fuzzy_search/
 # perf gains to be had here: https://github.com/ranelpadon/configs/blob/master/zshrc/rg_fzf_bat.sh
 
-export FZF_TMUX_HEIGHT='30%'
+export FZF_TMUX_HEIGHT='25%'
 export FZF_DEFAULT_OPTS="
 --inline-info
 --select-1
@@ -26,7 +26,7 @@ export FZF_DEFAULT_OPTS="
 --cycle
 --preview-window=right:60%:wrap
 --margin=0,0
---padding=1,1
+--padding=0,0
 --preview='bat --color=always --style=header,grid --line-range :300 {}'
 --prompt=' '
 --pointer=' '
@@ -55,11 +55,12 @@ _fzf_megaforest() {
 
   # --color=bg+:$color01,bg:$color00,spinner:$color0C,hl:$color0D
 export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS
---color=bg+:$color01,spinner:$color0C,hl:$color0A,gutter:$color01,separator:0
---color=fg:$color04,header:$color0D,info:$color0A,pointer:$color0C,query:7
---color=marker:$color0E,fg+:$color06,prompt:$color0A,hl+:$color0F,label:6
+--color=bg+:$color01,spinner:$color0C,hl:$color0A,gutter:$color01
+--color=fg:$color04,header:$color0D,info:$color0A,pointer:$color0C
+--color=marker:$color0E,fg+:$color06,prompt:$color0A,hl+:$color0F
 "
 }
+# ,label:6,query:7,separator:-1
 
 # set -U FZF_DEFAULT_OPTS "--reverse --no-info --prompt=' ' --pointer='' --marker=' ' --ansi --color gutter:-1,bg+:-1,header:4,separator:0,info:0,label:4,border:4,prompt:7,pointer:5,query:7,prompt:7"
 export FZF_CTRL_R_OPTS='--header="command history" --preview-window="hidden"'
