@@ -237,6 +237,8 @@ alias eqmk="nvim $HOME/code/megalithic_qmk/keyboards/atreus62/keymaps/megalithic
 
 alias ebt="nvim $DOTS/misc/newtab/index.html"
 
+alias ee="nvim $DOTS/config/espanso/default.yml"
+
 # kitty session connections:
 alias kapp="et -c 'cd ~/code/app && ls; exec /usr/bin/zsh' seth-dev; /usr/local/bin/zsh"
 alias katlas="et -c 'cd ~/code/atlas && ls; exec /usr/bin/zsh' seth-dev; /usr/local/bin/zsh"

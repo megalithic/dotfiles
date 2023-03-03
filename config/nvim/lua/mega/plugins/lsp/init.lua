@@ -113,7 +113,9 @@ local function diagnostic_popup(bufnr)
   --   if vim.b.lsp_hover_win and api.nvim_win_is_valid(vim.b.lsp_hover_win) then return end
   --   vim.diagnostic.open_float(args.buf, { scope = "line", focus = false })
   -- end
-  vim.diagnostic.open_float(bufnr, { scope = "line", focus = false })
+  if vim.b.lsp_hover_win and api.nvim_win_is_valid(vim.b.lsp_hover_win) then return end
+  vim.diagnostic.open_float(bufnr, { scope = "cursor", focus = false })
+  -- vim.diagnostic.open_float(bufnr, { scope = "line", focus = false })
 end
 
 local format_exclusions = {}
@@ -304,11 +306,18 @@ local function setup_keymaps(client, bufnr)
   --   end
   -- end
 
-  nnoremap("[d", function() diagnostic.goto_prev({ float = true }) end, desc("lsp: prev diagnostic"))
-  nnoremap("]d", function() diagnostic.goto_next({ float = true }) end, desc("lsp: next diagnostic"))
+  nnoremap("[d", function() diagnostic.goto_prev({ float = false }) end, desc("lsp: prev diagnostic"))
+  nnoremap("]d", function() diagnostic.goto_next({ float = false }) end, desc("lsp: next diagnostic"))
   nnoremap("gd", vim.lsp.buf.definition, desc("lsp: definition"))
-  -- nnoremap("gr", vim.lsp.buf.references, desc("lsp: references"))
-  nnoremap("gr", [[<cmd>FzfLua lsp_references<cr>]], desc("lsp: references"))
+  nnoremap("gr", function()
+    if vim.g.picker == "fzf" then
+      vim.cmd([[<cmd>FzfLua lsp_references<cr>]])
+    elseif vim.g.picker == "telescope" then
+      vim.cmd([[<cmd>Telescope lsp_references<cr>]])
+    else
+      vim.lsp.buf.references()
+    end
+  end, desc("lsp: references"))
   nnoremap("gt", vim.lsp.buf.type_definition, desc("lsp: type definition"))
   nnoremap("gi", vim.lsp.buf.implementation, desc("lsp: implementation"))
   nnoremap("gI", vim.lsp.buf.incoming_calls, desc("lsp: incoming calls"))
@@ -332,7 +341,18 @@ local function setup_keymaps(client, bufnr)
   -- nnoremap("gn", function() return ":IncRename " .. vim.fn.expand("<cword>") end, desc("lsp: rename", true))
   -- nnoremap("gn", "<cmd>IncRename<cr>", desc("lsp: rename"))
 
-  nnoremap("K", vim.lsp.buf.hover, desc("lsp: hover"))
+  nnoremap("K", function()
+    local filetype = vim.bo.filetype
+    if vim.tbl_contains({ "vim", "help" }, filetype) then
+      vim.cmd("h " .. vim.fn.expand("<cword>"))
+    elseif vim.tbl_contains({ "man" }, filetype) then
+      vim.cmd("Man " .. vim.fn.expand("<cword>"))
+    elseif vim.fn.expand("%:t") == "Cargo.toml" and require("crates").popup_available() then
+      require("crates").show_popup()
+    else
+      vim.lsp.buf.hover()
+    end
+  end, desc("lsp: hover"))
   nnoremap("gK", vim.lsp.buf.signature_help, desc("lsp: signature help"))
   inoremap("<c-k>", vim.lsp.buf.signature_help, desc("lsp: signature help"))
   nnoremap("<leader>lic", [[<cmd>LspInfo<CR>]], desc("connected client info"))

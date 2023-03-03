@@ -136,7 +136,7 @@ return {
       })
     end,
   },
-  { "lukas-reineke/virt-column.nvim", config = { char = "│" }, lazy = false },
+  { "lukas-reineke/virt-column.nvim", config = { char = "│" }, event = "VeryLazy" },
   {
     "stevearc/dressing.nvim",
     event = "VeryLazy",
@@ -187,7 +187,7 @@ return {
     event = { "BufReadPost", "BufNewFile" },
     enabled = true,
     opts = {
-      char = "│", -- alts: ┆ ┊  ▎
+      char = "┆", -- alts: ┆ ┊  ▎│
       show_foldtext = false,
       context_char = "▎",
       char_priority = 12,
@@ -330,7 +330,6 @@ return {
   },
   {
     "ruifm/gitlinker.nvim",
-    event = "VeryLazy",
     dependencies = "nvim-lua/plenary.nvim",
     keys = {
       { "<localleader>gu", mode = "n" },
@@ -590,7 +589,8 @@ return {
   },
   {
     "abecodes/tabout.nvim",
-    event = { "VeryLazy" },
+    event = { "InsertEnter" },
+    keys = { "<Tab>", "<S-Tab>", "<C-t>", "<C-d>" },
     dependencies = { "nvim-treesitter/nvim-treesitter", "hrsh7th/nvim-cmp" },
     config = function()
       require("tabout").setup({
@@ -656,6 +656,7 @@ return {
   {
     "gaoDean/autolist.nvim",
     ft = { "markdown" },
+    keys = { "<CR>", "<Tab>", "<S-Tab>", "o", "O", ">>", "<<", "<C-r>", "<leader>x", "C-c" },
     config = function()
       local autolist = require("autolist")
       autolist.setup()

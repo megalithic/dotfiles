@@ -121,6 +121,9 @@
       force: true
       # if: "[ `uname` = Darwin ]"
       path: config/kitty
+    ~/.config/lazygit:
+      force: true
+      path: config/lazygit
     ~/.config/nvim:
       force: true
       path: config/nvim

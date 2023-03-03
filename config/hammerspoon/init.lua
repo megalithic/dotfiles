@@ -62,7 +62,7 @@ Install:andUse("EmmyLua")
 Install:andUse("URLDispatcher", {
   start = false,
   config = {
-    default_handler = "com.brave.Browser",
+    default_handler = "com.brave.Browser.dev",
     url_patterns = {
       -- { "https?://slack.com/openid/*", "com.google.Chrome" },
       -- { "https?://github.com/[mM]iroapp.*", "com.google.Chrome" },
@@ -70,7 +70,7 @@ Install:andUse("URLDispatcher", {
       -- { "https?://dev.*.com", "com.google.Chrome" },
       -- { "https?://localhost:*", "com.google.Chrome" },
       -- { "https?://.*devrtb.com", "com.google.Chrome" },
-      -- { "https?://docs.google.com", "com.google.Chrome" },
+      { "https?://meet.google.com/", "com.brave.Browser.dev.app.kjgfgldnnfoeklkmfkjfagphfepbbdan" },
     },
   },
 })

@@ -28,7 +28,7 @@ return {
   config = function()
     local zk = require("zk")
     zk.setup({
-      picker = "fzf",
+      picker = vim.g.picker,
 
       lsp = {
         config = {

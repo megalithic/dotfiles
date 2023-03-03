@@ -274,22 +274,23 @@ local split_opts = {
 local function set_keymaps()
   local keymap_opts = { buffer = term_buf_id, silent = false }
   if term.direction ~= "tab" then
-    nmap("q", function()
+    mega.nmap("q", function()
       api.nvim_buf_delete(term_buf_id, { force = true })
       term_buf_id = nil_buf_id
+      vim.cmd(term.caller_winnr .. [[wincmd w]])
     end, keymap_opts)
   end
 
-  tmap("<esc>", [[<C-\><C-n>]], keymap_opts)
+  mega.tmap("<esc>", [[<C-\><C-n>]], keymap_opts)
   -- TODO: :h wincmd; TL;DR - winnr .. wincmd w
-  tmap("<C-h>", [[<Cmd>wincmd h<CR>]], keymap_opts)
-  tmap("<C-j>", [[<Cmd>wincmd j<CR>]], keymap_opts)
-  tmap("<C-k>", [[<Cmd>wincmd k<CR>]], keymap_opts)
-  tmap("<C-l>", [[<Cmd>wincmd l<CR>]], keymap_opts)
-  -- tmap("<C-h>", fmt([[<Cmd>%swincmd w<CR>]], term.caller_winnr), keymap_opts)
-  -- tmap("<C-j>", fmt([[<Cmd>%swincmd w<CR>]], term.caller_winnr), keymap_opts)
-  -- tmap("<C-k>", fmt([[<Cmd>%swincmd w<CR>]], term.caller_winnr), keymap_opts)
-  -- tmap("<C-l>", fmt([[<Cmd>%swincmd w<CR>]], term.caller_winnr), keymap_opts)
+  -- mega.tmap("<C-h>", fmt([[<Cmd>%swincmd w<CR>]], term.caller_winnr), keymap_opts)
+  -- mega.tmap("<C-j>", fmt([[<Cmd>%swincmd w<CR>]], term.caller_winnr), keymap_opts)
+  -- mega.tmap("<C-k>", fmt([[<Cmd>%swincmd w<CR>]], term.caller_winnr), keymap_opts)
+  -- mega.tmap("<C-l>", fmt([[<Cmd>%swincmd w<CR>]], term.caller_winnr), keymap_opts)
+  tmap("<C-h>", fmt([[<cmd>%swincmd w<cr>]], term.caller_winnr), keymap_opts)
+  tmap("<C-j>", fmt([[<cmd>%swincmd w<cr>]], term.caller_winnr), keymap_opts)
+  tmap("<C-k>", fmt([[<cmd>%swincmd w<cr>]], term.caller_winnr), keymap_opts)
+  tmap("<C-l>", fmt([[<cmd>%swincmd w<cr>]], term.caller_winnr), keymap_opts)
   -- tmap("<C-h>", [[<Cmd>wincmd p<CR>]], keymap_opts)
   -- tmap("<C-j>", [[<Cmd>wincmd p<CR>]], keymap_opts)
   -- tmap("<C-k>", [[<Cmd>wincmd p<CR>]], keymap_opts)
@@ -314,12 +315,12 @@ local function create_term(opts)
           if vim.tbl_contains({ 0, 127, 129, 130 }, exit_code) then
             unset_term(true)
           else
-            dd(fmt("%s/%s/%s", job_id, exit_code, event))
+            dd(fmt("exit status: %s/%s/%s", job_id, exit_code, event))
           end
         end, 100)
       end
 
-      vim.cmd([[wincmd p]])
+      vim.cmd(opts.caller_winnr .. [[wincmd w]])
     end,
   })
 end

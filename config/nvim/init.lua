@@ -33,6 +33,7 @@ vim.g.mapleader = ","
 vim.g.maplocalleader = " "
 vim.g.notifier_enabled = true
 vim.g.debug_enabled = false
+vim.g.picker = "telescope" -- alts: fzf
 
 -- [ globals ] -----------------------------------------------------------------
 

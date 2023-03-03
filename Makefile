@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 .POSIX:
-.PHONY: help dots up install subup xcode macos linux
+.PHONY: help dots up install subup xcode macos linux link
 .DEFAULT_GOAL := up
 
 help: ## Show this help content
@@ -17,6 +17,9 @@ up: ## Runs the main update script (idempotent); use after `make install`
 
 install: ## Runs the main dotbot install script (not for updating)
 	./install
+
+link: ## Runs the the link function of the main install script
+	./install --only link
 
 xcode: ## Install Xcode + CLI tools
 	$(HOME)/.dotfiles/bin/xcode-install -f

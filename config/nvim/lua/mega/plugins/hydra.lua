@@ -1,4 +1,4 @@
-local M = { "anuvyklack/hydra.nvim", lazy = false }
+local M = { "anuvyklack/hydra.nvim", event = "VeryLazy" }
 
 function M.config()
   local Hydra = require("hydra")

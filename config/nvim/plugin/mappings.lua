@@ -241,6 +241,10 @@ vmap("<C-r>", [["hy:%Subvert/<C-r>h//gc<left><left><left>]])
 -- - Close floating windows
 nmap([[<Esc>]], [[<Nop>]])
 nnoremap([[<Esc>]], function() mega.clear_ui() end, { silent = true, desc = "Clear UI" })
+inoremap([[jj]], function()
+  vim.cmd.stopinsert()
+  mega.clear_ui()
+end, { silent = true, desc = "Clear UI" })
 
 -- Use operator pending mode to visually select the whole buffer
 -- e.g. dA = delete buffer ALL, yA = copy whole buffer ALL

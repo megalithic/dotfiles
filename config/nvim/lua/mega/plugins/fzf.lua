@@ -1,13 +1,13 @@
 local M = {
   "ibhagwan/fzf-lua",
   cmd = { "FzfLua" },
+  enabled = vim.g.picker == "fzf",
   dependencies = {
     "vijaymarupudi/nvim-fzf",
     "nvim-tree/nvim-web-devicons",
     {
       "junegunn/fzf",
       init = function()
-        -- vim.env.FZF_DEFAULT_OPTS = "--reverse"
         vim.g.fzf_commands_expect = "enter"
         vim.g.fzf_layout = {
           window = {
@@ -30,7 +30,7 @@ local M = {
           marker = { "fg", "Yellow" },
           spinner = { "fg", "Yellow" },
           header = { "fg", "Grey" },
-          border = { "bg", "BackgroundLight" },
+          border = { "fg", "TelescopeBorder" },
         }
       end,
     },
@@ -41,6 +41,7 @@ local M = {
     { "<leader>A", "<cmd>FzfLua grep_cword<cr>", desc = "fzf: grep cursor" },
     { "<leader>A", "<cmd>FzfLua grep_visual<cr>", desc = "fzf: grep selection", mode = "v" },
     { "<leader>fb", "<cmd>FzfLua buffers<cr>", desc = "fzf: buffers" },
+    { "<leader>fo", "<cmd>FzfLua oldfiles<cr>", desc = "fzf: oldfiles/history/mru" },
     -- { "<C-u>", function() require("fzf-lua.win").preview_scroll(-1) end, desc = "fzf: scroll preview up" },
     -- { "<C-d>", function() require("fzf-lua.win").preview_scroll(1) end, desc = "fzf: scroll preview down" },
   },

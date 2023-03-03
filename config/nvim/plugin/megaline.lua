@@ -329,7 +329,7 @@ local function is_abnormal_buffer()
 end
 
 local function is_valid_git()
-  local status = vim.b.gitsigns_status_dict or {}
+  local status = vim.b[M.ctx.bufnr].gitsigns_status_dict or {}
   local is_valid = status and status.head ~= nil
   return is_valid and status or is_valid
 end

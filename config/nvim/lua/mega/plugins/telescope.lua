@@ -1,10 +1,14 @@
 local function get_border(border_opts)
   return vim.tbl_deep_extend("force", border_opts or {}, {
     borderchars = {
-      { " ", " ", " ", " ", " ", " ", " ", " " },
-      prompt = { " ", " ", " ", " ", " ", " ", " ", " " },
-      results = { " ", " ", " ", " ", " ", " ", " ", " " },
-      preview = { " ", " ", " ", " ", " ", " ", " ", " " },
+      { "", "", "", "", "", "", "", "" },
+      prompt = { "", "", "", "", "", "", "", "" },
+      results = { "", "", "", "", "", "", "", "" },
+      preview = { "", "", "", "", "", "", "", "" },
+      -- { " ", " ", " ", " ", " ", " ", " ", " " },
+      -- prompt = { " ", " ", " ", " ", " ", " ", " ", " " },
+      -- results = { " ", " ", " ", " ", " ", " ", " ", " " },
+      -- preview = { " ", " ", " ", " ", " ", " ", " ", " " },
       -- prompt = { "─", "│", " ", "│", "┌", "┐", "│", "│" },
       -- results = { "─", "│", "─", "│", "├", "┤", "┘", "└" },
       -- preview = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
@@ -39,6 +43,7 @@ local grep_files_cmd = {
   "--line-number",
   "--column",
   "--smart-case",
+  "--trim",
 }
 
 local function dropdown(opts) return require("telescope.themes").get_dropdown(get_border(opts)) end
@@ -110,7 +115,7 @@ end
 local M = {
   "nvim-telescope/telescope.nvim",
   cmd = { "Telescope" },
-
+  enabled = vim.g.picker == "telescope",
   dependencies = {
     "natecraddock/telescope-zf-native.nvim",
     "nvim-telescope/telescope-file-browser.nvim",
@@ -119,26 +124,26 @@ local M = {
   },
   keys = {
     { "<C-p>", project_files, desc = "Find File" },
-    -- { "<leader>ff", project_files, desc = "find files" },
-    -- {
-    --   "<leader>a",
-    --   function() require("telescope.builtin").live_grep(ivy({})) end,
-    --   desc = "live grep",
-    -- },
-    -- {
-    --   "<leader>A",
-    --   function() require("telescope.builtin").grep_string(ivy({})) end,
-    --   desc = "grep under cursor",
-    -- },
-    -- {
-    --   "<leader>A",
-    --   function()
-    --     local pattern = require("mega.utils").get_visual_selection()
-    --     require("telescope.builtin").grep_string(ivy({ search = pattern }))
-    --   end,
-    --   desc = "grep visual selection",
-    --   mode = "v",
-    -- },
+    { "<leader>ff", project_files, desc = "find files" },
+    {
+      "<leader>a",
+      function() require("telescope.builtin").live_grep(ivy({})) end,
+      desc = "live grep",
+    },
+    {
+      "<leader>A",
+      function() require("telescope.builtin").grep_string(ivy({})) end,
+      desc = "grep under cursor",
+    },
+    {
+      "<leader>A",
+      function()
+        local pattern = require("mega.utils").get_visual_selection()
+        require("telescope.builtin").grep_string(ivy({ search = pattern }))
+      end,
+      desc = "grep visual selection",
+      mode = "v",
+    },
     {
       "<leader>fl",
       function()
@@ -148,11 +153,11 @@ local M = {
       end,
       desc = "find plugin file",
     },
-    -- {
-    --   "<leader>fb",
-    --   function() require("telescope.builtin").buffers(dropdown({})) end,
-    --   desc = "find open buffers",
-    -- },
+    {
+      "<leader>fb",
+      function() require("telescope.builtin").buffers(dropdown({})) end,
+      desc = "find open buffers",
+    },
     {
       "<leader>fn",
       function() require("telescope").extensions.file_browser.file_browser(ivy({ path = vim.g.obsidian_vault_path })) end,
@@ -198,8 +203,9 @@ local M = {
             ["<c-o>"] = custom_actions.multi_selection_open,
           },
         },
-        prompt_prefix = " ",
+        prompt_prefix = " ",
         selection_caret = " ",
+        entry_prefix = "  ",
         winblend = 0,
 
         vimgrep_arguments = grep_files_cmd,

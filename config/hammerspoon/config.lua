@@ -265,6 +265,21 @@ local apps = {
     -- end,
     launchMode = "focus",
   },
+
+  ["com.brave.Browser.dev.app.kjgfgldnnfoeklkmfkjfagphfepbbdan"] = {
+    bundleID = "com.brave.Browser.dev.app.kjgfgldnnfoeklkmfkjfagphfepbbdan",
+    name = "Google Meet",
+    key = "z",
+    -- launcher = function()
+    --   if hs.application.find("us.zoom.xos") then
+    --     hs.application.launchOrFocusByBundleID("us.zoom.xos")
+    --   else
+    --     require("lib.browser").jump("meet.google.com|hangouts.google.com.call")
+    --   end
+    -- end,
+    launchMode = "focus",
+  },
+
   ["com.loom.desktop"] = {
     bundleID = "com.loom.desktop",
     name = "Loom",

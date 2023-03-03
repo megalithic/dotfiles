@@ -62,8 +62,14 @@ local function setMenubarTitle()
     title = updateTitle()
   end
 
-  if obj.menubar then
-    obj.menubar:setTitle(title)
+  if obj.menubar then obj.menubar:setTitle(title) end
+end
+
+function obj.toggle(show)
+  if show then
+    obj.menubar:returnToMenuBar()
+  else
+    obj.menubar:removeFromMenuBar()
   end
 end
 

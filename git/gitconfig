@@ -137,10 +137,11 @@
   ; l = "!. ~/.githelpers && pretty_git_log"
   ; la = !git l --all
   last = !git log --max-count=1 | awk '{print $2}' | awk 'NR==1{print $1}'
-  lg = log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
+  ; lg = log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
   log = log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
   ; log = !gitin log
-  lg = !gitin log
+  ; lg = !gitin log
+  lg = !lazygit
   ; branch = !gitin branch
   br = !gitin branch
   ; st = !gitin status
@@ -161,6 +162,7 @@
 
   up = !git pull --autostash --rebase && git log --color --pretty=oneline --abbrev-commit HEAD@{1}.. | sed 's/^/  /'
 
+  wt = !~/.dotfiles/bin/git-wt
   ; rb = rebase
   ; rb = rebase -i
 

@@ -68,6 +68,8 @@ matches:
     replace: "🙌🏼"
   - trigger: ":smile:"
     replace: "😃"
+  - trigger: ":cry:"
+    replace: "😢"
 
   # Dates
   - trigger: ":date:"
