@@ -368,6 +368,7 @@ local theme = lush(function(injected_functions)
     sym("@uri")({ fg = C.blue, bg = C.transparent, gui = "underline" }),
     sym("@variable")({ fg = C.fg }),
     sym("@variable.builtin")({ PurpleItalic }),
+    sym("@variable.lua")({ fg = C.fg }),
     sym("@comment")({ fg = C.light_grey, gui = "italic" }),
     sym("@error")({ gui = "undercurl", sp = C.red }),
 
@@ -720,16 +721,16 @@ local theme = lush(function(injected_functions)
     TelescopeMatching({ Title }),
     TelescopeTitle({ Normal, gui = "bold" }),
 
-    TelescopePreviewTitle({ fg = C.bg0, bg = C.dark_green, gui = "italic" }),
+    TelescopePreviewTitle({ fg = C.fg, bg = C.bg_blue, gui = "italic" }),
     -- darkens the whole preview panel + my faux-no-border
     TelescopePreviewBorder({ bg = PanelBackground.bg, fg = C.transparent }),
     TelescopePreviewNormal({ bg = PanelBackground.bg, fg = C.transparent }),
 
     TelescopePrompt({ bg = C.bg2.darken(10) }),
-    TelescopePromptPrefix({ Statement, bg = C.bg2.darken(10) }),
+    TelescopePromptPrefix({ fg = C.orange, bg = C.bg2.darken(10) }),
     TelescopePromptBorder({ fg = C.bg2.darken(10), bg = C.bg2.darken(10) }),
     TelescopePromptNormal({ fg = C.fg, bg = C.bg2.darken(10) }),
-    TelescopePromptTitle({ fg = C.bg0, bg = C.dark_red }),
+    TelescopePromptTitle({ fg = C.bg0, bg = C.bg_cyan }),
 
     TelescopeSelection({ bg = C.bg3, gui = "bold,italic" }),
     TelescopeSelectionCaret({ fg = C.fg, bg = C.bg3 }),

@@ -266,7 +266,7 @@ return {
             ["eruby.yaml"] = "# %s",
           },
         },
-        matchup = { enable = true },
+        matchup = { enable = true, include_match_words = true },
         rainbow = {
           enable = true,
           disable = { "json", "jsonc", "html" },

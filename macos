@@ -7,13 +7,13 @@
 # TODO:
 # - https://www.youtube.com/watch?v=psPgSN1bPLY&t=349s
 
-[[ -f "$HOME/.dotfiles/config/zsh/lib/helpers.zsh" ]] && source "$HOME/.dotfiles/config/zsh/lib/helpers.zsh"
+source "$HOME/.dotfiles/config/zsh/lib/helpers.zsh"
 
 # Close any open System Preferences panes, to prevent them from overriding
 # settings we’re about to change
 osascript -e 'tell application "System Preferences" to quit'
-
-BACKUP_FILE="${HOME}/Desktop/defaults-backup.$(date '+%Y%m%d_%H%M%S').plist"
+BACKUP_TIMESTAMP=$(date '+%Y%m%d_%H%M%S')
+BACKUP_FILE="${HOME}/Desktop/defaults-backup.${BACKUP_TIMESTAMP}.plist"
 log "backing up current macOS X defaults to: ${BACKUP_FILE}"
 defaults read >"$BACKUP_FILE"
 
@@ -475,6 +475,12 @@ defaults write NSGlobalDomain ApplePressAndHoldEnabled -bool false
 # Set a blazingly fast keyboard repeat rate
 # defaults write NSGlobalDomain KeyRepeat -int 1
 # defaults write NSGlobalDomain InitialKeyRepeat -int 10
+
+# Backup MacOS/system default /etc/zshrc
+
+[[ -e /etc/zshrc ]] &&
+  sudo mv /etc/zshrc "/etc/zshrc.backup-before-dotfiles-${BACKUP_TIMESTAMP}" &&
+  log_ok "Backed up system default /etc/zshrc to /etc/zshrc.backup-before-dotfiles-${BACKUP_TIMESTAMP}.."
 
 set +x
 

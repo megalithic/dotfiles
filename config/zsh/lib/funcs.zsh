@@ -311,8 +311,6 @@ remac() {
 }
 
 chk() { grep $1 =(ps auxwww) }
-portchk() { nc -z -v $1 $2 }
-alias chkport=portchk
 
 changeMac() {
   local mac=$(openssl rand -hex 6 | sed 's/\(..\)/\1:/g; s/.$//')

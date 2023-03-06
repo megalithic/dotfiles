@@ -1,4 +1,6 @@
--- TODO: https://github.com/jfpedroza/neotest-elixir
+-- TODO:
+-- https://github.com/jfpedroza/neotest-elixir
+-- https://github.com/jfpedroza/neotest-elixir/pull/23
 --
 local M = {
   "vim-test/vim-test",

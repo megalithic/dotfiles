@@ -333,7 +333,8 @@ function _prompt_deskfile_loaded() {
 }
 
 function _prompt_nix_shell_loaded() {
-  [[ -n $IN_NIX_SHELL ]] && echo "%F{243}[%f%F{#ffffff}$nix_shell_icon%f%F{243}]%f"
+  # [[ -n $IN_NIX_SHELL ]] && echo "%F{243}[%f%F{#ffffff}$nix_shell_icon%f%F{243}]%f"
+  [[ -n $IN_NIX_SHELL ]] && echo "%F{243}[%f%F{#ffffff}$nix_shell_icon%f %F{245}$NIX_PROJECT%f%F{243}]%f"
 }
 
 function _prompt_sudo() {

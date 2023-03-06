@@ -13,7 +13,7 @@
 # https://www.reddit.com/r/vim/comments/10mh48r/fuzzy_search/
 # perf gains to be had here: https://github.com/ranelpadon/configs/blob/master/zshrc/rg_fzf_bat.sh
 
-export FZF_TMUX_HEIGHT='25%'
+export FZF_TMUX_HEIGHT='22%'
 export FZF_DEFAULT_OPTS="
 --inline-info
 --select-1
