@@ -1,7 +1,7 @@
 #!/usr/local/bin/zsh
 
 SESSION="returns"
-CWD="$CODE/returns"
+CWD="$CODE/ternreturns"
 
 cd $CWD
 

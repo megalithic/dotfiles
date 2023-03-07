@@ -4,7 +4,7 @@ dnd_status=$(dnd status)
 echo
 
 if [[ "$dnd_status" == "on" ]]; then
-  printf "\uf59f DND#[fg=colour255] ⋮ "
+  printf "\uf59f DND"
 elif [[ "$dnd_status" == "off" ]]; then
   printf ""
 fi
