@@ -71,10 +71,12 @@ brew "deno"
 brew "diff-so-fancy"
 brew "dnsmasq"
 brew "dockutil" if OS.mac?
-brew "docker"
-brew "docker-compose"
-brew "docker-credential-helper-ecr"
-brew "docker-machine" # , restart_service: true, link: false
+# USE DOCKER CASK FOR MUCH EASE!
+# brew "docker"
+# brew "docker-compose"
+# brew "docker-credential-helper-ecr"
+# brew "docker-machine" # , restart_service: true, link: false
+
 brew "duck" # cli for cyberduck
 # brew "elixir-ls" # disabled for now, as we're manually installing via dotbot
 brew "federico-terzi/espanso/espanso" if OS.mac?
@@ -259,8 +261,9 @@ cask "contexts"
 cask "controlplane"
 cask "cyberduck"
 cask "dash"
-# cask "docker-edge"
-cask "dropbox"
+cask "docker"
+# cask "dropbox"
+cask "elmedia-player"
 # cask "espanso" if OS.mac?
 # cask "discord"
 # cask "expressvpn"
@@ -268,7 +271,7 @@ cask "figma"
 cask "firefox-developer-edition"
 cask "flux"
 # cask "google-chrome"
-cask "forklift" # replaced with marta for now
+# cask "forklift" # replaced with marta for now
 cask "hazel"
 cask "hammerspoon", greedy: true
 # FIXME: needs an !arm64 check
@@ -276,13 +279,13 @@ cask "hammerspoon", greedy: true
 cask "insomnia"
 # cask "inkscape"
 cask "istat-menus"
-cask "itsycal"
+# cask "itsycal"
 # cask "kap"
 cask "karabiner-elements"
 cask "keycastr"
 cask "kitty", greedy: true
 # cask "little-snitch4" # requires kernel extension, see notes from install message
-cask "loom"
+# cask "loom"
 # cask "marta"
 # cask "micro-snitch"
 cask "mailmate-beta"
