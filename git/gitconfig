@@ -55,6 +55,7 @@
   co = checkout
 
   cl = clone
+  clb = clone --bare
 
   cons = !git ls-files -u | cut -f 2 | sort -u
   econs = !git diff --name-only --diff-filter=U | uniq | xargs $EDITOR
