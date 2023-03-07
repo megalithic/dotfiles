@@ -37,6 +37,7 @@ L.load("config")
 L.load("lib.bindings"):start()
 L.load("lib.menubar.ptt"):start()
 L.load("lib.menubar.spotify"):start()
+L.load("lib.menubar.keyshowr")
 L.load("lib.watchers"):start()
 L.load("lib.wm"):start()
 L.load("lib.quitter"):start({ mode = "double" })
@@ -70,7 +71,7 @@ Install:andUse("URLDispatcher", {
       -- { "https?://dev.*.com", "com.google.Chrome" },
       -- { "https?://localhost:*", "com.google.Chrome" },
       -- { "https?://.*devrtb.com", "com.google.Chrome" },
-      { "https?://meet.google.com/", "com.brave.Browser.dev.app.kjgfgldnnfoeklkmfkjfagphfepbbdan" },
+      { "https?://meet.google.com/*", "com.brave.Browser.dev.app.kjgfgldnnfoeklkmfkjfagphfepbbdan" },
     },
   },
 })

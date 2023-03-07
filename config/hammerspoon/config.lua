@@ -100,7 +100,6 @@ local apps = {
       { "", 1, "maximized" },
     },
   },
-
   ["org.chromium.Chromium"] = {
     bundleID = "org.chromium.Chromium",
     name = "Chromium",
@@ -112,7 +111,6 @@ local apps = {
       { "", 1, "maximized" },
     },
   },
-
   ["org.mozilla.firefox"] = {
     bundleID = "org.mozilla.firefox",
     name = "Firefox",
@@ -174,16 +172,6 @@ local apps = {
       { "", 1, "maximized" },
     },
   },
-  ["com.kagi.kagimacOS"] = {
-    bundleID = "com.kagi.kagimacOS",
-    name = "Orion",
-    quitter = true,
-    localBindings = {},
-    tags = { "browsers" },
-    rules = {
-      { "", 1, "maximized" },
-    },
-  },
   ["com.apple.SafariTechnologyPreview"] = {
     bundleID = "com.apple.SafariTechnologyPreview",
     name = "Safari Technology Preview",
@@ -211,6 +199,15 @@ local apps = {
       { "", 2, "maximized" },
     },
   },
+  ["com.obsproject.obs-studio"] = {
+    bundleID = "com.obsproject.obs-studio",
+    name = "OBS Studio",
+    key = "o",
+    launchMode = "focus",
+    rules = {
+      { "", 2, "maximized" },
+    },
+  },
   ["com.freron.MailMate"] = {
     bundleID = "com.freron.MailMate",
     name = "MailMate",
@@ -228,7 +225,7 @@ local apps = {
     name = "ForkLift",
     -- key = "f",
     rules = {
-      { "", 1, "centeredLarge" },
+      { "", 1, "centeredMedium" },
     },
   },
   ["com.apple.finder"] = {

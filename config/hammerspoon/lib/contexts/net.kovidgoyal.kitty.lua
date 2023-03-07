@@ -14,7 +14,7 @@ function obj:start(opts)
   local event = opts["event"]
 
   if event == hs.application.watcher.activated then -- and _appObj:isRunning() then
-    -- if obj.modal then obj.modal:enter() end
+    if obj.modal then obj.modal:enter() end
     L.req("lib.menubar.spotify").toggle(false)
   end
 

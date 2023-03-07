@@ -17,7 +17,6 @@ end
 local api = hs.spotify
 
 local function spotifyRunning() return hs.application.get("Spotify") end
--- local function spotifyRunning() return hs.application.get("Spotify") and hs.application.get("Spotify"):isRunning() end
 
 local function isPaused()
   local state = api.getPlaybackState()
@@ -80,6 +79,7 @@ function obj:init()
 end
 
 function obj:start()
+  setMenubarTitle()
   obj.updateTimer = hs.timer.new(obj.refreshInterval, function() setMenubarTitle() end):start()
 
   return self
