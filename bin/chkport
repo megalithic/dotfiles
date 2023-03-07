@@ -2,7 +2,7 @@
 
 # List out the pid for the process that is currently listening on the provided port
 
-line="$(lsof -i -P -n | grep LISTEN | grep ":$1")"
+line="$(sudo lsof -i -P -n | grep LISTEN | grep ":$1")"
 pid=$(echo "$line" | awk '{print $2}')
 pid_name=$(echo "$line" | awk '{print $1}')
 
