@@ -24,6 +24,7 @@ do_install() {
   log "installing Xcode CLI tools.."
 
   xcode-select --install
+
   if [[ $? == 1 ]]; then
     log_warn "Xcode CLI tools installation failed for some reason (see output above).."
   elif [[ $? -gt 1 ]]; then
@@ -31,6 +32,9 @@ do_install() {
   elif [[ $? == 1 ]]; then
     log_ok "installed Xcode CLI tools"
   fi
+
+  log "installing rosetta for apple silicon.."
+  softwareupdate --install-rosetta
 }
 
 do_post_install() {
