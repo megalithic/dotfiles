@@ -500,7 +500,7 @@ end
 ---Create an autocommand
 ---returns the group ID so that it can be cleared or manipulated.
 ---@param name string
----@param commands Autocommand[]
+---@param ... Autocommand A list of autocommands to create (variadic parameter)
 ---@return number
 function mega.augroup(name, commands)
   assert(name ~= "User", "The name of an augroup CANNOT be User")

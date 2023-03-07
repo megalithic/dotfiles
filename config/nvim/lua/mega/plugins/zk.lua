@@ -28,7 +28,18 @@ return {
     "ZkInsertLinkAtSelection",
     "ZkNewFromContentSelection",
   },
-  keys = { "<leader>zn", "<leader>zf", "<leader>z/", "<leader>zt" },
+  keys = {
+    "<leader>zn",
+    "<leader>zf",
+    "<leader>z/",
+    "<leader>zw",
+    "<leader>zt",
+    "<leader>nn",
+    "<leader>nf",
+    "<leader>n/",
+    "<leader>nw",
+    "<leader>nt",
+  },
   config = function()
     local zk = require("zk")
     zk.setup({
@@ -211,6 +222,25 @@ return {
         function() require("telescope").extensions.zk.notes(_G.telescope_ivy({ sort = { "modified" } })) end,
         desc("zk: find notes")
       )
+      mega.nnoremap(
+        "<leader>nf",
+        function() require("telescope").extensions.zk.notes(_G.telescope_ivy({ sort = { "modified" } })) end,
+        desc("zk: find notes")
+      )
+      mega.nnoremap(
+        "<leader>zw",
+        function()
+          require("telescope").extensions.zk.notes(_G.telescope_ivy({ sort = { "modified" }, tags = { "tern" } }))
+        end,
+        desc("zk: find notes")
+      )
+      mega.nnoremap(
+        "<leader>nw",
+        function()
+          require("telescope").extensions.zk.notes(_G.telescope_ivy({ sort = { "modified" }, tags = { "tern" } }))
+        end,
+        desc("zk: find notes")
+      )
     end
 
     commands.add("ZkOrphans", make_edit_fn({ orphan = true }, { title = "zk orphans" }))
@@ -218,6 +248,7 @@ return {
 
     -- mega.nnoremap("<leader>zt", "<cmd>ZkTags<cr>", desc("zk: find tags"))
     mega.nnoremap("<leader>zn", "<Cmd>ZkNew { title = vim.fn.input('title: ') }<CR>", desc("zk: new note"))
+    mega.nnoremap("<leader>nn", "<Cmd>ZkNew { title = vim.fn.input('title: ') }<CR>", desc("zk: new note"))
     mega.vnoremap("<leader>zn", function()
       vim.ui.select({ "Title", "Content" }, { prompt = "Set selection as:" }, function(choice)
         if choice == "Title" then
@@ -227,6 +258,16 @@ return {
         end
       end)
     end, desc("zk: new note from selection"))
+    mega.vnoremap("<leader>nn", function()
+      vim.ui.select({ "Title", "Content" }, { prompt = "Set selection as:" }, function(choice)
+        if choice == "Title" then
+          vim.cmd([['<,'>ZkNewFromTitleSelection]])
+        elseif choice == "Content" then
+          vim.cmd([['<,'>ZkNewFromContentSelection]])
+        end
+      end)
+    end, desc("zk: new note from selection"))
+
     mega.vnoremap("<leader>zg", ":'<,'>ZkMatch<CR>", desc("zk: search notes matching selection"))
     mega.nnoremap("<leader>zr", "<Cmd>ZkRecents<CR>", desc("zk: find recent notes"))
     -- mega.nnoremap(

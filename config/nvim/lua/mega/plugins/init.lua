@@ -187,7 +187,7 @@ return {
     event = { "BufReadPost", "BufNewFile" },
     enabled = true,
     opts = {
-      char = "┆", -- alts: ┆ ┊  ▎│
+      char = "┊", -- alts: ┆ ┊  ▎│
       show_foldtext = false,
       context_char = "▎",
       char_priority = 12,
@@ -487,12 +487,12 @@ return {
     config = function()
       vim.g.matchup_surround_enabled = true
       vim.g.matchup_matchparen_deferred = true
-      -- vim.g.matchup_matchparen_offscreen =  {
-      --   method = "popup",
-      --   fullwidth = true,
-      --   highlight = "Normal",
-      --   border = "shadow",
-      -- }
+      vim.g.matchup_matchparen_offscreen = {
+        method = "popup",
+        -- fullwidth = true,
+        highlight = "Normal",
+        border = "none",
+      }
     end,
   },
   {

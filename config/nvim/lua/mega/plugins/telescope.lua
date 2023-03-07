@@ -112,34 +112,46 @@ local function file_extension_filter(prompt)
   end
 end
 
-local M = {
+local function extensions(name) return require("telescope").extensions[name] end
+
+return {
   "nvim-telescope/telescope.nvim",
   cmd = { "Telescope" },
   enabled = vim.g.picker == "telescope",
   dependencies = {
+    { "molecule-man/telescope-menufacture" },
     "natecraddock/telescope-zf-native.nvim",
     "nvim-telescope/telescope-file-browser.nvim",
     -- "danielvolchek/tailiscope.nvim"
-    -- "danielfalk/smart-open.nvim"
+    {
+      "danielfalk/smart-open.nvim",
+      config = true,
+      dependencies = { "kkharji/sqlite.lua" },
+    },
   },
   keys = {
-    { "<C-p>", project_files, desc = "Find File" },
+    { "<C-p>", project_files, desc = "find files" },
     { "<leader>ff", project_files, desc = "find files" },
     {
+      "<localleader><localleader>",
+      function() extensions("smart_open").smart_open(ivy({ cwd_only = true })) end,
+      desc = "smart open files",
+    },
+    {
       "<leader>a",
-      function() require("telescope.builtin").live_grep(ivy({})) end,
+      function() extensions("menufacture").live_grep(ivy({})) end,
       desc = "live grep",
     },
     {
       "<leader>A",
-      function() require("telescope.builtin").grep_string(ivy({})) end,
+      function() extensions("menufacture").grep_string(ivy({})) end,
       desc = "grep under cursor",
     },
     {
       "<leader>A",
       function()
         local pattern = require("mega.utils").get_visual_selection()
-        require("telescope.builtin").grep_string(ivy({ search = pattern }))
+        extensions("menufacture").grep_string(ivy({ search = pattern }))
       end,
       desc = "grep visual selection",
       mode = "v",
@@ -147,7 +159,7 @@ local M = {
     {
       "<leader>fl",
       function()
-        require("telescope.builtin").find_files(ivy({
+        extensions("menufacture").find_files(ivy({
           cwd = require("lazy.core.config").options.root,
         }))
       end,
@@ -160,7 +172,7 @@ local M = {
     },
     {
       "<leader>fn",
-      function() require("telescope").extensions.file_browser.file_browser(ivy({ path = vim.g.obsidian_vault_path })) end,
+      function() extensions("file_browser").file_browser(ivy({ path = vim.g.obsidian_vault_path })) end,
       desc = "browse: obsidian notes",
     },
   },
@@ -221,6 +233,11 @@ local M = {
             enable = true,
             highlight_results = true,
             match_filename = false,
+          },
+        },
+        menufacture = {
+          mappings = {
+            main_menu = { [{ "i", "n" }] = "<C-y>" },
           },
         },
       },
@@ -291,8 +308,8 @@ local M = {
     })
 
     telescope.load_extension("file_browser")
+    telescope.load_extension("menufacture")
     telescope.load_extension("zf-native")
+    telescope.load_extension("smart_open")
   end,
 }
-
-return M

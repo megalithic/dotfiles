@@ -292,7 +292,7 @@ local theme = lush(function(injected_functions)
     Headline4({ fg = C.purple, bg = C.bg1, gui = "bold" }),
     Headline5({ fg = C.blue, bg = C.bg0, gui = "italic" }),
     Headline6({ fg = C.orange, bg = C.bg0, gui = C.transparent }),
-    Dash({ fg = C.bg2, gui = "bold" }),
+    Dash({ fg = C.bg3, gui = "bold" }),
     sym("@dash")({ Dash }),
     CodeBlock({ bg = C.bg1 }),
 
@@ -810,7 +810,7 @@ local theme = lush(function(injected_functions)
 
     ---- tmux-popup ------------------------------------------------------------
 
-    TmuxPopupNormal({ bg = "#3d494f" }),
+    TmuxPopupNormal({ bg = C.bg1 }),
 
     ---- virt-column ------------------------------------------------------------
 
