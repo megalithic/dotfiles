@@ -253,6 +253,7 @@ alias zkn="zknew"
 alias zknc='zk new --print-path --title "$*" | pbcopy'
 alias zkl="zk list $@"
 alias zke="zk edit --interactive"
+alias zkd="zk edit 202302272113"
 alias ezk='$EDITOR "$HOME/.dotfiles/config/zk/config.toml"'
 
 # FOLDERS
