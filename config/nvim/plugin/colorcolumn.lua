@@ -23,7 +23,7 @@ local M = {
     "orgagenda",
     "markdown",
     "Telescope",
-    "DirBuf",
+    "dirbuf",
     "terminal",
     "megaterm",
     "toggleterm",
