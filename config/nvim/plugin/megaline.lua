@@ -632,7 +632,7 @@ local function seg_git_status(truncate_at)
   local status = is_valid_git()
   if not status then return "" end
 
-  local branch = is_truncated(truncate_at) and mega.truncate(status.head or "", 11, false) or status.head
+  local branch = is_truncated(truncate_at) and mega.truncate(status.head or "", 15, false) or status.head
   return seg(branch, "StGitBranch", { margin = { 1, 1 }, prefix = seg_git_symbol(80), padding = { 1, 0 } })
 end
 

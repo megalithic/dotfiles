@@ -60,7 +60,7 @@ local function lsp_cmd_override(cmd_paths, args)
 end
 
 local servers = {
-  ccls = {},
+  ccls = true,
   cssls = {
     settings = {
       css = {
@@ -96,12 +96,50 @@ local servers = {
     },
   },
   elixirls = function()
+    local elixir_nvim_output_bufnr
+
+    local function open_output_panel(opts)
+      local options = opts or { window = "split" }
+
+      local window = {
+        split = function()
+          vim.cmd("sp")
+          vim.api.nvim_win_set_buf(0, elixir_nvim_output_bufnr)
+          vim.api.nvim_win_set_height(0, 30)
+        end,
+        vsplit = function()
+          vim.cmd("vs")
+          vim.api.nvim_win_set_buf(0, elixir_nvim_output_bufnr)
+          vim.api.nvim_win_set_width(0, 80)
+        end,
+        float = function() M.open_floating_window(elixir_nvim_output_bufnr) end,
+      }
+
+      -- mega.nnoremap("q", "<cmd>q<cr>", { buffer = elixir_nvim_output_bufnr, desc = "elixir: exit output panel" })
+      window[options.window]()
+    end
+
     return {
       cmd = lsp_cmd_override({
         ".elixir-ls-release/language_server.sh",
         fmt("%s/lsp/elixir-ls/%s", vim.env.XDG_DATA_HOME, "language_server.sh"),
         "elixir-ls",
       }),
+      handlers = {
+        ["window/logMessage"] = function(_err, result)
+          local message = vim.split("[" .. vim.lsp.protocol.MessageType[result.type] .. "] " .. result.message, "\n")
+
+          if not elixir_nvim_output_bufnr then
+            elixir_nvim_output_bufnr = vim.api.nvim_create_buf(false, true)
+            vim.api.nvim_buf_set_name(elixir_nvim_output_bufnr, "ElixirLS Output Panel")
+            vim.api.nvim_buf_set_option(elixir_nvim_output_bufnr, "filetype", "elixirls")
+          end
+
+          vim.api.nvim_buf_set_lines(elixir_nvim_output_bufnr, -1, -1, false, message)
+
+          mega.nnoremap("<localleader>eob", open_output_panel, { desc = "elixir: open output panel" })
+        end,
+      },
       settings = {
         elixirLS = {
           mixEnv = "test",
@@ -114,7 +152,7 @@ local servers = {
       },
     }
   end,
-  elmls = {},
+  elmls = true,
   emmet_ls = {
     settings = {
       includeLanguages = {
@@ -185,7 +223,7 @@ local servers = {
     local function do_organize_imports()
       local params = {
         command = "_typescript.organizeImports",
-        arguments = { vim.api.nvim_buf_get_name(0) },
+        arguments = { api.nvim_buf_get_name(0) },
         title = "",
       }
       lsp.buf.execute_command(params)
@@ -237,7 +275,7 @@ local servers = {
       },
     }
   end,
-  graphql = {},
+  graphql = true,
   jsonls = {
     commands = {
       Format = {
@@ -258,10 +296,10 @@ local servers = {
       },
     },
   },
-  bashls = {},
+  bashls = true,
   vimls = { init_options = { isNeovim = true } },
-  teal_ls = {},
-  terraformls = {},
+  teal_ls = true,
+  terraformls = true,
   rust_analyzer = {
     settings = {
       ["rust-analyzer"] = {
@@ -273,7 +311,7 @@ local servers = {
       },
     },
   },
-  marksman = {},
+  marksman = true,
   pyright = {
     single_file_support = false,
     settings = {
@@ -287,7 +325,7 @@ local servers = {
       },
     },
   },
-  ruby_ls = {},
+  ruby_ls = true,
   solargraph = {
     single_file_support = false,
     settings = {
@@ -300,7 +338,7 @@ local servers = {
       },
     },
   },
-  prosemd_lsp = {},
+  prosemd_lsp = true,
   --- https://github.com/golang/tools/blob/master/gopls/doc/settings.md
   gopls = {
     settings = {

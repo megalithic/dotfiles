@@ -239,6 +239,8 @@ alias ebt="nvim $DOTS/misc/newtab/index.html"
 
 alias ee="nvim $DOTS/config/espanso/default.yml"
 
+alias etm="nvim $DOTS/config/tmux/megaforest.tmux.conf"
+
 # kitty session connections:
 alias kapp="et -c 'cd ~/code/app && ls; exec /usr/bin/zsh' seth-dev; /usr/local/bin/zsh"
 alias katlas="et -c 'cd ~/code/atlas && ls; exec /usr/bin/zsh' seth-dev; /usr/local/bin/zsh"

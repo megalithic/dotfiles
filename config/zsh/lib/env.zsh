@@ -343,8 +343,6 @@ case "$(uname)" in
   # "${HOME}/.asdf/installs/elixir/`asdf current elixir | awk '{print $1}'`/.mix"
   path=(
     /opt/homebrew/bin
-    ${HOMEBREW_PREFIX}/opt/python@3.11/libexec/bin/python3
-    ${HOMEBREW_PREFIX}/opt/python@3.11/Frameworks/Python.framework/Versions/3.11
     ./bin
     ./.bin
     ./vendor/bundle/bin
@@ -359,7 +357,6 @@ case "$(uname)" in
     $ASDF_SHIMS
     $ASDF_INSTALLS
     $ASDF_LUAROCKS
-    # ${HOME}/neovim/bin(N-/)
     $GOBIN
     ${GOPATH}/bin(N-/)
     $CARGOPATH
@@ -370,12 +367,7 @@ case "$(uname)" in
     ${HOMEBREW_PREFIX}/opt/libffi/lib
     ${HOMEBREW_PREFIX}/opt/gnu-sed/libexec/gnubin
     ${HOMEBREW_PREFIX}/opt/postgresql@15/bin
-
-    # /usr/local/opt/imagemagick@6/bin
-    # /usr/local/opt/qt@5.5/bin
-    # /usr/local/opt/mysql@5.6/bin
-    # /usr/local/opt/postgresql@9.5/bin
-    # /Applications/Postgres.app/Contents/Versions/9.5/bin
+    ${HOMEBREW_PREFIX}/opt/postgresql@14/bin
 
     # /usr/local/opt/openssl@1.1/bin
     /usr/{bin,sbin}

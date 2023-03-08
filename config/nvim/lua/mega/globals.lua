@@ -1093,7 +1093,7 @@ function mega.is_chonky(bufnr, filepath)
   local ok, stats = pcall(vim.loop.fs_stat, filepath)
   if ok and stats and stats.size > max_filesize then is_too_large = true end
 
-  if is_too_long or is_too_large then P(fmt("is too long (%s) or, is too chonky (%s)", is_too_long, is_too_large)) end
+  -- if is_too_long or is_too_large then P(fmt("is too long (%s) or, is too chonky (%s)", is_too_long, is_too_large)) end
 
   return (is_too_long or is_too_large)
 end

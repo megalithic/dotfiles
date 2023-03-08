@@ -115,6 +115,7 @@ do
     "dirbuf",
     "lspinfo",
     "query",
+    "elixirls",
   }
   local smart_close_buftypes = {} -- Don't include no file buffers as diff buffers are nofile
 
