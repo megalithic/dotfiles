@@ -156,7 +156,10 @@ function fuzzy_find() {
   sessions_list=$(printf "%s\n%s" "$layouts_list" "$current_sessions_list" | sort -u)
   current_session="$(tmux display-message -p '#S')"
   sessions_count=$(echo "$sessions_list" | wc -l | sed -e 's/^[[:space:]]*//')
-  preview_cmd="echo {} | sed 's/:.*$//' | xargs -I{} tmux capture-pane -ep -t {}"
+  preview_cmd="echo {} | sed 's/:.*$//' | xargs -I{} echo 'windows in session:' && tmux list-windows -F '#{window_index}:#W (#{window_panes})' -t {} && echo "" && echo 'last 15 lines of output:' && tmux capture-pane -ep -S- -E- -t{}|sed '/^$/d'|tail -15"
+  # preview_cmd="echo {} | sed 's/:.*$//' | xargs -I{} tmux capture-pane -p -S- -E- -t{}|sed '/^$/d'|tail -15"
+  # preview_cmd="echo {} | sed 's/:.*$//' | xargs -I{} tmux capture-pane -ep -t {} | sed '/^$/d'|tail -20"
+  # preview_cmd="echo {} | sed 's/:.*$//' | xargs -I{} tmux capture-pane -ep -t {}"
 
   # -- do certain things based upon only one active session
   if [[ $sessions_count == 1 ]]; then
