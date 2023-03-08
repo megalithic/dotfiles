@@ -1,0 +1,19 @@
+#!/usr/bin/env zsh
+
+pane_number="${1:-$(tmux display-message -p '#{window_panes}')}"
+
+declare -A numbers_arr
+
+numbers_arr[1]="¹"
+numbers_arr[2]="²"
+numbers_arr[3]="³"
+numbers_arr[4]="⁴"
+numbers_arr[5]="⁵"
+numbers_arr[6]="⁶"
+numbers_arr[7]="⁷"
+numbers_arr[8]="⁸"
+numbers_arr[9]="⁹"
+
+echo "${numbers_arr[$pane_number]}"
+
+# vim:set ft=zsh;foldenable;foldmethod=marker;ts=2;sts=2;sw=2
