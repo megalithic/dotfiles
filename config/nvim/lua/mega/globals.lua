@@ -1252,6 +1252,15 @@ do
     vim.cmd([[silent !git branch --show-current | tr -d '[:space:]' | (pbcopy || lemonade copy)]])
     vim.notify(string.format("copied to clipboard: %s", vim.fn.getreg("+")))
   end)
+
+  command(
+    "TreeInspect",
+    function()
+      vim.treesitter.inspect_tree({
+        command = fmt("botright %dvnew", math.min(math.floor(vim.o.columns * 0.25), 80)),
+      })
+    end
+  )
 end
 
 return mega

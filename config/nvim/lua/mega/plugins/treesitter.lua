@@ -110,6 +110,7 @@ return {
       "RRethy/nvim-treesitter-endwise",
       "jadengis/nvim-ts-autotag",
       { "mrjones2014/nvim-ts-rainbow" },
+      -- @trial: https://github.com/akinsho/dotfiles/commit/f3e39e2747eb9dab6464ae5a4e2a1dc3c7af36a8
       "David-Kunz/treesitter-unit",
     },
     config = function()

@@ -96,7 +96,7 @@ editor = "nvim"
 # Pager used to scroll through long output.
 pager = "bat"
 # Command used to preview a note during interactive fzf mode.
-fzf-preview = "bat -p --color always {-1}"
+fzf-preview = "bat --color=always --style=header,grid --line-range :300 {-1}"
 # fzf-binding = "ctrl-n:down" #--bind="enter:replace-query+print-query"
 fzf-bind-new = "Ctrl-e"
 

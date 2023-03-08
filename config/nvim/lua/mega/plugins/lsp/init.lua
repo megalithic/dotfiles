@@ -29,7 +29,7 @@ local M = {
           fix_pos = true,
           auto_close_after = 10, -- close after 15 seconds
           hint_enable = false,
-          floating_window_above_cur_line = true,
+          floating_window_above_cur_line = false,
           doc_lines = 0,
           handler_opts = {
             anchor = "SW",
@@ -66,40 +66,24 @@ local M = {
       config = function()
         require("hover").setup({
           init = function()
-            -- Require providers
             require("hover.providers.lsp")
-            -- require('hover.providers.gh')
-            -- require('hover.providers.gh_user')
-            -- require('hover.providers.jira')
-            -- require('hover.providers.man')
-            -- require('hover.providers.dictionary')
+            require("hover.providers.gh")
+            require("hover.providers.gh_user")
+            require("hover.providers.jira")
+            require("hover.providers.man")
+            require("hover.providers.dictionary")
           end,
           preview_opts = {
             border = require("mega.globals").get_border(),
           },
           -- Whether the contents of a currently open hover window should be moved
           -- to a :h preview-window when pressing the hover keymap.
-          preview_window = false,
-          title = true,
+          preview_window = true,
+          title = false,
         })
       end,
     },
-    -- "ray-x/lsp_signature.nvim",
-    -- { "folke/neoconf.nvim", cmd = "Neoconf", config = true },
-    -- {
-    --   "folke/neodev.nvim",
-    --   config = {
-    --     debug = true,
-    --     experimental = {
-    --       pathStrict = true,
-    --     },
-    --     -- library = {
-    --     --   runtime = "~/projects/neovim/runtime/",
-    --     -- },
-    --   },
-    -- },
   },
-  -- pin = true,
 }
 
 -- [ HELPERS ] -----------------------------------------------------------------
@@ -113,7 +97,7 @@ local function diagnostic_popup(bufnr)
   --   if vim.b.lsp_hover_win and api.nvim_win_is_valid(vim.b.lsp_hover_win) then return end
   --   vim.diagnostic.open_float(args.buf, { scope = "line", focus = false })
   -- end
-  if vim.b.lsp_hover_win and api.nvim_win_is_valid(vim.b.lsp_hover_win) then return end
+  -- if vim.b.lsp_hover_win and api.nvim_win_is_valid(vim.b.lsp_hover_win) then return end
   vim.diagnostic.open_float(bufnr, { scope = "cursor", focus = false })
   -- vim.diagnostic.open_float(bufnr, { scope = "line", focus = false })
 end
@@ -160,8 +144,8 @@ local function hover()
       vim.api.nvim_win_close(existing_float_win, true)
     else
       P("nope, new buf hover")
-      vim.lsp.buf.hover(nil, { focus = false, focusable = false })
-      -- require("hover").hover()
+      -- vim.lsp.buf.hover(nil, { focus = false, focusable = false })
+      require("hover").hover()
     end
   end
 end
@@ -350,7 +334,8 @@ local function setup_keymaps(client, bufnr)
     elseif vim.fn.expand("%:t") == "Cargo.toml" and require("crates").popup_available() then
       require("crates").show_popup()
     else
-      vim.lsp.buf.hover()
+      require("hover").hover()
+      -- vim.lsp.buf.hover()
     end
   end, desc("lsp: hover"))
   nnoremap("gK", vim.lsp.buf.signature_help, desc("lsp: signature help"))
@@ -705,6 +690,9 @@ function M.config()
     -- TODO: what is dynamicRegistration doing here? should I not always set to true?
     capabilities.textDocument.colorProvider = { dynamicRegistration = false }
     capabilities.textDocument.completion.completionItem.documentationFormat = { "markdown" }
+    -- workspace = { didChangeWatchedFiles = { dynamicRegistration = true } },
+    -- textDocument = { foldingRange = { dynamicRegistration = false, lineFoldingOnly = true } },
+
     -- disable semantic token highlighting
     -- capabilities.textDocument.semanticTokensProvider = false
     capabilities.textDocument.foldingRange = {

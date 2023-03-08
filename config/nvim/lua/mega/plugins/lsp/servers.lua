@@ -60,7 +60,7 @@ local function lsp_cmd_override(cmd_paths, args)
 end
 
 local servers = {
-  ccls = true,
+  ccls = {},
   cssls = {
     settings = {
       css = {
@@ -114,7 +114,7 @@ local servers = {
       },
     }
   end,
-  elmls = true,
+  elmls = {},
   emmet_ls = {
     settings = {
       includeLanguages = {
@@ -185,7 +185,7 @@ local servers = {
     local function do_organize_imports()
       local params = {
         command = "_typescript.organizeImports",
-        arguments = { api.nvim_buf_get_name(0) },
+        arguments = { vim.api.nvim_buf_get_name(0) },
         title = "",
       }
       lsp.buf.execute_command(params)
@@ -237,7 +237,7 @@ local servers = {
       },
     }
   end,
-  graphql = true,
+  graphql = {},
   jsonls = {
     commands = {
       Format = {
@@ -258,10 +258,10 @@ local servers = {
       },
     },
   },
-  bashls = true,
+  bashls = {},
   vimls = { init_options = { isNeovim = true } },
-  teal_ls = true,
-  terraformls = true,
+  teal_ls = {},
+  terraformls = {},
   rust_analyzer = {
     settings = {
       ["rust-analyzer"] = {
@@ -273,7 +273,7 @@ local servers = {
       },
     },
   },
-  marksman = true,
+  marksman = {},
   pyright = {
     single_file_support = false,
     settings = {
@@ -287,6 +287,7 @@ local servers = {
       },
     },
   },
+  ruby_ls = {},
   solargraph = {
     single_file_support = false,
     settings = {
@@ -299,7 +300,7 @@ local servers = {
       },
     },
   },
-  prosemd_lsp = true,
+  prosemd_lsp = {},
   --- https://github.com/golang/tools/blob/master/gopls/doc/settings.md
   gopls = {
     settings = {

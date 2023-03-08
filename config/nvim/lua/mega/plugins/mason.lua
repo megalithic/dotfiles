@@ -4,6 +4,7 @@ local M = {
 
 M.tools = {
   "prettierd",
+  "prettier",
   "stylua",
   "selene",
   "luacheck",
@@ -12,14 +13,14 @@ M.tools = {
   "shellcheck",
   "deno",
   "shfmt",
+  "buf",
+  "goimports",
   -- "black",
   -- "isort",
   -- "flake8",
   "cbfmt",
   "elm-format",
   "yamlfmt",
-  "prettier",
-  "prettierd",
 }
 
 function M.check()

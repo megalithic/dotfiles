@@ -477,7 +477,15 @@ vim.g.registers_tab_symbol = "." -- "'·' by default
 vim.g.registers_space_symbol = " " -- "' ' by default
 vim.g.registers_register_key_sleep = 0 -- "0 by default, seconds to wait before closing the window when a register key is pressed
 vim.g.registers_show_empty_registers = 0 -- "1 by default, an additional line with the registers without content
-
+-----------------------------------------------------------------------------//
+-- Title {{{1
+-----------------------------------------------------------------------------//
+function mega.modified_icon() return vim.bo.modified and mega.icons.misc.circle or "" end
+vim.o.titlestring =
+  "%{substitute($VIM, '.*[/\\]', '', '')} %{fnamemodify(getcwd(), \":t\")}%( %{v:lua.mega.modified_icon()}%)"
+vim.o.titleold = fn.fnamemodify(vim.loop.os_getenv("SHELL"), ":t")
+vim.o.title = true
+vim.o.titlelen = 70
 -----------------------------------------------------------------------------//
 -- GUI {{{1
 -----------------------------------------------------------------------------//

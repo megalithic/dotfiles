@@ -219,7 +219,7 @@ local exception_types = {
     help = "",
     undotree = "פּ",
     NvimTree = "פּ",
-    dirbuf = "פּ",
+    dirbuf = "",
     ["neo-tree"] = "פּ",
     toggleterm = " ",
     megaterm = " ",
@@ -252,10 +252,15 @@ local exception_types = {
       local parts = vim.split(fname, " ")
       return fmt("Neo-Tree(%s)", parts[2])
     end,
-    dirbuf = "DirBuf",
+    dirbuf = function(fname, buf)
+      -- local shell = fnamemodify(vim.env.SHELL, ":t")
+      -- local parts = vim.split(fname, " ")
+      -- dd(parts)
+      return seg(fmt("DirBuf %s", vim.fn.expand("%:p")))
+    end,
     toggleterm = function(_, buf)
       local shell = fnamemodify(vim.env.SHELL, ":t")
-      return seg("Terminal(%s)[%s]", shell, api.nvim_buf_get_var(buf, "toggle_number"))
+      return seg(fmt("Terminal(%s)[%s]", shell, api.nvim_buf_get_var(buf, "toggle_number")))
     end,
     megaterm = function(_, buf)
       local shell = fnamemodify(vim.env.SHELL, ":t")
@@ -457,7 +462,8 @@ local function parse_filename(truncate_at)
   local fname = buf_expand(M.ctx.bufnr, modifier)
 
   local name = exception_types.names[M.ctx.filetype]
-  if type(name) == "function" then return "", "", name(fname, M.ctx.bufnr) end
+  local exception_icon = exception_types.filetypes[M.ctx.filetype] or ""
+  if type(name) == "function" then return "", "", fmt("%s %s", exception_icon, name(fname, M.ctx.bufnr)) end
 
   if name then return "", "", name end
 

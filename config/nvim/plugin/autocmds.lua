@@ -114,6 +114,7 @@ do
     "megaterm",
     "dirbuf",
     "lspinfo",
+    "query",
   }
   local smart_close_buftypes = {} -- Don't include no file buffers as diff buffers are nofile
 
@@ -325,6 +326,7 @@ do
     "megaterm",
     "terminal",
     "neotest-summary",
+    "query",
   }
 
   local function on_sidebar_enter()

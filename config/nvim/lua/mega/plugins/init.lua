@@ -34,79 +34,14 @@ return {
     priority = 999,
     dependencies = "rktjmp/lush.nvim",
   },
-  {
-    "sainnhe/everforest",
-    init = function()
-      vim.opt.termguicolors = true
-      -- mega.colors = require("mega.lush_theme.colors")
-
-      vim.g.everforest_diagnostic_virtual_text = "colored"
-      vim.g.everforest_enable_italic = true
-      vim.g.everforest_colors_override = {
-        bg0 = { "NONE", "NONE" }, --"#273433", "235"
-        bg1 = { "#394C4A", "236" },
-        bg2 = { "#425755", "237" },
-        bg3 = { "#4B6361", "238" },
-        bg4 = { "#56716F", "239" },
-      }
-    end,
-    config = function()
-      vim.api.nvim_create_autocmd("User LazyColorscheme", {
-        group = vim.api.nvim_create_augroup("lazy_colorscheme", { clear = true }),
-        once = true,
-        callback = function()
-          vim.cmd([[highlight! link @symbol Blue]])
-          vim.cmd([[highlight! link @constant PurpleItalic]])
-
-          local palette = vim.fn["everforest#get_palette"]("medium", vim.g.everforest_colors_override)
-          local hl = function(...) vim.api.nvim_set_hl(0, ...) end
-
-          hl("NavicIconsFile", { default = true, fg = palette.fg[1], bg = nil })
-          hl("NavicIconsModule", { default = true, fg = palette.yellow[1], bg = nil })
-          hl("NavicIconsNamespace", { default = true, fg = palette.fg[1], bg = nil })
-          hl("NavicIconsPackage", { default = true, fg = palette.fg[1], bg = nil })
-          hl("NavicIconsClass", { default = true, fg = palette.orange[1], bg = nil })
-          hl("NavicIconsMethod", { default = true, fg = palette.blue[1], bg = nil })
-          hl("NavicIconsProperty", { default = true, fg = palette.green[1], bg = nil })
-          hl("NavicIconsField", { default = true, fg = palette.green[1], bg = nil })
-          hl("NavicIconsConstructor", { default = true, fg = palette.orange[1], bg = nil })
-          hl("NavicIconsEnum", { default = true, fg = palette.orange[1], bg = nil })
-          hl("NavicIconsInterface", { default = true, fg = palette.orange[1], bg = nil })
-          hl("NavicIconsFunction", { default = true, fg = palette.blue[1], bg = nil })
-          hl("NavicIconsVariable", { default = true, fg = palette.purple[1], bg = nil })
-          hl("NavicIconsConstant", { default = true, fg = palette.purple[1], bg = nil })
-          hl("NavicIconsString", { default = true, fg = palette.green[1], bg = nil })
-          hl("NavicIconsNumber", { default = true, fg = palette.orange[1], bg = nil })
-          hl("NavicIconsBoolean", { default = true, fg = palette.orange[1], bg = nil })
-          hl("NavicIconsArray", { default = true, fg = palette.orange[1], bg = nil })
-          hl("NavicIconsObject", { default = true, fg = palette.orange[1], bg = nil })
-          hl("NavicIconsKey", { default = true, fg = palette.purple[1], bg = nil })
-          hl("NavicIconsKeyword", { default = true, fg = palette.purple[1], bg = nil })
-          hl("NavicIconsNull", { default = true, fg = palette.orange[1], bg = nil })
-          hl("NavicIconsEnumMember", { default = true, fg = palette.green[1], bg = nil })
-          hl("NavicIconsStruct", { default = true, fg = palette.orange[1], bg = nil })
-          hl("NavicIconsEvent", { default = true, fg = palette.orange[1], bg = nil })
-          hl("NavicIconsOperator", { default = true, fg = palette.fg[1], bg = nil })
-          hl("NavicIconsTypeParameter", { default = true, fg = palette.green[1], bg = nil })
-          hl("NavicText", { default = true, fg = palette.fg[1], bg = nil })
-          hl("NavicSeparator", { default = true, fg = palette.fg[1], bg = nil })
-          hl("NotifyFloat", { default = true, fg = palette.fg[1], bg = nil })
-        end,
-
-        vim.api.nvim_exec_autocmds("User LazyColorscheme", {}),
-      })
-    end,
-    priority = 1000,
-    lazy = true,
-  },
   { "nvim-tree/nvim-web-devicons", config = function() require("nvim-web-devicons").setup() end },
   {
     "NvChad/nvim-colorizer.lua",
     event = { "BufReadPre" },
     config = function()
       require("colorizer").setup({
-        filetypes = { "*", "!lazy", "!gitcommit", "!NeogitCommitMessage" },
-        buftype = { "*", "!prompt", "!nofile" },
+        filetypes = { "*", "!lazy", "!gitcommit", "!NeogitCommitMessage", "!dirbuf" },
+        buftype = { "*", "!prompt", "!nofile", "!dirbuf" },
         user_default_options = {
           RGB = false, -- #RGB hex codes
           RRGGBB = true, -- #RRGGBB hex codes
@@ -245,8 +180,37 @@ return {
     -- build = "cp ./*.py ~/.config/kitty/",
     cond = not vim.env.TMUX and not vim.env.ZELLIJ,
   },
-  -- { "sunaku/tmux-navigate", cond = vim.env.TMUX },
-  -- { "elihunter173/dirbuf.nvim", config = function() require("dirbuf").setup({}) end },
+  {
+    "megalithic/dirbuf.nvim",
+    dev = true,
+    keys = {
+      {
+        "<leader>ed",
+        function()
+          local buf = vim.api.nvim_buf_get_name(0)
+          -- vim.cmd([[vertical topleft split|vertical resize 60]])
+          vim.cmd([[vertical rightbelow split]])
+          require("dirbuf").open(buf)
+        end,
+        desc = "dirbuf: toggle",
+      },
+      {
+        "<leader>ee",
+        function()
+          local buf = vim.api.nvim_buf_get_name(0)
+          -- vim.cmd([[vertical topleft split|vertical resize 60]])
+          require("dirbuf").open(buf)
+        end,
+        desc = "dirbuf: toggle",
+      },
+    },
+    cmd = { "Dirbuf" },
+    event = "VeryLazy",
+    opts = {
+      sort_order = "directories_first",
+      devicons = true,
+    },
+  },
   {
     "prichrd/netrw.nvim",
     ft = "netrw",
@@ -526,12 +490,30 @@ return {
   -- },
   {
     "tpope/vim-abolish",
-    event = { "VeryLazy" },
-    config = function()
-      mega.nnoremap("<localleader>[", ":S/<C-R><C-W>//<LEFT>", { silent = false })
-      mega.nnoremap("<localleader>]", ":%S/<C-r><C-w>//c<left><left>", { silent = false })
-      mega.xnoremap("<localleader>[", [["zy:'<'>S/<C-r><C-o>"//c<left><left>]], { silent = false })
-    end,
+    event = "CmdlineEnter",
+    keys = {
+      {
+        "<C-s>",
+        ":S/<C-R><C-W>//<LEFT>",
+        mode = "n",
+        silent = false,
+        desc = "abolish: replace word under the cursor (line)",
+      },
+      {
+        "<C-s>",
+        ":%S/<C-r><C-w>//c<left><left>",
+        mode = "n",
+        silent = false,
+        desc = "abolish: replace word under the cursor (file)",
+      },
+      {
+        "<C-r>",
+        [["zy:'<'>S/<C-r><C-o>"//c<left><left>]],
+        mode = "x",
+        silent = false,
+        desc = "abolish: replace word under the cursor (visual)",
+      },
+    },
   },
   { "tpope/vim-rhubarb", event = { "VeryLazy" } },
   { "tpope/vim-repeat", keys = { "." } },

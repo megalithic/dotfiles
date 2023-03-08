@@ -42,45 +42,50 @@ function M.config()
     close_if_last_window = true, -- Close Neo-tree if it is the last window left in the tab
     enable_git_status = true,
     git_status_async = true,
-    -- event_handlers = {
-    --   {
-    --     event = "neo_tree_buffer_enter",
-    --     handler = function(args) vim.cmd("highlight! Cursor blend=100") end,
-    --   },
-    --   {
-    --     event = "neo_tree_buffer_leave",
-    --     handler = function(args) vim.cmd("highlight! Cursor blend=0") end,
-    --   },
-    --   {
-    --     event = "neo_tree_window_before_open",
-    --     handler = function(args) end,
-    --   },
-    --   {
-    --     event = "neo_tree_window_after_open",
-    --     handler = function(args)
-    --       vim.cmd("wincmd =")
-    --       vim.api.nvim_win_set_width(0, 50)
-    --     end,
-    --   },
-    --   {
-    --     event = "neo_tree_window_before_close",
-    --     handler = function(args) end,
-    --   },
-    --   -- {
-    --   --   event = "neo_tree_window_after_close",
-    --   --   handler = function(args)
-    --   --     -- vim.cmd("wincmd =")
-    --   --     -- require("virt-column").refresh()
-    --   --     -- -- _G.mega.resize_windows()
-    --   --     -- _G.mega.blink_cursorline(250)
-    --   --     -- vim.cmd("e")
-    --   --   end,
-    --   -- },
-    --   {
-    --     event = "neo_tree_popup_buffer_enter",
-    --     handler = function(args) vim.cmd("highlight! Cursor blend=0") end,
-    --   },
-    -- },
+    event_handlers = {
+      {
+        event = "neo_tree_buffer_enter",
+        handler = function(args)
+          -- vim.cmd("highlight! Cursor blend=100")
+          -- highlight.set('Cursor', { blend = 100 })
+          vim.api.nvim_win_set_width(0, 60)
+        end,
+      },
+      -- {
+      --   event = "neo_tree_buffer_leave",
+      --   handler = function(args) vim.cmd("highlight! Cursor blend=0") end,
+      -- },
+      -- {
+      --   event = "neo_tree_window_before_open",
+      --   handler = function(args) end,
+      -- },
+      -- {
+      --   event = "neo_tree_window_after_open",
+      --   handler = function(args)
+      --     vim.cmd("wincmd =")
+      --     vim.api.nvim_win_set_width(0, 50)
+      --   end,
+      -- },
+      -- {
+      --   event = "neo_tree_window_before_close",
+      --   handler = function(args) end,
+      -- },
+      -- {
+      --   event = "neo_tree_window_after_close",
+      --   handler = function(args)
+      --     -- highlight.set('Cursor', { blend = 0 })
+      --     -- vim.cmd("wincmd =")
+      --     -- require("virt-column").refresh()
+      --     -- -- _G.mega.resize_windows()
+      --     -- _G.mega.blink_cursorline(250)
+      --     -- vim.cmd("e")
+      --   end,
+      -- },
+      {
+        event = "neo_tree_popup_buffer_enter",
+        handler = function(args) vim.cmd("highlight! Cursor blend=0") end,
+      },
+    },
     filesystem = {
       hijack_netrw_behavior = "open_current",
       use_libuv_file_watcher = true,
@@ -118,7 +123,7 @@ function M.config()
     },
     window = {
       position = "left",
-      width = 80,
+      width = 60,
       mappings = {
         o = "toggle_node",
         ["/"] = "noop",

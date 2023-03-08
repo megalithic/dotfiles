@@ -14,6 +14,6 @@ numbers_arr[7]="⁷"
 numbers_arr[8]="⁸"
 numbers_arr[9]="⁹"
 
-echo "${numbers_arr[$pane_number]}"
+[[ "$pane_number" -gt 1 ]] && echo "${numbers_arr[$pane_number]}"
 
 # vim:set ft=zsh;foldenable;foldmethod=marker;ts=2;sts=2;sw=2

@@ -3,18 +3,10 @@
 -- - https://github.com/mickael-menu/zk-nvim/discussions/65
 -- Great keymaps and funcs:
 -- - https://github.com/huynle/vim-config/blob/main/after/plugin/zk.lua#L169
+-- Obsidian + zk:
+-- - https://github.com/ahmedelgabri/dotfiles/blob/main/config/nvim/lua/_/notes.lua
 return {
   "mickael-menu/zk-nvim",
-  -- dependencies = {
-  --   { "ibhagwan/fzf-lua" },
-  --   {
-  --     "junegunn/fzf.vim",
-  --     dependencies = {
-  --       { "junegunn/fzf" },
-  --     },
-  --   },
-  --   { "vijaymarupudi/nvim-fzf" },
-  -- },
   cmd = {
     "ZkNotes",
     "ZkLiveGrep",

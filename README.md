@@ -41,7 +41,7 @@ cd ~/.dotfiles && make help
 make -C ~/.dotfiles help
 ```
 
-> **_NOTE_**: to execute a `make` command from anywhere; specifically for your dotfiles: `make -C ~/.dotfiles <GOAL>`
+> **_NOTE_**: to execute a `make` command from anywhere, say, specifically for your dotfiles: `make -C ~/.dotfiles <GOAL>`
 
 ---
 

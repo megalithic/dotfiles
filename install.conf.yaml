@@ -312,13 +312,6 @@
         log "Attempting to symlink gitconfig_linux..";
         [[ "$(uname)" == "Linux" ]] && ln -sfv "$HOME/.dotfiles/git/gitconfig_linux" ~/.gitconfig_linux;
 
-        log "Attempting to handle newtab setup..";
-        sudo chown -R $(whoami) /etc/apache2;
-        sudo rm /etc/apache2/httpd.conf;
-        sudo ln -sfv $HOME/.dotfiles/misc/newtab/etc_apache2_httpd.conf /etc/apache2/httpd.conf;
-        sudo apachectl -k restart;
-        sudo launchctl load -w /System/Library/LaunchDaemons/org.apache.httpd.plist;
-
         log "Attempting to use gh-login to do GitHub Authentication..";
         ~/.dotfiles/bin/gh-login;
 

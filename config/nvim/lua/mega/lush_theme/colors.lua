@@ -69,7 +69,7 @@ C.bg5 = C.bg0.lighten(25) -- #626262
 
 C.bg_dark_raw = bg_hard
 C.bg_dark = hsluv(bg_hard)
-C.bg_visual = hsluv("#4e6053")
+C.bg_visual = hsluv("#5d5c50")
 C.bg_red = hsluv("#614b51")
 C.bg_green = hsluv("#4e6053")
 C.bg_blue = hsluv("#415c6d")

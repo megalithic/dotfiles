@@ -221,19 +221,28 @@ nnoremap("<leader>W", "<cmd>SudaWrite<cr>", "sudo write buffer and stuff")
 nnoremap("<leader>q", "<cmd>q<cr>", "quit")
 nnoremap("<leader>Q", "<cmd>q!<cr>", "quit!!11!!!")
 
--- map <leader>s <cmd>exe "%s/\\v\<" .. expand("<cword>") .. ">/" .. input("Replace \"" .. expand("<cword>") .. "\" by? ") .. "/g"<cr>
+nnoremap("g>", [[<cmd>set nomore<bar>40messages<bar>set more<CR>]], {
+  desc = "show message history",
+})
 
--- nnoremap(
---   "<C-r>",
---   [[<cmd>exe "%s/\\v\<" .. expand("<cword>") .. ">/" .. input("replace \"" .. expand("<cword>") .. "\" with -> ") .. "/g"<cr>]],
---   "replace "
--- )
--- vnoremap(
---   "<C-r>",
---   [[<cmd>exe "%s/\\v\<" .. expand("<cword>") .. ">/" .. input("replace \"" .. expand("<cword>") .. "\" with -> ") .. "/g"<cr>]],
---   "replace "
--- )
-vmap("<C-r>", [["hy:%Subvert/<C-r>h//gc<left><left><left>]])
+-- search and replace:
+-- NOTE: see tpope/vim-abolish entry in plugins
+-- nnoremap("<C-s>", [[:%s/\<<C-r>=expand("<cword>")<CR>\>/]], {
+--   silent = false,
+--   desc = "replace word under the cursor (file)",
+-- })
+-- nnoremap("<C-s>", [[:s/\<<C-r>=expand("<cword>")<CR>\>/]], {
+--   silent = false,
+--   desc = "replace word under the cursor (line)",
+-- })
+-- -- vnoremap("<C-r>", [["zy:%s/<C-r><C-o>"/]], {
+-- --   silent = false,
+-- --   desc = "replace word under the cursor (visual)",
+-- -- })
+-- vnoremap("<C-r>", [["hy:%Subvert/<C-r>h//gc<left><left><left>]], {
+--   silent = false,
+--   desc = "replace word under the cursor (line)",
+-- })
 
 -- Clear UI state via escape:
 -- - Clear search highlight

@@ -621,7 +621,7 @@ local theme = lush(function(injected_functions)
 
     ---- :help indent-blankline ------------------------------------------------
 
-    IndentBlanklineChar({ fg = C.bg1, bg = C.transparent }),
+    IndentBlanklineChar({ fg = C.bg1.li(3), bg = C.transparent }),
     IndentBlanklineContextChar({ fg = C.bg_blue, bg = C.transparent }),
     IndentBlanklineContextStart({ sp = C.bg_blue.li(10), bg = C.transparent, gui = "underline" }),
 

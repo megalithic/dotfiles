@@ -97,7 +97,13 @@ function M.setup()
       missing = true,
       colorscheme = { vim.g.colorscheme, "forestbones" },
     },
-    dev = { patterns = { "megalithic" } },
+    dev = {
+      -- directory where you store your local plugin projects
+      path = "~/code",
+      ---@type string[] plugins that match these patterns will use your local versions instead of being fetched from GitHub
+      patterns = { "megalithic" }, -- For example {"folke"}
+      fallback = true, -- Fallback to git when local plugin doesn't exist
+    },
     performance = {
       cache = {
         enabled = true,

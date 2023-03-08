@@ -3,19 +3,12 @@ local M = {
   event = { "BufReadPost", "BufNewFile" },
   config = function()
     local gs = require("gitsigns")
-    local right_block = "🮉"
     gs.setup({
       signs = {
-        -- add = { hl = "GitSignsAdd", text = right_block }, -- alts: ┃, │, ▌, ▎
-        -- change = { hl = "GitSignsChange", text = right_block }, -- alts: ║▎
-        -- delete = { hl = "GitSignsDelete", text = right_block },
-        -- topdelete = { hl = "GitSignsDelete", text = right_block },
-        -- changedelete = { hl = "GitSignsChange", text = right_block },
-        -- untracked = { hl = "GitSignsAdd", text = right_block },
-        add = { hl = "GitSignsAdd", text = "▎" }, -- alts: ┃, │, ▌, ▎
+        add = { hl = "GitSignsAdd", text = "▎" }, -- alts: ┃, │, ▌, ▎ 🮉
         change = { hl = "GitSignsChange", text = "▎" }, -- alts: ║▎
-        delete = { hl = "GitSignsDelete", text = "▎" },
-        topdelete = { hl = "GitSignsDelete", text = "▌" },
+        delete = { hl = "GitSignsDelete", text = "┊" }, -- alts: ▎▎
+        topdelete = { hl = "GitSignsDelete", text = "" }, -- alts: ▌
         changedelete = { hl = "GitSignsChange", text = "▌" },
         untracked = { hl = "GitSignsAdd", text = "│" },
         -- untracked = { hl = "GitSignsAdd", text = "▍", numhl = "GitSignsAddNr", linehl = "GitSignsAddLn" },

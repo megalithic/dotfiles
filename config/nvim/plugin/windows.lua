@@ -10,6 +10,7 @@ local ft_ignores = {
   "Trouble",
   "qf",
   "neo-tree",
+  "lazy",
   "packer",
   "startuptime",
 }

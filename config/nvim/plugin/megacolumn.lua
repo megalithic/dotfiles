@@ -106,6 +106,7 @@ local excluded = {
   "list",
   "NvimTree",
   "lazy",
+  "dirbuf",
   "fzf",
   "fzflua",
   "fzf-lua",
