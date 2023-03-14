@@ -207,6 +207,7 @@ function M.partial(fn, ...) end
 -- Parameters:
 --  * table - A table containing some sort of data
 --  * fn - A function that takes two parameters, which will be elements of the supplied table. It should choose one of these elements and return it
+--  * initial - If given, the first call to fn will be with this value and the first element of the table
 --
 -- Returns:
 --  * The element of the supplied table that was chosen by the iterative reducer function
@@ -214,7 +215,7 @@ function M.partial(fn, ...) end
 -- Notes:
 --  * table cannot be a sparse table, see [http://www.luafaq.org/gotchas.html#T6.4](http://www.luafaq.org/gotchas.html#T6.4)
 --  * The first iteration of the reducer will call fn with the first and second elements of the table. The second iteration will call fn with the result of the first iteration, and the third element. This repeats until there is only one element left
-function M.reduce(table, fn, ...) end
+function M.reduce(table, fn, initial, ...) end
 
 -- Creates a function that will collect the result of a series of functions into a table
 --

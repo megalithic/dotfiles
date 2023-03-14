@@ -1,6 +1,7 @@
 -- [ settings ] ----------------------------------------------------------------
 
 vim.g.enabled_plugin = {
+  breadcrumb = false, -- lastplace
   mappings = true,
   autocmds = true,
   megaline = true,

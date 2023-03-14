@@ -93,9 +93,9 @@ function M:zoneBrightness(zone, value, ...) end
 --   * 160 - Orange
 --   * 176 - Red
 --   * 194 - Pink
---   * 210 - Fuscia
+--   * 210 - Fuchsia
 --   * 226 - Lilac
---   * 240 - Lavendar
+--   * 240 - Lavender
 ---@return boolean
 function M:zoneColor(zone, value, ...) end
 

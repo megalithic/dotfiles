@@ -455,7 +455,7 @@ function M:setDefaultFilter(filter, ...) end
 --      and `hs.window.filter:rejectApp()`
 --    - if the *value* is a table, it must contain the accept/reject rules for the app *as key/value pairs*; valid keys
 --      and values are described in `hs.window.filter:setAppFilter()`
---    - the key can be one of the special strings `"default"` and `"override"`, which will will set the default and override
+--    - the key can be one of the special strings `"default"` and `"override"`, which will set the default and override
 --      filter respectively
 --    - the key can be the special string `"sortOrder"`; the value must be one of the `sortBy...` constants as per
 --      `hs.window.filter:setSortOrder()`
@@ -464,7 +464,7 @@ function M:setDefaultFilter(filter, ...) end
 --  * the `hs.window.filter` object for method chaining
 --
 -- Notes:
---  * every filter definition in `filters` will overwrite the pre-existing one for the relevant application, if present;
+--  * every filter definition in `filters` will overwrite the preexisting one for the relevant application, if present;
 --    this also applies to the special default and override filters, if included
 ---@return hs.window.filter
 function M:setFilters(filters, ...) end

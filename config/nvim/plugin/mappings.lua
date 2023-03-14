@@ -93,11 +93,11 @@ nnoremap("<localleader>f", "<cmd>LspFormatWrite<cr>", "run lsp formatter")
 exec("silent! unmap [%", true)
 exec("silent! unmap ]%", true)
 
-nnoremap("<Tab>", "%")
-snoremap("<Tab>", "%")
-vnoremap("<Tab>", "%")
-xnoremap("<Tab>", "%")
-onoremap("<Tab>", "%")
+nmap("<Tab>", "%")
+smap("<Tab>", "%")
+vmap("<Tab>", "%")
+xmap("<Tab>", "%")
+omap("<Tab>", "%")
 
 -- https://github.com/tpope/vim-rsi/blob/master/plugin/rsi.vim
 -- c-a / c-e everywhere - RSI.vim provides these

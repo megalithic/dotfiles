@@ -50,7 +50,7 @@ hs.doc = M
 --        * `lua`   - provides documentation for the version of lua Hammerspoon is using, currently 5.3
 --          * `lua._man` - provides the table of contents for the Lua 5.3 manual.  You can pull up a specific section of the lua manual by including the chapter (and subsection) like this: `lua._man._3_4_8`.
 --          * `lua._C`   - provides documentation specifically about the Lua C API for use when developing modules which require external libraries.
---      * `path` is one or more components, separated by a period specifying the module, submodule, function, or moethod you wish to view documentation for.
+--      * `path` is one or more components, separated by a period specifying the module, submodule, function, or method you wish to view documentation for.
 function M.help(identifier, ...) end
 
 -- Locates the JSON file corresponding to the specified third-party module or Spoon by searching package.path and package.cpath.
@@ -67,7 +67,7 @@ function M.help(identifier, ...) end
 --  * The documentation for core modules is stored in the JSON file specified by the `hs.docstrings_json_file` variable; this function is intended for use in locating the documentation file for third party modules and Spoons.
 function M.locateJSONFile(module, ...) end
 
--- Locates all installed Spoon documentation files and and marks them for loading the next time the [hs.doc.help](#help) function is invoked.
+-- Locates all installed Spoon documentation files and marks them for loading the next time the [hs.doc.help](#help) function is invoked.
 --
 -- Parameters:
 --  * None

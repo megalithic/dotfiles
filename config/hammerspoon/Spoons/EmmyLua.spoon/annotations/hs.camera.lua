@@ -68,7 +68,7 @@ function M:name() end
 -- Sets or clears a callback for when the properties of an hs.camera object change
 --
 -- Parameters:
---  * fn - A function to be called when properites of the camera change, or nil to clear a previously set callback. The function should accept the following parameters:
+--  * fn - A function to be called when properties of the camera change, or nil to clear a previously set callback. The function should accept the following parameters:
 --   * The hs.camera object that changed
 --   * A string describing the property that changed. Possible values are:
 --    * gone - The device's "in use" status changed (ie another app started using the camera, or stopped using it)
@@ -107,7 +107,7 @@ function M.setWatcherCallback(fn) end
 --  * The `hs.camera` object
 function M:startPropertyWatcher() end
 
--- Stops the camera devices watcher
+-- Starts the camera devices watcher
 --
 -- Parameters:
 --  * None

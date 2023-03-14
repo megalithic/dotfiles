@@ -9,6 +9,33 @@
 local M = {}
 hs.battery = M
 
+-- Returns a table containing all of the details concerning the Mac's powersource(s).
+--
+-- Parameters:
+--  * None
+--
+-- Returns:
+--  * a table containing the raw data about the power source(s) for the Mac.
+--
+-- Notes:
+--  * This function is generally not required and is provided to aid in debugging. This function combines the output of the following internally used functions:
+--    * `hs.battery._adapterDetails()`
+--    * `hs.battery._powerSources()`
+--    * `hs.battery._appleSmartBattery()`
+--    * `hs.battery._iopmBatteryInfo()`
+--
+--  * You can view this report by typing `hs.inspect(hs.battery._report())` (or a subset of it by using one of the above listed functions instead) -- it will primarily be of interest when debugging or extending this module and generally not necessary to use.
+function M._report() end
+
+-- Returns the serial number of the attached power supply, if present
+--
+-- Parameters:
+--  * None
+--
+-- Returns:
+--  * An number or string containing the power supply's serial number, or nil if the adapter is not attached or does not provide one.
+function M.adapterSerialNumber() end
+
 -- Returns the amount of current flowing through the battery, in mAh
 --
 -- Parameters:
@@ -21,6 +48,26 @@ hs.battery = M
 --   * Greater than zero if the battery is being charged
 ---@return number
 function M.amperage() end
+
+-- Returns the serial number of the battery, if present
+--
+-- Parameters:
+--  * None
+--
+-- Returns:
+--  * A string containing the battery's serial number, or nil if there is no battery or the battery or UPS does not provide one.
+---@return string
+function M.batterySerialNumber() end
+
+-- Returns the type of battery present, or nil if there is no battery
+--
+-- Parameters:
+--  * None
+--
+-- Returns:
+--  * A string containing one of "UPS" or "InternalBattery", or nil if no battery is present.
+---@return string
+function M.batteryType() end
 
 -- Returns the current capacity of the battery in mAh
 --
@@ -117,7 +164,7 @@ function M.isCharging() end
 --  * None
 --
 -- Returns:
---  * True if the battery is in its final charging state (i.e. trickle charging), false if not, or "n/a" if the battery is not charging at all
+--  * True if the battery is in its final charging state (i.e. trickle charging), false if not
 function M.isFinishingCharge() end
 
 -- Returns the maximum capacity of the battery in mAh
@@ -143,7 +190,7 @@ function M.maxCapacity() end
 ---@return string
 function M.name() end
 
--- Returns information about non-PSU batteries (e.g. bluetooth accessories)
+-- Returns information about non-PSU batteries (e.g. Bluetooth accessories)
 --
 -- Parameters:
 --  * None
@@ -162,7 +209,17 @@ function M.otherBatteryInfo() end
 ---@return number
 function M.percentage() end
 
--- Returns current source of power
+-- Returns the current source providing power
+--
+-- Parameters:
+--  * None
+--
+-- Returns:
+--  * A string containing one of {AC Power, Battery Power, UPS Power}.
+---@return string
+function M.powerSource() end
+
+-- Returns current power source type
 --
 -- Parameters:
 --  * None
@@ -170,7 +227,7 @@ function M.percentage() end
 -- Returns:
 --  * A string containing one of {AC Power, Battery Power, Off Line}.
 ---@return string
-function M.powerSource() end
+function M.powerSourceType() end
 
 -- Returns information about Bluetooth devices using Apple Private APIs
 --
@@ -186,7 +243,7 @@ function M.powerSource() end
 --  * The table contains the following keys:
 --    * vendorID - Numerical identifier for the vendor of the device (Apple's ID is 76)
 --    * productID - Numerical identifier for the device
---    * address - The bluetooth address of the device
+--    * address - The Bluetooth address of the device
 --    * isApple - A string containing "YES" or "NO", depending on whether or not this is an Apple/Beats product, or a third party product
 --    * name - A human readable string containing the name of the device
 --    * batteryPercentSingle - For some devices this will contain the percentage of the battery (e.g. Beats headphones)
@@ -207,26 +264,6 @@ function M.powerSource() end
 --  * Please report any crashes from this function - it's likely that there are Bluetooth devices we haven't tested which may return weird data
 --  * Many/Most/All non-Apple party products will likely return zeros for all of the battery related fields here, as will Apple HID devices. It seems that these private APIs mostly exist to support Apple/Beats headphones.
 function M.privateBluetoothBatteryInfo() end
-
--- Returns the serial number of the attached power supply, if present
---
--- Parameters:
---  * None
---
--- Returns:
---  * An integer containing the power supply's serial number, or 0 if no serial can be found
----@return number
-function M.psuSerial() end
-
--- Returns the serial string of the attached power supply, if present
---
--- Parameters:
---  * None
---
--- Returns:
---  * A string containing the power supply's serial, or an empty string if no serial can be found
----@return string
-function M.psuSerialString() end
 
 -- Returns the battery life remaining, in minutes
 --
@@ -260,6 +297,22 @@ function M.timeToFullCharge() end
 --  * A number containing the current voltage of the battery
 ---@return number
 function M.voltage() end
+
+-- Returns a string specifying the current battery warning state.
+--
+-- Parameters:
+--  * None
+--
+-- Returns:
+--  * a string specifying the current warning level state. The string will be one of "none", "low", or "critical".
+--
+-- Notes:
+--  * The meaning of the return strings is as follows:
+--    * "none" - indicates that the system is not in a low battery situation, or is currently attached to an AC power source.
+--    * "low"  - the system is in a low battery situation and can provide no more than 20 minutes of runtime. Note that this is a guess only; 20 minutes cannot be guaranteed and will be greatly influenced by what the computer is doing at the time, how many applications are running, screen brightness, etc.
+--    * "critical" - the system is in a very low battery situation and can provide no more than 10 minutes of runtime. Note that this is a guess only; 10 minutes cannot be guaranteed and will be greatly influenced by what the computer is doing at the time, how many applications are running, screen brightness, etc.
+---@return string
+function M.warningLevel() end
 
 -- Returns the power entering or leaving the battery, in W
 --

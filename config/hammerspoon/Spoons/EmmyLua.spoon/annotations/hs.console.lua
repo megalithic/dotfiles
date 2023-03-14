@@ -160,7 +160,7 @@ M.defaultToolbar = nil
 --  * If the text of the console is retrieved as a string, no color or style information in the console output is retrieved - only the raw text.
 function M.getConsole(styled, ...) end
 
--- Get the Hammerspoon console history as an array.
+-- Get the Hammerspoon console command history as an array.
 --
 -- Parameters:
 --  * None
@@ -202,6 +202,20 @@ function M.inputBackgroundColor(color, ...) end
 -- Notes:
 --  * see the notes for `hs.drawing.windowLevels`
 function M.level(theLevel, ...) end
+
+-- Get or set the max length of the Hammerspoon console's scrollback history.
+--
+-- Parameters:
+--  * length - an optional number containing the maximum size in bytes of the Hammerspoon console history.
+--
+-- Returns:
+--  * the current maximum size of the console history
+--
+-- Notes:
+--  * A length value of zero will allow the history to grow infinitely
+--  * The default console history is 100,000 characters
+---@return number
+function M.maxOutputHistory(length, ...) end
 
 -- Get or set the color for the background of the Hammerspoon Console's output view.
 --
@@ -246,7 +260,7 @@ function M.printStyledtext(...) end
 --  * You can specify the console content as a string or as an `hs.styledtext` object in either userdata or table format.
 function M.setConsole(styledText, ...) end
 
--- Set the Hammerspoon console history to the items specified in the given array.
+-- Set the Hammerspoon console command history to the items specified in the given array.
 --
 -- Parameters:
 --  * array - the list of commands to set the Hammerspoon console history to.

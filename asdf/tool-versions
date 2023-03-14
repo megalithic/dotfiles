@@ -4,8 +4,8 @@ erlang 25.2.2
 elm 0.19.1
 lua 5.1.5
 ruby 3.2.0
-rust stable
-golang 1.17.1
+rust latest
+golang 1.20.2
 # python 3.11.1
 # erlang 24.3.4
 # erlang 25.0.3

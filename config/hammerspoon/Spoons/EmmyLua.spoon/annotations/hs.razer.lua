@@ -234,7 +234,7 @@ function M:greenStatusLight(value, ...) end
 --  * This function must be called before any other parts of this module are used
 function M.init(fn) end
 
--- Returns the human readible device name of the Razer device.
+-- Returns the human readable device name of the Razer device.
 --
 -- Parameters:
 --  * None

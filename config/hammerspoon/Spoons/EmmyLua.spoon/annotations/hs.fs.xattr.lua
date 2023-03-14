@@ -3,7 +3,7 @@
 
 -- Get and manipulate extended attributes for files and directories
 --
--- This submodule provides functions for getting and setting the extended attributes for files and directories.  Access to extended attributes is provided through the Darwin xattr functions defined in the /usr/include/sys/xattr.h header. Attribute names are expected to conform to proper UTF-8 strings and values are represented as raw data -- in Lua raw data is presented as bytes in a string object but the bytes are not required to conform to peroper UTF-8 byte code sequences. This module does not perform any encoding or decoding of the raw data.
+-- This submodule provides functions for getting and setting the extended attributes for files and directories.  Access to extended attributes is provided through the Darwin xattr functions defined in the /usr/include/sys/xattr.h header. Attribute names are expected to conform to proper UTF-8 strings and values are represented as raw data -- in Lua raw data is presented as bytes in a string object but the bytes are not required to conform to proper UTF-8 byte code sequences. This module does not perform any encoding or decoding of the raw data.
 --
 -- All of the functions provided by this module can take an options table. Note that not all options are valid for all functions. The options table should be a Lua table containing an array of zero or more of the following strings:
 --
@@ -42,7 +42,7 @@ function M.get(path, attribute, options, position, ...) end
 --  * `path`      - A string specifying the path to the file or directory to get the extended attribute from
 --  * `attribute` - A string specifying the name of the extended attribute to get the value of
 --  * `options`   - An optional table containing options as described in this module's documentation header. Defaults to {} (an empty array).
---  * `position`  - An optional integer specifying the offset within the extended attribute. Defaults to 0. Setting this argument to a value other than 0 is only valid when `att  ribute` is "com.apple.ResourceFork".
+--  * `position`  - An optional integer specifying the offset within the extended attribute. Defaults to 0. Setting this argument to a value other than 0 is only valid when `attribute` is "com.apple.ResourceFork".
 --
 -- Returns:
 --  * if the returned data does not conform to proper UTF-8 byte sequences, passes the string through `hs.utf8.hexDump` first.  Otherwise the return values follow the description for [hs.fs.xattr.get](#get) .
@@ -79,7 +79,7 @@ function M.remove(path, attribute, options, ...) end
 -- Parameters:
 --  * `path`      - A string specifying the path to the file or directory to set the extended attribute for
 --  * `attribute` - A string specifying the name of the extended attribute to set
---  * `value`     - A string containing the value to set the extended attribute to. This value is treated as a raw sequence of bytes and does not have to conform to propert UTF-8 byte sequences.
+--  * `value`     - A string containing the value to set the extended attribute to. This value is treated as a raw sequence of bytes and does not have to conform to property UTF-8 byte sequences.
 --  * `options`   - An optional table containing options as described in this module's documentation header. Defaults to {} (an empty array).
 --  * `position`  - An optional integer specifying the offset within the extended attribute. Defaults to 0. Setting this argument to a value other than 0 is only valid when `attribute` is "com.apple.ResourceFork".
 --

@@ -171,7 +171,7 @@ function M:sent() end
 ---@return string
 function M:server() end
 
--- Set or remoce the callback function for the pingObject.
+-- Set or remove the callback function for the pingObject.
 --
 -- Parameters:
 --  * `fn` - the function to set as the callback, or nil if you wish use the default callback.
@@ -200,7 +200,7 @@ function M:setCallback(fn) end
 -- 5 packets transmitted, 5 packets received, 0.0 packet loss
 -- round-trip min/avg/max = 2.282/4.133/4.926 ms
 -- ~~~
---  * The numer of packets received will match the number that has currently been sent, not necessarily the value returned by [hs.network.ping:count](#count).
+--  * The number of packets received will match the number that has currently been sent, not necessarily the value returned by [hs.network.ping:count](#count).
 ---@return string
 function M:summary() end
 

@@ -6,6 +6,15 @@
 local M = {}
 hs.menubar = M
 
+-- Get or set the autosave name of the menubar. By defining an autosave name, macOS can restore the menubar position after reloads.
+--
+-- Parameters:
+--  * name - An optional string if you want to set the autosave name
+--
+-- Returns:
+--  * Either the menubar item, if its autosave name was changed, or the current value of the autosave name
+function M:autosaveName(name, ...) end
+
 -- Removes the menubar item from the menubar and destroys it
 --
 -- Parameters:
@@ -75,7 +84,8 @@ function M:isInMenuBar() end
 -- Creates a new menu bar item object and optionally add it to the system menubar
 --
 -- Parameters:
---  * inMenuBar -- an optional parameter which defaults to true.  If it is true, the menubaritem is added to the system menubar, otherwise the menubaritem is hidden.
+--  * inMenuBar - an optional parameter which defaults to true.  If it is true, the menubaritem is added to the system menubar, otherwise the menubaritem is hidden.
+--  * autosaveName - an optional parameter allowing you to define an autosave name, so that macOS can restore the menubar position between restarts.
 --
 -- Returns:
 --  * menubar item object to use with other API methods, or nil if it could not be created
@@ -85,21 +95,7 @@ function M:isInMenuBar() end
 --
 --  * Calling this method with inMenuBar equal to false is equivalent to calling hs.menubar.new():removeFromMenuBar().
 --  * A hidden menubaritem can be added to the system menubar by calling hs.menubar:returnToMenuBar() or used as a pop-up menu by calling hs.menubar:popupMenu().
-function M.new(inMenuBar, ...) end
-
--- Creates a new menu bar item object with the specified priority
---
--- Parameters:
---  * priority - an integer specifying the menubar item's priority.  A menubar item's position is determined by its priority value.
---
--- Returns:
---  * menubar item object to use with other API methods, or nil if it could not be created
---
--- Notes:
---  * Default priority levels can be found in the [hs.menubar.priorities](#priorities) table.
---
---  * This constructor uses undocumented methods in the NSStatusBar and NSStatusItem classes; because of this, we cannot guarantee that it will work with future versions of OS X.  This constructor has been written so that if the necessary private methods are not present, then a warning will be sent to the Hammerspoon console and the menubar item will be created in its default position -- the equivalent of using the [hs.menubar.new](#new) constructor instead of this one.
-function M.newWithPriority(priority, ...) end
+function M.new(inMenuBar, autosaveName, ...) end
 
 -- Display a menubaritem as a pop up menu at the specified screen point.
 --
@@ -115,32 +111,6 @@ function M.newWithPriority(priority, ...) end
 --  * This method is blocking. Hammerspoon will be unable to respond to any other activity while the pop-up menu is being displayed.
 --  * `darkMode` uses an undocumented macOS API call, so may break in a future release.
 function M:popupMenu(point, darkMode, ...) end
-
--- Pre-defined list of priority levels which can be used for positioning menubar items.
---
--- The constants defined are as follows:
---  * default            - the default priority -- to the left of existing menubar items
---  * system             - the default priority for Apple system menubar icons (Wifi, Bluetooth, etc.)
---  * spotlight          - the Spotlight menubar icon priority
---  * notificationCenter - the Notification Center icon priority
---
--- You are not limited to these priorities, but the behavior is undefined if you specify a priority less than 0 or greater than 2147483647 (the `notificationCenter` priority).
----@type table
-M.priorities = {}
-
--- Get or set a menubar item's priority
---
--- Parameters:
---  * priority - an optional integer specifying the menubar item's priority.  A menubar item's position is determined by its priority value.
---
--- Returns:
---  * if a priority is provided, then the menubaritem object is returned; otherwise the current priority value is returned.
---
--- Notes:
---  * Default priority levels can be found in the [hs.menubar.priorities](#priorities) table.
---
---  * This method uses undocumented methods in the NSStatusBar and NSStatusItem classes, which appear to have been removed in macOS 10.15 (Catalina), so this method will no longer work correctly.
-function M:priority(priority, ...) end
 
 -- Removes a menu from the system menu bar.  The item can still be used as a pop-up menu, unless you also delete it.
 --

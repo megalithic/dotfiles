@@ -221,7 +221,7 @@ function M:inputVolume() end
 --  * True if the audio device is in use, False if not. nil if an error occurred.
 function M:inUse() end
 
--- Determins if an audio device is an input device
+-- Determines if an audio device is an input device
 --
 -- Parameters:
 --  * None
@@ -231,7 +231,7 @@ function M:inUse() end
 ---@return boolean
 function M:isInputDevice() end
 
--- Determins if an audio device is an output device
+-- Determines if an audio device is an output device
 --
 -- Parameters:
 --  * None
@@ -367,7 +367,7 @@ function M:setInputVolume(level, ...) end
 --  * True if the device's mutedness state was set, or False if it does not support muting
 --
 -- Notes:
---  * If a device is capable of both input and output, this method will prefer the output. See `:inputSetMuted()` and `:outputSetMuted()` for specific variants.
+--  * If a device is capable of both input and output, this method will prefer the output. See `:setInputMuted()` and `:setOutputMuted()` for specific variants.
 ---@return boolean
 function M:setMuted(state, ...) end
 

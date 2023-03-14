@@ -62,7 +62,7 @@ local contains = vim.tbl_contains
 -- - https://github.com/disrupted/dotfiles/blob/master/.config/nvim/plugin/skeletons.lua
 -- - https://vimtricks.com/p/vim-file-templates/
 -- - https://github.com/chrisgrieser/dotfiles/blob/main/.config/nvim/lua/options-and-autocmds.lua#L155-L177
-mega.augroup("Skeletons", {
+augroup("Skeletons", {
   {
     event = { "BufNewFile" },
     desc = "Load skeleton when creating new file",
@@ -352,7 +352,7 @@ do
     -- })
   end
 
-  mega.augroup("UserHighlights", {
+  augroup("UserHighlights", {
     {
       event = { "FileType" },
       pattern = sidebar_fts,
@@ -469,7 +469,7 @@ do
     if col < p_start or col > p_end then stop_hl() end
   end
 
-  mega.augroup("IncSearchHighlight", {
+  augroup("IncSearchHighlight", {
     {
       event = { "CursorMoved" },
       command = function() hl_search() end,

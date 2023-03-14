@@ -27,7 +27,7 @@ function M.currentAssertions() end
 --
 -- Notes:
 --  * This is intended to simulate user activity, for example to prevent displays from sleeping, or to wake them up
---  * It is not mandatory to re-use assertion IDs if you are calling this function mulitple times, but it is recommended that you do so if the calls are related
+--  * It is not mandatory to re-use assertion IDs if you are calling this function multiple times, but it is recommended that you do so if the calls are related
 function M.declareUserActivity(id) end
 
 -- Show the Fast User Switch screen (ie a login screen without logging out first)

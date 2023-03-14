@@ -384,7 +384,7 @@ function M:isVisible() end
 --  * see the notes for `hs.drawing.windowLevels`
 function M:level(theLevel, ...) end
 
--- Returns a boolean value indicating whether or not the vebview is still loading content.
+-- Returns a boolean value indicating whether or not the webview is still loading content.
 --
 -- Parameters:
 --  * None
@@ -406,7 +406,7 @@ function M:magnification(value, ...) end
 -- Sets a callback for tracking a webview's navigation process.
 --
 -- Parameters:
---  * `fn` - the function to be called when the navigation status of a webview cahnges.  To disable the callback function, explicitly specify nil.  The function should expect 3 or 4 arguments and may optionally return 1.  The function arguments are defined as follows:
+--  * `fn` - the function to be called when the navigation status of a webview changes.  To disable the callback function, explicitly specify nil.  The function should expect 3 or 4 arguments and may optionally return 1.  The function arguments are defined as follows:
 --    * `action`  - a string indicating the webview's current status.  It will be one of the following:
 --      * `didStartProvisionalNavigation`                    - a request or action to change the contents of the main frame has occurred
 --      * `didReceiveServerRedirectForProvisionalNavigation` - a server redirect was received for the main frame
@@ -418,7 +418,7 @@ function M:magnification(value, ...) end
 --    * `navID`   - a navigation identifier which can be used to link this event back to a specific request made by a `hs.webview:url`, `hs.webview:html`, or `hs.webview:reload` method.
 --    * `error`   - a table which will only be provided when `action` is equal to `didFailNavigation` or `didFailProvisionalNavigation`.  If provided, it will contain at leas some of the following keys, possibly others as well:
 --      * `code`        - a numerical value indicating the type of error code.  This will mostly be of use to developers or in debugging and may be removed in the future.
---      * `domain`      - a string indcating the error domain of the error.  This will mostly be of use to developers or in debugging and may be removed in the future.
+--      * `domain`      - a string indicating the error domain of the error.  This will mostly be of use to developers or in debugging and may be removed in the future.
 --      * `description` - a string describing the condition or problem that has occurred.
 --      * `reason`      - if available, more information about what may have caused the problem to occur.
 --
@@ -498,7 +498,7 @@ function M.newBrowser(rect, preferencesTable, userContentController, ...) end
 --  * The webview object
 --
 -- Notes:
---  * If the webview object and webview2 are not at the same presentation level, this method will will move the webview object as close to the desired relationship without changing the webview object's presentation level. See [hs.webview.level](#level).
+--  * If the webview object and webview2 are not at the same presentation level, this method will move the webview object as close to the desired relationship without changing the webview object's presentation level. See [hs.webview.level](#level).
 function M:orderAbove(webview2, ...) end
 
 -- Moves webview object below webview2, or all webview objects in the same presentation level, if webview2 is not given.
@@ -510,7 +510,7 @@ function M:orderAbove(webview2, ...) end
 --  * The webview object
 --
 -- Notes:
---  * If the webview object and webview2 are not at the same presentation level, this method will will move the webview object as close to the desired relationship without changing the webview object's presentation level. See [hs.webview.level](#level).
+--  * If the webview object and webview2 are not at the same presentation level, this method will move the webview object as close to the desired relationship without changing the webview object's presentation level. See [hs.webview.level](#level).
 function M:orderBelow(webview2, ...) end
 
 -- Get the parent webview object for the calling webview object, or nil if the webview has no parent.
@@ -716,7 +716,7 @@ function M:sslCallback(fn) end
 -- Notes:
 --  * this method does not stop the loading of the primary content for the page at the specified URL
 --  * if [hs.webview:loading](#loading) would return true, this method does nothing -- see notes:
---    * The documentation from Apple is unclear and experimentation has shown that if this method is applied before the content of the specified URL has loaded, it can cause the webview to lock up; however it appears to stop the loading of addiional resources specified for the content (external script files, external style files, AJAX queries, etc.) and should be used in this context.
+--    * The documentation from Apple is unclear and experimentation has shown that if this method is applied before the content of the specified URL has loaded, it can cause the webview to lock up; however it appears to stop the loading of additional resources specified for the content (external script files, external style files, AJAX queries, etc.) and should be used in this context.
 function M:stopLoading() end
 
 -- Get the title of the page displayed in the webview.

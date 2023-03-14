@@ -87,6 +87,7 @@ function M.convertHtmlEntities(inString, ...) end
 --   * body - A string containing the body of the response
 --   * headers - A table containing the HTTP headers of the response
 --  * cachePolicy - An optional string containing the cache policy ("protocolCachePolicy", "ignoreLocalCache", "ignoreLocalAndRemoteCache", "returnCacheOrLoad", "returnCacheDontLoad" or "reloadRevalidatingCache"). Defaults to `protocolCachePolicy`.
+--  * enableRedirect - An optional boolean to indicate whether to redirect the http request. Defaults to true.
 --
 -- Returns:
 --  * None
@@ -94,7 +95,8 @@ function M.convertHtmlEntities(inString, ...) end
 -- Notes:
 --  * If authentication is required in order to download the request, the required credentials must be specified as part of the URL (e.g. "http://user:password@host.com/"). If authentication fails, or credentials are missing, the connection will attempt to continue without credentials.
 --  * If the Content-Type response header begins `text/` then the response body return value is a UTF8 string. Any other content type passes the response body, unaltered, as a stream of bytes.
-function M.doAsyncRequest(url, method, data, headers, callback, cachePolicy, ...) end
+--  * If enableRedirect is set to true, response body will be empty string. Http body will be dropped even though response has the body. This seems the limitation of 'connection:willSendRequest:redirectResponse' method.
+function M.doAsyncRequest(url, method, data, headers, callback, cachePolicy_or_enableRedirect, ...) end
 
 -- Creates an HTTP request and executes it synchronously
 --
@@ -281,7 +283,7 @@ function M.registerEntity(entity, codepoint, ...) end
 --    * a missing key (e.g. '=value') will be represented as { "" = value }
 --    * a missing value (e.g. 'key=') will be represented as { key = "" }
 --    * a missing value with no = (e.g. 'key') will be represented as { key }
---    * a missing key and value (e.g. '=') will be represente as { "" = "" }
+--    * a missing key and value (e.g. '=') will be represented as { "" = "" }
 --    * an empty query item (e.g. a query ending in '&' or a query containing && between two other query items) will be represented as { "" }
 --
 --  * At present Hammerspoon does not provide a way to represent a URL as a true Objective-C object within the OS X API.  This affects the following keys:

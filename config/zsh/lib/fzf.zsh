@@ -32,6 +32,7 @@ export FZF_DEFAULT_OPTS="
 --pointer=' '
 --marker=' '
 "
+# --preview='bat --color=always --style=header,grid --line-range :300 {}'
 # --no-multi
 # --reverse
 

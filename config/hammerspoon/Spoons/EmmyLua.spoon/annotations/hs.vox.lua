@@ -106,7 +106,7 @@ function M.getPlayerState() end
 --  * A string containing the name of the current track, or nil if an error occurred
 function M.getUniqueID() end
 
--- Increases the palyer volume
+-- Increases the player volume
 --
 -- Parameters:
 --  * None

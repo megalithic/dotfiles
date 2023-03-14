@@ -3,7 +3,7 @@
 
 -- Markdown to HTML and plaintext conversion support used by hs.doc
 --
--- This module provides Github-Flavored-Markdown conversion support used by hs.doc.  This module is a Lua wrapper to the C code portion of the Ruby gem `github-markdown`, available at https://rubygems.org/gems/github-markdown/versions/0.6.9.
+-- This module provides GitHub-Flavored-Markdown conversion support used by hs.doc.  This module is a Lua wrapper to the C code portion of the Ruby gem `github-markdown`, available at https://rubygems.org/gems/github-markdown/versions/0.6.9.
 --
 -- The Ruby gem `github-markdown` was chosen as the code base for this module because it is the tool used to generate the official Hammerspoon Dash docset.
 --
@@ -17,7 +17,7 @@ hs.doc.markdown = M
 -- Parameters:
 --  * markdown - a string containing the input text encoded using markdown tags
 --  * type     - an optional string specifying the conversion options and output type.  Defaults to "gfm".  The currently recognized types are:
---    * "markdown"  - specfies that the output should be HTML with the standard GitHub/Markdown extensions enabled.
+--    * "markdown"  - specifies that the output should be HTML with the standard GitHub/Markdown extensions enabled.
 --    * "gfm"       - specifies that the output should be HTML with additional GitHub extensions enabled.
 --    * "plaintext" - specifies that the output should plain text with the standard GitHub/Markdown extensions enabled.
 --

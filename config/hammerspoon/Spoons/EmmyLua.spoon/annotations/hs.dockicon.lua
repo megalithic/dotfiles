@@ -44,7 +44,7 @@ function M.setBadge(badge, ...) end
 --  * None
 function M.show() end
 
--- Get or set a canvas object to be displayed as the Hamemrspoon dock icon
+-- Get or set a canvas object to be displayed as the Hammerspoon dock icon
 --
 -- Parameters:
 --  * `canvas` - an optional `hs.canvas` object specifying the canvas to be displayed as the dock icon for Hammerspoon. If an explicit `nil` is specified, the dock icon will revert to the Hammerspoon application icon.

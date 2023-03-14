@@ -283,7 +283,7 @@ cask "istat-menus"
 # cask "kap"
 cask "karabiner-elements"
 cask "keycastr"
-cask "kitty", greedy: true
+cask "kitty-nightly", greedy: true
 # cask "little-snitch4" # requires kernel extension, see notes from install message
 # cask "loom"
 # cask "marta"

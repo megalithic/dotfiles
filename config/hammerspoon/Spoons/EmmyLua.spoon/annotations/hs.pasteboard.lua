@@ -17,7 +17,7 @@ hs.pasteboard = M
 --  * an array with each index representing an object on the pasteboard.  If the pasteboard contains only one element, this is equivalent to `{ hs.pasteboard.contentTypes(name) }`.
 function M.allContentTypes(name, ...) end
 
--- Invokes callback when the specified pasteoard has changed or the timeout is reached.
+-- Invokes callback when the specified pasteboard has changed or the timeout is reached.
 --
 -- Parameters:
 --  * `name`     - an optional string indicating the pasteboard name.  If nil or not present, defaults to the system pasteboard.
@@ -28,7 +28,7 @@ function M.allContentTypes(name, ...) end
 --  * None
 --
 -- Notes:
---  * This function can be used to capture the results of a copy operation issued programatically with `hs.application:selectMenuItem` or `hs.eventtap.keyStroke` without resorting to creating your own timers:
+--  * This function can be used to capture the results of a copy operation issued programmatically with `hs.application:selectMenuItem` or `hs.eventtap.keyStroke` without resorting to creating your own timers:
 --  ~~~
 --      hs.eventtap.keyStroke({"cmd"}, "c", 0) -- or whatever method you want to trigger the copy
 --      hs.pasteboard.callbackWhenChanged(5, function(state)
@@ -36,7 +36,7 @@ function M.allContentTypes(name, ...) end
 --              local contents = hs.pasteboard.getContents()
 --              -- do what you want with contents
 --          else
---              error("copy timeout") -- or whatever fallback you want when it timesout
+--              error("copy timeout") -- or whatever fallback you want when it times out
 --          end
 --      end)
 --  ~~~
@@ -123,7 +123,7 @@ function M.readAllData(name, ...) end
 --
 -- Notes:
 --  * NSKeyedArchiver specifies an architecture-independent format that is often used in OS X applications to store and transmit objects between applications and when storing data to a file. It works by recording information about the object types and key-value pairs which make up the objects being stored.
---  * Only objects which have conversion functions built in to Hammerspoon can be converted. A string representation describing unrecognized types wil be returned. If you find a common data type that you believe may be of interest to Hammerspoon users, feel free to contribute a conversion function or make a request in the Hammerspoon Google group or Github site.
+--  * Only objects which have conversion functions built into Hammerspoon can be converted. A string representation describing unrecognized types wil be returned. If you find a common data type that you believe may be of interest to Hammerspoon users, feel free to contribute a conversion function or make a request in the Hammerspoon Google group or GitHub site.
 --  * Some applications may define their own classes which can be archived.  Hammerspoon will be unable to recognize these types if the application does not make the object type available in one of its frameworks.  You *may* be able to load the necessary framework with `package.loadlib("/Applications/appname.app/Contents/Frameworks/frameworkname.framework/frameworkname", "*")` before retrieving the data, but a full representation of the data in Hammerspoon is probably not possible without support from the Application's developers.
 function M.readArchiverDataForUTI(name, uti, ...) end
 
@@ -292,7 +292,7 @@ function M.writeAllData(name, table, ...) end
 --
 -- Notes:
 --  * NSKeyedArchiver specifies an architecture-independent format that is often used in OS X applications to store and transmit objects between applications and when storing data to a file. It works by recording information about the object types and key-value pairs which make up the objects being stored.
---  * Only objects which have conversion functions built in to Hammerspoon can be converted.
+--  * Only objects which have conversion functions built into Hammerspoon can be converted.
 --  * A full list of NSObjects supported directly by Hammerspoon is planned in a future Wiki article.
 ---@return boolean
 function M.writeArchiverDataForUTI(name, uti, data, add, ...) end

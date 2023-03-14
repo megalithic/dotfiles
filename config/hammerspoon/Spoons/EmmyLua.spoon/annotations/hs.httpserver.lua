@@ -172,7 +172,7 @@ function M:stop() end
 --
 -- Parameters:
 --  * path - A string containing the websocket path such as '/ws'
---  * callback - A function returning a string for each recieved websocket message
+--  * callback - A function returning a string for each received websocket message
 --
 -- Returns:
 --  * The `hs.httpserver` object

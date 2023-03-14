@@ -99,7 +99,7 @@ M.minFloat = nil
 ---@return number
 function M.randomFloat() end
 
--- Returns a random integer between the start and end paramters
+-- Returns a random integer between the start and end parameters
 --
 -- Parameters:
 --  * start - A number to start the range, must be greater than or equal to zero

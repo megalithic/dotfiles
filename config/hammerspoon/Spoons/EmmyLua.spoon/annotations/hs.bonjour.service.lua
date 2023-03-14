@@ -55,7 +55,7 @@ function M:hostname() end
 -- Get or set whether the service represented by the service object should be published or resolved over peer-to-peer Bluetooth and Wi-Fi, if available.
 --
 -- Parameters:
---  * `value` - an optional boolean, default false, specifying whether advertising and resoloving should occur over peer-to-peer Bluetooth and Wi-Fi, if available.
+--  * `value` - an optional boolean, default false, specifying whether advertising and resolving should occur over peer-to-peer Bluetooth and Wi-Fi, if available.
 --
 -- Returns:
 --  * if `value` is provided, returns the serviceObject; otherwise returns the current value.
@@ -112,7 +112,7 @@ function M:name() end
 --
 --  * The service will not be advertised until [hs.bonjour.service:publish](#publish) is invoked on the serviceObject returned.
 --
---  * If you do not specify the `domain` paramter, your default domain, usually "local" will be used.
+--  * If you do not specify the `domain` parameter, your default domain, usually "local" will be used.
 function M.new(name, service, port, domain, ...) end
 
 -- Returns the port the service represented by the serviceObject is available on.
@@ -134,7 +134,7 @@ function M:port() end
 -- Parameters:
 --  * `allowRename` - an optional boolean, default true, specifying whether to automatically rename the service if the name and type combination is already being published in the service's domain. If renaming is allowed and a conflict occurs, the service name will have `-#` appended to it where `#` is an increasing integer starting at 2.
 --  * `callback`    - an optional callback function which should expect 2 or 3 arguments and return none. The arguments to the callback function will be one of the following sets:
---    * on successfull publishing:
+--    * on successful publishing:
 --      * the serviceObject userdata
 --      * the string "published"
 --    * if an error occurs during publishing:
@@ -165,15 +165,15 @@ function M:publish(allowRename, callback, ...) end
 --
 --  * Resolution of the service ip address, hostname, port, and current text records will not occur until [hs.bonjour.service:publish](#publish) is invoked on the serviceObject returned.
 --
---  * The macOS API specifies that an empty domain string (i.e. specifying the `domain` parameter as "" or leaving it off completely) should result in using the default domain for the computer; in my experience this results in an error when attempting to resolve the serviceObject's ip addresses if I don't specify "local" explicitely. In general this shouldn't be an issue if you limit your use of remote serviceObjects to those returned by `hs.bonjour:findServices` as the domain of discovery will be included in the object for you automatically. If you do try to create these objects independantly yourself, be aware that attempting to use the "default domain" rather than specifying it explicitely will probably not work as expected.
+--  * The macOS API specifies that an empty domain string (i.e. specifying the `domain` parameter as "" or leaving it off completely) should result in using the default domain for the computer; in my experience this results in an error when attempting to resolve the serviceObject's ip addresses if I don't specify "local" explicitly. In general this shouldn't be an issue if you limit your use of remote serviceObjects to those returned by `hs.bonjour:findServices` as the domain of discovery will be included in the object for you automatically. If you do try to create these objects independently yourself, be aware that attempting to use the "default domain" rather than specifying it explicitly will probably not work as expected.
 function M.remote(name, service, domain, ...) end
 
 -- Resolve the address and details for a discovered service.
 --
 -- Parameters:
---  * `timeout`  - an optional number, default 0.0, specifying the maximum number of seconds to attempt to resolve the details for this service. Specifying 0.0 means that the resolution should not timeout and that resolution should continue indefinately.
+--  * `timeout`  - an optional number, default 0.0, specifying the maximum number of seconds to attempt to resolve the details for this service. Specifying 0.0 means that the resolution should not timeout and that resolution should continue indefinitely.
 --  * `callback` - an optional callback function which should expect 2 or 3 arguments and return none.
---    * on successfull resolution:
+--    * on successful resolution:
 --      * the serviceObject userdata
 --      * the string "resolved"
 --    * if an error occurs during resolution:

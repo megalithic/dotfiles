@@ -114,6 +114,26 @@ end
 
 local function extensions(name) return require("telescope").extensions[name] end
 
+-- local defaulter = require("telescope.utils").make_default_callable
+-- local media_preview = defaulter(function(opts)
+--   return require("telescope.previewers").new_termopen_previewer({
+--     get_command = opts.get_command or function(entry)
+--       local tmp_table = vim.split(entry.value, "\t")
+--       local preview = opts.get_preview_window()
+--       opts.cwd = opts.cwd and vim.fn.expand(opts.cwd) or vim.loop.cwd()
+--       if vim.tbl_isempty(tmp_table) then return { "echo", "" } end
+--       return {
+--         "~/.dotfiles/bin/preview",
+--         string.format([[%s/%s]], opts.cwd, tmp_table[1]),
+--         preview.col,
+--         preview.line + 1,
+--         preview.width,
+--         preview.height,
+--       }
+--     end,
+--   })
+-- end, {})
+
 return {
   "nvim-telescope/telescope.nvim",
   cmd = { "Telescope" },
@@ -245,6 +265,7 @@ return {
         find_files = {
           find_command = find_files_cmd,
           on_input_filter_cb = file_extension_filter,
+          -- previewer = media_preview.new(opts),
         },
         live_grep = ivy({
           -- max_results = 500,

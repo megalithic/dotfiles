@@ -15,7 +15,7 @@ hs.plist = M
 --  * The contents of the plist as a Lua table
 function M.read(filepath, ...) end
 
--- Interpretes a property list file within a string into a table.
+-- Interprets a property list file within a string into a table.
 --
 -- Parameters:
 --  * value  - The contents of the property list as a string
@@ -45,7 +45,7 @@ function M.readString(value, binary, ...) end
 ---@return boolean
 function M.write(filepath, data, binary, ...) end
 
--- Interpretes a property list file within a string into a table.
+-- Interprets a property list file within a string into a table.
 --
 -- Parameters:
 --  * data - A Lua table containing the data to write into a plist string

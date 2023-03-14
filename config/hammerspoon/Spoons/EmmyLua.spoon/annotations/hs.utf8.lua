@@ -107,7 +107,7 @@ function M.hexDump(inputString, count, ...) end
 ---@return string
 function M.registerCodepoint(label, codepoint, ...) end
 
--- A collection of UTF-8 characters already converted from codepoint and available as convient key-value pairs.  UTF-8 printable versions of common Apple and OS X special keys are predefined and others can be added with `hs.utf8.registerCodepoint(label, codepoint)` for your own use.
+-- A collection of UTF-8 characters already converted from codepoint and available as convenient key-value pairs.  UTF-8 printable versions of common Apple and OS X special keys are predefined and others can be added with `hs.utf8.registerCodepoint(label, codepoint)` for your own use.
 --
 -- Predefined keys include:
 --

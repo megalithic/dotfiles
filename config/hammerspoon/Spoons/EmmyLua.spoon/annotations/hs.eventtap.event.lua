@@ -142,7 +142,7 @@ function M:getProperty(prop, ...) end
 --  * This method is expected to be used mostly for testing and expanding the range of possibilities available with the hs.eventtap module.  If you find that you are regularly using specific data from this method for common or re-usable purposes, consider submitting a request for adding a more targeted method to hs.eventtap or hs.eventtap.event -- it will likely be more efficient and faster for common tasks, something eventtaps need to be to minimize affecting system responsiveness.
 function M:getRawEventData() end
 
--- Returns a table contining more information about some touch related events.
+-- Returns a table containing more information about some touch related events.
 --
 -- Parameters:
 --  * None
@@ -182,7 +182,7 @@ function M:getTouchDetails() end
 --    * `type`                       - a string specifying the type of touch. A "direct" touch will indicate a touchbar, while a trackpad will report "indirect".
 --  * The following fields will be present when the touch is from a touchpad (`type` == "indirect")`
 --   * `normalizedPosition`         - a point table specifying the `x` and `y` coordinates of the touch, each normalized to be a value between 0.0 and 1.0. `{ x = 0, y = 0 }` is the lower left corner of the touch device.
---   * `previousNormalizedPosition` - a point table specifying the `x` and `y` coordinates of the previous position for this specific touch (as linked by `identity`) normalezed to values between 0.0 and 1.0.
+--   * `previousNormalizedPosition` - a point table specifying the `x` and `y` coordinates of the previous position for this specific touch (as linked by `identity`) normalized to values between 0.0 and 1.0.
 --  * The following fields will be present when the touch is from the touchbar (`type` == "direct")`
 --   * `location`                   - a point table specifying the `x` and `y` coordinates of the touch location within the touchbar.
 --   * `previousLocation`           - a point table specifying the `x` and `y` coordinates of the previous location for this specific touch (as linked by `identity`) within the touchbar.

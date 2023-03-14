@@ -22,9 +22,17 @@ return {
       on_save_pattern = { "*.html", "*.heex", "*.ex" },
     },
   },
+  {
+    "nvim-treesitter/nvim-treesitter-context",
+    event = "BufReadPre",
+    config = function()
+      require("treesitter-context").setup({
+        separator = { "▁", "TreesitterContextBorder" }, -- alts: ▁ ─ ▄─▁
+      })
+    end,
+  },
   -- {
   --   "nvim-treesitter/nvim-treesitter-context",
-  --   enabled = false,
   --   event = "BufReadPre",
   --   config = function()
   --     require("treesitter-context").setup({

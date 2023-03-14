@@ -26,7 +26,7 @@ local preferred = {
   media = { "Spotify" },
   vpn = { "Cloudflare WARP" },
 }
-preferred["browser"] = hs.urlevent.getDefaultHandler("https")
+preferred["browser"] = "com.brave.Browser.dev" --hs.urlevent.getDefaultHandler("https")
 
 local watchers = { "status", "bluetooth", "dock", "audio", "wifi", "url", "downloads" }
 

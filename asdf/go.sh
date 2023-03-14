@@ -35,6 +35,7 @@ do_install() {
     GO111MODULE=on go install github.com/lemonade-command/lemonade@HEAD
 
     GO111MODULE=on go install github.com/guysherman/kittymux/go
+    GO111MODULE=on CGO_ENABLED=0 go install -ldflags="-s -w" github.com/gokcehan/lf@latest
 
     # TODO: still need to install zk from source?
     # zk_build_path="$HOME/code/oss/zk"

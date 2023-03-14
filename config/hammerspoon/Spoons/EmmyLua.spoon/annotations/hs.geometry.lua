@@ -40,7 +40,7 @@ hs.geometry = M
 --  * None
 --
 -- Returns:
---  * a number represeting the angle in radians
+--  * a number representing the angle in radians
 ---@return number
 function M:angle() end
 
@@ -50,7 +50,7 @@ function M:angle() end
 --  * point - an hs.geometry object, or a table or string or parameter list to construct one; if a rect, uses the rect's center
 --
 -- Returns:
---  * a number represeting the angle in radians
+--  * a number representing the angle in radians
 ---@return number
 function M:angleTo(point, ...) end
 

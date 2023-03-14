@@ -6,7 +6,7 @@
 local M = {}
 hs.axuielement.observer = M
 
--- Registers the specified notification for the specified accesibility element with the observer.
+-- Registers the specified notification for the specified accessibility element with the observer.
 --
 -- Parameters:
 --  * `element`      - the `hs.axuielement` representing an accessibility element of the application the observer was created for.
@@ -114,6 +114,6 @@ function M:stop() end
 --
 -- Notes:
 --  * If an element is specified, then the table returned will contain a list of strings specifying the specific notifications that the observer is watching that element for.
---  * If no argument is specified, then the table will contain key-value pairs in which each key will be an `hs.axuielement` that is being observed and the corresponding value will be a table containing a list of strings specifying the specific notifications that the observer is watching for from from that element.
+--  * If no argument is specified, then the table will contain key-value pairs in which each key will be an `hs.axuielement` that is being observed and the corresponding value will be a table containing a list of strings specifying the specific notifications that the observer is watching for from that element.
 function M:watching(element, ...) end
 

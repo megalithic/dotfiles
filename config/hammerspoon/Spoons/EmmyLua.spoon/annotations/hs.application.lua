@@ -47,7 +47,7 @@ function M.applicationForPID(pid, ...) end
 -- Returns any running apps that have the given bundleID.
 --
 -- Parameters:
---  * bundleID - An OSX application bundle indentifier
+--  * bundleID - An OSX application bundle identifier
 --
 -- Returns:
 --  * A table of zero or more hs.application objects that match the given identifier
@@ -96,6 +96,8 @@ function M.enableSpotlightForNameSearches(state, ...) end
 --    - a bundle ID string as per `hs.application:bundleID()`
 --    - a string pattern that matches (via `string.find`) the application name as per `hs.application:name()` (for convenience, the matching will be done on lowercased strings)
 --    - a string pattern that matches (via `string.find`) the application's window title per `hs.window:title()` (for convenience, the matching will be done on lowercased strings)
+--  * exact - a boolean, true to check application names for exact matches, false to use Lua's string:find() method. Defaults to false
+--  * stringLiteral - a boolean, true to interpret the hint string literally, false to interpret it as a Lua Pattern. Defaults to false.
 --
 -- Returns:
 --  * one or more hs.application objects for running applications that match the supplied search criterion, or `nil` if none found
@@ -119,7 +121,7 @@ function M.enableSpotlightForNameSearches(state, ...) end
 -- -- by window title
 -- hs.application'bash':name() --> Terminal
 ---@return hs.application
-function M.find(hint, ...) end
+function M.find(hint, exact, stringLiteral, ...) end
 
 -- Searches the application for a menu item
 --
@@ -329,6 +331,24 @@ function M.launchOrFocus(name, ...) end
 ---@return boolean
 function M.launchOrFocusByBundleID(bundleID, ...) end
 
+-- Gets a list of all the localizations contained in the bundle.
+--
+-- Parameters:
+--  * bundleID - A string containing an application bundle identifier (e.g. "com.apple.Safari")
+--
+-- Returns:
+--  * A table containing language IDs for all the localizations contained in the bundle.
+function M.localizationsForBundleID(bundleID, ...) end
+
+-- Gets a list of all the localizations contained in the bundle.
+--
+-- Parameters:
+--  * bundlePath - A string containing the path to an application bundle (e.g. "/Applications/Safari.app")
+--
+-- Returns:
+--  * A table containing language IDs for all the localizations contained in the bundle.
+function M.localizationsForBundlePath(bundlePath, ...) end
+
 -- Returns the main window of the given app, or nil.
 --
 -- Parameters:
@@ -339,7 +359,7 @@ function M.launchOrFocusByBundleID(bundleID, ...) end
 ---@return hs.window
 function M:mainWindow() end
 
--- A table containing UTF8 representations of the defined key glyphs used in Menus for keybaord shortcuts which are presented pictorially rather than as text (arrow keys, return key, etc.)
+-- A table containing UTF8 representations of the defined key glyphs used in Menus for keyboard shortcuts which are presented pictorially rather than as text (arrow keys, return key, etc.)
 --
 -- These glyphs are indexed numerically where the numeric index matches a possible value for the AXMenuItemCmdGlyph key of an entry returned by `hs.application.getMenus`.  If the AXMenuItemCmdGlyph field is non-numeric, then no glyph is used in the presentation of the keyboard shortcut for a menu item.
 --
@@ -410,7 +430,7 @@ function M:mainWindow() end
 --  * This table is provided as a variable so that you can change any representation if you feel you know of a better or more appropriate one for you usage at runtime.
 --
 --  * The glyphs provided are defined in the Carbon framework headers in the Menus.h file, located (as of 10.11) at /System/Library/Frameworks/Carbon.framework/Frameworks/HIToolbox.framework/Headers/Menus.h.
---  * The following constants are defined in Menus.h, but do not seem to correspond to a visible UTF8 character or well defined representation that I could discover.  If you believe that you know of a (preferably sanctioned by Apple) proper visual representation, please submit an issue detailing it at the Hammerspoon repository on Github.
+--  * The following constants are defined in Menus.h, but do not seem to correspond to a visible UTF8 character or well defined representation that I could discover.  If you believe that you know of a (preferably sanctioned by Apple) proper visual representation, please submit an issue detailing it at the Hammerspoon repository on GitHub.
 --    * kMenuNullGlyph, 0x00, Null (always glyph 1)
 --    * kMenuNonmarkingReturnGlyph, 0x0D, Nonmarking return key
 --    * kMenuParagraphKoreanGlyph, 0x15, Unassigned (paragraph in Korean)
@@ -480,6 +500,24 @@ function M.pathForBundleID(bundleID, ...) end
 --  * The UNIX process identifier of the application (i.e. a number)
 ---@return number
 function M:pid() end
+
+-- Gets an ordered list of preferred localizations contained in a bundle
+--
+-- Parameters:
+--  * bundleID - A string containing an application bundle identifier (e.g. "com.apple.Safari")
+--
+-- Returns:
+--  * A table containing language IDs for localizations in the bundle. The strings are ordered according to the user's language preferences and available localizations.
+function M.preferredLocalizationsForBundleID(bundleID, ...) end
+
+-- Gets an ordered list of preferred localizations contained in a bundle
+--
+-- Parameters:
+--  * bundlePath - A string containing the path to an application bundle (e.g. "/Applications/Safari.app")
+--
+-- Returns:
+--  * A table containing language IDs for localizations in the bundle. The strings are ordered according to the user's language preferences and available localizations.
+function M.preferredLocalizationsForBundlePath(bundlePath, ...) end
 
 -- Returns all running apps.
 --

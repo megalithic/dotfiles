@@ -120,7 +120,8 @@ local excluded = {
   "NeogitRebaseTodo",
 }
 
-vim.o.statuscolumn = "%{%v:lua.mega.ui.statuscolumn.render()%}"
+-- vim.o.statuscolumn = "%{%v:lua.mega.ui.statuscolumn.render()%}"
+vim.opt.statuscolumn = [[%!v:lua.mega.ui.statuscolumn.render()]]
 
 mega.augroup("MegaColumn", {
   {

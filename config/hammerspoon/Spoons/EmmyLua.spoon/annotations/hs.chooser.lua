@@ -95,6 +95,19 @@ function M:choices(choices, ...) end
 --  * None
 function M:delete() end
 
+-- Gets/Sets whether the chooser should run the callback on a query when it does not match any on the list
+--
+-- Parameters:
+--  * enableDefaultForQuery - An optional boolean, true to return query string, false to not. If this parameter is omitted, the current configuration value will be returned
+--
+-- Returns:
+--  * the `hs.chooser` object if a value was set, or a boolean if no parameter was passed
+--
+-- Notes:
+--  * This should be used before a chooser has been displayed
+---@return hs.chooser
+function M:enableDefaultForQuery() end
+
 -- Sets the foreground color of the chooser
 --
 -- Parameters:

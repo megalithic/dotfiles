@@ -70,7 +70,7 @@ function M:count() end
 --  * `userHome`                - Search the user’s home directory.
 --
 -- Notes:
---  * It is uncertain at this time if the `iCloud*` search scopes are actually useful within Hammerspoon as Hammerspoon is not a sandboxed application that uses the iCloud API fo document storage. Further information on your experiences with these scopes, if you use them, is welcome in the Hammerspoon Google Group or at the Hammerspoon Github web site.
+--  * It is uncertain at this time if the `iCloud*` search scopes are actually useful within Hammerspoon as Hammerspoon is not a sandboxed application that uses the iCloud API fo document storage. Further information on your experiences with these scopes, if you use them, is welcome in the Hammerspoon Google Group or at the Hammerspoon GitHub web site.
 ---@type table
 M.definedSearchScopes = {}
 
@@ -83,7 +83,7 @@ M.definedSearchScopes = {}
 --  * an array table containing the grouped results for the Spotlight query as specified by the [hs.spotlight:groupingAttributes](#groupingAttributes) method.  Each member of the array will be a spotlightGroupObject which is detailed in the `hs.spotlight.group` module documentation.
 --
 -- Notes:
---  * The spotlightItemObjects available with the `hs.spotlight.group:resultAtIndex` method are the subset of the full results of the spotlightObject that match the attribute and value of the spotlightGroupObject.  The same item is available through the spotlightObject and the spotlightGroupObject, though likely at different indicies.
+--  * The spotlightItemObjects available with the `hs.spotlight.group:resultAtIndex` method are the subset of the full results of the spotlightObject that match the attribute and value of the spotlightGroupObject.  The same item is available through the spotlightObject and the spotlightGroupObject, though likely at different indices.
 function M:groupedResults() end
 
 -- Get or set the grouping attributes for the Spotlight query.
@@ -98,7 +98,7 @@ function M:groupedResults() end
 --  * Setting this property while a query is running stops the query and discards the current results. The receiver immediately starts a new query.
 --  * Setting this property will increase CPU and memory usage while performing the Spotlight query.
 --
---  * Thie method allows you to access results grouped by the values of specific attributes.  See `hs.spotlight.group` for more information on using and accessing grouped results.
+--  * This method allows you to access results grouped by the values of specific attributes.  See `hs.spotlight.group` for more information on using and accessing grouped results.
 --  * Note that not all attributes can be used as a grouping attribute.  In such cases, the grouped result will contain all results and an attribute value of nil.
 function M:groupingAttributes(attributes, ...) end
 

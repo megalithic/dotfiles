@@ -6,7 +6,7 @@
 local M = {}
 hs.hints = M
 
--- A fully specified family-face name, preferrably the PostScript name, such as Helvetica-BoldOblique or Times-Roman. (The Font Book app displays PostScript names of fonts in the Font Info panel.)
+-- A fully specified family-face name, preferably the PostScript name, such as Helvetica-BoldOblique or Times-Roman. (The Font Book app displays PostScript names of fonts in the Font Info panel.)
 -- The default value is the system font
 M.fontName = nil
 

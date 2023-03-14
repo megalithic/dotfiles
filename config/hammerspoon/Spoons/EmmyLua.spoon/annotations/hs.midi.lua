@@ -31,7 +31,7 @@ hs.midi = M
 --  * The `hs.midi` object
 --
 -- Notes:
---  * Most MIDI keyboards produce a `noteOn` when you press a key, then `noteOff` when you release. However, some MIDI keyboards will return a `noteOn` with 0 `velocity` instead of `noteOff`, so you will recieve two `noteOn` commands for every key press/release.
+--  * Most MIDI keyboards produce a `noteOn` when you press a key, then `noteOff` when you release. However, some MIDI keyboards will return a `noteOn` with 0 `velocity` instead of `noteOff`, so you will receive two `noteOn` commands for every key press/release.
 --  * The callback function should expect 5 arguments and should not return anything:
 --    * `object`       - The `hs.midi` object.
 --    * `deviceName`   - The device name as a string.
@@ -327,7 +327,7 @@ function M:name() end
 --  * deviceName - A string containing the device name of the MIDI device. A valid device name can be found by checking `hs.midi.devices()` and/or `hs.midi.virtualSources()`.
 --
 -- Returns:
---  * An `hs.midi` object or `nil` if an error occured.
+--  * An `hs.midi` object or `nil` if an error occurred.
 --
 -- Notes:
 --  * Example Usage:
@@ -340,7 +340,7 @@ function M.new(deviceName, ...) end
 --  * virtualSource - A string containing the virtual source name of the MIDI device. A valid virtual source name can be found by checking `hs.midi.virtualSources()`.
 --
 -- Returns:
---  * An `hs.midi` object or `nil` if an error occured.
+--  * An `hs.midi` object or `nil` if an error occurred.
 --
 -- Notes:
 --  * Example Usage:

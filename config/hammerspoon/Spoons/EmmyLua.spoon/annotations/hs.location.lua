@@ -3,7 +3,7 @@
 
 -- Determine the machine's location and useful information about that location
 --
--- This module provides functions for getting current location information and tracking location changes. It expands on the earlier version of the module by adding the ability to create independant locationObjects which can enable/disable location tracking independant of other uses of Location Services by Hammerspoon, adds region monitoring for exit and entry, and adds the retrieval of geocoding information through the `hs.location.geocoder` submodule.
+-- This module provides functions for getting current location information and tracking location changes. It expands on the earlier version of the module by adding the ability to create independent locationObjects which can enable/disable location tracking independent of other uses of Location Services by Hammerspoon, adds region monitoring for exit and entry, and adds the retrieval of geocoding information through the `hs.location.geocoder` submodule.
 --
 -- This module is backwards compatible with its predecessor with the following changes:
 --  * [hs.location.get](#get) - no longer requires that you invoke [hs.location.start](#start) before using this function. The information returned will be the last cached value, which is updated internally whenever additional WiFi networks are detected or lost (not necessarily joined). When update tracking is enabled with the [hs.location.start](#start) function, calculations based upon the RSSI of all currently seen networks are preformed more often to provide a more precise fix, but it's still based on the WiFi networks near you. In many cases, the value retrieved when the WiFi state is changed should be sufficiently accurate.
@@ -171,7 +171,7 @@ function M:location() end
 --  * This method activates Location Services for Hammerspoon, so the first time you call this, you may be prompted to authorise Hammerspoon to use Location Services.
 function M:monitoredRegions() end
 
--- Create a new location object which can receive callbacks independant of other Hammerspoon use of Location Services.
+-- Create a new location object which can receive callbacks independent of other Hammerspoon use of Location Services.
 --
 -- Parameters:
 --  * None
@@ -180,7 +180,7 @@ function M:monitoredRegions() end
 --  * a locationObject
 --
 -- Notes:
---  * The locationObject created will receive callbacks independant of all other locationObjects and the legacy callback functions created with [hs.location.register](#register).  It can also receive callbacks for region changes which are not available through the legacy callback mechanism.
+--  * The locationObject created will receive callbacks independent of all other locationObjects and the legacy callback functions created with [hs.location.register](#register).  It can also receive callbacks for region changes which are not available through the legacy callback mechanism.
 function M.new() end
 
 -- Registers a callback function to be called when the system location is updated

@@ -19,7 +19,7 @@ hs.spaces = M
 -- Returns the currently visible (active) space for the specified screen.
 --
 -- Parameters:
---  * `screen` - an optional screen specification identifying the screen to return the active space for. The screen may be specified by it's ID (`hs.screen:id()`), it's UUID (`hs.screen:getUUID()`), or as an `hs.screen` object. If no screen is specified, the screen returned by `hs.screen.mainScreen()` is used.
+--  * `screen` - an optional screen specification identifying the screen to return the active space for. The screen may be specified by its ID (`hs.screen:id()`), its UUID (`hs.screen:getUUID()`), the string "Main" (a shortcut for `hs.screen.mainScreen()`), the string "Primary" (a shortcut for `hs.screen.primaryScreen()`), or as an `hs.screen` object. If no screen is specified, the screen returned by `hs.screen.mainScreen()` is used.
 --
 -- Returns:
 --  * an integer specifying the ID of the space displayed, or nil and an error message if an error occurs.
@@ -40,7 +40,7 @@ function M.activeSpaces() end
 -- Adds a new space on the specified screen
 --
 -- Parameters:
---  * `screen` - an optional screen specification identifying the screen to create the new space on. The screen may be specified by it's ID (`hs.screen:id()`), it's UUID (`hs.screen:getUUID()`), or as an `hs.screen` object. If no screen is specified, the screen returned by `hs.screen.mainScreen()` is used.
+--  * `screen` - an optional screen specification identifying the screen to create the new space on. The screen may be specified by its ID (`hs.screen:id()`), its UUID (`hs.screen:getUUID()`), the string "Main" (a shortcut for `hs.screen.mainScreen()`), the string "Primary" (a shortcut for `hs.screen.primaryScreen()`), or as an `hs.screen` object. If no screen is specified, the screen returned by `hs.screen.mainScreen()` is used.
 --  * `closeMC` - an optional boolean, default true, specifying whether or not the Mission Control display should be closed after adding the new space.
 --
 -- Returns:
@@ -51,7 +51,7 @@ function M.activeSpaces() end
 --  * If you intend to perform multiple actions which require the Mission Control display (([hs.spaces.missionControlSpaceNames](#missionControlSpaceNames), [hs.spaces.addSpaceToScreen](#addSpaceToScreen), [hs.spaces.removeSpace](#removeSpace), or [hs.spaces.gotoSpace](#gotoSpace)), you can pass in `false` as the final argument to prevent the automatic closure of the Mission Control display -- this will reduce the visual side-affects to one transition instead of many.
 function M.addSpaceToScreen(screen, closeMC, ...) end
 
--- Returns a Kay-Value table contining the IDs of all spaces for all screens.
+-- Returns a Kay-Value table containing the IDs of all spaces for all screens.
 --
 -- Parameters:
 --  * None
@@ -158,6 +158,7 @@ M.MCwaitTime = nil
 --      * `hs.host.locale.current()`
 --      * `hs.inspect(hs.host.locale.preferredLanguages())`
 --      * `hs.inspect(hs.host.locale.details())`
+--      * `hs.spaces.screensHaveSeparateSpaces()`
 function M.missionControlSpaceNames(closeMC, ...) end
 
 -- Moves the window with the specified windowID to the space specified by spaceID.
@@ -165,13 +166,14 @@ function M.missionControlSpaceNames(closeMC, ...) end
 -- Parameters:
 --  * `window`  - an integer specifying the ID of the window, or an `hs.window` object
 --  * `spaceID` - an integer specifying the ID of the space
+--  * `force` - an optional boolean specifying whether the window should be tried to move even if the spaces aren't compatible
 --
 -- Returns:
 --  * true if the window was moved; otherwise nil and an error message.
 --
 -- Notes:
---  * a window can only be moved from a user space to another user space -- you cannot move the window of a full screen (or tiled) application to another space and you cannot move a window *to* the same space as a full screen application.
-function M.moveWindowToSpace(window, spaceID, ...) end
+--  * a window can only be moved from a user space to another user space -- you cannot move the window of a full screen (or tiled) application to another space. you also cannot move a window *to* the same space as a full screen application unless `force` is set to true and even then it works for floating windows only.
+function M.moveWindowToSpace(window, spaceID, force, ...) end
 
 -- Opens the Mission Control display
 --
@@ -241,7 +243,7 @@ function M.spaceDisplay(spaceID, ...) end
 -- Returns a table containing the IDs of the spaces for the specified screen in their current order.
 --
 -- Parameters:
---  * `screen` - an optional screen specification identifying the screen to return the space array for. The screen may be specified by it's ID (`hs.screen:id()`), it's UUID (`hs.screen:getUUID()`), or as an `hs.screen` object. If no screen is specified, the screen returned by `hs.screen.mainScreen()` is used.
+--  * `screen` - an optional screen specification identifying the screen to return the space array for. The screen may be specified by its ID (`hs.screen:id()`), its UUID (`hs.screen:getUUID()`), the string "Main" (a shortcut for `hs.screen.mainScreen()`), the string "Primary" (a shortcut for `hs.screen.primaryScreen()`), or as an `hs.screen` object. If no screen is specified, the screen returned by `hs.screen.mainScreen()` is used.
 --
 -- Returns:
 --  * a table containing space IDs for the spaces for the screen, or nil and an error message if there is an error.

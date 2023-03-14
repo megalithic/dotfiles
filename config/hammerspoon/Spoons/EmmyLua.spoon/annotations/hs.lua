@@ -42,7 +42,7 @@ M.accessibilityStateCallback = nil
 --      - Open `/Applications/Utilities/Script Editor.app`
 --      - Click `File > Open Dictionary...`
 --      - Select Hammerspoon from the list of Applications
---      - This will now open a Dictionary containing all of the availible Hammerspoon AppleScript commands.
+--      - This will now open a Dictionary containing all of the available Hammerspoon AppleScript commands.
 --  * Note that strings within the Lua code you pass from AppleScript can be delimited by `[[` and `]]` rather than normal quotes
 --  * Example:
 --    ```lua
@@ -78,7 +78,7 @@ function M.automaticallyCheckForUpdates(setting, ...) end
 -- Checks the Camera Permissions for Hammerspoon, and optionally allows you to prompt for permissions.
 --
 -- Parameters:
---  * shouldPrompt - an optional boolean value indicating if we should request camear access. Defaults to false.
+--  * shouldPrompt - an optional boolean value indicating if we should request camera access. Defaults to false.
 --
 -- Returns:
 --  * `true` or `false` indicating whether or not Camera access is enabled for Hammerspoon.
@@ -231,7 +231,7 @@ function M.execute(command, with_user_env, ...) end
 -- Notes:
 --  * The function should accept a single parameter, which will be a string containing the full path to the file that was dragged to the dock icon
 --  * If multiple files are sent, this callback will be called once for each file
---  * This callback will be triggered when ANY file type is dragged onto the Hammerspoon Dock Icon, however certain filetypes are also processed seperately by Hammerspoon. For example, `hs.urlevent` will be triggered when the following filetypes are dropped onto the Dock Icon: HTML Documents (.html, .htm, .shtml, .jhtml), Plain text documents (.txt, .text), Web site locations (.url), XHTML documents (.xhtml, .xht, .xhtm, .xht).
+--  * This callback will be triggered when ANY file type is dragged onto the Hammerspoon Dock Icon, however certain filetypes are also processed separately by Hammerspoon. For example, `hs.urlevent` will be triggered when the following filetypes are dropped onto the Dock Icon: HTML Documents (.html, .htm, .shtml, .jhtml), Plain text documents (.txt, .text), Web site locations (.url), XHTML documents (.xhtml, .xht, .xhtm, .xht).
 M.fileDroppedToDockIconCallback = nil
 
 -- Makes Hammerspoon the foreground app.
@@ -296,11 +296,11 @@ function M.hsdocs(identifier, ...) end
 --  * The object provided by the Spoon (which can be ignored if you chose to make the Spoon global)
 --
 -- Notes:
---  * Spoons are a way of distributing self-contained units of Lua functionality, for Hammerspoon. For more information, see https://github.com/Hammerspoon/hammerspoon/blob/master/SPOON.md
+--  * Spoons are a way of distributing self-contained units of Lua functionality, for Hammerspoon. For more information, see https://github.com/Hammerspoon/hammerspoon/blob/master/SPOONS.md
 --  * This function will load the Spoon and call its `:init()` method if it has one. If you do not wish this to happen, or wish to use a Spoon that somehow doesn't fit with the behaviours of this function, you can also simply `require('name')` to load the Spoon
 --  * If the Spoon has a `:start()` method you are responsible for calling it before using the functionality of the Spoon.
 --  * If the Spoon provides documentation, it will be loaded by made available in hs.docs
---  * To learn how to distribute your own code as a Spoon, see https://github.com/Hammerspoon/hammerspoon/blob/master/SPOON.md
+--  * To learn how to distribute your own code as a Spoon, see https://github.com/Hammerspoon/hammerspoon/blob/master/SPOONS.md
 function M.loadSpoon(name, global, ...) end
 
 -- Set or display whether or not the Hammerspoon menu icon is visible.

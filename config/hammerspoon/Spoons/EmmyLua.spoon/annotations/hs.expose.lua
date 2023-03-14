@@ -118,7 +118,7 @@ function M:toggleShow(activeApplication, ...) end
 -- To have multiple expose instances with different behaviour/looks, use the `uiPrefs` parameter for the constructor;
 -- the passed keys and values will override those in this table for that particular instance.
 --
--- The default values are shown in the right hand side of the assignements below.
+-- The default values are shown in the right hand side of the assignments below.
 --
 -- To represent color values, you can use:
 --  * a table {red=redN, green=greenN, blue=blueN, alpha=alphaN}
@@ -150,6 +150,6 @@ function M:toggleShow(activeApplication, ...) end
 --  * `hs.expose.ui.highlightThumbnailStrokeWidth = 8` - thumbnail frame thickness for candidate windows
 --  * `hs.expose.ui.maxHintLetters = 2` - if necessary, hints longer than this will be disambiguated with digits
 --  * `hs.expose.ui.fitWindowsMaxIterations = 30` -- lower is faster, but higher chance of overlapping thumbnails
---  * `hs.expose.ui.fitWindowsInBackground = false` -- improves responsivenss, but can affect the rest of the config
+--  * `hs.expose.ui.fitWindowsInBackground = false` -- improves responsiveness, but can affect the rest of the config
 M.ui = nil
 

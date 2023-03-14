@@ -3,7 +3,7 @@ return {
   { "dstein64/vim-startuptime", cmd = { "StartupTime" }, config = function() vim.g.startuptime_tries = 15 end },
   {
     "ethanholz/nvim-lastplace",
-    event = { "BufReadPre" },
+    lazy = false,
     config = function()
       require("nvim-lastplace").setup({
         lastplace_ignore_buftype = { "quickfix", "nofile", "help" },

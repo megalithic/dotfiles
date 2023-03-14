@@ -386,11 +386,25 @@ local theme = lush(function(injected_functions)
     sym("@text.note")({ sym("@comment.note") }),
     sym("@text.ref")({ sym("@comment.ref") }),
 
+    sym("@text.gitcommit")({ fg = C.fg, gui = nil }),
+    sym("@text.title.gitcommit")({ fg = C.green, gui = nil }),
+    sym("@keyword.gitcommit")({ bg = C.red, fg = C.bg_dark, gui = nil }),
+
+    -- lsp semantic tokens highlights ------------------------------------------
+    sym("@lsp.type.enum")({ sym("@type") }),
+    sym("@lsp.type.keyword")({ sym("@keyword") }),
+    sym("@lsp.type.interface")({ sym("Identifier") }),
+    sym("@lsp.type.namespace")({ sym("@namespace") }),
+    sym("@lsp.type.parameter")({ sym("@parameter") }),
+    sym("@lsp.type.property")({ sym("@property") }),
+    sym("@lsp.typemod.function.defaultLibrary")({ Special }),
+    sym("@lsp.typemod.variable.defaultLibrary")({ sym("@variable.builtin") }),
+
     ---- :help treesitter-context ----------------------------------------------
 
     TreesitterContext({ bg = C.bg1 }),
     -- TreesitterContextLineNumber({ CursorLineNr, bg = TreesitterContext.bg, gui = C.transparent }),
-    -- TreesitterContextBorder({ fg = C.bg_dark, bg = TreesitterContext.bg }),
+    TreesitterContextBorder({ fg = C.bg_dark, bg = TreesitterContext.bg }),
 
     -- TS: Markdown
     -- sym("@markdown.punct.special") {Special},
@@ -804,9 +818,9 @@ local theme = lush(function(injected_functions)
 
     ---- :help git-signs.txt ---------------------------------------------------
 
-    GitSignsAdd({ GreenSign, bg = C.transparent }),
-    GitSignsDelete({ RedSign, bg = C.transparent }),
-    GitSignsChange({ OrangeSign, bg = C.transparent }),
+    GitSignsAdd({ fg = C.green, bg = C.transparent }),
+    GitSignsDelete({ fg = C.red, bg = C.transparent }),
+    GitSignsChange({ fg = C.orange, bg = C.transparent }),
 
     ---- tmux-popup ------------------------------------------------------------
 

@@ -104,7 +104,7 @@ function M:desktopImageURL(imageURL, ...) end
 --  * one or more hs.screen objects that match the supplied search criterion, or `nil` if none found
 --
 -- Notes:
---  * for convenience you call call this as `hs.screen(hint)`
+--  * for convenience you call this as `hs.screen(hint)`
 --
 -- Example:
 -- ```lua
@@ -246,7 +246,7 @@ function M.mainScreen() end
 --
 -- Parameters:
 --  * aScreen - an hs.screen object you wish to mirror
---  * permament - an optional bool, true if this should be configured permanently, false if it should apply just for this login session. Defaults to false.
+--  * permanent - an optional bool, true if this should be configured permanently, false if it should apply just for this login session. Defaults to false.
 --
 -- Returns:
 --  * true if the operation succeeded, otherwise false

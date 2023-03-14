@@ -161,6 +161,11 @@ local function setup_commands(bufnr)
   vcmd([[ command! -range LspFormatRange execute 'lua FormatRange()' ]])
 
   command("LspLog", function() vim.cmd("vnew " .. vim.lsp.get_log_path()) end)
+  command(
+    "LspLogDelete",
+    function() vim.fn.system([[rm "$HOME/.local/state/nvim/lsp.log"]]) end,
+    { desc = "Deletes the LSP log file. Useful for when it gets too big" }
+  )
 
   command("LspFormat", function() format({ bufnr = bufnr, async = false }) end)
 

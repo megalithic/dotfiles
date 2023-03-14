@@ -207,7 +207,7 @@ repo_info =
       Mix.Project.get().project()[:app]
       |> Application.get_env(:ecto_repos)
       |> case do
-        repo ->
+        repo when not is_nil(repo) ->
           repo
           |> Enum.at(0)
           |> Atom.to_string()

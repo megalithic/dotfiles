@@ -15,7 +15,7 @@ hs.logger = M
 --
 -- Returns:
 --  * None
-function M:d(...) end
+function M.d(...) end
 
 -- Default log level for new logger instances.
 --
@@ -31,7 +31,7 @@ M.defaultLogLevel = nil
 --
 -- Returns:
 --  * None
-function M:df(fmt, ...) end
+function M.df(fmt, ...) end
 
 -- Logs an error to the console
 --
@@ -40,7 +40,7 @@ function M:df(fmt, ...) end
 --
 -- Returns:
 --  * None
-function M:e(...) end
+function M.e(...) end
 
 -- Logs a formatted error to the console
 --
@@ -50,7 +50,7 @@ function M:e(...) end
 --
 -- Returns:
 --  * None
-function M:ef(fmt, ...) end
+function M.ef(fmt, ...) end
 
 -- Logs formatted info to the console
 --
@@ -60,7 +60,7 @@ function M:ef(fmt, ...) end
 --
 -- Returns:
 --  * None
-function M:f(fmt, ...) end
+function M.f(fmt, ...) end
 
 -- Gets the log level of the logger instance
 --
@@ -70,7 +70,7 @@ function M:f(fmt, ...) end
 -- Returns:
 --  * The log level of this logger as a number between 0 and 5
 ---@return number
-function M:getLogLevel() end
+function M.getLogLevel() end
 
 -- Returns the global log history
 --
@@ -107,7 +107,7 @@ function M.historySize(size, ...) end
 --
 -- Returns:
 --  * None
-function M:i(...) end
+function M.i(...) end
 
 -- The log level of the logger instance, as a number between 0 and 5
 M.level = nil
@@ -124,7 +124,7 @@ M.level = nil
 --
 -- Notes:
 --  * the logger instance created by this method is not a regular object, but a plain table with "static" functions;
---    therefore, do not use the colon syntax for so-called "methods" in this module (as in `mylogger:setLogLevel(3)`);
+--    therefore, do not use the colon syntax for so-called "methods" in this module (as in `mylogger.setLogLevel(3)`);
 --    you must instead use the regular dot syntax: `mylogger.setLogLevel(3)`
 --
 -- Example:
@@ -138,7 +138,7 @@ function M.new(id, loglevel, ...) end
 --
 -- Parameters:
 --  * entries - (optional) the maximum number of entries to print; if omitted, all entries in the history will be printed
---  * level - (optional) the desired log level (see `hs.logger:setLogLevel()`); if omitted, defaults to `verbose`
+--  * level - (optional) the desired log level (see `hs.logger.setLogLevel()`); if omitted, defaults to `verbose`
 --  * filter - (optional) a string to filter the entries (by logger id or message) via `string.find` plain matching
 --  * caseSensitive - (optional) if true, filtering is case sensitive
 --
@@ -162,7 +162,7 @@ function M.setGlobalLogLevel(lvl, ...) end
 --
 -- Returns:
 --  * None
-function M:setLogLevel(loglevel, ...) end
+function M.setLogLevel(loglevel, ...) end
 
 -- Sets the log level for all currently loaded modules
 --
@@ -184,7 +184,7 @@ function M.setModulesLogLevel(lvl, ...) end
 --
 -- Returns:
 --  * None
-function M:v(...) end
+function M.v(...) end
 
 -- Logs formatted verbose info to the console
 --
@@ -194,7 +194,7 @@ function M:v(...) end
 --
 -- Returns:
 --  * None
-function M:vf(fmt, ...) end
+function M.vf(fmt, ...) end
 
 -- Logs a warning to the console
 --
@@ -203,7 +203,7 @@ function M:vf(fmt, ...) end
 --
 -- Returns:
 --  * None
-function M:w(...) end
+function M.w(...) end
 
 -- Logs a formatted warning to the console
 --
@@ -213,5 +213,5 @@ function M:w(...) end
 --
 -- Returns:
 --  * None
-function M:wf(fmt, ...) end
+function M.wf(fmt, ...) end
 

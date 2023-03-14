@@ -158,7 +158,7 @@ function M:setEnvironment(environment, ...) end
 --
 -- Notes:
 --  * This method can be called before the task has been started, to prepare some input for it (particularly if it is not a streaming task)
---  * If this method is called multiple times, any input that has not been passed to the task already, is discarded (for streaming tasks, the data is generally consumed very quickly, but for now there is no way to syncronise this)
+--  * If this method is called multiple times, any input that has not been passed to the task already, is discarded (for streaming tasks, the data is generally consumed very quickly, but for now there is no way to synchronize this)
 ---@return hs.task
 function M:setInput(inputData, ...) end
 

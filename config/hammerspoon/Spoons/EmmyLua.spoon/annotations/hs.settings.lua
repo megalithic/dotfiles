@@ -48,7 +48,7 @@ function M.get(key, ...) end
 --
 -- Notes:
 --  * Use `ipairs(hs.settings.getKeys())` to iterate over all available settings
---  * Use `hs.settings.getKeys()["someKey"]` to test for the existance of a particular key
+--  * Use `hs.settings.getKeys()["someKey"]` to test for the existence of a particular key
 function M.getKeys() end
 
 -- Saves a setting with common datatypes

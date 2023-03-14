@@ -67,7 +67,7 @@ function M:enter() end
 --  * None
 --
 -- Notes:
---  * This is a pre-existing function that you should override if you need to use it; the default implementation does nothing.
+--  * This is a preexisting function that you should override if you need to use it; the default implementation does nothing.
 function M:entered() end
 
 -- Exits a modal state
@@ -92,7 +92,7 @@ function M:exit() end
 --  * None
 --
 -- Notes:
---  * This is a pre-existing function that you should override if you need to use it; the default implementation does nothing.
+--  * This is a preexisting function that you should override if you need to use it; the default implementation does nothing.
 function M:exited() end
 
 -- Creates a new modal state, optionally with a global keyboard combination to trigger it
