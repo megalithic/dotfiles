@@ -290,6 +290,16 @@ local apps = {
       { "", 2, "right50" },
     },
   },
+  ["com.electron.postbird"] = {
+    bundleID = "com.electron.postbird",
+    name = "Postbird",
+    key = "p",
+    mods = mods.caSc,
+    hideAfter = 1,
+    rules = {
+      { "", 1, "centeredLarge" },
+    },
+  },
   ["com.apple.MobileSMS"] = {
     bundleID = "com.apple.MobileSMS",
     name = "Messages",

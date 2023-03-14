@@ -33,24 +33,24 @@ mega.augroup("megaline", {
       end
     end,
   },
-  {
-    event = { "CursorMoved" },
-    pattern = { "*" },
-    command = function()
-      if vim.o.hlsearch then
-        local timer = vim.loop.new_timer()
-        search_count_timer = timer
-        timer:start(0, 200, function()
-          vim.schedule(function()
-            if timer == search_count_timer then
-              fn.searchcount({ recompute = 1, maxcount = 0, timeout = 100 })
-              vim.cmd.redrawstatus()
-            end
-          end)
-        end)
-      end
-    end,
-  },
+--  {
+--    event = { "CursorMoved" },
+--    pattern = { "*" },
+--    command = function()
+--      if vim.o.hlsearch then
+--        local timer = vim.loop.new_timer()
+--        search_count_timer = timer
+--        timer:start(0, 200, function()
+--          vim.schedule(function()
+--            if timer == search_count_timer then
+--              fn.searchcount({ recompute = 1, maxcount = 0, timeout = 100 })
+--              vim.cmd.redrawstatus()
+--            end
+--          end)
+--        end)
+--      end
+--    end,
+--  },
 })
 
 -- ( SETTERS ) -----------------------------------------------------------------
@@ -436,7 +436,7 @@ local function get_search_results()
   local last_search = fn.getreg("/")
   if not last_search or last_search == "" then return "" end
   local result = fn.searchcount({ maxcount = 9999 })
-  if vim.tbl_isempty(result) then return "" end
+  if result == nil or vim.tbl_isempty(result) then return "" end
   -- return " " .. last_search:gsub("\\v", "") .. " " .. result.current .. "/" .. result.total .. ""
 
   if result.incomplete == 1 then -- timed out

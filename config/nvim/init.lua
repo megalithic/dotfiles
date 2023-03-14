@@ -60,7 +60,7 @@ require("mega.debug")
 require("mega.options")
 require("mega.lazy").setup()
 
--- [ colorscheme ] -----------------------------------------------------------------
+-- [ colorscheme ] -------------------------------------------------------------
 
 mega.wrap_err("theme failed to load because", function(colorscheme)
   local theme = fmt("mega.lush_theme.%s", colorscheme)

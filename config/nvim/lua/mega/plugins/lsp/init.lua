@@ -134,18 +134,18 @@ local function hover()
     vim.cmd([[execute printf('h %s', expand('<cword>'))]])
     -- require("hover").hover_select()
   else
-    P("custom float ?")
+    -- P("custom float ?")
     if existing_float_win and vim.api.nvim_win_is_valid(existing_float_win) then
-      P("existing customf loat")
+      -- P("existing customf loat")
       vim.b.lsp_floating_preview = nil
       local preview_buffer = vim.api.nvim_win_get_buf(existing_float_win)
       local pwin = get_preview_window()
       vim.api.nvim_win_set_buf(pwin, preview_buffer)
       vim.api.nvim_win_close(existing_float_win, true)
     else
-      P("nope, new buf hover")
-      -- vim.lsp.buf.hover(nil, { focus = false, focusable = false })
-      require("hover").hover()
+      -- P("nope, new buf hover")
+      vim.lsp.buf.hover(nil, { focus = false, focusable = false })
+      -- require("hover").hover()
     end
   end
 end
@@ -163,7 +163,7 @@ local function setup_commands(bufnr)
   command("LspLog", function() vim.cmd("vnew " .. vim.lsp.get_log_path()) end)
   command(
     "LspLogDelete",
-    function() vim.fn.system([[rm "$HOME/.local/state/nvim/lsp.log"]]) end,
+    function() vim.fn.system("rm " .. vim.lsp.get_log_path()) end,
     { desc = "Deletes the LSP log file. Useful for when it gets too big" }
   )
 
@@ -300,9 +300,9 @@ local function setup_keymaps(client, bufnr)
   nnoremap("gd", vim.lsp.buf.definition, desc("lsp: definition"))
   nnoremap("gr", function()
     if vim.g.picker == "fzf" then
-      vim.cmd([[<cmd>FzfLua lsp_references<cr>]])
+      vim.cmd("FzfLua lsp_references")
     elseif vim.g.picker == "telescope" then
-      vim.cmd([[<cmd>Telescope lsp_references<cr>]])
+      vim.cmd("Telescope lsp_references")
     else
       vim.lsp.buf.references()
     end
@@ -339,7 +339,8 @@ local function setup_keymaps(client, bufnr)
     elseif vim.fn.expand("%:t") == "Cargo.toml" and require("crates").popup_available() then
       require("crates").show_popup()
     else
-      require("hover").hover()
+      hover()
+      -- require("hover").hover()
       -- vim.lsp.buf.hover()
     end
   end, desc("lsp: hover"))
