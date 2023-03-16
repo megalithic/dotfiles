@@ -46,6 +46,7 @@ local displays = {
   laptop = "Built-in Retina Display",
   external = "LG UltraFine",
 }
+displays["internal"] = displays.laptop
 
 -- if hs.network.configuration:hostname() == "megabookpro" then
 --   displays.laptop = "Built-in Retina Display"
@@ -77,7 +78,7 @@ local apps = {
   ["com.runningwithcrayons.Alfred"] = {
     name = "Alfred",
     bundleID = "com.runningwithcrayons.Alfred",
-    key = "space",
+    -- key = "space",
     quitter = true,
   },
   ["net.kovidgoyal.kitty"] = {

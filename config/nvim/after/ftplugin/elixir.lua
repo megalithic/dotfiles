@@ -2,7 +2,7 @@
 -- running tests in iex:
 -- https://curiosum.com/til/run-tests-in-elixir-iex-shell?utm_medium=email&utm_source=elixir-radar
 
-vim.cmd([[setlocal iskeyword+=!,?]])
+vim.cmd([[setlocal iskeyword+=!,?,-]])
 
 -- nnoremap("<leader>ed", [[orequire IEx; IEx.pry; #respawn() to leave pry<ESC>:w<CR>]])
 nnoremap("<localleader>ep", [[o|><ESC>a]])

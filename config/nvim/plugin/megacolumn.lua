@@ -118,6 +118,9 @@ local excluded = {
   "Trouble",
   "NeogitCommitMessage",
   "NeogitRebaseTodo",
+  "qf",
+  "quickfixlist",
+  "quickfix",
 }
 
 -- vim.o.statuscolumn = "%{%v:lua.mega.ui.statuscolumn.render()%}"

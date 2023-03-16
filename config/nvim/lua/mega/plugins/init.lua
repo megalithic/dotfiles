@@ -14,8 +14,6 @@ return {
   },
 
   -- ( UI ) --------------------------------------------------------------------
-  -- lazy.nvim colorscheme setup info:
-  -- REF: https://github.com/folke/lazy.nvim
   {
     "rktjmp/lush.nvim",
     lazy = false,
@@ -71,7 +69,7 @@ return {
       })
     end,
   },
-  { "lukas-reineke/virt-column.nvim", config = { char = "│" }, event = "VeryLazy" },
+  { "lukas-reineke/virt-column.nvim", config = { char = "│" }, event = "VimEnter" },
   {
     "stevearc/dressing.nvim",
     event = "VeryLazy",
@@ -279,18 +277,10 @@ return {
   },
   {
     "akinsho/git-conflict.nvim",
-    event = "VeryLazy",
-    dependencies = "rktjmp/lush.nvim",
-    config = function()
-      require("git-conflict").setup({
-        disable_diagnostics = true,
-        highlights = {
-          incoming = "DiffText",
-          current = "DiffAdd",
-          ancestor = "DiffBase",
-        },
-      })
-    end,
+    lazy = false,
+    opts = {
+      disable_diagnostics = true,
+    },
   },
   {
     "ruifm/gitlinker.nvim",

@@ -229,7 +229,8 @@ if ecto_started? do
   repo =
     Mix.Project.get().project()[:app]
     |> Application.get_env(:ecto_repos)
-    |> Enum.at(0)
+
+  repo = if not is_nil(repo), do: Enum.at(repo, 0)
 
   quote do
     alias unquote(repo), as: Repo

@@ -296,7 +296,7 @@ local servers = {
       },
     },
   },
-  bashls = true,
+  -- bashls = false,
   vimls = { init_options = { isNeovim = true } },
   teal_ls = true,
   terraformls = true,

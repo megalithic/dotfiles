@@ -6,6 +6,42 @@
 local M = {}
 hs.hash = M
 
+-- Calculates a binary MD5 hash
+--
+-- Parameters:
+--  * data - A string containing some data to hash
+--
+-- Returns:
+--  * A string containing the binary hash of the supplied data
+function M.bMD5(data, ...) end
+
+-- Calculates a binary SHA1 hash
+--
+-- Parameters:
+--  * data - A string containing some data to hash
+--
+-- Returns:
+--  * A string containing the binary hash of the supplied data
+function M.bSHA1(data, ...) end
+
+-- Calculates a binary SHA256 hash
+--
+-- Parameters:
+--  * data - A string containing some data to hash
+--
+-- Returns:
+--  * A string containing the binary hash of the supplied data
+function M.bSHA256(data, ...) end
+
+-- Calculates a binary SHA512 hash
+--
+-- Parameters:
+--  * data - A string containing some data to hash
+--
+-- Returns:
+--  * A string containing the binary hash of the supplied data
+function M.bSHA512(data, ...) end
+
 -- Calculates an HMAC using a key and an MD5 hash
 --
 -- Parameters:
@@ -56,7 +92,7 @@ function M.hmacSHA512(key, data, ...) end
 --  * data - A string containing some data to hash
 --
 -- Returns:
---  * A string containing the hash of the supplied data
+--  * A string containing the hash of the supplied data, encoded as hexadecimal
 ---@return string
 function M.MD5(data, ...) end
 
@@ -66,7 +102,7 @@ function M.MD5(data, ...) end
 --  * data - A string containing some data to hash
 --
 -- Returns:
---  * A string containing the hash of the supplied data
+--  * A string containing the hash of the supplied data, encoded as hexadecimal
 ---@return string
 function M.SHA1(data, ...) end
 
@@ -76,7 +112,7 @@ function M.SHA1(data, ...) end
 --  * data - A string containing some data to hash
 --
 -- Returns:
---  * A string containing the hash of the supplied data
+--  * A string containing the hash of the supplied data, encoded as hexadecimal
 ---@return string
 function M.SHA256(data, ...) end
 
@@ -86,7 +122,7 @@ function M.SHA256(data, ...) end
 --  * data - A string containing some data to hash
 --
 -- Returns:
---  * A string containing the hash of the supplied data
+--  * A string containing the hash of the supplied data, encoded as hexadecimal
 ---@return string
 function M.SHA512(data, ...) end
 

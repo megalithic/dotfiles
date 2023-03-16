@@ -5,6 +5,7 @@
 
 local Settings = require("hs.settings")
 local Hyper
+hs.loadSpoon("Seal")
 
 local obj = {}
 
@@ -142,7 +143,9 @@ function obj:start()
     hs.reload()
     hs.notify.new({ title = "Hammerspoon", subTitle = "Reloading configuration.." }):send()
   end)
+  Hyper:bind({}, "space", function() spoon.Seal:toggle("") end)
 
+  -- FIXME: config in settings module can't serialize functions :/
   -- bind(bindings.utils, "utils", function(t)
   --   hs.fnutils.each(t, function(cfg)
   --     local mods = cfg.mods or {}

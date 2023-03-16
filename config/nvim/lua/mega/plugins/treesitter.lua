@@ -28,6 +28,9 @@ return {
     config = function()
       require("treesitter-context").setup({
         separator = { "▁", "TreesitterContextBorder" }, -- alts: ▁ ─ ▄─▁
+        mode = "cursor",
+        max_lines = 0, -- How many lines the window should span. Values <= 0 mean no limit.
+        trim_scope = "outer",
       })
     end,
   },

@@ -1,3 +1,5 @@
+os:
+  editCommandTemplate: "{{editor}} +{{line}} -- {{filename}}"
 gui:
     authorColors: {}
     branchColors: {}

@@ -28,29 +28,29 @@ mega.augroup("megaline", {
     command = function()
       if not vim.g.is_saving and vim.bo.modified then
         vim.g.is_saving = true
-        -- vim.cmd([[checktime]])
+        vim.cmd([[checktime]])
         vim.defer_fn(function() vim.g.is_saving = false end, 1000)
       end
     end,
   },
---  {
---    event = { "CursorMoved" },
---    pattern = { "*" },
---    command = function()
---      if vim.o.hlsearch then
---        local timer = vim.loop.new_timer()
---        search_count_timer = timer
---        timer:start(0, 200, function()
---          vim.schedule(function()
---            if timer == search_count_timer then
---              fn.searchcount({ recompute = 1, maxcount = 0, timeout = 100 })
---              vim.cmd.redrawstatus()
---            end
---          end)
---        end)
---      end
---    end,
---  },
+  {
+    event = { "CursorMoved" },
+    pattern = { "*" },
+    command = function()
+      if vim.o.hlsearch then
+        local timer = vim.loop.new_timer()
+        search_count_timer = timer
+        timer:start(0, 200, function()
+          vim.schedule(function()
+            if timer == search_count_timer then
+              fn.searchcount({ recompute = 1, maxcount = 0, timeout = 100 })
+              vim.cmd.redrawstatus()
+            end
+          end)
+        end)
+      end
+    end,
+  },
 })
 
 -- ( SETTERS ) -----------------------------------------------------------------
@@ -436,7 +436,8 @@ local function get_search_results()
   local last_search = fn.getreg("/")
   if not last_search or last_search == "" then return "" end
   local result = fn.searchcount({ maxcount = 9999 })
-  if result == nil or vim.tbl_isempty(result) then return "" end
+  if vim.tbl_isempty(result) then return "" end
+  -- if result == nil or vim.tbl_isempty(result) then return "" end
   -- return " " .. last_search:gsub("\\v", "") .. " " .. result.current .. "/" .. result.total .. ""
 
   if result.incomplete == 1 then -- timed out

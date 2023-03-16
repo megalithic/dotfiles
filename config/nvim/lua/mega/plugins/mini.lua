@@ -154,7 +154,7 @@ function mini.config()
   mini.pairs()
   mini.comment()
   mini.align()
-  mini.indentscope()
+  -- mini.indentscope()
 end
 
 function mini.init()

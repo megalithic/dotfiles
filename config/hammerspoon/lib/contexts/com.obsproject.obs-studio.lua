@@ -5,6 +5,8 @@ local obj = {}
 local _appObj = nil
 local browser = hs.application.get(Settings.get(CONFIG_KEY).preferred.browser)
 local defaultKittyFont = 15.0
+local defaultKittyFontDelta = 8.0
+local currentAudioOutputLevel
 
 obj.__index = obj
 obj.name = "context.obs"
@@ -23,18 +25,20 @@ function obj:start(opts)
   if event == hs.application.watcher.launched then
     do
       local kitty = hs.application.get("kitty")
+      currentAudioOutputLevel = hs.audiodevice.defaultOutputDevice():outputVolume()
 
       hs.spotify.pause()
       L.req("lib.menubar.keyshowr"):start()
       L.req("lib.dnd").on("obs")
       L.req("lib.menubar.ptt").setState("push-to-mute")
+      hs.audiodevice.defaultOutputDevice():setOutputVolume(15)
 
       hs.layout.apply({
         { browser:name(), nil, 1, hs.layout.maximized, nil, nil },
         { kitty:name(), nil, 1, hs.layout.maximized, nil, nil },
       })
       kitty:setFrontmost(true)
-      hs.execute("kitty @ --to unix:/tmp/mykitty set-font-size " .. (defaultKittyFont + 4.0), true)
+      hs.execute("kitty @ --to unix:/tmp/mykitty set-font-size " .. (defaultKittyFont + defaultKittyFontDelta), true)
     end
   end
 
@@ -54,6 +58,8 @@ function obj:stop(opts)
   then
     _appObj:kill()
   elseif event == hs.application.watcher.terminated then
+    hs.audiodevice.defaultOutputDevice():setOutputVolume(currentAudioOutputLevel)
+
     L.req("lib.menubar.ptt").setState("push-to-talk")
     L.req("lib.dnd").off()
 

@@ -19,8 +19,10 @@ obj.watchers = {
 local function displayHandler(watcher, path, key, oldValue, isConnected)
   if isConnected then
     success("[dock] external display connected")
+    hs.screen.find(Config.displays.external):setPrimary()
   else
     warn("[dock] external display disconnected")
+    hs.screen.find(Config.displays.laptop):setPrimary()
   end
   WM.layoutRunningApps(Config.bindings.apps)
 end

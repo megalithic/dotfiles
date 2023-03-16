@@ -33,13 +33,13 @@ ipc.cliInstall()
 
 --  NOTE: order matters
 L.load("config")
+
 -- L.load("console") -- see preflight
 L.load("lib.bindings"):start()
 L.load("lib.menubar.ptt"):start()
 L.load("lib.menubar.spotify"):start()
 L.load("lib.menubar.keyshowr")
 L.load("lib.watchers"):start()
--- TODO: integrate yabai with hammerspoon? https://github.com/apoxa/dotfiles/commit/bc9fe021cf56102d092eea9b98ba04030b3037c7
 L.load("lib.wm"):start()
 L.load("lib.quitter"):start({ mode = "double" })
 L.req("lib.clipboard")
@@ -57,10 +57,38 @@ end
 -- [ SPOONS ] ------------------------------------------------------------------
 
 hs.loadSpoon("SpoonInstall")
+spoon.SpoonInstall.use_syncinstall = true
 Install = spoon.SpoonInstall
 
+Install:andUse("Seal", {
+  -- NOTE: see bindings module for hotkey binding
+  fn = function(s)
+    s:loadPlugins({ "apps", "calc", "screencapture", "useractions", "urlformats", "safari_bookmarks" })
+    s.plugins.safari_bookmarks.always_open_with_safari = false
+    s.plugins.useractions.actions = {
+      ["Hammerspoon docs webpage"] = {
+        url = "http://hammerspoon.org/docs/",
+        icon = hs.image.imageFromName(hs.image.systemImageNames.ApplicationIcon),
+      },
+      ["github"] = { url = "https://github.com/search?q=${query}", keyword = "gh", icon = "favicon" },
+      ["hexdocs"] = { url = "https://hexdocs.pm/${query}", keyword = "hd", icon = "favicon" },
+      ["hex"] = {
+        url = "https://hex.pm/packages?search=${query}&sort=recent_downloads",
+        keyword = "hex",
+        icon = "favicon",
+      },
+      ["devdocs"] = { url = "https://devdocs.io/?q=%{query}", keyword = "dev", icon = "favicon" },
+      ["youtube"] = {
+        url = "https://www.youtube.com/results?search_query=${query}&page={startPage?}",
+        keyword = "yt",
+        icon = "favicon",
+      },
+    }
+    s:refreshAllCommands()
+  end,
+  start = true,
+})
 Install:andUse("EmmyLua")
--- @trial URLDispatcher: https://github.com/ahmedelgabri/dotfiles/commit/2c5c9f96bdf5e800f9932b7ba025a9aabb235de3#diff-13ac59e8e0af48d2afe1d4904f4c8d8705f12886b70dda63a31044284748a96aR18-R37
 Install:andUse("URLDispatcher", {
   start = true,
   loglevel = "debug",

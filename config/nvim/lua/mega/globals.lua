@@ -703,8 +703,10 @@ end
 -- https://www.reddit.com/r/neovim/comments/nrz9hp/can_i_close_all_floating_windows_without_closing/h0lg5m1/
 function mega.close_float_wins()
   for _, win in ipairs(vim.api.nvim_list_wins()) do
-    local config = vim.api.nvim_win_get_config(win)
-    if config.relative ~= "" then vim.api.nvim_win_close(win, false) end
+    if vim.api.nvim_win_is_valid(win) then
+      local config = vim.api.nvim_win_get_config(win)
+      if config.relative ~= "" then vim.api.nvim_win_close(win, false) end
+    end
   end
 end
 

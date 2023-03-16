@@ -19,31 +19,31 @@ local M = {
         input_buffer_type = "dressing",
       },
     },
-    {
-      "ray-x/lsp_signature.nvim",
-      event = "VeryLazy",
-      dependencies = "nvim-lspconfig",
-      config = function()
-        require("lsp_signature").setup({
-          bind = true,
-          fix_pos = true,
-          auto_close_after = 10, -- close after 15 seconds
-          hint_enable = false,
-          floating_window_above_cur_line = false,
-          doc_lines = 0,
-          handler_opts = {
-            anchor = "SW",
-            relative = "cursor",
-            row = -1,
-            focus = false,
-            border = _G.mega.get_border(),
-          },
-          zindex = 99, -- Keep signature popup below the completion PUM
-          toggle_key = "<C-K>",
-          select_signature_key = "<M-N>",
-        })
-      end,
-    },
+    -- {
+    --   "ray-x/lsp_signature.nvim",
+    --   event = "VeryLazy",
+    --   dependencies = "nvim-lspconfig",
+    --   config = function()
+    --     require("lsp_signature").setup({
+    --       bind = true,
+    --       fix_pos = true,
+    --       auto_close_after = 10, -- close after 15 seconds
+    --       hint_enable = false,
+    --       floating_window_above_cur_line = false,
+    --       doc_lines = 0,
+    --       handler_opts = {
+    --         anchor = "SW",
+    --         relative = "cursor",
+    --         row = -1,
+    --         focus = false,
+    --         border = _G.mega.get_border(),
+    --       },
+    --       zindex = 99, -- Keep signature popup below the completion PUM
+    --       toggle_key = "<C-K>",
+    --       select_signature_key = "<M-N>",
+    --     })
+    --   end,
+    -- },
     { "nvim-lua/lsp_extensions.nvim" },
     {
       "jose-elias-alvarez/typescript.nvim",
@@ -641,24 +641,24 @@ function M.config()
       end
     end
 
-    require("lsp_signature").on_attach({
-      bind = true,
-      fix_pos = true,
-      auto_close_after = 10, -- close after 15 seconds
-      hint_enable = false,
-      floating_window_above_cur_line = true,
-      doc_lines = 0,
-      handler_opts = {
-        anchor = "SW",
-        relative = "cursor",
-        row = -1,
-        focus = false,
-        border = _G.mega.get_border(),
-      },
-      zindex = 99, -- Keep signature popup below the completion PUM
-      toggle_key = "<C-K>",
-      select_signature_key = "<M-N>",
-    }, bufnr)
+    -- require("lsp_signature").on_attach({
+    --   bind = true,
+    --   fix_pos = true,
+    --   auto_close_after = 10, -- close after 15 seconds
+    --   hint_enable = false,
+    --   floating_window_above_cur_line = true,
+    --   doc_lines = 0,
+    --   handler_opts = {
+    --     anchor = "SW",
+    --     relative = "cursor",
+    --     row = -1,
+    --     focus = false,
+    --     border = _G.mega.get_border(),
+    --   },
+    --   zindex = 99, -- Keep signature popup below the completion PUM
+    --   toggle_key = "<C-K>",
+    --   select_signature_key = "<M-N>",
+    -- }, bufnr)
 
     -- if caps.documentSymbolProvider then
     --   local ok, navic = mega.require("nvim-navic")

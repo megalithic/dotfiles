@@ -288,10 +288,10 @@ local theme = lush(function(injected_functions)
 
     Headline1({ fg = C.green, bg = C.bg_green, gui = "bold,italic,underline" }),
     Headline2({ fg = C.yellow, bg = C.bg_yellow, gui = "bold,italic" }),
-    Headline3({ fg = C.red, bg = C.bg1, gui = "bold" }),
-    Headline4({ fg = C.purple, bg = C.bg1, gui = "bold" }),
-    Headline5({ fg = C.blue, bg = C.bg0, gui = "italic" }),
-    Headline6({ fg = C.orange, bg = C.bg0, gui = C.transparent }),
+    Headline3({ fg = C.red, bg = C.bg0, gui = "bold" }),
+    Headline4({ fg = C.purple, bg = C.bg0, gui = "bold" }),
+    Headline5({ fg = C.blue, bg = C.bg1, gui = "italic" }),
+    Headline6({ fg = C.orange, bg = C.bg1, gui = C.transparent }),
     Dash({ fg = C.bg3, gui = "bold" }),
     sym("@dash")({ Dash }),
     CodeBlock({ bg = C.bg1 }),
@@ -507,6 +507,10 @@ local theme = lush(function(injected_functions)
     DiffDelete({ fg = C.transparent, bg = C.bg_red }), -- diff mode: Deleted line |diff.txt|
     DiffText({ fg = C.transparent, bg = C.bg_blue }), -- diff mode: Changed text within a changed line |diff.txt|
     DiffBase({ fg = C.transparent, bg = C.bg_dark }), -- diff mode: Changed text within a changed line |diff.txt|
+
+    GitConflictCurrent({ DiffAdd }),
+    GitConflictIncoming({ DiffText }),
+    GitConflictAncestor({ DiffBase }),
 
     sym("@text.diff.add")({ DiffAdd }),
     sym("@text.diff.change")({ DiffChange }),

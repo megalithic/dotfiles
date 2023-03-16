@@ -1,6 +1,7 @@
 local M = {
   "glacambre/firenvim",
   -- lazy = false,
+  cond = vim.g.started_by_firenvim,
   event = { "BufEnter", "UIEnter", "BufReadPre" },
   build = function() vim.fn["firenvim#install"](0) end,
 }
