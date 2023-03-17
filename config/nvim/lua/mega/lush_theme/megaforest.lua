@@ -59,6 +59,7 @@ local theme = lush(function(injected_functions)
     ColorColumn({ fg = C.transparent, bg = C.bg0 }), -- used for the columns set with 'colorcolumn'
     Conceal({ fg = C.grey1, bg = C.transparent }), -- placeholder characters substituted for concealed text (see 'conceallevel')
     Cursor({ fg = C.transparent, bg = C.transparent, gui = "reverse" }), -- character under the cursor
+    Cursor2({ fg = C.red, bg = C.red }),
     TermCursor({ Cursor, bg = C.yellow }), -- cursor in a focused terminal
     TermCursorNC({ Cursor }), -- cursor in an unfocused terminal
     lCursor({ Cursor }), -- the character under the cursor when |language-mapping| is used (see 'guicursor')
