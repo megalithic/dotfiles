@@ -24,17 +24,17 @@ vim.g.enabled_plugin = {
 -- disable certain plugins for firenvim
 for plugin, _ in pairs(vim.g.enabled_plugin) do
   if not vim.tbl_contains({ "autocmds", "mappings", "quickfix" }, plugin) and vim.g.started_by_firenvim then
-    plugin = false
+    vim.g.enabled_plugin[plugin] = false
   end
 end
 
-vim.g.colorscheme = "megaforest" -- alts: megaforest, everforest, palenightfall, rose-pine, forestbones, tokyonight-storm
+vim.g.colorscheme = "megaforest"
 vim.g.default_colorcolumn = "81"
 vim.g.mapleader = ","
 vim.g.maplocalleader = " "
 vim.g.notifier_enabled = true
 vim.g.debug_enabled = false
-vim.g.picker = "telescope" -- alts: fzf
+vim.g.picker = "telescope"
 
 -- [ globals ] -----------------------------------------------------------------
 
