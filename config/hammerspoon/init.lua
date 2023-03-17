@@ -70,17 +70,17 @@ Install:andUse("Seal", {
         url = "http://hammerspoon.org/docs/",
         icon = hs.image.imageFromName(hs.image.systemImageNames.ApplicationIcon),
       },
-      ["github"] = { url = "https://github.com/search?q=${query}", keyword = "gh", icon = "favicon" },
-      ["hexdocs"] = { url = "https://hexdocs.pm/${query}", keyword = "hd", icon = "favicon" },
+      ["github"] = { url = "https://github.com/search?q=${query}", keyword = "!gh", icon = "favicon" },
+      ["hexdocs"] = { url = "https://hexdocs.pm/${query}", keyword = "!hd", icon = "favicon" },
       ["hex"] = {
         url = "https://hex.pm/packages?search=${query}&sort=recent_downloads",
-        keyword = "hex",
+        keyword = "!hex",
         icon = "favicon",
       },
-      ["devdocs"] = { url = "https://devdocs.io/?q=%{query}", keyword = "dev", icon = "favicon" },
+      ["devdocs"] = { url = "https://devdocs.io/?q=%{query}", keyword = "!dev", icon = "favicon" },
       ["youtube"] = {
         url = "https://www.youtube.com/results?search_query=${query}&page={startPage?}",
-        keyword = "yt",
+        keyword = "!yt",
         icon = "favicon",
       },
     }
