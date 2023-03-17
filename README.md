@@ -47,7 +47,7 @@ make -C ~/.dotfiles help
 
 This dotfiles repo is managed by [dotbot](https://github.com/anishathalye/dotbot); not near as over-the-top configurable as _Ansible_, but way more advanced than just _GNU Stow_.
 
-I have tried to be platform agnostic, but the majority of scripts that run here are for macOS (specifically macOS Monterey, _non-M1_, at the time of this commit -- I'll update here when I move to ARM), with a handful of Debian/Ubuntu Linux specific platform scripts and provisions. This means that certain tools/binaries I rely on may or may not install/configure on Linux. Though, I have tested it reasonably well on Ubuntu-based Linode and DigitalOcean instances.
+I have tried to be platform agnostic, but the majority of scripts that run here are for macOS (specifically macOS Ventura -- x86 and arm), with a handful of Debian/Ubuntu Linux specific platform scripts and provisions. This means that certain tools/binaries I rely on might or might not install/configure on Linux. Though, I have tested it reasonably well on Ubuntu-based Linode and DigitalOcean instances.
 
 #### 🐉 Thar be dragons
 
