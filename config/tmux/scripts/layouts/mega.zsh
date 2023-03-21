@@ -27,7 +27,6 @@ if tmux has-session -t "weechat" 2>/dev/null; then
 else
   tmux -2 send-keys -t "$SESSION":1 weechat C-m
 fi
-# tmux -2 send-keys -t "$SESSION":1 tmux\ link-window\ -s\ weechat:weechat\ -t\ 0\ \&\&\ exit C-m
 
 # Window "dots"
 tmux -2 send-keys -t "$SESSION":2 ls C-m

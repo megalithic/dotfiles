@@ -151,35 +151,34 @@ function fuzzy_find() {
   # -- prepare for fuzzy-finding!!
   layouts_list="$(get_layouts)"
   current_sessions_list=$(tmux list-sessions -F "#S")
-  sessions_list="$current_sessions_list"
-  # combine our pre-defined layouts AND open sessions (no more preview if we do this)
+
+  # combine our pre-defined layouts AND open sessions
   sessions_list=$(printf "%s\n%s" "$layouts_list" "$current_sessions_list" | sort -u)
   current_session="$(tmux display-message -p '#S')"
   sessions_count=$(echo "$sessions_list" | wc -l | sed -e 's/^[[:space:]]*//')
-  preview_cmd="echo {} | sed 's/:.*$//' | xargs -I{} echo 'windows in session:' && tmux list-windows -F '#{window_index}:#W (#{window_panes})' -t {} && echo "" && echo 'last 15 lines of output:' && tmux capture-pane -ep -S- -E- -t{}|sed '/^$/d'|tail -15"
-  # preview_cmd="echo {} | sed 's/:.*$//' | xargs -I{} tmux capture-pane -p -S- -E- -t{}|sed '/^$/d'|tail -15"
-  # preview_cmd="echo {} | sed 's/:.*$//' | xargs -I{} tmux capture-pane -ep -t {} | sed '/^$/d'|tail -20"
-  # preview_cmd="echo {} | sed 's/:.*$//' | xargs -I{} tmux capture-pane -ep -t {}"
+  preview_lines_of_output=10
+  preview_cmd="echo {} | sed 's/:.*$//' | xargs -I {} | xargs tmux has-session -t 2>/dev/null && xargs -I {} | echo '$(tput sgr 0 1)$(tput setaf 6)﬿ windows in session:$(tput sgr 0)\n' && tmux list-windows -F '░ #{window_index}:#W (#{window_panes})' -t {} && echo "" && echo '$(tput sgr 0 1)$(tput setaf 6) last $preview_lines_of_output lines of output:$(tput sgr 0)\n' && tmux capture-pane -ep -S- -E- -t {} | sed '/^$/d' | tr -s ' '  | tr -s 'q' | sed 's/^/░ /' | tail -$preview_lines_of_output"
 
   # -- do certain things based upon only one active session
   if [[ $sessions_count == 1 ]]; then
     fzf_prompt_text=" create new session  "
     fzf_header_text=""
 
-    # -- provide user with their avaialble pre-defined layouts (assumes certain dir)
+    # -- provide user with their available pre-defined layouts (assumes certain dir)
     sessions_list="$(get_layouts)"
     layouts_sessions_count=$(echo "$sessions_list" | wc -l | sed -e 's/^[[:space:]]*//')
     [[ $layouts_sessions_count -gt 0 ]] && fzf_header_text="ﯲ possible layouts"
     [[ $layouts_sessions_count -gt 0 ]] && preview_cmd="fd {} $layouts_dir | xargs bat"
   else
-    # sessions_list=$(printf "%s\n%s" "$layouts_list" "$current_sessions_list" | sort | uniq)
     fzf_prompt_text=" new or existing session  "
-    fzf_header_text="ﯲ active: $(tput sitm)$(tput setaf 5)$current_session$(tput sgr 0)"
+    fzf_header_text="ﯲ $(tput sitm)$(tput setaf 5)$current_session$(tput sgr 0) / $(tput setaf 255)ctrl-x$(tput sgr 0): $(tput setaf 245)kill-session"
   fi
 
   # -- get our session from fzf (grabs the the active pane from each session as preview, too!)
-  # -- REF: https://github.com/joshmedeski/t-smart-tmux-session-manager/blob/main/bin/t
-  try_session "$(echo "$sessions_list" | grep -v "^default\$" | grep -v "^$(tmux display-message -p '#S')\$" | "$fzf_cmd" --reverse --border=none --padding="1" --prompt="$fzf_prompt_text" --header="$fzf_header_text" --bind="enter:replace-query+print-query" --preview="$preview_cmd")"
+  fzf_list=$(echo "$sessions_list" | grep -v "^default\$" | grep -v "^$current_session\$")
+  select_session_bind="enter:replace-query+print-query"
+  kill_session_bind="ctrl-x:execute(tmux kill-session -t {})+reload(echo \"$sessions_list\" | grep -v \"^default\$\" | grep -v \"^$current_session\$\")"
+  try_session "$(echo "$fzf_list" | "$fzf_cmd" --reverse --border=none --padding="1" --prompt="$fzf_prompt_text" --header="$fzf_header_text" --bind="$select_session_bind" --bind="$kill_session_bind" --preview="$preview_cmd")"
 }
 
 # -- if we pass in a session_name: attach/switch to it or, create new session
