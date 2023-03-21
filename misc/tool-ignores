@@ -48,5 +48,7 @@ erl_crash.dump
 .nix-mix
 .nix-hex
 **/*.zwc
+**/ios
+**/android
 
 # vim:ft=gitignore:tw=0
