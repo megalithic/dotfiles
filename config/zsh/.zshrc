@@ -39,11 +39,13 @@ if exists zoxide; then
   eval "$(zoxide init zsh)"
 fi
 
+# NOTE: https://github.com/jdxcode/rtx#rtx-activate
+zsh_add_file "lib/rtx.zsh"
+
 # NOTE: http://asdf-vm.com/learn-more/faq.html#shell-not-detecting-newly-installed-shims
-zsh_add_file "lib/asdf.zsh"
+# zsh_add_file "lib/asdf.zsh"
 
 # work things
-[[ -f "/opt/dev-env/ansible/dash_profile" ]] && source /opt/dev-env/ansible/dash_profile
 [[ -n "$DESK_ENV" ]] && source "$DESK_ENV" || true
 
 # fzf just desparately wants this here

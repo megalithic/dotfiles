@@ -70,11 +70,12 @@
       quiet: true
       command: >-
         ~/.dotfiles/bin/brew-install -f;
-
-    - description: Attempting to install ASDF..
-      quiet: true
-      command: >-
-        ~/.dotfiles/bin/asdf-install -f;
+        eval "$($HOMEBREW_PREFIX/bin/rtx activate zsh)";
+    #
+    # - description: Attempting to install ASDF..
+    #   quiet: true
+    #   command: >-
+    #     ~/.dotfiles/bin/asdf-install -f;
 
 - link:
     # ----- home

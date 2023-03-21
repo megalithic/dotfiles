@@ -167,6 +167,7 @@ brew "readline"
 brew "reattach-to-user-namespace" if OS.mac?
 brew "ren"
 brew "ripgrep"
+brew "jdxcode/tap/rtx"
 brew "ruby-build" # needed for asdf/ruby
 brew "rust"
 brew "rustup-init"
@@ -208,6 +209,7 @@ brew "yubikey-personalization" if OS.mac?
 brew "yj"
 # brew "zellij"
 # brew "mhanberg/zk/zk", args: ["build-from-source"] if OS.mac?
+brew "zf"
 brew "zk", args: ["HEAD"] if OS.mac?
 brew "zoxide"
 brew "zsh"
@@ -233,6 +235,7 @@ cask "font-ia-writer-quattro"
 cask "font-victor-mono-nerd-font"
 cask "font-hack-nerd-font"
 cask "sf-symbols"
+cask "font-symbols-only-nerd-font"
 cask "font-cascadia-code"
 cask "font-cascadia-code-pl"
 cask "font-cascadia-mono"
