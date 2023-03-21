@@ -191,15 +191,6 @@ local apps = {
       { "", 1, "centeredLarge" },
     },
   },
-  ["com.tinyspeck.slackmacgap"] = {
-    bundleID = "com.tinyspeck.slackmacgap",
-    name = "Slack",
-    tags = { "chat" },
-    distraction = true,
-    rules = {
-      { "", 2, "maximized" },
-    },
-  },
   ["com.obsproject.obs-studio"] = {
     bundleID = "com.obsproject.obs-studio",
     name = "OBS Studio",
@@ -314,11 +305,22 @@ local apps = {
   ["org.whispersystems.signal-desktop"] = {
     bundleID = "org.whispersystems.signal-desktop",
     name = "Signal",
-    key = "w",
+    key = "s",
+    mods = mods.caSc,
     distraction = true,
-    tags = { "chat" },
+    -- tags = { "chat" },
     rules = {
       { "", 2, "right50" },
+    },
+  },
+  ["com.tinyspeck.slackmacgap"] = {
+    bundleID = "com.tinyspeck.slackmacgap",
+    name = "Slack",
+    -- tags = { "chat" },
+    key = "s",
+    distraction = true,
+    rules = {
+      { "", 2, "maximized" },
     },
   },
   ["com.agilebits.onepassword7"] = {
