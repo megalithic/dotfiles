@@ -1,4 +1,4 @@
---- An enchanced app watcher: a `hs.application.watcher` bolstered by a
+--- An enhanced app watcher: a `hs.application.watcher` bolstered by a
 -- `hs.window.filter` to catch activations of "transient" apps, such as Spotlight.
 --- TODO: deal with non-transient apps to see if we want to act on window filter events.
 
@@ -57,7 +57,10 @@ function obj:init(opts)
   opts = opts or {}
 
   obj.windowFilter = Window.filter.new(false)
-  obj.appWatcher = Application.watcher.new(appWatcherCallback)
+  obj.appWatcher = hs.watchable.watch(
+    "status.app",
+    function(_watcher, _path, _key, _old, new) appWatcherCallback(new.appName, new.appEvent, new.appObj) end
+  )
 
   return self
 end
@@ -74,7 +77,6 @@ function obj:start(apps, appFilters, _callback)
   -- on reload, enter modal (if any) for the front app (saves an redundant cmd+tab)
   local frontApp = Application.frontmostApplication()
   if frontApp then appWatcherCallback(nil, Application.watcher.activated, frontApp) end
-  obj.appWatcher:start()
   obj.windowFilter:setFilters(appFilters or {})
   obj.windowFilter:subscribe(allowedWindowFilterEvents, windowFilterCallback)
 
@@ -83,7 +85,6 @@ end
 
 function obj:stop()
   obj.windowFilter:unsubscribeAll()
-  obj.appWatcher:stop()
 
   return self
 end
