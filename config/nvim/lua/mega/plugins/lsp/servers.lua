@@ -135,7 +135,7 @@ local servers = {
             vim.api.nvim_buf_set_option(elixir_nvim_output_bufnr, "filetype", "elixirls")
           end
 
-          vim.api.nvim_buf_set_lines(elixir_nvim_output_bufnr, -1, -1, false, message)
+          pcall(vim.api.nvim_buf_set_lines, elixir_nvim_output_bufnr, -1, -1, false, message)
 
           mega.nnoremap("<localleader>eob", open_output_panel, { desc = "elixir: open output panel" })
         end,

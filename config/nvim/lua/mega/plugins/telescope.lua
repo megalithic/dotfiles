@@ -33,7 +33,7 @@ local rg_find_command = {
   "!.git",
 }
 
-local find_files_cmd = rg_find_command
+local find_files_cmd = fd_find_command
 local grep_files_cmd = {
   "rg",
   "--hidden",
@@ -177,6 +177,14 @@ return {
     },
   },
   config = function()
+    mega.augroup("TelescopePreviews", {
+      {
+        event = { "User" },
+        pattern = { "TelescopePreviewerLoaded" },
+        command = "setlocal number wrap numberwidth=5 norelativenumber",
+      },
+    })
+
     local telescope = require("telescope")
     local transform_mod = require("telescope.actions.mt").transform_mod
     local actions = require("telescope.actions")
@@ -187,13 +195,44 @@ return {
       multi_selection_open = function(prompt_bufnr) multiopen(prompt_bufnr, "default") end,
     })
 
+    local previewers = require("telescope.previewers")
+    local Job = require("plenary.job")
+    local new_maker = function(filepath, bufnr, opts)
+      opts = opts or {}
+      Job:new({
+        command = "file",
+        args = { "--mime-type", "-b", filepath },
+        on_exit = function(j)
+          local mime_type = vim.split(j:result()[1], "/")[1]
+          if mime_type == "text" or mime_type == "application" then
+            previewers.buffer_previewer_maker(filepath, bufnr, opts)
+          else
+            vim.schedule(function() vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "BINARY" }) end)
+          end
+        end,
+      }):sync()
+
+      local path = vim.fn.expand(filepath)
+      vim.loop.fs_stat(filepath, function(_, stat)
+        if not stat then return end
+        if stat.size > 100000 then
+          return
+        else
+          previewers.buffer_previewer_maker(path, bufnr, opts)
+        end
+      end)
+    end
+
     telescope.setup({
       defaults = {
         dynamic_preview_title = true,
         results_title = false,
         -- selection_strategy = "reset",
         -- use_less = true,
-        color_devicons = false,
+        color_devicons = true,
+        file_previewer = require("telescope.previewers").vim_buffer_cat.new,
+        grep_previewer = require("telescope.previewers").vim_buffer_vimgrep.new,
+        qflist_previewer = require("telescope.previewers").vim_buffer_qflist.new,
         layout_strategy = "horizontal",
         layout_config = {
           prompt_position = "top",
@@ -219,8 +258,49 @@ return {
         selection_caret = " ",
         entry_prefix = "  ",
         winblend = 0,
-
         vimgrep_arguments = grep_files_cmd,
+        buffer_previewer_maker = new_maker,
+        -- preview = {
+        --   mime_hook = function(filepath, bufnr, opts)
+        --     dd("mime_hook")
+        --     local is_image = function(filepath)
+        --       local image_extensions = { "png", "jpg", "jpeg", "gif" } -- Supported image formatsscreens
+        --       local split_path = vim.split(filepath:lower(), ".", { plain = true })
+        --       local extension = split_path[#split_path]
+        --       return vim.tbl_contains(image_extensions, extension)
+        --     end
+        --     if is_image(filepath) then
+        --       local term = vim.api.nvim_open_term(bufnr, {})
+        --       local function send_output(_, data, _)
+        --         for _, d in ipairs(data) do
+        --           vim.api.nvim_chan_send(term, d .. "\r\n")
+        --         end
+        --       end
+        --       --
+        --       -- vim.fn.jobstart({
+        --       --   "preview",
+        --       --   filepath, -- Terminal image viewer command
+        --       -- }, { on_stdout = send_output, stdout_buffered = true })
+        --       mega.notify("yup (image)?!")
+        --       dd("is_image")
+        --       vim.fn.jobstart({
+        --         "viu",
+        --         "-w",
+        --         "40",
+        --         "-b",
+        --         filepath,
+        --       }, {
+        --         on_stdout = send_output,
+        --         stdout_buffered = true,
+        --       })
+        --       -- require("telescope.previewers.utils").set_preview_message(bufnr, opts.winid, "Image cannot be previewed")
+        --     else
+        --       mega.notify("what (binary)?!")
+        --       dd("not_image")
+        --       require("telescope.previewers.utils").set_preview_message(bufnr, opts.winid, "Binary cannot be previewed")
+        --     end
+        --   end,
+        -- },
       },
       extensions = {
         ["zf-native"] = {
@@ -245,6 +325,9 @@ return {
         find_files = {
           find_command = find_files_cmd,
           on_input_filter_cb = file_extension_filter,
+          -- previewer = require("telescope.previewers.term_previewer").new_termopen_previewer({
+          --   get_command = function(entry) return { "preview", require("telescope.from_entry").path(entry) } end,
+          -- }),
         },
         live_grep = ivy({
           -- max_results = 500,
