@@ -122,6 +122,7 @@ return {
     { "molecule-man/telescope-menufacture" },
     "natecraddock/telescope-zf-native.nvim",
     "nvim-telescope/telescope-file-browser.nvim",
+    "fdschmidt93/telescope-egrepify.nvim",
     -- "danielvolchek/tailiscope.nvim"
     {
       "danielfalk/smart-open.nvim",
@@ -139,7 +140,8 @@ return {
     },
     {
       "<leader>a",
-      function() extensions("menufacture").live_grep(ivy({})) end,
+      -- function() extensions("menufacture").live_grep(ivy({})) end,
+      function() require("telescope").extensions.egrepify.egrepify(ivy({})) end,
       desc = "live grep",
     },
     {
@@ -320,6 +322,20 @@ return {
             main_menu = { [{ "i", "n" }] = "<C-y>" },
           },
         },
+        egrepify = {
+          lnum = true, -- default, not required
+          lnum_hl = "EgrepifyLnum", -- default, not required
+          col = false, -- default, not required
+          col_hl = "EgrepifyCol", -- default, not required
+          title_hl = "@title.emphasis",
+          title_suffix_hl = "Comment",
+          -- EXAMPLE PREFIX!
+          prefixes = {
+            ["!"] = {
+              flag = "invert-match",
+            },
+          },
+        },
       },
       pickers = {
         find_files = {
@@ -395,5 +411,6 @@ return {
     telescope.load_extension("menufacture")
     telescope.load_extension("zf-native")
     telescope.load_extension("smart_open")
+    telescope.load_extension("egrepify")
   end,
 }

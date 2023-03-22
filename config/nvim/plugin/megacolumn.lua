@@ -7,6 +7,8 @@ local ui, separators = mega.ui, mega.icons.separators
 local space = " "
 local shade = separators.light_shade_block
 local separator = separators.left_thin_block -- '│'
+-- local SIGN_COL_WIDTH, GIT_COL_WIDTH, space = 2, 1, ' '
+-- local fcs = vim.opt.fillchars:get()
 local fold_opened = "▽" -- '▼'
 local fold_closed = "▷" -- '▶'
 local sep_hl = "%#StatusColSep#"
@@ -23,10 +25,13 @@ local function click(name, item) return "%@v:lua.mega.ui.statuscolumn." .. name 
 ---@param buf number
 ---@return {name:string, text:string, texthl:string}[]
 local function get_signs(buf)
-  return vim.tbl_map(
-    function(sign) return fn.sign_getdefined(sign.name)[1] end,
-    fn.sign_getplaced(buf, { group = "*", lnum = v.lnum })[1].signs
-  )
+  return vim.tbl_map(function(sign)
+    local signs = fn.sign_getdefined(sign.name)[1]
+    for _, s in ipairs(signs) do
+      if s.text then s.text = s.text:gsub("%s", "") end
+    end
+    return signs
+  end, fn.sign_getplaced(buf, { group = "*", lnum = v.lnum })[1].signs)
 end
 
 function ui.statuscolumn.toggle_breakpoint(_, _, _, mods)
@@ -43,8 +48,6 @@ local function fdm()
   if fn.foldlevel(v.lnum) <= fn.foldlevel(v.lnum - 1) then return space end
   return fn.foldclosed(v.lnum) == -1 and fold_closed or fold_opened
 end
-
-local function is_virt_line() return v.virtnum < 0 end
 
 local function nr(win)
   if v.virtnum < 0 then return shade end -- virtual line
