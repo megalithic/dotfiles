@@ -58,3 +58,10 @@ end
 hs.notify.new({ title = "Hammerspoon", subTitle = "Configuration successfully loaded" }):send()
 
 require("_banner")
+
+-- axbrowse
+-- b = hs.axuielement.systemElementAtPosition(hs.mouse.absolutePosition())
+-- hs.inspect(b:attributeNames())
+-- hs.inspect(b:actionNames())
+-- hs.inspect(b:parameterizedAttributeNames())
+-- b:attributeValue("AXRoleDescription")

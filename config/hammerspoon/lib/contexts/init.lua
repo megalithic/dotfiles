@@ -85,6 +85,7 @@ end
 
 function obj:stop()
   obj.windowFilter:unsubscribeAll()
+  obj.appWatcher:release()
 
   return self
 end
