@@ -24,14 +24,20 @@ local function click(name, item) return "%@v:lua.mega.ui.statuscolumn." .. name 
 
 ---@param buf number
 ---@return {name:string, text:string, texthl:string}[]
+-- local function get_signs(buf)
+--   return vim.tbl_map(function(sign)
+--     local signs = fn.sign_getdefined(sign.name)[1]
+--     for _, s in ipairs(signs) do
+--       if s.text then s.text = s.text:gsub("%s", "") end
+--     end
+--     return signs
+--   end, fn.sign_getplaced(buf, { group = "*", lnum = v.lnum })[1].signs)
+-- end
 local function get_signs(buf)
-  return vim.tbl_map(function(sign)
-    local signs = fn.sign_getdefined(sign.name)[1]
-    for _, s in ipairs(signs) do
-      if s.text then s.text = s.text:gsub("%s", "") end
-    end
-    return signs
-  end, fn.sign_getplaced(buf, { group = "*", lnum = v.lnum })[1].signs)
+  return vim.tbl_map(
+    function(sign) return fn.sign_getdefined(sign.name)[1] end,
+    fn.sign_getplaced(buf, { group = "*", lnum = v.lnum })[1].signs
+  )
 end
 
 function ui.statuscolumn.toggle_breakpoint(_, _, _, mods)

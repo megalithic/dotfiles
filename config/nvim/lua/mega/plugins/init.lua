@@ -167,6 +167,37 @@ return {
       buftype_exclude = { "terminal", "nofile" },
     },
   },
+  {
+    "mbbill/undotree",
+    cmd = "UndotreeToggle",
+    keys = { { "<leader>u", "<Cmd>UndotreeToggle<CR>", desc = "undotree: toggle" } },
+    config = function()
+      vim.g.undotree_TreeNodeShape = "◦" -- Alternative: '◉'
+      vim.g.undotree_SetFocusWhenToggle = 1
+    end,
+  },
+  -- {
+  --   "willothy/flatten.nvim",
+  --   lazy = false,
+  --   priority = 1001,
+  --   config = {
+  --     window = { open = "current" },
+  --     callbacks = {
+  --       block_end = function() require("toggleterm").toggle() end,
+  --       pre_open = function() require("toggleterm").toggle() end,
+  --       post_open = function(bufnr, winnr)
+  --         local term = require("toggleterm.terminal").get_last_focused()
+  --         if term and term:is_float() then
+  --           term:close()
+  --           vim.cmd.buffer(bufnr)
+  --         else
+  --           require("toggleterm").toggle()
+  --           vim.api.nvim_set_current_win(winnr)
+  --         end
+  --       end,
+  --     },
+  --   },
+  -- },
 
   -- ( Movements ) -------------------------------------------------------------
   -- @trial multi-cursor: https://github.com/brendalf/dotfiles/blob/master/.config/nvim/lua/core/multi-cursor.lua
@@ -239,92 +270,6 @@ return {
       auto_open = false,
       use_diagnostic_signs = true, -- en
     },
-  },
-
-  -- ( Git ) -------------------------------------------------------------------
-  {
-    "TimUntersberger/neogit",
-    cmd = "Neogit",
-    config = function()
-      local neogit = require("neogit")
-      neogit.setup({
-        disable_signs = false,
-        disable_hint = true,
-        disable_commit_confirmation = true,
-        disable_builtin_notifications = true,
-        disable_insert_on_commit = false,
-        signs = {
-          section = { "", "" }, -- "", ""
-          item = { "▸", "▾" },
-          hunk = { "樂", "" },
-        },
-        integrations = {
-          diffview = true,
-        },
-      })
-      mega.nnoremap("<localleader>gs", function() neogit.open() end)
-      mega.nnoremap("<localleader>gc", function() neogit.open({ "commit" }) end)
-      mega.nnoremap("<localleader>gl", neogit.popups.pull.create)
-      mega.nnoremap("<localleader>gp", neogit.popups.push.create)
-    end,
-    dependencies = "nvim-lua/plenary.nvim",
-  },
-  {
-    "sindrets/diffview.nvim",
-    cmd = { "DiffviewOpen", "DiffviewClose", "DiffviewToggleFiles", "DiffviewFocusFiles" },
-    config = true,
-    keys = { { "<leader>gd", "<cmd>DiffviewOpen<cr>", desc = "DiffView" } },
-  },
-  {
-    "akinsho/git-conflict.nvim",
-    lazy = false,
-    opts = {
-      disable_diagnostics = true,
-    },
-  },
-  {
-    "ruifm/gitlinker.nvim",
-    dependencies = "nvim-lua/plenary.nvim",
-    keys = {
-      { "<localleader>gu", mode = "n" },
-      { "<localleader>gu", mode = "v" },
-      "<localleader>go",
-      "<leader>gH",
-      { "<localleader>go", mode = "n" },
-      { "<localleader>go", mode = "v" },
-    },
-    config = function()
-      require("gitlinker").setup({ mappings = nil })
-
-      local function linker() return require("gitlinker") end
-      local function browser_open() return { action_callback = require("gitlinker.actions").open_in_browser } end
-      mega.nnoremap(
-        "<localleader>gu",
-        function() linker().get_buf_range_url("n") end,
-        "gitlinker: copy line to clipboard"
-      )
-      mega.vnoremap(
-        "<localleader>gu",
-        function() linker().get_buf_range_url("v") end,
-        "gitlinker: copy range to clipboard"
-      )
-      mega.nnoremap(
-        "<localleader>go",
-        function() linker().get_repo_url(browser_open()) end,
-        "gitlinker: open in browser"
-      )
-      mega.nnoremap("<leader>gH", function() linker().get_repo_url(browser_open()) end, "gitlinker: open in browser")
-      mega.nnoremap(
-        "<localleader>go",
-        function() linker().get_buf_range_url("n", browser_open()) end,
-        "gitlinker: open current line in browser"
-      )
-      mega.vnoremap(
-        "<localleader>go",
-        function() linker().get_buf_range_url("v", browser_open()) end,
-        "gitlinker: open current selection in browser"
-      )
-    end,
   },
 
   -- ( Testing/Debugging ) -----------------------------------------------------
@@ -454,7 +399,7 @@ return {
     event = "CmdlineEnter",
     config = function() require("numb").setup() end,
   },
-  { "tpope/vim-eunuch", cmd = { "Move", "Rename", "Remove", "Delete", "Mkdir" } },
+  { "tpope/vim-eunuch", cmd = { "Move", "Rename", "Remove", "Delete", "Mkdir", "SudoWrite", "Chmod" } },
   -- {
   --   "chrisgrieser/nvim-genghis",
   --   -- dependencies = {
