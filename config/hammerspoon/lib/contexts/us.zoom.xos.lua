@@ -89,9 +89,8 @@ function obj:stop(opts)
     and (#_appObj:allWindows() == 0 or (#_appObj:allWindows() == 1 and _appObj:getWindow("") ~= nil))
   then
     -- make Zoom kill itself when I leave a meeting or there's just the "ending meeting" window like when someone else kills the meeting.
+    -- REF: https://github.com/mrjones2014/dotfiles/blob/master/.config/hammerspoon/zoom-killer.lua
     _appObj:kill()
-    -- FIXME: verify this needs or doesn't need to be called when we invoke `:kill()` on an hs.application object:
-    -- onStop()
   elseif event == hs.application.watcher.terminated then
     L.req("lib.menubar.ptt").setState("push-to-talk")
     L.req("lib.dnd").off()

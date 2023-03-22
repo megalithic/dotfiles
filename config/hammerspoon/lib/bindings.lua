@@ -137,6 +137,17 @@ function obj:start()
   group(bindings.apps, "j", "browsers") -- e.g., brave, vivaldi, safari, firefox, etc
   group(bindings.apps, "s", "chat") -- e.g., slack, discord, signal, etc
 
+  -- [ mouse bindings ] --------------------------------------------------------
+
+  -- bind mouse side buttons to forward/back
+  hs.eventtap
+    .new({ hs.eventtap.event.types.otherMouseUp }, function(event)
+      local button = event:getProperty(hs.eventtap.event.properties.mouseEventButtonNumber)
+      if button == 3 then hs.eventtap.keyStroke({ "cmd" }, "[") end
+      if button == 4 then hs.eventtap.keyStroke({ "cmd" }, "]") end
+    end)
+    :start()
+
   -- [ utility bindings ] ------------------------------------------------------
 
   Hyper:bind(keys.mods.caSc, "r", function()

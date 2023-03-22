@@ -217,6 +217,7 @@ function obj:start(opts)
 
   local filters = generateAppFilters(obj.apps)
 
+  -- lib/contexts/init.lua instance; manually call :start() on it
   obj.watcher:start(obj.apps, filters, handleWatcher)
 
   obj.layoutRunningApps(obj.apps)

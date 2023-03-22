@@ -53,10 +53,10 @@ function obj:start(opts)
       local kitty = hs.application.get("kitty")
       local pop = hs.application.get("Pop")
 
-      L.req("lib.dnd").on("zoom")
+      L.req("lib.dnd").on("meeting")
       hs.spotify.pause()
       L.req("lib.menubar.keyshowr"):start()
-      L.req("lib.menubar.ptt").setState("push-to-talk")
+      L.req("lib.menubar.ptt").setState("push-to-mute")
 
       local layouts = {
         { browser:name(), nil, hs.screen.primaryScreen():name(), hs.layout.right50, nil, nil },

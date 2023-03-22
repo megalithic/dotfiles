@@ -33,8 +33,6 @@ ipc.cliInstall()
 
 --  NOTE: order matters
 L.load("config")
-
--- L.load("console") -- see preflight
 L.load("lib.bindings"):start()
 L.load("lib.menubar.ptt"):start()
 L.load("lib.menubar.spotify"):start()

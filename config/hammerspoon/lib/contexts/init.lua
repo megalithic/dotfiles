@@ -15,18 +15,18 @@ obj.appWatcher = nil
 obj.windowFilter = nil
 obj.callback = nil
 
-local function info(...)
-  if obj.debug then return _G.info(...) end
-end
-local function dbg(...)
-  if obj.debug then return _G.dbg(...) end
-end
-local function note(...)
-  if obj.debug then return _G.note(...) end
-end
-local function success(...)
-  if obj.debug then return _G.success(...) end
-end
+-- local function info(...)
+--   if obj.debug then return _G.info(...) end
+-- end
+-- local function dbg(...)
+--   if obj.debug then return _G.dbg(...) end
+-- end
+-- local function note(...)
+--   if obj.debug then return _G.note(...) end
+-- end
+-- local function success(...)
+--   if obj.debug then return _G.success(...) end
+-- end
 
 -- _ -> appName
 local function appWatcherCallback(_, event, appObj)
@@ -40,7 +40,7 @@ local function appWatcherCallback(_, event, appObj)
   end
 end
 
-local function windowFilterCallback(hsWindow, appName, event)
+local function windowFilterCallback(hsWindow, _appName, event)
   local appObj = hsWindow:application()
   if not appObj then return end
   local bundleID = appObj:bundleID()
@@ -65,8 +65,8 @@ function obj:init(opts)
   return self
 end
 
-function obj:start(apps, appFilters, _callback)
-  obj.callback = _callback or function() end
+function obj:start(_apps, appFilters, callback)
+  obj.callback = callback or function() end
 
   local allowedWindowFilterEvents = {
     Window.filter.windowCreated,

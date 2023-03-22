@@ -11,6 +11,7 @@ obj.hyperBind = nil
 -- a.) reuse the initial one, or
 -- b.) we can have it generate a new modal:
 -- https://github.com/fahadbr/dotfiles/blob/master/macos/hammerspoon/init.lua#L23-L36
+-- REF: https://gist.github.com/ttscoff/cce98a711b5476166792d5e6f1ac5907
 
 --- Hyper:bindPassThrough(key, bundleId) -> hs.hotkey.modal
 --- Method

@@ -47,6 +47,22 @@ function obj.capture()
   return task
 end
 
+local function insert(contents)
+  local pasteboardContents = hs.pasteboard.getContents()
+  hs.pasteboard.setContents(contents)
+  hs.eventtap.keyStroke({ "cmd" }, "v")
+  hs.pasteboard.setContents(pasteboardContents)
+end
+
+local function bindings()
+  hs.hotkey.bind({}, "", function()
+    local pasteboardContents = hs.pasteboard.getContents() or ""
+    pasteboardContents = string.gsub(pasteboardContents, "\n", "\\n")
+    pasteboardContents = string.gsub(pasteboardContents, "\"", "\\\"")
+    insert(pasteboardContents)
+  end)
+end
+
 function obj:init(opts)
   opts = opts or {}
 
