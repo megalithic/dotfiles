@@ -41,6 +41,12 @@ return {
         mega.nmap("<leader>gm", function() gs.setqflist("all") end, {
           desc = "git: list modified in quickfix",
         })
+        mega.nmap("<leader>gd", function() gs.diffthis() end, {
+          desc = "git: diff this",
+        })
+        mega.nmap("<leader>gD", function() gs.diffthis("~") end, {
+          desc = "git: diff this against ~",
+        })
         -- Navigation
         bmap("n", "[c", function()
           if vim.wo.diff then return "[c" end
@@ -140,6 +146,20 @@ return {
     opts = {
       disable_diagnostics = true,
     },
+  },
+  {
+    "f-person/git-blame.nvim",
+    cmd = {
+      "GitBlameOpenCommitURL",
+      "GitBlameOpenFileURL",
+      "GitBlameCopyCommitURL",
+      "GitBlameCopyFileURL",
+      "GitBlameCopySHA",
+    },
+    keys = {
+      { "<localleader>gB", "<Cmd>GitBlameOpenCommitURL<CR>", desc = "git blame: open commit url", mode = "n" },
+    },
+    init = function() vim.g.gitblame_enabled = 0 end,
   },
   {
     "ruifm/gitlinker.nvim",
