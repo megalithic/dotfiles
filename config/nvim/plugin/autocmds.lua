@@ -304,6 +304,7 @@ do
     "megaterm",
     "terminal",
     "neotest-summary",
+    "SidebarNvim",
     "query",
   }
 

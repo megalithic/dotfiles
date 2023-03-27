@@ -90,6 +90,7 @@
   "replacer.nvim": { "branch": "master", "commit": "a40188a9f37bbc4eee7b827464bf44131be68353" },
   "rose-pine": { "branch": "main", "commit": "17723f76ea78cdd71fd0007b7b760683b60a5e43" },
   "schemastore.nvim": { "branch": "main", "commit": "ae41a33c0a30162d938619b055315efc0b459c18" },
+  "sidebar.nvim": { "branch": "main", "commit": "990ce5f562c9125283ccac5473235b1a56fea6dc" },
   "smart-open.nvim": { "branch": "main", "commit": "f9d51ad69b0ab3a01b61d3d5176367e540407f6e" },
   "splitjoin.vim": { "branch": "main", "commit": "2c8cd19a7be5b3d7baec3eeac086eef576896e12" },
   "sqlite.lua": { "branch": "master", "commit": "376e4735c48e07dade3e6ff5f09a654a04f5d4ba" },

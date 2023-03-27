@@ -204,6 +204,43 @@ return {
     cond = not vim.env.TMUX and not vim.env.ZELLIJ,
   },
   {
+    "sidebar-nvim/sidebar.nvim",
+    keys = {
+      { "<leader>et", [[<Cmd>lua require("sidebar-nvim").toggle({focus = true})<CR>]], desc = "Toggle sidebar" },
+    },
+    cmd = {
+      "SidebarNvimToggle",
+      "SidebarNvimOpen",
+      "SidebarNvimClose",
+      "SidebarNvimUpdate",
+      "SidebarNvimFocus",
+      "SidebarNvimResize",
+    },
+    enabled = vim.g.tree == "sidebar",
+    opts = {
+      open = false,
+      initial_width = 30,
+      section_separator = { " ", " " },
+      files = {
+        show_hidden = true,
+      },
+      todos = {
+        icon = " ",
+        ignored_paths = { "~" }, -- ignore certain paths, this will prevent huge folders like $HOME to hog Neovim with TODO searching
+        initially_closed = false, -- whether the groups should be initially closed on start. You can manually open/close groups later.
+      },
+      sections = {
+        "git",
+        "files",
+        "diagnostics",
+        -- "todos",
+        -- "buffers",
+        -- "symbols",
+        -- "containers",
+      },
+    },
+  },
+  {
     "megalithic/dirbuf.nvim",
     dev = true,
     keys = {
