@@ -29,16 +29,16 @@ return {
           vim.keymap.set(mode, l, r, opts)
         end
 
-        mega.nmap("<leader>hu", gs.undo_stage_hunk, { desc = "git(hunk): undo stage" })
-        mega.nmap("<leader>hp", gs.preview_hunk_inline, { desc = "git(hunk): preview hunk inline" })
+        mega.nmap("<localleader>hu", gs.undo_stage_hunk, { desc = "git(hunk): undo stage" })
+        mega.nmap("<localleader>hp", gs.preview_hunk_inline, { desc = "git(hunk): preview hunk inline" })
         -- mega.nmap("<leader>hp", gs.preview_hunk, { desc = "git: preview hunk" })
-        mega.nmap("<leader>hb", gs.toggle_current_line_blame, { desc = "git(hunk): toggle current line blame" })
-        mega.nmap("<leader>hd", gs.toggle_deleted, { desc = "git(hunk): show deleted lines" })
-        mega.nmap("<leader>hw", gs.toggle_word_diff, { desc = "git(hunk): toggle word diff" })
+        mega.nmap("<localleader>hb", gs.toggle_current_line_blame, { desc = "git(hunk): toggle current line blame" })
+        mega.nmap("<localleader>hd", gs.toggle_deleted, { desc = "git(hunk): show deleted lines" })
+        mega.nmap("<localleader>hw", gs.toggle_word_diff, { desc = "git(hunk): toggle word diff" })
         mega.nmap("<localleader>gw", gs.stage_buffer, { desc = "git: stage entire buffer" })
         mega.nmap("<localleader>gre", gs.reset_buffer, { desc = "git: reset entire buffer" })
         mega.nmap("<localleader>gbl", gs.blame_line, { desc = "git: blame current line" })
-        mega.nmap("<leader>lm", function() gs.setqflist("all") end, {
+        mega.nmap("<leader>gm", function() gs.setqflist("all") end, {
           desc = "git: list modified in quickfix",
         })
         -- Navigation
@@ -54,8 +54,8 @@ return {
         end, { expr = true, desc = "git: next hunk" })
 
         -- Actions
-        bmap({ "n", "v" }, "<leader>hs", ":Gitsigns stage_hunk<CR>", { desc = "git: stage hunk" })
-        bmap({ "n", "v" }, "<leader>hr", ":Gitsigns reset_hunk<CR>", { desc = "git: reset hunk" })
+        bmap({ "n", "v" }, "<localleader>hs", ":Gitsigns stage_hunk<CR>", { desc = "git: stage hunk" })
+        bmap({ "n", "v" }, "<localleader>hr", ":Gitsigns reset_hunk<CR>", { desc = "git: reset hunk" })
 
         -- Text object
         bmap({ "o", "x" }, "ih", ":<C-U>Gitsigns select_hunk<CR>", { desc = "git: select hunk" })

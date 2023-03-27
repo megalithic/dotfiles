@@ -25,7 +25,7 @@ obj.devices = {
     icon = "⌨️",
   },
 }
-obj.btUtil = "/usr/local/bin/blueutil"
+obj.btUtil = hostname() == "megabookpro" and "/opt/homebrew/bin/blueutil" or "/usr/local/bin/blueutil"
 obj.interval = (10 * 60)
 
 local function connectDevice(deviceStr)
