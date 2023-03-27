@@ -19,38 +19,13 @@ local M = {
         input_buffer_type = "dressing",
       },
     },
-    -- {
-    --   "ray-x/lsp_signature.nvim",
-    --   event = "VeryLazy",
-    --   dependencies = "nvim-lspconfig",
-    --   config = function()
-    --     require("lsp_signature").setup({
-    --       bind = true,
-    --       fix_pos = true,
-    --       auto_close_after = 10, -- close after 15 seconds
-    --       hint_enable = false,
-    --       floating_window_above_cur_line = false,
-    --       doc_lines = 0,
-    --       handler_opts = {
-    --         anchor = "SW",
-    --         relative = "cursor",
-    --         row = -1,
-    --         focus = false,
-    --         border = _G.mega.get_border(),
-    --       },
-    --       zindex = 99, -- Keep signature popup below the completion PUM
-    --       toggle_key = "<C-K>",
-    --       select_signature_key = "<M-N>",
-    --     })
-    --   end,
-    -- },
     { "nvim-lua/lsp_extensions.nvim" },
     {
       "jose-elias-alvarez/typescript.nvim",
       ft = { "typescript", "typescriptreact" },
       dependencies = { "jose-elias-alvarez/null-ls.nvim" },
       config = function()
-        -- require("typescript").setup({ server = require("as.servers")("tsserver") })
+        -- require("typescript").setup({ server = require("mega.servers")("tsserver") })
         require("null-ls").register({
           sources = { require("typescript.extensions.null-ls.code-actions") },
         })
@@ -60,6 +35,34 @@ local M = {
     { "williamboman/mason-lspconfig.nvim" },
     { "b0o/schemastore.nvim" },
     { "mrshmllow/document-color.nvim", event = "BufReadPre" },
+    {
+      "mhanberg/elixir.nvim",
+      ft = { "elixir", "eex", "heex", "surface" },
+      config = function()
+        local elixir = require("elixir")
+
+        elixir.setup({
+          cmd = fmt("%s/lsp/elixir-ls/%s", vim.env.XDG_DATA_HOME, "language_server.sh"),
+          settings = elixir.settings({
+            dialyzerEnabled = true,
+            fetchDeps = false,
+            enableTestLenses = false,
+            suggestSpecs = true,
+          }),
+          log_level = vim.lsp.protocol.MessageType.Log,
+          message_level = vim.lsp.protocol.MessageType.Log,
+          on_attach = function(client, bufnr)
+            -- whatever keybinds you want, see below for more suggestions
+            -- vim.keymap.set("n", "<space>fp", ":ElixirFromPipe<cr>", { buffer = true, noremap = true })
+            -- vim.keymap.set("n", "<space>tp", ":ElixirToPipe<cr>", { buffer = true, noremap = true })
+            -- vim.keymap.set("v", "<space>em", ":ElixirExpandMacro<cr>", { buffer = true, noremap = true })
+          end,
+        })
+      end,
+      dependencies = {
+        "nvim-lua/plenary.nvim",
+      },
+    },
     {
       "lewis6991/hover.nvim",
       keys = { "K", "gK" },
@@ -310,24 +313,6 @@ local function setup_autocommands(client, bufnr)
     },
   })
 
-  -- if client.server_capabilities.signatureHelpProvider then
-  --   augroup("LspSignature", {
-  --     event = { "CursorHoldI" },
-  --     buffer = bufnr,
-  --     callback = function()
-  --       vim.defer_fn(function()
-  --         local line = vim.api.nvim_get_current_line()
-  --         line = vim.trim(line:sub(1, vim.api.nvim_win_get_cursor(0)[2] + 1))
-  --         local len = line:len()
-  --         local char_post = line:sub(len, len)
-  --         local char_pre = line:sub(len - 1, len - 1)
-  --         local show_signature = char_pre == "(" or char_pre == "," or char_post == ")"
-  --         if show_signature then vim.lsp.buf.signature_help() end
-  --       end, 500)
-  --     end,
-  --   })
-  -- end
-
   augroup("LspFormat", {
     {
       event = { "BufWritePre" },
@@ -354,6 +339,7 @@ local function setup_keymaps(client, bufnr)
   nnoremap("[d", function() diagnostic.goto_prev({ float = false }) end, desc("lsp: prev diagnostic"))
   nnoremap("]d", function() diagnostic.goto_next({ float = false }) end, desc("lsp: next diagnostic"))
   nnoremap("gd", vim.lsp.buf.definition, desc("lsp: definition"))
+  nnoremap("gD", [[<cmd>vsplit | lua vim.lsp.buf.definition()<cr>]], desc("lsp: definition (vsplit)"))
   nnoremap("gr", function()
     if vim.g.picker == "fzf" then
       vim.cmd("FzfLua lsp_references")
@@ -600,75 +586,75 @@ function M.config()
   end
 
   local client_overrides = {
-    elixirls = function(client, bufnr)
-      local manipulate_pipes = function(direction, client)
-        local row, col = mega.get_cursor_position()
-
-        client.request_sync("workspace/executeCommand", {
-          command = "manipulatePipes:serverid",
-          arguments = { direction, "file://" .. vim.api.nvim_buf_get_name(0), row, col },
-        }, nil, 0)
-      end
-
-      local function from_pipe(c)
-        return function() manipulate_pipes("fromPipe", c) end
-      end
-
-      local function to_pipe(c)
-        return function() manipulate_pipes("toPipe", c) end
-      end
-
-      local function restart(c)
-        return function()
-          c.request_sync("workspace/executeCommand", {
-            command = "restart:serverid",
-            arguments = {},
-          }, nil, 0)
-
-          vim.cmd([[w | edit]])
-        end
-      end
-
-      local function expand_macro(c)
-        return function()
-          local params = vim.lsp.util.make_given_range_params()
-
-          local text = vim.api.nvim_buf_get_text(
-            0,
-            params.range.start.line,
-            params.range.start.character,
-            params.range["end"].line,
-            params.range["end"].character,
-            {}
-          )
-
-          local resp = c.request_sync("workspace/executeCommand", {
-            command = "expandMacro:serverid",
-            arguments = { params.textDocument.uri, vim.fn.join(text, "\n"), params.range.start.line },
-          }, nil, 0)
-
-          local content = {}
-          if resp["result"] then
-            for k, v in pairs(resp.result) do
-              vim.list_extend(content, { "# " .. k, "" })
-              vim.list_extend(content, vim.split(v, "\n"))
-            end
-          else
-            table.insert(content, "Error")
-          end
-
-          vim.schedule(
-            function() vim.lsp.util.open_floating_preview(vim.lsp.util.trim_empty_lines(content), "elixir", {}) end
-          )
-        end
-      end
-
-      local add_user_cmd = vim.api.nvim_buf_create_user_command
-      add_user_cmd(bufnr, "ElixirFromPipe", from_pipe(client), {})
-      add_user_cmd(bufnr, "ElixirToPipe", to_pipe(client), {})
-      add_user_cmd(bufnr, "ElixirRestart", restart(client), {})
-      add_user_cmd(bufnr, "ElixirExpandMacro", expand_macro(client), { range = true })
-    end,
+    -- elixirls = function(client, bufnr)
+    --   local manipulate_pipes = function(direction, client)
+    --     local row, col = mega.get_cursor_position()
+    --
+    --     client.request_sync("workspace/executeCommand", {
+    --       command = "manipulatePipes:serverid",
+    --       arguments = { direction, "file://" .. vim.api.nvim_buf_get_name(0), row, col },
+    --     }, nil, 0)
+    --   end
+    --
+    --   local function from_pipe(c)
+    --     return function() manipulate_pipes("fromPipe", c) end
+    --   end
+    --
+    --   local function to_pipe(c)
+    --     return function() manipulate_pipes("toPipe", c) end
+    --   end
+    --
+    --   local function restart(c)
+    --     return function()
+    --       c.request_sync("workspace/executeCommand", {
+    --         command = "restart:serverid",
+    --         arguments = {},
+    --       }, nil, 0)
+    --
+    --       vim.cmd([[w | edit]])
+    --     end
+    --   end
+    --
+    --   local function expand_macro(c)
+    --     return function()
+    --       local params = vim.lsp.util.make_given_range_params()
+    --
+    --       local text = vim.api.nvim_buf_get_text(
+    --         0,
+    --         params.range.start.line,
+    --         params.range.start.character,
+    --         params.range["end"].line,
+    --         params.range["end"].character,
+    --         {}
+    --       )
+    --
+    --       local resp = c.request_sync("workspace/executeCommand", {
+    --         command = "expandMacro:serverid",
+    --         arguments = { params.textDocument.uri, vim.fn.join(text, "\n"), params.range.start.line },
+    --       }, nil, 0)
+    --
+    --       local content = {}
+    --       if resp["result"] then
+    --         for k, v in pairs(resp.result) do
+    --           vim.list_extend(content, { "# " .. k, "" })
+    --           vim.list_extend(content, vim.split(v, "\n"))
+    --         end
+    --       else
+    --         table.insert(content, "Error")
+    --       end
+    --
+    --       vim.schedule(
+    --         function() vim.lsp.util.open_floating_preview(vim.lsp.util.trim_empty_lines(content), "elixir", {}) end
+    --       )
+    --     end
+    --   end
+    --
+    --   local add_user_cmd = vim.api.nvim_buf_create_user_command
+    --   add_user_cmd(bufnr, "ElixirFromPipe", from_pipe(client), {})
+    --   add_user_cmd(bufnr, "ElixirToPipe", to_pipe(client), {})
+    --   add_user_cmd(bufnr, "ElixirRestart", restart(client), {})
+    --   add_user_cmd(bufnr, "ElixirExpandMacro", expand_macro(client), { range = true })
+    -- end,
   }
 
   ---Add buffer local mappings, autocommands, tagfunc, etc for attaching servers
@@ -697,25 +683,6 @@ function M.config()
       end
     end
 
-    -- require("lsp_signature").on_attach({
-    --   bind = true,
-    --   fix_pos = true,
-    --   auto_close_after = 10, -- close after 15 seconds
-    --   hint_enable = false,
-    --   floating_window_above_cur_line = true,
-    --   doc_lines = 0,
-    --   handler_opts = {
-    --     anchor = "SW",
-    --     relative = "cursor",
-    --     row = -1,
-    --     focus = false,
-    --     border = _G.mega.get_border(),
-    --   },
-    --   zindex = 99, -- Keep signature popup below the completion PUM
-    --   toggle_key = "<C-K>",
-    --   select_signature_key = "<M-N>",
-    -- }, bufnr)
-
     -- if caps.documentSymbolProvider then
     --   local ok, navic = mega.require("nvim-navic")
     --   if ok and navic then navic.attach(client, bufnr) end
@@ -741,6 +708,38 @@ function M.config()
 
     if client_overrides[client.name] then client_overrides[client.name](client, bufnr) end
   end
+
+  mega.augroup("LspSetupCommands", {
+    event = "LspAttach",
+    desc = "setup the language server autocommands",
+    command = function(args)
+      local client = lsp.get_client_by_id(args.data.client_id)
+      on_attach(client, args.buf)
+      local overrides = client_overrides[client.name]
+      if not overrides or not overrides.on_attach then return end
+      overrides.on_attach(client, args.buf)
+    end,
+  }, {
+    event = "LspDetach",
+    desc = "Clean up after detached LSP",
+    command = function(args)
+      local client_id, b = args.data.client_id, vim.b[args.buf]
+      if not b.lsp_events or not client_id then return end
+      for _, state in pairs(b.lsp_events) do
+        if #state.clients == 1 and state.clients[1] == client_id then
+          api.nvim_clear_autocmds({ group = state.group_id, buffer = args.buf })
+        end
+        state.clients = vim.tbl_filter(function(id) return id ~= client_id end, state.clients)
+      end
+    end,
+  }, {
+    event = "DiagnosticChanged",
+    desc = "Update the diagnostic locations",
+    command = function(args)
+      diagnostic.setloclist({ open = false })
+      if #args.data.diagnostics == 0 then vim.cmd("silent! lclose") end
+    end,
+  })
 
   local servers = require("mega.plugins.lsp.servers").setup()
 

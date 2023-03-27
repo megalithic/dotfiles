@@ -15,6 +15,7 @@ local ft_ignores = {
   "packer",
   "startuptime",
   "undotree",
+  "DiffviewFiles",
 }
 
 local bt_ignores = {

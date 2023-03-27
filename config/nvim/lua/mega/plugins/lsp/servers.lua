@@ -1,9 +1,9 @@
 local M = {}
 
-local fn, fmt, lsp = vim.fn, string.format, vim.lsp
+local fn, lsp = vim.fn, vim.lsp
 local ok_lsp, lspconfig = mega.require("lspconfig")
 if not ok_lsp then return end
-local lsputil = require("lspconfig.util")
+-- local lsputil = require("lspconfig.util")
 
 local function root_pattern(...)
   local patterns = vim.tbl_flatten({ ... })
@@ -17,47 +17,47 @@ local function root_pattern(...)
   end
 end
 
-local function dir_has_file(dir, name)
-  local joined_path = lsputil.path.join(dir, name)
-  return lsputil.path.exists(joined_path), joined_path
-end
-
-local function workspace_root()
-  local cwd = vim.loop.cwd()
-
-  if dir_has_file(cwd, "compose.yml") or dir_has_file(cwd, "docker-compose.yml") then return cwd end
-
-  local function cb(dir, _) return dir_has_file(dir, "compose.yml") or dir_has_file(dir, "docker-compose.yml") end
-
-  local root, _ = lsputil.path.traverse_parents(cwd, cb)
-  return root
-end
-
-local function get_root()
-  local root = workspace_root()
-  if not root then root = vim.loop.cwd() end
-
-  return root
-end
-
-local function workspace_has_file(path)
-  local root = get_root()
-  if vim.tbl_contains({ "~", "/" }, path:sub(1, 1)) then return true, path end
-  return dir_has_file(root, path)
-end
-
-local function lsp_cmd_override(cmd_paths, args)
-  args = args or {}
-  if type(cmd_paths) == "string" then cmd_paths = { cmd_paths } end
-
-  for _, path in ipairs(cmd_paths) do
-    local exists, dir = workspace_has_file(path)
-    if exists then
-      -- vim.notify(fmt("lsp cmd: %s", vim.fn.expand(dir)), vim.log.levels.INFO, { title = "lsp" })
-      return vim.list_extend({ vim.fn.expand(dir) }, args)
-    end
-  end
-end
+-- local function dir_has_file(dir, name)
+--   local joined_path = lsputil.path.join(dir, name)
+--   return lsputil.path.exists(joined_path), joined_path
+-- end
+--
+-- local function workspace_root()
+--   local cwd = vim.loop.cwd()
+--
+--   if dir_has_file(cwd, "compose.yml") or dir_has_file(cwd, "docker-compose.yml") then return cwd end
+--
+--   local function cb(dir, _) return dir_has_file(dir, "compose.yml") or dir_has_file(dir, "docker-compose.yml") end
+--
+--   local root, _ = lsputil.path.traverse_parents(cwd, cb)
+--   return root
+-- end
+--
+-- local function get_root()
+--   local root = workspace_root()
+--   if not root then root = vim.loop.cwd() end
+--
+--   return root
+-- end
+--
+-- local function workspace_has_file(path)
+--   local root = get_root()
+--   if vim.tbl_contains({ "~", "/" }, path:sub(1, 1)) then return true, path end
+--   return dir_has_file(root, path)
+-- end
+--
+-- local function lsp_cmd_override(cmd_paths, args)
+--   args = args or {}
+--   if type(cmd_paths) == "string" then cmd_paths = { cmd_paths } end
+--
+--   for _, path in ipairs(cmd_paths) do
+--     local exists, dir = workspace_has_file(path)
+--     if exists then
+--       -- vim.notify(fmt("lsp cmd: %s", vim.fn.expand(dir)), vim.log.levels.INFO, { title = "lsp" })
+--       return vim.list_extend({ vim.fn.expand(dir) }, args)
+--     end
+--   end
+-- end
 
 local servers = {
   ccls = true,
@@ -95,63 +95,63 @@ local servers = {
       },
     },
   },
-  elixirls = function()
-    local elixir_nvim_output_bufnr
-
-    local function open_output_panel(opts)
-      local options = opts or { window = "split" }
-
-      local window = {
-        split = function()
-          vim.cmd("sp")
-          vim.api.nvim_win_set_buf(0, elixir_nvim_output_bufnr)
-          vim.api.nvim_win_set_height(0, 30)
-        end,
-        vsplit = function()
-          vim.cmd("vs")
-          vim.api.nvim_win_set_buf(0, elixir_nvim_output_bufnr)
-          vim.api.nvim_win_set_width(0, 80)
-        end,
-        float = function() M.open_floating_window(elixir_nvim_output_bufnr) end,
-      }
-
-      -- mega.nnoremap("q", "<cmd>q<cr>", { buffer = elixir_nvim_output_bufnr, desc = "elixir: exit output panel" })
-      window[options.window]()
-    end
-
-    return {
-      cmd = lsp_cmd_override({
-        ".elixir-ls-release/language_server.sh",
-        fmt("%s/lsp/elixir-ls/%s", vim.env.XDG_DATA_HOME, "language_server.sh"),
-        "elixir-ls",
-      }),
-      handlers = {
-        ["window/logMessage"] = function(_err, result)
-          local message = vim.split("[" .. vim.lsp.protocol.MessageType[result.type] .. "] " .. result.message, "\n")
-
-          if not elixir_nvim_output_bufnr then
-            elixir_nvim_output_bufnr = vim.api.nvim_create_buf(false, true)
-            vim.api.nvim_buf_set_name(elixir_nvim_output_bufnr, "ElixirLS Output Panel")
-            vim.api.nvim_buf_set_option(elixir_nvim_output_bufnr, "filetype", "elixirls")
-          end
-
-          pcall(vim.api.nvim_buf_set_lines, elixir_nvim_output_bufnr, -1, -1, false, message)
-
-          mega.nnoremap("<localleader>eob", open_output_panel, { desc = "elixir: open output panel" })
-        end,
-      },
-      settings = {
-        elixirLS = {
-          mixEnv = "test",
-          fetchDeps = true,
-          dialyzerEnabled = true,
-          dialyzerFormat = "dialyxir_short",
-          enableTestLenses = true,
-          suggestSpecs = true,
-        },
-      },
-    }
-  end,
+  -- elixirls = function()
+  --   local elixir_nvim_output_bufnr
+  --
+  --   local function open_output_panel(opts)
+  --     local options = opts or { window = "split" }
+  --
+  --     local window = {
+  --       split = function()
+  --         vim.cmd("sp")
+  --         vim.api.nvim_win_set_buf(0, elixir_nvim_output_bufnr)
+  --         vim.api.nvim_win_set_height(0, 30)
+  --       end,
+  --       vsplit = function()
+  --         vim.cmd("vs")
+  --         vim.api.nvim_win_set_buf(0, elixir_nvim_output_bufnr)
+  --         vim.api.nvim_win_set_width(0, 80)
+  --       end,
+  --       float = function() M.open_floating_window(elixir_nvim_output_bufnr) end,
+  --     }
+  --
+  --     -- mega.nnoremap("q", "<cmd>q<cr>", { buffer = elixir_nvim_output_bufnr, desc = "elixir: exit output panel" })
+  --     window[options.window]()
+  --   end
+  --
+  --   return {
+  --     cmd = lsp_cmd_override({
+  --       ".elixir-ls-release/language_server.sh",
+  --       fmt("%s/lsp/elixir-ls/%s", vim.env.XDG_DATA_HOME, "language_server.sh"),
+  --       "elixir-ls",
+  --     }),
+  --     handlers = {
+  --       ["window/logMessage"] = function(_err, result)
+  --         local message = vim.split("[" .. vim.lsp.protocol.MessageType[result.type] .. "] " .. result.message, "\n")
+  --
+  --         if not elixir_nvim_output_bufnr then
+  --           elixir_nvim_output_bufnr = vim.api.nvim_create_buf(false, true)
+  --           vim.api.nvim_buf_set_name(elixir_nvim_output_bufnr, "ElixirLS Output Panel")
+  --           vim.api.nvim_buf_set_option(elixir_nvim_output_bufnr, "filetype", "elixirls")
+  --         end
+  --
+  --         pcall(vim.api.nvim_buf_set_lines, elixir_nvim_output_bufnr, -1, -1, false, message)
+  --
+  --         mega.nnoremap("<localleader>eob", open_output_panel, { desc = "elixir: open output panel" })
+  --       end,
+  --     },
+  --     settings = {
+  --       elixirLS = {
+  --         mixEnv = "test",
+  --         fetchDeps = true,
+  --         dialyzerEnabled = true,
+  --         dialyzerFormat = "dialyxir_short",
+  --         enableTestLenses = true,
+  --         suggestSpecs = true,
+  --       },
+  --     },
+  --   }
+  -- end,
   elmls = true,
   emmet_ls = {
     settings = {
@@ -223,14 +223,14 @@ local servers = {
     local function do_organize_imports()
       local params = {
         command = "_typescript.organizeImports",
-        arguments = { api.nvim_buf_get_name(0) },
+        arguments = { vim.api.nvim_buf_get_name(0) },
         title = "",
       }
       lsp.buf.execute_command(params)
     end
 
     return {
-      cmd = lsp_cmd_override({ ".bin/typescript-language-server", "typescript-language-server" }, { "stdio" }),
+      -- cmd = lsp_cmd_override({ ".bin/typescript-language-server", "typescript-language-server" }, { "stdio" }),
       init_options = {
         hostInfo = "neovim",
         logVerbosity = "verbose",

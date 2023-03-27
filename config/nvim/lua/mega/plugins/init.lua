@@ -216,7 +216,7 @@ return {
       "SidebarNvimFocus",
       "SidebarNvimResize",
     },
-    enabled = vim.g.tree == "sidebar",
+    cond = vim.g.tree == "sidebar",
     opts = {
       open = false,
       initial_width = 30,

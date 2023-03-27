@@ -3,7 +3,7 @@ local M = {
   keys = {
     { "<leader>et", "<cmd>Neotree toggle reveal position=left<cr>", desc = "Toggle Neo-Tree" },
   },
-  enabled = vim.g.tree == "neo-tree",
+  cond = vim.g.tree == "neo-tree",
   cmd = { "NeoTree" },
   dependencies = {
     "nvim-lua/plenary.nvim",
