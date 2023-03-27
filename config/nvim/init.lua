@@ -1,7 +1,6 @@
 -- [ settings ] ----------------------------------------------------------------
 
 vim.g.enabled_plugin = {
-  breadcrumb = false, -- lastplace
   mappings = true,
   autocmds = true,
   megaline = true,
@@ -16,8 +15,9 @@ vim.g.enabled_plugin = {
   quickfix = true,
   folds = true,
   env = true,
-  vscode = false,
   tmux = true,
+  breadcrumb = false, -- lastplace
+  vscode = false,
   winbar = false,
 }
 

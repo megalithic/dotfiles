@@ -55,14 +55,31 @@ local function fdm()
   return fn.foldclosed(v.lnum) == -1 and fold_closed or fold_opened
 end
 
-local function nr(win)
-  if v.virtnum < 0 then return shade end -- virtual line
-  if v.virtnum > 0 then return space end -- wrapped line
-  local num = vim.wo[win].relativenumber and not mega.empty(v.relnum) and v.relnum or v.lnum
-  local lnum = fn.substitute(num, "\\d\\zs\\ze\\" .. "%(\\d\\d\\d\\)\\+$", ",", "g")
-  local num_width = (vim.wo[win].numberwidth - 1) - api.nvim_strwidth(lnum)
-  local padding = string.rep(space, num_width)
-  return click("toggle_breakpoint", padding .. lnum)
+local function nr(win, line_count)
+  local col_width = api.nvim_strwidth(tostring(line_count))
+  local padding = string.rep(space, col_width - 1)
+  if v.virtnum < 0 then return padding .. shade end -- virtual line
+  if v.virtnum > 0 then return padding .. space end -- wrapped line
+  local num = vim.wo[win].relativenumber and not mega.falsy(v.relnum) and v.relnum or v.lnum
+  if line_count >= 1000 then col_width = col_width + 1 end
+  local lnum = fn.substitute(num, "\\d\\zs\\ze\\%(\\d\\d\\d\\)\\+$", ",", "g")
+  local num_width = col_width - api.nvim_strwidth(lnum)
+  return string.rep(space, num_width) .. lnum
+  --   local col_width = api.nvim_strwidth(tostring(line_count))
+  --
+  --   local padding = string.rep(space, col_width - 1)
+  --   if v.virtnum < 0 then return shade end -- virtual line
+  --   if v.virtnum > 0 then return space end -- wrapped line
+  --
+  --   if line_count >= 1000 then col_width = col_width + 1 end
+  --
+  --   local num = vim.wo[win].relativenumber and not mega.falsy(v.relnum) and v.relnum or v.lnum
+  --   -- local lnum = fn.substitute(num, "\\d\\zs\\ze\\" .. "%(\\d\\d\\d\\)\\+$", ",", "g")
+  --   local lnum = fn.substitute(num, "\\d\\zs\\ze\\%(\\d\\d\\d\\)\\+$", ",", "g")
+  --   -- local num_width = (vim.wo[win].numberwidth - 1) - api.nvim_strwidth(lnum)
+  --   local num_width = col_width - api.nvim_strwidth(lnum)
+  -- return string.rep(space, num_width) .. lnum
+  --   -- return click("toggle_breakpoint", padding .. lnum)
 end
 
 local function sep()
@@ -73,6 +90,9 @@ end
 function ui.statuscolumn.render()
   local curwin = api.nvim_get_current_win()
   local curbuf = api.nvim_win_get_buf(curwin)
+
+  local line_count = api.nvim_buf_line_count(curbuf)
+  -- local is_absolute_lnum = v.virtnum >= 0 and mega.falsy(v.relnum)
 
   local sign, git_sign
   for _, s in ipairs(get_signs(curbuf)) do
@@ -86,7 +106,7 @@ function ui.statuscolumn.render()
   local components = {
     "%=",
     space,
-    nr(curwin),
+    nr(curwin, line_count),
     space,
     sign and hl(sign.texthl, sign.text:gsub(space, "")) or space,
     space,

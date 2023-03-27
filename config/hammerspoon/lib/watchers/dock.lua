@@ -16,18 +16,20 @@ obj.watchers = {
   display = {},
 }
 
-local function displayHandler(watcher, path, key, oldValue, isConnected)
+local function displayHandler(_watcher, _path, _key, _oldValue, isConnected)
   if isConnected then
     success("[dock] external display connected")
     hs.screen.find(Config.displays.external):setPrimary()
   else
     warn("[dock] external display disconnected")
-    hs.screen.find(Config.displays.laptop):setPrimary()
+    -- FIXME: errors here occassionally
+    hs.screen.find(Config.displays.internal):setPrimary()
   end
+
   WM.layoutRunningApps(Config.bindings.apps)
 end
 
-local function leelooHandler(watcher, path, key, oldValue, isConnected)
+local function leelooHandler(_watcher, _path, _key, _oldValue, isConnected)
   local function setProfile(profile)
     local task = hs.task.new(
       [[/Library/Application Support/org.pqrs/Karabiner-Elements/bin/karabiner_cli]],
@@ -77,7 +79,7 @@ function obj.setInput(state)
   task:start()
 end
 
-local function dockHandler(watcher, path, key, oldValue, isConnected)
+local function dockHandler(watcher, _path, _key, _oldValue, isConnected)
   info("[dock] handling docking state changes")
 
   local dock = function()
@@ -113,11 +115,16 @@ end
 
 function obj:start()
   obj.watchers.dock = hs.watchable.watch("status.dock", dockHandler)
+  -- obj.watchers.dock:alwaysNotify(true)
+
   obj.watchers.display = hs.watchable.watch("status.display", displayHandler)
+  -- obj.watchers.display:alwaysNotify(true)
+
   obj.watchers.leeloo = hs.watchable.watch("status.leeloo", leelooHandler)
+  -- obj.watchers.leeloo:alwaysNotify(true)
 
   -- run dock handler on start
-  dockHandler(nil, nil, nil, nil, obj.watchers.dock._active)
+  -- dockHandler(nil, nil, nil, nil, obj.watchers.dock._active)
 
   return self
 end

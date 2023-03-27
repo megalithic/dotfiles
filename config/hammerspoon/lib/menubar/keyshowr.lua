@@ -45,7 +45,7 @@ function obj:init()
         strokeWidth = 0,
         fillColor = { white = 0.1 },
         textColor = { white = 0.9 },
-        textSize = 13,
+        textSize = 23,
         radius = 5,
         fadeInDuration = 0,
         atScreenEdge = 1,

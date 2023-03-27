@@ -119,9 +119,9 @@ return {
       "nvim-treesitter/nvim-tree-docs",
       "JoosepAlviste/nvim-ts-context-commentstring",
       "RRethy/nvim-treesitter-endwise",
-      "jadengis/nvim-ts-autotag",
+      { "gandhiShepard/nvim-ts-autotag", branch = "patch-1" },
+      -- { "HiPhish/nvim-ts-rainbow2" },
       { "mrjones2014/nvim-ts-rainbow" },
-      -- @trial: https://github.com/akinsho/dotfiles/commit/f3e39e2747eb9dab6464ae5a4e2a1dc3c7af36a8
       "David-Kunz/treesitter-unit",
     },
     config = function()
@@ -135,7 +135,6 @@ return {
       ft_to_parser("keymap", "devicetree")
       ft_to_parser("zsh", "bash")
       ft_to_parser("kittybuf", "bash")
-      -- ft_to_parser("eelixir", "html_eex")
 
       require("nvim-treesitter.configs").setup({
         auto_install = false,
@@ -171,6 +170,7 @@ return {
           "jsonc",
           "json5",
           "lua",
+          "luap",
           "make",
           "markdown",
           "markdown_inline",
@@ -231,6 +231,7 @@ return {
             "handlebars",
             "hbs",
             "heex",
+            "elixir",
           },
         },
         endwise = { enable = true },
@@ -279,12 +280,23 @@ return {
           },
         },
         matchup = { enable = true, include_match_words = true },
+        -- rainbow = {
+        --   enable = true,
+        --   disable = false,
+        --   query = {
+        --     "rainbow-parens",
+        --     tsx = function() return nil end,
+        --     javascript = function() return nil end,
+        --   },
+        --   strategy = { require("ts-rainbow.strategy.global") },
+        -- },
         rainbow = {
           enable = true,
           disable = { "json", "jsonc", "html" },
           extended_mode = true, -- Highlight also non-parentheses delimiters, boolean or table: lang -> boolean
           max_file_lines = 2000, -- Do not enable for files with more than 1000 lines, int
         },
+        autopairs = { enable = true },
         textobjects = {
           lookahead = true,
           select = {

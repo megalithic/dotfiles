@@ -407,17 +407,8 @@ xnoremap("au", ":lua require\"treesitter-unit\".select(true)<CR>")
 onoremap("iu", ":<c-u>lua require\"treesitter-unit\".select()<CR>")
 onoremap("au", ":<c-u>lua require\"treesitter-unit\".select(true)<CR>")
 
--- # paq
--- map("n", "<F5>", mega.sync_plugins())
-nmap("<F5>", "<cmd>lua mega.sync_plugins()<cr>", "packer: sync plugins")
-
 -- -- # dirbuf.nvim
--- nnoremap("<C-t>", function()
---   local buf = vim.api.nvim_buf_get_name(0)
---   vim.cmd([[vertical topleft split|vertical resize 60]])
---   require("dirbuf").open(buf)
--- end)
--- nmap("-", "<Nop>") -- disable this mapping globally, only map in dirbuf ftplugin
+nmap("-", "<Nop>") -- disable this mapping globally, only map in dirbuf ftplugin
 
 -- # formatter.nvim
 nmap("<leader>F", [[<cmd>FormatWrite<cr>]], "format file")

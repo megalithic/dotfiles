@@ -153,35 +153,35 @@ do
         if fn.winnr("$") == 1 and vim.bo.buftype == "quickfix" then api.nvim_buf_delete(0, { force = true }) end
       end,
     },
-    {
-      -- automatically close corresponding loclist when quitting a window
-      event = { "QuitPre" },
-      nested = true,
-      command = function()
-        if vim.bo.filetype ~= "qf" then vim.cmd("silent! lclose") end
-      end,
-    },
+    -- {
+    --   -- automatically close corresponding loclist when quitting a window
+    --   event = { "QuitPre" },
+    --   nested = true,
+    --   command = function()
+    --     if vim.bo.filetype ~= "qf" then vim.cmd("silent! lclose") end
+    --   end,
+    -- },
   })
 end
 
 do
-  local save_excluded = {
-    "lua.luapad",
-    "gitcommit",
-    "NeogitCommitMessage",
-    "dirbuf",
-    "neo-tree",
-    "neo-tree-popup",
-    "megaterm",
-    "kittybuf",
-  }
-  local function can_save()
-    return mega.empty(fn.win_gettype())
-      and mega.empty(vim.bo.buftype)
-      and not mega.empty(vim.bo.filetype)
-      and vim.bo.modifiable
-      and not vim.tbl_contains(save_excluded, vim.bo.filetype)
-  end
+  -- local save_excluded = {
+  --   "lua.luapad",
+  --   "gitcommit",
+  --   "NeogitCommitMessage",
+  --   "dirbuf",
+  --   "neo-tree",
+  --   "neo-tree-popup",
+  --   "megaterm",
+  --   "kittybuf",
+  -- }
+  -- local function can_save()
+  --   return mega.empty(fn.win_gettype())
+  --     and mega.empty(vim.bo.buftype)
+  --     and not mega.empty(vim.bo.filetype)
+  --     and vim.bo.modifiable
+  --     and not vim.tbl_contains(save_excluded, vim.bo.filetype)
+  -- end
 
   augroup("Utilities", {
     {
@@ -217,11 +217,51 @@ do
     --     end
     --   end,
     -- },
+    -- {
+    --   event = { "BufLeave" },
+    --   pattern = { "*" },
+    --   command = function()
+    --     if can_save() then vim.cmd.update({ mods = { silent = true } }) end
+    --   end,
+    -- },
+    --   {
+    --     -- TODO: not clear what effect this has in the post vimscript world
+    --     -- it correctly sources $MYVIMRC but all the other files that it
+    --     -- requires will need to be resourced or reloaded themselves
+    --     event = "BufWritePost",
+    --     pattern = { "$DOTFILES/**/nvim/plugin/*.{lua,vim}", "$MYVIMRC" },
+    --     nested = true,
+    --     command = function()
+    --       local ok, msg = pcall(vcmd, "source $MYVIMRC | redraw | silent doautocmd ColorScheme")
+    --       msg = ok and "sourced " .. vim.fn.fnamemodify(vim.env.MYVIMRC, ":t") or msg
+    --       vim.notify(msg)
+    --     end,
+    --   },
+    -- {
+    --   event = { "FocusLost" },
+    --   command = "silent! wall",
+    -- },
     {
-      event = { "BufLeave" },
-      pattern = { "*" },
+      event = { "BufEnter" },
+      buffer = 0,
+      command = mega.open_plugin_url,
+    },
+    {
+      event = { "TextYankPost" },
       command = function()
-        if can_save() then vim.cmd.update({ mods = { silent = true } }) end
+        vim.highlight.on_yank({
+          timeout = 500,
+          on_visual = false,
+          higroup = "Visual",
+        })
+      end,
+    },
+    {
+      event = { "VimResized" },
+      command = function(args)
+        -- vim.cmd([[wincmd =]])
+        mega.resize_windows(args.buf)
+        require("virt-column").refresh()
       end,
     },
   })
@@ -247,69 +287,6 @@ augroup("Kitty", {
       -- auto-reload kitty upon kitty.conf write
       -- vim.notify(fmt(" sourced %s", vim.fn.expand("%")))
       vcmd(":silent !kill -SIGUSR1 $(grep kitty =(ps auxwww))")
-    end,
-  },
-})
-
-augroup("Plugins/Paq", {
-  -- {
-  --   event = { "BufWritePost" },
-  --   pattern = { "*/nvim/lua/mega/plugins/*.lua", "*/nvim/lua/plugin/*" },
-  --   command = function()
-  --     -- auto-source paq-nvim upon plugins/*.lua buffer writes
-  --     vim.cmd("luafile %")
-  --     vim.notify(fmt(" sourced %s", vim.fn.expand("%")))
-  --   end,
-  --   desc = "Paq reload",
-  -- },
-  {
-    event = { "BufEnter" },
-    buffer = 0,
-    command = mega.open_plugin_url,
-  },
-  -- {
-  --   event = { "User" },
-  --   pattern = { "PaqDoneSync" },
-  --   command = function() vim.cmd("Messages | Cfilter Paq") end,
-  -- },
-})
-
-augroup("YankHighlightedRegion", {
-  {
-    event = { "TextYankPost" },
-    command = function()
-      vim.highlight.on_yank({
-        timeout = 500,
-        on_visual = false,
-        higroup = "Visual",
-      })
-    end,
-  },
-})
-
-augroup("UpdateVim", {
-  --   {
-  --     -- TODO: not clear what effect this has in the post vimscript world
-  --     -- it correctly sources $MYVIMRC but all the other files that it
-  --     -- requires will need to be resourced or reloaded themselves
-  --     event = "BufWritePost",
-  --     pattern = { "$DOTFILES/**/nvim/plugin/*.{lua,vim}", "$MYVIMRC" },
-  --     nested = true,
-  --     command = function()
-  --       local ok, msg = pcall(vcmd, "source $MYVIMRC | redraw | silent doautocmd ColorScheme")
-  --       msg = ok and "sourced " .. vim.fn.fnamemodify(vim.env.MYVIMRC, ":t") or msg
-  --       vim.notify(msg)
-  --     end,
-  --   },
-  -- {
-  --   event = { "FocusLost" },
-  --   command = "silent! wall",
-  -- },
-  {
-    event = { "VimResized" },
-    command = function()
-      vim.cmd([[wincmd =]])
-      require("virt-column").refresh()
     end,
   },
 })

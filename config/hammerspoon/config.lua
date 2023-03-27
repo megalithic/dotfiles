@@ -81,6 +81,12 @@ local apps = {
     -- key = "space",
     quitter = true,
   },
+  ["com.raycast.macos"] = {
+    name = "Raycast",
+    bundleID = "com.raycast.macos",
+    key = "space",
+    quitter = true,
+  },
   ["net.kovidgoyal.kitty"] = {
     bundleID = "net.kovidgoyal.kitty",
     name = "kitty",
@@ -418,7 +424,7 @@ local dock = {
   ["undocked"] = {
     wifi = "on",
     profile = "internal",
-    input = "R-Phonak hearing aid",
+    input = "MacBook Pro Microphone",
     output = "R-Phonak hearing aid",
   },
 }

@@ -6,6 +6,9 @@ local DisplaysConfig = Config.displays
 local obj = {}
 
 obj.__index = obj
+-- REF:
+-- discussion around hs.watchable for a lot of stuff: https://github.com/Hammerspoon/hammerspoon/discussions/3437#discussioncomment-5398491
+-- fixes for hs.watchable module: https://github.com/Hammerspoon/hammerspoon/pull/3440#issuecomment-1480308900
 obj.name = "watcher.status"
 obj.debug = true
 obj.watchers = {
@@ -25,16 +28,20 @@ end
 local function usbHandler(device)
   dbg(fmt(":: [status] usb: %s", I(device)))
   if device.productName == DockConfig.target.productName then
-    obj.watchers.status.dock = (device.eventType == "added")
+    obj.watchers.status.dock = device.eventType == "added"
     dbg(fmt(":: [status] usb: %s", I((device.eventType == "added"))))
     obj.watchers.status.leeloo = checkLeelooConnection()
   end
 end
 
-local function screenHandler() obj.watchers.status.display = hs.screen.find(DisplaysConfig.external) ~= nil end
+local function screenHandler()
+  dbg(DisplaysConfig.external)
+  obj.watchers.status.display = hs.screen.find(DisplaysConfig.external) ~= nil
+  -- obj.watchers.status.dock = obj.watchers.status.display
+end
 
 local function applicationHandler(appName, appEvent, appObj)
-  -- dbg(fmt(":: [status] app: %s/%s/%s", appName, appEvent, hs.inspect(appObj)))
+  dbg(fmt(":: [status] app: %s/%s/%s", appName, appEvent, appObj:bundleID()))
 
   obj.watchers.status.app = {
     appName = appName,

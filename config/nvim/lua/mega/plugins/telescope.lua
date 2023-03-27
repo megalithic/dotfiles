@@ -70,7 +70,8 @@ local function multiopen(prompt_bufnr, method)
   local cmd_map = {
     vertical = "vsplit",
     horizontal = "split",
-    default = "edit",
+    default = "vsplit",
+    -- default = "edit",
   }
   local picker = action_state.get_current_picker(prompt_bufnr)
   local multi_selection = picker:get_multi_selection()
@@ -83,6 +84,77 @@ local function multiopen(prompt_bufnr, method)
       -- opinionated use-case
       local cmd = i == 1 and "edit" or cmd_map[method]
       vim.cmd(string.format("%s %s", cmd, entry.value))
+    end
+  else
+    actions["select_" .. method](prompt_bufnr)
+  end
+end
+
+local function multi_open(prompt_bufnr, method)
+  local actions = require("telescope.actions")
+  -- local transform_mod = require("telescope.actions.mt").transform_mod
+  local action_state = require("telescope.actions.state")
+  -- local action_layout = require("telescope.actions.layout")
+
+  local edit_file_cmd_map = {
+    vertical = "vsplit",
+    horizontal = "split",
+    tab = "tabedit",
+    default = "vsplit",
+    -- default = "edit",
+  }
+  local edit_buf_cmd_map = {
+    vertical = "vert sbuffer",
+    horizontal = "sbuffer",
+    tab = "tab sbuffer",
+    default = "vert sbuffer",
+    -- default = "buffer",
+  }
+  local picker = action_state.get_current_picker(prompt_bufnr)
+  local multi_selection = picker:get_multi_selection()
+
+  if #multi_selection > 1 then
+    require("telescope.pickers").on_close_prompt(prompt_bufnr)
+    pcall(vim.api.nvim_set_current_win, picker.original_win_id)
+
+    for i, entry in ipairs(multi_selection) do
+      local filename, row, col
+
+      if entry.path or entry.filename then
+        filename = entry.path or entry.filename
+
+        row = entry.row or entry.lnum
+        col = vim.F.if_nil(entry.col, 1)
+      elseif not entry.bufnr then
+        local value = entry.value
+        if not value then return end
+
+        if type(value) == "table" then value = entry.display end
+
+        local sections = vim.split(value, ":")
+
+        filename = sections[1]
+        row = tonumber(sections[2])
+        col = tonumber(sections[3])
+      end
+
+      local entry_bufnr = entry.bufnr
+
+      if entry_bufnr then
+        if not vim.api.nvim_buf_get_option(entry_bufnr, "buflisted") then
+          vim.api.nvim_buf_set_option(entry_bufnr, "buflisted", true)
+        end
+        local command = i == 1 and "buffer" or edit_buf_cmd_map[method]
+        pcall(vim.cmd, string.format("%s %s", command, vim.api.nvim_buf_get_name(entry_bufnr)))
+      else
+        local command = i == 1 and "edit" or edit_file_cmd_map[method]
+        if vim.api.nvim_buf_get_name(0) ~= filename or command ~= "edit" then
+          filename = require("plenary.path"):new(vim.fn.fnameescape(filename)):normalize(vim.loop.cwd())
+          pcall(vim.cmd, string.format("%s %s", command, filename))
+        end
+      end
+
+      if row and col then pcall(vim.api.nvim_win_set_cursor, 0, { row, col - 1 }) end
     end
   else
     actions["select_" .. method](prompt_bufnr)
@@ -192,9 +264,9 @@ return {
     local actions = require("telescope.actions")
 
     local custom_actions = transform_mod({
-      multi_selection_open_vertical = function(prompt_bufnr) multiopen(prompt_bufnr, "vertical") end,
-      multi_selection_open_horizontal = function(prompt_bufnr) multiopen(prompt_bufnr, "horizontal") end,
-      multi_selection_open = function(prompt_bufnr) multiopen(prompt_bufnr, "default") end,
+      multi_selection_open_vertical = function(prompt_bufnr) multi_open(prompt_bufnr, "vertical") end,
+      multi_selection_open_horizontal = function(prompt_bufnr) multi_open(prompt_bufnr, "horizontal") end,
+      multi_selection_open = function(prompt_bufnr) multi_open(prompt_bufnr, "vertical") end,
     })
 
     local previewers = require("telescope.previewers")
@@ -244,14 +316,17 @@ return {
           i = {
             ["<esc>"] = require("telescope.actions").close,
             ["<cr>"] = stopinsert(custom_actions.multi_selection_open_vertical),
+            ["<c-v>"] = stopinsert(custom_actions.multi_selection_open_vertical),
             ["<c-s>"] = stopinsert(custom_actions.multi_selection_open_horizontal),
             ["<c-o>"] = stopinsert(custom_actions.multi_selection_open),
-            ["<c-t>"] = function(...) return require("trouble.providers.telescope").open_with_trouble(...) end,
+            ["<C-z>"] = actions.toggle_selection,
+            ["<c-t>"] = function(...) return require("trouble.providers.telescope").smart_open_with_trouble(...) end,
             ["<C-Down>"] = function(...) return require("telescope.actions").cycle_history_next(...) end,
             ["<C-Up>"] = function(...) return require("telescope.actions").cycle_history_prev(...) end,
           },
           n = {
             ["<cr>"] = custom_actions.multi_selection_open_vertical,
+            ["<c-v>"] = custom_actions.multi_selection_open_vertical,
             ["<c-s>"] = custom_actions.multi_selection_open_horizontal,
             ["<c-o>"] = custom_actions.multi_selection_open,
           },
@@ -262,47 +337,6 @@ return {
         winblend = 0,
         vimgrep_arguments = grep_files_cmd,
         buffer_previewer_maker = new_maker,
-        -- preview = {
-        --   mime_hook = function(filepath, bufnr, opts)
-        --     dd("mime_hook")
-        --     local is_image = function(filepath)
-        --       local image_extensions = { "png", "jpg", "jpeg", "gif" } -- Supported image formatsscreens
-        --       local split_path = vim.split(filepath:lower(), ".", { plain = true })
-        --       local extension = split_path[#split_path]
-        --       return vim.tbl_contains(image_extensions, extension)
-        --     end
-        --     if is_image(filepath) then
-        --       local term = vim.api.nvim_open_term(bufnr, {})
-        --       local function send_output(_, data, _)
-        --         for _, d in ipairs(data) do
-        --           vim.api.nvim_chan_send(term, d .. "\r\n")
-        --         end
-        --       end
-        --       --
-        --       -- vim.fn.jobstart({
-        --       --   "preview",
-        --       --   filepath, -- Terminal image viewer command
-        --       -- }, { on_stdout = send_output, stdout_buffered = true })
-        --       mega.notify("yup (image)?!")
-        --       dd("is_image")
-        --       vim.fn.jobstart({
-        --         "viu",
-        --         "-w",
-        --         "40",
-        --         "-b",
-        --         filepath,
-        --       }, {
-        --         on_stdout = send_output,
-        --         stdout_buffered = true,
-        --       })
-        --       -- require("telescope.previewers.utils").set_preview_message(bufnr, opts.winid, "Image cannot be previewed")
-        --     else
-        --       mega.notify("what (binary)?!")
-        --       dd("not_image")
-        --       require("telescope.previewers.utils").set_preview_message(bufnr, opts.winid, "Binary cannot be previewed")
-        --     end
-        --   end,
-        -- },
       },
       extensions = {
         ["zf-native"] = {

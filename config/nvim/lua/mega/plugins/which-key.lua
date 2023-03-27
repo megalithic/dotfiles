@@ -74,49 +74,49 @@ function M.config()
     -- },
   })
 
-  local ok_gs, gs = mega.require("gitsigns")
-  if ok_gs then
-    require("which-key").register({
-      g = {
-        name = "git",
-        g = { "<cmd>Git<CR>", "Fugitive" },
-        H = "browse at line",
-        O = "browse repo",
-        B = "browse blame at line",
-        r = {
-          name = "+reset",
-          e = "gitsigns: reset entire buffer",
-        },
-        b = {
-          function() gs.blame_line({ full = true }) end,
-          "gitsigns: blame current line",
-        },
-        h = {
-          name = "+hunks",
-          s = { gs.stage_hunk, "stage" },
-          u = { gs.undo_stage_hunk, "undo stage" },
-          r = { gs.reset_hunk, "reset hunk" },
-          p = { gs.preview_hunk, "preview current hunk" },
-          d = { gs.diffthis, "diff this line" },
-          D = {
-            function() gs.diffthis("~") end,
-            "diff this with ~",
-          },
-          b = {
-            name = "+blame",
-            l = "gitsigns: blame current line",
-            d = "gitsigns: toggle word diff",
-            b = {
-              function() gs.blame_line({ full = true }) end,
-              "blame current line",
-            },
-          },
-        },
-        w = "gitsigns: stage entire buffer",
-        m = "gitsigns: list modified in quickfix",
-      },
-    }, { prefix = "<leader>" })
-  end
+  -- local ok_gs, gs = mega.require("gitsigns")
+  -- if ok_gs then
+  --   require("which-key").register({
+  --     g = {
+  --       name = "git",
+  --       g = { "<cmd>Git<CR>", "Fugitive" },
+  --       H = "browse at line",
+  --       O = "browse repo",
+  --       B = "browse blame at line",
+  --       r = {
+  --         name = "+reset",
+  --         e = "gitsigns: reset entire buffer",
+  --       },
+  --       b = {
+  --         function() gs.blame_line({ full = true }) end,
+  --         "gitsigns: blame current line",
+  --       },
+  --       h = {
+  --         name = "+hunks",
+  --         s = { gs.stage_hunk, "stage" },
+  --         u = { gs.undo_stage_hunk, "undo stage" },
+  --         r = { gs.reset_hunk, "reset hunk" },
+  --         p = { gs.preview_hunk, "preview current hunk" },
+  --         d = { gs.diffthis, "diff this line" },
+  --         D = {
+  --           function() gs.diffthis("~") end,
+  --           "diff this with ~",
+  --         },
+  --         b = {
+  --           name = "+blame",
+  --           l = "gitsigns: blame current line",
+  --           d = "gitsigns: toggle word diff",
+  --           b = {
+  --             function() gs.blame_line({ full = true }) end,
+  --             "blame current line",
+  --           },
+  --         },
+  --       },
+  --       w = "gitsigns: stage entire buffer",
+  --       m = "gitsigns: list modified in quickfix",
+  --     },
+  --   }, { prefix = "<leader>" })
+  -- end
 
   -- Normal Mode {{{1
   local n_mappings = {
@@ -139,40 +139,6 @@ function M.config()
       D = { [[<cmd>Delete!<cr>]], "delete file" },
       yp = { [[:let @+ = expand("%")<CR>]], "yank path to clipboard" },
     },
-    -- ["<leader>f"] = {
-    --   name = "telescope",
-    --   B = { "builtins" },
-    --   b = { "opened buffers" },
-    --   -- b = { "current buffer fuzzy find" },
-    --   d = { "dotfiles" },
-    --   p = { "privates" },
-    --   f = { "find/git files" },
-    --   g = {
-    --     name = "+git",
-    --   },
-    --   M = { "man pages" },
-    --   m = { "oldfiles (mru)" },
-    --   k = { "keymaps" },
-    --   P = { "plugins" },
-    --   -- o = { "buffers" },
-    --   -- O = { "org files" },
-    --   R = { "module reloader" },
-    --   r = { "resume last picker" },
-    --   s = { "grep string" },
-    --   v = {
-    --     name = "+vim",
-    --     h = { "highlights" },
-    --     a = { "autocommands" },
-    --     o = { "options" },
-    --   },
-    --   t = {
-    --     name = "+tmux",
-    --     s = { "sessions" },
-    --     w = { "windows" },
-    --   },
-    --   ["?"] = { "help" },
-    --   h = { "help" },
-    -- },
     ["<leader>l"] = {
       name = "+lsp",
       d = { "telescope: definitions" },
@@ -215,18 +181,18 @@ function M.config()
     ["<localleader>d"] = {
       name = "debugger",
     },
-    ["<localleader>g"] = {
-      name = "git",
-      r = {
-        name = "gitsigns: reset hunk",
-      },
-      o = "gitlinker: open in browser",
-      u = "gitlinker: copy to clipboard",
-      s = "neogit: open status buffer",
-      c = "neogit: open commit buffer",
-      l = "neogit: open pull popup",
-      p = "neogit: open push popup",
-    },
+    -- ["<localleader>g"] = {
+    --   name = "git",
+    --   -- r = {
+    --   --   name = "gitsigns: reset hunk",
+    --   -- },
+    --   o = "gitlinker: open in browser",
+    --   u = "gitlinker: copy to clipboard",
+    --   s = "neogit: open status buffer",
+    --   c = "neogit: open commit buffer",
+    --   l = "neogit: open pull popup",
+    --   p = "neogit: open push popup",
+    -- },
     c = {
       name = "git-conflict",
       ["0"] = "Resolve with _None",

@@ -10,13 +10,15 @@ nnoremap("<localleader>ed", [[o|> dbg()<ESC>a]])
 nnoremap("<localleader>ei", [[o|> IO.inspect()<ESC>i]])
 nnoremap("<localleader>eil", [[o|> IO.inspect(label: "")<ESC>hi]])
 
-vim.cmd([[iabbrev ep    \|>]])
-vim.cmd([[iabbrev epry  require IEx; IEx.pry]])
-vim.cmd([[iabbrev ei    IO.inspect()<ESC>i]])
-vim.cmd([[iabbrev eputs IO.puts()<ESC>i]])
-vim.cmd([[iabbrev ed    dbg()<ESC>i]])
-vim.cmd.iabbrev(":skip:  @tag :skip")
-vim.cmd.iabbrev("tskip   @tag :skip")
+vim.cmd.iabbrev([[ep      \|>]])
+vim.cmd.iabbrev([[epry    require IEx; IEx.pry]])
+vim.cmd.iabbrev([[ei      IO.inspect()<ESC>i]])
+vim.cmd.iabbrev([[eputs   IO.puts()<ESC>i]])
+vim.cmd.iabbrev([[ed      dbg()<ESC>i]])
+vim.cmd.iabbrev([[~H      ~H""""""<ESC>2hi<CR><ESC>O<BS> ]])
+vim.cmd.iabbrev([[~h      ~H""""""<ESC>2hi<CR><ESC>O<BS> ]])
+vim.cmd.iabbrev([[:skip:  @tag :skip]])
+vim.cmd.iabbrev([[tskip   @tag :skip]])
 
 -- REF:
 -- https://github.com/mhanberg/elixir.nvim/tree/main/lua/elixir/mix

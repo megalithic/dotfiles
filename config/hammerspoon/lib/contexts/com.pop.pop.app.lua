@@ -59,6 +59,7 @@ function obj:start(opts)
       L.req("lib.menubar.ptt").setState("push-to-mute")
 
       local layouts = {
+        { pop:name(), nil, hs.screen.primaryScreen():name(), hs.layout.maximized, nil, nil },
         { browser:name(), nil, hs.screen.primaryScreen():name(), hs.layout.right50, nil, nil },
         { "kitty", nil, hs.screen.primaryScreen():name(), hs.layout.right50, nil, nil },
       }

@@ -13,12 +13,13 @@ local ft_ignores = {
   "lazy",
   "packer",
   "startuptime",
+  "undotree",
 }
 
 local bt_ignores = {
   "help",
   "acwrite",
-  "Undotree",
+  "undotree",
   "quickfix",
   "nerdtree",
   "current",

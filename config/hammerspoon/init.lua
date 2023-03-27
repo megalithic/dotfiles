@@ -1,3 +1,9 @@
+-- [ GLOBALS ] ------------------------------------------------------------------
+
+_G.debug_enabled = false
+
+-- [ BOOTSTRAP/PRELOAD ] ------------------------------------------------------------------
+
 require("preflight")
 
 -- [ LOCALS ] ------------------------------------------------------------------
@@ -13,8 +19,9 @@ local unload = L.unload
 -- [ HAMMERSPOON SETTINGS ] ----------------------------------------------------
 
 hs.allowAppleScript(true)
-hs.application.enableSpotlightForNameSearches(true)
+hs.application.enableSpotlightForNameSearches(false)
 hs.autoLaunch(true)
+hs.consoleOnTop(false)
 hs.automaticallyCheckForUpdates(true)
 hs.menuIcon(true)
 hs.dockIcon(true)
@@ -57,9 +64,12 @@ hs.notify.new({ title = "Hammerspoon", subTitle = "Configuration successfully lo
 
 require("_banner")
 
+-- DEBUGGING things:
 -- axbrowse
 -- b = hs.axuielement.systemElementAtPosition(hs.mouse.absolutePosition())
 -- hs.inspect(b:attributeNames())
 -- hs.inspect(b:actionNames())
 -- hs.inspect(b:parameterizedAttributeNames())
 -- b:attributeValue("AXRoleDescription")
+--
+-- https://github.com/asmagill/hammerspoon/wiki/Variable-Scope-and-Garbage-Collection

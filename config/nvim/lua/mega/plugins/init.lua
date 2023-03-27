@@ -176,28 +176,22 @@ return {
       vim.g.undotree_SetFocusWhenToggle = 1
     end,
   },
-  -- {
-  --   "willothy/flatten.nvim",
-  --   lazy = false,
-  --   priority = 1001,
-  --   config = {
-  --     window = { open = "current" },
-  --     callbacks = {
-  --       block_end = function() require("toggleterm").toggle() end,
-  --       pre_open = function() require("toggleterm").toggle() end,
-  --       post_open = function(bufnr, winnr)
-  --         local term = require("toggleterm.terminal").get_last_focused()
-  --         if term and term:is_float() then
-  --           term:close()
-  --           vim.cmd.buffer(bufnr)
-  --         else
-  --           require("toggleterm").toggle()
-  --           vim.api.nvim_set_current_win(winnr)
-  --         end
-  --       end,
-  --     },
-  --   },
-  -- },
+  {
+    "chrisgrieser/replacer.nvim",
+    ft = "qf",
+    keys = {
+      { "<leader>R", function() require("replacer").run() end, desc = "qf: replace in qflist" },
+    },
+    init = function()
+      -- save & quit via "q"
+      mega.augroup("ReplacerFileType", {
+        pattern = "replacer",
+        callback = function()
+          mega.nmap("q", vim.cmd.write, { desc = " Finish replacing", buffer = true, nowait = true })
+        end,
+      })
+    end,
+  },
 
   -- ( Movements ) -------------------------------------------------------------
   -- @trial multi-cursor: https://github.com/brendalf/dotfiles/blob/master/.config/nvim/lua/core/multi-cursor.lua
@@ -451,7 +445,7 @@ return {
     },
   },
   { "tpope/vim-rhubarb", event = { "VeryLazy" } },
-  { "tpope/vim-repeat", keys = { "." } },
+  { "tpope/vim-repeat", lazy = false },
   { "tpope/vim-unimpaired", event = { "VeryLazy" } },
   { "tpope/vim-apathy", event = { "VeryLazy" } },
   { "tpope/vim-scriptease", event = { "VeryLazy" }, cmd = { "Messages", "Mess", "Noti" } },

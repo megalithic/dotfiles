@@ -12,36 +12,36 @@ function obj:init(opts)
   spoon.SpoonInstall.use_syncinstall = true
   Install = spoon.SpoonInstall
 
-  local config = Settings.get(CONFIG_KEY)
+  -- local config = Settings.get(CONFIG_KEY)
 
-  Install:andUse("Seal", {
-    -- NOTE: see bindings module for hotkey binding
-    fn = function(s)
-      s:loadPlugins({ "apps", "calc", "screencapture", "useractions", "urlformats", "safari_bookmarks" })
-      s.plugins.safari_bookmarks.always_open_with_safari = false
-      s.plugins.useractions.actions = {
-        ["Hammerspoon docs webpage"] = {
-          url = "http://hammerspoon.org/docs/",
-          icon = hs.image.imageFromName(hs.image.systemImageNames.ApplicationIcon),
-        },
-        ["github"] = { url = "https://github.com/search?q=${query}", keyword = "!gh", icon = "favicon" },
-        ["hexdocs"] = { url = "https://hexdocs.pm/${query}", keyword = "!hd", icon = "favicon" },
-        ["hex"] = {
-          url = "https://hex.pm/packages?search=${query}&sort=recent_downloads",
-          keyword = "!hex",
-          icon = "favicon",
-        },
-        ["devdocs"] = { url = "https://devdocs.io/?q=%{query}", keyword = "!dev", icon = "favicon" },
-        ["youtube"] = {
-          url = "https://www.youtube.com/results?search_query=${query}&page={startPage?}",
-          keyword = "!yt",
-          icon = "favicon",
-        },
-      }
-      s:refreshAllCommands()
-    end,
-    start = true,
-  })
+  -- Install:andUse("Seal", {
+  --   -- NOTE: see bindings module for hotkey binding
+  --   start = false,
+  --   fn = function(s)
+  --     s:loadPlugins({ "apps", "calc", "screencapture", "useractions", "urlformats", "safari_bookmarks" })
+  --     s.plugins.safari_bookmarks.always_open_with_safari = false
+  --     s.plugins.useractions.actions = {
+  --       ["Hammerspoon docs webpage"] = {
+  --         url = "http://hammerspoon.org/docs/",
+  --         icon = hs.image.imageFromName(hs.image.systemImageNames.ApplicationIcon),
+  --       },
+  --       ["github"] = { url = "https://github.com/search?q=${query}", keyword = "!gh", icon = "favicon" },
+  --       ["hexdocs"] = { url = "https://hexdocs.pm/${query}", keyword = "!hd", icon = "favicon" },
+  --       ["hex"] = {
+  --         url = "https://hex.pm/packages?search=${query}&sort=recent_downloads",
+  --         keyword = "!hex",
+  --         icon = "favicon",
+  --       },
+  --       ["devdocs"] = { url = "https://devdocs.io/?q=%{query}", keyword = "!dev", icon = "favicon" },
+  --       ["youtube"] = {
+  --         url = "https://www.youtube.com/results?search_query=${query}&page={startPage?}",
+  --         keyword = "!yt",
+  --         icon = "favicon",
+  --       }
+  --     }
+  --     s:refreshAllCommands()
+  --   end,
+  -- })
   Install:andUse("EmmyLua")
   Install:andUse("URLDispatcher", {
     start = true,
@@ -60,6 +60,7 @@ function obj:init(opts)
         { "https?://www.figma.com", "com.figma.Desktop" },
         { "https?://open.spotify.com", "com.spotify.client" },
         { "spotify:", "com.spotify.client" },
+        { "https?://www.github.com", "com.brave.Browser.dev" },
       },
       url_redir_decoders = {
         {

@@ -358,6 +358,9 @@ pr() {
 
   [[ -z $get_pr ]] && gh pr view -w "$get_pr"
 }
+alias ghpr="gh pr create --web"
+alias ghb="gh browse"
+alias ghi="gh issue create --label='' --assignee='@me' --body='' --title"
 
 # elixir
 # -----------------------------------------------------------------------------

@@ -18,9 +18,6 @@ obj.contextModals = {}
 local function info(...)
   if obj.log then return _G.info(...) end
 end
-local function dbg(...)
-  if obj.debug then return _G.dbg(...) end
-end
 local function note(...)
   if obj.log then return _G.note(...) end
 end
@@ -195,6 +192,7 @@ function obj.layoutRunningApps(apps)
 
   fnutils.each(runningApps, function(app)
     local appConfig = apps[app:bundleID()]
+    dbg(fmt("running app to run: %s", app:bundleID()))
     if appConfig then obj.applyLayout(appConfig) end
   end)
 end

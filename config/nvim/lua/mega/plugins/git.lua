@@ -1,3 +1,6 @@
+local function linker() return require("gitlinker") end
+local function neogit() return require("neogit") end
+local function browser_open() return { action_callback = require("gitlinker.actions").open_in_browser } end
 return {
   {
     "lewis6991/gitsigns.nvim",
@@ -26,12 +29,12 @@ return {
           vim.keymap.set(mode, l, r, opts)
         end
 
-        mega.nmap("<leader>hu", gs.undo_stage_hunk, { desc = "git: undo stage" })
-        mega.nmap("<leader>hp", gs.preview_hunk_inline, { desc = "git: preview hunk inline" })
+        mega.nmap("<leader>hu", gs.undo_stage_hunk, { desc = "git(hunk): undo stage" })
+        mega.nmap("<leader>hp", gs.preview_hunk_inline, { desc = "git(hunk): preview hunk inline" })
         -- mega.nmap("<leader>hp", gs.preview_hunk, { desc = "git: preview hunk" })
-        mega.nmap("<leader>hb", gs.toggle_current_line_blame, { desc = "git: toggle current line blame" })
-        mega.nmap("<leader>hd", gs.toggle_deleted, { desc = "git: show deleted lines" })
-        mega.nmap("<leader>hw", gs.toggle_word_diff, { desc = "git: toggle word diff" })
+        mega.nmap("<leader>hb", gs.toggle_current_line_blame, { desc = "git(hunk): toggle current line blame" })
+        mega.nmap("<leader>hd", gs.toggle_deleted, { desc = "git(hunk): show deleted lines" })
+        mega.nmap("<leader>hw", gs.toggle_word_diff, { desc = "git(hunk): toggle word diff" })
         mega.nmap("<localleader>gw", gs.stage_buffer, { desc = "git: stage entire buffer" })
         mega.nmap("<localleader>gre", gs.reset_buffer, { desc = "git: reset entire buffer" })
         mega.nmap("<localleader>gbl", gs.blame_line, { desc = "git: blame current line" })
@@ -73,13 +76,13 @@ return {
     cmd = "Neogit",
     dependencies = { "nvim-lua/plenary.nvim" },
     keys = {
-      { "<localleader>gs", function() require("neogit").open() end, "open status buffer" },
-      { "<localleader>gc", function() require("neogit").open({ "commit" }) end, "open commit buffer" },
-      { "<localleader>gl", function() require("neogit").popups.pull.create() end, "open pull popup" },
-      { "<localleader>gp", function() require("neogit").popups.push.create() end, "open push popup" },
+      { "<localleader>gs", function() neogit().open() end, desc = "neogit: open status buffer" },
+      { "<localleader>gc", function() neogit().open({ "commit" }) end, desc = "neogit: open commit buffer" },
+      { "<localleader>gl", function() neogit().popups.pull.create() end, desc = "neogit: open pull popup" },
+      { "<localleader>gp", function() neogit().popups.push.create() end, desc = "neogit: open push popup" },
     },
     config = function()
-      require("neogit").setup({
+      neogit().setup({
         disable_signs = false,
         disable_hint = true,
         disable_commit_confirmation = true,
@@ -97,7 +100,7 @@ return {
 
       mega.augroup("Neogit", {
         pattern = "NeogitPushComplete",
-        callback = require("neogit").close,
+        callback = neogit().close,
       })
     end,
   },
@@ -142,44 +145,34 @@ return {
     "ruifm/gitlinker.nvim",
     dependencies = "nvim-lua/plenary.nvim",
     keys = {
-      { "<localleader>gu", mode = "n" },
-      { "<localleader>gu", mode = "v" },
-      "<localleader>go",
-      "<leader>gH",
-      { "<localleader>go", mode = "n" },
-      { "<localleader>go", mode = "v" },
-    },
-    config = function()
-      require("gitlinker").setup({ mappings = nil })
-
-      local function linker() return require("gitlinker") end
-      local function browser_open() return { action_callback = require("gitlinker.actions").open_in_browser } end
-      mega.nnoremap(
+      {
         "<localleader>gu",
         function() linker().get_buf_range_url("n") end,
-        "gitlinker: copy line to clipboard"
-      )
-      mega.vnoremap(
+        desc = "gitlinker: copy line to clipboard",
+      },
+      {
         "<localleader>gu",
         function() linker().get_buf_range_url("v") end,
-        "gitlinker: copy range to clipboard"
-      )
-      mega.nnoremap(
+        desc = "gitlinker: copy range to clipboard",
+      },
+      {
         "<localleader>go",
         function() linker().get_repo_url(browser_open()) end,
-        "gitlinker: open in browser"
-      )
-      mega.nnoremap("<leader>gH", function() linker().get_repo_url(browser_open()) end, "gitlinker: open in browser")
-      mega.nnoremap(
+        desc = "gitlinker: open in browser",
+      },
+      {
         "<localleader>go",
         function() linker().get_buf_range_url("n", browser_open()) end,
-        "gitlinker: open current line in browser"
-      )
-      mega.vnoremap(
+        desc = "gitlinker: open current line in browser",
+      },
+      {
         "<localleader>go",
         function() linker().get_buf_range_url("v", browser_open()) end,
-        "gitlinker: open current selection in browser"
-      )
-    end,
+        desc = "gitlinker: open current selection in browser",
+      },
+    },
+    opts = {
+      mappings = nil,
+    },
   },
 }

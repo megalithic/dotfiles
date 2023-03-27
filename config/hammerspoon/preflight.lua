@@ -72,6 +72,8 @@ function _G.warn(msg, tag)
 end
 
 function _G.dbg(msg, tag)
+  if not _G.debug_enabled then return end
+
   tag = tag and "[DEBUG] " or "[DEBUG] "
   msg = type(msg) == "table" and I(msg) or msg
 
@@ -205,6 +207,24 @@ function _G.hostname()
 end
 
 _G.CONFIG_KEY = "_mega_config"
+
+-- _G.application_events = function(e)
+--   local t = type(e)
+--
+--   local a = hs.application.watcher
+--
+--   local enum_tbl = {
+--     [0] = a.launching,
+--     [1] = a.launched,
+--     [2] = a.terminated,
+--     [3] = a.hidden,
+--     [4] = a.unhidden,
+--     [5] = a.activated,
+--     [6] = a.deactivated,
+--   }
+--
+--   return enum_tbl[e]
+-- end
 
 -- [ CONSOLE SETTINGS ] ---------------------------------------------------------
 

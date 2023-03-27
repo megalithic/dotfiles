@@ -321,6 +321,7 @@ cask "zoom"
 
 # -- app store (mas) --
 
+mas "Signal Shifter", id: 6446061552
 mas "Fantastical", id: 975937182
 # mas "Mayday", id: 1473168024
 # mas "Spark", id: 1176895641

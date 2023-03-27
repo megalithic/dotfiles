@@ -424,6 +424,9 @@ local theme = lush(function(injected_functions)
     sym("@lsp.typemod.variable.global")({ sym("@constant") }),
     sym("@lsp.typemod.variable.readonly")({ sym("@constant") }),
     sym("@lsp.typemod.variable.static")({ sym("@constant") }),
+    sym("@lsp.typemod.operator.injected")({ sym("@operator") }),
+    sym("@lsp.typemod.string.injected")({ sym("@string") }),
+    sym("@lsp.typemod.variable.injected")({ sym("@variable") }),
 
     ---- :help treesitter-context ----------------------------------------------
 
@@ -669,7 +672,7 @@ local theme = lush(function(injected_functions)
     IndentBlanklineContextStart({ sp = C.bg_blue.li(10), bg = C.transparent, gui = "underline" }),
 
     ---- :help mini.indentscope ------------------------------------------------
-    MiniIndentscopeSymbol({ fg = C.teal, bg = C.transparent }),
+    MiniIndentscopeSymbol({ IndentBlanklineContextChar }),
 
     ---- :help mini.jump.txt / mini.jump2d.txt  --------------------------------
 

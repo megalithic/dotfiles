@@ -120,7 +120,8 @@ function M.config()
       local title = (notif.title and mega.tlen(notif.title) > 0 and notif.title[1] ~= "") and notif.title[1] or "nvim"
       local message = notif.message[1] and notif.message[1] or ""
 
-      vim.api.nvim_buf_set_lines(bufnr, 0, 1, false, { "" })
+      pcall(vim.api.nvim_buf_set_lines, bufnr, 0, -1, false, { "" })
+      -- vim.api.nvim_buf_set_lines(bufnr, 0, 1, false, { "" })
       vim.api.nvim_buf_set_extmark(bufnr, ns, 0, 0, {
         virt_text = {
           { " " },
