@@ -54,8 +54,9 @@ function mini.ai()
       }, {}),
       f = gen_spec.treesitter({ a = "@function.outer", i = "@function.inner" }, {}),
       c = gen_spec.treesitter({ a = "@class.outer", i = "@class.inner" }, {}),
-      -- t = gen_spec.treesitter({ a = "@tag.outer", i = "@tag.inner" }, {}),
-      -- t = { "<(%w-)%f[^<%w][^<>]->.-</%1>", "^<.->%s*().*()%s*</[^/]->$" },
+      -- t = { "<(%w-)%f[^<%w][^<>]->.-</%1>", "^<.->%s*().*()%s*</[^/]->$" }, -- deal with selection without the carriage return
+      t = { "<([%p%w]-)%f[^<%p%w][^<>]->.-</%1>", "^<.->().*()</[^/]->$" },
+
       -- scope
       s = gen_spec.treesitter({
         a = { "@function.outer", "@class.outer", "@testitem.outer" },
@@ -156,7 +157,7 @@ function mini.config()
   mini.pairs()
   mini.comment()
   mini.align()
-  -- mini.ai()
+  mini.ai()
   -- mini.jump()
   -- mini.indentscope()
 end
