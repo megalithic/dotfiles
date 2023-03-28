@@ -1,17 +1,18 @@
 return {
   -- ( CORE ) ------------------------------------------------------------------
   { "dstein64/vim-startuptime", cmd = { "StartupTime" }, config = function() vim.g.startuptime_tries = 15 end },
-  {
-    "ethanholz/nvim-lastplace",
-    lazy = false,
-    config = function()
-      require("nvim-lastplace").setup({
-        lastplace_ignore_buftype = { "quickfix", "nofile", "help" },
-        lastplace_ignore_filetype = { "gitcommit", "gitrebase", "svn", "hgcommit", "terminal", "megaterm" },
-        lastplace_open_folds = true,
-      })
-    end,
-  },
+  -- {
+  --   "ethanholz/nvim-lastplace",
+  --   cond = not vim.g.enabled_plugin["breadcrumb"],
+  --   lazy = { "BufWinEnter", "FileType" },
+  --   config = function()
+  --     require("nvim-lastplace").setup({
+  --       lastplace_ignore_buftype = { "quickfix", "nofile", "help" },
+  --       lastplace_ignore_filetype = { "gitcommit", "gitrebase", "svn", "hgcommit", "terminal", "megaterm" },
+  --       lastplace_open_folds = true,
+  --     })
+  --   end,
+  -- },
 
   -- ( UI ) --------------------------------------------------------------------
   {
@@ -417,53 +418,53 @@ return {
   },
 
   -- ( Testing/Debugging ) -----------------------------------------------------
-  {
-    "theHamsta/nvim-dap-virtual-text",
-    dependencies = "nvim-dap",
-    -- event = "VeryLazy",
-    config = function()
-      require("nvim-dap-virtual-text").setup({
-        commented = true,
-      })
-    end,
-  },
-  {
-    "jbyuki/one-small-step-for-vimkind",
-    dependencies = "nvim-dap",
-    -- event = "VeryLazy"
-  },
-  {
-    "suketa/nvim-dap-ruby",
-    -- event = "VeryLazy",
-    dependencies = "nvim-dap",
-    config = function() require("dap-ruby").setup() end,
-  },
+  -- {
+  --   "theHamsta/nvim-dap-virtual-text",
+  --   dependencies = "nvim-dap",
+  --   -- event = "VeryLazy",
+  --   config = function()
+  --     require("nvim-dap-virtual-text").setup({
+  --       commented = true,
+  --     })
+  --   end,
+  -- },
+  -- {
+  --   "jbyuki/one-small-step-for-vimkind",
+  --   dependencies = "nvim-dap",
+  --   -- event = "VeryLazy"
+  -- },
+  -- {
+  --   "suketa/nvim-dap-ruby",
+  --   -- event = "VeryLazy",
+  --   dependencies = "nvim-dap",
+  --   config = function() require("dap-ruby").setup() end,
+  -- },
   -- {
   --   "microsoft/vscode-js-debug",
   --   build = "npm install --legacy-peer-deps && npm run compile",
   -- },
-  {
-    "mxsdev/nvim-dap-vscode-js",
-    -- event = "VeryLazy",
-    dependencies = "nvim-dap",
-    config = function()
-      require("dap-vscode-js").setup({
-        log_file_level = vim.log.levels.TRACE,
-        adapters = {
-          "pwa-node",
-          "pwa-chrome",
-          "pwa-msedge",
-          "node-terminal",
-          "pwa-extensionHost",
-        },
-      })
-    end,
-  },
-  {
-    "sultanahamer/nvim-dap-reactnative",
-    dependencies = "nvim-dap",
-    -- event = "VeryLazy"
-  },
+  -- {
+  --   "mxsdev/nvim-dap-vscode-js",
+  --   -- event = "VeryLazy",
+  --   dependencies = "nvim-dap",
+  --   config = function()
+  --     require("dap-vscode-js").setup({
+  --       log_file_level = vim.log.levels.TRACE,
+  --       adapters = {
+  --         "pwa-node",
+  --         "pwa-chrome",
+  --         "pwa-msedge",
+  --         "node-terminal",
+  --         "pwa-extensionHost",
+  --       },
+  --     })
+  --   end,
+  -- },
+  -- {
+  --   "sultanahamer/nvim-dap-reactnative",
+  --   dependencies = "nvim-dap",
+  --   -- event = "VeryLazy"
+  -- },
   -- {
   --   "jayp0521/mason-nvim-dap.nvim",
   --   dependencies = "nvim-dap",

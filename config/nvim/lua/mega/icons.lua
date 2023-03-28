@@ -210,7 +210,6 @@ return {
   sep = "⋮",
   perc_sep = "",
   modified = "", -- alts: ✿✸✎ ○∘●綠●∘■ □ ▪ ▫● ◯ ◔ ◕ ◌ ◎ ◦ ◆ ◇ ∘∙
-
   mode = "",
   vcs = "",
   readonly = "",

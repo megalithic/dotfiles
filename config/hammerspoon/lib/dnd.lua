@@ -5,36 +5,7 @@ local obj = {}
 obj.__index = obj
 obj.name = "dnd"
 obj.cmd = os.getenv("HOME") .. "/.dotfiles/bin/dnd"
-obj.debug = true
-
-local function info(...)
-  if obj.debug then
-    return _G.info(...)
-  else
-    return print("")
-  end
-end
-local function dbg(...)
-  if obj.debug then
-    return _G.dbg(...)
-  else
-    return print("")
-  end
-end
-local function note(...)
-  if obj.debug then
-    return _G.note(...)
-  else
-    return print("")
-  end
-end
-local function success(...)
-  if obj.debug then
-    return _G.success(...)
-  else
-    return print("")
-  end
-end
+obj.debug = _G.debug_enabled
 
 -- M.dndHandler = function(app, dndConfig, event)
 --   if dndConfig == nil then
@@ -120,7 +91,7 @@ function obj.off()
 
   do
     local cmd = os.getenv("HOME") .. "/.dotfiles/bin/slck"
-    hs.task.new(cmd, function(stdTask, stdOut, stdErr) info("slack set to dnd off") end, { "-D" }):start()
+    hs.task.new(cmd, function(stdTask, stdOut, stdErr) info("slack set to dnd off") end, { "back" }):start()
   end
 end
 

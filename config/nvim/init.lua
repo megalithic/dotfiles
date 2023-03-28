@@ -1,6 +1,7 @@
 -- [ settings ] ----------------------------------------------------------------
 
 vim.g.enabled_plugin = {
+  breadcrumb = true,
   mappings = true,
   autocmds = true,
   megaline = true,
@@ -16,7 +17,6 @@ vim.g.enabled_plugin = {
   folds = true,
   env = true,
   tmux = true,
-  breadcrumb = false, -- lastplace
   vscode = false,
   winbar = false,
 }
@@ -57,7 +57,7 @@ _G.mega = mega
 -- [ loaders ] -----------------------------------------------------------------
 
 require("mega.globals")
-require("mega.debug")
+-- require("mega.debug")
 require("mega.options")
 require("mega.lazy").setup()
 

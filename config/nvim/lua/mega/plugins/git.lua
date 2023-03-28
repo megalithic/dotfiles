@@ -6,13 +6,14 @@ return {
     "lewis6991/gitsigns.nvim",
     event = { "BufReadPre", "BufNewFile" },
     opts = {
+
       signs = {
-        add = { hl = "GitSignsAdd", text = "▎" }, -- alts: ┃, │, ▌, ▎ 🮉
-        change = { hl = "GitSignsChange", text = "▎" }, -- alts: ║▎
-        delete = { hl = "GitSignsDelete", text = "┊" }, -- alts: ▎▎
-        topdelete = { hl = "GitSignsDelete", text = "" }, -- alts: ▌
-        changedelete = { hl = "GitSignsChange", text = "▌" },
-        untracked = { hl = "GitSignsAdd", text = "│" },
+        add = { hl = "GitSignsAdd", text = "▕" }, -- alts: ▕, ▎, ┃, │, ▌, ▎ 🮉
+        change = { hl = "GitSignsChange", text = "▕" }, -- alts: ▎║▎
+        delete = { hl = "GitSignsDelete", text = "🮉" }, -- alts: ┊▎▎
+        topdelete = { hl = "GitSignsDelete", text = "🮉" }, -- alts: ▌ ▄▀
+        changedelete = { hl = "GitSignsChange", text = "🮉" }, -- alts: ▌
+        untracked = { hl = "GitSignsAdd", text = "▕" }, -- alts: ┆ ▕
       },
       current_line_blame = false, -- not vim.fn.getcwd():match("dotfiles"),
       current_line_blame_formatter = " <author>, <author_time> · <summary>",

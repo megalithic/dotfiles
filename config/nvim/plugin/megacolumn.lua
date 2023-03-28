@@ -20,8 +20,6 @@ ui.statuscolumn = {}
 ---@return string
 local function hl(group, text) return "%#" .. group .. "#" .. text .. "%*" end
 
-local function click(name, item) return "%@v:lua.mega.ui.statuscolumn." .. name .. "@" .. item end
-
 ---@param buf number
 ---@return {name:string, text:string, texthl:string}[]
 -- local function get_signs(buf)
@@ -153,7 +151,7 @@ local excluded = {
 }
 
 -- vim.o.statuscolumn = "%{%v:lua.mega.ui.statuscolumn.render()%}"
-vim.opt.statuscolumn = [[%!v:lua.mega.ui.statuscolumn.render()]]
+vim.opt_local.statuscolumn = [[%!v:lua.mega.ui.statuscolumn.render()]]
 
 mega.augroup("MegaColumn", {
   {
