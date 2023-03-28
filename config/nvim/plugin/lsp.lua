@@ -1,3 +1,6 @@
+if not mega then return end
+if not vim.g.enabled_plugin["lsp"] then return end
+
 local fn = vim.fn
 local api = vim.api
 local lsp = vim.lsp
@@ -6,88 +9,6 @@ local command = mega.command
 local augroup = mega.augroup
 local fmt = string.format
 local diagnostic = vim.diagnostic
-
-local M = {
-  "neovim/nvim-lspconfig",
-  event = "BufReadPre",
-  dependencies = {
-    "hrsh7th/cmp-nvim-lsp",
-    {
-      "smjonas/inc-rename.nvim",
-      cmd = "IncRename",
-      config = {
-        input_buffer_type = "dressing",
-      },
-    },
-    { "nvim-lua/lsp_extensions.nvim" },
-    {
-      "jose-elias-alvarez/typescript.nvim",
-      ft = { "typescript", "typescriptreact" },
-      dependencies = { "jose-elias-alvarez/null-ls.nvim" },
-      config = function()
-        -- require("typescript").setup({ server = require("mega.servers")("tsserver") })
-        require("null-ls").register({
-          sources = { require("typescript.extensions.null-ls.code-actions") },
-        })
-      end,
-    },
-    { "MunifTanjim/nui.nvim" },
-    { "williamboman/mason-lspconfig.nvim" },
-    { "b0o/schemastore.nvim" },
-    { "mrshmllow/document-color.nvim", event = "BufReadPre" },
-    {
-      "mhanberg/elixir.nvim",
-      ft = { "elixir", "eex", "heex", "surface" },
-      config = function()
-        local elixir = require("elixir")
-
-        elixir.setup({
-          cmd = fmt("%s/lsp/elixir-ls/%s", vim.env.XDG_DATA_HOME, "language_server.sh"),
-          settings = elixir.settings({
-            dialyzerEnabled = true,
-            fetchDeps = false,
-            enableTestLenses = false,
-            suggestSpecs = true,
-          }),
-          log_level = vim.lsp.protocol.MessageType.Log,
-          message_level = vim.lsp.protocol.MessageType.Log,
-          on_attach = function(client, bufnr)
-            -- whatever keybinds you want, see below for more suggestions
-            -- vim.keymap.set("n", "<space>fp", ":ElixirFromPipe<cr>", { buffer = true, noremap = true })
-            -- vim.keymap.set("n", "<space>tp", ":ElixirToPipe<cr>", { buffer = true, noremap = true })
-            -- vim.keymap.set("v", "<space>em", ":ElixirExpandMacro<cr>", { buffer = true, noremap = true })
-          end,
-        })
-      end,
-      dependencies = {
-        "nvim-lua/plenary.nvim",
-      },
-    },
-    {
-      "lewis6991/hover.nvim",
-      keys = { "K", "gK" },
-      config = function()
-        require("hover").setup({
-          init = function()
-            require("hover.providers.lsp")
-            require("hover.providers.gh")
-            require("hover.providers.gh_user")
-            require("hover.providers.jira")
-            require("hover.providers.man")
-            require("hover.providers.dictionary")
-          end,
-          preview_opts = {
-            border = require("mega.globals").get_border(),
-          },
-          -- Whether the contents of a currently open hover window should be moved
-          -- to a :h preview-window when pressing the hover keymap.
-          preview_window = true,
-          title = false,
-        })
-      end,
-    },
-  },
-}
 
 -- [ HELPERS ] -----------------------------------------------------------------
 
@@ -355,7 +276,7 @@ local function setup_keymaps(client, bufnr)
   nnoremap("<leader>lc", vim.lsp.buf.code_action, desc("code action"))
   xnoremap("<leader>lc", "<esc><Cmd>lua vim.lsp.buf.range_code_action()<CR>", desc("code action"))
   nnoremap("gl", vim.lsp.codelens.run, desc("lsp: code lens"))
-  nnoremap("gn", require("mega.plugins.lsp.rename").rename, desc("lsp: rename"))
+  nnoremap("gn", require("mega.lsp.rename").rename, desc("lsp: rename"))
   -- nnoremap("gn", function()
   --   local bufnr = vim.api.nvim_get_current_buf()
   --   vim.ui.input({
@@ -549,272 +470,211 @@ local function setup_highlights(client, bufnr)
   end
 end
 
-function M.config()
-  local max_width = math.min(math.floor(vim.o.columns * 0.7), 100)
-  local max_height = math.min(math.floor(vim.o.lines * 0.3), 30)
+local max_width = math.min(math.floor(vim.o.columns * 0.7), 100)
+local max_height = math.min(math.floor(vim.o.lines * 0.3), 30)
 
-  vim.opt.shortmess:append("c") -- Don't pass messages to |ins-completion-menu|
+vim.opt.shortmess:append("c") -- Don't pass messages to |ins-completion-menu|
 
-  require("mason")
-  -- require("mega.plugins.lsp.diagnostics").setup()
+require("mason")
+-- require("mega.plugins.lsp.diagnostics").setup()
 
-  -- This function allows reading a per project "settings.json" file in the `.vim` directory of the project.
-  ---@param client table<string, any>
-  ---@return boolean
-  local function on_init(client)
-    local settings = client.workspace_folders[1].name .. "/.vim/settings.json"
+-- This function allows reading a per project "settings.json" file in the `.vim` directory of the project.
+---@param client table<string, any>
+---@return boolean
+local function on_init(client)
+  local settings = client.workspace_folders[1].name .. "/.vim/settings.json"
 
-    if fn.filereadable(settings) == 0 then return true end
-    local ok, json = pcall(fn.readfile, settings)
-    if not ok then return true end
+  if fn.filereadable(settings) == 0 then return true end
+  local ok, json = pcall(fn.readfile, settings)
+  if not ok then return true end
 
-    local overrides = vim.json.decode(table.concat(json, "\n"))
+  local overrides = vim.json.decode(table.concat(json, "\n"))
 
-    for name, config in pairs(overrides) do
-      if name == client.name then
-        client.config = vim.tbl_deep_extend("force", client.config, config)
-        client.notify("workspace/didChangeConfiguration")
+  for name, config in pairs(overrides) do
+    if name == client.name then
+      client.config = vim.tbl_deep_extend("force", client.config, config)
+      client.notify("workspace/didChangeConfiguration")
 
-        vim.schedule(function()
-          local path = fn.fnamemodify(settings, ":~:.")
-          local msg = fmt("loaded local settings for %s from %s", client.name, path)
-          vim.notify_once(msg, vim.log.levels.INFO, { title = "LSP Settings" })
-        end)
-      end
-    end
-    return true
-  end
-
-  local client_overrides = {
-    -- elixirls = function(client, bufnr)
-    --   local manipulate_pipes = function(direction, client)
-    --     local row, col = mega.get_cursor_position()
-    --
-    --     client.request_sync("workspace/executeCommand", {
-    --       command = "manipulatePipes:serverid",
-    --       arguments = { direction, "file://" .. vim.api.nvim_buf_get_name(0), row, col },
-    --     }, nil, 0)
-    --   end
-    --
-    --   local function from_pipe(c)
-    --     return function() manipulate_pipes("fromPipe", c) end
-    --   end
-    --
-    --   local function to_pipe(c)
-    --     return function() manipulate_pipes("toPipe", c) end
-    --   end
-    --
-    --   local function restart(c)
-    --     return function()
-    --       c.request_sync("workspace/executeCommand", {
-    --         command = "restart:serverid",
-    --         arguments = {},
-    --       }, nil, 0)
-    --
-    --       vim.cmd([[w | edit]])
-    --     end
-    --   end
-    --
-    --   local function expand_macro(c)
-    --     return function()
-    --       local params = vim.lsp.util.make_given_range_params()
-    --
-    --       local text = vim.api.nvim_buf_get_text(
-    --         0,
-    --         params.range.start.line,
-    --         params.range.start.character,
-    --         params.range["end"].line,
-    --         params.range["end"].character,
-    --         {}
-    --       )
-    --
-    --       local resp = c.request_sync("workspace/executeCommand", {
-    --         command = "expandMacro:serverid",
-    --         arguments = { params.textDocument.uri, vim.fn.join(text, "\n"), params.range.start.line },
-    --       }, nil, 0)
-    --
-    --       local content = {}
-    --       if resp["result"] then
-    --         for k, v in pairs(resp.result) do
-    --           vim.list_extend(content, { "# " .. k, "" })
-    --           vim.list_extend(content, vim.split(v, "\n"))
-    --         end
-    --       else
-    --         table.insert(content, "Error")
-    --       end
-    --
-    --       vim.schedule(
-    --         function() vim.lsp.util.open_floating_preview(vim.lsp.util.trim_empty_lines(content), "elixir", {}) end
-    --       )
-    --     end
-    --   end
-    --
-    --   local add_user_cmd = vim.api.nvim_buf_create_user_command
-    --   add_user_cmd(bufnr, "ElixirFromPipe", from_pipe(client), {})
-    --   add_user_cmd(bufnr, "ElixirToPipe", to_pipe(client), {})
-    --   add_user_cmd(bufnr, "ElixirRestart", restart(client), {})
-    --   add_user_cmd(bufnr, "ElixirExpandMacro", expand_macro(client), { range = true })
-    -- end,
-  }
-
-  ---Add buffer local mappings, autocommands, tagfunc, etc for attaching servers
-  ---@param client table lsp client
-  ---@param bufnr number
-  local function on_attach(client, bufnr)
-    if not client then
-      vim.notify("No LSP client found; aborting on_attach.")
-      return
-    end
-
-    local caps = client.server_capabilities
-
-    if client.config.flags then client.config.flags.allow_incremental_sync = true end
-
-    -- Live color highlighting; handy for tailwindcss
-    -- HT: kabouzeid
-    if type(caps.provider) == "boolean" and caps.colorProvider then
-      if client.name == "tailwindcss" then
-        -- require("mega.lsp.document_colors").buf_attach(bufnr, { single_column = true, col_count = 2 })
-        require("document-color").buf_attach(bufnr, { mode = "single" })
-        do
-          local ok, colorizer = pcall(require, "colorizer")
-          if ok and colorizer then colorizer.detach_from_buffer() end
-        end
-      end
-    end
-
-    -- if caps.documentSymbolProvider then
-    --   local ok, navic = mega.require("nvim-navic")
-    --   if ok and navic then navic.attach(client, bufnr) end
-    -- end
-
-    if caps.definitionProvider then vim.bo[bufnr].tagfunc = "v:lua.vim.lsp.tagfunc" end
-
-    if caps.documentFormattingProvider then vim.bo[bufnr].formatexpr = "v:lua.vim.lsp.formatexpr()" end
-
-    require("mega.plugins.lsp.handlers").setup()
-    -- if caps.signatureHelpProvider then require("mega.plugins.lsp.signature").setup(client) end
-    setup_formatting(client, bufnr)
-    setup_commands(bufnr)
-    setup_autocommands(client, bufnr)
-    setup_diagnostics()
-    setup_keymaps(client, bufnr)
-    setup_highlights(client, bufnr)
-
-    -- fully disable semantic tokens highlighting
-    client.server_capabilities.semanticTokensProvider = nil
-
-    vim.api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
-
-    if client_overrides[client.name] then client_overrides[client.name](client, bufnr) end
-  end
-
-  mega.augroup("LspSetupCommands", {
-    event = "LspAttach",
-    desc = "setup the language server autocommands",
-    command = function(args)
-      local client = lsp.get_client_by_id(args.data.client_id)
-      on_attach(client, args.buf)
-      local overrides = client_overrides[client.name]
-      if not overrides or not overrides.on_attach then return end
-      overrides.on_attach(client, args.buf)
-    end,
-  }, {
-    event = "LspDetach",
-    desc = "Clean up after detached LSP",
-    command = function(args)
-      local client_id, b = args.data.client_id, vim.b[args.buf]
-      if not b.lsp_events or not client_id then return end
-      for _, state in pairs(b.lsp_events) do
-        if #state.clients == 1 and state.clients[1] == client_id then
-          api.nvim_clear_autocmds({ group = state.group_id, buffer = args.buf })
-        end
-        state.clients = vim.tbl_filter(function(id) return id ~= client_id end, state.clients)
-      end
-    end,
-  }, {
-    event = "DiagnosticChanged",
-    desc = "Update the diagnostic locations",
-    command = function(args)
-      diagnostic.setloclist({ open = false })
-      if #args.data.diagnostics == 0 then vim.cmd("silent! lclose") end
-    end,
-  })
-
-  local servers = require("mega.plugins.lsp.servers").setup()
-
-  -- all the server capabilities we could want
-  local function get_server_capabilities()
-    local capabilities = vim.lsp.protocol.make_client_capabilities()
-    capabilities.offsetEncoding = { "utf-16" }
-    capabilities.textDocument.codeLens = { dynamicRegistration = false }
-    -- TODO: what is dynamicRegistration doing here? should I not always set to true?
-    capabilities.textDocument.colorProvider = { dynamicRegistration = false }
-    capabilities.textDocument.completion.completionItem.documentationFormat = { "markdown" }
-    -- workspace = { didChangeWatchedFiles = { dynamicRegistration = true } },
-    -- textDocument = { foldingRange = { dynamicRegistration = false, lineFoldingOnly = true } },
-
-    -- disable semantic token highlighting
-    -- capabilities.textDocument.semanticTokensProvider = false
-    capabilities.textDocument.foldingRange = {
-      dynamicRegistration = false,
-      lineFoldingOnly = true,
-    }
-    capabilities.textDocument.codeAction = {
-      dynamicRegistration = false,
-      codeActionLiteralSupport = {
-        codeActionKind = {
-          valueSet = {
-            "",
-            "quickfix",
-            "refactor",
-            "refactor.extract",
-            "refactor.inline",
-            "refactor.rewrite",
-            "source",
-            "source.organizeImports",
-          },
-        },
-      },
-    }
-
-    local nvim_lsp_ok, cmp_nvim_lsp = mega.require("cmp_nvim_lsp")
-    if nvim_lsp_ok then capabilities = cmp_nvim_lsp.default_capabilities(capabilities) end
-
-    return capabilities
-  end
-
-  ---Get the configuration for a specific language server
-  ---@type lspconfig.options
-  ---@param name string
-  ---@return table<string, any>?
-  local function get_config(name)
-    local config = servers[name]
-    if not config then return end
-    local t = type(config)
-    if t == "boolean" then config = {} end
-    if t == "function" then config = config() end
-
-    config.on_init = on_init
-    config.flags = { debounce_text_changes = 150 }
-    config.capabilities = get_server_capabilities()
-    config.on_attach = on_attach
-
-    return config
-  end
-
-  for server, _ in pairs(servers) do
-    -- opts = vim.tbl_deep_extend("force", {}, options, opts or {})
-    local opts = get_config(server)
-
-    if server == "tsserver" then
-      require("typescript").setup({ server = opts })
-    else
-      require("lspconfig")[server].setup(opts)
+      vim.schedule(function()
+        local path = fn.fnamemodify(settings, ":~:.")
+        local msg = fmt("loaded local settings for %s from %s", client.name, path)
+        vim.notify_once(msg, vim.log.levels.INFO, { title = "LSP Settings" })
+      end)
     end
   end
-
-  require("mega.plugins.null-ls").setup({ on_attach = on_attach })
+  return true
 end
 
-return M
+local client_overrides = {}
+
+---@param client lsp.Client
+---@param bufnr number
+local function setup_semantic_tokens(client, bufnr)
+  local overrides = client_overrides[client.name]
+  if not overrides or not overrides.semantic_tokens then return end
+
+  mega.augroup(fmt("LspSemanticTokens%s", client.name), {
+    event = "LspTokenUpdate",
+    buffer = bufnr,
+    desc = fmt("Configure the semantic tokens for the %s", client.name),
+    command = function(args) overrides.semantic_tokens(args.buf, client, args.data.token) end,
+  })
+end
+
+---Add buffer local mappings, autocommands, tagfunc, etc for attaching servers
+---@param client table lsp client
+---@param bufnr number
+local function on_attach(client, bufnr)
+  if not client then
+    vim.notify("No LSP client found; aborting on_attach.")
+    return
+  end
+
+  local caps = client.server_capabilities
+
+  if client.config.flags then client.config.flags.allow_incremental_sync = true end
+
+  -- Live color highlighting; handy for tailwindcss
+  -- HT: kabouzeid
+  if type(caps.provider) == "boolean" and caps.colorProvider then
+    if client.name == "tailwindcss" then
+      -- require("mega.document_colors").buf_attach(bufnr, { single_column = true, col_count = 2 })
+      require("document-color").buf_attach(bufnr, { mode = "single" })
+      do
+        local ok, colorizer = pcall(require, "colorizer")
+        if ok and colorizer then colorizer.detach_from_buffer() end
+      end
+    end
+  end
+
+  -- if caps.documentSymbolProvider then
+  --   local ok, navic = mega.require("nvim-navic")
+  --   if ok and navic then navic.attach(client, bufnr) end
+  -- end
+
+  if caps.definitionProvider then vim.bo[bufnr].tagfunc = "v:lua.vim.lsp.tagfunc" end
+
+  if caps.documentFormattingProvider then vim.bo[bufnr].formatexpr = "v:lua.vim.lsp.formatexpr()" end
+
+  require("mega.lsp.handlers").setup()
+  -- if caps.signatureHelpProvider then require("mega.lsp.signature").setup(client) end
+  setup_formatting(client, bufnr)
+  setup_commands(bufnr)
+  setup_autocommands(client, bufnr)
+  setup_diagnostics()
+  setup_keymaps(client, bufnr)
+  setup_highlights(client, bufnr)
+  setup_semantic_tokens(client, bufnr)
+
+  -- fully disable semantic tokens highlighting
+  client.server_capabilities.semanticTokensProvider = nil
+
+  vim.api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
+
+  if client_overrides[client.name] then client_overrides[client.name](client, bufnr) end
+end
+
+mega.augroup("LspSetupCommands", {
+  event = "LspAttach",
+  desc = "setup the language server autocommands",
+  command = function(args)
+    local client = lsp.get_client_by_id(args.data.client_id)
+    on_attach(client, args.buf)
+    local overrides = client_overrides[client.name]
+    if not overrides or not overrides.on_attach then return end
+    overrides.on_attach(client, args.buf)
+  end,
+}, {
+  event = "LspDetach",
+  desc = "Clean up after detached LSP",
+  command = function(args)
+    local client_id, b = args.data.client_id, vim.b[args.buf]
+    if not b.lsp_events or not client_id then return end
+    for _, state in pairs(b.lsp_events) do
+      if #state.clients == 1 and state.clients[1] == client_id then
+        api.nvim_clear_autocmds({ group = state.group_id, buffer = args.buf })
+      end
+      state.clients = vim.tbl_filter(function(id) return id ~= client_id end, state.clients)
+    end
+  end,
+}, {
+  event = "DiagnosticChanged",
+  desc = "Update the diagnostic locations",
+  command = function(args)
+    diagnostic.setloclist({ open = false })
+    if #args.data.diagnostics == 0 then vim.cmd("silent! lclose") end
+  end,
+})
+
+local servers = require("mega.servers")
+
+-- all the server capabilities we could want
+local function get_server_capabilities()
+  local capabilities = vim.lsp.protocol.make_client_capabilities()
+  capabilities.offsetEncoding = { "utf-16" }
+  capabilities.textDocument.codeLens = { dynamicRegistration = false }
+  -- TODO: what is dynamicRegistration doing here? should I not always set to true?
+  capabilities.textDocument.colorProvider = { dynamicRegistration = false }
+  capabilities.textDocument.completion.completionItem.documentationFormat = { "markdown" }
+  -- workspace = { didChangeWatchedFiles = { dynamicRegistration = true } },
+  -- textDocument = { foldingRange = { dynamicRegistration = false, lineFoldingOnly = true } },
+
+  -- disable semantic token highlighting
+  -- capabilities.textDocument.semanticTokensProvider = false
+  capabilities.textDocument.foldingRange = {
+    dynamicRegistration = false,
+    lineFoldingOnly = true,
+  }
+  capabilities.textDocument.codeAction = {
+    dynamicRegistration = false,
+    codeActionLiteralSupport = {
+      codeActionKind = {
+        valueSet = {
+          "",
+          "quickfix",
+          "refactor",
+          "refactor.extract",
+          "refactor.inline",
+          "refactor.rewrite",
+          "source",
+          "source.organizeImports",
+        },
+      },
+    },
+  }
+
+  local nvim_lsp_ok, cmp_nvim_lsp = mega.require("cmp_nvim_lsp")
+  if nvim_lsp_ok then capabilities = cmp_nvim_lsp.default_capabilities(capabilities) end
+
+  return capabilities
+end
+
+---Get the configuration for a specific language server
+---@type lspconfig.options
+---@param name string
+---@return table<string, any>?
+local function get_config(name)
+  local config = name and servers[name] or {}
+  if not config then return end
+  local t = type(config)
+  -- if t == "boolean" and config == true then config = {} end
+  if t == "function" then config = config() end
+
+  config.on_init = on_init
+  config.flags = { debounce_text_changes = 150 }
+  config.capabilities = get_server_capabilities()
+  config.on_attach = on_attach
+
+  return config
+end
+
+for server, _ in pairs(servers) do
+  -- opts = vim.tbl_deep_extend("force", {}, options, opts or {})
+  local opts = get_config(server)
+
+  if server == "tsserver" then
+    require("typescript").setup({ server = opts })
+  else
+    require("lspconfig")[server].setup(opts)
+  end
+end

@@ -372,6 +372,7 @@ local theme = lush(function(injected_functions)
     sym("@variable.lua")({ fg = C.fg }),
     sym("@comment")({ fg = C.light_grey, gui = "italic" }),
     sym("@error")({ gui = "undercurl", sp = C.red }),
+    sym("@error.heex")({ gui = C.transparent, sp = C.transparent }),
 
     -- highlight WARN:/FIXME:/TODO:/NOTE:/REF: comments
 

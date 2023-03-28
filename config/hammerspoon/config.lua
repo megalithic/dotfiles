@@ -362,8 +362,8 @@ local apps = {
   ["com.figma.Desktop"] = {
     bundleID = "com.figma.Desktop",
     name = "Figma",
-    key = "f",
-    mods = mods.caSc,
+    -- key = "f",
+    -- mods = mods.caSc,
     quitter = true,
     rules = {
       { "", 1, "maximized" },

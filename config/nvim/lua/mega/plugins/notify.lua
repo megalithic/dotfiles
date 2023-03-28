@@ -135,15 +135,15 @@ function M.config()
     end,
   })
 
-  _G.mega.augroup("CloseNotify", {
-    {
-      event = { "VimLeavePre", "LspDetach" },
-      command = function()
-        local ok, n = mega.require("notify")
-        if ok then n.dismiss() end
-      end,
-    },
-  })
+  -- _G.mega.augroup("CloseNotify", {
+  --   {
+  --     event = { "VimLeavePre", "LspDetach" },
+  --     command = function()
+  --       local ok, n = mega.require("notify")
+  --       if ok then n.dismiss() end
+  --     end,
+  --   },
+  -- })
 
   vim.notify = nnotify
 end

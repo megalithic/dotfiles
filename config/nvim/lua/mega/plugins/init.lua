@@ -20,13 +20,6 @@ return {
     priority = 1000,
   },
   {
-    "rose-pine/neovim",
-    name = "rose-pine",
-    lazy = false,
-    priority = 1000,
-    config = true,
-  },
-  {
     "mcchrish/zenbones.nvim",
     lazy = false,
     priority = 999,
@@ -70,27 +63,27 @@ return {
     end,
   },
   { "lukas-reineke/virt-column.nvim", config = { char = "│" }, event = "VimEnter" },
-  {
-    "stevearc/dressing.nvim",
-    event = "VeryLazy",
-    config = {
-      input = {
-        enabled = true,
-        override = function(conf)
-          conf.col = -1
-          conf.row = 0
-          return conf
-        end,
-      },
-    },
-    -- init = function()
-    --   ---@diagnostic disable-next-line: duplicate-set-field
-    --   vim.ui.input = function(...)
-    --     require("lazy").load({ plugins = { "dressing.nvim" } })
-    --     return vim.ui.input(...)
-    --   end
-    -- end,
-  },
+  -- {
+  --   "stevearc/dressing.nvim",
+  --   event = "VeryLazy",
+  --   config = {
+  --     input = {
+  --       enabled = true,
+  --       override = function(conf)
+  --         conf.col = -1
+  --         conf.row = 0
+  --         return conf
+  --       end,
+  --     },
+  --   },
+  --   -- init = function()
+  --   --   ---@diagnostic disable-next-line: duplicate-set-field
+  --   --   vim.ui.input = function(...)
+  --   --     require("lazy").load({ plugins = { "dressing.nvim" } })
+  --   --     return vim.ui.input(...)
+  --   --   end
+  --   -- end,
+  -- },
   {
     "folke/todo-comments.nvim",
     event = "VeryLazy",
@@ -118,7 +111,7 @@ return {
   {
     "lukas-reineke/indent-blankline.nvim",
     event = { "BufReadPost", "BufNewFile" },
-    enabled = true,
+    enabled = false,
     opts = {
       char = "┊", -- alts: ┆ ┊  ▎│
       show_foldtext = false,
@@ -193,6 +186,127 @@ return {
     end,
   },
 
+  -- ( LSP ) -------------------------------------------------------------------
+  {
+    "neovim/nvim-lspconfig",
+    event = { "BufReadPre", "BufNewFile" },
+    dependencies = {
+      "hrsh7th/cmp-nvim-lsp",
+      { "nvim-lua/lsp_extensions.nvim" },
+      {
+        "jose-elias-alvarez/typescript.nvim",
+        ft = { "typescript", "typescriptreact" },
+        dependencies = { "jose-elias-alvarez/null-ls.nvim" },
+        config = function()
+          -- require("typescript").setup({ server = require("mega.servers")("tsserver") })
+          require("null-ls").register({
+            sources = { require("typescript.extensions.null-ls.code-actions") },
+          })
+        end,
+      },
+      { "MunifTanjim/nui.nvim" },
+      { "williamboman/mason-lspconfig.nvim" },
+      { "b0o/schemastore.nvim" },
+      { "mrshmllow/document-color.nvim", event = "BufReadPre" },
+      {
+        "mhanberg/elixir.nvim",
+        ft = { "elixir", "eex", "heex", "surface" },
+        config = function()
+          local elixir = require("elixir")
+
+          elixir.setup({
+            cmd = fmt("%s/lsp/elixir-ls/%s", vim.env.XDG_DATA_HOME, "language_server.sh"),
+            settings = elixir.settings({
+              dialyzerEnabled = true,
+              dialyzerFormat = "dialyxir_short",
+              fetchDeps = false,
+              enableTestLenses = false,
+              suggestSpecs = true,
+            }),
+            log_level = vim.lsp.protocol.MessageType.Log,
+            message_level = vim.lsp.protocol.MessageType.Log,
+            on_attach = function(client, bufnr)
+              -- whatever keybinds you want, see below for more suggestions
+              -- vim.keymap.set("n", "<space>fp", ":ElixirFromPipe<cr>", { buffer = true, noremap = true })
+              -- vim.keymap.set("n", "<space>tp", ":ElixirToPipe<cr>", { buffer = true, noremap = true })
+              -- vim.keymap.set("v", "<space>em", ":ElixirExpandMacro<cr>", { buffer = true, noremap = true })
+            end,
+          })
+        end,
+        dependencies = {
+          "nvim-lua/plenary.nvim",
+        },
+      },
+      {
+        "lewis6991/hover.nvim",
+        keys = { "K", "gK" },
+        config = function()
+          require("hover").setup({
+            init = function()
+              require("hover.providers.lsp")
+              require("hover.providers.gh")
+              require("hover.providers.gh_user")
+              require("hover.providers.jira")
+              require("hover.providers.man")
+              require("hover.providers.dictionary")
+            end,
+            preview_opts = {
+              border = require("mega.globals").get_border(),
+            },
+            -- Whether the contents of a currently open hover window should be moved
+            -- to a :h preview-window when pressing the hover keymap.
+            preview_window = true,
+            title = false,
+          })
+        end,
+      },
+    },
+  },
+  -- {
+  --   {
+  --     "williamboman/mason.nvim",
+  --     cmd = "Mason",
+  --     build = ":MasonUpdate",
+  --     opts = { ui = { border = mega.get_border(), height = 0.8 } },
+  --   },
+  --   {
+  --     "williamboman/mason-lspconfig.nvim",
+  --     event = { "BufReadPre", "BufNewFile" },
+  --     dependencies = {
+  --       "mason.nvim",
+  --       {
+  --         "neovim/nvim-lspconfig",
+  --         dependencies = {
+  --           {
+  --             "folke/neodev.nvim",
+  --             ft = "lua",
+  --             opts = { library = { plugins = { "nvim-dap-ui" } } },
+  --           },
+  --           {
+  --             "folke/neoconf.nvim",
+  --             cmd = { "Neoconf" },
+  --             opts = { local_settings = ".nvim.json", global_settings = "nvim.json" },
+  --           },
+  --         },
+  --         config = function()
+  --           -- highlight.plugin("lspconfig", { { LspInfoBorder = { link = "FloatBorder" } } })
+  --           require("lspconfig.ui.windows").default_options.border = mega.get_border()
+  --           require("lspconfig").ccls.setup(require("mega.lsp.servers")("ccls"))
+  --         end,
+  --       },
+  --     },
+  --     config = function()
+  --       require("mason-lspconfig").setup({ automatic_installation = true })
+  --       require("mason-lspconfig").setup_handlers({
+  --         function(name)
+  --           local config = require("mega.lsp.servers")(name)
+  --           if config then require("lspconfig")[name].setup(config) end
+  --         end,
+  --       })
+  --     end,
+  --   },
+  -- },
+
   -- ( Movements ) -------------------------------------------------------------
   -- @trial multi-cursor: https://github.com/brendalf/dotfiles/blob/master/.config/nvim/lua/core/multi-cursor.lua
 
@@ -203,43 +317,43 @@ return {
     -- build = "cp ./*.py ~/.config/kitty/",
     cond = not vim.env.TMUX and not vim.env.ZELLIJ,
   },
-  {
-    "sidebar-nvim/sidebar.nvim",
-    keys = {
-      { "<leader>et", [[<Cmd>lua require("sidebar-nvim").toggle({focus = true})<CR>]], desc = "Toggle sidebar" },
-    },
-    cmd = {
-      "SidebarNvimToggle",
-      "SidebarNvimOpen",
-      "SidebarNvimClose",
-      "SidebarNvimUpdate",
-      "SidebarNvimFocus",
-      "SidebarNvimResize",
-    },
-    cond = vim.g.tree == "sidebar",
-    opts = {
-      open = false,
-      initial_width = 30,
-      section_separator = { " ", " " },
-      files = {
-        show_hidden = true,
-      },
-      todos = {
-        icon = " ",
-        ignored_paths = { "~" }, -- ignore certain paths, this will prevent huge folders like $HOME to hog Neovim with TODO searching
-        initially_closed = false, -- whether the groups should be initially closed on start. You can manually open/close groups later.
-      },
-      sections = {
-        "git",
-        "files",
-        "diagnostics",
-        -- "todos",
-        -- "buffers",
-        -- "symbols",
-        -- "containers",
-      },
-    },
-  },
+  -- {
+  --   "sidebar-nvim/sidebar.nvim",
+  --   keys = {
+  --     -- { "<leader>et", [[<Cmd>lua require("sidebar-nvim").toggle({focus = true})<CR>]], desc = "Toggle sidebar" },
+  --   },
+  --   cmd = {
+  --     "SidebarNvimToggle",
+  --     "SidebarNvimOpen",
+  --     "SidebarNvimClose",
+  --     "SidebarNvimUpdate",
+  --     "SidebarNvimFocus",
+  --     "SidebarNvimResize",
+  --   },
+  --   cond = vim.g.tree == "sidebar",
+  --   opts = {
+  --     open = false,
+  --     initial_width = 30,
+  --     section_separator = { " ", " " },
+  --     files = {
+  --       show_hidden = true,
+  --     },
+  --     todos = {
+  --       icon = " ",
+  --       ignored_paths = { "~" }, -- ignore certain paths, this will prevent huge folders like $HOME to hog Neovim with TODO searching
+  --       initially_closed = false, -- whether the groups should be initially closed on start. You can manually open/close groups later.
+  --     },
+  --     sections = {
+  --       "git",
+  --       "files",
+  --       "diagnostics",
+  --       -- "todos",
+  --       -- "buffers",
+  --       -- "symbols",
+  --       -- "containers",
+  --     },
+  --   },
+  -- },
   {
     "megalithic/dirbuf.nvim",
     dev = true,
@@ -264,20 +378,19 @@ return {
         desc = "dirbuf: toggle",
       },
     },
-    cmd = { "Dirbuf" },
-    event = "VeryLazy",
+    cmd = { "Dirbuf", "DirbufQuit", "DirbufSync" },
     opts = {
       sort_order = "directories_first",
       devicons = true,
     },
   },
-  {
-    "prichrd/netrw.nvim",
-    ft = "netrw",
-    dependencies = {
-      "nvim-tree/nvim-web-devicons",
-    },
-  },
+  -- {
+  --   "prichrd/netrw.nvim",
+  --   ft = "netrw",
+  --   dependencies = {
+  --     "nvim-tree/nvim-web-devicons",
+  --   },
+  -- },
   { "kevinhwang91/nvim-bqf", ft = "qf" },
   {
     url = "https://gitlab.com/yorickpeterse/nvim-pqf",
@@ -385,22 +498,21 @@ return {
       }
     end,
   },
-  {
-    "danymat/neogen",
-    event = "VeryLazy",
-    keys = {
-      {
-        "<leader>cc",
-        function() require("neogen").generate({}) end,
-        desc = "Neogen Comment",
-      },
-    },
-    config = { snippet_engine = "luasnip" },
-  },
+  -- {
+  --   "danymat/neogen",
+  --   event = "VeryLazy",
+  --   keys = {
+  --     {
+  --       "<leader>cc",
+  --       function() require("neogen").generate({}) end,
+  --       desc = "Neogen Comment",
+  --     },
+  --   },
+  --   config = { snippet_engine = "luasnip" },
+  -- },
   {
     -- TODO: https://github.com/avucic/dotfiles/blob/master/nvim_user/.config/nvim/lua/user/configs/dadbod.lua
     "kristijanhusak/vim-dadbod-ui",
-    event = "VeryLazy",
     dependencies = "tpope/vim-dadbod",
     cmd = { "DBUI", "DBUIToggle", "DBUIAddConnection" },
     init = function()
@@ -493,8 +605,8 @@ return {
   {
     "linty-org/readline.nvim",
     keys = {
-      { "<M-f>", function() require("readline").forward_word() end, mode = "!" },
-      { "<M-b>", function() require("readline").backward_word() end, mode = "!" },
+      { "<C-f>", function() require("readline").forward_word() end, mode = "!" },
+      { "<C-b>", function() require("readline").backward_word() end, mode = "!" },
       { "<C-a>", function() require("readline").beginning_of_line() end, mode = "!" },
       { "<C-e>", function() require("readline").end_of_line() end, mode = "!" },
       { "<M-d>", function() require("readline").kill_word() end, mode = "!" },
@@ -628,6 +740,8 @@ return {
   { "ellisonleao/glow.nvim", ft = { "markdown" } },
   {
     "lukas-reineke/headlines.nvim",
+    -- has TS query errors/warnings/etc
+    enabled = false,
     ft = { "markdown" },
     dependencies = "nvim-treesitter",
     config = function()

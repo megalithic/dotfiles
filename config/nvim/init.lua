@@ -5,7 +5,7 @@ vim.g.enabled_plugin = {
   autocmds = true,
   megaline = true,
   megacolumn = true,
-  lsp = false,
+  lsp = true,
   term = true,
   repls = true,
   cursorline = true,
@@ -35,7 +35,7 @@ vim.g.maplocalleader = " "
 vim.g.notifier_enabled = true
 vim.g.debug_enabled = false
 vim.g.picker = "telescope"
-vim.g.tree = "sidebar"
+vim.g.tree = "neo-tree"
 
 -- [ globals ] -----------------------------------------------------------------
 

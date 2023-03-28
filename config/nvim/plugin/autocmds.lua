@@ -274,7 +274,8 @@ augroup("Terminal", {
     pattern = { "*" },
     command = function()
       --- automatically close a terminal if the job was successful
-      if not vim.v.event.status == 0 then vim.cmd.bdelete({ fn.expand("<abuf>"), bang = true }) end
+      -- if not vim.v.event.status == 0 then vim.cmd.bdelete({ fn.expand("<abuf>"), bang = true }) end
+      if vim.v.event.status == 0 then vim.cmd.bdelete({ fn.expand("<abuf>"), bang = true }) end
     end,
   },
 })

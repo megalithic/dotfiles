@@ -54,6 +54,8 @@ function mini.ai()
       }, {}),
       f = gen_spec.treesitter({ a = "@function.outer", i = "@function.inner" }, {}),
       c = gen_spec.treesitter({ a = "@class.outer", i = "@class.inner" }, {}),
+      -- t = gen_spec.treesitter({ a = "@tag.outer", i = "@tag.inner" }, {}),
+      -- t = { "<(%w-)%f[^<%w][^<>]->.-</%1>", "^<.->%s*().*()%s*</[^/]->$" },
       -- scope
       s = gen_spec.treesitter({
         a = { "@function.outer", "@class.outer", "@testitem.outer" },
@@ -135,6 +137,7 @@ function mini.indentscope()
       "terminal",
       "megaterm",
       "lsp-installer",
+      "SidebarNvim",
       "lspinfo",
       "markdown",
       "help",
@@ -149,12 +152,12 @@ function mini.indentscope()
 end
 
 function mini.config()
-  -- mini.jump()
   mini.surround()
-  mini.ai()
   mini.pairs()
   mini.comment()
   mini.align()
+  -- mini.ai()
+  -- mini.jump()
   -- mini.indentscope()
 end
 

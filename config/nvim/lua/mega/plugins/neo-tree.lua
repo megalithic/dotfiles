@@ -46,7 +46,7 @@ function M.config()
     event_handlers = {
       {
         event = "neo_tree_buffer_enter",
-        handler = function(args)
+        handler = function(_args)
           -- vim.cmd("highlight! Cursor blend=100")
           -- highlight.set('Cursor', { blend = 100 })
           vim.api.nvim_win_set_width(0, 60)
@@ -71,20 +71,21 @@ function M.config()
       --   event = "neo_tree_window_before_close",
       --   handler = function(args) end,
       -- },
-      -- {
-      --   event = "neo_tree_window_after_close",
-      --   handler = function(args)
-      --     -- highlight.set('Cursor', { blend = 0 })
-      --     -- vim.cmd("wincmd =")
-      --     -- require("virt-column").refresh()
-      --     -- -- _G.mega.resize_windows()
-      --     -- _G.mega.blink_cursorline(250)
-      --     -- vim.cmd("e")
-      --   end,
-      -- },
+      {
+        event = "neo_tree_window_after_close",
+        handler = function(_args)
+          -- highlight.set('Cursor', { blend = 0 })
+          -- vim.cmd("wincmd =")
+          require("virt-column").refresh()
+          mega.resize_windows()
+          -- -- _G.mega.resize_windows()
+          -- _G.mega.blink_cursorline(250)
+          -- vim.cmd("e")
+        end,
+      },
       {
         event = "neo_tree_popup_buffer_enter",
-        handler = function(args) vim.cmd("highlight! Cursor blend=0") end,
+        handler = function(_args) vim.cmd("highlight! Cursor blend=0") end,
       },
     },
     filesystem = {

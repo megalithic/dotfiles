@@ -24,6 +24,7 @@ return {
   },
   {
     "nvim-treesitter/nvim-treesitter-context",
+    enabled = false,
     event = "BufReadPre",
     config = function()
       require("treesitter-context").setup({
@@ -162,7 +163,6 @@ return {
           "heex",
           "help",
           "html",
-          -- "html_eex",
           "javascript",
           "jq",
           "jsdoc",

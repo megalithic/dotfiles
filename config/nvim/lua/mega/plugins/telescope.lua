@@ -203,7 +203,6 @@ return {
     },
   },
   keys = {
-    { "<C-p>", project_files, desc = "find files" },
     { "<leader>ff", project_files, desc = "find files" },
     {
       "<localleader><localleader>",

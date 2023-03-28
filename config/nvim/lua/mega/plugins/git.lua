@@ -14,7 +14,7 @@ return {
         changedelete = { hl = "GitSignsChange", text = "▌" },
         untracked = { hl = "GitSignsAdd", text = "│" },
       },
-      current_line_blame = not vim.fn.getcwd():match("dotfiles"),
+      current_line_blame = false, -- not vim.fn.getcwd():match("dotfiles"),
       current_line_blame_formatter = " <author>, <author_time> · <summary>",
       preview_config = {
         border = mega.get_border(),

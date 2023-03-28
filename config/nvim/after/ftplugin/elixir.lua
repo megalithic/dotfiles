@@ -10,7 +10,7 @@ nnoremap("<localleader>ed", [[o|> dbg()<ESC>a]])
 nnoremap("<localleader>ei", [[o|> IO.inspect()<ESC>i]])
 nnoremap("<localleader>eil", [[o|> IO.inspect(label: "")<ESC>hi]])
 
-vim.cmd.iabbrev([[ep      \|>]])
+vim.cmd.iabbrev([[ep      |>]])
 vim.cmd.iabbrev([[epry    require IEx; IEx.pry]])
 vim.cmd.iabbrev([[ei      IO.inspect()<ESC>i]])
 vim.cmd.iabbrev([[eputs   IO.puts()<ESC>i]])
