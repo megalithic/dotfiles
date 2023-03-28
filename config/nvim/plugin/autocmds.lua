@@ -26,36 +26,39 @@ local contains = vim.tbl_contains
 
 --     return ws
 --   end
-
---   augroup("Startup", {
---     {
---       event = { "VimEnter" },
---       pattern = { "*" },
---       once = true,
---       command = function()
---         if not vim.g.started_by_firenvim then
---           vim.cmd([[if argc() == 0 | vert help news | exec '79wincmd|' | endif]])
---           -- require("mega.start").start()
---         end
---       end,
---     },
---     -- {
---     --   event = { "VimEnter" },
---     --   pattern = { "*" },
---     --   command = function(args)
---     --     vim.schedule_wrap(function()
---     --       local ws = get_workspace_if_exists()
---     --       if ws and type(ws) == "table" and args.file == "" then
---     --         P(ws.name)
---     --         require("workspaces").open(ws.name)
---     --       else
---     --         require("mega.start").start()
---     --       end
---     --     end, 0)
---     --   end,
---     -- },
---   })
 -- end
+
+augroup("Startup", {
+  {
+    event = { "VimEnter" },
+    pattern = { "*" },
+    once = true,
+    command = function(args)
+      if not vim.g.started_by_firenvim then
+        if vim.fn.argc() > 1 then
+          vim.schedule(function() mega.resize_windows(args.buf) end, 0)
+          -- elseif vim.fn.argc() == 0 then
+          --   require("mega.start").start()
+        end
+      end
+    end,
+  },
+  -- {
+  --   event = { "VimEnter" },
+  --   pattern = { "*" },
+  --   command = function(args)
+  --     vim.schedule_wrap(function()
+  --       local ws = get_workspace_if_exists()
+  --       if ws and type(ws) == "table" and args.file == "" then
+  --         P(ws.name)
+  --         require("workspaces").open(ws.name)
+  --       else
+  --         require("mega.start").start()
+  --       end
+  --     end, 0)
+  --   end,
+  -- },
+})
 
 -- Skeletons (Templates)
 -- REF:
