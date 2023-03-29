@@ -1,5 +1,5 @@
 local Settings = require("hs.settings")
-local Config = Settings.get(CONFIG_KEY)
+local Config = C
 local DockConfig = Config.dock
 local DisplaysConfig = Config.displays
 

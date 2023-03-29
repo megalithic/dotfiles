@@ -1,12 +1,12 @@
 local Settings = require("hs.settings")
 
 local obj = {}
-local browser = hs.application.get(Settings.get(CONFIG_KEY).preferred.browser)
+local browser = hs.application.get(C.preferred.browser)
 
 obj.__index = obj
 obj.name = "browser"
 obj.debug = true
-obj.browsers = Settings.get(CONFIG_KEY).preferred.browsers
+obj.browsers = C.preferred.browsers
 
 local dbg = function(...)
   if obj.debug then

@@ -200,7 +200,7 @@ end
 function obj:init(opts)
   opts = opts or {}
 
-  obj.apps = Settings.get(CONFIG_KEY).bindings.apps
+obj.apps = C.bindings.apps
 
   Snap = L.load("lib.wm.snap"):start()
   obj.watcher = L.load("lib.contexts", { id = "wm.watcher" })

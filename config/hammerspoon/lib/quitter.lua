@@ -1,9 +1,7 @@
 -- @REF https://github.com/Hammerspoon/Spoons/blob/master/Source/HoldToQuit.spoon/init.lua
 
 local alert = require("utils.alert")
-local Settings = require("hs.settings")
-local mods = Settings.get(CONFIG_KEY).keys.mods
-local apps = Settings.get(CONFIG_KEY).bindings.apps
+local mods = C.keys.mods
 local obj = {}
 
 obj.__index = obj
@@ -19,8 +17,7 @@ local afterDelay = 1
 
 local function guarded()
   local app = hs.application.frontmostApplication()
-  local appConfig = apps[app:bundleID()]
-  local enabled = appConfig and appConfig.quitter ~= nil and appConfig.quitter
+  local enabled = hs.fnutils.find(C.quitters, function(q) return q and q == app:bundleID() end) ~= nil
 
   if enabled then note(fmt(":: quitter activated for %s", app:bundleID())) end
 

@@ -1,7 +1,7 @@
 local Settings = require("hs.settings")
 local obj = {}
 local _appObj = nil
-local browser = hs.application.get(Settings.get(CONFIG_KEY).preferred.browser)
+local browser = hs.application.get(C.preferred.browser)
 
 obj.__index = obj
 obj.name = "context.meet"

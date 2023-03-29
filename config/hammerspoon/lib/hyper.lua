@@ -1,5 +1,3 @@
-local Settings = require("hs.settings")
-
 local obj = hs.hotkey.modal.new({}, nil)
 
 obj.__index = obj
@@ -38,7 +36,7 @@ end
 
 function obj:init(opts)
   opts = opts or {}
-  local hyperKey = opts["hyperKey"] or Settings.get(CONFIG_KEY).keys.hyper
+  local hyperKey = opts["hyperKey"] or C.keys.hyper
 
   -- sets up our config'd hyper key as the "trigger" for hyper key things; likely F19
   obj.hyperBind = hs.hotkey.bind({}, hyperKey, function() obj:enter() end, function() obj:exit() end)

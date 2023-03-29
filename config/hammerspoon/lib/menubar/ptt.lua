@@ -21,7 +21,7 @@ local log = {
 local template = require("utils").template
 local alert = require("utils.alert")
 local Settings = require("hs.settings")
-local pttKey = Settings.get(CONFIG_KEY).keys.ptt
+local pttKey = C.keys.ptt
 
 obj.defaultState = "push-to-talk"
 obj.mic = hs.audiodevice.defaultInputDevice()

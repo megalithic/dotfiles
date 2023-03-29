@@ -1,6 +1,6 @@
 -- [ GLOBALS ] ------------------------------------------------------------------
 
-_G.debug_enabled = false
+_G.debug_enabled = true
 
 -- [ BOOTSTRAP/PRELOAD ] ------------------------------------------------------------------
 
@@ -9,12 +9,9 @@ require("preflight")
 -- [ LOCALS ] ------------------------------------------------------------------
 
 local Window = require("hs.window")
-local Settings = require("hs.settings")
 local FNUtils = require("hs.fnutils")
 local ipc = require("hs.ipc")
 local hs = hs
-local load = L.load
-local unload = L.unload
 
 -- [ HAMMERSPOON SETTINGS ] ----------------------------------------------------
 
@@ -38,8 +35,9 @@ ipc.cliInstall()
 
 -- [ LOADERS ] -----------------------------------------------------------------
 
+_G.C = L.load("config")
+
 --  NOTE: order matters
-L.load("config")
 L.load("lib.bindings"):start()
 L.load("lib.menubar.ptt"):start()
 L.load("lib.menubar.spotify"):start()
@@ -56,7 +54,7 @@ L.load("spoons")
 
 hs.shutdownCallback = function()
   local loaders = { "config", "lib.watchers", "lib.wm", "lib.menubar.ptt", "lib.menubar.spotify", "lib.quitter" }
-  FNUtils.each(loaders, function(l) unload(l) end)
+  FNUtils.each(loaders, function(l) L.unload(l) end)
   _G.mega = nil
 end
 

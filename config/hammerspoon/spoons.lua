@@ -12,7 +12,7 @@ function obj:init(opts)
   spoon.SpoonInstall.use_syncinstall = true
   Install = spoon.SpoonInstall
 
-  -- local config = Settings.get(CONFIG_KEY)
+-- local config = C
 
   -- Install:andUse("Seal", {
   --   -- NOTE: see bindings module for hotkey binding

@@ -3,7 +3,7 @@
 local Settings = require("hs.settings")
 local obj = {}
 local _appObj = nil
-local browser = hs.application.get(Settings.get(CONFIG_KEY).preferred.browser)
+local browser = hs.application.get(C.preferred.browser)
 local defaultKittyFont = 15.0
 local defaultKittyFontDelta = 8.0
 local currentAudioOutputLevel

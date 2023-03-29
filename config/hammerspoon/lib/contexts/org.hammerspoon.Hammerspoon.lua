@@ -1,5 +1,5 @@
 local Settings = require("hs.settings")
-local mods = Settings.get(CONFIG_KEY).keys.mods
+local mods = C.keys.mods
 
 local obj = {}
 local _appObj = nil

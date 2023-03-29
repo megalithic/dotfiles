@@ -385,7 +385,7 @@ function obj:init(opts)
 end
 
 function obj:start()
-  local config = Settings.get(CONFIG_KEY)
+local config = C
   local keys = config.keys
   local browsers = config.preferred.browsers
 

@@ -11,7 +11,7 @@ obj.watched = {}
 function obj:init(opts)
   opts = opts or {}
 
-  obj.watchers = Settings.get(CONFIG_KEY).watchers
+obj.watchers = C.watchers
 
   return self
 end

@@ -1,12 +1,3 @@
-local Settings = require("hs.settings")
-
-local obj = {}
-
-obj.__index = obj
-obj.name = "config"
-
-obj.settings = {}
-
 local preferred = {
   terms = { "kitty", "wezterm", "alacritty", "iTerm", "Terminal.app" },
   browsers = {
@@ -74,29 +65,88 @@ local mods = {
 local hyper = "F19"
 local ptt = mods.CAsc
 
+--- @class QuitterOpts
+--- @field [1] string
+local quitters = {
+  "com.brave.Browser.dev",
+  "com.brave.Browser",
+  "com.raycast.macos",
+  "com.runningwithcrayons.Alfred",
+  "net.kovidgoyal.kitty",
+  "com.github.wez.wezterm",
+}
+
+-- launcher = function()
+--com.pop.pop.app
+--com.brave.Browser.dev.app.kjgfgldnnfoeklkmfkjfagphfepbbdan
+--   if hs.application.find("us.zoom.xos") then
+--     hs.application.launchOrFocusByBundleID("us.zoom.xos")
+--   else
+--     require("lib.browser").jump("meet.google.com|hangouts.google.com.call")
+--   end
+-- end,
+
+--- @class WindowRuleOpts
+--- @field [1] string Window title
+--- @field [2] number Screen number
+--- @field [3] string Window position
+
+--- @class TargetOpts
+--- @field [1] string Target identifier; an application bundleID, a url pattern
+--- @field locals? string[] Keys for local bindings
+--- @field rules WindowRuleOpts[] Rules for how/where to place windows for a target
+
+--- @class LauncherOpts
+--- @field key string Keyboard key for focusing/launching this target
+--- @field mods? string[]|string Keyboard modifiers (cmd, alt/opt, shift, ctrl)
+--- @field mode? "focus"|"launch" The mode that we use to launch; focus-only or launch if not opened
+--- @field targets? TargetOpts[]|string List of possible targets this keybinding would cycle through (NOTE: only works with mode set to "focus" order matters).
+local launchers = {
+  {
+    key = "z",
+    mode = "focus",
+    targets = {
+      { "us.zoom.xos" },
+      { "com.pop.pop.app" },
+      { "com.brave.Browser.dev.app.kjgfgldnnfoeklkmfkjfagphfepbbdan" },
+      { "https?://whereby.com" },
+      { "https?://meet.google.com" },
+    },
+  },
+  {
+    key = "k",
+    targets = {
+      {
+        "net.kovidgoyal.kitty",
+        locals = {},
+        rules = {
+          { "", 1, "maximized" },
+        },
+      },
+    },
+  },
+}
+
 local apps = {
   ["com.runningwithcrayons.Alfred"] = {
     name = "Alfred",
     bundleID = "com.runningwithcrayons.Alfred",
     -- key = "space",
-    quitter = true,
   },
   ["com.raycast.macos"] = {
     name = "Raycast",
     bundleID = "com.raycast.macos",
     key = "space",
-    quitter = true,
   },
-  ["net.kovidgoyal.kitty"] = {
-    bundleID = "net.kovidgoyal.kitty",
-    name = "kitty",
-    key = "k",
-    quitter = true,
-    localBindings = {},
-    rules = {
-      { "", 1, "maximized" },
-    },
-  },
+  -- ["net.kovidgoyal.kitty"] = {
+  --   bundleID = "net.kovidgoyal.kitty",
+  --   name = "kitty",
+  --   key = "k",
+  --   localBindings = {},
+  --   rules = {
+  --     { "", 1, "maximized" },
+  --   },
+  -- },
   ["com.github.wez.wezterm"] = {
     bundleID = "com.github.wez.wezterm",
     name = "wezterm",
@@ -152,7 +202,6 @@ local apps = {
     bundleID = "com.brave.Browser.dev",
     name = "Brave Browser Dev",
     -- key = "j",
-    quitter = true,
     localBindings = {},
     tags = { "browsers" },
     rules = {
@@ -162,7 +211,6 @@ local apps = {
   ["com.brave.Browser"] = {
     bundleID = "com.brave.Browser",
     name = "Brave Browser",
-    quitter = true,
     localBindings = {},
     tags = { "browsers" },
     rules = {
@@ -234,46 +282,45 @@ local apps = {
       { "Finder", 1, "centeredMedium" },
     },
   },
-  ["com.pop.pop.app"] = {
-    bundleID = "com.pop.pop.app",
-    name = "Pop",
-    key = "z",
-    -- launcher = function()
-    --   if hs.application.find("us.zoom.xos") then
-    --     hs.application.launchOrFocusByBundleID("us.zoom.xos")
-    --   else
-    --     require("lib.browser").jump("meet.google.com|hangouts.google.com.call")
-    --   end
-    -- end,
-    launchMode = "focus",
-  },
-  ["us.zoom.xos"] = {
-    bundleID = "us.zoom.xos",
-    name = "zoom.us",
-    key = "z",
-    -- launcher = function()
-    --   if hs.application.find("us.zoom.xos") then
-    --     hs.application.launchOrFocusByBundleID("us.zoom.xos")
-    --   else
-    --     require("lib.browser").jump("meet.google.com|hangouts.google.com.call")
-    --   end
-    -- end,
-    launchMode = "focus",
-  },
+  -- ["com.pop.pop.app"] = {
+  --   bundleID = "com.pop.pop.app",
+  --   name = "Pop",
+  --   key = "z",
+  --   -- launcher = function()
+  --   --   if hs.application.find("us.zoom.xos") then
+  --   --     hs.application.launchOrFocusByBundleID("us.zoom.xos")
+  --   --   else
+  --   --   end
+  --   -- end,
+  --   launchMode = "focus",
+  -- },
+  -- ["us.zoom.xos"] = {
+  --   bundleID = "us.zoom.xos",
+  --   name = "zoom.us",
+  --   key = "z",
+  --   -- launcher = function()
+  --   --   if hs.application.find("us.zoom.xos") then
+  --   --     hs.application.launchOrFocusByBundleID("us.zoom.xos")
+  --   --   else
+  --   --     require("lib.browser").jump("meet.google.com|hangouts.google.com.call")
+  --   --   end
+  --   -- end,
+  --   launchMode = "focus",
+  -- },
 
-  ["com.brave.Browser.dev.app.kjgfgldnnfoeklkmfkjfagphfepbbdan"] = {
-    bundleID = "com.brave.Browser.dev.app.kjgfgldnnfoeklkmfkjfagphfepbbdan",
-    name = "Google Meet",
-    key = "z",
-    -- launcher = function()
-    --   if hs.application.find("us.zoom.xos") then
-    --     hs.application.launchOrFocusByBundleID("us.zoom.xos")
-    --   else
-    --     require("lib.browser").jump("meet.google.com|hangouts.google.com.call")
-    --   end
-    -- end,
-    launchMode = "focus",
-  },
+  -- ["com.brave.Browser.dev.app.kjgfgldnnfoeklkmfkjfagphfepbbdan"] = {
+  --   bundleID = "com.brave.Browser.dev.app.kjgfgldnnfoeklkmfkjfagphfepbbdan",
+  --   name = "Google Meet",
+  --   key = "z",
+  --   -- launcher = function()
+  --   --   if hs.application.find("us.zoom.xos") then
+  --   --     hs.application.launchOrFocusByBundleID("us.zoom.xos")
+  --   --   else
+  --   --     require("lib.browser").jump("meet.google.com|hangouts.google.com.call")
+  --   --   end
+  --   -- end,
+  --   launchMode = "focus",
+  -- },
 
   ["com.loom.desktop"] = {
     bundleID = "com.loom.desktop",
@@ -429,38 +476,23 @@ local dock = {
   },
 }
 
-function obj:init(opts)
-  opts = opts or {}
-
-  obj.settings = {
-    ["bindings"] = {
-      ["apps"] = apps,
-      ["utils"] = utils,
-    },
-    ["dirs"] = dirs,
-    ["displays"] = displays,
-    ["keys"] = {
-      ["hyper"] = hyper,
-      ["ptt"] = ptt,
-      ["mods"] = mods,
-    },
-    ["networks"] = networks,
-    ["preferred"] = preferred,
-    ["transientApps"] = transientApps,
-    ["watchers"] = watchers,
-    ["dock"] = dock,
-  }
-
-  Settings.set(CONFIG_KEY, obj.settings)
-
-  return self
-end
-
-function obj:stop()
-  Settings.clear(CONFIG_KEY)
-  obj.settings = {}
-
-  return self
-end
-
-return obj
+return {
+  ["bindings"] = {
+    ["apps"] = apps,
+    ["utils"] = utils,
+    ["launchers"] = launchers,
+  },
+  ["dirs"] = dirs,
+  ["displays"] = displays,
+  ["keys"] = {
+    ["hyper"] = hyper,
+    ["ptt"] = ptt,
+    ["mods"] = mods,
+  },
+  ["networks"] = networks,
+  ["preferred"] = preferred,
+  ["transientApps"] = transientApps,
+  ["watchers"] = watchers,
+  ["dock"] = dock,
+  ["quitters"] = quitters,
+}

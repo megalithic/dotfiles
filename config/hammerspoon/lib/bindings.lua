@@ -97,9 +97,67 @@ function obj:init(opts)
 end
 
 function obj:start()
-  local config = Settings.get(CONFIG_KEY)
-  local bindings = config.bindings
-  local keys = config.keys
+  local bindings = C.bindings
+  local keys = C.keys
+
+  -- [ launcher bindings ] -----------------------------------------------------
+
+  bind(bindings.launchers, "launchers", function(l)
+    dbg("launchers iterating...")
+    dbg(I(l))
+
+    local launcher = L.load("lib.launcher") or {}
+
+    hs.fnutils.each(l, function(cfg)
+      local key = cfg.key
+      local mods = cfg.mods or {}
+      local targets = cfg.targets
+      local mode = cfg.mode or "launch"
+
+      if key and targets then
+        targets = type(targets) == "string" and { targets } or targets
+
+        -- TODO: recursively check list of targets for running app or opened www tab in browser;
+        -- if found; jump to www tab OR focus app.
+
+        hs.fnutils.each(targets, function(t)
+          -- we've only passed a string, assuming an application's bundleID
+          if type(t) == "string" then
+            Hyper:bind(mods, key, function()
+              if mode == "focus" then
+                launcher.focusOnly(t)
+              else
+                launcher.toggle(t, false)
+              end
+            end)
+          -- we've got a table to use various extra properties
+          else
+            local locals = t.locals
+            local targetId = t[1]
+            local isUrl = targetId:match("[a-z]*://[^ >,;]*")
+
+            Hyper:bind(mods, key, function()
+              if isUrl then
+                -- require("lib.browser").jump(targetId)
+              else
+                if mode == "focus" then
+                  launcher.focusOnly(targetId)
+                else
+                  launcher.toggle(targetId, false)
+                end
+              end
+            end)
+
+            if locals and #locals > 0 then
+              hs.fnutils.each(cfg.localBindings, function(k) Hyper:bindPassThrough(k, targetId) end)
+            end
+          end
+        end)
+      else
+        error("No key or targets given for this launcher..")
+      end
+    end)
+  end)
 
   -- [ application bindings ] --------------------------------------------------
 
@@ -125,6 +183,7 @@ function obj:start()
           -- end
         end)
       end
+
       if cfg.localBindings and #cfg.localBindings > 0 then
         hs.fnutils.each(cfg.localBindings, function(key) Hyper:bindPassThrough(key, cfg.bundleID) end)
       end
