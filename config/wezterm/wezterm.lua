@@ -151,6 +151,26 @@ colors.tab_bar = {
   },
 }
 
+-- Colors for copy_mode and quick_select
+-- available since: 20220807-113146-c2fee766
+-- In copy_mode, the color of the active text is:
+-- 1. copy_mode_active_highlight_* if additional text was selected using the mouse
+-- 2. selection_* otherwise
+-- colors.copy_mode_active_highlight_bg = { Color = "#000000" }
+-- -- use `AnsiColor` to specify one of the ansi color palette values
+-- -- (index 0-15) using one of the names "Black", "Maroon", "Green",
+-- --  "Olive", "Navy", "Purple", "Teal", "Silver", "Grey", "Red", "Lime",
+-- -- "Yellow", "Blue", "Fuchsia", "Aqua" or "White".
+-- colors.copy_mode_active_highlight_fg = { AnsiColor = "Black" }
+-- colors.copy_mode_inactive_highlight_bg = { Color = "#52ad70" }
+-- colors.copy_mode_inactive_highlight_fg = { AnsiColor = "White" }
+--
+-- -- https://megalithic.io
+-- colors.quick_select_label_bg = { "#52ad70" }
+-- colors.quick_select_label_fg = { Color = "#ffffff" }
+-- colors.quick_select_match_bg = { AnsiColor = "Navy" }
+-- colors.quick_select_match_fg = { Color = "#ffffff" }
+
 local font = {
   JetBrainsMono = {
     Normal = { family = "JetBrains Mono", weight = "Medium" },
@@ -159,7 +179,7 @@ local font = {
     BoldItalic = { family = "JetBrains Mono", italic = true, weight = "ExtraBlack" },
   },
   JetBrainsMonoNerdFont = {
-    Normal = { family = "JetBrainsMono Nerd Font Mono", weight = "Medium" },
+    Normal = { family = "JetBrainsMono Nerd Font Mono", weight = "Regular" },
     Italic = { family = "JetBrainsMono Nerd Font Mono", italic = true },
     Bold = { family = "JetBrainsMono Nerd Font Mono", weight = "ExtraBlack" },
     BoldItalic = { family = "JetBrainsMono Nerd Font Mono", italic = true, weight = "ExtraBlack" },
@@ -175,12 +195,12 @@ return {
   warn_about_missing_glyphs = false,
   allow_square_glyphs_to_overflow_width = "WhenFollowedBySpace",
   bold_brightens_ansi_colors = true,
-  font_size = 15,
+  font_size = 14.5,
   line_height = 1.1,
   text_blink_rate = 100,
-  cursor_blink_rate = 400,
-  -- cursor_blink_ease_in = "Constant",
-  -- cursor_blink_ease_out = "Constant",
+  cursor_blink_rate = 500,
+  cursor_blink_ease_in = "Constant",
+  cursor_blink_ease_out = "Constant",
   freetype_load_flags = "NO_HINTING",
   freetype_load_target = "Light",
   freetype_render_target = "HorizontalLcd",
@@ -196,6 +216,7 @@ return {
       font = wezterm.font_with_fallback({
         font.JetBrainsMono.BoldItalic,
         font.JetBrainsMonoNerdFont.BoldItalic,
+        { family = "Symbols Nerd Font Mono", scale = 0.8 },
       }),
     },
     {
@@ -203,6 +224,7 @@ return {
       font = wezterm.font_with_fallback({
         font.JetBrainsMono.Italic,
         font.JetBrainsMonoNerdFont.Italic,
+        { family = "Symbols Nerd Font Mono", scale = 0.8 },
       }),
     },
     {
@@ -210,6 +232,7 @@ return {
       font = wezterm.font_with_fallback({
         font.JetBrainsMono.Bold,
         font.JetBrainsMonoNerdFont.Bold,
+        { family = "Symbols Nerd Font Mono", scale = 0.8 },
       }),
     },
   },
@@ -232,15 +255,21 @@ return {
     --   mods = "CTRL",
     --   action = act.EmitEvent("toggle-ligature"),
     -- },
-    -- { key = "d", mods = "CMD|CTRL", action = wezterm.action.ShowDebugOverlay },
+    { key = "v", mods = "CMD", action = act.PasteFrom("Clipboard") },
+    { key = "d", mods = "CMD|CTRL", action = act.ShowDebugOverlay },
     {
       key = "o",
       mods = "CMD|CTRL",
       action = act({
         QuickSelectArgs = {
+          label = "open url",
           patterns = {
-            -- TEST: https://megalithic.io
             "https?://\\S+",
+            "git://\\S+",
+            "ssh://\\S+",
+            "ftp://\\S+",
+            "file://\\S+",
+            "mailto://\\S+",
           },
           action = wezterm.action_callback(function(window, pane)
             local url = window:get_selection_text_for_pane(pane)
@@ -250,5 +279,86 @@ return {
         },
       }),
     },
+    {
+      key = "u",
+      mods = "CMD|CTRL",
+      action = act.QuickSelectArgs({
+        label = "copy url",
+        patterns = {
+          "https?://\\S+",
+          "git://\\S+",
+          "ssh://\\S+",
+          "ftp://\\S+",
+          "file://\\S+",
+          "mailto://\\S+",
+        },
+      }),
+    },
+    {
+      key = "c",
+      mods = "CMD|CTRL",
+      action = act.QuickSelectArgs({
+        label = "copy command line",
+        patterns = {
+          "❯ [^│↲]+[^[:space:]│↲]",
+          "sudo [^│↲]+[^[:space:]│↲]",
+          "b?[as]sh [^│↲]+[^[:space:]│↲]",
+          "if [^│↲]+[^[:space:]│↲]",
+          "for [^│↲]+[^[:space:]│↲]",
+          "docker-compose [^│↲]+[^[:space:]│↲]",
+          "docker [^│↲]+[^[:space:]│↲]",
+          "git [^│↲]+[^[:space:]│↲]",
+          "ls [^│↲]+[^[:space:]│↲]",
+          "cd [^│↲]+[^[:space:]│↲]",
+          "mkdir [^│↲]+[^[:space:]│↲]",
+          "cat [^│↲]+[^[:space:]│↲]",
+          "n?vim? [^│↲]+[^[:space:]│↲]",
+          "c?make [^│↲]+[^[:space:]│↲]",
+          "cargo [^│↲]+[^[:space:]│↲]",
+          "rust[cu]?p? [^│↲]+[^[:space:]│↲]",
+          "python[23]? [^│↲]+[^[:space:]│↲]",
+          "pip[23]? [^│↲]+[^[:space:]│↲]",
+          "pytest [^│↲]+[^[:space:]│↲]",
+          "apt [^│↲]+[^[:space:]│↲]",
+          "php [^│↲]+[^[:space:]│↲]",
+          "node [^│↲]+[^[:space:]│↲]",
+          "np[mx] [^│↲]+[^[:space:]│↲]",
+          "p?grep [^│↲]+[^[:space:]│↲]",
+          "p?kill [^│↲]+[^[:space:]│↲]",
+          "fd [^│↲]+[^[:space:]│↲]",
+          "rg [^│↲]+[^[:space:]│↲]",
+          "echo [^│↲]+[^[:space:]│↲]",
+          "g?awk [^│↲]+[^[:space:]│↲]",
+          "curl [^│↲]+[^[:space:]│↲]",
+          "sed [^│↲]+[^[:space:]│↲]",
+          "basename [^│↲]+[^[:space:]│↲]",
+          "dirname [^│↲]+[^[:space:]│↲]",
+          "head [^│↲]+[^[:space:]│↲]",
+          "tail [^│↲]+[^[:space:]│↲]",
+        },
+      }),
+    },
+    {
+      key = "i",
+      mods = "CMD|CTRL",
+      action = act.QuickSelectArgs({
+        label = "copy ip",
+        patterns = {
+          "[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+",
+          "[0-9a-fA-F]{0,4}:[0-9a-fA-F]{0,4}:[0-9a-fA-F]{0,4}:[0-9a-fA-F]{0,4}\z
+    :[0-9a-fA-F]{0,4}:[0-9a-fA-F]{0,4}:[0-9a-fA-F]{0,4}:[0-9a-fA-F]{0,4}",
+        },
+      }),
+    },
+
+    { key = "p", mods = "CMD|CTRL", action = act.QuickSelect }, -- select path
+    { key = "l", mods = "CMD|CTRL", action = act.QuickSelectArgs({ patterns = { "^.+$" } }) }, -- select line
+    {
+      key = "s",
+      mods = "CMD|CTRL",
+      action = act.QuickSelectArgs({ label = "copy sha1", patterns = { "[0-9a-f]{7,40}" } }),
+    }, -- select sha1
+    -- { key = "s", mods = "CMD|CTRL", action = act.Search({ Regex = "" }) }, -- search mode
+    -- { key = "G", mods = "CMD|CTRL", action = act.ActivateCopyMode }, -- copy mode
   },
 }
