@@ -207,6 +207,8 @@ local font = {
 }
 
 return {
+  term = "wezterm",
+  adjust_window_size_when_changing_font_size = false,
   exit_behavior = "Close",
   window_close_confirmation = "NeverPrompt",
   disable_default_key_bindings = true,
@@ -266,7 +268,6 @@ return {
   hide_tab_bar_if_only_one_tab = true,
   colors = colors,
   keys = {
-
     -- mimic my kitty bindings for direct interaction with tmux..
     { key = "1", mods = "CTRL", action = act.SendString("\x00\x31") },
     { key = "2", mods = "CTRL", action = act.SendString("\x00\x32") },
@@ -277,11 +278,11 @@ return {
     { key = "7", mods = "CTRL", action = act.SendString("\x00\x37") },
     { key = "8", mods = "CTRL", action = act.SendString("\x00\x38") },
     { key = "9", mods = "CTRL", action = act.SendString("\x00\x39") },
-    -- {
-    --   key = "e",
-    --   mods = "CTRL",
-    --   action = act.EmitEvent("toggle-ligature"),
-    -- },
+    {
+      key = "e",
+      mods = "CMD|CTRL|SHIFT",
+      action = act.EmitEvent("toggle-ligature"), -- TEST: |>
+    },
     { key = "q", mods = "CMD", action = act.QuitApplication },
     { key = "w", mods = "CMD", action = wezterm.action.CloseCurrentTab({ confirm = false }) },
     { key = "v", mods = "CMD", action = act.PasteFrom("Clipboard") },
