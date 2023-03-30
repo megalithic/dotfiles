@@ -37,24 +37,6 @@ C.guic = function(gui)
   return table.concat(gui, ",")
 end
 
--- C.clrs.nord0 = hsl(220, 16, 22) -- #2F3541
--- C.clrs.nord1 = hsl(222, 16, 28) -- #3C4353
--- C.clrs.nord2 = hsl(220, 17, 32) -- #444D5F
--- C.clrs.nord3 = hsl(220, 16, 36) -- #4D576A
--- C.clrs.nord3_bright = hsl(220, 17, 46) -- #616F89
--- C.clrs.nord4 = hsl(219, 28, 88) -- #D8DEE9
--- C.clrs.nord5 = hsl(218, 27, 92) -- #E5E9F0
--- C.clrs.nord6 = hsl(218, 27, 94) -- #ECEFF4
--- C.clrs.nord7 = hsl(179, 25, 65) -- #8FBCBB
--- C.clrs.nord8 = hsl(193, 43, 67) -- #87BFCF
--- C.clrs.nord9 = hsl(210, 34, 63) -- #81A1C1
--- C.clrs.nord10 = hsl(213, 32, 52) -- #5D81AC
--- C.clrs.nord11 = hsl(354, 42, 56) -- #BE6069
--- C.clrs.nord12 = hsl(14, 51, 63) -- #D18771
--- C.clrs.nord13 = hsl(40, 71, 73) -- #EBCA89
--- C.clrs.nord14 = hsl(92, 28, 65) -- #A4BF8D
--- C.clrs.nord15 = hsl(311, 20, 63) -- #B48EAD
-
 local bg_thicc = "#273433"
 local bg_hard = "#2b3339"
 local bg_medium = "#2b3339"
