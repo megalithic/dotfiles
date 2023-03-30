@@ -50,5 +50,7 @@ erl_crash.dump
 **/*.zwc
 **/ios
 **/android
+**/priv/static/assets/*.js
+**/priv/static/assets/*.css
 
 # vim:ft=gitignore:tw=0
