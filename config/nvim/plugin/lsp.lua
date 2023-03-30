@@ -12,61 +12,61 @@ local diagnostic = vim.diagnostic
 
 -- [ HELPERS ] -----------------------------------------------------------------
 
-----------------------------------------------------------------------------------------------------
---  LSP file Rename
-----------------------------------------------------------------------------------------------------
-
----@param data { old_name: string, new_name: string }
-local function prepare_rename(data)
-  local bufnr = fn.bufnr(data.old_name)
-  for _, client in pairs(lsp.get_active_clients({ bufnr = bufnr })) do
-    local rename_path = { "server_capabilities", "workspace", "fileOperations", "willRename" }
-    if not vim.tbl_get(client, rename_path) then
-      vim.notify(fmt("%s does not support rename files"), vim.log.levels.ERROR, { title = "LSP" })
-    end
-    local params = {
-      files = { { newUri = "file://" .. data.new_name, oldUri = "file://" .. data.old_name } },
-    }
-    local resp = client.request_sync("workspace/willRenameFiles", params, 1000)
-    vim.lsp.util.apply_workspace_edit(resp.result, client.offset_encoding)
-  end
-end
-
-local function rename_file()
-  local old_name = api.nvim_buf_get_name(0)
-  local new_name = fmt("%s/%s", vim.fs.dirname(old_name), fn.input("New name: "))
-  prepare_rename({ old_name = old_name, new_name })
-  lsp.util.rename(old_name, new_name)
-end
-
-----------------------------------------------------------------------------------------------------
---  Related Locations
-----------------------------------------------------------------------------------------------------
--- This relates to https://github.com/neovim/neovim/issues/19649#issuecomment-1327287313
--- neovim does not currently correctly report the related locations for diagnostics.
--- TODO: once a PR for this is merged delete this workaround
-
-local function show_related_locations(diag)
-  local related_info = diag.relatedInformation
-  if not related_info or #related_info == 0 then return diag end
-  for _, info in ipairs(related_info) do
-    diag.message = ("%s\n%s(%d:%d)%s"):format(
-      diag.message,
-      fn.fnamemodify(vim.uri_to_fname(info.location.uri), ":p:."),
-      info.location.range.start.line + 1,
-      info.location.range.start.character + 1,
-      not mega.empty(info.message) and (": %s"):format(info.message) or ""
-    )
-  end
-  return diag
-end
-
-local handler = lsp.handlers["textDocument/publishDiagnostics"]
----@diagnostic disable-next-line: duplicate-set-field
-lsp.handlers["textDocument/publishDiagnostics"] = function(err, result, ctx, config)
-  result.diagnostics = vim.tbl_map(show_related_locations, result.diagnostics)
-  handler(err, result, ctx, config)
-end
+-- ----------------------------------------------------------------------------------------------------
+-- --  LSP file Rename
+-- ----------------------------------------------------------------------------------------------------
+--
+-- ---@param data { old_name: string, new_name: string }
+-- local function prepare_rename(data)
+--   local bufnr = fn.bufnr(data.old_name)
+--   for _, client in pairs(lsp.get_active_clients({ bufnr = bufnr })) do
+--     local rename_path = { "server_capabilities", "workspace", "fileOperations", "willRename" }
+--     if not vim.tbl_get(client, rename_path) then
+--       vim.notify(fmt("%s does not support rename files"), vim.log.levels.ERROR, { title = "LSP" })
+--     end
+--     local params = {
+--       files = { { newUri = "file://" .. data.new_name, oldUri = "file://" .. data.old_name } },
+--     }
+--     local resp = client.request_sync("workspace/willRenameFiles", params, 1000)
+--     vim.lsp.util.apply_workspace_edit(resp.result, client.offset_encoding)
+--   end
+-- end
+--
+-- local function rename_file()
+--   local old_name = api.nvim_buf_get_name(0)
+--   local new_name = fmt("%s/%s", vim.fs.dirname(old_name), fn.input("New name: "))
+--   prepare_rename({ old_name = old_name, new_name })
+--   lsp.util.rename(old_name, new_name)
+-- end
+--
+-- ----------------------------------------------------------------------------------------------------
+-- --  Related Locations
+-- ----------------------------------------------------------------------------------------------------
+-- -- This relates to https://github.com/neovim/neovim/issues/19649#issuecomment-1327287313
+-- -- neovim does not currently correctly report the related locations for diagnostics.
+-- -- TODO: once a PR for this is merged delete this workaround
+--
+-- local function show_related_locations(diag)
+--   local related_info = diag.relatedInformation
+--   if not related_info or #related_info == 0 then return diag end
+--   for _, info in ipairs(related_info) do
+--     diag.message = ("%s\n%s(%d:%d)%s"):format(
+--       diag.message,
+--       fn.fnamemodify(vim.uri_to_fname(info.location.uri), ":p:."),
+--       info.location.range.start.line + 1,
+--       info.location.range.start.character + 1,
+--       not mega.empty(info.message) and (": %s"):format(info.message) or ""
+--     )
+--   end
+--   return diag
+-- end
+--
+-- local handler = lsp.handlers["textDocument/publishDiagnostics"]
+-- ---@diagnostic disable-next-line: duplicate-set-field
+-- lsp.handlers["textDocument/publishDiagnostics"] = function(err, result, ctx, config)
+--   result.diagnostics = vim.tbl_map(show_related_locations, result.diagnostics)
+--   handler(err, result, ctx, config)
+-- end
 
 -- Show the popup diagnostics window, but only once for the current cursor/line location
 -- by checking whether the word under the cursor has changed.
@@ -112,18 +112,14 @@ local function hover()
   local existing_float_win = vim.b.lsp_floating_preview
   if next(vim.lsp.get_active_clients()) == nil then
     vim.cmd([[execute printf('h %s', expand('<cword>'))]])
-    -- require("hover").hover_select()
   else
-    -- P("custom float ?")
     if existing_float_win and vim.api.nvim_win_is_valid(existing_float_win) then
-      -- P("existing customf loat")
       vim.b.lsp_floating_preview = nil
       local preview_buffer = vim.api.nvim_win_get_buf(existing_float_win)
       local pwin = get_preview_window()
       vim.api.nvim_win_set_buf(pwin, preview_buffer)
       vim.api.nvim_win_close(existing_float_win, true)
     else
-      -- P("nope, new buf hover")
       vim.lsp.buf.hover(nil, { focus = false, focusable = false })
       -- require("hover").hover()
     end
@@ -401,9 +397,8 @@ local function setup_diagnostics()
   --   hide = function(_, bufnr) virt_text_handler.hide(ns, bufnr) end,
   -- })
 
-  -- FIXME:
-  -- require("mega.lsp.virtual_text")
-
+  local max_width = math.min(math.floor(vim.o.columns * 0.7), 100)
+  local max_height = math.min(math.floor(vim.o.lines * 0.3), 30)
   diagnostic.config({
     signs = {
       priority = 9999,
@@ -470,11 +465,10 @@ local function setup_highlights(client, bufnr)
   end
 end
 
-local max_width = math.min(math.floor(vim.o.columns * 0.7), 100)
-local max_height = math.min(math.floor(vim.o.lines * 0.3), 30)
-
 vim.opt.shortmess:append("c") -- Don't pass messages to |ins-completion-menu|
 
+-- Setup neovim lua configuration
+-- require("neodev").setup()
 require("mason")
 -- require("mega.plugins.lsp.diagnostics").setup()
 

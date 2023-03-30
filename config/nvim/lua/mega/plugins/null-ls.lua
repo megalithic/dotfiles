@@ -47,9 +47,9 @@ local M = {
           condition = function() return mega.executable("prettierd") end,
         }),
         format.fixjson.with({ filetypes = { "jsonc", "json" } }),
-        format.cbfmt:with({
-          condition = function() return mega.executable("cbfmt") end,
-        }),
+        -- format.cbfmt:with({
+        --   condition = function() return mega.executable("cbfmt") end,
+        -- }),
         format.stylua.with({
           condition = function()
             return mega.executable("stylua")

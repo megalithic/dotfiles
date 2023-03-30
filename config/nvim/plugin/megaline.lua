@@ -15,7 +15,7 @@ local strwidth = fn.strwidth
 local fnamemodify = fn.fnamemodify
 local fmt = string.format
 local icons = mega.icons
-local H = require("mega.utils.highlights_bak")
+local H = require("mega.utils.highlights")
 
 vim.g.is_saving = false
 local search_count_timer

@@ -1,5 +1,3 @@
-local mega = require("mega.globals")
-
 local M = {}
 
 function M.require(mod)

@@ -175,6 +175,7 @@ return {
     ft = "qf",
     keys = {
       { "<leader>R", function() require("replacer").run() end, desc = "qf: replace in qflist" },
+      { "<C-r>", function() require("replacer").run() end, desc = "qf: replace in qflist" },
     },
     init = function()
       -- save & quit via "q"
@@ -205,6 +206,11 @@ return {
           })
         end,
       },
+      -- {
+      --   "folke/neodev.nvim",
+      --   ft = "lua",
+      --   opts = { library = { plugins = { "nvim-dap-ui" } } },
+      -- },
       { "MunifTanjim/nui.nvim" },
       { "williamboman/mason-lspconfig.nvim" },
       { "b0o/schemastore.nvim" },
@@ -742,7 +748,7 @@ return {
   {
     "lukas-reineke/headlines.nvim",
     -- has TS query errors/warnings/etc
-    enabled = false,
+    enabled = true,
     ft = { "markdown" },
     dependencies = "nvim-treesitter",
     config = function()

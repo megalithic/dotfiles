@@ -157,14 +157,14 @@ function mini.config()
   mini.pairs()
   mini.comment()
   mini.align()
-  mini.ai()
+  -- mini.ai()
   -- mini.jump()
   -- mini.indentscope()
 end
 
 function mini.init()
-  vim.keymap.set("n", "<leader>bd", function() require("mini.bufremove").delete(0, false) end)
-  vim.keymap.set("n", "<leader>bD", function() require("mini.bufremove").delete(0, true) end)
+  mega.nmap("<leader>bd", function() require("mini.bufremove").delete(0, false) end)
+  mega.nmap("<leader>bD", function() require("mini.bufremove").delete(0, true) end)
 end
 
 return specs

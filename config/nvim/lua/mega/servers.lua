@@ -455,6 +455,7 @@ return {
             [[class= "([^"]*)]],
             [[class: "([^"]*)]],
             "~H\"\"\".*class=\"([^\"]*)\".*\"\"\"",
+            "~H\"\"\".*additional_classes=\"([^\"]*)\".*\"\"\"",
           },
         },
         validate = true,

@@ -49,12 +49,12 @@ return {
           desc = "git: diff this against ~",
         })
         -- Navigation
-        bmap("n", "[c", function()
+        bmap("n", "[h", function()
           if vim.wo.diff then return "[c" end
           vim.schedule(function() gs.prev_hunk() end)
           return "<Ignore>"
         end, { expr = true, desc = "git: prev hunk" })
-        bmap("n", "]c", function()
+        bmap("n", "]h", function()
           if vim.wo.diff then return "]c" end
           vim.schedule(function() gs.next_hunk() end)
           return "<Ignore>"
@@ -67,14 +67,14 @@ return {
         -- Text object
         bmap({ "o", "x" }, "ih", ":<C-U>Gitsigns select_hunk<CR>", { desc = "git: select hunk" })
 
-        mega.nmap("[h", function()
-          vim.schedule(function() gs.prev_hunk() end)
-          return "<Ignore>"
-        end, { expr = true, desc = "go to previous git hunk" })
-        mega.nmap("]h", function()
-          vim.schedule(function() gs.next_hunk() end)
-          return "<Ignore>"
-        end, { expr = true, desc = "go to next git hunk" })
+        -- mega.nmap("[h", function()
+        --   vim.schedule(function() gs.prev_hunk() end)
+        --   return "<Ignore>"
+        -- end, { expr = true, desc = "go to previous git hunk" })
+        -- mega.nmap("]h", function()
+        --   vim.schedule(function() gs.next_hunk() end)
+        --   return "<Ignore>"
+        -- end, { expr = true, desc = "go to next git hunk" })
       end,
     },
   },
@@ -144,9 +144,48 @@ return {
   {
     "akinsho/git-conflict.nvim",
     lazy = false,
-    opts = {
-      disable_diagnostics = true,
-    },
+    config = function()
+      require("git-conflict").setup({
+        disable_diagnostics = true,
+      })
+
+      mega.augroup("GitConflicts", {
+        {
+          event = { "User" },
+          pattern = { "GitConflictDetected" },
+          command = function(args)
+            mega.notify("Conflicts detected.")
+            vim.diagnostic.disable(args.buf)
+            vim.cmd("LspStop")
+            mega.nnoremap(
+              "cq",
+              "<cmd>GitConflictListQf<CR>",
+              { desc = "git-conflict: send conflicts to qf", buffer = args.buf }
+            )
+            mega.nnoremap(
+              "[c",
+              "<cmd>GitConflictPrevConflict<CR>",
+              { desc = "git-conflict: prev conflict", buffer = args.buf }
+            )
+            mega.nnoremap(
+              "]c",
+              "<cmd>GitConflictNextConflict<CR>",
+              { desc = "git-conflict: next conflict", buffer = args.buf }
+            )
+          end,
+        },
+        {
+          event = { "User" },
+          pattern = { "GitConflictResolved" },
+          command = function(args)
+            mega.notify("Conflicts resolved.")
+            vim.diagnostic.enable(args.buf)
+            vim.cmd("LspStart")
+            vim.cmd("cclose")
+          end,
+        },
+      })
+    end,
   },
   {
     "f-person/git-blame.nvim",

@@ -384,33 +384,6 @@ do
   })
 end
 
-augroup("GitConflicts", {
-  {
-    event = { "User" },
-    pattern = { "GitConflictDetected" },
-    command = function(args)
-      mega.notify("Conflicts detected.")
-      vim.diagnostic.disable(args.buf)
-      vim.cmd("LspStop")
-      -- vim.cmd("GitConflictListQf") -- | Telescope quickfix theme=get_ivy]])
-
-      mega.nnoremap("cq", "<cmd>GitConflictListQf<CR>", "send conflicts to qf")
-      mega.nnoremap("[c", "<cmd>GitConflictPrevConflict<CR>", "go to prev conflict")
-      mega.nnoremap("]c", "<cmd>GitConflictNextConflict<CR>", "go to next conflict")
-    end,
-  },
-  {
-    event = { "User" },
-    pattern = { "GitConflictResolved" },
-    command = function(args)
-      mega.notify("Conflicts resolved.")
-      vim.diagnostic.enable(args.buf)
-      vim.cmd("LspStart")
-      vim.cmd("cclose")
-    end,
-  },
-})
-
 augroup("ExternalCommands", {
   {
     -- Open images in an image viewer (probably Preview)
