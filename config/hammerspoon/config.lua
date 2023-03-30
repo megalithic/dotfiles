@@ -1,5 +1,5 @@
 local preferred = {
-  terms = { "kitty", "wezterm", "alacritty", "iTerm", "Terminal.app" },
+  terms = { "wezterm", "kitty", "wezterm", "alacritty", "iTerm", "Terminal.app" },
   browsers = {
     hs.urlevent.getDefaultHandler("https"),
     "Chromium",
@@ -109,15 +109,27 @@ local launchers = {
       { "us.zoom.xos" },
       { "com.pop.pop.app" },
       { "com.brave.Browser.dev.app.kjgfgldnnfoeklkmfkjfagphfepbbdan" },
-      { "https?://whereby.com" },
-      { "https?://meet.google.com" },
+      { "https://whereby.com" },
+      { "https://meet.google.com" },
+    },
+  },
+  {
+    -- key = "k",
+    targets = {
+      {
+        "net.kovidgoyal.kitty",
+        locals = {},
+        rules = {
+          { "", 1, "maximized" },
+        },
+      },
     },
   },
   {
     key = "k",
     targets = {
       {
-        "net.kovidgoyal.kitty",
+        "com.github.wez.wezterm",
         locals = {},
         rules = {
           { "", 1, "maximized" },
@@ -137,25 +149,6 @@ local apps = {
     name = "Raycast",
     bundleID = "com.raycast.macos",
     key = "space",
-  },
-  -- ["net.kovidgoyal.kitty"] = {
-  --   bundleID = "net.kovidgoyal.kitty",
-  --   name = "kitty",
-  --   key = "k",
-  --   localBindings = {},
-  --   rules = {
-  --     { "", 1, "maximized" },
-  --   },
-  -- },
-  ["com.github.wez.wezterm"] = {
-    bundleID = "com.github.wez.wezterm",
-    name = "wezterm",
-    -- key = "k",
-    -- quitter = true,
-    localBindings = {},
-    rules = {
-      { "", 1, "maximized" },
-    },
   },
   ["org.chromium.Chromium"] = {
     bundleID = "org.chromium.Chromium",
