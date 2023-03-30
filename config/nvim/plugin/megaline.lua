@@ -472,9 +472,11 @@ local function parse_filename(truncate_at)
 
   local path = (M.ctx.buftype == "" and not M.ctx.preview) and buf_expand(M.ctx.bufnr, ":~:.:h") or nil
   local is_root = path and #path == 1 -- "~" or "."
-  local dir = path and not is_root and fn.pathshorten(fnamemodify(path, ":h")) .. "/" or ""
+  -- local dir = path and not is_root and fn.pathshorten(fnamemodify(path, ":h")) .. "/" or ""
+  local dir = path and not is_root and fn.pathshorten(fnamemodify(path, ":h")) .. "" or ""
   local parent = path and (is_root and path or fnamemodify(path, ":t")) or ""
-  parent = parent ~= "" and parent .. "/" or ""
+  -- parent = parent ~= "" and parent .. "/" or ""
+  parent = parent ~= "" and parent .. "" or ""
 
   return dir, parent, fname
 end
@@ -508,8 +510,16 @@ local function seg_filename(truncate_at)
 
   local file_hl = M.ctx.modified and "StModified" or file.hl
 
+  -- usually our custom titles, like for megaterm, neo-tree, etc
+  if dir.item == "" and parent.item == "" then
+    return seg(
+      fmt("%s%s%s", seg(dir.item, dir.hl), seg(parent.item, parent.hl), seg(file.item, file_hl)),
+      { margin = { 1, 1 } }
+    )
+  end
+
   return seg(
-    fmt("%s%s%s", seg(dir.item, dir.hl), seg(parent.item, parent.hl), seg(file.item, file_hl)),
+    fmt("%s/%s/%s", seg(dir.item, dir.hl), seg(parent.item, parent.hl), seg(file.item, file_hl)),
     { margin = { 1, 1 } }
   )
 end

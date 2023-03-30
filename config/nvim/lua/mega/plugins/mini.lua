@@ -110,10 +110,9 @@ end
 
 function mini.indentscope()
   require("mini.indentscope").setup({
-    -- symbol = "", -- │ ▏▏
-    symbol = "┊", -- alts: ┆ ┊  ▎│
+    symbol = "┊", -- alts: ┊│┆ ┊  ▎││ ▏▏
     draw = {
-      delay = 0,
+      delay = 100,
       animation = require("mini.indentscope").gen_animation.none(),
     },
     options = { try_as_border = true },
@@ -157,9 +156,9 @@ function mini.config()
   mini.pairs()
   mini.comment()
   mini.align()
+  mini.indentscope()
   -- mini.ai()
   -- mini.jump()
-  -- mini.indentscope()
 end
 
 function mini.init()

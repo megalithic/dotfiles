@@ -239,6 +239,26 @@ end
 --- error handler for all errors
 ---@param msg string
 ---@param func function
+---@param ... any
+---@return boolean, any
+---@overload fun(func: function, ...): boolean, any
+function mega.pcall(msg, func, ...)
+  local args = { ... }
+  if type(msg) == "function" then
+    local arg = func --[[@as any]]
+    args, func, msg = { arg, unpack(args) }, msg, nil
+  end
+  return xpcall(func, function(err)
+    msg = debug.traceback(msg and fmt("%s:\n%s", msg, err) or err)
+    vim.schedule(function() vim.notify(msg, L.ERROR, { title = "ERROR" }) end)
+  end, unpack(args))
+end
+
+--- Call the given function and use `vim.notify` to notify of any errors
+--- this function is a wrapper around `xpcall` which allows having a single
+--- error handler for all errors
+---@param msg string
+---@param func function
 ---@vararg any
 ---@return boolean, any
 ---@overload fun(fun: function, ...): boolean, any
@@ -859,7 +879,7 @@ end
 
 function mega.get_border(hl)
   local border = {}
-  for _, char in ipairs(mega.icons.border.squared) do
+  for _, char in ipairs(mega.icons.border.blank) do
     table.insert(border, { char, hl or "FloatBorder" })
   end
 
@@ -1039,7 +1059,7 @@ end
 
 ---@generic T : table
 ---@param callback fun(T, key: string | number): T
----@param list T[]
+---@param list T[e
 function mega.foreach(callback, list)
   for k, v in pairs(list) do
     callback(v, k)

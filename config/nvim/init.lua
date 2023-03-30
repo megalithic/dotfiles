@@ -57,13 +57,13 @@ _G.mega = mega
 -- [ loaders ] -----------------------------------------------------------------
 
 require("mega.globals")
--- require("mega.debug")
+require("mega.debug")
 require("mega.options")
 require("mega.lazy").setup()
 
 -- [ colorscheme ] -------------------------------------------------------------
 
-mega.wrap_err("theme failed to load because", function(colorscheme)
+mega.pcall("theme failed to load because", function(colorscheme)
   local theme = fmt("mega.lush_theme.%s", colorscheme)
   local ok, lush_theme = pcall(require, theme)
   if ok then
