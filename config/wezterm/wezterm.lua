@@ -36,6 +36,16 @@ local function notifier(opts)
   window:toast_notification(title, message, nil, timeout)
 end
 
+function log_proc(proc, indent)
+  indent = indent or ""
+  wezterm.log_info(indent .. "pid=" .. proc.pid .. ", name=" .. proc.name .. ", status=" .. proc.status)
+  wezterm.log_info(indent .. "argv=" .. table.concat(proc.argv, " "))
+  wezterm.log_info(indent .. "executable=" .. proc.executable .. ", cwd=" .. proc.cwd)
+  for pid, child in pairs(proc.children) do
+    log_proc(child, indent .. "  ")
+  end
+end
+
 wezterm.on(
   "window-config-reloaded",
   function(window, pane)
@@ -56,10 +66,20 @@ wezterm.on("toggle-ligature", function(window, pane)
   window:set_config_overrides(overrides)
 end)
 
+wezterm.on("mux-is-process-stateful", function(proc)
+  log_proc(proc)
+
+  return false -- don't ask for confirmation, nothing stateful here
+end)
+
+--- [ COLORS ] -----------------------------------------------------------------
+
 -- @note: megaforest
 local palette = {
-  background = "#2f3d44",
+  background = "#323d43", -- "#2f3d44",
   bright_background = "#2f3d44",
+  -- background = "",
+  -- bright_background = "",
   foreground = "#d3c6aa", -- #d8cacc
   bright_foreground = "#d3c6aa",
   cursor = "#83b6af",
@@ -88,7 +108,6 @@ local palette = {
   bright_white = "#cccccc",
 }
 
---- [ COLORS ] -----------------------------------------------------------------
 local colors = {}
 
 colors.background = palette.background
@@ -150,7 +169,6 @@ colors.tab_bar = {
     bg_color = palette.background,
   },
 }
-
 -- Colors for copy_mode and quick_select
 -- available since: 20220807-113146-c2fee766
 -- In copy_mode, the color of the active text is:
@@ -171,6 +189,8 @@ colors.tab_bar = {
 -- colors.quick_select_match_bg = { AnsiColor = "Navy" }
 -- colors.quick_select_match_fg = { Color = "#ffffff" }
 
+--- [ FONTS ] ------------------------------------------------------------------
+
 local font = {
   JetBrainsMono = {
     Normal = { family = "JetBrains Mono", weight = "Medium" },
@@ -179,7 +199,7 @@ local font = {
     BoldItalic = { family = "JetBrains Mono", italic = true, weight = "ExtraBlack" },
   },
   JetBrainsMonoNerdFont = {
-    Normal = { family = "JetBrainsMono Nerd Font Mono", weight = "Regular" },
+    Normal = { family = "JetBrainsMono Nerd Font Mono", weight = "Medium" },
     Italic = { family = "JetBrainsMono Nerd Font Mono", italic = true },
     Bold = { family = "JetBrainsMono Nerd Font Mono", weight = "ExtraBlack" },
     BoldItalic = { family = "JetBrainsMono Nerd Font Mono", italic = true, weight = "ExtraBlack" },
@@ -187,6 +207,7 @@ local font = {
 }
 
 return {
+  exit_behavior = "Close",
   window_close_confirmation = "NeverPrompt",
   disable_default_key_bindings = true,
   front_end = "WebGpu", -- OpenGL, WebGpu, Software
@@ -209,6 +230,12 @@ return {
     font.JetBrainsMonoNerdFont.Normal,
     { family = "Symbols Nerd Font Mono", scale = 0.8 },
   }),
+  window_padding = {
+    left = "20px",
+    right = "10px",
+    top = "20px",
+    bottom = "10px",
+  },
   font_rules = {
     {
       intensity = "Bold",
@@ -238,8 +265,8 @@ return {
   },
   hide_tab_bar_if_only_one_tab = true,
   colors = colors,
-  -- leader = { key = " ", mods = "CTRL", timeout_milliseconds = 1000 },
   keys = {
+
     -- mimic my kitty bindings for direct interaction with tmux..
     { key = "1", mods = "CTRL", action = act.SendString("\x00\x31") },
     { key = "2", mods = "CTRL", action = act.SendString("\x00\x32") },
@@ -255,6 +282,8 @@ return {
     --   mods = "CTRL",
     --   action = act.EmitEvent("toggle-ligature"),
     -- },
+    { key = "q", mods = "CMD", action = act.QuitApplication },
+    { key = "w", mods = "CMD", action = wezterm.action.CloseCurrentTab({ confirm = false }) },
     { key = "v", mods = "CMD", action = act.PasteFrom("Clipboard") },
     { key = "d", mods = "CMD|CTRL", action = act.ShowDebugOverlay },
     {
@@ -262,7 +291,7 @@ return {
       mods = "CMD|CTRL",
       action = act({
         QuickSelectArgs = {
-          label = "open url",
+          label = "open url patterns",
           patterns = {
             "https?://\\S+",
             "git://\\S+",
