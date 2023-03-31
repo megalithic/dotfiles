@@ -82,7 +82,8 @@ local palette = {
   -- bright_background = "",
   foreground = "#d3c6aa", -- #d8cacc
   bright_foreground = "#d3c6aa",
-  cursor = "#83b6af",
+  -- cursor = "#83b6af",
+  cursor = "#d8cacc",
   visual = "#4e6053",
   split = "#3e4c53",
   -- ansi
@@ -218,7 +219,7 @@ return {
   warn_about_missing_glyphs = false,
   allow_square_glyphs_to_overflow_width = "WhenFollowedBySpace",
   bold_brightens_ansi_colors = true,
-  font_size = 14.5,
+  font_size = 14,
   line_height = 1.1,
   text_blink_rate = 100,
   cursor_blink_rate = 500,
@@ -285,6 +286,10 @@ return {
     },
     { key = "q", mods = "CMD", action = act.QuitApplication },
     { key = "w", mods = "CMD", action = wezterm.action.CloseCurrentTab({ confirm = false }) },
+    { key = "+", mods = "CMD", action = wezterm.action.IncreaseFontSize },
+    { key = "-", mods = "CMD", action = wezterm.action.DecreaseFontSize },
+    { key = "0", mods = "CMD", action = wezterm.action.ResetFontSize },
+    { key = "=", mods = "CMD", action = wezterm.action.ResetFontSize },
     { key = "v", mods = "CMD", action = act.PasteFrom("Clipboard") },
     { key = "d", mods = "CMD|CTRL", action = act.ShowDebugOverlay },
     {
