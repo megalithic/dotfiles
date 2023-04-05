@@ -19,6 +19,8 @@ local preferred = {
 }
 preferred["browser"] = "com.brave.Browser.dev" --hs.urlevent.getDefaultHandler("https")
 
+hs.application.hide
+
 local watchers = { "status", "bluetooth", "dock", "audio", "wifi", "url", "downloads" }
 
 local transientApps = {

@@ -353,9 +353,8 @@ return {
           lnum_hl = "EgrepifyLnum", -- default, not required
           col = false, -- default, not required
           col_hl = "EgrepifyCol", -- default, not required
-          title_hl = "@title.emphasis",
+          filename_hl = "@title.emphasis",
           title_suffix_hl = "Comment",
-          -- EXAMPLE PREFIX!
           prefixes = {
             ["!"] = {
               flag = "invert-match",

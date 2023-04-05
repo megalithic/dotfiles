@@ -10,7 +10,7 @@ secure_input_notification: false
 enable_passive: false
 toggle_key: OFF
 matches:
-  - trigger: "Rene"
+  - trigger: "Rene "
     replace: "René"
   - trigger: "Zoe"
     replace: "Zoë"

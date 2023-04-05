@@ -93,7 +93,7 @@ nnoremap("<localleader>f", "<cmd>LspFormatWrite<cr>", "run lsp formatter")
 exec("silent! unmap [%", true)
 exec("silent! unmap ]%", true)
 
-nmap("<Tab>", "%")
+nnoremap("<Tab>", "%")
 smap("<Tab>", "%")
 vmap("<Tab>", "%")
 xmap("<Tab>", "%")

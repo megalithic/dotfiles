@@ -64,7 +64,7 @@ end
 
 function mega.resize_windows(bufnr)
   -- P(fmt("resize_windows filetype: %s", vim.bo[bufnr].filetype))
-  if is_ignored(bufnr) then return end
+  if is_ignored(bufnr or 0) then return end
 
   local columns = vim.api.nvim_get_option("columns")
   local rows = vim.api.nvim_get_option("lines")

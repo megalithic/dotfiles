@@ -286,7 +286,7 @@ return {
       },
     },
   },
-  sqls = function()
+  sqlls = function()
     return {
       root_dir = lsputil.root_pattern(".git"),
       single_file_support = false,
