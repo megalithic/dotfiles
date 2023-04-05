@@ -2,13 +2,6 @@ local lush = require("lush")
 
 local C = require("mega.lush_theme.colors")
 
--- local palette = require("mega.lush_theme.palette")
--- local palette = mega.wrap_err(require, "mega.lush_theme.palette")
--- local spec = palette.spec
--- local gui = palette.gui_combine
--- local cfg = palette.cfg
--- local clrs = palette.clrs
-
 local tc = {
   black = C.bg0,
   red = C.red,
@@ -73,7 +66,7 @@ local theme = lush(function(injected_functions)
     -- CursorLineNrNC({ CursorLine, fg = C.transparent, bg = C.bg2 }), -- Like LineNr when 'cursorline' or 'relativenumber' is set for the cursor line.
     -- CursorLineSign({ CursorLine }),
     VertSplit({ fg = C.bg4, bg = C.transparent }), -- the column separating vertically split windows
-    WinSeparator({ VertSplit, fg = C.bg_dark, gui = "bold" }),
+    WinSeparator({ fg = C.bg_dark.li(15), bg = C.bg_dark.li(3), gui = "bold" }),
 
     Comment({ fg = C.grey1, bg = C.transparent, gui = "italic" }),
     Directory({ fg = C.green, bg = C.transparent }), -- directory names (and other special names in listings)

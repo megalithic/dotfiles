@@ -8,35 +8,6 @@ local C = {
   lsp = {},
 }
 
-local cfg = {
-  theme_bold = vim.g.theme_bold or 1,
-  theme_italic = vim.g.theme_italic or 0, -- TODO: Add other conditions
-  theme_underline = vim.g.theme_underline or 0,
-  theme_italic_comments = vim.g.theme_italic_comments or 0,
-  theme_uniform_status_lines = vim.g.theme_uniform_status_lines or 0,
-  theme_uniform_diff_background = vim.g.theme_uniform_diff_background or 0,
-  theme_cursor_line_number_background = vim.g.theme_cursor_line_number_background or 0,
-  theme_bold_vertical_split_line = vim.g.theme_bold_vertical_split_line or 0,
-}
-C.cfg = cfg
-
-local gui = {
-  bold = cfg.theme_bold == 1 and "bold" or "",
-  italic = cfg.theme_italic == 1 and "italic" or "",
-  underline = cfg.theme_underline == 1 and "underline" or "",
-  inverse = "inverse",
-  undercurl = "undercurl",
-}
-gui["italicize_comments"] = cfg.theme_italic_comments == 1 and gui.italic or ""
-C.gui = gui
-
-C.guic = function(gui)
-  for i = 1, #gui do
-    if gui[i] == "" then table.remove(gui, i) end
-  end
-  return table.concat(gui, ",")
-end
-
 local bg_thicc = "#273433"
 local bg_hard = "#2b3339"
 local bg_medium = "#2b3339"

@@ -267,14 +267,14 @@ cask "cyberduck"
 cask "dash"
 cask "docker"
 # cask "dropbox"
-cask "elmedia-player"
+# cask "elmedia-player"
 # cask "espanso" if OS.mac?
 # cask "discord"
 # cask "expressvpn"
 cask "figma"
 cask "firefox-developer-edition"
 cask "flux"
-# cask "google-chrome"
+cask "google-chrome-dev"
 # cask "forklift" # replaced with marta for now
 cask "hazel"
 cask "hammerspoon", greedy: true
@@ -310,6 +310,7 @@ cask "spotify"
 # cask "vimac"  # FIXME: this requires a click-based install (https://install.appcenter.ms/users/dexterleng/apps/vimac/distribution_groups/sparkle)
 cask "the-unarchiver"
 cask "utm" # similar parallels/qemu/virtualbox
+cask "vlc"
 cask "wez/wezterm/wezterm-nightly"
 # cask "usb-overdrive" # causes issues with QMK keyboards
 # cask "virtualbox" # requires restart with security allow (oracle things)
