@@ -19,8 +19,6 @@ local preferred = {
 }
 preferred["browser"] = "com.brave.Browser.dev" --hs.urlevent.getDefaultHandler("https")
 
-hs.application.hide
-
 local watchers = { "status", "bluetooth", "dock", "audio", "wifi", "url", "downloads" }
 
 local transientApps = {
@@ -405,6 +403,15 @@ local apps = {
     quitter = true,
     rules = {
       { "", 2, "maximized" },
+    },
+  },
+  ["com.dexterleng.Homerow"] = {
+    bundleID = "com.dexterleng.Homerow",
+    name = "Homerow",
+    localBindings = { ";" },
+    quitter = true,
+    rules = {
+      { "", 1, "centeredLarge" },
     },
   },
   ["com.flexibits.fantastical2.mac"] = {
