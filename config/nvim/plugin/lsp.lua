@@ -78,7 +78,7 @@ local function diagnostic_popup(bufnr)
   --   vim.diagnostic.open_float(args.buf, { scope = "line", focus = false })
   -- end
   -- if vim.b.lsp_hover_win and api.nvim_win_is_valid(vim.b.lsp_hover_win) then return end
-  vim.diagnostic.open_float(bufnr, { scope = "cursor", focus = false })
+  vim.diagnostic.open_float(bufnr, { scope = "line", focus = false })
   -- vim.diagnostic.open_float(bufnr, { scope = "line", focus = false })
 end
 
@@ -182,7 +182,7 @@ end
 local function setup_autocommands(client, bufnr)
   if not client then
     local msg = fmt("Unable to setup LSP autocommands, client for %d is missing", bufnr)
-    return vim.notify(msg, "error", { title = "LSP Setup" })
+    return vim.notify(msg, L.ERROR, { title = "LSP Setup" })
   end
 
   local supports_highlight = (client and client.server_capabilities.documentHighlightProvider == true)
@@ -197,20 +197,20 @@ local function setup_autocommands(client, bufnr)
     },
   })
 
-  -- augroup("LspDocumentHighlight", {
-  --   {
-  --     event = { "CursorHold", "CursorHoldI" },
-  --     buffer = bufnr,
-  --     command = function()
-  --       if supports_highlight then vim.lsp.buf.document_highlight() end
-  --     end,
-  --   },
-  --   {
-  --     event = { "CursorMoved", "BufLeave" },
-  --     buffer = bufnr,
-  --     command = function() vim.lsp.buf.clear_references() end,
-  --   },
-  -- })
+  augroup("LspDocumentHighlight", {
+    {
+      event = { "CursorHold", "CursorHoldI" },
+      buffer = bufnr,
+      command = function()
+        if supports_highlight then vim.lsp.buf.document_highlight() end
+      end,
+    },
+    {
+      event = { "CursorMoved", "BufLeave" },
+      buffer = bufnr,
+      command = function() vim.lsp.buf.clear_references() end,
+    },
+  })
 
   augroup("LspDiagnostics", {
     {
@@ -218,16 +218,16 @@ local function setup_autocommands(client, bufnr)
       desc = "Show diagnostics",
       command = function(args) diagnostic_popup(args.buf) end,
     },
-    {
-      event = { "DiagnosticChanged" },
-      -- buffer = bufnr,
-      desc = "Handle diagnostics changes",
-      command = function()
-        vim.diagnostic.setloclist({ open = false })
-        diagnostic_popup()
-        if vim.tbl_isempty(vim.fn.getloclist(0)) then vim.cmd([[lclose]]) end
-      end,
-    },
+    -- {
+    --   event = { "DiagnosticChanged" },
+    --   -- buffer = bufnr,
+    --   desc = "Handle diagnostics changes",
+    --   command = function()
+    --     vim.diagnostic.setloclist({ open = false })
+    --     diagnostic_popup()
+    --     if vim.tbl_isempty(vim.fn.getloclist(0)) then vim.cmd([[lclose]]) end
+    --   end,
+    -- },
   })
 
   augroup("LspFormat", {
@@ -253,8 +253,8 @@ local function setup_keymaps(client, bufnr)
   --   end
   -- end
 
-  nnoremap("[d", function() diagnostic.goto_prev({ float = false }) end, desc("lsp: prev diagnostic"))
-  nnoremap("]d", function() diagnostic.goto_next({ float = false }) end, desc("lsp: next diagnostic"))
+  nnoremap("[d", function() diagnostic.goto_prev({ float = true }) end, desc("lsp: prev diagnostic"))
+  nnoremap("]d", function() diagnostic.goto_next({ float = true }) end, desc("lsp: next diagnostic"))
   nnoremap("gd", vim.lsp.buf.definition, desc("lsp: definition"))
   nnoremap("gD", [[<cmd>vsplit | lua vim.lsp.buf.definition()<cr>]], desc("lsp: definition (vsplit)"))
   nnoremap("gr", function()
@@ -304,7 +304,7 @@ local function setup_keymaps(client, bufnr)
     end
   end, desc("lsp: hover"))
   nnoremap("gK", vim.lsp.buf.signature_help, desc("lsp: signature help"))
-  inoremap("<c-k>", vim.lsp.buf.signature_help, desc("lsp: signature help"))
+  imap("<c-k>", vim.lsp.buf.signature_help, desc("lsp: signature help"))
   nnoremap("<leader>lic", [[<cmd>LspInfo<CR>]], desc("connected client info"))
   nnoremap("<leader>lim", [[<cmd>Mason<CR>]], desc("mason info"))
   nnoremap(
@@ -568,37 +568,37 @@ local function on_attach(client, bufnr)
   if client_overrides[client.name] then client_overrides[client.name](client, bufnr) end
 end
 
-mega.augroup("LspSetupCommands", {
-  event = "LspAttach",
-  desc = "setup the language server autocommands",
-  command = function(args)
-    local client = lsp.get_client_by_id(args.data.client_id)
-    on_attach(client, args.buf)
-    local overrides = client_overrides[client.name]
-    if not overrides or not overrides.on_attach then return end
-    overrides.on_attach(client, args.buf)
-  end,
-}, {
-  event = "LspDetach",
-  desc = "Clean up after detached LSP",
-  command = function(args)
-    local client_id, b = args.data.client_id, vim.b[args.buf]
-    if not b.lsp_events or not client_id then return end
-    for _, state in pairs(b.lsp_events) do
-      if #state.clients == 1 and state.clients[1] == client_id then
-        api.nvim_clear_autocmds({ group = state.group_id, buffer = args.buf })
-      end
-      state.clients = vim.tbl_filter(function(id) return id ~= client_id end, state.clients)
-    end
-  end,
-}, {
-  event = "DiagnosticChanged",
-  desc = "Update the diagnostic locations",
-  command = function(args)
-    diagnostic.setloclist({ open = false })
-    if #args.data.diagnostics == 0 then vim.cmd("silent! lclose") end
-  end,
-})
+-- mega.augroup("LspSetupCommands", {
+--   event = "LspAttach",
+--   desc = "setup the language server autocommands",
+--   command = function(args)
+--     local client = lsp.get_client_by_id(args.data.client_id)
+--     on_attach(client, args.buf)
+--     local overrides = client_overrides[client.name]
+--     if not overrides or not overrides.on_attach then return end
+--     overrides.on_attach(client, args.buf)
+--   end,
+-- }, {
+--   event = "LspDetach",
+--   desc = "Clean up after detached LSP",
+--   command = function(args)
+--     local client_id, b = args.data.client_id, vim.b[args.buf]
+--     if not b.lsp_events or not client_id then return end
+--     for _, state in pairs(b.lsp_events) do
+--       if #state.clients == 1 and state.clients[1] == client_id then
+--         api.nvim_clear_autocmds({ group = state.group_id, buffer = args.buf })
+--       end
+--       state.clients = vim.tbl_filter(function(id) return id ~= client_id end, state.clients)
+--     end
+--   end,
+-- }, {
+--   event = "DiagnosticChanged",
+--   desc = "Update the diagnostic locations",
+--   command = function(args)
+--     diagnostic.setloclist({ open = false })
+--     if #args.data.diagnostics == 0 then vim.cmd("silent! lclose") end
+--   end,
+-- })
 
 local servers = require("mega.servers")
 

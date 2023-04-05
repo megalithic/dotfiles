@@ -1,10 +1,10 @@
 local api = vim.api
 local fn = vim.fn
 local vcmd = vim.cmd
-local L = vim.log.levels
 
 _G.I = vim.inspect
 _G.fmt = string.format
+_G.L = vim.log.levels
 _G.logger = require("mega.logger")
 
 -- [ global variables ] --------------------------------------------------------
@@ -32,13 +32,10 @@ vim.g.is_local_dev = vim.trim(vim.fn.system("hostname")) ~= "seth-dev"
 
 vim.g.open_command = vim.g.is_macos and "open" or "xdg-open"
 
-vim.g.packer_compiled_path = fmt("%s/plugin/packer_compiled.lua", vim.fn.stdpath("config")) -- alts: fmt("%s/packer/packer_compiled.lua", vim.fn.stdpath("cache"))
-vim.g.packer_install_path = fmt("%s/site/pack/packer/%s/packer.nvim", fn.stdpath("data"), "opt")
-vim.g.packer_snapshot_path = fmt("%s/packer/snapshots/", vim.fn.stdpath("cache"))
-
 vim.g.dotfiles = vim.env.DOTS or fn.expand("~/.dotfiles")
 vim.g.home = os.getenv("HOME")
 vim.g.vim_path = fmt("%s/.config/nvim", vim.g.home)
+vim.g.nvim_path = fmt("%s/.config/nvim", vim.g.home)
 vim.g.cache_path = fmt("%s/.cache/nvim", vim.g.home)
 vim.g.local_state_path = fmt("%s/.local/state/nvim", vim.g.home)
 vim.g.local_share_path = fmt("%s/.local/share/nvim", vim.g.home)
@@ -47,6 +44,8 @@ vim.g.icloud_documents_path = vim.env.ICLOUD_DOCUMENTS_DIR
 vim.g.obsidian_vault_path = vim.env.OBSIDIAN_VAULT_DIR
 vim.g.notes_path = fmt("%s/_notes", vim.g.icloud_documents_path)
 vim.g.neorg_path = fmt("%s/_neorg", vim.g.icloud_documents_path)
+vim.g.hammerspoon_path = fmt("%s/config/hammerspoon", vim.g.dotfiles)
+vim.g.hs_emmy_path = fmt("%s/Spoons/EmmyLua.spoon", vim.g.hammerspoon_path)
 
 mega.dirs.dots = vim.g.dotfiles
 mega.dirs.privates = fn.expand("$PRIVATES")
@@ -1296,6 +1295,11 @@ do
       })
     end
   )
+end
+
+-- [ iabbreviations ] ----------------------------------------------------------
+do
+  vim.cmd.iabbrev([[cabag Co-authored-by: Aaron Gunderson <aaron@ternit.com>]])
 end
 
 return mega

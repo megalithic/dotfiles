@@ -16,6 +16,27 @@ local dbg = function(...)
   end
 end
 
+function obj.hasTab(url)
+  if browser and hs.fnutils.contains(obj.browsers, browser:name()) then
+    return hs.osascript.javascript([[
+    (function() {
+      var browser = Application(']] .. browser:name() .. [[');
+      browser.activate();
+      var foundTab = false;
+      for (win of browser.windows()) {
+        var tabIndex =
+          win.tabs().findIndex(tab => tab.url().match(/]] .. string.gsub(url, "/", "\\/") .. [[/));
+         foundTab = (tabIndex != -1)
+      }
+
+      return foundTab;
+    })();
+    ]])
+  end
+
+  return false
+end
+
 function obj.jump(url)
   if browser and hs.fnutils.contains(obj.browsers, browser:name()) then
     hs.osascript.javascript([[
@@ -24,7 +45,7 @@ function obj.jump(url)
       browser.activate();
       for (win of browser.windows()) {
         var tabIndex =
-          win.tabs().findIndex(tab => tab.url().match(/]] .. url .. [[/));
+          win.tabs().findIndex(tab => tab.url().match(/]] .. string.gsub(url, "/", "\\/") .. [[/));
         if (tabIndex != -1) {
           win.activeTabIndex = (tabIndex + 1);
           win.index = 1;
@@ -64,7 +85,7 @@ function obj.killTabsByDomain(domain)
       browser.activate();
       for (win of browser.windows()) {
         for (tab of win.tabs()) {
-          if (tab.url().match(/]] .. domain .. [[/)) {
+          if (tab.url().match(/]] .. string.gsub(domain, "/", "\\/") .. [[/)) {
             console.log("found tab to kill", tab.url())
             tab.close()
           }

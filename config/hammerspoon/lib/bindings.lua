@@ -103,54 +103,50 @@ function obj:start()
   -- [ launcher bindings ] -----------------------------------------------------
 
   bind(bindings.launchers, "launchers", function(l)
-    dbg("launchers iterating...")
-    dbg(I(l))
-
     local launcher = L.load("lib.launcher") or {}
 
     hs.fnutils.each(l, function(cfg)
       local key = cfg.key
       local mods = cfg.mods or {}
-      local targets = cfg.targets
+      local target = cfg.target
       local mode = cfg.mode or "launch"
+      -- local B = require("lib.browser")
 
-      if key and targets then
-        targets = type(targets) == "string" and { targets } or targets
+      if key and target then
+        local targetType = type(target)
 
-        -- TODO: recursively check list of targets for running app or opened www tab in browser;
-        -- if found; jump to www tab OR focus app.
-
-        hs.fnutils.each(targets, function(t)
+        Hyper:bind(mods, key, function()
           -- we've only passed a string, assuming an application's bundleID
-          if type(t) == "string" then
-            Hyper:bind(mods, key, function()
-              if mode == "focus" then
-                launcher.focusOnly(t)
-              else
-                launcher.toggle(t, false)
-              end
-            end)
-          -- we've got a table to use various extra properties
-          else
-            local locals = t.locals
-            local targetId = t[1]
-            local isUrl = targetId:match("[a-z]*://[^ >,;]*")
+          if targetType == "string" then
+            if mode == "focus" then
+              launcher.focusOnly(target)
+            else
+              launcher.toggle(target, false)
+            end
+            -- we've got a table to use various extra properties
+          elseif type(target) == "table" then
+            hs.fnutils.each(target, function(t)
+              local targetId = t[1]
+              local isUrl = targetId:match("[a-z]*://[^ >,;]*")
+              local targetRunning = hs.application.find(targetId) ~= nil
+              --
+              -- local locals = t.locals
+              -- if locals and #locals > 0 then
+              --   hs.fnutils.each(locals, function(k) Hyper:bindPassThrough(k, targetId) end)
+              -- end
 
-            Hyper:bind(mods, key, function()
-              if isUrl then
-                -- require("lib.browser").jump(targetId)
-              else
+              if targetRunning and not isUrl then
+                -- dbg(fmt("isNOTUrl: %s", targetId))
                 if mode == "focus" then
                   launcher.focusOnly(targetId)
                 else
                   launcher.toggle(targetId, false)
                 end
+                -- elseif not targetRunning and isUrl then
+                --   dbg(fmt("isUrl: %s", targetId))
+                --    B.jump(targetId)
               end
             end)
-
-            if locals and #locals > 0 then
-              hs.fnutils.each(cfg.localBindings, function(k) Hyper:bindPassThrough(k, targetId) end)
-            end
           end
         end)
       else
@@ -213,6 +209,20 @@ function obj:start()
     hs.reload()
     hs.notify.new({ title = "Hammerspoon", subTitle = "Reloading configuration.." }):send()
   end)
+
+  local axbrowse = require("axbrowse")
+  local lastApp
+
+  hs.hotkey.bind(keys.mods.CasC, "b", function()
+    local currentApp = hs.axuielement.applicationElement(hs.application.frontmostApplication())
+    if currentApp == lastApp then
+      axbrowse.browse() -- try to continue from where we left off
+    else
+      lastApp = currentApp
+      axbrowse.browse(currentApp) -- new app, so start over
+    end
+  end)
+
   -- Hyper:bind({}, "space", function() spoon.Seal:toggle("") end)
 
   -- FIXME: config in settings module can't serialize functions :/

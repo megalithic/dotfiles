@@ -94,6 +94,7 @@ brew "fx" # jq but better
 brew "fzf" # -> $(brew --prefix)/opt/fzf/install
 brew "gawk"
 brew "gdb"
+brew "gifsicle"
 brew "gist"
 brew "git"
 brew "isacikgoz/taps/gitin"

@@ -8,6 +8,7 @@
 -- --- https://github.com/V1RE/dotfiles/blob/main/dot_config/wezterm/wezterm.lua
 -- --- https://github.com/Omochice/dotfiles/blob/main/config/wezterm/wezterm.lua
 -- --- https://github.com/yutkat/dotfiles/blob/main/.config/wezterm/wezterm.lua
+-- TODO: https://wezfurlong.org/wezterm/faq.html#how-do-i-enable-undercurl-curly-underlines
 --
 local wezterm = require("wezterm")
 local act = wezterm.action
@@ -24,7 +25,7 @@ local function log(msg) wezterm.log_info(msg) end
 -- Given "c:\\foo\\bar" returns "bar"
 local function basename(s) return string.gsub(s, "(.*[/\\])(.*)", "%2") end
 
-local function notifier(opts)
+local function notify(opts)
   if opts.window == nil then return end
 
   opts = opts or {}
@@ -49,7 +50,7 @@ end
 wezterm.on(
   "window-config-reloaded",
   function(window, pane)
-    notifier({ title = "wezterm", message = "configuration reloaded!", window = window, timeout = 4000 })
+    notify({ title = "wezterm", message = "configuration reloaded!", window = window, timeout = 4000 })
   end
 )
 
@@ -71,6 +72,43 @@ wezterm.on("mux-is-process-stateful", function(proc)
 
   return false -- don't ask for confirmation, nothing stateful here
 end)
+
+wezterm.on("user-var-changed", function(window, pane, name, value)
+  notify({ message = string.format("user-var-changed", name) })
+
+  local overrides = window:get_config_overrides() or {}
+  if name == "SCREEN_SHARE_MODE" then
+    if value == "on" then
+      overrides.font_size = 24
+    else
+      overrides.font_size = nil
+    end
+  end
+  window:set_config_overrides(overrides)
+end)
+
+-- wezterm.on("user-var-changed", function(window, pane, name, value)
+--   local overrides = window:get_config_overrides() or {}
+--   if name == "SCREEN_SHARE_MODE" then
+--     local incremental = value:find("+")
+--     local number_value = tonumber(value)
+--     if incremental ~= nil then
+--       while number_value > 0 do
+--         window:perform_action(wezterm.action.IncreaseFontSize, pane)
+--         number_value = number_value - 1
+--       end
+--       overrides.enable_tab_bar = false
+--     elseif number_value < 0 then
+--       window:perform_action(wezterm.action.ResetFontSize, pane)
+--       overrides.font_size = nil
+--       overrides.enable_tab_bar = true
+--     else
+--       overrides.font_size = number_value
+--       overrides.enable_tab_bar = false
+--     end
+--   end
+--   window:set_config_overrides(overrides)
+-- end)
 
 --- [ COLORS ] -----------------------------------------------------------------
 
@@ -118,7 +156,7 @@ colors.cursor_fg = palette.black
 colors.cursor_bg = palette.cursor
 colors.cursor_border = palette.foreground
 
-colors.selection_fg = palette.black
+colors.selection_fg = palette.fg
 colors.selection_bg = palette.visual
 
 colors.split = palette.split

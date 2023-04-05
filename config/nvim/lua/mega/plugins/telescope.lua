@@ -189,7 +189,6 @@ local function extensions(name) return require("telescope").extensions[name] end
 return {
   "nvim-telescope/telescope.nvim",
   cmd = { "Telescope" },
-  enabled = vim.g.picker == "telescope",
   dependencies = {
     { "molecule-man/telescope-menufacture" },
     "natecraddock/telescope-zf-native.nvim",
@@ -205,13 +204,7 @@ return {
   keys = {
     { "<leader>ff", project_files, desc = "find files" },
     {
-      "<localleader><localleader>",
-      function() extensions("smart_open").smart_open(ivy({ cwd_only = true })) end,
-      desc = "smart open files",
-    },
-    {
       "<leader>a",
-      -- function() extensions("menufacture").live_grep(ivy({})) end,
       function() require("telescope").extensions.egrepify.egrepify(ivy({})) end,
       desc = "live grep",
     },
@@ -445,5 +438,6 @@ return {
     telescope.load_extension("zf-native")
     telescope.load_extension("smart_open")
     telescope.load_extension("egrepify")
+    -- telescope.load_extension("noice")
   end,
 }

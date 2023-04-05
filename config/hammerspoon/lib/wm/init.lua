@@ -1,6 +1,5 @@
 local Application = require("hs.application")
 local Window = require("hs.window")
-local Settings = require("hs.settings")
 local fnutils = require("hs.fnutils")
 local contextsDir = U.resourcePath("../contexts/")
 
@@ -49,6 +48,7 @@ local function targetDisplay(num)
 end
 
 -- handles auto-layout of launched apps; using lib.snap
+-- TODO: pull layout info from launchers?
 function obj.applyLayout(appConfig)
   if appConfig == nil then return end
   local bundleID = appConfig["bundleID"]
@@ -200,7 +200,7 @@ end
 function obj:init(opts)
   opts = opts or {}
 
-obj.apps = C.bindings.apps
+  obj.apps = C.bindings.apps
 
   Snap = L.load("lib.wm.snap"):start()
   obj.watcher = L.load("lib.contexts", { id = "wm.watcher" })

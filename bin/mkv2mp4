@@ -1,6 +1,0 @@
-#!/bin/bash
-
-input="${1:-}"
-output="${2:-${1%.*}}"
-
-ffmpeg -i "$input" -c:a aac -c:v copy "$output.mp4"

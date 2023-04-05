@@ -81,8 +81,8 @@ path=(
 export MANPATH="$BREW_PREFIX/opt/coreutils/libexec/gnuman:${MANPATH}"
 # / =================== from .zprofile =========================================
 
-# -- term
-export TERM=${TERM:=xterm-kitty}
+# -- term (wezterm, xterm-kitty, xterm-256color, tmux-256color)
+# export TERM=${TERM:=xterm-kitty}
 export TERM_ITALICS="TRUE"
 export COLORTERM=${COLORTERM:=truecolor}
 export TERMINAL="kitty"

@@ -259,6 +259,7 @@ local theme = lush(function(injected_functions)
     LspCodeLensSeparator({ DiagnosticHint }),
 
     LspInfoBorder({ FloatBorder }),
+    LspSignatureActiveParameter({ Visual }),
 
     ---- :help notify ----------------------------------------------------------
 
@@ -373,6 +374,7 @@ local theme = lush(function(injected_functions)
     sym("@comment")({ fg = C.light_grey, gui = "italic" }),
     sym("@error")({ gui = "undercurl", sp = C.red }),
     sym("@error.heex")({ gui = C.transparent, sp = C.transparent }),
+    sym("@error.elixir")({ gui = C.transparent, sp = C.transparent }),
 
     -- highlight WARN:/FIXME:/TODO:/NOTE:/REF: comments
 

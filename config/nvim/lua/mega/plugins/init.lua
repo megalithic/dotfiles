@@ -319,12 +319,12 @@ return {
   -- @trial multi-cursor: https://github.com/brendalf/dotfiles/blob/master/.config/nvim/lua/core/multi-cursor.lua
 
   -- ( Navigation ) ------------------------------------------------------------
-  {
-    "knubie/vim-kitty-navigator",
-    event = "VeryLazy",
-    -- build = "cp ./*.py ~/.config/kitty/",
-    cond = not vim.env.TMUX and not vim.env.ZELLIJ,
-  },
+  -- {
+  --   "knubie/vim-kitty-navigator",
+  --   event = "VeryLazy",
+  --   -- build = "cp ./*.py ~/.config/kitty/",
+  --   cond = not vim.env.TMUX and not vim.env.ZELLIJ,
+  -- },
   -- {
   --   "sidebar-nvim/sidebar.nvim",
   --   keys = {
@@ -724,7 +724,6 @@ return {
   {
     "gaoDean/autolist.nvim",
     ft = { "markdown" },
-    keys = { "<CR>", "<Tab>", "<S-Tab>", "o", "O", ">>", "<<", "<C-r>", "<leader>x", "C-c" },
     config = function()
       local autolist = require("autolist")
       autolist.setup()
@@ -742,14 +741,11 @@ return {
         pattern = "*",
         callback = function() vim.cmd.normal({ autolist.force_recalculate(nil, nil), bang = false }) end,
       })
-      -- require("autolist").setup({ normal_mappings = { invert = { "<c-c>" } } })
     end,
   },
   { "ellisonleao/glow.nvim", ft = { "markdown" } },
   {
     "lukas-reineke/headlines.nvim",
-    -- has TS query errors/warnings/etc
-    enabled = true,
     ft = { "markdown" },
     dependencies = "nvim-treesitter",
     config = function()

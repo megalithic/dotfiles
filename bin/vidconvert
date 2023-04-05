@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+# shellcheck shell=bash
+
+set -euo pipefail
+[[ -v DEBUG ]] && set -x
+
+source "$HOME/.config/zsh/lib/helpers.zsh"
+
+# https://til.hashrocket.com/posts/z3ei0ejnjl-convert-mov-to-gif-with-ffmpeg
+
+ffmpeg_cmd="$HOMEBREW_PREFIX/bin/ffmpeg"
+
+# -- command checks
+(command -v "$ffmpeg_cmd" &>/dev/null) && FFMPEG_FOUND="${green}installed${reset}" || FFMPEG_FOUND="${red}not installed${reset}"
+
+function __help() {
+  printf -- "\n"
+  printf -- "${white}${bold}USAGE:${reset} %s [options] input <output>\n" "vidconvert"
+  printf -- "\n"
+  printf -- "${grey}${bold}OPTIONS:${reset}\n"
+  printf -- "  -t          output format (mov [default], gif, mp4)\n"
+  printf -- "  -h          this help\n"
+  printf -- "\n"
+  printf -- "${grey}${bold}DEPENDENCIES:${reset}\n"
+  printf -- "  ffmpeg      (%s)\n" "$FFMPEG_FOUND"
+  printf -- "\n"
+  printf -- "${grey}${bold}EXAMPLE:${reset}\n"
+  printf -- "  vidconvert -t mp4 path/to/video.mkv <optional/path/to/output.mp4>\n"
+  printf -- "\n"
+
+  exit 0
+}
+
+if [[ "$1"  == "" ]]; then
+  __help
+fi
+
+while getopts "ht:" OPTION; do
+  case $OPTION in
+    h)
+      __help
+      ;;
+
+    t)
+      case "$OPTARG" in
+        "gif")
+          shift "$((OPTIND - 1))"
+          input="${1:-}"
+          output="${2:-${1%.*}}"
+
+          ffmpeg -i "$input" \
+                -s 891x576 \
+                -pix_fmt rgb24 \
+                -r 10 \
+                -f gif \
+                "$output.gif"
+          # send to gifsicle? https://gist.github.com/SheldonWangRJT/8d3f44a35c8d1386a396b9b49b43c385
+        ;;
+
+        "mov")
+          shift "$((OPTIND - 1))"
+          input="${1:-}"
+          output="${2:-${1%.*}}"
+          ffmpeg -i "$input" -c:v copy -profile:v 3 -c:a pcm_s24le "$output.mov"
+        ;;
+
+        "mp4")
+          shift "$((OPTIND - 1))"
+          input="${1:-}"
+          output="${2:-${1%.*}}"
+          ffmpeg -i "$input" -c:a aac -c:v copy "$output.mp4"
+        ;;
+
+        *)
+          shift "$((OPTIND - 1))"
+          input="${1:-}"
+          output="${2:-${1%.*}}"
+          ffmpeg -i "$input" -c:v copy -profile:v 3 -c:a pcm_s24le "$output.mov"
+          ;;
+      esac
+      ;;
+
+    \?)
+      # NOTE: this covers the case where an optarg may not be provided
+      # and will exit errored
+      echo "Invalid Option: -$OPTARG" 1>&2
+      __help
+      ;;
+  esac
+done

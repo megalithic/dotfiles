@@ -1,3 +1,5 @@
+if vim.loader then vim.loader.enable() end
+
 -- [ settings ] ----------------------------------------------------------------
 
 vim.g.enabled_plugin = {

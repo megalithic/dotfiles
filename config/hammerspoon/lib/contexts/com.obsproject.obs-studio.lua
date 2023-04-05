@@ -5,7 +5,7 @@ local obj = {}
 local _appObj = nil
 local browser = hs.application.get(C.preferred.browser)
 local defaultKittyFont = 15.0
-local defaultKittyFontDelta = 8.0
+local fontSizeDelta = "+8.0"
 local currentAudioOutputLevel
 
 obj.__index = obj
@@ -24,7 +24,7 @@ function obj:start(opts)
 
   if event == hs.application.watcher.launched then
     do
-      local kitty = hs.application.get("kitty")
+      local term = hs.application.get("wezterm") or hs.application.get("kitty")
       currentAudioOutputLevel = hs.audiodevice.defaultOutputDevice():outputVolume()
 
       hs.spotify.pause()
@@ -35,10 +35,13 @@ function obj:start(opts)
 
       hs.layout.apply({
         { browser:name(), nil, 1, hs.layout.maximized, nil, nil },
-        { kitty:name(), nil, 1, hs.layout.maximized, nil, nil },
+        { term:name(), nil, 1, hs.layout.maximized, nil, nil },
       })
-      kitty:setFrontmost(true)
-      hs.execute("kitty @ --to unix:/tmp/mykitty set-font-size " .. (defaultKittyFont + defaultKittyFontDelta), true)
+      term:setFrontmost(true)
+      -- hs.execute("kitty @ --to unix:/tmp/mykitty set-font-size " .. (defaultKittyFont + defaultKittyFontDelta), true)
+      hs.execute([[printf "\033]1337;SetUserVar=%s=%s\007" SCREEN_SHARE_MODE `echo -n +8 | base64`]], true)
+      -- printf "\033]1337;SetUserVar=%s=%s\007" hacky-user-command $(printf '{"cmd":"open-tab","title":"%s"}' $1 | base64)
+      -- stdout:write(('\x1b]1337;SetUserVar=%s=%s\b'):format('ZEN_MODE', vim.fn.system({ 'base64' }, tostring(opts.font))))
     end
   end
 
@@ -71,11 +74,13 @@ function obj:stop(opts)
         if browser_win ~= nil then browser_win:moveToUnit(hs.layout.maximized) end
       end
 
-      local kitty = hs.application.get("kitty")
-      if kitty ~= nil then
-        hs.execute("kitty @ --to unix:/tmp/mykitty set-font-size " .. defaultKittyFont, true)
-        local kitty_win = kitty:mainWindow()
-        if kitty_win ~= nil then kitty_win:moveToUnit(hs.layout.maximized) end
+      local term = hs.application.get("wezterm") or hs.application.get("kitty")
+      if term ~= nil then
+        hs.execute([[printf "\033]1337;SetUserVar=%s=%s\007" SCREEN_SHARE_MODE `echo -n -8 | base64`]], true)
+
+        -- hs.execute("kitty @ --to unix:/tmp/mykitty set-font-size " .. defaultKittyFont, true)
+        local term_win = term:mainWindow()
+        if term_win ~= nil then term_win:moveToUnit(hs.layout.maximized) end
       end
     end
   end

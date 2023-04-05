@@ -55,7 +55,7 @@ return {
     end
 
     local cmp_window = {
-      border = "none", --mega.get_border(),
+      border = "none",
       winhighlight = table.concat({
         "Normal:NormalFloat",
         "FloatBorder:FloatBorder",
@@ -65,6 +65,9 @@ return {
     }
 
     cmp.setup({
+      experimental = { ghost_text = {
+        hl_group = "LspCodeLens",
+      } },
       matching = {
         disallow_partial_fuzzy_matching = false,
       },
@@ -104,52 +107,12 @@ return {
         ["<S-Tab>"] = cmp.mapping(shift_tab, { "i", "s", "c" }),
         ["<C-n>"] = cmp.mapping(tab, { "i", "s", "c" }),
         ["<C-p>"] = cmp.mapping(shift_tab, { "i", "s", "c" }),
-        -- ["<C-b>"] = cmp.mapping(cmp.mapping.scroll_docs(-4), { "i", "c" }),
-        -- ["<C-f>"] = cmp.mapping(cmp.mapping.scroll_docs(4), { "i", "c" }),
         ["<C-b>"] = cmp.mapping.scroll_docs(-4),
         ["<C-f>"] = cmp.mapping.scroll_docs(4),
-        ["<C-Space>"] = cmp.mapping.complete(),
+        ["<C-y>"] = cmp.mapping.confirm({ select = true }),
         ["<CR>"] = cmp.mapping.confirm({ select = false }),
-        ["<C-e>"] = cmp.mapping.close(),
-        -- ["<C-K>"] = cmp.mapping(function(fallback)
-        --   if cmp.open_docs_preview() then
-        --     cmp.close()
-        --   else
-        --     fallback()
-        --   end
-        -- end),
-        -- ["<C-e>"] = function(fallback)
-        --   if cmp.visible() then
-        --     cmp.confirm({ select = true })
-        --     cmp.complete()
-        --   else
-        --     fallback()
-        --   end
-        -- end,
+        ["<C-e>"] = cmp.mapping.abort(),
       },
-      -- see more configured sources in ftplugins/<filetype>.lua
-      -- sources = cmp.config.sources({
-      --   { name = "nvim_lsp", max_item_count = 10 },
-      --   { name = "luasnip", max_item_count = 10 },
-      --   { name = "nvim_lsp_signature_help" },
-      --   -- { name = "treesitter" },
-      --   -- { name = "buffer", keyword_length = 3 },
-      --   { name = "path", option = { trailing_slash = true } },
-      --   {
-      --     name = "buffer",
-      --     keyword_length = 5,
-      --     max_item_count = 5, -- only show up to 5 items.
-      --     options = {
-      --       get_bufnrs = function() return vim.tbl_map(vim.api.nvim_win_get_buf, vim.api.nvim_list_wins()) end,
-      --     },
-      --   },
-      --   {
-      --     name = "rg",
-      --     keyword_length = 4,
-      --     max_item_count = 10,
-      --     option = { additional_arguments = "--max-depth 8" },
-      --   },
-      -- }),
       formatting = {
         deprecated = true,
         -- fields = { "kind", "abbr", "menu" }, -- determines order of menu items
@@ -196,16 +159,10 @@ return {
         end,
       },
       sources = cmp.config.sources({
-        { name = "nvim_lsp_signature_help" },
+        -- { name = "nvim_lsp_signature_help" },
         { name = "nvim_lsp" },
         { name = "luasnip" },
         { name = "path", option = { trailing_slash = true } },
-        -- {
-        --   name = "rg",
-        --   keyword_length = 4,
-        --   max_item_count = 10,
-        --   option = { additional_arguments = "--max-depth 8" },
-        -- },
       }, {
         {
           name = "buffer",

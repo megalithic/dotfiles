@@ -6,7 +6,7 @@ return {
     "lewis6991/gitsigns.nvim",
     event = { "BufReadPre", "BufNewFile" },
     opts = {
-
+      _extmark_signs = false,
       signs = {
         add = { hl = "GitSignsAdd", text = "▕" }, -- alts: ▕, ▎, ┃, │, ▌, ▎ 🮉
         change = { hl = "GitSignsChange", text = "▕" }, -- alts: ▎║▎

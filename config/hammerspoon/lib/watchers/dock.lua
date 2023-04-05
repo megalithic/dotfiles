@@ -25,8 +25,6 @@ local function displayHandler(_watcher, _path, _key, _oldValue, isConnected)
     -- FIXME: errors here occassionally
     hs.screen.find(Config.displays.internal):setPrimary()
   end
-
-  WM.layoutRunningApps(Config.bindings.apps)
 end
 
 local function leelooHandler(_watcher, _path, _key, _oldValue, isConnected)
@@ -87,7 +85,6 @@ local function dockHandler(watcher, _path, _key, _oldValue, isConnected)
     obj.setInput(DockConfig.docked.input)
     -- hs.notify.new({ title = "dock watcher", subTitle = fmt("%s connected", DockConfig.target.productName) }):send()
     success("[dock] dock connected")
-    -- WM.layoutRunningApps(Config.bindings.apps)
   end
 
   local undock = function()
@@ -95,7 +92,6 @@ local function dockHandler(watcher, _path, _key, _oldValue, isConnected)
     obj.setInput(DockConfig.undocked.input)
     -- hs.notify.new({ title = "dock watcher", subTitle = fmt("%s disconnected", DockConfig.target.productName) }):send()
     warn("[dock] dock disconnected")
-    -- WM.layoutRunningApps(Config.bindings.apps)
   end
 
   if isConnected then
@@ -111,6 +107,8 @@ local function dockHandler(watcher, _path, _key, _oldValue, isConnected)
       hs.timer.doAfter(1, undock)
     end
   end
+
+  WM.layoutRunningApps(Config.bindings.apps)
 end
 
 function obj:start()

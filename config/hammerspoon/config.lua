@@ -73,18 +73,8 @@ local quitters = {
   "com.raycast.macos",
   "com.runningwithcrayons.Alfred",
   "net.kovidgoyal.kitty",
-  "com.github.wez.wezterm",
+  -- "com.github.wez.wezterm", -- stuck with wezterm's built in confirm, need to remove this
 }
-
--- launcher = function()
---com.pop.pop.app
---com.brave.Browser.dev.app.kjgfgldnnfoeklkmfkjfagphfepbbdan
---   if hs.application.find("us.zoom.xos") then
---     hs.application.launchOrFocusByBundleID("us.zoom.xos")
---   else
---     require("lib.browser").jump("meet.google.com|hangouts.google.com.call")
---   end
--- end,
 
 --- @class WindowRuleOpts
 --- @field [1] string Window title
@@ -100,22 +90,36 @@ local quitters = {
 --- @field key string Keyboard key for focusing/launching this target
 --- @field mods? string[]|string Keyboard modifiers (cmd, alt/opt, shift, ctrl)
 --- @field mode? "focus"|"launch" The mode that we use to launch; focus-only or launch if not opened
---- @field targets? TargetOpts[]|string List of possible targets this keybinding would cycle through (NOTE: only works with mode set to "focus" order matters).
+--- @field target? TargetOpts[]|string List of possible targets this keybinding would cycle through (NOTE: only works with mode set to "focus" order matters).
 local launchers = {
   {
     key = "z",
     mode = "focus",
-    targets = {
+    target = {
+      { "com.brave.Browser.dev.app.kjgfgldnnfoeklkmfkjfagphfepbbdan" },
       { "us.zoom.xos" },
       { "com.pop.pop.app" },
-      { "com.brave.Browser.dev.app.kjgfgldnnfoeklkmfkjfagphfepbbdan" },
       { "https://whereby.com" },
       { "https://meet.google.com" },
     },
   },
   {
+    key = "o",
+    mode = "focus",
+    target = {
+      {
+        "com.obsproject.obs-studio",
+        locals = {},
+        rules = {
+          { "", 2, "maximized" },
+        },
+      },
+    },
+  },
+  {
+    "net.kovidgoyal.kitty",
     -- key = "k",
-    targets = {
+    target = {
       {
         "net.kovidgoyal.kitty",
         locals = {},
@@ -127,7 +131,7 @@ local launchers = {
   },
   {
     key = "k",
-    targets = {
+    target = {
       {
         "com.github.wez.wezterm",
         locals = {},
@@ -139,6 +143,7 @@ local launchers = {
   },
 }
 
+-- FIXME: separate launchers keybindings from apps layouts
 local apps = {
   ["com.runningwithcrayons.Alfred"] = {
     name = "Alfred",
@@ -149,6 +154,20 @@ local apps = {
     name = "Raycast",
     bundleID = "com.raycast.macos",
     key = "space",
+  },
+  ["net.kovidgoyal.kitty"] = {
+    bundleID = "net.kovidgoyal.kitty",
+    name = "kitty",
+    rules = {
+      { "", 1, "maximized" },
+    },
+  },
+  ["com.github.wez.wezterm"] = {
+    bundleID = "com.github.wez.wezterm",
+    name = "wezterm",
+    rules = {
+      { "", 1, "maximized" },
+    },
   },
   ["org.chromium.Chromium"] = {
     bundleID = "org.chromium.Chromium",
@@ -241,8 +260,6 @@ local apps = {
   ["com.obsproject.obs-studio"] = {
     bundleID = "com.obsproject.obs-studio",
     name = "OBS Studio",
-    key = "o",
-    launchMode = "focus",
     rules = {
       { "", 2, "maximized" },
     },

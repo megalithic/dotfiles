@@ -160,7 +160,9 @@ if type nvim >/dev/null 2>&1; then
   alias nv="/usr/local/Cellar/neovim/0.6.0/bin/nvim"
   alias vm="nvim"
   alias nvm=nv
-  alias vim="nvim"
+  alias vim="NVIM_APPNAME=nvim nvim -O"
+  alias wipvim="NVIM_APPNAME=wipvim nvim -O"
+  alias lazyvim="NVIM_APPNAME=lazyvim nvim -O"
   alias v=vim
   alias vi="/usr/local/bin/vim"
   alias minvim="nvim -u NONE"
@@ -231,7 +233,7 @@ alias eks="nvim $DOTS/config/kitty/sessions/default.session"
 alias eq="nvim $DOTS/home/qutebrowser/config.py"
 
 alias ew="nvim $DOTS/config/wezterm/wezterm.lua"
-alias wezup="brew upgrade --cask wezterm-nightly --no-quarantine --greedy-latest"
+alias wezup="brew upgrade --cask homebrew/cask-versions/wezterm-nightly --no-quarantine --greedy-latest"
 
 alias ezmk="nvim $HOME/code/zmk-config/config/leeloo.keymap"
 alias eqmk="nvim $HOME/code/megalithic_qmk/keyboards/atreus62/keymaps/megalithic/keymap.c"

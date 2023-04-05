@@ -28,10 +28,15 @@ end
 local function usbHandler(device)
   dbg(fmt(":: [status] usb: %s", I(device)))
   if device.productName == DockConfig.target.productName then
-    obj.watchers.status.dock = device.eventType == "added"
-    dbg(fmt(":: [status] usb: %s", I((device.eventType == "added"))))
-    obj.watchers.status.leeloo = checkLeelooConnection()
+    dbg(fmt(":: [status] usb (%s): %s", DockConfig.target.productName, I((device.eventType == "added"))))
+
+    if device.eventType == "added" then
+      obj.watchers.status.dock = true
+    elseif device.eventType == "removed" then
+      obj.watchers.status.dock = false
+    end
   end
+  obj.watchers.status.leeloo = checkLeelooConnection()
 end
 
 local function screenHandler()
