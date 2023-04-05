@@ -73,7 +73,7 @@ local theme = lush(function(injected_functions)
     -- CursorLineNrNC({ CursorLine, fg = C.transparent, bg = C.bg2 }), -- Like LineNr when 'cursorline' or 'relativenumber' is set for the cursor line.
     -- CursorLineSign({ CursorLine }),
     VertSplit({ fg = C.bg4, bg = C.transparent }), -- the column separating vertically split windows
-    WinSeparator({ VertSplit, fg = C.bg2, gui = "bold" }),
+    WinSeparator({ VertSplit, fg = C.bg_dark, gui = "bold" }),
 
     Comment({ fg = C.grey1, bg = C.transparent, gui = "italic" }),
     Directory({ fg = C.green, bg = C.transparent }), -- directory names (and other special names in listings)
