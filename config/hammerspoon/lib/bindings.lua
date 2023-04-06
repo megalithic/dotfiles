@@ -114,11 +114,9 @@ function obj:start()
       local B = require("lib.browser")
 
       if key and target then
-        local targetType = type(target)
-
         Hyper:bind(mods, key, function()
           -- we've only passed a string, assuming an application's bundleID
-          if targetType == "string" then
+          if type(target) == "string" then
             if mode == "focus" then
               launch.focusOnly(target)
             else
