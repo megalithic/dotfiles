@@ -400,6 +400,10 @@ nnoremap("<leader>R", "<cmd>cfdo %s/<C-r>s//g<bar>update<cr>")
 -- # save and execute vim/lua file
 nmap("<leader>x", mega.save_and_exec)
 
+-- # equal/golden-ratio window resizing
+nmap("gw", function() mega.resize_windows() end, { desc = "window: resize splits (golden-ratio)" })
+nmap("gW", "<cmd>wincmd =<cr>", { desc = "window: resize splits (equally)" })
+
 -- [plugin mappings] -----------------------------------------------------------
 
 -- # treesitter
@@ -409,7 +413,7 @@ xnoremap("au", ":lua require\"treesitter-unit\".select(true)<CR>")
 onoremap("iu", ":<c-u>lua require\"treesitter-unit\".select()<CR>")
 onoremap("au", ":<c-u>lua require\"treesitter-unit\".select(true)<CR>")
 
--- -- # dirbuf.nvim
+-- # dirbuf.nvim
 nmap("-", "<Nop>") -- disable this mapping globally, only map in dirbuf ftplugin
 
 -- # formatter.nvim
