@@ -115,6 +115,7 @@ function obj:start()
 
       if key and target then
         Hyper:bind(mods, key, function()
+          dbg(fmt("key/mode/type/target: %s/%s/%s/%s", key, mode, type(target), I(target)))
           -- we've only passed a string, assuming an application's bundleID
           if type(target) == "string" then
             if mode == "focus" then
@@ -144,24 +145,28 @@ function obj:start()
             local launchType = foundTarget[1]
             local launchTarget = foundTarget[2]
 
-            if launchType == "bundleID" then
-              hs.fnutils.each(target, function(t)
-                local locals = t.locals
-                if locals and #locals > 0 then
-                  hs.fnutils.each(locals, function(k)
-                    dbg(fmt("passthrough: %s/%s", k, launchTarget))
-                    Hyper:bindPassThrough(k, launchTarget)
-                  end)
-                end
-              end)
+            if #foundTarget > 0 then
+              dbg(fmt("launch type/target", I(launchType), I(launchTarget)))
+              if launchType == "bundleID" then
+                hs.fnutils.each(target, function(t)
+                  local locals = t.locals
+                  if locals and #locals > 0 then
+                    hs.fnutils.each(locals, function(k)
+                      dbg(fmt("binding local passthroughs: %s/%s", k, launchTarget))
 
-              if mode == "focus" then
-                launch.focusOnly(launchTarget)
-              else
-                launch.toggle(launchTarget, false)
+                      Hyper:bindPassThrough(k, launchTarget)
+                    end)
+                  end
+                end)
+
+                if mode == "focus" then
+                  launch.focusOnly(launchTarget)
+                else
+                  launch.toggle(launchTarget, false)
+                end
+              elseif launchType == "url" then
+                B.jump(launchTarget)
               end
-            elseif launchType == "url" then
-              B.jump(launchTarget)
             end
           end
         end)
