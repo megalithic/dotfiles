@@ -37,9 +37,6 @@ local bt_ignores = {
   "startuptime",
 }
 
-local ignored_height = nil
-local ignored_width = nil
-
 local function ignored_by_window_resize_flag()
   local ignore_golden_resize = false
 
@@ -58,25 +55,17 @@ local function is_ignored(bufnr)
     or ignored_by_window_resize_flag()
     or is_floating_win()
 
-  -- P(fmt("resize_windows should ignore (%s): %s", should_ignore, vim.bo[bufnr].filetype, vim.bo[bufnr].buftype))
   return should_ignore
 end
 
 function mega.resize_windows(bufnr)
-  -- P(fmt("resize_windows filetype: %s", vim.bo[bufnr].filetype))
-  if is_ignored(bufnr or 0) then return end
+  bufnr = bufnr or 0
+  if is_ignored(bufnr) then return end
 
   local columns = vim.api.nvim_get_option("columns")
   local rows = vim.api.nvim_get_option("lines")
   local current_height = vim.api.nvim_win_get_height(0)
   local current_width = vim.api.nvim_win_get_width(0)
-
-  -- ignored_height = current_height
-  -- ignored_width = current_width
-  -- vim.api.nvim_win_set_height(0, ignored_height)
-  -- vim.api.nvim_win_set_width(0, ignored_width)
-  -- vim.cmd(fmt("let &winwidth=%d", ignored_width))
-  -- vim.cmd(fmt("let &winheight=%d", ignored_height))
 
   local golden_height = math.floor(rows / GOLDEN_RATIO)
   local golden_width = math.floor(columns / GOLDEN_RATIO)
@@ -85,56 +74,9 @@ function mega.resize_windows(bufnr)
   if current_height < golden_height then vim.api.nvim_win_set_height(0, golden_height) end
 end
 
------------------------------------------------------------------------------//
--- Autoresize
------------------------------------------------------------------------------//
--- Auto resize Vim splits to active split to 70% -
--- https://stackoverflow.com/questions/11634804/vim-auto-resize-focused-window
-function mega.auto_resize()
-  -- local auto_resize_on = false
-  -- return function(args)
-  --   if not auto_resize_on then
-  --     local factor = args and tonumber(args) or 70
-  --     local fraction = factor / 10
-  --     -- NOTE: mutating &winheight/&winwidth are key to how
-  --     -- this functionality works, the API fn equivalents do
-  --     -- not work the same way
-  --     vim.cmd(fmt("let &winheight=&lines * %d / 10 ", fraction))
-  --     vim.cmd(fmt("let &winwidth=&columns * %d / 10 ", fraction))
-  --     auto_resize_on = true
-  --     vim.notify("Auto resize ON")
-  --   else
-  --     vim.cmd("let &winheight=30")
-  --     vim.cmd("let &winwidth=30")
-  --     vim.cmd("wincmd =")
-  --     auto_resize_on = false
-  --     vim.notify("Auto resize OFF")
-  --   end
-  -- end
-end
-
--- mega.command("AutoResize", mega.auto_resize(), { nargs = "?" })
-
 mega.augroup("WindowsGoldenResizer", {
   {
     event = { "WinEnter", "VimResized" },
     command = function(args) mega.resize_windows(args.buf) end,
-  },
-  {
-    event = { "WinLeave" },
-    command = function(args)
-      -- if is_ignored(args.buf) then
-      --   P(fmt("resize_windows winleave: %s(%d)", vim.api.nvim_buf_get_name(args.buf), args.buf))
-      --   -- if ignored_height ~= nil then vim.api.nvim_command(vim.api.nvim_win_set_height(0, ignored_height)) end
-      --   -- if ignored_width ~= nil then vim.api.nvim_command(vim.api.nvim_win_set_width(0, ignored_width)) end
-      --   -- vim.cmd(fmt("let &winwidth=%d", ignored_width))
-      --   -- vim.cmd(fmt("let &winheight=%d", ignored_height))
-      -- end
-
-      -- if ignored_height ~= nil then vim.api.nvim_command(vim.api.nvim_win_set_height(0, ignored_height)) end
-      -- if ignored_width ~= nil then vim.api.nvim_command(vim.api.nvim_win_set_width(0, ignored_width)) end
-      -- vim.cmd(fmt("let &winwidth=%d", ignored_width))
-      -- vim.cmd(fmt("let &winheight=%d", ignored_height))
-    end,
   },
 })
