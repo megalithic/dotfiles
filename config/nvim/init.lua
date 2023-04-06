@@ -62,6 +62,7 @@ require("mega.globals")
 require("mega.debug")
 require("mega.options")
 require("mega.lazy").setup()
+require("mega.mappings")
 
 -- [ colorscheme ] -------------------------------------------------------------
 
