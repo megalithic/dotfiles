@@ -33,7 +33,6 @@ local transientApps = {
 local networks = { "shaolin" }
 
 local displays = {
-  -- laptop = "Color LCD",
   laptop = "Built-in Retina Display",
   external = "LG UltraFine",
 }
@@ -110,22 +109,6 @@ local launchers = {
       {
         "com.obsproject.obs-studio",
         locals = {},
-        rules = {
-          { "", 2, "maximized" },
-        },
-      },
-    },
-  },
-  {
-    "net.kovidgoyal.kitty",
-    -- key = "k",
-    target = {
-      {
-        "net.kovidgoyal.kitty",
-        locals = {},
-        rules = {
-          { "", 1, "maximized" },
-        },
       },
     },
   },
@@ -135,9 +118,15 @@ local launchers = {
       {
         "com.github.wez.wezterm",
         locals = {},
-        rules = {
-          { "", 1, "maximized" },
-        },
+      },
+    },
+  },
+  {
+    key = "space",
+    target = {
+      {
+        "com.raycast.macos",
+        locals = {},
       },
     },
   },
@@ -154,6 +143,9 @@ local apps = {
     name = "Raycast",
     bundleID = "com.raycast.macos",
     key = "space",
+    rules = {
+      { "", 1, "centeredMedium" },
+    },
   },
   ["net.kovidgoyal.kitty"] = {
     bundleID = "net.kovidgoyal.kitty",
@@ -172,19 +164,7 @@ local apps = {
   ["org.chromium.Chromium"] = {
     bundleID = "org.chromium.Chromium",
     name = "Chromium",
-    key = "j",
     quitter = true,
-    localBindings = {},
-    tags = { "browsers" },
-    rules = {
-      { "", 1, "maximized" },
-    },
-  },
-  ["org.mozilla.firefox"] = {
-    bundleID = "org.mozilla.firefox",
-    name = "Firefox",
-    quitter = true,
-    localBindings = {},
     tags = { "browsers" },
     rules = {
       { "", 1, "maximized" },
@@ -194,17 +174,6 @@ local apps = {
     bundleID = "org.mozilla.firefoxdeveloperedition",
     name = "Firefox Developer Edition",
     quitter = true,
-    localBindings = {},
-    tags = { "browsers" },
-    rules = {
-      { "", 1, "maximized" },
-    },
-  },
-  ["com.vivaldi.Vivaldi"] = {
-    bundleID = "com.vivaldi.Vivaldi",
-    name = "Vivaldi",
-    quitter = true,
-    localBindings = {},
     tags = { "browsers" },
     rules = {
       { "", 1, "maximized" },
@@ -213,17 +182,7 @@ local apps = {
   ["com.brave.Browser.dev"] = {
     bundleID = "com.brave.Browser.dev",
     name = "Brave Browser Dev",
-    -- key = "j",
-    localBindings = {},
-    tags = { "browsers" },
-    rules = {
-      { "", 1, "maximized" },
-    },
-  },
-  ["com.brave.Browser"] = {
-    bundleID = "com.brave.Browser",
-    name = "Brave Browser",
-    localBindings = {},
+    key = "j",
     tags = { "browsers" },
     rules = {
       { "", 1, "maximized" },
@@ -233,7 +192,6 @@ local apps = {
     bundleID = "com.apple.Safari",
     name = "Safari",
     quitter = true,
-    localBindings = {},
     tags = { "browsers" },
     rules = {
       { "", 1, "maximized" },
@@ -243,7 +201,6 @@ local apps = {
     bundleID = "com.apple.SafariTechnologyPreview",
     name = "Safari Technology Preview",
     quitter = true,
-    localBindings = {},
     tags = { "browsers" },
     rules = {
       { "", 1, "maximized" },
@@ -275,66 +232,13 @@ local apps = {
       { "All Messages", 2, "maximized" },
     },
   },
-
-  ["com.binarynights.ForkLift-3"] = {
-    bundleID = "com.binarynights.ForkLift-3",
-    name = "ForkLift",
-    -- key = "f",
-    rules = {
-      { "", 1, "centeredMedium" },
-    },
-  },
   ["com.apple.finder"] = {
     bundleID = "com.apple.finder",
     name = "Finder",
     key = "f",
     rules = {
-      { "Finder", 1, "centeredMedium" },
+      { "", 1, "centeredMedium" },
     },
-  },
-  -- ["com.pop.pop.app"] = {
-  --   bundleID = "com.pop.pop.app",
-  --   name = "Pop",
-  --   key = "z",
-  --   -- launcher = function()
-  --   --   if hs.application.find("us.zoom.xos") then
-  --   --     hs.application.launchOrFocusByBundleID("us.zoom.xos")
-  --   --   else
-  --   --   end
-  --   -- end,
-  --   launchMode = "focus",
-  -- },
-  -- ["us.zoom.xos"] = {
-  --   bundleID = "us.zoom.xos",
-  --   name = "zoom.us",
-  --   key = "z",
-  --   -- launcher = function()
-  --   --   if hs.application.find("us.zoom.xos") then
-  --   --     hs.application.launchOrFocusByBundleID("us.zoom.xos")
-  --   --   else
-  --   --     require("lib.browser").jump("meet.google.com|hangouts.google.com.call")
-  --   --   end
-  --   -- end,
-  --   launchMode = "focus",
-  -- },
-
-  -- ["com.brave.Browser.dev.app.kjgfgldnnfoeklkmfkjfagphfepbbdan"] = {
-  --   bundleID = "com.brave.Browser.dev.app.kjgfgldnnfoeklkmfkjfagphfepbbdan",
-  --   name = "Google Meet",
-  --   key = "z",
-  --   -- launcher = function()
-  --   --   if hs.application.find("us.zoom.xos") then
-  --   --     hs.application.launchOrFocusByBundleID("us.zoom.xos")
-  --   --   else
-  --   --     require("lib.browser").jump("meet.google.com|hangouts.google.com.call")
-  --   --   end
-  --   -- end,
-  --   launchMode = "focus",
-  -- },
-
-  ["com.loom.desktop"] = {
-    bundleID = "com.loom.desktop",
-    name = "Loom",
   },
   ["com.spotify.client"] = {
     bundleID = "com.spotify.client",
@@ -371,7 +275,6 @@ local apps = {
     key = "s",
     mods = mods.caSc,
     distraction = true,
-    -- tags = { "chat" },
     rules = {
       { "", 2, "right50" },
     },
@@ -379,7 +282,6 @@ local apps = {
   ["com.tinyspeck.slackmacgap"] = {
     bundleID = "com.tinyspeck.slackmacgap",
     name = "Slack",
-    -- tags = { "chat" },
     key = "s",
     distraction = true,
     rules = {
@@ -430,6 +332,7 @@ local apps = {
     name = "Figma",
     -- key = "f",
     -- mods = mods.caSc,
+    launchMode = "focus",
     quitter = true,
     rules = {
       { "", 1, "maximized" },
@@ -446,12 +349,12 @@ local apps = {
     key = "i",
     quitter = false,
     launchMode = "focus",
-    localBindings = {},
     rules = {
       { "", 1, "right30" },
     },
   },
 }
+local layouts = apps
 
 local utils = {
   {
@@ -496,6 +399,7 @@ local dock = {
 }
 
 return {
+  ["layouts"] = layouts,
   ["bindings"] = {
     ["apps"] = apps,
     ["utils"] = utils,

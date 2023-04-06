@@ -73,7 +73,7 @@ function obj:stop(opts)
 
       local term = hs.application.get("wezterm") or hs.application.get("kitty")
       if term ~= nil then
-        hs.execute([[printf "\033]1337;SetUserVar=%s=%s\007" SCREEN_SHARE_MODE `echo -n -8 | base64`]], true)
+        -- hs.execute([[printf "\033]1337;SetUserVar=%s=%s\007" SCREEN_SHARE_MODE `echo -n -8 | base64`]], true)
         -- hs.execute("kitty @ --to unix:/tmp/mykitty set-font-size " .. defaultKittyFont, true)
         local term_win = term:mainWindow()
         if term_win ~= nil then term_win:moveToUnit(hs.layout.maximized) end

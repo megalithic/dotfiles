@@ -93,11 +93,13 @@ nnoremap("<localleader>f", "<cmd>LspFormatWrite<cr>", "run lsp formatter")
 exec("silent! unmap [%", true)
 exec("silent! unmap ]%", true)
 
-nnoremap("<Tab>", "%")
-smap("<Tab>", "%")
-vmap("<Tab>", "%")
-xmap("<Tab>", "%")
-omap("<Tab>", "%")
+map({ "n", "o", "s", "v", "x" }, "<tab>", "%", { desc = "jump to opening/closing delimiter", remap = true })
+-- nmap("<Tab>", "%")
+-- nnoremap("<Tab>", "%")
+-- smap("<Tab>", "%")
+-- vmap("<Tab>", "%")
+-- xmap("<Tab>", "%")
+-- omap("<Tab>", "%")
 
 -- https://github.com/tpope/vim-rsi/blob/master/plugin/rsi.vim
 -- c-a / c-e everywhere - RSI.vim provides these

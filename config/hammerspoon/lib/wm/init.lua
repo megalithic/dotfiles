@@ -94,7 +94,7 @@ end
 function obj.applyContext(bundleID, appObj, event, fromWindowFilter)
   for key, context in pairs(obj.contextModals) do
     if key == bundleID then
-      local appConfig = obj.apps[bundleID]
+      local appConfig = obj.layouts[bundleID]
       note(
         fmt(
           "[context_%s] (%s%s)",
@@ -128,7 +128,7 @@ end
 
 -- general handlers like quit-guard, delayed hiding or quitting/closing, etc.
 function obj.applyHandlers(bundleID, appObj, event, fromWindowFilter)
-  local appConfig = obj.apps[bundleID]
+  local appConfig = obj.layouts[bundleID]
   local lollygagger = L.load("lib.lollygagger", { id = bundleID, silent = true })
 
   if appConfig then
@@ -142,7 +142,7 @@ end
 local function handleWatcher(bundleID, appObj, event, fromWindowFilter)
   if event == Application.watcher.launched and bundleID ~= nil then
     note(fmt("[LAUNCHED] %s", bundleID))
-    local appConfig = obj.apps[bundleID]
+    local appConfig = obj.layouts[bundleID]
     if appConfig then obj.applyLayout(appConfig) end
   elseif event == Application.watcher.terminated and bundleID ~= nil then
     note(fmt("[TERMINATED] %s", bundleID))
@@ -200,7 +200,7 @@ end
 function obj:init(opts)
   opts = opts or {}
 
-  obj.apps = C.bindings.apps
+  obj.layouts = C.layouts
 
   Snap = L.load("lib.wm.snap"):start()
   obj.watcher = L.load("lib.contexts", { id = "wm.watcher" })
@@ -213,12 +213,12 @@ end
 function obj:start(opts)
   opts = opts or {}
 
-  local filters = generateAppFilters(obj.apps)
+  local filters = generateAppFilters(obj.layouts)
 
   -- lib/contexts/init.lua instance; manually call :start() on it
-  obj.watcher:start(obj.apps, filters, handleWatcher)
+  obj.watcher:start(obj.layouts, filters, handleWatcher)
 
-  obj.layoutRunningApps(obj.apps)
+  obj.layoutRunningApps(obj.layouts)
 
   note(fmt("[START] %s (%s)", obj.name, obj.mode))
 

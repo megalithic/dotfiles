@@ -18,23 +18,22 @@ end
 
 function obj.hasTab(url)
   if browser and hs.fnutils.contains(obj.browsers, browser:name()) then
-    return hs.osascript.javascript([[
+    local _status, returnedObj, _descriptor = hs.osascript.javascript([[
     (function() {
       var browser = Application(']] .. browser:name() .. [[');
-      browser.activate();
-      var foundTab = false;
-      for (win of browser.windows()) {
-        var tabIndex =
-          win.tabs().findIndex(tab => tab.url().match(/]] .. string.gsub(url, "/", "\\/") .. [[/));
-         foundTab = (tabIndex != -1)
-      }
+      const foundTab = browser.windows().filter((win) => {
+        const tabIndex = win.tabs().findIndex(tab => tab.url().match(/]] .. string.gsub(url, "/", "\\/") .. [[/));
+        return tabIndex !== -1
+      })
 
-      return foundTab;
+      return foundTab.length > 0;
     })();
     ]])
+
+    return returnedObj
   end
 
-  return false
+  return nil
 end
 
 function obj.jump(url)

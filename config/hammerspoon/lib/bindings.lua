@@ -102,15 +102,16 @@ function obj:start()
 
   -- [ launcher bindings ] -----------------------------------------------------
 
-  bind(bindings.launchers, "launchers", function(l)
-    local launcher = L.load("lib.launcher") or {}
+  bind(bindings.launchers, "launchers", function(launcher)
+    local launch = L.load("lib.launcher") or {}
 
-    hs.fnutils.each(l, function(cfg)
-      local key = cfg.key
-      local mods = cfg.mods or {}
-      local target = cfg.target
-      local mode = cfg.mode or "launch"
-      -- local B = require("lib.browser")
+    hs.fnutils.each(launcher, function(spec)
+      dbg(I(spec))
+      local key = spec.key
+      local mods = spec.mods or {}
+      local target = spec.target
+      local mode = spec.mode or "launch"
+      local B = require("lib.browser")
 
       if key and target then
         local targetType = type(target)
@@ -119,34 +120,51 @@ function obj:start()
           -- we've only passed a string, assuming an application's bundleID
           if targetType == "string" then
             if mode == "focus" then
-              launcher.focusOnly(target)
+              launch.focusOnly(target)
             else
-              launcher.toggle(target, false)
+              launch.toggle(target, false)
             end
             -- we've got a table to use various extra properties
           elseif type(target) == "table" then
-            hs.fnutils.each(target, function(t)
-              local targetId = t[1]
+            local foundTarget = hs.fnutils.reduce(target, function(acc, el)
+              local targetId = el[1]
               local isUrl = targetId:match("[a-z]*://[^ >,;]*")
               local targetRunning = hs.application.find(targetId) ~= nil
-              --
-              -- local locals = t.locals
-              -- if locals and #locals > 0 then
-              --   hs.fnutils.each(locals, function(k) Hyper:bindPassThrough(k, targetId) end)
-              -- end
+              local targetType = nil
 
               if targetRunning and not isUrl then
-                -- dbg(fmt("isNOTUrl: %s", targetId))
-                if mode == "focus" then
-                  launcher.focusOnly(targetId)
-                else
-                  launcher.toggle(targetId, false)
-                end
-                -- elseif not targetRunning and isUrl then
-                --   dbg(fmt("isUrl: %s", targetId))
-                --    B.jump(targetId)
+                targetType = "bundleID"
+              elseif not targetRunning and isUrl and B.hasTab(targetId) then
+                targetType = "url"
               end
-            end)
+
+              if targetType ~= nil then return hs.fnutils.concat(acc, { targetType, targetId }) end
+
+              return acc
+            end, {})
+
+            local launchType = foundTarget[1]
+            local launchTarget = foundTarget[2]
+
+            if launchType == "bundleID" then
+              hs.fnutils.each(target, function(t)
+                local locals = t.locals
+                if locals and #locals > 0 then
+                  hs.fnutils.each(locals, function(k)
+                    dbg(fmt("passthrough: %s/%s", k, launchTarget))
+                    Hyper:bindPassThrough(k, launchTarget)
+                  end)
+                end
+              end)
+
+              if mode == "focus" then
+                launch.focusOnly(launchTarget)
+              else
+                launch.toggle(launchTarget, false)
+              end
+            elseif launchType == "url" then
+              B.jump(launchTarget)
+            end
           end
         end)
       else
