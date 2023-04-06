@@ -1,4 +1,3 @@
--- local border, highlight, L = as.ui.current.border, as.highlight, vim.log.levels
 local border = mega.get_border()
 
 return {

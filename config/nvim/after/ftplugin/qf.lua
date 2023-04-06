@@ -17,14 +17,7 @@ vim.cmd([[
   call s:adjust_height(3, 10)
   setlocal winfixheight
 
-  "--------------------------------------------------------------------------------
-  " Helper functions
-  "--------------------------------------------------------------------------------
-  " nnoremap <silent><buffer>dd :lua as.qf.delete()<CR>
-  " vnoremap <silent><buffer>d  :lua as.qf.delete()<CR>
-
-  " Resources and inspiration
-  " 2. https://github.com/romainl/vim-qf/blob/2e385e6d157314cb7d0385f8da0e1594a06873c5/autoload/qf.vim#L22
+  " REF: https://github.com/romainl/vim-qf/blob/2e385e6d157314cb7d0385f8da0e1594a06873c5/autoload/qf.vim#L22
 ]])
 
 nnoremap("<C-n>", [[:cnext<cr>]], { buffer = 0, label = "QF: next" })

@@ -489,7 +489,7 @@ for _, mode in ipairs({ "n", "x", "i", "v", "o", "t", "s", "c" }) do
 end
 _G.map = vim.keymap.set
 
---- Validate the keys passed to as.augroup are valid
+--- Validate the keys passed to mega.augroup are valid
 ---@param name string
 ---@param cmd Autocommand
 local function validate_autocmd(name, cmd)

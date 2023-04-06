@@ -1,6 +1,5 @@
 local api = vim.api
 local fn = vim.fn
--- local highlights = require("as.highlights")
 
 local function leap_keys()
   require("leap").leap({
