@@ -73,14 +73,14 @@ function M.config()
       -- },
       {
         event = "neo_tree_window_after_close",
-        handler = function(args)
-          require("virt-column").refresh()
+        handler = function(_args)
           mega.resize_windows()
+          require("virt-column").refresh()
         end,
       },
       {
         event = "neo_tree_popup_buffer_enter",
-        handler = function(args) vim.cmd("highlight! Cursor blend=0") end,
+        handler = function(_args) vim.cmd("highlight! Cursor blend=0") end,
       },
     },
     filesystem = {

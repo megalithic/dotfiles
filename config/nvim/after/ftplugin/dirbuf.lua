@@ -16,3 +16,5 @@ vim.cmd([[nmap <buffer> <leader>ed :q<CR>]])
 nnoremap("<C-v>", function() require("dirbuf").enter("vsplit") end, "dirbuf: open in vsplit")
 nnoremap("<C-s>", function() require("dirbuf").enter("vsplit") end, "dirbuf: open in split")
 nnoremap("<C-t>", function() require("dirbuf").enter("tabedit") end, "dirbuf: open in tab")
+
+-- vim.api.nvim_win_set_width(0, 60)

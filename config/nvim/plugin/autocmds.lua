@@ -36,7 +36,10 @@ augroup("Startup", {
     command = function(args)
       if not vim.g.started_by_firenvim then
         if vim.fn.argc() > 1 then
-          vim.schedule(function() mega.resize_windows(args.buf) end, 0)
+          vim.schedule(function()
+            mega.resize_windows(args.buf)
+            require("virt-column").refresh()
+          end, 0)
           -- elseif vim.fn.argc() == 0 then
           --   require("mega.start").start()
         end
