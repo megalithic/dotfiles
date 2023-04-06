@@ -59,6 +59,9 @@ local function is_ignored(bufnr)
 end
 
 function mega.resize_windows(bufnr)
+  -- necessary to avoid split widths from going tooo small
+  vim.o.winminwidth = 20
+
   bufnr = bufnr or 0
   if is_ignored(bufnr) then return end
 
