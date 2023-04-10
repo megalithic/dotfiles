@@ -12,7 +12,7 @@ function obj:init(opts)
   spoon.SpoonInstall.use_syncinstall = true
   Install = spoon.SpoonInstall
 
--- local config = C
+  -- local config = C
 
   -- Install:andUse("Seal", {
   --   -- NOTE: see bindings module for hotkey binding
@@ -44,6 +44,7 @@ function obj:init(opts)
   -- })
   Install:andUse("EmmyLua")
   Install:andUse("URLDispatcher", {
+    -- TODO: https://github.com/hthuong09/dots/blob/master/.hammerspoon/HandleURLDispatch.lua
     start = true,
     loglevel = "debug",
     config = {
@@ -61,6 +62,8 @@ function obj:init(opts)
         { "https?://open.spotify.com", "com.spotify.client" },
         { "spotify:", "com.spotify.client" },
         { "https?://www.github.com", "com.brave.Browser.dev" },
+        { "https?://accounts.bellhop.test", "com.apple.Safari" },
+        { "https?://admin.bellhop.test", "com.apple.Safari" },
       },
       url_redir_decoders = {
         {

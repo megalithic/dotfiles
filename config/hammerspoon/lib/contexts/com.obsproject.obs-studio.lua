@@ -38,10 +38,20 @@ function obj:start(opts)
         { term:name(), nil, 1, hs.layout.maximized, nil, nil },
       })
       term:setFrontmost(true)
-      -- hs.execute("kitty @ --to unix:/tmp/mykitty set-font-size " .. (defaultKittyFont + defaultKittyFontDelta), true)
-      hs.execute([[printf "\033]1337;SetUserVar=%s=%s\007" SCREEN_SHARE_MODE `echo -n +8 | base64`]], true)
-      -- printf "\033]1337;SetUserVar=%s=%s\007" hacky-user-command $(printf '{"cmd":"open-tab","title":"%s"}' $1 | base64)
-      -- stdout:write(('\x1b]1337;SetUserVar=%s=%s\b'):format('ZEN_MODE', vim.fn.system({ 'base64' }, tostring(opts.font))))
+      if term:name() == "kitty" then
+        hs.execute("kitty @ --to unix:/tmp/mykitty set-font-size " .. (defaultKittyFont + defaultKittyFontDelta), true)
+      elseif term:name() == "wezterm" then
+        -- hs.execute("wezterm-cli SCREEN_SHARE_MODE on", true)
+        hs.task
+          .new(
+            os.getenv("HOME") .. "/.dotfiles/bin/wezterm-cli",
+            function(stdTask, stdOut, stdErr)
+              dbg(fmt("wezterm SCREEN_SHARE_MODE set to on, %s / %s", I(stdOut), I(stdErr)))
+            end,
+            { "SCREEN_SHARE_MODE", "on" }
+          )
+          :start()
+      end
     end
   end
 
@@ -76,9 +86,21 @@ function obj:stop(opts)
 
       local term = hs.application.get("wezterm") or hs.application.get("kitty")
       if term ~= nil then
-        hs.execute([[printf "\033]1337;SetUserVar=%s=%s\007" SCREEN_SHARE_MODE `echo -n -8 | base64`]], true)
+        if term:name() == "kitty" then
+          hs.execute("kitty @ --to unix:/tmp/mykitty set-font-size " .. defaultKittyFont, true)
+        elseif term:name() == "wezterm" then
+          -- hs.execute("wezterm-cli SCREEN_SHARE_MODE off", true)
+          hs.task
+            .new(
+              os.getenv("HOME") .. "/.dotfiles/bin/wezterm-cli",
+              function(stdTask, stdOut, stdErr)
+                dbg(fmt("wezterm SCREEN_SHARE_MODE set to off, %s / %s", I(stdOut), I(stdErr)))
+              end,
+              { "SCREEN_SHARE_MODE", "off" }
+            )
+            :start()
+        end
 
-        -- hs.execute("kitty @ --to unix:/tmp/mykitty set-font-size " .. defaultKittyFont, true)
         local term_win = term:mainWindow()
         if term_win ~= nil then term_win:moveToUnit(hs.layout.maximized) end
       end

@@ -146,7 +146,8 @@ function obj:start()
             local launchTarget = foundTarget[2]
 
             if #foundTarget > 0 then
-              dbg(fmt("launch type/target", I(launchType), I(launchTarget)))
+              dbg(fmt("launch type/target: %s/%s", I(launchType), I(launchTarget)))
+
               if launchType == "bundleID" then
                 hs.fnutils.each(target, function(t)
                   local locals = t.locals
@@ -162,6 +163,7 @@ function obj:start()
                 if mode == "focus" then
                   launch.focusOnly(launchTarget)
                 else
+                  dbg(fmt("about to toggle/launch %s", launchTarget))
                   launch.toggle(launchTarget, false)
                 end
               elseif launchType == "url" then

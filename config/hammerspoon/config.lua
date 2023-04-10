@@ -72,6 +72,9 @@ local quitters = {
   "com.raycast.macos",
   "com.runningwithcrayons.Alfred",
   "net.kovidgoyal.kitty",
+  "org.mozilla.firefoxdeveloperedition",
+  "com.apple.SafariTechnologyPreview",
+  "com.apple.Safari",
   -- "com.github.wez.wezterm", -- stuck with wezterm's built in confirm, need to remove this
 }
 
@@ -112,15 +115,15 @@ local launchers = {
       },
     },
   },
-  {
-    key = "k",
-    target = {
-      {
-        "com.github.wez.wezterm",
-        locals = {},
-      },
-    },
-  },
+  -- {
+  --   key = "k",
+  --   target = {
+  --     {
+  --       "com.github.wez.wezterm",
+  --       locals = {},
+  --     },
+  --   },
+  -- },
   {
     key = "space",
     target = {
@@ -156,25 +159,8 @@ local apps = {
   },
   ["com.github.wez.wezterm"] = {
     bundleID = "com.github.wez.wezterm",
+    key = "k",
     name = "wezterm",
-    rules = {
-      { "", 1, "maximized" },
-    },
-  },
-  ["org.chromium.Chromium"] = {
-    bundleID = "org.chromium.Chromium",
-    name = "Chromium",
-    quitter = true,
-    tags = { "browsers" },
-    rules = {
-      { "", 1, "maximized" },
-    },
-  },
-  ["org.mozilla.firefoxdeveloperedition"] = {
-    bundleID = "org.mozilla.firefoxdeveloperedition",
-    name = "Firefox Developer Edition",
-    quitter = true,
-    tags = { "browsers" },
     rules = {
       { "", 1, "maximized" },
     },
@@ -191,10 +177,11 @@ local apps = {
   ["com.apple.Safari"] = {
     bundleID = "com.apple.Safari",
     name = "Safari",
-    quitter = true,
+    mods = mods.caSc,
+    key = "j",
     tags = { "browsers" },
     rules = {
-      { "", 1, "maximized" },
+      { "", 2, "maximized" },
     },
   },
   ["com.apple.SafariTechnologyPreview"] = {
@@ -203,7 +190,24 @@ local apps = {
     quitter = true,
     tags = { "browsers" },
     rules = {
+      { "", 2, "maximized" },
+    },
+  },
+  ["org.chromium.Chromium"] = {
+    bundleID = "org.chromium.Chromium",
+    name = "Chromium",
+    quitter = true,
+    tags = { "browsers" },
+    rules = {
       { "", 1, "maximized" },
+    },
+  },
+  ["org.mozilla.firefoxdeveloperedition"] = {
+    bundleID = "org.mozilla.firefoxdeveloperedition",
+    name = "Firefox Developer Edition",
+    tags = { "browsers" },
+    rules = {
+      { "", 2, "maximized" },
     },
   },
   ["com.kapeli.dashdoc"] = {

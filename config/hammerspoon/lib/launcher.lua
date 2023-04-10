@@ -33,11 +33,11 @@ end
 obj.toggle = function(appIdentifier, shouldHide)
   -- accepts app name (lowercased), pid, or bundleID; but we ALWAYS use bundleID
   local app = Application.find(appIdentifier)
-  local appBundleID = app and (app:bundleID() or appIdentifier)
+  local appBundleID = app and app:bundleID() or appIdentifier
 
   if not app then
     if appIdentifier ~= nil then
-      Application.launchOrFocusByBundleID(appIdentifier)
+      Application.launchOrFocusByBundleID(appBundleID)
     else
     end
   else
