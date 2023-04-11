@@ -62,9 +62,9 @@ local theme = lush(function(injected_functions)
     CursorColumn({ fg = C.transparent, bg = C.bg2 }), -- Screen-column at the cursor, when 'cursorcolumn' is set.
     CursorWord({ fg = C.transparent, bg = C.transparent, gui = "bold,underline" }),
     CursorLine({ bg = C.bg2 }), -- Screen-line at the cursor, when 'cursorline' is set.  Low-priority if foreground (ctermfg OR fg) is not set.
-    CursorLineNr({ CursorLine, fg = C.brown, gui = "bold,italic" }), -- Like LineNr when 'cursorline' or 'relativenumber' is set for the cursor line.
+    CursorLineNr({ CursorLine, fg = C.brown, bg = C.bg0, gui = "bold,italic" }), -- Like LineNr when 'cursorline' or 'relativenumber' is set for the cursor line.
     -- CursorLineNrNC({ CursorLine, fg = C.transparent, bg = C.bg2 }), -- Like LineNr when 'cursorline' or 'relativenumber' is set for the cursor line.
-    -- CursorLineSign({ CursorLine }),
+    -- CursorLineSign({ bg = C.red }),
     VertSplit({ fg = C.bg4, bg = C.transparent }), -- the column separating vertically split windows
     WinSeparator({ fg = C.bg_dark.li(15), bg = C.bg_dark.li(3), gui = "bold" }),
 
@@ -91,7 +91,7 @@ local theme = lush(function(injected_functions)
     FoldMoreMsg({ Comment, gui = "italic,bold" }), -- |more-prompt|
     NonText({ fg = C.bg4, bg = C.transparent }), -- '@' at the end of the window, characters from 'showbreak' and other characters that do not really exist in the text (e.g., ">" displayed when a double-wide character doesn't fit at the end of the line). See also |hl-EndOfBuffer|.
     Normal({ fg = C.fg, bg = C.transparent }), -- normal text
-    -- NormalNC     { }, -- normal text in non-current windows
+    NormalNC({ bg = C.bg0.da(5) }), -- inactive window split
     Pmenu({ fg = C.fg, bg = C.bg2 }), -- Popup menu: normal item.
     PmenuSel({ fg = C.green, bg = C.bg3 }), -- Popup menu: selected item.
     PmenuSbar({ fg = C.transparent, bg = C.bg2 }), -- Popup menu: scrollbar.
@@ -741,6 +741,13 @@ local theme = lush(function(injected_functions)
     StInfo({ fg = C.cyan, bg = C.bg1, gui = "bold" }),
     StHint({ fg = C.bg5, bg = C.bg1 }),
 
+    ---- :help statuscolumn  ---------------------------------------------------------
+
+    StatusColumnBorder({ bg = C.bg1, fg = "#7c8378" }),
+    -- StatusColumnBuffer({}),
+    --
+    -- [[%#StatusColumnBorder#]], -- HL
+
     ---- :help winbar  ---------------------------------------------------------
 
     WinBar({ StatusLine, gui = "italic" }),
@@ -758,7 +765,7 @@ local theme = lush(function(injected_functions)
 
     ---- :help telescope -------------------------------------------------------
 
-    TelescopeNormal({ bg = C.bg3.darken(25) }),
+    TelescopeNormal({ fg = C.fg, bg = C.bg3.darken(25) }),
     TelescopeBorder({ fg = C.bg0, bg = C.bg3.darken(25) }),
     TelescopeMatching({ Title }),
     TelescopeTitle({ Normal, gui = "bold" }),
@@ -846,9 +853,9 @@ local theme = lush(function(injected_functions)
 
     ---- :help git-signs.txt ---------------------------------------------------
 
-    GitSignsAdd({ fg = C.green, bg = C.transparent }),
-    GitSignsDelete({ fg = C.red, bg = C.transparent }),
-    GitSignsChange({ fg = C.orange, bg = C.transparent }),
+    GitSignsAdd({ fg = C.green }),
+    GitSignsDelete({ fg = C.red }),
+    GitSignsChange({ fg = C.orange }),
 
     ---- tmux-popup ------------------------------------------------------------
 

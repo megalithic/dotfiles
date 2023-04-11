@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+[[ -v DEBUG ]] && set -x
+
+source "$HOME/.config/zsh/lib/helpers.zsh"
+
+ENV_KEY="${1:-}"
+ENV_VALUE="${2:-}"
+
+function __help() {
+  printf -- "\n"
+  printf -- "${white}${bold}USAGE:${reset} %s <ENV_VAR_KEY> <ENV_VAR_VALUE>\n" "wezterm-cli"
+  printf -- "\n"
+  printf -- "${grey}${bold}EXAMPLE:${reset}\n"
+  printf -- "  wezterm-cli SCREEN_SHARE_MODE \"on\"\n"
+  printf -- "\n"
+}
+
+if [[ -z "$ENV_KEY" || -z "$ENV_VALUE" ]]; then
+  log_error "An environment variable key and value must be provided."
+  __help
+  exit 1
+fi
+
+#
+# FIXME:
+# Not presently working, see about remote controlling neovim and mimicking how folke/zen-mode controls wezterm
+#
+echo "$ENV_KEY -> $ENV_VALUE"
+if [ "$TMUX" = "" ]; then
+  printf "\033]1337;SetUserVar=%s=%s\007" "$ENV_KEY" "$(echo -n "$ENV_VALUE" | base64)"
+else
+  printf "\033Ptmux;\033\033]1337;SetUserVar=%s=%s\007\033\\" "$ENV_KEY" "$(echo -n "$ENV_VALUE" | base64)"
+fi
+
+# hs.execute([[echo -e "wezterm-cli SCREEN_SHARE_MODE on" | wezterm cli send-text --pane-id 0]], true)
+# hs.execute([[echo -e "wezterm-cli SCREEN_SHARE_MODE on" | wezterm cli send-text --pane-id 0]], true)

@@ -29,7 +29,10 @@ function mini.surround()
   mega.xnoremap("S", [[:<C-u>lua MiniSurround.add('visual')<CR>]])
 end
 
--- function mini.jump() require("mini.jump").setup({}) end
+function mini.jump()
+  -- require("mini.jump").setup()
+  -- require("mini.jump2d").setup()
+end
 
 function mini.pairs() require("mini.pairs").setup({}) end
 
@@ -157,8 +160,8 @@ function mini.config()
   mini.comment()
   mini.align()
   mini.indentscope()
+  mini.jump()
   -- mini.ai()
-  -- mini.jump()
 end
 
 function mini.init()

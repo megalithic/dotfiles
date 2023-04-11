@@ -311,10 +311,11 @@ return {
             ["<c-v>"] = stopinsert(custom_actions.multi_selection_open_vertical),
             ["<c-s>"] = stopinsert(custom_actions.multi_selection_open_horizontal),
             ["<c-o>"] = stopinsert(custom_actions.multi_selection_open),
-            ["<C-z>"] = actions.toggle_selection,
-            ["<c-t>"] = function(...) return require("trouble.providers.telescope").smart_open_with_trouble(...) end,
-            ["<C-Down>"] = function(...) return require("telescope.actions").cycle_history_next(...) end,
-            ["<C-Up>"] = function(...) return require("telescope.actions").cycle_history_prev(...) end,
+            ["<c-z>"] = actions.toggle_selection,
+            ["<c-r>"] = actions.to_fuzzy_refine,
+            ["<c-t>"] = require("trouble.providers.telescope").smart_open_with_trouble,
+            ["<c-down>"] = function(...) return require("telescope.actions").cycle_history_next(...) end,
+            ["<c-up>"] = function(...) return require("telescope.actions").cycle_history_prev(...) end,
           },
           n = {
             ["<cr>"] = custom_actions.multi_selection_open_vertical,
@@ -328,7 +329,31 @@ return {
         entry_prefix = "  ",
         winblend = 0,
         vimgrep_arguments = grep_files_cmd,
-        buffer_previewer_maker = new_maker,
+        -- buffer_previewer_maker = new_maker,
+        preview = {
+          mime_hook = function(filepath, bufnr, opts)
+            local is_image = function(fp)
+              local image_extensions = { "png", "jpg" } -- Supported image formats
+              local split_path = vim.split(fp:lower(), ".", { plain = true })
+              local extension = split_path[#split_path]
+              return vim.tbl_contains(image_extensions, extension)
+            end
+            if is_image(filepath) then
+              local term = vim.api.nvim_open_term(bufnr, {})
+              local function send_output(_, data, _)
+                for _, d in ipairs(data) do
+                  vim.api.nvim_chan_send(term, d .. "\r\n")
+                end
+              end
+              vim.fn.jobstart({
+                "catimg",
+                filepath, -- Terminal image viewer command
+              }, { on_stdout = send_output, stdout_buffered = true, pty = true })
+            else
+              require("telescope.previewers.utils").set_preview_message(bufnr, opts.winid, "Binary cannot be previewed")
+            end
+          end,
+        },
       },
       extensions = {
         ["zf-native"] = {

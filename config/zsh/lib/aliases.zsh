@@ -148,52 +148,27 @@ alias b="brew"
 # -----------------------------------------------------------------------------
 
 if type nvim >/dev/null 2>&1; then
+  # REF: in neovim -> `:help remote.txt` / https://www.youtube.com/watch?v=xO5yMutC-rM
+  alias nvim="nvim --listen /tmp/nvim.pipe -O" # let's always open multiple files passed in as vsplits
 
   alias slownvim="nvim --startuptime /dev/stdout slow_to_open_file.ex +q | less"
   # alias profilenvim="f() {nvim --startuptime /dev/stderr "$1" +q} && f $1"
   alias profilenvim='hyperfine "nvim --headless +qa" --warmup 5'
-  alias nvimupdate="brew update && brew uninstall neovim && brew install neovim --HEAD && brew postinstall neovim && pip3 install --upgrade pynvim && npm install -g neovim --force && gem install neovim && brew outdated"
-  alias nvimbuild="pushd ~/.local/share/src/neovim && git co master && git up && rm -rf ./.deps && make CMAKE_BUILD_TYPE=RelWithDebInfo && sudo make install && popd"
-  alias buildnvim=nvimbuild
-  alias nvim="nvim -O" # let's always open multiple files passed in as vsplits
+  # alias nvimupdate="brew update && brew uninstall neovim && brew install neovim --HEAD && brew postinstall neovim && pip3 install --upgrade pynvim && npm install -g neovim --force && gem install neovim && brew outdated"
+  # alias nvimbuild="pushd ~/.local/share/src/neovim && git co master && git up && rm -rf ./.deps && make CMAKE_BUILD_TYPE=RelWithDebInfo && sudo make install && popd"
+  # alias buildnvim=nvimbuild
   alias im="nvim"
-  alias nv="/usr/local/Cellar/neovim/0.6.0/bin/nvim"
   alias vm="nvim"
   alias nvm=nv
-  alias vim="NVIM_APPNAME=nvim nvim -O"
-  alias wipvim="NVIM_APPNAME=wipvim nvim -O"
-  alias lazyvim="NVIM_APPNAME=lazyvim nvim -O"
+  alias vim="NVIM_APPNAME=nvim nvim"
   alias v=vim
   alias vi="/usr/local/bin/vim"
   alias minvim="nvim -u NONE"
   alias barevim="nvim -u NONE"
-  alias packs="cd \"${XDG_DATA_HOME:-$HOME/.local/share}\"/nvim/site/pack/"
-  alias rmpaqs="packs; rm -rf paqs; cd -"
   alias ngit="nvim -c \":Neogit kind=replace\""
-  [ -n "$NVIM_LISTEN_ADDRESS" ] && alias nvim=nvr -cc split --remote-wait +'set bufhidden=wipe'
 
   # suffix aliases set the program type to use to open a particular file with an extension
   alias -s {js,html,js,ts,css,md}=nvim
-
-  # function nvim() {
-  #   if [ -n "$NVIM_LISTEN_ADDRESS" ]; then
-  #     nvr -p "$@"
-  #   else
-  #     command nvim "$@"
-  #   fi
-  # }
-  #
-  # This allow using neovim remote when nvim is called from inside a running vim instance
-  # alias darkMode="2>/dev/null defaults read -g AppleInterfaceStyle"
-
-  # alias nvt="nv +tabe +term +NvimuxVerticalSplit +term +tabnext"
-  # alias nvts="nv +tabe +term +NvimuxVerticalSplit +term +NvimuxHorizontalSplit +term +tabnext"
-  # # While in a nvim terminal, open file to current session
-  # if [ -n "${NVIM_LISTEN_ADDRESS+x}" ]; then
-  #   alias nvh='nvr -o'
-  #   alias nvv='nvr -O'
-  #   alias nvt='nvr --remote-tab'
-  # fi
 fi
 
 # CONFIG EDITS

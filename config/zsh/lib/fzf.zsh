@@ -21,11 +21,13 @@ export FZF_DEFAULT_OPTS="
 --no-border
 --reverse
 --extended
---bind ctrl-j:ignore,ctrl-k:ignore
---bind ctrl-f:page-down,ctrl-b:page-up,ctrl-j:down,ctrl-k:up
+--bind=ctrl-j:ignore,ctrl-k:ignore
+--bind=ctrl-f:page-down,ctrl-b:page-up,ctrl-j:down,ctrl-k:up,ctrl-u:up,ctrl-d:down
+--bind=esc:abort
 --cycle
 --preview-window=right:60%:wrap
 --margin=0,0
+--height=22%
 --padding=0,0
 --preview='bat --color=always --style=header,grid --line-range :300 {}'
 --prompt=' '
@@ -65,7 +67,18 @@ export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS
 
 # set -U FZF_DEFAULT_OPTS "--reverse --no-info --prompt=' ' --pointer='' --marker=' ' --ansi --color gutter:-1,bg+:-1,header:4,separator:0,info:0,label:4,border:4,prompt:7,pointer:5,query:7,prompt:7"
 export FZF_CTRL_R_OPTS='--header="command history" --preview-window="hidden"'
+# CTRL-/ to toggle small preview window to see the full command
+# CTRL-Y to copy the command into clipboard using pbcopy
+export FZF_CTRL_R_OPTS="
+  --header='command history (Press CTRL-Y to copy command into clipboard)'
+  --preview 'echo {}' --preview-window up:3:hidden:wrap
+  --bind 'ctrl-/:toggle-preview'
+  --bind 'ctrl-y:execute-silent(echo -n {2..} | pbcopy)+abort'
+  --color header:italic"
 # export FZF_TMUX_OPTS="$FZF_DEFAULT_OPTS" #"-p --no-info --ansi --color gutter:-1,bg+:-1,header:4,separator:0,info:0,label:4,border:4,prompt:7,pointer:5,query:7,prompt:7"
+
+# open fzf in a tmux popup
+# export FZF_TMUX_OPTS='-p80%,60%'
 
 _fzf_megaforest
 
@@ -80,3 +93,17 @@ if has fd; then
   export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
   export FZF_ALT_C_COMMAND="fd --type d --follow --hidden --color=always --no-ignore-vcs --exclude 'Library'"
 fi
+
+# Advanced customization of fzf options via _fzf_comprun function
+# - The first argument to the function is the name of the command.
+# - You should make sure to pass the rest of the arguments to fzf.
+_fzf_comprun() {
+  local command=$1
+  shift
+
+  case "$command" in
+    git)          git --help -a | grep -E '^\s+' | awk '{print $1}' | fzf "$@" ;;
+    cd)           fzf --preview 'tree -C {} | head -200'   "$@" ;;
+    *)            fzf "$@" ;;
+  esac
+}

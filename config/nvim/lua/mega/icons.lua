@@ -163,10 +163,12 @@ return {
     float = "",
   },
   separators = {
+    thin_block = "│",
     left_thin_block = "▏",
     vert_bottom_half_block = "▄",
     vert_top_half_block = "▀",
     right_block = "🮉",
+    right_med_block = "▐",
     light_shade_block = "░",
   },
   misc = {

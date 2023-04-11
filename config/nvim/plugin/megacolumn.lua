@@ -6,12 +6,12 @@ local ui, separators = mega.ui, mega.icons.separators
 
 local space = " "
 local shade = separators.light_shade_block
-local separator = separators.left_thin_block -- '│'
+local border = separators.thin_block
 -- local SIGN_COL_WIDTH, GIT_COL_WIDTH, space = 2, 1, ' '
 -- local fcs = vim.opt.fillchars:get()
 local fold_opened = "▽" -- '▼'
 local fold_closed = "▷" -- '▶'
-local sep_hl = "%#StatusColSep#"
+local border_hl = "%#StatusColumnBorder#"
 
 ui.statuscolumn = {}
 
@@ -82,7 +82,7 @@ end
 --   --   -- return click("toggle_breakpoint", padding .. lnum)
 -- end
 
-local function nr(win)
+local function nr(win, _line_count)
   if v.virtnum < 0 then return shade end -- virtual line
   if v.virtnum > 0 then return space end -- wrapped line
   local num = vim.wo[win].relativenumber and not mega.empty(v.relnum) and v.relnum or v.lnum
@@ -93,8 +93,8 @@ local function nr(win)
 end
 
 local function sep()
-  local separator_hl = v.virtnum >= 0 and mega.empty(v.relnum) and sep_hl or ""
-  return separator_hl .. separator
+  local separator_hl = v.virtnum >= 0 and mega.empty(v.relnum) and border_hl or ""
+  return separator_hl .. border
 end
 
 function ui.statuscolumn.render()
@@ -116,13 +116,12 @@ function ui.statuscolumn.render()
   local components = {
     "%=",
     space,
-    nr(curwin, line_count),
-    space,
     sign and hl(sign.texthl, sign.text:gsub(space, "")) or space,
-    space,
     git_sign and hl(git_sign.texthl, git_sign.text:gsub(space, "")) or space,
-    sep(),
     fdm(),
+    -- space,
+    nr(curwin, line_count),
+    sep(),
     space,
   }
   return table.concat(components, "")
@@ -157,20 +156,25 @@ local excluded = {
   "Trouble",
   "NeogitCommitMessage",
   "NeogitRebaseTodo",
+  "neotest-summary",
   "qf",
   "quickfixlist",
   "quickfix",
 }
 
 -- vim.o.statuscolumn = "%{%v:lua.mega.ui.statuscolumn.render()%}"
-vim.opt_local.statuscolumn = [[%!v:lua.mega.ui.statuscolumn.render()]]
+-- vim.opt_local.statuscolumn = [[%!v:lua.mega.ui.statuscolumn.render()]]
 
 mega.augroup("MegaColumn", {
   {
     event = { "BufEnter", "FileType", "WinEnter" },
     command = function(args)
       local buf = vim.bo[args.buf]
-      if buf.bt ~= "" or vim.tbl_contains(excluded, buf.ft) then vim.opt_local.statuscolumn = "" end
+      if buf.bt ~= "" or vim.tbl_contains(excluded, buf.ft) then
+        vim.opt_local.statuscolumn = ""
+      else
+        vim.opt_local.statuscolumn = [[%!v:lua.mega.ui.statuscolumn.render()]]
+      end
     end,
   },
 })

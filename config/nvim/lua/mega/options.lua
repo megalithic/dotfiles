@@ -199,6 +199,7 @@ vim.opt.path:append("**") -- Lets `find` search recursively into subfolders
 vim.o.cedit = "<C-y>" -- Enter Command-line Mode from command-mode
 vim.o.pumblend = 3 -- Make popup window translucent
 vim.o.pumheight = 20 -- completion menu height
+vim.o.winblend = 0
 -----------------------------------------------------------------------------//
 -- Display {{{1
 -----------------------------------------------------------------------------//

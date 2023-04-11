@@ -63,32 +63,32 @@ augroup("Startup", {
   -- },
 })
 
--- Skeletons (Templates)
--- REF:
--- - https://github.com/disrupted/dotfiles/blob/master/.config/nvim/plugin/skeletons.lua
--- - https://vimtricks.com/p/vim-file-templates/
--- - https://github.com/chrisgrieser/dotfiles/blob/main/.config/nvim/lua/options-and-autocmds.lua#L155-L177
-augroup("Skeletons", {
-  {
-    event = { "BufNewFile" },
-    desc = "Load skeleton when creating new file",
-    command = function(args)
-      local skeletons = { "lua", "sh", "applescript", "js", "elixir", "ruby" }
-      local ft = vim.api.nvim_buf_get_option(args.buf, "filetype")
-      local ext = vim.fn.expand("%:e")
-
-      if vim.tbl_contains(skeletons, ft) then
-        if
-          pcall(vim.fn, { "filereadable", fmt("~/.config/nvim/templates/skeleton.%s", ext) })
-          -- and pcall(vim.cmd, (fmt("0r ~/.config/nvim/templates/skeleton.%s | normal! G", ext)))
-        then
-          vim.cmd(fmt("0r ~/.config/nvim/templates/skeleton.%s | normal! G", ext))
-          vim.notify(fmt("loaded skeleton for %s (%s)", ft, ext), vim.log.levels.INFO, { title = "mega" })
-        end
-      end
-    end,
-  },
-})
+-- -- Skeletons (Templates)
+-- -- REF:
+-- -- - https://github.com/disrupted/dotfiles/blob/master/.config/nvim/plugin/skeletons.lua
+-- -- - https://vimtricks.com/p/vim-file-templates/
+-- -- - https://github.com/chrisgrieser/dotfiles/blob/main/.config/nvim/lua/options-and-autocmds.lua#L155-L177
+-- augroup("Skeletons", {
+--   {
+--     event = { "BufNewFile" },
+--     desc = "Load skeleton when creating new file",
+--     command = function(args)
+--       local skeletons = { "lua", "sh", "applescript", "js", "elixir", "ruby" }
+--       local ft = vim.api.nvim_buf_get_option(args.buf, "filetype")
+--       local ext = vim.fn.expand("%:e")
+--
+--       if vim.tbl_contains(skeletons, ft) then
+--         if
+--           pcall(vim.fn, { "filereadable", fmt("~/.config/nvim/templates/skeleton.%s", ext) })
+--           -- and pcall(vim.cmd, (fmt("0r ~/.config/nvim/templates/skeleton.%s | normal! G", ext)))
+--         then
+--           vim.cmd(fmt("0r ~/.config/nvim/templates/skeleton.%s | normal! G", ext))
+--           vim.notify(fmt("loaded skeleton for %s (%s)", ft, ext), vim.log.levels.INFO, { title = "mega" })
+--         end
+--       end
+--     end,
+--   },
+-- })
 
 augroup("CheckOutsideTime", {
   {
@@ -120,6 +120,7 @@ do
     "megaterm",
     "dirbuf",
     "lspinfo",
+    "neotest-output",
     "query",
     "elixirls",
   }
@@ -250,7 +251,16 @@ do
     {
       event = { "BufEnter" },
       buffer = 0,
-      command = mega.open_plugin_url,
+      command = function()
+        mega.nnoremap("gf", function()
+          local repo = fn.expand("<cfile>")
+          if repo:match("https://") then return vim.cmd("norm gx") end
+          if not repo or #vim.split(repo, "/") ~= 2 then return vim.cmd("norm! gf") end
+          local url = fmt("https://www.github.com/%s", repo)
+          fn.jobstart(fmt("%s %s", vim.g.open_command, url))
+          vim.notify(fmt("Opening %s at %s", repo, url))
+        end)
+      end,
     },
     {
       event = { "TextYankPost" },
@@ -265,7 +275,6 @@ do
     {
       event = { "VimResized" },
       command = function(args)
-        -- vim.cmd([[wincmd =]])
         mega.resize_windows(args.buf)
         require("virt-column").refresh()
       end,
@@ -386,30 +395,21 @@ do
     },
   })
 end
-
-augroup("ExternalCommands", {
-  {
-    -- Open images in an image viewer (probably Preview)
-    event = { "BufEnter" },
-    pattern = { "*.png", "*.jpg", "*.gif" },
-    command = function() vim.cmd(fmt("silent! \"%s | :bw\"", vim.g.open_command .. " " .. fn.expand("%"))) end,
-  },
-})
-
-augroup("LspDiagnosticExclusions", {
-  {
-    event = { "BufWinEnter" },
-    command = function(args)
-      if vim.wo.diff then vim.diagnostic.disable(args.buf) end
-    end,
-  },
-  {
-    event = { "BufWinLeave" },
-    command = function(args)
-      if vim.wo.diff then vim.diagnostic.enable(args.buf) end
-    end,
-  },
-})
+--
+-- augroup("LspDiagnosticExclusions", {
+--   {
+--     event = { "BufWinEnter" },
+--     command = function(args)
+--       if vim.wo.diff then vim.diagnostic.disable(args.buf) end
+--     end,
+--   },
+--   {
+--     event = { "BufWinLeave" },
+--     command = function(args)
+--       if vim.wo.diff then vim.diagnostic.enable(args.buf) end
+--     end,
+--   },
+-- })
 
 do
   vim.keymap.set({ "n", "v", "o", "i", "c", "t" }, "<Plug>(StopHL)", "execute(\"nohlsearch\")[-1]", { expr = true })

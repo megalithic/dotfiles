@@ -1,18 +1,6 @@
 return {
   -- ( CORE ) ------------------------------------------------------------------
   { "dstein64/vim-startuptime", cmd = { "StartupTime" }, config = function() vim.g.startuptime_tries = 15 end },
-  -- {
-  --   "ethanholz/nvim-lastplace",
-  --   cond = not vim.g.enabled_plugin["breadcrumb"],
-  --   lazy = { "BufWinEnter", "FileType" },
-  --   config = function()
-  --     require("nvim-lastplace").setup({
-  --       lastplace_ignore_buftype = { "quickfix", "nofile", "help" },
-  --       lastplace_ignore_filetype = { "gitcommit", "gitrebase", "svn", "hgcommit", "terminal", "megaterm" },
-  --       lastplace_open_folds = true,
-  --     })
-  --   end,
-  -- },
 
   -- ( UI ) --------------------------------------------------------------------
   {
@@ -64,6 +52,7 @@ return {
     end,
   },
   { "lukas-reineke/virt-column.nvim", config = { char = "│" }, event = "VimEnter" },
+  -- { "levouh/tint.nvim", enabled = false, config = true, event = { "VeryLazy" } },
   -- {
   --   "stevearc/dressing.nvim",
   --   event = "VeryLazy",
@@ -94,18 +83,6 @@ return {
       require("todo-comments").setup()
       -- mega.command("TodoDots", ("TodoQuickFix cwd=%s keywords=TODO,FIXME"):format(vim.g.vim_dir))
     end,
-  },
-  {
-    "folke/zen-mode.nvim",
-    cmd = "ZenMode",
-    opts = {
-      plugins = {
-        gitsigns = true,
-        tmux = true,
-        kitty = { enabled = false, font = "+2" },
-      },
-    },
-    keys = { { "<localleader>zz", "<cmd>ZenMode<cr>", desc = "Zen Mode" } },
   },
 
   -- indent guides for Neovim
@@ -223,10 +200,11 @@ return {
           local elixir = require("elixir")
 
           elixir.setup({
-            cmd = fmt("%s/lsp/elixir-ls/%s", vim.env.XDG_DATA_HOME, "language_server.sh"),
+            -- cmd = fmt("%s/lsp/elixir-ls/%s", vim.env.XDG_DATA_HOME, "language_server.sh"),
             settings = elixir.settings({
               dialyzerEnabled = true,
-              dialyzerFormat = "dialyxir_short",
+              dialyzerFormat = "dialyxir_long", -- alts: dialyxir_short
+              dialyzerwarnopts = {},
               fetchDeps = false,
               enableTestLenses = false,
               suggestSpecs = true,
@@ -234,6 +212,7 @@ return {
             log_level = vim.lsp.protocol.MessageType.Log,
             message_level = vim.lsp.protocol.MessageType.Log,
             on_attach = function(client, bufnr)
+              -- dd(fmt("attached to client %s on bufnr %s", I(client), bufnr))
               -- whatever keybinds you want, see below for more suggestions
               -- vim.keymap.set("n", "<space>fp", ":ElixirFromPipe<cr>", { buffer = true, noremap = true })
               -- vim.keymap.set("n", "<space>tp", ":ElixirToPipe<cr>", { buffer = true, noremap = true })
@@ -423,6 +402,22 @@ return {
       use_diagnostic_signs = true, -- en
     },
   },
+  -- {
+  --   "chrishrb/gx.nvim",
+  --   event = { "BufEnter" },
+  --   dependencies = { "nvim-lua/plenary.nvim" },
+  --   config = true, -- default settings
+  --
+  --   -- you can specify also another config if you want
+  --   -- config = function() require("gx").setup {
+  --   --   open_browser_app = "os_specific", -- specify your browser app; default for macos is "open" and for linux "xdg-open"
+  --   --   handlers = {
+  --   --     plugin = true, -- open plugin links in lua (e.g. packer, lazy, ..)
+  --   --     github = true, -- open github issues
+  --   --     package_json = true, -- open dependencies from package.json
+  --   --   },
+  --   -- } end,
+  -- },
 
   -- ( Testing/Debugging ) -----------------------------------------------------
   -- {
@@ -506,18 +501,26 @@ return {
       }
     end,
   },
-  -- {
-  --   "danymat/neogen",
-  --   event = "VeryLazy",
-  --   keys = {
-  --     {
-  --       "<leader>cc",
-  --       function() require("neogen").generate({}) end,
-  --       desc = "Neogen Comment",
-  --     },
-  --   },
-  --   config = { snippet_engine = "luasnip" },
-  -- },
+  {
+    "danymat/neogen",
+    cmd = "Neogen",
+    keys = {
+      {
+        "<leader>cc",
+        function() require("neogen").generate({}) end,
+        desc = "Neogen Comment",
+      },
+    },
+    opts = function()
+      local M = {}
+      M.snippet_engine = "luasnip"
+      M.languages = {}
+      M.languages.python = { template = { annotation_convention = "google_docstrings" } }
+      M.languages.typescript = { template = { annotation_convention = "tsdoc" } }
+      M.languages.typescriptreact = M.languages.typescript
+      return M
+    end,
+  },
   {
     -- TODO: https://github.com/avucic/dotfiles/blob/master/nvim_user/.config/nvim/lua/user/configs/dadbod.lua
     "kristijanhusak/vim-dadbod-ui",
@@ -786,4 +789,29 @@ return {
   { "chr4/nginx.vim", ft = "nginx" },
   { "fladson/vim-kitty", ft = "kitty" },
   { "SirJson/fzf-gitignore", config = function() vim.g.fzf_gitignore_no_maps = true end },
+  {
+    "mrossinek/zen-mode.nvim",
+    cmd = { "ZenMode" },
+    keys = { { "<localleader>zz", "<cmd>ZenMode<cr>", desc = "Zen Mode" } },
+    opts = {
+      window = {
+        options = {
+          foldcolumn = "0",
+          number = false,
+          relativenumber = false,
+          scrolloff = 999,
+          signcolumn = "no",
+        },
+      },
+      plugins = {
+        tmux = {
+          enabled = true,
+        },
+        wezterm = {
+          enabled = true,
+          font = "+8",
+        },
+      },
+    },
+  },
 }

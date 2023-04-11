@@ -49,7 +49,7 @@ end
 
 wezterm.on(
   "window-config-reloaded",
-  function(window, pane)
+  function(window, _pane)
     notify({ title = "wezterm", message = "configuration reloaded!", window = window, timeout = 4000 })
   end
 )
@@ -58,7 +58,6 @@ wezterm.on("toggle-ligature", function(window, pane)
   local overrides = window:get_config_overrides() or {}
   if not overrides.harfbuzz_features then
     -- If we haven't overridden it yet, then override with ligatures disabled
-    --- |>
     overrides.harfbuzz_features = { "calt=0", "clig=0", "liga=0" }
   else
     -- else we did already, and we should disable out override now
@@ -73,23 +72,29 @@ wezterm.on("mux-is-process-stateful", function(proc)
   return false -- don't ask for confirmation, nothing stateful here
 end)
 
-wezterm.on("user-var-changed", function(window, pane, name, value)
-  notify({ message = string.format("user-var-changed", name) })
+wezterm.on("user-var-changed", function(window, _pane, name, value)
+  notify({
+    title = "wezterm",
+    message = string.format("user-var-changed: %s -> %s", name, value),
+    window = window,
+    timeout = 4000,
+  })
 
   local overrides = window:get_config_overrides() or {}
   if name == "SCREEN_SHARE_MODE" then
     if value == "on" then
-      overrides.font_size = 24
+      overrides.font_size = 20
     else
       overrides.font_size = nil
     end
   end
+
   window:set_config_overrides(overrides)
 end)
 
 -- wezterm.on("user-var-changed", function(window, pane, name, value)
 --   local overrides = window:get_config_overrides() or {}
---   if name == "SCREEN_SHARE_MODE" then
+--   if name == "ZEN_MODE" then
 --     local incremental = value:find("+")
 --     local number_value = tonumber(value)
 --     if incremental ~= nil then
@@ -120,8 +125,8 @@ local palette = {
   -- bright_background = "",
   foreground = "#d3c6aa", -- #d8cacc
   bright_foreground = "#d3c6aa",
-  -- cursor = "#83b6af",
-  cursor = "#d8cacc",
+  cursor = "#83b6af",
+  -- cursor = "#d8cacc",
   visual = "#4e6053",
   split = "#3e4c53",
   -- ansi
@@ -246,7 +251,7 @@ local font = {
 }
 
 return {
-  term = "wezterm",
+  -- term = "wezterm",
   adjust_window_size_when_changing_font_size = false,
   exit_behavior = "Close",
   window_close_confirmation = "NeverPrompt",

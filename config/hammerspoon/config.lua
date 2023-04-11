@@ -177,8 +177,8 @@ local apps = {
   ["com.apple.Safari"] = {
     bundleID = "com.apple.Safari",
     name = "Safari",
-    mods = mods.caSc,
-    key = "j",
+    -- mods = mods.caSc,
+    -- key = "j",
     tags = { "browsers" },
     rules = {
       { "", 2, "maximized" },

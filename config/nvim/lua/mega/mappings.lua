@@ -377,6 +377,16 @@ nnoremap("N", "Nzz<esc><cmd>lua mega.blink_cursorline(50)<cr>")
 xnoremap("N", "Nzz<esc><cmd>lua mega.blink_cursorline(50)<cr>")
 onoremap("N", "Nzz<esc><cmd>lua mega.blink_cursorline(50)<cr>")
 
+-- smooth searching, allow tabbing between search results similar to using <c-g>
+-- or <c-t> the main difference being tab is easier to hit and remapping those keys
+-- to these would swallow up a tab mapping
+local function search(direction_key, default)
+  local c_type = fn.getcmdtype()
+  return (c_type == "/" or c_type == "?") and fmt("<CR>%s<C-r>/", direction_key) or default
+end
+cnoremap("<Tab>", function() return search("/", "<Tab>") end, { expr = true })
+cnoremap("<S-Tab>", function() return search("?", "<S-Tab>") end, { expr = true })
+
 -- REF: https://github.com/mhinz/vim-galore/blob/master/README.md#saner-command-line-history
 cnoremap("<C-n>", [[wildmenumode() ? "\<c-n>" : "\<down>"]], { expr = true })
 cnoremap("<C-p>", [[wildmenumode() ? "\<c-p>" : "\<up>"]], { expr = true })

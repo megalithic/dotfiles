@@ -16,6 +16,7 @@ local ft_ignores = {
   "startuptime",
   "undotree",
   "DiffviewFiles",
+  "neotest-summary",
 }
 
 local bt_ignores = {

@@ -81,10 +81,11 @@ function obj.applyLayout(appConfig)
           nil,
           nil,
         }
+        dbg(fmt("layout: %s", I(layout)))
         table.insert(layouts, layout)
       end)
-
       hs.layout.apply(layouts, string.match)
+      -- hs.timer.waitUntil(function() hs.layout.apply(layouts, string.match) end, 0.5)
     end
   end
 end
@@ -192,8 +193,10 @@ function obj.layoutRunningApps(apps)
 
   fnutils.each(runningApps, function(app)
     local appConfig = apps[app:bundleID()]
-    dbg(fmt("running app to run: %s", app:bundleID()))
-    if appConfig then obj.applyLayout(appConfig) end
+    if appConfig ~= nil then
+      dbg(fmt("running app to run: %s", appConfig.bundleID))
+      obj.applyLayout(appConfig)
+    end
   end)
 end
 

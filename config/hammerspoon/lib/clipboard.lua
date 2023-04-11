@@ -5,7 +5,7 @@
 local obj = {}
 
 obj.__index = obj
-obj.name = "scrot"
+obj.name = "clipboard"
 obj.debug = true
 obj.imgur_client_id = "2974b259fd073e2"
 obj.paste_script = [[osascript -e "get the clipboard as «class PNGf»" | sed "s/«data PNGf//; s/»//" | xxd -r -p]]
@@ -65,6 +65,9 @@ end
 
 function obj:init(opts)
   opts = opts or {}
+  hs.pasteboard.watcher
+    .new(function(pb) dbg(fmt("[pasteboard] contents: %s / textArgs: %s", I(pb), I({ pb }))) end)
+    :start()
 
   return self
 end

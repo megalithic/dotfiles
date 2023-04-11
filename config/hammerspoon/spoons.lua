@@ -62,8 +62,8 @@ function obj:init(opts)
         { "https?://open.spotify.com", "com.spotify.client" },
         { "spotify:", "com.spotify.client" },
         { "https?://www.github.com", "com.brave.Browser.dev" },
-        { "https?://accounts.bellhop.test", "com.apple.Safari" },
-        { "https?://admin.bellhop.test", "com.apple.Safari" },
+        -- { "https?://accounts.bellhop.test", "com.apple.Safari" },
+        -- { "https?://admin.bellhop.test", "com.apple.Safari" },
       },
       url_redir_decoders = {
         {

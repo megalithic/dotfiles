@@ -104,6 +104,8 @@ end
 -- https://vi.stackexchange.com/questions/33056/how-to-use-vim-loop-interactively-in-neovim
 function mega.blink_cursorline(delay)
   if is_ignored() then return end
+  -- local tint_ok, tint = mega.require("tint")
+  -- if tint_ok then tint.disable() end
 
   timer = vim.loop.new_timer()
   blink_active = true
@@ -124,6 +126,8 @@ function mega.blink_cursorline(delay)
       end
       blink_active = false
       highlight_cursorline()
+
+      -- if tint_ok then tint.enable() end
     end)
   )
 end

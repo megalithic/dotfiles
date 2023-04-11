@@ -684,17 +684,6 @@ function mega.open_uri()
   --   :sync()
 end
 
-function mega.open_plugin_url()
-  mega.nnoremap("gf", function()
-    local repo = fn.expand("<cfile>")
-    if repo:match("https://") then return vim.cmd("norm gx") end
-    if not repo or #vim.split(repo, "/") ~= 2 then return vim.cmd("norm! gf") end
-    local url = fmt("https://www.github.com/%s", repo)
-    fn.jobstart(fmt("%s %s", vim.g.open_command, url))
-    vim.notify(fmt("Opening %s at %s", repo, url))
-  end)
-end
-
 -- Open one or more man pages
 -- Accepts a string representing how to open the man pages, one of:
 --   - ''        - current window
@@ -1045,6 +1034,22 @@ function mega.fold(callback, list, accum)
   return accum
 end
 
+---@generic T
+---Given a table return a new table which if the key is not found will search
+---all the table's keys for a match using `string.match`
+---@param map T
+---@return T
+function mega.p_table(map)
+  return setmetatable(map, {
+    __index = function(tbl, key)
+      if not key then return end
+      for k, v in pairs(tbl) do
+        if key:match(k) then return v end
+      end
+    end,
+  })
+end
+
 ---@generic T : table
 ---@param callback fun(item: T, key: string | number, list: T[]): T
 ---@param list T[]
@@ -1300,6 +1305,7 @@ end
 -- [ iabbreviations ] ----------------------------------------------------------
 do
   vim.cmd.iabbrev([[cabag Co-authored-by: Aaron Gunderson <aaron@ternit.com>]])
+  vim.cmd.cabbrev("options", "vert options")
 end
 
 return mega

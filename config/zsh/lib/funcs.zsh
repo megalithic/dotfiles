@@ -469,3 +469,8 @@ printc() {
   local color="%F{$1}"
   echo -E ${(qqqq)${(%)color}}
 }
+
+wezshare() {
+  local mode="${1:-on}"
+  wezterm-cli SCREEN_SHARE_MODE "$mode"
+}

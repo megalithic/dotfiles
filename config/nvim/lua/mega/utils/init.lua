@@ -6,6 +6,7 @@ local M = {
   ext = {
     tmux = {},
     kitty = {},
+    wezterm = {},
   },
   lsp = {},
   hl = {},
@@ -92,6 +93,36 @@ function M.ext.kitty.clear_background()
     -- this is intentionally synchronous so it has time to execute fully
     fn.system(fmt("kitty @ --to %s set-colors background=%s", vim.env.KITTY_LISTEN_ON, bg))
   end
+end
+
+-- REF:
+-- https://www.reddit.com/r/neovim/comments/xn1q75/comment/iprdrpr
+-- https://github.com/folke/zen-mode.nvim/pull/61
+-- https://github.com/wez/wezterm/discussions/3211
+-- https://github.com/wez/wezterm/issues/2979#issuecomment-1447519267
+function M.ext.wezterm.toggle_screen_share_mode(enabled)
+  local mode = enabled and "on" or "off"
+  -- fn.jobstart(fmt("wezterm-cli SCREEN_SHARE_MODE %s", mode))
+
+  local stdout = vim.loop.new_tty(1, false)
+  if vim.env.TMUX then
+    -- just wezterm: \033]1337;SetUserVar=%s=%s\007
+    -- from zen-mode example: \x1b]1337;SetUserVar=%s=%s\b
+    -- \033Ptmux;\033\033]1337;SetUserVar=%s=%s\007\033\\
+    stdout:write(
+      ("\033Ptmux;\033\033]1337;SetUserVar=%s=%s\007\033\\b"):format(
+        "SCREEN_SHARE_MODE",
+        vim.fn.system({ "base64" }, tostring(mode))
+      )
+    )
+    dd("doing a thing with stdout in tmux")
+    -- stdout:write(('\x1b]1337;SetUserVar=%s=%s\b'):format('SCREEN_SHARE_MODE', vim.fn.system({ 'base64' }, tostring(enabled))))
+    -- else
+    --   stdout:write(
+    --     ("\x1b]1337;SetUserVar=%s=%s\b"):format("SCREEN_SHARE_MODE", vim.fn.system({ "base64" }, tostring(mode)))
+    --   )
+  end
+  -- vim.cmd([[redraw]])
 end
 
 function M.check_back_space()

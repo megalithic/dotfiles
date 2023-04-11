@@ -1,3 +1,6 @@
+-- REF: replace with latest syntax:
+--
+-- https://github.com/007Psycho007/dotfiles/blob/master/config/nvim/lua/user/tabby.lua
 local M = {
   "nanozuki/tabby.nvim",
   event = { "BufReadPost" },
@@ -34,25 +37,16 @@ function M.config()
 
     local tab_name = get_special_name_for_win(vim.api.nvim_tabpage_get_win(tabid), name)
 
-    -- if active then
-    --   return string.format(" %s %d: %s ", icon, number)
-    -- else
-    --   return string.format(" %s %d: %s ", icon, number, name)
-    -- end
-
-    return string.format(" %s %d: %s ", icon, number, tab_name)
+    if active then
+      return string.format(" %s %d:%s ", icon, number, tab_name)
+    else
+      return string.format(" %s %d:%s ", icon, number, mega.icons.misc.ellipsis)
+    end
   end
 
   local function win_label(winid, top)
     local icon = top and "" or ""
     return string.format(" %s %s ", icon, get_win_name(winid))
-  end
-
-  local function workspace_name()
-    -- local ws_ok, ws = pcall(function() return require("workspaces").name() end)
-    -- if ws_ok and ws then return ws end
-
-    return vim.g.workspace or ""
   end
 
   local tabline = {
@@ -61,7 +55,7 @@ function M.config()
     head = {
       { mega.icons.misc.lblock, hl = { fg = mega.colors.bg1.hex, bg = mega.colors.bg2.hex } },
       {
-        workspace_name(),
+        "",
         hl = { fg = mega.colors.grey2.hex, bg = mega.colors.bg2.hex },
       },
     },

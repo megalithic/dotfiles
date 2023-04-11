@@ -1,17 +1,22 @@
 local M = {
+  -- {
   "jose-elias-alvarez/null-ls.nvim",
+  dependencies = { "nvim-lua/plenary.nvim" },
   event = { "BufReadPre", "BufNewFile" },
   config = function()
     local nls = require("null-ls")
 
     local format = nls.builtins.formatting
     local diag = nls.builtins.diagnostics
-    -- local actions = nls.builtins.code_actions
-    -- local completion = nls.builtins.completion
-    -- local helpers = require("null-ls.helpers")
 
-    -- NOTE: this is/was the only formatter that would work for eruby files;
-    -- none of the built-ins would do the trick.
+    -- local custom_ca = require("user.lsp.code_actions")
+    -- REF: https://github.com/scottming/nvim/blob/master/lua/user/lsp/code_actions.lua
+    -- local elixir_dbg = {
+    --   method = nls.methods.CODE_ACTION,
+    --   filetypes = { "elixir" },
+    --   generator = { fn = custom_ca.add_or_remove_dbg },
+    -- }
+
     local erb_format = {
       method = nls.methods.FORMATTING,
       filetypes = { "eruby" },
@@ -89,17 +94,17 @@ local M = {
             }
           end,
         }),
-        format.beautysh.with({
-          extra_args = { "-i", "2" },
-          condition = function() return mega.executable("beautysh") end,
-        }),
+        -- format.beautysh.with({
+        --   extra_args = { "-i", "2" },
+        --   condition = function() return mega.executable("beautysh") end,
+        -- }),
         format.shellharden,
         format.elm_format,
         format.jq,
         -- format.markdownlint,
         format.shfmt.with({
           extra_args = { "-i", "2", "-ci" }, -- suggested: { "-i", "2", "-ci" } or { "-ci", "-s", "-bn", "-i", "2" }
-          filetypes = { "sh", "bash" },
+          filetypes = { "sh", "bash", "zsh" },
         }),
         diag.flake8.with({
           extra_args = function(_) return { "--max-line-lenth", vim.opt_local.colorcolumn:get()[1] or "88" } end,
@@ -107,9 +112,10 @@ local M = {
         diag.shellcheck.with({
           filetypes = { "sh", "bash" },
         }),
-        diag.zsh.with({
-          filetypes = { "zsh" },
-        }),
+        -- elixir_dbg,
+        -- diag.zsh.with({
+        --   filetypes = { "zsh" },
+        -- }),
         -- diag.editorconfig_checker.with({ command = "editorconfig-checker" }),
         -- diag.credo.with({
         --   -- run credo in strict mode even if strict mode is not enabled in
@@ -134,6 +140,21 @@ local M = {
 
     mega.command("ToggleNullFormatters", toggle_null_formatters)
   end,
+  -- },
+  -- {
+  --   "jay-babu/mason-null-ls.nvim",
+  --   event = { "BufReadPre", "BufNewFile" },
+  --   dependencies = { "mason.nvim", "null-ls.nvim" },
+  --   config = function()
+  --     require("mason-null-ls").setup({
+  --       automatic_setup = true,
+  --       automatic_installation = {},
+  --       ensure_installed = { "buf", "goimports", "golangci_lint", "stylua", "prettier" },
+  --     })
+  --     require("null-ls").setup()
+  --     require("mason-null-ls").setup_handlers()
+  --   end,
+  -- },
 }
 
 function M.has_formatter(ft)

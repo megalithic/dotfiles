@@ -25,7 +25,7 @@
       stdout: true
       stderr: true
       stdin: true
-      include: ["tap", "brew", "cask", "mas"]
+      include: [ "tap", "brew", "cask", "mas" ]
 
 - shell:
     - description:
@@ -69,8 +69,7 @@
     - description: Attempting to install Homebrew..
       quiet: true
       command: >-
-        ~/.dotfiles/bin/brew-install -f;
-        eval "$($HOMEBREW_PREFIX/bin/rtx activate zsh)";
+        ~/.dotfiles/bin/brew-install -f; eval "$($HOMEBREW_PREFIX/bin/rtx activate zsh)";
     #
     # - description: Attempting to install ASDF..
     #   quiet: true
@@ -128,9 +127,6 @@
     ~/.config/nvim:
       force: true
       path: config/nvim
-    ~/.config/wipvim:
-      force: true
-      path: config/wipvim
     ~/.config/ngrok:
       force: true
       path: config/ngrok
@@ -258,8 +254,7 @@
     - description: Attempting post-install commands..
       quiet: true
       command: >-
-        echo "Attempting to source correct brew..";
-        case `uname` in
+        echo "Attempting to source correct brew.."; case `uname` in
           Darwin)
             [ -f "/usr/local/bin/brew" ] && eval "$(/usr/local/bin/brew shellenv)";
             [ -f "/opt/homebrew/bin/brew" ] && eval "$(/opt/homebrew/bin/brew shellenv)";
@@ -269,38 +264,27 @@
             ;;
         esac
 
-        echo "Attempting to source helpers.zsh..";
-        source ~/.dotfiles/config/zsh/lib/helpers.zsh;
+        echo "Attempting to source helpers.zsh.."; source ~/.dotfiles/config/zsh/lib/helpers.zsh;
 
-        log "Attempting to install all git submodules..";
-        git submodule update --init --recursive
+        log "Attempting to install all git submodules.."; git submodule update --init --recursive
 
-        log "Attempting to set zsh as default shell..";
-        [[ $(echo $SHELL) == $(which zsh) ]] && log_warn "$(which zsh) already set as the default shell; skipping." || sudo chsh -s $(which zsh) $(whoami);
+        log "Attempting to set zsh as default shell.."; [[ $(echo $SHELL) == $(which zsh) ]] && log_warn "$(which zsh) already set as the default shell; skipping." || sudo chsh -s $(which zsh) $(whoami);
 
-        # log "Attempting to install asdf, again..";
-        #~/.dotfiles/bin/asdf-install -f;
+        # log "Attempting to install asdf, again.."; #~/.dotfiles/bin/asdf-install -f;
 
-        log "Attempting to install neovim from source..";
-        ~/.dotfiles/bin/nvim-install -f;
+        log "Attempting to install neovim from source.."; ~/.dotfiles/bin/nvim-install -f;
 
-        log "Attempting to install elixirls-master..";
-        ~/.dotfiles/bin/elixirls-install master;
+        log "Attempting to install elixirls-master.."; ~/.dotfiles/bin/elixirls-install master;
 
-        log "Attempting to install lua/luarocks packages..";
-        ~/.dotfiles/asdf/lua.sh;
+        log "Attempting to install lua/luarocks packages.."; ~/.dotfiles/asdf/lua.sh;
 
-        log "Attempting to install rust/cargo packages..";
-        ~/.dotfiles/asdf/rust.sh;
+        log "Attempting to install rust/cargo packages.."; ~/.dotfiles/asdf/rust.sh;
 
-        log "Attempting to install golang packages..";
-        ~/.dotfiles/asdf/go.sh;
+        log "Attempting to install golang packages.."; ~/.dotfiles/asdf/go.sh;
 
-        log "Attempting to install perl packages..";
-        ~/.dotfiles/asdf/perl.sh;
+        log "Attempting to install perl packages.."; ~/.dotfiles/asdf/perl.sh;
 
-        log "Attempting to install python packages..";
-        ~/.dotfiles/asdf/python.sh;
+        log "Attempting to install python packages.."; ~/.dotfiles/asdf/python.sh;
 
         log "Attempting to run post-fzf install step..";
 
@@ -310,58 +294,16 @@
           yes | /usr/local/opt/fzf/install;
         fi
 
-        log "Attempting to symlink gitconfig_macos..";
-        [[ "$(uname)" == "Darwin" ]] && ln -sfv "$HOME/.dotfiles/git/gitconfig_macos" ~/.gitconfig_macos;
+        log "Attempting to symlink gitconfig_macos.."; [[ "$(uname)" == "Darwin" ]] && ln -sfv "$HOME/.dotfiles/git/gitconfig_macos" ~/.gitconfig_macos;
 
-        log "Attempting to symlink gitconfig_linux..";
-        [[ "$(uname)" == "Linux" ]] && ln -sfv "$HOME/.dotfiles/git/gitconfig_linux" ~/.gitconfig_linux;
+        log "Attempting to symlink gitconfig_linux.."; [[ "$(uname)" == "Linux" ]] && ln -sfv "$HOME/.dotfiles/git/gitconfig_linux" ~/.gitconfig_linux;
 
-        log "Attempting to use gh-login to do GitHub Authentication..";
-        ~/.dotfiles/bin/gh-login;
+        log "Attempting to use gh-login to do GitHub Authentication.."; ~/.dotfiles/bin/gh-login;
 
-        log "Attempting to do platform-specific configs..";
-        # [[ "$(uname)" == "Darwin" ]] && ./macos;
-        # [[ "$(uname)" == "Linux" ]] && ./linux;
+        log "Attempting to do platform-specific configs.."; # [[ "$(uname)" == "Darwin" ]] && ./macos; # [[ "$(uname)" == "Linux" ]] && ./linux;
 
-        log "Attempting to chown as needed..";
-        [[ "$(uname)" == "Darwin" ]] && sudo chown -R "$(whoami)":admin ~/.local;
-        [[ "$(uname)" == "Darwin" ]] && sudo chown -R "$(whoami)":admin ~/.cache;
-        [[ "$(uname)" == "Darwin" ]] && sudo chown -R "$(whoami)":admin ~/.config;
+        log "Attempting to chown as needed.."; [[ "$(uname)" == "Darwin" ]] && sudo chown -R "$(whoami)":admin ~/.local; [[ "$(uname)" == "Darwin" ]] && sudo chown -R "$(whoami)":admin ~/.cache; [[ "$(uname)" == "Darwin" ]] && sudo chown -R "$(whoami)":admin ~/.config;
 
-        log "Correctly chown/chmod ~/.ssh files";
-        sudo chmod 0700 ~/.ssh;
-        sudo chmod -R 0600 ~/.ssh;
-        #sudo chmod 0644 ~/.ssh/*.pub;
-        #sudo chmod 0644 ~/.ssh/authorized_keys;
-        sudo chmod 0644 ~/.ssh/config;
-        sudo chown -R "$(whoami)" ~/.ssh;
+        log "Correctly chown/chmod ~/.ssh files"; sudo chmod 0700 ~/.ssh; sudo chmod -R 0600 ~/.ssh; #sudo chmod 0644 ~/.ssh/*.pub; #sudo chmod 0644 ~/.ssh/authorized_keys; sudo chmod 0644 ~/.ssh/config; sudo chown -R "$(whoami)" ~/.ssh;
 
-        #command cat <<EOF
-        #${blue}░  Installation complete (possibly with errors?)
-        #${blue}░  
-        #${blue}░
-        #${blue}░  Setup SSH key for this machine:
-        #${blue}░  ${white}  - ~/.dotfiles/bin/ssh-setup
-        #${blue}░
-        #${blue}░  Manually open/setup the following:
-        #${blue}░  ${white}  - espanso (espanso register; espanso start)
-        #${blue}░  ${white}  - postgresql
-        #${blue}░  ${white}  - mailmate
-        #${blue}░  ${white}  - signal
-        #${blue}░  ${white}  - slack
-        #${blue}░  ${white}  - bettertouchtool
-        #${blue}░  ${white}  - forklift
-        #${blue}░
-        #${blue}░  Install licenses for the following:
-        #${blue}░  ${white}  - alfred
-        #${blue}░  ${white}  - contexts
-        #${blue}░  ${white}  - mailmate
-        #${blue}░  ${white}  - dash
-        #${blue}░  ${white}  - bartender
-        #${blue}░  ${white}  - bettertouchtool
-        #${blue}░  ${white}  - colorsnapper
-        #${blue}░  ${white}  - forklift
-        #${blue}░  ${white}  - soundsource
-        #${blue}░
-        #${reset}
-        #EOF;
+        #command cat <<EOF #${blue}░  Installation complete (possibly with errors?) #${blue}░   #${blue}░ #${blue}░  Setup SSH key for this machine: #${blue}░  ${white}  - ~/.dotfiles/bin/ssh-setup #${blue}░ #${blue}░  Manually open/setup the following: #${blue}░  ${white}  - espanso (espanso register; espanso start) #${blue}░  ${white}  - postgresql #${blue}░  ${white}  - mailmate #${blue}░  ${white}  - signal #${blue}░  ${white}  - slack #${blue}░  ${white}  - bettertouchtool #${blue}░  ${white}  - forklift #${blue}░ #${blue}░  Install licenses for the following: #${blue}░  ${white}  - alfred #${blue}░  ${white}  - contexts #${blue}░  ${white}  - mailmate #${blue}░  ${white}  - dash #${blue}░  ${white}  - bartender #${blue}░  ${white}  - bettertouchtool #${blue}░  ${white}  - colorsnapper #${blue}░  ${white}  - forklift #${blue}░  ${white}  - soundsource #${blue}░ #${reset} #EOF;

@@ -59,6 +59,7 @@ brew "blueutil" if OS.mac?
 brew "broot"
 brew "browsh" if OS.mac?
 brew "btop"
+brew "catimg"
 brew "ccls" # c-lang lsp vs., c-lang lsp in llvm
 brew "chafa" # image renderer for telescope/bat/fzf/etc
 brew "cmake" if OS.mac?

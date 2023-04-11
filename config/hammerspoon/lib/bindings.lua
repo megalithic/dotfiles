@@ -11,6 +11,7 @@ local obj = {}
 
 obj.__index = obj
 obj.name = "bindings"
+obj.mouseBindings = {}
 
 local function chooseAppFromGroup(apps, key, tag, groupKey)
   local group = hs.fnutils.filter(
@@ -78,17 +79,6 @@ local function bind(t, id, bindFn)
   bindFn(t)
 end
 
-local function mouse()
-  -- bind mouse side buttons to forward/back
-  hs.eventtap
-    .new({ hs.eventtap.event.types.otherMouseUp }, function(event)
-      local button = event:getProperty(hs.eventtap.event.properties.mouseEventButtonNumber)
-      if button == 3 then hs.eventtap.keyStroke({ "cmd" }, "[") end
-      if button == 4 then hs.eventtap.keyStroke({ "cmd" }, "]") end
-    end)
-    :start()
-end
-
 function obj:init(opts)
   opts = opts or {}
   Hyper = L.load("lib.hyper", { id = obj.name }):start()
@@ -99,6 +89,22 @@ end
 function obj:start()
   local bindings = C.bindings
   local keys = C.keys
+
+  -- [ mouse bindings ] --------------------------------------------------------
+  -- bind mouse side buttons to forward/back
+  -- FIXME: this is replicated into init.lua, as it doesn't work when just in this module. ¯\_(ツ)_/¯
+  obj.mouseBindings = hs.eventtap.new({ hs.eventtap.event.types.otherMouseDown }, function(tapEvent)
+    local buttonIndex = tapEvent:getProperty(hs.eventtap.event.properties.mouseEventButtonNumber)
+    dbg(I(tapEvent))
+    dbg(I(buttonIndex))
+
+    if buttonIndex == 3 then
+      hs.eventtap.keyStroke({ "cmd" }, "[")
+    elseif buttonIndex == 4 then
+      hs.eventtap.keyStroke({ "cmd" }, "]")
+    end
+  end)
+  obj.mouseBindings:start()
 
   -- [ launcher bindings ] -----------------------------------------------------
 
@@ -215,17 +221,6 @@ function obj:start()
   group(bindings.apps, "j", "browsers") -- e.g., brave, vivaldi, safari, firefox, etc
   group(bindings.apps, "s", "chat") -- e.g., slack, discord, signal, etc
 
-  -- [ mouse bindings ] --------------------------------------------------------
-
-  -- bind mouse side buttons to forward/back
-  hs.eventtap
-    .new({ hs.eventtap.event.types.otherMouseUp }, function(event)
-      local button = event:getProperty(hs.eventtap.event.properties.mouseEventButtonNumber)
-      if button == 3 then hs.eventtap.keyStroke({ "cmd" }, "[") end
-      if button == 4 then hs.eventtap.keyStroke({ "cmd" }, "]") end
-    end)
-    :start()
-
   -- [ utility bindings ] ------------------------------------------------------
 
   Hyper:bind(keys.mods.caSc, "r", function()
@@ -260,14 +255,13 @@ function obj:start()
   --   end)
   -- end)
 
-  -- [ mouse bindings ] --------------------------------------------------------
-  mouse()
-
   return self
 end
 
 function obj:stop()
   L.unload("lib.hyper")
+  dbg("bindings obj.stop'd'")
+  obj.mouseBindings:stop()
 
   return self
 end

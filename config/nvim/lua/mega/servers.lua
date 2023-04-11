@@ -197,7 +197,7 @@ return {
       },
     },
   },
-  -- bashls = false,
+  -- bashls = {},
   vimls = { init_options = { isNeovim = true } },
   teal_ls = {},
   terraformls = {},
@@ -302,8 +302,11 @@ return {
     table.insert(path, "lua/?.lua")
     table.insert(path, "lua/?/init.lua")
 
+    -- TODO: investigate using neoconf and then this:
+    -- https://github.com/Hammerspoon/hammerspoon/discussions/3451#discussioncomment-5545150
     local plugins = ("%s/nvim/lazy"):format(fn.stdpath("data"))
     local plenary = ("%s/start/plenary.nvim"):format(plugins)
+    local hammerspoon = ("%s/annotations"):format(vim.g.hs_emmy_path)
 
     return {
       settings = {
@@ -401,7 +404,7 @@ return {
           },
           workspace = {
             ignoreSubmodules = true,
-            library = { fn.expand("$VIMRUNTIME/lua"), plugins, plenary, vim.g.hs_emmy_path },
+            library = { fn.expand("$VIMRUNTIME/lua"), plugins, plenary, hammerspoon },
             checkThirdParty = false,
           },
           telemetry = {

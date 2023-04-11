@@ -28,7 +28,8 @@ return {
     event = "BufReadPre",
     config = function()
       require("treesitter-context").setup({
-        separator = { "▁", "TreesitterContextBorder" }, -- alts: ▁ ─ ▄─▁
+        -- separator = { "▁", "TreesitterContextBorder" }, -- alts: ▁ ─ ▄─▁
+        separator = { "─", "TreesitterContextBorder" }, -- alternatives: ▁ ─ ▄
         mode = "cursor",
         max_lines = 0, -- How many lines the window should span. Values <= 0 mean no limit.
         trim_scope = "outer",
@@ -161,7 +162,6 @@ return {
           "go",
           "graphql",
           "heex",
-          "help",
           "html",
           "javascript",
           "jq",
@@ -170,6 +170,7 @@ return {
           "jsonc",
           "json5",
           "lua",
+          "luadoc",
           "luap",
           "make",
           "markdown",
@@ -190,6 +191,7 @@ return {
           "tsx",
           "typescript",
           "vim",
+          "vimdoc",
           "yaml",
         },
         highlight = {
