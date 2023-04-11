@@ -92,16 +92,16 @@ function obj:start()
 
   -- [ mouse bindings ] --------------------------------------------------------
   -- bind mouse side buttons to forward/back
-  -- FIXME: this is replicated into init.lua, as it doesn't work when just in this module. ¯\_(ツ)_/¯
+  -- FIXME: move these allowed bundleIDs to config?
+  local allowedMouseBindingApps = {}
   obj.mouseBindings = hs.eventtap.new({ hs.eventtap.event.types.otherMouseDown }, function(tapEvent)
-    local buttonIndex = tapEvent:getProperty(hs.eventtap.event.properties.mouseEventButtonNumber)
-    dbg(I(tapEvent))
-    dbg(I(buttonIndex))
-
-    if buttonIndex == 3 then
-      hs.eventtap.keyStroke({ "cmd" }, "[")
-    elseif buttonIndex == 4 then
-      hs.eventtap.keyStroke({ "cmd" }, "]")
+    if hs.fnutils.contains(allowedMouseBindingApps, hs.application.frontmostApplication():bundleID()) then
+      local buttonIndex = tapEvent:getProperty(hs.eventtap.event.properties.mouseEventButtonNumber)
+      if buttonIndex == 3 then
+        hs.eventtap.keyStroke({ "cmd" }, "[")
+      elseif buttonIndex == 4 then
+        hs.eventtap.keyStroke({ "cmd" }, "]")
+      end
     end
   end)
   obj.mouseBindings:start()

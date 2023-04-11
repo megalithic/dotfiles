@@ -297,6 +297,16 @@ function M.get_visual_selection()
   lines[1] = string.sub(lines[1], cscol)
   return table.concat(lines, "\n")
 end
+-- OR --------------------------------------------------------------------------
+-- REF: https://github.com/fdschmidt93/dotfiles/blob/master/nvim/.config/nvim/lua/fds/utils/init.lua
+function M.get_selection()
+  local rv = vim.fn.getreg("v")
+  local rt = vim.fn.getregtype("v")
+  vim.cmd([[noautocmd silent normal! "vy]])
+  local selection = vim.fn.getreg("v")
+  vim.fn.setreg("v", rv, rt)
+  return vim.split(selection, "\n")
+end
 
 ---@return string
 function M.get_root()

@@ -46,6 +46,32 @@ local grep_files_cmd = {
   "--trim",
 }
 
+local get_selection = function()
+  local rv = vim.fn.getreg("v")
+  local rt = vim.fn.getregtype("v")
+  vim.cmd([[noautocmd silent normal! "vy]])
+  local selection = vim.fn.getreg("v")
+  vim.fn.setreg("v", rv, rt)
+  return vim.split(selection, "\n")
+end
+
+-- telescope
+local ts = setmetatable({}, {
+  __index = function(_, key)
+    return function(topts)
+      local mode = vim.api.nvim_get_mode().mode
+      topts = topts or {}
+      if mode == "v" or mode == "V" or mode == "" then topts.default_text = table.concat(get_selection()) end
+      if key == "grep" then
+        require("telescope").extensions.egrepify.egrepify(topts)
+      else
+        local builtin = require("telescope.builtin")
+        builtin[key](topts)
+      end
+    end
+  end,
+})
+
 local function dropdown(opts) return require("telescope.themes").get_dropdown(get_border(opts)) end
 
 local function ivy(opts) return require("telescope.themes").get_ivy(get_border(opts)) end
@@ -61,7 +87,7 @@ local function project_files(opts)
   opts = opts or {}
   -- opts.cwd = require("mega.utils").get_root()
   -- vim.notify(fmt("current project files root: %s", opts.cwd), vim.log.levels.DEBUG, { title = "telescope" })
-  require("telescope.builtin").find_files(ivy(opts))
+  ts.find_files(ivy(opts))
 end
 
 local function multiopen(prompt_bufnr, method)
@@ -205,19 +231,19 @@ return {
     { "<leader>ff", project_files, desc = "find files" },
     {
       "<leader>a",
-      function() require("telescope").extensions.egrepify.egrepify(ivy({})) end,
+      function() ts.grep(ivy({})) end,
       desc = "live grep",
     },
     {
       "<leader>A",
-      function() extensions("menufacture").grep_string(ivy({})) end,
+      function() ts.grep(ivy({ default_text = vim.fn.expand("<cword>") })) end,
       desc = "grep under cursor",
     },
     {
       "<leader>A",
       function()
         local pattern = require("mega.utils").get_visual_selection()
-        extensions("menufacture").grep_string(ivy({ search = pattern }))
+        ts.grep(ivy({ default_text = pattern }))
       end,
       desc = "grep visual selection",
       mode = "v",
@@ -233,7 +259,7 @@ return {
     },
     {
       "<leader>fb",
-      function() require("telescope.builtin").buffers(dropdown({})) end,
+      function() ts.buffers(dropdown({})) end,
       desc = "find open buffers",
     },
     {
