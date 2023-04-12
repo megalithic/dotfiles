@@ -41,9 +41,9 @@ local function updateTitle()
   if artist ~= nil then
     local icon = ""
     if isPaused() then
-      icon = "" -- alts:  
+      icon = "󰏤" -- alts:  
     else
-      icon = "" -- alts:  
+      icon = "󰝚" -- alts:  
     end
 
     icon = stext(icon, { font = { name = defaultFont.name, size = 13 } })
