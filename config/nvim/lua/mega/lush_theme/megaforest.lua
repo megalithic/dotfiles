@@ -62,7 +62,8 @@ local theme = lush(function(injected_functions)
     CursorColumn({ fg = C.transparent, bg = C.bg2 }), -- Screen-column at the cursor, when 'cursorcolumn' is set.
     CursorWord({ fg = C.transparent, bg = C.transparent, gui = "bold,underline" }),
     CursorLine({ bg = C.bg2 }), -- Screen-line at the cursor, when 'cursorline' is set.  Low-priority if foreground (ctermfg OR fg) is not set.
-    CursorLineNr({ CursorLine, fg = C.brown, bg = C.bg0, gui = "bold,italic" }), -- Like LineNr when 'cursorline' or 'relativenumber' is set for the cursor line.
+    LineNr({ fg = C.grey0, bg = C.transparent }), -- Line number for ":number" and ":#" commands, and when 'number' or 'relativenumber' option is set.
+    CursorLineNr({ CursorLine, fg = C.brown, bg = C.bg0.li(5), gui = "bold,italic" }), -- Like LineNr when 'cursorline' or 'relativenumber' is set for the cursor line.
     -- CursorLineNrNC({ CursorLine, fg = C.transparent, bg = C.bg2 }), -- Like LineNr when 'cursorline' or 'relativenumber' is set for the cursor line.
     -- CursorLineSign({ bg = C.red }),
     VertSplit({ fg = C.bg4, bg = C.transparent }), -- the column separating vertically split windows
@@ -82,7 +83,6 @@ local theme = lush(function(injected_functions)
     CurSearch({ IncSearch }),
     Search({ fg = C.bg0, bg = C.green, gui = "italic,bold" }), -- Last search pattern highlighting (see 'hlsearch').  Also used for similar items that need to stand out.
     Substitute({ fg = C.bg0, bg = C.yellow, gui = "strikethrough,bold" }), -- |:substitute| replacement text highlighting
-    LineNr({ fg = C.grey0, bg = C.transparent }), -- Line number for ":number" and ":#" commands, and when 'number' or 'relativenumber' option is set.
     MatchParen({ fg = C.transparent, bg = C.bg4 }), -- The character under the cursor or just before it, if it is a paired bracket, and its match. |pi_paren.txt|
     ModeMsg({ fg = C.fg, bg = C.transparent, gui = "bold" }), -- 'showmode' message (e.g., "-- INSERT -- ")
     MsgArea({ bg = C.bg0 }), -- Area for messages and cmdline
@@ -684,9 +684,11 @@ local theme = lush(function(injected_functions)
 
     ---- :help tabline ---------------------------------------------------------
 
-    -- TabLine({ fg = grey2, bg = bg3 }), -- tab pages line, not active tab page label
-    -- TabLineFill({ fg = grey1, bg = bg1 }), -- tab pages line, where there are no labels
-    -- TabLineSel({ fg = bg0, bg = green }), -- tab pages line, active tab page label
+    TabLine({ fg = "#abb2bf", bg = C.bg_dark }),
+    TabLineIn({ fg = C.grey2, bg = C.bg1 }),
+    TabLineHead({ fg = C.bg1, bg = C.bg2 }),
+    TabLineSel({ fg = C.green, bg = C.bg0, gui = "bold" }),
+    TabFill({ bg = C.bg_dark }),
 
     ---- :help megaterm  -----------------------------------------------------
 

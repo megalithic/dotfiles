@@ -436,6 +436,8 @@ local function setup_diagnostics()
         "BufWritePre",
         "BufWritePost",
       },
+      -- title = { { "  ", "DiagnosticFloatTitleIcon" }, { "Problems  ", "DiagnosticFloatTitle" } },
+      scope = "cursor",
       header = { " Diagnostics:", "DiagnosticHeader" },
       ---@diagnostic disable-next-line: unused-local
       prefix = function(diag, i, total)

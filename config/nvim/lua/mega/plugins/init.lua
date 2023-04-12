@@ -52,7 +52,6 @@ return {
     end,
   },
   { "lukas-reineke/virt-column.nvim", config = { char = "│" }, event = "VimEnter" },
-  -- { "levouh/tint.nvim", enabled = false, config = true, event = { "VeryLazy" } },
   -- {
   --   "stevearc/dressing.nvim",
   --   event = "VeryLazy",
@@ -74,16 +73,6 @@ return {
   --   --   end
   --   -- end,
   -- },
-  {
-    "folke/todo-comments.nvim",
-    event = "VeryLazy",
-    enabled = false,
-    dependencies = { "nvim-treesitter/nvim-treesitter" },
-    config = function()
-      require("todo-comments").setup()
-      -- mega.command("TodoDots", ("TodoQuickFix cwd=%s keywords=TODO,FIXME"):format(vim.g.vim_dir))
-    end,
-  },
 
   -- indent guides for Neovim
   -- {
@@ -194,30 +183,32 @@ return {
       { "b0o/schemastore.nvim" },
       { "mrshmllow/document-color.nvim", event = "BufReadPre" },
       {
-        "mhanberg/elixir.nvim",
+        "elixir-tools/elixir-tools.nvim",
         ft = { "elixir", "eex", "heex", "surface" },
         config = function()
           local elixir = require("elixir")
+          local elixirls = require("elixir.elixirls")
 
           elixir.setup({
-            -- cmd = fmt("%s/lsp/elixir-ls/%s", vim.env.XDG_DATA_HOME, "language_server.sh"),
-            settings = elixir.settings({
-              dialyzerEnabled = true,
-              dialyzerFormat = "dialyxir_long", -- alts: dialyxir_short
-              dialyzerwarnopts = {},
-              fetchDeps = false,
-              enableTestLenses = false,
-              suggestSpecs = true,
-            }),
-            log_level = vim.lsp.protocol.MessageType.Log,
-            message_level = vim.lsp.protocol.MessageType.Log,
-            on_attach = function(client, bufnr)
-              -- dd(fmt("attached to client %s on bufnr %s", I(client), bufnr))
-              -- whatever keybinds you want, see below for more suggestions
-              -- vim.keymap.set("n", "<space>fp", ":ElixirFromPipe<cr>", { buffer = true, noremap = true })
-              -- vim.keymap.set("n", "<space>tp", ":ElixirToPipe<cr>", { buffer = true, noremap = true })
-              -- vim.keymap.set("v", "<space>em", ":ElixirExpandMacro<cr>", { buffer = true, noremap = true })
-            end,
+            elixirls = {
+              -- cmd = fmt("%s/lsp/elixir-ls/%s", vim.env.XDG_DATA_HOME, "language_server.sh"),
+              settings = elixirls.settings({
+                dialyzerEnabled = true,
+                dialyzerFormat = "dialyxir_long", -- alts: dialyxir_short
+                dialyzerwarnopts = {},
+                fetchDeps = false,
+                enableTestLenses = false,
+                suggestSpecs = true,
+              }),
+              log_level = vim.lsp.protocol.MessageType.Log,
+              message_level = vim.lsp.protocol.MessageType.Log,
+              on_attach = function(client, bufnr)
+                -- dd(fmt("attached to client %s on bufnr %s", I(client), bufnr))
+                -- vim.keymap.set("n", "<space>fp", ":ElixirFromPipe<cr>", { buffer = true, noremap = true })
+                -- vim.keymap.set("n", "<space>tp", ":ElixirToPipe<cr>", { buffer = true, noremap = true })
+                -- vim.keymap.set("v", "<space>em", ":ElixirExpandMacro<cr>", { buffer = true, noremap = true })
+              end,
+            },
           })
         end,
         dependencies = {

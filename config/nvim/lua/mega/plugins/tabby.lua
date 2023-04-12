@@ -9,6 +9,96 @@ local M = {
 }
 
 function M.config()
+  --
+  --
+  -- [ V2 ] --------------------------------------------------------------------
+  --
+  --
+  vim.o.showtabline = 2
+  function tab_name(tab) return string.gsub(tab, "%[..%]", "") end
+
+  function tab_modified(tab)
+    local wins = require("tabby.module.api").get_tab_wins(tab)
+    for _, x in pairs(wins) do
+      if vim.bo[vim.api.nvim_win_get_buf(x)].modified then return "" end
+    end
+    return ""
+  end
+
+  function lsp_diag(buf)
+    local diagnostics = vim.diagnostic.get(buf)
+    local count = { 0, 0, 0, 0 }
+
+    for _, diagnostic in ipairs(diagnostics) do
+      count[diagnostic.severity] = count[diagnostic.severity] + 1
+    end
+    if count[1] > 0 then
+      return vim.bo[buf].modified and "" or ""
+    elseif count[2] > 0 then
+      return vim.bo[buf].modified and "" or ""
+    end
+    return vim.bo[buf].modified and "" or ""
+  end
+
+  function GetFileExtension(url) return url:match("^.+(%..+)$"):sub(2) end
+
+  local theme = {
+    fill = "TabFill",
+    head = "TabLineHead",
+    current_tab = "TabLineSel",
+    inactive_tab = "TabLineIn",
+    tab = "TabLine",
+    win = "TabLineHead",
+    tail = "TabLineHead",
+  }
+
+  if false then
+    require("tabby.tabline").set(function(line)
+      return {
+        {
+          { mega.icons.misc.lblock, hl = theme.head },
+          line.sep(" ", theme.head, theme.fill),
+        },
+        line.tabs().foreach(function(tab)
+          local hl = tab.is_current() and theme.current_tab or theme.inactive_tab
+          return {
+            line.sep(" ", hl, theme.fill),
+            tab.number(),
+            " ",
+            tab_name(tab.name()),
+            " ",
+            tab_modified(tab.id),
+            line.sep(" ", hl, theme.fill),
+            hl = hl,
+            margin = " ",
+          }
+        end),
+        line.spacer(),
+        line.wins_in_tab(line.api.get_current_tab()).foreach(
+          function(win)
+            return {
+              line.sep(" ", theme.win, theme.fill),
+              win.is_current() and "" or "",
+              win.buf_name(),
+              line.sep(" ", theme.win, theme.fill),
+              hl = theme.win,
+              margin = " ",
+            }
+          end
+        ),
+        {
+          line.sep(" ", theme.tail, theme.fill),
+          { mega.icons.misc.rblock, hl = theme.tail },
+        },
+        hl = theme.fill,
+      }
+    end)
+  end
+  --
+  --
+  -- [ V1 ] --------------------------------------------------------------------
+  --
+  --
   local config = {
     layout = "active_wins_at_tail",
   }
@@ -96,9 +186,7 @@ function M.config()
     },
   }
 
-  require("tabby").setup({
-    tabline = tabline,
-  })
+  if true then require("tabby").setup({ tabline = tabline }) end
 end
 
 return M

@@ -19,6 +19,7 @@ vim.g.enabled_plugin = {
   folds = true,
   env = true,
   tmux = true,
+  dim = true,
   vscode = false,
   winbar = false,
 }

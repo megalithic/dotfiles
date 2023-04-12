@@ -4,11 +4,9 @@ if not vim.g.enabled_plugin["megacolumn"] then return end
 local fn, v, api = vim.fn, vim.v, vim.api
 local ui, separators = mega.ui, mega.icons.separators
 
-local space = " "
 local shade = separators.light_shade_block
 local border = separators.thin_block
--- local SIGN_COL_WIDTH, GIT_COL_WIDTH, space = 2, 1, ' '
--- local fcs = vim.opt.fillchars:get()
+local SIGN_COL_WIDTH, GIT_COL_WIDTH, space = 2, 1, " "
 local fold_opened = "▽" -- '▼'
 local fold_closed = "▷" -- '▶'
 local border_hl = "%#StatusColumnBorder#"
@@ -22,17 +20,6 @@ local function hl(group, text) return "%#" .. group .. "#" .. text .. "%*" end
 
 local function click(name, item) return "%@v:lua.mega.ui.statuscolumn." .. name .. "@" .. item end
 
----@param buf number
----@return {name:string, text:string, texthl:string}[]
--- local function get_signs(buf)
---   return vim.tbl_map(function(sign)
---     local signs = fn.sign_getdefined(sign.name)[1]
---     for _, s in ipairs(signs) do
---       if s.text then s.text = s.text:gsub("%s", "") end
---     end
---     return signs
---   end, fn.sign_getplaced(buf, { group = "*", lnum = v.lnum })[1].signs)
--- end
 local function get_signs(buf)
   return vim.tbl_map(
     function(sign) return fn.sign_getdefined(sign.name)[1] end,
