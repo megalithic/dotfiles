@@ -216,7 +216,6 @@ return {
   "nvim-telescope/telescope.nvim",
   cmd = { "Telescope" },
   dependencies = {
-    { "molecule-man/telescope-menufacture" },
     "natecraddock/telescope-zf-native.nvim",
     "nvim-telescope/telescope-file-browser.nvim",
     "fdschmidt93/telescope-egrepify.nvim",
@@ -247,15 +246,6 @@ return {
       end,
       desc = "grep visual selection",
       mode = "v",
-    },
-    {
-      "<leader>fl",
-      function()
-        extensions("menufacture").find_files(ivy({
-          cwd = require("lazy.core.config").options.root,
-        }))
-      end,
-      desc = "find plugin file",
     },
     {
       "<leader>fb",
@@ -394,11 +384,6 @@ return {
             match_filename = false,
           },
         },
-        menufacture = {
-          mappings = {
-            main_menu = { [{ "i", "n" }] = "<C-y>" },
-          },
-        },
         egrepify = {
           lnum = true, -- default, not required
           lnum_hl = "EgrepifyLnum", -- default, not required
@@ -484,7 +469,6 @@ return {
     })
 
     telescope.load_extension("file_browser")
-    telescope.load_extension("menufacture")
     telescope.load_extension("zf-native")
     telescope.load_extension("smart_open")
     telescope.load_extension("egrepify")

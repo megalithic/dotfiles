@@ -673,7 +673,7 @@ local theme = lush(function(injected_functions)
     ---- :help mini.jump.txt / mini.jump2d.txt  --------------------------------
 
     MiniJump({ fg = C.magenta, bg = C.bg_dark, gui = "bold,underline" }),
-    MiniJump2dSpot({ fg = C.white, bg = C.bg_dark, gui = "bold" }),
+    MiniJump2dSpot({ fg = C.purple, bg = C.bg_dark, gui = "bold,underline" }),
 
     ---- :help leap.txt --------------------------------------------------------
 

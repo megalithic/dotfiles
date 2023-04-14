@@ -251,7 +251,7 @@ nnoremap("g>", [[<cmd>set nomore<bar>40messages<bar>set more<CR>]], {
 -- - Clear command-line
 -- - Close floating windows
 -- nmap([[<Esc>]], [[<Nop>]])
--- nnoremap([[<Esc>]], function() mega.clear_ui() end, { silent = true, desc = "Clear UI" })
+nnoremap([[<Esc>]], function() mega.clear_ui() end, { silent = true, desc = "Clear UI" })
 inoremap([[jj]], function()
   vim.cmd.stopinsert()
   mega.clear_ui()

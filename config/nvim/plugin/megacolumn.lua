@@ -84,7 +84,7 @@ local function sep()
   return separator_hl .. border
 end
 
-function ui.statuscolumn.render()
+function ui.statuscolumn.render(isActive)
   local curwin = api.nvim_get_current_win()
   local curbuf = api.nvim_win_get_buf(curwin)
 
@@ -106,12 +106,25 @@ function ui.statuscolumn.render()
     sign and hl(sign.texthl, sign.text:gsub(space, "")) or space,
     git_sign and hl(git_sign.texthl, git_sign.text:gsub(space, "")) or space,
     fdm(),
-    -- space,
     nr(curwin, line_count),
     sep(),
     space,
   }
-  return table.concat(components, "")
+
+  if isActive then
+    return table.concat(components, "")
+  else
+    return table.concat({
+      "%=",
+      space,
+      space,
+      space,
+      space,
+      "%l",
+      space,
+      space,
+    }, "")
+  end
 end
 
 local excluded = {
@@ -149,18 +162,28 @@ local excluded = {
   "quickfix",
 }
 
--- vim.o.statuscolumn = "%{%v:lua.mega.ui.statuscolumn.render()%}"
--- vim.opt_local.statuscolumn = [[%!v:lua.mega.ui.statuscolumn.render()]]
-
 mega.augroup("MegaColumn", {
   {
-    event = { "BufEnter", "FileType", "WinEnter" },
+    event = { "BufEnter", "FileType", "WinEnter", "FocusGained" },
     command = function(args)
       local buf = vim.bo[args.buf]
+      -- vim.opt.statuscolumn = ""
       if buf.bt ~= "" or vim.tbl_contains(excluded, buf.ft) then
         vim.opt_local.statuscolumn = ""
       else
-        vim.opt_local.statuscolumn = [[%!v:lua.mega.ui.statuscolumn.render()]]
+        vim.opt_local.statuscolumn = [[%!v:lua.mega.ui.statuscolumn.render(v:true)]]
+      end
+    end,
+  },
+  {
+    event = { "BufLeave", "WinLeave" },
+    command = function(args)
+      local buf = vim.bo[args.buf]
+      -- vim.opt.statuscolumn = ""
+      if buf.bt ~= "" or vim.tbl_contains(excluded, buf.ft) then
+        vim.opt_local.statuscolumn = ""
+      else
+        vim.opt_local.statuscolumn = [[%!v:lua.mega.ui.statuscolumn.render(v:false)]]
       end
     end,
   },

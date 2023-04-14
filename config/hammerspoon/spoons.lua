@@ -50,7 +50,7 @@ function obj:init(opts)
     config = {
       default_handler = "com.brave.Browser.dev", --hs.application.get(require("hs.settings").get(CONFIG_KEY).preferred.browser),
       url_patterns = {
-        -- { "https?://slack.com/openid/*", "com.google.Chrome" },
+        { "https?://slack.com/openid/*", "com.brave.Browser.dev" },
         -- { "https?://github.com/[mM]iroapp.*", "com.google.Chrome" },
         -- { "https?://[mM]iro.*", "com.google.Chrome" },
         -- { "https?://dev.*.com", "com.google.Chrome" },
@@ -58,10 +58,10 @@ function obj:init(opts)
         -- { "https?://.*devrtb.com", "com.google.Chrome" },
         -- { "https?://www.notion.so", "com.spotify.client" },
         { "https?://meet.google.com", "com.brave.Browser.dev.app.kjgfgldnnfoeklkmfkjfagphfepbbdan" },
-        { "https?://www.figma.com", "com.figma.Desktop" },
+        { "https?://figma.com", "com.figma.Desktop" },
         { "https?://open.spotify.com", "com.spotify.client" },
         { "spotify:", "com.spotify.client" },
-        { "https?://www.github.com", "com.brave.Browser.dev" },
+        { "https?://github.com", "com.brave.Browser.dev" },
         -- { "https?://accounts.bellhop.test", "com.apple.Safari" },
         -- { "https?://admin.bellhop.test", "com.apple.Safari" },
       },

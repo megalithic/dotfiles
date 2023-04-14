@@ -1,6 +1,6 @@
 local mini = {
   "echasnovski/mini.nvim",
-  event = "VeryLazy",
+  event = { "BufReadPost", "BufNewFile" },
 }
 
 local specs = { mini, "JoosepAlviste/nvim-ts-context-commentstring" }
@@ -10,28 +10,188 @@ function mini.surround()
     mappings = {
       add = "ys",
       delete = "ds",
-      -- find = "",
-      -- find_left = "",
-      -- highlight = "",
+      find = "",
+      find_left = "",
+      highlight = "",
       replace = "cs",
-      -- add = "yp",
-      -- visual_add = "P",
-      -- delete = "dp",
-      -- find = "gp",
-      -- find_left = "gP",
-      -- replace = "cp",
-      -- update_n_lines = "",
+      update_n_lines = "",
+      -- Add this only if you don't want to use extended mappings
+      -- suffix_last = "",
+      -- suffix_next = "",
     },
-    -- n_lines = 200,
-    -- search_method = "cover_or_nearest", -- alts: cover_or_next
+    n_lines = 500,
+    search_method = "cover_or_nearest", -- alts: cover_or_next
   })
 
   mega.xnoremap("S", [[:<C-u>lua MiniSurround.add('visual')<CR>]])
 end
 
 function mini.jump()
-  -- require("mini.jump").setup()
-  -- require("mini.jump2d").setup()
+  require("mini.jump").setup()
+
+  do
+    if true then
+      local m = {
+        jump2d = require("mini.jump2d"),
+        jump2d_char = function()
+          local mj = require("mini.jump2d")
+          return mj.start(mj.builtin_opts.single_character)
+        end,
+        jump2d_start = function()
+          local mj = require("mini.jump2d")
+          return mj.start(mj.builtin_opts.default)
+        end,
+        jump2d_line = function()
+          local mj = require("mini.jump2d")
+          return mj.start(mj.builtin_opts.line_start)
+        end,
+        jump2d_word = function()
+          local mj = require("mini.jump2d")
+          return mj.start(mj.builtin_opts.word_start)
+        end,
+        jump2d_twochar = function()
+          local safe_getcharstr = function(msg)
+            vim.cmd("echon " .. vim.inspect(msg))
+            local char1_ok, char1 = pcall(vim.fn.getcharstr) -- Allow `<C-c>` to end input
+            local char2_ok, char2 = pcall(vim.fn.getcharstr) -- Allow `<C-c>` to end input
+            vim.cmd([[echo '' | redraw]]) -- Clean command line
+
+            -- Treat `<Esc>` or `<CR>` as cancel
+            if not char1_ok or (char1 == "\27" or char1 == "\r") then
+              vim.notify("no char1 given", L.ERROR)
+              return ""
+            end
+            if not char2_ok or (char2 == "\27" or char2 == "\r") then
+              vim.notify("no char2 given", L.ERROR)
+              return ""
+            end
+
+            return char1 .. char2
+          end
+
+          local gettwocharstr = function()
+            local _, char0 = pcall(vim.fn.getcharstr)
+            local _, char1 = pcall(vim.fn.getcharstr)
+
+            return char0 .. char1
+          end
+
+          -- local pattern = vim.pesc(gettwocharstr())
+          local pattern = vim.pesc(safe_getcharstr("(mini.jump2d) Enter two chars: "))
+
+          local mj = require("mini.jump2d")
+          return mj.start({
+            spotter = mj.gen_pattern_spotter(pattern),
+            allowed_lines = {
+              cursor_before = true,
+              cursor_after = true,
+              blank = false,
+              fold = false,
+            },
+            allowed_windows = {
+              not_current = false,
+            },
+            labels = "etovxqpdygfblzhckisuran",
+          })
+        end,
+      }
+
+      local opt = { noremap = true, silent = true }
+      vim.keymap.set({ "n" }, "S", m.jump2d_twochar, opt)
+      nnoremap("S", m.jump2d_twochar, opt)
+      -- vim.keymap.set({ "n", "v" }, "S", m.jump2d_char, opt)
+      -- vim.keymap.set({ "n", "v" }, "S", m.jump2d_start, opt)
+      -- vim.keymap.set({ "n", "v" }, "S", m.jump2d_line, opt)
+      -- vim.keymap.set({ "n", "v" }, "S", m.jump2d_word, opt)
+
+      require("mini.jump2d").setup({
+        -- spotter = dummy_spotter,
+        -- allowed_lines = { blank = false, fold = false },
+        -- hooks = {
+        --   before_start = function()
+        --     local first = safe_getcharstr("(mini.jump2d) Enter first character: ")
+        --     if first == nil then
+        --       jump2d.config.spotter = dummy_spotter
+        --       return
+        --     end
+        --
+        --     local second = safe_getcharstr("(mini.jump2d) Enter second character: ")
+        --     if second == nil then
+        --       jump2d.config.spotter = dummy_spotter
+        --       return
+        --     end
+        --
+        --     local pattern = make_ignorecase_pattern(first .. second)
+        --     jump2d.config.spotter = jump2d.gen_pattern_spotter(pattern)
+        --   end,
+        -- },
+        mappings = { start_jumping = "" },
+        labels = "etovxqpdygfblzhckisuran",
+      })
+    else
+      local status, jump2d = pcall(require, "mini.jump2d")
+      if not status then
+        print("mini.jump2d error")
+        return
+      end
+
+      local safe_getcharstr = function(msg)
+        vim.cmd("echon " .. vim.inspect(msg))
+        local ok, res = pcall(vim.fn.getcharstr) -- Allow `<C-c>` to end input
+        vim.cmd([[echo '' | redraw]]) -- Clean command line
+
+        -- Treat `<Esc>` or `<CR>` as cancel
+        if not ok or (res == "\27" or res == "\r") then return nil end
+
+        return res
+      end
+
+      local make_ignorecase_pattern = function(word)
+        local parts = {}
+        for i = 1, word:len() do
+          local char = word:sub(i, i)
+
+          if char:find("^%a$") then
+            -- Convert letter to a match both lower and upper case
+            char = "[" .. char:lower() .. char:upper() .. "]"
+          else
+            char = vim.pesc(char) -- Escape non-letter characters
+          end
+
+          table.insert(parts, char)
+        end
+
+        return table.concat(parts)
+      end
+
+      local dummy_spotter = function() return {} end
+
+      jump2d.setup({
+        spotter = dummy_spotter,
+        allowed_lines = { blank = false, fold = false },
+        hooks = {
+          before_start = function()
+            local first = safe_getcharstr("(mini.jump2d) Enter first character: ")
+            if first == nil then
+              jump2d.config.spotter = dummy_spotter
+              return
+            end
+
+            local second = safe_getcharstr("(mini.jump2d) Enter second character: ")
+            if second == nil then
+              jump2d.config.spotter = dummy_spotter
+              return
+            end
+
+            local pattern = make_ignorecase_pattern(first .. second)
+            jump2d.config.spotter = jump2d.gen_pattern_spotter(pattern)
+          end,
+        },
+        mappings = { start_jumping = "s" },
+        labels = "etovxqpdygfblzhckisuran",
+      })
+    end
+  end
 end
 
 function mini.pairs() require("mini.pairs").setup({}) end

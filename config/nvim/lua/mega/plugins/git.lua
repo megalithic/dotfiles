@@ -62,7 +62,9 @@ return {
 
         -- Actions
         bmap({ "n", "v" }, "<localleader>hs", ":Gitsigns stage_hunk<CR>", { desc = "git: stage hunk" })
+        bmap({ "n", "v" }, "<localleader>gs", ":Gitsigns stage_hunk<CR>", { desc = "git: stage hunk" })
         bmap({ "n", "v" }, "<localleader>hr", ":Gitsigns reset_hunk<CR>", { desc = "git: reset hunk" })
+        bmap({ "n", "v" }, "<localleader>gr", ":Gitsigns reset_hunk<CR>", { desc = "git: reset hunk" })
 
         -- Text object
         bmap({ "o", "x" }, "ih", ":<C-U>Gitsigns select_hunk<CR>", { desc = "git: select hunk" })
@@ -83,7 +85,7 @@ return {
     cmd = "Neogit",
     dependencies = { "nvim-lua/plenary.nvim" },
     keys = {
-      { "<localleader>gs", function() neogit().open() end, desc = "neogit: open status buffer" },
+      { "<localleader>gS", function() neogit().open() end, desc = "neogit: open status buffer" },
       { "<localleader>gc", function() neogit().open({ "commit" }) end, desc = "neogit: open commit buffer" },
       { "<localleader>gl", function() neogit().popups.pull.create() end, desc = "neogit: open pull popup" },
       { "<localleader>gp", function() neogit().popups.push.create() end, desc = "neogit: open push popup" },

@@ -18,11 +18,13 @@ return {
     dependencies = { "tpope/vim-repeat" },
     keys = { { "s", leap_keys } },
     config = leap_config,
+    enabled = false,
   },
   {
     "ggandor/flit.nvim",
     keys = { "f", "t", "F", "T" },
     dependencies = { "ggandor/leap.nvim" },
     opts = { labeled_modes = "nvo", multiline = false },
+    enabled = false,
   },
 }

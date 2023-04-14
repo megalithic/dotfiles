@@ -1190,10 +1190,10 @@ function mega.clear_ui()
   vim.cmd("echo ''")
   if vim.g.enabled_plugin["cursorline"] then mega.blink_cursorline() end
 
-  -- do
-  --   local ok, mj = pcall(require, "mini.jump")
-  --   if ok then mj.stop_jumping() end
-  -- end
+  do
+    local ok, mj = pcall(require, "mini.jump")
+    if ok then mj.stop_jumping() end
+  end
 
   local ok, n = mega.require("notify")
   if ok then n.dismiss() end

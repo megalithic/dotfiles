@@ -1,3 +1,6 @@
+-- REFs:
+--
+-- https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/picker.lua
 local M = {
   "ibhagwan/fzf-lua",
   cmd = { "FzfLua" },

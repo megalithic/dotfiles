@@ -2,8 +2,6 @@ local Settings = require("hs.settings")
 local obj = {}
 local _appObj = nil
 local browser = hs.application.get(C.preferred.browser)
-local defaultKittyFont = 15.0
-local defaultKittyFontDelta = 4.0
 
 obj.__index = obj
 obj.name = "context.pop"
@@ -20,26 +18,22 @@ function obj:start(opts)
   if obj.modal then obj.modal:enter() end
 
   if event == hs.application.watcher.launched then
-    do
-      local term = hs.application.get("wezterm") or hs.application.get("kitty")
-      local pop = hs.application.get("Pop")
+    local term = hs.application.get("wezterm") or hs.application.get("kitty")
+    local pop = hs.application.get("Pop")
 
-      -- hs.timer.waitUntil(function() return pop:getWindow("'s Screen") end, function()
-      L.req("lib.dnd").on("meeting")
-      hs.spotify.pause()
-      L.req("lib.menubar.keyshowr"):start()
-      L.req("lib.menubar.ptt").setState("push-to-mute")
+    -- hs.timer.waitUntil(function() return pop:getWindow("'s Screen") end, function()
+    L.req("lib.dnd").on("meeting")
+    hs.spotify.pause()
+    L.req("lib.menubar.keyshowr"):start()
+    L.req("lib.menubar.ptt").setState("push-to-mute")
 
-      local layouts = {
-        { pop:name(), nil, hs.screen.primaryScreen():name(), hs.layout.maximized, nil, nil },
-        { browser:name(), nil, hs.screen.primaryScreen():name(), hs.layout.right50, nil, nil },
-        { term:name(), nil, hs.screen.primaryScreen():name(), hs.layout.right50, nil, nil },
-      }
-      hs.layout.apply(layouts)
-      term:setFrontmost(true)
-      -- hs.execute("kitty @ --to unix:/tmp/mykitty set-font-size " .. (defaultKittyFont + defaultKittyFontDelta), true)
-      -- end)
-    end
+    local layouts = {
+      { pop:name(), nil, hs.screen.primaryScreen():name(), hs.layout.maximized, nil, nil },
+      { browser:name(), nil, hs.screen.primaryScreen():name(), hs.layout.right50, nil, nil },
+      { term:name(), nil, hs.screen.primaryScreen():name(), hs.layout.right50, nil, nil },
+    }
+    hs.layout.apply(layouts)
+    term:setFrontmost(true)
   end
 
   return self
@@ -62,22 +56,17 @@ function obj:stop(opts)
   elseif event == hs.application.watcher.terminated then
     L.req("lib.menubar.ptt").setState("push-to-talk")
     L.req("lib.dnd").off()
+    L.req("lib.menubar.keyshowr"):stop()
 
-    do
-      L.req("lib.menubar.keyshowr"):stop()
+    if browser ~= nil then
+      local browser_win = browser:mainWindow()
+      if browser_win ~= nil then browser_win:moveToUnit(hs.layout.maximized) end
+    end
 
-      if browser ~= nil then
-        local browser_win = browser:mainWindow()
-        if browser_win ~= nil then browser_win:moveToUnit(hs.layout.maximized) end
-      end
-
-      local term = hs.application.get("wezterm") or hs.application.get("kitty")
-      if term ~= nil then
-        -- hs.execute([[printf "\033]1337;SetUserVar=%s=%s\007" SCREEN_SHARE_MODE `echo -n -8 | base64`]], true)
-        -- hs.execute("kitty @ --to unix:/tmp/mykitty set-font-size " .. defaultKittyFont, true)
-        local term_win = term:mainWindow()
-        if term_win ~= nil then term_win:moveToUnit(hs.layout.maximized) end
-      end
+    local term = hs.application.get("wezterm") or hs.application.get("kitty")
+    if term ~= nil then
+      local term_win = term:mainWindow()
+      if term_win ~= nil then term_win:moveToUnit(hs.layout.maximized) end
     end
   end
 

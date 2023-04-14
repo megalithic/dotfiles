@@ -78,15 +78,9 @@ local quitters = {
   -- "com.github.wez.wezterm", -- stuck with wezterm's built in confirm, need to remove this
 }
 
---- @class WindowRuleOpts
---- @field [1] string Window title
---- @field [2] number Screen number
---- @field [3] string Window position
-
 --- @class TargetOpts
 --- @field [1] string Target identifier; an application bundleID, a url pattern
 --- @field locals? string[] Keys for local bindings
---- @field rules WindowRuleOpts[] Rules for how/where to place windows for a target
 
 --- @class LauncherOpts
 --- @field key string Keyboard key for focusing/launching this target
@@ -108,44 +102,37 @@ local launchers = {
   {
     key = "o",
     mode = "focus",
-    target = {
-      {
-        "com.obsproject.obs-studio",
-        locals = {},
-      },
-    },
+    target = "com.obsproject.obs-studio",
   },
-  -- {
-  --   key = "k",
-  --   target = {
-  --     {
-  --       "com.github.wez.wezterm",
-  --       locals = {},
-  --     },
-  --   },
-  -- },
+  {
+    key = "f",
+    mods = mods.caSc,
+    mode = "focus",
+    target = "com.figma.Desktop",
+  },
+  {
+    key = "k",
+    target = "com.github.wez.wezterm",
+  },
   {
     key = "space",
-    target = {
-      {
-        "com.raycast.macos",
-        locals = {},
-      },
-    },
+    target = "com.raycast.macos",
+  },
+  {
+    key = "j",
+    mods = mods.caSc,
+    target = "org.mozilla.firefoxdeveloperedition",
   },
 }
 
--- FIXME: separate launchers keybindings from apps layouts
-local apps = {
+local layouts = {
   ["com.runningwithcrayons.Alfred"] = {
     name = "Alfred",
     bundleID = "com.runningwithcrayons.Alfred",
-    -- key = "space",
   },
   ["com.raycast.macos"] = {
     name = "Raycast",
     bundleID = "com.raycast.macos",
-    key = "space",
     rules = {
       { "", 1, "centeredMedium" },
     },
@@ -159,7 +146,6 @@ local apps = {
   },
   ["com.github.wez.wezterm"] = {
     bundleID = "com.github.wez.wezterm",
-    key = "k",
     name = "wezterm",
     rules = {
       { "", 1, "maximized" },
@@ -168,7 +154,6 @@ local apps = {
   ["com.brave.Browser.dev"] = {
     bundleID = "com.brave.Browser.dev",
     name = "Brave Browser Dev",
-    key = "j",
     tags = { "browsers" },
     rules = {
       { "", 1, "maximized" },
@@ -177,8 +162,6 @@ local apps = {
   ["com.apple.Safari"] = {
     bundleID = "com.apple.Safari",
     name = "Safari",
-    -- mods = mods.caSc,
-    -- key = "j",
     tags = { "browsers" },
     rules = {
       { "", 2, "maximized" },
@@ -187,7 +170,6 @@ local apps = {
   ["com.apple.SafariTechnologyPreview"] = {
     bundleID = "com.apple.SafariTechnologyPreview",
     name = "Safari Technology Preview",
-    quitter = true,
     tags = { "browsers" },
     rules = {
       { "", 2, "maximized" },
@@ -334,8 +316,8 @@ local apps = {
   ["com.figma.Desktop"] = {
     bundleID = "com.figma.Desktop",
     name = "Figma",
-    -- key = "f",
-    -- mods = mods.caSc,
+    key = "f",
+    mods = mods.caSc,
     launchMode = "focus",
     quitter = true,
     rules = {
@@ -358,7 +340,6 @@ local apps = {
     },
   },
 }
-local layouts = apps
 
 local utils = {
   {
@@ -405,7 +386,7 @@ local dock = {
 return {
   ["layouts"] = layouts,
   ["bindings"] = {
-    ["apps"] = apps,
+    ["apps"] = layouts,
     ["utils"] = utils,
     ["launchers"] = launchers,
   },
