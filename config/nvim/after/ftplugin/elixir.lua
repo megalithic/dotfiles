@@ -20,12 +20,6 @@ vim.cmd.iabbrev([[~h      ~H""""""<ESC>2hi<CR><ESC>O<BS> ]])
 vim.cmd.iabbrev([[:skip:  @tag :skip]])
 vim.cmd.iabbrev([[tskip   @tag :skip]])
 
-nnoremap(
-  "<localleader>eob",
-  function() require("elixir").open_output_panel({ window = "split" }) end,
-  { desc = "elixir: open output panel" }
-)
-
 local function desk_cmd()
   local deskfile_cmd = ""
   local deskfile_path = require("mega.utils").root_has_file("Deskfile")

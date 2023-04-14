@@ -10,64 +10,6 @@ local augroup = mega.augroup
 local fmt = string.format
 local diagnostic = vim.diagnostic
 
--- [ HELPERS ] -----------------------------------------------------------------
-
--- ----------------------------------------------------------------------------------------------------
--- --  LSP file Rename
--- ----------------------------------------------------------------------------------------------------
---
--- ---@param data { old_name: string, new_name: string }
--- local function prepare_rename(data)
---   local bufnr = fn.bufnr(data.old_name)
---   for _, client in pairs(lsp.get_active_clients({ bufnr = bufnr })) do
---     local rename_path = { "server_capabilities", "workspace", "fileOperations", "willRename" }
---     if not vim.tbl_get(client, rename_path) then
---       vim.notify(fmt("%s does not support rename files"), vim.log.levels.ERROR, { title = "LSP" })
---     end
---     local params = {
---       files = { { newUri = "file://" .. data.new_name, oldUri = "file://" .. data.old_name } },
---     }
---     local resp = client.request_sync("workspace/willRenameFiles", params, 1000)
---     vim.lsp.util.apply_workspace_edit(resp.result, client.offset_encoding)
---   end
--- end
---
--- local function rename_file()
---   local old_name = api.nvim_buf_get_name(0)
---   local new_name = fmt("%s/%s", vim.fs.dirname(old_name), fn.input("New name: "))
---   prepare_rename({ old_name = old_name, new_name })
---   lsp.util.rename(old_name, new_name)
--- end
---
--- ----------------------------------------------------------------------------------------------------
--- --  Related Locations
--- ----------------------------------------------------------------------------------------------------
--- -- This relates to https://github.com/neovim/neovim/issues/19649#issuecomment-1327287313
--- -- neovim does not currently correctly report the related locations for diagnostics.
--- -- TODO: once a PR for this is merged delete this workaround
---
--- local function show_related_locations(diag)
---   local related_info = diag.relatedInformation
---   if not related_info or #related_info == 0 then return diag end
---   for _, info in ipairs(related_info) do
---     diag.message = ("%s\n%s(%d:%d)%s"):format(
---       diag.message,
---       fn.fnamemodify(vim.uri_to_fname(info.location.uri), ":p:."),
---       info.location.range.start.line + 1,
---       info.location.range.start.character + 1,
---       not mega.empty(info.message) and (": %s"):format(info.message) or ""
---     )
---   end
---   return diag
--- end
---
--- local handler = lsp.handlers["textDocument/publishDiagnostics"]
--- ---@diagnostic disable-next-line: duplicate-set-field
--- lsp.handlers["textDocument/publishDiagnostics"] = function(err, result, ctx, config)
---   result.diagnostics = vim.tbl_map(show_related_locations, result.diagnostics)
---   handler(err, result, ctx, config)
--- end
-
 -- Show the popup diagnostics window, but only once for the current cursor/line location
 -- by checking whether the word under the cursor has changed.
 local function diagnostic_popup(bufnr)
@@ -273,21 +215,6 @@ local function setup_keymaps(client, bufnr)
   xnoremap("<leader>lc", "<esc><Cmd>lua vim.lsp.buf.range_code_action()<CR>", desc("code action"))
   nnoremap("gl", vim.lsp.codelens.run, desc("lsp: code lens"))
   nnoremap("gn", require("mega.lsp.rename").rename, desc("lsp: rename"))
-  -- nnoremap("gn", function()
-  --   local bufnr = vim.api.nvim_get_current_buf()
-  --   vim.ui.input({
-  --     prompt = "New name: ",
-  --     highlight = function(new_name)
-  --       vim.api.nvim_buf_set_lines(bufnr, 0, 1, false, { new_name })
-  --       return {}
-  --     end,
-  --   }, function() print("Executing...") end)
-  --   -- require("inc_rename")
-  --   -- return ":IncRename " .. vim.fn.expand("<cword>")
-  -- end, desc("lsp: rename", true))
-
-  -- nnoremap("gn", function() return ":IncRename " .. vim.fn.expand("<cword>") end, desc("lsp: rename", true))
-  -- nnoremap("gn", "<cmd>IncRename<cr>", desc("lsp: rename"))
 
   nnoremap("K", function()
     local filetype = vim.bo.filetype
@@ -321,7 +248,6 @@ end
 
 -- [ FORMATTING ] ---------------------------------------------------------------
 
--- FIXME: deal with formatting exclusions for null to format vs. the in-built formatting for a client
 local function setup_formatting(client, bufnr)
   -- disable formatting for the following language-servers (i.e., let null-ls takeover):
   local disabled_lsp_formatting = { "tailwindcss", "html", "tsserver", "ls_emmet", "zk", "sumneko_lua" }

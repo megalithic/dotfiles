@@ -58,10 +58,10 @@ local M = {
         format.stylua.with({
           condition = function()
             return mega.executable("stylua")
-              and not vim.tbl_isempty(vim.fs.find({ ".stylua.toml", "stylua.toml" }, {
-                path = vim.fn.expand("%:p"),
-                upward = true,
-              }))
+            -- and not vim.tbl_isempty(vim.fs.find({ ".stylua.toml", "stylua.toml" }, {
+            --   path = vim.fn.expand("%:p"),
+            --   upward = true,
+            -- }))
           end,
         }),
         -- format.mix.with({

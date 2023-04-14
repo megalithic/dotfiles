@@ -102,6 +102,18 @@ return {
       { "b0o/schemastore.nvim" },
       { "mrshmllow/document-color.nvim", event = "BufReadPre" },
       {
+        "megalithic/output-panel.nvim",
+        keys = {
+          {
+            "<localleader>lop",
+            ":OutputPanel<CR>",
+            desc = "lsp: open output panel",
+          },
+        },
+        cmd = { "OutputPanel" },
+        config = function() require("output_panel").setup() end,
+      },
+      {
         "elixir-tools/elixir-tools.nvim",
         ft = { "elixir", "eex", "heex", "surface" },
         config = function()
@@ -122,9 +134,9 @@ return {
               log_level = vim.lsp.protocol.MessageType.Log,
               message_level = vim.lsp.protocol.MessageType.Log,
               on_attach = function(client, bufnr)
-                -- vim.keymap.set("n", "<space>fp", ":ElixirFromPipe<cr>", { buffer = true, noremap = true })
-                -- vim.keymap.set("n", "<space>tp", ":ElixirToPipe<cr>", { buffer = true, noremap = true })
-                -- vim.keymap.set("v", "<space>em", ":ElixirExpandMacro<cr>", { buffer = true, noremap = true })
+                vim.keymap.set("n", "<localleader>efp", ":ElixirFromPipe<cr>", { buffer = true, noremap = true })
+                vim.keymap.set("n", "<localleader>etp", ":ElixirToPipe<cr>", { buffer = true, noremap = true })
+                vim.keymap.set("v", "<localleader>eem", ":ElixirExpandMacro<cr>", { buffer = true, noremap = true })
               end,
             },
           })

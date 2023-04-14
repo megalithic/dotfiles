@@ -27,7 +27,7 @@ hs.keycodes.log.setLogLevel("error")
 hs.logger.defaultLogLevel = "error"
 
 Window.animationDuration = 0
-Window.highlight.ui.overlay = true
+-- Window.highlight.ui.overlay = true
 Window.setShadows(false)
 
 ipc.cliUninstall()
