@@ -599,7 +599,7 @@ local theme = lush(function(injected_functions)
 
     CmpItemAbbr({ fg = C.fg }),
     CmpItemAbbrMatch({ fg = C.cyan, gui = "bold,italic" }),
-    CmpItemAbbrMatchFuzzy({ fg = C.yellow }),
+    CmpItemAbbrMatchFuzzy({ fg = C.yellow, gui = "italic" }),
     CmpItemMenu({ NonText, gui = "italic" }),
 
     CmpItemKind({ fg = C.blue }),
@@ -685,9 +685,10 @@ local theme = lush(function(injected_functions)
     ---- :help tabline ---------------------------------------------------------
 
     TabLine({ fg = "#abb2bf", bg = C.bg_dark }),
-    TabLineIn({ fg = C.grey2, bg = C.bg1 }),
     TabLineHead({ fg = C.bg1, bg = C.bg2 }),
-    TabLineSel({ fg = C.green, bg = C.bg0, gui = "bold" }),
+    TabLineTabActive({ fg = C.green, bg = C.bg0, gui = "bold" }),
+    TabLineWinActive({ fg = C.green, bg = C.bg0, gui = "italic" }),
+    TabLineInactive({ fg = C.grey2, bg = C.bg1 }),
     TabFill({ bg = C.bg_dark }),
 
     ---- :help megaterm  -----------------------------------------------------

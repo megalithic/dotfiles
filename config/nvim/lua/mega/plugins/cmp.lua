@@ -115,7 +115,6 @@ return {
       },
       formatting = {
         deprecated = true,
-        -- fields = { "kind", "abbr", "menu" }, -- determines order of menu items
         fields = { "abbr", "kind", "menu" },
         format = function(entry, item)
           if item.kind == "Color" and entry.completion_item.documentation then
