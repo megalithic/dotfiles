@@ -52,27 +52,6 @@ return {
     end,
   },
   { "lukas-reineke/virt-column.nvim", config = { char = "│" }, event = "VimEnter" },
-  -- {
-  --   "stevearc/dressing.nvim",
-  --   event = "VeryLazy",
-  --   config = {
-  --     input = {
-  --       enabled = true,
-  --       override = function(conf)
-  --         conf.col = -1
-  --         conf.row = 0
-  --         return conf
-  --       end,
-  --     },
-  --   },
-  --   -- init = function()
-  --   --   ---@diagnostic disable-next-line: duplicate-set-field
-  --   --   vim.ui.input = function(...)
-  --   --     require("lazy").load({ plugins = { "dressing.nvim" } })
-  --   --     return vim.ui.input(...)
-  --   --   end
-  --   -- end,
-  -- },
   {
     "mbbill/undotree",
     cmd = "UndotreeToggle",
@@ -118,11 +97,6 @@ return {
           })
         end,
       },
-      -- {
-      --   "folke/neodev.nvim",
-      --   ft = "lua",
-      --   opts = { library = { plugins = { "nvim-dap-ui" } } },
-      -- },
       { "MunifTanjim/nui.nvim" },
       { "williamboman/mason-lspconfig.nvim" },
       { "b0o/schemastore.nvim" },
@@ -148,7 +122,6 @@ return {
               log_level = vim.lsp.protocol.MessageType.Log,
               message_level = vim.lsp.protocol.MessageType.Log,
               on_attach = function(client, bufnr)
-                -- dd(fmt("attached to client %s on bufnr %s", I(client), bufnr))
                 -- vim.keymap.set("n", "<space>fp", ":ElixirFromPipe<cr>", { buffer = true, noremap = true })
                 -- vim.keymap.set("n", "<space>tp", ":ElixirToPipe<cr>", { buffer = true, noremap = true })
                 -- vim.keymap.set("v", "<space>em", ":ElixirExpandMacro<cr>", { buffer = true, noremap = true })
@@ -185,98 +158,6 @@ return {
       },
     },
   },
-  -- {
-  --   {
-  --     "williamboman/mason.nvim",
-  --     cmd = "Mason",
-  --     build = ":MasonUpdate",
-  --     opts = { ui = { border = mega.get_border(), height = 0.8 } },
-  --   },
-  --   {
-  --     "williamboman/mason-lspconfig.nvim",
-  --     event = { "BufReadPre", "BufNewFile" },
-  --     dependencies = {
-  --       "mason.nvim",
-  --       {
-  --         "neovim/nvim-lspconfig",
-  --         dependencies = {
-  --           {
-  --             "folke/neodev.nvim",
-  --             ft = "lua",
-  --             opts = { library = { plugins = { "nvim-dap-ui" } } },
-  --           },
-  --           {
-  --             "folke/neoconf.nvim",
-  --             cmd = { "Neoconf" },
-  --             opts = { local_settings = ".nvim.json", global_settings = "nvim.json" },
-  --           },
-  --         },
-  --         config = function()
-  --           -- highlight.plugin("lspconfig", { { LspInfoBorder = { link = "FloatBorder" } } })
-  --           require("lspconfig.ui.windows").default_options.border = mega.get_border()
-  --           require("lspconfig").ccls.setup(require("mega.lsp.servers")("ccls"))
-  --         end,
-  --       },
-  --     },
-  --     config = function()
-  --       require("mason-lspconfig").setup({ automatic_installation = true })
-  --       require("mason-lspconfig").setup_handlers({
-  --         function(name)
-  --           local config = require("mega.lsp.servers")(name)
-  --           if config then require("lspconfig")[name].setup(config) end
-  --         end,
-  --       })
-  --     end,
-  --   },
-  -- },
-
-  -- ( Movements ) -------------------------------------------------------------
-  -- @trial multi-cursor: https://github.com/brendalf/dotfiles/blob/master/.config/nvim/lua/core/multi-cursor.lua
-
-  -- ( Navigation ) ------------------------------------------------------------
-  -- {
-  --   "knubie/vim-kitty-navigator",
-  --   event = "VeryLazy",
-  --   -- build = "cp ./*.py ~/.config/kitty/",
-  --   cond = not vim.env.TMUX and not vim.env.ZELLIJ,
-  -- },
-  -- {
-  --   "sidebar-nvim/sidebar.nvim",
-  --   keys = {
-  --     -- { "<leader>et", [[<Cmd>lua require("sidebar-nvim").toggle({focus = true})<CR>]], desc = "Toggle sidebar" },
-  --   },
-  --   cmd = {
-  --     "SidebarNvimToggle",
-  --     "SidebarNvimOpen",
-  --     "SidebarNvimClose",
-  --     "SidebarNvimUpdate",
-  --     "SidebarNvimFocus",
-  --     "SidebarNvimResize",
-  --   },
-  --   cond = vim.g.tree == "sidebar",
-  --   opts = {
-  --     open = false,
-  --     initial_width = 30,
-  --     section_separator = { " ", " " },
-  --     files = {
-  --       show_hidden = true,
-  --     },
-  --     todos = {
-  --       icon = " ",
-  --       ignored_paths = { "~" }, -- ignore certain paths, this will prevent huge folders like $HOME to hog Neovim with TODO searching
-  --       initially_closed = false, -- whether the groups should be initially closed on start. You can manually open/close groups later.
-  --     },
-  --     sections = {
-  --       "git",
-  --       "files",
-  --       "diagnostics",
-  --       -- "todos",
-  --       -- "buffers",
-  --       -- "symbols",
-  --       -- "containers",
-  --     },
-  --   },
-  -- },
   {
     "megalithic/dirbuf.nvim",
     dev = true,
@@ -307,13 +188,6 @@ return {
       devicons = true,
     },
   },
-  -- {
-  --   "prichrd/netrw.nvim",
-  --   ft = "netrw",
-  --   dependencies = {
-  --     "nvim-tree/nvim-web-devicons",
-  --   },
-  -- },
   { "kevinhwang91/nvim-bqf", ft = "qf" },
   {
     url = "https://gitlab.com/yorickpeterse/nvim-pqf",
@@ -338,81 +212,6 @@ return {
       use_diagnostic_signs = true, -- en
     },
   },
-  -- {
-  --   "chrishrb/gx.nvim",
-  --   event = { "BufEnter" },
-  --   dependencies = { "nvim-lua/plenary.nvim" },
-  --   config = true, -- default settings
-  --
-  --   -- you can specify also another config if you want
-  --   -- config = function() require("gx").setup {
-  --   --   open_browser_app = "os_specific", -- specify your browser app; default for macos is "open" and for linux "xdg-open"
-  --   --   handlers = {
-  --   --     plugin = true, -- open plugin links in lua (e.g. packer, lazy, ..)
-  --   --     github = true, -- open github issues
-  --   --     package_json = true, -- open dependencies from package.json
-  --   --   },
-  --   -- } end,
-  -- },
-
-  -- ( Testing/Debugging ) -----------------------------------------------------
-  -- {
-  --   "theHamsta/nvim-dap-virtual-text",
-  --   dependencies = "nvim-dap",
-  --   -- event = "VeryLazy",
-  --   config = function()
-  --     require("nvim-dap-virtual-text").setup({
-  --       commented = true,
-  --     })
-  --   end,
-  -- },
-  -- {
-  --   "jbyuki/one-small-step-for-vimkind",
-  --   dependencies = "nvim-dap",
-  --   -- event = "VeryLazy"
-  -- },
-  -- {
-  --   "suketa/nvim-dap-ruby",
-  --   -- event = "VeryLazy",
-  --   dependencies = "nvim-dap",
-  --   config = function() require("dap-ruby").setup() end,
-  -- },
-  -- {
-  --   "microsoft/vscode-js-debug",
-  --   build = "npm install --legacy-peer-deps && npm run compile",
-  -- },
-  -- {
-  --   "mxsdev/nvim-dap-vscode-js",
-  --   -- event = "VeryLazy",
-  --   dependencies = "nvim-dap",
-  --   config = function()
-  --     require("dap-vscode-js").setup({
-  --       log_file_level = vim.log.levels.TRACE,
-  --       adapters = {
-  --         "pwa-node",
-  --         "pwa-chrome",
-  --         "pwa-msedge",
-  --         "node-terminal",
-  --         "pwa-extensionHost",
-  --       },
-  --     })
-  --   end,
-  -- },
-  -- {
-  --   "sultanahamer/nvim-dap-reactnative",
-  --   dependencies = "nvim-dap",
-  --   -- event = "VeryLazy"
-  -- },
-  -- {
-  --   "jayp0521/mason-nvim-dap.nvim",
-  --   dependencies = "nvim-dap",
-  --   config = function()
-  --     require("mason-nvim-dap").setup({
-  --       ensure_installed = { "python", "node2", "chrome", "firefox" },
-  --       automatic_installation = true,
-  --     })
-  --   end,
-  -- },
 
   -- ( Development ) -----------------------------------------------------------
   {
@@ -490,29 +289,6 @@ return {
     config = function() require("numb").setup() end,
   },
   { "tpope/vim-eunuch", cmd = { "Move", "Rename", "Remove", "Delete", "Mkdir", "SudoWrite", "Chmod" } },
-  -- {
-  --   "chrisgrieser/nvim-genghis",
-  --   -- dependencies = {
-  --   --   { "tpope/vim-eunuch", event = "VeryLazy" },
-  --   -- },
-  --   event = "VeryLazy",
-  --   config = function()
-  --     local genghis = require("genghis")
-  --     mega.nnoremap("<localleader>yp", genghis.copyFilepath, { desc = "Copy filepath" })
-  --     mega.nnoremap("<localleader>yn", genghis.copyFilename, { desc = "Copy filename" })
-  --     mega.nnoremap("<localleader>yf", genghis.duplicateFile, { desc = "Duplicate file" })
-  --     mega.nnoremap("<localleader>rf", genghis.renameFile, { desc = "Rename file" })
-  --     mega.nnoremap("<localleader>cx", genghis.chmodx, { desc = "Chmod +x file" })
-  --     mega.nnoremap(
-  --       "<localleader>df",
-  --       function() genghis.trashFile({ trashLocation = "$HOME/.Trash" }) end,
-  --       { desc = "Delete to trash" }
-  --     ) -- default: "$HOME/.Trash".
-  --     -- mega.nmap("<localleader>mf", genghis.moveAndRenameFile)
-  --     -- mega.nmap("<localleader>nf", genghis.createNewFile)
-  --     -- mega.nmap("<localleader>x", genghis.moveSelectionToNewFile)
-  --   end,
-  -- },
   {
     "tpope/vim-abolish",
     event = "CmdlineEnter",
@@ -706,15 +482,6 @@ return {
       })
     end,
   },
-  -- @trial phaazon/mind.nvim
-  -- @trial "renerocksai/telekasten.nvim"
-  -- @trial preservim/vim-wordy
-  -- @trial jghauser/follow-md-links.nvim
-  -- @trial jakewvincent/mkdnflow.nvim
-  -- @trial jubnzv/mdeval.nvim
-  -- "dkarter/bullets.vim".
-  -- "dhruvasagar/vim-table-mode".
-  -- "rhysd/vim-gfm-syntax".
 
   -- ( Syntax/Languages ) ------------------------------------------------------
   { "ii14/emmylua-nvim", ft = "lua" },
