@@ -113,7 +113,7 @@ do
     "log",
     "tsplayground",
     "startuptime",
-    "OutputPanel",
+    "outputpanel",
     "preview",
     "qf",
     "man",
