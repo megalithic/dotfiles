@@ -102,7 +102,7 @@ return {
       { "b0o/schemastore.nvim" },
       { "mrshmllow/document-color.nvim", event = "BufReadPre" },
       {
-        "megalithic/output-panel.nvim",
+        "mhanberg/output-panel.nvim",
         keys = {
           {
             "<localleader>lop",
