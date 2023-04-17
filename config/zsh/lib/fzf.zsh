@@ -27,7 +27,6 @@ export FZF_DEFAULT_OPTS="
 --cycle
 --preview-window=right:60%:wrap
 --margin=0,0
---height=22%
 --padding=0,0
 --preview='bat --color=always --style=header,grid --line-range :300 {}'
 --prompt=' '
@@ -37,6 +36,7 @@ export FZF_DEFAULT_OPTS="
 # --preview='bat --color=always --style=header,grid --line-range :300 {}'
 # --no-multi
 # --reverse
+# --height=22%
 
 _fzf_megaforest() {
   local color00='#323d43'

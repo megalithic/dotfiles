@@ -195,7 +195,9 @@ local layouts = {
   ["com.kapeli.dashdoc"] = {
     bundleID = "com.kapeli.dashdoc",
     name = "Dash",
+    mods = mods.caSc,
     key = "d",
+    localBindings = { "d" },
     rules = {
       { "", 1, "centeredLarge" },
     },
