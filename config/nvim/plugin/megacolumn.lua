@@ -9,7 +9,8 @@ local border = separators.thin_block
 local SIGN_COL_WIDTH, GIT_COL_WIDTH, space = 2, 1, " "
 local fold_opened = "▽" -- '▼'
 local fold_closed = "▷" -- '▶'
-local border_hl = "%#StatusColumnBorder#"
+local active_border_hl = "%#StatusColumnActiveBorder#"
+local inactive_border_hl = "%#StatusColumnInactiveBorder#"
 
 ui.statuscolumn = {}
 
@@ -79,12 +80,18 @@ local function nr(win, _line_count)
   return click("toggle_breakpoint", padding .. lnum)
 end
 
-local function sep()
-  local separator_hl = v.virtnum >= 0 and mega.empty(v.relnum) and border_hl or ""
+local function sep(is_active)
+  local separator_hl = ""
+  if is_active then
+    separator_hl = v.virtnum >= 0 and mega.empty(v.relnum) and active_border_hl or ""
+  else
+    separator_hl = inactive_border_hl
+  end
+
   return separator_hl .. border
 end
 
-function ui.statuscolumn.render(isActive)
+function ui.statuscolumn.render(is_active)
   local curwin = api.nvim_get_current_win()
   local curbuf = api.nvim_win_get_buf(curwin)
 
@@ -107,11 +114,11 @@ function ui.statuscolumn.render(isActive)
     git_sign and hl(git_sign.texthl, git_sign.text:gsub(space, "")) or space,
     fdm(),
     nr(curwin, line_count),
-    sep(),
+    sep(is_active),
     space,
   }
 
-  if isActive then
+  if is_active then
     return table.concat(components, "")
   else
     return table.concat({
@@ -120,8 +127,9 @@ function ui.statuscolumn.render(isActive)
       space,
       space,
       space,
-      "%l",
-      space,
+      -- "%l",
+      nr(curwin, line_count),
+      sep(is_active),
       space,
     }, "")
   end
