@@ -52,7 +52,8 @@ end
 
 local function hover()
   local existing_float_win = vim.b.lsp_floating_preview
-  if next(vim.lsp.get_active_clients()) == nil then
+  local active_clients = vim.lsp.get_active_clients()
+  if next(active_clients) == nil then
     vim.cmd([[execute printf('h %s', expand('<cword>'))]])
   else
     if existing_float_win and vim.api.nvim_win_is_valid(existing_float_win) then
@@ -62,8 +63,8 @@ local function hover()
       vim.api.nvim_win_set_buf(pwin, preview_buffer)
       vim.api.nvim_win_close(existing_float_win, true)
     else
-      vim.lsp.buf.hover(nil, { focus = false, focusable = false })
-      -- require("hover").hover()
+      -- vim.lsp.buf.hover(nil, { focus = false, focusable = false })
+      require("pretty_hover").hover()
     end
   end
 end
@@ -226,8 +227,6 @@ local function setup_keymaps(client, bufnr)
       require("crates").show_popup()
     else
       hover()
-      -- require("hover").hover()
-      -- vim.lsp.buf.hover()
     end
   end, desc("lsp: hover"))
   nnoremap("gK", vim.lsp.buf.signature_help, desc("lsp: signature help"))

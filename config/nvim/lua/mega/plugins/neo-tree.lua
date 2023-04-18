@@ -76,6 +76,7 @@ function M.config()
         handler = function(_args)
           mega.resize_windows()
           require("virt-column").refresh()
+          vim.cmd("wincmd p")
         end,
       },
       {

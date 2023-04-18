@@ -146,6 +146,11 @@ return {
         },
       },
       {
+        "Fildo7525/pretty_hover",
+        event = "LspAttach",
+        opts = { border = mega.get_border() },
+      },
+      {
         "lewis6991/hover.nvim",
         keys = { "K", "gK" },
         config = function()

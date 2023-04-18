@@ -70,6 +70,8 @@ matches:
     replace: "😃"
   - trigger: ":cry:"
     replace: "😢"
+  - trigger: ":think:"
+    replace: "🤔"
 
   # Dates
   - trigger: ":date:"

@@ -66,12 +66,11 @@ export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS
 # ,label:6,query:7,separator:-1
 
 # set -U FZF_DEFAULT_OPTS "--reverse --no-info --prompt=' ' --pointer='' --marker=' ' --ansi --color gutter:-1,bg+:-1,header:4,separator:0,info:0,label:4,border:4,prompt:7,pointer:5,query:7,prompt:7"
-export FZF_CTRL_R_OPTS='--header="command history" --preview-window="hidden"'
 # CTRL-/ to toggle small preview window to see the full command
 # CTRL-Y to copy the command into clipboard using pbcopy
 export FZF_CTRL_R_OPTS="
-  --header='command history (Press CTRL-Y to copy command into clipboard)'
-  --preview 'echo {}' --preview-window up:3:hidden:wrap
+  --header='command history (Press CTRL-y to copy command into clipboard)'
+  --preview 'echo {}' --preview-window up:3:wrap
   --bind 'ctrl-/:toggle-preview'
   --bind 'ctrl-y:execute-silent(echo -n {2..} | pbcopy)+abort'
   --color header:italic"
