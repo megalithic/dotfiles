@@ -340,7 +340,7 @@ return {
   { "tpope/vim-scriptease", event = { "VeryLazy" }, cmd = { "Messages", "Mess", "Noti" } },
   { "lambdalisue/suda.vim", event = { "VeryLazy" } },
   { "EinfachToll/DidYouMean", event = { "BufNewFile" }, init = function() vim.g.dym_use_fzf = true end },
-  { "wsdjeg/vim-fetch", event = { "BufReadPre" } }, -- vim path/to/file.ext:12:3
+  { "wsdjeg/vim-fetch", lazy = false }, -- vim path/to/file.ext:12:3
   { "ConradIrwin/vim-bracketed-paste" }, -- FIXME: delete?
   {
     "linty-org/readline.nvim",
@@ -532,6 +532,37 @@ return {
           font = "+8",
         },
       },
+    },
+  },
+  {
+    "jackMort/ChatGPT.nvim",
+    cmd = { "ChatGPT" },
+    config = function()
+      local border = { style = mega.icons.border.blank, highlight = "CmpBorderedWindow_FloatBorder" }
+      require("chatgpt").setup({
+        popup_window = {
+          border = border,
+        },
+        popup_input = {
+          border = border,
+          submit = "<C-s>",
+        },
+        settings_window = {
+          border = border,
+        },
+        chat = {
+          keymaps = {
+            close = {
+              "<C-c>",--[[ , '<Esc>' ]]
+            },
+          },
+        },
+      })
+    end,
+    dependencies = {
+      "MunifTanjim/nui.nvim",
+      "nvim-lua/plenary.nvim",
+      "nvim-telescope/telescope.nvim",
     },
   },
 }

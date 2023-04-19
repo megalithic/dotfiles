@@ -857,7 +857,7 @@ local theme = lush(function(injected_functions)
 
     ---- :help git-signs.txt ---------------------------------------------------
 
-    GitSignsAdd({ fg = C.green }),
+    GitSignsAdd({ fg = C.bright_green }),
     GitSignsDelete({ fg = C.red }),
     GitSignsChange({ fg = C.orange }),
 

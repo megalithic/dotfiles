@@ -118,7 +118,6 @@ do
     "qf",
     "man",
     "terminal",
-    "megaterm",
     "dirbuf",
     "lspinfo",
     "neotest-output",

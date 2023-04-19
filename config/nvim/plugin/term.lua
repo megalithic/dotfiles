@@ -277,7 +277,8 @@ local function set_keymaps()
     mega.nmap("q", function()
       api.nvim_buf_delete(term_buf_id, { force = true })
       term_buf_id = nil_buf_id
-      vim.cmd(term.caller_winnr .. [[wincmd w]])
+      vim.cmd("wincmd p")
+      -- vim.cmd(term.caller_winnr .. [[wincmd w]])
     end, keymap_opts)
   end
 
