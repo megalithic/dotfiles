@@ -97,8 +97,9 @@ function mini.jump()
       }
 
       local opt = { noremap = true, silent = true }
-      vim.keymap.set({ "n" }, "S", m.jump2d_twochar, opt)
+      -- vim.keymap.set({ "n" }, "S", m.jump2d_twochar, opt)
       nnoremap("S", m.jump2d_twochar, opt)
+      nnoremap("s", m.jump2d_word, opt)
       -- vim.keymap.set({ "n", "v" }, "S", m.jump2d_char, opt)
       -- vim.keymap.set({ "n", "v" }, "S", m.jump2d_start, opt)
       -- vim.keymap.set({ "n", "v" }, "S", m.jump2d_line, opt)

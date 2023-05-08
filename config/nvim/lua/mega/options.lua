@@ -197,7 +197,7 @@ vim.opt.wildoptions = { "pum", "fuzzy" }
 vim.o.wildignorecase = true -- Case insensitive file/directory completion
 vim.opt.path:append("**") -- Lets `find` search recursively into subfolders
 vim.o.cedit = "<C-y>" -- Enter Command-line Mode from command-mode
-vim.o.pumblend = 3 -- Make popup window translucent
+vim.o.pumblend = 0 -- Make popup window translucent
 vim.o.pumheight = 20 -- completion menu height
 vim.o.winblend = 0
 -----------------------------------------------------------------------------//
@@ -294,7 +294,12 @@ vim.opt.guicursor = {
   [[n-v-c:block,i-ci-ve:ver25,r-cr:hor20,o:hor50]],
   [[a:blinkwait700-blinkoff400-blinkon250-Cursor/lCursor]],
   [[sm:block-blinkwait175-blinkoff150-blinkon175]],
+  -- 'n-v-c-sm:block-Cursor',
+  -- 'i-ci-ve:ver25-iCursor',
+  -- 'r-cr-o:hor20-Cursor',
+  -- 'a:blinkon0',
 }
+
 -- ]])
 
 -- vim.wo.number = true

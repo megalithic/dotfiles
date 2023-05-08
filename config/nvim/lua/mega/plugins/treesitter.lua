@@ -73,7 +73,7 @@ return {
     },
     config = function()
       -- for apple silicon
-      require("nvim-treesitter.install").compilers = { "gcc-12" }
+      require("nvim-treesitter.install").compilers = { "gcc-13" }
 
       vim.opt.indentexpr = "nvim_treesitter#indent()"
 
@@ -100,6 +100,7 @@ return {
           "embedded_template",
           "erlang",
           "fish",
+          "git_config",
           "git_rebase",
           "gitattributes",
           "gitcommit",

@@ -64,10 +64,10 @@ return {
   {
     "chrisgrieser/replacer.nvim",
     ft = "qf",
-    keys = {
-      { "<leader>R", function() require("replacer").run() end, desc = "qf: replace in qflist" },
-      { "<C-r>", function() require("replacer").run() end, desc = "qf: replace in qflist" },
-    },
+    -- keys = {
+    --   { "<leader>R", function() require("replacer").run() end, desc = "qf: replace in qflist" },
+    --   { "<C-r>", function() require("replacer").run() end, desc = "qf: replace in qflist" },
+    -- },
     init = function()
       -- save & quit via "q"
       mega.augroup("ReplacerFileType", {
@@ -76,6 +76,9 @@ return {
           mega.nmap("q", vim.cmd.write, { desc = " Finish replacing", buffer = true, nowait = true })
         end,
       })
+
+      -- { "<leader>R", function() require("replacer").run() end, desc = "qf: replace in qflist" },
+      -- { "<C-r>", function() require("replacer").run() end, desc = "qf: replace in qflist" },
     end,
   },
 
@@ -236,18 +239,33 @@ return {
     event = "InsertCharPre",
     config = function() require("hclipboard").start() end,
   },
+  -- {
+  --   "mg979/vim-visual-multi",
+  --   keys = { { "<C-e>", mode = { "n", "x" } }, "\\j", "\\k" },
+  --   enabled = false,
+  --   event = { "BufReadPost", "BufNewFile" },
+  --   init = function()
+  --     vim.g.VM_highlight_matches = "underline"
+  --     vim.g.VM_theme = "codedark"
+  --     vim.g.VM_maps = {
+  --       ["Find Word"] = "<C-E>",
+  --       ["Find Under"] = "<C-E>",
+  --       ["Find Subword Under"] = "<C-E>",
+  --       ["Select Cursor Down"] = "\\j",
+  --       ["Select Cursor Up"] = "\\k",
+  --     }
+  --   end,
+  -- },
   {
     "mg979/vim-visual-multi",
-    keys = { { "<C-e>", mode = { "n", "x" } }, "\\j", "\\k" },
-    enabled = false,
-    event = { "BufReadPost", "BufNewFile" },
+    lazy = false,
     init = function()
       vim.g.VM_highlight_matches = "underline"
       vim.g.VM_theme = "codedark"
       vim.g.VM_maps = {
-        ["Find Word"] = "<C-E>",
-        ["Find Under"] = "<C-E>",
-        ["Find Subword Under"] = "<C-E>",
+        ["Find Word"] = "<M-e>",
+        ["Find Under"] = "<M-e>",
+        ["Find Subword Under"] = "<M-e>",
         ["Select Cursor Down"] = "\\j",
         ["Select Cursor Up"] = "\\k",
       }
@@ -453,28 +471,28 @@ return {
       end)
     end,
   },
-  {
-    "gaoDean/autolist.nvim",
-    ft = { "markdown" },
-    config = function()
-      local autolist = require("autolist")
-      autolist.setup()
-      autolist.create_mapping_hook("i", "<CR>", autolist.new)
-      autolist.create_mapping_hook("i", "<Tab>", autolist.indent)
-      autolist.create_mapping_hook("i", "<S-Tab>", autolist.indent, "<C-D>")
-      autolist.create_mapping_hook("n", "o", autolist.new)
-      autolist.create_mapping_hook("n", "O", autolist.new_before)
-      autolist.create_mapping_hook("n", ">>", autolist.indent)
-      autolist.create_mapping_hook("n", "<<", autolist.indent)
-      autolist.create_mapping_hook("n", "<C-r>", autolist.force_recalculate)
-      autolist.create_mapping_hook("n", "<leader>x", autolist.invert_entry, "")
-      autolist.create_mapping_hook("n", "<C-c>", autolist.invert_entry, "")
-      vim.api.nvim_create_autocmd("TextChanged", {
-        pattern = "*",
-        callback = function() vim.cmd.normal({ autolist.force_recalculate(nil, nil), bang = false }) end,
-      })
-    end,
-  },
+  -- {
+  --   "gaoDean/autolist.nvim",
+  --   ft = { "markdown" },
+  --   config = function()
+  --     local autolist = require("autolist")
+  --     autolist.setup()
+  --     autolist.create_mapping_hook("i", "<CR>", autolist.new)
+  --     autolist.create_mapping_hook("i", "<Tab>", autolist.indent)
+  --     autolist.create_mapping_hook("i", "<S-Tab>", autolist.indent, "<C-D>")
+  --     autolist.create_mapping_hook("n", "o", autolist.new)
+  --     autolist.create_mapping_hook("n", "O", autolist.new_before)
+  --     autolist.create_mapping_hook("n", ">>", autolist.indent)
+  --     autolist.create_mapping_hook("n", "<<", autolist.indent)
+  --     autolist.create_mapping_hook("n", "<C-r>", autolist.force_recalculate)
+  --     autolist.create_mapping_hook("n", "<leader>x", autolist.invert_entry, "")
+  --     autolist.create_mapping_hook("n", "<C-c>", autolist.invert_entry, "")
+  --     vim.api.nvim_create_autocmd("TextChanged", {
+  --       pattern = "*",
+  --       callback = function() vim.cmd.normal({ autolist.force_recalculate(nil, nil), bang = false }) end,
+  --     })
+  --   end,
+  -- },
   { "ellisonleao/glow.nvim", ft = { "markdown" } },
   {
     "lukas-reineke/headlines.nvim",

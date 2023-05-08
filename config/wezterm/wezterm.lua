@@ -262,6 +262,7 @@ return {
   warn_about_missing_glyphs = false,
   allow_square_glyphs_to_overflow_width = "WhenFollowedBySpace",
   bold_brightens_ansi_colors = true,
+  cell_width = 1,
   font_size = 14,
   line_height = 1.1,
   text_blink_rate = 100,

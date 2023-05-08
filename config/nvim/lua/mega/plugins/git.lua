@@ -6,7 +6,11 @@ return {
     "lewis6991/gitsigns.nvim",
     event = { "BufReadPre", "BufNewFile" },
     opts = {
+      -- experimental things -----------
       _extmark_signs = false,
+      _inline2 = true,
+      _signs_staged_enable = false,
+      -- -------------------------------
       signs = {
         add = { hl = "GitSignsAdd", text = "▕" }, -- alts: ▕, ▎, ┃, │, ▌, ▎ 🮉
         change = { hl = "GitSignsChange", text = "▕" }, -- alts: ▎║▎
@@ -15,7 +19,7 @@ return {
         changedelete = { hl = "GitSignsChange", text = "🮉" }, -- alts: ▌
         untracked = { hl = "GitSignsAdd", text = "▕" }, -- alts: ┆ ▕
       },
-      current_line_blame = false, -- not vim.fn.getcwd():match("dotfiles"),
+      current_line_blame = not vim.fn.getcwd():match("dotfiles"),
       current_line_blame_formatter = " <author>, <author_time> · <summary>",
       preview_config = {
         border = mega.get_border(),

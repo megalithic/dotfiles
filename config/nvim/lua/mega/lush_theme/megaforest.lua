@@ -52,11 +52,11 @@ local theme = lush(function(injected_functions)
     ColorColumn({ fg = C.transparent, bg = C.bg0 }), -- used for the columns set with 'colorcolumn'
     Conceal({ fg = C.grey1, bg = C.transparent }), -- placeholder characters substituted for concealed text (see 'conceallevel')
     Cursor({ fg = C.transparent, bg = C.transparent, gui = "reverse" }), -- character under the cursor
-    Cursor2({ fg = C.red, bg = C.red }),
+    Cursor2({ fg = C.bg_red, bg = C.bg_red, gui = "reverse" }),
     TermCursor({ Cursor, bg = C.yellow }), -- cursor in a focused terminal
     TermCursorNC({ Cursor }), -- cursor in an unfocused terminal
     lCursor({ Cursor }), -- the character under the cursor when |language-mapping| is used (see 'guicursor')
-    iCursor({ Cursor }),
+    iCursor({ Cursor, bg = C.bg_blue }),
     vCursor({ Cursor }),
     CursorIM({ Cursor }), -- like Cursor, but used when in IME mode |CursorIM|
     CursorColumn({ fg = C.transparent, bg = C.bg2 }), -- Screen-column at the cursor, when 'cursorcolumn' is set.
@@ -67,7 +67,7 @@ local theme = lush(function(injected_functions)
     -- CursorLineNrNC({ CursorLine, fg = C.transparent, bg = C.bg2 }), -- Like LineNr when 'cursorline' or 'relativenumber' is set for the cursor line.
     -- CursorLineSign({ bg = C.red }),
     VertSplit({ fg = C.bg4, bg = C.transparent }), -- the column separating vertically split windows
-    WinSeparator({ fg = C.bg_dark.li(15), bg = C.bg_dark.li(3), gui = "bold" }),
+    WinSeparator({ fg = C.bg_dark.li(15), bg = C.bg_dark.li(1), gui = "bold" }),
 
     Comment({ fg = C.grey1, bg = C.transparent, gui = "italic" }),
     Directory({ fg = C.green, bg = C.transparent }), -- directory names (and other special names in listings)
@@ -91,7 +91,7 @@ local theme = lush(function(injected_functions)
     FoldMoreMsg({ Comment, gui = "italic,bold" }), -- |more-prompt|
     NonText({ fg = C.bg4, bg = C.transparent }), -- '@' at the end of the window, characters from 'showbreak' and other characters that do not really exist in the text (e.g., ">" displayed when a double-wide character doesn't fit at the end of the line). See also |hl-EndOfBuffer|.
     Normal({ fg = C.fg, bg = C.transparent }), -- normal text
-    NormalNC({ bg = C.bg0.da(5) }), -- inactive window split
+    NormalNC({ bg = C.bg0.da(7) }), -- inactive window split
     Pmenu({ fg = C.fg, bg = C.bg2 }), -- Popup menu: normal item.
     PmenuSel({ fg = C.green, bg = C.bg3 }), -- Popup menu: selected item.
     PmenuSbar({ fg = C.transparent, bg = C.bg2 }), -- Popup menu: scrollbar.
@@ -699,7 +699,7 @@ local theme = lush(function(injected_functions)
 
     ---- sidebar  -----------------------------------------------------
 
-    PanelBackground({ fg = C.fg.darken(10), bg = C.bg0.darken(8) }),
+    PanelBackground({ fg = C.fg.darken(10), bg = C.bg0.darken(15) }),
     PanelBorder({ fg = PanelBackground.bg.darken(10), bg = PanelBackground.bg }),
     PanelHeading({ PanelBackground, gui = "bold" }),
     PanelVertSplit({ VertSplit, bg = C.bg0.darken(8) }),

@@ -74,7 +74,7 @@ return {
       Array = "",
       Object = "",
       Key = "",
-      Null = "ﳠ",
+      Null = "󰟢", --alts: 󰟢ﳠ
     },
   },
   kind_highlights = {
@@ -147,7 +147,7 @@ return {
     rename = "",
     diff = "",
     repo = "",
-    symbol = "", -- alts:  
+    symbol = "", -- alts:  
   },
   documents = {
     file = "",

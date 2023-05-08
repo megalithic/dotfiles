@@ -76,15 +76,7 @@ function obj:stop(opts)
 
   if obj.modal then obj.modal:exit() end
 
-  if
-    _appObj
-    and (event == hs.application.watcher.hidden or event == hs.application.watcher.deactivated)
-    and (#_appObj:allWindows() == 0 or (#_appObj:allWindows() == 1 and _appObj:getWindow("") ~= nil))
-  then
-    _appObj:kill()
-    -- FIXME: verify this needs or doesn't need to be called when we invoke `:kill()` on an hs.application object:
-    -- onStop()
-  elseif event == hs.application.watcher.terminated then
+  if event == hs.application.watcher.terminated then
     L.req("lib.menubar.ptt").setState("push-to-talk")
     L.req("lib.dnd").off()
 

@@ -201,10 +201,12 @@ do
     },
     {
       event = { "BufNewFile", "BufWritePre" },
-      command = function()
-        -- @see https://github.com/yutkat/dotfiles/blob/main/.config/nvim/lua/rc/autocmd.lua#L113-L140
-        mega.auto_mkdir()
-      end,
+      pattern = { "*" },
+      command = [[if @% !~# '\(://\)' | call mkdir(expand('<afile>:p:h'), 'p') | endif]],
+      -- command = function()
+      --   -- @see https://github.com/yutkat/dotfiles/blob/main/.config/nvim/lua/rc/autocmd.lua#L113-L140
+      --   mega.auto_mkdir()
+      -- end,
     },
     -- {
     --   -- Last place of cursor position.
@@ -274,8 +276,8 @@ do
     },
     {
       event = { "VimResized" },
-      command = function(args)
-        mega.resize_windows(args.buf)
+      command = function(_args)
+        mega.resize_windows()
         require("virt-column").refresh()
       end,
     },

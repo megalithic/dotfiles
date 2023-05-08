@@ -90,7 +90,7 @@ function M.init()
       })
     end
 
-    require("autolist").setup({ normal_mappings = { invert = { "<c-c>" } } })
+    -- require("autolist").setup({ normal_mappings = { invert = { "<c-c>" } } })
 
     vim.opt.wrap = true
     vim.opt.linebreak = true

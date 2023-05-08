@@ -1305,6 +1305,10 @@ end
 -- [ iabbreviations ] ----------------------------------------------------------
 do
   vim.cmd.iabbrev([[cabag Co-authored-by: Aaron Gunderson <aaron@ternit.com>]])
+  vim.cmd.iabbrev([[cabdt Co-authored-by: Dan Thiffault <dan@ternit.com>]])
+  vim.cmd.iabbrev([[cabjm Co-authored-by: Jia Mu <jia@ternit.com>]])
+  vim.cmd.iabbrev([[cabam Co-authored-by: Ali Marsh<ali@ternit.com>]])
+
   vim.cmd.cabbrev("options", "vert options")
 end
 
