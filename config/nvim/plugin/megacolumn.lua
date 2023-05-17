@@ -1,6 +1,6 @@
 if not mega then return end
 if not vim.g.enabled_plugin["megacolumn"] then return end
---
+
 local fn, v, api = vim.fn, vim.v, vim.api
 local ui, separators = mega.ui, mega.icons.separators
 
@@ -43,41 +43,17 @@ local function fdm()
   return fn.foldclosed(v.lnum) == -1 and fold_closed or fold_opened
 end
 
--- local function nr(win, line_count)
---   local col_width = api.nvim_strwidth(tostring(line_count))
---   local padding = string.rep(space, col_width - 1)
---   if v.virtnum < 0 then return padding .. shade end -- virtual line
---   if v.virtnum > 0 then return padding .. space end -- wrapped line
---   local num = vim.wo[win].relativenumber and not mega.falsy(v.relnum) and v.relnum or v.lnum
---   if line_count >= 1000 then col_width = col_width + 1 end
---   local lnum = fn.substitute(num, "\\d\\zs\\ze\\%(\\d\\d\\d\\)\\+$", ",", "g")
---   local num_width = col_width - api.nvim_strwidth(lnum)
---   return string.rep(space, num_width) .. lnum
---   --   local col_width = api.nvim_strwidth(tostring(line_count))
---   --
---   --   local padding = string.rep(space, col_width - 1)
---   --   if v.virtnum < 0 then return shade end -- virtual line
---   --   if v.virtnum > 0 then return space end -- wrapped line
---   --
---   --   if line_count >= 1000 then col_width = col_width + 1 end
---   --
---   --   local num = vim.wo[win].relativenumber and not mega.falsy(v.relnum) and v.relnum or v.lnum
---   --   -- local lnum = fn.substitute(num, "\\d\\zs\\ze\\" .. "%(\\d\\d\\d\\)\\+$", ",", "g")
---   --   local lnum = fn.substitute(num, "\\d\\zs\\ze\\%(\\d\\d\\d\\)\\+$", ",", "g")
---   --   -- local num_width = (vim.wo[win].numberwidth - 1) - api.nvim_strwidth(lnum)
---   --   local num_width = col_width - api.nvim_strwidth(lnum)
---   -- return string.rep(space, num_width) .. lnum
---   --   -- return click("toggle_breakpoint", padding .. lnum)
--- end
-
-local function nr(win, _line_count)
+local function nr(win, _line_count, is_active)
   if v.virtnum < 0 then return shade end -- virtual line
   if v.virtnum > 0 then return space end -- wrapped line
-  local num = vim.wo[win].relativenumber and not mega.empty(v.relnum) and v.relnum or v.lnum
+  local num = is_active and (vim.wo[win].relativenumber and not mega.empty(v.relnum) and v.relnum or v.lnum) or v.lnum
   local lnum = fn.substitute(num, "\\d\\zs\\ze\\" .. "%(\\d\\d\\d\\)\\+$", ",", "g")
   local num_width = (vim.wo[win].numberwidth - 1) - api.nvim_strwidth(lnum)
   local padding = string.rep(space, num_width)
-  return click("toggle_breakpoint", padding .. lnum)
+  -- not using right now.. StatusColumnActiveLineNr
+  local lnum_hl = is_active and "" or "StatusColumnInactiveLineNr"
+  local highlighted_lnum = hl(lnum_hl, padding .. lnum)
+  return click("toggle_breakpoint", highlighted_lnum)
 end
 
 local function sep(is_active)
@@ -96,7 +72,6 @@ function ui.statuscolumn.render(is_active)
   local curbuf = api.nvim_win_get_buf(curwin)
 
   local line_count = api.nvim_buf_line_count(curbuf)
-  -- local is_absolute_lnum = v.virtnum >= 0 and mega.falsy(v.relnum)
 
   local sign, git_sign
   for _, s in ipairs(get_signs(curbuf)) do
@@ -113,7 +88,7 @@ function ui.statuscolumn.render(is_active)
     sign and hl(sign.texthl, sign.text:gsub(space, "")) or space,
     git_sign and hl(git_sign.texthl, git_sign.text:gsub(space, "")) or space,
     fdm(),
-    nr(curwin, line_count),
+    nr(curwin, line_count, is_active),
     sep(is_active),
     space,
   }
@@ -127,10 +102,21 @@ function ui.statuscolumn.render(is_active)
       space,
       space,
       space,
-      -- "%l",
-      nr(curwin, line_count),
+      nr(curwin, line_count, is_active),
       sep(is_active),
       space,
+
+      -- FULLY EMPTY STATUSCOLUMN
+      -- "%=",
+      -- space,
+      -- space,
+      -- space,
+      -- space,
+      -- space,
+      -- space,
+      -- space,
+      -- space,
+      -- space,
     }, "")
   end
 end
@@ -153,9 +139,6 @@ local excluded = {
   "NvimTree",
   "lazy",
   "dirbuf",
-  "fzf",
-  "fzflua",
-  "fzf-lua",
   "startify",
   "help",
   "orgagenda",
@@ -175,7 +158,6 @@ mega.augroup("MegaColumn", {
     event = { "BufEnter", "FileType", "WinEnter", "FocusGained" },
     command = function(args)
       local buf = vim.bo[args.buf]
-      -- vim.opt.statuscolumn = ""
       if buf.bt ~= "" or vim.tbl_contains(excluded, buf.ft) then
         vim.opt_local.statuscolumn = ""
       else
@@ -187,7 +169,6 @@ mega.augroup("MegaColumn", {
     event = { "BufLeave", "WinLeave" },
     command = function(args)
       local buf = vim.bo[args.buf]
-      -- vim.opt.statuscolumn = ""
       if buf.bt ~= "" or vim.tbl_contains(excluded, buf.ft) then
         vim.opt_local.statuscolumn = ""
       else

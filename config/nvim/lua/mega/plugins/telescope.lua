@@ -83,114 +83,51 @@ _G.telescope_ivy = ivy
 -- * .git from cwd
 -- * cwd
 ---@param opts? table
+local current_fn = nil
 local function project_files(opts)
+  local bufnr = vim.api.nvim_get_current_buf()
+  local fn = vim.api.nvim_buf_get_name(bufnr)
+  current_fn = fn
   opts = opts or {}
   -- opts.cwd = require("mega.utils").get_root()
   -- vim.notify(fmt("current project files root: %s", opts.cwd), vim.log.levels.DEBUG, { title = "telescope" })
   ts.find_files(ivy(opts))
 end
 
-local function multiopen(prompt_bufnr, method)
-  local actions = require("telescope.actions")
-  local action_state = require("telescope.actions.state")
-  local cmd_map = {
-    vertical = "vsplit",
-    horizontal = "split",
-    default = "vsplit",
-    -- default = "edit",
-  }
-  local picker = action_state.get_current_picker(prompt_bufnr)
-  local multi_selection = picker:get_multi_selection()
-
-  if #multi_selection > 1 then
-    require("telescope.pickers").on_close_prompt(prompt_bufnr)
-    pcall(vim.api.nvim_set_current_win, picker.original_win_id)
-
-    for i, entry in ipairs(multi_selection) do
-      -- opinionated use-case
-      local cmd = i == 1 and "edit" or cmd_map[method]
-      vim.cmd(string.format("%s %s", cmd, entry.value))
-    end
-  else
-    actions["select_" .. method](prompt_bufnr)
-  end
-end
-
-local function multi_open(prompt_bufnr, method)
-  local actions = require("telescope.actions")
-  -- local transform_mod = require("telescope.actions.mt").transform_mod
-  local action_state = require("telescope.actions.state")
-  -- local action_layout = require("telescope.actions.layout")
-
-  local edit_file_cmd_map = {
-    vertical = "vsplit",
-    horizontal = "split",
-    tab = "tabedit",
-    default = "vsplit",
-    -- default = "edit",
-  }
-  local edit_buf_cmd_map = {
-    vertical = "vert sbuffer",
-    horizontal = "sbuffer",
-    tab = "tab sbuffer",
-    default = "vert sbuffer",
-    -- default = "buffer",
-  }
-  local picker = action_state.get_current_picker(prompt_bufnr)
-  local multi_selection = picker:get_multi_selection()
-
-  if #multi_selection > 1 then
-    require("telescope.pickers").on_close_prompt(prompt_bufnr)
-    pcall(vim.api.nvim_set_current_win, picker.original_win_id)
-
-    for i, entry in ipairs(multi_selection) do
-      local filename, row, col
-
-      if entry.path or entry.filename then
-        filename = entry.path or entry.filename
-
-        row = entry.row or entry.lnum
-        col = vim.F.if_nil(entry.col, 1)
-      elseif not entry.bufnr then
-        local value = entry.value
-        if not value then return end
-
-        if type(value) == "table" then value = entry.display end
-
-        local sections = vim.split(value, ":")
-
-        filename = sections[1]
-        row = tonumber(sections[2])
-        col = tonumber(sections[3])
-      end
-
-      local entry_bufnr = entry.bufnr
-
-      if entry_bufnr then
-        if not vim.api.nvim_buf_get_option(entry_bufnr, "buflisted") then
-          vim.api.nvim_buf_set_option(entry_bufnr, "buflisted", true)
-        end
-        local command = i == 1 and "buffer" or edit_buf_cmd_map[method]
-        pcall(vim.cmd, string.format("%s %s", command, vim.api.nvim_buf_get_name(entry_bufnr)))
-      else
-        local command = i == 1 and "edit" or edit_file_cmd_map[method]
-        if vim.api.nvim_buf_get_name(0) ~= filename or command ~= "edit" then
-          filename = require("plenary.path"):new(vim.fn.fnameescape(filename)):normalize(vim.loop.cwd())
-          pcall(vim.cmd, string.format("%s %s", command, filename))
-        end
-      end
-
-      if row and col then pcall(vim.api.nvim_win_set_cursor, 0, { row, col - 1 }) end
-    end
-  else
-    actions["select_" .. method](prompt_bufnr)
-  end
-end
-
 local function stopinsert(callback)
   return function(prompt_bufnr)
     vim.cmd.stopinsert()
     vim.schedule(function() callback(prompt_bufnr) end)
+  end
+end
+
+-- REF: https://github.com/nvim-telescope/telescope.nvim/issues/416
+local function multi(pb, verb, open_selection_under_cursor)
+  open_selection_under_cursor = open_selection_under_cursor or false
+  local methods = {
+    ["vnew"] = "select_vertical",
+    ["new"] = "select_horizontal",
+    ["edit"] = "select_default",
+  }
+  local select_action = methods[verb]
+  local actions = require("telescope.actions")
+  local action_state = require("telescope.actions.state")
+  local picker = action_state.get_current_picker(pb)
+  local selections = picker:get_multi_selection()
+
+  if open_selection_under_cursor or current_fn == nil then
+    actions[select_action](pb)
+  else
+    if current_fn ~= nil then -- is it a file -> open it as well:
+      vim.cmd(string.format("%s %s", "edit!", current_fn))
+      current_fn = nil
+    end
+  end
+
+  for _, p in pairs(selections) do
+    if p.path ~= nil then -- is it a file -> open it as well:
+      vim.cmd(string.format("%s %s", verb, p.path))
+    end
   end
 end
 
@@ -215,6 +152,7 @@ local function extensions(name) return require("telescope").extensions[name] end
 return {
   "nvim-telescope/telescope.nvim",
   cmd = { "Telescope" },
+  enabled = vim.g.picker == "telescope",
   dependencies = {
     "natecraddock/telescope-zf-native.nvim",
     "nvim-telescope/telescope-file-browser.nvim",
@@ -270,45 +208,11 @@ return {
     local telescope = require("telescope")
     local transform_mod = require("telescope.actions.mt").transform_mod
     local actions = require("telescope.actions")
-
-    local custom_actions = transform_mod({
-      multi_selection_open_vertical = function(prompt_bufnr) multi_open(prompt_bufnr, "vertical") end,
-      multi_selection_open_horizontal = function(prompt_bufnr) multi_open(prompt_bufnr, "horizontal") end,
-      multi_selection_open = function(prompt_bufnr) multi_open(prompt_bufnr, "vertical") end,
-    })
-
-    local previewers = require("telescope.previewers")
-    local Job = require("plenary.job")
-    local new_maker = function(filepath, bufnr, opts)
-      opts = opts or {}
-      Job:new({
-        command = "file",
-        args = { "--mime-type", "-b", filepath },
-        on_exit = function(j)
-          local mime_type = vim.split(j:result()[1], "/")[1]
-          if mime_type == "text" or mime_type == "application" then
-            previewers.buffer_previewer_maker(filepath, bufnr, opts)
-          else
-            vim.schedule(function() vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "BINARY" }) end)
-          end
-        end,
-      }):sync()
-
-      local path = vim.fn.expand(filepath)
-      vim.loop.fs_stat(filepath, function(_, stat)
-        if not stat then return end
-        if stat.size > 100000 then
-          return
-        else
-          previewers.buffer_previewer_maker(path, bufnr, opts)
-        end
-      end)
-    end
+    local action_state = require("telescope.actions.state")
 
     telescope.setup({
       defaults = {
         dynamic_preview_title = true,
-        results_title = false,
         -- selection_strategy = "reset",
         -- use_less = true,
         color_devicons = true,
@@ -323,10 +227,10 @@ return {
         mappings = {
           i = {
             ["<esc>"] = require("telescope.actions").close,
-            ["<cr>"] = stopinsert(custom_actions.multi_selection_open_vertical),
-            ["<c-v>"] = stopinsert(custom_actions.multi_selection_open_vertical),
-            ["<c-s>"] = stopinsert(custom_actions.multi_selection_open_horizontal),
-            ["<c-o>"] = stopinsert(custom_actions.multi_selection_open),
+            ["<cr>"] = stopinsert(function(pb) multi(pb, "vnew") end),
+            ["<c-v>"] = stopinsert(function(pb) multi(pb, "vnew") end),
+            ["<c-s>"] = stopinsert(function(pb) multi(pb, "new") end),
+            ["<c-o>"] = stopinsert(function(pb) multi(pb, "edit") end),
             ["<c-z>"] = actions.toggle_selection,
             ["<c-r>"] = actions.to_fuzzy_refine,
             ["<c-t>"] = require("trouble.providers.telescope").smart_open_with_trouble,
@@ -334,15 +238,17 @@ return {
             ["<c-up>"] = function(...) return require("telescope.actions").cycle_history_prev(...) end,
           },
           n = {
-            ["<cr>"] = custom_actions.multi_selection_open_vertical,
-            ["<c-v>"] = custom_actions.multi_selection_open_vertical,
-            ["<c-s>"] = custom_actions.multi_selection_open_horizontal,
-            ["<c-o>"] = custom_actions.multi_selection_open,
+            ["<cr>"] = function(pb) multi(pb, "vnew") end,
+            ["<c-v>"] = function(pb) multi(pb, "vnew") end,
+            ["<c-s>"] = function(pb) multi(pb, "new") end,
+            ["<c-o>"] = function(pb) multi(pb, "edit") end,
           },
         },
+        results_title = false,
         prompt_prefix = " ",
-        selection_caret = " ",
+        selection_caret = " ",
         entry_prefix = "  ",
+        multi_icon = "󰛄 ",
         winblend = 0,
         vimgrep_arguments = grep_files_cmd,
         -- buffer_previewer_maker = new_maker,

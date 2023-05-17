@@ -161,6 +161,8 @@ if type nvim >/dev/null 2>&1; then
   alias vm="nvim"
   alias nvm=nv
   alias vim="NVIM_APPNAME=nvim nvim"
+  alias folkevim="NVIM_APPNAME=folkevim nvim"
+  alias akinvim="NVIM_APPNAME=akinvim nvim"
   alias v=vim
   alias vi="/usr/local/bin/vim"
   alias minvim="nvim -u NONE"
@@ -271,7 +273,7 @@ alias chromekill="ps ux | grep '[C]hrome Helper --type=renderer' | grep -v exten
 alias bravekill="ps ux | grep '[B]rave Helper --type=renderer' | grep -v extension-process | tr -s ' ' | cut -d ' ' -f2 | xargs kill"
 alias die='pkill -9 -f'
 alias port='lsof -i :'
-alias sz="source $HOME/.config/zsh/.zshenv && source $HOME/.config/zsh/.zshrc" # && \reset"
+alias sz="source $HOME/.config/zsh/.zshenv && source $HOME/.config/zsh/.zshrc && source $HOME/.config/zsh/prompt_megalithic_setup" # && \reset"
 alias zz=z
 alias cls="clr && ls"
 alias get="curl -OL"

@@ -747,7 +747,9 @@ local theme = lush(function(injected_functions)
     ---- :help statuscolumn  ---------------------------------------------------------
 
     StatusColumnActiveBorder({ bg = C.bg1, fg = "#7c8378" }),
+    StatusColumnActiveLineNr({ fg = "#7c8378" }),
     StatusColumnInactiveBorder({ bg = NormalNC.bg, fg = C.bg_dark.li(15) }),
+    StatusColumnInactiveLineNr({ fg = C.bg_dark.li(10) }),
     -- StatusColumnBuffer({}),
     --
     -- [[%#StatusColumnBorder#]], -- HL

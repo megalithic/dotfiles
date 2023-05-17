@@ -39,15 +39,15 @@ function M.setup()
 
   if vim.g.notifier_enabled then
     -- NOTE: disable for noice
-    lsp.handlers["window/showMessage"] = function(_, result, ctx)
-      local client = lsp.get_client_by_id(ctx.client_id)
-      local lvl = ({ "ERROR", "WARN", "INFO", "DEBUG", "OFF" })[result.type]
-      vim.notify(result.message, vim.log.levels[lvl], {
-        title = "LSP | " .. client.name,
-        timeout = 3000,
-        keep = function() return lvl == "ERROR" end,
-      })
-    end
+    -- lsp.handlers["window/showMessage"] = function(_, result, ctx)
+    --   local client = lsp.get_client_by_id(ctx.client_id)
+    --   local lvl = ({ "ERROR", "WARN", "INFO", "DEBUG", "OFF" })[result.type]
+    --   vim.notify(result.message, vim.log.levels[lvl], {
+    --     title = "LSP | " .. client.name,
+    --     timeout = 3000,
+    --     keep = function() return lvl == "ERROR" end,
+    --   })
+    -- end
 
     do
       if true then return end

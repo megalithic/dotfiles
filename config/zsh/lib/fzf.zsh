@@ -31,8 +31,9 @@ export FZF_DEFAULT_OPTS="
 --preview='bat --color=always --style=header,grid --line-range :300 {}'
 --prompt=' '
 --pointer=' '
---marker=' '
+--marker='󰛄 '
 "
+# alts: 󰛄
 # --preview='bat --color=always --style=header,grid --line-range :300 {}'
 # --no-multi
 # --reverse
@@ -57,7 +58,7 @@ _fzf_megaforest() {
   local color0F='#d65d0e'
 
   # --color=bg+:$color01,bg:$color00,spinner:$color0C,hl:$color0D
-export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS
+  export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS
 --color=bg+:$color01,spinner:$color0C,hl:$color0A,gutter:$color01
 --color=fg:$color04,header:$color0D,info:$color0A,pointer:$color0C
 --color=marker:$color0E,fg+:$color06,prompt:$color0A,hl+:$color0F
@@ -101,8 +102,8 @@ _fzf_comprun() {
   shift
 
   case "$command" in
-    git)          git --help -a | grep -E '^\s+' | awk '{print $1}' | fzf "$@" ;;
-    cd)           fzf --preview 'tree -C {} | head -200'   "$@" ;;
-    *)            fzf "$@" ;;
+    git) git --help -a | grep -E '^\s+' | awk '{print $1}' | fzf "$@" ;;
+    cd) fzf --preview 'tree -C {} | head -200' "$@" ;;
+    *) fzf "$@" ;;
   esac
 }

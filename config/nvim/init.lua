@@ -39,6 +39,7 @@ vim.g.notifier_enabled = true
 vim.g.debug_enabled = false
 vim.g.picker = "telescope"
 vim.g.tree = "neo-tree"
+vim.g.tester = "neotest"
 
 -- [ globals ] -----------------------------------------------------------------
 

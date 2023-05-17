@@ -23,6 +23,7 @@ function M.init()
       },
       ["https?://github.com/"] = {
         takeover = "always",
+        selector = "textarea:not([id='read-only-cursor-text-area'])",
         priority = 1,
       },
       ["https?://github.com/users/megalithic/projects"] = {
@@ -98,6 +99,7 @@ function M.init()
     vim.opt.showtabline = 0
     vim.opt_local.relativenumber = false
     vim.opt_local.signcolumn = "no"
+    vim.opt_local.statuscolumn = ""
     vim.opt_local.cursorlineopt = "screenline,number"
     vim.opt_local.cursorline = true
 

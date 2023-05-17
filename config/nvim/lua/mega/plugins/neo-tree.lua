@@ -21,6 +21,18 @@ local M = {
     --     other_win_hl_color = mega.colors.dark_red,
     --     }  }
   },
+
+  init = function()
+    vim.api.nvim_create_autocmd("BufEnter", {
+      desc = "Load NeoTree if entering a directory",
+      callback = function(args)
+        if vim.fn.isdirectory(vim.api.nvim_buf_get_name(args.buf)) > 0 then
+          require("lazy").load({ plugins = { "neo-tree.nvim" } })
+          vim.api.nvim_del_autocmd(args.id)
+        end
+      end,
+    })
+  end,
 }
 
 function M.config()

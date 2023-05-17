@@ -83,6 +83,7 @@ return {
   },
 
   -- ( LSP ) -------------------------------------------------------------------
+  "onsails/lspkind.nvim",
   {
     "neovim/nvim-lspconfig",
     event = { "BufReadPre", "BufNewFile" },
@@ -111,6 +112,11 @@ return {
             "<localleader>lop",
             ":OutputPanel<CR>",
             desc = "lsp: open output panel",
+          },
+          {
+            "<leader>lip",
+            ":OutputPanel<CR>",
+            desc = "open output panel",
           },
         },
         cmd = { "OutputPanel" },
@@ -550,37 +556,6 @@ return {
           font = "+8",
         },
       },
-    },
-  },
-  {
-    "jackMort/ChatGPT.nvim",
-    cmd = { "ChatGPT" },
-    config = function()
-      local border = { style = mega.icons.border.blank, highlight = "CmpBorderedWindow_FloatBorder" }
-      require("chatgpt").setup({
-        popup_window = {
-          border = border,
-        },
-        popup_input = {
-          border = border,
-          submit = "<C-s>",
-        },
-        settings_window = {
-          border = border,
-        },
-        chat = {
-          keymaps = {
-            close = {
-              "<C-c>",--[[ , '<Esc>' ]]
-            },
-          },
-        },
-      })
-    end,
-    dependencies = {
-      "MunifTanjim/nui.nvim",
-      "nvim-lua/plenary.nvim",
-      "nvim-telescope/telescope.nvim",
     },
   },
 }

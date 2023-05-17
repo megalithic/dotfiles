@@ -5,8 +5,8 @@ return {
     blank = { " ", " ", " ", " ", " ", " ", " ", " " },
   },
   lsp = {
-    error = "", -- alts: 
-    warn = "", -- alts: 喝卑
+    error = "", -- alts: 
+    warn = "󰔷", -- alts: 喝卑
     info = "",
     hint = "", -- alts: 
     ok = "",
@@ -147,7 +147,7 @@ return {
     rename = "",
     diff = "",
     repo = "",
-    symbol = "", -- alts:  
+    symbol = "", -- alts:  
   },
   documents = {
     file = "",

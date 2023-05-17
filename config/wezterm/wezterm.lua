@@ -258,6 +258,9 @@ return {
   disable_default_key_bindings = true,
   front_end = "WebGpu", -- OpenGL, WebGpu, Software
   window_decorations = "RESIZE",
+  macos_window_background_blur = 10,
+  -- window_background_opacity = 0.95,
+  force_reverse_video_cursor = true,
   use_cap_height_to_scale_fallback_fonts = true,
   warn_about_missing_glyphs = false,
   allow_square_glyphs_to_overflow_width = "WhenFollowedBySpace",

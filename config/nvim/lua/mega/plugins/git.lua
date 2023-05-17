@@ -187,7 +187,7 @@ return {
             mega.notify("Conflicts resolved.")
             vim.diagnostic.enable(args.buf)
             vim.cmd("LspStart")
-            vim.cmd("cclose")
+            -- vim.cmd("cclose")
           end,
         },
       })

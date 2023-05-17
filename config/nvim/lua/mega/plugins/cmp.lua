@@ -223,10 +223,10 @@ return {
       },
     })
 
-    require("cmp.entry").get_documentation = function(self)
-      local item = self:get_completion_item()
-      if item.documentation then return require("mega.utils").format_markdown(item.documentation) end
-      return {}
-    end
+    -- require("cmp.entry").get_documentation = function(self)
+    --   local item = self:get_completion_item()
+    --   if item.documentation then return require("mega.utils").format_markdown(item.documentation) end
+    --   return {}
+    -- end
   end,
 }

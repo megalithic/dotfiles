@@ -221,4 +221,4 @@ function M.config()
   -- nmap("<c-p>", "<cmd>FzfLua files<cr>", "fzf: find files")
 end
 
-return M
+return {}
