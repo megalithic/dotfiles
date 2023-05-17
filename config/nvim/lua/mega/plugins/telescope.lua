@@ -115,7 +115,7 @@ local function multi(pb, verb, open_selection_under_cursor)
   local picker = action_state.get_current_picker(pb)
   local selections = picker:get_multi_selection()
 
-  if open_selection_under_cursor or current_fn == nil then
+  if open_selection_under_cursor or current_fn == nil or #selections == 0 then
     actions[select_action](pb)
   else
     if current_fn ~= nil then -- is it a file -> open it as well:
