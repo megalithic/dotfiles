@@ -10,6 +10,11 @@ nnoremap("<localleader>ed", [[o|> dbg()<ESC>a]])
 nnoremap("<localleader>ei", [[o|> IO.inspect()<ESC>i]])
 nnoremap("<localleader>eil", [[o|> IO.inspect(label: "")<ESC>hi]])
 
+local has_wk, wk = mega.require("which-key")
+if has_wk then wk.register({
+  ["<localleader>e"] = { name = "+elixir" },
+}) end
+
 vim.cmd.iabbrev([[ep      |>]])
 vim.cmd.iabbrev([[epry    require IEx; IEx.pry]])
 vim.cmd.iabbrev([[ei      IO.inspect()<ESC>i]])

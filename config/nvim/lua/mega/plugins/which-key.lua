@@ -125,13 +125,13 @@ function M.config()
     ["]d"] = "lsp: go to next diagnostic",
     -- f = {}, -- see plugins.lua > telescope-mappings
     ["<leader>c"] = {
-      name = "+actions",
+      name = "+codeactions",
       d = { "telescope: diagnostics" },
       s = { "telescope: document symbols" },
       w = { "telescope: search workspace symbols" },
     },
     ["<leader>e"] = {
-      name = "edit files",
+      name = "+edit files",
       r = { [[<cmd>RenameFile<cr>]], "rename file to <input>" },
       s = { [[<cmd>SaveAsFile<cr>]], "save file as <input>" },
       -- d = { [[:DuplicateFile<cr>]], "duplicate current file" },
@@ -151,35 +151,30 @@ function M.config()
       i = { name = "lsp: info" },
     },
     ["<leader>m"] = {
-      name = "markdown",
+      name = "+markdown",
       p = { [[<cmd>MarkdownPreviewToggle<CR>]], "open preview" },
       g = { [[<cmd>Glow<CR>]], "open glow" },
     },
     ["<leader>p"] = {
-      name = "project",
+      name = "+project",
       p = { "<cmd>:AV<cr>", "Toggle Alternate (vsplit)" },
       P = { "<cmd>:A<cr>", "Open Alternate (edit)" },
       l = { "<cmd>:Vheex<cr>", "Open Heex for LiveView (vsplit)" },
       L = { "<cmd>:Vlive<cr>", "Open Live for LiveView (vsplit)" },
     },
-    ["<leader>r"] = {
-      name = "repls",
-    },
+    ["<leader>r"] = { name = "+repls" },
     ["<leader>t"] = {
-      name = "terminal",
+      name = "+terminal",
       t = { "term" },
       f = { "term (float)" },
       v = { "term (vertical)" },
     },
-    ["<leader>z"] = {
-      name = "zk",
-    },
-    ["<localleader>t"] = {
-      name = "test",
-    },
-    ["<localleader>d"] = {
-      name = "debugger",
-    },
+    ["<leader>z"] = { name = "+zk" },
+    ["<leader>g"] = { name = "+git" },
+    ["<localleader>t"] = { name = "+test" },
+    ["<localleader>g"] = { name = "+git" },
+    ["<localleader>h"] = { name = "+hunks" },
+    ["<localleader>d"] = { name = "+debugger" },
     -- ["<localleader>g"] = {
     --   name = "git",
     --   -- r = {
@@ -193,7 +188,7 @@ function M.config()
     --   p = "neogit: open push popup",
     -- },
     c = {
-      name = "git-conflict",
+      name = "+git-conflict",
       ["0"] = "Resolve with _None",
       t = "Resolve with _Theirs",
       o = "Resolve with _Ours",
@@ -203,13 +198,13 @@ function M.config()
     ["[c"] = { "<cmd>GitConflictPrevConflict<CR>", "go to prev conflict" },
     ["]c"] = { "<cmd>GitConflictNextConflict<CR>", "go to next conflict" },
     g = {
-      name = "go-to",
+      name = "+go-to",
       c = "comment text",
       ["cc"] = "comment line",
     },
     K = { "lsp: hover" },
     z = {
-      name = "highlight/folds/paging",
+      name = "+highlight/folds/paging",
       -- t = { [[<cmd>TSHighlightCapturesUnderCursor<CR>]], "show TS highlights under cursor" },
       -- TODO: ensure that we can get to these
       S = { "show syntax highlights under cursor" },
@@ -225,9 +220,9 @@ function M.config()
 
   -- Visual Mode {{{1
   local v_mappings = {
-    ["<leader>b"] = { name = "buffers", s = "save buffer" },
+    ["<leader>b"] = { name = "+buffers", s = "save buffer" },
     ["<leader>f"] = { "format selection" },
-    ["<leader>g"] = { name = "git link", y = "copy permalink selection" },
+    ["<leader>g"] = { name = "+git", y = "copy permalink selection" },
   }
   -- }}}
 

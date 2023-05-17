@@ -91,12 +91,9 @@ augroup("Startup", {
 -- })
 
 augroup("CheckOutsideTime", {
-  {
-    -- automatically check for changed files outside vim
-    event = { "BufEnter", "FocusGained" },
-    pattern = { "*" },
-    command = "checktime",
-  },
+  -- automatically check for changed files outside vim
+  event = { "WinEnter", "BufWinEnter", "BufWinLeave", "BufRead", "BufEnter", "FocusGained" },
+  command = "silent! checktime",
 })
 
 do
@@ -121,6 +118,7 @@ do
     "dirbuf",
     "lspinfo",
     "neotest-output",
+    "neotest-output-panel",
     "query",
     "elixirls",
   }

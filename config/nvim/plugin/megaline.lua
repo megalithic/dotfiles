@@ -33,24 +33,25 @@ mega.augroup("megaline", {
       end
     end,
   },
---   {
---     event = { "CursorMoved" },
---     pattern = { "*" },
---     command = function()
---       if vim.o.hlsearch then
---         local timer = vim.loop.new_timer()
---         search_count_timer = timer
---         timer:start(0, 200, function()
---           vim.schedule(function()
---             if timer == search_count_timer then
---               fn.searchcount({ recompute = 1, maxcount = 0, timeout = 100 })
---               vim.cmd.redrawstatus()
---             end
---           end)
---         end)
---       end
---     end,
---   },
+  -- FIXME: remove?
+  -- {
+  --   event = { "CursorMoved" },
+  --   pattern = { "*" },
+  --   command = function()
+  --     if vim.o.hlsearch then
+  --       local timer = vim.loop.new_timer()
+  --       search_count_timer = timer
+  --       timer:start(0, 200, function()
+  --         vim.schedule(function()
+  --           if timer == search_count_timer then
+  --             fn.searchcount({ recompute = 1, maxcount = 0, timeout = 100 })
+  --             vim.cmd.redrawstatus()
+  --           end
+  --         end)
+  --       end)
+  --     end
+  --   end,
+  -- },
 })
 
 -- ( SETTERS ) -----------------------------------------------------------------

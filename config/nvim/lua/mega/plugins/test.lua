@@ -24,18 +24,18 @@ return {
       "A",
       "AV",
     },
-    keys = {
-      { "<localleader>tn", "<cmd>TestNearest<cr>", desc = "run _test under cursor" },
-      { "<localleader>ta", "<cmd>TestFile<cr>", desc = "run _all tests in file" },
-      { "<localleader>tf", "<cmd>TestFile<cr>", desc = "run _all tests in file" },
-      { "<localleader>tl", "<cmd>TestLast<cr>", desc = "run _last test" },
-      { "<localleader>tt", "<cmd>TestLast<cr>", desc = "run _last test" },
-      { "<localleader>tv", "<cmd>TestVisit<cr>", desc = "run test file _visit" },
-      { "<localleader>tp", "<cmd>A<cr>", desc = "open alt (edit)" },
-      { "<localleader>tP", "<cmd>AV<cr>", desc = "open alt (vsplit)" },
-    },
+    -- keys = {
+    --   { "<localleader>tn", "<cmd>TestNearest<cr>", desc = "run _test under cursor" },
+    --   { "<localleader>ta", "<cmd>TestFile<cr>", desc = "run _all tests in file" },
+    --   { "<localleader>tf", "<cmd>TestFile<cr>", desc = "run _all tests in file" },
+    --   { "<localleader>tl", "<cmd>TestLast<cr>", desc = "run _last test" },
+    --   { "<localleader>tt", "<cmd>TestLast<cr>", desc = "run _last test" },
+    --   { "<localleader>tv", "<cmd>TestVisit<cr>", desc = "run test file _visit" },
+    --   { "<localleader>tp", "<cmd>A<cr>", desc = "open alt (edit)" },
+    --   { "<localleader>tP", "<cmd>AV<cr>", desc = "open alt (vsplit)" },
+    -- },
     -- event = { "BufReadPost", "BufNewFile" },
-    enabled = vim.g.tester == "vim-test",
+    -- cond = vim.g.tester == "vim-test",
     dependencies = { "tpope/vim-projectionist" },
     init = function()
       local system = vim.fn.system
@@ -91,7 +91,7 @@ return {
   {
     "nvim-neotest/neotest",
     -- event = { "LspAttach" },
-    enabled = vim.g.tester == "neotest",
+    cond = vim.g.tester == "neotest",
     dependencies = {
       "nvim-lua/plenary.nvim",
       "nvim-treesitter/nvim-treesitter",
