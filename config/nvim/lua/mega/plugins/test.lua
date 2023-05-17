@@ -24,8 +24,17 @@ return {
       "A",
       "AV",
     },
-    -- keys = {},
-    event = { "BufReadPost", "BufNewFile" },
+    keys = {
+      { "<localleader>tn", "<cmd>TestNearest<cr>", desc = "run _test under cursor" },
+      { "<localleader>ta", "<cmd>TestFile<cr>", desc = "run _all tests in file" },
+      { "<localleader>tf", "<cmd>TestFile<cr>", desc = "run _all tests in file" },
+      { "<localleader>tl", "<cmd>TestLast<cr>", desc = "run _last test" },
+      { "<localleader>tt", "<cmd>TestLast<cr>", desc = "run _last test" },
+      { "<localleader>tv", "<cmd>TestVisit<cr>", desc = "run test file _visit" },
+      { "<localleader>tp", "<cmd>A<cr>", desc = "open alt (edit)" },
+      { "<localleader>tP", "<cmd>AV<cr>", desc = "open alt (vsplit)" },
+    },
+    -- event = { "BufReadPost", "BufNewFile" },
     enabled = vim.g.tester == "vim-test",
     dependencies = { "tpope/vim-projectionist" },
     init = function()
@@ -77,20 +86,11 @@ return {
         suite = "termfloat",
         last = "termsplit",
       }
-
-      mega.nnoremap("<localleader>tn", "<cmd>TestNearest<cr>", "run _test under cursor")
-      mega.nnoremap("<localleader>ta", "<cmd>TestFile<cr>", "run _all tests in file")
-      mega.nnoremap("<localleader>tf", "<cmd>TestFile<cr>", "run _all tests in file")
-      mega.nnoremap("<localleader>tl", "<cmd>TestLast<cr>", "run _last test")
-      mega.nnoremap("<localleader>tt", "<cmd>TestLast<cr>", "run _last test")
-      mega.nnoremap("<localleader>tv", "<cmd>TestVisit<cr>", "run test file _visit")
-      mega.nnoremap("<localleader>tp", "<cmd>A<cr>", "open alt (edit)")
-      mega.nnoremap("<localleader>tP", "<cmd>AV<cr>", "open alt (vsplit)")
     end,
   },
   {
     "nvim-neotest/neotest",
-    event = { "LspAttach" },
+    -- event = { "LspAttach" },
     enabled = vim.g.tester == "neotest",
     dependencies = {
       "nvim-lua/plenary.nvim",
