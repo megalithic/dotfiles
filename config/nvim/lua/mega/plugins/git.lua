@@ -178,6 +178,7 @@ return {
               "<cmd>GitConflictNextConflict<CR>",
               { desc = "git-conflict: next conflict", buffer = args.buf }
             )
+            vim.cmd("GitConflictListQf")
           end,
         },
         {
@@ -187,7 +188,8 @@ return {
             mega.notify("Conflicts resolved.")
             vim.diagnostic.enable(args.buf)
             vim.cmd("LspStart")
-            -- vim.cmd("cclose")
+            -- pcall(vim["cmd"], "cclose")
+            vim.cmd("cclose")
           end,
         },
       })

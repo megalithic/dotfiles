@@ -1,17 +1,19 @@
 -- TODO:
 -- https://github.com/jfpedroza/neotest-elixir
 -- https://github.com/jfpedroza/neotest-elixir/pull/23
+-- --
+-- local ok_nt, nt = mega.require("neotest")
+-- local function neotest() return nt end
 --
-local function neotest() return require("neotest") end
-local function open() neotest().output.open({ enter = true, short = false }) end
-local function run_file() neotest().run.run(vim.fn.expand("%")) end
-local function run_file_sync() neotest().run.run({ vim.fn.expand("%"), concurrent = false }) end
-local function run_nearest() neotest().run.run() end
-local function run_last() neotest().run.run_last() end
-local function next_failed() neotest().jump.prev({ status = "failed" }) end
-local function prev_failed() neotest().jump.next({ status = "failed" }) end
-local function toggle_summary() neotest().summary.toggle() end
-local function cancel() neotest().run.stop({ interactive = true }) end
+local function open() require("neotest").output.open({ enter = true, short = false }) end
+local function run_file() require("neotest").run.run(vim.fn.expand("%")) end
+local function run_file_sync() require("neotest").run.run({ vim.fn.expand("%"), concurrent = false }) end
+local function run_nearest() require("neotest").run.run() end
+local function run_last() require("neotest").run.run_last() end
+local function next_failed() require("neotest").jump.prev({ status = "failed" }) end
+local function prev_failed() require("neotest").jump.next({ status = "failed" }) end
+local function toggle_summary() require("neotest").summary.toggle() end
+local function cancel() require("neotest").run.stop({ interactive = true }) end
 
 return {
   {
@@ -21,8 +23,8 @@ return {
       "TestFile",
       "TestLast",
       "TestVisit",
-      "A",
-      "AV",
+      -- "A",
+      -- "AV",
     },
     -- keys = {
     --   { "<localleader>tn", "<cmd>TestNearest<cr>", desc = "run _test under cursor" },
@@ -34,7 +36,7 @@ return {
     --   { "<localleader>tp", "<cmd>A<cr>", desc = "open alt (edit)" },
     --   { "<localleader>tP", "<cmd>AV<cr>", desc = "open alt (vsplit)" },
     -- },
-    -- event = { "BufReadPost", "BufNewFile" },
+    event = { "BufReadPost", "BufNewFile" },
     -- cond = vim.g.tester == "vim-test",
     dependencies = { "tpope/vim-projectionist" },
     init = function()
@@ -90,8 +92,7 @@ return {
   },
   {
     "nvim-neotest/neotest",
-    -- event = { "LspAttach" },
-    cond = vim.g.tester == "neotest",
+    event = { "BufReadPost", "BufNewFile" },
     dependencies = {
       "nvim-lua/plenary.nvim",
       "nvim-treesitter/nvim-treesitter",
@@ -103,7 +104,7 @@ return {
     keys = {
       { "<localleader>ts", toggle_summary, desc = "neotest: toggle summary" },
       { "<localleader>to", function() require("neotest").output_panel.open() end, desc = "neotest: output" },
-      { "<localleader>tn", run_nearest, desc = "neotest: run nearest" },
+      { "<localleader>tn", function() require("neotest").run.run() end, desc = "neotest: run nearest" },
       { "<localleader>tl", run_last, desc = "neotest: run last" },
       { "<localleader>tf", run_file, desc = "neotest: run file" },
       { "<localleader>tF", run_file_sync, desc = "neotest: run file synchronously" },
@@ -126,70 +127,40 @@ return {
       --   neotest.summary.toggle()
       -- end)
     },
+    -- init = function()
+    --   nmap("<localleader>tn", function() require("neotest").run.run() end, { desc = "neotest: run nearest" })
+    -- end,
     config = function()
-      -- local env = nil
-      --
-      -- local function run(arg)
-      --   local default_env = env or {}
-      --   local args
-      --
-      --   if type(arg) == "table" then
-      --     local local_env = arg.env or {}
-      --     arg.env = vim.tbl_extend("force", default_env, local_env)
-      --     args = arg
-      --   else
-      --     args = { arg, env = default_env }
-      --   end
-      --
-      --   print("Neotest run called with arg", args[1])
-      --   require("neotest").run.run(args)
-      -- end
-      -- --
-      -- -- local function run_file(args)
-      -- --   args = args or {}
-      -- --   args[1] = vim.fn.expand("%")
-      -- --   run(args)
-      -- -- end
-      -- --
-      -- local function run_suite(args)
-      --   args = args or {}
-      --   args[1] = vim.fn.getcwd()
-      --   run(args)
-      -- end
-      --
-      -- vim.api.nvim_create_user_command("Neotest", run_suite, {})
-      -- vim.api.nvim_create_user_command("NeotestFile", run_file, {})
-      -- vim.api.nvim_create_user_command("NeotestNearest", nearest, {})
-      -- vim.api.nvim_create_user_command("NeotestLast", neotest.run.run_last, {})
-      -- vim.api.nvim_create_user_command("NeotestAttach", neotest.run.attach, {})
-      -- vim.api.nvim_create_user_command("NeotestSummary", neotest.summary.toggle, {})
-      -- vim.api.nvim_create_user_command("NeotestOutput", neotest.output.open, {})
-
-      local namespace = vim.api.nvim_create_namespace("neotest")
+      local nt_ns = vim.api.nvim_create_namespace("neotest")
       vim.diagnostic.config({
         virtual_text = {
           format = function(diagnostic)
             dd(fmt("orig: %s", diagnostic.message))
-            dd(fmt("gsub: %s", diagnostic.message:gsub("\n", " "):gsub("\t", " "):gsub("%s+", " "):gsub("^%s+", "")))
 
             return diagnostic.message:gsub("\n", " "):gsub("\t", " "):gsub("%s+", " "):gsub("^%s+", "")
           end,
         },
-      }, namespace)
+      }, nt_ns)
 
       require("neotest").setup({
         log_level = L.DEBUG,
         discovery = { enabled = true },
         diagnostic = { enabled = true },
         output = {
-          enabled = false,
+          enabled = true,
           open_on_run = "short",
+        },
+        status = {
+          enabled = true,
         },
         output_panel = {
           enabled = true,
           open = "botright split | resize 25",
         },
-        quickfix = { enabled = false, open = true },
+        quickfix = {
+          enabled = true,
+          open = function() vim.cmd("Trouble quickfix") end,
+        },
         floating = { border = mega.get_border() },
         icons = {
           expanded = "",
@@ -199,10 +170,15 @@ return {
           non_collapsible = "",
           collapsed = "",
 
-          passed = "",
-          running = "",
-          failed = "",
-          unknown = "",
+          passed = "", --alts: 
+          running = "",
+          skipped = "○",
+          failed = "",
+          unknown = "", -- alts: 
+          -- running_animated = vim.tbl_map(
+          --   function(s) return s .. " " end,
+          --   { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" }
+          -- ),
           running_animated = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" },
         },
         summary = {

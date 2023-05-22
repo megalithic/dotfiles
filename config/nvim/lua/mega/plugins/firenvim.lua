@@ -1,109 +1,131 @@
+-- TODO:
+-- https://github.com/jfpedroza/dotfiles/blob/master/nvim/after/plugin/firenvim.lua
+-- https://github.com/stevearc/dotfiles/blob/master/.config/nvim/lua/plugins/firenvim.lua
+
 local M = {
   "glacambre/firenvim",
   cond = vim.g.started_by_firenvim,
   event = { "BufEnter", "BufReadPre", "UIEnter" },
   build = function() vim.fn["firenvim#install"](0) end,
-}
+  config = function()
+    if not vim.g.started_by_firenvim then return end
 
-function M.init()
-  if not vim.g.started_by_firenvim then return end
-
-  vim.g.firenvim_config = {
-    globalSettings = {
-      alt = "all",
-    },
-    localSettings = {
-      [".*"] = {
-        cmdline = "neovim",
-        content = "text",
-        priority = 0,
-        selector = "textarea",
-        takeover = "never",
-        -- filename = "/tmp/{hostname}_{pathname%10}.{extension}",
+    vim.g.firenvim_config = {
+      globalSettings = {
+        alt = "all",
       },
-      ["https?://github.com/"] = {
-        takeover = "always",
-        selector = "textarea:not([id='read-only-cursor-text-area'])",
-        priority = 1,
+      localSettings = {
+        [".*"] = {
+          cmdline = "neovim",
+          content = "text",
+          priority = 0,
+          selector = "textarea",
+          takeover = "never",
+          -- filename = "/tmp/{hostname}_{pathname%10}.{extension}",
+        },
+        ["https?://github.com/"] = {
+          takeover = "always",
+          selector = "textarea:not([id='read-only-cursor-text-area'])",
+          priority = 1,
+        },
+        ["https?://github.com/users/megalithic/projects"] = {
+          takeover = "never",
+          priority = 1,
+        },
+        ["https?://stackoverflow.com/"] = {
+          takeover = "always",
+          priority = 1,
+        },
+        -- ["https?://gitter.im/"] = {
+        --   takeover = "never",
+        --   priority = 1,
+        -- },
       },
-      ["https?://github.com/users/megalithic/projects"] = {
-        takeover = "never",
-        priority = 1,
-      },
-      ["https?://stackoverflow.com/"] = {
-        takeover = "always",
-        priority = 1,
-      },
-      -- ["https?://gitter.im/"] = {
-      --   takeover = "never",
-      --   priority = 1,
-      -- },
-    },
-    autocmds = {
-      { "BufEnter", "github.com_*.txt", "setlocal filetype=markdown" },
-      { "BufEnter", "leetcode.com_*.js", "setlocal filetype=typescript" },
-      {
-        "BufEnter",
-        "gitter.im_*.txt",
-        [[setlocal filetype=markdown | nnoremap <leader><CR> write<CR>:call firenvim#press_keys("<Lt>CR>")<CR>ggdGa]],
-        --[[
+      autocmds = {
+        { "BufEnter", "github.com_*.txt", "setlocal filetype=markdown" },
+        { "BufEnter", "leetcode.com_*.js", "setlocal filetype=typescript" },
+        {
+          "BufEnter",
+          "gitter.im_*.txt",
+          [[setlocal filetype=markdown | nnoremap <leader><CR> write<CR>:call firenvim#press_keys("<Lt>CR>")<CR>ggdGa]],
+          --[[
         normal! i
         inoremap <CR> <Esc>:w<CR>:call firenvim#press_keys("<LT>CR>")<CR>ggdGa
         inoremap <s-CR> <CR>
         --]]
-      },
-    },
-  }
-
-  local function on_bufenter(evt)
-    -- vim.opt.guifont = "JetBrainsMono_Nerd_Font_Mono:h22"
-    vim.opt.guifont = "JetBrainsMono Nerd Font Mono:h22"
-
-    -- P(fmt("lines: %s, win_height: %s", vim.o.lines, vim.api.nvim_win_get_height(vim.api.nvim_get_current_win())))
-
-    local bufnr = evt.buf or 0
-    local buf_lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, true)
-    local buf_name = vim.api.nvim_buf_get_name(bufnr)
-
-    -- start in insert mode if we're an empty buffer
-    if buf_name ~= "" and _G.mega.tlen(buf_lines) <= 2 and buf_lines[1] == "" then
-      vim.cmd([[startinsert]])
-    else
-      vim.cmd([[exec "norm gg"]])
-    end
-
-    -- expand the firenvim window larger than it should be, (if it's presently less than 25 lines)
-    if vim.o.lines < 15 then vim.o.lines = 15 end
-  end
-
-  local function on_uienter(evt)
-    -- vim.cmd.colorscheme("forestbones")
-
-    -- disable headlines (until we update colours for forestbones)
-    local ok_headlines, headlines = mega.require("headlines")
-    if ok_headlines then
-      headlines.setup({
-        markdown = {
-          headline_highlights = false,
-          dash_highlight = false,
-          codeblock_highlight = false,
         },
-      })
+      },
+    }
+
+    local timer = nil
+    local function throttle_write(delay)
+      local bufnr = vim.api.nvim_get_current_buf()
+      if timer then timer:close() end
+      timer = vim.loop.new_timer()
+      timer:start(
+        delay or 1000,
+        0,
+        vim.schedule_wrap(function()
+          timer:close()
+          timer = nil
+          if vim.api.nvim_buf_get_option(bufnr, "modified") then
+            vim.api.nvim_buf_call(bufnr, function() vim.cmd("write") end)
+          end
+        end)
+      )
     end
 
-    -- require("autolist").setup({ normal_mappings = { invert = { "<c-c>" } } })
+    local function on_bufenter(evt)
+      vim.api.nvim_set_option("guifont", "JetBrainsMono Nerd Font:h22")
+      -- vim.opt.guifont = "JetBrainsMono_Nerd_Font_Mono:h22"
+      -- vim.opt.guifont = "JetBrainsMono Nerd Font:h22"
 
-    vim.opt.wrap = true
-    vim.opt.linebreak = true
-    vim.opt.laststatus = 0
-    vim.opt.showtabline = 0
-    vim.opt_local.relativenumber = false
-    vim.opt_local.signcolumn = "no"
-    vim.opt_local.statuscolumn = ""
-    vim.opt_local.cursorlineopt = "screenline,number"
-    vim.opt_local.cursorline = true
+      -- P(fmt("lines: %s, win_height: %s", vim.o.lines, vim.api.nvim_win_get_height(vim.api.nvim_get_current_win())))
 
-    vim.cmd([[
+      local bufnr = evt.buf or 0
+      local buf_lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, true)
+      local buf_name = vim.api.nvim_buf_get_name(bufnr)
+
+      -- start in insert mode if we're an empty buffer
+      if buf_name ~= "" and _G.mega.tlen(buf_lines) <= 2 and buf_lines[1] == "" then
+        vim.cmd([[startinsert]])
+      else
+        vim.cmd([[exec "norm gg"]])
+      end
+
+      -- expand the firenvim window larger than it should be, (if it's presently less than 25 lines)
+      if vim.o.lines < 15 then vim.o.lines = 15 end
+    end
+
+    local function on_uienter(evt)
+      -- vim.cmd.colorscheme("forestbones")
+
+      -- disable headlines (until we update colours for forestbones)
+      local ok_headlines, headlines = mega.require("headlines")
+      if ok_headlines then
+        headlines.setup({
+          markdown = {
+            headline_highlights = false,
+            dash_highlight = false,
+            codeblock_highlight = false,
+          },
+        })
+      end
+
+      -- require("autolist").setup({ normal_mappings = { invert = { "<c-c>" } } })
+
+      vim.opt.ruler = false
+      vim.opt.wrap = true
+      vim.opt.linebreak = true
+      vim.opt.laststatus = 0
+      vim.opt.showtabline = 0
+      vim.opt_local.relativenumber = false
+      vim.opt_local.signcolumn = "no"
+      vim.opt_local.statuscolumn = ""
+      vim.opt_local.cursorlineopt = "screenline,number"
+      vim.opt_local.cursorline = true
+
+      vim.cmd([[
       tmap <D-v> <C-w>"+
       nnoremap <D-v> "+p
       vnoremap <D-v> "+p
@@ -111,42 +133,70 @@ function M.init()
       cnoremap <D-v> <C-R><C-O>+
     ]])
 
-    require("mega.globals").nnoremap(
-      "<Esc>",
-      "<cmd>wall | call firenvim#hide_frame() | call firenvim#press_keys('<LT>Esc>') | call firenvim#focus_page()<CR>"
-    )
-    require("mega.globals").nnoremap(
-      "<C-z>",
-      "<cmd>wall | call firenvim#hide_frame() | call firenvim#focus_input()<CR>"
-    )
-    require("mega.globals").inoremap(
-      "<C-c>",
-      "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR><Esc>norm! ggdGa<CR>"
-    )
-    require("mega.globals").nnoremap(
-      "<C-c>",
-      "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR><Esc>norm! ggdGa<CR>"
-    )
-    require("mega.globals").nnoremap(
-      "q",
-      "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR><Esc>norm! ggdGa<CR>"
-    )
+      require("mega.globals").nnoremap(
+        "<Esc>",
+        "<cmd>wall | call firenvim#hide_frame() | call firenvim#press_keys('<LT>Esc>') | call firenvim#focus_page()<CR>"
+      )
+      require("mega.globals").nnoremap(
+        "<C-z>",
+        "<cmd>wall | call firenvim#hide_frame() | call firenvim#focus_input()<CR>"
+      )
+      require("mega.globals").inoremap(
+        "<C-c>",
+        "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR><Esc>norm! ggdGa<CR>"
+      )
+      require("mega.globals").nnoremap(
+        "<C-c>",
+        "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR><Esc>norm! ggdGa<CR>"
+      )
+      require("mega.globals").nnoremap(
+        "q",
+        "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR><Esc>norm! ggdGa<CR>"
+      )
 
-    -- disable cmp autocomplete
-    require("cmp").setup.buffer({ enabled = false })
-  end
+      -- disable cmp autocomplete
+      require("cmp").setup.buffer({ enabled = false })
 
-  require("mega.globals").augroup("Firenvim", {
-    {
-      event = { "UIEnter" },
-      once = true,
-      command = function(evt) on_uienter(evt) end,
-    },
-    {
-      event = { "BufEnter" },
-      command = function(evt) on_bufenter(evt) end,
-    },
-  })
-end
+      -- We wait to call this function until the firenvim buffer is loaded
+      local buf_group = vim.api.nvim_create_augroup("FireNvimWrite", {})
+      vim.api.nvim_create_autocmd({ "FocusLost", "TextChanged", "TextChangedI", "InsertLeave" }, {
+        buffer = vim.api.nvim_get_current_buf(),
+        group = buf_group,
+        nested = true,
+        callback = function(params)
+          local delay = params.event == "FocusLost" and 10 or 1000
+          throttle_write(delay)
+        end,
+      })
+      -- These create unnecessary autocmds for BufWritePre and BufWritePost
+      -- By clearing them, we can improve the performance of :write
+      local unnecessary_groups = { "filetypedetect", "gzip", "eunuch" }
+      for _, name in ipairs(unnecessary_groups) do
+        local ok, err = pcall(vim.api.nvim_del_augroup_by_name, name)
+        if not ok then
+          -- vim.notify(string.format("Could not delete augroup '%s': %s", name, err), L.WARN)
+        end
+      end
+    end
+
+    require("mega.globals").augroup("Firenvim", {
+      {
+        event = { "UIEnter" },
+        once = true,
+        command = on_uienter,
+      },
+      {
+        event = { "BufEnter" },
+        pattern = "*.*",
+        command = on_bufenter,
+      },
+      {
+        event = { "BufEnter" },
+        pattern = "github.com_*.txt",
+        command = "set filetype=markdown",
+      },
+    })
+  end,
+}
 
 return M

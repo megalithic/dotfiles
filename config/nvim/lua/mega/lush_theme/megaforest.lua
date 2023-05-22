@@ -690,6 +690,7 @@ local theme = lush(function(injected_functions)
     TabLineWinActive({ fg = C.green, bg = C.bg0, gui = "italic" }),
     TabLineInactive({ fg = C.grey2, bg = C.bg1 }),
     TabFill({ bg = C.bg_dark }),
+    NavicSeparator({ bg = C.bg_dark }),
 
     ---- :help megaterm  -----------------------------------------------------
 

@@ -421,6 +421,7 @@ return {
         elixir = "phoenix-heex",
         eruby = "erb",
         heex = "phoenix-heex",
+        surface = "phoenix-heex",
       },
     },
     handlers = {
@@ -435,9 +436,11 @@ return {
         typescriptreact = "javascript",
         ["html-eex"] = "html",
         ["phoenix-heex"] = "html",
+        eelixir = "html",
         elixir = "html",
         heex = "html",
         elm = "html",
+        surface = "html",
         erb = "html",
       },
       tailwindCSS = {
@@ -449,6 +452,12 @@ return {
           invalidTailwindDirective = "error",
           invalidVariant = "error",
           recommendedVariantOrder = "warning",
+        },
+        classAttributes = {
+          "class",
+          "className",
+          "classList",
+          "ngClass",
         },
         experimental = {
           classRegex = {

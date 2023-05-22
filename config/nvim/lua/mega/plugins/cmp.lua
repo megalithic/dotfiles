@@ -77,7 +77,7 @@ return {
         return true
       end,
       preselect = cmp.PreselectMode.None,
-      -- view = { entries = "custom" },
+      entries = { name = "custom", selection_order = "near_cursor" },
       completion = {
         keyword_length = 1,
         get_trigger_characters = function(trigger_characters)
@@ -91,7 +91,7 @@ return {
         completion = {
           winhighlight = table.concat({
             "Normal:NormalFloat",
-            "FloatBorder:TelescopePromptBorder",
+            "FloatBorder:FloatBorder",
             "CursorLine:Visual",
             "Search:None",
           }, ","),
@@ -180,9 +180,7 @@ return {
       --   entries = { name = "custom", direction = "bottom_up" },
       -- },
       mapping = cmp.mapping.preset.cmdline(),
-      sources = {
-        sources = cmp.config.sources({ { name = "nvim_lsp_document_symbol" } }, { { name = "buffer" } }),
-      },
+      sources = cmp.config.sources({ { name = "nvim_lsp_document_symbol" } }, { { name = "buffer" } }),
     })
 
     cmp.setup.cmdline(":", {

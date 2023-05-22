@@ -49,6 +49,7 @@ function M.config()
 
   local function tab_name(number, name, active)
     local icon = active and "" or ""
+
     return fmt(" %s:%s %s ", number, string.gsub(name, "%[..%]", ""), icon)
   end
 

@@ -1,3 +1,48 @@
+-- TODO:
+-- https://github.com/seblj/dotfiles/blob/master/nvim/lua/config/telescope.lua#L143
+
+local ts = setmetatable({}, {
+  __index = function(_, key)
+    return function(topts)
+      local get_selection = function()
+        local rv = vim.fn.getreg("v")
+        local rt = vim.fn.getregtype("v")
+        vim.cmd([[noautocmd silent normal! "vy]])
+        local selection = vim.fn.getreg("v")
+        vim.fn.setreg("v", rv, rt)
+        return vim.split(selection, "\n")
+      end
+      local mode = vim.api.nvim_get_mode().mode
+      topts = topts or {}
+      if mode == "v" or mode == "V" or mode == "" then topts.default_text = table.concat(get_selection()) end
+      if key == "grep" then
+        require("telescope").extensions.egrepify.egrepify(topts)
+      else
+        local builtin = require("telescope.builtin")
+        builtin[key](topts)
+      end
+    end
+  end,
+})
+
+-- Set current folder as prompt title
+local function with_title(opts, extra)
+  extra = extra or {}
+  local path = opts.cwd or opts.path or extra.cwd or extra.path or nil
+  local title = ""
+  local buf_path = vim.fn.expand("%:p:h")
+  local cwd = vim.fn.getcwd()
+  if path ~= nil and buf_path ~= cwd then
+    title = require("plenary.path"):new(buf_path):make_relative(cwd)
+  else
+    title = vim.fn.fnamemodify(cwd, ":t")
+  end
+
+  return vim.tbl_extend("force", opts, {
+    prompt_title = title,
+  }, extra or {})
+end
+
 local function get_border(border_opts)
   return vim.tbl_deep_extend("force", border_opts or {}, {
     borderchars = {
@@ -15,7 +60,6 @@ local function get_border(border_opts)
     },
   })
 end
-_G.telescope_get_border = get_border
 
 local fd_find_command = { "fd", "--type", "f", "--no-ignore-vcs", "--strip-cwd-prefix" }
 local rg_find_command = {
@@ -45,37 +89,44 @@ local grep_files_cmd = {
   "--smart-case",
   "--trim",
 }
-
-local get_selection = function()
-  local rv = vim.fn.getreg("v")
-  local rt = vim.fn.getregtype("v")
-  vim.cmd([[noautocmd silent normal! "vy]])
-  local selection = vim.fn.getreg("v")
-  vim.fn.setreg("v", rv, rt)
-  return vim.split(selection, "\n")
-end
-
--- telescope
-local ts = setmetatable({}, {
-  __index = function(_, key)
-    return function(topts)
-      local mode = vim.api.nvim_get_mode().mode
-      topts = topts or {}
-      if mode == "v" or mode == "V" or mode == "" then topts.default_text = table.concat(get_selection()) end
-      if key == "grep" then
-        require("telescope").extensions.egrepify.egrepify(topts)
-      else
-        local builtin = require("telescope.builtin")
-        builtin[key](topts)
-      end
-    end
-  end,
-})
+local current_fn = nil
 
 local function dropdown(opts) return require("telescope.themes").get_dropdown(get_border(opts)) end
 
 local function ivy(opts) return require("telescope.themes").get_ivy(get_border(opts)) end
-_G.telescope_ivy = ivy
+
+_G.picker = { telescope = { dropdown, ivy, get_border } }
+
+mega.augroup("Startup.Telescope", {
+  {
+    event = { "VimEnter" },
+    pattern = { "*" },
+    once = true,
+    command = function(args)
+      if not vim.g.started_by_firenvim then
+        -- Open file browser if argument is a folder
+        -- REF: https://github.com/protiumx/.dotfiles/blob/main/stow/nvim/.config/nvim/lua/config/telescope.lua#L50
+        local arg = vim.api.nvim_eval("argv(0)")
+        if arg and (vim.fn.isdirectory(arg) ~= 0 or arg == "") then
+          vim.defer_fn(
+            function()
+              ts.find_files(with_title(dropdown({
+                hidden = true,
+                no_ignore = false,
+                previewer = false,
+                prompt_title = "",
+                preview_title = "",
+                results_title = "",
+                layout_config = { prompt_position = "top" },
+              })))
+            end,
+            10
+          )
+        end
+      end
+    end,
+  },
+})
 
 -- Gets the root dir from either:
 -- * connected lsp
@@ -83,7 +134,6 @@ _G.telescope_ivy = ivy
 -- * .git from cwd
 -- * cwd
 ---@param opts? table
-local current_fn = nil
 local function project_files(opts)
   local bufnr = vim.api.nvim_get_current_buf()
   local fn = vim.api.nvim_buf_get_name(bufnr)
@@ -252,30 +302,63 @@ return {
         winblend = 0,
         vimgrep_arguments = grep_files_cmd,
         -- buffer_previewer_maker = new_maker,
-        preview = {
-          mime_hook = function(filepath, bufnr, opts)
-            local is_image = function(fp)
-              local image_extensions = { "png", "jpg" } -- Supported image formats
-              local split_path = vim.split(fp:lower(), ".", { plain = true })
-              local extension = split_path[#split_path]
-              return vim.tbl_contains(image_extensions, extension)
-            end
-            if is_image(filepath) then
-              local term = vim.api.nvim_open_term(bufnr, {})
-              local function send_output(_, data, _)
-                for _, d in ipairs(data) do
-                  vim.api.nvim_chan_send(term, d .. "\r\n")
-                end
-              end
-              vim.fn.jobstart({
-                "catimg",
-                filepath, -- Terminal image viewer command
-              }, { on_stdout = send_output, stdout_buffered = true, pty = true })
-            else
-              require("telescope.previewers.utils").set_preview_message(bufnr, opts.winid, "Binary cannot be previewed")
-            end
-          end,
-        },
+        -- preview = {
+        --   mime_hook = function(filepath, bufnr, opts)
+        --     local split_path = vim.split(filepath:lower(), ".", { plain = true })
+        --     local extension = split_path[#split_path]
+        --     vim.fn.jobstart(
+        --       "echo \"ext:" .. extension .. "\" >> ~/tmp/out.log",
+        --       { on_stdout = send_output, stdout_buffered = true }
+        --     )
+        --
+        --     local is_image = function(fp)
+        --       local image_extensions = { "png", "jpg", "gif", "svg", "ico", "jpeg", "bmp", "webp" }
+        --       local split_path = vim.split(fp:lower(), ".", { plain = true })
+        --       local extension = split_path[#split_path]
+        --       return vim.tbl_contains(image_extensions, extension)
+        --     end
+        --
+        --     if is_image(filepath) then
+        --       local term = vim.api.nvim_open_term(bufnr, {})
+        --       local function send_output(_, data, _)
+        --         for _, d in ipairs(data) do
+        --           vim.api.nvim_chan_send(term, d .. "\r\n")
+        --         end
+        --       end
+        --       vim.fn.jobstart(
+        --         "echo \"convert " .. filepath .. " jpg:- | viu -\" >> ~/tmp/out.log",
+        --         { on_stdout = send_output, stdout_buffered = true }
+        --       )
+        --     else
+        --       require("telescope.previewers.utils").set_preview_message(bufnr, opts.winid, "Binary cannot be previewed")
+        --     end
+        --   end,
+        --   -- mime_hook = function(filepath, bufnr, opts)
+        --   --   local is_image = function(fp)
+        --   --     local image_extensions = { "png", "jpg", "jpeg", "gif" } -- Supported image formats
+        --   --     local split_path = vim.split(fp:lower(), ".", { plain = true })
+        --   --     local extension = split_path[#split_path]
+        --   --     return vim.tbl_contains(image_extensions, extension)
+        --   --   end
+        --   --   if is_image(filepath) then
+        --   --     local term = vim.api.nvim_open_term(bufnr, {})
+        --   --     local function send_output(_, data, _)
+        --   --       for _, d in ipairs(data) do
+        --   --         vim.api.nvim_chan_send(term, d .. "\r\n")
+        --   --       end
+        --   --     end
+        --   --     vim.fn.jobstart({
+        --   --       "chafa",
+        --   --       filepath,
+        --   --     }, {
+        --   --       on_stdout = send_output,
+        --   --       stdout_buffered = true,
+        --   --     })
+        --   --   else
+        --   --     require("telescope.previewers.utils").set_preview_message(bufnr, opts.winid, "Binary cannot be previewed")
+        --   --   end
+        --   -- end,
+        -- },
       },
       extensions = {
         ["zf-native"] = {

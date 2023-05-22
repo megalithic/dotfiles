@@ -9,11 +9,14 @@ local fmt = string.format
 local api = vim.api
 local fn = vim.fn
 
-local nil_buf_id = 999999
-local term_win_id = nil
-local term_buf_id = nil_buf_id
+local nil_id = 999999
+local term_win_id = nil_id
+local term_buf_id = nil_id
 local term_tab_id = nil
 local term = nil
+
+local __buftype = "terminal"
+local __filetype = "megaterm"
 
 local function is_valid_buffer(bufnr) return vim.api.nvim_buf_is_valid(bufnr) end
 local function is_valid_window(winnr) return vim.api.nvim_win_is_valid(winnr) end
@@ -53,7 +56,7 @@ end
 
 local function unset_term(should_delete)
   if should_delete and api.nvim_buf_is_loaded(term_buf_id) then api.nvim_buf_delete(term_buf_id, { force = true }) end
-  term_buf_id = nil_buf_id
+  term_buf_id = nil_id
   term_win_id = nil
   term_tab_id = nil
   term = {}
@@ -130,51 +133,25 @@ local function set_term_opts()
   vim.opt_local.relativenumber = false
   vim.opt_local.number = false
   vim.opt_local.signcolumn = "yes:1"
-  pcall(vim.api.nvim_buf_set_option, term_buf_id, "filetype", "megaterm")
-  pcall(vim.api.nvim_buf_set_option, term_buf_id, "buftype", "terminal")
+  pcall(vim.api.nvim_buf_set_option, term_buf_id, "filetype", __filetype)
+  pcall(vim.api.nvim_buf_set_option, term_buf_id, "buftype", __buftype)
 
   if vim.tbl_contains({ "float", "tab" }, term.direction) then
     vim.opt_local.signcolumn = "no"
     vim.bo.bufhidden = "wipe"
     vim.cmd("setlocal bufhidden=wipe")
-  else
-    vim.opt_local.winfixwidth = true
-    vim.opt_local.winfixheight = true
   end
 end
 
 local function set_win_size(bufnr)
   if term.direction == "vertical" then
     vim.cmd(fmt("let &winwidth=%d", term.size))
+    vim.opt_local.winfixwidth = true
   elseif term.direction == "horizontal" then
     vim.cmd(fmt("let &winheight=%d", term.size))
+    vim.opt_local.winfixheight = true
   end
 end
-
--- local set_autocommands = function()
---   mega.augroup("MegatermResizer", {
---     {
---       event = { "WinLeave" },
---       buffer = term_buf_id,
---       command = function(evt) set_win_size(evt.buf) end,
---     },
---     {
---       event = { "WinEnter" },
---       buffer = term_buf_id,
---       command = function(evt) set_win_size(evt.buf) end,
---     },
---     {
---       event = { "TermOpen" },
---       pattern = { "term://*" },
---       command = function(evt) end,
---     },
---     {
---       event = { "BufEnter" },
---       pattern = { "term://*" },
---       command = function(evt) end,
---     },
---   })
--- end
 
 -- TODO: https://github.com/brendalf/mix.nvim/blob/main/lua/mix/window.lua#L1-L26
 local create_float = function(bufnr, size, caller_winnr)
@@ -276,28 +253,119 @@ local function set_keymaps()
   if term.direction ~= "tab" then
     mega.nmap("q", function()
       api.nvim_buf_delete(term_buf_id, { force = true })
-      term_buf_id = nil_buf_id
+      term_buf_id = nil_id
       vim.cmd("wincmd p")
       -- vim.cmd(term.caller_winnr .. [[wincmd w]])
     end, keymap_opts)
   end
 
-  mega.tmap("<esc>", [[<C-\><C-n>]], keymap_opts)
-  -- TODO: :h wincmd; TL;DR - winnr .. wincmd w
-  -- mega.tmap("<C-h>", fmt([[<Cmd>%swincmd w<CR>]], term.caller_winnr), keymap_opts)
-  -- mega.tmap("<C-j>", fmt([[<Cmd>%swincmd w<CR>]], term.caller_winnr), keymap_opts)
-  -- mega.tmap("<C-k>", fmt([[<Cmd>%swincmd w<CR>]], term.caller_winnr), keymap_opts)
-  -- mega.tmap("<C-l>", fmt([[<Cmd>%swincmd w<CR>]], term.caller_winnr), keymap_opts)
-  tmap("<C-h>", fmt([[<cmd>%swincmd w<cr>]], term.caller_winnr), keymap_opts)
-  tmap("<C-j>", fmt([[<cmd>%swincmd w<cr>]], term.caller_winnr), keymap_opts)
-  tmap("<C-k>", fmt([[<cmd>%swincmd w<cr>]], term.caller_winnr), keymap_opts)
-  tmap("<C-l>", fmt([[<cmd>%swincmd w<cr>]], term.caller_winnr), keymap_opts)
+  -- mega.tmap("<esc>", [[<C-\><C-n>]], keymap_opts)
+  -- -- TODO: :h wincmd; TL;DR - winnr .. wincmd w
+  -- -- mega.tmap("<C-h>", fmt([[<Cmd>%swincmd w<CR>]], term.caller_winnr), keymap_opts)
+  -- -- mega.tmap("<C-j>", fmt([[<Cmd>%swincmd w<CR>]], term.caller_winnr), keymap_opts)
+  -- -- mega.tmap("<C-k>", fmt([[<Cmd>%swincmd w<CR>]], term.caller_winnr), keymap_opts)
+  -- -- mega.tmap("<C-l>", fmt([[<Cmd>%swincmd w<CR>]], term.caller_winnr), keymap_opts)
+  -- tmap("<C-h>", fmt([[<cmd>%swincmd w<cr>]], term.caller_winnr), keymap_opts)
+  -- tmap("<C-j>", fmt([[<cmd>%swincmd w<cr>]], term.caller_winnr), keymap_opts)
+  -- tmap("<C-k>", fmt([[<cmd>%swincmd w<cr>]], term.caller_winnr), keymap_opts)
+  -- tmap("<C-l>", fmt([[<cmd>%swincmd w<cr>]], term.caller_winnr), keymap_opts)
   -- tmap("<C-h>", [[<Cmd>wincmd p<CR>]], keymap_opts)
   -- tmap("<C-j>", [[<Cmd>wincmd p<CR>]], keymap_opts)
   -- tmap("<C-k>", [[<Cmd>wincmd p<CR>]], keymap_opts)
   -- tmap("<C-l>", [[<Cmd>wincmd p<CR>]], keymap_opts)
   -- TODO: want a `<C-r>` or `;,` to pull up last executed command in the term
   -- TODO: want a `<C-b>` to auto scroll back and `<C-f>` to auto scroll forward in insert mode
+
+  -- tmap("<esc>", [[<C-\><C-n>]], keymap_opts)
+  tmap("<esc>", [[<C-\><C-n>]], keymap_opts)
+  tnoremap("<C-h>", [[<C-\><C-n><C-w>h]], keymap_opts)
+  tnoremap("<C-j>", [[<C-\><C-n><C-w>j]], keymap_opts)
+  tnoremap("<C-k>", [[<C-\><C-n><C-w>k]], keymap_opts)
+  tnoremap("<C-l>", [[<C-\><C-n><C-w>l]], keymap_opts)
+  tmap("<C-h>", [[<cmd>wincmd h<CR>]], keymap_opts)
+  tmap("<C-j>", [[<cmd>wincmd j<CR>]], keymap_opts)
+  tmap("<C-k>", [[<cmd>wincmd k<CR>]], keymap_opts)
+  tmap("<C-l>", [[<cmd>wincmd l<CR>]], keymap_opts)
+
+  nmap("<C-h>", [[<cmd>wincmd h<CR>]], keymap_opts)
+  nmap("<C-j>", [[<cmd>wincmd j<CR>]], keymap_opts)
+  nmap("<C-k>", [[<cmd>wincmd k<CR>]], keymap_opts)
+  nmap("<C-l>", [[<cmd>wincmd l<CR>]], keymap_opts)
+  -- vim.api.nvim_buf_set_keymap(0, "t", "<esc>", [[<C-\><C-n>]], opts)
+  -- vim.api.nvim_buf_set_keymap(0, "t", "jk", [[<C-\><C-n>]], opts)
+  -- vim.api.nvim_buf_set_keymap(0, "t", "<C-h>", [[<C-\><C-n><C-W>h]], opts)
+  -- vim.api.nvim_buf_set_keymap(0, "t", "<C-j>", [[<C-\><C-n><C-W>j]], opts)
+  -- vim.api.nvim_buf_set_keymap(0, "t", "<C-k>", [[<C-\><C-n><C-W>k]], opts)
+  -- vim.api.nvim_buf_set_keymap(0, "t", "<C-l>", [[<C-\><C-n><C-W>l]], opts)
+end
+
+local function set_terminal_keymaps()
+  local keymap_opts = { buffer = term_buf_id, silent = false }
+  local wincmd_key = "<C-w>"
+  -- local wincmd_key = "<C-\\><C-n><C-w>"
+  local function _tmap_wincmd(lhs, rhs, opts) vim.keymap.set("t", wincmd_key .. lhs, rhs, opts) end
+
+  local mode_wincmd = false
+  local original_timeout = vim.o.timeout
+  local function leave_wincmd()
+    vim.o.timeout = original_timeout
+    mode_wincmd = false
+  end
+
+  -- map <C-w>
+  _tmap_wincmd("", function()
+    if mode_wincmd then
+      leave_wincmd()
+      return
+    end
+    original_timeout = vim.o.timeout
+    vim.o.timeout = false
+    mode_wincmd = true
+    -- re-input <C-w> (with notimeout)
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(wincmd_key, true, true, true), "", false)
+  end)
+
+  for _, lhs in ipairs({
+    "h",
+    "j",
+    "k",
+    "l",
+    "H",
+    "J",
+    "K",
+    "L",
+    "w",
+    "v",
+    "s",
+    "o",
+    "q",
+    "+",
+    "-",
+    "<",
+    ">",
+    "=",
+  }) do
+    local cmd = lhs
+    local rhs = function()
+      vim.cmd.wincmd(cmd)
+      leave_wincmd()
+    end
+    _tmap_wincmd(lhs, rhs)
+    if string.match(lhs, "[a-z]") then
+      lhs = string.format("<C-%s>", lhs)
+      _tmap_wincmd(lhs, rhs)
+    elseif string.match(lhs, "[A-Z]") then
+      lhs = string.format("<CS-%s>", lhs)
+      _tmap_wincmd(lhs, rhs)
+    end
+  end
+  _tmap_wincmd(":", [[<C-\><C-o>:]])
+  mega.tmap("<esc>", [[<C-\><C-n>]])
+  mega.nmap("q", function()
+    api.nvim_buf_delete(term_buf_id, { force = true })
+    term_buf_id = nil_id
+    vim.cmd("wincmd p")
+  end, keymap_opts)
 end
 
 local function create_term(opts)
@@ -344,7 +412,12 @@ local function create_win(opts)
   api.nvim_win_set_buf(term_win_id, term_buf_id)
 end
 
-local function on_open()
+local term_mode_var = "__terminal_mode"
+local function set_mode(buf, mode) vim.b[buf][term_mode_var] = mode end
+
+local function get_mode(buf) return vim.b[buf][term_mode_var] end
+
+local function __enter(_opts)
   set_term_opts()
   if vim.tbl_contains({ "vertical", "horizontal", "tab" }, term.direction) then
     set_win_hls()
@@ -358,8 +431,10 @@ local function on_open()
     vim.wo[term_win_id].winblend = 0
   end
   if vim.tbl_contains({ "vertical", "horizontal" }, term.direction) then set_win_size() end
-  set_keymaps()
-  -- set_autocommands()
+
+  -- set_keymaps()
+  set_terminal_keymaps()
+  set_mode(term_buf_id, "t")
 
   -- custom on_open
   if term.on_open ~= nil and term(term.on_open) == "function" then
@@ -367,7 +442,7 @@ local function on_open()
   else
     -- default_on_open
     vim.api.nvim_command([[normal! G]])
-    if term.start_insert then vim.cmd("startinsert") end
+    if term.start_insert then vim.cmd.startinsert() end
   end
 
   -- set some useful term-derived vars
@@ -384,34 +459,10 @@ local function new_term(opts)
 
   create_win(opts)
   create_term(opts)
-  on_open()
+  -- on_open(opts)
 
   -- we only want new tab terms each time
   if opts.direction == "tab" then unset_term(false) end
-end
-
-local function open_term(opts)
-  if opts.direction == "float" then
-    opts.split(opts.size, term_buf_id)
-  elseif opts.direction == "tab" then
-    api.nvim_command(fmt("%s%s", term_tab_id, opts.split))
-    term_win_id = nil
-  else
-    api.nvim_command(
-      fmt(
-        "%s %s | wincmd %s | lua vim.api.nvim_win_set_%s(%s, %s)",
-        opts.split,
-        term_buf_id,
-        opts.winc,
-        opts.dimension,
-        is_valid_window(term_win_id) and term_win_id or 0,
-        opts.size
-      )
-    )
-  end
-
-  on_open()
-  -- term_win_id = api.nvim_get_current_win()
 end
 
 local function build_defaults(opts)
@@ -426,12 +477,7 @@ end
 
 local function new_or_open_term(opts)
   opts = build_defaults(opts)
-  if fn.bufexists(term_buf_id) ~= 1 or opts.direction == "tab" or opts.temp then
-    new_term(opts)
-  elseif fn.win_gotoid(term_win_id) ~= 1 then
-    open_term(opts)
-  end
-
+  new_term(opts)
   if not opts.focus_on_open then vim.cmd("wincmd p") end
 end
 
@@ -440,11 +486,6 @@ local function hide_term(is_moving)
     api.nvim_command("hide")
     if not is_moving then vim.cmd([[wincmd p]]) end
   end
-end
-
-local function move_term(opts)
-  hide_term(true)
-  vim.cmd(fmt("T direction=%s", opts.direction))
 end
 
 --- Toggles open, or hides a custom terminal
@@ -467,131 +508,45 @@ function mega.term.toggle(args)
     if parsed_opts.size then parsed_opts.size = tonumber(parsed_opts.size) end
   end
 
-  if fn.win_gotoid(term_win_id) == 1 and parsed_opts.direction ~= "tab" then
-    if parsed_opts.direction and parsed_opts.direction ~= term.direction and parsed_opts.move_on_direction_change then
-      move_term(parsed_opts)
-    else
-      hide_term()
-    end
-  else
-    new_or_open_term(parsed_opts)
-  end
-end
-mega.term.open = new_or_open_term
-
----@param mode "visual" | "motion"
----@return table
-local function get_line_selection(mode)
-  local start_char, end_char = unpack(({
-    visual = { "'<", "'>" },
-    motion = { "'[", "']" },
-  })[mode])
-
-  -- Get the start and the end of the selection
-  local start_line, start_col = unpack(fn.getpos(start_char), 2, 3)
-  local end_line, end_col = unpack(fn.getpos(end_char), 2, 3)
-  local selected_lines = api.nvim_buf_get_lines(0, start_line - 1, end_line, false)
-  return {
-    start_pos = { start_line, start_col },
-    end_pos = { end_line, end_col },
-    selected_lines = selected_lines,
-  }
-end
-
-local function get_visual_selection(res)
-  local mode = fn.visualmode()
-  -- line-visual
-  -- return lines encompassed by the selection; already in res object
-  if mode == "V" then return res.selected_lines end
-
-  if mode == "v" then
-    -- regular-visual
-    -- return the buffer text encompassed by the selection
-    local start_line, start_col = unpack(res.start_pos)
-    local end_line, end_col = unpack(res.end_pos)
-    -- exclude the last char in text if "selection" is set to "exclusive"
-    if vim.opt.selection:get() == "exclusive" then end_col = end_col - 1 end
-    return api.nvim_buf_get_text(0, start_line - 1, start_col - 1, end_line - 1, end_col, {})
-  end
-
-  -- block-visual
-  -- return the lines encompassed by the selection, each truncated by the start and end columns
-  if mode == "\x16" then
-    local _, start_col = unpack(res.start_pos)
-    local _, end_col = unpack(res.end_pos)
-    -- exclude the last col of the block if "selection" is set to "exclusive"
-    if vim.opt.selection:get() == "exclusive" then end_col = end_col - 1 end
-    -- exchange start and end columns for proper substring indexing if needed
-    -- e.g. instead of str:sub(10, 5), do str:sub(5, 10)
-    if start_col > end_col then
-      start_col, end_col = end_col, start_col
-    end
-    -- iterate over lines, truncating each one
-    return vim.tbl_map(function(line) return line:sub(start_col, end_col) end, res.selected_lines)
-  end
-end
-
---- @param selection_type string
---- @param trim_spaces boolean
---- @param cmd_data table<string, any>
-local function send_lines_to_terminal(selection_type, trim_spaces, cmd_data)
-  if term.job_id == nil then return end
-
-  local id = tonumber(cmd_data.args) or 1
-  trim_spaces = trim_spaces == nil or trim_spaces
-
-  vim.validate({
-    selection_type = { selection_type, "string", true },
-    trim_spaces = { trim_spaces, "boolean", true },
-    terminal_id = { id, "number", true },
-  })
-
-  local current_window = api.nvim_get_current_win() -- save current window
-
-  local lines = {}
-  -- Beginning of the selection: line number, column number
-  local start_line, start_col
-  if selection_type == "single_line" then
-    start_line, start_col = unpack(api.nvim_win_get_cursor(0))
-    table.insert(lines, fn.getline(start_line))
-  elseif selection_type == "visual_lines" then
-    local res = get_line_selection("visual")
-    start_line, start_col = unpack(res.start_pos)
-    lines = res.selected_lines
-  elseif selection_type == "visual_selection" then
-    local res = get_line_selection("visual")
-    start_line, start_col = unpack(res.start_pos)
-    lines = get_visual_selection(res)
-  end
-
-  if not lines or not next(lines) then return end
-
-  for _, line in ipairs(lines) do
-    local l = trim_spaces and line:gsub("^%s+", ""):gsub("%s+$", "") or line
-    vim.fn.chansend(term.job_id, l)
-  end
-
-  -- Jump back with the cursor where we were at the beginning of the selection
-  api.nvim_set_current_win(current_window)
-  api.nvim_win_set_cursor(current_window, { start_line, start_col })
+  new_or_open_term(parsed_opts)
 end
 
 -- [COMMANDS] ------------------------------------------------------------------
+
 mega.command("T", function(opts) mega.term.toggle(opts.args) end, { nargs = "*" })
-mega.command("TSendCurrentLine", function(args) send_lines_to_terminal("single_line", true, args) end, { nargs = "?" })
-mega.command(
-  "TSendVisualLines",
-  function(args) send_lines_to_terminal("visual_lines", true, args) end,
-  { range = true, nargs = "?" }
-)
-mega.command(
-  "TSendVisualSelection",
-  function(args) send_lines_to_terminal("visual_selection", true, args) end,
-  { range = true, nargs = "?" }
-)
 
 -- [KEYMAPS] ------------------------------------------------------------------
+
 nnoremap("<leader>tt", "<cmd>T direction=horizontal move_on_direction_change=true<cr>", "term")
 nnoremap("<leader>tf", "<cmd>T direction=float move_on_direction_change=true<cr>", "term (float)")
 nnoremap("<leader>tv", "<cmd>T direction=vertical move_on_direction_change=true<cr>", "term (vertical)")
 nnoremap("<leader>tp", "<cmd>T direction=tab<cr>", "term (tab-persistent)")
+
+mega.augroup("megaterm", {
+  {
+    event = {
+      "TermOpen",
+      -- "TermClose",
+      -- "TermEnter",
+      -- "TermLeave",
+      -- "BufEnter",
+      -- "BufLeave",
+      -- "BufDelete",
+    },
+    pattern = "term://*",
+    command = function(params)
+      __enter()
+      -- set_terminal_keymaps()
+      -- dd(vim.inspect(params))
+    end,
+  },
+})
+-- }, {
+--   group = tmp_group,
+--   pattern = "term://*",
+--   callback = vim.schedule_wrap(function(args)
+--     local new_buf = vim.api.nvim_get_current_buf()
+--     M.log(string.format('%-11s (%d) -> %d', args.event, args.buf, new_buf))
+--     vim.cmd.checktime()
+--   end)
+-- })

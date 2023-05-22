@@ -1,3 +1,5 @@
+if true then return {} end
+
 local M = {
   "tpope/vim-projectionist",
   event = { "BufReadPost", "BufNewFile" },

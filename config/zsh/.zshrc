@@ -52,9 +52,5 @@ zsh_add_file "lib/rtx.zsh"
 [[ -f ~/.fzf.zsh ]] && source ~/.fzf.zsh
 zsh_add_file "lib/fzf.zsh"
 
-# export FPATH="/opt/homebrew/share/zsh/site-functions${FPATH+:$FPATH}";
-# export FPATH="${FPATH#/usr/share/zsh/5.8.1/site-functions:}"
-# export FPATH="${FPATH#/usr/share/zsh/5.8.1/functions:}"
-
 # zprof # -> bottom of .zshrc
 # vim:ft=zsh:foldenable:foldmethod=marker:ts=2:sts=2:sw=2

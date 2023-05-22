@@ -149,17 +149,32 @@ _G.__winbar = M
 --   },
 -- })
 --
-function __get_winbar()
-  local bufnr = vim.api.nvim_get_current_buf()
-  if vim.bo[bufnr].buftype == "terminal" then
-    return table.concat({
-      "terminal",
-      -- string.match(vim.fn.expand('%'), '//%d+:(%S+)$'),
-      "%=",
-      string.format("[%d/%d]", vim.b[bufnr].terminal_index or -1, vim.g.terminal_count or -1),
-    })
+local function hl(group, text) return "%#" .. group .. "#" .. text .. "%*" end
+
+function __get_navic()
+  local navic = require("nvim-navic")
+  local loc = navic.get_location()
+  if loc and #loc > 0 then
+    return fmt("   %%#NavicSeparator#> %s  ", navic.get_location())
+  else
+    return ""
   end
-  return "%f %h%w%m%r %=%(%l,%c%V %= %P%)"
 end
 
-vim.o.winbar = "%{%v:lua.__get_winbar()%}"
+function __get_winbar()
+  -- local bufnr = vim.api.nvim_get_current_buf()
+  -- if vim.bo[bufnr].buftype == "terminal" then
+  --   return table.concat({
+  --     "terminal",
+  --     -- string.match(vim.fn.expand('%'), '//%d+:(%S+)$'),
+  --     "%=",
+  --     string.format("[%d/%d]", vim.b[bufnr].terminal_index or -1, vim.g.terminal_count or -1),
+  --   })
+  -- end
+  -- return "%f %h%w%m%r %=%(%l,%c%V %= %P%)"
+  -- ﬿  
+  -- return [[  %m %t %{%v:lua.__get_navic()%}]]
+  return [[%{%v:lua.__get_navic()%}]]
+end
+
+vim.o.winbar = hl("TabFill", "%{%v:lua.__get_winbar()%}")

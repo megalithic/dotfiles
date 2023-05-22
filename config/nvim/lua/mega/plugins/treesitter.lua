@@ -29,7 +29,7 @@ return {
       require("treesitter-context").setup({
         separator = { "▁", "TreesitterContextBorder" }, -- alts: ▁ ─ ▄─▁
         mode = "cursor",
-        max_lines = 4, -- How many lines the window should span. Values <= 0 mean no limit.
+        max_lines = 1, -- How many lines the window should span. Values <= 0 mean no limit.
         trim_scope = "outer",
       })
     end,
@@ -71,6 +71,14 @@ return {
       "David-Kunz/treesitter-unit",
     },
     config = function()
+      local disable_max_size = 2000000 -- 2MB
+
+      local function should_disable(lang, bufnr)
+        local size = vim.fn.getfsize(vim.api.nvim_buf_get_name(bufnr or 0))
+        -- size will be -2 if it doesn't fit into a number
+        if size > disable_max_size or size == -2 then return true end
+        return false
+      end
       -- for apple silicon
       require("nvim-treesitter.install").compilers = { "gcc-13" }
 
@@ -141,7 +149,9 @@ return {
         },
         highlight = {
           enable = vim.g.vscode ~= 1,
-          disable = function(lang, bufnr) return mega.should_disable_ts({ lang = lang, bufnr = bufnr }) end,
+          -- disable = function(lang, bufnr) return mega.should_disable_ts({ lang = lang, bufnr = bufnr }) end,
+          disable = should_disable,
+
           use_languagetree = true,
           -- Setting this to true will run `:h syntax` and tree-sitter at the same time.
           -- Set this to `true` if you depend on 'syntax' being enabled (like for indentation).
@@ -157,7 +167,16 @@ return {
             "zsh",
           },
         },
-        indent = { enable = true },
+        indent = {
+          enable = true,
+          disable = function(lang, bufnr)
+            if lang == "lua" then -- or lang == "python" then
+              return true
+            else
+              return should_disable(lang, bufnr)
+            end
+          end,
+        },
         autotag = {
           enable = true,
           filetypes = {
@@ -224,7 +243,7 @@ return {
             ["eruby.yaml"] = "# %s",
           },
         },
-        matchup = { enable = true, include_match_words = true },
+        matchup = { enable = true, include_match_words = true, disable = should_disable },
         -- rainbow = {
         --   enable = true,
         --   disable = false,

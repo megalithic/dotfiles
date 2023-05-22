@@ -361,13 +361,12 @@ local function setup_diagnostics()
         "BufWritePre",
         "BufWritePost",
       },
-      -- title = { { "  ", "DiagnosticFloatTitleIcon" }, { "Problems  ", "DiagnosticFloatTitle" } },
       scope = "cursor",
       header = { " Diagnostics:", "DiagnosticHeader" },
-      ---@diagnostic disable-next-line: unused-local
-      prefix = function(diag, i, total)
+      prefix = function(diag, i, _total)
         local level = diagnostic.severity[diag.severity]
-        local prefix = fmt("%d. %s ", i, mega.icons.lsp[level:lower()])
+        local prefix = fmt("%d. ", i)
+        -- local prefix = fmt("%d. %s ", i, mega.icons.lsp[level:lower()])
         return prefix, "Diagnostic" .. level:gsub("^%l", string.upper)
       end,
     },

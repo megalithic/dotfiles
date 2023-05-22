@@ -3,6 +3,9 @@ local border = mega.get_border()
 local fn = vim.fn
 local border, L = mega.get_border(), vim.log.levels
 
+-- REF:
+-- https://github.com/willothy/nvim-config/blob/main/lua/plugins/noice.lua
+-- https://github.com/Oliver-Leete/Configs/blob/master/nvim/lua/user/noice.lua
 return {
   "folke/noice.nvim",
   event = "VeryLazy",

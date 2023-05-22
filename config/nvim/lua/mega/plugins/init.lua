@@ -123,6 +123,36 @@ return {
         config = function() require("output_panel").setup() end,
       },
       {
+        "mhanberg/control-panel.nvim",
+        config = function()
+          local cp = require("control_panel")
+          cp.register({
+            id = "output-panel",
+            title = "Output Panel",
+          })
+
+          local handler = vim.lsp.handlers["window/logMessage"]
+
+          vim.lsp.handlers["window/logMessage"] = function(err, result, context)
+            handler(err, result, context)
+            if not err then
+              local client_id = context.client_id
+              local client = vim.lsp.get_client_by_id(client_id)
+
+              if not cp.panel("output-panel"):has_tab(client.name) then
+                cp.panel("output-panel")
+                  :tab({ name = client.name, key = tostring(#cp.panel("output-panel"):tabs() + 1) })
+              end
+
+              cp.panel("output-panel"):append({
+                tab = client.name,
+                text = "[" .. vim.lsp.protocol.MessageType[result.type] .. "] " .. result.message,
+              })
+            end
+          end
+        end,
+      },
+      {
         "elixir-tools/elixir-tools.nvim",
         ft = { "elixir", "eex", "heex", "surface" },
         config = function()
@@ -130,6 +160,7 @@ return {
           local elixirls = require("elixir.elixirls")
 
           elixir.setup({
+            credo = {},
             elixirls = {
               -- cmd = fmt("%s/lsp/elixir-ls/%s", vim.env.XDG_DATA_HOME, "language_server.sh"),
               settings = elixirls.settings({
@@ -142,15 +173,31 @@ return {
               }),
               log_level = vim.lsp.protocol.MessageType.Log,
               message_level = vim.lsp.protocol.MessageType.Log,
-              on_attach = function(client, bufnr)
-                vim.keymap.set("n", "<localleader>efp", ":ElixirFromPipe<cr>", { buffer = true, noremap = true })
-                vim.keymap.set("n", "<localleader>etp", ":ElixirToPipe<cr>", { buffer = true, noremap = true })
-                vim.keymap.set("v", "<localleader>eem", ":ElixirExpandMacro<cr>", { buffer = true, noremap = true })
+              on_attach = function(_client, _bufnr)
+                vim.keymap.set(
+                  "n",
+                  "<localleader>efp",
+                  ":ElixirFromPipe<cr>",
+                  { buffer = true, noremap = true, desc = "elixir: from pipe" }
+                )
+                vim.keymap.set(
+                  "n",
+                  "<localleader>etp",
+                  ":ElixirToPipe<cr>",
+                  { buffer = true, noremap = true, desc = "elixir: to pipe" }
+                )
+                vim.keymap.set(
+                  "v",
+                  "<localleader>eem",
+                  ":ElixirExpandMacro<cr>",
+                  { buffer = true, noremap = true, desc = "elixir: expand macro" }
+                )
               end,
             },
           })
         end,
         dependencies = {
+          { "tpope/vim-projectionist", lazy = false },
           "nvim-lua/plenary.nvim",
         },
       },
@@ -316,12 +363,18 @@ return {
     config = function()
       vim.g.matchup_surround_enabled = true
       vim.g.matchup_matchparen_deferred = true
+      vim.g.matchup_matchparen_nomode = "i"
+      vim.g.matchup_matchparen_deferred_show_delay = 400
+      vim.g.matchup_matchparen_deferred_hide_delay = 400
       vim.g.matchup_matchparen_offscreen = {
         method = "popup",
         -- fullwidth = true,
         highlight = "Normal",
         border = "none",
       }
+
+      vim.keymap.set({ "n", "x" }, "[[", "<plug>(matchup-[%)")
+      vim.keymap.set({ "n", "x" }, "]]", "<plug>(matchup-]%)")
     end,
   },
   {
@@ -533,6 +586,7 @@ return {
   { "chr4/nginx.vim", ft = "nginx" },
   { "fladson/vim-kitty", ft = "kitty" },
   { "SirJson/fzf-gitignore", config = function() vim.g.fzf_gitignore_no_maps = true end },
+  { "boltlessengineer/bufterm.nvim", config = true, cmd = { "BufTermEnter", "BufTermNext", "BufTermPrev" } },
   {
     "mrossinek/zen-mode.nvim",
     cmd = { "ZenMode" },
