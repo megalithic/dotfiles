@@ -353,12 +353,18 @@ local utils = {
 }
 
 local dock = {
-
   ["target"] = {
-    productID = 4675,
-    productName = "Audioengine HD3",
-    vendorID = 2578,
-    vendorName = "Audioengine",
+    -- home:
+    -- productID = 4675,
+    -- productName = "Audioengine HD3",
+    -- vendorID = 2578,
+    -- vendorName = "Audioengine",
+    --
+    -- silver spring:
+    productID = 25907,
+    productName = "CalDigit Thunderbolt 3 Audio",
+    vendorID = 8584,
+    vendorName = "CalDigit, Inc.",
   },
   ["keyboard"] = {
     productID = 24926,
@@ -371,16 +377,18 @@ local dock = {
     -- vendorName = "Profet",
   },
   ["docked"] = {
-    wifi = "off", -- wifi status
-    profile = "leeloo", -- Karabiner-Elements profile name
-    input = "Samson GoMic", -- microphone source
+    wifi = "on", -- wifi status
+    -- profile = "leeloo", -- Karabiner-Elements profile name
+    -- input = "Samson GoMic", -- microphone source
+    input = "R-Phonak hearing aid",
     -- https://github.com/dbalatero/dotfiles/blob/master/hammerspoon/headphones.lua
     output = "R-Phonak hearing aid", -- speaker source
   },
   ["undocked"] = {
     wifi = "on",
-    profile = "internal",
-    input = "MacBook Pro Microphone",
+    -- profile = "internal",
+    -- input = "MacBook Pro Microphone",
+    input = "R-Phonak hearing aid",
     output = "R-Phonak hearing aid",
   },
 }
