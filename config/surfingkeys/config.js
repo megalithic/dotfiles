@@ -68,23 +68,30 @@ Hints.characters = "qwertasdfgzxcvb";
 // Link Hints
 Hints.style(`
     font-family: 'JetBrains Mono';
-    font-size: 12px;
-    font-weight: normal;
+    font-size: 14px;
+    font-weight: bold;
     text-transform: lowercase;
     color: #E5E9F0 !important;
     background: #3B4252 !important;
     border: solid 1px #4C566A !important;
+    text-align: center;
+    padding: 5px;
+    line-height: 1;
   `);
 
 // Text Hints
 Hints.style(
   `
     font-family: 'JetBrains Mono';
-    font-size: 12px;
+    font-size: 14px;
+    font-weight: bold;
     text-transform: lowercase;
     color: #E5E9F0 !important;
     background: #6272a4 !important;
     border: solid 2px #4C566A !important;
+    text-align: center;
+    padding: 5px;
+    line-height: 1;
   `,
   "text"
 );

@@ -97,7 +97,7 @@ function M.config()
       },
     },
     filesystem = {
-      hijack_netrw_behavior = "open_current",
+      hijack_netrw_behavior = "disabled", -- "open_current",
       use_libuv_file_watcher = true,
       group_empty_dirs = true,
       follow_current_file = true,

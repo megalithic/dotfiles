@@ -232,8 +232,35 @@ return {
     },
   },
   {
+    "stevearc/oil.nvim",
+    cmd = { "Oil" },
+    lazy = false,
+    enabled = vim.g.explorer == "oil",
+    cond = vim.g.explorer == "oil",
+    opts = {},
+    keys = {
+      -- {
+      --   "<leader>ed",
+      --   function()
+      --     local buf = vim.api.nvim_buf_get_name(0)
+      --     -- vim.cmd([[vertical topleft split|vertical resize 60]])
+      --     vim.cmd([[vertical rightbelow split]])
+      --     require("dirbuf").open(buf)
+      --   end,
+      --   desc = "oil: toggle(vsplit)",
+      -- },
+      {
+        "<leader>ee",
+        function() require("oil").open() end,
+        desc = "oil: open",
+      },
+    },
+  },
+  {
     "megalithic/dirbuf.nvim",
     dev = true,
+    enabled = vim.g.explorer == "dirbuf",
+    cond = vim.g.explorer == "dirbuf",
     keys = {
       {
         "<leader>ed",

@@ -97,36 +97,36 @@ local function ivy(opts) return require("telescope.themes").get_ivy(get_border(o
 
 _G.picker = { telescope = { dropdown, ivy, get_border } }
 
-mega.augroup("Startup.Telescope", {
-  {
-    event = { "VimEnter" },
-    pattern = { "*" },
-    once = true,
-    command = function(args)
-      if not vim.g.started_by_firenvim then
-        -- Open file browser if argument is a folder
-        -- REF: https://github.com/protiumx/.dotfiles/blob/main/stow/nvim/.config/nvim/lua/config/telescope.lua#L50
-        local arg = vim.api.nvim_eval("argv(0)")
-        if arg and (vim.fn.isdirectory(arg) ~= 0 or arg == "") then
-          vim.defer_fn(
-            function()
-              ts.find_files(with_title(dropdown({
-                hidden = true,
-                no_ignore = false,
-                previewer = false,
-                prompt_title = "",
-                preview_title = "",
-                results_title = "",
-                layout_config = { prompt_position = "top" },
-              })))
-            end,
-            10
-          )
-        end
-      end
-    end,
-  },
-})
+-- mega.augroup("Startup.Telescope", {
+--   {
+--     event = { "VimEnter" },
+--     pattern = { "*" },
+--     once = true,
+--     command = function(args)
+--       if not vim.g.started_by_firenvim then
+--         -- Open file browser if argument is a folder
+--         -- REF: https://github.com/protiumx/.dotfiles/blob/main/stow/nvim/.config/nvim/lua/config/telescope.lua#L50
+--         local arg = vim.api.nvim_eval("argv(0)")
+--         if arg and (vim.fn.isdirectory(arg) ~= 0 or arg == "") then
+--           vim.defer_fn(
+--             function()
+--               ts.find_files(with_title(dropdown({
+--                 hidden = true,
+--                 no_ignore = false,
+--                 previewer = false,
+--                 prompt_title = "",
+--                 preview_title = "",
+--                 results_title = "",
+--                 layout_config = { prompt_position = "top" },
+--               })))
+--             end,
+--             10
+--           )
+--         end
+--       end
+--     end,
+--   },
+-- })
 
 -- Gets the root dir from either:
 -- * connected lsp

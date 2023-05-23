@@ -15,19 +15,6 @@ local api = vim.api
 local augroup = mega.augroup
 local contains = vim.tbl_contains
 
--- do
---   local function get_workspace_if_exists()
---     local ws = nil
---     local workspaces = require("workspaces").get()
---     local cwd = vim.fn.getcwd() .. "/"
---     for _, workspace in pairs(workspaces) do
---       if cwd == workspace.path then ws = workspace end
---     end
-
---     return ws
---   end
--- end
-
 augroup("Startup", {
   {
     event = { "VimEnter" },
@@ -40,55 +27,11 @@ augroup("Startup", {
             mega.resize_windows(args.buf)
             require("virt-column").refresh()
           end, 0)
-          -- elseif vim.fn.argc() == 0 then
-          --   require("mega.start").start()
         end
       end
     end,
   },
-  -- {
-  --   event = { "VimEnter" },
-  --   pattern = { "*" },
-  --   command = function(args)
-  --     vim.schedule_wrap(function()
-  --       local ws = get_workspace_if_exists()
-  --       if ws and type(ws) == "table" and args.file == "" then
-  --         P(ws.name)
-  --         require("workspaces").open(ws.name)
-  --       else
-  --         require("mega.start").start()
-  --       end
-  --     end, 0)
-  --   end,
-  -- },
 })
-
--- -- Skeletons (Templates)
--- -- REF:
--- -- - https://github.com/disrupted/dotfiles/blob/master/.config/nvim/plugin/skeletons.lua
--- -- - https://vimtricks.com/p/vim-file-templates/
--- -- - https://github.com/chrisgrieser/dotfiles/blob/main/.config/nvim/lua/options-and-autocmds.lua#L155-L177
--- augroup("Skeletons", {
---   {
---     event = { "BufNewFile" },
---     desc = "Load skeleton when creating new file",
---     command = function(args)
---       local skeletons = { "lua", "sh", "applescript", "js", "elixir", "ruby" }
---       local ft = vim.api.nvim_buf_get_option(args.buf, "filetype")
---       local ext = vim.fn.expand("%:e")
---
---       if vim.tbl_contains(skeletons, ft) then
---         if
---           pcall(vim.fn, { "filereadable", fmt("~/.config/nvim/templates/skeleton.%s", ext) })
---           -- and pcall(vim.cmd, (fmt("0r ~/.config/nvim/templates/skeleton.%s | normal! G", ext)))
---         then
---           vim.cmd(fmt("0r ~/.config/nvim/templates/skeleton.%s | normal! G", ext))
---           vim.notify(fmt("loaded skeleton for %s (%s)", ft, ext), vim.log.levels.INFO, { title = "mega" })
---         end
---       end
---     end,
---   },
--- })
 
 augroup("CheckOutsideTime", {
   -- automatically check for changed files outside vim

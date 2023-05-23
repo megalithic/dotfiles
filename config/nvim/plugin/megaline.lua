@@ -187,6 +187,7 @@ local plain_types = {
     "NeogitStatus",
     "dap-repl",
     "megaterm",
+    "oil",
   },
 
   buftypes = {
@@ -221,6 +222,7 @@ local exception_types = {
     undotree = "פּ",
     NvimTree = "פּ",
     dirbuf = "",
+    oil = "",
     ["neo-tree"] = "פּ",
     toggleterm = " ",
     megaterm = " ",
@@ -258,6 +260,12 @@ local exception_types = {
       -- local parts = vim.split(fname, " ")
       -- dd(parts)
       return seg(fmt("DirBuf %s", vim.fn.expand("%:p")))
+    end,
+    oil = function(fname, buf)
+      -- local shell = fnamemodify(vim.env.SHELL, ":t")
+      -- local parts = vim.split(fname, " ")
+      -- dd(parts)
+      return seg(fmt("Oil %s", vim.fn.expand("%:p")))
     end,
     toggleterm = function(_, buf)
       local shell = fnamemodify(vim.env.SHELL, ":t")

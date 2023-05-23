@@ -155,7 +155,7 @@ local excluded = {
 
 mega.augroup("MegaColumn", {
   {
-    event = { "BufEnter", "FileType", "WinEnter", "FocusGained" },
+    event = { "BufEnter", "FileType", "WinEnter", "FocusGained", "TermEnter", "TermOpen" },
     command = function(args)
       local buf = vim.bo[args.buf]
       if buf.bt ~= "" or vim.tbl_contains(excluded, buf.ft) then
@@ -166,7 +166,7 @@ mega.augroup("MegaColumn", {
     end,
   },
   {
-    event = { "BufLeave", "WinLeave" },
+    event = { "BufLeave", "WinLeave", "TermLeave", "TermClose" },
     command = function(args)
       local buf = vim.bo[args.buf]
       if buf.bt ~= "" or vim.tbl_contains(excluded, buf.ft) then
