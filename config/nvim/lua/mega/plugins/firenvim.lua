@@ -16,7 +16,7 @@ local M = {
       },
       localSettings = {
         [".*"] = {
-          cmdline = "firenvim", -- or neovim
+          cmdline = "neovim", -- or firenvim
           content = "text",
           priority = 0,
           selector = "textarea",
@@ -56,22 +56,16 @@ local M = {
           "BufEnter",
           "gitter.im_*.txt",
           [[setlocal filetype=markdown | nnoremap <leader><CR> write<CR>:call firenvim#press_keys("<Lt>CR>")<CR>ggdGa]],
-          --[[
-        normal! i
-        inoremap <CR> <Esc>:w<CR>:call firenvim#press_keys("<LT>CR>")<CR>ggdGa
-        inoremap <s-CR> <CR>
-        --]]
         },
       },
     }
 
     local timer = nil
-    local function throttle_write(delay)
-      local bufnr = vim.api.nvim_get_current_buf()
+    local function throttle_write(delay, bufnr)
       if timer then timer:close() end
       timer = vim.loop.new_timer()
       timer:start(
-        delay or 1000,
+        delay or 500,
         0,
         vim.schedule_wrap(function()
           timer:close()
@@ -84,6 +78,20 @@ local M = {
       )
     end
 
+    local function setup_write_autocmd(bufnr)
+      -- We wait to call this function until the firenvim buffer is loaded
+      local buf_group = vim.api.nvim_create_augroup("FireNvimWrite", {})
+      vim.api.nvim_create_autocmd({ "FocusLost", "TextChanged", "TextChangedI", "InsertLeave" }, {
+        buffer = bufnr,
+        group = buf_group,
+        nested = true,
+        callback = function(params)
+          local delay = vim.tbl_contains({ "FocusLost", "InsertLeave" }, params.event) and 10 or 500
+          throttle_write(delay, bufnr)
+        end,
+      })
+    end
+
     local function on_bufenter(evt)
       vim.api.nvim_set_option("guifont", "JetBrainsMono Nerd Font:h22")
       -- vim.opt.guifont = "JetBrainsMono_Nerd_Font_Mono:h22"
@@ -91,7 +99,7 @@ local M = {
 
       -- P(fmt("lines: %s, win_height: %s", vim.o.lines, vim.api.nvim_win_get_height(vim.api.nvim_get_current_win())))
 
-      local bufnr = evt.buf or 0
+      local bufnr = evt.buf or vim.api.nvim_get_current_buf() or 0
       local buf_lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, true)
       local buf_name = vim.api.nvim_buf_get_name(bufnr)
 
@@ -106,16 +114,7 @@ local M = {
       if vim.o.lines < 15 then vim.o.lines = 15 end
 
       -- We wait to call this function until the firenvim buffer is loaded
-      local buf_group = vim.api.nvim_create_augroup("FireNvimWrite", {})
-      vim.api.nvim_create_autocmd({ "FocusLost", "TextChanged", "TextChangedI", "InsertLeave" }, {
-        buffer = vim.api.nvim_get_current_buf(),
-        group = buf_group,
-        nested = true,
-        callback = function(params)
-          local delay = params.event == "FocusLost" and 10 or 1000
-          throttle_write(delay)
-        end,
-      })
+      setup_write_autocmd(bufnr)
     end
 
     local function on_uienter(evt)
@@ -176,17 +175,9 @@ local M = {
       -- disable cmp autocomplete
       require("cmp").setup.buffer({ enabled = false })
 
-      -- -- We wait to call this function until the firenvim buffer is loaded
-      -- local buf_group = vim.api.nvim_create_augroup("FireNvimWrite", {})
-      -- vim.api.nvim_create_autocmd({ "FocusLost", "TextChanged", "TextChangedI", "InsertLeave" }, {
-      --   buffer = vim.api.nvim_get_current_buf(),
-      --   group = buf_group,
-      --   nested = true,
-      --   callback = function(params)
-      --     local delay = params.event == "FocusLost" and 10 or 1000
-      --     throttle_write(delay)
-      --   end,
-      -- })
+      local bufnr = evt.buf or vim.api.nvim_get_current_buf() or 0
+
+      setup_write_autocmd(bufnr)
     end
 
     require("mega.globals").augroup("Firenvim", {
@@ -205,15 +196,15 @@ local M = {
         pattern = "github.com_*.txt",
         command = "set filetype=markdown",
       },
-      -- {
-      --   event = { "FocusLost", "TextChanged", "TextChangedI", "InsertLeave" },
-      --   buffer = vim.api.nvim_get_current_buf(),
-      --   nested = true,
-      --   callback = function(params)
-      --     local delay = params.event == "FocusLost" and 10 or 1000
-      --     throttle_write(delay)
-      --   end,
-      -- },
+      {
+        event = { "FocusLost", "TextChanged", "TextChangedI", "InsertLeave" },
+        buffer = vim.api.nvim_get_current_buf(),
+        nested = true,
+        command = function(params)
+          local delay = vim.tbl_contains({ "FocusLost", "InsertLeave" }, params.event) and 10 or 500
+          throttle_write(delay, params.buf)
+        end,
+      },
     })
   end,
 }
