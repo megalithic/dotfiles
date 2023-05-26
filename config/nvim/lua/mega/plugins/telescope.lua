@@ -173,10 +173,11 @@ local function multi(pb, verb, open_selection_under_cursor)
   local action_state = require("telescope.actions.state")
   local picker = action_state.get_current_picker(pb)
   local selections = picker:get_multi_selection()
+  local num_selections = #selections
 
   -- NOTE: optionally send to qf:
   -- https://github.com/olimorris/dotfiles/blob/main/.config/nvim/lua/Oli/plugins/telescope.lua#L103-L121
-  if open_selection_under_cursor or current_fn == nil or #selections == 0 then
+  if open_selection_under_cursor or current_fn == nil or num_selections == 0 then
     actions[select_action](pb)
   else
     if current_fn ~= nil then -- is it a file -> open it as well:
@@ -190,6 +191,13 @@ local function multi(pb, verb, open_selection_under_cursor)
       vim.cmd(string.format("%s %s", verb, p.path))
     end
   end
+
+  -- if num_selections > 1 then
+  --   actions.send_selected_to_qflist(pb)
+  --   actions.open_qflist()
+  -- else
+  --   actions.file_edit(pb)
+  -- end
 end
 
 local function file_extension_filter(prompt)

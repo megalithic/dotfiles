@@ -399,7 +399,7 @@ return {
       mods = "CMD|CTRL",
       action = act({
         QuickSelectArgs = {
-          label = "open url patterns",
+          label = "OPEN URL",
           patterns = {
             "https?://\\S+",
             "git://\\S+",
@@ -407,6 +407,8 @@ return {
             "ftp://\\S+",
             "file://\\S+",
             "mailto://\\S+",
+            [[h?t?t?p?s?:?/?/?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9]{1,6}\b[-a-zA-Z0-9@:%_\+.~#?&/=]*]],
+            [[h?t?t?p?:?/?/?localhost:?[0-9]*/?\b[-a-zA-Z0-9@:%_\+.~#?&/=]*]],
           },
           action = w.action_callback(function(window, pane)
             local url = window:get_selection_text_for_pane(pane)
@@ -420,7 +422,7 @@ return {
       key = "u",
       mods = "CMD|CTRL",
       action = act.QuickSelectArgs({
-        label = "copy url",
+        label = "COPY URL",
         patterns = {
           "https?://\\S+",
           "git://\\S+",
@@ -428,6 +430,43 @@ return {
           "ftp://\\S+",
           "file://\\S+",
           "mailto://\\S+",
+          [[h?t?t?p?s?:?/?/?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9]{1,6}\b[-a-zA-Z0-9@:%_\+.~#?&/=]*]],
+          [[h?t?t?p?:?/?/?localhost:?[0-9]*/?\b[-a-zA-Z0-9@:%_\+.~#?&/=]*]],
+        },
+      }),
+    },
+    {
+      key = "m",
+      mods = "CMD|CTRL",
+      action = act({
+        QuickSelectArgs = {
+          label = "COPY GOOGLE MEET ID",
+          patterns = {
+            "https?://meet.google.com/\\S+",
+          },
+          action = w.action_callback(function(window, pane)
+            local selection = window:get_selection_text_for_pane(pane)
+            local id = string.gsub(selection, "https?://meet.google.com/", "")
+            window:copy_to_clipboard(id, "ClipboardAndPrimarySelection")
+          end),
+        },
+      }),
+    },
+    {
+      key = "M",
+      mods = "CMD|CTRL",
+      action = act({
+        QuickSelectArgs = {
+          label = "OPEN AND COPY GOOGLE MEET ID",
+          patterns = {
+            "https?://meet.google.com/\\S+",
+          },
+          action = w.action_callback(function(window, pane)
+            local selection = window:get_selection_text_for_pane(pane)
+            local id = string.gsub(selection, "https?://meet.google.com/", "")
+            window:copy_to_clipboard(id, "ClipboardAndPrimarySelection")
+            w.open_with(selection)
+          end),
         },
       }),
     },
@@ -435,7 +474,7 @@ return {
       key = "c",
       mods = "CMD|CTRL",
       action = act.QuickSelectArgs({
-        label = "copy command line",
+        label = "COPY CMDLINE",
         patterns = {
           "❯ [^│↲]+[^[:space:]│↲]",
           "sudo [^│↲]+[^[:space:]│↲]",
@@ -479,7 +518,7 @@ return {
       key = "i",
       mods = "CMD|CTRL",
       action = act.QuickSelectArgs({
-        label = "copy ip",
+        label = "COPY IP",
         patterns = {
           "[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+",
           "[0-9a-fA-F]{0,4}:[0-9a-fA-F]{0,4}:[0-9a-fA-F]{0,4}:[0-9a-fA-F]{0,4}\z
@@ -489,14 +528,14 @@ return {
     },
 
     { key = "p", mods = "CMD|CTRL", action = act.QuickSelect }, -- select path
-    { key = "l", mods = "CMD|CTRL", action = act.QuickSelectArgs({ patterns = { "^.+$" } }) }, -- select line
+    { key = "l", mods = "CMD|CTRL", action = act.QuickSelectArgs({ label = "COPY LINE", patterns = { "^.+$" } }) },
     {
       key = "s",
       mods = "CMD|CTRL",
-      action = act.QuickSelectArgs({ label = "copy sha1", patterns = { "[0-9a-f]{7,40}" } }),
-    }, -- select sha1
+      action = act.QuickSelectArgs({ label = "COPY SHA1", patterns = { "[0-9a-f]{7,40}" } }),
+    },
     -- { key = "s", mods = "CMD|CTRL", action = act.Search({ Regex = "" }) }, -- search mode
-    -- { key = "G", mods = "CMD|CTRL", action = act.ActivateCopyMode }, -- copy mode
+    -- { key = "g", mods = "CMD|CTRL", action = act.ActivateCopyMode }, -- copy mode
     -- move between split panes
     -- split_nav("move", "h"),
     -- split_nav("move", "j"),
