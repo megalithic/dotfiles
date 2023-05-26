@@ -337,10 +337,10 @@ git_status() {
     local INDEX git_status=""
 
     GIT_STATUS_ADDED=$(write 'green' "$GIT_STAGED_ICON ")
-    GIT_STATUS_MODIFIED=$(write 'red' "$GIT_UNSTAGED_ICON ")
+    GIT_STATUS_MODIFIED=$(write '#db9c5e' "$GIT_UNSTAGED_ICON ")
     GIT_STATUS_UNTRACKED=$(write '009' "$GIT_UNTRACKED_ICON ")
     GIT_STATUS_RENAMED=$(write '208' "$GIT_RENAMED_ICON ")
-    GIT_STATUS_DELETED=$(write '161' "$GIT_DELETED_ICON ")
+    GIT_STATUS_DELETED=$(write 'red' "$GIT_DELETED_ICON ")
     GIT_STATUS_STASHED=$(write '003' "$GIT_STASHED_ICON ")
     GIT_STATUS_UNMERGED=$(write '016' "$GIT_CONFLICTED_ICON ")
     GIT_STATUS_AHEAD=$(write '012' "$GIT_AHEAD_ICON ")
