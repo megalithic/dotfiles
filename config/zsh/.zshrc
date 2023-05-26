@@ -27,10 +27,8 @@ zsh_add_file "lib/completion.zsh"
 zsh_add_file "lib/last_working_dir.zsh"
 
 # -- prompt
-autoload -U promptinit; promptinit # Enable prompt themes
-prompt megalithic                  # Set prompt
-# prompt nisi
-# prompt mega
+autoload -U promptinit && promptinit # Enable prompt themes
+prompt megalithic                    # Set prompt
 
 # -- scripts/libs/etc
 for file in $ZLIB/{nix,keybindings,opts,aliases,funcs,ssh,tmux,kitty,gpg}.zsh; do

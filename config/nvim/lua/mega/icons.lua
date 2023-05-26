@@ -179,6 +179,7 @@ return {
     bug = "", -- alts: 
     question = "",
     lock = "",
+    shaded_lock = "",
     circle = "",
     project = "",
     dashboard = "",
