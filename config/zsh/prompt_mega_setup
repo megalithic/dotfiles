@@ -30,7 +30,31 @@
 
 autoload -U colors && colors # Enable colors in prompt
 
-# -- [ ICONS ]------------------------------------------------------------------
+exists() {
+  command -v "$1" >/dev/null 2>&1
+}
+
+bold() {
+    echo -n "%B$1%b"
+}
+
+write() {
+    local color content bold
+    [[ -n "$1" ]] && color="%F{$1}" || color="%f"
+    [[ -n "$2" ]] && content="$2" || content=""
+
+    [[ -z "$2" ]] && content="$1"
+
+    echo -n "$color"
+    echo -n "$content"
+    echo -n "%{%b%f%}"
+}
+
+is_git() {
+    [[ $(command git rev-parse --is-inside-work-tree 2>/dev/null) == true ]]
+}
+
+# -- ICONS ---------------------------------------------------------------------
 prompt_icon=""           # alts:  ❯    ➜ 
 prompt_failure_icon=""   # alts: 
 placeholder_icon="…"
@@ -55,7 +79,7 @@ root_icon=""
 # ("λ" "ϟ" "▲" "∴" "→" "»" "৸" "◗")
 
 
-# -- [ VI_MODE ]----------------------------------------------------------------
+# -- VI-MODE -------------------------------------------------------------------
 # @see: https://thevaluable.dev/zsh-install-configure-mouseless/
 bindkey -e # enables vi mode, using -e = emacs
 export KEYTIMEOUT=1
@@ -133,7 +157,7 @@ cursor_mode() {
 
 cursor_mode
 
-# -- [ GIT ]--------------------------------------------------------------------
+# -- GIT -----------------------------------------------------------------------
 # vcs_info is a zsh native module for getting git info into your
 # prompt. It's not as fast as using git directly in some cases
 # but easy and well documented.
@@ -160,32 +184,23 @@ zstyle ':vcs_info:git+set-message:*' hooks git-untracked git-stash git-deleted g
 zstyle ':vcs_info:git*:*' actionformats '(%B%F{red}%b|%a%c%u%%b%f) '
 zstyle ':vcs_info:git:*' formats "%F{249}(%f%F{245}%{$__DOTS[ITALIC_ON]%}%b%{$__DOTS[ITALIC_OFF]%}%f%F{249})%f%c%u%m"
 
-__in_git() {
-  [[ $(git rev-parse --is-inside-work-tree 2> /dev/null) == "true" ]]
-}
-
-# on the output of the git command adds an indicator to the the vcs info
-# use --directory and --no-empty-directory to speed up command
-# https://stackoverflow.com/questions/11122410/fastest-way-to-get-git-status-in-bash
-function +vi-git-untracked() {
-  emulate -L zsh
-  if __in_git; then
-    if [[ -n $(git ls-files --directory --no-empty-directory --exclude-standard --others 2> /dev/null) ]]; then
-      hook_com[unstaged]+="%F{white} $git_untracked_icon%f"
-    fi
-  fi
-}
-
-function +vi-git-deleted() {
-  emulate -L zsh
-  if __in_git; then
-    if [[ -n $(git ls-files --deleted 2> /dev/null) ]]; then
-      hook_com[unstaged]+="%F{red} $git_deleted_icon%f"
-    fi
-  fi
-}
-
-# function +vi-git-renamed() {
+# __in_git() {
+#   [[ $(git rev-parse --is-inside-work-tree 2> /dev/null) == "true" ]]
+# }
+#
+# # on the output of the git command adds an indicator to the the vcs info
+# # use --directory and --no-empty-directory to speed up command
+# # https://stackoverflow.com/questions/11122410/fastest-way-to-get-git-status-in-bash
+# function +vi-git-untracked() {
+#   emulate -L zsh
+#   if __in_git; then
+#     if [[ -n $(git ls-files --directory --no-empty-directory --exclude-standard --others 2> /dev/null) ]]; then
+#       hook_com[unstaged]+="%F{white} $git_untracked_icon%f"
+#     fi
+#   fi
+# }
+#
+# function +vi-git-deleted() {
 #   emulate -L zsh
 #   if __in_git; then
 #     if [[ -n $(git ls-files --deleted 2> /dev/null) ]]; then
@@ -193,76 +208,199 @@ function +vi-git-deleted() {
 #     fi
 #   fi
 # }
+#
+# # function +vi-git-renamed() {
+# #   emulate -L zsh
+# #   if __in_git; then
+# #     if [[ -n $(git ls-files --deleted 2> /dev/null) ]]; then
+# #       hook_com[unstaged]+="%F{red} $git_deleted_icon%f"
+# #     fi
+# #   fi
+# # }
+#
+# function +vi-git-stash() {
+#   emulate -L zsh
+#   if __in_git; then
+#     if [[ -n $(git rev-list --walk-reflogs --count refs/stash 2> /dev/null) ]]; then
+#       hook_com[unstaged]+="%F{yellow} $git_stash_icon%f"
+#     fi
+#   fi
+# }
+# # git: Show +N/-N when your local branch is ahead-of or behind remote HEAD.
+# # Make sure you have added misc to your 'formats':  %m
+# # source: https://github.com/zsh-users/zsh/blob/545c42cdac25b73134a9577e3c0efa36d76b4091/Misc/vcs_info-examples#L180
+# function +vi-git-compare() {
+#   local ahead behind
+#   local -a gitstatus
+#
+#   # Exit early in case the worktree is on a detached HEAD
+#   git rev-parse ${hook_com[branch]}@{upstream} >/dev/null 2>&1 || return 0
+#
+#   # ----------------------------------------------------------------------------
+#   # graciously thieved from mr. nisi:
+#   # ----------------------------------------------------------------------------
+#   INDEX=$(command git status --porcelain -b 2>/dev/null)
+#   # Check whether branch is ahead
+#   local ahead=false
+#   if $(echo "$INDEX" | command grep '^## [^ ]\+ .*ahead' &> /dev/null); then
+#       ahead=true
+#   fi
+#
+#   # Check whether branch is behind
+#   local behind=false
+#   if $(echo "$INDEX" | command grep '^## [^ ]\+ .*behind' &> /dev/null); then
+#       behind=true
+#   fi
+#   # ----------------------------------------------------------------------------
+#   # original implementation:
+#   # ----------------------------------------------------------------------------
+#   # local -a ahead_and_behind=(
+#   #   $(git rev-list --left-right --count HEAD...${hook_com[branch]}@{upstream} 2>/dev/null)
+#   # )
+#   #
+#   # ahead=${ahead_and_behind[1]}
+#   # behind=${ahead_and_behind[2]}
+#   # ----------------------------------------------------------------------------
+#
+#   local ahead_symbol="%{$fg[red]%}$git_ahead_icon%{$reset_color%}${ahead}"
+#   local behind_symbol="%{$fg[cyan]%}$git_behind_icon%{$reset_color%}${behind}"
+#   (( $ahead )) && gitstatus+=( "${ahead_symbol}" )
+#   (( $behind )) && gitstatus+=( "${behind_symbol}" )
+#   hook_com[misc]+=" ${(j:/:)gitstatus}"
+# }
+#
+# ## git: Show remote branch name for remote-tracking branches
+# function +vi-git-remotebranch() {
+#   local remote
+#
+#   # Are we on a remote-tracking branch?
+#   remote=${$(git rev-parse --verify ${hook_com[branch]}@{upstream} \
+#     --symbolic-full-name 2>/dev/null)/refs\/remotes\/}
+#
+#   # The first test will show a tracking branch whenever there is one. The
+#   # second test, however, will only show the remote branch's name if it
+#   # differs from the local one.
+#   # if [[ -n ${remote} ]] ; then
+#   if [[ -n ${remote} && ${remote#*/} != ${hook_com[branch]} ]] ; then
+#     hook_com[branch]="${hook_com[branch]}→[${remote}]"
+#   fi
+# }
 
-function +vi-git-stash() {
-  emulate -L zsh
-  if __in_git; then
-    if [[ -n $(git rev-list --walk-reflogs --count refs/stash 2> /dev/null) ]]; then
-      hook_com[unstaged]+="%F{yellow} $git_stash_icon%f"
+GIT_STATUS_RESULT=""
+git_status_done() {
+    # $3 is the stdout of the git_status command
+    GIT_STATUS_RESULT="$3"
+    # RPROMPT="$3 $(suspended_jobs)"
+    zle reset-prompt
+}
+
+git_status() {
+    cd -q "$1"
+    is_git || return
+
+    vcs_info
+
+    local git_branch="$vcs_info_msg_0_"
+    git_branch="${git_branch#heads/}"
+    git_branch="${git_branch/.../}"
+
+    [[ -z "$git_branch" ]] && return
+
+    local INDEX git_status=""
+
+    GIT_SYMBOL=" "
+    GIT_STATUS_ADDED=$(write '002' ' ')
+    GIT_STATUS_MODIFIED=$(write '003' ' ')
+    GIT_STATUS_UNTRACKED=$(write '009' ' ')
+    GIT_STATUS_RENAMED=$(write '208' ' ')
+    GIT_STATUS_DELETED=$(write '161' '󰮉 ')
+    GIT_STATUS_STASHED=$(write '003' ' ')
+    GIT_STATUS_UNMERGED=$(write '016' '󰧁 ')
+    GIT_STATUS_AHEAD=$(write '012' ' ')
+    GIT_STATUS_BEHIND=$(write '011' ' ')
+    GIT_STATUS_DIVERGED=$(write '012' '󰧈 ')
+    GIT_STATUS_CLEAN=$(write '002' ' ')
+
+    INDEX=$(command git status --porcelain -b 2>/dev/null)
+
+    # Check for untracked files
+    if $(echo "$INDEX" | command grep -E '^\?\? ' &> /dev/null); then
+        git_status="$GIT_STATUS_UNTRACKED$git_status"
     fi
-  fi
+
+    # Check for staged files
+    if $(echo "$INDEX" | command grep '^A[ MDAU] ' &> /dev/null); then
+        git_status="$GIT_STATUS_ADDED$git_status"
+    elif $(echo "$INDEX" | command grep '^M[ MD] ' &> /dev/null); then
+        git_status="$GIT_STATUS_ADDED$git_status"
+    elif $(echo "$INDEX" | command grep '^UA' &> /dev/null); then
+        git_status="$GIT_STATUS_ADDED$git_status"
+    fi
+
+    # Check for modified files
+    if $(echo "$INDEX" | command grep '^[ MARC ]M ' &> /dev/null); then
+        git_status="$GIT_STATUS_MODIFIED$git_status"
+    fi
+
+    # Check for renamed files
+    if $(echo "$INDEX" | command grep '^R[ MD] ' &> /dev/null); then
+        git_status="$GIT_STATUS_RENAMED$git_status"
+    fi
+
+    # Check for deleted files
+    if $(echo "$INDEX" | command grep '^[MARCDU ]D ' &> /dev/null); then
+        git_status="$GIT_STATUS_DELETED$git_status"
+    elif $(echo "$INDEX" | command grep '^D[ UM] ' &> /dev/null); then
+        git_status="$GIT_STATUS_DELETED$git_status"
+    fi
+
+    # Check for stashes
+    if $(command git rev-parse --verify refs/stash >/dev/null 2>&1); then
+        git_status="$GIT_STATUS_STASHED$git_status"
+    fi
+
+    # Check for unmerged files
+    if $(echo "$INDEX" | command grep '^U[UDA] ' &> /dev/null); then
+        git_status="$GIT_STATUS_UNMERGED$git_status"
+    elif $(echo "$INDEX" | command grep '^AA ' &> /dev/null); then
+        git_status="$GIT_STATUS_UNMERGED$git_status"
+    elif $(echo "$INDEX" | command grep '^DD ' &> /dev/null); then
+        git_status="$GIT_STATUS_UNMERGED$git_status"
+    elif $(echo "$INDEX" | command grep '^[DA]U ' &> /dev/null); then
+        git_status="$GIT_STATUS_UNMERGED$git_status"
+    fi
+
+    # Check whether branch is ahead
+    local is_ahead=false
+    if $(echo "$INDEX" | command grep '^## [^ ]\+ .*ahead' &> /dev/null); then
+        is_ahead=true
+    fi
+
+    # Check whether branch is behind
+    local is_behind=false
+    if $(echo "$INDEX" | command grep '^## [^ ]\+ .*behind' &> /dev/null); then
+        is_behind=true
+    fi
+
+    # Check wheather branch has diverged
+    if [[ "$is_ahead" == true && "$is_behind" == true ]]; then
+        git_status="$GIT_STATUS_DIVERGED$git_status"
+    else
+        [[ "$is_ahead" == true ]] && git_status="$GIT_STATUS_AHEAD$git_status"
+        [[ "$is_behind" == true ]] && git_status="$GIT_STATUS_BEHIND$git_status"
+    fi
+
+    [[ -n "$git_status" ]] || git_status="$GIT_STATUS_CLEAN"
+
+    bold "$git_status"
+    write '241' "$git_branch"
 }
-# git: Show +N/-N when your local branch is ahead-of or behind remote HEAD.
-# Make sure you have added misc to your 'formats':  %m
-# source: https://github.com/zsh-users/zsh/blob/545c42cdac25b73134a9577e3c0efa36d76b4091/Misc/vcs_info-examples#L180
-function +vi-git-compare() {
-  local ahead behind
-  local -a gitstatus
 
-  # Exit early in case the worktree is on a detached HEAD
-  git rev-parse ${hook_com[branch]}@{upstream} >/dev/null 2>&1 || return 0
+async_init
+async_start_worker vcs_info
+async_register_callback vcs_info git_status_done
 
-  # ----------------------------------------------------------------------------
-  # graciously thieved from mr. nisi:
-  # ----------------------------------------------------------------------------
-  INDEX=$(command git status --porcelain -b 2>/dev/null)
-  # Check whether branch is ahead
-  local ahead=false
-  if $(echo "$INDEX" | command grep '^## [^ ]\+ .*ahead' &> /dev/null); then
-      ahead=true
-  fi
-
-  # Check whether branch is behind
-  local behind=false
-  if $(echo "$INDEX" | command grep '^## [^ ]\+ .*behind' &> /dev/null); then
-      behind=true
-  fi
-  # ----------------------------------------------------------------------------
-  # original implementation:
-  # ----------------------------------------------------------------------------
-  # local -a ahead_and_behind=(
-  #   $(git rev-list --left-right --count HEAD...${hook_com[branch]}@{upstream} 2>/dev/null)
-  # )
-  #
-  # ahead=${ahead_and_behind[1]}
-  # behind=${ahead_and_behind[2]}
-  # ----------------------------------------------------------------------------
-
-  local ahead_symbol="%{$fg[red]%}$git_ahead_icon%{$reset_color%}${ahead}"
-  local behind_symbol="%{$fg[cyan]%}$git_behind_icon%{$reset_color%}${behind}"
-  (( $ahead )) && gitstatus+=( "${ahead_symbol}" )
-  (( $behind )) && gitstatus+=( "${behind_symbol}" )
-  hook_com[misc]+=" ${(j:/:)gitstatus}"
-}
-
-## git: Show remote branch name for remote-tracking branches
-function +vi-git-remotebranch() {
-  local remote
-
-  # Are we on a remote-tracking branch?
-  remote=${$(git rev-parse --verify ${hook_com[branch]}@{upstream} \
-    --symbolic-full-name 2>/dev/null)/refs\/remotes\/}
-
-  # The first test will show a tracking branch whenever there is one. The
-  # second test, however, will only show the remote branch's name if it
-  # differs from the local one.
-  # if [[ -n ${remote} ]] ; then
-  if [[ -n ${remote} && ${remote#*/} != ${hook_com[branch]} ]] ; then
-    hook_com[branch]="${hook_com[branch]}→[${remote}]"
-  fi
-}
-
-# -- [ PROMPT ]-----------------------------------------------------------------
+# -- PROMPT --------------------------------------------------------------------
 setopt PROMPT_SUBST
 # %F...%f - - foreground color
 # toggle color based on success %F{%(?.green.red)}
@@ -369,7 +507,8 @@ function __prompt_eval() {
   local character="%(1j.%F{cyan}%j$background_job_icon%f.)%(?.${dots_prompt_icon}.${dots_prompt_failure_icon})"
   local bottom=$([[ -n "$vim_mode" ]] && echo "$(_prompt_nix_shell_loaded)$vim_mode" || echo "$(_prompt_nix_shell_loaded)$character")
   local newline=$'\n'
-  echo $newline$top$newline$bottom
+  print $newline$top$newline$bottom
+    async_job vcs_info git_status "$PWD"
 }
 # NOTE: VERY IMPORTANT: the type of quotes used matters greatly. Single quotes MUST be used for these variables
 export PROMPT='$(__prompt_eval)'
@@ -384,7 +523,7 @@ export PS1=$'%F{black}${(r:$COLUMNS::\u2500:)}'$PS1
 # REF: https://www.reddit.com/r/bash/comments/xcejrb/comment/io52img/?utm_source=share&utm_medium=web2x&context=3
 export PS4='${BASH_SOURCE[0]}:$LINENO '
 
-# -- [ EXECUTION TIME ]---------------------------------------------------------
+# -- EXECUTION TIME ------------------------------------------------------------
 # inspired by https://github.com/sindresorhus/pure/blob/81dd496eb380aa051494f93fd99322ec796ec4c2/pure.zsh#L47
 #
 # Turns seconds into human readable time.
@@ -426,7 +565,7 @@ __timings_precmd() {
   unset cmd_timestamp
 }
 
-# -- [ HOOKS ]------------------------------------------------------------------
+# -- HOOKS ---------------------------------------------------------------------
 autoload -Uz add-zsh-hook
 # Async prompt in Zsh
 # Rather than using zpty (a pseudo terminal) under the hood
@@ -502,10 +641,8 @@ add-zsh-hook chpwd
 
 add-zsh-hook chpwd () {
   _git_status_prompt="" # clear current vcs_info
-  chpwd_last_working_dir
   chpwd_recent_dirs
 }
-
 
 add-zsh-hook preexec () {
   __timings_preexec
