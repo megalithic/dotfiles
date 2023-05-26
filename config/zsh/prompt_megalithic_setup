@@ -288,7 +288,8 @@ zstyle ':vcs_info:*' enable git
 # zstyle ':vcs_info:*' use-simple true
 # zstyle ':vcs_info:git+set-message:*' hooks git-untracked git-stash git-deleted git-renamed git-compare git-remotebranch
 zstyle ':vcs_info:git*:*' actionformats '(%B%F{red}%b|%a%c%u%%b%f) '
-zstyle ':vcs_info:git:*' formats "%F{249}(%f%F{245}%{$__DOTS[ITALIC_ON]%}%b%{$__DOTS[ITALIC_OFF]%}%f%F{249})%f%c%u%m"
+zstyle ':vcs_info:git:*' formats "%F{249}(%f%F{245}%{$__DOTS[ITALIC_ON]%}%b%{$__DOTS[ITALIC_OFF]%}%f%F{249})%f"
+# zstyle ':vcs_info:git:*' formats "%F{249}(%f%F{245}%{$__DOTS[ITALIC_ON]%}%b%{$__DOTS[ITALIC_OFF]%}%f%F{249})%f%c%u%m"
 
 exists() {
   command -v "$1" >/dev/null 2>&1
@@ -419,8 +420,8 @@ git_status() {
 
     [[ -n "$git_status" ]] || git_status="$GIT_STATUS_CLEAN"
 
-    write 'blue' "$git_branch "
-    bold "$git_status"
+    write 'blue' "$git_branch"
+    bold " $git_status"
 }
 
 async_init
@@ -662,7 +663,7 @@ function TRAPWINCH () {
 add-zsh-hook precmd () {
   __timings_precmd
   __async_vcs_start # start async job to populate git info
-  async_job vcs_info git_status
+  async_job vcs_info git_status $PWD
 }
 
 autoload -Uz chpwd_recent_dirs cdr
