@@ -265,11 +265,6 @@ return {
       function() extensions("file_browser").file_browser(ivy({ path = vim.g.obsidian_vault_path })) end,
       desc = "browse: obsidian notes",
     },
-    {
-      "<leader>u",
-      function() extensions("undo").undo(ivy()) end,
-      desc = "undo",
-    },
   },
   config = function()
     mega.augroup("TelescopePreviews", {
@@ -396,33 +391,6 @@ return {
             },
           },
         },
-        undo = {
-          side_by_side = true,
-          use_delta = true,
-          layout_strategy = "flex",
-          layout_config = {
-            width = 0.8,
-            horizontal = {
-              mirror = false,
-              prompt_position = "top",
-              preview_cutoff = 120,
-              preview_width = 0.5,
-            },
-            vertical = {
-              mirror = false,
-              prompt_position = "top",
-              preview_cutoff = 120,
-              preview_width = 0.5,
-            },
-          },
-          mappings = {
-            i = {
-              ["<CR>"] = require("telescope-undo.actions").restore,
-              ["<C-a>"] = require("telescope-undo.actions").yank_additions,
-              ["<C-d>"] = require("telescope-undo.actions").yank_deletions,
-            },
-          },
-        },
       },
       pickers = {
         -- find_files = {
@@ -510,8 +478,5 @@ return {
     telescope.load_extension("zf-native")
     telescope.load_extension("smart_open")
     telescope.load_extension("egrepify")
-    telescope.load_extension("undo")
-
-    -- telescope.load_extension("noice")
   end,
 }

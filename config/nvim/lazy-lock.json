@@ -100,6 +100,7 @@
   "treesj": { "branch": "main", "commit": "b1e2976c2d7ba922371cc7f3ab08b75136c27231" },
   "trouble.nvim": { "branch": "main", "commit": "324c977cfeacb8498ca9ba1c74cc35bd18858a8d" },
   "typescript.nvim": { "branch": "main", "commit": "f66d4472606cb24615dfb7dbc6557e779d177624" },
+  "undotree": { "branch": "master", "commit": "485f01efde4e22cb1ce547b9e8c9238f36566f21" },
   "vim-abolish": { "branch": "master", "commit": "cb3dcb220262777082f63972298d57ef9e9455ec" },
   "vim-apathy": { "branch": "master", "commit": "27128a0f55189724c841843ba41cd33cf7186032" },
   "vim-bracketed-paste": { "branch": "master", "commit": "45411da73cc159e4fc2138d930553d247bbfbcdc" },

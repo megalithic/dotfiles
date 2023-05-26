@@ -54,7 +54,7 @@ return {
   { "lukas-reineke/virt-column.nvim", config = { char = "│" }, event = "VimEnter" },
   {
     "mbbill/undotree",
-    enabled = false,
+    -- enabled = false,
     cmd = "UndotreeToggle",
     keys = { { "<leader>u", "<Cmd>UndotreeToggle<CR>", desc = "undotree: toggle" } },
     config = function()
