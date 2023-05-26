@@ -9,7 +9,7 @@ return {
     warn = "󰔷", -- alts: 
     info = "", -- alts: 󰋼  ℹ 󰙎 
     hint = "", -- alts: 󰌶
-    ok = "",
+    ok = "✓", -- alts: ✓
     -- spinner_frames = { "▪", "■", "□", "▫" },
     -- spinner_frames = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" },
     -- TODO: evaluate
@@ -194,7 +194,7 @@ return {
     package = "",
     list = "",
     sign_in = "",
-    check = "",
+    check = "✓", -- alts: ✓
     fire = "",
     note = "",
     bookmark = "",
