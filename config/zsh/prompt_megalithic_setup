@@ -287,7 +287,7 @@ zstyle ':vcs_info:*' enable git
 # zstyle ':vcs_info:*' unstagedstr "%F{#db9c5e} $GIT_UNSTAGED_ICON%f"
 # zstyle ':vcs_info:*' use-simple true
 # zstyle ':vcs_info:git+set-message:*' hooks git-untracked git-stash git-deleted git-renamed git-compare git-remotebranch
-zstyle ':vcs_info:git*:*' actionformats '(%B%F{red}%b|%a%c%u%%b%f) '
+# zstyle ':vcs_info:git*:*' actionformats '(%B%F{red}%b|%a%c%u%%b%f) '
 zstyle ':vcs_info:git:*' formats "%F{249}(%f%F{245}%{$__DOTS[ITALIC_ON]%}%b%{$__DOTS[ITALIC_OFF]%}%f%F{249})%f"
 # zstyle ':vcs_info:git:*' formats "%F{249}(%f%F{245}%{$__DOTS[ITALIC_ON]%}%b%{$__DOTS[ITALIC_OFF]%}%f%F{249})%f%c%u%m"
 
@@ -339,14 +339,14 @@ git_status() {
 
     GIT_STATUS_ADDED=$(write 'green' "$GIT_STAGED_ICON ")
     GIT_STATUS_MODIFIED=$(write '#db9c5e' "$GIT_UNSTAGED_ICON ")
-    GIT_STATUS_UNTRACKED=$(write '009' "$GIT_UNTRACKED_ICON ")
+    GIT_STATUS_UNTRACKED=$(write '#ffffff' "$GIT_UNTRACKED_ICON ")
     GIT_STATUS_RENAMED=$(write '208' "$GIT_RENAMED_ICON ")
     GIT_STATUS_DELETED=$(write 'red' "$GIT_DELETED_ICON ")
-    GIT_STATUS_STASHED=$(write '003' "$GIT_STASHED_ICON ")
-    GIT_STATUS_UNMERGED=$(write '016' "$GIT_CONFLICTED_ICON ")
+    GIT_STATUS_STASHED=$(write '#aaaaaa' "$GIT_STASHED_ICON ")
+    GIT_STATUS_UNMERGED=$(write 'yellow' "$GIT_CONFLICTED_ICON ")
     GIT_STATUS_AHEAD=$(write '012' "$GIT_AHEAD_ICON ")
     GIT_STATUS_BEHIND=$(write '011' "$GIT_BEHIND_ICON ")
-    GIT_STATUS_DIVERGED=$(write '012' "$GIT_DIVERGED_ICON ")
+    GIT_STATUS_DIVERGED=$(write 'yellow' "$GIT_DIVERGED_ICON ")
     GIT_STATUS_CLEAN=$(write '002' "$GIT_CLEAN_ICON ")
 
     INDEX=$(command git status --porcelain -b 2>/dev/null)
@@ -547,7 +547,7 @@ export RPROMPT='%F{yellow}%{$__DOTS[ITALIC_ON]%}${cmd_exec_time}%{$__DOTS[ITALIC
 export SPROMPT="zsh: correct %F{red}'%R'%f to %F{blue}'%r'%f [%B%Uy%u%bes, %B%Un%u%bo, %B%Ue%u%bdit, %B%Ua%u%bbort]?"
 # Add a continuous line following every prompt
 # REF: https://superuser.com/a/846133
-export PS1=$'%F{black}${(r:$COLUMNS::\u2500:)}'$PS1
+# export PS1=$'%F{black}${(r:$COLUMNS::\u2500:)}'$PS1
 # To capturing errors arising from set -x in a script
 # REF: https://www.reddit.com/r/bash/comments/xcejrb/comment/io52img/?utm_source=share&utm_medium=web2x&context=3
 export PS4='${BASH_SOURCE[0]}:$LINENO '
@@ -662,7 +662,7 @@ function TRAPWINCH () {
 
 add-zsh-hook precmd () {
   __timings_precmd
-  __async_vcs_start # start async job to populate git info
+  # __async_vcs_start # start async job to populate git info
   async_job vcs_info git_status $PWD
 }
 

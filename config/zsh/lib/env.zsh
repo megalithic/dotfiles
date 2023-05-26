@@ -131,7 +131,8 @@ export GNUPGHOME="$XDG_CONFIG_HOME/gnupg"
 export LANG="en_US.UTF-8"
 export LC_ALL="en_US.UTF-8"
 export LC_CTYPE="en_US.UTF-8"
-export TZ="/usr/share/zoneinfo/US/Central"
+# export TZ="/usr/share/zoneinfo/US/Central"
+export TZ="/usr/share/zoneinfo/US/Eastern"
 
 # -- kitty
 export KITTYMUX_STATE_DIR=$HOME/.local/state

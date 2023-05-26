@@ -379,6 +379,7 @@ return {
     { key = "7", mods = "CTRL", action = act.SendString("\x00\x37") },
     { key = "8", mods = "CTRL", action = act.SendString("\x00\x38") },
     { key = "9", mods = "CTRL", action = act.SendString("\x00\x39") },
+    { key = "t", mods = "CMD", action = act.SendString("\x00\x63") },
     {
       key = "e",
       mods = "CMD|CTRL|SHIFT",
@@ -392,6 +393,7 @@ return {
     { key = "=", mods = "CMD", action = w.action.ResetFontSize },
     { key = "v", mods = "CMD", action = act.PasteFrom("Clipboard") },
     { key = "d", mods = "CMD|CTRL", action = act.ShowDebugOverlay },
+    { key = "n", mods = "CMD", action = act.SpawnTab("CurrentPaneDomain") },
     {
       key = "o",
       mods = "CMD|CTRL",
