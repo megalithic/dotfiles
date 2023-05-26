@@ -3,7 +3,7 @@ if true then return {} end
 local M = {
   "tpope/vim-projectionist",
   event = { "BufReadPost", "BufNewFile" },
-  ft = { "elixir", "javascript", "typescript" },
+  ft = { "elixir", "javascript", "typescript", "heex", "eelixir", "surface" },
 }
 
 function M.config()

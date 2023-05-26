@@ -65,14 +65,13 @@ local M = {
       if timer then timer:close() end
       timer = vim.loop.new_timer()
       timer:start(
-        delay or 500,
+        delay or 1000,
         0,
         vim.schedule_wrap(function()
           timer:close()
           timer = nil
           if vim.api.nvim_buf_get_option(bufnr, "modified") then
-            print("fixing to write because modified")
-            vim.api.nvim_buf_call(bufnr, function() vim.cmd("write") end)
+            vim.api.nvim_buf_call(bufnr, function() vim.cmd("silent! write") end)
           end
         end)
       )
@@ -86,7 +85,7 @@ local M = {
         group = buf_group,
         nested = true,
         callback = function(params)
-          local delay = vim.tbl_contains({ "FocusLost", "InsertLeave" }, params.event) and 10 or 500
+          local delay = vim.tbl_contains({ "FocusLost", "InsertLeave" }, params.event) and 10 or 1000
           throttle_write(delay, bufnr)
         end,
       })
@@ -201,7 +200,7 @@ local M = {
         buffer = vim.api.nvim_get_current_buf(),
         nested = true,
         command = function(params)
-          local delay = vim.tbl_contains({ "FocusLost", "InsertLeave" }, params.event) and 10 or 500
+          local delay = vim.tbl_contains({ "FocusLost", "InsertLeave" }, params.event) and 10 or 1000
           throttle_write(delay, params.buf)
         end,
       },

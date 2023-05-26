@@ -8,8 +8,9 @@ vim.g.enabled_plugin = {
   autocmds = true,
   megaline = true,
   megacolumn = true,
-  lsp = true,
   term = true,
+  megaterm = false,
+  lsp = true,
   repls = true,
   cursorline = true,
   colorcolumn = true,
@@ -18,7 +19,7 @@ vim.g.enabled_plugin = {
   quickfix = true,
   folds = true,
   env = true,
-  tmux = true,
+  tmux = false,
   dim = true,
   vscode = false,
   winbar = false,
@@ -37,10 +38,10 @@ vim.g.mapleader = ","
 vim.g.maplocalleader = " "
 vim.g.notifier_enabled = true
 vim.g.debug_enabled = false
-vim.g.picker = "telescope"
+vim.g.picker = "telescope" -- alt: telescope, fzf
 vim.g.tree = "neo-tree"
-vim.g.explorer = "oil"
-vim.g.tester = "neotest"
+vim.g.explorer = "oil" -- alt: dirbuf, oil
+vim.g.tester = "vim-test" -- alt: neotest, vim-test
 
 -- [ globals ] -----------------------------------------------------------------
 

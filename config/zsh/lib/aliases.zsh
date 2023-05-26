@@ -163,9 +163,10 @@ if type nvim >/dev/null 2>&1; then
   alias vim="NVIM_APPNAME=nvim nvim"
   alias folkevim="NVIM_APPNAME=folkevim nvim"
   alias akinvim="NVIM_APPNAME=akinvim nvim"
+  alias minvim="NVIM_APPNAME=minvim nvim"
   alias v=vim
   alias vi="/usr/local/bin/vim"
-  alias minvim="nvim -u NONE"
+  alias novim="nvim -u NONE"
   alias barevim="nvim -u NONE"
   alias ngit="nvim -c \":Neogit kind=replace\""
 
@@ -192,7 +193,7 @@ alias evo="nvim $DOTS/config/nvim/lua/mega/options.lua"
 alias evg="nvim $DOTS/config/nvim/lua/mega/globals.lua"
 alias evs="nvim $DOTS/config/nvim/lua/mega/servers.lua"
 alias evl="nvim $DOTS/config/nvim/plugin/lsp.lua"
-alias evm="nvim $DOTS/config/nvim/plugin/mappings.lua"
+alias evm="nvim $DOTS/config/nvim/lua/mega/mappings.lua"
 alias eva="nvim $DOTS/config/nvim/plugin/autocmds.lua"
 alias evt="nvim $DOTS/config/nvim/plugin/term.lua"
 

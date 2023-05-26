@@ -39,10 +39,51 @@ vim.keymap.set("n", "k", "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = tr
 vim.keymap.set("n", "j", "v:count == 0 ? 'gj' : 'j'", { expr = true, silent = true })
 
 -- go-to split (also, if in kitty, see nvim-kitty-navigator)
-nnoremap("<C-h>", "<cmd>wincmd h<CR>", "split: go left")
-nnoremap("<C-j>", "<cmd>wincmd j<CR>", "split: go down")
-nnoremap("<C-k>", "<cmd>wincmd k<CR>", "split: go up")
-nnoremap("<C-l>", "<cmd>wincmd l<CR>", "split: go right")
+-- nnoremap("<C-h>", "<cmd>wincmd h<CR>", "split: go left")
+-- nnoremap("<C-j>", "<cmd>wincmd j<CR>", "split: go down")
+-- nnoremap("<C-k>", "<cmd>wincmd k<CR>", "split: go up")
+-- nnoremap("<C-l>", "<cmd>wincmd l<CR>", "split: go right")
+
+-- mega.augroup("AddTerminalMappings", {
+--   event = { "TermOpen", "TermEnter" },
+--   pattern = { "term://*" },
+--   command = function()
+--     -- if vim.tbl_contains({ "", "toggleterm", "megaterm" }, vim.bo.filetype) then
+--     dd("terminal open -> mapping..")
+--     local opts = { silent = false, buffer = 0 }
+--     tnoremap("<esc>", [[<C-\><C-n>]], opts)
+--     tnoremap("<C-h>", "<C-\\><C-N><C-w>h", opts)
+--     tnoremap("<C-j>", "<C-\\><C-N><C-w>j", opts)
+--     tnoremap("<C-k>", "<C-\\><C-N><C-w>k", opts)
+--     tnoremap("<C-l>", "<C-\\><C-N><C-w>l", opts)
+--
+--     -- local opts = { silent = false, buffer = 0 }
+--     -- tmap("<esc>", [[<C-\><C-n>]], opts)
+--     -- tmap("jk", [[<C-\><C-n>]], opts)
+--     -- tmap("<C-h>", "<Cmd>wincmd h<CR>", opts)
+--     -- tmap("<C-j>", function() vim.cmd("wincmd j") end, opts)
+--     -- vim.keymap.set("t", "<C-k>", function()
+--     --   print("<C-k>'ing")
+--     --   vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes([[<C-\><C-n>]], true, false, true), "t", true)
+--     --   vim.cmd("wincmd k")
+--     -- end, opts)
+--     -- tnoremap("<C-l>", "<Cmd>wincmd l<CR>", opts)
+--     -- end
+--     -- if vim.bo.filetype == "" or vim.bo.filetype == "toggleterm" or vim.bo.filetype == "megaterm" then
+--     --   local opts = { silent = false, buffer = 0 }
+--     --   tnoremap("<esc>", [[<C-\><C-n>]], opts)
+--     --   tnoremap("jk", [[<C-\><C-n>]], opts)
+--     --   tnoremap("<C-h>", "<Cmd>wincmd h<CR>", opts)
+--     --   tnoremap("<C-j>", "<Cmd>wincmd j<CR>", opts)
+--     --   tnoremap("<C-k>", "<Cmd>wincmd k<CR>", opts)
+--     --   tnoremap("<C-l>", "<Cmd>wincmd l<CR>", opts)
+--     --   tnoremap("]t", "<Cmd>tablast<CR>")
+--     --   tnoremap("[t", "<Cmd>tabnext<CR>")
+--     --   tnoremap("<S-Tab>", "<Cmd>bprev<CR>")
+--     --   tnoremap("<leader><Tab>", "<Cmd>close \\| :bnext<cr>")
+--     -- end
+--   end,
+-- })
 
 -- jump to tab
 for i = 0, 9 do

@@ -97,36 +97,36 @@ local function ivy(opts) return require("telescope.themes").get_ivy(get_border(o
 
 _G.picker = { telescope = { dropdown, ivy, get_border } }
 
--- mega.augroup("Startup.Telescope", {
---   {
---     event = { "VimEnter" },
---     pattern = { "*" },
---     once = true,
---     command = function(args)
---       if not vim.g.started_by_firenvim then
---         -- Open file browser if argument is a folder
---         -- REF: https://github.com/protiumx/.dotfiles/blob/main/stow/nvim/.config/nvim/lua/config/telescope.lua#L50
---         local arg = vim.api.nvim_eval("argv(0)")
---         if arg and (vim.fn.isdirectory(arg) ~= 0 or arg == "") then
---           vim.defer_fn(
---             function()
---               ts.find_files(with_title(dropdown({
---                 hidden = true,
---                 no_ignore = false,
---                 previewer = false,
---                 prompt_title = "",
---                 preview_title = "",
---                 results_title = "",
---                 layout_config = { prompt_position = "top" },
---               })))
---             end,
---             10
---           )
---         end
---       end
---     end,
---   },
--- })
+mega.augroup("Startup.Telescope", {
+  {
+    event = { "VimEnter" },
+    pattern = { "*" },
+    once = true,
+    command = function(args)
+      if not vim.g.started_by_firenvim then
+        -- Open file browser if argument is a folder
+        -- REF: https://github.com/protiumx/.dotfiles/blob/main/stow/nvim/.config/nvim/lua/config/telescope.lua#L50
+        local arg = vim.api.nvim_eval("argv(0)")
+        if arg and (vim.fn.isdirectory(arg) ~= 0 or arg == "") then
+          vim.defer_fn(
+            function()
+              ts.find_files(with_title(dropdown({
+                hidden = true,
+                no_ignore = false,
+                previewer = false,
+                prompt_title = "",
+                preview_title = "",
+                results_title = "",
+                layout_config = { prompt_position = "top" },
+              })))
+            end,
+            10
+          )
+        end
+      end
+    end,
+  },
+})
 
 -- Gets the root dir from either:
 -- * connected lsp
@@ -304,20 +304,13 @@ return {
         -- buffer_previewer_maker = new_maker,
         -- preview = {
         --   mime_hook = function(filepath, bufnr, opts)
-        --     local split_path = vim.split(filepath:lower(), ".", { plain = true })
-        --     local extension = split_path[#split_path]
-        --     vim.fn.jobstart(
-        --       "echo \"ext:" .. extension .. "\" >> ~/tmp/out.log",
-        --       { on_stdout = send_output, stdout_buffered = true }
-        --     )
-        --
-        --     local is_image = function(fp)
-        --       local image_extensions = { "png", "jpg", "gif", "svg", "ico", "jpeg", "bmp", "webp" }
-        --       local split_path = vim.split(fp:lower(), ".", { plain = true })
+        --     print(vim.inspect(filepath))
+        --     local is_image = function(filepath)
+        --       local image_extensions = { "png", "jpg" } -- Supported image formats
+        --       local split_path = vim.split(filepath:lower(), ".", { plain = true })
         --       local extension = split_path[#split_path]
         --       return vim.tbl_contains(image_extensions, extension)
         --     end
-        --
         --     if is_image(filepath) then
         --       local term = vim.api.nvim_open_term(bufnr, {})
         --       local function send_output(_, data, _)
@@ -325,39 +318,14 @@ return {
         --           vim.api.nvim_chan_send(term, d .. "\r\n")
         --         end
         --       end
-        --       vim.fn.jobstart(
-        --         "echo \"convert " .. filepath .. " jpg:- | viu -\" >> ~/tmp/out.log",
-        --         { on_stdout = send_output, stdout_buffered = true }
-        --       )
+        --       vim.fn.jobstart({
+        --         "chafa",
+        --         filepath, -- Terminal image viewer command
+        --       }, { on_stdout = send_output, stdout_buffered = true, pty = true })
         --     else
         --       require("telescope.previewers.utils").set_preview_message(bufnr, opts.winid, "Binary cannot be previewed")
         --     end
         --   end,
-        --   -- mime_hook = function(filepath, bufnr, opts)
-        --   --   local is_image = function(fp)
-        --   --     local image_extensions = { "png", "jpg", "jpeg", "gif" } -- Supported image formats
-        --   --     local split_path = vim.split(fp:lower(), ".", { plain = true })
-        --   --     local extension = split_path[#split_path]
-        --   --     return vim.tbl_contains(image_extensions, extension)
-        --   --   end
-        --   --   if is_image(filepath) then
-        --   --     local term = vim.api.nvim_open_term(bufnr, {})
-        --   --     local function send_output(_, data, _)
-        --   --       for _, d in ipairs(data) do
-        --   --         vim.api.nvim_chan_send(term, d .. "\r\n")
-        --   --       end
-        --   --     end
-        --   --     vim.fn.jobstart({
-        --   --       "chafa",
-        --   --       filepath,
-        --   --     }, {
-        --   --       on_stdout = send_output,
-        --   --       stdout_buffered = true,
-        --   --     })
-        --   --   else
-        --   --     require("telescope.previewers.utils").set_preview_message(bufnr, opts.winid, "Binary cannot be previewed")
-        --   --   end
-        --   -- end,
         -- },
       },
       extensions = {
@@ -388,6 +356,18 @@ return {
         },
       },
       pickers = {
+        -- find_files = {
+        --   layout_strategy = "bottom_pane",
+        --   -- Since get_ivy didn't work. I just copy pasted the implementation
+        --   border = true,
+        --   borderchars = {
+        --     "z",
+        --     prompt = { "─", " ", " ", " ", "─", "─", " ", " " },
+        --     results = { " " },
+        --     -- results = { "a", "b", "c", "d", "e", "f", "g", "h" },
+        --     preview = { "─", "│", "─", "│", "╭", "╮", "╯", "╰" },
+        --   },
+        -- },
         find_files = {
           find_command = find_files_cmd,
           on_input_filter_cb = file_extension_filter,

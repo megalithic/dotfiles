@@ -1,3 +1,6 @@
+-- REF:
+-- https://www.instapaper.com/text?u=https%3A%2F%2Fvonheikemen.github.io%2Fdevlog%2Ftools%2Fusing-vim-abbreviations%2F
+
 local M = {}
 
 M.iabbrev = function(lhs, rhs, ft)

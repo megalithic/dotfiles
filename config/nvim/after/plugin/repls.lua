@@ -13,7 +13,7 @@ mega.command("TermElixir", function(args)
     cmd = "iex -S mix"
   end
 
-  mega.term.open({
+  mega.term({
     cmd = cmd,
     -- pre_cmd = pre_cmd,
     -- temp = true,
@@ -38,7 +38,7 @@ mega.command("TermRuby", function(args)
     cmd = "irb"
   end
 
-  mega.term.open({
+  mega.term({
     cmd = cmd,
     -- pre_cmd = pre_cmd,
     temp = true,
@@ -53,7 +53,7 @@ end, { bang = true })
 mega.command("TermLua", function()
   local cmd = "lua"
 
-  mega.term.open({
+  mega.term({
     cmd = cmd,
     direction = "horizontal",
     temp = true,
@@ -68,7 +68,7 @@ end)
 mega.command("TermPython", function()
   local cmd = "python"
 
-  mega.term.open({
+  mega.term({
     cmd = cmd,
     temp = true,
     ---@diagnostic disable-next-line: unused-local
@@ -83,7 +83,7 @@ mega.command("TermNode", function(args)
   local cmd = "node"
   if args.bang then cmd = fmt("node %s", vim.fn.expand("%")) end
 
-  mega.term.open({
+  mega.term({
     cmd = cmd,
     temp = true,
     ---@diagnostic disable-next-line: unused-local

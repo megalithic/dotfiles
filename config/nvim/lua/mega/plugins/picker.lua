@@ -269,7 +269,7 @@ return {
         },
         helptags = {
           prompt = prompt,
-          winopts = { title = title("Help", "") },
+          winopts = { title = title("Help", "󰋖") },
         },
         oldfiles = dropdown({
           cwd_only = true,
@@ -282,7 +282,8 @@ return {
           -- action = { ["ctrl-r"] = fzf.actions.arg_add },
         },
         buffers = dropdown({
-          winopts = { title = title("Buffers", "﬘") },
+          fzf_opts = { ["--delimiter"] = "' '", ["--with-nth"] = "-1.." },
+          winopts = { title = title("Buffers", "󰈙") },
         }),
         keymaps = dropdown({
           winopts = { title = title("Keymaps", ""), width = 0.7 },
@@ -292,7 +293,7 @@ return {
         }),
         grep = {
           prompt = " ",
-          winopts = { title = title("Grep", "") },
+          winopts = { title = title("Grep", "󰈭") },
           rg_opts = "--hidden --column --line-number --no-ignore-vcs --no-heading --color=always --smart-case -g '!.git'",
           rg_glob = true, -- enable glob parsing by default to all
           glob_flag = "--iglob", -- for case sensitive globs use '--glob'

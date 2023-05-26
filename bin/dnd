@@ -55,7 +55,8 @@ status() {
 
 status_kitty() {
   if [[ $(status) == "on" ]]; then
-    echo "\uf59f DND"
+    # echo "\uf59f DND"
+    echo "󰚎 DND"
   else
     echo ""
   fi

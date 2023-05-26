@@ -39,9 +39,9 @@ git_unstaged_icon="󰛄"     # alts: • ﯂ ●
 git_conflicted_icon=""   # alts: 
 git_stash_icon=""        # alts:   ≡
 # TODO: check for deleted: https://github.com/spaceship-prompt/spaceship-prompt/blob/master/sections/git_status.zsh#L66-L71
-git_deleted_icon=""
+git_deleted_icon=""
 git_diverged_icon="⇕"
-git_untracked_icon="?"    # alts: 
+git_untracked_icon="󱏘"    # alts: ?󰞋󰮦󰋖
 git_ahead_icon=""        # alts: ⇡
 git_behind_icon=""       # alts: ⇣
 git_renamed_icon=""

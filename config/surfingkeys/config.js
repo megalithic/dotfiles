@@ -67,8 +67,8 @@ Hints.characters = "qwertasdfgzxcvb";
 // Hints.characters = "asdfgyuiopqwertnmzxcvb";
 // Link Hints
 Hints.style(`
-    font-family: 'JetBrains Mono';
-    font-size: 14px;
+    font-family: 'JetBrainsMono Nerd Font Mono', 'SF Pro', monospace;
+    font-size: 15px;
     font-weight: bold;
     text-transform: lowercase;
     color: #E5E9F0 !important;
@@ -82,8 +82,8 @@ Hints.style(`
 // Text Hints
 Hints.style(
   `
-    font-family: 'JetBrains Mono';
-    font-size: 14px;
+    font-family: 'JetBrainsMono Nerd Font Mono', 'SF Pro', monospace;
+    font-size: 15px;
     font-weight: bold;
     text-transform: lowercase;
     color: #E5E9F0 !important;
@@ -392,7 +392,7 @@ addSearchAlias(
 // set theme
 settings.theme = `
   :root {
-    --font: "JetBrains Mono", Arial, sans-serif;
+    --font: "JetBrainsMono Nerd Font Mono", Arial, sans-serif;
     --font-size: 16px;
     --font-weight: bold;
     --fg: #E5E9F0;
@@ -456,6 +456,7 @@ settings.theme = `
     opacity: 0.2;
     color: var(--accent-fg);
   }
+
   /* ---------- Omnibar ---------- */
   /* Uncomment this and use settings.omnibarPosition = 'bottom' for Pentadactyl/Tridactyl style bottom bar */
   /* .sk_theme#sk_omnibar {
@@ -503,27 +504,38 @@ settings.theme = `
     margin: 0;
     padding: 5px 10px;
   }
+  .sk_theme #sk_omnibarSearchArea:before {
+    content: "󱋤";
+    display: inline-block;
+    margin-left: 5px;
+    font-size: 22px;
+  }
   .sk_theme #sk_omnibarSearchArea input,
   .sk_theme #sk_omnibarSearchArea span {
     font-size: 20px;
     padding:10px 0;
   }
-  .sk_theme .prompt {
+  .sk_theme #sk_omnibarSearchArea .prompt {
     text-transform: uppercase;
+    padding-left: 10px;
   }
-  .sk_theme .separator {
-    color: var(--bg);
-    /* margin-right: 10px;
-    * color: var(--accent-fg);
-    */
-  }
-  .sk_theme .separator:after {
-    content: "\u1405";
+  .sk_theme #sk_omnibarSearchArea .prompt:after {
+    content: "";
     display: inline-block;
-    margin-left: -10px;
     margin-right: 5px;
     color: var(--accent-fg);
   }
+  .sk_theme #sk_omnibarSearchArea .separator {
+    color: var(--bg);
+    display: none;
+  }
+  .sk_theme #sk_omnibarSearchArea .separator:after {
+    content: "";
+    display: inline-block;
+    margin-right: 5px;
+    color: var(--accent-fg);
+  }
+
   /* ---------- Popup Notification Banner ---------- */
   #sk_banner {
     font-family: var(--font);
@@ -534,6 +546,7 @@ settings.theme = `
     color: var(--fg);
     opacity: 0.9;
   }
+
   /* ---------- Popup Keys ---------- */
   #sk_keystroke {
     background-color: var(--bg);
@@ -544,6 +557,7 @@ settings.theme = `
   .sk_theme span.annotation {
     color: var(--accent-fg);
   }
+
   /* ---------- Popup Translation Bubble ---------- */
   #sk_bubble {
     background-color: var(--bg) !important;
@@ -561,6 +575,7 @@ settings.theme = `
     border-top-color: var(--bg) !important;
     border-bottom-color: var(--bg) !important;
   }
+
   /* ---------- Search ---------- */
   #sk_status,
   #sk_find {
@@ -576,6 +591,7 @@ settings.theme = `
   .sk_theme .feature_name span {
     color: var(--main-fg);
   }
+
   /* ---------- ACE Editor ---------- */
   #sk_editor {
     background: var(--bg-dark) !important;

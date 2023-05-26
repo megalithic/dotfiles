@@ -10,20 +10,20 @@
 -- --- https://github.com/yutkat/dotfiles/blob/main/.config/wezterm/wezterm.lua
 -- TODO: https://wezfurlong.org/wezterm/faq.html#how-do-i-enable-undercurl-curly-underlines
 --
-local wezterm = require("wezterm")
-local act = wezterm.action
-local mux = wezterm.mux
+local w = require("wezterm")
+local act = w.action
+local mux = w.mux
 local os = require("os")
 local homedir = os.getenv("HOME")
 local fmt = string.format
 local is_tmux = os.getenv("TMUX") ~= ""
 
-local function log(msg) wezterm.log_info(msg) end
-
--- Equivalent to POSIX basename(3)
--- Given "/foo/bar" returns "bar"
--- Given "c:\\foo\\bar" returns "bar"
-local function basename(s) return string.gsub(s, "(.*[/\\])(.*)", "%2") end
+-- local function log(msg) w.log_info(msg) end
+--
+-- -- Equivalent to POSIX basename(3)
+-- -- Given "/foo/bar" returns "bar"
+-- -- Given "c:\\foo\\bar" returns "bar"
+-- local function basename(s) return string.gsub(s, "(.*[/\\])(.*)", "%2") end
 
 local function notify(opts)
   if opts.window == nil then return end
@@ -37,24 +37,24 @@ local function notify(opts)
   window:toast_notification(title, message, nil, timeout)
 end
 
-function log_proc(proc, indent)
+local function log_proc(proc, indent)
   indent = indent or ""
-  wezterm.log_info(indent .. "pid=" .. proc.pid .. ", name=" .. proc.name .. ", status=" .. proc.status)
-  wezterm.log_info(indent .. "argv=" .. table.concat(proc.argv, " "))
-  wezterm.log_info(indent .. "executable=" .. proc.executable .. ", cwd=" .. proc.cwd)
-  for pid, child in pairs(proc.children) do
+  w.log_info(indent .. "pid=" .. proc.pid .. ", name=" .. proc.name .. ", status=" .. proc.status)
+  w.log_info(indent .. "argv=" .. table.concat(proc.argv, " "))
+  w.log_info(indent .. "executable=" .. proc.executable .. ", cwd=" .. proc.cwd)
+  for _pid, child in pairs(proc.children) do
     log_proc(child, indent .. "  ")
   end
 end
 
-wezterm.on(
+w.on(
   "window-config-reloaded",
   function(window, _pane)
     notify({ title = "wezterm", message = "configuration reloaded!", window = window, timeout = 4000 })
   end
 )
 
-wezterm.on("toggle-ligature", function(window, pane)
+w.on("toggle-ligature", function(window, _pane)
   local overrides = window:get_config_overrides() or {}
   if not overrides.harfbuzz_features then
     -- If we haven't overridden it yet, then override with ligatures disabled
@@ -66,13 +66,13 @@ wezterm.on("toggle-ligature", function(window, pane)
   window:set_config_overrides(overrides)
 end)
 
-wezterm.on("mux-is-process-stateful", function(proc)
+w.on("mux-is-process-stateful", function(proc)
   log_proc(proc)
 
   return false -- don't ask for confirmation, nothing stateful here
 end)
 
-wezterm.on("user-var-changed", function(window, _pane, name, value)
+w.on("user-var-changed", function(window, _pane, name, value)
   notify({
     title = "wezterm",
     message = string.format("user-var-changed: %s -> %s", name, value),
@@ -250,6 +250,59 @@ local font = {
   },
 }
 
+-- if you are *NOT* lazy-loading smart-splits.nvim (recommended)
+local function is_vim(pane)
+  -- this is set by the plugin, and unset on ExitPre in Neovim
+  return pane:get_user_vars().IS_NVIM == "true"
+end
+
+-- if you *ARE* lazy-loading smart-splits.nvim (not recommended)
+-- you have to use this instead, but note that this will not work
+-- in all cases (e.g. over an SSH connection). Also note that
+-- `pane:get_foreground_process_name()` can have high and highly variable
+-- latency, so the other implementation of `is_vim()` will be more
+-- performant as well.
+-- local function is_vim(pane)
+--   -- This gsub is equivalent to POSIX basename(3)
+--   -- Given "/foo/bar" returns "bar"
+--   -- Given "c:\\foo\\bar" returns "bar"
+--   local process_name = string.gsub(pane:get_foreground_process_name(), "(.*[/\\])(.*)", "%2")
+--   return process_name == "nvim" or process_name == "vim"
+-- end
+
+local direction_keys = {
+  Left = "h",
+  Down = "j",
+  Up = "k",
+  Right = "l",
+  -- reverse lookup
+  h = "Left",
+  j = "Down",
+  k = "Up",
+  l = "Right",
+}
+
+local function split_nav(resize_or_move, key)
+  return {
+    key = key,
+    mods = resize_or_move == "resize" and "META" or "CTRL",
+    action = w.action_callback(function(win, pane)
+      if is_vim(pane) then
+        -- pass the keys through to vim/nvim
+        win:perform_action({
+          SendKey = { key = key, mods = resize_or_move == "resize" and "META" or "CTRL" },
+        }, pane)
+      else
+        if resize_or_move == "resize" then
+          win:perform_action({ AdjustPaneSize = { direction_keys[key], 3 } }, pane)
+        else
+          win:perform_action({ ActivatePaneDirection = direction_keys[key] }, pane)
+        end
+      end
+    end),
+  }
+end
+
 return {
   -- term = "wezterm",
   adjust_window_size_when_changing_font_size = false,
@@ -275,7 +328,7 @@ return {
   freetype_load_flags = "NO_HINTING",
   freetype_load_target = "Light",
   freetype_render_target = "HorizontalLcd",
-  font = wezterm.font_with_fallback({
+  font = w.font_with_fallback({
     font.JetBrainsMono.Normal,
     font.JetBrainsMonoNerdFont.Normal,
     { family = "Symbols Nerd Font Mono", scale = 0.8 },
@@ -290,7 +343,7 @@ return {
     {
       intensity = "Bold",
       italic = true,
-      font = wezterm.font_with_fallback({
+      font = w.font_with_fallback({
         font.JetBrainsMono.BoldItalic,
         font.JetBrainsMonoNerdFont.BoldItalic,
         { family = "Symbols Nerd Font Mono", scale = 0.8 },
@@ -298,7 +351,7 @@ return {
     },
     {
       italic = true,
-      font = wezterm.font_with_fallback({
+      font = w.font_with_fallback({
         font.JetBrainsMono.Italic,
         font.JetBrainsMonoNerdFont.Italic,
         { family = "Symbols Nerd Font Mono", scale = 0.8 },
@@ -306,7 +359,7 @@ return {
     },
     {
       intensity = "Bold",
-      font = wezterm.font_with_fallback({
+      font = w.font_with_fallback({
         font.JetBrainsMono.Bold,
         font.JetBrainsMonoNerdFont.Bold,
         { family = "Symbols Nerd Font Mono", scale = 0.8 },
@@ -332,11 +385,11 @@ return {
       action = act.EmitEvent("toggle-ligature"), -- TEST: |>
     },
     { key = "q", mods = "CMD", action = act.QuitApplication },
-    { key = "w", mods = "CMD", action = wezterm.action.CloseCurrentTab({ confirm = false }) },
-    { key = "+", mods = "CMD", action = wezterm.action.IncreaseFontSize },
-    { key = "-", mods = "CMD", action = wezterm.action.DecreaseFontSize },
-    { key = "0", mods = "CMD", action = wezterm.action.ResetFontSize },
-    { key = "=", mods = "CMD", action = wezterm.action.ResetFontSize },
+    { key = "w", mods = "CMD", action = w.action.CloseCurrentTab({ confirm = false }) },
+    { key = "+", mods = "CMD", action = w.action.IncreaseFontSize },
+    { key = "-", mods = "CMD", action = w.action.DecreaseFontSize },
+    { key = "0", mods = "CMD", action = w.action.ResetFontSize },
+    { key = "=", mods = "CMD", action = w.action.ResetFontSize },
     { key = "v", mods = "CMD", action = act.PasteFrom("Clipboard") },
     { key = "d", mods = "CMD|CTRL", action = act.ShowDebugOverlay },
     {
@@ -353,10 +406,10 @@ return {
             "file://\\S+",
             "mailto://\\S+",
           },
-          action = wezterm.action_callback(function(window, pane)
+          action = w.action_callback(function(window, pane)
             local url = window:get_selection_text_for_pane(pane)
-            wezterm.log_info("opening: " .. url)
-            wezterm.open_with(url)
+            w.log_info("opening: " .. url)
+            w.open_with(url)
           end),
         },
       }),
@@ -442,5 +495,15 @@ return {
     }, -- select sha1
     -- { key = "s", mods = "CMD|CTRL", action = act.Search({ Regex = "" }) }, -- search mode
     -- { key = "G", mods = "CMD|CTRL", action = act.ActivateCopyMode }, -- copy mode
+    -- move between split panes
+    -- split_nav("move", "h"),
+    -- split_nav("move", "j"),
+    -- split_nav("move", "k"),
+    -- split_nav("move", "l"),
+    -- -- resize panes
+    -- split_nav("resize", "h"),
+    -- split_nav("resize", "j"),
+    -- split_nav("resize", "k"),
+    -- split_nav("resize", "l"),
   },
 }

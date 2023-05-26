@@ -1,10 +1,7 @@
 -- TODO:
 -- https://github.com/jfpedroza/neotest-elixir
 -- https://github.com/jfpedroza/neotest-elixir/pull/23
--- --
--- local ok_nt, nt = mega.require("neotest")
--- local function neotest() return nt end
---
+
 local function open() require("neotest").output.open({ enter = true, short = false }) end
 local function run_file() require("neotest").run.run(vim.fn.expand("%")) end
 local function run_file_sync() require("neotest").run.run({ vim.fn.expand("%"), concurrent = false }) end
@@ -26,18 +23,18 @@ return {
       -- "A",
       -- "AV",
     },
-    -- keys = {
-    --   { "<localleader>tn", "<cmd>TestNearest<cr>", desc = "run _test under cursor" },
-    --   { "<localleader>ta", "<cmd>TestFile<cr>", desc = "run _all tests in file" },
-    --   { "<localleader>tf", "<cmd>TestFile<cr>", desc = "run _all tests in file" },
-    --   { "<localleader>tl", "<cmd>TestLast<cr>", desc = "run _last test" },
-    --   { "<localleader>tt", "<cmd>TestLast<cr>", desc = "run _last test" },
-    --   { "<localleader>tv", "<cmd>TestVisit<cr>", desc = "run test file _visit" },
-    --   { "<localleader>tp", "<cmd>A<cr>", desc = "open alt (edit)" },
-    --   { "<localleader>tP", "<cmd>AV<cr>", desc = "open alt (vsplit)" },
-    -- },
-    event = { "BufReadPost", "BufNewFile" },
-    -- cond = vim.g.tester == "vim-test",
+    keys = {
+      { "<localleader>tn", "<cmd>TestNearest<cr>", desc = "run _test under cursor" },
+      { "<localleader>ta", "<cmd>TestFile<cr>", desc = "run _all tests in file" },
+      { "<localleader>tf", "<cmd>TestFile<cr>", desc = "run _all tests in file" },
+      { "<localleader>tl", "<cmd>TestLast<cr>", desc = "run _last test" },
+      { "<localleader>tt", "<cmd>TestLast<cr>", desc = "run _last test" },
+      { "<localleader>tv", "<cmd>TestVisit<cr>", desc = "run test file _visit" },
+      { "<localleader>tp", "<cmd>A<cr>", desc = "open alt (edit)" },
+      { "<localleader>tP", "<cmd>AV<cr>", desc = "open alt (vsplit)" },
+    },
+    -- event = { "BufReadPost", "BufNewFile" },
+    enabled = vim.g.tester == "vim-test",
     dependencies = { "tpope/vim-projectionist" },
     init = function()
       local system = vim.fn.system
@@ -58,7 +55,8 @@ return {
           cmd = cmd,
           notifier = terminal_notifier,
           temp = true,
-          start_insert = false,
+          open_startinsert = true,
+          focus_startinsert = false,
           focus_on_open = false,
           move_on_direction_change = false,
         }, extra_opts or {})
@@ -76,10 +74,10 @@ return {
       vim.g["test#preserve_screen"] = 1
 
       vim.g["test#custom_strategies"] = {
-        termsplit = function(cmd) mega.term.open(term_opts(cmd)) end,
-        termvsplit = function(cmd) mega.term.open(term_opts(cmd, { direction = "vertical" })) end,
-        termfloat = function(cmd) mega.term.open(term_opts(cmd, { direction = "float", focus_on_open = true })) end,
-        termtab = function(cmd) mega.term.open(term_opts(cmd, { direction = "tab", focus_on_open = true })) end,
+        termsplit = function(cmd) mega.term(term_opts(cmd)) end,
+        termvsplit = function(cmd) mega.term(term_opts(cmd, { direction = "vertical" })) end,
+        termfloat = function(cmd) mega.term(term_opts(cmd, { direction = "float", focus_on_open = true })) end,
+        termtab = function(cmd) mega.term(term_opts(cmd, { direction = "tab", focus_on_open = true })) end,
       }
 
       vim.g["test#strategy"] = {
@@ -93,6 +91,7 @@ return {
   {
     "nvim-neotest/neotest",
     -- event = { "BufReadPost", "BufNewFile" },
+    enabled = vim.g.tester == "neotest",
     dependencies = {
       "nvim-lua/plenary.nvim",
       "nvim-treesitter/nvim-treesitter",
@@ -111,32 +110,12 @@ return {
       { "<localleader>tc", cancel, desc = "neotest: cancel" },
       { "[e", next_failed, desc = "jump to next failed test" },
       { "]e", prev_failed, desc = "jump to previous failed test" },
-      -- nnoremap("<leader>nt", function()
-      --   neotest.run.run()
-      -- end)
-      --
-      -- nnoremap("<leader>nf", function()
-      --   neotest.run.run(vim.fn.expand("%"))
-      -- end)
-      --
-      -- nnoremap("<leader>nd", function()
-      --   neotest.run.run({ strategy = "dap" })
-      -- end)
-      --
-      -- nnoremap("<leader>ns", function()
-      --   neotest.summary.toggle()
-      -- end)
     },
-    -- init = function()
-    --   nmap("<localleader>tn", function() require("neotest").run.run() end, { desc = "neotest: run nearest" })
-    -- end,
     config = function()
       local nt_ns = vim.api.nvim_create_namespace("neotest")
       vim.diagnostic.config({
         virtual_text = {
           format = function(diagnostic)
-            dd(fmt("orig: %s", diagnostic.message))
-
             return diagnostic.message:gsub("\n", " "):gsub("\t", " "):gsub("%s+", " "):gsub("^%s+", "")
           end,
         },
@@ -158,7 +137,7 @@ return {
           open = "botright split | resize 25",
         },
         quickfix = {
-          enabled = true,
+          enabled = false,
           open = function() vim.cmd("Trouble quickfix") end,
         },
         floating = { border = mega.get_border() },
@@ -175,11 +154,11 @@ return {
           skipped = "○",
           failed = "",
           unknown = "", -- alts: 
-          -- running_animated = vim.tbl_map(
-          --   function(s) return s .. " " end,
-          --   { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" }
-          -- ),
-          running_animated = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" },
+          running_animated = vim.tbl_map(
+            function(s) return s .. " " end,
+            { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" }
+          ),
+          -- running_animated = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" },
         },
         summary = {
           mappings = {

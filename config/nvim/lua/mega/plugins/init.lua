@@ -81,6 +81,26 @@ return {
       -- { "<C-r>", function() require("replacer").run() end, desc = "qf: replace in qflist" },
     end,
   },
+  {
+    "mrjones2014/smart-splits.nvim",
+    lazy = false,
+    config = true,
+    build = "./kitty/install-kittens.bash",
+    keys = {
+      { "<A-h>", function() require("smart-splits").resize_left() end },
+      { "<A-l>", function() require("smart-splits").resize_right() end },
+      -- moving between splits
+      { "<C-h>", function() require("smart-splits").move_cursor_left() end },
+      { "<C-j>", function() require("smart-splits").move_cursor_down() end },
+      { "<C-k>", function() require("smart-splits").move_cursor_up() end },
+      { "<C-l>", function() require("smart-splits").move_cursor_right() end },
+      -- swapping buffers between windows
+      { "<leader><leader>h", function() require("smart-splits").swap_buf_left() end, desc = { "swap left" } },
+      { "<leader><leader>j", function() require("smart-splits").swap_buf_down() end, { desc = "swap down" } },
+      { "<leader><leader>k", function() require("smart-splits").swap_buf_up() end, { desc = "swap up" } },
+      { "<leader><leader>l", function() require("smart-splits").swap_buf_right() end, { desc = "swap right" } },
+    },
+  },
 
   -- ( LSP ) -------------------------------------------------------------------
   "onsails/lspkind.nvim",
@@ -239,16 +259,15 @@ return {
     cond = vim.g.explorer == "oil",
     opts = {},
     keys = {
-      -- {
-      --   "<leader>ed",
-      --   function()
-      --     local buf = vim.api.nvim_buf_get_name(0)
-      --     -- vim.cmd([[vertical topleft split|vertical resize 60]])
-      --     vim.cmd([[vertical rightbelow split]])
-      --     require("dirbuf").open(buf)
-      --   end,
-      --   desc = "oil: toggle(vsplit)",
-      -- },
+      {
+        "<leader>ed",
+        function()
+          -- vim.cmd([[vertical rightbelow split|vertical resize 60]])
+          vim.cmd([[vertical rightbelow split]])
+          require("oil").open()
+        end,
+        desc = "oil: toggle(vsplit)",
+      },
       {
         "<leader>ee",
         function() require("oil").open() end,
