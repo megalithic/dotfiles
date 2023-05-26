@@ -1,5 +1,6 @@
 -- TODO:
 -- https://github.com/seblj/dotfiles/blob/master/nvim/lua/config/telescope.lua#L143
+-- investigate MRU:  https://github.com/yutkat/dotfiles/blob/main/.config/nvim/lua/rc/pluginconfig/telescope.lua#LL241C1-L344C4
 
 local ts = setmetatable({}, {
   __index = function(_, key)
@@ -61,13 +62,13 @@ local function get_border(border_opts)
   })
 end
 
-local fd_find_command = { "fd", "--type", "f", "--no-ignore-vcs", "--strip-cwd-prefix" }
+local fd_find_command = { "fd", "--type", "f", "--hidden", "--no-ignore-vcs", "--strip-cwd-prefix" }
 local rg_find_command = {
   "rg",
   "--files",
   "--no-ignore-vcs",
-  "--hidden",
   "--no-heading",
+  "--hidden",
   "--with-filename",
   "--column",
   "--smart-case",
@@ -91,9 +92,17 @@ local grep_files_cmd = {
 }
 local current_fn = nil
 
-local function dropdown(opts) return require("telescope.themes").get_dropdown(get_border(opts)) end
+local function dropdown(opts)
+  opts = opts or {}
+  return require("telescope.themes").get_dropdown(get_border(opts))
+end
 
-local function ivy(opts) return require("telescope.themes").get_ivy(get_border(opts)) end
+local function ivy(opts)
+  opts = opts or {}
+  return require("telescope.themes").get_ivy(
+    get_border(vim.tbl_extend("force", { layout_config = { height = 0.3 } }, opts))
+  )
+end
 
 _G.picker = { telescope = { dropdown, ivy, get_border } }
 
@@ -165,6 +174,8 @@ local function multi(pb, verb, open_selection_under_cursor)
   local picker = action_state.get_current_picker(pb)
   local selections = picker:get_multi_selection()
 
+  -- NOTE: optionally send to qf:
+  -- https://github.com/olimorris/dotfiles/blob/main/.config/nvim/lua/Oli/plugins/telescope.lua#L103-L121
   if open_selection_under_cursor or current_fn == nil or #selections == 0 then
     actions[select_action](pb)
   else
@@ -213,6 +224,7 @@ return {
       config = true,
       dependencies = { "kkharji/sqlite.lua" },
     },
+    { "debugloop/telescope-undo.nvim" },
   },
   keys = {
     { "<leader>ff", project_files, desc = "find files" },
@@ -244,6 +256,11 @@ return {
       "<leader>fn",
       function() extensions("file_browser").file_browser(ivy({ path = vim.g.obsidian_vault_path })) end,
       desc = "browse: obsidian notes",
+    },
+    {
+      "<leader>u",
+      function() extensions("undo").undo(ivy()) end,
+      desc = "undo",
     },
   },
   config = function()
@@ -328,6 +345,23 @@ return {
         --   end,
         -- },
       },
+      -- file_ignore_patterns = {
+      --   ".git/",
+      --   "%.csv",
+      --   "%.jpg",
+      --   "%.jpeg",
+      --   "%.png",
+      --   -- "%.svg",
+      --   "%.otf",
+      --   "%.ttf",
+      --   "%.lock",
+      --   "__pycache__",
+      --   "%.sqlite3",
+      --   "%.ipynb",
+      --   "vendor",
+      --   "node_modules",
+      --   "dotbot",
+      -- },
       extensions = {
         ["zf-native"] = {
           file = {
@@ -351,6 +385,33 @@ return {
           prefixes = {
             ["!"] = {
               flag = "invert-match",
+            },
+          },
+        },
+        undo = {
+          side_by_side = true,
+          use_delta = true,
+          layout_strategy = "flex",
+          layout_config = {
+            width = 0.8,
+            horizontal = {
+              mirror = false,
+              prompt_position = "top",
+              preview_cutoff = 120,
+              preview_width = 0.5,
+            },
+            vertical = {
+              mirror = false,
+              prompt_position = "top",
+              preview_cutoff = 120,
+              preview_width = 0.5,
+            },
+          },
+          mappings = {
+            i = {
+              ["<CR>"] = require("telescope-undo.actions").restore,
+              ["<C-a>"] = require("telescope-undo.actions").yank_additions,
+              ["<C-d>"] = require("telescope-undo.actions").yank_deletions,
             },
           },
         },
@@ -441,6 +502,8 @@ return {
     telescope.load_extension("zf-native")
     telescope.load_extension("smart_open")
     telescope.load_extension("egrepify")
+    telescope.load_extension("undo")
+
     -- telescope.load_extension("noice")
   end,
 }

@@ -310,7 +310,9 @@ function Terminal:spawn()
     ---@diagnostic disable-next-line: unused-local
     on_stdout = function(job_id, data, name) end,
     ---@diagnostic disable-next-line: unused-local
-    on_stderr = function(job_id, data, name) end,
+    on_stderr = function(job_id, data, name)
+      vim.notify(fmt("[#%s] error occurred(%s): %s", job_id, name, data), L.error, {})
+    end,
     ---@diagnostic disable-next-line: unused-local
     on_exit = function(job_id, exit_code, event)
       if self.notifier ~= nil and type(self.notifier) == "function" then self.notifier(term_cmd, exit_code) end

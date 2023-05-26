@@ -54,6 +54,7 @@ return {
   { "lukas-reineke/virt-column.nvim", config = { char = "│" }, event = "VimEnter" },
   {
     "mbbill/undotree",
+    enabled = false,
     cmd = "UndotreeToggle",
     keys = { { "<leader>u", "<Cmd>UndotreeToggle<CR>", desc = "undotree: toggle" } },
     config = function()
@@ -257,7 +258,13 @@ return {
     lazy = false,
     enabled = vim.g.explorer == "oil",
     cond = vim.g.explorer == "oil",
-    opts = {},
+    opts = {
+      trash = false,
+      -- delete_to_trash = true,
+      skip_confirm_for_simple_edits = true,
+      restore_win_options = false,
+      prompt_save_on_select_new_entry = false,
+    },
     keys = {
       {
         "<leader>ed",

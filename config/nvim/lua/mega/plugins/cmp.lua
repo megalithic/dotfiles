@@ -65,9 +65,9 @@ return {
     }
 
     cmp.setup({
-      experimental = { ghost_text = {
-        hl_group = "LspCodeLens",
-      } },
+      -- experimental = { ghost_text = {
+      --   hl_group = "LspCodeLens",
+      -- } },
       matching = {
         disallow_partial_fuzzy_matching = false,
       },
@@ -159,14 +159,13 @@ return {
       },
       sources = cmp.config.sources({
         -- { name = "nvim_lsp_signature_help" },
-        { name = "nvim_lsp" },
         { name = "luasnip" },
+        { name = "nvim_lsp" },
         { name = "path", option = { trailing_slash = true } },
       }, {
         {
           name = "buffer",
           keyword_length = 4,
-          max_item_count = 5, -- only show up to 5 items.
           options = {
             get_bufnrs = function() return vim.tbl_map(vim.api.nvim_win_get_buf, vim.api.nvim_list_wins()) end,
           },

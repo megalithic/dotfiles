@@ -157,7 +157,7 @@ function fuzzy_find() {
   current_session="$(tmux display-message -p '#S')"
   sessions_count=$(echo "$sessions_list" | wc -l | sed -e 's/^[[:space:]]*//')
   preview_lines_of_output=10
-  preview_cmd="echo {} | sed 's/:.*$//' | xargs -I {} | xargs tmux has-session -t 2>/dev/null && xargs -I {} | echo '$(tput sgr 0 1)$(tput setaf 6)windows in session:$(tput sgr 0)\n' && tmux list-windows -F '░ #{window_index}:#W (#{window_panes})' -t {} && echo "" && echo '$(tput sgr 0 1)$(tput setaf 6) last $preview_lines_of_output lines of output:$(tput sgr 0)\n' && tmux capture-pane -ep -S- -E- -t {} | sed '/^$/d' | tr -s ' '  | tr -s 'q' | sed 's/^/░ /' | tail -$preview_lines_of_output"
+  preview_cmd="echo {} | sed 's/:.*$//' | xargs -I {} | xargs tmux has-session -t 2>/dev/null && xargs -I {} | echo '$(tput sgr 0 1)$(tput setaf 6)windows in session:$(tput sgr 0)\n' && tmux list-windows -F '░ #{window_index}:#W (#{window_panes})' -t {} && echo "" && echo '$(tput sgr 0 1)$(tput setaf 6) last $preview_lines_of_output lines of output:$(tput sgr 0)\n' && tmux capture-pane -ep -S- -E- -t {} | sed '/^$/d' | tr -s ' '  | tr -s 'q' | sed 's/^/░ /' | sed 's/─//g' |  tail -$preview_lines_of_output"
 
   # -- do certain things based upon only one active session
   if [[ $sessions_count == 1 ]]; then

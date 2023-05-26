@@ -53,6 +53,7 @@
   cp = commit -p
 
   co = checkout
+  cob = checkout -b
 
   cl = clone
   clb = clone --bare
@@ -104,6 +105,10 @@
 
   r = restore
   rs = restore --staged
+
+  rbc = rebase --continue
+  rba = rebase --abort
+
   pick = cherry-pick
 
   ; sha = name-rev --name-only --refs=refs/heads/*

@@ -149,7 +149,7 @@ return {
   },
   {
     "akinsho/git-conflict.nvim",
-    lazy = false,
+    event = { "BufReadPre", "BufWritePre" },
     config = function()
       require("git-conflict").setup({
         disable_diagnostics = true,

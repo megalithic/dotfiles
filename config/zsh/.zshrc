@@ -9,6 +9,7 @@ ZLIB="$ZDOTDIR/lib"
 [[ -f "$ZDOTDIR/plugins.zsh" ]] && source "$ZDOTDIR/plugins.zsh"
 
 # -- plugins
+zsh_add_plugin "mafredri/zsh-async" "async.plugin"
 zsh_add_plugin "Aloxaf/fzf-tab"
 zsh_add_plugin "zsh-users/zsh-syntax-highlighting"
 zsh_add_plugin "zsh-users/zsh-history-substring-search"
@@ -27,6 +28,7 @@ zsh_add_file "lib/completion.zsh"
 # -- prompt
 autoload -U promptinit; promptinit # Enable prompt themes
 prompt megalithic                  # Set prompt
+# prompt nisi
 
 # -- scripts/libs/etc
 for file in $ZLIB/{nix,keybindings,opts,aliases,funcs,ssh,tmux,kitty,gpg}.zsh; do

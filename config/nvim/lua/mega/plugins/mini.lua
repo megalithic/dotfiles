@@ -10,9 +10,9 @@ function mini.surround()
     mappings = {
       add = "ys",
       delete = "ds",
-      find = "",
-      find_left = "",
-      highlight = "",
+      find = "yf",
+      find_left = "yF",
+      highlight = "vs",
       replace = "cs",
       update_n_lines = "",
       -- Add this only if you don't want to use extended mappings
@@ -20,7 +20,7 @@ function mini.surround()
       -- suffix_next = "",
     },
     n_lines = 500,
-    search_method = "cover_or_nearest", -- alts: cover_or_next
+    search_method = "cover_or_next", -- alts: cover_or_nearest
   })
 
   mega.xnoremap("S", [[:<C-u>lua MiniSurround.add('visual')<CR>]])

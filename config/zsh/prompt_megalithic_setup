@@ -1,6 +1,7 @@
 #!/usr/bin/env zsh
 
 # HT: @akinsho / @sindresorhus/pure
+# REF: https://github.com/nicknisi/dotfiles/blob/main/zsh/prompt.zsh
 
 # NOTES:
 # git:
@@ -211,12 +212,31 @@ function +vi-git-compare() {
   # Exit early in case the worktree is on a detached HEAD
   git rev-parse ${hook_com[branch]}@{upstream} >/dev/null 2>&1 || return 0
 
-  local -a ahead_and_behind=(
-    $(git rev-list --left-right --count HEAD...${hook_com[branch]}@{upstream} 2>/dev/null)
-  )
+  # ----------------------------------------------------------------------------
+  # graciously thieved from mr. nisi:
+  # ----------------------------------------------------------------------------
+  INDEX=$(command git status --porcelain -b 2>/dev/null)
+  # Check whether branch is ahead
+  local ahead=false
+  if $(echo "$INDEX" | command grep '^## [^ ]\+ .*ahead' &> /dev/null); then
+      ahead=true
+  fi
 
-  ahead=${ahead_and_behind[1]}
-  behind=${ahead_and_behind[2]}
+  # Check whether branch is behind
+  local behind=false
+  if $(echo "$INDEX" | command grep '^## [^ ]\+ .*behind' &> /dev/null); then
+      behind=true
+  fi
+  # ----------------------------------------------------------------------------
+  # original implementation:
+  # ----------------------------------------------------------------------------
+  # local -a ahead_and_behind=(
+  #   $(git rev-list --left-right --count HEAD...${hook_com[branch]}@{upstream} 2>/dev/null)
+  # )
+  #
+  # ahead=${ahead_and_behind[1]}
+  # behind=${ahead_and_behind[2]}
+  # ----------------------------------------------------------------------------
 
   local ahead_symbol="%{$fg[red]%}$git_ahead_icon%{$reset_color%}${ahead}"
   local behind_symbol="%{$fg[cyan]%}$git_behind_icon%{$reset_color%}${behind}"
@@ -358,10 +378,10 @@ export RPROMPT='%F{yellow}%{$__DOTS[ITALIC_ON]%}${cmd_exec_time}%{$__DOTS[ITALIC
 # Spell checking & auto correction prompt
 export SPROMPT="zsh: correct %F{red}'%R'%f to %F{blue}'%r'%f [%B%Uy%u%bes, %B%Un%u%bo, %B%Ue%u%bdit, %B%Ua%u%bbort]?"
 # Add a continuous line following every prompt
-# see: https://superuser.com/a/846133
+# REF: https://superuser.com/a/846133
 export PS1=$'%F{black}${(r:$COLUMNS::\u2500:)}'$PS1
 # To capturing errors arising from set -x in a script
-# @REF: https://www.reddit.com/r/bash/comments/xcejrb/comment/io52img/?utm_source=share&utm_medium=web2x&context=3
+# REF: https://www.reddit.com/r/bash/comments/xcejrb/comment/io52img/?utm_source=share&utm_medium=web2x&context=3
 export PS4='${BASH_SOURCE[0]}:$LINENO '
 
 # -- EXECUTION TIME ------------------------------------------------------------
@@ -489,11 +509,6 @@ add-zsh-hook preexec () {
   __timings_preexec
 }
 
-
-# open most recent dir, when not in nvim
-# if [[ -z "$NVIM" ]]; then
-#   cdr
-# fi
 
 # Edit line in vim with v whilst in normal mod in vi mode
 autoload -Uz edit-command-line;
