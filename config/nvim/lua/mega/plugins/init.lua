@@ -60,6 +60,7 @@ return {
     config = function()
       vim.g.undotree_TreeNodeShape = "◦" -- Alternative: '◉'
       vim.g.undotree_SetFocusWhenToggle = 1
+      vim.g.undotree_DiffCommand = "diff -u"
     end,
   },
   {
