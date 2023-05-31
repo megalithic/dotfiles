@@ -42,6 +42,7 @@ vim.g.picker = "telescope" -- alt: telescope, fzf
 vim.g.tree = "neo-tree"
 vim.g.explorer = "oil" -- alt: dirbuf, oil
 vim.g.tester = "vim-test" -- alt: neotest, vim-test
+vim.g.snipper = "vsnip" -- alt: vsnip, luasnip
 
 -- [ globals ] -----------------------------------------------------------------
 

@@ -57,9 +57,10 @@ mega.augroup("megaline", {
 -- ( SETTERS ) -----------------------------------------------------------------
 
 --- @param hl string
-local function wrap(hl)
+local function wrap(hl, contents)
   assert(hl, "A highlight name must be specified")
-  return "%#" .. hl .. "#"
+  contents = contents or ""
+  return "%#" .. hl .. "#" .. contents
 end
 
 local function seg(contents, hl, cond, opts)
@@ -570,43 +571,20 @@ local function seg_lsp_status(truncate_at)
 end
 
 local function seg_lineinfo(truncate_at)
-  local opts = {
-    prefix = icons.ln_sep,
-    prefix_color = "StMetadataPrefix",
-    current_hl = "StTitle",
-    total_hl = "StComment",
-    col_hl = "StComment",
-    sep_hl = "StComment",
-  }
-  local sep = opts.sep or "/"
-  local prefix = opts.prefix or "L"
-  local prefix_color = opts.prefix_color
-  local current_hl = opts.current_hl
-  local col_hl = opts.col_hl
-  local total_hl = opts.total_hl
-  local sep_hl = opts.total_hl
-
-  local current_line = "%l"
-  local last_line = "%L"
-  local current_col = "%-c" -- alts: "%-3c" (for padding of 3)
+  local prefix = icons.ln_sep or "L"
+  local sep_hl = "StLineSep"
 
   -- Use virtual column number to allow update when paste last column
   if is_truncated(truncate_at) then return "%l/%L:%v" end
 
   return seg(
     table.concat({
-      wrap(prefix_color),
-      prefix,
-      " ",
-      wrap(current_hl),
-      current_line,
-      wrap(sep_hl),
-      sep,
-      wrap(total_hl),
-      last_line,
-      wrap(col_hl),
-      ":",
-      current_col,
+      wrap("StMetadataPrefix", prefix .. " "),
+      wrap("StLineNumber", "%l"),
+      wrap(sep_hl, "/"),
+      wrap("StLineTotal", "%L"),
+      wrap(sep_hl, ":"),
+      wrap("StLineColumn", "%-c"), -- alts: "%-3c" (for padding of 3)
     }),
     { margin = { 1, 1 } }
   )

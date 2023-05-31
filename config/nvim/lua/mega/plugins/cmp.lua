@@ -2,7 +2,25 @@ return {
   "hrsh7th/nvim-cmp",
   event = { "InsertEnter" },
   dependencies = {
-    { "saadparwaiz1/cmp_luasnip" },
+    { "saadparwaiz1/cmp_luasnip", cond = vim.g.snipper == "luasnip" },
+    {
+      "hrsh7th/cmp-vsnip",
+      dependencies = {
+        {
+          "hrsh7th/vim-vsnip",
+          event = "InsertEnter",
+          cond = vim.g.snipper == "vsnip",
+          init = function()
+            vim.g.vsnip_snippet_dir = vim.fn.fnamemodify(vim.env.MYVIMRC, ":p:h") .. "/snippets"
+            vim.g.vsnip_filetypes = {
+              typescript = { "javascript" },
+              typescriptreact = { "javascript" },
+              javascriptreact = { "javascript" },
+            }
+          end,
+        },
+      },
+    },
     { "hrsh7th/cmp-buffer" },
     { "hrsh7th/cmp-nvim-lsp" },
     { "hrsh7th/cmp-nvim-lua" },
@@ -24,7 +42,7 @@ return {
     local fmt = string.format
     local api = vim.api
 
-    local ok_ls, ls = mega.require("luasnip")
+    local function esc(cmd) return vim.api.nvim_replace_termcodes(cmd, true, false, true) end
 
     -- [nvim-cmp] --
     local has_words_before = function()
@@ -32,25 +50,59 @@ return {
       return col ~= 0 and api.nvim_buf_get_lines(0, line - 1, line, true)[1]:sub(col, col):match("%s") == nil
     end
 
-    local function tab(fallback)
-      if cmp.visible() then
-        cmp.select_next_item()
-      elseif ok_ls and ls and ls.expand_or_locally_jumpable() then
-        ls.expand_or_jump()
-      elseif has_words_before() then
-        cmp.complete()
-      else
-        fallback()
-      end
-    end
+    local tab = nil
+    local shift_tab = nil
 
-    local function shift_tab(fallback)
-      if cmp.visible() then
-        cmp.select_prev_item()
-      elseif ok_ls and ls and ls.jumpable(-1) then
-        ls.jump(-1)
-      else
-        fallback()
+    if vim.g.snipper == "luasnip" then
+      -- [luasnip] --
+      local ok_ls, ls = mega.require("luasnip")
+      tab = function(fallback)
+        if cmp.visible() then
+          cmp.select_next_item()
+        elseif ok_ls and ls and ls.expand_or_locally_jumpable() then
+          ls.expand_or_jump()
+        elseif has_words_before() then
+          cmp.complete()
+        else
+          fallback()
+        end
+      end
+
+      shift_tab = function(fallback)
+        if cmp.visible() then
+          cmp.select_prev_item()
+        elseif ok_ls and ls and ls.jumpable(-1) then
+          ls.jump(-1)
+        else
+          fallback()
+        end
+      end
+    elseif vim.g.snipper == "vsnip" then
+      -- [vsnip] --
+      tab = function(fallback)
+        if cmp.visible() then
+          cmp.select_next_item()
+        elseif vim.fn["vsnip#jumpable"](1) > 0 then
+          vim.fn.feedkeys(esc("<Plug>(vsnip-jump-next)"), "")
+        elseif has_words_before() then
+          cmp.complete()
+        -- elseif vim.fn["vsnip#expandable"]() > 0 then
+        --   vim.fn.feedkeys(esc("<Plug>(vsnip-expand)"), "")
+        -- elseif require("copilot.suggestion").is_visible() then
+        --   require("copilot.suggestion").accept()
+        else
+          fallback()
+        end
+      end
+
+      shift_tab = function(fallback)
+        if cmp.visible() then
+          cmp.select_prev_item()
+        elseif vim.fn["vsnip#jumpable"](-1) == 1 then
+          vim.fn.feedkeys(esc("<Plug>(vsnip-jump-prev)"), "")
+        else
+          fallback()
+        end
       end
     end
 
@@ -85,7 +137,13 @@ return {
         end,
       },
       snippet = {
-        expand = function(args) ls.lsp_expand(args.body) end,
+        expand = function(args)
+          if vim.g.snipper == "luasnip" then
+            ls.lsp_expand(args.body)
+          elseif vim.g.snipper == "vsnip" then
+            vim.fn["vsnip#anonymous"](args.body)
+          end
+        end,
       },
       window = {
         completion = {
@@ -110,7 +168,17 @@ return {
         ["<C-b>"] = cmp.mapping.scroll_docs(-4),
         ["<C-f>"] = cmp.mapping.scroll_docs(4),
         ["<C-y>"] = cmp.mapping.confirm({ select = true }),
-        ["<CR>"] = cmp.mapping.confirm({ select = false }),
+        ["<CR>"] = function(fallback)
+          if vim.g.snipper == "luasnip" then
+            cmp.mapping.confirm({ select = false })
+          elseif vim.g.snipper == "vsnip" then
+            if vim.fn["vsnip#expandable"]() ~= 0 then
+              vim.fn.feedkeys(esc("<Plug>(vsnip-expand)"), "")
+              return
+            end
+            return cmp.mapping.confirm({ select = false, behavior = cmp.ConfirmBehavior.Replace })(fallback)
+          end
+        end,
         ["<C-e>"] = cmp.mapping.abort(),
       },
       formatting = {
@@ -140,7 +208,8 @@ return {
           else
             item.menu = ({
               nvim_lsp = "[lsp]",
-              luasnip = "[lsnip]",
+              -- luasnip = "[lsnip]",
+              vsnip = "[vsnip]",
               nvim_lua = "[nlua]",
               nvim_lsp_signature_help = "[sig]",
               path = "[path]",
@@ -159,7 +228,8 @@ return {
       },
       sources = cmp.config.sources({
         -- { name = "nvim_lsp_signature_help" },
-        { name = "luasnip" },
+        { name = "vsnip" },
+        -- { name = "luasnip" },
         { name = "nvim_lsp" },
         { name = "path", option = { trailing_slash = true } },
       }, {

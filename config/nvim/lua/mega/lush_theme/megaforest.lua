@@ -675,6 +675,15 @@ local theme = lush(function(injected_functions)
     MiniJump({ fg = C.magenta, bg = C.bg_dark, gui = "bold,underline" }),
     MiniJump2dSpot({ fg = C.purple, bg = C.bg_dark, gui = "bold,underline" }),
 
+    ---- :help mini.hipatterns -------------------------------------------------
+
+    MiniHipatternsFixme({ sym("@comment.fix") }),
+    MiniHipatternsWarn({ sym("@comment.warn") }),
+    MiniHipatternsHack({ sym("@comment.warn") }),
+    MiniHipatternsTodo({ sym("@comment.todo") }),
+    MiniHipatternsNote({ sym("@comment.note") }),
+    MiniHipatternsRef({ sym("@comment.ref") }),
+
     ---- :help leap.txt --------------------------------------------------------
 
     LeapBackdrop({ fg = "#707070" }),
@@ -720,7 +729,7 @@ local theme = lush(function(injected_functions)
     StModeTermNormal({ StModeNormal }),
     StModeTermInsert({ bg = C.green, fg = PanelBackground.bg, gui = "underline", sp = C.green }),
     StMetadata({ Comment, bg = C.bg1 }),
-    StMetadataPrefix({ Comment, bg = C.bg1, gui = C.transparent }),
+    StMetadataPrefix({ Comment, bg = C.bg1 }),
     StIndicator({ fg = C.dark_blue, bg = C.bg1 }),
     StModified({ fg = C.pale_red, bg = C.bg1, gui = "bold,italic" }),
     StGitSymbol({ fg = C.light_red, bg = C.bg1 }),
@@ -739,6 +748,10 @@ local theme = lush(function(injected_functions)
     StIdentifier({ fg = C.blue, bg = C.bg1 }),
     StTitle({ bg = C.bg1, fg = C.grey2, gui = "bold" }),
     StComment({ Comment, bg = C.bg1 }),
+    StLineNumber({ fg = C.grey2, bg = C.bg1, gui = "bold" }),
+    StLineSep({ fg = C.grey1, bg = C.bg1, gui = "" }),
+    StLineTotal({ fg = C.grey1, bg = C.bg1 }),
+    StLineColumn({ fg = C.grey1, bg = C.bg1, gui = "italic" }),
     StClient({ bg = C.bg1, fg = C.fg, gui = "bold" }),
     StError({ fg = C.pale_red, bg = C.bg1 }),
     StWarn({ fg = C.orange, bg = C.bg1 }),

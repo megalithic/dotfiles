@@ -140,7 +140,7 @@ local excluded = {
   "list",
   "NvimTree",
   "lazy",
-  "dirbuf",
+  "oil",
   "startify",
   "help",
   "orgagenda",

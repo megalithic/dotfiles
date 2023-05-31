@@ -33,7 +33,7 @@ local M = {
     "startify",
     "help",
     "orgagenda",
-    "dirbuf",
+    "oil",
     "org",
     "Trouble",
     "Telescope",

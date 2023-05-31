@@ -227,11 +227,6 @@ return {
     "nvim-telescope/telescope-file-browser.nvim",
     "fdschmidt93/telescope-egrepify.nvim",
     -- "danielvolchek/tailiscope.nvim"
-    {
-      "danielfalk/smart-open.nvim",
-      config = true,
-      dependencies = { "kkharji/sqlite.lua" },
-    },
     { "debugloop/telescope-undo.nvim" },
   },
   keys = {
@@ -476,7 +471,6 @@ return {
 
     telescope.load_extension("file_browser")
     telescope.load_extension("zf-native")
-    telescope.load_extension("smart_open")
     telescope.load_extension("egrepify")
   end,
 }

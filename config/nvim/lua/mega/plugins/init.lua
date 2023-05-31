@@ -8,20 +8,14 @@ return {
     lazy = false,
     priority = 1000,
   },
-  {
-    "mcchrish/zenbones.nvim",
-    lazy = false,
-    priority = 999,
-    dependencies = "rktjmp/lush.nvim",
-  },
   { "nvim-tree/nvim-web-devicons", config = function() require("nvim-web-devicons").setup() end },
   {
     "NvChad/nvim-colorizer.lua",
     event = { "BufReadPre" },
     config = function()
       require("colorizer").setup({
-        filetypes = { "*", "!lazy", "!gitcommit", "!NeogitCommitMessage", "!dirbuf" },
-        buftype = { "*", "!prompt", "!nofile", "!dirbuf" },
+        filetypes = { "*", "!lazy", "!gitcommit", "!NeogitCommitMessage", "!oil" },
+        buftype = { "*", "!prompt", "!nofile", "!oil" },
         user_default_options = {
           RGB = false, -- #RGB hex codes
           RRGGBB = true, -- #RRGGBB hex codes
@@ -105,7 +99,7 @@ return {
   },
 
   -- ( LSP ) -------------------------------------------------------------------
-  "onsails/lspkind.nvim",
+  { "onsails/lspkind.nvim" },
   {
     "neovim/nvim-lspconfig",
     event = { "BufReadPre", "BufNewFile" },
@@ -283,38 +277,6 @@ return {
       },
     },
   },
-  {
-    "megalithic/dirbuf.nvim",
-    dev = true,
-    enabled = vim.g.explorer == "dirbuf",
-    cond = vim.g.explorer == "dirbuf",
-    keys = {
-      {
-        "<leader>ed",
-        function()
-          local buf = vim.api.nvim_buf_get_name(0)
-          -- vim.cmd([[vertical topleft split|vertical resize 60]])
-          vim.cmd([[vertical rightbelow split]])
-          require("dirbuf").open(buf)
-        end,
-        desc = "dirbuf: toggle",
-      },
-      {
-        "<leader>ee",
-        function()
-          local buf = vim.api.nvim_buf_get_name(0)
-          -- vim.cmd([[vertical topleft split|vertical resize 60]])
-          require("dirbuf").open(buf)
-        end,
-        desc = "dirbuf: toggle",
-      },
-    },
-    cmd = { "Dirbuf", "DirbufQuit", "DirbufSync" },
-    opts = {
-      sort_order = "directories_first",
-      devicons = true,
-    },
-  },
   { "kevinhwang91/nvim-bqf", ft = "qf" },
   {
     url = "https://gitlab.com/yorickpeterse/nvim-pqf",
@@ -346,38 +308,6 @@ return {
     event = "InsertCharPre",
     config = function() require("hclipboard").start() end,
   },
-  -- {
-  --   "mg979/vim-visual-multi",
-  --   keys = { { "<C-e>", mode = { "n", "x" } }, "\\j", "\\k" },
-  --   enabled = false,
-  --   event = { "BufReadPost", "BufNewFile" },
-  --   init = function()
-  --     vim.g.VM_highlight_matches = "underline"
-  --     vim.g.VM_theme = "codedark"
-  --     vim.g.VM_maps = {
-  --       ["Find Word"] = "<C-E>",
-  --       ["Find Under"] = "<C-E>",
-  --       ["Find Subword Under"] = "<C-E>",
-  --       ["Select Cursor Down"] = "\\j",
-  --       ["Select Cursor Up"] = "\\k",
-  --     }
-  --   end,
-  -- },
-  {
-    "mg979/vim-visual-multi",
-    lazy = false,
-    init = function()
-      vim.g.VM_highlight_matches = "underline"
-      vim.g.VM_theme = "codedark"
-      vim.g.VM_maps = {
-        ["Find Word"] = "<M-e>",
-        ["Find Under"] = "<M-e>",
-        ["Find Subword Under"] = "<M-e>",
-        ["Select Cursor Down"] = "\\j",
-        ["Select Cursor Up"] = "\\k",
-      }
-    end,
-  },
   {
     "danymat/neogen",
     cmd = "Neogen",
@@ -390,7 +320,7 @@ return {
     },
     opts = function()
       local M = {}
-      M.snippet_engine = "luasnip"
+      M.snippet_engine = "vsnip"
       M.languages = {}
       M.languages.python = { template = { annotation_convention = "google_docstrings" } }
       M.languages.typescript = { template = { annotation_convention = "tsdoc" } }
@@ -606,7 +536,6 @@ return {
   --     })
   --   end,
   -- },
-  { "ellisonleao/glow.nvim", ft = { "markdown" } },
   {
     "lukas-reineke/headlines.nvim",
     ft = { "markdown" },
@@ -634,8 +563,6 @@ return {
   -- ( Syntax/Languages ) ------------------------------------------------------
   { "ii14/emmylua-nvim", ft = "lua" },
   { "elixir-editors/vim-elixir", ft = { "markdown" } }, -- nvim exceptions thrown when not installed
-  "kchmck/vim-coffee-script",
-  "briancollins/vim-jst",
   { "imsnif/kdl.vim", ft = "kdl" },
   { "chr4/nginx.vim", ft = "nginx" },
   { "fladson/vim-kitty", ft = "kitty" },

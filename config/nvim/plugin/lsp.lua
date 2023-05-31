@@ -201,12 +201,16 @@ local function setup_keymaps(client, bufnr)
   nnoremap("gd", vim.lsp.buf.definition, desc("lsp: definition"))
   nnoremap("gD", [[<cmd>vsplit | lua vim.lsp.buf.definition()<cr>]], desc("lsp: definition (vsplit)"))
   nnoremap("gr", function()
-    if vim.g.picker == "fzf" then
-      vim.cmd("FzfLua lsp_references")
-    elseif vim.g.picker == "telescope" then
-      vim.cmd("Telescope lsp_references")
+    if true then
+      vim.cmd("Trouble lsp_references")
     else
-      vim.lsp.buf.references()
+      if vim.g.picker == "fzf" then
+        vim.cmd("FzfLua lsp_references")
+      elseif vim.g.picker == "telescope" then
+        vim.cmd("Telescope lsp_references")
+      else
+        vim.lsp.buf.references()
+      end
     end
   end, desc("lsp: references"))
   nnoremap("gt", vim.lsp.buf.type_definition, desc("lsp: type definition"))

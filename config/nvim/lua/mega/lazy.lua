@@ -93,7 +93,7 @@ function M.setup()
     },
     install = {
       missing = true,
-      colorscheme = { vim.g.colorscheme, "forestbones" },
+      colorscheme = { vim.g.colorscheme },
     },
     dev = {
       -- directory where you store your local plugin projects

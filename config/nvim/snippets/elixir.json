@@ -167,5 +167,13 @@
   "asserte": {
     "prefix": "asserte",
     "body": ["assert $1 =~ $2"]
+  },
+  "heex": {
+    "prefix": ["heex"],
+    "body": ["~H\"\"\"", "$1", "\"\"\""]
+  },
+  "hx": {
+    "prefix": ["heex"],
+    "body": ["~H\"\"\"", "$1", "\"\"\""]
   }
 }

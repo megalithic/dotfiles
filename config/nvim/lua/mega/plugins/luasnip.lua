@@ -4,10 +4,12 @@
 -- - https://github.com/sbulav/dotfiles/blob/master/nvim/lua/config/snippets.lua
 local M = {
   "L3MON4D3/LuaSnip",
+  enabled = vim.g.snipper == "luasnip",
   event = { "InsertEnter" },
   dependencies = {
     "rafamadriz/friendly-snippets",
     event = { "InsertEnter" },
+    enabled = vim.g.snipper == "luasnip",
     config = function() require("luasnip.loaders.from_vscode").lazy_load() end,
   },
 }

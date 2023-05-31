@@ -32,7 +32,7 @@ vim.g.number_filetype_exclusions = {
   "startify",
   "help",
   "orgagenda",
-  "dirbuf",
+  "oil",
   "org",
   "Trouble",
   "NeogitCommitMessage",

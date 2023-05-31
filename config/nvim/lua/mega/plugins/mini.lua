@@ -315,6 +315,24 @@ function mini.indentscope()
   })
 end
 
+function mini.hipatterns()
+  local hipatterns = require("mini.hipatterns")
+  hipatterns.setup({
+    highlighters = {
+      -- Highlight standalone "FIXME", "HACK", "TODO", "NOTE", "WARN", "REF"
+      fixme = { pattern = "%f[%w]()FIXME()%f[%W]", group = "MiniHipatternsFixme" },
+      hack = { pattern = "%f[%w]()HACK()%f[%W]", group = "MiniHipatternsHack" },
+      warn = { pattern = "%f[%w]()WARN()%f[%W]", group = "MiniHipatternsWarn" },
+      todo = { pattern = "%f[%w]()TODO()%f[%W]", group = "MiniHipatternsTodo" },
+      note = { pattern = "%f[%w]()NOTE()%f[%W]", group = "MiniHipatternsNote" },
+      ref = { pattern = "%f[%w]()REF()%f[%W]", group = "MiniHipatternsRef" },
+
+      -- Highlight hex color strings (`#rrggbb`) using that color
+      hex_color = hipatterns.gen_highlighter.hex_color(),
+    },
+  })
+end
+
 function mini.config()
   mini.surround()
   mini.pairs()
@@ -322,6 +340,7 @@ function mini.config()
   mini.align()
   mini.indentscope()
   mini.jump()
+  mini.hipatterns()
   -- mini.ai()
 end
 
