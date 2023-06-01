@@ -163,6 +163,7 @@ function M.config()
       L = { "<cmd>:Vlive<cr>", "Open Live for LiveView (vsplit)" },
     },
     ["<leader>r"] = { name = "+repls" },
+    ["<leader>s"] = { name = "+noice" },
     ["<leader>t"] = {
       name = "+terminal",
       t = { "term" },

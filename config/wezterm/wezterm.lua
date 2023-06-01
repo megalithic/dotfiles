@@ -436,7 +436,7 @@ return {
       }),
     },
     {
-      key = "m",
+      key = "M",
       mods = "CMD|CTRL",
       action = act({
         QuickSelectArgs = {
@@ -453,7 +453,7 @@ return {
       }),
     },
     {
-      key = "M",
+      key = "m",
       mods = "CMD|CTRL",
       action = act({
         QuickSelectArgs = {

@@ -138,8 +138,8 @@ end
 
 -- Custom `^V` and `^S` symbols to make this file appropriate for copy-paste
 -- (otherwise those symbols are not displayed).
-local CTRL_S = vim.api.nvim_replace_termcodes("<C-S>", true, true, true)
-local CTRL_V = vim.api.nvim_replace_termcodes("<C-V>", true, true, true)
+local CTRL_S = vim.keycode("<C-S>", true, true, true) 
+local CTRL_V = vim.keycode("<C-V>", true, true, true) 
 -- stylua: ignore start
 local MODES = setmetatable({
   ['n']    = { long = 'Normal',   short = 'N',   hl = 'StModeNormal' },

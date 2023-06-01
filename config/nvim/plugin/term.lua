@@ -386,6 +386,7 @@ function Terminal:new(params)
   self.size = t.size
   self.split = t.split
   self.winc = t.winc
+  self.notifier = t.notifier
   self.bufnr = self.bufnr or 0
 
   setmetatable(t, self)

@@ -42,7 +42,7 @@ return {
     local fmt = string.format
     local api = vim.api
 
-    local function esc(cmd) return vim.api.nvim_replace_termcodes(cmd, true, false, true) end
+    local function esc(cmd) return vim.keycode(cmd, true, false, true) end 
 
     -- [nvim-cmp] --
     local has_words_before = function()
@@ -88,8 +88,6 @@ return {
           cmp.complete()
         -- elseif vim.fn["vsnip#expandable"]() > 0 then
         --   vim.fn.feedkeys(esc("<Plug>(vsnip-expand)"), "")
-        -- elseif require("copilot.suggestion").is_visible() then
-        --   require("copilot.suggestion").accept()
         else
           fallback()
         end
@@ -198,6 +196,7 @@ return {
             item.kind = fmt("%s %s", mega.icons.lsp.kind[item.kind], item.kind)
           end
 
+          -- REF: https://github.com/zolrath/dotfiles/blob/main/dot_config/nvim/lua/plugins/cmp.lua#L45
           -- local max_length = 20
           local max_length = math.floor(vim.o.columns * 0.5)
           item.abbr = #item.abbr >= max_length and string.sub(item.abbr, 1, max_length) .. mega.icons.misc.ellipsis

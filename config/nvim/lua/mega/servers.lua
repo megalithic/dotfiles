@@ -328,7 +328,7 @@ return {
             arrayIndex = "Disable", -- "Enable", "Auto", "Disable"
             await = true,
             paramName = "Disable", -- "All", "Literal", "Disable"
-            paramType = false,
+            paramType = true,
             semicolon = "Disable", -- "All", "SameLine", "Disable"
             setType = true,
           },

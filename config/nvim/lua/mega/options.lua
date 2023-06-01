@@ -34,6 +34,7 @@ vim.o.ttimeoutlen = 10
 -----------------------------------------------------------------------------//
 -- Window splitting and buffers {{{1
 -----------------------------------------------------------------------------//
+vim.o.smoothscroll = true
 vim.o.splitbelow = true
 vim.o.splitright = true
 vim.o.splitkeep = "screen"
@@ -164,7 +165,7 @@ end
 -----------------------------------------------------------------------------//
 -- Wild and file globbing stuff in command mode {{{1
 -----------------------------------------------------------------------------//
-vim.o.wildcharm = fn.char2nr(mega.replace_termcodes([[<Tab>]]))
+vim.o.wildcharm = fn.char2nr(vim.keycode([[<Tab>]]))
 vim.o.wildmode = "longest:full,full" -- Shows a menu bar as opposed to an enormous list
 -- Binary
 vim.opt.wildignore = {
@@ -216,7 +217,7 @@ vim.o.synmaxcol = 1024 -- don't syntax highlight long lines
 vim.o.signcolumn = "yes:1"
 -- vim.o.signcolumn = "auto:3-9"
 vim.o.ruler = false
-vim.o.cmdheight = 1 -- Set command line height to two lines
+vim.o.cmdheight = 0 -- Set command line height to two lines
 vim.o.showbreak = [[↪ ]] -- Options include -> '…', '↳ ', '→','↪ '
 vim.o.showbreak = string.rep(" ", 3) -- Make it so that long lines wrap smartly
 vim.o.lazyredraw = false -- should make scrolling faster; disabled for noice.nvim

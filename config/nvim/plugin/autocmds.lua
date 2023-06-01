@@ -357,7 +357,7 @@ do
   vim.keymap.set({ "n", "v", "o", "i", "c", "t" }, "<Plug>(StopHL)", "execute(\"nohlsearch\")[-1]", { expr = true })
   local function stop_hl()
     if vim.v.hlsearch == 0 or api.nvim_get_mode().mode ~= "n" then return end
-    api.nvim_feedkeys(mega.replace_termcodes("<Plug>(StopHL)"), "m", false)
+    api.nvim_feedkeys(vim.keycode("<Plug>(StopHL)"), "m", false) 
   end
   local function hl_search()
     local col = api.nvim_win_get_cursor(0)[2]

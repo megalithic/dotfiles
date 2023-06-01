@@ -64,7 +64,7 @@ function M.rename()
 
   local function cleanup_rename_callback(winnr)
     api.nvim_win_close(winnr or 0, true)
-    api.nvim_feedkeys(mega.replace_termcodes("<Esc>"), "i", true)
+    api.nvim_feedkeys(vim.keycode("<Esc>"), "i", true) 
 
     current_name = ""
     rename_prompt = default_rename_prompt

@@ -576,11 +576,6 @@ end
 
 function mega.noop() end
 
----A terser proxy for `nvim_replace_termcodes`
----@param str string
----@return any
-function mega.replace_termcodes(str) return api.nvim_replace_termcodes(str, true, true, true) end
-
 -- essentially allows for a ternary operator of sorts
 function mega._if(bool, a, b)
   if bool then
@@ -1198,6 +1193,24 @@ function mega.clear_ui()
   local ok, n = mega.require("notify")
   if ok then n.dismiss() end
   mega.clear_commandline()
+end
+
+---@param buf number?
+---@return boolean
+function mega.is_large_file(buf)
+  buf = buf or 0
+  local ok1, is_large = pcall(vim.api.nvim_buf_get_var, buf, "large_file")
+  if ok1 then
+    -- set a buffer variable so we don't have to re-stat the file if this is
+    -- called again
+    vim.api.nvim_buf_set_var(buf, "large_file", is_large)
+    return is_large
+  end
+
+  local ok2, stats = pcall(vim.loop.fs_stat, vim.api.nvim_buf_get_name(buf))
+  if ok2 and stats and stats.size > 1000000 then return true end
+
+  return false
 end
 
 function mega.runlua()

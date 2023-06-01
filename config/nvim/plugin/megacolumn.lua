@@ -129,7 +129,6 @@ local excluded = {
   "log",
   "man",
   "dap-repl",
-  "markdown",
   "vimwiki",
   "vim-plug",
   "gitcommit",

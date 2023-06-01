@@ -141,5 +141,16 @@ autoload -U edit-command-line
 bindkey -M vicmd "^V" edit-command-line
 bindkey "^V" edit-command-line
 
+# repeat-prev-command() {
+#     if [[ $BUFFER == "k" ]]; then
+#         BUFFER=$history[$((HISTCMD-1))]
+#     fi
+#     zle accept-line
+# }
+# zle -N repeat-prev-command
+# bindkey -M viins '^g' repeat-prev-command
+# bindkey -M vicmd '^g' repeat-prev-command
+# bindkey '^g' repeat-prev-command
+
 
 bindkey '^y' autosuggest-accept

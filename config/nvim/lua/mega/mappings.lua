@@ -64,7 +64,7 @@ vim.keymap.set("n", "j", "v:count == 0 ? 'gj' : 'j'", { expr = true, silent = tr
 --     -- tmap("<C-j>", function() vim.cmd("wincmd j") end, opts)
 --     -- vim.keymap.set("t", "<C-k>", function()
 --     --   print("<C-k>'ing")
---     --   vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes([[<C-\><C-n>]], true, false, true), "t", true)
+--     --   vim.api.nvim_feedkeys(vim.keycode([[<C-\><C-n>]], true, false, true), "t", true)
 --     --   vim.cmd("wincmd k")
 --     -- end, opts)
 --     -- tnoremap("<C-l>", "<Cmd>wincmd l<CR>", opts)
@@ -96,7 +96,7 @@ map({ "i", "n", "t" }, "<C-Left>", ":tabp<CR>", { desc = "prev tab", remap = tru
 map({ "i", "n", "t" }, "<C-Up>", ":+tabmove<CR>", { desc = "move tab right", remap = true })
 map({ "i", "n", "t" }, "<C-Down>", ":-tabmove<CR>", { desc = "move tab left", remap = true })
 
-nmap("gb", string.format("<cmd>ls<CR>:b<space>%s", mega.replace_termcodes("<tab>")), "current buffers")
+nmap("gb", string.format("<cmd>ls<CR>:b<space>%s", vim.keycode("<tab>")), "current buffers")
 nmap("J", "<nop>")
 nmap("gx", mega.open_uri, "open uri under cursor")
 
@@ -134,7 +134,7 @@ nnoremap("<localleader>f", "<cmd>LspFormatWrite<cr>", "run lsp formatter")
 exec("silent! unmap [%", true)
 exec("silent! unmap ]%", true)
 
-map({ "n", "o", "s", "v", "x" }, "<tab>", "%", { desc = "jump to opening/closing delimiter", remap = true })
+map({ "n", "o", "s", "v", "x" }, "<tab>", "%", { desc = "jump to opening/closing delimiter", remap = false })
 -- nmap("<Tab>", "%")
 -- nnoremap("<Tab>", "%")
 -- smap("<Tab>", "%")
@@ -353,8 +353,8 @@ cnoremap("<C-n>", "<Down>", { desc = "Line Down (command-mode)" })
 nnoremap("<C-f>", "<C-f>zz<Esc><Cmd>lua mega.blink_cursorline(75)<CR>")
 nnoremap("<C-b>", "<C-b>zz<Esc><Cmd>lua mega.blink_cursorline(75)<CR>")
 
-nnoremap("<C-u>", "<C-u>zz<Esc><Cmd>lua mega.blink_cursorline(75)<CR>")
 nnoremap("<C-d>", "<C-d>zz<Esc><Cmd>lua mega.blink_cursorline(75)<CR>")
+nnoremap("<C-u>", "<C-u>zz<Esc><Cmd>lua mega.blink_cursorline(75)<CR>")
 
 vnoremap([[J]], [[5j]], "Jump down")
 vnoremap([[K]], [[5k]], "Jump up")
@@ -501,7 +501,7 @@ nnoremap("cN", "*``cgN")
 -- 4. Hit Enter to repeat the macro over search matches.
 function mega.mappings.setup_map() nnoremap("M", [[:nnoremap M n@z<CR>q:<C-u>let @z=strpart(@z,0,strlen(@z)-1)<CR>n@z]]) end
 
-vim.g.mc = mega.replace_termcodes([[y/\V<C-r>=escape(@", '/')<CR><CR>]])
+vim.g.mc = vim.keycode([[y/\V<C-r>=escape(@", '/')<CR><CR>]])
 xnoremap("cn", [[g:mc . "``cgn"]], { expr = true, silent = true })
 xnoremap("cN", [[g:mc . "``cgN"]], { expr = true, silent = true })
 nnoremap("cq", [[:\<C-u>call v:lua.mega.mappings.setup_map()<CR>*``qz]])

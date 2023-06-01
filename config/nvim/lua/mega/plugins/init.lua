@@ -58,6 +58,40 @@ return {
     end,
   },
   {
+    "Bekaboo/dropbar.nvim",
+    -- REF: https://github.com/Bekaboo/nvim/blob/master/init.lua
+    event = "VeryLazy",
+    cond = false,
+    keys = {
+      { "<leader>wp", function() require("dropbar.api").pick() end, desc = "winbar: pick" },
+    },
+    config = function()
+      require("dropbar").setup({
+        -- general = {
+        --   enable = function(buf, win)
+        --     local b, w = vim.bo[buf], vim.wo[win]
+        --     local decor = ui.decorations.get({ ft = b.ft, bt = b.bt, setting = "winbar" })
+        --     return decor.ft ~= false
+        --       and b.bt == ""
+        --       and not w.diff
+        --       and not api.nvim_win_get_config(win).zindex
+        --       and api.nvim_buf_get_name(buf) ~= ""
+        --   end,
+        -- },
+        icons = {
+          ui = { bar = { separator = " " .. mega.icons.misc.arrow_right .. " " } },
+          kinds = { symbols = vim.tbl_map(function(value) return value .. " " end, require("lspkind").symbol_map) },
+        },
+        menu = {
+          win_configs = {
+            border = mega.get_border(),
+            col = function(menu) return menu.parent_menu and menu.parent_menu._win_configs.width + 1 or 0 end,
+          },
+        },
+      })
+    end,
+  },
+  {
     "chrisgrieser/replacer.nvim",
     ft = "qf",
     -- keys = {
@@ -72,9 +106,11 @@ return {
           mega.nmap("q", vim.cmd.write, { desc = " Finish replacing", buffer = true, nowait = true })
         end,
       })
-
-      -- { "<leader>R", function() require("replacer").run() end, desc = "qf: replace in qflist" },
-      -- { "<C-r>", function() require("replacer").run() end, desc = "qf: replace in qflist" },
+      mega.nnoremap(
+        "<leader>r",
+        function() require("replacer").run() end,
+        { desc = "qf: replace in qflist", nowait = true }
+      )
     end,
   },
   {

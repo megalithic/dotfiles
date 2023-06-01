@@ -61,6 +61,9 @@ if $(erdtree &>/dev/null); then
   # alias tree="erdtree -I 'dotbot|node_modules|cache|test_*'"
 fi
 
+# REF: https://www.reddit.com/r/zsh/comments/3anb4c/zsh_function_to_run_last_command/
+alias fk="!!" #  or `r` - runs the last command
+
 alias s="ls"
 alias last='ls *(.om[1])'
 # alias bat='BAT_CONFIG_PATH="~/.batrc" BAT_THEME="base16" bat'
