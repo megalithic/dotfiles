@@ -105,6 +105,11 @@ local launchers = {
     target = "com.obsproject.obs-studio",
   },
   {
+    key = "o",
+    mode = "focus",
+    target = "co.detail.mac",
+  },
+  {
     key = "f",
     mods = mods.caSc,
     mode = "focus",
@@ -205,6 +210,13 @@ local layouts = {
   ["com.obsproject.obs-studio"] = {
     bundleID = "com.obsproject.obs-studio",
     name = "OBS Studio",
+    rules = {
+      { "", 2, "maximized" },
+    },
+  },
+  ["co.detail.mac"] = {
+    bundleID = "co.detail.mac",
+    name = "Detail",
     rules = {
       { "", 2, "maximized" },
     },
