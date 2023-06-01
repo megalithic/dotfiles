@@ -41,10 +41,10 @@ return {
 
       local function terminal_notifier(term_cmd, exit)
         if exit == 0 then
-          mega.notify("test(s) passed 👍", L.INFO)
+          mega.notify(mega.icons.test.passed .. " test(s) passed 👍", L.INFO)
           -- system(string.format([[terminal-notifier -title "Neovim [vim-test]" -message "test(s) passed"]], term_cmd))
         else
-          mega.notify("test(s) failed 👎", L.ERROR)
+          mega.notify(mega.icons.test.failed .. " test(s) failed 👎", L.ERROR)
           -- system(string.format([[terminal-notifier -title "Neovim [vim-test]" -message "test(s) failed"]], term_cmd))
         end
       end
@@ -149,11 +149,11 @@ return {
           non_collapsible = "",
           collapsed = "",
 
-          passed = "", --alts: 
-          running = "",
-          skipped = "○",
-          failed = "",
-          unknown = "", -- alts: 
+          passed = mega.icons.test.passed,
+          running = mega.icons.test.running,
+          skipped = mega.icons.test.skipped,
+          failed = mega.icons.test.failed,
+          unknown = mega.icons.test.unknown,
           running_animated = vim.tbl_map(
             function(s) return s .. " " end,
             { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" }

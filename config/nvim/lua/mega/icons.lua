@@ -155,6 +155,13 @@ return {
     folder = "",
     open_folder = "",
   },
+  test = {
+    passed = "", --alts: 
+    failed = "",
+    running = "",
+    skipped = "○",
+    unknown = "", -- alts: 
+  },
   type = {
     array = "",
     number = "",

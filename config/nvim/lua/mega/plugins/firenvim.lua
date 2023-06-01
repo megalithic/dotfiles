@@ -94,9 +94,11 @@ local M = {
     end
 
     local function on_bufenter(evt)
-      vim.api.nvim_set_option("guifont", "JetBrainsMono Nerd Font:h22")
-
       local bufnr = evt.buf or vim.api.nvim_get_current_buf() or 0
+      vim.api.nvim_set_option("guifont", "JetBrainsMono Nerd Font:h22")
+      vim.api.nvim_set_option("buftype", "firenvim")
+      dd(I(vim.api.nvim_get_option("buftype")))
+
       local buf_lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, true)
       local buf_name = vim.api.nvim_buf_get_name(bufnr)
 
@@ -137,6 +139,8 @@ local M = {
       vim.opt_local.statuscolumn = ""
       vim.opt_local.cursorlineopt = "screenline,number"
       vim.opt_local.cursorline = true
+      vim.opt_local.buftype = "firenvim"
+      vim.api.nvim_set_option("buftype", "firenvim")
 
       vim.cmd([[
       tmap <D-v> <C-w>"+

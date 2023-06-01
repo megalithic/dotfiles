@@ -62,7 +62,7 @@ if $(erdtree &>/dev/null); then
 fi
 
 # REF: https://www.reddit.com/r/zsh/comments/3anb4c/zsh_function_to_run_last_command/
-alias fk="!!" #  or `r` - runs the last command
+alias fk="r" #  runs the last command
 
 alias s="ls"
 alias last='ls *(.om[1])'
