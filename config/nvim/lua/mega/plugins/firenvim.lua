@@ -93,11 +93,10 @@ local M = {
       })
     end
 
-    local function on_bufenter(evt)
-      local bufnr = evt.buf or vim.api.nvim_get_current_buf() or 0
+    local function on_bufenter(params)
+      local bufnr = params.buf or vim.api.nvim_get_current_buf() or 0
       vim.api.nvim_set_option("guifont", "JetBrainsMono Nerd Font:h22")
       vim.api.nvim_set_option("buftype", "firenvim")
-      dd(I(vim.api.nvim_get_option("buftype")))
 
       local buf_lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, true)
       local buf_name = vim.api.nvim_buf_get_name(bufnr)
@@ -116,7 +115,7 @@ local M = {
       setup_write_autocmd(bufnr)
     end
 
-    local function on_uienter(evt)
+    local function on_uienter(params)
       -- disable headlines (until we update colours for forestbones)
       local ok_headlines, headlines = mega.require("headlines")
       if ok_headlines then
@@ -139,7 +138,6 @@ local M = {
       vim.opt_local.statuscolumn = ""
       vim.opt_local.cursorlineopt = "screenline,number"
       vim.opt_local.cursorline = true
-      vim.opt_local.buftype = "firenvim"
       vim.api.nvim_set_option("buftype", "firenvim")
 
       vim.cmd([[
@@ -171,10 +169,54 @@ local M = {
         "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR><Esc>norm! ggdGa<CR>"
       )
 
+      require("mega.globals").inoremap("<D-r>", function()
+        -- local appName = vim.cmd([[!hs -c "hs.application.frontmostApplication():name()"]])
+        -- print(appName)
+
+        local result = {}
+        vim.fn.jobstart("hs -c 'hs.application.frontmostApplication():name()'", {
+          stdout_buffered = true,
+          on_stdout = function(_, data, _)
+            for _, item in ipairs(data) do
+              if item and item ~= "" then table.insert(result, item) end
+            end
+            print("stdout: " .. vim.inspect(result))
+          end,
+          on_exit = function(_, code, _)
+            if code > 0 and not result or not result[1] then return end
+            print("exited " .. code)
+
+            -- local parts = vim.split(result[1], "\t")
+            -- if parts and #parts > 1 then
+            --   local formatted = { behind = parts[1], ahead = parts[2] }
+            --   vim.g.git_statusline_updates = formatted
+            -- end
+          end,
+        })
+
+        -- print("after jobstart: " .. vim.inspect(result))
+
+        -- vim.fn.jobstart([[hs -c "hs.application.frontmostApplication()"]], {
+        --   on_stdout = function(job_id, data, event)
+        --     print("stdout")
+        --     dd("stdout: " .. I({ job_id, data, event }))
+        --   end,
+        --   on_stderr = function(job_id, data, event)
+        --     print("stderr")
+        --     dd("stderr: " .. I({ job_id, data, event }))
+        --   end,
+        --   on_exit = function(job_id, data, event)
+        --     print("stderr")
+        --     dd("exit: " .. I({ job_id, data, event }))
+        --   end,
+        -- })
+        -- hs.osascript.javascript([[Application(']] .. hs.application.frontmostApplication():name() .. [[').reload()]])
+      end)
+
       -- disable cmp autocomplete
       require("cmp").setup.buffer({ enabled = false })
 
-      local bufnr = evt.buf or vim.api.nvim_get_current_buf() or 0
+      local bufnr = params.buf or vim.api.nvim_get_current_buf() or 0
 
       setup_write_autocmd(bufnr)
     end

@@ -6,7 +6,6 @@ local _appObj = nil
 local browser = hs.application.get(C.preferred.browser)
 local defaultKittyFont = 15.0
 local fontSizeDelta = "+8.0"
-local currentAudioOutputLevel
 
 obj.__index = obj
 obj.name = "context.detail"
@@ -25,13 +24,11 @@ function obj:start(opts)
   if event == hs.application.watcher.launched then
     do
       local term = hs.application.get("wezterm") or hs.application.get("kitty")
-      currentAudioOutputLevel = hs.audiodevice.defaultOutputDevice():outputVolume()
 
       hs.spotify.pause()
       L.req("lib.menubar.keyshowr"):start()
       L.req("lib.dnd").on("obs")
       L.req("lib.menubar.ptt").setState("push-to-mute")
-      hs.audiodevice.defaultOutputDevice():setOutputVolume(15)
 
       hs.layout.apply({
         { browser:name(), nil, 1, hs.layout.maximized, nil, nil },
@@ -71,8 +68,6 @@ function obj:stop(opts)
   then
     _appObj:kill()
   elseif event == hs.application.watcher.terminated then
-    hs.audiodevice.defaultOutputDevice():setOutputVolume(currentAudioOutputLevel)
-
     L.req("lib.menubar.ptt").setState("push-to-talk")
     L.req("lib.dnd").off()
 

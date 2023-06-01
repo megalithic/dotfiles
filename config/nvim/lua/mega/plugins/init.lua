@@ -46,6 +46,7 @@ return {
     end,
   },
   { "lukas-reineke/virt-column.nvim", config = { char = "│" }, event = "VimEnter" },
+  -- @trial: https://github.com/xiyaowong/virtcolumn.nvim
   {
     "mbbill/undotree",
     -- enabled = false,

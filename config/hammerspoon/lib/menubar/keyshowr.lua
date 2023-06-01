@@ -22,7 +22,7 @@ function obj:init()
   }, function(event)
     local flags = event:getFlags()
     local character = hs.keycodes.map[event:getKeyCode()]
-    if ((not flags.ctrl) and not flags.alt and not flags.cmd) or type(character) ~= "string" then return end
+    -- if ((not flags.ctrl) and not flags.alt and not flags.cmd) or type(character) ~= "string" then return end
     hs.alert.closeAll(0)
     hs.alert(
       (flags.ctrl and "⌃" or "")
@@ -45,7 +45,7 @@ function obj:init()
         strokeWidth = 0,
         fillColor = { white = 0.1 },
         textColor = { white = 0.9 },
-        textSize = 23,
+        textSize = 32,
         radius = 5,
         fadeInDuration = 0,
         atScreenEdge = 1,

@@ -34,7 +34,7 @@ vim.o.ttimeoutlen = 10
 -----------------------------------------------------------------------------//
 -- Window splitting and buffers {{{1
 -----------------------------------------------------------------------------//
-vim.o.smoothscroll = true
+-- vim.o.smoothscroll = true
 vim.o.splitbelow = true
 vim.o.splitright = true
 vim.o.splitkeep = "screen"
