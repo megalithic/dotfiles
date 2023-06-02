@@ -308,10 +308,13 @@ return {
         incremental_selection = {
           enable = true,
           keymaps = {
-            init_selection = "gN", -- maps in normal mode to init the node/scope selection
-            scope_incremental = "gN", -- increment to the upper scope (as defined in locals.scm)
-            node_incremental = "gnn", -- increment to the upper named parent
-            node_decremental = "gnN", -- decrement to the previous node
+            init_selection = "vv",
+            node_incremental = "v",
+            node_decremental = "V",
+            scope_incremental = "vv", -- increment to the upper scope (as defined in locals.scm)
+            -- init_selection = "gN", -- maps in normal mode to init the node/scope selection
+            -- node_incremental = "gnn", -- increment to the upper named parent
+            -- node_decremental = "gnN", -- decrement to the previous node
           },
         },
         query_linter = {

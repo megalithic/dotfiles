@@ -194,7 +194,7 @@ return {
     comment = "󰅺",
     robot = "󰚩",
     lightbulb = "󰌵",
-    search = "󰍉", -- alts: 
+    search = "", -- alts: 󰍉
     code = "",
     telescope = "",
     gear = "",

@@ -20,7 +20,7 @@ local M = {
           content = "text",
           priority = 0,
           selector = "textarea",
-          takeover = "always",
+          takeover = "never",
           -- filename = "/tmp/{hostname}_{pathname%10}.{extension}",
         },
         ["https?://github.com/"] = {
