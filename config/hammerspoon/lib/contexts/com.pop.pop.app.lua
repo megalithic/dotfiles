@@ -23,6 +23,7 @@ function obj:start(opts)
 
     -- hs.timer.waitUntil(function() return pop:getWindow("'s Screen") end, function()
     L.req("lib.dnd").on("meeting")
+    L.req("lib.watchers.dock").refreshInput("docked")
     hs.spotify.pause()
     L.req("lib.menubar.keyshowr"):start()
     L.req("lib.menubar.ptt").setState("push-to-mute")

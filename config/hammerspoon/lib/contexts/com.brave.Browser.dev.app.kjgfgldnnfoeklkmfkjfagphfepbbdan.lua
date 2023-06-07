@@ -47,24 +47,24 @@ function obj:start(opts)
   if obj.modal then obj.modal:enter() end
 
   if event == hs.application.watcher.launched then
-    do
-      local term = hs.application.get("com.github.wez.wezterm") or hs.application.get("kitty")
-      local meet = hs.application.get("Google Meet")
+    local term = hs.application.get("com.github.wez.wezterm") or hs.application.get("kitty")
+    local meet = hs.application.get("Google Meet")
 
-      hs.timer.waitUntil(function() return meet:isRunning() end, function()
-        L.req("lib.dnd").on("zoom")
-        hs.spotify.pause()
-        L.req("lib.menubar.ptt").setState("push-to-talk")
+    hs.timer.waitUntil(function() return meet:isRunning() end, function()
+      L.req("lib.dnd").on("zoom")
+      hs.spotify.pause()
+      L.req("lib.menubar.ptt").setState("push-to-talk")
 
-        local layouts = {
-          { "Google Meet", nil, hs.screen.primaryScreen():name(), hs.layout.left50, nil, nil },
-          { browser:name(), nil, hs.screen.primaryScreen():name(), hs.layout.right50, nil, nil },
-          { term:name(), nil, hs.screen.primaryScreen():name(), hs.layout.right50, nil, nil },
-        }
-        hs.layout.apply(layouts)
-        term:setFrontmost(true)
-      end)
-    end
+      local layouts = {
+        { "Google Meet", nil, hs.screen.primaryScreen():name(), hs.layout.left50, nil, nil },
+        { browser:name(), nil, hs.screen.primaryScreen():name(), hs.layout.right50, nil, nil },
+        { term:name(), nil, hs.screen.primaryScreen():name(), hs.layout.right50, nil, nil },
+      }
+      hs.layout.apply(layouts)
+      term:setFrontmost(true)
+
+      L.req("lib.watchers.dock").refreshInput("docked")
+    end)
   end
 
   return self

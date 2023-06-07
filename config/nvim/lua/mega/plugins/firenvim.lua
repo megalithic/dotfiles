@@ -109,7 +109,8 @@ local M = {
       end
 
       -- expand the firenvim window larger than it should be, (if it's presently less than 25 lines)
-      if vim.o.lines < 15 then vim.o.lines = 15 end
+      -- if vim.o.lines < 15 then vim.o.lines = 15 end
+      vim.o.lines = 15
 
       -- We wait to call this function until the firenvim buffer is loaded
       setup_write_autocmd(bufnr)

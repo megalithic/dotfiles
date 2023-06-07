@@ -12,15 +12,17 @@
 
 # add custom types
 --type-add
-frontend:*.{html,css,js,jsx,ts,tsx,scss,sass,html.heex}*
+frontend:*.{html,css,js,jsx,ts,tsx,scss,sass,html.heex,heex}*
 --type-add
-fe:*.{html,css,js,jsx,ts,tsx,scss,sass,html.heex}*
+fe:*.{html,css,js,jsx,ts,tsx,scss,sass,html.heex,heex}*
 --type-add
 rabl:*.rabl
 --type-add
 erb:*.erb
 --type-add
-heex:*.html.heex
+heex:*.{html.heex,heex}*
+--type-add
+ex:*.ex
 --type-add
 railsmigrations:*/migrate/*
 --type-add

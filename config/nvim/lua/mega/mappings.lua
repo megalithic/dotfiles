@@ -134,7 +134,12 @@ nnoremap("<localleader>f", "<cmd>LspFormatWrite<cr>", "run lsp formatter")
 exec("silent! unmap [%", true)
 exec("silent! unmap ]%", true)
 
-map({ "n", "o", "s", "v", "x" }, "<tab>", "%", { desc = "jump to opening/closing delimiter", remap = false })
+map(
+  { "n", "o", "s", "v", "x" },
+  "<Tab>",
+  "%",
+  { desc = "jump to opening/closing delimiter", remap = true, silent = false }
+)
 -- nmap("<Tab>", "%")
 -- nnoremap("<Tab>", "%")
 -- smap("<Tab>", "%")

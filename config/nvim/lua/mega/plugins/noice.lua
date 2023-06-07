@@ -135,166 +135,166 @@ return {
         },
       },
       redirect = { view = "popup", filter = { event = "msg_show" } },
-      routes = {
-        {
-          opts = { skip = true },
-          filter = {
-            any = {
-              { event = "msg_show", find = "written" },
-              { event = "msg_show", find = "%d+ lines, %d+ bytes" },
-              { event = "msg_show", find = "line %d+ of %d+" },
-              { event = "msg_show", kind = "search_count" },
-              { event = "msg_show", find = "%d+L, %d+B" },
-              { event = "msg_show", find = "^Hunk %d+ of %d" },
-              { event = "msg_show", find = "%d+ change" },
-              { event = "msg_show", find = "%d+ line" },
-              { event = "msg_show", find = "%d+ more line" },
-              -- TODO: investigate the source of this LSP message and disable it happens in typescript files
-              { event = "notify", find = "No information available" },
-            },
-          },
-        },
-        {
-          view = "vsplit",
-          filter = { event = "msg_show", min_height = 20 },
-        },
-        {
-          view = "notify",
-          filter = {
-            any = {
-              { event = "msg_show", min_height = 10 },
-              { event = "msg_show", find = "Treesitter" },
-            },
-          },
-          opts = { timeout = 10000 },
-        },
-        {
-          view = "notify",
-          filter = { event = "notify", find = "Type%-checking" },
-          opts = { replace = true, merge = true, title = "TSC" },
-          stop = true,
-        },
-        {
-          view = "mini",
-          filter = {
-            any = {
-              { event = "msg_show", find = "^E486:" },
-              { event = "notify", max_height = 1 },
-              { event = "notify", find = "lazy" },
-              { event = "notify", find = "test" },
-            },
-          }, -- minimise pattern not found messages
-        },
-        {
-          view = "notify",
-          filter = {
-            any = {
-              { warning = true },
-              { event = "msg_show", find = "^Warn" },
-              { event = "msg_show", find = "^W%d+:" },
-              { event = "msg_show", find = "^No hunks$" },
-            },
-          },
-          opts = { title = "Warning", level = L.WARN, merge = false, replace = false },
-        },
-        {
-          view = "notify",
-          opts = { title = "Error", level = L.ERROR, merge = true, replace = false },
-          filter = {
-            any = {
-              { error = true },
-              { event = "msg_show", find = "^Error" },
-              { event = "msg_show", find = "^E%d+:" },
-            },
-          },
-        },
-        {
-          view = "notify",
-          opts = { title = "" },
-          filter = { kind = { "emsg", "echo", "echomsg" } },
-        },
-        {
-          filter = {
-            event = "msg_show",
-            find = "%d+L, %d+B",
-          },
-          view = "mini",
-        },
-        {
-          filter = { event = "msg_show", min_height = 10 },
-          view = "split",
-          opts = { enter = true },
-        },
-        {
-          filter = { event = "msg_show", kind = "search_count" },
-          opts = { skip = true },
-        },
-        {
-          filter = {
-            event = "msg_show",
-            find = "; before #",
-          },
-          opts = { skip = true },
-        },
-        {
-          filter = {
-            event = "msg_show",
-            find = "; after #",
-          },
-          opts = { skip = true },
-        },
-        {
-          filter = {
-            event = "msg_show",
-            find = " lines, ",
-          },
-          opts = { skip = true },
-        },
-        {
-          filter = {
-            event = "msg_show",
-            find = "go up one level",
-          },
-          opts = { skip = true },
-        },
-        {
-          filter = {
-            event = "msg_show",
-            find = "yanked",
-          },
-          opts = { skip = true },
-        },
-        {
-          filter = { find = "No active Snippet" },
-          opts = { skip = true },
-        },
-        {
-          filter = { find = "waiting for cargo metadata" },
-          opts = { skip = true },
-        },
-        -- Show "recording" messages
-        {
-          view = "notify",
-          filter = { event = "msg_showmode" },
-        },
-        -- Hide "written" messages
-        {
-          filter = {
-            event = "msg_show",
-            kind = "",
-            find = "written",
-          },
-          opts = { skip = true },
-        },
-        -- Hide "No information available" messages
-        {
-          view = "notify",
-          filter = {
-            find = "No information available",
-          },
-          opts = { skip = true },
-        },
-      },
+      -- routes = {
+      --   {
+      --     opts = { skip = true },
+      --     filter = {
+      --       any = {
+      --         { event = "msg_show", find = "written" },
+      --         { event = "msg_show", find = "%d+ lines, %d+ bytes" },
+      --         { event = "msg_show", find = "line %d+ of %d+" },
+      --         { event = "msg_show", kind = "search_count" },
+      --         { event = "msg_show", find = "%d+L, %d+B" },
+      --         { event = "msg_show", find = "^Hunk %d+ of %d" },
+      --         { event = "msg_show", find = "%d+ change" },
+      --         { event = "msg_show", find = "%d+ line" },
+      --         { event = "msg_show", find = "%d+ more line" },
+      --         -- TODO: investigate the source of this LSP message and disable it happens in typescript files
+      --         { event = "notify", find = "No information available" },
+      --       },
+      --     },
+      --   },
+      --   {
+      --     view = "vsplit",
+      --     filter = { event = "msg_show", min_height = 20 },
+      --   },
+      --   {
+      --     view = "notify",
+      --     filter = {
+      --       any = {
+      --         { event = "msg_show", min_height = 10 },
+      --         { event = "msg_show", find = "Treesitter" },
+      --       },
+      --     },
+      --     opts = { timeout = 10000 },
+      --   },
+      --   {
+      --     view = "notify",
+      --     filter = { event = "notify", find = "Type%-checking" },
+      --     opts = { replace = true, merge = true, title = "TSC" },
+      --     stop = true,
+      --   },
+      --   {
+      --     view = "mini",
+      --     filter = {
+      --       any = {
+      --         { event = "msg_show", find = "^E486:" },
+      --         { event = "notify", max_height = 1 },
+      --         { event = "notify", find = "lazy" },
+      --         { event = "notify", find = "test" },
+      --       },
+      --     }, -- minimise pattern not found messages
+      --   },
+      --   {
+      --     view = "notify",
+      --     filter = {
+      --       any = {
+      --         { warning = true },
+      --         { event = "msg_show", find = "^Warn" },
+      --         { event = "msg_show", find = "^W%d+:" },
+      --         { event = "msg_show", find = "^No hunks$" },
+      --       },
+      --     },
+      --     opts = { title = "Warning", level = L.WARN, merge = false, replace = false },
+      --   },
+      --   {
+      --     view = "notify",
+      --     opts = { title = "Error", level = L.ERROR, merge = true, replace = false },
+      --     filter = {
+      --       any = {
+      --         { error = true },
+      --         { event = "msg_show", find = "^Error" },
+      --         { event = "msg_show", find = "^E%d+:" },
+      --       },
+      --     },
+      --   },
+      --   {
+      --     view = "notify",
+      --     opts = { title = "" },
+      --     filter = { kind = { "emsg", "echo", "echomsg" } },
+      --   },
+      --   {
+      --     filter = {
+      --       event = "msg_show",
+      --       find = "%d+L, %d+B",
+      --     },
+      --     view = "mini",
+      --   },
+      --   {
+      --     filter = { event = "msg_show", min_height = 10 },
+      --     view = "split",
+      --     opts = { enter = true },
+      --   },
+      --   {
+      --     filter = { event = "msg_show", kind = "search_count" },
+      --     opts = { skip = true },
+      --   },
+      --   {
+      --     filter = {
+      --       event = "msg_show",
+      --       find = "; before #",
+      --     },
+      --     opts = { skip = true },
+      --   },
+      --   {
+      --     filter = {
+      --       event = "msg_show",
+      --       find = "; after #",
+      --     },
+      --     opts = { skip = true },
+      --   },
+      --   {
+      --     filter = {
+      --       event = "msg_show",
+      --       find = " lines, ",
+      --     },
+      --     opts = { skip = true },
+      --   },
+      --   {
+      --     filter = {
+      --       event = "msg_show",
+      --       find = "go up one level",
+      --     },
+      --     opts = { skip = true },
+      --   },
+      --   {
+      --     filter = {
+      --       event = "msg_show",
+      --       find = "yanked",
+      --     },
+      --     opts = { skip = true },
+      --   },
+      --   {
+      --     filter = { find = "No active Snippet" },
+      --     opts = { skip = true },
+      --   },
+      --   {
+      --     filter = { find = "waiting for cargo metadata" },
+      --     opts = { skip = true },
+      --   },
+      --   -- Show "recording" messages
+      --   {
+      --     view = "notify",
+      --     filter = { event = "msg_showmode" },
+      --   },
+      --   -- Hide "written" messages
+      --   {
+      --     filter = {
+      --       event = "msg_show",
+      --       kind = "",
+      --       find = "written",
+      --     },
+      --     opts = { skip = true },
+      --   },
+      --   -- Hide "No information available" messages
+      --   {
+      --     view = "notify",
+      --     filter = {
+      --       find = "No information available",
+      --     },
+      --     opts = { skip = true },
+      --   },
+      -- },
       commands = {
         history = { view = "vsplit" },
       },

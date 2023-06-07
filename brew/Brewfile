@@ -311,6 +311,7 @@ cask "spotify"
 # cask "vimac"  # FIXME: this requires a click-based install (https://install.appcenter.ms/users/dexterleng/apps/vimac/distribution_groups/sparkle)
 cask "the-unarchiver"
 cask "utm" # similar parallels/qemu/virtualbox
+cask "vivaldi-snapshot"
 cask "vlc"
 cask "wez/wezterm/wezterm-nightly"
 # cask "usb-overdrive" # causes issues with QMK keyboards

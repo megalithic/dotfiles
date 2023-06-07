@@ -24,14 +24,14 @@ return {
       -- "AV",
     },
     keys = {
-      { "<localleader>tn", "<cmd>TestNearest<cr>", desc = "run _test under cursor" },
-      { "<localleader>ta", "<cmd>TestFile<cr>", desc = "run _all tests in file" },
-      { "<localleader>tf", "<cmd>TestFile<cr>", desc = "run _all tests in file" },
-      { "<localleader>tl", "<cmd>TestLast<cr>", desc = "run _last test" },
-      { "<localleader>tt", "<cmd>TestLast<cr>", desc = "run _last test" },
-      { "<localleader>tv", "<cmd>TestVisit<cr>", desc = "run test file _visit" },
-      { "<localleader>tp", "<cmd>A<cr>", desc = "open alt (edit)" },
-      { "<localleader>tP", "<cmd>AV<cr>", desc = "open alt (vsplit)" },
+      { "<localleader>tN", "<cmd>TestNearest<cr>", desc = "run _test under cursor" },
+      { "<localleader>tA", "<cmd>TestFile<cr>", desc = "run _all tests in file" },
+      { "<localleader>tF", "<cmd>TestFile<cr>", desc = "run _all tests in file" },
+      { "<localleader>tL", "<cmd>TestLast<cr>", desc = "run _last test" },
+      { "<localleader>tT", "<cmd>TestLast<cr>", desc = "run _last test" },
+      { "<localleader>tV", "<cmd>TestVisit<cr>", desc = "run test file _visit" },
+      -- { "<localleader>tp", "<cmd>A<cr>", desc = "open alt (edit)" },
+      -- { "<localleader>tP", "<cmd>AV<cr>", desc = "open alt (vsplit)" },
     },
     -- event = { "BufReadPost", "BufNewFile" },
     enabled = vim.g.tester == "vim-test",
@@ -41,10 +41,10 @@ return {
 
       local function terminal_notifier(term_cmd, exit)
         if exit == 0 then
-          mega.notify(mega.icons.test.passed .. " test(s) passed 👍", L.INFO)
+          mega.notify("vim-test(s) passed 👍", L.INFO)
           -- system(string.format([[terminal-notifier -title "Neovim [vim-test]" -message "test(s) passed"]], term_cmd))
         else
-          mega.notify(mega.icons.test.failed .. " test(s) failed 👎", L.ERROR)
+          mega.notify("vim-test(s) failed 👎", L.ERROR)
           -- system(string.format([[terminal-notifier -title "Neovim [vim-test]" -message "test(s) failed"]], term_cmd))
         end
       end
@@ -91,7 +91,8 @@ return {
   {
     "nvim-neotest/neotest",
     -- event = { "BufReadPost", "BufNewFile" },
-    enabled = vim.g.tester == "neotest",
+    -- enabled = vim.g.tester == "neotest",
+    cmd = { "Neotest" },
     dependencies = {
       "nvim-lua/plenary.nvim",
       "nvim-treesitter/nvim-treesitter",

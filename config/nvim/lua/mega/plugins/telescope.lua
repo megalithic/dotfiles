@@ -301,7 +301,9 @@ return {
             ["<c-t>"] = require("trouble.providers.telescope").smart_open_with_trouble,
             ["<c-down>"] = function(...) return require("telescope.actions").cycle_history_next(...) end,
             ["<c-up>"] = function(...) return require("telescope.actions").cycle_history_prev(...) end,
-            ["<C-q>"] = actions.smart_send_to_qflist + actions.open_qflist,
+            ["<c-q>"] = actions.smart_send_to_qflist + actions.open_qflist,
+            ["<c-a>"] = { "<Home>", type = "command" },
+            ["<c-e>"] = { "<End>", type = "command" },
           },
           n = {
             ["<cr>"] = function(pb) multi(pb, "vnew") end,
@@ -385,6 +387,12 @@ return {
           prefixes = {
             ["!"] = {
               flag = "invert-match",
+            },
+          },
+          mappings = {
+            i = {
+              ["<c-a>"] = { "<Home>", type = "command" }, -- overrides default: egrep_actions.toggle_and,
+              ["<c-e>"] = { "<End>", type = "command" },
             },
           },
         },

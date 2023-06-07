@@ -153,7 +153,7 @@ return {
       settings = {
         typescript = {
           inlayHints = {
-            includeInlayParameterNameHints = "all",
+            includeInlayParameterNameHints = "literal", -- alts: all
             includeInlayParameterNameHintsWhenArgumentMatchesName = false,
             includeInlayFunctionParameterTypeHints = true,
             includeInlayVariableTypeHints = true,
@@ -166,7 +166,7 @@ return {
           inlayHints = {
             includeInlayParameterNameHints = "all",
             includeInlayParameterNameHintsWhenArgumentMatchesName = false,
-            includeInlayFunctionParameterTypeHints = true,
+            includeInlayFunctionParameterTypeHints = false,
             includeInlayVariableTypeHints = true,
             includeInlayPropertyDeclarationTypeHints = true,
             includeInlayFunctionLikeReturnTypeHints = true,

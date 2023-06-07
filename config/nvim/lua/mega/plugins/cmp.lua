@@ -13,6 +13,8 @@ return {
           init = function()
             vim.g.vsnip_snippet_dir = vim.fn.fnamemodify(vim.env.MYVIMRC, ":p:h") .. "/snippets"
             vim.g.vsnip_filetypes = {
+              heex = { "elixir" },
+              eelixir = { "elixir" },
               typescript = { "javascript" },
               typescriptreact = { "javascript" },
               javascriptreact = { "javascript" },
@@ -42,7 +44,7 @@ return {
     local fmt = string.format
     local api = vim.api
 
-    local function esc(cmd) return vim.keycode(cmd, true, false, true) end 
+    local function esc(cmd) return vim.keycode(cmd, true, false, true) end
 
     -- [nvim-cmp] --
     local has_words_before = function()

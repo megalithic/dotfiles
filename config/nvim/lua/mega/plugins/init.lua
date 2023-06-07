@@ -79,6 +79,27 @@ return {
         --       and api.nvim_buf_get_name(buf) ~= ""
         --   end,
         -- },
+        bar = {
+          sources = function(_, _)
+            local sources = require("dropbar.sources")
+            return {
+              -- sources.path,
+              {
+                get_symbols = function(buf, cursor)
+                  if vim.bo[buf].ft == "markdown" then return sources.markdown.get_symbols(buf, cursor) end
+                  for _, source in ipairs({
+                    sources.lsp,
+                    sources.treesitter,
+                  }) do
+                    local symbols = source.get_symbols(buf, cursor)
+                    if not vim.tbl_isempty(symbols) then return symbols end
+                  end
+                  return {}
+                end,
+              },
+            }
+          end,
+        },
         icons = {
           ui = { bar = { separator = " " .. mega.icons.misc.arrow_right .. " " } },
           kinds = { symbols = vim.tbl_map(function(value) return value .. " " end, require("lspkind").symbol_map) },
@@ -285,6 +306,24 @@ return {
     },
   },
   {
+    "lvimuser/lsp-inlayhints.nvim",
+    branch = "anticonceal",
+    init = function()
+      mega.augroup("InlayHintsSetup", {
+        event = "LspAttach",
+        command = function(args)
+          local id = vim.tbl_get(args, "data", "client_id") --[[@as lsp.Client]]
+          if not id then return end
+          local client = vim.lsp.get_client_by_id(id)
+          require("lsp-inlayhints").on_attach(client, args.buf)
+        end,
+      })
+    end,
+    opts = {
+      inlay_hints = { priority = vim.highlight.priorities.user + 1 },
+    },
+  },
+  {
     "stevearc/oil.nvim",
     cmd = { "Oil" },
     lazy = false,
@@ -344,6 +383,51 @@ return {
     "kevinhwang91/nvim-hclipboard",
     event = "InsertCharPre",
     config = function() require("hclipboard").start() end,
+  },
+  {
+    "jackMort/ChatGPT.nvim",
+    cmd = { "ChatGPT", "ChatGPTActAs", "ChatGPTEditWithInstructions" },
+    config = function()
+      local border = { style = mega.get_border(), highlight = "PickerBorder" }
+      require("chatgpt").setup({
+        popup_window = { border = border },
+        popup_input = { border = border, submit = "<C-y>" },
+        settings_window = { border = border },
+        chat = {
+          keymaps = {
+            close = {
+              "<C-c>",
+            },
+          },
+        },
+      })
+    end,
+    dependencies = {
+      "MunifTanjim/nui.nvim",
+      "nvim-lua/plenary.nvim",
+    },
+  },
+  {
+    "tdfacer/explain-it.nvim",
+    requires = {
+      "rcarriga/nvim-notify",
+    },
+    config = function()
+      require("explain-it").setup({
+        -- Prints useful log messages
+        debug = true,
+        -- Customize notification window width
+        max_notification_width = 20,
+        -- Retry API calls
+        max_retries = 3,
+        -- Customize response text file persistence location
+        output_directory = "/tmp/chat_output",
+        -- Toggle splitting responses in notification window
+        split_responses = false,
+        -- Set token limit to prioritize keeping costs low, or increasing quality/length of responses
+        token_limit = 2000,
+      })
+    end,
   },
   {
     "danymat/neogen",

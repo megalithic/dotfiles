@@ -5,11 +5,11 @@ return {
     blank = { " ", " ", " ", " ", " ", " ", " ", " " },
   },
   lsp = {
-    error = "", -- alts: 
+    error = "", -- alts: 
     warn = "󰔷", -- alts: 
     info = "", -- alts: 󰋼  ℹ 󰙎 
     hint = "", -- alts: 󰌶
-    ok = "✓", -- alts: ✓
+    ok = "✓", -- alts: ✓
     -- spinner_frames = { "▪", "■", "□", "▫" },
     -- spinner_frames = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" },
     -- TODO: evaluate
@@ -156,8 +156,8 @@ return {
     open_folder = "",
   },
   test = {
-    passed = "", --alts: 
-    failed = "",
+    passed = "", --alts: 
+    failed = "", --alts: 
     running = "",
     skipped = "○",
     unknown = "", -- alts: 
