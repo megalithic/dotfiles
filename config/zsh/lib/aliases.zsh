@@ -341,7 +341,10 @@ pr() {
 
   [[ -z $get_pr ]] && gh pr view -w "$get_pr"
 }
-alias ghpr="gh pr create --web"
+# alias ghpr="gh pr create --web"
+function ghpr() {
+  GH_FORCE_TTY=100% gh pr list | fzf --query "$1" --ansi --preview 'GH_FORCE_TTY=100% gh pr view {1}' --preview-window down --header-lines 3 | awk '{print $1}' | xargs gh pr checkout
+}
 alias ghb="gh browse"
 alias ghi="gh issue create --label='' --assignee='@me' --body='' --title"
 

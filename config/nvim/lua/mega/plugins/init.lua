@@ -48,8 +48,14 @@ return {
   { "lukas-reineke/virt-column.nvim", config = { char = "│" }, event = "VimEnter" },
   -- @trial: https://github.com/xiyaowong/virtcolumn.nvim
   {
+    "mawkler/modicator.nvim",
+    dependencies = "rktjmp/lush.nvim", -- Add your colorscheme plugin here
+    event = "ModeChanged",
+    cond = false,
+    config = true,
+  },
+  {
     "mbbill/undotree",
-    -- enabled = false,
     cmd = "UndotreeToggle",
     keys = { { "<leader>u", "<Cmd>UndotreeToggle<CR>", desc = "undotree: toggle" } },
     config = function()
@@ -138,7 +144,7 @@ return {
   {
     "mrjones2014/smart-splits.nvim",
     lazy = false,
-    config = true,
+    opts = { at_edge = "stop" },
     build = "./kitty/install-kittens.bash",
     keys = {
       { "<A-h>", function() require("smart-splits").resize_left() end },
@@ -237,6 +243,7 @@ return {
             credo = {},
             elixirls = {
               -- cmd = fmt("%s/lsp/elixir-ls/%s", vim.env.XDG_DATA_HOME, "language_server.sh"),
+              single_file_support = true,
               settings = elixirls.settings({
                 dialyzerEnabled = true,
                 dialyzerFormat = "dialyxir_long", -- alts: dialyxir_short

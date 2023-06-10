@@ -94,7 +94,13 @@ local current_fn = nil
 
 local function dropdown(opts)
   opts = opts or {}
-  return require("telescope.themes").get_dropdown(get_border(opts))
+  return require("telescope.themes").get_dropdown(get_border({
+    mappings = {
+      i = {
+        ["<cr>"] = require("telescope.actions").select_default,
+      },
+    },
+  }))
 end
 
 local function ivy(opts)
@@ -396,6 +402,7 @@ return {
             },
           },
         },
+        undo = { use_delta = false, use_custom_command = { "bash", "-c", "echo '$DIFF' | delta" } },
       },
       pickers = {
         -- find_files = {
@@ -479,6 +486,7 @@ return {
       },
     })
 
+    telescope.load_extension("undo")
     telescope.load_extension("file_browser")
     telescope.load_extension("zf-native")
     telescope.load_extension("egrepify")

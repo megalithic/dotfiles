@@ -113,9 +113,9 @@ local M = {
           filetypes = { "sh", "bash" },
         }),
         -- elixir_dbg,
-        -- diag.zsh.with({
-        --   filetypes = { "zsh" },
-        -- }),
+        diag.zsh.with({
+          filetypes = { "zsh" },
+        }),
         -- diag.editorconfig_checker.with({ command = "editorconfig-checker" }),
         -- diag.credo.with({
         --   -- run credo in strict mode even if strict mode is not enabled in

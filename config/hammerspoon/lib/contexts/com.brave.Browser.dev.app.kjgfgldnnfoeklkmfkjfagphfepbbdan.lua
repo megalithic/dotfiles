@@ -63,7 +63,7 @@ function obj:start(opts)
       hs.layout.apply(layouts)
       term:setFrontmost(true)
 
-      L.req("lib.watchers.dock").refreshInput("docked")
+      -- L.req("lib.watchers.dock").refreshInput("docked")
     end)
   end
 

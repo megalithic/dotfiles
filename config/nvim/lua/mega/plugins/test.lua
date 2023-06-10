@@ -25,6 +25,7 @@ return {
     },
     keys = {
       { "<localleader>tN", "<cmd>TestNearest<cr>", desc = "run _test under cursor" },
+      { "<localleader>tt", "<cmd>TestNearest<cr>", desc = "run _test under cursor" },
       { "<localleader>tA", "<cmd>TestFile<cr>", desc = "run _all tests in file" },
       { "<localleader>tF", "<cmd>TestFile<cr>", desc = "run _all tests in file" },
       { "<localleader>tL", "<cmd>TestLast<cr>", desc = "run _last test" },

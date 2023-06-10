@@ -197,7 +197,7 @@ return {
       },
     },
   },
-  -- bashls = {},
+  bashls = {},
   vimls = { init_options = { isNeovim = true } },
   teal_ls = {},
   terraformls = {},

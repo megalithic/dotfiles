@@ -312,7 +312,8 @@ write() {
 }
 
 is_git() {
-    [[ $(command git rev-parse --is-inside-work-tree 2>/dev/null) == true ]]
+  [[ $(git rev-parse --is-inside-work-tree 2> /dev/null) == "true" ]]
+  [[ $(command git rev-parse --is-inside-work-tree 2>/dev/null) == true ]]
 }
 
 git_status_done() {
@@ -342,7 +343,7 @@ git_status() {
     GIT_STATUS_UNTRACKED=$(write '#ffffff' "$GIT_UNTRACKED_ICON ")
     GIT_STATUS_RENAMED=$(write '208' "$GIT_RENAMED_ICON ")
     GIT_STATUS_DELETED=$(write 'red' "$GIT_DELETED_ICON ")
-    GIT_STATUS_STASHED=$(write '#aaaaaa' "$GIT_STASHED_ICON ")
+    GIT_STATUS_STASHED=$(write '#d9bb80' "$GIT_STASHED_ICON ")
     GIT_STATUS_UNMERGED=$(write 'yellow' "$GIT_CONFLICTED_ICON ")
     GIT_STATUS_AHEAD=$(write '012' "$GIT_AHEAD_ICON ")
     GIT_STATUS_BEHIND=$(write '011' "$GIT_BEHIND_ICON ")
@@ -531,7 +532,7 @@ function __prompt_eval() {
   local dots_prompt_icon="%F{green}$PROMPT_ICON %f"
   local dots_prompt_failure_icon="%F{red}$PROMPT_FAILURE_ICON %f"
   local placeholder="(%F{blue}%{$__DOTS[ITALIC_ON]%}$PLACEHOLDER_ICON%{$__DOTS[ITALIC_OFF]%}%f)"
-  local top="$(_prompt_sudo)$(_prompt_ssh)$(_prompt_path)${_git_status_prompt:-$placeholder}"
+  local top="$(_prompt_sudo)$(_prompt_ssh)$(_prompt_path)${_git_status_prompt:-}"
   # local top="%B%F{magenta}%1~%f%b${_git_status_prompt:-$placeholder}"
   # local top="$(_prompt_sudo)$(_prompt_ssh)$(_prompt_path)${GIT_STATUS:-$placeholder}"
   local character="%(1j.%F{cyan}%j$BACKGROUND_JOB_ICON%f.)%(?.${dots_prompt_icon}.${dots_prompt_failure_icon})"
@@ -539,18 +540,6 @@ function __prompt_eval() {
   local newline=$'\n'
   echo $newline$top$newline$bottom
 }
-# NOTE: VERY IMPORTANT: the type of quotes used matters greatly. Single quotes MUST be used for these variables
-export PROMPT='$(__prompt_eval)'
-# Right prompt
-export RPROMPT='%F{yellow}%{$__DOTS[ITALIC_ON]%}${cmd_exec_time}%{$__DOTS[ITALIC_OFF]%}%f %F{240}%*%f'
-# Spell checking & auto correction prompt
-export SPROMPT="zsh: correct %F{red}'%R'%f to %F{blue}'%r'%f [%B%Uy%u%bes, %B%Un%u%bo, %B%Ue%u%bdit, %B%Ua%u%bbort]?"
-# Add a continuous line following every prompt
-# REF: https://superuser.com/a/846133
-# export PS1=$'%F{black}${(r:$COLUMNS::\u2500:)}'$PS1
-# To capturing errors arising from set -x in a script
-# REF: https://www.reddit.com/r/bash/comments/xcejrb/comment/io52img/?utm_source=share&utm_medium=web2x&context=3
-export PS4='${BASH_SOURCE[0]}:$LINENO '
 
 # -- [ EXECUTION TIME ]---------------------------------------------------------
 # inspired by https://github.com/sindresorhus/pure/blob/81dd496eb380aa051494f93fd99322ec796ec4c2/pure.zsh#L47
@@ -695,3 +684,16 @@ bindkey -M vicmd v edit-command-line
   # 		|| [[ "$container" == "lxc" ]] \
   # 		|| [[ -r "$nspawn_file" ]]
 # }
+
+# NOTE: VERY IMPORTANT: the type of quotes used matters greatly. Single quotes MUST be used for these variables
+export PROMPT='$(__prompt_eval)'
+# Right prompt
+export RPROMPT='%F{yellow}%{$__DOTS[ITALIC_ON]%}${cmd_exec_time}%{$__DOTS[ITALIC_OFF]%}%f %F{240}%*%f'
+# Spell checking & auto correction prompt
+export SPROMPT="zsh: correct %F{red}'%R'%f to %F{blue}'%r'%f [%B%Uy%u%bes, %B%Un%u%bo, %B%Ue%u%bdit, %B%Ua%u%bbort]?"
+# Add a continuous line following every prompt
+# REF: https://superuser.com/a/846133
+# export PS1=$'%F{black}${(r:$COLUMNS::\u2500:)}'$PS1
+# To capturing errors arising from set -x in a script
+# REF: https://www.reddit.com/r/bash/comments/xcejrb/comment/io52img/?utm_source=share&utm_medium=web2x&context=3
+export PS4='${BASH_SOURCE[0]}:$LINENO '

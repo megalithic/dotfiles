@@ -243,7 +243,7 @@ return {
             ["eruby.yaml"] = "# %s",
           },
         },
-        matchup = { enable = true, include_match_words = true, disable = should_disable },
+        matchup = { enable = true, include_match_words = true, disable = should_disable, disable_virtual_text = true },
         -- rainbow = {
         --   enable = true,
         --   disable = false,
@@ -312,9 +312,6 @@ return {
             node_incremental = "v",
             node_decremental = "V",
             scope_incremental = "vv", -- increment to the upper scope (as defined in locals.scm)
-            -- init_selection = "gN", -- maps in normal mode to init the node/scope selection
-            -- node_incremental = "gnn", -- increment to the upper named parent
-            -- node_decremental = "gnN", -- decrement to the previous node
           },
         },
         query_linter = {

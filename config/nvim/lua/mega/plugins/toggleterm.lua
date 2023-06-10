@@ -1,6 +1,7 @@
 return {
   "akinsho/toggleterm.nvim",
   cmd = { "ToggleTerm" },
+  cond = false,
   keys = {
 
     { "<leader>tt", "<cmd>ToggleTerm direction=horizontal<cr>", desc = "toggleterm" },
