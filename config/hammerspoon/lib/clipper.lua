@@ -3,7 +3,6 @@ local obj = {}
 obj.__index = obj
 obj.name = "clipper"
 obj.debug = false
-obj.imgur_client_id = "2974b259fd073e2"
 obj.clip_watcher = {}
 obj.clip_data = {}
 obj.tempfile = "/tmp/tmp.png"
