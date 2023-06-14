@@ -45,7 +45,15 @@ return {
       })
     end,
   },
-  { "lukas-reineke/virt-column.nvim", config = { char = "│" }, event = "VimEnter" },
+  { "lukas-reineke/virt-column.nvim", opts = { char = "│" }, event = "VimEnter" },
+  {
+    "xiyaowong/virtcolumn.nvim",
+    cond = false,
+    opts = {
+      virtcolumn_char = "▕", -- char to display the line
+      virtcolumn_priority = 10, -- priority of extmark
+    },
+  },
   -- @trial: https://github.com/xiyaowong/virtcolumn.nvim
   {
     "mawkler/modicator.nvim",
@@ -578,6 +586,7 @@ return {
   },
   {
     "abecodes/tabout.nvim",
+    cond = false,
     event = { "InsertEnter" },
     keys = { "<Tab>", "<S-Tab>", "<C-t>", "<C-d>" },
     dependencies = { "nvim-treesitter/nvim-treesitter", "hrsh7th/nvim-cmp" },
@@ -608,21 +617,6 @@ return {
 
   -- ( Notes/Docs ) ------------------------------------------------------------
   { "iamcco/markdown-preview.nvim", ft = "markdown", build = "cd app && yarn install" },
-  {
-    "ekickx/clipboard-image.nvim",
-    ft = "markdown",
-    config = true,
-  },
-  {
-    "evanpurkhiser/image-paste.nvim",
-    ft = "markdown",
-    keys = {
-      { "<C-v>", function() require("image-paste").paste_image() end, mode = "i" },
-    },
-    config = {
-      imgur_client_id = "2974b259fd073e2",
-    },
-  },
   {
     "toppair/peek.nvim",
     build = "deno task --quiet build:fast",

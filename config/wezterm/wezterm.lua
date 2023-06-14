@@ -331,6 +331,7 @@ return {
   font = w.font_with_fallback({
     font.JetBrainsMono.Normal,
     font.JetBrainsMonoNerdFont.Normal,
+    { family = "Rec Mono Duotone", weight = "Medium" },
     { family = "Symbols Nerd Font Mono", scale = 0.8 },
   }),
   window_padding = {
@@ -346,6 +347,7 @@ return {
       font = w.font_with_fallback({
         font.JetBrainsMono.BoldItalic,
         font.JetBrainsMonoNerdFont.BoldItalic,
+        { family = "Rec Mono Duotone", weight = "ExtraBlack", italic = true },
         { family = "Symbols Nerd Font Mono", scale = 0.8 },
       }),
     },
@@ -354,6 +356,7 @@ return {
       font = w.font_with_fallback({
         font.JetBrainsMono.Italic,
         font.JetBrainsMonoNerdFont.Italic,
+        { family = "Rec Mono Duotone", italic = true },
         { family = "Symbols Nerd Font Mono", scale = 0.8 },
       }),
     },
@@ -362,6 +365,7 @@ return {
       font = w.font_with_fallback({
         font.JetBrainsMono.Bold,
         font.JetBrainsMonoNerdFont.Bold,
+        { family = "Rec Mono Duotone", weight = "ExtraBlack", italic = false },
         { family = "Symbols Nerd Font Mono", scale = 0.8 },
       }),
     },

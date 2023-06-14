@@ -138,8 +138,8 @@ end
 
 -- Custom `^V` and `^S` symbols to make this file appropriate for copy-paste
 -- (otherwise those symbols are not displayed).
-local CTRL_S = vim.keycode("<C-S>", true, true, true) 
-local CTRL_V = vim.keycode("<C-V>", true, true, true) 
+local CTRL_S = vim.keycode("<C-S>", true, true, true)
+local CTRL_V = vim.keycode("<C-V>", true, true, true)
 -- stylua: ignore start
 local MODES = setmetatable({
   ['n']    = { long = 'Normal',   short = 'N',   hl = 'StModeNormal' },
@@ -374,14 +374,15 @@ end
 local function get_lsp_status(messages)
   local percentage
   local result = {}
-  for _, msg in pairs(messages) do
-    if msg.message then
-      table.insert(result, msg.title .. ": " .. msg.message)
-    else
-      table.insert(result, msg.title)
-    end
-    if msg.percentage then percentage = math.max(percentage or 0, msg.percentage) end
-  end
+  table.insert(result, messages)
+  -- for _, msg in pairs(messages) do
+  --   if msg.message then
+  --     table.insert(result, msg.title .. ": " .. msg.message)
+  --   else
+  --     table.insert(result, msg.title)
+  --   end
+  --   if msg.percentage then percentage = math.max(percentage or 0, msg.percentage) end
+  -- end
   local content = ""
   if percentage then
     content = string.format("%03d: %s", percentage, table.concat(result, ", "))
@@ -390,27 +391,6 @@ local function get_lsp_status(messages)
   end
 
   return seg(content, { margin = { 1, 1 } })
-end
-
-local function get_hydra_status()
-  local ok, hydra = mega.require("hydra.statusline")
-  if not ok then return "" end
-
-  local colors = {
-    red = "HydraRedSt",
-    blue = "HydraBlueSt",
-    amaranth = "HydraAmaranthSt",
-    teal = "HydraTealSt",
-    pink = "HydraPinkSt",
-  }
-  local data = {
-    name = hydra.get_name() or "UNKNOWN",
-    hint = hydra.get_hint(),
-    color = colors[hydra.get_color()],
-  }
-
-  if not hydra.is_active() then return "" end
-  return seg(fmt("%s %s", mega.icons.misc.hydra, string.upper(data.name)), data.color)
 end
 
 local function get_substitution_status()
@@ -555,9 +535,9 @@ end
 local function seg_lsp_status(truncate_at)
   if is_truncated(truncate_at) then return "" end
 
-  local messages = vim.lsp.util.get_progress_messages()
+  local messages = vim.lsp.status()
 
-  if vim.tbl_isempty(messages) then
+  if messages == "" then
     local ok_nls, nls = mega.require("null-ls")
     local enabled = ok_nls and nls.enabled
 
@@ -689,7 +669,6 @@ function _G.__statusline()
     -- seg_opened_terms(120),
     -- end left alignment
     seg([[%=]]),
-    -- seg(get_hydra_status()),
     -- seg(get_substitution_status()),
     seg([[%=]]),
     -- begin right alignment

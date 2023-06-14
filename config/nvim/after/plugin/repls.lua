@@ -65,6 +65,21 @@ mega.command("TermLua", function()
   })
 end)
 
+mega.command("TermHammerspoon", function()
+  local cmd = "hs"
+
+  mega.term({
+    cmd = cmd,
+    direction = "horizontal",
+    temp = true,
+    ---@diagnostic disable-next-line: unused-local
+    on_after_open = function(bufnr, _winnr)
+      vim.api.nvim_buf_set_var(bufnr, "term_cmd", cmd)
+      vim.cmd("startinsert")
+    end,
+  })
+end)
+
 mega.command("TermPython", function()
   local cmd = "python"
 
@@ -108,3 +123,4 @@ nnoremap("<leader>rn", "<cmd>TermNode<cr>", "node")
 nnoremap("<leader>rN", "<cmd>TermNode!<cr>", "node (current file)")
 nnoremap("<leader>rp", "<cmd>TermPython<cr>", "python")
 -- nnoremap("<leader>rP", "<cmd>TermPython!<cr>", "python (current file)")
+nnoremap("<leader>rh", "<cmd>TermHammerspoon<cr>", "hammerspoon")

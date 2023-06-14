@@ -27,7 +27,7 @@ return {
     event = "BufReadPre",
     config = function()
       require("treesitter-context").setup({
-        separator = { "▁", "TreesitterContextBorder" }, -- alts: ▁ ─ ▄─▁
+        separator = "▁", -- "TreesitterContextBorder" }, -- alts: ▁ ─ ▄─▁
         mode = "cursor",
         max_lines = 1, -- How many lines the window should span. Values <= 0 mean no limit.
         trim_scope = "outer",
@@ -98,6 +98,7 @@ return {
           "cpp",
           "css",
           "comment",
+          "dap_repl",
           "devicetree",
           "dockerfile",
           "diff",

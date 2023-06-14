@@ -462,6 +462,7 @@ return {
         experimental = {
           classRegex = {
             [[class= "([^"]*)]],
+            [[additional_classes= "([^"]*)]],
             [[class: "([^"]*)]],
             "~H\"\"\".*class=\"([^\"]*)\".*\"\"\"",
             "~H\"\"\".*additional_classes=\"([^\"]*)\".*\"\"\"",

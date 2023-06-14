@@ -428,7 +428,7 @@ local theme = lush(function(injected_functions)
 
     TreesitterContext({ bg = C.bg1 }),
     -- TreesitterContextLineNumber({ CursorLineNr, bg = TreesitterContext.bg, gui = C.transparent }),
-    TreesitterContextBorder({ fg = C.bg_dark, bg = TreesitterContext.bg }),
+    TreesitterContextSeparator({ fg = C.bg_dark, bg = TreesitterContext.bg }),
 
     -- TS: Markdown
     -- sym("@markdown.punct.special") {Special},

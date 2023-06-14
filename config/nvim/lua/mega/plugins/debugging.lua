@@ -1,5 +1,5 @@
 local fn = vim.fn
-mega.debug = { layout = { ft = { dart = 2 } } }
+
 return {
   {
     "mfussenegger/nvim-dap",
@@ -26,12 +26,12 @@ return {
       },
       {
         "<localleader>duc",
-        function() require("dapui").close(mega.debug.layout.ft[vim.bo.ft]) end,
+        function() require("dapui").close() end,
         desc = "dap ui: close",
       },
       {
         "<localleader>dut",
-        function() require("dapui").toggle(mega.debug.layout.ft[vim.bo.ft]) end,
+        function() require("dapui").toggle() end,
         desc = "dap ui: toggle",
       },
       { "<localleader>de", function() require("dap").step_out() end, desc = "dap: step out" },
@@ -70,7 +70,7 @@ return {
 
       dap.listeners.before.event_exited["dapui_config"] = function() dapui.close() end
       dap.listeners.before.event_terminated["dapui_config"] = function() dapui.close() end
-      dap.listeners.after.event_initialized["dapui_config"] = function() dapui.open(mega.debug.layout.ft[vim.bo.ft]) end
+      dap.listeners.after.event_initialized["dapui_config"] = function() dapui.open() end
     end,
     dependencies = {
       {
@@ -107,13 +107,122 @@ return {
     ft = { "javascript", "javascriptreact", "typescript", "typescriptreact" },
     dependencies = { "mfussenegger/nvim-dap" },
     opts = {
-      adapters = { "chrome", "pwa-node", "pwa-chrome", "node-terminal", "pwa-extensionHost" },
-      node_path = "node",
+      debugger_path = vim.fn.stdpath("data") .. "/mason/packages/js-debug-adapter",
       debugger_cmd = { "js-debug-adapter" },
+      node_path = "node",
+      adapters = { "chrome", "pwa-node", "pwa-chrome", "pwa-msedge", "node-terminal", "pwa-extensionHost" },
     },
     config = function(_, opts)
       require("dap-vscode-js").setup(opts)
-      for _, language in ipairs({ "typescript", "typescriptreact", "javascript" }) do
+
+      local dap = require("dap")
+      -- -- ╭──────────────────────────────────────────────────────────╮
+      -- -- │ Adapters                                                 │
+      -- -- ╰──────────────────────────────────────────────────────────╯
+      --
+      -- -- NODE
+      -- dap.adapters.node2 = {
+      --   type = "executable",
+      --   command = "node",
+      --   args = { vim.fn.stdpath("data") .. "/mason/packages/node-debug2-adapter/out/src/nodeDebug.js" },
+      -- }
+      --
+      -- -- Chrome
+      -- dap.adapters.chrome = {
+      --   type = "executable",
+      --   command = "node",
+      --   args = { vim.fn.stdpath("data") .. "/mason/packages/chrome-debug-adapter/out/src/chromeDebug.js" },
+      -- }
+      --
+      -- -- ╭──────────────────────────────────────────────────────────╮
+      -- -- │ Configurations                                           │
+      -- -- ╰──────────────────────────────────────────────────────────╯
+      -- dap.configurations.javascript = {
+      --   {
+      --     name = "Node.js",
+      --     type = "node2",
+      --     request = "launch",
+      --     program = "${file}",
+      --     cwd = vim.fn.getcwd(),
+      --     sourceMaps = true,
+      --     protocol = "inspector",
+      --     console = "integratedTerminal",
+      --   },
+      -- }
+      --
+      -- dap.configurations.javascript = {
+      --   {
+      --     name = "Chrome (9222)",
+      --     type = "chrome",
+      --     request = "attach",
+      --     program = "${file}",
+      --     cwd = vim.fn.getcwd(),
+      --     sourceMaps = true,
+      --     protocol = "inspector",
+      --     port = 9222,
+      --     webRoot = "${workspaceFolder}",
+      --   },
+      -- }
+      --
+      -- dap.configurations.javascriptreact = {
+      --   {
+      --     name = "Chrome (9222)",
+      --     type = "chrome",
+      --     request = "attach",
+      --     program = "${file}",
+      --     cwd = vim.fn.getcwd(),
+      --     sourceMaps = true,
+      --     protocol = "inspector",
+      --     port = 9222,
+      --     webRoot = "${workspaceFolder}",
+      --   },
+      -- }
+      --
+      -- dap.configurations.typescriptreact = {
+      --   {
+      --     name = "Chrome (9222)",
+      --     type = "chrome",
+      --     request = "attach",
+      --     program = "${file}",
+      --     cwd = vim.fn.getcwd(),
+      --     sourceMaps = true,
+      --     protocol = "inspector",
+      --     port = 9222,
+      --     webRoot = "${workspaceFolder}",
+      --   },
+      --   {
+      --     name = "React Native (8081) (Node2)",
+      --     type = "node2",
+      --     request = "attach",
+      --     program = "${file}",
+      --     cwd = vim.fn.getcwd(),
+      --     sourceMaps = true,
+      --     protocol = "inspector",
+      --     console = "integratedTerminal",
+      --     processId = require("dap.utils").pick_process,
+      --     port = 8081,
+      --   },
+      --   {
+      --     name = "Attach React Native (8081)",
+      --     type = "pwa-node",
+      --     request = "attach",
+      --     processId = require("dap.utils").pick_process,
+      --     cwd = vim.fn.getcwd(),
+      --     rootPath = "${workspaceFolder}",
+      --     skipFiles = { "<node_internals>/**", "node_modules/**" },
+      --     sourceMaps = true,
+      --     protocol = "inspector",
+      --     console = "integratedTerminal",
+      --   },
+      -- }
+
+      dap.adapters.node2 = {
+        type = "executable",
+        command = "node",
+        args = { vim.fn.stdpath("data") .. "/mason/packages/node-debug2-adapter/out/src/nodeDebug.js" },
+      }
+
+      for _, language in ipairs({ "typescript", "typescriptreact", "javascript", "javascriptreact" }) do
         require("dap").configurations[language] = {
           {
             type = "chrome",
@@ -129,8 +238,39 @@ return {
             processId = require("dap.utils").pick_process,
             cwd = "${workspaceFolder}",
           },
+          {
+            name = "React Native (8081) (Node2)",
+            type = "node2",
+            request = "attach",
+            program = "${file}",
+            cwd = vim.fn.getcwd(),
+            sourceMaps = true,
+            protocol = "inspector",
+            console = "integratedTerminal",
+            port = 8081,
+          },
+          {
+            name = "Attach React Native (8081)",
+            type = "pwa-node",
+            request = "attach",
+            processId = require("dap.utils").pick_process,
+            cwd = vim.fn.getcwd(),
+            rootPath = "${workspaceFolder}",
+            skipFiles = { "<node_internals>/**", "node_modules/**" },
+            sourceMaps = true,
+            protocol = "inspector",
+            console = "integratedTerminal",
+          },
         }
       end
     end,
+  },
+  {
+    "LiadOz/nvim-dap-repl-highlights",
+    config = true,
+    dependencies = {
+      "mfussenegger/nvim-dap",
+      "nvim-treesitter/nvim-treesitter",
+    },
   },
 }

@@ -213,7 +213,7 @@ alias eks="nvim $DOTS/config/kitty/sessions/default.session"
 alias eq="nvim $DOTS/home/qutebrowser/config.py"
 
 alias ew="nvim $DOTS/config/wezterm/wezterm.lua"
-alias wezup="brew upgrade --cask homebrew/cask-versions/wezterm-nightly --no-quarantine --greedy-latest"
+alias wezup="brew upgrade --cask wez/wezterm/wezterm-nightly --no-quarantine --greedy-latest"
 
 alias ezmk="nvim $HOME/code/zmk-config/config/leeloo.keymap"
 alias eqmk="nvim $HOME/code/megalithic_qmk/keyboards/atreus62/keymaps/megalithic/keymap.c"
@@ -343,7 +343,8 @@ pr() {
 }
 # alias ghpr="gh pr create --web"
 function ghpr() {
-  GH_FORCE_TTY=100% gh pr list | fzf --query "$1" --ansi --preview 'GH_FORCE_TTY=100% gh pr view {1}' --preview-window down --header-lines 3 | awk '{print $1}' | xargs gh pr checkout
+  # GH_FORCE_TTY=100% gh pr list | fzf --query "$1" --ansi --preview 'GH_FORCE_TTY=100% gh pr view {1}' --preview-window down --header-lines 3 | awk '{print $1}' | xargs gh pr checkout
+  gh pr create --web
 }
 alias ghb="gh browse"
 alias ghi="gh issue create --label='' --assignee='@me' --body='' --title"

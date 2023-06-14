@@ -203,6 +203,7 @@ brew "wxwidgets" # for erlang
 brew "yubico-piv-tool" if OS.mac?
 brew "libyubikey" if OS.mac?
 brew "pam_yubico" if OS.mac?
+brew "xclip" if OS.linux?
 brew "vivid"
 brew "vim"
 brew "viu" # used with fzf-lua for image rendering
@@ -243,6 +244,8 @@ cask "font-cascadia-code-pl"
 cask "font-cascadia-mono"
 cask "font-cascadia-mono-pl"
 cask "font-caskaydia-cove-nerd-font"
+cask "font-recursive-code"
+cask "font-recursive-code-nerd-font"
 
 cask "font-cascadia-mono"
 cask "font-3270-nerd-font"
@@ -301,7 +304,7 @@ cask "obs-beta"
 cask "obsidian"
 # cask "oracle-jdk"
 cask "postbird" if OS.mac?
-cask "qutebrowser" if OS.mac? # sudo xattr -dr com.apple.quarantine /Applications/qutebrowser.app
+# cask "qutebrowser" if OS.mac? # sudo xattr -dr com.apple.quarantine /Applications/qutebrowser.app
 cask "raycast" if OS.mac?
 cask "signal"
 cask "slack"

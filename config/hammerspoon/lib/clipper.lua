@@ -2,7 +2,7 @@ local obj = {}
 
 obj.__index = obj
 obj.name = "clipper"
-obj.debug = true
+obj.debug = false
 obj.imgur_client_id = "2974b259fd073e2"
 obj.clip_watcher = {}
 obj.clip_data = {}
@@ -19,12 +19,13 @@ function obj.send_to_imgur(image, open_image_url)
   if image then
     image:saveToFile(obj.tempfile)
     local b64 = hs.execute("base64 -i " .. obj.tempfile)
+    local client_id = hs.execute("zsh -ci 'echo $IMGUR_CLIENT_ID'")
 
     if b64 ~= nil then
       b64 = hs.http.encodeForQuery(string.gsub(b64, "\n", ""))
 
       local req_url = "https://api.imgur.com/3/upload.json"
-      local req_headers = { Authorization = "Client-ID " .. obj.imgur_client_id }
+      local req_headers = { Authorization = fmt("Client-ID %s", client_id) }
       local req_payload = "type='base64'&image=" .. b64
 
       hs.http.asyncPost(req_url, req_payload, req_headers, function(status, body, _headers)
