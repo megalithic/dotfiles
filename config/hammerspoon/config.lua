@@ -19,18 +19,16 @@ local preferred = {
 }
 preferred["browser"] = "com.brave.Browser.dev" --hs.urlevent.getDefaultHandler("https")
 
-local watchers = { "status", "bluetooth", "dock", "audio", "wifi", "url", "downloads" }
-
 local transientApps = {
-  ["LaunchBar"] = { allowRoles = "AXSystemDialog" },
-  -- ["1Password 7"] = { allowTitles = "1Password mini" },
+  -- ["LaunchBar"] = { allowRoles = "AXSystemDialog" },
+  ["1Password 7"] = { allowTitles = "1Password mini" },
   ["Spotlight"] = { allowRoles = "AXSystemDialog" },
-  ["Paletro"] = { allowRoles = "AXSystemDialog" },
+  -- ["Paletro"] = { allowRoles = "AXSystemDialog" },
   ["Contexts"] = false,
   ["Emoji & Symbols"] = true,
 }
 
-local networks = { "shaolin" }
+local networks = { "shaolin", "Ginger-Guest" }
 
 local displays = {
   laptop = "Built-in Retina Display",
@@ -422,7 +420,6 @@ return {
   ["networks"] = networks,
   ["preferred"] = preferred,
   ["transientApps"] = transientApps,
-  ["watchers"] = watchers,
   ["dock"] = dock,
   ["quitters"] = quitters,
 }

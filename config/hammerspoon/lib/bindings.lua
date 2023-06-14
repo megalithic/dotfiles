@@ -12,6 +12,12 @@ local obj = {}
 obj.__index = obj
 obj.name = "bindings"
 obj.mouseBindings = {}
+obj.debug = true
+
+local dbg = function(str, ...)
+  str = string.format(":: [%s] %s", obj.name, str)
+  if obj.debug then return _G.dbg(string.format(str, ...), false) end
+end
 
 local function chooseAppFromGroup(apps, key, tag, groupKey)
   local group = hs.fnutils.filter(
@@ -112,7 +118,7 @@ function obj:start()
     local launch = L.load("lib.launcher") or {}
 
     hs.fnutils.each(launcher, function(spec)
-      dbg(I(spec))
+      -- dbg(I(spec))
       local key = spec.key
       local mods = spec.mods or {}
       local target = spec.target
@@ -121,7 +127,7 @@ function obj:start()
 
       if key and target then
         Hyper:bind(mods, key, function()
-          dbg(fmt("key/mode/type/target: %s/%s/%s/%s", key, mode, type(target), I(target)))
+          dbg("key/mode/type/target: %s/%s/%s/%s", key, mode, type(target), I(target))
           -- we've only passed a string, assuming an application's bundleID
           if type(target) == "string" then
             if mode == "focus" then
@@ -152,14 +158,14 @@ function obj:start()
             local launchTarget = foundTarget[2]
 
             if #foundTarget > 0 then
-              dbg(fmt("launch type/target: %s/%s", I(launchType), I(launchTarget)))
+              dbg("launch type/target: %s/%s", I(launchType), I(launchTarget))
 
               if launchType == "bundleID" then
                 hs.fnutils.each(target, function(t)
                   local locals = t.locals
                   if locals and #locals > 0 then
                     hs.fnutils.each(locals, function(k)
-                      dbg(fmt("binding local passthroughs: %s/%s", k, launchTarget))
+                      dbg("binding local passthroughs: %s/%s", k, launchTarget)
 
                       Hyper:bindPassThrough(k, launchTarget)
                     end)
@@ -169,7 +175,7 @@ function obj:start()
                 if mode == "focus" then
                   launch.focusOnly(launchTarget)
                 else
-                  dbg(fmt("about to toggle/launch %s", launchTarget))
+                  dbg("toggle/launch %s", launchTarget)
                   launch.toggle(launchTarget, false)
                 end
               elseif launchType == "url" then
@@ -228,18 +234,18 @@ function obj:start()
     hs.notify.new({ title = "Hammerspoon", subTitle = "Reloading configuration.." }):send()
   end)
 
-  local axbrowse = require("axbrowse")
-  local lastApp
-
-  hs.hotkey.bind(keys.mods.CasC, "b", function()
-    local currentApp = hs.axuielement.applicationElement(hs.application.frontmostApplication())
-    if currentApp == lastApp then
-      axbrowse.browse() -- try to continue from where we left off
-    else
-      lastApp = currentApp
-      axbrowse.browse(currentApp) -- new app, so start over
-    end
-  end)
+  -- local axbrowse = require("axbrowse")
+  -- local lastApp
+  --
+  -- hs.hotkey.bind(keys.mods.CasC, "b", function()
+  --   local currentApp = hs.axuielement.applicationElement(hs.application.frontmostApplication())
+  --   if currentApp == lastApp then
+  --     axbrowse.browse() -- try to continue from where we left off
+  --   else
+  --     lastApp = currentApp
+  --     axbrowse.browse(currentApp) -- new app, so start over
+  --   end
+  -- end)
 
   -- Hyper:bind({}, "space", function() spoon.Seal:toggle("") end)
 
@@ -260,7 +266,6 @@ end
 
 function obj:stop()
   L.unload("lib.hyper")
-  dbg("bindings obj.stop'd'")
   obj.mouseBindings:stop()
 
   return self

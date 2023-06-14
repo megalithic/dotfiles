@@ -1,8 +1,3 @@
-local Settings = require("hs.settings")
-local Config = C
-local DockConfig = Config.dock
-local DisplaysConfig = Config.displays
-
 local obj = {}
 
 obj.__index = obj
@@ -18,35 +13,41 @@ obj.watchers = {
   app = {},
 }
 
-local function checkLeelooConnection()
+local dbg = function(str, ...)
+  str = string.format(":: [%s] %s", obj.name, str)
+  if obj.debug then return _G.dbg(string.format(str, ...), false) end
+end
+
+local function leelooBluetoothConnected()
   local connectedDevices = hs.battery.privateBluetoothBatteryInfo()
   local leeloo = hs.fnutils.find(connectedDevices, function(device) return device.name == "Leeloo" end)
-  dbg(fmt(":: [status] leeloo: %s", I(leeloo)))
-  return leeloo
+  dbg("leeloo: %s", I(leeloo))
+  return leeloo ~= nil
 end
 
 local function usbHandler(device)
-  dbg(fmt(":: [status] usb: %s", I(device)))
-  if device.productName == DockConfig.target.productName then
-    dbg(fmt(":: [status] usb (%s): %s", DockConfig.target.productName, I((device.eventType == "added"))))
-
-    if device.eventType == "added" then
-      obj.watchers.status.dock = true
-    elseif device.eventType == "removed" then
-      obj.watchers.status.dock = false
-    end
-  end
-  obj.watchers.status.leeloo = checkLeelooConnection()
+  -- dbg("usb: %s", I(device))
+  -- if device.productName == DockConfig.target.productName then
+  --   dbg("usb (%s): %s", DockConfig.target.productName, I((device.eventType == "added")))
+  --
+  --   if device.eventType == "added" then
+  --     obj.watchers.status.dock = true
+  --   elseif device.eventType == "removed" then
+  --     obj.watchers.status.dock = false
+  --   end
+  -- end
+  --
+  obj.watchers.status.leeloo = leelooBluetoothConnected()
+    or (device.eventType == "added" and device.productID == C.dock.keyboard.productID)
 end
 
 local function screenHandler()
-  dbg(DisplaysConfig.external)
-  obj.watchers.status.display = hs.screen.find(DisplaysConfig.external) ~= nil
-  -- obj.watchers.status.dock = obj.watchers.status.display
+  obj.watchers.status.display = hs.screen.find(C.displays.external) ~= nil
+  obj.watchers.status.dock = obj.watchers.status.display
 end
 
 local function applicationHandler(appName, appEvent, appObj)
-  dbg(fmt(":: [status] app: %s/%s/%s", appName, appEvent, appObj:bundleID()))
+  dbg("app: %s/%s/%s", appName, appEvent, appObj:bundleID())
 
   obj.watchers.status.app = {
     appName = appName,

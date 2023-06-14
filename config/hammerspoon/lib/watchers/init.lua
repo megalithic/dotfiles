@@ -1,5 +1,4 @@
-local Settings = require("hs.settings")
-local FNUtils = require("hs.fnutils")
+local fnutils = require("hs.fnutils")
 
 local obj = {}
 
@@ -10,16 +9,15 @@ obj.watched = {}
 
 function obj:init(opts)
   opts = opts or {}
-
-obj.watchers = C.watchers
+  if opts.watchers ~= nil then obj.watchers = opts.watchers end
 
   return self
 end
 
 function obj:start()
-  -- start each of our watchers
-  -- TODO: add ability for a watcher to refuse auto-starting
-  FNUtils.each(obj.watchers, function(modTarget)
+  -- obj.watchers = obj.watchers or watchers
+
+  fnutils.each(obj.watchers, function(modTarget)
     local modPath = "lib.watchers." .. modTarget
     local mod = L.load(modPath):start()
 
@@ -30,7 +28,9 @@ function obj:start()
 end
 
 function obj:stop()
-  FNUtils.each(obj.watched, function(mod) L.unload("lib." .. mod.name:gsub("watcher", "watchers")) end)
+  if obj.watchers == nil or obj.watched == nil then return end
+
+  fnutils.each(obj.watched, function(mod) L.unload("lib." .. mod.name:gsub("watcher", "watchers")) end)
   obj.watchers = {}
   obj.watched = {}
 

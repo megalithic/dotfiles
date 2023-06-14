@@ -26,7 +26,7 @@ function obj:start(opts)
       local term = hs.application.get("wezterm") or hs.application.get("kitty")
 
       hs.spotify.pause()
-      L.req("lib.menubar.keyshowr"):start()
+      L.req("lib.menubar.keycastr"):start()
       L.req("lib.dnd").on("obs")
       L.req("lib.menubar.ptt").setState("push-to-mute")
 
@@ -72,7 +72,7 @@ function obj:stop(opts)
     L.req("lib.dnd").off()
 
     do
-      L.req("lib.menubar.keyshowr"):stop()
+      L.req("lib.menubar.keycastr"):stop()
 
       if browser ~= nil then
         local browser_win = browser:mainWindow()

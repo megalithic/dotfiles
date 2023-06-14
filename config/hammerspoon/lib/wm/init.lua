@@ -14,6 +14,11 @@ obj.debug = false
 obj.log = true
 obj.contextModals = {}
 
+local dbg = function(str, ...)
+  str = string.format(":: [%s] %s", obj.name, str)
+  if obj.debug then return _G.dbg(string.format(str, ...), false) end
+end
+
 local function info(...)
   if obj.log then return _G.info(...) end
 end
@@ -221,7 +226,7 @@ function obj:start(opts)
   -- lib/contexts/init.lua instance; manually call :start() on it
   obj.watcher:start(obj.layouts, filters, handleWatcher)
 
-  obj.layoutRunningApps(obj.layouts)
+  -- obj.layoutRunningApps(obj.layouts)
 
   note(fmt("[START] %s (%s)", obj.name, obj.mode))
 

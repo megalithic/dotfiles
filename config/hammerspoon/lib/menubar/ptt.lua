@@ -25,6 +25,7 @@ local pttKey = C.keys.ptt
 
 obj.defaultState = "push-to-talk"
 obj.mic = hs.audiodevice.defaultInputDevice()
+obj.inputs = hs.audiodevice.allInputDevices()
 
 obj.state = obj.defaultState
 obj.defaultInputVolume = 50
@@ -54,6 +55,12 @@ local to_psv = function(tbl)
   return string.sub(s, 2) -- remove first comma
 end
 
+local function setAllInputsMuted(muted)
+  for _i, input in ipairs(obj.inputs) do
+    input:setMuted(muted)
+  end
+end
+
 local showState = function()
   if obj.pushed then log.df("device to handle: %s", obj.mic) end
 
@@ -78,7 +85,8 @@ local showState = function()
     end
   end
 
-  obj.mic:setInputMuted(muted)
+  setAllInputsMuted(muted)
+  -- obj.mic:setInputMuted(muted)
 end
 
 local buildMenu = function()
