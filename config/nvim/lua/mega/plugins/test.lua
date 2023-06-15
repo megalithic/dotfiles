@@ -2,19 +2,10 @@
 -- https://github.com/jfpedroza/neotest-elixir
 -- https://github.com/jfpedroza/neotest-elixir/pull/23
 
-local function open() require("neotest").output.open({ enter = true, short = false }) end
-local function run_file() require("neotest").run.run(vim.fn.expand("%")) end
-local function run_file_sync() require("neotest").run.run({ vim.fn.expand("%"), concurrent = false }) end
-local function run_nearest() require("neotest").run.run() end
-local function run_last() require("neotest").run.run_last() end
-local function next_failed() require("neotest").jump.prev({ status = "failed" }) end
-local function prev_failed() require("neotest").jump.next({ status = "failed" }) end
-local function toggle_summary() require("neotest").summary.toggle() end
-local function cancel() require("neotest").run.stop({ interactive = true }) end
-
 return {
   {
     "vim-test/vim-test",
+    -- enabled = vim.g.tester == "vim-test",
     cmd = {
       "TestNearest",
       "TestFile",
@@ -24,18 +15,16 @@ return {
       -- "AV",
     },
     keys = {
-      { "<localleader>tn", "<cmd>TestNearest<cr>", desc = "run _test under cursor" },
-      -- { "<localleader>tt", "<cmd>TestNearest<cr>", desc = "run _test under cursor" },
-      { "<localleader>ta", "<cmd>TestFile<cr>", desc = "run _all tests in file" },
-      { "<localleader>tf", "<cmd>TestFile<cr>", desc = "run _all tests in file" },
-      { "<localleader>tl", "<cmd>TestLast<cr>", desc = "run _last test" },
+      { "<localleader>tn", "<cmd>TestNearest<cr>", desc = "run (n)earest test" },
+      { "<localleader>ta", "<cmd>TestFile<cr>", desc = "run (a)ll tests in file" },
+      { "<localleader>tf", "<cmd>TestFile<cr>", desc = "run (a)ll tests in file" },
+      { "<localleader>tl", "<cmd>TestLast<cr>", desc = "run (l)ast test" },
       -- { "<localleader>tT", "<cmd>TestLast<cr>", desc = "run _last test" },
-      { "<localleader>tv", "<cmd>TestVisit<cr>", desc = "run test file _visit" },
+      { "<localleader>tv", "<cmd>TestVisit<cr>", desc = "run test file (v)isit" },
       -- { "<localleader>tp", "<cmd>A<cr>", desc = "open alt (edit)" },
       -- { "<localleader>tP", "<cmd>AV<cr>", desc = "open alt (vsplit)" },
     },
     -- event = { "BufReadPost", "BufNewFile" },
-    enabled = vim.g.tester == "vim-test",
     dependencies = { "tpope/vim-projectionist" },
     init = function()
       local system = vim.fn.system
@@ -104,8 +93,8 @@ return {
     },
     keys = {
       -- { "<localleader>ts", toggle_summary, desc = "neotest: toggle summary" },
-      -- { "<localleader>to", function() require("neotest").output_panel.open() end, desc = "neotest: output" },
-      -- { "<localleader>tn", function() require("neotest").run.run() end, desc = "neotest: run nearest" },
+      { "<localleader>to", function() require("neotest").output_panel.open() end, desc = "neotest: output" },
+      { "<localleader>tt", function() require("neotest").run.run() end, desc = "neotest: run nearest" },
       -- { "<localleader>tl", run_last, desc = "neotest: run last" },
       -- { "<localleader>tf", run_file, desc = "neotest: run file" },
       -- { "<localleader>tF", run_file_sync, desc = "neotest: run file synchronously" },

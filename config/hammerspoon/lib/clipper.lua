@@ -81,7 +81,7 @@ function obj.paste_ocr_text(image)
       -- clean up
       hs.execute(fmt("rm %s %s.txt", imagePath, outputPath))
     else
-      dbg("ocrText [failed]: %s/%s/%s/%s", output, success, type, rc)
+      error(fmt("ocrText [failed]: %s/%s/%s/%s", output, success, type, rc))
     end
   end
 end

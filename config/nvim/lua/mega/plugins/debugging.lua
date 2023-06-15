@@ -105,9 +105,10 @@ return {
   {
     "mxsdev/nvim-dap-vscode-js",
     ft = { "javascript", "javascriptreact", "typescript", "typescriptreact" },
-    dependencies = { "mfussenegger/nvim-dap" },
+    dependencies = { "mfussenegger/nvim-dap", "sultanahamer/nvim-dap-reactnative" },
     opts = {
       debugger_path = vim.fn.stdpath("data") .. "/mason/packages/js-debug-adapter",
+      -- debugger_cmd = vim.fn.stdpath("data") .. "/mason/packages/js-debug-adapter/js-debug/src/dapDebugServer.js",
       debugger_cmd = { "js-debug-adapter" },
       node_path = "node",
       adapters = { "chrome", "pwa-node", "pwa-chrome", "pwa-msedge", "node-terminal", "pwa-extensionHost" },
@@ -216,6 +217,8 @@ return {
       --   },
       -- }
 
+      -- TODO: https://github.com/sultanahamer/nvim-dap-reactnative
+
       dap.adapters.node2 = {
         type = "executable",
         command = "node",
@@ -225,7 +228,7 @@ return {
       for _, language in ipairs({ "typescript", "typescriptreact", "javascript", "javascriptreact" }) do
         require("dap").configurations[language] = {
           {
-            type = "chrome",
+            type = "pwa-chrome",
             request = "launch",
             name = "Launch Chrome against localhost",
             url = "http://localhost:3000",
@@ -238,17 +241,17 @@ return {
             processId = require("dap.utils").pick_process,
             cwd = "${workspaceFolder}",
           },
-          {
-            name = "React Native (8081) (Node2)",
-            type = "node2",
-            request = "attach",
-            program = "${file}",
-            cwd = vim.fn.getcwd(),
-            sourceMaps = true,
-            protocol = "inspector",
-            console = "integratedTerminal",
-            port = 8081,
-          },
+          -- {
+          --   name = "React Native (8081) (Node2)",
+          --   type = "node2",
+          --   request = "attach",
+          --   program = "${file}",
+          --   cwd = vim.fn.getcwd(),
+          --   sourceMaps = true,
+          --   protocol = "inspector",
+          --   console = "integratedTerminal",
+          --   port = 8081,
+          -- },
           {
             name = "Attach React Native (8081)",
             type = "pwa-node",
@@ -260,6 +263,34 @@ return {
             sourceMaps = true,
             protocol = "inspector",
             console = "integratedTerminal",
+            port = 8081,
+          },
+          {
+            type = "pwa-node",
+            request = "launch",
+            name = "Debug Jest Tests",
+            -- trace = true, -- include debugger info
+            runtimeExecutable = "node",
+            runtimeArgs = {
+              "./node_modules/jest/bin/jest.js",
+              "--runInBand",
+            },
+            rootPath = "${workspaceFolder}",
+            cwd = "${workspaceFolder}",
+            console = "integratedTerminal",
+            internalConsoleOptions = "neverOpen",
+            sourceMaps = true,
+          },
+          {
+            name = "Attach React Native (35000)",
+            type = "pwa-node",
+            request = "attach",
+            program = "${file}",
+            cwd = vim.fn.getcwd(),
+            sourceMaps = true,
+            protocol = "inspector",
+            console = "integratedTerminal",
+            port = 35000,
           },
         }
       end
