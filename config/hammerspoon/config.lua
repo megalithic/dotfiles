@@ -363,7 +363,7 @@ local utils = {
 }
 
 local dock = {
-  ["target"] = {
+  target = {
     -- home:
     -- productID = 4675,
     -- productName = "Audioengine HD3",
@@ -376,27 +376,23 @@ local dock = {
     vendorID = 8584,
     vendorName = "CalDigit, Inc.",
   },
-  ["keyboard"] = {
+  keyboard = {
+    connected = "leeloo",
+    disconnected = "internal",
     productID = 24926,
     productName = "Leeloo",
     vendorID = 7504,
     vendorName = "ZMK Project",
-    -- productID = 24674,
-    -- productName = "Atreus62",
-    -- vendorID = 65261,
-    -- vendorName = "Profet",
   },
-  ["docked"] = {
+  docked = {
     wifi = "on", -- wifi status
-    -- profile = "leeloo", -- Karabiner-Elements profile name
     -- input = "Samson GoMic", -- microphone source
     input = "R-Phonak hearing aid",
     -- https://github.com/dbalatero/dotfiles/blob/master/hammerspoon/headphones.lua
     output = "R-Phonak hearing aid", -- speaker source
   },
-  ["undocked"] = {
+  undocked = {
     wifi = "on",
-    -- profile = "internal",
     -- input = "MacBook Pro Microphone",
     input = "R-Phonak hearing aid",
     output = "R-Phonak hearing aid",

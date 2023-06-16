@@ -56,9 +56,9 @@ function obj:start(opts)
       L.req("lib.menubar.ptt").setState("push-to-talk")
 
       local layouts = {
-        { "Google Meet", nil, hs.screen.primaryScreen():name(), hs.layout.left50, nil, nil },
-        { browser:name(), nil, hs.screen.primaryScreen():name(), hs.layout.right50, nil, nil },
-        { term:name(), nil, hs.screen.primaryScreen():name(), hs.layout.right50, nil, nil },
+        { "Google Meet", nil, hs.screen.primaryScreen():name(), hs.layout.maximized, nil, nil },
+        { browser:name(), nil, hs.screen.primaryScreen():name(), hs.layout.maximized, nil, nil },
+        { term:name(), nil, hs.screen.primaryScreen():name(), hs.layout.maximized, nil, nil },
       }
       hs.layout.apply(layouts)
       term:setFrontmost(true)

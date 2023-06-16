@@ -5,9 +5,11 @@ obj.__index = obj
 -- discussion around hs.watchable for a lot of stuff: https://github.com/Hammerspoon/hammerspoon/discussions/3437#discussioncomment-5398491
 -- fixes for hs.watchable module: https://github.com/Hammerspoon/hammerspoon/pull/3440#issuecomment-1480308900
 obj.name = "watcher.status"
-obj.debug = true
+obj.debug = false
 obj.watchers = {
-  status = {},
+  status = {
+    leeloo = false,
+  },
   usb = {},
   screen = {},
   app = {},
@@ -20,30 +22,24 @@ end
 
 local function leelooBluetoothConnected()
   local connectedDevices = hs.battery.privateBluetoothBatteryInfo()
-  local leeloo = hs.fnutils.find(connectedDevices, function(device) return device.name == "Leeloo" end)
-  dbg("leeloo: %s", I(leeloo))
-  return leeloo ~= nil
+  local connected = hs.fnutils.find(connectedDevices, function(device) return device.name == "Leeloo" end) ~= nil
+  dbg("leeloo (bt): %s", connected)
+  return connected
 end
 
 local function usbHandler(device)
-  -- dbg("usb: %s", I(device))
-  -- if device.productName == DockConfig.target.productName then
-  --   dbg("usb (%s): %s", DockConfig.target.productName, I((device.eventType == "added")))
-  --
-  --   if device.eventType == "added" then
-  --     obj.watchers.status.dock = true
-  --   elseif device.eventType == "removed" then
-  --     obj.watchers.status.dock = false
-  --   end
-  -- end
-  --
-  obj.watchers.status.leeloo = leelooBluetoothConnected()
-    or (device.eventType == "added" and device.productID == C.dock.keyboard.productID)
+  if device.productID == C.dock.keyboard.productID then
+    if device.eventType == "added" then
+      obj.watchers.status.leeloo = true
+    elseif device.eventType == "removed" then
+      obj.watchers.status.leeloo = false
+    end
+  end
 end
 
 local function screenHandler()
   obj.watchers.status.display = hs.screen.find(C.displays.external) ~= nil
-  obj.watchers.status.dock = obj.watchers.status.display
+  obj.watchers.status.dock = hs.screen.find(C.displays.external) ~= nil
 end
 
 local function applicationHandler(appName, appEvent, appObj)
