@@ -242,6 +242,7 @@ return {
       },
       {
         "elixir-tools/elixir-tools.nvim",
+        cond = false,
         ft = { "elixir", "eex", "heex", "surface" },
         config = function()
           local elixir = require("elixir")

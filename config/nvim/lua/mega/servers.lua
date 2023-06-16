@@ -16,7 +16,10 @@ local function root_pattern(...)
   end
 end
 
-return {
+local M = {}
+
+M.list = {
+  bashls = {},
   ccls = {},
   cssls = {
     settings = {
@@ -77,6 +80,35 @@ return {
       "eruby",
     },
   },
+  gopls = {
+    settings = {
+      gopls = {
+        gofumpt = true,
+        codelenses = {
+          generate = true,
+          gc_details = false,
+          test = true,
+          tidy = true,
+        },
+        hints = {
+          assignVariableTypes = true,
+          compositeLiteralFields = true,
+          constantValues = true,
+          functionTypeParameters = true,
+          parameterNames = true,
+          rangeVariableTypes = true,
+        },
+        analyses = {
+          unusedparams = true,
+        },
+        usePlaceholders = true,
+        completeUnimported = true,
+        staticcheck = true,
+        directoryFilters = { "-node_modules" },
+      },
+    },
+  },
+  graphql = {},
   html = {
     settings = {
       includeLanguages = {
@@ -120,63 +152,6 @@ return {
       provideFormatter = false,
     },
   },
-  tsserver = function()
-    local function do_organize_imports()
-      local params = {
-        command = "_typescript.organizeImports",
-        arguments = { vim.api.nvim_buf_get_name(0) },
-        title = "",
-      }
-      lsp.buf.execute_command(params)
-    end
-
-    return {
-      -- cmd = lsp_cmd_override({ ".bin/typescript-language-server", "typescript-language-server" }, { "stdio" }),
-      init_options = {
-        hostInfo = "neovim",
-        logVerbosity = "verbose",
-      },
-      commands = {
-        OrganizeImports = {
-          do_organize_imports,
-          description = "Organize Imports",
-        },
-      },
-      filetypes = {
-        "javascript",
-        "javascriptreact",
-        "javascript.jsx",
-        "typescript",
-        "typescriptreact",
-        "typescript.tsx",
-      },
-      settings = {
-        typescript = {
-          inlayHints = {
-            includeInlayParameterNameHints = "literal", -- alts: all
-            includeInlayParameterNameHintsWhenArgumentMatchesName = false,
-            includeInlayFunctionParameterTypeHints = true,
-            includeInlayVariableTypeHints = true,
-            includeInlayPropertyDeclarationTypeHints = true,
-            includeInlayFunctionLikeReturnTypeHints = true,
-            includeInlayEnumMemberValueHints = true,
-          },
-        },
-        javascript = {
-          inlayHints = {
-            includeInlayParameterNameHints = "all",
-            includeInlayParameterNameHintsWhenArgumentMatchesName = false,
-            includeInlayFunctionParameterTypeHints = false,
-            includeInlayVariableTypeHints = true,
-            includeInlayPropertyDeclarationTypeHints = true,
-            includeInlayFunctionLikeReturnTypeHints = true,
-            includeInlayEnumMemberValueHints = true,
-          },
-        },
-      },
-    }
-  end,
-  graphql = {},
   jsonls = {
     commands = {
       Format = {
@@ -197,105 +172,7 @@ return {
       },
     },
   },
-  bashls = {},
-  vimls = { init_options = { isNeovim = true } },
-  teal_ls = {},
-  terraformls = {},
-  rust_analyzer = {
-    settings = {
-      ["rust-analyzer"] = {
-        cargo = { allFeatures = true },
-        checkOnSave = {
-          command = "clippy",
-          extraArgs = { "--no-deps" },
-        },
-      },
-    },
-  },
-  marksman = {},
-  pyright = {
-    single_file_support = false,
-    settings = {
-      python = {
-        format = false,
-        analysis = {
-          autoSearchPaths = true,
-          diagnosticMode = "workspace",
-          useLibraryCodeForTypes = true,
-        },
-      },
-    },
-  },
-  ruby_ls = {},
-  solargraph = {
-    single_file_support = false,
-    settings = {
-      solargraph = {
-        diagnostics = true,
-        useBundler = true,
-        formatting = true,
-        folding = false,
-        logLevel = "debug",
-      },
-    },
-  },
-  prosemd_lsp = {},
-  --- https://github.com/golang/tools/blob/master/gopls/doc/settings.md
-  gopls = {
-    settings = {
-      gopls = {
-        gofumpt = true,
-        codelenses = {
-          generate = true,
-          gc_details = false,
-          test = true,
-          tidy = true,
-        },
-        hints = {
-          assignVariableTypes = true,
-          compositeLiteralFields = true,
-          constantValues = true,
-          functionTypeParameters = true,
-          parameterNames = true,
-          rangeVariableTypes = true,
-        },
-        analyses = {
-          unusedparams = true,
-        },
-        usePlaceholders = true,
-        completeUnimported = true,
-        staticcheck = true,
-        directoryFilters = { "-node_modules" },
-      },
-    },
-  },
-  sourcekit = {
-    filetypes = { "swift", "objective-c", "objective-cpp" },
-  },
-  yamlls = {
-    settings = {
-      yaml = {
-        format = { enable = true },
-        validate = true,
-        hover = true,
-        completion = true,
-        schemas = require("schemastore").json.schemas(),
-        customTags = {
-          "!reference sequence", -- necessary for gitlab-ci.yaml files
-        },
-      },
-    },
-  },
-  sqlls = function()
-    return {
-      root_dir = lsputil.root_pattern(".git"),
-      single_file_support = false,
-      on_new_config = function(new_config, new_rootdir)
-        table.insert(new_config.cmd, "-config")
-        table.insert(new_config.cmd, new_rootdir .. "/.config.yaml")
-      end,
-    }
-  end,
+  lexical = {},
   --- @see https://gist.github.com/folke/fe5d28423ea5380929c3f7ce674c41d8
   lua_ls = function()
     local path = vim.split(package.path, ";")
@@ -414,6 +291,58 @@ return {
       },
     }
   end,
+  marksman = {},
+  prosemd_lsp = {},
+  pyright = {
+    single_file_support = false,
+    settings = {
+      python = {
+        format = false,
+        analysis = {
+          autoSearchPaths = true,
+          diagnosticMode = "workspace",
+          useLibraryCodeForTypes = true,
+        },
+      },
+    },
+  },
+  ruby_ls = {},
+  rust_analyzer = {
+    settings = {
+      ["rust-analyzer"] = {
+        cargo = { allFeatures = true },
+        checkOnSave = {
+          command = "clippy",
+          extraArgs = { "--no-deps" },
+        },
+      },
+    },
+  },
+  solargraph = {
+    single_file_support = false,
+    settings = {
+      solargraph = {
+        diagnostics = true,
+        useBundler = true,
+        formatting = true,
+        folding = false,
+        logLevel = "debug",
+      },
+    },
+  },
+  sourcekit = {
+    filetypes = { "swift", "objective-c", "objective-cpp" },
+  },
+  sqlls = function()
+    return {
+      root_dir = root_pattern(".git"),
+      single_file_support = false,
+      on_new_config = function(new_config, new_rootdir)
+        table.insert(new_config.cmd, "-config")
+        table.insert(new_config.cmd, new_rootdir .. "/.config.yaml")
+      end,
+    }
+  end,
   tailwindcss = {
     init_options = {
       userLanguages = {
@@ -464,6 +393,8 @@ return {
             [[class= "([^"]*)]],
             [[additional_classes= "([^"]*)]],
             [[class: "([^"]*)]],
+            [[~H""".*class="([^"]*)".*"""]],
+            [[~H""".*additional_classes="([^"]*)".*"""]],
             "~H\"\"\".*class=\"([^\"]*)\".*\"\"\"",
             "~H\"\"\".*additional_classes=\"([^\"]*)\".*\"\"\"",
           },
@@ -495,4 +426,122 @@ return {
       ".git"
     ),
   },
+  teal_ls = {},
+  terraformls = {},
+  tsserver = function()
+    local function do_organize_imports()
+      local params = {
+        command = "_typescript.organizeImports",
+        arguments = { vim.api.nvim_buf_get_name(0) },
+        title = "",
+      }
+      lsp.buf.execute_command(params)
+    end
+
+    return {
+      -- cmd = lsp_cmd_override({ ".bin/typescript-language-server", "typescript-language-server" }, { "stdio" }),
+      init_options = {
+        hostInfo = "neovim",
+        logVerbosity = "verbose",
+      },
+      commands = {
+        OrganizeImports = {
+          do_organize_imports,
+          description = "Organize Imports",
+        },
+      },
+      filetypes = {
+        "javascript",
+        "javascriptreact",
+        "javascript.jsx",
+        "typescript",
+        "typescriptreact",
+        "typescript.tsx",
+      },
+      settings = {
+        typescript = {
+          inlayHints = {
+            includeInlayParameterNameHints = "literal", -- alts: all
+            includeInlayParameterNameHintsWhenArgumentMatchesName = false,
+            includeInlayFunctionParameterTypeHints = true,
+            includeInlayVariableTypeHints = true,
+            includeInlayPropertyDeclarationTypeHints = true,
+            includeInlayFunctionLikeReturnTypeHints = true,
+            includeInlayEnumMemberValueHints = true,
+          },
+        },
+        javascript = {
+          inlayHints = {
+            includeInlayParameterNameHints = "all",
+            includeInlayParameterNameHintsWhenArgumentMatchesName = false,
+            includeInlayFunctionParameterTypeHints = false,
+            includeInlayVariableTypeHints = true,
+            includeInlayPropertyDeclarationTypeHints = true,
+            includeInlayFunctionLikeReturnTypeHints = true,
+            includeInlayEnumMemberValueHints = true,
+          },
+        },
+      },
+    }
+  end,
+  vimls = { init_options = { isNeovim = true } },
+  --- https://github.com/golang/tools/blob/master/gopls/doc/settings.md
+  yamlls = {
+    settings = {
+      yaml = {
+        format = { enable = true },
+        validate = true,
+        hover = true,
+        completion = true,
+        schemas = require("schemastore").json.schemas(),
+        customTags = {
+          "!reference sequence", -- necessary for gitlab-ci.yaml files
+        },
+      },
+    },
+  },
 }
+M.experimental = {
+  lexical = function()
+    local lspconfig = require("lspconfig")
+    local configs = require("lspconfig.configs")
+
+    function lex()
+      return {
+        cmd = {
+          "/Users/zimakki/code/lexical-lsp/lexical/_build/dev/rel/lexical/start_lexical.sh",
+        },
+        filetypes = { "elixir", "eelixir", "heex", "surface" },
+        root_dir = function(fname)
+          local lspconfig = require("lspconfig")
+          -- Set `~/Code/lexical` as root_dir for lexical project
+          local project = lspconfig.util.root_pattern(".git")(fname)
+          if project and string.sub(project, -12) == "code/lexical" then
+            return project
+          else
+            return lspconfig.util.root_pattern("mix.exs", ".git")(fname) or vim.loop.os_homedir()
+          end
+        end,
+      }
+    end
+
+    if not configs.lexical then
+      configs.lexical = {
+        default_config = {
+          cmd = { vim.env.XDG_DATA_HOME .. "/lsp/lexical/_build/dev/rel/lexical/start_lexical.sh" },
+          filetypes = { "elixir", "eelixir", "heex", "surface" },
+          root_dir = root_pattern("mix.exs", ".git"), -- or vim.loop.os_homedir(),
+          settings = {},
+        },
+      }
+    end
+  end,
+}
+
+M.load_experimental = function()
+  for _server_name, loader in pairs(M.experimental) do
+    loader()
+  end
+end
+
+return M

@@ -578,7 +578,7 @@ end
 ---@param name string
 ---@return table<string, any>?
 local function get_config(name)
-  local config = name and servers[name] or {}
+  local config = name and servers.list[name] or {}
   if not config then return end
   local t = type(config)
   -- if t == "boolean" and config == true then config = {} end
@@ -592,8 +592,8 @@ local function get_config(name)
   return config
 end
 
-for server, _ in pairs(servers) do
-  -- opts = vim.tbl_deep_extend("force", {}, options, opts or {})
+for server, _ in pairs(servers.list) do
+  servers.load_experimental()
   local opts = get_config(server)
 
   if server == "tsserver" then
