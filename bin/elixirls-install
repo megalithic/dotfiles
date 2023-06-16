@@ -45,27 +45,27 @@ do_install() {
   log "downloading and installing to $ELIXIRLS_PATH"
   if [[ $BUILD_TYPE == "archive" ]]; then
     curl -fLO "$TARGET/$BINARY" &&
-    unzip -o "$BINARY" -d "$ELIXIRLS_PATH" &&
-    chmod +x "$ELIXIRLS_PATH/language_server.sh" &&
-    log_ok "unpacked $HOME/$BINARY" &&
-    (rm "$BINARY" && log_ok "removed $HOME/$BINARY") &&
-    log_ok "finished downloading and installing $VERSION elixir-ls to $ELIXIRLS_PATH" ||
-    exit 1
+      unzip -o "$BINARY" -d "$ELIXIRLS_PATH" &&
+      chmod +x "$ELIXIRLS_PATH/language_server.sh" &&
+      log_ok "unpacked $HOME/$BINARY" &&
+      (rm "$BINARY" && log_ok "removed $HOME/$BINARY") &&
+      log_ok "finished downloading and installing $VERSION elixir-ls to $ELIXIRLS_PATH" ||
+      exit 1
   elif [[ $BUILD_TYPE == "source" ]]; then
     curl -fLO "$TARGET/$BINARY" &&
-    tar -xvzf "$BINARY" -C ~/tmp &&
-    log_ok "unpacked $HOME/$BINARY" &&
-    pushd "$HOME/tmp/elixir-ls-$VERSION" >/dev/null &&
-    mix local.hex --force && mix local.rebar --force &&
-    mix deps.get
+      tar -xvzf "$BINARY" -C ~/tmp &&
+      log_ok "unpacked $HOME/$BINARY" &&
+      pushd "$HOME/tmp/elixir-ls-$VERSION" >/dev/null &&
+      mix local.hex --force && mix local.rebar --force &&
+      mix deps.get
     MIX_ENV=prod mix compile
     MIX_ENV=prod mix elixir_ls.release -o "$ELIXIRLS_PATH" &&
-    log_ok "built elixir-ls" &&
-    popd >/dev/null &&
-    (rm -rf "$HOME/tmp/elixir-ls-$VERSION" && log_ok "removed $HOME/tmp/elixir-ls-$VERSION") &&
-    (rm "$BINARY" && log_ok "removed $HOME/$BINARY") &&
-    log_ok "finished downloading and installing $VERSION elixir-ls to $ELIXIRLS_PATH" ||
-    exit 1
+      log_ok "built elixir-ls" &&
+      popd >/dev/null &&
+      (rm -rf "$HOME/tmp/elixir-ls-$VERSION" && log_ok "removed $HOME/tmp/elixir-ls-$VERSION") &&
+      (rm "$BINARY" && log_ok "removed $HOME/$BINARY") &&
+      log_ok "finished downloading and installing $VERSION elixir-ls to $ELIXIRLS_PATH" ||
+      exit 1
   fi
 }
 

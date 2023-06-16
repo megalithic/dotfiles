@@ -1,0 +1,86 @@
+#!/bin/zsh
+
+if [[ -z $XDG_DATA_HOME ]]; then
+  export XDG_DATA_HOME="$HOME/.local/share"
+fi
+if [[ -z $XDG_CONFIG_HOME ]]; then
+  export XDG_CONFIG_HOME="$HOME/.config"
+fi
+
+source "${HOME}/.dotfiles/config/zsh/lib/helpers.zsh"
+
+# set -euo pipefail
+
+# -- set some useful vars for executable info:
+__dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+__file="${__dir}/$(basename "${BASH_SOURCE[0]}")"
+__base="$(basename "$__file" .sh)"
+__root="$(cd "$(dirname "$__dir")" && pwd)"
+# shellcheck disable=SC2034,SC2015
+__invocation="$(printf %q "$__file")$( (($#)) && printf ' %q' "$@" || true)"
+
+LSPS_PATH="${XDG_DATA_HOME}/lsp"
+LS_PATH="${LSPS_PATH}/lexical"
+
+VERSION="${1:-git}"
+TARGET=""
+BINARY=""
+BUILD_TYPE=""
+
+rm -rf "$LS_PATH"
+
+do_install() {
+  case "$VERSION" in
+    'stable')
+      TARGET="https://github.com/lexical-lsp/lexical/releases/latest/download/"
+      BINARY="lexical.zip"
+      BUILD_TYPE="archive"
+      ;;
+    'git')
+      TARGET="https://github.com/lexical-lsp/lexical"
+      BUILD_TYPE="git"
+      ;;
+    'main' | 'master')
+      TARGET="https://github.com/lexical-lsp/lexical/archive/refs/heads/"
+      BINARY="main.zip"
+      BUILD_TYPE="source"
+      ;;
+    *)
+      TARGET="https://github.com/lexical-lsp/lexical/archive/"
+      BINARY="${VERSION}.tar.gz"
+      BUILD_TYPE="source"
+      ;;
+  esac
+
+  if [[ $BUILD_TYPE == "archive" ]]; then
+    log_warn "$BUILD_TYPE not supported."
+    # curl -fLO "$TARGET/$BINARY" &&
+    #   unzip -o "$BINARY" -d "$LS_PATH/_build/dev/rel/lexical" &&
+    #   chmod +x "$LS_PATH/_build/dev/rel/lexical/start_lexical.sh" &&
+    #   log_ok "unpacked $HOME/$BINARY" &&
+    #   (rm "$BINARY" && log_ok "removed $HOME/$BINARY") &&
+    #   log_ok "finished downloading and installing $VERSION lexical to $LS_PATH/_build/dev/rel/lexical" ||
+    #   exit 1
+  elif [[ $BUILD_TYPE == "source" ]]; then
+    log "downloading and unpacking.."
+
+    (
+      curl -fLO "$TARGET/$BINARY" &&
+        tar -xvzf "$BINARY" -C "$LSPS_PATH" &&
+        log_ok "unpacked $HOME/$BINARY" &&
+        mv "$LSPS_PATH/lexical-$VERSION" "$LS_PATH" &&
+        pushd "$LS_PATH" >/dev/null &&
+        make release.namespaced &&
+        log_ok "built lexical" &&
+        popd >/dev/null &&
+        # (rm -rf "$HOME/tmp/lexical-$VERSION" && log_ok "removed $HOME/tmp/lexical-$VERSION") &&
+        (rm "$BINARY" && log_ok "removed $HOME/$BINARY") &&
+        log_ok "finished downloading and installing $VERSION lexical to $LS_PATH/_build/dev/rel/lexical"
+    ) ||
+      exit 1
+  elif [[ $BUILD_TYPE == "git" ]]; then
+    log_warn "$BUILD_TYPE not supported."
+  fi
+}
+
+do_install || exit 1
