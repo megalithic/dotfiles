@@ -2,7 +2,7 @@ local obj = {}
 
 obj.__index = obj
 obj.name = "clipper"
-obj.debug = true
+obj.debug = false
 obj.clip_watcher = {}
 obj.clip_data = {}
 obj.caps_dir = fmt("%s/screenshots", os.getenv("HOME"))
