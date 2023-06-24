@@ -497,7 +497,7 @@ return {
 
   -- ( Motions/Textobjects ) ---------------------------------------------------
   {
-    cond = false,
+    cond = true,
     "folke/flash.nvim",
     event = "VeryLazy",
     opts = {
@@ -510,7 +510,7 @@ return {
           enabled = true,
         },
         char = {
-          keys = { "f", "F", "t", "T", ";" },
+          keys = { "f", "F", "t", "T", ";" }, -- NOTE: using "," here, breaks which-key
         },
       },
     },

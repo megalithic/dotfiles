@@ -308,7 +308,7 @@ return {
         incremental_selection = {
           enable = true,
           keymaps = {
-            init_selection = "vv",
+            init_selection = "<CR>",
             node_incremental = "v",
             node_decremental = "V",
             scope_incremental = "vv", -- increment to the upper scope (as defined in locals.scm)

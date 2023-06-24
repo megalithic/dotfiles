@@ -38,6 +38,7 @@ function obj.capper(image, open_image_url)
       dbg("capper:\r\n%s\r\n%s\r\n%s\r\n%s", url, success, type, rc)
 
       if success then
+        hs.pasteboard.setContents(cap_name, "imageName")
         hs.pasteboard.setContents(url, "imageURL")
         hs.pasteboard.setContents(image, "image")
         if open_image_url then hs.urlevent.openURLWithBundle(url, hs.urlevent.getDefaultHandler("https")) end
@@ -138,6 +139,15 @@ function obj:init(opts)
         local imageURL = hs.pasteboard.getContents("imageURL")
         hs.eventtap.keyStrokes(imageURL)
         dbg("imageURL: %s", imageURL)
+      end)
+
+      hs.hotkey.bind({ "ctrl" }, "v", function()
+        local imageURL = hs.pasteboard.getContents("imageURL")
+        local imageName = hs.pasteboard.getContents("imageName")
+
+        local md_img = fmt([[![%s](%s)]], imageName, imageURL)
+        hs.eventtap.keyStrokes(md_img)
+        dbg("markdown_image: %s", md_img)
       end)
 
       hs.hotkey.bind({ "cmd", "shift" }, "p", function()

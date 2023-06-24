@@ -332,7 +332,7 @@ return {
     mini_comment()
     mini_align()
     mini_indentscope()
-    mini_jump()
+    -- mini_jump()
     mini_hipatterns()
     -- mini_ai()
   end,

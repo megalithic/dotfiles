@@ -4,7 +4,7 @@
 
 vim.cmd([[setlocal iskeyword+=!,?,-]])
 vim.cmd([[setlocal indentkeys-=0{]])
--- vim.opt_local.indentkeys-=0{
+vim.cmd([[setlocal indentkeys+=0=end]])
 
 -- nnoremap("<leader>ed", [[orequire IEx; IEx.pry; #respawn() to leave pry<ESC>:w<CR>]])
 nnoremap("<localleader>ep", [[o|><ESC>a]])
