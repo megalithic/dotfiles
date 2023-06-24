@@ -26,9 +26,16 @@ function obj.capper(image, open_image_url)
     local cap = fmt("%s/%s", obj.caps_dir, cap_name)
 
     if image:saveToFile(cap) then
-      local url, success, type, rc = hs.execute(fmt("%s/.dotfiles/bin/capper %s", os.getenv("HOME"), cap))
-      url = url:gsub("\n", "")
-      dbg("url: %s/%s/%s/%s", url, success, type, rc)
+      local std_out, success, type, rc =
+        hs.execute(fmt("%s -ci '%s/.dotfiles/bin/capper %s'", os.getenv("SHELL"), os.getenv("HOME"), cap))
+
+      local std_out_lines = {}
+      for s in std_out:gmatch("[^\r\n]+") do
+        table.insert(std_out_lines, s)
+      end
+      local url = std_out_lines[#std_out_lines]
+
+      dbg("capper:\r\n%s\r\n%s\r\n%s\r\n%s", url, success, type, rc)
 
       if success then
         hs.pasteboard.setContents(url, "imageURL")
