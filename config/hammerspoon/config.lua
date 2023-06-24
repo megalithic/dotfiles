@@ -364,17 +364,10 @@ local utils = {
 
 local dock = {
   target = {
-    -- home:
-    -- productID = 4675,
-    -- productName = "Audioengine HD3",
-    -- vendorID = 2578,
-    -- vendorName = "Audioengine",
-    --
-    -- silver spring:
-    productID = 25907,
-    productName = "CalDigit Thunderbolt 3 Audio",
-    vendorID = 8584,
-    vendorName = "CalDigit, Inc.",
+    productID = 39536,
+    productName = "LG UltraFine Display Controls",
+    vendorID = 1086,
+    vendorName = "LG Electronics Inc.",
   },
   keyboard = {
     connected = "leeloo",
@@ -388,7 +381,6 @@ local dock = {
     wifi = "on", -- wifi status
     -- input = "Samson GoMic", -- microphone source
     input = "R-Phonak hearing aid",
-    -- https://github.com/dbalatero/dotfiles/blob/master/hammerspoon/headphones.lua
     output = "R-Phonak hearing aid", -- speaker source
   },
   undocked = {

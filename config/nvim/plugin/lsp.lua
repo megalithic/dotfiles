@@ -9,6 +9,7 @@ local command = mega.command
 local augroup = mega.augroup
 local fmt = string.format
 local diagnostic = vim.diagnostic
+local lspconfig = require("lspconfig")
 
 -- Show the popup diagnostics window, but only once for the current cursor/line location
 -- by checking whether the word under the cursor has changed.
@@ -129,6 +130,8 @@ local function setup_autocommands(client, bufnr)
   end
 
   local supports_highlight = (client and client.server_capabilities.documentHighlightProvider == true)
+  local supports_inlay_hints = (client and client.server_capabilities.inlayHintProvider == true)
+  local supports_references = (client and client.server_capabilities.documentReferencesProvider == true)
 
   augroup("LspCodeLens", {
     {
@@ -182,6 +185,23 @@ local function setup_autocommands(client, bufnr)
       end,
     },
   })
+
+  -- augroup("LspDocumentHighlight", {
+  --   {
+  --     event = { "InsertEnter" },
+  --     buffer = bufnr,
+  --     command = function()
+  --       if supports_inlay_hints then vim.lsp.buf.inlay_hint(bufnr, true) end
+  --     end,
+  --   },
+  --   {
+  --     event = { "InsertLeave" },
+  --     buffer = bufnr,
+  --     command = function()
+  --       if supports_inlay_hints then vim.lsp.buf.inlay_hint(bufnr, false) end
+  --     end,
+  --   },
+  -- })
 end
 
 -- [ MAPPINGS ] ----------------------------------------------------------------
@@ -191,6 +211,7 @@ local function setup_keymaps(client, bufnr)
     expr = expr ~= nil and expr or false
     return { desc = desc, buffer = bufnr, expr = expr }
   end
+
   -- local maybe = function(spec, has)
   --   if not has or client.server_capabilities[has .. "Provider"] then
   --   end
@@ -199,20 +220,28 @@ local function setup_keymaps(client, bufnr)
   nnoremap("[d", function() diagnostic.goto_prev({ float = true }) end, desc("lsp: prev diagnostic"))
   nnoremap("]d", function() diagnostic.goto_next({ float = true }) end, desc("lsp: next diagnostic"))
   nnoremap("gd", vim.lsp.buf.definition, desc("lsp: definition"))
+  nnoremap("gs", vim.lsp.buf.document_symbol, desc("lsp: document symbols"))
+  nnoremap("gS", vim.lsp.buf.workspace_symbol, desc("lsp: workspace symbols"))
   nnoremap("gD", [[<cmd>vsplit | lua vim.lsp.buf.definition()<cr>]], desc("lsp: definition (vsplit)"))
-  nnoremap("gr", function()
-    if true then
-      vim.cmd("Trouble lsp_references")
-    else
-      if vim.g.picker == "fzf" then
-        vim.cmd("FzfLua lsp_references")
-      elseif vim.g.picker == "telescope" then
-        vim.cmd("Telescope lsp_references")
+
+  if not client.server_capabilities.referencesProvider then
+    nmap("gr", "<leader>A", desc("lsp: references"))
+  else
+    nnoremap("gr", function()
+      -- dd(client.server_capabilities)
+      if true then
+        vim.cmd("Trouble lsp_references")
       else
-        vim.lsp.buf.references()
+        if vim.g.picker == "fzf" then
+          vim.cmd("FzfLua lsp_references")
+        elseif vim.g.picker == "telescope" then
+          vim.cmd("Telescope lsp_references")
+        else
+          vim.lsp.buf.references()
+        end
       end
-    end
-  end, desc("lsp: references"))
+    end, desc("lsp: references"))
+  end
   nnoremap("gt", vim.lsp.buf.type_definition, desc("lsp: type definition"))
   nnoremap("gi", vim.lsp.buf.implementation, desc("lsp: implementation"))
   nnoremap("gI", vim.lsp.buf.incoming_calls, desc("lsp: incoming calls"))
@@ -253,6 +282,9 @@ end
 
 local function setup_formatting(client, bufnr)
   -- disable formatting for the following language-servers (i.e., let null-ls takeover):
+
+  -- REF: disable formatting for specific clients via format's filtering table
+  -- https://github.com/mhanberg/.dotfiles/commit/3d606966b04dbf33aa125d3f8a03cabf7f8a6712#diff-406a4eb2a988e31ffbf893c2e01684e43e72f4595eef92845fbb3f60e9156563R29-R35
   local disabled_lsp_formatting = { "tailwindcss", "html", "tsserver", "ls_emmet", "zk", "sumneko_lua" }
   for i = 1, #disabled_lsp_formatting do
     if disabled_lsp_formatting[i] == client.name then
@@ -579,10 +611,12 @@ end
 ---@return table<string, any>?
 local function get_config(name)
   local config = name and servers.list[name] or {}
-  if not config then return end
   local t = type(config)
-  -- if t == "boolean" and config == true then config = {} end
   if t == "function" then config = config() end
+  if t == "function" and config == false then config = nil end
+
+  if not config then return end
+  -- if config == false or config == nil then return end
 
   config.on_init = on_init
   config.flags = { debounce_text_changes = 150 }
@@ -593,12 +627,21 @@ local function get_config(name)
 end
 
 for server, _ in pairs(servers.list) do
-  servers.load_experimental()
+  servers.load_unofficial()
   local opts = get_config(server)
 
   if server == "tsserver" then
+    -- require("typescript-tools").setup({
+    --   capabilities = get_server_capabilities(),
+    --   on_attach = on_attach,
+    --   settings = {
+    --     separate_diagnostic_server = true,
+    --     publish_diagnostic_on = "insert_leave",
+    --     tsserver_plugins = { "typescript-styled-plugin" },
+    --   },
+    -- })
     require("typescript").setup({ server = opts })
   else
-    require("lspconfig")[server].setup(opts)
+    lspconfig[server].setup(opts)
   end
 end

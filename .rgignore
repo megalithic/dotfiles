@@ -8,6 +8,7 @@ node_modules/
 .idea/
 .cache/
 .elixir_ls/
+.lexical/
 deps/
 _build/
 *~

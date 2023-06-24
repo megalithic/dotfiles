@@ -117,24 +117,20 @@ local function dockHandler(watcher, _path, _key, _oldValue, isConnected)
     alert.show(fmt("%s Transitioned to %s state", icon, state))
   end
 
-  if watcher == nil then
-    processDockedState(connectedState)
-  else
-    hs.timer.doAfter(1, function() processDockedState(connectedState) end)
-  end
+  -- if watcher == nil then
+  processDockedState(connectedState)
+  -- else
+  --   hs.timer.doAfter(1, function() processDockedState(connectedState) end)
+  -- end
 
-  WM.layoutRunningApps(C.bindings.apps)
+  hs.timer.doAfter(1, function() WM.layoutRunningApps(C.bindings.apps) end)
+  -- WM.layoutRunningApps(C.bindings.apps)
 end
 
 function obj:start()
   obj.watchers.dock = hs.watchable.watch("status.dock", dockHandler)
-  -- obj.watchers.dock:alwaysNotify(true)
-
   obj.watchers.display = hs.watchable.watch("status.display", displayHandler)
-  -- obj.watchers.display:alwaysNotify(true)
-
   obj.watchers.leeloo = hs.watchable.watch("status.leeloo", leelooHandler)
-  -- obj.watchers.leeloo:alwaysNotify(true)
 
   -- run dock handler on start
   -- dockHandler(nil, nil, nil, nil, obj.watchers.dock._active)

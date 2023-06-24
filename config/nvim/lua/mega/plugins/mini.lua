@@ -1,11 +1,4 @@
-local mini = {
-  "echasnovski/mini.nvim",
-  event = { "BufReadPost", "BufNewFile" },
-}
-
-local specs = { mini, "JoosepAlviste/nvim-ts-context-commentstring" }
-
-function mini.surround()
+local function mini_surround()
   require("mini.surround").setup({
     mappings = {
       add = "ys",
@@ -26,29 +19,19 @@ function mini.surround()
   mega.xnoremap("S", [[:<C-u>lua MiniSurround.add('visual')<CR>]])
 end
 
-function mini.jump()
+local function mini_jump()
   require("mini.jump").setup()
+  local mj = require("mini.jump2d")
 
   do
     if true then
       local m = {
         jump2d = require("mini.jump2d"),
-        jump2d_char = function()
-          local mj = require("mini.jump2d")
-          return mj.start(mj.builtin_opts.single_character)
-        end,
-        jump2d_start = function()
-          local mj = require("mini.jump2d")
-          return mj.start(mj.builtin_opts.default)
-        end,
-        jump2d_line = function()
-          local mj = require("mini.jump2d")
-          return mj.start(mj.builtin_opts.line_start)
-        end,
-        jump2d_word = function()
-          local mj = require("mini.jump2d")
-          return mj.start(mj.builtin_opts.word_start)
-        end,
+        jump2d_char = function() return mj.start(mj.builtin_opts.single_character) end,
+        jump2d_start = function() return mj.start(mj.builtin_opts.default) end,
+        jump2d_query = function() return mj.start(mj.builtin_opts.query) end,
+        jump2d_line = function() return mj.start(mj.builtin_opts.line_start) end,
+        jump2d_word = function() return mj.start(mj.builtin_opts.word_start) end,
         jump2d_twochar = function()
           local safe_getcharstr = function(msg)
             vim.cmd("echon " .. vim.inspect(msg))
@@ -79,7 +62,6 @@ function mini.jump()
           -- local pattern = vim.pesc(gettwocharstr())
           local pattern = vim.pesc(safe_getcharstr("(mini.jump2d) Enter two chars: "))
 
-          local mj = require("mini.jump2d")
           return mj.start({
             spotter = mj.gen_pattern_spotter(pattern),
             allowed_lines = {
@@ -97,9 +79,9 @@ function mini.jump()
       }
 
       local opt = { noremap = true, silent = true }
-      -- vim.keymap.set({ "n" }, "S", m.jump2d_twochar, opt)
+      nnoremap("s", m.jump2d_char, opt)
       nnoremap("S", m.jump2d_twochar, opt)
-      nnoremap("s", m.jump2d_word, opt)
+
       -- vim.keymap.set({ "n", "v" }, "S", m.jump2d_char, opt)
       -- vim.keymap.set({ "n", "v" }, "S", m.jump2d_start, opt)
       -- vim.keymap.set({ "n", "v" }, "S", m.jump2d_line, opt)
@@ -195,9 +177,12 @@ function mini.jump()
   end
 end
 
-function mini.pairs() require("mini.pairs").setup({}) end
+local function mini_pairs(opts)
+  opts = opts or {}
+  require("mini.pairs").setup(opts)
+end
 
-function mini.comment()
+local function mini_comment()
   require("mini.comment").setup({
     hooks = {
       pre = function() require("ts_context_commentstring.internal").update_commentstring({}) end,
@@ -205,7 +190,7 @@ function mini.comment()
   })
 end
 
-function mini.ai()
+local function mini_ai()
   local ai = require("mini.ai")
   local gen_spec = ai.gen_spec
   ai.setup({
@@ -247,7 +232,7 @@ function mini.ai()
 
   local ai_map = function(text_obj, desc)
     for _, side in ipairs({ "left", "right" }) do
-      for dir, d in pairs({ prev = "[", next = "]" }) do
+      for dir, d in mini_pairs({ prev = "[", next = "]" }) do
         local lhs = d .. (side == "right" and text_obj:upper() or text_obj:lower())
         for _, mode in ipairs({ "n", "x", "o" }) do
           vim.keymap.set(mode, lhs, function() ai.move_cursor(side, "a", text_obj, { search_method = dir }) end, {
@@ -263,7 +248,7 @@ function mini.ai()
   ai_map("o", "block")
 end
 
-function mini.align()
+local function mini_align()
   require("mini.align").setup({
     mappings = {
       start = "ga",
@@ -272,7 +257,7 @@ function mini.align()
   })
 end
 
-function mini.indentscope()
+local function mini_indentscope()
   require("mini.indentscope").setup({
     symbol = "┊", -- alts: ┊│┆ ┊  ▎││ ▏▏
     draw = {
@@ -315,7 +300,7 @@ function mini.indentscope()
   })
 end
 
-function mini.hipatterns()
+local function mini_hipatterns()
   local hipatterns = require("mini.hipatterns")
   hipatterns.setup({
     highlighters = {
@@ -333,20 +318,22 @@ function mini.hipatterns()
   })
 end
 
-function mini.config()
-  mini.surround()
-  mini.pairs()
-  mini.comment()
-  mini.align()
-  mini.indentscope()
-  mini.jump()
-  mini.hipatterns()
-  -- mini.ai()
-end
+return {
+  "echasnovski/mini.nvim",
 
-function mini.init()
-  mega.nmap("<leader>bd", function() require("mini.bufremove").delete(0, false) end)
-  mega.nmap("<leader>bD", function() require("mini.bufremove").delete(0, true) end)
-end
-
-return specs
+  init = function()
+    mega.nmap("<leader>bd", function() require("mini.bufremove").delete(0, false) end)
+    mega.nmap("<leader>bD", function() require("mini.bufremove").delete(0, true) end)
+  end,
+  event = { "BufReadPost", "BufNewFile" },
+  config = function()
+    mini_surround()
+    mini_pairs()
+    mini_comment()
+    mini_align()
+    mini_indentscope()
+    mini_jump()
+    mini_hipatterns()
+    -- mini_ai()
+  end,
+}

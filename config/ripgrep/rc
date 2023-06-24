@@ -32,6 +32,7 @@ rails:include:ruby,rabl,erb
 --glob=!config/hammerspoon/Spoons/*
 --glob=!.git
 --glob=!.elixir_ls
+--glob=!.lexical
 --glob=!node_modules
 --glob=!yarn.lock
 --glob=!package-lock.json

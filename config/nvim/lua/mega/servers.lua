@@ -35,6 +35,7 @@ M.list = {
           idSelector = "warning",
           zeroUnits = "warning",
           duplicateProperties = "warning",
+          unknownAtRules = "ignore",
         },
         completion = {
           completePropertyWithSemicolon = true,
@@ -56,6 +57,40 @@ M.list = {
       },
     },
   },
+  -- elixirls = {
+  --   cmd = { fmt("%s/lsp/elixir-ls/%s", vim.env.XDG_DATA_HOME, "language_server.sh") },
+  --   -- cmd = { "elixir-ls" },
+  --   -- cmd = lsp_cmd_override({
+  --   --   ".elixir-ls-release/language_server.sh",
+  --   --   fmt("%s/lsp/elixir-ls/%s", vim.env.XDG_DATA_HOME, "language_server.sh"),
+  --   --   "elixir-ls",
+  --   -- }),
+  --   -- handlers = {
+  --   --   ["window/logMessage"] = function(_err, result)
+  --   --     local message = vim.split("[" .. vim.lsp.protocol.MessageType[result.type] .. "] " .. result.message, "\n")
+  --   --
+  --   --     if not elixir_nvim_output_bufnr then
+  --   --       elixir_nvim_output_bufnr = vim.api.nvim_create_buf(false, true)
+  --   --       vim.api.nvim_buf_set_name(elixir_nvim_output_bufnr, "ElixirLS Output Panel")
+  --   --       vim.api.nvim_buf_set_option(elixir_nvim_output_bufnr, "filetype", "elixirls")
+  --   --     end
+  --   --
+  --   --     pcall(vim.api.nvim_buf_set_lines, elixir_nvim_output_bufnr, -1, -1, false, message)
+  --   --
+  --   --     mega.nnoremap("<localleader>eob", open_output_panel, { desc = "elixir: open output panel" })
+  --   --   end,
+  --   -- },
+  --   settings = {
+  --     elixirLS = {
+  --       mixEnv = "test",
+  --       fetchDeps = false,
+  --       dialyzerEnabled = true,
+  --       dialyzerFormat = "dialyxir_long",
+  --       enableTestLenses = true,
+  --       suggestSpecs = true,
+  --     },
+  --   },
+  -- },
   elmls = {},
   emmet_ls = {
     settings = {
@@ -453,10 +488,8 @@ M.list = {
       filetypes = {
         "javascript",
         "javascriptreact",
-        "javascript.jsx",
         "typescript",
         "typescriptreact",
-        "typescript.tsx",
       },
       settings = {
         typescript = {
@@ -501,34 +534,26 @@ M.list = {
     },
   },
 }
-M.experimental = {
+M.unofficial = {
   lexical = function()
-    local lspconfig = require("lspconfig")
     local configs = require("lspconfig.configs")
 
-    function lex()
-      return {
-        cmd = {
-          "/Users/zimakki/code/lexical-lsp/lexical/_build/dev/rel/lexical/start_lexical.sh",
-        },
-        filetypes = { "elixir", "eelixir", "heex", "surface" },
-        root_dir = function(fname)
-          local lspconfig = require("lspconfig")
-          -- Set `~/Code/lexical` as root_dir for lexical project
-          local project = lspconfig.util.root_pattern(".git")(fname)
-          if project and string.sub(project, -12) == "code/lexical" then
-            return project
-          else
-            return lspconfig.util.root_pattern("mix.exs", ".git")(fname) or vim.loop.os_homedir()
-          end
-        end,
-      }
+    local function cmd()
+      -- built from bin/lexical-install
+      local bin = vim.env.XDG_DATA_HOME .. "/lsp/lexical/_build/dev/rel/lexical/start_lexical.sh"
+
+      -- built from source at ~/code/lexical
+      -- if vim.fn.exists(vim.env.HOME .. "/code/lexical/_build/dev/rel/lexical/start_lexical.sh") then
+      --   bin = vim.env.HOME .. "/code/lexical/_build/dev/rel/lexical/start_lexical.sh"
+      -- end
+
+      return bin
     end
 
     if not configs.lexical then
       configs.lexical = {
         default_config = {
-          cmd = { vim.env.XDG_DATA_HOME .. "/lsp/lexical/_build/dev/rel/lexical/start_lexical.sh" },
+          cmd = { cmd() },
           filetypes = { "elixir", "eelixir", "heex", "surface" },
           root_dir = root_pattern("mix.exs", ".git"), -- or vim.loop.os_homedir(),
           settings = {},
@@ -538,8 +563,8 @@ M.experimental = {
   end,
 }
 
-M.load_experimental = function()
-  for _server_name, loader in pairs(M.experimental) do
+M.load_unofficial = function()
+  for _server_name, loader in pairs(M.unofficial) do
     loader()
   end
 end

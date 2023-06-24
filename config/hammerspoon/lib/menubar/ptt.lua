@@ -189,7 +189,7 @@ function obj:start() return self end
 
 function obj:stop()
   if obj.eventTapWatcher then obj.eventTapWatcher:stop() end
-  if obj.menubar then obj.menubar:delete() end
+  -- if obj.menubar then obj.menubar:delete() end
   return self
 end
 

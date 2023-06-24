@@ -35,13 +35,18 @@ local function usbHandler(device)
       obj.watchers.status.leeloo = false
     end
   end
+
+  if device.productID == C.dock.target.productID then
+    if device.eventType == "added" then
+      obj.watchers.status.dock = true
+    elseif device.eventType == "removed" then
+      obj.watchers.status.dock = false
+    end
+  end
 end
 
-local function screenHandler()
-  obj.watchers.status.display = hs.screen.find(C.displays.external) ~= nil
-  obj.watchers.status.dock = hs.screen.find(C.displays.external) ~= nil
-end
-
+local function screenHandler() obj.watchers.status.display = hs.screen.find(C.displays.external) ~= nil end
+--
 local function applicationHandler(appName, appEvent, appObj)
   dbg("app: %s/%s/%s", appName, appEvent, appObj:bundleID())
 

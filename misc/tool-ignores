@@ -2,6 +2,8 @@
 .git
 .elixir_ls
 **/.elixir_ls
+.lexical
+**/.lexical
 node_modules
 _build
 tags

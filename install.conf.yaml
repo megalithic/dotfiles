@@ -25,7 +25,7 @@
       stdout: true
       stderr: true
       stdin: true
-      include: ["tap", "brew", "cask", "mas"]
+      include: [ "tap", "brew", "cask", "mas" ]
 
 - shell:
     - description:
@@ -206,36 +206,36 @@
       if: "[ `uname` = Darwin ]"
       path: misc/mailmate/megabindings.plist
       # POST-symlink: ensure you add `, Mega` to the keybind settings in Mailmate
-    ? ~/Library/Application Support/Google/Chrome/NativeMessagingHosts/surfingkeys.json
-    : force: true
+    ~/Library/Application Support/Google/Chrome/NativeMessagingHosts/surfingkeys.json:
+      force: true
       if: "[ `uname` = Darwin ]"
       path: config/surfingkeys/surfingkeys.json
-    ? ~/Library/Application Support/Google/Chrome/NativeMessagingHosts/firenvim.json
-    : force: true
+    ~/Library/Application Support/Google/Chrome/NativeMessagingHosts/firenvim.json:
+      force: true
       if: "[ `uname` = Darwin ]"
       path: config/surfingkeys/firenvim.json
-    ? ~/Library/Application Support/Chromium/NativeMessagingHosts/surfingkeys.json
-    : force: true
+    ~/Library/Application Support/Chromium/NativeMessagingHosts/surfingkeys.json:
+      force: true
       if: "[ `uname` = Darwin ]"
       path: config/surfingkeys/surfingkeys.json
     ~/Library/Application Support/Chromium/NativeMessagingHosts/firenvim.json:
       force: true
       if: "[ `uname` = Darwin ]"
       path: config/surfingkeys/firenvim.json
-    ? ~/Library/Application Support/BraveSoftware/Brave-Browser/NativeMessagingHosts/surfingkeys.json
-    : force: true
+    ~/Library/Application Support/BraveSoftware/Brave-Browser/NativeMessagingHosts/surfingkeys.json:
+      force: true
       if: "[ `uname` = Darwin ]"
       path: config/surfingkeys/surfingkeys.json
-    ? ~/Library/Application Support/BraveSoftware/Brave-Browser/NativeMessagingHosts/firenvim.json
-    : force: true
+    ~/Library/Application Support/BraveSoftware/Brave-Browser/NativeMessagingHosts/firenvim.json:
+      force: true
       if: "[ `uname` = Darwin ]"
       path: config/surfingkeys/firenvim.json
-    ? ~/Library/Application Support/BraveSoftware/Brave-Browser-Dev/NativeMessagingHosts/surfingkeys.json
-    : force: true
+    ~/Library/Application Support/BraveSoftware/Brave-Browser-Dev/NativeMessagingHosts/surfingkeys.json:
+      force: true
       if: "[ `uname` = Darwin ]"
       path: config/surfingkeys/surfingkeys.json
-    ? ~/Library/Application Support/BraveSoftware/Brave-Browser-Dev/NativeMessagingHosts/firenvim.json
-    : force: true
+    ~/Library/Application Support/BraveSoftware/Brave-Browser-Dev/NativeMessagingHosts/firenvim.json:
+      force: true
       if: "[ `uname` = Darwin ]"
       path: config/surfingkeys/firenvim.json
 
@@ -276,6 +276,8 @@
         log "Attempting to install neovim from source.."; ~/.dotfiles/bin/nvim-install -f;
 
         log "Attempting to install elixirls-master.."; ~/.dotfiles/bin/elixirls-install master;
+
+        log "Attempting to install lexical-main.."; ~/.dotfiles/bin/lexical-install main;
 
         log "Attempting to install lua/luarocks packages.."; ~/.dotfiles/asdf/lua.sh;
 

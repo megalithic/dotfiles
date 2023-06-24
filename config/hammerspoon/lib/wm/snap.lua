@@ -385,7 +385,7 @@ function obj:init(opts)
 end
 
 function obj:start()
-local config = C
+  local config = C
   local keys = config.keys
   local browsers = config.preferred.browsers
 
@@ -448,6 +448,11 @@ local config = C
     end)
     :bind(keys.mods.casc, "s", function()
       L.load("lib.browser").splitTab()
+      obj:exit()
+    end)
+    :bind(keys.mods.caSc, "s", function()
+      -- Split tab out and send to new window
+      L.load("lib.browser").splitTab(true)
       obj:exit()
     end)
 

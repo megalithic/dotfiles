@@ -118,8 +118,8 @@ do_install() {
   log "cloning asdf into $asdf_path"
   (git clone https://github.com/asdf-vm/asdf.git "$asdf_path" &&
     source "$asdf_path/asdf.sh" &&
-    install_plugins &&
-    install_versions &&
+    # install_plugins &&
+    # install_versions &&
   log_ok "completed installing asdf-nvim into $asdf_path") ||
   exit 1
 }

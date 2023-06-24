@@ -1,6 +1,7 @@
 .yarn
 .git
 .elixir_ls
+.lexical
 node_modules
 _build
 tags

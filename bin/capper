@@ -1,0 +1,12 @@
+#!/usr/bin/env zsh
+
+if [ ! -n "$1" ]; then
+  echo "Usage: $0 [file]"
+  return
+fi
+
+file="$1"
+friendly=$(echo "$1" | sed -e "s#$HOME/screenshots/##g")
+s3cmd -P put "$file" s3://caps/screenshots/
+
+echo "https://caps.nyc3.cdn.digitaloceanspaces.com/screenshots/$friendly"

@@ -12,7 +12,7 @@ local obj = {}
 obj.__index = obj
 obj.name = "bindings"
 obj.mouseBindings = {}
-obj.debug = true
+obj.debug = false
 
 local dbg = function(str, ...)
   str = string.format(":: [%s] %s", obj.name, str)

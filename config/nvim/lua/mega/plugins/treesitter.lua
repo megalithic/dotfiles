@@ -35,26 +35,26 @@ return {
     end,
   },
   { "nvim-treesitter/playground", cmd = { "TSPlaygroundToggle", "TSHighlightCapturesUnderCursor" } },
-  {
-    "mfussenegger/nvim-treehopper",
-    keys = {
-      {
-        "m",
-        function() require("tsht").nodes() end,
-        desc = "treehopper: toggle",
-        mode = "o",
-        noremap = false,
-        silent = true,
-      },
-      {
-        "m",
-        ":lua require('tsht').nodes()<CR>",
-        desc = "treehopper: toggle",
-        mode = "x",
-        silent = true,
-      },
-    },
-  },
+  -- {
+  --   "mfussenegger/nvim-treehopper",
+  --   keys = {
+  --     {
+  --       "m",
+  --       function() require("tsht").nodes() end,
+  --       desc = "treehopper: toggle",
+  --       mode = "o",
+  --       noremap = false,
+  --       silent = true,
+  --     },
+  --     {
+  --       "m",
+  --       ":lua require('tsht').nodes()<CR>",
+  --       desc = "treehopper: toggle",
+  --       mode = "x",
+  --       silent = true,
+  --     },
+  --   },
+  -- },
   {
     "nvim-treesitter/nvim-treesitter",
     build = ":TSUpdate",
@@ -98,7 +98,6 @@ return {
           "cpp",
           "css",
           "comment",
-          "dap_repl",
           "devicetree",
           "dockerfile",
           "diff",

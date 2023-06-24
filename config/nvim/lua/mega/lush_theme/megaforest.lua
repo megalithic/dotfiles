@@ -672,8 +672,11 @@ local theme = lush(function(injected_functions)
 
     ---- :help mini.jump.txt / mini.jump2d.txt  --------------------------------
 
-    MiniJump({ fg = C.magenta, bg = C.bg_dark, gui = "bold,underline" }),
-    MiniJump2dSpot({ fg = C.purple, bg = C.bg_dark, gui = "bold,underline" }),
+    MiniJump({ fg = C.blue, bg = C.bg_blue, gui = "bold,underline" }),
+    MiniJump2dSpot({ fg = C.purple, bg = C.bg_purple, gui = "bold,underline" }),
+    MiniJump2dSpotAhead({ fg = C.green, bg = C.bg_green, gui = "bold,underline" }),
+    MiniJump2dSpotUnique({ fg = C.red, bg = C.bg_red, gui = "bold,underline" }),
+    MiniJump2dDim({ Comment }),
 
     ---- :help mini.hipatterns -------------------------------------------------
 
@@ -881,9 +884,16 @@ local theme = lush(function(injected_functions)
 
     TmuxPopupNormal({ bg = C.bg1 }),
 
-    ---- virt-column ------------------------------------------------------------
+    ---- virt-column -----------------------------------------------------------
 
     VirtColumn({ Whitespace, bg = C.bg0 }),
+
+    ---- flash.nvim.txt --------------------------------------------------------
+
+    FlashBackdrop({ Comment, bg = PanelBackground.bg.lighten(0) }),
+    FlashMatch({ Search }),
+    FlashCurrent({ IncSearch }),
+    FlashLabel({ MiniJump }),
   }
 end)
 

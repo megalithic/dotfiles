@@ -86,7 +86,7 @@ function obj:start()
 end
 
 function obj:stop()
-  if obj.menubar then obj.menubar:delete() end
+  -- if obj.menubar then obj.menubar:delete() end
   if obj.updateTimer then obj.updateTimer:stop() end
 
   return self

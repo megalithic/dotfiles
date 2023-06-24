@@ -106,6 +106,7 @@
   r = restore
   rs = restore --staged
 
+  rbi = rebase -i
   rbc = rebase --continue
   rba = rebase --abort
 

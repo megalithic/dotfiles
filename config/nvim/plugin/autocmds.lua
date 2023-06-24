@@ -135,7 +135,7 @@ do
       event = { "BufWritePost" },
       command = function()
         if string.match(vim.fn.getline(1), "^#!") ~= nil then
-          if string.match(vim.fn.getline(1), "/bin/") ~= nil then vim.cmd([[silent !chmod a+x <afile>]]) end
+          if string.match(vim.fn.getline(1), "/bin/") ~= nil then vim.cmd([[!chmod a+x <afile>]]) end
         end
       end,
     },

@@ -178,7 +178,7 @@ return {
               "<cmd>GitConflictNextConflict<CR>",
               { desc = "git-conflict: next conflict", buffer = args.buf }
             )
-            vim.cmd("GitConflictListQf")
+            -- vim.cmd("GitConflictListQf")
           end,
         },
         {
@@ -189,7 +189,7 @@ return {
             vim.diagnostic.enable(args.buf)
             vim.cmd("LspStart")
             -- pcall(vim["cmd"], "cclose")
-            vim.cmd("cclose")
+            -- vim.cmd("cclose")
           end,
         },
       })

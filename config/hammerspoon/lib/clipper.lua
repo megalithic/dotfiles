@@ -2,15 +2,45 @@ local obj = {}
 
 obj.__index = obj
 obj.name = "clipper"
-obj.debug = false
+obj.debug = true
 obj.clip_watcher = {}
 obj.clip_data = {}
+obj.caps_dir = fmt("%s/screenshots", os.getenv("HOME"))
 obj.temp_image = "/tmp/tmp.png"
 obj.temp_ocr_image = "/tmp/ocr_tmp.png"
 
 local dbg = function(str, ...)
   str = string.format(":: [%s] %s", obj.name, str)
   if obj.debug then return _G.dbg(string.format(str, ...), false) end
+end
+
+function obj.capper(image, open_image_url)
+  image = image or hs.pasteboard.readImage()
+
+  if image then
+    -- clear previous image url
+    hs.pasteboard.clearContents("imageURL")
+
+    local date = hs.execute("zsh -ci 'echo $EPOCHSECONDS'")
+    local cap_name = fmt("cap_%s.png", date:gsub("\n", ""))
+    local cap = fmt("%s/%s", obj.caps_dir, cap_name)
+
+    if image:saveToFile(cap) then
+      local url, success, type, rc = hs.execute(fmt("%s/.dotfiles/bin/capper %s", os.getenv("HOME"), cap))
+      url = url:gsub("\n", "")
+      dbg("url: %s/%s/%s/%s", url, success, type, rc)
+
+      if success then
+        hs.pasteboard.setContents(url, "imageURL")
+        hs.pasteboard.setContents(image, "image")
+        if open_image_url then hs.urlevent.openURLWithBundle(url, hs.urlevent.getDefaultHandler("https")) end
+      else
+        error(fmt("failed to upload image to spaces (%s/%s/%s)..", url, type, rc))
+      end
+    else
+      error(fmt("file %s doesn't exist for uploading to capper.", cap))
+    end
+  end
 end
 
 function obj.send_to_imgur(image, open_image_url)
@@ -42,7 +72,7 @@ function obj.send_to_imgur(image, open_image_url)
           hs.pasteboard.setContents(imageURL, "imageURL")
           hs.pasteboard.setContents(image, "image")
 
-          if open_image_url then hs.urlevent.openURLWithBundle(imageURL, hs.urlevent.getDefaultHandler("http")) end
+          if open_image_url then hs.urlevent.openURLWithBundle(imageURL, hs.urlevent.getDefaultHandler("https")) end
           hs.execute("rm " .. obj.temp_image)
         else
           error(fmt("status: %s, body: %s, headers: %s", status, body, I(headers)))
@@ -95,7 +125,7 @@ function obj:init(opts)
       obj.clip_data = pb
     else
       obj.clip_data = hs.pasteboard.readImage()
-      obj.send_to_imgur(obj.clip_data, false)
+      obj.capper(obj.clip_data, false)
 
       hs.hotkey.bind({ "cmd", "shift" }, "v", function()
         local imageURL = hs.pasteboard.getContents("imageURL")

@@ -45,6 +45,7 @@ fi
 zsh_add_file "lib/rtx.zsh"
 
 # NOTE: http://asdf-vm.com/learn-more/faq.html#shell-not-detecting-newly-installed-shims
+# FIXME: some libs (elixir-ls, lulwat?) still require this
 # zsh_add_file "lib/asdf.zsh"
 
 # work things

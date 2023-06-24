@@ -276,7 +276,7 @@ function M.get_visual_selection()
       cscol, cecol = 0, 999
     end
     -- exit visual mode
-    vim.api.nvim_feedkeys(vim.keycode("<Esc>", true, false, true), "n", true) 
+    vim.api.nvim_feedkeys(vim.keycode("<Esc>"), "n", true)
   else
     -- otherwise, use the last known visual position
     _, csrow, cscol, _ = unpack(vim.fn.getpos("'<"))

@@ -47,22 +47,6 @@ return {
   },
   { "lukas-reineke/virt-column.nvim", opts = { char = "│" }, event = "VimEnter" },
   {
-    "xiyaowong/virtcolumn.nvim",
-    cond = false,
-    opts = {
-      virtcolumn_char = "▕", -- char to display the line
-      virtcolumn_priority = 10, -- priority of extmark
-    },
-  },
-  -- @trial: https://github.com/xiyaowong/virtcolumn.nvim
-  {
-    "mawkler/modicator.nvim",
-    dependencies = "rktjmp/lush.nvim", -- Add your colorscheme plugin here
-    event = "ModeChanged",
-    cond = false,
-    config = true,
-  },
-  {
     "mbbill/undotree",
     cmd = "UndotreeToggle",
     keys = { { "<leader>u", "<Cmd>UndotreeToggle<CR>", desc = "undotree: toggle" } },
@@ -70,61 +54,6 @@ return {
       vim.g.undotree_TreeNodeShape = "◦" -- Alternative: '◉'
       vim.g.undotree_SetFocusWhenToggle = 1
       vim.g.undotree_DiffCommand = "diff -u"
-    end,
-  },
-  {
-    "Bekaboo/dropbar.nvim",
-    -- REF: https://github.com/Bekaboo/nvim/blob/master/init.lua
-    event = "VeryLazy",
-    cond = false,
-    keys = {
-      { "<leader>wp", function() require("dropbar.api").pick() end, desc = "winbar: pick" },
-    },
-    config = function()
-      require("dropbar").setup({
-        -- general = {
-        --   enable = function(buf, win)
-        --     local b, w = vim.bo[buf], vim.wo[win]
-        --     local decor = ui.decorations.get({ ft = b.ft, bt = b.bt, setting = "winbar" })
-        --     return decor.ft ~= false
-        --       and b.bt == ""
-        --       and not w.diff
-        --       and not api.nvim_win_get_config(win).zindex
-        --       and api.nvim_buf_get_name(buf) ~= ""
-        --   end,
-        -- },
-        bar = {
-          sources = function(_, _)
-            local sources = require("dropbar.sources")
-            return {
-              -- sources.path,
-              {
-                get_symbols = function(buf, cursor)
-                  if vim.bo[buf].ft == "markdown" then return sources.markdown.get_symbols(buf, cursor) end
-                  for _, source in ipairs({
-                    sources.lsp,
-                    sources.treesitter,
-                  }) do
-                    local symbols = source.get_symbols(buf, cursor)
-                    if not vim.tbl_isempty(symbols) then return symbols end
-                  end
-                  return {}
-                end,
-              },
-            }
-          end,
-        },
-        icons = {
-          ui = { bar = { separator = " " .. mega.icons.misc.arrow_right .. " " } },
-          kinds = { symbols = vim.tbl_map(function(value) return value .. " " end, require("lspkind").symbol_map) },
-        },
-        menu = {
-          win_configs = {
-            border = mega.get_border(),
-            col = function(menu) return menu.parent_menu and menu.parent_menu._win_configs.width + 1 or 0 end,
-          },
-        },
-      })
     end,
   },
   {
@@ -183,7 +112,6 @@ return {
         ft = { "typescript", "typescriptreact" },
         dependencies = { "jose-elias-alvarez/null-ls.nvim" },
         config = function()
-          -- require("typescript").setup({ server = require("mega.servers")("tsserver") })
           require("null-ls").register({
             sources = { require("typescript.extensions.null-ls.code-actions") },
           })
@@ -207,88 +135,61 @@ return {
             desc = "open output panel",
           },
         },
+        event = "LspAttach",
         cmd = { "OutputPanel" },
         config = function() require("output_panel").setup() end,
       },
+      -- {
+      --   "mhanberg/control-panel.nvim",
+      --   keys = {
+      --     {
+      --       "<localleader>lop",
+      --       "<cmd>ControlPanel toggle output-panel<CR>",
+      --       desc = "lsp: open output panel",
+      --     },
+      --     {
+      --       "<leader>lip",
+      --       "<cmd>ControlPanel toggle output-panel<CR>",
+      --       desc = "open output panel",
+      --     },
+      --   },
+      --   config = function()
+      --     local cp = require("control_panel")
+      --     cp.register({
+      --       id = "output-panel",
+      --       title = "Output Panel",
+      --     })
+      --
+      --     local handler = vim.lsp.handlers["window/logMessage"]
+      --
+      --     vim.lsp.handlers["window/logMessage"] = function(err, result, context)
+      --       handler(err, result, context)
+      --       if not err then
+      --         local client_id = context.client_id
+      --         local client = vim.lsp.get_client_by_id(client_id)
+      --
+      --         if not cp.panel("output-panel"):has_tab(client.name) then
+      --           cp.panel("output-panel")
+      --             :tab({ name = client.name, key = tostring(#cp.panel("output-panel"):tabs() + 1) })
+      --         end
+      --
+      --         cp.panel("output-panel"):append({
+      --           tab = client.name,
+      --           text = "[" .. vim.lsp.protocol.MessageType[result.type] .. "] " .. result.message,
+      --         })
+      --       end
+      --     end
+      --   end,
+      -- },
       {
-        "mhanberg/control-panel.nvim",
-        config = function()
-          local cp = require("control_panel")
-          cp.register({
-            id = "output-panel",
-            title = "Output Panel",
-          })
-
-          local handler = vim.lsp.handlers["window/logMessage"]
-
-          vim.lsp.handlers["window/logMessage"] = function(err, result, context)
-            handler(err, result, context)
-            if not err then
-              local client_id = context.client_id
-              local client = vim.lsp.get_client_by_id(client_id)
-
-              if not cp.panel("output-panel"):has_tab(client.name) then
-                cp.panel("output-panel")
-                  :tab({ name = client.name, key = tostring(#cp.panel("output-panel"):tabs() + 1) })
-              end
-
-              cp.panel("output-panel"):append({
-                tab = client.name,
-                text = "[" .. vim.lsp.protocol.MessageType[result.type] .. "] " .. result.message,
-              })
-            end
-          end
-        end,
-      },
-      {
-        "elixir-tools/elixir-tools.nvim",
-        cond = false,
-        ft = { "elixir", "eex", "heex", "surface" },
-        config = function()
-          local elixir = require("elixir")
-          local elixirls = require("elixir.elixirls")
-
-          elixir.setup({
-            credo = {},
-            elixirls = {
-              -- cmd = fmt("%s/lsp/elixir-ls/%s", vim.env.XDG_DATA_HOME, "language_server.sh"),
-              single_file_support = true,
-              settings = elixirls.settings({
-                dialyzerEnabled = true,
-                dialyzerFormat = "dialyxir_long", -- alts: dialyxir_short
-                dialyzerwarnopts = {},
-                fetchDeps = false,
-                enableTestLenses = false,
-                suggestSpecs = true,
-              }),
-              log_level = vim.lsp.protocol.MessageType.Log,
-              message_level = vim.lsp.protocol.MessageType.Log,
-              on_attach = function(_client, _bufnr)
-                vim.keymap.set(
-                  "n",
-                  "<localleader>efp",
-                  ":ElixirFromPipe<cr>",
-                  { buffer = true, noremap = true, desc = "elixir: from pipe" }
-                )
-                vim.keymap.set(
-                  "n",
-                  "<localleader>etp",
-                  ":ElixirToPipe<cr>",
-                  { buffer = true, noremap = true, desc = "elixir: to pipe" }
-                )
-                vim.keymap.set(
-                  "v",
-                  "<localleader>eem",
-                  ":ElixirExpandMacro<cr>",
-                  { buffer = true, noremap = true, desc = "elixir: expand macro" }
-                )
-              end,
-            },
-          })
-        end,
-        dependencies = {
-          { "tpope/vim-projectionist", lazy = false },
-          "nvim-lua/plenary.nvim",
+        "pmizio/typescript-tools.nvim",
+        enabled = false,
+        ft = { "typescript", "typescriptreact", "javascript", "javascriptreact" },
+        build = "npm -g i typescript-styled-plugin",
+        opts = {
+          settings = {
+            tsserver_plugins = { "typescript-styled-plugin" },
+          },
         },
       },
       {
@@ -322,22 +223,60 @@ return {
     },
   },
   {
-    "lvimuser/lsp-inlayhints.nvim",
-    branch = "anticonceal",
-    init = function()
-      mega.augroup("InlayHintsSetup", {
-        event = "LspAttach",
-        command = function(args)
-          local id = vim.tbl_get(args, "data", "client_id") --[[@as lsp.Client]]
-          if not id then return end
-          local client = vim.lsp.get_client_by_id(id)
-          require("lsp-inlayhints").on_attach(client, args.buf)
-        end,
+    cond = false,
+    "megalithic/elixir-tools.nvim",
+    -- ft = { "elixir", "eelixir", "heex", "surface" },
+    event = { "BufReadPre", "BufNewFile" },
+    dependencies = {
+      { "tpope/vim-projectionist", lazy = false },
+      "nvim-lua/plenary.nvim",
+      "neovim/nvim-lspconfig",
+    },
+    version = "*",
+    config = function()
+      local elixir = require("elixir")
+      local elixirls = require("elixir.elixirls")
+
+      elixir.setup({
+        credo = { enable = false },
+        nextls = { enable = false },
+        elixirls = {
+          enable = true,
+          -- cmd = fmt("%s/lsp/elixir-ls/%s", vim.env.XDG_DATA_HOME, "language_server.sh"),
+          single_file_support = true,
+          settings = elixirls.settings({
+            dialyzerEnabled = true,
+            dialyzerFormat = "dialyxir_long", -- alts: dialyxir_short
+            dialyzerwarnopts = {},
+            fetchDeps = false,
+            enableTestLenses = false,
+            suggestSpecs = true,
+          }),
+          log_level = vim.lsp.protocol.MessageType.Log,
+          message_level = vim.lsp.protocol.MessageType.Log,
+          on_attach = function(_client, _bufnr)
+            vim.keymap.set(
+              "n",
+              "<localleader>efp",
+              ":ElixirFromPipe<cr>",
+              { buffer = true, noremap = true, desc = "elixir: from pipe" }
+            )
+            vim.keymap.set(
+              "n",
+              "<localleader>etp",
+              ":ElixirToPipe<cr>",
+              { buffer = true, noremap = true, desc = "elixir: to pipe" }
+            )
+            vim.keymap.set(
+              "v",
+              "<localleader>eem",
+              ":ElixirExpandMacro<cr>",
+              { buffer = true, noremap = true, desc = "elixir: expand macro" }
+            )
+          end,
+        },
       })
     end,
-    opts = {
-      inlay_hints = { priority = vim.highlight.priorities.user + 1 },
-    },
   },
   {
     "stevearc/oil.nvim",
@@ -557,6 +496,40 @@ return {
   { "axelvc/template-string.nvim", ft = { "typescript", "javascript", "typescriptreact", "javascriptreact" } },
 
   -- ( Motions/Textobjects ) ---------------------------------------------------
+  {
+    cond = false,
+    "folke/flash.nvim",
+    event = "VeryLazy",
+    opts = {
+      jump = { autojump = false },
+      search = { multi_window = false, mode = "exact" },
+      modes = {
+        -- options used when flash is activated through
+        -- a regular search with `/` or `?`
+        search = {
+          enabled = true,
+        },
+        char = {
+          keys = { "f", "F", "t", "T", ";" },
+        },
+      },
+    },
+    keys = {
+      {
+        "s",
+        mode = { "n", "x", "o" },
+        function()
+          -- default options: exact mode, multi window, all directions, with a backdrop
+          require("flash").jump()
+        end,
+      },
+      {
+        "m",
+        mode = { "o", "x" },
+        function() require("flash").treesitter() end,
+      },
+    },
+  },
   {
     "Wansmer/treesj",
     dependencies = { "nvim-treesitter/nvim-treesitter", "AndrewRadev/splitjoin.vim" },

@@ -26,6 +26,11 @@ bin/rspec
 deps
 _build
 .elixir_ls
+**/.elixir_ls
+.lexical
+**/.lexical
+.elixir-tools
+**/.elixir-tools
 credo_extra
 elm-stuff
 rel

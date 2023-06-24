@@ -40,8 +40,9 @@ return {
   init = function() vim.opt.completeopt = { "menu", "menuone", "noselect", "noinsert" } end,
   config = function()
     local cmp = require("cmp")
-
-    local fmt = string.format
+    local lspkind = require("lspkind")
+    local ellipsis = mega.icons.misc.ellipsis
+    local MIN_MENU_WIDTH, MAX_MENU_WIDTH = 25, math.min(50, math.floor(vim.o.columns * 0.5))
     local api = vim.api
 
     local function esc(cmd) return vim.keycode(cmd, true, false, true) end
@@ -55,9 +56,9 @@ return {
     local tab = nil
     local shift_tab = nil
 
+    local ok_ls, ls = pcall(require, "luasnip")
     if vim.g.snipper == "luasnip" then
       -- [luasnip] --
-      local ok_ls, ls = mega.require("luasnip")
       tab = function(fallback)
         if cmp.visible() then
           cmp.select_next_item()
@@ -115,7 +116,7 @@ return {
         "Search:None",
       }, ","),
     }
-
+    local compare = require("cmp.config.compare")
     cmp.setup({
       -- experimental = { ghost_text = {
       --   hl_group = "LspCodeLens",
@@ -184,6 +185,35 @@ return {
       formatting = {
         deprecated = true,
         fields = { "abbr", "kind", "menu" },
+        maxwidth = MAX_MENU_WIDTH,
+        ellipsis_char = ellipsis,
+        -- fields = { "kind", "abbr", "menu" },
+
+        -- format = lspkind.cmp_format({
+        --   mode = "symbol",
+        --   maxwidth = MAX_MENU_WIDTH,
+        --   ellipsis_char = ellipsis,
+        --   before = function(_, item)
+        --     local label, length = item.abbr, api.nvim_strwidth(item.abbr)
+        --     if length < MIN_MENU_WIDTH then item.abbr = label .. string.rep(" ", MIN_MENU_WIDTH - length) end
+        --     return item
+        --   end,
+        --   menu = {
+        --     nvim_lsp = "[LSP]",
+        --     nvim_lua = "[LUA]",
+        --     emoji = "[EMOJI]",
+        --     path = "[PATH]",
+        --     neorg = "[NEORG]",
+        --     luasnip = "[SNIP]",
+        --     dictionary = "[DIC]",
+        --     buffer = "[BUF]",
+        --     spell = "[SPL]",
+        --     orgmode = "[ORG]",
+        --     norg = "[NORG]",
+        --     rg = "[RG]",
+        --     git = "[GIT]",
+        --   },
+        -- }),
         format = function(entry, item)
           if item.kind == "Color" and entry.completion_item.documentation then
             local _, _, r, g, b = string.find(entry.completion_item.documentation, "^rgb%((%d+), (%d+), (%d+)")
@@ -226,6 +256,19 @@ return {
 
           return item
         end,
+      },
+      sorting = {
+        priority_weight = 2,
+        comparators = {
+          compare.offset,
+          compare.exact,
+          compare.score,
+          compare.recently_used,
+          compare.sort_text,
+          compare.kind,
+          compare.length,
+          compare.order,
+        },
       },
       sources = cmp.config.sources({
         -- { name = "nvim_lsp_signature_help" },

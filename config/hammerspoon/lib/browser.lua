@@ -2,6 +2,7 @@ local Settings = require("hs.settings")
 
 local obj = {}
 local browser = hs.application.get(C.preferred.browser)
+local snap = L.req("lib.wm.snap")
 
 obj.__index = obj
 obj.name = "browser"
@@ -55,13 +56,12 @@ function obj.jump(url)
   end
 end
 
-function obj.splitTab()
+function obj.splitTab(to_next_window)
   -- Move current window to the left half
-  local snap = L.req("lib.wm.snap")
-  if snap then snap.send_window_left() end
+  if snap and not to_next_window then snap.send_window_left() end
 
   hs.timer.doAfter(100 / 1000, function()
-    local supportedBrowsers = { "Brave Browser", "Brave Browser Dev", "Brave Browser Beta", "Safari" }
+    local supportedBrowsers = { "Brave Browser Dev", "Brave Browser", "Brave Browser Beta", "Safari" }
 
     if browser and hs.fnutils.contains(supportedBrowsers, browser:name()) then
       local moveTab = { "Tab", "Move Tab to New Window" }
@@ -69,7 +69,14 @@ function obj.splitTab()
       browser:selectMenuItem(moveTab)
 
       -- Move the split tab to the right of the screen
-      if snap then snap.send_window_right() end
+      if snap then
+        if to_next_window then
+          browser:selectMenuItem({ "Window", fmt("Move to %s", C.displays.internal) })
+          snap.maximize()
+        else
+          snap.send_window_right()
+        end
+      end
     else
       warn(fmt("[snap.browser.splitTab] unsupported browser: %s", browser:name()))
     end

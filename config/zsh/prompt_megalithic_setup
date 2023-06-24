@@ -46,7 +46,7 @@ GIT_SYMBOL=""
 GIT_CLEAN_ICON=""        # alts: ✓
 GIT_STAGED_ICON=""       # alts: 
 GIT_UNSTAGED_ICON="󰛄"     # alts: • ﯂ ●
-GIT_CONFLICTED_ICON=""   # alts: 
+GIT_CONFLICTED_ICON="󰔷"   # alts: 󰔷
 GIT_UNMERGED_ICON="󰧁"
 GIT_STASHED_ICON=""      # alts:   ≡
 # TODO: check for deleted: https://github.com/spaceship-prompt/spaceship-prompt/blob/master/sections/git_status.zsh#L66-L71

@@ -297,7 +297,10 @@ nnoremap("g>", [[<cmd>set nomore<bar>40messages<bar>set more<CR>]], {
 -- - Clear command-line
 -- - Close floating windows
 -- nmap([[<Esc>]], [[<Nop>]])
-nnoremap("<esc>", function() mega.clear_ui() end, { silent = true, desc = "Clear UI" })
+nnoremap("<esc>", function()
+  mega.clear_ui()
+  vim.api.nvim_feedkeys(vim.keycode("<Esc>"), "n", true)
+end, { silent = true, desc = "Clear UI" })
 
 -- Use operator pending mode to visually select the whole buffer
 -- e.g. dA = delete buffer ALL, yA = copy whole buffer ALL

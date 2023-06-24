@@ -69,7 +69,4 @@ do_install() {
   fi
 }
 
-source "${HOME}/.dotfiles/config/zsh/lib/asdf.zsh"
-asdf reshim elixir
-
 do_install || exit 1
