@@ -60,38 +60,25 @@ function obj.applyLayout(appConfig)
   local app = Application.get(bundleID)
 
   if appConfig.rules and #appConfig.rules > 0 then
-    if obj.mode == "snap" then
-      fnutils.each(appConfig.rules, function(rule)
-        local winTitlePattern, screenNum, positionStr = table.unpack(rule)
-        winTitlePattern = (winTitlePattern ~= "") and winTitlePattern or nil
+    local layouts = {}
 
-        hs.timer.waitUntil(
-          function() return getWindow(winTitlePattern, appConfig.bundleID) ~= nil end,
-          function() Snap.snapper(getWindow(winTitlePattern, appConfig.bundleID), positionStr, targetDisplay(screenNum)) end,
-          0.5
-        )
-      end)
-    elseif obj.mode == "layout" then
-      local layouts = {}
+    fnutils.map(appConfig.rules, function(rule)
+      local winTitlePattern, screenNum, positionStr = table.unpack(rule)
+      winTitlePattern = (winTitlePattern ~= "") and winTitlePattern or nil
 
-      fnutils.map(appConfig.rules, function(rule)
-        local winTitlePattern, screenNum, positionStr = table.unpack(rule)
-        winTitlePattern = (winTitlePattern ~= "") and winTitlePattern or nil
-
-        local layout = {
-          app, -- application name
-          winTitlePattern, -- window title
-          targetDisplay(screenNum), -- screen #
-          Snap.grid[positionStr], -- layout/postion
-          nil,
-          nil,
-        }
-        dbg(fmt("layout: %s", I(layout)))
-        table.insert(layouts, layout)
-      end)
-      hs.layout.apply(layouts, string.match)
-      -- hs.timer.waitUntil(function() hs.layout.apply(layouts, string.match) end, 0.5)
-    end
+      local layout = {
+        app, -- application name
+        winTitlePattern, -- window title
+        targetDisplay(screenNum), -- screen #
+        Snap.grid[positionStr], -- layout/postion
+        nil,
+        nil,
+      }
+      dbg(fmt("layout: %s", I(layout)))
+      table.insert(layouts, layout)
+    end)
+    hs.layout.apply(layouts, string.match)
+    -- hs.timer.waitUntil(function() hs.layout.apply(layouts, string.match) end, 0.5)
   end
 end
 
