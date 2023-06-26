@@ -499,12 +499,13 @@ return {
   {
     cond = true,
     "folke/flash.nvim",
+    event = "VeryLazy",
     opts = {
       jump = { autojump = false },
       search = { multi_window = false, mode = "exact" },
       modes = {
         search = {
-          enabled = false,
+          enabled = true,
         },
         char = {
           keys = { "f", "F", "t", "T", ";" }, -- NOTE: using "," here breaks which-key

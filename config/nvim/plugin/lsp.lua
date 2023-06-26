@@ -219,7 +219,14 @@ local function setup_keymaps(client, bufnr)
 
   nnoremap("[d", function() diagnostic.goto_prev({ float = true }) end, desc("lsp: prev diagnostic"))
   nnoremap("]d", function() diagnostic.goto_next({ float = true }) end, desc("lsp: next diagnostic"))
-  nnoremap("gd", vim.lsp.buf.definition, desc("lsp: definition"))
+  nnoremap("gd", function()
+    -- dd(client.server_capabilities)
+    if true then
+      vim.cmd("Trouble lsp_definitions")
+    else
+      vim.lsp.buf.definition()
+    end
+  end, desc("lsp: definition"))
   nnoremap("gs", vim.lsp.buf.document_symbol, desc("lsp: document symbols"))
   nnoremap("gS", vim.lsp.buf.workspace_symbol, desc("lsp: workspace symbols"))
   nnoremap("gD", [[<cmd>vsplit | lua vim.lsp.buf.definition()<cr>]], desc("lsp: definition (vsplit)"))

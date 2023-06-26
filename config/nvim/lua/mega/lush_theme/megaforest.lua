@@ -890,7 +890,7 @@ local theme = lush(function(injected_functions)
 
     ---- flash.nvim.txt --------------------------------------------------------
 
-    FlashBackdrop({ Comment, bg = PanelBackground.bg.lighten(0) }),
+    FlashBackdrop({ Comment }),
     FlashMatch({ Search }),
     FlashCurrent({ IncSearch }),
     FlashLabel({ MiniJump }),
