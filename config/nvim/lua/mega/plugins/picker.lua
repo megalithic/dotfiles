@@ -52,34 +52,34 @@ local function git_files_cwd_aware(opts)
   return fzf.git_files(opts)
 end
 
-local function list_sessions()
-  local fzf = require("fzf-lua")
-  local ok, persisted = as.pcall(require, "persisted")
-  if not ok then return end
-  local sessions = persisted.list()
-  fzf.fzf_exec(
-    vim.tbl_map(function(s) return s.name end, sessions),
-    dropdown({
-      winopts = { title = format_title("Sessions", ""), height = 0.33, row = 0.5 },
-      previewer = false,
-      actions = {
-        ["default"] = function(selected)
-          local session = vim.tbl_filter(function(s) return s.name == selected[1] end, sessions)[1]
-          if not session then return end
-          persisted.load({ session = session.file_path })
-        end,
-        ["ctrl-d"] = {
-          function(selected)
-            local session = vim.iter(sessions):find(function(s) return s.name == selected[1] end)
-            if not session then return end
-            fn.delete(vim.fn.expand(session.file_path))
-          end,
-          fzf.actions.resume,
-        },
-      },
-    })
-  )
-end
+-- local function list_sessions()
+--   local fzf = require("fzf-lua")
+--   local ok, persisted = mega.pcall(require, "persisted")
+--   if not ok then return end
+--   local sessions = persisted.list()
+--   fzf.fzf_exec(
+--     vim.tbl_map(function(s) return s.name end, sessions),
+--     dropdown({
+--       winopts = { title = format_title("Sessions", ""), height = 0.33, row = 0.5 },
+--       previewer = false,
+--       actions = {
+--         ["default"] = function(selected)
+--           local session = vim.tbl_filter(function(s) return s.name == selected[1] end, sessions)[1]
+--           if not session then return end
+--           persisted.load({ session = session.file_path })
+--         end,
+--         ["ctrl-d"] = {
+--           function(selected)
+--             local session = vim.iter(sessions):find(function(s) return s.name == selected[1] end)
+--             if not session then return end
+--             fn.delete(vim.fn.expand(session.file_path))
+--           end,
+--           fzf.actions.resume,
+--         },
+--       },
+--     })
+--   )
+-- end
 
 local function ivy(opts, ...)
   opts = opts or { winopts = {} }
@@ -106,11 +106,12 @@ end
 
 local function dropdown(opts, ...)
   opts = opts or { winopts = {} }
+
   return vim.tbl_deep_extend("force", {
     prompt = prompt,
     fzf_opts = { ["--layout"] = "reverse" },
     winopts = {
-      title_pos = opts.winopts.title and "center" or nil,
+      title_pos = (opts.winopts and opts.winopts.title) and "center" or nil,
       height = 0.70,
       width = 0.45,
       row = 0.1,
@@ -130,6 +131,33 @@ local function cursor_dropdown(opts)
     },
   }, opts)
 end
+
+-- if vim.g.picker == "fzf" then
+--   mega.augroup("FzfStartup", {
+--     {
+--       event = { "VimEnter" },
+--       pattern = { "*" },
+--       once = true,
+--       command = function(args)
+--         if not vim.g.started_by_firenvim then
+--           -- Open file browser if argument is a folder
+--           -- REF: https://github.com/protiumx/.dotfiles/blob/main/stow/nvim/.config/nvim/lua/config/telescope.lua#L50
+--           local fzf = require("fzf-lua")
+--           local arg = vim.api.nvim_eval("argv(0)")
+--           if arg and (vim.fn.isdirectory(arg) ~= 0 or arg == "") then
+--             file_picker(dropdown({
+--               -- actions = {
+--               --   files = {
+--               --     ["default"] = fzf.actions.file_edit,
+--               --   },
+--               -- },
+--             }))
+--           end
+--         end
+--       end,
+--     },
+--   })
+-- end
 
 return {
   {

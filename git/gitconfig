@@ -353,7 +353,7 @@ fzf = !"                                                                        
 	; editor = nvim
 	autocrlf = input
   editor = "nvr --remote-wait-silent" # or nvim
-  excludesfile ="~/.dotfiles/git/.gitignore_global"
+  excludesfile ="~/.dotfiles/git/gitignore_global"
 
 [apply]
   whitespace = fix

@@ -369,7 +369,10 @@ local function setup_diagnostics()
     severity_sort = true,
     virtual_text = {
       spacing = 1,
-      prefix = "",
+      prefix = function(d)
+        local level = diagnostic.severity[d.severity]
+        return mega.icons.lsp[level:lower()]
+      end,
       source = "if_many", -- or "always", "if_many" (for more than one source)
       severity = { min = diagnostic.severity.ERROR },
       format = function(d)
@@ -572,7 +575,6 @@ local function get_server_capabilities()
   -- TODO: what is dynamicRegistration doing here? should I not always set to true?
   capabilities.textDocument.colorProvider = { dynamicRegistration = false }
   capabilities.textDocument.completion.completionItem.documentationFormat = { "markdown" }
-  -- workspace = { didChangeWatchedFiles = { dynamicRegistration = true } },
   -- textDocument = { foldingRange = { dynamicRegistration = false, lineFoldingOnly = true } },
 
   -- disable semantic token highlighting

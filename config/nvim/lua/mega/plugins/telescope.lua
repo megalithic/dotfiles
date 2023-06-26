@@ -44,8 +44,8 @@ local function with_title(opts, extra)
   }, extra or {})
 end
 
-local function get_border(border_opts)
-  return vim.tbl_deep_extend("force", border_opts or {}, {
+local function get_border(opts)
+  opts = vim.tbl_deep_extend("force", opts or {}, {
     borderchars = {
       { "", "", "", "", "", "", "", "" },
       prompt = { "", "", "", "", "", "", "", "" },
@@ -60,6 +60,8 @@ local function get_border(border_opts)
       -- preview = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
     },
   })
+
+  return opts
 end
 
 local fd_find_command = { "fd", "--type", "f", "--hidden", "--no-ignore-vcs", "--strip-cwd-prefix" }
@@ -93,56 +95,16 @@ local grep_files_cmd = {
 local current_fn = nil
 
 local function dropdown(opts)
-  opts = opts or {}
-  return require("telescope.themes").get_dropdown(get_border({
-    mappings = {
-      i = {
-        ["<cr>"] = require("telescope.actions").select_default,
-      },
-    },
-  }))
+  opts = vim.tbl_deep_extend("force", opts or {}, {})
+  return require("telescope.themes").get_dropdown(get_border(opts))
 end
 
 local function ivy(opts)
-  opts = opts or {}
-  return require("telescope.themes").get_ivy(
-    get_border(vim.tbl_extend("force", { layout_config = { height = 0.3 } }, opts))
-  )
+  opts = vim.tbl_deep_extend("force", opts or {}, { layout_config = { height = 0.3 } })
+  return require("telescope.themes").get_ivy(get_border(opts))
 end
 
 _G.picker = { telescope = { dropdown, ivy, get_border } }
-
-mega.augroup("Startup.Telescope", {
-  {
-    event = { "VimEnter" },
-    pattern = { "*" },
-    once = true,
-    command = function(args)
-      if not vim.g.started_by_firenvim then
-        -- Open file browser if argument is a folder
-        -- REF: https://github.com/protiumx/.dotfiles/blob/main/stow/nvim/.config/nvim/lua/config/telescope.lua#L50
-        local arg = vim.api.nvim_eval("argv(0)")
-        if arg and (vim.fn.isdirectory(arg) ~= 0 or arg == "") then
-          vim.defer_fn(
-            function()
-              ts.find_files(with_title(dropdown({
-                hidden = true,
-                no_ignore = false,
-                previewer = false,
-                prompt_title = "",
-                preview_title = "",
-                results_title = "",
-                layout_config = { prompt_position = "top" },
-              })))
-            end,
-            10
-          )
-        end
-      end
-    end,
-  },
-})
-
 -- Gets the root dir from either:
 -- * connected lsp
 -- * .git from file
@@ -224,6 +186,40 @@ end
 
 local function extensions(name) return require("telescope").extensions[name] end
 
+if vim.g.picker == "telescope" then
+  mega.augroup("TelescopeStartup", {
+    {
+      event = { "VimEnter" },
+      pattern = { "*" },
+      once = true,
+      command = function(args)
+        if not vim.g.started_by_firenvim then
+          -- Open file browser if argument is a folder
+          -- REF: https://github.com/protiumx/.dotfiles/blob/main/stow/nvim/.config/nvim/lua/config/telescope.lua#L50
+          local arg = vim.api.nvim_eval("argv(0)")
+          if arg and (vim.fn.isdirectory(arg) ~= 0 or arg == "") then
+            ts.find_files(with_title(dropdown({
+              hidden = true,
+              no_ignore = false,
+              previewer = false,
+              prompt_title = "",
+              preview_title = "",
+              results_title = "",
+              layout_config = { prompt_position = "top" },
+              mappings = {
+                i = {
+                  ["<cr>"] = stopinsert(function(pb) multi(pb, "edit") end),
+                  -- ["<cr>"] = require("telescope.actions").select_default,
+                },
+              },
+            })))
+          end
+        end
+      end,
+    },
+  })
+end
+
 return {
   "nvim-telescope/telescope.nvim",
   cmd = { "Telescope" },
@@ -298,7 +294,6 @@ return {
         mappings = {
           i = {
             ["<esc>"] = require("telescope.actions").close,
-            ["<cr>"] = stopinsert(function(pb) multi(pb, "vnew") end),
             ["<c-v>"] = stopinsert(function(pb) multi(pb, "vnew") end),
             ["<c-s>"] = stopinsert(function(pb) multi(pb, "new") end),
             ["<c-o>"] = stopinsert(function(pb) multi(pb, "edit") end),
@@ -397,6 +392,7 @@ return {
           },
           mappings = {
             i = {
+              ["<cr>"] = stopinsert(function(pb) multi(pb, "vnew") end),
               ["<c-a>"] = { "<Home>", type = "command" }, -- overrides default: egrep_actions.toggle_and,
               ["<c-e>"] = { "<End>", type = "command" },
             },
@@ -420,6 +416,11 @@ return {
         find_files = {
           find_command = find_files_cmd,
           on_input_filter_cb = file_extension_filter,
+          mappings = {
+            i = {
+              ["<cr>"] = stopinsert(function(pb) multi(pb, "vnew") end),
+            },
+          },
           -- previewer = require("telescope.previewers.term_previewer").new_termopen_previewer({
           --   get_command = function(entry) return { "preview", require("telescope.from_entry").path(entry) } end,
           -- }),
@@ -429,6 +430,7 @@ return {
           -- file_ignore_patterns = { ".git/", "%.lock" },
           mappings = {
             i = {
+              ["<cr>"] = stopinsert(function(pb) multi(pb, "vnew") end),
               ["<C-f>"] = actions.to_fuzzy_refine,
               ["<C-s>"] = actions.to_fuzzy_refine,
             },
@@ -482,7 +484,13 @@ return {
             }
           end,
         }),
-        lsp_references = ivy({}),
+        lsp_references = ivy({
+          mappings = {
+            i = {
+              ["<cr>"] = stopinsert(function(pb) multi(pb, "vnew") end),
+            },
+          },
+        }),
       },
     })
 

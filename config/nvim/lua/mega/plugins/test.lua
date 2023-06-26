@@ -79,22 +79,22 @@ return {
     end,
   },
   {
+    cond = false,
     "nvim-neotest/neotest",
-    -- event = { "BufReadPost", "BufNewFile" },
-    -- enabled = vim.g.tester == "neotest",
+    event = { "BufReadPost", "BufNewFile" },
     cmd = { "Neotest" },
     dependencies = {
       "nvim-lua/plenary.nvim",
       "nvim-treesitter/nvim-treesitter",
       "antoinemadec/FixCursorHold.nvim",
-      { "scottming/neotest-elixir", branch = "only-support-iex" }, -- https://github.com/jfpedroza/neotest-elixir
+      { "scottming/neotest-elixir" }, -- https://github.com/jfpedroza/neotest-elixir
       { "haydenmeade/neotest-jest" },
       { "rcarriga/neotest-plenary", dependencies = { "nvim-lua/plenary.nvim" } },
     },
     keys = {
       -- { "<localleader>ts", toggle_summary, desc = "neotest: toggle summary" },
       { "<localleader>to", function() require("neotest").output_panel.open() end, desc = "neotest: output" },
-      { "<localleader>tt", function() require("neotest").run.run() end, desc = "neotest: run nearest" },
+      { "<localleader>tt", "<cmd>lua require('neotest').run.run()<cr>", desc = "neotest: run nearest" },
       -- { "<localleader>tl", run_last, desc = "neotest: run last" },
       -- { "<localleader>tf", run_file, desc = "neotest: run file" },
       -- { "<localleader>tF", run_file_sync, desc = "neotest: run file synchronously" },
@@ -113,7 +113,7 @@ return {
       }, nt_ns)
 
       require("neotest").setup({
-        log_level = L.DEBUG,
+        log_level = L.INFO,
         discovery = { enabled = true },
         diagnostic = { enabled = true },
         output = {
@@ -161,6 +161,7 @@ return {
           require("neotest-plenary"),
           require("neotest-elixir")({
             args = { "--trace" },
+            iex_shell_direction = "float",
           }),
           require("neotest-jest")({
             jestCommand = "npm test --",

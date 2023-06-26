@@ -499,18 +499,15 @@ return {
   {
     cond = true,
     "folke/flash.nvim",
-    event = "VeryLazy",
     opts = {
       jump = { autojump = false },
       search = { multi_window = false, mode = "exact" },
       modes = {
-        -- options used when flash is activated through
-        -- a regular search with `/` or `?`
         search = {
-          enabled = true,
+          enabled = false,
         },
         char = {
-          keys = { "f", "F", "t", "T", ";" }, -- NOTE: using "," here, breaks which-key
+          keys = { "f", "F", "t", "T", ";" }, -- NOTE: using "," here breaks which-key
         },
       },
     },
@@ -518,16 +515,14 @@ return {
       {
         "s",
         mode = { "n", "x", "o" },
-        function()
-          -- default options: exact mode, multi window, all directions, with a backdrop
-          require("flash").jump()
-        end,
+        function() require("flash").jump() end,
       },
       {
         "m",
         mode = { "o", "x" },
         function() require("flash").treesitter() end,
       },
+      { "r", function() require("flash").remote() end, mode = "o", desc = "Remote Flash" },
     },
   },
   {
@@ -590,11 +585,11 @@ return {
   },
 
   -- ( Notes/Docs ) ------------------------------------------------------------
-  { "iamcco/markdown-preview.nvim", ft = "markdown", build = "cd app && yarn install" },
   {
     "toppair/peek.nvim",
     build = "deno task --quiet build:fast",
     ft = { "markdown" },
+    keys = { { "<localleader>mp", "<cmd>Peek<cr>" } },
     config = function()
       local peek = require("peek")
       peek.setup({})
@@ -643,7 +638,7 @@ return {
           source_pattern_end = "^```$",
           dash_pattern = "-",
           dash_highlight = "Dash",
-          dash_string = "", -- alts:  靖並   ﮆ 
+          dash_string = "󰇜",
           headline_pattern = "^#+",
           headline_highlights = { "Headline1", "Headline2", "Headline3", "Headline4", "Headline5", "Headline6" },
           codeblock_highlight = "CodeBlock",
@@ -664,29 +659,4 @@ return {
   { "fladson/vim-kitty", ft = "kitty" },
   { "SirJson/fzf-gitignore", config = function() vim.g.fzf_gitignore_no_maps = true end },
   { "boltlessengineer/bufterm.nvim", config = true, cmd = { "BufTermEnter", "BufTermNext", "BufTermPrev" } },
-  {
-    "mrossinek/zen-mode.nvim",
-    cmd = { "ZenMode" },
-    keys = { { "<localleader>zz", "<cmd>ZenMode<cr>", desc = "Zen Mode" } },
-    opts = {
-      window = {
-        options = {
-          foldcolumn = "0",
-          number = false,
-          relativenumber = false,
-          scrolloff = 999,
-          signcolumn = "no",
-        },
-      },
-      plugins = {
-        tmux = {
-          enabled = true,
-        },
-        wezterm = {
-          enabled = true,
-          font = "+8",
-        },
-      },
-    },
-  },
 }

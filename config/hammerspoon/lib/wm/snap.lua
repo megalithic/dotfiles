@@ -12,28 +12,11 @@ obj.name = "snap"
 obj.alerts = {}
 obj.snapback_window_state = {}
 obj.isOpen = false
-obj.debug = true
+obj.debug = false
 
-local function info(...)
-  if obj.debug then
-    return _G.info(...)
-  else
-    return print("")
-  end
-end
-local function dbg(...)
-  if obj.debug then
-    return _G.dbg(...)
-  else
-    return print("")
-  end
-end
-local function note(...)
-  if obj.debug then
-    return _G.note(...)
-  else
-    return print("")
-  end
+local dbg = function(str, ...)
+  str = string.format(":: [%s] %s", obj.name, str)
+  if obj.debug then return _G.dbg(string.format(str, ...), false) end
 end
 
 obj.grid = {
@@ -375,6 +358,47 @@ function obj:toggle()
   return self
 end
 
+function obj.debug_window()
+  local win = hs.window.focusedWindow()
+  local app = win:application()
+  local app_name = app:name()
+  local win_title = win:title()
+  local win_id = win:id()
+  local win_frame = win:frame()
+  local win_frame_string = "x: "
+    .. win_frame.x
+    .. " y: "
+    .. win_frame.y
+    .. " w: "
+    .. win_frame.w
+    .. " h: "
+    .. win_frame.h
+  local win_screen = win:screen():name()
+  local win_screen_frame = win:screen():frame()
+  local win_screen_frame_string = "x: "
+    .. win_screen_frame.x
+    .. " y: "
+    .. win_screen_frame.y
+    .. " w: "
+    .. win_screen_frame.w
+    .. " h: "
+    .. win_screen_frame.h
+  local debugLines = {
+    "app: " .. app_name,
+    "win title: " .. win_title,
+    "win_id: " .. win_id,
+    "frame: " .. win_frame_string,
+    "screen: " .. win_screen,
+    "screen frame: " .. win_screen_frame_string,
+  }
+
+  -- alert.close()
+  -- alert.show(fmt(" Window Debugger:\n%s", table.concat(debugLines, "\n")))
+
+  str = string.format(":: [%s] %s", obj.name, "\n" .. table.concat(debugLines, "\n"))
+  _G.dbg(string.format(str), false)
+end
+
 function obj:init(opts)
   opts = opts or {}
   Hyper = L.load("lib.hyper", { id = obj.name }):start()
@@ -453,6 +477,10 @@ function obj:start()
     :bind(keys.mods.caSc, "s", function()
       -- Split tab out and send to new window
       L.load("lib.browser").splitTab(true)
+      obj:exit()
+    end)
+    :bind(keys.mods.casc, "i", function()
+      obj.debug_window()
       obj:exit()
     end)
 
