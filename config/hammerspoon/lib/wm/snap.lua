@@ -1,17 +1,21 @@
--- REF: https://github.com/Hammerspoon/hammerspoon/issues/154
+-- REF:
+-- https://github.com/Hammerspoon/hammerspoon/issues/154
+-- https://github.com/peterklijn/hammerspoon-shiftit/blob/master/init.lua
+-- https://github.com/kevindiu/m1_config/blob/main/.hammerspoon/resizeWindow.lua
 --
 -- TODO: https://github.com/nitzan-shaked/hammerspoon-config/blob/master/kbd_win.lua
 -- evaluate how we can use key repeat to cycle through layout positions, or to resize a window
 
 local alert = require("utils.alert")
 local obj = hs.hotkey.modal.new({}, nil)
+local delayedExitTimer = nil
 local Hyper
 
 obj.__index = obj
 obj.name = "snap"
 obj.alerts = {}
 obj.isOpen = false
-obj.debug = true
+obj.debug = false
 
 local dbg = function(str, ...)
   if type(str) == "string" then
@@ -42,6 +46,7 @@ obj.grid = {
   centeredSmall = { x = 0.35, y = 0.35, w = 0.30, h = 0.30 },
 }
 
+-- WARN: deprecated
 --- hs.window:moveToScreen(screen)
 --- Method
 --- move window to the the given screen, keeping the relative proportion and position window to the original screen.
@@ -59,6 +64,67 @@ function hs.window:moveToScreen(nextScreen)
   })
 end
 
+function obj:move(unit) hs.window.focusedWindow():move(unit, nil, true, 0) end
+function obj:resizeOut() self:resizeWindowInSteps(true) end
+function obj:resizeIn() self:resizeWindowInSteps(false) end
+function obj:resizeWindowInSteps(increment)
+  local screen = hs.window.focusedWindow():screen():frame()
+  local window = hs.window.focusedWindow():frame()
+  local wStep = math.floor(screen.w / 12)
+  local hStep = math.floor(screen.h / 12)
+  local x, y, w, h = window.x, window.y, window.w, window.h
+
+  if increment then
+    local xu = math.max(screen.x, x - wStep)
+    w = w + (x - xu)
+    x = xu
+    local yu = math.max(screen.y, y - hStep)
+    h = h + (y - yu)
+    y = yu
+    w = math.min(screen.w - x + screen.x, w + wStep)
+    h = math.min(screen.h - y + screen.y, h + hStep)
+  else
+    local noChange = true
+    local notMinWidth = w > wStep * 3
+    local notMinHeight = h > hStep * 3
+
+    local snapLeft = x <= screen.x
+    local snapTop = y <= screen.y
+    -- add one pixel in case of odd number of pixels
+    local snapRight = (x + w + 1) >= (screen.x + screen.w)
+    local snapBottom = (y + h + 1) >= (screen.y + screen.h)
+
+    local b2n = { [true] = 1, [false] = 0 }
+    local totalSnaps = b2n[snapLeft] + b2n[snapRight] + b2n[snapTop] + b2n[snapBottom]
+
+    if notMinWidth and (totalSnaps <= 1 or not snapLeft) then
+      x = x + wStep
+      w = w - wStep
+      noChange = false
+    end
+    if notMinHeight and (totalSnaps <= 1 or not snapTop) then
+      y = y + hStep
+      h = h - hStep
+      noChange = false
+    end
+    if notMinWidth and (totalSnaps <= 1 or not snapRight) then
+      w = w - wStep
+      noChange = false
+    end
+    if notMinHeight and (totalSnaps <= 1 or not snapBottom) then
+      h = h - hStep
+      noChange = false
+    end
+    if noChange then
+      x = notMinWidth and x + wStep or x
+      y = notMinHeight and y + hStep or y
+      w = notMinWidth and w - wStep * 2 or w
+      h = notMinHeight and h - hStep * 2 or h
+    end
+  end
+  self:move({ x = x, y = y, w = w, h = h })
+end
+
 obj.tile = function()
   local windows = hs.fnutils.map(hs.window.filter.new():getWindows(), function(win)
     if win ~= hs.window.focusedWindow() then
@@ -74,23 +140,21 @@ obj.tile = function()
   local chooser = hs.chooser.new(function(choice)
     if choice ~= nil then
       local focused = hs.window.focusedWindow()
-      local toRead = hs.window.find(choice.id)
+      local alt = hs.window.find(choice.id)
       if hs.eventtap.checkKeyboardModifiers()["shift"] then
         alert.show("  70 ◱ 30  ")
         hs.layout.apply({
           { nil, focused, focused:screen(), obj.grid.left70, 0, 0 },
-          { nil, toRead, focused:screen(), obj.grid.right30, 0, 0 },
+          { nil, alt, focused:screen(), obj.grid.right30, 0, 0 },
         })
       else
-        -- obj.send_window_left(focused, fmt("", focused:title()))
-        -- obj.send_window_right(toRead, fmt("", toRead:title()))
         alert.show("  50 ◱ 50  ")
         hs.layout.apply({
           { nil, focused, focused:screen(), obj.grid.left50, 0, 0 },
-          { nil, toRead, focused:screen(), obj.grid.right50, 0, 0 },
+          { nil, alt, focused:screen(), obj.grid.right50, 0, 0 },
         })
       end
-      toRead:raise()
+      alt:raise()
     end
   end)
 
@@ -101,10 +165,12 @@ obj.tile = function()
     :show()
 end
 
+-- TODO: or do we use something more simple:
+--https://github.com/kevindiu/m1_config/blob/main/.hammerspoon/resizeWindow.lua
 function obj.place(title, loc, win, screen)
   if title and not title == "" then alert.show(title) end
-  win = win and win or obj.win()
-  screen = screen and screen or win:screen()
+  win = win or obj.win()
+  screen = screen or win:screen()
 
   if not loc then
     warn(fmt("[snap.place] no location provided for placing window %s..", win:title()))
@@ -116,109 +182,37 @@ function obj.place(title, loc, win, screen)
   })
 end
 
-function obj.fullscreen(win, msg, screenAsUnit)
-  msg = msg or "Fullscreen"
-  obj.place(msg, obj.grid.maximized, win, screenAsUnit)
-end
+function obj.fullscreen(win, msg, screenAsUnit) obj.place(msg, obj.grid.maximized, win, screenAsUnit) end
 obj.maximize = obj.fullscreen
-function obj.centerSmall(win, msg, screenAsUnit)
-  msg = msg or "Center sm"
-  obj.place(msg, obj.grid.centeredSmall, win, screenAsUnit)
-end
-function obj.centerMedium(win, msg, screenAsUnit)
-  msg = msg or "Center md"
-  obj.place(msg, obj.grid.centeredMedium, win, screenAsUnit)
-end
-function obj.centerLarge(win, msg, screenAsUnit)
-  msg = msg or "Center lg"
-  obj.place(msg, obj.grid.centeredLarge, win, screenAsUnit)
-end
-function obj.left30(win, msg, screenAsUnit)
-  msg = msg or "Left 30%"
-  obj.place(msg, obj.grid.left30, win, screenAsUnit)
-end
-function obj.left50(win, msg, screenAsUnit)
-  msg = msg or "Left 50%"
-  obj.place(msg, obj.grid.left50, win, screenAsUnit)
-end
-function obj.left75(win, msg, screenAsUnit)
-  msg = msg or "Left 75%"
-  obj.place(msg, obj.grid.left75, win, screenAsUnit)
-end
-function obj.right30(win, msg, screenAsUnit)
-  msg = msg or "Right 30%"
-  obj.place(msg, obj.grid.right30, win, screenAsUnit)
-end
-function obj.right50(win, msg, screenAsUnit)
-  msg = msg or "Right 50%"
-  obj.place(msg, obj.grid.right50, win, screenAsUnit)
-end
-function obj.right75(win, msg, screenAsUnit)
-  msg = msg or "Right 75%"
-  obj.place(msg, obj.grid.right75, win, screenAsUnit)
-end
+function obj.centerSmall(win, msg, screenAsUnit) obj.place(msg, obj.grid.centeredSmall, win, screenAsUnit) end
+function obj.centerMedium(win, msg, screenAsUnit) obj.place(msg, obj.grid.centeredMedium, win, screenAsUnit) end
+function obj.centerLarge(win, msg, screenAsUnit) obj.place(msg, obj.grid.centeredLarge, win, screenAsUnit) end
+function obj.left30(win, msg, screenAsUnit) obj.place(msg, obj.grid.left30, win, screenAsUnit) end
+function obj.left50(win, msg, screenAsUnit) obj.place(msg, obj.grid.left50, win, screenAsUnit) end
+function obj.left75(win, msg, screenAsUnit) obj.place(msg, obj.grid.left75, win, screenAsUnit) end
+function obj.right30(win, msg, screenAsUnit) obj.place(msg, obj.grid.right30, win, screenAsUnit) end
+function obj.right50(win, msg, screenAsUnit) obj.place(msg, obj.grid.right50, win, screenAsUnit) end
+function obj.right75(win, msg, screenAsUnit) obj.place(msg, obj.grid.right75, win, screenAsUnit) end
 
+-- WARN: deprecated
 function obj.send_window_prev_monitor()
-  alert.show("Prev Monitor")
-  local win = hs.window.focusedWindow()
-  local nextScreen = win:screen():previous()
-  win:moveToScreen(nextScreen)
+  local nextScreen = obj.win():screen():previous()
+  obj.win():moveToScreen(nextScreen)
 end
 
+-- WARN: deprecated
 function obj.send_window_next_monitor()
-  alert.show("Next Monitor")
-  local win = hs.window.focusedWindow()
-  local nextScreen = win:screen():next()
-  win:moveToScreen(nextScreen)
+  local nextScreen = obj.win():screen():next()
+  obj.win():moveToScreen(nextScreen)
+end
+
+function obj.toNextScreen()
+  local nextScreen = obj.win():screen():next()
+  obj.win():moveToScreen(nextScreen)
 end
 
 -- return currently focused window
 function obj.win() return hs.window.focusedWindow() end
-
--- screen is the available rect inside the screen edge margins
-function obj.screen(screen, win)
-  win = win or obj.win()
-  screen = screen and screen:frame() or win:screen():frame()
-  local sem = obj.grid.screen_edge_margins
-  return {
-    x = screen.x + sem.left,
-    y = screen.y + sem.top,
-    w = screen.w - (sem.left + sem.right),
-    h = screen.h - (sem.top + sem.bottom),
-  }
-end
-
-function obj:entered()
-  obj.isOpen = true
-  hs.window.highlight.start()
-
-  obj.alerts = hs.fnutils.map(hs.screen.allScreens(), function(screen)
-    local win = hs.window.focusedWindow()
-
-    if win ~= nil then
-      if screen == hs.screen.mainScreen() then
-        local app_title = win:application():title()
-        local image = hs.image.imageFromAppBundle(win:application():bundleID())
-        local prompt = fmt("◱ : %s", app_title)
-        if image ~= nil then prompt = fmt(": %s", app_title) end
-        alert.showOnly({ text = prompt, image = image, screen = screen })
-      end
-    else
-      obj:exit()
-    end
-
-    return nil
-  end)
-end
-
-function obj:exited()
-  obj.isOpen = false
-  hs.window.highlight.stop()
-
-  hs.fnutils.ieach(obj.alerts, function(id) alert.closeSpecific(id) end)
-
-  alert.close()
-end
 
 function obj:toggle()
   if obj.isOpen then
@@ -231,10 +225,11 @@ function obj:toggle()
 end
 
 function obj.debug_window()
-  local win = hs.window.focusedWindow()
+  local win = obj.win()
   local app = win:application()
   local app_name = app:name()
   local win_title = win:title()
+  local win_fullscreened = win:isFullScreen()
   local win_id = win:id()
   local win_frame = win:frame()
   local win_frame_string = "x: "
@@ -262,11 +257,61 @@ function obj.debug_window()
     "frame: " .. win_frame_string,
     "screen: " .. win_screen,
     "screen frame: " .. win_screen_frame_string,
+    "fullscreened:" .. win_fullscreened,
   }
 
   -- alert.show(fmt(" Window Debugger:\n%s", table.concat(debugLines, "\n")))
   local str = fmt(":: [%s] %s", obj.name, "\n" .. table.concat(debugLines, "\n"))
   _G.dbg(fmt(str), false)
+end
+
+function obj.delayedExit(delay)
+  delay = delay or 2
+
+  if delayedExitTimer ~= nil then
+    delayedExitTimer:stop()
+    delayedExitTimer = nil
+  end
+
+  delayedExitTimer = hs.timer.doAfter(delay, function()
+    dbg("delaying exit..")
+    obj:exit()
+    delayedExitTimer = nil
+  end)
+end
+
+function obj:entered()
+  obj.isOpen = true
+  hs.window.highlight.start()
+
+  obj.alerts = hs.fnutils.map(hs.screen.allScreens(), function(screen)
+    local win = hs.window.focusedWindow()
+
+    if win ~= nil then
+      if screen == hs.screen.mainScreen() then
+        local app_title = win:application():title()
+        local image = hs.image.imageFromAppBundle(win:application():bundleID())
+        local prompt = fmt("◱ : %s", app_title)
+        if image ~= nil then prompt = fmt(": %s", app_title) end
+        alert.showOnly({ text = prompt, image = image, screen = screen })
+        obj.delayedExit(1)
+      end
+    else
+      obj:exit()
+    end
+
+    return nil
+  end)
+end
+
+function obj:exited()
+  obj.isOpen = false
+  hs.window.highlight.stop()
+
+  hs.fnutils.ieach(obj.alerts, function(id) alert.closeSpecific(id) end)
+
+  alert.close()
+  dbg("exited modal")
 end
 
 function obj:init(opts)
@@ -284,43 +329,27 @@ function obj:start()
   Hyper:bind(keys.mods.casc, "l", function() obj:toggle() end)
   local browser = L.load("lib.browser")
 
+  -- local i
+
   obj
     :bind(keys.mods.casc, "escape", function() obj:exit() end)
-    :bind(keys.mods.casc, "return", function()
-      obj.fullscreen()
-      obj:exit()
-    end)
+    :bind(keys.mods.casc, "return", function() obj.fullscreen() end, function() obj.delayedExit(0.1) end)
     :bind(keys.mods.caSc, "return", function()
-      obj.send_window_next_monitor()
       obj.fullscreen()
-      obj:exit()
-    end)
-    :bind(keys.mods.casc, "l", function()
-      obj.right50()
-      obj:exit()
-    end)
+      obj.toNextScreen()
+    end, function() obj:exit() end)
+    :bind(keys.mods.casc, "l", function() obj.right50() end, function() obj.delayedExit(0.1) end)
     :bind(keys.mods.caSc, "l", function()
-      obj.send_window_next_monitor()
       obj.right50()
-      obj:exit()
-    end)
-    :bind(keys.mods.casc, "h", function()
-      obj.left50()
-      obj:exit()
-    end)
+      obj.toNextScreen()
+    end, function() obj:exit() end)
+    :bind(keys.mods.casc, "h", function() obj.left50() end, function() obj.delayedExit(0.1) end)
     :bind(keys.mods.caSc, "h", function()
-      obj.send_window_prev_monitor()
       obj.left50()
-      obj:exit()
-    end)
-    :bind(keys.mods.casc, "j", function()
-      obj.centerMedium()
-      obj:exit()
-    end)
-    :bind(keys.mods.casc, "k", function()
-      obj.centerLarge()
-      obj:exit()
-    end)
+      obj.toNextScreen()
+    end, function() obj:exit() end)
+    :bind(keys.mods.casc, "j", function() obj.toNextScreen() end, function() obj.delayedExit(0.1) end)
+    :bind(keys.mods.casc, "k", function() obj.centerLarge() end, function() obj.delayedExit(0.1) end)
     :bind(keys.mods.casc, "v", function()
       obj.tile()
       obj:exit()
@@ -337,6 +366,17 @@ function obj:start()
       obj.debug_window()
       obj:exit()
     end)
+    :bind(keys.mods.casc, "LEFT", function()
+      obj:resizeIn()
+      obj.delayedExit()
+    end, function() obj.delayedExit() end, function() obj:resizeIn() end)
+    :bind(
+      keys.mods.casc,
+      "RIGHT",
+      function() obj:resizeOut() end,
+      function() obj.delayedExit() end,
+      function() obj:resizeOut() end
+    )
 
   return self
 end

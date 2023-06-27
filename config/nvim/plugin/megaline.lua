@@ -372,45 +372,8 @@ local function get_diagnostics(seg_formatters_status)
 end
 
 local function get_lsp_status(messages)
-  local percentage
-  local result = {}
-  table.insert(result, messages)
-  -- for _, msg in pairs(messages) do
-  --   if msg.message then
-  --     table.insert(result, msg.title .. ": " .. msg.message)
-  --   else
-  --     table.insert(result, msg.title)
-  --   end
-  --   if msg.percentage then percentage = math.max(percentage or 0, msg.percentage) end
-  -- end
-  local content = ""
-  if percentage then
-    content = string.format("%03d: %s", percentage, table.concat(result, ", "))
-  else
-    content = table.concat(result, ", ")
-  end
-
-  return seg(content, { margin = { 1, 1 } })
-end
-
-local function get_substitution_status()
-  local ok, cool = mega.require("cool-substitute.status")
-  if not ok then return "" end
-
-  -- P(fmt("cool writing active: %s", vim.g.cool_substitute_is_active))
-  -- P(fmt("cool applying active: %s", vim.g.cool_substitute_is_applying))
-
-  if not cool.status_with_icons() then return "" end
-  -- local hl = ""
-  -- if vim.g.cool_substitute_is_active then
-  --   hl = H.set_hl("StSubstitution", { bg = cool.status_color() })
-  -- elseif vim.g.cool_substitute_is_applying then
-  -- end
-  -- local writingHl = H.set_hl("StCoolSubWriting", { bg = cool.status_color() })
-  -- local applyingHl = H.set_hl("StCoolSubWriting", { bg = cool.status_color() })
-  -- P(cool.status_color())
-  H.set_hl("StSubstitution", { foreground = cool.status_color() })
-  return seg(cool.status_with_icons(), "StSubstitution")
+  --TODO: do some gsub replacements on the messages
+  return seg(messages, { margin = { 1, 1 } })
 end
 
 local function get_dap_status()

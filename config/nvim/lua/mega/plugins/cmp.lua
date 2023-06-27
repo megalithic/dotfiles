@@ -33,6 +33,7 @@ return {
     { "hrsh7th/cmp-nvim-lsp-signature-help" },
     { "hrsh7th/cmp-nvim-lsp-document-symbol" },
     { "lukas-reineke/cmp-rg" },
+    { "lukas-reineke/cmp-under-comparator" },
     { "davidsierradz/cmp-conventionalcommits" },
     -- { "dmitmel/cmp-cmdline-history"},
     -- { "kristijanhusak/vim-dadbod-completion"},
@@ -116,7 +117,6 @@ return {
         "Search:None",
       }, ","),
     }
-    local compare = require("cmp.config.compare")
     cmp.setup({
       -- experimental = { ghost_text = {
       --   hl_group = "LspCodeLens",
@@ -260,14 +260,15 @@ return {
       sorting = {
         priority_weight = 2,
         comparators = {
-          compare.offset,
-          compare.exact,
-          compare.score,
-          compare.recently_used,
-          compare.sort_text,
-          compare.kind,
-          compare.length,
-          compare.order,
+          cmp.config.compare.offset,
+          cmp.config.compare.exact,
+          cmp.config.compare.score,
+          cmp.config.compare.recently_used,
+          require("cmp-under-comparator").under,
+          cmp.config.compare.sort_text,
+          cmp.config.compare.kind,
+          cmp.config.compare.length,
+          cmp.config.compare.order,
         },
       },
       sources = cmp.config.sources({

@@ -41,22 +41,27 @@ local function connectDevice(deviceStr)
   local device = obj.devices[deviceStr]
   if not device then return end
 
-  alert.close()
-  alert.show(fmt("Connecting %s %s", device.name, device.icon))
+  info(fmt(":: please wait, connecting %s %s..", device.name, device.icon))
+
   hs.task
-    .new(obj.btUtil, function(exitCode, stdOut, stdErr)
-      dbg("exitCode: %s\nstdOut: %s\nstdErr: %s", exitCode, stdOut, stdErr)
-      -- hs.notify.new({ title = obj.name, subTitle = fmt("%s %s Connected", device.name, device.icon) }):send()
-    end, {
-      "--connect",
-      device.id,
-    })
+    .new(
+      obj.btUtil,
+      function(exitCode, stdOut, stdErr)
+        dbg("connectDevice/task: \nexitCode: %s\nstdOut: %s\nstdErr: %s", exitCode, stdOut, stdErr)
+      end,
+      {
+        "--connect",
+        device.id,
+      }
+    )
     :start()
 end
 
 local function checkDevice(deviceStr, fn)
   local device = obj.devices[deviceStr]
   if not device then return end
+
+  local connectedState = false
 
   hs.task
     .new(obj.btUtil, function(_, stdout)
@@ -65,43 +70,42 @@ local function checkDevice(deviceStr, fn)
 
       dbg("checkDevice/isConnected? %s", isConnected)
 
+      connectedState = isConnected
       fn(isConnected)
     end, {
       "--is-connected",
       device.id,
     })
     :start()
+
+  return connectedState
 end
 
 local function toggleDevice(deviceStr, fn)
-  connectDevice(deviceStr)
+  local isConnected = false
+  hs.timer.doUntil(function()
+    checkDevice(deviceStr, function(connectedState)
+      isConnected = connectedState
+      dbg("toggleDevice/checkDevice/callback/isConnected? %s", connectedState)
 
-  return checkDevice(deviceStr, function(isConnected)
-    dbg("toggleDevice/checkDevice/callback/isConnected? %s", isConnected)
+      local device = obj.devices[deviceStr]
 
-    local device = obj.devices[deviceStr]
+      if connectedState then
+        require("lib.watchers.dock").setInput(C.dock.docked.input)
+        hs.notify.new({ title = obj.name, subTitle = fmt("%s %s Connected", device.name, device.icon) }):send()
+      end
 
-    if isConnected then
-      require("lib.watchers.dock").setInput(C.dock.docked.input)
-      hs.notify.new({ title = obj.name, subTitle = fmt("%s %s Connected", device.name, device.icon) }):send()
-    end
+      obj.devices[deviceStr].connected = connectedState
 
-    obj.devices[deviceStr].connected = isConnected
+      fn(connectedState)
 
-    fn(isConnected)
+      return connectedState
+    end)
+
+    if isConnected then dbg("%s is connected..", deviceStr) end
 
     return isConnected
-  end)
-end
-
-local function updateTitle()
-  checkDevice(function(isConnected)
-    if isConnected then
-      obj.menubar:setTitle("on")
-    else
-      obj.menubar:setTitle(nil)
-    end
-  end)
+  end, function() connectDevice(deviceStr) end)
 end
 
 local function checkAndAlertLowBattery()
@@ -130,7 +134,9 @@ function obj:start()
   Hyper = L.load("lib.hyper", { id = "bluetooth" })
   Hyper:bind({ "shift" }, "H", nil, function()
     local device = obj.devices["phonak"]
-    toggleDevice("phonak", function(isConnected) info(fmt(":: phonak connected? %s", isConnected)) end)
+    toggleDevice("phonak", function(isConnected)
+      if isConnected then info(fmt(":: connected %s %s", device.name, device.icon)) end
+    end)
   end)
 
   lowBatteryTimer = hs.timer.doEvery(obj.interval, checkAndAlertLowBattery)

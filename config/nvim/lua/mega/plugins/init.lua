@@ -223,7 +223,7 @@ return {
     },
   },
   {
-    cond = false,
+    cond = true,
     "megalithic/elixir-tools.nvim",
     -- ft = { "elixir", "eelixir", "heex", "surface" },
     event = { "BufReadPre", "BufNewFile" },
@@ -239,7 +239,7 @@ return {
 
       elixir.setup({
         credo = { enable = false },
-        nextls = { enable = false },
+        nextls = { enable = true },
         elixirls = {
           enable = true,
           -- cmd = fmt("%s/lsp/elixir-ls/%s", vim.env.XDG_DATA_HOME, "language_server.sh"),

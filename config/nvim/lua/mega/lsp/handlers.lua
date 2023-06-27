@@ -85,21 +85,21 @@ function M.setup()
         local function format_title(title, client_name) return client_name .. (#title > 0 and ": " .. title or "") end
 
         local function format_message(message, percentage)
+          dd(percentage)
           return (percentage and percentage .. "%\t" or "") .. (message or "")
         end
 
         vim.lsp.handlers["$/progress"] = function(_, result, ctx)
           local client_id = ctx.client_id
           local client = vim.lsp.get_client_by_id(client_id)
+          dd(client.name)
           if
             client
             and (
-              client.name == "elixirls"
-              or client.name == "sumneko_lua"
-              or client.name == "rust_analyzer"
-              or client.name == "clangd"
-              or client.name == "shellcheck"
-              or client.name == "bashls"
+              client.name == "rust_analyzer"
+              or client.name == "clangd" -- or client.name == "shellcheck"            -- client.name == "elixirls"            -- or client.name == "sumneko_lua"            -- or client.name == "bashls"
+
+
             )
           then
             return
