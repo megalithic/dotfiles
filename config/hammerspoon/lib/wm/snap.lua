@@ -15,7 +15,7 @@ obj.__index = obj
 obj.name = "snap"
 obj.alerts = {}
 obj.isOpen = false
-obj.debug = false
+obj.debug = true
 
 local dbg = function(str, ...)
   if type(str) == "string" then
@@ -280,6 +280,20 @@ function obj.delayedExit(delay)
   end)
 end
 
+-- function obj.selectWindow(index)
+--   local app = obj.win():application()
+--   local mainWindow = app:mainWindow()
+--
+--   local foundWin = mainWindow:otherWindowsAllScreens()[index]
+--
+--   if index < 1 or not foundWin then
+--     warn(fmt("window not found for index %d", index))
+--     return
+--   end
+--
+--   app:getWindow(foundWin:title()):focus()
+-- end
+
 function obj:entered()
   obj.isOpen = true
   hs.window.highlight.start()
@@ -366,17 +380,30 @@ function obj:start()
       obj.debug_window()
       obj:exit()
     end)
-    :bind(keys.mods.casc, "LEFT", function()
+    :bind(keys.mods.casc, "left", function()
       obj:resizeIn()
       obj.delayedExit()
     end, function() obj.delayedExit() end, function() obj:resizeIn() end)
-    :bind(
-      keys.mods.casc,
-      "RIGHT",
-      function() obj:resizeOut() end,
-      function() obj.delayedExit() end,
-      function() obj:resizeOut() end
-    )
+    :bind(keys.mods.casc, "right", function()
+      obj:resizeOut()
+      obj.delayedExit()
+    end, function() obj.delayedExit() end, function() obj:resizeOut() end)
+  -- :bind(keys.mods.casc, "tab", function()
+  --   local winSwitcher = hs.window.switcher
+  --   local app = obj.win():application()
+  --   dbg(app:name())
+  --   winSwitcher.new(hs.window.filter.default:setAppFilter(app:name(), { visible = false }))
+  --   winSwitcher:next()
+  --   obj:delayedExit()
+  -- end, function() obj.delayedExit() end)
+  -- :bind(keys.mods.caSc, "tab", function()
+  --   local winSwitcher = hs.window.switcher
+  --   local app = obj.win():application()
+  --   dbg(app:name())
+  --   winSwitcher.new(hs.window.filter.default:setAppFilter(app:name(), { visible = false }))
+  --   winSwitcher:previous()
+  --   obj:delayedExit()
+  -- end, function() obj.delayedExit() end)
 
   return self
 end
