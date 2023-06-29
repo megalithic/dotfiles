@@ -15,7 +15,7 @@ obj.__index = obj
 obj.name = "snap"
 obj.alerts = {}
 obj.isOpen = false
-obj.debug = true
+obj.debug = false
 
 local dbg = function(str, ...)
   if type(str) == "string" then
@@ -227,8 +227,6 @@ end
 function obj.debug_window()
   local win = obj.win()
   local app = win:application()
-  local app_name = app:name()
-  local win_title = win:title()
   local win_fullscreened = win:isFullScreen()
   local win_id = win:id()
   local win_frame = win:frame()
@@ -251,13 +249,14 @@ function obj.debug_window()
     .. " h: "
     .. win_screen_frame.h
   local debugLines = {
-    "app: " .. app_name,
-    "win title: " .. win_title,
-    "win_id: " .. win_id,
+    "app name: " .. app:name(),
+    "app bundleID: " .. app:bundleID(),
+    "win title: " .. win:title(),
+    "win id: " .. win_id,
     "frame: " .. win_frame_string,
     "screen: " .. win_screen,
     "screen frame: " .. win_screen_frame_string,
-    "fullscreened:" .. win_fullscreened,
+    "fullscreened? " .. I(win_fullscreened),
   }
 
   -- alert.show(fmt(" Window Debugger:\n%s", table.concat(debugLines, "\n")))

@@ -205,10 +205,18 @@ function obj:start()
   return self
 end
 
-function obj:stop()
-  obj.mods_event_tap:stop()
-  obj.keys_event_tap:stop()
-  obj.canvas:hide()
+function obj:stop(delay)
+  if delay then
+    hs.timer.delayed.new(delay, function()
+      obj.mods_event_tap:stop()
+      obj.keys_event_tap:stop()
+      obj.canvas:hide()
+    end)
+  else
+    obj.mods_event_tap:stop()
+    obj.keys_event_tap:stop()
+    obj.canvas:hide()
+  end
 
   return self
 end
