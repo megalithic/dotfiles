@@ -171,14 +171,21 @@ function obj:init(opts)
         dbg("imageURL: %s", imageURL)
       end)
 
-      hs.hotkey.bind({ "ctrl" }, "v", function()
-        local imageURL = hs.pasteboard.getContents("imageURL")
-        -- local imageName = hs.pasteboard.getContents("imageName")
+      local browser = hs.application.get(C.preferred.browser)
+      if
+        browser
+        and hs.fnutils.contains(C.preferred.browsers, browser:name())
+        and browser == hs.application.frontmostApplication()
+      then
+        hs.hotkey.bind({ "ctrl" }, "v", function()
+          local imageURL = hs.pasteboard.getContents("imageURL")
+          -- local imageName = hs.pasteboard.getContents("imageName")
 
-        local md_img = fmt([[<img src="%s" width="450" />]], imageURL)
-        hs.eventtap.keyStrokes(md_img)
-        dbg("markdown_image: %s", md_img)
-      end)
+          local md_img = fmt([[<img src="%s" width="450" />]], imageURL)
+          hs.eventtap.keyStrokes(md_img)
+          dbg("markdown_image: %s", md_img)
+        end)
+      end
 
       hs.hotkey.bind({ "cmd", "shift" }, "p", function()
         obj.paste_ocr_text(obj.clip_data)

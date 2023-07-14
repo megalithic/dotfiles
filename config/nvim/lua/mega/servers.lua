@@ -69,6 +69,7 @@ M.list = {
   --   -- handlers = {
   --   --   ["window/logMessage"] = function(_err, result)
   --   --     local message = vim.split("[" .. vim.lsp.protocol.MessageType[result.type] .. "] " .. result.message, "\n")
+  --   --     local elixir_nvim_output_bufnr
   --   --
   --   --     if not elixir_nvim_output_bufnr then
   --   --       elixir_nvim_output_bufnr = vim.api.nvim_create_buf(false, true)
@@ -208,7 +209,20 @@ M.list = {
       },
     },
   },
-  lexical = {},
+  -- lexical = {
+  -- log_level = vim.lsp.protocol.MessageType.Log,
+  -- message_level = vim.lsp.protocol.MessageType.Log,
+  --   settings = {
+  --     dialyzerEnabled = true,
+  -- log_level = vim.lsp.protocol.MessageType.Log,
+  -- message_level = vim.lsp.protocol.MessageType.Log,
+  -- logLevel = vim.lsp.protocol.MessageType.Log,
+  -- messageLevel = vim.lsp.protocol.MessageType.Log,
+  --     -- lexical = {
+  --     --   logLevel = "debug",
+  --     -- },
+  --   },
+  -- },
   --- @see https://gist.github.com/folke/fe5d28423ea5380929c3f7ce674c41d8
   lua_ls = function()
     local path = vim.split(package.path, ";")

@@ -25,7 +25,7 @@ local function diagnostic_popup(bufnr)
   -- vim.diagnostic.open_float(bufnr, { scope = "line", focus = false })
 end
 
-local format_exclusions = { "elixirls-dev", "elixirls", "NextLS", "ElixirLS" }
+local format_exclusions = { "elixirls-dev", "elixirls", "ElixirLS", "NextLS", "lexical" } -- rely on null-ls mix-format for now
 local function formatting_filter(client)
   dd(client.name)
   return not vim.tbl_contains(format_exclusions, client.name)
@@ -134,7 +134,8 @@ local function setup_autocommands(client, bufnr)
 
   local supports_highlight = (client and client.server_capabilities.documentHighlightProvider == true)
   local supports_inlay_hints = (client and client.server_capabilities.inlayHintProvider == true)
-  local supports_references = (client and client.server_capabilities.documentReferencesProvider == true)
+  local supports_references = (client and client.server_capabilities.referencesProvider == true)
+  local supports_definition = (client and client.server_capabilities.definitionProvider == true)
 
   augroup("LspCodeLens", {
     {
@@ -225,7 +226,8 @@ local function setup_keymaps(client, bufnr)
   nnoremap("gd", function()
     -- dd(client.server_capabilities)
     if true then
-      vim.cmd("Trouble lsp_definitions")
+      vim.cmd("Telescope lsp_definitions")
+      -- vim.cmd("Trouble lsp_definitions")
     else
       vim.lsp.buf.definition()
     end
@@ -234,11 +236,12 @@ local function setup_keymaps(client, bufnr)
   nnoremap("gS", vim.lsp.buf.workspace_symbol, desc("lsp: workspace symbols"))
   nnoremap("gD", [[<cmd>vsplit | lua vim.lsp.buf.definition()<cr>]], desc("lsp: definition (vsplit)"))
 
-  if not client.server_capabilities.referencesProvider then
+  if
+    not client.server_capabilities.documentReferencesProvider and not client.server_capabilities.referencesProvider
+  then
     nmap("gr", "<leader>A", desc("lsp: references"))
   else
-    nnoremap("gr", function()
-      -- dd(client.server_capabilities)
+    nmap("gr", function()
       if true then
         vim.cmd("Trouble lsp_references")
       else

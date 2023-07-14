@@ -315,7 +315,7 @@ return {
     },
   },
   {
-    cond = false,
+    cond = true,
     "elixir-tools/elixir-tools.nvim",
     -- "megalithic/elixir-tools.nvim",
     -- ft = { "elixir", "eelixir", "heex", "surface" },
@@ -329,25 +329,15 @@ return {
     config = function()
       local elixir = require("elixir")
       local elixirls = require("elixir.elixirls")
-      -- local nextls = require("elixir.nextls")
 
       elixir.setup({
         credo = { enable = false },
         nextls = {
           enable = true,
-          version = "0.5.0",
-          single_file_support = true,
-          -- settings = nextls.settings({
-          --   dialyzerEnabled = true,
-          --   dialyzerFormat = "dialyxir_long", -- alts: dialyxir_short
-          --   dialyzerwarnopts = {},
-          --   fetchDeps = false,
-          --   enableTestLenses = false,
-          --   suggestSpecs = true,
-          -- }),
-          log_level = vim.lsp.protocol.MessageType.Log,
-          message_level = vim.lsp.protocol.MessageType.Log,
-          filetypes = { "elixir", "eelixir", "heex", "surface" },
+          -- single_file_support = true,
+          -- log_level = vim.lsp.protocol.MessageType.Log,
+          -- message_level = vim.lsp.protocol.MessageType.Log,
+          -- filetypes = { "elixir", "eelixir", "heex", "surface" },
           -- handlers = {
           --   -- using lexical diagnostics
           --   ["textDocument/publishDiagnostics"] = function() end,
@@ -372,7 +362,7 @@ return {
             -- using lexical diagnostics
             ["textDocument/publishDiagnostics"] = function() end,
           },
-          on_attach = function(_client, _bufnr)
+          on_attach = function(client, bufnr)
             vim.keymap.set(
               "n",
               "<localleader>efp",
@@ -391,6 +381,30 @@ return {
               ":ElixirExpandMacro<cr>",
               { buffer = true, noremap = true, desc = "elixir: expand macro" }
             )
+
+            -- dd({ client.name, client.server_capabilities })
+            local desc = function(desc, expr)
+              expr = expr ~= nil and expr or false
+              return { desc = desc, buffer = bufnr, expr = expr }
+            end
+            if not client.server_capabilities.referencesProvider then
+              nmap("gr", "<leader>A", desc("lsp: references"))
+            else
+              nnoremap("gr", function()
+                -- dd(client.server_capabilities)
+                -- if true then
+                --   vim.cmd("Trouble lsp_references")
+                -- else
+                if vim.g.picker == "fzf" then
+                  vim.cmd("FzfLua lsp_references")
+                elseif vim.g.picker == "telescope" then
+                  vim.cmd("Telescope lsp_references")
+                else
+                  vim.lsp.buf.references()
+                end
+                -- end
+              end, desc("lsp: references"))
+            end
           end,
         },
       })

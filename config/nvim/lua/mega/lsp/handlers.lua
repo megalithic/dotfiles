@@ -38,6 +38,22 @@ function M.setup()
   }
 
   if vim.g.notifier_enabled then
+    -- lsp.handlers["window/logMessage"] = function(_err, result, ctx)
+    --   local message = vim.split("[" .. vim.lsp.protocol.MessageType[result.type] .. "] " .. result.message, "\n")
+    --   dd(message)
+    --   -- local elixir_nvim_output_bufnr
+    --   --
+    --   -- if not elixir_nvim_output_bufnr then
+    --   --   elixir_nvim_output_bufnr = vim.api.nvim_create_buf(false, true)
+    --   --   vim.api.nvim_buf_set_name(elixir_nvim_output_bufnr, "Lexical Output Panel")
+    --   --   vim.api.nvim_buf_set_option(elixir_nvim_output_bufnr, "filetype", "lexical")
+    --   -- end
+    --   --
+    --   -- pcall(vim.api.nvim_buf_set_lines, elixir_nvim_output_bufnr, -1, -1, false, message)
+    --   --
+    --   -- mega.nnoremap("<localleader>eob", open_output_panel, { desc = "elixir: open output panel" })
+    -- end
+
     -- NOTE: disable for noice
     -- lsp.handlers["window/showMessage"] = function(_, result, ctx)
     --   local client = lsp.get_client_by_id(ctx.client_id)
@@ -98,7 +114,6 @@ function M.setup()
             and (
               client.name == "rust_analyzer"
               or client.name == "clangd" -- or client.name == "shellcheck"            -- client.name == "elixirls"            -- or client.name == "sumneko_lua"            -- or client.name == "bashls"
-
 
             )
           then
