@@ -207,7 +207,7 @@ end
 
 function obj:stop(delay)
   if delay then
-    hs.timer.delayed.new(delay, function()
+    hs.timer.doAfter(delay, function()
       obj.mods_event_tap:stop()
       obj.keys_event_tap:stop()
       obj.canvas:hide()

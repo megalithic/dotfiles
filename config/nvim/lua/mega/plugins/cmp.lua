@@ -147,6 +147,8 @@ return {
         end,
       },
       window = {
+        -- TODO:
+        -- https://github.com/hrsh7th/nvim-cmp/wiki/Menu-Appearance#how-to-get-types-on-the-left-and-offset-the-menu
         completion = {
           winhighlight = table.concat({
             "Normal:NormalFloat",
@@ -185,36 +187,38 @@ return {
       formatting = {
         deprecated = true,
         fields = { "abbr", "kind", "menu" },
+        -- fields = { "kind", "abbr", "menu" },
         maxwidth = MAX_MENU_WIDTH,
         ellipsis_char = ellipsis,
-        -- fields = { "kind", "abbr", "menu" },
-
-        -- format = lspkind.cmp_format({
-        --   mode = "symbol",
-        --   maxwidth = MAX_MENU_WIDTH,
-        --   ellipsis_char = ellipsis,
-        --   before = function(_, item)
-        --     local label, length = item.abbr, api.nvim_strwidth(item.abbr)
-        --     if length < MIN_MENU_WIDTH then item.abbr = label .. string.rep(" ", MIN_MENU_WIDTH - length) end
-        --     return item
-        --   end,
-        --   menu = {
-        --     nvim_lsp = "[LSP]",
-        --     nvim_lua = "[LUA]",
-        --     emoji = "[EMOJI]",
-        --     path = "[PATH]",
-        --     neorg = "[NEORG]",
-        --     luasnip = "[SNIP]",
-        --     dictionary = "[DIC]",
-        --     buffer = "[BUF]",
-        --     spell = "[SPL]",
-        --     orgmode = "[ORG]",
-        --     norg = "[NORG]",
-        --     rg = "[RG]",
-        --     git = "[GIT]",
-        --   },
-        -- }),
         format = function(entry, item)
+          -- -- FIXME: hacky way to deal with not getting completion results for certain lsp clients;
+          -- -- presently, in this list of elixir lsp clients, we just want NextLS..
+          -- local lsp_client_exclusions = { "lexical", "elixirls-dev", "elixirls" }
+          -- if
+          --   entry.source.name == "nvim_lsp"
+          --   and vim.tbl_contains(lsp_client_exclusions, entry.source.source.client.name)
+          -- then
+          --   next()
+          -- end
+
+          if entry.source.name == "path" then
+            local icon, hl_group = require("nvim-web-devicons").get_icon(entry:get_completion_item().label)
+            if icon then
+              item.kind = icon
+              item.kind_hl_group = hl_group
+            end
+          end
+
+          if entry.source.name == "nvim_lsp_signature_help" then
+            local parts = vim.split(item.abbr, " ", {})
+            local argument = parts[1]
+            argument = argument:gsub(":$", "")
+            local type = table.concat(parts, " ", 2)
+            item.abbr = argument
+            item.kind = type
+            item.kind_hl_group = "Type"
+          end
+
           if item.kind == "Color" and entry.completion_item.documentation then
             local _, _, r, g, b = string.find(entry.completion_item.documentation, "^rgb%((%d+), (%d+), (%d+)")
             if r then
@@ -262,19 +266,19 @@ return {
         comparators = {
           cmp.config.compare.offset,
           cmp.config.compare.exact,
+          cmp.config.compare.sort_text,
           cmp.config.compare.score,
           cmp.config.compare.recently_used,
           require("cmp-under-comparator").under,
-          cmp.config.compare.sort_text,
+          -- cmp.config.compare.sort_text,
           cmp.config.compare.kind,
           cmp.config.compare.length,
           cmp.config.compare.order,
         },
       },
       sources = cmp.config.sources({
-        -- { name = "nvim_lsp_signature_help" },
+        { name = "nvim_lsp_signature_help" },
         { name = "vsnip" },
-        -- { name = "luasnip" },
         { name = "nvim_lsp" },
         { name = "path", option = { trailing_slash = true } },
       }, {
@@ -315,7 +319,7 @@ return {
 
     -- cmp.setup.filetype({"lua"}, {
     --   sources = {
-    --     { name = "luasnip" },
+    --     { name = "vsnip" },
     --     { name = "nvim_lua" },
     --     { name = "nvim_lsp" },
     --     { name = "path" },

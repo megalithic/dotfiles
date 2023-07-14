@@ -284,7 +284,8 @@ local function create_term(opts)
       end
 
       if opts.notifier ~= nil and type(opts.notifier) == "function" then opts.notifier(term_cmd, exit_code) end
-      vim.cmd(opts.caller_winnr .. [[wincmd w]])
+      -- vim.cmd(opts.caller_winnr .. [[wincmd w]])
+      vim.cmd([[wincmd p]])
     end,
   })
 end

@@ -45,6 +45,29 @@ return {
       })
     end,
   },
+  {
+    "3rd/image.nvim",
+    cond = not vim.g.started_by_firenvim,
+    ft = { "markdown" },
+    -- build = "luarocks --local install magick",
+    opts = {
+      backend = "kitty",
+      integrations = {
+        markdown = {
+          enabled = true,
+          sizing_strategy = "auto",
+          download_remote_images = true,
+        },
+      },
+      max_width = nil,
+      max_height = nil,
+      max_width_window_percentage = nil,
+      max_height_window_percentage = 50,
+      kitty_method = "normal",
+      kitty_tmux_write_delay = 10,
+    },
+  },
+
   { "lukas-reineke/virt-column.nvim", opts = { char = "│" }, event = "VimEnter" },
   {
     "mbbill/undotree",
@@ -141,6 +164,7 @@ return {
       },
       -- {
       --   "mhanberg/control-panel.nvim",
+      --   event = "VeryLazy",
       --   keys = {
       --     {
       --       "<localleader>lop",
@@ -153,45 +177,113 @@ return {
       --       desc = "open output panel",
       --     },
       --   },
-      --   config = function()
-      --     local cp = require("control_panel")
-      --     cp.register({
-      --       id = "output-panel",
-      --       title = "Output Panel",
-      --     })
-      --
-      --     local handler = vim.lsp.handlers["window/logMessage"]
-      --
-      --     vim.lsp.handlers["window/logMessage"] = function(err, result, context)
-      --       handler(err, result, context)
-      --       if not err then
-      --         local client_id = context.client_id
-      --         local client = vim.lsp.get_client_by_id(client_id)
-      --
-      --         if not cp.panel("output-panel"):has_tab(client.name) then
-      --           cp.panel("output-panel")
-      --             :tab({ name = client.name, key = tostring(#cp.panel("output-panel"):tabs() + 1) })
-      --         end
-      --
-      --         cp.panel("output-panel"):append({
-      --           tab = client.name,
-      --           text = "[" .. vim.lsp.protocol.MessageType[result.type] .. "] " .. result.message,
-      --         })
-      --       end
-      --     end
-      --   end,
+      --   config = true,
+      --   -- config = function()
+      --   --   local cp = require("control_panel")
+      --   --   cp.register({
+      --   --     id = "output-panel",
+      --   --     title = "Output Panel",
+      --   --   })
+      --   --
+      --   --   local handler = vim.lsp.handlers["window/logMessage"]
+      --   --
+      --   --   vim.lsp.handlers["window/logMessage"] = function(err, result, context)
+      --   --     handler(err, result, context)
+      --   --     if not err then
+      --   --       local client_id = context.client_id
+      --   --       local client = vim.lsp.get_client_by_id(client_id)
+      --   --
+      --   --       if not cp.panel("output-panel"):has_tab(client.name) then
+      --   --         cp.panel("output-panel")
+      --   --           :tab({ name = client.name, key = tostring(#cp.panel("output-panel"):tabs() + 1) })
+      --   --       end
+      --   --
+      --   --       cp.panel("output-panel"):append({
+      --   --         tab = client.name,
+      --   --         text = "[" .. vim.lsp.protocol.MessageType[result.type] .. "] " .. result.message,
+      --   --       })
+      --   --     end
+      --   --   end
+      --   -- end,
       -- },
-      {
-        "pmizio/typescript-tools.nvim",
-        enabled = false,
-        ft = { "typescript", "typescriptreact", "javascript", "javascriptreact" },
-        build = "npm -g i typescript-styled-plugin",
-        opts = {
-          settings = {
-            tsserver_plugins = { "typescript-styled-plugin" },
-          },
-        },
-      },
+      -- {
+      --   "pmizio/typescript-tools.nvim",
+      --   enabled = false,
+      --   ft = { "typescript", "typescriptreact", "javascript", "javascriptreact" },
+      --   build = "npm -g i typescript-styled-plugin",
+      --   opts = {
+      --     settings = {
+      --       tsserver_plugins = { "typescript-styled-plugin" },
+      --     },
+      --   },
+      -- },
+
+      -- {
+      --   "pmizio/typescript-tools.nvim",
+      --   ft = {
+      --     "typescript",
+      --     "typescriptreact",
+      --     "javascript",
+      --     "javascriptreact",
+      --   },
+      --   build = "npm -g i typescript-styled-plugin",
+      --   dependencies = { "nvim-lua/plenary.nvim", "neovim/nvim-lspconfig" },
+      --   opts = {
+      --     settings = {
+      --       separate_diagnostic_server = true,
+      --       publish_diagnostic_on = "insert_leave",
+      --       tsserver_plugins = { "styled-components" }, -- npm i -g typescript-styled-plugin
+      --       tsserver_file_preferences = {
+      --         allowIncompleteCompletions = true,
+      --         allowRenameOfImportPath = true,
+      --         allowTextChangesInNewFiles = true,
+      --         disableLineTextInReferences = true,
+      --         displayPartsForJSDoc = true,
+      --         generateReturnInDocTemplate = true,
+      --         importModuleSpecifierEnding = "auto",
+      --         includeAutomaticOptionalChainCompletions = true,
+      --         includeCompletionsForImportStatements = true,
+      --         includeCompletionsWithClassMemberSnippets = true,
+      --         includeCompletionsWithObjectLiteralMethodSnippets = true,
+      --         includeCompletionsWithSnippetText = true,
+      --         includeInlayEnumMemberValueHints = false,
+      --         includeInlayFunctionLikeReturnTypeHints = false,
+      --         includeInlayFunctionParameterTypeHints = false,
+      --         includeInlayParameterNameHints = "none",
+      --         includeInlayParameterNameHintsWhenArgumentMatchesName = false,
+      --         includeInlayPropertyDeclarationTypeHints = false,
+      --         includeInlayVariableTypeHints = false,
+      --         includeInlayVariableTypeHintsWhenTypeMatchesName = false,
+      --         jsxAttributeCompletionStyle = "auto",
+      --         providePrefixAndSuffixTextForRename = true,
+      --         provideRefactorNotApplicableReason = true,
+      --         quotePreference = "auto",
+      --         useLabelDetailsInCompletionEntries = true,
+      --       },
+      --       tsserver_format_options = {
+      --         indentSwitchCase = true,
+      --         insertSpaceAfterCommaDelimiter = true,
+      --         insertSpaceAfterConstructor = false,
+      --         insertSpaceAfterFunctionKeywordForAnonymousFunctions = true,
+      --         insertSpaceAfterKeywordsInControlFlowStatements = true,
+      --         insertSpaceAfterOpeningAndBeforeClosingEmptyBraces = true,
+      --         insertSpaceAfterOpeningAndBeforeClosingJsxExpressionBraces = false,
+      --         insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces = true,
+      --         insertSpaceAfterOpeningAndBeforeClosingNonemptyBrackets = false,
+      --         insertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis = false,
+      --         insertSpaceAfterOpeningAndBeforeClosingTemplateStringBraces = false,
+      --         insertSpaceAfterSemicolonInForStatements = true,
+      --         insertSpaceAfterTypeAssertion = false,
+      --         insertSpaceBeforeAndAfterBinaryOperators = true,
+      --         insertSpaceBeforeFunctionParenthesis = false,
+      --         placeOpenBraceOnNewLineForControlBlocks = false,
+      --         placeOpenBraceOnNewLineForFunctions = false,
+      --         semicolons = "ignore",
+      --       },
+      --     },
+      --   },
+      -- },
+
       {
         "Fildo7525/pretty_hover",
         event = "LspAttach",
@@ -223,8 +315,9 @@ return {
     },
   },
   {
-    cond = true,
-    "megalithic/elixir-tools.nvim",
+    cond = false,
+    "elixir-tools/elixir-tools.nvim",
+    -- "megalithic/elixir-tools.nvim",
     -- ft = { "elixir", "eelixir", "heex", "surface" },
     event = { "BufReadPre", "BufNewFile" },
     dependencies = {
@@ -236,10 +329,30 @@ return {
     config = function()
       local elixir = require("elixir")
       local elixirls = require("elixir.elixirls")
+      -- local nextls = require("elixir.nextls")
 
       elixir.setup({
         credo = { enable = false },
-        nextls = { enable = true },
+        nextls = {
+          enable = true,
+          version = "0.5.0",
+          single_file_support = true,
+          -- settings = nextls.settings({
+          --   dialyzerEnabled = true,
+          --   dialyzerFormat = "dialyxir_long", -- alts: dialyxir_short
+          --   dialyzerwarnopts = {},
+          --   fetchDeps = false,
+          --   enableTestLenses = false,
+          --   suggestSpecs = true,
+          -- }),
+          log_level = vim.lsp.protocol.MessageType.Log,
+          message_level = vim.lsp.protocol.MessageType.Log,
+          filetypes = { "elixir", "eelixir", "heex", "surface" },
+          -- handlers = {
+          --   -- using lexical diagnostics
+          --   ["textDocument/publishDiagnostics"] = function() end,
+          -- },
+        },
         elixirls = {
           enable = true,
           -- cmd = fmt("%s/lsp/elixir-ls/%s", vim.env.XDG_DATA_HOME, "language_server.sh"),
@@ -252,8 +365,13 @@ return {
             enableTestLenses = false,
             suggestSpecs = true,
           }),
+          filetypes = { "elixir", "eelixir", "heex", "surface" },
           log_level = vim.lsp.protocol.MessageType.Log,
           message_level = vim.lsp.protocol.MessageType.Log,
+          handlers = {
+            -- using lexical diagnostics
+            ["textDocument/publishDiagnostics"] = function() end,
+          },
           on_attach = function(_client, _bufnr)
             vim.keymap.set(
               "n",
@@ -430,8 +548,11 @@ return {
         method = "popup",
         -- fullwidth = true,
         highlight = "Normal",
-        border = "none",
+        border = "",
       }
+      vim.g.matchup_surround_enabled = 1 -- defaulted 0
+      vim.g.matchup_motion_enabled = 1 -- defaulted 0
+      vim.g.matchup_text_obj_enabled = 1
 
       vim.keymap.set({ "n", "x" }, "[[", "<plug>(matchup-[%)")
       vim.keymap.set({ "n", "x" }, "]]", "<plug>(matchup-]%)")
@@ -493,7 +614,16 @@ return {
       { "<C-u>", function() require("readline").backward_kill_line() end, mode = "!" },
     },
   },
-  { "axelvc/template-string.nvim", ft = { "typescript", "javascript", "typescriptreact", "javascriptreact" } },
+  {
+    "axelvc/template-string.nvim",
+    ft = {
+      "typescript",
+      "typescriptreact",
+      "javascript",
+      "javascriptreact",
+    },
+    opts = {},
+  },
 
   -- ( Motions/Textobjects ) ---------------------------------------------------
   {
@@ -505,7 +635,7 @@ return {
       search = { multi_window = false, mode = "exact" },
       modes = {
         search = {
-          enabled = true,
+          enabled = false,
         },
         char = {
           keys = { "f", "F", "t", "T", ";" }, -- NOTE: using "," here breaks which-key

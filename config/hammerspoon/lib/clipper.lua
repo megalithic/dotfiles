@@ -173,9 +173,9 @@ function obj:init(opts)
 
       hs.hotkey.bind({ "ctrl" }, "v", function()
         local imageURL = hs.pasteboard.getContents("imageURL")
-        local imageName = hs.pasteboard.getContents("imageName")
+        -- local imageName = hs.pasteboard.getContents("imageName")
 
-        local md_img = fmt([[![%s](%s)]], imageName, imageURL)
+        local md_img = fmt([[<img src="%s" width="450" />]], imageURL)
         hs.eventtap.keyStrokes(md_img)
         dbg("markdown_image: %s", md_img)
       end)

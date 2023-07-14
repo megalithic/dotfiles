@@ -1,7 +1,6 @@
 local Settings = require("hs.settings")
 local obj = {}
 local _appObj = nil
-local browser = hs.application.get(C.preferred.browser)
 
 obj.__index = obj
 obj.name = "context.meet"
@@ -49,6 +48,7 @@ function obj:start(opts)
   if event == hs.application.watcher.launched then
     local term = hs.application.get("com.github.wez.wezterm") or hs.application.get("kitty")
     local meet = hs.application.get("Google Meet")
+    local browser = hs.application.get(C.preferred.browser)
 
     hs.timer.waitUntil(function() return meet:isRunning() end, function()
       L.req("lib.dnd").on("zoom")
@@ -79,6 +79,7 @@ function obj:stop(opts)
   if event == hs.application.watcher.terminated then
     L.req("lib.menubar.ptt").setState("push-to-talk")
     L.req("lib.dnd").off()
+    local browser = hs.application.get(C.preferred.browser)
 
     do
       if browser ~= nil then

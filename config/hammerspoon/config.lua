@@ -400,6 +400,7 @@ return {
   },
   ["dirs"] = dirs,
   ["displays"] = displays,
+  ["screens"] = displays,
   ["keys"] = {
     ["hyper"] = hyper,
     ["ptt"] = ptt,

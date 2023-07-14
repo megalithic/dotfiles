@@ -1,0 +1,99 @@
+#!/bin/sh
+# Font preview with ueberzug and fzf
+# This is inspired by https://github.com/sdushantha/fontpreview
+
+# TODO: trap 'notify-send hello' WINCH
+# Checking for environment variables if available.
+# These are compatible with original fontpreview.
+SIZE=${FONTPREVIEW_SIZE:-800x800}
+FONT_SIZE=${FONTPREVIEW_FONT_SIZE:-72}
+BG_COLOR=${FONTPREVIEW_BG_COLOR:-#ffffff}
+FG_COLOR=${FONTPREVIEW_FG_COLOR:-#000000}
+TEXT_ALIGN=${FONTPREVIEW_TEXT_ALIGN:-center}
+PREVIEW_TEXT=${FONTPREVIEW_PREVIEW_TEXT:-"ABCDEFGHIJKLM\nNOPQRSTUVWXYZ\n\
+abcdefghijklm\nnopqrstuvwxyz\n1234567890\n!@#$\%^&*,.;:\n_-=+'\"|\\(){}[]"}
+
+# Ueberzug related variables
+FIFO="/tmp/fontpreview-ueberzug-fifo"
+IMAGE="/tmp/fontpreview-ueberzug-img.png"
+ID="fontpreview-ueberzug"
+WIDTH=$FZF_PREVIEW_COLUMNS
+HEIGHT=$FZF_PREVIEW_LINES
+# fzf changes its preview paddings several times, its confusing
+VPAD=$(fzf --version | {
+  IFS='. ' read -r v1 v2 _
+  [ "$v1" = 0 ] && [ "$v2" -le 26 ] && echo 0 || echo 4
+})
+
+usage() {
+  echo "Usage: fontpreview-ueberzug [-h] [-a ALIGNMENT] [-s FONT_SIZE] [-b BG] [-f FG] [-t TEXT]"
+}
+
+start_ueberzug() {
+  [ -p "$FIFO" ] && rm -f "$FIFO"
+  mkfifo "$FIFO" || exit 1
+  touch "$IMAGE" || exit 1
+  # use ueberzugpp if available
+  if command -v ueberzugpp >/dev/null; then
+    ueberzugpp layer --no-cache --silent <"$FIFO" &
+  else
+    ueberzug layer --parser json --silent <"$FIFO" &
+  fi
+  # https://github.com/seebye/ueberzug/issues/54#issuecomment-502869935
+  exec 3>"$FIFO"
+}
+
+stop_ueberzug() {
+  exec 3>&-
+  rm -f "$FIFO" "$IMAGE"
+}
+
+preview() {
+  [ "$TEXT_ALIGN" = center ] || [ "$TEXT_ALIGN" = south ] || [ "$TEXT_ALIGN" = north ] || PADDING=50
+  fontfile=$(echo "$1" | cut -f2)
+  # In fzf the cols and lines are those of the preview pane
+  convert -size "$SIZE" xc:"$BG_COLOR" -fill "$FG_COLOR" \
+    -pointsize "$FONT_SIZE" -font "$fontfile" -gravity "$TEXT_ALIGN" \
+    -annotate +"${PADDING:-0}+0" "$PREVIEW_TEXT" "$IMAGE" &&
+    {
+      printf '{ "action": "add", "identifier": "%s", "path": "%s",' "$ID" "$IMAGE"
+      printf '"x": %d, "y": %d, "scaler": "fit_contain",' 2 1
+      printf '"width": %d, "height": %d }\n' "$((WIDTH - VPAD))" "$((HEIGHT - 2))"
+    } >"$FIFO" ||
+    printf '{ "action": "remove", "identifier": "%s" }\n' "$ID" >"$FIFO"
+}
+
+while getopts "a:hs:b:f:t:" arg; do
+  case "$arg" in
+    a) TEXT_ALIGN=$OPTARG ;;
+    s) FONT_SIZE=$OPTARG ;;
+    b) BG_COLOR=$OPTARG ;;
+    f) FG_COLOR=$OPTARG ;;
+    t) PREVIEW_TEXT=$OPTARG ;;
+    *)
+      usage
+      exit
+      ;;
+  esac
+done
+shift $((OPTIND - 1))
+
+if [ "$#" = 0 ]; then
+  trap stop_ueberzug EXIT QUIT INT TERM
+  # Prepare
+  start_ueberzug
+  # Export cli args as environment variables for preview command
+  TEXT_ALIGN=$(echo "$TEXT_ALIGN" | sed 's/top/north/; s/bottom/south/; s/left/west/; s/right/east/')
+  export FONTPREVIEW_TEXT_ALIGN="$TEXT_ALIGN"
+  export FONTPREVIEW_FONT_SIZE="$FONT_SIZE"
+  export FONTPREVIEW_BG_COLOR="$BG_COLOR"
+  export FONTPREVIEW_FG_COLOR="$FG_COLOR"
+  export FONTPREVIEW_PREVIEW_TEXT="$PREVIEW_TEXT"
+  # The preview command runs this script again with an argument
+  fc-list -f "%{family[0]}%{:style[0]=}\t%{file}\n" |
+    grep -i '\.\(ttc\|otf\|ttf\)$' | sort | uniq |
+    fzf --with-nth 1 --delimiter "\t" --layout=reverse --preview "sh $0 {}" \
+      --preview-window "left:50%:noborder:wrap"
+elif [ "$#" = 1 ]; then
+  [ -p "$FIFO" ] && preview "$1"
+fi

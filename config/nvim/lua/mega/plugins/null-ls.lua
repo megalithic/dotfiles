@@ -98,7 +98,7 @@ local M = {
         --   extra_args = { "-i", "2" },
         --   condition = function() return mega.executable("beautysh") end,
         -- }),
-        format.shellharden,
+        -- format.shellharden,
         format.elm_format,
         format.jq,
         -- format.markdownlint,

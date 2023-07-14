@@ -85,7 +85,7 @@ return {
     },
   },
   {
-    "TimUntersberger/neogit",
+    "NeogitOrg/neogit",
     cmd = "Neogit",
     dependencies = { "nvim-lua/plenary.nvim" },
     keys = {

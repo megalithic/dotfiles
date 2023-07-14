@@ -1,3 +1,6 @@
+#!/usr/bin/env zsh
+# shellcheck shell=bash
+
 zmodload zsh/datetime
 
 # Create a hash table for globally stashing variables without polluting main

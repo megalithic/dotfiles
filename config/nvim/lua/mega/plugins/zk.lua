@@ -6,7 +6,9 @@
 -- Obsidian + zk:
 -- - https://github.com/ahmedelgabri/dotfiles/blob/main/config/nvim/lua/_/notes.lua
 return {
-  "mickael-menu/zk-nvim",
+  "vicrdguez/zk-nvim",
+  -- "mickael-menu/zk-nvim",
+  branch = "fzf-lua",
   cmd = {
     "ZkNotes",
     "ZkLiveGrep",

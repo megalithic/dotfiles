@@ -307,6 +307,7 @@ return {
           multiprocess = true,
           prompt = prompt,
           winopts = { title = title("Files", "") },
+          -- previewer = "builtin",
           -- action = { ["ctrl-r"] = fzf.actions.arg_add },
         },
         buffers = dropdown({

@@ -17,27 +17,29 @@ function obj:start(opts)
 
   if obj.modal then obj.modal:enter() end
 
-  if event == hs.application.watcher.launched or event == hs.application.watcher.activated then
-    local pop = hs.application.get("Pop")
-
-    -- hs.timer.waitUntil(function() return pop:getWindow("'s Screen") end, function()
-    L.req("lib.dnd").on("meeting")
-    L.req("lib.watchers.dock").refreshInput("docked")
-    hs.spotify.pause()
-    L.req("lib.menubar.keycastr"):start()
-    L.req("lib.menubar.ptt").setState("push-to-mute")
-
-    hs.timer.waitUntil(
-      function() return #pop:allWindows() > 1 or pop:selectMenuItem({ "Window", "Focus Meeting Window" }) end,
-      function()
-        local wins = {}
-        for _, win in ipairs(pop:allWindows()) do
-          table.insert(wins, { pop, win, hs.screen.primaryScreen(), hs.layout.maximized, nil, nil })
-        end
-        hs.layout.apply(wins)
-      end
-    )
-  end
+  -- if event == hs.application.watcher.launched or event == hs.application.watcher.activated then
+  --   local pop = hs.application.get("Pop")
+  --
+  --   -- hs.timer.waitUntil(function() return pop:getWindow("'s Screen") end, function()
+  --   L.req("lib.dnd").on("meeting")
+  --   L.req("lib.watchers.dock").refreshInput("docked")
+  --   hs.spotify.pause()
+  --   -- L.req("lib.menubar.keycastr"):start()
+  --   L.req("lib.menubar.ptt").setState("push-to-mute")
+  --
+  --   if event == hs.application.watcher.launched then
+  --     hs.timer.waitUntil(
+  --       function() return #pop:allWindows() > 1 or pop:selectMenuItem({ "Window", "Focus Meeting Window" }) end,
+  --       function()
+  --         local wins = {}
+  --         for _, win in ipairs(pop:allWindows()) do
+  --           table.insert(wins, { pop, win, hs.screen.primaryScreen(), hs.layout.maximized, nil, nil })
+  --         end
+  --         hs.layout.apply(wins)
+  --       end
+  --     )
+  --   end
+  -- end
 
   return self
 end

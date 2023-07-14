@@ -320,9 +320,41 @@ return {
         multi_icon = "󰛄 ",
         winblend = 0,
         vimgrep_arguments = grep_files_cmd,
+        -- preview = {
+        --   filesize_limit = 128 * 1024, -- 128kb
+        --   treesitter = false,
+        --   mime_hook = function(filepath, bufnr, opts)
+        --     dd(filepath)
+        --     local is_image = function(filepath)
+        --       local image_extensions = { "png", "jpg" } -- Supported image formats
+        --       local split_path = vim.split(filepath:lower(), ".", { plain = true })
+        --       local extension = split_path[#split_path]
+        --       return vim.tbl_contains(image_extensions, extension)
+        --     end
+        --     if is_image(filepath) then
+        --       -- ## Uncomment to support image preview
+        --       -- local term = vim.api.nvim_open_term(bufnr, {})
+        --       -- local function send_output(_, data, _)
+        --       --   for _, d in ipairs(data) do
+        --       --     vim.api.nvim_chan_send(term, d .. '\r\n')
+        --       --   end
+        --       -- end
+        --
+        --       -- vim.fn.jobstart(
+        --       --   {
+        --       --     'catimg', filepath -- Terminal image viewer command
+        --       --   },
+        --       --   { on_stdout = send_output, stdout_buffered = true })
+        --       require("telescope.previewers.utils").set_preview_message(bufnr, opts.winid, "Image cannot be previewed")
+        --     else
+        --       require("telescope.previewers.utils").set_preview_message(bufnr, opts.winid, "Binary cannot be previewed")
+        --     end
+        --   end,
+        -- },
         -- buffer_previewer_maker = new_maker,
         -- preview = {
         --   mime_hook = function(filepath, bufnr, opts)
+        --     mega.notify("filepath")
         --     print(vim.inspect(filepath))
         --     local is_image = function(filepath)
         --       local image_extensions = { "png", "jpg" } -- Supported image formats

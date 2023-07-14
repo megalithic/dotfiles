@@ -1,6 +1,5 @@
 -- REF: https://github.com/leafac/hammerspoon/blob/main/init.lua
 
-local Settings = require("hs.settings")
 local obj = {}
 local _appObj = nil
 local browser = hs.application.get(C.preferred.browser)
@@ -30,24 +29,24 @@ function obj:start(opts)
       L.req("lib.dnd").on("obs")
       L.req("lib.menubar.ptt").setState("push-to-mute")
 
-      hs.layout.apply({
-        { browser:name(), nil, 1, hs.layout.maximized, nil, nil },
-        { term:name(), nil, 1, hs.layout.maximized, nil, nil },
-      })
+      -- hs.layout.apply({
+      --   { browser:name(), nil, 1, hs.layout.maximized, nil, nil },
+      --   { term:name(), nil, 1, hs.layout.maximized, nil, nil },
+      -- })
       term:setFrontmost(true)
       if term:name() == "kitty" then
-        hs.execute("kitty @ --to unix:/tmp/mykitty set-font-size " .. (defaultKittyFont + defaultKittyFontDelta), true)
+        hs.execute("kitty @ --to unix:/tmp/mykitty set-font-size " .. (defaultKittyFont + fontSizeDelta), true)
       elseif term:name() == "wezterm" then
         -- hs.execute("wezterm-cli SCREEN_SHARE_MODE on", true)
-        hs.task
-          .new(
-            os.getenv("HOME") .. "/.dotfiles/bin/wezterm-cli",
-            function(stdTask, stdOut, stdErr)
-              dbg(fmt("wezterm SCREEN_SHARE_MODE set to on, %s / %s", I(stdOut), I(stdErr)))
-            end,
-            { "SCREEN_SHARE_MODE", "on" }
-          )
-          :start()
+        -- hs.task
+        --   .new(
+        --     os.getenv("HOME") .. "/.dotfiles/bin/wezterm-cli",
+        --     function(stdTask, stdOut, stdErr)
+        --       dbg(fmt("wezterm SCREEN_SHARE_MODE set to on, %s / %s", I(stdOut), I(stdErr)))
+        --     end,
+        --     { "SCREEN_SHARE_MODE", "on" }
+        --   )
+        --   :start()
       end
     end
   end
@@ -72,7 +71,7 @@ function obj:stop(opts)
     L.req("lib.dnd").off()
 
     do
-      L.req("lib.menubar.keycastr"):stop()
+      L.req("lib.menubar.keycastr"):stop(2)
 
       if browser ~= nil then
         local browser_win = browser:mainWindow()

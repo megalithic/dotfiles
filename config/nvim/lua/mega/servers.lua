@@ -57,6 +57,7 @@ M.list = {
       },
     },
   },
+  -- NOTE: presently enabled via elixir-tools, also, see lexical
   -- elixirls = {
   --   cmd = { fmt("%s/lsp/elixir-ls/%s", vim.env.XDG_DATA_HOME, "language_server.sh") },
   --   -- cmd = { "elixir-ls" },
@@ -463,6 +464,7 @@ M.list = {
   },
   teal_ls = {},
   terraformls = {},
+  -- NOTE: presently enabled via typescript-tools
   tsserver = function()
     local function do_organize_imports()
       local params = {

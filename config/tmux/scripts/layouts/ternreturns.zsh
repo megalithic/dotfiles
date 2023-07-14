@@ -1,6 +1,6 @@
 #!/usr/local/bin/zsh
 
-SESSION="returns"
+SESSION="ternreturns"
 CWD="$CODE/ternreturns"
 
 cd $CWD
@@ -21,7 +21,7 @@ tmux -2 new-window -c "$CWD" -t "$SESSION":2 -n code
 tmux -2 new-window -c "$CWD" -t "$SESSION":3 -n services
 
 # Window "chats"
-tmux -2 send-keys -t "$SESSION":1 tmux\ link-window\ -s\ mega:chats\ -t\ 0\ \&\&\ exit C-m
+tmux -2 tmux send-keys -t "$SESSION":1 C-z "tmux link-window -s mega:chats -t 0 && exit" "C-m"
 
 # Window "code"
 tmux -2 send-keys -t "$SESSION":2.1 ls C-m

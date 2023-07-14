@@ -3,19 +3,20 @@
 wan=$(dig +short myip.opendns.com @resolver1.opendns.com)
 
 tun=""
-for i in {0..3}
+for i in {0..5}
 do
-  [[ -n $(ifconfig utun$i >/dev/null 2>&1 | rg 'inet ') ]] && tun=$(ifconfig utun$i >/dev/null 2>&1 | rg 'inet ' | awk '{print "["$2"]"}')
+  [[ -n $(ifconfig utun$i >/dev/null 2>&1 | rg 'inet ') ]] && tun=$(ifconfig utun$i >/dev/null 2>&1 | rg 'inet ' | awk '{print "["$3"]"}')
 done
 
 lan=""
 for i in {0..8}
 do
-  [[ -n $(ifconfig en$i >/dev/null 2>&1 | rg 'inet ') ]] && lan=$(ifconfig en$i >/dev/null 2>&1 | rg 'inet ' | awk '$2 ~ /^[[:blank:]]*192/ {print $2}')
+  [[ -n $(ifconfig en$i >/dev/null 2>&1 | rg 'inet ') ]] && lan=$(ifconfig en$i >/dev/null 2>&1 | rg 'inet ' | awk '{print $3}')
+  # [[ -n $(ifconfig en$i >/dev/null 2>&1 | rg 'inet ') ]] && lan=$(ifconfig en$i >/dev/null 2>&1 | rg 'inet ' | awk '$2 ~ /^[[:blank:]]*192/ {print $2}')
 done
 
-[[ -n $wan ]] && wan="$(tput setaf 2)(wan) 礪$wan"
-[[ -n $tun ]] && tun="$(tput setaf 4)(vpn) \uf982$tun"
+[[ -n $wan ]] && wan="$(tput setaf 2)(wan) 󰖈 $wan"
+[[ -n $tun ]] && tun="$(tput setaf 4)(vpn) 󰌚 $tun"
 [[ -n $lan ]] && lan="$(tput setaf 3)(lan)  $lan"
 
 [[ -n $wan ]] && echo "$wan\r"

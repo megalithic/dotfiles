@@ -8,7 +8,7 @@
 ```
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/megalithic/dotfiles/main/screenshot.png" alt="screenshot" />
+  ![screenshot](screenshot.png)
 </p>
 
 ## 🚀 Installation
@@ -53,7 +53,9 @@ I have tried to be platform agnostic, but the majority of scripts that run here 
 
 I am pushing updates _constantly_, so there are **NO** guarantees of stability with my config!
 
-> ⚠️ I highly recommend you dig into the scripts and configs to see what all is going on (because it does a lot more than what I'm describing in this README) before you -- all willy-nilly, throw caution to the wind -- install a stranger's shell scripts. 🤣
+> **Warning**
+>
+> I highly recommend you dig into the scripts and configs to see what all is going on (because it does a lot more than what I'm describing in this README) before you -- all willy-nilly, throw caution to the wind -- install a stranger's shell scripts. 🤣
 
 ---
 
@@ -79,5 +81,7 @@ A few of the _must-have_ tools I roll with:
   - [sketchyvim](https://github.com/FelixKratz/SketchyVim)
 
 <p align="center" style="margin-top: 20px;">
-  <a href="https://megalithic.io" target="_blank"><img src="megadotfiles.png" alt="megadotfiles" height="150px"/></a>
+  <a href="https://megalithic.io" target="_blank">
+    <img src="megadotfiles.png" alt="megadotfiles" height="150px"/>
+  </a>
 </p>

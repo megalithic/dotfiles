@@ -26,9 +26,9 @@ export FZF_DEFAULT_OPTS="
 --bind=esc:abort
 --cycle
 --preview-window=right:60%:wrap
+--preview='preview {}'
 --margin=0,0
 --padding=0,0
---preview='bat --color=always --style=header,grid --line-range :300 {}'
 --prompt=' '
 --pointer=' '
 --marker='󰛄 '
@@ -91,7 +91,11 @@ if has fd; then
   # export FZF_DEFAULT_COMMAND='fd --type f --follow --hidden --color=always --ignore-file \"$XDG_CONFIG_HOME/fd/ignore\"'
   export FZF_DEFAULT_COMMAND='fd --type f --follow --hidden --color=always --no-ignore-vcs'
   export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
-  export FZF_ALT_C_COMMAND="fd --type d --follow --hidden --color=always --no-ignore-vcs --exclude 'Library'"
+
+  export FZF_ALT_C_OPTS="--preview 'exa -T {}' --height=60%"
+  # export FZF_ALT_C_COMMAND="fd -t d -d 1"
+  export FZF_ALT_C_COMMAND="fd -t d -d 1 --follow --hidden --color=always --no-ignore-vcs --exclude 'Library'"
+  # export FZF_ALT_C_COMMAND="fd --type d --follow --hidden --color=always --no-ignore-vcs --exclude 'Library'"
 fi
 
 # Advanced customization of fzf options via _fzf_comprun function

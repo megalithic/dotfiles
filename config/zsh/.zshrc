@@ -1,4 +1,5 @@
 #!/usr/bin/env zsh
+# shellcheck shell=bash
 
 # zmodload zsh/zprof # -> top of your .zshrc file
 

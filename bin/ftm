@@ -183,7 +183,7 @@ function fuzzy_find() {
   # -- get our session from fzf (grabs the the active pane from each session as preview, too!)
   fzf_list=$(echo "$sessions_list" | grep -v "^default\$" | grep -v "^$current_session\$")
   select_session_bind="enter:replace-query+print-query"
-  kill_session_bind="ctrl-x:execute(tmux kill-session -t {})+reload(echo \"$sessions_list\" | grep -v \"^default\$\" | grep -v \"^$current_session\$\")"
+  kill_session_bind="ctrl-x:execute(tmux kill-session -t {})+reload(echo \"$fzf_list\")"
   try_session "$(echo "$fzf_list" | "$fzf_cmd" --reverse --border=none --padding="1" --prompt="$fzf_prompt_text" --header="$fzf_header_text" --bind="$select_session_bind" --bind="$kill_session_bind" --preview="$preview_cmd")"
 }
 

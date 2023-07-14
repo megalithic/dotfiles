@@ -46,6 +46,13 @@ obj.grid = {
   centeredSmall = { x = 0.35, y = 0.35, w = 0.30, h = 0.30 },
 }
 
+local latestMove = {
+  windowId = -1,
+  direction = "unknown",
+  stepX = -1,
+  stepY = -1,
+}
+
 -- WARN: deprecated
 --- hs.window:moveToScreen(screen)
 --- Method
@@ -64,6 +71,8 @@ function hs.window:moveToScreen(nextScreen)
   })
 end
 
+-- Thieved. Big up to peterklijn.
+-- REF: https://github.com/peterklijn/hammerspoon-shiftit/blob/master/init.lua
 function obj:move(unit) hs.window.focusedWindow():move(unit, nil, true, 0) end
 function obj:resizeOut() self:resizeWindowInSteps(true) end
 function obj:resizeIn() self:resizeWindowInSteps(false) end
@@ -142,13 +151,13 @@ obj.tile = function()
       local focused = hs.window.focusedWindow()
       local alt = hs.window.find(choice.id)
       if hs.eventtap.checkKeyboardModifiers()["shift"] then
-        alert.show("  70 ◱ 30  ")
+        alert.show("  70 󱪳 30  ")
         hs.layout.apply({
           { nil, focused, focused:screen(), obj.grid.left70, 0, 0 },
           { nil, alt, focused:screen(), obj.grid.right30, 0, 0 },
         })
       else
-        alert.show("  50 ◱ 50  ")
+        alert.show("  50 󱪳 50  ")
         hs.layout.apply({
           { nil, focused, focused:screen(), obj.grid.left50, 0, 0 },
           { nil, alt, focused:screen(), obj.grid.right50, 0, 0 },
@@ -265,7 +274,7 @@ function obj.debug_window()
 end
 
 function obj.delayedExit(delay)
-  delay = delay or 2
+  delay = delay or 1
 
   if delayedExitTimer ~= nil then
     delayedExitTimer:stop()
@@ -340,9 +349,6 @@ end
 function obj:start()
   local keys = C.keys
   Hyper:bind(keys.mods.casc, "l", function() obj:toggle() end)
-  local browser = L.load("lib.browser")
-
-  -- local i
 
   obj
     :bind(keys.mods.casc, "escape", function() obj:exit() end)
@@ -368,15 +374,22 @@ function obj:start()
       obj:exit()
     end)
     :bind(keys.mods.casc, "s", function()
+      local browser = L.load("lib.browser")
       browser.splitTab()
       obj:exit()
     end)
     :bind(keys.mods.caSc, "s", function()
+      local browser = L.load("lib.browser")
       browser.splitTab(true) -- Split tab out and send to new window
       obj:exit()
     end)
     :bind(keys.mods.casc, "i", function()
       obj.debug_window()
+      obj:exit()
+    end)
+    :bind(keys.mods.casc, "f", function()
+      local focused = hs.window.focusedWindow()
+      hs.fnutils.map(focused:otherWindowsAllScreens(), function(win) win:application():hide() end)
       obj:exit()
     end)
     :bind(keys.mods.casc, "left", function()
@@ -387,22 +400,6 @@ function obj:start()
       obj:resizeOut()
       obj.delayedExit()
     end, function() obj.delayedExit() end, function() obj:resizeOut() end)
-  -- :bind(keys.mods.casc, "tab", function()
-  --   local winSwitcher = hs.window.switcher
-  --   local app = obj.win():application()
-  --   dbg(app:name())
-  --   winSwitcher.new(hs.window.filter.default:setAppFilter(app:name(), { visible = false }))
-  --   winSwitcher:next()
-  --   obj:delayedExit()
-  -- end, function() obj.delayedExit() end)
-  -- :bind(keys.mods.caSc, "tab", function()
-  --   local winSwitcher = hs.window.switcher
-  --   local app = obj.win():application()
-  --   dbg(app:name())
-  --   winSwitcher.new(hs.window.filter.default:setAppFilter(app:name(), { visible = false }))
-  --   winSwitcher:previous()
-  --   obj:delayedExit()
-  -- end, function() obj.delayedExit() end)
 
   return self
 end

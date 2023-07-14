@@ -25,8 +25,11 @@ local function diagnostic_popup(bufnr)
   -- vim.diagnostic.open_float(bufnr, { scope = "line", focus = false })
 end
 
-local format_exclusions = {}
-local function formatting_filter(client) return not vim.tbl_contains(format_exclusions, client.name) end
+local format_exclusions = { "elixirls-dev", "elixirls", "NextLS", "ElixirLS" }
+local function formatting_filter(client)
+  dd(client.name)
+  return not vim.tbl_contains(format_exclusions, client.name)
+end
 
 ---@param opts table<string, any>
 local function format(opts)
@@ -275,7 +278,7 @@ local function setup_keymaps(client, bufnr)
   nnoremap("<leader>lim", [[<cmd>Mason<CR>]], desc("mason info"))
   nnoremap(
     "<leader>lis",
-    [[<cmd>lua =vim.lsp.get_active_clients()[1].server_capabilities<CR>]],
+    function() dd(fmt("server capabilities for %s: \r\n%s", client.name, client.server_capabilities)) end,
     desc("server capabilities")
   )
   nnoremap("<leader>lil", [[<cmd>LspLog<CR>]], desc("logs (vsplit)"))
@@ -512,6 +515,14 @@ local function on_attach(client, bufnr)
       end
     end
   end
+
+  -- Disable completion for certain clients (using this mostly for the multiple elixir clients i'm using at the moment):
+  -- if type(caps.provider) == "boolean" and caps.completionProvider then
+  --   if vim.tbl_contains({ "lexical" }, client.name) then
+  --     dd(fmt("disabling completionProvider for %s", client.name))
+  --     caps.completionProvider = nil
+  --   end
+  -- end
 
   -- if caps.documentSymbolProvider then
   --   local ok, navic = mega.require("nvim-navic")

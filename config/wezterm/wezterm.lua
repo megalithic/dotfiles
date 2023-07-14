@@ -47,6 +47,11 @@ local function log_proc(proc, indent)
   end
 end
 
+-- w.on("gui-startup", function()
+--   local _tab, _pane, window = w.mux.spawn_window({})
+--   window:gui_window():maximize()
+-- end)
+
 w.on(
   "window-config-reloaded",
   function(window, _pane)

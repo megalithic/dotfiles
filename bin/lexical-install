@@ -66,17 +66,13 @@ do_install() {
 
     (
       curl -fLO "$TARGET/$BINARY" &&
-        tar -xvzf "$BINARY" -C "$LSPS_PATH" &&
-        log_ok "unpacked $HOME/$BINARY" &&
+        (tar -xvzf "$BINARY" -C "$LSPS_PATH" && log_ok "unpacked $HOME/$BINARY") &&
         mv "$LSPS_PATH/lexical-$VERSION" "$LS_PATH" &&
         pushd "$LS_PATH" >/dev/null &&
-        make release.namespaced &&
-        log_ok "built lexical" &&
+        (NAMESPACE=1 mix release lexical --overwrite && log_ok "built lexical") &&
         popd >/dev/null &&
-        # (rm -rf "$HOME/tmp/lexical-$VERSION" && log_ok "removed $HOME/tmp/lexical-$VERSION") &&
-        (rm "$BINARY" && log_ok "removed $HOME/$BINARY") &&
-        log_ok "finished downloading and installing $VERSION lexical to $LS_PATH/_build/dev/rel/lexical"
-    ) ||
+        (rm "$BINARY" && log_ok "removed $HOME/$BINARY")
+    ) && log_ok "finished downloading and installing $VERSION lexical to $LS_PATH/_build/dev/rel/lexical" ||
       exit 1
   elif [[ $BUILD_TYPE == "git" ]]; then
     log_warn "$BUILD_TYPE not supported."

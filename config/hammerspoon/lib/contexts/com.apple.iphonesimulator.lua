@@ -52,8 +52,8 @@ function obj:start(opts)
 
     hs.timer.waitUntil(function() return sim:isRunning() end, function()
       local layouts = {
-        { term:name(), nil, 1, hs.layout.maximized, nil, nil },
-        { sim:name(), nil, 2, hs.layout.left25, nil, nil },
+        { term:name(), nil, hs.screen.find(C.displays.external), hs.layout.maximized, nil, nil },
+        { sim:name(), nil, hs.screen.find(C.displays.internal), hs.layout.left25, nil, nil },
       }
       hs.layout.apply(layouts)
       term:setFrontmost(true)
