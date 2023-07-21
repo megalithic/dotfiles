@@ -35,6 +35,10 @@ do_install() {
       BINARY="elixir-ls.zip"
       BUILD_TYPE="archive"
       ;;
+    'dev')
+      TARGET="$HOME/code/elixir-ls"
+      BUILD_TYPE="local"
+      ;;
     *)
       TARGET="https://github.com/elixir-lsp/elixir-ls/archive/"
       BINARY="${VERSION}.tar.gz"
@@ -65,6 +69,16 @@ do_install() {
       (rm -rf "$HOME/tmp/elixir-ls-$VERSION" && log_ok "removed $HOME/tmp/elixir-ls-$VERSION") &&
       (rm "$BINARY" && log_ok "removed $HOME/$BINARY") &&
       log_ok "finished downloading and installing $VERSION elixir-ls to $ELIXIRLS_PATH" ||
+      exit 1
+  elif [[ $BUILD_TYPE == "local" ]]; then
+    pushd "$TARGET" >/dev/null &&
+      mix local.hex --force && mix local.rebar --force &&
+      mix deps.get
+    MIX_ENV=prod mix compile
+    MIX_ENV=prod mix elixir_ls.release -o "$ELIXIRLS_PATH" &&
+      log_ok "built elixir-ls" &&
+      popd >/dev/null &&
+      log_ok "finished building $VERSION elixir-ls to $ELIXIRLS_PATH" ||
       exit 1
   fi
 }

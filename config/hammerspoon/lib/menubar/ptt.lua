@@ -55,12 +55,20 @@ local to_psv = function(tbl)
   return string.sub(s, 2) -- remove first comma
 end
 
-local function setAllInputsMuted(muted)
+function obj.setAllInputsMuted(muted)
   for _i, input in ipairs(obj.inputs) do
     input:setMuted(muted)
   end
 end
 
+-- 2023-07-19 14:16:04: 14:16:04 ERROR:   LuaSkin: hs.timer callback error: /Users/seth/.config/hammerspoon/lib/menubar/ptt.lua:60: ERROR: incorrect type 'nil' for argument 2 (expected boolean)
+-- stack traceback:
+-- 	[C]: in method 'setMuted'
+-- 	/Users/seth/.config/hammerspoon/lib/menubar/ptt.lua:60: in function 'lib.menubar.ptt.setAllInputsMuted'
+-- 	...ave.Browser.dev.app.kjgfgldnnfoeklkmfkjfagphfepbbdan.lua:67: in upvalue 'actionFn'
+-- 	...mmerspoon.app/Contents/Resources/extensions/hs/timer.lua:125: in function <...mmerspoon.app/Contents/Resources/extensions/hs/timer.lua:122>
+--
+--
 local showState = function()
   if obj.pushed then log.df("device to handle: %s", obj.mic) end
 
@@ -85,7 +93,7 @@ local showState = function()
     end
   end
 
-  setAllInputsMuted(muted)
+  obj.setAllInputsMuted(muted)
   -- obj.mic:setInputMuted(muted)
 end
 

@@ -233,7 +233,6 @@ vim.g.markdown_fenced_languages = {
   "lua",
   "cpp",
   "sql",
-  "elixir",
   "python",
   "javascript",
   "typescript",

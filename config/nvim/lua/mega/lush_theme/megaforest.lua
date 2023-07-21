@@ -786,6 +786,16 @@ local theme = lush(function(injected_functions)
     rainbowcol6({ fg = C.magenta }),
     rainbowcol7({ fg = C.purple }),
 
+    ---- :help rainbow-delimiters  ---------------------------------------------
+
+    RainbowDelimiterRed({ fg = C.red }),
+    RainbowDelimiterYellow({ fg = C.yellow }),
+    RainbowDelimiterBlue({ fg = C.blue }),
+    RainbowDelimiterOrange({ fg = C.orange }),
+    RainbowDelimiterGreen({ fg = C.green }),
+    RainbowDelimiterViolet({ fg = C.purple }),
+    RainbowDelimiterCyan({ fg = C.cyan }),
+
     ---- :help telescope -------------------------------------------------------
 
     TelescopeNormal({ fg = C.fg, bg = C.bg3.darken(25) }),
@@ -893,7 +903,7 @@ local theme = lush(function(injected_functions)
     FlashBackdrop({ Comment }),
     FlashMatch({ Search }),
     FlashCurrent({ IncSearch }),
-    FlashLabel({ MiniJump }),
+    FlashLabel({ fg = C.red, bg = C.bg_red, gui = "bold,underline" }),
   }
 end)
 

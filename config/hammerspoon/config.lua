@@ -114,6 +114,14 @@ local launchers = {
     target = "com.figma.Desktop",
   },
   {
+    key = "x",
+    mode = "focus",
+    target = {
+      { "com.apple.dt.Xcode" },
+      { "com.google.android.studio" },
+    },
+  },
+  {
     key = "k",
     target = "com.github.wez.wezterm",
   },

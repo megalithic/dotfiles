@@ -68,15 +68,15 @@ local M = {
           extra_filetypes = { "elixir", "eelixir", "heex", "surface" },
           args = { "format", "-" },
           extra_args = function(_params)
-            local version_output = vim.fn.system("elixir -v")
-            local minor_version = vim.fn.matchlist(version_output, "Elixir \\d.\\(\\d\\+\\)")[2]
+            -- local version_output = vim.fn.system("elixir -v")
+            -- local minor_version = vim.fn.matchlist(version_output, "Elixir \\d.\\(\\d\\+\\)")[2]
 
-            local extra_args = {}
+            local extra_args = { "--stdin-filename", "$FILENAME" }
 
             -- tells the formatter the filename for the code passed to it via stdin.
             -- This allows formatting heex files correctly. Only available for
             -- Elixir >= 1.14
-            if tonumber(minor_version, 10) >= 14 then extra_args = { "--stdin-filename", "$FILENAME" } end
+            -- if tonumber(minor_version, 10) >= 14 then extra_args = { "--stdin-filename", "$FILENAME" } end
 
             return extra_args
           end,

@@ -15,84 +15,136 @@ source "${HOME}/.dotfiles/config/zsh/lib/helpers.zsh"
 # - exiftool for videos and gifs
 # - readelf for viewing binaries
 
-[ "$1" = "" ] && exit 1
-
-DEBUG_LOG="/tmp/fzf_preview_fifo_debug.log"
-UEBERZUGPP_FIFO="/tmp/fzf_preview_fifo"
-ID="preview-ueberzugpp"
-WIDTH="$FZF_PREVIEW_COLUMNS"
-HEIGHT="$FZF_PREVIEW_LINES"
-
-# fzf changes its preview paddings several times, its confusing
-VPAD=$(fzf --version | {
-  IFS='. ' read -r v1 v2 _
-  [ "$v1" = 0 ] && [ "$v2" -le 26 ] && echo 0 || echo 4
-})
-
-[ -p "$UEBERZUGPP_FIFO" ] || mkfifo "$UEBERZUGPP_FIFO"
-
-cleanup() {
-  # log_info "cleaning up.."
-  if [ "$1" != "0" ]; then
-    log_error "FATAL error code \"${1}\" occurred on line \"${2}\""
-  fi
-
-  pkill ueberzugpp
-  test -p "$UEBERZUGPP_FIFO" && rm -f "$UEBERZUGPP_FIFO"
-  rm /tmp/ueberuzgpp-* 2>/dev/null
-  rm /tmp/fzf_preview-* 2>/dev/null
-}
+# [ "$1" = "" ] && exit 1
 #
-# clean_exit() {
-#   # cleanup
-#   set +x
-#   if [ $1 != "0" ]; then
+# DEBUG_LOG="/tmp/fzf_preview_fifo_debug.log"
+# UEBERZUGPP_FIFO="/tmp/fzf_preview_fifo"
+# ID="preview-ueberzugpp"
+# WIDTH="$FZF_PREVIEW_COLUMNS"
+# HEIGHT="$FZF_PREVIEW_LINES"
+#
+# # fzf changes its preview paddings several times, its confusing
+# VPAD=$(fzf --version | {
+#   IFS='. ' read -r v1 v2 _
+#   [ "$v1" = 0 ] && [ "$v2" -le 26 ] && echo 0 || echo 4
+# })
+#
+# [ -p "$UEBERZUGPP_FIFO" ] || mkfifo "$UEBERZUGPP_FIFO"
+#
+# cleanup() {
+#   # log_info "cleaning up.."
+#   if [ "$1" != "0" ]; then
 #     log_error "FATAL error code \"${1}\" occurred on line \"${2}\""
 #   fi
+#
+#   pkill ueberzugpp
+#   test -p "$UEBERZUGPP_FIFO" && rm -f "$UEBERZUGPP_FIFO"
+#   rm /tmp/ueberuzgpp-* 2>/dev/null
+#   rm /tmp/fzf_preview-* 2>/dev/null
+# }
+# #
+# # clean_exit() {
+# #   # cleanup
+# #   set +x
+# #   if [ $1 != "0" ]; then
+# #     log_error "FATAL error code \"${1}\" occurred on line \"${2}\""
+# #   fi
+# # }
+# #
+# # trap 'cleanup $? $LINENO' EXIT INT QUIT
+# trap 'cleanup $? $LINENO' EXIT INT QUIT
+# # trap cleanup EXIT INT QUIT
+#
+# start_preview() {
+#   # echo '{"path": "'"$1"'", "action": "add", "identifier": "fzfpreview", "x": 100, "y": 5, "width": 100, "height": 20}' >"$UEBERZUGPP_FIFO"
+#   # echo "$1"
+#   # export UEBERZUGPP_FIFO="$UEBERZUGPP_FIFO"
+#   # rm -f "$UEBERZUGPP_FIFO"
+#   # mkfifo "$UEBERZUGPP_FIFO"
+#
+#   {
+#     printf '{ "action": "add", "identifier": "%s", "path": "%s",' "$ID" "$1"
+#     # printf '"x": %d, "y": %d,' 2 1
+#     printf '"x": %d, "y": %d, "scaler": "fit_contain",' 2 1
+#     printf '"max-width": %d, "max-height": %d,' "$((WIDTH - VPAD))" "$((HEIGHT - 2))"
+#     # printf '"max-width": %d, "max-height": %d }\n' "$((WIDTH - VPAD))" "$((HEIGHT - 2))"
+#     printf '"width": %d, "height": %d }\n' "100" "$((HEIGHT - 2))"
+#   } >"$UEBERZUGPP_FIFO" 2>"$DEBUG_LOG" ||
+#     printf '{ "action": "remove", "identifier": "%s" }\n' "$ID" >"$UEBERZUGPP_FIFO" 2>"$DEBUG_LOG"
+#
+#   exec 3>"$UEBERZUGPP_FIFO"
 # }
 #
-# trap 'cleanup $? $LINENO' EXIT INT QUIT
-trap 'cleanup $? $LINENO' EXIT INT QUIT
-# trap cleanup EXIT INT QUIT
+# stop_preview() {
+#   printf '{ "action": "remove", "identifier": "%s" }\n' "$ID" >"$UEBERZUGPP_FIFO" 2>"$DEBUG_LOG"
+#   exec 3>&-
+# }
+#
+# handle_image() {
+#   case "$1" in
+#     image/*)
+#       # TODO:
+#       # https://github.com/justchokingaround/dotfiles/commit/4a1330f49d82c6fd687a96d3edc8fb9d20427e79
+#       #
+#       # ueberzugpp layer --silent --parser json <"$UEBERZUGPP_FIFO" 2>"$DEBUG_LOG" &
+#       # ueberzugpp layer -o kitty --no-cache --parser json <"$UEBERZUGPP_FIFO" 2>"$DEBUG_LOG" &
+#       # ueberzugpp layer -o kitty --parser json <"$UEBERZUGPP_FIFO" 2>"$DEBUG_LOG" &
+#       # ueberzugpp cmd -s "$UEBERZUGPP_FIFO" -i fzfpreview -a add -x "$X" -y 1 --max-width "$FZF_PREVIEW_COLUMNS" --max-height "$FZF_PREVIEW_LINES" -f "$2"
+#       # start_preview "$2"
+#       # sleep 1
+#       chafa "$2"
+#       ;;
+#     *) exiftool -All "$2" ;;
+#   esac
+# }
 
-start_preview() {
-  # echo '{"path": "'"$1"'", "action": "add", "identifier": "fzfpreview", "x": 100, "y": 5, "width": 100, "height": 20}' >"$UEBERZUGPP_FIFO"
-  # echo "$1"
-  # export UEBERZUGPP_FIFO="$UEBERZUGPP_FIFO"
-  # rm -f "$UEBERZUGPP_FIFO"
-  # mkfifo "$UEBERZUGPP_FIFO"
+[ "$1" = "" ] && exit 1
+FIFO="/tmp/fzf_preview_fifo"
 
-  {
-    printf '{ "action": "add", "identifier": "%s", "path": "%s",' "$ID" "$1"
-    # printf '"x": %d, "y": %d,' 2 1
-    printf '"x": %d, "y": %d, "scaler": "fit_contain",' 2 1
-    printf '"max-width": %d, "max-height": %d,' "$((WIDTH - VPAD))" "$((HEIGHT - 2))"
-    # printf '"max-width": %d, "max-height": %d }\n' "$((WIDTH - VPAD))" "$((HEIGHT - 2))"
-    printf '"width": %d, "height": %d }\n' "100" "$((HEIGHT - 2))"
-  } >"$UEBERZUGPP_FIFO" 2>"$DEBUG_LOG" ||
-    printf '{ "action": "remove", "identifier": "%s" }\n' "$ID" >"$UEBERZUGPP_FIFO" 2>"$DEBUG_LOG"
-
-  exec 3>"$UEBERZUGPP_FIFO"
+cleanup() {
+  pkill ueberzugpp
+  rm /tmp/ueberzugpp-*.socket 2>/dev/null
+  rm -f "$FIFO"
 }
 
-stop_preview() {
-  printf '{ "action": "remove", "identifier": "%s" }\n' "$ID" >"$UEBERZUGPP_FIFO" 2>"$DEBUG_LOG"
-  exec 3>&-
+if [ "$1" = "--cleanup" ]; then
+  cleanup
+  exit 0
+fi
+
+case "$1" in
+  "--ueberzugpp")
+    set -- "$2" >/dev/null
+    ueberzugpp_x="$(($(tput cols) / 2 + 1))"
+    ueberzugpp_y="1"
+    ueberzugpp_width="$FZF_PREVIEW_COLUMNS"
+    ueberzugpp_height="$FZF_PREVIEW_LINES"
+    ueberzug_image="chafa" # chafa, x11, wayland, kitty, sixel, iterm2
+    image_previewer="ueberuzgpp"
+    [ -p "$FIFO" ] || mkfifo "$FIFO"
+    ;;
+esac
+
+start_preview() {
+  echo '{"path": "'"$1"'", "action": "add", "identifier": "fzfpreview", "x": "'"$ueberzugpp_x"'", "y": "'"$ueberzugpp_y"'", "width": "'"$ueberzugpp_width"'", "height": "'"$ueberzugpp_height"'"}' >"$FIFO"
 }
 
 handle_image() {
   case "$1" in
     image/*)
-      # TODO:
-      # https://github.com/justchokingaround/dotfiles/commit/4a1330f49d82c6fd687a96d3edc8fb9d20427e79
-      #
-      # ueberzugpp layer --silent --parser json <"$UEBERZUGPP_FIFO" 2>"$DEBUG_LOG" &
-      # ueberzugpp layer -o kitty --no-cache --parser json <"$UEBERZUGPP_FIFO" 2>"$DEBUG_LOG" &
-      # ueberzugpp layer -o kitty --parser json <"$UEBERZUGPP_FIFO" 2>"$DEBUG_LOG" &
-      # ueberzugpp cmd -s "$UEBERZUGPP_FIFO" -i fzfpreview -a add -x "$X" -y 1 --max-width "$FZF_PREVIEW_COLUMNS" --max-height "$FZF_PREVIEW_LINES" -f "$2"
-      # start_preview "$2"
-      # sleep 1
-      chafa "$2"
+      case "$image_previewer" in
+        "ueberuzgpp")
+          # mediainfo "$2"
+          # ueberzugpp layer -o "$ueberzug_image" --silent <"$FIFO" &
+          # exec 3>"${FIFO}"
+          # start_preview "$2"
+          # wait
+          chafa "$2" -f symbols
+          ;;
+        *)
+          chafa "$2" -f symbols
+          ;;
+      esac
       ;;
     *) exiftool -All "$2" ;;
   esac
@@ -102,28 +154,78 @@ handle_text() {
   case "$2" in
     *.md) glow --style=auto "$2" ;;
     *.htm | *.html) elinks -dump "$2" ;;
-    *) bat --theme=base16 --color=always --paging=never --number --italic-text=never --tabs=2 --wrap=never "$2" ;;
+    *) bat -p --color=always "$2" ;;
+      # *) bat --theme=base16 --color=always --paging=never --number --italic-text=never --tabs=2 --wrap=never "$2" ;;
   esac
 }
 
+test -d "$HOME/.cache/fzf" || mkdir -p "$HOME/.cache/fzf"
+# cache="$HOME/.cache/fzf/thumbnail.$(stat --printf '%n\0%i\0%F\0%s\0%W\0%Y' -- "$(readlink -f "$1")" | sha256sum | awk '{print $1}'))"
+cache="$HOME/.cache/fzf/thumbnail.$(stat "$(readlink -f "$1")" | sha256sum | awk '{print $1}')"
 mime="$(file --brief --mime-type "$1")"
-echo "$mime"
+
+echo "filetype: $mime"
 case "$mime" in
   text/*) handle_text "$mime" "$1" ;;
-  inode/directory) exa --long --icons --color=always "$1" ;;
+    # inode/directory) exa -T --long --icons --color=always "$1" ;;
+  inode/directory) exa -ahFT -L=1 --color=auto --icons --sort=size --group-directories-first "$1" ;;
   inode/symlink) printf "Symbolic link to: \e[34m%s\e[0m." "$(readlink "$1")" ;;
   application/json) jq --color-output <"$1" ;;
   application/x-bittorrent) transmission-show --unsorted "$1" ;;
   application/x-executable | application/x-pie-executable | application/x-sharedlib) readelf --wide --demangle=auto --all "$1" ;;
   application/zip) atool --list "$1" ;;
-  image/* | video/*)
-    handle_image "$mime" "$1"
-    stop_preview
+  application/x-x509-ca-cert) openssl x509 -text -noout -in "$1" ;;
+  application/pdf)
+    pdftoppm -jpeg -f 1 -singlefile "$1" "$cache"
+    handle_image "image/*" "$cache.jpg"
     ;;
+  image/*)
+    handle_image "$mime" "$1"
+    ;;
+  video/*)
+    ffmpegthumbnailer -i "$1" -o "${cache}.jpg" -s 200
+    handle_image "image/*" "${cache}.jpg"
+    ;;
+  # image/* | video/*)
+  #   handle_image "$mime" "$1"
+  #   stop_preview
+  #   ;;
   font/* | application/vnd.ms-opentype)
+    echo "previewing font.."
     preview-font "$1"
     ;;
-  *) exit 1 ;;
+  *)
+    case "$(printf "%s\n" "$(readlink -f "$1")" | awk '{print tolower($0)}')" in
+      *.tgz | *.tar.gz) tar tzf "$1" ;;
+      *.tar.bz2 | *.tbz2) tar tjf "$1" ;;
+      *.tar.txz | *.txz) xz --list "$1" ;;
+      *.tar) tar tf "$1" ;;
+      *.zip | *.jar | *.war | *.ear | *.oxt) unzip -l "$1" ;;
+      *.rar) unrar l "$1" ;;
+      *.7z) 7z l "$1" ;;
+      *.[1-8]) man "$1" | col -b ;;
+      *.o) nm "$1" ;;
+      *.torrent) transmission-show "$1" ;;
+      *.iso) iso-info --no-header -l "$1" ;;
+      *.odt | *.ods | *.odp | *.sxw) odt2txt "$1" ;;
+      *.doc) catdoc "$1" ;;
+      *.docx) docx2txt "$1" - ;;
+      *.xls | *.xlsx)
+        ssconvert --export-type=Gnumeric_stf:stf_csv "$1" "fd://1" | batorcat --language=csv
+        ;;
+      *.wav | *.mp3 | *.flac | *.m4a | *.wma | *.ape | *.ac3 | *.og[agx] | *.spx | *.opus | *.as[fx] | *.mka)
+        exiftool "$1"
+        ;;
+      *.svg)
+        [ ! -f "${cache}.jpg" ] &&
+          convert "$1" "${cache}.jpg"
+        handle_image "image/*" "${cache}.jpg"
+        ;;
+      *)
+        exit 1
+        ;;
+    esac
+    ;;
 esac
 
 # #!/usr/bin/env sh

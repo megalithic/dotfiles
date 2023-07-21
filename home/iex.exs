@@ -97,10 +97,10 @@ defmodule H do
 end
 
 prefix = IO.ANSI.green() <> "%prefix" <> IO.ANSI.reset()
-counter = IO.ANSI.green() <> "-%node-(%counter)" <> IO.ANSI.reset()
+counter = IO.ANSI.green() <> "[%node](%counter)" <> IO.ANSI.reset()
 info = IO.ANSI.light_blue() <> " #{H.queue_length()}" <> IO.ANSI.reset()
 last = IO.ANSI.yellow() <> "" <> IO.ANSI.reset()
-alive = IO.ANSI.bright() <> IO.ANSI.yellow() <> "⚡" <> IO.ANSI.reset()
+alive = IO.ANSI.bright() <> IO.ANSI.yellow() <> "󱐋" <> IO.ANSI.reset()
 
 default_prompt = prefix <> counter <> " " <> info <> " " <> last
 alive_prompt = prefix <> counter <> " " <> info <> " " <> alive <> last

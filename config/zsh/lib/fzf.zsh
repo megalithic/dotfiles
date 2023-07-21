@@ -22,11 +22,15 @@ export FZF_DEFAULT_OPTS="
 --reverse
 --extended
 --bind=ctrl-j:ignore,ctrl-k:ignore
---bind=ctrl-f:page-down,ctrl-b:page-up,ctrl-j:down,ctrl-k:up,ctrl-u:up,ctrl-d:down
+--bind=ctrl-j:down,ctrl-k:up
+--bind=ctrl-f:page-down,ctrl-b:page-up
+--bind=ctrl-u:preview-up,ctrl-d:preview-down
 --bind=esc:abort
+--bind=?:toggle-preview
 --cycle
 --preview-window=right:60%:wrap
 --preview='preview {}'
+--preview='~/.dotfiles/bin/preview --ueberzugpp {}; ~/.dotfiles/bin/preview --cleanup'
 --margin=0,0
 --padding=0,0
 --prompt=' '
@@ -111,3 +115,18 @@ _fzf_comprun() {
     *) fzf "$@" ;;
   esac
 }
+
+# custom-fzf-preview() {
+#   choice=$(
+#     rg --files --hidden | fzf --cycle --preview="preview --ueberzugpp {}"
+#     preview --cleanup
+#   )
+#   if [ -n "$choice" ]; then
+#     printf "\n%s" "$choice"
+#     zle accept-line
+#   fi
+# }
+#
+# zle -N custom-fzf-preview
+#
+# bindkey '^!' custom-fzf-preview

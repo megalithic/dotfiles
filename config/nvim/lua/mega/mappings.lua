@@ -98,7 +98,6 @@ map({ "i", "n", "t" }, "<C-Down>", ":-tabmove<CR>", { desc = "move tab left", re
 
 nmap("gb", string.format("<cmd>ls<CR>:b<space>%s", vim.keycode("<tab>")), "current buffers")
 nmap("J", "<nop>")
-nmap("gx", mega.open_uri, "open uri under cursor")
 
 -- nmap("zs", mega.showCursorHighlights, "show syntax highlights under cursor")
 nmap("zS", mega.showCursorHighlights, "show syntax highlights under cursor")

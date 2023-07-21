@@ -47,7 +47,7 @@ return {
   },
   {
     "3rd/image.nvim",
-    cond = not vim.g.started_by_firenvim,
+    cond = false, -- not vim.g.started_by_firenvim,
     ft = { "markdown" },
     -- build = "luarocks --local install magick",
     opts = {
@@ -464,6 +464,7 @@ return {
       use_diagnostic_signs = true, -- en
     },
   },
+  { "lewis6991/whatthejump.nvim", keys = { "<C-I>", "<C-O>" } },
 
   -- ( Development ) -----------------------------------------------------------
   {
@@ -668,6 +669,13 @@ return {
         function() require("flash").treesitter() end,
       },
       { "r", function() require("flash").remote() end, mode = "o", desc = "Remote Flash" },
+      { "<c-s>", function() require("flash").toggle() end, mode = { "c" }, desc = "Toggle Flash Search" },
+      {
+        "R",
+        function() require("flash").treesitter_search() end,
+        mode = { "o", "x" },
+        desc = "Flash Treesitter Search",
+      },
     },
   },
   {
@@ -798,7 +806,7 @@ return {
 
   -- ( Syntax/Languages ) ------------------------------------------------------
   { "ii14/emmylua-nvim", ft = "lua" },
-  { "elixir-editors/vim-elixir", ft = { "markdown" } }, -- nvim exceptions thrown when not installed
+  { "elixir-editors/vim-elixir", event = "VeryLazy" }, -- nvim exceptions thrown when not installed
   { "imsnif/kdl.vim", ft = "kdl" },
   { "chr4/nginx.vim", ft = "nginx" },
   { "fladson/vim-kitty", ft = "kitty" },

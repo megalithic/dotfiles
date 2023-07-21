@@ -108,15 +108,6 @@ return {
       end
     end
 
-    local cmp_window = {
-      border = "none",
-      winhighlight = table.concat({
-        "Normal:NormalFloat",
-        "FloatBorder:FloatBorder",
-        "CursorLine:Visual",
-        "Search:None",
-      }, ","),
-    }
     cmp.setup({
       -- experimental = { ghost_text = {
       --   hl_group = "LspCodeLens",
@@ -160,8 +151,18 @@ return {
           col_offset = 0,
           border = mega.get_border(),
           side_padding = 1,
+          scrollbar = false,
         },
-        documentation = cmp.config.window.bordered(cmp_window),
+        documentation = cmp.config.window.bordered({
+          -- scrollbar = false,
+          border = "none",
+          winhighlight = table.concat({
+            "Normal:NormalFloat",
+            "FloatBorder:FloatBorder",
+            "CursorLine:Visual",
+            "Search:None",
+          }, ","),
+        }),
       },
       mapping = {
         ["<Tab>"] = cmp.mapping(tab, { "i", "s", "c" }),

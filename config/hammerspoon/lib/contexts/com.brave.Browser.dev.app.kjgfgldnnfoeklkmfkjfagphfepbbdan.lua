@@ -63,7 +63,8 @@ function obj:start(opts)
       hs.layout.apply(layouts)
       meet:setFrontmost(true)
 
-      -- L.req("lib.watchers.dock").refreshInput("docked")
+      L.req("lib.watchers.dock").refreshInput("docked")
+      L.req("lib.menubar.ptt").setAllInputsMuted(true)
     end)
   end
 

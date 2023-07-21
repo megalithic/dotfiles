@@ -656,29 +656,6 @@ local function open(path)
   vim.notify(fmt("Opening %s", path))
 end
 
--- open URI under cursor
-function mega.open_uri()
-  local file = fn.expand("<cfile>")
-  if fn.isdirectory(file) > 0 then return vim.cmd("edit " .. file) end
-  if file:match("http[s]?://") then return open(file) end
-  -- Any URI with a protocol segment
-  local protocol_uri_regex = "%a*:%/%/[%a%d%#%[%]%-%%+:;!$@/?&=_.,~*()]*"
-  if file:match(protocol_uri_regex) then return vim.cmd("norm! gf") end
-
-  -- consider anything that looks like string/string a github link
-  local plugin_url_regex = "[%a%d%-%.%_]*%/[%a%d%-%.%_]*"
-  local link = string.match(file, plugin_url_regex)
-  if link then return open(fmt("https://www.github.com/%s", link)) end
-  -- local Job = require("plenary.job")
-  -- local uri = vim.fn.expand("<cWORD>")
-  -- Job
-  --   :new({
-  --     "open",
-  --     uri,
-  --   })
-  --   :sync()
-end
-
 -- Open one or more man pages
 -- Accepts a string representing how to open the man pages, one of:
 --   - ''        - current window

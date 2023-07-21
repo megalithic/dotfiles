@@ -66,9 +66,34 @@ return {
       "JoosepAlviste/nvim-ts-context-commentstring",
       "RRethy/nvim-treesitter-endwise",
       { "megalithic/nvim-ts-autotag" },
-      -- { "HiPhish/nvim-ts-rainbow2" },
-      { "mrjones2014/nvim-ts-rainbow" },
       "David-Kunz/treesitter-unit",
+      {
+        "HiPhish/rainbow-delimiters.nvim",
+        event = "VeryLazy",
+        config = function()
+          local rainbow = require("rainbow-delimiters")
+          vim.g.rainbow_delimiters = {
+            strategy = {
+              [""] = rainbow.strategy["global"],
+              vim = rainbow.strategy["local"],
+            },
+            query = {
+              [""] = "rainbow-delimiters",
+              lua = "rainbow-blocks",
+              html = "rainbow-tags",
+            },
+            highlight = {
+              "RainbowDelimiterRed",
+              "RainbowDelimiterYellow",
+              "RainbowDelimiterBlue",
+              "RainbowDelimiterOrange",
+              "RainbowDelimiterGreen",
+              "RainbowDelimiterViolet",
+              "RainbowDelimiterCyan",
+            },
+          }
+        end,
+      },
     },
     config = function()
       local disable_max_size = 2000000 -- 2MB
@@ -244,22 +269,6 @@ return {
           },
         },
         matchup = { enable = true, include_match_words = true, disable = should_disable, disable_virtual_text = true },
-        -- rainbow = {
-        --   enable = true,
-        --   disable = false,
-        --   query = {
-        --     "rainbow-parens",
-        --     tsx = function() return nil end,
-        --     javascript = function() return nil end,
-        --   },
-        --   strategy = { require("ts-rainbow.strategy.global") },
-        -- },
-        rainbow = {
-          enable = true,
-          disable = { "json", "jsonc", "html" },
-          extended_mode = true, -- Highlight also non-parentheses delimiters, boolean or table: lang -> boolean
-          max_file_lines = 2000, -- Do not enable for files with more than 1000 lines, int
-        },
         autopairs = { enable = true },
         textobjects = {
           lookahead = true,

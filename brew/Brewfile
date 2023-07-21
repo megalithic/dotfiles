@@ -130,6 +130,7 @@ brew "luarocks"
 brew "lua-language-server"
 brew "luv"
 brew "mas" if OS.mac?
+brew "media-info"
 brew "mkcert"
 brew "moreutils"
 brew "mycli"

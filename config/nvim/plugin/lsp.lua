@@ -25,7 +25,7 @@ local function diagnostic_popup(bufnr)
   -- vim.diagnostic.open_float(bufnr, { scope = "line", focus = false })
 end
 
-local format_exclusions = { "elixirls-dev", "elixirls", "ElixirLS", "NextLS", "lexical" } -- rely on null-ls mix-format for now
+local format_exclusions = { "elixirls-dev", "elixirls", "lexical", "ElixirLS", "NextLS" } -- rely on null-ls mix-format for now
 local function formatting_filter(client)
   dd(client.name)
   return not vim.tbl_contains(format_exclusions, client.name)
@@ -34,11 +34,12 @@ end
 ---@param opts table<string, any>
 local function format(opts)
   opts = opts or {}
+  -- dd(opts)
   if (#vim.lsp.get_active_clients({ bufnr = opts.bufnr or vim.api.nvim_get_current_buf() })) < 1 then return end
 
   vim.lsp.buf.format({
     bufnr = opts.bufnr,
-    async = opts.async, -- NOTE: this is super dangerous. no sir; i don't like it.
+    async = opts.async or false, -- NOTE: this is super dangerous. no sir; i don't like it.
     filter = formatting_filter,
   })
 end
@@ -183,7 +184,6 @@ local function setup_autocommands(client, bufnr)
   augroup("LspFormat", {
     {
       event = { "BufWritePre" },
-      -- buffer = bufnr,
       command = function(args)
         format({ async = false, bufnr = args.buf }) -- prefer `false` here
       end,
@@ -510,7 +510,6 @@ local function on_attach(client, bufnr)
   -- HT: kabouzeid
   if type(caps.provider) == "boolean" and caps.colorProvider then
     if client.name == "tailwindcss" then
-      -- require("mega.document_colors").buf_attach(bufnr, { single_column = true, col_count = 2 })
       require("document-color").buf_attach(bufnr, { mode = "single" })
       do
         local ok, colorizer = pcall(require, "colorizer")
