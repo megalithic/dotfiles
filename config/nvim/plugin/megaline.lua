@@ -498,9 +498,9 @@ end
 local function seg_lsp_status(truncate_at)
   if is_truncated(truncate_at) then return "" end
 
-  local messages = vim.lsp.status()
+  local ok_messages, messages = pcall(vim.lsp.status)
 
-  if messages == "" then
+  if ok_messages and messages == "" then
     local ok_nls, nls = mega.require("null-ls")
     local enabled = ok_nls and nls.enabled
 

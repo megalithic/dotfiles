@@ -215,9 +215,14 @@ function obj.send_window_next_monitor()
   obj.win():moveToScreen(nextScreen)
 end
 
+function obj.toPrevScreen()
+  local prev = obj.win():screen():previous()
+  obj.win():moveToScreen(prev)
+end
+
 function obj.toNextScreen()
-  local nextScreen = obj.win():screen():next()
-  obj.win():moveToScreen(nextScreen)
+  local next = obj.win():screen():next()
+  obj.win():moveToScreen(next)
 end
 
 -- return currently focused window

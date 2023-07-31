@@ -53,14 +53,14 @@ function obj.jump(url)
   end
 end
 
-function obj.splitTab(to_next_window)
+function obj.splitTab(to_next_screen)
   if not snap then
     warn("snap module not found..")
     return
   end
 
   -- Move current window to the left half
-  if not to_next_window then snap.send_window_left() end
+  if not to_next_screen then snap.left50() end
 
   hs.timer.doAfter(0.25, function()
     local supportedBrowsers = { "Brave Browser Dev", "Brave Browser", "Brave Browser Beta", "Safari" }
@@ -72,12 +72,12 @@ function obj.splitTab(to_next_window)
       browser:selectMenuItem(moveTab)
 
       -- Move the split tab to the right of the screen
-      if to_next_window then
-        dbg("(splitTab) to_next_window: %s", C.displays.internal)
+      if to_next_screen then
+        dbg("(splitTab) to_next_screen: %s", C.displays.internal)
         browser:selectMenuItem({ "Window", fmt("Move to %s", C.displays.internal) })
         snap.maximize()
       else
-        snap.send_window_right()
+        snap.right50()
       end
     else
       warn(fmt("[snap.browser.splitTab] unsupported browser: %s", browser:name()))

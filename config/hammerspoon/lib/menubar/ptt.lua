@@ -20,7 +20,6 @@ local log = {
 
 local template = require("utils").template
 local alert = require("utils.alert")
-local Settings = require("hs.settings")
 local pttKey = C.keys.ptt
 
 obj.defaultState = "push-to-talk"

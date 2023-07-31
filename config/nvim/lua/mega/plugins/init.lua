@@ -315,7 +315,7 @@ return {
     },
   },
   {
-    cond = true,
+    cond = false,
     "elixir-tools/elixir-tools.nvim",
     -- "megalithic/elixir-tools.nvim",
     -- ft = { "elixir", "eelixir", "heex", "surface" },
@@ -338,10 +338,10 @@ return {
           -- log_level = vim.lsp.protocol.MessageType.Log,
           -- message_level = vim.lsp.protocol.MessageType.Log,
           -- filetypes = { "elixir", "eelixir", "heex", "surface" },
-          -- handlers = {
-          --   -- using lexical diagnostics
-          --   ["textDocument/publishDiagnostics"] = function() end,
-          -- },
+          handlers = {
+            -- using lexical diagnostics
+            ["textDocument/publishDiagnostics"] = function() end,
+          },
         },
         elixirls = {
           enable = true,
@@ -559,12 +559,13 @@ return {
       vim.g.matchup_matchparen_nomode = "i"
       vim.g.matchup_matchparen_deferred_show_delay = 400
       vim.g.matchup_matchparen_deferred_hide_delay = 400
-      vim.g.matchup_matchparen_offscreen = {
-        method = "popup",
-        -- fullwidth = true,
-        highlight = "Normal",
-        border = "",
-      }
+      vim.g.matchup_matchparen_offscreen = {}
+      -- vim.g.matchup_matchparen_offscreen = {
+      --   method = "popup",
+      --   -- fullwidth = true,
+      --   highlight = "TreesitterContext",
+      --   border = "",
+      -- }
       vim.g.matchup_surround_enabled = 1 -- defaulted 0
       vim.g.matchup_motion_enabled = 1 -- defaulted 0
       vim.g.matchup_text_obj_enabled = 1

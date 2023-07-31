@@ -23,6 +23,7 @@ return {
     },
   },
   {
+    cond = true,
     "nvim-treesitter/nvim-treesitter-context",
     event = "BufReadPre",
     config = function()
@@ -268,7 +269,7 @@ return {
             ["eruby.yaml"] = "# %s",
           },
         },
-        matchup = { enable = true, include_match_words = true, disable = should_disable, disable_virtual_text = true },
+        matchup = { enable = false, include_match_words = true, disable = should_disable, disable_virtual_text = true },
         autopairs = { enable = true },
         textobjects = {
           lookahead = true,

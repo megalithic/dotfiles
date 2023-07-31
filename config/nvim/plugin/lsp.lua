@@ -25,7 +25,7 @@ local function diagnostic_popup(bufnr)
   -- vim.diagnostic.open_float(bufnr, { scope = "line", focus = false })
 end
 
-local format_exclusions = { "elixirls-dev", "elixirls", "lexical", "ElixirLS", "NextLS" } -- rely on null-ls mix-format for now
+local format_exclusions = { "elixirls-dev", "elixirls", "ElixirLS", "NextLS" } -- rely on null-ls mix-format for now
 local function formatting_filter(client)
   dd(client.name)
   return not vim.tbl_contains(format_exclusions, client.name)
@@ -184,9 +184,7 @@ local function setup_autocommands(client, bufnr)
   augroup("LspFormat", {
     {
       event = { "BufWritePre" },
-      command = function(args)
-        format({ async = false, bufnr = args.buf }) -- prefer `false` here
-      end,
+      command = function(args) format({ async = false, bufnr = args.buf }) end,
     },
   })
 
@@ -323,7 +321,28 @@ end
 
 -- [ DIAGNOSTICS ] -------------------------------------------------------------
 
-local function setup_diagnostics()
+-- FIXME:
+--
+-- Error executing vim.schedule lua callback: Vim:E474: Invalid argument
+-- stack traceback:
+-- 	[C]: in function 'sign_place'
+-- 	/usr/local/share/nvim/runtime/lua/vim/diagnostic.lua:908: in function 'callback'
+-- 	/Users/seth/.dotfiles/config/nvim/plugin/lsp.lua:358: in function 'callback'
+-- 	/Users/seth/.dotfiles/config/nvim/plugin/lsp.lua:358: in function 'callback'
+-- 	/Users/seth/.dotfiles/config/nvim/plugin/lsp.lua:358: in function 'callback'
+-- 	/Users/seth/.dotfiles/config/nvim/plugin/lsp.lua:358: in function 'callback'
+-- 	/Users/seth/.dotfiles/config/nvim/plugin/lsp.lua:358: in function 'callback'
+-- 	/Users/seth/.dotfiles/config/nvim/plugin/lsp.lua:358: in function 'callback'
+-- 	/Users/seth/.dotfiles/config/nvim/plugin/lsp.lua:358: in function 'callback'
+-- 	/Users/seth/.dotfiles/config/nvim/plugin/lsp.lua:358: in function 'callback'
+-- 	/Users/seth/.dotfiles/config/nvim/plugin/lsp.lua:358: in function 'show'
+-- 	/usr/local/share/nvim/runtime/lua/vim/diagnostic.lua:1233: in function 'show'
+-- 	/usr/local/share/nvim/runtime/lua/vim/diagnostic.lua:706: in function 'set'
+-- 	/usr/local/share/nvim/runtime/lua/vim/lsp/diagnostic.lua:236: in function 'handler'
+-- 	/usr/local/share/nvim/runtime/lua/vim/lsp.lua:1164: in function ''
+-- 	vim/_editor.lua: in function <vim/_editor.lua:0>
+
+local function setup_diagnostics(client, bufnr)
   -- ( signs ) --
   local function sign(opts)
     fn.sign_define(opts.hl, {
@@ -355,15 +374,16 @@ local function setup_diagnostics()
         local m = max_severity_per_line[d.lnum]
         if not m or d.severity < m.severity then max_severity_per_line[d.lnum] = d end
       end
-      callback(ns, bufnr, vim.tbl_values(max_severity_per_line), opts)
+      local new_diags = vim.tbl_values(max_severity_per_line)
+      callback(ns, bufnr, new_diags, opts)
     end
   end
 
-  local signs_handler = diagnostic.handlers.signs
-  diagnostic.handlers.signs = vim.tbl_extend("force", signs_handler, {
-    show = max_diagnostic(signs_handler.show),
-    hide = function(_, bufnr) signs_handler.hide(ns, bufnr) end,
-  })
+  --   local signs_handler = diagnostic.handlers.signs
+  --   diagnostic.handlers.signs = vim.tbl_extend("force", signs_handler, {
+  --     show = max_diagnostic(signs_handler.show),
+  --     hide = function(_, bufnr) signs_handler.hide(ns, bufnr) end,
+  --   })
 
   -- local virt_text_handler = diagnostic.handlers.virtual_text
   -- diagnostic.handlers.virtual_text = vim.tbl_extend("force", virt_text_handler, {
@@ -381,18 +401,18 @@ local function setup_diagnostics()
     underline = { severity = { min = diagnostic.severity.HINT } },
     severity_sort = true,
     virtual_text = {
-      spacing = 1,
+      -- spacing = 1,
       prefix = function(d)
         local level = diagnostic.severity[d.severity]
         return mega.icons.lsp[level:lower()]
       end,
       source = "if_many", -- or "always", "if_many" (for more than one source)
       severity = { min = diagnostic.severity.ERROR },
-      format = function(d)
-        local lvl = diagnostic.severity[d.severity]
-        local icon = mega.icons.lsp[lvl:lower()]
-        return fmt("%s %s", icon, d.message)
-      end,
+      -- format = function(d)
+      --   local lvl = diagnostic.severity[d.severity]
+      --   local icon = mega.icons.lsp[lvl:lower()]
+      --   return fmt("%s %s", icon, d.message)
+      -- end,
     },
     update_in_insert = false,
     float = {
@@ -540,7 +560,7 @@ local function on_attach(client, bufnr)
   setup_formatting(client, bufnr)
   setup_commands(bufnr)
   setup_autocommands(client, bufnr)
-  setup_diagnostics()
+  setup_diagnostics(client, bufnr)
   setup_keymaps(client, bufnr)
   setup_highlights(client, bufnr)
   setup_semantic_tokens(client, bufnr)

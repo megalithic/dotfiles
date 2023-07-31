@@ -57,42 +57,41 @@ M.list = {
       },
     },
   },
-  -- NOTE: presently enabled via elixir-tools, also, see lexical
-  elixirls = {
-    cmd = { fmt("%s/lsp/elixir-ls/%s", vim.env.XDG_DATA_HOME, "language_server.sh") },
-    -- cmd = { "elixir-ls" },
-    -- cmd = lsp_cmd_override({
-    --   ".elixir-ls-release/language_server.sh",
-    --   fmt("%s/lsp/elixir-ls/%s", vim.env.XDG_DATA_HOME, "language_server.sh"),
-    --   "elixir-ls",
-    -- }),
-    -- handlers = {
-    --   ["window/logMessage"] = function(_err, result)
-    --     local message = vim.split("[" .. vim.lsp.protocol.MessageType[result.type] .. "] " .. result.message, "\n")
-    --     local elixir_nvim_output_bufnr
-    --
-    --     if not elixir_nvim_output_bufnr then
-    --       elixir_nvim_output_bufnr = vim.api.nvim_create_buf(false, true)
-    --       vim.api.nvim_buf_set_name(elixir_nvim_output_bufnr, "ElixirLS Output Panel")
-    --       vim.api.nvim_buf_set_option(elixir_nvim_output_bufnr, "filetype", "elixirls")
-    --     end
-    --
-    --     pcall(vim.api.nvim_buf_set_lines, elixir_nvim_output_bufnr, -1, -1, false, message)
-    --
-    --     mega.nnoremap("<localleader>eob", open_output_panel, { desc = "elixir: open output panel" })
-    --   end,
-    -- },
-    settings = {
-      elixirLS = {
-        mixEnv = "dev",
-        fetchDeps = false,
-        dialyzerEnabled = true,
-        dialyzerFormat = "dialyxir_long",
-        enableTestLenses = true,
-        suggestSpecs = true,
-      },
-    },
-  },
+  -- elixirls = {
+  --   cmd = { fmt("%s/lsp/elixir-ls/%s", vim.env.XDG_DATA_HOME, "language_server.sh") },
+  --   -- cmd = { "elixir-ls" },
+  --   -- cmd = lsp_cmd_override({
+  --   --   ".elixir-ls-release/language_server.sh",
+  --   --   fmt("%s/lsp/elixir-ls/%s", vim.env.XDG_DATA_HOME, "language_server.sh"),
+  --   --   "elixir-ls",
+  --   -- }),
+  --   -- handlers = {
+  --   --   ["window/logMessage"] = function(_err, result)
+  --   --     local message = vim.split("[" .. vim.lsp.protocol.MessageType[result.type] .. "] " .. result.message, "\n")
+  --   --     local elixir_nvim_output_bufnr
+  --   --
+  --   --     if not elixir_nvim_output_bufnr then
+  --   --       elixir_nvim_output_bufnr = vim.api.nvim_create_buf(false, true)
+  --   --       vim.api.nvim_buf_set_name(elixir_nvim_output_bufnr, "ElixirLS Output Panel")
+  --   --       vim.api.nvim_buf_set_option(elixir_nvim_output_bufnr, "filetype", "elixirls")
+  --   --     end
+  --   --
+  --   --     pcall(vim.api.nvim_buf_set_lines, elixir_nvim_output_bufnr, -1, -1, false, message)
+  --   --
+  --   --     mega.nnoremap("<localleader>eob", open_output_panel, { desc = "elixir: open output panel" })
+  --   --   end,
+  --   -- },
+  --   settings = {
+  --     elixirLS = {
+  --       mixEnv = "dev",
+  --       fetchDeps = false,
+  --       dialyzerEnabled = true,
+  --       dialyzerFormat = "dialyxir_long",
+  --       enableTestLenses = true,
+  --       suggestSpecs = true,
+  --     },
+  --   },
+  -- },
   elmls = {},
   emmet_ls = {
     settings = {
@@ -210,23 +209,23 @@ M.list = {
       },
     },
   },
-  -- lexical = {
-  --   log_level = vim.lsp.protocol.MessageType.Log,
-  --   message_level = vim.lsp.protocol.MessageType.Log,
-  --   logLevel = vim.lsp.protocol.MessageType.Log,
-  --   messageLevel = vim.lsp.protocol.MessageType.Log,
-  --
-  --   settings = {
-  --     dialyzerEnabled = true,
-  --     log_level = vim.lsp.protocol.MessageType.Log,
-  --     message_level = vim.lsp.protocol.MessageType.Log,
-  --     logLevel = vim.lsp.protocol.MessageType.Log,
-  --     messageLevel = vim.lsp.protocol.MessageType.Log,
-  --     -- lexical = {
-  --     --   logLevel = "debug",
-  --     -- },
-  --   },
-  -- },
+  lexical = {
+    log_level = vim.lsp.protocol.MessageType.Log,
+    message_level = vim.lsp.protocol.MessageType.Log,
+    logLevel = vim.lsp.protocol.MessageType.Log,
+    messageLevel = vim.lsp.protocol.MessageType.Log,
+
+    settings = {
+      dialyzerEnabled = true,
+      log_level = vim.lsp.protocol.MessageType.Log,
+      message_level = vim.lsp.protocol.MessageType.Log,
+      logLevel = vim.lsp.protocol.MessageType.Log,
+      messageLevel = vim.lsp.protocol.MessageType.Log,
+      -- lexical = {
+      --   logLevel = "debug",
+      -- },
+    },
+  },
   --- @see https://gist.github.com/folke/fe5d28423ea5380929c3f7ce674c41d8
   lua_ls = function()
     local path = vim.split(package.path, ";")
@@ -576,7 +575,17 @@ M.unofficial = {
           cmd = { cmd() },
           filetypes = { "elixir", "eelixir", "heex", "surface" },
           root_dir = root_pattern("mix.exs", ".git"), -- or vim.loop.os_homedir(),
-          settings = {},
+          log_level = vim.lsp.protocol.MessageType.Log,
+          message_level = vim.lsp.protocol.MessageType.Log,
+          logLevel = vim.lsp.protocol.MessageType.Log,
+          messageLevel = vim.lsp.protocol.MessageType.Log,
+          settings = {
+            dialyzerEnabled = true,
+            log_level = vim.lsp.protocol.MessageType.Log,
+            message_level = vim.lsp.protocol.MessageType.Log,
+            logLevel = vim.lsp.protocol.MessageType.Log,
+            messageLevel = vim.lsp.protocol.MessageType.Log,
+          },
         },
       }
     end

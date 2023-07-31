@@ -19,6 +19,7 @@ return {
       { "<localleader>ta", "<cmd>TestFile<cr>", desc = "run (a)ll tests in file" },
       { "<localleader>tf", "<cmd>TestFile<cr>", desc = "run (a)ll tests in file" },
       { "<localleader>tl", "<cmd>TestLast<cr>", desc = "run (l)ast test" },
+      { "<localleader>ts", "<cmd>TestSuite<cr>", desc = "run test (s)uite" },
       -- { "<localleader>tT", "<cmd>TestLast<cr>", desc = "run _last test" },
       { "<localleader>tv", "<cmd>TestVisit<cr>", desc = "run test file (v)isit" },
       -- { "<localleader>tp", "<cmd>A<cr>", desc = "open alt (edit)" },
