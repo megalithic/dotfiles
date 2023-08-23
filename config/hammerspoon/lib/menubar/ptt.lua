@@ -55,9 +55,15 @@ local to_psv = function(tbl)
 end
 
 function obj.setAllInputsMuted(muted)
+  local inputVolume = muted and 0 or obj.defaultInputVolume
+
   for _i, input in ipairs(obj.inputs) do
-    input:setMuted(muted)
+    input:setInputMuted(muted)
+    input:setInputVolume(inputVolume)
   end
+
+  obj.mic:setInputMuted(muted)
+  obj.mic:setInputVolume(inputVolume)
 end
 
 -- 2023-07-19 14:16:04: 14:16:04 ERROR:   LuaSkin: hs.timer callback error: /Users/seth/.config/hammerspoon/lib/menubar/ptt.lua:60: ERROR: incorrect type 'nil' for argument 2 (expected boolean)
@@ -93,7 +99,6 @@ local showState = function()
   end
 
   obj.setAllInputsMuted(muted)
-  -- obj.mic:setInputMuted(muted)
 end
 
 local buildMenu = function()

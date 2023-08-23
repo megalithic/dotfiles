@@ -63,5 +63,10 @@
   ))
 ))
 
+; (code_span) @nospell
+
 ; Needs https://github.com/neovim/neovim/issues/11711
 ; (fenced_code_block) @codeblock
+;
+;; extends
+

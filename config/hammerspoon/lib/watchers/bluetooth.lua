@@ -28,6 +28,12 @@ obj.devices = {
     icon = "⌨️ ⌨️⌨️⌨️",
     connected = false,
   },
+  ["megapods"] = {
+    name = "megapods",
+    id = "ac-90-85-c2-75-ab",
+    icon = "⌨️ ⌨️⌨️⌨️",
+    connected = false,
+  },
 }
 obj.btUtil = hostname() == "megabookpro" and "/opt/homebrew/bin/blueutil" or "/usr/local/bin/blueutil"
 obj.interval = (10 * 60)
@@ -83,6 +89,7 @@ end
 
 local function toggleDevice(deviceStr, fn)
   local isConnected = false
+  -- TODO: try the hearing aids first (maybe after 5 tries), then try megapods (again, 5 tries), then abort with a message
   hs.timer.doUntil(function()
     checkDevice(deviceStr, function(connectedState)
       isConnected = connectedState
@@ -139,14 +146,14 @@ function obj:start()
     end)
   end)
 
-  lowBatteryTimer = hs.timer.doEvery(obj.interval, checkAndAlertLowBattery)
-  checkAndAlertLowBattery()
+  -- lowBatteryTimer = hs.timer.doEvery(obj.interval, checkAndAlertLowBattery)
+  -- checkAndAlertLowBattery()
 
   return self
 end
 
 function obj:stop()
-  lowBatteryTimer:stop()
+  -- lowBatteryTimer:stop()
   return self
 end
 

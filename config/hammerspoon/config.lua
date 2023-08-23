@@ -386,14 +386,13 @@ local dock = {
     vendorName = "ZMK Project",
   },
   docked = {
-    wifi = "on", -- wifi status
-    -- input = "Samson GoMic", -- microphone source
-    input = "R-Phonak hearing aid",
+    wifi = "off", -- wifi status
+    input = "Samson GoMic", -- microphone source
+    -- input = "R-Phonak hearing aid",
     output = "R-Phonak hearing aid", -- speaker source
   },
   undocked = {
     wifi = "on",
-    -- input = "MacBook Pro Microphone",
     input = "R-Phonak hearing aid",
     output = "R-Phonak hearing aid",
   },

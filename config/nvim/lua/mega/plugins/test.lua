@@ -88,7 +88,7 @@ return {
       "nvim-lua/plenary.nvim",
       "nvim-treesitter/nvim-treesitter",
       "antoinemadec/FixCursorHold.nvim",
-      { "scottming/neotest-elixir" }, -- https://github.com/jfpedroza/neotest-elixir
+      { "jfpedroza/neotest-elixir" },
       { "haydenmeade/neotest-jest" },
       { "rcarriga/neotest-plenary", dependencies = { "nvim-lua/plenary.nvim" } },
     },

@@ -83,7 +83,7 @@ M.list = {
   --   -- },
   --   settings = {
   --     elixirLS = {
-  --       mixEnv = "dev",
+  --       -- mixEnv = "dev",
   --       fetchDeps = false,
   --       dialyzerEnabled = true,
   --       dialyzerFormat = "dialyxir_long",
@@ -209,6 +209,9 @@ M.list = {
       },
     },
   },
+  -- TODO:
+  -- Umbrella app support:
+  -- https://github.com/scottming/nvim/commit/ab15453bf172f1a253ce51cfb1ad24759b28fb19#diff-f3b6945dc71f9ffc53624b2053a25eee19634fccc7d0a59ef190e1d87114bb9aR10-R22
   lexical = {
     log_level = vim.lsp.protocol.MessageType.Log,
     message_level = vim.lsp.protocol.MessageType.Log,
@@ -559,14 +562,7 @@ M.unofficial = {
 
     local function cmd()
       -- built from bin/lexical-install
-      local bin = vim.env.XDG_DATA_HOME .. "/lsp/lexical/_build/dev/rel/lexical/start_lexical.sh"
-
-      -- built from source at ~/code/lexical
-      -- if vim.fn.exists(vim.env.HOME .. "/code/lexical/_build/dev/rel/lexical/start_lexical.sh") then
-      --   bin = vim.env.HOME .. "/code/lexical/_build/dev/rel/lexical/start_lexical.sh"
-      -- end
-
-      return bin
+      return vim.env.XDG_DATA_HOME .. "/lsp/lexical/_build/dev/package/lexical/bin/start_lexical.sh"
     end
 
     if not configs.lexical then

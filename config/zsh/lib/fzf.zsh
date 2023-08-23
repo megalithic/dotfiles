@@ -36,7 +36,9 @@ export FZF_DEFAULT_OPTS="
 --prompt=' '
 --pointer=' '
 --marker='󰛄 '
+--scrollbar='▓',
 "
+
 # alts: 󰛄
 # --preview='bat --color=always --style=header,grid --line-range :300 {}'
 # --no-multi

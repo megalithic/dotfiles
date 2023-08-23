@@ -216,7 +216,7 @@ return {
             argument = argument:gsub(":$", "")
             local type = table.concat(parts, " ", 2)
             item.abbr = argument
-            item.kind = type
+            if type ~= nil and type ~= "" then item.kind = type end
             item.kind_hl_group = "Type"
           end
 

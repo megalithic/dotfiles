@@ -79,6 +79,12 @@ return {
       vim.g.undotree_DiffCommand = "diff -u"
     end,
   },
+  -- {
+  --   "chrisgrieser/nvim-origami",
+  --   event = "BufReadPost",
+  --   keys = { { "<BS>", function() require("origami").h() end, desc = "toggle fold" } },
+  --   opts = {},
+  -- },
   {
     "chrisgrieser/replacer.nvim",
     ft = "qf",
@@ -115,10 +121,10 @@ return {
       { "<C-k>", function() require("smart-splits").move_cursor_up() end },
       { "<C-l>", function() require("smart-splits").move_cursor_right() end },
       -- swapping buffers between windows
-      { "<leader><leader>h", function() require("smart-splits").swap_buf_left() end, desc = { "swap left" } },
-      { "<leader><leader>j", function() require("smart-splits").swap_buf_down() end, { desc = "swap down" } },
-      { "<leader><leader>k", function() require("smart-splits").swap_buf_up() end, { desc = "swap up" } },
-      { "<leader><leader>l", function() require("smart-splits").swap_buf_right() end, { desc = "swap right" } },
+      { "<leader><leader>h", function() require("smart-splits").swap_buf_left() end, desc = "swap left" },
+      { "<leader><leader>j", function() require("smart-splits").swap_buf_down() end, desc = "swap down" },
+      { "<leader><leader>k", function() require("smart-splits").swap_buf_up() end, desc = "swap up" },
+      { "<leader><leader>l", function() require("smart-splits").swap_buf_right() end, desc = "swap right" },
     },
   },
 
@@ -144,6 +150,22 @@ return {
       { "williamboman/mason-lspconfig.nvim" },
       { "b0o/schemastore.nvim" },
       { "mrshmllow/document-color.nvim", event = "BufReadPre" },
+      {
+        "MaximilianLloyd/tw-values.nvim",
+        cmd = { "TWValues" },
+        -- keys = {
+        --   { "<leader>sv", "<cmd>TWValues<cr>", desc = "Show tailwind CSS values" },
+        -- },
+        opts = {
+          border = mega.get_border(), -- Valid window border style,
+          show_unknown_classes = true, -- Shows the unknown classes popup
+          focus_preview = true, -- Sets the preview as the current window
+          copy_register = "", -- The register to copy values to,
+          keymaps = {
+            copy = "<C-y>", -- Normal mode keymap to copy the CSS values between {}
+          },
+        },
+      },
       {
         "mhanberg/output-panel.nvim",
         keys = {
@@ -315,7 +337,7 @@ return {
     },
   },
   {
-    cond = false,
+    cond = true,
     "elixir-tools/elixir-tools.nvim",
     -- "megalithic/elixir-tools.nvim",
     -- ft = { "elixir", "eelixir", "heex", "surface" },
@@ -325,7 +347,6 @@ return {
       "nvim-lua/plenary.nvim",
       "neovim/nvim-lspconfig",
     },
-    version = "*",
     config = function()
       local elixir = require("elixir")
       local elixirls = require("elixir.elixirls")
@@ -338,10 +359,10 @@ return {
           -- log_level = vim.lsp.protocol.MessageType.Log,
           -- message_level = vim.lsp.protocol.MessageType.Log,
           -- filetypes = { "elixir", "eelixir", "heex", "surface" },
-          handlers = {
-            -- using lexical diagnostics
-            ["textDocument/publishDiagnostics"] = function() end,
-          },
+          -- handlers = {
+          --   -- using lexical diagnostics
+          --   ["textDocument/publishDiagnostics"] = function() end,
+          -- },
         },
         elixirls = {
           enable = true,
@@ -358,10 +379,10 @@ return {
           filetypes = { "elixir", "eelixir", "heex", "surface" },
           log_level = vim.lsp.protocol.MessageType.Log,
           message_level = vim.lsp.protocol.MessageType.Log,
-          handlers = {
-            -- using lexical diagnostics
-            ["textDocument/publishDiagnostics"] = function() end,
-          },
+          -- handlers = {
+          --   -- using lexical diagnostics
+          --   ["textDocument/publishDiagnostics"] = function() end,
+          -- },
           on_attach = function(client, bufnr)
             vim.keymap.set(
               "n",
@@ -387,24 +408,46 @@ return {
               expr = expr ~= nil and expr or false
               return { desc = desc, buffer = bufnr, expr = expr }
             end
-            if not client.server_capabilities.referencesProvider then
+
+            if
+              not client.server_capabilities.documentReferencesProvider
+              and not client.server_capabilities.referencesProvider
+            then
               nmap("gr", "<leader>A", desc("lsp: references"))
             else
-              nnoremap("gr", function()
-                -- dd(client.server_capabilities)
-                -- if true then
-                --   vim.cmd("Trouble lsp_references")
-                -- else
-                if vim.g.picker == "fzf" then
-                  vim.cmd("FzfLua lsp_references")
-                elseif vim.g.picker == "telescope" then
-                  vim.cmd("Telescope lsp_references")
+              nmap("gr", function()
+                if true then
+                  vim.cmd("Trouble lsp_references")
                 else
-                  vim.lsp.buf.references()
+                  if vim.g.picker == "fzf" then
+                    vim.cmd("FzfLua lsp_references")
+                  elseif vim.g.picker == "telescope" then
+                    vim.cmd("Telescope lsp_references")
+                  else
+                    vim.lsp.buf.references()
+                  end
                 end
-                -- end
               end, desc("lsp: references"))
             end
+
+            -- if not client.server_capabilities.referencesProvider then
+            --   nmap("gr", "<leader>A", desc("lsp: references"))
+            -- else
+            --   nnoremap("gr", function()
+            --     -- dd(client.server_capabilities)
+            --     -- if true then
+            --     --   vim.cmd("Trouble lsp_references")
+            --     -- else
+            --     if vim.g.picker == "fzf" then
+            --       vim.cmd("FzfLua lsp_references")
+            --     elseif vim.g.picker == "telescope" then
+            --       vim.cmd("Telescope lsp_references")
+            --     else
+            --       vim.lsp.buf.references()
+            --     end
+            --     -- end
+            --   end, desc("lsp: references"))
+            -- end
           end,
         },
       })
@@ -472,6 +515,16 @@ return {
     event = "InsertCharPre",
     config = function() require("hclipboard").start() end,
   },
+  {
+    "bennypowers/nvim-regexplainer",
+    opts = {},
+    cmd = { "RegexplainerShowSplit", "RegexplainerShowPopup", "RegexplainerHide", "RegexplainerToggle" },
+    dependencies = {
+      "nvim-treesitter/nvim-treesitter",
+      "MunifTanjim/nui.nvim",
+    },
+  },
+  { "tpope/vim-dispatch" },
   {
     "jackMort/ChatGPT.nvim",
     cmd = { "ChatGPT", "ChatGPTActAs", "ChatGPTEditWithInstructions" },
@@ -642,6 +695,23 @@ return {
   },
 
   -- ( Motions/Textobjects ) ---------------------------------------------------
+  {
+    "smoka7/multicursors.nvim",
+    event = "VeryLazy",
+    dependencies = { "nvim-treesitter/nvim-treesitter", "smoka7/hydra.nvim" },
+    opts = {
+      hint_config = { border = mega.get_border() },
+    },
+    cmd = { "MCstart", "MCvisual", "MCclear", "MCpattern", "MCvisualPattern", "MCunderCursor" },
+    keys = {
+      {
+        "<leader>mm",
+        "<cmd>MCstart<cr>",
+        mode = { "v", "n" },
+        desc = "Create a selection for selected text or word under the cursor",
+      },
+    },
+  },
   {
     cond = true,
     "folke/flash.nvim",

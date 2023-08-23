@@ -64,15 +64,17 @@ do_install() {
   elif [[ $BUILD_TYPE == "source" ]]; then
     log "downloading and unpacking.."
 
-    (
-      curl -fLO "$TARGET/$BINARY" &&
-        (tar -xvzf "$BINARY" -C "$LSPS_PATH" && log_ok "unpacked $TARGET/$BINARY to $LSPS_PATH") &&
-        mv "$LSPS_PATH/lexical-$VERSION" "$LS_PATH" &&
-        pushd "$LS_PATH" >/dev/null &&
-        (mix deps.get && NAMESPACE=1 mix release lexical --overwrite && log_ok "built lexical") &&
-        popd >/dev/null &&
-        (rm "$BINARY" && log_ok "removed $HOME/$BINARY")
-    ) && log_ok "finished downloading and installing lexical ($VERSION) to $LS_PATH/_build/dev/rel/lexical" ||
+    cd ~/tmp &&
+      (
+        curl -fLO "$TARGET/$BINARY" &&
+          (tar -xvzf "$BINARY" -C "$LSPS_PATH" && log_ok "unpacked $TARGET/$BINARY to $LSPS_PATH") &&
+          mv "$LSPS_PATH/lexical-$VERSION" "$LS_PATH" &&
+          pushd "$LS_PATH" >/dev/null &&
+          (mix deps.get && mix package && log_ok "built lexical") &&
+          # (mix deps.get && NAMESPACE=1 mix release lexical --overwrite && log_ok "built lexical") &&
+          popd >/dev/null &&
+          (rm "$BINARY" && log_ok "removed $HOME/$BINARY")
+      ) && log_ok "finished downloading and installing lexical ($VERSION) to $LS_PATH/_build/dev/rel/lexical" ||
       exit 1
   elif [[ $BUILD_TYPE == "git" ]]; then
     log_warn "$BUILD_TYPE not supported."

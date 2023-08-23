@@ -2,6 +2,7 @@
 -- https://github.com/seblj/dotfiles/blob/master/nvim/lua/config/telescope.lua#L143
 -- investigate MRU:  https://github.com/yutkat/dotfiles/blob/main/.config/nvim/lua/rc/pluginconfig/telescope.lua#LL241C1-L344C4
 
+local keys = {}
 local ts = setmetatable({}, {
   __index = function(_, key)
     return function(topts)
@@ -218,19 +219,7 @@ if vim.g.picker == "telescope" then
       end,
     },
   })
-end
 
-return {
-  "nvim-telescope/telescope.nvim",
-  cmd = { "Telescope" },
-  enabled = vim.g.picker == "telescope",
-  dependencies = {
-    "natecraddock/telescope-zf-native.nvim",
-    "nvim-telescope/telescope-file-browser.nvim",
-    "fdschmidt93/telescope-egrepify.nvim",
-    -- "danielvolchek/tailiscope.nvim"
-    { "debugloop/telescope-undo.nvim" },
-  },
   keys = {
     { "<leader>ff", project_files, desc = "find files" },
     {
@@ -262,7 +251,20 @@ return {
       function() extensions("file_browser").file_browser(ivy({ path = vim.g.obsidian_vault_path })) end,
       desc = "browse: obsidian notes",
     },
+  }
+end
+
+return {
+  "nvim-telescope/telescope.nvim",
+  cmd = { "Telescope" },
+  dependencies = {
+    "natecraddock/telescope-zf-native.nvim",
+    "nvim-telescope/telescope-file-browser.nvim",
+    "fdschmidt93/telescope-egrepify.nvim",
+    -- "danielvolchek/tailiscope.nvim"
+    { "debugloop/telescope-undo.nvim" },
   },
+  keys = keys,
   config = function()
     mega.augroup("TelescopePreviews", {
       {
@@ -299,6 +301,8 @@ return {
             ["<c-o>"] = stopinsert(function(pb) multi(pb, "edit") end),
             ["<c-z>"] = actions.toggle_selection,
             ["<c-r>"] = actions.to_fuzzy_refine,
+            ["<c-n>"] = actions.move_selection_next,
+            ["<c-p>"] = actions.move_selection_previous,
             ["<c-t>"] = require("trouble.providers.telescope").smart_open_with_trouble,
             ["<c-down>"] = function(...) return require("telescope.actions").cycle_history_next(...) end,
             ["<c-up>"] = function(...) return require("telescope.actions").cycle_history_prev(...) end,

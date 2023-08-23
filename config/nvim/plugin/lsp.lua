@@ -10,6 +10,7 @@ local augroup = mega.augroup
 local fmt = string.format
 local diagnostic = vim.diagnostic
 local lspconfig = require("lspconfig")
+local LSP_METHODS = vim.lsp.protocol.Methods
 
 -- Show the popup diagnostics window, but only once for the current cursor/line location
 -- by checking whether the word under the cursor has changed.
@@ -35,7 +36,7 @@ end
 local function format(opts)
   opts = opts or {}
   -- dd(opts)
-  if (#vim.lsp.get_active_clients({ bufnr = opts.bufnr or vim.api.nvim_get_current_buf() })) < 1 then return end
+  if (#vim.lsp.get_clients({ bufnr = opts.bufnr or vim.api.nvim_get_current_buf() })) < 1 then return end
 
   vim.lsp.buf.format({
     bufnr = opts.bufnr,
@@ -57,7 +58,7 @@ end
 
 local function hover()
   local existing_float_win = vim.b.lsp_floating_preview
-  local active_clients = vim.lsp.get_active_clients()
+  local active_clients = vim.lsp.get_clients()
   if next(active_clients) == nil then
     vim.cmd([[execute printf('h %s', expand('<cword>'))]])
   else
@@ -69,6 +70,7 @@ local function hover()
       vim.api.nvim_win_close(existing_float_win, true)
     else
       -- vim.lsp.buf.hover(nil, { focus = false, focusable = false })
+      dd("pretty hovering")
       require("pretty_hover").hover()
     end
   end
@@ -273,7 +275,8 @@ local function setup_keymaps(client, bufnr)
       hover()
     end
   end, desc("lsp: hover"))
-  nnoremap("gK", vim.lsp.buf.signature_help, desc("lsp: signature help"))
+  -- nnoremap("gK", vim.lsp.buf.signature_help, desc("lsp: signature help"))
+  inoremap("<c-k>", vim.lsp.buf.signature_help, desc("lsp: signature help"))
   imap("<c-k>", vim.lsp.buf.signature_help, desc("lsp: signature help"))
   nnoremap("<leader>lic", [[<cmd>LspInfo<CR>]], desc("connected client info"))
   nnoremap("<leader>lim", [[<cmd>Mason<CR>]], desc("mason info"))
@@ -393,7 +396,7 @@ local function setup_diagnostics(client, bufnr)
 
   local max_width = math.min(math.floor(vim.o.columns * 0.7), 100)
   local max_height = math.min(math.floor(vim.o.lines * 0.3), 30)
-  diagnostic.config({
+  mega.lsp.diagnostic_config = {
     signs = {
       priority = 9999,
       severity = { min = diagnostic.severity.HINT },
@@ -406,13 +409,14 @@ local function setup_diagnostics(client, bufnr)
         local level = diagnostic.severity[d.severity]
         return mega.icons.lsp[level:lower()]
       end,
-      source = "if_many", -- or "always", "if_many" (for more than one source)
+      source = "always", -- or "always", "if_many" (for more than one source)
       severity = { min = diagnostic.severity.ERROR },
-      -- format = function(d)
-      --   local lvl = diagnostic.severity[d.severity]
-      --   local icon = mega.icons.lsp[lvl:lower()]
-      --   return fmt("%s %s", icon, d.message)
-      -- end,
+      format = function(d)
+        return d.message
+        -- local lvl = diagnostic.severity[d.severity]
+        -- local icon = mega.icons.lsp[lvl:lower()]
+        -- return fmt("%s %s", icon, d.message)
+      end,
     },
     update_in_insert = false,
     float = {
@@ -442,7 +446,22 @@ local function setup_diagnostics(client, bufnr)
         return prefix, "Diagnostic" .. level:gsub("^%l", string.upper)
       end,
     },
-  })
+  }
+  diagnostic.config(mega.lsp.diagnostic_config)
+
+  local handler = lsp.handlers[LSP_METHODS.textDocument_publishDiagnostics]
+  ---@diagnostic disable-next-line: duplicate-set-field
+  lsp.handlers[LSP_METHODS.textDocument_publishDiagnostics] = function(err, result, ctx, config)
+    local client_name = vim.lsp.get_client_by_id(ctx.client_id).name
+
+    if vim.tbl_contains({ "lexical", "ElixirLS" }, client_name) then
+      -- dd(fmt("diag: %s", client_name))
+      return
+    end
+
+    -- result.diagnostics = vim.tbl_map(show_related_locations, result.diagnostics)
+    handler(err, result, ctx, config)
+  end
 end
 
 -- [ HIGHLIGHTS ] --------------------------------------------------------------
@@ -468,7 +487,6 @@ vim.opt.shortmess:append("c") -- Don't pass messages to |ins-completion-menu|
 -- Setup neovim lua configuration
 -- require("neodev").setup()
 require("mason")
--- require("mega.plugins.lsp.diagnostics").setup()
 
 -- This function allows reading a per project "settings.json" file in the `.vim` directory of the project.
 ---@param client table<string, any>
@@ -555,7 +573,6 @@ local function on_attach(client, bufnr)
 
   if caps.documentFormattingProvider then vim.bo[bufnr].formatexpr = "v:lua.vim.lsp.formatexpr()" end
 
-  require("mega.lsp.handlers").setup()
   -- if caps.signatureHelpProvider then require("mega.lsp.signature").setup(client) end
   setup_formatting(client, bufnr)
   setup_commands(bufnr)
@@ -572,38 +589,6 @@ local function on_attach(client, bufnr)
 
   if client_overrides[client.name] then client_overrides[client.name](client, bufnr) end
 end
-
--- mega.augroup("LspSetupCommands", {
---   event = "LspAttach",
---   desc = "setup the language server autocommands",
---   command = function(args)
---     local client = lsp.get_client_by_id(args.data.client_id)
---     on_attach(client, args.buf)
---     local overrides = client_overrides[client.name]
---     if not overrides or not overrides.on_attach then return end
---     overrides.on_attach(client, args.buf)
---   end,
--- }, {
---   event = "LspDetach",
---   desc = "Clean up after detached LSP",
---   command = function(args)
---     local client_id, b = args.data.client_id, vim.b[args.buf]
---     if not b.lsp_events or not client_id then return end
---     for _, state in pairs(b.lsp_events) do
---       if #state.clients == 1 and state.clients[1] == client_id then
---         api.nvim_clear_autocmds({ group = state.group_id, buffer = args.buf })
---       end
---       state.clients = vim.tbl_filter(function(id) return id ~= client_id end, state.clients)
---     end
---   end,
--- }, {
---   event = "DiagnosticChanged",
---   desc = "Update the diagnostic locations",
---   command = function(args)
---     diagnostic.setloclist({ open = false })
---     if #args.data.diagnostics == 0 then vim.cmd("silent! lclose") end
---   end,
--- })
 
 local servers = require("mega.servers")
 
@@ -686,4 +671,71 @@ for server, _ in pairs(servers.list) do
   else
     lspconfig[server].setup(opts)
   end
+end
+
+-- REF:
+-- https://github.com/neovim/neovim/issues/23291#issuecomment-1687088266
+do -- fswatch
+  local FSWATCH_EVENTS = {
+    Created = 1,
+    Updated = 2,
+    Removed = 3,
+    -- Renamed
+    OwnerModified = 2,
+    AttributeModified = 2,
+    MovedFrom = 1,
+    MovedTo = 3,
+    -- IsFile
+    IsDir = false,
+    IsSymLink = false,
+    PlatformSpecific = false,
+    -- Link
+    -- Overflow
+  }
+
+  --- @param data string
+  --- @param opts table
+  --- @param callback fun(path: string, event: integer)
+  local function fswatch_output_handler(data, opts, callback)
+    local d = vim.split(data, "%s+")
+    local cpath = d[1]
+
+    for i = 2, #d do
+      if FSWATCH_EVENTS[d[i]] == false then return end
+    end
+
+    if opts.include_pattern and opts.include_pattern:match(cpath) == nil then return end
+
+    if opts.exclude_pattern and opts.exclude_pattern:match(cpath) ~= nil then return end
+
+    for i = 2, #d do
+      local e = FSWATCH_EVENTS[d[i]]
+      if e then callback(cpath, e) end
+    end
+  end
+
+  local function fswatch(path, opts, callback)
+    local obj = vim.system({
+      "fswatch",
+      "--recursive",
+      "--event-flags",
+      "--exclude",
+      "/.git/",
+      path,
+    }, {
+      stdout = function(err, data)
+        if err then error(err) end
+
+        if not data then return end
+
+        for line in vim.gsplit(data, "\n", { plain = true, trimempty = true }) do
+          fswatch_output_handler(line, opts, callback)
+        end
+      end,
+    })
+
+    return function() obj:kill(2) end
+  end
+
+  if vim.fn.executable("fswatch") == 1 then require("vim.lsp._watchfiles")._watchfunc = fswatch end
 end

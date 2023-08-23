@@ -821,19 +821,19 @@ local theme = lush(function(injected_functions)
 
     ---- :help fzf-lua ---------------------------------------------------------
 
-    FzfLuaNormal({ TelescopePreviewNormal }),
-    FzfLuaBorder({ TelescopeBorder }),
-    FzfLuaCursor({ TelescopeNormal }),
-    FzfLuaCursorLine({ TelescopeNormal }),
-    FzfLuaCursorLineNr({ TelescopeNormal }),
-    FzfLuaSearch({ TelescopePrompt }),
-    FzfLuaTitle({ fg = C.bg0, bg = C.bg_cyan, gui = "italic" }),
-    FzfLuaScrollBorderEmpty({}),
-    FzfLuaScrollBorderFull({}),
-    FzfLuaScrollFloatEmpty({}),
-    FzfLuaScrollFloatFull({}),
-    FzfLuaHelpNormal({ TelescopePreviewNormal }),
-    FzfLuaHelpBorder({ TelescopePreviewBorder }),
+    -- FzfLuaNormal({ TelescopePreviewNormal }),
+    -- FzfLuaBorder({ TelescopeBorder }),
+    -- FzfLuaCursor({ TelescopeNormal }),
+    -- FzfLuaCursorLine({ TelescopeNormal }),
+    -- FzfLuaCursorLineNr({ TelescopeNormal }),
+    -- FzfLuaSearch({ TelescopePrompt }),
+    -- FzfLuaTitle({ fg = C.bg0, bg = C.bg_cyan, gui = "italic" }),
+    -- FzfLuaScrollBorderEmpty({}),
+    -- FzfLuaScrollBorderFull({}),
+    -- FzfLuaScrollFloatEmpty({}),
+    -- FzfLuaScrollFloatFull({}),
+    -- FzfLuaHelpNormal({ TelescopePreviewNormal }),
+    -- FzfLuaHelpBorder({ TelescopePreviewBorder }),
 
     ---- :help: trouble.txt ----------------------------------------------------
 

@@ -134,8 +134,8 @@ export GNUPGHOME="$XDG_CONFIG_HOME/gnupg"
 export LANG="en_US.UTF-8"
 export LC_ALL="en_US.UTF-8"
 export LC_CTYPE="en_US.UTF-8"
-# export TZ="/usr/share/zoneinfo/US/Central"
-export TZ="/usr/share/zoneinfo/US/Eastern"
+export TZ="/usr/share/zoneinfo/US/Central"
+# export TZ="/usr/share/zoneinfo/US/Eastern"
 
 # -- kitty
 export KITTYMUX_STATE_DIR=$HOME/.local/state
@@ -186,6 +186,7 @@ fi
 case "$(uname)" in
   Darwin)
     export ANDROID_SDK_ROOT="${HOME}/Library/Android/sdk/"
+    export ANDROID_HOME="$ANDROID_SDK_ROOT"
     # export ANDROID_SDK_ROOT="/usr/local/share/android-sdk"
 
     # Add LUA_PATH to the environment ensuring the lua version is set since
@@ -403,6 +404,9 @@ case "$(uname)" in
     ${HOMEBREW_PREFIX}/opt/python@3.*/bin(Nn[-1]-/)
     ${HOMEBREW_PREFIX}/opt/python@2.*/bin(Nn[-1]-/)
     ${HOMEBREW_PREFIX}/{bin,sbin}
+
+    $ANDROID_HOME/emulator
+    $ANDROID_HOME/platform-tools
     $path
   )
   export PATH

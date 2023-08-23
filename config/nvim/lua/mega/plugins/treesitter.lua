@@ -69,7 +69,8 @@ return {
       { "megalithic/nvim-ts-autotag" },
       "David-Kunz/treesitter-unit",
       {
-        "HiPhish/rainbow-delimiters.nvim",
+        "gitlab.com/HiPhish/rainbow-delimiters.nvim",
+        cond = false,
         event = "VeryLazy",
         config = function()
           local rainbow = require("rainbow-delimiters")

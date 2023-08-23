@@ -242,6 +242,10 @@ IO.puts("Ecto: #{ecto_info} #{repo_info}")
 # One extra empty line before command line
 IO.puts("")
 
+# Mix.ensure_application!(:wx)
+# Mix.ensure_application!(:runtime_tools)
+# Mix.ensure_application!(:observer)
+
 Application.put_env(:elixir, :dbg_callback, {Macro, :dbg, []})
 Application.put_env(:elixir, :ansi_enabled, true)
 

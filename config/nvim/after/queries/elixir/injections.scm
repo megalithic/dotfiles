@@ -37,8 +37,20 @@
   (string (quoted_content) @javascript)
   (#eq? @_comment "# javascript"))
 
-(call
-  target: ((identifier) @_identifier (#any-of? @_identifier "execute"))
-  (arguments
-    (string
-      (quoted_content) @sql)))
+((sigil
+   (sigil_name) @_name (#eq? @_name "g")
+   (quoted_content) @injection.content
+   (sigil_modifiers) @injection.language))
+
+(call (dot left: (atom) @_atom (#eq? @_atom ":esqlite3") right: (identifier) @_identifier (#eq? @_identifier "q")) (arguments (string (quoted_content) @sql))) @foo
+
+; SQL
+(sigil
+  (sigil_name) @_sigil_name
+  (quoted_content) @sql
+(#eq? @_sigil_name "Q"))
+
+(sigil
+  (sigil_name) @_sigil_name
+  (quoted_content) @elixir
+(#eq? @_sigil_name "E"))

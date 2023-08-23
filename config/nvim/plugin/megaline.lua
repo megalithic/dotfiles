@@ -354,7 +354,7 @@ end
 local function get_diagnostics(seg_formatters_status)
   seg_formatters_status = seg_formatters_status or ""
   local function count(lvl) return #vim.diagnostic.get(M.ctx.bufnr, { severity = lvl }) end
-  if vim.tbl_isempty(vim.lsp.get_active_clients({ bufnr = M.ctx.bufnr })) then return "" end
+  if vim.tbl_isempty(vim.lsp.get_clients({ bufnr = M.ctx.bufnr })) then return "" end
 
   local diags = {
     { num = count(vim.diagnostic.severity.ERROR), sign = mega.icons.lsp.error, hl = "StError" },
@@ -560,6 +560,16 @@ local function seg_opened_terms(truncate_at)
   return seg(fmt(" %s ", unpack(bufs)), "StCount", not is_truncated(truncate_at))
 end
 
+local function seg_hydra(truncate_at)
+  local hydra = require("hydra.statusline")
+  return seg(
+    fmt("%s", hydra.get_name()),
+    hydra.get_color(),
+    not is_truncated(truncate_at) and hydra.is_active(),
+    { margin = { 1, 1 }, padding = { 1, 1 } }
+  )
+end
+
 local function seg_git_symbol(truncate_at)
   if is_abnormal_buffer() or not is_valid_git() then return "" end
 
@@ -633,6 +643,8 @@ function _G.__statusline()
     -- end left alignment
     seg([[%=]]),
     -- seg(get_substitution_status()),
+    --
+    seg_hydra(120),
     seg([[%=]]),
     -- begin right alignment
     seg("%*"),

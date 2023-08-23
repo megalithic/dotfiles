@@ -9,17 +9,20 @@ return {
     "nvim-lua/plenary.nvim",
     "MunifTanjim/nui.nvim",
     "mrbjarksen/neo-tree-diagnostics.nvim",
-    --   { "s1n7ax/nvim-window-picker", config= {
-    --     autoselect_one = true,
-    --     include_current = false,
-    --     filter_rules = {
-    --       bo = {
-    --         filetype = { "neo-tree-popup", "quickfix", "incline" },
-    --         buftype = { "terminal", "quickfix", "nofile" },
-    --       },
-    --     },
-    --     other_win_hl_color = mega.colors.dark_red,
-    --     }  }
+    {
+      "ten3roberts/window-picker.nvim",
+      name = "window-picker",
+      config = function()
+        local picker = require("window-picker")
+        picker.setup()
+        picker.pick_window = function()
+          return picker.select(
+            { hl = "WindowPicker", prompt = "Pick window: " },
+            function(winid) return winid or nil end
+          )
+        end
+      end,
+    },
   },
   init = function()
     vim.api.nvim_create_autocmd("BufEnter", {
@@ -97,7 +100,7 @@ return {
         hijack_netrw_behavior = "disabled", -- "open_current",
         use_libuv_file_watcher = true,
         group_empty_dirs = true,
-        follow_current_file = true,
+        follow_current_file = { enabled = true },
         filtered_items = {
           visible = true,
           hide_dotfiles = false,
@@ -136,12 +139,12 @@ return {
           ["/"] = "noop",
           ["n"] = "noop",
           ["<c-/>"] = "fuzzy_finder",
-          ["<c-o>"] = "open",
-          ["<c-s>"] = "open_split",
-          ["<CR>"] = "open_vsplit",
-          -- ["<c-o>"] = "open_with_window_picker",
-          -- ["<c-s>"] = "split_with_window_picker",
-          -- ["<CR>"] = "vsplit_with_window_picker",
+          -- ["<c-o>"] = "open",
+          -- ["<c-s>"] = "open_split",
+          -- ["<CR>"] = "open_vsplit",
+          ["<c-o>"] = "open_with_window_picker",
+          ["<c-s>"] = "split_with_window_picker",
+          ["<CR>"] = "vsplit_with_window_picker",
           ["<esc>"] = "revert_preview",
           ["P"] = { "toggle_preview", config = { use_float = true } },
         },
