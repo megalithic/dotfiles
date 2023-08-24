@@ -355,6 +355,7 @@ return {
         credo = { enable = false },
         nextls = {
           enable = true,
+          version = "0.10.3",
           -- single_file_support = true,
           -- log_level = vim.lsp.protocol.MessageType.Log,
           -- message_level = vim.lsp.protocol.MessageType.Log,
