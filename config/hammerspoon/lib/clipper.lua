@@ -177,7 +177,7 @@ function obj:init(opts)
         and hs.fnutils.contains(C.preferred.browsers, browser:name())
         and browser == hs.application.frontmostApplication()
       then
-        hs.hotkey.bind({ "ctrl" }, "v", function()
+        hs.hotkey.bind({ "ctrl", "shift" }, "v", function()
           local imageURL = hs.pasteboard.getContents("imageURL")
           -- local imageName = hs.pasteboard.getContents("imageName")
 

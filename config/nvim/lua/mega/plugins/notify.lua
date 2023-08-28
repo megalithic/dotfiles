@@ -9,9 +9,27 @@ local M = {
 function M.config()
   local nnotify = require("notify")
   local stages_util = require("notify.stages.util")
+  local base = require("notify.render.base")
 
   local function initial(direction, opacity)
-    return function(state)
+    local stage = function(state)
+      local next_height = state.message.height + 2
+      local next_row = stages_util.available_slot(state.open_windows, next_height, direction)
+      if not next_row then return nil end
+      return {
+        relative = "editor",
+        anchor = "NE",
+        width = state.message.width,
+        height = state.message.height,
+        col = vim.opt.columns:get(),
+        row = next_row,
+        border = "",
+        style = "minimal",
+        opacity = opacity,
+      }
+    end
+
+    local new_stage = function(state)
       local next_height = state.message.height -- + 2
       local next_row = stages_util.available_slot(state.open_windows, next_height, direction)
       if not next_row then return nil end
@@ -22,11 +40,14 @@ function M.config()
         height = state.message.height,
         col = vim.opt.columns:get(),
         row = next_row - 1,
+        -- row = next_row,
         border = "",
         style = "minimal",
         opacity = opacity,
       }
     end
+
+    return stage
   end
 
   local function stages(type, direction)
@@ -105,7 +126,43 @@ function M.config()
         vim.api.nvim_buf_set_option(vim.api.nvim_win_get_buf(winnr), "filetype", "markdown")
       end
     end,
-    -- render = "minimal",
+    -- stages = stages("initial", "bottom_up"),
+    -- render = "compact",
+    render = function(bufnr, notif, highlights)
+      local namespace = base.namespace()
+      local icon = notif.icon
+      local title = notif.title[1]
+
+      local prefix
+      if type(title) == "string" and #title > 0 then
+        prefix = string.format("%s %s:", icon, title)
+      else
+        prefix = string.format("%s", icon)
+      end
+      notif.message[1] = string.format("%s %s", prefix, notif.message[1])
+
+      local message = { notif.message[1] }
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, message)
+
+      local icon_length = vim.str_utfindex(icon)
+      local prefix_length = vim.str_utfindex(prefix)
+
+      vim.api.nvim_buf_set_extmark(bufnr, namespace, 0, 0, {
+        hl_group = highlights.icon,
+        end_col = icon_length + 1,
+        priority = 50,
+      })
+      vim.api.nvim_buf_set_extmark(bufnr, namespace, 0, icon_length + 1, {
+        hl_group = highlights.title,
+        end_col = prefix_length + 1,
+        priority = 50,
+      })
+      vim.api.nvim_buf_set_extmark(bufnr, namespace, 0, prefix_length + 1, {
+        hl_group = highlights.body,
+        end_line = #message,
+        priority = 50,
+      })
+    end,
     -- stages = {
     --   function(...)
     --     local opts = base_stages[1](...)
@@ -114,25 +171,25 @@ function M.config()
     --   end,
     --   unpack(require("notify.stages.fade_in_slide_out")("bottom_up"), 2),
     -- },
-    stages = stages("static", "bottom_up"),
-    render = function(bufnr, notif, hls, _cfg)
-      local ns = require("notify.render.base").namespace()
-      local title = (notif.title and mega.tlen(notif.title) > 0 and notif.title[1] ~= "") and notif.title[1] or "nvim"
-      local message = notif.message[1] and notif.message[1] or ""
-
-      pcall(vim.api.nvim_buf_set_lines, bufnr, 0, -1, false, { "" })
-      -- vim.api.nvim_buf_set_lines(bufnr, 0, 1, false, { "" })
-      vim.api.nvim_buf_set_extmark(bufnr, ns, 0, 0, {
-        virt_text = {
-          { " " },
-          { title, hls.title },
-          { " ⋮ " },
-          { message, hls.body },
-        },
-        virt_text_win_col = 0,
-        priority = 10,
-      })
-    end,
+    -- stages = stages("static", "bottom_up"),
+    -- render = function(bufnr, notif, hls, _cfg)
+    --   local ns = require("notify.render.base").namespace()
+    --   local title = (notif.title and mega.tlen(notif.title) > 0 and notif.title[1] ~= "") and notif.title[1] or "nvim"
+    --   local message = notif.message[1] and notif.message[1] or ""
+    --
+    --   pcall(vim.api.nvim_buf_set_lines, bufnr, 0, -1, false, { "" })
+    --   -- vim.api.nvim_buf_set_lines(bufnr, 0, 1, false, { "" })
+    --   vim.api.nvim_buf_set_extmark(bufnr, ns, 0, 0, {
+    --     virt_text = {
+    --       { " " },
+    --       { title, hls.title },
+    --       { " ⋮ " },
+    --       { message, hls.body },
+    --     },
+    --     virt_text_win_col = 0,
+    --     priority = 10,
+    --   })
+    -- end,
   })
 
   -- _G.mega.augroup("CloseNotify", {
