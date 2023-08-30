@@ -261,8 +261,9 @@ local function mini_indentscope()
   require("mini.indentscope").setup({
     symbol = "┊", -- alts: ┊│┆ ┊  ▎││ ▏▏
     draw = {
-      delay = 100,
-      animation = require("mini.indentscope").gen_animation.none(),
+      delay = 50,
+      -- animation = require("mini.indentscope").gen_animation.none(),
+      animation = function() return 10 end,
     },
     options = { try_as_border = true },
   })
