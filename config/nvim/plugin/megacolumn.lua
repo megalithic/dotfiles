@@ -46,7 +46,8 @@ end
 local function nr(win, _line_count, is_active)
   if v.virtnum < 0 then return shade end -- virtual line
   if v.virtnum > 0 then return space end -- wrapped line
-  local num = is_active and (vim.wo[win].relativenumber and not mega.empty(v.relnum) and v.relnum or v.lnum) or v.lnum
+  local num = is_active and (vim.wo[win].relativenumber and not mega.empty(v.relnum) and v.relnum or v.lnum)
+    or v.lnum
   local lnum = fn.substitute(num, "\\d\\zs\\ze\\" .. "%(\\d\\d\\d\\)\\+$", ",", "g")
   local num_width = (vim.wo[win].numberwidth - 1) - api.nvim_strwidth(lnum)
   local padding = string.rep(space, num_width)

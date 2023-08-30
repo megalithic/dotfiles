@@ -90,17 +90,13 @@ end
 local function toggleDevice(deviceStr, fn)
   local isConnected = false
   -- TODO: try the hearing aids first (maybe after 5 tries), then try megapods (again, 5 tries), then abort with a message
+  -- local counter = 0
   hs.timer.doUntil(function()
     checkDevice(deviceStr, function(connectedState)
       isConnected = connectedState
       dbg("toggleDevice/checkDevice/callback/isConnected? %s", connectedState)
 
       local device = obj.devices[deviceStr]
-
-      if connectedState then
-        require("lib.watchers.dock").setInput(C.dock.docked.input)
-        hs.notify.new({ title = obj.name, subTitle = fmt("%s %s Connected", device.name, device.icon) }):send()
-      end
 
       obj.devices[deviceStr].connected = connectedState
 
@@ -142,7 +138,11 @@ function obj:start()
   Hyper:bind({ "shift" }, "H", nil, function()
     local device = obj.devices["phonak"]
     toggleDevice("phonak", function(isConnected)
-      if isConnected then info(fmt(":: connected %s %s", device.name, device.icon)) end
+      if isConnected then
+        info(fmt(":: connected %s %s", device.name, device.icon))
+        require("lib.watchers.dock").setInput(C.dock.docked.input)
+        hs.notify.new({ title = obj.name, subTitle = fmt("%s %s Connected", device.name, device.icon) }):send()
+      end
     end)
   end)
 

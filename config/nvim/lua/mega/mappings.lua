@@ -543,5 +543,5 @@ function mega.toggle_list(list_type)
   if fn.winnr() ~= winnr then vim.cmd("wincmd p") end
 end
 
-nnoremap("<leader>lq", function() mega.toggle_list("quickfix") end, "lists: toggle quickfix")
-nnoremap("<leader>lc", function() mega.toggle_list("location") end, "lists: toggle location")
+nnoremap("<leader>llq", function() mega.toggle_list("quickfix") end, "lists: toggle quickfix")
+nnoremap("<leader>llc", function() mega.toggle_list("location") end, "lists: toggle location")

@@ -140,28 +140,25 @@ if vim.g.picker == "fzf" then
     { "<leader>ff", file_picker, desc = "find files" },
     { "<leader>fo", fzf_lua.oldfiles, desc = "oldfiles" },
     { "<leader>fr", fzf_lua.resume, desc = "resume picker" },
-    { "<leader>fvh", fzf_lua.highlights, desc = "highlights" },
-    { "<leader>fvk", fzf_lua.keymaps, desc = "keymaps" },
-    { "<leader>fle", fzf_lua.diagnostics_workspace, desc = "workspace diagnostics" },
-    { "<leader>fld", fzf_lua.lsp_document_symbols, desc = "document symbols" },
-    { "<leader>fls", fzf_lua.lsp_live_workspace_symbols, desc = "workspace symbols" },
+    { "<leader>fh", fzf_lua.highlights, desc = "highlights" },
+    { "<leader>fk", fzf_lua.keymaps, desc = "keymaps" },
+    { "<leader>flw", fzf_lua.diagnostics_workspace, desc = "workspace diagnostics" },
+    { "<leader>fls", fzf_lua.lsp_document_symbols, desc = "document symbols" },
+    { "<leader>flS", fzf_lua.lsp_live_workspace_symbols, desc = "workspace symbols" },
     { "<leader>f?", fzf_lua.help_tags, desc = "help" },
-    { "<leader>fh", fzf_lua.oldfiles, desc = "Most (f)recently used files" },
     { "<leader>fgb", fzf_lua.git_branches, desc = "branches" },
     { "<leader>fgc", fzf_lua.git_commits, desc = "commits" },
     { "<leader>fgB", fzf_lua.git_bcommits, desc = "buffer commits" },
     { "<leader>fb", fzf_lua.buffers, desc = "buffers" },
-    -- { "<leader>a", function(cwd) fzf_lua.live_grep_glob({ search = "hi" }) end, desc = "live grep" },
     { "<leader>a", fzf_lua.live_grep_glob, desc = "live grep" },
-    -- { "<c-a>", fzf_lua.live_grep_glob, desc = "live grep" },
     { "<leader>A", fzf_lua.grep_cword, desc = "grep (under cursor)" },
     { "<leader>A", fzf_lua.grep_visual, desc = "grep (visual selection)", mode = "v" },
     { "<leader>fva", fzf_lua.autocmds, desc = "autocommands" },
-    { "<localleader>p", fzf_lua.registers, desc = "Registers" },
+    { "<localleader>p", fzf_lua.registers, desc = "registers" },
     { "<leader>fd", function() file_picker(vim.env.DOTFILES) end, desc = "dotfiles" },
     { "<leader>fc", function() file_picker(vim.g.vim_dir) end, desc = "nvim config" },
-    { "<leader>fO", function() file_picker(env.SYNC_DIR .. "/notes/org") end, desc = "org files" },
-    { "<leader>fN", function() file_picker(env.SYNC_DIR .. "/notes/neorg") end, desc = "norg files" },
+    -- { "<leader>fO", function() file_picker(env.SYNC_DIR .. "/notes/org") end, desc = "org files" },
+    -- { "<leader>fN", function() file_picker(env.SYNC_DIR .. "/notes/neorg") end, desc = "norg files" },
   }
 end
 
@@ -305,6 +302,7 @@ return {
           rg_glob = true, -- enable glob parsing by default to all
           glob_flag = "--iglob", -- for case sensitive globs use '--glob'
           glob_separator = "%s%-%-", -- query separator pattern (lua): ' --'
+          actions = { ["ctrl-g"] = fzf.actions.grep_lgrep },
           -- previewer = "builtin",
           -- fzf_opts = {
           --   ["--keep-right"] = "",

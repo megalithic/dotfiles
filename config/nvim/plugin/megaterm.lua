@@ -292,7 +292,9 @@ function Terminal:enter()
   else
     -- default_on_open
     api.nvim_command([[normal! G]])
-    if (vim.bo.filetype == "" or vim.bo.filetype == "megaterm") and self.open_startinsert then vim.cmd.startinsert() end
+    if (vim.bo.filetype == "" or vim.bo.filetype == "megaterm") and self.open_startinsert then
+      vim.cmd.startinsert()
+    end
   end
 
   -- set some useful term-derived vars for use with megaline

@@ -18,7 +18,7 @@ function M.config()
   local ls = require("luasnip")
   local add = ls.add_snippets
   local snip = ls.parser.parse_snippet -- lsp-style-snippets for future-proofness
-  local t = vim.keycode 
+  local t = vim.keycode
   local types = require("luasnip.util.types")
   local extras = require("luasnip.extras")
   local fmt = require("luasnip.extras.fmt").fmt

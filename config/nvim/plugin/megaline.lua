@@ -45,7 +45,7 @@ mega.augroup("megaline", {
           vim.schedule(function()
             if timer == search_count_timer then
               fn.searchcount({ recompute = 1, maxcount = 0, timeout = 100 })
-              vim.cmd.redrawstatus()
+              pcall(vim.cmd.redrawstatus)
             end
           end)
         end)
@@ -631,7 +631,7 @@ function _G.__statusline()
 
   return table.concat({
     seg([[%<]]),
-    seg_prefix(100),
+    -- seg_prefix(100),
     seg_mode(120),
     seg_filename(120),
     seg(fmt("[%s]", mega.icons.modified), "StModified", M.ctx.modified, { margin = { 0, 1 } }), -- alts: "%m"
@@ -657,7 +657,7 @@ function _G.__statusline()
     -- seg(get_dap_status()),
     seg_lineinfo(75),
     -- seg_startuptime(),
-    seg_suffix(100),
+    -- seg_suffix(100),
   })
 end
 

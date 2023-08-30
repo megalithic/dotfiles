@@ -24,7 +24,9 @@ local path_skip_list = {
   regex("plugged/.*/doc/.*\\.txt"),
   regex("/.git/"),
   regex("fugitiveblame$"),
-  regex(vim.fn.escape(vim.fn.fnamemodify(vim.fn.resolve(os.getenv("VIMRUNTIME")), ":p"), "\\") .. "doc/.*\\.txt"),
+  regex(
+    vim.fn.escape(vim.fn.fnamemodify(vim.fn.resolve(os.getenv("VIMRUNTIME")), ":p"), "\\") .. "doc/.*\\.txt"
+  ),
 }
 
 local function skip(path)

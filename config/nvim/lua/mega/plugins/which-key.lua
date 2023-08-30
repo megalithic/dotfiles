@@ -134,7 +134,7 @@ return {
       },
       ["<leader>e"] = {
         name = "+edit files",
-        r = { [[<cmd>RenameFile<cr>]], "rename file to <input>" },
+        r = { function() require("mega.utils").lsp.rename_file() end, "rename file (lsp) to <input>" },
         s = { [[<cmd>SaveAsFile<cr>]], "save file as <input>" },
         -- d = { [[:DuplicateFile<cr>]], "duplicate current file" },
         D = { [[<cmd>Delete!<cr>]], "delete file" },

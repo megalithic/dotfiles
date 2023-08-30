@@ -261,7 +261,10 @@ local function setup_keymaps(client, bufnr)
   nnoremap("<leader>lc", vim.lsp.buf.code_action, desc("code action"))
   xnoremap("<leader>lc", "<esc><Cmd>lua vim.lsp.buf.range_code_action()<CR>", desc("code action"))
   nnoremap("gl", vim.lsp.codelens.run, desc("lsp: code lens"))
-  nnoremap("gn", require("mega.lsp.rename").rename, desc("lsp: rename"))
+  nnoremap("gn", vim.lsp.buf.rename, desc("lsp: rename"))
+  -- nnoremap("gn", require("mega.utils.lsp").rename, desc("lsp: rename"))
+  nnoremap("ger", require("mega.utils.lsp").rename_file, desc("lsp: rename file to <input>"))
+  -- nnoremap("<leader>er", require("mega.utils.lsp").rename_file, desc("lsp: rename file to <input>"))
 
   nnoremap("K", function()
     local filetype = vim.bo.filetype
@@ -573,7 +576,8 @@ local function on_attach(client, bufnr)
 
   if caps.documentFormattingProvider then vim.bo[bufnr].formatexpr = "v:lua.vim.lsp.formatexpr()" end
 
-  -- if caps.signatureHelpProvider then require("mega.lsp.signature").setup(client) end
+  require("mega.utils.lsp").setup_rename(client, bufnr)
+
   setup_formatting(client, bufnr)
   setup_commands(bufnr)
   setup_autocommands(client, bufnr)
@@ -584,6 +588,7 @@ local function on_attach(client, bufnr)
 
   -- fully disable semantic tokens highlighting
   client.server_capabilities.semanticTokensProvider = nil
+  client.server_capabilities.completionProvider.triggerCharacters = { ".", ":" }
 
   vim.api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
 
@@ -608,23 +613,23 @@ local function get_server_capabilities()
     dynamicRegistration = false,
     lineFoldingOnly = true,
   }
-  capabilities.textDocument.codeAction = {
-    dynamicRegistration = false,
-    codeActionLiteralSupport = {
-      codeActionKind = {
-        valueSet = {
-          "",
-          "quickfix",
-          "refactor",
-          "refactor.extract",
-          "refactor.inline",
-          "refactor.rewrite",
-          "source",
-          "source.organizeImports",
-        },
-      },
-    },
-  }
+  -- capabilities.textDocument.codeAction = {
+  --   dynamicRegistration = false,
+  --   codeActionLiteralSupport = {
+  --     codeActionKind = {
+  --       valueSet = {
+  --         "",
+  --         "quickfix",
+  --         "refactor",
+  --         "refactor.extract",
+  --         "refactor.inline",
+  --         "refactor.rewrite",
+  --         "source",
+  --         "source.organizeImports",
+  --       },
+  --     },
+  --   },
+  -- }
 
   local nvim_lsp_ok, cmp_nvim_lsp = mega.pcall(require, "cmp_nvim_lsp")
   if nvim_lsp_ok then capabilities = cmp_nvim_lsp.default_capabilities(capabilities) end
