@@ -243,9 +243,9 @@ return {
     sign_in = "",
     check = "✓", -- alts: ✓
     fire = "",
-    note = "",
+    note = "󰎛",
     bookmark = "",
-    pencil = "",
+    pencil = "󰏫",
     arrow_right = "",
     caret_right = "",
     chevron_right = "",

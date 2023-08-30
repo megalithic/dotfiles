@@ -97,14 +97,14 @@ return {
       mega.augroup("ReplacerFileType", {
         pattern = "replacer",
         callback = function()
-          mega.nmap("q", vim.cmd.write, { desc = " Finish replacing", buffer = true, nowait = true })
+          mega.nmap("q", vim.cmd.write, { desc = " done replacing", buffer = true, nowait = true })
         end,
       })
-      mega.nnoremap(
-        "<leader>r",
-        function() require("replacer").run() end,
-        { desc = "qf: replace in qflist", nowait = true }
-      )
+      -- mega.nnoremap(
+      --   "<leader>r",
+      --   function() require("replacer").run() end,
+      --   { desc = "qf: replace in qflist", nowait = true }
+      -- )
     end,
   },
   {
@@ -352,10 +352,11 @@ return {
       local elixirls = require("elixir.elixirls")
 
       elixir.setup({
-        credo = { enable = false },
+        credo = { enable = mega.lsp.is_enabled_elixir_ls("credo") },
         nextls = {
-          enable = true,
-          version = "0.10.3",
+          enable = mega.lsp.is_enabled_elixir_ls("NextLS"),
+          version = "*",
+          -- version = "0.10.3",
           -- single_file_support = true,
           -- log_level = vim.lsp.protocol.MessageType.Log,
           -- message_level = vim.lsp.protocol.MessageType.Log,
@@ -366,7 +367,7 @@ return {
           -- },
         },
         elixirls = {
-          enable = true,
+          enable = mega.lsp.is_enabled_elixir_ls("ElixirLS"),
           -- cmd = fmt("%s/lsp/elixir-ls/%s", vim.env.XDG_DATA_HOME, "language_server.sh"),
           single_file_support = true,
           settings = elixirls.settings({
@@ -508,7 +509,7 @@ return {
       use_diagnostic_signs = true, -- en
     },
   },
-  { "lewis6991/whatthejump.nvim", keys = { "<C-I>", "<C-O>" } },
+  -- { "lewis6991/whatthejump.nvim", keys = { "<C-I>", "<C-O>" } },
 
   -- ( Development ) -----------------------------------------------------------
   {

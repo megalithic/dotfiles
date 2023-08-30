@@ -268,7 +268,7 @@ return {
         },
         highlights = {
           prompt = prompt,
-          winopts = { title = title("Highlights") },
+          winopts = { title = title("Highlights", "󰏘") },
         },
         helptags = {
           prompt = prompt,
@@ -290,7 +290,7 @@ return {
           winopts = { title = title("Buffers", "󰈙") },
         }),
         keymaps = dropdown({
-          winopts = { title = title("Keymaps", ""), width = 0.7 },
+          winopts = { title = title("Keymaps", "") },
         }),
         registers = cursor_dropdown({
           winopts = { title = title("Registers", ""), width = 0.6 },

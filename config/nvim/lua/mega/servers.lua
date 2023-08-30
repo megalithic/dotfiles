@@ -212,23 +212,45 @@ M.list = {
   -- TODO:
   -- Umbrella app support:
   -- https://github.com/scottming/nvim/commit/ab15453bf172f1a253ce51cfb1ad24759b28fb19#diff-f3b6945dc71f9ffc53624b2053a25eee19634fccc7d0a59ef190e1d87114bb9aR10-R22
-  lexical = {
-    log_level = vim.lsp.protocol.MessageType.Log,
-    message_level = vim.lsp.protocol.MessageType.Log,
-    logLevel = vim.lsp.protocol.MessageType.Log,
-    messageLevel = vim.lsp.protocol.MessageType.Log,
+  -- lexical = {
+  --   log_level = vim.lsp.protocol.MessageType.Log,
+  --   message_level = vim.lsp.protocol.MessageType.Log,
+  --   logLevel = vim.lsp.protocol.MessageType.Log,
+  --   messageLevel = vim.lsp.protocol.MessageType.Log,
+  --
+  --   settings = {
+  --     dialyzerEnabled = true,
+  --     log_level = vim.lsp.protocol.MessageType.Log,
+  --     message_level = vim.lsp.protocol.MessageType.Log,
+  --     logLevel = vim.lsp.protocol.MessageType.Log,
+  --     messageLevel = vim.lsp.protocol.MessageType.Log,
+  --     -- lexical = {
+  --     --   logLevel = "debug",
+  --     -- },
+  --   },
+  -- },
+  --
+  lexical = function()
+    if not mega.lsp.is_enabled_elixir_ls("lexical") then return nil end
 
-    settings = {
-      dialyzerEnabled = true,
+    return {
       log_level = vim.lsp.protocol.MessageType.Log,
       message_level = vim.lsp.protocol.MessageType.Log,
       logLevel = vim.lsp.protocol.MessageType.Log,
       messageLevel = vim.lsp.protocol.MessageType.Log,
-      -- lexical = {
-      --   logLevel = "debug",
-      -- },
-    },
-  },
+
+      settings = {
+        dialyzerEnabled = true,
+        log_level = vim.lsp.protocol.MessageType.Log,
+        message_level = vim.lsp.protocol.MessageType.Log,
+        logLevel = vim.lsp.protocol.MessageType.Log,
+        messageLevel = vim.lsp.protocol.MessageType.Log,
+        -- lexical = {
+        --   logLevel = "debug",
+        -- },
+      },
+    }
+  end,
   --- @see https://gist.github.com/folke/fe5d28423ea5380929c3f7ce674c41d8
   lua_ls = function()
     local path = vim.split(package.path, ";")

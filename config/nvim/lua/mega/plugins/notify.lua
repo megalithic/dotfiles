@@ -11,108 +11,108 @@ function M.config()
   local stages_util = require("notify.stages.util")
   local base = require("notify.render.base")
 
-  local function initial(direction, opacity)
-    local stage = function(state)
-      local next_height = state.message.height + 2
-      local next_row = stages_util.available_slot(state.open_windows, next_height, direction)
-      if not next_row then return nil end
-      return {
-        relative = "editor",
-        anchor = "NE",
-        width = state.message.width,
-        height = state.message.height,
-        col = vim.opt.columns:get(),
-        row = next_row,
-        border = "",
-        style = "minimal",
-        opacity = opacity,
-      }
-    end
-
-    local new_stage = function(state)
-      local next_height = state.message.height -- + 2
-      local next_row = stages_util.available_slot(state.open_windows, next_height, direction)
-      if not next_row then return nil end
-      return {
-        relative = "editor",
-        anchor = "NE",
-        width = state.message.width,
-        height = state.message.height,
-        col = vim.opt.columns:get(),
-        row = next_row - 1,
-        -- row = next_row,
-        border = "",
-        style = "minimal",
-        opacity = opacity,
-      }
-    end
-
-    return stage
-  end
-
-  local function stages(type, direction)
-    type = type or "static"
-    direction = stages_util[string.lower(direction)] or stages_util.DIRECTION.BOTTOM_UP
-
-    if type == "static" then
-      return {
-        initial(direction, 100),
-        function()
-          return {
-            col = { vim.opt.columns:get() },
-            time = true,
-          }
-        end,
-      }
-    elseif type == "fade_in_slide_out" then
-      return {
-        initial(direction, 0),
-        function(state, win)
-          return {
-            opacity = { 100 },
-            col = { vim.opt.columns:get() },
-            row = {
-              stages_util.slot_after_previous(win, state.open_windows, direction),
-              frequency = 3,
-              complete = function() return true end,
-            },
-          }
-        end,
-        function(state, win)
-          return {
-            col = { vim.opt.columns:get() },
-            time = true,
-            row = {
-              stages_util.slot_after_previous(win, state.open_windows, direction),
-              frequency = 3,
-              complete = function() return true end,
-            },
-          }
-        end,
-        function(state, win)
-          return {
-            width = {
-              1,
-              frequency = 2.5,
-              damping = 0.9,
-              complete = function(cur_width) return cur_width < 3 end,
-            },
-            opacity = {
-              0,
-              frequency = 2,
-              complete = function(cur_opacity) return cur_opacity <= 4 end,
-            },
-            col = { vim.opt.columns:get() },
-            row = {
-              stages_util.slot_after_previous(win, state.open_windows, direction),
-              frequency = 3,
-              complete = function() return true end,
-            },
-          }
-        end,
-      }
-    end
-  end
+  -- local function initial(direction, opacity)
+  --   local stage = function(state)
+  --     local next_height = state.message.height + 2
+  --     local next_row = stages_util.available_slot(state.open_windows, next_height, direction)
+  --     if not next_row then return nil end
+  --     return {
+  --       relative = "editor",
+  --       anchor = "NE",
+  --       width = state.message.width,
+  --       height = state.message.height,
+  --       col = vim.opt.columns:get(),
+  --       row = next_row,
+  --       border = "",
+  --       style = "minimal",
+  --       opacity = opacity,
+  --     }
+  --   end
+  --
+  --   local new_stage = function(state)
+  --     local next_height = state.message.height -- + 2
+  --     local next_row = stages_util.available_slot(state.open_windows, next_height, direction)
+  --     if not next_row then return nil end
+  --     return {
+  --       relative = "editor",
+  --       anchor = "NE",
+  --       width = state.message.width,
+  --       height = state.message.height,
+  --       col = vim.opt.columns:get(),
+  --       row = next_row - 1,
+  --       -- row = next_row,
+  --       border = "",
+  --       style = "minimal",
+  --       opacity = opacity,
+  --     }
+  --   end
+  --
+  --   return stage
+  -- end
+  --
+  -- local function stages(type, direction)
+  --   type = type or "static"
+  --   direction = stages_util[string.lower(direction)] or stages_util.DIRECTION.BOTTOM_UP
+  --
+  --   if type == "static" then
+  --     return {
+  --       initial(direction, 100),
+  --       function()
+  --         return {
+  --           col = { vim.opt.columns:get() },
+  --           time = true,
+  --         }
+  --       end,
+  --     }
+  --   elseif type == "fade_in_slide_out" then
+  --     return {
+  --       initial(direction, 0),
+  --       function(state, win)
+  --         return {
+  --           opacity = { 100 },
+  --           col = { vim.opt.columns:get() },
+  --           row = {
+  --             stages_util.slot_after_previous(win, state.open_windows, direction),
+  --             frequency = 3,
+  --             complete = function() return true end,
+  --           },
+  --         }
+  --       end,
+  --       function(state, win)
+  --         return {
+  --           col = { vim.opt.columns:get() },
+  --           time = true,
+  --           row = {
+  --             stages_util.slot_after_previous(win, state.open_windows, direction),
+  --             frequency = 3,
+  --             complete = function() return true end,
+  --           },
+  --         }
+  --       end,
+  --       function(state, win)
+  --         return {
+  --           width = {
+  --             1,
+  --             frequency = 2.5,
+  --             damping = 0.9,
+  --             complete = function(cur_width) return cur_width < 3 end,
+  --           },
+  --           opacity = {
+  --             0,
+  --             frequency = 2,
+  --             complete = function(cur_opacity) return cur_opacity <= 4 end,
+  --           },
+  --           col = { vim.opt.columns:get() },
+  --           row = {
+  --             stages_util.slot_after_previous(win, state.open_windows, direction),
+  --             frequency = 3,
+  --             complete = function() return true end,
+  --           },
+  --         }
+  --       end,
+  --     }
+  --   end
+  -- end
 
   nnotify.setup({
     timeout = 3000,
@@ -130,19 +130,20 @@ function M.config()
     -- render = "compact",
     render = function(bufnr, notif, highlights)
       local namespace = base.namespace()
-      local icon = notif.icon
+      local icon = "" -- » notif.icon
       local title = notif.title[1]
 
       local prefix
       if type(title) == "string" and #title > 0 then
-        prefix = string.format("%s %s:", icon, title)
+        prefix = string.format(" %s %s:", icon, title)
       else
-        prefix = string.format("%s", icon)
+        prefix = string.format(" %s", icon)
       end
-      notif.message[1] = string.format("%s %s", prefix, notif.message[1])
 
-      local message = { notif.message[1] }
-      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, message)
+      notif.message[1] = string.format("%s %s ", prefix, notif.message[1])
+
+      local messages = { notif.message[1] }
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, messages)
 
       local icon_length = vim.str_utfindex(icon)
       local prefix_length = vim.str_utfindex(prefix)
@@ -154,12 +155,12 @@ function M.config()
       })
       vim.api.nvim_buf_set_extmark(bufnr, namespace, 0, icon_length + 1, {
         hl_group = highlights.title,
-        end_col = prefix_length + 1,
+        end_col = prefix_length + 2,
         priority = 50,
       })
       vim.api.nvim_buf_set_extmark(bufnr, namespace, 0, prefix_length + 1, {
         hl_group = highlights.body,
-        end_line = #message,
+        end_line = #messages,
         priority = 50,
       })
     end,

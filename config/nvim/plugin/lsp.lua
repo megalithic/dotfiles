@@ -12,6 +12,8 @@ local diagnostic = vim.diagnostic
 local lspconfig = require("lspconfig")
 local LSP_METHODS = vim.lsp.protocol.Methods
 
+function mega.lsp.is_enabled_elixir_ls(ls) return vim.tbl_contains(vim.g.enabled_elixir_ls, ls) end
+
 -- Show the popup diagnostics window, but only once for the current cursor/line location
 -- by checking whether the word under the cursor has changed.
 local function diagnostic_popup(bufnr)
@@ -26,11 +28,7 @@ local function diagnostic_popup(bufnr)
   -- vim.diagnostic.open_float(bufnr, { scope = "line", focus = false })
 end
 
-local format_exclusions = { "elixirls-dev", "elixirls", "ElixirLS", "NextLS" } -- rely on null-ls mix-format for now
-local function formatting_filter(client)
-  dd(client.name)
-  return not vim.tbl_contains(format_exclusions, client.name)
-end
+local function formatting_filter(client) return not vim.tbl_contains(vim.g.formatter_exclusions, client.name) end
 
 ---@param opts table<string, any>
 local function format(opts)
@@ -452,18 +450,17 @@ local function setup_diagnostics(client, bufnr)
   }
   diagnostic.config(mega.lsp.diagnostic_config)
 
-  local handler = lsp.handlers[LSP_METHODS.textDocument_publishDiagnostics]
-  ---@diagnostic disable-next-line: duplicate-set-field
-  lsp.handlers[LSP_METHODS.textDocument_publishDiagnostics] = function(err, result, ctx, config)
-    local client_name = vim.lsp.get_client_by_id(ctx.client_id).name
+  do
+    local handler = lsp.handlers[LSP_METHODS.textDocument_publishDiagnostics]
+    ---@diagnostic disable-next-line: duplicate-set-field
+    lsp.handlers[LSP_METHODS.textDocument_publishDiagnostics] = function(err, result, ctx, config)
+      local client_name = vim.lsp.get_client_by_id(ctx.client_id).name
 
-    if vim.tbl_contains({ "lexical", "ElixirLS" }, client_name) then
-      -- dd(fmt("diag: %s", client_name))
-      return
+      if vim.tbl_contains(vim.g.diagnostic_exclusions, client_name) then return end
+
+      -- result.diagnostics = vim.tbl_map(show_related_locations, result.diagnostics)
+      handler(err, result, ctx, config)
     end
-
-    -- result.diagnostics = vim.tbl_map(show_related_locations, result.diagnostics)
-    handler(err, result, ctx, config)
   end
 end
 
@@ -662,19 +659,21 @@ for server, _ in pairs(servers.list) do
   servers.load_unofficial()
   local opts = get_config(server)
 
-  if server == "tsserver" then
-    -- require("typescript-tools").setup({
-    --   capabilities = get_server_capabilities(),
-    --   on_attach = on_attach,
-    --   settings = {
-    --     separate_diagnostic_server = true,
-    --     publish_diagnostic_on = "insert_leave",
-    --     tsserver_plugins = { "typescript-styled-plugin" },
-    --   },
-    -- })
-    require("typescript").setup({ server = opts })
-  else
-    lspconfig[server].setup(opts)
+  if opts ~= nil then
+    if server == "tsserver" then
+      -- require("typescript-tools").setup({
+      --   capabilities = get_server_capabilities(),
+      --   on_attach = on_attach,
+      --   settings = {
+      --     separate_diagnostic_server = true,
+      --     publish_diagnostic_on = "insert_leave",
+      --     tsserver_plugins = { "typescript-styled-plugin" },
+      --   },
+      -- })
+      require("typescript").setup({ server = opts })
+    else
+      lspconfig[server].setup(opts)
+    end
   end
 end
 

@@ -23,17 +23,16 @@ return {
     },
   },
   {
-    cond = true,
     "nvim-treesitter/nvim-treesitter-context",
     event = "BufReadPre",
-    config = function()
-      require("treesitter-context").setup({
-        separator = "▁", -- "TreesitterContextBorder" }, -- alts: ▁ ─ ▄─▁
-        mode = "cursor",
-        max_lines = 1, -- How many lines the window should span. Values <= 0 mean no limit.
-        trim_scope = "outer",
-      })
-    end,
+    opts = {
+      enabled = true,
+      separator = "▁", -- "TreesitterContextBorder" }, -- alts: ▁ ─ ▄─▁
+      min_window_height = 5,
+      mode = "topline",
+      max_lines = 3, -- How many lines the window should span. Values <= 0 mean no limit.
+      trim_scope = "outer",
+    },
   },
   { "nvim-treesitter/playground", cmd = { "TSPlaygroundToggle", "TSHighlightCapturesUnderCursor" } },
   -- {

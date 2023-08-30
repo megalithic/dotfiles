@@ -43,6 +43,9 @@ vim.g.tree = "neo-tree"
 vim.g.explorer = "oil" -- alt: dirbuf, oil
 vim.g.tester = "vim-test" -- alt: neotest, vim-test
 vim.g.snipper = "vsnip" -- alt: vsnip, luasnip
+vim.g.formatter_exclusions = { "elixirls-dev", "elixirls", "ElixirLS", "NextLS" }
+vim.g.diagnostic_exclusions = { "ElixirLS", "lexical" }
+vim.g.enabled_elixir_ls = { "ElixirLS", "NextLS", "lexical" } -- alts: credo
 
 -- [ globals ] -----------------------------------------------------------------
 
