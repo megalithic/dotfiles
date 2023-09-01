@@ -21,42 +21,53 @@ return {
       end,
       -- stages = stages("initial", "bottom_up"),
       -- render = "compact",
-      render = function(bufnr, notif, highlights, config)
-        local namespace = base.namespace()
+      render = function(bufnr, notif, hls, cfg)
+        local ns = base.namespace()
         local icon = notif.icon or "" -- » notif.icon
         local title = notif.title[1]
 
         local prefix
         if type(title) == "string" and #title > 0 then
-          prefix = string.format(" %s %s:", icon, title)
+          prefix = string.format("%s %s", icon, title)
         else
-          prefix = string.format(" %s", icon)
+          prefix = string.format("%s", icon)
         end
 
-        notif.message[1] = string.format("%s %s ", prefix, notif.message[1])
+        -- notif.message[1] = string.format("%s %s ", prefix, notif.message[1])
 
         local messages = { notif.message[1] }
         vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, messages)
 
-        local icon_length = vim.str_utfindex(icon)
-        local prefix_length = vim.str_utfindex(prefix)
-
-        vim.api.nvim_buf_set_extmark(bufnr, namespace, 0, 0, {
-          hl_group = highlights.icon,
-          end_col = icon_length + 1,
-          priority = 50,
+        -- local icon_length = vim.str_utfindex(icon)
+        -- local prefix_length = vim.str_utfindex(prefix)
+        --
+        -- vim.api.nvim_buf_set_extmark(bufnr, ns, 0, 0, {
+        --   hl_group = hls.icon,
+        --   end_col = icon_length + 1,
+        --   priority = 50,
+        -- })
+        -- vim.api.nvim_buf_set_extmark(bufnr, ns, 0, icon_length + 1, {
+        --   hl_group = hls.title,
+        --   end_col = prefix_length + 2,
+        --   priority = 50,
+        -- })
+        -- vim.api.nvim_buf_set_extmark(bufnr, ns, 0, prefix_length + 2, {
+        --   hl_group = hls.body,
+        --   end_line = #messages,
+        --   priority = 50,
+        -- })
+        -- vim.api.nvim_buf_set_lines(bufnr, 0, 1, false, { "" })
+        vim.api.nvim_buf_set_extmark(bufnr, ns, 0, 0, {
+          virt_text = {
+            { " " },
+            { prefix, hls.title },
+            { " ⋮ " },
+            { messages[1], hls.body },
+            { " " },
+          },
+          virt_text_win_col = 0,
+          priority = 10,
         })
-        vim.api.nvim_buf_set_extmark(bufnr, namespace, 0, icon_length + 1, {
-          hl_group = highlights.title,
-          end_col = prefix_length + 2,
-          priority = 50,
-        })
-        vim.api.nvim_buf_set_extmark(bufnr, namespace, 0, prefix_length + 2, {
-          hl_group = highlights.body,
-          end_line = #messages,
-          priority = 50,
-        })
-
         -- local max_message_width =
         --   math.max(math.max(unpack(vim.tbl_map(function(line) return vim.fn.strchars(line) end, notif.message))))
         -- local title = notif.title[1]
