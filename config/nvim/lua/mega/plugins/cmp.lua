@@ -1,3 +1,6 @@
+-- REF:
+-- https://github.com/piouPiouM/dotfiles/blob/master/nvim/.config/nvim/lua/ppm/plugin/cmp/init.lua
+-- https://github.com/ecosse3/nvim/blob/dev/lua/plugins/cmp.lua
 return {
   "hrsh7th/nvim-cmp",
   event = { "InsertEnter" },
@@ -112,6 +115,9 @@ return {
       -- experimental = { ghost_text = {
       --   hl_group = "LspCodeLens",
       -- } },
+      performance = {
+        max_view_entries = 30,
+      },
       matching = {
         disallow_partial_fuzzy_matching = false,
       },
@@ -278,7 +284,7 @@ return {
         },
       },
       sources = cmp.config.sources({
-        { name = "nvim_lsp_signature_help" },
+        -- { name = "nvim_lsp_signature_help" },
         { name = "vsnip" },
         { name = "nvim_lsp" },
         { name = "path", option = { trailing_slash = true } },

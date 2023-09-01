@@ -330,7 +330,10 @@ end
 
 function M.rename_file()
   local old_name = api.nvim_buf_get_name(0)
-  vim.ui.input({ prompt = fmt("rename %s to -> ", old_name) }, function(name)
+  -- nvim_buf_get_name(0)
+  -- -- -> fnamemodify(':t')
+  -- vim.fs.basename(vim.api.nvim_buf_get_name(0))
+  vim.ui.input({ prompt = fmt("rename %s to -> ", vim.fs.basename(old_name)) }, function(name)
     if not name then return end
     local new_name = fmt("%s/%s", vim.fs.dirname(old_name), name)
     prepare_file_rename({ old_name = old_name, new_name = new_name })

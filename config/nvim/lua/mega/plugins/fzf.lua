@@ -1,3 +1,5 @@
+-- REF: https://github.com/piouPiouM/dotfiles/tree/master/nvim/.config/nvim/lua/ppm/plugin/fzf-lua
+
 --- Require when an exported method is called.
 ---
 --- Creates a new function. Cannot be used to compare functions,
@@ -213,6 +215,12 @@ return {
             syntax_limit_l = 0, -- syntax limit (lines), 0=nolimit
             syntax_limit_b = 1024 * 1024, -- syntax limit (bytes), 0=nolimit
             limit_b = 1024 * 1024 * 10, -- preview limit (bytes), 0=nolimit
+            extensions = {
+              -- or, this is known to work: { "viu", "-t" }
+              ["gif"] = { "chafa", "-c", "full" },
+              ["jpg"] = { "chafa", "-c", "full" },
+              ["png"] = { "chafa", "-c", "full" },
+            },
           },
         },
         winopts = {
@@ -276,6 +284,8 @@ return {
         },
         oldfiles = dropdown({
           cwd_only = true,
+          stat_file = true, -- verify files exist on disk
+          include_current_session = false, -- include bufs from current session
           winopts = { title = title("History", "") },
         }),
         files = {
@@ -296,6 +306,7 @@ return {
           winopts = { title = title("Registers", ""), width = 0.6 },
         }),
         grep = {
+          multiprocess = true,
           prompt = " ",
           winopts = { title = title("Grep", "󰈭") },
           rg_opts = "--hidden --column --line-number --no-ignore-vcs --no-heading --color=always --smart-case -g '!.git'",
@@ -303,6 +314,13 @@ return {
           glob_flag = "--iglob", -- for case sensitive globs use '--glob'
           glob_separator = "%s%-%-", -- query separator pattern (lua): ' --'
           actions = { ["ctrl-g"] = fzf.actions.grep_lgrep },
+          rg_glob_fn = function(query, opts)
+            -- this enables all `rg` arguments to be passed in after the `--` glob separator
+            local search_query, glob_str = query:match("(.*)" .. opts.glob_separator .. "(.*)")
+            local glob_args = glob_str:gsub("^%s+", ""):gsub("-", "%-") .. " "
+
+            return search_query, glob_args
+          end,
           -- previewer = "builtin",
           -- fzf_opts = {
           --   ["--keep-right"] = "",

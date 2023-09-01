@@ -16,19 +16,10 @@ function mega.lsp.is_enabled_elixir_ls(ls) return vim.tbl_contains(vim.g.enabled
 
 -- Show the popup diagnostics window, but only once for the current cursor/line location
 -- by checking whether the word under the cursor has changed.
-local function diagnostic_popup(bufnr)
-  -- local cword = vim.fn.expand("<cword>")
-  -- if cword ~= vim.w.lsp_diagnostics_cword then
-  --   vim.w.lsp_diagnostics_cword = cword
-  --   if vim.b.lsp_hover_win and api.nvim_win_is_valid(vim.b.lsp_hover_win) then return end
-  --   vim.diagnostic.open_float(args.buf, { scope = "line", focus = false })
-  -- end
-  -- if vim.b.lsp_hover_win and api.nvim_win_is_valid(vim.b.lsp_hover_win) then return end
-  vim.diagnostic.open_float(bufnr, { scope = "line", focus = false })
-  -- vim.diagnostic.open_float(bufnr, { scope = "line", focus = false })
-end
+local function diagnostic_popup(bufnr) vim.diagnostic.open_float(bufnr, { scope = "cursor", focus = false }) end
 
 local function formatting_filter(client) return not vim.tbl_contains(vim.g.formatter_exclusions, client.name) end
+-- TODO: https://github.com/CKolkey/config/blob/master/nvim/lua/plugins/lsp/formatting.lua
 
 ---@param opts table<string, any>
 local function format(opts)
@@ -68,7 +59,7 @@ local function hover()
       vim.api.nvim_win_close(existing_float_win, true)
     else
       -- vim.lsp.buf.hover(nil, { focus = false, focusable = false })
-      dd("pretty hovering")
+      -- dd("pretty hovering")
       require("pretty_hover").hover()
     end
   end
@@ -187,7 +178,6 @@ local function setup_autocommands(client, bufnr)
       command = function(args) format({ async = false, bufnr = args.buf }) end,
     },
   })
-
   -- augroup("LspDocumentHighlight", {
   --   {
   --     event = { "InsertEnter" },
@@ -353,8 +343,8 @@ local function setup_diagnostics(client, bufnr)
       text = opts.icon,
       texthl = opts.hl,
       culhl = opts.hl .. "Line",
-      --     numhl = fmt("%sNumLine", hl),
-      --     linehl = fmt("%sLine", hl),
+      numhl = opts.hl .. "Line",
+      -- linehl = opts.hl .. "Line",
     })
   end
 
@@ -366,22 +356,22 @@ local function setup_diagnostics(client, bufnr)
   --- Restricts nvim's diagnostic signs to only the single most severe one per line
   --- @see `:help vim.diagnostic`
   -- TODO: https://github.com/kristijanhusak/neovim-config/blob/master/nvim/lua/partials/lsp.lua#L152-L159
-  local ns = api.nvim_create_namespace("severe-diagnostics")
-  local function max_diagnostic(callback)
-    return function(_, bufnr, _, opts)
-      -- Get all diagnostics from the whole buffer rather than just the
-      -- diagnostics passed to the handler
-      local diagnostics = vim.diagnostic.get(bufnr)
-      -- Find the "worst" diagnostic per line
-      local max_severity_per_line = {}
-      for _, d in pairs(diagnostics) do
-        local m = max_severity_per_line[d.lnum]
-        if not m or d.severity < m.severity then max_severity_per_line[d.lnum] = d end
-      end
-      local new_diags = vim.tbl_values(max_severity_per_line)
-      callback(ns, bufnr, new_diags, opts)
-    end
-  end
+  -- local ns = api.nvim_create_namespace("severe-diagnostics")
+  -- local function max_diagnostic(callback)
+  --   return function(_, bufnr, _, opts)
+  --     -- Get all diagnostics from the whole buffer rather than just the
+  --     -- diagnostics passed to the handler
+  --     local diagnostics = vim.diagnostic.get(bufnr)
+  --     -- Find the "worst" diagnostic per line
+  --     local max_severity_per_line = {}
+  --     for _, d in pairs(diagnostics) do
+  --       local m = max_severity_per_line[d.lnum]
+  --       if not m or d.severity < m.severity then max_severity_per_line[d.lnum] = d end
+  --     end
+  --     local new_diags = vim.tbl_values(max_severity_per_line)
+  --     callback(ns, bufnr, new_diags, opts)
+  --   end
+  -- end
 
   --   local signs_handler = diagnostic.handlers.signs
   --   diagnostic.handlers.signs = vim.tbl_extend("force", signs_handler, {
@@ -406,13 +396,15 @@ local function setup_diagnostics(client, bufnr)
     severity_sort = true,
     virtual_text = {
       -- spacing = 1,
-      prefix = function(d)
-        local level = diagnostic.severity[d.severity]
-        return mega.icons.lsp[level:lower()]
-      end,
+      -- prefix = function(d)
+      --   dd(fmt("virtual_text_prefix: %s", I(d)))
+      --   local level = diagnostic.severity[d.severity]
+      --   return mega.icons.lsp[level:lower()]
+      -- end,
       source = "always", -- or "always", "if_many" (for more than one source)
       severity = { min = diagnostic.severity.ERROR },
       format = function(d)
+        -- dd(fmt("virtual_text_format: %s", I(d)))
         return d.message
         -- local lvl = diagnostic.severity[d.severity]
         -- local icon = mega.icons.lsp[lvl:lower()]
@@ -450,17 +442,15 @@ local function setup_diagnostics(client, bufnr)
   }
   diagnostic.config(mega.lsp.diagnostic_config)
 
-  do
-    local handler = lsp.handlers[LSP_METHODS.textDocument_publishDiagnostics]
-    ---@diagnostic disable-next-line: duplicate-set-field
-    lsp.handlers[LSP_METHODS.textDocument_publishDiagnostics] = function(err, result, ctx, config)
-      local client_name = vim.lsp.get_client_by_id(ctx.client_id).name
+  local diagnostic_handler = lsp.handlers[LSP_METHODS.textDocument_publishDiagnostics]
+  lsp.handlers[LSP_METHODS.textDocument_publishDiagnostics] = function(err, result, ctx, config)
+    local client_name = vim.lsp.get_client_by_id(ctx.client_id).name
 
-      if vim.tbl_contains(vim.g.diagnostic_exclusions, client_name) then return end
+    if vim.tbl_contains(vim.g.diagnostic_exclusions, client_name) then return end
+    -- dd(fmt("diagnostic client: %s", client_name))
 
-      -- result.diagnostics = vim.tbl_map(show_related_locations, result.diagnostics)
-      handler(err, result, ctx, config)
-    end
+    -- result.diagnostics = vim.tbl_map(show_related_locations, result.diagnostics)
+    diagnostic_handler(err, result, ctx, config)
   end
 end
 
@@ -568,6 +558,18 @@ local function on_attach(client, bufnr)
   --   local ok, navic = mega.require("nvim-navic")
   --   if ok and navic then navic.attach(client, bufnr) end
   -- end
+
+  if client.supports_method("textDocument/signatureHelp") then
+    require("lsp_signature").on_attach({
+      -- hint_inline = function()
+      --   return true
+      -- end,
+      handler_opts = { border = "rounded" },
+      hint_prefix = "",
+      fixpos = true,
+      padding = " ",
+    }, bufnr)
+  end
 
   if caps.definitionProvider then vim.bo[bufnr].tagfunc = "v:lua.vim.lsp.tagfunc" end
 

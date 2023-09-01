@@ -43,9 +43,10 @@ vim.g.tree = "neo-tree"
 vim.g.explorer = "oil" -- alt: dirbuf, oil
 vim.g.tester = "vim-test" -- alt: neotest, vim-test
 vim.g.snipper = "vsnip" -- alt: vsnip, luasnip
-vim.g.formatter_exclusions = { "elixirls-dev", "elixirls", "ElixirLS", "NextLS" }
-vim.g.diagnostic_exclusions = { "ElixirLS", "lexical" }
-vim.g.enabled_elixir_ls = { "ElixirLS", "NextLS", "lexical" } -- alts: credo
+vim.g.ts_ignored_langs = {} -- alt: { "svg", "json", "heex", "jsonc" }
+vim.g.formatter_exclusions = { "elixirls-dev", "elixirls", "ElixirLS", "lexical" }
+vim.g.diagnostic_exclusions = { "ElixirLS", "lexical" } --, "lexical", "NextLS" }
+vim.g.enabled_elixir_ls = { "ElixirLS", "NextLS", "lexical" } -- alt: credo
 
 -- [ globals ] -----------------------------------------------------------------
 
@@ -59,7 +60,6 @@ _G.mega = mega
     term = {},
     lsp = {},
     icons = require("mega.icons"),
-    ts_ignored_langs = { "svg", "json", "heex", "jsonc" },
     notify = vim.notify,
   }
 

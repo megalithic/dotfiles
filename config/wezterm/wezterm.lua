@@ -310,6 +310,8 @@ end
 
 return {
   -- term = "wezterm",
+  -- send_composed_key_when_left_alt_is_pressed = true,
+  -- send_composed_key_when_right_alt_is_pressed = false,
   adjust_window_size_when_changing_font_size = false,
   exit_behavior = "Close",
   window_close_confirmation = "NeverPrompt",

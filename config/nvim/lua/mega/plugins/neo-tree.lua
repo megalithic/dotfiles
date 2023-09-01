@@ -8,7 +8,6 @@ return {
   dependencies = {
     "nvim-lua/plenary.nvim",
     "MunifTanjim/nui.nvim",
-    "mrbjarksen/neo-tree-diagnostics.nvim",
     {
       "ten3roberts/window-picker.nvim",
       name = "window-picker",
@@ -43,9 +42,7 @@ return {
     require("neo-tree").setup({
       sources = {
         "filesystem",
-        "buffers",
         "git_status",
-        "diagnostics",
       },
       source_selector = {
         winbar = true,

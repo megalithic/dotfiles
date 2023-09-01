@@ -150,6 +150,7 @@ return {
       { "williamboman/mason-lspconfig.nvim" },
       { "b0o/schemastore.nvim" },
       { "mrshmllow/document-color.nvim", event = "BufReadPre" },
+      { "ray-x/lsp_signature.nvim" },
       {
         "MaximilianLloyd/tw-values.nvim",
         cmd = { "TWValues" },
@@ -355,16 +356,7 @@ return {
         credo = { enable = mega.lsp.is_enabled_elixir_ls("credo") },
         nextls = {
           enable = mega.lsp.is_enabled_elixir_ls("NextLS"),
-          version = "*",
-          -- version = "0.10.3",
-          -- single_file_support = true,
-          -- log_level = vim.lsp.protocol.MessageType.Log,
-          -- message_level = vim.lsp.protocol.MessageType.Log,
-          -- filetypes = { "elixir", "eelixir", "heex", "surface" },
-          -- handlers = {
-          --   -- using lexical diagnostics
-          --   ["textDocument/publishDiagnostics"] = function() end,
-          -- },
+          -- version = "*",
         },
         elixirls = {
           enable = mega.lsp.is_enabled_elixir_ls("ElixirLS"),
@@ -381,10 +373,6 @@ return {
           filetypes = { "elixir", "eelixir", "heex", "surface" },
           log_level = vim.lsp.protocol.MessageType.Log,
           message_level = vim.lsp.protocol.MessageType.Log,
-          -- handlers = {
-          --   -- using lexical diagnostics
-          --   ["textDocument/publishDiagnostics"] = function() end,
-          -- },
           on_attach = function(client, bufnr)
             vim.keymap.set(
               "n",

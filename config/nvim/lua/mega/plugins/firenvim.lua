@@ -108,10 +108,6 @@ local M = {
         vim.cmd([[exec "norm gg"]])
       end
 
-      -- expand the firenvim window larger than it should be, (if it's presently less than 25 lines)
-      -- if vim.o.lines < 15 then vim.o.lines = 15 end
-      vim.o.lines = 15
-
       -- We wait to call this function until the firenvim buffer is loaded
       setup_write_autocmd(bufnr)
     end
@@ -141,6 +137,10 @@ local M = {
       vim.opt_local.cursorlineopt = "screenline,number"
       vim.opt_local.cursorline = true
       vim.api.nvim_set_option("buftype", "firenvim")
+
+      -- expand the firenvim window larger than it should be, (if it's presently less than 25 lines)
+      -- if vim.o.lines < 15 then vim.o.lines = 15 end
+      vim.o.lines = 15
 
       vim.cmd([[
       tmap <D-v> <C-w>"+

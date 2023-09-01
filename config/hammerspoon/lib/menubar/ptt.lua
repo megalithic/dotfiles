@@ -27,7 +27,7 @@ obj.mic = hs.audiodevice.defaultInputDevice()
 obj.inputs = hs.audiodevice.allInputDevices()
 
 obj.state = obj.defaultState
-obj.defaultInputVolume = 50
+obj.defaultInputVolume = 65
 obj.pushed = false
 
 local talkIcon = require("hs.styledtext").new("", { font = { name = defaultFont.name, size = 13 } })

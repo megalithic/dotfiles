@@ -33,6 +33,16 @@ mega.augroup("megaline", {
       end
     end,
   },
+  {
+    event = { "BufWritePost" },
+    command = function()
+      -- vim.cmd([[edit]])
+      vim.defer_fn(function()
+        vim.cmd([[TSBufDisable 0]])
+        vim.cmd([[TSBufEnable 0]])
+      end, 1000)
+    end,
+  },
   -- FIXME: remove?
   {
     event = { "CursorMoved" },
