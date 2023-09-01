@@ -1,3 +1,8 @@
+" REF:
+" minpac: https://gist.github.com/slashmili/d1e123e7dc558b876fef244ad8a77169
+" minpac: https://medium.com/pragmatic-programmers/managing-plugins-with-minpac-671a59d90d8c
+" vim-plug: https://github.com/jaspervanbrian/dotfiles-ubuntu/blob/master/.vimrc#L3-L22
+
 " -- [ mappings ] --------------------------------------------------------------
 
 let mapleader = ','

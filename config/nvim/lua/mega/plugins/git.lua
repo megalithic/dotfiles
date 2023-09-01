@@ -160,9 +160,6 @@ return {
           event = { "User" },
           pattern = { "GitConflictDetected" },
           command = function(args)
-            mega.notify("Conflicts detected.")
-            vim.diagnostic.disable(args.buf)
-            vim.cmd("LspStop")
             mega.nnoremap(
               "cq",
               "<cmd>GitConflictListQf<CR>",
@@ -178,18 +175,25 @@ return {
               "<cmd>GitConflictNextConflict<CR>",
               { desc = "git-conflict: next conflict", buffer = args.buf }
             )
-            -- vim.cmd("GitConflictListQf")
+            mega.notify(fmt("%s Conflicts detected.", mega.icons.lsp.error))
+
+            vim.defer_fn(function()
+              vim.diagnostic.disable(args.buf)
+              vim.cmd("LspStop")
+            end, 250)
           end,
         },
         {
           event = { "User" },
           pattern = { "GitConflictResolved" },
           command = function(args)
-            mega.notify("Conflicts resolved.")
-            vim.diagnostic.enable(args.buf)
-            vim.cmd("LspStart")
-            -- pcall(vim["cmd"], "cclose")
-            -- vim.cmd("cclose")
+            -- vim.cmd("write")
+            -- vim.cmd("edit")
+            mega.notify(fmt("%s All conflicts resolved!", mega.icons.lsp.ok))
+            vim.defer_fn(function()
+              vim.diagnostic.enable(args.buf)
+              vim.cmd("LspStart")
+            end, 250)
           end,
         },
       })

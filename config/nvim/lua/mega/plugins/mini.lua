@@ -12,6 +12,15 @@ local function mini_surround()
       -- suffix_last = "",
       -- suffix_next = "",
     },
+    custom_surroundings = {
+      ["("] = { output = { left = "( ", right = " )" } },
+      ["["] = { output = { left = "[ ", right = " ]" } },
+      ["{"] = { output = { left = "{ ", right = " }" } },
+      ["<"] = { output = { left = "<", right = ">" } },
+      ["|"] = { output = { left = "|", right = "|" } },
+      ["%"] = { output = { left = "<% ", right = " %>" } },
+      ["="] = { output = { left = "<%= ", right = " %>" } },
+    },
     n_lines = 500,
     search_method = "cover_or_next", -- alts: cover_or_nearest
   })

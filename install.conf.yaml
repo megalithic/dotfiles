@@ -153,6 +153,9 @@
       force: true
       path: config/tmux
       if: "[ `uname` = Darwin ]"
+    ~/.tmate.conf:
+      force: true
+      path: config/tmux/tmate.conf
     ~/.config/ueberzugpp:
       force: true
       path: config/ueberzugpp
