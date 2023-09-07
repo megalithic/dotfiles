@@ -107,32 +107,32 @@ local function git_files_cwd_aware(opts)
   return fzf.git_files(ivy(opts))
 end
 
--- if vim.g.picker == "fzf" then
---   mega.augroup("FzfStartup", {
---     {
---       event = { "VimEnter" },
---       pattern = { "*" },
---       once = true,
---       command = function(args)
---         if not vim.g.started_by_firenvim then
---           -- Open file browser if argument is a folder
---           -- REF: https://github.com/protiumx/.dotfiles/blob/main/stow/nvim/.config/nvim/lua/config/telescope.lua#L50
---           local fzf = require("fzf-lua")
---           local arg = vim.api.nvim_eval("argv(0)")
---           if arg and (vim.fn.isdirectory(arg) ~= 0 or arg == "") then
---             file_picker(dropdown({
---               -- actions = {
---               --   files = {
---               --     ["default"] = fzf.actions.file_edit,
---               --   },
---               -- },
---             }))
---           end
---         end
---       end,
---     },
---   })
--- end
+if vim.g.picker == "fzf" then
+  mega.augroup("FzfStartup", {
+    {
+      event = { "VimEnter" },
+      pattern = { "*" },
+      once = true,
+      command = function(args)
+        if not vim.g.started_by_firenvim then
+          -- Open file browser if argument is a folder
+          -- REF: https://github.com/protiumx/.dotfiles/blob/main/stow/nvim/.config/nvim/lua/config/telescope.lua#L50
+          local fzf = require("fzf-lua")
+          local arg = vim.api.nvim_eval("argv(0)")
+          if arg and (vim.fn.isdirectory(arg) ~= 0 or arg == "") then
+            file_picker(dropdown({
+              -- actions = {
+              --   files = {
+              --     ["default"] = fzf.actions.file_edit,
+              --   },
+              -- },
+            }))
+          end
+        end
+      end,
+    },
+  })
+end
 
 local keys = {}
 if vim.g.picker == "fzf" then

@@ -125,9 +125,9 @@ local function setup_autocommands(client, bufnr)
   end
 
   local supports_highlight = (client and client.server_capabilities.documentHighlightProvider == true)
-  local supports_inlay_hints = (client and client.server_capabilities.inlayHintProvider == true)
-  local supports_references = (client and client.server_capabilities.referencesProvider == true)
-  local supports_definition = (client and client.server_capabilities.definitionProvider == true)
+  -- local supports_inlay_hints = (client and client.server_capabilities.inlayHintProvider == true)
+  -- local supports_references = (client and client.server_capabilities.referencesProvider == true)
+  -- local supports_definition = (client and client.server_capabilities.definitionProvider == true)
 
   augroup("LspCodeLens", {
     {
@@ -316,7 +316,6 @@ end
 -- [ DIAGNOSTICS ] -------------------------------------------------------------
 
 -- FIXME:
---
 -- Error executing vim.schedule lua callback: Vim:E474: Invalid argument
 -- stack traceback:
 -- 	[C]: in function 'sign_place'
@@ -335,9 +334,7 @@ end
 -- 	/usr/local/share/nvim/runtime/lua/vim/lsp/diagnostic.lua:236: in function 'handler'
 -- 	/usr/local/share/nvim/runtime/lua/vim/lsp.lua:1164: in function ''
 -- 	vim/_editor.lua: in function <vim/_editor.lua:0>
-
-local function setup_diagnostics(client, bufnr)
-  -- ( signs ) --
+local function setup_diagnostics(client, _bufnr)
   local function sign(opts)
     fn.sign_define(opts.hl, {
       text = opts.icon,
@@ -347,31 +344,30 @@ local function setup_diagnostics(client, bufnr)
       -- linehl = opts.hl .. "Line",
     })
   end
-
   sign({ hl = "DiagnosticSignError", icon = mega.icons.lsp.error })
   sign({ hl = "DiagnosticSignWarn", icon = mega.icons.lsp.warn })
   sign({ hl = "DiagnosticSignInfo", icon = mega.icons.lsp.info })
   sign({ hl = "DiagnosticSignHint", icon = mega.icons.lsp.hint })
 
   --- Restricts nvim's diagnostic signs to only the single most severe one per line
-  --- @see `:help vim.diagnostic`
+  -- REF: `:help vim.diagnostic`
   -- TODO: https://github.com/kristijanhusak/neovim-config/blob/master/nvim/lua/partials/lsp.lua#L152-L159
-  -- local ns = api.nvim_create_namespace("severe-diagnostics")
-  -- local function max_diagnostic(callback)
-  --   return function(_, bufnr, _, opts)
-  --     -- Get all diagnostics from the whole buffer rather than just the
-  --     -- diagnostics passed to the handler
-  --     local diagnostics = vim.diagnostic.get(bufnr)
-  --     -- Find the "worst" diagnostic per line
-  --     local max_severity_per_line = {}
-  --     for _, d in pairs(diagnostics) do
-  --       local m = max_severity_per_line[d.lnum]
-  --       if not m or d.severity < m.severity then max_severity_per_line[d.lnum] = d end
-  --     end
-  --     local new_diags = vim.tbl_values(max_severity_per_line)
-  --     callback(ns, bufnr, new_diags, opts)
-  --   end
-  -- end
+  local ns = api.nvim_create_namespace("severe-diagnostics")
+  local function max_diagnostic(callback)
+    return function(_, bufnr, _, opts)
+      -- Get all diagnostics from the whole buffer rather than just the
+      -- diagnostics passed to the handler
+      local diagnostics = vim.diagnostic.get(bufnr)
+      -- Find the "worst" diagnostic per line
+      local max_severity_per_line = {}
+      for _, d in pairs(diagnostics) do
+        local m = max_severity_per_line[d.lnum]
+        if not m or d.severity < m.severity then max_severity_per_line[d.lnum] = d end
+      end
+      local new_diags = vim.tbl_values(max_severity_per_line)
+      callback(ns, bufnr, new_diags, opts)
+    end
+  end
 
   --   local signs_handler = diagnostic.handlers.signs
   --   diagnostic.handlers.signs = vim.tbl_extend("force", signs_handler, {
@@ -379,11 +375,11 @@ local function setup_diagnostics(client, bufnr)
   --     hide = function(_, bufnr) signs_handler.hide(ns, bufnr) end,
   --   })
 
-  -- local virt_text_handler = diagnostic.handlers.virtual_text
-  -- diagnostic.handlers.virtual_text = vim.tbl_extend("force", virt_text_handler, {
-  --   show = max_diagnostic(virt_text_handler.show),
-  --   hide = function(_, bufnr) virt_text_handler.hide(ns, bufnr) end,
-  -- })
+  local virt_text_handler = diagnostic.handlers.virtual_text
+  diagnostic.handlers.virtual_text = vim.tbl_extend("force", virt_text_handler, {
+    show = max_diagnostic(virt_text_handler.show),
+    hide = function(_, bufnr) virt_text_handler.hide(ns, bufnr) end,
+  })
 
   local max_width = math.min(math.floor(vim.o.columns * 0.7), 100)
   local max_height = math.min(math.floor(vim.o.lines * 0.3), 30)
@@ -395,12 +391,10 @@ local function setup_diagnostics(client, bufnr)
     underline = { severity = { min = diagnostic.severity.HINT } },
     severity_sort = true,
     virtual_text = {
-      -- spacing = 1,
-      -- prefix = function(d)
-      --   dd(fmt("virtual_text_prefix: %s", I(d)))
-      --   local level = diagnostic.severity[d.severity]
-      --   return mega.icons.lsp[level:lower()]
-      -- end,
+      prefix = function(d)
+        local level = diagnostic.severity[d.severity]
+        return mega.icons.lsp[level:lower()]
+      end,
       source = "always", -- or "always", "if_many" (for more than one source)
       severity = { min = diagnostic.severity.ERROR },
       format = function(d)
@@ -414,7 +408,7 @@ local function setup_diagnostics(client, bufnr)
     update_in_insert = false,
     float = {
       show_header = true,
-      source = "if_many", -- or "always", "if_many" (for more than one source)
+      source = "always", -- or "always", "if_many" (for more than one source)
       border = mega.get_border(),
       focusable = false,
       severity_sort = true,
@@ -564,8 +558,9 @@ local function on_attach(client, bufnr)
       -- hint_inline = function()
       --   return true
       -- end,
-      handler_opts = { border = "rounded" },
+      handler_opts = { border = mega.get_border() },
       hint_prefix = "",
+      hint_enable = false,
       fixpos = true,
       padding = " ",
     }, bufnr)
@@ -605,6 +600,10 @@ local function get_server_capabilities()
   capabilities.textDocument.colorProvider = { dynamicRegistration = false }
   capabilities.textDocument.completion.completionItem.documentationFormat = { "markdown" }
   -- textDocument = { foldingRange = { dynamicRegistration = false, lineFoldingOnly = true } },
+
+  -- FIX: https://github.com/neovim/neovim/issues/23291
+  -- NOTE: this might break nextls/elixirls:
+  -- capabilities.workspace.didChangeWatchedFiles.dynamicRegistration = false
 
   -- disable semantic token highlighting
   -- capabilities.textDocument.semanticTokensProvider = false

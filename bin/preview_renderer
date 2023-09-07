@@ -1,0 +1,23 @@
+#!/usr/bin/env sh
+#
+# Source of inspiration: https://github.com/junegunn/fzf/issues/1928
+# Was initially needed to not render `bat` errors into the preview window
+
+set -eu
+IFS=$(printf '\n\t')
+
+INPUT="$1"
+
+if [ -d "$INPUT" ]; then
+    tree "$INPUT"
+elif [ -f "$INPUT" ]; then
+    case "$INPUT" in
+    # TODO: use https://github.com/jstkdng/ueberzugpp/blob/master/scripts/fzfub when ueberzugpp will be in the homebrew upstream
+    # More info: https://github.com/junegunn/fzf/issues/3228#issuecomment-1517845143
+    *".jpg" | *".jpeg" | *".png" | *".gif" | *".tiff") catimg "$INPUT" ;;
+    *".pdf" | *".djvu") zathura "$INPUT" ;;
+    *) bat --color=always --style numbers,changes "$INPUT" ;;
+    esac
+else
+    printf "%s" "$INPUT"
+fi

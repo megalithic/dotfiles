@@ -391,7 +391,7 @@ return {
     mini_indentscope()
     -- mini_jump()
     mini_hipatterns()
-    mini_clue()
+    -- mini_clue()
     -- mini_ai()
   end,
 }

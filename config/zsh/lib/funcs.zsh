@@ -1,23 +1,6 @@
 #!/usr/bin/env zsh
 # shellcheck shell=bash
 
-# Kitty functions
-# REF: https://dev.to/dylanirlbeck/kitty-sessions-44j2
-function kt-mega() {
-  export PROJECT_DIR=$1
-  kitty --session ~/.dotfiles/config/kitty/mega.conf
-}
-
-function kt-atlas() {
-  export PROJECT_DIR=$1
-  kitty --session ~/.dotfiles/config/kitty/atlas.conf
-}
-
-function kt-app() {
-  export PROJECT_DIR=$1
-  kitty --session ~/.dotfiles/config/kitty/app.conf
-}
-
 function mixx() {
   mix $(mix help --names | fzf --delimiter=' ' --preview 'mix help {}' --reverse)
 }

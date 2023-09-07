@@ -8,6 +8,7 @@ return {
   dependencies = {
     "nvim-lua/plenary.nvim",
     "MunifTanjim/nui.nvim",
+    "adelarsq/image_preview.nvim",
     {
       "ten3roberts/window-picker.nvim",
       name = "window-picker",
@@ -132,6 +133,7 @@ return {
         position = "left",
         width = 60,
         mappings = {
+          ["I"] = "image_wezterm", -- "<Leader>p" instead of "I" if you want the same as NvimTree
           o = "toggle_node",
           ["/"] = "noop",
           ["n"] = "noop",
@@ -145,6 +147,12 @@ return {
           ["<esc>"] = "revert_preview",
           ["P"] = { "toggle_preview", config = { use_float = true } },
         },
+      },
+      commands = {
+        image_wezterm = function(state)
+          local node = state.tree:get_node()
+          if node.type == "file" then require("image_preview").PreviewImage(node.path) end
+        end,
       },
     })
   end,

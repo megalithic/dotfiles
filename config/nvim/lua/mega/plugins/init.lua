@@ -47,9 +47,9 @@ return {
   },
   {
     "3rd/image.nvim",
-    cond = false, -- not vim.g.started_by_firenvim,
+    enabled = false,
     ft = { "markdown" },
-    -- build = "luarocks --local install magick",
+    build = "luarocks --local install magick",
     opts = {
       backend = "kitty",
       integrations = {
@@ -72,7 +72,7 @@ return {
   {
     "mbbill/undotree",
     cmd = "UndotreeToggle",
-    keys = { { "<leader>u", "<Cmd>UndotreeToggle<CR>", desc = "undotree: toggle" } },
+    keys = { { "<leader>U", "<Cmd>UndotreeToggle<CR>", desc = "undotree: toggle" } },
     config = function()
       vim.g.undotree_TreeNodeShape = "◦" -- Alternative: '◉'
       vim.g.undotree_SetFocusWhenToggle = 1
@@ -152,22 +152,6 @@ return {
       { "mrshmllow/document-color.nvim", event = "BufReadPre" },
       { "ray-x/lsp_signature.nvim" },
       {
-        "MaximilianLloyd/tw-values.nvim",
-        cmd = { "TWValues" },
-        -- keys = {
-        --   { "<leader>sv", "<cmd>TWValues<cr>", desc = "Show tailwind CSS values" },
-        -- },
-        opts = {
-          border = mega.get_border(), -- Valid window border style,
-          show_unknown_classes = true, -- Shows the unknown classes popup
-          focus_preview = true, -- Sets the preview as the current window
-          copy_register = "", -- The register to copy values to,
-          keymaps = {
-            copy = "<C-y>", -- Normal mode keymap to copy the CSS values between {}
-          },
-        },
-      },
-      {
         "mhanberg/output-panel.nvim",
         keys = {
           {
@@ -186,50 +170,6 @@ return {
         config = function() require("output_panel").setup() end,
       },
       -- {
-      --   "mhanberg/control-panel.nvim",
-      --   event = "VeryLazy",
-      --   keys = {
-      --     {
-      --       "<localleader>lop",
-      --       "<cmd>ControlPanel toggle output-panel<CR>",
-      --       desc = "lsp: open output panel",
-      --     },
-      --     {
-      --       "<leader>lip",
-      --       "<cmd>ControlPanel toggle output-panel<CR>",
-      --       desc = "open output panel",
-      --     },
-      --   },
-      --   config = true,
-      --   -- config = function()
-      --   --   local cp = require("control_panel")
-      --   --   cp.register({
-      --   --     id = "output-panel",
-      --   --     title = "Output Panel",
-      --   --   })
-      --   --
-      --   --   local handler = vim.lsp.handlers["window/logMessage"]
-      --   --
-      --   --   vim.lsp.handlers["window/logMessage"] = function(err, result, context)
-      --   --     handler(err, result, context)
-      --   --     if not err then
-      --   --       local client_id = context.client_id
-      --   --       local client = vim.lsp.get_client_by_id(client_id)
-      --   --
-      --   --       if not cp.panel("output-panel"):has_tab(client.name) then
-      --   --         cp.panel("output-panel")
-      --   --           :tab({ name = client.name, key = tostring(#cp.panel("output-panel"):tabs() + 1) })
-      --   --       end
-      --   --
-      --   --       cp.panel("output-panel"):append({
-      --   --         tab = client.name,
-      --   --         text = "[" .. vim.lsp.protocol.MessageType[result.type] .. "] " .. result.message,
-      --   --       })
-      --   --     end
-      --   --   end
-      --   -- end,
-      -- },
-      -- {
       --   "pmizio/typescript-tools.nvim",
       --   enabled = false,
       --   ft = { "typescript", "typescriptreact", "javascript", "javascriptreact" },
@@ -240,7 +180,6 @@ return {
       --     },
       --   },
       -- },
-
       -- {
       --   "pmizio/typescript-tools.nvim",
       --   ft = {
@@ -455,6 +394,13 @@ return {
       skip_confirm_for_simple_edits = true,
       restore_win_options = false,
       prompt_save_on_select_new_entry = false,
+      keymaps = {
+        ["gp"] = function()
+          local oil = require("oil")
+          local entry = oil.get_cursor_entry()
+          require("image_preview").PreviewImage(oil.get_current_dir() .. entry.parsed_name)
+        end,
+      },
     },
     keys = {
       {
@@ -841,28 +787,21 @@ return {
       end)
     end,
   },
-  -- {
-  --   "gaoDean/autolist.nvim",
-  --   ft = { "markdown" },
-  --   config = function()
-  --     local autolist = require("autolist")
-  --     autolist.setup()
-  --     autolist.create_mapping_hook("i", "<CR>", autolist.new)
-  --     autolist.create_mapping_hook("i", "<Tab>", autolist.indent)
-  --     autolist.create_mapping_hook("i", "<S-Tab>", autolist.indent, "<C-D>")
-  --     autolist.create_mapping_hook("n", "o", autolist.new)
-  --     autolist.create_mapping_hook("n", "O", autolist.new_before)
-  --     autolist.create_mapping_hook("n", ">>", autolist.indent)
-  --     autolist.create_mapping_hook("n", "<<", autolist.indent)
-  --     autolist.create_mapping_hook("n", "<C-r>", autolist.force_recalculate)
-  --     autolist.create_mapping_hook("n", "<leader>x", autolist.invert_entry, "")
-  --     autolist.create_mapping_hook("n", "<C-c>", autolist.invert_entry, "")
-  --     vim.api.nvim_create_autocmd("TextChanged", {
-  --       pattern = "*",
-  --       callback = function() vim.cmd.normal({ autolist.force_recalculate(nil, nil), bang = false }) end,
-  --     })
-  --   end,
-  -- },
+  {
+    enabled = false,
+    "gaoDean/autolist.nvim",
+    ft = "markdown",
+    version = "2.3.0",
+    config = function()
+      local al = require("autolist")
+      al.setup()
+      al.create_mapping_hook("i", "<CR>", al.new)
+      al.create_mapping_hook("i", "<Tab>", al.indent)
+      al.create_mapping_hook("i", "<S-Tab>", al.indent, "<C-d>")
+      al.create_mapping_hook("n", "o", al.new)
+      al.create_mapping_hook("n", "O", al.new_before)
+    end,
+  },
   {
     "lukas-reineke/headlines.nvim",
     ft = { "markdown" },
@@ -887,7 +826,7 @@ return {
     end,
   },
 
-  -- ( Syntax/Languages ) ------------------------------------------------------
+  -- ( Syntax/Languages/langs ) ------------------------------------------------------
   { "ii14/emmylua-nvim", ft = "lua" },
   { "elixir-editors/vim-elixir", event = "VeryLazy" }, -- nvim exceptions thrown when not installed
   { "imsnif/kdl.vim", ft = "kdl" },
@@ -895,4 +834,96 @@ return {
   { "fladson/vim-kitty", ft = "kitty" },
   { "SirJson/fzf-gitignore", config = function() vim.g.fzf_gitignore_no_maps = true end },
   { "boltlessengineer/bufterm.nvim", config = true, cmd = { "BufTermEnter", "BufTermNext", "BufTermPrev" } },
+  {
+    "axelvc/template-string.nvim",
+    ft = {
+      "typescript",
+      "typescriptreact",
+      "javascript",
+      "javascriptreact",
+    },
+    opts = {},
+  },
+
+  {
+    "pmizio/typescript-tools.nvim",
+    ft = {
+      "typescript",
+      "typescriptreact",
+      "javascript",
+      "javascriptreact",
+    },
+    -- event = "VeryLazy",
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      "neovim/nvim-lspconfig",
+      "williamboman/mason.nvim",
+    },
+    opts = {
+      settings = {
+        -- tsserver_path = tsserver_path .. "/node_modules/typescript/lib/tsserver.js",
+        separate_diagnostic_server = false,
+        publish_diagnostic_on = "insert_leave",
+        expose_as_code_action = { "fix_all", "add_missing_imports", "remove_unused" },
+        tsserver_max_memory = 4096, -- or "auto"
+        -- complete_function_calls = false,
+        -- handlers = {
+        --   ["textDocument/publishDiagnostics"] = api.filter_diagnostics(
+        --     -- Ignore 'This may be converted to an async function' diagnostics.
+        --     -- { 80006 }
+        --     {}
+        --   ),
+        -- },
+        -- tsserver_plugins = { "styled-components" }, -- npm i -g typescript-styled-plugin
+        tsserver_file_preferences = {
+          -- allowIncompleteCompletions = true,
+          -- allowRenameOfImportPath = true,
+          -- allowTextChangesInNewFiles = true,
+          -- disableLineTextInReferences = true,
+          -- displayPartsForJSDoc = true,
+          -- generateReturnInDocTemplate = true,
+          -- importModuleSpecifier = "non-relative",
+          -- importModuleSpecifierEnding = "auto",
+          -- includeAutomaticOptionalChainCompletions = true,
+          -- includeCompletionsForImportStatements = true,
+          -- includeCompletionsWithClassMemberSnippets = true,
+          -- includeCompletionsWithObjectLiteralMethodSnippets = true,
+          -- includeCompletionsWithSnippetText = true,
+          -- includeInlayEnumMemberValueHints = false,
+          -- includeInlayFunctionLikeReturnTypeHints = false,
+          -- includeInlayFunctionParameterTypeHints = false,
+          -- includeInlayParameterNameHints = "all",
+          -- includeInlayParameterNameHintsWhenArgumentMatchesName = false,
+          -- includeInlayPropertyDeclarationTypeHints = false,
+          -- includeInlayVariableTypeHints = true,
+          -- includeInlayVariableTypeHintsWhenTypeMatchesName = false,
+          -- jsxAttributeCompletionStyle = "auto",
+          -- providePrefixAndSuffixTextForRename = true,
+          -- provideRefactorNotApplicableReason = true,
+          -- quotePreference = "auto",
+          -- useLabelDetailsInCompletionEntries = true,
+        },
+        tsserver_format_options = {
+          -- indentSwitchCase = true,
+          -- insertSpaceAfterCommaDelimiter = true,
+          -- insertSpaceAfterConstructor = false,
+          -- insertSpaceAfterFunctionKeywordForAnonymousFunctions = true,
+          -- insertSpaceAfterKeywordsInControlFlowStatements = true,
+          -- insertSpaceAfterOpeningAndBeforeClosingEmptyBraces = true,
+          -- insertSpaceAfterOpeningAndBeforeClosingJsxExpressionBraces = false,
+          -- insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces = true,
+          -- insertSpaceAfterOpeningAndBeforeClosingNonemptyBrackets = false,
+          -- insertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis = false,
+          -- insertSpaceAfterOpeningAndBeforeClosingTemplateStringBraces = false,
+          -- insertSpaceAfterSemicolonInForStatements = true,
+          -- insertSpaceAfterTypeAssertion = false,
+          -- insertSpaceBeforeAndAfterBinaryOperators = true,
+          -- insertSpaceBeforeFunctionParenthesis = false,
+          -- placeOpenBraceOnNewLineForControlBlocks = false,
+          -- placeOpenBraceOnNewLineForFunctions = false,
+          -- semicolons = "ignore",
+        },
+      },
+    },
+  },
 }

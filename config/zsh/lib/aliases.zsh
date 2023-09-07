@@ -464,3 +464,171 @@ alias tmlaunch="~/.dotfiles/bin/tmux-launch"
 alias tmexpo="sh tmux-launch expo 'cd ~/code/outstand/mobile; expo start'"
 
 alias compress="c() { zip -f "$1".zip "$1"} && c $1"
+
+alias yt='yt-dlp --sponsorblock-remove default --part --format "bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4]"'
+alias ytaudio='yt --extract-audio --audio-format mp3 --audio-quality 0 --write-thumbnail'
+
+# FUNCTIONS
+# ------------------------------------------------------------------------------
+
+function get_workdir () { basename "$PWD" | sed -e s'/[.-]/_/g' }
+
+function mixx() {
+  mix $(mix help --names | fzf --delimiter=' ' --preview 'mix help {}' --reverse)
+}
+
+function zknew() {
+  local note_title="${*:-}"
+
+  if [[ -z "$note_title" ]]; then
+    vared -p "$(tput bold)$(tput setaf 5) new note title:$(tput sgr 0) " -c note_title
+  fi
+
+  if [[ -z "$note_title" ]]; then
+    zk new
+  else
+    zk new --title "$note_title"
+  fi
+}
+
+fuzzy-xdg-open() {
+  local output
+  output=$(fzf --height 40% --reverse </dev/tty) && xdg-open ${(q-)output}
+  zle reset-prompt
+}
+
+zle -N fuzzy-xdg-open
+bindkey '^o' fuzzy-xdg-open
+
+# Shorten Github URL with vanity (url, vanity code) - saves to clipboard!
+ghurl() {
+  curl -i -s https://git.io -F "url=$1" -F "code=$2" | rg "Location" | cut -f 2 -d " " | pbcopy
+}
+
+function __close_all_apps() {
+  if [[ "$(uname)" != "Darwin" ]]; then
+    exit 0
+  fi
+
+  apps=$(osascript -e 'tell application "System Events" to get name of (processes where background only is false)' | awk -F ', ' '{for(i=1;i<=NF;i++) printf "%s;", $i}')
+  while [ "$apps" ] ;do
+    app=${apps%%;*}
+    if [[ $app != 'alacritty' && $app != 'kitty' ]]
+    then
+      pkill -x echo $app
+    fi
+
+    [ "$apps" = "$app" ] && \
+      apps='' || \
+      apps="${apps#*;}"
+  done
+}
+
+function reboot() {
+  __close_all_apps
+
+  sudo reboot
+}
+
+function shutdown() {
+  __close_all_apps
+
+  sudo shutdown -h now
+}
+
+function def() {
+  cmd="${@[$#]}" # last argument
+  res=$(whence -v "$cmd"); raw=$(whence "$cmd" | cut -d ' ' -f 1); lesscmd='less'
+  [ x"$cmd" = x"$raw" ] && res=${res//an alias/a recursive}
+  [ $(alias less &>/dev/null; echo $?) -eq 0 ] && lesscmd="$lesscmd -l zsh -pn"
+  echo "$res"; draw_help () { c=$(basename $1); tldr $c 2>/dev/null || eval "$1 --help | $MANPAGER" || man $c }
+  case $res in
+    *'not found'*)  checkyes "Google it?" && eval "?g linux cli $cmd";;
+    *function*)     (printf '#!/usr/bin/env zsh\n\n'; whence -f "$raw") | eval "$lesscmd" ;;
+    *alias*)        def "$raw" ;;
+    *)              echo; draw_help "$raw"; whence "$raw" ;; # binary, builtin
+  esac
+}
+
+function dotenv() {
+  [ -f .env ] && source .env
+  [ -f .env.sh ] && source .env.sh
+  return 0
+}
+
+function ex() {
+  for filename in "$@"; do
+    if [ -f "$filename" ]; then
+      case "$filename" in
+        *.tar.bz2)  tar xjf "$filename"  ;;
+        *.tar.gz)   tar xzf "$filename"  ;;
+        *.bz2)      bunzip2 "$filename"  ;;
+        *.rar)      unrar x "$filename"  ;;
+        *.gz)       gunzip "$filename"   ;;
+        *.tar)      tar xf "$filename"   ;;
+        *.tbz2)     tar xjf "$filename"  ;;
+        *.tgz)      tar xzf "$filename"  ;;
+        *.zip)      unzip "$filename"    ;;
+        *.Z)        uncompress "$filename";;
+        *.7z)       7z x "$filename"     ;;
+        *)          echo "'$filename' cannot be extracted via ex()" ;;
+      esac
+    else
+      echo "'$filename' is not found"
+    fi
+  done
+}
+
+function pfwd() {
+  # ssh -fNT -L 127.0.0.1:$2:127.0.0.1:$2 $1 && echo "Port forward to: http://127.0.0.1:$2"
+  svr="$1"; port="$2"; shift 2
+  eval "ssh -fNT $@ 127.0.0.1:${port}:127.0.0.1:${port} ${svr}" && echo "Port forward to: http://127.0.0.1:${port}"
+}
+
+function bak() {
+  for filename in $@; do
+    bak_file="$filename.bak"
+    if [ -f "$filename" ]; then
+      mv -i "$filename" "$bak_file"
+      [ -f "$filename" ] && warning "Skipping $filename"
+    fi
+  done
+}
+
+function rebak() {
+  for filename in $@; do
+    if ! [[ x"$filename" =~ .*bak ]]; then
+      error "$filename does not end with '.bak'. Skipping."
+      continue
+    fi
+    bak_file="${filename:r}"
+    if [ -f "$filename" ]; then
+      mv -i "$filename" "${bak_file}"
+      [ -f "$filename" ] && warning "Skipping $filename"
+    fi
+  done
+}
+
+alias unbak="rebak"
+
+# cdr: run fzf with dir history
+if [[ -n $(echo ${^fpath}/chpwd_recent_dirs(N)) && -n $(echo ${^fpath}/cdr(N)) ]]; then
+  autoload -Uz chpwd_recent_dirs cdr add-zsh-hook
+  add-zsh-hook chpwd chpwd_recent_dirs
+  zstyle ':completion:*' recent-dirs-insert both
+  zstyle ':chpwd:*' recent-dirs-default true
+  zstyle ':chpwd:*' recent-dirs-max 1000
+  zstyle ':chpwd:*' recent-dirs-file "$HOME/.cache/chpwd-recent-dirs"
+fi
+function fzf-cdr() {
+  local selected_dir="$(cdr -l | sed 's/^[0-9]\+ \+//' | fzf --query="$LBUFFER" --prompt='cd > ' +s --preview 'eval exa -aFhl {}')"
+  if [ -n "$selected_dir" ]; then
+    BUFFER="cd ${selected_dir}"
+    zle accept-line
+  else
+    BUFFER=''
+    zle accept-line
+  fi
+}
+zle -N fzf-cdr
+bindkey '^E' fzf-cdr

@@ -122,13 +122,14 @@ return {
         disallow_partial_fuzzy_matching = false,
       },
       enabled = function()
+        local context = require("cmp.config.context")
         if vim.bo.buftype == "prompt" or vim.g.started_by_firenvim then return false end
-
-        return true
+        return not context.in_treesitter_capture("comment") and not context.in_syntax_group("Comment")
       end,
       preselect = cmp.PreselectMode.None,
       entries = { name = "custom", selection_order = "near_cursor" },
       completion = {
+        max_item_count = 50,
         keyword_length = 1,
         get_trigger_characters = function(trigger_characters)
           return vim.tbl_filter(function(char) return char ~= " " end, trigger_characters)
@@ -239,6 +240,9 @@ return {
             item.kind = fmt("%s %s", mega.icons.lsp.kind[item.kind], item.kind)
           end
 
+          -- REF: https://github.com/3rd/config/blob/master/home/dotfiles/nvim/lua/modules/completion/nvim-cmp.lua
+          item.dup = 0
+
           -- REF: https://github.com/zolrath/dotfiles/blob/main/dot_config/nvim/lua/plugins/cmp.lua#L45
           -- local max_length = 20
           local max_length = math.floor(vim.o.columns * 0.5)
@@ -271,6 +275,12 @@ return {
       sorting = {
         priority_weight = 2,
         comparators = {
+          -- proximity
+          function(a, b)
+            if require("cmp_buffer"):compare_locality(a, b) then return true end
+            return false
+          end,
+          cmp.config.compare.locality,
           cmp.config.compare.offset,
           cmp.config.compare.exact,
           cmp.config.compare.sort_text,

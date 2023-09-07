@@ -34,10 +34,13 @@ mega.augroup("megaline", {
     end,
   },
   -- HACK: this is a wip here to try and fix an issue where saves aren't fixing weird treesitter syntax highlighting things. would love to disable TS and renable, but that doesn't work either
-  {
-    event = { "BufWritePost" },
-    command = function() pcall(vim.cmd.redraw) end,
-  },
+  -- {
+  --   event = { "BufWritePost" },
+  --   command = function()
+  --     -- vim.cmd(fmt("edit | :%d", vim.fn.line(".")))
+  --     vim.cmd("edit")
+  --   end,
+  -- },
   -- FIXME: remove? flaky fails at the redrawstatus
   {
     event = { "CursorMoved" },
@@ -497,7 +500,7 @@ end
 local function seg_mode(truncate_at)
   local mode_info = MODES[api.nvim_get_mode().mode]
   local mode = is_truncated(truncate_at) and mode_info.short or mode_info.long
-  return seg(string.upper(mode), mode_info.hl, { margin = { 1, 1 } })
+  return seg(string.upper(mode), mode_info.hl, { padding = { 1, 1 } })
 end
 
 local function seg_lsp_status(truncate_at)

@@ -135,7 +135,12 @@ do
       event = { "BufWritePost" },
       command = function()
         if string.match(vim.fn.getline(1), "^#!") ~= nil then
-          if string.match(vim.fn.getline(1), "/bin/") ~= nil then vim.cmd([[!chmod a+x <afile>]]) end
+          if string.match(vim.fn.getline(1), "/bin/") ~= nil then
+            vim.cmd([[!chmod a+x <afile>]])
+            local filename = vim.fs.basename(api.nvim_buf_get_name(0))
+            vim.notify(fmt("making %s executable", filename))
+            vim.cmd("edit!")
+          end
         end
       end,
     },

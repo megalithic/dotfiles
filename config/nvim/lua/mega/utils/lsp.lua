@@ -330,6 +330,7 @@ end
 
 function M.rename_file()
   local old_name = api.nvim_buf_get_name(0)
+  -- vim.fs.basename(old_name)
   -- nvim_buf_get_name(0)
   -- -- -> fnamemodify(':t')
   -- vim.fs.basename(vim.api.nvim_buf_get_name(0))

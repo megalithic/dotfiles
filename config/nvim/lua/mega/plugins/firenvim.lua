@@ -60,6 +60,33 @@ local M = {
       },
     }
 
+    local function set_options()
+      -- disable headlines (until we update colours for forestbones)
+      local ok_headlines, headlines = mega.require("headlines")
+      if ok_headlines then
+        headlines.setup({
+          markdown = {
+            headline_highlights = false,
+            dash_highlight = false,
+            codeblock_highlight = false,
+          },
+        })
+      end
+
+      vim.opt.ruler = false
+      vim.opt.wrap = true
+      vim.opt.linebreak = true
+      vim.opt.laststatus = 0
+      vim.opt.showtabline = 0
+      vim.opt.smoothscroll = false
+      vim.opt_local.relativenumber = false
+      vim.opt_local.signcolumn = "no"
+      vim.opt_local.statuscolumn = ""
+      vim.opt_local.cursorlineopt = "screenline,number"
+      vim.opt_local.cursorline = true
+      vim.api.nvim_set_option("buftype", "firenvim")
+    end
+
     local timer = nil
     local function throttle_write(delay, bufnr)
       if timer then timer:close() end
@@ -72,6 +99,7 @@ local M = {
           timer = nil
           if vim.api.nvim_buf_get_option(bufnr, "modified") then
             vim.api.nvim_buf_call(bufnr, function() vim.cmd("silent! write") end)
+            vim.o.lines = 30
           end
         end)
       )
@@ -108,39 +136,17 @@ local M = {
         vim.cmd([[exec "norm gg"]])
       end
 
+      -- expand the firenvim window larger than it should be, (if it's presently less than 25 lines)
+      -- if vim.o.lines < 15 then vim.o.lines = 15 end
+      vim.o.lines = 30
+
       -- We wait to call this function until the firenvim buffer is loaded
       setup_write_autocmd(bufnr)
+      set_options()
     end
 
     local function on_uienter(params)
-      -- disable headlines (until we update colours for forestbones)
-      local ok_headlines, headlines = mega.require("headlines")
-      if ok_headlines then
-        headlines.setup({
-          markdown = {
-            headline_highlights = false,
-            dash_highlight = false,
-            codeblock_highlight = false,
-          },
-        })
-      end
-
-      vim.opt.ruler = false
-      vim.opt.wrap = true
-      vim.opt.linebreak = true
-      vim.opt.laststatus = 0
-      vim.opt.showtabline = 0
-      vim.opt.smoothscroll = false
-      vim.opt_local.relativenumber = false
-      vim.opt_local.signcolumn = "no"
-      vim.opt_local.statuscolumn = ""
-      vim.opt_local.cursorlineopt = "screenline,number"
-      vim.opt_local.cursorline = true
-      vim.api.nvim_set_option("buftype", "firenvim")
-
-      -- expand the firenvim window larger than it should be, (if it's presently less than 25 lines)
-      -- if vim.o.lines < 15 then vim.o.lines = 15 end
-      vim.o.lines = 15
+      set_options()
 
       vim.cmd([[
       tmap <D-v> <C-w>"+

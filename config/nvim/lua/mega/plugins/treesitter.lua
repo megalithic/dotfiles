@@ -2,14 +2,6 @@
 -- https://github.com/vsedov/nvim/blob/master/lua/modules/lang/treesitter.lua
 
 return {
-  -- {
-  --   "ckolkey/ts-node-action",
-  --   dependencies = { "nvim-treesitter" },
-  --   config = function()
-  --     require("ts-node-action").setup()
-  --     nmap("K", require("ts-node-action").node_action, { desc = "Trigger Node Action" })
-  --   end,
-  -- },
   {
     "laytan/tailwind-sorter.nvim",
     dependencies = {
@@ -23,10 +15,10 @@ return {
     },
   },
   {
+    enabled = false,
     "nvim-treesitter/nvim-treesitter-context",
     event = "BufReadPre",
     opts = {
-      enabled = true,
       separator = "▁", -- "TreesitterContextBorder" }, -- alts: ▁ ─ ▄─▁
       min_window_height = 5,
       mode = "topline",
@@ -35,26 +27,6 @@ return {
     },
   },
   { "nvim-treesitter/playground", cmd = { "TSPlaygroundToggle", "TSHighlightCapturesUnderCursor" } },
-  -- {
-  --   "mfussenegger/nvim-treehopper",
-  --   keys = {
-  --     {
-  --       "m",
-  --       function() require("tsht").nodes() end,
-  --       desc = "treehopper: toggle",
-  --       mode = "o",
-  --       noremap = false,
-  --       silent = true,
-  --     },
-  --     {
-  --       "m",
-  --       ":lua require('tsht').nodes()<CR>",
-  --       desc = "treehopper: toggle",
-  --       mode = "x",
-  --       silent = true,
-  --     },
-  --   },
-  -- },
   {
     "nvim-treesitter/nvim-treesitter",
     build = ":TSUpdate",
@@ -116,6 +88,25 @@ return {
       ft_to_parser("zsh", "bash")
       ft_to_parser("kittybuf", "bash")
 
+      local parser_configs = require("nvim-treesitter.parsers").get_parser_configs()
+      parser_configs.norg = {
+        install_info = {
+          url = "https://github.com/nvim-neorg/tree-sitter-norg",
+          files = { "src/parser.c", "src/scanner.cc" },
+          branch = "main",
+        },
+      }
+
+      parser_configs.norg_meta = {
+        install_info = {
+          url = "https://github.com/nvim-neorg/tree-sitter-norg-meta",
+          files = { "src/parser.c" },
+          branch = "main",
+        },
+      }
+
+      vim.treesitter.language.register("gitcommit", "NeogitCommitMessage")
+
       require("nvim-treesitter.configs").setup({
         auto_install = false,
         ensure_installed = {
@@ -156,6 +147,8 @@ return {
           "markdown",
           "markdown_inline",
           "nix",
+          "norg",
+          "norg_meta",
           "perl",
           "psv",
           "python",

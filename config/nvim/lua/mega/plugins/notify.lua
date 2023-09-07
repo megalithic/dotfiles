@@ -19,7 +19,7 @@ return {
           vim.api.nvim_buf_set_option(vim.api.nvim_win_get_buf(winnr), "filetype", "markdown")
         end
       end,
-      -- stages = stages("initial", "bottom_up"),
+      stages = "slide",
       -- render = "compact",
       render = function(bufnr, notif, hls, cfg)
         local ns = base.namespace()

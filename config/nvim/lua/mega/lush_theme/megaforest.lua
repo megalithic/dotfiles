@@ -724,11 +724,11 @@ local theme = lush(function(injected_functions)
     StatusLine({ fg = C.grey1, bg = C.bg1 }), -- status line of current window
     StatusLineNC({ fg = C.grey1, bg = C.bg0 }), -- status lines of not-current windows Note: if this is equal to "StatusLine" Vim will use "^^^" in the status line of the current window.
     StInactive({ fg = C.bg_dark.lighten(20), bg = C.bg_dark, gui = "italic" }),
-    StModeNormal({ bg = C.bg1, fg = C.bg5, gui = C.transparent }),
-    StModeInsert({ bg = C.bg1, fg = C.green, gui = "bold" }),
-    StModeVisual({ bg = C.bg1, fg = C.magenta, gui = "bold" }),
-    StModeReplace({ bg = C.bg1, fg = C.dark_red, gui = "bold" }),
-    StModeCommand({ bg = C.bg1, fg = C.green, gui = "bold" }),
+    StModeNormal({ bg = C.bg2, fg = C.bg5, gui = C.transparent }),
+    StModeInsert({ bg = C.bg2, fg = C.green, gui = "bold" }),
+    StModeVisual({ bg = C.bg2, fg = C.magenta, gui = "bold" }),
+    StModeReplace({ bg = C.bg2, fg = C.dark_red, gui = "bold" }),
+    StModeCommand({ bg = C.bg2, fg = C.green, gui = "bold" }),
     StModeTermNormal({ StModeNormal }),
     StModeTermInsert({ bg = C.green, fg = PanelBackground.bg, gui = "underline", sp = C.green }),
     StMetadata({ Comment, bg = C.bg1 }),
@@ -906,6 +906,15 @@ local theme = lush(function(injected_functions)
     FlashMatch({ Search }),
     FlashCurrent({ IncSearch }),
     FlashLabel({ fg = C.red, bg = C.bg_red, gui = "bold,underline" }),
+
+    ---- neorg -----------------------------------------------------------------
+
+    sym("@neorg.headings.1.title")({ gui = "italic" }),
+    sym("@neorg.headings.2.title")({ gui = "italic" }),
+    sym("@neorg.headings.3.title")({ gui = "italic" }),
+    sym("@neorg.headings.4.title")({ gui = "italic" }),
+    sym("@neorg.headings.5.title")({ gui = "italic" }),
+    sym("@neorg.headings.6.title")({ gui = "italic" }),
   }
 end)
 
