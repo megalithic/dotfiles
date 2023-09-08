@@ -2,102 +2,6 @@
 
 source "${HOME}/.dotfiles/config/zsh/lib/helpers.zsh"
 
-# Add this script to $PATH. Then use this by: fzf --preview='preview {}'.
-# Requirements:
-# - chafa for image
-# - jq for json
-# - exa for directory
-# - elinks for html
-# - glow for markdown
-# - transmission-show for torrent
-# - bat for text files
-# - atool for viewing zips
-# - exiftool for videos and gifs
-# - readelf for viewing binaries
-
-# [ "$1" = "" ] && exit 1
-#
-# DEBUG_LOG="/tmp/fzf_preview_fifo_debug.log"
-# UEBERZUGPP_FIFO="/tmp/fzf_preview_fifo"
-# ID="preview-ueberzugpp"
-# WIDTH="$FZF_PREVIEW_COLUMNS"
-# HEIGHT="$FZF_PREVIEW_LINES"
-#
-# # fzf changes its preview paddings several times, its confusing
-# VPAD=$(fzf --version | {
-#   IFS='. ' read -r v1 v2 _
-#   [ "$v1" = 0 ] && [ "$v2" -le 26 ] && echo 0 || echo 4
-# })
-#
-# [ -p "$UEBERZUGPP_FIFO" ] || mkfifo "$UEBERZUGPP_FIFO"
-#
-# cleanup() {
-#   # log_info "cleaning up.."
-#   if [ "$1" != "0" ]; then
-#     log_error "FATAL error code \"${1}\" occurred on line \"${2}\""
-#   fi
-#
-#   pkill ueberzugpp
-#   test -p "$UEBERZUGPP_FIFO" && rm -f "$UEBERZUGPP_FIFO"
-#   rm /tmp/ueberuzgpp-* 2>/dev/null
-#   rm /tmp/fzf_preview-* 2>/dev/null
-# }
-# #
-# # clean_exit() {
-# #   # cleanup
-# #   set +x
-# #   if [ $1 != "0" ]; then
-# #     log_error "FATAL error code \"${1}\" occurred on line \"${2}\""
-# #   fi
-# # }
-# #
-# # trap 'cleanup $? $LINENO' EXIT INT QUIT
-# trap 'cleanup $? $LINENO' EXIT INT QUIT
-# # trap cleanup EXIT INT QUIT
-#
-# start_preview() {
-#   # echo '{"path": "'"$1"'", "action": "add", "identifier": "fzfpreview", "x": 100, "y": 5, "width": 100, "height": 20}' >"$UEBERZUGPP_FIFO"
-#   # echo "$1"
-#   # export UEBERZUGPP_FIFO="$UEBERZUGPP_FIFO"
-#   # rm -f "$UEBERZUGPP_FIFO"
-#   # mkfifo "$UEBERZUGPP_FIFO"
-#
-#   {
-#     printf '{ "action": "add", "identifier": "%s", "path": "%s",' "$ID" "$1"
-#     # printf '"x": %d, "y": %d,' 2 1
-#     printf '"x": %d, "y": %d, "scaler": "fit_contain",' 2 1
-#     printf '"max-width": %d, "max-height": %d,' "$((WIDTH - VPAD))" "$((HEIGHT - 2))"
-#     # printf '"max-width": %d, "max-height": %d }\n' "$((WIDTH - VPAD))" "$((HEIGHT - 2))"
-#     printf '"width": %d, "height": %d }\n' "100" "$((HEIGHT - 2))"
-#   } >"$UEBERZUGPP_FIFO" 2>"$DEBUG_LOG" ||
-#     printf '{ "action": "remove", "identifier": "%s" }\n' "$ID" >"$UEBERZUGPP_FIFO" 2>"$DEBUG_LOG"
-#
-#   exec 3>"$UEBERZUGPP_FIFO"
-# }
-#
-# stop_preview() {
-#   printf '{ "action": "remove", "identifier": "%s" }\n' "$ID" >"$UEBERZUGPP_FIFO" 2>"$DEBUG_LOG"
-#   exec 3>&-
-# }
-#
-# handle_image() {
-#   case "$1" in
-#     image/*)
-#       # TODO:
-#       # https://github.com/justchokingaround/dotfiles/commit/4a1330f49d82c6fd687a96d3edc8fb9d20427e79
-#       #
-#       # ueberzugpp layer --silent --parser json <"$UEBERZUGPP_FIFO" 2>"$DEBUG_LOG" &
-#       # ueberzugpp layer -o kitty --no-cache --parser json <"$UEBERZUGPP_FIFO" 2>"$DEBUG_LOG" &
-#       # ueberzugpp layer -o kitty --parser json <"$UEBERZUGPP_FIFO" 2>"$DEBUG_LOG" &
-#       # ueberzugpp cmd -s "$UEBERZUGPP_FIFO" -i fzfpreview -a add -x "$X" -y 1 --max-width "$FZF_PREVIEW_COLUMNS" --max-height "$FZF_PREVIEW_LINES" -f "$2"
-#       # start_preview "$2"
-#       # sleep 1
-#       chafa "$2"
-#       ;;
-#     *) exiftool -All "$2" ;;
-#   esac
-# }
-
 [ "$1" = "" ] && exit 1
 FIFO="/tmp/fzf_preview_fifo"
 
@@ -132,19 +36,23 @@ start_preview() {
 handle_image() {
   case "$1" in
     image/*)
-      case "$image_previewer" in
-        "ueberuzgpp")
-          # mediainfo "$2"
-          # ueberzugpp layer -o "$ueberzug_image" --silent <"$FIFO" &
-          # exec 3>"${FIFO}"
-          # start_preview "$2"
-          # wait
-          chafa "$2" -f symbols
-          ;;
-        *)
-          chafa "$2" -f symbols
-          ;;
-      esac
+      chafa "$2" -f symbols
+      # wezterm imgcat "$2"
+      # sleep 86400
+      # wait
+      # case "$image_previewer" in
+      #   "ueberuzgpp")
+      #     # mediainfo "$2"
+      #     # ueberzugpp layer -o "$ueberzug_image" --silent <"$FIFO" &
+      #     # exec 3>"${FIFO}"
+      #     # start_preview "$2"
+      #     # wait
+      #     chafa "$2" -f symbols
+      #     ;;
+      #   *)
+      #     chafa "$2" -f symbols
+      #     ;;
+      # esac
       ;;
     *) exiftool -All "$2" ;;
   esac
@@ -154,7 +62,8 @@ handle_text() {
   case "$2" in
     *.md) glow --style=auto "$2" ;;
     *.htm | *.html) elinks -dump "$2" ;;
-    *) bat -p --color=always "$2" ;;
+    *) bat -p --color=always --number "$2" ;;
+      # *) bat -p --color=always --style=header,grid --line-range :300 "$2" ;;
       # *) bat --theme=base16 --color=always --paging=never --number --italic-text=never --tabs=2 --wrap=never "$2" ;;
   esac
 }
@@ -164,12 +73,11 @@ test -d "$HOME/.cache/fzf" || mkdir -p "$HOME/.cache/fzf"
 cache="$HOME/.cache/fzf/thumbnail.$(stat "$(readlink -f "$1")" | sha256sum | awk '{print $1}')"
 mime="$(file --brief --mime-type "$1")"
 
-echo "filetype: $mime"
+printf "  %s\n\n" "$mime"
 case "$mime" in
   text/*) handle_text "$mime" "$1" ;;
-    # inode/directory) exa -T --long --icons --color=always "$1" ;;
-  inode/directory) exa -ahFT -L=1 --color=auto --icons --sort=size --group-directories-first "$1" ;;
-  inode/symlink) printf "Symbolic link to: \e[34m%s\e[0m." "$(readlink "$1")" ;;
+  inode/directory) exa -ahFT -L=1 --color=always --icons --sort=size --group-directories-first "$1" ;;
+  inode/symlink) printf "symlink to: \e[34m%s\e[0m." "$(readlink "$1")" ;;
   application/json) jq --color-output <"$1" ;;
   application/x-bittorrent) transmission-show --unsorted "$1" ;;
   application/x-executable | application/x-pie-executable | application/x-sharedlib) readelf --wide --demangle=auto --all "$1" ;;
@@ -192,7 +100,7 @@ case "$mime" in
   #   ;;
   font/* | application/vnd.ms-opentype)
     echo "previewing font.."
-    preview-font "$1"
+    preview_font "$1"
     ;;
   *)
     case "$(printf "%s\n" "$(readlink -f "$1")" | awk '{print tolower($0)}')" in
@@ -227,116 +135,3 @@ case "$mime" in
     esac
     ;;
 esac
-
-# #!/usr/bin/env sh
-# #
-# # Source of inspiration: https://github.com/junegunn/fzf/issues/1928
-# # Was initially needed to not render `bat` errors into the preview window
-# #
-#
-# # set -eu
-# # IFS=$(printf '\n\t')
-# #
-# # INPUT="$1"
-# #
-# # if [ -d "$INPUT" ]; then
-# #   tree "$INPUT"
-# # elif [ -f "$INPUT" ]; then
-# #   case "$INPUT" in
-# #     # TODO: use https://github.com/jstkdng/ueberzugpp/blob/master/scripts/fzfub when ueberzugpp will be in the homebrew upstream
-# #     # More info: https://github.com/junegunn/fzf/issues/3228#issuecomment-1517845143
-# #     *".jpg" | *".jpeg" | *".png" | *".gif" | *".tiff")
-# #       ueberzugpp cmd -s "$UB_SOCKET" -a add -i PREVIEW -x "$X" -y "$Y" --max-width "$MW" --max-height "$MH" -f "$FILE_PATH"
-# #       ;;
-# #     # image "$INPUT" ;;
-# #     *".pdf" | *".djvu") zathura "$INPUT" ;;
-# #     *) bat --color=always --style numbers,changes "$INPUT" ;;
-# #   esac
-# # else
-# #   printf "%s" "$INPUT"
-# # fi
-#
-# check() {
-#   command -v "$1" >/dev/null 2>&1
-# }
-#
-# image() {
-#   FILE_PATH="$1"
-#   X=$4
-#   Y=$5
-#   MW=$(($2 - 1))
-#   MH=$3
-#   X=0
-#   Y=0
-#   MW=100
-#   MH=100
-#   # echo "$1 $2 $3 $4 $5"
-#   ueberzugpp cmd -s "$UB_SOCKET" -a add -i PREVIEW -x "$X" -y "$Y" --max-width "$MW" --max-height "$MH" -f "$FILE_PATH"
-#   exit 1
-# }
-#
-# fileordir() {
-#   [ -d "$1" ] && {
-#     check exa && exa -ahFT -L=1 --color=auto --icons --sort=size --group-directories-first "$1" || ls "$1"
-#     return
-#   }
-#   file="$1"
-#   shift
-#   check bat && bat --color=always --style=plain --pager=never "$file" "$@" || cat "$file"
-# }
-#
-# mkdir -p "$HOME/.cache/preview"
-# # CACHE="$HOME/.cache/preview/thumbnail.$(stat --printf "%n\0%i\0%F\0%s\0%W\0%Y" "$(readlink -f "$1")" | sha256sum | awk '{print $1}')"
-# CACHE="$HOME/.cache/preview/thumbnail.$(stat "$(readlink -f "$1")" | sha256sum | awk '{print $1}')"
-# # CACHE="$HOME/.cache/preview/thumbnail.$(stat --printf '%n\0%i\0%F\0%s\0%W\0%Y' -- "$(readlink -f "$1")" | sha256sum | awk '{print $1}'))"
-#
-# echo ""
-# echo "$CACHE"
-# echo ""
-# echo "$(printf "%s\n" "$(readlink -f "$1")" | awk '{print tolower($0)}')"
-# echo ""
-#
-# case "$(printf "%s\n" "$(readlink -f "$1")" | awk '{print tolower($0)}')" in
-#   *.tgz | *.tar.gz) tar tzf "$1" ;;
-#   *.tar.bz2 | *.tbz2) tar tjf "$1" ;;
-#   *.tar.txz | *.txz) xz --list "$1" ;;
-#   *.tar) tar tf "$1" ;;
-#   *.zip | *.jar | *.war | *.ear | *.oxt) unzip -l "$1" ;;
-#   *.rar) unrar l "$1" ;;
-#   *.7z) 7z l "$1" ;;
-#   *.[1-8]) man "$1" | col -b ;;
-#   *.o) nm "$1" ;;
-#   *.torrent) transmission-show "$1" ;;
-#   *.iso) iso-info --no-header -l "$1" ;;
-#   *.odt | *.ods | *.odp | *.sxw) odt2txt "$1" ;;
-#   *.doc) catdoc "$1" ;;
-#   *.docx) docx2txt "$1" - ;;
-#   *.xls | *.xlsx)
-#     ssconvert --export-type=Gnumeric_stf:stf_csv "$1" "fd://1" | batorcat --language=csv
-#     ;;
-#   *.wav | *.mp3 | *.flac | *.m4a | *.wma | *.ape | *.ac3 | *.og[agx] | *.spx | *.opus | *.as[fx] | *.mka)
-#     exiftool "$1"
-#     ;;
-#   *.pdf)
-#     [ ! -f "${CACHE}.jpg" ] &&
-#       pdftoppm -jpeg -f 1 -singlefile "$1" "$CACHE"
-#     image "${CACHE}.jpg" "$2" "$3" "$4" "$5"
-#     ;;
-#   *.avi | *.mp4 | *.wmv | *.dat | *.3gp | *.ogv | *.mkv | *.mpg | *.mpeg | *.vob | *.fl[icv] | *.m2v | *.mov | *.webm | *.ts | *.mts | *.m4v | *.r[am] | *.qt | *.divx)
-#     [ ! -f "${CACHE}.jpg" ] &&
-#       ffmpegthumbnailer -i "$1" -o "${CACHE}.jpg" -s 0 -q 5
-#     image "${CACHE}.jpg" "$2" "$3" "$4" "$5"
-#     ;;
-#   *.bmp | *.jpg | *.jpeg | *.png | *.xpm | *.webp | *.gif | *.jfif)
-#     image "$1" "$2" "$3" "$4" "$5"
-#     ;;
-#   *.svg)
-#     [ ! -f "${CACHE}.jpg" ] &&
-#       convert "$1" "${CACHE}.jpg"
-#     image "${CACHE}.jpg" "$2" "$3" "$4" "$5"
-#     ;;
-#   *)
-#     fileordir "$1"
-#     ;;
-# esac
-# exit 0

@@ -30,7 +30,6 @@ export FZF_DEFAULT_OPTS="
 --cycle
 --preview-window=right:60%:wrap
 --preview='preview {}'
---preview='~/.dotfiles/bin/preview --ueberzugpp {}; ~/.dotfiles/bin/preview --cleanup'
 --margin=0,0
 --padding=0,0
 --prompt=' '

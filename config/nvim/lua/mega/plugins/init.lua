@@ -399,6 +399,7 @@ return {
           local oil = require("oil")
           local entry = oil.get_cursor_entry()
           require("image_preview").PreviewImage(oil.get_current_dir() .. entry.parsed_name)
+          return nil
         end,
       },
     },
@@ -410,12 +411,12 @@ return {
           vim.cmd([[vertical rightbelow split]])
           require("oil").open()
         end,
-        desc = "oil: toggle(vsplit)",
+        desc = "oil: open (vsplit)",
       },
       {
         "<leader>ee",
         function() require("oil").open() end,
-        desc = "oil: open",
+        desc = "oil: open (edit)",
       },
     },
   },

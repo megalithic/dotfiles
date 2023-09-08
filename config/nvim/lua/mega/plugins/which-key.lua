@@ -136,9 +136,24 @@ return {
         name = "+edit files",
         r = { function() require("mega.utils.lsp").rename_file() end, "rename file (lsp) to <input>" },
         s = { [[<cmd>SaveAsFile<cr>]], "save file as <input>" },
+        e = "oil: open (edit)",
+        d = "oil: open (vsplit)",
         -- d = { [[:DuplicateFile<cr>]], "duplicate current file" },
-        D = { [[<cmd>Delete!<cr>]], "delete file" },
-        yp = { [[:let @+ = expand("%")<CR>]], "yank path to clipboard" },
+        -- D = { [[<cmd>Delete!<cr>]], "delete file" },
+        D = {
+          function()
+            if vim.fn.confirm("You sure?", "&Yes\n&No", 2, "Question") == 1 then vim.cmd("Delete!") end
+          end,
+          "delete file",
+        },
+        yp = {
+          function()
+            vim.cmd([[let @+ = expand("%")]])
+            vim.notify(fmt("yanked %s to clipboard", vim.fn.expand("%")))
+          end,
+          "delete file",
+        },
+        -- yp = { [[:let @+ = expand("%")<CR>]], "yank path to clipboard" },
       },
       ["<leader>l"] = {
         name = "+lsp",
