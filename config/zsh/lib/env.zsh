@@ -407,6 +407,7 @@ case "$(uname)" in
 
     $ANDROID_HOME/emulator
     $ANDROID_HOME/platform-tools
+    /Applications/WezTerm.app/Contents/MacOS
     $path
   )
   export PATH

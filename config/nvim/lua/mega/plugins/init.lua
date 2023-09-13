@@ -197,83 +197,6 @@ return {
         cmd = { "OutputPanel" },
         config = function() require("output_panel").setup() end,
       },
-      -- {
-      --   "pmizio/typescript-tools.nvim",
-      --   enabled = false,
-      --   ft = { "typescript", "typescriptreact", "javascript", "javascriptreact" },
-      --   build = "npm -g i typescript-styled-plugin",
-      --   opts = {
-      --     settings = {
-      --       tsserver_plugins = { "typescript-styled-plugin" },
-      --     },
-      --   },
-      -- },
-      -- {
-      --   "pmizio/typescript-tools.nvim",
-      --   ft = {
-      --     "typescript",
-      --     "typescriptreact",
-      --     "javascript",
-      --     "javascriptreact",
-      --   },
-      --   build = "npm -g i typescript-styled-plugin",
-      --   dependencies = { "nvim-lua/plenary.nvim", "neovim/nvim-lspconfig" },
-      --   opts = {
-      --     settings = {
-      --       separate_diagnostic_server = true,
-      --       publish_diagnostic_on = "insert_leave",
-      --       tsserver_plugins = { "styled-components" }, -- npm i -g typescript-styled-plugin
-      --       tsserver_file_preferences = {
-      --         allowIncompleteCompletions = true,
-      --         allowRenameOfImportPath = true,
-      --         allowTextChangesInNewFiles = true,
-      --         disableLineTextInReferences = true,
-      --         displayPartsForJSDoc = true,
-      --         generateReturnInDocTemplate = true,
-      --         importModuleSpecifierEnding = "auto",
-      --         includeAutomaticOptionalChainCompletions = true,
-      --         includeCompletionsForImportStatements = true,
-      --         includeCompletionsWithClassMemberSnippets = true,
-      --         includeCompletionsWithObjectLiteralMethodSnippets = true,
-      --         includeCompletionsWithSnippetText = true,
-      --         includeInlayEnumMemberValueHints = false,
-      --         includeInlayFunctionLikeReturnTypeHints = false,
-      --         includeInlayFunctionParameterTypeHints = false,
-      --         includeInlayParameterNameHints = "none",
-      --         includeInlayParameterNameHintsWhenArgumentMatchesName = false,
-      --         includeInlayPropertyDeclarationTypeHints = false,
-      --         includeInlayVariableTypeHints = false,
-      --         includeInlayVariableTypeHintsWhenTypeMatchesName = false,
-      --         jsxAttributeCompletionStyle = "auto",
-      --         providePrefixAndSuffixTextForRename = true,
-      --         provideRefactorNotApplicableReason = true,
-      --         quotePreference = "auto",
-      --         useLabelDetailsInCompletionEntries = true,
-      --       },
-      --       tsserver_format_options = {
-      --         indentSwitchCase = true,
-      --         insertSpaceAfterCommaDelimiter = true,
-      --         insertSpaceAfterConstructor = false,
-      --         insertSpaceAfterFunctionKeywordForAnonymousFunctions = true,
-      --         insertSpaceAfterKeywordsInControlFlowStatements = true,
-      --         insertSpaceAfterOpeningAndBeforeClosingEmptyBraces = true,
-      --         insertSpaceAfterOpeningAndBeforeClosingJsxExpressionBraces = false,
-      --         insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces = true,
-      --         insertSpaceAfterOpeningAndBeforeClosingNonemptyBrackets = false,
-      --         insertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis = false,
-      --         insertSpaceAfterOpeningAndBeforeClosingTemplateStringBraces = false,
-      --         insertSpaceAfterSemicolonInForStatements = true,
-      --         insertSpaceAfterTypeAssertion = false,
-      --         insertSpaceBeforeAndAfterBinaryOperators = true,
-      --         insertSpaceBeforeFunctionParenthesis = false,
-      --         placeOpenBraceOnNewLineForControlBlocks = false,
-      --         placeOpenBraceOnNewLineForFunctions = false,
-      --         semicolons = "ignore",
-      --       },
-      --     },
-      --   },
-      -- },
-
       {
         "Fildo7525/pretty_hover",
         event = "LspAttach",
@@ -418,22 +341,30 @@ return {
     opts = {
       trash = false,
       skip_confirm_for_simple_edits = true,
+      trash_command = "trash-cli",
       prompt_save_on_select_new_entry = false,
-      -- keymaps = {
-      --   ["gp"] = function()
-      --     local oil = require("oil")
-      --     local entry = oil.get_cursor_entry()
-      --     if entry["type"] == "file" then
-      --       local dir = oil.get_current_dir()
-      --       local fileName = entry["name"]
-      --       local fullName = dir .. fileName
-      --
-      --       vim.api.nvim_command(fmt("silent !wezterm cli split-pane -- bash -c 'wezterm imgcat %s' ; read", fullName))
-      --     else
-      --       return ""
-      --     end
-      --   end,
-      -- },
+      use_default_keymaps = false,
+      columns = {
+        "icon",
+        -- "permissions",
+        -- "size",
+        -- "mtime",
+      },
+      keymaps = {
+        ["gp"] = function()
+          local oil = require("oil")
+          local entry = oil.get_cursor_entry()
+          if entry["type"] == "file" then
+            local dir = oil.get_current_dir()
+            local fileName = entry["name"]
+            local fullName = dir .. fileName
+
+            require("mega.utils").preview_image(fullName)
+          else
+            return ""
+          end
+        end,
+      },
     },
     keys = {
       {

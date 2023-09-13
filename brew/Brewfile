@@ -318,7 +318,7 @@ cask "the-unarchiver"
 cask "utm" # similar parallels/qemu/virtualbox
 cask "vivaldi-snapshot"
 cask "vlc"
-cask "wez/wezterm/wezterm-nightly"
+cask "wezterm-nightly"
 # cask "usb-overdrive" # causes issues with QMK keyboards
 # cask "virtualbox" # requires restart with security allow (oracle things)
 # cask "witch" # using contexts in stead

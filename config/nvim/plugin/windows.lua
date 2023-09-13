@@ -21,7 +21,7 @@ local ft_ignores = {
 
 local bt_ignores = {
   "help",
-  "acwrite",
+  -- "acwrite",
   "undotree",
   "quickfix",
   "nerdtree",

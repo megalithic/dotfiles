@@ -379,6 +379,43 @@ function M.qf_populate(lines, opts)
   vim.cmd(commands)
 end
 
+function M.file_extention(filepath) return filepath:match("^.+(%..+)$") end
+
+function M.is_image(filepath)
+  local ext = M.file_extention(filepath)
+  return vim.tbl_contains({ ".bmp", ".jpg", ".jpeg", ".png", ".gif" }, ext)
+end
+
+function M.preview_image(filename)
+  if not M.is_image(filename) then
+    vim.notify(filename, L.WARN, { title = "nvim: not an image file; aborting.", render = "wrapped-compact" })
+
+    return
+  end
+
+  vim.notify(filename, L.INFO, { title = "nvim: previewing image..", render = "wrapped-compact" })
+
+  local cmd = fmt("silent !wezterm cli split-pane --right --percent 30 -- bash -c 'wezterm imgcat %s ; read'", filename)
+
+  if true then
+    vim.api.nvim_command(cmd)
+  else
+    cmd = fmt("wezterm imgcat --width 800 --height 600 --max-pixels 1024 --hold --tmux-passthru enable %s", filename)
+
+    local term_opts = {
+      winnr = vim.fn.winnr(),
+      cmd = cmd,
+      temp = true,
+      open_startinsert = false,
+      focus_startinsert = false,
+      focus_on_open = true,
+      direction = "vertical",
+    }
+
+    mega.term(term_opts)
+  end
+end
+
 function M.conceal_class(bufnr)
   local min_chars = 2
   local namespace = vim.api.nvim_create_namespace("ConcealClassName")

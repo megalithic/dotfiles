@@ -38,16 +38,21 @@ local function get_preview_window()
   for _, win in ipairs(vim.api.nvim_tabpage_list_wins(vim.api.nvim_get_current_tabpage())) do
     if vim.api.nvim_win_get_option(win, "previewwindow") then return win end
   end
-  vim.cmd([[new]])
+  vim.cmd([[botright vnew]])
   local pwin = vim.api.nvim_get_current_win()
+  local pwin_width = vim.o.columns > 210 and 90 or 70
   vim.api.nvim_win_set_option(pwin, "previewwindow", true)
-  vim.api.nvim_win_set_height(pwin, vim.api.nvim_get_option("previewheight"))
+  vim.api.nvim_win_set_width(pwin, pwin_width)
+  vim.cmd(fmt("let &winwidth=%d", pwin_width))
+  vim.opt_local.winfixwidth = true
+
   return pwin
 end
 
 local function hover()
   local existing_float_win = vim.b.lsp_floating_preview
   local active_clients = vim.lsp.get_clients()
+
   if next(active_clients) == nil then
     vim.cmd([[execute printf('h %s', expand('<cword>'))]])
   else

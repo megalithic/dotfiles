@@ -1,9 +1,3 @@
--- REF: https://github.com/elihunter173/dirbuf.nvim/issues/8
-vim.bo.bufhidden = "wipe"
-vim.wo.signcolumn = "no"
-vim.opt_local.listchars:remove("tab:>·")
-vim.opt_local.listchars:append("tab:  ")
-
 -- easy quit
 vim.cmd([[nnoremap <buffer> q :q<CR>]])
 -- go-to parent dir
@@ -14,20 +8,19 @@ nnoremap("<BS>", function() require("oil").open() end, { desc = "oil: goto paren
 -- acts like toggle-off
 vim.cmd([[nmap <buffer> <leader>ed :q<CR>]])
 
-nnoremap("gp", function()
-  local oil = require("oil")
-  local entry = oil.get_cursor_entry()
-  if entry["type"] == "file" then
-    local dir = oil.get_current_dir()
-    local fileName = entry["name"]
-    local fullName = dir .. fileName
-
-    vim.notify(fmt("attempting to preview %s", fullName), L.INFO)
-    vim.api.nvim_command(fmt("silent !wezterm cli split-pane -- bash -c 'wezterm imgcat %s' ; read", fullName))
-  else
-    return ""
-  end
-end, { desc = "oil: preview image" })
+-- nnoremap("gp", function()
+--   local oil = require("oil")
+--   local entry = oil.get_cursor_entry()
+--   if entry["type"] == "file" then
+--     local dir = oil.get_current_dir()
+--     local fileName = entry["name"]
+--     local fullName = dir .. fileName
+--
+--     require("mega.utils").preview_image(fullName)
+--   else
+--     return ""
+--   end
+-- end, { desc = "oil: preview image" })
 
 -- nnoremap("<C-v>", function() require("dirbuf").enter("vsplit") end, "dirbuf: open in vsplit")
 -- nnoremap("<C-s>", function() require("dirbuf").enter("vsplit") end, "dirbuf: open in split")

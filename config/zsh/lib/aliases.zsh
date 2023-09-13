@@ -213,7 +213,7 @@ alias eks="nvim $DOTS/config/kitty/sessions/default.session"
 alias eq="nvim $DOTS/home/qutebrowser/config.py"
 
 alias ew="nvim $DOTS/config/wezterm/wezterm.lua"
-alias wezup="brew upgrade --cask wez/wezterm/wezterm-nightly --no-quarantine --greedy-latest"
+alias wezup="brew upgrade --cask wezterm-nightly --no-quarantine --greedy-latest"
 
 alias ezmk="nvim $HOME/code/zmk-config/config/leeloo.keymap"
 alias eqmk="nvim $HOME/code/megalithic_qmk/keyboards/atreus62/keymaps/megalithic/keymap.c"
