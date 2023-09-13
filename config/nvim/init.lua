@@ -1,3 +1,11 @@
+--==============================================================================
+--
+-- WARN: nvim must be pinned to 59d9f2413bde2046a09eb4a9edf856dcfa40eaf4 for now;
+-- it looks like the next commit's dep updates of luajit are breaking my
+-- colorscheme/lush.nvim
+--
+--==============================================================================
+
 if vim.loader then vim.loader.enable() end
 
 -- [ settings ] ----------------------------------------------------------------
