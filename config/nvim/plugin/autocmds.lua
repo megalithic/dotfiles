@@ -228,6 +228,15 @@ do
         require("virt-column").refresh()
       end,
     },
+
+    {
+      event = { "BufEnter", "BufWritePost", "TextChanged", "InsertLeave" },
+      pattern = { "*.html", "*.heex", "*.tsx", "*.jsx" },
+      command = function(args)
+        -- local bufnr = vim.api.nvim_get_current_buf()
+        require("mega.utils").conceal_class(args.buf)
+      end,
+    },
   })
 end
 

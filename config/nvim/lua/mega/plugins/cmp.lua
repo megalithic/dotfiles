@@ -302,6 +302,7 @@ return {
         {
           name = "buffer",
           keyword_length = 4,
+          max_item_count = 10,
           options = {
             get_bufnrs = function() return vim.tbl_map(vim.api.nvim_win_get_buf, vim.api.nvim_list_wins()) end,
           },
