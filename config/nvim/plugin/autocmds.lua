@@ -133,12 +133,14 @@ do
   augroup("Utilities", {
     {
       event = { "BufWritePost" },
-      command = function()
+      command = function(args)
         if string.match(vim.fn.getline(1), "^#!") ~= nil then
           if string.match(vim.fn.getline(1), "/bin/") ~= nil then
             vim.cmd([[!chmod a+x <afile>]])
-            local filename = vim.fs.basename(api.nvim_buf_get_name(0))
-            vim.notify(fmt("making %s executable", filename))
+            -- assert(vim.uv.fs_chmod(args.match, 755), fmt("failed to make %s executable", args.file))
+
+            -- local filename = vim.fs.basename(api.nvim_buf_get_name(0))
+            vim.notify(fmt("making %s executable", args.file))
             -- vim.cmd("edit!")
           end
         end

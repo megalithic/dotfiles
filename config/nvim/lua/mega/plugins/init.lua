@@ -476,17 +476,6 @@ return {
       use_diagnostic_signs = true, -- en
     },
   },
-  {
-    "rainbowhxch/accelerated-jk.nvim",
-    config = {
-      mode = "time_driven",
-      enable_deceleration = false,
-      acceleration_motions = {},
-      acceleration_limit = 75,
-      acceleration_table = { 7, 12, 17, 21, 24, 26, 28, 30 },
-      deceleration_table = { { 150, 9999 } },
-    },
-  },
   -- { "lewis6991/whatthejump.nvim", keys = { "<C-I>", "<C-O>" } },
 
   -- ( Development ) -----------------------------------------------------------

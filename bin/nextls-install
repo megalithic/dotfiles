@@ -20,34 +20,36 @@ __root="$(cd "$(dirname "$__dir")" && pwd)"
 __invocation="$(printf %q "$__file")$( (($#)) && printf ' %q' "$@" || true)"
 
 LSPS_PATH="${XDG_DATA_HOME}/lsp"
-LS_PATH="${LSPS_PATH}/lexical"
+LS_PATH="${LSPS_PATH}/nextls"
 mkdir -p "$LS_PATH"
 
 VERSION="${1:-git}"
 TARGET=""
 BINARY=""
 BUILD_TYPE=""
+SYS="$(echo "$(uname)" | awk '{print tolower($0)}')"
+ARCH="$(echo "$(uname -m)" | awk '{print tolower($0)}')"
 
 rm -rf "$LS_PATH"
 
 do_install() {
   case "$VERSION" in
     'stable')
-      TARGET="https://github.com/lexical-lsp/lexical/releases/latest/download"
-      BINARY="lexical.zip"
+      TARGET="https://github.com/elixir-tools/next-ls/releases/latest/download"
+      BINARY="next_ls_${SYS}_${ARCH}.zip"
       BUILD_TYPE="archive"
       ;;
     'git')
-      TARGET="https://github.com/lexical-lsp/lexical"
+      TARGET="https://github.com/elixir-tools/next-ls"
       BUILD_TYPE="git"
       ;;
     'main' | 'master')
-      TARGET="https://github.com/lexical-lsp/lexical/archive/refs/heads"
+      TARGET="https://github.com/elixir-tools/next-ls/archive/refs/heads"
       BINARY="main.zip"
       BUILD_TYPE="source"
       ;;
     *)
-      TARGET="https://github.com/lexical-lsp/lexical/archive"
+      TARGET="https://github.com/elixir-tools/next-ls/archive"
       BINARY="${VERSION}.tar.gz"
       BUILD_TYPE="source"
       ;;
@@ -55,27 +57,21 @@ do_install() {
 
   if [[ $BUILD_TYPE == "archive" ]]; then
     log_warn "$BUILD_TYPE not supported."
-    # curl -fLO "$TARGET/$BINARY" &&
-    #   unzip -o "$BINARY" -d "$LS_PATH/_build/dev/rel/lexical" &&
-    #   chmod +x "$LS_PATH/_build/dev/rel/lexical/start_lexical.sh" &&
-    #   log_ok "unpacked $HOME/$BINARY" &&
-    #   (rm "$BINARY" && log_ok "removed $HOME/$BINARY") &&
-    #   log_ok "finished downloading and installing $VERSION lexical to $LS_PATH/_build/dev/rel/lexical" ||
-    #   exit 1
   elif [[ $BUILD_TYPE == "source" ]]; then
     log "downloading and unpacking.."
 
     cd ~/tmp &&
       (
+
+        # curl --fail --silent -L https://github.com/elixir-tools/next-ls/releases/latest/download/next_ls_%s_%s -o %s/nextls
         curl -fLO "$TARGET/$BINARY" &&
           (tar -xvzf "$BINARY" -C "$LSPS_PATH" && log_ok "unpacked $TARGET/$BINARY to $LSPS_PATH") &&
-          mv "$LSPS_PATH/lexical-$VERSION" "$LS_PATH" &&
+          mv "$LSPS_PATH/next-ls-$VERSION" "$LS_PATH" &&
           pushd "$LS_PATH" >/dev/null &&
-          (mix deps.get && mix package && log_ok "built lexical") &&
-          # (mix deps.get && NAMESPACE=1 mix release lexical --overwrite && log_ok "built lexical") &&
+          # (mix deps.get && mix package && log_ok "built next-ls") &&
           popd >/dev/null &&
           (rm "$BINARY" && log_ok "removed $HOME/$BINARY")
-      ) && log_ok "finished downloading and installing lexical ($VERSION) to $LS_PATH/_build/dev/rel/lexical" ||
+      ) && log_ok "finished downloading and installing next-ls ($VERSION) to $LS_PATH" ||
       exit 1
   elif [[ $BUILD_TYPE == "git" ]]; then
     log_warn "$BUILD_TYPE not supported."

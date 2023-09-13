@@ -648,6 +648,35 @@ M.unofficial = {
       }
     end
   end,
+  nextls = function()
+    local configs = require("lspconfig.configs")
+
+    local function cmd()
+      -- built from bin/nextls-install
+      return vim.env.XDG_DATA_HOME .. "/lsp/nextls/bin/nextls"
+    end
+
+    if not configs.nextls then
+      configs.nextls = {
+        default_config = {
+          cmd = { cmd() },
+          filetypes = { "elixir", "eelixir", "heex", "surface" },
+          root_dir = root_pattern("mix.lock", "mix.exs", ".git"), -- or vim.loop.os_homedir(),
+          log_level = vim.lsp.protocol.MessageType.Log,
+          message_level = vim.lsp.protocol.MessageType.Log,
+          logLevel = vim.lsp.protocol.MessageType.Log,
+          messageLevel = vim.lsp.protocol.MessageType.Log,
+          settings = {
+            dialyzerEnabled = true,
+            log_level = vim.lsp.protocol.MessageType.Log,
+            message_level = vim.lsp.protocol.MessageType.Log,
+            logLevel = vim.lsp.protocol.MessageType.Log,
+            messageLevel = vim.lsp.protocol.MessageType.Log,
+          },
+        },
+      }
+    end
+  end,
 }
 
 M.load_unofficial = function()
