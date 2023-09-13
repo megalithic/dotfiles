@@ -65,6 +65,10 @@ _G.mega = mega
 
 -- [ loaders ] -----------------------------------------------------------------
 
+-- load luarocks
+-- package.path = package.path .. ";" .. vim.fn.expand("$HOME") .. "/.luarocks/share/lua/5.1/?/init.lua;"
+-- package.path = package.path .. ";" .. vim.fn.expand("$HOME") .. "/.luarocks/share/lua/5.1/?.lua;"
+
 require("mega.globals")
 require("mega.debug")
 require("mega.options")

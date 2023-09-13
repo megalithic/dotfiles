@@ -85,6 +85,8 @@ local M = {
       vim.opt_local.cursorlineopt = "screenline,number"
       vim.opt_local.cursorline = true
       vim.api.nvim_set_option("buftype", "firenvim")
+
+      vim.diagnostic.disable(0)
     end
 
     local timer = nil

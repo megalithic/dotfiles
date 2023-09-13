@@ -38,6 +38,43 @@ local function success(...)
   end
 end
 
+-- 2023-09-12 09:10:31 -> [WIN]  (com.brave.Browser.dev.app.kjgfgldnnfoeklkmfkjfagphfepbbdan)
+-- 2023-09-12 09:10:31 -> {
+--   app = "Google Meet",
+--   bundleID = "com.brave.Browser.dev.app.kjgfgldnnfoeklkmfkjfagphfepbbdan",
+--   frame = { -- hs.geometry.rect(1600.0,25.0,1600.0,1775.0)
+--     _h = 1775.0,
+--     _w = 1600.0,
+--     _x = 1600.0,
+--     _y = 25.0
+--   },
+--   id = 2872,
+--   isFullScreen = false,
+--   isMinimized = false,
+--   isStandard = true,
+--   role = "AXWindow",
+--   subrole = "AXStandardWindow",
+--   title = ""
+-- }
+-- 2023-09-12 09:10:31 -> [WIN]  (com.brave.Browser.dev.app.kjgfgldnnfoeklkmfkjfagphfepbbdan)
+-- 2023-09-12 09:10:31 -> {
+--   app = "Google Meet",
+--   bundleID = "com.brave.Browser.dev.app.kjgfgldnnfoeklkmfkjfagphfepbbdan",
+--   frame = { -- hs.geometry.rect(0.0,25.0,3200.0,1775.0)
+--     _h = 1775.0,
+--     _w = 3200.0,
+--     _x = 0.0,
+--     _y = 25.0
+--   },
+--   id = 2868,
+--   isFullScreen = false,
+--   isMinimized = false,
+--   isStandard = true,
+--   role = "AXWindow",
+--   subrole = "AXStandardWindow",
+--   title = ""
+-- }
+
 function obj:start(opts)
   opts = opts or {}
   _appObj = opts["appObj"]

@@ -187,8 +187,6 @@ return {
           event = { "User" },
           pattern = { "GitConflictResolved" },
           command = function(args)
-            -- vim.cmd("write")
-            -- vim.cmd("edit")
             mega.notify(fmt("%s All conflicts resolved!", mega.icons.lsp.ok))
             vim.defer_fn(function()
               vim.diagnostic.enable(args.buf)

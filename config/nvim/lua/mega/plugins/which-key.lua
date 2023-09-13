@@ -167,7 +167,7 @@ return {
         n = { "lsp: rename" },
         i = { name = "lsp: info" },
       },
-      ["<leader>m"] = {
+      ["<localleader>m"] = {
         name = "+markdown",
         p = { [[<cmd>MarkdownPreviewToggle<CR>]], "open preview" },
         g = { [[<cmd>Glow<CR>]], "open glow" },

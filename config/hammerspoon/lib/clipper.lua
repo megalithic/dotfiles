@@ -165,11 +165,13 @@ function obj:init(opts)
       obj.clip_data = hs.pasteboard.readImage()
       obj.capper(obj.clip_data, false)
 
-      hs.hotkey.bind({ "cmd", "shift" }, "v", function()
+      local pasteImageUrl = function()
         local imageURL = hs.pasteboard.getContents("imageURL")
         hs.eventtap.keyStrokes(imageURL)
         dbg("imageURL: %s", imageURL)
-      end)
+      end
+      hs.hotkey.bind({ "cmd", "shift" }, "v", pasteImageUrl)
+      hs.hotkey.bind({ "cmd", "ctrl" }, "v", pasteImageUrl)
 
       local browser = hs.application.get(C.preferred.browser)
       if

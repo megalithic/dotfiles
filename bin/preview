@@ -73,7 +73,7 @@ test -d "$HOME/.cache/fzf" || mkdir -p "$HOME/.cache/fzf"
 cache="$HOME/.cache/fzf/thumbnail.$(stat "$(readlink -f "$1")" | sha256sum | awk '{print $1}')"
 mime="$(file --brief --mime-type "$1")"
 
-printf "  %s\n\n" "$mime"
+printf " %s\n\n" "$mime"
 case "$mime" in
   text/*) handle_text "$mime" "$1" ;;
   inode/directory) exa -ahFT -L=1 --color=always --icons --sort=size --group-directories-first "$1" ;;

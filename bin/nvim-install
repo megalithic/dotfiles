@@ -20,6 +20,7 @@ __root="$(cd "$(dirname "$__dir")" && pwd)"
 __invocation="$(printf %q "$__file")$( (($#)) && printf ' %q' "$@" || true)"
 
 FORCE_INSTALL="false"
+VERSION=${1:master}
 
 if [[ "$(arch)" == "arm64" ]]; then
   eval "$(/opt/homebrew/bin/brew shellenv)"
@@ -56,7 +57,7 @@ remove_brew_nvim() {
 
 update() {
   cd "${XDG_DATA_HOME}/src/neovim" && log_ok "cd neovim successful"
-  git checkout master && log_ok "git checkout master successful"
+  git checkout "$VERSION" && log_ok "git checkout $VERSION successful"
   git fetch && log_ok "git fetch successful"
   git log --color --pretty=oneline --abbrev-commit HEAD@{1}.. | sed 's/^/  /'
 }
@@ -112,16 +113,19 @@ do_build() {
 }
 
 build() {
-  if [[ $(git rev-parse HEAD) == $(git rev-parse @{u}) && $FORCE_INSTALL == "false" ]]; then
-    log_warn "neovim already up to date on origin/master; skipping."
-  elif [[ $(git rev-parse HEAD) != $(git rev-parse @{u}) || $FORCE_INSTALL == "true" ]]; then
+  if [[ "$VERSION" == "master" ]]; then
+    if [[ $(git rev-parse HEAD) == $(git rev-parse @{u}) && $FORCE_INSTALL == "false" ]]; then
+      log_warn "neovim already up to date on origin/master; skipping."
+    elif [[ $(git rev-parse HEAD) != $(git rev-parse @{u}) || $FORCE_INSTALL == "true" ]]; then
+      do_build || exit 1
+    fi
+  else
     do_build || exit 1
   fi
 }
 
 while getopts "fp" OPTION; do
   case $OPTION in
-
     p)
       nvim "+StartupTime" && log_ok "nvim startup profiling completed successfully"
       # nvim --startuptime /tmp/startuptime.txt "+e /tmp/startuptime.txt"

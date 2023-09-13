@@ -8,6 +8,7 @@ return {
     lazy = false,
     priority = 1000,
   },
+  { "sainnhe/everforest", lazy = false, priority = 1001 },
   { "nvim-tree/nvim-web-devicons", config = function() require("nvim-web-devicons").setup() end },
   {
     "NvChad/nvim-colorizer.lua",
@@ -44,6 +45,11 @@ return {
         },
       })
     end,
+  },
+  {
+    "adelarsq/image_preview.nvim",
+    event = { "VeryLazy" },
+    opts = true,
   },
   {
     "3rd/image.nvim",
@@ -126,6 +132,28 @@ return {
       { "<leader><leader>k", function() require("smart-splits").swap_buf_up() end, desc = "swap up" },
       { "<leader><leader>l", function() require("smart-splits").swap_buf_right() end, desc = "swap right" },
     },
+  },
+  {
+    "chentoast/marks.nvim",
+    event = "VeryLazy",
+    keys = {
+      { "<leader>mm", "<Cmd>MarksListBuf<CR>", desc = "marks: list buffer marks" },
+      { "<leader>mg", "<Cmd>MarksListBuf<CR>", desc = "marks: list global marks" },
+      { "<leader>mb", "<Cmd>MarksListBuf<CR>", desc = "marks: list bookmark marks" },
+    },
+    config = function()
+      -- as.highlight.plugin("marks", {
+      --   { MarkSignHL = { link = "Directory" } },
+      --   { MarkSignNumHL = { link = "Directory" } },
+      -- })
+
+      require("marks").setup({
+        force_write_shada = false, -- This can cause data loss
+        excluded_filetypes = { "NeogitStatus", "NeogitCommitMessage", "toggleterm", "megaterm" },
+        bookmark_0 = { sign = "⚑", virt_text = "" },
+        mappings = { annotate = "m?" },
+      })
+    end,
   },
 
   -- ( LSP ) -------------------------------------------------------------------
@@ -385,23 +413,27 @@ return {
   {
     "stevearc/oil.nvim",
     cmd = { "Oil" },
-    lazy = false,
     enabled = vim.g.explorer == "oil",
     cond = vim.g.explorer == "oil",
     opts = {
       trash = false,
-      -- delete_to_trash = true,
       skip_confirm_for_simple_edits = true,
-      restore_win_options = false,
       prompt_save_on_select_new_entry = false,
-      keymaps = {
-        ["gp"] = function()
-          local oil = require("oil")
-          local entry = oil.get_cursor_entry()
-          require("image_preview").PreviewImage(oil.get_current_dir() .. entry.parsed_name)
-          return nil
-        end,
-      },
+      -- keymaps = {
+      --   ["gp"] = function()
+      --     local oil = require("oil")
+      --     local entry = oil.get_cursor_entry()
+      --     if entry["type"] == "file" then
+      --       local dir = oil.get_current_dir()
+      --       local fileName = entry["name"]
+      --       local fullName = dir .. fileName
+      --
+      --       vim.api.nvim_command(fmt("silent !wezterm cli split-pane -- bash -c 'wezterm imgcat %s' ; read", fullName))
+      --     else
+      --       return ""
+      --     end
+      --   end,
+      -- },
     },
     keys = {
       {
@@ -442,6 +474,17 @@ return {
     config = {
       auto_open = false,
       use_diagnostic_signs = true, -- en
+    },
+  },
+  {
+    "rainbowhxch/accelerated-jk.nvim",
+    config = {
+      mode = "time_driven",
+      enable_deceleration = false,
+      acceleration_motions = {},
+      acceleration_limit = 75,
+      acceleration_table = { 7, 12, 17, 21, 24, 26, 28, 30 },
+      deceleration_table = { { 150, 9999 } },
     },
   },
   -- { "lewis6991/whatthejump.nvim", keys = { "<C-I>", "<C-O>" } },
@@ -664,10 +707,10 @@ return {
     cmd = { "MCstart", "MCvisual", "MCclear", "MCpattern", "MCvisualPattern", "MCunderCursor" },
     keys = {
       {
-        "<leader>mm",
+        "<localleader>mm",
         "<cmd>MCstart<cr>",
         mode = { "v", "n" },
-        desc = "Create a selection for selected text or word under the cursor",
+        desc = "multicursors: Create a selection for selected text or word under the cursor",
       },
     },
   },
@@ -847,6 +890,7 @@ return {
   },
 
   {
+    enabled = false,
     "pmizio/typescript-tools.nvim",
     ft = {
       "typescript",

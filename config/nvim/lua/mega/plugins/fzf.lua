@@ -143,6 +143,7 @@ if vim.g.picker == "fzf" then
     { "<leader>fo", fzf_lua.oldfiles, desc = "oldfiles" },
     { "<leader>fr", fzf_lua.resume, desc = "resume picker" },
     { "<leader>fh", fzf_lua.highlights, desc = "highlights" },
+    { "<leader>fm", fzf_lua.marks, desc = "marks" },
     { "<leader>fk", fzf_lua.keymaps, desc = "keymaps" },
     { "<leader>flw", fzf_lua.diagnostics_workspace, desc = "workspace diagnostics" },
     { "<leader>fls", fzf_lua.lsp_document_symbols, desc = "document symbols" },

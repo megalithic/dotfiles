@@ -14,6 +14,21 @@ nnoremap("<BS>", function() require("oil").open() end, { desc = "oil: goto paren
 -- acts like toggle-off
 vim.cmd([[nmap <buffer> <leader>ed :q<CR>]])
 
+nnoremap("gp", function()
+  local oil = require("oil")
+  local entry = oil.get_cursor_entry()
+  if entry["type"] == "file" then
+    local dir = oil.get_current_dir()
+    local fileName = entry["name"]
+    local fullName = dir .. fileName
+
+    vim.notify(fmt("attempting to preview %s", fullName), L.INFO)
+    vim.api.nvim_command(fmt("silent !wezterm cli split-pane -- bash -c 'wezterm imgcat %s' ; read", fullName))
+  else
+    return ""
+  end
+end, { desc = "oil: preview image" })
+
 -- nnoremap("<C-v>", function() require("dirbuf").enter("vsplit") end, "dirbuf: open in vsplit")
 -- nnoremap("<C-s>", function() require("dirbuf").enter("vsplit") end, "dirbuf: open in split")
 -- nnoremap("<C-t>", function() require("dirbuf").enter("tabedit") end, "dirbuf: open in tab")

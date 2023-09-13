@@ -139,7 +139,7 @@ do
             vim.cmd([[!chmod a+x <afile>]])
             local filename = vim.fs.basename(api.nvim_buf_get_name(0))
             vim.notify(fmt("making %s executable", filename))
-            vim.cmd("edit!")
+            -- vim.cmd("edit!")
           end
         end
       end,

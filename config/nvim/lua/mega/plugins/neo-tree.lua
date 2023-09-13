@@ -133,7 +133,7 @@ return {
         position = "left",
         width = 60,
         mappings = {
-          ["I"] = "image_wezterm", -- "<Leader>p" instead of "I" if you want the same as NvimTree
+          ["gp"] = "image_wezterm", -- "<Leader>p" instead of "I" if you want the same as NvimTree
           o = "toggle_node",
           ["/"] = "noop",
           ["n"] = "noop",

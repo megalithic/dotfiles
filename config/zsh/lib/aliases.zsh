@@ -595,7 +595,7 @@ function bak() {
   done
 }
 
-function rebak() {
+function unbak() {
   for filename in $@; do
     if ! [[ x"$filename" =~ .*bak ]]; then
       error "$filename does not end with '.bak'. Skipping."
@@ -609,7 +609,10 @@ function rebak() {
   done
 }
 
-alias unbak="rebak"
+function pdf2img() {
+  convert -density 192 "$1" -quality 100 -alpha remove "$2"
+}
+
 
 # cdr: run fzf with dir history
 # if [[ -n $(echo ${^fpath}/chpwd_recent_dirs(N)) && -n $(echo ${^fpath}/cdr(N)) ]]; then

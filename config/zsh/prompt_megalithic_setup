@@ -535,8 +535,8 @@ function __prompt_eval() {
   local top="$(_prompt_sudo)$(_prompt_ssh)$(_prompt_path)${_git_status_prompt:-}"
   # local top="%B%F{magenta}%1~%f%b${_git_status_prompt:-$placeholder}"
   # local top="$(_prompt_sudo)$(_prompt_ssh)$(_prompt_path)${GIT_STATUS:-$placeholder}"
-  local character="%(1j.%F{cyan}%j$BACKGROUND_JOB_ICON%f.)%(?.${dots_prompt_icon}.${dots_prompt_failure_icon})"
-  local bottom=$([[ -n "$vim_mode" ]] && echo "$(_prompt_nix_shell_loaded)$vim_mode" || echo "$(_prompt_nix_shell_loaded)$character")
+  local characters="%(1j.%F{cyan}%j$BACKGROUND_JOB_ICON%f.)%(?.${dots_prompt_icon}.${dots_prompt_failure_icon})"
+  local bottom=$([[ -n "$vim_mode" ]] && echo "$(_prompt_nix_shell_loaded)$vim_mode" || echo "$(_prompt_nix_shell_loaded)$characters")
   local newline=$'\n'
   echo $newline$top$newline$bottom
 }
