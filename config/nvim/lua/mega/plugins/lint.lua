@@ -19,7 +19,7 @@ return {
     "typescriptreact",
     "vim",
     "yaml",
-    "zsh",
+    -- "zsh",
   },
   opts = {
     linters_by_ft = {
@@ -39,7 +39,7 @@ return {
       ["typescript.tsx"] = { "eslint_d" },
       vim = { "vint" },
       yaml = { "yamllint" },
-      zsh = { "zsh" },
+      -- zsh = { "shellcheck" },
     },
     linters = {},
   },

@@ -19,6 +19,7 @@ zsh_add_plugin "zsh-users/zsh-completions"
 zsh_add_plugin "djui/alias-tips"
 # zsh_add_plugin "MichaelAquilina/zsh-auto-notify" "auto-notify.plugin"
 zsh_add_plugin "hlissner/zsh-autopair"
+zsh_add_plugin "psprint/zsh-sweep" # zsh linting
 
 # adds `zmv` tool (https://twitter.com/wesbos/status/1443570300529086467)
 autoload -U zmv # builtin zsh rename command

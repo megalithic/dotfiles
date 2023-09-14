@@ -435,11 +435,17 @@ case "$(uname)" in
 
   # -- zsh plugins
   # ------------------------------------------------------------------------------
+  # zsweep zsh linter
+  zs_set_path=1
+
+  # autosuggest
   export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#465258,bold,underline"
   export ZSH_AUTOSUGGEST_MANUAL_REBIND=1  # make prompt faster
   export ZSH_AUTOSUGGEST_USE_ASYNC=1
   # export ZSH_AUTOSUGGEST_STRATEGY=(history completion) # or match_prev_cmd
   export ZSH_AUTOSUGGEST_STRATEGY=("match_prev_cmd" "completion")
+
+  # zoxide
   export _ZO_DATA_DIR="$XDG_DATA_HOME/zoxide"
   export _ZO_ECHO=1
 

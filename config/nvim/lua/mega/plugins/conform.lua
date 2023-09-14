@@ -51,7 +51,7 @@ return {
       typescriptreact = { prettier },
       yaml = { prettier },
       zig = { "zigfmt" },
-      zsh = { "beautysh" },
+      zsh = { "shfmt" },
     },
     log_level = vim.log.levels.DEBUG,
     format_on_save = function(bufnr)
