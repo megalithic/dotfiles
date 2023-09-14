@@ -570,13 +570,18 @@ local function seg_opened_terms(truncate_at)
 end
 
 local function seg_hydra(truncate_at)
-  local hydra = require("hydra.statusline")
-  return seg(
-    fmt("%s", hydra.get_name()),
-    hydra.get_color(),
-    not is_truncated(truncate_at) and hydra.is_active(),
-    { margin = { 1, 1 }, padding = { 1, 1 } }
-  )
+  local ok_hydra, hydra = mega.require("hydra", { silent = true })
+
+  if ok_hydra then
+    return seg(
+      fmt("%s", hydra.statusline.get_name()),
+      hydra.statusline.get_color(),
+      not is_truncated(truncate_at) and hydra.statusline.is_active(),
+      { margin = { 1, 1 }, padding = { 1, 1 } }
+    )
+  else
+    return ""
+  end
 end
 
 local function seg_git_symbol(truncate_at)

@@ -219,40 +219,6 @@ function mega.opt(o, v, scopes)
   end
 end
 
----Require a module using `pcall` and report any errors
----@param module string
----@param opts table?
----@return boolean, any
-function mega.require(module, opts)
-  opts = opts or { silent = false }
-  local ok, result = pcall(require, module)
-  if not ok and not opts.silent then
-    if opts.message then result = opts.message .. "\n" .. result end
-    vim.notify(result, L.ERROR, { title = fmt("Error requiring: %s", module) })
-  end
-  return ok, result
-end
-
---- Call the given function and use `vim.notify` to notify of any errors
---- this function is a wrapper around `xpcall` which allows having a single
---- error handler for all errors
----@param msg string
----@param func function
----@param ... any
----@return boolean, any
----@overload fun(func: function, ...): boolean, any
-function mega.pcall(msg, func, ...)
-  local args = { ... }
-  if type(msg) == "function" then
-    local arg = func --[[@as any]]
-    args, func, msg = { arg, unpack(args) }, msg, nil
-  end
-  return xpcall(func, function(err)
-    msg = debug.traceback(msg and fmt("%s:\n%s", msg, err) or err)
-    vim.schedule(function() vim.notify(msg, L.ERROR, { title = "ERROR" }) end)
-  end, unpack(args))
-end
-
 --- Call the given function and use `vim.notify` to notify of any errors
 --- this function is a wrapper around `xpcall` which allows having a single
 --- error handler for all errors
@@ -264,12 +230,30 @@ end
 function mega.wrap_err(msg, func, ...)
   local args = { ... }
   if type(msg) == "function" then
-    args, func, msg = { func, unpack(args) }, msg, nil
+    local arg = func --[[@as any]]
+    args, func, msg = { arg, unpack(args) }, msg, nil
   end
   return xpcall(func, function(err)
-    msg = msg and fmt("%s:\n%s", msg, err) or err
+    -- msg = msg and fmt("%s:\n%s", msg, err) or err
+    msg = debug.traceback(msg and fmt("%s:\n%s", msg, err) or err)
     vim.schedule(function() vim.notify(msg, L.ERROR, { title = "ERROR" }) end)
   end, unpack(args))
+end
+
+---Require a module using `pcall` and report any errors
+---@param module_name string
+---@param opts table?
+---@return boolean, any
+function mega.require(module_name, opts)
+  opts = opts or { silent = true }
+  local ok, result = pcall(require, module_name)
+  if not ok and not opts.silent then
+    if opts.message then result = opts.message .. "\n" .. result end
+
+    -- FIXME: this breaks if silent == true
+    vim.notify(result, L.ERROR, { title = fmt("Error requiring: %s", module_name), render = "default" })
+  end
+  return ok, result
 end
 
 -- ---@alias Plug table<(string | number), string>

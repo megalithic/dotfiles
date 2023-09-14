@@ -86,7 +86,7 @@ require("mega.mappings")
 
 -- [ colorscheme ] -------------------------------------------------------------
 
-mega.pcall("theme failed to load because", function(colorscheme)
+mega.wrap_err("theme failed to load because", function(colorscheme)
   local theme = fmt("mega.lush_theme.%s", colorscheme)
   local ok, lush_theme = pcall(require, theme)
   if ok then

@@ -652,7 +652,7 @@ local function get_server_capabilities()
   --   },
   -- }
 
-  local nvim_lsp_ok, cmp_nvim_lsp = mega.pcall(require, "cmp_nvim_lsp")
+  local nvim_lsp_ok, cmp_nvim_lsp = mega.wrap_err(require, "cmp_nvim_lsp")
   if nvim_lsp_ok then capabilities = cmp_nvim_lsp.default_capabilities(capabilities) end
 
   return capabilities

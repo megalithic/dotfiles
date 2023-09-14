@@ -41,9 +41,8 @@ return {
       { "megalithic/nvim-ts-autotag" },
       "David-Kunz/treesitter-unit",
       {
-        "gitlab.com/HiPhish/rainbow-delimiters.nvim",
-        cond = false,
-        event = "VeryLazy",
+        url = "https://gitlab.com/HiPhish/rainbow-delimiters.nvim",
+        event = "VimEnter",
         config = function()
           local rainbow = require("rainbow-delimiters")
           vim.g.rainbow_delimiters = {
@@ -65,6 +64,7 @@ return {
               "RainbowDelimiterViolet",
               "RainbowDelimiterCyan",
             },
+            blacklist = { "c", "cpp" },
           }
         end,
       },

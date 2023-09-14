@@ -164,7 +164,7 @@ function M.display(sections, available_space)
     end
     mega.foreach(function(args, index)
       if not args then return end
-      local ok, str = mega.pcall("Error creating component", component, args)
+      local ok, str = mega.wrap_err("Error creating component", component, args)
       if not ok then return end
       table.insert(acc, str)
       if #section == index and count ~= #sections then table.insert(acc, separator()) end

@@ -673,23 +673,6 @@ return {
 
   -- ( Motions/Textobjects ) ---------------------------------------------------
   {
-    "smoka7/multicursors.nvim",
-    event = "VeryLazy",
-    dependencies = { "nvim-treesitter/nvim-treesitter", "smoka7/hydra.nvim" },
-    opts = {
-      hint_config = { border = mega.get_border() },
-    },
-    cmd = { "MCstart", "MCvisual", "MCclear", "MCpattern", "MCvisualPattern", "MCunderCursor" },
-    keys = {
-      {
-        "<localleader>mm",
-        "<cmd>MCstart<cr>",
-        mode = { "v", "n" },
-        desc = "multicursors: Create a selection for selected text or word under the cursor",
-      },
-    },
-  },
-  {
     cond = true,
     "folke/flash.nvim",
     event = "VeryLazy",
