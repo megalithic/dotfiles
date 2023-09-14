@@ -19,7 +19,7 @@ return {
           vim.api.nvim_buf_set_option(vim.api.nvim_win_get_buf(winnr), "filetype", "markdown")
         end
       end,
-      stages = "slide",
+      stages = "slide", -- or "static"
       -- render = "compact",
       render = function(bufnr, notif, hls, cfg)
         local ns = base.namespace()
@@ -33,30 +33,9 @@ return {
           prefix = string.format("%s", icon)
         end
 
-        -- notif.message[1] = string.format("%s %s ", prefix, notif.message[1])
-
         local messages = { notif.message[1] }
         vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, messages)
 
-        -- local icon_length = vim.str_utfindex(icon)
-        -- local prefix_length = vim.str_utfindex(prefix)
-        --
-        -- vim.api.nvim_buf_set_extmark(bufnr, ns, 0, 0, {
-        --   hl_group = hls.icon,
-        --   end_col = icon_length + 1,
-        --   priority = 50,
-        -- })
-        -- vim.api.nvim_buf_set_extmark(bufnr, ns, 0, icon_length + 1, {
-        --   hl_group = hls.title,
-        --   end_col = prefix_length + 2,
-        --   priority = 50,
-        -- })
-        -- vim.api.nvim_buf_set_extmark(bufnr, ns, 0, prefix_length + 2, {
-        --   hl_group = hls.body,
-        --   end_line = #messages,
-        --   priority = 50,
-        -- })
-        -- vim.api.nvim_buf_set_lines(bufnr, 0, 1, false, { "" })
         vim.api.nvim_buf_set_extmark(bufnr, ns, 0, 0, {
           virt_text = {
             { " " },
@@ -68,42 +47,29 @@ return {
           virt_text_win_col = 0,
           priority = 10,
         })
-        -- local max_message_width =
-        --   math.max(math.max(unpack(vim.tbl_map(function(line) return vim.fn.strchars(line) end, notif.message))))
-        -- local title = notif.title[1]
-        -- local title_accum = vim.str_utfindex(title)
-        --
-        -- local title_buffer =
-        --   string.rep(" ", (math.max(max_message_width, title_accum, config.minimum_width()) - title_accum) / 2)
-        -- vim.api.nvim_buf_set_lines(bufnr, 0, 1, false, { "", "" })
-        -- vim.api.nvim_buf_set_extmark(bufnr, namespace, 0, 0, {
-        --   virt_text = {
-        --     { title_buffer .. title .. title_buffer, highlights.title },
-        --   },
-        --   virt_text_win_col = 0,
-        --   priority = 10,
-        -- })
-        -- vim.api.nvim_buf_set_extmark(bufnr, namespace, 1, 0, {
-        --   virt_text = {
-        --     {
-        --       string.rep("━", math.max(max_message_width, title_accum, config.minimum_width())),
-        --       highlights.border,
-        --     },
-        --   },
-        --   virt_text_win_col = 0,
-        --   priority = 10,
-        -- })
-        -- vim.api.nvim_buf_set_lines(bufnr, 2, -1, false, notif.message)
-        --
-        -- vim.api.nvim_buf_set_extmark(bufnr, namespace, 2, 0, {
-        --   hl_group = highlights.body,
-        --   end_line = 1 + #notif.message,
-        --   end_col = #notif.message[#notif.message],
-        --   priority = 50,
-        -- })
       end,
     })
 
-    vim.notify = notify
+    -- HT: https://github.com/davidosomething/dotfiles/blob/dev/nvim/lua/dko/plugins/notify.lua#L32
+    local notify_override = function(msg, level, opts)
+      if not opts then opts = {} end
+      if not opts.title then
+        if mega.starts_with(msg, "[LSP]") then
+          local client, found_client = msg:gsub("^%[LSP%]%[(.-)%] .*", "%1")
+          if found_client > 0 then
+            opts.title = ("LSP > %s"):format(client)
+          else
+            opts.title = "LSP"
+          end
+          msg = msg:gsub("^%[.*%] (.*)", "%1")
+        elseif msg == "No code actions available" then
+          -- https://github.com/neovim/neovim/blob/master/runtime/lua/vim/lsp/buf.lua#LL629C39-L629C39
+          opts.title = "LSP"
+        end
+      end
+      notify(msg, level, opts)
+    end
+
+    vim.notify = notify_override
   end,
 }

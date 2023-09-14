@@ -26,6 +26,7 @@ export FZF_DEFAULT_OPTS="
 --bind=ctrl-f:page-down,ctrl-b:page-up
 --bind=ctrl-u:preview-up,ctrl-d:preview-down
 --bind=esc:abort
+--bind=ctrl-c:abort
 --bind=?:toggle-preview
 --cycle
 --preview-window=right:60%:wrap

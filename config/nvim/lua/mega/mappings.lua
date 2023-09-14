@@ -471,7 +471,7 @@ onoremap("au", ":<c-u>lua require\"treesitter-unit\".select(true)<CR>")
 nmap("-", "<Nop>") -- disable this mapping globally, only map in dirbuf ftplugin
 
 -- # formatter.nvim
-nmap("<leader>F", [[<cmd>FormatWrite<cr>]], "format file")
+-- nmap("<leader>F", [[<cmd>FormatWrite<cr>]], "format file")
 
 -- Map Q to replay q register
 nnoremap("Q", "@q")

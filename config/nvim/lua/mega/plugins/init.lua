@@ -55,7 +55,9 @@ return {
     "3rd/image.nvim",
     enabled = false,
     ft = { "markdown" },
-    build = "luarocks --local install magick",
+    build = function()
+      vim.fn.system("luarocks --lua-dir=$(brew --prefix)/opt/lua@5.1 --lua-version=5.1 install magick")
+    end,
     opts = {
       backend = "kitty",
       integrations = {
@@ -166,12 +168,15 @@ return {
       { "nvim-lua/lsp_extensions.nvim" },
       {
         "jose-elias-alvarez/typescript.nvim",
+        enabled = vim.g.formatter == "null-ls",
         ft = { "typescript", "typescriptreact" },
         dependencies = { "jose-elias-alvarez/null-ls.nvim" },
         config = function()
-          require("null-ls").register({
-            sources = { require("typescript.extensions.null-ls.code-actions") },
-          })
+          if vim.g.formatter == "null-ls" then
+            require("null-ls").register({
+              sources = { require("typescript.extensions.null-ls.code-actions") },
+            })
+          end
         end,
       },
       { "MunifTanjim/nui.nvim" },
@@ -346,11 +351,21 @@ return {
       use_default_keymaps = false,
       columns = {
         "icon",
-        -- "permissions",
-        -- "size",
-        -- "mtime",
       },
       keymaps = {
+        ["gd"] = {
+          desc = "Toggle detail view",
+          callback = function()
+            local oil = require("oil")
+            local config = require("oil.config")
+            if #config.columns == 1 then
+              oil.set_columns({ "icon", "permissions", "size", "mtime" })
+            else
+              oil.set_columns({ "icon" })
+            end
+          end,
+        },
+        ["<CR>"] = "actions.select",
         ["gp"] = function()
           local oil = require("oil")
           local entry = oil.get_cursor_entry()
@@ -407,6 +422,56 @@ return {
       use_diagnostic_signs = true, -- en
     },
   },
+  -- {
+  --   "stevearc/conform.nvim",
+  --   event = { "BufReadPre", "BufNewFile", "BufWritePre" },
+  --   cmd = "ConformInfo",
+  --   keys = {
+  --     {
+  --       "<leader>F",
+  --       function() require("conform").format({ async = false, lsp_fallback = true }) end,
+  --       desc = "Format buffer (sync)",
+  --     },
+  --     {
+  --       "=",
+  --       function() require("conform").format({ async = true, lsp_fallback = true }) end,
+  --       mode = "",
+  --       desc = "Format buffer (async)",
+  --     },
+  --   },
+  --   opts = {
+  --     formatters_by_ft = {
+  --       -- Conform will use the first available formatter in the list
+  --       ["*"] = { "trim_whitespace", "trim_newlines" },
+  --       bash = { "beautysh" },
+  --       c = { "clang_format" },
+  --       cpp = { "clang_format" },
+  --       css = { "prettierd" },
+  --       go = { "gofumpt" },
+  --       html = { "prettierd" },
+  --       java = { "clang_format" },
+  --       javascript = { "prettier_d", "prettierd", "prettier" },
+  --       json = { "prettierd" },
+  --       lua = { "stylua" },
+  --       markdown = { "prettierd" },
+  --       python = {
+  --         formatters = { "isort", "black" },
+  --         -- Run formatters one after another instead of stopping at the first success
+  --         run_all_formatters = true,
+  --       },
+  --       rust = { "rustfmt" },
+  --       sh = { "beautysh", "shfmt", "shellharden" },
+  --       toml = { "taplo" },
+  --       typescript = { "prettier_d", "prettierd", "prettier" },
+  --       yaml = { "yamlfmt", "prettierd" },
+  --       zsh = { "beautysh" },
+  --     },
+  --   },
+  --   format_on_save = {
+  --     timeout_ms = 500,
+  --     lsp_fallback = true,
+  --   },
+  -- },
   -- { "lewis6991/whatthejump.nvim", keys = { "<C-I>", "<C-O>" } },
 
   -- ( Development ) -----------------------------------------------------------
@@ -604,16 +669,6 @@ return {
       { "<C-k>", function() require("readline").kill_line() end, mode = "!" },
       { "<C-u>", function() require("readline").backward_kill_line() end, mode = "!" },
     },
-  },
-  {
-    "axelvc/template-string.nvim",
-    ft = {
-      "typescript",
-      "typescriptreact",
-      "javascript",
-      "javascriptreact",
-    },
-    opts = {},
   },
 
   -- ( Motions/Textobjects ) ---------------------------------------------------

@@ -33,8 +33,8 @@ COMPUTER_NAME := 'megabook'
 COMPUTER_NAME="megabook"
 
 if [[ "$(arch)" == "arm64" ]]; then
-  COMPUTER_NAME := 'megabookpro'
-  COMPUTER_NAME="megabookpro"
+    COMPUTER_NAME := 'megabookpro'
+    COMPUTER_NAME="megabookpro"
 fi
 
 # Close any open System Preferences panes, to prevent them from overriding
@@ -43,17 +43,17 @@ osascript -e 'tell application "System Preferences" to quit'
 
 # handy folders we always use/seem to need
 if [ ! -d "$HOME/code" ]; then
-  mkdir -p $HOME/code
+    mkdir -p $HOME/code
 fi
 if [ ! -d "$HOME/tmp" ]; then
-  mkdir -p $HOME/tmp
+    mkdir -p $HOME/tmp
 fi
 
 # Keep-alive: update existing `sudo` time stamp until `osx/osx.sh` has finished
 while true; do
-  sudo -n true
-  sleep 60
-  kill -0 "$$" || exit
+    sudo -n true
+    sleep 60
+    kill -0 "$$" || exit
 done 2>/dev/null &
 
 # Set standby delay to 24 hours (default is 1 hour)
@@ -83,8 +83,8 @@ sudo scutil --set ComputerName $COMPUTER_NAME
 sudo scutil --set HostName $COMPUTER_NAME
 sudo scutil --set LocalHostName $COMPUTER_NAME
 sudo defaults write \
-  /Library/Preferences/SystemConfiguration/com.apple.smb.server \
-  NetBIOSName -string $COMPUTER_NAME
+    /Library/Preferences/SystemConfiguration/com.apple.smb.server \
+    NetBIOSName -string $COMPUTER_NAME
 
 # Create symlink for iCloud Drive to ~
 ln -sfv ~/Library/Mobile\ Documents/com\~apple\~CloudDocs/ ~/iCloud
@@ -476,11 +476,22 @@ defaults write NSGlobalDomain ApplePressAndHoldEnabled -bool false
 # defaults write NSGlobalDomain KeyRepeat -int 1
 # defaults write NSGlobalDomain InitialKeyRepeat -int 10
 
+# -- SET KEYBOARD SHORTCUTS
+# - REF: https://github.com/stevearc/dotfiles/blob/master/scripts/mac.sh
+# @: Command
+# $: Shift
+# ~: Alt
+# ^: Ctrl
+# defaults write com.google.Chrome NSUserKeyEquivalents -dict-add "Reopen Closed Tab" -string '^$t'
+# defaults write com.google.Chrome NSUserKeyEquivalents -dict-add "New Window" -string '^n'
+# defaults write com.google.Chrome NSUserKeyEquivalents -dict-add "New Incognito Window" -string '^$n'
+# defaults write com.google.Chrome NSUserKeyEquivalents -dict-add 'Developer Tools' -string '^Si'
+
 # Backup MacOS/system default /etc/zshrc
 
 [[ -e /etc/zshrc ]] &&
-  sudo mv /etc/zshrc "/etc/zshrc.backup-before-dotfiles-${BACKUP_TIMESTAMP}" &&
-  log_ok "Backed up system default /etc/zshrc to /etc/zshrc.backup-before-dotfiles-${BACKUP_TIMESTAMP}.."
+sudo mv /etc/zshrc "/etc/zshrc.backup-before-dotfiles-${BACKUP_TIMESTAMP}" &&
+log_ok "Backed up system default /etc/zshrc to /etc/zshrc.backup-before-dotfiles-${BACKUP_TIMESTAMP}.."
 
 set +x
 
@@ -489,31 +500,31 @@ set +x
 ##
 
 dock_apps_to_remove=(
-  "Launchpad"
-  "Mail"
-  "Contacts"
-  "Notes"
-  "Reminders"
-  "Maps"
-  "Photos"
-  "FaceTime"
-  "iTunes"
-  "iBooks"
-  "App Store"
-  "System Preferences"
-  "Calendar"
-  "Safari"
+    "Launchpad"
+    "Mail"
+    "Contacts"
+    "Notes"
+    "Reminders"
+    "Maps"
+    "Photos"
+    "FaceTime"
+    "iTunes"
+    "iBooks"
+    "App Store"
+    "System Preferences"
+    "Calendar"
+    "Safari"
 )
 for app in "${dock_apps_to_remove[@]}"; do
-  log "removing \"${app}\" from the dock."
+    log "removing \"${app}\" from the dock."
 
-  # remove apps from dock
-  # osascript -e 'tell application "System Events" to make login item at end with properties {path:"/Applications/${app}.app", hidden:true}' > /dev/null
-  dockutil --remove "${app}" && log_ok "done" || log_error "unable to remove ${app} from the dock"
+    # remove apps from dock
+    # osascript -e 'tell application "System Events" to make login item at end with properties {path:"/Applications/${app}.app", hidden:true}' > /dev/null
+    dockutil --remove "${app}" && log_ok "done" || log_error "unable to remove ${app} from the dock"
 done
 
 function app_is_running {
-  osascript -so -e "application \"$1\" is running"
+    osascript -so -e "application \"$1\" is running"
 }
 
 # function ask {
@@ -533,69 +544,69 @@ function app_is_running {
 # }
 
 apps_to_restart=(
-  "Activity Monitor"
-  "Address Book"
-  "Calendar"
-  "cfprefsd"
-  "Contacts"
-  "Dock"
-  "Finder"
-  "Google Chrome"
-  "Photos"
-  "Safari"
-  "SystemUIServer"
+    "Activity Monitor"
+    "Address Book"
+    "Calendar"
+    "cfprefsd"
+    "Contacts"
+    "Dock"
+    "Finder"
+    "Google Chrome"
+    "Photos"
+    "Safari"
+    "SystemUIServer"
 )
 
 for app in "${apps_to_restart[@]}"; do
-  if [[ "$(app_is_running "${app}")" == "true" ]]; then
-    log "\"${app}\" needs to be restarted; proceeding to quit"
-    killall "${app}" &>/dev/null && log_ok "DONE"
-  fi
+    if [[ "$(app_is_running "${app}")" == "true" ]]; then
+        log "\"${app}\" needs to be restarted; proceeding to quit"
+        killall "${app}" &>/dev/null && log_ok "DONE"
+    fi
 done
 
 apps_to_launch=(
-  "1Password"
-  "Alfred 5"
-  "Bartender 4"
-  "BetterTouchTool"
-  "Brave Browser Dev"
-  "Cloudflare WARP"
-  "Colorsnapper2"
-  "Contexts"
-  "Fantastical"
-  "Hammerspoon"
-  "iStat Menus"
-  "Karabiner-Elements"
-  "kitty"
-  "Messages"
+    "1Password"
+    "Alfred 5"
+    "Bartender 4"
+    "BetterTouchTool"
+    "Brave Browser Dev"
+    "Cloudflare WARP"
+    "Colorsnapper2"
+    "Contexts"
+    "Fantastical"
+    "Hammerspoon"
+    "iStat Menus"
+    "Karabiner-Elements"
+    "kitty"
+    "Messages"
 )
 for app in "${apps_to_launch[@]}"; do
-  if [[ ! "$(app_is_running "${app}")" == "true" ]]; then
-    echo "Launching \"${app}\"."
-    open /Applications/${app}.app
-    sleep 2
-    echo
-  fi
+    if [[ ! "$(app_is_running "${app}")" == "true" ]]; then
+        echo "Launching \"${app}\"."
+        open /Applications/${app}.app
+        sleep 2
+        echo
+    fi
 done
 
 apps_to_startup=(
-  "1Password"
-  "Alfred 5"
-  "Bartender 4"
-  "BetterTouchTool"
-  "Cloudflare WARP"
-  "Colorsnapper2"
-  "Contexts"
-  "Fantastical"
-  "Hammerspoon"
-  "iStat Menus"
-  "Karabiner-Elements"
+    "1Password"
+    "Alfred 5"
+    "Bartender 4"
+    "BetterTouchTool"
+    "Cloudflare WARP"
+    "Colorsnapper2"
+    "Contexts"
+    "Fantastical"
+    "Hammerspoon"
+    "iStat Menus"
+    "Karabiner-Elements"
 )
 for app in "${apps_to_startup[@]}"; do
-  log "setting to \"${app}\" to launch at startup."
+    log "setting to \"${app}\" to launch at startup."
 
-  # Enable apps at startup
-  osascript -e 'tell application "System Events" to make login item at end with properties {path:"/Applications/${app}.app", hidden:true}' >/dev/null && log_ok "DONE"
+    # Enable apps at startup
+    osascript -e 'tell application "System Events" to make login item at end with properties {path:"/Applications/${app}.app", hidden:true}' >/dev/null && log_ok "DONE"
 done
 
 # Set brave as default browser!

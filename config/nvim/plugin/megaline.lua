@@ -509,8 +509,9 @@ local function seg_lsp_status(truncate_at)
   local ok_messages, messages = pcall(vim.lsp.status)
 
   if ok_messages and messages == "" then
-    local ok_nls, nls = mega.require("null-ls")
-    local enabled = ok_nls and nls.enabled
+    -- local ok_nls, nls = mega.require("null-ls")
+    local enabled = not vim.g.disable_autoformat
+    -- local enabled = (ok_nls and nls.enabled) or not vim.g.disable_autoformat
 
     return get_diagnostics(seg(mega.icons.lsp.kind.Null, "StModeInsert", enabled))
   end

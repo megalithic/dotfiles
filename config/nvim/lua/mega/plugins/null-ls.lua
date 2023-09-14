@@ -1,6 +1,7 @@
 local M = {
   -- {
   "jose-elias-alvarez/null-ls.nvim",
+  cond = vim.g.formatter == "null-ls",
   dependencies = { "nvim-lua/plenary.nvim" },
   event = { "BufReadPre", "BufNewFile" },
   config = function()

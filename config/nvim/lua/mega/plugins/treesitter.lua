@@ -31,6 +31,7 @@ return {
     "nvim-treesitter/nvim-treesitter",
     build = ":TSUpdate",
     event = "VeryLazy",
+    cond = #vim.api.nvim_list_uis() > 0,
     dependencies = {
       "nvim-treesitter/nvim-treesitter-textobjects",
       "RRethy/nvim-treesitter-textsubjects",
@@ -82,11 +83,20 @@ return {
 
       vim.opt.indentexpr = "nvim_treesitter#indent()"
 
-      local ft_to_parser = vim.treesitter.language.register
-      ft_to_parser("json", "jsonc")
-      ft_to_parser("keymap", "devicetree")
-      ft_to_parser("zsh", "bash")
-      ft_to_parser("kittybuf", "bash")
+      local ft_to_parser_aliases = {
+        dotenv = "bash",
+        kittybuf = "bash",
+        zsh = "bash",
+        keymap = "devicetree",
+        json = "jsonc",
+        javascriptreact = "jsx",
+        tiltfile = "starlark",
+        typescriptreact = "tsx",
+      }
+
+      for ft, parser in pairs(ft_to_parser_aliases) do
+        vim.treesitter.language.register(parser, ft)
+      end
 
       local parser_configs = require("nvim-treesitter.parsers").get_parser_configs()
       parser_configs.norg = {

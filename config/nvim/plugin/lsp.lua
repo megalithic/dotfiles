@@ -183,6 +183,7 @@ local function setup_autocommands(client, bufnr)
       command = function(args) format({ async = false, bufnr = args.buf }) end,
     },
   })
+
   -- augroup("LspDocumentHighlight", {
   --   {
   --     event = { "InsertEnter" },
@@ -283,7 +284,11 @@ local function setup_keymaps(client, bufnr)
   )
   nnoremap("<leader>lil", [[<cmd>LspLog<CR>]], desc("logs (vsplit)"))
   nnoremap("<leader>lf", vim.lsp.buf.format, desc("format buffer"))
-  nnoremap("<leader>lft", [[<cmd>ToggleNullFormatters<cr>]], desc("toggle formatting"))
+  if vim.g.formatter == "null-ls" then
+    nnoremap("<leader>lft", [[<cmd>ToggleNullFormatters<cr>]], desc("toggle formatting"))
+  elseif vim.g.formatter == "conform" then
+    nnoremap("<leader>lft", [[<cmd>ToggleAutoFormat<cr>]], desc("toggle formatting"))
+  end
   nnoremap("=", function() vim.lsp.buf.format({ buffer = bufnr, async = true }) end, desc("lsp: format buffer"))
   vnoremap("=", function() vim.lsp.buf.format({ buffer = bufnr, async = true }) end, desc("lsp: format buffer range"))
 end
@@ -303,18 +308,31 @@ local function setup_formatting(client, bufnr)
     end
   end
 
-  local function has_nls_formatter(ft)
-    local sources = require("null-ls.sources")
-    local available = sources.get_available(ft, "NULL_LS_FORMATTING")
-    return #available > 0
-  end
-
-  if client.name == "null-ls" then
-    if has_nls_formatter(api.nvim_buf_get_option(bufnr, "filetype")) then
-      client.server_capabilities.documentFormattingProvider = true
-    else
-      client.server_capabilities.documentFormattingProvider = false
+  if vim.g.formatter == "null-ls" then
+    local function has_formatter(ft)
+      local sources = require("null-ls.sources")
+      local available = sources.get_available(ft, "NULL_LS_FORMATTING")
+      return #available > 0
     end
+
+    if client.name == "null-ls" then
+      if has_formatter(api.nvim_buf_get_option(bufnr, "filetype")) then
+        client.server_capabilities.documentFormattingProvider = true
+      else
+        client.server_capabilities.documentFormattingProvider = false
+      end
+    end
+  elseif vim.g.formatter == "conform" then
+    -- local function has_formatter(ft)
+    --   local sources = require("conform").list_formatters(bufnr)
+    --   local available = sources.get_available(ft, "NULL_LS_FORMATTING")
+    --   return #available > 0
+    -- end
+    -- -- Disable autoformat on certain filetypes
+    -- local ignore_filetypes = { "sql", "java" }
+    -- if vim.tbl_contains(ignore_filetypes, vim.bo[args.buf].filetype) then return end
+    -- -- Disable with a global or buffer-local variable
+    -- if vim.g.disable_autoformat or vim.b[args.buf].disable_autoformat then return end
   end
 end
 
@@ -676,7 +694,8 @@ for server, _ in pairs(servers.list) do
       --     tsserver_plugins = { "typescript-styled-plugin" },
       --   },
       -- })
-      require("typescript").setup({ server = opts })
+      -- require("typescript").setup({ server = opts })
+      lspconfig[server].setup(opts)
     else
       lspconfig[server].setup(opts)
     end

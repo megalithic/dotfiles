@@ -28,9 +28,8 @@ end
 local fn, env = vim.fn, vim.env
 local icons = mega.icons
 local prompt = icons.misc.search .. "  "
--- local prompt = icons.misc.telescope .. "  "
 
-local fzf_lua = reqcall("fzf-lua") ---@module 'fzf-lua'
+local fzf_lua = reqcall("fzf-lua")
 ------------------------------------------------------------------------------------------------------------------------
 -- FZF-LUA HELPERS
 ------------------------------------------------------------------------------------------------------------------------
@@ -41,6 +40,7 @@ end
 local function ivy(opts, ...)
   opts = opts or {}
   opts["winopts"] = opts.winopts or {}
+
   return vim.tbl_deep_extend("force", {
     prompt = prompt,
     fzf_opts = { ["--layout"] = "reverse" },
@@ -64,13 +64,15 @@ local function ivy(opts, ...)
 end
 
 local function dropdown(opts, ...)
-  opts = opts or { winopts = {} }
+  -- dd(I(opts))
+  opts = opts or {}
+  opts["winopts"] = opts.winopts or {}
 
   return vim.tbl_deep_extend("force", {
     prompt = prompt,
     fzf_opts = { ["--layout"] = "reverse" },
     winopts = {
-      title_pos = (opts.winopts and opts.winopts.title) and "center" or nil,
+      title_pos = opts["winopts"].title and "center" or nil,
       height = 0.70,
       width = 0.45,
       row = 0.1,
@@ -91,7 +93,13 @@ local function cursor_dropdown(opts)
   }, opts)
 end
 
-local file_picker = function(cwd) fzf_lua.files({ cwd = cwd }) end
+local file_picker = function(opts_or_cwd)
+  if type(opts_or_cwd) == "table" then
+    fzf_lua.files(opts_or_cwd)
+  else
+    fzf_lua.files({ cwd = opts_or_cwd })
+  end
+end
 
 local function git_files_cwd_aware(opts)
   opts = opts or {}
@@ -108,6 +116,17 @@ local function git_files_cwd_aware(opts)
 end
 
 if vim.g.picker == "fzf" then
+  -- || Error detected while processing VimEnter Autocommands for "*":
+  -- || Error executing lua callback: Vim:E731: Using a Dictionary as a String
+  -- || stack traceback:
+  -- || 	[C]: in function 'expand'
+  -- || 	...seth/.local/share/nvim/lazy/fzf-lua/lua/fzf-lua/path.lua:337: in function 'git_cwd'
+  -- || 	...seth/.local/share/nvim/lazy/fzf-lua/lua/fzf-lua/path.lua:352: in function 'git_root'
+  -- || 	...seth/.local/share/nvim/lazy/fzf-lua/lua/fzf-lua/path.lua:348: in function 'is_git_repo'
+  -- || 	...th/.local/share/nvim/lazy/fzf-lua/lua/fzf-lua/config.lua:329: in function 'normalize_opts'
+  -- || 	.../share/nvim/lazy/fzf-lua/lua/fzf-lua/providers/files.lua:41: in function 'files'
+  -- || 	/Users/seth/.config/nvim/lua/mega/plugins/fzf.lua:94: in function 'file_picker'
+  -- || 	/Users/seth/.config/nvim/lua/mega/plugins/fzf.lua:123: in function </Users/seth/.config/nvim/lua/mega/plugins/fzf.lua:116>
   mega.augroup("FzfStartup", {
     {
       event = { "VimEnter" },
@@ -115,15 +134,12 @@ if vim.g.picker == "fzf" then
       once = true,
       command = function(args)
         if not vim.g.started_by_firenvim then
-          -- Open file browser if argument is a folder
-          -- REF: https://github.com/protiumx/.dotfiles/blob/main/stow/nvim/.config/nvim/lua/config/telescope.lua#L50
-          local fzf = require("fzf-lua")
           local arg = vim.api.nvim_eval("argv(0)")
           if arg and (vim.fn.isdirectory(arg) ~= 0 or arg == "") then
             file_picker(dropdown({
               -- actions = {
               --   files = {
-              --     ["default"] = fzf.actions.file_edit,
+              --     ["default"] = require("fzf-lua").actions.file_edit_or_qf,
               --   },
               -- },
             }))
@@ -185,6 +201,7 @@ return {
       end
 
       fzf.setup({
+        -- "fzf-native",
         fzf_opts = {
           ["--info"] = "default", -- hidden OR inline:⏐
           ["--reverse"] = false,
@@ -220,6 +237,7 @@ return {
               -- or, this is known to work: { "viu", "-t" }
               ["gif"] = { "chafa", "-c", "full" },
               ["jpg"] = { "chafa", "-c", "full" },
+              ["jpeg"] = { "chafa", "-c", "full" },
               ["png"] = { "chafa", "-c", "full" },
             },
           },

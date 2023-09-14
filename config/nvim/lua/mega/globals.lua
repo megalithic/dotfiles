@@ -1145,6 +1145,19 @@ end
 -- NOTE: This fn defers sourcing of most time consuming commands (mostly plugins). This is done by using `vim.schedule(f)` which defers execution of `f` until Vim is loaded. This doesn't affect general usability; it decreases time before showing fully functional start screen (or asked file).
 function mega.packer_deferred() vim.cmd([[do User PackerDeferred]]) end
 
+function mega.starts_with(haystack, needle)
+  return type(haystack) == "string" and haystack:sub(1, needle:len()) == needle
+end
+
+---@param text string
+function mega.smallcaps(text)
+  -- alt F ғ (ghayn)
+  -- alt Q ꞯ (currently using ogonek)
+  local smallcaps = "ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘǫʀsᴛᴜᴠᴡxʏᴢ‹›⁰¹²³⁴⁵⁶⁷⁸⁹"
+  local normal = "ABCDEFGHIJKLMNOPQRSTUVWXYZ<>0123456789"
+  return vim.fn.tr(text:upper(), normal, smallcaps)
+end
+
 function mega.get_cursor_position()
   local rowcol = vim.api.nvim_win_get_cursor(0)
   local row = rowcol[1] - 1
