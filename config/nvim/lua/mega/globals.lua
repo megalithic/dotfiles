@@ -219,6 +219,39 @@ function mega.opt(o, v, scopes)
   end
 end
 
+---Determine if a value of any type is empty
+---@param item any
+---@return boolean?
+function mega.falsy(item)
+  if not item then return true end
+  local item_type = type(item)
+  if item_type == "boolean" then return not item end
+  if item_type == "string" then return item == "" end
+  if item_type == "number" then return item <= 0 end
+  if item_type == "table" then return vim.tbl_isempty(item) end
+  return item ~= nil
+end
+
+--- Call the given function and use `vim.notify` to notify of any errors
+--- this function is a wrapper around `xpcall` which allows having a single
+--- error handler for all errors
+---@param msg string
+---@param func function
+---@param ... any
+---@return boolean, any
+---@overload fun(func: function, ...): boolean, any
+function mega.pcall(msg, func, ...)
+  local args = { ... }
+  if type(msg) == "function" then
+    local arg = func --[[@as any]]
+    args, func, msg = { arg, unpack(args) }, msg, nil
+  end
+  return xpcall(func, function(err)
+    msg = debug.traceback(msg and fmt("%s:\n%s\n%s", msg, vim.inspect(args), err) or err)
+    vim.schedule(function() vim.notify(msg, L.ERROR, { title = "ERROR", render = "default" }) end)
+  end, unpack(args))
+end
+
 --- Call the given function and use `vim.notify` to notify of any errors
 --- this function is a wrapper around `xpcall` which allows having a single
 --- error handler for all errors
@@ -227,18 +260,7 @@ end
 ---@vararg any
 ---@return boolean, any
 ---@overload fun(fun: function, ...): boolean, any
-function mega.wrap_err(msg, func, ...)
-  local args = { ... }
-  if type(msg) == "function" then
-    local arg = func --[[@as any]]
-    args, func, msg = { arg, unpack(args) }, msg, nil
-  end
-  return xpcall(func, function(err)
-    -- msg = msg and fmt("%s:\n%s", msg, err) or err
-    msg = debug.traceback(msg and fmt("%s:\n%s", msg, err) or err)
-    vim.schedule(function() vim.notify(msg, L.ERROR, { title = "ERROR" }) end)
-  end, unpack(args))
-end
+function mega.wrap_err(msg, func, ...) mega.pcall(msg, func, ...) end
 
 ---Require a module using `pcall` and report any errors
 ---@param module_name string
@@ -256,27 +278,73 @@ function mega.require(module_name, opts)
   return ok, result
 end
 
--- ---@alias Plug table<(string | number), string>
+---@class FiletypeSettings
+---@field g table<string, any>
+---@field bo vim.bo
+---@field wo vim.wo
+---@field opt vim.opt
+---@field plugins {[string]: fun(module: table)}
+
+---@param args {[1]: string, [2]: string, [3]: string, [string]: boolean | integer}[]
+---@param buf integer
+local function apply_ft_mappings(args, buf)
+  vim.iter(args):each(function(m)
+    assert(#m == 3, "map args must be a table with at least 3 items")
+    local opts = vim.iter(m):fold({ buffer = buf }, function(acc, key, item)
+      if type(key) == "string" then acc[key] = item end
+      return acc
+    end)
+    map(m[1], m[2], m[3], opts)
+  end)
+end
 
 --- A convenience wrapper that calls the ftplugin config for a plugin if it exists
 --- and warns me if the plugin is not installed
---- TODO: find out if it's possible to annotate the plugin as a module
----@param name string
--- ---@param name string | Plug
----@param callback fun(module: table) | fun()
-function mega.ftplugin_conf(name, callback)
-  local plugin_name = type(name) == "table" and name.plugin or nil
-  if plugin_name and not mega.plugin_loaded(plugin_name) then return end
-
-  local module = type(name) == "table" and name[1] or name
-  local info = debug.getinfo(1, "S")
-  local ok, plugin = mega.require(module, { message = fmt("In file: %s", info.source) })
-
-  if ok and plugin then
-    callback(plugin)
-  else
-    callback()
+---@param configs table<string, fun(module: table)>
+function mega.ftplugin_conf(configs)
+  if type(configs) ~= "table" then return end
+  for name, callback in pairs(configs) do
+    local ok, plugin = mega.pcall(require, name)
+    if ok then callback(plugin) end
   end
+end
+
+--- This function is an alternative API to using ftplugin files. It allows defining
+--- filetype settings in a single place, then creating FileType autocommands from this definition
+---
+--- e.g.
+--- ```lua
+---   mega.filetype_settings({
+---     lua = {
+---      opt = {foldmethod = 'expr' },
+---      bo = { shiftwidth = 2 }
+---     },
+---    [{'c', 'cpp'}] = {
+---      bo = { shiftwidth = 2 }
+---    }
+---   })
+--- ```
+---
+---@param map {[string|string[]]: FiletypeSettings | {[integer]: fun(args: AutocmdArgs)}}
+function mega.filetype_settings(map)
+  local commands = vim.iter(map):map(function(ft, settings)
+    local name = type(ft) == "table" and table.concat(ft, ",") or ft
+    return {
+      pattern = ft,
+      event = "FileType",
+      desc = ("ft settings for %s"):format(name),
+      command = function(args)
+        vim.iter(settings):each(function(key, value)
+          if key == "opt" then key = "opt_local" end
+          if key == "mappings" then return apply_ft_mappings(value, args.buf) end
+          if key == "plugins" then return mega.ftplugin_conf(value) end
+          if type(key) == "function" then return mega.pcall(key, args) end
+          vim.iter(value):each(function(option, setting) vim[key][option] = setting end)
+        end)
+      end,
+    }
+  end)
+  mega.augroup("filetype-settings", unpack(commands:totable()))
 end
 
 -- function mega.plugin_setup(plugin_name, setup_tbl)

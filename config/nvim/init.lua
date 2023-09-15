@@ -54,8 +54,8 @@ vim.g.tester = "vim-test" -- alt: neotest, vim-test
 vim.g.snipper = "vsnip" -- alt: vsnip, luasnip
 vim.g.ts_ignored_langs = {} -- alt: { "svg", "json", "heex", "jsonc" }
 vim.g.formatter_exclusions = { "elixirls-dev", "elixirls", "ElixirLS", "lexical" }
-vim.g.diagnostic_exclusions = { "ElixirLS", "lexical" } --, "lexical", "NextLS" }
-vim.g.enabled_elixir_ls = { "ElixirLS", "NextLS", "lexical" } -- alt: credo
+vim.g.diagnostic_exclusions = { "ElixirLS", "lexical" } --, ElixirLS, lexical, NextLS
+vim.g.enabled_elixir_ls = { "ElixirLS", "NextLS" } -- alt: ElixirLS, NextLS, lexical, credo
 
 -- [ globals ] -----------------------------------------------------------------
 
@@ -86,7 +86,7 @@ require("mega.mappings")
 
 -- [ colorscheme ] -------------------------------------------------------------
 
-mega.wrap_err("theme failed to load because", function(colorscheme)
+mega.pcall("theme failed to load because", function(colorscheme)
   local theme = fmt("mega.lush_theme.%s", colorscheme)
   local ok, lush_theme = pcall(require, theme)
   if ok then

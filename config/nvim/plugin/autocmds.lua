@@ -146,6 +146,19 @@ do
         end
       end,
     },
+    -- {
+    --   event = { "BufReadPost" },
+    --   command = function()
+    --     if vim.fn.line("'\"") > 0 and vim.fn.line("'\"") <= vim.fn.line("$") then
+    --       vim.fn.setpos(".", vim.fn.getpos("'\""))
+    --       if vim.fn.prevnonblank(".") == vim.fn.line(".") then
+    --         vim.api.nvim_feedkeys("zz", "n", true)
+    --         vim.cmd("silent! foldopen")
+    --       end
+    --       mega.flash_cursorline()
+    --     end
+    --   end,
+    -- },
     {
       event = { "BufNewFile", "BufWritePre" },
       pattern = { "*" },

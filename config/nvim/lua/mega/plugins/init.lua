@@ -846,85 +846,63 @@ return {
     },
     opts = {},
   },
-
   {
-    enabled = false,
     "pmizio/typescript-tools.nvim",
-    ft = {
-      "typescript",
-      "typescriptreact",
-      "javascript",
-      "javascriptreact",
+    branch = "feature/search-for-tsserver-in-path-and-mason",
+    event = {
+      "BufRead *.js,*.jsx,*.mjs,*.cjs,*ts,*tsx",
+      "BufNewFile *.js,*.jsx,*.mjs,*.cjs,*ts,*tsx",
     },
-    -- event = "VeryLazy",
     dependencies = {
       "nvim-lua/plenary.nvim",
       "neovim/nvim-lspconfig",
-      "williamboman/mason.nvim",
     },
     opts = {
+      on_attach = function(client, bufnr)
+        client.server_capabilities.documentFormattingProvider = false
+        client.server_capabilities.documentRangeFormattingProvider = false
+
+        vim.keymap.set(
+          "n",
+          "gD",
+          "<Cmd>TSToolsGoToSourceDefinition<CR>",
+          { buffer = bufnr, desc = "lsp (ts/tsx): go to source definition" }
+        )
+
+        vim.keymap.set(
+          "n",
+          "<localleader>li",
+          "<Cmd>TSToolsAddMissingImports<CR>",
+          { buffer = bufnr, desc = "lsp (ts/tsx): add missing imports" }
+        )
+        vim.keymap.set(
+          "n",
+          "<localleader>lo",
+          "<Cmd>TSToolsOrganizeImports<CR>",
+          { buffer = bufnr, desc = "lsp (ts/tsx): organize imports" }
+        )
+        vim.keymap.set(
+          "n",
+          "<localleader>lr",
+          "<Cmd>TSToolsRemoveUnused<CR>",
+          { buffer = bufnr, desc = "lsp (ts/tsx): remove unused imports" }
+        )
+        vim.keymap.set(
+          "n",
+          "<localleader>lf",
+          "<Cmd>TSToolsFixAll<CR>",
+          { buffer = bufnr, desc = "lsp (ts/tsx): fix all" }
+        )
+      end,
       settings = {
-        -- tsserver_path = tsserver_path .. "/node_modules/typescript/lib/tsserver.js",
-        separate_diagnostic_server = false,
-        publish_diagnostic_on = "insert_leave",
-        expose_as_code_action = { "fix_all", "add_missing_imports", "remove_unused" },
-        tsserver_max_memory = 4096, -- or "auto"
-        -- complete_function_calls = false,
-        -- handlers = {
-        --   ["textDocument/publishDiagnostics"] = api.filter_diagnostics(
-        --     -- Ignore 'This may be converted to an async function' diagnostics.
-        --     -- { 80006 }
-        --     {}
-        --   ),
-        -- },
-        -- tsserver_plugins = { "styled-components" }, -- npm i -g typescript-styled-plugin
         tsserver_file_preferences = {
-          -- allowIncompleteCompletions = true,
-          -- allowRenameOfImportPath = true,
-          -- allowTextChangesInNewFiles = true,
-          -- disableLineTextInReferences = true,
-          -- displayPartsForJSDoc = true,
-          -- generateReturnInDocTemplate = true,
-          -- importModuleSpecifier = "non-relative",
-          -- importModuleSpecifierEnding = "auto",
-          -- includeAutomaticOptionalChainCompletions = true,
-          -- includeCompletionsForImportStatements = true,
-          -- includeCompletionsWithClassMemberSnippets = true,
-          -- includeCompletionsWithObjectLiteralMethodSnippets = true,
-          -- includeCompletionsWithSnippetText = true,
-          -- includeInlayEnumMemberValueHints = false,
-          -- includeInlayFunctionLikeReturnTypeHints = false,
-          -- includeInlayFunctionParameterTypeHints = false,
-          -- includeInlayParameterNameHints = "all",
-          -- includeInlayParameterNameHintsWhenArgumentMatchesName = false,
-          -- includeInlayPropertyDeclarationTypeHints = false,
-          -- includeInlayVariableTypeHints = true,
-          -- includeInlayVariableTypeHintsWhenTypeMatchesName = false,
-          -- jsxAttributeCompletionStyle = "auto",
-          -- providePrefixAndSuffixTextForRename = true,
-          -- provideRefactorNotApplicableReason = true,
-          -- quotePreference = "auto",
-          -- useLabelDetailsInCompletionEntries = true,
-        },
-        tsserver_format_options = {
-          -- indentSwitchCase = true,
-          -- insertSpaceAfterCommaDelimiter = true,
-          -- insertSpaceAfterConstructor = false,
-          -- insertSpaceAfterFunctionKeywordForAnonymousFunctions = true,
-          -- insertSpaceAfterKeywordsInControlFlowStatements = true,
-          -- insertSpaceAfterOpeningAndBeforeClosingEmptyBraces = true,
-          -- insertSpaceAfterOpeningAndBeforeClosingJsxExpressionBraces = false,
-          -- insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces = true,
-          -- insertSpaceAfterOpeningAndBeforeClosingNonemptyBrackets = false,
-          -- insertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis = false,
-          -- insertSpaceAfterOpeningAndBeforeClosingTemplateStringBraces = false,
-          -- insertSpaceAfterSemicolonInForStatements = true,
-          -- insertSpaceAfterTypeAssertion = false,
-          -- insertSpaceBeforeAndAfterBinaryOperators = true,
-          -- insertSpaceBeforeFunctionParenthesis = false,
-          -- placeOpenBraceOnNewLineForControlBlocks = false,
-          -- placeOpenBraceOnNewLineForFunctions = false,
-          -- semicolons = "ignore",
+          includeInlayParameterNameHints = "all",
+          includeInlayParameterNameHintsWhenArgumentMatchesName = false,
+          includeInlayFunctionParameterTypeHints = true,
+          includeInlayVariableTypeHints = true,
+          includeInlayPropertyDeclarationTypeHints = true,
+          includeInlayFunctionLikeReturnTypeHints = true,
+          includeInlayEnumMemberValueHints = true,
         },
       },
     },

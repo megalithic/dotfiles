@@ -57,12 +57,12 @@ return {
     format_on_save = function(bufnr)
       local async_format = vim.g.async_format_filetypes[vim.bo[bufnr].filetype]
       if async_format or vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then return end
-      return { timeout_ms = 500, lsp_fallback = true }
+      return { timeout_ms = 500, lsp_fallback = "always" }
     end,
     format_after_save = function(bufnr)
       local async_format = vim.g.async_format_filetypes[vim.bo[bufnr].filetype]
       if not async_format or vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then return end
-      return { lsp_fallback = true }
+      return { lsp_fallback = "always" }
     end,
     user_async_format_filetypes = {
       python = true,

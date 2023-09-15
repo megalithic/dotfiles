@@ -620,6 +620,8 @@ M.list = {
 }
 M.unofficial = {
   lexical = function()
+    if true then return nil end
+
     local configs = require("lspconfig.configs")
 
     local function cmd()
@@ -649,14 +651,16 @@ M.unofficial = {
     end
   end,
   nextls = function()
+    if true then return nil end
+
     local configs = require("lspconfig.configs")
 
-    local function cmd()
-      -- built from bin/nextls-install
-      return vim.env.XDG_DATA_HOME .. "/lsp/nextls/bin/nextls"
-    end
-
     if not configs.nextls then
+      local function cmd()
+        -- built from bin/nextls-install
+        return vim.env.XDG_DATA_HOME .. "/lsp/nextls/bin/nextls"
+      end
+
       configs.nextls = {
         default_config = {
           cmd = { cmd() },
