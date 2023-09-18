@@ -139,7 +139,7 @@ local M = {
       nls.toggle({ methods = nls.methods.FORMATTING })
     end
 
-    mega.command("ToggleNullFormatters", toggle_null_formatters)
+    mega.command("ToggleAutoFormat", toggle_null_formatters)
   end,
   -- },
   -- {

@@ -151,7 +151,29 @@ return {
 
       require("marks").setup({
         force_write_shada = false, -- This can cause data loss
-        excluded_filetypes = { "NeogitStatus", "NeogitCommitMessage", "toggleterm", "megaterm" },
+        excluded_filetypes = {
+          "DressingInput",
+          "gitcommit",
+          "NeogitCommitMessage",
+          "NeogitNotification",
+          "NeogitStatus",
+          "NeogitStatus",
+          "NvimTree",
+          "Outline",
+          "OverseerForm",
+          "dropbar_menu",
+          "lazy",
+          "lspinfo",
+          "megaterm",
+          "neo-tree",
+          "neo-tree-popup",
+          "noice",
+          "notify",
+          "null-ls-info",
+          "registers",
+          "toggleterm",
+          "toggleterm",
+        },
         bookmark_0 = { sign = "⚑", virt_text = "" },
         mappings = { annotate = "m?" },
       })
@@ -166,19 +188,19 @@ return {
     dependencies = {
       "hrsh7th/cmp-nvim-lsp",
       { "nvim-lua/lsp_extensions.nvim" },
-      {
-        "jose-elias-alvarez/typescript.nvim",
-        enabled = vim.g.formatter == "null-ls",
-        ft = { "typescript", "typescriptreact" },
-        dependencies = { "jose-elias-alvarez/null-ls.nvim" },
-        config = function()
-          if vim.g.formatter == "null-ls" then
-            require("null-ls").register({
-              sources = { require("typescript.extensions.null-ls.code-actions") },
-            })
-          end
-        end,
-      },
+      -- {
+      --   "jose-elias-alvarez/typescript.nvim",
+      --   enabled = vim.g.formatter == "null-ls",
+      --   ft = { "typescript", "typescriptreact" },
+      --   dependencies = { "jose-elias-alvarez/null-ls.nvim" },
+      --   config = function()
+      --     if vim.g.formatter == "null-ls" then
+      --       require("null-ls").register({
+      --         sources = { require("typescript.extensions.null-ls.code-actions") },
+      --       })
+      --     end
+      --   end,
+      -- },
       { "MunifTanjim/nui.nvim" },
       { "williamboman/mason-lspconfig.nvim" },
       { "b0o/schemastore.nvim" },
@@ -848,7 +870,6 @@ return {
   },
   {
     "pmizio/typescript-tools.nvim",
-    branch = "feature/search-for-tsserver-in-path-and-mason",
     event = {
       "BufRead *.js,*.jsx,*.mjs,*.cjs,*ts,*tsx",
       "BufNewFile *.js,*.jsx,*.mjs,*.cjs,*ts,*tsx",

@@ -47,7 +47,7 @@ vim.g.maplocalleader = " "
 vim.g.notifier_enabled = true
 vim.g.debug_enabled = false
 vim.g.picker = "fzf" -- alt: telescope, fzf
-vim.g.formatter = "conform" -- alt: null-ls, conform
+vim.g.formatter = "null-ls" -- alt: null-ls, conform
 vim.g.tree = "neo-tree"
 vim.g.explorer = "oil" -- alt: dirbuf, oil
 vim.g.tester = "vim-test" -- alt: neotest, vim-test
@@ -72,11 +72,12 @@ _G.mega = mega
     notify = vim.notify,
   }
 
--- [ loaders ] -----------------------------------------------------------------
+-- [ luarocks ] -----------------------------------------------------------------
 
--- load luarocks
--- package.path = package.path .. ";" .. vim.fn.expand("$HOME") .. "/.luarocks/share/lua/5.1/?/init.lua;"
--- package.path = package.path .. ";" .. vim.fn.expand("$HOME") .. "/.luarocks/share/lua/5.1/?.lua;"
+package.path = string.format("%s; %s/.luarocks/share/lua/5.1/?/init.lua;", package.path, vim.fn.expand("$HOME"))
+package.path = string.format("%s; %s/.luarocks/share/lua/5.1/?.lua;", package.path, vim.fn.expand("$HOME"))
+
+-- [ loaders ] -----------------------------------------------------------------
 
 require("mega.globals")
 require("mega.debug")

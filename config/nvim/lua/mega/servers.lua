@@ -620,8 +620,6 @@ M.list = {
 }
 M.unofficial = {
   lexical = function()
-    if true then return nil end
-
     local configs = require("lspconfig.configs")
 
     local function cmd()

@@ -85,37 +85,35 @@ return {
 
       local ft_to_parser_aliases = {
         dotenv = "bash",
-        kittybuf = "bash",
-        zsh = "bash",
-        keymap = "devicetree",
-        json = "jsonc",
+        gitcommit = "NeogitCommitMessage",
         javascriptreact = "jsx",
+        json = "jsonc",
+        keymap = "devicetree",
+        kittybuf = "bash",
         tiltfile = "starlark",
         typescriptreact = "tsx",
+        zsh = "bash",
       }
 
       for ft, parser in pairs(ft_to_parser_aliases) do
         vim.treesitter.language.register(parser, ft)
       end
 
-      local parser_configs = require("nvim-treesitter.parsers").get_parser_configs()
-      parser_configs.norg = {
-        install_info = {
-          url = "https://github.com/nvim-neorg/tree-sitter-norg",
-          files = { "src/parser.c", "src/scanner.cc" },
-          branch = "main",
-        },
-      }
-
-      parser_configs.norg_meta = {
-        install_info = {
-          url = "https://github.com/nvim-neorg/tree-sitter-norg-meta",
-          files = { "src/parser.c" },
-          branch = "main",
-        },
-      }
-
-      vim.treesitter.language.register("gitcommit", "NeogitCommitMessage")
+      -- local parser_configs = require("nvim-treesitter.parsers").get_parser_configs()
+      -- parser_configs.norg = {
+      --   install_info = {
+      --     url = "https://github.com/nvim-neorg/tree-sitter-norg",
+      --     files = { "src/parser.c", "src/scanner.cc" },
+      --     branch = "main",
+      --   },
+      -- }
+      -- parser_configs.norg_meta = {
+      --   install_info = {
+      --     url = "https://github.com/nvim-neorg/tree-sitter-norg-meta",
+      --     files = { "src/parser.c" },
+      --     branch = "main",
+      --   },
+      -- }
 
       require("nvim-treesitter.configs").setup({
         auto_install = false,
@@ -275,7 +273,7 @@ return {
             ["eruby.yaml"] = "# %s",
           },
         },
-        matchup = { enable = false, include_match_words = true, disable = should_disable, disable_virtual_text = true },
+        matchup = { enable = true, include_match_words = true, disable = should_disable, disable_virtual_text = true },
         autopairs = { enable = true },
         textobjects = {
           lookahead = true,
