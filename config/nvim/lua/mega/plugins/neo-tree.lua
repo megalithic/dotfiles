@@ -85,7 +85,7 @@ return {
           event = "neo_tree_window_after_close",
           handler = function(_args)
             mega.resize_windows()
-            require("virt-column").refresh()
+            require("virt-column").update()
             vim.cmd("wincmd p")
           end,
         },
@@ -151,7 +151,7 @@ return {
       commands = {
         image_wezterm = function(state)
           local node = state.tree:get_node()
-          if node.type == "file" then require("image_preview").PreviewImage(node.path) end
+          if node.type == "file" then require("mega.utils").preview_file(node.path) end
         end,
       },
     })

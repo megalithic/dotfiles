@@ -9,6 +9,25 @@ return {
     priority = 1000,
   },
   { "sainnhe/everforest", lazy = false, priority = 1001 },
+  {
+    "projekt0n/caret.nvim",
+    lazy = false, -- make sure we load this during startup if it is your main colorscheme
+    priority = 1002, -- make sure to load this before all the other start plugins
+    opts = {
+      options = {
+        transparent = true,
+      },
+    },
+  },
+  {
+    "farmergreg/vim-lastplace",
+    lazy = false,
+    init = function()
+      vim.g.lastplace_ignore = "gitcommit,gitrebase,svn,hgcommit,oil,megaterm,neogitcommit,gitrebase"
+      vim.g.lastplace_ignore_buftype = "quickfix,nofile,help,terminal"
+      vim.g.lastplace_open_folds = true
+    end,
+  },
   { "nvim-tree/nvim-web-devicons", config = function() require("nvim-web-devicons").setup() end },
   {
     "NvChad/nvim-colorizer.lua",
@@ -45,11 +64,6 @@ return {
         },
       })
     end,
-  },
-  {
-    "adelarsq/image_preview.nvim",
-    event = { "VeryLazy" },
-    opts = true,
   },
   {
     "3rd/image.nvim",
@@ -94,7 +108,7 @@ return {
   --   opts = {},
   -- },
   {
-    "chrisgrieser/replacer.nvim",
+    "gabrielpoca/replacer.nvim",
     ft = "qf",
     -- keys = {
     --   { "<leader>R", function() require("replacer").run() end, desc = "qf: replace in qflist" },
@@ -273,6 +287,7 @@ return {
         credo = { enable = mega.lsp.is_enabled_elixir_ls("credo") },
         nextls = {
           enable = mega.lsp.is_enabled_elixir_ls("NextLS"),
+          root_dir = require("mega.utils.lsp").root_pattern("mix.exs", ".git"), -- or vim.uv.os_homedir(),
           -- version = "*",
         },
         elixirls = {
@@ -288,6 +303,7 @@ return {
             suggestSpecs = true,
           }),
           filetypes = { "elixir", "eelixir", "heex", "surface" },
+          root_dir = require("mega.utils.lsp").root_pattern("mix.exs", ".git"), -- or vim.uv.os_homedir(),
           log_level = vim.lsp.protocol.MessageType.Log,
           message_level = vim.lsp.protocol.MessageType.Log,
           on_attach = function(client, bufnr)
@@ -396,7 +412,7 @@ return {
             local fileName = entry["name"]
             local fullName = dir .. fileName
 
-            require("mega.utils").preview_image(fullName)
+            require("mega.utils").preview_file(fullName)
           else
             return ""
           end

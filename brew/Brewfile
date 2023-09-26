@@ -137,6 +137,7 @@ brew "moreutils"
 brew "mycli"
 brew "nb" if OS.mac?
 brew "ncurses"
+brew "elixir-tools/tap/next-ls"
 # brew "neovim", args: ["HEAD"] # building from source now
 # brew "neovim-remote" # pip3'd
 brew "ninja" # for lua sumneko lsp

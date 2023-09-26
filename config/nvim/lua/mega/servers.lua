@@ -2,21 +2,8 @@ local fn, lsp = vim.fn, vim.lsp
 local ok_lsp = mega.require("lspconfig")
 if not ok_lsp then return end
 
-local lsputil = require("lspconfig.util")
-
-local function root_pattern(...)
-  local patterns = vim.tbl_flatten({ ... })
-
-  return function(startpath)
-    for _, pattern in ipairs(patterns) do
-      return lsputil.search_ancestors(startpath, function(path)
-        if lsputil.path.exists(fn.glob(lsputil.path.join(path, pattern))) then return path end
-      end)
-    end
-  end
-end
-
 local M = {}
+local root_pattern = require("mega.utils.lsp").root_pattern
 
 M.list = {
   bashls = {},
@@ -115,41 +102,45 @@ M.list = {
   --     filetypes = { "lua", "python", "json" },
   --   }
   -- end,
-  -- elixirls = {
-  --   cmd = { fmt("%s/lsp/elixir-ls/%s", vim.env.XDG_DATA_HOME, "language_server.sh") },
-  --   -- cmd = { "elixir-ls" },
-  --   -- cmd = lsp_cmd_override({
-  --   --   ".elixir-ls-release/language_server.sh",
-  --   --   fmt("%s/lsp/elixir-ls/%s", vim.env.XDG_DATA_HOME, "language_server.sh"),
-  --   --   "elixir-ls",
-  --   -- }),
-  --   -- handlers = {
-  --   --   ["window/logMessage"] = function(_err, result)
-  --   --     local message = vim.split("[" .. vim.lsp.protocol.MessageType[result.type] .. "] " .. result.message, "\n")
-  --   --     local elixir_nvim_output_bufnr
-  --   --
-  --   --     if not elixir_nvim_output_bufnr then
-  --   --       elixir_nvim_output_bufnr = vim.api.nvim_create_buf(false, true)
-  --   --       vim.api.nvim_buf_set_name(elixir_nvim_output_bufnr, "ElixirLS Output Panel")
-  --   --       vim.api.nvim_buf_set_option(elixir_nvim_output_bufnr, "filetype", "elixirls")
-  --   --     end
-  --   --
-  --   --     pcall(vim.api.nvim_buf_set_lines, elixir_nvim_output_bufnr, -1, -1, false, message)
-  --   --
-  --   --     mega.nnoremap("<localleader>eob", open_output_panel, { desc = "elixir: open output panel" })
-  --   --   end,
-  --   -- },
-  --   settings = {
-  --     elixirLS = {
-  --       -- mixEnv = "dev",
-  --       fetchDeps = false,
-  --       dialyzerEnabled = true,
-  --       dialyzerFormat = "dialyxir_long",
-  --       enableTestLenses = true,
-  --       suggestSpecs = true,
-  --     },
-  --   },
-  -- },
+  elixirls = function()
+    if not mega.lsp.is_enabled_elixir_ls("elixirls") then return nil end
+
+    return {
+      cmd = { fmt("%s/lsp/elixir-ls/%s", vim.env.XDG_DATA_HOME, "language_server.sh") },
+      -- cmd = { "elixir-ls" },
+      -- cmd = lsp_cmd_override({
+      --   ".elixir-ls-release/language_server.sh",
+      --   fmt("%s/lsp/elixir-ls/%s", vim.env.XDG_DATA_HOME, "language_server.sh"),
+      --   "elixir-ls",
+      -- }),
+      -- handlers = {
+      --   ["window/logMessage"] = function(_err, result)
+      --     local message = vim.split("[" .. vim.lsp.protocol.MessageType[result.type] .. "] " .. result.message, "\n")
+      --     local elixir_nvim_output_bufnr
+      --
+      --     if not elixir_nvim_output_bufnr then
+      --       elixir_nvim_output_bufnr = vim.api.nvim_create_buf(false, true)
+      --       vim.api.nvim_buf_set_name(elixir_nvim_output_bufnr, "ElixirLS Output Panel")
+      --       vim.api.nvim_buf_set_option(elixir_nvim_output_bufnr, "filetype", "elixirls")
+      --     end
+      --
+      --     pcall(vim.api.nvim_buf_set_lines, elixir_nvim_output_bufnr, -1, -1, false, message)
+      --
+      --     mega.nnoremap("<localleader>eob", open_output_panel, { desc = "elixir: open output panel" })
+      --   end,
+      -- },
+      settings = {
+        elixirLS = {
+          -- mixEnv = "dev",
+          fetchDeps = false,
+          dialyzerEnabled = true,
+          dialyzerFormat = "dialyxir_long",
+          enableTestLenses = true,
+          suggestSpecs = true,
+        },
+      },
+    }
+  end,
   elmls = {},
   emmet_ls = {
     settings = {
@@ -410,6 +401,58 @@ M.list = {
     }
   end,
   marksman = {},
+  -- nextls = {
+  --   cmd = { fmt("%s/lsp/next-ls/bin/%s", vim.env.XDG_DATA_HOME, "nextls") },
+  --   single_file_support = true,
+  --   filetypes = { "elixir", "eelixir", "heex", "surface" },
+  --   log_level = vim.lsp.protocol.MessageType.Log,
+  --   message_level = vim.lsp.protocol.MessageType.Log,
+  --   settings = {
+  --     -- mixEnv = "dev",
+  --     fetchDeps = false,
+  --     dialyzerEnabled = true,
+  --     dialyzerFormat = "dialyxir_long",
+  --     enableTestLenses = true,
+  --     suggestSpecs = true,
+  --   },
+  --   on_attach = function(_client, _bufnr) end,
+  -- },
+
+  nextls = function()
+    if not mega.lsp.is_enabled_elixir_ls("nextls") then return nil end
+
+    return {
+      -- log_level = vim.lsp.protocol.MessageType.Log,
+      -- message_level = vim.lsp.protocol.MessageType.Log,
+      -- logLevel = vim.lsp.protocol.MessageType.Log,
+      -- messageLevel = vim.lsp.protocol.MessageType.Log,
+      --
+      -- settings = {
+      --   dialyzerEnabled = true,
+      --   log_level = vim.lsp.protocol.MessageType.Log,
+      --   message_level = vim.lsp.protocol.MessageType.Log,
+      --   logLevel = vim.lsp.protocol.MessageType.Log,
+      --   messageLevel = vim.lsp.protocol.MessageType.Log,
+      --   -- lexical = {
+      --   --   logLevel = "debug",
+      --   -- },
+      -- },
+
+      single_file_support = true,
+      filetypes = { "elixir", "eelixir", "heex", "surface" },
+      log_level = vim.lsp.protocol.MessageType.Log,
+      message_level = vim.lsp.protocol.MessageType.Log,
+      settings = {
+        -- mixEnv = "dev",
+        fetchDeps = false,
+        dialyzerEnabled = true,
+        dialyzerFormat = "dialyxir_long",
+        enableTestLenses = true,
+        suggestSpecs = true,
+      },
+      on_attach = function(_client, _bufnr) end,
+    }
+  end,
   prosemd_lsp = {},
   pyright = {
     single_file_support = false,
@@ -618,21 +661,19 @@ M.list = {
     },
   },
 }
+
 M.unofficial = {
   lexical = function()
     local configs = require("lspconfig.configs")
 
-    local function cmd()
-      -- built from bin/lexical-install
-      return vim.env.XDG_DATA_HOME .. "/lsp/lexical/_build/dev/package/lexical/bin/start_lexical.sh"
-    end
+    local function cmd() return vim.env.XDG_DATA_HOME .. "/lsp/lexical/_build/dev/package/lexical/bin/start_lexical.sh" end
 
     if not configs.lexical then
       configs.lexical = {
         default_config = {
           cmd = { cmd() },
           filetypes = { "elixir", "eelixir", "heex", "surface" },
-          root_dir = root_pattern("mix.lock", "mix.exs", ".git"), -- or vim.loop.os_homedir(),
+          root_dir = root_pattern("mix.exs", ".git"), -- or vim.loop.os_homedir(),
           log_level = vim.lsp.protocol.MessageType.Log,
           message_level = vim.lsp.protocol.MessageType.Log,
           logLevel = vim.lsp.protocol.MessageType.Log,
@@ -649,32 +690,41 @@ M.unofficial = {
     end
   end,
   nextls = function()
-    if true then return nil end
-
     local configs = require("lspconfig.configs")
 
     if not configs.nextls then
-      local function cmd()
-        -- built from bin/nextls-install
-        return vim.env.XDG_DATA_HOME .. "/lsp/nextls/bin/nextls"
-      end
+      -- local function cmd() return vim.env.XDG_DATA_HOME .. "/lsp/nextls/bin/nextls" end
 
       configs.nextls = {
         default_config = {
-          cmd = { cmd() },
+          cmd = { "nextls", "--stdio" },
+          single_file_support = true,
           filetypes = { "elixir", "eelixir", "heex", "surface" },
-          root_dir = root_pattern("mix.lock", "mix.exs", ".git"), -- or vim.loop.os_homedir(),
+          root_dir = root_pattern("mix.exs", ".git"),
           log_level = vim.lsp.protocol.MessageType.Log,
           message_level = vim.lsp.protocol.MessageType.Log,
-          logLevel = vim.lsp.protocol.MessageType.Log,
-          messageLevel = vim.lsp.protocol.MessageType.Log,
           settings = {
+            -- mixEnv = "dev",
+            fetchDeps = false,
             dialyzerEnabled = true,
-            log_level = vim.lsp.protocol.MessageType.Log,
-            message_level = vim.lsp.protocol.MessageType.Log,
-            logLevel = vim.lsp.protocol.MessageType.Log,
-            messageLevel = vim.lsp.protocol.MessageType.Log,
+            dialyzerFormat = "dialyxir_long",
+            enableTestLenses = true,
+            suggestSpecs = true,
           },
+          on_attach = function(_client, _bufnr) end,
+          -- filetypes = { "elixir", "eelixir", "heex", "surface" },
+          -- root_dir = root_pattern("mix.exs", ".git"), -- or vim.uv.os_homedir(),
+          -- log_level = vim.lsp.protocol.MessageType.Log,
+          -- message_level = vim.lsp.protocol.MessageType.Log,
+          -- logLevel = vim.lsp.protocol.MessageType.Log,
+          -- messageLevel = vim.lsp.protocol.MessageType.Log,
+          -- settings = {
+          --   dialyzerEnabled = true,
+          --   log_level = vim.lsp.protocol.MessageType.Log,
+          --   message_level = vim.lsp.protocol.MessageType.Log,
+          --   logLevel = vim.lsp.protocol.MessageType.Log,
+          --   messageLevel = vim.lsp.protocol.MessageType.Log,
+          -- },
         },
       }
     end

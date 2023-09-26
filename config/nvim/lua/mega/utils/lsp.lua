@@ -1,5 +1,6 @@
 local api = vim.api
 local lsp = vim.lsp
+local lsputil = require("lspconfig.util")
 local fn = vim.fn
 
 local M = {}
@@ -53,6 +54,30 @@ local M = {}
 --     end
 --   end
 --   vim.fn.setqflist(entries)
+-- end
+
+function M.root_pattern(...)
+  local patterns = vim.tbl_flatten({ ... })
+
+  return function(startpath)
+    for _, pattern in ipairs(patterns) do
+      return lsputil.search_ancestors(startpath, function(path)
+        if lsputil.path.exists(fn.glob(lsputil.path.join(path, pattern))) then
+          -- dd(fmt("found %s at %s", pattern, path))
+          return path
+        end
+      end)
+    end
+  end
+end
+
+-- function M.root_dir(fname)
+--   if not fname or fname == "" then fname = vim.fn.getcwd() end
+--
+--   local matches = vim.fs.find({ "mix.exs" }, { upward = true, limit = 2, path = fname })
+--   local child_or_root_path, maybe_umbrella_path = unpack(matches)
+--
+--   return vim.fs.dirname(maybe_umbrella_path or child_or_root_path)
 -- end
 
 function M.setup_rename(_client, _bufnr)

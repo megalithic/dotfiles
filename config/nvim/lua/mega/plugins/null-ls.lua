@@ -1,10 +1,11 @@
 local M = {
   -- {
   "jose-elias-alvarez/null-ls.nvim",
-  cond = vim.g.formatter == "null-ls",
+  -- cond = vim.g.formatter == "null-ls",
   dependencies = { "nvim-lua/plenary.nvim" },
   event = { "BufReadPre", "BufNewFile" },
   config = function()
+    if vim.g.formatter ~= "null-ls" then return end
     local nls = require("null-ls")
 
     local format = nls.builtins.formatting

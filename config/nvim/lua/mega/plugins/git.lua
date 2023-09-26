@@ -160,6 +160,7 @@ return {
           event = { "User" },
           pattern = { "GitConflictDetected" },
           command = function(args)
+            vim.g.git_conflict_detected = true
             mega.nnoremap(
               "cq",
               "<cmd>GitConflictListQf<CR>",
@@ -191,6 +192,7 @@ return {
             vim.defer_fn(function()
               vim.diagnostic.enable(args.buf)
               vim.cmd("LspStart")
+              vim.g.git_conflict_detected = false
             end, 250)
           end,
         },

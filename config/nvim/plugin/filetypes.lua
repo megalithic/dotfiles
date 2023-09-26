@@ -1,4 +1,6 @@
-if not as then return end
+if not mega then return end
+if not vim.g.enabled_plugin["filetypes"] then return end
+
 local settings, highlight = mega.filetype_settings, mega.highlight
 local cmd, fn = vim.cmd, vim.fn
 
@@ -71,6 +73,7 @@ settings({
     },
     function()
       vim.schedule(function()
+        dd("NeogitCommitMessage filetypes callback fn")
         -- Schedule this call as highlights are not set correctly if there is not a delay
         highlight.set_winhl("gitcommit", 0, { { VirtColumn = { fg = { from = "Variable" } } } })
       end)
@@ -113,6 +116,11 @@ settings({
           },
         })
       end,
+    },
+  },
+  notify = {
+    opt = {
+      spell = false,
     },
   },
   org = {
@@ -159,4 +167,9 @@ settings({
     },
   },
   [{ "lua", "python", "rust" }] = { opt = { spell = true } },
+  markdown = {
+    function()
+      vim.schedule(function() dd("markdown filetypes callback fn") end)
+    end,
+  },
 })

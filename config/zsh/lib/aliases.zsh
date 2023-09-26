@@ -276,7 +276,7 @@ alias chrome="open -a '/Applications/Google Chrome.app' --args --disable-web-sec
 alias chromekill="ps ux | grep '[C]hrome Helper --type=renderer' | grep -v extension-process | tr -s ' ' | cut -d ' ' -f2 | xargs kill"
 alias bravekill="ps ux | grep '[B]rave Helper --type=renderer' | grep -v extension-process | tr -s ' ' | cut -d ' ' -f2 | xargs kill"
 alias die='pkill -9 -f'
-alias port='lsof -i :'
+alias killport='port "$1" | xargs kill -9'
 alias sz="source $HOME/.config/zsh/.zshenv && source $HOME/.config/zsh/.zshrc && source $HOME/.config/zsh/prompt_megalithic_setup" # && \reset"
 alias zz=z
 alias cls="clr && ls"

@@ -1,9 +1,9 @@
 local prettier = { "prettierd", "prettier" }
-return {
-  "stevearc/conform.nvim",
-  cond = vim.g.formatter == "conform",
-  event = { "BufReadPre", "BufNewFile", "BufWritePre" },
-  cmd = "ConformInfo",
+local timeout_ms = 2000
+local lsp_fallback = "always"
+local keys = {}
+
+if vim.g.formatter == "conform" then
   keys = {
     {
       "=",
@@ -22,7 +22,15 @@ return {
       end,
       desc = "Format buffer (sync)",
     },
-  },
+  }
+end
+
+return {
+  "stevearc/conform.nvim",
+  -- cond = vim.g.formatter == "conform",
+  event = { "BufReadPre", "BufNewFile", "BufWritePre" },
+  cmd = "ConformInfo",
+  keys = keys,
   opts = {
     formatters_by_ft = {
       ["*"] = { "trim_whitespace", "trim_newlines" },
@@ -55,20 +63,26 @@ return {
     },
     log_level = vim.log.levels.DEBUG,
     format_on_save = function(bufnr)
-      local async_format = vim.g.async_format_filetypes[vim.bo[bufnr].filetype]
-      if async_format or vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then return end
-      return { timeout_ms = 500, lsp_fallback = "always", filter = mega.lsp.formatting_filter }
+      -- local async_format = vim.g.async_format_filetypes[vim.bo[bufnr].filetype]
+      -- if async_format or vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then return end
+      if vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then return end
+      -- dd("format on save")
+      return { timeout_ms = timeout_ms, lsp_fallback = lsp_fallback, filter = mega.lsp.formatting_filter }
     end,
     format_after_save = function(bufnr)
-      local async_format = vim.g.async_format_filetypes[vim.bo[bufnr].filetype]
-      if not async_format or vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then return end
-      return { lsp_fallback = "always", filter = mega.lsp.formatting_filter }
+      -- local async_format = vim.g.async_format_filetypes[vim.bo[bufnr].filetype]
+      -- if not async_format or vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then return end
+      if vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then return end
+      -- dd("format after save")
+      return { timeout_ms = timeout_ms, lsp_fallback = lsp_fallback, filter = mega.lsp.formatting_filter }
     end,
     user_async_format_filetypes = {
       python = true,
     },
   },
   config = function(_, opts)
+    if vim.g.formatter ~= "conform" then return end
+
     if vim.g.started_by_firenvim then
       opts.format_on_save = false
       opts.format_after_save = false
@@ -82,7 +96,12 @@ return {
         vim.notify("Disabled auto-formatting.", L.WARN)
       else
         vim.notify("Enabled auto-formatting.", L.INFO)
-        require("conform").format({ lsp_fallback = "always", filter = mega.lsp.formatting_filter, bufnr = 0 })
+        require("conform").format({
+          timeout_ms = timeout_ms,
+          lsp_fallback = lsp_fallback,
+          filter = mega.lsp.formatting_filter,
+          bufnr = 0,
+        })
       end
     end)
   end,

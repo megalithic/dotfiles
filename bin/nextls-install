@@ -34,25 +34,25 @@ rm -rf "$LS_PATH"
 
 do_install() {
   case "$VERSION" in
-    'stable')
-      TARGET="https://github.com/elixir-tools/next-ls/releases/latest/download"
-      BINARY="next_ls_${SYS}_${ARCH}.zip"
-      BUILD_TYPE="archive"
-      ;;
-    'git')
-      TARGET="https://github.com/elixir-tools/next-ls"
-      BUILD_TYPE="git"
-      ;;
-    'main' | 'master')
-      TARGET="https://github.com/elixir-tools/next-ls/archive/refs/heads"
-      BINARY="main.zip"
-      BUILD_TYPE="source"
-      ;;
-    *)
-      TARGET="https://github.com/elixir-tools/next-ls/archive"
-      BINARY="${VERSION}.tar.gz"
-      BUILD_TYPE="source"
-      ;;
+  'stable')
+    TARGET="https://github.com/elixir-tools/next-ls/releases/latest/download"
+    BINARY="next_ls_${SYS}_${ARCH}.zip"
+    BUILD_TYPE="archive"
+    ;;
+  'git')
+    TARGET="https://github.com/elixir-tools/next-ls"
+    BUILD_TYPE="git"
+    ;;
+  'main' | 'master')
+    TARGET="https://github.com/elixir-tools/next-ls/archive/refs/heads"
+    BINARY="main.zip"
+    BUILD_TYPE="source"
+    ;;
+  *)
+    TARGET="https://github.com/elixir-tools/next-ls/archive"
+    BINARY="${VERSION}.tar.gz"
+    BUILD_TYPE="source"
+    ;;
   esac
 
   if [[ $BUILD_TYPE == "archive" ]]; then
@@ -68,6 +68,7 @@ do_install() {
           (tar -xvzf "$BINARY" -C "$LSPS_PATH" && log_ok "unpacked $TARGET/$BINARY to $LSPS_PATH") &&
           mv "$LSPS_PATH/next-ls-$VERSION" "$LS_PATH" &&
           pushd "$LS_PATH" >/dev/null &&
+          chmod +x "$LS_PATH/bin/nextls" &&
           # (mix deps.get && mix package && log_ok "built next-ls") &&
           popd >/dev/null &&
           (rm "$BINARY" && log_ok "removed $HOME/$BINARY")

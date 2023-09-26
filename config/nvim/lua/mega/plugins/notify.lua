@@ -16,7 +16,8 @@ return {
       on_open = function(winnr)
         if vim.api.nvim_win_is_valid(winnr) then
           vim.api.nvim_win_set_config(winnr, { border = "", focusable = false })
-          vim.api.nvim_buf_set_option(vim.api.nvim_win_get_buf(winnr), "filetype", "markdown")
+          -- vim.api.nvim_buf_set_option(vim.api.nvim_win_get_buf(winnr), "filetype", "markdown")
+          -- vim.cmd([[setlocal nospell]])
         end
       end,
       stages = "slide", -- or "static"

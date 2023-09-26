@@ -379,48 +379,40 @@ function M.qf_populate(lines, opts)
   vim.cmd(commands)
 end
 
-function M.file_extention(filepath) return filepath:match("^.+(%..+)$") end
+function M.get_file_extension(filepath) return filepath:match("^.+(%..+)$") end
 
 function M.is_image(filepath)
-  local ext = M.file_extention(filepath)
+  local ext = M.get_file_extension(filepath)
   return vim.tbl_contains({ ".bmp", ".jpg", ".jpeg", ".png", ".gif" }, ext)
 end
 
-function M.preview_image(filename)
-  if not M.is_image(filename) then
-    vim.notify(filename, L.WARN, { title = "nvim: not an image file; aborting.", render = "wrapped-compact" })
+function M.is_openable(filepath)
+  local ext = M.get_file_extension(filepath)
+  return vim.tbl_contains({ ".pdf", ".svg", ".html" }, ext)
+end
+
+function M.preview_file(filename)
+  local cmd = fmt("silent !open %s", filename)
+
+  if M.is_image(filename) then
+    vim.notify(filename, L.INFO, { title = "nvim: previewing image..", render = "wrapped-compact" })
+    cmd = fmt("silent !wezterm cli split-pane --right --percent 30 -- bash -c 'wezterm imgcat %s ; read'", filename)
+  elseif M.is_openable(filename) then
+    vim.notify(filename, L.INFO, { title = "nvim: opening with default app..", render = "wrapped-compact" })
+  else
+    vim.notify(filename, L.WARN, { title = "nvim: not previewable file; aborting.", render = "wrapped-compact" })
 
     return
   end
 
-  vim.notify(filename, L.INFO, { title = "nvim: previewing image..", render = "wrapped-compact" })
-
-  local cmd = fmt("silent !wezterm cli split-pane --right --percent 30 -- bash -c 'wezterm imgcat %s ; read'", filename)
-
-  if true then
-    vim.api.nvim_command(cmd)
-  else
-    cmd = fmt("wezterm imgcat --width 800 --height 600 --max-pixels 1024 --hold --tmux-passthru enable %s", filename)
-
-    local term_opts = {
-      winnr = vim.fn.winnr(),
-      cmd = cmd,
-      temp = true,
-      open_startinsert = false,
-      focus_startinsert = false,
-      focus_on_open = true,
-      direction = "vertical",
-    }
-
-    mega.term(term_opts)
-  end
+  vim.api.nvim_command(cmd)
 end
 
 function M.conceal_class(bufnr)
   local min_chars = 2
   local namespace = vim.api.nvim_create_namespace("ConcealClassName")
   local ft = "html"
-  if not vim.tbl_contains({ "html", "heex", "svelte", "astro", "vue" }, vim.bo.ft) then ft = "tsx" end
+  if not vim.tbl_contains({ "html", "heex", "svelte", "astro", "vue", "elixir" }, vim.bo.ft) then ft = "tsx" end
   local language_tree = vim.treesitter.get_parser(bufnr, ft)
   local syntax_tree = language_tree:parse()
   local root = syntax_tree[1]:root()

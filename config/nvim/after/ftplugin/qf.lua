@@ -78,4 +78,5 @@ mega.augroup("ReplacerFileType", {
   pattern = "replacer",
   callback = function() mega.nmap("q", vim.cmd.write, { desc = " done replacing", buffer = true, nowait = true }) end,
 })
+
 mega.nnoremap("<leader>r", function() require("replacer").run() end, { desc = "qf: replace in qflist", nowait = true })

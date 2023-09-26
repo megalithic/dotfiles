@@ -31,7 +31,7 @@ return {
     "nvim-treesitter/nvim-treesitter",
     build = ":TSUpdate",
     event = "VeryLazy",
-    cond = #vim.api.nvim_list_uis() > 0,
+    -- cond = #vim.api.nvim_list_uis() > 0,
     dependencies = {
       "nvim-treesitter/nvim-treesitter-textobjects",
       "RRethy/nvim-treesitter-textsubjects",
@@ -273,7 +273,7 @@ return {
             ["eruby.yaml"] = "# %s",
           },
         },
-        matchup = { enable = true, include_match_words = true, disable = should_disable, disable_virtual_text = true },
+        matchup = { enable = false, include_match_words = true, disable = should_disable, disable_virtual_text = true },
         autopairs = { enable = true },
         textobjects = {
           lookahead = true,

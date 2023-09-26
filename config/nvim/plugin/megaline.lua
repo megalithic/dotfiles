@@ -19,6 +19,7 @@ local H = require("mega.utils.highlights")
 
 vim.g.is_saving = false
 local search_count_timer
+
 --- Timer to update the search count as the file is travelled
 function M.update_search_count(timer) end
 
@@ -29,18 +30,16 @@ mega.augroup("megaline", {
       if not vim.g.is_saving and vim.bo.modified then
         vim.g.is_saving = true
         vim.cmd([[checktime]])
-        vim.defer_fn(function() vim.g.is_saving = false end, 1000)
+        vim.defer_fn(function() vim.g.is_saving = false end, 500)
       end
     end,
   },
-  -- HACK: this is a wip here to try and fix an issue where saves aren't fixing weird treesitter syntax highlighting things. would love to disable TS and renable, but that doesn't work either
-  -- {
-  --   event = { "BufWritePost" },
-  --   command = function()
-  --     -- vim.cmd(fmt("edit | :%d", vim.fn.line(".")))
-  --     vim.cmd("edit")
-  --   end,
-  -- },
+  {
+    event = { "BufWritePost" },
+    command = function()
+      -- vim.schedule(function() vim.cmd("edit") end)
+    end,
+  },
   -- FIXME: remove? flaky fails at the redrawstatus
   {
     event = { "CursorMoved" },

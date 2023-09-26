@@ -14,7 +14,7 @@ function obj:init(opts)
   Install:andUse("EmmyLua")
   Install:andUse("URLDispatcher", {
     -- TODO: https://github.com/hthuong09/dots/blob/master/.hammerspoon/HandleURLDispatch.lua
-    start = true,
+    start = false,
     loglevel = "error",
     config = {
       default_handler = "com.brave.Browser.dev", --hs.application.get(require("hs.settings").get(CONFIG_KEY).preferred.browser),

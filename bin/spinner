@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# ALT: https://gist.github.com/nicknisi/a26f148611517e3d998eb456ac57efff#file-new-worktree-sh-L76-L96
+
 # spinner
 
 # Display a spinner for long running commands
@@ -28,9 +30,9 @@ SPINNER_PARTS="⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
 ACC=1
 
 printf " "
-while ps a | awk '{print $1}' | grep -q "${PID}"; do
-	printf "\b%s" "${SPINNER_PARTS:ACC++%${#SPINNER_PARTS}:1}"
-	sleep .15
+while ps a | awk '{print $1}' | grep -q "$PID"; do
+    printf "\b%s" "${SPINNER_PARTS:ACC++%${#SPINNER_PARTS}:1}"
+    sleep .15
 done
 printf "\b"
 

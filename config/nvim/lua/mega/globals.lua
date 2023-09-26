@@ -212,24 +212,66 @@ function mega.get_log_string(label, level)
   return str, hl
 end
 
+--- Validate the keys passed to mega.augroup are valid
+---@param name string
+---@param cmd Autocommand
+local function validate_autocmd(name, cmd)
+  local keys = { "event", "buffer", "pattern", "desc", "command", "group", "once", "nested" }
+  local incorrect = mega.fold(function(accum, _, key)
+    if not vim.tbl_contains(keys, key) then table.insert(accum, key) end
+    return accum
+  end, cmd, {})
+  if #incorrect == 0 then return end
+  vim.schedule(
+    function()
+      vim.notify("Incorrect keys: " .. table.concat(incorrect, ", "), vim.log.levels.ERROR, {
+        title = fmt("Autocmd: %s", name),
+      })
+    end
+  )
+end
+
+---@class Autocommand
+---@field desc string
+---@field event  string[] list of autocommand events
+---@field pattern string[] list of autocommand patterns
+---@field command string | function
+---@field nested  boolean
+---@field once    boolean
+---@field buffer  number
+---Create an autocommand
+---returns the group ID so that it can be cleared or manipulated.
+---@param name string
+---@param ... Autocommand A list of autocommands to create (variadic parameter)
+---@return number
+function mega.augroup(name, commands)
+  assert(name ~= "User", "The name of an augroup CANNOT be User")
+
+  local id = vim.api.nvim_create_augroup(name, { clear = true })
+
+  for _, autocmd in ipairs(commands) do
+    validate_autocmd(name, autocmd)
+    local is_callback = type(autocmd.command) == "function"
+    api.nvim_create_autocmd(autocmd.event, {
+      group = id,
+      pattern = autocmd.pattern,
+      desc = autocmd.desc,
+      callback = is_callback and autocmd.command or nil,
+      command = not is_callback and autocmd.command or nil,
+      once = autocmd.once,
+      nested = autocmd.nested,
+      buffer = autocmd.buffer,
+    })
+  end
+
+  return id
+end
+
 function mega.opt(o, v, scopes)
   scopes = scopes or { vim.o }
   for _, s in ipairs(scopes) do
     s[o] = v
   end
-end
-
----Determine if a value of any type is empty
----@param item any
----@return boolean?
-function mega.falsy(item)
-  if not item then return true end
-  local item_type = type(item)
-  if item_type == "boolean" then return not item end
-  if item_type == "string" then return item == "" end
-  if item_type == "number" then return item <= 0 end
-  if item_type == "table" then return vim.tbl_isempty(item) end
-  return item ~= nil
 end
 
 --- Call the given function and use `vim.notify` to notify of any errors
@@ -273,10 +315,45 @@ function mega.require(module_name, opts)
     if opts.message then result = opts.message .. "\n" .. result end
 
     -- FIXME: this breaks if silent == true
-    vim.notify(result, L.ERROR, { title = fmt("Error requiring: %s", module_name), render = "default" })
+    -- vim.notify(result, L.ERROR, { title = fmt("Error requiring: %s", module_name), render = "default" })
+    vim.notify_once(string.format("Missing module: %s", module_name), L.WARN)
   end
   return ok, result
 end
+
+-- ---Require one or more modules
+-- ---@example
+-- --- p.require("foo").setup({})
+-- --- p.require("foo", "bar", function(foo, bar)
+-- ---   foo.setup({arg = bar})
+-- --- end)
+-- function mega.require(...)
+--   local args = { ... }
+--   local mods = {}
+--   local first_mod
+--   for _, arg in ipairs(args) do
+--     if type(arg) == "function" then
+--       arg(unpack(mods))
+--       break
+--     end
+--     local ok, mod = pcall(require, arg)
+--     if ok then
+--       if not first_mod then first_mod = mod end
+--       table.insert(mods, mod)
+--     else
+--       vim.notify_once(string.format("Missing module: %s", arg), vim.log.levels.WARN)
+--       -- Return a dummy item that returns functions, so we can do things like
+--       -- p.require("module").setup()
+--       local dummy = {}
+--       setmetatable(dummy, {
+--         __call = function() return dummy end,
+--         __index = function() return dummy end,
+--       })
+--       return dummy
+--     end
+--   end
+--   return first_mod
+-- end
 
 ---@class FiletypeSettings
 ---@field g table<string, any>
@@ -284,19 +361,6 @@ end
 ---@field wo vim.wo
 ---@field opt vim.opt
 ---@field plugins {[string]: fun(module: table)}
-
----@param args {[1]: string, [2]: string, [3]: string, [string]: boolean | integer}[]
----@param buf integer
-local function apply_ft_mappings(args, buf)
-  vim.iter(args):each(function(m)
-    assert(#m == 3, "map args must be a table with at least 3 items")
-    local opts = vim.iter(m):fold({ buffer = buf }, function(acc, key, item)
-      if type(key) == "string" then acc[key] = item end
-      return acc
-    end)
-    map(m[1], m[2], m[3], opts)
-  end)
-end
 
 --- A convenience wrapper that calls the ftplugin config for a plugin if it exists
 --- and warns me if the plugin is not installed
@@ -326,12 +390,27 @@ end
 --- ```
 ---
 ---@param map {[string|string[]]: FiletypeSettings | {[integer]: fun(args: AutocmdArgs)}}
+--- REF: https://github.com/akinsho/dotfiles/blob/nightly/.config/nvim/plugin/filetypes.lua
+--- ALT: https://github.com/stevearc/dotfiles/blob/master/.config/nvim/lua/ftplugin.lua
 function mega.filetype_settings(map)
+  ---@param args {[1]: string, [2]: string, [3]: string, [string]: boolean | integer}[]
+  ---@param buf integer
+  local function apply_ft_mappings(args, buf)
+    vim.iter(args):each(function(m)
+      assert(#m == 3, "map args must be a table with at least 3 items")
+      local opts = vim.iter(m):fold({ buffer = buf }, function(acc, key, item)
+        if type(key) == "string" then acc[key] = item end
+        return acc
+      end)
+      map(m[1], m[2], m[3], opts)
+    end)
+  end
+
   local commands = vim.iter(map):map(function(ft, settings)
     local name = type(ft) == "table" and table.concat(ft, ",") or ft
     return {
       pattern = ft,
-      event = "FileType",
+      event = { "FileType" },
       desc = ("ft settings for %s"):format(name),
       command = function(args)
         vim.iter(settings):each(function(key, value)
@@ -344,6 +423,7 @@ function mega.filetype_settings(map)
       end,
     }
   end)
+
   mega.augroup("filetype-settings", unpack(commands:totable()))
 end
 
@@ -540,61 +620,6 @@ for _, mode in ipairs({ "n", "x", "i", "v", "o", "t", "s", "c" }) do
   _G[mode .. "noremap"] = mega[mode .. "noremap"]
 end
 _G.map = vim.keymap.set
-
---- Validate the keys passed to mega.augroup are valid
----@param name string
----@param cmd Autocommand
-local function validate_autocmd(name, cmd)
-  local keys = { "event", "buffer", "pattern", "desc", "command", "group", "once", "nested" }
-  local incorrect = mega.fold(function(accum, _, key)
-    if not vim.tbl_contains(keys, key) then table.insert(accum, key) end
-    return accum
-  end, cmd, {})
-  if #incorrect == 0 then return end
-  vim.schedule(
-    function()
-      vim.notify("Incorrect keys: " .. table.concat(incorrect, ", "), vim.log.levels.ERROR, {
-        title = fmt("Autocmd: %s", name),
-      })
-    end
-  )
-end
-
----@class Autocommand
----@field desc string
----@field event  string[] list of autocommand events
----@field pattern string[] list of autocommand patterns
----@field command string | function
----@field nested  boolean
----@field once    boolean
----@field buffer  number
----Create an autocommand
----returns the group ID so that it can be cleared or manipulated.
----@param name string
----@param ... Autocommand A list of autocommands to create (variadic parameter)
----@return number
-function mega.augroup(name, commands)
-  assert(name ~= "User", "The name of an augroup CANNOT be User")
-
-  local id = vim.api.nvim_create_augroup(name, { clear = true })
-
-  for _, autocmd in ipairs(commands) do
-    validate_autocmd(name, autocmd)
-    local is_callback = type(autocmd.command) == "function"
-    api.nvim_create_autocmd(autocmd.event, {
-      group = id,
-      pattern = autocmd.pattern,
-      desc = autocmd.desc,
-      callback = is_callback and autocmd.command or nil,
-      command = not is_callback and autocmd.command or nil,
-      once = autocmd.once,
-      nested = autocmd.nested,
-      buffer = autocmd.buffer,
-    })
-  end
-
-  return id
-end
 
 --- TODO eventually move to using `nvim_set_hl`
 --- however for the time being that expects colors

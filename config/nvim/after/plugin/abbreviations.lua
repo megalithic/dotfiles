@@ -7,7 +7,7 @@ M.iabbrev = function(lhs, rhs, ft)
   ft = ft or nil
 
   if ft then
-    mega.augroup("iabbreviations_" .. vim.inspect(ft), {
+    mega.augroup("iabbreviations_" .. table.concat(ft, "_"), {
       {
         event = { "FileType" },
         desc = "Insert abbreviation for " .. vim.inspect(ft),

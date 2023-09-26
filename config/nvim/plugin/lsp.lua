@@ -13,7 +13,10 @@ local lspconfig = require("lspconfig")
 local LSP_METHODS = vim.lsp.protocol.Methods
 
 function mega.lsp.is_enabled_elixir_ls(ls) return vim.tbl_contains(vim.g.enabled_elixir_ls, ls) end
-function mega.lsp.formatting_filter(client) return not vim.tbl_contains(vim.g.formatter_exclusions, client.name) end
+function mega.lsp.formatting_filter(client)
+  -- dd(fmt("formatting_filter allows %s? %s", client.name, not vim.tbl_contains(vim.g.formatter_exclusions, client.name)))
+  return not vim.tbl_contains(vim.g.formatter_exclusions, client.name)
+end
 
 -- Show the popup diagnostics window, but only once for the current cursor/line location
 -- by checking whether the word under the cursor has changed.
@@ -24,7 +27,6 @@ local function diagnostic_popup(bufnr) vim.diagnostic.open_float(bufnr, { scope 
 ---@param opts table<string, any>
 local function format(opts)
   opts = opts or {}
-  -- dd(opts)
   if (#vim.lsp.get_clients({ bufnr = opts.bufnr or vim.api.nvim_get_current_buf() })) < 1 then return end
 
   vim.lsp.buf.format({
@@ -43,6 +45,7 @@ local function get_preview_window()
   local pwin_width = vim.o.columns > 210 and 90 or 70
   vim.api.nvim_win_set_option(pwin, "previewwindow", true)
   vim.api.nvim_win_set_width(pwin, pwin_width)
+  vim.cmd("set filetype=preview")
   vim.cmd(fmt("let &winwidth=%d", pwin_width))
   vim.opt_local.winfixwidth = true
 
@@ -149,13 +152,15 @@ local function setup_autocommands(client, bufnr)
       event = { "CursorHold", "CursorHoldI" },
       buffer = bufnr,
       command = function()
-        if supports_highlight then vim.lsp.buf.document_highlight() end
+        if supports_highlight and not vim.g.git_conflict_detected then vim.lsp.buf.document_highlight() end
       end,
     },
     {
       event = { "CursorMoved", "BufLeave" },
       buffer = bufnr,
-      command = function() vim.lsp.buf.clear_references() end,
+      command = function()
+        if not vim.g.git_conflict_detected then vim.lsp.buf.clear_references() end
+      end,
     },
   })
 
@@ -177,12 +182,15 @@ local function setup_autocommands(client, bufnr)
     -- },
   })
 
-  augroup("LspFormat", {
-    {
-      event = { "BufWritePre" },
-      command = function(args) format({ async = false, bufnr = args.buf }) end,
-    },
-  })
+  -- augroup("LspFormat", {
+  --   {
+  --     event = { "BufWritePre" },
+  --     command = function(args)
+  --       if vim.g.disable_autoformat then return end
+  --       format({ async = false, bufnr = args.buf })
+  --     end,
+  --   },
+  -- })
 
   -- augroup("LspDocumentHighlight", {
   --   {
@@ -283,12 +291,15 @@ local function setup_keymaps(client, bufnr)
     desc("server capabilities")
   )
   nnoremap("<leader>lil", [[<cmd>LspLog<CR>]], desc("logs (vsplit)"))
-  nnoremap("<leader>lf", vim.lsp.buf.format, desc("format buffer"))
-  if vim.g.formatter == "null-ls" then
-    nnoremap("<leader>lft", [[<cmd>ToggleNullFormatters<cr>]], desc("toggle formatting"))
-  elseif vim.g.formatter == "conform" then
-    nnoremap("<leader>lft", [[<cmd>ToggleAutoFormat<cr>]], desc("toggle formatting"))
-  end
+  nnoremap("<leader>lft", [[<cmd>ToggleAutoFormat<cr>]], desc("toggle formatting"))
+  -- nnoremap("<leader>lff", vim.lsp.buf.format, desc("format buffer"))
+  nnoremap("<leader>lff", function()
+    if pcall(require, "conform") then
+      require("conform").format({ async = false, lsp_fallback = true })
+    else
+      format()
+    end
+  end, desc("format buffer"))
   nnoremap("=", function() vim.lsp.buf.format({ buffer = bufnr, async = true }) end, desc("lsp: format buffer"))
   vnoremap("=", function() vim.lsp.buf.format({ buffer = bufnr, async = true }) end, desc("lsp: format buffer range"))
 end
@@ -616,9 +627,11 @@ local function on_attach(client, bufnr)
 
       close_timeout = 4000, -- close floating window after ms when laster parameter is entered
       fix_pos = false, -- set to true, the floating window will not auto-close until finish all parameters
-      hint_enable = true, -- virtual hint enable
-      hint_prefix = "➜ ", -- Panda for parameter, NOTE: for the terminal not support emoji, might crash
-      hint_scheme = "String",
+      hint_prefix = "",
+      hint_enable = false,
+      -- hint_enable = true, -- virtual hint enable
+      -- hint_prefix = "➜ ", -- Panda for parameter, NOTE: for the terminal not support emoji, might crash
+      -- hint_scheme = "String",
       hi_parameter = "LspSignatureActiveParameter", -- how your parameter will be highlight
       handler_opts = {
         border = mega.get_border(),
@@ -659,7 +672,9 @@ local function on_attach(client, bufnr)
 
   -- fully disable semantic tokens highlighting
   client.server_capabilities.semanticTokensProvider = nil
-  client.server_capabilities.completionProvider.triggerCharacters = { ".", ":" }
+  if client.server_capabilities.completionProvider ~= nil then
+    client.server_capabilities.completionProvider.triggerCharacters = { ".", ":" }
+  end
 
   vim.api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
 
