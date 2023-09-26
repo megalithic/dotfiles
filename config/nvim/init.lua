@@ -53,9 +53,9 @@ vim.g.explorer = "oil" -- alt: dirbuf, oil
 vim.g.tester = "vim-test" -- alt: neotest, vim-test
 vim.g.snipper = "vsnip" -- alt: vsnip, luasnip
 vim.g.ts_ignored_langs = {} -- alt: { "svg", "json", "heex", "jsonc" }
-vim.g.formatter_exclusions = { "ElixirLS", "NextLS", "lexical" } -- alt: ElixirLS, NextLS, elixirls, nextls, lexical
-vim.g.diagnostic_exclusions = { "ElixirLS", "NextLS", "elixirls" } -- alt: ElixirLS, NextLS, elixirls, nextls, lexical
-vim.g.enabled_elixir_ls = { "elixirls", "lexical" } -- alt: ElixirLS, NextLS, elixirls, nextls, lexical, credo
+vim.g.formatter_exclusions = { "ElixirLS", "NextLS", "nextls", "lexical" } -- alt: ElixirLS, NextLS, elixirls, nextls, lexical
+vim.g.diagnostic_exclusions = { "ElixirLS", "NextLS", "elixirls", "nextls" } -- alt: ElixirLS, NextLS, elixirls, nextls, lexical
+vim.g.enabled_elixir_ls = { "elixirls", "nextls", "lexical" } -- alt: ElixirLS, NextLS, elixirls, nextls, lexical, credo
 
 -- [ globals ] -----------------------------------------------------------------
 

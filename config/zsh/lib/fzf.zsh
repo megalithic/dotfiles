@@ -23,8 +23,8 @@ export FZF_DEFAULT_OPTS="
 --extended
 --bind=ctrl-j:ignore,ctrl-k:ignore
 --bind=ctrl-j:down,ctrl-k:up
---bind=ctrl-f:page-down,ctrl-b:page-up
---bind=ctrl-u:preview-up,ctrl-d:preview-down
+--bind=ctrl-b:preview-up,ctrl-f:preview-down
+--bind=ctrl-u:abort
 --bind=esc:abort
 --bind=ctrl-c:abort
 --bind=?:toggle-preview
@@ -40,6 +40,8 @@ export FZF_DEFAULT_OPTS="
 "
 
 # alts: 󰛄
+# --bind=ctrl-f:page-down,ctrl-b:page-up
+# --bind=ctrl-u:preview-up,ctrl-d:preview-down
 # --preview='bat --color=always --style=header,grid --line-range :300 {}'
 # --no-multi
 # --reverse
@@ -112,9 +114,9 @@ _fzf_comprun() {
   shift
 
   case "$command" in
-    git) git --help -a | grep -E '^\s+' | awk '{print $1}' | fzf "$@" ;;
-    cd) fzf --preview 'tree -C {} | head -200' "$@" ;;
-    *) fzf "$@" ;;
+  git) git --help -a | grep -E '^\s+' | awk '{print $1}' | fzf "$@" ;;
+  cd) fzf --preview 'tree -C {} | head -200' "$@" ;;
+  *) fzf "$@" ;;
   esac
 }
 
