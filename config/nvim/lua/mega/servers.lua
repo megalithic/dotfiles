@@ -44,91 +44,11 @@ M.list = {
       },
     },
   },
-  -- efm = function()
-  --   return {
-  --     init_options = {
-  --       documentFormatting = true,
-  --       documentRangeFormatting = true,
-  --       hover = true,
-  --       documentSymbol = true,
-  --       codeAction = true,
-  --       completion = true,
-  --     },
-  --     settings = {
-  --       rootMarkers = { ".git/" },
-  --       languages = {
-  --         json = {
-  --           {
-  --             formatCommand = "fixjson -",
-  --             formatStdin = true,
-  --             formatCanRange = true,
-  --           },
-  --         },
-  --         lua = {
-  --           {
-  --             formatCommand = "stylua --color Never ${--range-start:charStart} ${--range-end:charEnd} -",
-  --             formatStdin = true,
-  --             formatCanRange = true,
-  --           },
-  --         },
-  --         python = {
-  --           {
-  --             formatCommand = "black --no-color --quiet -",
-  --             formatStdin = true,
-  --           },
-  --           {
-  --             formatCommand = "isort --quiet -",
-  --             formatStdin = true,
-  --           },
-  --           {
-  --             lintCommand = "mypy --show-column-numbers",
-  --             lintStdin = false,
-  --             lintFormats = {
-  --               "%f:%l:%c: %trror: %m",
-  --               "%f:%l:%c: %tarning: %m",
-  --               "%f:%l:%c: %tote: %m",
-  --             },
-  --           },
-  --           {
-  --             lintCommand = "pylint --output-format text --score no --msg-template {path}:{line}:{column}:{C}:{msg} ${INPUT}",
-  --             lintStdin = false,
-  --             lintFormats = { "%.%#:%l:%c: %t%.%#: %m" },
-  --           },
-  --         },
-  --       },
-  --       lintDebounce = "1s",
-  --       formatDebounce = "1s",
-  --     },
-  --     filetypes = { "lua", "python", "json" },
-  --   }
-  -- end,
   elixirls = function()
     if not mega.lsp.is_enabled_elixir_ls("elixirls") then return nil end
 
     return {
       cmd = { fmt("%s/lsp/elixir-ls/%s", vim.env.XDG_DATA_HOME, "language_server.sh") },
-      -- cmd = { "elixir-ls" },
-      -- cmd = lsp_cmd_override({
-      --   ".elixir-ls-release/language_server.sh",
-      --   fmt("%s/lsp/elixir-ls/%s", vim.env.XDG_DATA_HOME, "language_server.sh"),
-      --   "elixir-ls",
-      -- }),
-      -- handlers = {
-      --   ["window/logMessage"] = function(_err, result)
-      --     local message = vim.split("[" .. vim.lsp.protocol.MessageType[result.type] .. "] " .. result.message, "\n")
-      --     local elixir_nvim_output_bufnr
-      --
-      --     if not elixir_nvim_output_bufnr then
-      --       elixir_nvim_output_bufnr = vim.api.nvim_create_buf(false, true)
-      --       vim.api.nvim_buf_set_name(elixir_nvim_output_bufnr, "ElixirLS Output Panel")
-      --       vim.api.nvim_buf_set_option(elixir_nvim_output_bufnr, "filetype", "elixirls")
-      --     end
-      --
-      --     pcall(vim.api.nvim_buf_set_lines, elixir_nvim_output_bufnr, -1, -1, false, message)
-      --
-      --     mega.nnoremap("<localleader>eob", open_output_panel, { desc = "elixir: open output panel" })
-      --   end,
-      -- },
       settings = {
         -- mixEnv = "dev",
         fetchDeps = false,
@@ -399,43 +319,10 @@ M.list = {
     }
   end,
   marksman = {},
-  -- nextls = {
-  --   cmd = { fmt("%s/lsp/next-ls/bin/%s", vim.env.XDG_DATA_HOME, "nextls") },
-  --   single_file_support = true,
-  --   filetypes = { "elixir", "eelixir", "heex", "surface" },
-  --   log_level = vim.lsp.protocol.MessageType.Log,
-  --   message_level = vim.lsp.protocol.MessageType.Log,
-  --   settings = {
-  --     -- mixEnv = "dev",
-  --     fetchDeps = false,
-  --     dialyzerEnabled = true,
-  --     dialyzerFormat = "dialyxir_long",
-  --     enableTestLenses = true,
-  --     suggestSpecs = true,
-  --   },
-  --   on_attach = function(_client, _bufnr) end,
-  -- },
-
   nextls = function()
     if not mega.lsp.is_enabled_elixir_ls("nextls") then return nil end
 
     return {
-      -- log_level = vim.lsp.protocol.MessageType.Log,
-      -- message_level = vim.lsp.protocol.MessageType.Log,
-      -- logLevel = vim.lsp.protocol.MessageType.Log,
-      -- messageLevel = vim.lsp.protocol.MessageType.Log,
-      --
-      -- settings = {
-      --   dialyzerEnabled = true,
-      --   log_level = vim.lsp.protocol.MessageType.Log,
-      --   message_level = vim.lsp.protocol.MessageType.Log,
-      --   logLevel = vim.lsp.protocol.MessageType.Log,
-      --   messageLevel = vim.lsp.protocol.MessageType.Log,
-      --   -- lexical = {
-      --   --   logLevel = "debug",
-      --   -- },
-      -- },
-
       single_file_support = true,
       filetypes = { "elixir", "eelixir", "heex", "surface" },
       log_level = vim.lsp.protocol.MessageType.Log,
@@ -445,10 +332,9 @@ M.list = {
         fetchDeps = false,
         dialyzerEnabled = true,
         dialyzerFormat = "dialyxir_long",
-        enableTestLenses = true,
+        enableTestLenses = false,
         suggestSpecs = true,
       },
-      on_attach = function(_client, _bufnr) end,
     }
   end,
   prosemd_lsp = {},
@@ -664,24 +550,21 @@ M.unofficial = {
   lexical = function()
     local configs = require("lspconfig.configs")
 
-    local function cmd() return vim.env.XDG_DATA_HOME .. "/lsp/lexical/_build/dev/package/lexical/bin/start_lexical.sh" end
-
     if not configs.lexical then
+      local function cmd()
+        return { vim.env.XDG_DATA_HOME .. "/lsp/lexical/_build/dev/package/lexical/bin/start_lexical.sh" }
+      end
+
       configs.lexical = {
         default_config = {
-          cmd = { cmd() },
+          cmd = cmd(),
+          single_file_support = true,
           filetypes = { "elixir", "eelixir", "heex", "surface" },
           root_dir = root_pattern("mix.exs", ".git"), -- or vim.loop.os_homedir(),
           log_level = vim.lsp.protocol.MessageType.Log,
           message_level = vim.lsp.protocol.MessageType.Log,
-          logLevel = vim.lsp.protocol.MessageType.Log,
-          messageLevel = vim.lsp.protocol.MessageType.Log,
           settings = {
             dialyzerEnabled = true,
-            log_level = vim.lsp.protocol.MessageType.Log,
-            message_level = vim.lsp.protocol.MessageType.Log,
-            logLevel = vim.lsp.protocol.MessageType.Log,
-            messageLevel = vim.lsp.protocol.MessageType.Log,
           },
         },
       }
@@ -691,11 +574,10 @@ M.unofficial = {
     local configs = require("lspconfig.configs")
 
     if not configs.nextls then
-      -- local function cmd() return vim.env.XDG_DATA_HOME .. "/lsp/nextls/bin/nextls" end
-
+      local cmd = function() return { "nextls", "--stdio" } end
       configs.nextls = {
         default_config = {
-          cmd = { "nextls", "--stdio" },
+          cmd = cmd(),
           single_file_support = true,
           filetypes = { "elixir", "eelixir", "heex", "surface" },
           root_dir = root_pattern("mix.exs", ".git"),
@@ -709,20 +591,6 @@ M.unofficial = {
             enableTestLenses = false,
             suggestSpecs = true,
           },
-          on_attach = function(_client, _bufnr) end,
-          -- filetypes = { "elixir", "eelixir", "heex", "surface" },
-          -- root_dir = root_pattern("mix.exs", ".git"), -- or vim.uv.os_homedir(),
-          -- log_level = vim.lsp.protocol.MessageType.Log,
-          -- message_level = vim.lsp.protocol.MessageType.Log,
-          -- logLevel = vim.lsp.protocol.MessageType.Log,
-          -- messageLevel = vim.lsp.protocol.MessageType.Log,
-          -- settings = {
-          --   dialyzerEnabled = true,
-          --   log_level = vim.lsp.protocol.MessageType.Log,
-          --   message_level = vim.lsp.protocol.MessageType.Log,
-          --   logLevel = vim.lsp.protocol.MessageType.Log,
-          --   messageLevel = vim.lsp.protocol.MessageType.Log,
-          -- },
         },
       }
     end

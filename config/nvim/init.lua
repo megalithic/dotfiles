@@ -55,7 +55,7 @@ vim.g.snipper = "vsnip" -- alt: vsnip, luasnip
 vim.g.ts_ignored_langs = {} -- alt: { "svg", "json", "heex", "jsonc" }
 vim.g.formatter_exclusions = { "ElixirLS", "NextLS", "nextls", "lexical" } -- alt: ElixirLS, NextLS, elixirls, nextls, lexical
 vim.g.diagnostic_exclusions = { "ElixirLS", "NextLS", "elixirls", "nextls" } -- alt: ElixirLS, NextLS, elixirls, nextls, lexical
-vim.g.enabled_elixir_ls = { "elixirls", "nextls", "lexical" } -- alt: ElixirLS, NextLS, elixirls, nextls, lexical, credo
+vim.g.enabled_elixir_ls = { "elixirls", "nextls" } -- alt: ElixirLS, NextLS, elixirls, nextls, lexical, credo
 
 -- [ globals ] -----------------------------------------------------------------
 

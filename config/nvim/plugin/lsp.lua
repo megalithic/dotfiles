@@ -12,6 +12,13 @@ local diagnostic = vim.diagnostic
 local lspconfig = require("lspconfig")
 local LSP_METHODS = vim.lsp.protocol.Methods
 
+function mega.lsp.has_method(client, method)
+  method = method:find("/") and method or "textDocument/" .. method
+
+  if client.supports_method(method) then dd(client.name .. " has " .. method) end
+
+  return client.supports_method(method)
+end
 function mega.lsp.is_enabled_elixir_ls(ls) return vim.tbl_contains(vim.g.enabled_elixir_ls, ls) end
 function mega.lsp.formatting_filter(client)
   -- dd(fmt("formatting_filter allows %s? %s", client.name, not vim.tbl_contains(vim.g.formatter_exclusions, client.name)))
@@ -20,7 +27,9 @@ end
 
 -- Show the popup diagnostics window, but only once for the current cursor/line location
 -- by checking whether the word under the cursor has changed.
-local function diagnostic_popup(bufnr) vim.diagnostic.open_float(bufnr, { scope = "cursor", focus = false }) end
+local function diagnostic_popup(bufnr)
+  if not vim.g.git_conflict_detected then vim.diagnostic.open_float(bufnr, { scope = "cursor", focus = false }) end
+end
 
 -- TODO: https://github.com/CKolkey/config/blob/master/nvim/lua/plugins/lsp/formatting.lua
 
@@ -36,23 +45,23 @@ local function format(opts)
   })
 end
 
-local function get_preview_window()
-  for _, win in ipairs(vim.api.nvim_tabpage_list_wins(vim.api.nvim_get_current_tabpage())) do
-    if vim.api.nvim_win_get_option(win, "previewwindow") then return win end
-  end
-  vim.cmd([[botright vnew]])
-  local pwin = vim.api.nvim_get_current_win()
-  local pwin_width = vim.o.columns > 210 and 90 or 70
-  vim.api.nvim_win_set_option(pwin, "previewwindow", true)
-  vim.api.nvim_win_set_width(pwin, pwin_width)
-  vim.cmd("set filetype=preview")
-  vim.cmd(fmt("let &winwidth=%d", pwin_width))
-  vim.opt_local.winfixwidth = true
-
-  return pwin
-end
-
 local function hover()
+  local function get_preview_window()
+    for _, win in ipairs(vim.api.nvim_tabpage_list_wins(vim.api.nvim_get_current_tabpage())) do
+      if vim.api.nvim_win_get_option(win, "previewwindow") then return win end
+    end
+    vim.cmd([[botright vnew]])
+    local pwin = vim.api.nvim_get_current_win()
+    local pwin_width = vim.o.columns > 210 and 90 or 70
+    vim.api.nvim_win_set_option(pwin, "previewwindow", true)
+    vim.api.nvim_win_set_width(pwin, pwin_width)
+    vim.cmd("set filetype=preview")
+    vim.cmd(fmt("let &winwidth=%d", pwin_width))
+    vim.opt_local.winfixwidth = true
+
+    return pwin
+  end
+
   local existing_float_win = vim.b.lsp_floating_preview
   local active_clients = vim.lsp.get_clients()
 
@@ -65,9 +74,12 @@ local function hover()
       local pwin = get_preview_window()
       vim.api.nvim_win_set_buf(pwin, preview_buffer)
       vim.api.nvim_win_close(existing_float_win, true)
+
+      nnoremap("q", function()
+        vim.api.nvim_win_close(0, true)
+        vim.cmd("wincmd p")
+      end, { buffer = preview_buffer })
     else
-      -- vim.lsp.buf.hover(nil, { focus = false, focusable = false })
-      -- dd("pretty hovering")
       require("pretty_hover").hover()
     end
   end
@@ -124,6 +136,7 @@ local function setup_commands(bufnr)
 end
 
 -- [ AUTOCMDS ] ----------------------------------------------------------------
+
 ---@param client table<string, any>
 ---@param bufnr number
 local function setup_autocommands(client, bufnr)
@@ -131,11 +144,6 @@ local function setup_autocommands(client, bufnr)
     local msg = fmt("Unable to setup LSP autocommands, client for %d is missing", bufnr)
     return vim.notify(msg, L.ERROR, { title = "LSP Setup" })
   end
-
-  local supports_highlight = (client and client.server_capabilities.documentHighlightProvider == true)
-  -- local supports_inlay_hints = (client and client.server_capabilities.inlayHintProvider == true)
-  -- local supports_references = (client and client.server_capabilities.referencesProvider == true)
-  -- local supports_definition = (client and client.server_capabilities.definitionProvider == true)
 
   augroup("LspCodeLens", {
     {
@@ -149,14 +157,16 @@ local function setup_autocommands(client, bufnr)
 
   augroup("LspDocumentHighlight", {
     {
-      event = { "CursorHold", "CursorHoldI" },
+      event = { "CursorHold" },
       buffer = bufnr,
       command = function()
-        if supports_highlight and not vim.g.git_conflict_detected then vim.lsp.buf.document_highlight() end
+        if mega.lsp.has_method(client, "documentHighlight") and not vim.g.git_conflict_detected then
+          vim.lsp.buf.document_highlight()
+        end
       end,
     },
     {
-      event = { "CursorMoved", "BufLeave" },
+      event = { "CursorMoved", "BufLeave", "WinLeave" },
       buffer = bufnr,
       command = function()
         if not vim.g.git_conflict_detected then vim.lsp.buf.clear_references() end
@@ -212,80 +222,78 @@ end
 
 -- [ MAPPINGS ] ----------------------------------------------------------------
 
-local function setup_keymaps(client, bufnr)
-  local function has(method)
-    method = method:find("/") and method or "textDocument/" .. method
-    -- local clients = vim.lsp.get_active_clients({ bufnr = buffer })
-    -- for _, client in ipairs(clients) do
-    -- if client.supports_method(method) then return true end
-    -- end
-    -- return false
-
-    -- if client.supports_method(method) then dd("has " .. method) end
-    return client.supports_method(method)
+local function cancelable(method)
+  return function()
+    local params = vim.lsp.util.make_position_params()
+    local bufnr = vim.api.nvim_get_current_buf()
+    local cursor = vim.api.nvim_win_get_cursor(0)
+    vim.lsp.buf_request(0, method, params, function(...)
+      local new_cursor = vim.api.nvim_win_get_cursor(0)
+      if vim.api.nvim_get_current_buf() == bufnr and vim.deep_equal(cursor, new_cursor) then
+        vim.lsp.handlers[method](...)
+      end
+    end)
   end
+end
 
+local function setup_keymaps(client, bufnr)
   local desc = function(desc, expr)
     expr = expr ~= nil and expr or false
     return { desc = desc, buffer = bufnr, expr = expr }
   end
 
+  local function safemap(method, mode, key, rhs, description)
+    if mega.lsp.has_method(client, method) then
+      vim.keymap.set(mode, key, rhs, { buffer = bufnr, desc = description })
+    end
+  end
+
   nnoremap("[d", function() diagnostic.goto_prev({ float = true }) end, desc("lsp: prev diagnostic"))
   nnoremap("]d", function() diagnostic.goto_next({ float = true }) end, desc("lsp: next diagnostic"))
 
-  if has("definition") then
-    nnoremap("gd", function()
-      -- dd(client.server_capabilities)
-      if true then
-        vim.cmd("Telescope lsp_definitions")
-      -- vim.cmd("Trouble lsp_definitions")
-      else
-        vim.lsp.buf.definition()
-      end
-    end, desc("lsp: definition"))
-  end
-
+  safemap("definition", "n", "gd", function()
+    if vim.g.picker == "fzf" then
+      vim.cmd("FzfLua lsp_definitions")
+    elseif vim.g.picker == "telescope" then
+      vim.cmd("Telescope lsp_definitions")
+    else
+      vim.lsp.buf.definition()
+    end
+  end, "lsp: definition")
+  safemap("definition", "n", "gD", [[<cmd>vsplit | lua vim.lsp.buf.definition()<cr>]], "lsp: definition (vsplit)")
   nnoremap("gs", vim.lsp.buf.document_symbol, desc("lsp: document symbols"))
   nnoremap("gS", vim.lsp.buf.workspace_symbol, desc("lsp: workspace symbols"))
-  nnoremap("gD", [[<cmd>vsplit | lua vim.lsp.buf.definition()<cr>]], desc("lsp: definition (vsplit)"))
-
   if
-    not has("references")
-    -- not client.server_capabilities.documentReferencesProvider and not client.server_capabilities.referencesProvider
+    client.name == "lexical"
+    -- and not mega.lsp.has_method(client, "references")
+    -- and not client.server_capabilities.documentReferencesProvider
+    -- and not client.server_capabilities.referencesProvider
   then
-    nmap("gr", "<leader>A", desc("lsp: references"))
-  else
-    nmap("gr", function()
-      if true then
-        vim.cmd("Trouble lsp_references")
+    safemap("references", "n", "gr", "<leader>A", "lsp: references")
+  end
+  safemap("references", "n", "gr", function()
+    if true then
+      vim.cmd("Trouble lsp_references")
+    else
+      if vim.g.picker == "fzf" then
+        vim.cmd("FzfLua lsp_references")
+      elseif vim.g.picker == "telescope" then
+        vim.cmd("Telescope lsp_references")
       else
-        if vim.g.picker == "fzf" then
-          vim.cmd("FzfLua lsp_references")
-        elseif vim.g.picker == "telescope" then
-          vim.cmd("Telescope lsp_references")
-        else
-          vim.lsp.buf.references()
-        end
+        vim.lsp.buf.references()
       end
-    end, desc("lsp: references"))
-  end
-
-  nnoremap("gt", vim.lsp.buf.type_definition, desc("lsp: type definition"))
-  nnoremap("gi", vim.lsp.buf.implementation, desc("lsp: implementation"))
+    end
+  end, "lsp: references")
+  safemap("typeDefinition", "n", "gt", vim.lsp.buf.type_definition, "lsp: type definition")
+  safemap("implementation", "n", "gi", vim.lsp.buf.implementation, "lsp: implementation")
   nnoremap("gI", vim.lsp.buf.incoming_calls, desc("lsp: incoming calls"))
-
-  if has("codeAction") then
-    nnoremap("<leader>lc", vim.lsp.buf.code_action, desc("code action"))
-    xnoremap("<leader>lc", "<esc><Cmd>lua vim.lsp.buf.range_code_action()<CR>", desc("code action"))
-  end
-
+  safemap("codeAction", "n", "<leader>lc", vim.lsp.buf.code_action, "code action")
+  safemap("codeAction", "x", "<leader>lc", "<esc><Cmd>lua vim.lsp.buf.range_code_action()<CR>", "code action")
   nnoremap("gl", vim.lsp.codelens.run, desc("lsp: code lens"))
-
-  if has("rename") then nnoremap("gn", vim.lsp.buf.rename, desc("lsp: rename")) end
-
+  safemap("rename", "n", "gn", vim.lsp.buf.rename, "lsp: rename")
   nnoremap("ger", require("mega.utils.lsp").rename_file, desc("lsp: rename file to <input>"))
-
-  nnoremap("K", function()
+  nnoremap("gen", require("mega.utils.lsp").rename_file, desc("lsp: rename file to <input>"))
+  safemap("hover", "n", "K", function()
     local filetype = vim.bo.filetype
     if vim.tbl_contains({ "vim", "help" }, filetype) then
       vim.cmd("h " .. vim.fn.expand("<cword>"))
@@ -297,13 +305,8 @@ local function setup_keymaps(client, bufnr)
       hover()
     end
   end, desc("lsp: hover"))
-
-  if has("signatureHelp") then
-    nnoremap("gK", vim.lsp.buf.signature_help, desc("lsp: signature help"))
-    inoremap("<c-k>", vim.lsp.buf.signature_help, desc("lsp: signature help"))
-    imap("<c-k>", vim.lsp.buf.signature_help, desc("lsp: signature help"))
-  end
-
+  safemap("signatureHelp", "n", "gK", vim.lsp.buf.signature_help, "lsp: signature help")
+  safemap("signatureHelp", "i", "<c-k>", vim.lsp.buf.signature_help, "lsp: signature help")
   nnoremap("<leader>lic", [[<cmd>LspInfo<CR>]], desc("connected client info"))
   nnoremap("<leader>lim", [[<cmd>Mason<CR>]], desc("mason info"))
   nnoremap(
@@ -312,23 +315,29 @@ local function setup_keymaps(client, bufnr)
     desc("server capabilities")
   )
   nnoremap("<leader>lil", [[<cmd>LspLog<CR>]], desc("logs (vsplit)"))
+  safemap("formatting", "n", "<leader>lft", [[<cmd>ToggleAutoFormat<cr>]], "toggle formatting")
+  safemap("formatting", "n", "<leader>lff", function()
+    if pcall(require, "conform") then
+      require("conform").format({ async = false, lsp_fallback = true })
+    else
+      format()
+    end
+  end, "format buffer")
+  safemap(
+    "formatting",
+    "n",
+    "=",
+    function() vim.lsp.buf.format({ buffer = bufnr, async = true }) end,
+    "lsp: format buffer"
+  )
 
-  if has("formatting") then
-    nnoremap("<leader>lft", [[<cmd>ToggleAutoFormat<cr>]], desc("toggle formatting"))
-    -- nnoremap("<leader>lff", vim.lsp.buf.format, desc("format buffer"))
-    nnoremap("<leader>lff", function()
-      if pcall(require, "conform") then
-        require("conform").format({ async = false, lsp_fallback = true })
-      else
-        format()
-      end
-    end, desc("format buffer"))
-    nnoremap("=", function() vim.lsp.buf.format({ buffer = bufnr, async = true }) end, desc("lsp: format buffer"))
-  end
-
-  if has("rangeFormatting") then
-    vnoremap("=", function() vim.lsp.buf.format({ buffer = bufnr, async = true }) end, desc("lsp: format buffer range"))
-  end
+  safemap(
+    "formattingRange",
+    "v",
+    "=",
+    function() vim.lsp.buf.format({ buffer = bufnr, async = true }) end,
+    "lsp: format buffer range"
+  )
 end
 
 -- [ FORMATTING ] ---------------------------------------------------------------
@@ -560,11 +569,28 @@ local function on_init(client)
   return true
 end
 
-local client_overrides = {}
+---@alias ClientOverrides {on_attach: fun(client: lsp.Client, bufnr: number), semantic_tokens: fun(bufnr: number, client: lsp.Client, token: table)}
+local client_overrides = {
+  lexical = {
+    on_attach = function(client, bufnr)
+      dd(I(mega.lsp.has_method(client, "references")))
+      if
+        not mega.lsp.has_method(client, "references")
+        -- and not client.server_capabilities.documentReferencesProvider
+        -- and not client.server_capabilities.referencesProvider
+      then
+        nmap("gr", "<leader>A", { desc = "lsp: references", buffer = bufnr })
+      end
+    end,
+  },
+}
 
 ---@param client lsp.Client
 ---@param bufnr number
 local function setup_semantic_tokens(client, bufnr)
+  -- fully disable semantic tokens highlighting
+  client.server_capabilities.semanticTokensProvider = nil
+
   local overrides = client_overrides[client.name]
   if not overrides or not overrides.semantic_tokens then return end
 
@@ -614,78 +640,8 @@ local function on_attach(client, bufnr)
   --   if ok and navic then navic.attach(client, bufnr) end
   -- end
 
-  -- if client.supports_method("textDocument/signatureHelp") then
-  --   require("lsp_signature").on_attach({
-  --     -- -- hint_inline = function()
-  --     -- --   return true
-  --     -- -- end,
-  --     -- handler_opts = { border = mega.get_border() },
-  --     -- hint_prefix = "",
-  --     -- hint_enable = false,
-  --     -- fixpos = true,
-  --     -- padding = " ",
-  --     debug = false, -- set to true to enable debug logging
-  --     log_path = vim.fs.joinpath(vim.fn.stdpath("cache"), "lsp_signature.log"), -- log dir when debug is on
-  --     -- default is  ~/.cache/nvim/lsp_signature.log
-  --     verbose = false, -- show debug line number
-  --
-  --     bind = true, -- This is mandatory, otherwise border config won't get registered.
-  --     -- If you want to hook lspsaga or other signature handler, pls set to false
-  --     doc_lines = 10, -- will show two lines of comment/doc(if there are more than two lines in doc, will be truncated);
-  --     -- set to 0 if you DO NOT want any API comments be shown
-  --     -- This setting only take effect in insert mode, it does not affect signature help in normal
-  --     -- mode, 10 by default
-  --
-  --     max_height = 12, -- max height of signature floating_window
-  --     max_width = 80, -- max_width of signature floating_window
-  --     noice = false, -- set to true if you using noice to render markdown
-  --     wrap = true, -- allow doc/signature text wrap inside floating_window, useful if your lsp return doc/sig is too long
-  --
-  --     floating_window = true, -- show hint in a floating window, set to false for virtual text only mode
-  --
-  --     floating_window_above_cur_line = true, -- try to place the floating above the current line when possible Note:
-  --     -- will set to true when fully tested, set to false will use whichever side has more space
-  --     -- this setting will be helpful if you do not want the PUM and floating win overlap
-  --
-  --     floating_window_off_x = 0, -- adjust float windows x position.
-  --     -- can be either a number or function
-  --     floating_window_off_y = 0, -- adjust float windows y position. e.g -2 move window up 2 lines; 2 move down 2 lines
-  --     -- can be either number or function, see examples
-  --
-  --     close_timeout = 4000, -- close floating window after ms when laster parameter is entered
-  --     fix_pos = false, -- set to true, the floating window will not auto-close until finish all parameters
-  --     hint_prefix = "",
-  --     hint_enable = false,
-  --     -- hint_enable = true, -- virtual hint enable
-  --     -- hint_prefix = "➜ ", -- Panda for parameter, NOTE: for the terminal not support emoji, might crash
-  --     -- hint_scheme = "String",
-  --     hi_parameter = "LspSignatureActiveParameter", -- how your parameter will be highlight
-  --     handler_opts = {
-  --       border = mega.get_border(),
-  --     },
-  --
-  --     always_trigger = false, -- sometime show signature on new line or in middle of parameter can be confusing, set it to false for #58
-  --
-  --     auto_close_after = nil, -- autoclose signature float win after x sec, disabled if nil.
-  --     extra_trigger_chars = {}, -- Array of extra characters that will trigger signature completion, e.g., {"(", ","}
-  --     zindex = 200, -- by default it will be on top of all floating windows, set to <= 50 send it to bottom
-  --
-  --     padding = "", -- character to pad on left and right of signature can be ' ', or '|'  etc
-  --
-  --     -- transparency = 10, -- disabled by default, allow floating win transparent value 1~100
-  --     shadow_blend = 36, -- if you using shadow as border use this set the opacity
-  --     shadow_guibg = mega.colors.bg_dark.hex, -- if you using shadow as border use this set the color e.g. 'Green' or '#121315'
-  --     timer_interval = 200, -- default timer check interval set to lower value if you want to reduce latency
-  --     toggle_key = nil, -- toggle signature on and off in insert mode,  e.g. toggle_key = '<M-x>'
-  --
-  --     select_signature_key = nil, -- cycle to next signature, e.g. '<M-n>' function overloading
-  --     move_cursor_key = nil, -- imap, use nvim_set_current_win to move cursor between current win and floating
-  --   }, bufnr)
-  -- end
-
-  if caps.definitionProvider then vim.bo[bufnr].tagfunc = "v:lua.vim.lsp.tagfunc" end
-
-  if caps.documentFormattingProvider then vim.bo[bufnr].formatexpr = "v:lua.vim.lsp.formatexpr()" end
+  if mega.lsp.has_method(client, "definition") then vim.bo[bufnr].tagfunc = "v:lua.vim.lsp.tagfunc" end
+  if mega.lsp.has_method(client, "formatting") then vim.bo[bufnr].formatexpr = "v:lua.vim.lsp.formatexpr()" end
 
   require("mega.utils.lsp").setup_rename(client, bufnr)
 
@@ -697,9 +653,7 @@ local function on_attach(client, bufnr)
   setup_highlights(client, bufnr)
   setup_semantic_tokens(client, bufnr)
 
-  -- fully disable semantic tokens highlighting
-  client.server_capabilities.semanticTokensProvider = nil
-  if client.server_capabilities.completionProvider ~= nil then
+  if mega.lsp.has_method(client, "completion") then
     client.server_capabilities.completionProvider.triggerCharacters = { ".", ":" }
   end
 
@@ -776,7 +730,9 @@ local function get_config(name)
 end
 
 for server, _ in pairs(servers.list) do
+  -- loads unsupported/custom language servers
   servers.load_unofficial()
+
   local opts = get_config(server)
 
   if opts ~= nil then
