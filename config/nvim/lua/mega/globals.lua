@@ -424,7 +424,7 @@ function mega.filetype_settings(map)
     }
   end)
 
-  mega.augroup("filetype-settings", unpack(commands:totable()))
+  -- mega.augroup("filetype-settings", unpack(commands:totable()))
 end
 
 -- function mega.plugin_setup(plugin_name, setup_tbl)
@@ -725,6 +725,8 @@ function mega.utf8(decimal)
 end
 
 function mega.has(feature) return fn.has(feature) > 0 end
+
+function mega.has_plugin(plugin) return require("lazy.core.config").spec.plugins[plugin] ~= nil end
 
 function mega.executable(e) return fn.executable(e) > 0 end
 

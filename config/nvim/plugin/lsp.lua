@@ -11,6 +11,7 @@ local fmt = string.format
 local diagnostic = vim.diagnostic
 local lspconfig = require("lspconfig")
 local LSP_METHODS = vim.lsp.protocol.Methods
+local servers = require("mega.servers")
 
 function mega.lsp.has_method(client, method)
   method = method:find("/") and method or "textDocument/" .. method
@@ -237,9 +238,9 @@ local function cancelable(method)
 end
 
 local function setup_keymaps(client, bufnr)
-  local desc = function(desc, expr)
+  local function desc(description, expr)
     expr = expr ~= nil and expr or false
-    return { desc = desc, buffer = bufnr, expr = expr }
+    return { desc = description, buffer = bufnr, expr = expr }
   end
 
   local function safemap(method, mode, key, rhs, description)
@@ -248,29 +249,32 @@ local function setup_keymaps(client, bufnr)
     end
   end
 
+  nnoremap("<leader>lic", [[<cmd>LspInfo<CR>]], desc("connected client info"))
+  nnoremap("<leader>lim", [[<cmd>Mason<CR>]], desc("mason info"))
+  nnoremap(
+    "<leader>lis",
+    function() dd(fmt("server capabilities for %s: \r\n%s", client.name, client.server_capabilities)) end,
+    desc("server capabilities")
+  )
+  nnoremap("<leader>lil", [[<cmd>LspLog<CR>]], desc("logs (vsplit)"))
+
   nnoremap("[d", function() diagnostic.goto_prev({ float = true }) end, desc("lsp: prev diagnostic"))
   nnoremap("]d", function() diagnostic.goto_next({ float = true }) end, desc("lsp: next diagnostic"))
 
   safemap("definition", "n", "gd", function()
-    if vim.g.picker == "fzf" then
-      vim.cmd("FzfLua lsp_definitions")
-    elseif vim.g.picker == "telescope" then
-      vim.cmd("Telescope lsp_definitions")
-    else
-      vim.lsp.buf.definition()
-    end
+    vim.lsp.buf.definition()
+    -- if vim.g.picker == "fzf" then
+    --   vim.cmd("FzfLua lsp_definitions")
+    -- elseif vim.g.picker == "telescope" then
+    --   vim.cmd("Telescope lsp_definitions")
+    -- else
+    --   vim.lsp.buf.definition()
+    -- end
   end, "lsp: definition")
   safemap("definition", "n", "gD", [[<cmd>vsplit | lua vim.lsp.buf.definition()<cr>]], "lsp: definition (vsplit)")
   nnoremap("gs", vim.lsp.buf.document_symbol, desc("lsp: document symbols"))
   nnoremap("gS", vim.lsp.buf.workspace_symbol, desc("lsp: workspace symbols"))
-  if
-    client.name == "lexical"
-    -- and not mega.lsp.has_method(client, "references")
-    -- and not client.server_capabilities.documentReferencesProvider
-    -- and not client.server_capabilities.referencesProvider
-  then
-    safemap("references", "n", "gr", "<leader>A", "lsp: references")
-  end
+
   safemap("references", "n", "gr", function()
     if true then
       vim.cmd("Trouble lsp_references")
@@ -284,6 +288,7 @@ local function setup_keymaps(client, bufnr)
       end
     end
   end, "lsp: references")
+  if client.name == "lexical" then safemap("references", "n", "gr", "<leader>A", "lsp: references") end
   safemap("typeDefinition", "n", "gt", vim.lsp.buf.type_definition, "lsp: type definition")
   safemap("implementation", "n", "gi", vim.lsp.buf.implementation, "lsp: implementation")
   nnoremap("gI", vim.lsp.buf.incoming_calls, desc("lsp: incoming calls"))
@@ -307,14 +312,6 @@ local function setup_keymaps(client, bufnr)
   end, desc("lsp: hover"))
   safemap("signatureHelp", "n", "gK", vim.lsp.buf.signature_help, "lsp: signature help")
   safemap("signatureHelp", "i", "<c-k>", vim.lsp.buf.signature_help, "lsp: signature help")
-  nnoremap("<leader>lic", [[<cmd>LspInfo<CR>]], desc("connected client info"))
-  nnoremap("<leader>lim", [[<cmd>Mason<CR>]], desc("mason info"))
-  nnoremap(
-    "<leader>lis",
-    function() dd(fmt("server capabilities for %s: \r\n%s", client.name, client.server_capabilities)) end,
-    desc("server capabilities")
-  )
-  nnoremap("<leader>lil", [[<cmd>LspLog<CR>]], desc("logs (vsplit)"))
   safemap("formatting", "n", "<leader>lft", [[<cmd>ToggleAutoFormat<cr>]], "toggle formatting")
   safemap("formatting", "n", "<leader>lff", function()
     if pcall(require, "conform") then
@@ -330,7 +327,6 @@ local function setup_keymaps(client, bufnr)
     function() vim.lsp.buf.format({ buffer = bufnr, async = true }) end,
     "lsp: format buffer"
   )
-
   safemap(
     "formattingRange",
     "v",
@@ -419,31 +415,33 @@ local function setup_diagnostics(client, _bufnr)
   sign({ hl = "DiagnosticSignInfo", icon = mega.icons.lsp.info })
   sign({ hl = "DiagnosticSignHint", icon = mega.icons.lsp.hint })
 
-  --- Restricts nvim's diagnostic signs to only the single most severe one per line
-  -- REF: `:help vim.diagnostic`
-  -- TODO: https://github.com/kristijanhusak/neovim-config/blob/master/nvim/lua/partials/lsp.lua#L152-L159
+  -- This section overrides the default diagnostic handlers for signs and virtual text so that only
+  -- the most severe diagnostic is shown per line
+
+  --- The custom namespace is so that ALL diagnostics across all namespaces can be aggregated
+  --- including diagnostics from plugins
   local ns = api.nvim_create_namespace("severe-diagnostics")
+
+  --- Restricts nvim's diagnostic signs to only the single most severe one per line
+  --- see `:help vim.diagnostic`
+  ---@param callback fun(namespace: integer, bufnr: integer, diagnostics: table, opts: table)
+  ---@return fun(namespace: integer, bufnr: integer, diagnostics: table, opts: table)
   local function max_diagnostic(callback)
-    return function(_, bufnr, _, opts)
-      -- Get all diagnostics from the whole buffer rather than just the
-      -- diagnostics passed to the handler
-      local diagnostics = vim.diagnostic.get(bufnr)
-      -- Find the "worst" diagnostic per line
-      local max_severity_per_line = {}
-      for _, d in pairs(diagnostics) do
-        local m = max_severity_per_line[d.lnum]
-        if not m or d.severity < m.severity then max_severity_per_line[d.lnum] = d end
-      end
-      local new_diags = vim.tbl_values(max_severity_per_line)
-      callback(ns, bufnr, new_diags, opts)
+    return function(_, bufnr, diagnostics, opts)
+      local max_severity_per_line = vim.iter(diagnostics):fold({}, function(diag_map, d)
+        local m = diag_map[d.lnum]
+        if not m or d.severity < m.severity then diag_map[d.lnum] = d end
+        return diag_map
+      end)
+      callback(ns, bufnr, vim.tbl_values(max_severity_per_line), opts)
     end
   end
 
-  --   local signs_handler = diagnostic.handlers.signs
-  --   diagnostic.handlers.signs = vim.tbl_extend("force", signs_handler, {
-  --     show = max_diagnostic(signs_handler.show),
-  --     hide = function(_, bufnr) signs_handler.hide(ns, bufnr) end,
-  --   })
+  local signs_handler = diagnostic.handlers.signs
+  diagnostic.handlers.signs = vim.tbl_extend("force", signs_handler, {
+    show = max_diagnostic(signs_handler.show),
+    hide = function(_, bufnr) signs_handler.hide(ns, bufnr) end,
+  })
 
   local virt_text_handler = diagnostic.handlers.virtual_text
   diagnostic.handlers.virtual_text = vim.tbl_extend("force", virt_text_handler, {
@@ -568,22 +566,22 @@ local function on_init(client)
   end
   return true
 end
-
----@alias ClientOverrides {on_attach: fun(client: lsp.Client, bufnr: number), semantic_tokens: fun(bufnr: number, client: lsp.Client, token: table)}
-local client_overrides = {
-  lexical = {
-    on_attach = function(client, bufnr)
-      dd(I(mega.lsp.has_method(client, "references")))
-      if
-        not mega.lsp.has_method(client, "references")
-        -- and not client.server_capabilities.documentReferencesProvider
-        -- and not client.server_capabilities.referencesProvider
-      then
-        nmap("gr", "<leader>A", { desc = "lsp: references", buffer = bufnr })
-      end
-    end,
-  },
-}
+--
+-- ---@alias ClientOverrides {on_attach: fun(client: lsp.Client, bufnr: number), semantic_tokens: fun(bufnr: number, client: lsp.Client, token: table)}
+-- local client_overrides = {
+--   lexical = {
+--     on_attach = function(client, bufnr)
+--       dd(I(mega.lsp.has_method(client, "references")))
+--       if
+--         not mega.lsp.has_method(client, "references")
+--         -- and not client.server_capabilities.documentReferencesProvider
+--         -- and not client.server_capabilities.referencesProvider
+--       then
+--         nmap("gr", "<leader>A", { desc = "lsp: references", buffer = bufnr })
+--       end
+--     end,
+--   },
+-- }
 
 ---@param client lsp.Client
 ---@param bufnr number
@@ -591,33 +589,31 @@ local function setup_semantic_tokens(client, bufnr)
   -- fully disable semantic tokens highlighting
   client.server_capabilities.semanticTokensProvider = nil
 
-  local overrides = client_overrides[client.name]
-  if not overrides or not overrides.semantic_tokens then return end
-
-  mega.augroup(fmt("LspSemanticTokens%s", client.name), {
-    event = "LspTokenUpdate",
-    buffer = bufnr,
-    desc = fmt("Configure the semantic tokens for the %s", client.name),
-    command = function(args) overrides.semantic_tokens(args.buf, client, args.data.token) end,
-  })
+  -- local overrides = client_overrides[client.name]
+  -- if not overrides or not overrides.semantic_tokens then return end
+  --
+  -- mega.augroup(fmt("LspSemanticTokens%s", client.name), {
+  --   event = "LspTokenUpdate",
+  --   buffer = bufnr,
+  --   desc = fmt("Configure the semantic tokens for the %s", client.name),
+  --   command = function(args) overrides.semantic_tokens(args.buf, client, args.data.token) end,
+  -- })
 end
 
 ---Add buffer local mappings, autocommands, tagfunc, etc for attaching servers
 ---@param client table lsp client
 ---@param bufnr number
 local function on_attach(client, bufnr)
-  if not client then
+  if not client or not bufnr then
     vim.notify("No LSP client found; aborting on_attach.")
     return
   end
-
-  local caps = client.server_capabilities
 
   if client.config.flags then client.config.flags.allow_incremental_sync = true end
 
   -- Live color highlighting; handy for tailwindcss
   -- HT: kabouzeid
-  if type(caps.provider) == "boolean" and caps.colorProvider then
+  if mega.lsp.has_method(client, "color") then
     if client.name == "tailwindcss" then
       require("document-color").buf_attach(bufnr, { mode = "single" })
       do
@@ -628,14 +624,15 @@ local function on_attach(client, bufnr)
   end
 
   -- Disable completion for certain clients (using this mostly for the multiple elixir clients i'm using at the moment):
-  -- if type(caps.provider) == "boolean" and caps.completionProvider then
+  --
+  -- if mega.lsp.has_method(client, "completion") then
   --   if vim.tbl_contains({ "lexical" }, client.name) then
   --     dd(fmt("disabling completionProvider for %s", client.name))
   --     caps.completionProvider = nil
   --   end
   -- end
 
-  -- if caps.documentSymbolProvider then
+  --   if mega.lsp.has_method(client, "documentSymbol") then
   --   local ok, navic = mega.require("nvim-navic")
   --   if ok and navic then navic.attach(client, bufnr) end
   -- end
@@ -658,11 +655,8 @@ local function on_attach(client, bufnr)
   end
 
   vim.api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
-
-  if client_overrides[client.name] then client_overrides[client.name](client, bufnr) end
+  -- if client_overrides[client.name] then client_overrides[client.name](client, bufnr) end
 end
-
-local servers = require("mega.servers")
 
 -- all the server capabilities we could want
 local function get_server_capabilities()
@@ -708,18 +702,14 @@ local function get_server_capabilities()
   return capabilities
 end
 
----Get the configuration for a specific language server
----@type lspconfig.options
----@param name string
----@return table<string, any>?
 local function get_config(name)
   local config = name and servers.list[name] or {}
-  local t = type(config)
-  if t == "function" then config = config() end
-  if t == "function" and config == false then config = nil end
+  if not config or config == nil then return end
 
-  if not config then return end
-  -- if config == false or config == nil then return end
+  if type(config) == "function" then
+    config = config()
+    if not config or config == nil then return end
+  end
 
   config.on_init = on_init
   config.flags = { debounce_text_changes = 150 }
@@ -730,28 +720,10 @@ local function get_config(name)
 end
 
 for server, _ in pairs(servers.list) do
-  -- loads unsupported/custom language servers
   servers.load_unofficial()
+  local cfg = get_config(server)
 
-  local opts = get_config(server)
-
-  if opts ~= nil then
-    if server == "tsserver" then
-      -- require("typescript-tools").setup({
-      --   capabilities = get_server_capabilities(),
-      --   on_attach = on_attach,
-      --   settings = {
-      --     separate_diagnostic_server = true,
-      --     publish_diagnostic_on = "insert_leave",
-      --     tsserver_plugins = { "typescript-styled-plugin" },
-      --   },
-      -- })
-      -- require("typescript").setup({ server = opts })
-      lspconfig[server].setup(opts)
-    else
-      lspconfig[server].setup(opts)
-    end
-  end
+  if cfg ~= nil then lspconfig[server].setup(cfg) end
 end
 
 -- REF:

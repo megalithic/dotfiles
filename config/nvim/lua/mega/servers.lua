@@ -227,6 +227,7 @@ M.list = {
               continuation_indent_size = "2",
             },
           },
+          semantic = { enable = false },
           hint = {
             enable = true,
             arrayIndex = "Disable", -- "Enable", "Auto", "Disable"

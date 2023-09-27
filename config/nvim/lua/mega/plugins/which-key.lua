@@ -157,15 +157,7 @@ return {
       },
       ["<leader>l"] = {
         name = "+lsp",
-        d = { "telescope: definitions" },
-        D = { "telescope: diagnostics" },
-        t = { "telescope: type definitions" },
-        r = { "telescope: references" },
-        s = { "telescope: document symbols" },
-        S = { "telescope: workspace symbols" },
-        w = { "telescope: dynamic workspace symbols" },
-        n = { "lsp: rename" },
-        i = { name = "lsp: info" },
+        i = { name = "+info" },
       },
       ["<localleader>m"] = {
         name = "+markdown",
