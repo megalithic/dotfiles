@@ -15,7 +15,7 @@ local LSP_METHODS = vim.lsp.protocol.Methods
 function mega.lsp.has_method(client, method)
   method = method:find("/") and method or "textDocument/" .. method
 
-  if client.supports_method(method) then dd(client.name .. " has " .. method) end
+  -- if client.supports_method(method) then dd(client.name .. " has " .. method) end
 
   return client.supports_method(method)
 end
