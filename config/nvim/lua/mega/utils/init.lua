@@ -1,6 +1,7 @@
 local vcmd, lsp, fn = vim.cmd, vim.lsp, vim.fn
 local fmt = string.format
 local hl_ok, H = mega.require("mega.utils.highlights", { silent = true })
+local ts_utils = require("nvim-treesitter.ts_utils")
 
 local M = {
   ext = {
@@ -395,10 +396,10 @@ function M.preview_file(filename)
   local cmd = fmt("silent !open %s", filename)
 
   if M.is_image(filename) then
-    vim.notify(filename, L.INFO, { title = "nvim: previewing image..", render = "wrapped-compact" })
+    -- vim.notify(filename, L.INFO, { title = "nvim: previewing image..", render = "wrapped-compact" })
     cmd = fmt("silent !wezterm cli split-pane --right --percent 30 -- bash -c 'wezterm imgcat %s ; read'", filename)
   elseif M.is_openable(filename) then
-    vim.notify(filename, L.INFO, { title = "nvim: opening with default app..", render = "wrapped-compact" })
+    -- vim.notify(filename, L.INFO, { title = "nvim: opening with default app..", render = "wrapped-compact" })
   else
     vim.notify(filename, L.WARN, { title = "nvim: not previewable file; aborting.", render = "wrapped-compact" })
 
@@ -421,6 +422,12 @@ function M.conceal_class(bufnr)
   local query = [[
     ((attribute
       (attribute_name) @att_name (#eq? @att_name "class")
+      (quoted_attribute_value (attribute_value) @class_value) (#set! @class_value conceal "…")))
+    ((attribute
+      (attribute_name) @att_name (#eq? @att_name "additional_classes")
+      (quoted_attribute_value (attribute_value) @class_value) (#set! @class_value conceal "…")))
+    ((attribute
+      (attribute_name) @att_name (#eq? @att_name "card_classes")
       (quoted_attribute_value (attribute_value) @class_value) (#set! @class_value conceal "…")))
     ]]
 
@@ -446,6 +453,47 @@ function M.conceal_class(bufnr)
       })
     end
   end
+end
+
+function M.wrap_range(bufnr, range, before, after)
+  local lines = vim.api.nvim_buf_get_lines(bufnr, range[1], range[3] + 1, true)
+  local last_line = lines[#lines]
+  local with_after = last_line:gsub("()", { [range[4] + 1] = after })
+  lines[#lines] = with_after
+
+  local first_line = lines[1]
+  local with_before = first_line:gsub("()", { [range[2] + 1] = before })
+  lines[1] = with_before
+
+  vim.api.nvim_buf_set_lines(bufnr, range[1], range[3] + 1, true, lines)
+end
+
+function M.wrap_cursor_node(before, after)
+  local winnr = 0
+  local node = ts_utils.get_node_at_cursor(winnr)
+
+  if node then
+    local bufnr = vim.api.nvim_win_get_buf(winnr)
+    local range = { node:range() }
+    M.wrap_range(bufnr, range, before, after)
+  else
+    vim.notify("Wrap: Node not found", vim.log.levels.WARN)
+  end
+end
+
+function M.wrap_selected_nodes(before, after)
+  local start = vim.fn.getpos("'<")
+  local end_ = vim.fn.getpos("'>")
+  local bufnr = 0
+
+  local start_node = vim.treesitter.get_node({ bufnr = 0, pos = { start[2] - 1, start[3] - 1 } })
+  local end_node = vim.treesitter.get_node({ bufnr = 0, pos = { end_[2] - 1, end_[3] - 1 } })
+  local start_range = { start_node:range() }
+  local end_range = { end_node:range() }
+
+  local range = { start_range[1], start_range[2], end_range[3], end_range[4] }
+
+  M.wrap_range(bufnr, range, before, after)
 end
 
 return M

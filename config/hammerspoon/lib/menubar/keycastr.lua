@@ -171,7 +171,7 @@ function obj:init()
   local screen_frame = screen:frame()
 
   obj.canvas = hs.canvas.new({
-    x = 25,
+    x = screen_frame.x2 / 2, -- centered'ish
     y = screen_frame.y2 - V_MARGIN - CANVAS_HEIGHT,
   })
   obj.canvas:appendElements({

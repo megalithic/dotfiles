@@ -68,9 +68,26 @@ return {
           opts.title = "LSP"
         end
       end
+
       notify(msg, level, opts)
     end
 
-    vim.notify = notify_override
+    if not pcall(require, "plenary") then
+      vim.notify = notify_override
+    else
+      local log = require("plenary.log").new({
+        plugin = "notify",
+        level = "debug",
+        use_console = false,
+        use_quickfix = false,
+        use_file = false,
+      })
+
+      vim.notify = function(msg, level, opts)
+        log.info(msg, level, opts)
+
+        notify_override(msg, level, opts)
+      end
+    end
   end,
 }

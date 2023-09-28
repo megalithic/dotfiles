@@ -164,13 +164,6 @@ return {
         p = { [[<cmd>MarkdownPreviewToggle<CR>]], "open preview" },
         g = { [[<cmd>Glow<CR>]], "open glow" },
       },
-      ["<leader>p"] = {
-        name = "+project",
-        p = { "<cmd>:AV<cr>", "Toggle Alternate (vsplit)" },
-        P = { "<cmd>:A<cr>", "Open Alternate (edit)" },
-        l = { "<cmd>:Vheex<cr>", "Open Heex for LiveView (vsplit)" },
-        L = { "<cmd>:Vlive<cr>", "Open Live for LiveView (vsplit)" },
-      },
       ["<leader>r"] = { name = "+repls" },
       ["<leader>s"] = { name = "+noice" },
       ["<leader>t"] = {

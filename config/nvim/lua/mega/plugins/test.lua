@@ -4,8 +4,66 @@
 
 return {
   {
+    "megalithic/nvim-test",
+    cond = vim.g.tester == "nvim-test",
+    dev = true,
+    cmd = {
+      "TestNearest",
+      "TestFile",
+      "TestLast",
+      "TestVisit",
+      "TestSuite",
+      "A",
+      "AV",
+    },
+    keys = {
+      { "<localleader>tn", "<cmd>TestNearest<cr>", desc = "run (n)earest test" },
+      { "<localleader>ta", "<cmd>TestFile<cr>", desc = "run (a)ll tests in file" },
+      { "<localleader>tf", "<cmd>TestFile<cr>", desc = "run (a)ll tests in file" },
+      { "<localleader>tl", "<cmd>TestLast<cr>", desc = "run (l)ast test" },
+      { "<localleader>ts", "<cmd>TestSuite<cr>", desc = "run test (s)uite" },
+      -- { "<localleader>tT", "<cmd>TestLast<cr>", desc = "run _last test" },
+      { "<localleader>tv", "<cmd>TestVisit<cr>", desc = "open last (v)isited test" },
+      { "<localleader>tp", "<cmd>A<cr>", desc = "open alt (edit)" },
+      { "<localleader>tP", "<cmd>AV<cr>", desc = "open alt (vsplit)" },
+    },
+    config = function()
+      require("nvim-test").setup({
+        run = true, -- run tests (using for debug)
+        commands_create = true, -- create commands (TestFile, TestLast, ...)
+        filename_modifier = ":.", -- modify filenames before tests run(:h filename-modifiers)
+        silent = false, -- less notifications
+        term = "terminal", -- a terminal to run ("terminal"|"toggleterm")
+        termOpts = {
+          direction = "vertical", -- terminal's direction ("horizontal"|"vertical"|"float")
+          width = 96, -- terminal's width (for vertical|float)
+          height = 24, -- terminal's height (for horizontal|float)
+          go_back = false, -- return focus to original window after executing
+          stopinsert = "auto", -- exit from insert mode (true|false|"auto")
+          keep_one = true, -- keep only one terminal for testing
+        },
+        runners = { -- setup tests runners
+          cs = "nvim-test.runners.dotnet",
+          go = "nvim-test.runners.go-test",
+          haskell = "nvim-test.runners.hspec",
+          javascriptreact = "nvim-test.runners.jest",
+          javascript = "nvim-test.runners.jest",
+          lua = "nvim-test.runners.busted",
+          python = "nvim-test.runners.pytest",
+          ruby = "nvim-test.runners.rspec",
+          eelixir = "nvim-test.runners.mix",
+          elixir = "nvim-test.runners.mix",
+          rust = "nvim-test.runners.cargo-test",
+          typescript = "nvim-test.runners.jest",
+          typescriptreact = "nvim-test.runners.jest",
+        },
+      })
+    end,
+  },
+
+  {
     "vim-test/vim-test",
-    -- enabled = vim.g.tester == "vim-test",
+    cond = vim.g.tester == "vim-test",
     cmd = {
       "TestNearest",
       "TestFile",
@@ -88,7 +146,7 @@ return {
       "nvim-lua/plenary.nvim",
       "nvim-treesitter/nvim-treesitter",
       "antoinemadec/FixCursorHold.nvim",
-      { "jfpedroza/neotest-elixir" },
+      { "megalithic/neotest-elixir", dev = true },
       { "haydenmeade/neotest-jest" },
       { "rcarriga/neotest-plenary", dependencies = { "nvim-lua/plenary.nvim" } },
     },
@@ -146,10 +204,11 @@ return {
           skipped = mega.icons.test.skipped,
           failed = mega.icons.test.failed,
           unknown = mega.icons.test.unknown,
-          running_animated = vim.tbl_map(
-            function(s) return s .. " " end,
-            { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" }
-          ),
+          running_animated = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" },
+          -- running_animated = vim.tbl_map(
+          --   function(s) return s .. " " end,
+          --   { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" }
+          -- ),
           -- running_animated = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" },
         },
         summary = {
@@ -163,6 +222,7 @@ return {
           require("neotest-elixir")({
             args = { "--trace" },
             iex_shell_direction = "float",
+            extra_formatters = { "ExUnit.CLIFormatter", "ExUnitNotifier" },
           }),
           require("neotest-jest")({
             jestCommand = "npm test --",

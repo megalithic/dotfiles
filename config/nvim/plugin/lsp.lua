@@ -666,6 +666,7 @@ local function get_server_capabilities()
   -- TODO: what is dynamicRegistration doing here? should I not always set to true?
   capabilities.textDocument.colorProvider = { dynamicRegistration = false }
   capabilities.textDocument.completion.completionItem.documentationFormat = { "markdown" }
+  capabilities.textDocument.completion.completionItem.snippetSupport = true
   -- textDocument = { foldingRange = { dynamicRegistration = false, lineFoldingOnly = true } },
 
   -- FIX: https://github.com/neovim/neovim/issues/23291
@@ -719,8 +720,8 @@ local function get_config(name)
   return config
 end
 
+servers.load_unofficial()
 for server, _ in pairs(servers.list) do
-  servers.load_unofficial()
   local cfg = get_config(server)
 
   if cfg ~= nil then lspconfig[server].setup(cfg) end

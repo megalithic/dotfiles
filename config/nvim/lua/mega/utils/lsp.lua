@@ -71,14 +71,16 @@ function M.root_pattern(...)
   end
 end
 
--- function M.root_dir(fname)
---   if not fname or fname == "" then fname = vim.fn.getcwd() end
---
---   local matches = vim.fs.find({ "mix.exs" }, { upward = true, limit = 2, path = fname })
---   local child_or_root_path, maybe_umbrella_path = unpack(matches)
---
---   return vim.fs.dirname(maybe_umbrella_path or child_or_root_path)
--- end
+-- NOTE: prefer this one, i think? 2023/09/28
+function M.root_dir(patterns, fname)
+  if type(patterns) == "string" then patterns = { patterns } end
+  if not fname or fname == "" then fname = vim.fn.getcwd() end
+
+  local matches = vim.fs.find(patterns, { upward = true, limit = 2, path = fname })
+  local child_or_root_path, maybe_umbrella_path = unpack(matches)
+
+  return vim.fs.dirname(maybe_umbrella_path or child_or_root_path)
+end
 
 function M.setup_rename(_client, _bufnr)
   --

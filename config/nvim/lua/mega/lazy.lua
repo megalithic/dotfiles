@@ -139,7 +139,11 @@ function M.setup()
     },
   })
 
-  vim.keymap.set("n", "<leader>lp", "<cmd>:Lazy<cr>")
+  nnoremap("<leader>pp", "<cmd>Lazy home<cr>", { desc = "lazy: home" })
+  nnoremap("<leader>ps", "<cmd>Lazy sync<cr>", { desc = "lazy: sync" })
+  nnoremap("<leader>pu", "<cmd>Lazy update<cr>", { desc = "lazy: update all" })
+  nnoremap("<leader>pb", "<cmd>Lazy build<cr>", { desc = "lazy: build all" })
+  nnoremap("<leader>px", "<cmd>Lazy clean<cr>", { desc = "lazy: clean all" })
 end
 
 return M

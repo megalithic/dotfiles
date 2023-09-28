@@ -215,12 +215,20 @@ do
       buffer = 0,
       command = function()
         mega.nnoremap("gf", function()
-          local repo = fn.expand("<cfile>")
-          if repo:match("https://") then return vim.cmd("norm gx") end
-          if not repo or #vim.split(repo, "/") ~= 2 then return vim.cmd("norm! gf") end
-          local url = fmt("https://www.github.com/%s", repo)
+          local target = fn.expand("<cfile>")
+          if require("mega.utils").is_image(target) then
+            local root_dir = require("mega.utils.lsp").root_dir({ ".git" })
+            dd(root_dir)
+            -- naive for now:
+            target = target:gsub("./samples", fmt("%s/samples", root_dir))
+            dd(target)
+            return require("mega.utils").preview_file(target)
+          end
+          if target:match("https://") then return vim.cmd("norm gx") end
+          if not target or #vim.split(target, "/") ~= 2 then return vim.cmd("norm! gf") end
+          local url = fmt("https://www.github.com/%s", target)
           fn.jobstart(fmt("%s %s", vim.g.open_command, url))
-          vim.notify(fmt("Opening %s at %s", repo, url))
+          vim.notify(fmt("Opening %s at %s", target, url))
         end)
       end,
     },

@@ -27,6 +27,16 @@ vim.cmd.iabbrev([[~h      ~H""""""<ESC>2hi<CR><ESC>O<BS> ]])
 vim.cmd.iabbrev([[:skip:  @tag :skip]])
 vim.cmd.iabbrev([[tskip   @tag :skip]])
 
+vim.cmd([[
+" Wrap word in {:ok, word} tuple
+nmap <silent> <localleader>ok :lua require("mega.utils").wrap_cursor_node("{:ok, ", "}")<CR>
+xmap <silent> <localleader>ok :lua require("mega.utils").wrap_selected_nodes("{:ok, ", "}")<CR>
+
+" Wrap word in {:error, word} tuple
+nmap <silent> <localleader>er :lua require("mega.utils").wrap_cursor_node("{:error, ", "}")<CR>
+xmap <silent> <localleader>er :lua require("mega.utils").wrap_selected_nodes("{:error, ", "}")<CR>
+]])
+
 local function desk_cmd()
   local deskfile_cmd = ""
   local deskfile_path = require("mega.utils").root_has_file("Deskfile")
