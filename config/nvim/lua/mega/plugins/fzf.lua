@@ -261,7 +261,6 @@ return {
         keymap = {
           builtin = {
             ["<c-/>"] = "toggle-help",
-            ["<c-e>"] = "toggle-preview",
             ["<c-=>"] = "toggle-fullscreen",
             ["<c-f>"] = "preview-page-down",
             ["<c-b>"] = "preview-page-up",

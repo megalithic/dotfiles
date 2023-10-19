@@ -3,20 +3,17 @@
 -- and created my own version for my specific needs. they are the real ones here.
 
 if not mega then return end
-if not vim.g.enabled_plugin["term"] then return end
+if not vim.g.enabled_plugin["old_term"] then return end
 
 local fmt = string.format
 local api = vim.api
 local fn = vim.fn
 
-local nil_id = 999999
-local term_win_id = nil_id
-local term_buf_id = nil_id
+local nil_buf_id = 999999
+local term_win_id = nil
+local term_buf_id = nil_buf_id
 local term_tab_id = nil
-local Term = nil
-
-local __buftype = "terminal"
-local __filetype = "megaterm"
+local term = nil
 
 local function is_valid_buffer(bufnr) return vim.api.nvim_buf_is_valid(bufnr) end
 local function is_valid_window(winnr) return vim.api.nvim_win_is_valid(winnr) end
@@ -50,16 +47,16 @@ local function set_term(winnr, bufnr, tabnr, opts)
   term_tab_id = tabnr
 
   -- FIXME: only care about the term global; get rid of the term_*_id globals
-  Term = vim.tbl_extend("force", opts, { winnr = winnr, bufnr = bufnr, tabnr = tabnr })
-  return Term
+  term = vim.tbl_extend("force", opts, { winnr = winnr, bufnr = bufnr, tabnr = tabnr })
+  return term
 end
 
 local function unset_term(should_delete)
   if should_delete and api.nvim_buf_is_loaded(term_buf_id) then api.nvim_buf_delete(term_buf_id, { force = true }) end
-  term_buf_id = nil_id
+  term_buf_id = nil_buf_id
   term_win_id = nil
   term_tab_id = nil
-  Term = {}
+  term = {}
 end
 
 ---@class ParsedArgs
@@ -129,29 +126,55 @@ local set_win_hls = function(hls)
   vim.opt_local.winhighlight = table.concat(hls, ",")
 end
 
-local function set_term_opts(term)
+local function set_term_opts()
   vim.opt_local.relativenumber = false
   vim.opt_local.number = false
   vim.opt_local.signcolumn = "yes:1"
-  pcall(vim.api.nvim_buf_set_option, term_buf_id, "filetype", __filetype)
-  pcall(vim.api.nvim_buf_set_option, term_buf_id, "buftype", __buftype)
+  pcall(vim.api.nvim_buf_set_option, term_buf_id, "filetype", "megaterm")
+  pcall(vim.api.nvim_buf_set_option, term_buf_id, "buftype", "terminal")
 
   if vim.tbl_contains({ "float", "tab" }, term.direction) then
     vim.opt_local.signcolumn = "no"
     vim.bo.bufhidden = "wipe"
     vim.cmd("setlocal bufhidden=wipe")
+  else
+    vim.opt_local.winfixwidth = true
+    vim.opt_local.winfixheight = true
   end
 end
 
 local function set_win_size(bufnr)
-  if Term and Term.direction == "vertical" then
-    vim.cmd(fmt("let &winwidth=%d", Term.size))
-    vim.opt_local.winfixwidth = true
-  elseif Term and Term.direction == "horizontal" then
-    vim.cmd(fmt("let &winheight=%d", Term.size))
-    vim.opt_local.winfixheight = true
+  if term.direction == "vertical" then
+    vim.cmd(fmt("let &winwidth=%d", term.size))
+  elseif term.direction == "horizontal" then
+    vim.cmd(fmt("let &winheight=%d", term.size))
   end
 end
+
+-- local set_autocommands = function()
+--   mega.augroup("MegatermResizer", {
+--     {
+--       event = { "WinLeave" },
+--       buffer = term_buf_id,
+--       command = function(evt) set_win_size(evt.buf) end,
+--     },
+--     {
+--       event = { "WinEnter" },
+--       buffer = term_buf_id,
+--       command = function(evt) set_win_size(evt.buf) end,
+--     },
+--     {
+--       event = { "TermOpen" },
+--       pattern = { "term://*" },
+--       command = function(evt) end,
+--     },
+--     {
+--       event = { "BufEnter" },
+--       pattern = { "term://*" },
+--       command = function(evt) end,
+--     },
+--   })
+-- end
 
 -- TODO: https://github.com/brendalf/mix.nvim/blob/main/lua/mix/window.lua#L1-L26
 local create_float = function(bufnr, size, caller_winnr)
@@ -192,7 +215,7 @@ local create_float = function(bufnr, size, caller_winnr)
     -- win = caller_winnr,
     relative = "editor",
     style = "minimal",
-    border = "single", --mega.get_border(),
+    border = mega.get_border(),
     width = width,
     height = height,
     row = row,
@@ -208,7 +231,7 @@ local create_float = function(bufnr, size, caller_winnr)
 end
 
 local default_opts = {
-  cmd = fmt("%s/bin/zsh", vim.env.HOMEBREW_PREFIX),
+  cmd = "zsh",
   direction = "horizontal",
   start_insert = true,
 }
@@ -248,20 +271,34 @@ local split_opts = {
   },
 }
 
-local function set_keymaps(bufnr, direction)
-  local opts = { buffer = bufnr, silent = false }
-  local function quit()
-    unset_term(true)
-    vim.cmd("wincmd p")
+local function set_keymaps()
+  local keymap_opts = { buffer = term_buf_id, silent = false }
+  if term.direction ~= "tab" then
+    nmap("q", function()
+      if vim.fn.bufexists(term_buf_id) > 0 then
+        api.nvim_buf_delete(term_buf_id, { force = true })
+        term_buf_id = nil_buf_id
+        vim.cmd([[wincmd p]])
+      end
+    end, keymap_opts)
   end
-  if direction ~= "tab" then mega.nmap("q", quit, opts) end
 
-  tnoremap("<esc>", [[<C-\><C-n>]], opts)
-  tnoremap("<C-h>", [[<cmd>wincmd h<cr>]], opts)
-  tnoremap("<C-j>", [[<cmd>wincmd j<cr>]], opts)
-  tnoremap("<C-k>", [[<cmd>wincmd k<cr>]], opts)
-  tnoremap("<C-l>", [[<cmd>wincmd l<cr>]], opts)
-  tnoremap("<C-x>", quit, opts)
+  tmap("<esc>", [[<C-\><C-n>]], keymap_opts)
+  -- TODO: :h wincmd; TL;DR - winnr .. wincmd w
+  tmap("<C-h>", [[<Cmd>wincmd h<CR>]], keymap_opts)
+  tmap("<C-j>", [[<Cmd>wincmd j<CR>]], keymap_opts)
+  tmap("<C-k>", [[<Cmd>wincmd k<CR>]], keymap_opts)
+  tmap("<C-l>", [[<Cmd>wincmd l<CR>]], keymap_opts)
+  -- tmap("<C-h>", fmt([[<Cmd>%swincmd w<CR>]], term.caller_winnr), keymap_opts)
+  -- tmap("<C-j>", fmt([[<Cmd>%swincmd w<CR>]], term.caller_winnr), keymap_opts)
+  -- tmap("<C-k>", fmt([[<Cmd>%swincmd w<CR>]], term.caller_winnr), keymap_opts)
+  -- tmap("<C-l>", fmt([[<Cmd>%swincmd w<CR>]], term.caller_winnr), keymap_opts)
+  -- tmap("<C-h>", [[<Cmd>wincmd p<CR>]], keymap_opts)
+  -- tmap("<C-j>", [[<Cmd>wincmd p<CR>]], keymap_opts)
+  -- tmap("<C-k>", [[<Cmd>wincmd p<CR>]], keymap_opts)
+  -- tmap("<C-l>", [[<Cmd>wincmd p<CR>]], keymap_opts)
+  -- TODO: want a `<C-r>` or `;,` to pull up last executed command in the term
+  -- TODO: want a `<C-b>` to auto scroll back and `<C-f>` to auto scroll forward in insert mode
 end
 
 local function create_term(opts)
@@ -270,22 +307,19 @@ local function create_term(opts)
   vim.fn.termopen(term_cmd, {
     ---@diagnostic disable-next-line: unused-local
     on_exit = function(job_id, exit_code, event)
+      if opts.notifier ~= nil and type(opts.notifier) == "function" then opts.notifier(term_cmd, exit_code) end
+
       -- if we get a custom on_exit, run it instead...
       if opts.on_exit ~= nil and type(opts.on_exit) == "function" then
         opts.on_exit(job_id, exit_code, event, term_cmd, opts.caller_winnr, term_buf_id)
       else
-        vim.defer_fn(function()
-          if vim.tbl_contains({ 0, 127, 129, 130 }, exit_code) then
-            unset_term(true)
-          else
-            vim.notify(fmt("exit status: %s/%s/%s", job_id, exit_code, event), L.debug)
-          end
-        end, 100)
+        -- test passed/process ended with an "ok" exit code, so let's close it.
+        -- just know, some processes, like `rspec` don't give real exit codes for failed/errored tests. :/
+        if exit_code == 0 or exit_code == 127 or exit_code == 130 then
+          unset_term(true)
+          vim.cmd([[wincmd p]])
+        end
       end
-
-      if opts.notifier ~= nil and type(opts.notifier) == "function" then opts.notifier(term_cmd, exit_code) end
-      -- vim.cmd(opts.caller_winnr .. [[wincmd w]])
-      vim.cmd([[wincmd p]])
     end,
   })
 end
@@ -308,19 +342,9 @@ local function create_win(opts)
   api.nvim_win_set_buf(term_win_id, term_buf_id)
 end
 
-local term_mode_var = "__terminal_mode"
-local function set_mode(buf, mode) vim.b[buf][term_mode_var] = mode end
-
-local function get_mode(buf) return vim.b[buf][term_mode_var] end
-
-local function __enter(_opts)
-  if Term == nil then
-    vim.notify("term not found")
-    return
-  end
-
-  set_term_opts(Term)
-  if vim.tbl_contains({ "vertical", "horizontal", "tab" }, Term.direction) then
+local function on_open()
+  set_term_opts()
+  if vim.tbl_contains({ "vertical", "horizontal", "tab" }, term.direction) then
     set_win_hls()
   else
     set_win_hls({
@@ -331,25 +355,24 @@ local function __enter(_opts)
     })
     vim.wo[term_win_id].winblend = 0
   end
-  if vim.tbl_contains({ "vertical", "horizontal" }, Term.direction) then set_win_size() end
-
-  set_keymaps(term_buf_id, Term.direction)
-  set_mode(term_buf_id, "t")
+  if vim.tbl_contains({ "vertical", "horizontal" }, term.direction) then set_win_size() end
+  set_keymaps()
+  -- set_autocommands()
 
   -- custom on_open
-  if Term.on_open ~= nil and Term(Term.on_open) == "function" then
-    Term.on_open(term_buf_id)
+  if term.on_open ~= nil and term(term.on_open) == "function" then
+    term.on_open(term_buf_id)
   else
     -- default_on_open
     vim.api.nvim_command([[normal! G]])
-    if Term.start_insert then vim.cmd.startinsert() end
+    if term.start_insert then vim.cmd("startinsert") end
   end
 
   -- set some useful term-derived vars
-  api.nvim_buf_set_var(term_buf_id, "term_cmd", Term.cmd)
+  api.nvim_buf_set_var(term_buf_id, "term_cmd", term.cmd)
   api.nvim_buf_set_var(term_buf_id, "term_buf", term_buf_id)
   api.nvim_buf_set_var(term_buf_id, "term_win", term_win_id)
-  api.nvim_buf_set_var(term_buf_id, "term_direction", Term.direction)
+  api.nvim_buf_set_var(term_buf_id, "term_direction", term.direction)
 
   vim.cmd([[do User MegaTermOpened]])
 end
@@ -359,12 +382,34 @@ local function new_term(opts)
 
   create_win(opts)
   create_term(opts)
-  __enter()
-
-  if not opts.focus_on_open then vim.cmd("wincmd p | stopinsert") end
+  on_open()
 
   -- we only want new tab terms each time
   if opts.direction == "tab" then unset_term(false) end
+end
+
+local function open_term(opts)
+  if opts.direction == "float" then
+    opts.split(opts.size, term_buf_id)
+  elseif opts.direction == "tab" then
+    api.nvim_command(fmt("%s%s", term_tab_id, opts.split))
+    term_win_id = nil
+  else
+    api.nvim_command(
+      fmt(
+        "%s %s | wincmd %s | lua vim.api.nvim_win_set_%s(%s, %s)",
+        opts.split,
+        term_buf_id,
+        opts.winc,
+        opts.dimension,
+        is_valid_window(term_win_id) and term_win_id or 0,
+        opts.size
+      )
+    )
+  end
+
+  on_open()
+  -- term_win_id = api.nvim_get_current_win()
 end
 
 local function build_defaults(opts)
@@ -379,8 +424,13 @@ end
 
 local function new_or_open_term(opts)
   opts = build_defaults(opts)
-  new_term(opts)
-  if not opts.focus_on_open then vim.cmd("wincmd p") end
+  if fn.bufexists(term_buf_id) ~= 1 or opts.direction == "tab" or opts.temp then
+    new_term(opts)
+  elseif fn.win_gotoid(term_win_id) ~= 1 then
+    open_term(opts)
+  end
+
+  if not opts.focus_on_open then vim.cmd([[wincmd p]]) end
 end
 
 local function hide_term(is_moving)
@@ -390,9 +440,14 @@ local function hide_term(is_moving)
   end
 end
 
+local function move_term(opts)
+  hide_term(true)
+  vim.cmd(fmt("T direction=%s", opts.direction))
+end
+
 --- Toggles open, or hides a custom terminal
---- @param args TermOpts|ParsedArgs|string
-function mega.term(args)
+--- @param args TermOpts|string
+function mega.term.toggle(args)
   -- be sure to clear our search highlights and other UI adornments
   mega.clear_ui()
 
@@ -410,15 +465,130 @@ function mega.term(args)
     if parsed_opts.size then parsed_opts.size = tonumber(parsed_opts.size) end
   end
 
-  new_or_open_term(parsed_opts)
+  if fn.win_gotoid(term_win_id) == 1 and parsed_opts.direction ~= "tab" then
+    if parsed_opts.direction and parsed_opts.direction ~= term.direction and parsed_opts.move_on_direction_change then
+      move_term(parsed_opts)
+    else
+      hide_term()
+    end
+  else
+    new_or_open_term(parsed_opts)
+  end
+end
+mega.term.open = new_or_open_term
+
+---@param mode "visual" | "motion"
+---@return table
+local function get_line_selection(mode)
+  local start_char, end_char = unpack(({
+    visual = { "'<", "'>" },
+    motion = { "'[", "']" },
+  })[mode])
+
+  -- Get the start and the end of the selection
+  local start_line, start_col = unpack(fn.getpos(start_char), 2, 3)
+  local end_line, end_col = unpack(fn.getpos(end_char), 2, 3)
+  local selected_lines = api.nvim_buf_get_lines(0, start_line - 1, end_line, false)
+  return {
+    start_pos = { start_line, start_col },
+    end_pos = { end_line, end_col },
+    selected_lines = selected_lines,
+  }
+end
+
+local function get_visual_selection(res)
+  local mode = fn.visualmode()
+  -- line-visual
+  -- return lines encompassed by the selection; already in res object
+  if mode == "V" then return res.selected_lines end
+
+  if mode == "v" then
+    -- regular-visual
+    -- return the buffer text encompassed by the selection
+    local start_line, start_col = unpack(res.start_pos)
+    local end_line, end_col = unpack(res.end_pos)
+    -- exclude the last char in text if "selection" is set to "exclusive"
+    if vim.opt.selection:get() == "exclusive" then end_col = end_col - 1 end
+    return api.nvim_buf_get_text(0, start_line - 1, start_col - 1, end_line - 1, end_col, {})
+  end
+
+  -- block-visual
+  -- return the lines encompassed by the selection, each truncated by the start and end columns
+  if mode == "\x16" then
+    local _, start_col = unpack(res.start_pos)
+    local _, end_col = unpack(res.end_pos)
+    -- exclude the last col of the block if "selection" is set to "exclusive"
+    if vim.opt.selection:get() == "exclusive" then end_col = end_col - 1 end
+    -- exchange start and end columns for proper substring indexing if needed
+    -- e.g. instead of str:sub(10, 5), do str:sub(5, 10)
+    if start_col > end_col then
+      start_col, end_col = end_col, start_col
+    end
+    -- iterate over lines, truncating each one
+    return vim.tbl_map(function(line) return line:sub(start_col, end_col) end, res.selected_lines)
+  end
+end
+
+--- @param selection_type string
+--- @param trim_spaces boolean
+--- @param cmd_data table<string, any>
+local function send_lines_to_terminal(selection_type, trim_spaces, cmd_data)
+  if term.job_id == nil then return end
+
+  local id = tonumber(cmd_data.args) or 1
+  trim_spaces = trim_spaces == nil or trim_spaces
+
+  vim.validate({
+    selection_type = { selection_type, "string", true },
+    trim_spaces = { trim_spaces, "boolean", true },
+    terminal_id = { id, "number", true },
+  })
+
+  local current_window = api.nvim_get_current_win() -- save current window
+
+  local lines = {}
+  -- Beginning of the selection: line number, column number
+  local start_line, start_col
+  if selection_type == "single_line" then
+    start_line, start_col = unpack(api.nvim_win_get_cursor(0))
+    table.insert(lines, fn.getline(start_line))
+  elseif selection_type == "visual_lines" then
+    local res = get_line_selection("visual")
+    start_line, start_col = unpack(res.start_pos)
+    lines = res.selected_lines
+  elseif selection_type == "visual_selection" then
+    local res = get_line_selection("visual")
+    start_line, start_col = unpack(res.start_pos)
+    lines = get_visual_selection(res)
+  end
+
+  if not lines or not next(lines) then return end
+
+  for _, line in ipairs(lines) do
+    local l = trim_spaces and line:gsub("^%s+", ""):gsub("%s+$", "") or line
+    vim.fn.chansend(term.job_id, l)
+  end
+
+  -- Jump back with the cursor where we were at the beginning of the selection
+  api.nvim_set_current_win(current_window)
+  api.nvim_win_set_cursor(current_window, { start_line, start_col })
 end
 
 -- [COMMANDS] ------------------------------------------------------------------
-
-mega.command("T", function(opts) mega.term(opts.args) end, { nargs = "*" })
+mega.command("T", function(opts) mega.term.toggle(opts.args) end, { nargs = "*" })
+mega.command("TSendCurrentLine", function(args) send_lines_to_terminal("single_line", true, args) end, { nargs = "?" })
+mega.command(
+  "TSendVisualLines",
+  function(args) send_lines_to_terminal("visual_lines", true, args) end,
+  { range = true, nargs = "?" }
+)
+mega.command(
+  "TSendVisualSelection",
+  function(args) send_lines_to_terminal("visual_selection", true, args) end,
+  { range = true, nargs = "?" }
+)
 
 -- [KEYMAPS] ------------------------------------------------------------------
-
 nnoremap("<leader>tt", "<cmd>T direction=horizontal move_on_direction_change=true<cr>", "term")
 nnoremap("<leader>tf", "<cmd>T direction=float move_on_direction_change=true<cr>", "term (float)")
 nnoremap("<leader>tv", "<cmd>T direction=vertical move_on_direction_change=true<cr>", "term (vertical)")

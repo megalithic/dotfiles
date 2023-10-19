@@ -283,6 +283,7 @@ alias zz=z
 alias cls="clr && ls"
 alias get="curl -OL"
 alias get="http --download"
+alias safe="xattr -d com.apple.quarantine"
 alias nvm='n'
 # alias irc="LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 weechat-curses"
 # alias irc="PERL_MM_OPT="INSTALL_BASE=$HOME/perl5" cpan local::lib; eval \"$(perl -I$HOME/perl5/lib/perl5 -Mlocal::lib=$HOME/perl5)\"; weechat-curses"

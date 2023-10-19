@@ -58,7 +58,7 @@ return {
         if mega.starts_with(msg, "[LSP]") then
           local client, found_client = msg:gsub("^%[LSP%]%[(.-)%] .*", "%1")
           if found_client > 0 then
-            opts.title = ("LSP > %s"):format(client)
+            opts.title = ("LSP %s %s"):format(mega.icons.misc.caret_right, client)
           else
             opts.title = "LSP"
           end

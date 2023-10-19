@@ -34,13 +34,16 @@ mega.augroup("megaline", {
       end
     end,
   },
-  {
-    event = { "BufWritePost" },
-    command = function()
-      -- vim.schedule(function() vim.cmd("edit") end)
-    end,
-  },
-  -- FIXME: remove? flaky fails at the redrawstatus
+
+  -- FIXME: sometimes needed to fix treesitter rendering things on save ¯\_(ツ)_/¯
+  -- {
+  --   event = { "BufWritePost" },
+  --   command = function()
+  --     vim.schedule(function() vim.cmd("edit") end)
+  --   end,
+  -- },
+
+  -- FIXME: remove? flaky fails at the redrawstatus call
   {
     event = { "CursorMoved" },
     pattern = { "*" },
@@ -51,7 +54,7 @@ mega.augroup("megaline", {
         timer:start(0, 200, function()
           vim.schedule(function()
             if timer == search_count_timer then
-              fn.searchcount({ recompute = 1, maxcount = 0, timeout = 100 })
+              pcall(vim.fn.searchcount, { recompute = 1, maxcount = 0, timeout = 100 })
               pcall(vim.cmd.redrawstatus)
             end
           end)
@@ -295,6 +298,7 @@ local exception_types = {
     end,
     ["dap-repl"] = "Debugger REPL",
     kittybuf = "Kitty Scrollback Buffer",
+    firenvim = function(fname, buf) return seg(fmt("%s firenvim (%s)", mega.icons.misc.flames, M.ctx.filetype)) end,
   },
 }
 
@@ -334,6 +338,7 @@ local function special_buffers()
   local normal_term = M.ctx.buftype == "terminal" and M.ctx.filetype == ""
 
   if is_loc_list then return "Location List" end
+  if vim.g.started_by_firenvim then return exception_types.names.firenvim() end
   if M.ctx.buftype == "quickfix" then return "Quickfix List" end
   if normal_term then return "Terminal(" .. fnamemodify(vim.env.SHELL, ":t") .. ")" end
   if M.ctx.preview then return "preview" end
@@ -417,7 +422,7 @@ local function parse_filename(truncate_at)
   local function buf_expand(bufnr, mod) return expand("#" .. bufnr .. mod) end
 
   local modifier = ":t"
-  local special_buf = special_buffers(M.ctx)
+  local special_buf = special_buffers()
   if special_buf then return "", "", special_buf end
 
   local fname = buf_expand(M.ctx.bufnr, modifier)
@@ -634,8 +639,8 @@ function _G.__statusline()
     local parts = {
       seg([[%<]]),
       seg_filename(),
-      seg(fmt("[%s]", mega.icons.modified), "StModified", M.ctx.modified, { margin = { 0, 1 } }), -- alts: "%m"
-      seg(mega.icons.misc.lock, "StModified", M.ctx.readonly, { margin = { 0, 1 } }), -- alts: "%r"
+      seg(fmt("%s", mega.icons.modified), "StModifiedIcon", M.ctx.modified, { margin = { 0, 1 } }), -- alts: "%m"
+      seg(mega.icons.misc.lock, "StModifiedIcon", M.ctx.readonly, { margin = { 0, 1 } }), -- alts: "%r"
       "%=",
     }
 
@@ -647,8 +652,8 @@ function _G.__statusline()
     -- seg_prefix(100),
     seg_mode(120),
     seg_filename(120),
-    seg(fmt("[%s]", mega.icons.modified), "StModified", M.ctx.modified, { margin = { 0, 1 } }), -- alts: "%m"
-    seg(mega.icons.misc.lock, "StModified", M.ctx.readonly, { margin = { 0, 1 } }), -- alts: "%r"
+    seg(fmt("%s", mega.icons.modified), "StModifiedIcon", M.ctx.modified, { margin = { 0, 1 } }), -- alts: "%m"
+    seg(mega.icons.misc.lock, "StModifiedIcon", M.ctx.readonly, { margin = { 0, 1 } }), -- alts: "%r"
     -- seg("%{&paste?'[paste] ':''}", "warningmsg", { margin = { 1, 1 } }),
     seg("Saving…", "StComment", vim.g.is_saving, { margin = { 0, 1 } }),
     seg_search_results(120),

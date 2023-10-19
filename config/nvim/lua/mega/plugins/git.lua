@@ -168,12 +168,12 @@ return {
             )
             mega.nnoremap(
               "[c",
-              "<cmd>GitConflictPrevConflict<CR>",
+              "<cmd>GitConflictPrevConflict<CR>|zz",
               { desc = "git-conflict: prev conflict", buffer = args.buf }
             )
             mega.nnoremap(
               "]c",
-              "<cmd>GitConflictNextConflict<CR>",
+              "<cmd>GitConflictNextConflict<CR>|zz",
               { desc = "git-conflict: next conflict", buffer = args.buf }
             )
             mega.notify(fmt("%s Conflicts detected.", mega.icons.lsp.error))

@@ -23,42 +23,39 @@ return {
       { "<localleader>tl", "<cmd>TestLast<cr>", desc = "run (l)ast test" },
       { "<localleader>ts", "<cmd>TestSuite<cr>", desc = "run test (s)uite" },
       -- { "<localleader>tT", "<cmd>TestLast<cr>", desc = "run _last test" },
-      { "<localleader>tv", "<cmd>TestVisit<cr>", desc = "open last (v)isited test" },
+      { "<localleader>tv", "<cmd>TestVisit<cr>", desc = "(v)isit last test" },
       { "<localleader>tp", "<cmd>A<cr>", desc = "open alt (edit)" },
       { "<localleader>tP", "<cmd>AV<cr>", desc = "open alt (vsplit)" },
     },
-    config = function()
-      require("nvim-test").setup({
-        run = true, -- run tests (using for debug)
-        commands_create = true, -- create commands (TestFile, TestLast, ...)
-        filename_modifier = ":.", -- modify filenames before tests run(:h filename-modifiers)
-        silent = false, -- less notifications
-        term = "terminal", -- a terminal to run ("terminal"|"toggleterm")
-        termOpts = {
-          direction = "vertical", -- terminal's direction ("horizontal"|"vertical"|"float")
-          width = 96, -- terminal's width (for vertical|float)
-          height = 24, -- terminal's height (for horizontal|float)
-          go_back = false, -- return focus to original window after executing
-          stopinsert = "auto", -- exit from insert mode (true|false|"auto")
-          keep_one = true, -- keep only one terminal for testing
-        },
-        runners = { -- setup tests runners
-          cs = "nvim-test.runners.dotnet",
-          go = "nvim-test.runners.go-test",
-          haskell = "nvim-test.runners.hspec",
-          javascriptreact = "nvim-test.runners.jest",
-          javascript = "nvim-test.runners.jest",
-          lua = "nvim-test.runners.busted",
-          python = "nvim-test.runners.pytest",
-          ruby = "nvim-test.runners.rspec",
-          eelixir = "nvim-test.runners.mix",
-          elixir = "nvim-test.runners.mix",
-          rust = "nvim-test.runners.cargo-test",
-          typescript = "nvim-test.runners.jest",
-          typescriptreact = "nvim-test.runners.jest",
-        },
-      })
-    end,
+    opts = {
+      run = true, -- run tests (using for debug)
+      commands_create = true, -- create commands (TestFile, TestLast, ...)
+      filename_modifier = ":.", -- modify filenames before tests run(:h filename-modifiers)
+      silent = false, -- less notifications
+      term = "terminal", -- a terminal to run ("terminal"|"toggleterm")
+      termOpts = {
+        direction = "vertical", -- terminal's direction ("horizontal"|"vertical"|"float")
+        width = 96, -- terminal's width (for vertical|float)
+        height = 24, -- terminal's height (for horizontal|float)
+        go_back = false, -- return focus to original window after executing
+        stopinsert = "auto", -- exit from insert mode (true|false|"auto")
+        keep_one = true, -- keep only one terminal for testing
+      },
+      runners = { -- setup tests runners
+        cs = "nvim-test.runners.dotnet",
+        go = "nvim-test.runners.go-test",
+        haskell = "nvim-test.runners.hspec",
+        javascriptreact = "nvim-test.runners.jest",
+        javascript = "nvim-test.runners.jest",
+        lua = "nvim-test.runners.busted",
+        python = "nvim-test.runners.pytest",
+        ruby = "nvim-test.runners.rspec",
+        elixir = "nvim-test.runners.mix",
+        rust = "nvim-test.runners.cargo-test",
+        typescript = "nvim-test.runners.jest",
+        typescriptreact = "nvim-test.runners.jest",
+      },
+    },
   },
 
   {
@@ -69,8 +66,9 @@ return {
       "TestFile",
       "TestLast",
       "TestVisit",
-      -- "A",
-      -- "AV",
+      "TestSuite",
+      "A",
+      "AV",
     },
     keys = {
       { "<localleader>tn", "<cmd>TestNearest<cr>", desc = "run (n)earest test" },
@@ -79,7 +77,7 @@ return {
       { "<localleader>tl", "<cmd>TestLast<cr>", desc = "run (l)ast test" },
       { "<localleader>ts", "<cmd>TestSuite<cr>", desc = "run test (s)uite" },
       -- { "<localleader>tT", "<cmd>TestLast<cr>", desc = "run _last test" },
-      { "<localleader>tv", "<cmd>TestVisit<cr>", desc = "run test file (v)isit" },
+      { "<localleader>tv", "<cmd>TestVisit<cr>", desc = "(v)isit last test" },
       { "<localleader>tp", "<cmd>A<cr>", desc = "open alt (edit)" },
       { "<localleader>tP", "<cmd>AV<cr>", desc = "open alt (vsplit)" },
     },
@@ -146,7 +144,8 @@ return {
       "nvim-lua/plenary.nvim",
       "nvim-treesitter/nvim-treesitter",
       "antoinemadec/FixCursorHold.nvim",
-      { "megalithic/neotest-elixir", dev = true },
+      "stevearc/overseer.nvim",
+      { "megalithic/neotest-elixir" },
       { "haydenmeade/neotest-jest" },
       { "rcarriga/neotest-plenary", dependencies = { "nvim-lua/plenary.nvim" } },
     },
@@ -162,11 +161,20 @@ return {
       -- { "]e", prev_failed, desc = "jump to previous failed test" },
     },
     config = function()
+      -- local nt_ns = vim.api.nvim_create_namespace("neotest")
+      -- vim.diagnostic.config({
+      --   virtual_text = {
+      --     format = function(diagnostic)
+      --       return diagnostic.message:gsub("\n", " "):gsub("\t", " "):gsub("%s+", " "):gsub("^%s+", "")
+      --     end,
+      --   },
+      -- }, nt_ns)
       local nt_ns = vim.api.nvim_create_namespace("neotest")
       vim.diagnostic.config({
         virtual_text = {
           format = function(diagnostic)
-            return diagnostic.message:gsub("\n", " "):gsub("\t", " "):gsub("%s+", " "):gsub("^%s+", "")
+            local message = diagnostic.message:gsub("\n", " "):gsub("\t", " "):gsub("%s+", " "):gsub("^%s+", "")
+            return message
           end,
         },
       }, nt_ns)
@@ -174,11 +182,18 @@ return {
       require("neotest").setup({
         log_level = L.INFO,
         discovery = { enabled = true },
-        diagnostic = { enabled = true },
+        diagnostic = { enabled = false },
+        -- consumers = {
+        --   overseer = require("neotest.consumers.overseer"),
+        -- },
         output = {
           enabled = true,
-          open_on_run = "short",
+          open_on_run = true,
         },
+        -- overseer = {
+        --   enabled = true,
+        --   force_default = true,
+        -- },
         status = {
           enabled = true,
         },
@@ -221,7 +236,8 @@ return {
           require("neotest-plenary"),
           require("neotest-elixir")({
             args = { "--trace" },
-            iex_shell_direction = "float",
+            strategy = "iex",
+            iex_shell_direction = "vertical",
             extra_formatters = { "ExUnit.CLIFormatter", "ExUnitNotifier" },
           }),
           require("neotest-jest")({

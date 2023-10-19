@@ -176,6 +176,8 @@ return {
         ["<S-Tab>"] = cmp.mapping(shift_tab, { "i", "s", "c" }),
         ["<C-n>"] = cmp.mapping(tab, { "i", "s", "c" }),
         ["<C-p>"] = cmp.mapping(shift_tab, { "i", "s", "c" }),
+        ["<Up>"] = cmp.mapping.select_prev_item({ "i", "s", "c" }),
+        ["<Down>"] = cmp.mapping.select_next_item({ "i", "s", "c" }),
         ["<C-b>"] = cmp.mapping.scroll_docs(-4),
         ["<C-f>"] = cmp.mapping.scroll_docs(4),
         ["<C-y>"] = cmp.mapping.confirm({ select = true }),

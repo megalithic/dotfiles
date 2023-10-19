@@ -24,6 +24,8 @@ heex:*.{html.heex,heex}*
 --type-add
 ex:*.ex
 --type-add
+exs:*.exs
+--type-add
 railsmigrations:*/migrate/*
 --type-add
 rails:include:ruby,rabl,erb

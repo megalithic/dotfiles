@@ -193,6 +193,34 @@ return {
       })
     end,
   },
+  {
+    "stevearc/overseer.nvim", -- Task runner and job management
+    keys = {
+      { "<leader>or", "<cmd>OverseerRun<cr>", desc = "overseer: run task" },
+      { "<leader>ot", "<cmd>OverseerToggle<cr>", desc = "overseer: toggle tasks" },
+    },
+    opts = {
+      strategy = {
+        "terminal",
+        use_shell = true,
+      },
+      form = {
+        border = mega.get_border(),
+      },
+      task_list = { direction = "right" },
+      templates = { "builtin", "global" },
+      component_aliases = {
+        default_neotest = {
+          "unique",
+          { "on_complete_notify", system = "unfocused", on_change = true },
+          "default",
+          "on_output_summarize",
+          "on_exit_set_status",
+          "on_complete_dispose",
+        },
+      },
+    },
+  },
 
   -- ( LSP ) -------------------------------------------------------------------
   { "onsails/lspkind.nvim" },
@@ -694,20 +722,22 @@ return {
   { "EinfachToll/DidYouMean", event = { "BufNewFile" }, init = function() vim.g.dym_use_fzf = true end },
   { "wsdjeg/vim-fetch", lazy = false }, -- vim path/to/file.ext:12:3
   { "ConradIrwin/vim-bracketed-paste" }, -- FIXME: delete?
-  {
-    "linty-org/readline.nvim",
-    keys = {
-      { "<C-f>", function() require("readline").forward_word() end, mode = "!" },
-      { "<C-b>", function() require("readline").backward_word() end, mode = "!" },
-      { "<C-a>", function() require("readline").beginning_of_line() end, mode = "!" },
-      { "<C-e>", function() require("readline").end_of_line() end, mode = "!" },
-      { "<M-d>", function() require("readline").kill_word() end, mode = "!" },
-      { "<M-BS>", function() require("readline").backward_kill_word() end, mode = "!" },
-      { "<C-w>", function() require("readline").unix_word_rubout() end, mode = "!" },
-      { "<C-k>", function() require("readline").kill_line() end, mode = "!" },
-      { "<C-u>", function() require("readline").backward_kill_line() end, mode = "!" },
-    },
-  },
+  { "ryvnf/readline.vim", event = "CmdlineEnter" },
+  -- {
+  --   "linty-org/readline.nvim",
+  --   pin = true,
+  --   keys = {
+  --     { "<C-f>", function() require("readline").forward_word() end, mode = "!" },
+  --     { "<C-b>", function() require("readline").backward_word() end, mode = "!" },
+  --     { "<C-a>", function() require("readline").beginning_of_line() end, mode = "!" },
+  --     { "<C-e>", function() require("readline").end_of_line() end, mode = "!" },
+  --     { "<M-d>", function() require("readline").kill_word() end, mode = "!" },
+  --     { "<M-BS>", function() require("readline").backward_kill_word() end, mode = "!" },
+  --     { "<C-w>", function() require("readline").unix_word_rubout() end, mode = "!" },
+  --     { "<C-k>", function() require("readline").kill_line() end, mode = "!" },
+  --     { "<C-u>", function() require("readline").backward_kill_line() end, mode = "!" },
+  --   },
+  -- },
 
   -- ( Motions/Textobjects ) ---------------------------------------------------
   {

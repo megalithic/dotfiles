@@ -140,6 +140,27 @@ end
 
 setup_mix()
 
+-- local function is_elixir_test_file()
+--   local file_name = vim.fn.expand("%:t")
+--   local is_test_file = type(file_name:match("_test%.exs$")) == "string" and file_name:match("_test%.exs$") ~= nil
+--   return is_test_file
+-- end
+--
+-- local function set_iex_strategy_after_delay()
+--   vim.defer_fn(function()
+--     local ok, neotest = pcall(require, "neotest")
+--     if ok then
+--       local cwd = vim.loop.cwd()
+--       neotest.setup_project(cwd, {
+--         adapters = { require("neotest-elixir") },
+--         default_strategy = "iex",
+--       })
+--     end
+--   end, 100)
+-- end
+
+-- if is_elixir_test_file() then set_iex_strategy_after_delay() end
+
 -- local ms_ok, ms = mega.require("mini.surround")
 -- if ms_ok then
 --   vim.b.minisurround_config = {

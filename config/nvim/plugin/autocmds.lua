@@ -249,16 +249,14 @@ do
         require("virt-column").update()
       end,
     },
-
-    {
-      event = { "BufEnter", "BufWritePost", "TextChanged", "InsertLeave", "FileType" },
-      pattern = { "*.html", "*.heex", "*.tsx", "*.jsx", "*.ex", "elixir", "heex", "html" },
-      command = function(args)
-        -- dd(args)
-        -- local bufnr = vim.api.nvim_get_current_buf()
-        require("mega.utils").conceal_class(args.buf)
-      end,
-    },
+    -- {
+    --   event = { "BufEnter", "TextChanged", "InsertLeave", "FileType" },
+    --   pattern = { "*.html", "*.heex", "*.tsx", "*.jsx", "*.ex", "elixir", "heex", "html" },
+    --   command = function(args)
+    --     FIXME: maybe crashing nvim
+    --     require("mega.utils").conceal_class(args.buf)
+    --   end,
+    -- },
   })
 end
 

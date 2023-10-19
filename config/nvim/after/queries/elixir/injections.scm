@@ -53,7 +53,7 @@
 (sigil
   (sigil_name) @_sigil_name
   (quoted_content) @elixir
-(#eq? @_sigil_name "E"))
+(#any-of? @_sigil_name "q" "S" "E"))
 
 (call
   target: ((identifier) @_identifier (#eq? @_identifier "execute"))

@@ -144,6 +144,7 @@ brew "ninja" # for lua sumneko lsp
 brew "nmap"
 brew "nss"
 brew "noti"
+brew "ollama" # ai
 brew "olets/tap/zsh-abbr"
 brew "openssl"
 brew "openssl@1.1"

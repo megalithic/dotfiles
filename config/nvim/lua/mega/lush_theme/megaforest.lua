@@ -735,6 +735,7 @@ local theme = lush(function(injected_functions)
     StMetadataPrefix({ Comment, bg = C.bg1 }),
     StIndicator({ fg = C.dark_blue, bg = C.bg1 }),
     StModified({ fg = C.pale_red, bg = C.bg1, gui = "bold,italic" }),
+    StModifiedIcon({ fg = C.pale_red, bg = C.bg1, gui = "bold" }),
     StGitSymbol({ fg = C.light_red, bg = C.bg1 }),
     StGitBranch({ fg = C.blue, bg = C.bg1 }),
     StGitSigns({ fg = C.dark_blue, bg = C.bg1 }),

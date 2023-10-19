@@ -193,15 +193,17 @@ local function setup_autocommands(client, bufnr)
     -- },
   })
 
-  -- augroup("LspFormat", {
-  --   {
-  --     event = { "BufWritePre" },
-  --     command = function(args)
-  --       if vim.g.disable_autoformat then return end
-  --       format({ async = false, bufnr = args.buf })
-  --     end,
-  --   },
-  -- })
+  if vim.g.formatter == "null-ls" then
+    augroup("LspFormat", {
+      {
+        event = { "BufWritePre" },
+        command = function(args)
+          if vim.g.disable_autoformat then return end
+          format({ async = false, bufnr = args.buf })
+        end,
+      },
+    })
+  end
 
   -- augroup("LspDocumentHighlight", {
   --   {
@@ -245,6 +247,7 @@ local function setup_keymaps(client, bufnr)
 
   local function safemap(method, mode, key, rhs, description)
     if mega.lsp.has_method(client, method) then
+      if type(description) ~= "string" then description = vim.inspect(description) end
       vim.keymap.set(mode, key, rhs, { buffer = bufnr, desc = description })
     end
   end
@@ -544,6 +547,8 @@ require("mason")
 ---@param client table<string, any>
 ---@return boolean
 local function on_init(client)
+  if client.workspace_folders == nil then return true end
+
   local settings = client.workspace_folders[1].name .. "/.vim/settings.json"
 
   if fn.filereadable(settings) == 0 then return true end

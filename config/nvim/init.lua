@@ -11,12 +11,13 @@ if vim.loader then vim.loader.enable() end
 -- [ settings ] ----------------------------------------------------------------
 
 vim.g.enabled_plugin = {
-  filetypes = true,
+  filetypes = false,
   mappings = true,
   autocmds = true,
   megaline = true,
   megacolumn = true,
   term = true,
+  old_term = false,
   lsp = true,
   repls = true,
   cursorline = true,
@@ -47,15 +48,17 @@ vim.g.maplocalleader = " "
 vim.g.notifier_enabled = true
 vim.g.debug_enabled = false
 vim.g.picker = "fzf" -- alt: telescope, fzf
-vim.g.formatter = "conform" -- alt: null-ls, conform
+vim.g.formatter = "null-ls" -- alt: null-ls, conform
 vim.g.tree = "neo-tree"
 vim.g.explorer = "oil" -- alt: dirbuf, oil
 vim.g.tester = "vim-test" -- alt: neotest, nvim-test, vim-test
 vim.g.snipper = "vsnip" -- alt: vsnip, luasnip
 vim.g.ts_ignored_langs = {} -- alt: { "svg", "json", "heex", "jsonc" }
-vim.g.formatter_exclusions = { "ElixirLS", "NextLS", "nextls", "lexical" } -- alt: ElixirLS, NextLS, elixirls, nextls, lexical
-vim.g.diagnostic_exclusions = { "ElixirLS", "NextLS", "elixirls", "nextls" } -- alt: ElixirLS, NextLS, elixirls, nextls, lexical
-vim.g.enabled_elixir_ls = { "elixirls", "nextls" } -- alt: ElixirLS, NextLS, elixirls, nextls, lexical, credo
+vim.g.formatter_exclusions = { "ElixirLS", "NextLS", "lexical", "nextls" } -- alt: ElixirLS, NextLS, elixirls, nextls, lexical
+vim.g.diagnostic_exclusions = { "ElixirLS", "NextLS", "elixirls", "lexical" } -- alt: ElixirLS, NextLS, elixirls, nextls, lexical
+vim.g.enabled_elixir_ls = { "elixirls", "nextls", "lexical" } -- alt: ElixirLS, NextLS, elixirls, nextls, lexical, credo
+vim.g.disable_autolint = true
+vim.g.disable_autoformat = false
 
 -- [ globals ] -----------------------------------------------------------------
 

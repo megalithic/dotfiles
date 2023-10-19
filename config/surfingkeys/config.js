@@ -93,17 +93,17 @@ Hints.style(
     padding: 5px;
     line-height: 1;
   `,
-  "text"
+  "text",
 );
 
 // set visual-mode style
 Visual.style(
   "marks",
-  "background-color: #A3BE8C; border: 1px solid #3B4252 !important; text-decoration: underline;"
+  "background-color: #A3BE8C; border: 1px solid #3B4252 !important; text-decoration: underline;",
 );
 Visual.style(
   "cursor",
-  "background-color: #E5E9F0 !important; border: 1px solid #6272a4 !important; border-bottom: 2px solid green !important; padding: 2px !important; outline: 1px solid rgba(255,255,255,.75) !important;"
+  "background-color: #E5E9F0 !important; border: 1px solid #6272a4 !important; border-bottom: 2px solid green !important; padding: 2px !important; outline: 1px solid rgba(255,255,255,.75) !important;",
 );
 
 // -- UNMAPS
@@ -223,7 +223,7 @@ mapkeyGithub("ygh", "Copy project path", () => {
 });
 
 mapkeyGithub("ygc", "git clone - git clone address", () =>
-  Clipboard.write("git clone " + window.location.href + ".git")
+  Clipboard.write("git clone " + window.location.href + ".git"),
 );
 
 mapkeyGithub("yv", "Copy for vim", () => {
@@ -343,6 +343,43 @@ actions.sendToInstapaper = () => {
 unmap(";i");
 mapkey(";i", "-> Send to Instapaper", actions.sendToInstapaper);
 
+// const browserName = getBrowserName();
+// if (browserName === "Chrome") {
+// imapkey("<Ctrl-Alt-i>", "#15Open neovim for current input", function () {
+//   openVim(true);
+// });
+mapkey(";pdf", "Toggle PDF viewer from SurfingKeys", function () {
+  var pdfUrl = window.location.href;
+  if (pdfUrl.indexOf(chrome.extension.getURL("/pages/pdf_viewer.html")) === 0) {
+    pdfUrl = window.location.search.substr(3);
+    chrome.storage.local.set({ noPdfViewer: 1 }, function () {
+      window.location.replace(pdfUrl);
+    });
+  } else {
+    if (
+      document.querySelector("EMBED") &&
+      document.querySelector("EMBED").getAttribute("type") === "application/pdf"
+    ) {
+      chrome.storage.local.remove("noPdfViewer", function () {
+        window.location.replace(pdfUrl);
+      });
+    } else {
+      chrome.storage.local.get("noPdfViewer", function (resp) {
+        if (!resp.noPdfViewer) {
+          chrome.storage.local.set({ noPdfViewer: 1 }, function () {
+            showBanner("PDF viewer disabled.");
+          });
+        } else {
+          chrome.storage.local.remove("noPdfViewer", function () {
+            showBanner("PDF viewer enabled.");
+          });
+        }
+      });
+    }
+  }
+});
+// }
+
 // add search engines
 // REF: https://gist.github.com/chixing/82767d49380294ad7b298554e2c0e59b
 removeSearchAlias("b");
@@ -357,7 +394,7 @@ addSearchAlias(
     return res.map(function (r) {
       return r.phrase;
     });
-  }
+  },
 );
 
 removeSearchAlias("n");
@@ -372,7 +409,7 @@ addSearchAlias(
     return res.map(function (r) {
       return r.phrase;
     });
-  }
+  },
 );
 
 addSearchAlias(
@@ -386,7 +423,7 @@ addSearchAlias(
     return res.map(function (r) {
       return r.phrase;
     });
-  }
+  },
 );
 
 // set theme

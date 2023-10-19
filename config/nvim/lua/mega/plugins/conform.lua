@@ -34,7 +34,8 @@ return {
   opts = {
     formatters_by_ft = {
       ["*"] = { "trim_whitespace", "trim_newlines" },
-      bash = { "shfmt", "beautysh", "shellharden" },
+      -- bash = { "shfmt", "beautysh", "shellharden" },
+      bash = { "shfmt" },
       c = { "clang_format" },
       cpp = { "clang_format" },
       css = { prettier },
@@ -82,6 +83,9 @@ return {
   },
   config = function(_, opts)
     if vim.g.formatter ~= "conform" then return end
+
+    local util = require("conform.util")
+    util.add_formatter_args(require("conform.formatters.shfmt"), { "-i", "2" })
 
     if vim.g.started_by_firenvim then
       opts.format_on_save = false

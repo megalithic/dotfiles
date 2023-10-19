@@ -409,6 +409,12 @@ function obj:start()
       obj:resizeOut()
       obj.delayedExit()
     end, function() obj.delayedExit() end, function() obj:resizeOut() end)
+    :bind("", "c", function()
+      local win = hs.window.focusedWindow()
+      local screenWidth = win:screen():frame().w
+      hs.window.focusedWindow():move(hs.geometry.rect(screenWidth / 2 - 300, 0, 600, 400))
+      obj:exit()
+    end)
 
   return self
 end

@@ -575,15 +575,23 @@ M.unofficial = {
     local configs = require("lspconfig.configs")
 
     if not configs.nextls then
-      local cmd = function() return { "nextls", "--stdio" } end
+      local cmd = function(use_homebrew)
+        if use_homebrew then return { "nextls", "--stdio" } end
+
+        return { vim.env.XDG_DATA_HOME .. "/lsp/nextls/bin/nextls", "--stdio" }
+      end
       configs.nextls = {
         default_config = {
-          cmd = cmd(),
+          cmd = cmd(true),
           single_file_support = true,
           filetypes = { "elixir", "eelixir", "heex", "surface" },
           root_dir = root_pattern("mix.exs", ".git"),
           log_level = vim.lsp.protocol.MessageType.Log,
           message_level = vim.lsp.protocol.MessageType.Log,
+          init_options = {
+            mix_env = "dev",
+            mix_target = "host",
+          },
           settings = {
             -- mixEnv = "dev",
             fetchDeps = false,

@@ -23,7 +23,7 @@ LSPS_PATH="${XDG_DATA_HOME}/lsp"
 LS_PATH="${LSPS_PATH}/nextls"
 mkdir -p "$LS_PATH"
 
-VERSION="${1:-git}"
+VERSION="${1:-release}"
 TARGET=""
 BINARY=""
 BUILD_TYPE=""
@@ -34,10 +34,10 @@ rm -rf "$LS_PATH"
 
 do_install() {
   case "$VERSION" in
-  'stable')
+  'release' | 'stable')
     TARGET="https://github.com/elixir-tools/next-ls/releases/latest/download"
-    BINARY="next_ls_${SYS}_${ARCH}.zip"
-    BUILD_TYPE="archive"
+    BINARY="next_ls_${SYS}_${ARCH}"
+    BUILD_TYPE="release"
     ;;
   'git')
     TARGET="https://github.com/elixir-tools/next-ls"
@@ -55,27 +55,20 @@ do_install() {
     ;;
   esac
 
-  if [[ $BUILD_TYPE == "archive" ]]; then
-    log_warn "$BUILD_TYPE not supported."
-  elif [[ $BUILD_TYPE == "source" ]]; then
-    log "downloading and unpacking.."
-
+  if [[ $BUILD_TYPE == "release" ]]; then
+    log "($BUILD_TYPE) downloading $TARGET/$BINARY.."
     cd ~/tmp &&
       (
-
-        # curl --fail --silent -L https://github.com/elixir-tools/next-ls/releases/latest/download/next_ls_%s_%s -o %s/nextls
-        curl -fLO "$TARGET/$BINARY" &&
-          (tar -xvzf "$BINARY" -C "$LSPS_PATH" && log_ok "unpacked $TARGET/$BINARY to $LSPS_PATH") &&
-          mv "$LSPS_PATH/next-ls-$VERSION" "$LS_PATH" &&
+        mkdir -p "$LS_PATH/bin" &&
+          curl --fail --silent -LO "$TARGET/$BINARY" &&
+          (mv "./$BINARY" "$LS_PATH/bin/nextls" && log_ok "moved $CWD/$BINARY to $LS_PATH/bin/nextls") || { log_error "issue moving binary" } &&
           pushd "$LS_PATH" >/dev/null &&
           chmod +x "$LS_PATH/bin/nextls" &&
-          # (mix deps.get && mix package && log_ok "built next-ls") &&
           popd >/dev/null &&
-          (rm "$BINARY" && log_ok "removed $HOME/$BINARY")
-      ) && log_ok "finished downloading and installing next-ls ($VERSION) to $LS_PATH" ||
+      ) && log_ok "finished downloading and installing nextls ($VERSION) to $LS_PATH/bin/nextls" ||
       exit 1
-  elif [[ $BUILD_TYPE == "git" ]]; then
-    log_warn "$BUILD_TYPE not supported."
+  else
+    log_warn "$BUILD_TYPE not yet supported."
   fi
 }
 
