@@ -297,7 +297,7 @@ return {
     },
   },
   {
-    cond = true,
+    cond = false,
     "elixir-tools/elixir-tools.nvim",
     -- "megalithic/elixir-tools.nvim",
     -- ft = { "elixir", "eelixir", "heex", "surface" },
@@ -898,7 +898,7 @@ return {
 
   -- ( Syntax/Languages/langs ) ------------------------------------------------------
   { "ii14/emmylua-nvim", ft = "lua" },
-  { "elixir-editors/vim-elixir", event = "VeryLazy" }, -- nvim exceptions thrown when not installed
+  { "elixir-editors/vim-elixir", ft = "elixir" }, -- nvim exceptions thrown when not installed
   { "imsnif/kdl.vim", ft = "kdl" },
   { "chr4/nginx.vim", ft = "nginx" },
   { "fladson/vim-kitty", ft = "kitty" },

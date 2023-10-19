@@ -618,6 +618,7 @@ local function is_focused() return tonumber(vim.g.actual_curwin) == vim.api.nvim
 function _G.__statusline()
   local winnr = vim.g.statusline_winid or 0
   local bufnr = api.nvim_win_get_buf(winnr)
+  local modified_icon = vim.g.started_by_firenvim and "?" or fmt("%s", mega.icons.modified)
 
   M.ctx = {
     bufnr = bufnr,
@@ -639,7 +640,7 @@ function _G.__statusline()
     local parts = {
       seg([[%<]]),
       seg_filename(),
-      seg(fmt("%s", mega.icons.modified), "StModifiedIcon", M.ctx.modified, { margin = { 0, 1 } }), -- alts: "%m"
+      seg(modified_icon, "StModifiedIcon", M.ctx.modified, { margin = { 0, 1 } }), -- alts: "%m"
       seg(mega.icons.misc.lock, "StModifiedIcon", M.ctx.readonly, { margin = { 0, 1 } }), -- alts: "%r"
       "%=",
     }
@@ -652,7 +653,7 @@ function _G.__statusline()
     -- seg_prefix(100),
     seg_mode(120),
     seg_filename(120),
-    seg(fmt("%s", mega.icons.modified), "StModifiedIcon", M.ctx.modified, { margin = { 0, 1 } }), -- alts: "%m"
+    seg(modified_icon, "StModifiedIcon", M.ctx.modified, { margin = { 0, 1 } }), -- alts: "%m"
     seg(mega.icons.misc.lock, "StModifiedIcon", M.ctx.readonly, { margin = { 0, 1 } }), -- alts: "%r"
     -- seg("%{&paste?'[paste] ':''}", "warningmsg", { margin = { 1, 1 } }),
     seg("Saving…", "StComment", vim.g.is_saving, { margin = { 0, 1 } }),
