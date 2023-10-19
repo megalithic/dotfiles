@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+TMUX_VAR="${1:-}"
+
+tmux_get_var() {
+  local key=$1
+  tmux showenv | awk -F= -v key="$key" '$1==key {print $2}'
+}
+
+var_value=$(tmux_get_var "$TMUX_VAR")
+
+if [ -n "$var_value" ]; then
+  echo "$var_value"
+else
+  if [ "$TMUX_VAR" == "SESSION_ICON" ]; then
+    echo ""
+  elif [ "$TMUX_VAR" == "SESSION_FG" ]; then
+    echo "#d9bb80"
+  fi
+fi

@@ -3,6 +3,9 @@
 SESSION="ternreturns"
 CWD="$CODE/ternreturns"
 
+SESSION_ICON=""
+SESSION_FG="#a7c080"
+
 cd $CWD
 
 # Create the session and the first window. Manually switch to root
@@ -37,3 +40,6 @@ tmux select-pane -t "$SESSION":3.1
 # focus
 tmux select-window -t "$SESSION":2
 tmux select-pane -t "$SESSION":2.1
+
+tmux setenv -t ${SESSION} 'SESSION_FG' "${SESSION_FG}"
+tmux setenv -t ${SESSION} 'SESSION_ICON' "${SESSION_ICON}"

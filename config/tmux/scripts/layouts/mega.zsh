@@ -3,8 +3,12 @@
 # REF: https://www.jakeworth.com/tmux-application-startup-script/
 
 SESSION="mega"
+CWD="$DOTS"
 
-cd $DOTS
+SESSION_ICON="" # alts: 🗿
+SESSION_FG="#d9bb80"
+
+cd $CWD
 
 # Run on_project_start command.
 
@@ -42,5 +46,8 @@ tmux -2 send-keys -t "$SESSION":2 ls C-m
 tmux -2 select-window -t "$SESSION":1
 tmux -2 select-pane -t "$SESSION":1.1
 tmux -2 rename-window -t "$SESSION":1 chats
+
+tmux setenv -t ${SESSION} 'SESSION_ICON' "${SESSION_ICON}"
+tmux setenv -t ${SESSION} 'SESSION_FG' "${SESSION_FG}"
 
 # Run on_project_exit command.

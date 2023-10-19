@@ -3,6 +3,9 @@
 SESSION="retriever"
 CWD="$CODE/retriever"
 
+SESSION_ICON="󰩄"
+SESSION_FG="#d39bb6"
+
 cd $CWD
 
 tmux new-session -d -s "$SESSION" -n chats
@@ -27,3 +30,6 @@ tmux send-keys -t "$SESSION":3.1 "iex --sname $SESSION-tern --cookie ternit -S m
 # focus
 tmux -2 select-window -t "$SESSION":2
 tmux -2 select-pane -t "$SESSION":2.1
+
+tmux setenv -t ${SESSION} 'SESSION_ICON' "${SESSION_ICON}"
+tmux setenv -t ${SESSION} 'SESSION_FG' "${SESSION_FG}"

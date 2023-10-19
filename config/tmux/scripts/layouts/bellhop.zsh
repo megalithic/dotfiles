@@ -3,6 +3,9 @@
 SESSION="bellhop"
 CWD="$CODE/bellhop"
 
+SESSION_ICON=""
+SESSION_FG="#4e88ff"
+
 cd $CWD
 
 # Create the session and the first window. Manually switch to root
@@ -47,3 +50,6 @@ tmux select-pane -t "$SESSION":3.2
 # focus
 tmux select-window -t "$SESSION":2
 tmux select-pane -t "$SESSION":2.1
+
+tmux setenv -t ${SESSION} 'SESSION_ICON' "${SESSION_ICON}"
+tmux setenv -t ${SESSION} 'SESSION_FG' "${SESSION_FG}"

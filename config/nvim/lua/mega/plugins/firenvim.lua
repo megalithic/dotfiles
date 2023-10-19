@@ -122,6 +122,12 @@ local M = {
         nested = true,
         callback = function(params) write(bufnr, params) end,
       })
+      vim.api.nvim_create_autocmd({ "FocusLost" }, {
+        buffer = bufnr,
+        group = buf_group,
+        nested = true,
+        callback = function(params) vim.cmd("wall | call firenvim#hide_frame() | call firenvim#focus_input()") end,
+      })
     end
 
     local function on_bufenter(params)
