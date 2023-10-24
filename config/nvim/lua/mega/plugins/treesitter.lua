@@ -79,7 +79,7 @@ return {
         return false
       end
       -- for apple silicon
-      require("nvim-treesitter.install").compilers = { "gcc-13" }
+      -- require("nvim-treesitter.install").compilers = { "gcc-13" }
 
       vim.opt.indentexpr = "nvim_treesitter#indent()"
 

@@ -78,7 +78,6 @@ brew "dockutil" if OS.mac?
 # brew "docker-machine" # , restart_service: true, link: false
 
 brew "duck" # cli for cyberduck
-# brew "elixir-ls" # disabled for now, as we're manually installing via dotbot
 brew "federico-terzi/espanso/espanso" if OS.mac?
 brew "exa"
 brew "exercism" if OS.mac?

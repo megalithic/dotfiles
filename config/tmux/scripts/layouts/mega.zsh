@@ -4,7 +4,6 @@
 
 SESSION="mega"
 CWD="$DOTS"
-
 SESSION_ICON="" # alts: 🗿
 SESSION_FG="#d9bb80"
 

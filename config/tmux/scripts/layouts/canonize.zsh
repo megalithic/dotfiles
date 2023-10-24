@@ -40,6 +40,7 @@ tmux -2 select-layout -t "$SESSION":3 tiled
 
 tmux -2 select-layout -t "$SESSION":3 even-horizontal
 tmux -2 select-pane -t "$SESSION":3.1
+tmux -2 resize-pane -Z -t "$SESSION":3.1
 
 # focus
 tmux -2 select-window -t "$SESSION":2

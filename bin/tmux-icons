@@ -1,0 +1,17 @@
+#!/usr/bin/env zsh
+
+declare -A icons_arr
+
+icons_arr["zsh"]="󱆃"
+icons_arr["bash"]="󱆃"
+icons_arr["sh"]="󱆃"
+icons_arr["vim"]=""
+icons_arr["nvim"]=""
+icons_arr["nix"]="󱄅"
+
+input=${1:-}
+
+echo "$(ps -t $input -o args= | head -n 2)"
+# echo "${icons_arr[$text]}"
+# echo "$(sed "s/$input/${icons_arr[$text]}/")"
+# echo "$input"

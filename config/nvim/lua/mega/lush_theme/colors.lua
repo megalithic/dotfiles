@@ -66,6 +66,7 @@ C.dark_blue_alt = "#4e88ff"
 C.dark_orange = hsluv("#FF922B")
 C.dark_red = hsluv("#be5046")
 C.dark_green = hsluv("#6bc46d").darken(20)
+C.dark_brown = "#795430"
 
 C.lsp.error = C.pale_red
 C.lsp.warn = C.dark_orange

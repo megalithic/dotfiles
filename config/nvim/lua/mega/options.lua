@@ -142,10 +142,10 @@ vim.o.foldlevel = 99 -- feel free to decrease the value
 vim.o.foldlevelstart = 10 -- open most folds by default
 vim.o.foldnestmax = 10 -- 10 nested fold max
 vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
-vim.o.foldmethod = "expr"
+vim.o.foldmethod = "marker"
 -- vim.wo.foldcolumndigits = false -- if disabled, 'foldsep' from 'fillchars' used.
 -- or --
-vim.o.foldmethod = "indent" -- fold based on indent level
+-- vim.o.foldmethod = "indent" -- fold based on indent level
 -----------------------------------------------------------------------------//
 -- Quickfix {{{1
 -----------------------------------------------------------------------------//

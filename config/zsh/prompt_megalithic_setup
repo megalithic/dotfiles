@@ -57,7 +57,7 @@ GIT_AHEAD_ICON=""        # alts: ⇡
 GIT_BEHIND_ICON=""       # alts: ⇣
 GIT_RENAMED_ICON=""      # alts: 
 DESKFILE_ICON=""         # alts:    ◲  🚀
-NIX_SHELL_ICON=""        # alts:
+NIX_SHELL_ICON="󱄅"        # alts: 󱄅
 BACKGROUND_JOB_ICON="󰄉"   # alts: 󰄉…✦
 ROOT_ICON=""
 

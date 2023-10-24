@@ -65,7 +65,7 @@ _fzf_megaforest() {
   local color0E='#d3869b'
   local color0F='#d65d0e'
 
-  # --color=bg+:$color01,bg:$color00,spinner:$color0C,hl:$color0D
+  # --color=bg+:$color01,spinner:$color0C,hl:$color0A,gutter:$color01
   export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS
 --color=bg+:$color01,spinner:$color0C,hl:$color0A,gutter:$color01
 --color=fg:$color04,header:$color0D,info:$color0A,pointer:$color0C
@@ -86,7 +86,7 @@ export FZF_CTRL_R_OPTS="
 # export FZF_TMUX_OPTS="$FZF_DEFAULT_OPTS" #"-p --no-info --ansi --color gutter:-1,bg+:-1,header:4,separator:0,info:0,label:4,border:4,prompt:7,pointer:5,query:7,prompt:7"
 
 # open fzf in a tmux popup
-# export FZF_TMUX_OPTS='-p80%,60%'
+# export FZF_TMUX_OPTS='-p 45%,50%'
 
 _fzf_megaforest
 
@@ -114,9 +114,9 @@ _fzf_comprun() {
   shift
 
   case "$command" in
-  git) git --help -a | grep -E '^\s+' | awk '{print $1}' | fzf "$@" ;;
-  cd) fzf --preview 'tree -C {} | head -200' "$@" ;;
-  *) fzf "$@" ;;
+    git) git --help -a | grep -E '^\s+' | awk '{print $1}' | fzf "$@" ;;
+    cd) fzf --preview 'tree -C {} | head -200' "$@" ;;
+    *) fzf "$@" ;;
   esac
 }
 

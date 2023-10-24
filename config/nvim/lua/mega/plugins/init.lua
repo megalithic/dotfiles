@@ -297,7 +297,7 @@ return {
     },
   },
   {
-    cond = false,
+    cond = true,
     "elixir-tools/elixir-tools.nvim",
     -- "megalithic/elixir-tools.nvim",
     -- ft = { "elixir", "eelixir", "heex", "surface" },

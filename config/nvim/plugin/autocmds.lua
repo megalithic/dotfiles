@@ -137,7 +137,7 @@ do
         if string.match(vim.fn.getline(1), "^#!") ~= nil then
           if string.match(vim.fn.getline(1), "/bin/") ~= nil then
             vim.notify(fmt("making %s executable", args.file), L.INFO)
-            vim.cmd([[!chmod a+x <afile> | update]])
+            vim.cmd([[!chmod a+x <afile>]])
             vim.schedule(function() vim.cmd("edit") end)
             -- assert(vim.uv.fs_chmod(args.match, 755), fmt("failed to make %s executable", args.file))
 

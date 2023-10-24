@@ -23,9 +23,9 @@ if (Application("Music").running()) {
 
   let stateIcon = "";
   if (state === "playing") {
-    stateIcon = ""; // alts:  
+    stateIcon = ""; // alts: 
   } else {
-    stateIcon = ""; // alts:  
+    stateIcon = ""; // alts: 
   }
 
   output = truncate(`${stateIcon} ${artist} - ${title}`, 45);

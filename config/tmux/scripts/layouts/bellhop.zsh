@@ -3,8 +3,8 @@
 SESSION="bellhop"
 CWD="$CODE/bellhop"
 
-SESSION_ICON=""
-SESSION_FG="#4e88ff"
+SESSION_ICON="" # alts: 󰂚󰞎󰵚󰵛
+SESSION_FG="#54816B"
 
 cd $CWD
 
@@ -46,6 +46,7 @@ tmux send-keys -t "$SESSION":3.2 "iex --sname $SESSION-tern --cookie ternit -S m
 tmux select-layout -t "$SESSION":3 tiled
 tmux select-layout -t "$SESSION":3 even-horizontal
 tmux select-pane -t "$SESSION":3.2
+tmux resize-pane -Z -t "$SESSION":3.2
 
 # focus
 tmux select-window -t "$SESSION":2

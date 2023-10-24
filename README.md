@@ -8,7 +8,7 @@
 ```
 
 <p align="center">
-  ![screenshot](screenshot.png)
+  <img src="https://raw.githubusercontent.com/megalithic/dotfiles/main/screenshot.png" alt="screenshot" />
 </p>
 
 ## 🚀 Installation
