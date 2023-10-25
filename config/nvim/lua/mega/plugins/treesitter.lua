@@ -81,8 +81,6 @@ return {
       -- for apple silicon
       -- require("nvim-treesitter.install").compilers = { "gcc-13" }
 
-      vim.opt.indentexpr = "nvim_treesitter#indent()"
-
       local ft_to_parser_aliases = {
         dotenv = "bash",
         gitcommit = "NeogitCommitMessage",

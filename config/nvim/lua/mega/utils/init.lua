@@ -413,7 +413,11 @@ function M.conceal_class(bufnr)
   local min_chars = 2
   local namespace = vim.api.nvim_create_namespace("ConcealClassName")
   local ft = "html"
-  if not vim.tbl_contains({ "html", "svelte", "astro", "vue", "heex", "phoenix_html" }, vim.bo.ft) then ft = "tsx" end
+  if
+    not vim.tbl_contains({ "html", "svelte", "astro", "vue", "elixir", "eelixir", "heex", "phoenix_html" }, vim.bo.ft)
+  then
+    ft = "tsx"
+  end
   local language_tree = vim.treesitter.get_parser(bufnr, ft)
   local syntax_tree = language_tree:parse()
   local root = syntax_tree[1]:root()

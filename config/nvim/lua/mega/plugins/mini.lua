@@ -321,6 +321,7 @@ local function mini_hipatterns()
       todo = { pattern = "%f[%w]()TODO()%f[%W]", group = "MiniHipatternsTodo" },
       note = { pattern = "%f[%w]()NOTE()%f[%W]", group = "MiniHipatternsNote" },
       ref = { pattern = "%f[%w]()REF()%f[%W]", group = "MiniHipatternsRef" },
+      refs = { pattern = "%f[%w]()REFS()%f[%W]", group = "MiniHipatternsRef" },
 
       -- Highlight hex color strings (`#rrggbb`) using that color
       -- hex_color = hipatterns.gen_highlighter.hex_color(),

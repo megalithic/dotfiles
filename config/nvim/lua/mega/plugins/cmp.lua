@@ -274,27 +274,27 @@ return {
           return item
         end,
       },
-      sorting = {
-        priority_weight = 2,
-        comparators = {
-          -- proximity
-          function(a, b)
-            if require("cmp_buffer"):compare_locality(a, b) then return true end
-            return false
-          end,
-          cmp.config.compare.locality,
-          cmp.config.compare.offset,
-          cmp.config.compare.exact,
-          cmp.config.compare.sort_text,
-          cmp.config.compare.score,
-          cmp.config.compare.recently_used,
-          require("cmp-under-comparator").under,
-          -- cmp.config.compare.sort_text,
-          cmp.config.compare.kind,
-          cmp.config.compare.length,
-          cmp.config.compare.order,
-        },
-      },
+      -- sorting = {
+      --   priority_weight = 2,
+      --   comparators = {
+      --     -- proximity
+      --     function(a, b)
+      --       if require("cmp_buffer"):compare_locality(a, b) then return true end
+      --       return false
+      --     end,
+      --     cmp.config.compare.locality,
+      --     cmp.config.compare.offset,
+      --     cmp.config.compare.exact,
+      --     cmp.config.compare.sort_text,
+      --     cmp.config.compare.score,
+      --     cmp.config.compare.recently_used,
+      --     require("cmp-under-comparator").under,
+      --     -- cmp.config.compare.sort_text,
+      --     cmp.config.compare.kind,
+      --     cmp.config.compare.length,
+      --     cmp.config.compare.order,
+      --   },
+      -- },
       sources = cmp.config.sources({
         -- { name = "nvim_lsp_signature_help" },
         { name = "vsnip" },

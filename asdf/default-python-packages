@@ -13,6 +13,7 @@ gntp
 goobook
 isort
 lastversion
+libtmux
 md-tangle
 neovim
 neovim-remote

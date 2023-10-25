@@ -101,14 +101,14 @@ brew "git-crypt"
 brew "git-delta"
 brew "git-lfs"
 brew "gh"
-brew "glow" if OS.mac?
+brew "glow" if OS.mac? # charmbracelet tool
 brew "gnutls"
 brew "gnupg"
 brew "gnu-sed" if OS.mac?
 brew "gotop"
 brew "gpg" # required for asdf-nodejs
 brew "grc"
-brew "gum" # for super dope scripts
+brew "gum" # charmbracelet tool
 brew "highlight"
 brew "hopenpgp-tools"
 brew "htop"
@@ -132,6 +132,7 @@ brew "luv"
 brew "mas" if OS.mac?
 brew "media-info"
 brew "mkcert"
+brew "mods" # charmbracelet tool
 brew "moreutils"
 brew "mycli"
 brew "nb" if OS.mac?

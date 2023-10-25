@@ -615,6 +615,13 @@ function pdf2img() {
   convert -density 192 "$1" -quality 100 -alpha remove "$2"
 }
 
+# REFS:
+# https://github.com/zackproser/zsh-shell-functions/tree/main/autogit
+# https://github.com/zackproser/automations/blob/master/docs/usage.md
+# function cd() {
+#   builtin cd "$@" && gum spin --title "Autogit updating git repo if necessary..." --show-output ~/.dotfiles/bin/autogit.sh
+# }
+
 
 # cdr: run fzf with dir history
 # if [[ -n $(echo ${^fpath}/chpwd_recent_dirs(N)) && -n $(echo ${^fpath}/cdr(N)) ]]; then

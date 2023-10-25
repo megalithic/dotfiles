@@ -50,7 +50,7 @@ zsh_add_file "lib/rtx.zsh"
 # FIXME: some libs (elixir-ls, lulwat?) still require this
 # zsh_add_file "lib/asdf.zsh"
 
-# work things
+# deprecated work-related things
 [[ -n "$DESK_ENV" ]] && source "$DESK_ENV" || true
 
 # fzf just desparately wants this here

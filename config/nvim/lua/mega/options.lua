@@ -141,11 +141,11 @@ vim.opt.foldopen = vim.opt.foldopen + "search"
 vim.o.foldlevel = 99 -- feel free to decrease the value
 vim.o.foldlevelstart = 10 -- open most folds by default
 vim.o.foldnestmax = 10 -- 10 nested fold max
-vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
-vim.o.foldmethod = "marker"
+-- vim.o.foldmethod = "marker"
+-- vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
+vim.wo.foldmethod = "expr"
+vim.wo.foldexpr = "v:lua.vim.treesitter.foldexpr()"
 -- vim.wo.foldcolumndigits = false -- if disabled, 'foldsep' from 'fillchars' used.
--- or --
--- vim.o.foldmethod = "indent" -- fold based on indent level
 -----------------------------------------------------------------------------//
 -- Quickfix {{{1
 -----------------------------------------------------------------------------//
@@ -266,6 +266,7 @@ vim.o.expandtab = true
 vim.o.shiftwidth = 2
 vim.o.tabstop = 2
 vim.o.softtabstop = 2
+vim.opt.indentexpr = "nvim_treesitter#indent()"
 -----------------------------------------------------------------------------//
 -- vim.o.debug = "msg"
 vim.o.gdefault = true

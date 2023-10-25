@@ -209,7 +209,10 @@ case "$(uname)" in
     export HOMEBREW_CASK_OPTS="--appdir=/Applications"
     export HOMEBREW_NO_INSTALL_CLEANUP=TRUE
     export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=FALSE
-    export HOMEBREW_NO_INSTALL_FROM_API=1
+    export HOMEBREW_NO_INSTALL_FROM_API=0
+    if which gh >/dev/null; then
+      export HOMEBREW_GITHUB_API_TOKEN="$(gh auth token)"
+    fi
     export BREW_PATH="$HOMEBREW_PREFIX/Homebrew"
     export BREW_CASK_PATH="/opt/homebrew-cask/Caskroom"
 
@@ -291,6 +294,9 @@ case "$(uname)" in
   export RUBY_GC_MALLOC_LIMIT=1000000000
   export RUBY_GC_HEAP_FREE_SLOTS=500000
   export RUBY_GC_HEAP_INIT_SLOTS=40000
+  if which brew >/dev/null; then
+    export RUBY_CONFIGURE_OPTS="--with-openssl-dir=$(brew --prefix openssl@1.1)"
+  fi
 
   export NODEJS_CHECK_SIGNATURES=no # https://github.com/asdf-vm/asdf-nodejs#use
 

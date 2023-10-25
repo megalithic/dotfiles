@@ -252,14 +252,9 @@ return {
         "mhanberg/output-panel.nvim",
         keys = {
           {
-            "<localleader>lop",
-            ":OutputPanel<CR>",
-            desc = "lsp: open output panel",
-          },
-          {
             "<leader>lip",
             ":OutputPanel<CR>",
-            desc = "open output panel",
+            desc = "lsp: open output panel",
           },
         },
         event = "LspAttach",
@@ -296,114 +291,114 @@ return {
       },
     },
   },
-  {
-    cond = true,
-    "elixir-tools/elixir-tools.nvim",
-    -- "megalithic/elixir-tools.nvim",
-    -- ft = { "elixir", "eelixir", "heex", "surface" },
-    event = { "BufReadPre", "BufNewFile" },
-    dependencies = {
-      { "tpope/vim-projectionist", lazy = false },
-      "nvim-lua/plenary.nvim",
-      "neovim/nvim-lspconfig",
-    },
-    config = function()
-      local elixir = require("elixir")
-      local elixirls = require("elixir.elixirls")
-
-      elixir.setup({
-        credo = { enable = mega.lsp.is_enabled_elixir_ls("credo") },
-        nextls = {
-          enable = mega.lsp.is_enabled_elixir_ls("NextLS"),
-          root_dir = require("mega.utils.lsp").root_pattern("mix.exs", ".git"), -- or vim.uv.os_homedir(),
-          -- version = "*",
-        },
-        elixirls = {
-          enable = mega.lsp.is_enabled_elixir_ls("ElixirLS"),
-          -- cmd = fmt("%s/lsp/elixir-ls/%s", vim.env.XDG_DATA_HOME, "language_server.sh"),
-          single_file_support = true,
-          settings = elixirls.settings({
-            dialyzerEnabled = true,
-            dialyzerFormat = "dialyxir_long", -- alts: dialyxir_short
-            dialyzerwarnopts = {},
-            fetchDeps = false,
-            enableTestLenses = false,
-            suggestSpecs = true,
-          }),
-          filetypes = { "elixir", "eelixir", "heex", "surface" },
-          root_dir = require("mega.utils.lsp").root_pattern("mix.exs", ".git"), -- or vim.uv.os_homedir(),
-          log_level = vim.lsp.protocol.MessageType.Log,
-          message_level = vim.lsp.protocol.MessageType.Log,
-          on_attach = function(client, bufnr)
-            vim.keymap.set(
-              "n",
-              "<localleader>efp",
-              ":ElixirFromPipe<cr>",
-              { buffer = true, noremap = true, desc = "elixir: from pipe" }
-            )
-            vim.keymap.set(
-              "n",
-              "<localleader>etp",
-              ":ElixirToPipe<cr>",
-              { buffer = true, noremap = true, desc = "elixir: to pipe" }
-            )
-            vim.keymap.set(
-              "v",
-              "<localleader>eem",
-              ":ElixirExpandMacro<cr>",
-              { buffer = true, noremap = true, desc = "elixir: expand macro" }
-            )
-
-            -- dd({ client.name, client.server_capabilities })
-            local desc = function(desc, expr)
-              expr = expr ~= nil and expr or false
-              return { desc = desc, buffer = bufnr, expr = expr }
-            end
-
-            if
-              not client.server_capabilities.documentReferencesProvider
-              and not client.server_capabilities.referencesProvider
-            then
-              nmap("gr", "<leader>A", desc("lsp: references"))
-            else
-              nmap("gr", function()
-                if true then
-                  vim.cmd("Trouble lsp_references")
-                else
-                  if vim.g.picker == "fzf" then
-                    vim.cmd("FzfLua lsp_references")
-                  elseif vim.g.picker == "telescope" then
-                    vim.cmd("Telescope lsp_references")
-                  else
-                    vim.lsp.buf.references()
-                  end
-                end
-              end, desc("lsp: references"))
-            end
-
-            -- if not client.server_capabilities.referencesProvider then
-            --   nmap("gr", "<leader>A", desc("lsp: references"))
-            -- else
-            --   nnoremap("gr", function()
-            --     -- dd(client.server_capabilities)
-            --     -- if true then
-            --     --   vim.cmd("Trouble lsp_references")
-            --     -- else
-            --     if vim.g.picker == "fzf" then
-            --       vim.cmd("FzfLua lsp_references")
-            --     elseif vim.g.picker == "telescope" then
-            --       vim.cmd("Telescope lsp_references")
-            --     else
-            --       vim.lsp.buf.references()
-            --     end
-            --     -- end
-            --   end, desc("lsp: references"))
-            -- end
-          end,
-        },
-      })
-    end,
-  },
+  -- {
+  --   cond = false,
+  --   "elixir-tools/elixir-tools.nvim",
+  --   -- "megalithic/elixir-tools.nvim",
+  --   -- ft = { "elixir", "eelixir", "heex", "surface" },
+  --   event = { "BufReadPre", "BufNewFile" },
+  --   dependencies = {
+  --     { "tpope/vim-projectionist", lazy = false },
+  --     "nvim-lua/plenary.nvim",
+  --     "neovim/nvim-lspconfig",
+  --   },
+  --   config = function()
+  --     local elixir = require("elixir")
+  --     local elixirls = require("elixir.elixirls")
+  --
+  --     elixir.setup({
+  --       credo = { enable = mega.lsp.is_enabled_elixir_ls("credo") },
+  --       nextls = {
+  --         enable = mega.lsp.is_enabled_elixir_ls("NextLS"),
+  --         root_dir = require("mega.utils.lsp").root_pattern("mix.exs", ".git"), -- or vim.uv.os_homedir(),
+  --         -- version = "*",
+  --       },
+  --       elixirls = {
+  --         enable = mega.lsp.is_enabled_elixir_ls("ElixirLS"),
+  --         -- cmd = fmt("%s/lsp/elixir-ls/%s", vim.env.XDG_DATA_HOME, "language_server.sh"),
+  --         single_file_support = true,
+  --         settings = elixirls.settings({
+  --           dialyzerEnabled = true,
+  --           dialyzerFormat = "dialyxir_long", -- alts: dialyxir_short
+  --           dialyzerwarnopts = {},
+  --           fetchDeps = false,
+  --           enableTestLenses = false,
+  --           suggestSpecs = true,
+  --         }),
+  --         filetypes = { "elixir", "eelixir", "heex", "surface" },
+  --         root_dir = require("mega.utils.lsp").root_pattern("mix.exs", ".git"), -- or vim.uv.os_homedir(),
+  --         log_level = vim.lsp.protocol.MessageType.Log,
+  --         message_level = vim.lsp.protocol.MessageType.Log,
+  --         on_attach = function(client, bufnr)
+  --           vim.keymap.set(
+  --             "n",
+  --             "<localleader>efp",
+  --             ":ElixirFromPipe<cr>",
+  --             { buffer = true, noremap = true, desc = "elixir: from pipe" }
+  --           )
+  --           vim.keymap.set(
+  --             "n",
+  --             "<localleader>etp",
+  --             ":ElixirToPipe<cr>",
+  --             { buffer = true, noremap = true, desc = "elixir: to pipe" }
+  --           )
+  --           vim.keymap.set(
+  --             "v",
+  --             "<localleader>eem",
+  --             ":ElixirExpandMacro<cr>",
+  --             { buffer = true, noremap = true, desc = "elixir: expand macro" }
+  --           )
+  --
+  --           -- dd({ client.name, client.server_capabilities })
+  --           local desc = function(desc, expr)
+  --             expr = expr ~= nil and expr or false
+  --             return { desc = desc, buffer = bufnr, expr = expr }
+  --           end
+  --
+  --           if
+  --             not client.server_capabilities.documentReferencesProvider
+  --             and not client.server_capabilities.referencesProvider
+  --           then
+  --             nmap("gr", "<leader>A", desc("lsp: references"))
+  --           else
+  --             nmap("gr", function()
+  --               if true then
+  --                 vim.cmd("Trouble lsp_references")
+  --               else
+  --                 if vim.g.picker == "fzf" then
+  --                   vim.cmd("FzfLua lsp_references")
+  --                 elseif vim.g.picker == "telescope" then
+  --                   vim.cmd("Telescope lsp_references")
+  --                 else
+  --                   vim.lsp.buf.references()
+  --                 end
+  --               end
+  --             end, desc("lsp: references"))
+  --           end
+  --
+  --           -- if not client.server_capabilities.referencesProvider then
+  --           --   nmap("gr", "<leader>A", desc("lsp: references"))
+  --           -- else
+  --           --   nnoremap("gr", function()
+  --           --     -- dd(client.server_capabilities)
+  --           --     -- if true then
+  --           --     --   vim.cmd("Trouble lsp_references")
+  --           --     -- else
+  --           --     if vim.g.picker == "fzf" then
+  --           --       vim.cmd("FzfLua lsp_references")
+  --           --     elseif vim.g.picker == "telescope" then
+  --           --       vim.cmd("Telescope lsp_references")
+  --           --     else
+  --           --       vim.lsp.buf.references()
+  --           --     end
+  --           --     -- end
+  --           --   end, desc("lsp: references"))
+  --           -- end
+  --         end,
+  --       },
+  --     })
+  --   end,
+  -- },
   {
     "stevearc/oil.nvim",
     cmd = { "Oil" },

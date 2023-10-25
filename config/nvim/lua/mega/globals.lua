@@ -43,7 +43,7 @@ vim.g.icloud_path = vim.env.ICLOUD_DIR
 vim.g.icloud_documents_path = vim.env.ICLOUD_DOCUMENTS_DIR
 vim.g.obsidian_vault_path = vim.env.OBSIDIAN_VAULT_DIR
 vim.g.notes_path = fmt("%s/_notes", vim.g.icloud_documents_path)
-vim.g.neorg_path = fmt("%s/_neorg", vim.g.icloud_documents_path)
+vim.g.neorg_path = fmt("%s/_org", vim.g.icloud_documents_path)
 vim.g.hammerspoon_path = fmt("%s/config/hammerspoon", vim.g.dotfiles)
 vim.g.hs_emmy_path = fmt("%s/Spoons/EmmyLua.spoon", vim.g.hammerspoon_path)
 

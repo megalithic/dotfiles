@@ -576,9 +576,19 @@ M.unofficial = {
 
     if not configs.nextls then
       local cmd = function(use_homebrew)
-        if use_homebrew then return { "nextls", "--stdio" } end
+        local arch = {
+          ["arm64"] = "arm64",
+          ["aarch64"] = "arm64",
+          ["amd64"] = "amd64",
+          ["x86_64"] = "amd64",
+        }
 
-        return { vim.env.XDG_DATA_HOME .. "/lsp/nextls/bin/nextls", "--stdio" }
+        local os_name = string.lower(vim.uv.os_uname().sysname)
+        local current_arch = arch[string.lower(vim.uv.os_uname().machine)]
+        local build_bin = fmt("next_ls_%s_%s", os_name, current_arch)
+
+        if use_homebrew then return { "nextls", "--stdio" } end
+        return { vim.env.XDG_DATA_HOME .. "/lsp/nextls/burrito_out/" .. build_bin, "--stdio" }
       end
       configs.nextls = {
         default_config = {

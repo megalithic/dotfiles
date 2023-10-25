@@ -12,7 +12,7 @@ local H_PADDING = 6
 local FILL_COLOR = { white = 1.0, alpha = 0.3 }
 
 local MOD_TO_CHAR = {
-  hyper = "✧", -- alts: 󱙫󰦤󰣙✧
+  hyper = "󰫣", -- alts: 󰫣󱙫󰦤󰣙✧
   ctrl = "⌃",
   alt = "⌥",
   cmd = "⌘",
@@ -27,7 +27,7 @@ local CHAR_TO_CHAR = {
   space = "␣",
   delete = "⌫",
   escape = "⎋",
-  help = "?⃝",
+  help = "󰘥",
 
   home = "↖",
   pageup = "⇞",

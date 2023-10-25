@@ -21,18 +21,22 @@ __invocation="$(printf %q "$__file")$( (($#)) && printf ' %q' "$@" || true)"
 
 LSPS_PATH="${XDG_DATA_HOME}/lsp"
 LS_PATH="${LSPS_PATH}/nextls"
+TMP_PATH="$HOME/tmp"
 mkdir -p "$LS_PATH"
 
-VERSION="${1:-release}"
+VERSION="${1:-main}"
 TARGET=""
 BINARY=""
 BUILD_TYPE=""
 SYS="$(echo "$(uname)" | awk '{print tolower($0)}')"
 ARCH="$(echo "$(uname -m)" | awk '{print tolower($0)}')"
+BUILD_BIN="next_ls_${SYS}_${ARCH}"
 
 rm -rf "$LS_PATH"
 
 do_install() {
+  local bin_path="$LS_PATH/burrito_out/$BUILD_BIN"
+
   case "$VERSION" in
   'release' | 'stable')
     TARGET="https://github.com/elixir-tools/next-ls/releases/latest/download"
@@ -45,27 +49,37 @@ do_install() {
     ;;
   'main' | 'master')
     TARGET="https://github.com/elixir-tools/next-ls/archive/refs/heads"
-    BINARY="main.zip"
+    BINARY="${VERSION}.zip"
     BUILD_TYPE="source"
     ;;
   *)
     TARGET="https://github.com/elixir-tools/next-ls/archive"
-    BINARY="${VERSION}.tar.gz"
+    BINARY="next-ls-${VERSION}.zip"
     BUILD_TYPE="source"
     ;;
   esac
 
-  if [[ $BUILD_TYPE == "release" ]]; then
+  if [[ $BUILD_TYPE == "source" ]]; then
     log "($BUILD_TYPE) downloading $TARGET/$BINARY.."
-    cd ~/tmp &&
+    cd "$TMP_PATH" &&
       (
-        mkdir -p "$LS_PATH/bin" &&
-          curl --fail --silent -LO "$TARGET/$BINARY" &&
-          (mv "./$BINARY" "$LS_PATH/bin/nextls" && log_ok "moved $CWD/$BINARY to $LS_PATH/bin/nextls") || { log_error "issue moving binary" } &&
+        curl -fLO "$TARGET/$BINARY" &&
+          (tar -xvzf "$BINARY" -C "$LSPS_PATH" && log_ok "unpacked $TARGET/$BINARY to $LSPS_PATH") &&
+          mv "$LSPS_PATH/next-ls-$VERSION" "$LS_PATH" &&
           pushd "$LS_PATH" >/dev/null &&
-          chmod +x "$LS_PATH/bin/nextls" &&
+          (mix local.hex --force && mix local.rebar --force && mix deps.get && BURRITO_TARGET=darwin_arm64 MIX_ENV=prod mix release --overwrite && log_ok "built next-ls") &&
+          chmod +x "$bin_path" &&
           popd >/dev/null &&
-      ) && log_ok "finished downloading and installing nextls ($VERSION) to $LS_PATH/bin/nextls" ||
+          (rm "$BINARY" && log_ok "removed $TMP_PATH/$BINARY")
+
+        # mkdir -p "$LS_PATH/bin" &&
+        #   curl --fail --silent -LO "$TARGET/$BINARY" &&
+        #   # (mv "./$BINARY" "$LS_PATH/bin/nextls" && log_ok "moved $CWD/$BINARY to $LS_PATH/bin/nextls") || { log_error "issue moving binary" } &&
+        #   pushd "$LS_PATH" >/dev/null &&
+        #     (BURRITO_TARGET=darwin_arm64 mix release && log_ok "built next-ls") &&
+        #   chmod +x "$LS_PATH/bin/nextls" &&
+        #   popd >/dev/null &&
+      ) && log_ok "finished downloading and installing nextls ($VERSION) to $bin_path" ||
       exit 1
   else
     log_warn "$BUILD_TYPE not yet supported."

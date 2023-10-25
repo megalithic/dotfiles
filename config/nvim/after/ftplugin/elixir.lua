@@ -138,7 +138,7 @@ local function setup_mix()
   end
 end
 
-setup_mix()
+-- setup_mix()
 
 -- local function is_elixir_test_file()
 --   local file_name = vim.fn.expand("%:t")

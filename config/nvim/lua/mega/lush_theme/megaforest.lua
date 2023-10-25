@@ -685,7 +685,7 @@ local theme = lush(function(injected_functions)
     MiniHipatternsHack({ sym("@comment.warn") }),
     MiniHipatternsTodo({ sym("@comment.todo") }),
     MiniHipatternsNote({ sym("@comment.note") }),
-    MiniHipatternsRef({ sym("@comment.ref") }),
+    MiniHipatternsRef({ sym("@comment.ref"), gui = "bold" }),
 
     ---- :help leap.txt --------------------------------------------------------
 

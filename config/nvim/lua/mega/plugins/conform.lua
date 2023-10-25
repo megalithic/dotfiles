@@ -62,6 +62,11 @@ return {
       zig = { "zigfmt" },
       zsh = { "shfmt" },
     },
+    formatters = {
+      shfmt = {
+        prepend_args = { "-i", "2" },
+      },
+    },
     log_level = vim.log.levels.DEBUG,
     format_on_save = function(bufnr)
       -- local async_format = vim.g.async_format_filetypes[vim.bo[bufnr].filetype]
@@ -84,8 +89,8 @@ return {
   config = function(_, opts)
     if vim.g.formatter ~= "conform" then return end
 
-    local util = require("conform.util")
-    util.add_formatter_args(require("conform.formatters.shfmt"), { "-i", "2" })
+    -- local util = require("conform.util")
+    -- util.add_formatter_args(require("conform.formatters.shfmt"), { "-i", "2" })
 
     if vim.g.started_by_firenvim then
       opts.format_on_save = false

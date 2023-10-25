@@ -173,10 +173,10 @@ if vim.g.picker == "fzf" then
     { "<leader>A", fzf_lua.grep_cword, desc = "grep (under cursor)" },
     { "<leader>A", fzf_lua.grep_visual, desc = "grep (visual selection)", mode = "v" },
     { "<leader>fva", fzf_lua.autocmds, desc = "autocommands" },
-    { "<localleader>p", fzf_lua.registers, desc = "registers" },
+    { "<leader>fp", fzf_lua.registers, desc = "registers" },
     { "<leader>fd", function() file_picker(vim.env.DOTFILES) end, desc = "dotfiles" },
-    { "<leader>fc", function() file_picker(vim.g.vim_dir) end, desc = "nvim config" },
-    -- { "<leader>fO", function() file_picker(env.SYNC_DIR .. "/notes/org") end, desc = "org files" },
+    { "<leader>fc", function() file_picker(vim.g.vim_path) end, desc = "nvim config" },
+    { "<leader>fn", function() file_picker(vim.g.neorg_path) end, desc = "neorg files" },
     -- { "<leader>fN", function() file_picker(env.SYNC_DIR .. "/notes/neorg") end, desc = "norg files" },
   }
 end

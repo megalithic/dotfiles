@@ -43,7 +43,7 @@ return {
       Method = "",
       Module = "",
       Namespace = "",
-      Null = "󰟢", --alts: 󰟢ﳠ
+      Null = "󰟢", --alts: 󰱥󰟢ﳠ
       Number = "",
       Object = "",
       -- Operator = "\u{03a8}", -- Operator
@@ -399,7 +399,7 @@ return {
   col_sep = "",
   sep = "⋮",
   perc_sep = "",
-  modified = "∘", -- alts: ✿✸✎ ○∘●綠●∘■ □ ▪ ▫● ◯ ◔ ◕ ◌ ◎ ◦ ◆ ◇ ∘∙
+  modified = "", -- alts: ∘✿✸✎ ○∘●綠●∘■ □ ▪ ▫● ◯ ◔ ◕ ◌ ◎ ◦ ◆ ◇ ∘∙
   mode = "",
   vcs = "",
   readonly = "",

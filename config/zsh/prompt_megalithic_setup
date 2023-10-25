@@ -662,6 +662,8 @@ add-zsh-hook chpwd () {
   _git_status_prompt="" # clear current vcs_info
   chpwd_last_working_dir
   chpwd_recent_dirs
+  # NOTE: this is a bit slow, so going to avoid usign this for now
+  # gum spin --title "Autogit updating git repo if necessary..." --show-output ~/.dotfiles/bin/autogit.sh
 }
 
 

@@ -88,10 +88,10 @@ return {
 
       local function terminal_notifier(term_cmd, exit)
         if exit == 0 then
-          mega.notify("vim-test(s) passed 👍", L.INFO)
+          mega.notify(fmt("vim-test(s) passed 👍 (%s)", term_cmd), L.INFO)
           -- system(string.format([[terminal-notifier -title "Neovim [vim-test]" -message "test(s) passed"]], term_cmd))
         else
-          mega.notify("vim-test(s) failed 👎", L.ERROR)
+          mega.notify(fmt("vim-test(s) failed 👎 (%s)", term_cmd), L.ERROR)
           -- system(string.format([[terminal-notifier -title "Neovim [vim-test]" -message "test(s) failed"]], term_cmd))
         end
       end
