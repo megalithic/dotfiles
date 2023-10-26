@@ -77,23 +77,31 @@ w.on("mux-is-process-stateful", function(proc)
   return false -- don't ask for confirmation, nothing stateful here
 end)
 
-w.on("user-var-changed", function(window, _pane, name, value)
-  notify({
-    title = "wezterm",
-    message = string.format("user-var-changed: %s -> %s", name, value),
-    window = window,
-    timeout = 4000,
-  })
+-- w.on("user-var-changed", function(window, _pane, name, value)
+--   notify({
+--     title = "wezterm",
+--     message = string.format("user-var-changed: %s -> %s", name, value),
+--     window = window,
+--     timeout = 4000,
+--   })
+--
+--   local overrides = window:get_config_overrides() or {}
+--   if name == "SCREEN_SHARE_MODE" then
+--     if value == "on" then
+--       overrides.font_size = 20
+--     else
+--       overrides.font_size = nil
+--     end
+--   end
+--
+--   window:set_config_overrides(overrides)
+-- end)
 
+w.on("user-var-changed", function(window, pane, name, value)
+  local profile_data = require("profile_data")
+  local wezterm_config_nvim = w.plugin.require("https://github.com/winter-again/wezterm-config.nvim")
   local overrides = window:get_config_overrides() or {}
-  if name == "SCREEN_SHARE_MODE" then
-    if value == "on" then
-      overrides.font_size = 20
-    else
-      overrides.font_size = nil
-    end
-  end
-
+  overrides = wezterm_config_nvim.override_user_var(overrides, name, value, profile_data)
   window:set_config_overrides(overrides)
 end)
 

@@ -830,8 +830,37 @@ return {
       })
     end,
   },
+  {
+    "winter-again/wezterm-config.nvim",
+    config = true,
+  },
 
   -- ( Notes/Docs ) ------------------------------------------------------------
+  {
+    "mhanberg/zk.nvim",
+    config = {
+      on_attach = function(client, bufnr)
+        -- attach keymaps here
+        local function buf_set_keymap(...) vim.api.nvim_buf_set_keymap(bufnr, ...) end
+        local opts = { noremap = true, silent = true }
+
+        buf_set_keymap("n", "<C-p>", [[:Notes<cr>]], opts)
+        buf_set_keymap("n", "<space>zt", [[:Tags<cr>]], opts)
+        buf_set_keymap("n", "<space>zl", [[:Links<cr>]], opts)
+        buf_set_keymap("n", "<space>zb", [[:Backlinks<cr>]], opts)
+
+        -- follow the link under the cursor
+        buf_set_keymap("n", "dt", "<cmd>lua vim.lsp.buf.definition()<cr>", opts)
+        -- show preview of note under the cursor
+        buf_set_keymap("n", "K", "<cmd>lua vim.lsp.buf.hover()<cr>", opts)
+        -- create a new note from the current visual selection and insert a link to it.
+        buf_set_keymap("v", "<leader>zn", ":'<,'>lua vim.lsp.buf.range_code_action()<cr>", opts)
+
+        -- remember to initialize your completion plugin if necessary
+        -- require("cmp_nvim_lsp").update_capabilities(capabilities)
+      end,
+    },
+  },
   {
     "toppair/peek.nvim",
     build = "deno task --quiet build:fast",

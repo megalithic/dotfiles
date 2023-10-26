@@ -83,16 +83,16 @@ function obj:stop(opts)
         if term:name() == "kitty" then
           hs.execute("kitty @ --to unix:/tmp/mykitty set-font-size " .. defaultKittyFont, true)
         elseif term:name() == "wezterm" then
-          -- hs.execute("wezterm-cli SCREEN_SHARE_MODE off", true)
-          hs.task
-            .new(
-              os.getenv("HOME") .. "/.dotfiles/bin/wezterm-cli",
-              function(stdTask, stdOut, stdErr)
-                dbg(fmt("wezterm SCREEN_SHARE_MODE set to off, %s / %s", I(stdOut), I(stdErr)))
-              end,
-              { "SCREEN_SHARE_MODE", "off" }
-            )
-            :start()
+          hs.execute("wezterm-cli font_size 20.0", true)
+          -- hs.task
+          --   .new(
+          --     os.getenv("HOME") .. "/.dotfiles/bin/wezterm-cli",
+          --     function(stdTask, stdOut, stdErr)
+          --       dbg(fmt("wezterm SCREEN_SHARE_MODE set to off, %s / %s", I(stdOut), I(stdErr)))
+          --     end,
+          --     { "SCREEN_SHARE_MODE", "off" }
+          --   )
+          --   :start()
         end
 
         local term_win = term:mainWindow()

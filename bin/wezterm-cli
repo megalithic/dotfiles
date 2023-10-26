@@ -9,18 +9,18 @@ ENV_KEY="${1:-}"
 ENV_VALUE="${2:-}"
 
 function __help() {
-  printf -- "\n"
-  printf -- "${white}${bold}USAGE:${reset} %s <ENV_VAR_KEY> <ENV_VAR_VALUE>\n" "wezterm-cli"
-  printf -- "\n"
-  printf -- "${grey}${bold}EXAMPLE:${reset}\n"
-  printf -- "  wezterm-cli SCREEN_SHARE_MODE \"on\"\n"
-  printf -- "\n"
+    printf -- "\n"
+    printf -- "${white}${bold}USAGE:${reset} %s <ENV_VAR_KEY> <ENV_VAR_VALUE>\n" "wezterm-cli"
+    printf -- "\n"
+    printf -- "${grey}${bold}EXAMPLE:${reset}\n"
+    printf -- "  wezterm-cli SCREEN_SHARE_MODE \"on\"\n"
+    printf -- "\n"
 }
 
 if [[ -z "$ENV_KEY" || -z "$ENV_VALUE" ]]; then
-  log_error "An environment variable key and value must be provided."
-  __help
-  exit 1
+    log_error "An environment variable key and value must be provided."
+    __help
+    exit 1
 fi
 
 #
@@ -28,10 +28,14 @@ fi
 # Not presently working, see about remote controlling neovim and mimicking how folke/zen-mode controls wezterm
 #
 echo "$ENV_KEY -> $ENV_VALUE"
-if [ "$TMUX" = "" ]; then
-  printf "\033]1337;SetUserVar=%s=%s\007" "$ENV_KEY" "$(echo -n "$ENV_VALUE" | base64)"
+
+if [ "$TMUX" == "" ]; then
+    printf "\033]1337;SetUserVar=%s=%s\007" "$ENV_KEY" "$(echo -n "$ENV_VALUE" | base64)"
 else
-  printf "\033Ptmux;\033\033]1337;SetUserVar=%s=%s\007\033\\" "$ENV_KEY" "$(echo -n "$ENV_VALUE" | base64)"
+    # echo "\x1bPtmux;\x1b\x1b]1337;SetUserVar=$ENV_KEY=$(echo -n "$ENV_VALUE" | base64)\007\x1b\\"
+
+    # printf "\x1bPtmux;\x1b\x1b]1337;SetUserVar=%s=%s\007\x1b\\" "$ENV_KEY" "$(echo -n "$ENV_VALUE" | base64)"
+    printf "\x1bPtmux;\x1b\x1b]1337;SetUserVar=%s=%s\007\x1b\\" "$ENV_KEY" "$ENV_VALUE"
 fi
 
 # hs.execute([[echo -e "wezterm-cli SCREEN_SHARE_MODE on" | wezterm cli send-text --pane-id 0]], true)

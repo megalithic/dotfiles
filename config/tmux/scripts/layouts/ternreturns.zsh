@@ -3,8 +3,9 @@
 SESSION="ternreturns"
 CWD="$CODE/ternreturns"
 
-SESSION_ICON=""
+SESSION_ICON=""
 SESSION_FG="#a7c080"
+SESSION_BG="#4e6053"
 
 cd $CWD
 
@@ -42,4 +43,5 @@ tmux select-window -t "$SESSION":2
 tmux select-pane -t "$SESSION":2.1
 
 tmux setenv -t ${SESSION} 'SESSION_FG' "${SESSION_FG}"
+tmux setenv -t ${SESSION} 'SESSION_BG' "${SESSION_BG}"
 tmux setenv -t ${SESSION} 'SESSION_ICON' "${SESSION_ICON}"
