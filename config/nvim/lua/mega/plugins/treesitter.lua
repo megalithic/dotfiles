@@ -88,7 +88,6 @@ return {
         json = "jsonc",
         keymap = "devicetree",
         kittybuf = "bash",
-        tiltfile = "starlark",
         typescriptreact = "tsx",
         zsh = "bash",
       }

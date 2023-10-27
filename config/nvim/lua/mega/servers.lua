@@ -125,8 +125,8 @@ M.list = {
       "html",
       "javascriptreact",
       "typescriptreact",
-      "elixir",
-      "eelixir",
+      -- "elixir",
+      -- "eelixir",
       "html.heex",
       "heex",
       "html_heex",
@@ -140,7 +140,8 @@ M.list = {
         "html",
         "css",
         "javascript",
-        "eelixir",
+        -- "elixir",
+        -- "eelixir",
         "heex",
         "html.heex",
         "html_heex",
@@ -549,6 +550,7 @@ M.list = {
 
 M.unofficial = {
   lexical = function()
+    if not mega.lsp.is_enabled_elixir_ls("lexical") then return end
     local configs = require("lspconfig.configs")
 
     if not configs.lexical then
@@ -572,6 +574,7 @@ M.unofficial = {
     end
   end,
   nextls = function()
+    if not mega.lsp.is_enabled_elixir_ls("nextls") then return end
     local configs = require("lspconfig.configs")
 
     if not configs.nextls then
@@ -590,6 +593,7 @@ M.unofficial = {
         if use_homebrew then return { "nextls", "--stdio" } end
         return { vim.env.XDG_DATA_HOME .. "/lsp/nextls/burrito_out/" .. build_bin, "--stdio" }
       end
+
       configs.nextls = {
         default_config = {
           cmd = cmd(true),
