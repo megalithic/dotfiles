@@ -400,25 +400,19 @@ M.list = {
         surface = "phoenix-heex",
       },
     },
-    handlers = {
-      ["tailwindcss/getConfiguration"] = function(_, _, params, _, bufnr, _)
-        lsp.buf_notify(bufnr, "tailwindcss/getConfigurationResponse", { _id = params._id })
-        P("tailwindcss getConfiguration callback")
-      end,
-    },
     settings = {
-      includeLanguages = {
-        typescript = "javascript",
-        typescriptreact = "javascript",
-        ["html-eex"] = "html",
-        ["phoenix-heex"] = "html",
-        eelixir = "html",
-        elixir = "html",
-        heex = "html",
-        elm = "html",
-        surface = "html",
-        erb = "html",
-      },
+      -- includeLanguages = {
+      --   typescript = "javascript",
+      --   typescriptreact = "javascript",
+      --   ["html-eex"] = "html",
+      --   ["phoenix-heex"] = "html",
+      --   eelixir = "html",
+      --   elixir = "html",
+      --   heex = "html",
+      --   elm = "html",
+      --   surface = "html",
+      --   erb = "html",
+      -- },
       tailwindCSS = {
         lint = {
           cssConflict = "warning",
@@ -433,17 +427,16 @@ M.list = {
           "class",
           "className",
           "classList",
-          "ngClass",
         },
         experimental = {
           classRegex = {
             [[class= "([^"]*)]],
             [[additional_classes= "([^"]*)]],
             [[class: "([^"]*)]],
-            [[~H""".*class="([^"]*)".*"""]],
-            [[~H""".*additional_classes="([^"]*)".*"""]],
-            "~H\"\"\".*class=\"([^\"]*)\".*\"\"\"",
-            "~H\"\"\".*additional_classes=\"([^\"]*)\".*\"\"\"",
+            -- [[~H""".*class="([^"]*)".*"""]],
+            -- [[~H""".*additional_classes="([^"]*)".*"""]],
+            -- "~H\"\"\".*class=\"([^\"]*)\".*\"\"\"",
+            -- "~H\"\"\".*additional_classes=\"([^\"]*)\".*\"\"\"",
           },
         },
         validate = true,

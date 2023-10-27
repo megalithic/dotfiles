@@ -235,8 +235,9 @@ local exception_types = {
     dirbuf = "",
     oil = "",
     ["neo-tree"] = "פּ",
-    toggleterm = " ",
-    megaterm = " ",
+    toggleterm = fmt("%s ", mega.icons.misc.terminal),
+    megaterm = fmt("%s ", mega.icons.misc.terminal),
+    terminal = fmt("%s ", mega.icons.misc.terminal),
     calendar = "",
     minimap = "",
     octo = "",
@@ -288,7 +289,8 @@ local exception_types = {
       local mode_hl = mode.short == "T-I" and "StModeTermInsert" or "StModeTermNormal"
       return seg(
         fmt(
-          "megaterm#%d(%s)[%s]",
+          "megaterm(%s)#%d(%s)[%s]",
+          M.ctx.filetype,
           api.nvim_buf_get_var(buf, "term_buf"),
           shell,
           api.nvim_buf_get_var(buf, "term_cmd") or buf

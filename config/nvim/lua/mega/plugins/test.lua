@@ -88,11 +88,11 @@ return {
 
       local function terminal_notifier(term_cmd, exit)
         if exit == 0 then
-          mega.notify(fmt("vim-test(s) passed 👍 (%s)", term_cmd), L.INFO)
-          -- system(string.format([[terminal-notifier -title "Neovim [vim-test]" -message "test(s) passed"]], term_cmd))
+          mega.notify(fmt("👍 vim-test(s) passed: %s", term_cmd), L.INFO)
+          system(string.format([[terminal-notifier -title "nvim [test]" -message "👍 test(s) passed"]], term_cmd))
         else
-          mega.notify(fmt("vim-test(s) failed 👎 (%s)", term_cmd), L.ERROR)
-          -- system(string.format([[terminal-notifier -title "Neovim [vim-test]" -message "test(s) failed"]], term_cmd))
+          mega.notify(fmt("👎 vim-test(s) failed: %s", term_cmd), L.ERROR)
+          system(string.format([[terminal-notifier -title "nvim [test]" -message "👎 test(s) failed"]], term_cmd))
         end
       end
 
@@ -122,7 +122,7 @@ return {
 
       vim.g["test#custom_strategies"] = {
         termsplit = function(cmd) mega.term(term_opts(cmd)) end,
-        termvsplit = function(cmd) mega.term(term_opts(cmd, { direction = "vertical" })) end,
+        termvsplit = function(cmd) mega.term(term_opts(cmd, { direction = "vertical", size = 100 })) end,
         termfloat = function(cmd) mega.term(term_opts(cmd, { direction = "float", focus_on_open = true })) end,
         termtab = function(cmd) mega.term(term_opts(cmd, { direction = "tab", focus_on_open = true })) end,
       }

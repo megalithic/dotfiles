@@ -38,11 +38,11 @@ return {
       },
       ["core.concealer"] = {
         config = {
-          -- icons = {
-          --   heading = {
-          --     icons = { "◈", "◆", "◇", "❖", "⟡", "⋄" },
-          --   },
-          -- },
+          icons = {
+            heading = {
+              icons = { "◈", "◆", "◇", "❖", "⟡", "⋄" },
+            },
+          },
           dim_code_blocks = {
             conceal = false, -- do not conceal @code and @end
           },

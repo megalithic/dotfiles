@@ -30,7 +30,7 @@ return {
   {
     "nvim-treesitter/nvim-treesitter",
     build = ":TSUpdate",
-    event = "VeryLazy",
+    -- event = "VeryLazy",
     -- cond = #vim.api.nvim_list_uis() > 0,
     dependencies = {
       "nvim-treesitter/nvim-treesitter-textobjects",
@@ -113,7 +113,7 @@ return {
       -- }
 
       require("nvim-treesitter.configs").setup({
-        auto_install = false,
+        auto_install = true,
         ensure_installed = {
           "bash",
           "c",

@@ -56,6 +56,7 @@ local function is_ignored(bufnr)
     or ignored_by_window_resize_flag()
     or is_floating_win()
 
+  -- dd({ vim.bo[bufnr].filetype, vim.bo[bufnr].buftype, bufnr, should_ignore })
   return should_ignore
 end
 

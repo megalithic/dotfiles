@@ -143,13 +143,17 @@ local function set_term_opts(term)
   end
 end
 
-local function set_win_size(bufnr)
+local function set_win_size()
   if Term and Term.direction == "vertical" then
     vim.cmd(fmt("let &winwidth=%d", Term.size))
     vim.opt_local.winfixwidth = true
+    vim.opt_local.winminwidth = Term.size / 2
+    vim.api.nvim_win_set_width(Term.winnr, Term.size)
   elseif Term and Term.direction == "horizontal" then
     vim.cmd(fmt("let &winheight=%d", Term.size))
     vim.opt_local.winfixheight = true
+    vim.opt_local.winminheight = Term.size / 2
+    vim.api.nvim_win_set_height(Term.winnr, Term.size)
   end
 end
 
@@ -308,12 +312,25 @@ local function create_win(opts)
   api.nvim_win_set_buf(term_win_id, term_buf_id)
 end
 
+local function set_autocmds(opts)
+  require("mega.globals").augroup("megaterm", {
+    {
+      event = { "BufEnter" },
+      command = function(params)
+        if vim.bo[params.buf].filetype == "megaterm" then
+          if vim.tbl_contains({ "vertical", "horizontal" }, Term.direction) then set_win_size() end
+        end
+      end,
+    },
+  })
+end
+
 local term_mode_var = "__terminal_mode"
 local function set_mode(buf, mode) vim.b[buf][term_mode_var] = mode end
 
 local function get_mode(buf) return vim.b[buf][term_mode_var] end
 
-local function __enter(_opts)
+local function __enter(opts)
   if Term == nil then
     vim.notify("term not found")
     return
@@ -352,6 +369,8 @@ local function __enter(_opts)
   api.nvim_buf_set_var(term_buf_id, "term_direction", Term.direction)
 
   vim.cmd([[do User MegaTermOpened]])
+
+  set_autocmds(opts)
 end
 
 local function new_term(opts)
@@ -359,7 +378,7 @@ local function new_term(opts)
 
   create_win(opts)
   create_term(opts)
-  __enter()
+  __enter(opts)
 
   if not opts.focus_on_open then vim.cmd("wincmd p | stopinsert") end
 
@@ -369,7 +388,7 @@ end
 
 local function build_defaults(opts)
   opts = vim.tbl_extend("force", default_opts, opts or {})
-  opts = vim.tbl_extend("keep", split_opts[opts.direction], opts)
+  opts = vim.tbl_extend("force", split_opts[opts.direction], opts)
   opts = vim.tbl_extend("keep", opts, { caller_winnr = vim.fn.winnr() })
   opts = vim.tbl_extend("keep", opts, { focus_on_open = true })
   opts = vim.tbl_extend("keep", opts, { move_on_direction_change = true })

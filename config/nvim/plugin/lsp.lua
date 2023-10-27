@@ -605,6 +605,20 @@ local function setup_semantic_tokens(client, bufnr)
   -- })
 end
 
+local function setup_extra_handlers(client, bufnr)
+  local levels = {
+    "ERROR",
+    "WARN",
+    "INFO",
+    "DEBUG",
+    [0] = "TRACE",
+  }
+
+  vim.lsp.handlers["window/showMessage"] = function(_, result)
+    vim.notify(result.message, vim.log.levels[levels[result.type]])
+  end
+end
+
 ---Add buffer local mappings, autocommands, tagfunc, etc for attaching servers
 ---@param client table lsp client
 ---@param bufnr number
@@ -654,6 +668,8 @@ local function on_attach(client, bufnr)
   setup_keymaps(client, bufnr)
   setup_highlights(client, bufnr)
   setup_semantic_tokens(client, bufnr)
+
+  setup_extra_handlers(client, bufnr)
 
   if mega.lsp.has_method(client, "completion") then
     client.server_capabilities.completionProvider.triggerCharacters = { ".", ":" }

@@ -10,6 +10,8 @@ secure_input_notification: false
 enable_passive: false
 toggle_key: OFF
 matches:
+  - trigger: ":address:"
+    replace: "1926 Cahaba Cove, Hoover, AL 35244"
   - trigger: "Rene "
     replace: "René"
   - trigger: "Zoe"

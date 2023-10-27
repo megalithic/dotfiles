@@ -20,7 +20,7 @@ __root="$(cd "$(dirname "$__dir")" && pwd)"
 __invocation="$(printf %q "$__file")$( (($#)) && printf ' %q' "$@" || true)"
 
 ELIXIRLS_PATH="${XDG_DATA_HOME}/lsp/elixir-ls"
-TMP_PATH="~/tmp"
+TMP_PATH="$HOME/tmp"
 mkdir -p "$ELIXIRLS_PATH"
 
 VERSION="${1:-master}"
@@ -57,9 +57,10 @@ do_install() {
       log_ok "finished downloading and installing $VERSION elixir-ls to $ELIXIRLS_PATH" ||
       exit 1
   elif [[ $BUILD_TYPE == "source" ]]; then
+    cd "$TMP_PATH"
     curl -fLO "$TARGET/$BINARY" &&
-      tar -xvzf "$BINARY" -C $TMP_PATH &&
-      log_ok "unpacked $HOME/$BINARY" &&
+      tar -xvzf "$BINARY" -C "$TMP_PATH" &&
+      log_ok "unpacked $TMP_PATH/$BINARY" &&
       pushd "$TMP_PATH/elixir-ls-$VERSION" >/dev/null &&
       mix local.hex --force && mix local.rebar --force &&
       mix deps.get

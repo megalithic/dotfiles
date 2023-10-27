@@ -237,6 +237,7 @@ return {
     search = "", -- alts: 󰍉
     code = "",
     telescope = "",
+    terminal = "", -- alts: 
     gear = "",
     package = "",
     list = "",
@@ -372,7 +373,7 @@ return {
     table = "  ",
     tag = "  ",
     telescope = "  ",
-    terminal = "  ",
+    terminal = "  ", -- alts: 
     text = "  ",
     threeDots = " 󰇘 ",
     threeDotsBoxed = "  ",
@@ -394,7 +395,7 @@ return {
     wrench = "  ",
   },
   virtual_text = "",
-  mode_term = "ﲵ",
+  mode_term = "",
   ln_sep = "ℓ", -- alts: ℓ 
   col_sep = "",
   sep = "⋮",

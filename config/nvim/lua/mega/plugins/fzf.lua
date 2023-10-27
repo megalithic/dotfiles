@@ -133,7 +133,7 @@ if vim.g.picker == "fzf" then
       pattern = { "*" },
       once = true,
       command = function(args)
-        if not vim.g.started_by_firenvim then
+        if not vim.g.started_by_firenvim and (not vim.env.TMUX_POPUP and vim.env.TMUX_POPUP ~= 1) then
           local arg = vim.api.nvim_eval("argv(0)")
           if arg and (vim.fn.isdirectory(arg) ~= 0 or arg == "") then
             file_picker(dropdown({
