@@ -6,6 +6,7 @@ return {
     { "<leader>ne", ":Neorg export to-file ", desc = "neorg: export file" },
     { "<leader>nt", "<cmd>Neorg tangle current-file<cr>", desc = "neorg: tangle file" },
     { "<leader>np", "<cmd>Neorg presenter<cr>", desc = "neorg: presenter" },
+    { "<leader>nw", ":Neorg workspace <TAB>", desc = "neorg: select workspace" },
     { "<leader>nmi", "<cmd>Neorg inject-metadata<cr>", desc = "neorg: inject" },
     { "<leader>nmu", "<cmd>Neorg update-metadata<cr>", desc = "neorg: update" },
     { "<leader>nol", "<cmd>Neorg toc left<cr>", desc = "neorg: open toc (left)" },
@@ -24,6 +25,8 @@ return {
           default_keybinds = true, -- Generate the default keybinds
           -- neorg_leader = km.localleader("o"), -- This is the default if unspecified
           hook = function(keybinds)
+            keybinds.remap_event("norg", "n", "]]", "core.integrations.treesitter.next.heading")
+            keybinds.remap_event("norg", "n", "[[", "core.integrations.treesitter.previous.heading")
             -- keybinds.map_event("norg", "n", km.leader("fl"), "core.integrations.telescope.find_linkable")
             -- keybinds.map_event("norg", "i", km.ctrl("l"), "core.integrations.telescope.insert_link")
             -- keybinds.map_event("norg", "n", km.localleader("m"), "core.looking-glass.magnify-code-block")
@@ -34,6 +37,7 @@ return {
       ["core.completion"] = {
         config = {
           engine = "nvim-cmp",
+          name = "[neorg]",
         },
       },
       ["core.concealer"] = {
@@ -52,12 +56,15 @@ return {
       ["core.qol.todo_items"] = {},
       ["core.dirman"] = {
         config = {
-          autodetect = true, -- {{{
-          workspaces = { -- }}}
+          autochdir = false,
+          autodetect = true,
+          autochdetect = true,
+          workspaces = {
             notes = "~/Documents/_org",
             journal = "~/Documents/_org",
             work = "~/Documents/_org/work",
           },
+          default_workspace = "home",
           index = "index.norg",
         },
       },

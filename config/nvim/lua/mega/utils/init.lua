@@ -270,7 +270,7 @@ function M.preview_file(filename)
 
   if M.is_image(filename) then
     -- vim.notify(filename, L.INFO, { title = "nvim: previewing image..", render = "wrapped-compact" })
-    cmd = fmt("silent !wezterm cli split-pane --right --percent 30 -- bash -c 'wezterm imgcat %s ; read'", filename)
+    cmd = fmt("silent !wezterm cli split-pane --right --percent 30 -- bash -c 'wezterm imgcat --hold %s;'", filename)
   elseif M.is_openable(filename) then
     -- vim.notify(filename, L.INFO, { title = "nvim: opening with default app..", render = "wrapped-compact" })
   else

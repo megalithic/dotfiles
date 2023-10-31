@@ -1,6 +1,9 @@
 if not mega then return end
 if not vim.g.enabled_plugin["lsp"] then return end
 
+local lsp_ok, lspconfig = pcall(require, "lspconfig")
+if not lsp_ok and not lspconfig then return end
+
 local fn = vim.fn
 local api = vim.api
 local lsp = vim.lsp
@@ -9,7 +12,6 @@ local command = mega.command
 local augroup = mega.augroup
 local fmt = string.format
 local diagnostic = vim.diagnostic
-local lspconfig = require("lspconfig")
 local LSP_METHODS = vim.lsp.protocol.Methods
 local servers = require("mega.servers")
 

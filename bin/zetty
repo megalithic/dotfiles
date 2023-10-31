@@ -74,7 +74,7 @@ tmux_command() {
 # )
 meeting() {
   # get the current meeting info:
-  cal_event_info=("${(@f)$(/usr/local/bin/icalBuddy --limitItems 1 -nc -npn -b '' -ic 'Calendar' -ps '|\n     |' -df '' -eed -iep title,attendees -po 'title,attendees' --includeOnlyEventsFromNowOn --excludeAllDayEvents eventsToday+)}")
+  cal_event_info=("${(@f)$(/opt/homebrew/bin/icalBuddy --limitItems 1 -nc -npn -b '' -ic 'Calendar' -ps '|\n     |' -df '' -eed -iep title,attendees -po 'title,attendees' --includeOnlyEventsFromNowOn --excludeAllDayEvents eventsToday+)}")
 
   # assign title
   [ -z "$cal_event_info" ] && title="Meeting Note" || title=$cal_event_info[1]

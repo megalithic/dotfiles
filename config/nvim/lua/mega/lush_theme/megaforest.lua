@@ -697,7 +697,8 @@ local theme = lush(function(injected_functions)
     ---- :help tabline ---------------------------------------------------------
 
     TabLine({ fg = "#abb2bf", bg = C.bg_dark }),
-    TabLineHead({ fg = C.bg1, bg = C.bg2 }),
+    TabLineHead({ fg = C.bg_dark, bg = C.bg_dark }),
+    -- TabLineHead({ fg = C.bg1, bg = C.bg2 }),
     TabLineTabActive({ fg = C.green, bg = C.bg0, gui = "bold" }),
     TabLineWinActive({ fg = C.green, bg = C.bg0, gui = "italic" }),
     TabLineInactive({ fg = C.grey2, bg = C.bg1 }),

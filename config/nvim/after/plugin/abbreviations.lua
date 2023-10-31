@@ -1,5 +1,7 @@
 -- REF:
 -- https://www.instapaper.com/text?u=https%3A%2F%2Fvonheikemen.github.io%2Fdevlog%2Ftools%2Fusing-vim-abbreviations%2F
+if not mega then return end
+if not vim.g.enabled_plugin["bbreviation"] then return end
 
 local M = {}
 

@@ -11,7 +11,7 @@ if vim.loader then vim.loader.enable() end
 -- [ settings ] ----------------------------------------------------------------
 
 vim.g.enabled_plugin = {
-  filetypes = false,
+  abbreviations = true,
   mappings = true,
   autocmds = true,
   megaline = true,
@@ -39,6 +39,8 @@ for plugin, _ in pairs(vim.g.enabled_plugin) do
   if not vim.tbl_contains({ "autocmds", "mappings", "quickfix" }, plugin) and vim.g.started_by_firenvim then
     vim.g.enabled_plugin[plugin] = false
   end
+
+  -- if vim.env.TMUX_POPUP then vim.g.enabled_plugin[plugin] = false end
 end
 
 vim.g.colorscheme = "megaforest"
@@ -55,8 +57,8 @@ vim.g.tester = "vim-test" -- alt: neotest, nvim-test, vim-test
 vim.g.snipper = "vsnip" -- alt: vsnip, luasnip
 vim.g.ts_ignored_langs = {} -- alt: { "svg", "json", "heex", "jsonc" }
 vim.g.formatter_exclusions = { "ElixirLS", "NextLS", "lexical", "nextls" } -- alt: ElixirLS, NextLS, elixirls, nextls, lexical
-vim.g.diagnostic_exclusions = { "ElixirLS", "NextLS", "elixirls", "lexical" } -- alt: ElixirLS, NextLS, elixirls, nextls, lexical
-vim.g.enabled_elixir_ls = { "elixirls", "nextls", "lexical" } -- alt: elixir-tools(ElixirLS, NextLS, credo), elixirls, nextls, lexical
+vim.g.diagnostic_exclusions = { "ElixirLS", "NextLS", "lexical", "nextls" } -- alt: ElixirLS, NextLS, elixirls, nextls, lexical
+vim.g.enabled_elixir_ls = { "elixirls", "nextls" } -- alt: elixir-tools(ElixirLS, NextLS, credo), elixirls, nextls, lexical
 vim.g.disable_autolint = true
 vim.g.disable_autoformat = false
 

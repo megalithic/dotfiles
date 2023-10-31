@@ -30,8 +30,20 @@ return {
   {
     "nvim-treesitter/nvim-treesitter",
     build = ":TSUpdate",
-    -- event = "VeryLazy",
+    event = { "BufReadPost", "BufNewFile" },
     -- cond = #vim.api.nvim_list_uis() > 0,
+    cmd = {
+      "TSUpdate",
+      "TSInstall",
+      "TSInstallInfo",
+      "TSModuleInfo",
+      "TSConfigInfo",
+      "TSUpdateSync",
+    },
+    keys = {
+      { "v", desc = "Increment selection", mode = "x" },
+      { "V", desc = "Shrink selection", mode = "x" },
+    },
     dependencies = {
       "nvim-treesitter/nvim-treesitter-textobjects",
       "RRethy/nvim-treesitter-textsubjects",
@@ -319,12 +331,21 @@ return {
         incremental_selection = {
           enable = true,
           keymaps = {
-            init_selection = "<CR>",
+            init_selection = false,
             node_incremental = "v",
+            scope_incremental = false,
             node_decremental = "V",
-            scope_incremental = "vv", -- increment to the upper scope (as defined in locals.scm)
           },
         },
+        -- incremental_selection = {
+        --   enable = true,
+        --   keymaps = {
+        --     init_selection = "<CR>",
+        --     node_incremental = "v",
+        --     node_decremental = "V",
+        --     scope_incremental = "vv", -- increment to the upper scope (as defined in locals.scm)
+        --   },
+        -- },
         query_linter = {
           enable = true,
           use_virtual_text = true,

@@ -166,6 +166,7 @@ if type nvim >/dev/null 2>&1; then
   alias vim="NVIM_APPNAME=nvim nvim"
   alias folkevim="NVIM_APPNAME=folkevim nvim"
   alias akinvim="NVIM_APPNAME=akinvim nvim"
+  alias kickstart="NVIM_APPNAME=kickstart nvim"
   alias minvim="NVIM_APPNAME=minvim nvim"
   alias v=vim
   alias vi="/usr/local/bin/vim"

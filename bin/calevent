@@ -2,8 +2,7 @@
 
 # REFS: https://github.com/mattpetters/dotfiles/commit/92b4fa766daa1b00858de29ff1f6e33ac6ec296d
 
-
-event=$(/usr/local/bin/icalBuddy -n -li 2 -npn -nc -b "" -ic "Calendar,Personal Calendar" -iep "title,datetime" -ps "|=|" -po "datetime,title" -tf "=%H:%M" -df "" -eed eventsToday+)
+event=$(/opt/homebrew/bin/icalBuddy -n -li 2 -npn -nc -b "" -ic "seth@ternit.com,seth.messer@gmail.com" -iep "title,datetime" -ps "|=|" -po "datetime,title" -tf "=%H:%M" -df "" -eed eventsToday+)
 echo "$event"
 event_time=$(echo $event | awk -F "=" '{print substr($2,0,5)}')
 # current_time=$(date +%R)
@@ -22,12 +21,10 @@ event_title=$(echo $event | awk -F "=" '{print $3}')
 
 output=""
 
-if [[ -z $event ]]
-then
+if [[ -z $event ]]; then
   output=""
 else
-  if [[ -z $TMUX ]]
-  then
+  if [[ -z $TMUX ]]; then
     output="$event_title @ $event_time"
   else
     output="#[fg=red] $event_title @ $event_time #[fg=colour255]⋮ "
@@ -86,7 +83,6 @@ echo $output
 # # log eventDateTime
 # # log eventUID
 # # log eventCalendar
-
 
 # # tell application "Calendar"
 # #     tell calendar eventCalendar

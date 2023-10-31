@@ -387,6 +387,7 @@ return {
   },
   hide_tab_bar_if_only_one_tab = true,
   colors = colors,
+  leader = { key = "Space", mods = "CTRL|SHIFT" },
   keys = {
     -- mimic my kitty bindings for direct interaction with tmux..
     { key = "1", mods = "CTRL", action = act.SendString("\x00\x31") },
@@ -413,6 +414,25 @@ return {
     { key = "v", mods = "CMD", action = act.PasteFrom("Clipboard") },
     { key = "d", mods = "CMD|CTRL", action = act.ShowDebugOverlay },
     { key = "n", mods = "CMD", action = act.SpawnTab("CurrentPaneDomain") },
+    {
+      key = "n",
+      mods = "LEADER",
+      action = w.action.SpawnCommandInNewWindow({
+        domain = "CurrentPaneDomain",
+        args = { "zsh", "-ic", "nvim", "-c", "'+Neorg journal today'" },
+        position = {
+          x = 600,
+          y = 400,
+          -- Optional origin to use for x and y.
+          -- Possible values:
+          -- * "ScreenCoordinateSystem" (this is the default)
+          -- * "MainScreen" (the primary or main screen)
+          -- * "ActiveScreen" (whichever screen hosts the active/focused window)
+          -- * {Named="HDMI-1"} - uses a screen by name. See wezterm.gui.screens()
+          origin = "ActiveScreen",
+        },
+      }),
+    },
     {
       key = "o",
       mods = "CMD|CTRL",

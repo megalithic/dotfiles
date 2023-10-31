@@ -43,8 +43,13 @@ vim.o.eadirection = "hor"
 -- do not use split or vsplit to ensure we don't open any new windows
 vim.o.switchbuf = "useopen,uselast"
 vim.opt.fillchars = {
-  vert = "▕", -- alternatives │
   horiz = "━",
+  -- horizup = "┻",
+  -- horizdown = "┳",
+  vert = "▕", -- alternatives │
+  -- vertleft = "┫",
+  -- vertright = "┣",
+  -- verthoriz = "╋",
   --   horizup   = '┻',
   --   horizdown = '┳',
   --   vert      = '┃',

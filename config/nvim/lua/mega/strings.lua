@@ -5,6 +5,8 @@
 -- like the tabline, statusline, winbar and statuscolumn. Since there are so many things that work
 -- this way one small library to create these strings is useful.
 
+if vim.env.TMUX_POPUP then return end
+
 local api, L = vim.api, vim.log.levels
 local strwidth, fmt, falsy = api.nvim_strwidth, string.format, mega.falsy
 

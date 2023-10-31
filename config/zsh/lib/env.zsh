@@ -211,7 +211,7 @@ case "$(uname)" in
     export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=FALSE
     export HOMEBREW_NO_INSTALL_FROM_API=0
     if which gh >/dev/null; then
-      export HOMEBREW_GITHUB_API_TOKEN="$(gh auth token)"
+      export HOMEBREW_GITHUB_API_TOKEN="$(gh auth token &>/dev/null)"
     fi
     export BREW_PATH="$HOMEBREW_PREFIX/Homebrew"
     export BREW_CASK_PATH="/opt/homebrew-cask/Caskroom"

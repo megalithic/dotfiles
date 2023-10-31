@@ -156,42 +156,73 @@ return {
       { "<leader>mm", "<Cmd>MarksListBuf<CR>", desc = "marks: list buffer marks" },
       { "<leader>mg", "<Cmd>MarksListBuf<CR>", desc = "marks: list global marks" },
       { "<leader>mb", "<Cmd>MarksListBuf<CR>", desc = "marks: list bookmark marks" },
+      { "m/", "<cmd>MarksListAll<CR>", desc = "Marks from all opened buffers" },
     },
-    config = function()
-      -- as.highlight.plugin("marks", {
-      --   { MarkSignHL = { link = "Directory" } },
-      --   { MarkSignNumHL = { link = "Directory" } },
-      -- })
-
-      require("marks").setup({
-        force_write_shada = false, -- This can cause data loss
-        excluded_filetypes = {
-          "DressingInput",
-          "gitcommit",
-          "NeogitCommitMessage",
-          "NeogitNotification",
-          "NeogitStatus",
-          "NeogitStatus",
-          "NvimTree",
-          "Outline",
-          "OverseerForm",
-          "dropbar_menu",
-          "lazy",
-          "lspinfo",
-          "megaterm",
-          "neo-tree",
-          "neo-tree-popup",
-          "noice",
-          "notify",
-          "null-ls-info",
-          "registers",
-          "toggleterm",
-          "toggleterm",
-        },
-        bookmark_0 = { sign = "⚑", virt_text = "" },
-        mappings = { annotate = "m?" },
-      })
-    end,
+    opts = {
+      sign_priority = { lower = 10, upper = 15, builtin = 8, bookmark = 20 },
+      bookmark_1 = { sign = "󰈼" }, -- ⚐ ⚑ 󰈻 󰈼 󰈽 󰈾 󰈿 󰉀
+      mappings = {
+        annotate = "m<Space>",
+      },
+      excluded_filetypes = {
+        "DressingInput",
+        "gitcommit",
+        "NeogitCommitMessage",
+        "NeogitNotification",
+        "NeogitStatus",
+        "NeogitStatus",
+        "NvimTree",
+        "Outline",
+        "OverseerForm",
+        "dropbar_menu",
+        "lazy",
+        "lspinfo",
+        "megaterm",
+        "neo-tree",
+        "neo-tree-popup",
+        "noice",
+        "notify",
+        "null-ls-info",
+        "registers",
+        "toggleterm",
+        "toggleterm",
+      },
+    },
+    -- config = function()
+    --   -- as.highlight.plugin("marks", {
+    --   --   { MarkSignHL = { link = "Directory" } },
+    --   --   { MarkSignNumHL = { link = "Directory" } },
+    --   -- })
+    --
+    --   require("marks").setup({
+    --     force_write_shada = false, -- This can cause data loss
+    --     excluded_filetypes = {
+    --       "DressingInput",
+    --       "gitcommit",
+    --       "NeogitCommitMessage",
+    --       "NeogitNotification",
+    --       "NeogitStatus",
+    --       "NeogitStatus",
+    --       "NvimTree",
+    --       "Outline",
+    --       "OverseerForm",
+    --       "dropbar_menu",
+    --       "lazy",
+    --       "lspinfo",
+    --       "megaterm",
+    --       "neo-tree",
+    --       "neo-tree-popup",
+    --       "noice",
+    --       "notify",
+    --       "null-ls-info",
+    --       "registers",
+    --       "toggleterm",
+    --       "toggleterm",
+    --     },
+    --     bookmark_0 = { sign = "⚑", virt_text = "" },
+    --     mappings = { annotate = "m?" },
+    --   })
+    -- end,
   },
   {
     "stevearc/overseer.nvim", -- Task runner and job management
