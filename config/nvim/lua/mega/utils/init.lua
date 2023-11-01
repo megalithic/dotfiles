@@ -1,74 +1,9 @@
-local vcmd, lsp, fn = vim.cmd, vim.lsp, vim.fn
+local vcmd, fn = vim.cmd, vim.fn
 local fmt = string.format
-local hl_ok, H = mega.require("mega.utils.highlights", { silent = true })
-local ts_utils = require("nvim-treesitter.ts_utils")
 
 local M = {
-  ext = {
-    wezterm = {},
-  },
-  lsp = {},
   hl = {},
 }
-local function fileicon()
-  local name = fn.bufname()
-  local icon, hl
-  local loaded, devicons = mega.require("nvim-web-devicons")
-  if loaded then
-    icon, hl = devicons.get_icon(name, fn.fnamemodify(name, ":e"), { default = true })
-  end
-  return icon, hl
-end
-
-function M.format_markdown(contents)
-  if type(contents) ~= "table" or not vim.tbl_islist(contents) then contents = { contents } end
-
-  local parts = {}
-
-  for _, content in ipairs(contents) do
-    if type(content) == "string" then
-      table.insert(parts, ("```\n%s\n```"):format(content))
-    elseif content.language then
-      table.insert(parts, ("```%s\n%s\n```"):format(content.language, content.value))
-    elseif content.kind == "markdown" then
-      table.insert(parts, content.value)
-    elseif content.kind == "plaintext" then
-      table.insert(parts, ("```\n%s\n```"):format(content.value))
-    end
-  end
-
-  return vim.split(table.concat(parts, "\n"), "\n")
-end
-
--- REF:
--- https://www.reddit.com/r/neovim/comments/xn1q75/comment/iprdrpr
--- https://github.com/folke/zen-mode.nvim/pull/61
--- https://github.com/wez/wezterm/discussions/3211
--- https://github.com/wez/wezterm/issues/2979#issuecomment-1447519267
-function M.ext.wezterm.toggle_screen_share_mode(enabled)
-  local mode = enabled and "on" or "off"
-  -- fn.jobstart(fmt("wezterm-cli SCREEN_SHARE_MODE %s", mode))
-
-  local stdout = vim.loop.new_tty(1, false)
-  if vim.env.TMUX then
-    -- just wezterm: \033]1337;SetUserVar=%s=%s\007
-    -- from zen-mode example: \x1b]1337;SetUserVar=%s=%s\b
-    -- \033Ptmux;\033\033]1337;SetUserVar=%s=%s\007\033\\
-    stdout:write(
-      ("\033Ptmux;\033\033]1337;SetUserVar=%s=%s\007\033\\b"):format(
-        "SCREEN_SHARE_MODE",
-        vim.fn.system({ "base64" }, tostring(mode))
-      )
-    )
-    dd("doing a thing with stdout in tmux")
-    -- stdout:write(('\x1b]1337;SetUserVar=%s=%s\b'):format('SCREEN_SHARE_MODE', vim.fn.system({ 'base64' }, tostring(enabled))))
-    -- else
-    --   stdout:write(
-    --     ("\x1b]1337;SetUserVar=%s=%s\b"):format("SCREEN_SHARE_MODE", vim.fn.system({ "base64" }, tostring(mode)))
-    --   )
-  end
-  -- vim.cmd([[redraw]])
-end
 
 function M.check_back_space()
   local col = fn.col(".") - 1
@@ -344,6 +279,7 @@ function M.wrap_range(bufnr, range, before, after)
 end
 
 function M.wrap_cursor_node(before, after)
+  local ts_utils = require("nvim-treesitter.ts_utils")
   local winnr = 0
   local node = ts_utils.get_node_at_cursor(winnr)
 
@@ -369,6 +305,268 @@ function M.wrap_selected_nodes(before, after)
   local range = { start_range[1], start_range[2], end_range[3], end_range[4] }
 
   M.wrap_range(bufnr, range, before, after)
+end
+
+--- Convert a list or map of items into a value by iterating all it's fields and transforming
+--- them with a callback
+---@generic T : table
+---@param callback fun(T, T, key: string | number): T
+---@param list T[]
+---@param accum T
+---@return T
+function M.fold(callback, list, accum)
+  for k, v in pairs(list) do
+    accum = callback(accum, v, k)
+    assert(accum ~= nil, "The accumulator must be returned on each iteration")
+  end
+  return accum
+end
+
+---Find an item in a list
+---@generic T
+---@param haystack T[]
+---@param matcher fun(arg: T):boolean
+---@return T
+function M.find(haystack, matcher)
+  local found
+  for _, needle in ipairs(haystack) do
+    if matcher(needle) then
+      found = needle
+      break
+    end
+  end
+  return found
+end
+
+function M.tlen(t)
+  local len = 0
+  for _ in pairs(t) do
+    len = len + 1
+  end
+  return len
+end
+
+--- automatically clear commandline messages after a few seconds delay
+--- source: http://unix.stackexchange.com/a/613645
+---@return function
+function M.clear_commandline()
+  --- Track the timer object and stop any previous timers before setting
+  --- a new one so that each change waits for 10secs and that 10secs is
+  --- deferred each time
+  -- local timer
+  -- return function()
+  --   if timer then timer:stop() end
+  --   timer = vim.defer_fn(function()
+  --     if fn.mode() == "n" then vim.cmd([[echon '']]) end
+  --   end, 2500)
+  -- end
+end
+
+function M.is_chonky(bufnr, filepath)
+  local max_filesize = 50 * 1024 -- 50 KB
+  local max_length = 5000
+
+  bufnr = bufnr or vim.api.nvim_get_current_buf()
+  filepath = filepath or vim.api.nvim_buf_get_name(bufnr)
+  local is_too_long = vim.api.nvim_buf_line_count(bufnr) >= max_length
+  local is_too_large = false
+
+  local ok, stats = pcall(vim.loop.fs_stat, filepath)
+  if ok and stats and stats.size > max_filesize then is_too_large = true end
+
+  return (is_too_long or is_too_large)
+end
+
+function M.exec(c, bool)
+  bool = bool or true
+  vim.api.nvim_exec(c, bool)
+end
+
+function M.has(feature) return fn.has(feature) > 0 end
+
+function M.has_plugin(plugin) return require("lazy.core.config").spec.plugins[plugin] ~= nil end
+
+function M.executable(e) return fn.executable(e) > 0 end
+--
+
+-- https://www.reddit.com/r/neovim/comments/nrz9hp/can_i_close_all_floating_windows_without_closing/h0lg5m1/
+function M.close_float_wins()
+  for _, win in ipairs(vim.api.nvim_list_wins()) do
+    if vim.api.nvim_win_is_valid(win) then
+      local config = vim.api.nvim_win_get_config(win)
+      if config.relative ~= "" then vim.api.nvim_win_close(win, false) end
+    end
+  end
+end
+
+function M.save_and_exec()
+  if vim.bo.filetype == "vim" then
+    vcmd("silent! write")
+    vcmd("source %")
+    vim.notify("wrote and sourced vim file..", vim.log.levels.INFO, { title = "nvim" })
+  elseif vim.bo.filetype == "lua" then
+    vcmd("silent! write")
+    vcmd("luafile %")
+    vim.notify("wrote and sourced lua file..", vim.log.levels.INFO, { title = "nvim" })
+  end
+end
+
+---Check whether or not the location or quickfix list is open
+---@return boolean
+function M.is_vim_list_open()
+  for _, win in ipairs(api.nvim_list_wins()) do
+    local buf = api.nvim_win_get_buf(win)
+    local location_list = fn.getloclist(0, { filewinid = 0 })
+    local is_loc_list = location_list.filewinid > 0
+    if vim.bo[buf].filetype == "qf" or is_loc_list then return true end
+  end
+  return false
+end
+
+---Determine if a value of any type is empty
+---@param item any
+---@return boolean?
+function M.falsy(item)
+  if not item then return true end
+  local item_type = type(item)
+  if item_type == "boolean" then return not item end
+  if item_type == "string" then return item == "" end
+  if item_type == "number" then return item <= 0 end
+  if item_type == "table" then return vim.tbl_isempty(item) end
+  return item ~= nil
+end
+
+---Determine if a value of any type is empty
+---@param item any
+---@return boolean
+function M.empty(item)
+  if not item then return true end
+  local item_type = type(item)
+  if item_type == "string" then
+    return item == ""
+  elseif item_type == "number" then
+    return item <= 0
+  elseif item_type == "table" then
+    return vim.tbl_isempty(item)
+  else
+    return true
+  end
+end
+
+function M.showCursorHighlights() vim.cmd("TSHighlightCapturesUnderCursor") end
+
+function M.debounce(ms, fn)
+  local timer = vim.loop.new_timer()
+  return function(...)
+    local argv = { ... }
+    timer:start(ms, 0, function()
+      timer:stop()
+      vim.schedule_wrap(fn)(unpack(argv))
+    end)
+  end
+end
+
+function M.throttle(ms, fn)
+  local timer = vim.loop.new_timer()
+  local running = false
+  return function(...)
+    if not running then
+      local argv = { ... }
+      local argc = select("#", ...)
+
+      timer:start(ms, 0, function()
+        running = false
+        pcall(vim.schedule_wrap(fn), unpack(argv, 1, argc))
+      end)
+      running = true
+    end
+  end
+end
+
+--- Debounces a function on the trailing edge. Automatically
+--- `schedule_wrap()`s.
+---
+-- @param fn (function) Function to debounce
+-- @param timeout (number) Timeout in ms
+-- @param first (boolean, optional) Whether to use the arguments of the first
+---call to `fn` within the timeframe. Default: Use arguments of the last call.
+-- @returns (function, timer) Debounced function and timer. Remember to call
+---`timer:close()` at the end or you will leak memory!
+function M.debounce_trailing(func, ms, first)
+  local timer = vim.loop.new_timer()
+  local wrapped_fn
+
+  if not first then
+    function wrapped_fn(...)
+      local argv = { ... }
+      local argc = select("#", ...)
+
+      timer:start(ms, 0, function() pcall(vim.schedule_wrap(func), unpack(argv, 1, argc)) end)
+    end
+  else
+    local argv, argc
+    function wrapped_fn(...)
+      argv = argv or { ... }
+      argc = argc or select("#", ...)
+
+      timer:start(ms, 0, function() pcall(vim.schedule_wrap(func), unpack(argv, 1, argc)) end)
+    end
+  end
+  return wrapped_fn, timer
+end
+
+function M.flash_cursorline()
+  -- local cursorline_state = vim.opt.cursorline:get()
+  vim.opt.cursorline = true
+  vim.cmd([[hi CursorLine guifg=#FFFFFF guibg=#FF9509]])
+  vim.fn.timer_start(200, function()
+    vim.cmd([[hi CursorLine guifg=NONE guibg=NONE]])
+    vim.opt.cursorline = false
+  end)
+end
+
+function M.starts_with(haystack, needle) return type(haystack) == "string" and haystack:sub(1, needle:len()) == needle end
+
+function M.clear_ui()
+  -- vcmd([[nnoremap <silent><ESC> :syntax sync fromstart<CR>:nohlsearch<CR>:redrawstatus!<CR><ESC> ]])
+  vim.cmd("nohlsearch")
+  vim.cmd("diffupdate")
+  vim.cmd("syntax sync fromstart")
+  M.close_float_wins()
+  vim.cmd("echo ''")
+  if vim.g.enabled_plugin["cursorline"] then mega.blink_cursorline() end
+
+  do
+    local ok, mj = pcall(require, "mini.jump")
+    if ok then mj.stop_jumping() end
+  end
+
+  do
+    local ok, n = pcall(require, "notify")
+    if ok then n.dismiss() end
+  end
+
+  M.clear_commandline()
+end
+
+--- Utility function to toggle the location or the quickfix list
+---@param list_type '"quickfix"' | '"location"'
+---@return nil
+function M.toggle_list(list_type)
+  local is_location_target = list_type == "location"
+  local prefix = is_location_target and "l" or "c"
+  local L = vim.log.levels
+  local is_open = M.is_vim_list_open()
+  if is_open then return fn.execute(prefix .. "close") end
+  local list = is_location_target and fn.getloclist(0) or fn.getqflist()
+  if vim.tbl_isempty(list) then
+    local msg_prefix = (is_location_target and "Location" or "QuickFix")
+    return vim.notify(msg_prefix .. " List is Empty.", L.WARN)
+  end
+
+  local winnr = fn.winnr()
+  fn.execute(prefix .. "open")
+  if fn.winnr() ~= winnr then vim.cmd("wincmd p") end
 end
 
 return M

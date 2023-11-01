@@ -1,6 +1,8 @@
 if not mega then return end
 if not vim.g.enabled_plugin["repls"] then return end
 
+local U = require("mega.utils")
+
 mega.command("TermElixir", function(args)
   -- local pre_cmd = ""
   local cmd = "iex"
@@ -9,7 +11,7 @@ mega.command("TermElixir", function(args)
 
   if args.bang then
     cmd = fmt("elixir %s", vim.fn.expand("%"))
-  elseif require("mega.utils").root_has_file("mix.exs") then
+  elseif U.root_has_file("mix.exs") then
     cmd = "iex -S mix"
   end
 
@@ -28,11 +30,11 @@ end, { bang = true })
 mega.command("TermRuby", function(args)
   -- local pre_cmd = ""
   local cmd = ""
-  -- if require("mega.utils").root_has_file("Deskfile") then pre_cmd = "eval $(desk load)" end
+  -- if U.root_has_file("Deskfile") then pre_cmd = "eval $(desk load)" end
 
   if args.bang then
     cmd = fmt("ruby %s", vim.fn.expand("%"))
-  elseif require("mega.utils").root_has_file("Gemfile") then
+  elseif U.root_has_file("Gemfile") then
     cmd = "rails c"
   else
     cmd = "irb"

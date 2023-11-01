@@ -1,72 +1,28 @@
 local M = {}
-
-function M.require(mod)
-  local ok, ret = M.try(require, mod)
-  return ok and ret
-end
-
-function M.try(fn, ...)
-  local args = { ... }
-
-  return xpcall(function() return fn(unpack(args)) end, function(err)
-    local lines = {}
-    table.insert(lines, err)
-    table.insert(lines, debug.traceback("", 3))
-
-    M.error(table.concat(lines, "\n"))
-    return err
-  end)
-end
-
--- ---A thin wrapper around vim.notify to add packer details to the message
--- ---@param msg string
-function M.notify(msg, level) vim.notify(msg, level, { title = "lazy" }) end
-
-function M.conf(name)
-  return function()
-    -- P(name)
-  end
-end
+--
+-- function M.require(mod)
+--   local ok, ret = M.try(require, mod)
+--   return ok and ret
+-- end
+--
+-- function M.try(fn, ...)
+--   local args = { ... }
+--
+--   return xpcall(function() return fn(unpack(args)) end, function(err)
+--     local lines = {}
+--     table.insert(lines, err)
+--     table.insert(lines, debug.traceback("", 3))
+--
+--     M.error(table.concat(lines, "\n"))
+--     return err
+--   end)
+-- end
+--
+-- -- ---A thin wrapper around vim.notify to add packer details to the message
+-- -- ---@param msg string
+-- function M.notify(msg, level) vim.notify(msg, level, { title = "lazy" }) end
 
 function M.setup()
-  -- REF: nvim --headless "+Lazy! sync" +qa
-  --   mega.augroup("LazySetupInit", {
-  --     {
-  --       event = { "BufWritePost" },
-  --       pattern = { "*/mega/plugins/*.lua", "*/mega/plugs/*.lua", "*/mega/lsp/servers.lua" },
-  --       desc = "setup and reloaded",
-  --       command = mega.reload,
-  --     },
-  --     {
-  --       event = { "User" },
-  --       pattern = { "VimrcReloaded" },
-  --       desc = "setup and reloaded",
-  --       command = mega.reload,
-  --     },
-  --     -- {
-  --     --   event = { "User" },
-  --     --   pattern = { "PackerCompileDone" },
-  --     --   command = function()
-  --     --     if not vim.g.packer_compiled_loaded and vim.loop.fs_stat(vim.g.packer_compiled_path) then
-  --     --       vim.cmd.source(vim.g.packer_compiled_path)
-  --     --       vim.g.packer_compiled_loaded = true
-  --     --     end
-  --     --     M.notify("compilation finished")
-  --     --   end,
-  --     -- },
-  --     -- {
-  --     --   event = { "User" },
-  --     --   pattern = { "LazyDone" },
-  --     --   command = function()
-  --     --     M.notify("updates finished")
-  --     --     vim.defer_fn(function()
-  --     --       if vim.env.PACKER_NON_INTERACTIVE then vim.cmd("quitall!") end
-  --     --     end, 100)
-  --     --   end,
-  --     -- },
-  --   })
-
-  -- bootstrap from github
   local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
   if not vim.loop.fs_stat(lazypath) then
     vim.fn.system({
@@ -134,7 +90,7 @@ function M.setup()
     },
     ui = {
       custom_keys = {
-        ["<localleader>d"] = function(plugin) dd(plugin) end,
+        ["<localleader>d"] = function(plugin) print(vim.inspect(plugin)) end,
       },
     },
   })

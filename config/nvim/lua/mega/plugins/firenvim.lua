@@ -63,7 +63,7 @@ local M = {
     local function set_options(bufnr)
       bufnr = bufnr or 0
       -- disable headlines (until we update colours for forestbones)
-      local ok_headlines, headlines = mega.require("headlines")
+      local ok_headlines, headlines = pcall(require, "headlines")
       if ok_headlines then
         headlines.setup({
           markdown = {
@@ -177,28 +177,16 @@ local M = {
         cnoremap <D-v> <C-R><C-O>+
       ]])
 
-      require("mega.globals").nnoremap(
+      _G.mega.nnoremap(
         "<Esc>",
         "<cmd>wall | call firenvim#hide_frame() | call firenvim#press_keys('<LT>Esc>') | call firenvim#focus_page()<CR>"
       )
-      require("mega.globals").nnoremap(
-        "<C-z>",
-        "<cmd>wall | call firenvim#hide_frame() | call firenvim#focus_input()<CR>"
-      )
-      require("mega.globals").inoremap(
-        "<C-c>",
-        "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR><Esc>norm! ggdGa<CR>"
-      )
-      require("mega.globals").nnoremap(
-        "<C-c>",
-        "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR><Esc>norm! ggdGa<CR>"
-      )
-      require("mega.globals").nnoremap(
-        "q",
-        "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR><Esc>norm! ggdGa<CR>"
-      )
+      _G.mega.nnoremap("<C-z>", "<cmd>wall | call firenvim#hide_frame() | call firenvim#focus_input()<CR>")
+      _G.mega.inoremap("<C-c>", "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR><Esc>norm! ggdGa<CR>")
+      _G.mega.nnoremap("<C-c>", "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR><Esc>norm! ggdGa<CR>")
+      _G.mega.nnoremap("q", "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR><Esc>norm! ggdGa<CR>")
 
-      -- require("mega.globals").inoremap("<D-r>", function()
+      -- _G.mega.inoremap("<D-r>", function()
       --   -- local appName = vim.cmd([[!hs -c "hs.application.frontmostApplication():name()"]])
       --   -- print(appName)
       --
@@ -249,7 +237,7 @@ local M = {
       setup_write_autocmd(bufnr)
     end
 
-    require("mega.globals").augroup("Firenvim", {
+    _G.mega.augroup("Firenvim", {
       {
         event = { "UIEnter" },
         once = true,

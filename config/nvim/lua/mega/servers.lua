@@ -1,5 +1,5 @@
 local fn, lsp = vim.fn, vim.lsp
-local ok_lsp = mega.require("lspconfig")
+local ok_lsp = pcall(require, "lspconfig")
 if not ok_lsp then return end
 
 local M = {}

@@ -123,7 +123,7 @@ return {
             renamed = icons.git.rename,
             untracked = "",
             ignored = "",
-            unstaged = "",
+            unstaged = icons.git.unstaged,
             staged = "",
             conflict = "",
           },

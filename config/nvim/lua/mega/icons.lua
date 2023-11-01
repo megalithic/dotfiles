@@ -5,10 +5,10 @@ return {
     blank = { " ", " ", " ", " ", " ", " ", " ", " " },
   },
   lsp = {
-    error = "", -- alts: 
-    warn = "󰔷", -- alts: 
-    info = "", -- alts: 󰋼  ℹ 󰙎 
-    hint = "", -- alts: 󰌶
+    error = "", -- alts: 󰬌 
+    warn = "󰔷", -- alts: 󰬞 󰔷 
+    info = "󰬐", -- alts: 󱂈 󰋼  󰬐 󰰃    
+    hint = "", -- alts:  󰬏 󰰀  󰌶 󰰂 󰰂 󰰁 󰫵 󰋢 
     ok = "✓", -- alts: ✓
     -- spinner_frames = { "▪", "■", "□", "▫" },
     -- spinner_frames = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" },
@@ -25,9 +25,9 @@ return {
       -- Constant = "", -- Constant
       Constructor = "",
       -- Constructor = "", -- Constructor
-      Enum = "",
+      Enum = "", -- alts: 
       -- Enum = "", -- Enum -- alts: 了
-      EnumMember = "",
+      EnumMember = "", -- alts: 
       -- EnumMember = "", -- EnumMember
       Event = "",
       Field = "󰜢",
@@ -43,9 +43,9 @@ return {
       Method = "",
       Module = "",
       Namespace = "",
-      Null = "󰟢", --alts: 󰱥󰟢ﳠ
-      Number = "",
-      Object = "",
+      Null = "󰟢", -- alts: 󰱥󰟢
+      Number = "󰎠", -- alts: 
+      Object = "",
       -- Operator = "\u{03a8}", -- Operator
       Operator = "󰆕",
       Package = "",
@@ -53,7 +53,7 @@ return {
       -- Property = "", -- Property
       Reference = "󰈇",
       Snippet = "",
-      String = "", -- alts: 
+      String = "", -- alts:  󱀍 󰀬 󱌯
       Struct = "󰙅",
       Text = "󰉿",
       TypeParameter = "",
@@ -188,6 +188,7 @@ return {
     diff = "",
     repo = "",
     symbol = "", -- alts:  
+    unstaged = "󰛄",
   },
   documents = {
     file = "",
@@ -205,7 +206,7 @@ return {
   type = {
     array = "",
     number = "",
-    object = "",
+    object = "",
     null = "[]",
     float = "",
   },

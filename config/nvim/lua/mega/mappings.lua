@@ -26,8 +26,8 @@
 if not mega then return end
 if not vim.g.enabled_plugin["mappings"] then return end
 
+local U = require("mega.utils")
 local fn = vim.fn
-local exec = mega.exec
 local api = vim.api
 local map = vim.keymap.set
 -- NOTE: all convenience mode mappers are on the _G global; so no local assigns needed
@@ -37,53 +37,6 @@ local map = vim.keymap.set
 -- deal with word wrap nicely
 vim.keymap.set("n", "k", "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = true })
 vim.keymap.set("n", "j", "v:count == 0 ? 'gj' : 'j'", { expr = true, silent = true })
-
--- go-to split (also, if in kitty, see nvim-kitty-navigator)
--- nnoremap("<C-h>", "<cmd>wincmd h<CR>", "split: go left")
--- nnoremap("<C-j>", "<cmd>wincmd j<CR>", "split: go down")
--- nnoremap("<C-k>", "<cmd>wincmd k<CR>", "split: go up")
--- nnoremap("<C-l>", "<cmd>wincmd l<CR>", "split: go right")
-
--- mega.augroup("AddTerminalMappings", {
---   event = { "TermOpen", "TermEnter" },
---   pattern = { "term://*" },
---   command = function()
---     -- if vim.tbl_contains({ "", "toggleterm", "megaterm" }, vim.bo.filetype) then
---     dd("terminal open -> mapping..")
---     local opts = { silent = false, buffer = 0 }
---     tnoremap("<esc>", [[<C-\><C-n>]], opts)
---     tnoremap("<C-h>", "<C-\\><C-N><C-w>h", opts)
---     tnoremap("<C-j>", "<C-\\><C-N><C-w>j", opts)
---     tnoremap("<C-k>", "<C-\\><C-N><C-w>k", opts)
---     tnoremap("<C-l>", "<C-\\><C-N><C-w>l", opts)
---
---     -- local opts = { silent = false, buffer = 0 }
---     -- tmap("<esc>", [[<C-\><C-n>]], opts)
---     -- tmap("jk", [[<C-\><C-n>]], opts)
---     -- tmap("<C-h>", "<Cmd>wincmd h<CR>", opts)
---     -- tmap("<C-j>", function() vim.cmd("wincmd j") end, opts)
---     -- vim.keymap.set("t", "<C-k>", function()
---     --   print("<C-k>'ing")
---     --   vim.api.nvim_feedkeys(vim.keycode([[<C-\><C-n>]], true, false, true), "t", true)
---     --   vim.cmd("wincmd k")
---     -- end, opts)
---     -- tnoremap("<C-l>", "<Cmd>wincmd l<CR>", opts)
---     -- end
---     -- if vim.bo.filetype == "" or vim.bo.filetype == "toggleterm" or vim.bo.filetype == "megaterm" then
---     --   local opts = { silent = false, buffer = 0 }
---     --   tnoremap("<esc>", [[<C-\><C-n>]], opts)
---     --   tnoremap("jk", [[<C-\><C-n>]], opts)
---     --   tnoremap("<C-h>", "<Cmd>wincmd h<CR>", opts)
---     --   tnoremap("<C-j>", "<Cmd>wincmd j<CR>", opts)
---     --   tnoremap("<C-k>", "<Cmd>wincmd k<CR>", opts)
---     --   tnoremap("<C-l>", "<Cmd>wincmd l<CR>", opts)
---     --   tnoremap("]t", "<Cmd>tablast<CR>")
---     --   tnoremap("[t", "<Cmd>tabnext<CR>")
---     --   tnoremap("<S-Tab>", "<Cmd>bprev<CR>")
---     --   tnoremap("<leader><Tab>", "<Cmd>close \\| :bnext<cr>")
---     -- end
---   end,
--- })
 
 -- jump to tab
 for i = 0, 9 do
@@ -100,7 +53,7 @@ nmap("gb", string.format("<cmd>ls<CR>:b<space>%s", vim.keycode("<tab>")), "curre
 nmap("J", "<nop>")
 
 -- nmap("zs", mega.showCursorHighlights, "show syntax highlights under cursor")
-nmap("zS", mega.showCursorHighlights, "show syntax highlights under cursor")
+nmap("zS", U.showCursorHighlights, "show syntax highlights under cursor")
 nnoremap("zs", "<cmd>Inspect<cr>", "Inspect the cursor position")
 
 nmap("<localleader>yg", "<cmd>CopyBranch<cr>", { desc = "Copy current git branch" })
@@ -109,29 +62,9 @@ nmap("<localleader>ygh", "<cmd>CopyBranch<cr>", { desc = "Copy current git branc
 nnoremap("<localleader>f", "<cmd>LspFormatWrite<cr>", "run lsp formatter")
 -- nnoremap("<localleader>F", "<cmd>LspFormat<cr>", "run lsp formatter")
 
--- -- These create newlines like o and O but stay in normal mode
--- map.mode_group('n', {
---   { 'zj', 'o<Esc>k' },
---   { 'zk', 'O<Esc>j' },
--- }, { silent = true })
---
--- -- Move lines in visual mode
--- map.mode_group('v', {
---   { 'J', ":m '>+1<cr>gv=gv" },
---   { 'K', ":m '<-2<cr>gv=gv" },
--- }, { noremap = true })
---
--- -- better undo breakpoints
--- map.mode_group('i', {
---   { ',', ',<c-g>u' },
---   { '.', '.<c-g>u' },
---   { '!', '!<c-g>u' },
---   { '?', '?<c-g>u' },
--- }, { noremap = true })
-
 -- make the tab key match bracket pairs
-exec("silent! unmap [%", true)
-exec("silent! unmap ]%", true)
+vim.cmd("silent! unmap [%", true)
+vim.cmd("silent! unmap ]%", true)
 
 map(
   { "n", "o", "s", "v", "x" },
@@ -139,12 +72,6 @@ map(
   "%",
   { desc = "jump to opening/closing delimiter", remap = true, silent = false }
 )
--- nmap("<Tab>", "%")
--- nnoremap("<Tab>", "%")
--- smap("<Tab>", "%")
--- vmap("<Tab>", "%")
--- xmap("<Tab>", "%")
--- omap("<Tab>", "%")
 
 -- https://github.com/tpope/vim-rsi/blob/master/plugin/rsi.vim
 -- c-a / c-e everywhere - RSI.vim provides these
@@ -222,7 +149,7 @@ nnoremap("<leader><CR>", [[empty(&buftype) ? '@@' : '<CR>']], { expr = true })
 
 -- [overrides/remaps mappings] ---------------------------------------------------------
 
-exec([[
+vim.cmd([[
 " -- ( overrides ) --
 " Help
 noremap <C-]> K
@@ -272,32 +199,13 @@ nnoremap("g>", [[<cmd>set nomore<bar>40messages<bar>set more<CR>]], {
   desc = "show message history",
 })
 
--- search and replace:
--- NOTE: see tpope/vim-abolish entry in plugins
--- nnoremap("<C-s>", [[:%s/\<<C-r>=expand("<cword>")<CR>\>/]], {
---   silent = false,
---   desc = "replace word under the cursor (file)",
--- })
--- nnoremap("<C-s>", [[:s/\<<C-r>=expand("<cword>")<CR>\>/]], {
---   silent = false,
---   desc = "replace word under the cursor (line)",
--- })
--- -- vnoremap("<C-r>", [["zy:%s/<C-r><C-o>"/]], {
--- --   silent = false,
--- --   desc = "replace word under the cursor (visual)",
--- -- })
--- vnoremap("<C-r>", [["hy:%Subvert/<C-r>h//gc<left><left><left>]], {
---   silent = false,
---   desc = "replace word under the cursor (line)",
--- })
-
 -- Clear UI state via escape:
 -- - Clear search highlight
 -- - Clear command-line
 -- - Close floating windows
 -- nmap([[<Esc>]], [[<Nop>]])
 nnoremap("<esc>", function()
-  mega.clear_ui()
+  U.clear_ui()
   vim.api.nvim_feedkeys(vim.keycode("<Esc>"), "n", true)
 end, { silent = true, desc = "Clear UI" })
 
@@ -452,7 +360,7 @@ nmap("<leader>S", "zg") -- Add word under cursor to dictionary
 nnoremap("<leader>R", "<cmd>cfdo %s/<C-r>s//g<bar>update<cr>")
 
 -- # save and execute vim/lua file
-nmap("<leader>x", mega.save_and_exec)
+nmap("<leader>x", U.save_and_exec)
 
 -- # equal/golden-ratio window resizing
 nmap("gw", function() mega.resize_windows() end, { desc = "window: resize splits (golden-ratio)" })
@@ -523,25 +431,5 @@ xnoremap(
 ---------------------------------------------------------------------------------
 -- Toggle list
 ---------------------------------------------------------------------------------
---- Utility function to toggle the location or the quickfix list
----@param list_type '"quickfix"' | '"location"'
----@return nil
-function mega.toggle_list(list_type)
-  local is_location_target = list_type == "location"
-  local prefix = is_location_target and "l" or "c"
-  local L = vim.log.levels
-  local is_open = mega.is_vim_list_open()
-  if is_open then return fn.execute(prefix .. "close") end
-  local list = is_location_target and fn.getloclist(0) or fn.getqflist()
-  if vim.tbl_isempty(list) then
-    local msg_prefix = (is_location_target and "Location" or "QuickFix")
-    return vim.notify(msg_prefix .. " List is Empty.", L.WARN)
-  end
-
-  local winnr = fn.winnr()
-  fn.execute(prefix .. "open")
-  if fn.winnr() ~= winnr then vim.cmd("wincmd p") end
-end
-
-nnoremap("<leader>llq", function() mega.toggle_list("quickfix") end, "lists: toggle quickfix")
-nnoremap("<leader>llc", function() mega.toggle_list("location") end, "lists: toggle location")
+nnoremap("<leader>llq", function() U.toggle_list("quickfix") end, "lists: toggle quickfix")
+nnoremap("<leader>llc", function() U.toggle_list("location") end, "lists: toggle location")

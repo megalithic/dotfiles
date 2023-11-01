@@ -51,7 +51,7 @@ local M = {
             "graphql",
             "markdown",
           },
-          condition = function() return mega.executable("prettierd") end,
+          condition = function() return require("mega.utils").executable("prettierd") end,
         }),
         format.fixjson.with({ filetypes = { "jsonc", "json" } }),
         -- format.cbfmt:with({
@@ -59,7 +59,7 @@ local M = {
         -- }),
         format.stylua.with({
           condition = function()
-            return mega.executable("stylua")
+            return require("mega.utils").executable("stylua")
             -- and not vim.tbl_isempty(vim.fs.find({ ".stylua.toml", "stylua.toml" }, {
             --   path = vim.fn.expand("%:p"),
             --   upward = true,
@@ -98,7 +98,7 @@ local M = {
         }),
         -- format.beautysh.with({
         --   extra_args = { "-i", "2" },
-        --   condition = function() return mega.executable("beautysh") end,
+        --   condition = function() return require("mega.utils").executable("beautysh") end,
         -- }),
         -- format.shellharden,
         format.elm_format,

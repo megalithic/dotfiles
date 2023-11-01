@@ -1,8 +1,8 @@
 local fn = vim.fn
-local fmt = string.format
+local U = require("mega.utils")
 
 -- Manually load runtime Man plugin to use Neovim as my man pager
-vim.api.nvim_command("runtime! plugin/man.vim")
+vim.cmd("runtime! plugin/man.vim")
 
 -----------------------------------------------------------------------------//
 -- Message output on vim actions {{{1
@@ -160,10 +160,10 @@ vim.wo.foldexpr = "v:lua.vim.treesitter.foldexpr()"
 -- Grepprg {{{1
 -----------------------------------------------------------------------------//
 -- Use faster grep alternatives if possible
-if mega.executable("rg") then
+if U.executable("rg") then
   vim.o.grepprg = [[rg --glob "!.git" --no-heading --vimgrep --follow $*]]
   vim.opt.grepformat = vim.opt.grepformat ^ { "%f:%l:%c:%m" }
-elseif mega.executable("ag") then
+elseif U.executable("ag") then
   vim.o.grepprg = [[ag --nogroup --nocolor --vimgrep]]
   vim.opt.grepformat = vim.opt.grepformat ^ { "%f:%l:%c:%m" }
 end
@@ -335,6 +335,7 @@ vim.opt.sessionoptions = {
 }
 vim.opt.viewoptions = { "cursor", "folds" } -- save/restore just these (with `:{mk,load}view`)
 vim.o.virtualedit = "block" -- allow cursor to move where there is no text in visual block mode
+
 -----------------------------------------------------------------------------//
 -- ShaDa (viminfo for vim): session data history
 -----------------------------------------------------------------------------//
@@ -408,7 +409,7 @@ vim.o.exrc = true -- Allow project local vimrc files example .nvimrc see :h exrc
 -----------------------------------------------------------------------------//
 -- Git editor {{{1
 -----------------------------------------------------------------------------//
-if mega.executable("nvr") then
+if U.executable("nvr") then
   vim.env.GIT_EDITOR = "nvr -cc split --remote-wait +'set bufhidden=wipe'"
   vim.env.EDITOR = "nvr -cc split --remote-wait +'set bufhidden=wipe'"
 end
@@ -444,7 +445,7 @@ for _, plugin in pairs(disabled_built_ins) do
   vim.g["loaded_" .. plugin] = 1
 end
 
-mega.exec([[
+vim.cmd([[
   " Set cursor shape based on mode (:h termcap-cursor-shape)
   " Vertical bar in insert mode
   let &t_SI = "\e[6 q"
@@ -483,7 +484,7 @@ if vim.fn.executable("nvr") then
   vim.env.EDITOR = "nvr -cc split --remote-wait +'set bufhidden=wipe'"
 end
 -- # registers
-vim.g.registers_return_symbol = " ﬋ " -- "'⏎' by default
+vim.g.registers_return_symbol = " ⏎ " -- "'⏎' by default
 vim.g.registers_tab_symbol = "." -- "'·' by default
 vim.g.registers_space_symbol = " " -- "' ' by default
 vim.g.registers_register_key_sleep = 0 -- "0 by default, seconds to wait before closing the window when a register key is pressed
@@ -491,16 +492,17 @@ vim.g.registers_show_empty_registers = 0 -- "1 by default, an additional line wi
 -----------------------------------------------------------------------------//
 -- Title {{{1
 -----------------------------------------------------------------------------//
-function mega.modified_icon() return vim.bo.modified and mega.icons.misc.circle or "" end
+function _G.modified_icon() return vim.bo.modified and mega.icons.misc.circle or "" end
 vim.o.titlestring =
-  "%{substitute($VIM, '.*[/\\]', '', '')} %{fnamemodify(getcwd(), \":t\")}%( %{v:lua.mega.modified_icon()}%)"
+  "%{substitute($VIM, '.*[/\\]', '', '')} %{fnamemodify(getcwd(), \":t\")}%( %{v:lua.modified_icon()}%)"
 vim.o.titleold = fn.fnamemodify(vim.loop.os_getenv("SHELL"), ":t")
-vim.o.title = true
+vim.o.title = vim.env.TMUX_POPUP == nil
 vim.o.titlelen = 70
 -----------------------------------------------------------------------------//
 -- GUI {{{1
 -----------------------------------------------------------------------------//
-vim.o.guifont = "JetBrains Mono:h12"
+vim.o.guifont = "JetBrainsMono Nerd Font:h15"
+
 -----------------------------------------------------------------------------//
 -- Abbreviations/Cabbreviations {{{1
 -----------------------------------------------------------------------------//

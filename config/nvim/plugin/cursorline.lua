@@ -4,6 +4,7 @@
 if not mega then return end
 if not vim.g.enabled_plugin["cursorline"] then return end
 
+local U = require("mega.utils")
 local C = require("mega.lush_theme.colors")
 local M = {
   blink_delay = 150,
@@ -69,7 +70,7 @@ local function is_ignored()
     or vim.tbl_contains(M.buftype_exclusions, vim.bo.buftype)
     or vim.tbl_contains(M.filetype_exclusions, vim.bo.filetype)
     or is_floating_win()
-    or mega.is_chonky()
+    or U.is_chonky()
 
   return should_ignore
 end
@@ -104,8 +105,6 @@ end
 -- https://vi.stackexchange.com/questions/33056/how-to-use-vim-loop-interactively-in-neovim
 function mega.blink_cursorline(delay)
   if is_ignored() then return end
-  -- local tint_ok, tint = mega.require("tint")
-  -- if tint_ok then tint.disable() end
 
   timer = vim.loop.new_timer()
   blink_active = true

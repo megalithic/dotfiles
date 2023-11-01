@@ -94,22 +94,13 @@ export LS_COLORS="$(vivid generate nord)"
 
 # -- editors
 if which nvim >/dev/null; then
-  # if [ -n "${NVIM_LISTEN_ADDRESS+x}" ]; then
-  #   # if [ -n "$NVIM_LISTEN_ADDRESS" ]; then
-  #   # FIXME: move to the latest nvim-remote api:
-  #   # https://github.com/ahmedelgabri/dotfiles/commit/b5d0824c60f19ab52a391e0c33930ddad9767910
-  #   export EDITOR="nvr -cc split --remote-wait +'set bufhidden=wipe'"
-  #   export VISUAL="nvr -cc split --remote-wait +'set bufhidden=wipe'"
-  #   export MANPAGER="/usr/local/bin/nvr -c 'Man!' -o -"
-  # else
-    export EDITOR="nvim"
-    export VISUAL="$EDITOR"
-    export MANPAGER="$EDITOR +Man!"
-    # export ELIXIR_EDITOR="$EDITOR +__LINE__ __FILE__"
-    # export PLUG_EDITOR=$ELIXIR_EDITOR
-    # export ECTO_EDITOR=$ELIXIR_EDITOR
-    # export MANPAGER="/usr/local/bin/nvim -c 'Man!' -o -"
-  # fi
+  export EDITOR="nvim"
+  export VISUAL="$EDITOR"
+  export MANPAGER="$EDITOR +Man!"
+  # export ELIXIR_EDITOR="$EDITOR +__LINE__ __FILE__"
+  # export PLUG_EDITOR=$ELIXIR_EDITOR
+  # export ECTO_EDITOR=$ELIXIR_EDITOR
+  # export MANPAGER="/usr/local/bin/nvim -c 'Man!' -o -"
 
   export NVIMRUNTIME="/usr/local/share/nvim/runtime"
   export NVIM_TUI_ENABLE_TRUE_COLOR=1

@@ -152,7 +152,9 @@ alias b="brew"
 
 if type nvim >/dev/null 2>&1; then
   # REF: in neovim -> `:help remote.txt` / https://www.youtube.com/watch?v=xO5yMutC-rM
-  alias nvim="nvim --listen /tmp/nvim.pipe -O" # let's always open multiple files passed in as vsplits
+  # alias nvim="nvim --listen /tmp/nvim.pipe -O" # let's always open multiple files passed in as vsplits
+  #
+  alias nvim="nvim -O"
 
   alias slownvim="nvim --startuptime /dev/stdout slow_to_open_file.ex +q | less"
   # alias profilenvim="f() {nvim --startuptime /dev/stderr "$1" +q} && f $1"
@@ -166,7 +168,8 @@ if type nvim >/dev/null 2>&1; then
   alias vim="NVIM_APPNAME=nvim nvim"
   alias folkevim="NVIM_APPNAME=folkevim nvim"
   alias akinvim="NVIM_APPNAME=akinvim nvim"
-  alias kickstart="NVIM_APPNAME=kickstart nvim"
+  alias kickstart="NVIM_APPNAME=kickstartvim nvim"
+  alias kv="kickstart"
   alias minvim="NVIM_APPNAME=minvim nvim"
   alias v=vim
   alias vi="/usr/local/bin/vim"
@@ -191,6 +194,7 @@ alias ezkb="nvim $DOTS/config/zsh/**/keybindings.zsh"
 alias ezl="nvim $DOTS/config/zsh/**/local.zsh"
 
 alias ev="nvim $DOTS/config/nvim/init.lua"
+alias evk="nvim $CODE/kickstart.nvim/init.lua"
 alias evv="nvim $DOTS/config/nvim/vimrc"
 alias evp="nvim $DOTS/config/nvim/lua/mega/plugins/init.lua"
 alias evo="nvim $DOTS/config/nvim/lua/mega/options.lua"

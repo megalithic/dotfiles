@@ -1,5 +1,6 @@
 -- Credits: contains some code snippets from https://github.com/norcalli/nvim-colorizer.lua
 local bit = require("bit")
+local U = require("mega.utils")
 
 local function lsp_color_to_hex(color)
   local function to256(c) return math.floor(c * color.alpha * 255) end
@@ -104,7 +105,7 @@ function M.buf_attach(bufnr, options)
   options = options or {}
 
   -- VSCode extension also does 200ms debouncing
-  local trigger_update_highlight, timer = mega.debounce_trailing(M.update_highlight, options.debounce or 200, false)
+  local trigger_update_highlight, timer = U.debounce_trailing(M.update_highlight, options.debounce or 200, false)
 
   -- for the first request, the server needs some time before it's ready
   -- sometimes 200ms is not enough for this

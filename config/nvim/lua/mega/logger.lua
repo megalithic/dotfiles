@@ -1,3 +1,4 @@
+local U = require("mega.utils")
 -- logger.lua
 --
 -- Inspired by rxi/log.lua
@@ -116,7 +117,7 @@ logger.new = function(config, standalone)
         if config.highlights and level_config.hl then vim.cmd("echohl NONE") end
 
         -- so that our clear messages autocmd fires
-        mega.clear_commandline()
+        U.clear_commandline()
       end
 
       if config.use_console == "sync" and not vim.in_fast_event() then

@@ -14,6 +14,7 @@ local fn = vim.fn
 local api = vim.api
 local augroup = mega.augroup
 local contains = vim.tbl_contains
+local U = require("mega.utils")
 
 augroup("Startup", {
   {
@@ -364,15 +365,15 @@ augroup("General", {
   -- },
 })
 
-do
-  augroup("ClearCommandMessages", {
-    {
-      event = { "CmdlineLeave", "CmdlineChanged" },
-      pattern = { ":" },
-      command = mega.clear_commandline(),
-    },
-  })
-end
+-- do
+--   augroup("ClearCommandMessages", {
+--     {
+--       event = { "CmdlineLeave", "CmdlineChanged" },
+--       pattern = { ":" },
+--       command = U.clear_commandline(),
+--     },
+--   })
+-- end
 --
 -- augroup("LspDiagnosticExclusions", {
 --   {

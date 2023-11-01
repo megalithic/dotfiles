@@ -4,12 +4,12 @@ if not vim.g.enabled_plugin["lsp"] then return end
 local lsp_ok, lspconfig = pcall(require, "lspconfig")
 if not lsp_ok and not lspconfig then return end
 
+local U = require("mega.utils")
+
 local fn = vim.fn
 local api = vim.api
 local lsp = vim.lsp
 local vcmd = vim.cmd
-local command = mega.command
-local augroup = mega.augroup
 local fmt = string.format
 local diagnostic = vim.diagnostic
 local LSP_METHODS = vim.lsp.protocol.Methods
@@ -51,12 +51,12 @@ end
 local function hover()
   local function get_preview_window()
     for _, win in ipairs(vim.api.nvim_tabpage_list_wins(vim.api.nvim_get_current_tabpage())) do
-      if vim.api.nvim_win_get_option(win, "previewwindow") then return win end
+      if vim.api.nvim_win_get_option(win, "preview") then return win end
     end
     vim.cmd([[botright vnew]])
     local pwin = vim.api.nvim_get_current_win()
     local pwin_width = vim.o.columns > 210 and 90 or 70
-    vim.api.nvim_win_set_option(pwin, "previewwindow", true)
+    vim.api.nvim_win_set_option(pwin, "preview", true)
     vim.api.nvim_win_set_width(pwin, pwin_width)
     vim.cmd("set filetype=preview")
     vim.cmd(fmt("let &winwidth=%d", pwin_width))
@@ -98,14 +98,14 @@ local function setup_commands(bufnr)
   end
   vcmd([[ command! -range LspFormatRange execute 'lua FormatRange()' ]])
 
-  command("LspLog", function() vim.cmd("vnew " .. vim.lsp.get_log_path()) end)
-  command(
+  mega.command("LspLog", function() vim.cmd("vnew " .. vim.lsp.get_log_path()) end)
+  mega.command(
     "LspLogDelete",
     function() vim.fn.system("rm " .. vim.lsp.get_log_path()) end,
     { desc = "Deletes the LSP log file. Useful for when it gets too big" }
   )
 
-  command("LspFormat", function() format({ bufnr = bufnr, async = false }) end)
+  mega.command("LspFormat", function() format({ bufnr = bufnr, async = false }) end)
 
   -- A helper function to auto-update the quickfix list when new diagnostics come
   -- in and close it once everything is resolved. This functionality only runs while
@@ -118,23 +118,23 @@ local function setup_commands(bufnr)
     return function()
       if not api.nvim_buf_is_valid(0) then return end
       pcall(vim.diagnostic.setqflist, { open = false })
-      mega.toggle_list("quickfix")
-      if not mega.is_vim_list_open() and cmd_id then
+      U.toggle_list("quickfix")
+      if not U.is_vim_list_open() and cmd_id then
         api.nvim_del_autocmd(cmd_id)
         cmd_id = nil
       end
       if cmd_id then return end
       cmd_id = api.nvim_create_autocmd("DiagnosticChanged", {
         callback = function()
-          if mega.is_vim_list_open() then
+          if U.is_vim_list_open() then
             pcall(vim.diagnostic.setqflist, { open = false })
-            if #fn.getqflist() == 0 then mega.toggle_list("quickfix") end
+            if #fn.getqflist() == 0 then U.toggle_list("quickfix") end
           end
         end,
       })
     end
   end
-  command("LspDiagnostics", make_diagnostic_qf_updater())
+  mega.command("LspDiagnostics", make_diagnostic_qf_updater())
   nnoremap("<leader>ll", "<Cmd>LspDiagnostics<CR>", "lsp: toggle quickfix diagnostics")
 end
 
@@ -148,7 +148,7 @@ local function setup_autocommands(client, bufnr)
     return vim.notify(msg, L.ERROR, { title = "LSP Setup" })
   end
 
-  augroup("LspCodeLens", {
+  mega.augroup("LspCodeLens", {
     {
       event = { "BufEnter", "CursorHold", "InsertLeave" }, -- CursorHoldI
       buffer = bufnr,
@@ -158,7 +158,7 @@ local function setup_autocommands(client, bufnr)
     },
   })
 
-  augroup("LspDocumentHighlight", {
+  mega.augroup("LspDocumentHighlight", {
     {
       event = { "CursorHold" },
       buffer = bufnr,
@@ -177,7 +177,7 @@ local function setup_autocommands(client, bufnr)
     },
   })
 
-  augroup("LspDiagnostics", {
+  mega.augroup("LspDiagnostics", {
     {
       event = { "CursorHold" },
       desc = "Show diagnostics",
@@ -196,7 +196,7 @@ local function setup_autocommands(client, bufnr)
   })
 
   if vim.g.formatter == "null-ls" then
-    augroup("LspFormat", {
+    mega.augroup("LspFormat", {
       {
         event = { "BufWritePre" },
         command = function(args)
@@ -364,7 +364,7 @@ local function setup_formatting(client, bufnr)
     end
 
     if client.name == "null-ls" then
-      if has_formatter(api.nvim_buf_get_option(bufnr, "filetype")) then
+      if has_formatter(vim.api.nvim_buf_get_option(bufnr, "filetype")) then
         client.server_capabilities.documentFormattingProvider = true
       else
         client.server_capabilities.documentFormattingProvider = false
@@ -543,7 +543,7 @@ vim.opt.shortmess:append("c") -- Don't pass messages to |ins-completion-menu|
 
 -- Setup neovim lua configuration
 -- require("neodev").setup()
-require("mason")
+pcall(require, "mason")
 
 -- This function allows reading a per project "settings.json" file in the `.vim` directory of the project.
 ---@param client table<string, any>
@@ -644,20 +644,6 @@ local function on_attach(client, bufnr)
     end
   end
 
-  -- Disable completion for certain clients (using this mostly for the multiple elixir clients i'm using at the moment):
-  --
-  -- if mega.lsp.has_method(client, "completion") then
-  --   if vim.tbl_contains({ "lexical" }, client.name) then
-  --     dd(fmt("disabling completionProvider for %s", client.name))
-  --     caps.completionProvider = nil
-  --   end
-  -- end
-
-  --   if mega.lsp.has_method(client, "documentSymbol") then
-  --   local ok, navic = mega.require("nvim-navic")
-  --   if ok and navic then navic.attach(client, bufnr) end
-  -- end
-
   if mega.lsp.has_method(client, "definition") then vim.bo[bufnr].tagfunc = "v:lua.vim.lsp.tagfunc" end
   if mega.lsp.has_method(client, "formatting") then vim.bo[bufnr].formatexpr = "v:lua.vim.lsp.formatexpr()" end
 
@@ -720,7 +706,7 @@ local function get_server_capabilities()
   --   },
   -- }
 
-  local nvim_lsp_ok, cmp_nvim_lsp = mega.wrap_err(require, "cmp_nvim_lsp")
+  local nvim_lsp_ok, cmp_nvim_lsp = pcall(require, "cmp_nvim_lsp")
   if nvim_lsp_ok then capabilities = cmp_nvim_lsp.default_capabilities(capabilities) end
 
   return capabilities

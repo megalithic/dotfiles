@@ -6,12 +6,9 @@ return {
     vim.o.timeoutlen = 300
   end,
   config = function()
-    local has_wk, wk = mega.require("which-key")
+    local has_wk, wk = pcall(require, "which-key")
     if not has_wk then return end
 
-    local fn = vim.fn
-    local exec = mega.exec
-    local api = vim.api
     -- NOTE: all convenience mode mappers are on the _G global; so no local assigns needed
 
     -- if you only want these mappings for toggle term use term://*toggleterm#* instead
@@ -73,7 +70,7 @@ return {
       -- },
     })
 
-    -- local ok_gs, gs = mega.require("gitsigns")
+    -- local ok_gs, gs = pcall(require, "gitsigns")
     -- if ok_gs then
     --   require("which-key").register({
     --     g = {

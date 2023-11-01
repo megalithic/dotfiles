@@ -12,7 +12,7 @@ nnoremap("<localleader>ed", [[o|> dbg()<ESC>a]])
 nnoremap("<localleader>ei", [[o|> IO.inspect()<ESC>i]])
 nnoremap("<localleader>eil", [[o|> IO.inspect(label: "")<ESC>hi]])
 
-local has_wk, wk = mega.require("which-key")
+local has_wk, wk = pcall(require, "which-key")
 if has_wk then wk.register({
   ["<localleader>e"] = { name = "+elixir" },
 }) end
@@ -160,34 +160,3 @@ end
 -- end
 
 -- if is_elixir_test_file() then set_iex_strategy_after_delay() end
-
--- local ms_ok, ms = mega.require("mini.surround")
--- if ms_ok then
---   vim.b.minisurround_config = {
---     custom_surroundings = {
---       ["%"] = {
---         output = function()
---           local clipboard = vim.fn.getreg("+"):gsub("\n", "")
---           return { left = "[", right = "](" .. clipboard .. ")" }
---         end,
---       },
---       L = {
---         output = function()
---           local link_name = ms.user_input("Enter the link name: ")
---           return {
---             left = "[" .. link_name .. "](",
---             right = ")",
---           }
---         end,
---       },
---       ["b"] = { -- Surround for bold
---         input = { "%*%*().-()%*%*" },
---         output = { left = "**", right = "**" },
---       },
---       ["i"] = { -- Surround for italics
---         input = { "%*().-()%*" },
---         output = { left = "*", right = "*" },
---       },
---     },
---   }
--- end

@@ -1,3 +1,4 @@
+if true then return end
 local api, notify, fmt, augroup = vim.api, vim.notify, string.format, mega.augroup
 
 ---@alias HLAttrs {from: string, attr: "fg" | "bg", alter: integer}
@@ -164,7 +165,7 @@ local function set(ns, name, opts)
     if attrs[attribute] then hl[attribute] = new_data end
   end
 
-  mega.pcall(fmt("setting highlight \"%s\"", name), api.nvim_set_hl, ns, name, hl)
+  -- mega.pcall(fmt("setting highlight \"%s\"", name), api.nvim_set_hl, ns, name, hl)
 end
 
 ---Apply a list of highlights

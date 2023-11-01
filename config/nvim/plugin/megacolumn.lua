@@ -3,6 +3,7 @@ if not vim.g.enabled_plugin["megacolumn"] then return end
 
 local fn, v, api = vim.fn, vim.v, vim.api
 local ui, separators = mega.ui, mega.icons.separators
+local U = require("mega.utils")
 
 local shade = separators.light_shade_block
 local border = separators.thin_block
@@ -46,8 +47,7 @@ end
 local function nr(win, _line_count, is_active)
   if v.virtnum < 0 then return shade end -- virtual line
   if v.virtnum > 0 then return space end -- wrapped line
-  local num = is_active and (vim.wo[win].relativenumber and not mega.empty(v.relnum) and v.relnum or v.lnum)
-    or v.lnum
+  local num = is_active and (vim.wo[win].relativenumber and not U.empty(v.relnum) and v.relnum or v.lnum) or v.lnum
   local lnum = fn.substitute(num, "\\d\\zs\\ze\\" .. "%(\\d\\d\\d\\)\\+$", ",", "g")
   local num_width = (vim.wo[win].numberwidth - 1) - api.nvim_strwidth(lnum)
   local padding = string.rep(space, num_width)
@@ -60,7 +60,7 @@ end
 local function sep(is_active)
   local separator_hl = ""
   if is_active then
-    separator_hl = v.virtnum >= 0 and mega.empty(v.relnum) and active_border_hl or ""
+    separator_hl = v.virtnum >= 0 and U.empty(v.relnum) and active_border_hl or ""
   else
     separator_hl = inactive_border_hl
   end

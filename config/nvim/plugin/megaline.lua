@@ -4,6 +4,8 @@
 if not mega then return end
 if not vim.g.enabled_plugin["megaline"] then
   vim.o.statusline = "%#Statusline# %2{mode()} | %F %m %r %= %{&spelllang} %y %8(%l,%c%) %8p%%"
+
+  return
 end
 
 local M = {}
@@ -15,6 +17,7 @@ local strwidth = fn.strwidth
 local fnamemodify = fn.fnamemodify
 local fmt = string.format
 local icons = mega.icons
+local U = require("mega.utils")
 local H = require("mega.utils.highlights")
 
 vim.g.is_saving = false
@@ -235,9 +238,9 @@ local exception_types = {
     dirbuf = "",
     oil = "",
     ["neo-tree"] = "פּ",
-    toggleterm = fmt("%s ", mega.icons.misc.terminal),
-    megaterm = fmt("%s ", mega.icons.misc.terminal),
-    terminal = fmt("%s ", mega.icons.misc.terminal),
+    toggleterm = fmt("%s ", icons.misc.terminal),
+    megaterm = fmt("%s ", icons.misc.terminal),
+    terminal = fmt("%s ", icons.misc.terminal),
     calendar = "",
     minimap = "",
     octo = "",
@@ -300,7 +303,7 @@ local exception_types = {
     end,
     ["dap-repl"] = "Debugger REPL",
     kittybuf = "Kitty Scrollback Buffer",
-    firenvim = function(fname, buf) return seg(fmt("%s firenvim (%s)", mega.icons.misc.flames, M.ctx.filetype)) end,
+    firenvim = function(fname, buf) return seg(fmt("%s firenvim (%s)", icons.misc.flames, M.ctx.filetype)) end,
   },
 }
 
@@ -325,6 +328,16 @@ local function is_truncated(trunc)
   if vim.api.nvim_get_option("laststatus") == 3 then check = vim.o.columns < (trunc or -1) end
 
   return check
+end
+
+--- truncate with an ellipsis or if surrounded by quotes, replace contents of quotes with ellipsis
+--- @param str string
+--- @param max_size integer
+--- @return string
+local function truncate_str(str, max_size)
+  if not max_size or strwidth(str) < max_size then return str end
+  local match, count = str:gsub("(['\"]).*%1", "%1" .. icons.misc.ellipsis .. "%1")
+  return count > 0 and match or str:sub(1, max_size - 1) .. icons.misc.ellipsis
 end
 
 local function matches(str, list)
@@ -371,10 +384,10 @@ local function get_diagnostics(seg_formatters_status)
   if vim.tbl_isempty(vim.lsp.get_clients({ bufnr = M.ctx.bufnr })) then return "" end
 
   local diags = {
-    { num = count(vim.diagnostic.severity.ERROR), sign = mega.icons.lsp.error, hl = "StError" },
-    { num = count(vim.diagnostic.severity.WARN), sign = mega.icons.lsp.warn, hl = "StWarn" },
-    { num = count(vim.diagnostic.severity.INFO), sign = mega.icons.lsp.info, hl = "StInfo" },
-    { num = count(vim.diagnostic.severity.HINT), sign = mega.icons.lsp.hint, hl = "StHint" },
+    { num = count(vim.diagnostic.severity.ERROR), sign = icons.lsp.error, hl = "StError" },
+    { num = count(vim.diagnostic.severity.WARN), sign = icons.lsp.warn, hl = "StWarn" },
+    { num = count(vim.diagnostic.severity.INFO), sign = icons.lsp.info, hl = "StInfo" },
+    { num = count(vim.diagnostic.severity.HINT), sign = icons.lsp.hint, hl = "StHint" },
   }
 
   local segments = ""
@@ -391,7 +404,7 @@ local function get_lsp_status(messages)
 end
 
 local function get_dap_status()
-  local ok, dap = mega.require("dap")
+  local ok, dap = pcall(require, "dap")
   if not ok then return "" end
   local status = dap.status()
   if status ~= "" then return status .. " | " end
@@ -435,7 +448,7 @@ local function parse_filename(truncate_at)
 
   if name then return "", "", name end
 
-  if not fname or mega.empty(fname) then return "", "", "No Name" end
+  if not fname or U.empty(fname) then return "", "", "No Name" end
 
   local path = (M.ctx.buftype == "" and not M.ctx.preview) and buf_expand(M.ctx.bufnr, ":~:.:h") or nil
   local is_root = path and #path == 1 -- "~" or "."
@@ -515,7 +528,7 @@ local function seg_lsp_status(truncate_at)
   local ok_messages, messages = pcall(vim.lsp.status)
 
   if ok_messages and messages == "" then
-    -- local ok_nls, nls = mega.require("null-ls")
+    -- local ok_nls, nls = pcall(require, "null-ls")
     local enabled = not vim.g.disable_autoformat
     -- local enabled = (ok_nls and nls.enabled) or not vim.g.disable_autoformat
 
@@ -576,7 +589,7 @@ local function seg_opened_terms(truncate_at)
 end
 
 local function seg_hydra(truncate_at)
-  local ok_hydra, hydra = mega.require("hydra", { silent = true })
+  local ok_hydra, hydra = pcall(require, "hydra", { silent = true })
 
   if ok_hydra then
     return seg(
@@ -603,7 +616,7 @@ local function seg_git_status(truncate_at)
   local status = is_valid_git()
   if not status then return "" end
 
-  local branch = is_truncated(truncate_at) and mega.truncate(status.head or "", 15, false) or status.head
+  local branch = is_truncated(truncate_at) and truncate_str(status.head or "", 14) or status.head
   return seg(branch, "StGitBranch", { margin = { 1, 1 }, prefix = seg_git_symbol(80), padding = { 1, 0 } })
 end
 

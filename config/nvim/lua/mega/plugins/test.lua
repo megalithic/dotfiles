@@ -84,15 +84,14 @@ return {
     -- event = { "BufReadPost", "BufNewFile" },
     dependencies = { "tpope/vim-projectionist" },
     init = function()
-      local system = vim.fn.system
-
       local function terminal_notifier(term_cmd, exit)
+        -- local system = vim.fn.system
         if exit == 0 then
-          mega.notify(fmt("👍 vim-test(s) passed: %s", term_cmd), L.INFO)
-          system(string.format([[terminal-notifier -title "nvim [test]" -message "👍 test(s) passed"]], term_cmd))
+          mega.notify(fmt("👍 [PASS] vim-test: %s", term_cmd), L.INFO)
+          -- system(string.format([[terminal-notifier -title "nvim [test]" -message "👍 test(s) passed"]], term_cmd))
         else
-          mega.notify(fmt("👎 vim-test(s) failed: %s", term_cmd), L.ERROR)
-          system(string.format([[terminal-notifier -title "nvim [test]" -message "👎 test(s) failed"]], term_cmd))
+          mega.notify(fmt("👎 [FAIL] vim-test: %s", term_cmd), L.ERROR)
+          -- system(string.format([[terminal-notifier -title "nvim [test]" -message "👎 test(s) failed"]], term_cmd))
         end
       end
 

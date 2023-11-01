@@ -23,7 +23,7 @@ vim.cmd([[
 nnoremap("<C-n>", [[:cnext<cr>]], { buffer = 0, label = "QF: next" })
 nnoremap("<C-p>", [[:cprevious<cr>]], { buffer = 0, label = "QF: previous" })
 
-local ok_bqf, bqf = mega.require("bqf")
+local ok_bqf, bqf = pcall(require, "bqf")
 if not ok_bqf then return end
 
 local fugitive_pv_timer

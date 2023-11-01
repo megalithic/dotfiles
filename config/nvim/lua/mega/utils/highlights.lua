@@ -2,6 +2,7 @@ local fmt = string.format
 local fn = vim.fn
 local api = vim.api
 local C = mega.colors
+local U = require("mega.utils")
 local levels = vim.log.levels
 
 local M = {}
@@ -69,7 +70,7 @@ function M.adopt_winhighlight(win_id, target, name, fallback)
   local hl_exists = fn.hlexists(win_hl_name) > 0
   if hl_exists then return win_hl_name end
   local parts = vim.split(win_hl, ",")
-  local found = mega.find(parts, function(part) return part:match(target) end)
+  local found = U.find(parts, function(part) return part:match(target) end)
   if not found then return fallback end
   local hl_group = vim.split(found, ":")[2]
   local bg = M.get_hl(hl_group, "bg")
@@ -89,9 +90,7 @@ end
 ---@param opts table<string, string|boolean|table<string,string>>
 local function convert_hl_to_val(opts)
   for name, value in pairs(opts) do
-    if type(value) == "table" and value.from then
-      opts[name] = M.get_hl(value.from, vim.F.if_nil(value.attr, name))
-    end
+    if type(value) == "table" and value.from then opts[name] = M.get_hl(value.from, vim.F.if_nil(value.attr, name)) end
   end
 end
 

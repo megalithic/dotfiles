@@ -312,6 +312,7 @@ cask "postbird" if OS.mac?
 cask "raycast" if OS.mac?
 cask "signal"
 cask "slack"
+cask "skim" if OS.mac?
 cask "soundsource", greedy: true
 cask "spotify"
 # cask "thingsmacsandboxhelper"

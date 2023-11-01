@@ -6,6 +6,7 @@ return {
   config = function()
     local notify = require("notify")
     local base = require("notify.render.base")
+    local U = require("mega.utils")
 
     notify.setup({
       timeout = 3000,
@@ -55,7 +56,7 @@ return {
     local notify_override = function(msg, level, opts)
       if not opts then opts = {} end
       if not opts.title then
-        if mega.starts_with(msg, "[LSP]") then
+        if U.starts_with(msg, "[LSP]") then
           local client, found_client = msg:gsub("^%[LSP%]%[(.-)%] .*", "%1")
           if found_client > 0 then
             opts.title = ("LSP %s %s"):format(mega.icons.misc.caret_right, client)

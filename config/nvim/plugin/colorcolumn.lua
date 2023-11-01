@@ -4,7 +4,7 @@
 if not mega then return end
 if not vim.g.enabled_plugin["colorcolumn"] then return end
 
-local vc_ok, vc = mega.require("virt-column")
+local vc_ok, vc = pcall(require, "virt-column")
 
 local contains = vim.tbl_contains
 local api = vim.api

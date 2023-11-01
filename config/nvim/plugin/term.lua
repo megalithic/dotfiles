@@ -8,6 +8,7 @@ if not vim.g.enabled_plugin["term"] then return end
 local fmt = string.format
 local api = vim.api
 local fn = vim.fn
+local U = require("mega.utils")
 
 local nil_id = 999999
 local term_win_id = nil_id
@@ -313,7 +314,7 @@ local function create_win(opts)
 end
 
 local function set_autocmds(opts)
-  require("mega.globals").augroup("megaterm", {
+  _G.mega.augroup("megaterm", {
     {
       event = { "BufEnter" },
       command = function(params)
@@ -413,7 +414,7 @@ end
 --- @param args TermOpts|ParsedArgs|string
 function mega.term(args)
   -- be sure to clear our search highlights and other UI adornments
-  mega.clear_ui()
+  U.clear_ui()
 
   local parsed_opts = args or {}
 

@@ -15,7 +15,7 @@ local function find(word, ...)
   end
 end
 
-local function open_help(tag) mega.wrap_err(vim.cmd.help, tag) end
+local function open_help(tag) pcall(vim.cmd.help, tag) end
 
 --- Stolen from nlua.nvim this function attempts to open
 --- vim help docs if an api or vim.fn function otherwise it
@@ -83,8 +83,8 @@ end
 --   })
 -- end)
 
-local ok_ms, ms = mega.require("mini.surround")
-local ok_mai, mai = mega.require("mini.surround")
+local ok_ms, ms = pcall(require, "mini.surround")
+local ok_mai, mai = pcall(require, "mini.surround")
 if ok_ms and ok_mai then
   vim.b.minisurround_config = {
     custom_surroundings = {
