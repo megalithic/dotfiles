@@ -25,8 +25,6 @@ vim.cmd([[
   setlocal foldexpr=markdown#FoldExpression(v:lnum)
   setlocal foldmethod=expr
   setlocal formatoptions+=t
-  setlocal nolist
-
   setlocal linebreak
   setlocal textwidth=0
   setlocal autoindent tabstop=2 shiftwidth=2 formatoptions-=t comments=fb:>,fb:*,fb:+,fb:-
@@ -90,11 +88,11 @@ vim.g.mkdp_auto_close = 1
 if vim.env.TMUX_POPUP then
   vim.opt_local.signcolumn = "no"
   vim.opt_local.cursorline = false
-  vim.opt_local.number = false
+  vim.opt_local.number = true
   vim.opt_local.relativenumber = false
 
-  vim.opt.laststatus = 1
-  vim.opt.cmdheight = 0
+  vim.opt.laststatus = 2
+  vim.opt.cmdheight = 1
   vim.api.nvim_win_set_option(
     0,
     "winhl",

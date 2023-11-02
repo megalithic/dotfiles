@@ -105,7 +105,7 @@ local function ivy(opts)
   return require("telescope.themes").get_ivy(get_border(opts))
 end
 
-_G.picker = { telescope = { dropdown, ivy, get_border } }
+_G.picker = { telescope = { dropdown = dropdown, ivy = ivy, border = get_border } }
 -- Gets the root dir from either:
 -- * connected lsp
 -- * .git from file

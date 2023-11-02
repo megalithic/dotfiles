@@ -3,36 +3,89 @@
 # which is based on https://github.com/joshmedeski/tmux-nerd-font-window-name
 
 NAME=$1
-SHOW_NAME="$(tmux show -gqv '@tmux-nerd-font-window-name-show-name')"
+# SHOW_NAME="$(tmux show -gqv '@tmux-nerd-font-window-name-show-name')"
+SHOW_NAME="true"
+DEFAULT_SHELL_ICON="" # alts: 󱆃   
+FALLBACK_ICON=""       # alts: ?
 
 function get_shell_icon() {
-  local default_shell_icon=""
-  local shell_icon
-  shell_icon="$(tmux show -gqv '@tmux-nerd-font-window-name-shell-icon')"
-  if [ "$shell_icon" != "" ]; then
-    echo "$shell_icon"
-  else
-    echo "$default_shell_icon"
-  fi
+  local default_shell_icon="$DEFAULT_SHELL_ICON" # alts: 󱆃  
+  # local shell_icon
+  # # shell_icon="$(tmux show -gqv '@tmux-nerd-font-window-name-shell-icon')"
+  # if [ "$shell_icon" != "" ]; then
+  #   echo "$shell_icon"
+  # else
+  echo "$default_shell_icon"
+  # fi
 }
 
 SHELL_ICON=$(get_shell_icon)
 
+# apt: ""
+# bash: ""
+# caffeinate: ""
+# beam.smp: ""
+# beam: ""
+# brew: ""
+# cfdisk: ""
+# dnf: ""
+# docker: ""
+# dpkg: ""
+# emacs: ""
+# fdisk: ""
+# fish: ""
+# git: ""
+# gitui: ""
+# go: ""
+# htop: ""
+# java: ""
+# kubectl: "󱃾"
+# lazydocker: ""
+# lazygit: ""
+# lf: ""
+# lfcd: ""
+# lvim: ""
+# nala: ""
+# node: ""
+# nvim: ""
+# pacman: ""
+# parted: ""
+# paru: ""
+# Python: ""
+# ranger: ""
+# ruby: ""
+# rustc: ""
+# rustup: ""
+# tcsh: ""
+# tig: ""
+# tmux: ""
+# top: ""
+# vim: ""
+# yay: ""
+# yum: ""
+# zsh: ""
+
 get_icon() {
   case $NAME in
+    chats)
+      echo "󱋊"
+      ;;
     tmux)
       echo ""
       ;;
     htop | top)
       echo ""
       ;;
-    fish | zsh | bash | tcsh)
+    zsh | bash | tcsh)
       echo "$SHELL_ICON"
+      ;;
+    fish)
+      echo "󰈺"
       ;;
     vi | vim | nvim | lvim)
       echo ""
       ;;
-    lazygit | git | tig)
+    lazygit | git | tig | ngit)
       echo ""
       ;;
     node)
@@ -53,6 +106,9 @@ get_icon() {
     elixir)
       echo ""
       ;;
+    nix)
+      echo "󱄅"
+      ;;
     lua)
       echo ""
       ;;
@@ -63,8 +119,8 @@ get_icon() {
       echo ""
       ;;
     *)
-      if [ "$SHOW_NAME" = true ]; then
-        echo ""
+      if [ "$SHOW_NAME" == true ]; then
+        echo "$FALLBACK_ICON"
       else
         echo "$NAME"
       fi
@@ -74,8 +130,9 @@ get_icon() {
 
 ICON=$(get_icon)
 
-if [ "$SHOW_NAME" = true ]; then
-  echo "$NAME|$ICON"
+if [ "$SHOW_NAME" == true ]; then
+  [[ "$ICON" ]] && echo "$NAME $ICON" || echo "$NAME"
+
 else
   echo "$ICON"
 fi

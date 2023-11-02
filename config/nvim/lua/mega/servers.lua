@@ -448,7 +448,7 @@ M.list = {
       "sass",
       "html",
       "heex",
-      -- "elixir",
+      "elixir", -- this is causing a delay on bufenter for elixir files (white then coloured)
       "javascript",
       "javascriptreact",
       "typescript",

@@ -1,3 +1,3 @@
-# {{format-date now "long"}}
+# daily for {{format-date now "long"}}
 
 {{content}}

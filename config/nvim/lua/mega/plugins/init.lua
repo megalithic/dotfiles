@@ -46,6 +46,33 @@ return {
     end,
   },
   { "lukas-reineke/virt-column.nvim", opts = { char = "│" }, event = "VimEnter" },
+  -- {
+  --   "lukas-reineke/indent-blankline.nvim",
+  --   event = "LazyFile",
+  --   opts = {
+  --     indent = {
+  --       char = "│",
+  --       tab_char = "│",
+  --     },
+  --     scope = { enabled = true },
+  --     exclude = {
+  --       filetypes = {
+  --         "help",
+  --         "alpha",
+  --         "dashboard",
+  --         "neo-tree",
+  --         "Trouble",
+  --         "trouble",
+  --         "lazy",
+  --         "mason",
+  --         "notify",
+  --         "toggleterm",
+  --         "lazyterm",
+  --       },
+  --     },
+  --   },
+  --   main = "ibl",
+  -- },
   {
     "mbbill/undotree",
     cmd = "UndotreeToggle",
@@ -197,7 +224,6 @@ return {
       { "MunifTanjim/nui.nvim" },
       { "williamboman/mason-lspconfig.nvim" },
       { "b0o/schemastore.nvim" },
-      { "mrshmllow/document-color.nvim", event = "BufReadPre" }, -- deprecated, follow-up on this + colorizer.nvim
       { "ray-x/lsp_signature.nvim" },
       {
         "mhanberg/output-panel.nvim",
@@ -600,9 +626,13 @@ return {
     end,
   },
   {
-    enabled = false,
+    -- enabled = false,
     "gaoDean/autolist.nvim",
-    ft = "markdown",
+    event = {
+      "BufRead",
+      "BufNewFile",
+    },
+    pattern = { "*.md" },
     version = "2.3.0",
     config = function()
       local al = require("autolist")

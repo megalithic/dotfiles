@@ -163,7 +163,7 @@ mega.augroup("MegaColumn", {
       -- dd(vim.inspect(args))
       if vim.api.nvim_buf_is_valid(args.buf) then
         local buf = vim.bo[args.buf]
-        if buf.bt ~= "" or vim.tbl_contains(excluded, buf.ft) then
+        if buf.bt ~= "" or vim.tbl_contains(excluded, buf.ft) or vim.env.TMUX_POPUP then
           -- dd("empty statuscolumn")
           vim.opt_local.statuscolumn = ""
         else

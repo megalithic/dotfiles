@@ -495,9 +495,10 @@ vim.g.registers_show_empty_registers = 0 -- "1 by default, an additional line wi
 function _G.modified_icon() return vim.bo.modified and mega.icons.misc.circle or "" end
 vim.o.titlestring =
   "%{substitute($VIM, '.*[/\\]', '', '')} %{fnamemodify(getcwd(), \":t\")}%( %{v:lua.modified_icon()}%)"
-vim.o.titleold = fn.fnamemodify(vim.loop.os_getenv("SHELL"), ":t")
-vim.o.title = vim.env.TMUX_POPUP == nil
+vim.o.titleold = fn.fnamemodify(vim.uv.os_getenv("SHELL"), ":t")
 vim.o.titlelen = 70
+-- FIXME: this breaks tmux (vim.o.title); so disabling for now ¯\_(ツ)_/¯
+-- vim.o.title = vim.env.TMUX_POPUP == nil
 -----------------------------------------------------------------------------//
 -- GUI {{{1
 -----------------------------------------------------------------------------//

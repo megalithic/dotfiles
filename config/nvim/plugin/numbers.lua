@@ -55,7 +55,9 @@ local is_enabled = true
 
 ---Determines whether or not a window should be ignored by this plugin
 ---@return boolean
-local function is_ignored() return vim.tbl_contains(vim.g.number_buftype_ignored, vim.bo.buftype) or is_floating_win() end
+local function is_ignored()
+  return vim.tbl_contains(vim.g.number_buftype_ignored, vim.bo.buftype) or is_floating_win() or vim.env.TMUX_POPUP
+end
 
 -- block list certain plugins and buffer types
 local function is_blocked()

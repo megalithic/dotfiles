@@ -6,9 +6,9 @@
 -- Obsidian + zk:
 -- - https://github.com/ahmedelgabri/dotfiles/blob/main/config/nvim/lua/_/notes.lua
 return {
-  "vicrdguez/zk-nvim",
-  -- "mickael-menu/zk-nvim",
-  branch = "fzf-lua",
+  -- "vicrdguez/zk-nvim",
+  "mickael-menu/zk-nvim",
+  -- branch = "fzf-lua",
   cmd = {
     "ZkNotes",
     "ZkLiveGrep",
@@ -23,6 +23,7 @@ return {
     "ZkNewFromContentSelection",
   },
   keys = {
+    "<leader>zd",
     "<leader>zn",
     "<leader>zf",
     "<leader>z/",
@@ -213,25 +214,29 @@ return {
     elseif vim.g.picker == "telescope" then
       mega.nnoremap(
         "<leader>zf",
-        function() require("telescope").extensions.zk.notes(_G.telescope_ivy({ sort = { "modified" } })) end,
+        function() require("telescope").extensions.zk.notes(_G.picker.telescope.ivy({ sort = { "modified" } })) end,
         desc("zk: find notes")
       )
       mega.nnoremap(
         "<leader>nf",
-        function() require("telescope").extensions.zk.notes(_G.telescope_ivy({ sort = { "modified" } })) end,
+        function() require("telescope").extensions.zk.notes(_G.picker.telescope.ivy({ sort = { "modified" } })) end,
         desc("zk: find notes")
       )
       mega.nnoremap(
         "<leader>zw",
         function()
-          require("telescope").extensions.zk.notes(_G.telescope_ivy({ sort = { "modified" }, tags = { "tern" } }))
+          require("telescope").extensions.zk.notes(
+            _G.picker.telescope.ivy({ sort = { "modified" }, tags = { "tern" } })
+          )
         end,
         desc("zk: find notes")
       )
       mega.nnoremap(
         "<leader>nw",
         function()
-          require("telescope").extensions.zk.notes(_G.telescope_ivy({ sort = { "modified" }, tags = { "tern" } }))
+          require("telescope").extensions.zk.notes(
+            _G.picker.telescope.ivy({ sort = { "modified" }, tags = { "tern" } })
+          )
         end,
         desc("zk: find notes")
       )
@@ -266,12 +271,18 @@ return {
     mega.nnoremap("<leader>zr", "<Cmd>ZkRecents<CR>", desc("zk: find recent notes"))
     -- mega.nnoremap(
     --   "<leader>z/",
-    --   require("telescope.builtin").live_grep(_G.telescope_ivy({ cwd = vim.g.notes_path })),
+    --   require("telescope.builtin").live_grep(_G.picker.telescope.ivy({ cwd = vim.g.notes_path })),
     --   { desc = "telescope | Live grep" }
     -- )
 
     mega.nnoremap("gl", "<Cmd>ZkInsertLink<CR>", desc("zk: insert link"))
     mega.vnoremap("gl", ":'<,'>ZkInsertLinkAtSelection<CR>", desc("zk: insert link (selected)"))
     mega.vnoremap("gL", ":'<,'>ZkInsertLinkAtSelection {match = true}<CR>", desc("zk: insert link (search selected)"))
+
+    mega.nnoremap(
+      "<leader>zd",
+      [[:lua require("zk").new({group = "daily", dir = "journal/daily"})<cr>]],
+      desc("zk: new note")
+    )
   end,
 }

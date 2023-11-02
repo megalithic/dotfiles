@@ -636,11 +636,10 @@ local function on_attach(client, bufnr)
   -- HT: kabouzeid
   if mega.lsp.has_method(client, "color") then
     if client.name == "tailwindcss" then
-      require("document-color").buf_attach(bufnr, { mode = "single" })
-      do
-        local ok, colorizer = pcall(require, "colorizer")
-        if ok and colorizer then colorizer.detach_from_buffer() end
-      end
+      -- require("document-color").buf_attach(bufnr)
+      require("mega.lsp.document_colors").buf_attach(bufnr, { single_column = true, col_count = 2 })
+      local ok, colorizer = pcall(require, "colorizer")
+      if ok and colorizer then colorizer.detach_from_buffer() end
     end
   end
 
@@ -673,7 +672,7 @@ local function get_server_capabilities()
   capabilities.offsetEncoding = { "utf-16" }
   capabilities.textDocument.codeLens = { dynamicRegistration = false }
   -- TODO: what is dynamicRegistration doing here? should I not always set to true?
-  capabilities.textDocument.colorProvider = { dynamicRegistration = false }
+  capabilities.textDocument.colorProvider = { dynamicRegistration = true }
   capabilities.textDocument.completion.completionItem.documentationFormat = { "markdown" }
   capabilities.textDocument.completion.completionItem.snippetSupport = true
   -- textDocument = { foldingRange = { dynamicRegistration = false, lineFoldingOnly = true } },

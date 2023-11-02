@@ -35,14 +35,16 @@ id-case = "lower"
 author = "Seth Messer"
 
 ## -- journal
-[group.journal]
-paths = [ "journal/daily", "journal/weekly" ]
-[group.journal.daily.note]
-filename = "{{format-date now}}"
+[group.daily]
+paths = [ "journal/daily" ]
+# paths = [ "journal/daily", "journal/weekly" ]
+[group.daily.note]
+filename = "daily-{{format-date now '%Y-%m-%d'}}"
 template = "daily.md"
-[group.journal.weekly.note]
-filename = "{{format-date now}}"
-template = "weekly.md"
+# [group.daily]
+# [group.weekly.note]
+# filename = "{{format-date now '%Y-%m-%d'}}"
+# template = "weekly.md"
 
 ## -- meetings
 [group.meetings]
@@ -50,7 +52,7 @@ template = "weekly.md"
 paths = ["meetings"]
 [group.meetings.note]
 # %Y-%m-%d is actually the default format, so you could use {{date now}} instead.
-filename = "{{title}}"
+filename = "meetings-{{title}}"
 extension = "md"
 template = "meeting.md"
 
@@ -116,6 +118,7 @@ edlast = "zk edit --limit 1 --sort modified- $@"
 # Edit the notes selected interactively among the notes created the last two weeks.
 recent = "zk edit --sort created- --created-after 'last two weeks' --interactive"
 conf = '$EDITOR "$ZK_CONFIG_DIR/config.toml"'
+daily = 'zk new --no-input "$ZK_NOTEBOOK_DIR/journal/daily"'
 
 # LSP INTEGRATION
 [lsp]
