@@ -3,7 +3,7 @@
 
 [[ -f "$HOME/.dotfiles/config/zsh/lib/helpers.zsh" ]] && source "$HOME/.dotfiles/config/zsh/lib/helpers.zsh"
 
-case `uname` in
+case $(uname) in
   Darwin)
     # -- intel mac:
     [ -f "/usr/local/bin/brew" ] && eval "$(/usr/local/bin/brew shellenv)"
@@ -19,9 +19,13 @@ set -euo pipefail
 
 do_install() {
   #export PERL_MM_USE_DEFAULT=1;
-  PERL_MM_USE_DEFAULT=1 cpan install Pod::Parser && log_ok "DONE configuring perl";
+  PERL_MM_USE_DEFAULT=1 cpan install Pod::Parser && log_ok "DONE configuring perl"
 
-  asdf reshim perl
+  if (command -v rtx &>/dev/null); then
+    rtx reshim perl
+  elif (command -v asdf &>/dev/null); then
+    asdf reshim perl
+  fi
 }
 
 do_install || exit 1

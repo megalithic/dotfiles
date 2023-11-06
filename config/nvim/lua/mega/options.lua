@@ -504,15 +504,6 @@ vim.o.titlelen = 70
 -----------------------------------------------------------------------------//
 vim.o.guifont = "JetBrainsMono Nerd Font:h15"
 
------------------------------------------------------------------------------//
--- Abbreviations/Cabbreviations {{{1
------------------------------------------------------------------------------//
--- REF: https://github.com/lukas-reineke/lsp-format.nvim#wq-will-not-format
--- vim.cmd([[cabbrev wq execute "lua vim.lsp.buf.format()" <bar> wq]])
-vim.cmd.abbrev([[dashbarod dashboard]])
-vim.cmd.abbrev([[dashbaord dashboard]])
-vim.cmd.abbrev([[dashbroad dashboard]])
-
 -- [ colorscheme ] -------------------------------------------------------------
 vim.o.termguicolors = true
 vim.opt.background = "dark"

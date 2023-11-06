@@ -61,11 +61,13 @@ local function leelooHandler(_watcher, _path, _key, _oldValue, isConnected)
   end
 end
 
+---@param dockState "docked"|"undocked"
 function obj.setWifi(state)
   hs.execute("networksetup -setairportpower airport " .. state, true)
   success(fmt("[watcher.dock] wifi set to %s", state))
 end
 
+---@param dockState "docked"|"undocked"
 function obj.setInput(state)
   local bin = hostname() == "megabookpro" and "/opt/homebrew/bin/SwitchAudioSource"
     or "/usr/local/bin/SwitchAudioSource"

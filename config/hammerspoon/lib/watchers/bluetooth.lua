@@ -105,7 +105,10 @@ local function toggleDevice(deviceStr, fn)
       return connectedState
     end)
 
-    if isConnected then dbg("%s is connected..", deviceStr) end
+    if isConnected then
+      dbg("%s is connected..", deviceStr)
+      L.req("lib.watchers.dock").setInput("docked")
+    end
 
     return isConnected
   end, function() connectDevice(deviceStr) end)
@@ -141,6 +144,7 @@ function obj:start()
       if isConnected then
         info(fmt(":: connected %s %s", device.name, device.icon))
         require("lib.watchers.dock").setInput(C.dock.docked.input)
+        hs.notify.withdrawAll()
         hs.notify.new({ title = obj.name, subTitle = fmt("%s %s Connected", device.name, device.icon) }):send()
       end
     end)

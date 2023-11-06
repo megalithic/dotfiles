@@ -39,7 +39,7 @@ author = "Seth Messer"
 paths = [ "journal/daily" ]
 # paths = [ "journal/daily", "journal/weekly" ]
 [group.daily.note]
-filename = "daily-{{format-date now '%Y-%m-%d'}}"
+filename = "{{format-date now '%Y-%m-%d'}}"
 template = "daily.md"
 # [group.daily]
 # [group.weekly.note]

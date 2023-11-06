@@ -55,6 +55,7 @@ hs.shutdownCallback = function()
   _G.mega = nil
 end
 
+hs.notify.withdrawAll()
 hs.notify.new({ title = "Hammerspoon", subTitle = "Configuration successfully loaded" }):send()
 
 require("_banner")

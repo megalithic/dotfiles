@@ -3,7 +3,7 @@
 
 [[ -f "$HOME/.dotfiles/config/zsh/lib/helpers.zsh" ]] && source "$HOME/.dotfiles/config/zsh/lib/helpers.zsh"
 
-case `uname` in
+case $(uname) in
   Darwin)
     # -- intel mac:
     [ -f "/usr/local/bin/brew" ] && eval "$(/usr/local/bin/brew shellenv)"
@@ -30,16 +30,20 @@ do_install() {
   python3.11 -m pip install --upgrade pip
   python3.11 -m pip install --upgrade -r "$HOME/.default-python-packages"
   # cat "$HOME/.default-python-packages" | xargs python3.11 -m pip install --upgrade
-  pip3.11 -m pip install --upgrade  -r "$HOME/.default-python-packages"
+  pip3.11 -m pip install --upgrade -r "$HOME/.default-python-packages"
   # cat "$HOME/.default-python-packages" | xargs pip3.11 install --upgrade
-  pip3 -m pip install --upgrade  -r "$HOME/.default-python-packages"
+  pip3 -m pip install --upgrade -r "$HOME/.default-python-packages"
   # cat "$HOME/.default-python-packages" | xargs pip3 install --upgrade
   # sudo /Library/Frameworks/Python.framework/Versions/3.11/bin/pip3 -m pip install --upgrade  -r "$HOME/.default-python-packages"
-  [[ -f "/usr/local/bin/brew" ]] && /usr/local/opt/python@3.11/bin/python3.11 -m pip install --upgrade  -r "$HOME/.default-python-packages"
-  [[ -f "/opt/homebrew/bin/brew" ]] && /opt/homebrew/opt/python@3.11/bin/python3.11 -m pip install --upgrade  -r "$HOME/.default-python-packages"
+  [[ -f "/usr/local/bin/brew" ]] && /usr/local/opt/python@3.11/bin/python3.11 -m pip install --upgrade -r "$HOME/.default-python-packages"
+  [[ -f "/opt/homebrew/bin/brew" ]] && /opt/homebrew/opt/python@3.11/bin/python3.11 -m pip install --upgrade -r "$HOME/.default-python-packages"
   # sudo cat "$HOME/.default-python-packages" | xargs /Library/Frameworks/Python.framework/Versions/3.11/bin/pip3 install --upgrade
 
-  asdf reshim python
+  if (command -v rtx &>/dev/null); then
+    rtx reshim python
+  elif (command -v asdf &>/dev/null); then
+    asdf reshim python
+  fi
 }
 
 do_install || exit 1

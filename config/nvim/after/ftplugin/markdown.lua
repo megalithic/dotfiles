@@ -11,25 +11,25 @@
 
 vim.cmd([[autocmd FileType markdown nnoremap gO <cmd>Toc<cr>]])
 
-vim.o.equalprg = [[prettier --stdin-filepath '%:p']]
-vim.o.makeprg = [[open %]]
+-- vim.o.equalprg = [[prettier --stdin-filepath '%:p']]
+-- vim.o.makeprg = [[open %]]
 
 vim.cmd([[iabbrev <expr> mdate "### ".strftime("%Y-%m-%d %H:%M:%S")]])
 vim.cmd.iabbrev("<buffer>", "zTODO", "<span style=\"color:red\">TODO:</span><Esc>F<i")
 
 -- TODO: convert these to vim.opt and vim.opt_local
-vim.cmd([[
-  setlocal wrap
-  setlocal spell
-  setlocal nolist
-  setlocal foldexpr=markdown#FoldExpression(v:lnum)
-  setlocal foldmethod=expr
-  setlocal formatoptions+=t
-  setlocal linebreak
-  setlocal textwidth=0
-  setlocal autoindent tabstop=2 shiftwidth=2 formatoptions-=t comments=fb:>,fb:*,fb:+,fb:-
-  setlocal conceallevel=2
-  ]])
+-- vim.cmd([[
+--   setlocal wrap
+--   setlocal spell
+--   setlocal nolist
+--   setlocal foldexpr=markdown#FoldExpression(v:lnum)
+--   setlocal foldmethod=expr
+--   setlocal formatoptions+=t
+--   setlocal linebreak
+--   setlocal textwidth=0
+--   setlocal autoindent tabstop=2 shiftwidth=2 formatoptions-=t comments=fb:>,fb:*,fb:+,fb:-
+--   setlocal conceallevel=2
+--   ]])
 
 -- ## plasticboy/vim-markdown
 -- vim.g.markdown_fenced_languages = {
@@ -59,40 +59,44 @@ vim.cmd([[
 --   "viml",
 -- }
 
-vim.g.markdown_enable_conceal = 1
-vim.g.vim_markdown_folding_level = 10
-vim.g.vim_markdown_folding_disabled = 1
-vim.g.vim_markdown_conceal = 2
-vim.g.vim_markdown_conceal_code_blocks = 0
-vim.g.vim_markdown_folding_style_pythonic = 1
-vim.g.vim_markdown_override_foldtext = 0
-vim.g.vim_markdown_follow_anchor = 1
-vim.g.vim_markdown_frontmatter = 1 -- for YAML format
-vim.g.vim_markdown_toml_frontmatter = 1 -- for TOML format
-vim.g.vim_markdown_json_frontmatter = 1 -- for JSON format
-vim.g.vim_markdown_new_list_item_indent = 2
-vim.g.vim_markdown_auto_insert_bullets = 0
-vim.g.vim_markdown_no_extensions_in_markdown = 1
-vim.g.vim_markdown_math = 1
-vim.g.vim_markdown_strikethrough = 1
+-- vim.g.markdown_enable_conceal = 1
+-- vim.g.vim_markdown_folding_level = 10
+-- vim.g.vim_markdown_folding_disabled = 1
+-- vim.g.vim_markdown_conceal = 2
+-- vim.g.vim_markdown_conceal_code_blocks = 0
+-- vim.g.vim_markdown_folding_style_pythonic = 1
+-- vim.g.vim_markdown_override_foldtext = 0
+-- vim.g.vim_markdown_follow_anchor = 1
+-- vim.g.vim_markdown_frontmatter = 1 -- for YAML format
+-- vim.g.vim_markdown_toml_frontmatter = 1 -- for TOML format
+-- vim.g.vim_markdown_json_frontmatter = 1 -- for JSON format
+-- vim.g.vim_markdown_new_list_item_indent = 2
+-- vim.g.vim_markdown_auto_insert_bullets = 0
+-- vim.g.vim_markdown_no_extensions_in_markdown = 1
+-- vim.g.vim_markdown_math = 1
+-- vim.g.vim_markdown_strikethrough = 1
+--
+-- -- ## ixru/nvim-markdown
+-- vim.g.vim_markdown_no_default_key_mappings = 1
+-- vim.cmd([[map <Plug> <Plug>Markdown_FollowLink]])
+--
+-- -- ## iamcco/markdown-preview.nvim
+-- vim.g.mkdp_auto_start = 0
+-- vim.g.mkdp_auto_close = 1
+--
+-- -- match and highlight hyperlinks
+-- vim.fn.matchadd("matchURL", [[http[s]\?:\/\/[[:alnum:]%\/_#.-]*]])
+-- vim.cmd(string.format("hi matchURL guifg=%s", require("mega.lush_theme.colors").bright_blue))
 
--- ## ixru/nvim-markdown
-vim.g.vim_markdown_no_default_key_mappings = 1
-vim.cmd([[map <Plug> <Plug>Markdown_FollowLink]])
-
--- ## iamcco/markdown-preview.nvim
-vim.g.mkdp_auto_start = 0
-vim.g.mkdp_auto_close = 1
-
--- ## used with my zk popups in tmux
 if vim.env.TMUX_POPUP then
+  -- ## used with markdown related tmux popups (through nvim)
   vim.opt_local.signcolumn = "no"
   vim.opt_local.cursorline = false
-  vim.opt_local.number = true
+  vim.opt_local.number = false
   vim.opt_local.relativenumber = false
 
-  vim.opt.laststatus = 2
-  vim.opt.cmdheight = 1
+  vim.opt.laststatus = 1
+  vim.opt.cmdheight = 0
   vim.api.nvim_win_set_option(
     0,
     "winhl",
@@ -106,12 +110,19 @@ if vim.env.TMUX_POPUP then
   )
 
   vim.cmd("hi MsgArea guibg=#3d494f")
+
+  local ok_headlines, headlines = pcall(require, "headlines")
+  if ok_headlines then
+    headlines.setup({
+      markdown = {
+        headline_highlights = false,
+        dash_highlight = false,
+        codeblock_highlight = false,
+      },
+    })
+  end
 end
 
--- match and highlight hyperlinks
-vim.fn.matchadd("matchURL", [[http[s]\?:\/\/[[:alnum:]%\/_#.-]*]])
-vim.cmd(string.format("hi matchURL guifg=%s", require("mega.lush_theme.colors").bright_blue))
---
 -- mega.augroup("ZKMaps", {
 --   {
 --     event = { "BufEnter", "BufReadPre", "BufReadPost", "BufNewFile" },

@@ -261,6 +261,12 @@ local font = {
     Bold = { family = "JetBrainsMono Nerd Font Mono", weight = "ExtraBlack" },
     BoldItalic = { family = "JetBrainsMono Nerd Font Mono", italic = true, weight = "ExtraBlack" },
   },
+  VictorMonoNerdFont = {
+    Normal = { family = "VictorMono Nerd Font Mono", weight = "Medium" },
+    Italic = { family = "VictorMono Nerd Font Mono", italic = true },
+    Bold = { family = "VictorMono Nerd Font Mono", weight = "ExtraBlack" },
+    BoldItalic = { family = "VictorMono Nerd Font Mono", italic = true, weight = "ExtraBlack" },
+  },
 }
 
 -- if you are *NOT* lazy-loading smart-splits.nvim (recommended)
@@ -344,7 +350,8 @@ return {
   freetype_load_target = "Light",
   freetype_render_target = "HorizontalLcd",
   font = w.font_with_fallback({
-    font.JetBrainsMono.Normal,
+    -- font.VictorMonoNerdFont.Normal,
+    -- font.JetBrainsMono.Normal,
     font.JetBrainsMonoNerdFont.Normal,
     { family = "Rec Mono Duotone", weight = "Medium" },
     { family = "Symbols Nerd Font Mono", scale = 0.8 },

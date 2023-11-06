@@ -5,8 +5,8 @@ log "setting up asdf for all platforms.."
 
 # clone asdf-vm (no need for homebrew version of asdf if we're doing this)
 if [[ ! -d "$HOME/.asdf" ]]; then
-	log_warn "$HOME/.asdf not found; cloning it now.."
-	git clone https://github.com/asdf-vm/asdf.git $HOME/.asdf
+  log_warn "$HOME/.asdf not found; cloning it now.."
+  git clone https://github.com/asdf-vm/asdf.git $HOME/.asdf
 fi
 
 source "$HOME/.asdf/asdf.sh"
@@ -42,24 +42,24 @@ export KERL_CONFIGURE_OPTIONS="--without-javac --with-ssl=$(brew --prefix openss
 asdf install
 
 log "configuring ruby.."
-source $DOTS/asdf/ruby.sh && log_ok "DONE configuring ruby"
+source $DOTS/tools/ruby.sh && log_ok "DONE configuring ruby"
 
 log "configuring node.."
 # TODO: it seems as though after installing a node vresion we have to explicitly set it with `asdf global nodejs <version>`
-source "$DOTS/asdf/node.sh" && log_ok "DONE configuring node"
+source "$DOTS/tools/node.sh" && log_ok "DONE configuring node"
 
 log "configuring lua.."
-# source "$DOTS/asdf/lua.sh" && log_ok "DONE configuring lua"
+# source "$DOTS/tools/lua.sh" && log_ok "DONE configuring lua"
 
 log "configuring rust.."
-source "$DOTS/asdf/rust.sh" && log_ok "DONE configuring rust"
+source "$DOTS/tools/rust.sh" && log_ok "DONE configuring rust"
 
 log "configuring elixir.."
 # NOTE: in case of `erl not found` issues: https://github.com/asdf-vm/asdf-elixir/issues/60#issuecomment-964812953
-source "$DOTS/asdf/elixir.sh" && log_ok "DONE configuring elixir"
+source "$DOTS/tools/elixir.sh" && log_ok "DONE configuring elixir"
 
 log "configuring go.."
-source "$DOTS/asdf/go.sh" && log_ok "DONE configuring go"
+source "$DOTS/tools/go.sh" && log_ok "DONE configuring go"
 
 log "configuring perl.."
 # REF: https://github.com/NixOS/nixpkgs/issues/106506#issuecomment-795775642

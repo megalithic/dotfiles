@@ -588,7 +588,7 @@ M.unofficial = {
 
       configs.nextls = {
         default_config = {
-          cmd = cmd(true),
+          cmd = cmd(false),
           single_file_support = true,
           filetypes = { "elixir", "eelixir", "heex", "surface" },
           root_dir = root_pattern("mix.exs", ".git"),

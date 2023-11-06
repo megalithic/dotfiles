@@ -388,7 +388,7 @@ cnoremap("%%", "<C-r>=fnameescape(expand('%'))<cr>")
 cnoremap("::", "<C-r>=fnameescape(expand('%:p:h'))<cr>/")
 
 -- makes * and # work on visual selection mode
-vim.api.nvim_exec(
+vim.cmd(
   [[
   function! g:VSetSearch(cmdtype)
     let temp = @s

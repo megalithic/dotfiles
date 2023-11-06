@@ -260,7 +260,7 @@ return {
   dependencies = {
     "natecraddock/telescope-zf-native.nvim",
     "nvim-telescope/telescope-file-browser.nvim",
-    "fdschmidt93/telescope-egrepify.nvim",
+    { "megalithic/telescope-egrepify.nvim" },
     -- "danielvolchek/tailiscope.nvim"
     { "debugloop/telescope-undo.nvim" },
   },

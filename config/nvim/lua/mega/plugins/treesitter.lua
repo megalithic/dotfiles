@@ -323,9 +323,9 @@ return {
           },
           lsp_interop = {
             enable = true,
-            -- peek_definition_code = {
-            --   ["gD"] = "@function.outer",
-            -- },
+            peek_definition_code = {
+              ["gP"] = "@function.outer",
+            },
           },
         },
         incremental_selection = {

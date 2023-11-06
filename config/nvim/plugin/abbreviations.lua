@@ -1,11 +1,9 @@
 -- REF:
 -- https://www.instapaper.com/text?u=https%3A%2F%2Fvonheikemen.github.io%2Fdevlog%2Ftools%2Fusing-vim-abbreviations%2F
 if not mega then return end
-if not vim.g.enabled_plugin["bbreviation"] then return end
+if not vim.g.enabled_plugin["abbreviations"] then return end
 
-local M = {}
-
-M.iabbrev = function(lhs, rhs, ft)
+mega.iabbrev = function(lhs, rhs, ft)
   ft = ft or nil
 
   if ft then
@@ -22,16 +20,27 @@ M.iabbrev = function(lhs, rhs, ft)
   end
 end
 
+mega.cabbrev = function(lhs, rhs) vim.cmd.cabbrev(string.format([[%s %s]], lhs, rhs)) end
+mega.nabbrev = function(lhs, rhs) vim.cmd.abbrev(string.format([[%s %s]], lhs, rhs)) end
+mega.noabbrev = function(lhs, rhs) vim.cmd.noabbrev(string.format([[%s %s]], lhs, rhs)) end
+
 -- [ insert ] ------------------------------------------------------------------
 
-local gitcommit_pattern = { "gitcommit", "NeogitCommitMessage" }
-M.iabbrev("cabag", "Co-authored-by: Aaron Gunderson <aaron@ternit.com>", gitcommit_pattern)
-M.iabbrev("cabdt", "Co-authored-by: Dan Thiffault <dan@ternit.com>", gitcommit_pattern)
-M.iabbrev("cabjm", "Co-authored-by: Jia Mu <jia@ternit.com>", gitcommit_pattern)
-M.iabbrev("cabam", "Co-authored-by: Ali Marsh<ali@ternit.com>", gitcommit_pattern)
+local gitcommit_pattern = { "gitcommit", "NeogitCommitMessage", "COMMIT_EDITMSG", "NEOGIT_COMMIT_EDITMSG" }
+mega.iabbrev("cabag", "Co-authored-by: Aaron Gunderson <aaron@ternit.com>", gitcommit_pattern)
+mega.iabbrev("cabdt", "Co-authored-by: Dan Thiffault <dan@ternit.com>", gitcommit_pattern)
+mega.iabbrev("cabjm", "Co-authored-by: Jia Mu <jia@ternit.com>", gitcommit_pattern)
+mega.iabbrev("cabam", "Co-authored-by: Ali Marsh<ali@ternit.com>", gitcommit_pattern)
 
--- [ command ] -----------------------------------------------------------------
+mega.iabbrev("dashbarod", "dashboard")
+mega.iabbrev("dashbaord", "dashboard")
+mega.iabbrev("dashbroad", "dashboard")
+mega.iabbrev("fulment", "fulfillment")
+mega.iabbrev("fullment", "fulfillment")
+mega.iabbrev("fullfillment", "fulfillment")
+mega.iabbrev("fulfilment", "fulfillment")
+mega.iabbrev("filment", "fulfillment")
 
-vim.cmd.cabbrev("options", "vert options")
+-- command -----------------------------------------------------------------
 
-return M
+mega.cabbrev("options", "vert options")

@@ -23,9 +23,6 @@ local H = require("mega.utils.highlights")
 vim.g.is_saving = false
 local search_count_timer
 
---- Timer to update the search count as the file is travelled
-function M.update_search_count(timer) end
-
 mega.augroup("megaline", {
   {
     event = { "BufWritePre" },
@@ -33,7 +30,10 @@ mega.augroup("megaline", {
       if not vim.g.is_saving and vim.bo.modified then
         vim.g.is_saving = true
         vim.cmd([[checktime]])
-        vim.defer_fn(function() vim.g.is_saving = false end, 500)
+        vim.defer_fn(function()
+          vim.g.is_saving = false
+          pcall(vim.cmd.redrawstatus)
+        end, 500)
       end
     end,
   },

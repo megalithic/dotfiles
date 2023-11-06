@@ -25,7 +25,7 @@
       stdout: true
       stderr: true
       stdin: true
-      include: [ "tap", "brew", "cask", "mas" ]
+      include: ["tap", "brew", "cask", "mas"]
 
 - shell:
     - description:
@@ -196,13 +196,13 @@
     ~/.asdfrc: asdf/asdfrc
     ~/.tool-versions:
       force: true
-      path: asdf/tool-versions
+      path: tools/tool-versions
     ~/.ignore:
       force: true
-      path: misc/tool-ignores
-    ~/.default-gems: asdf/default-gems
-    ~/.default-npm-packages: asdf/default-npm-packages
-    ~/.default-python-packages: asdf/default-python-packages
+      path: tools/tool-ignores
+    ~/.default-gems: tools/default-gems
+    ~/.default-npm-packages: tools/default-npm-packages
+    ~/.default-python-packages: tools/default-python-packages
     ~/Library/Application Support/Code/User/settings.json:
       force: true
       if: "[ `uname` = Darwin ]"
@@ -285,15 +285,15 @@
 
         log "Attempting to install lexical-main.."; ~/.dotfiles/bin/lexical-install main;
 
-        log "Attempting to install lua/luarocks packages.."; ~/.dotfiles/asdf/lua.sh;
+        log "Attempting to install lua/luarocks packages.."; ~/.dotfiles/tools/lua.sh;
 
-        log "Attempting to install rust/cargo packages.."; ~/.dotfiles/asdf/rust.sh;
+        log "Attempting to install rust/cargo packages.."; ~/.dotfiles/tools/rust.sh;
 
-        log "Attempting to install golang packages.."; ~/.dotfiles/asdf/go.sh;
+        log "Attempting to install golang packages.."; ~/.dotfiles/tools/go.sh;
 
-        log "Attempting to install perl packages.."; ~/.dotfiles/asdf/perl.sh;
+        log "Attempting to install perl packages.."; ~/.dotfiles/tools/perl.sh;
 
-        log "Attempting to install python packages.."; ~/.dotfiles/asdf/python.sh;
+        log "Attempting to install python packages.."; ~/.dotfiles/tools/python.sh;
 
         log "Attempting to run post-fzf install step..";
 
