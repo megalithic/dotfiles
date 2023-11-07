@@ -193,8 +193,6 @@ function M.update(bufnr)
         priority = 5000,
         conceal = "",
       })
-
-      dd(M.get_hl(hex))
     end
   end)
 end
