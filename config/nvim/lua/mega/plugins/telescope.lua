@@ -119,7 +119,8 @@ local function project_files(opts)
   opts = opts or {}
   -- opts.cwd = require("mega.utils").get_root()
   -- vim.notify(fmt("current project files root: %s", opts.cwd), vim.log.levels.DEBUG, { title = "telescope" })
-  ts.find_files(ivy(opts))
+  -- ts.find_files(ivy(opts))
+  require("telescope").extensions.smart_open.smart_open(ivy(opts))
 end
 
 local function stopinsert(callback)
@@ -259,8 +260,16 @@ return {
   cmd = { "Telescope" },
   dependencies = {
     "natecraddock/telescope-zf-native.nvim",
+    { "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
+
     "nvim-telescope/telescope-file-browser.nvim",
     { "megalithic/telescope-egrepify.nvim" },
+
+    {
+      "danielfalk/smart-open.nvim",
+      dependencies = { "kkharji/sqlite.lua", { "nvim-telescope/telescope-fzf-native.nvim", build = "make" } },
+    },
+
     -- "danielvolchek/tailiscope.nvim"
     { "debugloop/telescope-undo.nvim" },
   },
@@ -401,19 +410,32 @@ return {
         "dotbot",
       },
       extensions = {
-        ["zf-native"] = {
-          file = {
-            enable = true,
-            highlight_results = true,
-            match_filename = true,
-          },
-          generic = {
-            enable = true,
-            highlight_results = true,
-            match_filename = false,
-          },
+        fzf = {
+          fuzzy = true,
+          override_generic_sorter = true,
+          override_file_sorter = true,
+          case_mode = "smart_case",
         },
+        -- ["zf-native"] = {
+        --   file = {
+        --     enable = true,
+        --     highlight_results = true,
+        --     match_filename = true,
+        --   },
+        --   generic = {
+        --     enable = true,
+        --     highlight_results = true,
+        --     match_filename = false,
+        --   },
+        -- },
         -- FIXME: multi doesn't work here
+        smart_open = {
+          show_scores = true,
+          ignore_patterns = { "*.git/*", "*/tmp/*" },
+          match_algorithm = "fzf",
+          disable_devicons = false,
+          cwd_only = true,
+        },
         egrepify = {
           lnum = true, -- default, not required
           lnum_hl = "EgrepifyLnum", -- default, not required
@@ -434,7 +456,16 @@ return {
             },
           },
         },
-        undo = { use_delta = false, use_custom_command = { "bash", "-c", "echo '$DIFF' | delta" } },
+        undo = {
+          side_by_side = true,
+          use_delta = true,
+          -- use_custom_command = { "bash", "-c", "echo '$DIFF' | delta" },
+          mappings = {
+            i = {
+              ["<cr>"] = function() require("telescope-undo.actions").restore() end,
+            },
+          },
+        },
       },
       pickers = {
         -- find_files = {
@@ -532,7 +563,9 @@ return {
 
     telescope.load_extension("undo")
     telescope.load_extension("file_browser")
-    telescope.load_extension("zf-native")
+    telescope.load_extension("fzf")
+    -- telescope.load_extension("zf-native")
     telescope.load_extension("egrepify")
+    telescope.load_extension("smart_open")
   end,
 }
