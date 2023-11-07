@@ -85,8 +85,9 @@ vim.cmd.iabbrev("<buffer>", "zTODO", "<span style=\"color:red\">TODO:</span><Esc
 -- vim.g.mkdp_auto_close = 1
 --
 -- -- match and highlight hyperlinks
--- vim.fn.matchadd("matchURL", [[http[s]\?:\/\/[[:alnum:]%\/_#.-]*]])
--- vim.cmd(string.format("hi matchURL guifg=%s", require("mega.lush_theme.colors").bright_blue))
+vim.fn.matchadd("matchURL", [[http[s]\?:\/\/[[:alnum:]%\/_#.-]*]])
+vim.cmd(string.format("hi matchURL guifg=%s", require("mega.lush_theme.colors").bright_blue))
+vim.cmd([[syn region markdownWikiLink matchgroup=markdownLinkDelimiter start="\[\[\w\+|" end="\]\]"]])
 
 if vim.env.TMUX_POPUP then
   -- ## used with markdown related tmux popups (through nvim)
@@ -111,16 +112,16 @@ if vim.env.TMUX_POPUP then
 
   vim.cmd("hi MsgArea guibg=#3d494f")
 
-  local ok_headlines, headlines = pcall(require, "headlines")
-  if ok_headlines then
-    headlines.setup({
-      markdown = {
-        headline_highlights = false,
-        dash_highlight = false,
-        codeblock_highlight = false,
-      },
-    })
-  end
+  -- local ok_headlines, headlines = pcall(require, "headlines")
+  -- if ok_headlines then
+  --   headlines.setup({
+  --     markdown = {
+  --       headline_highlights = false,
+  --       dash_highlight = false,
+  --       codeblock_highlight = false,
+  --     },
+  --   })
+  -- end
 end
 
 -- mega.augroup("ZKMaps", {

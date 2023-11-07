@@ -250,14 +250,11 @@ do
         require("virt-column").update()
       end,
     },
-    -- {
-    --   event = { "BufEnter", "TextChanged", "InsertLeave", "FileType" },
-    --   pattern = { "*.html", "*.heex", "*.tsx", "*.jsx", "*.ex", "elixir", "heex", "html" },
-    --   command = function(args)
-    --     FIXME: maybe crashing nvim
-    --     require("mega.utils").conceal_class(args.buf)
-    --   end,
-    -- },
+    {
+      event = { "BufEnter", "TextChanged", "InsertLeave", "FileType" },
+      pattern = { "*.html", "*.heex", "*.tsx", "*.jsx", "*.ex", "elixir", "heex", "html" },
+      command = function(args) require("mega.utils").conceal_class(args.buf) end,
+    },
   })
 end
 

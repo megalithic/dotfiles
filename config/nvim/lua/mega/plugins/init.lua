@@ -1,6 +1,11 @@
 return {
   -- ( CORE ) ------------------------------------------------------------------
-  -- { "dstein64/vim-startuptime", cmd = { "StartupTime" }, config = function() vim.g.startuptime_tries = 15 end },
+  { "dstein64/vim-startuptime", cmd = { "StartupTime" }, config = function() vim.g.startuptime_tries = 15 end },
+  {
+    "zeioth/garbage-day.nvim",
+    event = "BufEnter",
+    config = true,
+  },
 
   -- ( UI ) --------------------------------------------------------------------
   {
@@ -199,6 +204,40 @@ return {
       },
     },
   },
+  {
+    "echasnovski/mini.pick",
+    cmd = "Pick",
+    opts = {},
+  },
+  {
+    "monaqa/dial.nvim",
+    -- stylua: ignore
+    keys = {
+      { "<C-a>", function() return require("dial.map").inc_normal() end, expr = true, desc = "Increment" },
+      { "<C-x>", function() return require("dial.map").dec_normal() end, expr = true, desc = "Decrement" },
+    },
+    config = function()
+      local augend = require("dial.augend")
+      require("dial.config").augends:register_group({
+        default = {
+          augend.integer.alias.decimal,
+          augend.integer.alias.hex,
+          augend.date.alias["%Y/%m/%d"],
+          augend.constant.alias.bool,
+          augend.semver.alias.semver,
+          augend.constant.new({ elements = { "let", "const" } }),
+        },
+      })
+    end,
+  },
+  -- {
+  --   "3rd/image.nvim",
+  --   ft = { "markdown", "norg", "syslang", "vimwiki" },
+  --   opts = {
+  --     -- backend = "ueberzug",
+  --     tmux_show_only_in_active_window = true,
+  --   },
+  -- },
 
   -- ( LSP ) -------------------------------------------------------------------
   { "onsails/lspkind.nvim" },
@@ -471,20 +510,21 @@ return {
   { "alvan/vim-closetag", ft = { "elixir", "heex", "html", "liquid", "javascriptreact", "typescriptreact" } },
   {
     "andymass/vim-matchup",
-    event = "BufReadPre",
     config = function()
-      vim.g.matchup_surround_enabled = true
-      vim.g.matchup_matchparen_deferred = true
       vim.g.matchup_matchparen_nomode = "i"
+      vim.g.matchup_delim_noskips = 1 -- recognize symbols within comments
       vim.g.matchup_matchparen_deferred_show_delay = 400
       vim.g.matchup_matchparen_deferred_hide_delay = 400
-      vim.g.matchup_matchparen_offscreen = {}
-      -- vim.g.matchup_matchparen_offscreen = {
-      --   method = "popup",
-      --   -- fullwidth = true,
-      --   highlight = "TreesitterContext",
-      --   border = "",
-      -- }
+      -- vim.g.matchup_matchparen_offscreen = {}
+      vim.g.matchup_matchparen_offscreen = {
+        method = "popup",
+        -- fullwidth = true,
+        highlight = "TreesitterContext",
+        border = "",
+      }
+      vim.g.matchup_matchparen_deferred = 1
+      vim.g.matchup_matchparen_timeout = 300
+      vim.g.matchup_matchparen_insert_timeout = 60
       vim.g.matchup_surround_enabled = 1 -- defaulted 0
       vim.g.matchup_motion_enabled = 1 -- defaulted 0
       vim.g.matchup_text_obj_enabled = 1
@@ -626,21 +666,12 @@ return {
     end,
   },
   {
-    -- enabled = false,
     "gaoDean/autolist.nvim",
-    event = {
-      -- "BufRead",
-      -- "BufNewFile",
-      -- "FileType",
-
-      "BufRead *.md,*.txt,*.org,*.norg",
-      "BufNewFile *.md,*.txt,*.org,*.norg",
-    },
-    pattern = {
-      "*.md",
-      "*.txt",
-      "*.org",
-      "*.norg",
+    ft = {
+      "org",
+      "neorg",
+      "plaintext",
+      "markdown",
       "gitcommit",
       "NeogitCommitMessage",
       "COMMIT_EDITMSG",

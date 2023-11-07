@@ -211,6 +211,7 @@ return {
         function() mega.zk_live_grep({ exec_empty_query = false, cwd = vim.env.ZK_NOTEBOOK_DIR }) end,
         desc("zk: live grep")
       )
+    -- TELESCOPE ---------------------------------------------------------------
     elseif vim.g.picker == "telescope" then
       mega.nnoremap(
         "<leader>zf",
@@ -269,6 +270,7 @@ return {
 
     mega.vnoremap("<leader>zg", ":'<,'>ZkMatch<CR>", desc("zk: search notes matching selection"))
     mega.nnoremap("<leader>zr", "<Cmd>ZkRecents<CR>", desc("zk: find recent notes"))
+    mega.nnoremap("<leader>zt", "<Cmd>ZkTags<CR>", desc("zk: find tags"))
     -- mega.nnoremap(
     --   "<leader>z/",
     --   require("telescope.builtin").live_grep(_G.picker.telescope.ivy({ cwd = vim.g.notes_path })),

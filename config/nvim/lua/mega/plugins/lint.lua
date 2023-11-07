@@ -23,12 +23,14 @@ return {
   },
   opts = {
     linters_by_ft = {
+      ["javascript.jsx"] = { "eslint_d" },
+      ["typescript.tsx"] = { "eslint_d" },
       bash = { "shellcheck" },
       css = { "styleint" },
       javascript = { "eslint_d" },
       javascriptreact = { "eslint_d" },
-      ["javascript.jsx"] = { "eslint_d" },
-      -- lua = { "luacheck" },
+      lua = { "selene", "luacheck" },
+      markdown = { "markdownlint" },
       python = { "mypy", "pylint" },
       rst = { "rstlint" },
       ruby = { "ruby", "rubocop" },
@@ -36,12 +38,18 @@ return {
       sh = { "shellcheck" },
       typescript = { "eslint_d" },
       typescriptreact = { "eslint_d" },
-      ["typescript.tsx"] = { "eslint_d" },
       vim = { "vint" },
       yaml = { "yamllint" },
-      -- zsh = { "shellcheck" },
+      zsh = { "shellcheck" },
     },
-    linters = {},
+    linters = {
+      selene = {
+        condition = function(ctx) return vim.fs.find({ "selene.toml" }, { path = ctx.filename, upward = true })[1] end,
+      },
+      luacheck = {
+        condition = function(ctx) return vim.fs.find({ ".luacheckrc" }, { path = ctx.filename, upward = true })[1] end,
+      },
+    },
   },
   config = function(_, opts)
     local lint = require("lint")

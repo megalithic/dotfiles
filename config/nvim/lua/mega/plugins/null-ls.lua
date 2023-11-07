@@ -1,11 +1,11 @@
 local M = {
   -- {
   "nvimtools/none-ls.nvim",
-  -- cond = vim.g.formatter == "null-ls",
+  cond = vim.tbl_contains({ "null-ls", "none-ls" }, vim.g.formatter),
   dependencies = { "nvim-lua/plenary.nvim" },
   event = { "BufReadPre", "BufNewFile" },
   config = function()
-    if vim.tbl_contains({ "null-ls", "none-ls" }, vim.g.formatter) then return end
+    if not vim.tbl_contains({ "null-ls", "none-ls" }, vim.g.formatter) then return end
     local nls = require("null-ls")
 
     local format = nls.builtins.formatting

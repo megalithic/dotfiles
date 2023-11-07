@@ -3,6 +3,46 @@
 
 return {
   {
+    "sustech-data/wildfire.nvim",
+    event = "VeryLazy",
+    dependencies = { "nvim-treesitter/nvim-treesitter" },
+    config = function()
+      require("wildfire").setup({
+        surrounds = {
+          { "(", ")" },
+          { "{", "}" },
+          { "<", ">" },
+          { "[", "]" },
+        },
+        filetype_exclude = {
+          "PlenaryTestPopup",
+          "TelescopePrompt",
+          "chatgpt",
+          "checkhealth",
+          "dap-repl",
+          "help",
+          "lspinfo",
+          "man",
+          "neotest-output",
+          "neotest-output-panel",
+          "neotest-summary",
+          "nnn",
+          "notify",
+          "qf",
+          "spectre_panel",
+          "startuptime",
+          "tsplayground",
+        },
+        keymaps = {
+          -- init_selection = ":lua require'wildfire'.init_selection()<CR>:lua require('tsht').nodes()<CR>",
+          init_selection = "<CR>",
+          node_incremental = "v",
+          node_decremental = "V",
+        },
+      })
+    end,
+  },
+  {
     "laytan/tailwind-sorter.nvim",
     dependencies = {
       "nvim-treesitter/nvim-treesitter",
@@ -51,6 +91,7 @@ return {
       "JoosepAlviste/nvim-ts-context-commentstring",
       "RRethy/nvim-treesitter-endwise",
       { "megalithic/nvim-ts-autotag" },
+      "andymass/vim-matchup",
       "David-Kunz/treesitter-unit",
       {
         url = "https://gitlab.com/HiPhish/rainbow-delimiters.nvim",
@@ -282,7 +323,7 @@ return {
             ["eruby.yaml"] = "# %s",
           },
         },
-        matchup = { enable = false, include_match_words = true, disable = should_disable, disable_virtual_text = true },
+        matchup = { enable = true, include_match_words = true, disable = should_disable, disable_virtual_text = false },
         autopairs = { enable = true },
         textobjects = {
           lookahead = true,
@@ -329,7 +370,7 @@ return {
           },
         },
         incremental_selection = {
-          enable = true,
+          enable = false, -- using wildfire.nvim for now
           keymaps = {
             init_selection = false,
             node_incremental = "v",
@@ -370,6 +411,15 @@ return {
           },
         },
       })
+
+      -- require("wildfire").setup({
+      --   keymaps = {
+      --     -- init_selection = ":lua require'wildfire'.init_selection()<CR>:lua require('tsht').nodes()<CR>",
+      --     init_selection = false,
+      --     node_incremental = "v",
+      --     node_decremental = "V",
+      --   },
+      -- })
     end,
   },
 }

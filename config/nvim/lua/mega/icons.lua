@@ -235,6 +235,8 @@ return {
     comment = "󰅺",
     robot = "󰚩",
     lightbulb = "󰌵",
+    file_tree = "󰙅",
+    help = "󰋖", -- alts: 󰘥 󰮥 󰮦 󰋗 󰞋 󰋖
     search = "", -- alts: 󰍉
     code = "",
     telescope = "",

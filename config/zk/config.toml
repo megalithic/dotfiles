@@ -78,18 +78,12 @@ template = "wiki.md"
 
 # MARKDOWN SETTINGS
 [format.markdown]
-# Enable support for #hashtags
-hashtags = true
-# Enable support for :colon:separated:tags:
-colon-tags = true
-# Format used to generate links between notes.
-# Either "wiki", "markdown" or a custom template. Default is "markdown".
-# link-format = "wiki"
-link-format = "[[{{path}}|{{title}}]]"
-# Indicates whether a link's path will be percent-encoded.
-link-encode-path = false
-# Indicates whether a link's path file extension will be removed.
+link-format = "wiki"
+link-encode-path = true
 link-drop-extension = true
+hashtags = true
+colon-tags = true
+multiword-tags = true
 
 
 # EXTERNAL TOOLS

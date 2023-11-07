@@ -249,7 +249,8 @@ function M.conceal_class(bufnr)
       ]]
   end
 
-  local ts_query = vim.treesitter.query.parse(ft, query)
+  local ok_query, ts_query = pcall(vim.treesitter.query.parse, ft, query)
+  if not ok_query then dd(ts_query) end
 
   for _, captures, metadata in ts_query:iter_matches(root, bufnr, root:start(), root:end_(), {}) do
     local start_row, start_col, end_row, end_col = captures[2]:range()

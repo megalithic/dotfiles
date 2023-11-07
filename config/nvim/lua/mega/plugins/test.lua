@@ -137,7 +137,7 @@ return {
     end,
   },
   {
-    cond = true,
+    cond = false,
     "nvim-neotest/neotest",
     event = { "BufReadPost", "BufNewFile" },
     cmd = { "Neotest" },

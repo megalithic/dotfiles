@@ -1,4 +1,4 @@
-local prettier = { "prettierd", "prettier" }
+local prettier = { "dprint", "prettierd", "prettier" }
 local timeout_ms = 2000
 local lsp_fallback = "always"
 local keys = {}
@@ -27,7 +27,7 @@ end
 
 return {
   "stevearc/conform.nvim",
-  -- cond = vim.g.formatter == "conform",
+  cond = vim.g.formatter == "conform",
   event = { "BufReadPre", "BufNewFile", "BufWritePre" },
   cmd = "ConformInfo",
   keys = keys,
@@ -47,7 +47,8 @@ return {
       json = { prettier, "fixjson" },
       jsonc = { prettier, "fixjson" },
       lua = { "stylua" },
-      markdown = { prettier },
+      ["markdown"] = { prettier },
+      ["markdown.mdx"] = { prettier },
       python = {
         formatters = { "isort", "black" },
         -- Run formatters one after another instead of stopping at the first success
@@ -64,7 +65,10 @@ return {
     },
     formatters = {
       shfmt = {
-        prepend_args = { "-i", "2" },
+        prepend_args = { "-i", "2", "-ci" },
+      },
+      dprint = {
+        condition = function(ctx) return vim.fs.find({ "dprint.json" }, { path = ctx.filename, upward = true })[1] end,
       },
     },
     log_level = vim.log.levels.DEBUG,

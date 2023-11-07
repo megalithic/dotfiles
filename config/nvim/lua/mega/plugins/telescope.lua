@@ -248,8 +248,8 @@ if vim.g.picker == "telescope" then
     },
     {
       "<leader>fn",
-      function() extensions("file_browser").file_browser(ivy({ path = vim.g.obsidian_vault_path })) end,
-      desc = "browse: obsidian notes",
+      function() extensions("file_browser").file_browser(ivy({ path = vim.g.notes_path })) end,
+      desc = "browse: notes",
     },
   }
 end
