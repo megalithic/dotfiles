@@ -506,11 +506,14 @@ local theme = lush(function(injected_functions)
     DiffChange({ fg = C.transparent, bg = C.bg_yellow }), -- diff mode: Changed line |diff.txt|
     DiffDelete({ fg = C.transparent, bg = C.bg_red }), -- diff mode: Deleted line |diff.txt|
     DiffText({ fg = C.transparent, bg = C.bg_blue }), -- diff mode: Changed text within a changed line |diff.txt|
-    DiffBase({ fg = C.transparent, bg = C.bg_dark }), -- diff mode: Changed text within a changed line |diff.txt|
+    DiffBase({ fg = C.transparent, bg = C.bg_dark.li(10) }), -- diff mode: Changed text within a changed line |diff.txt|
 
     GitConflictCurrent({ DiffAdd }),
     GitConflictIncoming({ DiffText }),
     GitConflictAncestor({ DiffBase }),
+    GitConflictCurrentLabel({ DiffAdd, bg = C.green.da(20) }),
+    GitConflictIncomingLabel({ DiffText, bg = C.blue.da(20) }),
+    GitConflictAncestorLabel({ DiffBase, bg = C.grey1.da(20) }),
 
     sym("@text.diff.add")({ DiffAdd }),
     sym("@text.diff.change")({ DiffChange }),

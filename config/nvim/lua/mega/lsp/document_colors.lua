@@ -80,7 +80,7 @@ local function buf_set_highlights(bufnr, colors, opts)
     local end_col = opts.single_column and start_col + opts.col_count or range["end"].character
 
     vim.api.nvim_buf_add_highlight(bufnr, NAMESPACE, highlight_name, line, start_col, end_col)
-    M.update(bufnr)
+    M.update_extmark(bufnr)
   end
 end
 
@@ -96,7 +96,7 @@ end
 function M.update_highlight(bufnr, options)
   local params = { textDocument = vim.lsp.util.make_text_document_params() }
   vim.lsp.buf_request(bufnr, "textDocument/documentColor", params, function(err, result, _, _)
-    -- M.update(bufnr)
+    -- M.update_extmark(bufnr)
     if err == nil and result ~= nil then buf_set_highlights(bufnr, result, options) end
   end)
 end
@@ -147,7 +147,7 @@ function M.get_hl(hex, mode)
 
     if mode == "fg" then
       vim.api.nvim_set_hl(0, hl, { fg = hex })
-    elseif mode == "fg" then
+    elseif mode == "bg" then
       vim.api.nvim_set_hl(0, hl, { bg = hex })
     end
   end
@@ -155,20 +155,20 @@ function M.get_hl(hex, mode)
   return hl
 end
 
-function M.set_hl(hex, mode)
-  local hl = "LspColor_" .. hex:sub(2)
+function M.set_hl(hex, mode, _default_fg)
+  local hl = HIGHLIGHT_NAME_PREFIX .. hex:sub(2)
   if not M.hl[hl] then
     M.hl[hl] = true
 
     if mode == "fg" then
       vim.api.nvim_set_hl(0, hl, { fg = hex })
-    elseif mode == "fg" then
+    elseif mode == "bg" then
       vim.api.nvim_set_hl(0, hl, { bg = hex })
     end
   end
 end
 
-function M.update(bufnr)
+function M.update_extmark(bufnr)
   bufnr = bufnr or vim.api.nvim_get_current_buf()
   local params = { textDocument = vim.lsp.util.make_text_document_params(bufnr) }
   vim.lsp.buf_request(bufnr, "textDocument/documentColor", params, function(err, colors)
@@ -186,12 +186,15 @@ function M.update(bufnr)
       local end_row = c.range["end"].line
       local end_col = vim.lsp.util._get_line_byte_from_position(bufnr, c.range["end"], offset_encoding)
 
+      local hl_group = M.get_hl(hex)
       vim.api.nvim_buf_set_extmark(bufnr, NAMESPACE, start_row, start_col, {
         end_row = end_row,
         end_col = end_col,
-        hl_group = M.get_hl(hex),
+        hl_group = hl_group,
         priority = 5000,
-        conceal = "",
+        -- conceal = "",
+        -- virt_text = { { "", hl_group } },
+        -- virt_text_pos = "overlay",
       })
     end
   end)

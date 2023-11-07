@@ -180,7 +180,10 @@ return {
 
             vim.defer_fn(function()
               vim.diagnostic.disable(args.buf)
-              vim.cmd("LspStop")
+              vim.lsp.stop_client(vim.lsp.get_clients())
+
+              local ok, gd = pcall(require, "garbage-day.utils")
+              if ok then gd.stop_lsp() end
             end, 250)
           end,
         },
@@ -193,6 +196,12 @@ return {
               vim.diagnostic.enable(args.buf)
               vim.cmd("LspStart")
               vim.g.git_conflict_detected = false
+
+              local ok, gd = pcall(require, "garbage-day.utils")
+              if ok then
+                local stopped_lsp_clients = gd.stop_lsp()
+                gd.start_lsp(stopped_lsp_clients)
+              end
             end, 250)
           end,
         },

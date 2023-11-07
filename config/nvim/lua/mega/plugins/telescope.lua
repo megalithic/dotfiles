@@ -119,8 +119,8 @@ local function project_files(opts)
   opts = opts or {}
   -- opts.cwd = require("mega.utils").get_root()
   -- vim.notify(fmt("current project files root: %s", opts.cwd), vim.log.levels.DEBUG, { title = "telescope" })
-  -- ts.find_files(ivy(opts))
-  require("telescope").extensions.smart_open.smart_open(ivy(opts))
+  ts.find_files(ivy(opts))
+  -- require("telescope").extensions.smart_open.smart_open(ivy(opts))
 end
 
 local function stopinsert(callback)
@@ -326,6 +326,14 @@ return {
             ["<c-o>"] = function(pb) multi(pb, "edit") end,
           },
         },
+        -- path_display = function(_, path)
+        --   local filename = path:gsub(vim.pesc(vim.loop.cwd()) .. "/", ""):gsub(vim.pesc(vim.fn.expand("$HOME")), "~")
+        --   local tail = require("telescope.utils").path_tail(filename)
+        --   local folder = vim.fn.fnamemodify(filename, ":h")
+        --   if folder == "." then return tail end
+        --
+        --   return string.format("%s  —  %s", tail, folder)
+        -- end,
         results_title = false,
         prompt_prefix = " ",
         selection_caret = " ",
@@ -333,64 +341,6 @@ return {
         multi_icon = "󰛄 ",
         winblend = 0,
         vimgrep_arguments = grep_files_cmd,
-        -- preview = {
-        --   filesize_limit = 128 * 1024, -- 128kb
-        --   treesitter = false,
-        --   mime_hook = function(filepath, bufnr, opts)
-        --     dd(filepath)
-        --     local is_image = function(filepath)
-        --       local image_extensions = { "png", "jpg" } -- Supported image formats
-        --       local split_path = vim.split(filepath:lower(), ".", { plain = true })
-        --       local extension = split_path[#split_path]
-        --       return vim.tbl_contains(image_extensions, extension)
-        --     end
-        --     if is_image(filepath) then
-        --       -- ## Uncomment to support image preview
-        --       -- local term = vim.api.nvim_open_term(bufnr, {})
-        --       -- local function send_output(_, data, _)
-        --       --   for _, d in ipairs(data) do
-        --       --     vim.api.nvim_chan_send(term, d .. '\r\n')
-        --       --   end
-        --       -- end
-        --
-        --       -- vim.fn.jobstart(
-        --       --   {
-        --       --     'catimg', filepath -- Terminal image viewer command
-        --       --   },
-        --       --   { on_stdout = send_output, stdout_buffered = true })
-        --       require("telescope.previewers.utils").set_preview_message(bufnr, opts.winid, "Image cannot be previewed")
-        --     else
-        --       require("telescope.previewers.utils").set_preview_message(bufnr, opts.winid, "Binary cannot be previewed")
-        --     end
-        --   end,
-        -- },
-        -- buffer_previewer_maker = new_maker,
-        -- preview = {
-        --   mime_hook = function(filepath, bufnr, opts)
-        --     mega.notify("filepath")
-        --     print(vim.inspect(filepath))
-        --     local is_image = function(filepath)
-        --       local image_extensions = { "png", "jpg" } -- Supported image formats
-        --       local split_path = vim.split(filepath:lower(), ".", { plain = true })
-        --       local extension = split_path[#split_path]
-        --       return vim.tbl_contains(image_extensions, extension)
-        --     end
-        --     if is_image(filepath) then
-        --       local term = vim.api.nvim_open_term(bufnr, {})
-        --       local function send_output(_, data, _)
-        --         for _, d in ipairs(data) do
-        --           vim.api.nvim_chan_send(term, d .. "\r\n")
-        --         end
-        --       end
-        --       vim.fn.jobstart({
-        --         "chafa",
-        --         filepath, -- Terminal image viewer command
-        --       }, { on_stdout = send_output, stdout_buffered = true, pty = true })
-        --     else
-        --       require("telescope.previewers.utils").set_preview_message(bufnr, opts.winid, "Binary cannot be previewed")
-        --     end
-        --   end,
-        -- },
       },
       file_ignore_patterns = {
         ".git/",
@@ -431,10 +381,33 @@ return {
         -- FIXME: multi doesn't work here
         smart_open = {
           show_scores = true,
-          ignore_patterns = { "*.git/*", "*/tmp/*" },
           match_algorithm = "fzf",
           disable_devicons = false,
           cwd_only = true,
+          max_unindexed = 50000,
+          ignore_patterns = {
+            "*.git/*",
+            "*/tmp/",
+            "*/vendor/",
+            "*/dist/*",
+            "*/declarations/*",
+            "*/node_modules/*",
+          },
+          mappings = {
+            i = {
+              ["<esc>"] = require("telescope.actions").close,
+              ["<cr>"] = stopinsert(function(pb) multi(pb, "vnew") end),
+              ["<c-v>"] = stopinsert(function(pb) multi(pb, "vnew") end),
+              ["<c-s>"] = stopinsert(function(pb) multi(pb, "new") end),
+              ["<c-o>"] = stopinsert(function(pb) multi(pb, "edit") end),
+            },
+            n = {
+              ["<cr>"] = function(pb) multi(pb, "vnew") end,
+              ["<c-v>"] = function(pb) multi(pb, "vnew") end,
+              ["<c-s>"] = function(pb) multi(pb, "new") end,
+              ["<c-o>"] = function(pb) multi(pb, "edit") end,
+            },
+          },
         },
         egrepify = {
           lnum = true, -- default, not required

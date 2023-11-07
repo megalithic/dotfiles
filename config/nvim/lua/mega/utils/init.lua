@@ -261,6 +261,7 @@ function M.conceal_class(bufnr)
         end_line = end_row,
         end_col = end_col,
         conceal = metadata[2].conceal,
+        priority = 5001,
       })
     end
   end
