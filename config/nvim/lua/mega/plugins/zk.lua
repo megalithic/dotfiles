@@ -9,6 +9,7 @@ return {
   -- "vicrdguez/zk-nvim",
   "mickael-menu/zk-nvim",
   -- branch = "fzf-lua",
+  event = "VeryLazy",
   cmd = {
     "ZkNotes",
     "ZkLiveGrep",
@@ -57,6 +58,7 @@ return {
     local util = require("zk.util")
     local commands = require("zk.commands")
     local api = require("zk.api")
+    local desc = function(desc) return { desc = desc, silent = true } end
 
     local function make_edit_fn(defaults, picker_options)
       return function(options)
@@ -65,83 +67,36 @@ return {
       end
     end
 
-    local function make_new_fn(defaults, picker_options)
-      return function(options)
-        options = vim.tbl_extend("force", defaults, options or {})
-        zk.new(options, picker_options)
-      end
-    end
+    -- local function make_new_fn(defaults, picker_options)
+    --   return function(options)
+    --     options = vim.tbl_extend("force", defaults, options or {})
+    --     zk.new(options, picker_options)
+    --   end
+    -- end
+    --
+    --
+    -- function insert_line_at_cursor(text, newline)
+    --   local cursor = vim.api.nvim_win_get_cursor(0)
+    --   local row = cursor[1]
+    --   local column = cursor[2]
+    --
+    --   if not newline then
+    --     vim.api.nvim_buf_set_text(0, row - 1, column, row - 1, column, { text })
+    --   else
+    --     vim.api.nvim_buf_set_lines(0, row, row, false, { text })
+    --   end
+    -- end
+    --
+    -- function insert_tag_at_cursor(text, newline)
+    --   local tag = string.match(text, "([#%a-]+)")
+    --   insert_line_at_cursor(tag, newline)
+    -- end
 
-    local desc = function(desc) return { desc = desc, silent = true } end
-
-    function insert_line_at_cursor(text, newline)
-      local cursor = vim.api.nvim_win_get_cursor(0)
-      local row = cursor[1]
-      local column = cursor[2]
-
-      if not newline then
-        vim.api.nvim_buf_set_text(0, row - 1, column, row - 1, column, { text })
-      else
-        vim.api.nvim_buf_set_lines(0, row, row, false, { text })
-      end
-    end
-
-    function insert_tag_at_cursor(text, newline)
-      local tag = string.match(text, "([#%a-]+)")
-      insert_line_at_cursor(tag, newline)
-    end
-
-    if vim.g.picker == "fzf" then
+    if vim.g.picker == "fzf_lua" then
+      --------------------------------------------------------------------------
+      -- FZF_LUA ---------------------------------------------------------------
+      --------------------------------------------------------------------------
       local fzf_lua = require("fzf-lua")
-      -- function ZettelkastenSearch()
-      --   require("fzf-lua").fzf_live("textgrep", {
-      --     actions = require("fzf-lua").defaults.actions.files,
-      --     previewer = "builtin",
-      --     exec_empty_query = true,
-      --     fzf_opts = {
-      --       ["--exact"] = "",
-      --       ["--ansi"] = "",
-      --       ["--tac"] = "",
-      --       ["--no-multi"] = "",
-      --       ["--no-info"] = "",
-      --       ["--phony"] = "",
-      --       ["--bind"] = "change:reload:textgrep \"{q}\"",
-      --     },
-      --   })
-      -- end
-      --
-      -- function ZettelkastenRelatedTags()
-      --   require("fzf-lua").fzf_exec("zk-related-tags \"" .. vim.fn.bufname("%") .. "\"", {
-      --     actions = { ["default"] = function(selected, opts) insert_tag_at_cursor(selected[1], true) end },
-      --     fzf_opts = { ["--exact"] = "", ["--nth"] = "2" },
-      --   })
-      -- end
-      --
-      -- function ZettelkastenTags()
-      --   require("fzf-lua").fzf_exec("zkt-raw", {
-      --     actions = { ["default"] = function(selected, opts) insert_tag_at_cursor(selected[1], true) end },
-      --     fzf_opts = { ["--exact"] = "", ["--nth"] = "2" },
-      --   })
-      -- end
-      --
-      -- function CompleteZettelkastenPath()
-      --   require("fzf-lua").fzf_exec("rg --files -t md | sed 's/^/[[/g' | sed 's/$/]]/'", {
-      --     actions = { ["default"] = function(selected, opts) insert_line_at_cursor(selected[1], false) end },
-      --   })
-      -- end
-      --
-      -- function CompleteZettelkastenTag()
-      --   require("fzf-lua").fzf_exec("zkt-raw", {
-      --     actions = { ["default"] = function(selected, opts) insert_tag_at_cursor(selected[1], false) end },
-      --     fzf_opts = {
-      --       ["--exact"] = "",
-      --       ["--nth"] = "2",
-      --       ["--print-query"] = "",
-      --       ["--multi"] = "",
-      --     },
-      --   })
-      -- end
-      --
       mega.zk_live_grep = function(opts)
         opts = opts or {}
         opts.prompt = "search notes  "
@@ -200,7 +155,7 @@ return {
       end
       commands.add("ZkLiveGrep", mega.zk_live_grep)
       commands.add("ZkFindNotes", mega.zk_find_notes)
-      mega.nnoremap("<leader>zf", "<cmd>ZkNotes<cr>", desc("zk: find notes"))
+      mega.nnoremap("<leader>zf", "<cmd>ZkFindNotes<cr>", desc("zk: find notes"))
       mega.nnoremap(
         "<leader>z/",
         function() mega.zk_live_grep({ exec_empty_query = false, cwd = vim.env.ZK_NOTEBOOK_DIR }) end,
@@ -211,7 +166,9 @@ return {
         function() mega.zk_live_grep({ exec_empty_query = false, cwd = vim.env.ZK_NOTEBOOK_DIR }) end,
         desc("zk: live grep")
       )
+    ----------------------------------------------------------------------------
     -- TELESCOPE ---------------------------------------------------------------
+    ----------------------------------------------------------------------------
     elseif vim.g.picker == "telescope" then
       mega.nnoremap(
         "<leader>zf",

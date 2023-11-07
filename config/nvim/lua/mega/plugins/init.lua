@@ -746,6 +746,7 @@ return {
   { "chr4/nginx.vim", ft = "nginx" },
   { "fladson/vim-kitty", ft = "kitty" },
   { "SirJson/fzf-gitignore", config = function() vim.g.fzf_gitignore_no_maps = true end },
+  { "justinsgithub/wezterm-types" },
   {
     "axelvc/template-string.nvim",
     ft = {
@@ -754,7 +755,7 @@ return {
       "javascript",
       "javascriptreact",
     },
-    config = true,
+    config = false,
   },
   {
     "pmizio/typescript-tools.nvim",

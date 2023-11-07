@@ -115,7 +115,7 @@ local function git_files_cwd_aware(opts)
   return fzf.git_files(ivy(opts))
 end
 
-if vim.g.picker == "fzf" then
+if vim.g.picker == "fzf_lua" then
   -- || Error detected while processing VimEnter Autocommands for "*":
   -- || Error executing lua callback: Vim:E731: Using a Dictionary as a String
   -- || stack traceback:
@@ -151,7 +151,7 @@ if vim.g.picker == "fzf" then
 end
 
 local keys = {}
-if vim.g.picker == "fzf" then
+if vim.g.picker == "fzf_lua" then
   keys = {
     { "<c-p>", git_files_cwd_aware, desc = "find files" },
     { "<leader>fa", "<Cmd>FzfLua<CR>", desc = "builtins" },

@@ -51,6 +51,7 @@ mega.augroup("megaline", {
     event = { "CursorMoved" },
     pattern = { "*" },
     command = function()
+      -- TODO: wrap all of this in an xpcall to handle an error raised when searching, for example, for `dbg\(`
       if vim.o.hlsearch then
         local timer = vim.loop.new_timer()
         search_count_timer = timer
@@ -290,8 +291,7 @@ local exception_types = {
       local mode_hl = mode.short == "T-I" and "StModeTermInsert" or "StModeTermNormal"
       return seg(
         fmt(
-          "megaterm(%s)#%d(%s)[%s]",
-          M.ctx.filetype,
+          "megaterm#%d(%s)[%s]",
           api.nvim_buf_get_var(buf, "term_buf"),
           shell,
           api.nvim_buf_get_var(buf, "term_cmd") or buf

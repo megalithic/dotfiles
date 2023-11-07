@@ -265,10 +265,10 @@ return {
     "nvim-telescope/telescope-file-browser.nvim",
     { "megalithic/telescope-egrepify.nvim" },
 
-    {
-      "danielfalk/smart-open.nvim",
-      dependencies = { "kkharji/sqlite.lua", { "nvim-telescope/telescope-fzf-native.nvim", build = "make" } },
-    },
+    -- {
+    --   "danielfalk/smart-open.nvim",
+    --   dependencies = { "kkharji/sqlite.lua", { "nvim-telescope/telescope-fzf-native.nvim", build = "make" } },
+    -- },
 
     -- "danielvolchek/tailiscope.nvim"
     { "debugloop/telescope-undo.nvim" },
@@ -366,6 +366,7 @@ return {
           override_file_sorter = true,
           case_mode = "smart_case",
         },
+        -- TODO: using fzf-native while using smart_open..
         -- ["zf-native"] = {
         --   file = {
         --     enable = true,
@@ -378,37 +379,37 @@ return {
         --     match_filename = false,
         --   },
         -- },
-        -- FIXME: multi doesn't work here
-        smart_open = {
-          show_scores = true,
-          match_algorithm = "fzf",
-          disable_devicons = false,
-          cwd_only = true,
-          max_unindexed = 50000,
-          ignore_patterns = {
-            "*.git/*",
-            "*/tmp/",
-            "*/vendor/",
-            "*/dist/*",
-            "*/declarations/*",
-            "*/node_modules/*",
-          },
-          mappings = {
-            i = {
-              ["<esc>"] = require("telescope.actions").close,
-              ["<cr>"] = stopinsert(function(pb) multi(pb, "vnew") end),
-              ["<c-v>"] = stopinsert(function(pb) multi(pb, "vnew") end),
-              ["<c-s>"] = stopinsert(function(pb) multi(pb, "new") end),
-              ["<c-o>"] = stopinsert(function(pb) multi(pb, "edit") end),
-            },
-            n = {
-              ["<cr>"] = function(pb) multi(pb, "vnew") end,
-              ["<c-v>"] = function(pb) multi(pb, "vnew") end,
-              ["<c-s>"] = function(pb) multi(pb, "new") end,
-              ["<c-o>"] = function(pb) multi(pb, "edit") end,
-            },
-          },
-        },
+        -- FIXME: multi doesn't work, nor my preferred select mappings
+        -- smart_open = {
+        --   show_scores = true,
+        --   match_algorithm = "fzf",
+        --   disable_devicons = false,
+        --   cwd_only = true,
+        --   max_unindexed = 50000,
+        --   ignore_patterns = {
+        --     "*.git/*",
+        --     "*/tmp/",
+        --     "*/vendor/",
+        --     "*/dist/*",
+        --     "*/declarations/*",
+        --     "*/node_modules/*",
+        --   },
+        --   mappings = {
+        --     i = {
+        --       ["<esc>"] = require("telescope.actions").close,
+        --       ["<cr>"] = stopinsert(function(pb) multi(pb, "vnew") end),
+        --       ["<c-v>"] = stopinsert(function(pb) multi(pb, "vnew") end),
+        --       ["<c-s>"] = stopinsert(function(pb) multi(pb, "new") end),
+        --       ["<c-o>"] = stopinsert(function(pb) multi(pb, "edit") end),
+        --     },
+        --     n = {
+        --       ["<cr>"] = function(pb) multi(pb, "vnew") end,
+        --       ["<c-v>"] = function(pb) multi(pb, "vnew") end,
+        --       ["<c-s>"] = function(pb) multi(pb, "new") end,
+        --       ["<c-o>"] = function(pb) multi(pb, "edit") end,
+        --     },
+        --   },
+        -- },
         egrepify = {
           lnum = true, -- default, not required
           lnum_hl = "EgrepifyLnum", -- default, not required
@@ -539,6 +540,6 @@ return {
     telescope.load_extension("fzf")
     -- telescope.load_extension("zf-native")
     telescope.load_extension("egrepify")
-    telescope.load_extension("smart_open")
+    -- telescope.load_extension("smart_open")
   end,
 }

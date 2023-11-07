@@ -268,7 +268,7 @@ local function setup_keymaps(client, bufnr)
 
   safemap("definition", "n", "gd", function()
     vim.lsp.buf.definition()
-    -- if vim.g.picker == "fzf" then
+    -- if vim.g.picker == "fzf_lua" then
     --   vim.cmd("FzfLua lsp_definitions")
     -- elseif vim.g.picker == "telescope" then
     --   vim.cmd("Telescope lsp_definitions")
@@ -284,7 +284,7 @@ local function setup_keymaps(client, bufnr)
     if true then
       vim.cmd("Trouble lsp_references")
     else
-      if vim.g.picker == "fzf" then
+      if vim.g.picker == "fzf_lua" then
         vim.cmd("FzfLua lsp_references")
       elseif vim.g.picker == "telescope" then
         vim.cmd("Telescope lsp_references")

@@ -212,6 +212,7 @@ M.list = {
     local plugins = ("%s/nvim/lazy"):format(fn.stdpath("data"))
     local plenary = ("%s/start/plenary.nvim"):format(plugins)
     local hammerspoon = ("%s/annotations"):format(vim.g.hs_emmy_path)
+    local wezterm = ("%s/nvim/lazy/wezterm-types/types"):format(fn.stdpath("data"))
 
     return {
       settings = {
@@ -310,7 +311,7 @@ M.list = {
           },
           workspace = {
             ignoreSubmodules = true,
-            library = { fn.expand("$VIMRUNTIME/lua"), plugins, plenary, hammerspoon },
+            library = { fn.expand("$VIMRUNTIME/lua"), plugins, plenary, hammerspoon, wezterm },
             checkThirdParty = false,
           },
           telemetry = {
