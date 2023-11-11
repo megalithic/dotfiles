@@ -216,15 +216,29 @@ local theme = lush(function(injected_functions)
     DiagnosticSignInfo({ DiagnosticInfo }),
     DiagnosticSignHint({ DiagnosticHint }),
 
-    DiagnosticSignErrorLine({ DiagnosticError }),
-    DiagnosticSignWarnLine({ DiagnosticWarn }),
-    DiagnosticSignInfoLine({ DiagnosticInfo }),
-    DiagnosticSignHintLine({ DiagnosticHint }),
+    DiagnosticSignErrorText({ DiagnosticError, bg = C.bg_dark, sp = C.red, gui = "italic,undercurl,bold" }),
+    DiagnosticSignWarnText({ DiagnosticWarn, bg = C.bg_dark, sp = C.orange, gui = "italic,bold" }),
+    DiagnosticSignInfoText({ DiagnosticInfo, gui = "italic,bold" }),
+    DiagnosticSignHintText({ gui = "italic,bold" }),
+    -- DiagnosticSignHintText({ fg = C.red, bg = C.red, sp = C.red, gui = "underline" }),
 
-    DiagnosticSignErrorNumLine({ bg = DiagnosticError.fg }),
-    DiagnosticSignWarnNumLine({ bg = DiagnosticWarn.fg }),
-    DiagnosticSignInfoNumLine({ bg = DiagnosticInfo.fg }),
-    DiagnosticSignHintNumLine({ bg = DiagnosticHint.fg }),
+    DiagnosticSignErrorLine({ DiagnosticSignErrorText }),
+    DiagnosticSignWarnLine({ DiagnosticSignWarnText }),
+    DiagnosticSignInfoLine({ DiagnosticSignInfoText }),
+    DiagnosticSignHintLine({ DiagnosticSignHintText }),
+    -- DiagnosticSignHintLine({ fg = C.red, bg = C.bg_dark, sp = C.red, gui = "" }),
+
+    DiagnosticSignErrorNum({ DiagnosticError }),
+    DiagnosticSignWarnNum({ DiagnosticWarn }),
+    DiagnosticSignInfoNum({ DiagnosticInfo }),
+    DiagnosticSignHintNum({ DiagnosticHint }),
+    -- DiagnosticSignHintNum({ fg = C.red, bg = C.bg_dark, sp = C.red, gui = "" }),
+
+    DiagnosticSignErrorCursorLine({ fg = DiagnosticError.fg, gui = "bold" }),
+    DiagnosticSignWarnCursorLine({ fg = DiagnosticWarn.fg, gui = "bold" }),
+    DiagnosticSignInfoCursorLine({ fg = DiagnosticInfo.fg, gui = "bold" }),
+    DiagnosticSignHintCursorLine({ fg = DiagnosticHint.fg, gui = "bold" }),
+    -- DiagnosticSignHintCursorLine({ fg = C.red, bg = C.bg_dark, sp = C.red, gui = "underline" }),
 
     DiagnosticErrorBorder({ DiagnosticError }),
     DiagnosticWarnBorder({ DiagnosticWarn }),
@@ -896,6 +910,10 @@ local theme = lush(function(injected_functions)
     GitSignsAdd({ fg = C.bright_green }),
     GitSignsDelete({ fg = C.red }),
     GitSignsChange({ fg = C.orange }),
+
+    GitSignsAddCursorLine({ fg = C.bright_green, bg = C.bg_dark }),
+    GitSignsDeleteCursorLine({ fg = C.red, bg = C.bg_dark }),
+    GitSignsChangeCursorLine({ fg = C.orange, bg = C.bg_dark }),
 
     ---- tmux-popup ------------------------------------------------------------
 

@@ -152,9 +152,26 @@ end
 
 local keys = {}
 if vim.g.picker == "fzf_lua" then
+  local has_wk, wk = mega.require("which-key")
+  if has_wk then
+    wk.register({
+      f = {
+        name = "fzf_lua",
+        g = {
+          name = "git",
+        },
+        l = {
+          name = "lsp",
+        },
+      },
+    }, {
+      prefix = "<leader>",
+    })
+  end
+
   keys = {
     { "<c-p>", git_files_cwd_aware, desc = "find files" },
-    { "<leader>fa", "<Cmd>FzfLua<CR>", desc = "builtins" },
+    { "<leader>fB", "<Cmd>FzfLua<CR>", desc = "builtins" },
     { "<leader>ff", file_picker, desc = "find files" },
     { "<leader>fo", fzf_lua.oldfiles, desc = "oldfiles" },
     { "<leader>fr", fzf_lua.resume, desc = "resume picker" },
@@ -169,14 +186,15 @@ if vim.g.picker == "fzf_lua" then
     { "<leader>fgc", fzf_lua.git_commits, desc = "commits" },
     { "<leader>fgB", fzf_lua.git_bcommits, desc = "buffer commits" },
     { "<leader>fb", fzf_lua.buffers, desc = "buffers" },
+    -- { "gb", fzf_lua.buffers, desc = "buffers" },
     { "<leader>a", fzf_lua.live_grep_glob, desc = "live grep" },
     { "<leader>A", fzf_lua.grep_cword, desc = "grep (under cursor)" },
     { "<leader>A", fzf_lua.grep_visual, desc = "grep (visual selection)", mode = "v" },
-    { "<leader>fva", fzf_lua.autocmds, desc = "autocommands" },
+    { "<leader>fa", fzf_lua.autocmds, desc = "autocommands" },
     { "<leader>fp", fzf_lua.registers, desc = "registers" },
     { "<leader>fd", function() file_picker(vim.env.DOTFILES) end, desc = "dotfiles" },
     { "<leader>fc", function() file_picker(vim.g.vim_path) end, desc = "nvim config" },
-    { "<leader>fn", function() file_picker(vim.g.neorg_path) end, desc = "neorg files" },
+    { "<leader>fn", function() file_picker(vim.g.notes_path) end, desc = "notes" },
     -- { "<leader>fN", function() file_picker(env.SYNC_DIR .. "/notes/neorg") end, desc = "norg files" },
   }
 end
@@ -314,7 +332,7 @@ return {
           -- action = { ["ctrl-r"] = fzf.actions.arg_add },
         },
         buffers = dropdown({
-          fzf_opts = { ["--delimiter"] = "' '", ["--with-nth"] = "-1.." },
+          -- fzf_opts = { ["--delimiter"] = "' '", ["--with-nth"] = "-1.." },
           winopts = { title = title("Buffers", "󰈙") },
         }),
         keymaps = dropdown({

@@ -83,11 +83,13 @@ function ui.statuscolumn.render(is_active)
     end
   end
 
+  -- dd(sign)
   local components = {
     "%=",
     space,
-    sign and hl(sign.texthl, sign.text:gsub(space, "")) or space,
+    sign and hl(sign.numhl, sign.text:gsub(space, "")) or space,
     git_sign and hl(git_sign.texthl, git_sign.text:gsub(space, "")) or space,
+    -- git_sign and hl(git_sign.culhl or git_sign.texthl, git_sign.text:gsub(space, "")) or space,
     fdm(),
     nr(curwin, line_count, is_active),
     sep(is_active),

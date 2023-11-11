@@ -47,4 +47,13 @@ vim.fn.matchaddpos("DiagnosticVirtualTextError", { { 1, 50, 10000 } })
 vim.cmd([[exec 'norm gg']])
 if vim.fn.prevnonblank(".") ~= vim.fn.line(".") then vim.cmd([[startinsert]]) end
 
+mega.iabbrev("cabag", "Co-authored-by: Aaron Gunderson <aaron@ternit.com>")
+mega.iabbrev("cabdt", "Co-authored-by: Dan Thiffault <dan@ternit.com>")
+mega.iabbrev("cabjm", "Co-authored-by: Jia Mu <jia@ternit.com>")
+mega.iabbrev("cabam", "Co-authored-by: Ali Marsh<ali@ternit.com>")
+mega.iabbrev("cbag", "Co-authored-by: Aaron Gunderson <aaron@ternit.com>")
+mega.iabbrev("cbdt", "Co-authored-by: Dan Thiffault <dan@ternit.com>")
+mega.iabbrev("cbjm", "Co-authored-by: Jia Mu <jia@ternit.com>")
+mega.iabbrev("cbam", "Co-authored-by: Ali Marsh<ali@ternit.com>")
+
 -- REF: https://github.com/arsham/shark/blob/master/after/ftplugin/gitcommit.lua

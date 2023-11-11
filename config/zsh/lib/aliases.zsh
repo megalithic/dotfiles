@@ -49,6 +49,7 @@ if $(gls &>/dev/null); then
   alias lt="gls -lAht"
   alias ll="gls -l"
   alias la="gls -A"
+  alias las='find . -maxdepth 1 -type l -printf "%p -> %l\n" | sort'
 fi
 
 if $(exa &>/dev/null); then
@@ -550,7 +551,7 @@ function def() {
   [ $(alias less &>/dev/null; echo $?) -eq 0 ] && lesscmd="$lesscmd -l zsh -pn"
   echo "$res"; draw_help () { c=$(basename $1); tldr $c 2>/dev/null || eval "$1 --help | $MANPAGER" || man $c }
   case $res in
-    *'not found'*)  checkyes "Google it?" && eval "?g linux cli $cmd";;
+    *'not found'*)  checkyes "Google it?" && eval "?g linux cli $cmd" ;;
     *function*)     (printf '#!/usr/bin/env zsh\n\n'; whence -f "$raw") | eval "$lesscmd" ;;
     *alias*)        def "$raw" ;;
     *)              echo; draw_help "$raw"; whence "$raw" ;; # binary, builtin
@@ -576,7 +577,7 @@ function ex() {
         *.tbz2)     tar xjf "$filename"  ;;
         *.tgz)      tar xzf "$filename"  ;;
         *.zip)      unzip "$filename"    ;;
-        *.Z)        uncompress "$filename";;
+        *.Z)        uncompress "$filename" ;;
         *.7z)       7z x "$filename"     ;;
         *)          echo "'$filename' cannot be extracted via ex()" ;;
       esac

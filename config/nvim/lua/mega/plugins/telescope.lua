@@ -220,6 +220,22 @@ if vim.g.picker == "telescope" then
       end,
     },
   })
+  local has_wk, wk = mega.require("which-key")
+  if has_wk then
+    wk.register({
+      f = {
+        name = "telescope",
+        g = {
+          name = "git",
+        },
+        l = {
+          name = "lsp",
+        },
+      },
+    }, {
+      prefix = "<leader>",
+    })
+  end
 
   keys = {
     { "<leader>ff", project_files, desc = "find files" },
@@ -247,9 +263,14 @@ if vim.g.picker == "telescope" then
       function() ts.buffers(dropdown({})) end,
       desc = "find open buffers",
     },
+    -- {
+    --   "gb",
+    --   function() ts.buffers(dropdown({})) end,
+    --   desc = "find open buffers",
+    -- },
     {
       "<leader>fn",
-      function() extensions("file_browser").file_browser(ivy({ path = vim.g.notes_path })) end,
+      function() ts.find_files(ivy({ path = vim.g.notes_path })) end,
       desc = "browse: notes",
     },
   }

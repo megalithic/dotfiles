@@ -123,7 +123,13 @@ return {
 
       vim.g["test#custom_strategies"] = {
         termsplit = function(cmd) mega.term(term_opts(cmd)) end,
-        termvsplit = function(cmd) mega.term(term_opts(cmd, { direction = "vertical", size = 100 })) end,
+        termvsplit = function(cmd)
+          if vim.opt.lines:get() * 4 < vim.opt.columns:get() then
+            mega.term(term_opts(cmd, { direction = "vertical", size = 100 }))
+          else
+            mega.term(term_opts(cmd))
+          end
+        end,
         termfloat = function(cmd) mega.term(term_opts(cmd, { direction = "float", focus_on_open = true })) end,
         termtab = function(cmd) mega.term(term_opts(cmd, { direction = "tab", focus_on_open = true })) end,
       }

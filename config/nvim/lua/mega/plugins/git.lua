@@ -12,9 +12,9 @@ return {
       _signs_staged_enable = false,
       -- -------------------------------
       signs = {
-        add = { hl = "GitSignsAdd", text = "▕" }, -- alts: ▕, ▎, ┃, │, ▌, ▎ 🮉
-        change = { hl = "GitSignsChange", text = "▕" }, -- alts: ▎║▎
-        delete = { hl = "GitSignsDelete", text = "🮉" }, -- alts: ┊▎▎
+        add = { hl = "GitSignsAdd", hl = "GitSignsAddCursorLine", text = "▕" }, -- alts: ▕, ▎, ┃, │, ▌, ▎ 🮉
+        change = { hl = "GitSignsChange", hl = "GitSignsChangeCursorLine", text = "▕" }, -- alts: ▎║▎
+        delete = { hl = "GitSignsDelete", hl = "GitSignsDeleteCursorline", text = "🮉" }, -- alts: ┊▎▎
         topdelete = { hl = "GitSignsDelete", text = "🮉" }, -- alts: ▌ ▄▀
         changedelete = { hl = "GitSignsChange", text = "🮉" }, -- alts: ▌
         untracked = { hl = "GitSignsAdd", text = "▕" }, -- alts: ┆ ▕
@@ -184,6 +184,7 @@ return {
 
               local ok, gd = pcall(require, "garbage-day.utils")
               if ok then gd.stop_lsp() end
+              vim.diagnostic.hide()
             end, 250)
           end,
         },
@@ -202,6 +203,7 @@ return {
                 local stopped_lsp_clients = gd.stop_lsp()
                 gd.start_lsp(stopped_lsp_clients)
               end
+              vim.diagnostic.show()
             end, 250)
           end,
         },

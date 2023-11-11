@@ -1,10 +1,10 @@
 #!/bin/bash
 
 if [[ -z $XDG_DATA_HOME ]]; then
-    export XDG_DATA_HOME="$HOME/.local/share"
+  export XDG_DATA_HOME="$HOME/.local/share"
 fi
 if [[ -z $XDG_CONFIG_HOME ]]; then
-    export XDG_CONFIG_HOME="$HOME/.config"
+  export XDG_CONFIG_HOME="$HOME/.config"
 fi
 
 source "${HOME}/.dotfiles/config/zsh/lib/helpers.zsh"
@@ -23,125 +23,140 @@ FORCE_INSTALL="false"
 VERSION=${1:-master}
 
 if [[ "$(arch)" == "arm64" ]]; then
-    eval "$(/opt/homebrew/bin/brew shellenv)"
+  eval "$(/opt/homebrew/bin/brew shellenv)"
 else
-    eval "$(/usr/local/bin/brew shellenv)"
+  eval "$(/usr/local/bin/brew shellenv)"
 fi
 
 brew_bin="/usr/local/bin/brew"
 
 if [[ "$(arch)" == "arm64" ]]; then
-    brew_bin="/opt/homebrew/bin/brew"
+  brew_bin="/opt/homebrew/bin/brew"
 fi
 
 remove_brew_nvim() {
-    if "$brew_bin" ls --versions neovim >/dev/null; then
-        read -p "$(tput bold)$(tput setaf 5)[?] remove homebrew version of neovim (Y/n)?$(tput sgr 0) " yn
-        case $yn in
-            [Yy]*)
-                "$brew_bin" uninstall -f --ignore-dependencies neovim neovim-remote || exit 1
-                ;;
-            "")
-                "$brew_bin" uninstall -f --ignore-dependencies neovim neovim-remote || exit 1
-                ;;
-            [Nn]*)
-                log_warn "opted out of homebrew neovim removal"
-                ;;
-            *)
-                log_warn "please answer [y]es or [n]o."
-                exec "$__invocation"
-                ;;
-        esac
-    fi
+  if "$brew_bin" ls --versions neovim >/dev/null; then
+    read -p "$(tput bold)$(tput setaf 5)[?] remove homebrew version of neovim (Y/n)?$(tput sgr 0) " yn
+    case $yn in
+      [Yy]*)
+        "$brew_bin" uninstall -f --ignore-dependencies neovim neovim-remote || exit 1
+        ;;
+      "")
+        "$brew_bin" uninstall -f --ignore-dependencies neovim neovim-remote || exit 1
+        ;;
+      [Nn]*)
+        log_warn "opted out of homebrew neovim removal"
+        ;;
+      *)
+        log_warn "please answer [y]es or [n]o."
+        exec "$__invocation"
+        ;;
+    esac
+  fi
 }
 
 update() {
-    cd "${XDG_DATA_HOME}/src/neovim" && log_ok "cd neovim successful"
-    git checkout "$VERSION" && log_ok "git checkout $VERSION successful"
-    git fetch && log_ok "git fetch successful"
-    git log --color --pretty=oneline --abbrev-commit HEAD@{1}.. | sed 's/^/  /'
+  cd "${XDG_DATA_HOME}/src/neovim" && log_ok "cd neovim successful"
+  git checkout "$VERSION" && log_ok "git checkout $VERSION successful"
+  git fetch && log_ok "git fetch successful"
+  git log --color --pretty=oneline --abbrev-commit HEAD@{1}.. | sed 's/^/  /'
 }
 
 clone() {
-    if [[ ! -d "${XDG_DATA_HOME}/src/neovim" ]]; then
-        git clone git@github.com:neovim/neovim.git && log_ok "git clone neovim successful"
-        cd neovim && log_ok "cd neovim successful"
-        # do it all and then exit cleanly...
-        update && build && remove_brew_nvim && popd >/dev/null && exit 0
-    fi
+  if [[ ! -d "${XDG_DATA_HOME}/src/neovim" ]]; then
+    git clone git@github.com:neovim/neovim.git && log_ok "git clone neovim successful"
+    cd neovim && log_ok "cd neovim successful"
+    # do it all and then exit cleanly...
+    update && build && remove_brew_nvim && popd >/dev/null && exit 0
+  fi
 }
 
 do_pip_install() {
-    log "installing neovim-remote via python (pip3).."
-    # $(brew --prefix)/opt/python@3.9/bin/python3.9 -m pip install --upgrade pip
-    python3 -m pip install --upgrade pip
-    pip3 install neovim-remote
+  log "installing neovim-remote via python (pip3).."
+  # $(brew --prefix)/opt/python@3.9/bin/python3.9 -m pip install --upgrade pip
+  python3 -m pip install --upgrade pip
+  pip3 install neovim-remote
 }
 
 do_lazy_install() {
-    log "running lazy.nvim package manager.."
-    rm -rfv ~/.cache/nvim/packer/packer_compiled.lua ~/.local/share/nvim/site/pack/packer ~/.local/share/nvim/lazy ~/.local/state/nvim/lazy
-    if [[ -e "$HOME/.dotfiles/config/nvim/lazy-lock.json" ]]; then
-        nvim --headless "+Lazy! restore" +qa
-    else
-        nvim --headless "+Lazy! sync" +qa
-    fi
+  log "running lazy.nvim package manager.."
+  rm -rfv ~/.cache/nvim/packer/packer_compiled.lua ~/.local/share/nvim/site/pack/packer ~/.local/share/nvim/lazy ~/.local/state/nvim/lazy
+  if [[ -e "$HOME/.dotfiles/config/nvim/lazy-lock.json" ]]; then
+    nvim --headless "+Lazy! restore" +qa
+  else
+    nvim --headless "+Lazy! sync" +qa
+  fi
 }
 
 do_build() {
-    git up && log_ok "git up successful"
+  git up && log_ok "git up successful"
 
-    # TODO: do we need to reinstall these each time??
-    case "$(uname)" in
-        Linux)
-            # REF: https://github.com/neovim/neovim/wiki/Building-Neovim#ubuntu--debian
-            sudo apt-get install ninja-build gettext libtool libtool-bin autoconf automake cmake g++ pkg-config unzip curl doxygen
-            ;;
-        Darwin)
-            # REF: https://github.com/neovim/neovim/wiki/Building-Neovim#macos--homebrew
-            "$brew_bin" reinstall --force ninja libtool automake cmake pkg-config gettext curl
-            ;;
-    esac
+  # TODO: do we need to reinstall these each time??
+  case "$(uname)" in
+    Linux)
+      # REF: https://github.com/neovim/neovim/wiki/Building-Neovim#ubuntu--debian
+      sudo apt-get install ninja-build gettext libtool libtool-bin autoconf automake cmake g++ pkg-config unzip curl doxygen
+      ;;
+    Darwin)
+      # REF: https://github.com/neovim/neovim/wiki/Building-Neovim#macos--homebrew
+      "$brew_bin" reinstall --force ninja libtool automake cmake pkg-config gettext curl
+      ;;
+  esac
 
-    if [[ -d "${XDG_DATA_HOME}/src/neovim/.deps" ]]; then
-        sudo rm -rf "${XDG_DATA_HOME}/src/neovim/.deps" && log_ok "remove .deps successful"
-    fi
+  if [[ -d "${XDG_DATA_HOME}/src/neovim/.deps" ]]; then
+    sudo rm -rf "${XDG_DATA_HOME}/src/neovim/.deps" && log_ok "remove .deps successful"
+  fi
 
-    sudo make distclean || exit 1 && log_ok "distclean successful"
-    sudo make CMAKE_BUILD_TYPE=RelWithDebInfo || exit 1 && log_ok "make successful"
-    sudo make install || exit 1 && log_ok "successfully built and installed neovim"
+  sudo make distclean || exit 1 && log_ok "distclean successful"
+  sudo make CMAKE_BUILD_TYPE=RelWithDebInfo || exit 1 && log_ok "make successful"
+  sudo make install || exit 1 && log_ok "successfully built and installed neovim"
 }
 
 build() {
-    if [[ "$VERSION" == "master" ]]; then
-        if [[ $(git rev-parse HEAD) == $(git rev-parse @{u}) && $FORCE_INSTALL == "false" ]]; then
-            log_warn "neovim already up to date on origin/master; skipping."
-        elif [[ $(git rev-parse HEAD) != $(git rev-parse @{u}) || $FORCE_INSTALL == "true" ]]; then
-            do_build || exit 1
-        fi
-    else
-        do_build || exit 1
+  if [[ "$VERSION" == "master" ]]; then
+    if [[ $(git rev-parse HEAD) == $(git rev-parse @{u}) && $FORCE_INSTALL == "false" ]]; then
+      log_warn "neovim already up to date on origin/master; skipping."
+    elif [[ $(git rev-parse HEAD) != $(git rev-parse @{u}) || $FORCE_INSTALL == "true" ]]; then
+      do_build || exit 1
     fi
+  else
+    do_build || exit 1
+  fi
 }
 
-while getopts "fp" OPTION; do
-    case $OPTION in
-        p)
-            nvim "+StartupTime" && log_ok "nvim startup profiling completed successfully"
-            # nvim --startuptime /tmp/startuptime.txt "+e /tmp/startuptime.txt"
-            exit 0
-            ;;
+while getopts "fpc" OPTION; do
+  case $OPTION in
+    p)
+      nvim "+StartupTime" && log_ok "nvim startup profiling completed successfully"
+      # nvim --startuptime /tmp/startuptime.txt "+e /tmp/startuptime.txt"
+      exit 0
+      ;;
 
-        f)
-            FORCE_INSTALL="true"
-            ;;
+    f)
+      FORCE_INSTALL="true"
+      ;;
+    c)
+      # # nvim "+StartupTime" && log_ok "nvim startup profiling completed successfully"
+      # # nvim --startuptime /tmp/startuptime.txt "+e /tmp/startuptime.txt"
+      # pushd "${XDG_DATA_HOME}/src/neovim" || return
+      # # git fetch origin
+      # # git log --color --pretty=oneline --abbrev-commit HEAD@{1}.. | sed 's/^/  /'
+      # #
+      # # git remote update
+      # # git status
+      # #
+      # git whatchanged --color --pretty=oneline --abbrev-commit origin/master | sed 's/^/  /'
+      #
+      # popd || return
+      exit 0
+      ;;
 
-        ?)
-            echo "Invalid Option: -$OPTARG" 1>&2
-            exit 1
-            ;;
+    ?)
+      echo "Invalid Option: -$OPTARG" 1>&2
+      exit 1
+      ;;
 
-    esac
+  esac
 done
 shift $((OPTIND - 1))
 

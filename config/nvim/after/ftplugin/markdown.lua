@@ -17,6 +17,16 @@ vim.cmd([[autocmd FileType markdown nnoremap gO <cmd>Toc<cr>]])
 vim.cmd([[iabbrev <expr> mdate "### ".strftime("%Y-%m-%d %H:%M:%S")]])
 vim.cmd.iabbrev("<buffer>", "zTODO", "<span style=\"color:red\">TODO:</span><Esc>F<i")
 
+-- quick section generators
+
+mega.iabbrev("ex:", "### elixir")
+mega.iabbrev("mtg:", "### meeting")
+mega.iabbrev("w:", "### work")
+mega.iabbrev("pair:", "### pairing")
+mega.iabbrev("dan:", "### 1:1 with dan")
+mega.iabbrev("one:", "### 1:1 with dan")
+mega.iabbrev("dots:", "### dotfiles")
+
 -- TODO: convert these to vim.opt and vim.opt_local
 -- vim.cmd([[
 --   setlocal wrap

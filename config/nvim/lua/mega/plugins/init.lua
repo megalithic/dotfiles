@@ -5,6 +5,7 @@ return {
     "zeioth/garbage-day.nvim",
     event = "BufEnter",
     config = true,
+    cond = false,
   },
 
   -- ( UI ) --------------------------------------------------------------------
@@ -138,17 +139,33 @@ return {
   },
   {
     "chentoast/marks.nvim",
+    cond = false,
     event = "VeryLazy",
     keys = {
       { "<leader>mm", "<Cmd>MarksListBuf<CR>", desc = "marks: list buffer marks" },
       { "<leader>mg", "<Cmd>MarksListBuf<CR>", desc = "marks: list global marks" },
       { "<leader>mb", "<Cmd>MarksListBuf<CR>", desc = "marks: list bookmark marks" },
       { "m/", "<cmd>MarksListAll<CR>", desc = "Marks from all opened buffers" },
+      { "<leader>mt", "<cmd>MarksToggleSigns<cr>", desc = "Toggle marks" },
+      -- { 'm', '<Plug>(Marks-set)', '<Plug>(Marks-toggle)' },
     },
     opts = {
       sign_priority = { lower = 10, upper = 15, builtin = 8, bookmark = 20 },
       bookmark_1 = { sign = "󰈼" }, -- ⚐ ⚑ 󰈻 󰈼 󰈽 󰈾 󰈿 󰉀
+      default_mappings = false, -- whether to map keybinds or not. default true
+      builtin_marks = {}, -- which builtin marks to show. default {}
+      cyclic = true, -- whether movements cycle back to the beginning/end of buffer. default true
+      force_write_shada = false, -- whether the shada file is updated after modifying uppercase marks. default false
+      bookmark_0 = { -- marks.nvim allows you to configure up to 10 bookmark groups, each with its own sign/virttext
+        sign = "⚑",
+        virt_text = "hello world",
+      },
       mappings = {
+        set_next = "m,",
+        next = "m]",
+        preview = "m;",
+        set_bookmark0 = "m0",
+        prev = false, -- pass false to disable only this default mapping
         annotate = "m<Space>",
       },
       excluded_filetypes = {
@@ -515,13 +532,13 @@ return {
       vim.g.matchup_delim_noskips = 1 -- recognize symbols within comments
       vim.g.matchup_matchparen_deferred_show_delay = 400
       vim.g.matchup_matchparen_deferred_hide_delay = 400
-      -- vim.g.matchup_matchparen_offscreen = {}
-      vim.g.matchup_matchparen_offscreen = {
-        method = "popup",
-        -- fullwidth = true,
-        highlight = "TreesitterContext",
-        border = "",
-      }
+      vim.g.matchup_matchparen_offscreen = {}
+      -- vim.g.matchup_matchparen_offscreen = {
+      --   method = "popup",
+      --   -- fullwidth = true,
+      --   highlight = "TreesitterContext",
+      --   border = "",
+      -- }
       vim.g.matchup_matchparen_deferred = 1
       vim.g.matchup_matchparen_timeout = 300
       vim.g.matchup_matchparen_insert_timeout = 60
@@ -646,6 +663,7 @@ return {
 
   -- ( Notes/Docs ) ------------------------------------------------------------
   {
+    cond = false,
     "toppair/peek.nvim",
     build = "deno task --quiet build:fast",
     ft = { "markdown" },

@@ -88,7 +88,7 @@ export MANPATH="$BREW_PREFIX/opt/coreutils/libexec/gnuman:${MANPATH}"
 # export TERM=${TERM:=xterm-kitty}
 export TERM_ITALICS="TRUE"
 export COLORTERM=${COLORTERM:=truecolor}
-export TERMINAL="kitty"
+export TERMINAL="wezterm"
 
 export LS_COLORS="$(vivid generate nord)"
 

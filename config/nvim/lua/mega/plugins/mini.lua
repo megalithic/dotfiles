@@ -376,6 +376,26 @@ local function mini_clue()
   })
 end
 
+local function mini_pick()
+  require("mini.pick").setup({
+    mappings = {
+      move_up = "<C-p>",
+      move_down = "<C-n>",
+    },
+    window = {
+      config = {
+        relative = "editor",
+        -- width = vim.opt.columns:get(),
+        width = 80,
+        height = 20,
+        col = 0,
+        row = vim.opt.lines:get(),
+        style = "minimal",
+      },
+    },
+  })
+end
+
 return {
   "echasnovski/mini.nvim",
 
@@ -389,6 +409,7 @@ return {
     mini_pairs()
     mini_comment()
     mini_align()
+    mini_pick()
     mini_indentscope()
     -- mini_jump()
     mini_hipatterns()

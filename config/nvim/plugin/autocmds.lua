@@ -135,16 +135,28 @@ do
     {
       event = { "BufWritePost" },
       command = function(args)
-        if string.match(vim.fn.getline(1), "^#!") ~= nil then
-          if string.match(vim.fn.getline(1), "/bin/") ~= nil then
-            vim.notify(fmt("making %s executable", args.file), L.INFO)
-            vim.cmd([[!chmod a+x <afile>]])
-            vim.schedule(function() vim.cmd("edit") end)
-            -- assert(vim.uv.fs_chmod(args.match, 755), fmt("failed to make %s executable", args.file))
-
-            -- local filename = vim.fs.basename(api.nvim_buf_get_name(0))
-          end
+        local not_executable = vim.fn.getfperm(vim.fn.expand("%")):sub(3, 3) ~= "x"
+        local has_shebang = string.match(vim.fn.getline(1), "^#!")
+        local has_bin = string.match(vim.fn.getline(1), "/bin/")
+        if not_executable and has_shebang and has_bin then
+          vim.notify(fmt("made %s executable", args.file), L.INFO)
+          vim.cmd([[!chmod +x <afile>]])
+          -- vim.cmd([[!chmod a+x <afile>]])
+          -- vim.schedule(function() vim.cmd("edit") end)
         end
+        -- if string.match(vim.fn.getline(1), "^#!") ~= nil then
+        --   if string.match(vim.fn.getline(1), "/bin/") ~= nil then
+        --     if vim.fn.getfperm(vim.fn.expand("%")):sub(3, 3) ~= "x" then
+        --
+        --     end
+        --     vim.notify(fmt("making %s executable", args.file), L.INFO)
+        --     vim.cmd([[!chmod a+x <afile>]])
+        --     vim.schedule(function() vim.cmd("edit") end)
+        --     -- assert(vim.uv.fs_chmod(args.match, 755), fmt("failed to make %s executable", args.file))
+        --
+        --     -- local filename = vim.fs.basename(api.nvim_buf_get_name(0))
+        --   end
+        -- end
       end,
     },
     -- {
@@ -255,6 +267,14 @@ do
       pattern = { "*.html", "*.heex", "*.tsx", "*.jsx", "*.ex", "elixir", "heex", "html" },
       command = function(args) require("mega.utils").conceal_class(args.buf) end,
     },
+    -- clear marks a-z on buffer enter
+    -- See: https://github.com/chentoast/marks.nvim/issues/13
+    --      https://github.com/neovim/neovim/issues/4295
+    -- {
+    --   event = { "BufEnter" },
+    --   pattern = { "*.html", "*.heex", "*.tsx", "*.jsx", "*.ex", "elixir", "heex", "html" },
+    --   command = "delm a-z",
+    -- },
   })
 end
 

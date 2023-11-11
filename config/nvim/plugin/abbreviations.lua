@@ -31,6 +31,10 @@ mega.iabbrev("cabag", "Co-authored-by: Aaron Gunderson <aaron@ternit.com>", gitc
 mega.iabbrev("cabdt", "Co-authored-by: Dan Thiffault <dan@ternit.com>", gitcommit_pattern)
 mega.iabbrev("cabjm", "Co-authored-by: Jia Mu <jia@ternit.com>", gitcommit_pattern)
 mega.iabbrev("cabam", "Co-authored-by: Ali Marsh<ali@ternit.com>", gitcommit_pattern)
+mega.iabbrev("cbag", "Co-authored-by: Aaron Gunderson <aaron@ternit.com>", gitcommit_pattern)
+mega.iabbrev("cbdt", "Co-authored-by: Dan Thiffault <dan@ternit.com>", gitcommit_pattern)
+mega.iabbrev("cbjm", "Co-authored-by: Jia Mu <jia@ternit.com>", gitcommit_pattern)
+mega.iabbrev("cbam", "Co-authored-by: Ali Marsh<ali@ternit.com>", gitcommit_pattern)
 
 mega.iabbrev("dashbarod", "dashboard")
 mega.iabbrev("dashbaord", "dashboard")

@@ -1,4 +1,5 @@
 local prettier = { "dprint", "prettierd", "prettier" }
+local shfmt = { "beautysh", "shfmt" } -- shellharden
 local timeout_ms = 2000
 local lsp_fallback = "always"
 local keys = {}
@@ -34,8 +35,7 @@ return {
   opts = {
     formatters_by_ft = {
       ["*"] = { "trim_whitespace", "trim_newlines" },
-      -- bash = { "shfmt", "beautysh", "shellharden" },
-      bash = { "shfmt" },
+      bash = { shfmt },
       c = { "clang_format" },
       cpp = { "clang_format" },
       css = { prettier },
@@ -55,17 +55,20 @@ return {
         run_all_formatters = true,
       },
       rust = { "rustfmt" },
-      sh = { "shfmt", "beautysh", "shellharden" },
+      sh = { shfmt },
       toml = { "taplo" },
       typescript = { prettier },
       typescriptreact = { prettier },
       yaml = { prettier },
       zig = { "zigfmt" },
-      zsh = { "shfmt" },
+      zsh = { shfmt },
     },
     formatters = {
       shfmt = {
         prepend_args = { "-i", "2", "-ci" },
+      },
+      beautysh = {
+        prepend_args = { "-i", "2" },
       },
       dprint = {
         condition = function(ctx) return vim.fs.find({ "dprint.json" }, { path = ctx.filename, upward = true })[1] end,
@@ -92,9 +95,6 @@ return {
   },
   config = function(_, opts)
     if vim.g.formatter ~= "conform" then return end
-
-    -- local util = require("conform.util")
-    -- util.add_formatter_args(require("conform.formatters.shfmt"), { "-i", "2" })
 
     if vim.g.started_by_firenvim then
       opts.format_on_save = false

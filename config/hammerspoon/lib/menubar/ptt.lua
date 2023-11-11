@@ -191,7 +191,7 @@ function obj:init()
 
   hs.hotkey.bind(pttKey, "p", function()
     local toggled_to_state = obj.toggleStates()
-    alert.show({ text = "Toggling to mode: " .. toggled_to_state })
+    alert.show({ text = "Toggled to -> " .. toggled_to_state })
   end)
 
   return self

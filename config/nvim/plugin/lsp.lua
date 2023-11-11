@@ -31,7 +31,17 @@ end
 -- Show the popup diagnostics window, but only once for the current cursor/line location
 -- by checking whether the word under the cursor has changed.
 local function diagnostic_popup(bufnr)
-  if not vim.g.git_conflict_detected then vim.diagnostic.open_float(bufnr, { scope = "cursor", focus = false }) end
+  if not vim.g.git_conflict_detected then
+    -- vim.diagnostic.open_float(bufnr, { scope = "cursor", focus = false })
+    -- if utils.not_interfere_on_float() then -- If there is not a floating window present
+    -- Try to open diagnostics under the cursor
+    local diags = vim.diagnostic.open_float(bufnr, { focus = false, scope = "cursor" })
+    if not diags then -- If there's no diagnostic under the cursor show diagnostics of the entire line
+      vim.diagnostic.open_float(bufnr, { focus = false, scope = "line" })
+    end
+    return diags
+    -- end
+  end
 end
 
 -- TODO: https://github.com/CKolkey/config/blob/master/nvim/lua/plugins/lsp/formatting.lua
@@ -51,12 +61,12 @@ end
 local function hover()
   local function get_preview_window()
     for _, win in ipairs(vim.api.nvim_tabpage_list_wins(vim.api.nvim_get_current_tabpage())) do
-      if vim.api.nvim_win_get_option(win, "preview") then return win end
+      if vim.api.nvim_win_get_option(win, "previewwindow") then return win end
     end
     vim.cmd([[botright vnew]])
     local pwin = vim.api.nvim_get_current_win()
     local pwin_width = vim.o.columns > 210 and 90 or 70
-    vim.api.nvim_win_set_option(pwin, "preview", true)
+    vim.api.nvim_win_set_option(pwin, "previewwindow", true)
     vim.api.nvim_win_set_width(pwin, pwin_width)
     vim.cmd("set filetype=preview")
     vim.cmd(fmt("let &winwidth=%d", pwin_width))
@@ -267,13 +277,16 @@ local function setup_keymaps(client, bufnr)
   nnoremap("]d", function() diagnostic.goto_next({ float = true }) end, desc("lsp: next diagnostic"))
 
   safemap("definition", "n", "gd", function()
-    vim.lsp.buf.definition()
-    -- if vim.g.picker == "fzf_lua" then
-    --   vim.cmd("FzfLua lsp_definitions")
-    -- elseif vim.g.picker == "telescope" then
-    --   vim.cmd("Telescope lsp_definitions")
+    -- if true then
+    --   vim.cmd("Trouble lsp_definitions")
     -- else
-    --   vim.lsp.buf.definition()
+    if vim.g.picker == "fzf_lua" then
+      vim.cmd("FzfLua lsp_definitions")
+    elseif vim.g.picker == "telescope" then
+      vim.cmd("Telescope lsp_definitions")
+    else
+      vim.lsp.buf.definition()
+    end
     -- end
   end, "lsp: definition")
   safemap("definition", "n", "gD", [[<cmd>vsplit | lua vim.lsp.buf.definition()<cr>]], "lsp: definition (vsplit)")
@@ -409,10 +422,10 @@ local function setup_diagnostics(client, _bufnr)
   local function sign(opts)
     fn.sign_define(opts.hl, {
       text = opts.icon,
-      texthl = opts.hl,
-      culhl = opts.hl .. "Line",
-      numhl = opts.hl .. "Line",
-      -- linehl = opts.hl .. "Line",
+      texthl = opts.hl .. "Text",
+      linehl = opts.hl .. "Line",
+      numhl = opts.hl .. "Num",
+      culhl = opts.hl .. "CursorLine",
     })
   end
   sign({ hl = "DiagnosticSignError", icon = mega.icons.lsp.error })
@@ -461,7 +474,7 @@ local function setup_diagnostics(client, _bufnr)
       priority = 9999,
       severity = { min = diagnostic.severity.HINT },
     },
-    underline = { severity = { min = diagnostic.severity.HINT } },
+    underline = true, --{ severity = { min = diagnostic.severity.HINT } },
     severity_sort = true,
     virtual_text = {
       prefix = function(d)
@@ -676,6 +689,13 @@ local function get_server_capabilities()
   capabilities.textDocument.colorProvider = { dynamicRegistration = true }
   capabilities.textDocument.completion.completionItem.documentationFormat = { "markdown" }
   capabilities.textDocument.completion.completionItem.snippetSupport = true
+  capabilities.textDocument.completion.completionItem.resolveSupport = {
+    properties = {
+      "documentation",
+      "detail",
+      "additionalTextEdits",
+    },
+  }
   -- textDocument = { foldingRange = { dynamicRegistration = false, lineFoldingOnly = true } },
 
   -- FIX: https://github.com/neovim/neovim/issues/23291

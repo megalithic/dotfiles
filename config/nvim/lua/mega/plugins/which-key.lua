@@ -49,14 +49,14 @@ return {
         separator = "➜", -- symbol used between a key and it's label
         group = "+", -- symbol prepended to a group
       },
-      -- window = {
-      --   border = "none", -- none, single, double, shadow
-      --   position = "bottom", -- bottom, top
-      --   margin = { 1, 0, 1, 0 }, -- extra window margin [top, right, bottom, left]
-      --   padding = { 1, 1, 1, 1 }, -- extra window padding [top, right, bottom, left]
-      -- },
-      window = { border = mega.get_border() },
-      layout = { align = "center" },
+      window = {
+        border = "none", -- none, single, double, shadow
+        position = "bottom", -- bottom, top
+        margin = { 1, 0, 1, 0 }, -- extra window margin [top, right, bottom, left]
+        padding = { 1, 1, 1, 1 }, -- extra window padding [top, right, bottom, left]
+      },
+      -- window = { border = mega.get_border() },
+      -- layout = { align = "center" },
       hidden = { ":w", "<silent>", "<cmd>", "<Cmd>", "<CR>", "call", "lua", "^:", "^ " }, -- hide mapping boilerplate
       show_help = true, -- show help message on the command line when the popup is visible
       triggers = "auto", -- automatically setup triggers
