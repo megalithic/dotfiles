@@ -156,10 +156,10 @@ return {
       builtin_marks = {}, -- which builtin marks to show. default {}
       cyclic = true, -- whether movements cycle back to the beginning/end of buffer. default true
       force_write_shada = false, -- whether the shada file is updated after modifying uppercase marks. default false
-      bookmark_0 = { -- marks.nvim allows you to configure up to 10 bookmark groups, each with its own sign/virttext
-        sign = "⚑",
-        virt_text = "hello world",
-      },
+      -- bookmark_0 = { -- marks.nvim allows you to configure up to 10 bookmark groups, each with its own sign/virttext
+      --   sign = "⚑",
+      --   virt_text = "hello world",
+      -- },
       mappings = {
         set_next = "m,",
         next = "m]",
@@ -713,7 +713,7 @@ return {
       vim.keymap.set("n", "o", "o<cmd>AutolistNewBullet<cr>")
       vim.keymap.set("n", "O", "O<cmd>AutolistNewBulletBefore<cr>")
       vim.keymap.set("n", "<CR>", "<cmd>AutolistToggleCheckbox<cr><CR>")
-      vim.keymap.set("n", "<C-r>", "<cmd>AutolistRecalculate<cr>")
+      -- vim.keymap.set("n", "<C-r>", "<cmd>AutolistRecalculate<cr>")
 
       -- cycle list types with dot-repeat
       vim.keymap.set("n", "<localleader>cn", require("autolist").cycle_next_dr, { expr = true })

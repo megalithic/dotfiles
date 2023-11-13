@@ -109,10 +109,10 @@ local theme = lush(function(injected_functions)
 
     ---- :help spell -------------------------------------------
 
-    SpellBad({ fg = C.red, bg = C.transparent, gui = C.transparent, sp = C.red }),
-    SpellCap({ fg = C.blue, bg = C.transparent, gui = "undercurl", sp = C.blue }),
-    SpellLocal({ fg = C.cyan, bg = C.transparent, gui = "undercurl", sp = C.cyan }),
-    SpellRare({ fg = C.purple, bg = C.transparent, gui = "undercurl", sp = C.purple }), -- Word that is recognized by the spellchecker as one that is hardly ever used.  |spell| Combined with the highlighting used otherwise.
+    SpellBad({ fg = C.red, bg = C.transparent, gui = "bold,underline", sp = C.red }),
+    SpellCap({ fg = C.blue, bg = C.transparent, gui = "underline", sp = C.blue }),
+    SpellLocal({ fg = C.cyan, bg = C.transparent, gui = "underline", sp = C.cyan }),
+    SpellRare({ fg = C.purple, bg = C.transparent, gui = "underline", sp = C.purple }), -- Word that is recognized by the spellchecker as one that is hardly ever used.  |spell| Combined with the highlighting used otherwise.
 
     -- These groups are not listed as default vim groups,
     -- but they are defacto standard group names for syntax highlighting.
@@ -216,10 +216,15 @@ local theme = lush(function(injected_functions)
     DiagnosticSignInfo({ DiagnosticInfo }),
     DiagnosticSignHint({ DiagnosticHint }),
 
-    DiagnosticSignErrorText({ DiagnosticError, bg = C.bg_dark, sp = C.red, gui = "italic,undercurl,bold" }),
-    DiagnosticSignWarnText({ DiagnosticWarn, bg = C.bg_dark, sp = C.orange, gui = "italic,bold" }),
-    DiagnosticSignInfoText({ DiagnosticInfo, gui = "italic,bold" }),
-    DiagnosticSignHintText({ gui = "italic,bold" }),
+    -- DiagnosticSignErrorText({ DiagnosticError, bg = C.bg_dark, sp = C.red, gui = "italic,undercurl,bold" }),
+    -- DiagnosticSignWarnText({ DiagnosticWarn, bg = C.bg_dark, sp = C.orange, gui = "italic,bold" }),
+    -- DiagnosticSignInfoText({ gui = "italic,bold" }),
+    -- DiagnosticSignHintText({ gui = "italic,bold" }),
+
+    DiagnosticSignErrorText({ DiagnosticError }),
+    DiagnosticSignWarnText({ DiagnosticWarn }),
+    DiagnosticSignInfoText({ DiagnosticInfo }),
+    DiagnosticSignHintText({ DiagnosticHint }),
     -- DiagnosticSignHintText({ fg = C.red, bg = C.red, sp = C.red, gui = "underline" }),
 
     DiagnosticSignErrorLine({ DiagnosticSignErrorText }),
@@ -250,11 +255,11 @@ local theme = lush(function(injected_functions)
       fg = C.transparent,
       bg = C.bg_dark,
       sp = DiagnosticError.fg,
-      gui = "undercurl,bold",
+      gui = "undercurl,bold,italic",
     }),
-    DiagnosticUnderlineWarn({ fg = C.transparent, bg = C.bg_dark, sp = DiagnosticWarn.fg, gui = "undercurl" }),
-    DiagnosticUnderlineInfo({ fg = C.transparent, bg = C.bg_dark, sp = DiagnosticInfo.fg, gui = "undercurl" }),
-    DiagnosticUnderlineHint({ fg = C.transparent, bg = C.bg_dark, sp = DiagnosticHint.fg, gui = "undercurl" }),
+    DiagnosticUnderlineWarn({ fg = C.transparent, bg = C.bg_dark, sp = DiagnosticWarn.fg, gui = "italic,bold" }),
+    DiagnosticUnderlineInfo({ fg = C.transparent, bg = C.bg_dark, sp = DiagnosticInfo.fg, gui = "italic" }),
+    DiagnosticUnderlineHint({ fg = C.transparent, bg = C.bg_dark, sp = DiagnosticHint.fg, gui = "italic" }),
 
     ---- :help lsp-highlight -----------------------------------
 
@@ -914,6 +919,10 @@ local theme = lush(function(injected_functions)
     GitSignsAddCursorLine({ fg = C.bright_green, bg = C.bg_dark }),
     GitSignsDeleteCursorLine({ fg = C.red, bg = C.bg_dark }),
     GitSignsChangeCursorLine({ fg = C.orange, bg = C.bg_dark }),
+
+    GitSignsAddNum({ fg = C.bright_green }),
+    GitSignsDeleteNum({ fg = C.red }),
+    GitSignsChangeNum({ fg = C.orange }),
 
     ---- tmux-popup ------------------------------------------------------------
 

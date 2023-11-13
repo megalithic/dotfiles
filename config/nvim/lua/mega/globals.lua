@@ -246,6 +246,22 @@ function mega.pcall(msg, func, ...)
   end, unpack(args))
 end
 
+-- XPCALL example:
+-- function _M.load_module_if_exists(module_name)
+--   local status, res = xpcall(function()
+--     return require(module_name)
+--   end, debug.traceback)
+--   if status then
+--     return true, res
+--   -- Here we match any character because if a module has a dash '-' in its name, we would need to escape it.
+--   elseif type(res) == "string" and find(res, "module '" .. module_name .. "' not found", nil, true) then
+--     return false, res
+--   else
+--     error("error loading module '" .. module_name .. "':\n" .. res)
+--   end
+-- end
+--
+
 --- Call the given function and use `vim.notify` to notify of any errors
 --- this function is a wrapper around `xpcall` which allows having a single
 --- error handler for all errors

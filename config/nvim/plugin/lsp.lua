@@ -68,6 +68,7 @@ local function hover()
     local pwin_width = vim.o.columns > 210 and 90 or 70
     vim.api.nvim_win_set_option(pwin, "previewwindow", true)
     vim.api.nvim_win_set_width(pwin, pwin_width)
+    vim.opt_local.winminwidth = pwin_width
     vim.cmd("set filetype=preview")
     vim.cmd(fmt("let &winwidth=%d", pwin_width))
     vim.opt_local.winfixwidth = true
@@ -277,17 +278,18 @@ local function setup_keymaps(client, bufnr)
   nnoremap("]d", function() diagnostic.goto_next({ float = true }) end, desc("lsp: next diagnostic"))
 
   safemap("definition", "n", "gd", function()
-    -- if true then
-    --   vim.cmd("Trouble lsp_definitions")
-    -- else
-    if vim.g.picker == "fzf_lua" then
-      vim.cmd("FzfLua lsp_definitions")
-    elseif vim.g.picker == "telescope" then
-      vim.cmd("Telescope lsp_definitions")
-    else
+    if true then
       vim.lsp.buf.definition()
+      -- vim.cmd("Trouble lsp_definition")
+    else
+      if vim.g.picker == "fzf_lua" then
+        vim.cmd("FzfLua lsp_definitions")
+      elseif vim.g.picker == "telescope" then
+        vim.cmd("Telescope lsp_definitions")
+      else
+        vim.lsp.buf.definition()
+      end
     end
-    -- end
   end, "lsp: definition")
   safemap("definition", "n", "gD", [[<cmd>vsplit | lua vim.lsp.buf.definition()<cr>]], "lsp: definition (vsplit)")
   nnoremap("gs", vim.lsp.buf.document_symbol, desc("lsp: document symbols"))
@@ -474,7 +476,7 @@ local function setup_diagnostics(client, _bufnr)
       priority = 9999,
       severity = { min = diagnostic.severity.HINT },
     },
-    underline = true, --{ severity = { min = diagnostic.severity.HINT } },
+    underline = { severity = { min = diagnostic.severity.HINT } },
     severity_sort = true,
     virtual_text = {
       prefix = function(d)
@@ -648,12 +650,12 @@ local function on_attach(client, bufnr)
   -- Live color highlighting; handy for tailwindcss
   -- HT: kabouzeid
   if mega.lsp.has_method(client, "color") then
-    require("mega.lsp.document_colors").buf_attach(bufnr, { single_column = true, col_count = 2 })
+    require("mega.lsp.document_colors").buf_attach(bufnr, { single_column = true, col_count = 2, mode = "bg" })
     if client.name == "tailwindcss" then
       -- require("document-color").buf_attach(bufnr)
       -- require("mega.lsp.document_colors").buf_attach(bufnr, { single_column = true, col_count = 2 })
-      local ok, colorizer = pcall(require, "colorizer")
-      if ok and colorizer then colorizer.detach_from_buffer() end
+      -- local ok, colorizer = pcall(require, "colorizer")
+      -- if ok and colorizer then colorizer.detach_from_buffer() end
     end
   end
 

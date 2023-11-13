@@ -12,9 +12,19 @@ return {
       _signs_staged_enable = false,
       -- -------------------------------
       signs = {
-        add = { hl = "GitSignsAdd", hl = "GitSignsAddCursorLine", text = "▕" }, -- alts: ▕, ▎, ┃, │, ▌, ▎ 🮉
-        change = { hl = "GitSignsChange", hl = "GitSignsChangeCursorLine", text = "▕" }, -- alts: ▎║▎
-        delete = { hl = "GitSignsDelete", hl = "GitSignsDeleteCursorline", text = "🮉" }, -- alts: ┊▎▎
+        add = { hl = "GitSignsAdd", culhl = "GitSignsAddCursorLine", numhl = "GitSignsAddNum", text = "▕" }, -- alts: ▕, ▎, ┃, │, ▌, ▎ 🮉
+        change = {
+          hl = "GitSignsChange",
+          culhl = "GitSignsChangeCursorLine",
+          numhl = "GitSignsChangeNum",
+          text = "▕",
+        }, -- alts: ▎║▎
+        delete = {
+          hl = "GitSignsDelete",
+          culhl = "GitSignsDeleteCursorLine",
+          numhl = "GitSignsDeleteNum",
+          text = "🮉",
+        }, -- alts: ┊▎▎
         topdelete = { hl = "GitSignsDelete", text = "🮉" }, -- alts: ▌ ▄▀
         changedelete = { hl = "GitSignsChange", text = "🮉" }, -- alts: ▌
         untracked = { hl = "GitSignsAdd", text = "▕" }, -- alts: ┆ ▕
