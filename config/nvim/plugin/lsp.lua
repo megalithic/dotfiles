@@ -14,6 +14,8 @@ local fmt = string.format
 local diagnostic = vim.diagnostic
 local LSP_METHODS = vim.lsp.protocol.Methods
 local servers = require("mega.servers")
+local md_namespace = vim.api.nvim_create_namespace("lsp_highlights")
+local diag_namespace = vim.api.nvim_create_namespace("lsp_diagnostics")
 
 function mega.lsp.has_method(client, method)
   method = method:find("/") and method or "textDocument/" .. method
@@ -32,7 +34,6 @@ end
 -- by checking whether the word under the cursor has changed.
 local function diagnostic_popup(bufnr)
   if not vim.g.git_conflict_detected then
-    -- vim.diagnostic.open_float(bufnr, { scope = "cursor", focus = false })
     -- if utils.not_interfere_on_float() then -- If there is not a floating window present
     -- Try to open diagnostics under the cursor
     local diags = vim.diagnostic.open_float(bufnr, { focus = false, scope = "cursor" })
@@ -40,7 +41,6 @@ local function diagnostic_popup(bufnr)
       vim.diagnostic.open_float(bufnr, { focus = false, scope = "line" })
     end
     return diags
-    -- end
   end
 end
 
@@ -194,16 +194,21 @@ local function setup_autocommands(client, bufnr)
       desc = "Show diagnostics",
       command = function(args) diagnostic_popup(args.buf) end,
     },
-    -- {
-    --   event = { "DiagnosticChanged" },
-    --   buffer = bufnr,
-    --   desc = "Handle diagnostics changes",
-    --   command = function()
-    --     vim.diagnostic.setloclist({ open = false })
-    --     diagnostic_popup()
-    --     if vim.tbl_isempty(vim.fn.getloclist(0)) then vim.cmd([[lclose]]) end
-    --   end,
-    -- },
+    {
+      event = { "DiagnosticChanged" },
+      buffer = bufnr,
+      desc = "Handle diagnostics changes",
+      command = function()
+        local current_line_diags = vim.diagnostic.get(bufnr, { lnum = vim.fn.line(".") - 1 })
+        vim.diagnostic.setloclist({ open = false })
+        if #current_line_diags > 0 then
+          diagnostic_popup()
+        else
+          vim.diagnostic.hide()
+        end
+        if vim.tbl_isempty(vim.fn.getloclist(0)) then vim.cmd([[lclose]]) end
+      end,
+    },
   })
 
   if vim.g.formatter == "null-ls" then
@@ -569,7 +574,6 @@ end
 local function setup_handlers(client, bufnr)
   -- brilliant highlighting and float handler stuff by mariasolos:
   -- https://github.com/MariaSolOs/dotfiles/blob/main/.config/nvim/lua/lsp.lua
-  local md_namespace = vim.api.nvim_create_namespace("lsp_highlights")
 
   --- Adds extra inline highlights to the given buffer.
   ---@param buf integer
