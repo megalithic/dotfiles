@@ -20,6 +20,7 @@ local M = {
     "undotree",
     "log",
     "man",
+    "fidget",
     "dap-repl",
     "markdown",
     "vimwiki",

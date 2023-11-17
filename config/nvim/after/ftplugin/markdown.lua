@@ -150,6 +150,10 @@ vim.fn.matchadd("matchURL", [[http[s]\?:\/\/[[:alnum:]%\/_#.-]*]])
 vim.cmd(string.format("hi matchURL guifg=%s", require("mega.lush_theme.colors").bright_blue))
 vim.cmd([[syn region markdownWikiLink matchgroup=markdownLinkDelimiter start="\[\[\w\+|" end="\]\]"]])
 
+mega.iabbrev("-cc", "- [ ]")
+mega.iabbrev("cc", "[ ]")
+mega.iabbrev("cb", "[ ]")
+
 if vim.env.TMUX_POPUP then
   -- ## used with markdown related tmux popups (through nvim)
   vim.opt_local.signcolumn = "no"
@@ -185,57 +189,56 @@ if vim.env.TMUX_POPUP then
   -- end
 end
 
--- mega.augroup("ZKMaps", {
---   {
---     event = { "BufEnter", "BufReadPre", "BufReadPost", "BufNewFile" },
---     pattern = { string.format("%s/**/*.md", vim.env.ZK_NOTEBOOK_DIR) },
---     command = function()
---       dd("presently in a zk file")
---       if not vim.g.started_by_firenvim and require("zk.util").notebook_root(vim.fn.expand("%:p")) ~= nil then
---         local desc = function(desc) return { desc = desc, noremap = true, silent = false, buffer = 0 } end
---
---         -- Open the link under the caret.
---         nnoremap("<CR>", "<Cmd>lua vim.lsp.buf.definition()<CR>", desc("zk: open link under cursor"))
---
---         -- Create a new note after asking for its title.
---         -- This overrides the global `<space>zn` mapping to create the note in the same directory as the current buffer.
---         nnoremap(
---           "<space>zn",
---           "<Cmd>ZkNew { dir = vim.fn.expand('%:p:h'), title = vim.fn.input('Title: ') }<CR>",
---           desc("zk: new note in cwd")
---         )
---         -- Create a new note in the same directory as the current buffer, using the current selection for title.
---         vnoremap(
---           "<space>zn",
---           ":'<,'>ZkNewFromTitleSelection { dir = vim.fn.expand('%:p:h') }<CR>",
---           desc("zk: new note in cwd")
---         )
---         -- Create a new note in the same directory as the current buffer, using the current selection for note content and asking for its title.
---         -- map("v", "<space>znc", ":'<,'>ZkNewFromContentSelection { dir = vim.fn.expand('%:p:h'), title = vim.fn.input('Title: ') }<CR>", desc("zk: open link under cursor"))
---
---         -- Open notes linking to the current buffer.
---         nnoremap("<space>zb", "<Cmd>ZkBacklinks<CR>", desc("zk: open back links for the current buffer"))
---         -- Alternative for backlinks using pure LSP and showing the source context.
---         --map('n', '<space>zb', '<Cmd>lua vim.lsp.buf.references()<CR>', desc("zk: open link under cursor"))
---         -- Open notes linked by the current buffer.
---         nnoremap("<space>zl", "<Cmd>ZkLinks<CR>", desc("zk: open notes linked by the current buffer"))
---
---         -- Preview a linked note.
---         nnoremap("K", "<Cmd>lua vim.lsp.buf.hover()<CR>", desc("zk: preview the linked note"))
---
---         -- Open the code actions for a visual selection.
---         vnoremap(
---           "<space>za",
---           ":'<,'>lua vim.lsp.buf.code_action()<CR>",
---           desc("zk: open the code actions for visual selection")
---         )
---
---         -- Insert a link from the note picker
---         inoremap("[[", "<Cmd>ZkInsertLink<CR>", desc("zk: insert link from the note picker"))
---       end
---     end,
---   },
--- })
+mega.augroup("ZKMaps", {
+  {
+    event = { "BufEnter", "BufReadPre", "BufReadPost", "BufNewFile" },
+    pattern = { string.format("%s/**/*.md", vim.env.ZK_NOTEBOOK_DIR) },
+    command = function()
+      if not vim.g.started_by_firenvim and require("zk.util").notebook_root(vim.fn.expand("%:p")) ~= nil then
+        local desc = function(desc) return { desc = desc, noremap = true, silent = false, buffer = 0 } end
+
+        -- Open the link under the caret.
+        nnoremap("<CR>", "<cmd>lua vim.lsp.buf.definition()<CR>", desc("zk: open link under cursor"))
+
+        -- Create a new note after asking for its title.
+        -- This overrides the global `<space>zn` mapping to create the note in the same directory as the current buffer.
+        nnoremap(
+          "<localleader>zn",
+          "<cmd>ZkNew { dir = vim.fn.expand('%:p:h'), title = vim.fn.input('Title: ') }<cr>",
+          desc("zk: new note in cwd")
+        )
+        -- Create a new note in the same directory as the current buffer, using the current selection for title.
+        vnoremap(
+          "<localleader>zn",
+          ":'<,'>ZkNewFromTitleSelection { dir = vim.fn.expand('%:p:h') }<cr>",
+          desc("zk: new note in cwd")
+        )
+        -- Create a new note in the same directory as the current buffer, using the current selection for note content and asking for its title.
+        -- map("v", "<space>znc", ":'<,'>ZkNewFromContentSelection { dir = vim.fn.expand('%:p:h'), title = vim.fn.input('Title: ') }<CR>", desc("zk: open link under cursor"))
+
+        -- Open notes linking to the current buffer.
+        nnoremap("<localleader>zb", "<cmd>ZkBacklinks<cr>", desc("zk: open back links for the current buffer"))
+        -- Alternative for backlinks using pure LSP and showing the source context.
+        --map('n', '<space>zb', '<cmd>lua vim.lsp.buf.references()<cr>', desc("zk: open link under cursor"))
+        -- Open notes linked by the current buffer.
+        nnoremap("<localleader>zl", "<cmd>ZkLinks<cr>", desc("zk: open notes linked by the current buffer"))
+
+        -- Preview a linked note.
+        nnoremap("K", "<cmd>lua vim.lsp.buf.hover()<cr>", desc("zk: preview the linked note"))
+
+        -- Open the code actions for a visual selection.
+        vnoremap(
+          "<localleader>za",
+          ":'<,'>lua vim.lsp.buf.code_action()<cr>",
+          desc("zk: open the code actions for visual selection")
+        )
+
+        -- Insert a link from the note picker
+        inoremap("[[", "<cmd>ZkInsertLink<cr>", desc("zk: insert link from the note picker"))
+      end
+    end,
+  },
+})
 --
 -- -- mega.conf("bullets.vim", function()
 -- --   vim.g.bullets_enabled_file_types = {

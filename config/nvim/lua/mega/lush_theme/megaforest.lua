@@ -223,8 +223,8 @@ local theme = lush(function(injected_functions)
 
     DiagnosticSignErrorText({ DiagnosticError }),
     DiagnosticSignWarnText({ DiagnosticWarn }),
-    DiagnosticSignInfoText({ DiagnosticInfo }),
-    DiagnosticSignHintText({ DiagnosticHint }),
+    DiagnosticSignInfoText({}),
+    DiagnosticSignHintText({}),
     -- DiagnosticSignHintText({ fg = C.red, bg = C.red, sp = C.red, gui = "underline" }),
 
     DiagnosticSignErrorLine({ DiagnosticSignErrorText }),
@@ -265,7 +265,7 @@ local theme = lush(function(injected_functions)
 
     LspReferenceText({ bg = C.transparent, gui = "underline" }),
     LspReferenceRead({ bg = C.transparent, gui = "underline" }),
-    LspReferenceWrite({ DiagnosticInfo, gui = "underline,bold,italic" }),
+    LspReferenceWrite({ DiagnosticInfo, bg = C.bg_dark, gui = "underline,bold,italic" }),
 
     LspCodeLens({ DiagnosticInfo, fg = C.bg2 }), -- Used to color the virtual text of the codelens,
     LspCodeLensSeparator({ DiagnosticHint }),
@@ -780,10 +780,10 @@ local theme = lush(function(injected_functions)
     StLineTotal({ fg = C.grey1, bg = C.bg1 }),
     StLineColumn({ fg = C.grey1, bg = C.bg1, gui = "italic" }),
     StClient({ bg = C.bg1, fg = C.fg, gui = "bold" }),
-    StError({ fg = C.pale_red, bg = C.bg1 }),
-    StWarn({ fg = C.orange, bg = C.bg1 }),
-    StInfo({ fg = C.cyan, bg = C.bg1, gui = "bold" }),
-    StHint({ fg = C.bg5, bg = C.bg1 }),
+    StError({ DiagnosticError, bg = C.bg1 }),
+    StWarn({ DiagnosticWarn, bg = C.bg1 }),
+    StInfo({ DiagnosticInfo, bg = C.bg1, gui = "bold" }),
+    StHint({ DiagnosticHint, bg = C.bg1 }),
 
     ---- :help statuscolumn  ---------------------------------------------------------
 

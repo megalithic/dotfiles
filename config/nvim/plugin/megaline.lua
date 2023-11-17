@@ -37,16 +37,10 @@ mega.augroup("megaline", {
       end
     end,
   },
-
-  -- FIXME: sometimes needed to fix treesitter rendering things on save ¯\_(ツ)_/¯
   -- {
-  --   event = { "BufWritePost" },
-  --   command = function()
-  --     vim.schedule(function() vim.cmd("edit") end)
-  --   end,
+  --   event = { "LspProgress" },
+  --   command = function() pcall(vim.cmd.redrawstatus) end,
   -- },
-
-  -- FIXME: remove? flaky fails at the redrawstatus call
   {
     event = { "CursorMoved" },
     pattern = { "*" },
@@ -523,18 +517,28 @@ end
 local function seg_lsp_status(truncate_at)
   if is_truncated(truncate_at) then return "" end
 
+  local lsp_client_names = table.concat(
+    vim.tbl_map(function(client) return client.name end, vim.tbl_values(vim.lsp.get_clients({ bufnr = M.ctx.bufnr }))),
+    ", "
+  )
+
+  -- Enable once we get fidget doing all the right things:
+  -- local enabled = not vim.g.disable_autoformat
+  -- return get_diagnostics(seg(mega.icons.lsp.kind.Null, "StModeInsert", enabled))
+
+  -- Disable once we get fidget doing all the right things:
   local ok_messages, messages = pcall(vim.lsp.status)
 
-  if ok_messages and messages == "" then
-    -- local ok_nls, nls = pcall(require, "null-ls")
-    local enabled = not vim.g.disable_autoformat
-    -- local enabled = (ok_nls and nls.enabled) or not vim.g.disable_autoformat
-
-    return get_diagnostics(seg(mega.icons.lsp.kind.Null, "StModeInsert", enabled))
+  if ok_messages then
+    if messages == "" then
+      local enabled = not vim.g.disable_autoformat
+      return get_diagnostics(seg(mega.icons.lsp.kind.Null, "StModeInsert", enabled))
+    else
+      messages = vim.iter(vim.split(messages, ", ")):last():gsub("%%", "%%%%")
+      -- dd(lsp_client_names)
+      --dd(messages)
+    end
   end
-
-  -- TODO: keep this if we move lsp progress to nvim-notify
-  -- if vim.g.notifier_enabled and vim.o.cmdheight == 1 then return "" end
 
   return get_lsp_status(messages)
 end

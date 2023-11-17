@@ -1,4 +1,4 @@
-local vcmd, fn = vim.cmd, vim.fn
+local vcmd, fn, api = vim.cmd, vim.fn, vim.api
 local fmt = string.format
 
 local M = {
@@ -416,8 +416,8 @@ end
 ---Check whether or not the location or quickfix list is open
 ---@return boolean
 function M.is_vim_list_open()
-  for _, win in ipairs(api.nvim_list_wins()) do
-    local buf = api.nvim_win_get_buf(win)
+  for _, win in ipairs(vim.api.nvim_list_wins()) do
+    local buf = vim.api.nvim_win_get_buf(win)
     local location_list = fn.getloclist(0, { filewinid = 0 })
     local is_loc_list = location_list.filewinid > 0
     if vim.bo[buf].filetype == "qf" or is_loc_list then return true end
@@ -515,16 +515,6 @@ function M.debounce_trailing(func, ms, first)
     end
   end
   return wrapped_fn, timer
-end
-
-function M.flash_cursorline()
-  -- local cursorline_state = vim.opt.cursorline:get()
-  vim.opt.cursorline = true
-  vim.cmd([[hi CursorLine guifg=#FFFFFF guibg=#FF9509]])
-  vim.fn.timer_start(200, function()
-    vim.cmd([[hi CursorLine guifg=NONE guibg=NONE]])
-    vim.opt.cursorline = false
-  end)
 end
 
 function M.starts_with(haystack, needle) return type(haystack) == "string" and haystack:sub(1, needle:len()) == needle end

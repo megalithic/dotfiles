@@ -133,15 +133,19 @@ if vim.g.picker == "fzf_lua" then
       pattern = { "*" },
       once = true,
       command = function(args)
-        if not vim.g.started_by_firenvim and (not vim.env.TMUX_POPUP and vim.env.TMUX_POPUP ~= 1) then
+        if
+          not vim.g.started_by_firenvim
+          and (not vim.env.TMUX_POPUP and vim.env.TMUX_POPUP ~= 1)
+          and not vim.tbl_contains({ "NeogitStatus" }, vim.bo[args.buf].filetype)
+        then
           local arg = vim.api.nvim_eval("argv(0)")
           if arg and (vim.fn.isdirectory(arg) ~= 0 or arg == "") then
             file_picker(dropdown({
-              -- actions = {
-              --   files = {
-              --     ["default"] = require("fzf-lua").actions.file_edit_or_qf,
-              --   },
-              -- },
+              actions = {
+                files = {
+                  ["default"] = require("fzf-lua").actions.file_edit_or_qf,
+                },
+              },
             }))
           end
         end

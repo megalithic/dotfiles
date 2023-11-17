@@ -33,6 +33,7 @@ return {
           "spectre_panel",
           "startuptime",
           "tsplayground",
+          "neogitstatus",
         },
         keymaps = {
           -- init_selection = ":lua require'wildfire'.init_selection()<CR>:lua require('tsht').nodes()<CR>",
@@ -41,13 +42,16 @@ return {
           node_decremental = "V",
         },
       })
-      vim.api.nvim_set_keymap(
-        "n",
-        "<CR>",
-        -- ":lua require'wildfire'.init_selection()<CR>:lua require('tsht').nodes()<CR>",
-        ":lua require'wildfire'.init_selection()<CR>:lua require('flash').treesitter()<CR>",
-        { noremap = true, silent = true }
-      )
+
+      if not vim.bo.filetype == "markdown" then
+        vim.api.nvim_set_keymap(
+          "n",
+          "<CR>",
+          -- ":lua require'wildfire'.init_selection()<CR>:lua require('tsht').nodes()<CR>",
+          ":lua require'wildfire'.init_selection()<CR>:lua require('flash').treesitter()<CR>",
+          { noremap = true, silent = true }
+        )
+      end
     end,
   },
   {

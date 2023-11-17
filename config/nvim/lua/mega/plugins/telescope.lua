@@ -19,6 +19,8 @@ local ts = setmetatable({}, {
       if mode == "v" or mode == "V" or mode == "" then topts.default_text = table.concat(get_selection()) end
       if key == "grep" then
         require("telescope").extensions.egrepify.egrepify(topts)
+      elseif key == "undo" then
+        require("telescope").extensions.undo.undo(topts)
       else
         local builtin = require("telescope.builtin")
         builtin[key](topts)
@@ -243,6 +245,11 @@ if vim.g.picker == "telescope" then
       "<leader>a",
       function() ts.grep(ivy({})) end,
       desc = "live grep",
+    },
+    {
+      "<leader>U",
+      function() ts.undo(ivy({})) end,
+      desc = "undo",
     },
     {
       "<leader>A",

@@ -340,7 +340,13 @@ M.list = {
       },
     }
   end,
-  prosemd_lsp = {},
+  prosemd_lsp = function()
+    if vim.g.started_by_firenvim or vim.env.TMUX_POPUP then
+      return nil
+    else
+      return {}
+    end
+  end,
   pyright = {
     single_file_support = false,
     settings = {
@@ -598,6 +604,11 @@ M.unofficial = {
           init_options = {
             mix_env = "dev",
             mix_target = "host",
+            experimental = {
+              completions = {
+                enable = true,
+              },
+            },
           },
           settings = {
             -- mixEnv = "dev",

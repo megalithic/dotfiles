@@ -123,8 +123,16 @@ return {
       },
       enabled = function()
         local context = require("cmp.config.context")
-        if vim.bo.buftype == "prompt" or vim.g.started_by_firenvim then return false end
-        return not context.in_treesitter_capture("comment") and not context.in_syntax_group("Comment")
+
+        local disabled = false
+        disabled = disabled or (vim.api.nvim_get_option_value("buftype", { buf = 0 }) == "prompt")
+        disabled = disabled or (vim.fn.reg_recording() ~= "")
+        disabled = disabled or (vim.fn.reg_executing() ~= "")
+        disabled = disabled or context.in_treesitter_capture("comment")
+        disabled = disabled or context.in_syntax_group("Comment")
+        disabled = disabled or vim.g.started_by_firenvim
+
+        return not disabled
       end,
       preselect = cmp.PreselectMode.None,
       entries = { name = "custom", selection_order = "near_cursor" },

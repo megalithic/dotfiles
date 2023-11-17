@@ -239,22 +239,23 @@ local function mini_ai()
     },
   })
 
-  local ai_map = function(text_obj, desc)
-    for _, side in ipairs({ "left", "right" }) do
-      for dir, d in mini_pairs({ prev = "[", next = "]" }) do
-        local lhs = d .. (side == "right" and text_obj:upper() or text_obj:lower())
-        for _, mode in ipairs({ "n", "x", "o" }) do
-          vim.keymap.set(mode, lhs, function() ai.move_cursor(side, "a", text_obj, { search_method = dir }) end, {
-            desc = dir .. " " .. desc,
-          })
-        end
-      end
-    end
-  end
-
-  ai_map("f", "function")
-  ai_map("c", "class")
-  ai_map("o", "block")
+  -- FIXME: started breaking at some point:
+  -- local ai_map = function(text_obj, desc)
+  --   for _, side in ipairs({ "left", "right" }) do
+  --     for dir, d in mini_pairs({ prev = "[", next = "]" }) do
+  --       local lhs = d .. (side == "right" and text_obj:upper() or text_obj:lower())
+  --       for _, mode in ipairs({ "n", "x", "o" }) do
+  --         vim.keymap.set(mode, lhs, function() ai.move_cursor(side, "a", text_obj, { search_method = dir }) end, {
+  --           desc = dir .. " " .. desc,
+  --         })
+  --       end
+  --     end
+  --   end
+  -- end
+  --
+  -- ai_map("f", "function")
+  -- ai_map("c", "class")
+  -- ai_map("o", "block")
 end
 
 local function mini_align()
@@ -327,6 +328,7 @@ local function mini_hipatterns()
       -- hex_color = hipatterns.gen_highlighter.hex_color(),
     },
   })
+  -- vim.b.minihipatterns_disable = not context.in_treesitter_capture("comment") or not context.in_syntax_group("Comment")
 end
 
 local function mini_clue()
@@ -414,6 +416,6 @@ return {
     -- mini_jump()
     mini_hipatterns()
     -- mini_clue()
-    -- mini_ai()
+    mini_ai()
   end,
 }

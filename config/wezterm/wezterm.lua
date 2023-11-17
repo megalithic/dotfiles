@@ -59,18 +59,6 @@ w.on(
   end
 )
 
-w.on("toggle-ligature", function(window, _pane)
-  local overrides = window:get_config_overrides() or {}
-  if not overrides.harfbuzz_features then
-    -- If we haven't overridden it yet, then override with ligatures disabled
-    overrides.harfbuzz_features = { "calt=0", "clig=0", "liga=0" }
-  else
-    -- else we did already, and we should disable out override now
-    overrides.harfbuzz_features = nil
-  end
-  window:set_config_overrides(overrides)
-end)
-
 w.on("mux-is-process-stateful", function(proc)
   log_proc(proc)
 
@@ -248,24 +236,28 @@ colors.tab_bar = {
 
 --- [ FONTS ] ------------------------------------------------------------------
 
+-- local harfbuzz_features = { "calt", "liga", "dlig", "ss01", "ss02", "ss03", "ss04", "ss05", "ss06", "ss07", "ss08" }
+-- local harfbuzz_features =
+--   { "calt=1", "liga=1", "dlig=1", "ss01=1", "ss02=1", "ss03=1", "ss04=1", "ss05=1", "ss06=1", "ss07=1", "ss08=1" }
+local harfbuzz_features = nil
 local font = {
   JetBrainsMono = {
-    Normal = { family = "JetBrains Mono", weight = "Medium" },
-    Italic = { family = "JetBrains Mono", italic = true },
-    Bold = { family = "JetBrains Mono", weight = "ExtraBlack" },
-    BoldItalic = { family = "JetBrains Mono", italic = true, weight = "ExtraBlack" },
+    Normal = { family = "JetBrains Mono", weight = "Medium", harfbuzz_features },
+    Italic = { family = "JetBrains Mono", italic = true, harfbuzz_features },
+    Bold = { family = "JetBrains Mono", weight = "ExtraBlack", harfbuzz_features },
+    BoldItalic = { family = "JetBrains Mono", italic = true, weight = "ExtraBlack", harfbuzz_features },
   },
   JetBrainsMonoNerdFont = {
-    Normal = { family = "JetBrainsMono Nerd Font Mono", weight = "Medium" },
-    Italic = { family = "JetBrainsMono Nerd Font Mono", italic = true },
-    Bold = { family = "JetBrainsMono Nerd Font Mono", weight = "ExtraBlack" },
-    BoldItalic = { family = "JetBrainsMono Nerd Font Mono", italic = true, weight = "ExtraBlack" },
+    Normal = { family = "JetBrainsMono Nerd Font Mono", weight = "Medium", harfbuzz_features },
+    Italic = { family = "JetBrainsMono Nerd Font Mono", italic = true, harfbuzz_features },
+    Bold = { family = "JetBrainsMono Nerd Font Mono", weight = "ExtraBlack", harfbuzz_features },
+    BoldItalic = { family = "JetBrainsMono Nerd Font Mono", italic = true, weight = "ExtraBlack", harfbuzz_features },
   },
   VictorMonoNerdFont = {
-    Normal = { family = "VictorMono Nerd Font Mono", weight = "Medium" },
-    Italic = { family = "VictorMono Nerd Font Mono", italic = true },
-    Bold = { family = "VictorMono Nerd Font Mono", weight = "ExtraBlack" },
-    BoldItalic = { family = "VictorMono Nerd Font Mono", italic = true, weight = "ExtraBlack" },
+    Normal = { family = "VictorMono Nerd Font Mono", weight = "Medium", harfbuzz_features },
+    Italic = { family = "VictorMono Nerd Font Mono", italic = true, harfbuzz_features },
+    Bold = { family = "VictorMono Nerd Font Mono", weight = "ExtraBlack", harfbuzz_features },
+    BoldItalic = { family = "VictorMono Nerd Font Mono", italic = true, weight = "ExtraBlack", harfbuzz_features },
   },
 }
 
@@ -328,6 +320,11 @@ return {
   -- send_composed_key_when_right_alt_is_pressed = false,
   adjust_window_size_when_changing_font_size = false,
   exit_behavior = "Close",
+  exit_behavior_messaging = "None",
+
+  -- Terminate WezTerm?
+  -- Detach and close all panes and terminate wezterm?
+  -- https://github.com/wez/wezterm/pull/4420
   window_close_confirmation = "NeverPrompt",
   disable_default_key_bindings = true,
   front_end = "WebGpu", -- OpenGL, WebGpu, Software
@@ -412,7 +409,7 @@ return {
       mods = "CMD|CTRL|SHIFT",
       action = act.EmitEvent("toggle-ligature"), -- TEST: |>
     },
-    { key = "q", mods = "CMD", action = act.QuitApplication },
+    -- { key = "q", mods = "CMD", action = act.QuitApplication },
     { key = "w", mods = "CMD", action = w.action.CloseCurrentTab({ confirm = false }) },
     { key = "+", mods = "CMD", action = w.action.IncreaseFontSize },
     { key = "-", mods = "CMD", action = w.action.DecreaseFontSize },

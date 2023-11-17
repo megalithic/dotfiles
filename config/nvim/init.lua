@@ -37,7 +37,7 @@ vim.g.colorscheme = "megaforest"
 vim.g.default_colorcolumn = "81"
 vim.g.notifier_enabled = true
 vim.g.debug_enabled = false
-vim.g.picker = "fzf_lua" -- alt: telescope, fzf_lua
+vim.g.picker = "telescope" -- alt: telescope, fzf_lua
 vim.g.formatter = "conform" -- alt: null-ls/none-ls, conform
 vim.g.tree = "neo-tree"
 vim.g.explorer = "oil" -- alt: dirbuf, oil
@@ -46,9 +46,9 @@ vim.g.snipper = "vsnip" -- alt: vsnip, luasnip
 vim.g.ts_ignored_langs = {} -- alt: { "svg", "json", "heex", "jsonc" }
 
 -- REF: elixir LSPs: elixir-tools(ElixirLS, NextLS, credo), elixirls, nextls, lexical
-vim.g.formatter_exclusions = { "ElixirLS", "NextLS", "nextls", "lexical" }
-vim.g.diagnostic_exclusions = { "ElixirLS", "NextLS", "elixirls", "lexical" }
-vim.g.enabled_elixir_ls = { "elixirls", "nextls" }
+vim.g.formatter_exclusions = { "ElixirLS", "NextLS", "elixirls", "nextls" }
+vim.g.diagnostic_exclusions = { "ElixirLS", "NextLS", "elixirls", "nextls" }
+vim.g.enabled_elixir_ls = { "lexical" }
 vim.g.disable_autolint = true
 vim.g.disable_autoformat = false
 

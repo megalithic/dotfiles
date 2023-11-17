@@ -8,6 +8,7 @@ local ft_ignores = {
   "megaterm",
   "dirbuf",
   "SidebarNvim",
+  "fidget",
   "Trouble",
   "qf",
   "neo-tree",

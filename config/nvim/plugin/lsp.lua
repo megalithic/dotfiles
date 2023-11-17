@@ -68,9 +68,9 @@ local function hover()
     local pwin_width = vim.o.columns > 210 and 90 or 70
     vim.api.nvim_win_set_option(pwin, "previewwindow", true)
     vim.api.nvim_win_set_width(pwin, pwin_width)
-    vim.opt_local.winminwidth = pwin_width
     vim.cmd("set filetype=preview")
     vim.cmd(fmt("let &winwidth=%d", pwin_width))
+    -- vim.opt_local.winminwidth = pwin_width
     vim.opt_local.winfixwidth = true
 
     return pwin
@@ -127,15 +127,15 @@ local function setup_commands(bufnr)
   local function make_diagnostic_qf_updater()
     local cmd_id = nil
     return function()
-      if not api.nvim_buf_is_valid(0) then return end
+      if not vim.api.nvim_buf_is_valid(0) then return end
       pcall(vim.diagnostic.setqflist, { open = false })
       U.toggle_list("quickfix")
       if not U.is_vim_list_open() and cmd_id then
-        api.nvim_del_autocmd(cmd_id)
+        vim.api.nvim_del_autocmd(cmd_id)
         cmd_id = nil
       end
       if cmd_id then return end
-      cmd_id = api.nvim_create_autocmd("DiagnosticChanged", {
+      cmd_id = vim.api.nvim_create_autocmd("DiagnosticChanged", {
         callback = function()
           if U.is_vim_list_open() then
             pcall(vim.diagnostic.setqflist, { open = false })
@@ -196,7 +196,7 @@ local function setup_autocommands(client, bufnr)
     },
     -- {
     --   event = { "DiagnosticChanged" },
-    --   -- buffer = bufnr,
+    --   buffer = bufnr,
     --   desc = "Handle diagnostics changes",
     --   command = function()
     --     vim.diagnostic.setloclist({ open = false })
@@ -297,7 +297,8 @@ local function setup_keymaps(client, bufnr)
 
   safemap("references", "n", "gr", function()
     if true then
-      vim.cmd("Trouble lsp_references")
+      vim.lsp.buf.references()
+      -- vim.cmd("Trouble lsp_references")
     else
       if vim.g.picker == "fzf_lua" then
         vim.cmd("FzfLua lsp_references")
@@ -420,7 +421,7 @@ end
 -- 	/usr/local/share/nvim/runtime/lua/vim/lsp/diagnostic.lua:236: in function 'handler'
 -- 	/usr/local/share/nvim/runtime/lua/vim/lsp.lua:1164: in function ''
 -- 	vim/_editor.lua: in function <vim/_editor.lua:0>
-local function setup_diagnostics(client, _bufnr)
+local function setup_diagnostics(client, bufnr)
   local function sign(opts)
     fn.sign_define(opts.hl, {
       text = opts.icon,
@@ -435,40 +436,6 @@ local function setup_diagnostics(client, _bufnr)
   sign({ hl = "DiagnosticSignInfo", icon = mega.icons.lsp.info })
   sign({ hl = "DiagnosticSignHint", icon = mega.icons.lsp.hint })
 
-  -- This section overrides the default diagnostic handlers for signs and virtual text so that only
-  -- the most severe diagnostic is shown per line
-
-  --- The custom namespace is so that ALL diagnostics across all namespaces can be aggregated
-  --- including diagnostics from plugins
-  local ns = api.nvim_create_namespace("severe-diagnostics")
-
-  --- Restricts nvim's diagnostic signs to only the single most severe one per line
-  --- see `:help vim.diagnostic`
-  ---@param callback fun(namespace: integer, bufnr: integer, diagnostics: table, opts: table)
-  ---@return fun(namespace: integer, bufnr: integer, diagnostics: table, opts: table)
-  local function max_diagnostic(callback)
-    return function(_, bufnr, diagnostics, opts)
-      local max_severity_per_line = vim.iter(diagnostics):fold({}, function(diag_map, d)
-        local m = diag_map[d.lnum]
-        if not m or d.severity < m.severity then diag_map[d.lnum] = d end
-        return diag_map
-      end)
-      callback(ns, bufnr, vim.tbl_values(max_severity_per_line), opts)
-    end
-  end
-
-  local signs_handler = diagnostic.handlers.signs
-  diagnostic.handlers.signs = vim.tbl_extend("force", signs_handler, {
-    show = max_diagnostic(signs_handler.show),
-    hide = function(_, bufnr) signs_handler.hide(ns, bufnr) end,
-  })
-
-  local virt_text_handler = diagnostic.handlers.virtual_text
-  diagnostic.handlers.virtual_text = vim.tbl_extend("force", virt_text_handler, {
-    show = max_diagnostic(virt_text_handler.show),
-    hide = function(_, bufnr) virt_text_handler.hide(ns, bufnr) end,
-  })
-
   local max_width = math.min(math.floor(vim.o.columns * 0.7), 100)
   local max_height = math.min(math.floor(vim.o.lines * 0.3), 30)
   mega.lsp.diagnostic_config = {
@@ -478,6 +445,7 @@ local function setup_diagnostics(client, _bufnr)
     },
     underline = { severity = { min = diagnostic.severity.HINT } },
     severity_sort = true,
+    -- TODO: use this: https://github.com/nvimdev/lspsaga.nvim/blob/main/lua/lspsaga/diagnostic/virt.lua
     virtual_text = {
       prefix = function(d)
         local level = diagnostic.severity[d.severity]
@@ -523,17 +491,6 @@ local function setup_diagnostics(client, _bufnr)
     },
   }
   diagnostic.config(mega.lsp.diagnostic_config)
-
-  local diagnostic_handler = lsp.handlers[LSP_METHODS.textDocument_publishDiagnostics]
-  lsp.handlers[LSP_METHODS.textDocument_publishDiagnostics] = function(err, result, ctx, config)
-    local client_name = vim.lsp.get_client_by_id(ctx.client_id).name
-
-    if vim.tbl_contains(vim.g.diagnostic_exclusions, client_name) then return end
-    -- dd(fmt("diagnostic client: %s", client_name))
-
-    -- result.diagnostics = vim.tbl_map(show_related_locations, result.diagnostics)
-    diagnostic_handler(err, result, ctx, config)
-  end
 end
 
 -- [ HIGHLIGHTS ] --------------------------------------------------------------
@@ -582,28 +539,15 @@ local function on_init(client)
       vim.schedule(function()
         local path = fn.fnamemodify(settings, ":~:.")
         local msg = fmt("loaded local settings for %s from %s", client.name, path)
-        vim.notify_once(msg, vim.log.levels.INFO, { title = "LSP Settings" })
+        vim.notify_once(msg, L.INFO, { title = "LSP Settings" })
       end)
     end
   end
   return true
 end
---
+
 -- ---@alias ClientOverrides {on_attach: fun(client: lsp.Client, bufnr: number), semantic_tokens: fun(bufnr: number, client: lsp.Client, token: table)}
--- local client_overrides = {
---   lexical = {
---     on_attach = function(client, bufnr)
---       dd(I(mega.lsp.has_method(client, "references")))
---       if
---         not mega.lsp.has_method(client, "references")
---         -- and not client.server_capabilities.documentReferencesProvider
---         -- and not client.server_capabilities.referencesProvider
---       then
---         nmap("gr", "<leader>A", { desc = "lsp: references", buffer = bufnr })
---       end
---     end,
---   },
--- }
+local client_overrides = {}
 
 ---@param client lsp.Client
 ---@param bufnr number
@@ -622,17 +566,109 @@ local function setup_semantic_tokens(client, bufnr)
   -- })
 end
 
-local function setup_extra_handlers(client, bufnr)
-  local levels = {
-    "ERROR",
-    "WARN",
-    "INFO",
-    "DEBUG",
-    [0] = "TRACE",
-  }
+local function setup_handlers(client, bufnr)
+  -- brilliant highlighting and float handler stuff by mariasolos:
+  -- https://github.com/MariaSolOs/dotfiles/blob/main/.config/nvim/lua/lsp.lua
+  local md_namespace = vim.api.nvim_create_namespace("lsp_highlights")
 
-  vim.lsp.handlers["window/showMessage"] = function(_, result)
-    vim.notify(result.message, vim.log.levels[levels[result.type]])
+  --- Adds extra inline highlights to the given buffer.
+  ---@param buf integer
+  local function add_inline_highlights(buf)
+    for l, line in ipairs(vim.api.nvim_buf_get_lines(buf, 0, -1, false)) do
+      for pattern, hl_group in pairs({
+        ["@%S+"] = "@parameter",
+        ["^%s*(Parameters:)"] = "@text.title",
+        ["^%s*(Return:)"] = "@text.title",
+        ["^%s*(See also:)"] = "@text.title",
+        ["{%S-}"] = "@parameter",
+        ["|%S-|"] = "@text.reference",
+      }) do
+        local from = 1 ---@type integer?
+        while from do
+          local to
+          from, to = line:find(pattern, from)
+          if from then
+            vim.api.nvim_buf_set_extmark(buf, md_namespace, l - 1, from - 1, {
+              end_col = to,
+              hl_group = hl_group,
+            })
+          end
+          from = to and to + 1 or nil
+        end
+      end
+    end
+  end
+
+  --- LSP handler that adds extra inline highlights, keymaps, and window options.
+  --- Code inspired from `noice`.
+  ---@param handler fun(err: any, result: any, ctx: any, config: any): integer?, integer?
+  ---@param focusable boolean
+  ---@return fun(err: any, result: any, ctx: any, config: any)
+  local function enhanced_float_handler(handler, focusable)
+    return function(err, result, ctx, config)
+      local bufnr, winnr = handler(
+        err,
+        result,
+        ctx,
+        vim.tbl_deep_extend("force", config or {}, {
+          border = mega.get_border(),
+          focusable = focusable,
+          max_height = math.floor(vim.o.lines * 0.5),
+          max_width = math.floor(vim.o.columns * 0.4),
+        })
+      )
+
+      if not bufnr or not winnr then return end
+
+      -- Conceal everything.
+      vim.wo[winnr].concealcursor = "n"
+
+      -- Extra highlights.
+      add_inline_highlights(bufnr)
+
+      -- Add keymaps for opening links.
+      if focusable and not vim.b[bufnr].markdown_keys then
+        vim.keymap.set("n", "K", function()
+          -- Vim help links.
+          local url = (vim.fn.expand("<cWORD>") --[[@as string]]):match("|(%S-)|")
+          if url then return vim.cmd.help(url) end
+
+          -- Markdown links.
+          local col = vim.api.nvim_win_get_cursor(0)[2] + 1
+          local from, to
+          from, to, url = vim.api.nvim_get_current_line():find("%[.-%]%((%S-)%)")
+          if from and col >= from and col <= to then
+            vim.system({ "open", url }, nil, function(res)
+              if res.code ~= 0 then vim.notify("Failed to open URL" .. url, vim.log.levels.ERROR) end
+            end)
+          end
+        end, { buffer = bufnr, silent = true })
+        vim.b[bufnr].markdown_keys = true
+      end
+    end
+  end
+
+  vim.lsp.handlers[LSP_METHODS.textDocument_hover] = enhanced_float_handler(vim.lsp.handlers.hover, true)
+  vim.lsp.handlers[LSP_METHODS.textDocument_signatureHelp] =
+    enhanced_float_handler(vim.lsp.handlers.signature_help, false)
+
+  --- HACK: Override `vim.lsp.util.stylize_markdown` to use Treesitter.
+  ---@param bufnr integer
+  ---@param contents string[]
+  ---@param opts table
+  ---@return string[]
+  ---@diagnostic disable-next-line: duplicate-set-field
+  vim.lsp.util.stylize_markdown = function(bufnr, contents, opts)
+    contents = vim.lsp.util._normalize_markdown(contents, {
+      width = vim.lsp.util._make_floating_popup_size(contents, opts),
+    })
+    vim.bo[bufnr].filetype = "markdown"
+    vim.treesitter.start(bufnr)
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, contents)
+
+    add_inline_highlights(bufnr)
+
+    return contents
   end
 end
 
@@ -651,12 +687,12 @@ local function on_attach(client, bufnr)
   -- HT: kabouzeid
   if mega.lsp.has_method(client, "color") then
     require("mega.lsp.document_colors").buf_attach(bufnr, { single_column = true, col_count = 2, mode = "bg" })
-    if client.name == "tailwindcss" then
-      -- require("document-color").buf_attach(bufnr)
-      -- require("mega.lsp.document_colors").buf_attach(bufnr, { single_column = true, col_count = 2 })
-      -- local ok, colorizer = pcall(require, "colorizer")
-      -- if ok and colorizer then colorizer.detach_from_buffer() end
-    end
+    -- if client.name == "tailwindcss" then
+    -- require("document-color").buf_attach(bufnr)
+    -- require("mega.lsp.document_colors").buf_attach(bufnr, { single_column = true, col_count = 2 })
+    -- local ok, colorizer = pcall(require, "colorizer")
+    -- if ok and colorizer then colorizer.detach_from_buffer() end
+    -- end
   end
 
   if mega.lsp.has_method(client, "definition") then vim.bo[bufnr].tagfunc = "v:lua.vim.lsp.tagfunc" end
@@ -672,14 +708,14 @@ local function on_attach(client, bufnr)
   setup_highlights(client, bufnr)
   setup_semantic_tokens(client, bufnr)
 
-  setup_extra_handlers(client, bufnr)
+  setup_handlers(client, bufnr)
 
   if mega.lsp.has_method(client, "completion") then
     client.server_capabilities.completionProvider.triggerCharacters = { ".", ":" }
   end
 
   vim.api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
-  -- if client_overrides[client.name] then client_overrides[client.name](client, bufnr) end
+  if client_overrides[client.name] then client_overrides[client.name](client, bufnr) end
 end
 
 -- all the server capabilities we could want
@@ -687,7 +723,6 @@ local function get_server_capabilities()
   local capabilities = vim.lsp.protocol.make_client_capabilities()
   capabilities.offsetEncoding = { "utf-16" }
   capabilities.textDocument.codeLens = { dynamicRegistration = false }
-  -- TODO: what is dynamicRegistration doing here? should I not always set to true?
   capabilities.textDocument.colorProvider = { dynamicRegistration = true }
   capabilities.textDocument.completion.completionItem.documentationFormat = { "markdown" }
   capabilities.textDocument.completion.completionItem.snippetSupport = true
@@ -756,71 +791,4 @@ for server, _ in pairs(servers.list) do
   local cfg = get_config(server)
 
   if cfg ~= nil then lspconfig[server].setup(cfg) end
-end
-
--- REF:
--- https://github.com/neovim/neovim/issues/23291#issuecomment-1687088266
-do -- fswatch
-  local FSWATCH_EVENTS = {
-    Created = 1,
-    Updated = 2,
-    Removed = 3,
-    -- Renamed
-    OwnerModified = 2,
-    AttributeModified = 2,
-    MovedFrom = 1,
-    MovedTo = 3,
-    -- IsFile
-    IsDir = false,
-    IsSymLink = false,
-    PlatformSpecific = false,
-    -- Link
-    -- Overflow
-  }
-
-  --- @param data string
-  --- @param opts table
-  --- @param callback fun(path: string, event: integer)
-  local function fswatch_output_handler(data, opts, callback)
-    local d = vim.split(data, "%s+")
-    local cpath = d[1]
-
-    for i = 2, #d do
-      if FSWATCH_EVENTS[d[i]] == false then return end
-    end
-
-    if opts.include_pattern and opts.include_pattern:match(cpath) == nil then return end
-
-    if opts.exclude_pattern and opts.exclude_pattern:match(cpath) ~= nil then return end
-
-    for i = 2, #d do
-      local e = FSWATCH_EVENTS[d[i]]
-      if e then callback(cpath, e) end
-    end
-  end
-
-  local function fswatch(path, opts, callback)
-    local obj = vim.system({
-      "fswatch",
-      "--recursive",
-      "--event-flags",
-      "--exclude",
-      "/.git/",
-      path,
-    }, {
-      stdout = function(err, data)
-        if err then error(err) end
-
-        if not data then return end
-
-        for line in vim.gsplit(data, "\n", { plain = true, trimempty = true }) do
-          fswatch_output_handler(line, opts, callback)
-        end
-      end,
-    })
-
-    return function() obj:kill(2) end
-  end
-
-  if vim.fn.executable("fswatch") == 1 then require("vim.lsp._watchfiles")._watchfunc = fswatch end
 end

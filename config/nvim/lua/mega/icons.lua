@@ -12,6 +12,7 @@ return {
     ok = "✓", -- alts: ✓
     -- spinner_frames = { "▪", "■", "□", "▫" },
     -- spinner_frames = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" },
+    spinner_frames = { "⣾", "⣽", "⣻", "⢿", "⡿", "⣟", "⣯", "⣷" },
     -- TODO: evaluate
     kind = {
 
@@ -220,13 +221,14 @@ return {
     light_shade_block = "░",
   },
   misc = {
+    formatter = "", -- alts: 󰉼
     clock = "",
     ellipsis = "…",
     lblock = "▌",
     rblock = "▐",
     bug = "", -- alts: 
     question = "",
-    lock = "",
+    lock = "󰌾", -- alts:   
     shaded_lock = "",
     circle = "",
     project = "",

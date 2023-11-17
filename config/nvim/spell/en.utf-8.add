@@ -203,3 +203,5 @@ perf
 ci
 discoverability
 struct
+changesets
+ecto
