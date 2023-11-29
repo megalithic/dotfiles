@@ -27,10 +27,13 @@ vim.cmd.iabbrev([[~h      ~H""""""<ESC>2hi<CR><ESC>O<BS> ]])
 vim.cmd.iabbrev([[:skip:  @tag :skip]])
 vim.cmd.iabbrev([[tskip   @tag :skip]])
 
+-- nnoremap("<localleader>eok", [[o|> IO.inspect(label: "")<ESC>hi]])
+-- nnoremap("<localleader>eer", [[o|> IO.inspect(label: "")<ESC>hi]])
 vim.cmd([[
 " Wrap word in {:ok, word} tuple
 nmap <silent> <localleader>ok :lua require("mega.utils").wrap_cursor_node("{:ok, ", "}")<CR>
 xmap <silent> <localleader>ok :lua require("mega.utils").wrap_selected_nodes("{:ok, ", "}")<CR>
+
 
 " Wrap word in {:error, word} tuple
 nmap <silent> <localleader>er :lua require("mega.utils").wrap_cursor_node("{:error, ", "}")<CR>

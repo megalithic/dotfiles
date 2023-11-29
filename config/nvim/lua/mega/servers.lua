@@ -604,11 +604,11 @@ M.unofficial = {
           init_options = {
             mix_env = "dev",
             mix_target = "host",
-            experimental = {
-              completions = {
-                enable = true,
-              },
-            },
+            -- experimental = {
+            --   completions = {
+            --     enable = true,
+            --   },
+            -- },
           },
           settings = {
             -- mixEnv = "dev",

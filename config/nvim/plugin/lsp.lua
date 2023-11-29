@@ -29,12 +29,23 @@ function mega.lsp.formatting_filter(client)
   -- dd(fmt("formatting_filter allows %s? %s", client.name, not vim.tbl_contains(vim.g.formatter_exclusions, client.name)))
   return not vim.tbl_contains(vim.g.formatter_exclusions, client.name)
 end
+local function not_interfere_on_float()
+  local winids = vim.api.nvim_tabpage_list_wins(0)
+  for _, winid in ipairs(winids) do
+    if vim.api.nvim_win_get_config(winid).zindex then
+      -- vim.notify("There is a floating window open already", vim.log.levels.WARN)
+      return false
+    end
+  end
+
+  return true
+end
 
 -- Show the popup diagnostics window, but only once for the current cursor/line location
 -- by checking whether the word under the cursor has changed.
 local function diagnostic_popup(bufnr)
   if not vim.g.git_conflict_detected then
-    -- if utils.not_interfere_on_float() then -- If there is not a floating window present
+    -- if not vim.g.git_conflict_detected and not_interfere_on_float() then
     -- Try to open diagnostics under the cursor
     local diags = vim.diagnostic.open_float(bufnr, { focus = false, scope = "cursor" })
     if not diags then -- If there's no diagnostic under the cursor show diagnostics of the entire line
@@ -194,21 +205,21 @@ local function setup_autocommands(client, bufnr)
       desc = "Show diagnostics",
       command = function(args) diagnostic_popup(args.buf) end,
     },
-    {
-      event = { "DiagnosticChanged" },
-      buffer = bufnr,
-      desc = "Handle diagnostics changes",
-      command = function()
-        local current_line_diags = vim.diagnostic.get(bufnr, { lnum = vim.fn.line(".") - 1 })
-        vim.diagnostic.setloclist({ open = false })
-        if #current_line_diags > 0 then
-          diagnostic_popup()
-        else
-          vim.diagnostic.hide()
-        end
-        if vim.tbl_isempty(vim.fn.getloclist(0)) then vim.cmd([[lclose]]) end
-      end,
-    },
+    -- {
+    --   event = { "DiagnosticChanged" },
+    --   buffer = bufnr,
+    --   desc = "Handle diagnostics changes",
+    --   command = function()
+    --     local current_line_diags = vim.diagnostic.get(bufnr, { lnum = vim.fn.line(".") - 1 })
+    --     vim.diagnostic.setloclist({ open = false })
+    --     if #current_line_diags > 0 then
+    --       diagnostic_popup()
+    --     else
+    --       vim.diagnostic.hide()
+    --     end
+    --     if vim.tbl_isempty(vim.fn.getloclist(0)) then vim.cmd([[lclose]]) end
+    --   end,
+    -- },
   })
 
   if vim.g.formatter == "null-ls" then
@@ -264,7 +275,7 @@ local function setup_keymaps(client, bufnr)
   end
 
   local function safemap(method, mode, key, rhs, description)
-    if mega.lsp.has_method(client, method) then
+    if mega.lsp.has_method(client, method) and client.name ~= "zk" then
       if type(description) ~= "string" then description = vim.inspect(description) end
       vim.keymap.set(mode, key, rhs, { buffer = bufnr, desc = description })
     end
@@ -314,13 +325,16 @@ local function setup_keymaps(client, bufnr)
       end
     end
   end, "lsp: references")
-  if client.name == "lexical" then safemap("references", "n", "gr", "<leader>A", "lsp: references") end
+
+  -- if not mega.lsp.has_method(client, "references") then nmap("gr", "<leader>A", desc("find: references via grep")) end
+
+  -- if client.name == "lexical" then safemap("references", "n", "gr", "<leader>A", "lsp: references") end
   safemap("typeDefinition", "n", "gt", vim.lsp.buf.type_definition, "lsp: type definition")
   safemap("implementation", "n", "gi", vim.lsp.buf.implementation, "lsp: implementation")
   nnoremap("gI", vim.lsp.buf.incoming_calls, desc("lsp: incoming calls"))
   safemap("codeAction", "n", "<leader>lc", vim.lsp.buf.code_action, "code action")
   safemap("codeAction", "x", "<leader>lc", "<esc><Cmd>lua vim.lsp.buf.range_code_action()<CR>", "code action")
-  nnoremap("gl", vim.lsp.codelens.run, desc("lsp: code lens"))
+  safemap("codelens", "n", "gl", vim.lsp.codelens.run, desc("lsp: code lens"))
   safemap("rename", "n", "gn", vim.lsp.buf.rename, "lsp: rename")
   nnoremap("ger", require("mega.utils.lsp").rename_file, desc("lsp: rename file to <input>"))
   nnoremap("gen", require("mega.utils.lsp").rename_file, desc("lsp: rename file to <input>"))
@@ -615,7 +629,7 @@ local function setup_handlers(client, bufnr)
         result,
         ctx,
         vim.tbl_deep_extend("force", config or {}, {
-          border = mega.get_border(),
+          border = "none", --  mega.get_border(),
           focusable = focusable,
           max_height = math.floor(vim.o.lines * 0.5),
           max_width = math.floor(vim.o.columns * 0.4),
@@ -723,12 +737,13 @@ local function on_attach(client, bufnr)
 end
 
 -- all the server capabilities we could want
-local function get_server_capabilities()
+local function get_server_capabilities(name)
   local capabilities = vim.lsp.protocol.make_client_capabilities()
+
   capabilities.offsetEncoding = { "utf-16" }
   capabilities.textDocument.codeLens = { dynamicRegistration = false }
   capabilities.textDocument.colorProvider = { dynamicRegistration = true }
-  capabilities.textDocument.completion.completionItem.documentationFormat = { "markdown" }
+  capabilities.textDocument.completion.completionItem.documentationFormat = { "markdown", "plaintext" }
   capabilities.textDocument.completion.completionItem.snippetSupport = true
   capabilities.textDocument.completion.completionItem.resolveSupport = {
     properties = {
@@ -737,18 +752,17 @@ local function get_server_capabilities()
       "additionalTextEdits",
     },
   }
-  -- textDocument = { foldingRange = { dynamicRegistration = false, lineFoldingOnly = true } },
-
-  -- FIX: https://github.com/neovim/neovim/issues/23291
-  -- NOTE: this might break nextls/elixirls:
-  -- capabilities.workspace.didChangeWatchedFiles.dynamicRegistration = false
-
-  -- disable semantic token highlighting
-  -- capabilities.textDocument.semanticTokensProvider = false
   capabilities.textDocument.foldingRange = {
     dynamicRegistration = false,
     lineFoldingOnly = true,
   }
+
+  -- FIX: https://github.com/neovim/neovim/issues/23291
+  -- NOTE: this might break nextls/elixirls:
+  capabilities.workspace.didChangeWatchedFiles.dynamicRegistration = false
+
+  -- disable semantic token highlighting
+  -- capabilities.textDocument.semanticTokensProvider = false
   -- capabilities.textDocument.codeAction = {
   --   dynamicRegistration = false,
   --   codeActionLiteralSupport = {

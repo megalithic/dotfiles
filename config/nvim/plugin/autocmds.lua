@@ -113,24 +113,6 @@ do
 end
 
 do
-  -- local save_excluded = {
-  --   "lua.luapad",
-  --   "gitcommit",
-  --   "NeogitCommitMessage",
-  --   "dirbuf",
-  --   "neo-tree",
-  --   "neo-tree-popup",
-  --   "megaterm",
-  --   "kittybuf",
-  -- }
-  -- local function can_save()
-  --   return mega.empty(fn.win_gettype())
-  --     and mega.empty(vim.bo.buftype)
-  --     and not mega.empty(vim.bo.filetype)
-  --     and vim.bo.modifiable
-  --     and not vim.tbl_contains(save_excluded, vim.bo.filetype)
-  -- end
-
   augroup("Utilities", {
     {
       event = { "BufWritePost" },
@@ -144,34 +126,8 @@ do
           -- vim.cmd([[!chmod a+x <afile>]])
           -- vim.schedule(function() vim.cmd("edit") end)
         end
-        -- if string.match(vim.fn.getline(1), "^#!") ~= nil then
-        --   if string.match(vim.fn.getline(1), "/bin/") ~= nil then
-        --     if vim.fn.getfperm(vim.fn.expand("%")):sub(3, 3) ~= "x" then
-        --
-        --     end
-        --     vim.notify(fmt("making %s executable", args.file), L.INFO)
-        --     vim.cmd([[!chmod a+x <afile>]])
-        --     vim.schedule(function() vim.cmd("edit") end)
-        --     -- assert(vim.uv.fs_chmod(args.match, 755), fmt("failed to make %s executable", args.file))
-        --
-        --     -- local filename = vim.fs.basename(api.nvim_buf_get_name(0))
-        --   end
-        -- end
       end,
     },
-    -- {
-    --   event = { "BufReadPost" },
-    --   command = function()
-    --     if vim.fn.line("'\"") > 0 and vim.fn.line("'\"") <= vim.fn.line("$") then
-    --       vim.fn.setpos(".", vim.fn.getpos("'\""))
-    --       if vim.fn.prevnonblank(".") == vim.fn.line(".") then
-    --         vim.api.nvim_feedkeys("zz", "n", true)
-    --         vim.cmd("silent! foldopen")
-    --       end
-    --       mega.flash_cursorline()
-    --     end
-    --   end,
-    -- },
     {
       event = { "BufNewFile", "BufWritePre" },
       pattern = { "*" },
@@ -181,48 +137,6 @@ do
       --   mega.auto_mkdir()
       -- end,
     },
-    -- {
-    --   -- Last place of cursor position.
-    --   -- When editing a file, always jump to the last known cursor position.
-    --   -- Don't do it for commit messages, when the position is invalid.
-    --   event = { "BufEnter", "BufWinEnter", "WinEnter" },
-    --   command = function()
-    --     -- REF:
-    --     -- https://github.com/novasenco/nvim.config/blob/main/autoload/autocmd.vim#L34
-    --     -- https://github.com/akinsho/dotfiles/blob/main/.config/nvim/plugin/autocommands.lua#L401-L419
-    --     if vim.bo.ft ~= "gitcommit" and vim.fn.win_gettype() ~= "popup" then
-    --       local last_place_mark = vim.api.nvim_buf_get_mark(0, "\"")
-    --       local line_nr = last_place_mark[1]
-    --       local last_line = vim.api.nvim_buf_line_count(0)
-
-    --       if line_nr > 0 and line_nr <= last_line then vim.api.nvim_win_set_cursor(0, last_place_mark) end
-    --     end
-    --   end,
-    -- },
-    -- {
-    --   event = { "BufLeave" },
-    --   pattern = { "*" },
-    --   command = function()
-    --     if can_save() then vim.cmd.update({ mods = { silent = true } }) end
-    --   end,
-    -- },
-    --   {
-    --     -- TODO: not clear what effect this has in the post vimscript world
-    --     -- it correctly sources $MYVIMRC but all the other files that it
-    --     -- requires will need to be resourced or reloaded themselves
-    --     event = "BufWritePost",
-    --     pattern = { "$DOTFILES/**/nvim/plugin/*.{lua,vim}", "$MYVIMRC" },
-    --     nested = true,
-    --     command = function()
-    --       local ok, msg = pcall(vcmd, "source $MYVIMRC | redraw | silent doautocmd ColorScheme")
-    --       msg = ok and "sourced " .. vim.fn.fnamemodify(vim.env.MYVIMRC, ":t") or msg
-    --       vim.notify(msg)
-    --     end,
-    --   },
-    -- {
-    --   event = { "FocusLost" },
-    --   command = "silent! wall",
-    -- },
     {
       event = { "BufEnter" },
       buffer = 0,
@@ -330,16 +244,6 @@ do
       "VertSplit:PanelVertSplit",
       "WinSeparator:PanelWinSeparator",
     }, ",")
-
-    -- vim.opt_local.winhighlight:append({
-    --   Normal = "PanelBackground",
-    --   EndOfBuffer = "PanelBackground",
-    --   StatusLine = "PanelSt",
-    --   StatusLineNC = "PanelStNC",
-    --   SignColumn = "PanelBackground",
-    --   VertSplit = "PanelVertSplit",
-    --   WinSeparator = "PanelWinSeparator",
-    -- })
   end
 
   augroup("UserHighlights", {
@@ -356,6 +260,16 @@ augroup("General", {
     event = { "FileType" },
     pattern = { "help" },
     command = function() vim.cmd([[wincmd J | :resize 40]]) end,
+  },
+  {
+    event = { "CmdwinEnter" },
+    desc = "Disable incremental selection when entering the cmdline window",
+    command = "TSBufDisable incremental_selection",
+  },
+  {
+    event = { "CmdwinLeave" },
+    desc = "Enable incremental selection when leaving the cmdline window",
+    command = "TSBufEnable incremental_selection",
   },
   -- {
   --   event = { "BufWritePost" },

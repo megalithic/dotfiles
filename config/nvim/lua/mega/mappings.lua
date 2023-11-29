@@ -49,7 +49,6 @@ map({ "i", "n", "t" }, "<C-Left>", ":tabp<CR>", { desc = "prev tab", remap = tru
 map({ "i", "n", "t" }, "<C-Up>", ":+tabmove<CR>", { desc = "move tab right", remap = true })
 map({ "i", "n", "t" }, "<C-Down>", ":-tabmove<CR>", { desc = "move tab left", remap = true })
 
--- nmap("gb", string.format("<cmd>ls<CR>:b<space>%s", vim.keycode("<tab>")), "current buffers")
 nmap("gb", "<cmd>Pick buffers<cr>", "current buffers")
 
 nmap("J", "<nop>")

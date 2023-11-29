@@ -4,8 +4,9 @@
 
 local M = {
   "glacambre/firenvim",
+  lazy = not vim.g.started_by_firenvim,
   cond = vim.g.started_by_firenvim,
-  event = { "BufEnter", "BufReadPre", "UIEnter" },
+  -- event = { "BufEnter", "BufReadPre", "UIEnter" },
   build = function() vim.fn["firenvim#install"](0) end,
   config = function()
     if not vim.g.started_by_firenvim then return end
@@ -19,20 +20,20 @@ local M = {
           cmdline = "neovim", -- or firenvim
           content = "text",
           priority = 0,
-          selector = "textarea",
+          selector = "textarea:not([id='read-only-cursor-text-area'], [id='pull_request_review_body'])",
           takeover = "never",
           -- filename = "/tmp/{hostname}_{pathname%10}.{extension}",
         },
-        ["https?://github.com/"] = {
+        ["^https?://github\\.com/"] = {
           takeover = "always",
-          selector = "textarea:not([id='read-only-cursor-text-area'])",
+          selector = "textarea:not([id='read-only-cursor-text-area'], [id='pull_request_review_body'])",
           priority = 1,
         },
-        ["https?://github.com/users/megalithic/projects"] = {
+        ["^https?://github\\.com/users/megalithic/projects"] = {
           takeover = "never",
           priority = 1,
         },
-        ["https?://stackoverflow.com/"] = {
+        ["^https?://stackoverflow\\.com/"] = {
           takeover = "always",
           priority = 1,
         },
@@ -166,10 +167,12 @@ local M = {
     end
 
     local function on_uienter(params)
-      local bufnr = params.buf or vim.api.nvim_get_current_buf() or 0
-      set_options(bufnr)
+      local client = vim.api.nvim_get_chan_info(vim.v.event.chan).client
+      if client ~= nil and client.name == "Firenvim" then
+        local bufnr = params.buf or vim.api.nvim_get_current_buf() or 0
+        set_options(bufnr)
 
-      vim.cmd([[
+        vim.cmd([[
         tmap <D-v> <C-w>"+
         nnoremap <D-v> "+p
         vnoremap <D-v> "+p
@@ -177,64 +180,71 @@ local M = {
         cnoremap <D-v> <C-R><C-O>+
       ]])
 
-      _G.mega.nnoremap(
-        "<Esc>",
-        "<cmd>wall | call firenvim#hide_frame() | call firenvim#press_keys('<LT>Esc>') | call firenvim#focus_page()<CR>"
-      )
-      _G.mega.nnoremap("<C-z>", "<cmd>wall | call firenvim#hide_frame() | call firenvim#focus_input()<CR>")
-      _G.mega.inoremap("<C-c>", "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR><Esc>norm! ggdGa<CR>")
-      _G.mega.nnoremap("<C-c>", "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR><Esc>norm! ggdGa<CR>")
-      _G.mega.nnoremap("q", "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR><Esc>norm! ggdGa<CR>")
+        _G.mega.nnoremap(
+          "<Esc>",
+          "<cmd>wall | call firenvim#hide_frame() | call firenvim#press_keys('<LT>Esc>') | call firenvim#focus_page()<CR>"
+        )
+        _G.mega.nnoremap("<C-z>", "<cmd>wall | call firenvim#hide_frame() | call firenvim#focus_input()<CR>")
+        _G.mega.inoremap(
+          "<C-c>",
+          "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR><Esc>norm! ggdGa<CR>"
+        )
+        _G.mega.nnoremap(
+          "<C-c>",
+          "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR><Esc>norm! ggdGa<CR>"
+        )
+        _G.mega.nnoremap("q", "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR><Esc>norm! ggdGa<CR>")
 
-      -- _G.mega.inoremap("<D-r>", function()
-      --   -- local appName = vim.cmd([[!hs -c "hs.application.frontmostApplication():name()"]])
-      --   -- print(appName)
-      --
-      --   local result = {}
-      --   vim.fn.jobstart("hs -c 'hs.application.frontmostApplication():name()'", {
-      --     stdout_buffered = true,
-      --     on_stdout = function(_, data, _)
-      --       for _, item in ipairs(data) do
-      --         if item and item ~= "" then table.insert(result, item) end
-      --       end
-      --       print("stdout: " .. vim.inspect(result))
-      --     end,
-      --     on_exit = function(_, code, _)
-      --       if code > 0 and not result or not result[1] then return end
-      --       print("exited " .. code)
-      --
-      --       -- local parts = vim.split(result[1], "\t")
-      --       -- if parts and #parts > 1 then
-      --       --   local formatted = { behind = parts[1], ahead = parts[2] }
-      --       --   vim.g.git_statusline_updates = formatted
-      --       -- end
-      --     end,
-      --   })
-      --
-      --   -- print("after jobstart: " .. vim.inspect(result))
-      --
-      --   -- vim.fn.jobstart([[hs -c "hs.application.frontmostApplication()"]], {
-      --   --   on_stdout = function(job_id, data, event)
-      --   --     print("stdout")
-      --   --     dd("stdout: " .. I({ job_id, data, event }))
-      --   --   end,
-      --   --   on_stderr = function(job_id, data, event)
-      --   --     print("stderr")
-      --   --     dd("stderr: " .. I({ job_id, data, event }))
-      --   --   end,
-      --   --   on_exit = function(job_id, data, event)
-      --   --     print("stderr")
-      --   --     dd("exit: " .. I({ job_id, data, event }))
-      --   --   end,
-      --   -- })
-      --   -- hs.osascript.javascript([[Application(']] .. hs.application.frontmostApplication():name() .. [[').reload()]])
-      -- end)
+        -- _G.mega.inoremap("<D-r>", function()
+        --   -- local appName = vim.cmd([[!hs -c "hs.application.frontmostApplication():name()"]])
+        --   -- print(appName)
+        --
+        --   local result = {}
+        --   vim.fn.jobstart("hs -c 'hs.application.frontmostApplication():name()'", {
+        --     stdout_buffered = true,
+        --     on_stdout = function(_, data, _)
+        --       for _, item in ipairs(data) do
+        --         if item and item ~= "" then table.insert(result, item) end
+        --       end
+        --       print("stdout: " .. vim.inspect(result))
+        --     end,
+        --     on_exit = function(_, code, _)
+        --       if code > 0 and not result or not result[1] then return end
+        --       print("exited " .. code)
+        --
+        --       -- local parts = vim.split(result[1], "\t")
+        --       -- if parts and #parts > 1 then
+        --       --   local formatted = { behind = parts[1], ahead = parts[2] }
+        --       --   vim.g.git_statusline_updates = formatted
+        --       -- end
+        --     end,
+        --   })
+        --
+        --   -- print("after jobstart: " .. vim.inspect(result))
+        --
+        --   -- vim.fn.jobstart([[hs -c "hs.application.frontmostApplication()"]], {
+        --   --   on_stdout = function(job_id, data, event)
+        --   --     print("stdout")
+        --   --     dd("stdout: " .. I({ job_id, data, event }))
+        --   --   end,
+        --   --   on_stderr = function(job_id, data, event)
+        --   --     print("stderr")
+        --   --     dd("stderr: " .. I({ job_id, data, event }))
+        --   --   end,
+        --   --   on_exit = function(job_id, data, event)
+        --   --     print("stderr")
+        --   --     dd("exit: " .. I({ job_id, data, event }))
+        --   --   end,
+        --   -- })
+        --   -- hs.osascript.javascript([[Application(']] .. hs.application.frontmostApplication():name() .. [[').reload()]])
+        -- end)
 
-      -- disable cmp autocomplete
-      require("cmp").setup.buffer({ enabled = false })
+        -- disable cmp autocomplete
+        require("cmp").setup.buffer({ enabled = false })
 
-      local bufnr = params.buf or vim.api.nvim_get_current_buf() or 0
-      setup_write_autocmd(bufnr)
+        local bufnr = params.buf or vim.api.nvim_get_current_buf() or 0
+        setup_write_autocmd(bufnr)
+      end
     end
 
     _G.mega.augroup("Firenvim", {
@@ -247,11 +257,6 @@ local M = {
         event = { "BufEnter" },
         pattern = "*",
         command = on_bufenter,
-      },
-      {
-        event = { "BufEnter" },
-        pattern = "github.com_*.txt",
-        command = "set filetype=markdown",
       },
       {
         event = { "FocusLost", "TextChanged", "TextChangedI", "InsertLeave" },

@@ -2,6 +2,7 @@ local preferred = {
   terms = { "wezterm", "kitty", "wezterm", "alacritty", "iTerm", "Terminal.app" },
   browsers = {
     hs.urlevent.getDefaultHandler("https"),
+    "Brave Browser Nightly",
     "Chromium",
     "Brave Browser Dev",
     "Firefox",
@@ -17,7 +18,7 @@ local preferred = {
   media = { "Spotify" },
   vpn = { "Cloudflare WARP" },
 }
-preferred["browser"] = "com.brave.Browser.dev" --hs.urlevent.getDefaultHandler("https")
+preferred["browser"] = "com.brave.Browser.nightly" --hs.urlevent.getDefaultHandler("https")
 
 local transientApps = {
   -- ["LaunchBar"] = { allowRoles = "AXSystemDialog" },
@@ -65,6 +66,7 @@ local ptt = mods.CAsc
 --- @class QuitterOpts
 --- @field [1] string
 local quitters = {
+  "com.brave.Browser.nightly",
   "com.brave.Browser.dev",
   "com.brave.Browser",
   "com.raycast.macos",
@@ -162,9 +164,9 @@ local layouts = {
       { "", 1, "maximized" },
     },
   },
-  ["com.brave.Browser.dev"] = {
-    bundleID = "com.brave.Browser.dev",
-    name = "Brave Browser Dev",
+  ["com.brave.Browser.nightly"] = {
+    bundleID = "com.brave.Browser.nightly",
+    name = "Brave Browser Nightly",
     tags = { "browsers" },
     rules = {
       { "", 1, "maximized" },

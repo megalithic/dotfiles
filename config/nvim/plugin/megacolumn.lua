@@ -147,10 +147,14 @@ local excluded = {
   "oil",
   "org",
   "orgagenda",
+  "outputpanel",
   "qf",
   "quickfix",
   "quickfixlist",
   "startify",
+  "telescope",
+  "TelescopePrompt",
+  "TelescopeResults",
   "terminal",
   "toggleterm",
   "undotree",
@@ -160,9 +164,8 @@ local excluded = {
 
 mega.augroup("MegaColumn", {
   {
-    event = { "BufEnter", "FileType", "WinEnter", "FocusGained", "TermLeave", "DiagnosticChanged" },
+    event = { "BufEnter", "FileType", "FocusGained" }, --, "WinEnter", "FocusGained", "TermLeave", "DiagnosticChanged" },
     command = function(args)
-      -- dd(vim.inspect(args))
       if vim.api.nvim_buf_is_valid(args.buf) then
         local buf = vim.bo[args.buf]
         if buf.bt ~= "" or vim.tbl_contains(excluded, buf.ft) or vim.env.TMUX_POPUP then

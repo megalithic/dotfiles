@@ -51,6 +51,9 @@ end
 local function is_floating_win() return vim.fn.win_gettype() == "popup" end
 
 local function is_ignored(bufnr)
+  -- local win_count = #vim.api.nvim_tabpage_list_wins(0)
+  -- dd(win_count)
+
   local should_ignore = vim.tbl_contains(bt_ignores, vim.bo[bufnr].buftype)
     or vim.tbl_contains(ft_ignores, vim.bo[bufnr].filetype)
     or vim.bo[bufnr].filetype == ""

@@ -111,6 +111,24 @@ return {
       end
     end
 
+    local sources = {
+      { name = "nvim_lsp_signature_help" },
+      { name = "vsnip" },
+      { name = "nvim_lsp" },
+      { name = "path", option = { trailing_slash = true } },
+      {
+        name = "buffer",
+        keyword_length = 4,
+        max_item_count = 10,
+        options = {
+          get_bufnrs = function() return vim.tbl_map(vim.api.nvim_win_get_buf, vim.api.nvim_list_wins()) end,
+        },
+      },
+      { name = "spell" },
+    }
+
+    if vim.uv.cwd() ~= vim.uv.os_homedir() then table.insert(sources, { name = "rg" }) end
+
     cmp.setup({
       -- experimental = { ghost_text = {
       --   hl_group = "LspCodeLens",
@@ -303,22 +321,7 @@ return {
       --     cmp.config.compare.order,
       --   },
       -- },
-      sources = cmp.config.sources({
-        -- { name = "nvim_lsp_signature_help" },
-        { name = "vsnip" },
-        { name = "nvim_lsp" },
-        { name = "path", option = { trailing_slash = true } },
-      }, {
-        {
-          name = "buffer",
-          keyword_length = 4,
-          max_item_count = 10,
-          options = {
-            get_bufnrs = function() return vim.tbl_map(vim.api.nvim_win_get_buf, vim.api.nvim_list_wins()) end,
-          },
-        },
-        { name = "spell" },
-      }),
+      sources = cmp.config.sources(sources),
     })
 
     cmp.setup.cmdline({ "/", "?" }, {

@@ -65,7 +65,8 @@ function obj.splitTab(to_next_screen)
   if not to_next_screen then snap.left50() end
 
   hs.timer.doAfter(0.25, function()
-    local supportedBrowsers = { "Brave Browser Dev", "Brave Browser", "Brave Browser Beta", "Safari" }
+    local supportedBrowsers =
+      { "Brave Browser Nightly", "Brave Browser Dev", "Brave Browser", "Brave Browser Beta", "Safari" }
 
     if browser and hs.fnutils.contains(supportedBrowsers, browser:name()) then
       dbg("(splitTab) %s", browser:name())

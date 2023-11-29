@@ -15,6 +15,11 @@ return {
     priority = 1000,
   },
   {
+    "sainnhe/everforest",
+    lazy = false,
+    priority = 1001,
+  },
+  {
     "farmergreg/vim-lastplace",
     lazy = false,
     init = function()
@@ -222,6 +227,14 @@ return {
     },
   },
   {
+    "David-Kunz/gen.nvim",
+    cmd = { "Gen" },
+    keys = {
+      { "<leader>]", ":Gen<CR>", mode = "v" },
+      { "<leader>]", ":Gen<CR>", mode = "n" },
+    },
+  },
+  {
     "echasnovski/mini.pick",
     cmd = "Pick",
     opts = {},
@@ -351,6 +364,69 @@ return {
           })
         end,
       },
+      {
+        "Wansmer/symbol-usage.nvim",
+        event = "LspAttach",
+        config = {
+          text_format = function(symbol)
+            local res = {}
+            local ins = table.insert
+
+            -- local round_start = { "", "SymbolUsageRounding" }
+            -- local round_end = { "", "SymbolUsageRounding" }
+
+            if symbol.references then
+              local usage = symbol.references <= 1 and "usage" or "usages"
+              local num = symbol.references == 0 and "no" or symbol.references
+              -- ins(res, round_start)
+              ins(res, { "󰌹 ", "SymbolUsageRef" })
+              ins(res, { ("%s %s"):format(num, usage), "SymbolUsageContent" })
+              if #res > 0 then table.insert(res, { " ", "NonText" }) end
+              -- ins(res, round_end)
+            end
+
+            if symbol.definition then
+              if #res > 0 then table.insert(res, { " ", "NonText" }) end
+              -- ins(res, round_start)
+              ins(res, { "󰳽 ", "SymbolUsageDef" })
+              ins(res, { symbol.definition .. " defs", "SymbolUsageContent" })
+              if #res > 0 then table.insert(res, { " ", "NonText" }) end
+              -- ins(res, round_end)
+            end
+
+            if symbol.implementation then
+              if #res > 0 then table.insert(res, { " ", "NonText" }) end
+              -- ins(res, round_start)
+              ins(res, { "󰡱 ", "SymbolUsageImpl" })
+              ins(res, { symbol.implementation .. " impls", "SymbolUsageContent" })
+              if #res > 0 then table.insert(res, { " ", "NonText" }) end
+              -- ins(res, round_end)
+            end
+
+            return res
+          end,
+          -- text_format = function(symbol)
+          --   local fragments = {}
+          --
+          --   if symbol.references then
+          --     local usage = symbol.references <= 1 and "usage" or "usages"
+          --     local num = symbol.references == 0 and "no" or symbol.references
+          --     table.insert(fragments, { ("%s %s"):format(num, usage), "SymbolUsageContent" })
+          --   end
+          --
+          --   if symbol.definition then
+          --     table.insert(fragments, { symbol.definition .. " defs", "SymbolUsageContent" })
+          --   end
+          --
+          --   if symbol.implementation then
+          --     table.insert(fragments, { symbol.implementation .. " impls", "SymbolUsageContent" })
+          --   end
+          --
+          --   -- return table.concat(fragments, ", ")
+          --   return fragments
+          -- end,
+        },
+      },
     },
   },
   {
@@ -366,6 +442,9 @@ return {
       use_default_keymaps = false,
       columns = {
         "icon",
+      },
+      view_options = {
+        show_hidden = true,
       },
       keymaps = {
         ["gd"] = {
@@ -413,9 +492,13 @@ return {
       },
     },
   },
-  { "kevinhwang91/nvim-bqf", ft = "qf" },
+  { "kevinhwang91/nvim-bqf", ft = "qf", opts = {
+    preview = {
+      winblend = 0,
+    },
+  } },
   {
-    url = "https://gitlab.com/yorickpeterse/nvim-pqf",
+    "yorickpeterse/nvim-pqf",
     event = "BufReadPre",
     config = function()
       local icons = require("mega.icons")
@@ -426,6 +509,8 @@ return {
           info = icons.lsp.info,
           hint = icons.lsp.hint,
         },
+        show_multiple_lines = true,
+        max_filename_length = 40,
       })
     end,
   },
@@ -733,7 +818,10 @@ return {
   },
   {
     "gaoDean/autolist.nvim",
-    ft = "markdown",
+    event = {
+      "BufRead **.md,**.neorg,**.org",
+      "BufNewFile **.md,**.neorg,**.org",
+    },
     version = "2.3.0",
     config = function()
       local al = require("autolist")
@@ -749,7 +837,10 @@ return {
   },
   {
     "lukas-reineke/headlines.nvim",
-    ft = { "markdown" },
+    event = {
+      "BufRead **.md,**.yaml,**.neorg,**.org",
+      "BufNewFile **.md,**.yaml,**.neorg,**.org",
+    },
     dependencies = "nvim-treesitter",
     config = function()
       require("headlines").setup({

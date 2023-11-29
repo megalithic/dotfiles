@@ -58,6 +58,11 @@ vim.g.hs_emmy_path = fmt("%s/Spoons/EmmyLua.spoon", vim.g.hammerspoon_path)
 -- mega.dirs.zettel = fn.expand("$ZK_NOTEBOOK_DIR")
 -- mega.dirs.zk = mega.dirs.zettel
 
+-- [ luarocks ] -----------------------------------------------------------------
+
+package.path = string.format("%s; %s/.luarocks/share/lua/5.1/?/init.lua;", package.path, vim.g.home)
+package.path = string.format("%s; %s/.luarocks/share/lua/5.1/?.lua;", package.path, vim.g.home)
+
 -- inspect the contents of an object very quickly
 -- in your code or from the command-line:
 -- @see: https://www.reddit.com/r/neovim/comments/p84iu2/useful_functions_to_explore_lua_objects/
@@ -155,6 +160,7 @@ for _, mode in ipairs({ "n", "x", "i", "v", "o", "t", "s", "c" }) do
   _G[mode .. "noremap"] = mega[mode .. "noremap"]
 end
 _G.map = vim.keymap.set
+mega.map = vim.keymap.set
 
 function mega.command(name, rhs, opts)
   opts = opts or {}

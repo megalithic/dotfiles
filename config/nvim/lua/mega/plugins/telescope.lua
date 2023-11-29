@@ -17,10 +17,14 @@ local ts = setmetatable({}, {
       local mode = vim.api.nvim_get_mode().mode
       topts = topts or {}
       if mode == "v" or mode == "V" or mode == "" then topts.default_text = table.concat(get_selection()) end
-      if key == "grep" then
+      if key == "grepify" then
         require("telescope").extensions.egrepify.egrepify(topts)
       elseif key == "undo" then
         require("telescope").extensions.undo.undo(topts)
+      elseif key == "grep" then
+        require("telescope").extensions.live_grep_args.live_grep_args(topts)
+      elseif key == "fd" then
+        require("telescope").extensions.corrode.corrode(topts)
       else
         local builtin = require("telescope.builtin")
         builtin[key](topts)
@@ -121,7 +125,7 @@ local function project_files(opts)
   opts = opts or {}
   -- opts.cwd = require("mega.utils").get_root()
   -- vim.notify(fmt("current project files root: %s", opts.cwd), vim.log.levels.DEBUG, { title = "telescope" })
-  ts.find_files(ivy(opts))
+  ts.fd(ivy(opts))
   -- require("telescope").extensions.smart_open.smart_open(ivy(opts))
 end
 
@@ -197,12 +201,16 @@ if vim.g.picker == "telescope" then
       pattern = { "*" },
       once = true,
       command = function(args)
-        if not vim.g.started_by_firenvim then
+        if
+          not vim.g.started_by_firenvim
+          and (not vim.env.TMUX_POPUP and vim.env.TMUX_POPUP ~= 1)
+          and not vim.tbl_contains({ "NeogitStatus" }, vim.bo[args.buf].filetype)
+        then
           -- Open file browser if argument is a folder
           -- REF: https://github.com/protiumx/.dotfiles/blob/main/stow/nvim/.config/nvim/lua/config/telescope.lua#L50
           local arg = vim.api.nvim_eval("argv(0)")
           if arg and (vim.fn.isdirectory(arg) ~= 0 or arg == "") then
-            ts.find_files(with_title(dropdown({
+            ts.fd(with_title(dropdown({
               hidden = true,
               no_ignore = false,
               previewer = false,
@@ -213,7 +221,6 @@ if vim.g.picker == "telescope" then
               mappings = {
                 i = {
                   ["<cr>"] = stopinsert(function(pb) multi(pb, "edit") end),
-                  -- ["<cr>"] = require("telescope.actions").select_default,
                 },
               },
             })))
@@ -240,7 +247,8 @@ if vim.g.picker == "telescope" then
   end
 
   keys = {
-    { "<leader>ff", project_files, desc = "find files" },
+    { "<leader>ff", function() ts.fd(ivy({})) end, desc = "find files" },
+    -- { "<leader>ff", project_files, desc = "find files" },
     {
       "<leader>a",
       function() ts.grep(ivy({})) end,
@@ -277,7 +285,7 @@ if vim.g.picker == "telescope" then
     -- },
     {
       "<leader>fn",
-      function() ts.find_files(ivy({ path = vim.g.notes_path })) end,
+      function() ts.fd(ivy({ path = vim.g.notes_path })) end,
       desc = "browse: notes",
     },
   }
@@ -291,14 +299,17 @@ return {
     { "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
 
     "nvim-telescope/telescope-file-browser.nvim",
-    { "megalithic/telescope-egrepify.nvim" },
-
+    { "megalithic/telescope-egrepify.nvim", branch = "feat/ts-highlight" },
+    { "megalithic/telescope-corrode.nvim" },
     -- {
     --   "danielfalk/smart-open.nvim",
     --   dependencies = { "kkharji/sqlite.lua", { "nvim-telescope/telescope-fzf-native.nvim", build = "make" } },
     -- },
 
     -- "danielvolchek/tailiscope.nvim"
+    {
+      "nvim-telescope/telescope-live-grep-args.nvim",
+    },
     { "debugloop/telescope-undo.nvim" },
   },
   keys = keys,
@@ -314,6 +325,7 @@ return {
     local telescope = require("telescope")
     local transform_mod = require("telescope.actions.mt").transform_mod
     local actions = require("telescope.actions")
+    local lga_actions = require("telescope-live-grep-args.actions")
     local action_state = require("telescope.actions.state")
 
     telescope.setup({
@@ -341,8 +353,8 @@ return {
             ["<c-n>"] = actions.move_selection_next,
             ["<c-p>"] = actions.move_selection_previous,
             ["<c-t>"] = require("trouble.providers.telescope").smart_open_with_trouble,
-            ["<c-down>"] = function(...) return require("telescope.actions").cycle_history_next(...) end,
-            ["<c-up>"] = function(...) return require("telescope.actions").cycle_history_prev(...) end,
+            ["<c-down>"] = function(...) return actions.cycle_history_next(...) end,
+            ["<c-up>"] = function(...) return actions.cycle_history_prev(...) end,
             ["<c-q>"] = actions.smart_send_to_qflist + actions.open_qflist,
             ["<c-a>"] = { "<Home>", type = "command" },
             ["<c-e>"] = { "<End>", type = "command" },
@@ -394,6 +406,34 @@ return {
           override_file_sorter = true,
           case_mode = "smart_case",
         },
+        live_grep_args = {
+          auto_quoting = true, -- enable/disable auto-quoting
+          -- define mappings, e.g.
+          mappings = { -- extend mappings
+            i = {
+              ["<C-r>"] = lga_actions.quote_prompt(),
+              ["<C-i>"] = lga_actions.quote_prompt({ postfix = " --iglob " }),
+              ["<C-t>"] = lga_actions.quote_prompt({ postfix = " -t " }),
+              ["<esc>"] = require("telescope.actions").close,
+              ["<c-v>"] = stopinsert(function(pb) multi(pb, "vnew") end),
+              ["<c-s>"] = stopinsert(function(pb) multi(pb, "new") end),
+              ["<c-o>"] = stopinsert(function(pb) multi(pb, "edit") end),
+              ["<cr>"] = stopinsert(function(pb) multi(pb, "vnew") end),
+              ["<tab>"] = actions.toggle_selection + actions.move_selection_next,
+            },
+            n = {
+              ["<esc>"] = require("telescope.actions").close,
+              ["<c-v>"] = function(pb) multi(pb, "vnew") end,
+              ["<c-s>"] = function(pb) multi(pb, "new") end,
+              ["<c-o>"] = function(pb) multi(pb, "edit") end,
+              ["<cr>"] = function(pb) multi(pb, "vnew") end,
+            },
+          },
+          -- ... also accepts theme settings, for example:
+          theme = "ivy", -- use dropdown theme
+          -- theme = { }, -- use own theme spec
+          -- layout_config = { mirror=true }, -- mirror preview pane
+        },
         -- TODO: using fzf-native while using smart_open..
         -- ["zf-native"] = {
         --   file = {
@@ -438,7 +478,38 @@ return {
         --     },
         --   },
         -- },
+        corrode = {
+          fd_cmd = find_files_cmd,
+          rg_cmd = grep_files_cmd,
+          mappings = {
+            i = {
+              ["<cr>"] = stopinsert(function(pb) multi(pb, "vnew") end),
+              ["<esc>"] = require("telescope.actions").close,
+              ["<c-v>"] = stopinsert(function(pb) multi(pb, "vnew") end),
+              ["<c-s>"] = stopinsert(function(pb) multi(pb, "new") end),
+              ["<c-o>"] = stopinsert(function(pb) multi(pb, "edit") end),
+              ["<c-z>"] = actions.toggle_selection,
+              ["<c-r>"] = actions.to_fuzzy_refine,
+              ["<c-n>"] = actions.move_selection_next,
+              ["<c-p>"] = actions.move_selection_previous,
+              ["<c-t>"] = require("trouble.providers.telescope").smart_open_with_trouble,
+              ["<c-down>"] = function(...) return actions.cycle_history_next(...) end,
+              ["<c-up>"] = function(...) return actions.cycle_history_prev(...) end,
+              ["<c-q>"] = actions.smart_send_to_qflist + actions.open_qflist,
+              ["<c-a>"] = { "<Home>", type = "command" },
+              ["<c-e>"] = { "<End>", type = "command" },
+            },
+            n = {
+              ["<cr>"] = function(pb) multi(pb, "vnew") end,
+              ["<c-v>"] = function(pb) multi(pb, "vnew") end,
+              ["<c-s>"] = function(pb) multi(pb, "new") end,
+              ["<c-o>"] = function(pb) multi(pb, "edit") end,
+            },
+          },
+        },
         egrepify = {
+          results_ts_hl = true,
+          AND = true,
           lnum = true, -- default, not required
           lnum_hl = "EgrepifyLnum", -- default, not required
           col = false, -- default, not required
@@ -452,7 +523,12 @@ return {
           },
           mappings = {
             i = {
+              ["<esc>"] = require("telescope.actions").close,
+              ["<c-v>"] = stopinsert(function(pb) multi(pb, "vnew") end),
+              ["<c-s>"] = stopinsert(function(pb) multi(pb, "new") end),
+              ["<c-o>"] = stopinsert(function(pb) multi(pb, "edit") end),
               ["<cr>"] = stopinsert(function(pb) multi(pb, "vnew") end),
+              ["<tab>"] = actions.toggle_selection + actions.move_selection_next,
               ["<c-a>"] = { "<Home>", type = "command" }, -- overrides default: egrep_actions.toggle_and,
               ["<c-e>"] = { "<End>", type = "command" },
             },
@@ -564,10 +640,12 @@ return {
     })
 
     telescope.load_extension("undo")
+    telescope.load_extension("live_grep_args")
     telescope.load_extension("file_browser")
     telescope.load_extension("fzf")
     -- telescope.load_extension("zf-native")
     telescope.load_extension("egrepify")
+    telescope.load_extension("corrode")
     -- telescope.load_extension("smart_open")
   end,
 }

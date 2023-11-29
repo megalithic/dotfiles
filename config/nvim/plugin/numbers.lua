@@ -34,6 +34,7 @@ vim.g.number_filetype_exclusions = {
   "oil",
   "org",
   "orgagenda",
+  "outputpanel",
   "prompt",
   "startify",
   "toggleterm",

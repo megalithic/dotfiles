@@ -36,22 +36,13 @@ return {
           "neogitstatus",
         },
         keymaps = {
-          -- init_selection = ":lua require'wildfire'.init_selection()<CR>:lua require('tsht').nodes()<CR>",
           init_selection = false,
           node_incremental = "v",
           node_decremental = "V",
         },
       })
 
-      if not vim.bo.filetype == "markdown" then
-        vim.api.nvim_set_keymap(
-          "n",
-          "<CR>",
-          -- ":lua require'wildfire'.init_selection()<CR>:lua require('tsht').nodes()<CR>",
-          ":lua require'wildfire'.init_selection()<CR>:lua require('flash').treesitter()<CR>",
-          { noremap = true, silent = true }
-        )
-      end
+      mega.nnoremap("vv", ":lua require'wildfire'.init_selection()<CR>:lua require('flash').treesitter()<CR>")
     end,
   },
   {
@@ -101,7 +92,14 @@ return {
       "nvim-treesitter/nvim-treesitter-textobjects",
       "RRethy/nvim-treesitter-textsubjects",
       "nvim-treesitter/nvim-tree-docs",
-      "JoosepAlviste/nvim-ts-context-commentstring",
+      {
+        "JoosepAlviste/nvim-ts-context-commentstring",
+        config = function()
+          require("ts_context_commentstring").setup({})
+          -- skip backwards compatibility routines and speed up loading.
+          vim.g.skip_ts_context_commentstring_module = true
+        end,
+      },
       "RRethy/nvim-treesitter-endwise",
       { "megalithic/nvim-ts-autotag" },
       "andymass/vim-matchup",
@@ -313,50 +311,50 @@ return {
           },
         },
         endwise = { enable = true },
-        context_commentstring = {
-          enable = true,
-          enable_autocmd = false,
-          config = {
-            typescript = {
-              __default = "// %s",
-              jsx_element = "{/* %s */}",
-              jsx_fragment = "{/* %s */}",
-              jsx_attribute = "// %s",
-              comment = "// %s",
-              __multiline = "/* %s */",
-            },
-            javascript = {
-              __default = "// %s",
-              jsx_element = "{/* %s */}",
-              jsx_fragment = "{/* %s */}",
-              jsx_attribute = "// %s",
-              comment = "// %s",
-              __multiline = "/* %s */",
-            },
-            elixir = {
-              __default = "# %s",
-              quoted_content = "<%!-- %s --%>",
-              component = "<%!-- %s --%>",
-            },
-            heex = {
-              __default = "<%!-- %s --%>",
-              component = "<%!-- %s --%>",
-              self_closing_component = "<%!-- %s --%>",
-              __multiline = "<%!-- %s --%>",
-            },
-            html = {
-              __default = "<!-- %s -->",
-              component = "<!-- %s -->",
-              self_closing_component = "<!-- %s -->",
-              __multiline = "<!-- %s -->",
-            },
-            lua = "-- %s",
-            fish = "# %s",
-            toml = "# %s",
-            yaml = "# %s",
-            ["eruby.yaml"] = "# %s",
-          },
-        },
+        -- context_commentstring = {
+        --   enable = true,
+        --   enable_autocmd = false,
+        --   config = {
+        --     typescript = {
+        --       __default = "// %s",
+        --       jsx_element = "{/* %s */}",
+        --       jsx_fragment = "{/* %s */}",
+        --       jsx_attribute = "// %s",
+        --       comment = "// %s",
+        --       __multiline = "/* %s */",
+        --     },
+        --     javascript = {
+        --       __default = "// %s",
+        --       jsx_element = "{/* %s */}",
+        --       jsx_fragment = "{/* %s */}",
+        --       jsx_attribute = "// %s",
+        --       comment = "// %s",
+        --       __multiline = "/* %s */",
+        --     },
+        --     elixir = {
+        --       __default = "# %s",
+        --       quoted_content = "<%!-- %s --%>",
+        --       component = "<%!-- %s --%>",
+        --     },
+        --     heex = {
+        --       __default = "<%!-- %s --%>",
+        --       component = "<%!-- %s --%>",
+        --       self_closing_component = "<%!-- %s --%>",
+        --       __multiline = "<%!-- %s --%>",
+        --     },
+        --     html = {
+        --       __default = "<!-- %s -->",
+        --       component = "<!-- %s -->",
+        --       self_closing_component = "<!-- %s -->",
+        --       __multiline = "<!-- %s -->",
+        --     },
+        --     lua = "-- %s",
+        --     fish = "# %s",
+        --     toml = "# %s",
+        --     yaml = "# %s",
+        --     ["eruby.yaml"] = "# %s",
+        --   },
+        -- },
         matchup = { enable = true, include_match_words = true, disable = should_disable, disable_virtual_text = false },
         autopairs = { enable = true },
         textobjects = {

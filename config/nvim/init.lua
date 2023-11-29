@@ -26,7 +26,7 @@ vim.g.enabled_plugin = {
 }
 
 for plugin, _ in pairs(vim.g.enabled_plugin) do
-  if not vim.tbl_contains({ "autocmds", "mappings", "quickfix" }, plugin) and vim.g.started_by_firenvim then
+  if not vim.tbl_contains({ "autocmds", "mappings" }, plugin) and vim.g.started_by_firenvim then
     vim.g.enabled_plugin[plugin] = false
   end
 end
@@ -66,11 +66,6 @@ _G.mega = mega
     icons = require("mega.icons"),
     notify = vim.notify,
   }
-
--- [ luarocks ] -----------------------------------------------------------------
-
-package.path = string.format("%s; %s/.luarocks/share/lua/5.1/?/init.lua;", package.path, vim.fn.expand("$HOME"))
-package.path = string.format("%s; %s/.luarocks/share/lua/5.1/?.lua;", package.path, vim.fn.expand("$HOME"))
 
 -- [ loaders ] -----------------------------------------------------------------
 

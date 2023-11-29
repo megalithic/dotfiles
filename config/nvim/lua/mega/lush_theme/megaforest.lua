@@ -42,6 +42,13 @@ local theme = lush(function(injected_functions)
   local sym = injected_functions.sym
 
   return {
+    Normal({ fg = C.fg, bg = C.transparent }), -- normal text
+    NormalNC({ bg = C.bg0.da(7) }), -- inactive window split
+    NonText({ fg = C.bg4, bg = C.transparent }), -- '@' at the end of the window, characters from 'showbreak' and other characters that do not really exist in the text (e.g., ">" displayed when a double-wide character doesn't fit at the end of the line). See also |hl-EndOfBuffer|.
+    Pmenu({ fg = C.fg, bg = C.bg2 }), -- Popup menu: normal item.
+    PmenuSel({ fg = C.green, bg = C.bg3 }), -- Popup menu: selected item.
+    PmenuSbar({ fg = C.transparent, bg = C.bg2 }), -- Popup menu: scrollbar.
+    PmenuThumb({ fg = C.transparent, bg = C.grey1 }), -- Popup menu: Thumb of the scrollbar.
     Background({ bg = C.bg0 }),
     BackgroundLight({ bg = C.bg1 }),
     BackgroundExtraLight({ bg = C.bg2 }),
@@ -72,7 +79,8 @@ local theme = lush(function(injected_functions)
     Comment({ fg = C.grey1, bg = C.transparent, gui = "italic" }),
     Directory({ fg = C.green, bg = C.transparent }), -- directory names (and other special names in listings)
     ErrorMsg({ fg = C.red, bg = C.transparent, gui = "bold,underline" }), -- error messages on the command line
-    Folded({ Comment, gui = "bold,italic" }), -- line used for closed folds
+    Folded({ Normal }), -- line used for closed folds
+    -- Folded({ Comment, gui = "bold,italic" }), -- line used for closed folds
     FoldColumn({ fg = C.grey1, bg = C.bg1 }), -- 'foldcolumn'
     -- Neither the sign column or end of buffer highlights require an explicit background
     -- they should both just use the background that is in the window they are in.
@@ -89,13 +97,6 @@ local theme = lush(function(injected_functions)
     MsgSeparator({ bg = C.bg0 }), -- Separator for scrolled messages, `msgsep` flag of 'display'
     MoreMsg({ fg = C.yellow, bg = C.transparent, gui = "bold" }), -- |more-prompt|
     FoldMoreMsg({ Comment, gui = "italic,bold" }), -- |more-prompt|
-    NonText({ fg = C.bg4, bg = C.transparent }), -- '@' at the end of the window, characters from 'showbreak' and other characters that do not really exist in the text (e.g., ">" displayed when a double-wide character doesn't fit at the end of the line). See also |hl-EndOfBuffer|.
-    Normal({ fg = C.fg, bg = C.transparent }), -- normal text
-    NormalNC({ bg = C.bg0.da(7) }), -- inactive window split
-    Pmenu({ fg = C.fg, bg = C.bg2 }), -- Popup menu: normal item.
-    PmenuSel({ fg = C.green, bg = C.bg3 }), -- Popup menu: selected item.
-    PmenuSbar({ fg = C.transparent, bg = C.bg2 }), -- Popup menu: scrollbar.
-    PmenuThumb({ fg = C.transparent, bg = C.grey1 }), -- Popup menu: Thumb of the scrollbar.
     WildMenu({ PmenuSel }), -- current match in 'wildmenu' completion
     NormalFloat({ Pmenu }), -- Normal text in floating windows.
     FloatBorder({ Pmenu, fg = C.bg_dark }),
@@ -889,7 +890,8 @@ local theme = lush(function(injected_functions)
     ---- :help: bqf.txt --------------------------------------------------------
 
     BqfPreviewFloat({ PanelBackground }), -- or WinSeparator
-    BqfPreviewBorder({ PanelBackground, fg = C.bg_blue }), -- or WinSeparator
+    BqfPreviewTitle({ bg = C.bg_dark, fg = C.brown }), -- or WinSeparator
+    BqfPreviewBorder({ bg = C.bg_dark, fg = C.bg_blue }), -- or WinSeparator
 
     qfPosition({ Todo }),
 
@@ -937,7 +939,7 @@ local theme = lush(function(injected_functions)
     FlashBackdrop({ Comment }),
     FlashMatch({ Search }),
     FlashCurrent({ IncSearch }),
-    FlashLabel({ fg = C.red, bg = C.bg_red, gui = "bold,underline" }),
+    FlashLabel({ fg = C.bright_blue_alt, bg = C.bg_blue, gui = "bold,underline" }),
 
     ---- neorg -----------------------------------------------------------------
 
@@ -947,6 +949,13 @@ local theme = lush(function(injected_functions)
     sym("@neorg.headings.4.title")({ gui = "italic" }),
     sym("@neorg.headings.5.title")({ gui = "italic" }),
     sym("@neorg.headings.6.title")({ gui = "italic" }),
+
+    ---- symbol-usage ----------------------------------------------------------
+    SymbolUsageRounding({ CursorLine, gui = "italic" }),
+    SymbolUsageContent({ fg = C.bg_dark.li(18), gui = "italic" }),
+    SymbolUsageRef({ fg = Function.fg, bg = C.transparent, gui = "italic" }),
+    SymbolUsageDef({ fg = Type.fg, bg = C.transparent, gui = "italic" }),
+    SymbolUsageImpl({ fg = Keyword.fg, bg = C.transparent, gui = "italic" }),
   }
 end)
 
