@@ -303,7 +303,8 @@ local function mini_indentscope()
       "help",
       "startify",
       "packer",
-      "neogitstatus",
+      "NeogitStatus",
+      "oil",
       "DirBuf",
       "markdown",
     },
@@ -400,7 +401,6 @@ end
 
 return {
   "echasnovski/mini.nvim",
-
   init = function()
     mega.nmap("<leader>bd", function() require("mini.bufremove").delete(0, false) end)
     mega.nmap("<leader>bD", function() require("mini.bufremove").delete(0, true) end)
@@ -408,11 +408,11 @@ return {
   event = { "BufReadPost", "BufNewFile" },
   config = function()
     mini_surround()
-    mini_pairs()
+    -- mini_pairs()
     mini_comment()
     mini_align()
     mini_pick()
-    mini_indentscope()
+    -- mini_indentscope()
     -- mini_jump()
     mini_hipatterns()
     -- mini_clue()

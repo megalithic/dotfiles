@@ -250,6 +250,7 @@ cask "font-cascadia-mono-pl"
 cask "font-caskaydia-cove-nerd-font"
 cask "font-recursive-code"
 cask "font-recursive-code-nerd-font"
+cask "font-monaspace-nerd-font"
 
 cask "font-cascadia-mono"
 cask "font-3270-nerd-font"

@@ -12,13 +12,22 @@ return {
   {
     "rktjmp/lush.nvim",
     lazy = false,
-    priority = 1000,
-  },
-  {
-    "sainnhe/everforest",
-    lazy = false,
     priority = 1001,
   },
+  -- {
+  --   "ribru17/bamboo.nvim",
+  --   lazy = false,
+  --   priority = 1000,
+  -- },
+  -- {
+  --   "sainnhe/everforest",
+  --   lazy = false,
+  --   priority = 1000,
+  --   config = function()
+  --     vim.g.everforest_background = "soft"
+  --     vim.g.everforest_better_performance = true
+  --   end,
+  -- },
   {
     "farmergreg/vim-lastplace",
     lazy = false,
@@ -57,33 +66,44 @@ return {
     end,
   },
   { "lukas-reineke/virt-column.nvim", opts = { char = "│" }, event = "VimEnter" },
-  -- {
-  --   "lukas-reineke/indent-blankline.nvim",
-  --   event = "LazyFile",
-  --   opts = {
-  --     indent = {
-  --       char = "│",
-  --       tab_char = "│",
-  --     },
-  --     scope = { enabled = true },
-  --     exclude = {
-  --       filetypes = {
-  --         "help",
-  --         "alpha",
-  --         "dashboard",
-  --         "neo-tree",
-  --         "Trouble",
-  --         "trouble",
-  --         "lazy",
-  --         "mason",
-  --         "notify",
-  --         "toggleterm",
-  --         "lazyterm",
-  --       },
-  --     },
-  --   },
-  --   main = "ibl",
-  -- },
+  {
+    "lukas-reineke/indent-blankline.nvim",
+    event = { "VeryLazy" },
+    main = "ibl",
+    opts = {
+      indent = {
+        char = "┊",
+        smart_indent_cap = true,
+      },
+      scope = {
+        enabled = false,
+      },
+    },
+  },
+  {
+    "echasnovski/mini.indentscope",
+    version = "*",
+    main = "mini.indentscope",
+    event = { "VeryLazy" },
+    opts = {
+      symbol = "┊", -- alts: ┊│┆ ┊  ▎││ ▏▏
+      -- mappings = {
+      --   goto_top = "<leader>k",
+      --   goto_bottom = "<leader>j",
+      -- },
+      options = {
+        try_as_border = true,
+      },
+      draw = {
+        animation = function() return 0 end,
+      },
+    },
+  },
+  {
+    "echasnovski/mini.pick",
+    cmd = "Pick",
+    opts = {},
+  },
   {
     "mbbill/undotree",
     cmd = "UndotreeToggle",
@@ -100,28 +120,28 @@ return {
   --   keys = { { "<BS>", function() require("origami").h() end, desc = "toggle fold" } },
   --   opts = {},
   -- },
-  {
-    "gabrielpoca/replacer.nvim",
-    ft = { "qf", "quickfix" },
-    keys = {
-      -- { "<leader>R", function() require("replacer").run() end, desc = "qf: replace in qflist" },
-      -- { "<C-r>", function() require("replacer").run() end, desc = "qf: replace in qflist" },
-    },
-    init = function()
-      -- save & quit via "q"
-      mega.augroup("ReplacerFileType", {
-        pattern = "replacer",
-        callback = function()
-          mega.nmap("q", vim.cmd.write, { desc = " done replacing", buffer = true, nowait = true })
-        end,
-      })
-      -- mega.nnoremap(
-      --   "<leader>r",
-      --   function() require("replacer").run() end,
-      --   { desc = "qf: replace in qflist", nowait = true }
-      -- )
-    end,
-  },
+  -- {
+  --   "gabrielpoca/replacer.nvim",
+  --   ft = { "qf", "quickfix" },
+  --   keys = {
+  --     -- { "<leader>R", function() require("replacer").run() end, desc = "qf: replace in qflist" },
+  --     -- { "<C-r>", function() require("replacer").run() end, desc = "qf: replace in qflist" },
+  --   },
+  --   init = function()
+  --     -- save & quit via "q"
+  --     mega.augroup("ReplacerFileType", {
+  --       pattern = "replacer",
+  --       callback = function()
+  --         mega.nmap("q", vim.cmd.write, { desc = " done replacing", buffer = true, nowait = true })
+  --       end,
+  --     })
+  --     -- mega.nnoremap(
+  --     --   "<leader>r",
+  --     --   function() require("replacer").run() end,
+  --     --   { desc = "qf: replace in qflist", nowait = true }
+  --     -- )
+  --   end,
+  -- },
   {
     "mrjones2014/smart-splits.nvim",
     lazy = false,
@@ -142,90 +162,90 @@ return {
       { "<leader><leader>l", function() require("smart-splits").swap_buf_right() end, desc = "swap right" },
     },
   },
-  {
-    "chentoast/marks.nvim",
-    cond = false,
-    event = "VeryLazy",
-    keys = {
-      { "<leader>mm", "<Cmd>MarksListBuf<CR>", desc = "marks: list buffer marks" },
-      { "<leader>mg", "<Cmd>MarksListBuf<CR>", desc = "marks: list global marks" },
-      { "<leader>mb", "<Cmd>MarksListBuf<CR>", desc = "marks: list bookmark marks" },
-      { "m/", "<cmd>MarksListAll<CR>", desc = "Marks from all opened buffers" },
-      { "<leader>mt", "<cmd>MarksToggleSigns<cr>", desc = "Toggle marks" },
-      -- { 'm', '<Plug>(Marks-set)', '<Plug>(Marks-toggle)' },
-    },
-    opts = {
-      sign_priority = { lower = 10, upper = 15, builtin = 8, bookmark = 20 },
-      bookmark_1 = { sign = "󰈼" }, -- ⚐ ⚑ 󰈻 󰈼 󰈽 󰈾 󰈿 󰉀
-      default_mappings = false, -- whether to map keybinds or not. default true
-      builtin_marks = {}, -- which builtin marks to show. default {}
-      cyclic = true, -- whether movements cycle back to the beginning/end of buffer. default true
-      force_write_shada = false, -- whether the shada file is updated after modifying uppercase marks. default false
-      -- bookmark_0 = { -- marks.nvim allows you to configure up to 10 bookmark groups, each with its own sign/virttext
-      --   sign = "⚑",
-      --   virt_text = "hello world",
-      -- },
-      mappings = {
-        set_next = "m,",
-        next = "m]",
-        preview = "m;",
-        set_bookmark0 = "m0",
-        prev = false, -- pass false to disable only this default mapping
-        annotate = "m<Space>",
-      },
-      excluded_filetypes = {
-        "DressingInput",
-        "gitcommit",
-        "NeogitCommitMessage",
-        "NeogitNotification",
-        "NeogitStatus",
-        "NeogitStatus",
-        "NvimTree",
-        "Outline",
-        "OverseerForm",
-        "dropbar_menu",
-        "lazy",
-        "lspinfo",
-        "megaterm",
-        "neo-tree",
-        "neo-tree-popup",
-        "noice",
-        "notify",
-        "null-ls-info",
-        "registers",
-        "toggleterm",
-        "toggleterm",
-      },
-    },
-  },
-  {
-    "stevearc/overseer.nvim", -- Task runner and job management
-    keys = {
-      { "<leader>or", "<cmd>OverseerRun<cr>", desc = "overseer: run task" },
-      { "<leader>ot", "<cmd>OverseerToggle<cr>", desc = "overseer: toggle tasks" },
-    },
-    opts = {
-      strategy = {
-        "terminal",
-        use_shell = true,
-      },
-      form = {
-        border = mega.get_border(),
-      },
-      task_list = { direction = "right" },
-      templates = { "builtin", "global" },
-      component_aliases = {
-        default_neotest = {
-          "unique",
-          { "on_complete_notify", system = "unfocused", on_change = true },
-          "default",
-          "on_output_summarize",
-          "on_exit_set_status",
-          "on_complete_dispose",
-        },
-      },
-    },
-  },
+  -- {
+  --   "chentoast/marks.nvim",
+  --   cond = false,
+  --   event = "VeryLazy",
+  --   keys = {
+  --     { "<leader>mm", "<Cmd>MarksListBuf<CR>", desc = "marks: list buffer marks" },
+  --     { "<leader>mg", "<Cmd>MarksListBuf<CR>", desc = "marks: list global marks" },
+  --     { "<leader>mb", "<Cmd>MarksListBuf<CR>", desc = "marks: list bookmark marks" },
+  --     { "m/", "<cmd>MarksListAll<CR>", desc = "Marks from all opened buffers" },
+  --     { "<leader>mt", "<cmd>MarksToggleSigns<cr>", desc = "Toggle marks" },
+  --     -- { 'm', '<Plug>(Marks-set)', '<Plug>(Marks-toggle)' },
+  --   },
+  --   opts = {
+  --     sign_priority = { lower = 10, upper = 15, builtin = 8, bookmark = 20 },
+  --     bookmark_1 = { sign = "󰈼" }, -- ⚐ ⚑ 󰈻 󰈼 󰈽 󰈾 󰈿 󰉀
+  --     default_mappings = false, -- whether to map keybinds or not. default true
+  --     builtin_marks = {}, -- which builtin marks to show. default {}
+  --     cyclic = true, -- whether movements cycle back to the beginning/end of buffer. default true
+  --     force_write_shada = false, -- whether the shada file is updated after modifying uppercase marks. default false
+  --     -- bookmark_0 = { -- marks.nvim allows you to configure up to 10 bookmark groups, each with its own sign/virttext
+  --     --   sign = "⚑",
+  --     --   virt_text = "hello world",
+  --     -- },
+  --     mappings = {
+  --       set_next = "m,",
+  --       next = "m]",
+  --       preview = "m;",
+  --       set_bookmark0 = "m0",
+  --       prev = false, -- pass false to disable only this default mapping
+  --       annotate = "m<Space>",
+  --     },
+  --     excluded_filetypes = {
+  --       "DressingInput",
+  --       "gitcommit",
+  --       "NeogitCommitMessage",
+  --       "NeogitNotification",
+  --       "NeogitStatus",
+  --       "NeogitStatus",
+  --       "NvimTree",
+  --       "Outline",
+  --       "OverseerForm",
+  --       "dropbar_menu",
+  --       "lazy",
+  --       "lspinfo",
+  --       "megaterm",
+  --       "neo-tree",
+  --       "neo-tree-popup",
+  --       "noice",
+  --       "notify",
+  --       "null-ls-info",
+  --       "registers",
+  --       "toggleterm",
+  --       "toggleterm",
+  --     },
+  --   },
+  -- },
+
+  --   "stevearc/overseer.nvim", -- Task runner and job management
+  --   keys = {
+  --     { "<leader>or", "<cmd>OverseerRun<cr>", desc = "overseer: run task" },
+  --     { "<leader>ot", "<cmd>OverseerToggle<cr>", desc = "overseer: toggle tasks" },
+  --   },
+  --   opts = {
+  --     strategy = {
+  --       "terminal",
+  --       use_shell = true,
+  --     },
+  --     form = {
+  --       border = mega.get_border(),
+  --     },
+  --     task_list = { direction = "right" },
+  --     templates = { "builtin", "global" },
+  --     component_aliases = {
+  --       default_neotest = {
+  --         "unique",
+  --         { "on_complete_notify", system = "unfocused", on_change = true },
+  --         "default",
+  --         "on_output_summarize",
+  --         "on_exit_set_status",
+  --         "on_complete_dispose",
+  --       },
+  --     },
+  --   },
+  -- },
   {
     "David-Kunz/gen.nvim",
     cmd = { "Gen" },
@@ -233,11 +253,6 @@ return {
       { "<leader>]", ":Gen<CR>", mode = "v" },
       { "<leader>]", ":Gen<CR>", mode = "n" },
     },
-  },
-  {
-    "echasnovski/mini.pick",
-    cmd = "Pick",
-    opts = {},
   },
   {
     "monaqa/dial.nvim",
@@ -275,7 +290,41 @@ return {
     "neovim/nvim-lspconfig",
     event = { "BufReadPre", "BufNewFile" },
     dependencies = {
-      "hrsh7th/cmp-nvim-lsp",
+      {
+        "williamboman/mason.nvim",
+        config = function()
+          local tools = {
+            "prettierd",
+            "prettier",
+            "stylua",
+            "selene",
+            "luacheck",
+            -- "fixjson",
+            -- "eslint_d",
+            "shellcheck",
+            -- "deno",
+            "shfmt",
+            -- "goimports",
+            -- "black",
+            -- "isort",
+            -- "flake8",
+            -- "cbfmt",
+            -- "buf",
+            -- "elm-format",
+            "yamlfmt",
+          }
+
+          require("mason").setup()
+          -- local mr = require("mason-registry")
+          -- for _, tool in ipairs(tools) do
+          --   local p = mr.get_package(tool)
+          --   if not p:is_installed() then p:install() end
+          -- end
+          require("mason-lspconfig").setup({
+            automatic_installation = true,
+          })
+        end,
+      },
       { "nvim-lua/lsp_extensions.nvim" },
       -- {
       --   "jose-elias-alvarez/typescript.nvim",
@@ -364,69 +413,70 @@ return {
           })
         end,
       },
-      {
-        "Wansmer/symbol-usage.nvim",
-        event = "LspAttach",
-        config = {
-          text_format = function(symbol)
-            local res = {}
-            local ins = table.insert
-
-            -- local round_start = { "", "SymbolUsageRounding" }
-            -- local round_end = { "", "SymbolUsageRounding" }
-
-            if symbol.references then
-              local usage = symbol.references <= 1 and "usage" or "usages"
-              local num = symbol.references == 0 and "no" or symbol.references
-              -- ins(res, round_start)
-              ins(res, { "󰌹 ", "SymbolUsageRef" })
-              ins(res, { ("%s %s"):format(num, usage), "SymbolUsageContent" })
-              if #res > 0 then table.insert(res, { " ", "NonText" }) end
-              -- ins(res, round_end)
-            end
-
-            if symbol.definition then
-              if #res > 0 then table.insert(res, { " ", "NonText" }) end
-              -- ins(res, round_start)
-              ins(res, { "󰳽 ", "SymbolUsageDef" })
-              ins(res, { symbol.definition .. " defs", "SymbolUsageContent" })
-              if #res > 0 then table.insert(res, { " ", "NonText" }) end
-              -- ins(res, round_end)
-            end
-
-            if symbol.implementation then
-              if #res > 0 then table.insert(res, { " ", "NonText" }) end
-              -- ins(res, round_start)
-              ins(res, { "󰡱 ", "SymbolUsageImpl" })
-              ins(res, { symbol.implementation .. " impls", "SymbolUsageContent" })
-              if #res > 0 then table.insert(res, { " ", "NonText" }) end
-              -- ins(res, round_end)
-            end
-
-            return res
-          end,
-          -- text_format = function(symbol)
-          --   local fragments = {}
-          --
-          --   if symbol.references then
-          --     local usage = symbol.references <= 1 and "usage" or "usages"
-          --     local num = symbol.references == 0 and "no" or symbol.references
-          --     table.insert(fragments, { ("%s %s"):format(num, usage), "SymbolUsageContent" })
-          --   end
-          --
-          --   if symbol.definition then
-          --     table.insert(fragments, { symbol.definition .. " defs", "SymbolUsageContent" })
-          --   end
-          --
-          --   if symbol.implementation then
-          --     table.insert(fragments, { symbol.implementation .. " impls", "SymbolUsageContent" })
-          --   end
-          --
-          --   -- return table.concat(fragments, ", ")
-          --   return fragments
-          -- end,
-        },
-      },
+      -- {
+      --   "Wansmer/symbol-usage.nvim",
+      --   cond = false,
+      --   event = "LspAttach",
+      --   config = {
+      --     text_format = function(symbol)
+      --       local res = {}
+      --       local ins = table.insert
+      --
+      --       -- local round_start = { "", "SymbolUsageRounding" }
+      --       -- local round_end = { "", "SymbolUsageRounding" }
+      --
+      --       if symbol.references then
+      --         local usage = symbol.references <= 1 and "usage" or "usages"
+      --         local num = symbol.references == 0 and "no" or symbol.references
+      --         -- ins(res, round_start)
+      --         ins(res, { "󰌹 ", "SymbolUsageRef" })
+      --         ins(res, { ("%s %s"):format(num, usage), "SymbolUsageContent" })
+      --         if #res > 0 then table.insert(res, { " ", "NonText" }) end
+      --         -- ins(res, round_end)
+      --       end
+      --
+      --       if symbol.definition then
+      --         if #res > 0 then table.insert(res, { " ", "NonText" }) end
+      --         -- ins(res, round_start)
+      --         ins(res, { "󰳽 ", "SymbolUsageDef" })
+      --         ins(res, { symbol.definition .. " defs", "SymbolUsageContent" })
+      --         if #res > 0 then table.insert(res, { " ", "NonText" }) end
+      --         -- ins(res, round_end)
+      --       end
+      --
+      --       if symbol.implementation then
+      --         if #res > 0 then table.insert(res, { " ", "NonText" }) end
+      --         -- ins(res, round_start)
+      --         ins(res, { "󰡱 ", "SymbolUsageImpl" })
+      --         ins(res, { symbol.implementation .. " impls", "SymbolUsageContent" })
+      --         if #res > 0 then table.insert(res, { " ", "NonText" }) end
+      --         -- ins(res, round_end)
+      --       end
+      --
+      --       return res
+      --     end,
+      --     -- text_format = function(symbol)
+      --     --   local fragments = {}
+      --     --
+      --     --   if symbol.references then
+      --     --     local usage = symbol.references <= 1 and "usage" or "usages"
+      --     --     local num = symbol.references == 0 and "no" or symbol.references
+      --     --     table.insert(fragments, { ("%s %s"):format(num, usage), "SymbolUsageContent" })
+      --     --   end
+      --     --
+      --     --   if symbol.definition then
+      --     --     table.insert(fragments, { symbol.definition .. " defs", "SymbolUsageContent" })
+      --     --   end
+      --     --
+      --     --   if symbol.implementation then
+      --     --     table.insert(fragments, { symbol.implementation .. " impls", "SymbolUsageContent" })
+      --     --   end
+      --     --
+      --     --   -- return table.concat(fragments, ", ")
+      --     --   return fragments
+      --     -- end,
+      --   },
+      -- },
     },
   },
   {
@@ -440,13 +490,21 @@ return {
       trash_command = "trash-cli",
       prompt_save_on_select_new_entry = false,
       use_default_keymaps = false,
+      is_always_hidden = function(name, _bufnr) return name == ".." end,
       columns = {
         "icon",
+        -- "permissions",
+        -- "size",
+        -- "mtime",
       },
       view_options = {
         show_hidden = true,
       },
       keymaps = {
+        ["g?"] = "actions.show_help",
+        ["gs"] = "actions.change_sort",
+        ["gx"] = "actions.open_external",
+        ["g."] = "actions.toggle_hidden",
         ["gd"] = {
           desc = "Toggle detail view",
           callback = function()
@@ -529,61 +587,69 @@ return {
     event = "InsertCharPre",
     config = function() require("hclipboard").start() end,
   },
+  -- {
+  --   "bennypowers/nvim-regexplainer",
+  --   opts = {},
+  --   cmd = { "RegexplainerShowSplit", "RegexplainerShowPopup", "RegexplainerHide", "RegexplainerToggle" },
+  --   dependencies = {
+  --     "nvim-treesitter/nvim-treesitter",
+  --     "MunifTanjim/nui.nvim",
+  --   },
+  -- },
   {
-    "bennypowers/nvim-regexplainer",
-    opts = {},
-    cmd = { "RegexplainerShowSplit", "RegexplainerShowPopup", "RegexplainerHide", "RegexplainerToggle" },
-    dependencies = {
-      "nvim-treesitter/nvim-treesitter",
-      "MunifTanjim/nui.nvim",
-    },
+    "altermo/ultimate-autopair.nvim",
+    event = { "InsertEnter" },
+    branch = "v0.6", --recomended as each new version will have breaking changes
+    config = true,
   },
   { "tpope/vim-dispatch" },
-  {
-    "jackMort/ChatGPT.nvim",
-    cmd = { "ChatGPT", "ChatGPTActAs", "ChatGPTEditWithInstructions" },
-    config = function()
-      local border = { style = mega.get_border(), highlight = "PickerBorder" }
-      require("chatgpt").setup({
-        popup_window = { border = border },
-        popup_input = { border = border, submit = "<C-y>" },
-        settings_window = { border = border },
-        chat = {
-          keymaps = {
-            close = {
-              "<C-c>",
-            },
-          },
-        },
-      })
-    end,
-    dependencies = {
-      "MunifTanjim/nui.nvim",
-      "nvim-lua/plenary.nvim",
-    },
-  },
-  {
-    "tdfacer/explain-it.nvim",
-    requires = {
-      "rcarriga/nvim-notify",
-    },
-    config = function()
-      require("explain-it").setup({
-        -- Prints useful log messages
-        debug = true,
-        -- Customize notification window width
-        max_notification_width = 20,
-        -- Retry API calls
-        max_retries = 3,
-        -- Customize response text file persistence location
-        output_directory = "/tmp/chat_output",
-        -- Toggle splitting responses in notification window
-        split_responses = false,
-        -- Set token limit to prioritize keeping costs low, or increasing quality/length of responses
-        token_limit = 2000,
-      })
-    end,
-  },
+  -- {
+  --   "jackMort/ChatGPT.nvim",
+  --   event = "VeryLazy",
+  --   config = function()
+  --     local border = { style = mega.get_border(), highlight = "PickerBorder" }
+  --     require("chatgpt").setup({
+  --       popup_window = { border = border },
+  --       popup_input = { border = border, submit = "<C-y>" },
+  --       settings_window = { border = border },
+  --       -- async_api_key_cmd = "pass show api/openai",
+  --       chat = {
+  --         keymaps = {
+  --           close = {
+  --             "<C-c>",
+  --           },
+  --         },
+  --       },
+  --     })
+  --   end,
+  --   dependencies = {
+  --     "MunifTanjim/nui.nvim",
+  --     "nvim-lua/plenary.nvim",
+  --     "nvim-telescope/telescope.nvim",
+  --   },
+  -- },
+  -- {
+  --   "tdfacer/explain-it.nvim",
+  --   requires = {
+  --     "rcarriga/nvim-notify",
+  --   },
+  --   config = function()
+  --     require("explain-it").setup({
+  --       -- Prints useful log messages
+  --       debug = true,
+  --       -- Customize notification window width
+  --       max_notification_width = 20,
+  --       -- Retry API calls
+  --       max_retries = 3,
+  --       -- Customize response text file persistence location
+  --       output_directory = "/tmp/chat_output",
+  --       -- Toggle splitting responses in notification window
+  --       split_responses = false,
+  --       -- Set token limit to prioritize keeping costs low, or increasing quality/length of responses
+  --       token_limit = 2000,
+  --     })
+  --   end,
+  -- },
   {
     "piersolenski/wtf.nvim",
     dependencies = {
@@ -697,6 +763,23 @@ return {
       },
     },
   },
+  -- {
+  --   "ojroques/nvim-osc52",
+  --   -- Only change the clipboard if we're in a SSH session
+  --   cond = os.getenv("SSH_CLIENT") ~= nil and (os.getenv("TMUX") ~= nil or vim.fn.has("nvim-0.10") == 0),
+  --   config = function()
+  --     local osc52 = require("osc52")
+  --     local function copy(lines, _) osc52.copy(table.concat(lines, "\n")) end
+  --
+  --     local function paste() return { vim.fn.split(vim.fn.getreg(""), "\n"), vim.fn.getregtype("") } end
+  --
+  --     vim.g.clipboard = {
+  --       name = "osc52",
+  --       copy = { ["+"] = copy, ["*"] = copy },
+  --       paste = { ["+"] = paste, ["*"] = paste },
+  --     }
+  --   end,
+  -- },
   { "tpope/vim-rhubarb", event = { "VeryLazy" } },
   { "tpope/vim-repeat", lazy = false },
   { "tpope/vim-unimpaired", event = { "VeryLazy" } },

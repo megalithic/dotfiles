@@ -75,7 +75,7 @@ local quitters = {
   "org.mozilla.firefoxdeveloperedition",
   "com.apple.SafariTechnologyPreview",
   "com.apple.Safari",
-  -- "com.github.wez.wezterm", -- stuck with wezterm's built in confirm, need to remove this
+  "com.github.wez.wezterm", -- stuck with wezterm's built in confirm, need to remove this
 }
 
 --- @class TargetOpts

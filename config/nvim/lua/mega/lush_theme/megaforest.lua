@@ -54,6 +54,7 @@ local theme = lush(function(injected_functions)
     BackgroundExtraLight({ bg = C.bg2 }),
     Visual({ fg = C.transparent, bg = C.bg_visual }), -- Visual mode selection
     VisualNOS({ fg = C.transparent, bg = C.bg_visual }), -- Visual mode selection when vim is "Not Owning the Selection".
+    VisualYank({ fg = C.transparent, bg = C.bg_blue }), -- Visual mode selection
     WarningMsg({ fg = C.yellow, bg = C.transparent }), -- warning messages
     Whitespace({ fg = C.bg3, bg = C.transparent }), -- "nbsp", "space", "tab" and "trail" in 'listchars'
     ColorColumn({ fg = C.transparent, bg = C.bg0 }), -- used for the columns set with 'colorcolumn'
@@ -100,7 +101,8 @@ local theme = lush(function(injected_functions)
     WildMenu({ PmenuSel }), -- current match in 'wildmenu' completion
     NormalFloat({ Pmenu }), -- Normal text in floating windows.
     FloatBorder({ Pmenu, fg = C.bg_dark }),
-    NotifyFloat({ bg = C.bg2.darken(10), fg = C.bg2.darken(10) }),
+    NotifyBackground({ bg = C.bg2.darken(10) }),
+    NotifyFloat({ NotifyBackground, fg = C.bg2.darken(10) }),
     FloatTitle({ Visual }),
     Question({ fg = C.yellow, bg = C.transparent }), -- |hit-enter| prompt and yes/no questions
     -- QuickFixLine({ fg = transparent, bg = PmenuSbar.bg, gui = "bold,italic" }), -- Current |quickfix| item in the quickfix window. Combined with |hl-CursorLine| when the cursor is there.
@@ -301,12 +303,12 @@ local theme = lush(function(injected_functions)
 
     ---- :help headlines.txt -------------------------------------------
 
-    Headline1({ fg = C.green, bg = C.bg_green, gui = "bold,italic,underline" }),
-    Headline2({ fg = C.yellow, bg = C.bg_yellow, gui = "bold,italic" }),
+    Headline1({ fg = C.green, bg = C.bg0, gui = "bold,italic,underline" }),
+    Headline2({ fg = C.yellow, bg = C.bg0, gui = "bold,italic" }),
     Headline3({ fg = C.red, bg = C.bg0, gui = "bold" }),
     Headline4({ fg = C.purple, bg = C.bg0, gui = "bold" }),
-    Headline5({ fg = C.blue, bg = C.bg1, gui = "italic" }),
-    Headline6({ fg = C.orange, bg = C.bg1, gui = C.transparent }),
+    Headline5({ fg = C.blue, bg = C.bg0, gui = "italic" }),
+    Headline6({ fg = C.orange, bg = C.bg0, gui = C.transparent }),
     Dash({ fg = C.bg3, gui = "bold" }),
     sym("@dash")({ Dash }),
     CodeBlock({ bg = C.bg1 }),

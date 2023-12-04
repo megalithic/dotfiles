@@ -36,11 +36,10 @@ function M.setup()
   end
 
   vim.opt.runtimepath:prepend(lazypath)
+  require("lazy.core.cache").enable()
 
-  -- load lazy
-  -- REF:
-  -- https://github.com/M3dry/Dotfiles/blob/master/.config/nvim/lua/m3dry/plugins.lua
   require("lazy").setup("mega.plugins", {
+    -- spec = specs,
     debug = false,
     defaults = { lazy = true },
     checker = { enabled = false },
@@ -49,13 +48,13 @@ function M.setup()
     },
     install = {
       missing = true,
-      colorscheme = { vim.g.colorscheme },
+      colorscheme = { vim.g.colorscheme, "habamax" },
     },
     dev = {
       -- directory where you store your local plugin projects
       path = "~/code",
       ---@type string[] plugins that match these patterns will use your local versions instead of being fetched from GitHub
-      patterns = { "megalithic" }, -- For example {"folke"}
+      patterns = { "megalithic" },
       fallback = true, -- Fallback to git when local plugin doesn't exist
     },
     performance = {

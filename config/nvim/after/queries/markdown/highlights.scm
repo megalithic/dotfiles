@@ -1,5 +1,13 @@
 ;; extends
 
+; Headers
+((atx_h1_marker) @text.title (#set! conceal "¹"))
+((atx_h2_marker) @text.title (#set! conceal "²"))
+((atx_h3_marker) @text.title (#set! conceal "³"))
+((atx_h4_marker) @text.title (#set! conceal "⁴"))
+((atx_h5_marker) @text.title (#set! conceal "⁵"))
+((atx_h6_marker) @text.title (#set! conceal "⁶"))
+
 (atx_heading [
   (atx_h1_marker)
   (atx_h2_marker)
@@ -9,9 +17,21 @@
   (atx_h6_marker)
 ] @headline)
 
+; Thematic breaks
+((thematic_break) @punctuation.special
+                  (#offset! @punctuation.special 0 2 0 0)
+                  (#set! conceal "━"))
+((thematic_break) @punctuation.special
+                  (#offset! @punctuation.special 0 1 0 0)
+                  (#set! conceal "━"))
+((thematic_break) @punctuation.special
+                  (#set! conceal "━"))
+
 (thematic_break) @dash
 (minus_metadata) @dash
 
+; Ease fenced code block conceals a bit
+((fenced_code_block_delimiter) @punctuation.delimiter (#set! conceal "~"))
 (fenced_code_block) @codeblock
 
 (block_quote_marker) @quote
@@ -42,6 +62,54 @@
 ; ](#set! conceal ""))
 
 ; bullet points
+; ([(list_marker_minus) (list_marker_plus) (list_marker_star)]
+;  @punctuation.special
+;  (#offset-first-n! @punctuation.special 1)
+;  (#set! conceal "•"))
+; (list
+;   (list_item
+;     (list
+;       (list_item
+;         ([(list_marker_minus) (list_marker_plus) (list_marker_star)]
+;          @punctuation.special
+;          (#offset-first-n! @punctuation.special 1)
+;          (#set! conceal "⭘"))))))
+; (list
+;   (list_item
+;     (list
+;       (list_item
+;         (list
+;           (list_item
+;             ([(list_marker_minus) (list_marker_plus) (list_marker_star)]
+;              @punctuation.special
+;              (#offset-first-n! @punctuation.special 1)
+;              (#set! conceal "◼"))))))))
+; (list
+;   (list_item
+;     (list
+;       (list_item
+;         (list
+;           (list_item
+;             (list
+;               (list_item
+;                 ([(list_marker_minus) (list_marker_plus) (list_marker_star)]
+;                  @punctuation.special
+;                  (#offset-first-n! @punctuation.special 1)
+;                  (#set! conceal "◻"))))))))))
+; (list
+;   (list_item
+;     (list
+;       (list_item
+;         (list
+;           (list_item
+;             (list
+;               (list_item
+;                 (list
+;                   (list_item
+;                     ([(list_marker_minus) (list_marker_plus) (list_marker_star)]
+;                      @punctuation.special
+;                      (#offset-first-n! @punctuation.special 1)
+;                      (#set! conceal "→"))))))))))))
 ([(list_marker_minus) (list_marker_star)] @punctuation.special (#offset! @punctuation.special 0 0 0 -1) (#set! conceal "•"))
 
 ; Checkbox list items
@@ -56,12 +124,19 @@
 (pipe_table_row ("|") @punctuation.special @conceal (#set! conceal "┃"))
 
 ; Block quotes
-((block_quote_marker) @conceal (#set! conceal "▍"))
+; ((block_quote_marker) @conceal (#set! conceal "▍"))
 ((block_quote
   (paragraph (inline
-    (block_continuation) @conceal (#set! conceal "▍")
+    ; (block_continuation) @conceal (#set! conceal "▍")
+    (block_continuation) @punctuation.special @conceal (#offset! @punctuation.special 0 0 0 -1) (#set! conceal "▐")
   ))
 ))
+((block_quote_marker) @punctuation.special (#offset! @punctuation.special 0 0 0 -1) (#set! conceal "▐"))
+((block_continuation) @punctuation.special (#eq? @punctuation.special "> ") (#offset! @punctuation.special 0 0 0 -1) (#set! conceal "▐"))
+((block_continuation) @punctuation.special (#eq? @punctuation.special ">") (#set! conceal "▐"))
+(block_quote
+  (paragraph) @text.literal)
+
 
 ; (code_span) @nospell
 

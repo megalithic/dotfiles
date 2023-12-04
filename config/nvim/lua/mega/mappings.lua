@@ -23,8 +23,7 @@
 -- https://github.com/mbriggs/nvim/blob/main/lua/mb/which-key.lua
 -- https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/whichkey.lua
 
-if not mega then return end
-if not vim.g.enabled_plugin["mappings"] then return end
+if not plugin_loaded("mappings") then return end
 
 local U = require("mega.utils")
 local fn = vim.fn

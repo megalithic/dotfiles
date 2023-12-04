@@ -1,17 +1,258 @@
 -- REF:
 -- https://github.com/piouPiouM/dotfiles/blob/master/nvim/.config/nvim/lua/ppm/plugin/cmp/init.lua
 -- https://github.com/ecosse3/nvim/blob/dev/lua/plugins/cmp.lua
+if false then
+  return {
+    "hrsh7th/nvim-cmp",
+    event = { "InsertEnter", "CmdlineEnter" },
+    dependencies = {
+      -- NOTE: cmp sources
+      "hrsh7th/cmp-nvim-lsp",
+      "hrsh7th/cmp-cmdline",
+      "FelipeLema/cmp-async-path",
+      {
+        "tzachar/cmp-fuzzy-buffer",
+        dependencies = { "tzachar/fuzzy.nvim" },
+      },
+
+      -- NOTE: snippet plugins
+      {
+        "garymjr/nvim-snippets",
+        opts = {
+          friendly_snippets = true,
+          search_paths = { vim.fn.stdpath("config") .. "/snippets" },
+        },
+        dependencies = {
+          "rafamadriz/friendly-snippets",
+          event = { "InsertEnter" },
+          enabled = vim.g.snipper == "snippets",
+        },
+      },
+
+      -- NOTE: autopairs plugin
+      -- {
+      --   "windwp/nvim-autopairs",
+      --   opts = { check_ts = true, fast_wrap = { map = "<C-e>" } },
+      -- },
+
+      -- NOTE: github copilot if available
+      -- {
+      --   "zbirenbaum/copilot-cmp",
+      --   dependencies = {
+      --     "zbirenbaum/copilot.lua",
+      --     opts = {
+      --       suggestion = { enabled = false },
+      --       panel = { enabled = false },
+      --     },
+      --   },
+      --   config = true,
+      -- },
+
+      -- NOTE: misc. plugins
+      "onsails/lspkind.nvim",
+    },
+    opts = function()
+      local cmp = require("cmp")
+      local default_border = mega.get_border()
+
+      local lspkind_format = require("lspkind").cmp_format({
+        mode = "symbol_text",
+        maxwidth = 50,
+        symbol_map = { Copilot = "" },
+      })
+
+      local function has_word_before()
+        local line, col = unpack(vim.api.nvim_win_get_cursor(0))
+        return col ~= 0 and vim.api.nvim_buf_get_lines(0, line - 1, line, true)[1]:sub(col, col):match("%s") == nil
+      end
+
+      local cmp_formatting = {
+        fields = { "kind", "abbr", "menu" },
+        format = function(entry, vim_item)
+          local original_kind = vim_item.kind
+          local kind = lspkind_format(entry, vim_item)
+          local strings = vim.split(kind.kind, "%s", { trimempty = true })
+
+          kind.kind = strings[1] .. " "
+          kind.menu = "   " .. strings[2]
+          kind.menu_hl_group = "CmpItemKind" .. original_kind
+
+          return kind
+        end,
+      }
+
+      local cmp_mapping = {
+        ["<C-d>"] = cmp.mapping(cmp.mapping.scroll_docs(2), { "i", "c" }),
+        ["<C-u>"] = cmp.mapping(cmp.mapping.scroll_docs(-2), { "i", "c" }),
+        ["<C-e>"] = cmp.mapping({ i = cmp.mapping.abort(), c = cmp.mapping.close() }),
+        ["<CR>"] = cmp.mapping(function(fallback)
+          if cmp.visible() then
+            cmp.confirm({ behavior = cmp.ConfirmBehavior.Replace, select = true })
+          else
+            fallback()
+          end
+        end),
+        ["<Tab>"] = cmp.mapping(function(fallback)
+          if cmp.visible() then
+            cmp.select_next_item()
+          elseif vim.snippet.jumpable(1) then
+            vim.schedule(function() vim.snippet.jump(1) end)
+          elseif has_word_before() then
+            cmp.complete()
+          else
+            fallback()
+          end
+        end, { "i", "s" }),
+        ["<S-Tab>"] = cmp.mapping(function(fallback)
+          if cmp.visible() then
+            cmp.select_prev_item()
+          elseif vim.snippet.jumpable(-1) then
+            vim.schedule(function() vim.snippet.jump(-1) end)
+          else
+            fallback()
+          end
+        end, { "i", "s" }),
+      }
+
+      local cmp_sorting = {
+        priority_weight = 2,
+        comparators = {
+          -- require("copilot_cmp.comparators").prioritize,
+          require("cmp_fuzzy_buffer.compare"),
+
+          cmp.config.compare.offset,
+          cmp.config.compare.exact,
+          cmp.config.compare.score,
+
+          -- INFO: sort by number of underscores
+          function(entry1, entry2)
+            local _, entry1_under = entry1.completion_item.label:find("^_+")
+            local _, entry2_under = entry2.completion_item.label:find("^_+")
+            entry1_under = entry1_under or 0
+            entry2_under = entry2_under or 0
+            if entry1_under > entry2_under then
+              return false
+            elseif entry1_under < entry2_under then
+              return true
+            end
+          end,
+
+          cmp.config.compare.kind,
+          cmp.config.compare.sort_text,
+          cmp.config.compare.length,
+          cmp.config.compare.order,
+        },
+      }
+
+      local cmp_sources = cmp.config.sources({
+        -- { name = "copilot" },
+        { name = "async_path" },
+        { name = "nvim_lsp" },
+        { name = "snippets", keyword_length = 2 },
+      }, {
+        {
+          name = "fuzzy_buffer",
+          option = {
+            min_match_length = 2,
+            max_matches = 5,
+            get_bufnrs = function()
+              local bufs = {}
+              for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+                local buftype = vim.api.nvim_buf_get_option(buf, "buftype")
+                if buftype ~= "nofile" and buftype ~= "prompt" then bufs[#bufs + 1] = buf end
+              end
+              return bufs
+            end,
+          },
+        },
+      })
+
+      return {
+        snippet = { expand = function(args) vim.snippet.expand(args.body) end },
+        mapping = cmp_mapping,
+        sorting = cmp_sorting,
+        sources = cmp_sources,
+        formatting = cmp_formatting,
+        -- preselect = cmp.PreselectMode.None,
+        window = {
+          completion = {
+            col_offset = -4,
+            side_padding = 1,
+            border = default_border,
+          },
+          documentation = {
+            border = default_border,
+          },
+        },
+        experimental = {
+          ghost_text = { hl_group = "Comment" },
+        },
+        preselect = cmp.PreselectMode.Item,
+        completion = {
+          completeopt = "menu,menuone,preview,noselect,noinsert",
+        },
+        matching = {
+          disallow_partial_fuzzy_matching = false,
+        },
+      }
+    end,
+    config = function(_, opts)
+      local cmp = require("cmp")
+
+      cmp.setup(opts)
+
+      cmp.setup.cmdline({ "/", "?" }, {
+        mapping = cmp.mapping.preset.cmdline(),
+        completion = {
+          completeopt = "menuone,noselect",
+        },
+        sources = {
+          { name = "fuzzy_buffer", option = { min_match_length = 2 } },
+        },
+      })
+
+      cmp.setup.cmdline(":", {
+        mapping = cmp.mapping.preset.cmdline(),
+        completion = {
+          completeopt = "menuone,noselect",
+        },
+        sources = cmp.config.sources({
+          { name = "async_path" },
+        }, {
+          { name = "cmdline" },
+        }),
+      })
+
+      -- NOTE: autopairs mapping on <CR>
+      -- cmp.event:on("confirm_done", require("nvim-autopairs.completion.cmp").on_confirm_done())
+    end,
+  }
+end
+
 return {
   "hrsh7th/nvim-cmp",
-  event = { "InsertEnter" },
+  event = { "InsertEnter", "CmdlineEnter" },
+  cond = vim.g.completer == "cmp",
   dependencies = {
     { "saadparwaiz1/cmp_luasnip", cond = vim.g.snipper == "luasnip" },
+    {
+      "garymjr/nvim-snippets",
+      opts = {
+        friendly_snippets = true,
+        search_paths = { vim.fn.stdpath("config") .. "/snippets" },
+      },
+      dependencies = {
+        "rafamadriz/friendly-snippets",
+        event = { "InsertEnter" },
+        enabled = vim.g.snipper == "snippets",
+      },
+    },
     {
       "hrsh7th/cmp-vsnip",
       dependencies = {
         {
           "hrsh7th/vim-vsnip",
-          event = "InsertEnter",
+          event = "InsertEnter *",
           cond = vim.g.snipper == "vsnip",
           init = function()
             vim.g.vsnip_snippet_dir = vim.fn.fnamemodify(vim.env.MYVIMRC, ":p:h") .. "/snippets"
@@ -27,9 +268,14 @@ return {
       },
     },
     { "hrsh7th/cmp-buffer" },
+    {
+      "tzachar/cmp-fuzzy-buffer",
+      dependencies = { "tzachar/fuzzy.nvim" },
+    },
     { "hrsh7th/cmp-nvim-lsp" },
     { "hrsh7th/cmp-nvim-lua" },
     { "hrsh7th/cmp-path" },
+    { "FelipeLema/cmp-async-path" },
     { "hrsh7th/cmp-emoji" },
     { "f3fora/cmp-spell" },
     { "hrsh7th/cmp-cmdline", event = { "CmdlineEnter" } },
@@ -38,10 +284,10 @@ return {
     { "lukas-reineke/cmp-rg" },
     { "lukas-reineke/cmp-under-comparator" },
     { "davidsierradz/cmp-conventionalcommits" },
-    -- { "dmitmel/cmp-cmdline-history"},
+    { "dmitmel/cmp-cmdline-history" },
     -- { "kristijanhusak/vim-dadbod-completion"},
   },
-  init = function() vim.opt.completeopt = { "menu", "menuone", "noselect", "noinsert" } end,
+  -- init = function() vim.opt.completeopt = { "menu", "menuone", "noselect", "noinsert" } end,
   config = function()
     local cmp = require("cmp")
     local lspkind = require("lspkind")
@@ -109,35 +355,54 @@ return {
           fallback()
         end
       end
+    elseif vim.g.snipper == "snippets" then
+      tab = function(fallback)
+        if cmp.visible() then
+          cmp.select_next_item()
+        elseif vim.snippet.jumpable(1) then
+          vim.schedule(function() vim.snippet.jump(1) end)
+        elseif has_words_before() then
+          cmp.complete()
+        else
+          fallback()
+        end
+      end
+      shift_tab = function(fallback)
+        if cmp.visible() then
+          cmp.select_prev_item()
+        elseif vim.snippet.jumpable(-1) then
+          vim.schedule(function() vim.snippet.jump(-1) end)
+        else
+          fallback()
+        end
+      end
+    else
+      tab = function(fallback)
+        if cmp.visible() then
+          cmp.select_next_item()
+        else
+          fallback()
+        end
+      end
+
+      shift_tab = function(fallback)
+        if cmp.visible() then
+          cmp.select_prev_item()
+        else
+          fallback()
+        end
+      end
     end
 
-    local sources = {
-      { name = "nvim_lsp_signature_help" },
-      { name = "vsnip" },
-      { name = "nvim_lsp" },
-      { name = "path", option = { trailing_slash = true } },
-      {
-        name = "buffer",
-        keyword_length = 4,
-        max_item_count = 10,
-        options = {
-          get_bufnrs = function() return vim.tbl_map(vim.api.nvim_win_get_buf, vim.api.nvim_list_wins()) end,
-        },
-      },
-      { name = "spell" },
-    }
-
-    if vim.uv.cwd() ~= vim.uv.os_homedir() then table.insert(sources, { name = "rg" }) end
-
     cmp.setup({
-      -- experimental = { ghost_text = {
-      --   hl_group = "LspCodeLens",
-      -- } },
+      experimental = {
+        ghost_text = false,
+        -- ghost_text = {
+        --   hl_group = "LspCodeLens",
+        -- },
+      },
       performance = {
         max_view_entries = 30,
-      },
-      matching = {
-        disallow_partial_fuzzy_matching = false,
       },
       enabled = function()
         local context = require("cmp.config.context")
@@ -152,14 +417,23 @@ return {
 
         return not disabled
       end,
-      preselect = cmp.PreselectMode.None,
-      entries = { name = "custom", selection_order = "near_cursor" },
+      -- preselect = cmp.PreselectMode.None,
+      -- preselect = cmp.PreselectMode.Item,
+      -- entries = { name = "custom", selection_order = "near_cursor" },
       completion = {
+        -- completeopt = "menuone",
+        -- completeopt = "menu,menuone,noselect,noinsert",
+        -- completeopt = "menu,menuone,noselect",
+
+        -- completeopt = { "menu", "menuone", "preview", "noselect", "noinsert" },
         max_item_count = 50,
         keyword_length = 1,
         get_trigger_characters = function(trigger_characters)
           return vim.tbl_filter(function(char) return char ~= " " end, trigger_characters)
         end,
+      },
+      matching = {
+        disallow_partial_fuzzy_matching = false,
       },
       snippet = {
         expand = function(args)
@@ -167,6 +441,10 @@ return {
             ls.lsp_expand(args.body)
           elseif vim.g.snipper == "vsnip" then
             vim.fn["vsnip#anonymous"](args.body)
+          elseif vim.g.snipper == "snippets" then
+            vim.snippet.expand(args.body)
+          else
+            return false
           end
         end,
       },
@@ -182,13 +460,12 @@ return {
           }, ","),
           zindex = 1001,
           col_offset = 0,
-          border = mega.get_border(),
+          border = "none", -- alts: mega.get_border(), "none"
           side_padding = 1,
           scrollbar = false,
         },
         documentation = cmp.config.window.bordered({
-          -- scrollbar = false,
-          border = "none",
+          border = "none", -- alts: mega.get_border(), "none"
           winhighlight = table.concat({
             "Normal:NormalFloat",
             "FloatBorder:FloatBorder",
@@ -207,6 +484,7 @@ return {
         ["<C-b>"] = cmp.mapping.scroll_docs(-4),
         ["<C-f>"] = cmp.mapping.scroll_docs(4),
         ["<C-y>"] = cmp.mapping.confirm({ select = true }),
+        ["<C-t>"] = cmp.mapping.confirm({ select = true }),
         ["<CR>"] = function(fallback)
           if vim.g.snipper == "luasnip" then
             cmp.mapping.confirm({ select = false })
@@ -216,14 +494,20 @@ return {
               return
             end
             return cmp.mapping.confirm({ select = false, behavior = cmp.ConfirmBehavior.Replace })(fallback)
+          else
+            if cmp.visible() then
+              cmp.confirm({ behavior = cmp.ConfirmBehavior.Replace, select = true })
+            else
+              fallback()
+            end
           end
         end,
         ["<C-e>"] = cmp.mapping.abort(),
       },
       formatting = {
-        deprecated = true,
-        fields = { "abbr", "kind", "menu" },
-        -- fields = { "kind", "abbr", "menu" },
+        -- deprecated = true,
+        -- fields = { "abbr", "kind", "menu" },
+        fields = { "abbr", "menu", "kind" },
         maxwidth = MAX_MENU_WIDTH,
         ellipsis_char = ellipsis,
         format = function(entry, item)
@@ -237,7 +521,7 @@ return {
           --   next()
           -- end
 
-          if entry.source.name == "path" then
+          if entry.source.name == "async_path" then
             local icon, hl_group = require("nvim-web-devicons").get_icon(entry:get_completion_item().label)
             if icon then
               item.kind = icon
@@ -282,12 +566,14 @@ return {
           else
             item.menu = ({
               nvim_lsp = "[lsp]",
-              -- luasnip = "[lsnip]",
+              luasnip = "[lsnip]",
               vsnip = "[vsnip]",
+              snippets = "[snips]",
               nvim_lua = "[nlua]",
               nvim_lsp_signature_help = "[sig]",
-              path = "[path]",
-              -- rg = "[rg]",
+              async_path = "[path]",
+              rg = "[rg]",
+              fuzzy_buffer = "[buf]",
               buffer = "[buf]",
               spell = "[spl]",
               neorg = "[neorg]",
@@ -299,6 +585,34 @@ return {
 
           return item
         end,
+      },
+      sorting = {
+        priority_weight = 2,
+        comparators = {
+          require("cmp_fuzzy_buffer.compare"),
+
+          cmp.config.compare.offset,
+          cmp.config.compare.exact,
+          cmp.config.compare.score,
+
+          -- INFO: sort by number of underscores
+          function(entry1, entry2)
+            local _, entry1_under = entry1.completion_item.label:find("^_+")
+            local _, entry2_under = entry2.completion_item.label:find("^_+")
+            entry1_under = entry1_under or 0
+            entry2_under = entry2_under or 0
+            if entry1_under > entry2_under then
+              return false
+            elseif entry1_under < entry2_under then
+              return true
+            end
+          end,
+
+          cmp.config.compare.kind,
+          cmp.config.compare.sort_text,
+          cmp.config.compare.length,
+          cmp.config.compare.order,
+        },
       },
       -- sorting = {
       --   priority_weight = 2,
@@ -321,7 +635,26 @@ return {
       --     cmp.config.compare.order,
       --   },
       -- },
-      sources = cmp.config.sources(sources),
+      sources = cmp.config.sources({
+        { name = "nvim_lsp_signature_help" },
+        { name = "snippets", keyword_length = 2 },
+        { name = "luasnip", keyword_length = 2 },
+        { name = "vsnip", keyword_length = 2 },
+        { name = "nvim_lua" },
+        { name = "nvim_lsp" },
+        { name = "async_path", option = { trailing_slash = true } },
+      }, {
+        { name = "fuzzy_buffer", option = { min_match_length = 3 } },
+        {
+          name = "buffer",
+          keyword_length = 4,
+          max_item_count = 5,
+          options = {
+            get_bufnrs = function() return vim.tbl_map(vim.api.nvim_win_get_buf, vim.api.nvim_list_wins()) end,
+          },
+        },
+        { name = "spell" },
+      }),
     })
 
     cmp.setup.cmdline({ "/", "?" }, {
@@ -329,13 +662,32 @@ return {
       --   entries = { name = "custom", direction = "bottom_up" },
       -- },
       mapping = cmp.mapping.preset.cmdline(),
-      sources = cmp.config.sources({ { name = "nvim_lsp_document_symbol" } }, { { name = "buffer" } }),
+      completion = {
+        completeopt = "menuone,noselect",
+      },
+      sources = {
+        { name = "nvim_lsp_document_symbol" },
+        { name = "fuzzy_buffer", option = { min_match_length = 2 } },
+        { name = "buffer", option = { min_match_length = 2 } },
+      },
     })
 
     cmp.setup.cmdline(":", {
+      mapping = cmp.mapping.preset.cmdline(),
+      completion = {
+        completeopt = "menuone,noselect",
+      },
       sources = cmp.config.sources({
-        { name = "cmdline", keyword_pattern = [=[[^[:blank:]\!]*]=] },
-        { name = "path" },
+        { name = "async_path" },
+        {
+          name = "cmdline",
+          keyword_length = 3,
+          option = {
+            ignore_cmds = { "Man", "!" },
+          },
+          -- keyword_pattern = [=[[^[:blank:]\!]*]=]
+        },
+        -- { name = "cmdline", keyword_pattern = [=[[^[:blank:]\!]*]=] },
         -- { name = "cmdline_history", priority = 10, max_item_count = 3 },
       }),
     })
@@ -343,7 +695,7 @@ return {
     cmp.setup.filetype({ "gitcommit", "NeogitCommitMessage" }, {
       sources = {
         { name = "conventionalcommits" },
-        { name = "path" },
+        { name = "async_path" },
       },
       { name = "buffer" },
     })
@@ -353,7 +705,7 @@ return {
     --     { name = "vsnip" },
     --     { name = "nvim_lua" },
     --     { name = "nvim_lsp" },
-    --     { name = "path" },
+    --     { name = "async_path" },
     --   },
     --   { name = "buffer" },
     -- })
@@ -364,11 +716,11 @@ return {
     --   },
     -- })
 
-    cmp.setup.filetype({ "dap-repl", "dapui_watches" }, {
-      sources = {
-        { name = "dap" },
-      },
-    })
+    -- cmp.setup.filetype({ "dap-repl", "dapui_watches" }, {
+    --   sources = {
+    --     { name = "dap" },
+    --   },
+    -- })
 
     -- require("cmp.entry").get_documentation = function(self)
     --   local item = self:get_completion_item()

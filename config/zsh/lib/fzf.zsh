@@ -66,7 +66,7 @@ _fzf_megaforest() {
   local color0F='#d65d0e'
 
   # --color=bg+:$color01,spinner:$color0C,hl:$color0A,gutter:$color01
-  export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS
+export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS
 --color=bg+:$color01,spinner:$color0C,hl:$color0A,gutter:$color01
 --color=fg:$color04,header:$color0D,info:$color0A,pointer:$color0C
 --color=marker:$color0E,fg+:$color06,prompt:$color0A,hl+:$color0F
@@ -78,17 +78,30 @@ _fzf_megaforest() {
 # CTRL-/ to toggle small preview window to see the full command
 # CTRL-Y to copy the command into clipboard using pbcopy
 export FZF_CTRL_R_OPTS="
-  --header='command history (Press CTRL-y to copy command into clipboard)'
-  --preview 'echo {}' --preview-window up:3:wrap
-  --bind 'ctrl-/:toggle-preview'
-  --bind 'ctrl-y:execute-silent(echo -n {2..} | pbcopy)+abort'
-  --color header:italic"
+--header='command history (Press CTRL-y to copy command into clipboard)'
+--preview 'echo {}' --preview-window up:3:wrap
+--bind 'ctrl-/:toggle-preview'
+--bind 'ctrl-y:execute-silent(echo -n {2..} | pbcopy)+abort'
+--color header:italic"
 # export FZF_TMUX_OPTS="$FZF_DEFAULT_OPTS" #"-p --no-info --ansi --color gutter:-1,bg+:-1,header:4,separator:0,info:0,label:4,border:4,prompt:7,pointer:5,query:7,prompt:7"
 
 # open fzf in a tmux popup
 # export FZF_TMUX_OPTS='-p 45%,50%'
 
 _fzf_megaforest
+
+# FZF_FIND_CMD=find
+# if command -v bfs > /dev/null ; then
+#   FZF_FIND_CMD=bfs
+# fi
+#
+# FZFCMD="command $FZF_FIND_CMD -L . \
+  # -name .git -prune -o \
+  # -name node_modules -prune -o \
+  # -type d -print -o \
+  # -type f -print -o \
+  # -type l -print 2>/dev/null \
+  # | sed 1d | cut -b3-" 2>/dev/null
 
 if has fd; then
   # LIST_DIR_CONTENTS='ls --almost-all --group-directories-first --color=always {}'
@@ -97,8 +110,9 @@ if has fd; then
   # export FZF_CTRL_T_OPTS="--preview 'if [[ -f {} ]]; then $LIST_FILE_CONTENTS; elif [[ -d {} ]]; then $LIST_DIR_CONTENTS; fi'"
 
   # export FZF_DEFAULT_COMMAND='fd --type f --follow --hidden --color=always --ignore-file \"$XDG_CONFIG_HOME/fd/ignore\"'
-  export FZF_DEFAULT_COMMAND='fd --type f --follow --hidden --color=always --no-ignore-vcs'
-  export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+  export FZF_DEFAULT_COMMAND="fd --type f --follow --hidden --color=always --no-ignore-vcs"
+  # export FZF_CTRL_T_OPTS="--with-nth"
+  export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND" # | sed 's/^[ \t]*//'"
 
   export FZF_ALT_C_OPTS="--preview 'exa -T {}' --height=60%"
   # export FZF_ALT_C_COMMAND="fd -t d -d 1"

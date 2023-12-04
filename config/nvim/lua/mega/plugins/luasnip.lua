@@ -4,8 +4,9 @@
 -- - https://github.com/sbulav/dotfiles/blob/master/nvim/lua/config/snippets.lua
 local M = {
   "L3MON4D3/LuaSnip",
-  enabled = vim.g.snipper == "luasnip",
+  cond = vim.g.snipper == "luasnip",
   event = { "InsertEnter" },
+  build = "make install_jsregexp",
   dependencies = {
     "rafamadriz/friendly-snippets",
     event = { "InsertEnter" },

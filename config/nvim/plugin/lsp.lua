@@ -2,7 +2,7 @@ if not mega then return end
 if not vim.g.enabled_plugin["lsp"] then return end
 
 local lsp_ok, lspconfig = pcall(require, "lspconfig")
-if not lsp_ok and not lspconfig then return end
+if not lsp_ok then return nil end
 
 local U = require("mega.utils")
 
@@ -39,6 +39,78 @@ local function not_interfere_on_float()
   end
 
   return true
+end
+
+-- A helper function to auto-update the quickfix list when new diagnostics come
+-- in and close it once everything is resolved. This functionality only runs while
+-- the list is open.
+-- REF:
+-- * https://github.com/akinsho/dotfiles/blob/main/.config/nvim/plugin/lsp.lua#L28-L58
+-- * https://github.com/onsails/diaglist.nvim
+local function make_diagnostic_qf_updater()
+  local cmd_id = nil
+  return function()
+    if not vim.api.nvim_buf_is_valid(0) then return end
+    pcall(vim.diagnostic.setqflist, { open = false })
+    U.toggle_list("quickfix")
+    if not U.is_vim_list_open() and cmd_id then
+      vim.api.nvim_del_autocmd(cmd_id)
+      cmd_id = nil
+    end
+    if cmd_id then return end
+    cmd_id = vim.api.nvim_create_autocmd("DiagnosticChanged", {
+      callback = function()
+        if U.is_vim_list_open() then
+          pcall(vim.diagnostic.setqflist, { open = false })
+          if #fn.getqflist() == 0 then U.toggle_list("quickfix") end
+        end
+      end,
+    })
+  end
+end
+
+local function locations_equal(loc1, loc2)
+  return (loc1.uri or loc1.targetUri) == (loc2.uri or loc2.targetUri)
+    and (loc1.range or loc1.targetSelectionRange).start.line == (loc2.range or loc2.targetSelectionRange).start.line
+end
+local function location_handler(_, result, ctx, _)
+  if result == nil or vim.tbl_isempty(result) then return nil end
+  local client = vim.lsp.get_client_by_id(ctx.client_id)
+
+  -- textDocument/definition can return Location or Location[]
+  -- https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_definition
+
+  if vim.tbl_islist(result) then
+    if #result == 1 or (#result == 2 and locations_equal(result[1], result[2])) then
+      pcall(vim.lsp.util.jump_to_location, result[1], client.offset_encoding, false)
+    elseif vim.g.picker == "telescope" then
+      local opts = {}
+      local pickers = require("telescope.pickers")
+      local finders = require("telescope.finders")
+      local make_entry = require("telescope.make_entry")
+      local conf = require("telescope.config").values
+      local items = vim.lsp.util.locations_to_items(result, client.offset_encoding)
+      pickers
+        .new(opts, {
+          prompt_title = "LSP Locations",
+          finder = finders.new_table({
+            results = items,
+            entry_maker = make_entry.gen_from_quickfix(opts),
+          }),
+          previewer = conf.qflist_previewer(opts),
+          sorter = conf.generic_sorter(opts),
+        })
+        :find()
+    else
+      vim.fn.setqflist({}, " ", {
+        title = "LSP locations",
+        items = vim.lsp.util.locations_to_items(result, client.offset_encoding),
+      })
+      vim.cmd.copen({ mods = { split = "botright" } })
+    end
+  else
+    vim.lsp.util.jump_to_location(result, client.offset_encoding)
+  end
 end
 
 -- Show the popup diagnostics window, but only once for the current cursor/line location
@@ -129,33 +201,6 @@ local function setup_commands(bufnr)
 
   mega.command("LspFormat", function() format({ bufnr = bufnr, async = false }) end)
 
-  -- A helper function to auto-update the quickfix list when new diagnostics come
-  -- in and close it once everything is resolved. This functionality only runs while
-  -- the list is open.
-  -- REF:
-  -- * https://github.com/akinsho/dotfiles/blob/main/.config/nvim/plugin/lsp.lua#L28-L58
-  -- * https://github.com/onsails/diaglist.nvim
-  local function make_diagnostic_qf_updater()
-    local cmd_id = nil
-    return function()
-      if not vim.api.nvim_buf_is_valid(0) then return end
-      pcall(vim.diagnostic.setqflist, { open = false })
-      U.toggle_list("quickfix")
-      if not U.is_vim_list_open() and cmd_id then
-        vim.api.nvim_del_autocmd(cmd_id)
-        cmd_id = nil
-      end
-      if cmd_id then return end
-      cmd_id = vim.api.nvim_create_autocmd("DiagnosticChanged", {
-        callback = function()
-          if U.is_vim_list_open() then
-            pcall(vim.diagnostic.setqflist, { open = false })
-            if #fn.getqflist() == 0 then U.toggle_list("quickfix") end
-          end
-        end,
-      })
-    end
-  end
   mega.command("LspDiagnostics", make_diagnostic_qf_updater())
   nnoremap("<leader>ll", "<Cmd>LspDiagnostics<CR>", "lsp: toggle quickfix diagnostics")
 end
@@ -326,8 +371,9 @@ local function setup_keymaps(client, bufnr)
     end
   end, "lsp: references")
 
-  -- if not mega.lsp.has_method(client, "references") then nmap("gr", "<leader>A", desc("find: references via grep")) end
-
+  if not mega.lsp.has_method(client, "references") then
+    nnoremap("gr", "<leader>A", desc("find: references via grep"))
+  end
   -- if client.name == "lexical" then safemap("references", "n", "gr", "<leader>A", "lsp: references") end
   safemap("typeDefinition", "n", "gt", vim.lsp.buf.type_definition, "lsp: type definition")
   safemap("implementation", "n", "gi", vim.lsp.buf.implementation, "lsp: implementation")
@@ -787,26 +833,28 @@ local function get_server_capabilities(name)
   return capabilities
 end
 
-local function get_config(name)
-  local config = name and servers.list[name] or {}
-  if not config or config == nil then return end
-
-  if type(config) == "function" then
-    config = config()
+if servers ~= nil then
+  local function get_config(name)
+    local config = name and servers.list[name] or {}
     if not config or config == nil then return end
+
+    if type(config) == "function" then
+      config = config()
+      if not config or config == nil then return end
+    end
+
+    config.on_init = on_init
+    config.flags = { debounce_text_changes = 150 }
+    config.capabilities = get_server_capabilities()
+    config.on_attach = on_attach
+
+    return config
   end
 
-  config.on_init = on_init
-  config.flags = { debounce_text_changes = 150 }
-  config.capabilities = get_server_capabilities()
-  config.on_attach = on_attach
+  servers.load_unofficial()
+  for server, _ in pairs(servers.list) do
+    local cfg = get_config(server)
 
-  return config
-end
-
-servers.load_unofficial()
-for server, _ in pairs(servers.list) do
-  local cfg = get_config(server)
-
-  if cfg ~= nil then lspconfig[server].setup(cfg) end
+    if cfg ~= nil then lspconfig[server].setup(cfg) end
+  end
 end

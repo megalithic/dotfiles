@@ -37,6 +37,8 @@ local function title(str, icon, icon_hl)
   return { { " " }, { (icon or ""), icon_hl or "DevIconDefault" }, { " " }, { str, "Bold" }, { " " } }
 end
 
+local function get_border() return { " ", " ", " ", " ", " ", " ", " ", " " } end
+
 local function ivy(opts, ...)
   opts = opts or {}
   opts["winopts"] = opts.winopts or {}
@@ -50,7 +52,7 @@ local function ivy(opts, ...)
       width = 1.00,
       row = 0.94,
       col = 1,
-      border = { " ", " ", " ", " ", " ", " ", " ", " " },
+      border = get_border(),
       preview = {
         layout = "flex",
         hidden = "nohidden",
@@ -92,8 +94,7 @@ local function cursor_dropdown(opts)
     },
   }, opts)
 end
-
-local file_picker = function(opts_or_cwd)
+local find_files = function(opts_or_cwd)
   if type(opts_or_cwd) == "table" then
     fzf_lua.files(opts_or_cwd)
   else
@@ -116,17 +117,6 @@ local function git_files_cwd_aware(opts)
 end
 
 if vim.g.picker == "fzf_lua" then
-  -- || Error detected while processing VimEnter Autocommands for "*":
-  -- || Error executing lua callback: Vim:E731: Using a Dictionary as a String
-  -- || stack traceback:
-  -- || 	[C]: in function 'expand'
-  -- || 	...seth/.local/share/nvim/lazy/fzf-lua/lua/fzf-lua/path.lua:337: in function 'git_cwd'
-  -- || 	...seth/.local/share/nvim/lazy/fzf-lua/lua/fzf-lua/path.lua:352: in function 'git_root'
-  -- || 	...seth/.local/share/nvim/lazy/fzf-lua/lua/fzf-lua/path.lua:348: in function 'is_git_repo'
-  -- || 	...th/.local/share/nvim/lazy/fzf-lua/lua/fzf-lua/config.lua:329: in function 'normalize_opts'
-  -- || 	.../share/nvim/lazy/fzf-lua/lua/fzf-lua/providers/files.lua:41: in function 'files'
-  -- || 	/Users/seth/.config/nvim/lua/mega/plugins/fzf.lua:94: in function 'file_picker'
-  -- || 	/Users/seth/.config/nvim/lua/mega/plugins/fzf.lua:123: in function </Users/seth/.config/nvim/lua/mega/plugins/fzf.lua:116>
   mega.augroup("FzfStartup", {
     {
       event = { "VimEnter" },
@@ -140,13 +130,15 @@ if vim.g.picker == "fzf_lua" then
         then
           local arg = vim.api.nvim_eval("argv(0)")
           if arg and (vim.fn.isdirectory(arg) ~= 0 or arg == "") then
-            file_picker(dropdown({
+            find_files(dropdown({
               actions = {
                 files = {
                   ["default"] = require("fzf-lua").actions.file_edit_or_qf,
                 },
               },
             }))
+          elseif vim.fn.isdirectory(vim.fn.expand("%")) == 1 then
+            vim.cmd("Oil")
           end
         end
       end,
@@ -173,10 +165,14 @@ if vim.g.picker == "fzf_lua" then
     })
   end
 
+  -- assign global file picker
+  mega.find_files = find_files
+  mega.grep = fzf_lua.live_grep_glob
+
   keys = {
     { "<c-p>", git_files_cwd_aware, desc = "find files" },
     { "<leader>fB", "<Cmd>FzfLua<CR>", desc = "builtins" },
-    { "<leader>ff", file_picker, desc = "find files" },
+    { "<leader>ff", find_files, desc = "find files" },
     { "<leader>fo", fzf_lua.oldfiles, desc = "oldfiles" },
     { "<leader>fr", fzf_lua.resume, desc = "resume picker" },
     { "<leader>fh", fzf_lua.highlights, desc = "highlights" },
@@ -196,10 +192,21 @@ if vim.g.picker == "fzf_lua" then
     { "<leader>A", fzf_lua.grep_visual, desc = "grep (visual selection)", mode = "v" },
     { "<leader>fa", fzf_lua.autocmds, desc = "autocommands" },
     { "<leader>fp", fzf_lua.registers, desc = "registers" },
-    { "<leader>fd", function() file_picker(vim.env.DOTFILES) end, desc = "dotfiles" },
-    { "<leader>fc", function() file_picker(vim.g.vim_path) end, desc = "nvim config" },
-    { "<leader>fn", function() file_picker(vim.g.notes_path) end, desc = "notes" },
+    { "<leader>fd", function() find_files(vim.env.DOTFILES) end, desc = "dotfiles" },
+    { "<leader>fc", function() find_files(vim.g.vim_path) end, desc = "nvim config" },
+    { "<leader>fn", function() find_files(vim.g.notes_path) end, desc = "notes" },
     -- { "<leader>fN", function() file_picker(env.SYNC_DIR .. "/notes/neorg") end, desc = "norg files" },
+  }
+
+  _G.picker = {
+    fzf_lua = {
+      find_files = mega.find_files,
+      grep = mega.grep,
+      dropdown = dropdown,
+      cursor_dropdown = cursor_dropdown,
+      ivy = ivy,
+      border = get_border,
+    },
   }
 end
 

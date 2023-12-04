@@ -22,12 +22,18 @@ augroup("Startup", {
     pattern = { "*" },
     once = true,
     command = function(args)
-      if not vim.g.started_by_firenvim then
+      if
+        not vim.g.started_by_firenvim
+        and (not vim.env.TMUX_POPUP and vim.env.TMUX_POPUP ~= 1)
+        and not vim.tbl_contains({ "NeogitStatus" }, vim.bo[args.buf].filetype)
+      then
         if vim.fn.argc() > 1 then
           vim.schedule(function()
             mega.resize_windows(args.buf)
             require("virt-column").update()
           end, 0)
+        elseif vim.fn.isdirectory(vim.fn.expand("%")) == 1 then
+          vim.cmd("Oil")
         end
       end
     end,
@@ -74,15 +80,39 @@ do
     end
   end
 
-  augroup("SmartClose", {
+  local miniindentscope_disable_ft = {
+    "help",
+    "alpha",
+    "dashboard",
+    "neo-tree",
+    "Trouble",
+    "lazy",
+    "mason",
+    "fzf",
+    "dirbuf",
+    "terminal",
+    "fzf-lua",
+    "fzflua",
+    "megaterm",
+    "nofile",
+    "terminal",
+    "megaterm",
+    "lsp-installer",
+    "SidebarNvim",
+    "lspinfo",
+    "markdown",
+    "help",
+    "startify",
+    "packer",
+    "NeogitStatus",
+    "oil",
+    "DirBuf",
+    "markdown",
+  }
+
+  augroup("FileTypes", {
     {
-      -- Auto open grep quickfix window
-      event = { "QuickFixCmdPost" },
-      pattern = { "*grep*" },
-      command = "cwindow",
-    },
-    {
-      -- Close certain filetypes by pressing q.
+      -- Smart Close certain filetypes by pressing q.
       event = { "FileType" },
       pattern = { "*" },
       command = function()
@@ -93,6 +123,22 @@ do
           or contains(smart_close_filetypes, vim.bo.filetype)
         if is_eligible then nnoremap("q", smart_close, { buffer = 0, nowait = true }) end
       end,
+    },
+    {
+      event = { "FileType" },
+      pattern = miniindentscope_disable_ft,
+      command = function() vim.b.miniindentscope_disable = true end,
+    },
+  })
+end
+
+do
+  augroup("Utilities", {
+    {
+      -- Auto open grep quickfix window
+      event = { "QuickFixCmdPost" },
+      pattern = { "*grep*" },
+      command = "cwindow",
     },
     {
       -- Close quick fix window if the file containing it was closed
@@ -109,11 +155,6 @@ do
     --     if vim.bo.filetype ~= "qf" then vim.cmd("silent! lclose") end
     --   end,
     -- },
-  })
-end
-
-do
-  augroup("Utilities", {
     {
       event = { "BufWritePost" },
       command = function(args)
@@ -128,6 +169,26 @@ do
         end
       end,
     },
+    -- REF: https://github.com/ribru17/nvim/blob/master/lua/autocmds.lua#L68
+    -->> "RUN ONCE" ON FILE OPEN COMMANDS <<--
+    -- prevent comment from being inserted when entering new line in existing comment
+    {
+      event = { "BufRead", "BufNewFile" },
+      command = function()
+        -- allow <CR> to continue block comments only
+        -- https://stackoverflow.com/questions/10726373/auto-comment-new-line-in-vim-only-for-block-comments
+        vim.schedule(function()
+          -- TODO: find a way for this to work without changing comment format, to
+          -- allow for automatic comment wrapping when hitting textwidth
+          vim.opt_local.comments:remove("://")
+          vim.opt_local.comments:remove(":--")
+          vim.opt_local.comments:remove(":#")
+          vim.opt_local.comments:remove(":%")
+        end)
+        vim.opt_local.bufhidden = "delete"
+      end,
+    },
+
     {
       event = { "BufNewFile", "BufWritePre" },
       pattern = { "*" },
@@ -164,8 +225,8 @@ do
       command = function()
         vim.highlight.on_yank({
           timeout = 500,
-          on_visual = false,
-          higroup = "Visual",
+          -- on_visual = false,
+          higroup = "VisualYank",
         })
       end,
     },
@@ -261,15 +322,23 @@ augroup("General", {
     pattern = { "help" },
     command = function() vim.cmd([[wincmd J | :resize 40]]) end,
   },
+  -- {
+  --   event = { "CmdwinEnter" },
+  --   desc = "Disable incremental selection when entering the cmdline window",
+  --   command = "TSBufDisable incremental_selection",
+  -- },
+  -- {
+  --   event = { "CmdwinLeave" },
+  --   desc = "Enable incremental selection when leaving the cmdline window",
+  --   command = "TSBufEnable incremental_selection",
+  -- },
   {
-    event = { "CmdwinEnter" },
-    desc = "Disable incremental selection when entering the cmdline window",
-    command = "TSBufDisable incremental_selection",
-  },
-  {
-    event = { "CmdwinLeave" },
-    desc = "Enable incremental selection when leaving the cmdline window",
-    command = "TSBufEnable incremental_selection",
+    event = { "BufEnter", "WinEnter", "WinNew", "VimResized" },
+    -- NOTE: keeps cursorline centered (`zz`'d);
+    -- TODO: add function to toggle this
+    command = function()
+      if vim.g.is_screen_sharing then vim.wo[0].scrolloff = 1 + math.floor(vim.api.nvim_win_get_height(0) / 2) end
+    end,
   },
   -- {
   --   event = { "BufWritePost" },

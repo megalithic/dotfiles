@@ -110,22 +110,20 @@ local function ivy(opts)
   opts = vim.tbl_deep_extend("force", opts or {}, { layout_config = { height = 0.3 } })
   return require("telescope.themes").get_ivy(get_border(opts))
 end
-
-_G.picker = { telescope = { dropdown = dropdown, ivy = ivy, border = get_border } }
 -- Gets the root dir from either:
 -- * connected lsp
 -- * .git from file
 -- * .git from cwd
 -- * cwd
 ---@param opts? table
-local function project_files(opts)
+local function find_files(opts)
   local bufnr = vim.api.nvim_get_current_buf()
   local fn = vim.api.nvim_buf_get_name(bufnr)
   current_fn = fn
   opts = opts or {}
   -- opts.cwd = require("mega.utils").get_root()
   -- vim.notify(fmt("current project files root: %s", opts.cwd), vim.log.levels.DEBUG, { title = "telescope" })
-  ts.fd(ivy(opts))
+  ts.find_files(ivy(opts))
   -- require("telescope").extensions.smart_open.smart_open(ivy(opts))
 end
 
@@ -224,6 +222,8 @@ if vim.g.picker == "telescope" then
                 },
               },
             })))
+          elseif vim.fn.isdirectory(vim.fn.expand("%")) == 1 then
+            vim.cmd("Oil")
           end
         end
       end,
@@ -246,12 +246,14 @@ if vim.g.picker == "telescope" then
     })
   end
 
+  mega.find_files = find_files
+  mega.grep = function(...) ts.grep(ivy(...)) end
+
   keys = {
-    { "<leader>ff", function() ts.fd(ivy({})) end, desc = "find files" },
-    -- { "<leader>ff", project_files, desc = "find files" },
+    { "<leader>ff", mega.find_files, desc = "find files" },
     {
       "<leader>a",
-      function() ts.grep(ivy({})) end,
+      mega.grep,
       desc = "live grep",
     },
     {
@@ -261,14 +263,14 @@ if vim.g.picker == "telescope" then
     },
     {
       "<leader>A",
-      function() ts.grep(ivy({ default_text = vim.fn.expand("<cword>") })) end,
+      function() mega.grep({ default_text = vim.fn.expand("<cword>") }) end,
       desc = "grep under cursor",
     },
     {
       "<leader>A",
       function()
         local pattern = require("mega.utils").get_visual_selection()
-        ts.grep(ivy({ default_text = pattern }))
+        mega.grep({ default_text = pattern })
       end,
       desc = "grep visual selection",
       mode = "v",
@@ -285,8 +287,20 @@ if vim.g.picker == "telescope" then
     -- },
     {
       "<leader>fn",
-      function() ts.fd(ivy({ path = vim.g.notes_path })) end,
+      function() mega.find_files({ path = vim.g.notes_path }) end,
       desc = "browse: notes",
+    },
+  }
+
+  _G.picker = {
+    telescope = {
+      find_files = mega.find_files,
+      grep = mega.grep,
+      dropdown = dropdown,
+      -- TODO: add impl
+      cursor_dropdown = dropdown,
+      ivy = ivy,
+      border = get_border,
     },
   }
 end
@@ -481,6 +495,7 @@ return {
         corrode = {
           fd_cmd = find_files_cmd,
           rg_cmd = grep_files_cmd,
+          AND = true,
           mappings = {
             i = {
               ["<cr>"] = stopinsert(function(pb) multi(pb, "vnew") end),
@@ -643,9 +658,9 @@ return {
     telescope.load_extension("live_grep_args")
     telescope.load_extension("file_browser")
     telescope.load_extension("fzf")
-    -- telescope.load_extension("zf-native")
     telescope.load_extension("egrepify")
     telescope.load_extension("corrode")
+    -- telescope.load_extension("zf-native")
     -- telescope.load_extension("smart_open")
   end,
 }

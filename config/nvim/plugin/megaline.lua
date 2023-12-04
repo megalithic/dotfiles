@@ -1,8 +1,7 @@
 -- I've taken various aspects of my statusline from the following amazing devs:
 -- @akinsho, @echasnovski, @lukas-reineke, @kristijanhusak, @mfussenegger
 
-if not mega then return end
-if not vim.g.enabled_plugin["megaline"] then
+if not plugin_loaded("megaline") then
   vim.o.statusline = "%#Statusline# %2{mode()} | %F %m %r %= %{&spelllang} %y %8(%l,%c%) %8p%%"
 
   return

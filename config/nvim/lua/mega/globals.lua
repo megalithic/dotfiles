@@ -1,8 +1,5 @@
-local api = vim.api
-local fn = vim.fn
-local vcmd = vim.cmd
-
 local U = require("mega.utils")
+
 _G.I = vim.inspect
 _G.fmt = string.format
 _G.L = vim.log.levels
@@ -298,7 +295,7 @@ end
 -- [ commands ] ----------------------------------------------------------------
 do
   local command = mega.command
-  vcmd([[
+  vim.cmd([[
     command! -nargs=1 Rg lua require("telescope.builtin").grep_string({ search = vim.api.nvim_eval('"<args>"') })
   ]])
 

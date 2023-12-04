@@ -1,5 +1,4 @@
 local M = {
-  -- {
   "nvimtools/none-ls.nvim",
   cond = vim.tbl_contains({ "null-ls", "none-ls" }, vim.g.formatter),
   dependencies = { "nvim-lua/plenary.nvim" },

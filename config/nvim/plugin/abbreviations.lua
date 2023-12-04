@@ -43,7 +43,10 @@ mega.iabbrev("fulment", "fulfillment")
 mega.iabbrev("fullment", "fulfillment")
 mega.iabbrev("fullfillment", "fulfillment")
 mega.iabbrev("fulfilment", "fulfillment")
+mega.iabbrev("fulfillment_instruciton", "fulfillment_instruction")
 mega.iabbrev("filment", "fulfillment")
+mega.iabbrev("repload", "preload")
+mega.iabbrev("reploads", "preloads")
 
 -- command -----------------------------------------------------------------
 

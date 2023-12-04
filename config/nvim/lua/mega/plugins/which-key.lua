@@ -170,6 +170,7 @@ return {
         v = { "term (vertical)" },
       },
       ["<leader>z"] = { name = "+zk" },
+      ["<leader>n"] = { name = "+notes" },
       ["<leader>g"] = { name = "+git" },
       ["<localleader>t"] = { name = "+test" },
       ["<localleader>g"] = { name = "+git" },

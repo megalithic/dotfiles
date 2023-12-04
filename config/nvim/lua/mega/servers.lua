@@ -1,6 +1,6 @@
 local fn, lsp = vim.fn, vim.lsp
 local ok_lsp = pcall(require, "lspconfig")
-if not ok_lsp then return end
+if not ok_lsp then return nil end
 
 local M = {}
 local root_pattern = require("mega.utils.lsp").root_pattern
@@ -340,13 +340,14 @@ M.list = {
       },
     }
   end,
-  prosemd_lsp = function()
-    if vim.g.started_by_firenvim or vim.env.TMUX_POPUP then
-      return nil
-    else
-      return {}
-    end
-  end,
+  prosemd_lsp = nil,
+  -- prosemd_lsp = function()
+  --   if vim.g.started_by_firenvim or vim.env.TMUX_POPUP then
+  --     return nil
+  --   else
+  --     return {}
+  --   end
+  -- end,
   pyright = {
     single_file_support = false,
     settings = {

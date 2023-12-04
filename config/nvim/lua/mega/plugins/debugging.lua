@@ -3,6 +3,7 @@ local fn = vim.fn
 return {
   {
     "mfussenegger/nvim-dap",
+    cond = false,
     keys = {
       {
         "<localleader>dL",

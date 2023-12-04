@@ -5,6 +5,7 @@ if not mega then return end
 if not vim.g.enabled_plugin["colorcolumn"] then return end
 
 local vc_ok, vc = pcall(require, "virt-column")
+local ibl_ok, ibl = pcall(require, "ibl")
 
 local contains = vim.tbl_contains
 local api = vim.api
@@ -24,6 +25,7 @@ local M = {
     "markdown",
     "Telescope",
     "dirbuf",
+    "oil",
     "terminal",
     "megaterm",
     "toggleterm",
@@ -44,23 +46,24 @@ local function set_colorcolumn(leaving)
   if contains(M.column_clear, vim.bo.filetype) or not_eligible or (leaving and not is_last_win) or small_window then
     vim.wo.colorcolumn = ""
     if vc_ok then vc.setup_buffer({ char = "", virtcolumn = vim.wo.colorcolumn }) end
-
+    -- if ibl_ok then vim.cmd("IBLDisable") end
     return
   end
 
   if vim.wo.colorcolumn == "" then
     vim.wo.colorcolumn = tostring(vim.g.default_colorcolumn)
     if vc_ok then vc.setup_buffer({ char = "│", virtcolumn = vim.wo.colorcolumn }) end
+    -- if ibl_ok then vim.cmd("IBLEnable") end
   end
 end
 
 local function disable_colorcolumn(leaving)
-  if not vim.g.started_by_firenvim and vim.g.loaded_indent_blankline then vim.cmd("IndentBlanklineDisable") end
+  if not vim.g.started_by_firenvim and ibl_ok then vim.cmd("IBLDisable") end
   set_colorcolumn(leaving)
 end
 
 local function enable_colorcolumn()
-  if not vim.g.started_by_firenvim and vim.g.loaded_indent_blankline then vim.cmd("IndentBlanklineEnable") end
+  if not vim.g.started_by_firenvim and ibl_ok then vim.cmd("IBLEnable") end
   set_colorcolumn()
 end
 --

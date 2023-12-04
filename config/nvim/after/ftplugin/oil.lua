@@ -1,29 +1,26 @@
--- easy quit
-vim.cmd([[nnoremap <buffer> q :q<CR>]])
--- go-to parent dir
--- vim.cmd([[nmap <buffer> - <Plug>(dirbuf_up)]])
--- go-to parent dirup a dir
--- vim.cmd([[nmap <buffer> <BS> <Plug>(dirbuf_up)]])
-nnoremap("<BS>", function() require("oil").open() end, { desc = "oil: goto parent dir" })
--- acts like toggle-off
-vim.cmd([[nmap <buffer> <leader>ed :q<CR>]])
+local oil = require("oil")
 
--- nnoremap("gp", function()
---   local oil = require("oil")
---   local entry = oil.get_cursor_entry()
---   if entry["type"] == "file" then
---     local dir = oil.get_current_dir()
---     local fileName = entry["name"]
---     local fullName = dir .. fileName
---
---     require("mega.utils").preview_image(fullName)
---   else
---     return ""
---   end
--- end, { desc = "oil: preview image" })
+vim.opt.conceallevel = 3
+vim.opt.concealcursor = "n"
+vim.opt.list = false
+vim.opt.wrap = false
+vim.opt.signcolumn = "no"
 
--- nnoremap("<C-v>", function() require("dirbuf").enter("vsplit") end, "dirbuf: open in vsplit")
--- nnoremap("<C-s>", function() require("dirbuf").enter("vsplit") end, "dirbuf: open in split")
--- nnoremap("<C-t>", function() require("dirbuf").enter("tabedit") end, "dirbuf: open in tab")
+nnoremap("q", "<cmd>q<cr>", { desc = "oil: quit", buffer = 0 })
+nnoremap("<leader>ed", "<cmd>q<cr>", { desc = "oil: quit", buffer = 0 })
+nnoremap("<BS>", function() require("oil").open() end, { desc = "oil: goto parent dir", buffer = 0 })
 
--- vim.api.nvim_win_set_width(0, 60)
+local function find_files()
+  local dir = oil.get_current_dir()
+  if vim.api.nvim_win_get_config(0).relative ~= "" then vim.api.nvim_win_close(0, true) end
+  mega.find_files({ cwd = dir, hidden = true })
+end
+
+local function grep()
+  local dir = oil.get_current_dir()
+  if vim.api.nvim_win_get_config(0).relative ~= "" then vim.api.nvim_win_close(0, true) end
+  mega.grep({ cwd = dir })
+end
+
+nnoremap("<localleader>ff", find_files, "oil: find files in dir")
+nnoremap("<localleader>a", grep, "oil: grep files in dir")

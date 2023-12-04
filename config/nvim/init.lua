@@ -25,10 +25,20 @@ vim.g.enabled_plugin = {
   -- winbar = false,
 }
 
-for plugin, _ in pairs(vim.g.enabled_plugin) do
-  if not vim.tbl_contains({ "autocmds", "mappings" }, plugin) and vim.g.started_by_firenvim then
-    vim.g.enabled_plugin[plugin] = false
+if vim.g.enabled_plugin ~= nil then
+  for plugin, _ in pairs(vim.g.enabled_plugin) do
+    if not vim.tbl_contains({ "autocmds", "mappings" }, plugin) and vim.g.started_by_firenvim then
+      vim.g.enabled_plugin[plugin] = false
+    end
   end
+end
+
+function plugin_loaded(plugin)
+  if not mega then return false end
+  if not vim.g.enabled_plugin then return false end
+  if not vim.g.enabled_plugin[plugin] then return false end
+
+  return true
 end
 
 vim.g.mapleader = ","
@@ -42,8 +52,10 @@ vim.g.formatter = "conform" -- alt: null-ls/none-ls, conform
 vim.g.tree = "neo-tree"
 vim.g.explorer = "oil" -- alt: dirbuf, oil
 vim.g.tester = "vim-test" -- alt: neotest, nvim-test, vim-test
-vim.g.snipper = "vsnip" -- alt: vsnip, luasnip
+vim.g.snipper = "snippets" -- alt: vsnip, luasnip, snippets (nvim-builtin)
+vim.g.completer = "cmp" -- alt: cmp, epo
 vim.g.ts_ignored_langs = {} -- alt: { "svg", "json", "heex", "jsonc" }
+vim.g.is_screen_sharing = false
 
 -- REF: elixir LSPs: elixir-tools(ElixirLS, NextLS, credo), elixirls, nextls, lexical
 vim.g.formatter_exclusions = { "ElixirLS", "NextLS", "elixirls", "nextls" }
@@ -51,7 +63,6 @@ vim.g.diagnostic_exclusions = { "ElixirLS", "NextLS", "elixirls", "nextls" }
 vim.g.enabled_elixir_ls = { "lexical" }
 vim.g.disable_autolint = true
 vim.g.disable_autoformat = false
-
 -- [ globals ] -----------------------------------------------------------------
 
 _G.mega = mega
@@ -86,7 +97,7 @@ mega.pcall("theme failed to load because", function(colorscheme)
 
     require("lush")(lush_theme)
   else
-    vim.cmd.colorscheme(colorscheme)
+    pcall(vim.cmd.colorscheme, colorscheme)
   end
 
   -- NOTE: always make available my lushified-color palette

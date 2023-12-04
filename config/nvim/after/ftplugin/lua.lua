@@ -84,8 +84,7 @@ end
 -- end)
 
 local ok_ms, ms = pcall(require, "mini.surround")
-local ok_mai, mai = pcall(require, "mini.surround")
-if ok_ms and ok_mai then
+if ok_ms then
   vim.b.minisurround_config = {
     custom_surroundings = {
       s = { input = { "%[%[().-()%]%]" }, output = { left = "[[", right = "]]" } },
@@ -95,15 +94,16 @@ if ok_ms and ok_mai then
       },
     },
   }
-
-  vim.b.miniai_config = {
-    custom_textobjects = {
-      s = { "%[%[().-()%]%]" },
-    },
-  }
 end
 
-nnoremap("gK", keyword, { buffer = 0 })
+local ok_mai, mai = pcall(require, "mini.ai")
+if ok_mai then vim.b.miniai_config = {
+  custom_textobjects = {
+    s = { "%[%[().-()%]%]" },
+  },
+} end
+
+nnoremap("K", keyword, { buffer = 0 })
 
 vim.opt_local.textwidth = 100
 vim.opt_local.formatoptions:remove("o")

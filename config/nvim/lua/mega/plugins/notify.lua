@@ -90,13 +90,45 @@ return {
     --   end
     -- end
 
-    local function stages()
+    local function stages(type)
+      type = type or "static"
       local stages_util = require("notify.stages.util")
       local direction = stages_util.DIRECTION.BOTTOM_UP
       -- local direction = stages_util[string.lower(direction)] or stages_util.DIRECTION.BOTTOM_UP
 
+      if type == "static" then
+        local function initial(direction, opacity)
+          return function(state)
+            local next_height = state.message.height + 1 -- + 2
+            local next_row = stages_util.available_slot(state.open_windows, next_height, direction)
+            if not next_row then return nil end
+            return {
+              relative = "editor",
+              anchor = "NE",
+              width = state.message.width,
+              height = state.message.height,
+              col = vim.opt.columns:get(),
+              row = next_row,
+              border = "none",
+              style = "minimal",
+              opacity = opacity,
+            }
+          end
+        end
+        return {
+          initial(direction, 100),
+          function()
+            return {
+              col = { vim.opt.columns:get() },
+              time = true,
+            }
+          end,
+        }
+      end
+
       return {
         function(state)
+          local width = state.message.width or 1
           -- local next_height = state.message.height + 1
           local next_height = #state.open_windows == 0 and state.message.height + 1 or 1
           local next_row = stages_util.available_slot(state.open_windows, next_height, direction)
@@ -104,16 +136,18 @@ return {
           return {
             relative = "editor",
             anchor = "NE",
-            width = 1,
+            width = width,
             height = state.message.height,
             col = vim.opt.columns:get(),
             row = next_row,
             border = "none",
             style = "minimal",
+            opacity = type == "fade" and 0 or 100,
           }
         end,
         function(state)
           return {
+            opacity = type == "fade" and { 100 } or { 100 },
             width = { state.message.width, frequency = 2 },
             col = { vim.opt.columns:get() },
           }
@@ -132,6 +166,11 @@ return {
               damping = 0.9,
               complete = function(cur_width) return cur_width < 2 end,
             },
+            opacity = type == "fade" and {
+              0,
+              frequency = 2,
+              complete = function(cur_opacity) return cur_opacity <= 4 end,
+            } or { 100 },
             col = { vim.opt.columns:get() },
           }
         end,
@@ -141,7 +180,7 @@ return {
     notify.setup({
       timeout = 3000,
       top_down = false,
-      background_colour = "NotifyFloat",
+      background_colour = "NotifyBackground",
       max_width = function() return math.floor(vim.o.columns * 0.8) end,
       max_height = function() return math.floor(vim.o.lines * 0.8) end,
       on_open = function(winnr)
@@ -153,7 +192,7 @@ return {
         end
       end,
       -- stages = "slide", -- alts: "static", "slide"
-      stages = stages(),
+      stages = stages("slide"), -- alts: "static", "slide", "fade"
       -- render = "compact",
       render = function(bufnr, notif, hls, cfg)
         -- local namespace = base.namespace()
