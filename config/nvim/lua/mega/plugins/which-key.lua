@@ -122,44 +122,33 @@ return {
       ["]h"] = "go to next git hunk",
       ["[d"] = "lsp: go to prev diagnostic",
       ["]d"] = "lsp: go to next diagnostic",
-      -- f = {}, -- see plugins.lua > telescope-mappings
-      ["<leader>c"] = {
-        name = "+codeactions",
-        d = { "telescope: diagnostics" },
-        s = { "telescope: document symbols" },
-        w = { "telescope: search workspace symbols" },
-      },
       ["<leader>e"] = {
         name = "+edit files",
         r = { function() require("mega.utils.lsp").rename_file() end, "rename file (lsp) to <input>" },
         s = { [[<cmd>SaveAsFile<cr>]], "save file as <input>" },
-        e = "oil: open (edit)",
-        d = "oil: open (vsplit)",
-        -- d = { [[:DuplicateFile<cr>]], "duplicate current file" },
-        -- D = { [[<cmd>Delete!<cr>]], "delete file" },
+        e = "oil: open (edit)", -- NOTE: change in plugins/init.lu
+        v = "oil: open (vsplit)", -- NOTE: change in plugins/init.lu
+        d = { [[<cmd>Duplicate<cr>]], "duplicate file" },
         D = {
           function()
             if vim.fn.confirm("You sure?", "&Yes\n&No", 2, "Question") == 1 then vim.cmd("Delete!") end
           end,
-          "delete file",
+          "delete file?",
         },
         yp = {
           function()
             vim.cmd([[let @+ = expand("%")]])
             vim.notify(fmt("yanked %s to clipboard", vim.fn.expand("%")))
           end,
-          "delete file",
+          "yank path to clipboard",
         },
-        -- yp = { [[:let @+ = expand("%")<CR>]], "yank path to clipboard" },
+      },
+      ["<leader>f"] = {
+        name = "+" .. vim.g.picker,
       },
       ["<leader>l"] = {
         name = "+lsp",
         i = { name = "+info" },
-      },
-      ["<localleader>m"] = {
-        name = "+markdown",
-        p = { [[<cmd>MarkdownPreviewToggle<CR>]], "open preview" },
-        g = { [[<cmd>Glow<CR>]], "open glow" },
       },
       ["<leader>r"] = { name = "+repls" },
       ["<leader>s"] = { name = "+noice" },
@@ -176,6 +165,11 @@ return {
       ["<localleader>g"] = { name = "+git" },
       ["<localleader>h"] = { name = "+hunks" },
       ["<localleader>d"] = { name = "+debugger" },
+      ["<localleader>m"] = {
+        name = "+markdown",
+        p = { [[<cmd>MarkdownPreviewToggle<CR>]], "open preview" },
+        g = { [[<cmd>Glow<CR>]], "open glow" },
+      },
       -- ["<localleader>g"] = {
       --   name = "git",
       --   -- r = {

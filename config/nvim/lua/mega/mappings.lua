@@ -144,9 +144,6 @@ end
 nnoremap("<localleader>,", modify_line_end_delimiter(","))
 nnoremap("<localleader>;", modify_line_end_delimiter(";"))
 
--- Enter key should repeat the last macro recorded or just act as enter
-nnoremap("<leader><CR>", [[empty(&buftype) ? '@@' : '<CR>']], { expr = true })
-
 -- [overrides/remaps mappings] ---------------------------------------------------------
 
 vim.cmd([[

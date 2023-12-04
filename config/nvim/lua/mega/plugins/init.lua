@@ -535,7 +535,7 @@ return {
     },
     keys = {
       {
-        "<leader>ed",
+        "<leader>ev",
         function()
           -- vim.cmd([[vertical rightbelow split|vertical resize 60]])
           vim.cmd([[vertical rightbelow split]])

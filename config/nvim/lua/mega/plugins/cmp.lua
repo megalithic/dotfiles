@@ -1,234 +1,6 @@
 -- REF:
 -- https://github.com/piouPiouM/dotfiles/blob/master/nvim/.config/nvim/lua/ppm/plugin/cmp/init.lua
 -- https://github.com/ecosse3/nvim/blob/dev/lua/plugins/cmp.lua
-if false then
-  return {
-    "hrsh7th/nvim-cmp",
-    event = { "InsertEnter", "CmdlineEnter" },
-    dependencies = {
-      -- NOTE: cmp sources
-      "hrsh7th/cmp-nvim-lsp",
-      "hrsh7th/cmp-cmdline",
-      "FelipeLema/cmp-async-path",
-      {
-        "tzachar/cmp-fuzzy-buffer",
-        dependencies = { "tzachar/fuzzy.nvim" },
-      },
-
-      -- NOTE: snippet plugins
-      {
-        "garymjr/nvim-snippets",
-        opts = {
-          friendly_snippets = true,
-          search_paths = { vim.fn.stdpath("config") .. "/snippets" },
-        },
-        dependencies = {
-          "rafamadriz/friendly-snippets",
-          event = { "InsertEnter" },
-          enabled = vim.g.snipper == "snippets",
-        },
-      },
-
-      -- NOTE: autopairs plugin
-      -- {
-      --   "windwp/nvim-autopairs",
-      --   opts = { check_ts = true, fast_wrap = { map = "<C-e>" } },
-      -- },
-
-      -- NOTE: github copilot if available
-      -- {
-      --   "zbirenbaum/copilot-cmp",
-      --   dependencies = {
-      --     "zbirenbaum/copilot.lua",
-      --     opts = {
-      --       suggestion = { enabled = false },
-      --       panel = { enabled = false },
-      --     },
-      --   },
-      --   config = true,
-      -- },
-
-      -- NOTE: misc. plugins
-      "onsails/lspkind.nvim",
-    },
-    opts = function()
-      local cmp = require("cmp")
-      local default_border = mega.get_border()
-
-      local lspkind_format = require("lspkind").cmp_format({
-        mode = "symbol_text",
-        maxwidth = 50,
-        symbol_map = { Copilot = "" },
-      })
-
-      local function has_word_before()
-        local line, col = unpack(vim.api.nvim_win_get_cursor(0))
-        return col ~= 0 and vim.api.nvim_buf_get_lines(0, line - 1, line, true)[1]:sub(col, col):match("%s") == nil
-      end
-
-      local cmp_formatting = {
-        fields = { "kind", "abbr", "menu" },
-        format = function(entry, vim_item)
-          local original_kind = vim_item.kind
-          local kind = lspkind_format(entry, vim_item)
-          local strings = vim.split(kind.kind, "%s", { trimempty = true })
-
-          kind.kind = strings[1] .. " "
-          kind.menu = "   " .. strings[2]
-          kind.menu_hl_group = "CmpItemKind" .. original_kind
-
-          return kind
-        end,
-      }
-
-      local cmp_mapping = {
-        ["<C-d>"] = cmp.mapping(cmp.mapping.scroll_docs(2), { "i", "c" }),
-        ["<C-u>"] = cmp.mapping(cmp.mapping.scroll_docs(-2), { "i", "c" }),
-        ["<C-e>"] = cmp.mapping({ i = cmp.mapping.abort(), c = cmp.mapping.close() }),
-        ["<CR>"] = cmp.mapping(function(fallback)
-          if cmp.visible() then
-            cmp.confirm({ behavior = cmp.ConfirmBehavior.Replace, select = true })
-          else
-            fallback()
-          end
-        end),
-        ["<Tab>"] = cmp.mapping(function(fallback)
-          if cmp.visible() then
-            cmp.select_next_item()
-          elseif vim.snippet.jumpable(1) then
-            vim.schedule(function() vim.snippet.jump(1) end)
-          elseif has_word_before() then
-            cmp.complete()
-          else
-            fallback()
-          end
-        end, { "i", "s" }),
-        ["<S-Tab>"] = cmp.mapping(function(fallback)
-          if cmp.visible() then
-            cmp.select_prev_item()
-          elseif vim.snippet.jumpable(-1) then
-            vim.schedule(function() vim.snippet.jump(-1) end)
-          else
-            fallback()
-          end
-        end, { "i", "s" }),
-      }
-
-      local cmp_sorting = {
-        priority_weight = 2,
-        comparators = {
-          -- require("copilot_cmp.comparators").prioritize,
-          require("cmp_fuzzy_buffer.compare"),
-
-          cmp.config.compare.offset,
-          cmp.config.compare.exact,
-          cmp.config.compare.score,
-
-          -- INFO: sort by number of underscores
-          function(entry1, entry2)
-            local _, entry1_under = entry1.completion_item.label:find("^_+")
-            local _, entry2_under = entry2.completion_item.label:find("^_+")
-            entry1_under = entry1_under or 0
-            entry2_under = entry2_under or 0
-            if entry1_under > entry2_under then
-              return false
-            elseif entry1_under < entry2_under then
-              return true
-            end
-          end,
-
-          cmp.config.compare.kind,
-          cmp.config.compare.sort_text,
-          cmp.config.compare.length,
-          cmp.config.compare.order,
-        },
-      }
-
-      local cmp_sources = cmp.config.sources({
-        -- { name = "copilot" },
-        { name = "async_path" },
-        { name = "nvim_lsp" },
-        { name = "snippets", keyword_length = 2 },
-      }, {
-        {
-          name = "fuzzy_buffer",
-          option = {
-            min_match_length = 2,
-            max_matches = 5,
-            get_bufnrs = function()
-              local bufs = {}
-              for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-                local buftype = vim.api.nvim_buf_get_option(buf, "buftype")
-                if buftype ~= "nofile" and buftype ~= "prompt" then bufs[#bufs + 1] = buf end
-              end
-              return bufs
-            end,
-          },
-        },
-      })
-
-      return {
-        snippet = { expand = function(args) vim.snippet.expand(args.body) end },
-        mapping = cmp_mapping,
-        sorting = cmp_sorting,
-        sources = cmp_sources,
-        formatting = cmp_formatting,
-        -- preselect = cmp.PreselectMode.None,
-        window = {
-          completion = {
-            col_offset = -4,
-            side_padding = 1,
-            border = default_border,
-          },
-          documentation = {
-            border = default_border,
-          },
-        },
-        experimental = {
-          ghost_text = { hl_group = "Comment" },
-        },
-        preselect = cmp.PreselectMode.Item,
-        completion = {
-          completeopt = "menu,menuone,preview,noselect,noinsert",
-        },
-        matching = {
-          disallow_partial_fuzzy_matching = false,
-        },
-      }
-    end,
-    config = function(_, opts)
-      local cmp = require("cmp")
-
-      cmp.setup(opts)
-
-      cmp.setup.cmdline({ "/", "?" }, {
-        mapping = cmp.mapping.preset.cmdline(),
-        completion = {
-          completeopt = "menuone,noselect",
-        },
-        sources = {
-          { name = "fuzzy_buffer", option = { min_match_length = 2 } },
-        },
-      })
-
-      cmp.setup.cmdline(":", {
-        mapping = cmp.mapping.preset.cmdline(),
-        completion = {
-          completeopt = "menuone,noselect",
-        },
-        sources = cmp.config.sources({
-          { name = "async_path" },
-        }, {
-          { name = "cmdline" },
-        }),
-      })
-
-      -- NOTE: autopairs mapping on <CR>
-      -- cmp.event:on("confirm_done", require("nvim-autopairs.completion.cmp").on_confirm_done())
-    end,
-  }
-end
-
 return {
   "hrsh7th/nvim-cmp",
   event = { "InsertEnter", "CmdlineEnter" },
@@ -475,8 +247,36 @@ return {
         }),
       },
       mapping = {
-        ["<Tab>"] = cmp.mapping(tab, { "i", "s", "c" }),
-        ["<S-Tab>"] = cmp.mapping(shift_tab, { "i", "s", "c" }),
+        -- ["<Tab>"] = cmp.mapping(tab, { "i", "s", "c" }),
+        -- ["<S-Tab>"] = cmp.mapping(shift_tab, { "i", "s", "c" }),
+        ["<Tab>"] = {
+          i = tab,
+          s = tab,
+          c = function()
+            if vim.fn.getcmdline():sub(1, 1) == "!" then
+              vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<C-z>", true, false, true), "n", false)
+              return
+            end
+            if cmp.visible() then
+              cmp.confirm({ select = true })
+            else
+              cmp.complete()
+              cmp.select_next_item()
+              cmp.select_prev_item({ behavior = cmp.SelectBehavior.Insert })
+            end
+          end,
+        },
+        ["<S-Tab>"] = {
+          i = shift_tab,
+          s = shift_tab,
+          c = function()
+            if cmp.visible() then
+              cmp.select_prev_item({ behavior = cmp.SelectBehavior.Insert })
+            else
+              cmp.complete()
+            end
+          end,
+        },
         ["<C-n>"] = cmp.mapping(tab, { "i", "s", "c" }),
         ["<C-p>"] = cmp.mapping(shift_tab, { "i", "s", "c" }),
         ["<Up>"] = cmp.mapping.select_prev_item({ "i", "s", "c" }),

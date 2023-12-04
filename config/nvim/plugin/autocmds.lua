@@ -224,7 +224,7 @@ do
       event = { "TextYankPost" },
       command = function()
         vim.highlight.on_yank({
-          timeout = 500,
+          -- timeout = 500,
           -- on_visual = false,
           higroup = "VisualYank",
         })
