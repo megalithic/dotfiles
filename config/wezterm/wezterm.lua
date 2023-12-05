@@ -409,7 +409,7 @@ return {
       mods = "CMD|CTRL|SHIFT",
       action = act.EmitEvent("toggle-ligature"), -- TEST: |>
     },
-    -- { key = "q", mods = "CMD", action = act.QuitApplication },
+    { key = "q", mods = "CMD", action = act.QuitApplication },
     { key = "w", mods = "CMD", action = w.action.CloseCurrentTab({ confirm = false }) },
     { key = "+", mods = "CMD", action = w.action.IncreaseFontSize },
     { key = "-", mods = "CMD", action = w.action.DecreaseFontSize },

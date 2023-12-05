@@ -3,27 +3,6 @@
 if not mega then return end
 if not vim.g.enabled_plugin["abbreviations"] then return end
 
-mega.iabbrev = function(lhs, rhs, ft)
-  ft = ft or nil
-
-  if ft then
-    mega.augroup("iabbreviations_" .. table.concat(ft, "_"), {
-      {
-        event = { "FileType" },
-        desc = "Insert abbreviation for " .. vim.inspect(ft),
-        pattern = ft,
-        command = function() vim.cmd.iabbrev(string.format([[%s %s]], lhs, rhs)) end,
-      },
-    })
-  else
-    vim.cmd.iabbrev(string.format([[%s %s]], lhs, rhs))
-  end
-end
-
-mega.cabbrev = function(lhs, rhs) vim.cmd.cabbrev(string.format([[%s %s]], lhs, rhs)) end
-mega.nabbrev = function(lhs, rhs) vim.cmd.abbrev(string.format([[%s %s]], lhs, rhs)) end
-mega.noabbrev = function(lhs, rhs) vim.cmd.noabbrev(string.format([[%s %s]], lhs, rhs)) end
-
 -- [ insert ] ------------------------------------------------------------------
 
 local gitcommit_pattern = { "gitcommit", "NeogitCommitMessage", "COMMIT_EDITMSG", "NEOGIT_COMMIT_EDITMSG" }

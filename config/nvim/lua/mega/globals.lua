@@ -57,8 +57,8 @@ vim.g.hs_emmy_path = fmt("%s/Spoons/EmmyLua.spoon", vim.g.hammerspoon_path)
 
 -- [ luarocks ] -----------------------------------------------------------------
 
-package.path = string.format("%s; %s/.luarocks/share/lua/5.1/?/init.lua;", package.path, vim.g.home)
-package.path = string.format("%s; %s/.luarocks/share/lua/5.1/?.lua;", package.path, vim.g.home)
+package.path = fmt("%s; %s/.luarocks/share/lua/5.1/?/init.lua;", package.path, vim.g.home)
+package.path = fmt("%s; %s/.luarocks/share/lua/5.1/?.lua;", package.path, vim.g.home)
 
 -- inspect the contents of an object very quickly
 -- in your code or from the command-line:
@@ -287,10 +287,30 @@ function mega.require(module_name, opts)
 
     -- FIXME: this breaks if silent == true
     -- vim.notify(result, L.ERROR, { title = fmt("Error requiring: %s", module_name), render = "default" })
-    vim.notify_once(string.format("Missing module: %s", module_name), L.WARN)
+    vim.notify_once(fmt("Missing module: %s", module_name), L.WARN)
   end
   return ok, result
 end
+
+mega.iabbrev = function(lhs, rhs, ft)
+  ft = ft or nil
+
+  if ft then
+    mega.augroup("iabbreviations_" .. table.concat(ft, "_"), {
+      {
+        event = { "FileType" },
+        desc = "Insert abbreviation for " .. vim.inspect(ft),
+        pattern = ft,
+        command = function() vim.cmd.iabbrev(fmt([[%s %s]], lhs, rhs)) end,
+      },
+    })
+  else
+    vim.cmd.iabbrev(fmt([[%s %s]], lhs, rhs))
+  end
+end
+mega.cabbrev = function(lhs, rhs) vim.cmd.cabbrev(fmt([[%s %s]], lhs, rhs)) end
+mega.nabbrev = function(lhs, rhs) vim.cmd.abbrev(fmt([[%s %s]], lhs, rhs)) end
+mega.noabbrev = function(lhs, rhs) vim.cmd.noabbrev(fmt([[%s %s]], lhs, rhs)) end
 
 -- [ commands ] ----------------------------------------------------------------
 do
@@ -333,7 +353,7 @@ do
 
   command("CopyBranch", function()
     vim.cmd([[silent !git branch --show-current | tr -d '[:space:]' | (pbcopy || lemonade copy)]])
-    vim.notify(string.format("copied to clipboard: %s", vim.fn.getreg("+")))
+    vim.notify(fmt("copied to clipboard: %s", vim.fn.getreg("+")))
   end)
 
   command(

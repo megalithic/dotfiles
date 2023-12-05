@@ -154,7 +154,7 @@ mega.iabbrev("-cc", "- [ ]")
 mega.iabbrev("cc", "[ ]")
 mega.iabbrev("cb", "[ ]")
 
-if vim.env.TMUX_POPUP then
+if vim.g.is_tmux_popup then
   -- ## used with markdown related tmux popups (through nvim)
   vim.opt_local.signcolumn = "no"
   vim.opt_local.cursorline = false
