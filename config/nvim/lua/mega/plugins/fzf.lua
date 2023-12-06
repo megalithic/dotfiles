@@ -116,36 +116,6 @@ local function git_files_cwd_aware(opts)
   return fzf.git_files(ivy(opts))
 end
 
-if vim.g.picker == "fzf_lua" then
-  mega.augroup("FzfStartup", {
-    {
-      event = { "VimEnter" },
-      pattern = { "*" },
-      once = true,
-      command = function(args)
-        if
-          not vim.g.started_by_firenvim
-          and (not vim.env.TMUX_POPUP and vim.env.TMUX_POPUP ~= 1)
-          and not vim.tbl_contains({ "NeogitStatus" }, vim.bo[args.buf].filetype)
-        then
-          local arg = vim.api.nvim_eval("argv(0)")
-          if arg and (vim.fn.isdirectory(arg) ~= 0 or arg == "") then
-            find_files(dropdown({
-              actions = {
-                files = {
-                  ["default"] = require("fzf-lua").actions.file_edit_or_qf,
-                },
-              },
-            }))
-          elseif vim.fn.isdirectory(vim.fn.expand("%")) == 1 then
-            vim.cmd("Oil")
-          end
-        end
-      end,
-    },
-  })
-end
-
 local keys = {}
 if vim.g.picker == "fzf_lua" then
   local has_wk, wk = mega.require("which-key")
@@ -165,7 +135,6 @@ if vim.g.picker == "fzf_lua" then
     })
   end
 
-  -- assign global file picker
   mega.find_files = find_files
   mega.grep = fzf_lua.live_grep_glob
 
@@ -206,6 +175,23 @@ if vim.g.picker == "fzf_lua" then
       cursor_dropdown = cursor_dropdown,
       ivy = ivy,
       border = get_border,
+      startup = function(args)
+        local arg = vim.api.nvim_eval("argv(0)")
+        if
+          not vim.g.started_by_firenvim
+          and (not vim.env.TMUX_POPUP and vim.env.TMUX_POPUP ~= 1)
+          and not vim.tbl_contains({ "NeogitStatus" }, vim.bo[args.buf].filetype)
+          and (arg and (vim.fn.isdirectory(arg) == 0 and arg == ""))
+        then
+          find_files(dropdown({
+            actions = {
+              files = {
+                ["default"] = require("fzf-lua").actions.file_edit_or_qf,
+              },
+            },
+          }))
+        end
+      end,
     },
   }
 end

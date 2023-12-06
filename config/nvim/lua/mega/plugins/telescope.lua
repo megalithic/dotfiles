@@ -200,41 +200,7 @@ end
 local function extensions(name) return require("telescope").extensions[name] end
 
 if vim.g.picker == "telescope" then
-  mega.augroup("TelescopeStartup", {
-    {
-      event = { "VimEnter" },
-      pattern = { "*" },
-      once = true,
-      command = function(args)
-        if
-          not vim.g.started_by_firenvim
-          and (not vim.env.TMUX_POPUP and vim.env.TMUX_POPUP ~= 1)
-          and not vim.tbl_contains({ "NeogitStatus" }, vim.bo[args.buf].filetype)
-        then
-          -- Open file browser if argument is a folder
-          -- REF: https://github.com/protiumx/.dotfiles/blob/main/stow/nvim/.config/nvim/lua/config/telescope.lua#L50
-          local arg = vim.api.nvim_eval("argv(0)")
-          if arg and (vim.fn.isdirectory(arg) ~= 0 or arg == "") then
-            ts.fd(with_title(dropdown({
-              hidden = true,
-              no_ignore = false,
-              previewer = false,
-              prompt_title = "",
-              preview_title = "",
-              results_title = "",
-              layout_config = { prompt_position = "top" },
-              mappings = {
-                i = {
-                  ["<cr>"] = stopinsert(function(pb) multi(pb, "edit") end),
-                },
-              },
-            })))
-          elseif vim.fn.isdirectory(vim.fn.expand("%")) == 1 then
-            vim.cmd("Oil")
-          end
-        end
-      end,
-    },
+  mega.augroup("Telescope", {
     {
       -- HACK color parent as comment
       -- CAVEAT interferes with other Telescope Results that display for spaces
@@ -318,6 +284,32 @@ if vim.g.picker == "telescope" then
       cursor_dropdown = dropdown,
       ivy = ivy,
       border = get_border,
+      startup = function(args)
+        local arg = vim.api.nvim_eval("argv(0)")
+        if
+          not vim.g.started_by_firenvim
+          and (not vim.env.TMUX_POPUP and vim.env.TMUX_POPUP ~= 1)
+          and not vim.tbl_contains({ "NeogitStatus" }, vim.bo[args.buf].filetype)
+          and (arg and (vim.fn.isdirectory(arg) == 0 and arg == ""))
+        then
+          -- Open file browser if argument is a folder
+          -- REF: https://github.com/protiumx/.dotfiles/blob/main/stow/nvim/.config/nvim/lua/config/telescope.lua#L50
+          ts.fd(with_title(dropdown({
+            hidden = true,
+            no_ignore = false,
+            previewer = false,
+            prompt_title = "",
+            preview_title = "",
+            results_title = "",
+            layout_config = { prompt_position = "top" },
+            mappings = {
+              i = {
+                ["<cr>"] = stopinsert(function(pb) multi(pb, "edit") end),
+              },
+            },
+          })))
+        end
+      end,
     },
   }
 end

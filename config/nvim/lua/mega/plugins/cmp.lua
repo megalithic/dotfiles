@@ -52,11 +52,11 @@ return {
     { "hrsh7th/cmp-cmdline", event = { "CmdlineEnter" } },
     { "hrsh7th/cmp-nvim-lsp-signature-help" },
     { "hrsh7th/cmp-nvim-lsp-document-symbol" },
-    { "hrsh7th/cmp-emoji" },
+    -- { "hrsh7th/cmp-emoji" },
     { "f3fora/cmp-spell" },
     { "lukas-reineke/cmp-rg" },
     { "lukas-reineke/cmp-under-comparator" },
-    { "davidsierradz/cmp-conventionalcommits" },
+    -- { "davidsierradz/cmp-conventionalcommits" },
     { "dmitmel/cmp-cmdline-history" },
     { "andersevenrud/cmp-tmux" },
     -- { "kristijanhusak/vim-dadbod-completion"},
@@ -501,13 +501,13 @@ return {
         -- { name = "cmdline_history", priority = 10, max_item_count = 3 },
       }),
     })
-
-    cmp.setup.filetype({ "gitcommit", "NeogitCommitMessage" }, {
-      sources = {
-        { name = "conventionalcommits" },
-        { name = "async_path" },
-      },
-      { name = "buffer" },
-    })
+    --
+    -- cmp.setup.filetype({ "gitcommit", "NeogitCommitMessage" }, {
+    --   sources = {
+    --     { name = "conventionalcommits" },
+    --     { name = "async_path" },
+    --   },
+    --   { name = "buffer" },
+    -- })
   end,
 }

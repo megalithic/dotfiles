@@ -38,8 +38,8 @@ function M.setup()
   vim.opt.runtimepath:prepend(lazypath)
   require("lazy.core.cache").enable()
   local spec = {
-    { import = "mega.plugins_bak" },
-    -- { import = "mega.plugins" },
+    { import = "mega.plugins" },
+    -- { import = "mega.plugins_new" }, -- WIP plugins
   }
 
   require("lazy").setup({

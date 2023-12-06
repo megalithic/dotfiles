@@ -21,9 +21,11 @@ augroup("Startup", {
     event = { "VimEnter" },
     pattern = { "*" },
     once = true,
+    desc = "Crazy behaviours for opening vim with arguments (or not)",
     command = function(args)
       -- TODO: handle situations where 2 file names given and the second is of the shape of a line number, e.g. `:200`;
       -- maybe use this? https://github.com/stevearc/dotfiles/commit/db4849d91328bb6f39481cf2e009866911c31757
+      local arg = vim.api.nvim_eval("argv(0)")
       if
         not vim.g.started_by_firenvim
         and (not vim.env.TMUX_POPUP and vim.env.TMUX_POPUP ~= 1)
@@ -41,8 +43,10 @@ augroup("Startup", {
               require("virt-column").update()
             end)
           end
-        else
-          if vim.fn.isdirectory(vim.fn.expand("%")) == 1 then vim.cmd("Oil") end
+        elseif vim.fn.isdirectory(arg) ~= 0 then
+          require("oil").open(arg)
+        elseif _G.picker[vim.g.picker]["startup"] then
+          _G.picker[vim.g.picker]["startup"](args)
         end
       end
     end,
@@ -50,7 +54,7 @@ augroup("Startup", {
 })
 
 augroup("CheckOutsideTime", {
-  -- automatically check for changed files outside vim
+  desc = "Automatically check for changed files outside vim",
   event = { "WinEnter", "BufWinEnter", "BufWinLeave", "BufRead", "BufEnter", "FocusGained" },
   command = "silent! checktime",
 })
@@ -121,8 +125,8 @@ end
 
 augroup("FileTypes", {
   {
-    -- Smart Close certain filetypes by pressing q.
     event = { "FileType" },
+    desc = "Smart close certain filetypes with `q`",
     pattern = { "*" },
     command = function()
       local is_unmapped = fn.hasmapto("q", "n") == 0
@@ -134,6 +138,7 @@ augroup("FileTypes", {
     end,
   },
   {
+    desc = "Disable miniindentscope as needed",
     event = { "FileType" },
     pattern = miniindentscope_disable_ft,
     command = function() vim.b.miniindentscope_disable = true end,
@@ -142,28 +147,29 @@ augroup("FileTypes", {
 
 augroup("Utilities", {
   {
-    -- Auto open grep quickfix window
+    desc = "Auto open grep quickfix window",
     event = { "QuickFixCmdPost" },
     pattern = { "*grep*" },
     command = "cwindow",
   },
   {
-    -- Close quick fix window if the file containing it was closed
+    desc = "Close quick fix window if the file containing it was closed",
     event = { "BufEnter" },
     command = function()
       if fn.winnr("$") == 1 and vim.bo.buftype == "quickfix" then api.nvim_buf_delete(0, { force = true }) end
     end,
   },
   {
-    -- automatically close corresponding loclist when quitting a window
     event = { "QuitPre" },
     nested = true,
+    desc = "Auto-close corresponding loclist when quitting a window",
     command = function()
       if vim.bo.filetype ~= "qf" then vim.cmd.lclose({ mods = { silent = true } }) end
     end,
   },
   {
     event = { "BufWritePost" },
+    desc = "Auto chmod +x shell scripts, as needed",
     command = function(args)
       local not_executable = vim.fn.getfperm(vim.fn.expand("%")):sub(3, 3) ~= "x"
       local has_shebang = string.match(vim.fn.getline(1), "^#!")
@@ -198,6 +204,7 @@ augroup("Utilities", {
 
   {
     event = { "BufNewFile", "BufWritePre" },
+    desc = "Auto-mkdir recursive on-demand",
     pattern = { "*" },
     command = [[if @% !~# '\(://\)' | call mkdir(expand('<afile>:p:h'), 'p') | endif]],
     -- command = function()
@@ -208,6 +215,7 @@ augroup("Utilities", {
   {
     event = { "BufEnter" },
     buffer = 0,
+    desc = "Crazy `gf` open behaviour",
     command = function()
       mega.nnoremap("gf", function()
         local target = fn.expand("<cfile>")
@@ -229,23 +237,28 @@ augroup("Utilities", {
   },
   {
     event = { "TextYankPost" },
+    desc = "Blink selection post-yank",
     command = function()
       vim.highlight.on_yank({
-        -- timeout = 500,
-        -- on_visual = false,
+        timeout = 150,
+        on_visual = false,
         higroup = "VisualYank",
       })
     end,
   },
   {
-    event = { "VimResized" },
-    command = function(_args)
-      mega.resize_windows()
-      require("virt-column").update()
+    event = { "VimResized", "WinResized" },
+    desc = "Attempt to window resize to my liking - windows.lua (golden ratio)",
+    command = function()
+      vim.schedule(function()
+        mega.resize_windows()
+        require("virt-column").update()
+      end)
     end,
   },
   {
     event = { "BufEnter", "TextChanged", "InsertLeave", "FileType" },
+    desc = "Conceal strings for various attributes that look like `class`",
     pattern = { "*.html", "*.heex", "*.tsx", "*.jsx", "*.ex", "elixir", "heex", "html" },
     command = function(args) require("mega.utils").conceal_class(args.buf) end,
   },
@@ -264,6 +277,7 @@ augroup("Terminal", {
   {
     event = { "TermClose" },
     pattern = { "*" },
+    desc = "Auto-kill terminal if the job was successful",
     command = function()
       --- automatically close a terminal if the job was successful
       -- if not vim.v.event.status == 0 then vim.cmd.bdelete({ fn.expand("<abuf>"), bang = true }) end
@@ -276,6 +290,7 @@ augroup("Kitty", {
   {
     event = { "BufWritePost" },
     pattern = { "*/kitty/*.conf" },
+    desc = "Restart Kitty after config change",
     command = function()
       -- auto-reload kitty upon kitty.conf write
       -- vim.notify(fmt(" sourced %s", vim.fn.expand("%")))
@@ -317,6 +332,7 @@ do
     {
       event = { "FileType" },
       pattern = sidebar_fts,
+      desc = "Set sidebar/panel colors",
       command = function() on_sidebar_enter() end,
     },
   })
@@ -326,7 +342,17 @@ augroup("General", {
   {
     event = { "FileType" },
     pattern = { "help" },
+    desc = "Resize help",
     command = function() vim.cmd([[wincmd J | :resize 40]]) end,
+  },
+  {
+    event = { "BufHidden" },
+    desc = "Delete [No Name] buffers",
+    command = function(data)
+      if data.file == "" and vim.bo[data.buf].buftype == "" and not vim.bo[data.buf].modified then
+        vim.schedule(function() pcall(vim.api.nvim_buf_delete, data.buf, {}) end)
+      end
+    end,
   },
   -- {
   --   event = { "CmdlineChanged" },
@@ -349,6 +375,7 @@ augroup("General", {
     event = { "BufEnter", "WinEnter", "WinNew", "VimResized" },
     -- NOTE: keeps cursorline centered (`zz`'d);
     -- TODO: add function to toggle this
+    desc = "Keeps cursorline in center of screen when screen sharing",
     command = function()
       if vim.g.is_screen_sharing then vim.wo[0].scrolloff = 1 + math.floor(vim.api.nvim_win_get_height(0) / 2) end
     end,
@@ -356,11 +383,12 @@ augroup("General", {
   {
     event = { "BufWritePost" },
     pattern = { "*/spell/*.add" },
+    desc = "Run mkspell after writing to a dictionary",
     command = "silent! :mkspell! %",
   },
   {
-    --- disable formatting in directories in third party repositories
     event = { "BufEnter" },
+    desc = "Disable autoformat when not in my preferred code repos/folders",
     command = function(args)
       local paths = vim.split(vim.o.runtimepath, ",")
       local match = mega.find(function(dir)
@@ -377,6 +405,7 @@ augroup("General", {
     event = { "BufWritePost" },
     pattern = { "*" },
     nested = true,
+    desc = "Correctly set filetype",
     command = function()
       if mega.falsy(vim.bo.filetype) or vim.fn.exists("b:ftdetect") == 1 then
         cmd([[
@@ -426,48 +455,50 @@ augroup("General", {
 --   },
 -- })
 
-do
-  vim.keymap.set({ "n", "v", "o", "i", "c", "t" }, "<Plug>(StopHL)", "execute(\"nohlsearch\")[-1]", { expr = true })
-  local function stop_hl()
-    if vim.v.hlsearch == 0 or api.nvim_get_mode().mode ~= "n" then return end
-    api.nvim_feedkeys(vim.keycode("<Plug>(StopHL)"), "m", false)
-  end
-  local function hl_search()
-    local col = api.nvim_win_get_cursor(0)[2]
-    local curr_line = api.nvim_get_current_line()
-    local ok, match = pcall(fn.matchstrpos, curr_line, fn.getreg("/"), 0)
-    if not ok then return end
-    local _, p_start, p_end = unpack(match)
-    -- if the cursor is in a search result, leave highlighting on
-    if col < p_start or col > p_end then stop_hl() end
-  end
-
-  augroup("IncSearchHighlight", {
-    {
-      event = { "CursorMoved" },
-      command = function() hl_search() end,
-    },
-    {
-      event = { "InsertEnter" },
-      command = function(evt)
-        if vim.bo[evt.buf].filetype == "megaterm" then return end
-        stop_hl()
-      end,
-    },
-    {
-      event = { "OptionSet" },
-      pattern = { "hlsearch" },
-      command = function()
-        vim.schedule(function() vim.cmd.redrawstatus() end)
-      end,
-    },
-    {
-      event = { "RecordingEnter" },
-      command = function() vim.o.hlsearch = false end,
-    },
-    {
-      event = { "RecordingLeave" },
-      command = function() vim.o.hlsearch = true end,
-    },
-  })
+-- -----------------------------------------------------------------------------
+-- # IncSearch behaviours
+-- HT: akinsho
+-- -----------------------------------------------------------------------------
+vim.keymap.set({ "n", "v", "o", "i", "c", "t" }, "<Plug>(StopHL)", "execute(\"nohlsearch\")[-1]", { expr = true })
+local function stop_hl()
+  if vim.v.hlsearch == 0 or api.nvim_get_mode().mode ~= "n" then return end
+  api.nvim_feedkeys(vim.keycode("<Plug>(StopHL)"), "m", false)
 end
+local function hl_search()
+  local col = api.nvim_win_get_cursor(0)[2]
+  local curr_line = api.nvim_get_current_line()
+  local ok, match = pcall(fn.matchstrpos, curr_line, fn.getreg("/"), 0)
+  if not ok then return end
+  local _, p_start, p_end = unpack(match)
+  -- if the cursor is in a search result, leave highlighting on
+  if col < p_start or col > p_end then stop_hl() end
+end
+
+augroup("IncSearchHighlight", {
+  {
+    event = { "CursorMoved" },
+    command = function() hl_search() end,
+  },
+  {
+    event = { "InsertEnter" },
+    command = function(evt)
+      if vim.bo[evt.buf].filetype == "megaterm" then return end
+      stop_hl()
+    end,
+  },
+  {
+    event = { "OptionSet" },
+    pattern = { "hlsearch" },
+    command = function()
+      vim.schedule(function() vim.cmd.redrawstatus() end)
+    end,
+  },
+  {
+    event = { "RecordingEnter" },
+    command = function() vim.o.hlsearch = false end,
+  },
+  {
+    event = { "RecordingLeave" },
+    command = function() vim.o.hlsearch = true end,
+  },
+})

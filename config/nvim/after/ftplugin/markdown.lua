@@ -7,8 +7,8 @@
 -- " source: https://gist.github.com/huytd/668fc018b019fbc49fa1c09101363397
 -- " based on: https://www.reddit.com/r/vim/comments/h8pgor/til_conceal_in_vim/
 -- " youtube video: https://youtu.be/UuHJloiDErM?t=793
--- Custom conceal (does not work with existing syntax highlight plugin)
 
+vim.opt_local.textwidth = 80
 vim.cmd([[autocmd FileType markdown nnoremap gO <cmd>Toc<cr>]])
 
 -- vim.o.equalprg = [[prettier --stdin-filepath '%:p']]

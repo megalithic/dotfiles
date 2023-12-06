@@ -51,6 +51,8 @@ local function set_colorcolumn(leaving)
   end
 
   if vim.wo.colorcolumn == "" then
+    -- TODO:
+    -- https://github.com/Wansmer/nvim-config/blob/main/lua/autocmd.lua#L81-L87
     vim.wo.colorcolumn = tostring(vim.g.default_colorcolumn)
     if vc_ok then vc.setup_buffer({ char = "│", virtcolumn = vim.wo.colorcolumn }) end
     -- if ibl_ok then vim.cmd("IBLEnable") end
