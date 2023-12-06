@@ -66,12 +66,12 @@ nnoremap("<localleader>f", "<cmd>LspFormatWrite<cr>", "run lsp formatter")
 vim.cmd("silent! unmap [%", true)
 vim.cmd("silent! unmap ]%", true)
 
-map(
-  { "n", "o", "s", "v", "x" },
-  "<Tab>",
-  "%",
-  { desc = "jump to opening/closing delimiter", remap = true, silent = false }
-)
+-- map(
+--   { "n", "o", "s", "v", "x" },
+--   "<Tab>",
+--   "%",
+--   { desc = "jump to opening/closing delimiter", remap = true, silent = false }
+-- )
 
 -- https://github.com/tpope/vim-rsi/blob/master/plugin/rsi.vim
 -- c-a / c-e everywhere - RSI.vim provides these
@@ -350,8 +350,46 @@ nnoremap("yf", [[:let @*=expand("%:p")<CR>]], "yank file path into the clipboard
 
 -- Spelling
 -- map("n", "<leader>s", "z=e") -- Correct current word
-nmap("<leader>s", "b1z=e") -- Correct previous word
-nmap("<leader>S", "zg") -- Add word under cursor to dictionary
+nmap("<leader>s", function()
+  local cur_pos = vim.api.nvim_win_get_cursor(0)
+  vim.cmd.normal({ "1z=", bang = true })
+  vim.api.nvim_win_set_cursor(0, cur_pos)
+end, { desc = "Correct spelling of word under cursor" })
+nmap("<leader>S", function()
+  local cur_pos = vim.api.nvim_win_get_cursor(0)
+  vim.cmd.normal({ "zg", bang = true })
+  vim.api.nvim_win_set_cursor(0, cur_pos)
+end, { desc = "Add word under cursor to dictionary" })
+-- nmap("<leader>S", "zg") -- Add word under cursor to dictionary
+
+mega.map({ "x", "n" }, "gct", function()
+  local win = vim.api.nvim_get_current_win()
+  local cur = vim.api.nvim_win_get_cursor(win)
+  local vstart = vim.fn.getpos("v")[2]
+  local current_line = vim.fn.line(".")
+  local set_cur = vim.api.nvim_win_set_cursor
+  if vstart == current_line then
+    vim.cmd.yank()
+    require("Comment.api").toggle.linewise.current()
+    -- require("mini.comment").operator()
+    vim.cmd.put()
+    set_cur(win, { cur[1] + 1, cur[2] })
+  else
+    if vstart < current_line then
+      vim.cmd(":" .. vstart .. "," .. current_line .. "y")
+      vim.cmd.put()
+      set_cur(win, { vim.fn.line("."), cur[2] })
+    else
+      vim.cmd(":" .. current_line .. "," .. vstart .. "y")
+      set_cur(win, { vstart, cur[2] })
+      vim.cmd.put()
+      set_cur(win, { vim.fn.line("."), cur[2] })
+    end
+    require("Comment.api").toggle.linewise(vim.fn.visualmode())
+    -- require("mini.comment").operator("visual")
+    -- vim.cmd([[:<c-u>lua require('mini.comment').operator('visual')]])
+  end
+end, { silent = true, desc = "Comment and duplicate selected lines" })
 
 -- # find and replace in multiple files
 nnoremap("<leader>R", "<cmd>cfdo %s/<C-r>s//g<bar>update<cr>")

@@ -411,4 +411,13 @@ return {
   vcs = "",
   readonly = "",
   prompt = "",
+  markdown = {
+    h1 = "󰉫", -- alts: 󰉫¹
+    h2 = "󰉬", -- alts: 󰉬²
+    h3 = "󰉭", -- alts: 󰉭³
+    h4 = "󰉮", -- alts: 󰉮⁴
+    h5 = "󰉯", -- alts: 󰉯⁵
+    h6 = "󰉰", -- alts: 󰉰⁶
+    dash = "",
+  },
 }

@@ -164,7 +164,7 @@ local excluded = {
 
 mega.augroup("MegaColumn", {
   {
-    event = { "BufEnter", "FileType", "FocusGained" }, --, "WinEnter", "FocusGained", "TermLeave", "DiagnosticChanged" },
+    event = { "BufEnter", "FileType", "FocusGained", "WinEnter" }, --, "TermLeave", "DiagnosticChanged" },
     command = function(args)
       if vim.api.nvim_buf_is_valid(args.buf) then
         local buf = vim.bo[args.buf]

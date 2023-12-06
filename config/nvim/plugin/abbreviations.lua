@@ -29,4 +29,4 @@ mega.iabbrev("reploads", "preloads")
 
 -- command -----------------------------------------------------------------
 
-mega.cabbrev("options", "vert options")
+-- mega.cabbrev("options", "vert options")

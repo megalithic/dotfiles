@@ -128,7 +128,12 @@ return {
         s = { [[<cmd>SaveAsFile<cr>]], "save file as <input>" },
         e = "oil: open (edit)", -- NOTE: change in plugins/init.lu
         v = "oil: open (vsplit)", -- NOTE: change in plugins/init.lu
-        d = { [[<cmd>Duplicate<cr>]], "duplicate file" },
+        d = {
+          function()
+            if vim.fn.confirm("You sure?", "&Yes\n&No", 2, "Question") == 1 then vim.cmd("Duplicate") end
+          end,
+          "duplicate file?",
+        },
         D = {
           function()
             if vim.fn.confirm("You sure?", "&Yes\n&No", 2, "Question") == 1 then vim.cmd("Delete!") end

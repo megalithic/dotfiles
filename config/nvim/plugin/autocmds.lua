@@ -22,18 +22,27 @@ augroup("Startup", {
     pattern = { "*" },
     once = true,
     command = function(args)
+      -- TODO: handle situations where 2 file names given and the second is of the shape of a line number, e.g. `:200`;
+      -- maybe use this? https://github.com/stevearc/dotfiles/commit/db4849d91328bb6f39481cf2e009866911c31757
       if
         not vim.g.started_by_firenvim
         and (not vim.env.TMUX_POPUP and vim.env.TMUX_POPUP ~= 1)
         and not vim.tbl_contains({ "NeogitStatus" }, vim.bo[args.buf].filetype)
       then
         if vim.fn.argc() > 1 then
-          vim.schedule(function()
-            mega.resize_windows(args.buf)
-            require("virt-column").update()
-          end, 0)
-        elseif vim.fn.isdirectory(vim.fn.expand("%")) == 1 then
-          vim.cmd("Oil")
+          local line = string.match(vim.fn.argv(1), "^:(%d+)$")
+          if string.find(vim.fn.argv(1), "^:%d*") ~= nil then
+            vim.cmd.edit({ args = { vim.fn.argv(0) } })
+            pcall(vim.api.nvim_win_set_cursor, 0, { tonumber(line), 0 })
+            vim.api.nvim_buf_delete(args.buf + 1, { force = true })
+          else
+            vim.schedule(function()
+              mega.resize_windows(args.buf)
+              require("virt-column").update()
+            end)
+          end
+        else
+          if vim.fn.isdirectory(vim.fn.expand("%")) == 1 then vim.cmd("Oil") end
         end
       end
     end,
@@ -46,212 +55,209 @@ augroup("CheckOutsideTime", {
   command = "silent! checktime",
 })
 
-do
-  local smart_close_filetypes = {
-    "help",
-    "git-status",
-    "git-log",
-    "gitcommit",
-    "oil",
-    "dbui",
-    "fugitive",
-    "fugitiveblame",
-    "LuaTree",
-    "log",
-    "tsplayground",
-    "startuptime",
-    "outputpanel",
-    "preview",
-    "qf",
-    "man",
-    "terminal",
-    "lspinfo",
-    "neotest-output",
-    "neotest-output-panel",
-    "query",
-    "elixirls",
-  }
-  local smart_close_buftypes = {} -- Don't include no file buffers as diff buffers are nofile
+local smart_close_filetypes = {
+  "help",
+  "git-status",
+  "git-log",
+  "gitcommit",
+  "oil",
+  "dbui",
+  "fugitive",
+  "fugitiveblame",
+  "LuaTree",
+  "log",
+  "tsplayground",
+  "startuptime",
+  "outputpanel",
+  "preview",
+  "qf",
+  "man",
+  "terminal",
+  "lspinfo",
+  "neotest-output",
+  "neotest-output-panel",
+  "query",
+  "elixirls",
+}
+local smart_close_buftypes = {} -- Don't include no file buffers as diff buffers are nofile
 
-  local function smart_close()
-    if fn.winnr("$") ~= 1 then
-      api.nvim_win_close(0, true)
-      vim.cmd("wincmd p")
-    end
+local miniindentscope_disable_ft = {
+  "help",
+  "alpha",
+  "dashboard",
+  "neo-tree",
+  "Trouble",
+  "lazy",
+  "mason",
+  "fzf",
+  "dirbuf",
+  "terminal",
+  "fzf-lua",
+  "fzflua",
+  "megaterm",
+  "nofile",
+  "terminal",
+  "megaterm",
+  "lsp-installer",
+  "SidebarNvim",
+  "lspinfo",
+  "markdown",
+  "help",
+  "startify",
+  "packer",
+  "NeogitStatus",
+  "oil",
+  "oil_preview",
+  "DirBuf",
+  "markdown",
+}
+
+local function do_smart_close()
+  if fn.winnr("$") ~= 1 then
+    api.nvim_win_close(0, true)
+    vim.cmd("wincmd p")
   end
-
-  local miniindentscope_disable_ft = {
-    "help",
-    "alpha",
-    "dashboard",
-    "neo-tree",
-    "Trouble",
-    "lazy",
-    "mason",
-    "fzf",
-    "dirbuf",
-    "terminal",
-    "fzf-lua",
-    "fzflua",
-    "megaterm",
-    "nofile",
-    "terminal",
-    "megaterm",
-    "lsp-installer",
-    "SidebarNvim",
-    "lspinfo",
-    "markdown",
-    "help",
-    "startify",
-    "packer",
-    "NeogitStatus",
-    "oil",
-    "DirBuf",
-    "markdown",
-  }
-
-  augroup("FileTypes", {
-    {
-      -- Smart Close certain filetypes by pressing q.
-      event = { "FileType" },
-      pattern = { "*" },
-      command = function()
-        local is_unmapped = fn.hasmapto("q", "n") == 0
-        local is_eligible = is_unmapped
-          or vim.wo.previewwindow
-          or contains(smart_close_buftypes, vim.bo.buftype)
-          or contains(smart_close_filetypes, vim.bo.filetype)
-        if is_eligible then nnoremap("q", smart_close, { buffer = 0, nowait = true }) end
-      end,
-    },
-    {
-      event = { "FileType" },
-      pattern = miniindentscope_disable_ft,
-      command = function() vim.b.miniindentscope_disable = true end,
-    },
-  })
 end
 
-do
-  augroup("Utilities", {
-    {
-      -- Auto open grep quickfix window
-      event = { "QuickFixCmdPost" },
-      pattern = { "*grep*" },
-      command = "cwindow",
-    },
-    {
-      -- Close quick fix window if the file containing it was closed
-      event = { "BufEnter" },
-      command = function()
-        if fn.winnr("$") == 1 and vim.bo.buftype == "quickfix" then api.nvim_buf_delete(0, { force = true }) end
-      end,
-    },
-    -- {
-    --   -- automatically close corresponding loclist when quitting a window
-    --   event = { "QuitPre" },
-    --   nested = true,
-    --   command = function()
-    --     if vim.bo.filetype ~= "qf" then vim.cmd("silent! lclose") end
-    --   end,
-    -- },
-    {
-      event = { "BufWritePost" },
-      command = function(args)
-        local not_executable = vim.fn.getfperm(vim.fn.expand("%")):sub(3, 3) ~= "x"
-        local has_shebang = string.match(vim.fn.getline(1), "^#!")
-        local has_bin = string.match(vim.fn.getline(1), "/bin/")
-        if not_executable and has_shebang and has_bin then
-          vim.notify(fmt("made %s executable", args.file), L.INFO)
-          vim.cmd([[!chmod +x <afile>]])
-          -- vim.cmd([[!chmod a+x <afile>]])
-          -- vim.schedule(function() vim.cmd("edit") end)
+augroup("FileTypes", {
+  {
+    -- Smart Close certain filetypes by pressing q.
+    event = { "FileType" },
+    pattern = { "*" },
+    command = function()
+      local is_unmapped = fn.hasmapto("q", "n") == 0
+      local is_eligible = is_unmapped
+        or vim.wo.previewwindow
+        or contains(smart_close_buftypes, vim.bo.buftype)
+        or contains(smart_close_filetypes, vim.bo.filetype)
+      if is_eligible then nnoremap("q", do_smart_close, { buffer = 0, nowait = true }) end
+    end,
+  },
+  {
+    event = { "FileType" },
+    pattern = miniindentscope_disable_ft,
+    command = function() vim.b.miniindentscope_disable = true end,
+  },
+})
+
+augroup("Utilities", {
+  {
+    -- Auto open grep quickfix window
+    event = { "QuickFixCmdPost" },
+    pattern = { "*grep*" },
+    command = "cwindow",
+  },
+  {
+    -- Close quick fix window if the file containing it was closed
+    event = { "BufEnter" },
+    command = function()
+      if fn.winnr("$") == 1 and vim.bo.buftype == "quickfix" then api.nvim_buf_delete(0, { force = true }) end
+    end,
+  },
+  {
+    -- automatically close corresponding loclist when quitting a window
+    event = { "QuitPre" },
+    nested = true,
+    command = function()
+      if vim.bo.filetype ~= "qf" then vim.cmd.lclose({ mods = { silent = true } }) end
+    end,
+  },
+  {
+    event = { "BufWritePost" },
+    command = function(args)
+      local not_executable = vim.fn.getfperm(vim.fn.expand("%")):sub(3, 3) ~= "x"
+      local has_shebang = string.match(vim.fn.getline(1), "^#!")
+      local has_bin = string.match(vim.fn.getline(1), "/bin/")
+      if not_executable and has_shebang and has_bin then
+        vim.notify(fmt("made %s executable", args.file), L.INFO)
+        vim.cmd([[!chmod +x <afile>]])
+        -- vim.cmd([[!chmod a+x <afile>]])
+        -- vim.schedule(function() vim.cmd("edit") end)
+      end
+    end,
+  },
+  -- REF: https://github.com/ribru17/nvim/blob/master/lua/autocmds.lua#L68
+  -->> "RUN ONCE" ON FILE OPEN COMMANDS <<--
+  -- prevent comment from being inserted when entering new line in existing comment
+  {
+    event = { "BufRead", "BufNewFile" },
+    command = function()
+      -- allow <CR> to continue block comments only
+      -- https://stackoverflow.com/questions/10726373/auto-comment-new-line-in-vim-only-for-block-comments
+      vim.schedule(function()
+        -- TODO: find a way for this to work without changing comment format, to
+        -- allow for automatic comment wrapping when hitting textwidth
+        vim.opt_local.comments:remove("://")
+        vim.opt_local.comments:remove(":--")
+        vim.opt_local.comments:remove(":#")
+        vim.opt_local.comments:remove(":%")
+      end)
+      vim.opt_local.bufhidden = "delete"
+    end,
+  },
+
+  {
+    event = { "BufNewFile", "BufWritePre" },
+    pattern = { "*" },
+    command = [[if @% !~# '\(://\)' | call mkdir(expand('<afile>:p:h'), 'p') | endif]],
+    -- command = function()
+    --   -- @see https://github.com/yutkat/dotfiles/blob/main/.config/nvim/lua/rc/autocmd.lua#L113-L140
+    --   mega.auto_mkdir()
+    -- end,
+  },
+  {
+    event = { "BufEnter" },
+    buffer = 0,
+    command = function()
+      mega.nnoremap("gf", function()
+        local target = fn.expand("<cfile>")
+        if require("mega.utils").is_image(target) then
+          local root_dir = require("mega.utils.lsp").root_dir({ ".git" })
+          dd(root_dir)
+          -- naive for now:
+          target = target:gsub("./samples", fmt("%s/samples", root_dir))
+          dd(target)
+          return require("mega.utils").preview_file(target)
         end
-      end,
-    },
-    -- REF: https://github.com/ribru17/nvim/blob/master/lua/autocmds.lua#L68
-    -->> "RUN ONCE" ON FILE OPEN COMMANDS <<--
-    -- prevent comment from being inserted when entering new line in existing comment
-    {
-      event = { "BufRead", "BufNewFile" },
-      command = function()
-        -- allow <CR> to continue block comments only
-        -- https://stackoverflow.com/questions/10726373/auto-comment-new-line-in-vim-only-for-block-comments
-        vim.schedule(function()
-          -- TODO: find a way for this to work without changing comment format, to
-          -- allow for automatic comment wrapping when hitting textwidth
-          vim.opt_local.comments:remove("://")
-          vim.opt_local.comments:remove(":--")
-          vim.opt_local.comments:remove(":#")
-          vim.opt_local.comments:remove(":%")
-        end)
-        vim.opt_local.bufhidden = "delete"
-      end,
-    },
-
-    {
-      event = { "BufNewFile", "BufWritePre" },
-      pattern = { "*" },
-      command = [[if @% !~# '\(://\)' | call mkdir(expand('<afile>:p:h'), 'p') | endif]],
-      -- command = function()
-      --   -- @see https://github.com/yutkat/dotfiles/blob/main/.config/nvim/lua/rc/autocmd.lua#L113-L140
-      --   mega.auto_mkdir()
-      -- end,
-    },
-    {
-      event = { "BufEnter" },
-      buffer = 0,
-      command = function()
-        mega.nnoremap("gf", function()
-          local target = fn.expand("<cfile>")
-          if require("mega.utils").is_image(target) then
-            local root_dir = require("mega.utils.lsp").root_dir({ ".git" })
-            dd(root_dir)
-            -- naive for now:
-            target = target:gsub("./samples", fmt("%s/samples", root_dir))
-            dd(target)
-            return require("mega.utils").preview_file(target)
-          end
-          if target:match("https://") then return vim.cmd("norm gx") end
-          if not target or #vim.split(target, "/") ~= 2 then return vim.cmd("norm! gf") end
-          local url = fmt("https://www.github.com/%s", target)
-          fn.jobstart(fmt("%s %s", vim.g.open_command, url))
-          vim.notify(fmt("Opening %s at %s", target, url))
-        end)
-      end,
-    },
-    {
-      event = { "TextYankPost" },
-      command = function()
-        vim.highlight.on_yank({
-          -- timeout = 500,
-          -- on_visual = false,
-          higroup = "VisualYank",
-        })
-      end,
-    },
-    {
-      event = { "VimResized" },
-      command = function(_args)
-        mega.resize_windows()
-        require("virt-column").update()
-      end,
-    },
-    {
-      event = { "BufEnter", "TextChanged", "InsertLeave", "FileType" },
-      pattern = { "*.html", "*.heex", "*.tsx", "*.jsx", "*.ex", "elixir", "heex", "html" },
-      command = function(args) require("mega.utils").conceal_class(args.buf) end,
-    },
-    -- clear marks a-z on buffer enter
-    -- See: https://github.com/chentoast/marks.nvim/issues/13
-    --      https://github.com/neovim/neovim/issues/4295
-    -- {
-    --   event = { "BufEnter" },
-    --   pattern = { "*.html", "*.heex", "*.tsx", "*.jsx", "*.ex", "elixir", "heex", "html" },
-    --   command = "delm a-z",
-    -- },
-  })
-end
+        if target:match("https://") then return vim.cmd("norm gx") end
+        if not target or #vim.split(target, "/") ~= 2 then return vim.cmd("norm! gf") end
+        local url = fmt("https://www.github.com/%s", target)
+        fn.jobstart(fmt("%s %s", vim.g.open_command, url))
+        vim.notify(fmt("Opening %s at %s", target, url))
+      end)
+    end,
+  },
+  {
+    event = { "TextYankPost" },
+    command = function()
+      vim.highlight.on_yank({
+        -- timeout = 500,
+        -- on_visual = false,
+        higroup = "VisualYank",
+      })
+    end,
+  },
+  {
+    event = { "VimResized" },
+    command = function(_args)
+      mega.resize_windows()
+      require("virt-column").update()
+    end,
+  },
+  {
+    event = { "BufEnter", "TextChanged", "InsertLeave", "FileType" },
+    pattern = { "*.html", "*.heex", "*.tsx", "*.jsx", "*.ex", "elixir", "heex", "html" },
+    command = function(args) require("mega.utils").conceal_class(args.buf) end,
+  },
+  -- clear marks a-z on buffer enter
+  -- See: https://github.com/chentoast/marks.nvim/issues/13
+  --      https://github.com/neovim/neovim/issues/4295
+  -- {
+  --   event = { "BufEnter" },
+  --   pattern = { "*.html", "*.heex", "*.tsx", "*.jsx", "*.ex", "elixir", "heex", "html" },
+  --   command = "delm a-z",
+  -- },
+})
 
 -- @trial this (or move it to `term.lua`?)
 augroup("Terminal", {
@@ -323,6 +329,13 @@ augroup("General", {
     command = function() vim.cmd([[wincmd J | :resize 40]]) end,
   },
   -- {
+  --   event = { "CmdlineChanged" },
+  --   command = function()
+  --     pcall(vim.cmd.redraw)
+  --     pcall(vim.cmd.redrawstatus)
+  --   end,
+  -- },
+  -- {
   --   event = { "CmdwinEnter" },
   --   desc = "Disable incremental selection when entering the cmdline window",
   --   command = "TSBufDisable incremental_selection",
@@ -340,17 +353,40 @@ augroup("General", {
       if vim.g.is_screen_sharing then vim.wo[0].scrolloff = 1 + math.floor(vim.api.nvim_win_get_height(0) / 2) end
     end,
   },
-  -- {
-  --   event = { "BufWritePost" },
-  --   pattern = { "*/spell/*.add" },
-  --   command = "silent! :mkspell! %",
-  -- },
-  -- {
-  --   event = { "InsertLeave" },
-  --   pattern = { "*" },
-  --   command = [[execute 'normal! mI']],
-  --   desc = "global mark I for last edit",
-  -- },
+  {
+    event = { "BufWritePost" },
+    pattern = { "*/spell/*.add" },
+    command = "silent! :mkspell! %",
+  },
+  {
+    --- disable formatting in directories in third party repositories
+    event = { "BufEnter" },
+    command = function(args)
+      local paths = vim.split(vim.o.runtimepath, ",")
+      local match = mega.find(function(dir)
+        local path = api.nvim_buf_get_name(args.buf)
+        if vim.startswith(path, vim.env.CODE) then return false end
+        if vim.startswith(path, vim.env.VIMRUNTIME) then return true end
+        return vim.startswith(path, dir)
+      end, paths)
+      -- vim.b[args.buf].formatting_disabled = match ~= nil
+      vim.b[args.buf].disable_autoformat = match ~= nil
+    end,
+  },
+  {
+    event = { "BufWritePost" },
+    pattern = { "*" },
+    nested = true,
+    command = function()
+      if mega.falsy(vim.bo.filetype) or vim.fn.exists("b:ftdetect") == 1 then
+        cmd([[
+        unlet! b:ftdetect
+        filetype detect
+        call v:lua.vim.notify('Filetype set to ' . &ft, "info", {})
+      ]])
+      end
+    end,
+  },
   -- {
   --   event = { "BufEnter", "WinEnter" },
   --   pattern = { "*/node_modules/*" },

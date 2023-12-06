@@ -33,7 +33,7 @@ if vim.g.enabled_plugin ~= nil then
   end
 end
 
-function plugin_loaded(plugin)
+function _G.plugin_loaded(plugin)
   if not mega then return false end
   if not vim.g.enabled_plugin then return false end
   if not vim.g.enabled_plugin[plugin] then return false end

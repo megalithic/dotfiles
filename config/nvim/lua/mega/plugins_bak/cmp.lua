@@ -9,6 +9,7 @@ return {
     { "saadparwaiz1/cmp_luasnip", cond = vim.g.snipper == "luasnip" },
     {
       "garymjr/nvim-snippets",
+      cond = vim.g.snipper == "snippets",
       opts = {
         friendly_snippets = true,
         search_paths = { vim.fn.stdpath("config") .. "/snippets" },
@@ -19,26 +20,26 @@ return {
         enabled = vim.g.snipper == "snippets",
       },
     },
-    {
-      "hrsh7th/cmp-vsnip",
-      dependencies = {
-        {
-          "hrsh7th/vim-vsnip",
-          event = "InsertEnter *",
-          cond = vim.g.snipper == "vsnip",
-          init = function()
-            vim.g.vsnip_snippet_dir = vim.fn.fnamemodify(vim.env.MYVIMRC, ":p:h") .. "/snippets"
-            vim.g.vsnip_filetypes = {
-              heex = { "elixir" },
-              eelixir = { "elixir" },
-              typescript = { "javascript" },
-              typescriptreact = { "javascript" },
-              javascriptreact = { "javascript" },
-            }
-          end,
-        },
-      },
-    },
+    -- {
+    --   "hrsh7th/cmp-vsnip",
+    --   dependencies = {
+    --     {
+    --       "hrsh7th/vim-vsnip",
+    --       event = "InsertEnter *",
+    --       cond = vim.g.snipper == "vsnip",
+    --       init = function()
+    --         vim.g.vsnip_snippet_dir = vim.fn.fnamemodify(vim.env.MYVIMRC, ":p:h") .. "/snippets"
+    --         vim.g.vsnip_filetypes = {
+    --           heex = { "elixir" },
+    --           eelixir = { "elixir" },
+    --           typescript = { "javascript" },
+    --           typescriptreact = { "javascript" },
+    --           javascriptreact = { "javascript" },
+    --         }
+    --       end,
+    --     },
+    --   },
+    -- },
     { "hrsh7th/cmp-buffer" },
     {
       "tzachar/cmp-fuzzy-buffer",
@@ -48,15 +49,16 @@ return {
     { "hrsh7th/cmp-nvim-lua" },
     { "hrsh7th/cmp-path" },
     { "FelipeLema/cmp-async-path" },
-    { "hrsh7th/cmp-emoji" },
-    { "f3fora/cmp-spell" },
     { "hrsh7th/cmp-cmdline", event = { "CmdlineEnter" } },
     { "hrsh7th/cmp-nvim-lsp-signature-help" },
     { "hrsh7th/cmp-nvim-lsp-document-symbol" },
+    { "hrsh7th/cmp-emoji" },
+    { "f3fora/cmp-spell" },
     { "lukas-reineke/cmp-rg" },
     { "lukas-reineke/cmp-under-comparator" },
     { "davidsierradz/cmp-conventionalcommits" },
     { "dmitmel/cmp-cmdline-history" },
+    { "andersevenrud/cmp-tmux" },
     -- { "kristijanhusak/vim-dadbod-completion"},
   },
   -- init = function() vim.opt.completeopt = { "menu", "menuone", "noselect", "noinsert" } end,
@@ -232,12 +234,12 @@ return {
           }, ","),
           zindex = 1001,
           col_offset = 0,
-          border = "none", -- alts: mega.get_border(), "none"
+          border = mega.get_border(), -- alts: mega.get_border(), "none"
           side_padding = 1,
           scrollbar = false,
         },
         documentation = cmp.config.window.bordered({
-          border = "none", -- alts: mega.get_border(), "none"
+          border = mega.get_border(), -- alts: mega.get_border(), "none"
           winhighlight = table.concat({
             "Normal:NormalFloat",
             "FloatBorder:FloatBorder",
@@ -247,8 +249,6 @@ return {
         }),
       },
       mapping = {
-        -- ["<Tab>"] = cmp.mapping(tab, { "i", "s", "c" }),
-        -- ["<S-Tab>"] = cmp.mapping(shift_tab, { "i", "s", "c" }),
         ["<Tab>"] = {
           i = tab,
           s = tab,
@@ -372,6 +372,7 @@ return {
               nvim_lua = "[nlua]",
               nvim_lsp_signature_help = "[sig]",
               async_path = "[path]",
+              tmux = "[tmux]",
               rg = "[rg]",
               fuzzy_buffer = "[buf]",
               buffer = "[buf]",
@@ -443,24 +444,34 @@ return {
         { name = "nvim_lua" },
         { name = "nvim_lsp" },
         { name = "async_path", option = { trailing_slash = true } },
+        { name = "tmux", option = { all_panes = true } },
       }, {
-        { name = "fuzzy_buffer", option = { min_match_length = 3 } },
         {
-          name = "buffer",
-          keyword_length = 4,
-          max_item_count = 5,
-          options = {
-            get_bufnrs = function() return vim.tbl_map(vim.api.nvim_win_get_buf, vim.api.nvim_list_wins()) end,
+          name = "fuzzy_buffer",
+          option = {
+            min_match_length = 3,
+            max_matches = 5,
+            options = {
+              get_bufnrs = function() return vim.tbl_map(vim.api.nvim_win_get_buf, vim.api.nvim_list_wins()) end,
+            },
           },
         },
+        -- {
+        --   name = "buffer",
+        --   keyword_length = 4,
+        --   max_item_count = 5,
+        --   options = {
+        --     get_bufnrs = function() return vim.tbl_map(vim.api.nvim_win_get_buf, vim.api.nvim_list_wins()) end,
+        --   },
+        -- },
         { name = "spell" },
       }),
     })
 
     cmp.setup.cmdline({ "/", "?" }, {
-      -- view = {
-      --   entries = { name = "custom", direction = "bottom_up" },
-      -- },
+      view = {
+        entries = { name = "custom", direction = "bottom_up" },
+      },
       mapping = cmp.mapping.preset.cmdline(),
       completion = {
         completeopt = "menuone,noselect",
@@ -468,7 +479,7 @@ return {
       sources = {
         { name = "nvim_lsp_document_symbol" },
         { name = "fuzzy_buffer", option = { min_match_length = 2 } },
-        { name = "buffer", option = { min_match_length = 2 } },
+        -- { name = "buffer", option = { min_match_length = 2 } },
       },
     })
 
@@ -487,7 +498,6 @@ return {
           },
           -- keyword_pattern = [=[[^[:blank:]\!]*]=]
         },
-        -- { name = "cmdline", keyword_pattern = [=[[^[:blank:]\!]*]=] },
         -- { name = "cmdline_history", priority = 10, max_item_count = 3 },
       }),
     })
@@ -499,33 +509,5 @@ return {
       },
       { name = "buffer" },
     })
-
-    -- cmp.setup.filetype({"lua"}, {
-    --   sources = {
-    --     { name = "vsnip" },
-    --     { name = "nvim_lua" },
-    --     { name = "nvim_lsp" },
-    --     { name = "async_path" },
-    --   },
-    --   { name = "buffer" },
-    -- })
-
-    -- cmp.setup.filetype({ "sql", "mysql", "plsql" }, {
-    --   sources = {
-    --     { name = "vim-dadbod-completion" },
-    --   },
-    -- })
-
-    -- cmp.setup.filetype({ "dap-repl", "dapui_watches" }, {
-    --   sources = {
-    --     { name = "dap" },
-    --   },
-    -- })
-
-    -- require("cmp.entry").get_documentation = function(self)
-    --   local item = self:get_completion_item()
-    --   if item.documentation then return require("mega.utils").format_markdown(item.documentation) end
-    --   return {}
-    -- end
   end,
 }

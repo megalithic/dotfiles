@@ -262,10 +262,10 @@ local function set_keymaps(bufnr, direction)
   if direction ~= "tab" then mega.nmap("q", quit, opts) end
 
   tnoremap("<esc>", [[<C-\><C-n>]], opts)
-  tnoremap("<C-h>", [[<cmd>wincmd h<cr>]], opts)
-  tnoremap("<C-j>", [[<cmd>wincmd j<cr>]], opts)
-  tnoremap("<C-k>", [[<cmd>wincmd k<cr>]], opts)
-  tnoremap("<C-l>", [[<cmd>wincmd l<cr>]], opts)
+  tnoremap("<C-h>", [[<cmd>wincmd p<cr>]], opts)
+  tnoremap("<C-j>", [[<cmd>wincmd p<cr>]], opts)
+  tnoremap("<C-k>", [[<cmd>wincmd p<cr>]], opts)
+  tnoremap("<C-l>", [[<cmd>wincmd p<cr>]], opts)
   tnoremap("<C-x>", quit, opts)
 end
 

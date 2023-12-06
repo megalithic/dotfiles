@@ -159,6 +159,17 @@ end
 _G.map = vim.keymap.set
 mega.map = vim.keymap.set
 
+---Find an item in a list
+---@generic T
+---@param matcher fun(arg: T):boolean
+---@param haystack T[]
+---@return T?
+function mega.find(matcher, haystack)
+  for _, needle in ipairs(haystack) do
+    if matcher(needle) then return needle end
+  end
+end
+
 function mega.command(name, rhs, opts)
   opts = opts or {}
   vim.api.nvim_create_user_command(name, rhs, opts)
@@ -292,7 +303,7 @@ function mega.require(module_name, opts)
   return ok, result
 end
 
-mega.iabbrev = function(lhs, rhs, ft)
+function mega.iabbrev(lhs, rhs, ft)
   ft = ft or nil
 
   if ft then
@@ -308,9 +319,9 @@ mega.iabbrev = function(lhs, rhs, ft)
     vim.cmd.iabbrev(fmt([[%s %s]], lhs, rhs))
   end
 end
-mega.cabbrev = function(lhs, rhs) vim.cmd.cabbrev(fmt([[%s %s]], lhs, rhs)) end
-mega.nabbrev = function(lhs, rhs) vim.cmd.abbrev(fmt([[%s %s]], lhs, rhs)) end
-mega.noabbrev = function(lhs, rhs) vim.cmd.noabbrev(fmt([[%s %s]], lhs, rhs)) end
+function mega.cabbrev(lhs, rhs) vim.cmd.cabbrev(fmt([[%s %s]], lhs, rhs)) end
+function mega.nabbrev(lhs, rhs) vim.cmd.abbrev(fmt([[%s %s]], lhs, rhs)) end
+function mega.noabbrev(lhs, rhs) vim.cmd.noabbrev(fmt([[%s %s]], lhs, rhs)) end
 
 -- [ commands ] ----------------------------------------------------------------
 do

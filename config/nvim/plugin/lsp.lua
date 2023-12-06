@@ -18,27 +18,15 @@ local md_namespace = vim.api.nvim_create_namespace("lsp_highlights")
 local diag_namespace = vim.api.nvim_create_namespace("lsp_diagnostics")
 
 function mega.lsp.has_method(client, method)
-  method = method:find("/") and method or "textDocument/" .. method
-
-  -- if client.supports_method(method) then dd(client.name .. " has " .. method) end
-
-  return client.supports_method(method)
+  return client.supports_method(method:find("/") and method or "textDocument/" .. method)
 end
 function mega.lsp.is_enabled_elixir_ls(ls) return vim.tbl_contains(vim.g.enabled_elixir_ls, ls) end
-function mega.lsp.formatting_filter(client)
-  -- dd(fmt("formatting_filter allows %s? %s", client.name, not vim.tbl_contains(vim.g.formatter_exclusions, client.name)))
-  return not vim.tbl_contains(vim.g.formatter_exclusions, client.name)
-end
-local function not_interfere_on_float()
+function mega.lsp.formatting_filter(client) return not vim.tbl_contains(vim.g.formatter_exclusions, client.name) end
+local function has_existing_floats()
   local winids = vim.api.nvim_tabpage_list_wins(0)
   for _, winid in ipairs(winids) do
-    if vim.api.nvim_win_get_config(winid).zindex then
-      -- vim.notify("There is a floating window open already", vim.log.levels.WARN)
-      return false
-    end
+    if vim.api.nvim_win_get_config(winid).zindex then return true end
   end
-
-  return true
 end
 
 -- A helper function to auto-update the quickfix list when new diagnostics come
@@ -117,7 +105,6 @@ end
 -- by checking whether the word under the cursor has changed.
 local function diagnostic_popup(bufnr)
   if not vim.g.git_conflict_detected then
-    -- if not vim.g.git_conflict_detected and not_interfere_on_float() then
     -- Try to open diagnostics under the cursor
     local diags = vim.diagnostic.open_float(bufnr, { focus = false, scope = "cursor" })
     if not diags then -- If there's no diagnostic under the cursor show diagnostics of the entire line
@@ -141,7 +128,7 @@ local function format(opts)
   })
 end
 
-local function hover()
+local function hover(hover_only)
   local function get_preview_window()
     for _, win in ipairs(vim.api.nvim_tabpage_list_wins(vim.api.nvim_get_current_tabpage())) do
       if vim.api.nvim_win_get_option(win, "previewwindow") then return win end
@@ -162,22 +149,35 @@ local function hover()
   local existing_float_win = vim.b.lsp_floating_preview
   local active_clients = vim.lsp.get_clients()
 
-  if next(active_clients) == nil then
-    vim.cmd([[execute printf('h %s', expand('<cword>'))]])
+  local filetype = vim.bo.filetype
+  if vim.tbl_contains({ "vim", "help" }, filetype) then
+    vim.cmd("h " .. vim.fn.expand("<cword>"))
+  elseif vim.tbl_contains({ "man" }, filetype) then
+    vim.cmd("Man " .. vim.fn.expand("<cword>"))
+  elseif vim.fn.expand("%:t") == "Cargo.toml" and require("crates").popup_available() then
+    require("crates").show_popup()
   else
-    if existing_float_win and vim.api.nvim_win_is_valid(existing_float_win) then
-      vim.b.lsp_floating_preview = nil
-      local preview_buffer = vim.api.nvim_win_get_buf(existing_float_win)
-      local pwin = get_preview_window()
-      vim.api.nvim_win_set_buf(pwin, preview_buffer)
-      vim.api.nvim_win_close(existing_float_win, true)
-
-      nnoremap("q", function()
-        vim.api.nvim_win_close(0, true)
-        vim.cmd("wincmd p")
-      end, { buffer = preview_buffer })
+    if next(active_clients) == nil then
+      vim.cmd("h " .. vim.fn.expand("<cword>"))
     else
-      require("pretty_hover").hover()
+      if hover_only then
+        require("pretty_hover").hover()
+      else
+        if existing_float_win and vim.api.nvim_win_is_valid(existing_float_win) then
+          vim.b.lsp_floating_preview = nil
+          local preview_buffer = vim.api.nvim_win_get_buf(existing_float_win)
+          local pwin = get_preview_window()
+          vim.api.nvim_win_set_buf(pwin, preview_buffer)
+          vim.api.nvim_win_close(existing_float_win, true)
+
+          nnoremap("q", function()
+            vim.api.nvim_win_close(0, true)
+            vim.cmd("wincmd p")
+          end, { buffer = preview_buffer })
+        else
+          require("pretty_hover").hover()
+        end
+      end
     end
   end
 end
@@ -248,7 +248,9 @@ local function setup_autocommands(client, bufnr)
     {
       event = { "CursorHold" },
       desc = "Show diagnostics",
-      command = function(args) diagnostic_popup(args.buf) end,
+      command = function(args)
+        if not has_existing_floats() then diagnostic_popup(args.buf) end
+      end,
     },
     -- {
     --   event = { "DiagnosticChanged" },
@@ -266,7 +268,6 @@ local function setup_autocommands(client, bufnr)
     --   end,
     -- },
   })
-
   if vim.g.formatter == "null-ls" then
     mega.augroup("LspFormat", {
       {
@@ -278,7 +279,6 @@ local function setup_autocommands(client, bufnr)
       },
     })
   end
-
   -- augroup("LspDocumentHighlight", {
   --   {
   --     event = { "InsertEnter" },
@@ -298,20 +298,6 @@ local function setup_autocommands(client, bufnr)
 end
 
 -- [ MAPPINGS ] ----------------------------------------------------------------
-
-local function cancelable(method)
-  return function()
-    local params = vim.lsp.util.make_position_params()
-    local bufnr = vim.api.nvim_get_current_buf()
-    local cursor = vim.api.nvim_win_get_cursor(0)
-    vim.lsp.buf_request(0, method, params, function(...)
-      local new_cursor = vim.api.nvim_win_get_cursor(0)
-      if vim.api.nvim_get_current_buf() == bufnr and vim.deep_equal(cursor, new_cursor) then
-        vim.lsp.handlers[method](...)
-      end
-    end)
-  end
-end
 
 local function setup_keymaps(client, bufnr)
   local function desc(description, expr)
@@ -384,19 +370,8 @@ local function setup_keymaps(client, bufnr)
   safemap("rename", "n", "gn", vim.lsp.buf.rename, "lsp: rename")
   nnoremap("ger", require("mega.utils.lsp").rename_file, desc("lsp: rename file to <input>"))
   nnoremap("gen", require("mega.utils.lsp").rename_file, desc("lsp: rename file to <input>"))
-  safemap("hover", "n", "K", function()
-    local filetype = vim.bo.filetype
-    if vim.tbl_contains({ "vim", "help" }, filetype) then
-      vim.cmd("h " .. vim.fn.expand("<cword>"))
-    elseif vim.tbl_contains({ "man" }, filetype) then
-      vim.cmd("Man " .. vim.fn.expand("<cword>"))
-    elseif vim.fn.expand("%:t") == "Cargo.toml" and require("crates").popup_available() then
-      require("crates").show_popup()
-    else
-      hover()
-    end
-  end, desc("lsp: hover"))
-  safemap("signatureHelp", "n", "gK", vim.lsp.buf.signature_help, "lsp: signature help")
+  safemap("hover", "n", "K", function() hover() end, desc("lsp: hover"))
+  safemap("hover", "n", "gK", function() hover(true) end, desc("lsp: hover"))
   safemap("signatureHelp", "i", "<c-k>", vim.lsp.buf.signature_help, "lsp: signature help")
   safemap("formatting", "n", "<leader>lft", [[<cmd>ToggleAutoFormat<cr>]], "toggle formatting")
   safemap("formatting", "n", "<leader>lff", function()
@@ -618,7 +593,7 @@ local client_overrides = {}
 ---@param bufnr number
 local function setup_semantic_tokens(client, bufnr)
   -- fully disable semantic tokens highlighting
-  client.server_capabilities.semanticTokensProvider = nil
+  client.server_capabilities.semanticTokensProvider = {}
 
   -- local overrides = client_overrides[client.name]
   -- if not overrides or not overrides.semantic_tokens then return end

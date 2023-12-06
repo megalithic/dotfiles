@@ -199,6 +199,7 @@ M.list = {
         --   logLevel = "debug",
         -- },
       },
+      on_attach = function(client, bufnr) dd({ client, bufnr }) end,
     }
   end,
   --- @see https://gist.github.com/folke/fe5d28423ea5380929c3f7ce674c41d8
@@ -591,7 +592,7 @@ M.unofficial = {
         local build_bin = fmt("next_ls_%s_%s", os_name, current_arch)
 
         if use_homebrew then return { "nextls", "--stdio" } end
-        return { vim.env.XDG_DATA_HOME .. "/lsp/nextls/burrito_out/" .. build_bin, "--stdio" }
+        return { fmt("%s/lsp/nextls/burrito_out/", vim.env.XDG_DATA_HOME, build_bin), "--stdio" }
       end
 
       configs.nextls = {

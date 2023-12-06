@@ -55,6 +55,7 @@
   (quoted_content) @elixir
 (#any-of? @_sigil_name "q" "S" "E"))
 
+; from https://github.com/elixir-tools/elixir-tools.nvim/blob/main/queries/elixir/injections.scm
 (call
   target: ((identifier) @_identifier (#eq? @_identifier "execute"))
   (arguments

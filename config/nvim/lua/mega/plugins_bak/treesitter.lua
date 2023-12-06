@@ -102,7 +102,35 @@ return {
       },
       "RRethy/nvim-treesitter-endwise",
       { "megalithic/nvim-ts-autotag" },
-      "andymass/vim-matchup",
+      {
+        "andymass/vim-matchup",
+        lazy = false,
+        config = function()
+          vim.g.matchup_matchparen_nomode = "i"
+          vim.g.matchup_delim_noskips = 1 -- recognize symbols within comments
+          vim.g.matchup_matchparen_deferred_show_delay = 400
+          vim.g.matchup_matchparen_deferred_hide_delay = 400
+          vim.g.matchup_matchparen_offscreen = {}
+          -- vim.g.matchup_matchparen_offscreen = {
+          --   method = "popup",
+          --   -- fullwidth = true,
+          --   highlight = "TreesitterContext",
+          --   border = "",
+          -- }
+          vim.g.matchup_matchparen_deferred = 1
+          vim.g.matchup_matchparen_timeout = 300
+          vim.g.matchup_matchparen_insert_timeout = 60
+          vim.g.matchup_surround_enabled = 1 -- defaulted 0
+          vim.g.matchup_motion_enabled = 1 -- defaulted 0
+          vim.g.matchup_text_obj_enabled = 1
+
+          vim.keymap.set({ "n", "x" }, "[[", "<plug>(matchup-[%)", { desc = "goto prev delimiter" })
+          vim.keymap.set({ "n", "x" }, "]]", "<plug>(matchup-]%)", { desc = "goto next delimiter" })
+        end,
+        keys = {
+          { "<Tab>", "<plug>(matchup-%)", desc = "goto matching delimiter", mode = { "n", "x" } },
+        },
+      },
       "David-Kunz/treesitter-unit",
       -- {
       --   "roobert/tabtree.nvim",

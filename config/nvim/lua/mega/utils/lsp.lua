@@ -83,8 +83,6 @@ function M.root_dir(patterns, fname)
 end
 
 function M.setup_rename(_client, _bufnr)
-  --
-  --
   -- populate qf list with changes (if multiple files modified)
   local function qf_rename()
     local rename_prompt = ""
@@ -93,6 +91,7 @@ function M.setup_rename(_client, _bufnr)
 
     local position_params = vim.lsp.util.make_position_params()
     position_params.oldName = vim.fn.expand("<cword>")
+    position_params.context = { includeDeclaration = true }
 
     local function cleanup_rename_callback(winnr)
       api.nvim_win_close(winnr or 0, true)

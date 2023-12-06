@@ -1,12 +1,12 @@
 ;; extends
 
 ; Headers
-((atx_h1_marker) @text.title (#set! conceal "¹"))
-((atx_h2_marker) @text.title (#set! conceal "²"))
-((atx_h3_marker) @text.title (#set! conceal "³"))
-((atx_h4_marker) @text.title (#set! conceal "⁴"))
-((atx_h5_marker) @text.title (#set! conceal "⁵"))
-((atx_h6_marker) @text.title (#set! conceal "⁶"))
+((atx_h1_marker) @text.title (#set! conceal "󰉫"))
+((atx_h2_marker) @text.title (#set! conceal "󰉬"))
+((atx_h3_marker) @text.title (#set! conceal "󰉭"))
+((atx_h4_marker) @text.title (#set! conceal "󰉮"))
+((atx_h5_marker) @text.title (#set! conceal "󰉯"))
+((atx_h6_marker) @text.title (#set! conceal "󰉰"))
 
 (atx_heading [
   (atx_h1_marker)

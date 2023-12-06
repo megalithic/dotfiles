@@ -191,14 +191,6 @@ local function mini_pairs(opts)
   require("mini.pairs").setup(opts)
 end
 
-local function mini_comment()
-  require("mini.comment").setup({
-    hooks = {
-      pre = function() require("ts_context_commentstring.internal").update_commentstring({}) end,
-    },
-  })
-end
-
 local function mini_ai()
   local ai = require("mini.ai")
   local gen_spec = ai.gen_spec
@@ -409,7 +401,6 @@ return {
   config = function()
     mini_surround()
     -- mini_pairs()
-    mini_comment()
     mini_align()
     mini_pick()
     -- mini_indentscope()

@@ -54,7 +54,7 @@ local theme = lush(function(injected_functions)
     BackgroundExtraLight({ bg = C.bg2 }),
     Visual({ fg = C.transparent, bg = C.bg_visual }), -- Visual mode selection
     VisualNOS({ fg = C.transparent, bg = C.bg_visual }), -- Visual mode selection when vim is "Not Owning the Selection".
-    VisualYank({ fg = C.transparent, bg = C.bg_blue }), -- Visual mode selection
+    VisualYank({ Visual, bg = C.bg_visual.li(10) }), -- Visual mode selection
     WarningMsg({ fg = C.yellow, bg = C.transparent }), -- warning messages
     Whitespace({ fg = C.bg3, bg = C.transparent }), -- "nbsp", "space", "tab" and "trail" in 'listchars'
     ColorColumn({ fg = C.transparent, bg = C.bg0 }), -- used for the columns set with 'colorcolumn'

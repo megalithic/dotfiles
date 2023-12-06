@@ -3,6 +3,29 @@
 -- investigate MRU:  https://github.com/yutkat/dotfiles/blob/main/.config/nvim/lua/rc/pluginconfig/telescope.lua#LL241C1-L344C4
 
 local keys = {}
+
+-- Set current folder as prompt title
+local function with_title(opts, extra)
+  extra = extra or {}
+  local path = opts.cwd or opts.path or extra.cwd or extra.path or nil
+  local title = ""
+  local buf_path = vim.fn.expand("%:p:h")
+  local cwd = vim.fn.getcwd()
+  if extra["title"] ~= nil then
+    title = fmt("%s (%s):", extra.title, vim.fs.basename(vim.loop.cwd() or ""))
+  else
+    if path ~= nil and buf_path ~= cwd then
+      title = require("plenary.path"):new(buf_path):make_relative(cwd)
+    else
+      title = vim.fn.fnamemodify(cwd, ":t")
+    end
+  end
+
+  return vim.tbl_extend("force", opts, {
+    prompt_title = title,
+  }, extra or {})
+end
+
 local ts = setmetatable({}, {
   __index = function(_, key)
     return function(topts)
@@ -14,42 +37,26 @@ local ts = setmetatable({}, {
         vim.fn.setreg("v", rv, rt)
         return vim.split(selection, "\n")
       end
+      local builtin = require("telescope.builtin")
       local mode = vim.api.nvim_get_mode().mode
       topts = topts or {}
       if mode == "v" or mode == "V" or mode == "" then topts.default_text = table.concat(get_selection()) end
       if key == "grepify" then
-        require("telescope").extensions.egrepify.egrepify(topts)
+        require("telescope").extensions.egrepify.egrepify(with_title(topts, { title = "egrepify" }))
       elseif key == "undo" then
         require("telescope").extensions.undo.undo(topts)
       elseif key == "grep" then
-        require("telescope").extensions.live_grep_args.live_grep_args(topts)
+        require("telescope").extensions.live_grep_args.live_grep_args(with_title(topts, { title = "live grep args" }))
       elseif key == "fd" then
-        require("telescope").extensions.corrode.corrode(topts)
+        require("telescope").extensions.corrode.corrode(with_title(topts, { title = "find files" }))
+      elseif key == "find_files" then
+        builtin[key](with_title(topts, { title = "find files" }))
       else
-        local builtin = require("telescope.builtin")
         builtin[key](topts)
       end
     end
   end,
 })
-
--- Set current folder as prompt title
-local function with_title(opts, extra)
-  extra = extra or {}
-  local path = opts.cwd or opts.path or extra.cwd or extra.path or nil
-  local title = ""
-  local buf_path = vim.fn.expand("%:p:h")
-  local cwd = vim.fn.getcwd()
-  if path ~= nil and buf_path ~= cwd then
-    title = require("plenary.path"):new(buf_path):make_relative(cwd)
-  else
-    title = vim.fn.fnamemodify(cwd, ":t")
-  end
-
-  return vim.tbl_extend("force", opts, {
-    prompt_title = title,
-  }, extra or {})
-end
 
 local function get_border(opts)
   opts = vim.tbl_deep_extend("force", opts or {}, {
@@ -228,6 +235,16 @@ if vim.g.picker == "telescope" then
         end
       end,
     },
+    {
+      -- HACK color parent as comment
+      -- CAVEAT interferes with other Telescope Results that display for spaces
+      event = { "FileType" },
+      pattern = "TelescopeResults",
+      command = function()
+        vim.fn.matchadd("TelescopeParent", "\t\t.*$")
+        vim.api.nvim_set_hl(0, "TelescopeParent", { link = "Comment" })
+      end,
+    },
   })
   local has_wk, wk = mega.require("which-key")
   if has_wk then
@@ -341,6 +358,21 @@ return {
     local actions = require("telescope.actions")
     local lga_actions = require("telescope-live-grep-args.actions")
     local action_state = require("telescope.actions.state")
+
+    ---Requires the autocmd above
+    ---@param _ table
+    ---@param path string
+    ---@return string
+    local function filenameFirst(_, path)
+      path = path:gsub("/$", "") -- trailing slash from directories breaks fs.basename
+      local tail = vim.fs.basename(path)
+      local parent = vim.fs.dirname(path)
+      if parent == "." then return tail end
+      local parentDisplay = #parent > 20 and vim.fs.basename(parent) or parent
+      -- return path
+      return string.format("%s/%s", parentDisplay, tail) -- parent colored via autocmd above
+      -- return string.format("%s\t\t%s", tail, parentDisplay) -- parent colored via autocmd above
+    end
 
     telescope.setup({
       defaults = {
@@ -574,6 +606,7 @@ return {
         --   },
         -- },
         find_files = {
+          -- path_display = filenameFirst,
           find_command = find_files_cmd,
           on_input_filter_cb = file_extension_filter,
           mappings = {

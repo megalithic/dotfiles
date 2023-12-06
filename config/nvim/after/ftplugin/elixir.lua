@@ -6,11 +6,21 @@ vim.cmd([[setlocal iskeyword+=!,?,-]])
 vim.cmd([[setlocal indentkeys-=0{]])
 vim.cmd([[setlocal indentkeys+=0=end]])
 
+mega.command("CopyModuleAlias", function()
+  vim.api.nvim_feedkeys(
+    -- Copy Module Alias to next window? [[mT?defmodule <cr>w"zyiW`T<c-w>poalias <c-r>z]]
+    vim.api.nvim_replace_termcodes([[mT?defmodule <cr>w"zyiW`Tpoalias <c-r>z]], true, false, true),
+    "n",
+    true
+  )
+end)
+
 -- nnoremap("<leader>ed", [[orequire IEx; IEx.pry; #respawn() to leave pry<ESC>:w<CR>]])
-nnoremap("<localleader>ep", [[o|><ESC>a]])
-nnoremap("<localleader>ed", [[o|> dbg()<ESC>a]])
-nnoremap("<localleader>ei", [[o|> IO.inspect()<ESC>i]])
-nnoremap("<localleader>eil", [[o|> IO.inspect(label: "")<ESC>hi]])
+nnoremap("<localleader>ep", [[o|><ESC>a]], { desc = "ex: pipe (new line)" })
+nnoremap("<localleader>ed", [[o|> dbg()<ESC>a]], { desc = "ex: dbg (new line)" })
+nnoremap("<localleader>ei", [[o|> IO.inspect()<ESC>i]], { desc = "ex: inspect (new line)" })
+nnoremap("<localleader>eil", [[o|> IO.inspect(label: "")<ESC>hi]], { desc = "ex: inspect label (new line)" })
+nnoremap("<localleader>em", "<cmd>CopyModuleAlias<cr>", { desc = "ex: copy module alias" })
 
 local has_wk, wk = pcall(require, "which-key")
 if has_wk then wk.register({
@@ -141,7 +151,7 @@ local function setup_mix()
   end
 end
 
--- setup_mix()
+setup_mix()
 
 -- local function is_elixir_test_file()
 --   local file_name = vim.fn.expand("%:t")

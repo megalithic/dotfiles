@@ -20,6 +20,7 @@ vim.opt.shortmess = {
   W = true, -- Don't show [w] or written when writing
 }
 
+vim.opt.startofline = true -- motions like "G" also move to the first char
 vim.o.shortmess = "filnxtToOFWIcC"
 -----------------------------------------------------------------------------//
 -- Timings {{{1
@@ -167,6 +168,7 @@ end
 -----------------------------------------------------------------------------//
 -- Wild and file globbing stuff in command mode {{{1
 -----------------------------------------------------------------------------//
+vim.o.wildcharm = fn.char2nr(vim.keycode([[<Tab>]]))
 vim.o.wildmode = "longest:full,full" -- Shows a menu bar as opposed to an enormous list
 -- Binary
 vim.opt.wildignore = {
@@ -494,7 +496,7 @@ vim.o.titlestring =
 vim.o.titleold = fn.fnamemodify(vim.uv.os_getenv("SHELL"), ":t")
 vim.o.titlelen = 70
 -- FIXME: this breaks tmux (vim.o.title); so disabling for now ¯\_(ツ)_/¯
--- vim.o.title = vim.env.TMUX_POPUP == nil
+vim.o.title = not vim.g.is_tmux_popup
 -----------------------------------------------------------------------------//
 -- GUI {{{1
 -----------------------------------------------------------------------------//
