@@ -191,7 +191,7 @@ return {
 
         return not disabled
       end,
-      -- preselect = cmp.PreselectMode.None,
+      preselect = cmp.PreselectMode.None,
       -- preselect = cmp.PreselectMode.Item,
       -- entries = { name = "custom", selection_order = "near_cursor" },
       completion = {
@@ -199,7 +199,7 @@ return {
         -- completeopt = "menu,menuone,noselect,noinsert",
         -- completeopt = "menu,menuone,noselect",
 
-        -- completeopt = { "menu", "menuone", "preview", "noselect", "noinsert" },
+        completeopt = { "menu", "menuone", "preview", "noselect", "noinsert" },
         max_item_count = 50,
         keyword_length = 1,
         get_trigger_characters = function(trigger_characters)
@@ -501,13 +501,8 @@ return {
         -- { name = "cmdline_history", priority = 10, max_item_count = 3 },
       }),
     })
-    --
-    -- cmp.setup.filetype({ "gitcommit", "NeogitCommitMessage" }, {
-    --   sources = {
-    --     { name = "conventionalcommits" },
-    --     { name = "async_path" },
-    --   },
-    --   { name = "buffer" },
-    -- })
+    cmp.setup.filetype({ "gitcommit", "NeogitCommitMessage" }, {
+      sources = {},
+    })
   end,
 }
