@@ -472,9 +472,6 @@ return {
         entries = { name = "custom", direction = "bottom_up" },
       },
       mapping = cmp.mapping.preset.cmdline(),
-      completion = {
-        completeopt = "menuone,noselect",
-      },
       sources = {
         { name = "nvim_lsp_document_symbol" },
         { name = "fuzzy_buffer", option = { min_match_length = 2 } },
@@ -482,24 +479,21 @@ return {
       },
     })
 
-    -- cmp.setup.cmdline(":", {
-    --   mapping = cmp.mapping.preset.cmdline(),
-    --   completion = {
-    --     completeopt = "menuone,noselect",
-    --   },
-    --   sources = cmp.config.sources({
-    --     { name = "async_path" },
-    --     {
-    --       name = "cmdline",
-    --       keyword_length = 3,
-    --       option = {
-    --         ignore_cmds = { "Man", "!" },
-    --       },
-    --       -- keyword_pattern = [=[[^[:blank:]\!]*]=]
-    --     },
-    --     -- { name = "cmdline_history", priority = 10, max_item_count = 3 },
-    --   }),
-    -- })
+    cmp.setup.cmdline(":", {
+      mapping = cmp.mapping.preset.cmdline(),
+      sources = cmp.config.sources({
+        { name = "async_path" },
+        {
+          name = "cmdline",
+          keyword_length = 3,
+          option = {
+            ignore_cmds = { "Man", "!" },
+          },
+          keyword_pattern = [=[[^[:blank:]\!]*]=],
+        },
+        -- { name = "cmdline_history", priority = 10, max_item_count = 3 },
+      }),
+    })
 
     cmp.setup.filetype({ "gitcommit", "NeogitCommitMessage" }, {
       sources = {},
