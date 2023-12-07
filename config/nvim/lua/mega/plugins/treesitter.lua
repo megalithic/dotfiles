@@ -72,7 +72,8 @@ return {
   { "nvim-treesitter/playground", cmd = { "TSPlaygroundToggle", "TSHighlightCapturesUnderCursor" } },
   {
     "nvim-treesitter/nvim-treesitter",
-    build = ":TSUpdate",
+    -- build = ":TSUpdate",
+    build = function() require("nvim-treesitter.install").update({ with_sync = true }) end,
     event = { "BufReadPost", "BufNewFile" },
     -- cond = #vim.api.nvim_list_uis() > 0,
     cmd = {

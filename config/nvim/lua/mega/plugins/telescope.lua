@@ -37,6 +37,7 @@ local ts = setmetatable({}, {
         vim.fn.setreg("v", rv, rt)
         return vim.split(selection, "\n")
       end
+
       local builtin = require("telescope.builtin")
       local mode = vim.api.nvim_get_mode().mode
       topts = topts or {}
@@ -124,13 +125,20 @@ end
 -- * cwd
 ---@param opts? table
 local function find_files(opts)
+  opts = opts or {}
+  local theme = opts["theme"] or "ivy"
   local bufnr = vim.api.nvim_get_current_buf()
   local fn = vim.api.nvim_buf_get_name(bufnr)
   current_fn = fn
-  opts = opts or {}
   -- opts.cwd = require("mega.utils").get_root()
   -- vim.notify(fmt("current project files root: %s", opts.cwd), vim.log.levels.DEBUG, { title = "telescope" })
-  ts.find_files(ivy(opts))
+  if theme == "ivy" then
+    ts.find_files(ivy(opts))
+  elseif theme == "dropdown" then
+    ts.find_files(dropdown(opts))
+  else
+    ts.find_files(opts)
+  end
   -- require("telescope").extensions.smart_open.smart_open(ivy(opts))
 end
 
@@ -263,11 +271,6 @@ if vim.g.picker == "telescope" then
       function() ts.buffers(dropdown({})) end,
       desc = "find open buffers",
     },
-    -- {
-    --   "gb",
-    --   function() ts.buffers(dropdown({})) end,
-    --   desc = "find open buffers",
-    -- },
     {
       "<leader>fn",
       function() mega.find_files({ path = vim.g.notes_path }) end,
@@ -292,9 +295,14 @@ if vim.g.picker == "telescope" then
           and not vim.tbl_contains({ "NeogitStatus" }, vim.bo[args.buf].filetype)
           and (arg and (vim.fn.isdirectory(arg) == 0 and arg == ""))
         then
+          mega.augroup("TelescopeStartup", {
+            event = { "BufEnter" },
+            command = function(args) dd(args) end,
+          })
           -- Open file browser if argument is a folder
           -- REF: https://github.com/protiumx/.dotfiles/blob/main/stow/nvim/.config/nvim/lua/config/telescope.lua#L50
-          ts.fd(with_title(dropdown({
+          find_files({
+            theme = "dropdown",
             hidden = true,
             no_ignore = false,
             previewer = false,
@@ -302,12 +310,24 @@ if vim.g.picker == "telescope" then
             preview_title = "",
             results_title = "",
             layout_config = { prompt_position = "top" },
+            -- FIXME: this simply will not work; unable to override defaults
             mappings = {
               i = {
-                ["<cr>"] = stopinsert(function(pb) multi(pb, "edit") end),
+                ["<cr>"] = stopinsert(function(pb)
+                  dd("i -cr'ing")
+                  multi(pb, "edit")
+                  vim.api.nvim_buf_delete(1, { force = true })
+                end),
+              },
+              n = {
+                ["<cr>"] = function(pb)
+                  dd("n -cr'ing")
+                  multi(pb, "vnew")
+                  vim.api.nvim_buf_delete(args.buf + 1, { force = true })
+                end,
               },
             },
-          })))
+          })
         end
       end,
     },
@@ -350,21 +370,6 @@ return {
     local actions = require("telescope.actions")
     local lga_actions = require("telescope-live-grep-args.actions")
     local action_state = require("telescope.actions.state")
-
-    ---Requires the autocmd above
-    ---@param _ table
-    ---@param path string
-    ---@return string
-    local function filenameFirst(_, path)
-      path = path:gsub("/$", "") -- trailing slash from directories breaks fs.basename
-      local tail = vim.fs.basename(path)
-      local parent = vim.fs.dirname(path)
-      if parent == "." then return tail end
-      local parentDisplay = #parent > 20 and vim.fs.basename(parent) or parent
-      -- return path
-      return string.format("%s/%s", parentDisplay, tail) -- parent colored via autocmd above
-      -- return string.format("%s\t\t%s", tail, parentDisplay) -- parent colored via autocmd above
-    end
 
     telescope.setup({
       defaults = {
@@ -585,20 +590,7 @@ return {
         },
       },
       pickers = {
-        -- find_files = {
-        --   layout_strategy = "bottom_pane",
-        --   -- Since get_ivy didn't work. I just copy pasted the implementation
-        --   border = true,
-        --   borderchars = {
-        --     "z",
-        --     prompt = { "─", " ", " ", " ", "─", "─", " ", " " },
-        --     results = { " " },
-        --     -- results = { "a", "b", "c", "d", "e", "f", "g", "h" },
-        --     preview = { "─", "│", "─", "│", "╭", "╮", "╯", "╰" },
-        --   },
-        -- },
         find_files = {
-          -- path_display = filenameFirst,
           find_command = find_files_cmd,
           on_input_filter_cb = file_extension_filter,
           mappings = {
@@ -606,13 +598,8 @@ return {
               ["<cr>"] = stopinsert(function(pb) multi(pb, "vnew") end),
             },
           },
-          -- previewer = require("telescope.previewers.term_previewer").new_termopen_previewer({
-          --   get_command = function(entry) return { "preview", require("telescope.from_entry").path(entry) } end,
-          -- }),
         },
         live_grep = ivy({
-          -- max_results = 500,
-          -- file_ignore_patterns = { ".git/", "%.lock" },
           mappings = {
             i = {
               ["<cr>"] = stopinsert(function(pb) multi(pb, "vnew") end),

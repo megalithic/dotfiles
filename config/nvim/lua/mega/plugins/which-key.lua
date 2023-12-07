@@ -126,17 +126,17 @@ return {
         name = "+edit files",
         r = { function() require("mega.utils.lsp").rename_file() end, "rename file (lsp) to <input>" },
         s = { [[<cmd>SaveAsFile<cr>]], "save file as <input>" },
-        e = "oil: open (edit)", -- NOTE: change in plugins/init.lu
-        v = "oil: open (vsplit)", -- NOTE: change in plugins/init.lu
+        e = "oil: open (edit)", -- NOTE: change in plugins/init.lua
+        v = "oil: open (vsplit)", -- NOTE: change in plugins/init.lua
         d = {
           function()
-            if vim.fn.confirm("You sure?", "&Yes\n&No", 2, "Question") == 1 then vim.cmd("Duplicate") end
+            if vim.fn.confirm("Duplicate file?", "&Yes\n&No", 2, "Question") == 1 then vim.cmd("Duplicate") end
           end,
           "duplicate file?",
         },
         D = {
           function()
-            if vim.fn.confirm("You sure?", "&Yes\n&No", 2, "Question") == 1 then vim.cmd("Delete!") end
+            if vim.fn.confirm("Delete file?", "&Yes\n&No", 2, "Question") == 1 then vim.cmd("Delete!") end
           end,
           "delete file?",
         },
@@ -166,13 +166,17 @@ return {
       ["<leader>z"] = { name = "+zk" },
       ["<leader>n"] = { name = "+notes" },
       ["<leader>g"] = { name = "+git" },
+      ["<leader>gb"] = { name = "+git-blame" },
       ["<localleader>t"] = { name = "+test" },
       ["<localleader>g"] = { name = "+git" },
+      ["<localleader>gb"] = { name = "+git-blame" },
+      ["<localleader>gr"] = { name = "+git-blame" },
       ["<localleader>h"] = { name = "+hunks" },
       ["<localleader>d"] = { name = "+debugger" },
+      ["<localleader>y"] = { name = "+yank" },
       ["<localleader>m"] = {
         name = "+markdown",
-        p = { [[<cmd>MarkdownPreviewToggle<CR>]], "open preview" },
+        -- p = { [[<cmd>MarkdownPreviewToggle<CR>]], "open preview" },
         g = { [[<cmd>Glow<CR>]], "open glow" },
       },
       -- ["<localleader>g"] = {

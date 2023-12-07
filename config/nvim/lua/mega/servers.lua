@@ -188,18 +188,14 @@ M.list = {
       message_level = vim.lsp.protocol.MessageType.Log,
       logLevel = vim.lsp.protocol.MessageType.Log,
       messageLevel = vim.lsp.protocol.MessageType.Log,
-
+      cmd = { vim.env.XDG_DATA_HOME .. "/lsp/lexical/_build/dev/package/lexical/bin/start_lexical.sh" },
       settings = {
         dialyzerEnabled = true,
         log_level = vim.lsp.protocol.MessageType.Log,
         message_level = vim.lsp.protocol.MessageType.Log,
         logLevel = vim.lsp.protocol.MessageType.Log,
         messageLevel = vim.lsp.protocol.MessageType.Log,
-        -- lexical = {
-        --   logLevel = "debug",
-        -- },
       },
-      on_attach = function(client, bufnr) dd({ client, bufnr }) end,
     }
   end,
   --- @see https://gist.github.com/folke/fe5d28423ea5380929c3f7ce674c41d8
@@ -550,30 +546,6 @@ M.list = {
 }
 
 M.unofficial = {
-  lexical = function()
-    if not mega.lsp.is_enabled_elixir_ls("lexical") then return end
-    local configs = require("lspconfig.configs")
-
-    if not configs.lexical then
-      local function cmd()
-        return { vim.env.XDG_DATA_HOME .. "/lsp/lexical/_build/dev/package/lexical/bin/start_lexical.sh" }
-      end
-
-      configs.lexical = {
-        default_config = {
-          cmd = cmd(),
-          single_file_support = true,
-          filetypes = { "elixir", "eelixir", "heex", "surface" },
-          root_dir = root_pattern("mix.exs", ".git"), -- or vim.loop.os_homedir(),
-          log_level = vim.lsp.protocol.MessageType.Log,
-          message_level = vim.lsp.protocol.MessageType.Log,
-          settings = {
-            dialyzerEnabled = true,
-          },
-        },
-      }
-    end
-  end,
   nextls = function()
     if not mega.lsp.is_enabled_elixir_ls("nextls") then return end
     local configs = require("lspconfig.configs")

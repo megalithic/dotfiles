@@ -65,6 +65,8 @@ A few of the _must-have_ tools I roll with:
 
 - [kitty](https://github.com/kovidgoyal/kitty)
 - [tmux](https://github.com/tmux/tmux/wiki)
+  - foo
+    - bar
 - [neovim](https://neovim.io/)
 - [zsh](https://www.zsh.org/)
 - [weechat](https://www.weechat.org/)

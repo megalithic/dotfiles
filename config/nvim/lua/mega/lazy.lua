@@ -52,7 +52,7 @@ function M.setup()
     },
     install = {
       missing = true,
-      colorscheme = { vim.g.colorscheme, "habamax" },
+      colorscheme = { vim.g.colorscheme, "default", "habamax" },
     },
     dev = {
       -- directory where you store your local plugin projects

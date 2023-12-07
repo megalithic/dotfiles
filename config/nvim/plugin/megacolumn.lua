@@ -13,12 +13,16 @@ local fold_closed = "▷" -- '▶'
 local active_border_hl = "%#StatusColumnActiveBorder#"
 local inactive_border_hl = "%#StatusColumnInactiveBorder#"
 
+vim.opt_local.statuscolumn = ""
 ui.statuscolumn = {}
 
 ---@param group string
 ---@param text string
 ---@return string
-local function hl(group, text) return "%#" .. group .. "#" .. text .. "%*" end
+local function hl(group, text)
+  if group ~= nil and text ~= nil then return "%#" .. group .. "#" .. text .. "%*" end
+  return ""
+end
 
 local function click(name, item) return "%@v:lua.mega.ui.statuscolumn." .. name .. "@" .. item end
 
@@ -83,12 +87,11 @@ function ui.statuscolumn.render(is_active)
     end
   end
 
-  -- dd(sign)
   local components = {
     "%=",
     space,
-    sign and hl(sign.numhl, sign.text:gsub(space, "")) or space,
-    git_sign and hl(git_sign.texthl, git_sign.text:gsub(space, "")) or space,
+    sign ~= nil and hl(sign.numhl, (sign.text ~= nil and sign.text:gsub(space, "")) or "") or space,
+    git_sign ~= nil and hl(git_sign.texthl, git_sign.text:gsub(space, "")) or space,
     fdm(),
     nr(curwin, line_count, is_active),
     sep(is_active),
@@ -125,7 +128,7 @@ end
 
 local excluded = {
   "NeogitCommitMessage",
-  "NeogitCommitMessage",
+  "NeogitCommitView",
   "NeogitRebaseTodo",
   "NeogitStatus",
   "NvimTree",

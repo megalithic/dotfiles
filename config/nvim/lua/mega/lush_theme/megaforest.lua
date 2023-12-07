@@ -303,19 +303,27 @@ local theme = lush(function(injected_functions)
 
     ---- :help headlines.txt -------------------------------------------
 
-    Headline1({ fg = C.green, bg = C.bg0, gui = "bold,italic,underline" }),
-    Headline2({ fg = C.yellow, bg = C.bg0, gui = "bold,italic" }),
-    Headline3({ fg = C.red, bg = C.bg0, gui = "bold" }),
-    Headline4({ fg = C.purple, bg = C.bg0, gui = "bold" }),
-    Headline5({ fg = C.blue, bg = C.bg0, gui = "italic" }),
-    Headline6({ fg = C.orange, bg = C.bg0, gui = C.transparent }),
+    Headline1({ fg = C.green, bg = C.bg_green, gui = "bold,italic" }),
+    Headline2({ fg = C.yellow, bg = C.bg_yellow, gui = "bold" }),
+    Headline3({ fg = C.red, bg = C.bg0, gui = "bold,italic,underline" }),
+    Headline4({ fg = C.purple, bg = C.bg0, gui = "bold,italic" }),
+    Headline5({ fg = C.blue, bg = C.bg0, gui = "bold" }),
+    Headline6({ fg = C.orange, bg = C.bg0, gui = "italic" }),
     Dash({ fg = C.bg3, gui = "bold" }),
-    sym("@dash")({ Dash }),
     CodeBlock({ bg = C.bg1 }),
 
     ---- :help nvim-treesitter-highlights (external plugin) ----
     -- https://github.com/folke/tokyonight.nvim/blob/main/lua/tokyonight/treesitter.lua#L20
     -- REF: https://github.com/rose-pine/neovim/blob/main/lua/rose-pine/theme.lua#L205-L261
+
+    sym("@headline1")({ Headline1 }),
+    sym("@headline2")({ Headline2 }),
+    sym("@headline3")({ Headline3 }),
+    sym("@headline4")({ Headline4 }),
+    sym("@headline5")({ Headline5 }),
+    sym("@headline6")({ Headline6 }),
+    sym("@dash")({ Dash }),
+    sym("@codeblock")({ CodeBlock }),
 
     sym("@annotation")({ Purple }),
     sym("@attribute")({ Purple }),
@@ -355,6 +363,7 @@ local theme = lush(function(injected_functions)
     sym("@punctuation.bracket")({ sym("@punctuation") }),
     sym("@punctuation.delimiter")({ sym("@punctuation") }),
     sym("@punctuation.special")({ sym("@punctuation") }),
+    sym("@punctuation.tilda")({ Dash, fg = Dash.fg.li(10) }),
     sym("@repeat")({ Red }),
     sym("@regex")({ Yellow }),
     sym("@string")({ Yellow }),

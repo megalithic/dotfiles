@@ -1,3 +1,7 @@
+-- NOTE: fix for initial flash of black
+-- REF: follow along here: https://github.com/neovim/neovim/pull/26381
+vim.o.termguicolors = false
+
 if vim.loader then vim.loader.enable() end
 
 -- [ settings ] ----------------------------------------------------------------
@@ -88,18 +92,19 @@ require("mega.mappings")
 
 -- [ colorscheme ] -------------------------------------------------------------
 
-mega.pcall("theme failed to load because", function(colorscheme)
-  local theme = fmt("mega.lush_theme.%s", colorscheme)
-  local ok, lush_theme = pcall(require, theme)
-  if ok then
-    vim.g.colors_name = colorscheme
-    package.loaded[theme] = nil
-
-    require("lush")(lush_theme)
-  else
-    pcall(vim.cmd.colorscheme, colorscheme)
-  end
-
-  -- NOTE: always make available my lushified-color palette
-  mega.colors = require("mega.lush_theme.colors")
-end, vim.g.colorscheme)
+-- NOTE: this gets called in lush.nvim config block in plugins/init.lua
+-- mega.pcall("theme failed to load because", function(colorscheme)
+--   local theme = fmt("mega.lush_theme.%s", colorscheme)
+--   local ok, lush_theme = pcall(require, theme)
+--   if ok then
+--     vim.g.colors_name = colorscheme
+--     package.loaded[theme] = nil
+--
+--     require("lush")(lush_theme)
+--   else
+--     pcall(vim.cmd.colorscheme, colorscheme)
+--   end
+--
+--   -- NOTE: always make available my lushified-color palette
+--   mega.colors = require("mega.lush_theme.colors")
+-- end, vim.g.colorscheme)

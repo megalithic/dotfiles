@@ -13,21 +13,43 @@ return {
     "rktjmp/lush.nvim",
     lazy = false,
     priority = 1001,
+    config = function()
+      mega.pcall("theme failed to load because", function(colorscheme)
+        local theme = fmt("mega.lush_theme.%s", colorscheme)
+        local ok, lush_theme = pcall(require, theme)
+        if ok then
+          vim.g.colors_name = colorscheme
+          package.loaded[theme] = nil
+
+          require("lush")(lush_theme)
+        else
+          pcall(vim.cmd.colorscheme, colorscheme)
+        end
+
+        -- NOTE: always make available my lushified-color palette
+        mega.colors = require("mega.lush_theme.colors")
+      end, vim.g.colorscheme)
+    end,
   },
-  -- {
-  --   "ribru17/bamboo.nvim",
-  --   lazy = false,
-  --   priority = 1000,
-  -- },
-  -- {
-  --   "sainnhe/everforest",
-  --   lazy = false,
-  --   priority = 1000,
-  --   config = function()
-  --     vim.g.everforest_background = "soft"
-  --     vim.g.everforest_better_performance = true
-  --   end,
-  -- },
+  {
+    "ribru17/bamboo.nvim",
+    lazy = false,
+    priority = 1000,
+    opts = {
+      style = "multiplex", -- alts: multiplex, vulgaris, light
+      transparent = true,
+      dim_inactive = true,
+    },
+  },
+  {
+    "sainnhe/everforest",
+    lazy = false,
+    priority = 1000,
+    config = function()
+      vim.g.everforest_background = "soft"
+      vim.g.everforest_better_performance = true
+    end,
+  },
   {
     "farmergreg/vim-lastplace",
     lazy = false,

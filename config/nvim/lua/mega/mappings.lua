@@ -56,8 +56,9 @@ nmap("J", "<nop>")
 nmap("zS", U.showCursorHighlights, "show syntax highlights under cursor")
 nnoremap("zs", "<cmd>Inspect<cr>", "Inspect the cursor position")
 
-nmap("<localleader>yg", "<cmd>CopyBranch<cr>", { desc = "Copy current git branch" })
-nmap("<localleader>ygh", "<cmd>CopyBranch<cr>", { desc = "Copy current git branch" })
+nmap("<localleader>yg", "<cmd>CopyBranch<cr>", { desc = "git: copy current git branch" })
+nmap("<localleader>ygh", "<cmd>CopyBranch<cr>", { desc = "git: copy current git branch" })
+nmap("<localleader>gy", "<cmd>CopyBranch<cr>", { desc = "git: copy current git branch" })
 
 nnoremap("<localleader>f", "<cmd>LspFormatWrite<cr>", "run lsp formatter")
 -- nnoremap("<localleader>F", "<cmd>LspFormat<cr>", "run lsp formatter")

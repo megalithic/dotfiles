@@ -61,7 +61,7 @@ return {
     { "andersevenrud/cmp-tmux" },
     -- { "kristijanhusak/vim-dadbod-completion"},
   },
-  -- init = function() vim.opt.completeopt = { "menu", "menuone", "noselect", "noinsert" } end,
+  init = function() vim.opt.completeopt = { "menu", "menuone", "noselect", "noinsert" } end,
   config = function()
     local cmp = require("cmp")
     local lspkind = require("lspkind")
@@ -198,8 +198,7 @@ return {
         -- completeopt = "menuone",
         -- completeopt = "menu,menuone,noselect,noinsert",
         -- completeopt = "menu,menuone,noselect",
-
-        completeopt = { "menu", "menuone", "preview", "noselect", "noinsert" },
+        -- completeopt = { "menu", "menuone", "preview", "noselect", "noinsert" },
         max_item_count = 50,
         keyword_length = 1,
         get_trigger_characters = function(trigger_characters)
@@ -483,24 +482,25 @@ return {
       },
     })
 
-    cmp.setup.cmdline(":", {
-      mapping = cmp.mapping.preset.cmdline(),
-      completion = {
-        completeopt = "menuone,noselect",
-      },
-      sources = cmp.config.sources({
-        { name = "async_path" },
-        {
-          name = "cmdline",
-          keyword_length = 3,
-          option = {
-            ignore_cmds = { "Man", "!" },
-          },
-          -- keyword_pattern = [=[[^[:blank:]\!]*]=]
-        },
-        -- { name = "cmdline_history", priority = 10, max_item_count = 3 },
-      }),
-    })
+    -- cmp.setup.cmdline(":", {
+    --   mapping = cmp.mapping.preset.cmdline(),
+    --   completion = {
+    --     completeopt = "menuone,noselect",
+    --   },
+    --   sources = cmp.config.sources({
+    --     { name = "async_path" },
+    --     {
+    --       name = "cmdline",
+    --       keyword_length = 3,
+    --       option = {
+    --         ignore_cmds = { "Man", "!" },
+    --       },
+    --       -- keyword_pattern = [=[[^[:blank:]\!]*]=]
+    --     },
+    --     -- { name = "cmdline_history", priority = 10, max_item_count = 3 },
+    --   }),
+    -- })
+
     cmp.setup.filetype({ "gitcommit", "NeogitCommitMessage" }, {
       sources = {},
     })

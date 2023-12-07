@@ -403,21 +403,20 @@ return {
   virtual_text = "◆",
   mode_term = "",
   ln_sep = "ℓ", -- alts: ℓ 
-  col_sep = "",
   sep = "⋮",
   perc_sep = "",
-  modified = "", -- alts: ∘✿✸✎ ○∘●●∘■ □ ▪ ▫● ◯ ◔ ◕ ◌ ◎ ◦ ◆ ◇ ∘∙
+  modified = "", -- alts: ∘✿✸✎ ○∘●●∘■ □ ▪ ▫● ◯ ◔ ◕ ◌ ◎ ◦ ◆ ◇ ▪▫◦∘∙⭘
   mode = "",
   vcs = "",
   readonly = "",
   prompt = "",
   markdown = {
-    h1 = "󰉫", -- alts: 󰉫¹
-    h2 = "󰉬", -- alts: 󰉬²
-    h3 = "󰉭", -- alts: 󰉭³
-    h4 = "󰉮", -- alts: 󰉮⁴
-    h5 = "󰉯", -- alts: 󰉯⁵
-    h6 = "󰉰", -- alts: 󰉰⁶
+    h1 = "◉", -- alts: 󰉫¹◉
+    h2 = "◆", -- alts: 󰉬²◆
+    h3 = "󱄅", -- alts: 󰉭³✿
+    h4 = "⭘", -- alts: 󰉮⁴○⭘
+    h5 = "◌", -- alts: 󰉯⁵◇◌
+    h6 = "", -- alts: 󰉰⁶
     dash = "",
   },
 }
