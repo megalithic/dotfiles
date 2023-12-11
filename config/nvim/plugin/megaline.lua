@@ -380,7 +380,7 @@ local function get_diagnostics(seg_formatters_status)
 
   local segments = ""
   for _, d in ipairs(diags) do
-    if d.num > 0 then segments = fmt("%s %s", segments, seg(fmt("%s%s", d.sign, d.num), d.hl)) end
+    if d.num > 0 then segments = fmt("%s %s", segments, seg(fmt("%s%s", d.num, d.sign), d.hl)) end
   end
 
   return seg(segments .. " " .. seg_formatters_status, { margin = { 1, 1 } })

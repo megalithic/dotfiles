@@ -80,6 +80,7 @@ brew "dockutil" if OS.mac?
 brew "duck" # cli for cyberduck
 brew "federico-terzi/espanso/espanso" if OS.mac?
 brew "exa"
+brew "eza"
 brew "exercism" if OS.mac?
 brew "fasd"
 brew "fd"

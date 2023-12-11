@@ -317,46 +317,74 @@ function mega.require(module_name, opts)
   return ok, result
 end
 
-function mega.iabbrev(lhs, rhs, opts)
-  opts = opts or {}
-  local ft = opts["ft"] or nil
-  local ext = opts["ext"] or nil
-  if type(opts) == "string" then ft = { opts } end
-  local event = nil
-  local pattern = { "*" }
-  local desc = ""
-  local group = "iabbrevs"
-  if ft ~= nil then
-    group = "iabbrevs_" .. table.concat(ft, "_")
-    event = { "FileType" }
-    pattern = type(ft) == "string" and { ft } or ft
-    desc = "Insert abbreviation for " .. vim.inspect(ft)
-  elseif ext ~= nil then
-    group = "iabbrevs_" .. ext
-    event = {
-      fmt([[BufRead %s]], ext),
-      fmt([[BufNewFile %s]], ext),
-    }
-    pattern = ext
-    desc = "Insert abbreviation for " .. ext
-  end
+-- function mega.iabbrev(lhs, rhs, opts)
+--   opts = opts or {}
+--   local ft = opts["ft"] or nil
+--   local ext = opts["ext"] or nil
+--   if type(opts) == "string" then ft = { opts } end
+--   local event = nil
+--   local pattern = { "*" }
+--   local desc = ""
+--   local group = "iabbrevs"
+--   if ft ~= nil then
+--     group = "iabbrevs_" .. table.concat(ft, "_")
+--     event = { "FileType" }
+--     pattern = type(ft) == "string" and { ft } or ft
+--     desc = "Insert abbreviation for " .. vim.inspect(ft)
+--   elseif ext ~= nil then
+--     group = "iabbrevs_" .. ext
+--     event = {
+--       fmt([[BufRead %s]], ext),
+--       fmt([[BufNewFile %s]], ext),
+--     }
+--     pattern = ext
+--     desc = "Insert abbreviation for " .. ext
+--   end
+--
+--   if event ~= nil then
+--     mega.augroup(group, {
+--       {
+--         event = event,
+--         pattern = pattern,
+--         desc = desc,
+--         command = function() vim.cmd.iabbrev(fmt([[%s %s]], lhs, rhs)) end,
+--       },
+--     })
+--   else
+--     vim.cmd.iabbrev(fmt([[%s %s]], lhs, rhs))
+--   end
+-- end
+function mega.iabbrev(lhs, rhs, ft)
+  ft = ft or nil
+  if type(ft) == "string" then ft = { ft } end
 
-  if event ~= nil then
-    mega.augroup(group, {
-      {
-        event = event,
-        pattern = pattern,
-        desc = desc,
-        command = function() vim.cmd.iabbrev(fmt([[%s %s]], lhs, rhs)) end,
-      },
-    })
+  if ft ~= nil then
+    if vim.tbl_contains(ft, vim.bo.filetype) then vim.cmd.iabbrev(fmt([[%s %s]], lhs, rhs)) end
   else
     vim.cmd.iabbrev(fmt([[%s %s]], lhs, rhs))
   end
 end
 function mega.cabbrev(lhs, rhs) vim.cmd.cabbrev(fmt([[%s %s]], lhs, rhs)) end
-function mega.nabbrev(lhs, rhs) vim.cmd.abbrev(fmt([[%s %s]], lhs, rhs)) end
-function mega.noabbrev(lhs, rhs) vim.cmd.noabbrev(fmt([[%s %s]], lhs, rhs)) end
+function mega.abbrev(lhs, rhs, ft)
+  ft = ft or nil
+  if type(ft) == "string" then ft = { ft } end
+
+  if ft ~= nil then
+    if vim.tbl_contains(ft, vim.bo.filetype) then vim.cmd.abbrev(fmt([[%s %s]], lhs, rhs)) end
+  else
+    vim.cmd.abbrev(fmt([[%s %s]], lhs, rhs))
+  end
+end
+function mega.noabbrev(lhs, rhs, ft)
+  ft = ft or nil
+  if type(ft) == "string" then ft = { ft } end
+
+  if ft ~= nil then
+    if vim.tbl_contains(ft, vim.bo.filetype) then vim.cmd.noabbrev(fmt([[%s %s]], lhs, rhs)) end
+  else
+    vim.cmd.noabbrev(fmt([[%s %s]], lhs, rhs))
+  end
+end
 
 -- [ commands ] ----------------------------------------------------------------
 do

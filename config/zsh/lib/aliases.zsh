@@ -52,7 +52,10 @@ if $(gls &>/dev/null); then
   alias las='find . -maxdepth 1 -type l -printf "%p -> %l\n" | sort'
 fi
 
-if $(exa &>/dev/null); then
+if $(eza &>/dev/null); then
+  alias ls="\eza -gahF --group-directories-first"
+  alias l="\eza -lahF --icons --group-directories-first --git"
+elif $(exa &>/dev/null); then
   alias ls="exa -gahF --group-directories-first"
   alias l="exa -lahF --icons --group-directories-first --git"
 fi

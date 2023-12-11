@@ -53,8 +53,8 @@ M.list = {
         -- mixEnv = "dev",
         fetchDeps = false,
         dialyzerEnabled = true,
-        dialyzerFormat = "dialyxir_long",
-        enableTestLenses = false,
+        dialyzerFormat = "dialyxir_short",
+        enableTestLenses = true,
         suggestSpecs = true,
       },
     }
@@ -184,10 +184,6 @@ M.list = {
     if not mega.lsp.is_enabled_elixir_ls("lexical") then return nil end
 
     return {
-      log_level = vim.lsp.protocol.MessageType.Log,
-      message_level = vim.lsp.protocol.MessageType.Log,
-      logLevel = vim.lsp.protocol.MessageType.Log,
-      messageLevel = vim.lsp.protocol.MessageType.Log,
       cmd = { vim.env.XDG_DATA_HOME .. "/lsp/lexical/_build/dev/package/lexical/bin/start_lexical.sh" },
       settings = {
         dialyzerEnabled = true,
@@ -196,6 +192,7 @@ M.list = {
         logLevel = vim.lsp.protocol.MessageType.Log,
         messageLevel = vim.lsp.protocol.MessageType.Log,
       },
+      single_file_support = true,
     }
   end,
   --- @see https://gist.github.com/folke/fe5d28423ea5380929c3f7ce674c41d8
@@ -564,7 +561,7 @@ M.unofficial = {
         local build_bin = fmt("next_ls_%s_%s", os_name, current_arch)
 
         if use_homebrew then return { "nextls", "--stdio" } end
-        return { fmt("%s/lsp/nextls/burrito_out/", vim.env.XDG_DATA_HOME, build_bin), "--stdio" }
+        return { fmt("%s/lsp/nextls/burrito_out/%s", vim.env.XDG_DATA_HOME, build_bin), "--stdio" }
       end
 
       configs.nextls = {

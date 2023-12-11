@@ -78,7 +78,7 @@ template = "wiki.md"
 
 # MARKDOWN SETTINGS
 [format.markdown]
-link-format = "wiki"
+link-format = "markdown" # alts: wiki, markdown, custom-template
 link-encode-path = true
 link-drop-extension = true
 hashtags = true

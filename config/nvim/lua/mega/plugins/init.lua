@@ -94,6 +94,7 @@ return {
       scope = {
         enabled = false,
       },
+      exclude = { filetypes = { "markdown" } },
     },
   },
   {

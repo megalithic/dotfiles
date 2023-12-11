@@ -1,6 +1,6 @@
 local prettier = { "dprint", "prettierd", "prettier" }
 local shfmt = { "beautysh", "shfmt" } -- shellharden
-local timeout_ms = 2000
+local timeout_ms = 500
 local lsp_fallback = "always"
 local keys = {}
 
@@ -109,12 +109,13 @@ return {
         vim.notify("Disabled auto-formatting.", L.WARN)
       else
         vim.notify("Enabled auto-formatting.", L.INFO)
-        require("conform").format({
-          timeout_ms = timeout_ms,
-          lsp_fallback = lsp_fallback,
-          filter = mega.lsp.formatting_filter,
-          bufnr = 0,
-        })
+        -- NOTE: probably better to NOT run formatter (elixir related formatting is wonky)
+        -- require("conform").format({
+        --   timeout_ms = timeout_ms,
+        --   lsp_fallback = lsp_fallback,
+        --   filter = mega.lsp.formatting_filter,
+        --   bufnr = 0,
+        -- })
       end
     end)
   end,

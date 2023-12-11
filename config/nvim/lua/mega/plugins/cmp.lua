@@ -3,8 +3,7 @@
 -- https://github.com/ecosse3/nvim/blob/dev/lua/plugins/cmp.lua
 return {
   "hrsh7th/nvim-cmp",
-  event = { "InsertEnter" },
-  -- event = { "InsertEnter", "CmdlineEnter" },
+  event = { "InsertEnter", "CmdlineEnter" },
   cond = vim.g.completer == "cmp",
   dependencies = {
     { "saadparwaiz1/cmp_luasnip", cond = vim.g.snipper == "luasnip" },
@@ -42,7 +41,7 @@ return {
     { "andersevenrud/cmp-tmux" },
     -- { "kristijanhusak/vim-dadbod-completion"},
   },
-  init = function() vim.opt.completeopt = { "menu", "menuone", "noselect", "noinsert" } end,
+  -- init = function() vim.opt.completeopt = { "menu", "menuone", "noselect", "noinsert" } end,
   config = function()
     local cmp = require("cmp")
     local lspkind = require("lspkind")
@@ -172,13 +171,13 @@ return {
 
         return not disabled
       end,
-      preselect = cmp.PreselectMode.None,
+      -- preselect = cmp.PreselectMode.None,
       -- preselect = cmp.PreselectMode.Item,
       -- entries = { name = "custom", selection_order = "near_cursor" },
       completion = {
         -- completeopt = "menuone",
         -- completeopt = "menu,menuone,noselect,noinsert",
-        -- completeopt = "menu,menuone,noselect",
+        completeopt = "menu,menuone,noselect",
         -- completeopt = { "menu", "menuone", "preview", "noselect", "noinsert" },
         max_item_count = 50,
         keyword_length = 1,

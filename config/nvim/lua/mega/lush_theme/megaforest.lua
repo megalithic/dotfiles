@@ -327,6 +327,13 @@ local theme = lush(function(injected_functions)
     sym("@dash")({ Dash }),
     sym("@codeblock")({ CodeBlock }),
 
+    sym("@text.title.1.markdown")({ Headline1 }),
+    sym("@text.title.2.markdown")({ Headline2 }),
+    sym("@text.title.3.markdown")({ Headline3 }),
+    sym("@text.title.4.markdown")({ Headline4 }),
+    sym("@text.title.5.markdown")({ Headline5 }),
+    sym("@text.title.6.markdown")({ Headline6 }),
+
     sym("@annotation")({ Purple }),
     sym("@attribute")({ Purple }),
     sym("@boolean")({ fg = C.magenta.li(5) }),

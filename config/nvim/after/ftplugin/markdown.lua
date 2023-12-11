@@ -14,137 +14,17 @@ vim.cmd([[autocmd FileType markdown nnoremap gO <cmd>Toc<cr>]])
 -- vim.o.equalprg = [[prettier --stdin-filepath '%:p']]
 -- vim.o.makeprg = [[open %]]
 
-vim.cmd([[iabbrev <expr> mdate "### ".strftime("%Y-%m-%d %H:%M:%S")]])
+vim.cmd.iabbrev([[<expr> mdate "### ".strftime("%Y-%m-%d %H:%M:%S")]])
 vim.cmd.iabbrev("<buffer>", "zTODO", "<span style=\"color:red\">TODO:</span><Esc>F<i")
 
--- quick section generators
-
--- {
---   "gaoDean/autolist.nvim",
---   ft = {
---     "org",
---     "neorg",
---     "plaintext",
---     "markdown",
---     "gitcommit",
---     "NeogitCommitMessage",
---     "COMMIT_EDITMSG",
---     "NEOGIT_COMMIT_EDITMSG",
---   },
---   config = function()
---     -- local al = require("autolist")
---     -- al.setup()
---     -- al.create_mapping_hook("i", "<CR>", al.new)
---     -- al.create_mapping_hook("i", "<Tab>", al.indent)
---     -- al.create_mapping_hook("i", "<S-Tab>", al.indent, "<C-d>")
---     -- al.create_mapping_hook("n", "o", al.new)
---     -- al.create_mapping_hook("n", "O", al.new_before)
---
---     require("autolist").setup()
---
---     vim.keymap.set("i", "<tab>", "<cmd>AutolistTab<cr>")
---     vim.keymap.set("i", "<s-tab>", "<cmd>AutolistShiftTab<cr>")
---     -- vim.keymap.set("i", "<c-t>", "<c-t><cmd>AutolistRecalculate<cr>") -- an example of using <c-t> to indent
---     vim.keymap.set("i", "<CR>", "<CR><cmd>AutolistNewBullet<cr>")
---     vim.keymap.set("n", "o", "o<cmd>AutolistNewBullet<cr>")
---     vim.keymap.set("n", "O", "O<cmd>AutolistNewBulletBefore<cr>")
---     vim.keymap.set("n", "<CR>", "<cmd>AutolistToggleCheckbox<cr><CR>")
---     vim.keymap.set("n", "<C-r>", "<cmd>AutolistRecalculate<cr>")
---
---     -- cycle list types with dot-repeat
---     vim.keymap.set("n", "<localleader>cn", require("autolist").cycle_next_dr, { expr = true })
---     vim.keymap.set("n", "<localleader>cp", require("autolist").cycle_prev_dr, { expr = true })
---     -- if you don't want dot-repeat
---     -- vim.keymap.set("n", "<leader>cn", "<cmd>AutolistCycleNext<cr>")
---     -- vim.keymap.set("n", "<leader>cp", "<cmd>AutolistCycleNext<cr>")
---
---     -- functions to recalculate list on edit
---     vim.keymap.set("n", ">>", ">><cmd>AutolistRecalculate<cr>")
---     vim.keymap.set("n", "<<", "<<<cmd>AutolistRecalculate<cr>")
---     vim.keymap.set("n", "dd", "dd<cmd>AutolistRecalculate<cr>")
---     vim.keymap.set("v", "d", "d<cmd>AutolistRecalculate<cr>")
---
---     mega.iabbrev("-cc", "- [ ]")
---     mega.iabbrev("cc", "[ ]")
---     mega.iabbrev("cb", "[ ]")
---   end,
--- },
-
--- TODO: convert these to vim.opt and vim.opt_local
--- vim.cmd([[
---   setlocal wrap
---   setlocal spell
---   setlocal nolist
---   setlocal foldexpr=markdown#FoldExpression(v:lnum)
---   setlocal foldmethod=expr
---   setlocal formatoptions+=t
---   setlocal linebreak
---   setlocal textwidth=0
---   setlocal autoindent tabstop=2 shiftwidth=2 formatoptions-=t comments=fb:>,fb:*,fb:+,fb:-
---   setlocal conceallevel=2
---   ]])
-
--- ## plasticboy/vim-markdown
--- vim.g.markdown_fenced_languages = {
---   "diff",
---   "javascript",
---   "js=javascript",
---   "json=javascript",
---   "typescript",
---   "css",
---   "scss",
---   "sass",
---   "ruby",
---   "erb=eruby",
---   "python",
---   "haml",
---   "html",
---   "bash=sh",
---   "zsh=sh",
---   "shell=sh",
---   "console=sh",
---   "sh",
---   "elm",
---   -- "elixir",
---   -- "eelixir",
---   "lua",
---   "vim",
---   "viml",
--- }
-
--- vim.g.markdown_enable_conceal = 1
--- vim.g.vim_markdown_folding_level = 10
--- vim.g.vim_markdown_folding_disabled = 1
--- vim.g.vim_markdown_conceal = 2
--- vim.g.vim_markdown_conceal_code_blocks = 0
--- vim.g.vim_markdown_folding_style_pythonic = 1
--- vim.g.vim_markdown_override_foldtext = 0
--- vim.g.vim_markdown_follow_anchor = 1
--- vim.g.vim_markdown_frontmatter = 1 -- for YAML format
--- vim.g.vim_markdown_toml_frontmatter = 1 -- for TOML format
--- vim.g.vim_markdown_json_frontmatter = 1 -- for JSON format
--- vim.g.vim_markdown_new_list_item_indent = 2
--- vim.g.vim_markdown_auto_insert_bullets = 0
--- vim.g.vim_markdown_no_extensions_in_markdown = 1
--- vim.g.vim_markdown_math = 1
--- vim.g.vim_markdown_strikethrough = 1
---
--- -- ## ixru/nvim-markdown
--- vim.g.vim_markdown_no_default_key_mappings = 1
--- vim.cmd([[map <Plug> <Plug>Markdown_FollowLink]])
---
--- -- ## iamcco/markdown-preview.nvim
--- vim.g.mkdp_auto_start = 0
--- vim.g.mkdp_auto_close = 1
---
 -- -- match and highlight hyperlinks
 vim.fn.matchadd("matchURL", [[http[s]\?:\/\/[[:alnum:]%\/_#.-]*]])
 vim.cmd(string.format("hi matchURL guifg=%s", require("mega.lush_theme.colors").bright_blue))
 vim.cmd([[syn region markdownWikiLink matchgroup=markdownLinkDelimiter start="\[\[\w\+|" end="\]\]"]])
 
-mega.iabbrev("-cc", "- [ ]", "markdown")
-mega.iabbrev("cc", "[ ]", "markdown")
-mega.iabbrev("cb", "[ ]", "markdown")
+mega.iabbrev("-cc", "- [ ]", { "markdown" })
+mega.iabbrev("cc", "[ ]", { "markdown" })
+mega.iabbrev("cb", "[ ]", { "markdown" })
 
 if vim.g.is_tmux_popup then
   -- ## used with markdown related tmux popups (through nvim)
@@ -250,9 +130,6 @@ mega.augroup("ZKMaps", {
           desc("zk: open the code actions for visual selection")
         )
 
-        -- Insert a link from the note picker
-        inoremap("[[", "<cmd>ZkInsertLink<cr>", desc("zk: insert link from the note picker"))
-
         -- ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
         -- MAPPINGS
         -- ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
@@ -298,20 +175,31 @@ mega.augroup("ZKMaps", {
           { desc = "zk: live grep notes" }
         )
 
-        mega.xnoremap("gm", "<esc><cmd>'<,'>ZkMatch<cr>", desc("zk: find notes in selection"))
-        mega.nnoremap("gm", "<esc><cmd>ZkMatch<cr>", desc("zk: find notes under cursor"))
         mega.nnoremap("<leader>nr", "<Cmd>ZkRecents<CR>", desc("zk: find recent notes"))
-        mega.vnoremap("<leader>gr", "<cmd>ZkMatch<CR>", desc("zk: search notes matching under cursor"))
-        mega.vnoremap("<leader>gr", ":'<,'>ZkMatch<CR>", desc("zk: search notes matching selection"))
+
+        mega.nnoremap("<leader>gr", "<cmd>ZkMatch<CR>", desc("zk: search notes matching under cursor"))
         mega.map({ "v", "x" }, "<leader>gr", ":'<,'>ZkMatch<CR>", desc("zk: search notes matching selection"))
-        mega.nnoremap("gi", "<Cmd>ZkInsertLink<CR>", desc("zk: insert link"))
-        mega.vnoremap("gi", ":'<,'>ZkInsertLinkAtSelection<CR>", desc("zk: insert link (selected)"))
+
+        mega.nnoremap("gn", "<cmd>ZkMatch<CR>", desc("zk: search notes matching under cursor"))
+        mega.xnoremap("gm", "<esc><cmd>'<,'>ZkMatch<cr>", desc("zk: find notes in selection"))
+        mega.nnoremap("gr", "<cmd>ZkMatch<CR>", desc("zk: search notes matching under cursor"))
+        mega.map({ "v", "x" }, "gr", ":'<,'>ZkMatch<CR>", desc("zk: search notes matching selection"))
+
+        mega.nnoremap("gl", "<Cmd>ZkInsertLink<CR>", desc("zk: insert link"))
+        mega.nnoremap("[[", "<Cmd>ZkInsertLink<CR>", desc("zk: insert link"))
+        mega.vnoremap("gl", ":'<,'>ZkInsertLinkAtSelection<CR>", desc("zk: insert link (selected)"))
+        mega.vnoremap("[[", ":'<,'>ZkInsertLinkAtSelection<CR>", desc("zk: insert link (selected)"))
         mega.vnoremap(
-          "gI",
+          "gL",
           ":'<,'>ZkInsertLinkAtSelection {match = true}<CR>",
           desc("zk: insert link (search selected)")
         )
-        mega.nnoremap("<leader>nn", "<Cmd>ZkNew { title = vim.fn.input('title: ') }<CR>", desc("zk: new note"))
+        mega.nnoremap(
+          "<leader>nn",
+          "<Cmd>ZkNew { title = vim.fn.input('title: ') }<CR>",
+          desc("zk: new note (with title)")
+        )
+        mega.nnoremap("gn", "<Cmd>ZkNew { title = vim.fn.input('title: ') }<CR>", desc("zk: new note (input title)"))
 
         mega.map(
           { "v", "x" },
@@ -321,10 +209,17 @@ mega.augroup("ZKMaps", {
         )
         mega.map(
           { "v", "x" },
+          "gn",
+          ":'<,'>ZkNewFromContentSelection { title = vim.fn.input('Title: ') }<CR>",
+          desc("zk: new note from selection")
+        )
+        mega.map(
+          { "v", "x" },
           "<leader>nN",
           ":'<,'>ZkNewFromTitleSelection<CR>",
           desc("zk: new note title from selection")
         )
+        mega.map({ "v", "x" }, "gN", ":'<,'>ZkNewFromTitleSelection<CR>", desc("zk: new note title from selection"))
       end
     end,
   },

@@ -62,9 +62,9 @@ vim.g.ts_ignored_langs = {} -- alt: { "svg", "json", "heex", "jsonc" }
 vim.g.is_screen_sharing = false
 
 -- REF: elixir LSPs: elixir-tools(ElixirLS, NextLS, credo), elixirls, nextls, lexical
-vim.g.formatter_exclusions = { "ElixirLS", "NextLS", "elixirls", "nextls" }
+vim.g.formatter_exclusions = { "ElixirLS", "NextLS", "nextls", "lexical" }
 vim.g.diagnostic_exclusions = { "ElixirLS", "NextLS", "elixirls", "nextls" }
-vim.g.enabled_elixir_ls = { "lexical" }
+vim.g.enabled_elixir_ls = { "elixirls", "lexical" }
 vim.g.disable_autolint = true
 vim.g.disable_autoformat = false
 -- [ globals ] -----------------------------------------------------------------

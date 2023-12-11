@@ -267,13 +267,6 @@ local function setup_autocommands(client, bufnr)
     -- },
   })
 
-  mega.augroup("LspProgress", {
-    {
-      event = { "LspProgress" },
-      command = "redrawstatus",
-    },
-  })
-
   if vim.g.formatter == "null-ls" then
     mega.augroup("LspFormat", {
       {
@@ -767,7 +760,9 @@ local function get_server_capabilities(name)
 
   capabilities.offsetEncoding = { "utf-16" }
   capabilities.textDocument.codeLens = { dynamicRegistration = false }
-  capabilities.textDocument.colorProvider = { dynamicRegistration = true }
+  if not vim.tbl_contains({ "elixirls", "nextls", "lexical" }, name) then
+    capabilities.textDocument.colorProvider = { dynamicRegistration = true }
+  end
   capabilities.textDocument.completion.completionItem.documentationFormat = { "markdown", "plaintext" }
   capabilities.textDocument.completion.completionItem.snippetSupport = true
   capabilities.textDocument.completion.completionItem.resolveSupport = {
