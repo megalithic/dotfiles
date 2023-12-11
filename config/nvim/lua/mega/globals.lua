@@ -33,6 +33,7 @@ vim.g.open_command = vim.g.is_macos and "open" or "xdg-open"
 
 vim.g.dotfiles = vim.env.DOTS or vim.fn.expand("~/.dotfiles")
 vim.g.home = os.getenv("HOME")
+vim.g.code = fmt("%s/code", vim.g.home)
 vim.g.vim_path = fmt("%s/.config/nvim", vim.g.home)
 vim.g.nvim_path = fmt("%s/.config/nvim", vim.g.home)
 vim.g.cache_path = fmt("%s/.cache/nvim", vim.g.home)
@@ -316,15 +317,36 @@ function mega.require(module_name, opts)
   return ok, result
 end
 
-function mega.iabbrev(lhs, rhs, ft)
-  ft = ft or nil
+function mega.iabbrev(lhs, rhs, opts)
+  opts = opts or {}
+  local ft = opts["ft"] or nil
+  local ext = opts["ext"] or nil
+  if type(opts) == "string" then ft = { opts } end
+  local event = nil
+  local pattern = { "*" }
+  local desc = ""
+  local group = "iabbrevs"
+  if ft ~= nil then
+    group = "iabbrevs_" .. table.concat(ft, "_")
+    event = { "FileType" }
+    pattern = type(ft) == "string" and { ft } or ft
+    desc = "Insert abbreviation for " .. vim.inspect(ft)
+  elseif ext ~= nil then
+    group = "iabbrevs_" .. ext
+    event = {
+      fmt([[BufRead %s]], ext),
+      fmt([[BufNewFile %s]], ext),
+    }
+    pattern = ext
+    desc = "Insert abbreviation for " .. ext
+  end
 
-  if ft then
-    mega.augroup("iabbreviations_" .. table.concat(ft, "_"), {
+  if event ~= nil then
+    mega.augroup(group, {
       {
-        event = { "FileType" },
-        desc = "Insert abbreviation for " .. vim.inspect(ft),
-        pattern = ft,
+        event = event,
+        pattern = pattern,
+        desc = desc,
         command = function() vim.cmd.iabbrev(fmt([[%s %s]], lhs, rhs)) end,
       },
     })

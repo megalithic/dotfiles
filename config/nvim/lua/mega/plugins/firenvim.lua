@@ -104,7 +104,8 @@ local M = {
         vim.schedule_wrap(function()
           timer:close()
           timer = nil
-          if vim.api.nvim_buf_get_option(bufnr, "modified") then
+          -- if vim.api.nvim_buf_get_option(bufnr, "modified") then
+          if vim.api.nvim_get_option_value("modified", { buf = bufnr }) then
             vim.api.nvim_buf_call(bufnr, function() vim.cmd("silent! write") end)
             if vim.o.lines < 15 then vim.o.lines = 30 end
           end

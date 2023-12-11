@@ -9,13 +9,11 @@ local U = require("mega.utils")
 local fn = vim.fn
 local api = vim.api
 local lsp = vim.lsp
-local vcmd = vim.cmd
 local fmt = string.format
 local diagnostic = vim.diagnostic
 local LSP_METHODS = vim.lsp.protocol.Methods
 local servers = require("mega.servers")
 local md_namespace = vim.api.nvim_create_namespace("lsp_highlights")
-local diag_namespace = vim.api.nvim_create_namespace("lsp_diagnostics")
 
 function mega.lsp.has_method(client, method)
   return client.supports_method(method:find("/") and method or "textDocument/" .. method)
@@ -190,7 +188,7 @@ local function setup_commands(bufnr)
     local end_pos = api.nvim_buf_get_mark(0, ">")
     lsp.buf.range_formatting({}, start_pos, end_pos)
   end
-  vcmd([[ command! -range LspFormatRange execute 'lua FormatRange()' ]])
+  vim.cmd([[ command! -range LspFormatRange execute 'lua FormatRange()' ]])
 
   mega.command("LspLog", function() vim.cmd("vnew " .. vim.lsp.get_log_path()) end)
   mega.command(
@@ -268,6 +266,14 @@ local function setup_autocommands(client, bufnr)
     --   end,
     -- },
   })
+
+  mega.augroup("LspProgress", {
+    {
+      event = { "LspProgress" },
+      command = "redrawstatus",
+    },
+  })
+
   if vim.g.formatter == "null-ls" then
     mega.augroup("LspFormat", {
       {
@@ -370,8 +376,8 @@ local function setup_keymaps(client, bufnr)
   safemap("rename", "n", "gn", vim.lsp.buf.rename, "lsp: rename")
   nnoremap("ger", require("mega.utils.lsp").rename_file, desc("lsp: rename file to <input>"))
   nnoremap("gen", require("mega.utils.lsp").rename_file, desc("lsp: rename file to <input>"))
-  safemap("hover", "n", "K", function() hover() end, desc("lsp: hover"))
-  safemap("hover", "n", "gK", function() hover(true) end, desc("lsp: hover"))
+  safemap("hover", "n", "K", function() hover(true) end, desc("lsp: hover (always)"))
+  safemap("hover", "n", "gK", function() hover() end, desc("lsp: hover (optional split)"))
   safemap("signatureHelp", "i", "<c-k>", vim.lsp.buf.signature_help, "lsp: signature help")
   safemap("formatting", "n", "<leader>lft", [[<cmd>ToggleAutoFormat<cr>]], "toggle formatting")
   safemap("formatting", "n", "<leader>lff", function()
@@ -553,13 +559,13 @@ end
 
 vim.opt.shortmess:append("c") -- Don't pass messages to |ins-completion-menu|
 
--- Setup neovim lua configuration
--- require("neodev").setup()
-pcall(require, "mason")
-
--- This function allows reading a per project "settings.json" file in the `.vim` directory of the project.
----@param client table<string, any>
----@return boolean
+-- -- Setup neovim lua configuration
+-- -- require("neodev").setup()
+-- -- pcall(require, "mason")
+--
+-- -- This function allows reading a per project "settings.json" file in the `.vim` directory of the project.
+-- ---@param client table<string, any>
+-- ---@return boolean
 local function on_init(client)
   if client.workspace_folders == nil then return true end
 
@@ -585,26 +591,26 @@ local function on_init(client)
   end
   return true
 end
-
--- ---@alias ClientOverrides {on_attach: fun(client: lsp.Client, bufnr: number), semantic_tokens: fun(bufnr: number, client: lsp.Client, token: table)}
-local client_overrides = {}
-
----@param client lsp.Client
----@param bufnr number
-local function setup_semantic_tokens(client, bufnr)
-  -- fully disable semantic tokens highlighting
-  client.server_capabilities.semanticTokensProvider = {}
-
-  -- local overrides = client_overrides[client.name]
-  -- if not overrides or not overrides.semantic_tokens then return end
-  --
-  -- mega.augroup(fmt("LspSemanticTokens%s", client.name), {
-  --   event = "LspTokenUpdate",
-  --   buffer = bufnr,
-  --   desc = fmt("Configure the semantic tokens for the %s", client.name),
-  --   command = function(args) overrides.semantic_tokens(args.buf, client, args.data.token) end,
-  -- })
-end
+--
+-- -- ---@alias ClientOverrides {on_attach: fun(client: lsp.Client, bufnr: number), semantic_tokens: fun(bufnr: number, client: lsp.Client, token: table)}
+-- local client_overrides = {}
+--
+-- ---@param client lsp.Client
+-- ---@param bufnr number
+-- local function setup_semantic_tokens(client, bufnr)
+--   -- fully disable semantic tokens highlighting
+--   -- client.server_capabilities.semanticTokensProvider = nil
+--
+--   -- local overrides = client_overrides[client.name]
+--   -- if not overrides or not overrides.semantic_tokens then return end
+--   --
+--   -- mega.augroup(fmt("LspSemanticTokens%s", client.name), {
+--   --   event = "LspTokenUpdate",
+--   --   buffer = bufnr,
+--   --   desc = fmt("Configure the semantic tokens for the %s", client.name),
+--   --   command = function(args) overrides.semantic_tokens(args.buf, client, args.data.token) end,
+--   -- })
+-- end
 
 local function setup_handlers(client, bufnr)
   -- brilliant highlighting and float handler stuff by mariasolos:
@@ -739,22 +745,20 @@ local function on_attach(client, bufnr)
 
   require("mega.utils.lsp").setup_rename(client, bufnr)
 
-  setup_formatting(client, bufnr)
   setup_commands(bufnr)
   setup_autocommands(client, bufnr)
-  setup_diagnostics(client, bufnr)
   setup_keymaps(client, bufnr)
+  setup_formatting(client, bufnr)
+  setup_diagnostics(client, bufnr)
   setup_highlights(client, bufnr)
-  setup_semantic_tokens(client, bufnr)
-
   setup_handlers(client, bufnr)
+  -- setup_semantic_tokens(client, bufnr)
 
   if mega.lsp.has_method(client, "completion") then
     client.server_capabilities.completionProvider.triggerCharacters = { ".", ":" }
+    vim.api.nvim_set_option_value("omnifunc", "v:lua.vim.lsp.omnifunc", { buf = bufnr })
   end
-
-  vim.api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
-  if client_overrides[client.name] then client_overrides[client.name](client, bufnr) end
+  -- if client_overrides[client.name] then client_overrides[client.name](client, bufnr) end
 end
 
 -- all the server capabilities we could want
@@ -779,28 +783,7 @@ local function get_server_capabilities(name)
   }
 
   -- FIX: https://github.com/neovim/neovim/issues/23291
-  -- NOTE: this might break nextls/elixirls:
   capabilities.workspace.didChangeWatchedFiles.dynamicRegistration = false
-
-  -- disable semantic token highlighting
-  -- capabilities.textDocument.semanticTokensProvider = false
-  -- capabilities.textDocument.codeAction = {
-  --   dynamicRegistration = false,
-  --   codeActionLiteralSupport = {
-  --     codeActionKind = {
-  --       valueSet = {
-  --         "",
-  --         "quickfix",
-  --         "refactor",
-  --         "refactor.extract",
-  --         "refactor.inline",
-  --         "refactor.rewrite",
-  --         "source",
-  --         "source.organizeImports",
-  --       },
-  --     },
-  --   },
-  -- }
 
   local nvim_lsp_ok, cmp_nvim_lsp = pcall(require, "cmp_nvim_lsp")
   if nvim_lsp_ok then capabilities = cmp_nvim_lsp.default_capabilities(capabilities) end
@@ -829,7 +812,6 @@ if servers ~= nil then
   servers.load_unofficial()
   for server, _ in pairs(servers.list) do
     local cfg = get_config(server)
-
     if cfg ~= nil then lspconfig[server].setup(cfg) end
   end
 end

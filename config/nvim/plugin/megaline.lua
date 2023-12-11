@@ -22,44 +22,44 @@ local H = require("mega.utils.highlights")
 vim.g.is_saving = false
 local search_count_timer
 
--- mega.augroup("megaline", {
---   {
---     event = { "BufWritePre" },
---     command = function()
---       if not vim.g.is_saving and vim.bo.modified then
---         vim.g.is_saving = true
---         vim.cmd([[checktime]])
---         vim.defer_fn(function()
---           vim.g.is_saving = false
---           pcall(vim.cmd.redrawstatus)
---         end, 500)
---       end
---     end,
---   },
---   -- {
---   --   event = { "LspProgress" },
---   --   command = function() pcall(vim.cmd.redrawstatus) end,
---   -- },
---   {
---     event = { "CursorMoved" },
---     pattern = { "*" },
---     command = function()
---       -- TODO: wrap all of this in an xpcall to handle an error raised when searching, for example, for `dbg\(`
---       if vim.o.hlsearch then
---         local timer = vim.loop.new_timer()
---         search_count_timer = timer
---         timer:start(0, 200, function()
---           vim.schedule(function()
---             if timer == search_count_timer then
---               pcall(vim.fn.searchcount, { recompute = 1, maxcount = 0, timeout = 100 })
---               pcall(vim.cmd.redrawstatus)
---             end
---           end)
---         end)
---       end
---     end,
---   },
--- })
+mega.augroup("megaline", {
+  -- {
+  --   event = { "BufWritePre" },
+  --   command = function()
+  --     if not vim.g.is_saving and vim.bo.modified then
+  --       vim.g.is_saving = true
+  --       vim.cmd([[checktime]])
+  --       vim.defer_fn(function()
+  --         vim.g.is_saving = false
+  --         pcall(vim.cmd.redrawstatus)
+  --       end, 500)
+  --     end
+  --   end,
+  -- },
+  {
+    event = { "LspProgress" },
+    command = function() pcall(vim.cmd.redrawstatus) end,
+  },
+  {
+    event = { "CursorMoved" },
+    pattern = { "*" },
+    command = function()
+      -- TODO: wrap all of this in an xpcall to handle an error raised when searching, for example, for `dbg\(`
+      if vim.o.hlsearch then
+        local timer = vim.loop.new_timer()
+        search_count_timer = timer
+        timer:start(0, 200, function()
+          vim.schedule(function()
+            if timer == search_count_timer then
+              pcall(vim.fn.searchcount, { recompute = 1, maxcount = 0, timeout = 100 })
+              pcall(vim.cmd.redrawstatus)
+            end
+          end)
+        end)
+      end
+    end,
+  },
+})
 
 -- ( SETTERS ) -----------------------------------------------------------------
 
@@ -178,12 +178,9 @@ local MODES = setmetatable({
 local plain_types = {
   filetypes = {
     "help",
-    "ctrlsf",
     "minimap",
     "Trouble",
     "tsplayground",
-    "coc-explorer",
-    "NvimTree",
     "undotree",
     "neo-tree",
     "dirbuf",

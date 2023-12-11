@@ -204,27 +204,12 @@ return {
         kittybuf = "bash",
         typescriptreact = "tsx",
         zsh = "bash",
+        eelixir = "elixir",
       }
 
       for ft, parser in pairs(ft_to_parser_aliases) do
         vim.treesitter.language.register(parser, ft)
       end
-
-      -- local parser_configs = require("nvim-treesitter.parsers").get_parser_configs()
-      -- parser_configs.norg = {
-      --   install_info = {
-      --     url = "https://github.com/nvim-neorg/tree-sitter-norg",
-      --     files = { "src/parser.c", "src/scanner.cc" },
-      --     branch = "main",
-      --   },
-      -- }
-      -- parser_configs.norg_meta = {
-      --   install_info = {
-      --     url = "https://github.com/nvim-neorg/tree-sitter-norg-meta",
-      --     files = { "src/parser.c" },
-      --     branch = "main",
-      --   },
-      -- }
 
       require("nvim-treesitter.configs").setup({
         auto_install = true,
@@ -340,50 +325,6 @@ return {
           },
         },
         endwise = { enable = true },
-        -- context_commentstring = {
-        --   enable = true,
-        --   enable_autocmd = false,
-        --   config = {
-        --     typescript = {
-        --       __default = "// %s",
-        --       jsx_element = "{/* %s */}",
-        --       jsx_fragment = "{/* %s */}",
-        --       jsx_attribute = "// %s",
-        --       comment = "// %s",
-        --       __multiline = "/* %s */",
-        --     },
-        --     javascript = {
-        --       __default = "// %s",
-        --       jsx_element = "{/* %s */}",
-        --       jsx_fragment = "{/* %s */}",
-        --       jsx_attribute = "// %s",
-        --       comment = "// %s",
-        --       __multiline = "/* %s */",
-        --     },
-        --     elixir = {
-        --       __default = "# %s",
-        --       quoted_content = "<%!-- %s --%>",
-        --       component = "<%!-- %s --%>",
-        --     },
-        --     heex = {
-        --       __default = "<%!-- %s --%>",
-        --       component = "<%!-- %s --%>",
-        --       self_closing_component = "<%!-- %s --%>",
-        --       __multiline = "<%!-- %s --%>",
-        --     },
-        --     html = {
-        --       __default = "<!-- %s -->",
-        --       component = "<!-- %s -->",
-        --       self_closing_component = "<!-- %s -->",
-        --       __multiline = "<!-- %s -->",
-        --     },
-        --     lua = "-- %s",
-        --     fish = "# %s",
-        --     toml = "# %s",
-        --     yaml = "# %s",
-        --     ["eruby.yaml"] = "# %s",
-        --   },
-        -- },
         matchup = { enable = true, include_match_words = true, disable = should_disable, disable_virtual_text = false },
         autopairs = { enable = true },
         textobjects = {

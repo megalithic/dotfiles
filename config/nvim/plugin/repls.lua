@@ -3,6 +3,35 @@ if not vim.g.enabled_plugin["repls"] then return end
 
 local U = require("mega.utils")
 
+local cmds_by_ft = {
+  ["lua"] = function(args)
+    if string.match(vim.fn.expand("%"), "hammerspoon") ~= nil then
+      return "hs"
+    else
+      return "lua"
+    end
+  end,
+  ["python"] = "python",
+  ["javascript"] = "node",
+  ["javascriptreact"] = "node",
+  ["typescript"] = "node",
+  ["typescriptreact"] = "node",
+  ["ruby"] = function(args)
+    if U.root_has_file("Gemfile") then
+      return "rails c"
+    else
+      return "irb"
+    end
+  end,
+  ["elixir"] = function(args)
+    if U.root_has_file("mix.exs") then
+      return "iex -S mix"
+    else
+      return "iex"
+    end
+  end,
+}
+
 mega.command("TermElixir", function(args)
   -- local pre_cmd = ""
   local cmd = "iex"
@@ -111,9 +140,27 @@ mega.command("TermNode", function(args)
   })
 end, { bang = true })
 
-nnoremap("<leader>rs", "<cmd>TSendCurrentLine<cr>", "send current line to active repl")
-vnoremap("<leader>rs", "<cmd>TSendVisualSelection<cr>", "send visual selection to active repl")
-vnoremap("<leader>rS", "<cmd>TSendVisualLines<cr>", "send visual lines to active repl")
+mega.command("TermRepl", function(args)
+  local bufnr = args.buf or 0
+  local ft = vim.bo[bufnr].ft
+  local cmd = cmds_by_ft[ft]
+
+  if type(cmd) == "function" then cmd = cmd(args) end
+
+  -- if args.bang then cmd = fmt("node %s", vim.fn.expand("%")) end
+
+  mega.term({
+    cmd = cmd,
+    temp = true,
+    ---@diagnostic disable-next-line: unused-local
+    on_after_open = function(bufnr, _winnr)
+      vim.api.nvim_buf_set_var(bufnr, "term_cmd", cmd)
+      vim.cmd("startinsert")
+    end,
+  })
+end, { bang = true })
+
+nnoremap("<localleader>r", "<cmd>TermRepl<cr>", "repl (ft)")
 
 nnoremap("<leader>re", "<cmd>TermElixir<cr>", "elixir")
 nnoremap("<leader>rE", "<cmd>TermElixir!<cr>", "elixir (current file)")
@@ -124,5 +171,5 @@ nnoremap("<leader>rL", "<cmd>TermLua!<cr>", "lua (current file)")
 nnoremap("<leader>rn", "<cmd>TermNode<cr>", "node")
 nnoremap("<leader>rN", "<cmd>TermNode!<cr>", "node (current file)")
 nnoremap("<leader>rp", "<cmd>TermPython<cr>", "python")
--- nnoremap("<leader>rP", "<cmd>TermPython!<cr>", "python (current file)")
+nnoremap("<leader>rP", "<cmd>TermPython!<cr>", "python (current file)")
 nnoremap("<leader>rh", "<cmd>TermHammerspoon<cr>", "hammerspoon")

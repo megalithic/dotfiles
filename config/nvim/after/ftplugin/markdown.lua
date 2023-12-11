@@ -19,14 +19,6 @@ vim.cmd.iabbrev("<buffer>", "zTODO", "<span style=\"color:red\">TODO:</span><Esc
 
 -- quick section generators
 
--- mega.iabbrev("ex:", "### elixir")
--- mega.iabbrev("mtg:", "### meeting")
--- mega.iabbrev("w:", "### work")
--- mega.iabbrev("pair:", "### pairing")
--- mega.iabbrev("dan:", "### 1:1 with dan")
--- mega.iabbrev("one:", "### 1:1 with dan")
--- mega.iabbrev("dots:", "### dotfiles")
-
 -- {
 --   "gaoDean/autolist.nvim",
 --   ft = {
@@ -150,9 +142,9 @@ vim.fn.matchadd("matchURL", [[http[s]\?:\/\/[[:alnum:]%\/_#.-]*]])
 vim.cmd(string.format("hi matchURL guifg=%s", require("mega.lush_theme.colors").bright_blue))
 vim.cmd([[syn region markdownWikiLink matchgroup=markdownLinkDelimiter start="\[\[\w\+|" end="\]\]"]])
 
-mega.iabbrev("-cc", "- [ ]")
-mega.iabbrev("cc", "[ ]")
-mega.iabbrev("cb", "[ ]")
+mega.iabbrev("-cc", "- [ ]", "markdown")
+mega.iabbrev("cc", "[ ]", "markdown")
+mega.iabbrev("cb", "[ ]", "markdown")
 
 if vim.g.is_tmux_popup then
   -- ## used with markdown related tmux popups (through nvim)
@@ -195,6 +187,14 @@ mega.augroup("ZKMaps", {
     pattern = { string.format("%s/**/*.md", vim.env.ZK_NOTEBOOK_DIR) },
     command = function()
       if not vim.g.started_by_firenvim and require("zk.util").notebook_root(vim.fn.expand("%:p")) ~= nil then
+        -- mega.iabbrev("ex:", "### elixir", "markdown")
+        -- mega.iabbrev("mtg:", "### meeting", "markdown")
+        -- mega.iabbrev("w:", "### work", "markdown")
+        -- mega.iabbrev("pair:", "### pairing", "markdown")
+        -- mega.iabbrev("dan:", "### 1:1 with dan", "markdown")
+        -- mega.iabbrev("one:", "### 1:1 with dan", "markdown")
+        -- mega.iabbrev("dots:", "### dotfiles", "markdown")
+
         local desc = function(desc) return { desc = desc, noremap = true, silent = false, buffer = 0 } end
 
         -- Open the link under the caret.

@@ -187,7 +187,9 @@ local function mini_jump()
 end
 
 local function mini_pairs(opts)
-  opts = opts or {}
+  opts = opts or { mappings = {
+    ["'"] = false,
+  } }
   require("mini.pairs").setup(opts)
 end
 
@@ -400,7 +402,7 @@ return {
   event = { "BufReadPost", "BufNewFile" },
   config = function()
     mini_surround()
-    -- mini_pairs()
+    mini_pairs()
     mini_align()
     mini_pick()
     -- mini_indentscope()

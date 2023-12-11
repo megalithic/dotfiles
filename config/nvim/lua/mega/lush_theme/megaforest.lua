@@ -52,7 +52,7 @@ local theme = lush(function(injected_functions)
     Background({ bg = C.bg0 }),
     BackgroundLight({ bg = C.bg1 }),
     BackgroundExtraLight({ bg = C.bg2 }),
-    Visual({ fg = C.transparent, bg = C.bg_visual }), -- Visual mode selection
+    Visual({ bg = C.bg_visual }), -- Visual mode selection
     VisualNOS({ fg = C.transparent, bg = C.bg_visual }), -- Visual mode selection when vim is "Not Owning the Selection".
     VisualYank({ Visual, bg = C.bg_visual.li(10) }), -- Visual mode selection
     WarningMsg({ fg = C.yellow, bg = C.transparent }), -- warning messages
@@ -193,6 +193,7 @@ local theme = lush(function(injected_functions)
 
     ---- :help diagnostic-highlight ----------------------------
 
+    DiagnosticOk({ fg = C.green, bg = C.transparent }),
     DiagnosticError({ fg = C.red, bg = C.transparent }),
     DiagnosticWarn({ fg = C.orange, bg = C.transparent }),
     DiagnosticInfo({ fg = C.cyan, bg = C.transparent }),
@@ -214,6 +215,7 @@ local theme = lush(function(injected_functions)
     DiagnosticVirtualTextInfo({ DiagnosticInfo, fg = DiagnosticInfo.fg.darken(40) }),
     DiagnosticVirtualTextHint({ DiagnosticHint, fg = DiagnosticHint.fg.darken(40) }),
 
+    DiagnosticSignOk({ DiagnosticOk }),
     DiagnosticSignError({ DiagnosticError }),
     DiagnosticSignWarn({ DiagnosticWarn }),
     DiagnosticSignInfo({ DiagnosticInfo }),
@@ -967,6 +969,26 @@ local theme = lush(function(injected_functions)
     SymbolUsageRef({ fg = Function.fg, bg = C.transparent, gui = "italic" }),
     SymbolUsageDef({ fg = Type.fg, bg = C.transparent, gui = "italic" }),
     SymbolUsageImpl({ fg = Keyword.fg, bg = C.transparent, gui = "italic" }),
+
+    ---- oil -------------------------------------------------------------------
+    OilDir({ Directory }),
+    OilDirIcon({ Directory }),
+    OilLink({ Constant }),
+    OilLinkTarget({ Comment }),
+    OilCopy({ DiagnosticSignHint, gui = "bold" }),
+    OilMove({ DiagnosticSignWarn, gui = "bold" }),
+    OilChange({ DiagnosticSignWarn, gui = "bold" }),
+    OilCreate({ DiagnosticSignInfo, gui = "bold" }),
+    OilDelete({ DiagnosticSignError, gui = "bold" }),
+    OilPermissionNone({ NonText }),
+    OilPermissionRead({ DiagnosticSignWarn }),
+    OilPermissionWrite({ DiagnosticSignError }),
+    OilPermissionExecute({ DiagnosticSignOk }),
+    OilTypeDir({ Directory }),
+    OilTypeFifo({ Special }),
+    OilTypeFile({ NonText }),
+    OilTypeLink({ Constant }),
+    OilTypeSocket({ Keyword }),
   }
 end)
 

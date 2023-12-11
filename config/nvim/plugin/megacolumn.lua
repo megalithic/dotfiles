@@ -165,62 +165,37 @@ local excluded = {
   "vimwiki",
 }
 
+function mega.set_statuscolumn(bufnr, is_active)
+  local statuscolumn = ""
+  if is_active then
+    statuscolumn = [[%!v:lua.mega.ui.statuscolumn.render(v:true)]]
+  else
+    statuscolumn = [[%!v:lua.mega.ui.statuscolumn.render(v:false)]]
+  end
+
+  if vim.api.nvim_buf_is_valid(bufnr) then
+    local buf = vim.bo[bufnr]
+    if buf.bt ~= "" or vim.tbl_contains(excluded, buf.ft) then
+      vim.opt_local.statuscolumn = ""
+    else
+      vim.opt_local.statuscolumn = statuscolumn
+    end
+  else
+    vim.opt_local.statuscolumn = statuscolumn
+  end
+end
+
 mega.augroup("MegaColumn", {
   {
-    event = { "BufEnter", "FileType", "FocusGained", "WinEnter" }, --, "TermLeave", "DiagnosticChanged" },
-    command = function(args)
-      if vim.api.nvim_buf_is_valid(args.buf) then
-        local buf = vim.bo[args.buf]
-        if buf.bt ~= "" or vim.tbl_contains(excluded, buf.ft) or vim.env.TMUX_POPUP then
-          -- dd("empty statuscolumn")
-          vim.opt_local.statuscolumn = ""
-        else
-          -- dd("active statuscolumn")
-          vim.opt_local.statuscolumn = [[%!v:lua.mega.ui.statuscolumn.render(v:true)]]
-        end
-      else
-        -- dd("fallback active statuscolumn")
-        vim.opt_local.statuscolumn = [[%!v:lua.mega.ui.statuscolumn.render(v:true)]]
-      end
-    end,
+    event = { "BufEnter", "BufReadPost", "FileType", "FocusGained", "WinEnter", "TermLeave" },
+    command = function(args) mega.set_statuscolumn(args.buf, true) end,
   },
   {
     event = { "BufLeave", "WinLeave", "FocusLost" },
-    command = function(args)
-      -- dd(vim.inspect(args))
-      if vim.api.nvim_buf_is_valid(args.buf) then
-        local buf = vim.bo[args.buf]
-        if buf.bt ~= "" or vim.tbl_contains(excluded, buf.ft) then
-          -- dd("empty statuscolumn")
-          vim.opt_local.statuscolumn = ""
-        else
-          -- dd("inactive statuscolumn")
-          vim.opt_local.statuscolumn = [[%!v:lua.mega.ui.statuscolumn.render(v:false)]]
-        end
-      else
-        -- dd("fallback inactive statuscolumn")
-        vim.opt_local.statuscolumn = [[%!v:lua.mega.ui.statuscolumn.render(v:false)]]
-      end
-    end,
+    command = function(args) mega.set_statuscolumn(args.buf, false) end,
   },
   -- {
-  --   event = { "TermEnter", "TermOpen", "TermLeave" },
-  --   command = function(args)
-  --     dd(vim.inspect(args))
-  --     -- dd(vim.inspect(args))
-  --     -- if vim.api.nvim_buf_is_valid(args.buf) then
-  --     --   local buf = vim.bo[args.buf]
-  --     --   if buf.bt ~= "" or vim.tbl_contains(excluded, buf.ft) then
-  --     --     -- dd("empty statuscolumn")
-  --     --     vim.opt_local.statuscolumn = ""
-  --     --   else
-  --     --     -- dd("inactive statuscolumn")
-  --     --     vim.opt_local.statuscolumn = [[%!v:lua.mega.ui.statuscolumn.render(v:false)]]
-  --     --   end
-  --     -- else
-  --     --   -- dd("fallback inactive statuscolumn")
-  --     --   vim.opt_local.statuscolumn = [[%!v:lua.mega.ui.statuscolumn.render(v:false)]]
-  --     -- end
-  --   end,
+  --   event = { "BufWinLeave" },
+  --   command = function(args) mega.set_statuscolumn(args.buf, false) end,
   -- },
 })

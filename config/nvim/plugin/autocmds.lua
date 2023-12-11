@@ -32,10 +32,10 @@ augroup("Startup", {
         and not vim.tbl_contains({ "NeogitStatus" }, vim.bo[args.buf].filetype)
       then
         if vim.fn.argc() > 1 then
-          local line = string.match(vim.fn.argv(1), "^:(%d+)$")
+          local linenr = string.match(vim.fn.argv(1), "^:(%d+)$")
           if string.find(vim.fn.argv(1), "^:%d*") ~= nil then
             vim.cmd.edit({ args = { vim.fn.argv(0) } })
-            pcall(vim.api.nvim_win_set_cursor, 0, { tonumber(line), 0 })
+            pcall(vim.api.nvim_win_set_cursor, 0, { tonumber(linenr), 0 })
             vim.api.nvim_buf_delete(args.buf + 1, { force = true })
           else
             vim.schedule(function()
@@ -43,14 +43,41 @@ augroup("Startup", {
               require("virt-column").update()
             end)
           end
+        elseif vim.fn.argc() == 1 then
+          -- handle editing an argument with `:300`(line number) at the end
+          local bufname = vim.api.nvim_buf_get_name(args.buf)
+          local root, line = bufname:match("^(.*):(%d+)$")
+          if vim.fn.filereadable(bufname) == 0 and root and line and vim.fn.filereadable(root) == 1 then
+            vim.schedule(function()
+              vim.cmd.edit({ args = { root } })
+              pcall(vim.api.nvim_win_set_cursor, 0, { tonumber(line), 0 })
+              vim.api.nvim_buf_delete(args.buf, { force = true })
+            end)
+          end
         elseif vim.fn.isdirectory(arg) ~= 0 then
           require("oil").open(arg)
-        elseif _G.picker[vim.g.picker]["startup"] then
+        elseif _G.picker ~= nil and _G.picker[vim.g.picker] ~= nil and _G.picker[vim.g.picker]["startup"] then
           _G.picker[vim.g.picker]["startup"](args)
         end
       end
     end,
   },
+  -- {
+  --   event = { "BufNew" },
+  --   desc = "Edit files with :line at the end",
+  --   pattern = "*",
+  --   command = function(args)
+  --     local bufname = vim.api.nvim_buf_get_name(args.buf)
+  --     local root, line = bufname:match("^(.*):(%d+)$")
+  --     if vim.fn.filereadable(bufname) == 0 and root and line and vim.fn.filereadable(root) == 1 then
+  --       vim.schedule(function()
+  --         vim.cmd.edit({ args = { root } })
+  --         pcall(vim.api.nvim_win_set_cursor, 0, { tonumber(line), 0 })
+  --         vim.api.nvim_buf_delete(args.buf, { force = true })
+  --       end)
+  --     end
+  --   end,
+  -- },
 })
 
 augroup("CheckOutsideTime", {
@@ -252,7 +279,7 @@ augroup("Utilities", {
     command = function()
       vim.schedule(function()
         mega.resize_windows()
-        require("virt-column").update()
+        if pcall(require, "virt-column") then require("virt-column").update() end
       end)
     end,
   },
@@ -357,6 +384,7 @@ augroup("General", {
   -- {
   --   event = { "CmdlineChanged" },
   --   command = function()
+  --     -- dd("CmdlineChanged")
   --     pcall(vim.cmd.redraw)
   --     pcall(vim.cmd.redrawstatus)
   --   end,
@@ -390,15 +418,20 @@ augroup("General", {
     event = { "BufEnter" },
     desc = "Disable autoformat when not in my preferred code repos/folders",
     command = function(args)
+      vim.b[args.buf].disable_autoformat = vim.g.started_by_firenvim
       local paths = vim.split(vim.o.runtimepath, ",")
-      local match = mega.find(function(dir)
-        local path = api.nvim_buf_get_name(args.buf)
-        if vim.startswith(path, vim.env.CODE) then return false end
-        if vim.startswith(path, vim.env.VIMRUNTIME) then return true end
-        return vim.startswith(path, dir)
-      end, paths)
-      -- vim.b[args.buf].formatting_disabled = match ~= nil
-      vim.b[args.buf].disable_autoformat = match ~= nil
+      if paths ~= nil then
+        local match = mega.find(function(dir)
+          if dir == nil then return false end
+          local path = api.nvim_buf_get_name(args.buf)
+          if path == nil then return false end
+          if vim.startswith(path, vim.g.code) then return false end
+          if vim.startswith(path, vim.env.VIMRUNTIME) then return true end
+          return vim.startswith(path, dir)
+        end, paths)
+        -- vim.b[args.buf].formatting_disabled = match ~= nil
+        vim.b[args.buf].disable_autoformat = match ~= nil
+      end
     end,
   },
   {

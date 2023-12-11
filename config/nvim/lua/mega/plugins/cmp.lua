@@ -3,7 +3,8 @@
 -- https://github.com/ecosse3/nvim/blob/dev/lua/plugins/cmp.lua
 return {
   "hrsh7th/nvim-cmp",
-  event = { "InsertEnter", "CmdlineEnter" },
+  event = { "InsertEnter" },
+  -- event = { "InsertEnter", "CmdlineEnter" },
   cond = vim.g.completer == "cmp",
   dependencies = {
     { "saadparwaiz1/cmp_luasnip", cond = vim.g.snipper == "luasnip" },
@@ -20,26 +21,6 @@ return {
         enabled = vim.g.snipper == "snippets",
       },
     },
-    -- {
-    --   "hrsh7th/cmp-vsnip",
-    --   dependencies = {
-    --     {
-    --       "hrsh7th/vim-vsnip",
-    --       event = "InsertEnter *",
-    --       cond = vim.g.snipper == "vsnip",
-    --       init = function()
-    --         vim.g.vsnip_snippet_dir = vim.fn.fnamemodify(vim.env.MYVIMRC, ":p:h") .. "/snippets"
-    --         vim.g.vsnip_filetypes = {
-    --           heex = { "elixir" },
-    --           eelixir = { "elixir" },
-    --           typescript = { "javascript" },
-    --           typescriptreact = { "javascript" },
-    --           javascriptreact = { "javascript" },
-    --         }
-    --       end,
-    --     },
-    --   },
-    -- },
     { "hrsh7th/cmp-buffer" },
     {
       "tzachar/cmp-fuzzy-buffer",
@@ -49,7 +30,7 @@ return {
     { "hrsh7th/cmp-nvim-lua" },
     { "hrsh7th/cmp-path" },
     { "FelipeLema/cmp-async-path" },
-    { "hrsh7th/cmp-cmdline", event = { "CmdlineEnter" } },
+    { "hrsh7th/cmp-cmdline" }, -- event = { "CmdlineEnter" } },
     { "hrsh7th/cmp-nvim-lsp-signature-help" },
     { "hrsh7th/cmp-nvim-lsp-document-symbol" },
     -- { "hrsh7th/cmp-emoji" },
@@ -480,9 +461,13 @@ return {
     })
 
     cmp.setup.cmdline(":", {
+      view = {
+        entries = { name = "custom", direction = "bottom_up" },
+      },
       mapping = cmp.mapping.preset.cmdline(),
       sources = cmp.config.sources({
         { name = "async_path" },
+        -- { name = "path" },
         {
           name = "cmdline",
           keyword_length = 3,

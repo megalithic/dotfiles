@@ -1,12 +1,6 @@
 return {
   -- ( CORE ) ------------------------------------------------------------------
   { "dstein64/vim-startuptime", cmd = { "StartupTime" }, config = function() vim.g.startuptime_tries = 15 end },
-  {
-    "zeioth/garbage-day.nvim",
-    event = "BufEnter",
-    config = true,
-    cond = false,
-  },
 
   -- ( UI ) --------------------------------------------------------------------
   {
@@ -309,7 +303,6 @@ return {
   },
   {
     "monaqa/dial.nvim",
-    -- stylua: ignore
     keys = {
       { "<C-a>", function() return require("dial.map").inc_normal() end, expr = true, desc = "Increment" },
       { "<C-x>", function() return require("dial.map").dec_normal() end, expr = true, desc = "Decrement" },
@@ -324,6 +317,7 @@ return {
           augend.constant.alias.bool,
           augend.semver.alias.semver,
           augend.constant.new({ elements = { "let", "const" } }),
+          augend.constant.new({ elements = { ":ok", ":error" } }),
         },
       })
     end,
@@ -368,11 +362,11 @@ return {
           }
 
           require("mason").setup()
-          -- local mr = require("mason-registry")
-          -- for _, tool in ipairs(tools) do
-          --   local p = mr.get_package(tool)
-          --   if not p:is_installed() then p:install() end
-          -- end
+          local mr = require("mason-registry")
+          for _, tool in ipairs(tools) do
+            local p = mr.get_package(tool)
+            if not p:is_installed() then p:install() end
+          end
           require("mason-lspconfig").setup({
             automatic_installation = true,
           })
@@ -392,19 +386,9 @@ return {
       --     end
       --   end,
       -- },
-      { "MunifTanjim/nui.nvim" },
       { "williamboman/mason-lspconfig.nvim" },
       { "b0o/schemastore.nvim" },
       { "ray-x/lsp_signature.nvim" },
-      -- {
-      --   "sigma-code/nvim-lsp-notify",
-      --   dependencies = { "rcarriga/nvim-notify" },
-      --   config = function()
-      --     require("lsp-notify").setup({
-      --       notify = require("notify"),
-      --     })
-      --   end,
-      -- },
       -- {
       --   "j-hui/fidget.nvim",
       --   config = function()
@@ -536,55 +520,112 @@ return {
     cmd = { "Oil" },
     enabled = vim.g.explorer == "oil",
     cond = vim.g.explorer == "oil",
-    opts = {
-      trash = false,
-      skip_confirm_for_simple_edits = true,
-      trash_command = "trash-cli",
-      prompt_save_on_select_new_entry = false,
-      use_default_keymaps = false,
-      is_always_hidden = function(name, _bufnr) return name == ".." end,
-      columns = {
-        "icon",
-        -- "permissions",
-        -- "size",
-        -- "mtime",
-      },
-      view_options = {
-        show_hidden = true,
-      },
-      keymaps = {
-        ["g?"] = "actions.show_help",
-        ["gs"] = "actions.change_sort",
-        ["gx"] = "actions.open_external",
-        ["g."] = "actions.toggle_hidden",
-        ["gd"] = {
-          desc = "Toggle detail view",
-          callback = function()
+    config = function()
+      local icons = mega.icons
+      local icon_file = vim.trim(icons.lsp.kind.File)
+      local icon_dir = vim.trim(icons.lsp.kind.Folder)
+      local permission_hlgroups = setmetatable({
+        ["-"] = "OilPermissionNone",
+        ["r"] = "OilPermissionRead",
+        ["w"] = "OilPermissionWrite",
+        ["x"] = "OilPermissionExecute",
+      }, {
+        __index = function() return "OilDir" end,
+      })
+
+      local type_hlgroups = setmetatable({
+        ["-"] = "OilTypeFile",
+        ["d"] = "OilTypeDir",
+        ["f"] = "OilTypeFifo",
+        ["l"] = "OilTypeLink",
+        ["s"] = "OilTypeSocket",
+      }, {
+        __index = function() return "OilTypeFile" end,
+      })
+
+      require("oil").setup({
+        trash = false,
+        skip_confirm_for_simple_edits = true,
+        trash_command = "trash-cli",
+        prompt_save_on_select_new_entry = false,
+        use_default_keymaps = false,
+        is_always_hidden = function(name, _bufnr) return name == ".." end,
+        -- columns = {
+        --   "icon",
+        --   -- "permissions",
+        --   -- "size",
+        --   -- "mtime",
+        -- },
+
+        columns = {
+          {
+            "type",
+            icons = {
+              directory = "d",
+              fifo = "f",
+              file = "-",
+              link = "l",
+              socket = "s",
+            },
+            highlight = function(type_str) return type_hlgroups[type_str] end,
+          },
+          {
+            "permissions",
+            highlight = function(permission_str)
+              local hls = {}
+              for i = 1, #permission_str do
+                local char = permission_str:sub(i, i)
+                table.insert(hls, { permission_hlgroups[char], i - 1, i })
+              end
+              return hls
+            end,
+          },
+          { "size", highlight = "Special" },
+          { "mtime", highlight = "Number" },
+          {
+            "icon",
+            default_file = icon_file,
+            directory = icon_dir,
+            add_padding = false,
+          },
+        },
+        view_options = {
+          show_hidden = true,
+        },
+        keymaps = {
+          ["g?"] = "actions.show_help",
+          ["gs"] = "actions.change_sort",
+          ["gx"] = "actions.open_external",
+          ["g."] = "actions.toggle_hidden",
+          ["gd"] = {
+            desc = "Toggle detail view",
+            callback = function()
+              local oil = require("oil")
+              local config = require("oil.config")
+              if #config.columns == 1 then
+                oil.set_columns({ "icon", "permissions", "size", "mtime" })
+              else
+                oil.set_columns({ "type", "icon" })
+              end
+            end,
+          },
+          ["<CR>"] = "actions.select",
+          ["gp"] = function()
             local oil = require("oil")
-            local config = require("oil.config")
-            if #config.columns == 1 then
-              oil.set_columns({ "icon", "permissions", "size", "mtime" })
+            local entry = oil.get_cursor_entry()
+            if entry["type"] == "file" then
+              local dir = oil.get_current_dir()
+              local fileName = entry["name"]
+              local fullName = dir .. fileName
+
+              require("mega.utils").preview_file(fullName)
             else
-              oil.set_columns({ "icon" })
+              return ""
             end
           end,
         },
-        ["<CR>"] = "actions.select",
-        ["gp"] = function()
-          local oil = require("oil")
-          local entry = oil.get_cursor_entry()
-          if entry["type"] == "file" then
-            local dir = oil.get_current_dir()
-            local fileName = entry["name"]
-            local fullName = dir .. fileName
-
-            require("mega.utils").preview_file(fullName)
-          else
-            return ""
-          end
-        end,
-      },
-    },
+      })
+    end,
     keys = {
       {
         "<leader>ev",
@@ -639,47 +680,42 @@ return {
     event = "InsertCharPre",
     config = function() require("hclipboard").start() end,
   },
-  -- {
-  --   "bennypowers/nvim-regexplainer",
-  --   opts = {},
-  --   cmd = { "RegexplainerShowSplit", "RegexplainerShowPopup", "RegexplainerHide", "RegexplainerToggle" },
-  --   dependencies = {
-  --     "nvim-treesitter/nvim-treesitter",
-  --     "MunifTanjim/nui.nvim",
-  --   },
-  -- },
   {
-    "altermo/ultimate-autopair.nvim",
-    event = { "InsertEnter" },
-    branch = "v0.6", --recomended as each new version will have breaking changes
+    "bennypowers/nvim-regexplainer",
     config = true,
+    cmd = { "RegexplainerShowSplit", "RegexplainerShowPopup", "RegexplainerHide", "RegexplainerToggle" },
+    dependencies = {
+      "nvim-treesitter/nvim-treesitter",
+      "MunifTanjim/nui.nvim",
+    },
   },
   { "tpope/vim-dispatch" },
-  -- {
-  --   "jackMort/ChatGPT.nvim",
-  --   event = "VeryLazy",
-  --   config = function()
-  --     local border = { style = mega.get_border(), highlight = "PickerBorder" }
-  --     require("chatgpt").setup({
-  --       popup_window = { border = border },
-  --       popup_input = { border = border, submit = "<C-y>" },
-  --       settings_window = { border = border },
-  --       -- async_api_key_cmd = "pass show api/openai",
-  --       chat = {
-  --         keymaps = {
-  --           close = {
-  --             "<C-c>",
-  --           },
-  --         },
-  --       },
-  --     })
-  --   end,
-  --   dependencies = {
-  --     "MunifTanjim/nui.nvim",
-  --     "nvim-lua/plenary.nvim",
-  --     "nvim-telescope/telescope.nvim",
-  --   },
-  -- },
+  {
+    cond = false or not vim.g.started_by_firenvim,
+    "jackMort/ChatGPT.nvim",
+    event = "VeryLazy",
+    config = function()
+      local border = { style = mega.get_border(), highlight = "PickerBorder" }
+      require("chatgpt").setup({
+        popup_window = { border = border },
+        popup_input = { border = border, submit = "<C-y>" },
+        settings_window = { border = border },
+        -- async_api_key_cmd = "pass show api/openai",
+        chat = {
+          keymaps = {
+            close = {
+              "<C-c>",
+            },
+          },
+        },
+      })
+    end,
+    dependencies = {
+      "MunifTanjim/nui.nvim",
+      "nvim-lua/plenary.nvim",
+      "nvim-telescope/telescope.nvim",
+    },
+  },
   -- {
   --   "tdfacer/explain-it.nvim",
   --   requires = {
@@ -727,11 +763,17 @@ return {
   {
     "danymat/neogen",
     cmd = "Neogen",
+    dependencies = { "nvim-treesitter/nvim-treesitter", "hrsh7th/vim-vsnip" },
     keys = {
+      {
+        "gcd",
+        function() require("neogen").generate({}) end,
+        desc = "comment: neogen comment",
+      },
       {
         "<leader>cc",
         function() require("neogen").generate({}) end,
-        desc = "Neogen Comment",
+        desc = "comment: neogen comment",
       },
     },
     opts = function()
@@ -763,33 +805,33 @@ return {
     config = function() require("numb").setup() end,
   },
   { "tpope/vim-eunuch", cmd = { "Move", "Rename", "Remove", "Delete", "Mkdir", "SudoWrite", "Chmod" } },
-  -- {
-  --   "tpope/vim-abolish",
-  --   event = "CmdlineEnter",
-  --   keys = {
-  --     {
-  --       "<C-s>",
-  --       ":S/<C-R><C-W>//<LEFT>",
-  --       mode = "n",
-  --       silent = false,
-  --       desc = "abolish: replace word under the cursor (line)",
-  --     },
-  --     {
-  --       "<C-s>",
-  --       ":%S/<C-r><C-w>//c<left><left>",
-  --       mode = "n",
-  --       silent = false,
-  --       desc = "abolish: replace word under the cursor (file)",
-  --     },
-  --     {
-  --       "<C-r>",
-  --       [["zy:'<'>S/<C-r><C-o>"//c<left><left>]],
-  --       mode = "x",
-  --       silent = false,
-  --       desc = "abolish: replace word under the cursor (visual)",
-  --     },
-  --   },
-  -- },
+  {
+    "tpope/vim-abolish",
+    event = "CmdlineEnter",
+    keys = {
+      {
+        "<C-s>",
+        ":S/<C-R><C-W>//<LEFT>",
+        mode = "n",
+        silent = false,
+        desc = "abolish: replace word under the cursor (line)",
+      },
+      {
+        "<C-s>",
+        ":%S/<C-r><C-w>//c<left><left>",
+        mode = "n",
+        silent = false,
+        desc = "abolish: replace word under the cursor (file)",
+      },
+      {
+        "<C-r>",
+        [["zy:'<'>S/<C-r><C-o>"//c<left><left>]],
+        mode = "x",
+        silent = false,
+        desc = "abolish: replace word under the cursor (visual)",
+      },
+    },
+  },
   -- {
   --   "ojroques/nvim-osc52",
   --   -- Only change the clipboard if we're in a SSH session
@@ -814,13 +856,11 @@ return {
   { "tpope/vim-scriptease", event = { "VeryLazy" }, cmd = { "Messages", "Mess", "Noti" } },
   { "lambdalisue/suda.vim", event = { "VeryLazy" } },
   { "EinfachToll/DidYouMean", event = { "BufNewFile" }, init = function() vim.g.dym_use_fzf = true end },
-  { "wsdjeg/vim-fetch", lazy = false }, -- vim path/to/file.ext:12:3
   { "ConradIrwin/vim-bracketed-paste" }, -- FIXME: delete?
   { "ryvnf/readline.vim", event = "CmdlineEnter" },
 
   -- ( Motions/Textobjects ) ---------------------------------------------------
   {
-    cond = true,
     "folke/flash.nvim",
     event = "VeryLazy",
     opts = {
@@ -885,62 +925,62 @@ return {
       },
     },
   },
-  {
-    "Wansmer/treesj",
-    dependencies = {
-      "nvim-treesitter/nvim-treesitter",
-      {
-        "AndrewRadev/splitjoin.vim",
-        init = function()
-          vim.g.splitjoin_split_mapping = ""
-          vim.g.splitjoin_join_mapping = ""
-        end,
-      },
-    },
-    cmd = {
-      "TSJSplit",
-      "TSJJoin",
-      "TSJToggle",
-      "SplitjoinJoin",
-      "SplitjoinSplit",
-      "SplitjoinToggle",
-    },
-    keys = {
-      {
-        "gJ",
-        function()
-          if require("treesj.langs")["presets"][vim.bo.filetype] then
-            vim.cmd("TSJToggle")
-          else
-            vim.cmd("SplitjoinToggle")
-          end
-        end,
-        desc = "splitjoin: toggle lines",
-      },
-    },
-    opts = {
-      use_default_keymaps = false,
-      max_join_length = tonumber(vim.g.default_colorcolumn),
-    }, -- config = function()
-    --   require("treesj").setup({ use_default_keymaps = false, max_join_length = 150 })
-    --
-    --   mega.augroup("SplitJoin", {
-    --     event = { "FileType" },
-    --     pattern = "*",
-    --     command = function()
-    --       if require("treesj.langs")["presets"][vim.bo.filetype] then
-    --         mega.nnoremap("gJ", ":TSJToggle<cr>", { desc = "splitjoin: toggle lines", buffer = true })
-    --       else
-    --         mega.nnoremap("gJ", ":SplitjoinToggle<cr>", { desc = "splitjoin: toggle lines", buffer = true })
-    --       end
-    --     end,
-    --   })
-    -- end,
-  },
+  -- {
+  --   "Wansmer/treesj",
+  --   dependencies = {
+  --     "nvim-treesitter/nvim-treesitter",
+  --     {
+  --       "AndrewRadev/splitjoin.vim",
+  --       init = function()
+  --         vim.g.splitjoin_split_mapping = ""
+  --         vim.g.splitjoin_join_mapping = ""
+  --       end,
+  --     },
+  --   },
+  --   cmd = {
+  --     "TSJSplit",
+  --     "TSJJoin",
+  --     "TSJToggle",
+  --     "SplitjoinJoin",
+  --     "SplitjoinSplit",
+  --     "SplitjoinToggle",
+  --   },
+  --   keys = {
+  --     {
+  --       "gJ",
+  --       function()
+  --         if require("treesj.langs")["presets"][vim.bo.filetype] then
+  --           vim.cmd("TSJToggle")
+  --         else
+  --           vim.cmd("SplitjoinToggle")
+  --         end
+  --       end,
+  --       desc = "splitjoin: toggle lines",
+  --     },
+  --   },
+  --   opts = {
+  --     use_default_keymaps = false,
+  --     max_join_length = tonumber(vim.g.default_colorcolumn),
+  --   }, -- config = function()
+  --   --   require("treesj").setup({ use_default_keymaps = false, max_join_length = 150 })
+  --   --
+  --   --   mega.augroup("SplitJoin", {
+  --   --     event = { "FileType" },
+  --   --     pattern = "*",
+  --   --     command = function()
+  --   --       if require("treesj.langs")["presets"][vim.bo.filetype] then
+  --   --         mega.nnoremap("gJ", ":TSJToggle<cr>", { desc = "splitjoin: toggle lines", buffer = true })
+  --   --       else
+  --   --         mega.nnoremap("gJ", ":SplitjoinToggle<cr>", { desc = "splitjoin: toggle lines", buffer = true })
+  --   --       end
+  --   --     end,
+  --   --   })
+  --   -- end,
+  -- },
 
   -- ( Notes/Docs ) ------------------------------------------------------------
   {
-    cond = true,
+    cond = false,
     "toppair/peek.nvim",
     build = "deno task --quiet build:fast",
     ft = { "markdown" },
@@ -1038,14 +1078,12 @@ return {
       on_attach = function(client, bufnr)
         client.server_capabilities.documentFormattingProvider = false
         client.server_capabilities.documentRangeFormattingProvider = false
-
         vim.keymap.set(
           "n",
           "gD",
           "<Cmd>TSToolsGoToSourceDefinition<CR>",
           { buffer = bufnr, desc = "lsp (ts/tsx): go to source definition" }
         )
-
         vim.keymap.set(
           "n",
           "<localleader>li",
