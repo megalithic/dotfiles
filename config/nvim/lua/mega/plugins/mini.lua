@@ -402,7 +402,7 @@ return {
   event = { "BufReadPost", "BufNewFile" },
   config = function()
     mini_surround()
-    mini_pairs()
+    -- mini_pairs()
     mini_align()
     mini_pick()
     -- mini_indentscope()

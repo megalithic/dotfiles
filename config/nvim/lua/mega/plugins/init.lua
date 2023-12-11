@@ -689,6 +689,14 @@ return {
       "MunifTanjim/nui.nvim",
     },
   },
+  {
+    "altermo/ultimate-autopair.nvim",
+    event = { "VeryLazy" },
+    branch = "v0.6", --recomended as each new version will have breaking changes
+    opts = {
+      cmap = false,
+    },
+  },
   { "tpope/vim-dispatch" },
   {
     cond = false or not vim.g.started_by_firenvim,

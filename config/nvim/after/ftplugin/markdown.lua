@@ -185,8 +185,12 @@ mega.augroup("ZKMaps", {
   {
     event = { "BufEnter", "BufReadPre", "BufReadPost", "BufNewFile" },
     pattern = { string.format("%s/**/*.md", vim.env.ZK_NOTEBOOK_DIR) },
-    command = function()
+    command = function(args)
       if not vim.g.started_by_firenvim and require("zk.util").notebook_root(vim.fn.expand("%:p")) ~= nil then
+        local zk = require("zk")
+        -- local util = require("zk.util")
+        -- local api = require("zk.api")
+
         -- mega.iabbrev("ex:", "### elixir", "markdown")
         -- mega.iabbrev("mtg:", "### meeting", "markdown")
         -- mega.iabbrev("w:", "### work", "markdown")
@@ -195,7 +199,20 @@ mega.augroup("ZKMaps", {
         -- mega.iabbrev("one:", "### 1:1 with dan", "markdown")
         -- mega.iabbrev("dots:", "### dotfiles", "markdown")
 
-        local desc = function(desc) return { desc = desc, noremap = true, silent = false, buffer = 0 } end
+        -- ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+        -- HELPERS
+        -- ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+        local picker_style = _G.picker[vim.g.picker]["ivy"]
+        local desc = function(desc) return { desc = desc, noremap = true, silent = false, buffer = args.buf or 0 } end
+
+        local function get_notes(...)
+          if vim.g.picker == "fzf_lua" then return zk.command.get("ZkNotes")(...) end
+          return require("telescope").extensions.zk.notes(picker_style(...))
+        end
+        local function get_tags(...)
+          if vim.g.picker == "fzf_lua" then return zk.command.get("ZkTags")(...) end
+          return require("telescope").extensions.zk.tags(picker_style(...))
+        end
 
         -- Open the link under the caret.
         nnoremap("<CR>", "<cmd>lua vim.lsp.buf.definition()<CR>", desc("zk: open link under cursor"))
@@ -235,38 +252,80 @@ mega.augroup("ZKMaps", {
 
         -- Insert a link from the note picker
         inoremap("[[", "<cmd>ZkInsertLink<cr>", desc("zk: insert link from the note picker"))
+
+        -- ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+        -- MAPPINGS
+        -- ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+        mega.nnoremap("<leader>nf", function() get_notes({ sort = { "modified" } }) end, desc("zk: find notes"))
+        mega.nnoremap(
+          "<leader>nw",
+          function() get_notes({ sort = { "modified" }, tags = { "tern OR work" } }, { title = "work notes" }) end,
+          desc("zk: work notes")
+        )
+        mega.nnoremap(
+          "<leader>nd",
+          function() get_notes({ sort = { "modified" }, tags = { "daily" } }, { title = "daily notes" }) end,
+          desc("zk: daily notes")
+        )
+        mega.nnoremap(
+          "<leader>nl",
+          function()
+            get_notes({
+              linkedBy = { vim.api.nvim_buf_get_name(0) },
+            })
+          end,
+          desc("zk: links")
+        )
+        mega.nnoremap(
+          "<leader>nb",
+          function()
+            get_notes({
+              linkedTo = { vim.api.nvim_buf_get_name(0) },
+            })
+          end,
+          desc("zk: backlinks")
+        )
+        mega.nnoremap("<leader>nt", function() get_tags() end, desc("zk: tags"))
+        mega.nnoremap("gt", function() get_tags() end, desc("zk: tags"))
+        -- FIXME: not quite working
+        mega.nnoremap(
+          "<leader>na",
+          function()
+            get_notes({
+              match = {},
+            }, { title = "live grep notes" })
+          end,
+          { desc = "zk: live grep notes" }
+        )
+
+        mega.xnoremap("gm", "<esc><cmd>'<,'>ZkMatch<cr>", desc("zk: find notes in selection"))
+        mega.nnoremap("gm", "<esc><cmd>ZkMatch<cr>", desc("zk: find notes under cursor"))
+        mega.nnoremap("<leader>nr", "<Cmd>ZkRecents<CR>", desc("zk: find recent notes"))
+        mega.vnoremap("<leader>gr", "<cmd>ZkMatch<CR>", desc("zk: search notes matching under cursor"))
+        mega.vnoremap("<leader>gr", ":'<,'>ZkMatch<CR>", desc("zk: search notes matching selection"))
+        mega.map({ "v", "x" }, "<leader>gr", ":'<,'>ZkMatch<CR>", desc("zk: search notes matching selection"))
+        mega.nnoremap("gi", "<Cmd>ZkInsertLink<CR>", desc("zk: insert link"))
+        mega.vnoremap("gi", ":'<,'>ZkInsertLinkAtSelection<CR>", desc("zk: insert link (selected)"))
+        mega.vnoremap(
+          "gI",
+          ":'<,'>ZkInsertLinkAtSelection {match = true}<CR>",
+          desc("zk: insert link (search selected)")
+        )
+        mega.nnoremap("<leader>nn", "<Cmd>ZkNew { title = vim.fn.input('title: ') }<CR>", desc("zk: new note"))
+
+        mega.map(
+          { "v", "x" },
+          "<leader>nn",
+          ":'<,'>ZkNewFromContentSelection { title = vim.fn.input('Title: ') }<CR>",
+          desc("zk: new note from selection")
+        )
+        mega.map(
+          { "v", "x" },
+          "<leader>nN",
+          ":'<,'>ZkNewFromTitleSelection<CR>",
+          desc("zk: new note title from selection")
+        )
       end
     end,
   },
 })
---
--- -- mega.conf("bullets.vim", function()
--- --   vim.g.bullets_enabled_file_types = {
--- --     "markdown",
--- --     "text",
--- --     "gitcommit",
--- --     "scratch",
--- --   }
--- --   vim.g.bullets_checkbox_markers = " ○◐✗"
--- --   vim.g.bullets_set_mappings = 0
--- --   -- vim.g.bullets_outline_levels = { "num" }
---
--- --   -- vim.cmd([[
--- --   --       " Disable default bullets.vim mappings, clashes with other mappings
--- --   --       let g:bullets_set_mappings = 0
--- --   --       " let g:bullets_checkbox_markers = '✗○◐●✓'
--- --   --       let g:bullets_checkbox_markers = ' .oOx'
---
--- --   --       " Add custom bullets mappings that don't clash with other mappings
--- --   --       function! InsertNewBullet()
--- --   --         InsertNewBullet
--- --   --         return ''
--- --   --       endfunction
---
--- --   --         " \ inoremap <buffer><expr> <cr> (pumvisible() ? '<C-y>' : '<C-]><C-R>=InsertNewBullet()<cr>')|
--- --   --       autocmd FileType markdown,text,gitcommit
--- --   --         \ nnoremap <silent><buffer> o :InsertNewBullet<cr>|
--- --   --         \ nnoremap cx :ToggleCheckbox<cr>
--- --   --         \ nmap <C-x> :ToggleCheckbox<cr>
--- --   --     ]])
--- -- end)
