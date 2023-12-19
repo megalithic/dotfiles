@@ -624,6 +624,17 @@ function pdf2img() {
   convert -density 192 "$1" -quality 100 -alpha remove "$2"
 }
 
+alias listening='lsof -Pn -i'
+
+function listening-ports() {
+  if [ -z "$1" ]; then
+    echo "Usage: $0 tcp|udp|..."
+    echo "See /etc/protocols for full list"
+    return 1
+  fi
+  netstat -tulanp "$1"
+}
+
 # REFS:
 # https://github.com/zackproser/zsh-shell-functions/tree/main/autogit
 # https://github.com/zackproser/automations/blob/master/docs/usage.md
