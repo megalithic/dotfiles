@@ -8,23 +8,17 @@
 -- " based on: https://www.reddit.com/r/vim/comments/h8pgor/til_conceal_in_vim/
 -- " youtube video: https://youtu.be/UuHJloiDErM?t=793
 
-vim.opt_local.textwidth = 80
+if not vim.g.started_by_firenvim then vim.opt_local.textwidth = 80 end
+
 vim.cmd([[autocmd FileType markdown nnoremap gO <cmd>Toc<cr>]])
 
 -- vim.o.equalprg = [[prettier --stdin-filepath '%:p']]
 -- vim.o.makeprg = [[open %]]
 
-vim.cmd.iabbrev([[<expr> mdate "### ".strftime("%Y-%m-%d %H:%M:%S")]])
-vim.cmd.iabbrev("<buffer>", "zTODO", "<span style=\"color:red\">TODO:</span><Esc>F<i")
-
 -- -- match and highlight hyperlinks
 vim.fn.matchadd("matchURL", [[http[s]\?:\/\/[[:alnum:]%\/_#.-]*]])
 vim.cmd(string.format("hi matchURL guifg=%s", require("mega.lush_theme.colors").bright_blue))
 vim.cmd([[syn region markdownWikiLink matchgroup=markdownLinkDelimiter start="\[\[\w\+|" end="\]\]"]])
-
-mega.iabbrev("-cc", "- [ ]", { "markdown" })
-mega.iabbrev("cc", "[ ]", { "markdown" })
-mega.iabbrev("cb", "[ ]", { "markdown" })
 
 if vim.g.is_tmux_popup then
   -- ## used with markdown related tmux popups (through nvim)
@@ -35,8 +29,7 @@ if vim.g.is_tmux_popup then
 
   vim.opt.laststatus = 1
   vim.opt.cmdheight = 0
-  vim.api.nvim_win_set_option(
-    0,
+  vim.api.nvim_set_option_value(
     "winhl",
     table.concat({
       "Normal:TmuxPopupNormal",
@@ -44,22 +37,18 @@ if vim.g.is_tmux_popup then
       "MsgArea:TmuxPopupNormal",
       "ModeMsg:TmuxPopupNormal",
       "NonText:TmuxPopupNormal",
-    }, ",")
+    }, ","),
+    { win = 0 }
   )
 
   vim.cmd("hi MsgArea guibg=#3d494f")
-
-  -- local ok_headlines, headlines = pcall(require, "headlines")
-  -- if ok_headlines then
-  --   headlines.setup({
-  --     markdown = {
-  --       headline_highlights = false,
-  --       dash_highlight = false,
-  --       codeblock_highlight = false,
-  --     },
-  --   })
-  -- end
 end
+
+mega.iabbrev("-cc", "- [ ]", { "markdown" })
+mega.iabbrev("cc", "[ ]", { "markdown" })
+mega.iabbrev("cb", "[ ]", { "markdown" })
+vim.cmd.iabbrev([[<expr> mdate "### ".strftime("%Y-%m-%d %H:%M:%S")]])
+vim.cmd.iabbrev("<buffer>", "zTODO", "<span style=\"color:red\">TODO:</span><Esc>F<i")
 
 mega.augroup("ZKMaps", {
   {

@@ -15,6 +15,11 @@
     right: (string (quoted_content) @heex))
   (#eq? @_comment "# heex"))
 
+(sigil
+  (sigil_name) @_sigil_name
+  (quoted_content) @heex
+(#eq? @_sigil_name "H"))
+
 ; JSON string blocks
 ((comment) @_comment
   .

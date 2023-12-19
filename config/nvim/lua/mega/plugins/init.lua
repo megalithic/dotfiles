@@ -37,11 +37,26 @@ return {
   },
   {
     "sainnhe/everforest",
+    cond = false,
     lazy = false,
     priority = 1000,
     config = function()
       vim.g.everforest_background = "soft"
       vim.g.everforest_better_performance = true
+    end,
+  },
+
+  {
+    "neanias/everforest-nvim",
+    lazy = false,
+    priority = 1000,
+    config = function()
+      require("everforest").setup({
+        dim_inactive_windows = true,
+        transparent_background_level = 2,
+        background = "medium",
+        italics = true,
+      })
     end,
   },
   {
@@ -453,6 +468,7 @@ return {
       },
       {
         "Wansmer/symbol-usage.nvim",
+        cond = false,
         event = "LspAttach",
         config = {
           text_format = function(symbol)
@@ -1076,13 +1092,15 @@ return {
   {
     "pmizio/typescript-tools.nvim",
     event = {
-      "BufRead *.js,*.jsx,*.mjs,*.cjs,*ts,*tsx",
-      "BufNewFile *.js,*.jsx,*.mjs,*.cjs,*ts,*tsx",
+      "BufRead *.js,*.jsx,*.mjs,*.cjs,*.ts,*.tsx",
+      "BufNewFile *.js,*.jsx,*.mjs,*.cjs,*.ts,*.tsx",
     },
+    ft = { "typescript", "typescriptreact", "javascript", "javascriptreact" },
     dependencies = {
       "nvim-lua/plenary.nvim",
       "neovim/nvim-lspconfig",
     },
+    build = "npm i -g @styled/typescript-styled-plugin typescript-styled-plugin",
     opts = {
       on_attach = function(client, bufnr)
         client.server_capabilities.documentFormattingProvider = false
@@ -1127,6 +1145,12 @@ return {
           includeInlayPropertyDeclarationTypeHints = true,
           includeInlayFunctionLikeReturnTypeHints = true,
           includeInlayEnumMemberValueHints = true,
+        },
+        tsserver_plugins = {
+          -- for TypeScript v4.9+
+          "@styled/typescript-styled-plugin",
+          -- or for older TypeScript versions
+          -- "typescript-styled-plugin",
         },
       },
     },

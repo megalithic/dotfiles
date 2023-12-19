@@ -356,9 +356,9 @@ local function setup_keymaps(client, bufnr)
     end
   end, "lsp: references")
 
-  if not mega.lsp.has_method(client, "references") then
-    nnoremap("gr", "<leader>A", desc("find: references via grep"))
-  end
+  -- if not mega.lsp.has_method(client, "references") then
+  --   nnoremap("gr", "<leader>A", desc("find: references via grep"))
+  -- end
   -- if client.name == "lexical" then safemap("references", "n", "gr", "<leader>A", "lsp: references") end
   safemap("typeDefinition", "n", "gt", vim.lsp.buf.type_definition, "lsp: type definition")
   safemap("implementation", "n", "gi", vim.lsp.buf.implementation, "lsp: implementation")
@@ -584,26 +584,6 @@ local function on_init(client)
   end
   return true
 end
---
--- -- ---@alias ClientOverrides {on_attach: fun(client: lsp.Client, bufnr: number), semantic_tokens: fun(bufnr: number, client: lsp.Client, token: table)}
--- local client_overrides = {}
---
--- ---@param client lsp.Client
--- ---@param bufnr number
--- local function setup_semantic_tokens(client, bufnr)
---   -- fully disable semantic tokens highlighting
---   -- client.server_capabilities.semanticTokensProvider = nil
---
---   -- local overrides = client_overrides[client.name]
---   -- if not overrides or not overrides.semantic_tokens then return end
---   --
---   -- mega.augroup(fmt("LspSemanticTokens%s", client.name), {
---   --   event = "LspTokenUpdate",
---   --   buffer = bufnr,
---   --   desc = fmt("Configure the semantic tokens for the %s", client.name),
---   --   command = function(args) overrides.semantic_tokens(args.buf, client, args.data.token) end,
---   -- })
--- end
 
 local function setup_handlers(client, bufnr)
   -- brilliant highlighting and float handler stuff by mariasolos:
@@ -745,7 +725,6 @@ local function on_attach(client, bufnr)
   setup_diagnostics(client, bufnr)
   setup_highlights(client, bufnr)
   setup_handlers(client, bufnr)
-  -- setup_semantic_tokens(client, bufnr)
 
   if mega.lsp.has_method(client, "completion") then
     client.server_capabilities.completionProvider.triggerCharacters = { ".", ":" }
@@ -799,6 +778,16 @@ if servers ~= nil then
     config.on_init = on_init
     config.flags = { debounce_text_changes = 150 }
     config.capabilities = get_server_capabilities()
+    -- FIXME: This locks up lexical:
+    -- if config.on_attach then
+    --   config.on_attach = function(client, bufnr)
+    --     dd("on_attach provided from servers.lua config")
+    --     on_attach(client, bufnr)
+    --     config.on_attach(client, bufnr)
+    --   end
+    -- else
+    --   config.on_attach = on_attach
+    -- end
     config.on_attach = on_attach
 
     return config

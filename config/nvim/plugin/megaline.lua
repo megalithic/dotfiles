@@ -23,19 +23,19 @@ vim.g.is_saving = false
 local search_count_timer
 
 mega.augroup("megaline", {
-  -- {
-  --   event = { "BufWritePre" },
-  --   command = function()
-  --     if not vim.g.is_saving and vim.bo.modified then
-  --       vim.g.is_saving = true
-  --       vim.cmd([[checktime]])
-  --       vim.defer_fn(function()
-  --         vim.g.is_saving = false
-  --         pcall(vim.cmd.redrawstatus)
-  --       end, 500)
-  --     end
-  --   end,
-  -- },
+  {
+    event = { "BufWritePre" },
+    command = function()
+      if not vim.g.is_saving and vim.bo.modified then
+        vim.g.is_saving = true
+        vim.cmd([[checktime]])
+        vim.defer_fn(function()
+          vim.g.is_saving = false
+          pcall(vim.cmd.redrawstatus)
+        end, 500)
+      end
+    end,
+  },
   {
     event = { "LspProgress" },
     command = function() pcall(vim.cmd.redrawstatus) end,

@@ -5,11 +5,8 @@ CWD="$CODE/megalithic.io"
 
 cd $CWD
 
-# Run on_project_start command.
-
-# Run pre command.
-
-# Run on_project_first_start command.
+SESSION_ICON="🗿"
+SESSION_FG="#614b51"
 
 # Create the session and the first window. Manually switch to root
 # directory if required to support tmux < 1.9
@@ -59,4 +56,6 @@ tmux -2 select-pane -t "$SESSION":3.1
 tmux -2 select-window -t "$SESSION":2
 tmux -2 select-pane -t "$SESSION":2.1
 
-# Run on_project_exit command.
+
+tmux setenv -t ${SESSION} 'SESSION_ICON' "${SESSION_ICON}"
+tmux setenv -t ${SESSION} 'SESSION_FG' "${SESSION_FG}"

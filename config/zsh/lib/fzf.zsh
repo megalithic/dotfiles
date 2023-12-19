@@ -78,9 +78,9 @@ export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS
 # CTRL-/ to toggle small preview window to see the full command
 # CTRL-Y to copy the command into clipboard using pbcopy
 export FZF_CTRL_R_OPTS="
---header='command history (Press CTRL-y to copy command into clipboard)'
+--header=\"command history [$(tput setaf 255)ctrl-y$(tput sgr 0): $(tput setaf 245)copy to clipboard$(tput sgr 0)]\"
 --preview 'echo {}' --preview-window up:3:wrap
---bind 'ctrl-/:toggle-preview'
+--bind '?:toggle-preview'
 --bind 'ctrl-y:execute-silent(echo -n {2..} | pbcopy)+abort'
 --color header:italic"
 # export FZF_TMUX_OPTS="$FZF_DEFAULT_OPTS" #"-p --no-info --ansi --color gutter:-1,bg+:-1,header:4,separator:0,info:0,label:4,border:4,prompt:7,pointer:5,query:7,prompt:7"

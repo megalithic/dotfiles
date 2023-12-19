@@ -49,6 +49,14 @@ M.list = {
 
     return {
       cmd = { fmt("%s/lsp/elixir-ls/%s", vim.env.XDG_DATA_HOME, "language_server.sh") },
+      filetypes = { "elixir", "eelixir", "heex", "surface" },
+      root_dir = function(fname)
+        local matches = vim.fs.find({ "mix.exs" }, { upward = true, limit = 2, path = fname })
+        local child_or_root_path, maybe_umbrella_path = unpack(matches)
+        local root_dir = vim.fs.dirname(maybe_umbrella_path or child_or_root_path)
+
+        return root_dir
+      end,
       settings = {
         -- mixEnv = "dev",
         fetchDeps = false,
@@ -187,12 +195,13 @@ M.list = {
       cmd = { vim.env.XDG_DATA_HOME .. "/lsp/lexical/_build/dev/package/lexical/bin/start_lexical.sh" },
       settings = {
         dialyzerEnabled = true,
-        log_level = vim.lsp.protocol.MessageType.Log,
-        message_level = vim.lsp.protocol.MessageType.Log,
-        logLevel = vim.lsp.protocol.MessageType.Log,
-        messageLevel = vim.lsp.protocol.MessageType.Log,
+        log_level = vim.lsp.protocol.MessageType.Error,
+        message_level = vim.lsp.protocol.MessageType.Error,
+        logLevel = vim.lsp.protocol.MessageType.Error,
+        messageLevel = vim.lsp.protocol.MessageType.Error,
       },
       single_file_support = true,
+      on_attach = function(client, bufnr) dd(client.name) end,
     }
   end,
   --- @see https://gist.github.com/folke/fe5d28423ea5380929c3f7ce674c41d8
@@ -322,8 +331,15 @@ M.list = {
     return {
       single_file_support = true,
       filetypes = { "elixir", "eelixir", "heex", "surface" },
-      log_level = vim.lsp.protocol.MessageType.Log,
-      message_level = vim.lsp.protocol.MessageType.Log,
+      log_level = vim.lsp.protocol.MessageType.Error,
+      message_level = vim.lsp.protocol.MessageType.Error,
+      root_dir = function(fname)
+        local matches = vim.fs.find({ "mix.exs" }, { upward = true, limit = 2, path = fname })
+        local child_or_root_path, maybe_umbrella_path = unpack(matches)
+        local root_dir = vim.fs.dirname(maybe_umbrella_path or child_or_root_path)
+
+        return root_dir
+      end,
       settings = {
         -- mixEnv = "dev",
         fetchDeps = false,
@@ -470,60 +486,60 @@ M.list = {
   teal_ls = {},
   terraformls = {},
   -- NOTE: presently enabled via typescript-tools
-  tsserver = function()
-    local function do_organize_imports()
-      local params = {
-        command = "_typescript.organizeImports",
-        arguments = { vim.api.nvim_buf_get_name(0) },
-        title = "",
-      }
-      lsp.buf.execute_command(params)
-    end
-
-    return {
-      -- cmd = lsp_cmd_override({ ".bin/typescript-language-server", "typescript-language-server" }, { "stdio" }),
-      init_options = {
-        hostInfo = "neovim",
-        logVerbosity = "verbose",
-      },
-      commands = {
-        OrganizeImports = {
-          do_organize_imports,
-          description = "Organize Imports",
-        },
-      },
-      filetypes = {
-        "javascript",
-        "javascriptreact",
-        "typescript",
-        "typescriptreact",
-      },
-      settings = {
-        typescript = {
-          inlayHints = {
-            includeInlayParameterNameHints = "literal", -- alts: all
-            includeInlayParameterNameHintsWhenArgumentMatchesName = false,
-            includeInlayFunctionParameterTypeHints = true,
-            includeInlayVariableTypeHints = true,
-            includeInlayPropertyDeclarationTypeHints = true,
-            includeInlayFunctionLikeReturnTypeHints = true,
-            includeInlayEnumMemberValueHints = true,
-          },
-        },
-        javascript = {
-          inlayHints = {
-            includeInlayParameterNameHints = "all",
-            includeInlayParameterNameHintsWhenArgumentMatchesName = false,
-            includeInlayFunctionParameterTypeHints = false,
-            includeInlayVariableTypeHints = true,
-            includeInlayPropertyDeclarationTypeHints = true,
-            includeInlayFunctionLikeReturnTypeHints = true,
-            includeInlayEnumMemberValueHints = true,
-          },
-        },
-      },
-    }
-  end,
+  -- tsserver = function()
+  --   local function do_organize_imports()
+  --     local params = {
+  --       command = "_typescript.organizeImports",
+  --       arguments = { vim.api.nvim_buf_get_name(0) },
+  --       title = "",
+  --     }
+  --     lsp.buf.execute_command(params)
+  --   end
+  --
+  --   return {
+  --     -- cmd = lsp_cmd_override({ ".bin/typescript-language-server", "typescript-language-server" }, { "stdio" }),
+  --     init_options = {
+  --       hostInfo = "neovim",
+  --       logVerbosity = "verbose",
+  --     },
+  --     commands = {
+  --       OrganizeImports = {
+  --         do_organize_imports,
+  --         description = "Organize Imports",
+  --       },
+  --     },
+  --     filetypes = {
+  --       "javascript",
+  --       "javascriptreact",
+  --       "typescript",
+  --       "typescriptreact",
+  --     },
+  --     settings = {
+  --       typescript = {
+  --         inlayHints = {
+  --           includeInlayParameterNameHints = "literal", -- alts: all
+  --           includeInlayParameterNameHintsWhenArgumentMatchesName = false,
+  --           includeInlayFunctionParameterTypeHints = true,
+  --           includeInlayVariableTypeHints = true,
+  --           includeInlayPropertyDeclarationTypeHints = true,
+  --           includeInlayFunctionLikeReturnTypeHints = true,
+  --           includeInlayEnumMemberValueHints = true,
+  --         },
+  --       },
+  --       javascript = {
+  --         inlayHints = {
+  --           includeInlayParameterNameHints = "all",
+  --           includeInlayParameterNameHintsWhenArgumentMatchesName = false,
+  --           includeInlayFunctionParameterTypeHints = false,
+  --           includeInlayVariableTypeHints = true,
+  --           includeInlayPropertyDeclarationTypeHints = true,
+  --           includeInlayFunctionLikeReturnTypeHints = true,
+  --           includeInlayEnumMemberValueHints = true,
+  --         },
+  --       },
+  --     },
+  --   }
+  -- end,
   vimls = { init_options = { isNeovim = true } },
   --- https://github.com/golang/tools/blob/master/gopls/doc/settings.md
   yamlls = {
@@ -569,9 +585,15 @@ M.unofficial = {
           cmd = cmd(false),
           single_file_support = true,
           filetypes = { "elixir", "eelixir", "heex", "surface" },
-          root_dir = root_pattern("mix.exs", ".git"),
-          log_level = vim.lsp.protocol.MessageType.Log,
-          message_level = vim.lsp.protocol.MessageType.Log,
+          root_dir = function(fname)
+            local matches = vim.fs.find({ "mix.exs" }, { upward = true, limit = 2, path = fname })
+            local child_or_root_path, maybe_umbrella_path = unpack(matches)
+            local root_dir = vim.fs.dirname(maybe_umbrella_path or child_or_root_path)
+
+            return root_dir
+          end,
+          log_level = vim.lsp.protocol.MessageType.Error,
+          message_level = vim.lsp.protocol.MessageType.Error,
           init_options = {
             mix_env = "dev",
             mix_target = "host",
@@ -584,7 +606,7 @@ M.unofficial = {
           settings = {
             -- mixEnv = "dev",
             fetchDeps = false,
-            dialyzerEnabled = true,
+            dialyzerEnabled = false,
             dialyzerFormat = "dialyxir_long",
             enableTestLenses = false,
             suggestSpecs = true,

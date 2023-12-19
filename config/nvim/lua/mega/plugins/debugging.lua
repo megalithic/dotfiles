@@ -1,9 +1,10 @@
 local fn = vim.fn
 
+if true then return {} end
+
 return {
   {
     "mfussenegger/nvim-dap",
-    cond = false,
     keys = {
       {
         "<localleader>dL",

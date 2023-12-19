@@ -38,10 +38,10 @@ return {
     { "lukas-reineke/cmp-under-comparator" },
     -- { "davidsierradz/cmp-conventionalcommits" },
     { "dmitmel/cmp-cmdline-history" },
-    { "andersevenrud/cmp-tmux" },
+    { "andersevenrud/cmp-tmux", cond = false },
     -- { "kristijanhusak/vim-dadbod-completion"},
   },
-  -- init = function() vim.opt.completeopt = { "menu", "menuone", "noselect", "noinsert" } end,
+  init = function() vim.opt.completeopt = { "menu", "menuone", "noselect", "noinsert" } end,
   config = function()
     local cmp = require("cmp")
     local lspkind = require("lspkind")
@@ -171,13 +171,12 @@ return {
 
         return not disabled
       end,
-      -- preselect = cmp.PreselectMode.None,
-      -- preselect = cmp.PreselectMode.Item,
+      preselect = cmp.PreselectMode.None,
       -- entries = { name = "custom", selection_order = "near_cursor" },
       completion = {
         -- completeopt = "menuone",
-        -- completeopt = "menu,menuone,noselect,noinsert",
-        completeopt = "menu,menuone,noselect",
+        completeopt = "menu,menuone,noselect,noinsert",
+        -- completeopt = "menu,menuone,noselect",
         -- completeopt = { "menu", "menuone", "preview", "noselect", "noinsert" },
         max_item_count = 50,
         keyword_length = 1,
@@ -454,7 +453,7 @@ return {
       mapping = cmp.mapping.preset.cmdline(),
       sources = {
         { name = "nvim_lsp_document_symbol" },
-        { name = "fuzzy_buffer", option = { min_match_length = 2 } },
+        { name = "fuzzy_buffer", option = { min_match_length = 3 } },
         -- { name = "buffer", option = { min_match_length = 2 } },
       },
     })

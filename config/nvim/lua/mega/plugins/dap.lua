@@ -1,9 +1,9 @@
 -- @REF:
 -- https://github.com/jayp0521/dotfiles/blob/main/shell/.config/nvim/lua/user/plugins/dap.lua
+if true then return {} end
 return {
   {
     "mfussenegger/nvim-dap",
-    cond = false,
     dependencies = {
       {
         "jbyuki/one-small-step-for-vimkind",

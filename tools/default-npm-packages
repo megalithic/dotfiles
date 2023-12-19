@@ -40,6 +40,7 @@ tree-sitter-cli
 tsd
 typescript
 typescript-language-server
+@styled/typescript-styled-plugin
 typescript-styled-plugin
 vim-language-server
 vim-node-rpc

@@ -67,6 +67,7 @@ while getopts "phs:" OPTION; do
   case $OPTION in
 
     p)
+      export TMUX_POPUP=1
       POPUP="true"
       ;;
 
@@ -130,12 +131,12 @@ function new_session() {
     (sh "$layouts_dir/$session.zsh" &&
       to_session "$session" ||
       tmux new-session -d -s "$session" &&
-      to_session "$session") && exit
+    to_session "$session") && exit
   else
     (sh "$layouts_dir/default.zsh" "$session" &&
       to_session "$session" ||
       tmux new-session -d -s "$session" &&
-      to_session "$session") && exit
+    to_session "$session") && exit
   fi
 }
 
@@ -156,14 +157,18 @@ function fuzzy_find() {
   sessions_list=$(printf "%s\n%s" "$layouts_list" "$current_sessions_list" | sort -u)
   current_session="$(tmux display-message -p '#S')"
   sessions_count=$(echo "$sessions_list" | wc -l | sed -e 's/^[[:space:]]*//')
-  preview_lines_of_output=10
 
+  # alts:
+  # tmux capture-pane -ep -t "${1}"
+  # tmux capture-pane -ep -S- -E- -t {}
+  # pane_capture="tmux capture-pane -ep -S- -E- -t {}"
+  pane_capture="tmux capture-pane -ep -t {}"
+
+
+  preview_lines_of_output=100
   preview_cmd_layout_info="echo {} | sed 's/:.*$//' | xargs -I {} | xargs tmux has-session -t 2>/dev/null && xargs -I {} | echo '$(tput sgr 0 1)$(tput setaf 6) windows in session:$(tput sgr 0)\n' && tmux list-windows -F '░ #{window_index}:#W (#P/#{window_panes}) #(nerdwin #{pane_current_command})' -t {}"
-  preview_cmd_preview="echo '$(tput sgr 0 1)$(tput setaf 6) last $preview_lines_of_output lines of output:$(tput sgr 0)\n' && tmux capture-pane -ep -S- -E- -t {} | sed '/^$/d' | tr -s ' '  | tr -s 'q' | sed 's/^/░ /' | sed 's/─//g' |  tail -$preview_lines_of_output"
-
-  preview_cmd="$preview_cmd_layout_info" #" && echo "" && ${preview_cmd_preview}"
-
-  # preview_cmd="echo {} | sed 's/:.*$//' | xargs -I {} | xargs tmux has-session -t 2>/dev/null && xargs -I {} | echo '$(tput sgr 0 1)$(tput setaf 6) windows in session:$(tput sgr 0)\n' && tmux list-windows -F '░ #{window_index}:#W (#P/#{window_panes})' -t {} && echo "" && echo '$(tput sgr 0 1)$(tput setaf 6) last $preview_lines_of_output lines of output:$(tput sgr 0)\n' && tmux capture-pane -ep -S- -E- -t {} | sed '/^$/d' | tr -s ' '  | tr -s 'q' | sed 's/^/░ /' | sed 's/─//g' |  tail -$preview_lines_of_output"
+  preview_cmd_preview="echo '$(tput sgr 0 1)$(tput setaf 6) last $preview_lines_of_output lines of output:$(tput sgr 0)\n' && ${pane_capture} | tail -$preview_lines_of_output"
+  preview_cmd="${preview_cmd_layout_info} && echo "" && echo $TERM && echo "" && ${preview_cmd_preview}"
 
   # -- do certain things based upon only one active session
   if [[ $sessions_count == 1 ]]; then
@@ -177,14 +182,41 @@ function fuzzy_find() {
     [[ $layouts_sessions_count -gt 0 ]] && preview_cmd="fd {} $layouts_dir | xargs bat"
   else
     fzf_prompt_text=" new or existing session  "
-    fzf_header_text="󰢩 $(tput sitm)$(tput setaf 5)$current_session$(tput sgr 0) / $(tput setaf 255)ctrl-x$(tput sgr 0): $(tput setaf 245)kill-session"
+    fzf_header_text="󰢩 $(tput sitm)$(tput setaf 5)$current_session$(tput sgr 0) [$(tput setaf 255)ctrl-x$(tput sgr 0): $(tput setaf 245)kill-session / $(tput setaf 255)ctrl-r$(tput sgr 0): $(tput setaf 245)rename-session]"
   fi
 
   # -- get our session from fzf (grabs the the active pane from each session as preview, too!)
-  fzf_list=$(echo "$sessions_list" | grep -v "^default\$" | grep -v "^$current_session\$")
-  select_session_bind="enter:replace-query+print-query"
-  kill_session_bind="ctrl-x:execute(tmux kill-session -t {})+reload(echo \"$fzf_list\")"
-  try_session "$(echo "$fzf_list" | "$fzf_cmd" --reverse --border=none --padding="1" --prompt="$fzf_prompt_text" --header="$fzf_header_text" --bind="$select_session_bind" --bind="$kill_session_bind" --preview="$preview_cmd")"
+  fzf_list=$(echo "$sessions_list" | sed -E "s/:.*$//" | grep -v "^default\$" | grep -v "^$current_session\$")
+  # list_sessions=$(tmux list-sessions | sed -E "s/:.*$//")
+
+  ENTER_select_session_bind="enter:replace-query+print-query"
+  CTRL_X_kill_session_bind='ctrl-x:execute(tmux kill-session -t {})+reload(tmux list-sessions | sed -E "s/:.*$//")'
+  # CTRL_R_rename_session_bind='ctrl-r:execute(printf >&2 "New session name: ";read name; tmux rename-session -t {} ${name};)+reload(echo "$sessions_list" | grep -v "^default\$" | grep -v "^$current_session\$")'
+  CTRL_R_rename_session_bind='ctrl-r:execute(printf >&2 "New session name: ";read name; tmux rename-session -t {} ${name};)+reload(tmux list-sessions | sed -E "s/:.*$//")'
+
+  try_session "$(echo \
+    "$fzf_list" \
+    | \
+    "$fzf_cmd" \
+    --reverse \
+    --border=none \
+    --scrollbar="▌▐" \
+    --padding="1" \
+    --prompt="$fzf_prompt_text" \
+    --header="$fzf_header_text" \
+    --bind="change:first" \
+    --bind="focus:transform-preview-label:echo [ {} ]" \
+    --bind="$ENTER_select_session_bind" \
+    --bind="$CTRL_X_kill_session_bind" \
+    --bind="$CTRL_R_rename_session_bind" \
+    --bind="?:toggle-preview" \
+    --bind="ctrl-u:preview-half-page-up,ctrl-d:preview-half-page-down" \
+    --preview="$preview_cmd" \
+    --preview-window="right,55%,," \
+    --print-query \
+    --exit-0 \
+    --tac \
+    )"
 }
 
 # -- if we pass in a session_name: attach/switch to it or, create new session

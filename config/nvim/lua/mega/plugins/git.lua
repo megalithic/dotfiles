@@ -29,7 +29,7 @@ return {
         changedelete = { hl = "GitSignsChange", text = "🮉" }, -- alts: ▌
         untracked = { hl = "GitSignsAdd", text = "▕" }, -- alts: ┆ ▕
       },
-      current_line_blame = false, -- not vim.fn.getcwd():match("dotfiles"),
+      current_line_blame = not vim.fn.getcwd():match("dotfiles"),
       current_line_blame_formatter = " <author>, <author_time> · <summary>",
       preview_config = {
         border = mega.get_border(),
@@ -80,7 +80,7 @@ return {
         bmap({ "n", "v" }, "<localleader>hs", ":Gitsigns stage_hunk<CR>", { desc = "git: stage hunk" })
         bmap({ "n", "v" }, "<localleader>gs", ":Gitsigns stage_hunk<CR>", { desc = "git: stage hunk" })
         bmap({ "n", "v" }, "<localleader>hr", ":Gitsigns reset_hunk<CR>", { desc = "git: reset hunk" })
-        bmap({ "n", "v" }, "<localleader>gr", ":Gitsigns reset_hunk<CR>", { desc = "git: reset hunk" })
+        bmap({ "n", "v" }, "<localleader>gu", ":Gitsigns reset_hunk<CR>", { desc = "git: reset hunk" })
 
         -- Text object
         bmap({ "o", "x" }, "ih", ":<C-U>Gitsigns select_hunk<CR>", { desc = "git: select hunk" })
@@ -101,10 +101,14 @@ return {
     cmd = "Neogit",
     dependencies = { "nvim-lua/plenary.nvim" },
     keys = {
-      { "<leader>G", function() neogit().open() end, desc = "neogit: open status buffer" },
-      { "<localleader>gc", function() neogit().open({ "commit", "-v" }) end, desc = "neogit: open commit buffer" },
-      { "<localleader>gl", function() neogit().popups.pull.create() end, desc = "neogit: open pull popup" },
-      { "<localleader>gp", function() neogit().popups.push.create() end, desc = "neogit: open push popup" },
+      { "<leader>G", function() require("neogit").open() end, desc = "neogit: open status buffer" },
+      {
+        "<localleader>gc",
+        function() require("neogit").open({ "commit", "-v" }) end,
+        desc = "neogit: open commit buffer",
+      },
+      { "<localleader>gl", function() require("neogit").popups.pull.create() end, desc = "neogit: open pull popup" },
+      { "<localleader>gp", function() require("neogit").popups.push.create() end, desc = "neogit: open push popup" },
       {
         "<localleader>gbb",
         function()
