@@ -60,13 +60,13 @@ mega.augroup("ZKMaps", {
         -- local util = require("zk.util")
         -- local api = require("zk.api")
 
-        -- mega.iabbrev("ex:", "### elixir", "markdown")
-        -- mega.iabbrev("mtg:", "### meeting", "markdown")
-        -- mega.iabbrev("w:", "### work", "markdown")
-        -- mega.iabbrev("pair:", "### pairing", "markdown")
-        -- mega.iabbrev("dan:", "### 1:1 with dan", "markdown")
-        -- mega.iabbrev("one:", "### 1:1 with dan", "markdown")
-        -- mega.iabbrev("dots:", "### dotfiles", "markdown")
+        mega.iabbrev({ "ex:", "elixir:" }, "#### elixir", "markdown")
+        mega.iabbrev({ "wk:", "work:" }, "#### work", "markdown")
+        mega.iabbrev({ "cn:", "canon:", "canonize:" }, "#### canonize.app", "markdown")
+        mega.iabbrev({ "mtg:", "meet:", "meeting:" }, "#### meeting", "markdown")
+        mega.iabbrev({ "pr:", "pair:", "pairing:" }, "#### pairing", "markdown")
+        mega.iabbrev({ "dan:", "one:" }, "#### 1:1 with dan", "markdown")
+        mega.iabbrev({ "dots:", "dotfiles:" }, "#### dotfiles", "markdown")
 
         -- ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
         -- HELPERS

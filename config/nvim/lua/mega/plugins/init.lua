@@ -113,6 +113,57 @@ return {
     },
   },
   {
+    cond = false,
+    "luukvbaal/statuscol.nvim",
+    event = { "VeryLazy" },
+    branch = "0.10",
+    opts = function()
+      local builtin = require("statuscol.builtin")
+
+      return {
+        -- setopt = true,
+        bt_ignore = { "nofile", "terminal" },
+        relculright = true,
+        segments = {
+          -- {
+          --   text = {
+          --     function(args)
+          --       args.fold.close = ""
+          --       args.fold.open = ""
+          --       args.fold.sep = " "
+          --       return builtin.foldfunc(args)
+          --     end,
+          --   },
+          --   click = "v:lua.ScFa",
+          -- },
+          -- {
+          --   text = { " ", builtin.foldfunc, " " },
+          --   condition = {
+          --     builtin.not_empty,
+          --     true,
+          --     builtin.not_empty,
+          --   },
+          --   click = "v:lua.ScFa",
+          -- },
+          { text = { builtin.foldfunc, " " }, click = "v:lua.ScFa", hl = "Comment" },
+          { sign = { name = { ".*" }, namespace = { "gitsigns" }, colwidth = 1, wrap = true }, click = "v:lua.ScSa" },
+          -- {
+          --   sign = {
+          --     name = { ".*" },
+          --     text = { ".*" },
+          --   },
+          --   click = "v:lua.ScSa",
+          -- },
+          {
+            text = { builtin.lnumfunc, colwidth = 2 },
+            condition = { true, builtin.not_empty },
+            click = "v:lua.ScLa",
+          },
+        },
+      }
+    end,
+  },
+  {
     "echasnovski/mini.indentscope",
     version = "*",
     main = "mini.indentscope",
@@ -144,6 +195,20 @@ return {
         ignore_blank_lines = true,
         hooks = {
           pre = function() require("ts_context_commentstring.internal").update_commentstring({}) end,
+        },
+        mappings = {
+          -- Toggle comment (like `gcip` - comment inner paragraph) for both
+          -- Normal and Visual modes
+          comment = "gc",
+
+          -- Toggle comment on current line
+          comment_line = "gcc",
+
+          -- Toggle comment on visual selection
+          comment_visual = "gc",
+
+          -- Define 'comment' textobject (like `dgc` - delete whole comment block)
+          textobject = "gc",
         },
       })
     end,
@@ -790,11 +855,11 @@ return {
     cmd = "Neogen",
     dependencies = { "nvim-treesitter/nvim-treesitter", "hrsh7th/vim-vsnip" },
     keys = {
-      {
-        "gcd",
-        function() require("neogen").generate({}) end,
-        desc = "comment: neogen comment",
-      },
+      -- {
+      --   "gcd",
+      --   function() require("neogen").generate({}) end,
+      --   desc = "comment: neogen comment",
+      -- },
       {
         "<leader>cc",
         function() require("neogen").generate({}) end,

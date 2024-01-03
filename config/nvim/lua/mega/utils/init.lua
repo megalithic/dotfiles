@@ -324,6 +324,26 @@ function M.fold(callback, list, accum)
   return accum
 end
 
+---@generic T:table
+---@param callback fun(item: T, key: any)
+---@param list table<any, T>
+function M.foreach(callback, list)
+  for k, v in pairs(list) do
+    callback(v, k)
+  end
+end
+
+--- Check if the target matches  any item in the list.
+---@param target string
+---@param list string[]
+---@return boolean
+function M.any(target, list)
+  for _, item in ipairs(list) do
+    if target:match(item) then return true end
+  end
+  return false
+end
+
 ---Find an item in a list
 ---@generic T
 ---@param haystack T[]

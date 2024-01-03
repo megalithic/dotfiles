@@ -3,6 +3,7 @@
 vim.o.termguicolors = false
 
 if vim.loader then vim.loader.enable() end
+vim.env.DYLD_LIBRARY_PATH = "$BREW_PREFIX/lib/"
 
 -- [ settings ] ----------------------------------------------------------------
 
@@ -11,7 +12,8 @@ vim.g.enabled_plugin = {
   mappings = true,
   autocmds = true,
   megaline = true,
-  megacolumn = true,
+  megacolumn = false,
+  statuscolumn = true,
   term = true,
   lsp = true,
   repls = true,
@@ -67,11 +69,12 @@ vim.g.diagnostic_exclusions = { "ElixirLS", "NextLS", "elixirls", "nextls" }
 vim.g.enabled_elixir_ls = { "elixirls", "nextls", "lexical" }
 vim.g.disable_autolint = true
 vim.g.disable_autoformat = false
+
 -- [ globals ] -----------------------------------------------------------------
 
 _G.mega = mega
   or {
-    ui = {},
+    ui = { foldtext = {}, statuscolumn = {} },
     fn = {},
     fzf = {},
     dirs = {},

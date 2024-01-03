@@ -160,6 +160,17 @@ end
 _G.map = vim.keymap.set
 mega.map = vim.keymap.set
 
+function mega.fold(callback, list, accum)
+  accum = accum or {}
+  for k, v in pairs(list) do
+    accum = callback(accum, v, k)
+    assert(accum ~= nil, "The accumulator must be returned on each iteration")
+  end
+  return accum
+end
+
+mega.foreach = U.foreach
+
 ---Find an item in a list
 ---@generic T
 ---@param matcher fun(arg: T):boolean
@@ -317,51 +328,17 @@ function mega.require(module_name, opts)
   return ok, result
 end
 
--- function mega.iabbrev(lhs, rhs, opts)
---   opts = opts or {}
---   local ft = opts["ft"] or nil
---   local ext = opts["ext"] or nil
---   if type(opts) == "string" then ft = { opts } end
---   local event = nil
---   local pattern = { "*" }
---   local desc = ""
---   local group = "iabbrevs"
---   if ft ~= nil then
---     group = "iabbrevs_" .. table.concat(ft, "_")
---     event = { "FileType" }
---     pattern = type(ft) == "string" and { ft } or ft
---     desc = "Insert abbreviation for " .. vim.inspect(ft)
---   elseif ext ~= nil then
---     group = "iabbrevs_" .. ext
---     event = {
---       fmt([[BufRead %s]], ext),
---       fmt([[BufNewFile %s]], ext),
---     }
---     pattern = ext
---     desc = "Insert abbreviation for " .. ext
---   end
---
---   if event ~= nil then
---     mega.augroup(group, {
---       {
---         event = event,
---         pattern = pattern,
---         desc = desc,
---         command = function() vim.cmd.iabbrev(fmt([[%s %s]], lhs, rhs)) end,
---       },
---     })
---   else
---     vim.cmd.iabbrev(fmt([[%s %s]], lhs, rhs))
---   end
--- end
 function mega.iabbrev(lhs, rhs, ft)
   ft = ft or nil
   if type(ft) == "string" then ft = { ft } end
+  if type(lhs) == "string" then lhs = { lhs } end
 
-  if ft ~= nil then
-    if vim.tbl_contains(ft, vim.bo.filetype) then vim.cmd.iabbrev(fmt([[%s %s]], lhs, rhs)) end
-  else
-    vim.cmd.iabbrev(fmt([[%s %s]], lhs, rhs))
+  for _, lhs_item in ipairs(lhs) do
+    if ft ~= nil then
+      if vim.tbl_contains(ft, vim.bo.filetype) then vim.cmd.iabbrev(fmt([[%s %s]], lhs_item, rhs)) end
+    else
+      vim.cmd.iabbrev(fmt([[%s %s]], lhs_item, rhs))
+    end
   end
 end
 function mega.cabbrev(lhs, rhs) vim.cmd.cabbrev(fmt([[%s %s]], lhs, rhs)) end

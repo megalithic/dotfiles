@@ -363,7 +363,7 @@ nmap("<leader>S", function()
 end, { desc = "Add word under cursor to dictionary" })
 -- nmap("<leader>S", "zg") -- Add word under cursor to dictionary
 
-mega.map({ "x", "n" }, "gct", function()
+mega.map({ "x", "n" }, "gcd", function()
   local win = vim.api.nvim_get_current_win()
   local cur = vim.api.nvim_win_get_cursor(win)
   local vstart = vim.fn.getpos("v")[2]

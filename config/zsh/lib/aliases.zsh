@@ -127,6 +127,8 @@ alias mega="ftm mega"
 alias s="kitty +kitten ssh"
 alias kssh="kitty +kitten ssh"
 
+alias fixssh="chmod 700 ~/.ssh && chmod 600 ~/.ssh/*"
+
 ## - ag/ack/grep/fzf/rg/ripgrep --------------------------------------
 # https://github.com/junegunn/fzf/wiki/Examples#searching-file-contents
 # alias ag="ag --nobreak --nonumbers --noheading . | fzf"

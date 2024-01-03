@@ -344,10 +344,11 @@ unmap(";i");
 mapkey(";i", "-> Send to Instapaper", actions.sendToInstapaper);
 
 actions.sendToOmnivore = () => {
-  // javascript:window.open("https://omnivore.app/api/save?url=%22%20+%20window.location.href,%20%27_blank%27);
-  const script = document.createElement("script");
-  script.innerHTML = `(() => { var d=document;try{if(!d.body)throw(0);window.location='https://omnivore.app/api/save?url='+encodeURIComponent(d.location.href);}catch(e){alert('Please wait until the page has loaded.');} })()`;
-  document.body.appendChild(script);
+  window.open(
+    "https://omnivore.app/api/save?url=" +
+      encodeURIComponent(window.location.href),
+    "_blank",
+  );
 };
 unmap(";o");
 mapkey(";o", "-> Send to Omnivore", actions.sendToOmnivore);

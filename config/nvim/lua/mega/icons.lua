@@ -263,6 +263,7 @@ return {
     hydra = "🐙",
     flames = "󰈸", -- alts: 󱠇󰈸
     vsplit = "◫",
+    v_border = "▐ ",
   },
   more = {
     abc = "",

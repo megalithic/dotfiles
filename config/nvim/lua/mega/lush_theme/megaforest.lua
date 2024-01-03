@@ -307,7 +307,7 @@ local theme = lush(function(injected_functions)
 
     Headline1({ fg = C.green, bg = C.bg_green, gui = "bold,italic" }),
     Headline2({ fg = C.yellow, bg = C.bg_yellow, gui = "bold" }),
-    Headline3({ fg = C.red, bg = C.bg0, gui = "bold,italic,underline" }),
+    Headline3({ fg = C.red, bg = C.bg_red, gui = "italic" }),
     Headline4({ fg = C.purple, bg = C.bg0, gui = "bold,italic" }),
     Headline5({ fg = C.blue, bg = C.bg0, gui = "bold" }),
     Headline6({ fg = C.orange, bg = C.bg0, gui = "italic" }),
