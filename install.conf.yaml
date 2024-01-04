@@ -70,7 +70,7 @@
     - description: Attempting to install Homebrew..
       quiet: true
       command: >-
-        ~/.dotfiles/bin/brew-install -f; eval "$($HOMEBREW_PREFIX/bin/rtx activate zsh)";
+        ~/.dotfiles/bin/brew-install -f; eval "$($HOMEBREW_PREFIX/bin/mise activate zsh)";
     #
     # - description: Attempting to install ASDF..
     #   quiet: true
@@ -134,9 +134,9 @@
     ~/.config/ripgrep:
       force: true
       path: config/ripgrep
-    ~/.config/rtx:
+    ~/.config/mise:
       force: true
-      path: config/rtx/config.toml
+      path: config/mise/config.toml
     ~/.config/surfingkeys:
       force: true
       path: config/surfingkeys

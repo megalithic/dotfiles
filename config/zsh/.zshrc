@@ -44,7 +44,8 @@ if exists zoxide; then
 fi
 
 # NOTE: https://github.com/jdxcode/rtx#rtx-activate
-zsh_add_file "lib/rtx.zsh"
+zsh_add_file "lib/mise.zsh"
+alias rtx="mise"
 
 # NOTE: http://asdf-vm.com/learn-more/faq.html#shell-not-detecting-newly-installed-shims
 # FIXME: some libs (elixir-ls, lulwat?) still require this
