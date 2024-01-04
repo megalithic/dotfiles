@@ -65,7 +65,7 @@ vim.g.is_screen_sharing = false
 
 -- REF: elixir LSPs: elixir-tools(ElixirLS, NextLS, credo), elixirls, nextls, lexical
 vim.g.formatter_exclusions = { "ElixirLS", "NextLS", "nextls", "lexical" }
-vim.g.diagnostic_exclusions = { "ElixirLS", "NextLS", "elixirls", "nextls" }
+vim.g.diagnostic_exclusions = { "ElixirLS", "NextLS", "lexical", "nextls" }
 vim.g.enabled_elixir_ls = { "elixirls", "nextls", "lexical" }
 vim.g.disable_autolint = true
 vim.g.disable_autoformat = false
