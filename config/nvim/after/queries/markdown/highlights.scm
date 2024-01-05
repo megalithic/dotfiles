@@ -30,9 +30,6 @@
 (thematic_break) @dash
 (minus_metadata) @dash
 
-; Ease fenced code block conceals a bit
-((fenced_code_block_delimiter) @punctuation.tilda (#set! conceal "~"))
-(fenced_code_block) @codeblock
 
 ; bullet points
  ([(list_marker_minus) (list_marker_plus) (list_marker_star)]
@@ -131,10 +128,18 @@
                       (#offset-first-n! @punctuation.special 1)
                       (#set! conceal "▐"))
 
+; Ease fenced code block conceals a bit
+((fenced_code_block_delimiter) @punctuation.tilda (#set! conceal "~"))
+(fenced_code_block) @codeblock
+; Ease fenced code block conceals a bit
+((fenced_code_block_delimiter) @punctuation.delimiter (#set! conceal "~"))
 
-; (code_span) @nospell
-
-; Needs https://github.com/neovim/neovim/issues/11711
-; (fenced_code_block) @codeblock
-;
-;; extends
+; Awesome fenced code block language conceals using Nerd icons
+; This solution is a bit hacky to allow the Nerd icon to expand to full width
+; (fenced_code_block (fenced_code_block_delimiter) @label
+;                    (info_string (language) @_lang)
+;                    (#offset! @label 0 1 0 -1)
+;                    (#ft-conceal! @_lang))
+; ((fenced_code_block_delimiter) @label
+;                                (#offset! @label 0 2 0 0)
+;                                (#set! conceal " "))

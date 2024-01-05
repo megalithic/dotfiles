@@ -1,61 +1,19 @@
-;; extends
+;extends
+; EXTENDING COMMENTS TAGS https://github.com/nvim-treesitter/nvim-treesitter/blob/master/queries/comment/highlights.scm
+; DOCS https://github.com/nvim-treesitter/nvim-treesitter#adding-queries
+;───────────────────────────────────────────────────────────────────────────────
 
-; [
-;  "("
-;  ")"
-; ] @punctuation.bracket
+; added by me:
+; CONFIG SIC PENDING CAVEAT DATA GUARD SOURCE
+; CONFIG: foo PENDING: foo
 
-; ; ":" @punctuation.delimiter
-; ((tag (name) @TSCommentWarn)
-;  (#match? @TSCommentWarn "^(TODO|HACK|WARNING)$"))
+; original tags:
+; FOOBAR TEST ERROR
+; NOTE XXX PERF DOCS
+; BUG TODO HACK
+; BUG: foobar
 
-; ("text" @TSCommentWarn
-;  (#match? @TSCommentWarn "^(TODO|HACK|WARNING)$"))
-
-; ; ((tag (name) @TSCommentFix)
-; ;  (match? @TSCommentFix "^(FIX|FIXME|XXX|BUG)$"))
-
-; ; ("text" @TSCommentFix
-; ;  (match? @TSCommentFix "^(FIX|FIXME|XXX|BUG)$"))
-
-; ((tag (name) @TSCommentNote)
-;  (#match? @TSCommentNote "^(NOTE)$"))
-
-; ("text" @TSCommentNote
-;  (#match? @TSCommentNote "^(NOTE)$"))
-
-; ((tag (name) @TSCommentRef)
-;  (#match? @TSCommentRef "^(REF)$"))
-
-; ("text" @TSCommentRef
-;  (#match? @TSCommentRef "^(REF)$"))
-
-
-; ("text" @text.danger
-;  (#any-of? @text.danger "NOPE" ))
-
-; ("text" @text.danger
-;  (#any-of? @text.danger "NOPE" ))
-
-; (tag
-;  (name) @ui.text
-;  (user)? @constant)
-
-; ; Issue number (#123)
-; ("text" @constant.numeric
-;  (#match? @constant.numeric "^#[0-9]+$"))
-
-; ; User mention (@user)
-; ("text" @tag
-;  (#match? @tag "^[@][a-zA-Z0-9_-]+$"))
-
-; (tag ((name) @_name (#match? @_name "TODO") (":" @CommentTasksTodo)))
-; (tag ((name) @_name (#match? @_name "FIXME") (":" @CommentTasksFixme)))
-; (tag ((name) @_name (#match? @_name "NOTE") (":"  @CommentTasksNote)))
-; (tag ((name) @_name (#match? @_name "REF") (":"  @CommentTasksRef)))
-; (tag ((name) @_name (#match? @_name "WARN") (":"  @CommentTasksRef)))
-
-
+;───────────────────────────────────────────────────────────────────────────────
 
 [
  "("
@@ -98,3 +56,16 @@
 
 ("text" @text.test
  (#any-of? @text.test "TEST"))
+
+
+("text" @text.todo (#any-of? @text.todo "PENDING" "GUARD"))
+((tag (name) @text.todo ":" @punctuation.delimiter)
+ (#any-of? @text.todo "PENDING" "GUARD"))
+
+("text" @text.note (#any-of? @text.note "CONFIG" "SOURCE" "DATA"))
+((tag (name) @text.note ":" @punctuation.delimiter)
+ (#any-of? @text.note "CONFIG" "SOURCE" "DATA"))
+
+("text" @text.warning (#any-of? @text.warning "SIC" "CAVEAT"))
+((tag (name) @text.warning ":" @punctuation.delimiter)
+ (#any-of? @text.warning "SIC" "CAVEAT"))

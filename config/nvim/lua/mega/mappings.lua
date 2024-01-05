@@ -229,10 +229,6 @@ vmap("L", "g_")
 -- Remap VIM 0 to first non-blank character
 nmap("0", "^")
 
-nmap("q", "<Nop>")
-nmap("Q", "@q")
-vnoremap("Q", ":norm @q<CR>")
-
 nnoremap("dd", function()
   if vim.fn.prevnonblank(".") ~= vim.fn.line(".") then
     return "\"_dd"
@@ -356,6 +352,7 @@ nmap("<leader>s", function()
   vim.cmd.normal({ "1z=", bang = true })
   vim.api.nvim_win_set_cursor(0, cur_pos)
 end, { desc = "Correct spelling of word under cursor" })
+
 nmap("<leader>S", function()
   local cur_pos = vim.api.nvim_win_get_cursor(0)
   vim.cmd.normal({ "zg", bang = true })
@@ -417,9 +414,6 @@ nmap("-", "<Nop>") -- disable this mapping globally, only map in dirbuf ftplugin
 -- # formatter.nvim
 -- nmap("<leader>F", [[<cmd>FormatWrite<cr>]], "format file")
 
--- Map Q to replay q register
-nnoremap("Q", "@q")
-
 cnoremap("%%", "<C-r>=fnameescape(expand('%'))<cr>")
 cnoremap("::", "<C-r>=fnameescape(expand('%:p:h'))<cr>/")
 
@@ -438,31 +432,23 @@ vim.cmd(
   false
 )
 
------------------------------------------------------------------------------//
--- Multiple Cursor Replacement
--- http://www.kevinli.co/posts/2017-01-19-multiple-cursors-in-500-bytes-of-vimscript/
--- @trial: https://github.com/otavioschwanck/cool-substitute.nvim
------------------------------------------------------------------------------//
-nnoremap("cn", "*``cgn")
-nnoremap("cN", "*``cgN")
+---------------------------------------------------------------------------------
+-- Macros
+---------------------------------------------------------------------------------
 
--- 1. Position the cursor over a word; alternatively, make a selection.
--- 2. Hit cq to start recording the macro.
--- 3. Once you are done with the macro, go back to normal mode.
--- 4. Hit Enter to repeat the macro over search matches.
-function mega.mappings.setup_map() nnoremap("M", [[:nnoremap M n@z<CR>q:<C-u>let @z=strpart(@z,0,strlen(@z)-1)<CR>n@z]]) end
+-- Map Q to replay q register for macro
+nnoremap("Q", "@qj")
+xnoremap("Q", ":norm @q<CR>")
 
-vim.g.mc = vim.keycode([[y/\V<C-r>=escape(@", '/')<CR><CR>]])
-xnoremap("cn", [[g:mc . "``cgn"]], { expr = true, silent = true })
-xnoremap("cN", [[g:mc . "``cgN"]], { expr = true, silent = true })
-nnoremap("cq", [[:\<C-u>call v:lua.mega.mappings.setup_map()<CR>*``qz]])
-nnoremap("cQ", [[:\<C-u>call v:lua.mega.mappings.setup_map()<CR>#``qz]])
-xnoremap("cq", [[":\<C-u>call v:lua.mega.mappings.setup_map()<CR>gv" . g:mc . "``qz"]], { expr = true })
-xnoremap(
-  "cQ",
-  [[":\<C-u>call v:lua.mega.mappings.setup_map()<CR>gv" . substitute(g:mc, '/', '?', 'g') . "``qz"]],
-  { expr = true }
-)
+---------------------------------------------------------------------------------
+-- Folds
+---------------------------------------------------------------------------------
+map("n", "<leader>z", "za", { desc = "Toggle current fold" })
+map("x", "<leader>z", "zf", { desc = "Create fold from selection" })
+map("n", "zf", function() vim.cmd.normal("zMzv") end, { desc = "Fold all except current" })
+map("n", "zF", function() vim.cmd.normal("zMzvzczo") end, { desc = "Fold all except current and children of current" })
+map("n", "zO", function() vim.cmd.normal("zR") end, { desc = "Open all folds" })
+map("n", "zo", "zO", { desc = "Open all folds descending from current line" })
 
 ---------------------------------------------------------------------------------
 -- Toggle list

@@ -1,129 +1,284 @@
 if not mega then return end
 if not vim.g.enabled_plugin["megacolumn"] then return end
 
-local fn, v, api = vim.fn, vim.v, vim.api
-local ui, separators = mega.ui, mega.icons.separators
-local U = require("mega.utils")
+---@alias ExtmarkSign {[1]: number, [2]: number, [3]: number, [4]: {sign_text: string, sign_hl_group: string}}
 
-local shade = separators.light_shade_block
-local border = separators.thin_block
-local SIGN_COL_WIDTH, GIT_COL_WIDTH, space = 2, 1, " "
-local fold_opened = "▽" -- '▼'
-local fold_closed = "▷" -- '▶'
-local active_border_hl = "%#StatusColumnActiveBorder#"
-local inactive_border_hl = "%#StatusColumnInactiveBorder#"
+local fn, v, api, opt = vim.fn, vim.v, vim.api, vim.opt
+local sep, falsy = mega.icons.separators, mega.falsy
+local strwidth = vim.api.nvim_strwidth
 
-vim.opt_local.statuscolumn = ""
-ui.statuscolumn = {}
+local MIN_SIGN_WIDTH, space = 1, " "
+local fcs = opt.fillchars:get()
+local shade, separator = sep.light_shade_block, sep.left_thin_block -- '│'
 
----@param group string
----@param text string
+local CLICK_END = "%X"
+local padding = " "
+
+---@return StringComponent
+local function separator() return { component = "%=", length = 0, priority = 0 } end
+
+---@param func_name string
+---@param id string
 ---@return string
-local function hl(group, text)
-  if group ~= nil and text ~= nil then return "%#" .. group .. "#" .. text .. "%*" end
-  return ""
-end
-
-local function click(name, item) return "%@v:lua.mega.ui.statuscolumn." .. name .. "@" .. item end
-
-local function get_signs(buf)
-  return vim.tbl_map(
-    function(sign) return fn.sign_getdefined(sign.name)[1] end,
-    fn.sign_getplaced(buf, { group = "*", lnum = v.lnum })[1].signs
-  )
-end
-
-function ui.statuscolumn.toggle_breakpoint(_, _, _, mods)
-  local ok, dap = pcall(require, "dap")
-  if not ok then return end
-  if mods:find("c") then
-    vim.ui.input({ prompt = "Breakpoint condition: " }, function(input) dap.set_breakpoint(input) end)
-  else
-    dap.toggle_breakpoint()
+local function get_click_start(func_name, id)
+  if not id then
+    vim.schedule(function()
+      local msg = fmt("An ID is needed to enable click handler %s to work", func_name)
+      vim.notify_once(msg, L.ERROR, { title = "Statusline" })
+    end)
+    return ""
   end
+  return ("%%%d@%s@"):format(id, func_name)
 end
 
-local function fdm()
-  if fn.foldlevel(v.lnum) <= fn.foldlevel(v.lnum - 1) then return space end
-  return fn.foldclosed(v.lnum) == -1 and fold_closed or fold_opened
+--- Creates a spacer statusline component i.e. for padding
+--- or to represent an empty component
+--- @param size integer?
+--- @param opts table<string, any>?
+--- @return ComponentOpts?
+local function spacer(size, opts)
+  opts = opts or {}
+  local filler = opts.filler or " "
+  local priority = opts.priority or 0
+  if not size or size < 1 then return end
+  local spacer = string.rep(filler, size)
+  return { { { spacer } }, priority = priority, before = "", after = "" }
 end
 
-local function nr(win, _line_count, is_active)
-  if v.virtnum < 0 then return shade end -- virtual line
-  if v.virtnum > 0 then return space end -- wrapped line
-  local num = is_active and (vim.wo[win].relativenumber and not U.empty(v.relnum) and v.relnum or v.lnum) or v.lnum
-  local lnum = fn.substitute(num, "\\d\\zs\\ze\\" .. "%(\\d\\d\\d\\)\\+$", ",", "g")
-  local num_width = (vim.wo[win].numberwidth - 1) - api.nvim_strwidth(lnum)
-  local padding = string.rep(space, num_width)
-  -- not using right now.. StatusColumnActiveLineNr
-  local lnum_hl = is_active and "" or "StatusColumnInactiveLineNr"
-  local highlighted_lnum = hl(lnum_hl, padding .. lnum)
-  return click("toggle_breakpoint", highlighted_lnum)
+--- truncate with an ellipsis or if surrounded by quotes, replace contents of quotes with ellipsis
+--- @param str string
+--- @param max_size integer
+--- @return string
+local function truncate_str(str, max_size)
+  if not max_size or strwidth(str) < max_size then return str end
+  local match, count = str:gsub("(['\"]).*%1", "%1…%1")
+  return count > 0 and match or str:sub(1, max_size - 1) .. "…"
 end
 
-local function sep(is_active)
-  local separator_hl = ""
-  if is_active then
-    separator_hl = v.virtnum >= 0 and U.empty(v.relnum) and active_border_hl or ""
-  else
-    separator_hl = inactive_border_hl
+---@alias Chunks {[1]: string | number, [2]: string, max_size: integer?}[]
+
+---@param chunks Chunks
+---@return string
+local function chunks_to_string(chunks)
+  if not chunks or not vim.tbl_islist(chunks) then return "" end
+  local strings = mega.fold(function(acc, item)
+    local text, hl = unpack(item)
+    if not falsy(text) then
+      if type(text) ~= "string" then text = tostring(text) end
+      if item.max_size then text = truncate_str(text, item.max_size) end
+      text = text:gsub("%%", "%%%1")
+      table.insert(acc, not falsy(hl) and ("%%#%s#%s%%*"):format(hl, text) or text)
+    end
+    return acc
+  end, chunks)
+  return table.concat(strings)
+end
+
+--- @class ComponentOpts
+--- @field [1] Chunks
+--- @field priority number
+--- @field click string
+--- @field before string
+--- @field after string
+--- @field id number
+--- @field max_size integer
+--- @field cond boolean | number | table | string,
+
+--- @param opts ComponentOpts
+--- @return StringComponent?
+local function component(opts)
+  assert(opts, "component options are required")
+  if opts.cond ~= nil and mega.falsy(opts.cond) then return end
+
+  local item = opts[1]
+  if not vim.tbl_islist(item) then
+    error(fmt("component options are required but got %s instead", vim.inspect(item)))
   end
 
-  return separator_hl .. border
+  if not opts.priority then opts.priority = 10 end
+  local before, after = opts.before or "", opts.after or padding
+
+  local item_str = chunks_to_string(item)
+  if strwidth(item_str) == 0 then return end
+
+  local click_start = opts.click and get_click_start(opts.click, tostring(opts.id)) or ""
+  local click_end = opts.click and CLICK_END or ""
+  local component_str = table.concat({ click_start, before, item_str, after, click_end })
+  return {
+    component = component_str,
+    length = api.nvim_eval_statusline(component_str, { maxwidth = 0 }).width,
+    priority = opts.priority,
+  }
 end
 
-function ui.statuscolumn.render(is_active)
-  local curwin = api.nvim_get_current_win()
-  local curbuf = api.nvim_win_get_buf(curwin)
+local function sum_lengths(list)
+  return mega.fold(function(acc, item) return acc + (item.length or 0) end, list, 0)
+end
 
-  local line_count = api.nvim_buf_line_count(curbuf)
+local function is_lowest(item, lowest)
+  -- if there hasn't been a lowest selected so far, then the item is the lowest
+  if not lowest or not lowest.length then return true end
+  -- if the item doesn't have a priority or a length, it is likely a special character so should never be the lowest
+  if not item.priority or not item.length then return false end
+  -- if the item has the same priority as the lowest, then if the item has a greater length it should become the lowest
+  if item.priority == lowest.priority then return item.length > lowest.length end
+  return item.priority > lowest.priority
+end
 
-  local sign, git_sign
-  for _, s in ipairs(get_signs(curbuf)) do
-    if s.name:find("GitSign") then
-      git_sign = s
-    else
-      sign = s
+--- Take the lowest priority items out of the statusline if we don't have
+--- space for them.
+--- TODO: currently this doesn't account for if an item that has a lower priority
+--- could be fit in instead
+--- @param statusline table
+--- @param space number
+--- @param length number
+local function prioritize(statusline, space, length)
+  length = length or sum_lengths(statusline)
+  if length <= space then return statusline end
+  local lowest, index_to_remove
+  for idx, c in ipairs(statusline) do
+    if is_lowest(c, lowest) then
+      lowest, index_to_remove = c, idx
     end
   end
+  table.remove(statusline, index_to_remove)
+  return prioritize(statusline, space, length - lowest.length)
+end
 
-  local components = {
-    "%=",
-    space,
-    sign ~= nil and hl(sign.numhl, (sign.text ~= nil and sign.text:gsub(space, "")) or "") or space,
-    git_sign ~= nil and hl(git_sign.texthl, git_sign.text:gsub(space, "")) or space,
-    fdm(),
-    nr(curwin, line_count, is_active),
-    sep(is_active),
-    space,
-  }
+--- @param sections ComponentOpts[][]
+--- @param available_space number?
+--- @return string
+local function display(sections, available_space)
+  local components = mega.fold(function(acc, section, count)
+    if #section == 0 then
+      table.insert(acc, separator())
+      return acc
+    end
+    mega.foreach(function(args, index)
+      if not args then return end
+      local ok, str = mega.pcall("Error creating component", component, args)
+      if not ok then return end
+      table.insert(acc, str)
+      if #section == index and count ~= #sections then table.insert(acc, separator()) end
+    end, section)
+    return acc
+  end, sections)
 
-  if is_active then
-    return table.concat(components, "")
-  else
-    return table.concat({
-      "%=",
-      space,
-      space,
-      space,
-      space,
-      nr(curwin, line_count, is_active),
-      sep(is_active),
-      space,
+  local items = available_space and prioritize(components, available_space) or components
+  local str = vim.tbl_map(function(item) return item.component end, items)
+  return table.concat(str)
+end
 
-      -- FULLY EMPTY STATUSCOLUMN
-      -- "%=",
-      -- space,
-      -- space,
-      -- space,
-      -- space,
-      -- space,
-      -- space,
-      -- space,
-      -- space,
-      -- space,
-    }, "")
+--- A helper class that allow collecting `...StringComponent`
+--- into sections that can then be added to each other
+--- i.e.
+--- ```lua
+--- section1:new(1, 2, 3) + section2:new(4, 5, 6) + section3(7, 8, 9)
+--- {1, 2, 3, 4, 5, 6, 7, 8, 9} -- <--
+--- ```
+---@class Section
+---@field __add fun(l:Section, r:Section): StringComponent[]
+---@field __index Section
+---@field new fun(...:StringComponent[]): Section
+local section = {}
+function section:new(...)
+  local o = { ... }
+  self.__index = self
+  self.__add = function(l, r)
+    local rt = { unpack(l) }
+    for _, v in ipairs(r) do
+      rt[#rt + 1] = v
+    end
+    return rt
   end
+  return setmetatable(o, self)
+end
+
+local function fdm(lnum)
+  if fn.foldlevel(lnum) <= fn.foldlevel(lnum - 1) then return space end
+  return fn.foldclosed(lnum) == -1 and fcs.foldopen or fcs.foldclose
+end
+
+---@param win integer
+---@param line_count integer
+---@param lnum integer
+---@param relnum integer
+---@param virtnum integer
+---@return string
+local function nr(win, lnum, relnum, virtnum, line_count)
+  local col_width = api.nvim_strwidth(tostring(line_count))
+  if virtnum and virtnum ~= 0 then return space:rep(col_width - 1) .. (virtnum < 0 and shade or space) end -- virtual line
+  local num = vim.wo[win].relativenumber and not falsy(relnum) and relnum or lnum
+  if line_count > 999 then col_width = col_width + 1 end
+  local ln = tostring(num):reverse():gsub("(%d%d%d)", "%1,"):reverse():gsub("^,", "")
+  local num_width = col_width - api.nvim_strwidth(ln)
+  return string.rep(space, num_width) .. ln
+end
+
+---@generic T:table<string, any>
+---@param t T the object to format
+---@param k string the key to format
+---@return T?
+local function format_text(t, k)
+  if t == nil then return end
+  local txt = t[k] and t[k]:gsub("%s", "") or ""
+  if #txt < 1 then return end
+  t[k] = txt
+  return t
+end
+
+---@param curbuf integer
+---@param lnum integer
+---@return StringComponent[] sgns non-git signs
+local function signplaced_signs(curbuf, lnum)
+  return vim.tbl_map(function(s)
+    local sign = format_text(fn.sign_getdefined(s.name)[1], "text")
+    if sign == nil then return { { { "", "Comment" } }, after = "" } end
+
+    return { { { sign.text, sign.texthl } }, after = "" }
+  end, fn.sign_getplaced(curbuf, { group = "*", lnum = lnum })[1].signs)
+end
+
+---@param curbuf integer
+---@return StringComponent[], StringComponent[]
+local function extmark_signs(curbuf, lnum)
+  lnum = lnum - 1
+  ---@type ExtmarkSign[]
+  local signs = api.nvim_buf_get_extmarks(curbuf, -1, { lnum, 0 }, { lnum, -1 }, { details = true, type = "sign" })
+  local sns = mega.fold(function(acc, item)
+    item = format_text(item[4], "sign_text")
+    local txt, hl = item.sign_text, item.sign_hl_group
+    local is_git = hl:match("^Git")
+    local target = is_git and acc.git or acc.other
+    table.insert(target, { { { txt, hl } }, after = "" })
+    return acc
+  end, signs, { git = {}, other = {} })
+  if #sns.git == 0 then sns.git = { spacer(1) } end
+  return sns.git, sns.other
+end
+
+--- The vast majority of the complexity in this statuscolumn is due to the fact
+--- that you cannot place signs in a particular separate column in neovim e.g. gitsigns
+--- cannot be placed in the same column as other git signs which means they have to be manually
+--- split out and placed.
+function mega.ui.statuscolumn.render(is_active)
+  local lnum, relnum, virtnum = v.lnum, v.relnum, v.virtnum
+  local win = api.nvim_get_current_win()
+  local buf = api.nvim_win_get_buf(win)
+  local line_count = api.nvim_buf_line_count(buf)
+
+  local gitsign, other_sns = extmark_signs(buf, lnum)
+  local sns = signplaced_signs(buf, lnum)
+  vim.list_extend(sns, other_sns)
+  while #sns < MIN_SIGN_WIDTH do
+    table.insert(sns, spacer(1))
+  end
+
+  local r1_hl = is_active and "" or "StatusColumnInactiveLineNr"
+  local r1 = section:new(spacer(1), { { { nr(win, lnum, relnum, virtnum, line_count), r1_hl } } }, unpack(gitsign))
+  local r2 = section:new({ { { separator, "LineNr" } }, after = "" }, { { { fdm(lnum) } } })
+
+  return display({ sns, r1 + r2 })
 end
 
 local excluded = {
@@ -165,7 +320,7 @@ local excluded = {
   "vimwiki",
 }
 
-function mega.set_statuscolumn(bufnr, is_active)
+function mega.ui.statuscolumn.set(bufnr, is_active)
   local statuscolumn = ""
   if is_active then
     statuscolumn = [[%!v:lua.mega.ui.statuscolumn.render(v:true)]]
@@ -188,14 +343,14 @@ end
 mega.augroup("MegaColumn", {
   {
     event = { "BufEnter", "BufReadPost", "FileType", "FocusGained", "WinEnter", "TermLeave" },
-    command = function(args) mega.set_statuscolumn(args.buf, true) end,
+    command = function(args) mega.ui.statuscolumn.set(args.buf, true) end,
   },
   {
     event = { "BufLeave", "WinLeave", "FocusLost" },
-    command = function(args) mega.set_statuscolumn(args.buf, false) end,
+    command = function(args) mega.ui.statuscolumn.set(args.buf, false) end,
   },
   -- {
   --   event = { "BufWinLeave" },
-  --   command = function(args) mega.set_statuscolumn(args.buf, false) end,
+  --   command = function(args) mega.ui.statuscolumn.set(args.buf, false) end,
   -- },
 })

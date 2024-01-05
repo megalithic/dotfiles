@@ -112,6 +112,7 @@ return {
       exclude = { filetypes = { "markdown" } },
     },
   },
+  { "Bekaboo/deadcolumn.nvim" },
   {
     cond = false,
     "luukvbaal/statuscol.nvim",

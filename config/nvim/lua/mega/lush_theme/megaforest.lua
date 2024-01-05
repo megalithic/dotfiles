@@ -297,7 +297,11 @@ local theme = lush(function(injected_functions)
     NotifyINFOTitle({ fg = C.green }),
     NotifyDEBUGTitle({ fg = C.grey2 }),
 
-    ---- :help health ----------------------------
+    ---- :help mini.notify -----------------------------------------------------
+
+    MiniNotifyNormal({ NotifyFloat, fg = C.grey2 }),
+
+    ---- :help health ----------------------------------------------------------
 
     healthError({ Red }),
     healthSuccess({ Green }),
