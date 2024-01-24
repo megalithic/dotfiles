@@ -11,14 +11,14 @@ return {
       "garymjr/nvim-snippets",
       cond = vim.g.snipper == "snippets",
       opts = {
-        friendly_snippets = true,
+        friendly_snippets = false,
         search_paths = { vim.fn.stdpath("config") .. "/snippets" },
       },
-      dependencies = {
-        "rafamadriz/friendly-snippets",
-        event = { "InsertEnter" },
-        enabled = vim.g.snipper == "snippets",
-      },
+      -- dependencies = {
+      --   "rafamadriz/friendly-snippets",
+      --   event = { "InsertEnter" },
+      --   enabled = vim.g.snipper == "snippets",
+      -- },
     },
     { "hrsh7th/cmp-buffer" },
     {
@@ -150,10 +150,10 @@ return {
 
     cmp.setup({
       experimental = {
-        ghost_text = false,
-        -- ghost_text = {
-        --   hl_group = "LspCodeLens",
-        -- },
+        -- ghost_text = false,
+        ghost_text = {
+          hl_group = "LspCodeLens",
+        },
       },
       performance = {
         max_view_entries = 30,
@@ -347,6 +347,7 @@ return {
               luasnip = "[lsnip]",
               vsnip = "[vsnip]",
               snippets = "[snips]",
+              codeium = "[code]",
               nvim_lua = "[nlua]",
               nvim_lsp_signature_help = "[sig]",
               async_path = "[path]",
@@ -420,7 +421,16 @@ return {
         { name = "luasnip", keyword_length = 2 },
         { name = "vsnip", keyword_length = 2 },
         { name = "nvim_lua" },
-        { name = "nvim_lsp" },
+        {
+          name = "nvim_lsp",
+          entry_filter = function(entry, ctx)
+            -- dd(entry.source.source.client.name)
+            if vim.tbl_contains(vim.g.completion_exclusions, entry.source.source.client.name) then return false end
+            -- if require("cmp.types").lsp.CompletionItemKind[entry:get_kind()] ~= "Text" then return false end
+
+            return true
+          end,
+        },
         { name = "async_path", option = { trailing_slash = true } },
         { name = "tmux", option = { all_panes = true } },
       }, {

@@ -437,8 +437,10 @@ vim.cmd(
 ---------------------------------------------------------------------------------
 
 -- Map Q to replay q register for macro
-nnoremap("Q", "@qj")
-xnoremap("Q", ":norm @q<CR>")
+nnoremap("<localleader>q", "q", "macros: start macro")
+nnoremap("q", "<Nop>")
+nnoremap("Q", "@qj", "macros: run `q` macro")
+xnoremap("Q", ":norm @q<CR>", "macros: run `q` macro (selection)")
 
 ---------------------------------------------------------------------------------
 -- Folds

@@ -28,11 +28,12 @@ return {
   {
     "ribru17/bamboo.nvim",
     lazy = false,
-    priority = 1000,
+    priority = 1001,
     opts = {
       style = "multiplex", -- alts: multiplex, vulgaris, light
       transparent = true,
       dim_inactive = true,
+      colors = require("mega.lush_theme.colors"),
     },
   },
   {
@@ -376,6 +377,38 @@ return {
   --   },
   -- },
   {
+    "Exafunction/codeium.nvim",
+    cmd = { "Codeium" },
+    build = ":Codeium Auth",
+    event = "InsertEnter",
+    init = function()
+      vim.g.codeium_disable_bindings = 1
+      vim.g.codeium_filetypes = {
+        rust = true,
+        go = true,
+        lua = true,
+        markdown = true,
+        norg = true,
+        zsh = true,
+        bash = true,
+        txt = true,
+        js = true,
+        elixir = true,
+        erlang = true,
+      }
+    end,
+    keys = {
+      { mode = { "n" }, "<leader>Ce", ":Codeium Enable<CR>", { silent = true, desc = "codeium: enable" } },
+      { mode = { "n" }, "<leader>Cd", ":Codeium Disable<CR>", { silent = true, desc = "codeium: disable" } },
+    },
+    config = function()
+      vim.keymap.set("i", "<C-t>", function() return vim.fn["codeium#Accept"]() end, { expr = true })
+      -- vim.keymap.set("i", "<M-]>", function() return vim.fn["codeium#CycleCompletions"](1) end, { expr = true })
+      -- vim.keymap.set("i", "<M-[>", function() return vim.fn["codeium#CycleCompletions"](-1) end, { expr = true })
+      vim.keymap.set("i", "<C-e>", function() return vim.fn["codeium#Clear"]() end, { expr = true })
+    end,
+  },
+  {
     "David-Kunz/gen.nvim",
     cmd = { "Gen" },
     keys = {
@@ -536,7 +569,7 @@ return {
         "Wansmer/symbol-usage.nvim",
         cond = false,
         event = "LspAttach",
-        config = {
+        opts = {
           text_format = function(symbol)
             local res = {}
             local ins = table.insert
@@ -751,7 +784,7 @@ return {
   {
     "folke/trouble.nvim",
     cmd = { "TroubleToggle", "Trouble" },
-    config = {
+    opts = {
       auto_open = false,
       use_diagnostic_signs = true, -- en
     },
@@ -1153,7 +1186,6 @@ return {
       "javascript",
       "javascriptreact",
     },
-    config = false,
   },
   {
     "pmizio/typescript-tools.nvim",
@@ -1201,8 +1233,12 @@ return {
           "<Cmd>TSToolsFixAll<CR>",
           { buffer = bufnr, desc = "lsp (ts/tsx): fix all" }
         )
+
+        -- vim.lsp.inlay_hint(bufnr, true)
       end,
+      code_lens = "all",
       settings = {
+        separate_diagnostic_server = true,
         tsserver_file_preferences = {
           includeInlayParameterNameHints = "all",
           includeInlayParameterNameHintsWhenArgumentMatchesName = false,
@@ -1211,6 +1247,8 @@ return {
           includeInlayPropertyDeclarationTypeHints = true,
           includeInlayFunctionLikeReturnTypeHints = true,
           includeInlayEnumMemberValueHints = true,
+          includeCompletionsForModuleExports = true,
+          quotePreference = "auto",
         },
         tsserver_plugins = {
           -- for TypeScript v4.9+

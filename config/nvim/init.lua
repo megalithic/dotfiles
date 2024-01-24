@@ -63,8 +63,9 @@ vim.g.ts_ignored_langs = {} -- alt: { "svg", "json", "heex", "jsonc" }
 vim.g.is_screen_sharing = false
 
 -- REF: elixir LSPs: elixir-tools(ElixirLS, NextLS, credo), elixirls, nextls, lexical
-vim.g.formatter_exclusions = { "ElixirLS", "NextLS", "nextls", "lexical" }
-vim.g.diagnostic_exclusions = { "ElixirLS", "NextLS", "lexical", "nextls" }
+vim.g.formatter_exclusions = { "ElixirLS", "NextLS", "", "nextls", "lexical" }
+vim.g.diagnostic_exclusions = { "ElixirLS", "NextLS", "elixirls", "nextls", "" }
+vim.g.completion_exclusions = { "ElixirLS", "NextLS", "elixirls", "nextls", "" }
 vim.g.enabled_elixir_ls = { "elixirls", "nextls", "lexical" }
 vim.g.disable_autolint = true
 vim.g.disable_autoformat = false
@@ -93,6 +94,9 @@ require("mega.lazy").setup()
 require("mega.mappings")
 
 -- [ colorscheme ] -------------------------------------------------------------
+
+-- NOTE: always make available my lushified-color palette
+-- mega.colors = require("mega.lush_theme.colors")
 
 -- NOTE: this gets called in lush.nvim config block in plugins/init.lua
 -- mega.pcall("theme failed to load because", function(colorscheme)

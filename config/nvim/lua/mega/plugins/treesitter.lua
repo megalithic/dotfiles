@@ -52,7 +52,7 @@ return {
       "nvim-lua/plenary.nvim",
     },
     build = "cd formatter && npm i && npm run build",
-    config = {
+    opts = {
       on_save_enabled = true,
       on_save_pattern = { "*.html", "*.heex", "*.ex" },
     },
@@ -73,7 +73,10 @@ return {
   {
     "nvim-treesitter/nvim-treesitter",
     -- build = ":TSUpdate",
-    build = function() require("nvim-treesitter.install").update({ with_sync = true }) end,
+    build = function()
+      vim.cmd("TSUpdate")
+      require("nvim-treesitter.install").update({ with_sync = true })
+    end,
     event = { "BufReadPost", "BufNewFile" },
     -- cond = #vim.api.nvim_list_uis() > 0,
     cmd = {
@@ -155,7 +158,7 @@ return {
       --   },
       -- },
       {
-        url = "https://gitlab.com/HiPhish/rainbow-delimiters.nvim",
+        "HiPhish/rainbow-delimiters.nvim",
         event = "VimEnter",
         config = function()
           local rainbow = require("rainbow-delimiters")

@@ -201,7 +201,7 @@ M.list = {
         messageLevel = vim.lsp.protocol.MessageType.Error,
       },
       single_file_support = true,
-      on_attach = function(client, bufnr) dd(client.name) end,
+      -- on_attach = function(client, bufnr) dd(client.name) end,
     }
   end,
   --- @see https://gist.github.com/folke/fe5d28423ea5380929c3f7ce674c41d8
@@ -325,7 +325,10 @@ M.list = {
     }
   end,
   marksman = {},
-  nextls = function()
+  -- nextls = {},
+  nextls = function(...)
+    -- dd(...)
+    -- print("nextls server config")
     if not mega.lsp.is_enabled_elixir_ls("nextls") then return nil end
 
     return {
@@ -341,6 +344,11 @@ M.list = {
         return root_dir
       end,
       settings = {
+        experimental = {
+          completions = {
+            enable = true,
+          },
+        },
         -- mixEnv = "dev",
         fetchDeps = false,
         dialyzerEnabled = true,
@@ -580,9 +588,10 @@ M.unofficial = {
         return { fmt("%s/lsp/nextls/burrito_out/%s", vim.env.XDG_DATA_HOME, build_bin), "--stdio" }
       end
 
+      local homebrew_enabled = false
       configs.nextls = {
         default_config = {
-          cmd = cmd(false),
+          cmd = cmd(homebrew_enabled),
           single_file_support = true,
           filetypes = { "elixir", "eelixir", "heex", "surface" },
           root_dir = function(fname)
@@ -597,16 +606,16 @@ M.unofficial = {
           init_options = {
             mix_env = "dev",
             mix_target = "host",
-            -- experimental = {
-            --   completions = {
-            --     enable = true,
-            --   },
-            -- },
+            experimental = {
+              completions = {
+                enable = true,
+              },
+            },
           },
           settings = {
             -- mixEnv = "dev",
             fetchDeps = false,
-            dialyzerEnabled = false,
+            dialyzerEnabled = true,
             dialyzerFormat = "dialyxir_long",
             enableTestLenses = false,
             suggestSpecs = true,

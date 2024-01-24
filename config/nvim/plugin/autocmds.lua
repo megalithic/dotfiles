@@ -287,7 +287,9 @@ augroup("Utilities", {
     event = { "BufEnter", "TextChanged", "InsertLeave", "FileType" },
     desc = "Conceal strings for various attributes that look like `class`",
     pattern = { "*.html", "*.heex", "*.tsx", "*.jsx", "*.ex", "elixir", "heex", "html" },
-    command = function(args) require("mega.utils").conceal_class(args.buf) end,
+    command = function(args)
+      -- require("mega.utils").conceal_class(args.buf)
+    end,
   },
   -- clear marks a-z on buffer enter
   -- See: https://github.com/chentoast/marks.nvim/issues/13

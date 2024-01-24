@@ -20,6 +20,7 @@ return {
       Boolean = "",
       Class = "󰠱",
       -- Class = "", -- Class
+      Codeium = "",
       Color = "󰏘",
       -- Color = "", -- Color
       Constant = "󰏿",

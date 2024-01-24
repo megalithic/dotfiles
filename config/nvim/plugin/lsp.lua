@@ -794,28 +794,28 @@ end
 -- all the server capabilities we could want
 local function get_server_capabilities(name)
   local capabilities = vim.lsp.protocol.make_client_capabilities()
-
-  capabilities.offsetEncoding = { "utf-16" }
-  capabilities.textDocument.codeLens = { dynamicRegistration = false }
-  if not vim.tbl_contains({ "elixirls", "nextls", "lexical" }, name) then
-    capabilities.textDocument.colorProvider = { dynamicRegistration = true }
-  end
-  capabilities.textDocument.completion.completionItem.documentationFormat = { "markdown", "plaintext" }
-  capabilities.textDocument.completion.completionItem.snippetSupport = true
-  capabilities.textDocument.completion.completionItem.resolveSupport = {
-    properties = {
-      "documentation",
-      "detail",
-      "additionalTextEdits",
-    },
-  }
-  capabilities.textDocument.foldingRange = {
-    dynamicRegistration = false,
-    lineFoldingOnly = true,
-  }
-
-  -- FIX: https://github.com/neovim/neovim/issues/23291
-  capabilities.workspace.didChangeWatchedFiles.dynamicRegistration = false
+  --
+  -- capabilities.offsetEncoding = { "utf-16" }
+  -- capabilities.textDocument.codeLens = { dynamicRegistration = false }
+  -- if not vim.tbl_contains({ "elixirls", "nextls", "lexical" }, name) then
+  --   capabilities.textDocument.colorProvider = { dynamicRegistration = true }
+  -- end
+  -- capabilities.textDocument.completion.completionItem.documentationFormat = { "markdown", "plaintext" }
+  -- capabilities.textDocument.completion.completionItem.snippetSupport = true
+  -- capabilities.textDocument.completion.completionItem.resolveSupport = {
+  --   properties = {
+  --     "documentation",
+  --     "detail",
+  --     "additionalTextEdits",
+  --   },
+  -- }
+  -- capabilities.textDocument.foldingRange = {
+  --   dynamicRegistration = false,
+  --   lineFoldingOnly = true,
+  -- }
+  --
+  -- -- FIX: https://github.com/neovim/neovim/issues/23291
+  -- capabilities.workspace.didChangeWatchedFiles.dynamicRegistration = false
 
   local nvim_lsp_ok, cmp_nvim_lsp = pcall(require, "cmp_nvim_lsp")
   if nvim_lsp_ok then capabilities = cmp_nvim_lsp.default_capabilities(capabilities) end
@@ -854,6 +854,9 @@ if servers ~= nil then
   servers.load_unofficial()
   for server, _ in pairs(servers.list) do
     local cfg = get_config(server)
-    if cfg ~= nil then lspconfig[server].setup(cfg) end
+    if cfg ~= nil then
+      -- if server == "nextls" then dd(cfg) end
+      lspconfig[server].setup(cfg)
+    end
   end
 end

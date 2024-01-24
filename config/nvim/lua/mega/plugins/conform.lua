@@ -49,11 +49,7 @@ return {
       lua = { "stylua" },
       ["markdown"] = { prettier },
       ["markdown.mdx"] = { prettier },
-      python = {
-        formatters = { "isort", "black" },
-        -- Run formatters one after another instead of stopping at the first success
-        run_all_formatters = true,
-      },
+      python = { "isort", "black" },
       rust = { "rustfmt" },
       sh = { shfmt },
       toml = { "taplo" },
@@ -75,13 +71,13 @@ return {
       },
     },
     log_level = vim.log.levels.DEBUG,
-    format_on_save = function(bufnr)
-      -- local async_format = vim.g.async_format_filetypes[vim.bo[bufnr].filetype]
-      -- if async_format or vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then return end
-      if vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then return end
-      -- dd("format on save")
-      return { timeout_ms = timeout_ms, lsp_fallback = lsp_fallback, filter = mega.lsp.formatting_filter }
-    end,
+    -- format_on_save = function(bufnr)
+    --   -- local async_format = vim.g.async_format_filetypes[vim.bo[bufnr].filetype]
+    --   -- if async_format or vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then return end
+    --   if vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then return end
+    --   -- dd("format on save")
+    --   return { timeout_ms = timeout_ms, lsp_fallback = lsp_fallback, filter = mega.lsp.formatting_filter }
+    -- end,
     format_after_save = function(bufnr)
       -- local async_format = vim.g.async_format_filetypes[vim.bo[bufnr].filetype]
       -- if not async_format or vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then return end
