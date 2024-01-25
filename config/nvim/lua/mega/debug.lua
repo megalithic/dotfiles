@@ -82,6 +82,8 @@ _G.d = function(...) M.dump(M.get_value(...)) end
 
 _G.dd = function(...) M.dump(M.get_value(...), { schedule = true }) end
 
+_G.dbg = function(...) M.dump(M.get_value(...), { schedule = true }) end
+
 function M.setup()
   M.notify.setup()
   -- make all keymaps silent by default

@@ -275,10 +275,13 @@ function mega.ui.statuscolumn.render(is_active)
   end
 
   local r1_hl = is_active and "" or "StatusColumnInactiveLineNr"
-  local r1 = section:new(spacer(1), { { { nr(win, lnum, relnum, virtnum, line_count), r1_hl } } }, unpack(gitsign))
+
+  local r1 = is_active
+      and section:new(spacer(1), { { { nr(win, lnum, relnum, virtnum, line_count), r1_hl } } }, unpack(gitsign))
+    or section:new(spacer(1), { { { nr(win, lnum, relnum, virtnum, line_count), r1_hl } } })
   local r2 = section:new({ { { separator, "LineNr" } }, after = "" }, { { { fdm(lnum) } } })
 
-  return display({ sns, r1 + r2 })
+  return is_active and display({ sns, r1 + r2 }) or display({ r1 + r2 })
 end
 
 local excluded = {

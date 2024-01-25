@@ -26,16 +26,50 @@ return {
     end,
   },
   {
-    "ribru17/bamboo.nvim",
+    "megalithic/bamboo.nvim",
     lazy = false,
     priority = 1001,
     opts = {
-      style = "multiplex", -- alts: multiplex, vulgaris, light
-      transparent = true,
+      style = "megaforest", -- alts: megaforest, multiplex, vulgaris, light
+      -- transparent = true,
       dim_inactive = true,
-      colors = require("mega.lush_theme.colors"),
+      highlights = {
+        -- make comments blend nicely with background, similar to other color schemes
+        -- ["@comment"] = { fg = "$grey" },
+        -- ["@keyword"] = { fg = "$green" },
+        -- ["@string"] = { fg = "$bright_orange", bg = "#00ff00", fmt = "bold" },
+        -- ["@function"] = { fg = "#0000ff", sp = "$cyan", fmt = "underline,italic" },
+        -- ["@function.builtin"] = { fg = "#0059ff" },
+        --
+        CursorLineNr = { fg = "$orange", fmt = "bold,italic" },
+        -- TSKeyword = { fg = "$green" },
+        -- TSString = { fg = "$bright_orange", bg = "#00ff00", fmt = "bold" },
+        -- TSFunction = { fg = "#0000ff", sp = "$cyan", fmt = "underline,italic" },
+        -- TSFuncBuiltin = { fg = "#0059ff" },
+      },
     },
+    -- config = function(opts)
+    --   mega.colors = require("mega.lush_theme.colors")
+    --   require("bamboo").setup(opts)
+    -- end,
   },
+  -- {
+  --   "ribru17/bamboo.nvim",
+  --   lazy = false,
+  --   priority = 1001,
+  --   opts = {
+  --     style = "multiplex", -- alts: multiplex, vulgaris, light
+  --     transparent = true,
+  --     dim_inactive = true,
+  --     -- colors = {
+  --     --   multiplex = require("mega.lush_theme.colors"),
+  --     -- },
+  --   },
+  --   -- config = function(opts)
+  --   --   require("bamboo").setup(opts)
+  --   --   mega.colors = require("mega.lush_theme.colors")
+  --   -- end,
+  -- },
   {
     "sainnhe/everforest",
     cond = false,
@@ -379,24 +413,23 @@ return {
   {
     "Exafunction/codeium.nvim",
     cmd = { "Codeium" },
-    build = ":Codeium Auth",
-    event = "InsertEnter",
-    init = function()
-      vim.g.codeium_disable_bindings = 1
-      vim.g.codeium_filetypes = {
-        rust = true,
-        go = true,
-        lua = true,
-        markdown = true,
-        norg = true,
-        zsh = true,
-        bash = true,
-        txt = true,
-        js = true,
-        elixir = true,
-        erlang = true,
-      }
-    end,
+    -- build = ":Codeium Auth",
+    -- init = function()
+    --   vim.g.codeium_disable_bindings = 1
+    --   vim.g.codeium_filetypes = {
+    --     rust = true,
+    --     go = true,
+    --     lua = true,
+    --     markdown = true,
+    --     norg = true,
+    --     zsh = true,
+    --     bash = true,
+    --     txt = true,
+    --     js = true,
+    --     elixir = true,
+    --     erlang = true,
+    --   }
+    -- end,
     keys = {
       { mode = { "n" }, "<leader>Ce", ":Codeium Enable<CR>", { silent = true, desc = "codeium: enable" } },
       { mode = { "n" }, "<leader>Cd", ":Codeium Disable<CR>", { silent = true, desc = "codeium: disable" } },

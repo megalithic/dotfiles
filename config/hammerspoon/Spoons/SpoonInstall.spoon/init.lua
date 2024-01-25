@@ -272,7 +272,7 @@ function obj:_installSpoonFromZipURLgetCallback(urlparts, callback, status, body
                   success=true
                end
             else
-               self.logger.ef("The downloaded zip file %s is invalid - it should contain exactly one spoon. Leaving it in place for your examination.", outfile) 
+               self.logger.ef("The downloaded zip file %s is invalid - it should contain exactly one spoon. Leaving it in place for your examination.", outfile)
             end
          end
       end
@@ -320,8 +320,8 @@ function obj:installSpoonFromZipURL(url)
    local urlparts = hs.http.urlParts(url)
    local dlfile = urlparts.lastPathComponent
    if dlfile and dlfile ~= "" and urlparts.pathExtension == "zip" then
-      a,b,c=hs.http.get(url)
-      return self:_installSpoonFromZipURLgetCallback(urlparts, nil, a, b, c)
+      a,b,C=hs.http.get(url)
+      return self:_installSpoonFromZipURLgetCallback(urlparts, nil, a, b, C)
    else
       self.logger.ef("Invalid URL %s, must point to a zip file", url)
       return nil
