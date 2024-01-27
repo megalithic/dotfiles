@@ -14,9 +14,6 @@
 # - gh config set -h github.com git_protocol ssh
   # protocol = https
 
-[credential "https://dev.azure.com"]
-	useHttpPath = true
-
 [git]
   user = megalithic
 
@@ -206,16 +203,16 @@
 	cmd = "nvim -d \"$LOCAL\" \"$MERGED\" \"$REMOTE\""
 	trustExitCode = true
 
-[merge "railsschema"]
-  name = newer Rails schema version
-  driver = "ruby -e '\n\
-    system %(git), %(merge-file), %(--marker-size=%L), %(%A), %(%O), %(%B)\n\
-    b = File.read(%(%A))\n\
-    b.sub!(/^<+ .*\\nActiveRecord::Schema\\.define.:version => (\\d+). do\\n=+\\nActiveRecord::Schema\\.define.:version => (\\d+). do\\n>+ .*/) do\n\
-    %(ActiveRecord::Schema.define(:version => #{[$1, $2].max}) do)\n\
-    end\n\
-    File.open(%(%A), %(w)) {|f| f.write(b)}\n\
-    exit 1 if b.include?(%(<)*%L)'"
+; [merge "railsschema"]
+;   name = newer Rails schema version
+;   driver = "ruby -e '\n\
+;     system %(git), %(merge-file), %(--marker-size=%L), %(%A), %(%O), %(%B)\n\
+;     b = File.read(%(%A))\n\
+;     b.sub!(/^<+ .*\\nActiveRecord::Schema\\.define.:version => (\\d+). do\\n=+\\nActiveRecord::Schema\\.define.:version => (\\d+). do\\n>+ .*/) do\n\
+;     %(ActiveRecord::Schema.define(:version => #{[$1, $2].max}) do)\n\
+;     end\n\
+;     File.open(%(%A), %(w)) {|f| f.write(b)}\n\
+;     exit 1 if b.include?(%(<)*%L)'"
 
 [color]
 	branch = auto
@@ -232,10 +229,10 @@
 [core]
   ; pager = `brew --prefix git`/share/git-core/contrib/diff-highlight/diff-highlight | less
   pager = delta --dark --diff-so-fancy # https://github.com/dandavison/delta
-  whitespace=fix,-indent-with-non-tab,trailing-space,cr-at-eol
-	; editor = nvim
-	autocrlf = input
-  editor = "nvr --remote-wait-silent" # or nvim
+  ; whitespace=fix,-indent-with-non-tab,trailing-space,cr-at-eol
+	editor = nvim
+	; autocrlf = input
+  ; editor = "nvr --remote-wait-silent" # or nvim
   excludesfile ="~/.dotfiles/git/gitignore_global"
 
 [apply]
@@ -392,11 +389,6 @@
   # A local gitconfig, outside of version control.
   # If the file doesn't exist it is silently ignored
   path = ~/.gitconfig_linux
-
-[include]
-  # A local gitconfig, outside of version control.
-  # If the file doesn't exist it is silently ignored
-  path = ~/.gitconfig_work
 
 [include]
   # A local gitconfig, outside of version control.

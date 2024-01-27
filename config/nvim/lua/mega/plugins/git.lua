@@ -97,8 +97,48 @@ return {
     },
   },
   {
+    "tpope/vim-fugitive",
+    cmd = "Git",
+    cond = vim.g.gitter == "fugitive",
+    keys = {
+      { "<leader>G", "<cmd>Git<cr>", desc = "git: open status buffer" },
+      {
+        "<localleader>gc",
+        "<cmd>tabn|Git commit<cr>",
+        desc = "git: open commit buffer",
+      },
+      -- { "<localleader>gl", function() require("neogit").popups.pull.create() end, desc = "neogit: open pull popup" },
+      -- { "<localleader>gp", function() require("neogit").popups.push.create() end, desc = "neogit: open push popup" },
+      -- {
+      --   "<localleader>gbb",
+      --   function()
+      --     local line = vim.api.nvim_win_get_cursor(0)[1]
+      --     local line_range = line .. "," .. line
+      --
+      --     local annotation =
+      --       vim.fn.systemlist("git annotate -M --porcelain " .. vim.fn.expand("%:p") .. " -L" .. line_range)[1]
+      --     if vim.v.shell_error ~= 0 then
+      --       vim.notify(annotation, vim.log.levels.ERROR)
+      --       return
+      --     end
+      --
+      --     local ref = vim.split(annotation, " ")[1]
+      --     if ref == "0000000000000000000000000000000000000000" then
+      --       vim.notify("Not committed yet", vim.log.levels.WARN)
+      --       return
+      --     end
+      --
+      --     local commit_view = require("neogit.buffers.commit_view").new(ref, false)
+      --     commit_view:open()
+      --   end,
+      --   desc = "git: view full line blame commit",
+      -- },
+    },
+  },
+  {
     "NeogitOrg/neogit",
     cmd = "Neogit",
+    cond = vim.g.gitter == "neogit",
     dependencies = { "nvim-lua/plenary.nvim" },
     keys = {
       { "<leader>G", function() require("neogit").open() end, desc = "neogit: open status buffer" },
@@ -134,28 +174,29 @@ return {
         desc = "git: view full line blame commit",
       },
     },
-    config = function()
-      neogit().setup({
-        disable_signs = false,
-        disable_hint = true,
-        disable_commit_confirmation = true,
-        disable_builtin_notifications = true,
-        disable_insert_on_commit = false,
-        signs = {
-          section = { "", "" }, -- "󰁙", "󰁊"
-          item = { "▸", "▾" },
-          hunk = { "󰐕", "󰍴" },
-        },
-        integrations = {
-          diffview = true,
-        },
-      })
-
-      mega.augroup("Neogit", {
-        pattern = "NeogitPushComplete",
-        callback = neogit().close,
-      })
-    end,
+    opts = true,
+    -- config = function()
+    --   neogit().setup({
+    --     disable_signs = false,
+    --     disable_hint = true,
+    --     disable_commit_confirmation = true,
+    --     disable_builtin_notifications = true,
+    --     disable_insert_on_commit = false,
+    --     signs = {
+    --       section = { "", "" }, -- "󰁙", "󰁊"
+    --       item = { "▸", "▾" },
+    --       hunk = { "󰐕", "󰍴" },
+    --     },
+    --     integrations = {
+    --       diffview = true,
+    --     },
+    --   })
+    --
+    --   mega.augroup("Neogit", {
+    --     pattern = "NeogitPushComplete",
+    --     callback = neogit().close,
+    --   })
+    -- end,
   },
   {
     "sindrets/diffview.nvim",

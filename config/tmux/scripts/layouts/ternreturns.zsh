@@ -34,9 +34,9 @@ tmux select-layout -t "$SESSION":3 tiled
 tmux send-keys -t "$SESSION":3.2 yarn\ test\ --watch C-m
 
 tmux select-layout -t "$SESSION":3 tiled
-
 tmux select-layout -t "$SESSION":3 even-horizontal
 tmux select-pane -t "$SESSION":3.1
+tmux resize-pane -Z -t "$SESSION":3.1
 
 # focus
 tmux select-window -t "$SESSION":2

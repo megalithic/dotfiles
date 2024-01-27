@@ -321,7 +321,8 @@ alias map="xargs -n1"
 # -----------------------------------------------------------------------------
 
 # alias hub -> git
-(command -v hub &>/dev/null) && alias git="hub"
+(command -v hub &>/dev/null) && alias ghub="hub"
+(command -v hub &>/dev/null) && alias gub="hub"
 (command -v git-crypt &>/dev/null) && alias gc="git-crypt"
 
 alias gt=g

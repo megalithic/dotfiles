@@ -150,10 +150,10 @@ return {
 
     cmp.setup({
       experimental = {
-        -- ghost_text = false,
-        ghost_text = {
-          hl_group = "LspCodeLens",
-        },
+        ghost_text = false,
+        -- ghost_text = {
+        --   hl_group = "LspCodeLens",
+        -- },
       },
       performance = {
         max_view_entries = 30,
@@ -488,8 +488,8 @@ return {
       }),
     })
 
-    cmp.setup.filetype({ "gitcommit", "NeogitCommitMessage" }, {
-      sources = {},
-    })
+    -- cmp.setup.filetype({ "gitcommit", "NeogitCommitMessage" }, {
+    --   sources = {},
+    -- })
   end,
 }
