@@ -107,6 +107,11 @@ return {
         "<cmd>tabn|Git commit<cr>",
         desc = "git: open commit buffer",
       },
+      {
+        "<localleader>gp",
+        "<cmd>Git push<cr>",
+        desc = "git: push commit(s)",
+      },
       -- { "<localleader>gl", function() require("neogit").popups.pull.create() end, desc = "neogit: open pull popup" },
       -- { "<localleader>gp", function() require("neogit").popups.push.create() end, desc = "neogit: open push popup" },
       -- {
