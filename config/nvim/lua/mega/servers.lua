@@ -7,6 +7,7 @@ local root_pattern = require("mega.utils.lsp").root_pattern
 
 M.list = {
   bashls = {},
+  biome = {},
   ccls = {},
   cssls = {
     settings = {

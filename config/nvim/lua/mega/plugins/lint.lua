@@ -1,3 +1,4 @@
+local eslint = { "biome", "eslint_d" }
 local uv = vim.uv or vim.loop
 return {
   "mfussenegger/nvim-lint",
@@ -24,13 +25,15 @@ return {
   },
   opts = {
     linters_by_ft = {
-      ["javascript.jsx"] = { "eslint_d" },
-      ["typescript.tsx"] = { "eslint_d" },
+      ["javascript.jsx"] = eslint,
+      ["typescript.tsx"] = eslint,
       bash = { "shellcheck" },
       css = { "styleint" },
       elixir = { "credo" },
-      javascript = { "eslint_d" },
-      javascriptreact = { "eslint_d" },
+      javascript = eslint,
+      javascriptreact = eslint,
+      json = eslint,
+      jsonc = eslint,
       lua = { "selene", "luacheck" },
       markdown = { "markdownlint" },
       python = { "mypy", "pylint" },
@@ -38,8 +41,8 @@ return {
       ruby = { "ruby", "rubocop" },
       scss = { "styleint" },
       sh = { "shellcheck" },
-      typescript = { "eslint_d" },
-      typescriptreact = { "eslint_d" },
+      typescript = eslint,
+      typescriptreact = eslint,
       vim = { "vint" },
       yaml = { "yamllint" },
       zsh = { "shellcheck" },

@@ -44,17 +44,21 @@ augroup("Startup", {
             end)
           end
         elseif vim.fn.argc() == 1 then
-          -- handle editing an argument with `:300`(line number) at the end
-          local bufname = vim.api.nvim_buf_get_name(args.buf)
-          local root, line = bufname:match("^(.*):(%d+)$")
-          if vim.fn.filereadable(bufname) == 0 and root and line and vim.fn.filereadable(root) == 1 then
-            vim.schedule(function()
-              vim.cmd.edit({ args = { root } })
-              pcall(vim.api.nvim_win_set_cursor, 0, { tonumber(line), 0 })
-              vim.api.nvim_buf_delete(args.buf, { force = true })
-            end)
+          if vim.fn.isdirectory(arg) == 1 then
+            require("oil").open(arg)
+          else
+            -- handle editing an argument with `:300`(line number) at the end
+            local bufname = vim.api.nvim_buf_get_name(args.buf)
+            local root, line = bufname:match("^(.*):(%d+)$")
+            if vim.fn.filereadable(bufname) == 0 and root and line and vim.fn.filereadable(root) == 1 then
+              vim.schedule(function()
+                vim.cmd.edit({ args = { root } })
+                pcall(vim.api.nvim_win_set_cursor, 0, { tonumber(line), 0 })
+                vim.api.nvim_buf_delete(args.buf, { force = true })
+              end)
+            end
           end
-        elseif vim.fn.isdirectory(arg) ~= 0 then
+        elseif vim.fn.isdirectory(arg) == 1 then
           require("oil").open(arg)
         elseif _G.picker ~= nil and _G.picker[vim.g.picker] ~= nil and _G.picker[vim.g.picker]["startup"] then
           _G.picker[vim.g.picker]["startup"](args)

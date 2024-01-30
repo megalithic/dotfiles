@@ -488,8 +488,9 @@ return {
       }),
     })
 
-    -- cmp.setup.filetype({ "gitcommit", "NeogitCommitMessage" }, {
-    --   sources = {},
-    -- })
+    -- no completion suggestions in a git commit
+    cmp.setup.filetype({ "gitcommit", "NeogitCommitMessage" }, {
+      sources = {},
+    })
   end,
 }
