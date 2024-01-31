@@ -478,9 +478,9 @@ local function setup_diagnostics(client, bufnr)
   -- -----------------------------------------------------------------------------//
   -- -- Handler Overrides
   -- -----------------------------------------------------------------------------//
-  -- -- This section overrides the default diagnostic handlers for signs and virtual text so that only
-  -- -- the most severe diagnostic is shown per line
-  --
+  -- This section overrides the default diagnostic handlers for signs and virtual text so that only
+  -- the most severe diagnostic is shown per line
+
   -- --- The custom namespace is so that ALL diagnostics across all namespaces can be aggregated
   -- --- including diagnostics from plugins
   -- local ns = api.nvim_create_namespace("severe-diagnostics")
@@ -490,26 +490,26 @@ local function setup_diagnostics(client, bufnr)
   -- ---@param callback fun(namespace: integer, bufnr: integer, diagnostics: table, opts: table)
   -- ---@return fun(namespace: integer, bufnr: integer, diagnostics: table, opts: table)
   -- local function max_diagnostic(callback)
-  --   return function(_, bufnr, diagnostics, opts)
+  --   return function(_, bn, diagnostics, opts)
   --     local max_severity_per_line = mega.fold(function(diag_map, d)
   --       local m = diag_map[d.lnum]
   --       if not m or d.severity < m.severity then diag_map[d.lnum] = d end
   --       return diag_map
   --     end, diagnostics, {})
-  --     callback(ns, bufnr, vim.tbl_values(max_severity_per_line), opts)
+  --     callback(ns, bn, vim.tbl_values(max_severity_per_line), opts)
   --   end
   -- end
-  --
+
   -- local signs_handler = diagnostic.handlers.signs
   -- diagnostic.handlers.signs = vim.tbl_extend("force", signs_handler, {
   --   show = max_diagnostic(signs_handler.show),
-  --   hide = function(_, bufnr) signs_handler.hide(ns, bufnr) end,
+  --   hide = function(_, bn) signs_handler.hide(ns, bn) end,
   -- })
   --
   -- local virt_text_handler = diagnostic.handlers.virtual_text
   -- diagnostic.handlers.virtual_text = vim.tbl_extend("force", virt_text_handler, {
   --   show = max_diagnostic(virt_text_handler.show),
-  --   hide = function(_, bufnr) virt_text_handler.hide(ns, bufnr) end,
+  --   hide = function(_, bn) virt_text_handler.hide(ns, bn) end,
   -- })
 
   local max_width = math.min(math.floor(vim.o.columns * 0.7), 100)
@@ -536,6 +536,10 @@ local function setup_diagnostics(client, bufnr)
     underline = { severity = { min = diagnostic.severity.HINT } },
     severity_sort = true,
     -- TODO: use this: https://github.com/nvimdev/lspsaga.nvim/blob/main/lua/lspsaga/diagnostic/virt.lua
+    virtual_lines = {
+      only_current_line = true,
+      highlight_whole_line = false,
+    },
     virtual_text = {
       prefix = function(d)
         local level = diagnostic.severity[d.severity]

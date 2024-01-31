@@ -1,4 +1,4 @@
-local prettier = { "biome", "dprint", "prettierd", "prettier" }
+local prettier = { "dprint", "prettierd", "prettier" }
 local shfmt = { "beautysh", "shfmt" } -- shellharden
 local timeout_ms = 1500
 local lsp_fallback = "always"

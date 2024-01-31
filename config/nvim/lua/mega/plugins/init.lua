@@ -148,57 +148,113 @@ return {
     },
   },
   { "Bekaboo/deadcolumn.nvim" },
-  {
-    cond = false,
-    "luukvbaal/statuscol.nvim",
-    event = { "VeryLazy" },
-    branch = "0.10",
-    opts = function()
-      local builtin = require("statuscol.builtin")
+  -- {
+  --   "luukvbaal/statuscol.nvim",
+  --   cond = not vim.g.enabled_plugin["megacolumn"],
+  --   event = { "VeryLazy" },
+  --   config = function()
+  --     local builtin = require("statuscol.builtin")
+  --     require("statuscol").setup({
+  --       relculright = true,
+  --       segments = {
+  --         { text = { builtin.foldfunc }, click = "v:lua.ScFa" },
+  --         { text = { builtin.lnumfunc }, click = "v:lua.ScLa" },
+  --         {
+  --           sign = { name = { ".*" }, maxwidth = 2, colwidth = 1 },
+  --           click = "v:lua.ScSa",
+  --         },
+  --       },
+  --     })
+  --   end,
+  -- },
 
-      return {
-        -- setopt = true,
-        bt_ignore = { "nofile", "terminal" },
-        relculright = true,
-        segments = {
-          -- {
-          --   text = {
-          --     function(args)
-          --       args.fold.close = ""
-          --       args.fold.open = ""
-          --       args.fold.sep = " "
-          --       return builtin.foldfunc(args)
-          --     end,
-          --   },
-          --   click = "v:lua.ScFa",
-          -- },
-          -- {
-          --   text = { " ", builtin.foldfunc, " " },
-          --   condition = {
-          --     builtin.not_empty,
-          --     true,
-          --     builtin.not_empty,
-          --   },
-          --   click = "v:lua.ScFa",
-          -- },
-          { text = { builtin.foldfunc, " " }, click = "v:lua.ScFa", hl = "Comment" },
-          { sign = { name = { ".*" }, namespace = { "gitsigns" }, colwidth = 1, wrap = true }, click = "v:lua.ScSa" },
-          -- {
-          --   sign = {
-          --     name = { ".*" },
-          --     text = { ".*" },
-          --   },
-          --   click = "v:lua.ScSa",
-          -- },
-          {
-            text = { builtin.lnumfunc, colwidth = 2 },
-            condition = { true, builtin.not_empty },
-            click = "v:lua.ScLa",
-          },
-        },
-      }
-    end,
-  },
+  -- {
+  --   "luukvbaal/statuscol.nvim",
+  --   cond = not vim.g.enabled_plugin["megacolumn"],
+  --   branch = "0.10",
+  --   -- event = { "VeryLazy" },
+  --   opts = function()
+  --     local builtin = require("statuscol.builtin")
+  --
+  --     return {
+  --       bt_ignore = { "nofile", "terminal" },
+  --       segments = {
+  --         {
+  --           sign = {
+  --             name = { ".*" },
+  --             text = { ".*" },
+  --           },
+  --           click = "v:lua.ScSa",
+  --         },
+  --         {
+  --           text = { builtin.lnumfunc },
+  --           condition = { true, builtin.not_empty },
+  --           click = "v:lua.ScLa",
+  --         },
+  --         {
+  --           sign = { namespace = { "gitsigns" }, colwidth = 1, wrap = true },
+  --           click = "v:lua.ScSa",
+  --         },
+  --         {
+  --           text = {
+  --             function(args)
+  --               args.fold.close = ""
+  --               args.fold.open = ""
+  --               args.fold.sep = " "
+  --               return builtin.foldfunc(args)
+  --             end,
+  --           },
+  --           click = "v:lua.ScFa",
+  --         },
+  --       },
+  --     }
+  --   end,
+  --   -- opts = function()
+  --   --   local builtin = require("statuscol.builtin")
+  --   --
+  --   --   return {
+  --   --     -- setopt = true,
+  --   --     bt_ignore = { "nofile", "terminal" },
+  --   --     relculright = true,
+  --   --     segments = {
+  --   --       -- {
+  --   --       --   text = {
+  --   --       --     function(args)
+  --   --       --       args.fold.close = ""
+  --   --       --       args.fold.open = ""
+  --   --       --       args.fold.sep = " "
+  --   --       --       return builtin.foldfunc(args)
+  --   --       --     end,
+  --   --       --   },
+  --   --       --   click = "v:lua.ScFa",
+  --   --       -- },
+  --   --       -- {
+  --   --       --   text = { " ", builtin.foldfunc, " " },
+  --   --       --   condition = {
+  --   --       --     builtin.not_empty,
+  --   --       --     true,
+  --   --       --     builtin.not_empty,
+  --   --       --   },
+  --   --       --   click = "v:lua.ScFa",
+  --   --       -- },
+  --   --       { text = { builtin.foldfunc, " " }, click = "v:lua.ScFa", hl = "Comment" },
+  --   --       { sign = { name = { ".*" }, namespace = { "gitsigns" }, colwidth = 1, wrap = true }, click = "v:lua.ScSa" },
+  --   --       -- {
+  --   --       --   sign = {
+  --   --       --     name = { ".*" },
+  --   --       --     text = { ".*" },
+  --   --       --   },
+  --   --       --   click = "v:lua.ScSa",
+  --   --       -- },
+  --   --       {
+  --   --         text = { builtin.lnumfunc, colwidth = 2 },
+  --   --         condition = { true, builtin.not_empty },
+  --   --         click = "v:lua.ScLa",
+  --   --       },
+  --   --     },
+  --   --   }
+  --   -- end,
+  -- },
   {
     "echasnovski/mini.indentscope",
     version = "*",

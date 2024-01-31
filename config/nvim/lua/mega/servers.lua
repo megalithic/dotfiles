@@ -1,13 +1,16 @@
 local fn, lsp = vim.fn, vim.lsp
-local ok_lsp = pcall(require, "lspconfig")
+local ok_lsp, lspconfig = pcall(require, "lspconfig")
 if not ok_lsp then return nil end
 
 local M = {}
-local root_pattern = require("mega.utils.lsp").root_pattern
+-- local root_pattern = require("mega.utils.lsp").root_pattern
+local root_pattern = lspconfig.util.root_pattern
 
 M.list = {
   bashls = {},
-  biome = {},
+  -- biome = {
+  --   root_dir = root_pattern({ "biome.json", ".biome.json" }),
+  -- },
   ccls = {},
   cssls = {
     settings = {
