@@ -279,7 +279,7 @@ repo_info =
   if ecto_started? do
     repo =
       app_name
-      |> String.to_atom()
+      # |> String.to_atom()
       |> Application.get_env(:ecto_repos)
       |> case do
         repo when not is_nil(repo) ->
