@@ -207,7 +207,7 @@ info = IO.ANSI.light_blue() <> " #{H.queue_length()}" <> IO.ANSI.reset()
 last = IO.ANSI.yellow() <> "" <> IO.ANSI.reset()
 alive = IO.ANSI.bright() <> IO.ANSI.yellow() <> "󱐋" <> IO.ANSI.reset()
 
-default_prompt = prefix <> counter <> " " <> info <> " " <> last
+default_prompt = prefix <> counter <> " " <> info <> last
 alive_prompt = prefix <> counter <> " " <> info <> " " <> alive <> last
 
 IEx.configure(

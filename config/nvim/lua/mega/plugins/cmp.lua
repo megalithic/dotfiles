@@ -347,7 +347,7 @@ return {
               luasnip = "[lsnip]",
               vsnip = "[vsnip]",
               snippets = "[snips]",
-              codeium = "[code]",
+              -- codeium = "[code]",
               nvim_lua = "[nlua]",
               nvim_lsp_signature_help = "[sig]",
               async_path = "[path]",

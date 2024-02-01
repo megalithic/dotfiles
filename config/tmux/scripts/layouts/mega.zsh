@@ -18,10 +18,10 @@ cd $CWD
 # Create the session and the first window. Manually switch to root
 # directory if required to support tmux < 1.9
 TMUX= tmux -2 new-session -d -s "$SESSION" -n chats
-tmux -2 send-keys -t "$SESSION":1 cd\ "$DOTS" C-m
+tmux -2 send-keys -t "$SESSION":1 cd\ "$CWD" C-m
 
 # Create other windows.
-tmux -2 new-window -c "$DOTS" -t "$SESSION":2 -n dots
+tmux -2 new-window -c "$CWD" -t "$SESSION":2 -n dots
 # tmux -2 new-window -c "$DOTS" -t "$SESSION":3 -n ssh-dots
 
 # Window "chats"

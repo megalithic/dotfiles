@@ -35,3 +35,5 @@ typeset -ag chpwd_functions;
 if [[ -z "${chpwd_functions[(r)_mise_hook]+1}" ]]; then
   chpwd_functions=( _mise_hook ${chpwd_functions[@]} )
 fi
+
+alias rtx="mise"

@@ -126,6 +126,7 @@ function to_session() {
 # -- new session with pre-defined layout, OR just new basic tmux session
 function new_session() {
   local session="$1"
+  local cwd="$2"
 
   if [[ -f "$layouts_dir/$session.zsh" ]]; then
     (sh "$layouts_dir/$session.zsh" &&
@@ -133,19 +134,28 @@ function new_session() {
       tmux new-session -d -s "$session" &&
     to_session "$session") && exit
   else
-    (sh "$layouts_dir/default.zsh" "$session" &&
+    (sh "$layouts_dir/default.zsh" "$session" "${cwd}" &&
       to_session "$session" ||
-      tmux new-session -d -s "$session" &&
+      tmux new-session -d -s "$session" -c "${cwd}" &&
     to_session "$session") && exit
   fi
 }
 
 # -- try to change to an existing session; otherwise, create a new one
 function try_session() {
-  local session="$1"
-  to_session "$session" 2>/dev/null || new_session "$session"
-  # TODO: do we really want this?
-  # tmux display-message " $session activated.."
+  local session
+  local cwd
+  session="$1"
+
+  # FIXME: zoxide doesn't cut it completely; need to fuzzy find all folders in `$CODE`
+  cwd=$(zoxide query "$session" 2>/dev/null || fd -1 "$session" "$CODE")
+
+  # backup plan: use dotfiles dir if nothing found
+  if [[ -z "$cwd" ]]; then
+    cwd="$DOTS"
+  fi
+
+  to_session "$session" 2>/dev/null || new_session "$session" "${cwd}"
 }
 
 function fuzzy_find() {

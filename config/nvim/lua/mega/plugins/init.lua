@@ -11,6 +11,7 @@ return {
       mega.pcall("theme failed to load because", function(colorscheme)
         local theme = fmt("mega.lush_theme.%s", colorscheme)
         local ok, lush_theme = pcall(require, theme)
+
         if ok then
           vim.g.colors_name = colorscheme
           package.loaded[theme] = nil
@@ -21,37 +22,40 @@ return {
         end
 
         -- NOTE: always make available my lushified-color palette
-        mega.colors = require("mega.lush_theme.colors")
+        -- mega.colors = require("mega.lush_theme.colors")
       end, vim.g.colorscheme)
+
+      mega.colors = require("mega.lush_theme.colors")
     end,
   },
   {
     "megalithic/bamboo.nvim",
+    cond = vim.g.colorscheme == "bamboo",
     lazy = false,
     priority = 1001,
-    opts = {
-      style = "megaforest", -- alts: megaforest, multiplex, vulgaris, light
-      -- transparent = true,
-      dim_inactive = true,
-      highlights = {
-        -- make comments blend nicely with background, similar to other color schemes
-        -- ["@comment"] = { fg = "$grey" },
-        -- ["@keyword"] = { fg = "$green" },
-        -- ["@string"] = { fg = "$bright_orange", bg = "#00ff00", fmt = "bold" },
-        -- ["@function"] = { fg = "#0000ff", sp = "$cyan", fmt = "underline,italic" },
-        -- ["@function.builtin"] = { fg = "#0059ff" },
-        --
-        CursorLineNr = { fg = "$orange", fmt = "bold,italic" },
-        -- TSKeyword = { fg = "$green" },
-        -- TSString = { fg = "$bright_orange", bg = "#00ff00", fmt = "bold" },
-        -- TSFunction = { fg = "#0000ff", sp = "$cyan", fmt = "underline,italic" },
-        -- TSFuncBuiltin = { fg = "#0059ff" },
-      },
-    },
-    -- config = function(opts)
-    --   mega.colors = require("mega.lush_theme.colors")
-    --   require("bamboo").setup(opts)
-    -- end,
+    config = function()
+      require("bamboo").setup({
+        style = "megaforest", -- alts: megaforest, multiplex, vulgaris, light
+        -- transparent = true,
+        dim_inactive = true,
+        highlights = {
+          -- make comments blend nicely with background, similar to other color schemes
+          -- ["@comment"] = { fg = "$grey" },
+          -- ["@keyword"] = { fg = "$green" },
+          -- ["@string"] = { fg = "$bright_orange", bg = "#00ff00", fmt = "bold" },
+          -- ["@function"] = { fg = "#0000ff", sp = "$cyan", fmt = "underline,italic" },
+          -- ["@function.builtin"] = { fg = "#0059ff" },
+          --
+          CursorLineNr = { fg = "$orange", fmt = "bold,italic" },
+          -- TSKeyword = { fg = "$green" },
+          -- TSString = { fg = "$bright_orange", bg = "#00ff00", fmt = "bold" },
+          -- TSFunction = { fg = "#0000ff", sp = "$cyan", fmt = "underline,italic" },
+          -- TSFuncBuiltin = { fg = "#0059ff" },
+        },
+      })
+
+      require("bamboo").load()
+    end,
   },
   -- {
   --   "ribru17/bamboo.nvim",
@@ -467,17 +471,17 @@ return {
   --   },
   -- },
 
-  {
-    "jcdickinson/codeium.nvim",
-    cond = true,
-    lazy = true,
-    event = "VeryLazy",
-    dependencies = {
-      "nvim-lua/plenary.nvim",
-      "MunifTanjim/nui.nvim",
-    },
-    config = true,
-  },
+  -- {
+  --   "jcdickinson/codeium.nvim",
+  --   cond = false,
+  --   lazy = true,
+  --   event = "VeryLazy",
+  --   dependencies = {
+  --     "nvim-lua/plenary.nvim",
+  --     "MunifTanjim/nui.nvim",
+  --   },
+  --   opts = true,
+  -- },
   -- {
   --   "Exafunction/codeium.nvim",
   --   cmd = { "Codeium" },

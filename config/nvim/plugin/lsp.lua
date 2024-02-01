@@ -540,21 +540,22 @@ local function setup_diagnostics(client, bufnr)
       only_current_line = true,
       highlight_whole_line = false,
     },
-    virtual_text = {
-      prefix = function(d)
-        local level = diagnostic.severity[d.severity]
-        return mega.icons.lsp[level:lower()]
-      end,
-      source = "always", -- or "always", "if_many" (for more than one source)
-      severity = { min = diagnostic.severity.ERROR },
-      format = function(d)
-        -- dd(fmt("virtual_text_format: %s", I(d)))
-        return d.message
-        -- local lvl = diagnostic.severity[d.severity]
-        -- local icon = mega.icons.lsp[lvl:lower()]
-        -- return fmt("%s %s", icon, d.message)
-      end,
-    },
+    virtual_text = false,
+    -- virtual_text = {
+    --   prefix = function(d)
+    --     local level = diagnostic.severity[d.severity]
+    --     return mega.icons.lsp[level:lower()]
+    --   end,
+    --   source = "always", -- or "always", "if_many" (for more than one source)
+    --   severity = { min = diagnostic.severity.ERROR },
+    --   format = function(d)
+    --     -- dd(fmt("virtual_text_format: %s", I(d)))
+    --     return d.message
+    --     -- local lvl = diagnostic.severity[d.severity]
+    --     -- local icon = mega.icons.lsp[lvl:lower()]
+    --     -- return fmt("%s %s", icon, d.message)
+    --   end,
+    -- },
     update_in_insert = false,
     float = {
       show_header = true,
@@ -805,7 +806,7 @@ local function get_server_capabilities(name)
   --   capabilities.textDocument.colorProvider = { dynamicRegistration = true }
   -- end
   -- capabilities.textDocument.completion.completionItem.documentationFormat = { "markdown", "plaintext" }
-  -- capabilities.textDocument.completion.completionItem.snippetSupport = true
+  capabilities.textDocument.completion.completionItem.snippetSupport = true
   -- capabilities.textDocument.completion.completionItem.resolveSupport = {
   --   properties = {
   --     "documentation",

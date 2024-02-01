@@ -45,7 +45,6 @@ fi
 
 # NOTE: https://github.com/jdxcode/rtx#rtx-activate
 zsh_add_file "lib/mise.zsh"
-alias rtx="mise"
 
 # NOTE: http://asdf-vm.com/learn-more/faq.html#shell-not-detecting-newly-installed-shims
 # FIXME: some libs (elixir-ls, lulwat?) still require this
@@ -57,6 +56,9 @@ alias rtx="mise"
 # fzf just desparately wants this here
 [[ -f ~/.fzf.zsh ]] && source ~/.fzf.zsh
 zsh_add_file "lib/fzf.zsh"
+
+# replaces ctrl_r keybinding for faster, more robust history search
+# zsh_add_file "lib/mcfly.zsh"
 
 # zprof # -> bottom of .zshrc
 # vim:ft=zsh:foldenable:foldmethod=marker:ts=2:sts=2:sw=2

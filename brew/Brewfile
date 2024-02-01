@@ -132,6 +132,7 @@ brew "lua-language-server"
 brew "luv"
 brew "mas" if OS.mac?
 brew "media-info"
+brew "mcfly"
 brew "mkcert"
 brew "mods" # charmbracelet tool
 brew "moreutils"

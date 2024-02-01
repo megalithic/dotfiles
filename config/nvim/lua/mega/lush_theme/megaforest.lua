@@ -620,6 +620,15 @@ local theme = lush(function(injected_functions)
     -- sym("@lsp.typemod.variable.static")({ sym("@constant") }),
     sym("@lsp.typemod.variable.static")({ Red }),
 
+    -- @constant.elixir links to PurpleItalic elixir
+    -- @comment.documentation.elixir links to @comment elixir
+    -- @constant.elixir links to PurpleItalic elixir
+    -- @string.elixir links to Yellow elixir
+    -- @comment.documentation.elixir links to @comment elixir
+    -- @markup.raw.block.markdown links to Special markdown
+
+    sym("@markup.raw.block.markdown")({ sym("@comment") }),
+
     ---- :help treesitter-context ----------------------------------------------
 
     TreesitterContext({ bg = C.bg1 }),
