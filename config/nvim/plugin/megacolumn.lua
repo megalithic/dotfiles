@@ -1,6 +1,7 @@
 if not mega then return end
 if not vim.g.enabled_plugin["megacolumn"] then return end
 
+---@alias StringComponent {component: string, length: integer, priority: integer}
 ---@alias ExtmarkSign {[1]: number, [2]: number, [3]: number, [4]: {sign_text: string, sign_hl_group: string}}
 
 local fn, v, api, opt = vim.fn, vim.v, vim.api, vim.opt
@@ -41,8 +42,8 @@ local function spacer(size, opts)
   local filler = opts.filler or " "
   local priority = opts.priority or 0
   if not size or size < 1 then return end
-  local spacer = string.rep(filler, size)
-  return { { { spacer } }, priority = priority, before = "", after = "" }
+  local spc = string.rep(filler, size)
+  return { { { spc } }, priority = priority, before = "", after = "" }
 end
 
 --- truncate with an ellipsis or if surrounded by quotes, replace contents of quotes with ellipsis
@@ -130,11 +131,11 @@ end
 --- TODO: currently this doesn't account for if an item that has a lower priority
 --- could be fit in instead
 --- @param statusline table
---- @param space number
+--- @param spc number
 --- @param length number
-local function prioritize(statusline, space, length)
+local function prioritize(statusline, spc, length)
   length = length or sum_lengths(statusline)
-  if length <= space then return statusline end
+  if length <= spc then return statusline end
   local lowest, index_to_remove
   for idx, c in ipairs(statusline) do
     if is_lowest(c, lowest) then
@@ -142,7 +143,7 @@ local function prioritize(statusline, space, length)
     end
   end
   table.remove(statusline, index_to_remove)
-  return prioritize(statusline, space, length - lowest.length)
+  return prioritize(statusline, spc, length - lowest.length)
 end
 
 --- @param sections ComponentOpts[][]
@@ -221,22 +222,10 @@ end
 ---@return T?
 local function format_text(t, k)
   if t == nil then return end
-  local txt = t[k] and t[k]:gsub("%s", "") or ""
+  local txt = (t and t[k]) and t[k]:gsub("%s", "") or ""
   if #txt < 1 then return end
   t[k] = txt
   return t
-end
-
----@param curbuf integer
----@param lnum integer
----@return StringComponent[] sgns non-git signs
-local function signplaced_signs(curbuf, lnum)
-  return vim.tbl_map(function(s)
-    local sign = format_text(fn.sign_getdefined(s.name)[1], "text")
-    if sign == nil then return { { { "", "Comment" } }, after = "" } end
-
-    return { { { sign.text, sign.texthl } }, after = "" }
-  end, fn.sign_getplaced(curbuf, { group = "*", lnum = lnum })[1].signs)
 end
 
 ---@param curbuf integer
@@ -267,21 +256,20 @@ function mega.ui.statuscolumn.render(is_active)
   local buf = api.nvim_win_get_buf(win)
   local line_count = api.nvim_buf_line_count(buf)
 
-  local gitsign, other_sns = extmark_signs(buf, lnum)
-  local sns = signplaced_signs(buf, lnum)
-  vim.list_extend(sns, other_sns)
+  local gitsigns, sns = extmark_signs(buf, lnum)
+
   while #sns < MIN_SIGN_WIDTH do
-    table.insert(sns, spacer(1))
+    table.insert(sns, spacer(2))
   end
 
   local r1_hl = is_active and "" or "StatusColumnInactiveLineNr"
 
   local r1 = is_active
-      and section:new(spacer(1), { { { nr(win, lnum, relnum, virtnum, line_count), r1_hl } } }, unpack(gitsign))
+      and section:new(spacer(1), { { { nr(win, lnum, relnum, virtnum, line_count), r1_hl } } }, unpack(gitsigns))
     or section:new(spacer(1), { { { nr(win, lnum, relnum, virtnum, line_count), r1_hl } } })
-  local r2 = section:new({ { { separator, "LineNr" } }, after = "" }, { { { fdm(lnum) } } })
+  local r2 = section:new({ { { "", "LineNr" } }, after = "" }, { { { fdm(lnum) } } })
 
-  return is_active and display({ sns, r1 + r2 }) or display({ r1 + r2 })
+  return is_active and display({ sns, r1 + r2 }) or display({ section:new(spacer(2)), r1 + r2 })
 end
 
 local excluded = {

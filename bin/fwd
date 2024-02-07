@@ -49,7 +49,7 @@ __status() {
   command cat <<EOF
 
 ${grey}░$([[ -e "${FWD_CONTROL_FILE}" ]] && echo "${blue} Forwarding traffic $FWD_REMOTE_HOST:8888 <-> localhost:$PORT" || echo "${white} fwd - an ngrok alternative${reset}")
-${grey}░${blue} 
+${grey}░${blue} 󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜󰇜
 ${grey}░${white} $(echo "Options:")
 ${grey}░${grey}   $(echo "fwd -x -> exit")
 ${grey}░${grey}   $(echo "fwd -s -> status")

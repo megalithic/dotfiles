@@ -17,7 +17,7 @@ SESSION="${1:-}"
 if [[ -n $SESSION ]]; then
   CWD="${2:-$CODE}"
 
-  SESSION_ICON=""
+  SESSION_ICON="󱃸" # alts: 󱃷  󰲌 󱃸
   SESSION_FG="#999f93"
 
   cd $CWD

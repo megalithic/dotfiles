@@ -481,30 +481,30 @@ local function setup_diagnostics(client, bufnr)
   -- This section overrides the default diagnostic handlers for signs and virtual text so that only
   -- the most severe diagnostic is shown per line
 
-  -- --- The custom namespace is so that ALL diagnostics across all namespaces can be aggregated
-  -- --- including diagnostics from plugins
-  -- local ns = api.nvim_create_namespace("severe-diagnostics")
-  --
-  -- --- Restricts nvim's diagnostic signs to only the single most severe one per line
-  -- --- see `:help vim.diagnostic`
-  -- ---@param callback fun(namespace: integer, bufnr: integer, diagnostics: table, opts: table)
-  -- ---@return fun(namespace: integer, bufnr: integer, diagnostics: table, opts: table)
-  -- local function max_diagnostic(callback)
-  --   return function(_, bn, diagnostics, opts)
-  --     local max_severity_per_line = mega.fold(function(diag_map, d)
-  --       local m = diag_map[d.lnum]
-  --       if not m or d.severity < m.severity then diag_map[d.lnum] = d end
-  --       return diag_map
-  --     end, diagnostics, {})
-  --     callback(ns, bn, vim.tbl_values(max_severity_per_line), opts)
-  --   end
-  -- end
+  --- The custom namespace is so that ALL diagnostics across all namespaces can be aggregated
+  --- including diagnostics from plugins
+  local ns = api.nvim_create_namespace("severe-diagnostics")
 
-  -- local signs_handler = diagnostic.handlers.signs
-  -- diagnostic.handlers.signs = vim.tbl_extend("force", signs_handler, {
-  --   show = max_diagnostic(signs_handler.show),
-  --   hide = function(_, bn) signs_handler.hide(ns, bn) end,
-  -- })
+  --- Restricts nvim's diagnostic signs to only the single most severe one per line
+  --- see `:help vim.diagnostic`
+  ---@param callback fun(namespace: integer, bufnr: integer, diagnostics: table, opts: table)
+  ---@return fun(namespace: integer, bufnr: integer, diagnostics: table, opts: table)
+  local function max_diagnostic(callback)
+    return function(_, bn, diagnostics, opts)
+      local max_severity_per_line = mega.fold(function(diag_map, d)
+        local m = diag_map[d.lnum]
+        if not m or d.severity < m.severity then diag_map[d.lnum] = d end
+        return diag_map
+      end, diagnostics, {})
+
+      callback(ns, bn, vim.tbl_values(max_severity_per_line), opts)
+    end
+  end
+  local signs_handler = diagnostic.handlers.signs
+  diagnostic.handlers.signs = vim.tbl_extend("force", signs_handler, {
+    show = max_diagnostic(signs_handler.show),
+    hide = function(_, bn) signs_handler.hide(ns, bn) end,
+  })
   --
   -- local virt_text_handler = diagnostic.handlers.virtual_text
   -- diagnostic.handlers.virtual_text = vim.tbl_extend("force", virt_text_handler, {

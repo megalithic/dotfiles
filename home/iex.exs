@@ -76,21 +76,6 @@ defmodule U do
     )
   end
 
-  # def copy(term) do
-  #   text =
-  #     if is_binary(term) do
-  #       term
-  #     else
-  #       inspect(term, limit: :infinity, pretty: true)
-  #     end
-  #
-  #   port = Port.open({:spawn, "pbcopy"}, [])
-  #   true = Port.command(port, text)
-  #   true = Port.close(port)
-  #
-  #   :ok
-  # end
-
   # REF: https://github.com/gvaughn/dotfiles/blob/master/iex.exs
   def paste() do
     {res, _} = System.cmd("/usr/bin/pbpaste", [])
@@ -116,7 +101,11 @@ defmodule U do
     val
   end
 
-  # def uuid, do: Ecto.UUID.generate()
+  def generate_repo_alias(repo) do
+    quote do
+      alias unquote(repo), as: Repo
+    end
+  end
 end
 
 defmodule :_exit do
@@ -195,6 +184,80 @@ defmodule H do
   def logger_error(), do: Logger.configure(level: :error)
   def logger_warn(), do: Logger.configure(level: :warn)
   def logger_info(), do: Logger.configure(level: :info)
+
+  def get_app_name() do
+    app_name =
+      if Mix.Project.umbrella?(),
+        do:
+          Mix.Project.apps_paths()
+          |> Enum.reject(fn {_x, y} ->
+            y == :undefined
+          end)
+          |> Enum.find(fn {x, _y} ->
+            x |> Atom.to_string() |> String.ends_with?("_web")
+          end)
+          |> elem(0)
+          |> Atom.to_string()
+          |> String.replace("_web", ""),
+        else: Mix.Project.get().project()[:app]
+
+    if is_binary(app_name), do: String.to_atom(app_name), else: app_name
+  end
+
+  def write_phoenix_info(app_name) do
+    phoenix_info =
+      if H.is_app_started?(:phoenix) do
+        IO.ANSI.green() <>
+          "running (" <>
+          IO.ANSI.light_yellow() <>
+          "#{app_name}_web" <>
+          IO.ANSI.reset() <>
+          ")" <> IO.ANSI.reset()
+      else
+        IO.ANSI.yellow() <> "not detected" <> IO.ANSI.reset()
+      end
+
+    IO.puts("Phoenix: #{phoenix_info}")
+  end
+
+  def write_ecto_info(app_name) do
+    ecto_started? = H.is_app_started?(:ecto)
+
+    ecto_info =
+      if ecto_started? do
+        IO.ANSI.green() <> "running" <> IO.ANSI.reset()
+      else
+        IO.ANSI.yellow() <> "not detected" <> IO.ANSI.reset()
+      end
+
+    repo_info =
+      if ecto_started? do
+        repo =
+          app_name
+          |> Application.get_env(:ecto_repos)
+          |> case do
+            repo when not is_nil(repo) ->
+              repo
+              |> Enum.at(0)
+              |> Atom.to_string()
+              |> String.replace(~r/^Elixir\./, "")
+
+            _ ->
+              ""
+          end
+
+        import_if_available(Ecto.Query)
+        import_if_available(Ecto.Changeset)
+
+        U.generate_repo_alias(repo)
+
+        IO.ANSI.faint() <> "(`alias #{repo}, as: Repo`)" <> IO.ANSI.reset()
+      else
+        ""
+      end
+
+    IO.puts("Ecto: #{ecto_info} #{repo_info}")
+  end
 end
 
 prefix = IO.ANSI.green() <> "%prefix" <> IO.ANSI.reset()
@@ -225,86 +288,10 @@ IEx.configure(
 
 H.print_bright("\n---  Phoenix & Ecto:")
 
-# phoenix_app =
-#   :application.info()
-#   |> Keyword.get(:running)
-#   |> Enum.reject(fn {_x, y} ->
-#     y == :undefined
-#   end)
-#   |> Enum.filter(fn {x, _y} ->
-#     x |> Atom.to_string() |> String.ends_with?("_web")
-#   end)
-#   |> dbg()
+app_name = H.get_app_name()
 
-phoenix_started? = H.is_app_started?(:phoenix)
-ecto_started? = H.is_app_started?(:ecto)
-
-app_name =
-  if Mix.Project.umbrella?(),
-    do:
-      Mix.Project.apps_paths()
-      |> Enum.reject(fn {_x, y} ->
-        y == :undefined
-      end)
-      |> Enum.find(fn {x, _y} ->
-        x |> Atom.to_string() |> String.ends_with?("_web")
-      end)
-      |> elem(0)
-      |> Atom.to_string()
-      |> String.replace("_web", ""),
-    else: Mix.Project.get().project()[:app]
-
-phoenix_info =
-  if phoenix_started? do
-    IO.ANSI.green() <>
-      "running (" <>
-      IO.ANSI.light_yellow() <>
-      "#{app_name}_web" <>
-      IO.ANSI.reset() <>
-      ")" <> IO.ANSI.reset()
-  else
-    IO.ANSI.yellow() <> "not detected" <> IO.ANSI.reset()
-  end
-
-IO.puts("Phoenix: #{phoenix_info}")
-
-ecto_info =
-  if ecto_started? do
-    IO.ANSI.green() <> "running" <> IO.ANSI.reset()
-  else
-    IO.ANSI.yellow() <> "not detected" <> IO.ANSI.reset()
-  end
-
-repo_info =
-  if ecto_started? do
-    repo =
-      app_name
-      # |> String.to_atom()
-      |> Application.get_env(:ecto_repos)
-      |> case do
-        repo when not is_nil(repo) ->
-          repo
-          |> Enum.at(0)
-          |> Atom.to_string()
-          |> String.replace(~r/^Elixir\./, "")
-
-        _ ->
-          ""
-      end
-
-    import_if_available(Ecto.Query)
-    import_if_available(Ecto.Changeset)
-
-    quote do
-      alias unquote(repo), as: Repo
-    end
-
-    IO.ANSI.faint() <> "(`alias #{repo}, as: Repo`)" <> IO.ANSI.reset()
-  else
-    ""
-  end
-
-IO.puts("Ecto: #{ecto_info} #{repo_info}")
+H.write_phoenix_info(app_name)
+H.write_ecto_info(app_name)
 
 IO.puts("")
 
