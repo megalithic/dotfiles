@@ -33,19 +33,32 @@ help() {
   printf -- "    status   Get the current status of do-not-disturb (DND) mode\n"
 }
 
+cmd() {
+  local state="$1"
+
+  shortcuts run "$shortcut_cmd" <<< "$state"
+  if [[ -n "$TMUX" ]]; then
+    tmux refresh-client
+  fi
+}
+
 install() {
   open "$DOTS/bin/macos-focus-mode.shortcut"
 }
 
 on() {
-  shortcuts run "$shortcut_cmd" <<< "on"
+  cmd "on"
 }
 
 off() {
-  shortcuts run "$shortcut_cmd" <<< "off"
+  cmd "off"
 }
 
 status() {
+  if [[ -n "$TMUX" ]]; then
+    echo "[TMUX]"
+  fi
+
   if [[ "$(defaults read com.apple.controlcenter "NSStatusItem Visible FocusModes")" == 1 ]]; then
     echo "on"
   else
@@ -65,7 +78,7 @@ status_kitty() {
 subcommand="${1:-}"
 case $subcommand in
   '')
-    toggle
+    status
     ;;
   '-k')
     status_kitty

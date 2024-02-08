@@ -29,7 +29,7 @@ end
 return {
   "stevearc/conform.nvim",
   cond = vim.g.formatter == "conform",
-  event = { "BufReadPre", "BufNewFile", "BufWritePre" },
+  event = { "BufReadPre", "BufNewFile", "BufWritePre", "BufWritePost" },
   cmd = "ConformInfo",
   keys = keys,
   opts = {
@@ -73,20 +73,20 @@ return {
       },
     },
     log_level = vim.log.levels.DEBUG,
-    -- format_on_save = function(bufnr)
-    --   -- local async_format = vim.g.async_format_filetypes[vim.bo[bufnr].filetype]
-    --   -- if async_format or vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then return end
-    --   if vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then return end
-    --   -- dd("format on save")
-    --   return { timeout_ms = timeout_ms, lsp_fallback = lsp_fallback, filter = mega.lsp.formatting_filter }
-    -- end,
-    format_after_save = function(bufnr)
+    format_on_save = function(bufnr)
       -- local async_format = vim.g.async_format_filetypes[vim.bo[bufnr].filetype]
-      -- if not async_format or vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then return end
+      -- if async_format or vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then return end
       if vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then return end
-      -- dd("format after save")
+      -- dd("format on save")
       return { timeout_ms = timeout_ms, lsp_fallback = lsp_fallback, filter = mega.lsp.formatting_filter }
     end,
+    -- format_after_save = function(bufnr)
+    --   -- local async_format = vim.g.async_format_filetypes[vim.bo[bufnr].filetype]
+    --   -- if not async_format or vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then return end
+    --   if vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then return end
+    --   -- dd("format after save")
+    --   return { timeout_ms = timeout_ms, lsp_fallback = lsp_fallback, filter = mega.lsp.formatting_filter }
+    -- end,
     user_async_format_filetypes = {
       python = true,
     },

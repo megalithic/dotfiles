@@ -29,14 +29,14 @@ return {
     end,
   },
   {
-    "megalithic/bamboo.nvim",
+    "ribru17/bamboo.nvim",
     cond = vim.g.colorscheme == "bamboo",
     lazy = false,
     priority = 1001,
     config = function()
       require("bamboo").setup({
-        style = "megaforest", -- alts: megaforest, multiplex, vulgaris, light
-        -- transparent = true,
+        style = "multiplex", -- alts: megaforest, multiplex, vulgaris, light
+        transparent = true,
         dim_inactive = true,
         highlights = {
           -- make comments blend nicely with background, similar to other color schemes
@@ -95,6 +95,9 @@ return {
         transparent_background_level = 2,
         background = "medium",
         italics = true,
+        on_highlights = function(hl, p)
+          -- hl.NeoTreeStatusLine = { fg = p.none, bg = p.none, sp = p.red }
+        end,
       })
     end,
   },
@@ -1416,9 +1419,25 @@ return {
           dash_pattern = "-",
           dash_highlight = "Dash",
           dash_string = "󰇜",
+          quote_highlight = "Quote",
+          quote_string = "┃",
           headline_pattern = "^#+",
           headline_highlights = { "Headline1", "Headline2", "Headline3", "Headline4", "Headline5", "Headline6" },
+          fat_headlines = true,
+          fat_headline_upper_string = "▃",
+          fat_headline_lower_string = "🬂",
           codeblock_highlight = "CodeBlock",
+          bullets = {},
+          bullet_highlights = {},
+          -- bullets = { "◉", "○", "✸", "✿" },
+          -- bullet_highlights = {
+          --   "@text.title.1.marker.markdown",
+          --   "@text.title.2.marker.markdown",
+          --   "@text.title.3.marker.markdown",
+          --   "@text.title.4.marker.markdown",
+          --   "@text.title.5.marker.markdown",
+          --   "@text.title.6.marker.markdown",
+          -- },
         },
         yaml = {
           dash_pattern = "^---+$",
@@ -1443,78 +1462,6 @@ return {
       "typescriptreact",
       "javascript",
       "javascriptreact",
-    },
-  },
-  {
-    "pmizio/typescript-tools.nvim",
-    -- event = {
-    --   "BufRead *.js,*.jsx,*.mjs,*.cjs,*.ts,*.tsx",
-    --   "BufNewFile *.js,*.jsx,*.mjs,*.cjs,*.ts,*.tsx",
-    -- },
-    ft = { "typescript", "typescriptreact", "javascript", "javascriptreact" },
-    dependencies = {
-      "nvim-lua/plenary.nvim",
-      "neovim/nvim-lspconfig",
-    },
-    build = "npm i -g @styled/typescript-styled-plugin typescript-styled-plugin",
-    opts = {
-      on_attach = function(client, bufnr)
-        client.server_capabilities.documentFormattingProvider = false
-        client.server_capabilities.documentRangeFormattingProvider = false
-        vim.keymap.set(
-          "n",
-          "gD",
-          "<Cmd>TSToolsGoToSourceDefinition<CR>",
-          { buffer = bufnr, desc = "lsp (ts/tsx): go to source definition" }
-        )
-        vim.keymap.set(
-          "n",
-          "<localleader>li",
-          "<Cmd>TSToolsAddMissingImports<CR>",
-          { buffer = bufnr, desc = "lsp (ts/tsx): add missing imports" }
-        )
-        vim.keymap.set(
-          "n",
-          "<localleader>lo",
-          "<Cmd>TSToolsOrganizeImports<CR>",
-          { buffer = bufnr, desc = "lsp (ts/tsx): organize imports" }
-        )
-        vim.keymap.set(
-          "n",
-          "<localleader>lr",
-          "<Cmd>TSToolsRemoveUnused<CR>",
-          { buffer = bufnr, desc = "lsp (ts/tsx): remove unused imports" }
-        )
-        vim.keymap.set(
-          "n",
-          "<localleader>lf",
-          "<Cmd>TSToolsFixAll<CR>",
-          { buffer = bufnr, desc = "lsp (ts/tsx): fix all" }
-        )
-
-        -- vim.lsp.inlay_hint(bufnr, true)
-      end,
-      code_lens = "all",
-      settings = {
-        separate_diagnostic_server = true,
-        tsserver_file_preferences = {
-          includeInlayParameterNameHints = "all",
-          includeInlayParameterNameHintsWhenArgumentMatchesName = false,
-          includeInlayFunctionParameterTypeHints = true,
-          includeInlayVariableTypeHints = true,
-          includeInlayPropertyDeclarationTypeHints = true,
-          includeInlayFunctionLikeReturnTypeHints = true,
-          includeInlayEnumMemberValueHints = true,
-          includeCompletionsForModuleExports = true,
-          quotePreference = "auto",
-        },
-        tsserver_plugins = {
-          -- for TypeScript v4.9+
-          "@styled/typescript-styled-plugin",
-          -- or for older TypeScript versions
-          -- "typescript-styled-plugin",
-        },
-      },
     },
   },
 }

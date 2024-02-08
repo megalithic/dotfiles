@@ -50,7 +50,7 @@ do_install() {
       ;;
     *)
       TARGET="https://github.com/lexical-lsp/lexical/archive"
-      BINARY="lexical-${VERSION}.zip"
+      BINARY="${VERSION}.zip"
       BUILD_TYPE="source"
       ;;
   esac

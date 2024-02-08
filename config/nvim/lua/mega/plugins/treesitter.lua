@@ -195,9 +195,9 @@ return {
         if size > disable_max_size or size == -2 then return true end
 
         -- FIXME: temporarily disable js/ts and friends until matchup supports TS query/node changes
-        if vim.tbl_contains({ "javascriptreact", "typescriptreact", "javascript", "typescript" }, lang) then
-          return true
-        end
+        -- if vim.tbl_contains({ "javascriptreact", "typescriptreact", "javascript", "typescript" }, lang) then
+        --   return true
+        -- end
 
         return false
       end
