@@ -9,7 +9,6 @@
 yabai -m signal --add event=dock_did_restart action="sudo yabai --load-sa"
 sudo yabai --load-sa
 
-
 yabai -m config debug_output on
 
 # config
@@ -18,15 +17,60 @@ yabai -m config debug_output on
 # - https://github.com/koekeishiya/yabai/blob/master/examples/yabairc
 # - https://github.com/rtauziac/Hammerspoon-Yabai/blob/master/.yabairc
 
-yabai -m config window_placement first_child
-yabai -m config mouse_follows_focus on
-yabai -m config layout bsp
-yabai -m config mouse_modifier ctrl
-yabai -m config mouse_drop_action stack
-yabai -m config window_shadow float
-yabai -m config window_placement second_child
-yabai -m config window_gap 10
-yabai -m config top_padding 10
-yabai -m config bottom_padding 10
-yabai -m config left_padding 10
-yabai -m config right_padding 10
+yabai -m config                               \
+  debug_output                 on             \
+  external_bar                 off:40:0       \
+  menubar_opacity              1.0            \
+  mouse_follows_focus          off            \
+  focus_follows_mouse          off            \
+  window_origin_display        default        \
+  window_placement             second_child   \
+  window_zoom_persist          on             \
+  window_shadow                float          \
+  window_animation_duration    0.0            \
+  window_opacity_duration      0.0            \
+  active_window_opacity        1.0            \
+  normal_window_opacity        0.90           \
+  window_opacity               off            \
+  insert_feedback_color        0xffd75f5f     \
+  split_ratio                  0.50           \
+  split_type                   auto           \
+  auto_balance                 off            \
+  top_padding                  10             \
+  bottom_padding               10             \
+  left_padding                 10             \
+  right_padding                10             \
+  window_gap                   05             \
+  layout                       bsp            \
+  mouse_modifier               ctr            \
+  mouse_action1                move           \
+  mouse_action2                resize         \
+  mouse_drop_action            stack # alts: stack/swap
+
+yabai -m rule                                 \
+  --add app='Fantastical'      display=east   \
+  --add app='OBS'              display=east   \
+  --add app='System Settings'  manage=off     \
+  --add app='Dash'             manage=off     \
+  --add app='Timery'           manage=off     \
+  --add app='Cardhop'          manage=off
+
+# NOTE:
+# Examples of regex matches for app or window titles:
+# yabai -m rule --add app="(^Préférences Système$)" manage=off
+# yabai -m rule --add app="(^Android Studio$)" title="Tip of the Day" manage=off
+# yabai -m rule --add app="(^Android Studio$)" title="Generate Signed Bundle or APK" manage=off
+# yabai -m rule --add app="(^Finder$)" title="(^Copier$)" manage=off
+# yabai -m rule --add app="(^Mozilla VPN$)" title="(^Mozilla VPN$)" manage=off
+# yabai -m rule --add app="(^JetBrains Toolbox$)" title="(^JetBrains Toolbox$)" manage=off
+# yabai -m rule --add app="(^Firefox$)" title="(^Ouverture de)" manage=off
+
+# NOTE:
+# Examples of signals:
+# yabai -m signal --add event=window_focused action="hs -c \"yabaidirectcall.window_focused(\`printenv YABAI_WINDOW_ID\`)\""
+# yabai -m signal --add event=application_activated action="hs -c \"yabaidirectcall.application_activated(\`printenv YABAI_PROCESS_ID\`)\""
+# yabai -m signal --add event=window_resized action="hs -c \"yabaidirectcall.window_resized(\`printenv YABAI_WINDOW_ID\`)\""
+# yabai -m signal --add event=window_moved action="hs -c \"yabaidirectcall.window_moved(\`printenv YABAI_WINDOW_ID\`)\""
+# yabai -m signal --add event=window_destroyed action="hs -c \"yabaidirectcall.window_destroyed(\`printenv YABAI_WINDOW_ID\`)\""
+
+echo "yabai config loaded.."

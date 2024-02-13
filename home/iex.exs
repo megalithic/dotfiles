@@ -266,7 +266,7 @@ counter =
   IO.ANSI.green() <>
     "[" <> IO.ANSI.light_blue() <> "%node" <> IO.ANSI.green() <> "](%counter)" <> IO.ANSI.reset()
 
-info = IO.ANSI.light_blue() <> " #{H.queue_length()}" <> IO.ANSI.reset()
+info = IO.ANSI.light_blue() <> "#{H.queue_length()}" <> IO.ANSI.reset()
 last = IO.ANSI.yellow() <> "" <> IO.ANSI.reset()
 alive = IO.ANSI.bright() <> IO.ANSI.yellow() <> "󱐋" <> IO.ANSI.reset()
 

@@ -17,6 +17,8 @@ function obj:start(opts)
 
   if obj.modal then obj.modal:enter() end
 
+  hs.timer.doAfter(2, function() L.req("lib.browser").killTabsByDomain("pop.com") end)
+
   -- if event == hs.application.watcher.launched or event == hs.application.watcher.activated then
   --   local pop = hs.application.get("Pop")
   --

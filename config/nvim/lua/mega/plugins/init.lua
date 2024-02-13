@@ -29,6 +29,12 @@ return {
     end,
   },
   {
+    "mcchrish/zenbones.nvim",
+    cond = vim.tbl_contains({ "forestbones", "tokyobones" }, vim.g.colorscheme),
+    lazy = false,
+    priority = 1001,
+  },
+  {
     "ribru17/bamboo.nvim",
     cond = vim.g.colorscheme == "bamboo",
     lazy = false,
@@ -57,23 +63,6 @@ return {
       require("bamboo").load()
     end,
   },
-  -- {
-  --   "ribru17/bamboo.nvim",
-  --   lazy = false,
-  --   priority = 1001,
-  --   opts = {
-  --     style = "multiplex", -- alts: multiplex, vulgaris, light
-  --     transparent = true,
-  --     dim_inactive = true,
-  --     -- colors = {
-  --     --   multiplex = require("mega.lush_theme.colors"),
-  --     -- },
-  --   },
-  --   -- config = function(opts)
-  --   --   require("bamboo").setup(opts)
-  --   --   mega.colors = require("mega.lush_theme.colors")
-  --   -- end,
-  -- },
   {
     "sainnhe/everforest",
     cond = false,
@@ -89,6 +78,7 @@ return {
     "neanias/everforest-nvim",
     lazy = false,
     priority = 1000,
+    cond = vim.g.colorscheme == "everforest",
     config = function()
       require("everforest").setup({
         dim_inactive_windows = true,

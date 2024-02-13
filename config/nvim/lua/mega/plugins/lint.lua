@@ -54,6 +54,22 @@ return {
       luacheck = {
         condition = function(ctx) return vim.fs.find({ ".luacheckrc" }, { path = ctx.filename, upward = true })[1] end,
       },
+      markdownlint = {
+        args = {
+          -- "--config",
+          -- "~/dotfiles/linter_configs/markdownlint.json",
+          "--disable",
+          "MD013", -- disable line length limit
+          "MD024", -- allow multiple headings with the same comment
+          "MD030", -- allow spaces after list markers
+          "MD033", -- allow inline HTML
+          "MD036", -- allow emphasis blocks
+          "MD040", -- allow code blocks without language specification
+          "MD041", -- allow non-headers on the first line, e.g. meta section
+          "MD046", -- allow mixed code-block styles
+          "--",
+        },
+      },
     },
   },
   config = function(_, opts)

@@ -1,5 +1,5 @@
 local preferred = {
-  terms = { "wezterm", "kitty", "wezterm", "alacritty", "iTerm", "Terminal.app" },
+  terms = { "kitty", "wezterm", "alacritty", "iTerm", "Terminal.app" },
   browsers = {
     hs.urlevent.getDefaultHandler("https"),
     "Brave Browser Nightly",
@@ -126,6 +126,10 @@ local launchers = {
   {
     key = "k",
     target = "com.github.wez.wezterm",
+    -- target = {
+    --   "net.kovidgoyal.kitty",
+    --   "com.github.wez.wezterm",
+    -- },
   },
   {
     key = "space",

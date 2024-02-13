@@ -41,7 +41,7 @@ return {
     { "andersevenrud/cmp-tmux", cond = false },
     -- { "kristijanhusak/vim-dadbod-completion"},
   },
-  -- init = function() vim.opt.completeopt = { "menu", "menuone", "noselect" } end,
+  init = function() vim.opt.completeopt = { "menu", "menuone", "noinsert", "noselect" } end,
   config = function()
     local cmp = require("cmp")
     local lspkind = require("lspkind")
@@ -172,12 +172,9 @@ return {
         return not disabled
       end,
       preselect = cmp.PreselectMode.None,
-      -- entries = { name = "custom", selection_order = "near_cursor" },
+      entries = { name = "custom", selection_order = "near_cursor" },
       completion = {
-        -- completeopt = "menuone",
-        completeopt = "menu,menuone,noselect",
-        -- completeopt = "menu,menuone,noselect",
-        -- completeopt = { "menu", "menuone", "preview", "noselect", "noinsert" },
+        completeopt = "menu,menuone,noinsert,noselect",
         max_item_count = 50,
         keyword_length = 1,
         get_trigger_characters = function(trigger_characters)
