@@ -1,0 +1,32 @@
+#!/usr/bin/env sh
+
+# for this to work you must configure sudo such that
+# it will be able to run the command without password
+#
+# see this wiki page for information:
+#  - https://github.com/koekeishiya/yabai/wiki/Installing-yabai-(latest-release)#configure-scripting-addition
+#
+yabai -m signal --add event=dock_did_restart action="sudo yabai --load-sa"
+sudo yabai --load-sa
+
+
+yabai -m config debug_output on
+
+# config
+#
+# REF:
+# - https://github.com/koekeishiya/yabai/blob/master/examples/yabairc
+# - https://github.com/rtauziac/Hammerspoon-Yabai/blob/master/.yabairc
+
+yabai -m config window_placement first_child
+yabai -m config mouse_follows_focus on
+yabai -m config layout bsp
+yabai -m config mouse_modifier ctrl
+yabai -m config mouse_drop_action stack
+yabai -m config window_shadow float
+yabai -m config window_placement second_child
+yabai -m config window_gap 10
+yabai -m config top_padding 10
+yabai -m config bottom_padding 10
+yabai -m config left_padding 10
+yabai -m config right_padding 10
