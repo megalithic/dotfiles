@@ -20,7 +20,13 @@
   },
   "files": {
     "ignoreUnknown": true,
-    "ignore": ["**/*/trace.json", "static/app/data/world.json", "**/*.sourcemap.js", "**/*.min.js", "fixtures"]
+    "ignore": [
+      "**/*/trace.json",
+      "static/app/data/world.json",
+      "**/*.sourcemap.js",
+      "**/*.min.js",
+      "fixtures"
+    ]
   },
   "formatter": {
     "enabled": false,
@@ -29,7 +35,9 @@
     "indentWidth": 2,
     "lineEnding": "lf",
     "lineWidth": 150,
-    "ignore": ["tests/**/*.json"]
+    "ignore": [
+      "tests/**/*.json"
+    ]
   },
   "javascript": {
     "formatter": {

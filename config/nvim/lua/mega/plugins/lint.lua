@@ -1,4 +1,4 @@
-local eslint = { "biome", "eslint_d" }
+local eslint = { "eslint_d" } -- alts: biome, eslint, eslint_d
 local uv = vim.uv or vim.loop
 return {
   "mfussenegger/nvim-lint",
@@ -28,7 +28,7 @@ return {
       ["javascript.jsx"] = eslint,
       ["typescript.tsx"] = eslint,
       bash = { "shellcheck" },
-      css = { "styleint" },
+      css = { "stylelint" },
       elixir = { "credo" },
       javascript = eslint,
       javascriptreact = eslint,
@@ -39,7 +39,7 @@ return {
       python = { "mypy", "pylint" },
       rst = { "rstlint" },
       ruby = { "ruby", "rubocop" },
-      scss = { "styleint" },
+      scss = { "stylelint" },
       sh = { "shellcheck" },
       typescript = eslint,
       typescriptreact = eslint,
@@ -65,9 +65,11 @@ return {
     local timer = assert(uv.new_timer())
     local DEBOUNCE_MS = 500
 
+    local do_lint = function() lint.try_lint(nil, { ignore_errors = true }) end
+
     mega.augroup("Lint", {
       {
-        event = { "BufWritePost", "TextChanged", "InsertLeave" },
+        event = { "BufEnter", "BufWritePre", "BufWritePost", "TextChanged", "InsertLeave" },
         command = function()
           local bufnr = vim.api.nvim_get_current_buf()
           timer:stop()
@@ -75,9 +77,7 @@ return {
             DEBOUNCE_MS,
             0,
             vim.schedule_wrap(function()
-              if vim.api.nvim_buf_is_valid(bufnr) then
-                vim.api.nvim_buf_call(bufnr, function() lint.try_lint(nil, { ignore_errors = true }) end)
-              end
+              if vim.api.nvim_buf_is_valid(bufnr) then vim.api.nvim_buf_call(bufnr, do_lint) end
             end)
           )
         end,
@@ -90,10 +90,10 @@ return {
         vim.notify("Disabled auto-linting.", L.WARN)
       else
         vim.notify("Enabled auto-linting.", L.INFO)
-        lint.try_lint(nil, { ignore_errors = true })
+        do_lint()
       end
     end)
 
-    lint.try_lint(nil, { ignore_errors = true })
+    do_lint()
   end,
 }

@@ -322,6 +322,8 @@ local function setup_keymaps(client, bufnr)
 
   nnoremap("[d", function() diagnostic.goto_prev({ float = true }) end, desc("lsp: prev diagnostic"))
   nnoremap("]d", function() diagnostic.goto_next({ float = true }) end, desc("lsp: next diagnostic"))
+  nnoremap("[e", function() diagnostic.goto_prev({ float = true, severity = 1 }) end, desc("lsp: prev diagnostic"))
+  nnoremap("]e", function() diagnostic.goto_next({ float = true, severity = 1 }) end, desc("lsp: next diagnostic"))
 
   safemap("definition", "n", "gd", function()
     if true then

@@ -9,7 +9,7 @@ local root_pattern = lspconfig.util.root_pattern
 M.list = {
   bashls = {},
   -- biome = {
-  --   root_dir = root_pattern({ "biome.json", ".biome.json" }),
+  --   root_dir = root_pattern({ "biome.json", ".biome.json", ".eslintrc.js", ".prettierrc.js" }),
   -- },
   ccls = {},
   cssls = {

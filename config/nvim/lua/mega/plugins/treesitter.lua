@@ -6,7 +6,7 @@ return {
     "sustech-data/wildfire.nvim",
     event = "VeryLazy",
     dependencies = { "nvim-treesitter/nvim-treesitter", "David-Kunz/treesitter-unit" },
-    cond = not vim.g.started_by_firenvim,
+    cond = false or not vim.g.started_by_firenvim,
     config = function()
       require("wildfire").setup({
         surrounds = {
@@ -42,7 +42,10 @@ return {
         },
       })
 
-      mega.nnoremap("vv", ":lua require'wildfire'.init_selection()<CR>:lua require('flash').treesitter()<CR>")
+      -- mega.nnoremap("vv", function()
+      --   dbg("attempting vv/wildfire")
+      --   vim.cmd([[:lua require'wildfire'.init_selection()<CR>:lua require('flash').treesitter()<CR>]])
+      -- end)
     end,
   },
   {
@@ -380,24 +383,26 @@ return {
             },
           },
         },
-        incremental_selection = {
-          enable = false, -- using wildfire.nvim for now
-          keymaps = {
-            init_selection = false,
-            node_incremental = "v",
-            scope_incremental = false,
-            node_decremental = "V",
-          },
-        },
         -- incremental_selection = {
-        --   enable = true,
+        --   enable = false, -- using wildfire.nvim for now
         --   keymaps = {
-        --     init_selection = "<CR>",
+        --     init_selection = false,
         --     node_incremental = "v",
+        --     scope_incremental = false,
         --     node_decremental = "V",
-        --     scope_incremental = "vv", -- increment to the upper scope (as defined in locals.scm)
         --   },
         -- },
+        incremental_selection = {
+          enable = true,
+          keymaps = {
+            -- init_selection = ":lua require'wildfire'.init_selection()<CR>:lua require('flash').treesitter()<CR>",
+            -- init_selection = "vv",
+            node_incremental = "v",
+            node_decremental = "V",
+            scope_incremental = false,
+            -- scope_incremental = "vv", -- increment to the upper scope (as defined in locals.scm)
+          },
+        },
         query_linter = {
           enable = true,
           use_virtual_text = true,
