@@ -191,7 +191,7 @@ return {
     config = function()
       vim.g.committia_hooks = {
         edit_open = function()
-          vim.cmd.resize(10)
+          vim.cmd.resize(25)
           local opts = {
             buffer = vim.api.nvim_get_current_buf(),
             silent = true,
