@@ -375,13 +375,13 @@ function M.clear_commandline()
   --- Track the timer object and stop any previous timers before setting
   --- a new one so that each change waits for 10secs and that 10secs is
   --- deferred each time
-  -- local timer
-  -- return function()
-  --   if timer then timer:stop() end
-  --   timer = vim.defer_fn(function()
-  --     if fn.mode() == "n" then vim.cmd([[echon '']]) end
-  --   end, 2500)
-  -- end
+  local timer
+  return function()
+    if timer then timer:stop() end
+    timer = vim.defer_fn(function()
+      if fn.mode() == "n" then vim.cmd([[echon '']]) end
+    end, 2500)
+  end
 end
 
 function M.is_chonky(bufnr, filepath)

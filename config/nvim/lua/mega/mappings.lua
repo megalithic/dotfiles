@@ -244,9 +244,9 @@ nnoremap("gp", "`[v`]", "reselect pasted content")
 nnoremap("gV", "ggVG", "select whole buffer")
 nnoremap("<leader>v", "ggVG", "select whole buffer")
 
--- Map <leader>o & <leader>O to newline without insert mode
-nnoremap("<leader>o", ":<C-u>call append(line(\".\"), repeat([\"\"], v:count1))<CR>")
-nnoremap("<leader>O", ":<C-u>call append(line(\".\")-1, repeat([\"\"], v:count1))<CR>")
+-- Map <localleader>o & <localleader>O to newline without insert mode
+nnoremap("<localleader>o", ":<C-u>call append(line(\".\"), repeat([\"\"], v:count1))<CR>")
+nnoremap("<localleader>O", ":<C-u>call append(line(\".\")-1, repeat([\"\"], v:count1))<CR>")
 
 -- Jumplist mutations and dealing with word wrapped lines
 -- nnoremap("k", "v:count == 0 ? 'gk' : (v:count > 5 ? \"m'\" . v:count : '') . 'k'", { expr = true })

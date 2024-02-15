@@ -607,6 +607,9 @@ M.unofficial = {
           end,
           log_level = vim.lsp.protocol.MessageType.Error,
           message_level = vim.lsp.protocol.MessageType.Error,
+          cmd_env = {
+            NEXTLS_SPITFIRE_ENABLED = 1,
+          },
           init_options = {
             mix_env = "dev",
             mix_target = "host",

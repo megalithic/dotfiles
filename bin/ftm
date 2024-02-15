@@ -172,7 +172,7 @@ function fuzzy_find() {
   # tmux capture-pane -ep -t "${1}"
   # tmux capture-pane -ep -S- -E- -t {}
   # pane_capture="tmux capture-pane -ep -S- -E- -t {}"
-  pane_capture="tmux capture-pane -ep -t {}"
+  pane_capture="tmux capture-pane -epT -t {}"
 
 
   preview_lines_of_output=100

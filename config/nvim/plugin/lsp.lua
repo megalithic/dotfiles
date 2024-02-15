@@ -595,6 +595,75 @@ local function setup_diagnostics(client, bufnr)
     if vim.tbl_contains(vim.g.diagnostic_exclusions, client_name) then return end
     diagnostic_handler(err, result, ctx, config)
   end
+
+  local function log(msg)
+    local client = msg.client or ""
+    local title = msg.title or ""
+    local message = msg.message or ""
+    local percentage = msg.percentage or 0
+
+    local out = ""
+    if client ~= "" then out = out .. "[" .. client .. "]" end
+
+    if percentage > 0 then out = out .. " [" .. percentage .. "%]" end
+
+    if title ~= "" then out = out .. " " .. title end
+
+    if message ~= "" then out = out .. " - " .. message end
+
+    vim.api.nvim_command(string.format("echo \"%s\"", string.sub(out, 1, vim.v.echospace)))
+  end
+
+  local series = {}
+  vim.lsp.handlers["$/progress"] = function(err, progress, ctx)
+    if err then return end
+
+    local token = progress.token
+    local value = progress.value
+
+    if value.kind == "begin" then
+      local client = vim.lsp.get_client_by_id(ctx.client_id)
+      series[token] = {
+        client = client and client.name or "",
+        title = value.title or "",
+        message = value.message or "",
+        percentage = value.percentage or 0,
+      }
+
+      local cur = series[token]
+      log({
+        client = cur.client,
+        title = cur.title,
+        message = cur.message .. " - Starting",
+        percentage = cur.percentage,
+      })
+    elseif value.kind == "report" then
+      local cur = series[token]
+      if cur then
+        log({
+          client = cur.client,
+          title = value.title or cur.title,
+          message = value.message or cur.message,
+          percentage = value.percentage or cur.percentage,
+        })
+      end
+    elseif value.kind == "end" then
+      local cur = series[token]
+      if cur then
+        log({
+          client = cur.client,
+          title = value.title or value.message or cur.title or cur.message,
+          message = "Done",
+        })
+        series[token] = nil
+      end
+    end
+    if series[token] == nil then
+      vim.defer_fn(function()
+        if fn.mode() == "n" then vim.cmd([[echon '']]) end
+      end, 2000)
+    end
+  end
 end
 
 -- [ HIGHLIGHTS ] --------------------------------------------------------------

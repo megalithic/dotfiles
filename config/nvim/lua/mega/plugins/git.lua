@@ -186,7 +186,7 @@ return {
     init = function()
       -- See: https://github.com/rhysd/committia.vim#variables
       vim.g.committia_min_window_width = 30
-      vim.g.committia_edit_window_width = 75
+      vim.g.committia_edit_window_width = 100
     end,
     config = function()
       vim.g.committia_hooks = {

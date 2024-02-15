@@ -3,7 +3,7 @@
 -- https://github.com/ecosse3/nvim/blob/dev/lua/plugins/cmp.lua
 return {
   "hrsh7th/nvim-cmp",
-  event = { "InsertEnter", "CmdlineEnter" },
+  event = { "InsertEnter *", "CmdlineEnter *" },
   cond = vim.g.completer == "cmp",
   dependencies = {
     { "saadparwaiz1/cmp_luasnip", cond = vim.g.snipper == "luasnip" },
@@ -48,8 +48,6 @@ return {
     local ellipsis = mega.icons.misc.ellipsis
     local MIN_MENU_WIDTH, MAX_MENU_WIDTH = 25, math.min(50, math.floor(vim.o.columns * 0.5))
     local api = vim.api
-
-    local function esc(cmd) return vim.keycode(cmd, true, false, true) end
 
     -- [nvim-cmp] --
     local has_words_before = function()

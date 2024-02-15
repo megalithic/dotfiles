@@ -329,38 +329,46 @@ function mega.require(module_name, opts)
 end
 
 function mega.iabbrev(lhs, rhs, ft)
-  ft = ft or nil
-  if type(ft) == "string" then ft = { ft } end
-  if type(lhs) == "string" then lhs = { lhs } end
+  vim.schedule(function()
+    ft = ft or nil
+    if ft ~= nil and type(ft) == "string" then ft = { ft } end
+    if type(lhs) == "string" then lhs = { lhs } end
 
-  for _, lhs_item in ipairs(lhs) do
-    if ft ~= nil then
-      if vim.tbl_contains(ft, vim.bo.filetype) then vim.cmd.iabbrev(fmt([[%s %s]], lhs_item, rhs)) end
-    else
-      vim.cmd.iabbrev(fmt([[%s %s]], lhs_item, rhs))
+    for _, lhs_item in ipairs(lhs) do
+      if ft ~= nil then
+        if vim.tbl_contains(ft, vim.bo.filetype) then vim.cmd.iabbrev(fmt([[%s %s]], lhs_item, rhs)) end
+      else
+        vim.cmd.iabbrev(fmt([[%s %s]], lhs_item, rhs))
+      end
     end
-  end
+  end)
 end
 function mega.cabbrev(lhs, rhs) vim.cmd.cabbrev(fmt([[%s %s]], lhs, rhs)) end
 function mega.abbrev(lhs, rhs, ft)
-  ft = ft or nil
-  if type(ft) == "string" then ft = { ft } end
+  vim.schedule(function()
+    ft = ft or nil
+    if ft ~= nil and type(ft) == "string" then ft = { ft } end
+    if type(lhs) == "string" then lhs = { lhs } end
 
-  if ft ~= nil then
-    if vim.tbl_contains(ft, vim.bo.filetype) then vim.cmd.abbrev(fmt([[%s %s]], lhs, rhs)) end
-  else
-    vim.cmd.abbrev(fmt([[%s %s]], lhs, rhs))
-  end
+    if ft ~= nil then
+      if vim.tbl_contains(ft, vim.bo.filetype) then vim.cmd.abbrev(fmt([[%s %s]], lhs, rhs)) end
+    else
+      vim.cmd.abbrev(fmt([[%s %s]], lhs, rhs))
+    end
+  end)
 end
 function mega.noabbrev(lhs, rhs, ft)
-  ft = ft or nil
-  if type(ft) == "string" then ft = { ft } end
+  vim.schedule(function()
+    ft = ft or nil
+    if ft ~= nil and type(ft) == "string" then ft = { ft } end
+    if type(lhs) == "string" then lhs = { lhs } end
 
-  if ft ~= nil then
-    if vim.tbl_contains(ft, vim.bo.filetype) then vim.cmd.noabbrev(fmt([[%s %s]], lhs, rhs)) end
-  else
-    vim.cmd.noabbrev(fmt([[%s %s]], lhs, rhs))
-  end
+    if ft ~= nil then
+      if vim.tbl_contains(ft, vim.bo.filetype) then vim.cmd.noabbrev(fmt([[%s %s]], lhs, rhs)) end
+    else
+      vim.cmd.noabbrev(fmt([[%s %s]], lhs, rhs))
+    end
+  end)
 end
 
 -- [ commands ] ----------------------------------------------------------------

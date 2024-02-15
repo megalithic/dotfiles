@@ -447,7 +447,7 @@ augroup("General", {
     desc = "Correctly set filetype",
     command = function()
       if mega.falsy(vim.bo.filetype) or vim.fn.exists("b:ftdetect") == 1 then
-        cmd([[
+        vim.cmd([[
         unlet! b:ftdetect
         filetype detect
         call v:lua.vim.notify('Filetype set to ' . &ft, "info", {})
@@ -470,13 +470,13 @@ augroup("General", {
 })
 
 -- do
---   augroup("ClearCommandMessages", {
---     {
---       event = { "CmdlineLeave", "CmdlineChanged" },
---       pattern = { ":" },
---       command = U.clear_commandline(),
---     },
---   })
+augroup("ClearCommandMessages", {
+  {
+    event = { "CmdlineLeave", "CmdlineChanged" },
+    pattern = { ":" },
+    command = U.clear_commandline(),
+  },
+})
 -- end
 --
 -- augroup("LspDiagnosticExclusions", {
