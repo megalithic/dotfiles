@@ -3,6 +3,7 @@ return {
   {
     "echasnovski/mini.notify",
     event = "VeryLazy",
+    cond = false,
     config = function()
       local win_config = function()
         local has_statusline = vim.o.laststatus > 0

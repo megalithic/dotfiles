@@ -265,7 +265,7 @@ function mega.ui.statuscolumn.render(is_active)
   local gitsigns, sns = extmark_signs(buf, lnum)
 
   while #sns < MIN_SIGN_WIDTH do
-    table.insert(sns, spacer(2))
+    table.insert(sns, spacer(1))
   end
 
   local r1_hl = is_active and "" or "StatusColumnInactiveLineNr"
@@ -275,7 +275,7 @@ function mega.ui.statuscolumn.render(is_active)
     or section:new(spacer(1), { { { nr(win, lnum, relnum, virtnum, line_count), r1_hl } } }, spacer(1))
   local r2 = section:new({ { { "", "LineNr" } }, after = "" }, { { { fdm(lnum) } } })
 
-  return is_active and display({ sns, r1 + r2 }) or display({ section:new(spacer(2)), r1 + r2 })
+  return is_active and display({ section:new(spacer(1)), sns, r1 + r2 }) or display({ section:new(spacer(2)), r1 + r2 })
 end
 
 local excluded = {
