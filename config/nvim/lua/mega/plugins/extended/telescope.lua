@@ -342,7 +342,7 @@ return {
     { "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
 
     "nvim-telescope/telescope-file-browser.nvim",
-    { "megalithic/telescope-egrepify.nvim", branch = "feat/ts-highlight" },
+    { "fdschmidt93/telescope-egrepify.nvim" },
     { "megalithic/telescope-corrode.nvim" },
     -- {
     --   "danielfalk/smart-open.nvim",
