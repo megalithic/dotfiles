@@ -19,14 +19,26 @@ return {
   {
     "Bekaboo/deadcolumn.nvim",
     event = { "VeryLazy" },
+    cond = false,
     config = function()
       require("deadcolumn").setup({
         blending = {
           threshold = 0.75,
+          colorcode = "#323d43",
+          hlgroup = { "VirtColumn", "fg" },
         },
         warning = {
           alpha = 0.2,
+          offset = 0,
+          colorcode = "#E06C75",
+          hlgroup = { "Error", "fg" },
         },
+        -- blending = {
+        --   threshold = 0.75,
+        -- },
+        -- warning = {
+        --   alpha = 0.2,
+        -- },
       })
     end,
   },
