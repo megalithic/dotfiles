@@ -16,7 +16,20 @@ return {
       exclude = { filetypes = { "markdown" } },
     },
   },
-  { "Bekaboo/deadcolumn.nvim" },
+  {
+    "Bekaboo/deadcolumn.nvim",
+    event = { "VeryLazy" },
+    config = function()
+      require("deadcolumn").setup({
+        blending = {
+          threshold = 0.75,
+        },
+        warning = {
+          alpha = 0.2,
+        },
+      })
+    end,
+  },
   {
     "echasnovski/mini.indentscope",
     version = "*",
