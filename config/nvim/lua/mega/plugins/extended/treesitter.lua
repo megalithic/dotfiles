@@ -427,6 +427,39 @@ return {
           },
         },
       })
+      -- local offset_first_n = function(match, _, _, pred, metadata)
+      --   ---@cast pred integer[]
+      --   local capture_id = pred[2]
+      --   if not metadata[capture_id] then metadata[capture_id] = {} end
+      --
+      --   local range = metadata[capture_id].range or { match[capture_id]:range() }
+      --   local offset = pred[3] or 0
+      --
+      --   range[4] = range[2] + offset
+      --   metadata[capture_id].range = range
+      -- end
+      --
+      -- -- predicates for formatting of query files
+      -- vim.treesitter.query.add_predicate("has-type?", function(match, _, _, pred)
+      --   local node = match[pred[2]]
+      --   if not node then return true end
+      --
+      --   local types = { unpack(pred, 3) }
+      --   local type = node:type()
+      --   for _, value in pairs(types) do
+      --     if value == type then return true end
+      --   end
+      --   return false
+      -- end, { all = true })
+      --
+      -- vim.treesitter.query.add_predicate("is-start-of-line?", function(match, _, _, pred)
+      --   local node = match[pred[2]]
+      --   if not node then return true end
+      --   local start_row, start_col = node:start()
+      --   return vim.fn.indent(start_row + 1) == start_col
+      -- end)
+      --
+      -- vim.treesitter.query.add_directive("offset-first-n!", offset_first_n, { all = true })
 
       -- REF: https://github.com/ribru17/nvim/blob/master/lua/plugins/treesitter.lua#L92
       local offset_first_n = function(match, _, _, pred, metadata)

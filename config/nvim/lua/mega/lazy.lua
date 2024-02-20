@@ -38,20 +38,8 @@ function M.setup()
   vim.opt.runtimepath:prepend(lazypath)
   require("lazy.core.cache").enable()
   local spec = {
-    { import = "mega.plugins" },
-    -- { import = "mega.plugins_new" }, -- WIP plugins/init.lua
-    -- { import = "mega.plugins.treesitter" },
-    -- { import = "mega.plugins.notify" },
-    -- { import = "mega.plugins.telescope" },
-    -- { import = "mega.plugins.cmp" },
-    -- { import = "mega.plugins.zk" },
-    -- { import = "mega.plugins.git" },
-    -- { import = "mega.plugins.tabby" },
-    -- { import = "mega.plugins.firenvim" },
-    -- { import = "mega.plugins.which-key" },
-    -- { import = "mega.plugins.neo-tree" },
-    -- { import = "mega.plugins.conform" },
-    -- { import = "mega.plugins.test" },
+    { import = "mega.plugins.core" },
+    { import = "mega.plugins.extended" },
   }
 
   require("lazy").setup({

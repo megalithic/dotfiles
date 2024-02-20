@@ -1,133 +1,5 @@
 return {
-  -- ( CORE ) ------------------------------------------------------------------
-  { "dstein64/vim-startuptime", cmd = { "StartupTime" }, config = function() vim.g.startuptime_tries = 15 end },
-
-  -- ( UI ) --------------------------------------------------------------------
-  {
-    "rktjmp/lush.nvim",
-    lazy = false,
-    priority = 1001,
-    config = function()
-      mega.pcall("theme failed to load because", function(colorscheme)
-        local theme = fmt("mega.lush_theme.%s", colorscheme)
-        local ok, lush_theme = pcall(require, theme)
-
-        if ok then
-          vim.g.colors_name = colorscheme
-          package.loaded[theme] = nil
-
-          require("lush")(lush_theme)
-        else
-          pcall(vim.cmd.colorscheme, colorscheme)
-        end
-
-        -- NOTE: always make available my lushified-color palette
-        -- mega.colors = require("mega.lush_theme.colors")
-      end, vim.g.colorscheme)
-
-      mega.colors = require("mega.lush_theme.colors")
-    end,
-  },
-  {
-    "mcchrish/zenbones.nvim",
-    cond = vim.tbl_contains({ "forestbones", "tokyobones" }, vim.g.colorscheme),
-    lazy = false,
-    priority = 1001,
-  },
-  {
-    "ribru17/bamboo.nvim",
-    cond = vim.g.colorscheme == "bamboo",
-    lazy = false,
-    priority = 1001,
-    config = function()
-      require("bamboo").setup({
-        style = "multiplex", -- alts: megaforest, multiplex, vulgaris, light
-        transparent = true,
-        dim_inactive = true,
-        highlights = {
-          -- make comments blend nicely with background, similar to other color schemes
-          -- ["@comment"] = { fg = "$grey" },
-          -- ["@keyword"] = { fg = "$green" },
-          -- ["@string"] = { fg = "$bright_orange", bg = "#00ff00", fmt = "bold" },
-          -- ["@function"] = { fg = "#0000ff", sp = "$cyan", fmt = "underline,italic" },
-          -- ["@function.builtin"] = { fg = "#0059ff" },
-          --
-          CursorLineNr = { fg = "$orange", fmt = "bold,italic" },
-          -- TSKeyword = { fg = "$green" },
-          -- TSString = { fg = "$bright_orange", bg = "#00ff00", fmt = "bold" },
-          -- TSFunction = { fg = "#0000ff", sp = "$cyan", fmt = "underline,italic" },
-          -- TSFuncBuiltin = { fg = "#0059ff" },
-        },
-      })
-
-      require("bamboo").load()
-    end,
-  },
-  {
-    "sainnhe/everforest",
-    cond = false,
-    lazy = false,
-    priority = 1000,
-    config = function()
-      vim.g.everforest_background = "soft"
-      vim.g.everforest_better_performance = true
-    end,
-  },
-
-  {
-    "neanias/everforest-nvim",
-    lazy = false,
-    priority = 1000,
-    cond = vim.g.colorscheme == "everforest",
-    config = function()
-      require("everforest").setup({
-        dim_inactive_windows = true,
-        transparent_background_level = 2,
-        background = "medium",
-        italics = true,
-        on_highlights = function(hl, p)
-          -- hl.NeoTreeStatusLine = { fg = p.none, bg = p.none, sp = p.red }
-        end,
-      })
-    end,
-  },
-  {
-    "farmergreg/vim-lastplace",
-    lazy = false,
-    init = function()
-      vim.g.lastplace_ignore = "gitcommit,gitrebase,svn,hgcommit,oil,megaterm,neogitcommit,gitrebase"
-      vim.g.lastplace_ignore_buftype = "quickfix,nofile,help,terminal"
-      vim.g.lastplace_open_folds = true
-    end,
-  },
-  { "nvim-tree/nvim-web-devicons", config = function() require("nvim-web-devicons").setup() end },
-  {
-    "NvChad/nvim-colorizer.lua",
-    event = { "BufReadPre" },
-    config = function()
-      require("colorizer").setup({
-        filetypes = { "*", "!lazy", "!gitcommit", "!NeogitCommitMessage", "!oil" },
-        buftype = { "*", "!prompt", "!nofile", "!oil" },
-        user_default_options = {
-          RGB = false, -- #RGB hex codes
-          RRGGBB = true, -- #RRGGBB hex codes
-          names = false, -- "Name" codes like Blue or blue
-          RRGGBBAA = true, -- #RRGGBBAA hex codes
-          AARRGGBB = true, -- 0xAARRGGBB hex codes
-          rgb_fn = true, -- CSS rgb() and rgba() functions
-          hsl_fn = true, -- CSS hsl() and hsla() functions
-          -- css = true, -- Enable all CSS features: rgb_fn, hsl_fn, names, RGB, RRGGBB
-          css_fn = true, -- Enable all CSS *functions*: rgb_fn, hsl_fn
-          sass = { enable = false, parsers = { "css" } }, -- Enable sass colors
-          -- Available modes for `mode`: foreground, background,  virtualtext
-          mode = "background", -- Set the display mode.
-          virtualtext = "■",
-        },
-        -- all the sub-options of filetypes apply to buftypes
-        buftypes = {},
-      })
-    end,
-  },
+  -- ( UI-continued ) --------------------------------------------------------------------
   { "lukas-reineke/virt-column.nvim", opts = { char = "│" }, event = "VimEnter" },
   {
     "lukas-reineke/indent-blankline.nvim",
@@ -145,113 +17,6 @@ return {
     },
   },
   { "Bekaboo/deadcolumn.nvim" },
-  -- {
-  --   "luukvbaal/statuscol.nvim",
-  --   cond = not vim.g.enabled_plugin["megacolumn"],
-  --   event = { "VeryLazy" },
-  --   config = function()
-  --     local builtin = require("statuscol.builtin")
-  --     require("statuscol").setup({
-  --       relculright = true,
-  --       segments = {
-  --         { text = { builtin.foldfunc }, click = "v:lua.ScFa" },
-  --         { text = { builtin.lnumfunc }, click = "v:lua.ScLa" },
-  --         {
-  --           sign = { name = { ".*" }, maxwidth = 2, colwidth = 1 },
-  --           click = "v:lua.ScSa",
-  --         },
-  --       },
-  --     })
-  --   end,
-  -- },
-
-  -- {
-  --   "luukvbaal/statuscol.nvim",
-  --   cond = not vim.g.enabled_plugin["megacolumn"],
-  --   branch = "0.10",
-  --   -- event = { "VeryLazy" },
-  --   opts = function()
-  --     local builtin = require("statuscol.builtin")
-  --
-  --     return {
-  --       bt_ignore = { "nofile", "terminal" },
-  --       segments = {
-  --         {
-  --           sign = {
-  --             name = { ".*" },
-  --             text = { ".*" },
-  --           },
-  --           click = "v:lua.ScSa",
-  --         },
-  --         {
-  --           text = { builtin.lnumfunc },
-  --           condition = { true, builtin.not_empty },
-  --           click = "v:lua.ScLa",
-  --         },
-  --         {
-  --           sign = { namespace = { "gitsigns" }, colwidth = 1, wrap = true },
-  --           click = "v:lua.ScSa",
-  --         },
-  --         {
-  --           text = {
-  --             function(args)
-  --               args.fold.close = ""
-  --               args.fold.open = ""
-  --               args.fold.sep = " "
-  --               return builtin.foldfunc(args)
-  --             end,
-  --           },
-  --           click = "v:lua.ScFa",
-  --         },
-  --       },
-  --     }
-  --   end,
-  --   -- opts = function()
-  --   --   local builtin = require("statuscol.builtin")
-  --   --
-  --   --   return {
-  --   --     -- setopt = true,
-  --   --     bt_ignore = { "nofile", "terminal" },
-  --   --     relculright = true,
-  --   --     segments = {
-  --   --       -- {
-  --   --       --   text = {
-  --   --       --     function(args)
-  --   --       --       args.fold.close = ""
-  --   --       --       args.fold.open = ""
-  --   --       --       args.fold.sep = " "
-  --   --       --       return builtin.foldfunc(args)
-  --   --       --     end,
-  --   --       --   },
-  --   --       --   click = "v:lua.ScFa",
-  --   --       -- },
-  --   --       -- {
-  --   --       --   text = { " ", builtin.foldfunc, " " },
-  --   --       --   condition = {
-  --   --       --     builtin.not_empty,
-  --   --       --     true,
-  --   --       --     builtin.not_empty,
-  --   --       --   },
-  --   --       --   click = "v:lua.ScFa",
-  --   --       -- },
-  --   --       { text = { builtin.foldfunc, " " }, click = "v:lua.ScFa", hl = "Comment" },
-  --   --       { sign = { name = { ".*" }, namespace = { "gitsigns" }, colwidth = 1, wrap = true }, click = "v:lua.ScSa" },
-  --   --       -- {
-  --   --       --   sign = {
-  --   --       --     name = { ".*" },
-  --   --       --     text = { ".*" },
-  --   --       --   },
-  --   --       --   click = "v:lua.ScSa",
-  --   --       -- },
-  --   --       {
-  --   --         text = { builtin.lnumfunc, colwidth = 2 },
-  --   --         condition = { true, builtin.not_empty },
-  --   --         click = "v:lua.ScLa",
-  --   --       },
-  --   --     },
-  --   --   }
-  --   -- end,
-  -- },
   {
     "echasnovski/mini.indentscope",
     version = "*",
@@ -331,39 +96,12 @@ return {
       vim.g.undotree_DiffCommand = "diff -u"
     end,
   },
-  -- {
-  --   "chrisgrieser/nvim-origami",
-  --   event = "BufReadPost",
-  --   keys = { { "<BS>", function() require("origami").h() end, desc = "toggle fold" } },
-  --   opts = {},
-  -- },
-  -- {
-  --   "gabrielpoca/replacer.nvim",
-  --   ft = { "qf", "quickfix" },
-  --   keys = {
-  --     -- { "<leader>R", function() require("replacer").run() end, desc = "qf: replace in qflist" },
-  --     -- { "<C-r>", function() require("replacer").run() end, desc = "qf: replace in qflist" },
-  --   },
-  --   init = function()
-  --     -- save & quit via "q"
-  --     mega.augroup("ReplacerFileType", {
-  --       pattern = "replacer",
-  --       callback = function()
-  --         mega.nmap("q", vim.cmd.write, { desc = " done replacing", buffer = true, nowait = true })
-  --       end,
-  --     })
-  --     -- mega.nnoremap(
-  --     --   "<leader>r",
-  --     --   function() require("replacer").run() end,
-  --     --   { desc = "qf: replace in qflist", nowait = true }
-  --     -- )
-  --   end,
-  -- },
   {
     "mrjones2014/smart-splits.nvim",
     lazy = false,
+    commit = "36bfe63246386fc5ae2679aa9b17a7746b7403d5",
     opts = { at_edge = "stop" },
-    build = "./kitty/install-kittens.bash",
+    -- build = "./kitty/install-kittens.bash",
     keys = {
       { "<A-h>", function() require("smart-splits").resize_left() end },
       { "<A-l>", function() require("smart-splits").resize_right() end },
@@ -379,146 +117,6 @@ return {
       { "<leader><leader>l", function() require("smart-splits").swap_buf_right() end, desc = "swap right" },
     },
   },
-  -- {
-  --   "chentoast/marks.nvim",
-  --   cond = false,
-  --   event = "VeryLazy",
-  --   keys = {
-  --     { "<leader>mm", "<Cmd>MarksListBuf<CR>", desc = "marks: list buffer marks" },
-  --     { "<leader>mg", "<Cmd>MarksListBuf<CR>", desc = "marks: list global marks" },
-  --     { "<leader>mb", "<Cmd>MarksListBuf<CR>", desc = "marks: list bookmark marks" },
-  --     { "m/", "<cmd>MarksListAll<CR>", desc = "Marks from all opened buffers" },
-  --     { "<leader>mt", "<cmd>MarksToggleSigns<cr>", desc = "Toggle marks" },
-  --     -- { 'm', '<Plug>(Marks-set)', '<Plug>(Marks-toggle)' },
-  --   },
-  --   opts = {
-  --     sign_priority = { lower = 10, upper = 15, builtin = 8, bookmark = 20 },
-  --     bookmark_1 = { sign = "󰈼" }, -- ⚐ ⚑ 󰈻 󰈼 󰈽 󰈾 󰈿 󰉀
-  --     default_mappings = false, -- whether to map keybinds or not. default true
-  --     builtin_marks = {}, -- which builtin marks to show. default {}
-  --     cyclic = true, -- whether movements cycle back to the beginning/end of buffer. default true
-  --     force_write_shada = false, -- whether the shada file is updated after modifying uppercase marks. default false
-  --     -- bookmark_0 = { -- marks.nvim allows you to configure up to 10 bookmark groups, each with its own sign/virttext
-  --     --   sign = "⚑",
-  --     --   virt_text = "hello world",
-  --     -- },
-  --     mappings = {
-  --       set_next = "m,",
-  --       next = "m]",
-  --       preview = "m;",
-  --       set_bookmark0 = "m0",
-  --       prev = false, -- pass false to disable only this default mapping
-  --       annotate = "m<Space>",
-  --     },
-  --     excluded_filetypes = {
-  --       "DressingInput",
-  --       "gitcommit",
-  --       "NeogitCommitMessage",
-  --       "NeogitNotification",
-  --       "NeogitStatus",
-  --       "NeogitStatus",
-  --       "NvimTree",
-  --       "Outline",
-  --       "OverseerForm",
-  --       "dropbar_menu",
-  --       "lazy",
-  --       "lspinfo",
-  --       "megaterm",
-  --       "neo-tree",
-  --       "neo-tree-popup",
-  --       "noice",
-  --       "notify",
-  --       "null-ls-info",
-  --       "registers",
-  --       "toggleterm",
-  --       "toggleterm",
-  --     },
-  --   },
-  -- },
-
-  --   "stevearc/overseer.nvim", -- Task runner and job management
-  --   keys = {
-  --     { "<leader>or", "<cmd>OverseerRun<cr>", desc = "overseer: run task" },
-  --     { "<leader>ot", "<cmd>OverseerToggle<cr>", desc = "overseer: toggle tasks" },
-  --   },
-  --   opts = {
-  --     strategy = {
-  --       "terminal",
-  --       use_shell = true,
-  --     },
-  --     form = {
-  --       border = mega.get_border(),
-  --     },
-  --     task_list = { direction = "right" },
-  --     templates = { "builtin", "global" },
-  --     component_aliases = {
-  --       default_neotest = {
-  --         "unique",
-  --         { "on_complete_notify", system = "unfocused", on_change = true },
-  --         "default",
-  --         "on_output_summarize",
-  --         "on_exit_set_status",
-  --         "on_complete_dispose",
-  --       },
-  --     },
-  --   },
-  -- },
-
-  -- {
-  --   "jcdickinson/codeium.nvim",
-  --   cond = false,
-  --   lazy = true,
-  --   event = "VeryLazy",
-  --   dependencies = {
-  --     "nvim-lua/plenary.nvim",
-  --     "MunifTanjim/nui.nvim",
-  --   },
-  --   opts = true,
-  -- },
-  -- {
-  --   "Exafunction/codeium.nvim",
-  --   cmd = { "Codeium" },
-  --   lazy = false,
-  --   -- event = "VeryLazy",
-  --   init = function()
-  --     vim.g.codeium_disable_bindings = 1
-  --     vim.g.codeium_enabled = true
-  --     --   vim.g.codeium_filetypes = {
-  --     --     rust = true,
-  --     --     go = true,
-  --     --     lua = true,
-  --     --     markdown = true,
-  --     --     norg = true,
-  --     --     zsh = true,
-  --     --     bash = true,
-  --     --     txt = true,
-  --     --     js = true,
-  --     --     elixir = true,
-  --     --     erlang = true,
-  --     --   }
-  --   end,
-  --   build = ":Codeium Auth",
-  --   keys = {
-  --     { mode = { "n" }, "<leader>Ce", ":Codeium Enable<CR>", { silent = true, desc = "codeium: enable" } },
-  --     { mode = { "n" }, "<leader>Cd", ":Codeium Disable<CR>", { silent = true, desc = "codeium: disable" } },
-  --   },
-  --   config = function()
-  --     vim.keymap.set("i", "<C-t>", function() return vim.fn["codeium#Accept"]() end, { expr = true })
-  --     -- vim.keymap.set("i", "<M-]>", function() return vim.fn["codeium#CycleCompletions"](1) end, { expr = true })
-  --     -- vim.keymap.set("i", "<M-[>", function() return vim.fn["codeium#CycleCompletions"](-1) end, { expr = true })
-  --     vim.keymap.set("i", "<C-e>", function() return vim.fn["codeium#Clear"]() end, { expr = true })
-  --   end,
-  -- },
-
-  -- {
-  --   "David-Kunz/gen.nvim",
-  --   cmd = { "Gen" },
-  --   keys = {
-  --     { "<leader>]", ":Gen<CR>", mode = "v" },
-  --     { "<leader>]", ":Gen<CR>", mode = "n" },
-  --   },
-  -- },
-
   {
     "David-Kunz/gen.nvim",
     cmd = "Gen",
@@ -670,31 +268,31 @@ return {
       })
     end,
   },
-  {
-    "3rd/image.nvim",
-    ft = { "markdown", "norg", "syslang", "vimwiki" },
-    build = function()
-      local uv = vim.uv or vim.loop
-      local is_mac = uv.os_uname().sysname == "Darwin"
-      local has_magick = pcall(require, "magick")
-      if not has_magick and vim.fn.executable("luarocks") == 1 then
-        if is_mac then
-          vim.fn.system("luarocks --lua-dir=$(brew --prefix)/opt/lua@5.1 --lua-version=5.1 install magick")
-        else
-          vim.fn.system("luarocks --local --lua-version=5.1 install magick")
-        end
-        if vim.v.shell_error ~= 0 then vim.notify("Error installing magick with luarocks", vim.log.levels.WARN) end
-      end
-    end,
-    opts = {
-      editor_only_render_when_focused = true,
-      tmux_show_only_in_active_window = true,
-    },
-    config = function(_, opts)
-      local has_magick = pcall(require, "magick")
-      if has_magick then require("image").setup(opts) end
-    end,
-  },
+  -- {
+  --   "3rd/image.nvim",
+  --   ft = { "markdown", "norg", "syslang", "vimwiki" },
+  --   build = function()
+  --     local uv = vim.uv or vim.loop
+  --     local is_mac = uv.os_uname().sysname == "Darwin"
+  --     local has_magick = pcall(require, "magick")
+  --     if not has_magick and vim.fn.executable("luarocks") == 1 then
+  --       if is_mac then
+  --         vim.fn.system("luarocks --lua-dir=$(brew --prefix)/opt/lua@5.1 --lua-version=5.1 install magick")
+  --       else
+  --         vim.fn.system("luarocks --local --lua-version=5.1 install magick")
+  --       end
+  --       if vim.v.shell_error ~= 0 then vim.notify("Error installing magick with luarocks", vim.log.levels.WARN) end
+  --     end
+  --   end,
+  --   opts = {
+  --     editor_only_render_when_focused = true,
+  --     tmux_show_only_in_active_window = true,
+  --   },
+  --   config = function(_, opts)
+  --     local has_magick = pcall(require, "magick")
+  --     if has_magick then require("image").setup(opts) end
+  --   end,
+  -- },
 
   -- ( LSP ) -------------------------------------------------------------------
   { "onsails/lspkind.nvim" },

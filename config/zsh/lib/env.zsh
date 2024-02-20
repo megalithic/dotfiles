@@ -82,6 +82,16 @@ path=(
 )
 
 export MANPATH="$BREW_PREFIX/opt/coreutils/libexec/gnuman:${MANPATH}"
+# less colors for man pages
+export LESS_TERMCAP_mb=$'\e[1;35m'  # begin bold
+export LESS_TERMCAP_md=$'\e[1;34m'  # begin blink
+export LESS_TERMCAP_so=$'\e[03;90m' # begin reverse video
+export LESS_TERMCAP_us=$'\e[01;31m' # begin underline
+export LESS_TERMCAP_me=$'\e[0m'     # reset bold/blink
+export LESS_TERMCAP_se=$'\e[0m'     # reset reverse video
+export LESS_TERMCAP_ue=$'\e[0m'     # reset underline
+export GROFF_NO_SGR=1               # for color interpretation
+export MANPAGER='less -s -M +Gg'    # percentages for less paging
 # / =================== from .zprofile =========================================
 
 # -- term (wezterm, xterm-kitty, xterm-256color, tmux-256color)

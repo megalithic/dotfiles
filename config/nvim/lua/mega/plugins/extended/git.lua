@@ -182,7 +182,9 @@ return {
   },
   {
     "rhysd/committia.vim",
-    event = "BufReadPre COMMIT_EDITMSG",
+    cond = false, -- presently causing a pause and black flash
+    -- event = "BufReadPre COMMIT_EDITMSG",
+    ft = { "gitcommit" },
     init = function()
       -- See: https://github.com/rhysd/committia.vim#variables
       vim.g.committia_min_window_width = 30

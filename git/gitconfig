@@ -196,7 +196,7 @@
 
 [merge]
   tool = nvimdiff
-  conflictstyle = diff3
+  conflictstyle = zdiff3
 
 [mergetool "nvimdiff"]
   keepBackup = false
@@ -313,6 +313,7 @@
 	indentHeuristic = true
   colorMoved = default
   navigate = true  # use n and N to move between diff sections
+  algorithm = histogram
 
 [color "diff-highlight"]
 	oldNormal = red bold

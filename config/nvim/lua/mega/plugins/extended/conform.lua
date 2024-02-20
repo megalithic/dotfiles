@@ -91,6 +91,7 @@ return {
       python = true,
     },
   },
+  init = function() vim.o.formatexpr = "v:lua.require'conform'.formatexpr()" end,
   config = function(_, opts)
     if vim.g.formatter ~= "conform" then return end
 

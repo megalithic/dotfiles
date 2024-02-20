@@ -48,7 +48,7 @@ end
 
 vim.g.mapleader = ","
 vim.g.maplocalleader = " "
-vim.g.colorscheme = "megaforest"
+vim.g.colorscheme = "megaforest" -- alt: `vim` for default
 vim.g.default_colorcolumn = "81"
 vim.g.notifier_enabled = true
 vim.g.debug_enabled = false

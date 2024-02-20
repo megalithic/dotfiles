@@ -334,6 +334,8 @@ return {
   force_reverse_video_cursor = true,
   use_cap_height_to_scale_fallback_fonts = true,
   warn_about_missing_glyphs = false,
+  unicode_version = 15,
+  custom_block_glyphs = true,
   allow_square_glyphs_to_overflow_width = "WhenFollowedBySpace",
   bold_brightens_ansi_colors = true,
   cell_width = 1,
