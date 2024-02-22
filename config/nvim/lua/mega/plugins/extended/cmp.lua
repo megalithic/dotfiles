@@ -260,7 +260,9 @@ return {
         ["<C-t>"] = cmp.mapping.confirm({ select = true }),
         ["<CR>"] = function(fallback)
           if vim.g.snipper == "luasnip" then
-            cmp.mapping.confirm({ select = false })
+            -- cmp.mapping.confirm({ select = false })
+
+            cmp.mapping.confirm({ select = false, behavior = cmp.ConfirmBehavior.Replace })(fallback)
           elseif vim.g.snipper == "vsnip" then
             if vim.fn["vsnip#expandable"]() ~= 0 then
               vim.fn.feedkeys(esc("<Plug>(vsnip-expand)"), "")

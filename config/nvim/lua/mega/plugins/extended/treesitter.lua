@@ -462,19 +462,19 @@ return {
       -- vim.treesitter.query.add_directive("offset-first-n!", offset_first_n, { all = true })
 
       -- REF: https://github.com/ribru17/nvim/blob/master/lua/plugins/treesitter.lua#L92
-      local offset_first_n = function(match, _, _, pred, metadata)
+      vim.treesitter.query.add_directive("offset-first-n!", function(match, _, _, pred, metadata)
         ---@cast pred integer[]
         local capture_id = pred[2]
-        if not metadata[capture_id] then metadata[capture_id] = {} end
+        if not metadata[capture_id] then return end
+        -- if not metadata[capture_id] then metadata[capture_id] = {} end
+        -- dbg(metadata[capture_id])
 
         local range = metadata[capture_id].range or { match[capture_id]:range() }
         local offset = pred[3] or 0
 
         range[4] = range[2] + offset
         metadata[capture_id].range = range
-      end
-
-      vim.treesitter.query.add_directive("offset-first-n!", offset_first_n, true)
+      end, { all = true })
     end,
   },
 }
