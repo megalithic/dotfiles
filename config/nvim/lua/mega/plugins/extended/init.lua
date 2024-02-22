@@ -379,19 +379,6 @@ return {
         end,
       },
       { "nvim-lua/lsp_extensions.nvim" },
-      -- {
-      --   "jose-elias-alvarez/typescript.nvim",
-      --   enabled = vim.g.formatter == "null-ls",
-      --   ft = { "typescript", "typescriptreact" },
-      --   dependencies = { "jose-elias-alvarez/null-ls.nvim" },
-      --   config = function()
-      --     if vim.g.formatter == "null-ls" then
-      --       require("null-ls").register({
-      --         sources = { require("typescript.extensions.null-ls.code-actions") },
-      --       })
-      --     end
-      --   end,
-      -- },
       { "williamboman/mason-lspconfig.nvim" },
       { "b0o/schemastore.nvim" },
       { "ray-x/lsp_signature.nvim" },

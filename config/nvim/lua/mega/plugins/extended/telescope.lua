@@ -253,6 +253,11 @@ if vim.g.picker == "telescope" then
       desc = "undo",
     },
     {
+      "<leader>fh",
+      function() ts.help_tags(ivy({})) end,
+      desc = "help",
+    },
+    {
       "<leader>A",
       function() mega.grep({ default_text = vim.fn.expand("<cword>") }) end,
       desc = "grep under cursor",
