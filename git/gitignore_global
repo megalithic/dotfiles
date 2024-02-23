@@ -31,6 +31,7 @@ _build
 **/.lexical
 .elixir-tools
 **/.elixir-tools
+**/priv/etc/**/*.sql
 credo_extra
 elm-stuff
 rel

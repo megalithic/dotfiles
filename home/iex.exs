@@ -186,7 +186,11 @@ defmodule H do
   def logger_info(), do: Logger.configure(level: :info)
 
   def get_app_name() do
-    app_name =
+    non_umbrella_project = Mix.Project.get()
+
+    if non_umbrella_project == nil do
+      ""
+    else
       if Mix.Project.umbrella?(),
         do:
           Mix.Project.apps_paths()
@@ -199,9 +203,8 @@ defmodule H do
           |> elem(0)
           |> Atom.to_string()
           |> String.replace("_web", ""),
-        else: Mix.Project.get().project()[:app]
-
-    if is_binary(app_name), do: String.to_atom(app_name), else: app_name
+        else: non_umbrella_project.project()[:app]
+    end
   end
 
   def write_phoenix_info(app_name) do

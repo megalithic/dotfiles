@@ -11,7 +11,11 @@ return {
       "garymjr/nvim-snippets",
       cond = vim.g.snipper == "snippets",
       opts = {
+        create_cmp_source = true,
         friendly_snippets = false,
+        -- extended_filetypes = {
+        --   eelixir = { "elixir" },
+        -- },
         search_paths = { vim.fn.stdpath("config") .. "/snippets" },
       },
       -- dependencies = {
@@ -164,7 +168,9 @@ return {
         disabled = disabled or (vim.fn.reg_recording() ~= "")
         disabled = disabled or (vim.fn.reg_executing() ~= "")
         disabled = disabled or context.in_treesitter_capture("comment")
+        disabled = disabled or context.in_treesitter_capture("string")
         disabled = disabled or context.in_syntax_group("Comment")
+        disabled = disabled or context.in_syntax_group("String")
         disabled = disabled or vim.g.started_by_firenvim
 
         return not disabled
@@ -174,7 +180,7 @@ return {
       completion = {
         completeopt = "menu,menuone,noinsert,noselect",
         max_item_count = 50,
-        keyword_length = 1,
+        keyword_length = 2,
         get_trigger_characters = function(trigger_characters)
           return vim.tbl_filter(function(char) return char ~= " " end, trigger_characters)
         end,
@@ -271,7 +277,8 @@ return {
             return cmp.mapping.confirm({ select = false, behavior = cmp.ConfirmBehavior.Replace })(fallback)
           else
             if cmp.visible() then
-              cmp.confirm({ behavior = cmp.ConfirmBehavior.Replace, select = true })
+              -- cmp.confirm({ behavior = cmp.ConfirmBehavior.Replace, select = true })
+              cmp.mapping.confirm({ select = false, behavior = cmp.ConfirmBehavior.Replace })(fallback)
             else
               fallback()
             end
@@ -414,18 +421,18 @@ return {
       -- },
       sources = cmp.config.sources({
         { name = "nvim_lsp_signature_help" },
-        { name = "snippets", keyword_length = 2 },
-        { name = "luasnip", keyword_length = 2 },
-        { name = "vsnip", keyword_length = 2 },
+        { name = "snippets", group_index = 1, max_item_count = 5, keyword_length = 1 },
+        { name = "luasnip", group_index = 1, max_item_count = 5, keyword_length = 1 },
+        { name = "vsnip", group_index = 1, max_item_count = 5, keyword_length = 1 },
         { name = "nvim_lua" },
         {
           name = "nvim_lsp",
-          entry_filter = function(entry, ctx)
-            -- dd(entry.source.source.client.name)
+          group_index = 1,
+          max_item_count = 7,
+          entry_filter = function(entry)
+            local kind = entry:get_kind()
             if vim.tbl_contains(vim.g.completion_exclusions, entry.source.source.client.name) then return false end
-            -- if require("cmp.types").lsp.CompletionItemKind[entry:get_kind()] ~= "Text" then return false end
-
-            return true
+            return cmp.lsp.CompletionItemKind.Snippet ~= kind
           end,
         },
         { name = "async_path", option = { trailing_slash = true } },

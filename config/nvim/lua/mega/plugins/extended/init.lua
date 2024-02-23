@@ -382,26 +382,26 @@ return {
       { "williamboman/mason-lspconfig.nvim" },
       { "b0o/schemastore.nvim" },
       { "ray-x/lsp_signature.nvim" },
-      -- {
-      --   "j-hui/fidget.nvim",
-      --   config = function()
-      --     require("fidget").setup({
-      --       progress = {
-      --         display = {
-      --           done_icon = "✓",
-      --         },
-      --       },
-      --       notification = {
-      --         view = {
-      --           group_separator = "─────", -- digraph `hh`
-      --         },
-      --         window = {
-      --           winblend = 0,
-      --         },
-      --       },
-      --     })
-      --   end,
-      -- },
+      {
+        "j-hui/fidget.nvim",
+        config = function()
+          require("fidget").setup({
+            progress = {
+              display = {
+                done_icon = "✓",
+              },
+            },
+            notification = {
+              view = {
+                group_separator = "─────", -- digraph `hh`
+              },
+              window = {
+                winblend = 0,
+              },
+            },
+          })
+        end,
+      },
       {
         "mhanberg/output-panel.nvim",
         keys = {

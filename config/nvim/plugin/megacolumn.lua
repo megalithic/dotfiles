@@ -229,6 +229,19 @@ local function format_text(t, k)
 end
 
 ---@param curbuf integer
+---@param lnum integer
+---@return StringComponent[] sgns non-git signs
+local function signplaced_signs(curbuf, lnum)
+  return vim
+    .iter(fn.sign_getplaced(curbuf, { group = "*", lnum = lnum })[1].signs)
+    :map(function(s)
+      local sign = format_text(fn.sign_getdefined(s.name)[1], "text")
+      return { { { sign.text, sign.texthl } }, after = "" }
+    end)
+    :totable()
+end
+
+---@param curbuf integer
 ---@return StringComponent[], StringComponent[]
 local function extmark_signs(curbuf, lnum)
   lnum = lnum - 1
@@ -241,10 +254,11 @@ local function extmark_signs(curbuf, lnum)
 
     -- NOTE: use this so we can check if it's an nvim-lint sign; we'll use our own signs
     -- FIXME: do this in nvim-lint config instead with their vim.diagnostic.config settings
-    local is_lint = string.find(txt, "[EWHI]+", 1) ~= nil
+    -- local is_lint = string.find(txt, "[EWHI]+", 1) ~= nil
 
     local target = is_git and acc.git or acc.other
-    if not is_lint then table.insert(target, { { { txt, hl } }, after = "" }) end
+    table.insert(target, { { { txt, hl } }, after = "" })
+    -- if not is_lint then table.insert(target, { { { txt, hl } }, after = "" }) end
 
     return acc
   end, signs, { git = {}, other = {} })
@@ -262,7 +276,10 @@ function mega.ui.statuscolumn.render(is_active)
   local buf = api.nvim_win_get_buf(win)
   local line_count = api.nvim_buf_line_count(buf)
 
-  local gitsigns, sns = extmark_signs(buf, lnum)
+  -- local gitsigns, sns = extmark_signs(buf, lnum)
+  local gitsigns, other_sns = extmark_signs(buf, lnum)
+  local sns = signplaced_signs(buf, lnum)
+  vim.list_extend(sns, other_sns)
 
   while #sns < MIN_SIGN_WIDTH do
     table.insert(sns, spacer(1))
