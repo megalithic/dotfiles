@@ -347,6 +347,15 @@ M.list = {
 
         return root_dir
       end,
+      init_options = {
+        mix_env = "dev",
+        mix_target = "host",
+        experimental = {
+          completions = {
+            enable = true,
+          },
+        },
+      },
       settings = {
         experimental = {
           completions = {

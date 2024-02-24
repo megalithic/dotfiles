@@ -7,7 +7,7 @@ if [[ -z $XDG_CONFIG_HOME ]]; then
   export XDG_CONFIG_HOME="$HOME/.config"
 fi
 
-source "${HOME}/.dotfiles/config/zsh/lib/helpers.zsh"
+. "${HOME}/.dotfiles/config/zsh/lib/helpers.zsh"
 
 #set -euo pipefail
 
@@ -124,6 +124,12 @@ build() {
   fi
 }
 
+write_version() {
+  cd "${XDG_DATA_HOME}/src/neovim" || exit
+  rm ./VERSION 2>/dev/null
+  echo "$VERSION" > ./VERSION
+}
+
 while getopts "fpc" OPTION; do
   case $OPTION in
     p)
@@ -161,4 +167,5 @@ done
 shift $((OPTIND - 1))
 
 pushd "${XDG_DATA_HOME}/src" >/dev/null && log_ok "cd ~/.local/share/src successful"
+write_version
 clone && update && build && do_pip_install && do_lazy_install && remove_brew_nvim popd >/dev/null

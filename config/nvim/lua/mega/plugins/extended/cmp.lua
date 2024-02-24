@@ -18,11 +18,6 @@ return {
         -- },
         search_paths = { vim.fn.stdpath("config") .. "/snippets" },
       },
-      -- dependencies = {
-      --   "rafamadriz/friendly-snippets",
-      --   event = { "InsertEnter" },
-      --   enabled = vim.g.snipper == "snippets",
-      -- },
     },
     { "hrsh7th/cmp-buffer" },
     {
@@ -335,13 +330,22 @@ return {
           end
 
           -- REF: https://github.com/3rd/config/blob/master/home/dotfiles/nvim/lua/modules/completion/nvim-cmp.lua
-          item.dup = 0
+          item.dup = ({
+            buffer = 0,
+            path = 0,
+            nvim_lsp = 0,
+            luasnip = 0,
+            vsnip = 0,
+            snippets = 0,
+          })[entry.source.name] or 0
 
           -- REF: https://github.com/zolrath/dotfiles/blob/main/dot_config/nvim/lua/plugins/cmp.lua#L45
           -- local max_length = 20
           local max_length = math.floor(vim.o.columns * 0.5)
           item.abbr = #item.abbr >= max_length and string.sub(item.abbr, 1, max_length) .. mega.icons.misc.ellipsis
             or item.abbr
+
+          item.abbr = string.gsub(item.abbr, "^%s+", "")
 
           if entry.source.name == "nvim_lsp" then
             item.menu = entry.source.source.client.name

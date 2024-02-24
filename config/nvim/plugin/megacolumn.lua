@@ -236,7 +236,12 @@ local function signplaced_signs(curbuf, lnum)
     .iter(fn.sign_getplaced(curbuf, { group = "*", lnum = lnum })[1].signs)
     :map(function(s)
       local sign = format_text(fn.sign_getdefined(s.name)[1], "text")
-      return { { { sign.text, sign.texthl } }, after = "" }
+
+      if sign then
+        -- if sign.text ~= "" and sign.text ~= " " then print(sign.text) end
+
+        return { { { sign.text, sign.texthl } }, after = "" }
+      end
     end)
     :totable()
 end
@@ -250,15 +255,16 @@ local function extmark_signs(curbuf, lnum)
   local sns = mega.fold(function(acc, item)
     item = format_text(item[4], "sign_text")
     local txt, hl = item.sign_text, item.sign_hl_group
+    -- if txt ~= "" and txt ~= " " then print(txt) end
     local is_git = hl:match("^Git")
 
     -- NOTE: use this so we can check if it's an nvim-lint sign; we'll use our own signs
     -- FIXME: do this in nvim-lint config instead with their vim.diagnostic.config settings
-    -- local is_lint = string.find(txt, "[EWHI]+", 1) ~= nil
+    local is_lint = string.find(txt, "[EWHI]+", 1) ~= nil
 
     local target = is_git and acc.git or acc.other
-    table.insert(target, { { { txt, hl } }, after = "" })
-    -- if not is_lint then table.insert(target, { { { txt, hl } }, after = "" }) end
+    -- table.insert(target, { { { txt, hl } }, after = "" })
+    if not is_lint then table.insert(target, { { { txt, hl } }, after = "" }) end
 
     return acc
   end, signs, { git = {}, other = {} })

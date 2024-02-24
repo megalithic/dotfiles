@@ -51,7 +51,6 @@ return {
           -- ["@string"] = { fg = "$bright_orange", bg = "#00ff00", fmt = "bold" },
           -- ["@function"] = { fg = "#0000ff", sp = "$cyan", fmt = "underline,italic" },
           -- ["@function.builtin"] = { fg = "#0059ff" },
-          --
           CursorLineNr = { fg = "$orange", fmt = "bold,italic" },
           -- TSKeyword = { fg = "$green" },
           -- TSString = { fg = "$bright_orange", bg = "#00ff00", fmt = "bold" },
@@ -85,9 +84,9 @@ return {
         transparent_background_level = 2,
         background = "medium",
         italics = true,
-        on_highlights = function(hl, p)
-          -- hl.NeoTreeStatusLine = { fg = p.none, bg = p.none, sp = p.red }
-        end,
+        -- on_highlights = function(hl, p)
+        --   hl.NeoTreeStatusLine = { fg = p.none, bg = p.none, sp = p.red }
+        -- end,
       })
     end,
   },
