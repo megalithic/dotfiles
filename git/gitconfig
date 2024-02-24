@@ -197,6 +197,7 @@
 [merge]
   tool = nvimdiff
   conflictstyle = zdiff3
+  ff = true
 
 [mergetool "nvimdiff"]
   keepBackup = false
