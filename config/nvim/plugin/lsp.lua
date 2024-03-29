@@ -18,8 +18,6 @@ local md_namespace = vim.api.nvim_create_namespace("lsp_highlights")
 function mega.lsp.has_method(client, method)
   return client.supports_method(method:find("/") and method or "textDocument/" .. method)
 end
-function mega.lsp.is_enabled_elixir_ls(ls) return vim.tbl_contains(vim.g.enabled_elixir_ls, ls) end
-function mega.lsp.formatting_filter(client) return not vim.tbl_contains(vim.g.formatter_exclusions, client.name) end
 local function has_existing_floats()
   local winids = vim.api.nvim_tabpage_list_wins(0)
   for _, winid in ipairs(winids) do
@@ -320,10 +318,22 @@ local function setup_keymaps(client, bufnr)
   )
   nnoremap("<leader>lil", [[<cmd>LspLog<CR>]], desc("logs (vsplit)"))
 
-  nnoremap("[d", function() diagnostic.goto_prev({ float = true }) end, desc("lsp: prev diagnostic"))
-  nnoremap("]d", function() diagnostic.goto_next({ float = true }) end, desc("lsp: next diagnostic"))
-  nnoremap("[e", function() diagnostic.goto_prev({ float = true, severity = 1 }) end, desc("lsp: prev diagnostic"))
-  nnoremap("]e", function() diagnostic.goto_next({ float = true, severity = 1 }) end, desc("lsp: next diagnostic"))
+  nnoremap("[d", function()
+    diagnostic.goto_prev({ float = true })
+    mega.blink_cursorline()
+  end, desc("lsp: prev diagnostic"))
+  nnoremap("]d", function()
+    diagnostic.goto_next({ float = true })
+    mega.blink_cursorline()
+  end, desc("lsp: next diagnostic"))
+  nnoremap("[e", function()
+    diagnostic.goto_prev({ float = true, severity = 1 })
+    mega.blink_cursorline()
+  end, desc("lsp: prev diagnostic"))
+  nnoremap("]e", function()
+    diagnostic.goto_next({ float = true, severity = 1 })
+    mega.blink_cursorline()
+  end, desc("lsp: next diagnostic"))
 
   safemap("definition", "n", "gd", function()
     if true then
@@ -485,7 +495,7 @@ local function setup_diagnostics(client, bufnr)
 
   --- The custom namespace is so that ALL diagnostics across all namespaces can be aggregated
   --- including diagnostics from plugins
-  local ns = api.nvim_create_namespace("severe-diagnostics")
+  local ns = api.nvim_create_namespace("max-diagnostics")
 
   --- Restricts nvim's diagnostic signs to only the single most severe one per line
   --- see `:help vim.diagnostic`
@@ -503,10 +513,15 @@ local function setup_diagnostics(client, bufnr)
     end
   end
   local signs_handler = diagnostic.handlers.signs
-  diagnostic.handlers.signs = vim.tbl_extend("force", signs_handler, {
-    show = max_diagnostic(signs_handler.show),
-    hide = function(_, bn) signs_handler.hide(ns, bn) end,
-  })
+  if vim.tbl_contains(vim.g.max_diagnostic_exclusions, client.name) then
+    diagnostic.handlers.signs = signs_handler
+  else
+    diagnostic.handlers.signs = vim.tbl_extend("force", signs_handler, {
+      show = max_diagnostic(signs_handler.show),
+      hide = function(og_ns, bn) signs_handler.hide(ns, bn) end,
+    })
+  end
+
   --
   -- local virt_text_handler = diagnostic.handlers.virtual_text
   -- diagnostic.handlers.virtual_text = vim.tbl_extend("force", virt_text_handler, {

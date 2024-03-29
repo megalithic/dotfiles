@@ -92,6 +92,8 @@ export LESS_TERMCAP_se=$'\e[0m'     # reset reverse video
 export LESS_TERMCAP_ue=$'\e[0m'     # reset underline
 export GROFF_NO_SGR=1               # for color interpretation
 export MANPAGER='less -s -M +Gg'    # percentages for less paging
+export MANPAGER='nvim +Man!' # nice nvim man paging
+export MANWIDTH=80
 # / =================== from .zprofile =========================================
 
 # -- term (wezterm, xterm-kitty, xterm-256color, tmux-256color)
@@ -135,8 +137,8 @@ export GNUPGHOME="$XDG_CONFIG_HOME/gnupg"
 export LANG="en_US.UTF-8"
 export LC_ALL="en_US.UTF-8"
 export LC_CTYPE="en_US.UTF-8"
-export TZ="/usr/share/zoneinfo/US/Central"
-# export TZ="/usr/share/zoneinfo/US/Eastern"
+# export TZ="/usr/share/zoneinfo/US/Central"
+export TZ="/usr/share/zoneinfo/US/Eastern"
 
 # -- kitty
 export KITTYMUX_STATE_DIR=$HOME/.local/state
@@ -390,7 +392,9 @@ case "$(uname)" in
     /usr/local/share/npm/bin
     /usr/local/lib/node_modules
     ${HOMEBREW_PREFIX}/opt/libffi/lib
+      ${HOMEBREW_PREFIX}/opt/icu4c/bin
     ${HOMEBREW_PREFIX}/opt/gnu-sed/libexec/gnubin
+    ${HOMEBREW_PREFIX}/opt/postgresql@16/bin
     ${HOMEBREW_PREFIX}/opt/postgresql@15/bin
     ${HOMEBREW_PREFIX}/opt/postgresql@14/bin
 
@@ -402,6 +406,7 @@ case "$(uname)" in
     ${HOMEBREW_PREFIX}/opt/openssl@*/bin(Nn[-1]-/)
     ${HOMEBREW_PREFIX}/opt/gnu-sed/libexec/gnubin(N-/)
     ${HOMEBREW_PREFIX}/opt/coreutils/libexec/gnubin(N-/)
+    ${HOMEBREW_PREFIX}/opt/python@3.12/libexec/bin(Nn[-1]-/)
     ${HOMEBREW_PREFIX}/opt/python@3.11/libexec/bin(Nn[-1]-/)
     ${HOMEBREW_PREFIX}/opt/python@3.10/libexec/bin(Nn[-1]-/)
     ${HOMEBREW_PREFIX}/opt/python@3.9/libexec/bin(Nn[-1]-/)
@@ -412,10 +417,12 @@ case "$(uname)" in
 
     ${GOBIN}(N-/)
 
+    ${HOME}/Library/Python/3.12/bin(Nn[-1]-/)
     ${HOME}/Library/Python/3.11/bin(Nn[-1]-/)
     ${HOME}/Library/Python/3.10/bin(Nn[-1]-/)
     ${HOME}/Library/Python/3.9/bin(Nn[-1]-/)
     ${HOME}/Library/Python/2.*/bin(Nn[-1]-/)
+    ${HOMEBREW_PREFIX}/lib/python3.12/site-packages(N-/)
     ${HOMEBREW_PREFIX}/lib/python3.11/site-packages(N-/)
     ${HOMEBREW_PREFIX}/lib/python3.10/site-packages(N-/)
     ${HOMEBREW_PREFIX}/lib/python3.9/site-packages(N-/)

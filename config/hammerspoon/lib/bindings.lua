@@ -4,6 +4,7 @@
 -- https://github.com/elliotwaite/hammerspoon-config/tree/scroll-events-only
 
 local Settings = require("hs.settings")
+local B = require("lib.browser")
 local Hyper
 hs.loadSpoon("Seal")
 
@@ -233,6 +234,19 @@ function obj:start()
     hs.reload()
     hs.notify.new({ title = "Hammerspoon", subTitle = "Reloading configuration.." }):send()
   end)
+
+  -- Hyper:bind(keys.mods.casc, "d", function()
+  --   hs.reload()
+  --   hs.notify.new({ title = "Hammerspoon", subTitle = "Reloading configuration.." }):send()
+  -- end)
+
+  -- Hyper:bind(keys.mods.casc, "d", function()
+  --   if B.jump("https://devdocs.io") then
+  --     return true
+  --   else
+  --     hs.urlevent.openURL("https://devdocs.io")
+  --   end
+  -- end)
 
   -- local axbrowse = require("axbrowse")
   -- local lastApp

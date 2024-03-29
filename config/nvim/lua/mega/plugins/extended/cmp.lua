@@ -11,7 +11,6 @@ return {
       "garymjr/nvim-snippets",
       cond = vim.g.snipper == "snippets",
       opts = {
-        create_cmp_source = true,
         friendly_snippets = false,
         -- extended_filetypes = {
         --   eelixir = { "elixir" },
@@ -163,9 +162,9 @@ return {
         disabled = disabled or (vim.fn.reg_recording() ~= "")
         disabled = disabled or (vim.fn.reg_executing() ~= "")
         disabled = disabled or context.in_treesitter_capture("comment")
-        disabled = disabled or context.in_treesitter_capture("string")
+        -- disabled = disabled or context.in_treesitter_capture("string") -- prevents tailwindcss
         disabled = disabled or context.in_syntax_group("Comment")
-        disabled = disabled or context.in_syntax_group("String")
+        -- disabled = disabled or context.in_syntax_group("String") -- prevents tailwindcss
         disabled = disabled or vim.g.started_by_firenvim
 
         return not disabled
@@ -210,7 +209,7 @@ return {
           col_offset = 0,
           border = mega.get_border(), -- alts: mega.get_border(), "none"
           side_padding = 1,
-          scrollbar = false,
+          scrollbar = true,
         },
         documentation = cmp.config.window.bordered({
           border = mega.get_border(), -- alts: mega.get_border(), "none"
@@ -432,11 +431,12 @@ return {
         {
           name = "nvim_lsp",
           group_index = 1,
-          max_item_count = 7,
+          max_item_count = 35,
           entry_filter = function(entry)
             local kind = entry:get_kind()
             if vim.tbl_contains(vim.g.completion_exclusions, entry.source.source.client.name) then return false end
             return cmp.lsp.CompletionItemKind.Snippet ~= kind
+            -- return true
           end,
         },
         { name = "async_path", option = { trailing_slash = true } },

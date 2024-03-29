@@ -21,6 +21,7 @@ __invocation="$(printf %q "$__file")$( (($#)) && printf ' %q' "$@" || true)"
 
 FORCE_INSTALL="false"
 VERSION=${1:-master}
+OLD_VERSION=""
 
 if [[ "$(arch)" == "arm64" ]]; then
   eval "$(/opt/homebrew/bin/brew shellenv)"
@@ -74,8 +75,8 @@ clone() {
 do_pip_install() {
   log "installing neovim-remote via python (pip3).."
   # $(brew --prefix)/opt/python@3.9/bin/python3.9 -m pip install --upgrade pip
-  python3 -m pip install --upgrade pip
-  pip3 install neovim-remote
+  python3 -m pip install --upgrade --break-system-packages pip
+  pip3 install --user --upgrade --break-system-packages neovim-remote
 }
 
 do_lazy_install() {
@@ -124,6 +125,16 @@ build() {
   fi
 }
 
+log_version() {
+  echo ""
+  log_info "old version: $OLD_VERSION"
+  log_info "new version: $VERSION"
+}
+read_version() {
+  cd "${XDG_DATA_HOME}/src/neovim" || exit
+  OLD_VERSION="$(cat ${XDG_DATA_HOME}/src/neovim/VERSION)"
+}
+
 write_version() {
   cd "${XDG_DATA_HOME}/src/neovim" || exit
   rm ./VERSION 2>/dev/null
@@ -166,6 +177,8 @@ while getopts "fpc" OPTION; do
 done
 shift $((OPTIND - 1))
 
+read_version
 pushd "${XDG_DATA_HOME}/src" >/dev/null && log_ok "cd ~/.local/share/src successful"
 write_version
 clone && update && build && do_pip_install && do_lazy_install && remove_brew_nvim popd >/dev/null
+log_version

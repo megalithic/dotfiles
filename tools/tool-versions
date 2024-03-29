@@ -11,7 +11,8 @@ rust latest
 golang 1.20.2
 yarn 1.22.4
 zig 0.11.0
-# python 3.11.1
+python 3.11
+python 3.12.2
 # erlang 24.3.4
 # erlang 25.0.3
 # erlang 24.3.2

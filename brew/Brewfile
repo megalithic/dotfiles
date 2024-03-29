@@ -169,7 +169,9 @@ brew "postgresql@14", link: true, restart_service: true if OS.mac?
 # brew "python@3.8", link: false
 # brew "python@3.9", link: false
 # brew "python@3.10", link: false
-brew "python@3.11", link: true
+# brew "python@3.11", link: true
+brew "python@3.12", link: true
+brew "pipx"
 brew "python3", link: false
 brew "readline"
 brew "reattach-to-user-namespace" if OS.mac?

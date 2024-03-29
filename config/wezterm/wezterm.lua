@@ -120,7 +120,7 @@ end)
 
 -- @note: megaforest
 local palette = {
-  background = "#323d43", -- "#2f3d44",
+  background = "#323d43", -- #2f3d44, #323d43
   bright_background = "#2f3d44",
   -- background = "",
   -- bright_background = "",

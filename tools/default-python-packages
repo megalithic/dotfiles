@@ -30,7 +30,6 @@ python-language-server
 qmk
 qutebrowser
 reorder_python_imports
-saws
 setuptools
 solargraph-utils.py
 typing

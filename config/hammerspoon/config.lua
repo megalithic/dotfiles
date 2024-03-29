@@ -2,6 +2,8 @@ local preferred = {
   terms = { "kitty", "wezterm", "alacritty", "iTerm", "Terminal.app" },
   browsers = {
     hs.urlevent.getDefaultHandler("https"),
+    "org.mozilla.floorp",
+    "Orion",
     "Brave Browser Nightly",
     "Chromium",
     "Brave Browser Dev",
@@ -18,7 +20,7 @@ local preferred = {
   media = { "Spotify" },
   vpn = { "Cloudflare WARP" },
 }
-preferred["browser"] = "com.brave.Browser.nightly" --hs.urlevent.getDefaultHandler("https")
+preferred["browser"] = "Brave Browser Nightly" --hs.urlevent.getDefaultHandler("https")
 
 local transientApps = {
   -- ["LaunchBar"] = { allowRoles = "AXSystemDialog" },
@@ -66,6 +68,9 @@ local ptt = mods.CAsc
 --- @class QuitterOpts
 --- @field [1] string
 local quitters = {
+  "org.chromium.Chromium",
+  "Brave Browser Nightly",
+  "com.kagi.kagimacOS",
   "com.brave.Browser.nightly",
   "com.brave.Browser.dev",
   "com.brave.Browser",
@@ -168,9 +173,33 @@ local layouts = {
       { "", 1, "maximized" },
     },
   },
+  ["com.kagi.kagimacOS"] = {
+    bundleID = "com.kagi.kagimacOS",
+    name = "Orion",
+    tags = { "browsers" },
+    rules = {
+      { "", 1, "maximized" },
+    },
+  },
+  ["org.mozilla.floorp"] = {
+    bundleID = "org.mozilla.floorp",
+    name = "Floorp",
+    tags = { "browsers" },
+    rules = {
+      { "", 1, "maximized" },
+    },
+  },
   ["com.brave.Browser.nightly"] = {
     bundleID = "com.brave.Browser.nightly",
     name = "Brave Browser Nightly",
+    tags = { "browsers" },
+    rules = {
+      { "", 1, "maximized" },
+    },
+  },
+  ["com.brave.Browser.dev"] = {
+    bundleID = "com.brave.Browser.dev",
+    name = "Brave Browser Dev",
     tags = { "browsers" },
     rules = {
       { "", 1, "maximized" },
@@ -216,7 +245,7 @@ local layouts = {
     key = "d",
     localBindings = { "d" },
     rules = {
-      { "", 1, "centeredLarge" },
+      { "", 1, "maximized" },
     },
   },
   ["com.obsproject.obs-studio"] = {

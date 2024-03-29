@@ -328,6 +328,9 @@ function mega.require(module_name, opts)
   return ok, result
 end
 
+function mega.lsp.is_enabled_elixir_ls(ls) return vim.tbl_contains(vim.g.enabled_elixir_ls, ls) end
+function mega.lsp.formatting_filter(client) return not vim.tbl_contains(vim.g.formatter_exclusions, client.name) end
+
 function mega.iabbrev(lhs, rhs, ft)
   vim.schedule(function()
     ft = ft or nil

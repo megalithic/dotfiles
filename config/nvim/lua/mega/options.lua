@@ -138,17 +138,12 @@ vim.o.formatoptions = "jcroqlnt" -- tcqj
 -----------------------------------------------------------------------------//
 vim.o.foldenable = false -- enable folding
 vim.o.foldcolumn = "0" -- presently disabled until we can use foldcolumndigits
--- vim.wo.foldcolumndigits = false
--- vim.opt.foldtext = "v:lua.mega.folds()"
 vim.opt.foldopen = vim.opt.foldopen + "search"
 vim.o.foldlevel = 99 -- feel free to decrease the value
 vim.o.foldlevelstart = 3 -- or 10? open most folds by default
 vim.o.foldnestmax = 10 -- 10 nested fold max
--- vim.o.foldmethod = "marker"
--- vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
 vim.wo.foldmethod = "expr"
 vim.wo.foldexpr = "v:lua.vim.treesitter.foldexpr()"
--- vim.wo.foldcolumndigits = false -- if disabled, 'foldsep' from 'fillchars' used.
 -----------------------------------------------------------------------------//
 -- Quickfix {{{1
 -----------------------------------------------------------------------------//

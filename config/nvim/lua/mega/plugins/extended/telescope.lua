@@ -347,18 +347,17 @@ return {
     { "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
 
     "nvim-telescope/telescope-file-browser.nvim",
-    { "fdschmidt93/telescope-egrepify.nvim" },
-    { "megalithic/telescope-corrode.nvim" },
+    "fdschmidt93/telescope-egrepify.nvim",
+    "megalithic/telescope-corrode.nvim",
     -- {
     --   "danielfalk/smart-open.nvim",
     --   dependencies = { "kkharji/sqlite.lua", { "nvim-telescope/telescope-fzf-native.nvim", build = "make" } },
     -- },
 
     -- "danielvolchek/tailiscope.nvim"
-    {
-      "nvim-telescope/telescope-live-grep-args.nvim",
-    },
-    { "debugloop/telescope-undo.nvim" },
+    "nvim-telescope/telescope-live-grep-args.nvim",
+    "debugloop/telescope-undo.nvim",
+    "folke/trouble.nvim",
   },
   keys = keys,
   config = function()
@@ -400,7 +399,7 @@ return {
             ["<c-r>"] = actions.to_fuzzy_refine,
             ["<c-n>"] = actions.move_selection_next,
             ["<c-p>"] = actions.move_selection_previous,
-            ["<c-t>"] = require("trouble.providers.telescope").smart_open_with_trouble,
+            ["<c-t>"] = require("trouble.sources.telescope").open,
             ["<c-down>"] = function(...) return actions.cycle_history_next(...) end,
             ["<c-up>"] = function(...) return actions.cycle_history_prev(...) end,
             ["<c-q>"] = actions.smart_send_to_qflist + actions.open_qflist,
@@ -459,9 +458,9 @@ return {
           -- define mappings, e.g.
           mappings = { -- extend mappings
             i = {
-              ["<C-r>"] = lga_actions.quote_prompt(),
-              ["<C-i>"] = lga_actions.quote_prompt({ postfix = " --iglob " }),
-              ["<C-t>"] = lga_actions.quote_prompt({ postfix = " -t " }),
+              ["<c-r>"] = lga_actions.quote_prompt(),
+              ["<c-i>"] = lga_actions.quote_prompt({ postfix = " --iglob " }),
+              ["<c-t>"] = lga_actions.quote_prompt({ postfix = " -t " }),
               ["<esc>"] = require("telescope.actions").close,
               ["<c-v>"] = stopinsert(function(pb) multi(pb, "vnew") end),
               ["<c-s>"] = stopinsert(function(pb) multi(pb, "new") end),
@@ -541,7 +540,7 @@ return {
               ["<c-r>"] = actions.to_fuzzy_refine,
               ["<c-n>"] = actions.move_selection_next,
               ["<c-p>"] = actions.move_selection_previous,
-              ["<c-t>"] = require("trouble.providers.telescope").smart_open_with_trouble,
+              ["<c-t>"] = require("trouble.sources.telescope").open,
               ["<c-down>"] = function(...) return actions.cycle_history_next(...) end,
               ["<c-up>"] = function(...) return actions.cycle_history_prev(...) end,
               ["<c-q>"] = actions.smart_send_to_qflist + actions.open_qflist,

@@ -4,7 +4,7 @@
 
 SESSION="mega"
 CWD="$DOTS"
-SESSION_ICON="" # alts: 🗿
+SESSION_ICON="󰈸" # alts: 🗿󰈸
 SESSION_FG="#d9bb80"
 
 cd $CWD
@@ -17,7 +17,7 @@ cd $CWD
 
 # Create the session and the first window. Manually switch to root
 # directory if required to support tmux < 1.9
-TMUX= tmux -2 new-session -d -s "$SESSION" -n chats
+tmux -2 new-session -d -s "$SESSION" -n chats
 tmux -2 send-keys -t "$SESSION":1 cd\ "$CWD" C-m
 
 # Create other windows.

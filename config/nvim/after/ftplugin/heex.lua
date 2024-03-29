@@ -1,3 +1,4 @@
+vim.bo.commentstring = "<%!-- %s --%>"
 -- vim.cmd([[
 --   augroup MixFormat
 --     autocmd! * <buffer>

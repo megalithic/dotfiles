@@ -198,7 +198,7 @@ end
 
 return {
   {
-    "ibhagwan/fzf-lua",
+    url = "https://gitlab.com/ibhagwan/fzf-lua",
     cmd = { "FzfLua" },
     dependencies = { "nvim-tree/nvim-web-devicons" },
     keys = keys,

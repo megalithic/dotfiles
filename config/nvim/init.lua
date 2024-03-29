@@ -52,7 +52,7 @@ vim.g.colorscheme = "megaforest" -- alt: `vim` for default
 vim.g.default_colorcolumn = "81"
 vim.g.notifier_enabled = true
 vim.g.debug_enabled = false
-vim.g.picker = "telescope" -- alt: telescope, fzf_lua
+vim.g.picker = "fzf_lua" -- alt: telescope, fzf_lua
 vim.g.formatter = "conform" -- alt: null-ls/none-ls, conform
 vim.g.tree = "neo-tree"
 vim.g.explorer = "oil" -- alt: dirbuf, oil
@@ -63,11 +63,13 @@ vim.g.completer = "cmp" -- alt: cmp, epo
 vim.g.ts_ignored_langs = {} -- alt: { "svg", "json", "heex", "jsonc" }
 vim.g.is_screen_sharing = false
 
--- REF: elixir LSPs: elixir-tools(ElixirLS, NextLS, credo), elixirls, nextls, lexical
-vim.g.formatter_exclusions = { "ElixirLS", "NextLS", "", "nextls", "lexical" }
-vim.g.diagnostic_exclusions = { "ElixirLS", "NextLS", "", "nextls", "lexical", "tsserver" }
-vim.g.completion_exclusions = { "ElixirLS", "NextLS", "elixirls", "", "" }
-vim.g.enabled_elixir_ls = { "elixirls", "nextls", "lexical" }
+-- REF: elixir LSPs: elixir-tools(tools-elixirls, tools-nextls, credo), elixirls, nextls, lexical
+vim.g.enabled_elixir_ls = { "", "", "elixirls", "", "lexical" }
+vim.g.formatter_exclusions = { "tools-elixirls", "tools-nextls", "", "nextls", "lexical" }
+vim.g.diagnostic_exclusions = { "tools-elixirls", "tools-nextls", "elixirls", "nextls", "", "tsserver" }
+vim.g.max_diagnostic_exclusions = { "tools-elixirls", "tools-nextls", "elixirls", "nextls", "lexical" }
+vim.g.completion_exclusions = { "tools-elixirls", "tools-nextls", "elixirls", "nextls", "" }
+
 vim.g.disable_autolint = false
 vim.g.disable_autoformat = false
 

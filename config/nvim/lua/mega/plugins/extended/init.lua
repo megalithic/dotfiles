@@ -72,6 +72,8 @@ return {
     config = function()
       require("mini.comment").setup({
         ignore_blank_lines = true,
+
+        custom_commentstring = function() return vim.bo.commentstring end,
         hooks = {
           pre = function() require("ts_context_commentstring.internal").update_commentstring({}) end,
         },
@@ -378,10 +380,49 @@ return {
           })
         end,
       },
+      {
+        "elixir-tools/elixir-tools.nvim",
+        version = "*",
+        -- dev = true,
+        event = { "BufReadPre", "BufNewFile" },
+        config = function()
+          local elixir = require("elixir")
+          local nextls_opts
+          nextls_opts = {
+            enable = mega.lsp.is_enabled_elixir_ls("tools-nextls"),
+            spitfire = true,
+            init_options = {
+              experimental = {
+                completions = {
+                  enable = true,
+                },
+              },
+            },
+          }
+
+          elixir.setup({
+            nextls = nextls_opts,
+            credo = { enable = mega.lsp.is_enabled_elixir_ls("credo") },
+            elixirls = { enable = mega.lsp.is_enabled_elixir_ls("tools-elixirls") },
+          })
+        end,
+        dependencies = {
+          "nvim-lua/plenary.nvim",
+          "mhanberg/workspace-folders.nvim",
+        },
+      },
       { "nvim-lua/lsp_extensions.nvim" },
       { "williamboman/mason-lspconfig.nvim" },
       { "b0o/schemastore.nvim" },
       { "ray-x/lsp_signature.nvim" },
+      {
+        "icholy/lsplinks.nvim",
+        setup = function()
+          local lsplinks = require("lsplinks")
+          lsplinks.setup()
+          vim.keymap.set("n", "gx", lsplinks.gx)
+        end,
+      },
       {
         "j-hui/fidget.nvim",
         config = function()
@@ -661,6 +702,7 @@ return {
   },
   {
     "folke/trouble.nvim",
+    branch = "dev",
     cmd = { "TroubleToggle", "Trouble" },
     opts = {
       auto_open = false,

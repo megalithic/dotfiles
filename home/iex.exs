@@ -188,22 +188,34 @@ defmodule H do
   def get_app_name() do
     non_umbrella_project = Mix.Project.get()
 
-    if non_umbrella_project == nil do
-      ""
-    else
-      if Mix.Project.umbrella?(),
-        do:
-          Mix.Project.apps_paths()
-          |> Enum.reject(fn {_x, y} ->
-            y == :undefined
-          end)
-          |> Enum.find(fn {x, _y} ->
-            x |> Atom.to_string() |> String.ends_with?("_web")
-          end)
-          |> elem(0)
-          |> Atom.to_string()
-          |> String.replace("_web", ""),
-        else: non_umbrella_project.project()[:app]
+    app_name =
+      if non_umbrella_project == nil do
+        ""
+      else
+        if Mix.Project.umbrella?(),
+          do:
+            Mix.Project.apps_paths()
+            |> Enum.reject(fn {_x, y} ->
+              y == :undefined
+            end)
+            |> Enum.find(fn {x, _y} ->
+              x |> Atom.to_string() |> String.ends_with?("_web")
+            end)
+            |> elem(0)
+            |> Atom.to_string()
+            |> String.replace("_web", ""),
+          else: non_umbrella_project.project()[:app]
+      end
+
+    cond do
+      app_name == "" ->
+        ""
+
+      is_binary(app_name) ->
+        String.to_atom(app_name)
+
+      true ->
+        app_name
     end
   end
 

@@ -1,11 +1,51 @@
 {
-  "%": {
-    "prefix": "%",
-    "body": "<% $0 %>"
+  "heex_sigil": {
+    "prefix": [
+      "heex",
+      "hx"
+    ],
+    "body": [
+      "~H\"\"\"",
+      "$1",
+      "\"\"\""
+    ]
   },
-  "=": {
-    "prefix": "=",
-    "body": "<%= $0 %>"
+  "heex_sigil_empty": {
+    "prefix": [
+      "heexe",
+      "hxe"
+    ],
+    "body": [
+      "~H\"\"$1"
+    ]
+  },
+  "%= block": {
+    "prefix": [
+      "%=",
+      "e-",
+      "e=",
+      "eb"
+    ],
+    "body": [
+      "<%= $1 %>"
+    ]
+  },
+  "% block": {
+    "prefix": [
+      "%%",
+      "ee"
+    ],
+    "body": [
+      "<% $1 %>"
+    ]
+  },
+  "%= inspect": {
+    "prefix": [
+      "insp"
+    ],
+    "body": [
+      "<%= inspect($1) %>"
+    ]
   },
   "inspect": {
     "prefix": "lin",
@@ -196,45 +236,6 @@
     "prefix": "asserte",
     "body": [
       "assert $1 =~ $2"
-    ]
-  },
-  "heex_sigil": {
-    "prefix": [
-      "heex",
-      "hx"
-    ],
-    "body": [
-      "~H\"\"\"",
-      "$1",
-      "\"\"\""
-    ]
-  },
-  "heex_sigil_empty": {
-    "prefix": [
-      "heexe",
-      "hxe"
-    ],
-    "body": [
-      "~H\"\"$1"
-    ]
-  },
-  "%= block": {
-    "prefix": [
-      "%=",
-      "e-",
-      "e="
-    ],
-    "body": [
-      "<%= $1 %>"
-    ]
-  },
-  "% block": {
-    "prefix": [
-      "%%",
-      "ee"
-    ],
-    "body": [
-      "<% $1 %>"
     ]
   },
   "eex_form_for": {

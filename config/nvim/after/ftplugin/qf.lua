@@ -20,8 +20,32 @@ vim.cmd([[
   " REF: https://github.com/romainl/vim-qf/blob/2e385e6d157314cb7d0385f8da0e1594a06873c5/autoload/qf.vim#L22
 ]])
 
-nnoremap("<C-n>", [[:cnext<cr>]], { buffer = 0, label = "QF: next" })
-nnoremap("<C-p>", [[:cprevious<cr>]], { buffer = 0, label = "QF: previous" })
+nnoremap("<C-n>", function()
+  pcall(function()
+    vim.cmd.lne({
+      count = vim.v.count1,
+    })
+  end)
+end, { buffer = 0, label = "QF: next" })
+nnoremap("<C-p>", function()
+  pcall(function()
+    vim.cmd.lp({
+      count = vim.v.count1,
+    })
+  end)
+end, { buffer = 0, label = "QF: previous" })
+vim.keymap.set(
+  { "n", "x" },
+  "<CR>",
+  function()
+    vim.cmd.ll({
+      count = vim.api.nvim_win_get_cursor(0)[1],
+    })
+  end,
+  {
+    buffer = true,
+  }
+)
 
 local ok_bqf, bqf = pcall(require, "bqf")
 if not ok_bqf then return end

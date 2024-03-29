@@ -9,12 +9,17 @@ from pync import Notifier
 
 SCRIPT_NAME = 'notification_center'
 SCRIPT_AUTHOR = 'Sindre Sorhus <sindresorhus@gmail.com>'
-SCRIPT_VERSION = '1.5.1'
+SCRIPT_VERSION = '1.5.2'
 SCRIPT_LICENSE = 'MIT'
 SCRIPT_DESC = 'Pass highlights and private messages to the macOS Notification Center'
-WEECHAT_ICON = os.path.expanduser('~/.weechat/weechat.png')
 
 weechat.register(SCRIPT_NAME, SCRIPT_AUTHOR, SCRIPT_VERSION, SCRIPT_LICENSE, SCRIPT_DESC, '', '')
+
+WEECHAT_VERSION = weechat.info_get('version_number', '') or 0
+if int(WEECHAT_VERSION) >= 0x03020000:
+	WEECHAT_ICON = os.path.join(weechat.info_get('weechat_config_dir', ''), 'weechat.png')
+else:
+	WEECHAT_ICON = os.path.join(weechat.info_get('weechat_dir', ''), 'weechat.png')
 
 DEFAULT_OPTIONS = {
 	'show_highlights': 'on',
@@ -47,8 +52,11 @@ def notify(data, buffer, date, tags, displayed, highlight, prefix, message):
 
 	# Ignore messages older than the configured theshold (such as ZNC logs) if enabled
 	if weechat.config_get_plugin('ignore_old_messages') == 'on':
-		message_time = datetime.datetime.utcfromtimestamp(int(date))
-		now_time = datetime.datetime.utcnow()
+
+ message_time = datetime.datetime.fromtimestamp(date, datetime.UTC).
+		# message_time = datetime.datetime.utcfromtimestamp(int(date))
+		# now_time = datetime.datetime.utcnow()
+		now_time = datetime.datetime.now(datetime.UTC)
 
 		# Ignore if the message is greater than 5 seconds old
 		if (now_time - message_time).seconds > 5:
@@ -58,12 +66,12 @@ def notify(data, buffer, date, tags, displayed, highlight, prefix, message):
 	sound = weechat.config_get_plugin('sound_name') if weechat.config_get_plugin('sound') == 'on' else lambda:_
 	activate_bundle_id = weechat.config_get_plugin('activate_bundle_id')
 
-	channel_whitelist = []
+	channel_allow_list = []
 	if weechat.config_get_plugin('channels') != "":
-		channel_whitelist = weechat.config_get_plugin('channels').split(',')
+		channel_allow_list = weechat.config_get_plugin('channels').split(',')
 	channel = weechat.buffer_get_string(buffer, 'localvar_channel')
 
-	if channel in channel_whitelist:
+	if channel in channel_allow_list:
 		if weechat.config_get_plugin('show_message_text') == 'on':
 			Notifier.notify(message, title='%s %s' % (prefix, channel), sound=sound, appIcon=WEECHAT_ICON, activate=activate_bundle_id)
 		else:
