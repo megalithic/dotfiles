@@ -53,9 +53,9 @@ def notify(data, buffer, date, tags, displayed, highlight, prefix, message):
 	# Ignore messages older than the configured theshold (such as ZNC logs) if enabled
 	if weechat.config_get_plugin('ignore_old_messages') == 'on':
 
- message_time = datetime.datetime.fromtimestamp(date, datetime.UTC).
 		# message_time = datetime.datetime.utcfromtimestamp(int(date))
 		# now_time = datetime.datetime.utcnow()
+    message_time = datetime.datetime.fromtimestamp(int(date), datetime.UTC)
 		now_time = datetime.datetime.now(datetime.UTC)
 
 		# Ignore if the message is greater than 5 seconds old
