@@ -23,6 +23,8 @@ do_install() {
 
   if (command -v rtx &>/dev/null); then
     rtx reshim perl
+  elif (command -v mise &>/dev/null); then
+    mise reshim perl
   elif (command -v asdf &>/dev/null); then
     asdf reshim perl
   fi

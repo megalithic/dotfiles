@@ -19,11 +19,11 @@ asdf_compat = false # set to true to ensure .tool-versions will be compatible wi
 jobs = 4            # number of plugins or runtimes to install in parallel. The default is `4`.
 raw = false         # set to true to directly pipe plugins to stdin/stdout/stderr
 
-shorthands_file = '~/.config/rtx/shorthands.toml' # path to the shorthands file, see `RTX_SHORTHANDS_FILE`
+shorthands_file = '~/.config/mise/shorthands.toml' # path to the shorthands file, see `RTX_SHORTHANDS_FILE`
 disable_default_shorthands = false # disable the default shorthands, see `RTX_DISABLE_DEFAULT_SHORTHANDS`
 
 experimental = false # enable experimental features such as shims
-shims_dir = '~/.local/share/rtx/shims' # [experimental] directory where shims are stored
+shims_dir = '~/.local/share/mise/shims' # [experimental] directory where shims are stored
 
 [alias.nodejs]
 my_custom_node = '18'  # makes `rtx install nodejs@my_custom_node` install node-18.x

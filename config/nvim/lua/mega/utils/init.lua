@@ -539,14 +539,22 @@ end
 
 function M.starts_with(haystack, needle) return type(haystack) == "string" and haystack:sub(1, needle:len()) == needle end
 
-function M.clear_ui()
+function M.clear_ui(opts)
+  opts = opts or {}
+  local deluxe = opts["deluxe"]
   -- vcmd([[nnoremap <silent><ESC> :syntax sync fromstart<CR>:nohlsearch<CR>:redrawstatus!<CR><ESC> ]])
-  vim.cmd("nohlsearch")
-  vim.cmd("diffupdate")
+  -- Clear / search term
+  vim.fn.setreg("/", "")
+
+  -- Stop highlighting searches
+  vim.cmd.nohlsearch()
+
+  vim.cmd.diffupdate()
   vim.cmd("syntax sync fromstart")
   M.close_float_wins()
-  vim.cmd("echo ''")
+
   if plugin_loaded("cursorline") then mega.blink_cursorline() end
+  vim.cmd.redraw({ bang = true })
 
   do
     local ok, mj = pcall(require, "mini.jump")

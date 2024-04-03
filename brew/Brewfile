@@ -178,7 +178,6 @@ brew "readline"
 brew "reattach-to-user-namespace" if OS.mac?
 brew "ren"
 brew "ripgrep"
-brew "jdxcode/tap/rtx"
 brew "ruby-build" # needed for asdf/ruby
 brew "rust"
 brew "rustup-init"

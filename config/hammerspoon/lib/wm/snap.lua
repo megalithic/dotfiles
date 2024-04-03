@@ -316,6 +316,22 @@ function obj:entered()
 
     if win ~= nil then
       if screen == hs.screen.mainScreen() then
+        local max = screen:fullFrame()
+        local f = win:frame()
+
+        -- https://github.com/Hammerspoon/hammerspoon/issues/2214
+        obj.indicator = hs.canvas
+          .new({ x = max.x, y = max.y, h = max.h, w = max.w })
+          :appendElements({
+            type = "rectangle",
+            action = "stroke",
+            strokeWidth = 4.0,
+            strokeColor = { white = 0.5, alpha = 0.7 },
+            roundedRectRadii = { xRadius = 14.0, yRadius = 14.0 },
+            frame = { x = f.x, y = f.y, h = f.h, w = f.w },
+          })
+          :show()
+
         local app_title = win:application():title()
         local image = hs.image.imageFromAppBundle(win:application():bundleID())
         local prompt = fmt("◱ : %s", app_title)
@@ -327,18 +343,21 @@ function obj:entered()
       obj:exit()
     end
 
-    return nil
+    return self
   end)
 end
 
 function obj:exited()
   obj.isOpen = false
   hs.window.highlight.stop()
-
-  hs.fnutils.ieach(obj.alerts, function(id) alert.closeSpecific(id) end)
-
+  hs.fnutils.ieach(obj.alerts, function(id)
+    if alert ~= nil then alert.closeSpecific(id) end
+    if obj.indicator ~= nil then obj.indicator:delete() end
+  end)
   alert.close()
   dbg("exited modal")
+
+  return self
 end
 
 function obj:init(opts)

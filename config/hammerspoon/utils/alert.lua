@@ -41,6 +41,7 @@ function obj.showOnly(opts)
 end
 
 function obj.close() hs.alert.closeAll(0) end
+function obj.closeSpecific(id) hs.alert.closeSpecific(id) end
 
 function obj.show(opts)
   local text

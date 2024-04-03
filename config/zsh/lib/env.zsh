@@ -158,13 +158,6 @@ export CARGOPATH="$HOME/.cargo"
 export CARGOBIN="$CARGOPATH/bin"
 [ -f "$CARGOPATH/env" ] && . "$CARGOPATH/env"
 
-# -- asdf
-export ASDF_DIR="$HOME/.asdf"
-export ASDF_SHIMS="$ASDF_DIR/shims"
-export ASDF_BIN="$ASDF_SHIMS"
-export ASDF_INSTALLS="$ASDF_DIR/installs"
-# [ -f "$ZDOTDIR/lib/asdf.zsh" ] && source "$ZDOTDIR/lib/asdf.zsh" && echo "from env.zsh -- sourced $ZDOTDIR/lib/asdf.zsh.."
-# export ASDF_LUAROCKS="$ASDF_INSTALLS/lua/5.3.5/luarocks/bin"
 
 # -- rg/ripgrep
 # @see: https://github.com/BurntSushi/ripgrep/blob/master/GUIDE.md#configuration-file
@@ -378,11 +371,6 @@ case "$(uname)" in
     ${HOME}/.local/bin(N-/)
     ${DOTS}/bin(N-/)
     $PRIVATES/bin
-    $ASDF_DIR
-    $ASDF_BIN
-    $ASDF_SHIMS
-    $ASDF_INSTALLS
-    $ASDF_LUAROCKS
     $GOBIN
     ${GOPATH}/bin(N-/)
     $CARGOPATH
