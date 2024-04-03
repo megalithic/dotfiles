@@ -10,20 +10,45 @@ ftplugin.extend_all({
       { "<leader>ap", "<CMD>ArduinoChooseProgrammer<CR>" },
     },
   },
-  cs = {
-    opt = {
-      foldlevel = 0,
-      foldmethod = "syntax",
-    },
-    bufvar = {
-      match_words = "\\s*#\\s*region.*$:\\s*#\\s*endregion",
-      all_folded = 1,
-    },
-  },
+  -- cs = {
+  --   opt = {
+  --     foldlevel = 0,
+  --     foldmethod = "syntax",
+  --   },
+  --   bufvar = {
+  --     match_words = "\\s*#\\s*region.*$:\\s*#\\s*endregion",
+  --     all_folded = 1,
+  --   },
+  -- },
   DressingInput = {
     keys = {
       { "<C-k>", "<CMD>lua require(\"dressing.input\").history_prev()<CR>", mode = "i" },
       { "<C-j>", "<CMD>lua require(\"dressing.input\").history_next()<CR>", mode = "i" },
+    },
+  },
+  gitcommit = {
+    opt = {
+      list = false,
+      number = false,
+      relativenumber = false,
+      cursorline = false,
+      spell = true,
+      spelllang = "en_gb",
+      colorcolumn = "50,72",
+    },
+    callback = function()
+      vim.fn.matchaddpos("DiagnosticVirtualTextError", { { 1, 50, 10000 } })
+    end,
+  },
+  neogitcommitmessage = {
+    opt = {
+      list = false,
+      number = false,
+      relativenumber = false,
+      cursorline = false,
+      spell = true,
+      spelllang = "en_gb",
+      colorcolumn = "50,72",
     },
   },
   fugitiveblame = {
@@ -141,12 +166,12 @@ ftplugin.extend_all({
       buflisted = false,
     },
   },
-  rust = {
-    compiler = "cargo",
-    callback = function(bufnr)
-      -- vim.keymap.set("n", "<leader>e", function() run_file({ "cargo", "run" }) end, { buffer = bufnr })
-    end,
-  },
+  -- rust = {
+  --   compiler = "cargo",
+  --   callback = function(bufnr)
+  --     -- vim.keymap.set("n", "<leader>e", function() run_file({ "cargo", "run" }) end, { buffer = bufnr })
+  --   end,
+  -- },
   sh = {
     callback = function(bufnr)
       -- vim.keymap.set(
@@ -157,34 +182,34 @@ ftplugin.extend_all({
       -- )
     end,
   },
-  supercollider = {
-    keys = {
-      { "<CR>", "<Plug>(scnvim-send-block)" },
-      { "<c-CR>", "<Plug>(scnvim-send-block)", mode = "i" },
-      { "<CR>", "<Plug>(scnvim-send-selection)", mode = "x" },
-      { "<F1>", "<cmd>call scnvim#install()<CR><cmd>SCNvimStart<CR><cmd>SCNvimStatusLine<CR>" },
-      { "<F2>", "<cmd>SCNvimStop<CR>" },
-      { "<F12>", "<Plug>(scnvim-hard-stop)" },
-      { "<leader><space>", "<Plug>(scnvim-postwindow-toggle)" },
-      { "<leader>g", "<cmd>call scnvim#sclang#send('s.plotTree;')<CR>" },
-      { "<leader>s", "<cmd>call scnvim#sclang#send('s.scope;')<CR>" },
-      { "<leader>f", "<cmd>call scnvim#sclang#send('FreqScope.new;')<CR>" },
-      { "<leader>r", "<cmd>SCNvimRecompile<CR>" },
-      { "<leader>m", "<cmd>call scnvim#sclang#send('Master.gui;')<CR>" },
-    },
-    opt = {
-      foldmethod = "marker",
-      foldmarker = "{{{,}}}",
-      statusline = "%f %h%w%m%r %{scnvim#statusline#server_status()} %= %(%l,%c%V %= %P%)",
-    },
-    callback = function(bufnr)
-      vim.api.nvim_create_autocmd("WinEnter", {
-        pattern = "*",
-        command = "if winnr('$') == 1 && getbufvar(winbufnr(winnr()), '&filetype') == 'scnvim'|q|endif",
-        group = "ClosePostWindowIfLast",
-      })
-    end,
-  },
+  -- supercollider = {
+  --   keys = {
+  --     { "<CR>", "<Plug>(scnvim-send-block)" },
+  --     { "<c-CR>", "<Plug>(scnvim-send-block)", mode = "i" },
+  --     { "<CR>", "<Plug>(scnvim-send-selection)", mode = "x" },
+  --     { "<F1>", "<cmd>call scnvim#install()<CR><cmd>SCNvimStart<CR><cmd>SCNvimStatusLine<CR>" },
+  --     { "<F2>", "<cmd>SCNvimStop<CR>" },
+  --     { "<F12>", "<Plug>(scnvim-hard-stop)" },
+  --     { "<leader><space>", "<Plug>(scnvim-postwindow-toggle)" },
+  --     { "<leader>g", "<cmd>call scnvim#sclang#send('s.plotTree;')<CR>" },
+  --     { "<leader>s", "<cmd>call scnvim#sclang#send('s.scope;')<CR>" },
+  --     { "<leader>f", "<cmd>call scnvim#sclang#send('FreqScope.new;')<CR>" },
+  --     { "<leader>r", "<cmd>SCNvimRecompile<CR>" },
+  --     { "<leader>m", "<cmd>call scnvim#sclang#send('Master.gui;')<CR>" },
+  --   },
+  --   opt = {
+  --     foldmethod = "marker",
+  --     foldmarker = "{{{,}}}",
+  --     statusline = "%f %h%w%m%r %{scnvim#statusline#server_status()} %= %(%l,%c%V %= %P%)",
+  --   },
+  --   callback = function(bufnr)
+  --     vim.api.nvim_create_autocmd("WinEnter", {
+  --       pattern = "*",
+  --       command = "if winnr('$') == 1 && getbufvar(winbufnr(winnr()), '&filetype') == 'scnvim'|q|endif",
+  --       group = "ClosePostWindowIfLast",
+  --     })
+  --   end,
+  -- },
   typescript = {
     compiler = "tsc",
   },
@@ -194,14 +219,14 @@ ftplugin.extend_all({
       keywordprg = ":help",
     },
   },
-  zig = {
-    compiler = "zig_test",
-    opt = {
-      shiftwidth = 4,
-      tabstop = 4,
-      softtabstop = 4,
-    },
-  },
+  -- zig = {
+  --   compiler = "zig_test",
+  --   opt = {
+  --     shiftwidth = 4,
+  --     tabstop = 4,
+  --     softtabstop = 4,
+  --   },
+  -- },
 })
 
--- ftplugin.setup()
+ftplugin.setup()

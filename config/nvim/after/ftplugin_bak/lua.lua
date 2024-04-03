@@ -7,6 +7,7 @@ local fn = vim.fn
 
 if not mega then return end
 
+print("lua")
 local function find(word, ...)
   for _, str in ipairs({ ... }) do
     local match_start, match_end = string.find(word, str)

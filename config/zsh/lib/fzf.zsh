@@ -66,7 +66,7 @@ _fzf_megaforest() {
   local color0F='#d65d0e'
 
   # --color=bg+:$color01,spinner:$color0C,hl:$color0A,gutter:$color01
-export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS
+  export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS
 --color=bg+:$color01,spinner:$color0C,hl:$color0A,gutter:$color01
 --color=fg:$color04,header:$color0D,info:$color0A,pointer:$color0C
 --color=marker:$color0E,fg+:$color06,prompt:$color0A,hl+:$color0F
@@ -96,12 +96,12 @@ _fzf_megaforest
 # fi
 #
 # FZFCMD="command $FZF_FIND_CMD -L . \
-  # -name .git -prune -o \
-  # -name node_modules -prune -o \
-  # -type d -print -o \
-  # -type f -print -o \
-  # -type l -print 2>/dev/null \
-  # | sed 1d | cut -b3-" 2>/dev/null
+# -name .git -prune -o \
+# -name node_modules -prune -o \
+# -type d -print -o \
+# -type f -print -o \
+# -type l -print 2>/dev/null \
+# | sed 1d | cut -b3-" 2>/dev/null
 
 if has fd; then
   # LIST_DIR_CONTENTS='ls --almost-all --group-directories-first --color=always {}'
@@ -134,6 +134,12 @@ _fzf_comprun() {
   esac
 }
 
+__fzf-audio() {
+  SwitchAudioSource -s \
+    "$(SwitchAudioSource -a | grep "(output)" |
+      fzf-tmux --height=8 --cycle --no-mouse --no-multi |
+      cut -f1 -d'(' | xargs)"
+}
 # custom-fzf-preview() {
 #   choice=$(
 #     rg --files --hidden | fzf --cycle --preview="preview --ueberzugpp {}"

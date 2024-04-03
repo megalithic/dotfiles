@@ -2,9 +2,9 @@ local preferred = {
   terms = { "kitty", "wezterm", "alacritty", "iTerm", "Terminal.app" },
   browsers = {
     hs.urlevent.getDefaultHandler("https"),
+    "Brave Browser Nightly",
     "org.mozilla.floorp",
     "Orion",
-    "Brave Browser Nightly",
     "Chromium",
     "Brave Browser Dev",
     "Firefox",
@@ -20,7 +20,7 @@ local preferred = {
   media = { "Spotify" },
   vpn = { "Cloudflare WARP" },
 }
-preferred["browser"] = "Brave Browser Nightly" --hs.urlevent.getDefaultHandler("https")
+preferred["browser"] = hs.urlevent.getDefaultHandler("https")
 
 local transientApps = {
   -- ["LaunchBar"] = { allowRoles = "AXSystemDialog" },
