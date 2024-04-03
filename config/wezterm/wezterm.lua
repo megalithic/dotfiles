@@ -259,6 +259,21 @@ local font = {
     Bold = { family = "VictorMono Nerd Font Mono", weight = "ExtraBlack", harfbuzz_features },
     BoldItalic = { family = "VictorMono Nerd Font Mono", italic = true, weight = "ExtraBlack", harfbuzz_features },
   },
+  MapleMono = {
+    family = "Maple Mono",
+    harfbuzz_features = {
+      "calt=1", -- no ligatures => ===
+      "cv01=1", -- fully attached @ # $ etc.
+      "cv02=0", -- curly i
+      "cv03=1", -- upper arm on a
+      "cv04=1", -- @ rounded
+      "ss01=1", -- == !=, etc
+      "ss02=1", -- [info]
+      "ss03=1", -- --
+      "ss04=1", -- >= <= tight
+      "ss05=1", -- {{  }} tight
+    },
+  },
 }
 
 -- if you are *NOT* lazy-loading smart-splits.nvim (recommended)
@@ -316,11 +331,15 @@ end
 
 return {
   term = "wezterm",
+  audible_bell = "Disabled",
   -- send_composed_key_when_left_alt_is_pressed = true,
   -- send_composed_key_when_right_alt_is_pressed = false,
   adjust_window_size_when_changing_font_size = false,
   exit_behavior = "Close",
   exit_behavior_messaging = "None",
+
+  swallow_mouse_click_on_pane_focus = true,
+  swallow_mouse_click_on_window_focus = true,
 
   -- Terminate WezTerm?
   -- Detach and close all panes and terminate wezterm?
@@ -341,19 +360,27 @@ return {
   cell_width = 1,
   font_size = 14,
   line_height = 1.1,
+
   text_blink_rate = 100,
-  cursor_blink_rate = 500,
-  cursor_blink_ease_in = "Constant",
-  cursor_blink_ease_out = "Constant",
+  cursor_blink_rate = 400,
+  cursor_blink_ease_in = "Linear", -- alts: Constant
+  cursor_blink_ease_out = "Linear", -- alts: Constant
+
   freetype_load_flags = "NO_HINTING",
   freetype_load_target = "Light",
   freetype_render_target = "HorizontalLcd",
   font = w.font_with_fallback({
-    -- font.VictorMonoNerdFont.Normal,
     -- font.JetBrainsMono.Normal,
+    -- font.MapleMono,
     font.JetBrainsMonoNerdFont.Normal,
     { family = "Rec Mono Duotone", weight = "Medium" },
+    -- charset fallbacks ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘǫʀsᴛᴜᴠᴡxʏᴢ (ﾉಥ益ಥ）ﾉ︵┻━┻
+    "Noto Sans Mono", -- linux + smallcaps
+    "Monaco", -- mac + smallcaps
     { family = "Symbols Nerd Font Mono", scale = 0.8 },
+    { family = "Unifont", scale = 1.2 }, -- bitmap fallback with a lot of unicode
+    -- emoji fallback 👉 👀 😁 💩 ✅
+    "Noto Color Emoji",
   }),
   window_padding = {
     left = "20px",

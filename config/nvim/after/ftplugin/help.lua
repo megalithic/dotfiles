@@ -1,6 +1,7 @@
-vim.o.splitbelow = true -- Prefer windows splitting in the bottom
 -- open help buffers in new tabs by default
-vim.cmd.wincmd("T")
+-- vim.cmd.wincmd("T")
+
+vim.o.splitbelow = true -- Prefer windows splitting in the bottom
 -- get highlighted code examples
 vim.treesitter.start()
 -- easier navigation

@@ -149,7 +149,49 @@ local function stopinsert(callback)
   end
 end
 
+local t = require("telescope")
+local action_state = require("telescope.actions.state")
+local action_utils = require("telescope.actions.utils")
+
+local function single_or_multi_select(prompt_bufnr)
+  local current_picker = action_state.get_current_picker(prompt_bufnr)
+  local has_multi_selection = (next(current_picker:get_multi_selection()) ~= nil)
+
+  if has_multi_selection then
+    local results = {}
+    action_utils.map_selections(prompt_bufnr, function(selection) table.insert(results, selection[1]) end)
+
+    -- load the selections into buffers list without switching to them
+    for _, filepath in ipairs(results) do
+      -- not the same as vim.fn.bufadd!
+      vim.cmd.badd({ args = { filepath } })
+    end
+
+    require("telescope.pickers").on_close_prompt(prompt_bufnr)
+
+    -- switch to newly loaded buffers if on an empty buffer
+    if vim.fn.bufname() == "" and not vim.bo.modified then
+      vim.cmd.bwipeout()
+      vim.cmd.buffer(results[1])
+    end
+    return
+  end
+
+  -- if does not have multi selection, open single file
+  require("telescope.actions").file_edit(prompt_bufnr)
+end
+
+-- local function with_multiselect_mapping()
+--   -- @TODO tbl extend
+--   return {
+--     i = {
+--       ["<CR>"] = single_or_multi_select,
+--     },
+--   }
+-- end
+
 -- REF: https://github.com/nvim-telescope/telescope.nvim/issues/416
+-- REF: https://github.com/davidosomething/dotfiles/blob/dev/nvim/lua/dko/plugins/telescope.lua#L23-L66
 local function multi(pb, verb, open_selection_under_cursor)
   open_selection_under_cursor = open_selection_under_cursor or false
   local methods = {
@@ -319,14 +361,12 @@ if vim.g.picker == "telescope" then
             mappings = {
               i = {
                 ["<cr>"] = stopinsert(function(pb)
-                  dd("i -cr'ing")
                   multi(pb, "edit")
                   vim.api.nvim_buf_delete(1, { force = true })
                 end),
               },
               n = {
                 ["<cr>"] = function(pb)
-                  dd("n -cr'ing")
                   multi(pb, "vnew")
                   vim.api.nvim_buf_delete(args.buf + 1, { force = true })
                 end,
@@ -600,6 +640,9 @@ return {
           mappings = {
             i = {
               ["<cr>"] = stopinsert(function(pb) multi(pb, "vnew") end),
+              ["<c-v>"] = stopinsert(function(pb) multi(pb, "vnew") end),
+              ["<c-s>"] = stopinsert(function(pb) multi(pb, "new") end),
+              ["<c-o>"] = stopinsert(function(pb) multi(pb, "edit") end),
             },
           },
         },

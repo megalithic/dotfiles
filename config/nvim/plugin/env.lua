@@ -1,5 +1,4 @@
-if not mega then return end
-if not vim.g.enabled_plugin["env"] then return end
+if not plugin_loaded("env") then return end
 
 local api, fn, fs = vim.api, vim.fn, vim.fs
 local fmt = string.format

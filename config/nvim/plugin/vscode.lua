@@ -1,5 +1,4 @@
-if not mega then return end
-if not vim.g.enabled_plugin["vscode"] and (not vim.g.vscode or vim.g.vscode ~= 1) then return end
+if not plugin_loaded("vscode") and (not vim.g.vscode or vim.g.vscode ~= 1) then return end
 if vim.g.started_by_firenvim or vim.g.started_by_firenvim == 1 then return end
 
 -- REF:

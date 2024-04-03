@@ -1,5 +1,4 @@
-if not mega then return end
-if not vim.g.enabled_plugin["windows"] then return end
+if not plugin_loaded("windows") then return end
 
 local GOLDEN_RATIO = 1.618
 

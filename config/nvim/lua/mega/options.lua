@@ -22,6 +22,8 @@ vim.opt.shortmess = {
 
 vim.opt.startofline = true -- motions like "G" also move to the first char
 vim.o.shortmess = "filnxtToOFWIcC"
+vim.o.shortmess = "tAoOTfFsCsFWcCW" -- "filnxtToOFWIcC"
+
 -----------------------------------------------------------------------------//
 -- Timings {{{1
 -----------------------------------------------------------------------------//

@@ -1,5 +1,4 @@
-if not mega then return end
-if not vim.g.enabled_plugin["lsp"] then return end
+if not plugin_loaded("lsp") then return end
 
 local lsp_ok, lspconfig = pcall(require, "lspconfig")
 if not lsp_ok then return nil end

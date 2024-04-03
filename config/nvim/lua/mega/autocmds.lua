@@ -6,7 +6,6 @@
 --
 
 if not mega then return end
-if not vim.g.enabled_plugin["autocmds"] then return end
 
 _G.fmt = fmt or string.format
 local vcmd = vim.cmd

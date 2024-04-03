@@ -23,7 +23,7 @@
 -- https://github.com/mbriggs/nvim/blob/main/lua/mb/which-key.lua
 -- https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/whichkey.lua
 
-if not plugin_loaded("mappings") then return end
+if not mega then return end
 
 local U = require("mega.utils")
 local fn = vim.fn
@@ -34,8 +34,8 @@ local map = vim.keymap.set
 -- [convenience mappings] ------------------------------------------------------
 
 -- deal with word wrap nicely
-vim.keymap.set("n", "k", "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = true })
-vim.keymap.set("n", "j", "v:count == 0 ? 'gj' : 'j'", { expr = true, silent = true })
+map("n", "k", "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = true })
+map("n", "j", "v:count == 0 ? 'gj' : 'j'", { expr = true, silent = true })
 
 -- jump to tab
 for i = 0, 9 do
@@ -456,3 +456,33 @@ map("n", "zo", "zO", { desc = "Open all folds descending from current line" })
 ---------------------------------------------------------------------------------
 nnoremap("<leader>llq", function() U.toggle_list("quickfix") end, "lists: toggle quickfix")
 nnoremap("<leader>llc", function() U.toggle_list("location") end, "lists: toggle location")
+
+map(
+  "n",
+  "<leader>h",
+  ":%s/\\<<C-r><C-w>\\>/<C-r><C-w>/gIc<Left><Left><Left><Left>",
+  { desc = "Replace instances of hovered word" }
+)
+map(
+  "n",
+  "<leader>H",
+  ":%S/<C-r><C-w>/<C-r><C-w>/gcw<Left><Left><Left><Left>",
+  { desc = "Replace instances of hovered word (matching case)" }
+)
+
+map("x", "<leader>h", "\"hy:%s/<C-r>h/<C-r>h/gc<left><left><left>", {
+  desc = [[Crude search & replace visual selection
+                 (breaks on multiple lines & special chars)]],
+})
+
+map("n", "<leader>z", "za", { desc = "Toggle current fold" })
+map("x", "<leader>z", "zf", { desc = "Create fold from selection" })
+map("n", "zf", function() vim.cmd.normal("zMzv") end, { desc = "Fold all except current" })
+map("n", "zF", function() vim.cmd.normal("zMzvzczo") end, { desc = "Fold all except current and children of current" })
+map("n", "zO", function() vim.cmd.normal("zR") end, { desc = "Open all folds" })
+map("n", "zo", "zO", { desc = "Open all folds descending from current line" })
+
+map("x", "y", "ygv<Esc>", { desc = "Cursor-in-place copy" })
+map("n", "P", function() vim.cmd.normal({ vim.v.count1 .. "P`[", bang = true }) end, { desc = "Cursor-in-place paste" })
+
+map("i", "<C-p>", "<C-r>\"", { desc = "Paste from register in insert mode" })

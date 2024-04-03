@@ -392,7 +392,7 @@ M.list = {
       },
     },
   },
-  ruby_ls = {},
+  -- ruby_ls = {},
   rust_analyzer = {
     settings = {
       ["rust-analyzer"] = {
@@ -404,18 +404,18 @@ M.list = {
       },
     },
   },
-  solargraph = {
-    single_file_support = false,
-    settings = {
-      solargraph = {
-        diagnostics = true,
-        useBundler = true,
-        formatting = true,
-        folding = false,
-        logLevel = "debug",
-      },
-    },
-  },
+  -- solargraph = {
+  --   single_file_support = false,
+  --   settings = {
+  --     solargraph = {
+  --       diagnostics = true,
+  --       useBundler = true,
+  --       formatting = true,
+  --       folding = false,
+  --       logLevel = "debug",
+  --     },
+  --   },
+  -- },
   sourcekit = {
     filetypes = { "swift", "objective-c", "objective-cpp" },
   },

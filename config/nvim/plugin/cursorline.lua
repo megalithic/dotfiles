@@ -1,8 +1,7 @@
 -- Inspiration
 -- 1. nvim-cursorline
 
-if not mega then return end
-if not vim.g.enabled_plugin["cursorline"] then return end
+if not plugin_loaded("cursorline") then return end
 
 local U = require("mega.utils")
 local C = require("mega.lush_theme.colors")

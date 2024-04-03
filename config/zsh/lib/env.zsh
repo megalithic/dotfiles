@@ -1,5 +1,4 @@
 #!/usr/bin/env zsh
-# shellcheck shell=bash
 
 zmodload zsh/datetime
 
@@ -369,7 +368,7 @@ case "$(uname)" in
   # Set the list of directories that Zsh searches for programs.
   # "${HOME}/.asdf/installs/elixir/`asdf current elixir | awk '{print $1}'`/.mix"
   path=(
-    /opt/homebrew/bin
+    ${HOMEBREW_PREFIX}/opt/bin
     ./bin
     ./.bin
     ./vendor/bundle/bin
@@ -392,7 +391,7 @@ case "$(uname)" in
     /usr/local/share/npm/bin
     /usr/local/lib/node_modules
     ${HOMEBREW_PREFIX}/opt/libffi/lib
-      ${HOMEBREW_PREFIX}/opt/icu4c/bin
+    ${HOMEBREW_PREFIX}/opt/icu4c/bin
     ${HOMEBREW_PREFIX}/opt/gnu-sed/libexec/gnubin
     ${HOMEBREW_PREFIX}/opt/postgresql@16/bin
     ${HOMEBREW_PREFIX}/opt/postgresql@15/bin
@@ -431,7 +430,6 @@ case "$(uname)" in
     ${HOMEBREW_PREFIX}/opt/python@3.*/bin(Nn[-1]-/)
     ${HOMEBREW_PREFIX}/opt/python@2.*/bin(Nn[-1]-/)
     ${HOMEBREW_PREFIX}/{bin,sbin}
-
     $ANDROID_HOME/emulator
     $ANDROID_HOME/platform-tools
     /Applications/WezTerm.app/Contents/MacOS

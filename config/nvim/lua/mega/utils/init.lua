@@ -546,7 +546,7 @@ function M.clear_ui()
   vim.cmd("syntax sync fromstart")
   M.close_float_wins()
   vim.cmd("echo ''")
-  if vim.g.enabled_plugin["cursorline"] then mega.blink_cursorline() end
+  if plugin_loaded("cursorline") then mega.blink_cursorline() end
 
   do
     local ok, mj = pcall(require, "mini.jump")

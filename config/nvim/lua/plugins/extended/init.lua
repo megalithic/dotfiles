@@ -17,103 +17,6 @@ return {
     },
   },
   {
-    "Bekaboo/deadcolumn.nvim",
-    event = { "VeryLazy" },
-    cond = false,
-    config = function()
-      require("deadcolumn").setup({
-        blending = {
-          threshold = 0.75,
-          colorcode = "#323d43",
-          hlgroup = { "VirtColumn", "fg" },
-        },
-        warning = {
-          alpha = 0.2,
-          offset = 0,
-          colorcode = "#E06C75",
-          hlgroup = { "Error", "fg" },
-        },
-        -- blending = {
-        --   threshold = 0.75,
-        -- },
-        -- warning = {
-        --   alpha = 0.2,
-        -- },
-      })
-    end,
-  },
-  {
-    "echasnovski/mini.indentscope",
-    version = "*",
-    main = "mini.indentscope",
-    event = { "VeryLazy" },
-    opts = {
-      symbol = "┊", -- alts: ┊│┆ ┊  ▎││ ▏▏
-      -- mappings = {
-      --   goto_top = "<leader>k",
-      --   goto_bottom = "<leader>j",
-      -- },
-      options = {
-        try_as_border = true,
-      },
-      draw = {
-        animation = function() return 0 end,
-      },
-    },
-  },
-  {
-    "echasnovski/mini.pick",
-    cmd = "Pick",
-    opts = {},
-  },
-  {
-    "echasnovski/mini.comment",
-    event = "VeryLazy",
-    config = function()
-      require("mini.comment").setup({
-        ignore_blank_lines = true,
-
-        custom_commentstring = function() return vim.bo.commentstring end,
-        hooks = {
-          pre = function() require("ts_context_commentstring.internal").update_commentstring({}) end,
-        },
-        mappings = {
-          -- Toggle comment (like `gcip` - comment inner paragraph) for both
-          -- Normal and Visual modes
-          comment = "gc",
-
-          -- Toggle comment on current line
-          comment_line = "gcc",
-
-          -- Toggle comment on visual selection
-          comment_visual = "gc",
-
-          -- Define 'comment' textobject (like `dgc` - delete whole comment block)
-          textobject = "gc",
-        },
-      })
-    end,
-  },
-  {
-    "echasnovski/mini.splitjoin",
-    cond = false,
-    keys = { "gJ", "gS", "gs", "gj" },
-    config = function()
-      require("mini.splitjoin").setup({
-        mappings = {
-          toggle = "gJ",
-          split = "gS",
-          join = "gJ",
-        },
-      })
-    end,
-  },
-  {
-    -- NOTE: only using for `gct` binding in mappings.lua
-    "numToStr/Comment.nvim",
-    opts = true,
-  },
-  {
     "mbbill/undotree",
     cmd = "UndotreeToggle",
     -- keys = { { "<leader>U", "<Cmd>UndotreeToggle<CR>", desc = "undotree: toggle" } },
@@ -144,135 +47,6 @@ return {
       { "<leader><leader>l", function() require("smart-splits").swap_buf_right() end, desc = "swap right" },
     },
   },
-  {
-    "David-Kunz/gen.nvim",
-    cmd = "Gen",
-    opts = {
-      model = "deepseek-coder",
-      display_mode = "split", -- The display mode. Can be "float" or "split".
-      show_prompt = true, -- Shows the Prompt submitted to Ollama.
-      show_model = true, -- Displays which model you are using at the beginning of your chat session.
-      no_auto_close = true, -- Never closes the window automatically.
-      init = function(options) pcall(io.popen, "ollama serve > /dev/null 2>&1 &") end,
-      -- Function to initialize Ollama
-      command = "curl --silent --no-buffer -X POST http://localhost:11434/api/generate -d $body",
-    },
-    config = function(_, opts)
-      require("gen").setup(opts)
-      require("gen").prompts["Elaborate_Text"] = {
-        prompt = "Elaborate the following text:\n$text",
-        replace = true,
-      }
-      require("gen").prompts["Fix_Code"] = {
-        prompt = "Fix the following code. Only ouput the result in format ```$filetype\n...\n```:\n```$filetype\n$text\n```",
-        replace = true,
-        extract = "```$filetype\n(.-)```",
-      }
-      require("gen").prompts["DevOps me!"] = {
-        prompt = "You are a senior devops engineer, acting as an assistant. You offer help with cloud technologies like: Terraform, AWS, kubernetes, python. You answer with code examples when possible. $input:\n$text",
-        replace = true,
-      }
-
-      local icn = {
-        Chat = "", --     
-        Test = "", --    
-        Regex = "", --   
-        Comment = "", --  
-        Code = "", --   
-        Text = "", --   
-        Items = "", --    
-        Swap = "", -- 
-        Keep = "", --  
-        into = "", --  
-      }
-
-      require("gen").prompts = {
-        [icn.Chat .. " Ask about given context " .. icn.Keep] = {
-          prompt = "Regarding the following text, $input:\n$text",
-          model = "mistral",
-        },
-        [icn.Chat .. " Chat about anything " .. icn.Keep] = {
-          prompt = "$input",
-          model = "mistral",
-        },
-        [icn.Regex .. " Regex create " .. icn.Swap] = {
-          prompt = "Create a regular expression for $filetype language that matches the following pattern:\n```$filetype\n$text\n```",
-          replace = true,
-          no_auto_close = false,
-          extract = "```$filetype\n(.-)```",
-          model = "deepseek-coder",
-        },
-        [icn.Regex .. " Regex explain " .. icn.Keep] = {
-          prompt = "Explain the following regular expression:\n```$filetype\n$text\n```",
-          extract = "```$filetype\n(.-)```",
-          model = "deepseek-coder",
-        },
-        [icn.Comment .. " Code " .. icn.into .. " JSDoc " .. icn.Keep] = {
-          prompt = "Write JSDoc comments for the following $filetype code:\n```$filetype\n$text\n```",
-          model = "deepseek-coder",
-        },
-        [icn.Comment .. " JSDoc " .. icn.into .. " Code " .. icn.Keep] = {
-          prompt = "Read the following comment and create the $filetype code below it:\n```$filetype\n$text\n```",
-          extract = "```$filetype\n(.-)```",
-          model = "deepseek-coder",
-        },
-        [icn.Test .. " Unit Test add missing (React/Jest) " .. icn.Keep] = {
-          prompt = "Read the following $filetype code that includes some unit tests inside the 'describe' function. We are using Jest with React testing library, and the main component is reused by the tests via the customRender function. Detect if we have any missing unit tests and create them.\n```$filetype\n$text\n```",
-          extract = "```$filetype\n(.-)```",
-          model = "deepseek-coder",
-        },
-        [icn.Code .. " Code suggestions " .. icn.Keep] = {
-          prompt = "Review the following $filetype code and make concise suggestions:\n```$filetype\n$text\n```",
-          model = "deepseek-coder",
-        },
-        [icn.Code .. " Explain code " .. icn.Keep] = {
-          prompt = "Explain the following $filetype code in a very concise way:\n```$filetype\n$text\n```",
-          model = "deepseek-coder",
-        },
-        [icn.Code .. " Fix code " .. icn.Swap] = {
-          prompt = "Fix the following $filetype code:\n```$filetype\n$text\n```",
-          replace = true,
-          no_auto_close = false,
-          extract = "```$filetype\n(.-)```",
-          model = "deepseek-coder",
-        },
-        [icn.Items .. " Text " .. icn.into .. " List of items " .. icn.Swap] = {
-          prompt = "Convert the following text, except for the code blocks, into a markdown list of items without additional quotes around it:\n$text",
-          replace = true,
-          no_auto_close = false,
-          model = "mistral",
-        },
-        [icn.Items .. " List of items " .. icn.into .. " Text " .. icn.Swap] = {
-          prompt = "Convert the following list of items into a block of text, without additional quotes around it. Modify the resulting text if needed to use better wording.\n$text",
-          replace = true,
-          no_auto_close = false,
-          model = "mistral",
-        },
-        [icn.Text .. " Fix Grammar / Syntax in text " .. icn.Swap] = {
-          prompt = "Fix the grammar and syntax in the following text, except for the code blocks, and without additional quotes around it:\n$text",
-          replace = true,
-          no_auto_close = false,
-          model = "mistral",
-        },
-        [icn.Text .. " Reword text " .. icn.Swap] = {
-          prompt = "Modify the following text, except for the code blocks, to use better wording, and without additional quotes around it:\n$text",
-          replace = true,
-          no_auto_close = false,
-          model = "mistral",
-        },
-        [icn.Text .. " Simplify text " .. icn.Swap] = {
-          prompt = "Modify the following text, except for the code blocks, to make it as simple and concise as possible and without additional quotes around it:\n$text",
-          replace = true,
-          no_auto_close = false,
-          model = "mistral",
-        },
-        [icn.Text .. " Summarize text " .. icn.Keep] = {
-          prompt = "Summarize the following text, except for the code blocks, without additional quotes around it:\n$text",
-          model = "mistral",
-        },
-      }
-    end,
-  },
 
   {
     "monaqa/dial.nvim",
@@ -294,6 +68,18 @@ return {
         },
       })
     end,
+  },
+  {
+    "HakonHarnes/img-clip.nvim",
+    event = "VeryLazy",
+    opts = {
+      -- add options here
+      -- or leave it empty to use the default settings
+    },
+    keys = {
+      -- suggested keymap
+      { "<leader>p", "<cmd>PasteImage<cr>", desc = "Paste image from system clipboard" },
+    },
   },
   -- {
   --   "3rd/image.nvim",
@@ -327,19 +113,20 @@ return {
     "neovim/nvim-lspconfig",
     event = { "BufReadPre", "BufNewFile" },
     dependencies = {
+      { "williamboman/mason-lspconfig.nvim" },
       {
         "WhoIsSethDaniel/mason-tool-installer.nvim",
         opts = {
           ensure_installed = {
-            "prettierd",
-            "prettier",
-            "stylua",
-            "eslint_d",
-            "isort",
             "black",
             "eslint_d",
-            -- "rubocop",
+            "eslint_d",
+            "isort",
+            "prettier",
+            "prettierd",
             "ruff",
+            "stylua",
+            -- "rubocop",
           },
           automatic_installation = true,
         },
@@ -348,24 +135,25 @@ return {
         "williamboman/mason.nvim",
         config = function()
           local tools = {
-            "prettierd",
-            "prettier",
-            "stylua",
-            "selene",
             "luacheck",
-            -- "fixjson",
-            -- "eslint_d",
+            "prettier",
+            "prettierd",
+            "selene",
             "shellcheck",
-            -- "deno",
             "shfmt",
-            -- "goimports",
-            -- "black",
-            -- "isort",
-            -- "flake8",
-            -- "cbfmt",
-            -- "buf",
-            -- "elm-format",
+            "solargraph",
+            "stylua",
             "yamlfmt",
+            -- "black",
+            -- "buf",
+            -- "cbfmt",
+            -- "deno",
+            -- "elm-format",
+            -- "eslint_d",
+            -- "fixjson",
+            -- "flake8",
+            -- "goimports",
+            -- "isort",
           }
 
           require("mason").setup()
@@ -380,41 +168,8 @@ return {
           })
         end,
       },
-      {
-        "elixir-tools/elixir-tools.nvim",
-        version = "*",
-        -- dev = true,
-        event = { "BufReadPre", "BufNewFile" },
-        config = function()
-          local elixir = require("elixir")
-          local nextls_opts
-          nextls_opts = {
-            enable = mega.lsp.is_enabled_elixir_ls("tools-nextls"),
-            spitfire = true,
-            init_options = {
-              experimental = {
-                completions = {
-                  enable = true,
-                },
-              },
-            },
-          }
-
-          elixir.setup({
-            nextls = nextls_opts,
-            credo = { enable = mega.lsp.is_enabled_elixir_ls("credo") },
-            elixirls = { enable = mega.lsp.is_enabled_elixir_ls("tools-elixirls") },
-          })
-        end,
-        dependencies = {
-          "nvim-lua/plenary.nvim",
-          "mhanberg/workspace-folders.nvim",
-        },
-      },
       { "nvim-lua/lsp_extensions.nvim" },
-      { "williamboman/mason-lspconfig.nvim" },
       { "b0o/schemastore.nvim" },
-      { "ray-x/lsp_signature.nvim" },
       {
         "icholy/lsplinks.nvim",
         setup = function()
@@ -484,198 +239,6 @@ return {
           })
         end,
       },
-      {
-        "Wansmer/symbol-usage.nvim",
-        cond = false,
-        event = "LspAttach",
-        opts = {
-          text_format = function(symbol)
-            local res = {}
-            local ins = table.insert
-
-            -- local round_start = { "", "SymbolUsageRounding" }
-            -- local round_end = { "", "SymbolUsageRounding" }
-
-            if symbol.references then
-              local usage = symbol.references <= 1 and "usage" or "usages"
-              local num = symbol.references == 0 and "no" or symbol.references
-              -- ins(res, round_start)
-              ins(res, { "󰌹 ", "SymbolUsageRef" })
-              ins(res, { ("%s %s"):format(num, usage), "SymbolUsageContent" })
-              if #res > 0 then table.insert(res, { " ", "NonText" }) end
-              -- ins(res, round_end)
-            end
-
-            if symbol.definition then
-              if #res > 0 then table.insert(res, { " ", "NonText" }) end
-              -- ins(res, round_start)
-              ins(res, { "󰳽 ", "SymbolUsageDef" })
-              ins(res, { symbol.definition .. " defs", "SymbolUsageContent" })
-              if #res > 0 then table.insert(res, { " ", "NonText" }) end
-              -- ins(res, round_end)
-            end
-
-            if symbol.implementation then
-              if #res > 0 then table.insert(res, { " ", "NonText" }) end
-              -- ins(res, round_start)
-              ins(res, { "󰡱 ", "SymbolUsageImpl" })
-              ins(res, { symbol.implementation .. " impls", "SymbolUsageContent" })
-              if #res > 0 then table.insert(res, { " ", "NonText" }) end
-              -- ins(res, round_end)
-            end
-
-            return res
-          end,
-          -- text_format = function(symbol)
-          --   local fragments = {}
-          --
-          --   if symbol.references then
-          --     local usage = symbol.references <= 1 and "usage" or "usages"
-          --     local num = symbol.references == 0 and "no" or symbol.references
-          --     table.insert(fragments, { ("%s %s"):format(num, usage), "SymbolUsageContent" })
-          --   end
-          --
-          --   if symbol.definition then
-          --     table.insert(fragments, { symbol.definition .. " defs", "SymbolUsageContent" })
-          --   end
-          --
-          --   if symbol.implementation then
-          --     table.insert(fragments, { symbol.implementation .. " impls", "SymbolUsageContent" })
-          --   end
-          --
-          --   -- return table.concat(fragments, ", ")
-          --   return fragments
-          -- end,
-        },
-      },
-    },
-  },
-  {
-    "stevearc/oil.nvim",
-    cmd = { "Oil" },
-    enabled = vim.g.explorer == "oil",
-    cond = vim.g.explorer == "oil",
-    config = function()
-      local icons = mega.icons
-      local icon_file = vim.trim(icons.lsp.kind.File)
-      local icon_dir = vim.trim(icons.lsp.kind.Folder)
-      local permission_hlgroups = setmetatable({
-        ["-"] = "OilPermissionNone",
-        ["r"] = "OilPermissionRead",
-        ["w"] = "OilPermissionWrite",
-        ["x"] = "OilPermissionExecute",
-      }, {
-        __index = function() return "OilDir" end,
-      })
-
-      local type_hlgroups = setmetatable({
-        ["-"] = "OilTypeFile",
-        ["d"] = "OilTypeDir",
-        ["f"] = "OilTypeFifo",
-        ["l"] = "OilTypeLink",
-        ["s"] = "OilTypeSocket",
-      }, {
-        __index = function() return "OilTypeFile" end,
-      })
-
-      require("oil").setup({
-        trash = false,
-        skip_confirm_for_simple_edits = true,
-        trash_command = "trash-cli",
-        prompt_save_on_select_new_entry = false,
-        use_default_keymaps = false,
-        is_always_hidden = function(name, _bufnr) return name == ".." end,
-        -- columns = {
-        --   "icon",
-        --   -- "permissions",
-        --   -- "size",
-        --   -- "mtime",
-        -- },
-
-        columns = {
-          {
-            "type",
-            icons = {
-              directory = "d",
-              fifo = "f",
-              file = "-",
-              link = "l",
-              socket = "s",
-            },
-            highlight = function(type_str) return type_hlgroups[type_str] end,
-          },
-          {
-            "permissions",
-            highlight = function(permission_str)
-              local hls = {}
-              for i = 1, #permission_str do
-                local char = permission_str:sub(i, i)
-                table.insert(hls, { permission_hlgroups[char], i - 1, i })
-              end
-              return hls
-            end,
-          },
-          { "size", highlight = "Special" },
-          { "mtime", highlight = "Number" },
-          {
-            "icon",
-            default_file = icon_file,
-            directory = icon_dir,
-            add_padding = false,
-          },
-        },
-        view_options = {
-          show_hidden = true,
-        },
-        keymaps = {
-          ["g?"] = "actions.show_help",
-          ["gs"] = "actions.change_sort",
-          ["gx"] = "actions.open_external",
-          ["g."] = "actions.toggle_hidden",
-          ["gd"] = {
-            desc = "Toggle detail view",
-            callback = function()
-              local oil = require("oil")
-              local config = require("oil.config")
-              if #config.columns == 1 then
-                oil.set_columns({ "icon", "permissions", "size", "mtime" })
-              else
-                oil.set_columns({ "type", "icon" })
-              end
-            end,
-          },
-          ["<CR>"] = "actions.select",
-          ["gp"] = function()
-            local oil = require("oil")
-            local entry = oil.get_cursor_entry()
-            if entry["type"] == "file" then
-              local dir = oil.get_current_dir()
-              local fileName = entry["name"]
-              local fullName = dir .. fileName
-
-              require("mega.utils").preview_file(fullName)
-            else
-              return ""
-            end
-          end,
-        },
-      })
-    end,
-    keys = {
-      {
-        "<leader>ev",
-        function()
-          -- vim.cmd([[vertical rightbelow split|vertical resize 60]])
-          vim.cmd([[vertical rightbelow split]])
-          require("oil").open()
-        end,
-        desc = "oil: open (vsplit)",
-      },
-      {
-        "<leader>ee",
-        function() require("oil").open() end,
-        desc = "oil: open (edit)",
-      },
     },
   },
   { "kevinhwang91/nvim-bqf", ft = "qf", opts = {
@@ -727,7 +290,7 @@ return {
   },
   {
     "altermo/ultimate-autopair.nvim",
-    event = { "VeryLazy" },
+    event = { "InsertEnter", "TermEnter", "CursorMoved" },
     branch = "v0.6", --recomended as each new version will have breaking changes
     opts = {
       cmap = false,
@@ -970,58 +533,58 @@ return {
       },
     },
   },
-  -- {
-  --   "Wansmer/treesj",
-  --   dependencies = {
-  --     "nvim-treesitter/nvim-treesitter",
-  --     {
-  --       "AndrewRadev/splitjoin.vim",
-  --       init = function()
-  --         vim.g.splitjoin_split_mapping = ""
-  --         vim.g.splitjoin_join_mapping = ""
-  --       end,
-  --     },
-  --   },
-  --   cmd = {
-  --     "TSJSplit",
-  --     "TSJJoin",
-  --     "TSJToggle",
-  --     "SplitjoinJoin",
-  --     "SplitjoinSplit",
-  --     "SplitjoinToggle",
-  --   },
-  --   keys = {
-  --     {
-  --       "gJ",
-  --       function()
-  --         if require("treesj.langs")["presets"][vim.bo.filetype] then
-  --           vim.cmd("TSJToggle")
-  --         else
-  --           vim.cmd("SplitjoinToggle")
-  --         end
-  --       end,
-  --       desc = "splitjoin: toggle lines",
-  --     },
-  --   },
-  --   opts = {
-  --     use_default_keymaps = false,
-  --     max_join_length = tonumber(vim.g.default_colorcolumn),
-  --   }, -- config = function()
-  --   --   require("treesj").setup({ use_default_keymaps = false, max_join_length = 150 })
-  --   --
-  --   --   mega.augroup("SplitJoin", {
-  --   --     event = { "FileType" },
-  --   --     pattern = "*",
-  --   --     command = function()
-  --   --       if require("treesj.langs")["presets"][vim.bo.filetype] then
-  --   --         mega.nnoremap("gJ", ":TSJToggle<cr>", { desc = "splitjoin: toggle lines", buffer = true })
-  --   --       else
-  --   --         mega.nnoremap("gJ", ":SplitjoinToggle<cr>", { desc = "splitjoin: toggle lines", buffer = true })
-  --   --       end
-  --   --     end,
-  --   --   })
-  --   -- end,
-  -- },
+  {
+    "Wansmer/treesj",
+    dependencies = {
+      "nvim-treesitter/nvim-treesitter",
+      {
+        "AndrewRadev/splitjoin.vim",
+        init = function()
+          vim.g.splitjoin_split_mapping = ""
+          vim.g.splitjoin_join_mapping = ""
+        end,
+      },
+    },
+    cmd = {
+      "TSJSplit",
+      "TSJJoin",
+      "TSJToggle",
+      "SplitjoinJoin",
+      "SplitjoinSplit",
+      "SplitjoinToggle",
+    },
+    keys = {
+      {
+        "gJ",
+        function()
+          if require("treesj.langs")["presets"][vim.bo.filetype] then
+            vim.cmd("TSJToggle")
+          else
+            vim.cmd("SplitjoinToggle")
+          end
+        end,
+        desc = "splitjoin: toggle lines",
+      },
+    },
+    opts = {
+      use_default_keymaps = false,
+      max_join_length = tonumber(vim.g.default_colorcolumn),
+    }, -- config = function()
+    --   require("treesj").setup({ use_default_keymaps = false, max_join_length = 150 })
+    --
+    --   mega.augroup("SplitJoin", {
+    --     event = { "FileType" },
+    --     pattern = "*",
+    --     command = function()
+    --       if require("treesj.langs")["presets"][vim.bo.filetype] then
+    --         mega.nnoremap("gJ", ":TSJToggle<cr>", { desc = "splitjoin: toggle lines", buffer = true })
+    --       else
+    --         mega.nnoremap("gJ", ":SplitjoinToggle<cr>", { desc = "splitjoin: toggle lines", buffer = true })
+    --       end
+    --     end,
+    --   })
+    -- end,
+  },
 
   -- ( Notes/Docs ) ------------------------------------------------------------
   {

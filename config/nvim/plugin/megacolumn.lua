@@ -1,5 +1,4 @@
-if not mega then return end
-if not vim.g.enabled_plugin["megacolumn"] then return end
+if not plugin_loaded("megacolumn") then return end
 
 ---@alias StringComponent {component: string, length: integer, priority: integer}
 ---@alias ExtmarkSign {[1]: number, [2]: number, [3]: number, [4]: {sign_text: string, sign_hl_group: string}}

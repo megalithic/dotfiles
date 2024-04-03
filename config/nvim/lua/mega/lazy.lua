@@ -1,26 +1,4 @@
 local M = {}
---
--- function M.require(mod)
---   local ok, ret = M.try(require, mod)
---   return ok and ret
--- end
---
--- function M.try(fn, ...)
---   local args = { ... }
---
---   return xpcall(function() return fn(unpack(args)) end, function(err)
---     local lines = {}
---     table.insert(lines, err)
---     table.insert(lines, debug.traceback("", 3))
---
---     M.error(table.concat(lines, "\n"))
---     return err
---   end)
--- end
---
--- -- ---A thin wrapper around vim.notify to add packer details to the message
--- -- ---@param msg string
--- function M.notify(msg, level) vim.notify(msg, level, { title = "lazy" }) end
 
 function M.setup()
   local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
@@ -36,10 +14,20 @@ function M.setup()
   end
 
   vim.opt.runtimepath:prepend(lazypath)
+
+  -- settings and autocmds must load before plugins,
+  -- but we can manually enable caching before both
+  -- of these for optimal performance
   require("lazy.core.cache").enable()
+
+  -- add event aliases
+  local event = require("lazy.core.handler.event")
+  event.mappings.LazyFile = { id = "LazyFile", event = { "BufReadPost", "BufNewFile", "BufWritePre" } }
+  event.mappings["User LazyFile"] = event.mappings.LazyFile
+
   local spec = {
-    { import = "mega.plugins.core" },
-    { import = "mega.plugins.extended" },
+    { import = "plugins.core" },
+    { import = "plugins.extended" },
   }
 
   require("lazy").setup({

@@ -86,7 +86,8 @@ return {
     event = { "BufReadPre", "BufNewFile" },
     opts = {
       -- experimental things -----------
-      _extmark_signs = vim.g.enabled_plugin["statuscolumn"],
+      -- _extmark_signs = vim.g.enabled_plugin["statuscolumn"],
+      _extmark_signs = true,
       _inline2 = true,
       _signs_staged_enable = false,
       -- -------------------------------

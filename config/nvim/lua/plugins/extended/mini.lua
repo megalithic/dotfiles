@@ -186,39 +186,32 @@ local function mini_jump()
   end
 end
 
-local function mini_pairs(opts)
-  opts = opts or { mappings = {
-    ["'"] = false,
-  } }
-  require("mini.pairs").setup(opts)
-end
-
 local function mini_ai()
   local ai = require("mini.ai")
   local gen_spec = ai.gen_spec
   ai.setup({
     n_lines = 500,
     -- search_method = "cover_or_next",
-    custom_textobjects = {
-      o = gen_spec.treesitter({
-        a = { "@block.outer", "@conditional.outer", "@loop.outer" },
-        i = { "@block.inner", "@conditional.inner", "@loop.inner" },
-      }, {}),
-      f = gen_spec.treesitter({ a = "@function.outer", i = "@function.inner" }, {}),
-      c = gen_spec.treesitter({ a = "@class.outer", i = "@class.inner" }, {}),
-      -- t = { "<(%w-)%f[^<%w][^<>]->.-</%1>", "^<.->%s*().*()%s*</[^/]->$" }, -- deal with selection without the carriage return
-      t = { "<([%p%w]-)%f[^<%p%w][^<>]->.-</%1>", "^<.->().*()</[^/]->$" },
-
-      -- scope
-      s = gen_spec.treesitter({
-        a = { "@function.outer", "@class.outer", "@testitem.outer" },
-        i = { "@function.inner", "@class.inner", "@testitem.inner" },
-      }),
-      S = gen_spec.treesitter({
-        a = { "@function.name", "@class.name", "@testitem.name" },
-        i = { "@function.name", "@class.name", "@testitem.name" },
-      }),
-    },
+    -- custom_textobjects = {
+    --   o = gen_spec.treesitter({
+    --     a = { "@block.outer", "@conditional.outer", "@loop.outer" },
+    --     i = { "@block.inner", "@conditional.inner", "@loop.inner" },
+    --   }, {}),
+    --   f = gen_spec.treesitter({ a = "@function.outer", i = "@function.inner" }, {}),
+    --   c = gen_spec.treesitter({ a = "@class.outer", i = "@class.inner" }, {}),
+    --   -- t = { "<(%w-)%f[^<%w][^<>]->.-</%1>", "^<.->%s*().*()%s*</[^/]->$" }, -- deal with selection without the carriage return
+    --   t = { "<([%p%w]-)%f[^<%p%w][^<>]->.-</%1>", "^<.->().*()</[^/]->$" },
+    --
+    --   -- scope
+    --   s = gen_spec.treesitter({
+    --     a = { "@function.outer", "@class.outer", "@testitem.outer" },
+    --     i = { "@function.inner", "@class.inner", "@testitem.inner" },
+    --   }),
+    --   S = gen_spec.treesitter({
+    --     a = { "@function.name", "@class.name", "@testitem.name" },
+    --     i = { "@function.name", "@class.name", "@testitem.name" },
+    --   }),
+    -- },
     mappings = {
       around = "a",
       inside = "i",
@@ -264,9 +257,14 @@ end
 local function mini_indentscope()
   require("mini.indentscope").setup({
     symbol = "┊", -- alts: ┊│┆ ┊  ▎││ ▏▏
+    -- mappings = {
+    --   goto_top = "<leader>k",
+    --   goto_bottom = "<leader>j",
+    -- },
     draw = {
       delay = 10,
       -- animation = require("mini.indentscope").gen_animation.none(),
+      -- animation = function() return 0 end,
       animation = function() return 10 end,
     },
     options = { try_as_border = true },
@@ -326,49 +324,24 @@ local function mini_hipatterns()
   -- vim.b.minihipatterns_disable = not context.in_treesitter_capture("comment") or not context.in_syntax_group("Comment")
 end
 
-local function mini_clue()
-  local miniclue = require("mini.clue")
-  miniclue.setup({
-    triggers = {
-      -- Leader triggers
-      { mode = "n", keys = "<Leader>" },
-      { mode = "x", keys = "<Leader>" },
+local function mini_comment()
+  require("mini.comment").setup({
+    ignore_blank_lines = true,
 
-      -- Built-in completion
-      { mode = "i", keys = "<C-x>" },
-
-      -- `g` key
-      { mode = "n", keys = "g" },
-      { mode = "x", keys = "g" },
-
-      -- Marks
-      { mode = "n", keys = "'" },
-      { mode = "n", keys = "`" },
-      { mode = "x", keys = "'" },
-      { mode = "x", keys = "`" },
-
-      -- Registers
-      { mode = "n", keys = "\"" },
-      { mode = "x", keys = "\"" },
-      { mode = "i", keys = "<C-r>" },
-      { mode = "c", keys = "<C-r>" },
-
-      -- Window commands
-      { mode = "n", keys = "<C-w>" },
-
-      -- `z` key
-      { mode = "n", keys = "z" },
-      { mode = "x", keys = "z" },
+    custom_commentstring = function() return vim.bo.commentstring end,
+    hooks = {
+      pre = function() require("ts_context_commentstring.internal").update_commentstring({}) end,
     },
-
-    clues = {
-      -- Enhance this by adding descriptions for <Leader> mapping groups
-      miniclue.gen_clues.builtin_completion(),
-      miniclue.gen_clues.g(),
-      miniclue.gen_clues.marks(),
-      miniclue.gen_clues.registers(),
-      miniclue.gen_clues.windows(),
-      miniclue.gen_clues.z(),
+    mappings = {
+      -- Toggle comment (like `gcip` - comment inner paragraph) for both
+      -- Normal and Visual modes
+      comment = "gc",
+      -- Toggle comment on current line
+      comment_line = "gcc",
+      -- Toggle comment on visual selection
+      comment_visual = "gc",
+      -- Define 'comment' textobject (like `dgc` - delete whole comment block)
+      textobject = "gc",
     },
   })
 end
@@ -399,16 +372,15 @@ return {
     mega.nmap("<leader>bd", function() require("mini.bufremove").delete(0, false) end)
     mega.nmap("<leader>bD", function() require("mini.bufremove").delete(0, true) end)
   end,
-  event = { "BufReadPost", "BufNewFile" },
+  event = { "LazyFile" },
   config = function()
+    mini_ai()
+    mini_indentscope()
+    mini_comment()
     mini_surround()
-    -- mini_pairs()
     mini_align()
     mini_pick()
-    -- mini_indentscope()
     -- mini_jump()
     mini_hipatterns()
-    -- mini_clue()
-    mini_ai()
   end,
 }
