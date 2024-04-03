@@ -375,12 +375,11 @@ return {
   event = { "LazyFile" },
   config = function()
     mini_ai()
-    mini_indentscope()
-    mini_comment()
-    mini_surround()
     mini_align()
-    mini_pick()
-    -- mini_jump()
+    mini_comment()
     mini_hipatterns()
+    mini_indentscope()
+    mini_pick()
+    mini_surround()
   end,
 }

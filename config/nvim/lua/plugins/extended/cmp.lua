@@ -58,7 +58,6 @@ return {
 
     local ok_ls, ls = pcall(require, "luasnip")
     if vim.g.snipper == "luasnip" then
-      -- [luasnip] --
       tab = function(fallback)
         if cmp.visible() then
           cmp.select_next_item()
@@ -76,31 +75,6 @@ return {
           cmp.select_prev_item()
         elseif ok_ls and ls and ls.jumpable(-1) then
           ls.jump(-1)
-        else
-          fallback()
-        end
-      end
-    elseif vim.g.snipper == "vsnip" then
-      -- [vsnip] --
-      tab = function(fallback)
-        if cmp.visible() then
-          cmp.select_next_item()
-        elseif vim.fn["vsnip#jumpable"](1) > 0 then
-          vim.fn.feedkeys(esc("<Plug>(vsnip-jump-next)"), "")
-        elseif has_words_before() then
-          cmp.complete()
-        -- elseif vim.fn["vsnip#expandable"]() > 0 then
-        --   vim.fn.feedkeys(esc("<Plug>(vsnip-expand)"), "")
-        else
-          fallback()
-        end
-      end
-
-      shift_tab = function(fallback)
-        if cmp.visible() then
-          cmp.select_prev_item()
-        elseif vim.fn["vsnip#jumpable"](-1) == 1 then
-          vim.fn.feedkeys(esc("<Plug>(vsnip-jump-prev)"), "")
         else
           fallback()
         end
@@ -186,8 +160,6 @@ return {
         expand = function(args)
           if vim.g.snipper == "luasnip" then
             ls.lsp_expand(args.body)
-          elseif vim.g.snipper == "vsnip" then
-            vim.fn["vsnip#anonymous"](args.body)
           elseif vim.g.snipper == "snippets" then
             vim.snippet.expand(args.body)
           else
@@ -260,15 +232,7 @@ return {
         ["<C-t>"] = cmp.mapping.confirm({ select = true }),
         ["<CR>"] = function(fallback)
           if vim.g.snipper == "luasnip" then
-            -- cmp.mapping.confirm({ select = false })
-
             cmp.mapping.confirm({ select = false, behavior = cmp.ConfirmBehavior.Replace })(fallback)
-          elseif vim.g.snipper == "vsnip" then
-            if vim.fn["vsnip#expandable"]() ~= 0 then
-              vim.fn.feedkeys(esc("<Plug>(vsnip-expand)"), "")
-              return
-            end
-            return cmp.mapping.confirm({ select = false, behavior = cmp.ConfirmBehavior.Replace })(fallback)
           else
             if cmp.visible() then
               -- cmp.confirm({ behavior = cmp.ConfirmBehavior.Replace, select = true })

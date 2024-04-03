@@ -20,6 +20,7 @@ neovim-remote
 notificationcenter
 opendrop
 pip
+pkgutil
 psutil
 pycp
 pyfzf
@@ -32,8 +33,8 @@ qutebrowser
 reorder_python_imports
 setuptools
 solargraph-utils.py
-typing
 term-image
+typing
 websocket-client
 west
 wheel

@@ -320,6 +320,9 @@ nnoremap("N", "Nzz<esc><cmd>lua mega.blink_cursorline(50)<cr>")
 xnoremap("N", "Nzz<esc><cmd>lua mega.blink_cursorline(50)<cr>")
 onoremap("N", "Nzz<esc><cmd>lua mega.blink_cursorline(50)<cr>")
 
+-- https://stackoverflow.com/questions/4256697/vim-search-and-highlight-but-do-not-jump#comment91750564_4257175
+map("n", "*", "m`<Cmd>keepjumps normal! *``<CR>", { desc = "Don't jump on first * -- simpler vim-asterisk" })
+
 -- smooth searching, allow tabbing between search results similar to using <c-g>
 -- or <c-t> the main difference being tab is easier to hit and remapping those keys
 -- to these would swallow up a tab mapping
@@ -334,8 +337,53 @@ cnoremap("<S-Tab>", function() return search("?", "<S-Tab>") end, { expr = true 
 cnoremap("<C-n>", [[wildmenumode() ? "\<c-n>" : "\<down>"]], { expr = true })
 cnoremap("<C-p>", [[wildmenumode() ? "\<c-p>" : "\<up>"]], { expr = true })
 
-nnoremap("<leader>yf", [[:let @*=expand("%:p")<CR>]], "yank file path into the clipboard")
-nnoremap("yf", [[:let @*=expand("%:p")<CR>]], "yank file path into the clipboard")
+-- nnoremap("<leader>yf", [[:let @*=expand("%:p")<CR>]], "yank file path into the clipboard")
+-- nnoremap("yf", [[:let @*=expand("%:p")<CR>]], "yank file path into the clipboard")
+
+map(
+  "n",
+  "zsc",
+  function() vim.print(vim.treesitter.get_captures_at_cursor()) end,
+  { desc = "[treesitter] Print treesitter captures under cursor" }
+)
+
+map("n", "yts", function()
+  local captures = vim.treesitter.get_captures_at_cursor()
+  if #captures == 0 then
+    vim.notify(
+      "No treesitter captures under cursor",
+      L.ERROR,
+      { title = "[yank] failed to yank treesitter captures", render = "compact" }
+    )
+    return
+  end
+
+  local parsedCaptures = vim.iter(captures):map(function(capture) return ("@%s"):format(capture) end):totable()
+  local resultString = vim.inspect(parsedCaptures)
+  vim.fn.setreg("+", resultString .. "\n")
+  vim.notify(resultString, L.INFO, { title = "[yank] yanked treesitter capture", render = "compact" })
+end, { desc = "[yank] copy treesitter captures under cursor" })
+
+map("n", "<Leader>yn", function()
+  local res = vim.fn.expand("%:t", false, false)
+  if type(res) ~= "string" then return end
+  if res == "" then
+    vim.notify("Buffer has no filename", L.ERROR, { title = "[yank] failed to yank filename", render = "compact" })
+    return
+  end
+  vim.fn.setreg("+", res)
+  vim.notify(res, L.INFO, { title = "[yank] yanked filename" })
+end, { desc = "[yank] yank the filename of current buffer" })
+
+map("n", "<Leader>yp", function()
+  local res = vim.fn.expand("%:p", false, false)
+  if type(res) ~= "string" then return end
+  res = res == "" and vim.uv.cwd() or res
+  if res:len() then
+    vim.fn.setreg("+", res)
+    vim.notify(res, L.INFO, { title = "[yank] yanked filepath" })
+  end
+end, { desc = "[yank] yank the full filepath of current buffer" })
 
 -- [custom mappings] -----------------------------------------------------------
 

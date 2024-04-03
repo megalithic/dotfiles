@@ -371,8 +371,8 @@ return {
   freetype_render_target = "HorizontalLcd",
   font = w.font_with_fallback({
     -- font.JetBrainsMono.Normal,
-    -- font.MapleMono,
     font.JetBrainsMonoNerdFont.Normal,
+    font.MapleMono,
     { family = "Rec Mono Duotone", weight = "Medium" },
     -- charset fallbacks ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘǫʀsᴛᴜᴠᴡxʏᴢ (ﾉಥ益ಥ）ﾉ︵┻━┻
     "Noto Sans Mono", -- linux + smallcaps

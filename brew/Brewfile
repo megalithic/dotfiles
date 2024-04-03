@@ -60,7 +60,7 @@ brew "broot"
 brew "browsh" if OS.mac?
 brew "btop"
 brew "catimg"
-brew "ccls" # c-lang lsp vs., c-lang lsp in llvm
+brew "ccls"  # c-lang lsp vs., c-lang lsp in llvm
 brew "chafa" # image renderer for telescope/bat/fzf/etc
 brew "cmake" if OS.mac?
 brew "coreutils" if OS.mac?
@@ -91,7 +91,7 @@ brew "fswatch"
 brew "superfly/tap/flyctl"
 brew "fontforge" if OS.mac?
 brew "fop" # used for asdf erlang
-brew "fx" # jq but better
+brew "fx"  # jq but better
 brew "fzf" # -> $(brew --prefix)/opt/fzf/install
 brew "gawk"
 brew "gdb"
@@ -256,6 +256,7 @@ cask "font-caskaydia-cove-nerd-font"
 cask "font-recursive-code"
 cask "font-recursive-code-nerd-font"
 cask "font-maple"
+cask "font-noto-sans-mono"
 cask "font-monaspace-nerd-font"
 
 cask "font-cascadia-mono"

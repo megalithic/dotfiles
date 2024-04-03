@@ -1,5 +1,5 @@
 local prettier = { "dprint", "prettierd", "prettier" }
-local shfmt = { "beautysh", "shfmt" } -- shellharden
+local shfmt = { "shfmt" } -- shellharden
 local timeout_ms = 1500
 local lsp_fallback = "always"
 local keys = {}
