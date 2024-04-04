@@ -310,23 +310,20 @@ end
 function obj:entered()
   obj.isOpen = true
   hs.window.highlight.start()
+  local frame = hs.window.focusedWindow():frame()
 
-  -- local win = hs.window.focusedWindow()
-  -- local max = win:screen():fullFrame()
-  -- local f = win:frame()
-  --
-  -- -- https://github.com/Hammerspoon/hammerspoon/issues/2214
-  -- obj.indicator = hs.canvas
-  --   .new({ x = max.x, y = max.y, h = max.h, w = max.w })
-  --   :appendElements({
-  --     type = "rectangle",
-  --     action = "stroke",
-  --     strokeWidth = 4.0,
-  --     strokeColor = { white = 0.5, alpha = 0.7 },
-  --     roundedRectRadii = { xRadius = 14.0, yRadius = 14.0 },
-  --     frame = { x = f.x, y = f.y, h = f.h, w = f.w },
-  --   })
-  --   :show()
+  -- HT: @evantravers
+  obj.indicator = hs.canvas
+    .new(frame)
+    :appendElements({
+      type = "rectangle",
+      action = "stroke",
+      strokeWidth = 2.0,
+      strokeColor = { white = 0.5, alpha = 0.7 },
+      roundedRectRadii = { xRadius = 14.0, yRadius = 14.0 },
+      frame = frame, --k x = f.x, y = f.y, h = f.h, w = f.w },
+    })
+    :show()
 
   obj.alerts = hs.fnutils.map(hs.screen.allScreens(), function(screen)
     local win = hs.window.focusedWindow()
