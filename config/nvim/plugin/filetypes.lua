@@ -232,24 +232,8 @@ xmap <silent> <localleader>er :lua require("mega.utils").wrap_selected_nodes("{:
     },
     callback = function()
       vim.fn.matchaddpos("DiagnosticVirtualTextError", { { 1, 50, 10000 } })
+      -- vim.cmd.normal("gg") -- FIXME: causes unncessary screen flickering on <cr>
       if vim.fn.prevnonblank(".") ~= vim.fn.line(".") then vim.cmd.startinsert() end
-
-      -- stylua: ignore start
-      local formatlistpat = {'^\\s*'}                         --- Optional leading whitespace
-      table.insert(formatlistpat, '[')                        --- Start character class
-      table.insert(formatlistpat, '\\[({]\\?')                --- |  Optionally match opening punctuation
-      table.insert(formatlistpat, '\\(')                      --- |  Start group
-      table.insert(formatlistpat, '[0-9]\\+')                 --- |  |  Numbers
-      table.insert(formatlistpat, [[\\\|]])                   --- |  |  or
-      table.insert(formatlistpat, '[a-zA-Z]\\+')              --- |  |  Letters
-      table.insert(formatlistpat, '\\)')                      --- |  End group
-      table.insert(formatlistpat, '[\\]:.)}')                 --- |  Closing punctuation
-      table.insert(formatlistpat, ']')                        --- End character class
-      table.insert(formatlistpat, '\\s\\+')                   --- One or more spaces
-      table.insert(formatlistpat, [[\\\|]])                   --- or
-      table.insert(formatlistpat, '^\\s*[-+*]\\s\\+')         --- Bullet points
-      vim.bo.formatlistpat = table.concat(formatlistpat, '')
-      -- stylua: ignore end
     end,
   },
   neogitcommitmessage = {
@@ -264,24 +248,8 @@ xmap <silent> <localleader>er :lua require("mega.utils").wrap_selected_nodes("{:
     },
     callback = function()
       vim.fn.matchaddpos("DiagnosticVirtualTextError", { { 1, 50, 10000 } })
+      -- vim.cmd.normal("gg") -- FIXME: causes unncessary screen flickering on <cr>
       if vim.fn.prevnonblank(".") ~= vim.fn.line(".") then vim.cmd.startinsert() end
-
-      -- stylua: ignore start
-      local formatlistpat = {'^\\s*'}                         --- Optional leading whitespace
-      table.insert(formatlistpat, '[')                        --- Start character class
-      table.insert(formatlistpat, '\\[({]\\?')                --- |  Optionally match opening punctuation
-      table.insert(formatlistpat, '\\(')                      --- |  Start group
-      table.insert(formatlistpat, '[0-9]\\+')                 --- |  |  Numbers
-      table.insert(formatlistpat, [[\\\|]])                   --- |  |  or
-      table.insert(formatlistpat, '[a-zA-Z]\\+')              --- |  |  Letters
-      table.insert(formatlistpat, '\\)')                      --- |  End group
-      table.insert(formatlistpat, '[\\]:.)}')                 --- |  Closing punctuation
-      table.insert(formatlistpat, ']')                        --- End character class
-      table.insert(formatlistpat, '\\s\\+')                   --- One or more spaces
-      table.insert(formatlistpat, [[\\\|]])                   --- or
-      table.insert(formatlistpat, '^\\s*[-+*]\\s\\+')         --- Bullet points
-      vim.bo.formatlistpat = table.concat(formatlistpat, '')
-      -- stylua: ignore end
     end,
   },
   fugitiveblame = {

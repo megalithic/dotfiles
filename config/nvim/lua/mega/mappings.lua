@@ -392,17 +392,27 @@ end, { desc = "[yank] yank the full filepath of current buffer" })
 
 -- Spelling
 -- map("n", "<leader>s", "z=e") -- Correct current word
-nmap("<leader>s", function()
+nmap("<leader>sj", "]s", { desc = "[spell] Move to next misspelling" })
+nmap("<leader>sk", "[s", { desc = "[spell] Move to previous misspelling" })
+nmap("<leader>sf", function()
   local cur_pos = vim.api.nvim_win_get_cursor(0)
   vim.cmd.normal({ "1z=", bang = true })
   vim.api.nvim_win_set_cursor(0, cur_pos)
-end, { desc = "Correct spelling of word under cursor" })
+end, { desc = "[spell] Correct spelling of word under cursor" })
 
-nmap("<leader>S", function()
+nmap("<leader>sa", function()
   local cur_pos = vim.api.nvim_win_get_cursor(0)
   vim.cmd.normal({ "zg", bang = true })
   vim.api.nvim_win_set_cursor(0, cur_pos)
-end, { desc = "Add word under cursor to dictionary" })
+end, { desc = "[spell] Add word under cursor to dictionary" })
+
+nmap("<leader>si", function() vim.cmd.normal("ysiw`") end, { desc = "[spell] Ignore spelling of word under cursor" })
+
+-- map('n', '<leader>sf', function()
+--   local cur_pos = vim.api.nvim_win_get_cursor(0)
+--   vim.cmd.normal { '1z=', bang = true }
+--   vim.api.nvim_win_set_cursor(0, cur_pos)
+-- end, { desc = 'Correct spelling of word under cursor' })
 -- nmap("<leader>S", "zg") -- Add word under cursor to dictionary
 
 mega.map({ "x", "n" }, "gcd", function()
