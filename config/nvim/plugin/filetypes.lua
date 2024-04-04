@@ -221,6 +221,16 @@ xmap <silent> <localleader>er :lua require("mega.utils").wrap_selected_nodes("{:
     },
   },
   gitcommit = {
+    keys = {
+      {
+        "q",
+        function()
+          print("quitting stuff")
+          vim.cmd.quit()
+        end,
+        { nowait = true, desc = "abort gitcommit" },
+      },
+    },
     opt = {
       list = false,
       number = false,
@@ -232,9 +242,12 @@ xmap <silent> <localleader>er :lua require("mega.utils").wrap_selected_nodes("{:
     },
     callback = function()
       vim.fn.matchaddpos("DiagnosticVirtualTextError", { { 1, 50, 10000 } })
-      -- vim.cmd.normal("gg") -- FIXME: causes unncessary screen flickering on <cr>
+      vim.defer_fn(function() vim.cmd.normal({ "gg", bang = true }) end, 1)
       if vim.fn.prevnonblank(".") ~= vim.fn.line(".") then vim.cmd.startinsert() end
     end,
+  },
+  gitrebase = {
+    function() vim.keymap.set("n", "q", vim.cmd.cquit, { nowait = true, desc = "Abort" }) end,
   },
   neogitcommitmessage = {
     opt = {
@@ -247,8 +260,9 @@ xmap <silent> <localleader>er :lua require("mega.utils").wrap_selected_nodes("{:
       colorcolumn = "50,72",
     },
     callback = function()
+      vim.keymap.set("n", "q", vim.cmd.cquit, { buffer = true, nowait = true, desc = "Abort" })
       vim.fn.matchaddpos("DiagnosticVirtualTextError", { { 1, 50, 10000 } })
-      -- vim.cmd.normal("gg") -- FIXME: causes unncessary screen flickering on <cr>
+      vim.defer_fn(function() vim.cmd.normal({ "gg", bang = true }) end, 1)
       if vim.fn.prevnonblank(".") ~= vim.fn.line(".") then vim.cmd.startinsert() end
     end,
   },

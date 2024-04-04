@@ -37,26 +37,6 @@ local M = {
   completer = "cmp", -- alt: cmp, epo
   ts_ignored_langs = {}, -- alt: { "svg", "json", "heex", "jsonc" }
   is_screen_sharing = false,
-  enabled_plugin = {
-    abbreviations = true,
-    megaline = true,
-    megacolumn = true,
-    term = true,
-    lsp = true,
-    repls = true,
-    cursorline = true,
-    colorcolumn = true,
-    windows = true,
-    numbers = true,
-    folds = true,
-    env = true,
-    -- old_term = false,
-    -- tmux = false,
-    -- breadcrumb = false,
-    -- megaterm = false,
-    -- vscode = false,
-    -- winbar = false,
-  },
   enabled_plugins = {
     "abbreviations",
     "megaline",
@@ -68,7 +48,7 @@ local M = {
     "colorcolumn",
     "windows",
     "numbers",
-    "folds",
+    -- "folds",
     "env",
   },
   -- REF: elixir LSPs: elixir-tools(tools-elixirls, tools-nextls, credo), elixirls, nextls, lexical
@@ -171,6 +151,7 @@ M.apply = function()
       foldcolumn = "1",
       foldenable = true,
       foldexpr = "v:lua.vim.treesitter.foldexpr()",
+      -- foldtext = "", -- NOTE: see plugin/folds.lua
       foldlevel = 99,
       foldlevelstart = 99,
       foldmethod = "expr",

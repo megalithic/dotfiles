@@ -89,32 +89,6 @@ augroup("CheckOutsideTime", {
   command = "silent! checktime",
 })
 
-local smart_close_filetypes = {
-  "help",
-  "git-status",
-  "git-log",
-  "gitcommit",
-  "oil",
-  "dbui",
-  "fugitive",
-  "fugitiveblame",
-  "LuaTree",
-  "log",
-  "tsplayground",
-  "startuptime",
-  "outputpanel",
-  "preview",
-  "qf",
-  "man",
-  "terminal",
-  "lspinfo",
-  "neotest-output",
-  "neotest-output-panel",
-  "query",
-  "elixirls",
-}
-local smart_close_buftypes = {} -- Don't include no file buffers as diff buffers are nofile
-
 local miniindentscope_disable_ft = {
   "help",
   "alpha",
@@ -145,6 +119,31 @@ local miniindentscope_disable_ft = {
   "DirBuf",
   "markdown",
 }
+
+local smart_close_filetypes = {
+  "help",
+  "git-status",
+  "git-log",
+  "oil",
+  "dbui",
+  "fugitive",
+  "fugitiveblame",
+  "LuaTree",
+  "log",
+  "tsplayground",
+  "startuptime",
+  "outputpanel",
+  "preview",
+  "qf",
+  "man",
+  "terminal",
+  "lspinfo",
+  "neotest-output",
+  "neotest-output-panel",
+  "query",
+  "elixirls",
+}
+local smart_close_buftypes = {} -- Don't include no file buffers as diff buffers are nofile
 
 local function do_smart_close()
   if fn.winnr("$") ~= 1 then

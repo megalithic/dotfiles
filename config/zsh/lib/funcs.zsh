@@ -433,6 +433,10 @@ fzstash() {
   done
 }
 
+# fvidconvert() {
+#   vidconvert -t mov ~/Movies/obs/$(printf -v date '%(%Y-%m-%d)T' -1)*.mkv
+# }
+
 # fzf-tab https://github.com/Aloxaf/fzf-tab/wiki/Configuration#group-colors
 #
 # Usage: palette

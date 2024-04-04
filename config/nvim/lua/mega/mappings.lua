@@ -535,13 +535,6 @@ map("x", "<leader>h", "\"hy:%s/<C-r>h/<C-r>h/gc<left><left><left>", {
                  (breaks on multiple lines & special chars)]],
 })
 
-map("n", "<leader>z", "za", { desc = "Toggle current fold" })
-map("x", "<leader>z", "zf", { desc = "Create fold from selection" })
-map("n", "zf", function() vim.cmd.normal("zMzv") end, { desc = "Fold all except current" })
-map("n", "zF", function() vim.cmd.normal("zMzvzczo") end, { desc = "Fold all except current and children of current" })
-map("n", "zO", function() vim.cmd.normal("zR") end, { desc = "Open all folds" })
-map("n", "zo", "zO", { desc = "Open all folds descending from current line" })
-
 map("x", "y", "ygv<Esc>", { desc = "Cursor-in-place copy" })
 map("n", "P", function() vim.cmd.normal({ vim.v.count1 .. "P`[", bang = true }) end, { desc = "Cursor-in-place paste" })
 
