@@ -544,7 +544,7 @@ function M.clear_ui(opts)
   local deluxe = opts["deluxe"]
   -- vcmd([[nnoremap <silent><ESC> :syntax sync fromstart<CR>:nohlsearch<CR>:redrawstatus!<CR><ESC> ]])
   -- Clear / search term
-  vim.fn.setreg("/", "")
+  -- vim.fn.setreg("/", "")
 
   -- Stop highlighting searches
   vim.cmd.nohlsearch()
