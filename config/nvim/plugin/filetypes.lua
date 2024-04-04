@@ -269,12 +269,55 @@ xmap <silent> <localleader>er :lua require("mega.utils").wrap_selected_nodes("{:
       { "gd", "<C-]>" },
     },
     opt = {
+      signcolumn = "no",
       splitbelow = true,
+      number = true,
       relativenumber = true,
       list = false,
       textwidth = 80,
     },
     callback = function() mega.pcall(vim.treesitter.start) end,
+  },
+  man = {
+    keys = {
+      { "gd", "<C-]>" },
+    },
+    opt = {
+      signcolumn = "no",
+      splitbelow = true,
+      number = true,
+      relativenumber = true,
+      list = false,
+      textwidth = 80,
+    },
+  },
+  oil = {
+    keys = {},
+    opt = {
+      conceallevel = 3,
+      concealcursor = "n",
+      list = false,
+      wrap = false,
+      signcolumn = "no",
+    },
+    callback = function()
+      nnoremap("q", "<cmd>q<cr>", { desc = "oil: quit", buffer = 0 })
+      nnoremap("<leader>ed", "<cmd>q<cr>", { desc = "oil: quit", buffer = 0 })
+      nnoremap("<BS>", function() require("oil").open() end, { desc = "oil: goto parent dir", buffer = 0 })
+
+      nnoremap("<localleader>ff", function()
+        local oil = require("oil")
+        local dir = oil.get_current_dir()
+        if vim.api.nvim_win_get_config(0).relative ~= "" then vim.api.nvim_win_close(0, true) end
+        mega.find_files({ cwd = dir, hidden = true })
+      end, "oil: find files in dir")
+      nnoremap("<localleader>a", function()
+        local oil = require("oil")
+        local dir = oil.get_current_dir()
+        if vim.api.nvim_win_get_config(0).relative ~= "" then vim.api.nvim_win_close(0, true) end
+        mega.grep({ cwd = dir })
+      end, "oil: grep files in dir")
+    end,
   },
   lua = {
     abbr = {
