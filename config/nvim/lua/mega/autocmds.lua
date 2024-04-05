@@ -14,6 +14,7 @@ local api = vim.api
 local augroup = mega.augroup
 local contains = vim.tbl_contains
 local U = require("mega.utils")
+local SETTINGS = require("mega.settings")
 
 augroup("Startup", {
   {
@@ -178,15 +179,21 @@ augroup("EnterLeaveBehaviours", {
   {
     desc = "Enable things on *Enter",
     event = { "BufEnter" },
-    command = function()
-      vim.defer_fn(function() vim.cmd("EnableHL") end, 1)
+    command = function(evt)
+      vim.defer_fn(function()
+        local ibl_ok, ibl = pcall(require, "ibl")
+        if ibl_ok then ibl.setup_buffer(evt.buf, { indent = { char = SETTINGS.indent_char } }) end
+      end, 1)
     end,
   },
   {
     desc = "Disable things on *Leave",
     event = { "BufLeave" },
-    command = function()
-      vim.defer_fn(function() vim.cmd("DisableHL") end, 1)
+    command = function(evt)
+      vim.defer_fn(function()
+        local ibl_ok, ibl = pcall(require, "ibl")
+        if ibl_ok then ibl.setup_buffer(evt.buf, { indent = { char = "" } }) end
+      end, 1)
     end,
   },
 })

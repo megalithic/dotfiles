@@ -576,7 +576,7 @@ local function setup_diagnostics(client, bufnr)
     float = {
       show_header = true,
       source = "always", -- or "always", "if_many" (for more than one source)
-      border = mega.get_border(),
+      border = mega.current_border(),
       focusable = false,
       severity_sort = true,
       max_width = max_width,

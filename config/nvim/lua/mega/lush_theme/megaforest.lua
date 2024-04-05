@@ -98,7 +98,7 @@ local theme = lush(function(injected_functions)
     FoldMoreMsg({ Comment, gui = "italic,bold" }), -- |more-prompt|
     WildMenu({ PmenuSel }), -- current match in 'wildmenu' completion
     NormalFloat({ Pmenu }), -- Normal text in floating windows.
-    FloatBorder({ Pmenu, fg = C.bg2.darken(29) }),
+    FloatBorder({ Pmenu, fg = C.bg2.darken(10) }),
     NotifyBackground({ bg = C.bg2.darken(10) }),
     NotifyFloat({ NotifyBackground, fg = C.bg2.darken(10) }),
     FloatTitle({ Visual }),

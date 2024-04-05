@@ -182,12 +182,12 @@ return {
           }, ","),
           zindex = 1001,
           col_offset = 0,
-          border = mega.get_border(), -- alts: mega.get_border(), "none"
+          border = mega.current_border(), -- alts: mega.get_border(), "none"
           side_padding = 1,
           scrollbar = true,
         },
         documentation = cmp.config.window.bordered({
-          border = mega.get_border(), -- alts: mega.get_border(), "none"
+          border = mega.current_border(), -- alts: mega.get_border(), "none"
           winhighlight = table.concat({
             "Normal:NormalFloat",
             "FloatBorder:FloatBorder",

@@ -42,7 +42,7 @@ return {
       end,
       preview = {
         win_config = {
-          border = mega.get_border(),
+          border = mega.current_border(),
           winhighlight = "Normal:Normal",
           winblend = 0,
         },

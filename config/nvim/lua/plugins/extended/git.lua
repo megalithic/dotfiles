@@ -112,7 +112,7 @@ return {
       current_line_blame = not vim.fn.getcwd():match("dotfiles"),
       current_line_blame_formatter = " <author>, <author_time> · <summary>",
       preview_config = {
-        border = mega.get_border(),
+        border = mega.current_border(),
       },
       on_attach = function(bufnr)
         local gs = package.loaded.gitsigns

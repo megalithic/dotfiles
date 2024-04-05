@@ -191,7 +191,7 @@ return {
           enabled = false,
           open = function() vim.cmd("Trouble quickfix") end,
         },
-        floating = { border = mega.get_border() },
+        floating = { border = mega.current_border() },
         icons = {
           expanded = "",
           child_prefix = "",

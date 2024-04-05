@@ -1,3 +1,5 @@
+local SETTINGS = require("mega.settings")
+
 local function mini_surround()
   require("mini.surround").setup({
     mappings = {
@@ -256,7 +258,7 @@ end
 
 local function mini_indentscope()
   require("mini.indentscope").setup({
-    symbol = "┊", -- alts: ┊│┆ ┊  ▎││ ▏▏
+    symbol = SETTINGS.indent_scope_char,
     -- mappings = {
     --   goto_top = "<leader>k",
     --   goto_bottom = "<leader>j",
@@ -378,7 +380,7 @@ return {
     mini_align()
     mini_comment()
     mini_hipatterns()
-    -- mini_indentscope()
+    mini_indentscope()
     mini_pick()
     mini_surround()
   end,

@@ -2,6 +2,13 @@ local in_dotfiles = vim.fn.system("git --git-dir=$HOME/.dotfiles/ --work-tree=$H
 
 local BORDER_STYLE = "none"
 
+local border_chars = {
+  rounded = { "╭", "─", "╮", "│", "╯", "─", "╰", "│" },
+  squared = { "🭽", "▔", "🭾", "▕", "🭿", "▁", "🭼", "▏" },
+  none = { " ", " ", " ", " ", " ", " ", " ", " " },
+  blank = { " ", " ", " ", " ", " ", " ", " ", " " },
+}
+
 local telescope_border_chars = {
   none = { "", "", "", "", "", "", "", "" },
   single = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
@@ -21,7 +28,12 @@ local connected_telescope_border_chars = {
 }
 
 local M = {
+  -- NOTE: char options (https://unicodeplus.com/): ┊│┆ ┊  ▎││ ▏▏│¦┆┊
+  indent_scope_char = "│",
+  indent_char = "┊",
+  virt_column_char = "│",
   border = BORDER_STYLE,
+  border_chars = border_chars[BORDER_STYLE],
   telescope_border_chars = telescope_border_chars[BORDER_STYLE],
   colorscheme = "megaforest", -- alt: `vim` for default
   default_colorcolumn = "81",
@@ -79,7 +91,6 @@ local M = {
 }
 
 M.apply = function()
-
   function modified_icon() return vim.bo.modified and mega.icons.misc.circle or "" end
 
   local settings = {

@@ -238,7 +238,7 @@ function M.setup_rename(_client, _bufnr)
         row = -3,
         col = 1,
         style = "minimal",
-        border = mega.get_border(),
+        border = mega.current_border(),
       })
 
       api.nvim_win_set_option(
@@ -311,7 +311,7 @@ function M.rename()
       row = -3,
       col = 1,
       style = "minimal",
-      border = mega.get_border(),
+      border = mega.current_border(),
     })
 
     api.nvim_win_set_option(

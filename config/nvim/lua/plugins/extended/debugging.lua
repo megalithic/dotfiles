@@ -84,7 +84,7 @@ return {
           "rcarriga/nvim-dap-ui",
           opts = {
             windows = { indent = 2 },
-            floating = { border = mega.get_border() },
+            floating = { border = mega.current_border() },
             layouts = {
               {
                 elements = {

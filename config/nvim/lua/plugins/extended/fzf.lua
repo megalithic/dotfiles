@@ -241,7 +241,7 @@ return {
           ["gutter"] = { "bg", hl_match({ "TelescopePromptPrefix" }) },
           ["separator"] = { "fg", hl_match({ "FzfLuaSeparator" }) },
         },
-        border = mega.get_border(),
+        border = mega.current_border(),
         previewers = {
           builtin = {
             toggle_behavior = "extend",

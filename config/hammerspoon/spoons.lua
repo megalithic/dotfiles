@@ -1,5 +1,3 @@
-local Settings = require("hs.settings")
-
 local obj = {}
 
 obj.__index = obj
@@ -11,20 +9,23 @@ function obj:init(opts)
   hs.loadSpoon("SpoonInstall")
   spoon.SpoonInstall.use_syncinstall = true
   Install = spoon.SpoonInstall
+
   Install:andUse("EmmyLua")
+
+  local currentBrowser = hs.application.get(C.preferred.browser)
   Install:andUse("URLDispatcher", {
     -- TODO: https://github.com/hthuong09/dots/blob/master/.hammerspoon/HandleURLDispatch.lua
-    start = false,
+    start = true,
     loglevel = "error",
     config = {
-      default_handler = "com.brave.Browser.dev", --hs.application.get(require("hs.settings").get(CONFIG_KEY).preferred.browser),
+      default_handler = currentBrowser, --hs.application.get(require("hs.settings").get(CONFIG_KEY).preferred.browser),
       url_patterns = {
-        { "https?://slack.com/openid/*", "com.brave.Browser.dev" },
+        { "https?://slack.com/openid/*", currentBrowser },
         { "https?://meet.google.com", "com.brave.Browser.dev.app.kjgfgldnnfoeklkmfkjfagphfepbbdan" },
         { "https?://figma.com", "com.figma.Desktop" },
         { "https?://open.spotify.com", "com.spotify.client" },
         { "spotify:", "com.spotify.client" },
-        { "https?://github.com", "com.brave.Browser.dev" },
+        { "https?://github.com", currentBrowser },
         -- { "https?://github.com/[mM]iroapp.*", "com.google.Chrome" },
         -- { "https?://[mM]iro.*", "com.google.Chrome" },
         -- { "https?://dev.*.com", "com.google.Chrome" },
