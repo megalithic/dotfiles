@@ -134,12 +134,6 @@ _fzf_comprun() {
   esac
 }
 
-__fzf-audio() {
-  SwitchAudioSource -s \
-    "$(SwitchAudioSource -a | grep "(output)" |
-      fzf-tmux --height=8 --cycle --no-mouse --no-multi |
-      cut -f1 -d'(' | xargs)"
-}
 # custom-fzf-preview() {
 #   choice=$(
 #     rg --files --hidden | fzf --cycle --preview="preview --ueberzugpp {}"

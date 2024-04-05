@@ -347,7 +347,7 @@ map(
   { desc = "[treesitter] Print treesitter captures under cursor" }
 )
 
-map("n", "yts", function()
+map("n", "<localleader>yts", function()
   local captures = vim.treesitter.get_captures_at_cursor()
   if #captures == 0 then
     vim.notify(
@@ -364,7 +364,7 @@ map("n", "yts", function()
   vim.notify(resultString, L.INFO, { title = "[yank] yanked treesitter capture", render = "compact" })
 end, { desc = "[yank] copy treesitter captures under cursor" })
 
-map("n", "<Leader>yn", function()
+map("n", "<localleader>yn", function()
   local res = vim.fn.expand("%:t", false, false)
   if type(res) ~= "string" then return end
   if res == "" then
@@ -375,7 +375,7 @@ map("n", "<Leader>yn", function()
   vim.notify(res, L.INFO, { title = "[yank] yanked filename" })
 end, { desc = "[yank] yank the filename of current buffer" })
 
-map("n", "<Leader>yp", function()
+map("n", "<localleader>yp", function()
   local res = vim.fn.expand("%:p", false, false)
   if type(res) ~= "string" then return end
   res = res == "" and vim.uv.cwd() or res

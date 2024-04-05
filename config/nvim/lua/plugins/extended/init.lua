@@ -70,79 +70,6 @@ return {
       })
     end,
   },
-  {
-    "3rd/image.nvim",
-    cond = false, -- imagemagick luarocks install issues
-    ft = "markdown",
-    config = function()
-      require("image").setup({
-        backend = "kitty",
-        integrations = {
-          markdown = {
-            enabled = true,
-            clear_in_insert_mode = false,
-            download_remote_images = true,
-            only_render_image_at_cursor = false,
-            filetypes = { "markdown", "vimwiki" }, -- markdown extensions (ie. quarto) can go here
-          },
-          neorg = {
-            enabled = true,
-            clear_in_insert_mode = false,
-            download_remote_images = true,
-            only_render_image_at_cursor = false,
-            filetypes = { "norg" },
-          },
-        },
-        max_width = nil,
-        max_height = nil,
-        max_width_window_percentage = nil,
-        max_height_window_percentage = 50,
-        window_overlap_clear_enabled = false, -- toggles images when windows are overlapped
-        window_overlap_clear_ft_ignore = { "cmp_menu", "cmp_docs", "" },
-        editor_only_render_when_focused = false, -- auto show/hide images when the editor gains/looses focus
-        tmux_show_only_in_active_window = true, -- auto show/hide images in the correct Tmux window (needs visual-activity off)
-        hijack_file_patterns = { "*.png", "*.jpg", "*.jpeg", "*.gif", "*.webp" }, -- render image files as images when opened
-      })
-    end,
-  },
-  {
-    "HakonHarnes/img-clip.nvim",
-    cond = false,
-    event = "VeryLazy",
-    opts = {
-      -- add options here
-      -- or leave it empty to use the default settings
-    },
-    keys = {
-      -- suggested keymap
-      { "<leader>p", "<cmd>PasteImage<cr>", desc = "Paste image from system clipboard" },
-    },
-  },
-  -- {
-  --   "3rd/image.nvim",
-  --   ft = { "markdown", "norg", "syslang", "vimwiki" },
-  --   build = function()
-  --     local uv = vim.uv or vim.loop
-  --     local is_mac = uv.os_uname().sysname == "Darwin"
-  --     local has_magick = pcall(require, "magick")
-  --     if not has_magick and vim.fn.executable("luarocks") == 1 then
-  --       if is_mac then
-  --         vim.fn.system("luarocks --lua-dir=$(brew --prefix)/opt/lua@5.1 --lua-version=5.1 install magick")
-  --       else
-  --         vim.fn.system("luarocks --local --lua-version=5.1 install magick")
-  --       end
-  --       if vim.v.shell_error ~= 0 then vim.notify("Error installing magick with luarocks", vim.log.levels.WARN) end
-  --     end
-  --   end,
-  --   opts = {
-  --     editor_only_render_when_focused = true,
-  --     tmux_show_only_in_active_window = true,
-  --   },
-  --   config = function(_, opts)
-  --     local has_magick = pcall(require, "magick")
-  --     if has_magick then require("image").setup(opts) end
-  --   end,
-  -- },
 
   -- ( LSP ) -------------------------------------------------------------------
   { "onsails/lspkind.nvim" },
@@ -209,26 +136,11 @@ return {
       { "b0o/schemastore.nvim" },
       {
         "icholy/lsplinks.nvim",
-        setup = function()
+        config = function()
           local lsplinks = require("lsplinks")
           lsplinks.setup()
           vim.keymap.set("n", "gx", lsplinks.gx)
         end,
-      },
-      {
-        "MaximilianLloyd/tw-values.nvim",
-        keys = {
-          { "<leader>sv", "<cmd>TWValues<cr>", desc = "Show tailwind CSS values" },
-        },
-        opts = {
-          border = "none", -- Valid window border style,
-          show_unknown_classes = true, -- Shows the unknown classes popup
-          focus_preview = true, -- Sets the preview as the current window
-          copy_register = "", -- The register to copy values to,
-          keymaps = {
-            copy = "<C-y>", -- Normal mode keymap to copy the CSS values between {}
-          },
-        },
       },
       {
         "j-hui/fidget.nvim",
@@ -332,15 +244,6 @@ return {
     config = function() require("hclipboard").start() end,
   },
   {
-    "bennypowers/nvim-regexplainer",
-    config = true,
-    cmd = { "RegexplainerShowSplit", "RegexplainerShowPopup", "RegexplainerHide", "RegexplainerToggle" },
-    dependencies = {
-      "nvim-treesitter/nvim-treesitter",
-      "MunifTanjim/nui.nvim",
-    },
-  },
-  {
     "altermo/ultimate-autopair.nvim",
     event = { "InsertEnter", "TermEnter", "CursorMoved" },
     branch = "v0.6", --recomended as each new version will have breaking changes
@@ -349,32 +252,6 @@ return {
     },
   },
   { "tpope/vim-dispatch" },
-  {
-    cond = false or not vim.g.started_by_firenvim,
-    "jackMort/ChatGPT.nvim",
-    event = "VeryLazy",
-    config = function()
-      local border = { style = mega.current_border(), highlight = "PickerBorder" }
-      require("chatgpt").setup({
-        popup_window = { border = border },
-        popup_input = { border = border, submit = "<C-y>" },
-        settings_window = { border = border },
-        -- async_api_key_cmd = "pass show api/openai",
-        chat = {
-          keymaps = {
-            close = {
-              "<C-c>",
-            },
-          },
-        },
-      })
-    end,
-    dependencies = {
-      "MunifTanjim/nui.nvim",
-      "nvim-lua/plenary.nvim",
-      "nvim-telescope/telescope.nvim",
-    },
-  },
   -- {
   --   "tdfacer/explain-it.nvim",
   --   requires = {
@@ -397,28 +274,7 @@ return {
   --     })
   --   end,
   -- },
-  {
-    "piersolenski/wtf.nvim",
-    dependencies = {
-      "MunifTanjim/nui.nvim",
-    },
-    event = "VeryLazy",
-    opts = {},
-    keys = {
-      {
-        "gw",
-        mode = { "n" },
-        function() require("wtf").ai() end,
-        desc = "Debug diagnostic with AI",
-      },
-      {
-        mode = { "n" },
-        "gW",
-        function() require("wtf").search() end,
-        desc = "Search diagnostic with Google",
-      },
-    },
-  },
+
   {
     "danymat/neogen",
     cmd = "Neogen",
@@ -457,7 +313,6 @@ return {
       -- _G.mega.nnoremap("<leader>db", "<cmd>DBUIToggle<CR>", "dadbod: toggle")
     end,
   },
-  { "alvan/vim-closetag", ft = { "elixir", "heex", "html", "liquid", "javascriptreact", "typescriptreact" } },
   {
     "nacro90/numb.nvim",
     event = "CmdlineEnter",
@@ -491,23 +346,6 @@ return {
       },
     },
   },
-  -- {
-  --   "ojroques/nvim-osc52",
-  --   -- Only change the clipboard if we're in a SSH session
-  --   cond = os.getenv("SSH_CLIENT") ~= nil and (os.getenv("TMUX") ~= nil or vim.fn.has("nvim-0.10") == 0),
-  --   config = function()
-  --     local osc52 = require("osc52")
-  --     local function copy(lines, _) osc52.copy(table.concat(lines, "\n")) end
-  --
-  --     local function paste() return { vim.fn.split(vim.fn.getreg(""), "\n"), vim.fn.getregtype("") } end
-  --
-  --     vim.g.clipboard = {
-  --       name = "osc52",
-  --       copy = { ["+"] = copy, ["*"] = copy },
-  --       paste = { ["+"] = paste, ["*"] = paste },
-  --     }
-  --   end,
-  -- },
   { "tpope/vim-rhubarb", event = { "VeryLazy" } },
   { "tpope/vim-repeat", lazy = false },
   { "tpope/vim-unimpaired", event = { "VeryLazy" } },
@@ -621,45 +459,10 @@ return {
     opts = {
       use_default_keymaps = false,
       max_join_length = tonumber(vim.g.default_colorcolumn),
-    }, -- config = function()
-    --   require("treesj").setup({ use_default_keymaps = false, max_join_length = 150 })
-    --
-    --   mega.augroup("SplitJoin", {
-    --     event = { "FileType" },
-    --     pattern = "*",
-    --     command = function()
-    --       if require("treesj.langs")["presets"][vim.bo.filetype] then
-    --         mega.nnoremap("gJ", ":TSJToggle<cr>", { desc = "splitjoin: toggle lines", buffer = true })
-    --       else
-    --         mega.nnoremap("gJ", ":SplitjoinToggle<cr>", { desc = "splitjoin: toggle lines", buffer = true })
-    --       end
-    --     end,
-    --   })
-    -- end,
+    },
   },
 
   -- ( Notes/Docs ) ------------------------------------------------------------
-  {
-    cond = false,
-    "toppair/peek.nvim",
-    build = "deno task --quiet build:fast",
-    ft = { "markdown" },
-    keys = { { "<localleader>mp", "<cmd>Peek<cr>", desc = "markdown: peek preview" } },
-    config = function()
-      local peek = require("peek")
-      peek.setup({})
-
-      _G.mega.command("Peek", function()
-        if not peek.is_open() and vim.bo[vim.api.nvim_get_current_buf()].filetype == "markdown" then
-          peek.open()
-          -- vim.fn.system([[hs -c 'require("wm.snap").send_window_right(hs.window.find("Peek preview"))']])
-          -- vim.fn.system([[hs -c 'require("wm.snap").send_window_left(hs.application.find("kitty"):mainWindow())']])
-        else
-          peek.close()
-        end
-      end)
-    end,
-  },
   {
     "gaoDean/autolist.nvim",
     event = {
@@ -732,6 +535,7 @@ return {
   { "justinsgithub/wezterm-types" },
   {
     "axelvc/template-string.nvim",
+    event = { "LazyFile" },
     ft = {
       "typescript",
       "typescriptreact",

@@ -15,13 +15,13 @@ function obj:init(opts)
   local currentBrowser = hs.application.get(C.preferred.browser)
   Install:andUse("URLDispatcher", {
     -- TODO: https://github.com/hthuong09/dots/blob/master/.hammerspoon/HandleURLDispatch.lua
-    start = true,
+    start = false,
     loglevel = "error",
     config = {
       default_handler = currentBrowser, --hs.application.get(require("hs.settings").get(CONFIG_KEY).preferred.browser),
       url_patterns = {
         { "https?://slack.com/openid/*", currentBrowser },
-        { "https?://meet.google.com", "com.brave.Browser.dev.app.kjgfgldnnfoeklkmfkjfagphfepbbdan" },
+        -- { "https?://meet.google.com", "com.brave.Browser.dev.app.kjgfgldnnfoeklkmfkjfagphfepbbdan" },
         { "https?://figma.com", "com.figma.Desktop" },
         { "https?://open.spotify.com", "com.spotify.client" },
         { "spotify:", "com.spotify.client" },

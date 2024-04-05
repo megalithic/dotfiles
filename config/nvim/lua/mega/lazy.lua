@@ -4,7 +4,7 @@ function M.setup()
   -- add event aliases
   local lche_ok, event = pcall(require, "lazy.core.handler.event")
   if lche_ok then
-    event.mappings.LazyFile = { id = "LazyFile", event = { "BufReadPost", "BufNewFile", "BufWritePre" } }
+    event.mappings.LazyFile = { id = "LazyFile", event = { "BufReadPre", "BufReadPost", "BufNewFile", "BufWritePre" } }
     event.mappings["User LazyFile"] = event.mappings.LazyFile
   end
 

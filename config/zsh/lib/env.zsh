@@ -222,7 +222,7 @@ case "$(uname)" in
       export LDFLAGS="-L/opt/homebrew/opt/ruby/lib"
       export CPPFLAGS="-I/opt/homebrew/opt/ruby/include"
 
- export PKG_CONFIG_PATH="$PKG_CONFIG_PATH /opt/homebrew/opt/ruby/lib/pkgconfig"
+      export PKG_CONFIG_PATH="$PKG_CONFIG_PATH /opt/homebrew/opt/ruby/lib/pkgconfig"
       export PKG_CONFIG_PATH="$PKG_CONFIG_PATH $(brew --prefix)/opt/libffi/lib/pkgconfig"
       export PKG_CONFIG_PATH="$PKG_CONFIG_PATH $(brew --prefix)/opt/openssl@1.1/lib/pkgconfig"
 
@@ -361,16 +361,17 @@ case "$(uname)" in
   # Set the list of directories that Zsh searches for programs.
   # "${HOME}/.asdf/installs/elixir/`asdf current elixir | awk '{print $1}'`/.mix"
   path=(
-    ${HOMEBREW_PREFIX}/opt/bin
+    ${HOMEBREW_PREFIX}/{bin,sbin}
+    ${HOMEBREW_PREFIX}/opt
     ./bin
     ./.bin
     ./vendor/bundle/bin
     $HOME/bin
     $HOME/.bin
     $HOME/.emacs.d/bin
-    ${HOME}/.local/bin(N-/)
-    ${DOTS}/bin(N-/)
-    $PRIVATES/bin
+    $HOME/.local/bin(N-/)
+    $HOME/.dotfiles/bin(N-/)
+    ${PRIVATES}/bin
     $GOBIN
     ${GOPATH}/bin(N-/)
     $CARGOPATH
@@ -400,8 +401,6 @@ case "$(uname)" in
     ${HOMEBREW_CELLAR}/git/*/share/git-core/contrib/git-jump(Nn[-1]-/)
 
     ${CARGO_HOME}/bin(N-/)
-    $HOME/.asdf/installs/rust/stable/bin
-
     ${GOBIN}(N-/)
 
     ${HOME}/Library/Python/3.12/bin(Nn[-1]-/)
@@ -417,10 +416,11 @@ case "$(uname)" in
     ${HOMEBREW_PREFIX}/lib/python2.*/site-packages(N-/)
     ${HOMEBREW_PREFIX}/opt/python@3.*/bin(Nn[-1]-/)
     ${HOMEBREW_PREFIX}/opt/python@2.*/bin(Nn[-1]-/)
-    ${HOMEBREW_PREFIX}/{bin,sbin}
     $ANDROID_HOME/emulator
     $ANDROID_HOME/platform-tools
     /Applications/WezTerm.app/Contents/MacOS
+    ${HOMEBREW_PREFIX}/{bin,sbin}
+    ${HOMEBREW_PREFIX}/opt
     $path
   )
   export PATH
@@ -440,7 +440,6 @@ case "$(uname)" in
     "${ZDOTDIR}/funcs"
     "${ZDOTDIR}/lib/fns"
     "${DOTS}/bin"
-    "${ASDF_DIR}/completions"
     "${fpath[@]}"
     "$fpath"
   )
