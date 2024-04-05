@@ -94,6 +94,17 @@ local M = {
       vim.lsp.stop_client(vim.lsp.get_clients({ bufnr = bufnr }))
     end
 
+    local function set_lines(bufnr)
+      vim.defer_fn(function()
+        local buflines = vim.api.nvim_buf_line_count(bufnr)
+        if vim.o.lines <= 15 or buflines < 30 then
+          vim.o.lines = 30
+        elseif buflines > 30 then
+          vim.o.lines = buflines
+        end
+      end, 1)
+    end
+
     local timer = nil
     local function throttle_write(delay, bufnr)
       if timer then timer:close() end
@@ -107,7 +118,7 @@ local M = {
           -- if vim.api.nvim_buf_get_option(bufnr, "modified") then
           if vim.api.nvim_get_option_value("modified", { buf = bufnr }) then
             vim.api.nvim_buf_call(bufnr, function() vim.cmd("silent! write") end)
-            if vim.o.lines < 15 then vim.o.lines = 30 end
+            set_lines(bufnr)
           end
         end)
       )
@@ -141,7 +152,7 @@ local M = {
       else
         local bufnr = params.buf or vim.api.nvim_get_current_buf() or 0
         local buflines = vim.api.nvim_buf_line_count(bufnr)
-        if vim.o.lines <= 15 then vim.o.lines = 30 end
+        set_lines(bufnr)
 
         if buflines == 1 then
           local function first_empty_line()
@@ -174,12 +185,13 @@ local M = {
         set_options(bufnr)
 
         vim.cmd([[
-        tmap <D-v> <C-w>"+
-        nnoremap <D-v> "+p
-        vnoremap <D-v> "+p
-        inoremap <D-v> <C-R><C-O>+
-        cnoremap <D-v> <C-R><C-O>+
-      ]])
+          tmap <D-v> <C-w>"+
+          nnoremap <D-v> "+p
+          vnoremap <D-v> "+p
+          inoremap <D-v> <C-R><C-O>+
+          cnoremap <D-v> <C-R><C-O>+
+          inoremap <D-r> <nop>
+        ]])
 
         _G.mega.nnoremap(
           "<Esc>",
@@ -244,6 +256,7 @@ local M = {
         require("cmp").setup.buffer({ enabled = false })
 
         local bufnr = params.buf or vim.api.nvim_get_current_buf() or 0
+
         setup_write_autocmd(bufnr)
       end
     end

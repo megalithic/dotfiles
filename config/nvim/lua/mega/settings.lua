@@ -79,16 +79,6 @@ local M = {
 }
 
 M.apply = function()
-  -- NOTE: to use in one of our plugins:
-  -- `if not plugin_loaded("plugin_name") then return end`
-  function _G.plugin_loaded(plugin)
-    if not mega then return false end
-
-    if not M.enabled_plugins then return false end
-    if not vim.tbl_contains(M.enabled_plugins, plugin) then return false end
-
-    return true
-  end
 
   function modified_icon() return vim.bo.modified and mega.icons.misc.circle or "" end
 
@@ -252,6 +242,8 @@ M.apply = function()
         -- foldsep = "│",
         foldsep = " ",
         foldclose = mega.icons.misc.fold_close, -- alts: ▸
+        stl = " ", -- alts: ─ ⣿ ░ ▐ ▒▓
+        stlnc = " ", -- alts: ─
       },
       guicursor = {
         [[n-v-c:block,i-ci-ve:ver25,r-cr:hor20,o:hor50]],
@@ -385,9 +377,6 @@ M.apply = function()
     },
     -- ['.*tmux.*conf$'] = 'tmux',
   })
-
-  -- FIXME: deprecate:
-  -- require("mega.options")
 end
 
 return M

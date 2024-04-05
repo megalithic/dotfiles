@@ -93,10 +93,10 @@ matches:
           format: "%m/%d/%Y"
 
   # Shell commands
-  - trigger: ":shell:"
-    replace: "{{output}}"
-    vars:
-      - name: output
-        type: shell
-        params:
-          cmd: "echo Hello from your shell"
+  # - trigger: ":shell:"
+  #   replace: "{{output}}"
+  #   vars:
+  #     - name: output
+  #       type: shell
+  #       params:
+  #         cmd: "echo Hello from your shell"

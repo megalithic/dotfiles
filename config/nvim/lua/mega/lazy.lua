@@ -1,29 +1,12 @@
 local M = {}
 
 function M.setup()
-  local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
-  if not vim.loop.fs_stat(lazypath) then
-    vim.fn.system({
-      "git",
-      "clone",
-      "--filter=blob:none",
-      "--single-branch",
-      "git@github.com:folke/lazy.nvim.git",
-      lazypath,
-    })
-  end
-
-  vim.opt.runtimepath:prepend(lazypath)
-
-  -- settings and autocmds must load before plugins,
-  -- but we can manually enable caching before both
-  -- of these for optimal performance
-  require("lazy.core.cache").enable()
-
   -- add event aliases
-  local event = require("lazy.core.handler.event")
-  event.mappings.LazyFile = { id = "LazyFile", event = { "BufReadPost", "BufNewFile", "BufWritePre" } }
-  event.mappings["User LazyFile"] = event.mappings.LazyFile
+  local lche_ok, event = pcall(require, "lazy.core.handler.event")
+  if lche_ok then
+    event.mappings.LazyFile = { id = "LazyFile", event = { "BufReadPost", "BufNewFile", "BufWritePre" } }
+    event.mappings["User LazyFile"] = event.mappings.LazyFile
+  end
 
   local spec = {
     { import = "plugins.core" },

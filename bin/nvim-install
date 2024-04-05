@@ -127,18 +127,24 @@ build() {
 
 log_version() {
   echo ""
+
   log_info "old version: $OLD_VERSION"
   log_info "new version: $VERSION"
 }
+
 read_version() {
   cd "${XDG_DATA_HOME}/src/neovim" || exit
   OLD_VERSION="$(cat ${XDG_DATA_HOME}/src/neovim/VERSION)"
 }
 
 write_version() {
+  # if [[ $VERSION == "master" ]]; then
+  #   VERSION="$(git rev-parse origin/master)"
+  # fi
+
   cd "${XDG_DATA_HOME}/src/neovim" || exit
   rm ./VERSION 2>/dev/null
-  echo "$VERSION" > ./VERSION
+  echo "$VERSION" >./VERSION
 }
 
 while getopts "fpc" OPTION; do

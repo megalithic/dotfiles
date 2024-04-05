@@ -222,14 +222,7 @@ xmap <silent> <localleader>er :lua require("mega.utils").wrap_selected_nodes("{:
   },
   gitcommit = {
     keys = {
-      {
-        "q",
-        function()
-          print("quitting stuff")
-          vim.cmd.quit()
-        end,
-        { nowait = true, desc = "abort gitcommit" },
-      },
+      { "q", vim.cmd.quit, { nowait = true, buffer = true, desc = "abort gitcommit" } },
     },
     opt = {
       list = false,

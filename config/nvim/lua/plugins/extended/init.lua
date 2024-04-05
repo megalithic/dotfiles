@@ -1,20 +1,84 @@
 return {
   -- ( UI-continued ) --------------------------------------------------------------------
   { "lukas-reineke/virt-column.nvim", opts = { char = "│" }, event = "VimEnter" },
+  -- {
+  --   "lukas-reineke/indent-blankline.nvim",
+  --   event = { "VeryLazy" },
+  --   main = "ibl",
+  --   opts = {
+  --     indent = {
+  --       char = "┊",
+  --       smart_indent_cap = true,
+  --     },
+  --     scope = {
+  --       enabled = false,
+  --     },
+  --     exclude = { filetypes = { "markdown" } },
+  --   },
+  -- },
   {
-    "lukas-reineke/indent-blankline.nvim",
-    event = { "VeryLazy" },
-    main = "ibl",
-    opts = {
-      indent = {
-        char = "┊",
-        smart_indent_cap = true,
-      },
-      scope = {
-        enabled = false,
-      },
-      exclude = { filetypes = { "markdown" } },
-    },
+    "shellRaining/hlchunk.nvim",
+    -- enabled = false,
+    cond = #vim.api.nvim_list_uis() > 0,
+    event = "UIEnter",
+    config = function()
+      local exclude_filetype = {
+        "help",
+        "plugin",
+        "alpha",
+        "dashboard",
+        "neo-tree",
+        "Trouble",
+        "lazy",
+        "mason",
+      }
+
+      require("hlchunk").setup({
+        blank = {
+          enable = false,
+          exclude_filetype = exclude_filetype,
+          chars = { " " },
+          notify = false,
+          style = {
+            { bg = "", fg = "" },
+            {
+              bg = function() return mega.colors.bg0.hex end,
+            },
+          },
+        },
+        context = {
+          enable = true,
+          chars = { "│" }, -- more code can be found in https://unicodeplus.com/
+          exclude_filetypes = {
+            sh = true,
+          },
+          style = {
+            {
+              fg = function() return mega.colors.teal.hex end,
+            },
+          },
+        },
+        chunk = {
+          enable = false,
+          exclude_filetypes = {
+            sh = true,
+          },
+          notify = false,
+        },
+        indent = {
+          enable = true,
+          chars = { "┊" }, -- more code can be found in https://unicodeplus.com/
+          -- chars = { "│", "¦", "┆", "┊" }, -- more code can be found in https://unicodeplus.com/
+
+          style = {
+            {
+              fg = function() return mega.colors.bg2.hex end,
+            },
+          },
+        },
+        line_num = { enable = false },
+      })
+    end,
   },
   {
     "mbbill/undotree",

@@ -264,10 +264,10 @@ local function mini_indentscope()
     draw = {
       delay = 10,
       -- animation = require("mini.indentscope").gen_animation.none(),
-      -- animation = function() return 0 end,
-      animation = function() return 10 end,
+      animation = function() return 0 end,
+      -- animation = function() return 10 end,
     },
-    options = { try_as_border = true },
+    options = { try_as_border = true, border = "both", indent_at_cursor = true },
   })
 
   vim.api.nvim_create_autocmd("FileType", {
@@ -378,7 +378,7 @@ return {
     mini_align()
     mini_comment()
     mini_hipatterns()
-    mini_indentscope()
+    -- mini_indentscope()
     mini_pick()
     mini_surround()
   end,

@@ -174,6 +174,23 @@ augroup("FileTypes", {
   },
 })
 
+augroup("EnterLeaveBehaviours", {
+  {
+    desc = "Enable things on *Enter",
+    event = { "BufEnter" },
+    command = function()
+      vim.defer_fn(function() vim.cmd("EnableHL") end, 1)
+    end,
+  },
+  {
+    desc = "Disable things on *Leave",
+    event = { "BufLeave" },
+    command = function()
+      vim.defer_fn(function() vim.cmd("DisableHL") end, 1)
+    end,
+  },
+})
+
 augroup("Utilities", {
   {
     desc = "Auto open grep quickfix window",

@@ -10,8 +10,11 @@ return {
     {
       "garymjr/nvim-snippets",
       cond = vim.g.snipper == "snippets",
+      dependencies = {
+        "rafamadriz/friendly-snippets",
+      },
       opts = {
-        friendly_snippets = false,
+        friendly_snippets = true,
         -- extended_filetypes = {
         --   eelixir = { "elixir" },
         -- },

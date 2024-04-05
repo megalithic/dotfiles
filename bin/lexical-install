@@ -58,17 +58,17 @@ do_install() {
   if [[ $BUILD_TYPE == "source" ]]; then
     log "downloading and unpacking $TARGET/$BINARY.."
     cd "$TMP_PATH" &&
-    (
-      curl -fLO "$TARGET/$BINARY" &&
-      (tar -xvzf "$BINARY" -C "$LSPS_PATH" && log_ok "unpacked $TARGET/$BINARY to $LSPS_PATH") &&
-      mv "$LSPS_PATH/lexical-$VERSION" "$LS_PATH" &&
-      pushd "$LS_PATH" >/dev/null &&
-      (mix deps.get && INDEX_ENABLED=true mix package && log_ok "built lexical") &&
-      # (mix deps.get && NAMESPACE=1 mix release lexical --overwrite && log_ok "built lexical") &&
-      popd >/dev/null &&
-      (rm "$BINARY" && log_ok "removed $TMP_PATH/$BINARY")
-    ) && log_ok "finished downloading and installing lexical ($VERSION) to $bin_path" ||
-    exit 1
+      (
+        curl -fLO "$TARGET/$BINARY" &&
+          (tar -xvzf "$BINARY" -C "$LSPS_PATH" && log_ok "unpacked $TARGET/$BINARY to $LSPS_PATH") &&
+          mv "$LSPS_PATH/lexical-$VERSION" "$LS_PATH" &&
+          pushd "$LS_PATH" >/dev/null &&
+          (mix deps.get && INDEX_ENABLED=true mix package && log_ok "built lexical") &&
+          # (mix deps.get && NAMESPACE=1 mix release lexical --overwrite && log_ok "built lexical") &&
+          popd >/dev/null &&
+          (rm "$BINARY" && log_ok "removed $TMP_PATH/$BINARY")
+      ) && log_ok "finished downloading and installing lexical ($VERSION) to $bin_path" ||
+      exit 1
   else
     log_warn "$BUILD_TYPE not yet supported."
   fi
