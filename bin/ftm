@@ -172,7 +172,7 @@ function fuzzy_find() {
   # tmux capture-pane -ep -t "${1}"
   # tmux capture-pane -ep -S- -E- -t {}
   # pane_capture="tmux capture-pane -ep -S- -E- -t {}"
-  pane_capture="tmux capture-pane -epT -t {}"
+  pane_capture="tmux capture-pane -ep -t {}"
 
 
   preview_lines_of_output=100
@@ -192,7 +192,7 @@ function fuzzy_find() {
     [[ $layouts_sessions_count -gt 0 ]] && preview_cmd="fd {} $layouts_dir | xargs bat"
   else
     fzf_prompt_text=" new or existing session  "
-    fzf_header_text="󰢩 $(tput sitm)$(tput setaf 5)$current_session$(tput sgr 0) [$(tput setaf 255)ctrl-x$(tput sgr 0): $(tput setaf 245)kill-session / $(tput setaf 255)ctrl-r$(tput sgr 0): $(tput setaf 245)rename-session]"
+    fzf_header_text="󰢩 $(tput sitm)$(tput setaf 5)$current_session$(tput sgr 0) [$(tput setaf 255)ctrl-x$(tput sgr 0): $(tput setaf 245)kill-session / $(tput setaf 255)ctrl-r$(tput sgr 0): $(tput setaf 245)rename-session$(tput sgr 0)]"
   fi
 
   # -- get our session from fzf (grabs the the active pane from each session as preview, too!)

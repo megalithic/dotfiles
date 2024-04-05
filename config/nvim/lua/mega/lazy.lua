@@ -1,45 +1,16 @@
 local M = {}
---
--- function M.require(mod)
---   local ok, ret = M.try(require, mod)
---   return ok and ret
--- end
---
--- function M.try(fn, ...)
---   local args = { ... }
---
---   return xpcall(function() return fn(unpack(args)) end, function(err)
---     local lines = {}
---     table.insert(lines, err)
---     table.insert(lines, debug.traceback("", 3))
---
---     M.error(table.concat(lines, "\n"))
---     return err
---   end)
--- end
---
--- -- ---A thin wrapper around vim.notify to add packer details to the message
--- -- ---@param msg string
--- function M.notify(msg, level) vim.notify(msg, level, { title = "lazy" }) end
 
 function M.setup()
-  local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
-  if not vim.loop.fs_stat(lazypath) then
-    vim.fn.system({
-      "git",
-      "clone",
-      "--filter=blob:none",
-      "--single-branch",
-      "git@github.com:folke/lazy.nvim.git",
-      lazypath,
-    })
+  -- add event aliases
+  local lche_ok, event = pcall(require, "lazy.core.handler.event")
+  if lche_ok then
+    event.mappings.LazyFile = { id = "LazyFile", event = { "BufReadPost", "BufNewFile", "BufWritePre" } }
+    event.mappings["User LazyFile"] = event.mappings.LazyFile
   end
 
-  vim.opt.runtimepath:prepend(lazypath)
-  require("lazy.core.cache").enable()
   local spec = {
-    { import = "mega.plugins.core" },
-    { import = "mega.plugins.extended" },
+    { import = "plugins.core" },
+    { import = "plugins.extended" },
   }
 
   require("lazy").setup({

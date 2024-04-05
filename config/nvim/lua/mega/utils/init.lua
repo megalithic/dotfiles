@@ -539,14 +539,22 @@ end
 
 function M.starts_with(haystack, needle) return type(haystack) == "string" and haystack:sub(1, needle:len()) == needle end
 
-function M.clear_ui()
+function M.clear_ui(opts)
+  opts = opts or {}
+  local deluxe = opts["deluxe"]
   -- vcmd([[nnoremap <silent><ESC> :syntax sync fromstart<CR>:nohlsearch<CR>:redrawstatus!<CR><ESC> ]])
-  vim.cmd("nohlsearch")
-  vim.cmd("diffupdate")
+  -- Clear / search term
+  -- vim.fn.setreg("/", "")
+
+  -- Stop highlighting searches
+  vim.cmd.nohlsearch()
+
+  vim.cmd.diffupdate()
   vim.cmd("syntax sync fromstart")
   M.close_float_wins()
-  vim.cmd("echo ''")
-  if vim.g.enabled_plugin["cursorline"] then mega.blink_cursorline() end
+
+  if plugin_loaded("cursorline") then mega.blink_cursorline() end
+  vim.cmd.redraw({ bang = true })
 
   do
     local ok, mj = pcall(require, "mini.jump")
@@ -580,5 +588,20 @@ function M.toggle_list(list_type)
   fn.execute(prefix .. "open")
   if fn.winnr() ~= winnr then vim.cmd("wincmd p") end
 end
+
+M.capitalize = function(str) return (str:gsub("^%l", string.upper)) end
+
+---@param haystack string
+---@param needle string
+---@return boolean found true if needle in haystack
+M.starts_with = function(haystack, needle) return type(haystack) == "string" and haystack:sub(1, needle:len()) == needle end
+
+-- alt F ғ (ghayn)
+-- alt Q ꞯ (currently using ogonek)
+local smallcaps = "ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘǫʀsᴛᴜᴠᴡxʏᴢ‹›⁰¹²³⁴⁵⁶⁷⁸⁹"
+local normal = "ABCDEFGHIJKLMNOPQRSTUVWXYZ<>0123456789"
+
+---@param text string
+M.smallcaps = function(text) return vim.fn.tr(text:upper(), normal, smallcaps) end
 
 return M

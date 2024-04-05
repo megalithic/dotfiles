@@ -23,7 +23,7 @@
 -- https://github.com/mbriggs/nvim/blob/main/lua/mb/which-key.lua
 -- https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/whichkey.lua
 
-if not plugin_loaded("mappings") then return end
+if not mega then return end
 
 local U = require("mega.utils")
 local fn = vim.fn
@@ -34,8 +34,8 @@ local map = vim.keymap.set
 -- [convenience mappings] ------------------------------------------------------
 
 -- deal with word wrap nicely
-vim.keymap.set("n", "k", "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = true })
-vim.keymap.set("n", "j", "v:count == 0 ? 'gj' : 'j'", { expr = true, silent = true })
+map("n", "k", "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = true })
+map("n", "j", "v:count == 0 ? 'gj' : 'j'", { expr = true, silent = true })
 
 -- jump to tab
 for i = 0, 9 do
@@ -197,15 +197,13 @@ nnoremap("g>", [[<cmd>set nomore<bar>40messages<bar>set more<CR>]], {
   desc = "show message history",
 })
 
--- Clear UI state via escape:
--- - Clear search highlight
--- - Clear command-line
--- - Close floating windows
--- nmap([[<Esc>]], [[<Nop>]])
 nnoremap("<esc>", function()
-  U.clear_ui()
+  vim.cmd.doautoall("User EscDeluxeStart")
+  U.clear_ui({ deluxe = true })
+  vim.cmd.doautoall("User EscDeluxeEnd")
+
   vim.api.nvim_feedkeys(vim.keycode("<Esc>"), "n", true)
-end, { silent = true, desc = "Clear UI" })
+end, { silent = true, desc = "EscDeluxe + Clear/Reset UI" })
 
 -- Use operator pending mode to visually select the whole buffer
 -- e.g. dA = delete buffer ALL, yA = copy whole buffer ALL
@@ -259,11 +257,10 @@ nnoremap("<leader><leader>", "<C-^>")
 cnoremap("<C-p>", "<Up>", { desc = "Line Up (command-mode)" })
 cnoremap("<C-n>", "<Down>", { desc = "Line Down (command-mode)" })
 
-nnoremap("<C-f>", "<C-f>zz<Esc><Cmd>lua mega.blink_cursorline(75)<CR>")
-nnoremap("<C-b>", "<C-b>zz<Esc><Cmd>lua mega.blink_cursorline(75)<CR>")
-
-nnoremap("<C-d>", "<C-d>zz<Esc><Cmd>lua mega.blink_cursorline(75)<CR>")
-nnoremap("<C-u>", "<C-u>zz<Esc><Cmd>lua mega.blink_cursorline(75)<CR>")
+-- nnoremap("<C-f>", "<C-f>zz<Esc><Cmd>lua mega.blink_cursorline(75)<CR>")
+-- nnoremap("<C-b>", "<C-b>zz<Esc><Cmd>lua mega.blink_cursorline(75)<CR>")
+-- nnoremap("<C-d>", "<C-d>zz<Esc><Cmd>lua mega.blink_cursorline(75)<CR>")
+-- nnoremap("<C-u>", "<C-u>zz<Esc><Cmd>lua mega.blink_cursorline(75)<CR>")
 
 vnoremap([[J]], [[5j]], "Jump down")
 vnoremap([[K]], [[5k]], "Jump up")
@@ -323,6 +320,9 @@ nnoremap("N", "Nzz<esc><cmd>lua mega.blink_cursorline(50)<cr>")
 xnoremap("N", "Nzz<esc><cmd>lua mega.blink_cursorline(50)<cr>")
 onoremap("N", "Nzz<esc><cmd>lua mega.blink_cursorline(50)<cr>")
 
+-- https://stackoverflow.com/questions/4256697/vim-search-and-highlight-but-do-not-jump#comment91750564_4257175
+map("n", "*", "m`<Cmd>keepjumps normal! *``<CR>", { desc = "Don't jump on first * -- simpler vim-asterisk" })
+
 -- smooth searching, allow tabbing between search results similar to using <c-g>
 -- or <c-t> the main difference being tab is easier to hit and remapping those keys
 -- to these would swallow up a tab mapping
@@ -337,8 +337,53 @@ cnoremap("<S-Tab>", function() return search("?", "<S-Tab>") end, { expr = true 
 cnoremap("<C-n>", [[wildmenumode() ? "\<c-n>" : "\<down>"]], { expr = true })
 cnoremap("<C-p>", [[wildmenumode() ? "\<c-p>" : "\<up>"]], { expr = true })
 
-nnoremap("<leader>yf", [[:let @*=expand("%:p")<CR>]], "yank file path into the clipboard")
-nnoremap("yf", [[:let @*=expand("%:p")<CR>]], "yank file path into the clipboard")
+-- nnoremap("<leader>yf", [[:let @*=expand("%:p")<CR>]], "yank file path into the clipboard")
+-- nnoremap("yf", [[:let @*=expand("%:p")<CR>]], "yank file path into the clipboard")
+
+map(
+  "n",
+  "zsc",
+  function() vim.print(vim.treesitter.get_captures_at_cursor()) end,
+  { desc = "[treesitter] Print treesitter captures under cursor" }
+)
+
+map("n", "yts", function()
+  local captures = vim.treesitter.get_captures_at_cursor()
+  if #captures == 0 then
+    vim.notify(
+      "No treesitter captures under cursor",
+      L.ERROR,
+      { title = "[yank] failed to yank treesitter captures", render = "compact" }
+    )
+    return
+  end
+
+  local parsedCaptures = vim.iter(captures):map(function(capture) return ("@%s"):format(capture) end):totable()
+  local resultString = vim.inspect(parsedCaptures)
+  vim.fn.setreg("+", resultString .. "\n")
+  vim.notify(resultString, L.INFO, { title = "[yank] yanked treesitter capture", render = "compact" })
+end, { desc = "[yank] copy treesitter captures under cursor" })
+
+map("n", "<Leader>yn", function()
+  local res = vim.fn.expand("%:t", false, false)
+  if type(res) ~= "string" then return end
+  if res == "" then
+    vim.notify("Buffer has no filename", L.ERROR, { title = "[yank] failed to yank filename", render = "compact" })
+    return
+  end
+  vim.fn.setreg("+", res)
+  vim.notify(res, L.INFO, { title = "[yank] yanked filename" })
+end, { desc = "[yank] yank the filename of current buffer" })
+
+map("n", "<Leader>yp", function()
+  local res = vim.fn.expand("%:p", false, false)
+  if type(res) ~= "string" then return end
+  res = res == "" and vim.uv.cwd() or res
+  if res:len() then
+    vim.fn.setreg("+", res)
+    vim.notify(res, L.INFO, { title = "[yank] yanked filepath" })
+  end
+end, { desc = "[yank] yank the full filepath of current buffer" })
 
 -- [custom mappings] -----------------------------------------------------------
 
@@ -347,17 +392,31 @@ nnoremap("yf", [[:let @*=expand("%:p")<CR>]], "yank file path into the clipboard
 
 -- Spelling
 -- map("n", "<leader>s", "z=e") -- Correct current word
-nmap("<leader>s", function()
+nmap("<localleader>sj", "]s", { desc = "[spell] Move to next misspelling" })
+nmap("<localleader>sk", "[s", { desc = "[spell] Move to previous misspelling" })
+nmap("<localleader>sf", function()
   local cur_pos = vim.api.nvim_win_get_cursor(0)
   vim.cmd.normal({ "1z=", bang = true })
   vim.api.nvim_win_set_cursor(0, cur_pos)
-end, { desc = "Correct spelling of word under cursor" })
+end, { desc = "[spell] Correct spelling of word under cursor" })
 
-nmap("<leader>S", function()
+nmap("<localleader>sa", function()
   local cur_pos = vim.api.nvim_win_get_cursor(0)
   vim.cmd.normal({ "zg", bang = true })
   vim.api.nvim_win_set_cursor(0, cur_pos)
-end, { desc = "Add word under cursor to dictionary" })
+end, { desc = "[spell] Add word under cursor to dictionary" })
+
+nmap(
+  "<localleader>si",
+  function() vim.cmd.normal("ysiw`") end,
+  { desc = "[spell] Ignore spelling of word under cursor" }
+)
+
+-- map('n', '<leader>sf', function()
+--   local cur_pos = vim.api.nvim_win_get_cursor(0)
+--   vim.cmd.normal { '1z=', bang = true }
+--   vim.api.nvim_win_set_cursor(0, cur_pos)
+-- end, { desc = 'Correct spelling of word under cursor' })
 -- nmap("<leader>S", "zg") -- Add word under cursor to dictionary
 
 mega.map({ "x", "n" }, "gcd", function()
@@ -457,3 +516,26 @@ map("n", "zo", "zO", { desc = "Open all folds descending from current line" })
 ---------------------------------------------------------------------------------
 nnoremap("<leader>llq", function() U.toggle_list("quickfix") end, "lists: toggle quickfix")
 nnoremap("<leader>llc", function() U.toggle_list("location") end, "lists: toggle location")
+
+map(
+  "n",
+  "<leader>h",
+  ":%s/\\<<C-r><C-w>\\>/<C-r><C-w>/gIc<Left><Left><Left><Left>",
+  { desc = "Replace instances of hovered word" }
+)
+map(
+  "n",
+  "<leader>H",
+  ":%S/<C-r><C-w>/<C-r><C-w>/gcw<Left><Left><Left><Left>",
+  { desc = "Replace instances of hovered word (matching case)" }
+)
+
+map("x", "<leader>h", "\"hy:%s/<C-r>h/<C-r>h/gc<left><left><left>", {
+  desc = [[Crude search & replace visual selection
+                 (breaks on multiple lines & special chars)]],
+})
+
+map("x", "y", "ygv<Esc>", { desc = "Cursor-in-place copy" })
+map("n", "P", function() vim.cmd.normal({ vim.v.count1 .. "P`[", bang = true }) end, { desc = "Cursor-in-place paste" })
+
+map("i", "<C-p>", "<C-r>\"", { desc = "Paste from register in insert mode" })

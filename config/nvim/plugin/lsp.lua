@@ -1,5 +1,4 @@
-if not mega then return end
-if not vim.g.enabled_plugin["lsp"] then return end
+if not plugin_loaded("lsp") then return end
 
 local lsp_ok, lspconfig = pcall(require, "lspconfig")
 if not lsp_ok then return nil end
@@ -18,8 +17,6 @@ local md_namespace = vim.api.nvim_create_namespace("lsp_highlights")
 function mega.lsp.has_method(client, method)
   return client.supports_method(method:find("/") and method or "textDocument/" .. method)
 end
-function mega.lsp.is_enabled_elixir_ls(ls) return vim.tbl_contains(vim.g.enabled_elixir_ls, ls) end
-function mega.lsp.formatting_filter(client) return not vim.tbl_contains(vim.g.formatter_exclusions, client.name) end
 local function has_existing_floats()
   local winids = vim.api.nvim_tabpage_list_wins(0)
   for _, winid in ipairs(winids) do
@@ -320,10 +317,22 @@ local function setup_keymaps(client, bufnr)
   )
   nnoremap("<leader>lil", [[<cmd>LspLog<CR>]], desc("logs (vsplit)"))
 
-  nnoremap("[d", function() diagnostic.goto_prev({ float = true }) end, desc("lsp: prev diagnostic"))
-  nnoremap("]d", function() diagnostic.goto_next({ float = true }) end, desc("lsp: next diagnostic"))
-  nnoremap("[e", function() diagnostic.goto_prev({ float = true, severity = 1 }) end, desc("lsp: prev diagnostic"))
-  nnoremap("]e", function() diagnostic.goto_next({ float = true, severity = 1 }) end, desc("lsp: next diagnostic"))
+  nnoremap("[d", function()
+    diagnostic.goto_prev({ float = true })
+    mega.blink_cursorline()
+  end, desc("lsp: prev diagnostic"))
+  nnoremap("]d", function()
+    diagnostic.goto_next({ float = true })
+    mega.blink_cursorline()
+  end, desc("lsp: next diagnostic"))
+  nnoremap("[e", function()
+    diagnostic.goto_prev({ float = true, severity = 1 })
+    mega.blink_cursorline()
+  end, desc("lsp: prev diagnostic"))
+  nnoremap("]e", function()
+    diagnostic.goto_next({ float = true, severity = 1 })
+    mega.blink_cursorline()
+  end, desc("lsp: next diagnostic"))
 
   safemap("definition", "n", "gd", function()
     if true then
@@ -485,7 +494,7 @@ local function setup_diagnostics(client, bufnr)
 
   --- The custom namespace is so that ALL diagnostics across all namespaces can be aggregated
   --- including diagnostics from plugins
-  local ns = api.nvim_create_namespace("severe-diagnostics")
+  local ns = api.nvim_create_namespace("max-diagnostics")
 
   --- Restricts nvim's diagnostic signs to only the single most severe one per line
   --- see `:help vim.diagnostic`
@@ -503,10 +512,15 @@ local function setup_diagnostics(client, bufnr)
     end
   end
   local signs_handler = diagnostic.handlers.signs
-  diagnostic.handlers.signs = vim.tbl_extend("force", signs_handler, {
-    show = max_diagnostic(signs_handler.show),
-    hide = function(_, bn) signs_handler.hide(ns, bn) end,
-  })
+  if vim.tbl_contains(vim.g.max_diagnostic_exclusions, client.name) then
+    diagnostic.handlers.signs = signs_handler
+  else
+    diagnostic.handlers.signs = vim.tbl_extend("force", signs_handler, {
+      show = max_diagnostic(signs_handler.show),
+      hide = function(og_ns, bn) signs_handler.hide(ns, bn) end,
+    })
+  end
+
   --
   -- local virt_text_handler = diagnostic.handlers.virtual_text
   -- diagnostic.handlers.virtual_text = vim.tbl_extend("force", virt_text_handler, {
@@ -614,56 +628,56 @@ local function setup_diagnostics(client, bufnr)
     vim.api.nvim_command(string.format("echo \"%s\"", string.sub(out, 1, vim.v.echospace)))
   end
 
-  local series = {}
-  vim.lsp.handlers["$/progress"] = function(err, progress, ctx)
-    if err then return end
-
-    local token = progress.token
-    local value = progress.value
-
-    if value.kind == "begin" then
-      local client = vim.lsp.get_client_by_id(ctx.client_id)
-      series[token] = {
-        client = client and client.name or "",
-        title = value.title or "",
-        message = value.message or "",
-        percentage = value.percentage or 0,
-      }
-
-      local cur = series[token]
-      log({
-        client = cur.client,
-        title = cur.title,
-        message = cur.message .. " - Starting",
-        percentage = cur.percentage,
-      })
-    elseif value.kind == "report" then
-      local cur = series[token]
-      if cur then
-        log({
-          client = cur.client,
-          title = value.title or cur.title,
-          message = value.message or cur.message,
-          percentage = value.percentage or cur.percentage,
-        })
-      end
-    elseif value.kind == "end" then
-      local cur = series[token]
-      if cur then
-        log({
-          client = cur.client,
-          title = value.title or value.message or cur.title or cur.message,
-          message = "Done",
-        })
-        series[token] = nil
-      end
-    end
-    if series[token] == nil then
-      vim.defer_fn(function()
-        if fn.mode() == "n" then vim.cmd([[echon '']]) end
-      end, 2000)
-    end
-  end
+  -- local series = {}
+  -- vim.lsp.handlers["$/progress"] = function(err, progress, ctx)
+  --   if err then return end
+  --
+  --   local token = progress.token
+  --   local value = progress.value
+  --
+  --   if value.kind == "begin" then
+  --     local client = vim.lsp.get_client_by_id(ctx.client_id)
+  --     series[token] = {
+  --       client = client and client.name or "",
+  --       title = value.title or "",
+  --       message = value.message or "",
+  --       percentage = value.percentage or 0,
+  --     }
+  --
+  --     local cur = series[token]
+  --     log({
+  --       client = cur.client,
+  --       title = cur.title,
+  --       message = cur.message .. " - Starting",
+  --       percentage = cur.percentage,
+  --     })
+  --   elseif value.kind == "report" then
+  --     local cur = series[token]
+  --     if cur then
+  --       log({
+  --         client = cur.client,
+  --         title = value.title or cur.title,
+  --         message = value.message or cur.message,
+  --         percentage = value.percentage or cur.percentage,
+  --       })
+  --     end
+  --   elseif value.kind == "end" then
+  --     local cur = series[token]
+  --     if cur then
+  --       log({
+  --         client = cur.client,
+  --         title = value.title or value.message or cur.title or cur.message,
+  --         message = "Done",
+  --       })
+  --       series[token] = nil
+  --     end
+  --   end
+  --   if series[token] == nil then
+  --     vim.defer_fn(function()
+  --       if fn.mode() == "n" then vim.cmd([[echon '']]) end
+  --     end, 2000)
+  --   end
+  -- end
 end
 
 -- [ HIGHLIGHTS ] --------------------------------------------------------------

@@ -58,14 +58,14 @@
  (#any-of? @text.test "TEST"))
 
 
-("text" @text.todo (#any-of? @text.todo "PENDING" "GUARD"))
-((tag (name) @text.todo ":" @punctuation.delimiter)
- (#any-of? @text.todo "PENDING" "GUARD"))
+("text" @comment.todo (#any-of? @comment.todo "PENDING" "GUARD" "REQUIRED" "VALIDATE"))
+((tag (name) @comment.todo ":" @punctuation.delimiter)
+ (#any-of? @comment.todo "PENDING" "GUARD" "REQUIRED" "VALIDATE"))
 
-("text" @text.note (#any-of? @text.note "CONFIG" "SOURCE" "DATA"))
-((tag (name) @text.note ":" @punctuation.delimiter)
- (#any-of? @text.note "CONFIG" "SOURCE" "DATA"))
+("text" @comment.note (#any-of? @comment.note "CONFIG" "SOURCE" "DATA" "EXAMPLE"))
+((tag (name) @comment.note ":" @punctuation.delimiter)
+ (#any-of? @comment.note "CONFIG" "SOURCE" "DATA" "EXAMPLE"))
 
-("text" @text.warning (#any-of? @text.warning "SIC" "CAVEAT"))
-((tag (name) @text.warning ":" @punctuation.delimiter)
- (#any-of? @text.warning "SIC" "CAVEAT"))
+("text" @comment.warning (#any-of? @comment.warning "SIC" "CAVEAT"))
+((tag (name) @comment.warning ":" @punctuation.delimiter)
+ (#any-of? @comment.warning "SIC" "CAVEAT"))

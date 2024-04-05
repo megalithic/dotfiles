@@ -1,0 +1,52 @@
+#!/bin/bash
+
+# fzft - attach to a window in any current tmux session using fzf
+# Inspired by https://github.com/pokey/dotfiles/blob/dade6c88af31458c323e8f0247af510bca7af0f5/bin/ftwind
+# as mentioned at https://github.com/junegunn/fzf/wiki/Examples#tmux
+
+# 1. Include this in you $PATH
+# 2. Add binding in ~/.tmux.conf, such as:
+#    bind-key "'" run "tmux new-window 'bash -c fzft'"
+
+# TODO: Determine if inside tmux already and use attach-session instead of switch-client.
+
+# TODO: Color output
+# GREEN='\033[00;32m'
+# RESTORE='\033[0m'
+
+# TODO: Indicate/skip current session/window
+
+windows_raw=$(tmux list-windows -a -F '#{session_id}:#I #{session_name} #{window_name} #{pane_current_path} #{pane_current_command}')
+# $0:1 session_name window_name /Path/name bash
+
+windows_update=''
+while read -r line; do
+    # This is the important part:
+    uid=$(echo "$line" | awk '{print $1}')
+
+    # These are useful for the human to know what's going on:
+    session_name=$(echo "$line" | awk '{print $2}')
+    window_name=$(echo "$line" | awk '{print $3}')
+    window_path=$(echo "$line" | awk '{print $4}')
+    window_path=${window_path/#$HOME/'~'}
+    window_command=$(echo "$line" | awk '{print $5}')
+
+    windows_update+=$(echo "$uid" "$session_name" "$window_name" "$window_path" "$window_command")
+    windows_update+=$'\n'
+done <<< "$windows_raw"
+
+# Make it easier to read
+windows_nice=$(column -t <<< "$windows_update")
+
+# Run through fzf, check exit status
+target=$(echo "$windows_nice" | fzf +m --reverse --ansi)
+res=$?
+[ "$res" -eq "130" ] && exit 0
+[ "$res" -eq "0" ] || exit $res
+
+target_window=$(echo "$target" | awk '{print $1}')
+[ "$target_window" = "" ] && \
+   target_window=$(echo "$target" | cut -d' ' -f3)
+
+# Switch to window (see 'COMMANDS' > 'target-session' in `man tmux`)
+tmux switch-client -t "$target_window"

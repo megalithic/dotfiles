@@ -35,12 +35,12 @@
 
   aliases = "!git config -l | grep ^alias | cut -c 7- | sort"
 
-	b = branch
-	br = branch
-	; ba = branch -A
-	; bm = branch -m
-	; bd = branch -d
-	; bbd = branch -D $1 && push origin --delete $1
+b = branch
+br = branch
+; ba = branch -A
+; bm = branch -m
+; bd = branch -d
+; bbd = branch -D $1 && push origin --delete $1
 
   c = commit
   cv = commit -v
@@ -197,6 +197,7 @@
 [merge]
   tool = nvimdiff
   conflictstyle = zdiff3
+  ff = true
 
 [mergetool "nvimdiff"]
   keepBackup = false

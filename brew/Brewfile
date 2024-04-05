@@ -1,5 +1,3 @@
-#!/usr/bin/env zsh
-
 ## --- DOCS
 #
 # How to install older versions:
@@ -19,9 +17,16 @@ tap "heroku/brew" if OS.mac?
 tap "microsoft/git"
 tap "isacikgoz/taps"
 tap "olets/tap"
-tap "federico-terzi/espanso" if OS.mac? # legacy version (pre 2.x) -- preferred!
-# tap "espanso/espanso" if OS.mac?
+
+# Espanso legacy version (0.7.3/pre 2.x) -- preferred, though, now it has a weird issues where ".<space>" is replaced with ".1"!
+# NOTE: if upgrading to the latest version from the legacy version below, be sure to `brew untap federico-terzi/espanso`
+# tap "federico-terzi/espanso" if OS.mac?
+
+# Espanso current version (post-0.7.3/post-2.x)
+tap "espanso/espanso" if OS.mac?
+
 tap "wez/wezterm" if OS.mac?
+
 tap "FelixKratz/formulae" if OS.mac? # sketchyvim
 tap "koekeishiya/formulae" if OS.mac?
 
@@ -60,7 +65,7 @@ brew "broot"
 brew "browsh" if OS.mac?
 brew "btop"
 brew "catimg"
-brew "ccls" # c-lang lsp vs., c-lang lsp in llvm
+brew "ccls"  # c-lang lsp vs., c-lang lsp in llvm
 brew "chafa" # image renderer for telescope/bat/fzf/etc
 brew "cmake" if OS.mac?
 brew "coreutils" if OS.mac?
@@ -91,7 +96,7 @@ brew "fswatch"
 brew "superfly/tap/flyctl"
 brew "fontforge" if OS.mac?
 brew "fop" # used for asdf erlang
-brew "fx" # jq but better
+brew "fx"  # jq but better
 brew "fzf" # -> $(brew --prefix)/opt/fzf/install
 brew "gawk"
 brew "gdb"
@@ -158,6 +163,7 @@ brew "pgcli"
 brew "pkg-config"
 brew "pigz"
 brew "pinentry-mac" if OS.mac?
+brew "pngpaste"
 # --
 # POST-install for postgresql:
 # initdb /usr/local/var/postgres -E utf8
@@ -169,13 +175,14 @@ brew "postgresql@14", link: true, restart_service: true if OS.mac?
 # brew "python@3.8", link: false
 # brew "python@3.9", link: false
 # brew "python@3.10", link: false
-brew "python@3.11", link: true
+# brew "python@3.11", link: true
+brew "python@3.12", link: true
+brew "pipx"
 brew "python3", link: false
 brew "readline"
 brew "reattach-to-user-namespace" if OS.mac?
 brew "ren"
 brew "ripgrep"
-brew "jdxcode/tap/rtx"
 brew "ruby-build" # needed for asdf/ruby
 brew "rust"
 brew "rustup-init"
@@ -253,6 +260,8 @@ cask "font-cascadia-mono-pl"
 cask "font-caskaydia-cove-nerd-font"
 cask "font-recursive-code"
 cask "font-recursive-code-nerd-font"
+cask "font-maple"
+cask "font-noto-sans-mono"
 cask "font-monaspace-nerd-font"
 
 cask "font-cascadia-mono"

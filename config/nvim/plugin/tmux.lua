@@ -3,9 +3,7 @@
 -- REF: maybe try: https://github.com/numToStr/Navigator.nvim
 --
 
-if not mega then return end
-if not vim.env.TMUX then return end
-if not vim.g.enabled_plugin["tmux"] then return end
+if not vim.env.TMUX or not plugin_loaded("tmux") then return end
 
 function Tmux_navigate_directions()
   local pos = vim.api.nvim_win_get_position(0)

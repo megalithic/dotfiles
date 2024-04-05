@@ -310,6 +310,20 @@ end
 function obj:entered()
   obj.isOpen = true
   hs.window.highlight.start()
+  local frame = hs.window.focusedWindow():frame()
+
+  -- HT: @evantravers
+  obj.indicator = hs.canvas
+    .new(frame)
+    :appendElements({
+      type = "rectangle",
+      action = "stroke",
+      strokeWidth = 2.0,
+      strokeColor = { white = 0.8, alpha = 0.7 },
+      roundedRectRadii = { xRadius = 14.0, yRadius = 14.0 },
+      frame = frame,
+    })
+    :show()
 
   obj.alerts = hs.fnutils.map(hs.screen.allScreens(), function(screen)
     local win = hs.window.focusedWindow()
@@ -327,18 +341,21 @@ function obj:entered()
       obj:exit()
     end
 
-    return nil
+    return self
   end)
 end
 
 function obj:exited()
   obj.isOpen = false
   hs.window.highlight.stop()
-
-  hs.fnutils.ieach(obj.alerts, function(id) alert.closeSpecific(id) end)
-
+  hs.fnutils.ieach(obj.alerts, function(id)
+    if alert ~= nil then alert.closeSpecific(id) end
+    if obj.indicator ~= nil then obj.indicator:delete() end
+  end)
   alert.close()
   dbg("exited modal")
+
+  return self
 end
 
 function obj:init(opts)

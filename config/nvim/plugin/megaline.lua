@@ -409,16 +409,16 @@ local function get_search_results()
   -- return " " .. last_search:gsub("\\v", "") .. " " .. result.current .. "/" .. result.total .. ""
 
   if result.incomplete == 1 then -- timed out
-    return fmt("%s ?/??", icons.misc.search)
+    return fmt("%s %s ?/??", icons.misc.search, last_search)
   elseif result.incomplete == 2 then -- max count exceeded
     if result.total > result.maxcount and result.current > result.maxcount then
-      return fmt("%s >%d/>%d", icons.misc.search, result.current, result.total)
+      return fmt("%s %s >%d/>%d", icons.misc.search, last_search, result.current, result.total)
     elseif result.total > result.maxcount then
-      return fmt("%s %d/>%d", icons.misc.search, result.current, result.total)
+      return fmt("%s %s %d/>%d (%s)", icons.misc.search, last_search, result.current, result.total)
     end
   end
 
-  return fmt("%s %d/%d", icons.misc.search, result.current, result.total)
+  return fmt("%s %s %d/%d", icons.misc.search, last_search, result.current, result.total)
 end
 
 local function parse_filename(truncate_at)

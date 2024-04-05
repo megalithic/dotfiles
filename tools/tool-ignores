@@ -54,5 +54,6 @@ erl_crash.dump
 **/android
 **/priv/static/assets/*.js
 **/priv/static/assets/*.css
+**/priv/etc/**/*.sql
 
 # vim:ft=gitignore:tw=0

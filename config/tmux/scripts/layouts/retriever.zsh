@@ -1,7 +1,8 @@
 #!/usr/local/bin/zsh
 
 SESSION="retriever"
-CWD="$CODE/retriever"
+ROOT_DIR="$CODE/tern"
+CWD="$ROOT_DIR/$SESSION"
 
 SESSION_ICON="󰩄"
 SESSION_FG="#d39bb6"

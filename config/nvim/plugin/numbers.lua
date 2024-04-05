@@ -3,8 +3,7 @@
 -- 2. numbers.vim - https://github.com/myusuf3/numbers.vim/blob/master/plugin/numbers.vim
 -- 3. straight up thieved it from the legend, @akinsho: https://github.com/akinsho/dotfiles/blob/main/.config/nvim/plugin/numbers.lua
 
-if not mega then return end
-if not vim.g.enabled_plugin["numbers"] then return end
+if not plugin_loaded("numbers") then return end
 
 local api = vim.api
 local M = {}

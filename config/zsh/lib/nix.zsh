@@ -6,3 +6,4 @@ fi
 
 alias ns="nix-shell"
 alias nsz="nix-shell --run zsh"
+alias nsp="nix-shell --pure"

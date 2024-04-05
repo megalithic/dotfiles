@@ -81,35 +81,11 @@
                       (#offset-first-n! @punctuation.special 1)
                       (#set! conceal "")))))))))))) ; alts: →
 
-; ([(list_marker_minus) (list_marker_star)] @punctuation.special (#offset! @punctuation.special 0 0 0 -1) (#set! conceal "•"))
 
 ; Checkbox list items
 ((task_list_marker_unchecked) @punctuation.special (#offset! @punctuation.special 0 -2 0 0) (#set! conceal "")) ;
 ((task_list_marker_checked) @comment (#offset! @comment 0 -2 0 0) (#set! conceal "")) ;
 (list_item (task_list_marker_checked)) @comment
-;
-; ; Use box drawing characters for tables
-; (pipe_table_header ("|") @punctuation.special @conceal (#set! conceal "┃"))
-; (pipe_table_delimiter_row ("|") @punctuation.special @conceal (#set! conceal "┃"))
-; (pipe_table_delimiter_cell ("-") @punctuation.special @conceal (#set! conceal "━"))
-; (pipe_table_row ("|") @punctuation.special @conceal (#set! conceal "┃"))
-
-; ; Block quotes
-; ; ((block_quote_marker) @conceal (#set! conceal "▍"))
-; ((block_quote
-;   (paragraph (inline
-;     ; (block_continuation) @conceal (#set! conceal "▍")
-;     (block_continuation) @punctuation.special @conceal (#offset! @punctuation.special 0 0 0 -1) (#set! conceal "▐")
-;   ))
-; ))
-; ((block_quote_marker) @punctuation.special (#offset! @punctuation.special 0 0 0 -1) (#set! conceal "▐"))
-; ((block_continuation) @punctuation.special (#eq? @punctuation.special "> ") (#offset! @punctuation.special 0 0 0 -1) (#set! conceal "▐"))
-; ((block_continuation) @punctuation.special (#eq? @punctuation.special ">") (#set! conceal "▐"))
-; (block_quote
-;   (paragraph) @text.literal)
-;
-; (block_quote_marker) @quote
-; (block_quote (paragraph (inline (block_continuation) @quote)))
 
 ; Tables
 (pipe_table_header ("|") @punctuation.special (#set! conceal "┃"))
@@ -130,16 +106,32 @@
 
 ; Ease fenced code block conceals a bit
 ((fenced_code_block_delimiter) @punctuation.tilda (#set! conceal "~"))
-(fenced_code_block) @codeblock
-; Ease fenced code block conceals a bit
 ((fenced_code_block_delimiter) @punctuation.delimiter (#set! conceal "~"))
+((fenced_code_block_delimiter) @conceal (#set! conceal "~"))
 
 ; Awesome fenced code block language conceals using Nerd icons
 ; This solution is a bit hacky to allow the Nerd icon to expand to full width
-; (fenced_code_block (fenced_code_block_delimiter) @label
-;                    (info_string (language) @_lang)
-;                    (#offset! @label 0 1 0 -1)
-;                    (#ft-conceal! @_lang))
+; REF: https://github.com/ribru17/.dotfiles/blob/master/.config/nvim/queries/markdown/highlights.scm#L157-L168
+(fenced_code_block
+  (fenced_code_block_delimiter) @label
+  (info_string
+    (language) @_lang)
+  (#offset! @label 0 1 0 -1)
+  (#ft-conceal! @_lang))
+
 ; ((fenced_code_block_delimiter) @label
-;                                (#offset! @label 0 2 0 0)
-;                                (#set! conceal " "))
+;   (#offset! @label 0 2 0 0)
+;   (#set! conceal " "))
+
+(fenced_code_block
+  (fenced_code_block_delimiter) @label
+  (info_string
+    (language) @_lang)
+  (#offset! @label 0 2 0 0)
+   (#set! conceal ""))
+
+; Spell checking for table content
+(pipe_table_header
+  (pipe_table_cell) @nospell)
+(pipe_table_row
+  (pipe_table_cell) @spell)

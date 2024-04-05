@@ -19,7 +19,7 @@ local function get_hostname()
   return hostname
 end
 
-vim.g.os = vim.loop.os_uname().sysname
+vim.g.os = vim.uv.os_uname().sysname
 vim.g.is_macos = vim.g.os == "Darwin"
 vim.g.is_linux = vim.g.os == "Linux"
 vim.g.is_windows = vim.g.os == "Windows"
@@ -46,45 +46,6 @@ vim.g.notes_path = fmt("%s/_notes", vim.g.icloud_documents_path)
 vim.g.neorg_path = fmt("%s/_org", vim.g.icloud_documents_path)
 vim.g.hammerspoon_path = fmt("%s/config/hammerspoon", vim.g.dotfiles)
 vim.g.hs_emmy_path = fmt("%s/Spoons/EmmyLua.spoon", vim.g.hammerspoon_path)
-
--- mega.dirs.dots = vim.g.dotfiles
--- mega.dirs.privates = fn.expand("$PRIVATES")
--- mega.dirs.code = fn.expand("$HOME/code")
--- mega.dirs.icloud = vim.g.icloud_path
--- mega.dirs.docs = fn.expand("$DOCUMENTS_DIR")
--- mega.dirs.org = fn.expand(mega.dirs.docs .. "/_org")
--- mega.dirs.zettel = fn.expand("$ZK_NOTEBOOK_DIR")
--- mega.dirs.zk = mega.dirs.zettel
-
--- [ luarocks ] -----------------------------------------------------------------
-
-package.path = fmt("%s; %s/.luarocks/share/lua/5.1/?/init.lua;", package.path, vim.g.home)
-package.path = fmt("%s; %s/.luarocks/share/lua/5.1/?.lua;", package.path, vim.g.home)
-
--- inspect the contents of an object very quickly
--- in your code or from the command-line:
--- @see: https://www.reddit.com/r/neovim/comments/p84iu2/useful_functions_to_explore_lua_objects/
--- USAGE:
--- in lua: P({1, 2, 3})
--- in commandline: :lua P(vim.loop)
----@vararg any
-function _G.P(...)
-  -- if not vim.g.debug_enabled then return end
-  local objects, v = {}, nil
-  for i = 1, select("#", ...) do
-    v = select(i, ...)
-    table.insert(objects, vim.inspect(v))
-  end
-
-  if pcall(require, "plenary") then
-    local p_logger = logger.new({ level = "debug" })
-    p_logger.info(table.concat(objects, "\n"))
-  else
-    print(...)
-  end
-
-  return ...
-end
 
 --[[
   ╭────────────────────────────────────────────────────────────────────────────╮
@@ -203,7 +164,7 @@ end
 function mega.get_border(hl)
   hl = hl or "FloatBorder"
   local border = {}
-  for _, char in ipairs(mega.icons.border.blank) do
+  for _, char in ipairs(mega.icons.border.squared) do
     table.insert(border, { char, hl })
   end
 
@@ -327,6 +288,9 @@ function mega.require(module_name, opts)
   end
   return ok, result
 end
+
+function mega.lsp.is_enabled_elixir_ls(ls) return vim.tbl_contains(vim.g.enabled_elixir_ls, ls) end
+function mega.lsp.formatting_filter(client) return not vim.tbl_contains(vim.g.formatter_exclusions, client.name) end
 
 function mega.iabbrev(lhs, rhs, ft)
   vim.schedule(function()

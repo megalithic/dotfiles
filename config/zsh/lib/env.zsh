@@ -1,5 +1,4 @@
 #!/usr/bin/env zsh
-# shellcheck shell=bash
 
 zmodload zsh/datetime
 
@@ -92,6 +91,8 @@ export LESS_TERMCAP_se=$'\e[0m'     # reset reverse video
 export LESS_TERMCAP_ue=$'\e[0m'     # reset underline
 export GROFF_NO_SGR=1               # for color interpretation
 export MANPAGER='less -s -M +Gg'    # percentages for less paging
+export MANPAGER='nvim +Man!' # nice nvim man paging
+export MANWIDTH=80
 # / =================== from .zprofile =========================================
 
 # -- term (wezterm, xterm-kitty, xterm-256color, tmux-256color)
@@ -135,8 +136,8 @@ export GNUPGHOME="$XDG_CONFIG_HOME/gnupg"
 export LANG="en_US.UTF-8"
 export LC_ALL="en_US.UTF-8"
 export LC_CTYPE="en_US.UTF-8"
-export TZ="/usr/share/zoneinfo/US/Central"
-# export TZ="/usr/share/zoneinfo/US/Eastern"
+# export TZ="/usr/share/zoneinfo/US/Central"
+export TZ="/usr/share/zoneinfo/US/Eastern"
 
 # -- kitty
 export KITTYMUX_STATE_DIR=$HOME/.local/state
@@ -157,13 +158,6 @@ export CARGOPATH="$HOME/.cargo"
 export CARGOBIN="$CARGOPATH/bin"
 [ -f "$CARGOPATH/env" ] && . "$CARGOPATH/env"
 
-# -- asdf
-export ASDF_DIR="$HOME/.asdf"
-export ASDF_SHIMS="$ASDF_DIR/shims"
-export ASDF_BIN="$ASDF_SHIMS"
-export ASDF_INSTALLS="$ASDF_DIR/installs"
-# [ -f "$ZDOTDIR/lib/asdf.zsh" ] && source "$ZDOTDIR/lib/asdf.zsh" && echo "from env.zsh -- sourced $ZDOTDIR/lib/asdf.zsh.."
-# export ASDF_LUAROCKS="$ASDF_INSTALLS/lua/5.3.5/luarocks/bin"
 
 # -- rg/ripgrep
 # @see: https://github.com/BurntSushi/ripgrep/blob/master/GUIDE.md#configuration-file
@@ -367,7 +361,7 @@ case "$(uname)" in
   # Set the list of directories that Zsh searches for programs.
   # "${HOME}/.asdf/installs/elixir/`asdf current elixir | awk '{print $1}'`/.mix"
   path=(
-    /opt/homebrew/bin
+    ${HOMEBREW_PREFIX}/opt/bin
     ./bin
     ./.bin
     ./vendor/bundle/bin
@@ -377,11 +371,6 @@ case "$(uname)" in
     ${HOME}/.local/bin(N-/)
     ${DOTS}/bin(N-/)
     $PRIVATES/bin
-    $ASDF_DIR
-    $ASDF_BIN
-    $ASDF_SHIMS
-    $ASDF_INSTALLS
-    $ASDF_LUAROCKS
     $GOBIN
     ${GOPATH}/bin(N-/)
     $CARGOPATH
@@ -390,7 +379,9 @@ case "$(uname)" in
     /usr/local/share/npm/bin
     /usr/local/lib/node_modules
     ${HOMEBREW_PREFIX}/opt/libffi/lib
+    ${HOMEBREW_PREFIX}/opt/icu4c/bin
     ${HOMEBREW_PREFIX}/opt/gnu-sed/libexec/gnubin
+    ${HOMEBREW_PREFIX}/opt/postgresql@16/bin
     ${HOMEBREW_PREFIX}/opt/postgresql@15/bin
     ${HOMEBREW_PREFIX}/opt/postgresql@14/bin
 
@@ -402,6 +393,7 @@ case "$(uname)" in
     ${HOMEBREW_PREFIX}/opt/openssl@*/bin(Nn[-1]-/)
     ${HOMEBREW_PREFIX}/opt/gnu-sed/libexec/gnubin(N-/)
     ${HOMEBREW_PREFIX}/opt/coreutils/libexec/gnubin(N-/)
+    ${HOMEBREW_PREFIX}/opt/python@3.12/libexec/bin(Nn[-1]-/)
     ${HOMEBREW_PREFIX}/opt/python@3.11/libexec/bin(Nn[-1]-/)
     ${HOMEBREW_PREFIX}/opt/python@3.10/libexec/bin(Nn[-1]-/)
     ${HOMEBREW_PREFIX}/opt/python@3.9/libexec/bin(Nn[-1]-/)
@@ -412,10 +404,12 @@ case "$(uname)" in
 
     ${GOBIN}(N-/)
 
+    ${HOME}/Library/Python/3.12/bin(Nn[-1]-/)
     ${HOME}/Library/Python/3.11/bin(Nn[-1]-/)
     ${HOME}/Library/Python/3.10/bin(Nn[-1]-/)
     ${HOME}/Library/Python/3.9/bin(Nn[-1]-/)
     ${HOME}/Library/Python/2.*/bin(Nn[-1]-/)
+    ${HOMEBREW_PREFIX}/lib/python3.12/site-packages(N-/)
     ${HOMEBREW_PREFIX}/lib/python3.11/site-packages(N-/)
     ${HOMEBREW_PREFIX}/lib/python3.10/site-packages(N-/)
     ${HOMEBREW_PREFIX}/lib/python3.9/site-packages(N-/)
@@ -424,7 +418,6 @@ case "$(uname)" in
     ${HOMEBREW_PREFIX}/opt/python@3.*/bin(Nn[-1]-/)
     ${HOMEBREW_PREFIX}/opt/python@2.*/bin(Nn[-1]-/)
     ${HOMEBREW_PREFIX}/{bin,sbin}
-
     $ANDROID_HOME/emulator
     $ANDROID_HOME/platform-tools
     /Applications/WezTerm.app/Contents/MacOS

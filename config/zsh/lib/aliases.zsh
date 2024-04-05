@@ -172,6 +172,7 @@ if type nvim >/dev/null 2>&1; then
   alias vm="nvim"
   alias nvm=nv
   alias vim="NVIM_APPNAME=nvim nvim"
+  alias wipvim="NVIM_APPNAME=wipvim nvim"
   alias folkevim="NVIM_APPNAME=folkevim nvim"
   alias akinvim="NVIM_APPNAME=akinvim nvim"
   alias ribvim="NVIM_APPNAME=ribvim nvim"
@@ -204,14 +205,16 @@ alias ezl="nvim $DOTS/config/zsh/**/local.zsh"
 alias ev="nvim $DOTS/config/nvim/init.lua"
 alias evk="nvim $CODE/kickstart.nvim/init.lua"
 alias evv="nvim $DOTS/config/nvim/vimrc"
-alias evp="nvim $DOTS/config/nvim/lua/mega/plugins/core/init.lua"
-alias evo="nvim $DOTS/config/nvim/lua/mega/options.lua"
+alias evp="nvim $DOTS/config/nvim/lua/plugins/core/init.lua $DOTS/config/nvim/lua/plugins/extended/init.lua"
+# alias evo="nvim $DOTS/config/nvim/lua/mega/options.lua"
+alias evo="nvim $DOTS/config/nvim/lua/mega/settings.lua"
 alias evg="nvim $DOTS/config/nvim/lua/mega/globals.lua"
 alias evu="nvim $DOTS/config/nvim/lua/mega/utils/init.lua"
 alias evs="nvim $DOTS/config/nvim/lua/mega/servers.lua"
-alias evl="nvim $DOTS/config/nvim/plugin/lsp.lua"
 alias evm="nvim $DOTS/config/nvim/lua/mega/mappings.lua"
-alias eva="nvim $DOTS/config/nvim/plugin/autocmds.lua"
+alias eva="nvim $DOTS/config/nvim/lua/mega/autocmds.lua"
+alias evl="nvim $DOTS/config/nvim/plugin/lsp.lua"
+alias evf="nvim $DOTS/config/nvim/plugin/filetypes.lua"
 alias evt="nvim $DOTS/config/nvim/plugin/term.lua"
 
 alias ehs="nvim $DOTS/config/hammerspoon/config.lua"
@@ -277,6 +280,7 @@ alias nvim-plugins="cd ~/.local/share/nvim/site/pack/paqs/start"
 
 # MISC
 # -----------------------------------------------------------------------------
+alias gem="$(mise where ruby latest)/bin/gem"
 alias rm="rm -v"
 [[ "$(uname)" == "Darwin" ]] && alias rm="${HOMEBREW_PREFIX}/bin/trash"
 alias dash="open dash://" # lang:query
@@ -306,13 +310,11 @@ alias irc="weechat"
 # alias irc="rm ~/.weechat/weechat_crash*.log; weechat-curses"
 alias rc=irc
 alias clr=clear
-alias dif="kitty +kitten diff"
 alias zshtime="/usr/bin/time $(which zsh) -i -c echo"
 # alias zshtime="for i in $(seq 1 10); do /usr/bin/time zsh -i -c exit; done"
 alias timezsh="time $(which zsh) -i -c exit"
 alias zshprofile="time ZPROFILE=1 $(which zsh) -i -c exit"
 alias zshclear="rm -f ~/.zcompdump ~/.zsh-dotfiles-compiled.zsh"
-alias vimtime="ruby $DOTS/bin/vim-plugins-profile.rb nvim"
 
 # Intuitive map function
 # For example, to list all directories that contain a certain file:

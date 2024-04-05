@@ -2,8 +2,7 @@
 -- plugin ideas; ultimately, I've taken many brilliant ideas from @akinsho and @kassio
 -- and created my own version for my specific needs. they are the real ones here.
 
-if not mega then return end
-if not vim.g.enabled_plugin["megaterm"] then return end
+if not plugin_loaded("megaterm") then return end
 
 local defaultCfg = {
   env = nil,

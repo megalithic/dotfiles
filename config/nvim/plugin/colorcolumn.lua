@@ -1,8 +1,4 @@
--- Inspiration
--- 1. nvim-cursorline
-
-if not mega then return end
-if not vim.g.enabled_plugin["colorcolumn"] then return end
+if not plugin_loaded("colorcolumn") then return end
 
 local vc_ok, vc = pcall(require, "virt-column")
 local ibl_ok, ibl = pcall(require, "ibl")

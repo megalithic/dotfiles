@@ -1,7 +1,8 @@
 #!/usr/local/bin/zsh
 
 SESSION="ternreturns"
-CWD="$CODE/ternreturns"
+ROOT_DIR="$CODE/tern"
+CWD="$ROOT_DIR/$SESSION"
 
 SESSION_ICON=""
 SESSION_FG="#a7c080"

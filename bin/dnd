@@ -55,10 +55,6 @@ off() {
 }
 
 status() {
-  if [[ -n "$TMUX" ]]; then
-    echo "[TMUX]"
-  fi
-
   if [[ "$(defaults read com.apple.controlcenter "NSStatusItem Visible FocusModes")" == 1 ]]; then
     echo "on"
   else

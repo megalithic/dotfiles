@@ -5,73 +5,72 @@ vim.o.termguicolors = false
 if vim.loader then vim.loader.enable() end
 vim.env.DYLD_LIBRARY_PATH = "$BREW_PREFIX/lib/"
 
--- [ settings ] ----------------------------------------------------------------
 
-vim.g.enabled_plugin = {
-  abbreviations = true,
-  mappings = true,
-  autocmds = true,
-  megaline = true,
-  megacolumn = true,
-  term = true,
-  lsp = true,
-  repls = true,
-  cursorline = true,
-  colorcolumn = true,
-  windows = true,
-  numbers = true,
-  folds = true,
-  env = true,
-  -- old_term = false,
-  -- tmux = false,
-  -- breadcrumb = false,
-  -- megaterm = false,
-  -- vscode = false,
-  -- winbar = false,
-}
-
-if vim.g.enabled_plugin ~= nil then
-  for plugin, _ in pairs(vim.g.enabled_plugin) do
-    if not vim.tbl_contains({ "autocmds", "mappings" }, plugin) and vim.g.started_by_firenvim then
-      vim.g.enabled_plugin[plugin] = false
-    end
+  local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
+  if not vim.uv.fs_stat(lazypath) then
+    vim.fn.system({
+      "git",
+      "clone",
+      "--filter=blob:none",
+      "--single-branch",
+      "git@github.com:folke/lazy.nvim.git",
+      lazypath,
+    })
   end
-end
+  vim.opt.runtimepath:prepend(lazypath)
 
-function _G.plugin_loaded(plugin)
-  if not mega then return false end
-  if not vim.g.enabled_plugin then return false end
-  if not vim.g.enabled_plugin[plugin] then return false end
-
-  return true
-end
-
-vim.g.mapleader = ","
-vim.g.maplocalleader = " "
-vim.g.colorscheme = "megaforest" -- alt: `vim` for default
-vim.g.default_colorcolumn = "81"
-vim.g.notifier_enabled = true
-vim.g.debug_enabled = false
-vim.g.picker = "telescope" -- alt: telescope, fzf_lua
-vim.g.formatter = "conform" -- alt: null-ls/none-ls, conform
-vim.g.tree = "neo-tree"
-vim.g.explorer = "oil" -- alt: dirbuf, oil
-vim.g.tester = "vim-test" -- alt: neotest, nvim-test, vim-test
-vim.g.gitter = "fugitive" -- alt: neogit, fugitive
-vim.g.snipper = "snippets" -- alt: vsnip, luasnip, snippets (nvim-builtin)
-vim.g.completer = "cmp" -- alt: cmp, epo
-vim.g.ts_ignored_langs = {} -- alt: { "svg", "json", "heex", "jsonc" }
-vim.g.is_screen_sharing = false
-
--- REF: elixir LSPs: elixir-tools(ElixirLS, NextLS, credo), elixirls, nextls, lexical
-vim.g.formatter_exclusions = { "ElixirLS", "NextLS", "", "nextls", "lexical" }
-vim.g.diagnostic_exclusions = { "ElixirLS", "NextLS", "", "nextls", "lexical", "tsserver" }
-vim.g.completion_exclusions = { "ElixirLS", "NextLS", "elixirls", "nextls", "" }
-vim.g.enabled_elixir_ls = { "elixirls", "nextls", "lexical" }
-vim.g.disable_autolint = false
-vim.g.disable_autoformat = false
+  -- settings and autocmds must load before plugins,
+  -- but we can manually enable caching before both
+  -- of these for optimal performance
+  local lcc_ok, lazy_cache = pcall(require, "lazy.core.cache")
+  if lcc_ok then
+    lazy_cache.enable()
+  end
 
 -- [ globals ] -----------------------------------------------------------------
+
+local req = require("mega.req")
+
+_G.I = vim.inspect
+_G.fmt = string.format
+_G.L = vim.log.levels
+
+-- inspect the contents of an object very quickly
+-- in your code or from the command-line:
+-- @see: https://www.reddit.com/r/neovim/comments/p84iu2/useful_functions_to_explore_lua_objects/
+-- USAGE:
+-- in lua: P({1, 2, 3})
+-- in commandline: :lua P(vim.loop)
+---@vararg any
+function _G.P(...)
+  -- if not vim.g.debug_enabled then return end
+  local objects, v = {}, nil
+  for i = 1, select("#", ...) do
+    v = select(i, ...)
+    table.insert(objects, vim.inspect(v))
+  end
+
+  if pcall(require, "plenary") then
+    local p_logger = logger.new({ level = "debug" })
+    p_logger.info(table.concat(objects, "\n"))
+  else
+    print(...)
+  end
+
+  return ...
+end
+
+  -- NOTE: to use in one of our plugins:
+  -- `if not plugin_loaded("plugin_name") then return end`
+  function _G.plugin_loaded(plugin)
+    if not mega then return false end
+    local enabled_plugins = require("mega.settings").enabled_plugins
+
+    if not enabled_plugins then return false end
+    if not vim.tbl_contains(enabled_plugins, plugin) then return false end
+
+    return true
+  end
 
 _G.mega = mega
   or {
@@ -84,12 +83,16 @@ _G.mega = mega
     lsp = {},
     icons = require("mega.icons"),
     notify = vim.notify,
+    req = req,
   }
 
 -- [ loaders ] -----------------------------------------------------------------
 
-require("mega.globals")
-require("mega.debug")
-require("mega.options")
-require("mega.lazy").setup()
-require("mega.mappings")
+package.path = fmt("%s; %s/.luarocks/share/lua/5.1/?/init.lua;", package.path, vim.g.home)
+package.path = fmt("%s; %s/.luarocks/share/lua/5.1/?.lua;", package.path, vim.g.home)
+
+req("mega.globals")
+req("mega.settings").apply()
+req("mega.lazy").setup()
+req("mega.autocmds")
+req("mega.mappings")

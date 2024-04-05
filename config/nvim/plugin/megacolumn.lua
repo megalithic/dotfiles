@@ -1,5 +1,4 @@
-if not mega then return end
-if not vim.g.enabled_plugin["megacolumn"] then return end
+if not plugin_loaded("megacolumn") then return end
 
 ---@alias StringComponent {component: string, length: integer, priority: integer}
 ---@alias ExtmarkSign {[1]: number, [2]: number, [3]: number, [4]: {sign_text: string, sign_hl_group: string}}
@@ -229,6 +228,24 @@ local function format_text(t, k)
 end
 
 ---@param curbuf integer
+---@param lnum integer
+---@return StringComponent[] sgns non-git signs
+local function signplaced_signs(curbuf, lnum)
+  return vim
+    .iter(fn.sign_getplaced(curbuf, { group = "*", lnum = lnum })[1].signs)
+    :map(function(s)
+      local sign = format_text(fn.sign_getdefined(s.name)[1], "text")
+
+      if sign then
+        -- if sign.text ~= "" and sign.text ~= " " then print(sign.text) end
+
+        return { { { sign.text, sign.texthl } }, after = "" }
+      end
+    end)
+    :totable()
+end
+
+---@param curbuf integer
 ---@return StringComponent[], StringComponent[]
 local function extmark_signs(curbuf, lnum)
   lnum = lnum - 1
@@ -237,6 +254,7 @@ local function extmark_signs(curbuf, lnum)
   local sns = mega.fold(function(acc, item)
     item = format_text(item[4], "sign_text")
     local txt, hl = item.sign_text, item.sign_hl_group
+    -- if txt ~= "" and txt ~= " " then print(txt) end
     local is_git = hl:match("^Git")
 
     -- NOTE: use this so we can check if it's an nvim-lint sign; we'll use our own signs
@@ -244,6 +262,7 @@ local function extmark_signs(curbuf, lnum)
     local is_lint = string.find(txt, "[EWHI]+", 1) ~= nil
 
     local target = is_git and acc.git or acc.other
+    -- table.insert(target, { { { txt, hl } }, after = "" })
     if not is_lint then table.insert(target, { { { txt, hl } }, after = "" }) end
 
     return acc
@@ -262,7 +281,10 @@ function mega.ui.statuscolumn.render(is_active)
   local buf = api.nvim_win_get_buf(win)
   local line_count = api.nvim_buf_line_count(buf)
 
-  local gitsigns, sns = extmark_signs(buf, lnum)
+  -- local gitsigns, sns = extmark_signs(buf, lnum)
+  local gitsigns, other_sns = extmark_signs(buf, lnum)
+  local sns = signplaced_signs(buf, lnum)
+  vim.list_extend(sns, other_sns)
 
   while #sns < MIN_SIGN_WIDTH do
     table.insert(sns, spacer(1))

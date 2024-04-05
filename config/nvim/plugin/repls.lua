@@ -1,5 +1,4 @@
-if not mega then return end
-if not vim.g.enabled_plugin["repls"] then return end
+if not plugin_loaded("repls") then return end
 
 local U = require("mega.utils")
 

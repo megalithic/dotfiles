@@ -37,7 +37,7 @@ end
 function obj.jump(url)
   local browser = hs.application.get(C.preferred.browser)
   if browser and hs.fnutils.contains(obj.browsers, browser:name()) then
-    hs.osascript.javascript([[
+    local _success, object, _output = hs.osascript.javascript([[
     (function() {
       var browser = Application(']] .. browser:name() .. [[');
       browser.activate();
@@ -47,10 +47,16 @@ function obj.jump(url)
         if (tabIndex != -1) {
           win.activeTabIndex = (tabIndex + 1);
           win.index = 1;
+          return true;
+        } else {
+          return false;
         }
       }
     })();
     ]])
+    return object
+  else
+    return false
   end
 end
 

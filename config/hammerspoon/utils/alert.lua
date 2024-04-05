@@ -41,6 +41,7 @@ function obj.showOnly(opts)
 end
 
 function obj.close() hs.alert.closeAll(0) end
+function obj.closeSpecific(id) hs.alert.closeSpecific(id) end
 
 function obj.show(opts)
   local text
@@ -57,6 +58,9 @@ function obj.show(opts)
 
   if image ~= nil then
     hs.alert.showWithImage(text, image, {
+      atScreenEdge = 0,
+      fadeInDuration = 0,
+      fadeOutDuration = 0,
       textSize = size,
       radius = radius,
       textStyle = { paragraphStyle = { alignment = "center" } },
@@ -64,6 +68,9 @@ function obj.show(opts)
   else
     hs.alert.show(text, {
       textSize = size,
+      atScreenEdge = 0,
+      fadeInDuration = 0,
+      fadeOutDuration = 0,
       radius = radius,
       textStyle = { paragraphStyle = { alignment = "center" } },
     }, screen, duration)

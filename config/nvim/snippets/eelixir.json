@@ -1,0 +1,536 @@
+{
+  "%": {
+    "prefix": "%",
+    "body": "<% $0 %>"
+  },
+  "=": {
+    "prefix": "=",
+    "body": "<%= $0 %>"
+  },
+  "inspect": {
+    "prefix": "lin",
+    "body": [
+      "IO.inspect($1, label: \"$1 ($RELATIVE_FILEPATH:#{__ENV__.line})\")"
+    ],
+    "description": "IO.inspect"
+  },
+  "pipe_inspect": {
+    "prefix": "pin",
+    "body": [
+      "|> IO.inspect(label: \"$1 ($RELATIVE_FILEPATH:#{__ENV__.line})\")"
+    ],
+    "description": "IO.inspect in a pipeline"
+  },
+  "log_inspect": {
+    "prefix": "logi",
+    "body": [
+      "Logger.info(\"$1: #{inspect($1, pretty:true)} ($RELATIVE_FILEPATH:#{__ENV__.line})\")"
+    ],
+    "description": "Logger.info with informaion"
+  },
+  "key": {
+    "prefix": "k",
+    "body": [
+      "$1: $1"
+    ],
+    "description": "Key for key value list with same name."
+  },
+  "key_string": {
+    "prefix": "ks",
+    "body": [
+      "\"$1\" => $1"
+    ],
+    "description": "String key for key value list with same name."
+  },
+  "key_get": {
+    "prefix": "kget",
+    "body": [
+      "$1: Keyword.get(opts, :$1)"
+    ],
+    "description": "Get key from keyword list"
+  },
+  "pipe_assign": {
+    "prefix": "pass",
+    "body": [
+      "|> assign(:$1, $2)"
+    ],
+    "description": "assign in a pipeline"
+  },
+  "pipe_assign_new": {
+    "prefix": "passnew",
+    "body": [
+      "|> assign_new(:$1, $2)"
+    ],
+    "description": "assign in a pipeline"
+  },
+  "start_link": {
+    "prefix": "start_link",
+    "body": [
+      "def start_link(opts \\\\\\ []) do",
+      "    GenServer.start_link(__MODULE__, opts, name: __MODULE__)",
+      "end"
+    ],
+    "description": "Generic start_link GenServer function"
+  },
+  "hev": {
+    "prefix": "hev",
+    "description": "Handle event",
+    "body": [
+      "@impl Phoenix.LiveView",
+      "def handle_event(${1:event}, ${2:_params}, socket) do",
+      "  socket =",
+      "    socket",
+      "    |> assign(:${3:key}, ${4:value})",
+      "  $0",
+      "  {:noreply, socket}",
+      "end"
+    ]
+  },
+  "hin": {
+    "prefix": "hin",
+    "description": "Handle info",
+    "body": [
+      "def handle_info($1, socket) do",
+      "  socket =",
+      "    socket",
+      "    |> assign(:${2:key}, ${3:value})",
+      "  $0",
+      "  {:noreply, socket}",
+      "end"
+    ]
+  },
+  "handle_params": {
+    "prefix": "hp",
+    "body": [
+      "def handle_params(params, _url, socket) do",
+      "  {:noreply, socket}",
+      "end"
+    ],
+    "description": "LiveView handle_params function"
+  },
+  "lv_mount": {
+    "prefix": "mount",
+    "body": [
+      "def mount(_params, _session, socket) do",
+      "  socket =",
+      "    socket",
+      "    |> assign(:${1:key}, ${2:value})",
+      "  $0",
+      "  {:ok, socket}",
+      "end"
+    ],
+    "description": "LiveView mount function"
+  },
+  "lv_rend": {
+    "prefix": "rend",
+    "body": [
+      "def render(assigns) do",
+      "  ~H\"\"\"",
+      "  ${0}",
+      "  \"\"\"",
+      "end"
+    ],
+    "description": "LiveView render function"
+  },
+  "lc_mount": {
+    "prefix": "lc_mount",
+    "description": "LiveComponent mount function",
+    "body": [
+      "@impl Phoenix.LiveComponent",
+      "def mount(socket) do",
+      "    {:ok, assign(socket, $1: $2)}",
+      "end"
+    ]
+  },
+  "lc_update": {
+    "prefix": "lc_update",
+    "description": "LiveComponent update function",
+    "body": [
+      "@impl Phoenix.LiveComponent",
+      "def update(assigns, socket) do",
+      "    socket = assign(socket, assigns)",
+      "    $1",
+      "    {:ok, socket}",
+      "end"
+    ]
+  },
+  "ee": {
+    "prefix": "ee",
+    "description": "Embedded Elixir",
+    "body": [
+      "<%= $1 %>"
+    ]
+  },
+  "rs": {
+    "prefix": "rs",
+    "description": "Render slot in LiveComponent",
+    "body": [
+      "<%= render_slot(@$1) %>"
+    ]
+  },
+  "rsi": {
+    "prefix": "rsi",
+    "description": "Render slot of inner block",
+    "body": [
+      "<%= render_slot(@inner_block) %>"
+    ]
+  },
+  "testconn": {
+    "prefix": "testconn",
+    "body": [
+      "test \"${1:name}\", %{conn: conn$2} do",
+      "  {:ok, view, _html} = live(conn, \"/\")",
+      "  $0",
+      "end"
+    ]
+  },
+  "testparams": {
+    "prefix": "testparams",
+    "body": [
+      "test \"${1:name}\", %{$2} do",
+      "  $0",
+      "end"
+    ]
+  },
+  "asserte": {
+    "prefix": "asserte",
+    "body": [
+      "assert $1 =~ $2"
+    ]
+  },
+  "heex_sigil": {
+    "prefix": [
+      "heex",
+      "hx"
+    ],
+    "body": [
+      "~H\"\"\"",
+      "$1",
+      "\"\"\""
+    ]
+  },
+  "heex_sigil_empty": {
+    "prefix": [
+      "heexe",
+      "hxe"
+    ],
+    "body": [
+      "~H\"\"$1"
+    ]
+  },
+  "%= block": {
+    "prefix": [
+      "%=",
+      "e-",
+      "e=",
+      "eb"
+    ],
+    "body": [
+      "<%= $1 %>"
+    ]
+  },
+  "% block": {
+    "prefix": [
+      "%%",
+      "ee"
+    ],
+    "body": [
+      "<% $1 %>"
+    ]
+  },
+  "eex_form_for": {
+    "prefix": "ff",
+    "body": [
+      "<%= form_for @${1:changeset}, ${2:url}, ${3:[]}, fn f -> %>",
+      "  $4",
+      "<% end %>"
+    ],
+    "description": "eex form_for"
+  },
+  "eex_error_tag": {
+    "prefix": "et",
+    "body": [
+      "<%= error_tag ${1:f}, :${2:field} %>"
+    ],
+    "description": "eex form error tag"
+  },
+  "eex_text_input": {
+    "prefix": "ti",
+    "body": [
+      "<%= text_input ${1:f}, :${2:field} %>"
+    ],
+    "description": "eex form text input"
+  },
+  "eex_form_label": {
+    "prefix": "la",
+    "body": [
+      "<%= label ${1:f}, :${2:field}, \"${3:Text}\" %>"
+    ],
+    "description": "eex form label"
+  },
+  "eex_submit": {
+    "prefix": "subm",
+    "body": [
+      "<%= submit ${1:Text} %>"
+    ],
+    "description": "eex form submit"
+  },
+  "eex_submit_c": {
+    "prefix": "submc",
+    "body": [
+      "<%= submit ${1:Text}, class: \"${3:btn btn-primary}\" %>"
+    ],
+    "description": "eex form submit with class"
+  },
+  "eex_password_input": {
+    "prefix": "pi",
+    "body": [
+      "<%= password_input ${1:f}, :${2:field} %>"
+    ],
+    "description": "eex form password input"
+  },
+  "eex_link": {
+    "prefix": "lt",
+    "body": [
+      "<%= link \"${1:text}\", to: ${2:url} %>"
+    ],
+    "description": "eex link"
+  },
+  "eex_link_block": {
+    "prefix": "ltb",
+    "body": [
+      "<%= link to: ${1:url} do %>",
+      "\t${2:text}",
+      "<% end %>"
+    ],
+    "description": "eex link block"
+  },
+  "eex_render": {
+    "prefix": "render",
+    "body": [
+      "<%= render \"${1:partial}.html\", ${2:local_var: @local} %>"
+    ],
+    "description": "eex render"
+  },
+  "eex_h1": {
+    "prefix": "h1",
+    "body": [
+      "<h1>${0}</h1>"
+    ],
+    "description": "EEx h1"
+  },
+  "eex_div_class": {
+    "prefix": "div",
+    "body": [
+      "<div class=\"${1}\">",
+      "  ${0}",
+      "</div>",
+      ""
+    ],
+    "description": "EEx div with class"
+  },
+  "eex_div_id": {
+    "prefix": "divi",
+    "body": [
+      "<div id=\"${1}\">",
+      "  ${0}",
+      "</div>",
+      ""
+    ],
+    "description": "EEx div with id"
+  },
+  "eex_span_class": {
+    "prefix": "span",
+    "body": [
+      "<span class=\"${1}\">",
+      "  ${0}",
+      "</span>",
+      ""
+    ],
+    "description": "EEx span with class"
+  },
+  "eex_span_style": {
+    "prefix": "spans",
+    "body": [
+      "<span style=\"${1}\">",
+      "  ${0}",
+      "</span>",
+      ""
+    ],
+    "description": "EEx span with width"
+  },
+  "eex_form": {
+    "prefix": "form",
+    "body": [
+      "<form>",
+      "  ${0}",
+      "</form>",
+      ""
+    ],
+    "description": "EEx form"
+  },
+  "eex_button": {
+    "prefix": "button",
+    "body": [
+      "<button>",
+      "  ${0}",
+      "</button>"
+    ],
+    "description": "EEx button"
+  },
+  "eex_img": {
+    "prefix": "img",
+    "body": [
+      "<img src=\"${1}\">"
+    ],
+    "description": "EEx img"
+  },
+  "eex_datalist": {
+    "prefix": "data",
+    "body": [
+      "<datalist id=\"${1}\">",
+      "  ${0}",
+      "</datalist>",
+      ""
+    ],
+    "description": "EEx datalist"
+  },
+  "eex_input": {
+    "prefix": "input",
+    "body": [
+      "<input type=\"text\" name=\"${1}\" value=\"${2}\"",
+      "       placeholder=\"${3}\" />"
+    ],
+    "description": "EEx text input"
+  },
+  "eex_hidden_input": {
+    "prefix": "hidden",
+    "body": [
+      "<input type=\"hidden\" name=\"${1}\" value=\"${2}\" />"
+    ],
+    "description": "EEx hidden input"
+  },
+  "eex_checkbox_input": {
+    "prefix": "checkbox",
+    "body": [
+      "<input type=\"checkbox\" id=\"${1}\" name=\"${2}\" value=\"${3}\"/>"
+    ],
+    "description": "EEx checkbox input"
+  },
+  "eex_select": {
+    "prefix": "select",
+    "body": [
+      "<select name=\"${1}\">",
+      "</select>"
+    ],
+    "description": "EEx select input"
+  },
+  "eex_option": {
+    "prefix": "option",
+    "body": [
+      "<option value=\"${1}\">${0}</option>"
+    ],
+    "description": "EEx option"
+  },
+  "eex_label": {
+    "prefix": "label",
+    "body": [
+      "<label for=\"${1}\">${2}</label>"
+    ],
+    "description": "EEx label"
+  },
+  "eex_href": {
+    "prefix": "a",
+    "body": [
+      "<a href=\"#\">${1}</a>"
+    ],
+    "description": "EEx anchor tag"
+  },
+  "eex_render_block": {
+    "prefix": "et",
+    "body": [
+      "<%= $1 %>"
+    ],
+    "description": "<%= %> render block"
+  },
+  "eex_end_tag": {
+    "prefix": "eend",
+    "body": [
+      "<% end %>$1"
+    ],
+    "description": "<% end %> end tag"
+  },
+  "for": {
+    "prefix": "efor",
+    "body": [
+      "<%= for ${1:item} <- @$1s do %>",
+      "  $2",
+      "<% end %>"
+    ],
+    "description": "EEx for"
+  },
+  "fori": {
+    "prefix": "efori",
+    "body": [
+      "<%= for ${1:item} <- @$1s do %>",
+      "  $2",
+      "<% end %>"
+    ],
+    "description": "EEx for comprehension with items"
+  },
+  "eex_ifa": {
+    "prefix": "eifa",
+    "body": [
+      "<%= if $1, do: \"{$1}\" %>"
+    ],
+    "description": "EEx if for attribute"
+  },
+  "eex_if": {
+    "prefix": "eif",
+    "body": [
+      "<%= if $1 do %>",
+      "  $2",
+      "<% end %>"
+    ],
+    "description": "EEx if"
+  },
+  "eex_if_else": {
+    "prefix": "eife",
+    "body": [
+      "<%= if $1 do %>",
+      "  $2",
+      "<% else %>",
+      "  $3",
+      "<% end %>"
+    ],
+    "description": "EEx if else"
+  },
+  "eex_else": {
+    "prefix": "eelse",
+    "body": [
+      "<% else %>"
+    ],
+    "description": "EEx else"
+  },
+  "eex_cond": {
+    "prefix": "econd",
+    "body": [
+      "<%= cond do %>",
+      "  <% $1 -> %>",
+      "    $2",
+      "  <% true -> %>",
+      "    $3",
+      "<% end %>"
+    ],
+    "description": "EEx cond"
+  },
+  "eex_unless": {
+    "prefix": "eunless",
+    "body": [
+      "<%= unless $1 do %>",
+      "  $2",
+      "<% end %>"
+    ],
+    "description": "EEx unless"
+  }
+}
