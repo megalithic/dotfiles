@@ -1,5 +1,53 @@
 return {
   {
+    cond = false or not vim.g.started_by_firenvim,
+    "jackMort/ChatGPT.nvim",
+    event = "VeryLazy",
+    config = function()
+      local border = { style = mega.current_border(), highlight = "PickerBorder" }
+      require("chatgpt").setup({
+        popup_window = { border = border },
+        popup_input = { border = border, submit = "<C-y>" },
+        settings_window = { border = border },
+        -- async_api_key_cmd = "pass show api/openai",
+        chat = {
+          keymaps = {
+            close = {
+              "<C-c>",
+            },
+          },
+        },
+      })
+    end,
+    dependencies = {
+      "MunifTanjim/nui.nvim",
+      "nvim-lua/plenary.nvim",
+      "nvim-telescope/telescope.nvim",
+    },
+  },
+  {
+    "piersolenski/wtf.nvim",
+    dependencies = {
+      "MunifTanjim/nui.nvim",
+    },
+    event = "VeryLazy",
+    opts = {},
+    keys = {
+      {
+        "gw",
+        mode = { "n" },
+        function() require("wtf").ai() end,
+        desc = "Debug diagnostic with AI",
+      },
+      {
+        mode = { "n" },
+        "gW",
+        function() require("wtf").search() end,
+        desc = "Search diagnostic with Google",
+      },
+    },
+  },
+  {
     "David-Kunz/gen.nvim",
     cmd = "Gen",
     opts = {

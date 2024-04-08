@@ -1,6 +1,11 @@
-local in_dotfiles = vim.fn.system("git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME ls-tree --name-only HEAD") ~= ""
-
 local BORDER_STYLE = "none"
+
+local border_chars = {
+  rounded = { "╭", "─", "╮", "│", "╯", "─", "╰", "│" },
+  squared = { "🭽", "▔", "🭾", "▕", "🭿", "▁", "🭼", "▏" },
+  none = { " ", " ", " ", " ", " ", " ", " ", " " },
+  blank = { " ", " ", " ", " ", " ", " ", " ", " " },
+}
 
 local telescope_border_chars = {
   none = { "", "", "", "", "", "", "", "" },
@@ -21,7 +26,12 @@ local connected_telescope_border_chars = {
 }
 
 local M = {
+  -- NOTE: char options (https://unicodeplus.com/): ┊│┆ ┊  ▎││ ▏▏│¦┆┊
+  indent_scope_char = "│",
+  indent_char = "┊",
+  virt_column_char = "│",
   border = BORDER_STYLE,
+  border_chars = border_chars[BORDER_STYLE],
   telescope_border_chars = telescope_border_chars[BORDER_STYLE],
   colorscheme = "megaforest", -- alt: `vim` for default
   default_colorcolumn = "81",
@@ -79,14 +89,13 @@ local M = {
 }
 
 M.apply = function()
-
   function modified_icon() return vim.bo.modified and mega.icons.misc.circle or "" end
 
   local settings = {
     g = {
       mapleader = ",",
       maplocalleader = " ",
-      ruby_host_prog = "~/.local/share/mise/installs/ruby/latest",
+      -- ruby_host_prog = "~/.local/share/mise/installs/ruby/latest",
       bullets_checkbox_markers = " x",
       bullets_outline_levels = { "ROM", "ABC", "rom", "abc", "std-" },
       mkdp_echo_preview_url = 1,
@@ -121,6 +130,7 @@ M.apply = function()
       markdown_fenced_languages = M.markdown_fenced_languages,
     },
     o = {
+      -- autochdir = true,
       autoindent = true,
       autowriteall = true,
       backup = false,
@@ -258,7 +268,7 @@ M.apply = function()
       jumpoptions = { "stack", "view" },
       listchars = {
         eol = nil,
-        tab = nil, -- alts: »│
+        tab = "│ ", -- alts: »│
         nbsp = "␣",
         extends = "›", -- alts: … »
         precedes = "‹", -- alts: … «
@@ -308,12 +318,13 @@ M.apply = function()
 
       -- vim.opt.path:append("**") -- Lets `find` search recursively into subfolders
     },
-    env = {
-      GIT_WORK_TREE = in_dotfiles and vim.env.HOME or vim.env.GIT_WORK_TREE,
-      GIT_DIR = in_dotfiles and vim.env.HOME .. "/.dotfiles" or vim.env.GIT_DIR,
-      -- for constant paging in Telescope delta commands
-      GIT_PAGER = "delta --paging=always",
-    },
+    -- env = {
+    -- -- local in_dotfiles = vim.fn.system("git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME ls-tree --name-only HEAD") ~= ""
+    --   GIT_WORK_TREE = in_dotfiles and vim.env.HOME or vim.env.GIT_WORK_TREE,
+    --   GIT_DIR = in_dotfiles and vim.env.HOME .. "/.dotfiles" or vim.env.GIT_DIR,
+    --   -- for constant paging in Telescope delta commands
+    --   GIT_PAGER = "delta --paging=always",
+    -- },
   }
 
   -- apply the above settings

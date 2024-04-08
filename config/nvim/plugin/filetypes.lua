@@ -355,6 +355,7 @@ xmap <silent> <localleader>er :lua require("mega.utils").wrap_selected_nodes("{:
       linebreak = true,
       wrap = true,
       suffixesadd = ".md",
+      spell = true,
     },
     keys = {
       -- { "<leader>td", require("markdown").task_mark_done },

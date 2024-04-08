@@ -14,6 +14,29 @@ function log_warn {
   printf '%s%s[%s] %s\n%s' $(tput bold) $(tput setaf 3) "$(date '+%x %X')" "-> [!] $*" $(tput sgr 0)
 }
 
+function gh_key {
+  log_warn -n "-> add this key to your github account? [yN]"
+  read continue_gh_reply
+
+  case $continue_gh_reply in
+    [Yy]) $(open "https://github.com/settings/keys") ;;
+    [Nn]) log_warn "$skip_gh_message" ;;
+    *) log_warn "$skip_gh_message" ;;
+  esac
+  log "-> if you did add your key to github, you can verify with: 'ssh -T git@github.com'"
+}
+
+function do_key {
+  log_warn -n "-> add this key to your digitalocean account? [yN]"
+  read continue_do_reply
+
+  case $continue_do_reply in
+    [Yy]) $(open "https://cloud.digitalocean.com/account/security") ;;
+    [Nn]) log_warn "$skip_do_message" ;;
+    *) log_warn "$skip_do_message" ;;
+  esac
+}
+
 KEY_NAME="${1:-$USER-$HOST}"
 KEY_ID="${1:-$USER@$HOST}"
 
@@ -23,7 +46,8 @@ key_file="$KEY_NAME"
 key_type="ed25519"
 key_path="$ssh_path/$key_file"
 key_path_pub="$ssh_path/$key_file.pub"
-skip_message="-> skipping; be sure to visit https://github.com/settings/keys to add your new key!"
+skip_gh_message="-> skipping GH; be sure to visit https://github.com/settings/keys to add your new key!"
+skip_do_message="-> skipping DO; be sure to visit https://cloud.digitalocean.com/account/security to add your new key!"
 
 log "-> generating an ssh public/private key with params:"
 echo "- platform      = $(uname)"
@@ -58,14 +82,5 @@ pbcopy <"$key_path_pub"
 
 log_ok "-> DONE creating ssh key at "$key_path_pub"; copied to clipboard."
 
-log_warn -n "-> add this key to your github account? [yN]"
-read continue_reply
-
-case $continue_reply in
-  [Yy]) $(open "https://github.com/settings/keys") ;;
-  [Nn]) log_warn "$skip_message" ;;
-  *) log_warn "$skip_message" ;;
-esac
-
-log "-> if you did add your key to github, you can verify with: 'ssh -T git@github.com'"
-log_warn "-> ensure you also add your key to your DO instance.."
+gh_key
+do_key

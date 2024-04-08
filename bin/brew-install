@@ -24,10 +24,18 @@ __root="$(cd "$(dirname "$__dir")" && pwd)"
 # shellcheck disable=SC2034,SC2015
 __invocation="$(printf %q "$__file")$( (($#)) && printf ' %q' "$@" || true)"
 
+FORCE=0
+UPDATE=0
+UPGRADE=0
+
 do_update() {
   export NONINTERACTIVE=1
   brew update --verbose
   brew outdated --verbose
+}
+
+do_upgrade() {
+  export NONINTERACTIVE=1
   brew upgrade --force --verbose
 }
 
@@ -35,8 +43,8 @@ do_install() {
   log "installing homebrew ($(uname)).."
   export NONINTERACTIVE=1
   NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" &&
-  log_ok "completed installing brew." ||
-  exit 1
+    log_ok "completed installing brew." ||
+    exit 1
 
   if [[ "$(arch)" == "arm64" ]]; then
     eval $(/opt/homebrew/bin/brew shellenv)
@@ -48,16 +56,18 @@ do_install() {
     brew bundle --verbose --force --file=~/.dotfiles/brew/Brewfile
   fi
 }
-while getopts "uf" OPTION; do
+while getopts "ufg" OPTION; do
   case $OPTION in
     u)
-      do_update
-      exit 0
+      UPDATE=1
+      ;;
+
+    g)
+      UPGRADE=1
       ;;
 
     f)
-      do_install && do_update
-      exit 0
+      FORCE=1
       ;;
 
     \?)
@@ -71,7 +81,17 @@ shift $((OPTIND - 1))
 
 if type "brew" &>/dev/null; then
   log_warn "brew already installed; updating instead."
-  do_update
+  if [[ $UPGRADE == 1 ]]; then
+    do_update && do_upgrade
+  else
+    do_update
+  fi
 else
-  do_install && do_update
+  if [[ $FORCE == 1 ]]; then
+    do_install && do_update && do_upgrade
+  elif [[ $UPGRADE == 1 ]]; then
+    do_update && do_upgrade
+  else
+    do_update
+  fi
 fi

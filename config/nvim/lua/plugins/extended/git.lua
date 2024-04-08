@@ -83,13 +83,15 @@ end
 return {
   {
     "lewis6991/gitsigns.nvim",
-    event = { "BufReadPre", "BufNewFile" },
+    event = { "LazyFile" },
     opts = {
       -- experimental things -----------
-      -- _extmark_signs = vim.g.enabled_plugin["statuscolumn"],
+      -- _extmark_signs = plugin_loaded("megacolumn"),
       _extmark_signs = true,
       _inline2 = true,
-      _signs_staged_enable = false,
+      _signs_staged_enable = true,
+      attach_to_untracked = true,
+      sign_priority = 0,
       -- -------------------------------
       signs = {
         add = { hl = "GitSignsAdd", culhl = "GitSignsAddCursorLine", numhl = "GitSignsAddNum", text = "▕" }, -- alts: ▕, ▎, ┃, │, ▌, ▎ 🮉
@@ -112,7 +114,7 @@ return {
       current_line_blame = not vim.fn.getcwd():match("dotfiles"),
       current_line_blame_formatter = " <author>, <author_time> · <summary>",
       preview_config = {
-        border = mega.get_border(),
+        border = mega.current_border(),
       },
       on_attach = function(bufnr)
         local gs = package.loaded.gitsigns
@@ -212,6 +214,7 @@ return {
   {
     "NeogitOrg/neogit",
     cmd = "Neogit",
+    branch = "nightly",
     dependencies = { "nvim-lua/plenary.nvim" },
     -- commit = "b89ef391d20f45479e92bd4190e444c9ec9163a3",
     keys = git_keys,
@@ -348,6 +351,7 @@ return {
   {
     "linrongbin16/gitlinker.nvim",
     dependencies = "nvim-lua/plenary.nvim",
+    cmd = { "GitLink" },
     keys = {
       -- {
       --   "<localleader>gy",
@@ -419,6 +423,8 @@ return {
         desc = "Generate git permanent link",
       },
       mappings = nil,
+      debug = true,
+      file_log = true,
     },
   },
 }

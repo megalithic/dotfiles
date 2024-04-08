@@ -161,10 +161,10 @@ function mega.falsy(item)
   return item ~= nil
 end
 
-function mega.get_border(hl)
+function mega.current_border(hl)
   hl = hl or "FloatBorder"
   local border = {}
-  for _, char in ipairs(mega.icons.border.squared) do
+  for _, char in ipairs(require("mega.settings").border_chars) do
     table.insert(border, { char, hl })
   end
 
