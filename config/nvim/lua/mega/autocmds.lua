@@ -181,6 +181,7 @@ augroup("EnterLeaveBehaviours", {
     event = { "BufEnter" },
     command = function(evt)
       vim.defer_fn(function()
+        -- enable ibl for active buffer
         local ibl_ok, ibl = pcall(require, "ibl")
         if ibl_ok then ibl.setup_buffer(evt.buf, { indent = { char = SETTINGS.indent_char } }) end
       end, 1)
@@ -191,6 +192,7 @@ augroup("EnterLeaveBehaviours", {
     event = { "BufLeave" },
     command = function(evt)
       vim.defer_fn(function()
+        -- disable ibl for inactive buffer
         local ibl_ok, ibl = pcall(require, "ibl")
         if ibl_ok then ibl.setup_buffer(evt.buf, { indent = { char = "" } }) end
       end, 1)

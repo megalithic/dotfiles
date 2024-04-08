@@ -222,7 +222,7 @@ xmap <silent> <localleader>er :lua require("mega.utils").wrap_selected_nodes("{:
   },
   gitcommit = {
     keys = {
-      { "q", vim.cmd.quit, { nowait = true, buffer = true, desc = "abort gitcommit" } },
+      { "q", vim.cmd.cquit, { nowait = true, buffer = true, desc = "abort", bang = true } },
     },
     opt = {
       list = false,
@@ -235,14 +235,16 @@ xmap <silent> <localleader>er :lua require("mega.utils").wrap_selected_nodes("{:
     },
     callback = function()
       vim.fn.matchaddpos("DiagnosticVirtualTextError", { { 1, 50, 10000 } })
-      vim.defer_fn(function() vim.cmd.normal({ "gg", bang = true }) end, 1)
       if vim.fn.prevnonblank(".") ~= vim.fn.line(".") then vim.cmd.startinsert() end
     end,
   },
   gitrebase = {
-    function() vim.keymap.set("n", "q", vim.cmd.cquit, { nowait = true, desc = "Abort" }) end,
+    function() vim.keymap.set("n", "q", vim.cmd.cquit, { nowait = true, desc = "abort" }) end,
   },
   neogitcommitmessage = {
+    keys = {
+      { "q", vim.cmd.cquit, { nowait = true, buffer = true, desc = "abort", bang = true } },
+    },
     opt = {
       list = false,
       number = false,
@@ -255,7 +257,6 @@ xmap <silent> <localleader>er :lua require("mega.utils").wrap_selected_nodes("{:
     callback = function()
       vim.keymap.set("n", "q", vim.cmd.cquit, { buffer = true, nowait = true, desc = "Abort" })
       vim.fn.matchaddpos("DiagnosticVirtualTextError", { { 1, 50, 10000 } })
-      vim.defer_fn(function() vim.cmd.normal({ "gg", bang = true }) end, 1)
       if vim.fn.prevnonblank(".") ~= vim.fn.line(".") then vim.cmd.startinsert() end
     end,
   },
