@@ -1,5 +1,3 @@
-local in_dotfiles = vim.fn.system("git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME ls-tree --name-only HEAD") ~= ""
-
 local BORDER_STYLE = "none"
 
 local border_chars = {
@@ -132,6 +130,7 @@ M.apply = function()
       markdown_fenced_languages = M.markdown_fenced_languages,
     },
     o = {
+      -- autochdir = true,
       autoindent = true,
       autowriteall = true,
       backup = false,
@@ -319,12 +318,13 @@ M.apply = function()
 
       -- vim.opt.path:append("**") -- Lets `find` search recursively into subfolders
     },
-    env = {
-      GIT_WORK_TREE = in_dotfiles and vim.env.HOME or vim.env.GIT_WORK_TREE,
-      GIT_DIR = in_dotfiles and vim.env.HOME .. "/.dotfiles" or vim.env.GIT_DIR,
-      -- for constant paging in Telescope delta commands
-      GIT_PAGER = "delta --paging=always",
-    },
+    -- env = {
+    -- -- local in_dotfiles = vim.fn.system("git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME ls-tree --name-only HEAD") ~= ""
+    --   GIT_WORK_TREE = in_dotfiles and vim.env.HOME or vim.env.GIT_WORK_TREE,
+    --   GIT_DIR = in_dotfiles and vim.env.HOME .. "/.dotfiles" or vim.env.GIT_DIR,
+    --   -- for constant paging in Telescope delta commands
+    --   GIT_PAGER = "delta --paging=always",
+    -- },
   }
 
   -- apply the above settings
