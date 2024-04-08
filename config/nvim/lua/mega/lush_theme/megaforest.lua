@@ -879,7 +879,7 @@ local theme = lush(function(injected_functions)
     IndentBlanklineContextStart({ sp = C.bg_blue.li(10), bg = C.transparent, gui = "underline" }),
 
     ---- :help mini.indentscope ------------------------------------------------
-    MiniIndentscopeSymbol({ fg = C.teal }),
+    MiniIndentscopeSymbol({ fg = C.teal.lighten(10) }),
 
     ---- :help mini.jump.txt / mini.jump2d.txt  --------------------------------
 

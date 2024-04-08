@@ -265,9 +265,7 @@ local function mini_indentscope()
     -- },
     draw = {
       delay = 10,
-      -- animation = require("mini.indentscope").gen_animation.none(),
       animation = function() return 0 end,
-      -- animation = function() return 10 end,
     },
     options = { try_as_border = true, border = "both", indent_at_cursor = true },
   })
