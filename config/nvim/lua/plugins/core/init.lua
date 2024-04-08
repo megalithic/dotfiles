@@ -8,7 +8,7 @@ return {
     lazy = false,
     priority = 1001,
     config = function()
-      mega.pcall("theme failed to load because", function(colorscheme)
+      mega.pcall("lush theme failed to load", function(colorscheme)
         local theme = fmt("mega.lush_theme.%s", colorscheme)
         local ok, lush_theme = pcall(require, theme)
 
@@ -20,7 +20,6 @@ return {
         else
           pcall(vim.cmd.colorscheme, colorscheme)
         end
-
         -- NOTE: always make available my lushified-color palette
         -- mega.colors = require("mega.lush_theme.colors")
       end, vim.g.colorscheme)

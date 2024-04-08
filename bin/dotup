@@ -75,24 +75,24 @@ update() {
   log "homebrew install.." &&
     ./bin/brew-install -u
 
-  # log "asdf install.." &&
-  #   ./bin/asdf-install
-  #
-  log "(asdf) install perl packages.." &&
-    ~/.dotfiles/asdf/perl.sh
+  log "install perl packages.." &&
+    ~/.dotfiles/tools/perl.sh
 
-  log "(asdf) install python packages.." &&
-    ~/.dotfiles/asdf/python.sh
+  log "install python packages.." &&
+    ~/.dotfiles/tools/python.sh
 
   log "neovim install.." && ./bin/nvim-install
 
   if [[ "$(uname)" == "Darwin" ]]; then
     log "elixir-ls install.." &&
-      ./bin/elixirls-install master
+      ./bin/elixirls-install
 
     log "lexical install.." &&
-      ./bin/lexical-install main
+      ./bin/lexical-install
   fi
+
+  [[ -n $TMUX ]] &&
+    log "updating tpm plugins for tmux.." && ~/.dotfiles/config/tmux/plugins/tpm/bin/update_plugins
 
   [[ -e /etc/zshrc ]] &&
     log "backup system default /etc/zshrc.." &&
@@ -111,23 +111,6 @@ yay() {
 ░ $(dotsay "👍 @b@yellow[[donesies!]]")
 ░ $(dotsay "@b@green[[]]")
 EOF
-
-  if [[ "$(hostname)" == "seth-dev" ]]; then
-    command cat <<EOF
-░
-░  $(dotsay "✸ since you're on $(hostname), you might want to:")
-░
-░   $(dotsay "• run \`@b@blue[[dev update]]\`")
-░
-EOF
-  else
-    command cat <<EOF
-░
-░  $(dotsay "• nothing more to do.")
-░
-
-EOF
-  fi
 }
 
 oops() {
