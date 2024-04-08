@@ -87,11 +87,11 @@ return {
     opts = {
       -- experimental things -----------
       -- _extmark_signs = plugin_loaded("megacolumn"),
-      _extmark_signs = true,
-      _inline2 = true,
-      _signs_staged_enable = true,
-      attach_to_untracked = true,
-      sign_priority = 0,
+      -- _extmark_signs = true,
+      -- _inline2 = true,
+      -- _signs_staged_enable = true,
+      -- attach_to_untracked = true,
+      -- sign_priority = 0,
       -- -------------------------------
       signs = {
         add = { hl = "GitSignsAdd", culhl = "GitSignsAddCursorLine", numhl = "GitSignsAddNum", text = "▕" }, -- alts: ▕, ▎, ┃, │, ▌, ▎ 🮉
@@ -128,7 +128,8 @@ return {
 
         mega.nmap("<localleader>hu", gs.undo_stage_hunk, { desc = "git(hunk): undo stage" })
         mega.nmap("<localleader>hr", gs.reset_hunk, { desc = "git(hunk): reset hunk" })
-        mega.nmap("<localleader>hp", gs.preview_hunk_inline, { desc = "git(hunk): preview hunk inline" })
+        mega.nmap("<localleader>hp", gs.preview_hunk, { desc = "git(hunk): preview hunk" })
+        -- mega.nmap("<localleader>hp", gs.preview_hunk_inline, { desc = "git(hunk): preview hunk inline" })
         -- mega.nmap("<leader>hp", gs.preview_hunk, { desc = "git: preview hunk" })
         mega.nmap("<localleader>hd", gs.toggle_deleted, { desc = "git(hunk): show deleted lines" })
         mega.nmap("<localleader>hw", gs.toggle_word_diff, { desc = "git(hunk): toggle word diff" })
@@ -149,12 +150,12 @@ return {
         -- Navigation
         bmap("n", "[h", function()
           if vim.wo.diff then return "[c" end
-          vim.schedule(function() gs.prev_hunk() end)
+          vim.schedule(function() gs.nav_hunk("prev") end)
           return "<Ignore>"
         end, { expr = true, desc = "git: prev hunk" })
         bmap("n", "]h", function()
           if vim.wo.diff then return "]c" end
-          vim.schedule(function() gs.next_hunk() end)
+          vim.schedule(function() gs.nav_hunk("next") end)
           return "<Ignore>"
         end, { expr = true, desc = "git: next hunk" })
 
@@ -423,8 +424,8 @@ return {
         desc = "Generate git permanent link",
       },
       mappings = nil,
-      debug = true,
-      file_log = true,
+      debug = false,
+      file_log = false,
     },
   },
 }
