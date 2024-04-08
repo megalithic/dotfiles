@@ -321,7 +321,6 @@ function obj:entered()
       strokeWidth = 2.0,
       strokeColor = { white = 0.8, alpha = 0.7 },
       roundedRectRadii = { xRadius = 14.0, yRadius = 14.0 },
-      frame = frame,
     })
     :show()
 
