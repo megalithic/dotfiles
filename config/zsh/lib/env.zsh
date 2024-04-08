@@ -222,7 +222,7 @@ case "$(uname)" in
       export LDFLAGS="-L/opt/homebrew/opt/ruby/lib"
       export CPPFLAGS="-I/opt/homebrew/opt/ruby/include"
 
-      export PKG_CONFIG_PATH="$PKG_CONFIG_PATH /opt/homebrew/opt/ruby/lib/pkgconfig"
+      export PKG_CONFIG_PATH="$PKG_CONFIG_PATH $(brew --prefix)/opt/ruby/lib/pkgconfig"
       export PKG_CONFIG_PATH="$PKG_CONFIG_PATH $(brew --prefix)/opt/libffi/lib/pkgconfig"
       export PKG_CONFIG_PATH="$PKG_CONFIG_PATH $(brew --prefix)/opt/openssl@1.1/lib/pkgconfig"
 

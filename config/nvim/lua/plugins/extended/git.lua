@@ -423,6 +423,8 @@ return {
         desc = "Generate git permanent link",
       },
       mappings = nil,
+      debug = true,
+      file_log = true,
     },
   },
 }
