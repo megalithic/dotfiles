@@ -346,6 +346,8 @@ local function mini_comment()
   })
 end
 
+local function mini_pairs() require("mini.pairs").setup({}) end
+
 local function mini_pick()
   require("mini.pick").setup({
     mappings = {
@@ -366,20 +368,32 @@ local function mini_pick()
   })
 end
 
+local function mini_splitjoin()
+  require("mini.splitjoin").setup({
+    mappings = {
+      toggle = "",
+      split = "",
+      join = "",
+    },
+  })
+end
+
 return {
   "echasnovski/mini.nvim",
   init = function()
     mega.nmap("<leader>bd", function() require("mini.bufremove").delete(0, false) end)
     mega.nmap("<leader>bD", function() require("mini.bufremove").delete(0, true) end)
   end,
-  event = { "LazyFile" },
+  event = { "VeryLazy" },
   config = function()
     mini_ai()
     mini_align()
     mini_comment()
     mini_hipatterns()
     mini_indentscope()
+    mini_pairs()
     mini_pick()
+    mini_splitjoin()
     mini_surround()
   end,
 }

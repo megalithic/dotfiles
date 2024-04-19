@@ -91,6 +91,9 @@ update() {
       ./bin/lexical-install
   fi
 
+  log "other updates.." &&
+    bat cache --build
+
   [[ -n $TMUX ]] &&
     log "updating tpm plugins for tmux.." && ~/.dotfiles/config/tmux/plugins/tpm/bin/update_plugins
 

@@ -231,7 +231,7 @@ local function setup_autocommands(client, bufnr)
       end,
     },
     {
-      event = { "CursorMoved", "BufLeave", "WinLeave" },
+      event = { "BufLeave", "WinLeave" },
       buffer = bufnr,
       command = function()
         if not vim.g.git_conflict_detected then vim.lsp.buf.clear_references() end

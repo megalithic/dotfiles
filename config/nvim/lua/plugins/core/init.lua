@@ -42,7 +42,10 @@ return {
       vim.g.lastplace_open_folds = true
     end,
   },
-  { "nvim-tree/nvim-web-devicons", config = function() require("nvim-web-devicons").setup() end },
+  {
+    "nvim-tree/nvim-web-devicons",
+    config = function() require("nvim-web-devicons").setup() end,
+  },
   {
     "NvChad/nvim-colorizer.lua",
     event = { "BufReadPre" },

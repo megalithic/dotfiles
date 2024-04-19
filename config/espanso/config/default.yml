@@ -37,4 +37,5 @@
 # uses the clipboard if the text is longer than 'clipboard_threshold' characters.
 # clipboard_threshold: 100
 
+backend: auto
 # For a list of all the available options, visit the official docs at: https://espanso.org/docs/

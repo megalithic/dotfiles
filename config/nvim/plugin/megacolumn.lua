@@ -6,6 +6,7 @@ if not plugin_loaded("megacolumn") then return end
 local fn, v, api, opt = vim.fn, vim.v, vim.api, vim.opt
 local sep, falsy = mega.icons.separators, mega.falsy
 local strwidth = vim.api.nvim_strwidth
+local U = require("mega.utils")
 
 local MIN_SIGN_WIDTH, space = 1, " "
 local fcs = opt.fillchars:get()

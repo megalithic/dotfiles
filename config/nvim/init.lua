@@ -81,6 +81,8 @@ _G.mega = mega
     icons = require("mega.icons"),
     notify = vim.notify,
     req = req,
+    blink_cursorline = function() end,
+    resize_windows = function() end,
   }
 
 -- [ loaders ] -----------------------------------------------------------------

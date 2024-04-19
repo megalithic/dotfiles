@@ -158,6 +158,8 @@ export CARGOPATH="$HOME/.cargo"
 export CARGOBIN="$CARGOPATH/bin"
 [ -f "$CARGOPATH/env" ] && . "$CARGOPATH/env"
 
+# -- eza
+export EZA_COLORS="reset"
 
 # -- rg/ripgrep
 # @see: https://github.com/BurntSushi/ripgrep/blob/master/GUIDE.md#configuration-file

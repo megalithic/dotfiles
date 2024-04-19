@@ -187,6 +187,7 @@ brew "ruby-build" # needed for asdf/ruby
 brew "rust"
 brew "rustup-init"
 brew "qt" if OS.mac?
+brew "sd"
 brew "shellcheck"
 brew "shfmt"
 brew "ssh-copy-id"

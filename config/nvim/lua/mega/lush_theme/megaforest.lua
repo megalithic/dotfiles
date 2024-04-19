@@ -1032,6 +1032,8 @@ local theme = lush(function(injected_functions)
     TelescopeResults({ bg = C.transparent }),
     TelescopeResultsTitle({ fg = C.bg0, bg = C.fg, gui = "bold" }),
 
+    EgrepifySuffix({ fg = C.bright_blue.darken(20), bg = C.bg_dark.lighten(5) }),
+
     ---- :help fzf-lua ---------------------------------------------------------
     -- REF: https://github.com/ibhagwan/fzf-lua#highlights
 

@@ -4,21 +4,65 @@
   name = Seth Messer
   email = seth@megalithic.io
   color = auto
-
+[core]
+  ; pager = `brew --prefix git`/share/git-core/contrib/diff-highlight/diff-highlight | less
+  pager = delta --dark --diff-so-fancy # https://github.com/dandavison/delta
+  ; whitespace=fix,-indent-with-non-tab,trailing-space,cr-at-eol
+	; editor = nvim
+	; autocrlf = input
+  editor = "nvim" # "nvr --remote-wait-silent" # or nvim
+  excludesfile ="~/.dotfiles/git/gitignore_global"
+[interactive]
+	diffFilter = delta --color-only
+# [pager]
+# 	blame  = delta
+# 	diff   = delta
+# 	reflog = delta
+# 	show   = delta
 [hub]
   protocol = https
-
 [github.com]
 	user = megalithic
   protocol = https
-# - gh config set -h github.com git_protocol ssh
-  # protocol = https
-
 [git]
   user = megalithic
-
+  protocol = https
 [github]
 	user = megalithic
+  protocol = https
+[delta]
+  ; plus-color = "#012800"
+  ; minus-color = "#340001"
+  theme = 'Nord'
+  features = line-numbers decorations
+  hyperlinks = false
+
+[delta "decorations"]
+  commit-decoration-style = bold yellow box ul
+  file-style = bold yellow ul
+
+[interactive]
+  diffFilter = delta --color-only
+# [delta]
+# 	line-numbers = true
+# 	features = decorations
+# 	navigate = true
+# 	side-by-side = false
+#   true-color = always
+#   syntax-theme = 'Forest%20Night%20Italic'
+# [delta "decorations"]
+# 	file-decoration-style = bold yellow ul
+# 	file-style = yellow bold
+# 	hunk-header-decoration-style = yellow box ul
+# 	hunk-header-file-style = yellow
+# 	hunk-header-line-number-style = grey bold italic
+# 	hunk-header-style = line-number syntax italic
+# 	line-numbers-minus-style = red bold italic
+# 	line-numbers-plus-style = green bold italic
+# 	line-numbers-zero-style = grey italic
+# 	minus-emph-style = syntax auto
+# 	minus-style = syntax auto
+# 	zero-style = syntax
 
 [diff]
 [difftool]
@@ -226,73 +270,50 @@ br = branch
 [color "diff"]
   old = red strike
   new = green italic
-
-[core]
-  ; pager = `brew --prefix git`/share/git-core/contrib/diff-highlight/diff-highlight | less
-  pager = delta --dark --diff-so-fancy # https://github.com/dandavison/delta
-  ; whitespace=fix,-indent-with-non-tab,trailing-space,cr-at-eol
-	; editor = nvim
-	; autocrlf = input
-  editor = "nvr --remote-wait-silent" # or nvim
-  excludesfile ="~/.dotfiles/git/gitignore_global"
-
 [apply]
   whitespace = fix
   #whitespace = nowarn
-
 [push]
 	default = current # or upstream?
-
 [web]
   browser = open
-
 [branch]
   autosetuprebase = always
-
 [rebase]
 	autosquash = true
 	autostash = true
 	autoStash = true
-
 [pull]
 	rebase = true
 	ff = only
-
 [rerere]
   enabled = true
   enabled = 1
   autoupdate = true
-
 [diff-so-fancy]
   markEmptyLines = true
   stripLeadingSymbols = true
 
-[delta]
-  ; plus-color = "#012800"
-  ; minus-color = "#340001"
-  theme = 'Nord'
-  features = line-numbers decorations
-  hyperlinks = false
-
-[delta "decorations"]
-  commit-decoration-style = bold yellow box ul
-  file-style = bold yellow ul
-
-[interactive]
-  diffFilter = delta --color-only
+# [delta]
+#   ; plus-color = "#012800"
+#   ; minus-color = "#340001"
+#   theme = 'Nord'
+#   features = line-numbers decorations
+#   hyperlinks = false
+#
+# [delta "decorations"]
+#   commit-decoration-style = bold yellow box ul
+#   file-style = bold yellow ul
+#
+# [interactive]
+#   diffFilter = delta --color-only
 
 [ghq]
   root = ~/code
-
-; [url "git@github.com:"]
-;   pushInsteadOf = git://github.com/
-;   pushInsteadOf = https://github.com/
-
 [url "https://github.com/"]
   insteadOf = "git@github.com:"
   insteadOf = "ssh://git@github.com/"
   insteadOf = "http://github.com/"
-
 [browse-remote "github.com"]
   top  = https://{host}/{path}
   ref  = https://{host}/{path}/tree/{short_ref}

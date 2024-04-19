@@ -171,6 +171,8 @@ function mega.current_border(hl)
   return border
 end
 
+mega.get_border = mega.current_border
+
 --- Validate the keys passed to mega.augroup are valid
 ---@param name string
 ---@param cmd Autocommand

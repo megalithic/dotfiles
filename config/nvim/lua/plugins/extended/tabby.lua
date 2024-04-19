@@ -5,7 +5,7 @@ return {
   "nanozuki/tabby.nvim",
   event = { "BufReadPost" },
   dependencies = { "rktjmp/lush.nvim" },
-  cond = not vim.g.started_by_firenvim and not vim.env.TMUX_POPUP,
+  cond = false, -- not vim.g.started_by_firenvim and not vim.env.TMUX_POPUP,
   config = function()
     vim.o.showtabline = 2
     -- function tab_modified(tab)
@@ -48,7 +48,8 @@ return {
     local function tab_name(number, name, active)
       local icon = active and "" or ""
 
-      return fmt(" %s:%s %s ", number, string.gsub(name, "%[..%]", ""), icon)
+      -- return fmt(" %s:%s %s ", number, string.gsub(name, "%[..%]", ""), icon)
+      return fmt(" %s %s ", number, icon)
     end
 
     local function win_name(name, active)

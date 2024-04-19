@@ -1,12 +1,16 @@
 lastupdatecheck: 0
 recentrepos:
+- /Users/seth/code/tern/bellhop
 - /Users/seth/.local/share/src/neovim
 - /Users/seth/.dotfiles
 - /Users/seth/code/telescope-egrepify.nvim
-- /Users/seth/code/retriever
-- /Users/seth/code/bellhop
-- /Users/seth/code/ternreturns
 startuppopupversion: 5
+lastversion: 0.41.0
 customcommandshistory: []
 hidecommandlog: false
 ignorewhitespaceindiffview: false
+diffcontextsize: 3
+localbranchsortorder: recency
+remotebranchsortorder: alphabetical
+gitlogorder: topo-order
+gitlogshowgraph: always
