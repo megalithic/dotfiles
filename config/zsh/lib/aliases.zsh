@@ -124,7 +124,7 @@ alias tpmu="$XDG_CONFIG_HOME/tmux/plugins/tpm/bin/update_plugins"
 alias tpmc="$XDG_CONFIG_HOME/tmux/plugins/tpm/bin/clean_plugins"
 alias mega="ftm mega"
 
-alias s="kitty +kitten ssh"
+# alias s="kitty +kitten ssh"
 alias kssh="kitty +kitten ssh"
 
 alias fixssh="chmod 700 ~/.ssh && chmod 600 ~/.ssh/*"
@@ -171,7 +171,8 @@ if type nvim >/dev/null 2>&1; then
   alias im="nvim"
   alias vm="nvim"
   alias nvm=nv
-  alias vim="NVIM_APPNAME=nvim nvim"
+  alias vim="NVIM_APPNAME=wipvim nvim"
+  # alias vim="NVIM_APPNAME=nvim nvim" # <-- original!
   # alias wipvim="NVIM_APPNAME=wipvim nvim"
   # alias folkevim="NVIM_APPNAME=folkevim nvim"
   # alias akinvim="NVIM_APPNAME=akinvim nvim"

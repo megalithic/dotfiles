@@ -156,7 +156,8 @@ M.apply = function(name, bufnr)
   if conf.abbr then
     vim.api.nvim_buf_call(bufnr, function()
       for k, v in pairs(conf.abbr) do
-        vim.cmd(string.format("iabbrev <buffer> %s %s", k, v))
+        -- vim.cmd(string.format("iabbrev <buffer> %s %s", k, v))
+        vim.cmd.iabbrev(string.format([[<buffer> %s %s]], k, v))
       end
     end)
   end

@@ -351,7 +351,7 @@ if vim.g.picker == "telescope" then
         then
           mega.augroup("TelescopeStartup", {
             event = { "BufEnter" },
-            command = function(args) dd(args) end,
+            command = function(args) print(vim.inspect(args)) end,
           })
           -- Open file browser if argument is a folder
           -- REF: https://github.com/protiumx/.dotfiles/blob/main/stow/nvim/.config/nvim/lua/config/telescope.lua#L50

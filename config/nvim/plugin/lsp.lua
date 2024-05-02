@@ -368,7 +368,7 @@ local function setup_keymaps(client, bufnr)
   end, "lsp: references")
 
   -- if not mega.lsp.has_method(client, "references") then
-  --   nnoremap("gr", "<leader>A", desc("find: references via grep"))
+  --   nnoremap("gr", "<geader>A", desc("find: references via grep"))
   -- end
   -- if client.name == "lexical" then safemap("references", "n", "gr", "<leader>A", "lsp: references") end
   safemap("typeDefinition", "n", "gt", vim.lsp.buf.type_definition, "lsp: type definition")

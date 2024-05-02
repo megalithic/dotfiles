@@ -255,7 +255,7 @@ local M = {
         -- disable cmp autocomplete
         require("cmp").setup.buffer({ enabled = false })
 
-        local bufnr = params.buf or vim.api.nvim_get_current_buf() or 0
+        bufnr = params.buf or vim.api.nvim_get_current_buf() or 0
 
         setup_write_autocmd(bufnr)
       end

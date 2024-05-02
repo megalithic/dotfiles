@@ -12,12 +12,13 @@ function obj:init(opts)
 
   Install:andUse("EmmyLua")
 
-  local currentBrowser = hs.application.get(C.preferred.browser)
+  local currentBrowser = hs.application.get(C.preferred.browser):bundleID()
   Install:andUse("URLDispatcher", {
     -- TODO: https://github.com/hthuong09/dots/blob/master/.hammerspoon/HandleURLDispatch.lua
-    start = false,
-    loglevel = "error",
+    start = true,
+    loglevel = "debug",
     config = {
+      set_system_handler = true,
       default_handler = currentBrowser, --hs.application.get(require("hs.settings").get(CONFIG_KEY).preferred.browser),
       url_patterns = {
         { "https?://slack.com/openid/*", currentBrowser },
@@ -34,6 +35,7 @@ function obj:init(opts)
         -- { "https?://www.notion.so", "com.spotify.client" },
         -- { "https?://accounts.bellhop.test", "com.apple.Safari" },
         -- { "https?://admin.bellhop.test", "com.apple.Safari" },
+        { "https?://*", currentBrowser },
       },
       url_redir_decoders = {
         {

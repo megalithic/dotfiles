@@ -2,15 +2,15 @@ local preferred = {
   terms = { "kitty", "wezterm", "alacritty", "iTerm", "Terminal.app" },
   browsers = {
     "Brave Browser Nightly",
+    "Chromium",
+    "Firefox Developer Edition",
+    "Safari",
     "Brave Browser Dev",
     "Brave Browser Beta",
     "Brave Browser",
-    "Chromium",
-    "Firefox Developer Edition",
     "Firefox",
     "Floorp",
     "Orion",
-    "Safari",
     "Vivaldi",
     "Google Chrome",
   },
@@ -19,7 +19,8 @@ local preferred = {
   media = { "Spotify" },
   vpn = { "Cloudflare WARP" },
 }
-preferred["browser"] = preferred["browsers"][1] --hs.urlevent.getDefaultHandler("https")
+-- preferred["browser"] = hs.urlevent.getDefaultHandler("https")
+preferred["browser"] = preferred["browsers"][1]
 
 local transientApps = {
   -- ["LaunchBar"] = { allowRoles = "AXSystemDialog" },
@@ -30,7 +31,7 @@ local transientApps = {
   ["Emoji & Symbols"] = true,
 }
 
-local networks = { "shaolin", "Ginger-Guest" }
+local networks = { "shaolin" }
 
 local displays = {
   laptop = "Built-in Retina Display",
