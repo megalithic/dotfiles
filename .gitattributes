@@ -41,6 +41,6 @@ bin/slck filter=crypt diff=crypt merge=crypt
 config/ngrok/ngrok.yml filter=crypt diff=crypt merge=crypt
 config/newtab/etc_apache2_httpd.conf filter=crypt diff=crypt merge=crypt
 misc/megalithic_dev.conf filter=crypt diff=crypt merge=crypt
-home/ssh/config filter=crypt diff=crypt merge=crypt
+home/ssh/* filter=crypt diff=crypt merge=crypt
 home/s3cfg filter=crypt diff=crypt merge=crypt
 bin/capper filter=crypt diff=crypt merge=crypt

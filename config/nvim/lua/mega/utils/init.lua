@@ -445,6 +445,8 @@ function M.is_vim_list_open()
   return false
 end
 
+function M.showCursorHighlights() vim.cmd("TSHighlightCapturesUnderCursor") end
+
 ---Determine if a value of any type is empty
 ---@param item any
 ---@return boolean?
@@ -474,8 +476,6 @@ function M.empty(item)
     return true
   end
 end
-
-function M.showCursorHighlights() vim.cmd("TSHighlightCapturesUnderCursor") end
 
 function M.debounce(ms, fn)
   local timer = vim.loop.new_timer()

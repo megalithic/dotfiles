@@ -26,6 +26,8 @@ local function with_title(opts, extra)
   }, extra or {})
 end
 
+local function extensions(name) return require("telescope").extensions[name] end
+
 local ts = setmetatable({}, {
   __index = function(_, key)
     return function(topts)
@@ -42,15 +44,18 @@ local ts = setmetatable({}, {
       local mode = vim.api.nvim_get_mode().mode
       topts = topts or {}
       if mode == "v" or mode == "V" or mode == "" then topts.default_text = table.concat(get_selection()) end
-      if key == "grepify" then
-        require("telescope").extensions.egrepify.egrepify(with_title(topts, { title = "egrepify" }))
+      if key == "grepify" or key == "egrepify" then
+        extensions("egrepify").egrepify(with_title(topts, { title = "live grep (egrepify)" }))
       elseif key == "undo" then
-        require("telescope").extensions.undo.undo(topts)
+        extensions("undo").undo(topts)
+      elseif key == "smart" then
+        extensions("smart_open").smart_open(with_title(topts, { title = "smartly find files" }))
       elseif key == "grep" then
-        require("telescope").extensions.live_grep_args.live_grep_args(with_title(topts, { title = "live grep args" }))
-      elseif key == "fd" then
-        require("telescope").extensions.corrode.corrode(with_title(topts, { title = "find files" }))
-      elseif key == "find_files" then
+        extensions("live_grep_args").live_grep_args(with_title(topts, { title = "live grep args" }))
+      elseif key == "corrode" then
+        extensions("corrode").corrode(with_title(topts, { title = "find files (corrode)" }))
+      elseif key == "find_files" or key == "fd" then
+        -- extensions("corrode").corrode(with_title(topts, { title = "find files (corrode)" }))
         builtin[key](with_title(topts, { title = "find files" }))
       else
         builtin[key](topts)
@@ -118,29 +123,6 @@ local function ivy(opts)
   opts = vim.tbl_deep_extend("force", opts or {}, { layout_config = { height = 0.3 } })
   return require("telescope.themes").get_ivy(get_border(opts))
 end
--- Gets the root dir from either:
--- * connected lsp
--- * .git from file
--- * .git from cwd
--- * cwd
----@param opts? table
-local function find_files(opts)
-  opts = opts or {}
-  local theme = opts["theme"] or "ivy"
-  local bufnr = vim.api.nvim_get_current_buf()
-  local fn = vim.api.nvim_buf_get_name(bufnr)
-  current_fn = fn
-  -- opts.cwd = require("mega.utils").get_root()
-  -- vim.notify(fmt("current project files root: %s", opts.cwd), vim.log.levels.DEBUG, { title = "telescope" })
-  if theme == "ivy" then
-    ts.find_files(ivy(opts))
-  elseif theme == "dropdown" then
-    ts.find_files(dropdown(opts))
-  else
-    ts.find_files(opts)
-  end
-  -- require("telescope").extensions.smart_open.smart_open(ivy(opts))
-end
 
 local function stopinsert(callback)
   return function(prompt_bufnr)
@@ -198,6 +180,7 @@ local function multi(pb, verb, open_selection_under_cursor)
     ["vnew"] = "select_vertical",
     ["new"] = "select_horizontal",
     ["edit"] = "select_default",
+    ["tabnew"] = "select_tab",
   }
   local select_action = methods[verb]
   local actions = require("telescope.actions")
@@ -240,14 +223,12 @@ local function file_extension_filter(prompt)
   --    prompt: @lua <search_term>
   -- then only search files ending in *.lua
   if #result == 2 and result[1]:sub(1, 1) == "@" and (#result[1] == 2 or #result[1] == 3 or #result[1] == 4) then
-    print(result[2], result[1]:sub(2))
+    -- print(result[2], result[1]:sub(2))
     return { prompt = result[2] .. "." .. result[1]:sub(2) }
   else
     return { prompt = prompt }
   end
 end
-
-local function extensions(name) return require("telescope").extensions[name] end
 
 if vim.g.picker == "telescope" then
   mega.augroup("Telescope", {
@@ -279,14 +260,40 @@ if vim.g.picker == "telescope" then
     })
   end
 
-  mega.find_files = find_files
-  mega.grep = function(...) ts.grep(ivy(...)) end
+  local grep = function(...) ts.grep(ivy(...)) end
+
+  -- Gets the root dir from either:
+  -- * connected lsp
+  -- * .git from file
+  -- * .git from cwd
+  -- * cwd
+  ---@param opts? table
+  local find_files = function(opts)
+    opts = opts or {}
+    local theme = opts["theme"] or "ivy"
+    local bufnr = vim.api.nvim_get_current_buf()
+    local fn = vim.api.nvim_buf_get_name(bufnr)
+
+    current_fn = fn
+    -- opts.cwd = require("mega.utils").get_root()
+    -- vim.notify(fmt("current project files root: %s", opts.cwd), vim.log.levels.DEBUG, { title = "telescope" })
+    local picker = ts.find_files
+
+    if theme == "ivy" then
+      picker(ivy(opts))
+    elseif theme == "dropdown" then
+      picker(dropdown(opts))
+    else
+      picker(opts)
+    end
+  end
 
   keys = {
-    { "<leader>ff", mega.find_files, desc = "find files" },
+    -- { "<leader>ff", find_files, desc = "find files" },
+    { "<leader>ff", function() ts.smart(ivy({})) end, desc = "smart find files" },
     {
       "<leader>a",
-      mega.grep,
+      grep,
       desc = "live grep",
     },
     {
@@ -301,14 +308,14 @@ if vim.g.picker == "telescope" then
     },
     {
       "<leader>A",
-      function() mega.grep({ default_text = vim.fn.expand("<cword>") }) end,
+      function() grep({ default_text = vim.fn.expand("<cword>") }) end,
       desc = "grep under cursor",
     },
     {
       "<leader>A",
       function()
         local pattern = require("mega.utils").get_visual_selection()
-        mega.grep({ default_text = pattern })
+        grep({ default_text = pattern })
       end,
       desc = "grep visual selection",
       mode = "v",
@@ -320,15 +327,15 @@ if vim.g.picker == "telescope" then
     },
     {
       "<leader>fn",
-      function() mega.find_files({ path = vim.g.notes_path }) end,
+      function() find_files({ path = vim.g.notes_path }) end,
       desc = "browse: notes",
     },
   }
 
   _G.picker = {
     telescope = {
-      find_files = mega.find_files,
-      grep = mega.grep,
+      find_files = find_files,
+      grep = grep,
       dropdown = dropdown,
       -- TODO: add impl
       cursor_dropdown = dropdown,
@@ -344,7 +351,7 @@ if vim.g.picker == "telescope" then
         then
           mega.augroup("TelescopeStartup", {
             event = { "BufEnter" },
-            command = function(args) dd(args) end,
+            command = function(args) print(vim.inspect(args)) end,
           })
           -- Open file browser if argument is a folder
           -- REF: https://github.com/protiumx/.dotfiles/blob/main/stow/nvim/.config/nvim/lua/config/telescope.lua#L50
@@ -388,11 +395,12 @@ return {
 
     "nvim-telescope/telescope-file-browser.nvim",
     "fdschmidt93/telescope-egrepify.nvim",
-    "megalithic/telescope-corrode.nvim",
-    -- {
-    --   "danielfalk/smart-open.nvim",
-    --   dependencies = { "kkharji/sqlite.lua", { "nvim-telescope/telescope-fzf-native.nvim", build = "make" } },
-    -- },
+    "fdschmidt93/telescope-corrode.nvim",
+    {
+      "danielfalk/smart-open.nvim",
+      branch = "0.2.x",
+      dependencies = { "kkharji/sqlite.lua", { "nvim-telescope/telescope-fzf-native.nvim", build = "make" } },
+    },
 
     -- "danielvolchek/tailiscope.nvim"
     "nvim-telescope/telescope-live-grep-args.nvim",
@@ -415,8 +423,17 @@ return {
     local lga_actions = require("telescope-live-grep-args.actions")
     local action_state = require("telescope.actions.state")
 
+    local egrepify_title_suffix = string.format(" %s", string.rep("󰇘", 1000)) -- alts: ⣿ ░ ─ ⋮󰇘󱗿󱗽󱗼󱥸󱗾
+    local function filename_first(_, path)
+      local tail = vim.fs.basename(path)
+      local parent = vim.fs.dirname(path)
+      if parent == "." then return tail end
+      return string.format("%s\t\t%s", tail, parent)
+    end
+
     telescope.setup({
       defaults = {
+        theme = "ivy",
         dynamic_preview_title = true,
         -- selection_strategy = "reset",
         -- use_less = true,
@@ -453,14 +470,6 @@ return {
             ["<c-o>"] = function(pb) multi(pb, "edit") end,
           },
         },
-        -- path_display = function(_, path)
-        --   local filename = path:gsub(vim.pesc(vim.loop.cwd()) .. "/", ""):gsub(vim.pesc(vim.fn.expand("$HOME")), "~")
-        --   local tail = require("telescope.utils").path_tail(filename)
-        --   local folder = vim.fn.fnamemodify(filename, ":h")
-        --   if folder == "." then return tail end
-        --
-        --   return string.format("%s  —  %s", tail, folder)
-        -- end,
         results_title = false,
         prompt_prefix = " ",
         selection_caret = " ",
@@ -470,6 +479,7 @@ return {
         vimgrep_arguments = grep_files_cmd,
       },
       file_ignore_patterns = {
+        ".DS_Store",
         ".git/",
         "%.csv",
         "%.jpg",
@@ -492,6 +502,23 @@ return {
           override_generic_sorter = true,
           override_file_sorter = true,
           case_mode = "smart_case",
+        },
+        smart_open = {
+          cwd_only = true,
+          show_scores = false,
+          ignore_patterns = { "*.git/*", "*/tmp/*" },
+          match_algorithm = "fzf",
+          disable_devicons = false,
+          open_buffer_indicators = { previous = "👀", others = "🙈" },
+          mappings = {
+            i = {
+              ["<cr>"] = stopinsert(function(pb) multi(pb, "vnew") end),
+              ["<esc>"] = require("telescope.actions").close,
+              ["<c-v>"] = stopinsert(function(pb) multi(pb, "vnew") end),
+              ["<c-s>"] = stopinsert(function(pb) multi(pb, "new") end),
+              ["<c-o>"] = stopinsert(function(pb) multi(pb, "edit") end),
+            },
+          },
         },
         live_grep_args = {
           auto_quoting = true, -- enable/disable auto-quoting
@@ -596,17 +623,45 @@ return {
           },
         },
         egrepify = {
-          results_ts_hl = true,
+          -- results_ts_hl = true, -- #PR23
+          permutations = false,
           AND = true,
           lnum = true, -- default, not required
           lnum_hl = "EgrepifyLnum", -- default, not required
-          col = false, -- default, not required
+          col = true, -- default, not required
           col_hl = "EgrepifyCol", -- default, not required
           filename_hl = "@title.emphasis",
-          title_suffix_hl = "Comment",
+          title = false,
+          title_suffix = nil, --egrepify_title_suffix,
+          title_suffix_hl = nil, --"EgrepifySuffix",
           prefixes = {
             ["!"] = {
               flag = "invert-match",
+            },
+            ["#"] = {
+              -- filter for file suffixes
+              -- #$REMAINDER
+              -- # is caught prefix
+              -- `input` becomes $REMAINDER
+              -- in the above example #lua,md -> input: lua,md
+              flag = "glob",
+              cb = function(input) return string.format([[*.{%s}]], input) end,
+            },
+            -- filter for (partial) folder names
+            -- example prompt: >conf $MY_PROMPT
+            -- searches with ripgrep prompt $MY_PROMPT in paths that have "conf" in folder
+            -- i.e. rg --glob="**/conf*/**" -- $MY_PROMPT
+            [">"] = {
+              flag = "glob",
+              cb = function(input) return string.format([[**/{%s}*/**]], input) end,
+            },
+            -- filter for (partial) file names
+            -- example prompt: &egrep $MY_PROMPT
+            -- searches with ripgrep prompt $MY_PROMPT in paths that have "egrep" in file name
+            -- i.e. rg --glob="*egrep*" -- $MY_PROMPT
+            ["&"] = {
+              flag = "glob",
+              cb = function(input) return string.format([[*{%s}*]], input) end,
             },
           },
           mappings = {
@@ -619,6 +674,7 @@ return {
               ["<tab>"] = actions.toggle_selection + actions.move_selection_next,
               ["<c-a>"] = { "<Home>", type = "command" }, -- overrides default: egrep_actions.toggle_and,
               ["<c-e>"] = { "<End>", type = "command" },
+              ["<c-r>"] = actions.to_fuzzy_refine,
             },
           },
         },
@@ -634,8 +690,10 @@ return {
         },
       },
       pickers = {
+        highlights = ivy({}),
         find_files = {
           find_command = find_files_cmd,
+          path_display = filename_first,
           on_input_filter_cb = file_extension_filter,
           mappings = {
             i = {
@@ -719,7 +777,7 @@ return {
     telescope.load_extension("fzf")
     telescope.load_extension("egrepify")
     telescope.load_extension("corrode")
+    telescope.load_extension("smart_open")
     -- telescope.load_extension("zf-native")
-    -- telescope.load_extension("smart_open")
   end,
 }

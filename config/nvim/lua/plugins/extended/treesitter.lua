@@ -48,6 +48,7 @@ return {
       -- end)
     end,
   },
+  { "yorickpeterse/nvim-tree-pairs", dependencies = { "nvim-treesitter/nvim-treesitter" }, opts = {} },
   {
     "laytan/tailwind-sorter.nvim",
     dependencies = {

@@ -124,7 +124,7 @@ alias tpmu="$XDG_CONFIG_HOME/tmux/plugins/tpm/bin/update_plugins"
 alias tpmc="$XDG_CONFIG_HOME/tmux/plugins/tpm/bin/clean_plugins"
 alias mega="ftm mega"
 
-alias s="kitty +kitten ssh"
+# alias s="kitty +kitten ssh"
 alias kssh="kitty +kitten ssh"
 
 alias fixssh="chmod 700 ~/.ssh && chmod 600 ~/.ssh/*"
@@ -171,16 +171,18 @@ if type nvim >/dev/null 2>&1; then
   alias im="nvim"
   alias vm="nvim"
   alias nvm=nv
-  alias vim="NVIM_APPNAME=nvim nvim"
-  alias wipvim="NVIM_APPNAME=wipvim nvim"
-  alias folkevim="NVIM_APPNAME=folkevim nvim"
-  alias akinvim="NVIM_APPNAME=akinvim nvim"
-  alias ribvim="NVIM_APPNAME=ribvim nvim"
-  alias kickstart="NVIM_APPNAME=kickstartvim nvim"
-  alias kickvim="NVIM_APPNAME=kickvim nvim"
-  alias kv="kickstart"
-  alias kickvim="kickstart"
+  alias vim="NVIM_APPNAME=wipvim nvim"
+  # alias vim="NVIM_APPNAME=nvim nvim" # <-- original!
+  # alias wipvim="NVIM_APPNAME=wipvim nvim"
+  # alias folkevim="NVIM_APPNAME=folkevim nvim"
+  # alias akinvim="NVIM_APPNAME=akinvim nvim"
+  # alias ribvim="NVIM_APPNAME=ribvim nvim"
+  # alias kickvim="NVIM_APPNAME=kickvim nvim"
+  alias e="NVIM_APPNAME=wipvim nvim"
+  # alias kv="kickvim"
+  # alias kvim="kickvim"
   alias minvim="NVIM_APPNAME=minvim nvim"
+  # alias wansvim="NVIM_APPNAME=wansvim nvim"
   alias v=vim
   alias vi="/usr/local/bin/vim"
   alias novim="nvim -u NONE"
@@ -238,7 +240,7 @@ alias eqmk="nvim $HOME/code/megalithic_qmk/keyboards/atreus62/keymaps/megalithic
 
 alias ebt="nvim $DOTS/misc/newtab/index.html"
 
-alias ee="nvim $DOTS/config/espanso/default.yml"
+alias ee="nvim $DOTS/config/espanso/match/base.yml"
 
 alias etm="nvim $DOTS/config/tmux/megaforest.tmux.conf"
 
@@ -641,6 +643,13 @@ function listening-ports() {
     return 1
   fi
   netstat -tulanp "$1"
+}
+
+# find and replace in a directory (current by default)
+# ignores hidden files
+# `replace <before> <after> [directory]`
+replace() {
+    rg -l --no-hidden "$1" "${3-.}" | xargs sd "$1" "$2"
 }
 
 # REFS:

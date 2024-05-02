@@ -419,34 +419,34 @@ nmap(
 -- end, { desc = 'Correct spelling of word under cursor' })
 -- nmap("<leader>S", "zg") -- Add word under cursor to dictionary
 
-mega.map({ "x", "n" }, "gcd", function()
-  local win = vim.api.nvim_get_current_win()
-  local cur = vim.api.nvim_win_get_cursor(win)
-  local vstart = vim.fn.getpos("v")[2]
-  local current_line = vim.fn.line(".")
-  local set_cur = vim.api.nvim_win_set_cursor
-  if vstart == current_line then
-    vim.cmd.yank()
-    require("Comment.api").toggle.linewise.current()
-    -- require("mini.comment").operator()
-    vim.cmd.put()
-    set_cur(win, { cur[1] + 1, cur[2] })
-  else
-    if vstart < current_line then
-      vim.cmd(":" .. vstart .. "," .. current_line .. "y")
-      vim.cmd.put()
-      set_cur(win, { vim.fn.line("."), cur[2] })
-    else
-      vim.cmd(":" .. current_line .. "," .. vstart .. "y")
-      set_cur(win, { vstart, cur[2] })
-      vim.cmd.put()
-      set_cur(win, { vim.fn.line("."), cur[2] })
-    end
-    require("Comment.api").toggle.linewise(vim.fn.visualmode())
-    -- require("mini.comment").operator("visual")
-    -- vim.cmd([[:<c-u>lua require('mini.comment').operator('visual')]])
-  end
-end, { silent = true, desc = "Comment and duplicate selected lines" })
+-- mega.map({ "x", "n" }, "gcd", function()
+--   local win = vim.api.nvim_get_current_win()
+--   local cur = vim.api.nvim_win_get_cursor(win)
+--   local vstart = vim.fn.getpos("v")[2]
+--   local current_line = vim.fn.line(".")
+--   local set_cur = vim.api.nvim_win_set_cursor
+--   if vstart == current_line then
+--     vim.cmd.yank()
+--     require("Comment.api").toggle.linewise.current()
+--     -- require("mini.comment").operator()
+--     vim.cmd.put()
+--     set_cur(win, { cur[1] + 1, cur[2] })
+--   else
+--     if vstart < current_line then
+--       vim.cmd(":" .. vstart .. "," .. current_line .. "y")
+--       vim.cmd.put()
+--       set_cur(win, { vim.fn.line("."), cur[2] })
+--     else
+--       vim.cmd(":" .. current_line .. "," .. vstart .. "y")
+--       set_cur(win, { vstart, cur[2] })
+--       vim.cmd.put()
+--       set_cur(win, { vim.fn.line("."), cur[2] })
+--     end
+--     require("Comment.api").toggle.linewise(vim.fn.visualmode())
+--     -- require("mini.comment").operator("visual")
+--     -- vim.cmd([[:<c-u>lua require('mini.comment').operator('visual')]])
+--   end
+-- end, { silent = true, desc = "Comment and duplicate selected lines" })
 
 -- # find and replace in multiple files
 nnoremap("<leader>R", "<cmd>cfdo %s/<C-r>s//g<bar>update<cr>")

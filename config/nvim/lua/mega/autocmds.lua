@@ -181,6 +181,7 @@ augroup("EnterLeaveBehaviours", {
     event = { "BufEnter" },
     command = function(evt)
       vim.defer_fn(function()
+        -- enable ibl for active buffer
         local ibl_ok, ibl = pcall(require, "ibl")
         if ibl_ok then ibl.setup_buffer(evt.buf, { indent = { char = SETTINGS.indent_char } }) end
       end, 1)
@@ -191,6 +192,7 @@ augroup("EnterLeaveBehaviours", {
     event = { "BufLeave" },
     command = function(evt)
       vim.defer_fn(function()
+        -- disable ibl for inactive buffer
         local ibl_ok, ibl = pcall(require, "ibl")
         if ibl_ok then ibl.setup_buffer(evt.buf, { indent = { char = "" } }) end
       end, 1)
@@ -302,7 +304,7 @@ augroup("Utilities", {
   {
     event = { "VimResized", "WinResized" },
     desc = "Attempt to window resize to my liking - windows.lua (golden ratio)",
-    command = function()
+    command = function(evt)
       vim.schedule(function()
         mega.resize_windows()
         if pcall(require, "virt-column") then require("virt-column").update() end
@@ -520,46 +522,46 @@ augroup("ClearCommandMessages", {
 -- # IncSearch behaviours
 -- HT: akinsho
 -- -----------------------------------------------------------------------------
-vim.keymap.set({ "n", "v", "o", "i", "c", "t" }, "<Plug>(StopHL)", "execute(\"nohlsearch\")[-1]", { expr = true })
-local function stop_hl()
-  if vim.v.hlsearch == 0 or api.nvim_get_mode().mode ~= "n" then return end
-  api.nvim_feedkeys(vim.keycode("<Plug>(StopHL)"), "m", false)
-end
-local function hl_search()
-  local col = api.nvim_win_get_cursor(0)[2]
-  local curr_line = api.nvim_get_current_line()
-  local ok, match = pcall(fn.matchstrpos, curr_line, fn.getreg("/"), 0)
-  if not ok then return end
-  local _, p_start, p_end = unpack(match)
-  -- if the cursor is in a search result, leave highlighting on
-  if col < p_start or col > p_end then stop_hl() end
-end
-
-augroup("IncSearchHighlight", {
-  {
-    event = { "CursorMoved" },
-    command = function() hl_search() end,
-  },
-  {
-    event = { "InsertEnter" },
-    command = function(evt)
-      if vim.bo[evt.buf].filetype == "megaterm" then return end
-      stop_hl()
-    end,
-  },
-  {
-    event = { "OptionSet" },
-    pattern = { "hlsearch" },
-    command = function()
-      vim.schedule(function() vim.cmd.redrawstatus() end)
-    end,
-  },
-  {
-    event = { "RecordingEnter" },
-    command = function() vim.o.hlsearch = false end,
-  },
-  {
-    event = { "RecordingLeave" },
-    command = function() vim.o.hlsearch = true end,
-  },
-})
+-- vim.keymap.set({ "n", "v", "o", "i", "c", "t" }, "<Plug>(StopHL)", "execute(\"nohlsearch\")[-1]", { expr = true })
+-- local function stop_hl()
+--   if vim.v.hlsearch == 0 or api.nvim_get_mode().mode ~= "n" then return end
+--   api.nvim_feedkeys(vim.keycode("<Plug>(StopHL)"), "m", false)
+-- end
+-- local function hl_search()
+--   local col = api.nvim_win_get_cursor(0)[2]
+--   local curr_line = api.nvim_get_current_line()
+--   local ok, match = pcall(fn.matchstrpos, curr_line, fn.getreg("/"), 0)
+--   if not ok then return end
+--   local _, p_start, p_end = unpack(match)
+--   -- if the cursor is in a search result, leave highlighting on
+--   if col < p_start or col > p_end then stop_hl() end
+-- end
+--
+-- augroup("IncSearchHighlight", {
+--   {
+--     event = { "CursorMoved" },
+--     command = function() hl_search() end,
+--   },
+--   {
+--     event = { "InsertEnter" },
+--     command = function(evt)
+--       if vim.bo[evt.buf].filetype == "megaterm" then return end
+--       stop_hl()
+--     end,
+--   },
+--   {
+--     event = { "OptionSet" },
+--     pattern = { "hlsearch" },
+--     command = function()
+--       vim.schedule(function() vim.cmd.redrawstatus() end)
+--     end,
+--   },
+--   {
+--     event = { "RecordingEnter" },
+--     command = function() vim.o.hlsearch = false end,
+--   },
+--   {
+--     event = { "RecordingLeave" },
+--     command = function() vim.o.hlsearch = true end,
+--   },
+-- })

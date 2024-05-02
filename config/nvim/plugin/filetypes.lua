@@ -222,7 +222,7 @@ xmap <silent> <localleader>er :lua require("mega.utils").wrap_selected_nodes("{:
   },
   gitcommit = {
     keys = {
-      { "q", vim.cmd.quit, { nowait = true, buffer = true, desc = "abort gitcommit" } },
+      { "q", vim.cmd.cquit, { nowait = true, buffer = true, desc = "abort", bang = true } },
     },
     opt = {
       list = false,
@@ -235,14 +235,16 @@ xmap <silent> <localleader>er :lua require("mega.utils").wrap_selected_nodes("{:
     },
     callback = function()
       vim.fn.matchaddpos("DiagnosticVirtualTextError", { { 1, 50, 10000 } })
-      vim.defer_fn(function() vim.cmd.normal({ "gg", bang = true }) end, 1)
       if vim.fn.prevnonblank(".") ~= vim.fn.line(".") then vim.cmd.startinsert() end
     end,
   },
   gitrebase = {
-    function() vim.keymap.set("n", "q", vim.cmd.cquit, { nowait = true, desc = "Abort" }) end,
+    function() vim.keymap.set("n", "q", vim.cmd.cquit, { nowait = true, desc = "abort" }) end,
   },
   neogitcommitmessage = {
+    keys = {
+      { "q", vim.cmd.cquit, { nowait = true, buffer = true, desc = "abort", bang = true } },
+    },
     opt = {
       list = false,
       number = false,
@@ -255,7 +257,6 @@ xmap <silent> <localleader>er :lua require("mega.utils").wrap_selected_nodes("{:
     callback = function()
       vim.keymap.set("n", "q", vim.cmd.cquit, { buffer = true, nowait = true, desc = "Abort" })
       vim.fn.matchaddpos("DiagnosticVirtualTextError", { { 1, 50, 10000 } })
-      vim.defer_fn(function() vim.cmd.normal({ "gg", bang = true }) end, 1)
       if vim.fn.prevnonblank(".") ~= vim.fn.line(".") then vim.cmd.startinsert() end
     end,
   },
@@ -350,8 +351,8 @@ xmap <silent> <localleader>er :lua require("mega.utils").wrap_selected_nodes("{:
       shiftwidth = 2,
       tabstop = 2,
       softtabstop = 2,
-      formatoptions = "jqlnr",
-      comments = "sb:- [x],mb:- [ ],b:-,b:*,b:>",
+      -- formatoptions = "jqlnr",
+      -- comments = "sb:- [x],mb:- [ ],b:-,b:*,b:>",
       linebreak = true,
       wrap = true,
       suffixesadd = ".md",
@@ -361,15 +362,15 @@ xmap <silent> <localleader>er :lua require("mega.utils").wrap_selected_nodes("{:
       -- { "<leader>td", require("markdown").task_mark_done },
       -- { "<leader>tu", require("markdown").task_mark_undone },
     },
-    callback = function(bufnr)
-      -- require("markdown").update_code_highlights(bufnr)
-      local aug = vim.api.nvim_create_augroup("MarkdownStyling", {})
-      vim.api.nvim_clear_autocmds({ buffer = bufnr, group = aug })
-      -- vim.api.nvim_create_autocmd({ "TextChanged", "InsertLeave" }, {
-      --   buffer = bufnr,
-      --   callback = vim.schedule_wrap(function(args) require("markdown").update_code_highlights(bufnr) end),
-      -- })
-    end,
+    -- callback = function(bufnr)
+    --   require("markdown").update_code_highlights(bufnr)
+    --   local aug = vim.api.nvim_create_augroup("MarkdownStyling", {})
+    --   vim.api.nvim_clear_autocmds({ buffer = bufnr, group = aug })
+    --   vim.api.nvim_create_autocmd({ "TextChanged", "InsertLeave" }, {
+    --     buffer = bufnr,
+    --     callback = vim.schedule_wrap(function(args) require("markdown").update_code_highlights(bufnr) end),
+    --   })
+    -- end,
   },
   ["neotest-summary"] = {
     opt = {
@@ -422,53 +423,53 @@ xmap <silent> <localleader>er :lua require("mega.utils").wrap_selected_nodes("{:
     },
     callback = function()
       vim.cmd([[
-  " Autosize quickfix to match its minimum content
-  " https://vim.fandom.com/wiki/Automatically_fitting_a_quickfix_window_height
-  function! s:adjust_height(minheight, maxheight)
-    exe max([min([line("$"), a:maxheight]), a:minheight]) . "wincmd _"
-  endfunction
+        " Autosize quickfix to match its minimum content
+        " https://vim.fandom.com/wiki/Automatically_fitting_a_quickfix_window_height
+        function! s:adjust_height(minheight, maxheight)
+          exe max([min([line("$"), a:maxheight]), a:minheight]) . "wincmd _"
+        endfunction
 
-  " force quickfix to open beneath all other splits
-  wincmd J
+        " force quickfix to open beneath all other splits
+        wincmd J
 
-  setlocal nonumber
-  setlocal norelativenumber
-  setlocal nowrap
-  setlocal signcolumn=yes
-  setlocal colorcolumn=
-  setlocal nobuflisted " quickfix buffers should not pop up when doing :bn or :bp
-  call s:adjust_height(3, 10)
-  setlocal winfixheight
+        setlocal nonumber
+        setlocal norelativenumber
+        setlocal nowrap
+        setlocal signcolumn=yes
+        setlocal colorcolumn=
+        setlocal nobuflisted " quickfix buffers should not pop up when doing :bn or :bp
+        call s:adjust_height(3, 10)
+        setlocal winfixheight
 
-  " REF: https://github.com/romainl/vim-qf/blob/2e385e6d157314cb7d0385f8da0e1594a06873c5/autoload/qf.vim#L22
-]])
+        " REF: https://github.com/romainl/vim-qf/blob/2e385e6d157314cb7d0385f8da0e1594a06873c5/autoload/qf.vim#L22
+      ]])
 
-      nnoremap("<C-n>", function()
-        pcall(function()
-          vim.cmd.lne({
-            count = vim.v.count1,
-          })
-        end)
-      end, { buffer = 0, label = "QF: next" })
-      nnoremap("<C-p>", function()
-        pcall(function()
-          vim.cmd.lp({
-            count = vim.v.count1,
-          })
-        end)
-      end, { buffer = 0, label = "QF: previous" })
-      vim.keymap.set(
-        { "n", "x" },
-        "<CR>",
-        function()
-          vim.cmd.ll({
-            count = vim.api.nvim_win_get_cursor(0)[1],
-          })
-        end,
-        {
-          buffer = true,
-        }
-      )
+      -- nnoremap("<C-n>", function()
+      --   pcall(function()
+      --     vim.cmd.lne({
+      --       count = vim.v.count1,
+      --     })
+      --   end)
+      -- end, { buffer = 0, label = "QF: next" })
+      -- nnoremap("<C-p>", function()
+      --   pcall(function()
+      --     vim.cmd.lp({
+      --       count = vim.v.count1,
+      --     })
+      --   end)
+      -- end, { buffer = 0, label = "QF: previous" })
+      -- vim.keymap.set(
+      --   { "n", "x" },
+      --   "<CR>",
+      --   function()
+      --     vim.cmd.ll({
+      --       count = vim.api.nvim_win_get_cursor(0)[1],
+      --     })
+      --   end,
+      --   {
+      --     buffer = true,
+      --   }
+      -- )
 
       local ok_bqf, bqf = pcall(require, "bqf")
       if not ok_bqf then return end

@@ -245,6 +245,7 @@ return {
   },
   {
     "altermo/ultimate-autopair.nvim",
+    cond = false,
     event = { "InsertEnter", "TermEnter", "CursorMoved" },
     branch = "v0.6", --recomended as each new version will have breaking changes
     opts = {
@@ -280,11 +281,6 @@ return {
     cmd = "Neogen",
     dependencies = { "nvim-treesitter/nvim-treesitter", "hrsh7th/vim-vsnip" },
     keys = {
-      -- {
-      --   "gcd",
-      --   function() require("neogen").generate({}) end,
-      --   desc = "comment: neogen comment",
-      -- },
       {
         "<leader>cc",
         function() require("neogen").generate({}) end,
@@ -427,30 +423,32 @@ return {
     "Wansmer/treesj",
     dependencies = {
       "nvim-treesitter/nvim-treesitter",
-      {
-        "AndrewRadev/splitjoin.vim",
-        init = function()
-          vim.g.splitjoin_split_mapping = ""
-          vim.g.splitjoin_join_mapping = ""
-        end,
-      },
+      "echasnovski/mini.splitjoin",
     },
-    cmd = {
-      "TSJSplit",
-      "TSJJoin",
-      "TSJToggle",
-      "SplitjoinJoin",
-      "SplitjoinSplit",
-      "SplitjoinToggle",
-    },
+    event = { "VeryLazy" },
     keys = {
       {
         "gJ",
         function()
-          if require("treesj.langs")["presets"][vim.bo.filetype] then
+          local langs = require("treesj.langs").presets
+
+          if langs[vim.bo.filetype] then
             vim.cmd("TSJToggle")
           else
-            vim.cmd("SplitjoinToggle")
+            for _, nodes in pairs(langs) do
+              nodes.comment = {
+                both = {
+                  fallback = function(tsn)
+                    -- mini.splitjoin returns `nil` if nothing to toggle
+                    local res = require("mini.splitjoin").toggle()
+
+                    if not res then vim.cmd("normal! gww") end
+                  end,
+                },
+              }
+            end
+
+            require("mini.splitjoin").toggle()
           end
         end,
         desc = "splitjoin: toggle lines",
@@ -460,6 +458,26 @@ return {
       use_default_keymaps = false,
       max_join_length = tonumber(vim.g.default_colorcolumn),
     },
+
+    config = function(_, opts)
+      local langs = require("treesj.langs").presets
+
+      -- Add fallback to all language
+      for _, nodes in pairs(langs) do
+        nodes.comment = {
+          both = {
+            fallback = function(tsn)
+              -- mini.splitjoin returns `nil` if nothing to toggle
+              local res = require("mini.splitjoin").toggle()
+
+              if not res then vim.cmd("normal! gww") end
+            end,
+          },
+        }
+      end
+
+      require("treesj").setup(opts)
+    end,
   },
 
   -- ( Notes/Docs ) ------------------------------------------------------------

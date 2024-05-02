@@ -231,7 +231,7 @@ local function setup_autocommands(client, bufnr)
       end,
     },
     {
-      event = { "CursorMoved", "BufLeave", "WinLeave" },
+      event = { "BufLeave", "WinLeave" },
       buffer = bufnr,
       command = function()
         if not vim.g.git_conflict_detected then vim.lsp.buf.clear_references() end
@@ -368,7 +368,7 @@ local function setup_keymaps(client, bufnr)
   end, "lsp: references")
 
   -- if not mega.lsp.has_method(client, "references") then
-  --   nnoremap("gr", "<leader>A", desc("find: references via grep"))
+  --   nnoremap("gr", "<geader>A", desc("find: references via grep"))
   -- end
   -- if client.name == "lexical" then safemap("references", "n", "gr", "<leader>A", "lsp: references") end
   safemap("typeDefinition", "n", "gt", vim.lsp.buf.type_definition, "lsp: type definition")

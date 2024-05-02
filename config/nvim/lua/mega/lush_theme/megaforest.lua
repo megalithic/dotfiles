@@ -879,7 +879,7 @@ local theme = lush(function(injected_functions)
     IndentBlanklineContextStart({ sp = C.bg_blue.li(10), bg = C.transparent, gui = "underline" }),
 
     ---- :help mini.indentscope ------------------------------------------------
-    MiniIndentscopeSymbol({ fg = C.teal }),
+    MiniIndentscopeSymbol({ fg = C.teal.lighten(10) }),
 
     ---- :help mini.jump.txt / mini.jump2d.txt  --------------------------------
 
@@ -1031,6 +1031,8 @@ local theme = lush(function(injected_functions)
     TelescopeSelectionCaret({ fg = C.fg, bg = C.bg3 }),
     TelescopeResults({ bg = C.transparent }),
     TelescopeResultsTitle({ fg = C.bg0, bg = C.fg, gui = "bold" }),
+
+    EgrepifySuffix({ fg = C.bright_blue.darken(20), bg = C.bg_dark.lighten(5) }),
 
     ---- :help fzf-lua ---------------------------------------------------------
     -- REF: https://github.com/ibhagwan/fzf-lua#highlights

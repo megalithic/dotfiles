@@ -94,13 +94,6 @@ local function cursor_dropdown(opts)
     },
   }, opts)
 end
-local find_files = function(opts_or_cwd)
-  if type(opts_or_cwd) == "table" then
-    fzf_lua.files(opts_or_cwd)
-  else
-    fzf_lua.files({ cwd = opts_or_cwd })
-  end
-end
 
 local function git_files_cwd_aware(opts)
   opts = opts or {}
@@ -111,12 +104,14 @@ local function git_files_cwd_aware(opts)
   -- local git_root = fzf_lua.path.git_root(opts, true)
   local git_root = fzf.path.git_root(opts)
   if not git_root then return fzf.files(ivy(opts)) end
-  local relative = fzf.path.relative(vim.loop.cwd(), git_root)
+  local relative = fzf.path.relative(vim.uv.cwd(), git_root)
   opts.fzf_opts = { ["--query"] = git_root ~= relative and relative or nil }
   return fzf.git_files(ivy(opts))
 end
 
 local keys = {}
+
+-- [ HANDLE FZF_LUA SPECIFIC IMPLEMENTATION ] ----------------------------------
 if vim.g.picker == "fzf_lua" then
   local has_wk, wk = mega.require("which-key")
   if has_wk then
@@ -135,8 +130,16 @@ if vim.g.picker == "fzf_lua" then
     })
   end
 
-  mega.find_files = find_files
-  mega.grep = fzf_lua.live_grep_glob
+  local find_files = function(opts_or_cwd)
+    if type(opts_or_cwd) == "table" then
+      P(opts_or_cwd)
+      reqcall("fzf-lua").files(opts_or_cwd)
+    else
+      reqcall("fzf-lua").files({ cwd = opts_or_cwd })
+    end
+  end
+
+  local grep = reqcall("fzf-lua").live_grep_glob
 
   keys = {
     { "<c-p>", git_files_cwd_aware, desc = "find files" },
@@ -156,7 +159,7 @@ if vim.g.picker == "fzf_lua" then
     { "<leader>fgB", fzf_lua.git_bcommits, desc = "buffer commits" },
     { "<leader>fb", fzf_lua.buffers, desc = "buffers" },
     -- { "gb", fzf_lua.buffers, desc = "buffers" },
-    { "<leader>a", fzf_lua.live_grep_glob, desc = "live grep" },
+    { "<leader>a", grep, desc = "live grep" },
     { "<leader>A", fzf_lua.grep_cword, desc = "grep (under cursor)" },
     { "<leader>A", fzf_lua.grep_visual, desc = "grep (visual selection)", mode = "v" },
     { "<leader>fa", fzf_lua.autocmds, desc = "autocommands" },
@@ -169,8 +172,8 @@ if vim.g.picker == "fzf_lua" then
 
   _G.picker = {
     fzf_lua = {
-      find_files = mega.find_files,
-      grep = mega.grep,
+      find_files = find_files,
+      grep = grep,
       dropdown = dropdown,
       cursor_dropdown = cursor_dropdown,
       ivy = ivy,

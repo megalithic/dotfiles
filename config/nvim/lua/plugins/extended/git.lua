@@ -87,11 +87,11 @@ return {
     opts = {
       -- experimental things -----------
       -- _extmark_signs = plugin_loaded("megacolumn"),
-      _extmark_signs = true,
-      _inline2 = true,
-      _signs_staged_enable = true,
-      attach_to_untracked = true,
-      sign_priority = 0,
+      -- _extmark_signs = true,
+      -- _inline2 = true,
+      -- _signs_staged_enable = true,
+      -- attach_to_untracked = true,
+      -- sign_priority = 0,
       -- -------------------------------
       signs = {
         add = { hl = "GitSignsAdd", culhl = "GitSignsAddCursorLine", numhl = "GitSignsAddNum", text = "▕" }, -- alts: ▕, ▎, ┃, │, ▌, ▎ 🮉
@@ -128,15 +128,16 @@ return {
 
         mega.nmap("<localleader>hu", gs.undo_stage_hunk, { desc = "git(hunk): undo stage" })
         mega.nmap("<localleader>hr", gs.reset_hunk, { desc = "git(hunk): reset hunk" })
-        mega.nmap("<localleader>hp", gs.preview_hunk_inline, { desc = "git(hunk): preview hunk inline" })
+        mega.nmap("<localleader>hp", gs.preview_hunk, { desc = "git(hunk): preview hunk" })
+        -- mega.nmap("<localleader>hp", gs.preview_hunk_inline, { desc = "git(hunk): preview hunk inline" })
         -- mega.nmap("<leader>hp", gs.preview_hunk, { desc = "git: preview hunk" })
         mega.nmap("<localleader>hd", gs.toggle_deleted, { desc = "git(hunk): show deleted lines" })
         mega.nmap("<localleader>hw", gs.toggle_word_diff, { desc = "git(hunk): toggle word diff" })
         mega.nmap("<localleader>gw", gs.stage_buffer, { desc = "git: stage entire buffer" })
         mega.nmap("<localleader>gre", gs.reset_buffer, { desc = "git: reset entire buffer" })
         mega.nmap("<localleader>grh", gs.reset_hunk, { desc = "git: reset hunk" })
-        mega.nmap("<localleader>gbt", gs.toggle_current_line_blame, { desc = "git: toggle current line blame" })
-        mega.nmap("<localleader>gbl", gs.blame_line, { desc = "git: view current line blame" })
+        -- mega.nmap("<localleader>gbt", gs.toggle_current_line_blame, { desc = "git: toggle current line blame" })
+        -- mega.nmap("<localleader>gbl", gs.blame_line, { desc = "git: view current line blame" })
         mega.nmap("<leader>gm", function() gs.setqflist("all") end, {
           desc = "git: list modified in quickfix",
         })
@@ -149,12 +150,12 @@ return {
         -- Navigation
         bmap("n", "[h", function()
           if vim.wo.diff then return "[c" end
-          vim.schedule(function() gs.prev_hunk() end)
+          vim.schedule(function() gs.nav_hunk("prev") end)
           return "<Ignore>"
         end, { expr = true, desc = "git: prev hunk" })
         bmap("n", "]h", function()
           if vim.wo.diff then return "]c" end
-          vim.schedule(function() gs.next_hunk() end)
+          vim.schedule(function() gs.nav_hunk("next") end)
           return "<Ignore>"
         end, { expr = true, desc = "git: next hunk" })
 
@@ -353,34 +354,6 @@ return {
     dependencies = "nvim-lua/plenary.nvim",
     cmd = { "GitLink" },
     keys = {
-      -- {
-      --   "<localleader>gy",
-      --   function() linker().get_buf_range_url("n") end,
-      --   desc = "gitlinker: copy line to clipboard",
-      -- },
-      -- {
-      --   "<localleader>gy",
-      --   function() linker().get_buf_range_url("v") end,
-      --   desc = "gitlinker: copy range to clipboard",
-      --   mode = { "v" },
-      -- },
-      -- {
-      --   "<localleader>go",
-      --   function() linker().get_repo_url(browser_open()) end,
-      --   desc = "gitlinker: open in browser",
-      -- },
-      -- {
-      --   "<localleader>go",
-      --   function() linker().get_buf_range_url("n", browser_open()) end,
-      --   desc = "gitlinker: open current line in browser",
-      -- },
-      -- {
-      --   "<localleader>go",
-      --   function() linker().get_buf_range_url("v", browser_open()) end,
-      --   desc = "gitlinker: open current selection in browser",
-      --   mode = { "v" },
-      -- },
-
       {
         "<localleader>go",
         "<cmd>GitLink!<cr>",
@@ -396,7 +369,7 @@ return {
       {
         "<localleader>gb",
         "<cmd>GitLink! blame<cr>",
-        desc = "gitlinker: blame in browser",
+        desc = "gitlinker: open blame in browser",
         mode = { "n", "v" },
       },
       {
@@ -423,8 +396,8 @@ return {
         desc = "Generate git permanent link",
       },
       mappings = nil,
-      debug = true,
-      file_log = true,
+      debug = false,
+      file_log = false,
     },
   },
 }

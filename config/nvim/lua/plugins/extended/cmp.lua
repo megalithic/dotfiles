@@ -182,12 +182,12 @@ return {
           }, ","),
           zindex = 1001,
           col_offset = 0,
-          border = mega.current_border(), -- alts: mega.get_border(), "none"
+          border = mega.get_border(), -- alts: mega.get_border(), "none"
           side_padding = 1,
           scrollbar = true,
         },
         documentation = cmp.config.window.bordered({
-          border = mega.current_border(), -- alts: mega.get_border(), "none"
+          border = mega.get_border(), -- alts: mega.get_border(), "none"
           winhighlight = table.concat({
             "Normal:NormalFloat",
             "FloatBorder:FloatBorder",
@@ -250,6 +250,7 @@ return {
       formatting = {
         -- deprecated = true,
         -- fields = { "abbr", "kind", "menu" },
+        expandable_indicator = true,
         fields = { "abbr", "menu", "kind" },
         maxwidth = MAX_MENU_WIDTH,
         ellipsis_char = ellipsis,
@@ -319,9 +320,8 @@ return {
             item.menu = ({
               nvim_lsp = "[lsp]",
               luasnip = "[lsnip]",
-              vsnip = "[vsnip]",
               snippets = "[snips]",
-              -- codeium = "[code]",
+              codeium = "[code]",
               nvim_lua = "[nlua]",
               nvim_lsp_signature_help = "[sig]",
               async_path = "[path]",

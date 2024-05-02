@@ -58,7 +58,7 @@ local M = {
     "colorcolumn",
     "windows",
     "numbers",
-    -- "folds",
+    "folds",
     "env",
   },
   -- REF: elixir LSPs: elixir-tools(tools-elixirls, tools-nextls, credo), elixirls, nextls, lexical
@@ -149,7 +149,7 @@ M.apply = function()
       expandtab = true,
       exrc = true, -- Allow project local vimrc files example .nvimrc see :h exrc
       foldcolumn = "1",
-      foldenable = true,
+      foldenable = false,
       foldexpr = "v:lua.vim.treesitter.foldexpr()",
       -- foldtext = "", -- NOTE: see plugin/folds.lua
       foldlevel = 99,
@@ -178,7 +178,8 @@ M.apply = function()
       shiftwidth = 2,
       shiftround = true,
       shortmess = "filnxtToOFWIcC", -- alts: "filnxtToOFWIcC", "tAoOTfFsCsFWcCW"
-      showbreak = string.rep("↪", 3), -- Make it so that long lines wrap smartly; alts: -> '…', '↳ ', '→','↪ '
+      showbreak = string.format("%s ", string.rep("↪", 1)), -- Make it so that long lines wrap smartly; alts: -> '…', '↳ ', '→','↪ '
+      -- showbreak = string.format("  %s ", string.rep("↪", 1)), -- Make it so that long lines wrap smartly; alts: -> '…', '↳ ', '→','↪ '
       showcmd = true, -- show current mode (insert, etc) under the cmdline
       showmode = false, -- show current mode (insert, etc) under the cmdline
       sidescroll = 1,

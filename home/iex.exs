@@ -64,7 +64,7 @@ defmodule U do
       label: label,
       pretty: true,
       limit: :infinity,
-      structs: false,
+      # structs: false,
       syntax_colors: [
         number: :yellow,
         atom: :cyan,
@@ -72,7 +72,7 @@ defmodule U do
         nil: :magenta,
         boolean: :magenta
       ],
-      width: 0
+      width: 80
     )
   end
 
@@ -143,12 +143,6 @@ defmodule H do
   - https://www.adiiyengar.com/blog/20180709/my-iex-exs
   """
 
-  @tips_and_tricks [
-    ":observer.start() - a GUI for BEAM",
-    "runtime_info <:memory|:applications|...> - sometimes useful data",
-    "IEx.configure(inspect: [limit: :infinity]) - show everything"
-  ]
-
   # Lookup an app in the started applications list
   def is_app_started?(app) when is_atom(app) do
     Application.started_applications()
@@ -167,12 +161,6 @@ defmodule H do
   def print_bright(text) do
     (IO.ANSI.bright() <> text <> IO.ANSI.reset())
     |> IO.puts()
-  end
-
-  def print_tips() do
-    print_bright("\n--- Tips & Tricks:")
-
-    Enum.map(@tips_and_tricks, &IO.puts/1)
   end
 
   def wat?(term) when is_nil(term), do: "Type: Nil"
@@ -285,16 +273,45 @@ info = IO.ANSI.light_blue() <> "#{H.queue_length()}" <> IO.ANSI.reset()
 last = IO.ANSI.yellow() <> "" <> IO.ANSI.reset()
 alive = IO.ANSI.bright() <> IO.ANSI.yellow() <> "󱐋" <> IO.ANSI.reset()
 
-default_prompt = prefix <> counter <> " " <> info <> last
-alive_prompt = prefix <> counter <> " " <> info <> " " <> alive <> last
+timestamp = fn ->
+  {_date, {hour, minute, _second}} = :calendar.local_time()
+
+  [hour, minute]
+  |> Enum.map(&String.pad_leading(Integer.to_string(&1), 2, "0"))
+  |> Enum.join(":")
+end
+
+default_prompt = prefix <> "|#{timestamp.()} " <> counter <> " " <> info <> last
+alive_prompt = prefix <> "|#{timestamp.()} " <> counter <> " " <> info <> " " <> alive <> last
 
 IEx.configure(
-  inspect: [limit: :infinity, pretty: true, charlists: :as_lists],
+  inspect: [
+    limit: :infinity,
+    pretty: true,
+    charlists: :as_lists,
+    width: 80,
+    # Fix for map key sorting: `data = %{a: 1, b: 2, c: 3, d: 4}`
+    custom_options: [sort_maps: true]
+  ],
   history_size: history_size,
+  width: 80,
   colors: [
     eval_result: eval_result,
     eval_error: eval_error,
-    eval_info: eval_info
+    eval_info: eval_info,
+    syntax_colors: [
+      number: :light_magenta,
+      atom: :light_cyan,
+      string: :light_yellow,
+      boolean: :red,
+      nil: [:magenta, :bright]
+    ],
+    ls_directory: :cyan,
+    ls_device: :yellow,
+    doc_code: :green,
+    doc_inline_code: :magenta,
+    doc_headings: [:cyan, :underline],
+    doc_title: [:cyan, :bright, :underline]
   ],
   continuation_prompt: "    ",
   alive_prompt: alive_prompt,

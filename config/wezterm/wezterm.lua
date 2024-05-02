@@ -240,6 +240,18 @@ colors.tab_bar = {
 -- local harfbuzz_features =
 --   { "calt=1", "liga=1", "dlig=1", "ss01=1", "ss02=1", "ss03=1", "ss04=1", "ss05=1", "ss06=1", "ss07=1", "ss08=1" }
 local harfbuzz_features = nil
+local maplemono_harfbuzz_features = {
+  "calt=1", -- no ligatures => ===
+  "cv01=1", -- fully attached @ # $ etc.
+  "cv02=0", -- curly i
+  "cv03=1", -- upper arm on a
+  "cv04=1", -- @ rounded
+  "ss01=1", -- == !=, etc
+  "ss02=1", -- [info]
+  "ss03=1", -- --
+  "ss04=1", -- >= <= tight
+  "ss05=1", -- {{  }} tight
+}
 local font = {
   JetBrainsMono = {
     Normal = { family = "JetBrains Mono", weight = "Medium", harfbuzz_features },
@@ -260,19 +272,10 @@ local font = {
     BoldItalic = { family = "VictorMono Nerd Font Mono", italic = true, weight = "ExtraBlack", harfbuzz_features },
   },
   MapleMono = {
-    family = "Maple Mono",
-    harfbuzz_features = {
-      "calt=1", -- no ligatures => ===
-      "cv01=1", -- fully attached @ # $ etc.
-      "cv02=0", -- curly i
-      "cv03=1", -- upper arm on a
-      "cv04=1", -- @ rounded
-      "ss01=1", -- == !=, etc
-      "ss02=1", -- [info]
-      "ss03=1", -- --
-      "ss04=1", -- >= <= tight
-      "ss05=1", -- {{  }} tight
-    },
+    Normal = { family = "Maple Mono", weight = "Medium", maplemono_harfbuzz_features },
+    Italic = { family = "Maple Mono", italic = true, maplemono_harfbuzz_features },
+    Bold = { family = "Maple Mono", weight = "ExtraBlack", maplemono_harfbuzz_features },
+    BoldItalic = { family = "Maple Mono", italic = true, weight = "ExtraBlack", maplemono_harfbuzz_features },
   },
 }
 
@@ -347,6 +350,7 @@ return {
   window_close_confirmation = "NeverPrompt",
   disable_default_key_bindings = true,
   front_end = "WebGpu", -- OpenGL, WebGpu, Software
+  webgpu_power_preference = "HighPerformance",
   window_decorations = "RESIZE",
   macos_window_background_blur = 10,
   -- window_background_opacity = 0.95,
@@ -362,19 +366,22 @@ return {
   line_height = 1.1,
 
   text_blink_rate = 100,
-  cursor_blink_rate = 400,
+  cursor_blink_rate = 300,
   cursor_blink_ease_in = "Linear", -- alts: Constant
   cursor_blink_ease_out = "Linear", -- alts: Constant
+  default_cursor_style = "BlinkingBar",
 
   freetype_load_flags = "NO_HINTING",
   freetype_load_target = "Light",
   freetype_render_target = "HorizontalLcd",
   font = w.font_with_fallback({
-    -- font.JetBrainsMono.Normal,
+    -- "Maple Mono",
     font.JetBrainsMonoNerdFont.Normal,
-    font.MapleMono,
     { family = "Rec Mono Duotone", weight = "Medium" },
     -- charset fallbacks ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘǫʀsᴛᴜᴠᴡxʏᴢ (ﾉಥ益ಥ）ﾉ︵┻━┻
+    "Apple Color Emoji",
+    "Noto Color Emoji",
+    "Material Icons Rounded",
     "Noto Sans Mono", -- linux + smallcaps
     "Monaco", -- mac + smallcaps
     { family = "Symbols Nerd Font Mono", scale = 0.8 },
@@ -393,6 +400,7 @@ return {
       intensity = "Bold",
       italic = true,
       font = w.font_with_fallback({
+        -- font.MapleMono.BoldItalic,
         font.JetBrainsMono.BoldItalic,
         font.JetBrainsMonoNerdFont.BoldItalic,
         { family = "Rec Mono Duotone", weight = "ExtraBlack", italic = true },
@@ -402,6 +410,7 @@ return {
     {
       italic = true,
       font = w.font_with_fallback({
+        -- font.MapleMono.Italic,
         font.JetBrainsMono.Italic,
         font.JetBrainsMonoNerdFont.Italic,
         { family = "Rec Mono Duotone", italic = true },
@@ -411,6 +420,7 @@ return {
     {
       intensity = "Bold",
       font = w.font_with_fallback({
+        -- font.MapleMono.Bold,
         font.JetBrainsMono.Bold,
         font.JetBrainsMonoNerdFont.Bold,
         { family = "Rec Mono Duotone", weight = "ExtraBlack", italic = false },
