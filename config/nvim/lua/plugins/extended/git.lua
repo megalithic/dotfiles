@@ -1,26 +1,26 @@
-local function linker() return require("gitlinker") end
-local function neogit() return require("neogit") end
-local function browser_open() return { action_callback = require("gitlinker.actions").open_in_browser } end
+local SETTINGS = require("mega.settings")
+local icons = SETTINGS.icons
+
 local git_keys = {}
 
 if vim.g.gitter == "neogit" then
   git_keys = {
+    { "<leader>gS", function() require("neogit").open() end, desc = "neogit: open status buffer" },
     { "<leader>G", function() require("neogit").open() end, desc = "neogit: open status buffer" },
     {
       "<localleader>gc",
       function() require("neogit").open({ "commit", "-v" }) end,
       desc = "neogit: open commit buffer",
     },
-    { "<localleader>gl", function() require("neogit").popups.pull.create() end, desc = "neogit: open pull popup" },
-    { "<localleader>gp", function() require("neogit").popups.push.create() end, desc = "neogit: open push popup" },
+    { "<localleader>gl", function() require("neogit").popups.pull.create() end, desc = "neogit: pull commit(s)" },
+    { "<localleader>gp", function() require("neogit").popups.push.create() end, desc = "neogit: push commit(s)" },
     {
       "<localleader>gbb",
       function()
         local line = vim.api.nvim_win_get_cursor(0)[1]
         local line_range = line .. "," .. line
 
-        local annotation =
-          vim.fn.systemlist("git annotate -M --porcelain " .. vim.fn.expand("%:p") .. " -L" .. line_range)[1]
+        local annotation = vim.fn.systemlist("git annotate -M --porcelain " .. vim.fn.expand("%:p") .. " -L" .. line_range)[1]
         if vim.v.shell_error ~= 0 then
           vim.notify(annotation, vim.log.levels.ERROR)
           return
@@ -40,6 +40,7 @@ if vim.g.gitter == "neogit" then
   }
 elseif vim.g.gitter == "fugitive" then
   git_keys = {
+    { "<leader>gS", "<cmd>Git<cr>", desc = "git: open status buffer" },
     { "<leader>G", "<cmd>Git<cr>", desc = "git: open status buffer" },
     {
       "<localleader>gc",
@@ -50,6 +51,11 @@ elseif vim.g.gitter == "fugitive" then
       "<localleader>gp",
       "<cmd>Git push<cr>",
       desc = "git: push commit(s)",
+    },
+    {
+      "<localleader>gl",
+      "<cmd>Git pull<cr>",
+      desc = "git: pull commit(s)",
     },
     -- { "<localleader>gl", function() require("neogit").popups.pull.create() end, desc = "neogit: open pull popup" },
     -- { "<localleader>gp", function() require("neogit").popups.push.create() end, desc = "neogit: open push popup" },
@@ -81,72 +87,66 @@ elseif vim.g.gitter == "fugitive" then
 end
 
 return {
-  {
+  -- Here is a more advanced example where we pass configuration
+  -- options to `gitsigns.nvim`. This is equivalent to the following Lua:
+  --    require('gitsigns').setup({ ... })
+  --
+  -- See `:help gitsigns` to understand what the configuration keys do
+  { -- Adds git related signs to the gutter, as well as utilities for managing changes
     "lewis6991/gitsigns.nvim",
-    event = { "LazyFile" },
     opts = {
-      -- experimental things -----------
-      -- _extmark_signs = plugin_loaded("megacolumn"),
-      -- _extmark_signs = true,
-      -- _inline2 = true,
-      -- _signs_staged_enable = true,
-      -- attach_to_untracked = true,
-      -- sign_priority = 0,
-      -- -------------------------------
+      -- signs = {
+      --   add = { text = "+" },
+      --   change = { text = "~" },
+      --   delete = { text = "_" },
+      --   topdelete = { text = "‾" },
+      --   changedelete = { text = "~" },
+      -- },
+
       signs = {
-        add = { hl = "GitSignsAdd", culhl = "GitSignsAddCursorLine", numhl = "GitSignsAddNum", text = "▕" }, -- alts: ▕, ▎, ┃, │, ▌, ▎ 🮉
+        add = { hl = "GitSignsAdd", culhl = "GitSignsAddCursorLine", numhl = "GitSignsAddNum", text = icons.git.add }, -- alts: ▕, ▎, ┃, │, ▌, ▎ 🮉
         change = {
           hl = "GitSignsChange",
           culhl = "GitSignsChangeCursorLine",
           numhl = "GitSignsChangeNum",
-          text = "▕",
+          text = icons.git.change,
         }, -- alts: ▎║▎
         delete = {
           hl = "GitSignsDelete",
           culhl = "GitSignsDeleteCursorLine",
           numhl = "GitSignsDeleteNum",
-          text = "🮉",
+          text = icons.git.delete,
         }, -- alts: ┊▎▎
-        topdelete = { hl = "GitSignsDelete", text = "🮉" }, -- alts: ▌ ▄▀
-        changedelete = { hl = "GitSignsChange", text = "🮉" }, -- alts: ▌
-        untracked = { hl = "GitSignsAdd", text = "▕" }, -- alts: ┆ ▕
+        topdelete = { hl = "GitSignsDelete", text = icons.git.topdelete }, -- alts: ▌ ▄▀
+        changedelete = { hl = "GitSignsChange", text = icons.git.changedelete }, -- alts: ▌
+        untracked = { hl = "GitSignsAdd", text = icons.git.untracked }, -- alts: ┆ ▕
       },
       current_line_blame = not vim.fn.getcwd():match("dotfiles"),
       current_line_blame_formatter = " <author>, <author_time> · <summary>",
       preview_config = {
-        border = mega.current_border(),
+        border = SETTINGS.border,
       },
       on_attach = function(bufnr)
         local gs = package.loaded.gitsigns
 
-        -- local function map(mode, l, r, desc) vim.keymap.set(mode, l, r, { buffer = bufnr, desc = desc }) end
+        local function nmap(l, r, desc) vim.keymap.set("n", l, r, { buffer = bufnr, desc = desc }) end
         local function bmap(mode, l, r, opts)
           opts = opts or {}
           opts.buffer = bufnr
           vim.keymap.set(mode, l, r, opts)
         end
 
-        mega.nmap("<localleader>hu", gs.undo_stage_hunk, { desc = "git(hunk): undo stage" })
-        mega.nmap("<localleader>hr", gs.reset_hunk, { desc = "git(hunk): reset hunk" })
-        mega.nmap("<localleader>hp", gs.preview_hunk, { desc = "git(hunk): preview hunk" })
-        -- mega.nmap("<localleader>hp", gs.preview_hunk_inline, { desc = "git(hunk): preview hunk inline" })
-        -- mega.nmap("<leader>hp", gs.preview_hunk, { desc = "git: preview hunk" })
-        mega.nmap("<localleader>hd", gs.toggle_deleted, { desc = "git(hunk): show deleted lines" })
-        mega.nmap("<localleader>hw", gs.toggle_word_diff, { desc = "git(hunk): toggle word diff" })
-        mega.nmap("<localleader>gw", gs.stage_buffer, { desc = "git: stage entire buffer" })
-        mega.nmap("<localleader>gre", gs.reset_buffer, { desc = "git: reset entire buffer" })
-        mega.nmap("<localleader>grh", gs.reset_hunk, { desc = "git: reset hunk" })
-        -- mega.nmap("<localleader>gbt", gs.toggle_current_line_blame, { desc = "git: toggle current line blame" })
-        -- mega.nmap("<localleader>gbl", gs.blame_line, { desc = "git: view current line blame" })
-        mega.nmap("<leader>gm", function() gs.setqflist("all") end, {
-          desc = "git: list modified in quickfix",
-        })
-        mega.nmap("<leader>gd", function() gs.diffthis() end, {
-          desc = "git: diff this",
-        })
-        mega.nmap("<leader>gD", function() gs.diffthis("~") end, {
-          desc = "git: diff this against ~",
-        })
+        nmap("<localleader>hu", gs.undo_stage_hunk, "git(hunk): undo stage")
+        nmap("<localleader>hr", gs.reset_hunk, "git(hunk): reset hunk")
+        nmap("<localleader>hp", gs.preview_hunk, "git(hunk): preview hunk")
+        nmap("<localleader>hd", gs.toggle_deleted, "git(hunk): show deleted lines")
+        nmap("<localleader>hw", gs.toggle_word_diff, "git(hunk): toggle word diff")
+        nmap("<localleader>gw", gs.stage_buffer, "git: stage entire buffer")
+        nmap("<localleader>gre", gs.reset_buffer, "git: reset entire buffer")
+        nmap("<localleader>grh", gs.reset_hunk, "git: reset hunk")
+        nmap("<leader>gm", function() gs.setqflist("all") end, "git: list modified in quickfix")
+        nmap("<leader>gd", function() gs.diffthis() end, "git: diff this")
+        nmap("<leader>gD", function() gs.diffthis("~") end, "git: diff this against ~")
         -- Navigation
         bmap("n", "[h", function()
           if vim.wo.diff then return "[c" end
@@ -220,7 +220,7 @@ return {
     -- commit = "b89ef391d20f45479e92bd4190e444c9ec9163a3",
     keys = git_keys,
     config = function()
-      neogit().setup({
+      require("neogit").setup({
         disable_signs = false,
         disable_hint = true,
         disable_commit_confirmation = true,
@@ -236,9 +236,9 @@ return {
         },
       })
 
-      mega.augroup("Neogit", {
+      require("mega.autocmds").augroup("Neogit", {
         pattern = "NeogitPushComplete",
-        callback = neogit().close,
+        callback = require("neogit").close,
       })
     end,
   },
@@ -280,27 +280,15 @@ return {
         disable_diagnostics = true,
       })
 
-      mega.augroup("GitConflicts", {
+      require("mega.autocmds").augroup("GitConflicts", {
         {
           event = { "User" },
           pattern = { "GitConflictDetected" },
           command = function(args)
             vim.g.git_conflict_detected = true
-            mega.nnoremap(
-              "cq",
-              "<cmd>GitConflictListQf<CR>",
-              { desc = "git-conflict: send conflicts to qf", buffer = args.buf }
-            )
-            mega.nnoremap(
-              "[c",
-              "<cmd>GitConflictPrevConflict<CR>|zz",
-              { desc = "git-conflict: prev conflict", buffer = args.buf }
-            )
-            mega.nnoremap(
-              "]c",
-              "<cmd>GitConflictNextConflict<CR>|zz",
-              { desc = "git-conflict: next conflict", buffer = args.buf }
-            )
+            mega.nnoremap("cq", "<cmd>GitConflictListQf<CR>", { desc = "git-conflict: send conflicts to qf", buffer = args.buf })
+            mega.nnoremap("[c", "<cmd>GitConflictPrevConflict<CR>|zz", { desc = "git-conflict: prev conflict", buffer = args.buf })
+            mega.nnoremap("]c", "<cmd>GitConflictNextConflict<CR>|zz", { desc = "git-conflict: next conflict", buffer = args.buf })
             mega.notify(fmt("%s Conflicts detected.", mega.icons.lsp.error))
 
             vim.defer_fn(function()
@@ -354,6 +342,34 @@ return {
     dependencies = "nvim-lua/plenary.nvim",
     cmd = { "GitLink" },
     keys = {
+      -- {
+      --   "<localleader>gy",
+      --   function() linker().get_buf_range_url("n") end,
+      --   desc = "gitlinker: copy line to clipboard",
+      -- },
+      -- {
+      --   "<localleader>gy",
+      --   function() linker().get_buf_range_url("v") end,
+      --   desc = "gitlinker: copy range to clipboard",
+      --   mode = { "v" },
+      -- },
+      -- {
+      --   "<localleader>go",
+      --   function() linker().get_repo_url(browser_open()) end,
+      --   desc = "gitlinker: open in browser",
+      -- },
+      -- {
+      --   "<localleader>go",
+      --   function() linker().get_buf_range_url("n", browser_open()) end,
+      --   desc = "gitlinker: open current line in browser",
+      -- },
+      -- {
+      --   "<localleader>go",
+      --   function() linker().get_buf_range_url("v", browser_open()) end,
+      --   desc = "gitlinker: open current selection in browser",
+      --   mode = { "v" },
+      -- },
+
       {
         "<localleader>go",
         "<cmd>GitLink!<cr>",
@@ -369,7 +385,7 @@ return {
       {
         "<localleader>gb",
         "<cmd>GitLink! blame<cr>",
-        desc = "gitlinker: open blame in browser",
+        desc = "gitlinker: blame in browser",
         mode = { "n", "v" },
       },
       {
@@ -396,8 +412,8 @@ return {
         desc = "Generate git permanent link",
       },
       mappings = nil,
-      debug = false,
-      file_log = false,
+      debug = true,
+      file_log = true,
     },
   },
 }

@@ -5,8 +5,12 @@ return {
   "nanozuki/tabby.nvim",
   event = { "BufReadPost" },
   dependencies = { "rktjmp/lush.nvim" },
-  cond = false, -- not vim.g.started_by_firenvim and not vim.env.TMUX_POPUP,
+  cond = not vim.g.started_by_firenvim and not vim.env.TMUX_POPUP,
   config = function()
+    local SETTINGS = require("mega.settings")
+    local icons = SETTINGS.icons
+    local fmt = string.format
+
     vim.o.showtabline = 2
     -- function tab_modified(tab)
     --   local wins = require("tabby.module.api").get_tab_wins(tab)
@@ -48,8 +52,8 @@ return {
     local function tab_name(number, name, active)
       local icon = active and "" or ""
 
-      -- return fmt(" %s:%s %s ", number, string.gsub(name, "%[..%]", ""), icon)
-      return fmt(" %s %s ", number, icon)
+      return fmt(" %s:%s %s ", number, string.gsub(name, "%[..%]", ""), icon)
+      -- return fmt(" %s %s ", number, icon)
     end
 
     local function win_name(name, active)
@@ -61,7 +65,7 @@ return {
     require("tabby.tabline").set(function(line)
       return {
         {
-          { mega.icons.misc.lblock, hl = theme.head },
+          { icons.misc.lblock, hl = theme.head },
         },
         line.tabs().foreach(function(tab)
           local hl = tab.is_current() and theme.current_tab or theme.inactive_tab
@@ -83,7 +87,7 @@ return {
           }
         end),
         {
-          { mega.icons.misc.rblock, hl = theme.tail },
+          { icons.misc.rblock, hl = theme.tail },
         },
         hl = theme.fill,
       }

@@ -1,0 +1,212 @@
+{
+  "inspect": {
+    "prefix": "lin",
+    "body": [
+      "IO.inspect($1, label: \"$1 ($RELATIVE_FILEPATH:#{__ENV__.line})\")"
+    ],
+    "description": "IO.inspect"
+  },
+  "pipe_inspect": {
+    "prefix": "pin",
+    "body": [
+      "|> IO.inspect(label: \"$1 ($RELATIVE_FILEPATH:#{__ENV__.line})\")"
+    ],
+    "description": "IO.inspect in a pipeline"
+  },
+  "log_inspect": {
+    "prefix": "logi",
+    "body": [
+      "Logger.info(\"$1: #{inspect($1, pretty:true)} ($RELATIVE_FILEPATH:#{__ENV__.line})\")"
+    ],
+    "description": "Logger.info with informaion"
+  },
+  "key": {
+    "prefix": "k",
+    "body": [
+      "$1: $1"
+    ],
+    "description": "Key for key value list with same name."
+  },
+  "key_string": {
+    "prefix": "ks",
+    "body": [
+      "\"$1\" => $1"
+    ],
+    "description": "String key for key value list with same name."
+  },
+  "key_get": {
+    "prefix": "kget",
+    "body": [
+      "$1: Keyword.get(opts, :$1)"
+    ],
+    "description": "Get key from keyword list"
+  },
+  "pipe_assign": {
+    "prefix": "pass",
+    "body": [
+      "|> assign(:$1, $2)"
+    ],
+    "description": "assign in a pipeline"
+  },
+  "pipe_assign_new": {
+    "prefix": "passnew",
+    "body": [
+      "|> assign_new(:$1, $2)"
+    ],
+    "description": "assign in a pipeline"
+  },
+  "start_link": {
+    "prefix": "start_link",
+    "body": [
+      "def start_link(opts \\\\\\ []) do",
+      "    GenServer.start_link(__MODULE__, opts, name: __MODULE__)",
+      "end"
+    ],
+    "description": "Generic start_link GenServer function"
+  },
+  "hev": {
+    "prefix": "hev",
+    "description": "Handle event",
+    "body": [
+      "@impl Phoenix.LiveView",
+      "def handle_event(${1:event}, ${2:_params}, socket) do",
+      "  socket =",
+      "    socket",
+      "    |> assign(:${3:key}, ${4:value})",
+      "  $0",
+      "  {:noreply, socket}",
+      "end"
+    ]
+  },
+  "hin": {
+    "prefix": "hin",
+    "description": "Handle info",
+    "body": [
+      "def handle_info($1, socket) do",
+      "  socket =",
+      "    socket",
+      "    |> assign(:${2:key}, ${3:value})",
+      "  $0",
+      "  {:noreply, socket}",
+      "end"
+    ]
+  },
+  "handle_params": {
+    "prefix": "hp",
+    "body": [
+      "def handle_params(params, _url, socket) do",
+      "  {:noreply, socket}",
+      "end"
+    ],
+    "description": "LiveView handle_params function"
+  },
+  "lv_mount": {
+    "prefix": "mount",
+    "body": [
+      "def mount(_params, _session, socket) do",
+      "  socket =",
+      "    socket",
+      "    |> assign(:${1:key}, ${2:value})",
+      "  $0",
+      "  {:ok, socket}",
+      "end"
+    ],
+    "description": "LiveView mount function"
+  },
+  "lv_rend": {
+    "prefix": "rend",
+    "body": [
+      "def render(assigns) do",
+      "  ~H\"\"\"",
+      "  ${0}",
+      "  \"\"\"",
+      "end"
+    ],
+    "description": "LiveView render function"
+  },
+  "lc_mount": {
+    "prefix": "lc_mount",
+    "description": "LiveComponent mount function",
+    "body": [
+      "@impl Phoenix.LiveComponent",
+      "def mount(socket) do",
+      "    {:ok, assign(socket, $1: $2)}",
+      "end"
+    ]
+  },
+  "lc_update": {
+    "prefix": "lc_update",
+    "description": "LiveComponent update function",
+    "body": [
+      "@impl Phoenix.LiveComponent",
+      "def update(assigns, socket) do",
+      "    socket = assign(socket, assigns)",
+      "    $1",
+      "    {:ok, socket}",
+      "end"
+    ]
+  },
+  "testconn": {
+    "prefix": "testconn",
+    "body": [
+      "test \"${1:name}\", %{conn: conn$2} do",
+      "  {:ok, view, _html} = live(conn, \"/\")",
+      "  $0",
+      "end"
+    ]
+  },
+  "testparams": {
+    "prefix": "testparams",
+    "body": [
+      "test \"${1:name}\", %{$2} do",
+      "  $0",
+      "end"
+    ]
+  },
+  "asserte": {
+    "prefix": "asserte",
+    "body": [
+      "assert $1 =~ $2"
+    ]
+  },
+  "heex_sigil": {
+    "prefix": [
+      "heex",
+      "hx"
+    ],
+    "body": [
+      "~H\"\"\"",
+      "$1",
+      "\"\"\""
+    ]
+  },
+  "heex_sigil_empty": {
+    "prefix": [
+      "heexe",
+      "hxe"
+    ],
+    "body": [
+      "~H\"\"$1"
+    ]
+  },
+  "%= block": {
+    "prefix": [
+      "%=",
+      "e-",
+      "e=",
+      "eb"
+    ],
+    "body": [
+      "<%= $1 %>"
+    ]
+  },
+  "% block": {
+    "prefix": [
+      "%%",
+      "ee"
+    ],
+    "body": [
+      "<% $1 %>"
+    ]
+  }
+}

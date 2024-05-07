@@ -1,8 +1,9 @@
 -- TODO:
 -- https://github.com/jfpedroza/dotfiles/blob/master/nvim/after/plugin/firenvim.lua
 -- https://github.com/stevearc/dotfiles/blob/master/.config/nvim/lua/plugins/firenvim.lua
+local map = vim.keymap.set
 
-local M = {
+return {
   "glacambre/firenvim",
   lazy = not vim.g.started_by_firenvim,
   cond = vim.g.started_by_firenvim,
@@ -193,20 +194,11 @@ local M = {
           inoremap <D-r> <nop>
         ]])
 
-        _G.mega.nnoremap(
-          "<Esc>",
-          "<cmd>wall | call firenvim#hide_frame() | call firenvim#press_keys('<LT>Esc>') | call firenvim#focus_page()<CR>"
-        )
-        _G.mega.nnoremap("<C-z>", "<cmd>wall | call firenvim#hide_frame() | call firenvim#focus_input()<CR>")
-        _G.mega.inoremap(
-          "<C-c>",
-          "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR><Esc>norm! ggdGa<CR>"
-        )
-        _G.mega.nnoremap(
-          "<C-c>",
-          "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR><Esc>norm! ggdGa<CR>"
-        )
-        _G.mega.nnoremap("q", "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR><Esc>norm! ggdGa<CR>")
+        map("n", "<Esc>", "<cmd>wall | call firenvim#hide_frame() | call firenvim#press_keys('<LT>Esc>') | call firenvim#focus_page()<CR>")
+        map("n", "<C-z>", "<cmd>wall | call firenvim#hide_frame() | call firenvim#focus_input()<CR>")
+        map("n", "<C-c>", "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR><Esc>norm! ggdGa<CR>")
+        map("n", "<C-c>", "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR><Esc>norm! ggdGa<CR>")
+        map("n", "q", "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR><Esc>norm! ggdGa<CR>")
 
         -- _G.mega.inoremap("<D-r>", function()
         --   -- local appName = vim.cmd([[!hs -c "hs.application.frontmostApplication():name()"]])
@@ -261,7 +253,7 @@ local M = {
       end
     end
 
-    _G.mega.augroup("Firenvim", {
+    require("mega.autocmds").augroup("Firenvim", {
       {
         event = { "UIEnter" },
         once = true,
@@ -281,5 +273,3 @@ local M = {
     })
   end,
 }
-
-return M

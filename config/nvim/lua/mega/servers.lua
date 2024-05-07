@@ -1,4 +1,7 @@
 local fn, lsp = vim.fn, vim.lsp
+local fmt = string.format
+local L = vim.log.levels
+local U = require("mega.utils")
 local ok_lsp, lspconfig = pcall(require, "lspconfig")
 if not ok_lsp then return nil end
 
@@ -11,7 +14,7 @@ M.list = {
   -- biome = {
   --   root_dir = root_pattern({ "biome.json", ".biome.json", ".eslintrc.js", ".prettierrc.js" }),
   -- },
-  ccls = {},
+  -- ccls = {},
   cssls = {
     settings = {
       css = {
@@ -49,7 +52,7 @@ M.list = {
     },
   },
   elixirls = function()
-    if not mega.lsp.is_enabled_elixir_ls("elixirls") then return nil end
+    if not U.lsp.is_enabled_elixir_ls("elixirls") then return nil end
 
     return {
       cmd = { fmt("%s/lsp/elixir-ls/%s", vim.env.XDG_DATA_HOME, "language_server.sh") },
@@ -193,7 +196,7 @@ M.list = {
   -- Umbrella app support:
   -- https://github.com/scottming/nvim/commit/ab15453bf172f1a253ce51cfb1ad24759b28fb19#diff-f3b6945dc71f9ffc53624b2053a25eee19634fccc7d0a59ef190e1d87114bb9aR10-R22
   lexical = function()
-    if not mega.lsp.is_enabled_elixir_ls("lexical") then return nil end
+    if not U.lsp.is_enabled_elixir_ls("lexical") then return nil end
 
     return {
       cmd = { vim.env.XDG_DATA_HOME .. "/lsp/lexical/_build/dev/package/lexical/bin/start_lexical.sh" },
@@ -329,11 +332,8 @@ M.list = {
     }
   end,
   marksman = {},
-  -- nextls = {},
   nextls = function(...)
-    -- dd(...)
-    -- print("nextls server config")
-    if not mega.lsp.is_enabled_elixir_ls("nextls") then return nil end
+    if not U.lsp.is_enabled_elixir_ls("nextls") then return nil end
 
     return {
       single_file_support = true,
@@ -347,7 +347,19 @@ M.list = {
 
         return root_dir
       end,
+      cmd_env = {
+        NEXTLS_SPITFIRE_ENABLED = 1,
+      },
+      env = {
+        NEXTLS_SPITFIRE_ENABLED = 1,
+      },
       init_options = {
+        cmd_env = {
+          NEXTLS_SPITFIRE_ENABLED = 1,
+        },
+        env = {
+          NEXTLS_SPITFIRE_ENABLED = 1,
+        },
         mix_env = "dev",
         mix_target = "host",
         experimental = {
@@ -357,6 +369,12 @@ M.list = {
         },
       },
       settings = {
+        cmd_env = {
+          NEXTLS_SPITFIRE_ENABLED = 1,
+        },
+        env = {
+          NEXTLS_SPITFIRE_ENABLED = 1,
+        },
         experimental = {
           completions = {
             enable = true,
@@ -392,7 +410,7 @@ M.list = {
       },
     },
   },
-  -- ruby_ls = {},
+  -- ruby_lsp = {},
   rust_analyzer = {
     settings = {
       ["rust-analyzer"] = {
@@ -416,9 +434,9 @@ M.list = {
   --     },
   --   },
   -- },
-  sourcekit = {
-    filetypes = { "swift", "objective-c", "objective-cpp" },
-  },
+  -- sourcekit = {
+  --   filetypes = { 'swift', 'objective-c', 'objective-cpp' },
+  -- },
   sqlls = function()
     return {
       root_dir = root_pattern(".git"),
@@ -580,16 +598,15 @@ M.list = {
 }
 
 M.unofficial = {
-  lexical = function()
-    if not mega.lsp.is_enabled_elixir_ls("lexical") then return end
+  lexical = function(server_name)
+    server_name = server_name or "lexical"
+    if not U.lsp.is_enabled_elixir_ls("lexical") then return nil end
     local configs = require("lspconfig.configs")
 
-    if not configs.lexical then
-      local function cmd()
-        return { vim.env.XDG_DATA_HOME .. "/lsp/lexical/_build/dev/package/lexical/bin/start_lexical.sh" }
-      end
+    if not configs["server_name"] then
+      local function cmd() return { vim.env.XDG_DATA_HOME .. "/lsp/lexical/_build/dev/package/lexical/bin/start_lexical.sh" } end
 
-      configs.lexical = {
+      configs[server_name] = {
         default_config = {
           cmd = cmd(),
           single_file_support = true,
@@ -605,7 +622,7 @@ M.unofficial = {
     end
   end,
   nextls = function()
-    if not mega.lsp.is_enabled_elixir_ls("nextls") then return end
+    if not U.lsp.is_enabled_elixir_ls("nextls") then return end
     local configs = require("lspconfig.configs")
 
     if not configs.nextls then
@@ -643,7 +660,16 @@ M.unofficial = {
           cmd_env = {
             NEXTLS_SPITFIRE_ENABLED = 1,
           },
+          env = {
+            NEXTLS_SPITFIRE_ENABLED = 1,
+          },
           init_options = {
+            cmd_env = {
+              NEXTLS_SPITFIRE_ENABLED = 1,
+            },
+            env = {
+              NEXTLS_SPITFIRE_ENABLED = 1,
+            },
             mix_env = "dev",
             mix_target = "host",
             experimental = {
@@ -653,6 +679,17 @@ M.unofficial = {
             },
           },
           settings = {
+            cmd_env = {
+              NEXTLS_SPITFIRE_ENABLED = 1,
+            },
+            env = {
+              NEXTLS_SPITFIRE_ENABLED = 1,
+            },
+            experimental = {
+              completions = {
+                enable = true,
+              },
+            },
             -- mixEnv = "dev",
             fetchDeps = false,
             dialyzerEnabled = true,
@@ -667,8 +704,8 @@ M.unofficial = {
 }
 
 M.load_unofficial = function()
-  for _server_name, loader in pairs(M.unofficial) do
-    loader()
+  for server_name, loader in pairs(M.unofficial) do
+    loader(server_name)
   end
 end
 
