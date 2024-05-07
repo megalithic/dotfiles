@@ -79,7 +79,7 @@ return {
       local tab = function(fallback)
         if cmp.visible() then
           cmp.select_next_item()
-        elseif vim.snippet.jumpable(1) then
+        elseif vim.snippet.active() and vim.snippet.jumpable(1) then
           vim.schedule(function() vim.snippet.jump(1) end)
         elseif has_words_before() then
           cmp.complete()

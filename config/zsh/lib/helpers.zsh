@@ -56,7 +56,7 @@ function valid() {
 
 # ZSH only and most performant way to check existence of an executable
 # https://www.topbug.net/blog/2016/10/11/speed-test-check-the-existence-of-a-command-in-bash-and-zsh/
-exists() { (($+commands[$1])); }
+exists() { (($ + commands[$1])); }
 
 function has() {
   type "$1" &>/dev/null
@@ -75,7 +75,7 @@ function log {
 }
 
 function log_info {
-  printf '%s[%s] %s\n%s' $(tput setaf 4) "$(date '+%x %X')" "➜ $*" $(tput sgr 0)
+  printf '%s[%s] %s\n%s' $(tput setaf 4) "$(date '+%x %X')" "➜ [i] $*" $(tput sgr 0)
 }
 
 function log_ok {
@@ -110,9 +110,12 @@ function checkyes() {
   result=1
   tput setaf 6
   if [[ x$(basename $SHELL) = x'bash' ]]; then
-    read -p "$@ [y/N]: " yn; case "$yn" in [yY]*) result=0;; *) result=1;; esac
+    read -p "$@ [y/N]: " yn
+    case "$yn" in [yY]*) result=0 ;; *) result=1 ;; esac
   elif [[ x$(basename $SHELL) = x'zsh' ]]; then
-    printf "$@ [y/N]: "; if read -q; then result=0; else result=1; fi; echo
+    printf "$@ [y/N]: "
+    if read -q; then result=0; else result=1; fi
+    echo
   fi
   tput sgr0
   return $result

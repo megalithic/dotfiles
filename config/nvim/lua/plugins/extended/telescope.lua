@@ -420,7 +420,8 @@ return {
               ["<c-q>"] = actions.smart_send_to_qflist + actions.open_qflist,
               ["<c-a>"] = { "<Home>", type = "command" },
               ["<c-e>"] = { "<End>", type = "command" },
-              ["<tab>"] = actions.toggle_selection,
+              -- ["<tab>"] = actions.toggle_selection,
+              ["<tab>"] = actions.toggle_selection + actions.move_selection_next,
               ["<S-Cr>"] = function(prompt_bufnr)
                 -- Use nvim-window-picker to choose the window by dynamically attaching a function
 
@@ -593,7 +594,8 @@ return {
                 ["<c-v>"] = stopinsert(function(pb) multi(pb, "vnew") end),
                 ["<c-s>"] = stopinsert(function(pb) multi(pb, "new") end),
                 ["<c-o>"] = stopinsert(function(pb) multi(pb, "edit") end),
-                ["<tab>"] = actions.toggle_selection,
+                -- ["<tab>"] = actions.toggle_selection,
+                ["<tab>"] = actions.toggle_selection + actions.move_selection_next,
               },
             },
           },

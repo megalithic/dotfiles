@@ -21,7 +21,7 @@ return {
         "cpp",
         "css",
         "csv",
-        "comment",
+        -- "comment", -- too slow still.
         "devicetree",
         "dockerfile",
         "diff",

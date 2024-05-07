@@ -98,6 +98,7 @@ return {
           ["<localleader>h"] = { name = "[h]unk", _ = "which_key_ignore" },
           ["<localleader>r"] = { name = "[r]epl", _ = "which_key_ignore" },
           ["<localleader>t"] = { name = "[t]est", _ = "which_key_ignore" },
+          ["<localleader>s"] = { name = "[s]pell", _ = "which_key_ignore" },
         })
       end,
     },

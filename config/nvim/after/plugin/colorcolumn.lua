@@ -19,7 +19,6 @@ local M = {
     "fugitive",
     "org",
     "orgagenda",
-    "markdown",
     "Telescope",
     "dirbuf",
     "oil",

@@ -355,7 +355,9 @@ xmap <silent> <localleader>er :lua require("mega.utils").wrap_selected_nodes("{:
       -- comments = "sb:- [x],mb:- [ ],b:-,b:*,b:>",
       linebreak = true,
       wrap = true,
+      wrapscan = true,
       suffixesadd = ".md",
+      textwidth = 79,
       spell = true,
     },
     keys = {

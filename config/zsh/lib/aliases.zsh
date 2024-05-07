@@ -171,7 +171,7 @@ if type nvim >/dev/null 2>&1; then
   alias im="nvim"
   alias vm="nvim"
   alias nvm=nv
-  alias vim="NVIM_APPNAME=wipvim nvim"
+  alias vim="NVIM_APPNAME=nvim nvim"
   # alias vim="NVIM_APPNAME=nvim nvim" # <-- original!
   # alias wipvim="NVIM_APPNAME=wipvim nvim"
   # alias folkevim="NVIM_APPNAME=folkevim nvim"
@@ -179,6 +179,8 @@ if type nvim >/dev/null 2>&1; then
   # alias ribvim="NVIM_APPNAME=ribvim nvim"
   # alias kickvim="NVIM_APPNAME=kickvim nvim"
   alias e="NVIM_APPNAME=wipvim nvim"
+  alias ogvim="NVIM_APPNAME=ogvim nvim"
+  alias og="NVIM_APPNAME=ogvim nvim"
   # alias kv="kickvim"
   # alias kvim="kickvim"
   alias minvim="NVIM_APPNAME=minvim nvim"

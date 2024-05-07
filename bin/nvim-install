@@ -21,7 +21,7 @@ __invocation="$(printf %q "$__file")$( (($#)) && printf ' %q' "$@" || true)"
 
 FORCE_INSTALL="false"
 VERSION=${1:-master}
-OLD_VERSION=""
+CURRENT_VERSION=""
 
 if [[ "$(arch)" == "arm64" ]]; then
   eval "$(/opt/homebrew/bin/brew shellenv)"
@@ -128,23 +128,36 @@ build() {
 log_version() {
   echo ""
 
-  log_info "old version: $OLD_VERSION"
-  log_info "new version: $VERSION"
+  log_info "old version: $CURRENT_VERSION"
+  log_ok "new version: $VERSION"
 }
 
 read_version() {
-  cd "${XDG_DATA_HOME}/src/neovim" || exit
-  OLD_VERSION="$(cat ${XDG_DATA_HOME}/src/neovim/VERSION)"
+  # cd "${XDG_DATA_HOME}/src/neovim" || exit
+  log_info "reading version.."
+  CURRENT_VERSION="$(cat "${XDG_DATA_HOME}"/src/neovim/VERSION)"
+  log_ok "read current version: $CURRENT_VERSION"
 }
 
 write_version() {
-  # if [[ $VERSION == "master" ]]; then
-  #   VERSION="$(git rev-parse origin/master)"
-  # fi
-
-  cd "${XDG_DATA_HOME}/src/neovim" || exit
+  log_info "write version.."
+  pushd "${XDG_DATA_HOME}/src/neovim" >/dev/null || exit
   rm ./VERSION 2>/dev/null
+
+  if [[ "$VERSION" == "master" ]]; then
+    # if top="$(git rev-parse --show-toplevel 2>/dev/null)" && [ -w "$top/.git" ]; then
+    log_info "getting git sha as version.."
+    VERSION="$(git rev-parse origin/master)"
+    # else
+    # VERSION="master"
+    # fi
+  fi
+
+  log_ok "writing version.."
+  echo "$VERSION"
   echo "$VERSION" >./VERSION
+  log_ok "wrote version: $VERSION"
+  popd >/dev/null || return
 }
 
 while getopts "fpc" OPTION; do
@@ -183,8 +196,9 @@ while getopts "fpc" OPTION; do
 done
 shift $((OPTIND - 1))
 
-read_version
 pushd "${XDG_DATA_HOME}/src" >/dev/null && log_ok "cd ~/.local/share/src successful"
+read_version
 write_version
-clone && update && build && do_pip_install && do_lazy_install && remove_brew_nvim popd >/dev/null
+clone && update && build && do_pip_install && do_lazy_install && remove_brew_nvim
+popd >/dev/null || return
 log_version

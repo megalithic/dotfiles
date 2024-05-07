@@ -371,7 +371,17 @@ M.apply = function()
       neorg_path = fmt("%s/_org", icloud_documents_path),
       hs_emmy_path = fmt("%s/Spoons/EmmyLua.spoon", hammerspoon_path),
     },
-    o = {},
+    o = {
+      linebreak = true, -- lines wrap at words rather than random characters
+      wrapscan = true,
+      undodir = vim.env.HOME .. "/.vim/undodir",
+      undofile = true,
+      splitbelow = true,
+      splitright = true,
+      splitkeep = "screen",
+      startofline = true,
+      swapfile = false,
+    },
     opt = {
       -- [[ Setting options ]]
       -- See `:help vim.opt`
@@ -400,9 +410,6 @@ M.apply = function()
       -- Enable break indent
       breakindent = true,
 
-      -- Save undo history
-      undofile = true,
-
       -- Case-insensitive searching UNLESS \C or one or more capital letters in the search term
       ignorecase = true,
       smartcase = true,
@@ -416,8 +423,6 @@ M.apply = function()
       -- Decrease mapped sequence wait time
       -- Displays which-key popup sooner
       timeoutlen = 300, -- Configure how new splits should be opened
-      splitright = true,
-      splitbelow = true,
 
       -- Sets how neovim will display certain whitespace characters in the editor.
       --  See `:help 'list'`
@@ -460,6 +465,17 @@ M.apply = function()
         foldclose = M.icons.misc.fold_close, -- alts: ▸
         stl = " ", -- alts: ─ ⣿ ░ ▐ ▒▓
         stlnc = " ", -- alts: ─
+      },
+
+      diffopt = {
+        "vertical",
+        "iwhite",
+        "hiddenoff",
+        "foldcolumn:0",
+        "context:4",
+        "algorithm:histogram",
+        "indent-heuristic",
+        "linematch:60",
       },
 
       -- Preview substitutions live, as you type!
