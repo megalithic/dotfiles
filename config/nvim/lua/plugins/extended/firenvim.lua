@@ -2,16 +2,14 @@
 -- https://github.com/jfpedroza/dotfiles/blob/master/nvim/after/plugin/firenvim.lua
 -- https://github.com/stevearc/dotfiles/blob/master/.config/nvim/lua/plugins/firenvim.lua
 -- https://github.com/letientai299/dotfiles/blob/master/vim/lua/firenvim_config.lua
-local map = vim.keymap.set
 
 return {
   "glacambre/firenvim",
+  -- Explanation: https://github.com/folke/lazy.nvim/discussions/463#discussioncomment-4819297
   lazy = not vim.g.started_by_firenvim,
-  cond = vim.g.started_by_firenvim,
-  -- event = { "BufEnter", "BufReadPre", "UIEnter" },
   build = function() vim.fn["firenvim#install"](0) end,
   config = function()
-    if not vim.g.started_by_firenvim then return end
+    local map = vim.keymap.set
 
     vim.g.firenvim_config = {
       globalSettings = {

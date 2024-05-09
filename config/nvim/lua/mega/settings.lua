@@ -90,12 +90,12 @@ local M = {
   },
   disabled_lsp_formatters = { "tailwindcss", "html", "tsserver", "ls_emmet", "zk", "sumneko_lua" },
   -- REF: elixir language servers: { ElixirLS, Next LS, elixirls, nextls, lexical }
-  enabled_elixir_ls = { "ElixirLS", "Next LS", "", "", "" },
+  enabled_elixir_ls = { "", "Next LS", "", "", "" },
+  completion_exclusions = { "ElixirLS", "", "elixirls", "nextls", "lexical" },
   formatter_exclusions = { "ElixirLS", "", "elixirls", "nextls", "lexical" },
   diagnostic_exclusions = { "ElixirLS", "", "elixirls", "nextls", "lexical", "tsserver" },
   definition_exclusions = { "ElixirLS", "", "elixirls", "nextls", "lexical" },
   max_diagnostic_exclusions = { "ElixirLS", "", "elixirls", "nextls", "lexical" },
-  completion_exclusions = { "ElixirLS", "", "elixirls", "nextls", "" },
   disable_autolint = false,
   disable_autoformat = false,
   markdown_fenced_languages = {

@@ -5,6 +5,8 @@ local command = vim.api.nvim_create_user_command
 local U = require("mega.utils")
 local fmt = string.format
 
+local M = {}
+
 return {
   {
     "neovim/nvim-lspconfig",
@@ -112,7 +114,7 @@ return {
       --    That is to say, every time a new file is opened that is associated with
       --    an lsp (for example, opening `main.rs` is associated with `rust_analyzer`) this
       --    function will be executed to configure the current buffer
-      local function on_attach(bufnr, client)
+      function M.on_attach(client, bufnr)
         local disabled_lsp_formatting = SETTINGS.disabled_lsp_formatters
         for i = 1, #disabled_lsp_formatting do
           if disabled_lsp_formatting[i] == client.name then
@@ -432,6 +434,12 @@ return {
           qf_rename()
         end, "[r]ename")
 
+        if client.name == "ElixirLS" then
+          vim.keymap.set("n", "<localleader>efp", ":ElixirFromPipe<cr>", { buffer = bufnr, noremap = true, desc = "from pipe" })
+          vim.keymap.set("n", "<localleader>etp", ":ElixirToPipe<cr>", { buffer = bufnr, noremap = true, desc = "to pipe (|>)" })
+          vim.keymap.set("v", "<localleader>eem", ":ElixirExpandMacro<cr>", { buffer = bufnr, noremap = true, desc = "expand macro" })
+        end
+
         command("LspCapabilities", function(ctx)
           local filter = ctx.args == "" and { bufnr = 0 } or { name = ctx.args }
           local clients = vim.lsp.get_clients(filter)
@@ -621,20 +629,61 @@ return {
           desc = "Attach various functionality to an LSP-connected buffer/client",
           command = function(evt)
             local client = vim.lsp.get_client_by_id(evt.data.client_id)
-            if client ~= nil then on_attach(evt.buf, client) end
+            if client ~= nil then M.on_attach(client, evt.buf) end
           end,
         },
       })
 
       local lspconfig = require("lspconfig")
 
+      -- capabilities = <1>{
+      --   general = {
+      --     positionEncodings = { "utf-16" }
+      --   },
+      --   textDocument = {
+      --     callHierarchy = {
+      --       dynamicRegistration = false
+      --     },
+      --     codeAction = {
+      --       codeActionLiteralSupport = {
+      --         codeActionKind = {
+      --           valueSet = { "", "quickfix", "refactor", "refactor.extract", "refactor.inline", "refactor.rewrite", "source", "source.organizeImports" }
+      --         }
+      --       },
+      --       dataSupport = true,
+      --       dynamicRegistration = true,
+      --       isPreferredSupport = true,
+      --       resolveSupport = {
+      --         properties = { "edit" }
+      --       }
+      --     },
+      --     completion = {
+      --       completionItem = {
+      --         commitCharactersSupport = false,
+      --         deprecatedSupport = false,
+      --         documentationFormat = { "markdown", "plaintext" },
+      --         preselectSupport = false,
+      --         snippetSupport = false
+      --       },
+      --       completionItemKind = {
+      --         valueSet = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 }
+      --       },
+      --       completionList = {
+      --         itemDefaults = { "editRange", "insertTextFormat", "insertTextMode", "data" }
+      --       },
+      --       contextSupport = false,
+      --       dynamicRegistration = false
+      --     },
+
       -- LSP servers and clients are able to communicate to each other what features they support.
       --  By default, Neovim doesn't support everything that is in the LSP specification.
       --  When you add nvim-cmp, luasnip, etc. Neovim now has *more* capabilities.
       --  So, we create new capabilities with nvim cmp, and then broadcast that to the servers.
-      local capabilities = vim.lsp.protocol.make_client_capabilities()
-      capabilities.textDocument.completion.completionItem.snippetSupport = true
-      capabilities = vim.tbl_deep_extend("force", capabilities, require("cmp_nvim_lsp").default_capabilities(capabilities))
+      M.capabilities = vim.lsp.protocol.make_client_capabilities()
+      M.capabilities.textDocument.completion.completionItem.snippetSupport = true
+      -- M.capabilities = vim.tbl_deep_extend("force", M.capabilities, require("cmp_nvim_lsp").default_capabilities(capabilities))
+      M.capabilities = require("cmp_nvim_lsp").default_capabilities(M.capabilities)
+      -- M.capabilities = require("cmp_nvim_lsp").default_capabilities()
 
       -- Enable the following language servers
       --  Feel free to add/remove any LSPs that you want here. They will automatically be installed.
@@ -677,9 +726,9 @@ return {
       local servers = require("mega.servers")
       if servers == nil then return end
 
-      servers.load_unofficial()
+      servers.load_contrib()
 
-      local function get_config(name)
+      function M.get_config(name)
         local config = name and servers.list[name] or {}
         if not config or config == nil then return end
 
@@ -689,21 +738,7 @@ return {
         end
 
         config.flags = { debounce_text_changes = 150 }
-        -- config.on_init = on_init
-        -- config.capabilities = get_server_capabilities()
-        -- -- FIXME: This locks up lexical:
-        -- -- if config.on_attach then
-        -- --   config.on_attach = function(client, bufnr)
-        -- --     dd("on_attach provided from servers.lua config")
-        -- --     on_attach(client, bufnr)
-        -- --     config.on_attach(client, bufnr)
-        -- --   end
-        -- -- else
-        -- --   config.on_attach = on_attach
-        -- -- end
-        -- config.on_attach = on_attach
-
-        config.capabilities = vim.tbl_deep_extend("force", {}, capabilities, config.capabilities or {})
+        config.capabilities = vim.tbl_deep_extend("force", {}, M.capabilities, config.capabilities or {})
         return config
       end
 
@@ -745,9 +780,9 @@ return {
       -- You can add other tools here that you want Mason to install
       -- for you, so that they are available from within Neovim.
       local ensure_installed = vim.tbl_keys(servers.list or {})
+
       vim.list_extend(ensure_installed, {
         "black",
-        "eslint_d",
         "eslint_d",
         "isort",
         "prettier",
@@ -758,28 +793,13 @@ return {
       require("mason-tool-installer").setup({ ensure_installed = ensure_installed })
 
       require("mason-lspconfig").setup({
-        automatic_installation = true,
+        automatic_installation = false,
         handlers = {
           function(server_name)
             if servers ~= nil then
-              -- loads our custom set of lsp servers
-
-              -- for server, _ in pairs(servers.list) do
-              local cfg = get_config(server_name)
-              if cfg ~= nil then
-                -- if server == "nextls" then dd(cfg) end
-
-                lspconfig[server_name].setup(cfg)
-              end
-              -- end
+              local cfg = M.get_config(server_name)
+              if cfg ~= nil then lspconfig[server_name].setup(cfg) end
             end
-
-            -- local server = servers[server_name] or {}
-            -- This handles overriding only values explicitly passed
-            -- by the server configuration above. Useful when disabling
-            -- certain features of an LSP (for example, turning off formatting for tsserver)
-            -- server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
-            -- require('lspconfig')[server_name].setup(server)
           end,
         },
       })
@@ -800,9 +820,9 @@ return {
     cmd = { "OutputPanel" },
     config = function() require("output_panel").setup() end,
   },
+
   {
     "elixir-tools/elixir-tools.nvim",
-    version = "*",
     cond = U.lsp.is_enabled_elixir_ls("Next LS") or U.lsp.is_enabled_elixir_ls("ElixirLS"),
     event = { "BufReadPre", "BufNewFile" },
     config = function()
@@ -820,16 +840,15 @@ return {
         local current_arch = arch[string.lower(vim.uv.os_uname().machine)]
         local build_bin = fmt("next_ls_%s_%s", os_name, current_arch)
 
-        if use_homebrew then return { "nextls", "--stdio" } end
         return fmt("%s/lsp/nextls/burrito_out/%s", vim.env.XDG_DATA_HOME, build_bin)
       end
 
-      local prefer_homebrew = false
       elixir.setup({
         nextls = {
-          enable = U.lsp.is_enabled_elixir_ls("Next LS"), -- defaults to false
-
-          cmd = cmd(prefer_homebrew),
+          enable = U.lsp.is_enabled_elixir_ls("Next LS"),
+          autostart = true,
+          cmd = cmd(),
+          spitfire = true,
           init_options = {
             experimental = {
               completions = {
@@ -837,6 +856,7 @@ return {
               },
             },
           },
+          on_attach = M.on_attach,
         },
         credo = {},
         elixirls = {
@@ -845,12 +865,13 @@ return {
             dialyzerEnabled = true,
             enableTestLenses = true,
           }),
-          on_attach = function(_client, bufnr)
-            local map = vim.keymap.set
-            map("n", "<space>fp", ":ElixirFromPipe<cr>", { buffer = bufnr, noremap = true })
-            map("n", "<space>tp", ":ElixirToPipe<cr>", { buffer = bufnr, noremap = true })
-            map("v", "<space>em", ":ElixirExpandMacro<cr>", { buffer = bufnr, noremap = true })
-          end,
+          on_attach = M.on_attach,
+          -- on_attach = function(_client, bufnr)
+          --   local map = vim.keymap.set
+          --   map("n", "<localleader>efp", ":ElixirFromPipe<cr>", { buffer = bufnr, noremap = true, desc = "from pipe" })
+          --   map("n", "<localleader>etp", ":ElixirToPipe<cr>", { buffer = bufnr, noremap = true, desc = "to pipe (|>)" })
+          --   map("v", "<localleader>eem", ":ElixirExpandMacro<cr>", { buffer = bufnr, noremap = true, desc = "expand macro" })
+          -- end,
         },
       })
     end,

@@ -25,12 +25,10 @@ return {
               -- `friendly-snippets` contains a variety of premade snippets.
               --    See the README about individual language/framework/plugin snippets:
               --    https://github.com/rafamadriz/friendly-snippets
-              -- {
-              --   'rafamadriz/friendly-snippets',
-              --   config = function()
-              --     require('luasnip.loaders.from_vscode').lazy_load()
-              --   end,
-              -- },
+              {
+                "rafamadriz/friendly-snippets",
+                config = function() require("luasnip.loaders.from_vscode").lazy_load() end,
+              },
             },
           },
         },
@@ -43,11 +41,8 @@ return {
         },
         opts = {
           friendly_snippets = false,
-          -- extended_filetypes = {
-          --   eelixir = { "elixir" },
-          -- },
           create_autocmd = true,
-          -- search_paths = { vim.fn.stdpath("config") .. "/snippets" },
+          search_paths = { vim.fn.stdpath("config") .. "/snippets" },
         },
       },
       { "hrsh7th/cmp-buffer" },
@@ -330,10 +325,13 @@ return {
             group_index = 1,
             max_item_count = 35,
             entry_filter = function(entry)
-              local kind = entry:get_kind()
+              print(entry.source.source.client.name)
+
               if vim.tbl_contains(SETTINGS.completion_exclusions, entry.source.source.client.name) then return false end
-              return cmp.lsp.CompletionItemKind.Snippet ~= kind
-              -- return true
+              -- FIXME: breaks Next LS
+              -- if cmp.lsp.CompletionItemKind.Snippet ~= entry:get_kind() then return false end
+
+              return true
             end,
           },
           { name = "async_path", option = { trailing_slash = true } },
