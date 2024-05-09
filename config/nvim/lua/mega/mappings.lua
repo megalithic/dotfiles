@@ -76,8 +76,10 @@ for _, mode in ipairs({ "n", "x", "i", "v", "o", "t", "s", "c" }) do
 
   -- recursive global mappings
   -- mega[mode .. "map"] = mapper(mode, map_opts)
+  M[mode .. "map"] = mapper(mode, map_opts)
   _G[mode .. "map"] = mapper(mode, map_opts)
   -- non-recursive global mappings
+  M[mode .. "noremap"] = mapper(mode, noremap_opts)
   _G[mode .. "noremap"] = mapper(mode, noremap_opts)
 end
 

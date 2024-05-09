@@ -132,12 +132,12 @@ function new_session() {
     (sh "$layouts_dir/$session.zsh" &&
       to_session "$session" ||
       tmux new-session -d -s "$session" &&
-    to_session "$session") && exit
+      to_session "$session") && exit
   else
     (sh "$layouts_dir/default.zsh" "$session" "${cwd}" &&
       to_session "$session" ||
       tmux new-session -d -s "$session" -c "${cwd}" &&
-    to_session "$session") && exit
+      to_session "$session") && exit
   fi
 }
 
@@ -172,8 +172,9 @@ function fuzzy_find() {
   # tmux capture-pane -ep -t "${1}"
   # tmux capture-pane -ep -S- -E- -t {}
   # pane_capture="tmux capture-pane -ep -S- -E- -t {}"
+  # REF: https://github.com/search?q=repo%3Asainnhe%2Ftmux-fzf%20preview&type=code
   pane_capture="tmux capture-pane -ep -t {}"
-
+  # [ "$1" != '[cancel]' ] && [ "$1" != '[current]' ] && echo $1 | sed 's/: .*$//' | xargs -I{} tmux capture-pane -ep -t {}
 
   preview_lines_of_output=100
   preview_cmd_layout_info="echo {} | sed 's/:.*$//' | xargs -I {} | xargs tmux has-session -t 2>/dev/null && xargs -I {} | echo '$(tput sgr 0 1)$(tput setaf 6) windows in session:$(tput sgr 0)\n' && tmux list-windows -F '░ #{window_index}:#W (#P/#{window_panes}) #(nerdwin #{pane_current_command})' -t {}"
@@ -204,29 +205,29 @@ function fuzzy_find() {
   # CTRL_R_rename_session_bind='ctrl-r:execute(printf >&2 "New session name: ";read name; tmux rename-session -t {} ${name};)+reload(echo "$sessions_list" | grep -v "^default\$" | grep -v "^$current_session\$")'
   CTRL_R_rename_session_bind='ctrl-r:execute(printf >&2 "New session name: ";read name; tmux rename-session -t {} ${name};)+reload(tmux list-sessions | sed -E "s/:.*$//")'
 
-  try_session "$(echo \
-    "$fzf_list" \
-    | \
-    "$fzf_cmd" \
-    --reverse \
-    --border=none \
-    --scrollbar="▌▐" \
-    --padding="1" \
-    --prompt="$fzf_prompt_text" \
-    --header="$fzf_header_text" \
-    --bind="change:first" \
-    --bind="focus:transform-preview-label:echo [ {} ]" \
-    --bind="$ENTER_select_session_bind" \
-    --bind="$CTRL_X_kill_session_bind" \
-    --bind="$CTRL_R_rename_session_bind" \
-    --bind="?:toggle-preview" \
-    --bind="ctrl-u:preview-half-page-up,ctrl-d:preview-half-page-down" \
-    --preview="$preview_cmd" \
-    --preview-window="right,55%,," \
-    --print-query \
-    --exit-0 \
-    --tac \
-    )"
+  try_session "$(
+    echo \
+      "$fzf_list" |
+      "$fzf_cmd" \
+        --reverse \
+        --border=none \
+        --scrollbar="▌▐" \
+        --padding="1" \
+        --prompt="$fzf_prompt_text" \
+        --header="$fzf_header_text" \
+        --bind="change:first" \
+        --bind="focus:transform-preview-label:echo [ {} ]" \
+        --bind="$ENTER_select_session_bind" \
+        --bind="$CTRL_X_kill_session_bind" \
+        --bind="$CTRL_R_rename_session_bind" \
+        --bind="?:toggle-preview" \
+        --bind="ctrl-u:preview-half-page-up,ctrl-d:preview-half-page-down" \
+        --preview="$preview_cmd" \
+        --preview-window="right,55%,," \
+        --print-query \
+        --exit-0 \
+        --tac
+  )"
 }
 
 # -- if we pass in a session_name: attach/switch to it or, create new session
