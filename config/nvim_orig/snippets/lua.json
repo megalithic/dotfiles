@@ -1,8 +1,0 @@
-{
-  "test": {
-    "prefix": "test",
-    "body": [
-      "print('test')"
-    ]
-  }
-}

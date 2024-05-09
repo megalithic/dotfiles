@@ -1,6 +1,0 @@
-[selene]
-base = "lua51"
-name = "vim"
-
-[vim]
-any = true
