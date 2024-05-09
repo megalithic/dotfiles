@@ -52,7 +52,6 @@ local hammerspoon_path = fmt("%s/config/hammerspoon", dotfiles_path)
 -- is_local_dev = vim.trim(vim.fn.system("hostname")) ~= "seth-dev",
 
 local M = {
-
   -- NOTE: char options (https://unicodeplus.com/): ┊│┆ ┊  ▎││ ▏▏│¦┆┊
   indent_scope_char = "│",
   indent_char = "┊",
@@ -90,13 +89,13 @@ local M = {
     "env",
   },
   disabled_lsp_formatters = { "tailwindcss", "html", "tsserver", "ls_emmet", "zk", "sumneko_lua" },
-  -- REF: elixir LSPs: elixir-tools(tools-elixirls, tools-nextls, credo), elixirls, nextls, lexical
-  enabled_elixir_ls = { "", "", "elixirls", "", "lexical" },
-  formatter_exclusions = { "tools-elixirls", "tools-nextls", "", "nextls", "lexical" },
-  diagnostic_exclusions = { "tools-elixirls", "tools-nextls", "", "nextls", "lexical", "tsserver" },
-  definition_exclusions = { "tools-elixirls", "tools-nextls", "elixirls", "nextls", "" },
-  max_diagnostic_exclusions = { "tools-elixirls", "tools-nextls", "", "nextls", "lexical" },
-  completion_exclusions = { "tools-elixirls", "tools-nextls", "elixirls", "nextls", "" },
+  -- REF: elixir language servers: { ElixirLS, Next LS, elixirls, nextls, lexical }
+  enabled_elixir_ls = { "ElixirLS", "Next LS", "", "", "lexical" },
+  formatter_exclusions = { "ElixirLS", "", "elixirls", "nextls", "lexical" },
+  diagnostic_exclusions = { "ElixirLS", "", "elixirls", "nextls", "lexical", "tsserver" },
+  definition_exclusions = { "ElixirLS", "", "elixirls", "nextls", "lexical" },
+  max_diagnostic_exclusions = { "ElixirLS", "", "elixirls", "nextls", "lexical" },
+  completion_exclusions = { "ElixirLS", "", "elixirls", "nextls", "" },
   disable_autolint = false,
   disable_autoformat = false,
   markdown_fenced_languages = {
@@ -106,6 +105,8 @@ local M = {
     "console=sh",
     "vim",
     "lua",
+    "elixir",
+    "heex",
     "cpp",
     "sql",
     "python",

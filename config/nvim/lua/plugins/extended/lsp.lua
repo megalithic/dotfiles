@@ -83,20 +83,27 @@ return {
         assert(dir == "prev" or dir == "next")
         local diagnostic = vim.diagnostic["get_" .. dir]()
         if not diagnostic then return end
+
         if diagnostic_timer then
           diagnostic_timer:close()
           hl_cancel()
         end
-        vim.api.nvim_buf_set_extmark(0, diagnostic_ns, diagnostic.lnum, diagnostic.col, {
-          end_row = diagnostic.end_lnum,
-          end_col = diagnostic.end_col,
-          hl_group = hl_map[diagnostic.severity],
-        })
+
+        -- if end_col is 999, typically we'd get an out of range error from extmarks api
+        if diagnostic.end_col ~= 999 then
+          vim.api.nvim_buf_set_extmark(0, diagnostic_ns, diagnostic.lnum, diagnostic.col, {
+            end_row = diagnostic.end_lnum,
+            end_col = diagnostic.end_col,
+            hl_group = hl_map[diagnostic.severity],
+          })
+        end
+
         hl_cancel = function()
           diagnostic_timer = nil
           hl_cancel = nil
           pcall(vim.api.nvim_buf_clear_namespace, 0, diagnostic_ns, 0, -1)
         end
+
         diagnostic_timer = vim.defer_fn(hl_cancel, 500)
         vim.diagnostic["goto_" .. dir]()
       end
@@ -578,24 +585,34 @@ return {
         -- Get a reference to the original signs handler
         local orig_signs_handler = vim.diagnostic.handlers.signs
         -- Override the built-in signs handler
-        vim.diagnostic.handlers.signs = {
-          show = function(_, bn, _, opts)
-            -- Get all diagnostics from the whole buffer rather than just the
-            -- diagnostics passed to the handler
-            local diagnostics = vim.diagnostic.get(bn)
-            -- Find the "worst" diagnostic per line
-            local max_severity_per_line = {}
-            for _, d in pairs(diagnostics) do
-              local m = max_severity_per_line[d.lnum]
-              if not m or d.severity < m.severity then max_severity_per_line[d.lnum] = d end
-            end
-            -- Pass the filtered diagnostics (with our custom namespace) to
-            -- the original handler
-            local filtered_diagnostics = vim.tbl_values(max_severity_per_line)
-            orig_signs_handler.show(ns, bn, filtered_diagnostics, opts)
-          end,
-          hide = function(_, bn) orig_signs_handler.hide(ns, bn) end,
-        }
+        local max_diagnostics = function(_, bn, _, opts)
+          -- Get all diagnostics from the whole buffer rather than just the
+          -- diagnostics passed to the handler
+          local diagnostics = vim.diagnostic.get(bn)
+          -- Find the "worst" diagnostic per line
+          local max_severity_per_line = {}
+          for _, d in pairs(diagnostics) do
+            local m = max_severity_per_line[d.lnum]
+            if not m or d.severity < m.severity then max_severity_per_line[d.lnum] = d end
+          end
+          -- Pass the filtered diagnostics (with our custom namespace) to
+          -- the original handler
+          local filtered_diagnostics = vim.tbl_values(max_severity_per_line)
+          orig_signs_handler.show(ns, bn, filtered_diagnostics, opts)
+        end
+
+        if vim.tbl_contains(vim.g.max_diagnostic_exclusions, client.name) then
+          vim.diagnostic.handlers.signs = orig_signs_handler
+        else
+          vim.diagnostic.handlers.signs = vim.tbl_extend("force", orig_signs_handler, {
+            show = max_diagnostics,
+            hide = function(_, bn) orig_signs_handler.hide(ns, bn) end,
+          })
+        end
+        -- vim.diagnostic.handlers.signs = {
+        --   show = max_diagnostics,
+        --   hide = function(_, bn) orig_signs_handler.hide(ns, bn) end,
+        -- }
       end
 
       augroup("LspAttach", {
@@ -786,15 +803,33 @@ return {
   {
     "elixir-tools/elixir-tools.nvim",
     version = "*",
-    enabled = false,
+    cond = U.lsp.is_enabled_elixir_ls("Next LS") or U.lsp.is_enabled_elixir_ls("ElixirLS"),
     event = { "BufReadPre", "BufNewFile" },
     config = function()
       local elixir = require("elixir")
       local elixirls = require("elixir.elixirls")
+      local cmd = function(use_homebrew)
+        local arch = {
+          ["arm64"] = "arm64",
+          ["aarch64"] = "arm64",
+          ["amd64"] = "amd64",
+          ["x86_64"] = "amd64",
+        }
 
+        local os_name = string.lower(vim.uv.os_uname().sysname)
+        local current_arch = arch[string.lower(vim.uv.os_uname().machine)]
+        local build_bin = fmt("next_ls_%s_%s", os_name, current_arch)
+
+        if use_homebrew then return { "nextls", "--stdio" } end
+        return fmt("%s/lsp/nextls/burrito_out/%s", vim.env.XDG_DATA_HOME, build_bin)
+      end
+
+      local prefer_homebrew = false
       elixir.setup({
         nextls = {
-          enable = true, -- defaults to false
+          enable = U.lsp.is_enabled_elixir_ls("Next LS"), -- defaults to false
+
+          cmd = cmd(prefer_homebrew),
           init_options = {
             experimental = {
               completions = {
@@ -805,10 +840,10 @@ return {
         },
         credo = {},
         elixirls = {
-          enable = true,
+          enable = U.lsp.is_enabled_elixir_ls("ElixirLS"),
           settings = elixirls.settings({
-            dialyzerEnabled = false,
-            enableTestLenses = false,
+            dialyzerEnabled = true,
+            enableTestLenses = true,
           }),
           on_attach = function(_client, bufnr)
             local map = vim.keymap.set

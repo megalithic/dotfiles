@@ -120,7 +120,7 @@ return {
           -- init_selection = ":lua require'wildfire'.init_selection()<CR>:lua require('flash').treesitter()<CR>",
           --
           -- @see: flash.nvim
-          init_selection = "vv",
+          init_selection = ":lua require('flash').treesitter()<CR>",
           node_incremental = "v",
           node_decremental = "V",
           scope_incremental = "v", -- increment to the upper scope (as defined in locals.scm)

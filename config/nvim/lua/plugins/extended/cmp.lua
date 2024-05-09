@@ -83,8 +83,8 @@ return {
       local tab = function(fallback)
         if cmp.visible() then
           cmp.select_next_item()
-        -- elseif vim.snippet.active() and vim.snippet.jumpable(1) then
-        elseif vim.snippet.jumpable(1) then
+        elseif vim.snippet.active() and vim.snippet.jumpable(1) then
+          -- elseif vim.snippet.jumpable(1) then
           -- vim.snippet.jump(1)
           vim.schedule(function() vim.snippet.jump(1) end)
         elseif has_words_before() then
@@ -96,8 +96,8 @@ return {
       local shift_tab = function(fallback)
         if cmp.visible() then
           cmp.select_prev_item()
-        -- elseif vim.snippet.active() and vim.snippet.jumpable(-1) then
-        elseif vim.snippet.jumpable(-1) then
+        elseif vim.snippet.active() and vim.snippet.jumpable(-1) then
+          -- elseif vim.snippet.jumpable(-1) then
           -- vim.snippet.jump(-1)
           vim.schedule(function() vim.snippet.jump(-1) end)
         else
@@ -331,7 +331,7 @@ return {
             max_item_count = 35,
             entry_filter = function(entry)
               local kind = entry:get_kind()
-              if vim.tbl_contains(vim.g.completion_exclusions, entry.source.source.client.name) then return false end
+              if vim.tbl_contains(SETTINGS.completion_exclusions, entry.source.source.client.name) then return false end
               return cmp.lsp.CompletionItemKind.Snippet ~= kind
               -- return true
             end,
