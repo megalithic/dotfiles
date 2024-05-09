@@ -194,23 +194,11 @@ return {
 
         formatting = {
           expandable_indicator = true,
-          -- deprecated = true,
-          -- fields = { "abbr", "kind", "menu" },
-          fields = { "abbr", "menu", "kind" },
+          fields = { "abbr", "kind", "menu" },
           maxwidth = MAX_MENU_WIDTH,
           minwidth = MIN_MENU_WIDTH,
           ellipsis_char = icons.misc.ellipsis,
           format = function(entry, item)
-            -- -- FIXME: hacky way to deal with not getting completion results for certain lsp clients;
-            -- -- presently, in this list of elixir lsp clients, we just want NextLS..
-            -- local lsp_client_exclusions = { "lexical", "elixirls-dev", "elixirls" }
-            -- if
-            --   entry.source.name == "nvim_lsp"
-            --   and vim.tbl_contains(lsp_client_exclusions, entry.source.source.client.name)
-            -- then
-            --   next()
-            -- end
-
             if entry.source.name == "async_path" then
               local icon, hl_group = require("nvim-web-devicons").get_icon(entry:get_completion_item().label)
               if icon then
