@@ -1,4 +1,9 @@
-local lush = require("lush")
+local ok, lush = pcall(require, "lush")
+if not ok then
+  print("lush not found, not loading theme")
+  return
+end
+
 local C = require("mega.lush_theme.colors")
 local tc = {
   black = C.bg0,
@@ -273,8 +278,10 @@ local theme = lush(function(injected_functions)
     LspCodeLens({ DiagnosticInfo, fg = C.bg2 }), -- Used to color the virtual text of the codelens,
     LspCodeLensSeparator({ DiagnosticHint }),
 
+    LspInlayHint({ NonText }),
     LspInfoBorder({ FloatBorder }),
     LspSignatureActiveParameter({ Visual }),
+    SnippetTabstop({ Visual }),
 
     ---- :help notify ----------------------------------------------------------
 
@@ -524,6 +531,7 @@ local theme = lush(function(injected_functions)
     -- highlight WARN:/FIXME:/TODO:/NOTE:/REF: comments
 
     sym("@comment.fix")({ bg = C.red, fg = C.bg_dark, gui = "bold,underline" }),
+    sym("@comment.error")({ bg = C.red, fg = C.bg_dark, gui = "bold" }),
     sym("@comment.warn")({ bg = C.orange, fg = C.bg1, gui = "bold" }),
     sym("@comment.todo")({ fg = C.orange, bg = C.bg1, gui = nil }),
     sym("@comment.note")({ fg = C.grey0, bg = C.bg_dark, gui = "italic" }),
@@ -892,6 +900,7 @@ local theme = lush(function(injected_functions)
     ---- :help mini.hipatterns -------------------------------------------------
 
     MiniHipatternsFixme({ sym("@comment.fix") }),
+    MiniHipatternsError({ sym("@comment.error") }),
     MiniHipatternsWarn({ sym("@comment.warn") }),
     MiniHipatternsHack({ sym("@comment.warn") }),
     MiniHipatternsTodo({ sym("@comment.todo") }),

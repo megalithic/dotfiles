@@ -1,0 +1,133 @@
+title = "Ghostty 👻"
+
+# background-opacity = 0.95
+# background-blur-radius = 30
+# unfocused-split-opacity = 0.90
+
+minimum-contrast = 1.0
+
+# Leading
+adjust-cell-height = 10%
+
+# adjust-underline-thickness = 0.5
+# adjust-underline-thickness = -50%
+# adjust-underline-position = 25%
+
+macos-option-as-alt     = true
+
+fullscreen = true
+
+# visible-menu
+macos-non-native-fullscreen = visible-menu
+macos-titlebar-tabs=false
+
+window-theme = "dark"
+window-decoration       = false
+window-colorspace = display-p3
+window-vsync = true
+window-padding-x = 10
+window-padding-y = 10
+window-padding-balance = true
+window-save-state = always
+
+shell-integration = zsh
+shell-integration-features = cursor,sudo,title
+
+cursor-style = block
+cursor-style-blink = true
+# selection-invert-fg-bg = true
+
+clipboard-read = allow
+clipboard-write = allow
+copy-on-select = clipboard
+clipboard-paste-protection = false
+
+confirm-close-surface = false
+quit-after-last-window-closed = true
+
+mouse-hide-while-typing = true
+mouse-shift-capture = true
+
+
+# Default font
+font-family             = "JetBrainsMono Nerd Font Mono"
+font-style              = "Medium"
+# Bold
+font-family-bold        = "JetBrainsMono Nerd Font Mono"
+font-style-bold         = "ExtraBold"
+# Italic
+font-family-italic      = "JetBrainsMono Nerd Font Mono"
+font-style-italic       = "Italic"
+# Bold and Italic
+font-family-bold-italic = "JetBrainsMono Nerd Font Mono"
+font-style-bold-italic  = "ExtraBold Italic"
+
+font-size = 14
+font-thicken = true
+# font-feature = zero
+# font-feature = ss01
+# font-feature = ss02
+# font-feature = ss03
+# font-feature = ss04
+# font-feature = ss05
+# font-feature = ss06
+# font-feature = calt
+# font-feature = liga
+
+# https://github.com/ryanoasis/nerd-fonts/wiki/Glyph-Sets-and-Code-Points
+# powerline & powerline-extras
+font-codepoint-map = U+e0b0-U+e0b3,U+e0b4-U+e0c8,U+e0cc-U+e0d4,U+e0ca=JetBrainsMono Nerd Font Mono
+
+# font-awesome
+font-codepoint-map = U+f000-U+f2e0,U+e200-U+e2a9=JetBrainsMono Nerd Font Mono
+
+# seti-ui
+font-codepoint-map = U+e5fa-U+e6b1=JetBrainsMono Nerd Font Mono
+
+# codicons
+font-codepoint-map = U+ea60-U+ebeb=JetBrainsMono Nerd Font Mono
+
+# megaforest color theme
+background = #323d43
+foreground = #d8caac
+# black
+palette = 0=#505a60
+palette = 8=#5c6370
+# red
+palette = 1=#e67e80
+palette = 9=#E06C75
+# green
+palette = 2=#a7c080
+palette = 10=#A7CF9B
+# yellow
+palette = 3=#d9bb80
+palette = 11=#e5c07b
+# blue
+palette = 4=#7fbbb3
+palette = 12=#7FBBD0
+# purple
+palette = 5=#d39bb6
+palette = 13=#FCC5E9
+# aqua
+palette = 6=#7eb48b
+palette = 14=#78BA91
+# white
+palette = 7=#ffffff
+palette = 15=#ffffff
+
+# Keybinds
+# \x02 is ctrl+b (default tmux prefix)
+# \x01 is ctrl+a (common alternative tmux prefix)
+# \x00 is ctrl+space (common alternative tmux prefix)
+keybind = ctrl+one=text:\x00\x31
+keybind = ctrl+two=text:\x00\x32
+keybind = ctrl+three=text:\x00\x33
+keybind = ctrl+four=text:\x00\x34
+keybind = ctrl+five=text:\x00\x35
+keybind = ctrl+six=text:\x00\x36
+keybind = ctrl+seven=text:\x00\x37
+keybind = ctrl+eight=text:\x00\x38
+keybind = ctrl+nine=text:\x00\x39
+
+keybind = super+shift+r=reload_config
+# vim: ft=ghostty

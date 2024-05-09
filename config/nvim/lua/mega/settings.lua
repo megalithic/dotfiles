@@ -1,10 +1,10 @@
 local BORDER_STYLE = "none"
+local fmt = string.format
 
 local border_chars = {
-  rounded = { "╭", "─", "╮", "│", "╯", "─", "╰", "│" },
-  squared = { "🭽", "▔", "🭾", "▕", "🭿", "▁", "🭼", "▏" },
   none = { " ", " ", " ", " ", " ", " ", " ", " " },
-  blank = { " ", " ", " ", " ", " ", " ", " ", " " },
+  single = { "🭽", "▔", "🭾", "▕", "🭿", "▁", "🭼", "▏" },
+  rounded = { "╭", "─", "╮", "│", "╯", "─", "╰", "│" },
 }
 
 local telescope_border_chars = {
@@ -25,12 +25,39 @@ local connected_telescope_border_chars = {
   shadow = { "", "", "", "", "", "", "", "" },
 }
 
+local current_border = function(opts)
+  opts = opts or { hl = "FloatBorder", style = BORDER_STYLE }
+  local hl = opts.hl or "FloatBorder"
+  local style = opts.style or BORDER_STYLE
+  local border = {}
+  for _, char in ipairs(border_chars[style]) do
+    table.insert(border, { char, hl })
+  end
+
+  return border
+end
+
+local uname = vim.uv.os_uname().sysname
+local is_macos = uname == "Darwin"
+local is_linux = uname == "Linux"
+local is_windows = uname == "Windows"
+local home_path = os.getenv("HOME")
+local icloud_path = vim.env.ICLOUD_DIR
+local icloud_documents_path = vim.env.ICLOUD_DOCUMENTS_DIR
+local obsidian_vault_path = vim.env.OBSIDIAN_VAULT_DIR
+local dotfiles_path = vim.env.DOTS or vim.fn.expand("~/.dotfiles")
+local hammerspoon_path = fmt("%s/config/hammerspoon", dotfiles_path)
+
+-- is_remote_dev = vim.trim(vim.fn.system("hostname")) == "seth-dev",
+-- is_local_dev = vim.trim(vim.fn.system("hostname")) ~= "seth-dev",
+
 local M = {
   -- NOTE: char options (https://unicodeplus.com/): ┊│┆ ┊  ▎││ ▏▏│¦┆┊
   indent_scope_char = "│",
   indent_char = "┊",
   virt_column_char = "│",
-  border = BORDER_STYLE,
+  border_style = BORDER_STYLE,
+  border = current_border(),
   border_chars = border_chars[BORDER_STYLE],
   telescope_border_chars = telescope_border_chars[BORDER_STYLE],
   colorscheme = "megaforest", -- alt: `vim` for default
@@ -61,12 +88,14 @@ local M = {
     "folds",
     "env",
   },
-  -- REF: elixir LSPs: elixir-tools(tools-elixirls, tools-nextls, credo), elixirls, nextls, lexical
-  enabled_elixir_ls = { "", "", "elixirls", "", "lexical" },
-  formatter_exclusions = { "tools-elixirls", "tools-nextls", "", "nextls", "lexical" },
-  diagnostic_exclusions = { "tools-elixirls", "tools-nextls", "elixirls", "nextls", "", "tsserver" },
-  max_diagnostic_exclusions = { "tools-elixirls", "tools-nextls", "elixirls", "nextls", "lexical" },
-  completion_exclusions = { "tools-elixirls", "tools-nextls", "elixirls", "nextls", "" },
+  disabled_lsp_formatters = { "tailwindcss", "html", "tsserver", "ls_emmet", "zk", "sumneko_lua" },
+  -- REF: elixir language servers: { ElixirLS, Next LS, elixirls, nextls, lexical }
+  enabled_elixir_ls = { "ElixirLS", "Next LS", "", "", "lexical" },
+  formatter_exclusions = { "ElixirLS", "", "elixirls", "nextls", "lexical" },
+  diagnostic_exclusions = { "ElixirLS", "", "elixirls", "nextls", "lexical", "tsserver" },
+  definition_exclusions = { "ElixirLS", "", "elixirls", "nextls", "lexical" },
+  max_diagnostic_exclusions = { "ElixirLS", "", "elixirls", "nextls", "lexical" },
+  completion_exclusions = { "ElixirLS", "", "elixirls", "nextls", "" },
   disable_autolint = false,
   disable_autoformat = false,
   markdown_fenced_languages = {
@@ -76,6 +105,8 @@ local M = {
     "console=sh",
     "vim",
     "lua",
+    "elixir",
+    "heex",
     "cpp",
     "sql",
     "python",
@@ -86,11 +117,209 @@ local M = {
     "yaml",
     "json",
   },
+  colorizer = {
+    filetypes = { "*", "!lazy", "!gitcommit", "!NeogitCommitMessage", "!oil" },
+    buftypes = { "*", "!prompt", "!nofile", "!oil" },
+    user_default_options = {
+      RGB = false, -- #RGB hex codes
+      RRGGBB = true, -- #RRGGBB hex codes
+      names = false, -- "Name" codes like Blue or blue
+      RRGGBBAA = true, -- #RRGGBBAA hex codes
+      AARRGGBB = true, -- 0xAARRGGBB hex codes
+      rgb_fn = true, -- CSS rgb() and rgba() functions
+      hsl_fn = true, -- CSS hsl() and hsla() functions
+      -- css = true, -- Enable all CSS features: rgb_fn, hsl_fn, names, RGB, RRGGBB
+      css_fn = true, -- Enable all CSS *functions*: rgb_fn, hsl_fn
+      sass = { enable = false, parsers = { "css" } }, -- Enable sass colors
+      mode = "background", -- Set the display mode.
+    },
+    -- all the sub-options of filetypes apply to buftypes
+  },
+  icons = {
+    lsp = {
+      error = "", -- alts: 󰬌      
+      warn = "▲", -- alts: 󰬞 󰔷   ▲ 󰔷
+      info = "", -- alts: 󱂈 󰋼  󰬐 󰰃     ● 󰬐
+      hint = "", -- alts:  󰬏 󰰀  󰌶 󰰂 󰰂 󰰁 󰫵 󰋢   
+      ok = "✓", -- alts: ✓✓
+    },
+    test = {
+      passed = "", --alts: 
+      failed = "", --alts: 
+      running = "",
+      skipped = "○",
+      unknown = "", -- alts: 
+    },
+    kind = {
+      Array = "",
+      Boolean = "",
+      Class = "󰠱",
+      -- Class = "", -- Class
+      Codeium = "",
+      Color = "󰏘",
+      -- Color = "", -- Color
+      Constant = "󰏿",
+      -- Constant = "", -- Constant
+      Constructor = "",
+      -- Constructor = "", -- Constructor
+      Enum = "", -- alts: 
+      -- Enum = "", -- Enum -- alts: 了
+      EnumMember = "", -- alts: 
+      -- EnumMember = "", -- EnumMember
+      Event = "",
+      Field = "󰜢",
+      File = "󰈙",
+      -- File = "", -- File
+      Folder = "󰉋",
+      -- Folder = "", -- Folder
+      Function = "󰊕",
+      Interface = "",
+      Key = "",
+      Keyword = "󰌋",
+      -- Keyword = "", -- Keyword
+      Method = "",
+      Module = "",
+      Namespace = "",
+      Null = "󰟢", -- alts: 󰱥󰟢
+      Number = "󰎠", -- alts: 
+      Object = "",
+      -- Operator = "\u{03a8}", -- Operator
+      Operator = "󰆕",
+      Package = "",
+      Property = "󰜢",
+      -- Property = "", -- Property
+      Reference = "󰈇",
+      Snippet = "",
+      String = "", -- alts:  󱀍 󰀬 󱌯
+      Struct = "󰙅",
+      Text = "󰉿",
+      TypeParameter = "",
+      Unit = "󰑭",
+      -- Unit = "", -- Unit
+      Value = "󰎠",
+      Variable = "󰀫",
+      -- Variable = "", -- Variable, alts: 
+
+      -- Text = "",
+      -- Method = "",
+      -- Function = "",
+      -- Constructor = "",
+      -- Field = "",
+      -- Variable = "",
+      -- Class = "",
+      -- Interface = "",
+      -- Module = "",
+      -- Property = "",
+      -- Unit = "",
+      -- Value = "",
+      -- Enum = "",
+      -- Keyword = "",
+      -- Snippet = "",
+      -- Color = "",
+      -- File = "",
+      -- Reference = "",
+      -- Folder = "",
+      -- EnumMember = "",
+      -- Constant = "",
+      -- Struct = "",
+      -- Event = "",
+      -- Operator = "",
+      -- TypeParameter = "",
+    },
+    separators = {
+      thin_block = "│",
+      left_thin_block = "▏",
+      vert_bottom_half_block = "▄",
+      vert_top_half_block = "▀",
+      right_block = "🮉",
+      right_med_block = "▐",
+      light_shade_block = "░",
+    },
+    misc = {
+      formatter = "", -- alts: 󰉼
+      clock = "",
+      ellipsis = "…",
+      lblock = "▌",
+      rblock = "▐",
+      bug = "", -- alts: 
+      question = "",
+      lock = "󰌾", -- alts:   
+      shaded_lock = "",
+      circle = "",
+      project = "",
+      dashboard = "",
+      history = "󰄉",
+      comment = "󰅺",
+      robot = "󰚩",
+      lightbulb = "󰌵",
+      file_tree = "󰙅",
+      help = "󰋖", -- alts: 󰘥 󰮥 󰮦 󰋗 󰞋 󰋖
+      search = "", -- alts: 󰍉
+      code = "",
+      telescope = "",
+      terminal = "", -- alts: 
+      gear = "",
+      package = "",
+      list = "",
+      sign_in = "",
+      check = "✓", -- alts: ✓
+      fire = "",
+      note = "󰎛",
+      bookmark = "",
+      pencil = "󰏫",
+      arrow_right = "",
+      caret_right = "",
+      chevron_right = "",
+      double_chevron_right = "»",
+      table = "",
+      calendar = "",
+      fold_open = "",
+      fold_close = "",
+      hydra = "🐙",
+      flames = "󰈸", -- alts: 󱠇󰈸
+      vsplit = "◫",
+      v_border = "▐ ",
+      virtual_text = "◆",
+      mode_term = "",
+      ln_sep = "ℓ", -- alts: ℓ 
+      sep = "⋮",
+      perc_sep = "",
+      modified = "", -- alts: ∘✿✸✎ ○∘●●∘■ □ ▪ ▫● ◯ ◔ ◕ ◌ ◎ ◦ ◆ ◇ ▪▫◦∘∙⭘
+      mode = "",
+      vcs = "",
+      readonly = "",
+      prompt = "",
+      markdown = {
+        h1 = "◉", -- alts: 󰉫¹◉
+        h2 = "◆", -- alts: 󰉬²◆
+        h3 = "󱄅", -- alts: 󰉭³✿
+        h4 = "⭘", -- alts: 󰉮⁴○⭘
+        h5 = "◌", -- alts: 󰉯⁵◇◌
+        h6 = "", -- alts: 󰉰⁶
+        dash = "",
+      },
+    },
+    git = {
+      add = "▕", -- alts:  ▕,▕, ▎, ┃, │, ▌, ▎ 🮉
+      change = "▕", -- alts:  ▕ ▎║▎
+      mod = "",
+      remove = "", -- alts: 
+      delete = "🮉", -- alts: ┊▎▎
+      topdelete = "🮉",
+      changedelete = "🮉",
+      untracked = "▕",
+      ignore = "",
+      rename = "",
+      diff = "",
+      repo = "",
+      symbol = "", -- alts:  
+      unstaged = "󰛄",
+    },
+  },
 }
 
 M.apply = function()
-  function modified_icon() return vim.bo.modified and mega.icons.misc.circle or "" end
-
+  -- function modified_icon() return vim.bo.modified and M.icons.misc.circle or "" end
   local settings = {
     g = {
       mapleader = ",",
@@ -128,115 +357,97 @@ M.apply = function()
       disable_autolint = M.disable_autolint,
       disable_autoformat = M.disable_autoformat,
       markdown_fenced_languages = M.markdown_fenced_languages,
+      have_nerd_font = true,
+
+      open_command = is_macos and "open" or "xdg-open",
+      is_tmux_popup = vim.env.TMUX_POPUP ~= nil,
+      code = fmt("%s/code", home_path),
+      vim_path = fmt("%s/.config/nvim", home_path),
+      nvim_path = fmt("%s/.config/nvim", home_path),
+      cache_path = fmt("%s/.cache/nvim", home_path),
+      local_state_path = fmt("%s/.local/state/nvim", home_path),
+      local_share_path = fmt("%s/.local/share/nvim", home_path),
+      notes_path = fmt("%s/_notes", icloud_documents_path),
+      org_path = fmt("%s/_org", icloud_documents_path),
+      neorg_path = fmt("%s/_org", icloud_documents_path),
+      hs_emmy_path = fmt("%s/Spoons/EmmyLua.spoon", hammerspoon_path),
     },
     o = {
-      -- autochdir = true,
-      autoindent = true,
-      autowriteall = true,
-      backup = false,
-      breakindentopt = "sbr",
-      cedit = "<C-y>", -- Enter Command-line Mode from command-mode
-      cmdheight = 1, -- Set command line height to two lines
-      colorcolumn = "80",
-      compatible = false,
-      conceallevel = 2,
-      confirm = true,
-      cpoptions = "aABceFs", -- make `cw` compatible with other `w` operations
-      cursorline = true,
-      cursorlineopt = "both",
-      eadirection = "hor",
-      encoding = "utf-8",
-      expandtab = true,
-      exrc = true, -- Allow project local vimrc files example .nvimrc see :h exrc
-      foldcolumn = "1",
-      foldenable = false,
-      foldexpr = "v:lua.vim.treesitter.foldexpr()",
-      -- foldtext = "", -- NOTE: see plugin/folds.lua
-      foldlevel = 99,
-      foldlevelstart = 99,
-      foldmethod = "expr",
-      foldnestmax = 10, -- 10 nested fold max
-      formatoptions = "jcroqlnt", -- tcqj
-      gdefault = true,
-      guifont = "JetBrainsMono Nerd Font:h15",
-      hlsearch = true,
-      ignorecase = true,
-      lazyredraw = false, -- should make scrolling faster; disabled for noice.nvim
       linebreak = true, -- lines wrap at words rather than random characters
-      list = true,
-      mouse = "",
-
-      mousefocus = true,
-      mousemoveevent = true,
-      number = true,
-      pumheight = 20,
-      pumblend = 0, -- Make popup window translucent
-      relativenumber = true,
-      ruler = false,
-      scrolloff = 9,
-      secure = true, -- Disable autocmd etc for project local vimrc files.
-      shiftwidth = 2,
-      shiftround = true,
-      shortmess = "filnxtToOFWIcC", -- alts: "filnxtToOFWIcC", "tAoOTfFsCsFWcCW"
-      showbreak = string.format("%s ", string.rep("↪", 1)), -- Make it so that long lines wrap smartly; alts: -> '…', '↳ ', '→','↪ '
-      -- showbreak = string.format("  %s ", string.rep("↪", 1)), -- Make it so that long lines wrap smartly; alts: -> '…', '↳ ', '→','↪ '
-      showcmd = true, -- show current mode (insert, etc) under the cmdline
-      showmode = false, -- show current mode (insert, etc) under the cmdline
-      sidescroll = 1,
-      sidescrolloff = 5,
-      -- FIXME: use 'auto:2-4' when the ability to set only a single lsp sign is restored
-      --@see: https://github.com/neovim/neovim/issues?q=set_signs
-      -- vim.o.signcolumn = "auto:2-5",
-      -- vim.osigncolumn = "auto:3-9",
-      signcolumn = "yes:1",
-      shada = [[!,'100,<0,s100,h]],
-      smartcase = true,
-      smoothscroll = true,
-      softtabstop = 2,
+      wrapscan = true,
+      undodir = vim.env.HOME .. "/.vim/undodir",
+      undofile = true,
       splitbelow = true,
       splitright = true,
       splitkeep = "screen",
       startofline = true,
       swapfile = false,
-      switchbuf = "useopen,uselast",
-      synmaxcol = 1024, -- don't syntax highlight long lines
-      tabstop = 2,
-      termguicolors = true,
-      textwidth = 79, -- alts: 0 disables
-      timeout = true,
-      timeoutlen = 500,
-      titlestring = "%{substitute($VIM, '.*[/\\]', '', '')} %{fnamemodify(getcwd(), \":t\")}%( %{v:lua.modified_icon()}%)",
-      titleold = vim.fn.fnamemodify(vim.uv.os_getenv("SHELL"), ":t"),
-      titlelen = 70,
-      -- FIXME: this breaks tmux (vim.o.title); so disabling for now ¯\_(ツ)_/¯
-      title = not vim.g.is_tmux_popup,
-      ttimeoutlen = 10,
-      ttyfast = true, -- more faster scrolling (thanks @morganick!)
-      undodir = vim.env.HOME .. "/.vim/undodir",
-      undofile = true,
-      updatetime = 300,
-      virtualedit = "block,onemore",
-      wildcharm = vim.fn.char2nr(vim.keycode([[<Tab>]])),
-      wildignorecase = true, -- Case insensitive file/directory completion
-      wildmode = "longest:full,full", -- Shows a menu bar as opposed to an enormous list
-      winblend = 0,
-      wrap = false,
-      wrapscan = true,
-      -- wrapmargin = 2,
     },
     opt = {
-      clipboard = { "unnamedplus" },
-      completeopt = { "menu", "menuone", "preview", "noselect", "noinsert" },
-      diffopt = {
-        "vertical",
-        "iwhite",
-        "hiddenoff",
-        "foldcolumn:0",
-        "context:4",
-        "algorithm:histogram",
-        "indent-heuristic",
-        "linematch:60",
+      -- [[ Setting options ]]
+      -- See `:help vim.opt`
+      -- NOTE: You can change these options as you wish!
+      --  For more options, you can see `:help option-list`
+
+      -- Make line numbers default
+      number = true,
+      -- You can also add relative line numbers, to help with jumping.
+      --  Experiment for yourself to see if you like it!
+      relativenumber = true,
+
+      -- Enable mouse mode, can be useful for resizing splits for example!
+      mouse = "a",
+
+      showbreak = string.format("%s ", string.rep("↪", 1)), -- Make it so that long lines wrap smartly; alts: -> '…', '↳ ', '→','↪ '
+      -- Don't show the mode, since it's already in the status line
+      showmode = false,
+      showcmd = false,
+
+      -- Sync clipboard between OS and Neovim.
+      --  Remove this option if you want your OS clipboard to remain independent.
+      --  See `:help 'clipboard'`
+      clipboard = "unnamedplus",
+
+      -- Enable break indent
+      breakindent = true,
+
+      -- Case-insensitive searching UNLESS \C or one or more capital letters in the search term
+      ignorecase = true,
+      smartcase = true,
+
+      -- Keep signcolumn on by default
+      signcolumn = "yes",
+
+      -- Decrease update time
+      updatetime = 250,
+
+      -- Decrease mapped sequence wait time
+      -- Displays which-key popup sooner
+      timeoutlen = 300, -- Configure how new splits should be opened
+
+      -- Sets how neovim will display certain whitespace characters in the editor.
+      --  See `:help 'list'`
+      --  and `:help 'listchars'`
+      list = true,
+      listchars = {
+        eol = nil,
+        tab = "» ", -- alts: »│ │
+        nbsp = "␣",
+        extends = "›", -- alts: … »
+        precedes = "‹", -- alts: … «
+        trail = "·", -- alts: • BULLET (U+2022, UTF-8: E2 80 A2)
       },
+      formatoptions = vim.opt.formatoptions
+        - "a" -- Auto formatting is BAD.
+        - "t" -- Don't auto format my code. I got linters for that.
+        + "c" -- In general, I like it when comments respect textwidth
+        + "q" -- Allow formatting comments w/ gq
+        - "o" -- O and o, don't continue comments
+        + "r" -- But do continue when pressing enter.
+        + "n" -- Indent past the formatlistpat, not underneath it.
+        + "j" -- Auto-remove comments if possible.
+        - "2", -- I'm not in gradeschool anymore
+
       fillchars = {
         horiz = "━",
         vert = "▕", -- alternatives │┃
@@ -249,83 +460,41 @@ M.apply = function()
         eob = " ", -- suppress ~ at EndOfBuffer
         diff = "╱", -- alts: = ⣿ ░ ─
         msgsep = " ", -- alts: ‾ ─
-        foldopen = mega.icons.misc.fold_open, -- alts: ▾
+        foldopen = M.icons.misc.fold_open, -- alts: ▾
         -- foldsep = "│",
         foldsep = " ",
-        foldclose = mega.icons.misc.fold_close, -- alts: ▸
+        foldclose = M.icons.misc.fold_close, -- alts: ▸
         stl = " ", -- alts: ─ ⣿ ░ ▐ ▒▓
         stlnc = " ", -- alts: ─
       },
-      guicursor = {
-        [[n-v-c:block,i-ci-ve:ver25,r-cr:hor20,o:hor50]],
-        [[a:blinkwait700-blinkoff400-blinkon250-Cursor/lCursor]],
-        [[sm:block-blinkwait175-blinkoff150-blinkon175]],
-        -- 'n-v-c-sm:block-Cursor',
-        -- 'i-ci-ve:ver25-iCursor',
-        -- 'r-cr-o:hor20-Cursor',
-        -- 'a:blinkon0',
-      },
-      iskeyword = vim.opt.iskeyword:append("-"),
-      jumpoptions = { "stack", "view" },
-      listchars = {
-        eol = nil,
-        tab = "│ ", -- alts: »│
-        nbsp = "␣",
-        extends = "›", -- alts: … »
-        precedes = "‹", -- alts: … «
-        trail = "·", -- alts: • BULLET (U+2022, UTF-8: E2 80 A2)
-      },
-      mousescroll = { "ver:1", "hor:6" },
-      sessionoptions = {
-        "blank",
-        "buffers",
-        "curdir",
-        "folds",
-        "globals",
-        -- "help",
-        -- "tabpages",
-        "terminal",
-        "winpos",
-        "winsize",
-      },
-      viewoptions = { "cursor", "folds" },
-      wildignore = {
-        "*.aux",
-        "*.out",
-        "*.toc",
-        "*.o",
-        "*.obj",
-        "*.dll",
-        "*.jar",
-        "*.pyc",
-        "*.rbc",
-        "*.class",
-        "*.gif",
-        "*.ico",
-        "*.jpg",
-        "*.jpeg",
-        "*.png",
-        "*.avi",
-        "*.wav",
-        -- Temp/System
-        "*.*~",
-        "*~ ",
-        "*.swp",
-        ".lock",
-        ".DS_Store",
-        "tags.lock",
-      },
-      wildoptions = { "pum", "fuzzy" },
 
-      -- vim.opt.path:append("**") -- Lets `find` search recursively into subfolders
+      diffopt = {
+        "vertical",
+        "iwhite",
+        "hiddenoff",
+        "foldcolumn:0",
+        "context:4",
+        "algorithm:histogram",
+        "indent-heuristic",
+        "linematch:60",
+      },
+
+      -- Preview substitutions live, as you type!
+      inccommand = "split",
+
+      -- Show which line your cursor is on
+      cursorline = true,
+
+      -- Minimal number of screen lines to keep above and below the cursor.
+      scrolloff = 10,
+
+      -- Set highlight on search, but clear on pressing <Esc> in normal mode
+      hlsearch = true,
+
+      -- Tabline
+      tabline = "",
+      showtabline = 0,
     },
-    -- env = {
-    -- -- local in_dotfiles = vim.fn.system("git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME ls-tree --name-only HEAD") ~= ""
-    --   GIT_WORK_TREE = in_dotfiles and vim.env.HOME or vim.env.GIT_WORK_TREE,
-    --   GIT_DIR = in_dotfiles and vim.env.HOME .. "/.dotfiles" or vim.env.GIT_DIR,
-    --   -- for constant paging in Telescope delta commands
-    --   GIT_PAGER = "delta --paging=always",
-    -- },
   }
 
   -- apply the above settings
@@ -389,6 +558,34 @@ M.apply = function()
     },
     -- ['.*tmux.*conf$'] = 'tmux',
   })
+  function vim.pprint(...)
+    local s, args = pcall(vim.deepcopy, { ... })
+    if not s then args = { ... } end
+    vim.schedule_wrap(vim.notify)(vim.inspect(#args > 1 and args or unpack(args)))
+  end
+
+  function vim.pprint(...)
+    local s, args = pcall(vim.deepcopy, { ... })
+    if not s then args = { ... } end
+    vim.schedule_wrap(vim.notify)(vim.inspect(#args > 1 and args or unpack(args)))
+  end
+
+  function vim.lg(...)
+    if vim.in_fast_event() then return vim.schedule_wrap(vim.lg)(...) end
+    local d = debug.getinfo(2)
+    return vim.fn.writefile(
+      vim.fn.split(":" .. d.short_src .. ":" .. d.currentline .. ":\n" .. vim.inspect(#{ ... } > 1 and { ... } or ...), "\n"),
+      "/tmp/nlog",
+      "a"
+    )
+  end
+
+  function vim.lgclear() vim.fn.writefile({}, "/tmp/nlog") end
+
+  vim.api.nvim_create_user_command("Capture", function(opts)
+    vim.fn.writefile(vim.split(vim.api.nvim_exec2(opts.args, { output = true }).output, "\n"), "/tmp/nvim_out.capture")
+    vim.cmd.split("/tmp/nvim_out.capture")
+  end, { nargs = "*", complete = "command" })
 end
 
 return M

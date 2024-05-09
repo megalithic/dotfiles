@@ -2,12 +2,15 @@
 -- plugin ideas; ultimately, I've taken many brilliant ideas from @akinsho and @kassio
 -- and created my own version for my specific needs. they are the real ones here.
 
-if not plugin_loaded("term") then return end
+if not mega then return end
 
 local fmt = string.format
 local api = vim.api
 local fn = vim.fn
 local U = require("mega.utils")
+local augroup = require("mega.autocmds").augroup
+local command = vim.api.nvim_create_user_command
+local nnoremap = function(lhs, rhs, desc) vim.keymap.set("n", lhs, rhs, { buffer = 0, desc = "term: " .. desc }) end
 
 local nil_id = 999999
 local term_win_id = nil_id
@@ -258,14 +261,18 @@ local function set_keymaps(bufnr, direction)
     unset_term(true)
     vim.cmd("wincmd p")
   end
-  if direction ~= "tab" then mega.nmap("q", quit, opts) end
 
-  tnoremap("<esc>", [[<C-\><C-n>]], opts)
-  tnoremap("<C-h>", [[<cmd>wincmd p<cr>]], opts)
-  tnoremap("<C-j>", [[<cmd>wincmd p<cr>]], opts)
-  tnoremap("<C-k>", [[<cmd>wincmd p<cr>]], opts)
-  tnoremap("<C-l>", [[<cmd>wincmd p<cr>]], opts)
-  tnoremap("<C-x>", quit, opts)
+  local nmap = function(lhs, rhs) vim.keymap.set("n", lhs, rhs, opts) end
+  local tmap = function(lhs, rhs) vim.keymap.set("t", lhs, rhs, opts) end
+
+  if direction ~= "tab" then nmap("q", quit) end
+
+  tmap("<esc>", [[<C-\><C-n>]])
+  tmap("<C-h>", [[<cmd>wincmd p<cr>]])
+  tmap("<C-j>", [[<cmd>wincmd p<cr>]])
+  tmap("<C-k>", [[<cmd>wincmd p<cr>]])
+  tmap("<C-l>", [[<cmd>wincmd p<cr>]])
+  tmap("<C-x>", quit)
 end
 
 local function create_term(opts)
@@ -302,9 +309,7 @@ local function create_win(opts)
     api.nvim_command(fmt("%s", opts.new))
     set_term(api.nvim_get_current_win(), api.nvim_get_current_buf(), api.nvim_get_current_tabpage(), opts)
   else
-    api.nvim_command(
-      fmt("%s | wincmd %s | lua vim.api.nvim_win_set_%s(%s, %s)", opts.new, opts.winc, opts.dimension, 0, opts.size)
-    )
+    api.nvim_command(fmt("%s | wincmd %s | lua vim.api.nvim_win_set_%s(%s, %s)", opts.new, opts.winc, opts.dimension, 0, opts.size))
     set_term(api.nvim_get_current_win(), api.nvim_get_current_buf(), nil, opts)
   end
 
@@ -313,7 +318,7 @@ local function create_win(opts)
 end
 
 local function set_autocmds(opts)
-  _G.mega.augroup("megaterm", {
+  augroup("megaterm", {
     {
       event = { "BufEnter" },
       command = function(params)
@@ -434,11 +439,11 @@ end
 
 -- [COMMANDS] ------------------------------------------------------------------
 
-mega.command("T", function(opts) mega.term(opts.args) end, { nargs = "*" })
+command("T", function(opts) mega.term(opts.args) end, { nargs = "*" })
 
 -- [KEYMAPS] ------------------------------------------------------------------
 
-nnoremap("<leader>tt", "<cmd>T direction=horizontal move_on_direction_change=true<cr>", "term")
-nnoremap("<leader>tf", "<cmd>T direction=float move_on_direction_change=true<cr>", "term (float)")
-nnoremap("<leader>tv", "<cmd>T direction=vertical move_on_direction_change=true<cr>", "term (vertical)")
-nnoremap("<leader>tp", "<cmd>T direction=tab<cr>", "term (tab-persistent)")
+nnoremap("<leader>tt", "<cmd>T direction=horizontal move_on_direction_change=true<cr>", "horizontal")
+nnoremap("<leader>tf", "<cmd>T direction=float move_on_direction_change=true<cr>", "float")
+nnoremap("<leader>tv", "<cmd>T direction=vertical move_on_direction_change=true<cr>", "vertical")
+nnoremap("<leader>tp", "<cmd>T direction=tab<cr>", "tab-persistent")

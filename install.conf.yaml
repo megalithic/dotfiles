@@ -107,6 +107,9 @@
     ~/.config/gnupg:
       force: true
       path: config/gnupg
+    ~/.config/ghostty:
+      force: true
+      path: config/ghostty
     ~/.config/helix:
       force: true
       path: config/helix

@@ -18,12 +18,13 @@ return {
     local util = require("zk.util")
     local api = require("zk.api")
     local on_attach = function(_client, bufnr)
+      local command = vim.api.nvim_create_user_command
       zk.command = require("zk.commands")
 
       -- ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
       -- HELPERS
       -- ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
-      local picker_style = _G.picker[vim.g.picker]["ivy"]
+      local picker_style = mega.picker.ivy
       local desc = function(desc) return { desc = desc, silent = true, buffer = bufnr } end
       local function make_edit_fn(defaults, picker_options)
         return function(options)
@@ -49,38 +50,23 @@ return {
       -- ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
       -- COMMANDS
       -- ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
-      mega.command(
-        "ZkToday",
-        function(_) zk.command.get("ZkNew")({ dir = "log/daily" }) end,
-        { desc = "zk: opens or creates zk note for today" }
-      )
-      mega.command(
-        "ZkLog",
-        function(_) get_notes({ hrefs = { "log" }, sort = { "created" } }) end,
-        { desc = "zk: list all the zk log notes" }
-      )
+      command("ZkToday", function(_) zk.command.get("ZkNew")({ dir = "log/daily" }) end, { desc = "zk: opens or creates zk note for today" })
+      command("ZkLog", function(_) get_notes({ hrefs = { "log" }, sort = { "created" } }) end, { desc = "zk: list all the zk log notes" })
       zk.command.add("ZkMultiTags", function(opts)
         get_tags(opts, { title = "zk tags" }, function(tags)
           tags = vim.tbl_map(function(v) return v.name end, tags)
-          get_notes(
-            { tags = tags },
-            { title = "Zk Notes for tag(s) " .. vim.inspect(tags), multi_select = true },
-            function(notes)
-              local cmd = "args"
-              for _, note in ipairs(notes) do
-                cmd = cmd .. " " .. note.absPath
-              end
-              vim.cmd(cmd)
+          get_notes({ tags = tags }, { title = "Zk Notes for tag(s) " .. vim.inspect(tags), multi_select = true }, function(notes)
+            local cmd = "args"
+            for _, note in ipairs(notes) do
+              cmd = cmd .. " " .. note.absPath
             end
-          )
+            vim.cmd(cmd)
+          end)
         end)
       end, { nargs = "?", force = true, complete = "lua" })
 
       zk.command.add("ZkOrphans", make_edit_fn({ orphan = true }, { title = "zk: orphans" }))
-      zk.command.add(
-        "ZkRecents",
-        make_edit_fn({ sort = { "modified" }, createdAfter = "1 week ago" }, { title = "zk: recents" })
-      )
+      zk.command.add("ZkRecents", make_edit_fn({ sort = { "modified" }, createdAfter = "1 week ago" }, { title = "zk: recents" }))
     end
 
     zk.setup({

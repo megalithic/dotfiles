@@ -1,5 +1,8 @@
 local ok, lush = pcall(require, "lush")
-if not ok then return end
+if not ok then
+  print("lush not found, not loading colors")
+  return
+end
 
 local hsluv = lush.hsluv
 local hsl = lush.hsl
@@ -11,10 +14,11 @@ local C = {
 local bg_thicc = "#273433"
 local bg_hard = "#2b3339"
 local bg_medium = "#2b3339"
+local bg_low = "#323d43"
 
 C.transparent = nil
 C.none = "none"
-C.bg0 = hsluv("#323d43") -- #2f3d44 / #323d43
+C.bg0 = hsluv(bg_low) -- #2f3d44 / #323d43
 C.bg1 = C.bg0.lighten(5) -- #3c474d
 C.bg2 = C.bg0.lighten(10) -- #465258
 C.bg3 = C.bg0.lighten(15) -- #505a60

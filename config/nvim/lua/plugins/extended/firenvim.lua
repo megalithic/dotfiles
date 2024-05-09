@@ -1,8 +1,10 @@
 -- TODO:
 -- https://github.com/jfpedroza/dotfiles/blob/master/nvim/after/plugin/firenvim.lua
 -- https://github.com/stevearc/dotfiles/blob/master/.config/nvim/lua/plugins/firenvim.lua
+-- https://github.com/letientai299/dotfiles/blob/master/vim/lua/firenvim_config.lua
+local map = vim.keymap.set
 
-local M = {
+return {
   "glacambre/firenvim",
   lazy = not vim.g.started_by_firenvim,
   cond = vim.g.started_by_firenvim,
@@ -14,6 +16,23 @@ local M = {
     vim.g.firenvim_config = {
       globalSettings = {
         alt = "all",
+      },
+      ignoreKeys = {
+        all = { "<C-->" },
+        normal = {
+          "<D-1>",
+          "<D-2>",
+          "<D-3>",
+          "<D-4>",
+          "<D-5>",
+          "<D-6>",
+          "<D-7>",
+          "<D-8>",
+          "<D-9>",
+          "<D-0>",
+          "<D-t>",
+          "<D-r>",
+        },
       },
       localSettings = {
         [".*"] = {
@@ -95,14 +114,14 @@ local M = {
     end
 
     local function set_lines(bufnr)
-      vim.defer_fn(function()
-        local buflines = vim.api.nvim_buf_line_count(bufnr)
-        if vim.o.lines <= 15 or buflines < 30 then
-          vim.o.lines = 30
-        elseif buflines > 30 then
-          vim.o.lines = buflines
-        end
-      end, 1)
+      -- vim.defer_fn(function()
+      --   local buflines = vim.api.nvim_buf_line_count(bufnr)
+      --   if vim.o.lines <= 15 or buflines < 30 then
+      --     vim.o.lines = 30
+      --   elseif buflines > 30 then
+      --     vim.o.lines = buflines
+      --   end
+      -- end, 1)
     end
 
     local timer = nil
@@ -193,20 +212,62 @@ local M = {
           inoremap <D-r> <nop>
         ]])
 
-        _G.mega.nnoremap(
-          "<Esc>",
-          "<cmd>wall | call firenvim#hide_frame() | call firenvim#press_keys('<LT>Esc>') | call firenvim#focus_page()<CR>"
-        )
-        _G.mega.nnoremap("<C-z>", "<cmd>wall | call firenvim#hide_frame() | call firenvim#focus_input()<CR>")
-        _G.mega.inoremap(
-          "<C-c>",
-          "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR><Esc>norm! ggdGa<CR>"
-        )
-        _G.mega.nnoremap(
-          "<C-c>",
-          "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR><Esc>norm! ggdGa<CR>"
-        )
-        _G.mega.nnoremap("q", "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR><Esc>norm! ggdGa<CR>")
+        vim.api.nvim_set_keymap("", "<D-c>", "\"+y", { noremap = true, silent = true }) -- Copy
+        vim.api.nvim_set_keymap("", "<D-v>", "+p<CR>", { noremap = true, silent = true })
+        vim.api.nvim_set_keymap("!", "<D-v>", "<C-R>+", { noremap = true, silent = true })
+        vim.api.nvim_set_keymap("t", "<D-v>", "<C-R>+", { noremap = true, silent = true })
+        vim.api.nvim_set_keymap("v", "<D-v>", "<C-R>+", { noremap = true, silent = true })
+
+        -- Make navigating long lines easier in the tight view
+        vim.api.nvim_set_keymap("n", "j", "gj", { noremap = true, silent = true })
+        vim.api.nvim_set_keymap("n", "k", "gk", { noremap = true, silent = true })
+
+        -- vim.o.guifont = "IosevkaTerm Nerd Font Light:h12"
+
+        -- disable various UI elements to have more text lines.
+        vim.o.showtabline = 0
+        vim.o.showmode = false
+        vim.o.signcolumn = "no"
+        vim.o.showcmd = false
+        vim.o.linespace = -2
+        -- vim.cmd("colo carbonfox")
+
+        vim.fn.timer_start(100, function()
+          if vim.o.lines < 20 then vim.o.lines = 20 end
+          if vim.o.columns < 120 then vim.o.columns = 120 end
+        end)
+
+        -- vim.api.nvim_create_autocmd({ "UIEnter" }, {
+        -- 	callback = function(event)
+        -- 		local client = vim.api.nvim_get_chan_info(vim.v.event.chan).client
+        -- 		if client ~= nil and client.name == "Firenvim" then
+        -- 			vim.o.laststatus = 0
+        -- 			vim.o.spell = 1
+        -- 		end
+        --
+        -- 		vim.fn.timer_start(100, function()
+        -- 			if vim.o.lines < 20 then
+        -- 				vim.o.lines = 20
+        -- 			end
+        -- 			if vim.o.columns < 120 then
+        -- 				vim.o.columns = 120
+        -- 			end
+        -- 		end)
+        -- 	end,
+        -- })
+        --
+        -- vim.api.nvim_create_autocmd({ "BufEnter" }, {
+        -- 	pattern = { "*" },
+        -- 	callback = function()
+        -- 		vim.o.filetype = "markdown"
+        -- 	end,
+        -- })
+
+        map("n", "<Esc>", "<cmd>wall | call firenvim#hide_frame() | call firenvim#press_keys('<LT>Esc>') | call firenvim#focus_page()<CR>")
+        map("n", "<C-z>", "<cmd>wall | call firenvim#hide_frame() | call firenvim#focus_input()<CR>")
+        map("n", "<C-c>", "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR><Esc>norm! ggdGa<CR>")
+        map("n", "<C-c>", "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR><Esc>norm! ggdGa<CR>")
+        map("n", "q", "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR><Esc>norm! ggdGa<CR>")
 
         -- _G.mega.inoremap("<D-r>", function()
         --   -- local appName = vim.cmd([[!hs -c "hs.application.frontmostApplication():name()"]])
@@ -261,10 +322,10 @@ local M = {
       end
     end
 
-    _G.mega.augroup("Firenvim", {
+    require("mega.autocmds").augroup("Firenvim", {
       {
         event = { "UIEnter" },
-        once = true,
+        -- once = true,
         command = on_uienter,
       },
       {
@@ -281,5 +342,3 @@ local M = {
     })
   end,
 }
-
-return M

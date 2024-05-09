@@ -32,11 +32,11 @@ build() {
   local build_path="$1"
   local build_env="${2:-prod}"
 
-  (mix deps.get \
-      && MIX_ENV="$build_env" mix compile \
-    && MIX_ENV="$build_env" mix elixir_ls.release2 -o "$build_path") \
-    && log_ok "built elixir-ls" \
-    || log_err "building elixir-ls failed"
+  (mix deps.get &&
+    MIX_ENV="$build_env" mix compile &&
+    MIX_ENV="$build_env" mix elixir_ls.release2 -o "$build_path") &&
+    log_ok "built elixir-ls" ||
+    log_err "building elixir-ls failed"
 }
 
 # REF: https://github.com/outstand/atlas/blob/83345ed348ad0b6fb5a8c413b5202f5cfaf5d547/Dockerfile
@@ -61,32 +61,32 @@ do_install() {
   log "downloading and installing to $ELIXIRLS_PATH"
   if [[ $BUILD_TYPE == "archive" ]]; then
     curl -fLO "$TARGET/$BINARY" &&
-    unzip -o "$BINARY" -d "$ELIXIRLS_PATH" &&
-    chmod +x "$ELIXIRLS_PATH/language_server.sh" &&
-    log_ok "unpacked $HOME/$BINARY" &&
-    (rm "$BINARY" && log_ok "removed $HOME/$BINARY") &&
-    log_ok "finished downloading and installing $VERSION elixir-ls to $ELIXIRLS_PATH" ||
-    exit 1
+      unzip -o "$BINARY" -d "$ELIXIRLS_PATH" &&
+      chmod +x "$ELIXIRLS_PATH/language_server.sh" &&
+      log_ok "unpacked $HOME/$BINARY" &&
+      (rm "$BINARY" && log_ok "removed $HOME/$BINARY") &&
+      log_ok "finished downloading and installing $VERSION elixir-ls to $ELIXIRLS_PATH" ||
+      exit 1
   elif [[ $BUILD_TYPE == "source" ]]; then
     cd "$TMP_PATH"
     curl -fLO "$TARGET/$BINARY" &&
-    tar -xvzf "$BINARY" -C "$TMP_PATH" &&
-    log_ok "unpacked $TMP_PATH/$BINARY" &&
-    pushd "$TMP_PATH/elixir-ls-$VERSION" >/dev/null &&
-    mix local.hex --force && mix local.rebar --force &&
-    build "$ELIXIRLS_PATH" "prod" &&
-    popd >/dev/null &&
-    (rm -rf "$TMP_PATH/elixir-ls-$VERSION" && log_ok "removed $TMP_PATH/elixir-ls-$VERSION") &&
-    (rm "$BINARY" && log_ok "removed $TMP_PATH/$BINARY") &&
-    log_ok "finished downloading and installing $VERSION elixir-ls to $ELIXIRLS_PATH" ||
-    exit 1
+      tar -xvzf "$BINARY" -C "$TMP_PATH" &&
+      log_ok "unpacked $TMP_PATH/$BINARY" &&
+      pushd "$TMP_PATH/elixir-ls-$VERSION" >/dev/null &&
+      mix local.hex --force && mix local.rebar --force &&
+      build "$ELIXIRLS_PATH" "prod" &&
+      popd >/dev/null &&
+      (rm -rf "$TMP_PATH/elixir-ls-$VERSION" && log_ok "removed $TMP_PATH/elixir-ls-$VERSION") &&
+      (rm "$BINARY" && log_ok "removed $TMP_PATH/$BINARY") &&
+      log_ok "finished downloading and installing $VERSION elixir-ls to $ELIXIRLS_PATH" ||
+      exit 1
   elif [[ $BUILD_TYPE == "local" ]]; then
     pushd "$TARGET" >/dev/null &&
-    mix local.hex --force && mix local.rebar --force &&
-    build "$ELIXIRLS_PATH" "prod" &&
-    popd >/dev/null &&
-    log_ok "finished building $VERSION elixir-ls to $ELIXIRLS_PATH" ||
-    exit 1
+      mix local.hex --force && mix local.rebar --force &&
+      build "$ELIXIRLS_PATH" "prod" &&
+      popd >/dev/null &&
+      log_ok "finished building $VERSION elixir-ls to $ELIXIRLS_PATH" ||
+      exit 1
   fi
 }
 

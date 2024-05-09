@@ -21,6 +21,8 @@ return {
       local notify = require("notify")
       local base = require("notify.render.base")
       local U = require("mega.utils")
+      local SETTINGS = require("mega.settings")
+      local icons = SETTINGS.icons
 
       -- local stages_util = require("notify.stages.util")
       -- local function initial(direction, opacity)
@@ -253,7 +255,7 @@ return {
           if U.starts_with(msg, "[LSP]") then
             local client, found_client = msg:gsub("^%[LSP%]%[(.-)%] .*", "%1")
             if found_client > 0 then
-              opts.title = ("LSP %s %s"):format(mega.icons.misc.caret_right, client)
+              opts.title = ("LSP %s %s"):format(icons.misc.caret_right, client)
             else
               opts.title = "LSP"
             end

@@ -1,3 +1,6 @@
+local SETTINGS = require("mega.settings")
+local U = require("mega.utils")
+
 local prettier = { "dprint", "prettierd", "prettier" }
 local shfmt = { "shfmt" } -- shellharden
 local timeout_ms = 1500
@@ -78,14 +81,14 @@ return {
       -- if async_format or vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then return end
       if vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then return end
       -- dd("format on save")
-      return { timeout_ms = timeout_ms, lsp_fallback = lsp_fallback, filter = mega.lsp.formatting_filter }
+      return { timeout_ms = timeout_ms, lsp_fallback = lsp_fallback, filter = U.lsp.formatting_filter }
     end,
     -- format_after_save = function(bufnr)
     --   -- local async_format = vim.g.async_format_filetypes[vim.bo[bufnr].filetype]
     --   -- if not async_format or vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then return end
     --   if vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then return end
     --   -- dd("format after save")
-    --   return { timeout_ms = timeout_ms, lsp_fallback = lsp_fallback, filter = mega.lsp.formatting_filter }
+    --   return { timeout_ms = timeout_ms, lsp_fallback = lsp_fallback, filter = U.lsp.formatting_filter }
     -- end,
     user_async_format_filetypes = {
       python = true,
@@ -93,8 +96,6 @@ return {
   },
   init = function() vim.o.formatexpr = "v:lua.require'conform'.formatexpr()" end,
   config = function(_, opts)
-    if vim.g.formatter ~= "conform" then return end
-
     if vim.g.started_by_firenvim then
       opts.format_on_save = false
       opts.format_after_save = false
@@ -102,7 +103,7 @@ return {
     vim.g.async_format_filetypes = opts.user_async_format_filetypes
     require("conform").setup(opts)
 
-    mega.command("ToggleAutoFormat", function()
+    vim.api.nvim_create_user_command("ToggleAutoFormat", function()
       vim.g.disable_autoformat = not vim.g.disable_autoformat
       if vim.g.disable_autoformat then
         vim.notify("Disabled auto-formatting.", L.WARN)
@@ -112,10 +113,10 @@ return {
         -- require("conform").format({
         --   timeout_ms = timeout_ms,
         --   lsp_fallback = lsp_fallback,
-        --   filter = mega.lsp.formatting_filter,
+        --   filter = U.lsp.formatting_filter,
         --   bufnr = 0,
         -- })
       end
-    end)
+    end, {})
   end,
 }

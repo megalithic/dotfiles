@@ -1,4 +1,8 @@
-.cache
-repos
-packer_compiled.vim
-pack/*
+.DS_Store
+tags
+test.sh
+.luarc.json
+nvim
+
+spell/
+lazy-lock.json
