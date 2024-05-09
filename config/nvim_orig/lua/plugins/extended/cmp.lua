@@ -14,7 +14,7 @@ return {
         "rafamadriz/friendly-snippets",
       },
       opts = {
-        friendly_snippets = true,
+        -- friendly_snippets = true,
         -- extended_filetypes = {
         --   eelixir = { "elixir" },
         -- },

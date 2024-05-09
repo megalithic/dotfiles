@@ -16,6 +16,10 @@
         "path": "./eelixir.json"
       },
       {
+        "language": "heex",
+        "path": "./heex.json"
+      },
+      {
         "language": "lua",
         "path": "./lua.json"
       },

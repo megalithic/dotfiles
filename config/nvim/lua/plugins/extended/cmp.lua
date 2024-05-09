@@ -3,46 +3,51 @@ local icons = SETTINGS.icons
 local fmt = string.format
 
 return {
-
-  { -- Autocompletion
+  {
     "hrsh7th/nvim-cmp",
-    event = "InsertEnter",
+    event = { "InsertEnter *", "CmdlineEnter *" },
     dependencies = {
-      -- Snippet Engine & its associated nvim-cmp source
       {
-        "L3MON4D3/LuaSnip",
-        build = (function()
-          -- Build Step is needed for regex support in snippets.
-          -- This step is not supported in many windows environments.
-          -- Remove the below condition to re-enable on windows.
-          if vim.fn.has("win32") == 1 or vim.fn.executable("make") == 0 then return end
-          return "make install_jsregexp"
-        end)(),
+        "saadparwaiz1/cmp_luasnip",
+        cond = vim.g.snipper == "luasnip",
         dependencies = {
-          -- `friendly-snippets` contains a variety of premade snippets.
-          --    See the README about individual language/framework/plugin snippets:
-          --    https://github.com/rafamadriz/friendly-snippets
-          -- {
-          --   'rafamadriz/friendly-snippets',
-          --   config = function()
-          --     require('luasnip.loaders.from_vscode').lazy_load()
-          --   end,
-          -- },
+          {
+            "L3MON4D3/LuaSnip",
+            cond = vim.g.snipper == "luasnip",
+            build = (function()
+              -- Build Step is needed for regex support in snippets.
+              -- This step is not supported in many windows environments.
+              -- Remove the below condition to re-enable on windows.
+              if vim.fn.has("win32") == 1 or vim.fn.executable("make") == 0 then return end
+              return "make install_jsregexp"
+            end)(),
+            dependencies = {
+              -- `friendly-snippets` contains a variety of premade snippets.
+              --    See the README about individual language/framework/plugin snippets:
+              --    https://github.com/rafamadriz/friendly-snippets
+              -- {
+              --   'rafamadriz/friendly-snippets',
+              --   config = function()
+              --     require('luasnip.loaders.from_vscode').lazy_load()
+              --   end,
+              -- },
+            },
+          },
         },
       },
-      { "saadparwaiz1/cmp_luasnip", cond = vim.g.snipper == "luasnip" },
       {
         "garymjr/nvim-snippets",
-        -- cond = vim.g.snipper == "snippets",
+        cond = vim.g.snipper == "snippets",
         dependencies = {
           "rafamadriz/friendly-snippets",
         },
         opts = {
-          friendly_snippets = true,
+          friendly_snippets = false,
           -- extended_filetypes = {
           --   eelixir = { "elixir" },
           -- },
-          search_paths = { vim.fn.stdpath("config") .. "/snippets" },
+          create_autocmd = true,
+          -- search_paths = { vim.fn.stdpath("config") .. "/snippets" },
         },
       },
       { "hrsh7th/cmp-buffer" },
@@ -69,7 +74,6 @@ return {
     init = function() vim.opt.completeopt = { "menu", "menuone", "noinsert", "noselect" } end,
     config = function()
       local cmp = require("cmp")
-      -- local lspkind = require("lspkind")
       local MIN_MENU_WIDTH, MAX_MENU_WIDTH = 25, math.min(50, math.floor(vim.o.columns * 0.5))
 
       local has_words_before = function()
@@ -79,7 +83,9 @@ return {
       local tab = function(fallback)
         if cmp.visible() then
           cmp.select_next_item()
-        elseif vim.snippet.active() and vim.snippet.jumpable(1) then
+        -- elseif vim.snippet.active() and vim.snippet.jumpable(1) then
+        elseif vim.snippet.jumpable(1) then
+          -- vim.snippet.jump(1)
           vim.schedule(function() vim.snippet.jump(1) end)
         elseif has_words_before() then
           cmp.complete()
@@ -90,7 +96,9 @@ return {
       local shift_tab = function(fallback)
         if cmp.visible() then
           cmp.select_prev_item()
+        -- elseif vim.snippet.active() and vim.snippet.jumpable(-1) then
         elseif vim.snippet.jumpable(-1) then
+          -- vim.snippet.jump(-1)
           vim.schedule(function() vim.snippet.jump(-1) end)
         else
           fallback()
@@ -104,6 +112,7 @@ return {
         },
         -- NOTE: read `:help ins-completion`
         completion = { completeopt = "menu,menuone,noinsert,noselect" },
+        entries = { name = "custom", selection_order = "near_cursor" },
         window = {
           -- TODO:
           -- https://github.com/hrsh7th/nvim-cmp/wiki/Menu-Appearance#how-to-get-types-on-the-left-and-offset-the-menu
@@ -116,12 +125,12 @@ return {
             }, ","),
             zindex = 1001,
             col_offset = 0,
-            border = SETTINGS.border, -- alts: mega.get_border(), "none"
+            border = SETTINGS.border,
             side_padding = 1,
             scrollbar = true,
           },
           documentation = cmp.config.window.bordered({
-            border = SETTINGS.border, -- alts: mega.get_border(), "none"
+            border = SETTINGS.border,
             winhighlight = table.concat({
               "Normal:NormalFloat",
               "FloatBorder:FloatBorder",
@@ -186,29 +195,6 @@ return {
               end
             end,
           },
-
-          -- Manually trigger a completion from nvim-cmp.
-          --  Generally you don't need this, because nvim-cmp will display
-          --  completions whenever it has completion options available.
-          ["<C-Space>"] = cmp.mapping.complete({}),
-
-          -- Think of <c-l> as moving to the right of your snippet expansion.
-          --  So if you have a snippet that's like:
-          --  function $name($args)
-          --    $body
-          --  end
-          --
-          -- <c-l> will move you to the right of each of the expansion locations.
-          -- <c-h> is similar, except moving you backwards.
-          -- ["<C-l>"] = cmp.mapping(function()
-          --   if luasnip.expand_or_locally_jumpable() then luasnip.expand_or_jump() end
-          -- end, { "i", "s" }),
-          -- ["<C-h>"] = cmp.mapping(function()
-          --   if luasnip.locally_jumpable(-1) then luasnip.jump(-1) end
-          -- end, { "i", "s" }),
-
-          -- For more advanced Luasnip keymaps (e.g. selecting choice nodes, expansion) see:
-          --    https://github.com/L3MON4D3/LuaSnip?tab=readme-ov-file#keymaps
         }),
 
         formatting = {
@@ -217,6 +203,7 @@ return {
           -- fields = { "abbr", "kind", "menu" },
           fields = { "abbr", "menu", "kind" },
           maxwidth = MAX_MENU_WIDTH,
+          minwidth = MIN_MENU_WIDTH,
           ellipsis_char = icons.misc.ellipsis,
           format = function(entry, item)
             -- -- FIXME: hacky way to deal with not getting completion results for certain lsp clients;
@@ -304,12 +291,39 @@ return {
             return item
           end,
         },
+        sorting = {
+          priority_weight = 2,
+          comparators = {
+            require("cmp_fuzzy_buffer.compare"),
 
+            cmp.config.compare.offset,
+            cmp.config.compare.exact,
+            cmp.config.compare.score,
+
+            -- INFO: sort by number of underscores
+            function(entry1, entry2)
+              local _, entry1_under = entry1.completion_item.label:find("^_+")
+              local _, entry2_under = entry2.completion_item.label:find("^_+")
+              entry1_under = entry1_under or 0
+              entry2_under = entry2_under or 0
+              if entry1_under > entry2_under then
+                return false
+              elseif entry1_under < entry2_under then
+                return true
+              end
+            end,
+
+            cmp.config.compare.kind,
+            cmp.config.compare.sort_text,
+            cmp.config.compare.length,
+            cmp.config.compare.order,
+          },
+        },
         sources = cmp.config.sources({
           { name = "nvim_lsp_signature_help" },
           { name = "snippets", group_index = 1, max_item_count = 5, keyword_length = 1 },
-          -- { name = "luasnip", group_index = 1, max_item_count = 5, keyword_length = 1 },
-          -- { name = "vsnip", group_index = 1, max_item_count = 5, keyword_length = 1 },
+          { name = "luasnip", group_index = 1, max_item_count = 5, keyword_length = 1 },
+          { name = "vsnip", group_index = 1, max_item_count = 5, keyword_length = 1 },
           { name = "nvim_lua" },
           {
             name = "nvim_lsp",
@@ -323,7 +337,7 @@ return {
             end,
           },
           { name = "async_path", option = { trailing_slash = true } },
-          { name = "tmux", option = { all_panes = true } },
+          -- { name = "tmux", option = { all_panes = true } },
         }, {
           {
             name = "fuzzy_buffer",
@@ -382,6 +396,11 @@ return {
           },
           -- { name = "cmdline_history", priority = 10, max_item_count = 3 },
         }),
+      })
+
+      -- no completion suggestions in a git commit
+      cmp.setup.filetype({ "gitcommit", "NeogitCommitMessage" }, {
+        sources = {},
       })
     end,
   },

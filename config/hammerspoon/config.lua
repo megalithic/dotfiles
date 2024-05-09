@@ -1,5 +1,5 @@
 local preferred = {
-  terms = { "kitty", "wezterm", "alacritty", "iTerm", "Terminal.app" },
+  terms = { "ghostty", "wezterm", "kitty", "alacritty", "iTerm", "Terminal.app" },
   browsers = {
     "Brave Browser Nightly",
     "Chromium",
@@ -80,6 +80,7 @@ local quitters = {
   "org.mozilla.firefoxdeveloperedition",
   "com.apple.SafariTechnologyPreview",
   "com.apple.Safari",
+  "com.mitchellh.ghostty",
   "com.github.wez.wezterm", -- stuck with wezterm's built in confirm, need to remove this
 }
 
@@ -129,8 +130,16 @@ local launchers = {
     },
   },
   {
-    key = "k",
+    -- key = "k",
     target = "com.github.wez.wezterm",
+    -- target = {
+    --   "net.kovidgoyal.kitty",
+    --   "com.github.wez.wezterm",
+    -- },
+  },
+  {
+    key = "k",
+    target = "com.mitchellh.ghostty",
     -- target = {
     --   "net.kovidgoyal.kitty",
     --   "com.github.wez.wezterm",
@@ -169,6 +178,13 @@ local layouts = {
   ["com.github.wez.wezterm"] = {
     bundleID = "com.github.wez.wezterm",
     name = "wezterm",
+    rules = {
+      { "", 1, "maximized" },
+    },
+  },
+  ["com.mitchellh.ghostty"] = {
+    bundleID = "com.mitchellh.ghostty",
+    name = "ghostty",
     rules = {
       { "", 1, "maximized" },
     },

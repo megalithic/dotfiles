@@ -50,7 +50,7 @@ ftplugin.extend_all({
 
       local has_wk, wk = pcall(require, "which-key")
       if has_wk then wk.register({
-        ["<localleader>e"] = { name = "+elixir" },
+        ["<localleader>e"] = { name = "[e]lixir" },
       }) end
     end,
   },
