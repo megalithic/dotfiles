@@ -283,8 +283,31 @@ return {
       vim.g.matchup_text_obj_enabled = 1
     end,
   },
-  { "David-Kunz/treesitter-unit", cond = true, dependencies = { "nvim-treesitter/nvim-treesitter" } },
+  {
+    "David-Kunz/treesitter-unit",
+    keys = {
+      { "iu", ":lua require\"treesitter-unit\".select()<CR>", mode = { "x" } },
+      { "iu", ":<c-u>lua require\"treesitter-unit\".select()<CR>", mode = { "o" } },
+      { "au", ":lua require\"treesitter-unit\".select(true)<CR>", mode = { "x" } },
+      { "au", ":<c-u>lua require\"treesitter-unit\".select(true)<CR>", mode = { "o" } },
+    },
+    dependencies = { "nvim-treesitter/nvim-treesitter" },
+  },
   { "yorickpeterse/nvim-tree-pairs", dependencies = { "nvim-treesitter/nvim-treesitter" }, opts = {} },
+  {
+    "laytan/tailwind-sorter.nvim",
+    cond = false,
+    event = "VeryLazy",
+    dependencies = {
+      "nvim-treesitter/nvim-treesitter",
+      "nvim-lua/plenary.nvim",
+    },
+    build = "cd formatter && npm i && npm run build",
+    opts = {
+      on_save_enabled = true,
+      on_save_pattern = { "*.html", "*.js", "*.jsx", "*.tsx", "*.twig", "*.hbs", "*.php", "*.heex" }, -- The file patterns to watch and sort.
+    },
+  },
   {
     "HiPhish/rainbow-delimiters.nvim",
     dependencies = { "nvim-treesitter/nvim-treesitter" },

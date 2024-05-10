@@ -190,6 +190,7 @@ brew "qt" if OS.mac?
 brew "sd"
 brew "shellcheck"
 brew "shfmt"
+brew "sk" # alt to fzf
 brew "ssh-copy-id"
 # brew "stack"
 # brew "starship"
@@ -326,7 +327,7 @@ cask "postbird" if OS.mac?
 cask "raycast" if OS.mac?
 cask "signal"
 cask "slack"
-cask "skim" if OS.mac?
+# cask "skim" if OS.mac?
 cask "soundsource", greedy: true
 cask "spotify"
 # cask "thingsmacsandboxhelper"

@@ -38,6 +38,7 @@ SAVED_SESSION_NAME="${SAVED_SESSION_NAME:-}"
 # -- check for our dependencies..
 [[ -n $TMUX ]] && TMUX_RUNNING="running" || TMUX_RUNNING="not running"
 (command -v fzf &>/dev/null) && FZF_FOUND="installed" || FZF_FOUND="not installed"
+(command -v sk &>/dev/null) && SKIM_FOUND="installed" || SKIM_FOUND="not installed"
 [[ -d "$HOME/.config/tmux/scripts/layouts" ]] && layouts_dir="$HOME/.config/tmux/scripts/layouts" || layouts_dir=""
 
 # -- friendly help if -h option given
@@ -51,6 +52,7 @@ function __help() {
   printf -- "   Dependencies:\n"
   printf -- "     tmux            (%s)\n" "$TMUX_RUNNING"
   printf -- "     fzf             (%s)\n" "$FZF_FOUND"
+  printf -- "     skim (sk)       (%s)\n" "$SKIM_FOUND"
   printf -- "\n"
 
   exit 0
@@ -100,6 +102,7 @@ session_name="${1:-}"
 # -- handle options
 [[ -n $TMUX ]] && change="switch-client" || change="attach-session"
 [[ $POPUP == "true" ]] && fzf_cmd="fzf" || fzf_cmd="fzf-tmux"
+[[ $POPUP == "true" ]] && sk_cmd="sk" || sk_cmd="sk-tmux"
 
 # -- array of available pre-defined layouts
 declare -a layouts
@@ -119,7 +122,8 @@ function get_layouts() {
 
 # -- change to the given existing session
 function to_session() {
-  local session="$1"
+  local session
+  session="$(echo "$1" | sed '/^$/d')"
   tmux "$change" -t "$session"\; refresh-client
 }
 
@@ -145,7 +149,7 @@ function new_session() {
 function try_session() {
   local session
   local cwd
-  session="$1"
+  session="$(echo "$1" | sed '/^$/d')"
 
   # FIXME: zoxide doesn't cut it completely; need to fuzzy find all folders in `$CODE`
   cwd=$(zoxide query "$session" 2>/dev/null || fd -1 "$session" "$CODE")
@@ -173,13 +177,12 @@ function fuzzy_find() {
   # tmux capture-pane -ep -S- -E- -t {}
   # pane_capture="tmux capture-pane -ep -S- -E- -t {}"
   # REF: https://github.com/search?q=repo%3Asainnhe%2Ftmux-fzf%20preview&type=code
-  pane_capture="tmux capture-pane -ep -t {}"
-  # [ "$1" != '[cancel]' ] && [ "$1" != '[current]' ] && echo $1 | sed 's/: .*$//' | xargs -I{} tmux capture-pane -ep -t {}
+  pane_capture="tmux capture-pane -epT -t {}"
 
   preview_lines_of_output=100
   preview_cmd_layout_info="echo {} | sed 's/:.*$//' | xargs -I {} | xargs tmux has-session -t 2>/dev/null && xargs -I {} | echo '$(tput sgr 0 1)$(tput setaf 6) windows in session:$(tput sgr 0)\n' && tmux list-windows -F '░ #{window_index}:#W (#P/#{window_panes}) #(nerdwin #{pane_current_command})' -t {}"
   preview_cmd_preview="echo '$(tput sgr 0 1)$(tput setaf 6) last $preview_lines_of_output lines of output:$(tput sgr 0)\n' && ${pane_capture} | tail -$preview_lines_of_output"
-  preview_cmd="${preview_cmd_layout_info} && echo "" && echo $TERM && echo "" && ${preview_cmd_preview}"
+  preview_cmd="${preview_cmd_layout_info} && echo "" && ${preview_cmd_preview}"
 
   # -- do certain things based upon only one active session
   if [[ $sessions_count == 1 ]]; then
@@ -209,8 +212,10 @@ function fuzzy_find() {
     echo \
       "$fzf_list" |
       "$fzf_cmd" \
+        --ansi \
         --reverse \
         --border=none \
+        --scrollbar='▓' \
         --scrollbar="▌▐" \
         --padding="1" \
         --prompt="$fzf_prompt_text" \
@@ -223,7 +228,9 @@ function fuzzy_find() {
         --bind="?:toggle-preview" \
         --bind="ctrl-u:preview-half-page-up,ctrl-d:preview-half-page-down" \
         --preview="$preview_cmd" \
-        --preview-window="right,55%,," \
+        --preview-window="right:55%:nowrap" \
+        --pointer=' ' \
+        --marker='󰛄 ' \
         --print-query \
         --exit-0 \
         --tac

@@ -225,6 +225,7 @@ return {
     -- },
     {
       "kndndrj/nvim-dbee",
+      cmd = { "Dbee" },
       dependencies = {
         "MunifTanjim/nui.nvim",
       },

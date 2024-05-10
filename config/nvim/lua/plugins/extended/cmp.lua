@@ -313,8 +313,6 @@ return {
             group_index = 1,
             max_item_count = 35,
             entry_filter = function(entry)
-              print(entry.source.source.client.name)
-
               if vim.tbl_contains(SETTINGS.completion_exclusions, entry.source.source.client.name) then return false end
               -- FIXME: breaks Next LS
               -- if cmp.lsp.CompletionItemKind.Snippet ~= entry:get_kind() then return false end

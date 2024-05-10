@@ -173,6 +173,7 @@ local function prepareContextScripts()
               end
             end
           end
+          -- info(hs.inspect(script))
           obj.contextModals[basenameAndBundleID] = script
         end
       end

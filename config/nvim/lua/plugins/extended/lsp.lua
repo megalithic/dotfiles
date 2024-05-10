@@ -149,7 +149,6 @@ return {
         local definition_handler = vim.lsp.handlers["textDocument/definition"]
         vim.lsp.handlers["textDocument/definition"] = function(err, result, ctx, config)
           local client_name = vim.lsp.get_client_by_id(ctx.client_id).name
-          print(client_name)
           -- disables diagnostic reporting for specific clients
           if vim.tbl_contains(SETTINGS.definition_exclusions, client_name) then
             print("returning for " .. client_name)
@@ -824,7 +823,10 @@ return {
   {
     "elixir-tools/elixir-tools.nvim",
     cond = U.lsp.is_enabled_elixir_ls("Next LS") or U.lsp.is_enabled_elixir_ls("ElixirLS"),
-    event = { "BufReadPre", "BufNewFile" },
+    event = {
+      "BufReadPre **.ex,**.exs,**.heex",
+      "BufNewFile **.ex,**.exs,**.heex",
+    },
     config = function()
       local elixir = require("elixir")
       local elixirls = require("elixir.elixirls")
