@@ -43,12 +43,69 @@ return {
     },
     {
       "folke/which-key.nvim",
-      event = "VimEnter", -- Sets the loading event to 'VimEnter'
-      config = function() -- This is the function that runs, AFTER loading
-        require("which-key").setup()
+      event = "VeryLazy",
+      init = function()
+        vim.o.timeout = true
+        vim.o.timeoutlen = 300
+      end,
+      opts = {
+        plugins = {
+          marks = true, -- shows a list of your marks on ' and `
+          registers = true, -- shows your registers on " in NORMAL or <C-r> in INSERT mode
+          -- the presets plugin, adds help for a bunch of default keybindings in Neovim
+          -- No actual key bindings are created
+          spelling = {
+            enabled = true, -- enabling this will show WhichKey when pressing z= to select spelling suggestions
+            suggestions = 20, -- how many suggestions should be shown in the list?
+          },
+          presets = {
+            operators = false, -- adds help for operators like d, y, ... and registers them for motion / text object completion
+            motions = false, -- adds help for motions
+            text_objects = true, -- help for text objects triggered after entering an operator
+            windows = false, -- default bindings on <c-w>
+            nav = true, -- misc bindings to work with windows
+            z = true, -- bindings for folds, spelling and others prefixed with z
+            g = true, -- bindings for prefixed with g
+          },
+        },
+        -- add operators that will trigger motion and text object completion
+        -- to enable all native operators, set the preset / operators plugin above
+        operators = { gc = "Comments" },
+        key_labels = {
+          -- override the label used to display some keys. It doesn't effect WK in any other way.
+          -- For example:
+          ["<space>"] = "SPC",
+          ["<cr>"] = "RET",
+          ["<tab>"] = "TAB",
+        },
+        icons = {
+          breadcrumb = "»", -- symbol used in the command line area that shows your active key combo
+          separator = "➜", -- symbol used between a key and it's label
+          group = "+", -- symbol prepended to a group
+        },
+        window = {
+          border = "none", -- none, single, double, shadow
+          position = "bottom", -- bottom, top
+          margin = { 1, 0, 1, 0 }, -- extra window margin [top, right, bottom, left]
+          padding = { 1, 1, 1, 1 }, -- extra window padding [top, right, bottom, left]
+        },
+        -- window = { border = mega.get_border() },
+        -- layout = { align = "center" },
+        hidden = { ":w", "<silent>", "<cmd>", "<Cmd>", "<CR>", "call", "lua", "^:", "^ " }, -- hide mapping boilerplate
+        show_help = true, -- show help message on the command line when the popup is visible
+        triggers = "auto", -- automatically setup triggers
+        -- triggers = {"<leader>"} -- or specifiy a list manually
+        triggers_blacklist = {
+          n = { ":" },
+          c = { ":" },
+        },
+      },
+      config = function(_, opts) -- This is the function that runs, AFTER loading
+        local wk = require("which-key")
+        wk.setup(opts)
 
         -- Document existing key chains
-        require("which-key").register({
+        wk.register({
           ["<leader>c"] = { name = "[c]ode", _ = "which_key_ignore" },
           ["<leader>d"] = { name = "[d]ocument", _ = "which_key_ignore" },
           ["<leader>e"] = {
@@ -84,7 +141,10 @@ return {
           },
           ["<leader>l"] = {
             name = "[l]sp",
+            c = { name = "[c]ode [a]ctions" },
             i = { name = "[i]nfo" },
+            s = { name = "[s]ymbols" },
+            -- w = { name = "[w]orkspace" },
             _ = "which_key_ignore",
           },
           ["<leader>g"] = { name = "[g]it", _ = "which_key_ignore" },
@@ -92,7 +152,6 @@ return {
           ["<leader>p"] = { name = "[p]lugins", _ = "which_key_ignore" },
           ["<leader>r"] = { name = "[r]ename", _ = "which_key_ignore" },
           ["<leader>t"] = { name = "[t]erminal", _ = "which_key_ignore" },
-          ["<leader>w"] = { name = "[w]orkspace", _ = "which_key_ignore" },
           ["<leader>z"] = { name = "[z]k", _ = "which_key_ignore" },
           ["<localleader>g"] = { name = "[g]it", _ = "which_key_ignore" },
           ["<localleader>h"] = { name = "[h]unk", _ = "which_key_ignore" },
@@ -112,10 +171,22 @@ return {
         { "<A-h>", function() require("smart-splits").resize_left() end },
         { "<A-l>", function() require("smart-splits").resize_right() end },
         -- moving between splits
-        { "<C-h>", function() require("smart-splits").move_cursor_left() end },
+        {
+          "<C-h>",
+          function()
+            require("smart-splits").move_cursor_left()
+            vim.cmd.normal("zz")
+          end,
+        },
         { "<C-j>", function() require("smart-splits").move_cursor_down() end },
         { "<C-k>", function() require("smart-splits").move_cursor_up() end },
-        { "<C-l>", function() require("smart-splits").move_cursor_right() end },
+        {
+          "<C-l>",
+          function()
+            require("smart-splits").move_cursor_right()
+            vim.cmd.normal("zz")
+          end,
+        },
         -- swapping buffers between windows
         { "<leader><leader>h", function() require("smart-splits").swap_buf_left() end, desc = "swap left" },
         { "<leader><leader>j", function() require("smart-splits").swap_buf_down() end, desc = "swap down" },
@@ -225,6 +296,7 @@ return {
     -- },
     {
       "kndndrj/nvim-dbee",
+      cmd = { "Dbee" },
       dependencies = {
         "MunifTanjim/nui.nvim",
       },
@@ -242,6 +314,12 @@ return {
   {
     "nacro90/numb.nvim",
     event = "CmdlineEnter",
+    opts = {},
+  },
+  {
+    "Exafunction/codeium.nvim",
+    cmd = "Codeium",
+    -- build = ":Codeium Auth",
     opts = {},
   },
 }

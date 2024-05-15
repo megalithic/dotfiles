@@ -132,6 +132,7 @@ function obj.paste_ocr_text(image)
   end
 end
 
+--  REF: https://github.com/danielo515/dotfiles/blob/master/chezmoi/dot_hammerspoon/keybinds.lua#L44-L61
 function obj.edit_clipboard_image(image)
   -- Check if an image is in the clipboard
   image = image or hs.pasteboard.readImage()
@@ -148,10 +149,7 @@ function obj.edit_clipboard_image(image)
   -- Open the image in Preview and start annotation
   hs.execute("open -a Preview " .. tmpfile)
 
-  -- hs.timer.doAfter(
-  --   1,
-  --   function() hs.appfinder.appFromName("Preview"):selectMenuItem({ "Tools", "Annotate", "Arrow" }) end
-  -- )
+  hs.timer.doAfter(1, function() hs.application.find("Preview"):selectMenuItem({ "Tools", "Annotate", "Arrow" }) end)
 end
 
 function obj:init(opts)
@@ -208,6 +206,12 @@ function obj:init(opts)
         -- hs.eventtap.keyStrokes(ocr_text)
         -- dbg("ocrText: %s", ocr_text)
       end)
+      -- hs.hotkey.bind({ "cmd", "shift" }, "v", function()
+      --   hs.eventtap.keyStrokes(hs.pasteboard.getContents())
+      --   -- local ocr_text = hs.pasteboard.getContents("ocrText")
+      --   -- hs.eventtap.keyStrokes(ocr_text)
+      --   -- dbg("ocrText: %s", ocr_text)
+      -- end)
     end
   end)
 

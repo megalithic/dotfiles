@@ -88,9 +88,9 @@ function obj.table_merge(t1, t2, opts)
   return t1
 end
 
-function obj.deep_merge(...) obj.table_merge(..., { strategy = "deep" }) end
+function obj.deep_merge(t1, t2) obj.table_merge(t1, t2, { strategy = "deep" }) end
 
-function obj.shallow_merge(...) obj.table_merge(..., { strategy = "shallow" }) end
+function obj.shallow_merge(t1, t2) obj.table_merge(t1, t2, { strategy = "shallow" }) end
 
 function obj.template(template, replacements) return string.gsub(template, "{(.-)}", replacements) end
 
@@ -170,6 +170,24 @@ function obj.truncate(str, width, at_tail)
   end
 
   return shorten(str, width, at_tail)
+end
+
+function obj.paste(str)
+  -- return function()
+  local tempClipboard = hs.pasteboard.uniquePasteboard()
+  hs.pasteboard.writeAllData(tempClipboard, hs.pasteboard.readAllData(nil))
+  hs.pasteboard.writeObjects(str)
+  hs.eventtap.keyStroke({ "cmd" }, "v")
+  hs.pasteboard.writeAllData(nil, hs.pasteboard.readAllData(tempClipboard))
+  hs.pasteboard.deletePasteboard(tempClipboard)
+  -- end
+end
+
+function obj.pasteWith(str, fn)
+  return function()
+    local paste = obj.fnutils.paste(str)
+    fn(paste)
+  end
 end
 
 return obj

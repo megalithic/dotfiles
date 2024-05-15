@@ -1,6 +1,9 @@
-if not plugin_loaded("repls") then return end
+if not mega then return end
 
 local U = require("mega.utils")
+local command = vim.api.nvim_create_user_command
+local fmt = string.format
+local nnoremap = require("mega.mappings").nnoremap
 
 local cmds_by_ft = {
   ["lua"] = function(args)
@@ -31,7 +34,7 @@ local cmds_by_ft = {
   end,
 }
 
-mega.command("TermElixir", function(args)
+command("TermElixir", function(args)
   -- local pre_cmd = ""
   local cmd = "iex"
   -- load up our Deskfile if we have one..
@@ -55,7 +58,7 @@ mega.command("TermElixir", function(args)
   })
 end, { bang = true })
 
-mega.command("TermRuby", function(args)
+command("TermRuby", function(args)
   -- local pre_cmd = ""
   local cmd = ""
   -- if U.root_has_file("Deskfile") then pre_cmd = "eval $(desk load)" end
@@ -80,7 +83,7 @@ mega.command("TermRuby", function(args)
   })
 end, { bang = true })
 
-mega.command("TermLua", function()
+command("TermLua", function()
   local cmd = "lua"
 
   mega.term({
@@ -93,9 +96,9 @@ mega.command("TermLua", function()
       vim.cmd("startinsert")
     end,
   })
-end)
+end, {})
 
-mega.command("TermHammerspoon", function()
+command("TermHammerspoon", function()
   local cmd = "hs"
 
   mega.term({
@@ -108,9 +111,9 @@ mega.command("TermHammerspoon", function()
       vim.cmd("startinsert")
     end,
   })
-end)
+end, {})
 
-mega.command("TermPython", function()
+command("TermPython", function()
   local cmd = "python"
 
   mega.term({
@@ -122,9 +125,9 @@ mega.command("TermPython", function()
       vim.cmd("startinsert")
     end,
   })
-end)
+end, {})
 
-mega.command("TermNode", function(args)
+command("TermNode", function(args)
   local cmd = "node"
   if args.bang then cmd = fmt("node %s", vim.fn.expand("%")) end
 
@@ -139,7 +142,7 @@ mega.command("TermNode", function(args)
   })
 end, { bang = true })
 
-mega.command("TermRepl", function(args)
+command("TermRepl", function(args)
   local bufnr = args.buf or 0
   local ft = vim.bo[bufnr].ft
   local cmd = cmds_by_ft[ft]
@@ -152,8 +155,8 @@ mega.command("TermRepl", function(args)
     cmd = cmd,
     temp = true,
     ---@diagnostic disable-next-line: unused-local
-    on_after_open = function(bufnr, _winnr)
-      vim.api.nvim_buf_set_var(bufnr, "term_cmd", cmd)
+    on_after_open = function(bn, _winnr)
+      vim.api.nvim_buf_set_var(bn, "term_cmd", cmd)
       vim.cmd("startinsert")
     end,
   })

@@ -405,6 +405,18 @@ function obj:start()
       browser.splitTab(true) -- Split tab out and send to new window
       obj:exit()
     end)
+    :bind(keys.mods.casc, "m", function()
+      local app = hs.application.frontmostApplication()
+      -- if app:title() ~= "Safari Technology Preview" then
+      local menuItemTable = { "Window", "Merge All Windows" }
+      if app:findMenuItem(menuItemTable) then
+        app:selectMenuItem(menuItemTable)
+      else
+        warn("Merge All Windows is unsupported for " .. app:bundleID())
+      end
+      -- end
+      obj:exit()
+    end)
     :bind(keys.mods.casc, "i", function()
       obj.debug_window()
       obj:exit()

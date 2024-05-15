@@ -2,16 +2,14 @@
 -- https://github.com/jfpedroza/dotfiles/blob/master/nvim/after/plugin/firenvim.lua
 -- https://github.com/stevearc/dotfiles/blob/master/.config/nvim/lua/plugins/firenvim.lua
 -- https://github.com/letientai299/dotfiles/blob/master/vim/lua/firenvim_config.lua
-local map = vim.keymap.set
 
 return {
   "glacambre/firenvim",
+  -- Explanation: https://github.com/folke/lazy.nvim/discussions/463#discussioncomment-4819297
   lazy = not vim.g.started_by_firenvim,
-  cond = vim.g.started_by_firenvim,
-  -- event = { "BufEnter", "BufReadPre", "UIEnter" },
   build = function() vim.fn["firenvim#install"](0) end,
   config = function()
-    if not vim.g.started_by_firenvim then return end
+    local map = vim.keymap.set
 
     vim.g.firenvim_config = {
       globalSettings = {
@@ -127,7 +125,7 @@ return {
     local timer = nil
     local function throttle_write(delay, bufnr)
       if timer then timer:close() end
-      timer = vim.loop.new_timer()
+      timer = vim.uv.new_timer()
       timer:start(
         delay or 10, -- or 1000?
         0,
@@ -337,7 +335,7 @@ return {
         event = { "FocusLost", "TextChanged", "TextChangedI", "InsertLeave" },
         buffer = vim.api.nvim_get_current_buf(),
         nested = true,
-        command = function(params) write(params, vim.api.nvim_get_current_buf()) end,
+        command = function(params) write(vim.api.nvim_get_current_buf(), params) end,
       },
     })
   end,

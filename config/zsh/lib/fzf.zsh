@@ -29,7 +29,7 @@ export FZF_DEFAULT_OPTS="
 --bind=ctrl-c:abort
 --bind=?:toggle-preview
 --cycle
---preview-window=right:60%:wrap
+--preview-window=right:60%
 --preview='preview {}'
 --margin=0,0
 --padding=0,0
@@ -79,7 +79,7 @@ _fzf_megaforest() {
 # CTRL-Y to copy the command into clipboard using pbcopy
 export FZF_CTRL_R_OPTS="
 --header=\"command history [$(tput setaf 255)ctrl-y$(tput sgr 0): $(tput setaf 245)copy to clipboard$(tput sgr 0)]\"
---preview 'echo {}' --preview-window up:3:wrap
+--preview 'echo {}' --preview-window up:3
 --bind '?:toggle-preview'
 --bind 'ctrl-y:execute-silent(echo -n {2..} | pbcopy)+abort'
 --color header:italic"

@@ -1,8 +1,8 @@
 local preferred = {
   terms = { "ghostty", "wezterm", "kitty", "alacritty", "iTerm", "Terminal.app" },
   browsers = {
-    "Brave Browser Nightly",
     "Chromium",
+    "Brave Browser Nightly",
     "Firefox Developer Edition",
     "Safari",
     "Brave Browser Dev",
@@ -20,7 +20,7 @@ local preferred = {
   vpn = { "Cloudflare WARP" },
 }
 -- preferred["browser"] = hs.urlevent.getDefaultHandler("https")
-preferred["browser"] = preferred["browsers"][1]
+preferred["browser"] = preferred.browsers[1]
 
 local transientApps = {
   -- ["LaunchBar"] = { allowRoles = "AXSystemDialog" },
@@ -64,6 +64,21 @@ local mods = {
 
 local hyper = "F19"
 local ptt = mods.CAsc
+
+local snippets = {
+  [";foo;"] = "🤣",
+  [";user;"] = "megalithic",
+  [";name;"] = "Seth Messer",
+  [";date;"] = function() return os.date("%B %d, %Y", os.time()) end,
+  [";email;"] = "seth@megalithic.io",
+  [";meet;"] = "https://zoom.us/12345678",
+  [";address;"] = "9300 Corporate Blvd, Apt 1135, Rockville, MD 20850",
+  [";@@"] = "seth.messer@gmail.com",
+  [";@@@"] = "seth@ternit.com",
+  [";@@@@"] = "seth@megalithic.io",
+  ["Rene"] = "René",
+  [";rene"] = "René",
+}
 
 --- @class QuitterOpts
 --- @field [1] string
@@ -170,6 +185,7 @@ local layouts = {
   },
   ["net.kovidgoyal.kitty"] = {
     bundleID = "net.kovidgoyal.kitty",
+    tags = { "terms" },
     name = "kitty",
     rules = {
       { "", 1, "maximized" },
@@ -177,6 +193,7 @@ local layouts = {
   },
   ["com.github.wez.wezterm"] = {
     bundleID = "com.github.wez.wezterm",
+    tags = { "terms" },
     name = "wezterm",
     rules = {
       { "", 1, "maximized" },
@@ -184,6 +201,7 @@ local layouts = {
   },
   ["com.mitchellh.ghostty"] = {
     bundleID = "com.mitchellh.ghostty",
+    tags = { "terms" },
     name = "ghostty",
     rules = {
       { "", 1, "maximized" },
@@ -240,7 +258,6 @@ local layouts = {
   ["org.chromium.Chromium"] = {
     bundleID = "org.chromium.Chromium",
     name = "Chromium",
-    quitter = true,
     tags = { "browsers" },
     rules = {
       { "", 1, "maximized" },
@@ -469,4 +486,5 @@ return {
   ["transientApps"] = transientApps,
   ["dock"] = dock,
   ["quitters"] = quitters,
+  ["snippets"] = snippets,
 }

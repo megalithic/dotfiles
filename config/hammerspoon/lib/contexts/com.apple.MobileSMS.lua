@@ -4,7 +4,7 @@ local Settings = require("hs.settings")
 local mods = C.keys.mods
 
 local obj = {}
-local _appObj = nil
+local appObj = nil
 local _appModal = nil
 
 obj.__index = obj
@@ -13,8 +13,8 @@ obj.debug = true
 
 local function chooserCallback(choice) os.execute(string.format([["/usr/bin/open" "%s"]], choice.text)) end
 
-local function getChatMessageLinks(appObj)
-  local linkElements = UI.getUIElement(appObj:mainWindow(), {
+local function getChatMessageLinks(app)
+  local linkElements = UI.getUIElement(app:mainWindow(), {
     { "AXSplitGroup", 1 },
     { "AXScrollArea", 2 },
     { "AXWebArea", 1 },
@@ -31,7 +31,7 @@ end
 obj.modal = true
 obj.actions = {
   getMessageLinks = {
-    action = function() getChatMessageLinks(_appObj) end,
+    action = function() getChatMessageLinks(appObj) end,
     hotkey = { "alt", "o" },
   },
   nextConversation = {
@@ -65,7 +65,7 @@ obj.actions = {
 
 function obj:start(opts)
   opts = opts or {}
-  _appObj = opts["appObj"]
+  appObj = opts["appObj"]
   local event = opts["event"]
 
   if event == hs.application.watcher.activated then
@@ -79,7 +79,7 @@ function obj:stop(opts)
   opts = opts or {}
   local event = opts["event"]
 
-  obj.modal:exit()
+  if obj.modal ~= nil then obj.modal:exit() end
 
   return self
 end

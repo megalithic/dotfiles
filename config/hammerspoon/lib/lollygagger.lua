@@ -28,8 +28,11 @@ obj.quitAfter = function(app, interval, event)
       if cache.timers[bundleID] ~= nil then cache.timers[bundleID]:stop() end
 
       if event == hs.application.watcher.deactivated then
-        note(fmt("[lollygagger.quit] %s %s %s", app, interval, U.eventName(event)))
-        cache.timers[bundleID] = hs.timer.doAfter((interval * 60), function() killApp(app) end)
+        note(fmt("[lollygagger.quit(%s)] will quit %s after %sm", U.eventName(event), app:bundleID(), interval))
+        cache.timers[bundleID] = hs.timer.doAfter((interval * 60), function()
+          killApp(app)
+          note(fmt("[lollygagger.quit] killing %s", app:bundleID()))
+        end)
       end
     end
   else
@@ -45,8 +48,11 @@ obj.hideAfter = function(app, interval, event)
       if cache.timers[bundleID] ~= nil then cache.timers[bundleID]:stop() end
 
       if event == hs.application.watcher.deactivated then
-        note(fmt("[lollygagger.hide] %s %s %s", app, interval, U.eventName(event)))
-        cache.timers[bundleID] = hs.timer.doAfter((interval * 60), function() app:hide() end)
+        note(fmt("[lollygagger.hide(%s)] will hide %s after %sm", U.eventName(event), app:bundleID(), interval))
+        cache.timers[bundleID] = hs.timer.doAfter((interval * 60), function()
+          app:hide()
+          note(fmt("[lollygagger.hide] hiding %s", app:bundleID()))
+        end)
       end
     end
   else

@@ -7,6 +7,7 @@ obj.__index = obj
 obj.name = "browser"
 obj.debug = false
 obj.browsers = C.preferred.browsers
+local browser = hs.application.get(Settings.get("group.browsers") or C.preferred.browser or obj.browsers[1])
 
 local dbg = function(str, ...)
   str = string.format(":: [%s] %s", obj.name, str)
@@ -14,7 +15,6 @@ local dbg = function(str, ...)
 end
 
 function obj.hasTab(url)
-  local browser = hs.application.get(C.preferred.browser)
   if browser and hs.fnutils.contains(obj.browsers, browser:name()) then
     local _status, returnedObj, _descriptor = hs.osascript.javascript([[
     (function() {
@@ -35,7 +35,6 @@ function obj.hasTab(url)
 end
 
 function obj.jump(url)
-  local browser = hs.application.get(C.preferred.browser)
   if browser and hs.fnutils.contains(obj.browsers, browser:name()) then
     local _success, object, _output = hs.osascript.javascript([[
     (function() {
@@ -61,7 +60,6 @@ function obj.jump(url)
 end
 
 function obj.splitTab(to_next_screen)
-  local browser = hs.application.get(C.preferred.browser)
   if not snap then
     warn("snap module not found..")
     return
@@ -72,7 +70,7 @@ function obj.splitTab(to_next_screen)
 
   hs.timer.doAfter(0.25, function()
     local supportedBrowsers =
-      { "Brave Browser Nightly", "Brave Browser Dev", "Brave Browser", "Brave Browser Beta", "Safari" }
+      { "Chromium", "Brave Browser Nightly", "Brave Browser Dev", "Brave Browser", "Brave Browser Beta", "Safari" }
 
     if browser and hs.fnutils.contains(supportedBrowsers, browser:name()) then
       dbg("(splitTab) %s", browser:name())
@@ -95,7 +93,6 @@ function obj.splitTab(to_next_screen)
 end
 
 function obj.killTabsByDomain(domain)
-  local browser = hs.application.get(C.preferred.browser)
   if browser and hs.fnutils.contains(obj.browsers, browser:name()) then
     hs.osascript.javascript([[
     (function() {

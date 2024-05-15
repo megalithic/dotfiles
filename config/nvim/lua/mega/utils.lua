@@ -482,6 +482,12 @@ function M.qf_populate(lines, opts)
   end
 end
 
+function M.root_has_file(name)
+  local cwd = vim.uv.cwd()
+  local lsputil = require("lspconfig.util")
+  return lsputil.path.exists(lsputil.path.join(cwd, name)), lsputil.path.join(cwd, name)
+end
+
 --[[
 -- HIGHLIGHTS -----------------------------------------------------------------
 --]]

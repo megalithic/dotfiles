@@ -26,7 +26,7 @@ hs.keycodes.log.setLogLevel("error")
 hs.logger.defaultLogLevel = "error"
 
 window.animationDuration = 0
--- window.highlight.ui.overlay = true
+window.highlight.ui.overlay = false
 window.setShadows(false)
 
 ipc.cliUninstall()
@@ -41,11 +41,12 @@ L.load("lib.bindings"):start()
 L.load("lib.menubar.ptt"):start()
 L.load("lib.menubar.spotify"):start()
 L.load("lib.menubar.keycastr")
+L.load("spoons")
 L.load("lib.watchers", { watchers = { "status", "bluetooth", "dock", "audio", "wifi", "url", "downloads" } }):start()
 L.load("lib.wm"):start()
 L.load("lib.quitter"):start({ mode = "double" })
 L.load("lib.clipper")
-L.load("spoons")
+-- L.load("lib.snipper"):start(C.snippets)
 
 -- [ UNLOADERS ] ---------------------------------------------------------------
 
