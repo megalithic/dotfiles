@@ -194,10 +194,10 @@ return {
         end, "[g]oto [d]efinition (split)")
         map("gr", require("telescope.builtin").lsp_references, "[g]oto [r]eferences")
         map("gI", require("telescope.builtin").lsp_implementations, "[g]oto [i]mplementation")
-        map("<leader>D", require("telescope.builtin").lsp_type_definitions, "type [d]efinition")
-        map("<leader>ds", require("telescope.builtin").lsp_document_symbols, "[d]ocument [s]ymbols")
-        map("<leader>dS", require("telescope.builtin").lsp_dynamic_workspace_symbols, "[w]orkspace [s]ymbols")
-        map("<leader>ca", vim.lsp.buf.code_action, "[c]ode [a]ction")
+        map("<leader>ltd", require("telescope.builtin").lsp_type_definitions, "[t]ype [d]efinition")
+        map("<leader>lsd", require("telescope.builtin").lsp_document_symbols, "[d]ocument [s]ymbols")
+        map("<leader>lsw", require("telescope.builtin").lsp_dynamic_workspace_symbols, "[w]orkspace [s]ymbols")
+        map("<leader>lca", vim.lsp.buf.code_action, "[c]ode [a]ctions")
         map("K", vim.lsp.buf.hover, "hover documentation")
         -- map("gD", vim.lsp.buf.declaration, "[g]oto [d]eclaration (e.g. to a header file in C)")
         map("<leader>rn", function()
@@ -608,7 +608,7 @@ return {
           orig_signs_handler.show(ns, bn, filtered_diagnostics, opts)
         end
 
-        if vim.tbl_contains(vim.g.max_diagnostic_exclusions, client.name) then
+        if vim.tbl_contains(SETTINGS.max_diagnostic_exclusions, client.name) then
           vim.diagnostic.handlers.signs = orig_signs_handler
         else
           vim.diagnostic.handlers.signs = vim.tbl_extend("force", orig_signs_handler, {
@@ -635,93 +635,10 @@ return {
 
       local lspconfig = require("lspconfig")
 
-      -- capabilities = <1>{
-      --   general = {
-      --     positionEncodings = { "utf-16" }
-      --   },
-      --   textDocument = {
-      --     callHierarchy = {
-      --       dynamicRegistration = false
-      --     },
-      --     codeAction = {
-      --       codeActionLiteralSupport = {
-      --         codeActionKind = {
-      --           valueSet = { "", "quickfix", "refactor", "refactor.extract", "refactor.inline", "refactor.rewrite", "source", "source.organizeImports" }
-      --         }
-      --       },
-      --       dataSupport = true,
-      --       dynamicRegistration = true,
-      --       isPreferredSupport = true,
-      --       resolveSupport = {
-      --         properties = { "edit" }
-      --       }
-      --     },
-      --     completion = {
-      --       completionItem = {
-      --         commitCharactersSupport = false,
-      --         deprecatedSupport = false,
-      --         documentationFormat = { "markdown", "plaintext" },
-      --         preselectSupport = false,
-      --         snippetSupport = false
-      --       },
-      --       completionItemKind = {
-      --         valueSet = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 }
-      --       },
-      --       completionList = {
-      --         itemDefaults = { "editRange", "insertTextFormat", "insertTextMode", "data" }
-      --       },
-      --       contextSupport = false,
-      --       dynamicRegistration = false
-      --     },
-
-      -- LSP servers and clients are able to communicate to each other what features they support.
-      --  By default, Neovim doesn't support everything that is in the LSP specification.
-      --  When you add nvim-cmp, luasnip, etc. Neovim now has *more* capabilities.
-      --  So, we create new capabilities with nvim cmp, and then broadcast that to the servers.
       M.capabilities = vim.lsp.protocol.make_client_capabilities()
       M.capabilities.textDocument.completion.completionItem.snippetSupport = true
-      -- M.capabilities = vim.tbl_deep_extend("force", M.capabilities, require("cmp_nvim_lsp").default_capabilities(capabilities))
-      M.capabilities = require("cmp_nvim_lsp").default_capabilities(M.capabilities)
-      -- M.capabilities = require("cmp_nvim_lsp").default_capabilities()
+      if pcall(require, "cmp_nvim_lsp") then M.capabilities = require("cmp_nvim_lsp").default_capabilities(M.capabilities) end
 
-      -- Enable the following language servers
-      --  Feel free to add/remove any LSPs that you want here. They will automatically be installed.
-      --
-      --  Add any additional override configuration in the following tables. Available keys are:
-      --  - cmd (table): Override the default command used to start the server
-      --  - filetypes (table): Override the default list of associated filetypes for the server
-      --  - capabilities (table): Override fields in capabilities. Can be used to disable certain LSP features.
-      --  - settings (table): Override the default settings passed when initializing the server.
-      --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
-      -- local servers = {
-      --   -- clangd = {},
-      --   -- gopls = {},
-      --   -- pyright = {},
-      --   -- rust_analyzer = {},
-      --   -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
-      --   --
-      --   -- Some languages (like typescript) have entire language plugins that can be useful:
-      --   --    https://github.com/pmizio/typescript-tools.nvim
-      --   --
-      --   -- But for many setups, the LSP (`tsserver`) will work just fine
-      --   -- tsserver = {},
-      --   --
-      --
-      --   lua_ls = {
-      --     -- cmd = {...},
-      --     -- filetypes = { ...},
-      --     -- capabilities = {},
-      --     settings = {
-      --       Lua = {
-      --         completion = {
-      --           callSnippet = 'Replace',
-      --         },
-      --         -- You can toggle below to ignore Lua_LS's noisy `missing-fields` warnings
-      --         -- diagnostics = { disable = { 'missing-fields' } },
-      --       },
-      --     },
-      --   },
-      -- }
       local servers = require("mega.servers")
       if servers == nil then return end
 
@@ -741,12 +658,6 @@ return {
         return config
       end
 
-      -- Ensure the servers and tools above are installed
-      --  To check the current status of installed tools and/or manually install
-      --  other tools, you can run
-      --    :Mason
-      --
-      --  You can press `g?` for help in this menu.
       local tools = {
         "luacheck",
         "prettier",
@@ -776,11 +687,9 @@ return {
         if not p:is_installed() then p:install() end
       end
 
-      -- You can add other tools here that you want Mason to install
-      -- for you, so that they are available from within Neovim.
-      local ensure_installed = vim.tbl_keys(servers.list or {})
-
-      vim.list_extend(ensure_installed, {
+      -- will try and install the language servers defined in servers.lua..
+      -- in addition to the others..
+      local ensure_installed = {
         "black",
         "eslint_d",
         "isort",
@@ -788,7 +697,10 @@ return {
         "prettierd",
         "ruff",
         "stylua",
-      })
+      }
+      ensure_installed = vim.list_extend(vim.tbl_keys(servers.list or {}), ensure_installed)
+      ensure_installed = vim.tbl_filter(function(server) return not vim.tbl_contains(SETTINGS.controlled_language_servers, server) end, ensure_installed)
+
       require("mason-tool-installer").setup({ ensure_installed = ensure_installed })
 
       require("mason-lspconfig").setup({
@@ -814,7 +726,6 @@ return {
         desc = "lsp: open output panel",
       },
     },
-    cond = false,
     event = "VeryLazy",
     cmd = { "OutputPanel" },
     config = function() require("output_panel").setup() end,
@@ -830,7 +741,7 @@ return {
     config = function()
       local elixir = require("elixir")
       local elixirls = require("elixir.elixirls")
-      local cmd = function(use_homebrew)
+      local cmd = function()
         local arch = {
           ["arm64"] = "arm64",
           ["aarch64"] = "arm64",

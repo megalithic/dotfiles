@@ -1,4 +1,12 @@
 {
+  "%= inspect": {
+    "prefix": [
+      "insp"
+    ],
+    "body": [
+      "<%= inspect($1) %>"
+    ]
+  },
   "inspect": {
     "prefix": "lin",
     "body": [

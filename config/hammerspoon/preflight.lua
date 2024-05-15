@@ -38,24 +38,44 @@ local getInfo = function()
   local lineinfo = fmt("%s:%s: ", info.short_src, info.currentline)
   return ""
 end
-function _G.info(msg, tag)
-  tag = tag and "[INFO] " or ""
+
+function _G.note(msg, tag1, tag2)
+  local tag = tag2 and "[NOTE] " or ""
+  tag1 = type(tag1) == "table" and I(tag1) or tag1
+  msg = type(msg) == "table" and I(msg) or string.format("%s%s", msg, tag1 and " " .. tag1 or "")
+
+  hs.console.printStyledtext(stext(ts() .. " -> " .. tag .. msg, {
+    color = { hex = "#444444", alpha = 1 },
+    font = defaultFont,
+  }))
+end
+
+function _G.info(msg, tag1, tag2)
+  local tag = tag2 and "[INFO] " or ""
+  tag1 = type(tag1) == "table" and I(tag1) or tag1
+  msg = type(msg) == "table" and I(msg) or string.format("%s%s", msg, tag1 and " " .. tag1 or "")
+
   hs.console.printStyledtext(stext(ts() .. " -> " .. tag .. msg, {
     color = { hex = "#51afef", alpha = 0.65 },
     font = defaultFont,
   }))
 end
 
-function _G.success(msg, tag)
-  tag = tag and "[OK] " or ""
+function _G.success(msg, tag1, tag2)
+  local tag = tag2 and "[SUCCESS] " or ""
+  tag1 = type(tag1) == "table" and I(tag1) or tag1
+  msg = type(msg) == "table" and I(msg) or string.format("%s%s", msg, tag1 and " " .. tag1 or "")
+
   hs.console.printStyledtext(stext(ts() .. " -> " .. tag .. msg, {
     color = { hex = "#a7c080", alpha = 1 },
     font = defaultFont,
   }))
 end
 
-function _G.error(msg, tag)
-  tag = tag and "[ERROR] " or ""
+function _G.error(msg, tag1, tag2)
+  local tag = tag2 and "[ERROR] " or ""
+  tag1 = type(tag1) == "table" and I(tag1) or tag1
+  msg = type(msg) == "table" and I(msg) or string.format("%s%s", msg, tag1 and " " .. tag1 or "")
 
   hs.console.printStyledtext(stext(ts() .. " -> " .. tag .. getInfo() .. msg, {
     color = { hex = "#c43e1f", alpha = 1 },
@@ -63,32 +83,29 @@ function _G.error(msg, tag)
   }))
 end
 
-function _G.warn(msg, tag)
-  tag = tag and "[WARN] " or ""
+function _G.warn(msg, tag1, tag2)
+  local tag = tag2 and "[WARN] " or ""
+  tag1 = type(tag1) == "table" and I(tag1) or tag1
+  msg = type(msg) == "table" and I(msg) or string.format("%s%s", msg, tag1 and " " .. tag1 or "")
+
+  -- tag = tag and "[WARN] " or ""
   hs.console.printStyledtext(stext(ts() .. " -> " .. tag .. msg, {
     color = { hex = "#FF922B", alpha = 1 },
     font = defaultFont,
   }))
 end
 
-function _G.dbg(msg, tag)
+function _G.dbg(msg, tag1, tag2)
   if not _G.debug_enabled then return end
 
-  tag = tag and "[DEBUG] " or "[DEBUG] "
-  msg = type(msg) == "table" and I(msg) or msg
+  local tag = tag2 and "[DEBUG] " or "[DEBUG] "
+  tag1 = type(tag1) == "table" and I(tag1) or tag1
+  msg = type(msg) == "table" and I(msg) or string.format("%s%s", msg, tag1 and " " .. tag1 or "")
 
   -- hs.console.printStyledtext(stext(ts() .. " -> " .. tag .. getInfo() .. msg, {
   hs.console.printStyledtext(stext(ts() .. " -> " .. tag .. msg, {
     color = { hex = "#dddddd", alpha = 1 },
     backgroundColor = { hex = "#222222", alpha = 1 },
-    font = defaultFont,
-  }))
-end
-
-function _G.note(msg, tag)
-  tag = tag and "[NOTE] " or ""
-  hs.console.printStyledtext(stext(ts() .. " -> " .. tag .. msg, {
-    color = { hex = "#444444", alpha = 1 },
     font = defaultFont,
   }))
 end

@@ -643,8 +643,10 @@ local theme = lush(function(injected_functions)
     ---- :help treesitter-context ----------------------------------------------
 
     TreesitterContext({ bg = C.bg1 }),
-    -- TreesitterContextLineNumber({ CursorLineNr, bg = TreesitterContext.bg, gui = C.transparent }),
-    TreesitterContextSeparator({ fg = C.bg_dark, bg = TreesitterContext.bg }),
+    TreesitterContextLineNumber({ fg = LineNr.fg.li(20), bg = TreesitterContext.bg, gui = "bold,italic" }),
+    TreesitterContextBottom({ sp = C.bg_dark.da(20), bg = C.bg1, gui = "" }),
+    TreesitterContextLineNumberBottom({ sp = C.bg_dark.da(20), bg = C.bg1, gui = "" }),
+    TreesitterContextSeparator({ fg = TreesitterContext.bg.da(15), bg = C.transparent }),
 
     -- TS: Markdown
     -- sym("@markdown.punct.special") {Special},

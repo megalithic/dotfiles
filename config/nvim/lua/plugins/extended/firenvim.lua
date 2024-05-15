@@ -125,7 +125,7 @@ return {
     local timer = nil
     local function throttle_write(delay, bufnr)
       if timer then timer:close() end
-      timer = vim.loop.new_timer()
+      timer = vim.uv.new_timer()
       timer:start(
         delay or 10, -- or 1000?
         0,
@@ -335,7 +335,7 @@ return {
         event = { "FocusLost", "TextChanged", "TextChangedI", "InsertLeave" },
         buffer = vim.api.nvim_get_current_buf(),
         nested = true,
-        command = function(params) write(params, vim.api.nvim_get_current_buf()) end,
+        command = function(params) write(vim.api.nvim_get_current_buf(), params) end,
       },
     })
   end,

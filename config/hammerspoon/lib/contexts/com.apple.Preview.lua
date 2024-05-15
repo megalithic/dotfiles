@@ -11,9 +11,13 @@ obj.actions = {
     action = function() appObj:selectMenuItem({ "Tools", "Rectangular Selection" }) end,
     hotkey = { "ctrl", "r" },
   },
-  cropSelection = {
+  cropSelectionK = {
     action = function() appObj:selectMenuItem({ "Tools", "Crop" }) end,
     hotkey = { "ctrl", "k" },
+  },
+  cropSelectionT = {
+    action = function() appObj:selectMenuItem({ "Tools", "Crop" }) end,
+    hotkey = { "ctrl", "t" },
   },
 }
 

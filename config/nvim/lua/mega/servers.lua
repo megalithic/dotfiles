@@ -51,6 +51,23 @@ M.list = {
       },
     },
   },
+  lexical = function()
+    if not U.lsp.is_enabled_elixir_ls("lexical") then return nil end
+
+    local function cmd() return vim.env.XDG_DATA_HOME .. "/lsp/lexical/_build/dev/package/lexical/bin/start_lexical.sh" end
+
+    return {
+      cmd = vim.env.XDG_DATA_HOME .. "/lsp/lexical/_build/dev/package/lexical/bin/start_lexical.sh",
+      single_file_support = true,
+      filetypes = { "elixir", "eelixir", "heex", "surface" },
+      root_dir = root_pattern("mix.exs", ".git"), -- or vim.loop.os_homedir(),
+      log_level = vim.lsp.protocol.MessageType.Log,
+      message_level = vim.lsp.protocol.MessageType.Log,
+      settings = {
+        dialyzerEnabled = true,
+      },
+    }
+  end,
   elixirls = function()
     if not U.lsp.is_enabled_elixir_ls("elixirls") then return nil end
 
@@ -64,14 +81,20 @@ M.list = {
 
         return root_dir
       end,
+      single_file_support = true,
       settings = {
-        -- mixEnv = "dev",
-        fetchDeps = false,
+        mixEnv = "dev",
+        autoBuild = true,
+        fetchDeps = true,
+        incrementalDialyzer = true,
         dialyzerEnabled = true,
-        dialyzerFormat = "dialyxir_short",
+        -- dialyzerFormat = "dialyxir_long",
         enableTestLenses = true,
         suggestSpecs = true,
+        autoInsertRequiredAlias = true,
+        signatureAfterComplete = true,
       },
+      -- on_attach = function(client, buffer) vim.pprint({ client, buffer }) end,
     }
   end,
   elmls = {},
@@ -521,29 +544,29 @@ M.list = {
 }
 
 M.contrib = {
-  lexical = function(server_name)
-    server_name = server_name or "lexical"
-    if not U.lsp.is_enabled_elixir_ls("lexical") then return nil end
-    local configs = require("lspconfig.configs")
-
-    -- if not configs[server_name] then
-    local function cmd() return { vim.env.XDG_DATA_HOME .. "/lsp/lexical/_build/dev/package/lexical/bin/start_lexical.sh" } end
-
-    configs[server_name] = {
-      default_config = {
-        cmd = cmd(),
-        single_file_support = true,
-        filetypes = { "elixir", "eelixir", "heex", "surface" },
-        root_dir = root_pattern("mix.exs", ".git"), -- or vim.loop.os_homedir(),
-        log_level = vim.lsp.protocol.MessageType.Log,
-        message_level = vim.lsp.protocol.MessageType.Log,
-        settings = {
-          dialyzerEnabled = true,
-        },
-      },
-    }
-    -- end
-  end,
+  -- lexical = function(server_name)
+  --   server_name = server_name or "lexical"
+  --   if not U.lsp.is_enabled_elixir_ls("lexical") then return nil end
+  --   local configs = require("lspconfig.configs")
+  --
+  --   -- if not configs[server_name] then
+  --   local function cmd() return { vim.env.XDG_DATA_HOME .. "/lsp/lexical/_build/dev/package/lexical/bin/start_lexical.sh" } end
+  --
+  --   configs[server_name] = {
+  --     default_config = {
+  --       cmd = cmd(),
+  --       single_file_support = true,
+  --       filetypes = { "elixir", "eelixir", "heex", "surface" },
+  --       root_dir = root_pattern("mix.exs", ".git"), -- or vim.loop.os_homedir(),
+  --       log_level = vim.lsp.protocol.MessageType.Log,
+  --       message_level = vim.lsp.protocol.MessageType.Log,
+  --       settings = {
+  --         dialyzerEnabled = true,
+  --       },
+  --     },
+  --   }
+  --   -- end
+  -- end,
   nextls = function(server_name)
     server_name = server_name or "nextls"
     if not U.lsp.is_enabled_elixir_ls(server_name) then return end

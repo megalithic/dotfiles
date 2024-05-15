@@ -88,6 +88,7 @@ local M = {
     "folds",
     "env",
   },
+  controlled_language_servers = { "ElixirLS", "Next LS", "elixirls", "nextls", "lexical" },
   disabled_lsp_formatters = { "tailwindcss", "html", "tsserver", "ls_emmet", "zk", "sumneko_lua" },
   -- REF: elixir language servers: { ElixirLS, Next LS, elixirls, nextls, lexical }
   enabled_elixir_ls = { "", "Next LS", "", "", "" },
@@ -348,12 +349,6 @@ M.apply = function()
       completer = M.completer, -- alt: cmp, epo
       ts_ignored_langs = M.ts_ignored_langs, -- alt: { "svg", "json", "heex", "jsonc" }
       is_screen_sharing = M.is_screen_sharing,
-      -- REF: elixir LSPs: elixir-tools(tools-elixirls, tools-nextls, credo), elixirls, nextls, lexical
-      enabled_elixir_ls = M.enabled_elixir_ls,
-      formatter_exclusions = M.formatter_exclusions,
-      diagnostic_exclusions = M.diagnostic_exclusions,
-      max_diagnostic_exclusions = M.max_diagnostic_exclusions,
-      completion_exclusions = M.completion_exclusions,
       disable_autolint = M.disable_autolint,
       disable_autoformat = M.disable_autoformat,
       markdown_fenced_languages = M.markdown_fenced_languages,
@@ -373,15 +368,16 @@ M.apply = function()
       hs_emmy_path = fmt("%s/Spoons/EmmyLua.spoon", hammerspoon_path),
     },
     o = {
+      diffopt = "internal,filler,closeoff,linematch:60",
       linebreak = true, -- lines wrap at words rather than random characters
-      wrapscan = true,
-      undodir = vim.env.HOME .. "/.vim/undodir",
-      undofile = true,
       splitbelow = true,
-      splitright = true,
       splitkeep = "screen",
+      splitright = true,
       startofline = true,
       swapfile = false,
+      undodir = vim.env.HOME .. "/.vim/undodir",
+      undofile = true,
+      wrapscan = true,
     },
     opt = {
       -- [[ Setting options ]]
@@ -558,12 +554,6 @@ M.apply = function()
     },
     -- ['.*tmux.*conf$'] = 'tmux',
   })
-  function vim.pprint(...)
-    local s, args = pcall(vim.deepcopy, { ... })
-    if not s then args = { ... } end
-    vim.schedule_wrap(vim.notify)(vim.inspect(#args > 1 and args or unpack(args)))
-  end
-
   function vim.pprint(...)
     local s, args = pcall(vim.deepcopy, { ... })
     if not s then args = { ... } end

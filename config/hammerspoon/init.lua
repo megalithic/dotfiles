@@ -26,7 +26,7 @@ hs.keycodes.log.setLogLevel("error")
 hs.logger.defaultLogLevel = "error"
 
 window.animationDuration = 0
--- window.highlight.ui.overlay = true
+window.highlight.ui.overlay = false
 window.setShadows(false)
 
 ipc.cliUninstall()
@@ -46,6 +46,7 @@ L.load("lib.watchers", { watchers = { "status", "bluetooth", "dock", "audio", "w
 L.load("lib.wm"):start()
 L.load("lib.quitter"):start({ mode = "double" })
 L.load("lib.clipper")
+-- L.load("lib.snipper"):start(C.snippets)
 
 -- [ UNLOADERS ] ---------------------------------------------------------------
 

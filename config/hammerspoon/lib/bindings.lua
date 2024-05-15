@@ -39,11 +39,10 @@ local function chooseAppFromGroup(apps, key, tag, groupKey)
   if #choices == 1 then
     local app = choices[1]
 
-    hs.notify
-      .new(nil)
-      :title("Switching hyper+" .. key .. " to " .. hs.application.nameForBundleID(app.bundleID))
-      :contentImage(hs.image.imageFromAppBundle(app.bundleID))
-      :send()
+    --     hs.notify.new({ title = "Switching hyper+" .. key .. " to " .. hs.application.nameForBundleID(app.bundleID) })
+    -- :contentImage(
+    --       hs.image.imageFromAppBundle(app.bundleID)
+    --     ):send()
 
     Settings.set(groupKey, app.bundleID)
     hs.application.launchOrFocusByBundleID(app.bundleID)

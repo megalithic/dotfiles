@@ -18,7 +18,8 @@ local currentHandler = nil
 local function httpCallback(scheme, _host, _params, fullURL, _senderPID)
   local allHandlers = hs.urlevent.getAllHandlersForScheme(scheme)
 
-  local preferredBrowser = hs.application.get(C.preferred.browser)
+  local preferredBrowser =
+    hs.application.get(Settings.get("group.browsers") or C.preferred.browser or C.preferred.browsers[1])
   local currentBrowserBundleID = preferredBrowser:bundleID()
 
   local handler = hs.fnutils.find(allHandlers, function(v) return v == currentBrowserBundleID end)

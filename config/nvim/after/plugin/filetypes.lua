@@ -268,6 +268,15 @@ ftplugin.extend_all({
       wrap = true,
     },
   },
+  org = {
+    opt = {
+      comments = "n:-,n:( )",
+      conceallevel = 2,
+      indentkeys = "o,O,*<M-o>,*<M-O>,*<CR>",
+      linebreak = true,
+      wrap = true,
+    },
+  },
   qf = {
     opt = {
       winfixheight = true,
@@ -372,6 +381,13 @@ ftplugin.extend_all({
         },
       })
     end,
+  },
+  sql = {
+    opt = {
+      tabstop = 2,
+      shiftwidth = 2,
+      commentstring = [[-- %s]],
+    },
   },
 })
 

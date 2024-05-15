@@ -101,11 +101,13 @@ end
 -- REF:
 -- https://neovim.discourse.group/t/how-to-use-repeat-on-timer-start-in-a-lua-function/1645
 -- https://vi.stackexchange.com/questions/33056/how-to-use-vim-loop-interactively-in-neovim
-function mega.blink_cursorline(delay)
+function mega.blink_cursorline(delay, should_center)
   if is_ignored() then return end
 
   timer = vim.loop.new_timer()
   blink_active = true
+
+  if should_center ~= nil and should_center then vim.cmd.normal("zz") end
 
   vim.wo.cursorlineopt = "both"
   highlight_cursorline()

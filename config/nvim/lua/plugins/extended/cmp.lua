@@ -5,7 +5,8 @@ local fmt = string.format
 return {
   {
     "hrsh7th/nvim-cmp",
-    event = { "InsertEnter *", "CmdlineEnter *" },
+    lazy = false,
+    priority = 100,
     dependencies = {
       {
         "saadparwaiz1/cmp_luasnip",
@@ -78,9 +79,7 @@ return {
       local tab = function(fallback)
         if cmp.visible() then
           cmp.select_next_item()
-        elseif vim.snippet.active() and vim.snippet.jumpable(1) then
-          -- elseif vim.snippet.jumpable(1) then
-          -- vim.snippet.jump(1)
+        elseif vim.snippet.active({ direction = 1 }) then
           vim.schedule(function() vim.snippet.jump(1) end)
         elseif has_words_before() then
           cmp.complete()
@@ -91,9 +90,7 @@ return {
       local shift_tab = function(fallback)
         if cmp.visible() then
           cmp.select_prev_item()
-        elseif vim.snippet.active() and vim.snippet.jumpable(-1) then
-          -- elseif vim.snippet.jumpable(-1) then
-          -- vim.snippet.jump(-1)
+        elseif vim.snippet.active({ direction = -1 }) then
           vim.schedule(function() vim.snippet.jump(-1) end)
         else
           fallback()
@@ -274,34 +271,34 @@ return {
             return item
           end,
         },
-        sorting = {
-          priority_weight = 2,
-          comparators = {
-            require("cmp_fuzzy_buffer.compare"),
-
-            cmp.config.compare.offset,
-            cmp.config.compare.exact,
-            cmp.config.compare.score,
-
-            -- INFO: sort by number of underscores
-            function(entry1, entry2)
-              local _, entry1_under = entry1.completion_item.label:find("^_+")
-              local _, entry2_under = entry2.completion_item.label:find("^_+")
-              entry1_under = entry1_under or 0
-              entry2_under = entry2_under or 0
-              if entry1_under > entry2_under then
-                return false
-              elseif entry1_under < entry2_under then
-                return true
-              end
-            end,
-
-            cmp.config.compare.kind,
-            cmp.config.compare.sort_text,
-            cmp.config.compare.length,
-            cmp.config.compare.order,
-          },
-        },
+        -- sorting = {
+        --   priority_weight = 2,
+        --   comparators = {
+        --     require("cmp_fuzzy_buffer.compare"),
+        --
+        --     cmp.config.compare.offset,
+        --     cmp.config.compare.exact,
+        --     cmp.config.compare.score,
+        --
+        --     -- INFO: sort by number of underscores
+        --     function(entry1, entry2)
+        --       local _, entry1_under = entry1.completion_item.label:find("^_+")
+        --       local _, entry2_under = entry2.completion_item.label:find("^_+")
+        --       entry1_under = entry1_under or 0
+        --       entry2_under = entry2_under or 0
+        --       if entry1_under > entry2_under then
+        --         return false
+        --       elseif entry1_under < entry2_under then
+        --         return true
+        --       end
+        --     end,
+        --
+        --     cmp.config.compare.kind,
+        --     cmp.config.compare.sort_text,
+        --     cmp.config.compare.length,
+        --     cmp.config.compare.order,
+        --   },
+        -- },
         sources = cmp.config.sources({
           { name = "nvim_lsp_signature_help" },
           { name = "snippets", group_index = 1, max_item_count = 5, keyword_length = 1 },
@@ -311,7 +308,7 @@ return {
           {
             name = "nvim_lsp",
             group_index = 1,
-            max_item_count = 35,
+            -- max_item_count = 35,
             entry_filter = function(entry)
               if vim.tbl_contains(SETTINGS.completion_exclusions, entry.source.source.client.name) then return false end
               -- FIXME: breaks Next LS
@@ -319,6 +316,11 @@ return {
 
               return true
             end,
+          },
+          {
+            name = "codeium",
+            group_index = 1,
+            priority = 100,
           },
           { name = "async_path", option = { trailing_slash = true } },
           -- { name = "tmux", option = { all_panes = true } },
@@ -384,7 +386,15 @@ return {
 
       -- no completion suggestions in a git commit
       cmp.setup.filetype({ "gitcommit", "NeogitCommitMessage" }, {
-        sources = {},
+        { name = "buffer" },
+        { name = "spell" },
+      })
+
+      cmp.setup.filetype({ "sql" }, {
+        sources = {
+          { name = "vim-dadbod-completion" },
+          { name = "buffer" },
+        },
       })
     end,
   },

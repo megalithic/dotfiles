@@ -227,10 +227,18 @@ return {
   { "megalithic/nvim-ts-autotag", dependencies = { "nvim-treesitter/nvim-treesitter" } },
   {
     "nvim-treesitter/nvim-treesitter-context",
+    keys = {
+      {
+        "[[",
+        function() require("treesitter-context").go_to_context(vim.v.count1) end,
+      },
+    },
     config = function()
       require("treesitter-context").setup({
         enable = true,
-        max_lines = 1,
+        separator = "‾", --, "TreesitterContextBorder", -- alts: ▁▁ ─ ▄─▁-_‾
+        -- min_window_height = 5,
+        max_lines = 2, -- How many lines the window should span. Values <= 0 mean no limi
         trim_scope = "outer",
         patterns = { -- Match patterns for TS nodes. These get wrapped to match at word boundaries.
           -- For all filetypes
@@ -251,10 +259,8 @@ return {
           },
         },
         exact_patterns = {},
-
         zindex = 20, -- The Z-index of the context window
         mode = "cursor", -- Line used to calculate context. Choices: 'cursor', 'topline'
-        separator = nil, -- Separator between context and content. Should be a single character string, like '-'.
       })
     end,
   },

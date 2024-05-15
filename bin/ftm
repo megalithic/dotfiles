@@ -203,9 +203,9 @@ function fuzzy_find() {
   fzf_list=$(echo "$sessions_list" | sed -E "s/:.*$//" | grep -v "^default\$" | grep -v "^$current_session\$")
   # list_sessions=$(tmux list-sessions | sed -E "s/:.*$//")
 
-  ENTER_select_session_bind="enter:replace-query+print-query"
-  CTRL_X_kill_session_bind='ctrl-x:execute(tmux kill-session -t {})+reload(tmux list-sessions | sed -E "s/:.*$//")'
+  # ENTER_select_session_bind="enter:replace-query+print-query"
   # CTRL_R_rename_session_bind='ctrl-r:execute(printf >&2 "New session name: ";read name; tmux rename-session -t {} ${name};)+reload(echo "$sessions_list" | grep -v "^default\$" | grep -v "^$current_session\$")'
+  CTRL_X_kill_session_bind='ctrl-x:execute(tmux kill-session -t {})+reload(tmux list-sessions | sed -E "s/:.*$//")'
   CTRL_R_rename_session_bind='ctrl-r:execute(printf >&2 "New session name: ";read name; tmux rename-session -t {} ${name};)+reload(tmux list-sessions | sed -E "s/:.*$//")'
 
   try_session "$(
@@ -222,20 +222,30 @@ function fuzzy_find() {
         --header="$fzf_header_text" \
         --bind="change:first" \
         --bind="focus:transform-preview-label:echo [ {} ]" \
-        --bind="$ENTER_select_session_bind" \
-        --bind="$CTRL_X_kill_session_bind" \
-        --bind="$CTRL_R_rename_session_bind" \
         --bind="?:toggle-preview" \
         --bind="ctrl-u:preview-half-page-up,ctrl-d:preview-half-page-down" \
+        \
+        --bind="$CTRL_X_kill_session_bind" \
+        --bind="$CTRL_R_rename_session_bind" \
+        \
+        --bind="enter:replace-query+print-query" \
         --preview="$preview_cmd" \
         --preview-window="right:55%:nowrap" \
         --pointer=' ' \
         --marker='󰛄 ' \
         --print-query \
         --exit-0 \
-        --tac
+        --tac # --bind='ctrl-x:execute(tmux kill-session -t {})+reload(tmux list-sessions | sed -E "s/:.*$//")' \
+    # --bind='ctrl-r:execute(printf >&2 \"New session name: \";read name; tmux rename-session -t {} ${name};)+reload(tmux list-sessions | sed -E \"s/:.*$//\")' \
   )"
 }
+
+# --bind 'ctrl-a:change-prompt(⚡  )+reload(sesh list)' \
+# --bind 'ctrl-t:change-prompt(🪟  )+reload(sesh list -t)' \
+# --bind 'ctrl-g:change-prompt(⚙️  )+reload(sesh list -c)' \
+# --bind 'ctrl-x:change-prompt(📁  )+reload(sesh list -z)' \
+# --bind 'ctrl-f:change-prompt(🔎  )+reload(fd -H -d 2 -t d -E .Trash . ~)' \
+# --bind 'ctrl-d:execute(tmux kill-session -t {})+change-prompt(⚡  )+reload(sesh list)'
 
 # -- if we pass in a session_name: attach/switch to it or, create new session
 if [[ $session_name ]]; then

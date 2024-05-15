@@ -1,5 +1,6 @@
 local obj = {}
 local C = require("config")
+local Settings = require("hs.settings")
 
 obj.__index = obj
 obj.name = "spoons"
@@ -14,7 +15,8 @@ function obj:init(opts)
   Install:andUse("EmmyLua")
 
   local defaultProfile = "Profile 1"
-  local preferredBrowser = hs.application.get(C.preferred.browser)
+  local preferredBrowser =
+    hs.application.get(Settings.get("group.browsers") or C.preferred.browser or C.preferred.browsers[1])
   local currentBrowserBundleID = preferredBrowser:bundleID()
 
   local openWithPreferredBrowser = function(url, profile)
@@ -22,7 +24,7 @@ function obj:init(opts)
     local name = preferredBrowser:name()
 
     -- "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-    binPath = string.format("%s/Contents/MacOS/%s", path, name)
+    local binPath = string.format("%s/Contents/MacOS/%s", path, name)
     local t = hs.task.new(binPath, nil, function() return false end, { "--profile-directory=" .. profile, url })
     t:start()
   end
