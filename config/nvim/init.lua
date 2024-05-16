@@ -12,14 +12,6 @@ _G.mega = {
   notify = vim.notify,
 }
 
-vim.g.mapleader = ","
-vim.g.maplocalleader = " "
-
-require("mega.settings").apply()
-require("mega.lazy")
-require("mega.autocmds").apply()
-require("mega.mappings")
-
 -- inspect the contents of an object very quickly
 -- in your code or from the command-line:
 -- @see: https://www.reddit.com/r/neovim/comments/p84iu2/useful_functions_to_explore_lua_objects/
@@ -55,3 +47,11 @@ function vim.lg(...)
 end
 
 function vim.lgclear() vim.fn.writefile({}, "/tmp/nlog") end
+
+vim.g.mapleader = ","
+vim.g.maplocalleader = " "
+
+require("mega.settings").apply()
+require("mega.lazy")
+require("mega.autocmds").apply()
+require("mega.mappings")

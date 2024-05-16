@@ -701,9 +701,10 @@ return {
       local servers_to_install = vim.tbl_filter(function(key)
         local s = servers.list[key]
         if type(s) == "table" then
-          return s and not s.manual
+          return not s.manual_install
         elseif type(s) == "function" then
-          return s() and not s().manual
+          s = s()
+          return (s and not s.manual_install)
         else
           return s
         end
@@ -712,7 +713,7 @@ return {
 
       require("mason-tool-installer").setup({ ensure_installed = ensure_installed })
 
-      servers.load_contrib()
+      -- servers.load_contrib()
 
       for server_name, _ in pairs(servers.list) do
         local cfg = M.get_config(server_name)

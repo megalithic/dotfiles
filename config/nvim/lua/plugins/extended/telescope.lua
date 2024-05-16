@@ -367,7 +367,7 @@ return {
           selection_strategy = "reset",
           scroll_strategy = "limit",
           sorting_strategy = "ascending",
-          path_display = { "truncate" },
+          path_display = { "filename_first, truncate" },
           color_devicons = true,
           file_previewer = require("telescope.previewers").vim_buffer_cat.new,
           grep_previewer = require("telescope.previewers").vim_buffer_vimgrep.new,

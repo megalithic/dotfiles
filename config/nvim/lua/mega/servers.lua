@@ -57,7 +57,7 @@ M.list = {
     -- local function cmd() return vim.env.XDG_DATA_HOME .. "/lsp/lexical/_build/dev/package/lexical/bin/start_lexical.sh" end
 
     return {
-      manual = true,
+      manual_install = true,
       cmd = { vim.env.XDG_DATA_HOME .. "/lsp/lexical/_build/dev/package/lexical/bin/start_lexical.sh" },
       single_file_support = true,
       filetypes = { "elixir", "eelixir", "heex", "surface" },
@@ -73,7 +73,7 @@ M.list = {
     if not U.lsp.is_enabled_elixir_ls("elixirls") then return nil end
 
     return {
-      manual = true,
+      manual_install = true,
       cmd = { fmt("%s/lsp/elixir-ls/%s", vim.env.XDG_DATA_HOME, "language_server.sh") },
       filetypes = { "elixir", "eelixir", "heex", "surface" },
       root_dir = function(fname)
@@ -359,7 +359,7 @@ M.list = {
 
     local homebrew_enabled = false
     return {
-      manual = true,
+      manual_install = true,
       cmd = cmd(homebrew_enabled),
       single_file_support = true,
       filetypes = { "elixir", "eelixir", "heex", "surface" },
