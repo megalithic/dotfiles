@@ -1,6 +1,7 @@
 local preferred = {
   terms = { "ghostty", "wezterm", "kitty", "alacritty", "iTerm", "Terminal.app" },
   browsers = {
+    "Thorium",
     "Chromium",
     "Brave Browser Nightly",
     "Firefox Developer Edition",
@@ -83,6 +84,7 @@ local snippets = {
 --- @class QuitterOpts
 --- @field [1] string
 local quitters = {
+  "org.chromium.Thorium",
   "org.chromium.Chromium",
   "Brave Browser Nightly",
   "com.kagi.kagimacOS",
@@ -253,6 +255,14 @@ local layouts = {
     tags = { "browsers" },
     rules = {
       { "", 2, "maximized" },
+    },
+  },
+  ["org.chromium.Thorium"] = {
+    bundleID = "org.chromium.Thorium",
+    name = "Thorium",
+    tags = { "browsers" },
+    rules = {
+      { "", 1, "maximized" },
     },
   },
   ["org.chromium.Chromium"] = {

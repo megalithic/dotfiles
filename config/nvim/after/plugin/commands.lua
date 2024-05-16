@@ -1,4 +1,8 @@
-local command = vim.api.nvim_create_user_command
+local fmt = string.format
+local command = function(lhs, rhs, opts)
+  opts = vim.tbl_extend("force", opts, {})
+  vim.api.nvim_create_user_command(lhs, rhs, opts)
+end
 
 vim.cmd([[
   command! -nargs=1 Rg lua require("telescope.builtin").grep_string({ search = vim.api.nvim_eval('"<args>"') })
@@ -30,6 +34,10 @@ command("D", function(opts)
 end, { nargs = "*" })
 -- command("Noti", [[Notifications]])
 command("Noti", [[Messages | Notifications]], {})
-command("noti", [[Messages | Notifications]], {})
 command("Mess", [[messages]], {})
-command("mess", [[messages]], {})
+
+command("LogRead", function(_opts) vim.cmd.vnew("/tmp/nlog") end, {})
+command("Capture", function(opts)
+  vim.fn.writefile(vim.split(vim.api.nvim_exec2(opts.args, { output = true }).output, "\n"), "/tmp/nvim_out.capture")
+  vim.cmd.split("/tmp/nvim_out.capture")
+end, { nargs = "*", complete = "command" })

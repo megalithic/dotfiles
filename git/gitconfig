@@ -79,12 +79,14 @@
 
   aliases = "!git config -l | grep ^alias | cut -c 7- | sort"
 
-b = branch
-br = branch
-; ba = branch -A
-; bm = branch -m
-; bd = branch -d
-; bbd = branch -D $1 && push origin --delete $1
+  b = branch
+  br = branch
+  ; ba = branch -A
+  ; bm = branch -m
+  ; bd = branch -d
+  ; bbd = branch -D $1 && push origin --delete $1
+
+  clean = clean -i
 
   c = commit
   cv = commit -v
@@ -123,6 +125,8 @@ br = branch
   ; m = merge --no-ff
   ; ff = merge --no-ff
 
+  info = !git diff && git remote -v && git status
+
   # REF: https://evantravers.com/articles/2022/04/14/git-jump-to-vim-quickfix/#git-jump
   jump = "!$(brew --prefix git)/share/git-core/contrib/git-jump/git-jump"
 
@@ -143,6 +147,7 @@ br = branch
   # git submodules
 	subpull = submodule foreach git pull
 
+	squash = "!f() { git rebase -i HEAD~$1; }; f"
 
   r = restore
   rs = restore --staged

@@ -6,6 +6,7 @@ local _appObj = nil
 local browser = hs.application.get(C.preferred.browser)
 local defaultKittyFont = 15.0
 local fontSizeDelta = "+8.0"
+local term = hs.application.get("Ghostty") or hs.application.get("wezterm") or hs.application.get("kitty")
 
 obj.__index = obj
 obj.name = "context.obs"
@@ -23,31 +24,34 @@ function obj:start(opts)
 
   if event == hs.application.watcher.launched then
     do
-      local term = hs.application.get("wezterm") or hs.application.get("kitty")
-
       hs.spotify.pause()
-      L.req("lib.menubar.keycastr"):start()
+      -- L.req("lib.menubar.keycastr"):start()
       L.req("lib.dnd").on("obs")
       L.req("lib.menubar.ptt").setState("push-to-mute")
 
       hs.layout.apply({
-        { browser:name(), nil, 1, hs.layout.maximized, nil, nil },
         { term:name(), nil, 1, hs.layout.maximized, nil, nil },
+        { browser:name(), nil, 1, hs.layout.maximized, nil, nil },
       })
-      term:setFrontmost(true)
-      if term:name() == "kitty" then
-        hs.execute("kitty @ --to unix:/tmp/mykitty set-font-size " .. (defaultKittyFont + defaultKittyFontDelta), true)
-      elseif term:name() == "wezterm" then
-        -- hs.execute("wezterm-cli SCREEN_SHARE_MODE on", true)
-        hs.task
-          .new(
-            os.getenv("HOME") .. "/.dotfiles/bin/wezterm-cli",
-            function(stdTask, stdOut, stdErr)
-              dbg(fmt("wezterm SCREEN_SHARE_MODE set to on, %s / %s", I(stdOut), I(stdErr)))
-            end,
-            { "SCREEN_SHARE_MODE", "on" }
+      if term ~= nil then
+        term:setFrontmost(true)
+        if term:name() == "kitty" then
+          hs.execute(
+            "kitty @ --to unix:/tmp/mykitty set-font-size " .. (defaultKittyFont + defaultKittyFontDelta),
+            true
           )
-          :start()
+        elseif term:name() == "wezterm" then
+          -- hs.execute("wezterm-cli SCREEN_SHARE_MODE on", true)
+          hs.task
+            .new(
+              os.getenv("HOME") .. "/.dotfiles/bin/wezterm-cli",
+              function(stdTask, stdOut, stdErr)
+                dbg(fmt("wezterm SCREEN_SHARE_MODE set to on, %s / %s", I(stdOut), I(stdErr)))
+              end,
+              { "SCREEN_SHARE_MODE", "on" }
+            )
+            :start()
+        end
       end
     end
   end
@@ -72,14 +76,13 @@ function obj:stop(opts)
     L.req("lib.dnd").off()
 
     do
-      L.req("lib.menubar.keycastr"):stop()
+      -- L.req("lib.menubar.keycastr"):stop()
 
       if browser ~= nil then
         local browser_win = browser:mainWindow()
         if browser_win ~= nil then browser_win:moveToUnit(hs.layout.maximized) end
       end
 
-      local term = hs.application.get("wezterm") or hs.application.get("kitty")
       if term ~= nil then
         if term:name() == "kitty" then
           hs.execute("kitty @ --to unix:/tmp/mykitty set-font-size " .. defaultKittyFont, true)

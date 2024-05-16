@@ -57,7 +57,7 @@ elseif vim.g.tester == "vim-test" then
     { "<localleader>ts", "<cmd>TestSuite<cr>", desc = "run test (s)uite" },
     -- { "<localleader>tT", "<cmd>TestLast<cr>", desc = "run _last test" },
     { "<localleader>tv", "<cmd>TestVisit<cr>", desc = "(v)isit last test" },
-    -- { "<localleader>tp", "<cmd>A<cr>", desc = "open alt (edit)" },
+    { "<localleader>tp", "<cmd>A<cr>", desc = "open alt (edit)" },
     -- { "<localleader><localleader>", "<cmd>A<cr>", desc = "open alt (edit)" },
     { "<localleader>tP", "<cmd>AV<cr>", desc = "open alt (vsplit)" },
   }

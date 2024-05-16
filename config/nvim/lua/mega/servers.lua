@@ -54,10 +54,11 @@ M.list = {
   lexical = function()
     if not U.lsp.is_enabled_elixir_ls("lexical") then return nil end
 
-    local function cmd() return vim.env.XDG_DATA_HOME .. "/lsp/lexical/_build/dev/package/lexical/bin/start_lexical.sh" end
+    -- local function cmd() return vim.env.XDG_DATA_HOME .. "/lsp/lexical/_build/dev/package/lexical/bin/start_lexical.sh" end
 
     return {
-      cmd = vim.env.XDG_DATA_HOME .. "/lsp/lexical/_build/dev/package/lexical/bin/start_lexical.sh",
+      manual = true,
+      cmd = { vim.env.XDG_DATA_HOME .. "/lsp/lexical/_build/dev/package/lexical/bin/start_lexical.sh" },
       single_file_support = true,
       filetypes = { "elixir", "eelixir", "heex", "surface" },
       root_dir = root_pattern("mix.exs", ".git"), -- or vim.loop.os_homedir(),
@@ -72,6 +73,7 @@ M.list = {
     if not U.lsp.is_enabled_elixir_ls("elixirls") then return nil end
 
     return {
+      manual = true,
       cmd = { fmt("%s/lsp/elixir-ls/%s", vim.env.XDG_DATA_HOME, "language_server.sh") },
       filetypes = { "elixir", "eelixir", "heex", "surface" },
       root_dir = function(fname)
@@ -335,6 +337,84 @@ M.list = {
     }
   end,
   marksman = {},
+  nextls = function(...)
+    if not U.lsp.is_enabled_elixir_ls("nextls") then return end
+
+    local cmd = function(use_homebrew)
+      local arch = {
+        ["arm64"] = "arm64",
+        ["aarch64"] = "arm64",
+        ["amd64"] = "amd64",
+        ["x86_64"] = "amd64",
+      }
+
+      local os_name = string.lower(vim.uv.os_uname().sysname)
+      local current_arch = arch[string.lower(vim.uv.os_uname().machine)]
+      local build_bin = fmt("next_ls_%s_%s", os_name, current_arch)
+
+      if use_homebrew then return { "nextls", "--stdio" } end
+      -- return fmt("%s/lsp/nextls/burrito_out/%s", vim.env.XDG_DATA_HOME, build_bin)
+      return { fmt("%s/lsp/nextls/burrito_out/%s", vim.env.XDG_DATA_HOME, build_bin), "--stdio" }
+    end
+
+    local homebrew_enabled = false
+    return {
+      manual = true,
+      cmd = cmd(homebrew_enabled),
+      single_file_support = true,
+      filetypes = { "elixir", "eelixir", "heex", "surface" },
+      root_dir = function(fname)
+        local matches = vim.fs.find({ "mix.exs" }, { upward = true, limit = 2, path = fname })
+        local child_or_root_path, maybe_umbrella_path = unpack(matches)
+        local root_dir = vim.fs.dirname(maybe_umbrella_path or child_or_root_path)
+
+        return root_dir
+      end,
+      log_level = vim.lsp.protocol.MessageType.Error,
+      message_level = vim.lsp.protocol.MessageType.Error,
+      cmd_env = {
+        NEXTLS_SPITFIRE_ENABLED = 1,
+      },
+      env = {
+        NEXTLS_SPITFIRE_ENABLED = 1,
+      },
+      spitfire = true,
+      init_options = {
+        cmd_env = {
+          NEXTLS_SPITFIRE_ENABLED = 1,
+        },
+        env = {
+          NEXTLS_SPITFIRE_ENABLED = 1,
+        },
+        mix_env = "dev",
+        mix_target = "host",
+        experimental = {
+          completions = {
+            enable = true,
+          },
+        },
+      },
+      settings = {
+        cmd_env = {
+          NEXTLS_SPITFIRE_ENABLED = 1,
+        },
+        env = {
+          NEXTLS_SPITFIRE_ENABLED = 1,
+        },
+        experimental = {
+          completions = {
+            enable = true,
+          },
+        },
+        -- mixEnv = "dev",
+        fetchDeps = false,
+        dialyzerEnabled = true,
+        dialyzerFormat = "dialyxir_long",
+        enableTestLenses = false,
+        suggestSpecs = true,
+      },
+    }
+  end,
   prosemd_lsp = nil,
   -- prosemd_lsp = function()
   --   if vim.g.started_by_firenvim or vim.env.TMUX_POPUP then
@@ -567,92 +647,95 @@ M.contrib = {
   --   }
   --   -- end
   -- end,
-  nextls = function(server_name)
-    server_name = server_name or "nextls"
-    if not U.lsp.is_enabled_elixir_ls(server_name) then return end
-    local configs = require("lspconfig.configs")
-
-    -- if not configs[server_name] then
-    local cmd = function(use_homebrew)
-      local arch = {
-        ["arm64"] = "arm64",
-        ["aarch64"] = "arm64",
-        ["amd64"] = "amd64",
-        ["x86_64"] = "amd64",
-      }
-
-      local os_name = string.lower(vim.uv.os_uname().sysname)
-      local current_arch = arch[string.lower(vim.uv.os_uname().machine)]
-      local build_bin = fmt("next_ls_%s_%s", os_name, current_arch)
-
-      if use_homebrew then return { "nextls", "--stdio" } end
-      -- return fmt("%s/lsp/nextls/burrito_out/%s", vim.env.XDG_DATA_HOME, build_bin)
-      return { fmt("%s/lsp/nextls/burrito_out/%s", vim.env.XDG_DATA_HOME, build_bin), "--stdio" }
-    end
-
-    local homebrew_enabled = false
-    configs[server_name] = {
-      default_config = {
-        cmd = cmd(homebrew_enabled),
-        single_file_support = true,
-        filetypes = { "elixir", "eelixir", "heex", "surface" },
-        root_dir = function(fname)
-          local matches = vim.fs.find({ "mix.exs" }, { upward = true, limit = 2, path = fname })
-          local child_or_root_path, maybe_umbrella_path = unpack(matches)
-          local root_dir = vim.fs.dirname(maybe_umbrella_path or child_or_root_path)
-
-          return root_dir
-        end,
-        log_level = vim.lsp.protocol.MessageType.Error,
-        message_level = vim.lsp.protocol.MessageType.Error,
-        cmd_env = {
-          NEXTLS_SPITFIRE_ENABLED = 1,
-        },
-        env = {
-          NEXTLS_SPITFIRE_ENABLED = 1,
-        },
-        init_options = {
-          cmd_env = {
-            NEXTLS_SPITFIRE_ENABLED = 1,
-          },
-          env = {
-            NEXTLS_SPITFIRE_ENABLED = 1,
-          },
-          mix_env = "dev",
-          mix_target = "host",
-          experimental = {
-            completions = {
-              enable = true,
-            },
-          },
-        },
-        settings = {
-          cmd_env = {
-            NEXTLS_SPITFIRE_ENABLED = 1,
-          },
-          env = {
-            NEXTLS_SPITFIRE_ENABLED = 1,
-          },
-          experimental = {
-            completions = {
-              enable = true,
-            },
-          },
-          -- mixEnv = "dev",
-          fetchDeps = false,
-          dialyzerEnabled = true,
-          dialyzerFormat = "dialyxir_long",
-          enableTestLenses = false,
-          suggestSpecs = true,
-        },
-      },
-    }
-  end,
+  -- nextls = function(server_name)
+  --   server_name = server_name or "nextls"
+  --   if not U.lsp.is_enabled_elixir_ls(server_name) then return end
+  --   local configs = require("lspconfig.configs")
+  --
+  --   -- if not configs[server_name] then
+  --   local cmd = function(use_homebrew)
+  --     local arch = {
+  --       ["arm64"] = "arm64",
+  --       ["aarch64"] = "arm64",
+  --       ["amd64"] = "amd64",
+  --       ["x86_64"] = "amd64",
+  --     }
+  --
+  --     local os_name = string.lower(vim.uv.os_uname().sysname)
+  --     local current_arch = arch[string.lower(vim.uv.os_uname().machine)]
+  --     local build_bin = fmt("next_ls_%s_%s", os_name, current_arch)
+  --
+  --     if use_homebrew then return { "nextls", "--stdio" } end
+  --     -- return fmt("%s/lsp/nextls/burrito_out/%s", vim.env.XDG_DATA_HOME, build_bin)
+  --     return { fmt("%s/lsp/nextls/burrito_out/%s", vim.env.XDG_DATA_HOME, build_bin), "--stdio" }
+  --   end
+  --
+  --   local homebrew_enabled = false
+  --
+  --   configs[server_name] = {
+  --     default_config = {
+  --       cmd = cmd(homebrew_enabled),
+  --       single_file_support = true,
+  --       filetypes = { "elixir", "eelixir", "heex", "surface" },
+  --       root_dir = function(fname)
+  --         local matches = vim.fs.find({ "mix.exs" }, { upward = true, limit = 2, path = fname })
+  --         local child_or_root_path, maybe_umbrella_path = unpack(matches)
+  --         local root_dir = vim.fs.dirname(maybe_umbrella_path or child_or_root_path)
+  --
+  --         return root_dir
+  --       end,
+  --       log_level = vim.lsp.protocol.MessageType.Error,
+  --       message_level = vim.lsp.protocol.MessageType.Error,
+  --       cmd_env = {
+  --         NEXTLS_SPITFIRE_ENABLED = 1,
+  --       },
+  --       env = {
+  --         NEXTLS_SPITFIRE_ENABLED = 1,
+  --       },
+  --       init_options = {
+  --         cmd_env = {
+  --           NEXTLS_SPITFIRE_ENABLED = 1,
+  --         },
+  --         env = {
+  --           NEXTLS_SPITFIRE_ENABLED = 1,
+  --         },
+  --         mix_env = "dev",
+  --         mix_target = "host",
+  --         experimental = {
+  --           completions = {
+  --             enable = true,
+  --           },
+  --         },
+  --       },
+  --       settings = {
+  --         cmd_env = {
+  --           NEXTLS_SPITFIRE_ENABLED = 1,
+  --         },
+  --         env = {
+  --           NEXTLS_SPITFIRE_ENABLED = 1,
+  --         },
+  --         experimental = {
+  --           completions = {
+  --             enable = true,
+  --           },
+  --         },
+  --         -- mixEnv = "dev",
+  --         fetchDeps = false,
+  --         dialyzerEnabled = true,
+  --         dialyzerFormat = "dialyxir_long",
+  --         enableTestLenses = false,
+  --         suggestSpecs = true,
+  --       },
+  --     },
+  --   }
+  -- end,
 }
 
 M.load_contrib = function()
-  for server_name, config in pairs(M.contrib) do
-    config(server_name)
+  if M.control and #M.contrib > 0 then
+    for server_name, config in pairs(M.contrib) do
+      config(server_name)
+    end
   end
 end
 

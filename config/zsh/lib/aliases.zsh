@@ -190,6 +190,7 @@ if type nvim >/dev/null 2>&1; then
   alias novim="nvim -u NONE"
   alias barevim="nvim -u NONE"
   alias ngit="nvim -c \":bd|:Neogit kind=replace\""
+  alias ndb="nvim -c \":bd|:DBUI\""
 
   # suffix aliases set the program type to use to open a particular file with an extension
   alias -s {js,html,js,ts,css,md}=nvim

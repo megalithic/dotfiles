@@ -215,6 +215,10 @@
       if: "[ `uname` = Darwin ]"
       path: misc/mailmate/megabindings.plist
       # POST-symlink: ensure you add `, Mega` to the keybind settings in Mailmate
+    ~/Library/Application Support/Thorium/NativeMessagingHosts/surfingkeys.json:
+      force: true
+      if: "[ `uname` = Darwin ]"
+      path: config/surfingkeys/surfingkeys.json
     ~/Library/Application Support/Google/Chrome/NativeMessagingHosts/surfingkeys.json:
       force: true
       if: "[ `uname` = Darwin ]"
@@ -247,6 +251,18 @@
       force: true
       if: "[ `uname` = Darwin ]"
       path: config/surfingkeys/firenvim.json
+    ~/Library/Application Support/Thorium/NativeMessagingHosts/firenvim.json:
+      force: true
+      if: "[ `uname` = Darwin ]"
+      path: config/surfingkeys/surfingkeys.json
+    ~/Library/Application Support/Thorium/NativeMessagingHosts/com.1password.1password.json:
+      force: true
+      if: "[ `uname` = Darwin ]"
+      path: misc/1p/com.1password.1password.json
+    ~/Library/Application Support/Chromium/NativeMessagingHosts/com.1password.1password.json:
+      force: true
+      if: "[ `uname` = Darwin ]"
+      path: misc/1p/com.1password.1password.json
 
 - shell:
     - description: GnuPG (gpg) setup..
@@ -276,48 +292,4 @@
 
         echo "Attempting to source helpers.zsh.."; source ~/.dotfiles/config/zsh/lib/helpers.zsh;
 
-        log "Attempting to install all git submodules.."; git submodule update --init --recursive
-
-        log "Attempting to set zsh as default shell.."; [[ $(echo $SHELL) == $(which zsh) ]] && log_warn "$(which zsh) already set as the default shell; skipping." || sudo chsh -s $(which zsh) $(whoami);
-
-        # log "Attempting to install asdf, again.."; #~/.dotfiles/bin/asdf-install -f;
-
-        log "Attempting to install neovim from source.."; ~/.dotfiles/bin/nvim-install -f;
-
-        log "Attempting to install elixirls-master.."; ~/.dotfiles/bin/elixirls-install master;
-
-        log "Attempting to install lexical-main.."; ~/.dotfiles/bin/lexical-install main;
-
-        log "Attempting to install lua/luarocks packages.."; ~/.dotfiles/tools/lua.sh;
-
-        log "Attempting to install rust/cargo packages.."; ~/.dotfiles/tools/rust.sh;
-
-        log "Attempting to install golang packages.."; ~/.dotfiles/tools/go.sh;
-
-        log "Attempting to install perl packages.."; ~/.dotfiles/tools/perl.sh;
-
-        log "Attempting to install python packages.."; ~/.dotfiles/tools/python.sh;
-
-        log "Attempting to run post-fzf install step..";
-
-        if [[ "$(arch)" == "arm64" ]]; then
-          yes | /opt/homebrew/opt/fzf/install;
-        else
-          yes | /usr/local/opt/fzf/install;
-        fi
-
-        log "Attempting to symlink gitconfig_macos.."; [[ "$(uname)" == "Darwin" ]] && ln -sfv "$HOME/.dotfiles/git/gitconfig_macos" ~/.gitconfig_macos;
-
-        log "Attempting to symlink gitconfig_linux.."; [[ "$(uname)" == "Linux" ]] && ln -sfv "$HOME/.dotfiles/git/gitconfig_linux" ~/.gitconfig_linux;
-
-        log "Attempting to use gh-login to do GitHub Authentication.."; ~/.dotfiles/bin/gh-login;
-
-        log "Attempting to do platform-specific configs.."; # [[ "$(uname)" == "Darwin" ]] && ./macos; # [[ "$(uname)" == "Linux" ]] && ./linux;
-
-        log "Attempting to chown as needed.."; [[ "$(uname)" == "Darwin" ]] && sudo chown -R "$(whoami)":admin ~/.local; [[ "$(uname)" == "Darwin" ]] && sudo chown -R "$(whoami)":admin ~/.cache; [[ "$(uname)" == "Darwin" ]] && sudo chown -R "$(whoami)":admin ~/.config;
-
-        log "Correctly chown/chmod ~/.ssh files"; sudo chmod 0700 ~/.ssh; sudo chmod -R 0600 ~/.ssh; sudo chmod 0644 ~/.ssh/config; sudo chown -R "$(whoami)" ~/.ssh;
-
-        log "Install tpm plugins for tmux.."; ~/.dotfiles/config/tmux/plugins/tpm/bin/install_plugins;
-
-        #command cat <<EOF #${blue}░  Installation complete (possibly with errors?) #${blue}░   #${blue}░ #${blue}░  Setup SSH key for this machine: #${blue}░  ${white}  - ~/.dotfiles/bin/ssh-setup #${blue}░ #${blue}░  Manually open/setup the following: #${blue}░  ${white}  - espanso (espanso register; espanso start) #${blue}░  ${white}  - postgresql #${blue}░  ${white}  - mailmate #${blue}░  ${white}  - signal #${blue}░  ${white}  - slack #${blue}░  ${white}  - bettertouchtool #${blue}░  ${white}  - forklift #${blue}░ #${blue}░  Install licenses for the following: #${blue}░  ${white}  - alfred #${blue}░  ${white}  - contexts #${blue}░  ${white}  - mailmate #${blue}░  ${white}  - dash #${blue}░  ${white}  - bartender #${blue}░  ${white}  - bettertouchtool #${blue}░  ${white}  - colorsnapper #${blue}░  ${white}  - forklift #${blue}░  ${white}  - soundsource #${blue}░ #${reset} #EOF;
+        log "Attempting to install all git submodules.."; git submodule update --init --recurs

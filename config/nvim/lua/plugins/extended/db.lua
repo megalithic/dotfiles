@@ -4,6 +4,8 @@ return {
   {
     "kristijanhusak/vim-dadbod-ui",
     config = function()
+      vim.g.db_ui_save_location = vim.g.db_ui_path
+      --
       -- delete from posts where id=18395898;
 
       -- delete pickups/items/friends

@@ -307,6 +307,7 @@ return {
           { name = "nvim_lua" },
           {
             name = "nvim_lsp",
+            priority = 100,
             group_index = 1,
             -- max_item_count = 35,
             entry_filter = function(entry)
@@ -317,11 +318,11 @@ return {
               return true
             end,
           },
-          {
-            name = "codeium",
-            group_index = 1,
-            priority = 100,
-          },
+          -- {
+          --   name = "codeium",
+          --   group_index = 1,
+          --   priority = 100,
+          -- },
           { name = "async_path", option = { trailing_slash = true } },
           -- { name = "tmux", option = { all_panes = true } },
         }, {
@@ -384,7 +385,6 @@ return {
         }),
       })
 
-      -- no completion suggestions in a git commit
       cmp.setup.filetype({ "gitcommit", "NeogitCommitMessage" }, {
         { name = "buffer" },
         { name = "spell" },

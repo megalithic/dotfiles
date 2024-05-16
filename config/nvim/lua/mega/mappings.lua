@@ -165,8 +165,11 @@ map("n", "j", "v:count == 0 ? 'gj' : 'j'", { expr = true, silent = true })
 
 -- map({ "n", "x", "o" }, "n", "nzz<esc><cmd>lua mega.blink_cursorline(50)<cr>")
 -- map({ "n", "x", "o" }, "N", "Nzz<esc><cmd>lua mega.blink_cursorline(50)<cr>")
-map({ "n", "x", "o" }, "n", "nzz")
-map({ "n", "x", "o" }, "N", "Nzz")
+-- map({ "n", "x", "o" }, "n", "nzz")
+-- map({ "n", "x", "o" }, "N", "Nzz")
+
+map({ "n", "x", "o" }, "n", "nzzzv<esc><cmd>lua mega.blink_cursorline(50)<cr>", { desc = "Fwd  search '/' or '?'" })
+map({ "n", "x", "o" }, "N", "Nzzzv<esc><cmd>lua mega.blink_cursorline(50)<cr>", { desc = "Back search '/' or '?'" })
 
 -- [[ macros ]] ----------------------------------------------------------------
 -- Map Q to replay q register for macro

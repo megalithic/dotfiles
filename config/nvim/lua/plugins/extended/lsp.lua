@@ -9,7 +9,7 @@ local M = {}
 
 return {
   {
-    "neovim/nvim-lspconfig",
+    "megalithic/nvim-lspconfig",
     dependencies = {
       { "nvim-lua/lsp_extensions.nvim" },
       { "b0o/schemastore.nvim" },
@@ -642,8 +642,6 @@ return {
       local servers = require("mega.servers")
       if servers == nil then return end
 
-      servers.load_contrib()
-
       function M.get_config(name)
         local config = name and servers.list[name] or {}
         if not config or config == nil then return end
@@ -655,6 +653,7 @@ return {
 
         config.flags = { debounce_text_changes = 150 }
         config.capabilities = vim.tbl_deep_extend("force", {}, M.capabilities, config.capabilities or {})
+
         return config
       end
 
@@ -698,22 +697,30 @@ return {
         "ruff",
         "stylua",
       }
-      ensure_installed = vim.list_extend(vim.tbl_keys(servers.list or {}), ensure_installed)
-      ensure_installed = vim.tbl_filter(function(server) return not vim.tbl_contains(SETTINGS.controlled_language_servers, server) end, ensure_installed)
+
+      local servers_to_install = vim.tbl_filter(function(key)
+        local s = servers.list[key]
+        if type(s) == "table" then
+          return s and not s.manual
+        elseif type(s) == "function" then
+          return s() and not s().manual
+        else
+          return s
+        end
+      end, vim.tbl_keys(servers.list))
+      vim.list_extend(ensure_installed, servers_to_install)
 
       require("mason-tool-installer").setup({ ensure_installed = ensure_installed })
 
-      require("mason-lspconfig").setup({
-        automatic_installation = false,
-        handlers = {
-          function(server_name)
-            if servers ~= nil then
-              local cfg = M.get_config(server_name)
-              if cfg ~= nil then lspconfig[server_name].setup(cfg) end
-            end
-          end,
-        },
-      })
+      servers.load_contrib()
+
+      for server_name, _ in pairs(servers.list) do
+        local cfg = M.get_config(server_name)
+
+        if cfg == nil then return end
+
+        lspconfig[server_name].setup(cfg)
+      end
     end,
   },
 
@@ -734,14 +741,15 @@ return {
   {
     "elixir-tools/elixir-tools.nvim",
     cond = U.lsp.is_enabled_elixir_ls("Next LS") or U.lsp.is_enabled_elixir_ls("ElixirLS"),
-    event = {
-      "BufReadPre **.ex,**.exs,**.heex",
-      "BufNewFile **.ex,**.exs,**.heex",
-    },
+    -- event = {
+    --   "BufReadPre **.ex,**.exs,**.heex",
+    --   "BufNewFile **.ex,**.exs,**.heex",
+    -- },
+    lazy = false,
     config = function()
       local elixir = require("elixir")
       local elixirls = require("elixir.elixirls")
-      local cmd = function()
+      local nextls_cmd = function()
         local arch = {
           ["arm64"] = "arm64",
           ["aarch64"] = "arm64",
@@ -760,7 +768,7 @@ return {
         nextls = {
           enable = U.lsp.is_enabled_elixir_ls("Next LS"),
           autostart = true,
-          cmd = cmd(),
+          cmd = nextls_cmd(),
           spitfire = true,
           init_options = {
             experimental = {
@@ -774,6 +782,7 @@ return {
         credo = {},
         elixirls = {
           enable = U.lsp.is_enabled_elixir_ls("ElixirLS"),
+          cmd = fmt("%s/lsp/elixir-ls/%s", vim.env.XDG_DATA_HOME, "language_server.sh"),
           settings = elixirls.settings({
             dialyzerEnabled = true,
             enableTestLenses = true,

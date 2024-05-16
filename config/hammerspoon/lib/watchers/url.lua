@@ -6,6 +6,14 @@ local obj = {}
 
 obj.__index = obj
 obj.name = "watcher.url"
+obj.callbacks = {
+  ["meet.google.com"] = function() end,
+}
+
+local function handle_url_callbacks(fullURL, handler)
+  dbg(fullURL)
+  dbg(obj.callbacks)
+end
 
 -- keeps track of the most recently used browser
 local currentHandler = nil
@@ -35,6 +43,8 @@ local function httpCallback(scheme, _host, _params, fullURL, _senderPID)
   end
 
   hs.urlevent.openURLWithBundle(fullURL, handler)
+
+  handle_url_callbacks(fullURL, handler)
 end
 
 function obj:start()
