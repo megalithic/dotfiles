@@ -187,6 +187,7 @@ function M.apply()
 
   M.augroup("HighlightYank", {
     {
+      -- TODO: https://github.com/ibhagwan/nvim-lua/blob/main/lua/autocmd.lua#L19-L51 (tmux/ssh copy)
       desc = "Highlight when yanking (copying) text",
       event = { "TextYankPost" },
       command = function() vim.highlight.on_yank() end,

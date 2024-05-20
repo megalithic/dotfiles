@@ -149,7 +149,7 @@ return {
       "nvim-neotest/neotest-plenary",
       "nvim-neotest/neotest-jest",
       "nvim-neotest/neotest-go",
-      "nvim-neotest/nvim-nio",
+      { "pablobfonseca/nvim-nio", branch = "fix-deprecations" },
       "stevearc/overseer.nvim",
       "nvim-lua/plenary.nvim",
       { "rcarriga/neotest-plenary", dependencies = { "nvim-lua/plenary.nvim" } },

@@ -1,29 +1,29 @@
+local fmt = string.format
+local U = require("mega.utils")
 local SETTINGS = require("mega.settings")
 local BORDER_STYLE = SETTINGS.border
 local augroup = require("mega.autocmds").augroup
 local command = vim.api.nvim_create_user_command
-local U = require("mega.utils")
-local fmt = string.format
-
 local M = {}
 
 return {
   {
-    "megalithic/nvim-lspconfig",
+    "neovim/nvim-lspconfig",
+    event = { "BufReadPre", "BufNewFile" },
     dependencies = {
-      { "nvim-lua/lsp_extensions.nvim" },
-      { "b0o/schemastore.nvim" },
+      "nvim-lua/lsp_extensions.nvim",
+      "b0o/schemastore.nvim",
+      "onsails/lspkind.nvim",
       "williamboman/mason.nvim",
       "williamboman/mason-lspconfig.nvim",
       "WhoIsSethDaniel/mason-tool-installer.nvim",
-
-      -- NOTE: `opts = {}` is the same as calling `require('fidget').setup({})`
       {
         "j-hui/fidget.nvim",
+        event = "LspAttach",
         opts = {
           progress = {
             display = {
-              done_icon = require("mega.settings").icons.lsp.ok,
+              done_icon = SETTINGS.icons.lsp.ok,
             },
           },
           notification = {
@@ -36,13 +36,15 @@ return {
           },
         },
       },
-
-      -- `neodev` configures Lua LSP for your Neovim config, runtime and plugins
-      -- used for completion, annotations and signatures of Neovim apis
       { "folke/neodev.nvim", opts = {} },
     },
     config = function()
-      local diagnostic_ns = vim.api.nvim_create_namespace("hldiagnosticregion")
+      local lsp_ok, lspconfig = pcall(require, "lspconfig")
+      if not lsp_ok then return nil end
+
+      require("neodev").setup()
+
+      local diagnostic_ns = vim.api.nvim_create_namespace("hl_diagnostic_region")
       local diagnostic_timer
       local hl_cancel
       local hl_map = {
@@ -116,12 +118,16 @@ return {
       --    function will be executed to configure the current buffer
       function M.on_attach(client, bufnr)
         local disabled_lsp_formatting = SETTINGS.disabled_lsp_formatters
+
         for i = 1, #disabled_lsp_formatting do
           if disabled_lsp_formatting[i] == client.name then
             client.server_capabilities.documentFormattingProvider = false
             client.server_capabilities.documentRangeFormattingProvider = false
           end
         end
+
+        local filetype = vim.bo[bufnr].filetype
+        if SETTINGS.disabled_semantic_tokens[filetype] then client.server_capabilities.semanticTokensProvider = nil end
 
         -- vim.lsp.handlers["textDocument/publishDiagnostics"] = function(err, result, ctx, config) ---@diagnostic disable-line: duplicate-set-field
         --   result.diagnostics = vim.tbl_map(function(diag)
@@ -433,18 +439,22 @@ return {
           qf_rename()
         end, "[r]ename")
 
-        if client.name == "ElixirLS" then
+        if client.name == "ElixirLS" or client.name == "elixirls" then
           vim.keymap.set("n", "<localleader>efp", ":ElixirFromPipe<cr>", { buffer = bufnr, noremap = true, desc = "from pipe" })
           vim.keymap.set("n", "<localleader>etp", ":ElixirToPipe<cr>", { buffer = bufnr, noremap = true, desc = "to pipe (|>)" })
           vim.keymap.set("v", "<localleader>eem", ":ElixirExpandMacro<cr>", { buffer = bufnr, noremap = true, desc = "expand macro" })
         end
-
+        command(
+          "LspLogDelete",
+          function() vim.fn.system("rm " .. vim.lsp.get_log_path()) end,
+          { desc = "Deletes the LSP log file. Useful for when it gets too big" }
+        )
         command("LspCapabilities", function(ctx)
           local filter = ctx.args == "" and { bufnr = 0 } or { name = ctx.args }
           local clients = vim.lsp.get_clients(filter)
           local clientInfo = vim.tbl_map(function(c) return c.name .. "\n" .. vim.inspect(c) end, clients)
           local msg = table.concat(clientInfo, "\n\n")
-          vim.notify(msg)
+          P(msg)
         end, {
           nargs = "?",
           complete = function()
@@ -462,6 +472,20 @@ return {
             command = diagnostic_popup,
           },
         })
+
+        -- augroup("LspFormat", {
+        --   {
+        --     event = { "BufWritePre" },
+        --     desc = "Auto format via LSP",
+        --     command = function(args)
+        --       require("conform").format({
+        --         bufnr = args.buf,
+        --         lsp_fallback = true,
+        --         quiet = true,
+        --       })
+        --     end,
+        --   },
+        -- })
 
         if client and client.server_capabilities.documentHighlightProvider then
           augroup("LspDocumentHighlights", {
@@ -626,68 +650,26 @@ return {
         {
           event = { "LspAttach" },
           desc = "Attach various functionality to an LSP-connected buffer/client",
-          command = function(evt)
-            local client = vim.lsp.get_client_by_id(evt.data.client_id)
-            if client ~= nil then M.on_attach(client, evt.buf) end
+          command = function(args)
+            -- local client = vim.lsp.get_client_by_id(args.data.client_id)
+            local client = assert(vim.lsp.get_client_by_id(args.data.client_id), "must have valid client")
+            if client ~= nil then M.on_attach(client, args.buf) end
           end,
         },
       })
 
-      local lspconfig = require("lspconfig")
-
-      M.capabilities = vim.lsp.protocol.make_client_capabilities()
-      M.capabilities.textDocument.completion.completionItem.snippetSupport = true
-      if pcall(require, "cmp_nvim_lsp") then M.capabilities = require("cmp_nvim_lsp").default_capabilities(M.capabilities) end
+      local capabilities = vim.lsp.protocol.make_client_capabilities()
+      capabilities.textDocument.completion.completionItem.snippetSupport = true
+      if pcall(require, "cmp_nvim_lsp") then capabilities = require("cmp_nvim_lsp").default_capabilities() end
 
       local servers = require("mega.servers")
       if servers == nil then return end
-
-      function M.get_config(name)
-        local config = name and servers.list[name] or {}
-        if not config or config == nil then return end
-
-        if type(config) == "function" then
-          config = config()
-          if not config or config == nil then return end
-        end
-
-        config.flags = { debounce_text_changes = 150 }
-        config.capabilities = vim.tbl_deep_extend("force", {}, M.capabilities, config.capabilities or {})
-
-        return config
-      end
-
-      local tools = {
-        "luacheck",
-        "prettier",
-        "prettierd",
-        "selene",
-        "shellcheck",
-        "shfmt",
-        -- "solargraph",
-        "stylua",
-        "yamlfmt",
-        -- "black",
-        -- "buf",
-        -- "cbfmt",
-        -- "deno",
-        -- "elm-format",
-        -- "eslint_d",
-        -- "fixjson",
-        -- "flake8",
-        -- "goimports",
-        -- "isort",
-      }
+      local servers_list = servers.list()
+      -- servers.load_contrib()
 
       require("mason").setup()
-      local mr = require("mason-registry")
-      for _, tool in ipairs(tools) do
-        local p = mr.get_package(tool)
-        if not p:is_installed() then p:install() end
-      end
+      require("mason-lspconfig").setup()
 
-      -- will try and install the language servers defined in servers.lua..
-      -- in addition to the others..
       local ensure_installed = {
         "black",
         "eslint_d",
@@ -699,7 +681,7 @@ return {
       }
 
       local servers_to_install = vim.tbl_filter(function(key)
-        local s = servers.list[key]
+        local s = servers_list[key]
         if type(s) == "table" then
           return not s.manual_install
         elseif type(s) == "function" then
@@ -708,23 +690,33 @@ return {
         else
           return s
         end
-      end, vim.tbl_keys(servers.list))
+      end, vim.tbl_keys(servers_list))
       vim.list_extend(ensure_installed, servers_to_install)
 
       require("mason-tool-installer").setup({ ensure_installed = ensure_installed })
 
-      -- servers.load_contrib()
+      local function get_config(name)
+        local config = name and servers_list[name] or {}
+        if not config or config == nil then return end
 
-      for server_name, _ in pairs(servers.list) do
-        local cfg = M.get_config(server_name)
+        if type(config) == "function" then
+          config = config()
+          if not config or config == nil then return end
+        end
 
-        if cfg == nil then return end
+        config.flags = { debounce_text_changes = 150 }
+        config.capabilities = vim.tbl_deep_extend("force", {}, capabilities, config.capabilities or {})
 
-        lspconfig[server_name].setup(cfg)
+        return config
       end
+
+      vim.iter(servers_list):each(function(server_name, _)
+        local cfg = get_config(server_name)
+        if cfg == nil then return end
+        lspconfig[server_name].setup(cfg)
+      end)
     end,
   },
-
   {
     "mhanberg/output-panel.nvim",
     keys = {
@@ -734,19 +726,17 @@ return {
         desc = "lsp: open output panel",
       },
     },
-    event = "VeryLazy",
+    event = "LspAttach",
     cmd = { "OutputPanel" },
     config = function() require("output_panel").setup() end,
   },
-
   {
     "elixir-tools/elixir-tools.nvim",
     cond = U.lsp.is_enabled_elixir_ls("Next LS") or U.lsp.is_enabled_elixir_ls("ElixirLS"),
-    -- event = {
-    --   "BufReadPre **.ex,**.exs,**.heex",
-    --   "BufNewFile **.ex,**.exs,**.heex",
-    -- },
-    lazy = false,
+    event = {
+      "BufReadPre **.ex,**.exs,**.heex",
+      "BufNewFile **.ex,**.exs,**.heex",
+    },
     config = function()
       local elixir = require("elixir")
       local elixirls = require("elixir.elixirls")
@@ -789,12 +779,6 @@ return {
             enableTestLenses = true,
           }),
           on_attach = M.on_attach,
-          -- on_attach = function(_client, bufnr)
-          --   local map = vim.keymap.set
-          --   map("n", "<localleader>efp", ":ElixirFromPipe<cr>", { buffer = bufnr, noremap = true, desc = "from pipe" })
-          --   map("n", "<localleader>etp", ":ElixirToPipe<cr>", { buffer = bufnr, noremap = true, desc = "to pipe (|>)" })
-          --   map("v", "<localleader>eem", ":ElixirExpandMacro<cr>", { buffer = bufnr, noremap = true, desc = "expand macro" })
-          -- end,
         },
       })
     end,

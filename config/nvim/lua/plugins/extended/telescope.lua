@@ -524,11 +524,14 @@ return {
                   prompt = prompt:gsub("%s", ".*"),
                   updated_finder = require("telescope.finders").new_job(
                     function(new_prompt)
-                      return vim.tbl_flatten({
-                        require("telescope.config").values.vimgrep_arguments,
-                        "--",
-                        new_prompt,
-                      })
+                      return vim
+                        .iter({
+                          require("telescope.config").values.vimgrep_arguments,
+                          "--",
+                          new_prompt,
+                        })
+                        :flatten()
+                        :totable()
                     end,
                     require("telescope.make_entry").gen_from_vimgrep({}),
                     nil,
@@ -548,12 +551,15 @@ return {
                 prompt = prompt:sub(result_len + 1):gsub("%s", ".*"),
                 updated_finder = require("telescope.finders").new_job(
                   function(new_prompt)
-                    return vim.tbl_flatten({
-                      require("telescope.config").values.vimgrep_arguments,
-                      string.format("-g*.%s", result),
-                      "--",
-                      new_prompt,
-                    })
+                    return vim
+                      .iter({
+                        require("telescope.config").values.vimgrep_arguments,
+                        string.format("-g*.%s", result),
+                        "--",
+                        new_prompt,
+                      })
+                      :flatten()
+                      :totable()
                   end,
                   require("telescope.make_entry").gen_from_vimgrep({}),
                   nil,
@@ -645,9 +651,11 @@ return {
       -- telescope.load_extension("nucleo")
       -- telescope.load_extension("zf-native")
 
+      -- keys
       local builtin = require("telescope.builtin")
       map("n", "<leader>ff", function() mega.picker.find_files({ picker = "smart_open" }) end, { desc = "[f]ind [f]iles" })
       map("n", "<leader>fh", ts.help_tags, { desc = "[f]ind [h]elp" })
+      map("n", "<leader>fa", ts.autocommands, { desc = "[f]ind [a]utocommands" })
       map("n", "<leader>fk", ts.keymaps, { desc = "[f]ind [k]eymaps" })
       -- map("n", "<leader>fs", ts.builtin, { desc = "[f]ind [f]elect Telescope" })
       map("n", "<leader>a", mega.picker.grep, { desc = "grep (live)" })

@@ -1,6 +1,8 @@
 local BORDER_STYLE = "none"
 local fmt = string.format
 
+vim.lsp.set_log_level("debug")
+
 local border_chars = {
   none = { " ", " ", " ", " ", " ", " ", " ", " " },
   single = { "🭽", "▔", "🭾", "▕", "🭿", "▁", "🭼", "▏" },
@@ -88,6 +90,7 @@ local M = {
     "folds",
     "env",
   },
+  disabled_semantic_tokens = { "lua" },
   disabled_lsp_formatters = { "tailwindcss", "html", "tsserver", "ls_emmet", "zk", "sumneko_lua" },
   -- REF: elixir language servers: { ElixirLS, Next LS, elixirls, nextls, lexical }
   enabled_elixir_ls = { "", "", "", "nextls", "" },
@@ -554,6 +557,7 @@ M.apply = function()
     },
     -- ['.*tmux.*conf$'] = 'tmux',
   })
+
   function vim.pprint(...)
     local s, args = pcall(vim.deepcopy, { ... })
     if not s then args = { ... } end
