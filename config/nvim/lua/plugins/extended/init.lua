@@ -294,195 +294,38 @@ return {
     --     },
     --   },
     -- },
-    {
-      "kndndrj/nvim-dbee",
-      cmd = { "Dbee" },
-      dependencies = {
-        "MunifTanjim/nui.nvim",
-      },
-      build = function()
-        -- Install tries to automatically detect the install method.
-        -- if it fails, try calling it with one of these parameters:
-        --    "curl", "wget", "bitsadmin", "go"
-        require("dbee").install()
-      end,
-      config = function()
-        require("dbee").setup(--[[optional config]])
-      end,
-    },
   },
   {
     "nacro90/numb.nvim",
     event = "CmdlineEnter",
     opts = {},
   },
-  {
-    "Exafunction/codeium.nvim",
-    cmd = "Codeium",
-    -- build = ":Codeium Auth",
-    opts = {},
-  },
 
-  -- ( LSP ) -------------------------------------------------------------------
-  -- { "onsails/lspkind.nvim" },
-  -- {
-  --   "neovim/nvim-lspconfig",
-  --   event = { "BufReadPre", "BufNewFile" },
-  --   dependencies = {
-  --     { "williamboman/mason-lspconfig.nvim" },
-  --     {
-  --       "WhoIsSethDaniel/mason-tool-installer.nvim",
-  --       config = function()
-  --         local servers = require("mega.servers")
-  --         if servers == nil then return end
-  --         local ensure_installed = {
-  --           "black",
-  --           "eslint_d",
-  --           "isort",
-  --           "prettier",
-  --           "prettierd",
-  --           "ruff",
-  --           "stylua",
-  --         }
-  --
-  --         local servers_to_install = vim.tbl_filter(function(key)
-  --           local s = servers.list[key]
-  --           if type(s) == "table" then
-  --             return not s.manual_install
-  --           elseif type(s) == "function" then
-  --             s = s()
-  --             return (s and not s.manual_install)
-  --           else
-  --             return s
-  --           end
-  --         end, vim.tbl_keys(servers.list))
-  --         vim.list_extend(ensure_installed, servers_to_install)
-  --
-  --         require("mason-tool-installer").setup({ ensure_installed = ensure_installed })
-  --       end,
-  --       -- opts = {
-  --       --   ensure_installed = {
-  --       --     "black",
-  --       --     "eslint_d",
-  --       --     "eslint_d",
-  --       --     "isort",
-  --       --     "prettier",
-  --       --     "prettierd",
-  --       --     "ruff",
-  --       --     "stylua",
-  --       --     -- "rubocop",
-  --       --   },
-  --       --   automatic_installation = true,
-  --       -- },
-  --     },
-  --     {
-  --       "williamboman/mason.nvim",
-  --       config = function()
-  --         local tools = {
-  --           "luacheck",
-  --           "prettier",
-  --           "prettierd",
-  --           "selene",
-  --           "shellcheck",
-  --           "shfmt",
-  --           -- "solargraph",
-  --           "stylua",
-  --           "yamlfmt",
-  --           -- "black",
-  --           -- "buf",
-  --           -- "cbfmt",
-  --           -- "deno",
-  --           -- "elm-format",
-  --           -- "eslint_d",
-  --           -- "fixjson",
-  --           -- "flake8",
-  --           -- "goimports",
-  --           -- "isort",
-  --         }
-  --
-  --         require("mason").setup()
-  --         local mr = require("mason-registry")
-  --         for _, tool in ipairs(tools) do
-  --           local p = mr.get_package(tool)
-  --           if not p:is_installed() then p:install() end
-  --         end
-  --
-  --         require("mason-lspconfig").setup({
-  --           automatic_installation = true,
-  --         })
-  --       end,
-  --     },
-  --     { "nvim-lua/lsp_extensions.nvim" },
-  --     { "b0o/schemastore.nvim" },
-  --     {
-  --       "icholy/lsplinks.nvim",
-  --       config = function()
-  --         local lsplinks = require("lsplinks")
-  --         lsplinks.setup()
-  --         vim.keymap.set("n", "gx", lsplinks.gx)
-  --       end,
-  --     },
-  --     {
-  --       "j-hui/fidget.nvim",
-  --       config = function()
-  --         require("fidget").setup({
-  --           progress = {
-  --             display = {
-  --               done_icon = "✓",
-  --             },
-  --           },
-  --           notification = {
-  --             view = {
-  --               group_separator = "─────", -- digraph `hh`
-  --             },
-  --             window = {
-  --               winblend = 0,
-  --             },
-  --           },
-  --         })
-  --       end,
-  --     },
-  --     {
-  --       "mhanberg/output-panel.nvim",
-  --       keys = {
-  --         {
-  --           "<leader>lip",
-  --           ":OutputPanel<CR>",
-  --           desc = "lsp: open output panel",
-  --         },
-  --       },
-  --       event = "LspAttach",
-  --       cmd = { "OutputPanel" },
-  --       config = function() require("output_panel").setup() end,
-  --     },
-  --     {
-  --       "Fildo7525/pretty_hover",
-  --       event = "LspAttach",
-  --       opts = { border = BORDER_STYLE },
-  --     },
-  --     {
-  --       "lewis6991/hover.nvim",
-  --       keys = { "K", "gK" },
-  --       config = function()
-  --         require("hover").setup({
-  --           init = function()
-  --             require("hover.providers.lsp")
-  --             require("hover.providers.gh")
-  --             require("hover.providers.gh_user")
-  --             require("hover.providers.jira")
-  --             require("hover.providers.man")
-  --             require("hover.providers.dictionary")
-  --           end,
-  --           preview_opts = {
-  --             border = BORDER_STYLE,
-  --           },
-  --           -- Whether the contents of a currently open hover window should be moved
-  --           -- to a :h preview-window when pressing the hover keymap.
-  --           preview_window = true,
-  --           title = false,
-  --         })
-  --       end,
-  --     },
-  --   },
-  -- },
+  {
+    "windwp/nvim-ts-autotag",
+    dependencies = { "nvim-treesitter/nvim-treesitter" },
+    event = { "BufReadPre", "BufNewFile" },
+    opts = {
+      aliases = {
+        ["elixir"] = "html",
+        ["heex"] = "html",
+        ["phoenix_html"] = "html",
+      },
+      opts = {
+
+        -- Defaults
+        enable_close = true, -- Auto close tags
+        enable_rename = true, -- Auto rename pairs of tags
+        enable_close_on_slash = false, -- Auto close on trailing </
+      },
+      -- Also override individual filetype configs, these take priority.
+      -- Empty by default, useful if one of the "opts" global settings
+      -- doesn't work well in a specific filetype
+      -- per_filetype = {
+      --   ["html"] = {
+      --     enable_close = false,
+      --   },
+      -- },
+    },
+  },
 }

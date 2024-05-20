@@ -1,7 +1,7 @@
 local BORDER_STYLE = "none"
 local fmt = string.format
 
-vim.lsp.set_log_level("debug")
+vim.lsp.set_log_level("WARN")
 
 local border_chars = {
   none = { " ", " ", " ", " ", " ", " ", " ", " " },
@@ -93,14 +93,15 @@ local M = {
   disabled_semantic_tokens = { "lua" },
   disabled_lsp_formatters = { "tailwindcss", "html", "tsserver", "ls_emmet", "zk", "sumneko_lua" },
   -- REF: elixir language servers: { ElixirLS, Next LS, elixirls, nextls, lexical }
-  enabled_elixir_ls = { "", "", "", "nextls", "" },
-  completion_exclusions = { "ElixirLS", "Next LS", "elixirls", "", "lexical" },
+  enabled_elixir_ls = { "", "", "", "nextls", "lexical" },
+  completion_exclusions = { "ElixirLS", "Next LS", "elixirls", "", "" },
   formatter_exclusions = { "ElixirLS", "Next LS", "elixirls", "", "lexical" },
   diagnostic_exclusions = { "ElixirLS", "Next LS", "elixirls", "", "lexical", "tsserver" },
   definition_exclusions = { "ElixirLS", "Next LS", "elixirls", "", "lexical" },
   max_diagnostic_exclusions = { "ElixirLS", "Next LS", "elixirls", "", "lexical" },
   disable_autolint = false,
   disable_autoformat = false,
+  enable_signsplaced = false,
   markdown_fenced_languages = {
     "shell=sh",
     "bash=sh",

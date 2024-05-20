@@ -108,7 +108,7 @@ return {
       vim.api.nvim_set_option("guifont", "JetBrainsMono Nerd Font:h22")
       vim.api.nvim_set_option("buftype", "firenvim")
 
-      vim.diagnostic.disable(bufnr)
+      vim.diagnostic.enable(false, { bufnr = bufnr })
       vim.lsp.stop_client(vim.lsp.get_clients({ bufnr = bufnr }))
     end
 

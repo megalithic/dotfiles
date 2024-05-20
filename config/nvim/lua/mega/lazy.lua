@@ -27,7 +27,7 @@ local plugin_spec = {
 require("lazy").setup(plugin_spec, {
   -- debug = false,
   -- defaults = { lazy = true },
-  checker = { enabled = false },
+  -- checker = { enabled = false },
   -- diff = {
   --   cmd = "terminal_git",
   -- },

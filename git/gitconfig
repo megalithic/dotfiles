@@ -293,7 +293,6 @@
 	ff = only
 [rerere]
   enabled = true
-  enabled = 1
   autoupdate = true
 [diff-so-fancy]
   markEmptyLines = true

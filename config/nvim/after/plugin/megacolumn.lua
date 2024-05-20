@@ -287,8 +287,14 @@ function mega.ui.statuscolumn.render(is_active)
 
   -- local gitsigns, sns = extmark_signs(buf, lnum)
   local gitsigns, other_sns = extmark_signs(buf, lnum)
-  local sns = signplaced_signs(buf, lnum)
-  vim.list_extend(sns, other_sns)
+  local sns
+
+  if SETTINGS.enable_signsplaced then
+    sns = signplaced_signs(buf, lnum)
+    vim.list_extend(sns, other_sns)
+  else
+    sns = other_sns
+  end
 
   while #sns < MIN_SIGN_WIDTH do
     table.insert(sns, spacer(1))

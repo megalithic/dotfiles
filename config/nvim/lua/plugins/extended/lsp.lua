@@ -129,7 +129,8 @@ return {
         local filetype = vim.bo[bufnr].filetype
         if SETTINGS.disabled_semantic_tokens[filetype] then client.server_capabilities.semanticTokensProvider = nil end
 
-        -- vim.lsp.handlers["textDocument/publishDiagnostics"] = function(err, result, ctx, config) ---@diagnostic disable-line: duplicate-set-field
+        -- ---@diagnostic disable-line: duplicate-set-field
+        -- vim.lsp.handlers["textDocument/publishDiagnostics"] = function(err, result, ctx, config)
         --   result.diagnostics = vim.tbl_map(function(diag)
         --     if
         --       (diag.source == "biome" and diag.code == "lint/suspicious/noConsoleLog")
@@ -651,21 +652,18 @@ return {
           event = { "LspAttach" },
           desc = "Attach various functionality to an LSP-connected buffer/client",
           command = function(args)
-            -- local client = vim.lsp.get_client_by_id(args.data.client_id)
-            local client = assert(vim.lsp.get_client_by_id(args.data.client_id), "must have valid client")
+            local client = assert(vim.lsp.get_client_by_id(args.data.client_id), "must have valid ls client")
             if client ~= nil then M.on_attach(client, args.buf) end
           end,
         },
       })
 
       local capabilities = vim.lsp.protocol.make_client_capabilities()
-      capabilities.textDocument.completion.completionItem.snippetSupport = true
       if pcall(require, "cmp_nvim_lsp") then capabilities = require("cmp_nvim_lsp").default_capabilities() end
 
       local servers = require("mega.servers")
       if servers == nil then return end
       local servers_list = servers.list()
-      -- servers.load_contrib()
 
       require("mason").setup()
       require("mason-lspconfig").setup()
@@ -695,7 +693,7 @@ return {
 
       require("mason-tool-installer").setup({ ensure_installed = ensure_installed })
 
-      local function get_config(name)
+      function M.get_config(name)
         local config = name and servers_list[name] or {}
         if not config or config == nil then return end
 
@@ -711,7 +709,7 @@ return {
       end
 
       vim.iter(servers_list):each(function(server_name, _)
-        local cfg = get_config(server_name)
+        local cfg = M.get_config(server_name)
         if cfg == nil then return end
         lspconfig[server_name].setup(cfg)
       end)

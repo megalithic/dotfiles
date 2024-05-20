@@ -1,4 +1,5 @@
 local obj = {}
+local Settings = require("hs.settings")
 
 obj.__index = obj
 obj.name = "clipper"
@@ -171,12 +172,10 @@ function obj:init(opts)
       hs.hotkey.bind({ "cmd", "shift" }, "v", pasteImageUrl)
       hs.hotkey.bind({ "cmd", "ctrl" }, "v", pasteImageUrl)
 
-      local browser = hs.application.get(C.preferred.browser)
-      if
-        browser
-        and hs.fnutils.contains(C.preferred.browsers, browser:name())
-        and browser == hs.application.frontmostApplication()
-      then
+      local browser =
+        hs.application.get(Settings.get("group.browsers") or C.preferred.browser or C.preferred.browsers[1])
+
+      if browser and browser == hs.application.frontmostApplication() then
         hs.hotkey.bind({ "ctrl", "shift" }, "v", function()
           local imageURL = hs.pasteboard.getContents("imageURL")
           -- local imageName = hs.pasteboard.getContents("imageName")

@@ -1,80 +1,54 @@
--- debug.lua
---
--- Shows how to use the DAP plugin to debug your code.
---
--- Primarily focused on configuring the debugger for Go, but can
--- be extended to other languages as well. That's why it's called
--- mega.nvim and not kitchen-sink.nvim ;)
+local SETTINGS = require("mega.settings")
 
 return {
-  -- NOTE: Yes, you can install new plugins here!
   "mfussenegger/nvim-dap",
-  -- NOTE: And you can specify dependencies as well
+  event = { "LazyFile" },
   dependencies = {
-    -- Creates a beautiful debugger UI
     "rcarriga/nvim-dap-ui",
     "theHamsta/nvim-dap-virtual-text",
+    -- {
+    --   "jbyuki/one-small-step-for-vimkind",
+    --   keys = {
+    --     { "<localleader>dL", function() require("osv").launch({ port = 8086 }) end, desc = "Adapter Lua Server" },
+    --     { "<localleader>dl", function() require("osv").run_this() end, desc = "Adapter Lua" },
+    --   },
+    --   opts = {},
+    -- },
 
-    -- Required dependency for nvim-dap-ui
     { "pablobfonseca/nvim-nio", branch = "fix-deprecations" },
-
-    -- Installs the debug adapters for you
     "williamboman/mason.nvim",
     "jay-babu/mason-nvim-dap.nvim",
-
-    -- Add your own debuggers here
-    "leoluz/nvim-dap-go",
   },
   config = function()
     local dap = require("dap")
     local dapui = require("dapui")
 
     require("mason-nvim-dap").setup({
-      -- Makes a best effort to setup the various debuggers with
-      -- reasonable debug configurations
       automatic_setup = true,
-
-      -- You can provide additional configuration to the handlers,
-      -- see mason-nvim-dap README for more information
       handlers = {},
-
-      -- You'll need to check that you have the required things installed
-      -- online, please don't ask me how to install them :)
       ensure_installed = {
-        -- Update this to ensure that you have the debuggers for the langs you want
         "delve",
+        "python",
+        "elixir",
+        -- "node2",
+        -- "chrome",
+        -- "firefox",
+        "js",
       },
     })
 
-    require("nvim-dap-virtual-text").setup({
-      -- This just tries to mitigate the chance that I leak tokens here. Probably won't stop it from happening...
-      display_callback = function(variable)
-        local name = string.lower(variable.name)
-        local value = string.lower(variable.value)
-        if name:match("secret") or name:match("api") or value:match("secret") or value:match("api") then return "*****" end
-
-        if #variable.value > 15 then return " " .. string.sub(variable.value, 1, 15) .. "... " end
-
-        return " " .. variable.value
-      end,
-    })
-
-    -- Basic debugging keymaps, feel free to change to your liking!
-    vim.keymap.set("n", "<F5>", dap.continue, { desc = "Debug: Start/Continue" })
-    vim.keymap.set("n", "<F1>", dap.step_into, { desc = "Debug: Step Into" })
-    vim.keymap.set("n", "<F2>", dap.step_over, { desc = "Debug: Step Over" })
-    vim.keymap.set("n", "<F3>", dap.step_out, { desc = "Debug: Step Out" })
+    vim.keymap.set("n", "<localleader>dd", dap.continue, { desc = "Debug: Start/Continue" })
+    vim.keymap.set("n", "<localleader>dsi", dap.step_into, { desc = "Debug: Step Into" })
+    vim.keymap.set("n", "<localleader>dso", dap.step_over, { desc = "Debug: Step Over" })
+    vim.keymap.set("n", "<localleader>dst", dap.step_out, { desc = "Debug: Step Out" })
     vim.keymap.set("n", "<localleader>db", dap.toggle_breakpoint, { desc = "Debug: Toggle Breakpoint" })
     vim.keymap.set("n", "<localleader>dB", function() dap.set_breakpoint(vim.fn.input("Breakpoint condition: ")) end, { desc = "Debug: Set Breakpoint" })
 
-    vim.keymap.set("n", "<space>?", function() require("dapui").eval(nil, { enter = true }) end)
+    vim.keymap.set("n", "<localleader>dc", dap.run_to_cursor)
+    vim.keymap.set("n", "<localleader>dx", dap.terminate)
+    vim.keymap.set("n", "<localleader>dt", dapui.toggle)
 
-    -- Dap UI setup
-    -- For more information, see |:help nvim-dap-ui|
     dapui.setup({
-      -- Set icons to characters that are more likely to work in every terminal.
-      --    Feel free to remove or use ones that you like more! :)
-      --    Don't feel like these are good choices.
       icons = { expanded = "▾", collapsed = "▸", current_frame = "*" },
       controls = {
         icons = {
@@ -91,21 +65,71 @@ return {
       },
     })
 
+    vim.fn.sign_define({
+      {
+        name = "DapBreakpoint",
+        text = SETTINGS.icons.misc.bug,
+        texthl = "DapBreakpoint",
+        linehl = "",
+        numhl = "",
+      },
+      {
+        name = "DapStopped",
+        text = SETTINGS.icons.misc.bookmark,
+        texthl = "DapStopped",
+        linehl = "",
+        numhl = "",
+      },
+    })
+
+    vim.keymap.set("n", "<localleader>d?", function() require("dapui").eval(nil, { enter = true }) end)
     -- Toggle to see last session result. Without this, you can't see session output in case of unhandled exception.
-    vim.keymap.set("n", "<F7>", dapui.toggle, { desc = "Debug: See last session result." })
+    vim.keymap.set("n", "<localleader>dl", dapui.toggle, { desc = "Debug: See last session result." })
+
+    dap.adapters.nlua = function(callback, config) callback({ type = "server", host = config.host or "127.0.0.1", port = config.port or 8086 }) end
 
     local elixir_ls_debugger = vim.fn.exepath("elixir-ls-debugger")
+    -- elixir_ls_debugger = string.format("%s/lsp/elixir-ls/%s", vim.env.XDG_DATA_HOME, "debug_adapter.sh")
     if elixir_ls_debugger ~= "" then
       dap.adapters.mix_task = {
         type = "executable",
         command = elixir_ls_debugger,
+        args = {},
       }
 
       dap.configurations.elixir = {
         {
           type = "mix_task",
-          name = "phoenix server",
+          name = "phx.server",
           task = "phx.server",
+          request = "launch",
+          projectDir = "${workspaceFolder}",
+          exitAfterTaskReturns = false,
+          debugAutoInterpretAllModules = false,
+        },
+        {
+          type = "mix_task",
+          name = "mix test",
+          request = "launch",
+          task = "test",
+          taskArgs = { "--trace" },
+          startApps = true,
+          projectDir = "${workspaceFolder}",
+          requireFiles = { "test/**/test_helper.exs", "test/**/*_test.exs" },
+        },
+        {
+          type = "mix_task",
+          name = "bellhop phx.server",
+          task = "iex --sname bellhop-tern --cookie ternit -S mix phx.server",
+          request = "launch",
+          projectDir = "${workspaceFolder}",
+          exitAfterTaskReturns = false,
+          debugAutoInterpretAllModules = false,
+        },
+        {
+          type = "mix_task",
+          name = "retriever server",
+          task = "iex --sname retriever-tern --cookie retriever -S mix",
           request = "launch",
           projectDir = "${workspaceFolder}",
           exitAfterTaskReturns = false,
@@ -114,11 +138,18 @@ return {
       }
     end
 
-    dap.listeners.after.event_initialized["dapui_config"] = dapui.open
-    dap.listeners.before.event_terminated["dapui_config"] = dapui.close
-    dap.listeners.before.event_exited["dapui_config"] = dapui.close
+    dap.configurations.lua = {
+      {
+        type = "nlua",
+        request = "attach",
+        name = "Attach to running Neovim instance",
+      },
+    }
 
-    -- Install golang specific config
-    -- require('dap-go').setup()
+    dap.listeners.before.attach.dapui_config = function() dapui.open() end
+    dap.listeners.before.launch.dapui_config = function() dapui.open() end
+    dap.listeners.before.event_terminated.dapui_config = function() dapui.close() end
+    dap.listeners.before.event_exited.dapui_config = function() dapui.close() end
+    dap.listeners.after.event_initialized.dapui_config = function() dapui.open() end
   end,
 }

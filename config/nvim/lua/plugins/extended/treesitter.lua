@@ -22,7 +22,7 @@ return {
         "cpp",
         "css",
         "csv",
-        -- "comment", -- too slow still.
+        "comment", -- too slow still.
         "devicetree",
         "dockerfile",
         "diff",
@@ -75,6 +75,7 @@ return {
         "vimdoc",
         "yaml",
       },
+      ignore_install = { "comment" },
       auto_install = true,
       highlight = {
         enable = vim.g.vscode ~= 1,
@@ -225,7 +226,6 @@ return {
   { "RRethy/nvim-treesitter-textsubjects", cond = true, dependencies = { "nvim-treesitter/nvim-treesitter" } },
   { "nvim-treesitter/nvim-tree-docs", cond = true, dependencies = { "nvim-treesitter/nvim-treesitter" } },
   { "RRethy/nvim-treesitter-endwise", dependencies = { "nvim-treesitter/nvim-treesitter" } },
-  { "megalithic/nvim-ts-autotag", dependencies = { "nvim-treesitter/nvim-treesitter" } },
   {
     "nvim-treesitter/nvim-treesitter-context",
     keys = {

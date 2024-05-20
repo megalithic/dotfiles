@@ -215,7 +215,7 @@ return {
   {
     "NeogitOrg/neogit",
     cmd = "Neogit",
-    branch = "nightly",
+    branch = "master",
     dependencies = { "nvim-lua/plenary.nvim" },
     -- commit = "b89ef391d20f45479e92bd4190e444c9ec9163a3",
     keys = git_keys,
@@ -292,7 +292,7 @@ return {
             mega.notify(fmt("%s Conflicts detected.", mega.icons.lsp.error))
 
             vim.defer_fn(function()
-              vim.diagnostic.disable(args.buf)
+              vim.diagnostic.enable(false, { bufnr = args.buf })
               vim.lsp.stop_client(vim.lsp.get_clients())
 
               local ok, gd = pcall(require, "garbage-day.utils")
