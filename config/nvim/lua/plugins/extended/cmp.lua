@@ -321,6 +321,7 @@ return {
             end,
           },
           { name = "async_path", option = { trailing_slash = true } },
+        }, {
           {
             name = "fuzzy_buffer",
             group_index = 2,

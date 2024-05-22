@@ -215,10 +215,6 @@
       if: "[ `uname` = Darwin ]"
       path: misc/mailmate/megabindings.plist
       # POST-symlink: ensure you add `, Mega` to the keybind settings in Mailmate
-    ~/Library/Application Support/Thorium/NativeMessagingHosts/surfingkeys.json:
-      force: true
-      if: "[ `uname` = Darwin ]"
-      path: config/surfingkeys/surfingkeys.json
     ~/Library/Application Support/Google/Chrome/NativeMessagingHosts/surfingkeys.json:
       force: true
       if: "[ `uname` = Darwin ]"
@@ -235,6 +231,10 @@
       force: true
       if: "[ `uname` = Darwin ]"
       path: config/surfingkeys/firenvim.json
+    ~/Library/Application Support/Chromium/NativeMessagingHosts/com.1password.1password.json:
+      force: true
+      if: "[ `uname` = Darwin ]"
+      path: misc/1p/com.1password.1password.json
     ~/Library/Application Support/BraveSoftware/Brave-Browser/NativeMessagingHosts/surfingkeys.json:
       force: true
       if: "[ `uname` = Darwin ]"
@@ -254,15 +254,15 @@
     ~/Library/Application Support/Thorium/NativeMessagingHosts/firenvim.json:
       force: true
       if: "[ `uname` = Darwin ]"
-      path: config/surfingkeys/surfingkeys.json
+      path: config/surfingkeys/firenvim.json
     ~/Library/Application Support/Thorium/NativeMessagingHosts/com.1password.1password.json:
       force: true
       if: "[ `uname` = Darwin ]"
       path: misc/1p/com.1password.1password.json
-    ~/Library/Application Support/Chromium/NativeMessagingHosts/com.1password.1password.json:
+    ~/Library/Application Support/Thorium/NativeMessagingHosts/surfingkeys.json:
       force: true
       if: "[ `uname` = Darwin ]"
-      path: misc/1p/com.1password.1password.json
+      path: config/surfingkeys/surfingkeys.json
 
 - shell:
     - description: GnuPG (gpg) setup..

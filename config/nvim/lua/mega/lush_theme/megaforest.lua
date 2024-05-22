@@ -261,11 +261,11 @@ local theme = lush(function(injected_functions)
     -- affects individual bits of code that are errored:
     DiagnosticUnderlineError({
       fg = C.transparent,
-      bg = C.bg_dark,
+      bg = C.bg_red,
       sp = DiagnosticError.fg,
       gui = "undercurl,bold,italic",
     }),
-    DiagnosticUnderlineWarn({ fg = C.transparent, bg = C.bg_dark, sp = DiagnosticWarn.fg, gui = "italic,bold" }),
+    DiagnosticUnderlineWarn({ fg = C.transparent, bg = C.bg_dark, sp = DiagnosticWarn.fg, gui = "italic,bold,undercurl" }),
     DiagnosticUnderlineInfo({ fg = C.transparent, bg = C.bg_dark, sp = DiagnosticInfo.fg, gui = "italic" }),
     DiagnosticUnderlineHint({ fg = C.transparent, bg = C.bg_dark, sp = DiagnosticHint.fg, gui = "italic" }),
 

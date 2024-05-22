@@ -62,7 +62,7 @@ M.list = function()
         cmd = { vim.env.XDG_DATA_HOME .. "/lsp/lexical/_build/dev/package/lexical/bin/start_lexical.sh" },
         single_file_support = true,
         filetypes = { "elixir", "eelixir", "heex", "surface" },
-        root_dir = root_pattern("mix.exs", ".git"), -- or vim.loop.os_homedir(),
+        root_dir = root_pattern("mix.exs", ".git"),
         log_level = vim.lsp.protocol.MessageType.Log,
         message_level = vim.lsp.protocol.MessageType.Log,
         settings = {
@@ -338,7 +338,7 @@ M.list = function()
       }
     end,
     marksman = function() return (vim.g.started_by_firenvim or vim.env.TMUX_POPUP) and nil or {} end,
-    nextls = function(...)
+    nextls = function()
       if not U.lsp.is_enabled_elixir_ls("nextls") then return false end
 
       local cmd = function(use_homebrew)
@@ -354,13 +354,13 @@ M.list = function()
         local build_bin = fmt("next_ls_%s_%s", os_name, current_arch)
 
         if use_homebrew then return { "nextls", "--stdio" } end
-        -- return fmt("%s/lsp/nextls/burrito_out/%s", vim.env.XDG_DATA_HOME, build_bin)
-        return { fmt("%s/lsp/nextls/burrito_out/%s", vim.env.XDG_DATA_HOME, build_bin), "--stdio" }
+        P({ fmt("%s/lsp/next-ls/burrito_out/%s", vim.env.XDG_DATA_HOME, build_bin), "--stdio" })
+        return { fmt("%s/lsp/next-ls/burrito_out/%s", vim.env.XDG_DATA_HOME, build_bin), "--stdio" }
       end
 
-      local homebrew_enabled = false
+      local homebrew_enabled = true
 
-      local config = {
+      return {
         manual_install = true,
         cmd = cmd(homebrew_enabled),
         single_file_support = true,
@@ -408,7 +408,8 @@ M.list = function()
               enable = true,
             },
           },
-          -- mixEnv = "dev",
+          mixEnv = "dev",
+          mix_target = "host",
           fetchDeps = false,
           dialyzerEnabled = true,
           dialyzerFormat = "dialyxir_long",
@@ -416,8 +417,6 @@ M.list = function()
           suggestSpecs = true,
         },
       }
-
-      return config
     end,
     prosemd_lsp = function() return (vim.g.started_by_firenvim or vim.env.TMUX_POPUP) and nil or {} end,
     pyright = {

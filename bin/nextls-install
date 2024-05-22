@@ -20,7 +20,7 @@ __root="$(cd "$(dirname "$__dir")" && pwd)"
 __invocation="$(printf %q "$__file")$( (($#)) && printf ' %q' "$@" || true)"
 
 LSPS_PATH="${XDG_DATA_HOME}/lsp"
-LS_PATH="${LSPS_PATH}/nextls"
+LS_PATH="${LSPS_PATH}/next-ls"
 TMP_PATH="$HOME/tmp"
 mkdir -p "$LS_PATH"
 
@@ -71,15 +71,7 @@ do_install() {
           chmod +x "$bin_path" &&
           popd >/dev/null &&
           (rm "$BINARY" && log_ok "removed $TMP_PATH/$BINARY")
-
-        # mkdir -p "$LS_PATH/bin" &&
-        #   curl --fail --silent -LO "$TARGET/$BINARY" &&
-        #   # (mv "./$BINARY" "$LS_PATH/bin/nextls" && log_ok "moved $CWD/$BINARY to $LS_PATH/bin/nextls") || { log_error "issue moving binary" } &&
-        #   pushd "$LS_PATH" >/dev/null &&
-        #     (BURRITO_TARGET=darwin_arm64 mix release && log_ok "built next-ls") &&
-        #   chmod +x "$LS_PATH/bin/nextls" &&
-        #   popd >/dev/null &&
-      ) && log_ok "finished downloading and installing nextls ($VERSION) to $bin_path" ||
+      ) && log_ok "finished downloading and installing next-ls ($VERSION) to $bin_path" ||
       exit 1
   else
     log_warn "$BUILD_TYPE not yet supported."

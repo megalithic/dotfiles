@@ -123,6 +123,7 @@ brew "httpie"
 brew "hub"
 brew "hyperfine"
 brew "ical-buddy" if OS.mac?
+brew "imagemagick"
 brew "jo"
 brew "jq"
 brew "kerl"

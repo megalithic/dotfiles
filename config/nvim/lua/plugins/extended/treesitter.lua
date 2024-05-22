@@ -23,6 +23,7 @@ return {
         "css",
         "csv",
         "comment", -- too slow still.
+        "dap_repl",
         "devicetree",
         "dockerfile",
         "diff",
@@ -67,6 +68,7 @@ return {
         "sql",
         "surface",
         "teal",
+        "tmux",
         "toml",
         "tsv",
         "tsx",
@@ -86,6 +88,7 @@ return {
         --  the list of additional_vim_regex_highlighting and disabled languages for indent.
         additional_vim_regex_highlighting = {
           "ruby",
+          "elixir",
           "python",
           -- "lua",
           "vim",
@@ -217,7 +220,6 @@ return {
       vim.treesitter.query.add_directive("ft-conceal!", ft_conceal, true)
 
       require("nvim-treesitter.install").prefer_git = true
-      vim.lg(opts)
       require("nvim-treesitter.configs").setup(opts)
     end,
   },

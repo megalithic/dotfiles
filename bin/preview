@@ -3,40 +3,68 @@
 source "${HOME}/.dotfiles/config/zsh/lib/helpers.zsh"
 
 [ "$1" = "" ] && exit 1
-FIFO="/tmp/fzf_preview_fifo"
 
-cleanup() {
-  pkill ueberzugpp
-  rm /tmp/ueberzugpp-*.socket 2>/dev/null
-  rm -f "$FIFO"
-}
-
-if [ "$1" = "--cleanup" ]; then
-  cleanup
-  exit 0
-fi
-
-case "$1" in
-  "--ueberzugpp")
-    set -- "$2" >/dev/null
-    ueberzugpp_x="$(($(tput cols) / 2 + 1))"
-    ueberzugpp_y="1"
-    ueberzugpp_width="$FZF_PREVIEW_COLUMNS"
-    ueberzugpp_height="$FZF_PREVIEW_LINES"
-    ueberzug_image="chafa" # chafa, x11, wayland, kitty, sixel, iterm2
-    image_previewer="ueberuzgpp"
-    [ -p "$FIFO" ] || mkfifo "$FIFO"
-    ;;
+case "$(uname -a)" in
+  *Darwin*) UEBERZUG_TMP_DIR="$TMPDIR" ;;
+  *) UEBERZUG_TMP_DIR="/tmp" ;;
 esac
 
-start_preview() {
-  echo '{"path": "'"$1"'", "action": "add", "identifier": "fzfpreview", "x": "'"$ueberzugpp_x"'", "y": "'"$ueberzugpp_y"'", "width": "'"$ueberzugpp_width"'", "height": "'"$ueberzugpp_height"'"}' >"$FIFO"
+cleanup() {
+  ueberzugpp cmd -s "$SOCKET" -a exit
 }
+trap cleanup HUP INT QUIT TERM EXIT
+
+# FIFO="/tmp/fzf_preview_fifo"
+#
+# cleanup() {
+#   pkill ueberzugpp
+#   rm /tmp/ueberzugpp-*.socket 2>/dev/null
+#   rm -f "$FIFO"
+# }
+#
+# if [ "$1" = "--cleanup" ]; then
+#   cleanup
+#   exit 0
+# fi
+#
+# case "$1" in
+#   "--ueberzugpp")
+#     set -- "$2" >/dev/null
+#     ueberzugpp_x="$(($(tput cols) / 2 + 1))"
+#     ueberzugpp_y="1"
+#     ueberzugpp_width="$FZF_PREVIEW_COLUMNS"
+#     ueberzugpp_height="$FZF_PREVIEW_LINES"
+#     ueberzug_image="chafa" # chafa, x11, wayland, kitty, sixel, iterm2
+#     image_previewer="ueberuzgpp"
+#     [ -p "$FIFO" ] || mkfifo "$FIFO"
+#     ;;
+# esac
+#
+# start_preview() {
+#   echo '{"path": "'"$1"'", "action": "add", "identifier": "fzfpreview", "x": "'"$ueberzugpp_x"'", "y": "'"$ueberzugpp_y"'", "width": "'"$ueberzugpp_width"'", "height": "'"$ueberzugpp_height"'"}' >"$FIFO"
+# }
 
 handle_image() {
   case "$1" in
     image/*)
       chafa "$2" -f symbols
+      # kitty icat "$2"
+
+      # UB_PID_FILE="$UEBERZUG_TMP_DIR/.$(uuidgen)"
+      # ueberzugpp layer --no-stdin --silent --use-escape-codes --pid-file "$UB_PID_FILE"
+      # UB_PID=$(cat "$UB_PID_FILE")
+      #
+      # export SOCKET="$UEBERZUG_TMP_DIR"/ueberzugpp-"$UB_PID".socket
+      # export X=$(($(tput cols) / 2 + 1))
+      # # --max-width $FZF_PREVIEW_COLUMNS --max-height $FZF_PREVIEW_LINES
+      # # if FZF_PREVIEW_COLUMNS exists, use it, otherwise use tput cols
+      # [ -z "$FZF_PREVIEW_COLUMNS" ] && max_width=$(($(tput cols) - 2)) || max_width=$FZF_PREVIEW_COLUMNS
+      # [ -z "$FZF_PREVIEW_LINES" ] && max_height=$(($(tput lines) - 2)) || max_height=$FZF_PREVIEW_LINES
+      #
+      # # run fzf with preview
+      # ueberzugpp cmd -s "$SOCKET" -i fzfpreview -a add -x "$X" -y 1 --max-width "$max_width" --max-height "$max_height" -f "$2"
+      # ueberzugpp cmd -s "$SOCKET" -a exit
+
       # wezterm imgcat "$2"
       # sleep 86400
       # wait

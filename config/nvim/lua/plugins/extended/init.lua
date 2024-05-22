@@ -110,7 +110,7 @@ return {
           ["<leader>d"] = { name = "[d]ocument", _ = "which_key_ignore" },
           ["<leader>e"] = {
             name = "+edit files",
-            r = { function() require("mega.utils.lsp").rename_file() end, "rename file (lsp) to <input>" },
+            r = { function() require("mega.utils").lsp.rename_file() end, "rename file (lsp) to <input>" },
             s = { [[<cmd>SaveAsFile<cr>]], "save file as <input>" },
             e = "oil: open (edit)", -- NOTE: change in plugins/extended/oil.lua
             v = "oil: open (vsplit)", -- NOTE: change in plugins/extended/oil.lua
@@ -153,6 +153,7 @@ return {
           ["<leader>r"] = { name = "[r]ename", _ = "which_key_ignore" },
           ["<leader>t"] = { name = "[t]erminal", _ = "which_key_ignore" },
           ["<leader>z"] = { name = "[z]k", _ = "which_key_ignore" },
+          ["<localleader>d"] = { name = "[d]ebug", _ = "which_key_ignore" },
           ["<localleader>g"] = { name = "[g]it", _ = "which_key_ignore" },
           ["<localleader>h"] = { name = "[h]unk", _ = "which_key_ignore" },
           ["<localleader>r"] = { name = "[r]epl", _ = "which_key_ignore" },

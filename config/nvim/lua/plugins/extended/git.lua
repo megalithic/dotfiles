@@ -145,8 +145,8 @@ return {
         nmap("<localleader>gre", gs.reset_buffer, "git: reset entire buffer")
         nmap("<localleader>grh", gs.reset_hunk, "git: reset hunk")
         nmap("<leader>gm", function() gs.setqflist("all") end, "git: list modified in quickfix")
-        nmap("<leader>gd", function() gs.diffthis() end, "git: diff this")
-        nmap("<leader>gD", function() gs.diffthis("~") end, "git: diff this against ~")
+        nmap("<localleader>gd", function() gs.diffthis() end, "git: diff this")
+        nmap("<localleader>gD", function() gs.diffthis("~") end, "git: diff this against ~")
         -- Navigation
         bmap("n", "[h", function()
           if vim.wo.diff then return "[c" end
@@ -246,7 +246,7 @@ return {
     "sindrets/diffview.nvim",
     cmd = { "DiffviewOpen", "DiffviewClose", "DiffviewToggleFiles", "DiffviewFocusFiles", "DiffviewFileHistory" },
     keys = {
-      { "<localleader>gd", "<Cmd>DiffviewOpen<CR>", desc = "diffview: open", mode = "n" },
+      { "<leader>gd", "<Cmd>DiffviewOpen<CR>", desc = "diffview: open", mode = "n" },
       { "gh", [[:'<'>DiffviewFileHistory<CR>]], desc = "diffview: file history", mode = "v" },
       {
         "<localleader>gh",

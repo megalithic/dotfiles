@@ -36,6 +36,9 @@ end, { nargs = "*" })
 command("Noti", [[Messages | Notifications]], {})
 command("Mess", [[messages]], {})
 
+vim.cmd.cnoreabbrev("noti Noti")
+vim.cmd.cnoreabbrev("mess Mess")
+
 command("LogRead", function(_opts) vim.cmd.vnew("/tmp/nlog") end, {})
 command("Capture", function(opts)
   vim.fn.writefile(vim.split(vim.api.nvim_exec2(opts.args, { output = true }).output, "\n"), "/tmp/nvim_out.capture")

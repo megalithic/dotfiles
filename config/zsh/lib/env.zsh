@@ -173,6 +173,9 @@ export WEECHAT_HOME="$XDG_CONFIG_HOME/weechat"
 # https://github.com/ansible/ansible/issues/76322#issuecomment-974147955
 export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
 
+# -- imagemagick thing
+# REF: https://github.com/3rd/image.nvim?tab=readme-ov-file#installing-imagemagick
+export DYLD_LIBRARY_PATH="$(brew --prefix)/lib:$DYLD_LIBRARY_PATH"
 
 # -- bat
 if which bat >/dev/null; then

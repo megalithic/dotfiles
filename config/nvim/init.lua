@@ -1,15 +1,21 @@
 if vim.loader then vim.loader.enable() end
 vim.env.DYLD_LIBRARY_PATH = "$BREW_PREFIX/lib/"
 
+vim.g.mapleader = ","
+vim.g.maplocalleader = " "
+
 _G.L = vim.log.levels
 _G.I = vim.inspect
+
+vim.noti = vim.notify
 
 _G.mega = {
   ui = {},
   lsp = {},
   req = require("mega.req"),
+  resize_windows = function() end,
   term = nil,
-  notify = vim.notify,
+  notify = vim.noti,
 }
 
 -- inspect the contents of an object very quickly
@@ -20,24 +26,62 @@ _G.mega = {
 -- in commandline: :lua P(vim.loop)
 ---@vararg any
 function _G.P(...)
-  local objects = {}
+  local printables = {}
   for i = 1, select("#", ...) do
     local v = select(i, ...)
-    table.insert(objects, vim.inspect(v))
+    table.insert(printables, vim.inspect(v))
   end
 
-  print(table.concat(objects, "\n"))
+  if pcall(require, "plenary") then
+    local log = require("plenary.log").new({
+      plugin = "notify",
+      level = "debug",
+      use_console = true,
+      use_quickfix = false,
+      use_file = false,
+    })
+    -- vim.schedule_wrap(log.info)(table.concat(printables, "\n"))
+    vim.schedule_wrap(log.info)(vim.inspect(#printables > 1 and printables or unpack(printables)))
+  else
+    vim.schedule_wrap(print)(table.concat(printables, "\n"))
+  end
   return ...
+end
+
+function vim.lg(msg, level, _opts)
+  if pcall(require, "plenary") then
+    local log = require("plenary.log").new({
+      plugin = "notify",
+      level = level or "DEBUG",
+      use_console = true,
+      use_quickfix = false,
+      use_file = false,
+    })
+    vim.schedule_wrap(log.info)(msg)
+  else
+    vim.schedule_wrap(P)(msg)
+  end
 end
 
 function vim.pprint(...)
   local s, args = pcall(vim.deepcopy, { ... })
   if not s then args = { ... } end
-  vim.schedule_wrap(vim.notify)(vim.inspect(#args > 1 and args or unpack(args)))
+  if pcall(require, "plenary") then
+    local log = require("plenary.log").new({
+      plugin = "notify",
+      level = "debug",
+      use_console = true,
+      use_quickfix = false,
+      use_file = false,
+    })
+    vim.schedule_wrap(log.info)(vim.inspect(#args > 1 and args or unpack(args)))
+  else
+    vim.schedule_wrap(vim.notify)(vim.inspect(#args > 1 and args or unpack(args)))
+  end
 end
 
-function vim.lg(...)
-  if vim.in_fast_event() then return vim.schedule_wrap(vim.lg)(...) end
+function vim.logfile(...)
+  if vim.in_fast_event() then return vim.schedule_wrap(vim.logfile)(...) end
   local d = debug.getinfo(2)
   return vim.fn.writefile(
     vim.fn.split(":" .. d.short_src .. ":" .. d.currentline .. ":\n" .. vim.inspect(#{ ... } > 1 and { ... } or ...), "\n"),
@@ -46,10 +90,7 @@ function vim.lg(...)
   )
 end
 
-function vim.lgclear() vim.fn.writefile({}, "/tmp/nlog") end
-
-vim.g.mapleader = ","
-vim.g.maplocalleader = " "
+function vim.logfileclear() vim.fn.writefile({}, "/tmp/nlog") end
 
 require("mega.settings").apply()
 require("mega.lazy")

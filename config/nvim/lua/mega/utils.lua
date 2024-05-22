@@ -2,7 +2,7 @@ if not mega then return end
 
 local fn = vim.fn
 local api = vim.api
-local fmt = vim.format
+local fmt = string.format
 local levels = vim.log.levels
 local L = levels
 local SETTINGS = require("mega.settings")
@@ -24,6 +24,35 @@ function M.lsp.formatting_filter(client, exclusions)
   exclusions = exclusions or SETTINGS.formatter_exclusions
 
   return not vim.tbl_contains(exclusions, client_name)
+end
+
+---@param data { old_name: string, new_name: string }
+local function prepare_file_rename(data)
+  local bufnr = vim.fn.bufnr(data.old_name)
+  for _, client in pairs(vim.lsp.get_clients({ bufnr = bufnr })) do
+    local rename_path = { "server_capabilities", "workspace", "fileOperations", "willRename" }
+    if not vim.tbl_get(client, rename_path) then return vim.notify(fmt("%s does not LSP file rename", client.name), L.INFO, { title = "LSP" }) end
+    local params = {
+      files = { { newUri = "file://" .. data.new_name, oldUri = "file://" .. data.old_name } },
+    }
+    ---@diagnostic disable-next-line: invisible
+    local resp = client.request_sync("workspace/willRenameFiles", params, 1000)
+    if resp then vim.lsp.util.apply_workspace_edit(resp.result, client.offset_encoding) end
+  end
+end
+
+function M.lsp.rename_file()
+  local old_name = vim.api.nvim_buf_get_name(0)
+  -- vim.fs.basename(old_name)
+  -- nvim_buf_get_name(0)
+  -- -- -> fnamemodify(':t')
+  -- vim.fs.basename(vim.api.nvim_buf_get_name(0))
+  vim.ui.input({ prompt = fmt("rename %s to -> ", vim.fs.basename(old_name)) }, function(name)
+    if not name then return end
+    local new_name = fmt("%s/%s", vim.fs.dirname(old_name), name)
+    prepare_file_rename({ old_name = old_name, new_name = new_name })
+    -- lsp.util.rename(old_name, new_name)
+  end)
 end
 
 --- Call the given function and use `vim.notify` to notify of any errors
@@ -423,6 +452,7 @@ function M.is_openable(filepath)
 end
 
 function M.preview_file(filename)
+  fmt = string.format
   local cmd = fmt("silent !open %s", filename)
 
   if M.is_image(filename) then
@@ -560,7 +590,7 @@ function M.hl.adopt_winhighlight(win_id, target, name, fallback)
   local found = M.find(parts, function(part) return part:match(target) end)
   if not found then return fallback end
   local hl_group = vim.split(found, ":")[2]
-  local bg = M.get_hl(hl_group, "bg")
+  local bg = M.hl.get_hl(hl_group, "bg")
   M.hl.set_hl(win_hl_name, { background = bg, inherit = fallback })
   return win_hl_name
 end

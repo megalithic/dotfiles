@@ -70,7 +70,7 @@ local M = {
   formatter = "conform", -- alt: null-ls/none-ls, conform
   tree = "neo-tree",
   explorer = "oil", -- alt: dirbuf, oil
-  tester = "vim-test", -- alt: neotest, nvim-test, vim-test
+  tester = "vim-test", -- alt: neotest, vim-test
   gitter = "neogit", -- alt: neogit, fugitive
   snipper = "snippets", -- alt: vsnip, luasnip, snippets (nvim-builtin)
   completer = "cmp", -- alt: cmp, epo
@@ -93,8 +93,8 @@ local M = {
   disabled_semantic_tokens = { "lua" },
   disabled_lsp_formatters = { "tailwindcss", "html", "tsserver", "ls_emmet", "zk", "sumneko_lua" },
   -- REF: elixir language servers: { ElixirLS, Next LS, elixirls, nextls, lexical }
-  enabled_elixir_ls = { "", "", "", "nextls", "lexical" },
-  completion_exclusions = { "ElixirLS", "Next LS", "elixirls", "", "" },
+  enabled_elixir_ls = { "", "", "elixirls", "nextls", "" },
+  completion_exclusions = { "ElixirLS", "Next LS", "elixirls", "", "lexical" },
   formatter_exclusions = { "ElixirLS", "Next LS", "elixirls", "", "lexical" },
   diagnostic_exclusions = { "ElixirLS", "Next LS", "elixirls", "", "lexical", "tsserver" },
   definition_exclusions = { "ElixirLS", "Next LS", "elixirls", "", "lexical" },
@@ -142,9 +142,9 @@ local M = {
   icons = {
     lsp = {
       error = "", -- alts: 󰬌      
-      warn = "▲", -- alts: 󰬞 󰔷   ▲ 󰔷
+      warn = "󰔷", -- alts: 󰬞 󰔷   ▲ 󰔷
       info = "", -- alts: 󱂈 󰋼  󰬐 󰰃     ● 󰬐
-      hint = "", -- alts:  󰬏 󰰀  󰌶 󰰂 󰰂 󰰁 󰫵 󰋢   
+      hint = "▫", -- alts:  󰬏 󰰀  󰌶 󰰂 󰰂 󰰁 󰫵 󰋢   
       ok = "✓", -- alts: ✓✓
     },
     test = {
@@ -322,6 +322,12 @@ local M = {
   },
 }
 
+M.apply_abbreviations = function()
+  -- vim.cmd.cnoreabbrev("ntl NeotestLast")
+  -- vim.cmd.cnoreabbrev("nts NeotestSummary")
+  -- vim.cmd.cnoreabbrev("nto NeotestOutput")
+end
+
 M.apply = function()
   -- function modified_icon() return vim.bo.modified and M.icons.misc.circle or "" end
   local settings = {
@@ -372,6 +378,8 @@ M.apply = function()
       hs_emmy_path = fmt("%s/Spoons/EmmyLua.spoon", hammerspoon_path),
     },
     o = {
+      cmdwinheight = 7,
+      cmdheight = 1,
       diffopt = "internal,filler,closeoff,linematch:60",
       linebreak = true, -- lines wrap at words rather than random characters
       splitbelow = true,
@@ -559,28 +567,19 @@ M.apply = function()
     -- ['.*tmux.*conf$'] = 'tmux',
   })
 
-  function vim.pprint(...)
-    local s, args = pcall(vim.deepcopy, { ... })
-    if not s then args = { ... } end
-    vim.schedule_wrap(vim.notify)(vim.inspect(#args > 1 and args or unpack(args)))
+  M.apply_abbreviations()
+
+  -- NOTE: to use in one of our plugins:
+  -- `if not plugin_loaded("plugin_name") then return end`
+  function _G.plugin_loaded(plugin)
+    if not mega then return false end
+    local enabled_plugins = M.enabled_plugins
+
+    if not enabled_plugins then return false end
+    if not vim.tbl_contains(enabled_plugins, plugin) then return false end
+
+    return true
   end
-
-  function vim.lg(...)
-    if vim.in_fast_event() then return vim.schedule_wrap(vim.lg)(...) end
-    local d = debug.getinfo(2)
-    return vim.fn.writefile(
-      vim.fn.split(":" .. d.short_src .. ":" .. d.currentline .. ":\n" .. vim.inspect(#{ ... } > 1 and { ... } or ...), "\n"),
-      "/tmp/nlog",
-      "a"
-    )
-  end
-
-  function vim.lgclear() vim.fn.writefile({}, "/tmp/nlog") end
-
-  vim.api.nvim_create_user_command("Capture", function(opts)
-    vim.fn.writefile(vim.split(vim.api.nvim_exec2(opts.args, { output = true }).output, "\n"), "/tmp/nvim_out.capture")
-    vim.cmd.split("/tmp/nvim_out.capture")
-  end, { nargs = "*", complete = "command" })
 end
 
 return M

@@ -280,10 +280,14 @@ ftplugin.extend_all({
   qf = {
     opt = {
       winfixheight = true,
+      winfixwidth = true,
       relativenumber = false,
+      number = false,
       buflisted = false,
+      wrap = false,
     },
     callback = function()
+      vim.cmd("wincmd J")
       vim.cmd([[
         " Autosize quickfix to match its minimum content
         " https://vim.fandom.com/wiki/Automatically_fitting_a_quickfix_window_height
@@ -292,16 +296,7 @@ ftplugin.extend_all({
         endfunction
 
         " force quickfix to open beneath all other splits
-        wincmd J
-
-        setlocal nonumber
-        setlocal norelativenumber
-        setlocal nowrap
-        setlocal signcolumn=yes
-        setlocal colorcolumn=
-        setlocal nobuflisted " quickfix buffers should not pop up when doing :bn or :bp
         call s:adjust_height(3, 10)
-        setlocal winfixheight
 
         " REF: https://github.com/romainl/vim-qf/blob/2e385e6d157314cb7d0385f8da0e1594a06873c5/autoload/qf.vim#L22
       ]])
