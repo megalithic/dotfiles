@@ -7,12 +7,26 @@ local obj = {}
 obj.__index = obj
 obj.name = "watcher.url"
 obj.callbacks = {
-  ["meet.google.com"] = function() end,
+  {
+    pattern = "https:?://meet.google.com/*",
+    callback = function(...)
+      dbg("matched google meet!")
+      dbg(...)
+
+      L.req("lib.dnd").on("zoom")
+      hs.spotify.pause()
+      L.req("lib.menubar.ptt").setState("push-to-talk")
+      L.req("lib.watchers.dock").refreshInput("docked")
+      L.req("lib.menubar.ptt").setAllInputsMuted(true)
+    end,
+  },
 }
 
 local function handle_url_callbacks(fullURL, handler)
-  dbg(fullURL)
-  dbg(obj.callbacks)
+  local cb = hs.fnutils.find(obj.callbacks, function(el) return string.match(fullURL, el.pattern) ~= nil end)
+  if cb ~= nil then
+    if type(cb.callback) then cb.callback({ arg1 = "arg1 here", app_handler = handler, fullURL = fullURL }) end
+  end
 end
 
 -- keeps track of the most recently used browser
@@ -30,11 +44,13 @@ local function httpCallback(scheme, _host, _params, fullURL, _senderPID)
     hs.application.get(Settings.get("group.browsers") or C.preferred.browser or C.preferred.browsers[1])
   local currentBrowserBundleID = preferredBrowser:bundleID()
 
-  local handler = hs.fnutils.find(allHandlers, function(v) return v == currentBrowserBundleID end)
+  local app_handler = hs.fnutils.find(allHandlers, function(v) return v == currentBrowserBundleID end)
 
-  if not handler then
+  if not app_handler then
     error("Invalid browser handler: " .. (currentHandler or "nil"))
     return
+  else
+    currentHandler = app_handler
   end
 
   if not fullURL then
@@ -42,9 +58,9 @@ local function httpCallback(scheme, _host, _params, fullURL, _senderPID)
     return
   end
 
-  hs.urlevent.openURLWithBundle(fullURL, handler)
+  hs.urlevent.openURLWithBundle(fullURL, app_handler)
 
-  handle_url_callbacks(fullURL, handler)
+  handle_url_callbacks(fullURL, app_handler)
 end
 
 function obj:start()

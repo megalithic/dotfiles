@@ -76,6 +76,7 @@ function M.apply()
         -- TODO: handle situations where 2 file names given and the second is of the shape of a line number, e.g. `:200`;
         -- maybe use this? https://github.com/stevearc/dotfiles/commit/db4849d91328bb6f39481cf2e009866911c31757
         local arg = vim.api.nvim_eval("argv(0)")
+        -- P(arg, vim.fn.argv(1))
         if
           not vim.g.started_by_firenvim
           and (not vim.env.TMUX_POPUP and vim.env.TMUX_POPUP ~= 1)
@@ -279,7 +280,6 @@ function M.apply()
           if ibl_ok then ibl.setup_buffer(evt.buf, { indent = { char = SETTINGS.indent_char } }) end
         end, 1)
         vim.wo.cursorline = true
-
         if not vim.g.started_by_firenvim then require("colorizer").attach_to_buffer(evt.buf) end
       end,
     },

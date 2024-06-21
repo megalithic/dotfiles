@@ -7,7 +7,15 @@ obj.__index = obj
 obj.name = "browser"
 obj.debug = false
 obj.browsers = C.preferred.browsers
-local browser = hs.application.get(Settings.get("group.browsers") or C.preferred.browser or obj.browsers[1])
+
+local browser = nil
+if Settings.get("group.browsers") ~= nil then
+  browser = hs.application.get(Settings.get("group.browsers"))
+elseif C.preferred.browser ~= nil then
+  browser = hs.application.get(C.preferred.browser)
+elseif obj.browsers[1] ~= nil then
+  browser = hs.application.get(obj.browsers[1])
+end
 
 local dbg = function(str, ...)
   str = string.format(":: [%s] %s", obj.name, str)

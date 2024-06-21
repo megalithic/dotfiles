@@ -27,6 +27,7 @@ local ft_ignores = {
   "Trouble",
   "trouble",
   "qf",
+  "dbui",
   "neo-tree",
   "lazy",
   "packer",

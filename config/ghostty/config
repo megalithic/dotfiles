@@ -19,7 +19,7 @@ fullscreen = true
 
 # visible-menu
 macos-non-native-fullscreen = visible-menu
-macos-titlebar-tabs=false
+# macos-titlebar-tabs=false # FIXME: deprecated?
 
 window-theme = "dark"
 window-decoration       = false
@@ -130,4 +130,5 @@ keybind = ctrl+eight=text:\x00\x38
 keybind = ctrl+nine=text:\x00\x39
 
 keybind = super+shift+r=reload_config
+keybind = super+t=text:\x00\x63
 # vim: ft=ghostty

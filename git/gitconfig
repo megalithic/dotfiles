@@ -163,6 +163,7 @@
   ; gi = grep --break --heading --line-number -i
   tree = log --graph --pretty=oneline --decorate
   undo = reset --soft HEAD^
+  reset-to-main = !git reset --hard origin/main
   # Reset previous commit, but keep all the associated changes. Useful for avoiding nasty git merge commits.
   uncommit = reset --soft HEAD^
 	unamend = reset --soft HEAD@{1}

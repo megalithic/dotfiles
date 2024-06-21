@@ -1,7 +1,7 @@
 local BORDER_STYLE = "none"
 local fmt = string.format
 
-vim.lsp.set_log_level("WARN")
+vim.lsp.set_log_level("ERROR")
 
 local border_chars = {
   none = { " ", " ", " ", " ", " ", " ", " ", " " },
@@ -53,6 +53,8 @@ local hammerspoon_path = fmt("%s/config/hammerspoon", dotfiles_path)
 -- is_remote_dev = vim.trim(vim.fn.system("hostname")) == "seth-dev",
 -- is_local_dev = vim.trim(vim.fn.system("hostname")) ~= "seth-dev",
 
+--- @class Settings
+--- @field enabled_elixir_ls {"ElixirLS"|"Next LS"|"elixirls"|"nextls"|"lexical"}
 local M = {
   -- NOTE: char options (https://unicodeplus.com/): ┊│┆ ┊  ▎││ ▏▏│¦┆┊
   indent_scope_char = "│",
@@ -92,13 +94,12 @@ local M = {
   },
   disabled_semantic_tokens = { "lua" },
   disabled_lsp_formatters = { "tailwindcss", "html", "tsserver", "ls_emmet", "zk", "sumneko_lua" },
-  -- REF: elixir language servers: { ElixirLS, Next LS, elixirls, nextls, lexical }
-  enabled_elixir_ls = { "", "", "elixirls", "nextls", "" },
-  completion_exclusions = { "ElixirLS", "Next LS", "elixirls", "", "lexical" },
-  formatter_exclusions = { "ElixirLS", "Next LS", "elixirls", "", "lexical" },
-  diagnostic_exclusions = { "ElixirLS", "Next LS", "elixirls", "", "lexical", "tsserver" },
-  definition_exclusions = { "ElixirLS", "Next LS", "elixirls", "", "lexical" },
-  max_diagnostic_exclusions = { "ElixirLS", "Next LS", "elixirls", "", "lexical" },
+  enabled_elixir_ls = { "", "", "elixirls", "", "lexical" },
+  completion_exclusions = { "ElixirLS", "Next LS", "elixirls", "nextls", "" },
+  formatter_exclusions = { "ElixirLS", "Next LS", "", "nextls", "lexical" }, -- NOTE: prefer anything but lexical for formatting (it always wraps with parens, like in a schema or router)
+  diagnostic_exclusions = { "ElixirLS", "Next LS", "elixirls", "nextls", "", "tsserver" },
+  definition_exclusions = { "ElixirLS", "Next LS", "elixirls", "nextls", "" },
+  max_diagnostic_exclusions = { "ElixirLS", "Next LS", "elixirls", "nextls", "" },
   disable_autolint = false,
   disable_autoformat = false,
   enable_signsplaced = false,
@@ -365,8 +366,10 @@ M.apply = function()
 
       open_command = is_macos and "open" or "xdg-open",
       is_tmux_popup = vim.env.TMUX_POPUP ~= nil,
-      code = fmt("%s/code", home_path),
+      code_path = fmt("%s/code", home_path),
+      projects_path = fmt("%s/code", home_path),
       vim_path = fmt("%s/.config/nvim", home_path),
+      dotfiles_path = fmt("%s/.dotfiles", home_path),
       nvim_path = fmt("%s/.config/nvim", home_path),
       cache_path = fmt("%s/.cache/nvim", home_path),
       local_state_path = fmt("%s/.local/state/nvim", home_path),
@@ -502,6 +505,7 @@ M.apply = function()
       -- Tabline
       tabline = "",
       showtabline = 0,
+      guicursor = vim.opt.guicursor + "a:blinkon500-blinkoff100",
     },
   }
 

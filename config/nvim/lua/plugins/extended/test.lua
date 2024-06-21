@@ -125,7 +125,7 @@ return {
 
       vim.g["test#strategy"] = {
         nearest = "termvsplit",
-        file = "termtab",
+        file = "termvsplit",
         suite = "termfloat",
         last = "termvsplit",
       }

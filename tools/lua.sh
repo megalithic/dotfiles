@@ -20,6 +20,14 @@ do_install() {
     (! has lua-format) && luarocks install --server=https://luarocks.org/dev luaformatter
     (! has lua-nuspell) && luarocks install lua-nuspell
     (! has penlight) && luarocks install penlight
+
+    # NOTE: these ought to install to ~/.luarocks
+    # luarocks install --lua-version 5.4 fsm 1.1.0-1
+    # luarocks install --lua-version 5.4 lustache 1.3.1-0
+    # luarocks install --lua-version 5.4 middleclass 4.1.1-0
+    luarocks install fsm 1.1.0-1
+    luarocks install lustache 1.3.1-0
+    luarocks install middleclass 4.1.1-0
   fi
 }
 

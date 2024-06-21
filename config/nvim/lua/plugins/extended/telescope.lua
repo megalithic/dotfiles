@@ -115,7 +115,7 @@ return {
         local buf_path = vim.fn.expand("%:p:h")
         local cwd = vim.fn.getcwd()
         if extra["title"] ~= nil then
-          title = fmt("%s (%s):", extra.title, vim.fs.basename(vim.loop.cwd() or ""))
+          title = fmt("%s (%s):", extra.title, vim.fs.basename(path or vim.uv.cwd() or ""))
         else
           if path ~= nil and buf_path ~= cwd then
             title = require("plenary.path"):new(buf_path):make_relative(cwd)
@@ -152,7 +152,10 @@ return {
             elseif key == "undo" then
               extensions("undo").undo(with_title(topts, { title = "undo" }))
             elseif key == "smart_open" or key == "smart" then
-              extensions("smart_open").smart_open(with_title(topts, { title = "smartly find files" }))
+              -- FIXME: if we have a title in topts, use that title with the default title
+              local title = "smartly find files"
+              -- if topts.title ~= nil then title = fmt("smartly find files (%s)", topts.title) end
+              extensions("smart_open").smart_open(with_title(topts, { title = title }))
             elseif key == "grep" or key == "live_grep" then
               extensions("live_grep_args").live_grep_args(with_title(topts, { title = "live grep args" }))
             elseif key == "corrode" then
@@ -586,6 +589,20 @@ return {
             override_file_sorter = true,
             case_mode = "smart_case",
           },
+          undo = {
+            -- use_delta = true,
+            -- use_custom_command = nil, -- setting this implies `use_delta = false`. Accepted format is: { "bash", "-c", "echo '$DIFF' | delta" }
+            -- side_by_side = false,
+            -- diff_context_lines = vim.o.scrolloff,
+            -- entry_format = "state #$ID, $STAT, $TIME",
+            -- time_format = "",
+            -- saved_only = false,
+            --side_by_side = true,
+            layout_strategy = "vertical",
+            layout_config = {
+              preview_height = 0.8,
+            },
+          },
           smart_open = {
             show_scores = false,
             ignore_patterns = { "*.git/*", "*/tmp/*" },
@@ -666,10 +683,18 @@ return {
         mega.picker.grep({ default_text = pattern })
       end, { desc = "grep (selection)" })
 
-      map("n", "<leader>fd", ts.diagnostics, { desc = "[S]earch [D]iagnostics" })
+      map("n", "<leader>fu", ts.undo, { desc = "[f]ind [u]ndo" })
+      -- map("n", "<leader>fd", ts.diagnostics, { desc = "[f]ind [d]iagnostics" })
+      map("n", "<leader>fd", function() mega.picker.find_files({ picker = "smart_open", cwd = vim.g.dotfiles_path }) end, { desc = "[f]ind in [d]otfiles" })
       map("n", "<leader>fc", function() mega.picker.find_files({ picker = "smart_open", cwd = vim.fn.stdpath("config") }) end, { desc = "[f]ind in [c]onfig" })
-      map("n", "<leader>fr", ts.resume, { desc = "[S]earch [R]esume" })
-      map("n", "<leader>f.", ts.oldfiles, { desc = "[S]earch Recent Files (\".\" for repeat)" })
+      map(
+        "n",
+        "<leader>fp",
+        function() mega.picker.find_files({ picker = "smart_open", cwd = vim.fn.expand(vim.g.code_path), title = "in ~/code" }) end,
+        { desc = "[f]ind in ~/code [p]rojects" }
+      )
+      map("n", "<leader>fr", ts.resume, { desc = "[f]ind [r]esume" })
+      map("n", "<leader>f.", ts.oldfiles, { desc = "[f]ind Recent Files (\".\" for repeat)" })
       map("n", "<leader><leader>", ts.buffers, { desc = "[ ] Find existing buffers" })
 
       -- Slightly advanced example of overriding default behavior and theme

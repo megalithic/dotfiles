@@ -22,7 +22,7 @@ function obj:start(opts)
   -- REF: https://github.com/mrjones2014/dotfiles/blob/master/.config/hammerspoon/zoom-killer.lua
   if event == hs.application.watcher.launched then
     do
-      local term = hs.application.get("com.github.wez.wezterm") or hs.application.get("kitty")
+      -- local term = hs.application.get("com.github.wez.wezterm") or hs.application.get("com.github.wez.wezterm") or hs.application.get("kitty")
       local zoom = hs.application.get("zoom.us")
 
       hs.timer.waitUntil(function() return zoom:getWindow("Zoom Meeting") end, function()
@@ -38,10 +38,10 @@ function obj:start(opts)
         local layouts = {
           { "zoom.us", "Zoom Meeting", hs.screen.primaryScreen():name(), hs.layout.left50, nil, nil },
           { browser:name(), nil, hs.screen.primaryScreen():name(), hs.layout.right50, nil, nil },
-          { term:name(), nil, hs.screen.primaryScreen():name(), hs.layout.maximized, nil, nil },
+          -- { term:name(), nil, hs.screen.primaryScreen():name(), hs.layout.maximized, nil, nil },
         }
         hs.layout.apply(layouts)
-        term:setFrontmost(true)
+        -- term:setFrontmost(true)
       end)
     end
   end
@@ -73,11 +73,11 @@ function obj:stop(opts)
         if browser_win ~= nil then browser_win:moveToUnit(hs.layout.maximized) end
       end
 
-      local term = hs.application.get("com.github.wez.wezterm") or hs.application.get("kitty")
-      if term ~= nil then
-        local term_win = term:mainWindow()
-        if term_win ~= nil then term_win:moveToUnit(hs.layout.maximized) end
-      end
+      -- local term = hs.application.get("com.github.wez.wezterm") or hs.application.get("kitty")
+      -- if term ~= nil then
+      --   local term_win = term:mainWindow()
+      --   if term_win ~= nil then term_win:moveToUnit(hs.layout.maximized) end
+      -- end
     end
   end
 

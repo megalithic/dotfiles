@@ -1,9 +1,9 @@
 local preferred = {
   terms = { "ghostty", "wezterm", "kitty", "alacritty", "iTerm", "Terminal.app" },
   browsers = {
-    "Thorium",
-    "Chromium",
     "Brave Browser Nightly",
+    "Chromium",
+    "Thorium",
     "Firefox Developer Edition",
     "Safari",
     "Brave Browser Dev",

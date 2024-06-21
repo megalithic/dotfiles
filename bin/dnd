@@ -28,15 +28,15 @@ help() {
   printf -- "Subcommands:\n"
   printf -- "    on        Turn ON do-not-disturb (DND) mode\n"
   printf -- "    off       Turn OFF do-not-disturb (DND) mode\n"
+  printf -- "    toggle    Toggle ON/OFF do-not-disturb (DND) mode\n"
   printf -- "    install   Install macos-focus-mode shortcut\n"
-  # printf -- "    toggle   Toggle do-not-disturb (DND) mode ON and OFF\n"
-  printf -- "    status   Get the current status of do-not-disturb (DND) mode\n"
+  printf -- "    status    Get the current status of do-not-disturb (DND) mode\n"
 }
 
 cmd() {
   local state="$1"
 
-  shortcuts run "$shortcut_cmd" <<< "$state"
+  shortcuts run "$shortcut_cmd" <<<"$state"
   if [[ -n "$TMUX" ]]; then
     tmux refresh-client
   fi
@@ -48,10 +48,20 @@ install() {
 
 on() {
   cmd "on"
+  tmux refresh-client
 }
 
 off() {
   cmd "off"
+  tmux refresh-client
+}
+
+toggle() {
+  if [[ "$(defaults read com.apple.controlcenter "NSStatusItem Visible FocusModes")" == 1 ]]; then
+    cmd "off"
+  else
+    cmd "on"
+  fi
 }
 
 status() {

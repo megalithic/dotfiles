@@ -47,6 +47,7 @@ function _G.P(...)
   end
   return ...
 end
+_G.dbg = _G.P
 
 function vim.lg(msg, level, _opts)
   if pcall(require, "plenary") then

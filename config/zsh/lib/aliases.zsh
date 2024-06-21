@@ -345,6 +345,7 @@ alias resolve="git mergetool --tool=nvimdiff"
 alias gs="git status --branch --short ."
 alias gwt="git worktree"
 alias gp="git push -u"
+alias gfp="git push origin +HEAD"
 alias gcv="git cv"
 alias gcm='git commit -m "$(gum input)" -m "$(gum write)"'
 alias gaa="git aa"
@@ -491,6 +492,10 @@ alias compress="c() { zip -f "$1".zip "$1"} && c $1"
 
 alias yt='yt-dlp --sponsorblock-remove default --part --format "bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4]"'
 alias ytaudio='yt --extract-audio --audio-format mp3 --audio-quality 0 --write-thumbnail'
+
+alias b="m1ddc set luminance"
+
+alias gpt="chatgpt-cli -k $OPENAI_API_KEY"
 
 # FUNCTIONS
 # ------------------------------------------------------------------------------

@@ -87,7 +87,7 @@ ftplugin.extend_all({
     end,
   },
   gitrebase = {
-    function() vim.keymap.set("n", "q", vim.cmd.cquit, { nowait = true, desc = "abort" }) end,
+    function() vim.keymap.set("n", "q", vim.cmd.cquit, { nowait = true, desc = "abort", bang = true }) end,
   },
   neogitcommitmessage = {
     keys = {
@@ -103,7 +103,7 @@ ftplugin.extend_all({
       colorcolumn = "50,72",
     },
     callback = function()
-      map("n", "q", vim.cmd.cquit, { buffer = true, nowait = true, desc = "Abort" })
+      map("n", "q", vim.cmd.cquit, { buffer = true, nowait = true, desc = "Abort", bang = true })
       vim.fn.matchaddpos("DiagnosticVirtualTextError", { { 1, 50, 10000 } })
       if vim.fn.prevnonblank(".") ~= vim.fn.line(".") then vim.cmd.startinsert() end
     end,

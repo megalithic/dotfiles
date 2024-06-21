@@ -157,6 +157,7 @@ function obj.truncate(str, width, at_tail)
   -- @usage ('1234567890'):shorten(8, true) == '...67890'
   -- @usage ('1234567890'):shorten(20) == '1234567890'
   local function shorten(s, w, tail)
+    if s == nil then return "" end
     if #s > w then
       if w < n_ellipsis then return ellipsis:sub(1, w) end
       if tail then

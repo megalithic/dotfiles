@@ -233,18 +233,22 @@ return {
           end
 
           local messages = { notif.message[1] }
-          vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, messages)
-          vim.api.nvim_buf_set_extmark(bufnr, ns, 0, 0, {
-            virt_text = {
-              { " " },
-              { prefix, hls.title },
-              { " ⋮ " },
-              { messages[1], hls.body },
-              { " " },
-            },
-            virt_text_win_col = 0,
-            priority = 10,
-          })
+
+          -- this started failing with lsp not stopping, so fidget runs and interferes with the notify calls
+          if pcall(vim.api.nvim_buf_set_lines, bufnr, 0, -1, false, messages) then
+            vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, messages)
+            vim.api.nvim_buf_set_extmark(bufnr, ns, 0, 0, {
+              virt_text = {
+                { " " },
+                { prefix, hls.title },
+                { " ⋮ " },
+                { messages[1], hls.body },
+                { " " },
+              },
+              virt_text_win_col = 0,
+              priority = 10,
+            })
+          end
         end,
       })
 

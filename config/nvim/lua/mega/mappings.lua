@@ -133,7 +133,7 @@ end, { noremap = false, silent = true, desc = "EscDeluxe + Clear/Reset UI" })
 -- map("n", "<C-j>", "<C-w><C-j>", { desc = "Move focus to the lower window" })
 -- map("n", "<C-k>", "<C-w><C-k>", { desc = "Move focus to the upper window" })
 
-map("n", "<leader>w", function(args) vim.api.nvim_command("silent! write") end, { desc = "write buffer" })
+map("n", "<leader>w", function(_args) vim.api.nvim_command("silent! write") end, { desc = "write buffer" })
 map("n", "<leader>W", "<cmd>SudaWrite<cr>", { desc = "sudo write buffer" })
 map("n", "<leader>q", "<cmd>q<cr>", { desc = "quit" })
 map("n", "<leader>Q", "<cmd>q!<cr>", { desc = "really quit" })
@@ -322,5 +322,13 @@ end
 
 map("n", "<localleader>,", modify_line_end_delimiter(","), { desc = "add comma `,` to end of current line" })
 map("n", "<localleader>;", modify_line_end_delimiter(";"), { desc = "add semicolon `;` to end of current line" })
+
+-- [Terminal] ------------------------------------------------------------------
+
+local nnoremap = function(lhs, rhs, desc) vim.keymap.set("n", lhs, rhs, { buffer = 0, desc = "term: " .. desc }) end
+nnoremap("<leader>tt", "<cmd>T direction=horizontal move_on_direction_change=true<cr>", "horizontal")
+nnoremap("<leader>tf", "<cmd>T direction=float move_on_direction_change=true<cr>", "float")
+nnoremap("<leader>tv", "<cmd>T direction=vertical move_on_direction_change=true<cr>", "vertical")
+nnoremap("<leader>tp", "<cmd>T direction=tab<cr>", "tab-persistent")
 
 return M

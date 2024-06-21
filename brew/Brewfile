@@ -17,6 +17,7 @@ tap "heroku/brew" if OS.mac?
 tap "microsoft/git"
 tap "isacikgoz/taps"
 tap "olets/tap"
+tap "duanemay/tap" # for chatgpt-cli
 
 # Espanso legacy version (0.7.3/pre 2.x) -- preferred, though, now it has a weird issues where ".<space>" is replaced with ".1"!
 # NOTE: if upgrading to the latest version from the legacy version below, be sure to `brew untap federico-terzi/espanso`
@@ -67,6 +68,8 @@ brew "btop"
 brew "catimg"
 brew "ccls"  # c-lang lsp vs., c-lang lsp in llvm
 brew "chafa" # image renderer for telescope/bat/fzf/etc
+
+brew "chatgpt-cli"
 brew "cmake" if OS.mac?
 brew "coreutils" if OS.mac?
 brew "curl"
@@ -137,6 +140,7 @@ brew "luajit", args: ["HEAD"] if OS.mac?
 brew "luarocks"
 brew "lua-language-server"
 brew "luv"
+brew "m1ddc" if OS.mac? # control screen brightness on my LG 5k; see `b()`
 brew "mas" if OS.mac?
 brew "media-info"
 brew "mcfly"

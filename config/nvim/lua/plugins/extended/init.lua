@@ -34,7 +34,6 @@ return {
     { "numToStr/Comment.nvim", opts = {} },
     {
       "folke/trouble.nvim",
-      branch = "dev",
       cmd = { "TroubleToggle", "Trouble" },
       opts = {
         auto_open = false,
@@ -329,4 +328,31 @@ return {
       -- },
     },
   },
+  {
+    "kevinhwang91/nvim-bqf",
+    ft = "qf",
+    opts = {
+      preview = {
+        winblend = 0,
+      },
+    },
+  },
+  {
+    "yorickpeterse/nvim-pqf",
+    event = "BufReadPre",
+    config = function()
+      local icons = require("mega.settings").icons
+      require("pqf").setup({
+        signs = {
+          error = { text = icons.lsp.error, hl = "DiagnosticSignError" },
+          warning = { text = icons.lsp.warn, hl = "DiagnosticSignWarn" },
+          info = { text = icons.lsp.info, hl = "DiagnosticSignInfo" },
+          hint = { text = icons.lsp.hint, hl = "DiagnosticSignHint" },
+        },
+        show_multiple_lines = true,
+        max_filename_length = 40,
+      })
+    end,
+  },
+  { "lambdalisue/suda.vim", event = { "VeryLazy" } },
 }

@@ -23,7 +23,7 @@ return {
         "css",
         "csv",
         "comment", -- too slow still.
-        "dap_repl",
+        -- "dap_repl",
         "devicetree",
         "dockerfile",
         "diff",
@@ -57,6 +57,7 @@ return {
         "nix",
         "org",
         "perl",
+        "printf",
         "psv",
         "python",
         "query",

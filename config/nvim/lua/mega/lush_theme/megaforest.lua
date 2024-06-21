@@ -976,13 +976,13 @@ local theme = lush(function(injected_functions)
     StTitle({ bg = C.bg1, fg = C.grey2, gui = "bold" }),
     StComment({ Comment, bg = C.bg1 }),
     StLineNumber({ fg = C.grey2, bg = C.bg1, gui = "bold" }),
-    StLineSep({ fg = C.grey1, bg = C.bg1, gui = "" }),
+    StLineSep({ fg = C.grey0, bg = C.bg1, gui = "" }),
     StLineTotal({ fg = C.grey1, bg = C.bg1 }),
-    StLineColumn({ fg = C.grey1, bg = C.bg1, gui = "italic" }),
+    StLineColumn({ fg = C.grey2, bg = C.bg1 }),
     StClient({ bg = C.bg1, fg = C.fg, gui = "bold" }),
     StError({ DiagnosticError, bg = C.bg1 }),
     StWarn({ DiagnosticWarn, bg = C.bg1 }),
-    StInfo({ DiagnosticInfo, bg = C.bg1, gui = "bold" }),
+    StInfo({ DiagnosticInfo, bg = C.bg1 }),
     StHint({ DiagnosticHint, bg = C.bg1 }),
 
     ---- :help statuscolumn  ---------------------------------------------------------
@@ -1117,15 +1117,17 @@ local theme = lush(function(injected_functions)
 
     GitSignsAdd({ fg = C.bright_green }),
     GitSignsDelete({ fg = C.red }),
+    GitSignsTopdelete({ GitSignsDelete }),
     GitSignsChange({ fg = C.orange }),
+    GitSignsChangedelete({ GitSignsChange }),
 
     GitSignsAddCursorLine({ fg = C.bright_green, bg = C.bg_dark }),
     GitSignsDeleteCursorLine({ fg = C.red, bg = C.bg_dark }),
     GitSignsChangeCursorLine({ fg = C.orange, bg = C.bg_dark }),
 
-    GitSignsAddNum({ fg = C.bright_green }),
-    GitSignsDeleteNum({ fg = C.red }),
-    GitSignsChangeNum({ fg = C.orange }),
+    GitSignsAddNr({ fg = C.bright_green }),
+    GitSignsDeleteNr({ fg = C.red }),
+    GitSignsChangeNr({ fg = C.orange }),
 
     ---- tmux-popup ------------------------------------------------------------
 

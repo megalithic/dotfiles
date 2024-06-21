@@ -12,10 +12,10 @@ local root_pattern = lspconfig.util.root_pattern
 M.list = function()
   return {
     bashls = {},
-    biome = {
-      manual_install = true,
-      root_dir = root_pattern({ "biome.json", ".biome.json", ".eslintrc.js", ".prettierrc.js" }),
-    },
+    -- biome = {
+    --   manual_install = true,
+    --   root_dir = root_pattern({ "biome.json", ".biome.json", ".eslintrc.js", ".prettierrc.js" }),
+    -- },
     cssls = {
       settings = {
         css = {
@@ -63,11 +63,11 @@ M.list = function()
         single_file_support = true,
         filetypes = { "elixir", "eelixir", "heex", "surface" },
         root_dir = root_pattern("mix.exs", ".git"),
-        log_level = vim.lsp.protocol.MessageType.Log,
-        message_level = vim.lsp.protocol.MessageType.Log,
-        settings = {
-          dialyzerEnabled = true,
-        },
+        -- log_level = vim.lsp.protocol.MessageType.Log,
+        -- message_level = vim.lsp.protocol.MessageType.Log,
+        -- settings = {
+        --   dialyzerEnabled = true,
+        -- },
       }
     end,
     elixirls = function()
@@ -104,8 +104,8 @@ M.list = function()
     emmet_ls = {
       settings = {
         includeLanguages = {
-          ["html-eex"] = "html",
-          ["phoenix-heex"] = "html",
+          -- ["html-eex"] = "html",
+          -- ["phoenix-heex"] = "html",
           eruby = "html",
         },
       },
@@ -115,12 +115,12 @@ M.list = function()
         "typescriptreact",
         -- "elixir",
         -- "eelixir",
-        "html.heex",
-        "heex",
-        "html_heex",
-        "html_eex",
-        "phoenix-heex",
-        "phoenix_heex",
+        -- "html.heex",
+        -- "heex",
+        -- "html_heex",
+        -- "html_eex",
+        -- "phoenix-heex",
+        -- "phoenix_heex",
         "eruby",
       },
     },
@@ -337,7 +337,7 @@ M.list = function()
         },
       }
     end,
-    marksman = function() return (vim.g.started_by_firenvim or vim.env.TMUX_POPUP) and nil or {} end,
+    -- marksman = function() return (vim.g.started_by_firenvim or vim.env.TMUX_POPUP) and nil or {} end,
     nextls = function()
       if not U.lsp.is_enabled_elixir_ls("nextls") then return false end
 
@@ -418,7 +418,7 @@ M.list = function()
         },
       }
     end,
-    prosemd_lsp = function() return (vim.g.started_by_firenvim or vim.env.TMUX_POPUP) and nil or {} end,
+    -- prosemd_lsp = function() return (vim.g.started_by_firenvim or vim.env.TMUX_POPUP) and nil or {} end,
     pyright = {
       single_file_support = false,
       settings = {
