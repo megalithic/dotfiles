@@ -54,17 +54,17 @@ do_install() {
       ;;
     'latest')
       # local tag=v0.22.6
-      local tag=
-      local tag_display=[[ -z "$tag" ]] && echo "latest" || echo "$tag"
-      log_info "downloading and installing gh release $tag_display to $LSPS_BIN_PATH/nextls"
+      tag=
+      tag_display=$([[ -z $tag ]] && echo "latest gh release" || echo "gh release '$tag'"
+      log_info "downloading and installing $tag_display to $LSPS_BIN_PATH/nextls"
       gh release download "$tag" \
         --pattern $BUILD_BIN \
         --output $LSPS_BIN_PATH/nextls \
         --clobber \
-        --repo elixir-tools/next-ls && log_ok "installed gh release to $LSPS_BIN_PATH/nextls"
+        --repo elixir-tools/next-ls && log_ok "installed $tag_display to $LSPS_BIN_PATH/nextls"
 
       chmod +x $LSPS_BIN_PATH/nextls
-      log_info "gh release $tag_display is ready at $LSPS_BIN_PATH/nextls"
+      log_info "$tag_display is ready at $LSPS_BIN_PATH/nextls"
       exit 1
       ;;
     'git')
