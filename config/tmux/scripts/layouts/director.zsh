@@ -15,7 +15,7 @@ tmux send-keys -t "$SESSION":1 C-z "tmux link-window -s mega:chats -t 0 && exit"
 
 # Window "code"
 tmux new-window -c "$CWD" -t "$SESSION":2 -n code
-tmux send-keys -t "$SESSION":2.1 nix-shell\ --run\ zsh "C-m"
+tmux send-keys -t "$SESSION":2.1 "nix-channel --update && nix-shell --run zsh" "C-m"
 tmux send-keys -t "$SESSION":2.1 ls "C-m"
 
 tmux select-layout -t "$SESSION":2 tiled

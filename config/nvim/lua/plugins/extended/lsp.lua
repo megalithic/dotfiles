@@ -607,6 +607,7 @@ return {
             format = diag_msg_format,
           },
           severity_sort = true,
+          -- virtual_text = false,
           virtual_text = {
             severity = { min = diag_level.ERROR },
             suffix = function(diag) return diag_source_as_suffix(diag, "virtual_text") end,
@@ -733,8 +734,15 @@ return {
     end,
   },
   {
-    "mhanberg/output-panel.nvim",
+    cond = false,
+    "rachartier/tiny-inline-diagnostic.nvim",
     event = "VeryLazy",
+    opts = true,
+  },
+  {
+    "mhanberg/output-panel.nvim",
+    -- event = "VeryLazy",
+    lazy = false,
     keys = {
       {
         "<leader>lip",
@@ -745,61 +753,4 @@ return {
     cmd = { "OutputPanel" },
     opts = true,
   },
-  -- {
-  --   "elixir-tools/elixir-tools.nvim",
-  --   cond = U.lsp.is_enabled_elixir_ls("Next LS") or U.lsp.is_enabled_elixir_ls("ElixirLS"),
-  --   event = {
-  --     "BufReadPre **.ex,**.exs,**.heex",
-  --     "BufNewFile **.ex,**.exs,**.heex",
-  --   },
-  --   config = function()
-  --     local elixir = require("elixir")
-  --     local elixirls = require("elixir.elixirls")
-  --     local nextls_cmd = function()
-  --       local arch = {
-  --         ["arm64"] = "arm64",
-  --         ["aarch64"] = "arm64",
-  --         ["amd64"] = "amd64",
-  --         ["x86_64"] = "amd64",
-  --       }
-  --
-  --       local os_name = string.lower(vim.uv.os_uname().sysname)
-  --       local current_arch = arch[string.lower(vim.uv.os_uname().machine)]
-  --       local build_bin = fmt("next_ls_%s_%s", os_name, current_arch)
-  --
-  --       return fmt("%s/lsp/nextls/burrito_out/%s", vim.env.XDG_DATA_HOME, build_bin)
-  --     end
-  --
-  --     elixir.setup({
-  --       nextls = {
-  --         enable = U.lsp.is_enabled_elixir_ls("Next LS"),
-  --         autostart = true,
-  --         cmd = nextls_cmd(),
-  --         spitfire = true,
-  --         init_options = {
-  --           experimental = {
-  --             completions = {
-  --               enable = true, -- control if completions are enabled. defaults to false
-  --             },
-  --           },
-  --         },
-  --         on_attach = M.on_attach,
-  --       },
-  --       credo = {},
-  --       elixirls = {
-  --         enable = U.lsp.is_enabled_elixir_ls("ElixirLS"),
-  --         cmd = fmt("%s/lsp/elixir-ls/%s", vim.env.XDG_DATA_HOME, "language_server.sh"),
-  --         settings = elixirls.settings({
-  --           dialyzerEnabled = true,
-  --           enableTestLenses = true,
-  --         }),
-  --         on_attach = M.on_attach,
-  --       },
-  --     })
-  --   end,
-  --   dependencies = {
-  --     "nvim-lua/plenary.nvim",
-  --     "neovim/nvim-lspconfig",
-  --   },
-  -- },
 }

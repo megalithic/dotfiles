@@ -20,11 +20,20 @@ __root="$(cd "$(dirname "$__dir")" && pwd)"
 __invocation="$(printf %q "$__file")$( (($#)) && printf ' %q' "$@" || true)"
 
 LSPS_PATH="${XDG_DATA_HOME}/lsp"
+LSPS_BIN_PATH="${XDG_DATA_HOME}/lsp/bin"
 LS_PATH="${LSPS_PATH}/next-ls"
 TMP_PATH="$HOME/tmp"
-mkdir -p "$LS_PATH"
 
-VERSION="${1:-main}"
+if [ ! -d "$LS_PATH" ]; then
+  mkdir -p "$LS_PATH"
+fi
+
+if [ ! -d "$LSPS_BIN_PATH" ]; then
+  mkdir -p "$LSPS_BIN_PATH"
+fi
+
+VERSION="${1:-latest}" # "latest" uses gh release downloader
+# VERSION="${1:-main}"
 TARGET=""
 BINARY=""
 BUILD_TYPE=""
@@ -42,6 +51,21 @@ do_install() {
       TARGET="https://github.com/elixir-tools/next-ls/releases/latest/download"
       BINARY="next_ls_${SYS}_${ARCH}"
       BUILD_TYPE="release"
+      ;;
+    'latest')
+      # local tag=v0.22.6
+      local tag=
+      local tag_display=[[ -z "$tag" ]] && echo "latest" || echo "$tag"
+      log_info "downloading and installing gh release $tag_display to $LSPS_BIN_PATH/nextls"
+      gh release download "$tag" \
+        --pattern $BUILD_BIN \
+        --output $LSPS_BIN_PATH/nextls \
+        --clobber \
+        --repo elixir-tools/next-ls && log_ok "installed gh release to $LSPS_BIN_PATH/nextls"
+
+      chmod +x $LSPS_BIN_PATH/nextls
+      log_info "gh release $tag_display is ready at $LSPS_BIN_PATH/nextls"
+      exit 1
       ;;
     'git')
       TARGET="https://github.com/elixir-tools/next-ls"
@@ -67,7 +91,7 @@ do_install() {
           (tar -xvzf "$BINARY" -C "$LSPS_PATH" && log_ok "unpacked $TARGET/$BINARY to $LSPS_PATH") &&
           mv "$LSPS_PATH/next-ls-$VERSION" "$LS_PATH" &&
           pushd "$LS_PATH" >/dev/null &&
-          (mix local.hex --force && mix local.rebar --force && mix deps.get && BURRITO_TARGET=darwin_arm64 MIX_ENV=prod mix release --overwrite && log_ok "built next-ls") &&
+          (mix do local.hex --force, local.rebar --force && BURRITO_TARGET="${SYS}_${ARCH}" MIX_ENV="prod" NEXTLS_RELEASE_MODE="burrito" mix do deps.get, release && log_ok "built next-ls") &&
           chmod +x "$bin_path" &&
           popd >/dev/null &&
           (rm "$BINARY" && log_ok "removed $TMP_PATH/$BINARY")

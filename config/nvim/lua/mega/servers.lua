@@ -87,6 +87,7 @@ M.list = function()
         single_file_support = true,
         settings = {
           mixEnv = "dev",
+          mix_env = "dev",
           autoBuild = true,
           fetchDeps = true,
           incrementalDialyzer = true,
@@ -355,10 +356,11 @@ M.list = function()
 
         if use_homebrew then return { "nextls", "--stdio" } end
         P({ fmt("%s/lsp/next-ls/burrito_out/%s", vim.env.XDG_DATA_HOME, build_bin), "--stdio" })
-        return { fmt("%s/lsp/next-ls/burrito_out/%s", vim.env.XDG_DATA_HOME, build_bin), "--stdio" }
+        -- return { fmt("%s/lsp/next-ls/burrito_out/%s", vim.env.XDG_DATA_HOME, build_bin), "--stdio" }
+        return { fmt("%s/lsp/bin/nextls", vim.env.XDG_DATA_HOME), "--stdio" }
       end
 
-      local homebrew_enabled = true
+      local homebrew_enabled = false
 
       return {
         manual_install = true,
@@ -372,8 +374,8 @@ M.list = function()
 
           return root_dir
         end,
-        log_level = vim.lsp.protocol.MessageType.Error,
-        message_level = vim.lsp.protocol.MessageType.Error,
+        log_level = "verbose", --vim.lsp.protocol.MessageType.Error,
+        message_level = "verbose", -- vim.lsp.protocol.MessageType.Error,
         cmd_env = {
           NEXTLS_SPITFIRE_ENABLED = 1,
         },
@@ -408,9 +410,9 @@ M.list = function()
               enable = true,
             },
           },
-          mixEnv = "dev",
+          mix_env = "dev",
           mix_target = "host",
-          fetchDeps = false,
+          fetchDeps = true,
           dialyzerEnabled = true,
           dialyzerFormat = "dialyxir_long",
           enableTestLenses = false,

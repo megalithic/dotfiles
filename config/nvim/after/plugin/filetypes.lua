@@ -42,6 +42,10 @@ ftplugin.extend_all({
       nmap("<localleader>ei", [[o|> IO.inspect()<ESC>i]], "inspect (new line)")
       nmap("<localleader>eil", [[o|> IO.inspect(label: "")<ESC>hi]], "inspect label (new line)")
       nmap("<localleader>em", "<cmd>CopyModuleAlias<cr>", "copy module alias")
+      nmap("<localleader>eF", function()
+        vim.cmd("silent !mix format")
+        vim.cmd("edit")
+      end, "format")
 
       nmap("<localleader>ok", [[:lua require("mega.utils").wrap_cursor_node("{:ok, ", "}")<CR>]], "copy module alias")
       xmap("<localleader>ok", [[:lua require("mega.utils").wrap_selected_nodes("{:ok, ", "}")<CR>]], "copy module alias")

@@ -238,6 +238,9 @@
 
   ; https://git.tsundere.moe/Frederick888/frederick-settings/blob/master/.gitconfig
 
+  set-prod-api = !git stash push -m "dev-use-prod-api"
+  get-prod-api = !git stash apply stash^{/dev-use-prod-api}
+
 [clean]
   requireForce = true
 

@@ -326,9 +326,9 @@ map("n", "<localleader>;", modify_line_end_delimiter(";"), { desc = "add semicol
 -- [Terminal] ------------------------------------------------------------------
 
 local nnoremap = function(lhs, rhs, desc) vim.keymap.set("n", lhs, rhs, { buffer = 0, desc = "term: " .. desc }) end
-nnoremap("<leader>tt", "<cmd>T direction=horizontal move_on_direction_change=true<cr>", "horizontal")
-nnoremap("<leader>tf", "<cmd>T direction=float move_on_direction_change=true<cr>", "float")
-nnoremap("<leader>tv", "<cmd>T direction=vertical move_on_direction_change=true<cr>", "vertical")
-nnoremap("<leader>tp", "<cmd>T direction=tab<cr>", "tab-persistent")
+map("n", "<leader>tt", "<cmd>T direction=horizontal move_on_direction_change=true<cr>", { desc = "horizontal" })
+map("n", "<leader>tf", "<cmd>T direction=float move_on_direction_change=true<cr>", { desc = "float" })
+map("n", "<leader>tv", "<cmd>T direction=vertical move_on_direction_change=true<cr>", { desc = "vertical" })
+map("n", "<leader>tp", "<cmd>T direction=tab<cr>", { desc = "tab-persistent" })
 
 return M

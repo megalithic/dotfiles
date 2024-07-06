@@ -365,7 +365,9 @@ case "$(uname)" in
 
   # Set the list of directories that Zsh searches for programs.
   # "${HOME}/.asdf/installs/elixir/`asdf current elixir | awk '{print $1}'`/.mix"
+  # NOTE: ASC for override, first-in-list wins
   path=(
+    ${HOME}/.local/share/lsp/bin(N-/)
     ${HOMEBREW_PREFIX}/{bin,sbin}
     ${HOMEBREW_PREFIX}/opt
     ./bin
@@ -426,6 +428,7 @@ case "$(uname)" in
     /Applications/WezTerm.app/Contents/MacOS
     ${HOMEBREW_PREFIX}/{bin,sbin}
     ${HOMEBREW_PREFIX}/opt
+
     $path
   )
   export PATH

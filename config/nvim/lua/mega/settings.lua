@@ -1,7 +1,7 @@
 local BORDER_STYLE = "none"
 local fmt = string.format
 
-vim.lsp.set_log_level("ERROR")
+vim.lsp.set_log_level("DEBUG")
 
 local border_chars = {
   none = { " ", " ", " ", " ", " ", " ", " ", " " },
@@ -94,12 +94,14 @@ local M = {
   },
   disabled_semantic_tokens = { "lua" },
   disabled_lsp_formatters = { "tailwindcss", "html", "tsserver", "ls_emmet", "zk", "sumneko_lua" },
-  enabled_elixir_ls = { "", "", "elixirls", "", "lexical" },
-  completion_exclusions = { "ElixirLS", "Next LS", "elixirls", "nextls", "" },
-  formatter_exclusions = { "ElixirLS", "Next LS", "", "nextls", "lexical" }, -- NOTE: prefer anything but lexical for formatting (it always wraps with parens, like in a schema or router)
-  diagnostic_exclusions = { "ElixirLS", "Next LS", "elixirls", "nextls", "", "tsserver" },
-  definition_exclusions = { "ElixirLS", "Next LS", "elixirls", "nextls", "" },
-  max_diagnostic_exclusions = { "ElixirLS", "Next LS", "elixirls", "nextls", "" },
+  ---@format disable
+  enabled_elixir_ls = { "", "", "", "nextls", "" },
+  completion_exclusions = { "ElixirLS", "Next LS", "elixirls", "", "lexical" },
+  formatter_exclusions = { "ElixirLS", "Next LS", "elixirls", "", "lexical" },
+  definition_exclusions = { "ElixirLS", "Next LS", "elixirls", "", "lexical" },
+  diagnostic_exclusions = { "ElixirLS", "Next LS", "elixirls", "", "lexical", "tsserver" },
+  max_diagnostic_exclusions = { "ElixirLS", "Next LS", "elixirls", "", "lexical" },
+  ---@format enable
   disable_autolint = false,
   disable_autoformat = false,
   enable_signsplaced = false,

@@ -1,0 +1,15 @@
+{
+  "model": "gpt-4o",
+  "messages": [
+    {
+      "role": "user",
+      "content": "how do you say over there in spanish?//"
+    },
+    {
+      "role": "assistant",
+      "content": "In Spanish, \"over there\" is translated as \"allí\" or \"allá.\" \n\n- \"Allí\" is generally used to refer to a place that is somewhat distant but still within sight.\n- \"Allá\" can imply a place that is farther away or even out of sight.\n\nFor example:\n- \"El libro está allí.\" (The book is over there.)\n- \"Los niños están allá, en el parque.\" (The children are over there, at the park.)"
+    }
+  ],
+  "temperature": 1,
+  "top_p": 1
+}

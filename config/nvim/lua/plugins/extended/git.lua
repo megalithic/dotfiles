@@ -134,6 +134,10 @@ return {
           -- hl = "GitSignsAdd",
           text = icons.git.untracked,
         }, -- alts: ┆ ▕
+        signs_staged = {
+          change = { text = "┋" },
+          delete = { text = "🢒" },
+        },
       },
       current_line_blame = not vim.fn.getcwd():match("dotfiles"),
       current_line_blame_formatter = " <author>, <author_time> · <summary>",

@@ -1,0 +1,15 @@
+{
+  "model": "gpt-4o",
+  "messages": [
+    {
+      "role": "user",
+      "content": "how do you say \"i want the smoked salmon\" in spanish?\n"
+    },
+    {
+      "role": "assistant",
+      "content": "You can say \"Quiero el salmón ahumado\" in Spanish."
+    }
+  ],
+  "temperature": 1,
+  "top_p": 1
+}
