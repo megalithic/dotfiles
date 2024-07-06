@@ -451,24 +451,32 @@ function M.apply()
     {
       event = { "BufEnter" },
       buffer = 0,
-      desc = "Crazy `gf` open behaviour",
-      command = function()
+      desc = "Extreeeeme `gf` open behaviour",
+      command = function(args)
         map("n", "gf", function()
-          local target = vim.fn.expand("<cfile>")
+          local target = vim.fn.escape(vim.fn.expand("<cword>"), [[\/]])
           if U.is_image(target) then
             local root_dir = require("mega.utils.lsp").root_dir({ ".git" })
-            -- dd(root_dir)
-            -- naive for now:
             target = target:gsub("./samples", fmt("%s/samples", root_dir))
-            -- dd(target)
             return require("mega.utils").preview_file(target)
+          elseif target:match("https://") then
+            return vim.cmd("norm gx")
+          elseif vim.bo[args.buf].filetype == "elixir" then
+            vim.cmd([[setlocal iskeyword+=:,!,?,-]])
+            target = vim.fn.escape(vim.fn.expand("<cword>"), [[\/]])
+            target = string.sub(target, 2)
+
+            local url = fmt("https://hexdocs.pm/%s/", target)
+            vim.notify(fmt("Opening %s at %s", target, url))
+            vim.fn.jobstart(fmt("%s %s", vim.g.open_command, url))
+          elseif not target or #vim.split(target, "/") ~= 2 then
+            return vim.cmd("norm! gf")
+          else
+            local url = fmt("https://github.com/%s", target)
+            vim.fn.jobstart(fmt("%s %s", vim.g.open_command, url))
+            vim.notify(fmt("Opening %s at %s", target, url))
           end
-          if target:match("https://") then return vim.cmd("norm gx") end
-          if not target or #vim.split(target, "/") ~= 2 then return vim.cmd("norm! gf") end
-          local url = fmt("https://www.github.com/%s", target)
-          vim.fn.jobstart(fmt("%s %s", vim.g.open_command, url))
-          vim.notify(fmt("Opening %s at %s", target, url))
-        end, { desc = "[g]oto [f]ile (preview, github repo, url)" })
+        end, { desc = "[g]oto [f]ile (preview, github repo, hexdocs, url)" })
       end,
     },
   })
