@@ -4,8 +4,8 @@ SESSION="bellhop"
 ROOT_DIR="$CODE/tern"
 CWD="$ROOT_DIR/$SESSION"
 
-SESSION_ICON="" # alts: 󰂚󰞎󰵚󰵛
-SESSION_FG="#54816B"
+export SESSION_ICON="" # alts: 󰂚󰞎󰵚󰵛
+export SESSION_FG="#54816B"
 
 cd $CWD
 

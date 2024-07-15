@@ -4,8 +4,8 @@ SESSION="director"
 ROOT_DIR="$CODE/tern"
 CWD="$ROOT_DIR/$SESSION"
 
-SESSION_ICON="󰿎" # alts: 󰂚󰞎󰵚󰵛
-SESSION_FG="#008060"
+export SESSION_ICON="󰿎" # alts: 󰂚󰞎󰵚󰵛
+export SESSION_FG="#008060"
 
 cd $CWD
 

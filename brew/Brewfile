@@ -316,6 +316,7 @@ cask "istat-menus"
 cask "karabiner-elements"
 cask "keycastr"
 cask "kitty-nightly", greedy: true
+cask "livebook"
 # cask "little-snitch4" # requires kernel extension, see notes from install message
 # cask "loom"
 # cask "marta"

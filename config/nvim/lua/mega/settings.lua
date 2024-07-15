@@ -95,8 +95,8 @@ local M = {
   disabled_semantic_tokens = { "lua" },
   disabled_lsp_formatters = { "tailwindcss", "html", "tsserver", "ls_emmet", "zk", "sumneko_lua" },
   ---@format disable
-  enabled_elixir_ls = { "", "", "", "nextls", "" },
-  completion_exclusions = { "ElixirLS", "Next LS", "elixirls", "", "lexical" },
+  enabled_elixir_ls = { "", "", "elixirls", "nextls", "" },
+  completion_exclusions = { "ElixirLS", "Next LS", "", "", "lexical" },
   formatter_exclusions = { "ElixirLS", "Next LS", "elixirls", "", "lexical" },
   definition_exclusions = { "ElixirLS", "Next LS", "elixirls", "", "lexical" },
   diagnostic_exclusions = { "ElixirLS", "Next LS", "elixirls", "", "lexical", "tsserver" },

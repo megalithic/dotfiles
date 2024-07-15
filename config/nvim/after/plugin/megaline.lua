@@ -483,8 +483,8 @@ end
 
 local function seg_prefix(truncate_at)
   local mode_info = MODES[api.nvim_get_mode().mode]
-  local prefix = is_truncated(truncate_at) and "" or icons.misc.lblock
-  return seg(prefix, mode_info.hl)
+  local prefix = is_truncated(truncate_at) and "" or vim.env.SESSION_ICON -- icons.misc.lblock
+  return seg(prefix, mode_info.hl, { padding = { 1, 1 } })
 end
 
 local function seg_suffix(truncate_at)
@@ -602,6 +602,9 @@ local function seg_git_status(truncate_at)
   if not status then return "" end
 
   local branch = is_truncated(truncate_at) and truncate_str(status.head or "", 14) or status.head
+  -- if vim.fn.trim(vim.fn.system("git rev-parse --is-inside-work-tree")) == "true" then
+  --   branch = vim.fn.trim(vim.fn.system("basename `git rev-parse --show-toplevel`"))
+  -- end
   return seg(branch, "StGitBranch", { margin = { 1, 1 }, prefix = seg_git_symbol(80), padding = { 1, 0 } })
 end
 
@@ -650,7 +653,7 @@ function mega.ui.statusline.render()
 
   return table.concat({
     seg([[%<]]),
-    -- seg_prefix(100),
+    seg_prefix(100),
     seg_mode(120),
     seg_filename(120),
     seg(modified_icon, "StModifiedIcon", M.ctx.modified, { margin = { 0, 1 } }), -- alts: "%m"

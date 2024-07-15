@@ -83,6 +83,14 @@ for _, mode in ipairs({ "n", "x", "i", "v", "o", "t", "s", "c" }) do
   _G[mode .. "noremap"] = mapper(mode, noremap_opts)
 end
 
+-- [[ tabs ]] ------------------------------------------------------------------
+-- jump to tab
+for i = 0, 9 do
+  if i + 1 >= 10 then break end
+  local key_string = tostring(i + 1)
+  map("n", "<localleader>" .. key_string, string.format("<cmd>%stabnext<cr>", key_string), { desc = string.format("tab: jump to tab %s", key_string) })
+end
+
 -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
 -- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
 -- is not what someone will guess without a bit more experience.
@@ -168,8 +176,14 @@ map("n", "j", "v:count == 0 ? 'gj' : 'j'", { expr = true, silent = true })
 -- map({ "n", "x", "o" }, "n", "nzz")
 -- map({ "n", "x", "o" }, "N", "Nzz")
 
-map({ "n", "x", "o" }, "n", "nzzzv<esc><cmd>lua mega.blink_cursorline(50)<cr>", { desc = "Fwd  search '/' or '?'" })
-map({ "n", "x", "o" }, "N", "Nzzzv<esc><cmd>lua mega.blink_cursorline(50)<cr>", { desc = "Back search '/' or '?'" })
+map({ "n", "x", "o" }, "n", "nzzzv<esc><cmd>lua mega.blink_cursorline(150)<cr>", { desc = "Fwd  search '/' or '?'" })
+map({ "n", "x", "o" }, "N", "Nzzzv<esc><cmd>lua mega.blink_cursorline(150)<cr>", { desc = "Back search '/' or '?'" })
+
+nnoremap("<C-f>", "<C-f>zz<Esc><Cmd>lua mega.blink_cursorline(75)<CR>")
+nnoremap("<C-b>", "<C-b>zz<Esc><Cmd>lua mega.blink_cursorline(75)<CR>")
+
+nnoremap("<C-d>", "<C-d>zz<Esc><Cmd>lua mega.blink_cursorline(75)<CR>")
+nnoremap("<C-u>", "<C-u>zz<Esc><Cmd>lua mega.blink_cursorline(75)<CR>")
 
 -- [[ macros ]] ----------------------------------------------------------------
 -- Map Q to replay q register for macro
@@ -269,7 +283,7 @@ map("x", "<leader>h", "\"hy:%s/<C-r>h/<C-r>h/gc<left><left><left>", {
 map("n", "<localleader>sj", "]s", { desc = "[spell] Move to next misspelling" })
 map("n", "<localleader>sk", "[s", { desc = "[spell] Move to previous misspelling" })
 map("n", "<localleader>sf", function()
-  local cur_pos = vim.api.nvim_win_get_cursor(0)
+  local cur_pos = vim.api.nvim_win_get_sursor(0)
   vim.cmd.normal({ "1z=", bang = true })
   vim.api.nvim_win_set_cursor(0, cur_pos)
 end, { desc = "[spell] Correct spelling of word under cursor" })

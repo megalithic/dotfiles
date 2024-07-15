@@ -1,5 +1,6 @@
 local SETTINGS = mega.req("mega.settings")
 return {
+  { "echasnovski/mini.icons", version = false },
   {
     "echasnovski/mini.indentscope",
     config = function()

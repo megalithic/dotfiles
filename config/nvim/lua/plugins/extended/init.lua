@@ -42,12 +42,15 @@ return {
     },
     {
       "folke/which-key.nvim",
+      version = "2.1.0",
+      pin = true,
       event = "VeryLazy",
       init = function()
         vim.o.timeout = true
         vim.o.timeoutlen = 300
       end,
       opts = {
+        -- preset = "modern",
         plugins = {
           marks = true, -- shows a list of your marks on ' and `
           registers = true, -- shows your registers on " in NORMAL or <C-r> in INSERT mode
@@ -102,6 +105,12 @@ return {
       config = function(_, opts) -- This is the function that runs, AFTER loading
         local wk = require("which-key")
         wk.setup(opts)
+        -- wk.add({
+        --   { "<leader>c", group = "[c]ode" },
+        --   { "<leader>d", group = "[d]ocument" },
+        --   { "<leader>e", group = "[e]dit files" },
+        --   { "<leader>e", group = "[e]dit files" },
+        -- })
 
         -- Document existing key chains
         wk.register({

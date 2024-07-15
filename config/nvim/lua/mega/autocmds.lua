@@ -70,6 +70,7 @@ function M.apply()
       -- FIXME: handle situations where we use `ngit` or `ndb` from cli
       event = { "VimEnter" },
       pattern = { "*" },
+      enabled = false,
       once = true,
       desc = "Crazy behaviours for opening vim with arguments (or not)",
       command = function(args)
@@ -198,8 +199,19 @@ function M.apply()
   M.augroup("CheckOutsideTime", {
     desc = "Automatically check for changed files outside vim",
     event = { "WinEnter", "BufWinEnter", "BufWinLeave", "BufRead", "BufEnter", "FocusGained" },
-    command = "silent! checktime",
+    command = function() vim.cmd.checktime() end,
   })
+
+  -- M.augroup("UpdateOnLeave", {
+  --   desc = "Automatically update modified buffer on leave..",
+  --   event = { "FocusLost", "BufLeave", "BufWinLeave" },
+  --   command = function()
+  --     if vim.bo.modified and not vim.bo.readonly and vim.fn.expand("%") ~= "" and vim.bo.buftype == "" then
+  --       vim.notify("updating...")
+  --       vim.api.nvim_command("silent w")
+  --     end
+  --   end,
+  -- })
 
   M.augroup("SmartCloseBuffers", {
     {

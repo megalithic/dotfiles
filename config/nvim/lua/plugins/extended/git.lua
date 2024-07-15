@@ -434,4 +434,66 @@ return {
       file_log = true,
     },
   },
+  {
+    cond = false,
+    "Juksuu/worktrees.nvim",
+    event = "VeryLazy",
+    keys = {
+      {
+        "<leader>gww",
+        "<cmd>lua require('telescope').extensions.worktrees.list_worktrees()<cr>",
+        desc = "git-worktree: switch worktree",
+        -- mode = { "n", "v" },
+      },
+      {
+        "<leader>gwn",
+        "<cmd>GitWorktreeCreate<cr>",
+        desc = "git-worktree: create worktree",
+      },
+      {
+        "<leader>gwc",
+        "<cmd>GitWorktreeCreateExisting<cr>",
+        desc = "git-worktree: create existing worktree",
+      },
+    },
+    config = function()
+      -- telescope.load_extension("git_worktree")
+      require("worktrees").setup({})
+      require("telescope").load_extension("worktrees")
+    end,
+  },
+  {
+    -- "mgierada/git-worktree.nvim",
+    -- branch = "adapt-for-telescope-api-changes",
+
+    "awerebea/git-worktree.nvim", -- Temporary switch to fork
+    branch = "main",
+    event = "VeryLazy",
+    keys = {
+      {
+        "<leader>gww",
+        function() require("telescope").extensions.git_worktree.git_worktrees({ path_display = {} }) end,
+        desc = "git-worktree: switch worktree",
+      },
+      {
+        "<leader>gwc",
+        function() require("telescope").extensions.git_worktree.create_git_worktree() end,
+        desc = "git-worktree: create worktree",
+      },
+    },
+    opts = {},
+    config = function()
+      local wt = require("git-worktree")
+      require("telescope").load_extension("git_worktree")
+      wt.on_tree_change(function(op, metadata)
+        if op == wt.Operations.Switch then
+          vim.notify("Switched from " .. metadata.prev_path .. " to " .. metadata.path)
+        elseif op == wt.Operations.Create then
+          vim.notify("Worktree created: " .. metadata.path .. " for branch " .. metadata.branch .. " with upstream " .. metadata.upstream)
+        elseif op == wt.Operations.Delete then
+          vim.notify("Worktree deleted: " .. metadata.path)
+        end
+      end)
+    end,
+  },
 }

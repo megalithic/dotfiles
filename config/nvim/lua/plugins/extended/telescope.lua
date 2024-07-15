@@ -29,7 +29,7 @@ return {
 
       "natecraddock/telescope-zf-native.nvim",
       "nvim-telescope/telescope-file-browser.nvim",
-      "fdschmidt93/telescope-egrepify.nvim",
+      { "fdschmidt93/telescope-egrepify.nvim", branch = "fix/preview" },
       "fdschmidt93/telescope-corrode.nvim",
       {
         "danielfalk/smart-open.nvim",
@@ -61,6 +61,7 @@ return {
       local telescope = require("telescope")
       local transform_mod = require("telescope.actions.mt").transform_mod
       local actions = require("telescope.actions")
+      local egrep_actions = require("telescope._extensions.egrepify.actions")
       local action_state = require("telescope.actions.state")
       local action_set = require("telescope.actions.set")
       local lga_actions = require("telescope-live-grep-args.actions")
@@ -209,7 +210,27 @@ return {
       end
       mega.ivy = ivy
 
-      local grep = function(...) ts.live_grep(ivy(...)) end
+      -- local grep = function(...) ts.live_grep(ivy(...)) end
+      local grep = function(opts)
+        opts = vim.tbl_deep_extend("force", opts or {}, {})
+        local picker = opts and opts["picker"] or "live_grep"
+        local theme = opts and opts["theme"] or "ivy"
+        local bufnr = vim.api.nvim_get_current_buf()
+        local fn = vim.api.nvim_buf_get_name(bufnr)
+
+        current_fn = fn
+        -- opts.cwd = require("mega.utils").get_root()
+        -- vim.notify(fmt("current project files root: %s", opts.cwd), vim.log.levels.DEBUG, { title = "telescope" })
+        -- local picker = ts["find_files"]
+
+        if theme == "ivy" then
+          ts[picker](ivy(opts))
+        elseif theme == "dropdown" then
+          ts[picker](dropdown(opts))
+        else
+          ts[picker](opts)
+        end
+      end
       mega.picker.grep = grep
 
       -- Gets the root dir from either:
@@ -240,6 +261,61 @@ return {
       end
       mega.picker.find_files = find_files
 
+      local function flash(prompt_bufnr)
+        require("flash").jump({
+          pattern = "^",
+          label = { after = { 0, 0 } },
+          search = {
+            mode = "search",
+            exclude = {
+              function(win) return vim.bo[vim.api.nvim_win_get_buf(win)].filetype ~= "TelescopeResults" end,
+            },
+          },
+          action = function(match)
+            local picker = require("telescope.actions.state").get_current_picker(prompt_bufnr)
+            dbg(picker)
+            picker:set_selection(match.pos[1] - 1)
+          end,
+        })
+      end
+
+      local function multi(pb, verb, open_selection_under_cursor)
+        open_selection_under_cursor = open_selection_under_cursor or false
+        local methods = {
+          ["vnew"] = "select_vertical",
+          ["new"] = "select_horizontal",
+          ["edit"] = "select_default",
+          ["tabnew"] = "select_tab",
+        }
+        local select_action = methods[verb]
+        local picker = action_state.get_current_picker(pb)
+        local selections = picker:get_multi_selection()
+        local num_selections = #selections
+
+        -- NOTE: optionally send to qf:
+        -- https://github.com/olimorris/dotfiles/blob/main/.config/nvim/lua/Oli/plugins/telescope.lua#L103-L121
+        if open_selection_under_cursor or current_fn == nil or num_selections == 0 then
+          actions[select_action](pb)
+        else
+          if current_fn ~= nil then -- is it a file -> open it as well:
+            vim.cmd(fmt("%s %s", "edit!", current_fn))
+            current_fn = nil
+          end
+        end
+
+        for _, p in pairs(selections) do
+          if p.path ~= nil then -- is it a file -> open it as well:
+            vim.cmd(fmt("%s %s", verb, p.path))
+          end
+        end
+
+        -- if num_selections > 1 then
+        --   actions.send_selected_to_qflist(pb)
+        --   actions.open_qflist()
+        -- else
+        --   actions.file_edit(pb)
+        -- end
+      end
       mega.picker.startup = function(bufnr)
         mega.picker.find_files({
           theme = "dropdown",
@@ -299,44 +375,6 @@ return {
         "--trim",
       }
 
-      local function multi(pb, verb, open_selection_under_cursor)
-        open_selection_under_cursor = open_selection_under_cursor or false
-        local methods = {
-          ["vnew"] = "select_vertical",
-          ["new"] = "select_horizontal",
-          ["edit"] = "select_default",
-          ["tabnew"] = "select_tab",
-        }
-        local select_action = methods[verb]
-        local picker = action_state.get_current_picker(pb)
-        local selections = picker:get_multi_selection()
-        local num_selections = #selections
-
-        -- NOTE: optionally send to qf:
-        -- https://github.com/olimorris/dotfiles/blob/main/.config/nvim/lua/Oli/plugins/telescope.lua#L103-L121
-        if open_selection_under_cursor or current_fn == nil or num_selections == 0 then
-          actions[select_action](pb)
-        else
-          if current_fn ~= nil then -- is it a file -> open it as well:
-            vim.cmd(fmt("%s %s", "edit!", current_fn))
-            current_fn = nil
-          end
-        end
-
-        for _, p in pairs(selections) do
-          if p.path ~= nil then -- is it a file -> open it as well:
-            vim.cmd(fmt("%s %s", verb, p.path))
-          end
-        end
-
-        -- if num_selections > 1 then
-        --   actions.send_selected_to_qflist(pb)
-        --   actions.open_qflist()
-        -- else
-        --   actions.file_edit(pb)
-        -- end
-      end
-
       local function file_extension_filter(prompt)
         -- if prompt starts with escaped @ then treat it as a literal
         if (prompt):sub(1, 2) == "\\@" then return { prompt = prompt:sub(2) } end
@@ -376,6 +414,16 @@ return {
           grep_previewer = require("telescope.previewers").vim_buffer_vimgrep.new,
           qflist_previewer = require("telescope.previewers").vim_buffer_qflist.new,
           layout_strategy = "horizontal",
+          -- NOTE: https://github.com/bangalcat/nvim/blob/main/lua/plugins/telescope.lua#L61
+          get_selection_window = function()
+            local wins = vim.api.nvim_list_wins()
+            table.insert(wins, 1, vim.api.nvim_get_current_win())
+            for _, win in ipairs(wins) do
+              local buf = vim.api.nvim_win_get_buf(win)
+              if vim.bo[buf].buftype == "" then return win end
+            end
+            return 0
+          end,
           layout_config = {
             prompt_position = "top",
           },
@@ -411,7 +459,9 @@ return {
               ["<esc>"] = require("telescope.actions").close,
               -- ['<cr>'] = require('telescope.actions').select_vertical,
               ["<c-v>"] = stopinsert(function(pb) multi(pb, "vnew") end),
-              ["<c-s>"] = stopinsert(function(pb) multi(pb, "new") end),
+              ["<c-s>"] = stopinsert(function(pb) flash(pb) end),
+              -- ["<c-s>"] = stopinsert(function(pb) multi(pb, "new") end),
+
               ["<c-o>"] = stopinsert(function(pb) multi(pb, "edit") end),
               ["<c-z>"] = actions.toggle_selection,
               ["<c-r>"] = actions.to_fuzzy_refine,
@@ -512,8 +562,8 @@ return {
                   multi(pb, "vnew")
                   -- actions.select_vertical(pb)
                 end),
-                ["<C-f>"] = actions.to_fuzzy_refine,
-                ["<C-s>"] = actions.to_fuzzy_refine,
+                ["<C-r>"] = actions.to_fuzzy_refine,
+                -- ["<C-s>"] = actions.to_fuzzy_refine,
               },
             },
             on_input_filter_cb = function(prompt)
@@ -650,6 +700,44 @@ return {
             -- theme = { }, -- use own theme spec
             -- layout_config = { mirror=true }, -- mirror preview pane
           },
+          egrepify = {
+            -- intersect tokens in prompt ala "str1.*str2" that ONLY matches
+            -- if str1 and str2 are consecutively in line with anything in between (wildcard)
+            AND = true, -- default
+            permutations = false, -- opt-in to imply AND & match all permutations of prompt tokens
+            lnum = true, -- default, not required
+            lnum_hl = "EgrepifyLnum", -- default, not required, links to `Constant`
+            col = false, -- default, not required
+            col_hl = "EgrepifyCol", -- default, not required, links to `Constant`
+            title = true, -- default, not required, show filename as title rather than inline
+            filename_hl = "EgrepifyFile", -- default, not required, links to `Title`
+            results_ts_hl = true, -- set to true if you want results ts highlighting, may increase latency!
+            -- suffix = long line, see screenshot
+            -- EXAMPLE ON HOW TO ADD PREFIX!
+            prefixes = {
+              -- ADDED ! to invert matches
+              -- example prompt: ! sorter
+              -- matches all lines that do not comprise sorter
+              -- rg --invert-match -- sorter
+              ["!"] = {
+                flag = "invert-match",
+              },
+              -- HOW TO OPT OUT OF PREFIX
+              -- ^ is not a default prefix and safe example
+              ["^"] = false,
+            },
+            -- default mappings
+            mappings = {
+              i = {
+                -- toggle prefixes, prefixes is default
+                ["<C-z>"] = egrep_actions.toggle_prefixes,
+                -- toggle AND, AND is default, AND matches tokens and any chars in between
+                ["<C-a>"] = egrep_actions.toggle_and,
+                -- toggle permutations, permutations of tokens is opt-in
+                ["<C-r>"] = egrep_actions.toggle_permutations,
+              },
+            },
+          },
           ["ui-select"] = {
             require("telescope.themes").get_dropdown(),
           },
@@ -665,6 +753,7 @@ return {
       telescope.load_extension("egrepify")
       telescope.load_extension("corrode")
       telescope.load_extension("smart_open")
+
       -- telescope.load_extension("nucleo")
       -- telescope.load_extension("zf-native")
 
@@ -675,6 +764,9 @@ return {
       map("n", "<leader>fa", ts.autocommands, { desc = "[f]ind [a]utocommands" })
       map("n", "<leader>fk", ts.keymaps, { desc = "[f]ind [k]eymaps" })
       -- map("n", "<leader>fs", ts.builtin, { desc = "[f]ind [f]elect Telescope" })
+      map("n", "<leader>fg", ts.egrepify, { desc = "egrepify (live)" })
+
+      map("n", "<leader>fg", function() mega.picker.grep({ picker = "egrepify" }) end, { desc = "[f]ind e[g]repify" })
       map("n", "<leader>a", mega.picker.grep, { desc = "grep (live)" })
       -- map("n", "<leader>A", ts.grep_string, { desc = "grep (under cursor)" })
       map("n", "<leader>A", function() mega.picker.grep({ default_text = vim.fn.expand("<cword>") }) end, { desc = "grep (under cursor)" })

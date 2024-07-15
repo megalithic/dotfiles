@@ -216,7 +216,8 @@
 
   up = !git pull --autostash --rebase && git log --color --pretty=oneline --abbrev-commit HEAD@{1}.. | sed 's/^/  /'
 
-  wt = !~/.dotfiles/bin/git-wt
+  wt = !git worktree
+  # wt = !~/.dotfiles/bin/git-wt
   ; rb = rebase
   ; rb = rebase -i
 

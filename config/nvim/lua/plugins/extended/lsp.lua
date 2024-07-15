@@ -472,9 +472,7 @@ return {
             event = { "LspProgress" },
             desc = "Handle lsp progress message scenarios",
             command = function(ev)
-              if ev.data.result == nil then return end
-
-              local token = ev.data.result.token
+              local token = ev.data.params.token
               local client_id = ev.data.client_id
               local clnt = client_id and vim.lsp.get_client_by_id(client_id)
               if clnt and token then require("fidget").notification.remove(clnt.name, token) end
@@ -504,20 +502,20 @@ return {
         --   },
         -- })
 
-        if client and client.server_capabilities.documentHighlightProvider then
-          augroup("LspDocumentHighlights", {
-            {
-              event = { "CursorHold", "CursorHoldI" },
-              buffer = bufnr,
-              command = vim.lsp.buf.document_highlight,
-            },
-            {
-              event = { "CursorMoved", "CursorMovedI" },
-              buffer = bufnr,
-              command = vim.lsp.buf.clear_references,
-            },
-          })
-        end
+        -- if client and client.server_capabilities.documentHighlightProvider then
+        --   augroup("LspDocumentHighlights", {
+        --     {
+        --       event = { "CursorHold", "CursorHoldI" },
+        --       buffer = bufnr,
+        --       command = vim.lsp.buf.document_highlight,
+        --     },
+        --     {
+        --       event = { "CursorMoved", "CursorMovedI" },
+        --       buffer = bufnr,
+        --       command = vim.lsp.buf.clear_references,
+        --     },
+        --   })
+        -- end
 
         local max_width = math.min(math.floor(vim.o.columns * 0.7), 100)
         local max_height = math.min(math.floor(vim.o.lines * 0.3), 30)

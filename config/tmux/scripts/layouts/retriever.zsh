@@ -4,8 +4,8 @@ SESSION="retriever"
 ROOT_DIR="$CODE/tern"
 CWD="$ROOT_DIR/$SESSION"
 
-SESSION_ICON="󰩄"
-SESSION_FG="#d39bb6"
+export SESSION_ICON="󰩄"
+export SESSION_FG="#d39bb6"
 
 cd $CWD
 

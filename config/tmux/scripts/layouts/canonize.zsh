@@ -3,9 +3,9 @@
 SESSION="canonize"
 CWD="$CODE/$SESSION"
 
-SESSION_ICON="󰴓"
-SESSION_FG="#e39b7b"
-# SESSION_BG="#626262"
+export SESSION_ICON="󰴓"
+export SESSION_FG="#e39b7b"
+# export SESSION_BG="#626262"
 
 cd $CWD
 
