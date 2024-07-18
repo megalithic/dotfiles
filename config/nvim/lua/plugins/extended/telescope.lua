@@ -202,13 +202,13 @@ return {
         opts = vim.tbl_deep_extend("force", opts or {}, {})
         return require("telescope.themes").get_dropdown(get_border(opts))
       end
-      mega.dropdown = dropdown
+      mega.picker.dropdown = dropdown
 
       local function ivy(opts)
         opts = vim.tbl_deep_extend("force", opts or {}, { layout_config = { height = 0.3 } })
         return require("telescope.themes").get_ivy(get_border(opts))
       end
-      mega.ivy = ivy
+      mega.picker.ivy = ivy
 
       -- local grep = function(...) ts.live_grep(ivy(...)) end
       local grep = function(opts)
@@ -737,6 +737,9 @@ return {
                 ["<C-r>"] = egrep_actions.toggle_permutations,
               },
             },
+          },
+          git_worktree = {
+            theme = "ivy", -- use dropdown theme
           },
           ["ui-select"] = {
             require("telescope.themes").get_dropdown(),

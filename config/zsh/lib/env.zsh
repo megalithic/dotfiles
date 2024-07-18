@@ -465,6 +465,18 @@ case "$(uname)" in
   # export ZSH_AUTOSUGGEST_STRATEGY=(history completion) # or match_prev_cmd
   export ZSH_AUTOSUGGEST_STRATEGY=("match_prev_cmd" "completion")
 
+  # zsh magic dashboard
+  # Size of the dashboard
+  export MAGIC_DASHBOARD_GITLOG_LINES=5
+  export MAGIC_DASHBOARD_FILES_LINES=6
+
+  # Disable dashboard in low terminal windows.
+  # (Useful for tmux or for terminals embedded in your IDE.)
+  export MAGIC_DASHBOARD_DISABLED_BELOW_TERM_HEIGHT=15
+
+  # Make commit hashes & files clickable. Requires `git-delta`.
+  export MAGIC_DASHBOARD_USE_HYPERLINKS=0 # set to `1` to enable
+
   # zoxide
   export _ZO_DATA_DIR="$XDG_DATA_HOME/zoxide"
   export _ZO_ECHO=1

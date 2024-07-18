@@ -131,4 +131,5 @@ keybind = ctrl+nine=text:\x00\x39
 
 keybind = super+shift+r=reload_config
 keybind = super+t=text:\x00\x63
+
 # vim: ft=ghostty

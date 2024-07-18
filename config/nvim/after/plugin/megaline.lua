@@ -653,7 +653,7 @@ function mega.ui.statusline.render()
 
   return table.concat({
     seg([[%<]]),
-    seg_prefix(100),
+    -- seg_prefix(100),
     seg_mode(120),
     seg_filename(120),
     seg(modified_icon, "StModifiedIcon", M.ctx.modified, { margin = { 0, 1 } }), -- alts: "%m"

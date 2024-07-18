@@ -1,7 +1,7 @@
 local BORDER_STYLE = "none"
 local fmt = string.format
 
-vim.lsp.set_log_level("DEBUG")
+vim.lsp.set_log_level("ERROR")
 
 local border_chars = {
   none = { " ", " ", " ", " ", " ", " ", " ", " " },

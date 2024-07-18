@@ -472,7 +472,7 @@ return {
     keys = {
       {
         "<leader>gww",
-        function() require("telescope").extensions.git_worktree.git_worktrees({ path_display = {} }) end,
+        function() require("telescope").extensions.git_worktree.git_worktrees(mega.picker.dropdown({ path_display = {} })) end,
         desc = "git-worktree: switch worktree",
       },
       {

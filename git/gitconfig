@@ -214,7 +214,13 @@
 
   ; fix = !$DOTFILES/bin/git-recent
 
-  up = !git pull --autostash --rebase && git log --color --pretty=oneline --abbrev-commit HEAD@{1}.. | sed 's/^/  /'
+  # files = "!f() { git diff --name-status \"$1^\" \"$1\"; }; f"
+  # up = !git pull --autostash --rebase && git log --color --pretty=oneline --abbrev-commit HEAD@{1}.. | sed 's/^/  /'
+  up = "!f() { \
+    git pull --autostash --rebase ${1-} \
+    && git log --color --pretty=oneline --abbrev-commit HEAD@{1}.. \
+    | sed 's/^/  /';\
+    }; f"
 
   wt = !git worktree
   # wt = !~/.dotfiles/bin/git-wt
@@ -230,7 +236,7 @@
   fixup = !git commit --amend -CHEAD
   fpush = !git push origin +HEAD
 
-  cf = clean -f
+  cf = clean -fd
 	cof = !git for-each-ref --format='%(refname:short)' --sort=-committerdate refs/heads | fzf --header checkout | xargs git checkout
   ; cof = !git branch --sort=-committerdate | fzf --header Checkout | xargs git checkout'
 

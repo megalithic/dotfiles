@@ -364,4 +364,43 @@ return {
     end,
   },
   { "lambdalisue/suda.vim", event = { "VeryLazy" } },
+
+  { -- lua alternative to the official codeium.vim plugin https://github.com/Exafunction/codeium.vim
+    "monkoose/neocodeium",
+    event = "InsertEnter",
+    cmd = "NeoCodeium",
+    opts = {
+      filetypes = {
+        DressingInput = false,
+        TelescopePrompt = false,
+        noice = false, -- sometimes triggered in error-buffers
+        text = false, -- `pass` passwords editing filetype is plaintext
+        ["rip-substitute"] = true,
+      },
+      silent = true,
+      show_label = false, -- signcolumn label for number of suggestions
+    },
+    init = function()
+      -- disable while recording
+      vim.api.nvim_create_autocmd("RecordingEnter", { command = "NeoCodeium disable" })
+      vim.api.nvim_create_autocmd("RecordingLeave", { command = "NeoCodeium enable" })
+    end,
+    keys = {
+			-- stylua: ignore start
+			{ "<C-y>", function() require("neocodeium").accept() end, mode = "i", desc = "󰚩 Accept full suggestion" },
+			{ "<C-w>", function() require("neocodeium").accept_word() end, mode = "i", desc = "󰚩 Accept word" },
+			{ "<C-e>", function() require("neocodeium").accept_line() end, mode = "i", desc = "󰚩 Accept line" },
+			{ "<C-d>", function() require("neocodeium").cycle(1) end, mode = "i", desc = "󰚩 Next suggestion" },
+      -- stylua: ignore end
+      {
+        "<leader>oa",
+        function()
+          vim.cmd.NeoCodeium("toggle")
+          local on = require("neocodeium.options").options.enabled
+          require("config.utils").notify("NeoCodeium", on and "enabled" or "disabled", "info")
+        end,
+        desc = "󰚩 NeoCodeium Suggestions",
+      },
+    },
+  },
 }
