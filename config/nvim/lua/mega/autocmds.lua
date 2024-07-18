@@ -466,7 +466,7 @@ function M.apply()
       desc = "Extreeeeme `gf` open behaviour",
       command = function(args)
         map("n", "gf", function()
-          local target = vim.fn.escape(vim.fn.expand("<cword>"), [[\/]])
+          local target = vim.fn.expand("<cfile>")
 
           if U.is_image(target) then
             local root_dir = require("mega.utils.lsp").root_dir({ ".git" })
