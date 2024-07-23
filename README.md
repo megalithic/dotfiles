@@ -75,10 +75,9 @@ A few of the _must-have_ tools I roll with:
 - [hammerspoon](https://github.com/megalithic/dotfiles/tree/main/config/hammerspoon)
 - [karabiner-elements](https://github.com/tekezo/Karabiner-Elements) ([leeloo ZMK](https://github.com/megalithic/zmk-config))
 - [gpg/yubikey/encryption](https://github.com/drduh/YubiKey-Guide)
-- system-wide `vim`-esque control
-  - [surfingkeys](https://github.com/brookhong/Surfingkeys)
-  - [vimac](https://vimacapp.com)
-  - [sketchyvim](https://github.com/FelixKratz/SketchyVim)
+- `vim`-esque control
+  - [surfingkeys (in-browser)](https://github.com/brookhong/Surfingkeys)
+  - [homerow (macos-wide)](https://homerow.app)
 
 <p align="center" style="margin-top: 20px;">
   <a href="https://megalithic.io" target="_blank">

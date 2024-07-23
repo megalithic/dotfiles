@@ -323,6 +323,11 @@ local theme = lush(function(injected_functions)
     Dash({ fg = C.bg3, gui = "bold" }),
     CodeBlock({ bg = C.bg1 }),
 
+    ---- *render-markdown.txt* -------------------------------------------------
+
+    RenderMarkdownDash({ Dash }),
+    RenderMarkdownCode({ CodeBlock }),
+
     ---- :help nvim-treesitter-highlights (external plugin) ----
     -- https://github.com/folke/tokyonight.nvim/blob/main/lua/tokyonight/treesitter.lua#L20
     -- REF: https://github.com/rose-pine/neovim/blob/main/lua/rose-pine/theme.lua#L205-L261

@@ -388,8 +388,8 @@ return {
     keys = {
 			-- stylua: ignore start
 			{ "<C-y>", function() require("neocodeium").accept() end, mode = "i", desc = "󰚩 Accept full suggestion" },
-			{ "<C-w>", function() require("neocodeium").accept_word() end, mode = "i", desc = "󰚩 Accept word" },
-			{ "<C-e>", function() require("neocodeium").accept_line() end, mode = "i", desc = "󰚩 Accept line" },
+			{ "<C-t>", function() require("neocodeium").accept_line() end, mode = "i", desc = "󰚩 Accept line" },
+			-- { "<C-w>", function() require("neocodeium").accept_word() end, mode = "i", desc = "󰚩 Accept word" },
 			{ "<C-d>", function() require("neocodeium").cycle(1) end, mode = "i", desc = "󰚩 Next suggestion" },
       -- stylua: ignore end
       {
