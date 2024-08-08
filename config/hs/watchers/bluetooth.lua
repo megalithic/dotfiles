@@ -116,7 +116,7 @@ local function toggleDevice(deviceStr, fn)
     if isConnected then
       dbg("%s is connected..", deviceStr)
 
-      require("dock"):setAudio(DOCK.docked)
+      require("watchers.dock"):setAudio(DOCK.docked)
     end
 
     return isConnected
@@ -152,7 +152,7 @@ function obj:start()
     toggleDevice("phonak", function(isConnected)
       if isConnected then
         info(fmt(":: connected %s %s", device.name, device.icon))
-        require("dock"):setAudio(DOCK.docked)
+        require("watchers.dock"):setAudio(DOCK.docked)
 
         local audioDevice = hs.audiodevice.defaultOutputDevice()
         cur_balance = audioDevice:balance()

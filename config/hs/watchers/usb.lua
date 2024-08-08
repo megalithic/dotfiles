@@ -5,6 +5,7 @@ obj.name = "watcher.usb"
 obj.debug = false
 obj.watchers = {
   usb = {},
+  status = {},
 }
 
 local function leelooHandler(_watcher, _path, _key, _oldValue, isConnected)
@@ -48,17 +49,18 @@ local function usbHandler(device)
     leelooHandler(nil, nil, nil, nil, leelooConnected)
   end
 
-  -- if device.productID == DOCK.target.productID then
-  --   if device.eventType == "added" then
-  --     obj.watchers.status.dock = true
-  --   elseif device.eventType == "removed" then
-  --     obj.watchers.status.dock = false
-  --   end
-  -- end
+  if device.productID == DOCK.target.productID then
+    if device.eventType == "added" then
+      obj.watchers.status.dock = true
+    elseif device.eventType == "removed" then
+      obj.watchers.status.dock = false
+    end
+  end
 end
 
 function obj:start()
   self.watchers.usb = hs.usb.watcher.new(usbHandler):start()
+  self.watchers.status = hs.watchable.new("status", false) -- don't allow bi-directional status updates
 
   info(fmt("[START] %s", self.name))
   return self
@@ -66,6 +68,7 @@ end
 
 function obj:stop()
   if self.watchers.usb then self.watchers.usb:stop() end
+  if self.watchers.status then self.watchers.status = nil end
 
   info(fmt("[STOP] %s", self.name))
   return self
