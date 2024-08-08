@@ -14,26 +14,26 @@ obj.watchers = {
 obj.contextModals = {}
 obj.contextsPath = utils.resourcePath("../contexts/")
 
-local appHandler = function(appName, event, appObj, windowTitle)
-  info(fmt("appHandler: %s/%s/%s (%s)", appName, event, appObj:bundleID(), windowTitle))
-  if event == hs.uielement.watcher.windowCreated then
-    if appName:find("Google Chrome") then
-      if windowTitle:find("(Private)", 1, true) then
-        if hs.application.find("OpenVPN Connect") then print("Created private window created while on VPN") end
-      end
-    end
-  elseif event == hs.uielement.watcher.titleChanged then
-    -- print("title changed")
-  elseif event == hs.uielement.watcher.elementDestroyed then
-    -- print("destroyed")
-  elseif event == hs.uielement.watcher.focusedWindowChanged then
-    if appName:find("Google Chrome") then
-      if windowTitle:find("(Private)", 1, true) then
-        if hs.application.find("OpenVPN Connect") then print("Switched to private window created while on VPN") end
-      end
-    end
-  end
-end
+-- local appHandler = function(appName, event, appObj, windowTitle)
+--   info(fmt("appHandler: %s/%s/%s (%s)", appName, event, appObj:bundleID(), windowTitle))
+--   if event == hs.uielement.watcher.windowCreated then
+--     if appName:find("Google Chrome") then
+--       if windowTitle:find("(Private)", 1, true) then
+--         if hs.application.find("OpenVPN Connect") then print("Created private window created while on VPN") end
+--       end
+--     end
+--   elseif event == hs.uielement.watcher.titleChanged then
+--     -- print("title changed")
+--   elseif event == hs.uielement.watcher.elementDestroyed then
+--     -- print("destroyed")
+--   elseif event == hs.uielement.watcher.focusedWindowChanged then
+--     if appName:find("Google Chrome") then
+--       if windowTitle:find("(Private)", 1, true) then
+--         if hs.application.find("OpenVPN Connect") then print("Switched to private window created while on VPN") end
+--       end
+--     end
+--   end
+-- end
 
 function obj.prepareContextScripts(contextsScriptsPath)
   contextsScriptsPath = contextsScriptsPath or obj.contextsPath
@@ -65,15 +65,16 @@ end
 
 -- interface: (appName, eventType, appObject)
 obj.handleGlobalAppEvent = function(appName, event, appObj)
-  -- if event == hs.application.watcher.activated then print("activated " .. appName) end
-  -- if event == hs.application.watcher.deactivated then print("deactivated " .. appName) end
-  -- if event == hs.application.watcher.launched then print("launched " .. appName) end
+  obj.runLayoutRulesForAppBundleID(appName, event, appObj)
   obj.runContextForAppBundleID(appName, event, appObj)
 end
 
 -- interface: (element, event, watcher, info)
 obj.handleAppEvent = function(element, event, _watcher, appObj)
-  if element ~= nil then obj.runContextForAppBundleID(element, event, appObj) end
+  if element ~= nil then
+    obj.runLayoutRulesForAppBundleID(element, event, appObj)
+    obj.runContextForAppBundleID(element, event, appObj)
+  end
 end
 
 -- interface: (app, initializing)
@@ -98,16 +99,36 @@ obj.attachExistingApps = function()
   enum.each(apps, function(app) obj.watchApp(app, true) end)
 end
 
+obj.runLayoutRulesForAppBundleID = function(elementOrAppName, event, appObj)
+  if appObj and appObj:focusedWindow() then
+    -- info(
+    --   fmt(
+    --     "appHandler: %s/%s/%s (%s)",
+    --     I(elementOrAppName),
+    --     utils.eventEnums(event),
+    --     appObj:bundleID(),
+    --     appObj:focusedWindow():title()
+    --   )
+    -- )
+  end
+end
+
 obj.runContextForAppBundleID = function(elementOrAppName, event, appObj)
   if not obj.watchers.context[appObj:bundleID()] then return end
 
-  contexts:run({
-    context = obj.watchers.context[appObj:bundleID()],
-    element = type(elementOrAppName) ~= "string" and elementOrAppName or nil,
-    event = event,
-    appObj = appObj,
-    bundleID = appObj:bundleID(),
-  })
+  -- slight delay
+  hs.timer.doAfter(
+    0.1,
+    function()
+      contexts:run({
+        context = obj.watchers.context[appObj:bundleID()],
+        element = type(elementOrAppName) ~= "string" and elementOrAppName or nil,
+        event = event,
+        appObj = appObj,
+        bundleID = appObj:bundleID(),
+      })
+    end
+  )
 end
 
 function obj:start()

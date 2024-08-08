@@ -95,6 +95,7 @@ QUITTERS = {
   "org.chromium.Thorium",
   "org.chromium.Chromium",
   "Brave Browser Nightly",
+  "com.pop.pop.app",
   "com.kagi.kagimacOS",
   "com.brave.Browser.nightly",
   "com.brave.Browser.dev",

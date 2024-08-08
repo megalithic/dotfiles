@@ -88,7 +88,18 @@ function _G.warn(msg, tag1, tag2)
   }))
 end
 
-function _G.dbg(msg, tag1, tag2)
+function _G.dbg(msg, force, tag1, tag2)
+  if type(force) == "boolean" then
+    if force then
+      _G.debug_enabled = true
+    else
+      _G.debug_enabled = false
+    end
+  else
+    tag1 = force
+    tag2 = tag1
+  end
+
   if not _G.debug_enabled then return end
 
   local tag = tag2 and "[DEBUG] " or "[DEBUG] "

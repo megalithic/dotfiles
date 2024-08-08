@@ -23,6 +23,7 @@ function obj:run(opts)
       hs.application.watcher.activated,
       hs.application.watcher.launched,
       hs.uielement.watcher.windowCreated,
+      hs.uielement.watcher.titleChanged,
       hs.uielement.watcher.applicationActivated,
     }, event)
   then
@@ -34,6 +35,8 @@ function obj:run(opts)
   elseif
     enum.contains({
       hs.application.watcher.deactivated,
+      hs.uielement.watcher.elementDestroyed,
+      hs.uielement.watcher.titleChanged,
       hs.uielement.watcher.applicationDeactivated,
     }, event)
   then
@@ -44,7 +47,7 @@ function obj:run(opts)
     })
   end
 
-  info(fmt("[RUN] %s/%s (%s)", self.name, contextId, utils.eventEnums(event)))
+  dbg(fmt("[RUN] %s/%s (%s)", self.name, contextId, utils.eventEnums(event)), obj.debug)
 
   return self
 end

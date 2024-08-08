@@ -2,12 +2,50 @@ local wm = require("wm")
 
 -- [ APP LAUNCHERS ] -----------------------------------------------------------
 
-local hyper = require("hyper"):start({ id = "apps" })
-hs.fnutils.each(APPS, function(bindingTable)
-  local bundleID, globalBind, localBinds = table.unpack(bindingTable)
-  if globalBind then hyper:bind({}, globalBind, function() hs.application.launchOrFocusByBundleID(bundleID) end) end
-  if localBinds then hs.fnutils.each(localBinds, function(key) hyper:bindPassThrough(key, bundleID) end) end
-end)
+do
+  local hyper = require("hyper"):start({ id = "apps" })
+  hs.fnutils.each(APPS, function(bindingTable)
+    local bundleID, globalBind, localBinds = table.unpack(bindingTable)
+    if globalBind then hyper:bind({}, globalBind, function() hs.application.launchOrFocusByBundleID(bundleID) end) end
+    if localBinds then hs.fnutils.each(localBinds, function(key) hyper:bindPassThrough(key, bundleID) end) end
+  end)
+end
+
+-- [ OTHER LAUNCHERS ] -----------------------------------------------------------
+
+do
+  local hyper = require("hyper"):start({ id = "meeting" })
+  -- hyper:bind({}, "z", function() hs.application.launchOrFocusByBundleID(bundleID) end)
+  Z_count = 0
+  hyper:bind({}, "z", nil, function()
+    Z_count = Z_count + 1
+
+    hs.timer.doAfter(0.2, function() Z_count = 0 end)
+
+    -- if Z_count == 2 then
+    --   spoon.ElgatoKey:toggle()
+    -- else
+    -- start a timer
+    -- if not pressed again then
+    if hs.application.find("us.zoom.xos") then
+      hs.application.launchOrFocusByBundleID("us.zoom.xos")
+      local app = hs.application.find("us.zoom.xos")
+      local targetWin = app:findWindow("Zoom Meeting")
+      if targetWin:isStandard() then targetWin:focus() end
+    elseif hs.application.find("com.pop.pop.app") then
+      hs.application.launchOrFocusByBundleID("com.pop.pop.app")
+      local app = hs.application.find("com.pop.pop.app")
+      local targetWin = app:mainWindow()
+      if targetWin:isStandard() and targetWin:frame().w > 1000 and targetWin:frame().h > 1000 then targetWin:focus() end
+    elseif require("browser").jump("meet.google.com|hangouts.google.com.call") then
+      local jumped = require("browser").jump("meet.google.com|hangouts.google.com.call")
+      info(I(jumped))
+    else
+      info(fmt("%s: No hyper meeting targets to focus", "bindings.hyper.meeting"))
+    end
+    -- end
+  end)
+end
 
 -- [ MODAL LAUNCHERS ] ---------------------------------------------------------
 
@@ -16,7 +54,10 @@ local modality = require("modality"):start({ id = "wm", key = "l" })
 modality
   :bind({}, "escape", function() modality:exit() end)
   :bind({}, "return", function() wm.place(POSITIONS.full) end, function() modality:delayedExit(0.1) end)
-  :bind({ "shift" }, "return", function() wm.place(POSITIONS.full) end, function() modality:exit() end)
+  :bind({ "shift" }, "return", function()
+    wm.toNextScreen()
+    wm.place(POSITIONS.full)
+  end, function() modality:delayedExit(0.1) end)
   :bind({}, "l", function() wm.place(POSITIONS.halves.right) end, function() modality:delayedExit(0.1) end)
   :bind({ "shift" }, "l", function()
     wm.toNextScreen()
@@ -32,7 +73,6 @@ modality
     local chain = require("chain")
     -- wm.place(POSITIONS.center.large)
 
-    dbg(chain)
     chain({
       POSITIONS.center.large,
       POSITIONS.center.medium,
