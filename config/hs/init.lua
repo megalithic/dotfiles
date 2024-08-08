@@ -1,0 +1,11 @@
+require("preflight")
+require("config")
+require("watchers"):start({ "bluetooth", "usb", "screen", "app" })
+require("ptt")
+require("quitter")
+require("lollygagger")
+require("spoons")
+require("bindings")
+
+hs.notify.withdrawAll()
+hs.notify.new({ title = "hammerspork", subTitle = "config is loaded." }):send()
