@@ -88,7 +88,7 @@ function obj:start(opts)
     end
   end
 
-  info(fmt("[START] %s", obj.name))
+  info(fmt("[START] %s (%s)", obj.name, obj.mode))
 
   return self
 end
@@ -100,7 +100,5 @@ function obj:stop(opts)
 
   return self
 end
-
-obj:start({ mode = "double" })
 
 return obj

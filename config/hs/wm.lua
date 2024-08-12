@@ -1,10 +1,10 @@
 local enum = req("hs.fnutils")
 local utils = req("utils")
 
-local M = {}
-M.__index = M
-M.name = "wm"
-M.debug = false
+local obj = {}
+obj.__index = obj
+obj.name = "wm"
+obj.debug = false
 
 local function targetDisplay(num)
   local displays = hs.screen.allScreens() or {}
@@ -15,7 +15,7 @@ local function targetDisplay(num)
   end
 end
 
-M.tile = function()
+obj.tile = function()
   local windows = hs.fnutils.map(hs.window.filter.new():getWindows(), function(win)
     if win ~= hs.window.focusedWindow() then
       return {
@@ -55,7 +55,7 @@ M.tile = function()
     :show()
 end
 
-M.toNextScreen = function()
+obj.toNextScreen = function()
   local win = hs.window.frontmostWindow()
   local next = win:screen():next()
   win:moveToScreen(next)
@@ -63,7 +63,7 @@ M.toNextScreen = function()
   return win
 end
 
-M.toPrevScreen = function()
+obj.toPrevScreen = function()
   local win = hs.window.frontmostWindow()
   local prev = win:screen():previous()
   win:moveToScreen(prev)
@@ -71,7 +71,7 @@ M.toPrevScreen = function()
   return win
 end
 
-M.place = function(pos)
+obj.place = function(pos)
   local win = hs.window.frontmostWindow()
 
   hs.grid.set(win, pos)
@@ -79,7 +79,7 @@ M.place = function(pos)
   return win
 end
 
-M.placeApp = function(elementOrAppName, event, appObj)
+obj.placeApp = function(elementOrAppName, event, appObj)
   local appLayout = LAYOUTS[appObj:bundleID()]
   if appLayout ~= nil then
     if appLayout.rules and #appLayout.rules > 0 then
@@ -101,7 +101,7 @@ M.placeApp = function(elementOrAppName, event, appObj)
               win:title(),
               I(appLayout.rules)
             ),
-            M.debug
+            obj.debug
           )
 
           hs.grid.set(win, position, targetDisplay(screenNum))
@@ -111,4 +111,4 @@ M.placeApp = function(elementOrAppName, event, appObj)
   end
 end
 
-return M
+return obj

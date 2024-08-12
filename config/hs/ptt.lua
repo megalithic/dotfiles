@@ -1,12 +1,24 @@
--- Derived from the PushToTalk Spoon and then heavily modified for my use cases
-
 local obj = {}
-
 obj.__index = obj
 obj.name = "ptt"
 obj.debug = false
 
-local dbg = function(...)
+obj.momentaryKey = { "cmd", "alt" }
+obj.toggleKey = { { "cmd", "alt" }, "p" }
+obj.mode = "push-to-talk"
+
+obj.mic = hs.audiodevice.defaultInputDevice()
+obj.inputs = hs.audiodevice.allInputDevices()
+
+obj.defaultInputVolume = 65
+obj.pushed = false
+
+obj.icons = {
+  ["push-to-mute"] = req("hs.styledtext").new("", { font = { name = DefaultFont.name, size = 13 } }),
+  ["push-to-talk"] = req("hs.styledtext").new("", { font = { name = DefaultFont.name, size = 13 } }),
+}
+
+local function dbg(...)
   if obj.debug then
     return _G.dbg(fmt(...), false)
   else
@@ -18,39 +30,34 @@ local log = {
   df = function(...) dbg(..., false) end,
 }
 
-local template = require("utils").template
-local pttKey = { "cmd", "alt" }
-
-obj.defaultState = "push-to-talk"
-obj.mic = hs.audiodevice.defaultInputDevice()
-obj.inputs = hs.audiodevice.allInputDevices()
-
-obj.state = obj.defaultState
-obj.defaultInputVolume = 65
-obj.pushed = false
-
-local talkIcon = require("hs.styledtext").new("", { font = { name = DefaultFont.name, size = 13 } })
-local muteIcon = require("hs.styledtext").new("", { font = { name = DefaultFont.name, size = 13 } })
-obj.icons = { ["push-to-mute"] = talkIcon, ["push-to-talk"] = muteIcon }
-
-obj.states = function()
-  log.df("current module.state from module.states(): %s", obj.state)
-
-  return {
-    { title = "Push-to-talk", state = "push-to-talk", checked = (obj.state == "push-to-talk") },
-    { title = "Push-to-mute", state = "push-to-mute", checked = (obj.state == "push-to-mute") },
+function obj.menuKeyFormatter(tbl)
+  local modLookup = {
+    cmd = "⌘",
+    ctrl = "⌃",
+    alt = "⌥",
+    opt = "⌥",
+    shift = "⇧",
   }
-end
 
--- function to return table values to `+` separated string
-local to_psv = function(tbl)
   local s = ""
 
   for _, p in ipairs(tbl) do
-    s = s .. "+" .. p
+    s = s .. " " .. modLookup[p]
   end
 
-  return string.sub(s, 2) -- remove first comma
+  -- removes first separator (+,space, etc)
+  local v = string.sub(s, 2)
+
+  return v
+end
+
+function obj.getModes(currentMode)
+  currentMode = currentMode or obj.mode
+
+  return {
+    { title = "push-to-talk", mode = "push-to-talk", checked = (currentMode == "push-to-talk") },
+    { title = "push-to-mute", mode = "push-to-mute", checked = (currentMode == "push-to-mute") },
+  }
 end
 
 function obj.setAllInputsMuted(muted)
@@ -65,13 +72,12 @@ function obj.setAllInputsMuted(muted)
   obj.mic:setInputVolume(inputVolume)
 end
 
-local showState = function()
+function obj.updateMenubar()
   if obj.pushed then log.df("device to handle: %s", obj.mic) end
 
-  -- starting point:
   local muted = false
 
-  if obj.state == "push-to-talk" then
+  if obj.mode == "push-to-talk" then
     if obj.pushed then
       obj.menubar:setTitle(obj.icons["push-to-mute"])
       muted = false
@@ -79,7 +85,7 @@ local showState = function()
       obj.menubar:setTitle(obj.icons["push-to-talk"])
       muted = true
     end
-  elseif obj.state == "push-to-mute" then
+  elseif obj.mode == "push-to-mute" then
     if obj.pushed then
       obj.menubar:setTitle(obj.icons["push-to-talk"])
       muted = true
@@ -92,18 +98,21 @@ local showState = function()
   obj.setAllInputsMuted(muted)
 end
 
-local buildMenu = function()
-  local menutable = hs.fnutils.map(obj.states(), function(item)
+function obj.buildMenubar()
+  local menutable = hs.fnutils.map(obj.getModes(), function(item)
     local title = ""
     if item.checked then
-      title = template("{TITLE} ({PTT})", { TITLE = tostring(item.title), PTT = to_psv(pttKey) })
+      title = req("utils").template(
+        "{menu_title}\t\t {menu_keys}",
+        { menu_title = tostring(item.title), menu_keys = obj.menuKeyFormatter(obj.momentaryKey) }
+      )
     else
       title = item.title
     end
 
     return {
       title = title,
-      fn = function() obj.setState(item.state) end,
+      fn = function() obj.setMode(item.mode) end,
       checked = item.checked,
     }
   end)
@@ -111,92 +120,81 @@ local buildMenu = function()
   return menutable
 end
 
-local eventKeysMatchModifiers = function(modifiers)
-  local modifiersMatch = true
+function obj.setMode(s)
+  obj.mode = s
+  log.df("Setting PTT mode to %s", s)
 
-  for _, key in ipairs(obj.modifierKeys) do
-    if modifiers[key] ~= true then modifiersMatch = false end
-  end
-
-  return modifiersMatch
-end
-
-local eventTapWatcher = function(event)
-  local modifiersMatch = eventKeysMatchModifiers(event:getFlags())
-
-  if modifiersMatch then
-    obj.pushed = true
-  else
-    obj.pushed = false
-  end
-
-  showState()
-  if obj.pushed then
-    log.df(
-      "Input device PTT: { muted: %s, volume: %s, state: %s, pushed: %s }",
-      obj.mic:inputMuted(),
-      obj.mic:inputVolume(),
-      obj.state,
-      obj.pushed
-    )
-  end
-end
-
-obj.setState = function(s)
-  obj.state = s
-  log.df("Setting PTT state to %s", s)
-
-  -- local muted = obj.state == "push-to-talk"
+  -- local muted = obj.mode == "push-to-talk"
   -- hs.audiodevice.defaultInputDevice():setInputMuted(muted)
 
   if obj.menubar ~= nil then
-    obj.menubar:setMenu(buildMenu())
-    obj.menubar:setTitle(obj.icons[obj.state])
+    obj.menubar:setMenu(obj.buildMenubar())
+    obj.menubar:setTitle(obj.icons[obj.mode])
 
-    showState()
+    obj.updateMenubar()
   end
 end
+obj.setState = obj.setMode
 
-obj.toggleStates = function()
-  local current_state = obj.state
-  local toggle_to = hs.fnutils.find(obj.states(), function(item)
+function obj.toggleMode()
+  local currentMode = obj.mode
+  local toggle_to = hs.fnutils.find(obj.getModes(currentMode), function(item)
     if not item.checked then return item end
-  end) or obj.state
+  end) or obj.mode
 
-  obj.setState(toggle_to.state)
+  obj.setMode(toggle_to.mode)
 
-  log.df("Toggling PTT state to %s", toggle_to.state, current_state)
-  return toggle_to.state
+  log.df("Toggling PTT mode to %s", toggle_to.mode, currentMode)
+
+  return toggle_to.mode
 end
 
-function obj:init()
-  obj:stop()
+function obj:start(opts)
+  if opts["mode"] ~= nil then self.mode = opts["mode"] end
 
-  obj.modifierKeys = pttKey
-  obj.eventTapWatcher = hs.eventtap.new({ hs.eventtap.event.types.flagsChanged }, eventTapWatcher)
-  obj.eventTapWatcher:start()
+  self:stop()
 
-  if obj.menubar == nil then obj.menubar = hs.menubar.new() end
+  self.momentaryKeyWatcher = hs.eventtap.new({ hs.eventtap.event.types.flagsChanged }, function(evt)
+    local modifiersMatch = function(modifiers)
+      local modifiersMatch = true
 
-  obj.setState(obj.state)
+      for _, key in ipairs(obj.momentaryKey) do
+        if modifiers[key] ~= true then modifiersMatch = false end
+      end
 
-  hs.hotkey.bind(pttKey, "p", function()
-    local toggled_to_state = obj.toggleStates()
+      return modifiersMatch
+    end
+
+    if modifiersMatch(evt:getFlags()) then
+      self.pushed = true
+    else
+      self.pushed = false
+    end
+
+    self.updateMenubar()
+  end)
+  self.momentaryKeyWatcher:start()
+
+  if self.menubar == nil then self.menubar = hs.menubar.new() end
+
+  self.setMode(self.mode)
+
+  local toggleMod, toggleKey = table.unpack(self.toggleKey)
+  hs.hotkey.bind(toggleMod, toggleKey, function()
+    local newMode = self.toggleMode()
     hs.alert.closeAll()
-    hs.alert.show("Toggled to -> " .. toggled_to_state)
+    hs.alert.show("Toggled to -> " .. newMode)
   end)
 
-  info(fmt("[START] %s", obj.name))
+  info(fmt("[START] %s (%s)", self.name, self.mode))
 
   return self
 end
 
 function obj:stop()
-  if obj.eventTapWatcher then obj.eventTapWatcher:stop() end
-  -- if obj.menubar then obj.menubar:delete() end
+  if self.momentaryKeyWatcher then self.momentaryKeyWatcher:stop() end
+  -- if self.menubar then self.menubar:delete() end
   return self
 end
-
-obj:init()
 
 return obj

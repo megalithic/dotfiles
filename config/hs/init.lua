@@ -23,8 +23,8 @@ req("bindings")
 -- listing of *.watcher based modules; the core of the automation that takes place.
 -- NOTE: `app` contains the app layout and app context logic.
 req("watchers"):start({ "bluetooth", "usb", "dock", "app", "url" })
-req("ptt")
-req("quitter")
+req("ptt"):start({ mode = "push-to-talk" })
+req("quitter"):start({ mode = "double" })
 
 -- experimental/wip modules and stuff..
 req("wip")
