@@ -83,8 +83,6 @@ local function checkDevice(deviceStr, fn)
 
       connectedState = isConnected
 
-      info(connectedState)
-
       fn(connectedState)
     end, {
       "--is-connected",
@@ -149,8 +147,9 @@ function obj:start()
   local hyper = require("hyper"):start({ id = "bluetooth" })
   hyper:bind({ "shift" }, "h", nil, function()
     local device = self.devices["phonak"]
+    local toggledDevice = false
     toggleDevice("phonak", function(isConnected)
-      if isConnected then
+      if isConnected and not toggledDevice then
         info(fmt(":: connected %s %s", device.name, device.icon))
         require("watchers.dock"):setAudio(DOCK.docked)
 
@@ -160,6 +159,7 @@ function obj:start()
 
         hs.notify.withdrawAll()
         hs.notify.new({ title = self.name, subTitle = fmt("%s %s Connected", device.name, device.icon) }):send()
+        toggledDevice = true
       end
     end)
   end)

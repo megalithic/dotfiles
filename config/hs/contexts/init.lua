@@ -6,6 +6,16 @@ obj.__index = obj
 obj.name = "contexts"
 obj.debug = false
 
+obj.loggableEvents = {
+  hs.application.watcher.activated,
+  hs.application.watcher.launched,
+  hs.uielement.watcher.windowCreated,
+  hs.uielement.watcher.applicationActivated,
+  hs.application.watcher.deactivated,
+  hs.application.watcher.terminated,
+  hs.uielement.watcher.applicationDeactivated,
+}
+
 function obj:run(opts)
   local context = opts["context"]
   local appObj = opts["appObj"]
@@ -47,7 +57,9 @@ function obj:run(opts)
     })
   end
 
-  dbg(fmt("[RUN] %s/%s (%s)", self.name, contextId, utils.eventEnums(event)), obj.debug)
+  if enum.contains(obj.loggableEvents, event) then
+    note(fmt("[RUN] %s/%s (%s)", self.name, contextId, utils.eventEnums(event)))
+  end
 
   return self
 end

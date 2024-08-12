@@ -4,7 +4,7 @@ local wm = require("wm")
 
 do
   local hyper = require("hyper"):start({ id = "apps" })
-  hs.fnutils.each(APPS, function(bindingTable)
+  hs.fnutils.each(LAUNCHERS, function(bindingTable)
     local bundleID, globalBind, localBinds = table.unpack(bindingTable)
     if globalBind then hyper:bind({}, globalBind, function() hs.application.launchOrFocusByBundleID(bundleID) end) end
     if localBinds then hs.fnutils.each(localBinds, function(key) hyper:bindPassThrough(key, bundleID) end) end
@@ -70,16 +70,19 @@ modality
   end, function() modality:exit() end)
   :bind({}, "j", function() wm.toNextScreen() end, function() modality:delayedExit(0.1) end)
   :bind({}, "k", function()
-    local chain = require("chain")
-    -- wm.place(POSITIONS.center.large)
+    wm.place(POSITIONS.center.large)
+    modality:exit()
 
-    chain({
-      POSITIONS.center.large,
-      POSITIONS.center.medium,
-      POSITIONS.center.small,
-      POSITIONS.center.tiny,
-      POSITIONS.center.mini,
-    }, modality)
+    -- local chain = require("chain")
+    -- -- wm.place(POSITIONS.center.large)
+    --
+    -- chain({
+    --   POSITIONS.center.large,
+    --   POSITIONS.center.medium,
+    --   POSITIONS.center.small,
+    --   POSITIONS.center.tiny,
+    --   POSITIONS.center.mini,
+    -- }, modality)
   end) --, function() modality:delayedExit(0.1) end)
   :bind({}, "v", function()
     wm.tile()

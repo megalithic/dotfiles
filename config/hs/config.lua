@@ -2,6 +2,14 @@ local enum = require("hs.fnutils")
 local window = require("hs.window")
 local ipc = require("hs.ipc")
 
+-- Trace all Lua code
+function lineTraceHook(event, data)
+  lineInfo = debug.getinfo(2, "Snl")
+  print("TRACE: " .. (lineInfo["short_src"] or "<unknown source>") .. ":" .. (lineInfo["linedefined"] or "<??>"))
+end
+-- Uncomment the following line to enable tracing
+-- debug.sethook(lineTraceHook, "l")
+
 -- [ HAMMERSPOON SETTINGS ] ----------------------------------------------------
 
 hs.allowAppleScript(true)
@@ -41,7 +49,7 @@ con.consoleResultColor(lightGrayColor)
 con.consolePrintColor(grayColor)
 
 -- [ ALERT SETTINGS ] ----------------------------------------------------------
---
+
 hs.alert.defaultStyle["textSize"] = 24
 hs.alert.defaultStyle["radius"] = 20
 hs.alert.defaultStyle["strokeColor"] = {
@@ -62,6 +70,8 @@ hs.alert.defaultStyle["textColor"] = {
 }
 hs.alert.defaultStyle["textFont"] = "JetBrainsMono Nerd Font"
 
+-- [ CONSTANTS (used all over) ] -----------------------------------------------
+
 HYPER = "F19"
 
 BROWSER = "com.brave.Browser.nightly"
@@ -71,50 +81,6 @@ DISPLAYS = {
   internal = "Built-in Retina Display",
   laptop = "Built-in Retina Display",
   external = "LG UltraFine",
-}
-
--- bundleID, global, { local }, {pos, screen}
-APPS = {
-  { "com.brave.Browser.nightly", "j", nil },
-  { "com.mitchellh.ghostty", "k", nil },
-  { "com.apple.MobileSMS", "m", nil },
-  { "com.apple.finder", "f", nil },
-  { "com.spotify.client", "p", nil },
-  { "com.freron.MailMate", "e", nil },
-  { "com.flexibits.fantastical2.mac", "y", { "'" } },
-  { "com.raycast.macos", "space", { "c", "space" } },
-  { "com.superultra.Homerow", nil, { ";" } },
-  { "com.dexterleng.Homerow", nil, { ";" } },
-  { "com.tinyspeck.slackmacgap", "s" },
-  { "org.hammerspoon.Hammerspoon", "r" },
-}
-
-LAYOUTS = {}
-
-QUITTERS = {
-  "org.chromium.Thorium",
-  "org.chromium.Chromium",
-  "Brave Browser Nightly",
-  "com.pop.pop.app",
-  "com.kagi.kagimacOS",
-  "com.brave.Browser.nightly",
-  "com.brave.Browser.dev",
-  "com.brave.Browser",
-  "com.raycast.macos",
-  "com.runningwithcrayons.Alfred",
-  "net.kovidgoyal.kitty",
-  "org.mozilla.firefoxdeveloperedition",
-  "com.apple.SafariTechnologyPreview",
-  "com.apple.Safari",
-  "com.mitchellh.ghostty",
-  "com.github.wez.wezterm",
-}
-
-LOLLYGAGGERS = {
-  { "org.hammerspoon.Hammerspoon", 1 },
-  { "com.flexibits.fantastical2.mac", 1 },
-  { "com.1password.1password", 1 },
-  { "com.spotify.client", 1 },
 }
 
 POSITIONS = {
@@ -153,6 +119,256 @@ POSITIONS = {
     left = "0,0 50x20",
     right = "10,0 50x20",
   },
+}
+
+-- bundleID, global, { local }, focusOnly
+LAUNCHERS = {
+  { "com.brave.Browser.nightly", "j", nil, false },
+  { "com.mitchellh.ghostty", "k", nil, false },
+  { "com.apple.MobileSMS", "m", nil, false },
+  { "com.apple.finder", "f", nil, false },
+  { "com.spotify.client", "p", nil, false },
+  { "com.freron.MailMate", "e", nil, false },
+  { "com.flexibits.fantastical2.mac", "y", { "'" }, false },
+  { "com.raycast.macos", "space", { "c", "space" }, false },
+  { "com.superultra.Homerow", nil, { ";" }, false },
+  { "com.dexterleng.Homerow", nil, { ";" }, false },
+  { "com.tinyspeck.slackmacgap", "s", nil, false },
+  { "org.hammerspoon.Hammerspoon", "r", nil, false },
+}
+
+LAYOUTS = {
+  ["com.raycast.macos"] = {
+    name = "Raycast",
+    bundleID = "com.raycast.macos",
+    rules = {
+      { "", 1, POSITIONS.center.large },
+    },
+  },
+  ["net.kovidgoyal.kitty"] = {
+    bundleID = "net.kovidgoyal.kitty",
+    name = "kitty",
+    rules = {
+      { "", 1, POSITIONS.full },
+    },
+  },
+  ["com.github.wez.wezterm"] = {
+    bundleID = "com.github.wez.wezterm",
+    name = "wezterm",
+    rules = {
+      { "", 1, POSITIONS.full },
+    },
+  },
+  ["com.mitchellh.ghostty"] = {
+    bundleID = "com.mitchellh.ghostty",
+    name = "ghostty",
+    rules = {
+      { "", 1, POSITIONS.full },
+    },
+  },
+  ["com.kagi.kagimacOS"] = {
+    bundleID = "com.kagi.kagimacOS",
+    name = "Orion",
+    rules = {
+      { "", 1, POSITIONS.full },
+    },
+  },
+  ["org.mozilla.floorp"] = {
+    bundleID = "org.mozilla.floorp",
+    name = "Floorp",
+    rules = {
+      { "", 1, POSITIONS.full },
+    },
+  },
+  ["com.brave.Browser.nightly"] = {
+    bundleID = "com.brave.Browser.nightly",
+    name = "Brave Browser Nightly",
+    rules = {
+      { "", 1, POSITIONS.full },
+    },
+  },
+  ["com.brave.Browser.dev"] = {
+    bundleID = "com.brave.Browser.dev",
+    name = "Brave Browser Dev",
+    rules = {
+      { "", 1, POSITIONS.full },
+    },
+  },
+  ["com.apple.Safari"] = {
+    bundleID = "com.apple.Safari",
+    name = "Safari",
+    rules = {
+      { "", 2, POSITIONS.full },
+    },
+  },
+  ["com.apple.SafariTechnologyPreview"] = {
+    bundleID = "com.apple.SafariTechnologyPreview",
+    name = "Safari Technology Preview",
+    rules = {
+      { "", 2, POSITIONS.full },
+    },
+  },
+  ["org.chromium.Thorium"] = {
+    bundleID = "org.chromium.Thorium",
+    name = "Thorium",
+    rules = {
+      { "", 1, POSITIONS.full },
+    },
+  },
+  ["org.chromium.Chromium"] = {
+    bundleID = "org.chromium.Chromium",
+    name = "Chromium",
+    rules = {
+      { "", 1, POSITIONS.full },
+    },
+  },
+  ["org.mozilla.firefoxdeveloperedition"] = {
+    bundleID = "org.mozilla.firefoxdeveloperedition",
+    name = "Firefox Developer Edition",
+    rules = {
+      { "", 2, POSITIONS.full },
+    },
+  },
+  ["com.kapeli.dashdoc"] = {
+    bundleID = "com.kapeli.dashdoc",
+    name = "Dash",
+    rules = {
+      { "", 1, POSITIONS.full },
+    },
+  },
+  ["com.obsproject.obs-studio"] = {
+    bundleID = "com.obsproject.obs-studio",
+    name = "OBS Studio",
+    rules = {
+      { "", 2, POSITIONS.full },
+    },
+  },
+  ["co.detail.mac"] = {
+    bundleID = "co.detail.mac",
+    name = "Detail",
+    rules = {
+      { "", 2, POSITIONS.full },
+    },
+  },
+  ["com.freron.MailMate"] = {
+    bundleID = "com.freron.MailMate",
+    name = "MailMate",
+    rules = {
+      { "", 2, POSITIONS.halves.left },
+      { "Inbox", 2, POSITIONS.full },
+      { "All Messages", 2, POSITIONS.full },
+    },
+  },
+  ["com.apple.finder"] = {
+    bundleID = "com.apple.finder",
+    name = "Finder",
+    rules = {
+      { "", 1, POSITIONS.center.medium },
+    },
+  },
+  ["com.spotify.client"] = {
+    bundleID = "com.spotify.client",
+    name = "Spotify",
+    rules = {
+      { "", 2, POSITIONS.halves.right },
+    },
+  },
+  ["com.electron.postbird"] = {
+    bundleID = "com.electron.postbird",
+    name = "Postbird",
+    rules = {
+      { "", 1, POSITIONS.center.large },
+    },
+  },
+  ["com.apple.MobileSMS"] = {
+    bundleID = "com.apple.MobileSMS",
+    name = "Messages",
+    rules = {
+      { "", 2, POSITIONS.halves.right },
+    },
+  },
+  ["org.whispersystems.signal-desktop"] = {
+    bundleID = "org.whispersystems.signal-desktop",
+    name = "Signal",
+    rules = {
+      { "", 2, POSITIONS.halves.right },
+    },
+  },
+  ["com.tinyspeck.slackmacgap"] = {
+    bundleID = "com.tinyspeck.slackmacgap",
+    name = "Slack",
+    rules = {
+      { "", 2, POSITIONS.full },
+    },
+  },
+  ["com.agilebits.onepassword7"] = {
+    bundleID = "com.1password.1password",
+    name = "1Password",
+    rules = {
+      { "", 1, POSITIONS.center.medium },
+    },
+  },
+  ["org.hammerspoon.Hammerspoon"] = {
+    bundleID = "org.hammerspoon.Hammerspoon",
+    name = "Hammerspoon",
+    rules = {
+      { "", 2, POSITIONS.full },
+    },
+  },
+  ["com.dexterleng.Homerow"] = {
+    bundleID = "com.dexterleng.Homerow",
+    name = "Homerow",
+    rules = {
+      { "", 1, POSITIONS.center.large },
+    },
+  },
+  ["com.flexibits.fantastical2.mac"] = {
+    bundleID = "com.flexibits.fantastical2.mac",
+    name = "Fantastical",
+    rules = {
+      { "", 1, POSITIONS.center.large },
+    },
+  },
+  ["com.figma.Desktop"] = {
+    bundleID = "com.figma.Desktop",
+    name = "Figma",
+    rules = {
+      { "", 1, POSITIONS.full },
+    },
+  },
+  ["com.apple.iphonesimulator"] = {
+    bundleID = "com.apple.iphonesimulator",
+    name = "iPhone Simulator",
+    rules = {
+      { "", 1, POSITIONS.halves.right },
+    },
+  },
+}
+
+QUITTERS = {
+  "org.chromium.Thorium",
+  "org.chromium.Chromium",
+  "Brave Browser Nightly",
+  "com.pop.pop.app",
+  "com.kagi.kagimacOS",
+  "com.brave.Browser.nightly",
+  "com.brave.Browser.dev",
+  "com.brave.Browser",
+  "com.raycast.macos",
+  "com.runningwithcrayons.Alfred",
+  "net.kovidgoyal.kitty",
+  "org.mozilla.firefoxdeveloperedition",
+  "com.apple.SafariTechnologyPreview",
+  "com.apple.Safari",
+  "com.mitchellh.ghostty",
+  "com.github.wez.wezterm",
+}
+
+LOLLYGAGGERS = {
+  { "org.hammerspoon.Hammerspoon", 1 },
+  { "com.flexibits.fantastical2.mac", 1 },
+  { "com.1password.1password", 1 },
+  { "com.spotify.client", 1 },
 }
 
 DOCK = {

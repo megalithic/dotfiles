@@ -9,35 +9,6 @@ obj.debug = true
 obj.modal = nil
 obj.actions = {}
 
-local function info(...)
-  if obj.debug then
-    return _G.info(...)
-  else
-    return print("")
-  end
-end
-local function dbg(...)
-  if obj.debug then
-    return _G.dbg(...)
-  else
-    return print("")
-  end
-end
-local function note(...)
-  if obj.debug then
-    return _G.note(...)
-  else
-    return print("")
-  end
-end
-local function success(...)
-  if obj.debug then
-    return _G.success(...)
-  else
-    return print("")
-  end
-end
-
 -- 2023-09-12 09:10:31 -> [WIN]  (com.brave.Browser.dev.app.kjgfgldnnfoeklkmfkjfagphfepbbdan)
 -- 2023-09-12 09:10:31 -> {
 --   app = "Google Meet",
@@ -83,14 +54,14 @@ function obj:start(opts)
   if obj.modal then obj.modal:enter() end
 
   if event == hs.application.watcher.launched then
-    local term = hs.application.get("com.github.wez.wezterm") or hs.application.get("kitty")
+    local term = hs.application.get(TERMINAL)
     local meet = hs.application.get("Google Meet")
-    local browser = hs.application.get(C.preferred.browser)
+    local browser = hs.application.get(BROWSER)
 
     hs.timer.waitUntil(function() return meet:isRunning() end, function()
-      L.req("lib.dnd").on("zoom")
+      -- L.req("lib.dnd").on("zoom")
       hs.spotify.pause()
-      L.req("lib.menubar.ptt").setState("push-to-talk")
+      req("ptt").setState("push-to-talk")
 
       local layouts = {
         { meet:name(), nil, hs.screen.primaryScreen():name(), hs.layout.maximized, nil, nil },
@@ -100,8 +71,8 @@ function obj:start(opts)
       hs.layout.apply(layouts)
       meet:setFrontmost(true)
 
-      L.req("lib.watchers.dock").refreshInput("docked")
-      L.req("lib.menubar.ptt").setAllInputsMuted(true)
+      req("watchers.dock").refreshInput("docked")
+      req("ptt").setAllInputsMuted(true)
     end)
   end
 
@@ -115,9 +86,9 @@ function obj:stop(opts)
   if obj.modal then obj.modal:exit() end
 
   if event == hs.application.watcher.terminated then
-    L.req("lib.menubar.ptt").setState("push-to-talk")
-    L.req("lib.dnd").off()
-    local browser = hs.application.get(C.preferred.browser)
+    req("ptt").setState("push-to-talk")
+    -- L.req("lib.dnd").off()
+    local browser = hs.application.get(BROWSER)
 
     do
       if browser ~= nil then
@@ -125,7 +96,7 @@ function obj:stop(opts)
         if browser_win ~= nil then browser_win:moveToUnit(hs.layout.maximized) end
       end
 
-      local term = hs.application.get("com.github.wez.wezterm") or hs.application.get("kitty")
+      local term = hs.application.get(TERMINAL)
       if term ~= nil then
         local term_win = term:mainWindow()
         if term_win ~= nil then term_win:moveToUnit(hs.layout.maximized) end

@@ -64,13 +64,13 @@ function obj.prepareContextScripts(contextsScriptsPath)
 end
 
 -- interface: (appName, eventType, appObject)
-obj.handleGlobalAppEvent = function(appName, event, appObj)
+function obj.handleGlobalAppEvent(appName, event, appObj)
   obj.runLayoutRulesForAppBundleID(appName, event, appObj)
   obj.runContextForAppBundleID(appName, event, appObj)
 end
 
 -- interface: (element, event, watcher, info)
-obj.handleAppEvent = function(element, event, _watcher, appObj)
+function obj.handleAppEvent(element, event, _watcher, appObj)
   if element ~= nil then
     obj.runLayoutRulesForAppBundleID(element, event, appObj)
     obj.runContextForAppBundleID(element, event, appObj)
@@ -78,7 +78,7 @@ obj.handleAppEvent = function(element, event, _watcher, appObj)
 end
 
 -- interface: (app, initializing)
-obj.watchApp = function(app, _)
+function obj.watchApp(app, _)
   if obj.watchers.app[app:pid()] then return end
 
   local watcher = app:newWatcher(obj.handleAppEvent, app)
@@ -94,26 +94,72 @@ obj.watchApp = function(app, _)
   })
 end
 
-obj.attachExistingApps = function()
+function obj.attachExistingApps()
   local apps = enum.filter(hs.application.runningApplications(), function(app) return app:title() ~= "Hammerspoon" end)
   enum.each(apps, function(app) obj.watchApp(app, true) end)
 end
 
-obj.runLayoutRulesForAppBundleID = function(elementOrAppName, event, appObj)
-  if appObj and appObj:focusedWindow() then
-    -- info(
-    --   fmt(
-    --     "appHandler: %s/%s/%s (%s)",
-    --     I(elementOrAppName),
-    --     utils.eventEnums(event),
-    --     appObj:bundleID(),
-    --     appObj:focusedWindow():title()
-    --   )
-    -- )
+function obj.runLayoutRulesForAppBundleID(elementOrAppName, event, appObj)
+  local layoutableEvents = {
+    -- hs.application.watcher.activated,
+    hs.application.watcher.launched,
+    hs.uielement.watcher.windowCreated,
+    -- hs.uielement.watcher.applicationActivated,
+    -- hs.application.watcher.deactivated,
+    hs.application.watcher.terminated,
+    -- hs.uielement.watcher.applicationDeactivated,
+  }
+
+  local function targetDisplay(num)
+    local displays = hs.screen.allScreens() or {}
+    if displays[num] ~= nil then
+      return displays[num]
+    else
+      return hs.screen.primaryScreen()
+    end
+  end
+
+  if appObj and appObj:focusedWindow() and enum.contains(layoutableEvents, event) then
+    local appLayout = LAYOUTS[appObj:bundleID()]
+    if appLayout ~= nil then
+      if appLayout.rules and #appLayout.rules > 0 then
+        enum.each(appLayout.rules, function(rule)
+          local winTitlePattern, screenNum, position = table.unpack(rule)
+
+          winTitlePattern = (winTitlePattern ~= "") and winTitlePattern or nil
+          local win = winTitlePattern == nil and appObj:mainWindow() or hs.window.find(winTitlePattern)
+
+          -- if win == nil then win = appObj:focusedWindow() end
+
+          if win ~= nil then
+            note(
+              fmt(
+                "[LAYOUT] layouts/%s (%s): %s",
+                appObj:bundleID(),
+                utils.eventEnums(event),
+                appObj:focusedWindow():title()
+              )
+            )
+
+            dbg(
+              fmt(
+                "[RULES] %s (%s): %s",
+                type(elementOrAppName) == "string" and elementOrAppName or I(elementOrAppName),
+                win:title(),
+                I(appLayout.rules)
+              ),
+              obj.debug
+            )
+
+            hs.grid.set(win, position, targetDisplay(screenNum))
+          end
+        end)
+      end
+    end
   end
 end
 
-obj.runContextForAppBundleID = function(elementOrAppName, event, appObj)
+function obj.runContextForAppBundleID(elementOrAppName, event, appObj)
   if not obj.watchers.context[appObj:bundleID()] then return end
 
   -- slight delay

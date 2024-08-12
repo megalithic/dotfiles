@@ -10,8 +10,8 @@ hs.window.filter.default:subscribe(hs.window.filter.windowUnfocused, function(wi
 
 return function(appName)
   local id
-  if APPS and APPS[appName] then
-    id = APPS[appName].id
+  if LAUNCHERS and LAUNCHERS[appName] then
+    id = LAUNCHERS[appName].id
   elseif hs.application.find(appName) then
     id = hs.application.find(appName):bundleID()
   else
