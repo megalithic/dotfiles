@@ -1,4 +1,19 @@
+local enum = req("hs.fnutils")
+local utils = req("utils")
+
 local M = {}
+M.__index = M
+M.name = "wm"
+M.debug = false
+
+local function targetDisplay(num)
+  local displays = hs.screen.allScreens() or {}
+  if displays[num] ~= nil then
+    return displays[num]
+  else
+    return hs.screen.primaryScreen()
+  end
+end
 
 M.tile = function()
   local windows = hs.fnutils.map(hs.window.filter.new():getWindows(), function(win)
@@ -62,6 +77,38 @@ M.place = function(pos)
   hs.grid.set(win, pos)
 
   return win
+end
+
+M.placeApp = function(elementOrAppName, event, appObj)
+  local appLayout = LAYOUTS[appObj:bundleID()]
+  if appLayout ~= nil then
+    if appLayout.rules and #appLayout.rules > 0 then
+      enum.each(appLayout.rules, function(rule)
+        local winTitlePattern, screenNum, position = table.unpack(rule)
+
+        winTitlePattern = (winTitlePattern ~= "") and winTitlePattern or nil
+        local win = winTitlePattern == nil and appObj:mainWindow() or hs.window.find(winTitlePattern)
+
+        if win ~= nil then
+          note(
+            fmt("[wm] layouts/%s (%s): %s", appObj:bundleID(), utils.eventEnums(event), appObj:focusedWindow():title())
+          )
+
+          dbg(
+            fmt(
+              "[wm] rules/%s (%s): %s",
+              type(elementOrAppName) == "string" and elementOrAppName or I(elementOrAppName),
+              win:title(),
+              I(appLayout.rules)
+            ),
+            M.debug
+          )
+
+          hs.grid.set(win, position, targetDisplay(screenNum))
+        end
+      end)
+    end
+  end
 end
 
 return M

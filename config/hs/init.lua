@@ -25,6 +25,8 @@ req("bindings")
 req("watchers"):start({ "bluetooth", "usb", "dock", "app", "url" })
 req("ptt")
 req("quitter")
+
+-- experimental/wip modules and stuff..
 req("wip")
 
 hs.timer.doAfter(0.2, function()

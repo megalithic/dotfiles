@@ -1,6 +1,6 @@
-local enum = require("hs.fnutils")
-local utils = require("utils")
-local contexts = require("contexts")
+local enum = req("hs.fnutils")
+local utils = req("utils")
+local contexts = req("contexts")
 
 local obj = {}
 
@@ -11,57 +11,6 @@ obj.watchers = {
   app = {},
   context = {},
 }
-obj.contextModals = {}
-obj.contextsPath = utils.resourcePath("../contexts/")
-
--- local appHandler = function(appName, event, appObj, windowTitle)
---   info(fmt("appHandler: %s/%s/%s (%s)", appName, event, appObj:bundleID(), windowTitle))
---   if event == hs.uielement.watcher.windowCreated then
---     if appName:find("Google Chrome") then
---       if windowTitle:find("(Private)", 1, true) then
---         if hs.application.find("OpenVPN Connect") then print("Created private window created while on VPN") end
---       end
---     end
---   elseif event == hs.uielement.watcher.titleChanged then
---     -- print("title changed")
---   elseif event == hs.uielement.watcher.elementDestroyed then
---     -- print("destroyed")
---   elseif event == hs.uielement.watcher.focusedWindowChanged then
---     if appName:find("Google Chrome") then
---       if windowTitle:find("(Private)", 1, true) then
---         if hs.application.find("OpenVPN Connect") then print("Switched to private window created while on VPN") end
---       end
---     end
---   end
--- end
-
-function obj.prepareContextScripts(contextsScriptsPath)
-  contextsScriptsPath = contextsScriptsPath or obj.contextsPath
-  local iterFn, dirObj = hs.fs.dir(contextsScriptsPath)
-  if iterFn then
-    for file in iterFn, dirObj do
-      if string.sub(file, -3) == "lua" then
-        local basenameAndBundleID = string.sub(file, 1, -5)
-        local script = dofile(contextsScriptsPath .. file)
-        if basenameAndBundleID ~= "init" then
-          if script.modal then script.modal = hs.hotkey.modal.new() end
-
-          if script.actions ~= nil then
-            for _, value in pairs(script.actions) do
-              local hotkey = value.hotkey
-              if hotkey then
-                local mods, key = table.unpack(hotkey)
-                script.modal:bind(mods, key, value.action)
-              end
-            end
-          end
-
-          obj.watchers.context[basenameAndBundleID] = script
-        end
-      end
-    end
-  end
-end
 
 -- interface: (appName, eventType, appObject)
 function obj.handleGlobalAppEvent(appName, event, appObj)
@@ -101,68 +50,24 @@ end
 
 function obj.runLayoutRulesForAppBundleID(elementOrAppName, event, appObj)
   local layoutableEvents = {
-    -- hs.application.watcher.activated,
     hs.application.watcher.launched,
     hs.uielement.watcher.windowCreated,
+    hs.application.watcher.terminated,
+    -- hs.application.watcher.activated,
     -- hs.uielement.watcher.applicationActivated,
     -- hs.application.watcher.deactivated,
-    hs.application.watcher.terminated,
     -- hs.uielement.watcher.applicationDeactivated,
   }
 
-  local function targetDisplay(num)
-    local displays = hs.screen.allScreens() or {}
-    if displays[num] ~= nil then
-      return displays[num]
-    else
-      return hs.screen.primaryScreen()
-    end
-  end
-
   if appObj and appObj:focusedWindow() and enum.contains(layoutableEvents, event) then
-    local appLayout = LAYOUTS[appObj:bundleID()]
-    if appLayout ~= nil then
-      if appLayout.rules and #appLayout.rules > 0 then
-        enum.each(appLayout.rules, function(rule)
-          local winTitlePattern, screenNum, position = table.unpack(rule)
-
-          winTitlePattern = (winTitlePattern ~= "") and winTitlePattern or nil
-          local win = winTitlePattern == nil and appObj:mainWindow() or hs.window.find(winTitlePattern)
-
-          -- if win == nil then win = appObj:focusedWindow() end
-
-          if win ~= nil then
-            note(
-              fmt(
-                "[LAYOUT] layouts/%s (%s): %s",
-                appObj:bundleID(),
-                utils.eventEnums(event),
-                appObj:focusedWindow():title()
-              )
-            )
-
-            dbg(
-              fmt(
-                "[RULES] %s (%s): %s",
-                type(elementOrAppName) == "string" and elementOrAppName or I(elementOrAppName),
-                win:title(),
-                I(appLayout.rules)
-              ),
-              obj.debug
-            )
-
-            hs.grid.set(win, position, targetDisplay(screenNum))
-          end
-        end)
-      end
-    end
+    req("wm").placeApp(elementOrAppName, event, appObj)
   end
 end
 
 function obj.runContextForAppBundleID(elementOrAppName, event, appObj)
   if not obj.watchers.context[appObj:bundleID()] then return end
 
-  -- slight delay
+  -- seems to work best with a slight delay
   hs.timer.doAfter(
     0.1,
     function()
@@ -178,7 +83,7 @@ function obj.runContextForAppBundleID(elementOrAppName, event, appObj)
 end
 
 function obj:start()
-  self.prepareContextScripts()
+  self.watchers.context = contexts:init()
   self.watchers.app = {}
   self.globalWatcher = hs.application.watcher.new(self.handleGlobalAppEvent):start()
   self.attachExistingApps()

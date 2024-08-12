@@ -5,6 +5,8 @@ local obj = {}
 obj.__index = obj
 obj.name = "contexts"
 obj.debug = false
+obj.contextsPath = utils.resourcePath("./")
+obj.contextModals = {}
 
 obj.loggableEvents = {
   hs.application.watcher.activated,
@@ -64,14 +66,40 @@ function obj:run(opts)
   return self
 end
 
-function obj:start()
-  info(fmt("[START] %s", self.name))
-  return self
+function obj.prepareContextScripts(contextsScriptsPath)
+  contextsScriptsPath = contextsScriptsPath or obj.contextsPath
+  local iterFn, dirObj = hs.fs.dir(contextsScriptsPath)
+  if iterFn then
+    for file in iterFn, dirObj do
+      if string.sub(file, -3) == "lua" then
+        local basenameAndBundleID = string.sub(file, 1, -5)
+        local script = dofile(contextsScriptsPath .. file)
+        if basenameAndBundleID ~= "init" then
+          if script.modal then script.modal = hs.hotkey.modal.new() end
+
+          if script.actions ~= nil then
+            for _, value in pairs(script.actions) do
+              local hotkey = value.hotkey
+              if hotkey then
+                local mods, key = table.unpack(hotkey)
+                script.modal:bind(mods, key, value.action)
+              end
+            end
+          end
+
+          obj.contextModals[basenameAndBundleID] = script
+        end
+      end
+    end
+  end
+
+  return obj.contextModals
 end
 
-function obj:stop()
-  info(fmt("[STOP] %s", self.name))
-  return self
+function obj:init()
+  info(fmt("[INIT] %s", self.name))
+
+  return self.prepareContextScripts()
 end
 
 return obj
