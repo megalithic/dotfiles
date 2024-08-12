@@ -57,16 +57,18 @@ local function handleDockingStateChanges(_watcher, _path, _key, _oldValue, isCon
   local notifier = isConnected and _G.success or _G.warn
   notifier = _G.warn
   local icon = isConnected and "🖥️" or "💻"
+  local label = isConnected and "desktop mode" or "laptop mode"
 
   info(fmt("[dock] handling docking state changes (%s)", connectedState))
 
   obj.setWifi(DOCK[connectedState].wifi)
   obj.setInput(DOCK[connectedState].input)
   obj.setOutput(DOCK[connectedState].output)
-  notifier(fmt("[watcher.dock] %s transitioned to %s state", icon, connectedState))
+
+  notifier(fmt("[watcher.dock] %s transitioned to %s", icon, label))
 
   hs.alert.closeAll()
-  hs.alert.show(fmt("%s Transitioned to %s state", icon, connectedState))
+  hs.alert.show(fmt("%s Transitioned to %s", icon, label))
 
   -- hs.timer.doAfter(1, function() WM.layoutRunningApps(C.bindings.apps) end)
   -- WM.layoutRunningApps(C.bindings.apps)

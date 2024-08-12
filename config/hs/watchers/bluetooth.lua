@@ -128,9 +128,6 @@ local function checkAndAlertLowBattery()
     local percentage = device["batteryPercentSingle"]
     local name = device["name"]
 
-    -- TODO: add a watcheable watch for bluetooth
-    -- watching
-
     if tonumber(percentage) < 10 then
       error(fmt("[bluetooth] %s: %s%%", name, percentage))
     elseif tonumber(percentage) < 25 then
@@ -151,7 +148,6 @@ function obj:start()
     toggleDevice("phonak", function(isConnected)
       if isConnected and not toggledDevice then
         info(fmt(":: connected %s %s", device.name, device.icon))
-        require("watchers.dock"):setAudio(DOCK.docked)
 
         local audioDevice = hs.audiodevice.defaultOutputDevice()
         cur_balance = audioDevice:balance()

@@ -1,12 +1,22 @@
-local wm = require("wm")
+local wm = req("wm")
+local summon = req("summon")
 
 -- [ APP LAUNCHERS ] -----------------------------------------------------------
 
 do
-  local hyper = require("hyper"):start({ id = "apps" })
+  local hyper = req("hyper"):start({ id = "apps" })
   hs.fnutils.each(LAUNCHERS, function(bindingTable)
-    local bundleID, globalBind, localBinds = table.unpack(bindingTable)
-    if globalBind then hyper:bind({}, globalBind, function() hs.application.launchOrFocusByBundleID(bundleID) end) end
+    local bundleID, globalBind, localBinds, focusOnly = table.unpack(bindingTable)
+    if globalBind then
+      hyper:bind({}, globalBind, function()
+        if focusOnly ~= nil and focusOnly then
+          summon.focus(bundleID)
+        else
+          summon.toggle(bundleID)
+        end
+      end)
+    end
+
     if localBinds then hs.fnutils.each(localBinds, function(key) hyper:bindPassThrough(key, bundleID) end) end
   end)
 end
@@ -14,7 +24,7 @@ end
 -- [ OTHER LAUNCHERS ] -----------------------------------------------------------
 
 do
-  local hyper = require("hyper"):start({ id = "meeting" })
+  local hyper = req("hyper"):start({ id = "meeting" })
   -- hyper:bind({}, "z", function() hs.application.launchOrFocusByBundleID(bundleID) end)
   Z_count = 0
   hyper:bind({}, "z", nil, function()
@@ -37,8 +47,8 @@ do
       local app = hs.application.find("com.pop.pop.app")
       local targetWin = app:mainWindow()
       if targetWin:isStandard() and targetWin:frame().w > 1000 and targetWin:frame().h > 1000 then targetWin:focus() end
-    elseif require("browser").jump("meet.google.com|hangouts.google.com.call") then
-      local jumped = require("browser").jump("meet.google.com|hangouts.google.com.call")
+    elseif req("browser").jump("meet.google.com|hangouts.google.com.call") then
+      local jumped = req("browser").jump("meet.google.com|hangouts.google.com.call")
       info(I(jumped))
     else
       info(fmt("%s: No hyper meeting targets to focus", "bindings.hyper.meeting"))
@@ -47,10 +57,19 @@ do
   end)
 end
 
+do
+  local hyper = req("hyper"):start({ id = "utils" })
+  -- hyper:bind({}, "z", function() hs.application.launchOrFocusByBundleID(bundleID) end)
+  hyper:bind({ "shift" }, "r", nil, function()
+    hs.notify.new({ title = "hammerspork", subTitle = "config is reloading..." }):send()
+    hs.reload()
+  end)
+end
+
 -- [ MODAL LAUNCHERS ] ---------------------------------------------------------
 
 -- # window management ---------------------------------------------------------
-local modality = require("modality"):start({ id = "wm", key = "l" })
+local modality = req("modality"):start({ id = "wm", key = "l" })
 modality
   :bind({}, "escape", function() modality:exit() end)
   :bind({}, "return", function() wm.place(POSITIONS.full) end, function() modality:delayedExit(0.1) end)
@@ -73,7 +92,7 @@ modality
     wm.place(POSITIONS.center.large)
     modality:exit()
 
-    -- local chain = require("chain")
+    -- local chain = req("chain")
     -- -- wm.place(POSITIONS.center.large)
     --
     -- chain({
@@ -89,11 +108,11 @@ modality
     modality:exit()
   end)
   :bind({}, "s", function()
-    require("browser"):splitTab()
+    req("browser"):splitTab()
     modality:exit()
   end)
   :bind({ "shift" }, "s", function()
-    require("browser"):splitTab(true)
+    req("browser"):splitTab(true)
     modality:exit()
   end)
   :bind({}, "m", function()

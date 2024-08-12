@@ -1,29 +1,45 @@
---------------------------------------------------------------------------------
--- Summon App / Toggle App Visibility
---
--- Courtesy of: https://github.com/jesseleite/dotfiles/blob/master/hammerspoon/summon.lua
---------------------------------------------------------------------------------
+local obj = {}
 
-local lastFocusedWindow
+obj.__index = obj
+obj.name = "summon"
 
-hs.window.filter.default:subscribe(hs.window.filter.windowUnfocused, function(window) lastFocusedWindow = window end)
+function obj.focus(appIdentifier)
+  local app = hs.application.find(appIdentifier)
+  local appBundleID = app and (app:bundleID() or appIdentifier)
 
-return function(appName)
-  local id
-  if LAUNCHERS and LAUNCHERS[appName] then
-    id = LAUNCHERS[appName].id
-  elseif hs.application.find(appName) then
-    id = hs.application.find(appName):bundleID()
+  if app and appIdentifier and appBundleID then app:activate() end
+end
+
+-- REF: https://github.com/octplane/hammerspoon-config/blob/master/init.lua#L105
+-- +--- possibly more robust app toggler
+function obj.toggle(appIdentifier, shouldHide)
+  -- accepts app name (lowercased), pid, or bundleID; but we ALWAYS use bundleID
+  local app = hs.application.find(appIdentifier)
+  local appBundleID = app and app:bundleID() or appIdentifier
+
+  if not app then
+    if appIdentifier ~= nil then hs.application.launchOrFocusByBundleID(appBundleID) end
   else
-    id = appName
-  end
-  local app = hs.application.find(id)
-  local currentId = hs.application.frontmostApplication():bundleID()
-  if currentId == id and not next(app:allWindows()) then
-    hs.application.open(id)
-  elseif currentId ~= id then
-    hs.application.open(id)
-  elseif lastFocusedWindow then
-    lastFocusedWindow:focus()
+    local mainWin = app:mainWindow()
+
+    if mainWin then
+      if mainWin == hs.window.focusedWindow() then
+        if shouldHide then mainWin:application():hide() end
+      else
+        mainWin:application():activate(true)
+        mainWin:application():unhide()
+        mainWin:focus()
+      end
+    else
+      -- assumes there is no "mainWindow" for the application in question, probably iTerm2
+      if app:focusedWindow() == hs.window.focusedWindow() then
+        if shouldHide then app:hide() end
+      else
+        app:unhide()
+        hs.application.launchOrFocusByBundleID(appBundleID)
+      end
+    end
   end
 end
+
+return obj
