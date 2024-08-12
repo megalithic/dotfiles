@@ -3,8 +3,6 @@ local AX = require("hs.axuielement")
 local enum = require("hs.fnutils")
 
 local obj = {}
-local appObj = nil
-local _appModal = nil
 
 obj.__index = obj
 obj.name = "context.messages"
@@ -164,11 +162,11 @@ obj.actions = {
 
 function obj:start(opts)
   opts = opts or {}
-  appObj = opts["appObj"]
+  local appObj = opts["appObj"]
   local event = opts["event"]
 
   if enum.contains({ hs.application.watcher.activated, hs.uielement.watcher.applicationActivated }, event) then
-    if obj.modal then obj.modal:enter() end
+    if obj.modal ~= nil then obj.modal:enter() end
   end
 
   return self

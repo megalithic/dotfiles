@@ -59,9 +59,15 @@ function obj.runLayoutRulesForAppBundleID(elementOrAppName, event, appObj)
     -- hs.uielement.watcher.applicationDeactivated,
   }
 
-  if appObj and appObj:focusedWindow() and enum.contains(layoutableEvents, event) then
-    req("wm").placeApp(elementOrAppName, event, appObj)
+  -- hs.timer.doAfter(0.3, function()
+  if appObj and enum.contains(layoutableEvents, event) then
+    hs.timer.waitUntil(
+      function() return appObj:mainWindow() ~= nil end,
+      function() req("wm").placeApp(elementOrAppName, event, appObj) end
+    )
   end
+
+  -- end)
 end
 
 function obj.runContextForAppBundleID(elementOrAppName, event, appObj)
@@ -69,7 +75,7 @@ function obj.runContextForAppBundleID(elementOrAppName, event, appObj)
 
   -- seems to work best with a slight delay
   hs.timer.doAfter(
-    0.1,
+    0.2,
     function()
       contexts:run({
         context = obj.watchers.context[appObj:bundleID()],
@@ -83,7 +89,8 @@ function obj.runContextForAppBundleID(elementOrAppName, event, appObj)
 end
 
 function obj:start()
-  self.watchers.context = contexts:init()
+  -- prepares all of our contexts scripts by initializing their potential hotkey modals and actions
+  self.watchers.context = contexts:start()
   self.watchers.app = {}
   self.globalWatcher = hs.application.watcher.new(self.handleGlobalAppEvent):start()
   self.attachExistingApps()
@@ -97,6 +104,11 @@ function obj:stop()
   if self.watchers.app then
     enum.each(self.watchers.app, function(w) w:stop() end)
     self.watchers.app = nil
+  end
+
+  if self.watchers.contexts then
+    enum.each(self.watchers.contexts, function(w) w:stop() end)
+    self.watchers.contexts = nil
   end
 
   info(fmt("[STOP] %s", self.name))

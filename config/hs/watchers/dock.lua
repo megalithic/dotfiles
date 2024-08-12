@@ -11,7 +11,7 @@ obj.watchers = {
 
 function obj.setWifi(connectedState)
   hs.execute("networksetup -setairportpower airport " .. connectedState, true)
-  success(fmt("[dock] wifi set to %s", connectedState))
+  success(fmt("[watcher.dock] wifi set to %s", connectedState))
 end
 
 function obj.setInput(device)
@@ -20,7 +20,7 @@ function obj.setInput(device)
     function() end, -- Fake callback
     function(_task, stdOut, _stdErr)
       local continue = stdOut == string.format([[input audio device set to "%s"]], device)
-      success(fmt("[dock] audio input set to %s", device))
+      success(fmt("[watcher.dock] audio input set to %s", device))
       return continue
     end,
     { "-t", "input", "-s", device }
@@ -34,7 +34,7 @@ function obj.setOutput(device)
     function() end, -- Fake callback
     function(_task, stdOut, _stdErr)
       local continue = stdOut == string.format([[output audio device set to "%s"]], device)
-      success(fmt("[dock] audio output set to %s", device))
+      success(fmt("[watcher.dock] audio output set to %s", device))
       return continue
     end,
     { "-t", "output", "-s", device }
@@ -59,8 +59,6 @@ local function handleDockingStateChanges(_watcher, _path, _key, _oldValue, isCon
   local icon = isConnected and "🖥️" or "💻"
   local label = isConnected and "desktop mode" or "laptop mode"
 
-  info(fmt("[dock] handling docking state changes (%s)", connectedState))
-
   obj.setWifi(DOCK[connectedState].wifi)
   obj.setInput(DOCK[connectedState].input)
   obj.setOutput(DOCK[connectedState].output)
@@ -69,6 +67,8 @@ local function handleDockingStateChanges(_watcher, _path, _key, _oldValue, isCon
 
   hs.alert.closeAll()
   hs.alert.show(fmt("%s Transitioned to %s", icon, label))
+
+  hs.timer.doAfter(0.5, function() info(fmt("[watcher.dock] handling docking state changes (%s)", connectedState)) end)
 
   -- hs.timer.doAfter(1, function() WM.layoutRunningApps(C.bindings.apps) end)
   -- WM.layoutRunningApps(C.bindings.apps)

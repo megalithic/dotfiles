@@ -1,23 +1,19 @@
 G = {} -- persist from garbage collector
 
----Try to require the module, and do not error when one of them cannot be
----loaded, but go ahead and tell me if something is amiss.
----@param mod string module to load
+require("preflight")
+
 --- @diagnostic disable-next-line: lowercase-global
 function req(mod)
   local ok, M = pcall(require, mod)
-  G[mod:sub(5)] = M
-
   if not ok then
-    hs.alert.show(M, 5)
-    print(M)
+    -- hs.alert.show(M, 5)
+    error(M)
   else
-    -- always return the module.. we end up immediately invoking it, usually.
+    -- always return the module.. we typically end up immediately invoking it.
     return M
   end
 end
 
-req("preflight")
 req("config")
 req("bindings")
 -- listing of *.watcher based modules; the core of the automation that takes place.

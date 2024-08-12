@@ -27,16 +27,16 @@ function obj:start(opts)
   local event = opts["event"]
   local bundleID = opts["bundleID"]
 
-  if
-    event == hs.application.watcher.launched
-    and appObj:bundleID() == bundleID
-    and appObj:bundleID() == "com.apple.Preview"
-  then
-    appObj:selectMenuItem({ "Tools", "Rectangular Selection" })
-  end
+  -- if
+  --   event == hs.application.watcher.launched
+  --   and appObj:bundleID() == bundleID
+  --   and appObj:bundleID() == "com.apple.Preview"
+  -- then
+  --   appObj:selectMenuItem({ "Tools", "Rectangular Selection" })
+  -- end
 
   if event == hs.application.watcher.activated then
-    function obj.modal:entered() info("entered com.apple.Preview modal") end
+    -- function obj.modal:entered() info("entered com.apple.Preview modal") end
 
     if obj.modal then obj.modal:enter() end
   end

@@ -135,6 +135,11 @@ LAUNCHERS = {
   { "com.dexterleng.Homerow", nil, { ";" }, false },
   { "com.tinyspeck.slackmacgap", "s", nil, false },
   { "org.hammerspoon.Hammerspoon", "r", nil, false },
+  { "com.apple.dt.Xcode", "x", nil, true },
+  { "com.google.android.studio", "x", nil, true },
+  { "com.figma.Desktop", { { "shift" }, "f" }, nil, true },
+  { "com.obsproject.obs-studio", "o", nil, true },
+  { "com.kapeli.dashdoc", { { "shift" }, "d" }, { "d" }, false },
 }
 
 LAYOUTS = {

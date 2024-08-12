@@ -6,12 +6,17 @@ obj.__index = obj
 obj.name = "wm"
 obj.debug = false
 
-local function targetDisplay(num)
+function obj.targetDisplay(hint)
   local displays = hs.screen.allScreens() or {}
-  if displays[num] ~= nil then
-    return displays[num]
+
+  if type(hint) == "number" then
+    if displays[hint] ~= nil then
+      return displays[hint]
+    else
+      return hs.screen.primaryScreen()
+    end
   else
-    return hs.screen.primaryScreen()
+    return hs.screen.find(hint)
   end
 end
 
@@ -89,6 +94,10 @@ obj.placeApp = function(elementOrAppName, event, appObj)
         winTitlePattern = (winTitlePattern ~= "") and winTitlePattern or nil
         local win = winTitlePattern == nil and appObj:mainWindow() or hs.window.find(winTitlePattern)
 
+        if win == nil then
+          warn(fmt("[wm] layouts/%s (%s): %s not found", appObj:bundleID(), utils.eventEnums(event), I(win)))
+        end
+
         if win ~= nil then
           note(
             fmt("[wm] layouts/%s (%s): %s", appObj:bundleID(), utils.eventEnums(event), appObj:focusedWindow():title())
@@ -104,7 +113,7 @@ obj.placeApp = function(elementOrAppName, event, appObj)
             obj.debug
           )
 
-          hs.grid.set(win, position, targetDisplay(screenNum))
+          hs.grid.set(win, position, obj.targetDisplay(screenNum))
         end
       end)
     end

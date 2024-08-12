@@ -7,8 +7,14 @@ do
   local hyper = req("hyper"):start({ id = "apps" })
   hs.fnutils.each(LAUNCHERS, function(bindingTable)
     local bundleID, globalBind, localBinds, focusOnly = table.unpack(bindingTable)
-    if globalBind then
-      hyper:bind({}, globalBind, function()
+    if globalBind ~= nil then
+      local key = globalBind
+      local mods = {}
+      if type(key) == "table" then
+        mods, key = table.unpack(globalBind)
+      end
+
+      hyper:bind(mods, key, function()
         if focusOnly ~= nil and focusOnly then
           summon.focus(bundleID)
         else

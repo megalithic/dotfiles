@@ -96,8 +96,8 @@ function obj.prepareContextScripts(contextsScriptsPath)
   return obj.contextModals
 end
 
-function obj:init()
-  info(fmt("[INIT] %s", self.name))
+function obj:start()
+  info(fmt("[START] %s", self.name))
 
   return self.prepareContextScripts()
 end

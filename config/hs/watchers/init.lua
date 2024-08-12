@@ -6,17 +6,8 @@ obj.__index = obj
 obj.name = "watchers"
 obj.watched = {}
 
-function obj:init() return self end
-
 function obj:start(watchers)
   if watchers == nil then return self end
-
-  function karabinerCallback(eventName, params)
-    print("karabiner_event: " .. eventName)
-    print(hs.inspect(params))
-  end
-
-  hs.urlevent.bind("karabiner", karabinerCallback)
 
   enum.each(watchers, function(modTarget)
     local modPath = "watchers." .. modTarget
@@ -25,7 +16,7 @@ function obj:start(watchers)
     self.watched[modPath] = mod
   end)
 
-  info(fmt("[START] %s", self.name))
+  info(fmt("[START] %s (%s)", self.name, I(watchers)))
 
   return self
 end

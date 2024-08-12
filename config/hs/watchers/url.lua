@@ -2,7 +2,7 @@ local enum = require("hs.fnutils")
 local obj = {}
 
 obj.__index = obj
-obj.name = "watcher.screen"
+obj.name = "watcher.url"
 obj.debug = false
 
 -- custom callbacks per url to be able to run some arbitrary function
@@ -10,10 +10,7 @@ obj.callbacks = {
   {
     pattern = "https:?://meet.google.com/*",
     callback = function(...)
-      dbg("matched google meet!")
-      dbg(...)
-
-      -- L.req("lib.dnd").on("zoom")
+      req("utils").dnd(true, "zoom")
       hs.spotify.pause()
       require("ptt").setState("push-to-talk")
       -- L.req("lib.watchers.dock").refreshInput("docked")
@@ -63,13 +60,19 @@ local function httpCallback(scheme, _host, _params, fullURL, _senderPID)
 end
 
 function obj:start()
+  -- Tracking this issue to get working handoff to default browser:
+  -- REF: https://github.com/Hammerspoon/hammerspoon/pull/3635
   hs.urlevent.httpCallback = httpCallback
+  info(fmt("[START] %s", self.name))
+
   return self
 end
 
 function obj:stop()
   hs.urlevent.httpCallback = nil
   currentHandler = nil
+  info(fmt("[STOP] %s", self.name))
+
   return self
 end
 

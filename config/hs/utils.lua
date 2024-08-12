@@ -1,5 +1,12 @@
 local obj = {}
 
+obj.__index = obj
+obj.name = "utils"
+obj.debug = false
+
+obj.dndCmd = os.getenv("HOME") .. "/.dotfiles/bin/dnd"
+obj.slckCmd = os.getenv("HOME") .. "/.dotfiles/bin/slck"
+
 function obj.template(template, vars) return string.gsub(template, "{(.-)}", vars) end
 
 --- utils.scriptPath([n]) -> string
@@ -44,6 +51,40 @@ function obj.eventEnums(e)
   }
 
   return table.unpack(enum_tbl[e])
+end
+
+---@param dndStatus boolean|string dnd status on or off as a boolean to pass to the dnd binary
+---@param slackStatus string slack status to pass to the slck binary
+function obj.dnd(dndStatus, slackStatus)
+  if type(dndStatus) == "boolean" then dndStatus = dndStatus and "on" or "off" end
+
+  if dndStatus ~= nil then
+    hs.task
+      .new(obj.dndCmd, function(_stdTask, _stdOut, _stdErr) info("[DND]: " .. dndStatus) end, { dndStatus })
+      :start()
+  end
+
+  -- FIXME: should we just write something specific to use HS rest client?
+  -- if slackStatus ~= nil and slackStatus ~= "" then
+  --   -- local slck = hs.task.new("/opt/homebrew/bin/zsh", function(stdTask, stdOut, stdErr)
+  --   --   dbg({ stdTask, stdOut, stdErr }, true)
+  --   --   info("[SLCK]: " .. slackStatus)
+  --   -- end, { "-c", obj.slckCmd, slackStatus })
+  --   local slck = hs.task.new(obj.slckCmd, function(stdTask, stdOut, stdErr)
+  --     dbg({ stdTask, stdOut, stdErr }, true)
+  --     info("[SLCK]: " .. slackStatus)
+  --   end, { slackStatus })
+  --   slck:setEnvironment({
+  --     TERM = "xterm-256color",
+  --     HOMEBREW_PREFIX = "/opt/homebrew",
+  --     HOME = os.getenv("HOME"),
+  --     PATH = os.getenv("PATH") .. ":/opt/homebrew/bin",
+  --   })
+  --
+  --   slck:start()
+  --
+  --   dbg({ slck }, true)
+  -- end
 end
 
 return obj
