@@ -53,6 +53,7 @@ function obj:setAudio(devices)
 end
 
 local function handleDockingStateChanges(_watcher, _path, _key, _oldValue, isConnected)
+  -- dbg({ _watcher, _path, _key, _oldValue, isConnected }, true)
   local connectedState = isConnected and "docked" or "undocked"
   local notifier = isConnected and _G.success or _G.warn
   notifier = _G.warn
@@ -77,6 +78,9 @@ end
 function obj:start()
   info(fmt("[START] %s", self.name))
   obj.watchers.dock = hs.watchable.watch("status.dock", handleDockingStateChanges)
+
+  -- FIXME: we ought to execute this on start so that we always have the correct docking state and related actions performed.
+
   return self
 end
 

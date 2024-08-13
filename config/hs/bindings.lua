@@ -29,50 +29,33 @@ end
 
 -- [ OTHER LAUNCHERS ] -----------------------------------------------------------
 
-do
-  local hyper = req("hyper"):start({ id = "meeting" })
-  -- hyper:bind({}, "z", function() hs.application.launchOrFocusByBundleID(bundleID) end)
-  Z_count = 0
-  hyper:bind({}, "z", nil, function()
-    Z_count = Z_count + 1
+req("hyper"):start({ id = "meeting" }):bind({}, "z", nil, function()
+  local focusedApp = hs.application.frontmostApplication()
+  if hs.application.find("us.zoom.xos") then
+    hs.application.launchOrFocusByBundleID("us.zoom.xos")
+    local app = hs.application.find("us.zoom.xos")
+    local targetWin = app:findWindow("Zoom Meeting")
+    if targetWin:isStandard() then targetWin:focus() end
+  elseif hs.application.find("com.brave.Browser.nightly.app.kjgfgldnnfoeklkmfkjfagphfepbbdan") then
+    hs.application.launchOrFocusByBundleID("com.brave.Browser.nightly.app.kjgfgldnnfoeklkmfkjfagphfepbbdan")
+  elseif hs.application.find("com.pop.pop.app") then
+    hs.application.launchOrFocusByBundleID("com.pop.pop.app")
+    local app = hs.application.find("com.pop.pop.app")
+    local targetWin = app:mainWindow()
+    if targetWin:isStandard() and targetWin:frame().w > 1000 and targetWin:frame().h > 1000 then targetWin:focus() end
+  elseif req("browser").hasTab("meet.google.com|hangouts.google.com.call") then
+    req("browser").jump("meet.google.com|hangouts.google.com.call")
+  else
+    info(fmt("%s: no meeting targets to focus", "bindings.hyper.meeting"))
 
-    hs.timer.doAfter(0.2, function() Z_count = 0 end)
+    focusedApp:activate()
+  end
+end)
 
-    -- if Z_count == 2 then
-    --   spoon.ElgatoKey:toggle()
-    -- else
-    -- start a timer
-    -- if not pressed again then
-    if hs.application.find("us.zoom.xos") then
-      hs.application.launchOrFocusByBundleID("us.zoom.xos")
-      local app = hs.application.find("us.zoom.xos")
-      local targetWin = app:findWindow("Zoom Meeting")
-      if targetWin:isStandard() then targetWin:focus() end
-    elseif hs.application.find("com.brave.Browser.nightly.app.kjgfgldnnfoeklkmfkjfagphfepbbdan") then
-      hs.application.launchOrFocusByBundleID("com.brave.Browser.nightly.app.kjgfgldnnfoeklkmfkjfagphfepbbdan")
-    elseif hs.application.find("com.pop.pop.app") then
-      hs.application.launchOrFocusByBundleID("com.pop.pop.app")
-      local app = hs.application.find("com.pop.pop.app")
-      local targetWin = app:mainWindow()
-      if targetWin:isStandard() and targetWin:frame().w > 1000 and targetWin:frame().h > 1000 then targetWin:focus() end
-    elseif req("browser").jump("meet.google.com|hangouts.google.com.call") then
-      local jumped = req("browser").jump("meet.google.com|hangouts.google.com.call")
-      info(I(jumped))
-    else
-      info(fmt("%s: No hyper meeting targets to focus", "bindings.hyper.meeting"))
-    end
-    -- end
-  end)
-end
-
-do
-  local hyper = req("hyper"):start({ id = "utils" })
-  -- hyper:bind({}, "z", function() hs.application.launchOrFocusByBundleID(bundleID) end)
-  hyper:bind({ "shift" }, "r", nil, function()
-    hs.notify.new({ title = "hammerspork", subTitle = "config is reloading..." }):send()
-    hs.reload()
-  end)
-end
+req("hyper"):start({ id = "utils" }):bind({ "shift" }, "r", nil, function()
+  hs.notify.new({ title = "hammerspork", subTitle = "config is reloading..." }):send()
+  hs.reload()
+end)
 
 -- [ MODAL LAUNCHERS ] ---------------------------------------------------------
 
