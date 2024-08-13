@@ -48,6 +48,8 @@ do
       local app = hs.application.find("us.zoom.xos")
       local targetWin = app:findWindow("Zoom Meeting")
       if targetWin:isStandard() then targetWin:focus() end
+    elseif hs.application.find("com.brave.Browser.nightly.app.kjgfgldnnfoeklkmfkjfagphfepbbdan") then
+      hs.application.launchOrFocusByBundleID("com.brave.Browser.nightly.app.kjgfgldnnfoeklkmfkjfagphfepbbdan")
     elseif hs.application.find("com.pop.pop.app") then
       hs.application.launchOrFocusByBundleID("com.pop.pop.app")
       local app = hs.application.find("com.pop.pop.app")

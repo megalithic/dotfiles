@@ -46,6 +46,7 @@ function obj:run(opts)
     })
   elseif
     enum.contains({
+      hs.application.watcher.terminated,
       hs.application.watcher.deactivated,
       hs.uielement.watcher.elementDestroyed,
       hs.uielement.watcher.titleChanged,

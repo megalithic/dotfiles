@@ -20,6 +20,7 @@ end
 
 -- interface: (element, event, watcher, info)
 function obj.handleAppEvent(element, event, _watcher, appObj)
+  -- dbg({ I(element), appObj:bundleID(), utils.eventEnums(event) }, true)
   if element ~= nil then
     obj.runLayoutRulesForAppBundleID(element, event, appObj)
     obj.runContextForAppBundleID(element, event, appObj)
@@ -36,6 +37,7 @@ function obj.watchApp(app, _)
   }
 
   watcher:start({
+    hs.uielement.watcher.windowCreated,
     hs.uielement.watcher.mainWindowChanged,
     hs.uielement.watcher.focusedWindowChanged,
     hs.uielement.watcher.titleChanged,
@@ -50,19 +52,19 @@ end
 
 function obj.runLayoutRulesForAppBundleID(elementOrAppName, event, appObj)
   local layoutableEvents = {
-    hs.application.watcher.launched,
     hs.uielement.watcher.windowCreated,
+    hs.application.watcher.launched,
     hs.application.watcher.terminated,
     -- hs.application.watcher.activated,
-    -- hs.uielement.watcher.applicationActivated,
     -- hs.application.watcher.deactivated,
+    -- hs.uielement.watcher.applicationActivated,
     -- hs.uielement.watcher.applicationDeactivated,
   }
 
   -- hs.timer.doAfter(0.3, function()
   if appObj and enum.contains(layoutableEvents, event) then
     hs.timer.waitUntil(
-      function() return appObj:mainWindow() ~= nil end,
+      function() return #appObj:allWindows() > 0 and appObj:mainWindow() ~= nil end,
       function() req("wm").placeApp(elementOrAppName, event, appObj) end
     )
   end
@@ -74,18 +76,18 @@ function obj.runContextForAppBundleID(elementOrAppName, event, appObj)
   if not obj.watchers.context[appObj:bundleID()] then return end
 
   -- seems to work best with a slight delay
-  hs.timer.doAfter(
-    0.2,
-    function()
-      contexts:run({
-        context = obj.watchers.context[appObj:bundleID()],
-        element = type(elementOrAppName) ~= "string" and elementOrAppName or nil,
-        event = event,
-        appObj = appObj,
-        bundleID = appObj:bundleID(),
-      })
-    end
-  )
+  -- hs.timer.doAfter(
+  --   0.2,
+  --   function()
+  contexts:run({
+    context = obj.watchers.context[appObj:bundleID()],
+    element = type(elementOrAppName) ~= "string" and elementOrAppName or nil,
+    event = event,
+    appObj = appObj,
+    bundleID = appObj:bundleID(),
+  })
+  --   end
+  -- )
 end
 
 function obj:start()

@@ -1,15 +1,17 @@
 -- local fuzzyChooser = require("utils.fuzzychooser")
 local AX = require("hs.axuielement")
 local enum = require("hs.fnutils")
+local utils = require("utils")
 
 local obj = {}
 
 obj.__index = obj
 obj.name = "context.messages"
 obj.debug = true
+obj.appObj = nil
 -- USAGE
 -- { ..., {"AXWindow", "AXRoleDescription", "standard window"}, ..., {"AXSplitGroup", 1}, ...}
-local function getUIElement(appOrWindowOrAx, uiPathTable)
+function obj.getUIElement(appOrWindowOrAx, uiPathTable)
   local n
   local match
   local numeralIndexReferenceMode
@@ -39,8 +41,8 @@ local function getUIElement(appOrWindowOrAx, uiPathTable)
     children = targetElement:attributeValue("AXChildren")
 
     -- if 0 children, return
-    -- print(hs.inspect(children))
-    if not children or U.tlen(children) == 0 then return nil end
+    print(hs.inspect(children))
+    if not children or utils.tlen(children) == 0 then return nil end
 
     -- for the current pathItem, checking for an index/attribute-value reference
     if tonumber(indexOrAttribute) then
@@ -73,12 +75,13 @@ local function getUIElement(appOrWindowOrAx, uiPathTable)
     end
     if not match then return nil end
   end
+
   return targetElement
 end
 
-local function cycleUIElements(hsAppObj, parentUIGroup, elementRole, direction)
+function obj.cycleUIElements(hsAppObj, parentUIGroup, elementRole, direction)
   -- cycles left (next) or right (prev) through a group of similar ui elements, under a common parent
-  local axParent = getUIElement(hsAppObj, parentUIGroup)
+  local axParent = obj.getUIElement(hsAppObj, parentUIGroup)
   local elements = axParent:attributeValue("AXChildren")
   local totalElements = 0
   local selectedElement = 0
@@ -105,32 +108,36 @@ local function cycleUIElements(hsAppObj, parentUIGroup, elementRole, direction)
   -- create the new target element as string, add it to the ui path
   targetElement = { elementRole, targetElement }
   table.insert(parentUIGroup, targetElement)
-  getUIElement(hsAppObj, parentUIGroup):performAction("AXPress")
+  obj.getUIElement(hsAppObj, parentUIGroup):performAction("AXPress")
 end
 
 -- local function chooserCallback(choice) os.execute(string.format([["/usr/bin/open" "%s"]], choice.text)) end
 --
--- local function getChatMessageLinks(app)
---   local linkElements = UI.getUIElement(app:mainWindow(), {
---     { "AXSplitGroup", 1 },
---     { "AXScrollArea", 2 },
---     { "AXWebArea", 1 },
---   }):attributeValue("AXLinkUIElements")
---   local choices = {}
---   for _, link in ipairs(linkElements) do
---     local url = link:attributeValue("AXChildren")[1]:attributeValue("AXValue")
---     table.insert(choices, { text = url })
---   end
---   if U.tlen(choices) == 0 then table.insert(choices, { text = "No Links" }) end
---   fuzzyChooser:start(chooserCallback, choices, { "text" })
--- end
+function obj.getChatMessageLinks(app)
+  local linkElements = obj
+    .getUIElement(app:mainWindow(), {
+      { "AXSplitGroup", 1 },
+      { "AXScrollArea", 2 },
+      { "AXWebArea", 1 },
+    })
+    :attributeValue("AXLinkUIElements")
+
+  local choices = {}
+  for _, link in ipairs(linkElements) do
+    local url = link:attributeValue("AXChildren")[1]:attributeValue("AXValue")
+    table.insert(choices, { text = url })
+  end
+  if utils.tlen(choices) == 0 then table.insert(choices, { text = "No Links" }) end
+  dbg(I(choices), true)
+  -- fuzzyChooser:start(chooserCallback, choices, { "text" })
+end
 
 obj.modal = true
 obj.actions = {
-  -- getMessageLinks = {
-  --   action = function() getChatMessageLinks(appObj) end,
-  --   hotkey = { "alt", "o" },
-  -- },
+  getMessageLinks = {
+    action = function() obj.getChatMessageLinks(obj.appObj) end,
+    hotkey = { "alt", "o" },
+  },
   nextConversation = {
     -- action = function() _appObj:selectMenuItem({ "Window", "Go to Next Conversation" }) end,
     action = function() hs.eventtap.keyStroke({ "cmd", "shift" }, "]") end,
@@ -158,15 +165,28 @@ obj.actions = {
     action = function() hs.eventtap.keyStroke({ "cmd" }, "4") end,
     hotkey = { { "ctrl" }, "l" },
   },
+  replyToLastMessage = {
+    action = function() hs.eventtap.keyStroke({ "cmd" }, "r") end,
+    hotkey = { { "ctrl" }, "r" },
+  },
+  tapbackLastMessage = {
+    action = function() hs.eventtap.keyStroke({ "cmd" }, "t") end,
+    hotkey = { { "ctrl" }, "t" },
+  },
+  editLastMessage = {
+    action = function() hs.eventtap.keyStroke({ "cmd" }, "e") end,
+    hotkey = { { "ctrl" }, "u" },
+  },
 }
 
 function obj:start(opts)
   opts = opts or {}
-  local appObj = opts["appObj"]
+  self.appObj = opts["appObj"]
   local event = opts["event"]
 
   if enum.contains({ hs.application.watcher.activated, hs.uielement.watcher.applicationActivated }, event) then
-    if obj.modal ~= nil then obj.modal:enter() end
+    -- function obj.modal:entered() dbg(I(obj.actions), true) end
+    if self.modal ~= nil then self.modal:enter() end
   end
 
   return self
@@ -176,7 +196,7 @@ function obj:stop(opts)
   opts = opts or {}
   local event = opts["event"]
 
-  if obj.modal ~= nil then obj.modal:exit() end
+  if self.modal ~= nil then self.modal:exit() end
 
   return self
 end

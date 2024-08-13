@@ -15,7 +15,7 @@ local dbg = function(str, ...)
 end
 
 function obj.hasTab(url)
-  local app = hs.application.frontmostApplication()
+  local app = hs.application.get(BROWSER) or hs.application.frontmostApplication()
 
   if app and enum.contains(supportedBrowsers, app:name()) then
     local _status, returnedObj, _descriptor = hs.osascript.javascript([[
@@ -37,19 +37,20 @@ function obj.hasTab(url)
 end
 
 function obj.jump(url)
-  local app = hs.application.frontmostApplication()
+  local app = hs.application.get(BROWSER) or hs.application.frontmostApplication()
 
   if app and enum.contains(supportedBrowsers, app:name()) then
     info("(jump) %s", app:name())
 
     -- win.tabs().findIndex(tab => tab.url().match(/]] .. string.gsub(url, "/", "\\/") .. [[/));
+    -- win.tabs().findIndex(tab => tab.url().match(/]] .. url .. [[/));
     local _success, object, _output = hs.osascript.javascript([[
     (function() {
       var browser = Application(']] .. app:name() .. [[');
       browser.activate();
       for (win of browser.windows()) {
         var tabIndex =
-        win.tabs().findIndex(tab => tab.url().match(/]] .. url .. [[/));
+          win.tabs().findIndex(tab => tab.url().match(/]] .. string.gsub(url, "/", "\\/") .. [[/));
         if (tabIndex != -1) {
           win.activeTabIndex = (tabIndex + 1);
           win.index = 1;
@@ -71,7 +72,7 @@ function obj:splitTab(to_next_screen)
   if not to_next_screen then wm.place(POSITIONS.halves.left) end
 
   hs.timer.doAfter(0.25, function()
-    local app = hs.application.frontmostApplication()
+    local app = hs.application.get(BROWSER) or hs.application.frontmostApplication()
 
     if app and enum.contains(supportedBrowsers, app:name()) then
       dbg("(splitTab) %s", app:name())
@@ -94,8 +95,10 @@ function obj:splitTab(to_next_screen)
 end
 
 function obj.killTabsByDomain(domain)
-  local app = hs.application.frontmostApplication()
+  local app = hs.application.get(BROWSER) or hs.application.frontmostApplication()
   if app and enum.contains(supportedBrowsers, app:name()) then
+    -- if (tab.url().match(/]] .. string.gsub(domain, "/", "\\/") .. [[/)) {
+    -- if (tab.url().match(/]] .. domain .. [[/)) {
     hs.osascript.javascript([[
     (function() {
       var browser = Application(']] .. app:name() .. [[');

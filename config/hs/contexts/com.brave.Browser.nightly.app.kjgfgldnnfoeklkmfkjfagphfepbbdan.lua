@@ -59,9 +59,10 @@ function obj:start(opts)
     local browser = hs.application.get(BROWSER)
 
     hs.timer.waitUntil(function() return meet:isRunning() end, function()
-      -- L.req("lib.dnd").on("zoom")
+      req("utils").dnd(true, "zoom")
       hs.spotify.pause()
       req("ptt").setState("push-to-talk")
+      req("browser").killTabsByDomain("meet.google.com")
 
       local layouts = {
         { meet:name(), nil, hs.screen.primaryScreen():name(), hs.layout.maximized, nil, nil },
@@ -71,8 +72,8 @@ function obj:start(opts)
       hs.layout.apply(layouts)
       meet:setFrontmost(true)
 
-      req("watchers.dock").refreshInput("docked")
-      req("ptt").setAllInputsMuted(true)
+      -- req("watchers.dock").refreshInput("docked")
+      -- req("ptt").setAllInputsMuted(true)
     end)
   end
 
@@ -87,7 +88,7 @@ function obj:stop(opts)
 
   if event == hs.application.watcher.terminated then
     req("ptt").setState("push-to-talk")
-    -- L.req("lib.dnd").off()
+    req("utils").dnd(false, nil)
     local browser = hs.application.get(BROWSER)
 
     do
