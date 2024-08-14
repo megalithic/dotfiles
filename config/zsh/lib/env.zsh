@@ -175,7 +175,8 @@ export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
 
 # -- imagemagick thing
 # REF: https://github.com/3rd/image.nvim?tab=readme-ov-file#installing-imagemagick
-export DYLD_LIBRARY_PATH="$(brew --prefix)/lib:$DYLD_LIBRARY_PATH"
+# export DYLD_LIBRARY_PATH="$(brew --prefix)/lib:$DYLD_LIBRARY_PATH"
+export DYLD_LIBRARY_PATH="$(brew --prefix)/lib"
 
 # -- bat
 if which bat >/dev/null; then
@@ -227,9 +228,10 @@ case "$(uname)" in
       export LDFLAGS="-L/opt/homebrew/opt/ruby/lib"
       export CPPFLAGS="-I/opt/homebrew/opt/ruby/include"
 
-      export PKG_CONFIG_PATH="$PKG_CONFIG_PATH $(brew --prefix)/opt/ruby/lib/pkgconfig"
-      export PKG_CONFIG_PATH="$PKG_CONFIG_PATH $(brew --prefix)/opt/libffi/lib/pkgconfig"
-      export PKG_CONFIG_PATH="$PKG_CONFIG_PATH $(brew --prefix)/opt/openssl@1.1/lib/pkgconfig"
+      export PKG_CONFIG_PATH="$(brew --prefix)/opt/ruby/lib/pkgconfig $(brew --prefix)/opt/libffi/lib/pkgconfig $(brew --prefix)/opt/openssl@1.1/lib/pkgconfig"
+      # export PKG_CONFIG_PATH="$PKG_CONFIG_PATH $(brew --prefix)/opt/ruby/lib/pkgconfig"
+      # export PKG_CONFIG_PATH="$PKG_CONFIG_PATH $(brew --prefix)/opt/libffi/lib/pkgconfig"
+      # export PKG_CONFIG_PATH="$PKG_CONFIG_PATH $(brew --prefix)/opt/openssl@1.1/lib/pkgconfig"
 
       # export ERLANG_OPENSSL_PATH="/usr/local/opt/openssl@1.1"
       # export ERLANG_OPENSSL_PATH="/usr/local/opt/openssl@3"
@@ -289,7 +291,7 @@ case "$(uname)" in
   export KEYTIMEOUT=1
 
   # so I can run USPTO/jboss stuff sensibly
-  export JAVA_OPTS="$JAVA_OPTS -Xms2048M -Xmx4096M -XX:MaxPermSize=512M -Djboss.vfs.forceCopy=false"
+  export JAVA_OPTS="-Xms2048M -Xmx4096M -XX:MaxPermSize=512M -Djboss.vfs.forceCopy=false"
 
   # This resolves issues install the mysql, postgres, and other gems with native non universal binary extensions
   export ARCHFLAGS='-arch x86_64'
@@ -330,7 +332,8 @@ case "$(uname)" in
 
   # export MYSQL=/usr/local/mysql/bin
   # export PATH=$PATH:$MYSQL
-  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:.:/usr/local/lib
+  export LD_LIBRARY_PATH="/usr/local/lib"
+  # export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:.:/usr/local/lib
 
   # elixir and erlang things for `iex`, etc:
   export ERL_AFLAGS="-kernel shell_history enabled"

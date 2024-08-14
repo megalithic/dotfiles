@@ -1,4 +1,5 @@
 if vim.loader then vim.loader.enable() end
+
 vim.env.DYLD_LIBRARY_PATH = "$BREW_PREFIX/lib/"
 
 vim.g.mapleader = ","

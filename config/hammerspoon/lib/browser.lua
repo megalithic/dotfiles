@@ -8,13 +8,26 @@ obj.name = "browser"
 obj.debug = false
 obj.browsers = C.preferred.browsers
 
-local browser = nil
-if Settings.get("group.browsers") ~= nil then
-  browser = hs.application.get(Settings.get("group.browsers"))
-elseif C.preferred.browser ~= nil then
-  browser = hs.application.get(C.preferred.browser)
-elseif obj.browsers[1] ~= nil then
-  browser = hs.application.get(obj.browsers[1])
+-- local browser = nil
+-- if Settings.get("group.browsers") ~= nil then
+--   browser = hs.application.get(Settings.get("group.browsers"))
+-- elseif C.preferred.browser ~= nil then
+--   browser = hs.application.get(C.preferred.browser)
+-- elseif obj.browsers[1] ~= nil then
+--   browser = hs.application.get(obj.browsers[1])
+-- end
+
+local get_browser = function()
+  local browser = nil
+  if Settings.get("group.browsers") ~= nil then
+    browser = hs.application.get(Settings.get("group.browsers"))
+  elseif C.preferred.browser ~= nil then
+    browser = hs.application.get(C.preferred.browser)
+  elseif obj.browsers[1] ~= nil then
+    browser = hs.application.get(obj.browsers[1])
+  end
+
+  return browser
 end
 
 local dbg = function(str, ...)
@@ -23,6 +36,7 @@ local dbg = function(str, ...)
 end
 
 function obj.hasTab(url)
+  local browser = get_browser()
   if browser and hs.fnutils.contains(obj.browsers, browser:name()) then
     local _status, returnedObj, _descriptor = hs.osascript.javascript([[
     (function() {
@@ -43,6 +57,7 @@ function obj.hasTab(url)
 end
 
 function obj.jump(url)
+  local browser = get_browser()
   if browser and hs.fnutils.contains(obj.browsers, browser:name()) then
     local _success, object, _output = hs.osascript.javascript([[
     (function() {
@@ -72,6 +87,7 @@ function obj.splitTab(to_next_screen)
     warn("snap module not found..")
     return
   end
+  local browser = get_browser()
 
   -- Move current window to the left half
   if not to_next_screen then snap.left50() end
@@ -83,7 +99,7 @@ function obj.splitTab(to_next_screen)
     if browser and hs.fnutils.contains(supportedBrowsers, browser:name()) then
       dbg("(splitTab) %s", browser:name())
       local moveTab = { "Tab", "Move Tab to New Window" }
-      if string.match(browser:name(), "Safari") then moveTab = { "Window", "Move Tab to New Window" } end
+      if string.match(browser:name() or "", "Safari") then moveTab = { "Window", "Move Tab to New Window" } end
       browser:selectMenuItem(moveTab)
 
       -- Move the split tab to the right of the screen
@@ -101,6 +117,7 @@ function obj.splitTab(to_next_screen)
 end
 
 function obj.killTabsByDomain(domain)
+  local browser = get_browser()
   if browser and hs.fnutils.contains(obj.browsers, browser:name()) then
     hs.osascript.javascript([[
     (function() {

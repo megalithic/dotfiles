@@ -8,7 +8,9 @@
 ```
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/megalithic/dotfiles/main/screenshot.png" alt="screenshot" />
+
+![alt text](https://raw.githubusercontent.com/megalithic/dotfiles/main/screenshot.png "screenshot")
+
 </p>
 
 ## 🚀 Installation
@@ -81,6 +83,8 @@ A few of the _must-have_ tools I roll with:
 
 <p align="center" style="margin-top: 20px;">
   <a href="https://megalithic.io" target="_blank">
-    <img src="megadotfiles.png" alt="megadotfiles" height="150px"/>
-  </a>
+
+![alt text](https://raw.githubusercontent.com/megalithic/dotfiles/main/megadotfiles.png "megadotfiles logo")
+
+</a>
 </p>

@@ -321,7 +321,7 @@ local theme = lush(function(injected_functions)
     Headline5({ fg = C.blue, bg = C.bg0, gui = "bold" }),
     Headline6({ fg = C.orange, bg = C.bg0, gui = "italic" }),
     Dash({ fg = C.bg3, gui = "bold" }),
-    CodeBlock({ bg = C.bg1 }),
+    CodeBlock({ bg = C.bg2 }),
 
     ---- *render-markdown.txt* -------------------------------------------------
 
@@ -894,7 +894,7 @@ local theme = lush(function(injected_functions)
     IndentBlanklineContextStart({ sp = C.bg_blue.li(10), bg = C.transparent, gui = "underline" }),
 
     ---- :help mini.indentscope ------------------------------------------------
-    MiniIndentscopeSymbol({ fg = C.teal.lighten(10) }),
+    MiniIndentscopeSymbol({ fg = C.teal.darken(30) }),
 
     ---- :help mini.jump.txt / mini.jump2d.txt  --------------------------------
 
@@ -1121,18 +1121,28 @@ local theme = lush(function(injected_functions)
     ---- :help git-signs.txt ---------------------------------------------------
 
     GitSignsAdd({ fg = C.bright_green }),
+    GitSignsAddCul({ fg = C.bright_green, bg = C.bg_dark }),
     GitSignsDelete({ fg = C.red }),
+    GitSignsDeleteCul({ fg = C.red, bg = C.bg_dark }),
     GitSignsTopdelete({ GitSignsDelete }),
     GitSignsChange({ fg = C.orange }),
+    GitSignsChangeCul({ fg = C.orange, bg = C.bg_dark }),
     GitSignsChangedelete({ GitSignsChange }),
 
-    GitSignsAddCursorLine({ fg = C.bright_green, bg = C.bg_dark }),
-    GitSignsDeleteCursorLine({ fg = C.red, bg = C.bg_dark }),
-    GitSignsChangeCursorLine({ fg = C.orange, bg = C.bg_dark }),
+    -- GitSignsAddCursorLine({ fg = C.bright_green, bg = C.bg_dark }),
+    -- GitSignsDeleteCursorLine({ fg = C.red, bg = C.bg_dark }),
+    -- GitSignsChangeCursorLine({ fg = C.orange, bg = C.bg_dark }),
 
     GitSignsAddNr({ fg = C.bright_green }),
     GitSignsDeleteNr({ fg = C.red }),
     GitSignsChangeNr({ fg = C.orange }),
+
+    -- 'signs.add.culhl' is now deprecated, please define highlight 'GitSignsAddCul' e.g:
+    --   vim.api.nvim_set_hl(0, 'GitSignsAddCul', { link = 'GitSignsAddCursorLine' })
+    -- 'signs.change.culhl' is now deprecated, please define highlight 'GitSignsChangeCul' e.g:
+    --   vim.api.nvim_set_hl(0, 'GitSignsChangeCul', { link = 'GitSignsChangeCursorLine' })
+    -- 'signs.delete.culhl' is now deprecated, please define highlight 'GitSignsDeleteCul' e.g:
+    --   vim.api.nvim_set_hl(0, 'GitSignsDeleteCul', { link = 'GitSignsDeleteCursorLine' })
 
     ---- tmux-popup ------------------------------------------------------------
 

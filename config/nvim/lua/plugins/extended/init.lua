@@ -6,6 +6,10 @@ local icons = SETTINGS.icons
 return {
   {
     {
+      "max397574/better-escape.nvim",
+      config = function() require("better_escape").setup() end,
+    },
+    {
       "farmergreg/vim-lastplace",
       lazy = false,
       init = function()
@@ -367,10 +371,14 @@ return {
 
   { -- lua alternative to the official codeium.vim plugin https://github.com/Exafunction/codeium.vim
     "monkoose/neocodeium",
+    cond = function() return vim.g.ai == "neocodeium" end,
     event = "InsertEnter",
     cmd = "NeoCodeium",
     opts = {
       filetypes = {
+        oil = false,
+        gitcommit = false,
+        markdown = false,
         DressingInput = false,
         TelescopePrompt = false,
         noice = false, -- sometimes triggered in error-buffers
@@ -402,5 +410,111 @@ return {
         desc = "󰚩 NeoCodeium Suggestions",
       },
     },
+  },
+  -- {
+  --   "milanglacier/minuet-ai.nvim",
+  --   dependencies = { { "nvim-lua/plenary.nvim" }, { "hrsh7th/nvim-cmp" } },
+  --   config = function()
+  --     require("minuet").setup({
+  --       provider = "openai", -- openai, codestral, gemini
+  --       request_timeout = 4,
+  --       throttle = 2000,
+  --       notify = "verbose",
+  --       provider_options = {
+  --         codestral = {
+  --           optional = {
+  --             stop = { "\n\n" },
+  --             max_tokens = 256,
+  --           },
+  --         },
+  --         gemini = {
+  --           optional = {
+  --             generationConfig = {
+  --               maxOutputTokens = 256,
+  --               topP = 0.9,
+  --             },
+  --             safetySettings = {
+  --               {
+  --                 category = "HARM_CATEGORY_DANGEROUS_CONTENT",
+  --                 threshold = "BLOCK_NONE",
+  --               },
+  --               {
+  --                 category = "HARM_CATEGORY_HATE_SPEECH",
+  --                 threshold = "BLOCK_NONE",
+  --               },
+  --               {
+  --                 category = "HARM_CATEGORY_HARASSMENT",
+  --                 threshold = "BLOCK_NONE",
+  --               },
+  --               {
+  --                 category = "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+  --                 threshold = "BLOCK_NONE",
+  --               },
+  --             },
+  --           },
+  --         },
+  --         openai = {
+  --           optional = {
+  --             max_tokens = 256,
+  --             top_p = 0.9,
+  --           },
+  --         },
+  --         openai_compatible = {
+  --           optional = {
+  --             max_tokens = 256,
+  --             top_p = 0.9,
+  --           },
+  --         },
+  --       },
+  --     })
+  --   end,
+  --   cond = function() return vim.g.ai == "minuet" end,
+  -- },
+  -- {
+  --   "olimorris/codecompanion.nvim",
+  --   cmd = { "CodeCompanion", "CodeCompanionActions" },
+  --   cond = function() return vim.g.ai == "codecompanion" end,
+  --   dependencies = {
+  --     "nvim-lua/plenary.nvim",
+  --     "nvim-treesitter/nvim-treesitter",
+  --     -- "stevearc/dressing.nvim", -- Optional: Improves the default Neovim UI
+  --   },
+  --   config = function()
+  --     local code_companion = require("codecompanion")
+  --     local adapters = require("codecompanion.adapters")
+  --
+  --     code_companion.setup({
+  --       adapters = {
+  --         ollama = adapters.use("ollama", {
+  --           schema = {
+  --             model = {
+  --               default = get_preferred_model(),
+  --             },
+  --           },
+  --         }),
+  --       },
+  --       strategies = {
+  --         chat = { adapter = "ollama" },
+  --         inline = { adapter = "ollama" },
+  --         agent = { adapter = "ollama" },
+  --       },
+  --     })
+  --   end,
+  -- },
+  {
+    "OXY2DEV/helpview.nvim",
+    lazy = false,
+    dependencies = {
+      "nvim-treesitter/nvim-treesitter",
+    },
+  },
+  {
+    "MagicDuck/grug-far.nvim",
+    cmd = "GrugFar",
+    config = function()
+      require("grug-far").setup({
+        windowCreationCommand = "botright vsplit %",
+      })
+    end,
   },
 }

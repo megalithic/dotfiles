@@ -78,6 +78,7 @@ brew "dbus"
 brew "defaultbrowser" if OS.mac?
 brew "deno"
 brew "diff-so-fancy"
+brew "difftastic"
 brew "dnsmasq"
 brew "dockutil" if OS.mac?
 # USE DOCKER CASK FOR MUCH EASE!

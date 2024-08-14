@@ -37,5 +37,13 @@
 # uses the clipboard if the text is longer than 'clipboard_threshold' characters.
 # clipboard_threshold: 100
 
-backend: auto
+search_trigger: OFF
+search_shortcut: ""
+
+show_icon: true
+show_notifications: true
+auto_restart: true # alternatively via Makefile, but is slower and annoying to sync
+
+undo_backspace: false # backspace undos expansion
+backend: Auto
 # For a list of all the available options, visit the official docs at: https://espanso.org/docs/

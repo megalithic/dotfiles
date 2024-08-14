@@ -30,7 +30,7 @@ _G.P = function(...)
   hs.console.printStyledtext(ts() .. " -> " .. contents)
 end
 _G.I = hs.inspect.inspect
-_G.defaultFont = { name = "JetBrainsMono Nerd Font", size = 18 }
+_G.DefaultFont = { name = "JetBrainsMono Nerd Font", size = 18 }
 
 local stext = require("hs.styledtext").new
 local getInfo = function()
@@ -46,7 +46,7 @@ function _G.note(msg, tag1, tag2)
 
   hs.console.printStyledtext(stext(ts() .. " -> " .. tag .. msg, {
     color = { hex = "#444444", alpha = 1 },
-    font = defaultFont,
+    font = DefaultFont,
   }))
 end
 
@@ -57,7 +57,7 @@ function _G.info(msg, tag1, tag2)
 
   hs.console.printStyledtext(stext(ts() .. " -> " .. tag .. msg, {
     color = { hex = "#51afef", alpha = 0.65 },
-    font = defaultFont,
+    font = DefaultFont,
   }))
 end
 
@@ -68,7 +68,7 @@ function _G.success(msg, tag1, tag2)
 
   hs.console.printStyledtext(stext(ts() .. " -> " .. tag .. msg, {
     color = { hex = "#a7c080", alpha = 1 },
-    font = defaultFont,
+    font = DefaultFont,
   }))
 end
 
@@ -79,7 +79,7 @@ function _G.error(msg, tag1, tag2)
 
   hs.console.printStyledtext(stext(ts() .. " -> " .. tag .. getInfo() .. msg, {
     color = { hex = "#c43e1f", alpha = 1 },
-    font = defaultFont,
+    font = DefaultFont,
   }))
 end
 
@@ -91,7 +91,7 @@ function _G.warn(msg, tag1, tag2)
   -- tag = tag and "[WARN] " or ""
   hs.console.printStyledtext(stext(ts() .. " -> " .. tag .. msg, {
     color = { hex = "#FF922B", alpha = 1 },
-    font = defaultFont,
+    font = DefaultFont,
   }))
 end
 
@@ -106,7 +106,7 @@ function _G.dbg(msg, tag1, tag2)
   hs.console.printStyledtext(stext(ts() .. " -> " .. tag .. msg, {
     color = { hex = "#dddddd", alpha = 1 },
     backgroundColor = { hex = "#222222", alpha = 1 },
-    font = defaultFont,
+    font = DefaultFont,
   }))
 end
 
@@ -247,7 +247,7 @@ _G.CONFIG_KEY = "_mega_config"
 
 local con = require("hs.console")
 con.darkMode(true)
-con.consoleFont(defaultFont)
+con.consoleFont(DefaultFont)
 con.alpha(0.985)
 local darkGrayColor = { red = 26 / 255, green = 28 / 255, blue = 39 / 255, alpha = 1.0 }
 local whiteColor = { white = 1.0, alpha = 1.0 }

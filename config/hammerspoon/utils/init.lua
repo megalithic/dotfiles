@@ -92,7 +92,7 @@ function obj.deep_merge(t1, t2) obj.table_merge(t1, t2, { strategy = "deep" }) e
 
 function obj.shallow_merge(t1, t2) obj.table_merge(t1, t2, { strategy = "shallow" }) end
 
-function obj.template(template, replacements) return string.gsub(template, "{(.-)}", replacements) end
+function obj.template(template, vars) return string.gsub(template, "{(.-)}", vars) end
 
 function obj.tlen(t)
   local len = 0

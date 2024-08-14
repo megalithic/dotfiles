@@ -52,7 +52,7 @@ local function connectDevice(deviceStr)
   local device = obj.devices[deviceStr]
   if not device then return end
 
-  info(fmt(":: please wait, connecting %s %s..", device.name, device.icon))
+  info(fmt("connecting %s %s..", device.icon, device.name))
 
   hs.task
     .new(
@@ -147,7 +147,7 @@ function obj:start()
     local toggledDevice = false
     toggleDevice("phonak", function(isConnected)
       if isConnected and not toggledDevice then
-        info(fmt(":: connected %s %s", device.name, device.icon))
+        success(fmt("connected %s %s", device.icon, device.name))
 
         local audioDevice = hs.audiodevice.defaultOutputDevice()
         cur_balance = audioDevice:balance()

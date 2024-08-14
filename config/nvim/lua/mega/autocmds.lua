@@ -416,6 +416,21 @@ function M.apply()
 
   M.augroup("Utilities", {
     {
+      event = { "UIEnter", "ColorScheme" },
+      desc = "remove terminal padding around neovim instance",
+      command = function(_args)
+        local normal = vim.api.nvim_get_hl(0, { name = "Normal" })
+        if not normal.bg then return end
+        io.write(string.format("\027]11;#%06x\027\\", normal.bg))
+      end,
+    },
+    {
+      event = { "UILeave" },
+      desc = "remove terminal padding around neovim instance",
+      command = function(_args) io.write("\027]111\027\\") end,
+    },
+
+    {
       event = { "BufWritePost" },
       desc = "chmod +x shell scripts on-demand",
       command = function(args)

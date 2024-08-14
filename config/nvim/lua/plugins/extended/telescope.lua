@@ -177,45 +177,6 @@ return {
 
       local function extensions(name) return require("telescope").extensions[name] end
 
-      local ts = setmetatable({}, {
-        __index = function(_, key)
-          return function(topts)
-            local get_selection = function()
-              local rv = vim.fn.getreg("v")
-              local rt = vim.fn.getregtype("v")
-              vim.cmd([[noautocmd silent normal! "vy]])
-              local selection = vim.fn.getreg("v")
-              vim.fn.setreg("v", rv, rt)
-              return vim.split(selection, "\n")
-            end
-
-            local builtin = require("telescope.builtin")
-            local mode = vim.api.nvim_get_mode().mode
-            topts = topts or {}
-            if mode == "v" or mode == "V" or mode == "" then topts.default_text = table.concat(get_selection()) end
-            if key == "grepify" or key == "egrepify" then
-              extensions("egrepify").egrepify(with_title(topts, { title = "live grep (egrepify)" }))
-            elseif key == "undo" then
-              extensions("undo").undo(with_title(topts, { title = "undo" }))
-            elseif key == "smart_open" or key == "smart" then
-              -- FIXME: if we have a title in topts, use that title with the default title
-              local title = "smartly find files"
-              -- if topts.title ~= nil then title = fmt("smartly find files (%s)", topts.title) end
-              extensions("smart_open").smart_open(with_title(topts, { title = title }))
-            elseif key == "grep" or key == "live_grep" then
-              extensions("live_grep_args").live_grep_args(with_title(topts, { title = "live grep args" }))
-            elseif key == "corrode" then
-              extensions("corrode").corrode(with_title(topts, { title = "find files (corrode)" }))
-            elseif key == "find_files" or key == "fd" then
-              -- extensions("corrode").corrode(with_title(topts, { title = "find files (corrode)" }))
-              builtin[key](with_title(topts, { title = "find files" }))
-            else
-              builtin[key](topts)
-            end
-          end
-        end,
-      })
-
       local function get_border(opts)
         opts = vim.tbl_deep_extend("force", opts or {}, {
           borderchars = {
@@ -254,6 +215,45 @@ return {
         return require("telescope.themes").get_ivy(get_border(opts))
       end
       mega.picker.ivy = ivy
+
+      local ts = setmetatable({}, {
+        __index = function(_, key)
+          return function(topts)
+            local get_selection = function()
+              local rv = vim.fn.getreg("v")
+              local rt = vim.fn.getregtype("v")
+              vim.cmd([[noautocmd silent normal! "vy]])
+              local selection = vim.fn.getreg("v")
+              vim.fn.setreg("v", rv, rt)
+              return vim.split(selection, "\n")
+            end
+
+            local builtin = require("telescope.builtin")
+            local mode = vim.api.nvim_get_mode().mode
+            topts = topts or {}
+            if mode == "v" or mode == "V" or mode == "" then topts.default_text = table.concat(get_selection()) end
+            if key == "grepify" or key == "egrepify" then
+              extensions("egrepify").egrepify(with_title(topts, { title = "live grep (egrepify)" }))
+            elseif key == "undo" then
+              extensions("undo").undo(with_title(topts, { title = "undo" }))
+            elseif key == "smart_open" or key == "smart" then
+              -- FIXME: if we have a title in topts, use that title with the default title
+              local title = "smartly find files"
+              -- if topts.title ~= nil then title = fmt("smartly find files (%s)", topts.title) end
+              extensions("smart_open").smart_open(with_title(topts, { title = title }))
+            elseif key == "grep" or key == "live_grep" then
+              extensions("live_grep_args").live_grep_args(with_title(topts, { title = "live grep args" }))
+            elseif key == "corrode" then
+              extensions("corrode").corrode(with_title(topts, { title = "find files (corrode)" }))
+            elseif key == "find_files" or key == "fd" then
+              -- extensions("corrode").corrode(with_title(topts, { title = "find files (corrode)" }))
+              builtin[key](with_title(topts, { title = "find files" }))
+            else
+              builtin[key](ivy(topts))
+            end
+          end
+        end,
+      })
 
       -- local grep = function(...) ts.live_grep(ivy(...)) end
       local grep = function(opts)

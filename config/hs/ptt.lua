@@ -14,7 +14,10 @@ obj.defaultInputVolume = 65
 obj.pushed = false
 
 obj.icons = {
-  ["push-to-mute"] = req("hs.styledtext").new("", { font = { name = DefaultFont.name, size = 13 } }),
+  ["push-to-mute"] = req("hs.styledtext").new("", {
+    color = { hex = "#c43e1f" },
+    font = { name = DefaultFont.name, size = 13 },
+  }),
   ["push-to-talk"] = req("hs.styledtext").new("", { font = { name = DefaultFont.name, size = 13 } }),
 }
 

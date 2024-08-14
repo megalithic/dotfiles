@@ -106,19 +106,19 @@ return {
       signs = {
         add = {
           -- hl = "GitSignsAdd",
-          culhl = "GitSignsAddCursorLine",
+          -- culhl = "GitSignsAddCursorLine",
           -- numhl = "GitSignsAddNum",
           text = icons.git.add,
         }, -- alts: ▕, ▎, ┃, │, ▌, ▎ 🮉
         change = {
           -- hl = "GitSignsChange",
-          culhl = "GitSignsChangeCursorLine",
+          -- culhl = "GitSignsChangeCursorLine",
           -- numhl = "GitSignsChangeNum",
           text = icons.git.change,
         }, -- alts: ▎║▎
         delete = {
           -- hl = "GitSignsDelete",
-          culhl = "GitSignsDeleteCursorLine",
+          -- culhl = "GitSignsDeleteCursorLine",
           -- numhl = "GitSignsDeleteNum",
           text = icons.git.delete,
         }, -- alts: ┊▎▎

@@ -257,6 +257,8 @@ local function extmark_signs(curbuf, lnum)
   local signs = api.nvim_buf_get_extmarks(curbuf, -1, { lnum, 0 }, { lnum, -1 }, { details = true, type = "sign" })
   local sns = U.fold(function(acc, item)
     item = format_text(item[4], "sign_text")
+    if not item then return acc end
+
     local txt, hl = item.sign_text, item.sign_hl_group
     -- if txt ~= "" and txt ~= " " then print(txt) end
     local is_git = hl ~= nil and hl:match("^Git")

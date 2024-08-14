@@ -24,6 +24,9 @@ public
 **/dotbot
 **/dotbot-plugins
 **/config/zsh/plugins
+!**/config/hs/Spoons
+**/config/hs/Spoons/URLDispatcher.spoon
+**/config/hs/Spoons/EmmyLua.spoon
 !**/config/hammerspoon/Spoons
 **/config/hammerspoon/Spoons/URLDispatcher.spoon
 **/config/hammerspoon/Spoons/EmmyLua.spoon

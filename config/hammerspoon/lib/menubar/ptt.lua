@@ -30,8 +30,8 @@ obj.state = obj.defaultState
 obj.defaultInputVolume = 65
 obj.pushed = false
 
-local talkIcon = require("hs.styledtext").new("", { font = { name = defaultFont.name, size = 13 } })
-local muteIcon = require("hs.styledtext").new("", { font = { name = defaultFont.name, size = 13 } })
+local talkIcon = require("hs.styledtext").new("", { font = { name = DefaultFont.name, size = 13 } })
+local muteIcon = require("hs.styledtext").new("", { font = { name = DefaultFont.name, size = 13 } })
 obj.icons = { ["push-to-mute"] = talkIcon, ["push-to-talk"] = muteIcon }
 
 obj.states = function()

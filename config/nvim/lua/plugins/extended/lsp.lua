@@ -165,6 +165,19 @@ return {
           definition_handler(err, result, ctx, config)
         end
 
+        local references_handler = vim.lsp.handlers["textDocument/references"]
+        vim.lsp.handlers["textDocument/references"] = function(err, result, ctx, config)
+          local client_name = vim.lsp.get_client_by_id(ctx.client_id).name
+          dbg(client_name)
+          -- disables diagnostic reporting for specific clients
+          if vim.tbl_contains(SETTINGS.references_exclusions, client_name) then
+            print("returning for " .. client_name)
+            return
+          end
+
+          references_handler(err, result, ctx, config)
+        end
+
         -- if action opens up qf list, open the first item and close the list
         local function choose_list_first(items)
           print(#items)
@@ -197,6 +210,7 @@ return {
         map("gD", function()
           vim.cmd.vsplit()
           vim.lsp.buf.definition()
+          vim.cmd.normal("zz")
           -- vim.lsp.buf.definition({ on_list = choose_list_first })
         end, "[g]oto [d]efinition (split)")
         map("gr", require("telescope.builtin").lsp_references, "[g]oto [r]eferences")
@@ -738,8 +752,9 @@ return {
     opts = true,
   },
   {
+    -- FIXME: https://github.com/mhanberg/output-panel.nvim/issues/5
+    enabled = false,
     "mhanberg/output-panel.nvim",
-    -- event = "VeryLazy",
     lazy = false,
     keys = {
       {

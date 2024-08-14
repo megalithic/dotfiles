@@ -74,6 +74,16 @@ return {
       local cmp = require("cmp")
       local MIN_MENU_WIDTH, MAX_MENU_WIDTH = 25, math.min(50, math.floor(vim.o.columns * 0.5))
 
+      local neocodeium = require("neocodeium")
+      local commands = require("neocodeium.commands")
+
+      -- cmp.event:on("menu_opened", function()
+      --   commands.disable()
+      --   neocodeium.clear()
+      -- end)
+      --
+      -- cmp.event:on("menu_closed", function() commands.enable() end)
+
       local has_words_before = function()
         local line, col = unpack(vim.api.nvim_win_get_cursor(0))
         return col ~= 0 and vim.api.nvim_buf_get_lines(0, line - 1, line, true)[1]:sub(col, col):match("%s") == nil
@@ -147,6 +157,8 @@ return {
           --  This will auto-import if your LSP supports it.
           --  This will expand snippets if the LSP sent a snippet.
           -- ["<C-y>"] = cmp.mapping.confirm({ select = true }),
+
+          -- ["<C-y>"] = require("minuet").make_cmp_map(),
           ["<C-e>"] = cmp.mapping.abort(),
 
           ["<CR>"] = function(fallback)
@@ -165,10 +177,10 @@ return {
             i = tab,
             s = tab,
             c = function()
-              if vim.fn.getcmdline():sub(1, 1) == "!" then
-                vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<C-z>", true, false, true), "n", false)
-                return
-              end
+              -- if vim.fn.getcmdline():sub(1, 1) == "!" then
+              --   vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<C-z>", true, false, true), "n", false)
+              --   return
+              -- end
               if cmp.visible() then
                 cmp.confirm({ select = true })
               else
@@ -255,6 +267,7 @@ return {
                 nvim_lsp = "[lsp]",
                 luasnip = "[lsnip]",
                 vsnip = "[vsnip]",
+                -- minuet = "[󱗻 ai]",
                 snippets = "[snips]",
                 -- codeium = "[code]",
                 nvim_lua = "[nlua]",
@@ -375,9 +388,10 @@ return {
           -- { name = "path" },
           {
             name = "cmdline",
-            keyword_length = 3,
+            keyword_length = 2,
             option = {
-              ignore_cmds = { "Man", "!" },
+              ignore_cmds = {},
+              -- ignore_cmds = { "Man", "!" },
             },
             keyword_pattern = [=[[^[:blank:]\!]*]=],
           },

@@ -78,6 +78,7 @@ return {
         show_hidden = true,
       },
       keymaps = {
+        ["<C-y>"] = "actions.yank_entry",
         ["g?"] = "actions.show_help",
         ["gs"] = "actions.change_sort",
         ["gx"] = "actions.open_external",

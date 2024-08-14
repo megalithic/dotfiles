@@ -1,6 +1,5 @@
 local obj = {}
 local _appObj = nil
-local browser = hs.application.get(BROWSER)
 
 obj.__index = obj
 obj.name = "context.zoom"
@@ -25,10 +24,9 @@ function obj:start(opts)
       local zoom = hs.application.get("zoom.us")
 
       hs.timer.waitUntil(function() return zoom:getWindow("Zoom Meeting") end, function()
-        -- L.req("lib.dnd").on("zoom")
-        -- L.req("lib.watchers.dock").refreshInput("docked")
+        require("utils").dnd(true, "zoom")
         hs.spotify.pause()
-        require("ptt").setState("push-to-talk")
+        require("ptt").setMode("push-to-talk")
         require("browser").killTabsByDomain("zoom.us")
 
         local target_close_window = zoom:getWindow("Zoom")
@@ -36,7 +34,7 @@ function obj:start(opts)
 
         local layouts = {
           { "zoom.us", "Zoom Meeting", hs.screen.primaryScreen():name(), hs.layout.left50, nil, nil },
-          { browser:name(), nil, hs.screen.primaryScreen():name(), hs.layout.right50, nil, nil },
+          { hs.application.get(BROWSER):name(), nil, hs.screen.primaryScreen():name(), hs.layout.right50, nil, nil },
           -- { term:name(), nil, hs.screen.primaryScreen():name(), hs.layout.maximized, nil, nil },
         }
         hs.layout.apply(layouts)
@@ -63,12 +61,12 @@ function obj:stop(opts)
     -- REF: https://github.com/mrjones2014/dotfiles/blob/master/.config/hammerspoon/zoom-killer.lua
     _appObj:kill()
   elseif event == hs.application.watcher.terminated then
-    require("ptt").setState("push-to-talk")
-    -- L.req("lib.dnd").off()
+    require("ptt").setMode("push-to-talk")
+    require("utils").dnd(false, "back")
 
     do
-      if browser ~= nil then
-        local browser_win = browser:mainWindow()
+      if hs.application.get(BROWSER) ~= nil then
+        local browser_win = hs.application.get(BROWSER):mainWindow()
         if browser_win ~= nil then browser_win:moveToUnit(hs.layout.maximized) end
       end
 
