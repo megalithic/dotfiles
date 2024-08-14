@@ -62,7 +62,7 @@ function obj.tlen(t)
 end
 
 ---@param dndStatus boolean|string dnd status on or off as a boolean to pass to the dnd binary
----@param slackStatus string slack status to pass to the slck binary
+---@param slackStatus string|nil slack status to pass to the slck binary
 function obj.dnd(dndStatus, slackStatus)
   if type(dndStatus) == "boolean" then dndStatus = dndStatus and "on" or "off" end
 
@@ -72,26 +72,30 @@ function obj.dnd(dndStatus, slackStatus)
       :start()
   end
 
-  -- if slackStatus ~= nil and slackStatus ~= "" then
-  --   local slck = hs.task.new("/opt/homebrew/bin/zsh", function(stdTask, stdOut, stdErr)
-  --     dbg({ stdTask, stdOut, stdErr }, true)
-  --     info("[SLCK]: " .. slackStatus)
-  --   end, { "-lc", obj.slckCmd, slackStatus })
-  --   -- local slck = hs.task.new(obj.slckCmd, function(stdTask, stdOut, stdErr)
-  --   --   dbg({ stdTask, stdOut, stdErr }, true)
-  --   --   info("[SLCK]: " .. slackStatus)
-  --   -- end, { slackStatus })
-  --   slck:setEnvironment({
-  --     TERM = "xterm-256color",
-  --     -- HOMEBREW_PREFIX = "/opt/homebrew",
-  --     -- HOME = os.getenv("HOME"),
-  --     -- PATH = os.getenv("PATH") .. ":/opt/homebrew/bin",
-  --   })
-  --
-  --   slck:start()
-  --
-  --   dbg({ slck }, true)
-  -- end
+  if slackStatus ~= nil and slackStatus ~= "" then obj.slack(slackStatus) end
+end
+
+function obj.slack(slackStatus)
+  if slackStatus ~= nil and slackStatus ~= "" then
+    local slck = hs.task.new("/opt/homebrew/bin/zsh", function(stdTask, stdOut, stdErr)
+      dbg({ stdTask, stdOut, stdErr }, true)
+      info("[SLCK]: " .. slackStatus)
+    end, { "-lc", obj.slckCmd, slackStatus })
+    -- local slck = hs.task.new(obj.slckCmd, function(stdTask, stdOut, stdErr)
+    --   dbg({ stdTask, stdOut, stdErr }, true)
+    --   info("[SLCK]: " .. slackStatus)
+    -- end, { slackStatus })
+    slck:setEnvironment({
+      TERM = "xterm-256color",
+      -- HOMEBREW_PREFIX = "/opt/homebrew",
+      -- HOME = os.getenv("HOME"),
+      -- PATH = os.getenv("PATH") .. ":/opt/homebrew/bin",
+    })
+
+    slck:start()
+
+    dbg({ slck }, true)
+  end
 end
 
 return obj

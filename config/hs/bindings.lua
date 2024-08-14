@@ -1,5 +1,7 @@
 local wm = req("wm")
 local summon = req("summon")
+local chain = req("chain")
+local enum = req("hs.fnutils")
 
 -- [ APP LAUNCHERS ] -----------------------------------------------------------
 
@@ -66,37 +68,71 @@ req("hyper")
 local modality = req("modality"):start({ id = "wm", key = "l" })
 modality
   :bind({}, "escape", function() modality:exit() end)
-  :bind({}, "return", function() wm.place(POSITIONS.full) end, function() modality:delayedExit(0.1) end)
+  -- :bind(
+  --   {},
+  --   "space",
+  --   req("chain")({
+  --     POSITIONS.center.large,
+  --     POSITIONS.center.medium,
+  --     POSITIONS.center.small,
+  --     POSITIONS.center.tiny,
+  --     POSITIONS.center.mini,
+  --   }, modality)
+  -- )
+  :bind(
+    {},
+    "return",
+    function() wm.place(POSITIONS.full) end,
+    function() modality:delayedExit(0.1) end
+  )
   :bind({ "shift" }, "return", function()
     wm.toNextScreen()
     wm.place(POSITIONS.full)
   end, function() modality:delayedExit(0.1) end)
-  :bind({}, "l", function() wm.place(POSITIONS.halves.right) end, function() modality:delayedExit(0.1) end)
+  :bind(
+    {},
+    "l",
+    chain(
+      enum.map({ "thirds", "halves", "twoThirds", "fiveSixths", "sixths" }, function(size)
+        if type(POSITIONS[size]) == "string" then return POSITIONS[size] end
+        return POSITIONS[size]["right"]
+      end),
+      modality,
+      1.0
+    )
+  )
   :bind({ "shift" }, "l", function()
     wm.toNextScreen()
     wm.place(POSITIONS.halves.right)
   end, function() modality:exit() end)
-  :bind({}, "h", function() wm.place(POSITIONS.halves.left) end, function() modality:delayedExit(0.1) end)
+  :bind(
+    {},
+    "h",
+    chain(
+      enum.map({ "thirds", "halves", "twoThirds", "fiveSixths", "sixths" }, function(size)
+        if type(POSITIONS[size]) == "string" then return POSITIONS[size] end
+        return POSITIONS[size]["left"]
+      end),
+      modality,
+      1.0
+    )
+  )
   :bind({ "shift" }, "h", function()
     wm.toNextScreen()
     wm.place(POSITIONS.halves.right)
   end, function() modality:exit() end)
   :bind({}, "j", function() wm.toNextScreen() end, function() modality:delayedExit(0.1) end)
-  :bind({}, "k", function()
-    wm.place(POSITIONS.center.large)
-    modality:exit()
-
-    -- local chain = req("chain")
-    -- -- wm.place(POSITIONS.center.large)
-    --
-    -- chain({
-    --   POSITIONS.center.large,
-    --   POSITIONS.center.medium,
-    --   POSITIONS.center.small,
-    --   POSITIONS.center.tiny,
-    --   POSITIONS.center.mini,
-    -- }, modality)
-  end) --, function() modality:delayedExit(0.1) end)
+  :bind(
+    {},
+    "k",
+    chain({
+      POSITIONS.center.large,
+      POSITIONS.center.medium,
+      POSITIONS.center.small,
+      POSITIONS.center.tiny,
+      POSITIONS.center.mini,
+    }, modality, 1.0)
+  )
   :bind({}, "v", function()
     wm.tile()
     modality:exit()

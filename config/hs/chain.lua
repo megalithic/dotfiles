@@ -21,10 +21,14 @@ obj.lastSeenChain = nil
 obj.lastSeenWindow = nil
 obj.lastSeenAt = nil
 
-obj.place = function(movements, modal)
+obj.placeInSequence = function(movements, modal, interval)
+  interval = interval or 1.0
+
   local chainResetInterval = 2 -- seconds
   local cycleLength = #movements
   local sequenceNumber = 1
+
+  -- dbg(I({ movements, modal }), true)
 
   return function()
     local win = hs.window.frontmostWindow()
@@ -45,8 +49,8 @@ obj.place = function(movements, modal)
     hs.grid.set(win, movements[sequenceNumber])
     sequenceNumber = sequenceNumber % cycleLength + 1
 
-    if modal then modal:delayedExit(0.2) end
+    if modal ~= nil then modal:delayedExit(interval) end
   end
 end
 
-return function(movements, modal) obj.place(movements, modal) end
+return function(...) return obj.placeInSequence(...) end

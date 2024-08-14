@@ -25,6 +25,7 @@ end
 
 -- interface: (app, initializing)
 function obj.watchApp(app, _)
+  if app == nil then return end
   if obj.watchers.app[app:pid()] then return end
 
   local watcher = app:newWatcher(obj.handleWatchedEvent, app)

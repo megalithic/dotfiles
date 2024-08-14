@@ -52,19 +52,13 @@ local function connectDevice(deviceStr)
   local device = obj.devices[deviceStr]
   if not device then return end
 
-  info(fmt("connecting %s %s..", device.icon, device.name))
+  info(fmt("[%s] connecting %s %s..", obj.name, device.icon, device.name))
 
   hs.task
-    .new(
-      obj.btUtil,
-      function(exitCode, stdOut, stdErr)
-        dbg("connectDevice/task: \nexitCode: %s\nstdOut: %s\nstdErr: %s", exitCode, stdOut, stdErr)
-      end,
-      {
-        "--connect",
-        device.id,
-      }
-    )
+    .new(obj.btUtil, function(_exitCode, _stdOut, _stdErr) end, {
+      "--connect",
+      device.id,
+    })
     :start()
 end
 
@@ -78,8 +72,6 @@ local function checkDevice(deviceStr, fn)
     .new(obj.btUtil, function(_, stdout)
       stdout = string.gsub(stdout, "\n$", "")
       local isConnected = stdout == "1"
-
-      dbg("checkDevice/isConnected? %s", isConnected)
 
       connectedState = isConnected
 
@@ -100,7 +92,6 @@ local function toggleDevice(deviceStr, fn)
   hs.timer.doUntil(function()
     checkDevice(deviceStr, function(connectedState)
       isConnected = connectedState
-      dbg("toggleDevice/checkDevice/callback/isConnected? %s", connectedState)
 
       local device = obj.devices[deviceStr]
 
@@ -111,11 +102,7 @@ local function toggleDevice(deviceStr, fn)
       return connectedState
     end)
 
-    if isConnected then
-      dbg("%s is connected..", deviceStr)
-
-      require("watchers.dock"):setAudio(DOCK.docked)
-    end
+    if isConnected then require("watchers.dock"):setAudio(DOCK.docked) end
 
     return isConnected
   end, function() connectDevice(deviceStr) end)
@@ -147,7 +134,7 @@ function obj:start()
     local toggledDevice = false
     toggleDevice("phonak", function(isConnected)
       if isConnected and not toggledDevice then
-        success(fmt("connected %s %s", device.icon, device.name))
+        success(fmt("[%s] connected %s %s", obj.name, device.icon, device.name))
 
         local audioDevice = hs.audiodevice.defaultOutputDevice()
         cur_balance = audioDevice:balance()
