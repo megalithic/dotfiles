@@ -68,23 +68,7 @@ req("hyper")
 local modality = req("modality"):start({ id = "wm", key = "l" })
 modality
   :bind({}, "escape", function() modality:exit() end)
-  -- :bind(
-  --   {},
-  --   "space",
-  --   req("chain")({
-  --     POSITIONS.center.large,
-  --     POSITIONS.center.medium,
-  --     POSITIONS.center.small,
-  --     POSITIONS.center.tiny,
-  --     POSITIONS.center.mini,
-  --   }, modality)
-  -- )
-  :bind(
-    {},
-    "return",
-    function() wm.place(POSITIONS.full) end,
-    function() modality:delayedExit(0.1) end
-  )
+  :bind({}, "return", function() wm.place(POSITIONS.full) end, function() modality:delayedExit(0.1) end)
   :bind({ "shift" }, "return", function()
     wm.toNextScreen()
     wm.place(POSITIONS.full)
@@ -93,7 +77,7 @@ modality
     {},
     "l",
     chain(
-      enum.map({ "thirds", "halves", "twoThirds", "fiveSixths", "sixths" }, function(size)
+      enum.map({ "halves", "thirds", "twoThirds", "fiveSixths", "sixths" }, function(size)
         if type(POSITIONS[size]) == "string" then return POSITIONS[size] end
         return POSITIONS[size]["right"]
       end),
@@ -109,7 +93,7 @@ modality
     {},
     "h",
     chain(
-      enum.map({ "thirds", "halves", "twoThirds", "fiveSixths", "sixths" }, function(size)
+      enum.map({ "halves", "thirds", "twoThirds", "fiveSixths", "sixths" }, function(size)
         if type(POSITIONS[size]) == "string" then return POSITIONS[size] end
         return POSITIONS[size]["left"]
       end),
