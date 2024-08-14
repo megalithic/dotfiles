@@ -25,8 +25,8 @@ function obj:start(opts)
     do
       hs.spotify.pause()
       -- L.req("lib.menubar.keycastr"):start()
-      -- L.req("lib.dnd").on("obs")
-      require("ptt").setState("push-to-mute")
+      req("utils").dnd(true)
+      req("ptt").setState("push-to-mute")
 
       hs.layout.apply({
         { term:name(), nil, 1, hs.layout.maximized, nil, nil },
@@ -72,7 +72,7 @@ function obj:stop(opts)
     _appObj:kill()
   elseif event == hs.application.watcher.terminated then
     require("ptt").setState("push-to-talk")
-    -- L.req("lib.dnd").off()
+    req("utils").dnd(false)
 
     do
       -- L.req("lib.menubar.keycastr"):stop()

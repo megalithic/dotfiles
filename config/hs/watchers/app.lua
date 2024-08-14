@@ -12,18 +12,12 @@ obj.watchers = {
   context = {},
 }
 
--- interface: (appName, eventType, appObject)
-function obj.handleGlobalAppEvent(appName, event, appObj)
-  obj.runLayoutRulesForAppBundleID(appName, event, appObj)
-  obj.runContextForAppBundleID(appName, event, appObj)
-end
-
 -- interface: (element, event, watcher, info)
-function obj.handleAppEvent(element, event, _watcher, appObj)
+function obj.handleAppEvent(elementOrAppName, event, _watcher, app)
   -- dbg({ I(element), appObj:bundleID(), utils.eventEnums(event) }, true)
-  if element ~= nil then
-    obj.runLayoutRulesForAppBundleID(element, event, appObj)
-    obj.runContextForAppBundleID(element, event, appObj)
+  if elementOrAppName ~= nil then
+    obj.runLayoutRulesForAppBundleID(elementOrAppName, event, app)
+    obj.runContextForAppBundleID(elementOrAppName, event, app)
   end
 end
 
@@ -50,11 +44,11 @@ function obj.attachExistingApps()
   enum.each(apps, function(app) obj.watchApp(app, true) end)
 end
 
-function obj.runLayoutRulesForAppBundleID(elementOrAppName, event, appObj)
+function obj.runLayoutRulesForAppBundleID(elementOrAppName, event, app)
   local layoutableEvents = {
-    hs.uielement.watcher.windowCreated,
     hs.application.watcher.launched,
     hs.application.watcher.terminated,
+    -- hs.uielement.watcher.windowCreated,
     -- hs.application.watcher.activated,
     -- hs.application.watcher.deactivated,
     -- hs.uielement.watcher.applicationActivated,
@@ -62,29 +56,29 @@ function obj.runLayoutRulesForAppBundleID(elementOrAppName, event, appObj)
   }
 
   -- hs.timer.doAfter(0.3, function()
-  if appObj and enum.contains(layoutableEvents, event) then
+  if app and enum.contains(layoutableEvents, event) then
     hs.timer.waitUntil(
-      function() return #appObj:allWindows() > 0 and appObj:mainWindow() ~= nil end,
-      function() req("wm").placeApp(elementOrAppName, event, appObj) end
+      function() return #app:allWindows() > 0 and app:mainWindow() ~= nil end,
+      function() req("wm").placeApp(elementOrAppName, event, app) end
     )
   end
 
   -- end)
 end
 
-function obj.runContextForAppBundleID(elementOrAppName, event, appObj)
-  if not obj.watchers.context[appObj:bundleID()] then return end
+function obj.runContextForAppBundleID(elementOrAppName, event, app)
+  if not obj.watchers.context[app:bundleID()] then return end
 
   -- seems to work best with a slight delay
   -- hs.timer.doAfter(
   --   0.2,
   --   function()
   contexts:run({
-    context = obj.watchers.context[appObj:bundleID()],
+    context = obj.watchers.context[app:bundleID()],
     element = type(elementOrAppName) ~= "string" and elementOrAppName or nil,
     event = event,
-    appObj = appObj,
-    bundleID = appObj:bundleID(),
+    appObj = app,
+    bundleID = app:bundleID(),
   })
   --   end
   -- )
@@ -94,7 +88,10 @@ function obj:start()
   -- prepares all of our contexts scripts by initializing their potential hotkey modals and actions
   self.watchers.context = contexts:start()
   self.watchers.app = {}
-  self.globalWatcher = hs.application.watcher.new(self.handleGlobalAppEvent):start()
+  -- self.globalWatcher = hs.application.watcher.new(self.handleGlobalAppEvent):start()
+  self.globalWatcher = hs.application.watcher
+    .new(function(appName, event, app) obj.handleAppEvent(appName, event, nil, app) end)
+    :start()
   self.attachExistingApps()
 
   info(fmt("[START] %s", self.name))

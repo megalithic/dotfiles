@@ -84,24 +84,28 @@ obj.place = function(pos)
   return win
 end
 
-obj.placeApp = function(elementOrAppName, event, appObj)
-  local appLayout = LAYOUTS[appObj:bundleID()]
+obj.placeAllApps = function()
+  local apps = enum.filter(hs.application.runningApplications(), function(app) return app:title() ~= "Hammerspoon" end)
+  enum.each(apps, function(app) obj.placeApp(app:name(), "relayout", app) end)
+  hs.notify.new({ title = "hammerspork", subTitle = "layout reflow complete." }):send()
+end
+
+obj.placeApp = function(elementOrAppName, event, app)
+  local appLayout = LAYOUTS[app:bundleID()]
   if appLayout ~= nil then
     if appLayout.rules and #appLayout.rules > 0 then
       enum.each(appLayout.rules, function(rule)
         local winTitlePattern, screenNum, position = table.unpack(rule)
 
         winTitlePattern = (winTitlePattern ~= "") and winTitlePattern or nil
-        local win = winTitlePattern == nil and appObj:mainWindow() or hs.window.find(winTitlePattern)
+        local win = winTitlePattern == nil and app:mainWindow() or hs.window.find(winTitlePattern)
 
         if win == nil then
-          warn(fmt("[wm] layouts/%s (%s): %s not found", appObj:bundleID(), utils.eventEnums(event), I(win)))
+          warn(fmt("[wm] layouts/%s (%s): %s not found", app:bundleID(), utils.eventEnums(event), I(win)))
         end
 
         if win ~= nil then
-          note(
-            fmt("[wm] layouts/%s (%s): %s", appObj:bundleID(), utils.eventEnums(event), appObj:focusedWindow():title())
-          )
+          note(fmt("[wm] layouts/%s (%s): %s", app:bundleID(), utils.eventEnums(event), app:focusedWindow():title()))
 
           dbg(
             fmt(

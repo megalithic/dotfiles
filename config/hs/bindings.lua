@@ -52,10 +52,13 @@ req("hyper"):start({ id = "meeting" }):bind({}, "z", nil, function()
   end
 end)
 
-req("hyper"):start({ id = "utils" }):bind({ "shift" }, "r", nil, function()
-  hs.notify.new({ title = "hammerspork", subTitle = "config is reloading..." }):send()
-  hs.reload()
-end)
+req("hyper")
+  :start({ id = "utils" })
+  :bind({ "shift" }, "r", nil, function()
+    hs.notify.new({ title = "hammerspork", subTitle = "config is reloading..." }):send()
+    hs.reload()
+  end)
+  :bind({ "shift", "ctrl" }, "l", nil, function() req("wm").placeAllApps() end)
 
 -- [ MODAL LAUNCHERS ] ---------------------------------------------------------
 
