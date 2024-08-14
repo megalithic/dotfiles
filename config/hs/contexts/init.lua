@@ -9,24 +9,25 @@ obj.contextsPath = utils.resourcePath("./")
 obj.contextModals = {}
 
 obj.loggableEvents = {
-  hs.application.watcher.activated,
-  hs.application.watcher.launched,
   hs.uielement.watcher.windowCreated,
   hs.uielement.watcher.applicationActivated,
+  hs.uielement.watcher.applicationDeactivated,
+  hs.application.watcher.launched,
+  hs.application.watcher.activated,
   hs.application.watcher.deactivated,
   hs.application.watcher.terminated,
-  hs.uielement.watcher.applicationDeactivated,
 }
 
 function obj:run(opts)
   local context = opts["context"]
-  local appObj = opts["appObj"]
+  local app = opts["appObj"]
   local event = opts["event"]
   local bundleID = opts["bundleID"]
-  local contextId = opts["bundleID"] and bundleID or appObj:bundleID()
+  local metadata = opts["metadata"]
+  local contextId = opts["bundleID"] and bundleID or app:bundleID()
 
   if not context then
-    -- warn(fmt("[WARN] %s: No context found for %s", self.name, bundleID))
+    warn(fmt("[WARN] %s: No context found for %s", self.name, app:bundleID()))
     return self
   end
 
@@ -41,8 +42,9 @@ function obj:run(opts)
   then
     context:start({
       event = event,
-      appObj = appObj,
-      bundleID = appObj:bundleID(),
+      appObj = app,
+      bundleID = app:bundleID(),
+      metadata = metadata,
     })
   elseif
     enum.contains({
@@ -55,8 +57,9 @@ function obj:run(opts)
   then
     context:stop({
       event = event,
-      appObj = appObj,
-      bundleID = appObj:bundleID(),
+      appObj = app,
+      bundleID = app:bundleID(),
+      metadata = metadata,
     })
   end
 

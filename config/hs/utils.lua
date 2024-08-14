@@ -72,7 +72,7 @@ function obj.dnd(dndStatus, slackStatus)
       :start()
   end
 
-  if slackStatus ~= nil and slackStatus ~= "" then obj.slack(slackStatus) end
+  -- if slackStatus ~= nil and slackStatus ~= "" then obj.slack(slackStatus) end
 end
 
 function obj.slack(slackStatus)

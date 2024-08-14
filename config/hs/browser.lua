@@ -14,15 +14,35 @@ local dbg = function(str, ...)
   if true then return print(string.format(str, ...)) end
 end
 
+function obj.tabCount()
+  local app = hs.application.get(BROWSER) or hs.application.frontmostApplication()
+
+  if app and enum.contains(supportedBrowsers, app:name()) then
+    local _bool, count, _desc = hs.osascript.javascript([[
+      const browser = new Application("/Applications/]] .. app:name() .. [[.app")
+      let count = 0;
+
+      if(browser.running())
+      for (i in browser.windows) count += browser.windows[i].tabs.length;
+
+      count
+    ]])
+    return count
+  end
+
+  return nil
+end
+
 function obj.hasTab(url)
   local app = hs.application.get(BROWSER) or hs.application.frontmostApplication()
 
   if app and enum.contains(supportedBrowsers, app:name()) then
+    url = string.gsub(url, "/", "\\/")
     local _status, returnedObj, _descriptor = hs.osascript.javascript([[
     (function() {
       var browser = Application(']] .. app:name() .. [[');
       const foundTab = browser.windows().filter((win) => {
-        const tabIndex = win.tabs().findIndex(tab => tab.url().match(/]] .. string.gsub(url, "/", "\\/") .. [[/));
+        const tabIndex = win.tabs().findIndex(tab => tab.url().match(/]] .. url .. [[/));
         return tabIndex !== -1
       })
 

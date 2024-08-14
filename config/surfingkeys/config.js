@@ -222,9 +222,13 @@ mapkeyGithub("ygh", "Copy project path", () => {
   Clipboard.write(`${path[1]}/${path[2]}`);
 });
 
-mapkeyGithub("ygc", "git clone - git clone address", () =>
-  Clipboard.write("git clone " + window.location.href + ".git"),
-);
+mapkeyGithub("ygc", "git clone - git clone address", () => {
+  let url = window.location.href;
+  // url = url:replace("/tree/master", "");
+  // url = url:replace("/tree/main", "");
+
+  Clipboard.write("git clone " + url + ".git");
+});
 
 mapkeyGithub("yv", "Copy for vim", () => {
   const path = new URL(window.location.href).pathname.split("/");

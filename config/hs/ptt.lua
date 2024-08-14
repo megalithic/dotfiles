@@ -16,9 +16,12 @@ obj.pushed = false
 obj.icons = {
   ["push-to-mute"] = req("hs.styledtext").new("", {
     color = { hex = "#c43e1f" },
-    font = { name = DefaultFont.name, size = 13 },
+    font = { name = DefaultFont.name, size = 15 },
   }),
-  ["push-to-talk"] = req("hs.styledtext").new("", { font = { name = DefaultFont.name, size = 13 } }),
+  ["push-to-talk"] = req("hs.styledtext").new("", {
+    color = { hex = "#cccccc" },
+    font = { name = DefaultFont.name, size = 14 },
+  }),
 }
 
 local function dbg(...)

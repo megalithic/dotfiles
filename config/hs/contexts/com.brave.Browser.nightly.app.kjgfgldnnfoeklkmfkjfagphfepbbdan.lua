@@ -62,7 +62,7 @@ function obj:start(opts)
       req("utils").dnd(true, "zoom")
       hs.spotify.pause()
       req("ptt").setState("push-to-talk")
-      req("browser").killTabsByDomain("meet.google.com")
+      -- req("browser").killTabsByDomain("meet.google.com")
 
       local layouts = {
         { meet:name(), nil, hs.screen.primaryScreen():name(), hs.layout.maximized, nil, nil },

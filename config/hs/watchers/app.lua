@@ -66,7 +66,7 @@ function obj.runLayoutRulesForAppBundleID(elementOrAppName, event, app)
   end
 end
 
-function obj.runContextForAppBundleID(elementOrAppName, event, app)
+function obj.runContextForAppBundleID(elementOrAppName, event, app, metadata)
   if not obj.watchers.context[app:bundleID()] then return end
 
   contexts:run({
@@ -75,6 +75,7 @@ function obj.runContextForAppBundleID(elementOrAppName, event, app)
     event = event,
     appObj = app,
     bundleID = app:bundleID(),
+    metadata = metadata,
   })
 end
 
