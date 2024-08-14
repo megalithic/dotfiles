@@ -34,7 +34,7 @@ obj.quitAfter = function(app, interval, event)
         note(fmt("[RUN] %s/%s quitting after %sm", obj.name, app:bundleID(), interval))
         cache.timers[bundleID] = hs.timer.doAfter((interval * 60), function()
           killApp(app)
-          note(fmt("[QUIT] %s/%s quit", obj.name, app:bundleID()))
+          info(fmt("[QUIT] %s/%s quit", obj.name, app:bundleID()))
         end)
       end
     end
@@ -54,7 +54,7 @@ obj.hideAfter = function(app, interval, event)
         note(fmt("[RUN] %s/%s hiding after %sm", obj.name, app:bundleID(), interval))
         cache.timers[bundleID] = hs.timer.doAfter((interval * 60), function()
           app:hide()
-          note(fmt("[HIDE] %s/%s hidden", obj.name, app:bundleID(), interval))
+          info(fmt("[HIDE] %s/%s hidden", obj.name, app:bundleID(), interval))
         end)
       end
     end

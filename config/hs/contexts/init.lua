@@ -1,5 +1,5 @@
-local enum = require("hs.fnutils")
-local utils = require("utils")
+local enum = req("hs.fnutils")
+local utils = req("utils")
 local obj = {}
 
 obj.__index = obj
@@ -64,7 +64,7 @@ function obj:run(opts)
   end
 
   if enum.contains(obj.loggableEvents, event) then
-    note(fmt("[RUN] %s/%s (%s)", self.name, contextId, utils.eventEnums(event)))
+    note(fmt("[RUN] %s/%s (%s)", self.name, contextId, utils.eventString(event)))
   end
 
   return self

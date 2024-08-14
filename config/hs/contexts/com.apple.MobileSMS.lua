@@ -1,7 +1,7 @@
 -- local fuzzyChooser = require("utils.fuzzychooser")
-local AX = require("hs.axuielement")
-local enum = require("hs.fnutils")
-local utils = require("utils")
+local AX = req("hs.axuielement")
+local enum = req("hs.fnutils")
+local utils = req("utils")
 
 local obj = {}
 

@@ -6,10 +6,13 @@ obj.__index = obj
 obj.name = "watcher.url"
 obj.debug = false
 obj.browserTabCount = -1
+obj.currentHandler = nil
 
 obj.callbacks = {
   {
     pattern = "https:?://meet.google.com/*",
+    -- FIXME: if the url passed to the PWA google meet app worked,
+    --  we'd not need to fiddle with this hackiness. :sadpanda:
     -- action = "com.brave.Browser.nightly.app.kjgfgldnnfoeklkmfkjfagphfepbbdan",
     action = function(opts)
       local handler = opts["handler"]
@@ -18,6 +21,7 @@ obj.callbacks = {
 
       local app = hs.application.get(handler) or hs.application.get(BROWSER)
 
+      -- NOTE: order of this tabCount check matters!
       obj.browserTabCount = browser.tabCount()
       hs.urlevent.openURLWithBundle(url, app:bundleID())
 
@@ -50,29 +54,16 @@ function obj.handleUrlCallback(url, handler)
 end
 
 -- keeps track of the most recently used browser
-local currentHandler = nil
--- callback, called when a url is clicked. Sends the url to the currentHandler.
----   * scheme - A string containing the URL scheme (i.e. "http")
----   * host - A string containing the host requested (e.g. "www.hammerspoon.org")
----   * params - A table containing the key/value pairs of all the URL parameters
----   * fullURL - A string containing the full, original URL
----   * senderPID - An integer containing the PID of the application that opened the URL, if available (otherwise -1)
 function obj.handleHttpCallback(scheme, _host, _params, fullURL, _senderPID)
   local allHandlers = hs.urlevent.getAllHandlersForScheme(scheme)
+  local currentBrowserBundleID = hs.application.get(BROWSER):bundleID()
+  local appHandler = enum.find(allHandlers, function(v) return v == currentBrowserBundleID end)
 
-  local preferredBrowser = hs.application.get(BROWSER)
-  local currentBrowserBundleID = preferredBrowser:bundleID()
-
-  local app_handler = enum.find(allHandlers, function(v)
-    -- dbg(v, true)
-    return v == currentBrowserBundleID
-  end)
-
-  if not app_handler then
-    error("Invalid browser handler: " .. (currentHandler or "nil"))
+  if not appHandler then
+    warn(fmt("[%s] invalid browser handler: %s", obj.name, obj.currentHandler))
     return
   else
-    currentHandler = app_handler
+    obj.currentHandler = appHandler
   end
 
   if not fullURL then
@@ -80,7 +71,7 @@ function obj.handleHttpCallback(scheme, _host, _params, fullURL, _senderPID)
     return
   end
 
-  obj.handleUrlCallback(fullURL, app_handler)
+  obj.handleUrlCallback(fullURL, appHandler)
 end
 
 function obj:start()
@@ -95,7 +86,7 @@ end
 
 function obj:stop()
   hs.urlevent.httpCallback = nil
-  currentHandler = nil
+  obj.currentHandler = nil
   info(fmt("[STOP] %s", self.name))
 
   return self

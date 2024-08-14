@@ -101,11 +101,11 @@ obj.placeApp = function(elementOrAppName, event, app)
         local win = winTitlePattern == nil and app:mainWindow() or hs.window.find(winTitlePattern)
 
         if win == nil then
-          warn(fmt("[wm] layouts/%s (%s): %s not found", app:bundleID(), utils.eventEnums(event), I(win)))
+          warn(fmt("[wm] layouts/%s (%s): %s not found", app:bundleID(), utils.eventString(event), I(win)))
         end
 
         if win ~= nil then
-          note(fmt("[wm] layouts/%s (%s): %s", app:bundleID(), utils.eventEnums(event), app:focusedWindow():title()))
+          note(fmt("[wm] layouts/%s (%s): %s", app:bundleID(), utils.eventString(event), app:focusedWindow():title()))
 
           dbg(
             fmt(

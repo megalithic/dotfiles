@@ -35,7 +35,7 @@ end
 ---  * Absolute path of the file. Note: no existence or other checks are done on the path.
 function obj.resourcePath(partial) return (obj.scriptPath(3) .. partial) end
 
-function obj.eventEnums(e)
+function obj.eventString(e)
   local a = hs.application.watcher
 
   if type(e) == "string" then return e end
