@@ -5,7 +5,6 @@ local obj = {}
 obj.__index = obj
 obj.name = "context.brave.browser.nightly"
 obj.debug = true
-obj.wfilter = {}
 
 obj.modal = false
 obj.actions = {}

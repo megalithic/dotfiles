@@ -136,8 +136,60 @@ function obj.killTabsByDomain(domain)
   end
 end
 
+function obj.updateBrowserTabBar()
+  local previousCount = -1
+  local countDir = "-"
+  local openTabsBar = hs.menubar.new(true)
+
+  local function updateOpenTabs()
+    local count = obj.tabCount()
+
+    if count ~= previousCount then
+      if count > previousCount and previousCount ~= -1 then countDir = "▲" end
+      if count < previousCount then countDir = "▼" end
+
+      previousCount = count
+    end
+
+    TARGET = 50
+    styled = hs.styledtext.new({
+      "  " .. count .. "  " .. countDir .. "  ",
+      tonumber(count) > TARGET and {
+        starts = 2,
+        attributes = {
+          backgroundColor = { red = 1 },
+          color = { white = 1 },
+        },
+      },
+    })
+
+    openTabsBar:setTitle(styled)
+  end
+
+  if openTabsBar then
+    icon = [[ASCII:
+    ............
+    ............
+    ............
+    ..C......D..
+    ............
+    ............
+    ............
+    A.B......E.F
+    H..........I
+    K..........L
+    ............
+    ............]]
+    openTabsBar:setIcon(icon)
+
+    -- if you don't assign to a global the timer will be garbage collected
+    tabTimer = hs.timer.doEvery(3, updateOpenTabs)
+  end
+end
+
 function obj:init()
   info(fmt("[INIT] %s", self.name))
+  -- self.updateBrowserTabBar()
 
   return self
 end

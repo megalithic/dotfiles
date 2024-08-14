@@ -153,4 +153,6 @@ modality
     modality:exit()
   end)
 
+req("clipper"):init()
+
 info(fmt("[START] %s", "bindings"))

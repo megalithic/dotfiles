@@ -16,11 +16,11 @@ obj.pushed = false
 obj.icons = {
   ["push-to-mute"] = req("hs.styledtext").new("", {
     color = { hex = "#c43e1f" },
-    font = { name = DefaultFont.name, size = 15 },
+    font = { name = DefaultFont.name, size = 14 },
   }),
   ["push-to-talk"] = req("hs.styledtext").new("", {
-    color = { hex = "#cccccc" },
-    font = { name = DefaultFont.name, size = 14 },
+    color = { hex = "#aaaaaa" },
+    font = { name = DefaultFont.name, size = 13 },
   }),
 }
 
@@ -199,7 +199,6 @@ end
 
 function obj:stop()
   if self.momentaryKeyWatcher then self.momentaryKeyWatcher:stop() end
-  -- if self.menubar then self.menubar:delete() end
   return self
 end
 
