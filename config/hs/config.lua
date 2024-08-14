@@ -143,6 +143,7 @@ LAUNCHERS = {
 }
 
 LAYOUTS = {
+  --- [bundleID] = { name, bundleID, {{ winTitle, screenNum, gridPosition }} }
   ["com.raycast.macos"] = {
     name = "Raycast",
     bundleID = "com.raycast.macos",
@@ -370,10 +371,11 @@ QUITTERS = {
 }
 
 LOLLYGAGGERS = {
-  { "org.hammerspoon.Hammerspoon", 1 },
-  { "com.flexibits.fantastical2.mac", 1 },
-  { "com.1password.1password", 1 },
-  { "com.spotify.client", 1 },
+  --- [bundleID] = { hideAfter, quitAfter }
+  ["org.hammerspoon.Hammerspoon"] = { 1, nil },
+  ["com.flexibits.fantastical2.mac"] = { 1, nil },
+  ["com.1password.1password"] = { 1, nil },
+  ["com.spotify.client"] = { 1, nil },
 }
 
 DOCK = {

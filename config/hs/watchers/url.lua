@@ -48,7 +48,7 @@ local function httpCallback(scheme, _host, _params, fullURL, _senderPID)
   local currentBrowserBundleID = preferredBrowser:bundleID()
 
   local app_handler = enum.find(allHandlers, function(v)
-    dbg(v, true)
+    -- dbg(v, true)
     return v == currentBrowserBundleID
   end)
 

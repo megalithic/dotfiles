@@ -1,3 +1,6 @@
+local enum = req("hs.fnutils")
+local utils = req("utils")
+
 local obj = {}
 local cache = { timers = {} }
 
@@ -28,10 +31,10 @@ obj.quitAfter = function(app, interval, event)
       if cache.timers[bundleID] ~= nil then cache.timers[bundleID]:stop() end
 
       if event == hs.application.watcher.deactivated then
-        note(fmt("[lollygagger.quit(%s)] will quit %s after %sm", U.eventName(event), app:bundleID(), interval))
+        note(fmt("[RUN] %s/%s quitting after %sm", obj.name, app:bundleID(), interval))
         cache.timers[bundleID] = hs.timer.doAfter((interval * 60), function()
           killApp(app)
-          note(fmt("[lollygagger.quit] killing %s", app:bundleID()))
+          note(fmt("[KILL] %s/%s quitting", obj.name, app:bundleID()))
         end)
       end
     end
@@ -48,10 +51,10 @@ obj.hideAfter = function(app, interval, event)
       if cache.timers[bundleID] ~= nil then cache.timers[bundleID]:stop() end
 
       if event == hs.application.watcher.deactivated then
-        note(fmt("[lollygagger.hide(%s)] will hide %s after %sm", U.eventName(event), app:bundleID(), interval))
+        note(fmt("[RUN] %s/%s hiding after %sm", obj.name, app:bundleID(), interval))
         cache.timers[bundleID] = hs.timer.doAfter((interval * 60), function()
           app:hide()
-          note(fmt("[lollygagger.hide] hiding %s", app:bundleID()))
+          note(fmt("[HIDE] %s/%s hiding", obj.name, app:bundleID(), interval))
         end)
       end
     end
@@ -60,8 +63,15 @@ obj.hideAfter = function(app, interval, event)
   end
 end
 
-function obj:start() info(fmt("[START] %s", obj.name)) end
+function obj:run(_elementOrAppName, event, app)
+  local config = LOLLYGAGGERS[app:bundleID()]
 
-obj:start()
+  if config then
+    local hideAfter, quitAfter = table.unpack(config)
+    if hideAfter then self.hideAfter(app, hideAfter, event) end
+    if quitAfter then self.quitAfter(app, quitAfter, event) end
+  end
+end
+function obj:start() info(fmt("[START] %s", self.name)) end
 
 return obj
