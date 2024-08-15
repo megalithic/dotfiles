@@ -4,6 +4,7 @@ local obj = {}
 
 local Hyper
 local lowBatteryTimer
+local DEFAULT_BALANCE = 0.7
 
 -- REF:
 -- https://github.com/jasonrudolph/dotfiles/commit/8bc3e6c55bd9c95eb83e4cfa265cc32d9da6edc3
@@ -144,6 +145,11 @@ function obj:start()
       if isConnected then
         info(fmt(":: connected %s %s", device.name, device.icon))
         require("lib.watchers.dock").setInput(C.dock.docked.input)
+
+        local audioDevice = hs.audiodevice.defaultOutputDevice()
+        cur_balance = audioDevice:balance()
+        if cur_balance ~= DEFAULT_BALANCE then audioDevice:setBalance(DEFAULT_BALANCE) end
+
         hs.notify.withdrawAll()
         hs.notify.new({ title = obj.name, subTitle = fmt("%s %s Connected", device.name, device.icon) }):send()
       end

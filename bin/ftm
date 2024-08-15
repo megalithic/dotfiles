@@ -68,30 +68,30 @@ fi
 while getopts "phs:" OPTION; do
   case $OPTION in
 
-    p)
-      export TMUX_POPUP=1
-      POPUP="true"
-      ;;
+  p)
+    export TMUX_POPUP=1
+    POPUP="true"
+    ;;
 
-    h)
-      __help
-      ;;
-    s)
-      SAVED_SESSION_NAME="$OPTARG"
-      echo "Saving session with session name: $OPTARG"
-      exit 0
-      ;;
+  h)
+    __help
+    ;;
+  s)
+    SAVED_SESSION_NAME="$OPTARG"
+    echo "Saving session with session name: $OPTARG"
+    exit 0
+    ;;
 
-    \?)
-      # NOTE: this covers the case where an optarg may not be provided
-      # and will exit errored
-      echo "Invalid Option: -$OPTARG" 1>&2
-      exit 1
-      ;;
-    :)
-      echo "Invalid Option: -$OPTARG requires an argument" 1>&2
-      exit 1
-      ;;
+  \?)
+    # NOTE: this covers the case where an optarg may not be provided
+    # and will exit errored
+    echo "Invalid Option: -$OPTARG" 1>&2
+    exit 1
+    ;;
+  :)
+    echo "Invalid Option: -$OPTARG requires an argument" 1>&2
+    exit 1
+    ;;
   esac
 done
 # shift $((OPTIND - 1))
@@ -179,10 +179,16 @@ function fuzzy_find() {
   # REF: https://github.com/search?q=repo%3Asainnhe%2Ftmux-fzf%20preview&type=code
   pane_capture="tmux capture-pane -epT -t {}"
 
-  preview_lines_of_output=100
-  preview_cmd_layout_info="echo {} | sed 's/:.*$//' | xargs -I {} | xargs tmux has-session -t 2>/dev/null && xargs -I {} | echo '$(tput sgr 0 1)$(tput setaf 6) windows in session:$(tput sgr 0)\n' && tmux list-windows -F '░ #{window_index}:#W (#P/#{window_panes}) #(nerdwin #{pane_current_command})' -t {}"
-  preview_cmd_preview="echo '$(tput sgr 0 1)$(tput setaf 6) last $preview_lines_of_output lines of output:$(tput sgr 0)\n' && ${pane_capture} | tail -$preview_lines_of_output"
+  preview_lines_of_output=50
+  preview_cmd_layout_info="echo {} | sed 's/:.*$//' | xargs -I {} | xargs tmux has-session -t 2>/dev/null && xargs -I {}"
+  preview_cmd_preview="${pane_capture} | tail -f -n${FZF_PREVIEW_LINES:-25}" # | less -N +F"
+  # preview_cmd_preview="${pane_capture} | tail -f -n$preview_lines_of_output | nl" # | less -N +F"
+  # preview_cmd_layout_info="echo {} | sed 's/:.*$//' | xargs -I {} | xargs tmux has-session -t 2>/dev/null && xargs -I {} | echo '$(tput sgr 0 1)$(tput setaf 6) windows in session:$(tput sgr 0)\n' && tmux list-windows -F '░ #{window_index}:#W (#P/#{window_panes}) #(nerdwin #{pane_current_command})' -t {}"
+  # preview_cmd_preview="echo '$(tput sgr 0 1)$(tput setaf 6) last $preview_lines_of_output lines of output:$(tput sgr 0)\n' && ${pane_capture} | tail -$preview_lines_of_output"
+  # preview_cmd="${preview_cmd_preview}"
   preview_cmd="${preview_cmd_layout_info} && echo "" && ${preview_cmd_preview}"
+
+  header_icon="$SESSION_ICON" || "󰢩"
 
   # -- do certain things based upon only one active session
   if [[ $sessions_count == 1 ]]; then
@@ -192,11 +198,11 @@ function fuzzy_find() {
     # -- provide user with their available pre-defined layouts (assumes certain dir)
     sessions_list="$(get_layouts)"
     layouts_sessions_count=$(echo "$sessions_list" | wc -l | sed -e 's/^[[:space:]]*//')
-    [[ $layouts_sessions_count -gt 0 ]] && fzf_header_text="󰢩 possible layouts"
+    [[ $layouts_sessions_count -gt 0 ]] && fzf_header_text="${header_icon} possible layouts"
     [[ $layouts_sessions_count -gt 0 ]] && preview_cmd="fd {} $layouts_dir | xargs bat"
   else
     fzf_prompt_text=" new or existing session  "
-    fzf_header_text="󰢩 $(tput sitm)$(tput setaf 5)$current_session$(tput sgr 0) [$(tput setaf 255)ctrl-x$(tput sgr 0): $(tput setaf 245)kill-session / $(tput setaf 255)ctrl-r$(tput sgr 0): $(tput setaf 245)rename-session$(tput sgr 0)]"
+    fzf_header_text="${header_icon} $(tput sitm)$(tput setaf 5)$current_session$(tput sgr 0) [$(tput setaf 255)ctrl-x$(tput sgr 0): $(tput setaf 245)kill-session / $(tput setaf 255)ctrl-r$(tput sgr 0): $(tput setaf 245)rename-session$(tput sgr 0)]"
   fi
 
   # -- get our session from fzf (grabs the the active pane from each session as preview, too!)

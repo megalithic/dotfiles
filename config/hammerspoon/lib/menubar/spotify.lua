@@ -46,7 +46,7 @@ local function updateTitle()
       icon = "󰝚" -- alts:  
     end
 
-    icon = stext(icon, { font = { name = defaultFont.name, size = 13 } })
+    icon = stext(icon, { font = { name = DefaultFont.name, size = 13 } })
     titleInfo = icon .. fmt(" %s - %s", artist, U.truncate(track, 25))
   end
 

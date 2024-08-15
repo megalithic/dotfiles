@@ -52,10 +52,10 @@ if $(gls &>/dev/null); then
   alias las='find . -maxdepth 1 -type l -printf "%p -> %l\n" | sort'
 fi
 
-# if $(eza &>/dev/null); then
-#   alias ls="\eza -gahF --group-directories-first"
-#   alias l="\eza -lahF --icons --group-directories-first --git"
-if $(exa &>/dev/null); then
+if $(\eza &>/dev/null); then
+  alias ls="\eza -gahF --group-directories-first"
+  alias l="\eza -lahF --icons --group-directories-first --git"
+elif $(exa &>/dev/null); then
   alias ls="exa -gahF --group-directories-first"
   alias l="exa -lahF --icons --group-directories-first --git"
 fi
@@ -190,6 +190,7 @@ if type nvim >/dev/null 2>&1; then
   alias novim="nvim -u NONE"
   alias barevim="nvim -u NONE"
   alias ngit="nvim -c \":bd|:Neogit kind=replace\""
+  alias ndb="nvim -c \":bd|:DBUI\""
 
   # suffix aliases set the program type to use to open a particular file with an extension
   alias -s {js,html,js,ts,css,md}=nvim
@@ -199,7 +200,7 @@ fi
 # -----------------------------------------------------------------------------
 alias ez="nvim $DOTS/config/zsh/.zshrc"
 alias ezz="nvim $DOTS/config/zsh/.zshenv"
-alias eza="nvim $DOTS/config/zsh/**/aliases.zsh"
+alias ea="nvim $DOTS/config/zsh/**/aliases.zsh"
 alias ezp="nvim $DOTS/config/zsh/prompt_megalithic_setup"
 alias ezf="nvim $DOTS/config/zsh/**/funcs.zsh"
 alias ezo="nvim $DOTS/config/zsh/**/opts.zsh"
@@ -344,6 +345,7 @@ alias resolve="git mergetool --tool=nvimdiff"
 alias gs="git status --branch --short ."
 alias gwt="git worktree"
 alias gp="git push -u"
+alias gfp="git push origin +HEAD"
 alias gcv="git cv"
 alias gcm='git commit -m "$(gum input)" -m "$(gum write)"'
 alias gaa="git aa"
@@ -490,6 +492,10 @@ alias compress="c() { zip -f "$1".zip "$1"} && c $1"
 
 alias yt='yt-dlp --sponsorblock-remove default --part --format "bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4]"'
 alias ytaudio='yt --extract-audio --audio-format mp3 --audio-quality 0 --write-thumbnail'
+
+alias b="m1ddc set luminance"
+
+alias gpt="chatgpt-cli -k $OPENAI_API_KEY"
 
 # FUNCTIONS
 # ------------------------------------------------------------------------------

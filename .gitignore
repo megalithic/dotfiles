@@ -22,6 +22,8 @@ config/gh/hosts.yml
 **/packer_compiled.lua
 packer_compiled.lua
 
+chatgpt-cli-*.json
+
 home/ssh/*
 !home/ssh/config
 
@@ -29,4 +31,3 @@ home/ssh/*
 config/gnupg/**/*
 !config/gnupg/gpg-agent.conf
 !config/gnupg/gpg.conf
-

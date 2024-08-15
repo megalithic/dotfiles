@@ -5,6 +5,8 @@ local fmt = string.format
 return {
   {
     "hrsh7th/nvim-cmp",
+    -- event = { "InsertEnter *", "CmdlineEnter *" },
+    -- event = "InsertEnter",
     lazy = false,
     priority = 100,
     dependencies = {
@@ -72,6 +74,16 @@ return {
       local cmp = require("cmp")
       local MIN_MENU_WIDTH, MAX_MENU_WIDTH = 25, math.min(50, math.floor(vim.o.columns * 0.5))
 
+      local neocodeium = require("neocodeium")
+      local commands = require("neocodeium.commands")
+
+      -- cmp.event:on("menu_opened", function()
+      --   commands.disable()
+      --   neocodeium.clear()
+      -- end)
+      --
+      -- cmp.event:on("menu_closed", function() commands.enable() end)
+
       local has_words_before = function()
         local line, col = unpack(vim.api.nvim_win_get_cursor(0))
         return col ~= 0 and vim.api.nvim_buf_get_lines(0, line - 1, line, true)[1]:sub(col, col):match("%s") == nil
@@ -104,7 +116,7 @@ return {
         },
         -- NOTE: read `:help ins-completion`
         completion = { completeopt = "menu,menuone,noinsert,noselect" },
-        entries = { name = "custom", selection_order = "near_cursor" },
+        -- entries = { name = "custom", selection_order = "near_cursor" },
         window = {
           -- TODO:
           -- https://github.com/hrsh7th/nvim-cmp/wiki/Menu-Appearance#how-to-get-types-on-the-left-and-offset-the-menu
@@ -144,7 +156,9 @@ return {
           -- Accept ([y]es) the completion.
           --  This will auto-import if your LSP supports it.
           --  This will expand snippets if the LSP sent a snippet.
-          ["<C-y>"] = cmp.mapping.confirm({ select = true }),
+          -- ["<C-y>"] = cmp.mapping.confirm({ select = true }),
+
+          -- ["<C-y>"] = require("minuet").make_cmp_map(),
           ["<C-e>"] = cmp.mapping.abort(),
 
           ["<CR>"] = function(fallback)
@@ -163,10 +177,10 @@ return {
             i = tab,
             s = tab,
             c = function()
-              if vim.fn.getcmdline():sub(1, 1) == "!" then
-                vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<C-z>", true, false, true), "n", false)
-                return
-              end
+              -- if vim.fn.getcmdline():sub(1, 1) == "!" then
+              --   vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<C-z>", true, false, true), "n", false)
+              --   return
+              -- end
               if cmp.visible() then
                 cmp.confirm({ select = true })
               else
@@ -229,8 +243,10 @@ return {
 
             -- REF: https://github.com/3rd/config/blob/master/home/dotfiles/nvim/lua/modules/completion/nvim-cmp.lua
             item.dup = ({
+              fuzzy_buffer = 0,
               buffer = 0,
               path = 0,
+              async_path = 0,
               nvim_lsp = 0,
               luasnip = 0,
               vsnip = 0,
@@ -245,12 +261,13 @@ return {
             item.abbr = string.gsub(item.abbr, "^%s+", "")
 
             if entry.source.name == "nvim_lsp" then
-              item.menu = entry.source.source.client.name
+              item.menu = fmt("[lsp] %s", entry.source.source.client.name)
             else
               item.menu = ({
                 nvim_lsp = "[lsp]",
                 luasnip = "[lsnip]",
                 vsnip = "[vsnip]",
+                -- minuet = "[󱗻 ai]",
                 snippets = "[snips]",
                 -- codeium = "[code]",
                 nvim_lua = "[nlua]",
@@ -271,34 +288,34 @@ return {
             return item
           end,
         },
-        -- sorting = {
-        --   priority_weight = 2,
-        --   comparators = {
-        --     require("cmp_fuzzy_buffer.compare"),
-        --
-        --     cmp.config.compare.offset,
-        --     cmp.config.compare.exact,
-        --     cmp.config.compare.score,
-        --
-        --     -- INFO: sort by number of underscores
-        --     function(entry1, entry2)
-        --       local _, entry1_under = entry1.completion_item.label:find("^_+")
-        --       local _, entry2_under = entry2.completion_item.label:find("^_+")
-        --       entry1_under = entry1_under or 0
-        --       entry2_under = entry2_under or 0
-        --       if entry1_under > entry2_under then
-        --         return false
-        --       elseif entry1_under < entry2_under then
-        --         return true
-        --       end
-        --     end,
-        --
-        --     cmp.config.compare.kind,
-        --     cmp.config.compare.sort_text,
-        --     cmp.config.compare.length,
-        --     cmp.config.compare.order,
-        --   },
-        -- },
+        sorting = {
+          priority_weight = 2,
+          comparators = {
+            require("cmp_fuzzy_buffer.compare"),
+
+            cmp.config.compare.offset,
+            cmp.config.compare.exact,
+            cmp.config.compare.score,
+
+            -- INFO: sort by number of underscores
+            function(entry1, entry2)
+              local _, entry1_under = entry1.completion_item.label:find("^_+")
+              local _, entry2_under = entry2.completion_item.label:find("^_+")
+              entry1_under = entry1_under or 0
+              entry2_under = entry2_under or 0
+              if entry1_under > entry2_under then
+                return false
+              elseif entry1_under < entry2_under then
+                return true
+              end
+            end,
+
+            cmp.config.compare.kind,
+            cmp.config.compare.sort_text,
+            cmp.config.compare.length,
+            cmp.config.compare.order,
+          },
+        },
         sources = cmp.config.sources({
           { name = "nvim_lsp_signature_help" },
           { name = "snippets", group_index = 1, max_item_count = 5, keyword_length = 1 },
@@ -308,26 +325,23 @@ return {
           {
             name = "nvim_lsp",
             group_index = 1,
+            priority = 100,
             -- max_item_count = 35,
             entry_filter = function(entry)
               if vim.tbl_contains(SETTINGS.completion_exclusions, entry.source.source.client.name) then return false end
-              -- FIXME: breaks Next LS
-              -- if cmp.lsp.CompletionItemKind.Snippet ~= entry:get_kind() then return false end
 
               return true
             end,
           },
-          {
-            name = "codeium",
-            group_index = 1,
-            priority = 100,
-          },
           { name = "async_path", option = { trailing_slash = true } },
-          -- { name = "tmux", option = { all_panes = true } },
         }, {
           {
             name = "fuzzy_buffer",
+            group_index = 2,
+            priority = 1,
             option = {
+              group_index = 2,
+              priority = 1,
               min_match_length = 3,
               max_matches = 5,
               options = {
@@ -374,9 +388,10 @@ return {
           -- { name = "path" },
           {
             name = "cmdline",
-            keyword_length = 3,
+            keyword_length = 2,
             option = {
-              ignore_cmds = { "Man", "!" },
+              ignore_cmds = {},
+              -- ignore_cmds = { "Man", "!" },
             },
             keyword_pattern = [=[[^[:blank:]\!]*]=],
           },
@@ -384,7 +399,6 @@ return {
         }),
       })
 
-      -- no completion suggestions in a git commit
       cmp.setup.filetype({ "gitcommit", "NeogitCommitMessage" }, {
         { name = "buffer" },
         { name = "spell" },

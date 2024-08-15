@@ -65,7 +65,7 @@ end
 ---@param chunks Chunks
 ---@return string
 local function chunks_to_string(chunks)
-  if not chunks or not vim.tbl_islist(chunks) then return "" end
+  if not chunks or not vim.islist(chunks) then return "" end
   local strings = U.fold(function(acc, item)
     local text, hl = unpack(item)
     if not U.falsy(text) then
@@ -97,7 +97,7 @@ local function component(opts)
   if opts.cond ~= nil and U.falsy(opts.cond) then return end
 
   local item = opts[1]
-  if not vim.tbl_islist(item) then error(fmt("component options are required but got %s instead", vim.inspect(item))) end
+  if not vim.islist(item) then error(fmt("component options are required but got %s instead", vim.inspect(item))) end
 
   if not opts.priority then opts.priority = 10 end
   local before, after = opts.before or "", opts.after or padding
@@ -257,6 +257,8 @@ local function extmark_signs(curbuf, lnum)
   local signs = api.nvim_buf_get_extmarks(curbuf, -1, { lnum, 0 }, { lnum, -1 }, { details = true, type = "sign" })
   local sns = U.fold(function(acc, item)
     item = format_text(item[4], "sign_text")
+    if not item then return acc end
+
     local txt, hl = item.sign_text, item.sign_hl_group
     -- if txt ~= "" and txt ~= " " then print(txt) end
     local is_git = hl ~= nil and hl:match("^Git")
@@ -287,8 +289,14 @@ function mega.ui.statuscolumn.render(is_active)
 
   -- local gitsigns, sns = extmark_signs(buf, lnum)
   local gitsigns, other_sns = extmark_signs(buf, lnum)
-  local sns = signplaced_signs(buf, lnum)
-  vim.list_extend(sns, other_sns)
+  local sns
+
+  if SETTINGS.enable_signsplaced then
+    sns = signplaced_signs(buf, lnum)
+    vim.list_extend(sns, other_sns)
+  else
+    sns = other_sns
+  end
 
   while #sns < MIN_SIGN_WIDTH do
     table.insert(sns, spacer(1))

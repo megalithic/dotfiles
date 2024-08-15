@@ -8,7 +8,9 @@
 ```
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/megalithic/dotfiles/main/screenshot.png" alt="screenshot" />
+
+![alt text](https://raw.githubusercontent.com/megalithic/dotfiles/main/screenshot.png "screenshot")
+
 </p>
 
 ## 🚀 Installation
@@ -72,16 +74,17 @@ A few of the _must-have_ tools I roll with:
 - [homebrew](https://brew.sh/)
 - `megaforest` for all the colours/themes
 - [jetbrains mono](https://www.jetbrains.com/lp/mono/) font ([nerd-fonts](https://github.com/ryanoasis/nerd-fonts#font-patcher) patched)
-- [hammerspoon](https://github.com/megalithic/dotfiles/tree/main/config/hammerspoon)
+- [hammerspoon](https://github.com/megalithic/dotfiles/tree/main/config/hs)
 - [karabiner-elements](https://github.com/tekezo/Karabiner-Elements) ([leeloo ZMK](https://github.com/megalithic/zmk-config))
 - [gpg/yubikey/encryption](https://github.com/drduh/YubiKey-Guide)
-- system-wide `vim`-esque control
-  - [surfingkeys](https://github.com/brookhong/Surfingkeys)
-  - [vimac](https://vimacapp.com)
-  - [sketchyvim](https://github.com/FelixKratz/SketchyVim)
+- `vim`-esque control
+  - [surfingkeys (in-browser)](https://github.com/brookhong/Surfingkeys)
+  - [homerow (macos-wide)](https://homerow.app)
 
 <p align="center" style="margin-top: 20px;">
   <a href="https://megalithic.io" target="_blank">
-    <img src="megadotfiles.png" alt="megadotfiles" height="150px"/>
-  </a>
+
+![alt text](https://raw.githubusercontent.com/megalithic/dotfiles/main/megadotfiles.png "megadotfiles logo")
+
+</a>
 </p>

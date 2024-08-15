@@ -1,8 +1,8 @@
--- [ GLOBALS ] ------------------------------------------------------------------
+-- [ GLOBALS ] -----------------------------------------------------------------
 
 _G.debug_enabled = true
 
--- [ BOOTSTRAP/PRELOAD ] ------------------------------------------------------------------
+-- [ BOOTSTRAP/PRELOAD ] -------------------------------------------------------
 
 require("preflight")
 
@@ -39,8 +39,8 @@ _G.C = L.load("config")
 --  NOTE: order matters
 L.load("lib.bindings"):start()
 L.load("lib.menubar.ptt"):start()
-L.load("lib.menubar.spotify"):start()
-L.load("lib.menubar.keycastr")
+-- L.load("lib.menubar.spotify"):start()
+-- L.load("lib.menubar.keycastr")
 L.load("spoons")
 L.load("lib.watchers", { watchers = { "status", "bluetooth", "dock", "audio", "wifi", "url", "downloads" } }):start()
 L.load("lib.wm"):start()

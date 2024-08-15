@@ -5,9 +5,9 @@
 
 return {
   "glacambre/firenvim",
-  -- Explanation: https://github.com/folke/lazy.nvim/discussions/463#discussioncomment-4819297
   lazy = not vim.g.started_by_firenvim,
-  build = function() vim.fn["firenvim#install"](0) end,
+  -- enabled = false,
+  build = ":call firenvim#install(0)",
   config = function()
     local map = vim.keymap.set
 
@@ -107,7 +107,7 @@ return {
       vim.api.nvim_set_option("guifont", "JetBrainsMono Nerd Font:h22")
       vim.api.nvim_set_option("buftype", "firenvim")
 
-      vim.diagnostic.disable(bufnr)
+      vim.diagnostic.enable(false, { bufnr = bufnr })
       vim.lsp.stop_client(vim.lsp.get_clients({ bufnr = bufnr }))
     end
 

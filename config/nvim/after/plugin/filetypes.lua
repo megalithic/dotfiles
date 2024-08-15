@@ -42,6 +42,10 @@ ftplugin.extend_all({
       nmap("<localleader>ei", [[o|> IO.inspect()<ESC>i]], "inspect (new line)")
       nmap("<localleader>eil", [[o|> IO.inspect(label: "")<ESC>hi]], "inspect label (new line)")
       nmap("<localleader>em", "<cmd>CopyModuleAlias<cr>", "copy module alias")
+      nmap("<localleader>eF", function()
+        vim.cmd("silent !mix format")
+        vim.cmd("edit")
+      end, "format")
 
       nmap("<localleader>ok", [[:lua require("mega.utils").wrap_cursor_node("{:ok, ", "}")<CR>]], "copy module alias")
       xmap("<localleader>ok", [[:lua require("mega.utils").wrap_selected_nodes("{:ok, ", "}")<CR>]], "copy module alias")
@@ -87,7 +91,7 @@ ftplugin.extend_all({
     end,
   },
   gitrebase = {
-    function() vim.keymap.set("n", "q", vim.cmd.cquit, { nowait = true, desc = "abort" }) end,
+    function() vim.keymap.set("n", "q", vim.cmd.cquit, { nowait = true, desc = "abort", bang = true }) end,
   },
   neogitcommitmessage = {
     keys = {
@@ -103,7 +107,7 @@ ftplugin.extend_all({
       colorcolumn = "50,72",
     },
     callback = function()
-      map("n", "q", vim.cmd.cquit, { buffer = true, nowait = true, desc = "Abort" })
+      map("n", "q", vim.cmd.cquit, { buffer = true, nowait = true, desc = "Abort", bang = true })
       vim.fn.matchaddpos("DiagnosticVirtualTextError", { { 1, 50, 10000 } })
       if vim.fn.prevnonblank(".") ~= vim.fn.line(".") then vim.cmd.startinsert() end
     end,
@@ -280,10 +284,14 @@ ftplugin.extend_all({
   qf = {
     opt = {
       winfixheight = true,
+      winfixwidth = true,
       relativenumber = false,
+      number = false,
       buflisted = false,
+      wrap = false,
     },
     callback = function()
+      vim.cmd("wincmd J")
       vim.cmd([[
         " Autosize quickfix to match its minimum content
         " https://vim.fandom.com/wiki/Automatically_fitting_a_quickfix_window_height
@@ -292,16 +300,7 @@ ftplugin.extend_all({
         endfunction
 
         " force quickfix to open beneath all other splits
-        wincmd J
-
-        setlocal nonumber
-        setlocal norelativenumber
-        setlocal nowrap
-        setlocal signcolumn=yes
-        setlocal colorcolumn=
-        setlocal nobuflisted " quickfix buffers should not pop up when doing :bn or :bp
         call s:adjust_height(3, 10)
-        setlocal winfixheight
 
         " REF: https://github.com/romainl/vim-qf/blob/2e385e6d157314cb7d0385f8da0e1594a06873c5/autoload/qf.vim#L22
       ]])

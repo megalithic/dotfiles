@@ -1,29 +1,29 @@
+local fmt = string.format
+local U = require("mega.utils")
 local SETTINGS = require("mega.settings")
 local BORDER_STYLE = SETTINGS.border
 local augroup = require("mega.autocmds").augroup
 local command = vim.api.nvim_create_user_command
-local U = require("mega.utils")
-local fmt = string.format
-
 local M = {}
 
 return {
   {
     "neovim/nvim-lspconfig",
+    event = { "BufReadPre", "BufNewFile" },
     dependencies = {
-      { "nvim-lua/lsp_extensions.nvim" },
-      { "b0o/schemastore.nvim" },
+      "nvim-lua/lsp_extensions.nvim",
+      "b0o/schemastore.nvim",
+      "onsails/lspkind.nvim",
       "williamboman/mason.nvim",
       "williamboman/mason-lspconfig.nvim",
       "WhoIsSethDaniel/mason-tool-installer.nvim",
-
-      -- NOTE: `opts = {}` is the same as calling `require('fidget').setup({})`
       {
         "j-hui/fidget.nvim",
+        event = "LspAttach",
         opts = {
           progress = {
             display = {
-              done_icon = require("mega.settings").icons.lsp.ok,
+              done_icon = SETTINGS.icons.lsp.ok,
             },
           },
           notification = {
@@ -36,13 +36,15 @@ return {
           },
         },
       },
-
-      -- `neodev` configures Lua LSP for your Neovim config, runtime and plugins
-      -- used for completion, annotations and signatures of Neovim apis
       { "folke/neodev.nvim", opts = {} },
     },
     config = function()
-      local diagnostic_ns = vim.api.nvim_create_namespace("hldiagnosticregion")
+      local lsp_ok, lspconfig = pcall(require, "lspconfig")
+      if not lsp_ok then return nil end
+
+      require("neodev").setup()
+
+      local diagnostic_ns = vim.api.nvim_create_namespace("hl_diagnostic_region")
       local diagnostic_timer
       local hl_cancel
       local hl_map = {
@@ -116,6 +118,7 @@ return {
       --    function will be executed to configure the current buffer
       function M.on_attach(client, bufnr)
         local disabled_lsp_formatting = SETTINGS.disabled_lsp_formatters
+
         for i = 1, #disabled_lsp_formatting do
           if disabled_lsp_formatting[i] == client.name then
             client.server_capabilities.documentFormattingProvider = false
@@ -123,7 +126,11 @@ return {
           end
         end
 
-        -- vim.lsp.handlers["textDocument/publishDiagnostics"] = function(err, result, ctx, config) ---@diagnostic disable-line: duplicate-set-field
+        local filetype = vim.bo[bufnr].filetype
+        if SETTINGS.disabled_semantic_tokens[filetype] then client.server_capabilities.semanticTokensProvider = nil end
+
+        -- ---@diagnostic disable-line: duplicate-set-field
+        -- vim.lsp.handlers["textDocument/publishDiagnostics"] = function(err, result, ctx, config)
         --   result.diagnostics = vim.tbl_map(function(diag)
         --     if
         --       (diag.source == "biome" and diag.code == "lint/suspicious/noConsoleLog")
@@ -158,6 +165,19 @@ return {
           definition_handler(err, result, ctx, config)
         end
 
+        local references_handler = vim.lsp.handlers["textDocument/references"]
+        vim.lsp.handlers["textDocument/references"] = function(err, result, ctx, config)
+          local client_name = vim.lsp.get_client_by_id(ctx.client_id).name
+          dbg(client_name)
+          -- disables diagnostic reporting for specific clients
+          if vim.tbl_contains(SETTINGS.references_exclusions, client_name) then
+            print("returning for " .. client_name)
+            return
+          end
+
+          references_handler(err, result, ctx, config)
+        end
+
         -- if action opens up qf list, open the first item and close the list
         local function choose_list_first(items)
           print(#items)
@@ -190,6 +210,7 @@ return {
         map("gD", function()
           vim.cmd.vsplit()
           vim.lsp.buf.definition()
+          vim.cmd.normal("zz")
           -- vim.lsp.buf.definition({ on_list = choose_list_first })
         end, "[g]oto [d]efinition (split)")
         map("gr", require("telescope.builtin").lsp_references, "[g]oto [r]eferences")
@@ -433,18 +454,22 @@ return {
           qf_rename()
         end, "[r]ename")
 
-        if client.name == "ElixirLS" then
+        if client.name == "ElixirLS" or client.name == "elixirls" then
           vim.keymap.set("n", "<localleader>efp", ":ElixirFromPipe<cr>", { buffer = bufnr, noremap = true, desc = "from pipe" })
           vim.keymap.set("n", "<localleader>etp", ":ElixirToPipe<cr>", { buffer = bufnr, noremap = true, desc = "to pipe (|>)" })
           vim.keymap.set("v", "<localleader>eem", ":ElixirExpandMacro<cr>", { buffer = bufnr, noremap = true, desc = "expand macro" })
         end
-
+        command(
+          "LspLogDelete",
+          function() vim.fn.system("rm " .. vim.lsp.get_log_path()) end,
+          { desc = "Deletes the LSP log file. Useful for when it gets too big" }
+        )
         command("LspCapabilities", function(ctx)
           local filter = ctx.args == "" and { bufnr = 0 } or { name = ctx.args }
           local clients = vim.lsp.get_clients(filter)
           local clientInfo = vim.tbl_map(function(c) return c.name .. "\n" .. vim.inspect(c) end, clients)
           local msg = table.concat(clientInfo, "\n\n")
-          vim.notify(msg)
+          P(msg)
         end, {
           nargs = "?",
           complete = function()
@@ -455,6 +480,20 @@ return {
           end,
         })
 
+        augroup("LspProgress", {
+          {
+            pattern = "end",
+            event = { "LspProgress" },
+            desc = "Handle lsp progress message scenarios",
+            command = function(ev)
+              local token = ev.data.params.token
+              local client_id = ev.data.client_id
+              local clnt = client_id and vim.lsp.get_client_by_id(client_id)
+              if clnt and token then require("fidget").notification.remove(clnt.name, token) end
+            end,
+          },
+        })
+
         augroup("LspDiagnostics", {
           {
             event = { "CursorHold" },
@@ -463,20 +502,34 @@ return {
           },
         })
 
-        if client and client.server_capabilities.documentHighlightProvider then
-          augroup("LspDocumentHighlights", {
-            {
-              event = { "CursorHold", "CursorHoldI" },
-              buffer = bufnr,
-              command = vim.lsp.buf.document_highlight,
-            },
-            {
-              event = { "CursorMoved", "CursorMovedI" },
-              buffer = bufnr,
-              command = vim.lsp.buf.clear_references,
-            },
-          })
-        end
+        -- augroup("LspFormat", {
+        --   {
+        --     event = { "BufWritePre" },
+        --     desc = "Auto format via LSP",
+        --     command = function(args)
+        --       require("conform").format({
+        --         bufnr = args.buf,
+        --         lsp_fallback = true,
+        --         quiet = true,
+        --       })
+        --     end,
+        --   },
+        -- })
+
+        -- if client and client.server_capabilities.documentHighlightProvider then
+        --   augroup("LspDocumentHighlights", {
+        --     {
+        --       event = { "CursorHold", "CursorHoldI" },
+        --       buffer = bufnr,
+        --       command = vim.lsp.buf.document_highlight,
+        --     },
+        --     {
+        --       event = { "CursorMoved", "CursorMovedI" },
+        --       buffer = bufnr,
+        --       command = vim.lsp.buf.clear_references,
+        --     },
+        --   })
+        -- end
 
         local max_width = math.min(math.floor(vim.o.columns * 0.7), 100)
         local max_height = math.min(math.floor(vim.o.lines * 0.3), 30)
@@ -511,26 +564,27 @@ return {
         end
 
         local vim_diag = vim.diagnostic
+        local diag_level = vim_diag.severity
         vim_diag.config({
           underline = true,
           signs = {
             text = {
-              [vim_diag.severity.ERROR] = icons.lsp.error, -- alts: ▌
-              [vim_diag.severity.WARN] = icons.lsp.warn,
-              [vim_diag.severity.HINT] = icons.lsp.hint,
-              [vim_diag.severity.INFO] = icons.lsp.info,
+              [diag_level.ERROR] = icons.lsp.error, -- alts: ▌
+              [diag_level.WARN] = icons.lsp.warn,
+              [diag_level.HINT] = icons.lsp.hint,
+              [diag_level.INFO] = icons.lsp.info,
             },
             numhl = {
-              [vim_diag.severity.ERROR] = "DiagnosticError",
-              [vim_diag.severity.WARN] = "DiagnosticWarn",
-              [vim_diag.severity.HINT] = "DiagnosticHint",
-              [vim_diag.severity.INFO] = "DiagnosticInfo",
+              [diag_level.ERROR] = "DiagnosticError",
+              [diag_level.WARN] = "DiagnosticWarn",
+              [diag_level.HINT] = "DiagnosticHint",
+              [diag_level.INFO] = "DiagnosticInfo",
             },
             texthl = {
-              [vim_diag.severity.ERROR] = "DiagnosticError",
-              [vim_diag.severity.WARN] = "DiagnosticWarn",
-              [vim_diag.severity.HINT] = "DiagnosticHint",
-              [vim_diag.severity.INFO] = "DiagnosticInfo",
+              [diag_level.ERROR] = "DiagnosticError",
+              [diag_level.WARN] = "DiagnosticWarn",
+              [diag_level.HINT] = "DiagnosticHint",
+              [diag_level.INFO] = "DiagnosticInfo",
             },
             -- severity = { min = vim_diag.severity.WARN },
           },
@@ -565,8 +619,9 @@ return {
             format = diag_msg_format,
           },
           severity_sort = true,
+          -- virtual_text = false,
           virtual_text = {
-            severity = { min = vim_diag.severity.ERROR },
+            severity = { min = diag_level.ERROR },
             suffix = function(diag) return diag_source_as_suffix(diag, "virtual_text") end,
           },
           update_in_insert = false,
@@ -626,69 +681,23 @@ return {
         {
           event = { "LspAttach" },
           desc = "Attach various functionality to an LSP-connected buffer/client",
-          command = function(evt)
-            local client = vim.lsp.get_client_by_id(evt.data.client_id)
-            if client ~= nil then M.on_attach(client, evt.buf) end
+          command = function(args)
+            local client = assert(vim.lsp.get_client_by_id(args.data.client_id), "must have valid ls client")
+            if client ~= nil then M.on_attach(client, args.buf) end
           end,
         },
       })
 
-      local lspconfig = require("lspconfig")
-
-      M.capabilities = vim.lsp.protocol.make_client_capabilities()
-      M.capabilities.textDocument.completion.completionItem.snippetSupport = true
-      if pcall(require, "cmp_nvim_lsp") then M.capabilities = require("cmp_nvim_lsp").default_capabilities(M.capabilities) end
+      local capabilities = vim.lsp.protocol.make_client_capabilities()
+      if pcall(require, "cmp_nvim_lsp") then capabilities = require("cmp_nvim_lsp").default_capabilities() end
 
       local servers = require("mega.servers")
       if servers == nil then return end
-
-      servers.load_contrib()
-
-      function M.get_config(name)
-        local config = name and servers.list[name] or {}
-        if not config or config == nil then return end
-
-        if type(config) == "function" then
-          config = config()
-          if not config or config == nil then return end
-        end
-
-        config.flags = { debounce_text_changes = 150 }
-        config.capabilities = vim.tbl_deep_extend("force", {}, M.capabilities, config.capabilities or {})
-        return config
-      end
-
-      local tools = {
-        "luacheck",
-        "prettier",
-        "prettierd",
-        "selene",
-        "shellcheck",
-        "shfmt",
-        -- "solargraph",
-        "stylua",
-        "yamlfmt",
-        -- "black",
-        -- "buf",
-        -- "cbfmt",
-        -- "deno",
-        -- "elm-format",
-        -- "eslint_d",
-        -- "fixjson",
-        -- "flake8",
-        -- "goimports",
-        -- "isort",
-      }
+      local servers_list = servers.list()
 
       require("mason").setup()
-      local mr = require("mason-registry")
-      for _, tool in ipairs(tools) do
-        local p = mr.get_package(tool)
-        if not p:is_installed() then p:install() end
-      end
+      require("mason-lspconfig").setup()
 
-      -- will try and install the language servers defined in servers.lua..
-      -- in addition to the others..
       local ensure_installed = {
         "black",
         "eslint_d",
@@ -698,27 +707,55 @@ return {
         "ruff",
         "stylua",
       }
-      ensure_installed = vim.list_extend(vim.tbl_keys(servers.list or {}), ensure_installed)
-      ensure_installed = vim.tbl_filter(function(server) return not vim.tbl_contains(SETTINGS.controlled_language_servers, server) end, ensure_installed)
+
+      local servers_to_install = vim.tbl_filter(function(key)
+        local s = servers_list[key]
+        if type(s) == "table" then
+          return not s.manual_install
+        elseif type(s) == "function" then
+          s = s()
+          return (s and not s.manual_install)
+        else
+          return s
+        end
+      end, vim.tbl_keys(servers_list))
+      vim.list_extend(ensure_installed, servers_to_install)
 
       require("mason-tool-installer").setup({ ensure_installed = ensure_installed })
 
-      require("mason-lspconfig").setup({
-        automatic_installation = false,
-        handlers = {
-          function(server_name)
-            if servers ~= nil then
-              local cfg = M.get_config(server_name)
-              if cfg ~= nil then lspconfig[server_name].setup(cfg) end
-            end
-          end,
-        },
-      })
+      function M.get_config(name)
+        local config = name and servers_list[name] or {}
+        if not config or config == nil then return end
+
+        if type(config) == "function" then
+          config = config()
+          if not config or config == nil then return end
+        end
+
+        config.flags = { debounce_text_changes = 150 }
+        config.capabilities = vim.tbl_deep_extend("force", {}, capabilities, config.capabilities or {})
+
+        return config
+      end
+
+      vim.iter(servers_list):each(function(server_name, _)
+        local cfg = M.get_config(server_name)
+        if cfg == nil then return end
+        lspconfig[server_name].setup(cfg)
+      end)
     end,
   },
-
   {
+    cond = false,
+    "rachartier/tiny-inline-diagnostic.nvim",
+    event = "VeryLazy",
+    opts = true,
+  },
+  {
+    -- FIXME: https://github.com/mhanberg/output-panel.nvim/issues/5
+    enabled = false,
     "mhanberg/output-panel.nvim",
+    lazy = false,
     keys = {
       {
         "<leader>lip",
@@ -726,71 +763,7 @@ return {
         desc = "lsp: open output panel",
       },
     },
-    event = "VeryLazy",
     cmd = { "OutputPanel" },
-    config = function() require("output_panel").setup() end,
-  },
-
-  {
-    "elixir-tools/elixir-tools.nvim",
-    cond = U.lsp.is_enabled_elixir_ls("Next LS") or U.lsp.is_enabled_elixir_ls("ElixirLS"),
-    event = {
-      "BufReadPre **.ex,**.exs,**.heex",
-      "BufNewFile **.ex,**.exs,**.heex",
-    },
-    config = function()
-      local elixir = require("elixir")
-      local elixirls = require("elixir.elixirls")
-      local cmd = function()
-        local arch = {
-          ["arm64"] = "arm64",
-          ["aarch64"] = "arm64",
-          ["amd64"] = "amd64",
-          ["x86_64"] = "amd64",
-        }
-
-        local os_name = string.lower(vim.uv.os_uname().sysname)
-        local current_arch = arch[string.lower(vim.uv.os_uname().machine)]
-        local build_bin = fmt("next_ls_%s_%s", os_name, current_arch)
-
-        return fmt("%s/lsp/nextls/burrito_out/%s", vim.env.XDG_DATA_HOME, build_bin)
-      end
-
-      elixir.setup({
-        nextls = {
-          enable = U.lsp.is_enabled_elixir_ls("Next LS"),
-          autostart = true,
-          cmd = cmd(),
-          spitfire = true,
-          init_options = {
-            experimental = {
-              completions = {
-                enable = true, -- control if completions are enabled. defaults to false
-              },
-            },
-          },
-          on_attach = M.on_attach,
-        },
-        credo = {},
-        elixirls = {
-          enable = U.lsp.is_enabled_elixir_ls("ElixirLS"),
-          settings = elixirls.settings({
-            dialyzerEnabled = true,
-            enableTestLenses = true,
-          }),
-          on_attach = M.on_attach,
-          -- on_attach = function(_client, bufnr)
-          --   local map = vim.keymap.set
-          --   map("n", "<localleader>efp", ":ElixirFromPipe<cr>", { buffer = bufnr, noremap = true, desc = "from pipe" })
-          --   map("n", "<localleader>etp", ":ElixirToPipe<cr>", { buffer = bufnr, noremap = true, desc = "to pipe (|>)" })
-          --   map("v", "<localleader>eem", ":ElixirExpandMacro<cr>", { buffer = bufnr, noremap = true, desc = "expand macro" })
-          -- end,
-        },
-      })
-    end,
-    dependencies = {
-      "nvim-lua/plenary.nvim",
-      "neovim/nvim-lspconfig",
-    },
+    opts = true,
   },
 }

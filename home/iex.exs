@@ -82,6 +82,13 @@ defmodule U do
     res
   end
 
+  def dolog() do
+    Logger.configure(level: :debug)
+  end
+  def nolog() do
+    Logger.configure(level: :none)
+  end
+
   def copy(val) do
     port = Port.open({:spawn_executable, "/usr/bin/pbcopy"}, [:binary, args: []])
 
@@ -125,6 +132,8 @@ defmodule :_util do
   defdelegate copy(any), to: U, as: :copy
   defdelegate cp(any), to: U, as: :copy
   defdelegate paste(), to: U, as: :paste
+  defdelegate dolog(), to: U, as: :dolog
+  defdelegate nolog(), to: U, as: :nolog
 end
 
 import :_exit

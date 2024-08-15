@@ -5,35 +5,36 @@
 
 from __future__ import print_function, unicode_literals
 
-import copy
-import errno
-import hashlib
-import json
-import os
-import random
-import re
-import socket
-import ssl
-import string
-import sys
-import textwrap
-import time
-import traceback
 from collections import OrderedDict, namedtuple
 from datetime import date, datetime, timedelta
 from functools import partial, wraps
 from io import StringIO
 from itertools import chain, count, islice
 
+import copy
+import errno
+import textwrap
+import time
+import json
+import hashlib
+import os
+import re
+import sys
+import traceback
+import ssl
+import random
+import socket
+import string
+
 # Prevent websocket from using numpy (it's an optional dependency). We do this
 # because numpy causes python (and thus weechat) to crash when it's reloaded.
 # See https://github.com/numpy/numpy/issues/11925
 sys.modules["numpy"] = None
 
-from websocket import (
+from websocket import (  # noqa: E402
     ABNF,
-    WebSocketConnectionClosedException,  # noqa: E402
     create_connection,
+    WebSocketConnectionClosedException,
 )
 
 try:
@@ -75,7 +76,7 @@ except ImportError:
 
 SCRIPT_NAME = "slack"
 SCRIPT_AUTHOR = "Trygve Aaberge <trygveaa@gmail.com>"
-SCRIPT_VERSION = "2.10.1"
+SCRIPT_VERSION = "2.10.2"
 SCRIPT_LICENSE = "MIT"
 SCRIPT_DESC = "Extends WeeChat for typing notification/search/etc on slack.com"
 REPO_URL = "https://github.com/wee-slack/wee-slack"
@@ -753,9 +754,9 @@ class EventRouter(object):
                     j = json.loads(body)
 
                     try:
-                        j[
-                            "wee_slack_process_method"
-                        ] = request_metadata.request_normalized
+                        j["wee_slack_process_method"] = (
+                            request_metadata.request_normalized
+                        )
                         if self.recording:
                             self.record_event(
                                 j,
@@ -1594,7 +1595,7 @@ class SlackTeam(object):
         users,
         bots,
         channels,
-        **kwargs
+        **kwargs,
     ):
         self.slack_api_translator = copy.deepcopy(SLACK_API_TRANSLATOR)
         self.identifier = team_info["id"]
@@ -1690,6 +1691,7 @@ class SlackTeam(object):
             self.eventrouter.weechat_controller.register_buffer(
                 self.channel_buffer, self
             )
+            w.buffer_set(self.channel_buffer, "input_prompt", self.nick)
             w.buffer_set(self.channel_buffer, "input_multiline", "1")
             w.buffer_set(self.channel_buffer, "localvar_set_type", "server")
             w.buffer_set(self.channel_buffer, "localvar_set_slack_type", self.type)
@@ -2420,6 +2422,7 @@ class SlackChannel(SlackChannelCommon):
             self.eventrouter.weechat_controller.register_buffer(
                 self.channel_buffer, self
             )
+            w.buffer_set(self.channel_buffer, "input_prompt", self.team.nick)
             w.buffer_set(self.channel_buffer, "input_multiline", "1")
             w.buffer_set(
                 self.channel_buffer, "localvar_set_type", get_localvar_type(self.type)
@@ -2886,12 +2889,12 @@ class SlackDMChannel(SlackChannel):
     has some important differences.
     """
 
-    def __init__(self, eventrouter, users, **kwargs):
+    def __init__(self, eventrouter, users, myidentifier, **kwargs):
         dmuser = kwargs["user"]
         kwargs["name"] = users[dmuser].name if dmuser in users else dmuser
         super(SlackDMChannel, self).__init__(eventrouter, "im", **kwargs)
         self.update_color()
-        self.members = {self.user}
+        self.members = {myidentifier, self.user}
         if dmuser in users:
             self.set_topic(create_user_status_string(users[dmuser].profile))
 
@@ -3209,6 +3212,7 @@ class SlackThreadChannel(SlackChannelCommon):
             self.eventrouter.weechat_controller.register_buffer(
                 self.channel_buffer, self
             )
+            w.buffer_set(self.channel_buffer, "input_prompt", self.team.nick)
             w.buffer_set(self.channel_buffer, "input_multiline", "1")
             w.buffer_set(
                 self.channel_buffer,
@@ -3728,7 +3732,9 @@ def handle_rtmstart(login_data, eventrouter, team, channel, metadata):
                 channels[item["id"]] = SlackChannel(eventrouter, **item)
 
         for item in login_data["ims"]:
-            channels[item["id"]] = SlackDMChannel(eventrouter, users, **item)
+            channels[item["id"]] = SlackDMChannel(
+                eventrouter, users, login_data["self"]["id"], **item
+            )
 
         for item in login_data["mpims"]:
             channels[item["id"]] = SlackMPDMChannel(
@@ -4110,6 +4116,16 @@ def process_pref_change(message_json, eventrouter, team, channel, metadata):
         team.set_muted_channels(message_json["value"])
     elif message_json["name"] == "highlight_words":
         team.set_highlight_words(message_json["value"])
+    elif message_json["name"] == "all_notifications_prefs":
+        new_prefs = json.loads(message_json["value"])
+        new_muted_channels = set(
+            channel_id
+            for channel_id, prefs in new_prefs["channels"].items()
+            if prefs["muted"]
+        )
+        team.set_muted_channels(",".join(new_muted_channels))
+        global_keywords = new_prefs["global"]["global_keywords"]
+        team.set_highlight_words(global_keywords)
     else:
         dbg("Preference change not implemented: {}\n".format(message_json["name"]))
 
@@ -4122,7 +4138,9 @@ def process_user_change(message_json, eventrouter, team, channel, metadata):
     profile = message_json["user"]["profile"]
     if user:
         user.update_status(profile.get("status_emoji"), profile.get("status_text"))
-        dmchannel = team.find_channel_by_members({user.identifier}, channel_type="im")
+        dmchannel = team.find_channel_by_members(
+            {team.myidentifier, user.identifier}, channel_type="im"
+        )
         if dmchannel:
             dmchannel.set_topic(create_user_status_string(profile))
 
@@ -4383,7 +4401,9 @@ def process_channel_rename(message_json, eventrouter, team, channel, metadata):
 
 def process_im_created(message_json, eventrouter, team, channel, metadata):
     item = message_json["channel"]
-    channel = SlackDMChannel(eventrouter, team=team, users=team.users, **item)
+    channel = SlackDMChannel(
+        eventrouter, team.users, team.myidentifier, team=team, **item
+    )
     team.channels[item["id"]] = channel
     team.buffer_prnt("IM channel created: {}".format(channel.name))
 
@@ -4548,8 +4568,8 @@ def linkify_text(message, team, only_users=False, escape_characters=True):
             message
             # Replace IRC formatting chars with Slack formatting chars.
             .replace("\x02", "*")
-            .replace("\x1D", "_")
-            .replace("\x1F", config.map_underline_to)
+            .replace("\x1d", "_")
+            .replace("\x1f", config.map_underline_to)
             # Escape chars that have special meaning to Slack. Note that we do not
             # (and should not) perform full HTML entity-encoding here.
             # See https://api.slack.com/docs/message-formatting for details.
@@ -7258,7 +7278,9 @@ def initiate_connection(token):
 
 def create_channel_from_info(eventrouter, channel_info, team, myidentifier, users):
     if channel_info.get("is_im"):
-        return SlackDMChannel(eventrouter, users, team=team, **channel_info)
+        return SlackDMChannel(
+            eventrouter, users, myidentifier, team=team, **channel_info
+        )
     elif channel_info.get("is_mpim"):
         return SlackMPDMChannel(
             eventrouter, users, myidentifier, team=team, **channel_info
@@ -7326,6 +7348,28 @@ def create_team(token, initial_data):
                 "away" if initial_data["presence"]["manual_away"] else "active"
             )
 
+            try:
+                all_notifications_prefs = json.loads(
+                    initial_data["prefs"].get("all_notifications_prefs")
+                )
+                global_keywords = all_notifications_prefs.get("global", {}).get(
+                    "global_keywords"
+                )
+            except json.decoder.JSONDecodeError:
+                global_keywords = None
+
+            if global_keywords is None:
+                print_error(
+                    "global_keywords not found in users.prefs.get", warning=True
+                )
+                dbg(
+                    "global_keywords not found in users.prefs.get. Response of users.prefs.get: {}".format(
+                        json.dumps(initial_data["prefs"])
+                    ),
+                    level=5,
+                )
+                global_keywords = ""
+
             team_info = {
                 "id": team_id,
                 "name": response_json["team"]["id"],
@@ -7350,7 +7394,7 @@ def create_team(token, initial_data):
                     bots,
                     channels,
                     muted_channels=initial_data["prefs"]["muted_channels"],
-                    highlight_words=initial_data["prefs"]["highlight_words"],
+                    highlight_words=global_keywords,
                 )
                 eventrouter.register_team(team)
                 team.connect()

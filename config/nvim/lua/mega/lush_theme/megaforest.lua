@@ -261,11 +261,11 @@ local theme = lush(function(injected_functions)
     -- affects individual bits of code that are errored:
     DiagnosticUnderlineError({
       fg = C.transparent,
-      bg = C.bg_dark,
+      bg = C.bg_red,
       sp = DiagnosticError.fg,
       gui = "undercurl,bold,italic",
     }),
-    DiagnosticUnderlineWarn({ fg = C.transparent, bg = C.bg_dark, sp = DiagnosticWarn.fg, gui = "italic,bold" }),
+    DiagnosticUnderlineWarn({ fg = C.transparent, bg = C.bg_dark, sp = DiagnosticWarn.fg, gui = "italic,bold,undercurl" }),
     DiagnosticUnderlineInfo({ fg = C.transparent, bg = C.bg_dark, sp = DiagnosticInfo.fg, gui = "italic" }),
     DiagnosticUnderlineHint({ fg = C.transparent, bg = C.bg_dark, sp = DiagnosticHint.fg, gui = "italic" }),
 
@@ -321,7 +321,12 @@ local theme = lush(function(injected_functions)
     Headline5({ fg = C.blue, bg = C.bg0, gui = "bold" }),
     Headline6({ fg = C.orange, bg = C.bg0, gui = "italic" }),
     Dash({ fg = C.bg3, gui = "bold" }),
-    CodeBlock({ bg = C.bg1 }),
+    CodeBlock({ bg = C.bg2 }),
+
+    ---- *render-markdown.txt* -------------------------------------------------
+
+    RenderMarkdownDash({ Dash }),
+    RenderMarkdownCode({ CodeBlock }),
 
     ---- :help nvim-treesitter-highlights (external plugin) ----
     -- https://github.com/folke/tokyonight.nvim/blob/main/lua/tokyonight/treesitter.lua#L20
@@ -889,7 +894,7 @@ local theme = lush(function(injected_functions)
     IndentBlanklineContextStart({ sp = C.bg_blue.li(10), bg = C.transparent, gui = "underline" }),
 
     ---- :help mini.indentscope ------------------------------------------------
-    MiniIndentscopeSymbol({ fg = C.teal.lighten(10) }),
+    MiniIndentscopeSymbol({ fg = C.teal.darken(30) }),
 
     ---- :help mini.jump.txt / mini.jump2d.txt  --------------------------------
 
@@ -976,13 +981,13 @@ local theme = lush(function(injected_functions)
     StTitle({ bg = C.bg1, fg = C.grey2, gui = "bold" }),
     StComment({ Comment, bg = C.bg1 }),
     StLineNumber({ fg = C.grey2, bg = C.bg1, gui = "bold" }),
-    StLineSep({ fg = C.grey1, bg = C.bg1, gui = "" }),
+    StLineSep({ fg = C.grey0, bg = C.bg1, gui = "" }),
     StLineTotal({ fg = C.grey1, bg = C.bg1 }),
-    StLineColumn({ fg = C.grey1, bg = C.bg1, gui = "italic" }),
+    StLineColumn({ fg = C.grey2, bg = C.bg1 }),
     StClient({ bg = C.bg1, fg = C.fg, gui = "bold" }),
     StError({ DiagnosticError, bg = C.bg1 }),
     StWarn({ DiagnosticWarn, bg = C.bg1 }),
-    StInfo({ DiagnosticInfo, bg = C.bg1, gui = "bold" }),
+    StInfo({ DiagnosticInfo, bg = C.bg1 }),
     StHint({ DiagnosticHint, bg = C.bg1 }),
 
     ---- :help statuscolumn  ---------------------------------------------------------
@@ -1116,16 +1121,28 @@ local theme = lush(function(injected_functions)
     ---- :help git-signs.txt ---------------------------------------------------
 
     GitSignsAdd({ fg = C.bright_green }),
+    GitSignsAddCul({ fg = C.bright_green, bg = C.bg_dark }),
     GitSignsDelete({ fg = C.red }),
+    GitSignsDeleteCul({ fg = C.red, bg = C.bg_dark }),
+    GitSignsTopdelete({ GitSignsDelete }),
     GitSignsChange({ fg = C.orange }),
+    GitSignsChangeCul({ fg = C.orange, bg = C.bg_dark }),
+    GitSignsChangedelete({ GitSignsChange }),
 
-    GitSignsAddCursorLine({ fg = C.bright_green, bg = C.bg_dark }),
-    GitSignsDeleteCursorLine({ fg = C.red, bg = C.bg_dark }),
-    GitSignsChangeCursorLine({ fg = C.orange, bg = C.bg_dark }),
+    -- GitSignsAddCursorLine({ fg = C.bright_green, bg = C.bg_dark }),
+    -- GitSignsDeleteCursorLine({ fg = C.red, bg = C.bg_dark }),
+    -- GitSignsChangeCursorLine({ fg = C.orange, bg = C.bg_dark }),
 
-    GitSignsAddNum({ fg = C.bright_green }),
-    GitSignsDeleteNum({ fg = C.red }),
-    GitSignsChangeNum({ fg = C.orange }),
+    GitSignsAddNr({ fg = C.bright_green }),
+    GitSignsDeleteNr({ fg = C.red }),
+    GitSignsChangeNr({ fg = C.orange }),
+
+    -- 'signs.add.culhl' is now deprecated, please define highlight 'GitSignsAddCul' e.g:
+    --   vim.api.nvim_set_hl(0, 'GitSignsAddCul', { link = 'GitSignsAddCursorLine' })
+    -- 'signs.change.culhl' is now deprecated, please define highlight 'GitSignsChangeCul' e.g:
+    --   vim.api.nvim_set_hl(0, 'GitSignsChangeCul', { link = 'GitSignsChangeCursorLine' })
+    -- 'signs.delete.culhl' is now deprecated, please define highlight 'GitSignsDeleteCul' e.g:
+    --   vim.api.nvim_set_hl(0, 'GitSignsDeleteCul', { link = 'GitSignsDeleteCursorLine' })
 
     ---- tmux-popup ------------------------------------------------------------
 

@@ -14,6 +14,7 @@ return {
   {
     "nvim-treesitter/nvim-treesitter",
     build = ":TSUpdate",
+    lazy = false,
     opts = {
       ensure_installed = {
         "bash",
@@ -21,7 +22,8 @@ return {
         "cpp",
         "css",
         "csv",
-        -- "comment", -- too slow still.
+        "comment", -- too slow still.
+        -- "dap_repl",
         "devicetree",
         "dockerfile",
         "diff",
@@ -55,6 +57,7 @@ return {
         "nix",
         "org",
         "perl",
+        "printf",
         "psv",
         "python",
         "query",
@@ -66,6 +69,7 @@ return {
         "sql",
         "surface",
         "teal",
+        "tmux",
         "toml",
         "tsv",
         "tsx",
@@ -74,6 +78,7 @@ return {
         "vimdoc",
         "yaml",
       },
+      ignore_install = { "comment" },
       auto_install = true,
       highlight = {
         enable = vim.g.vscode ~= 1,
@@ -84,6 +89,7 @@ return {
         --  the list of additional_vim_regex_highlighting and disabled languages for indent.
         additional_vim_regex_highlighting = {
           "ruby",
+          "elixir",
           "python",
           -- "lua",
           "vim",
@@ -215,7 +221,6 @@ return {
       vim.treesitter.query.add_directive("ft-conceal!", ft_conceal, true)
 
       require("nvim-treesitter.install").prefer_git = true
-      vim.lg(opts)
       require("nvim-treesitter.configs").setup(opts)
     end,
   },
@@ -224,7 +229,6 @@ return {
   { "RRethy/nvim-treesitter-textsubjects", cond = true, dependencies = { "nvim-treesitter/nvim-treesitter" } },
   { "nvim-treesitter/nvim-tree-docs", cond = true, dependencies = { "nvim-treesitter/nvim-treesitter" } },
   { "RRethy/nvim-treesitter-endwise", dependencies = { "nvim-treesitter/nvim-treesitter" } },
-  { "megalithic/nvim-ts-autotag", dependencies = { "nvim-treesitter/nvim-treesitter" } },
   {
     "nvim-treesitter/nvim-treesitter-context",
     keys = {

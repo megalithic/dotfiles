@@ -4,9 +4,9 @@ SESSION="ternreturns"
 ROOT_DIR="$CODE/tern"
 CWD="$ROOT_DIR/$SESSION"
 
-SESSION_ICON=""
-SESSION_FG="#a7c080"
-SESSION_BG="#4e6053"
+export SESSION_ICON=""
+export SESSION_FG="#a7c080"
+export SESSION_BG="#4e6053"
 
 cd $CWD
 

@@ -173,6 +173,10 @@ export WEECHAT_HOME="$XDG_CONFIG_HOME/weechat"
 # https://github.com/ansible/ansible/issues/76322#issuecomment-974147955
 export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
 
+# -- imagemagick thing
+# REF: https://github.com/3rd/image.nvim?tab=readme-ov-file#installing-imagemagick
+# export DYLD_LIBRARY_PATH="$(brew --prefix)/lib:$DYLD_LIBRARY_PATH"
+export DYLD_LIBRARY_PATH="$(brew --prefix)/lib"
 
 # -- bat
 if which bat >/dev/null; then
@@ -224,9 +228,10 @@ case "$(uname)" in
       export LDFLAGS="-L/opt/homebrew/opt/ruby/lib"
       export CPPFLAGS="-I/opt/homebrew/opt/ruby/include"
 
-      export PKG_CONFIG_PATH="$PKG_CONFIG_PATH $(brew --prefix)/opt/ruby/lib/pkgconfig"
-      export PKG_CONFIG_PATH="$PKG_CONFIG_PATH $(brew --prefix)/opt/libffi/lib/pkgconfig"
-      export PKG_CONFIG_PATH="$PKG_CONFIG_PATH $(brew --prefix)/opt/openssl@1.1/lib/pkgconfig"
+      export PKG_CONFIG_PATH="$(brew --prefix)/opt/ruby/lib/pkgconfig $(brew --prefix)/opt/libffi/lib/pkgconfig $(brew --prefix)/opt/openssl@1.1/lib/pkgconfig"
+      # export PKG_CONFIG_PATH="$PKG_CONFIG_PATH $(brew --prefix)/opt/ruby/lib/pkgconfig"
+      # export PKG_CONFIG_PATH="$PKG_CONFIG_PATH $(brew --prefix)/opt/libffi/lib/pkgconfig"
+      # export PKG_CONFIG_PATH="$PKG_CONFIG_PATH $(brew --prefix)/opt/openssl@1.1/lib/pkgconfig"
 
       # export ERLANG_OPENSSL_PATH="/usr/local/opt/openssl@1.1"
       # export ERLANG_OPENSSL_PATH="/usr/local/opt/openssl@3"
@@ -286,7 +291,7 @@ case "$(uname)" in
   export KEYTIMEOUT=1
 
   # so I can run USPTO/jboss stuff sensibly
-  export JAVA_OPTS="$JAVA_OPTS -Xms2048M -Xmx4096M -XX:MaxPermSize=512M -Djboss.vfs.forceCopy=false"
+  export JAVA_OPTS="-Xms2048M -Xmx4096M -XX:MaxPermSize=512M -Djboss.vfs.forceCopy=false"
 
   # This resolves issues install the mysql, postgres, and other gems with native non universal binary extensions
   export ARCHFLAGS='-arch x86_64'
@@ -327,7 +332,8 @@ case "$(uname)" in
 
   # export MYSQL=/usr/local/mysql/bin
   # export PATH=$PATH:$MYSQL
-  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:.:/usr/local/lib
+  export LD_LIBRARY_PATH="/usr/local/lib"
+  # export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:.:/usr/local/lib
 
   # elixir and erlang things for `iex`, etc:
   export ERL_AFLAGS="-kernel shell_history enabled"
@@ -362,7 +368,9 @@ case "$(uname)" in
 
   # Set the list of directories that Zsh searches for programs.
   # "${HOME}/.asdf/installs/elixir/`asdf current elixir | awk '{print $1}'`/.mix"
+  # NOTE: ASC for override, first-in-list wins
   path=(
+    ${HOME}/.local/share/lsp/bin(N-/)
     ${HOMEBREW_PREFIX}/{bin,sbin}
     ${HOMEBREW_PREFIX}/opt
     ./bin
@@ -423,6 +431,7 @@ case "$(uname)" in
     /Applications/WezTerm.app/Contents/MacOS
     ${HOMEBREW_PREFIX}/{bin,sbin}
     ${HOMEBREW_PREFIX}/opt
+
     $path
   )
   export PATH
@@ -458,6 +467,18 @@ case "$(uname)" in
   export ZSH_AUTOSUGGEST_USE_ASYNC=1
   # export ZSH_AUTOSUGGEST_STRATEGY=(history completion) # or match_prev_cmd
   export ZSH_AUTOSUGGEST_STRATEGY=("match_prev_cmd" "completion")
+
+  # zsh magic dashboard
+  # Size of the dashboard
+  export MAGIC_DASHBOARD_GITLOG_LINES=5
+  export MAGIC_DASHBOARD_FILES_LINES=6
+
+  # Disable dashboard in low terminal windows.
+  # (Useful for tmux or for terminals embedded in your IDE.)
+  export MAGIC_DASHBOARD_DISABLED_BELOW_TERM_HEIGHT=15
+
+  # Make commit hashes & files clickable. Requires `git-delta`.
+  export MAGIC_DASHBOARD_USE_HYPERLINKS=0 # set to `1` to enable
 
   # zoxide
   export _ZO_DATA_DIR="$XDG_DATA_HOME/zoxide"

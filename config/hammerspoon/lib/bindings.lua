@@ -234,6 +234,19 @@ function obj:start()
     hs.notify.new({ title = "Hammerspoon", subTitle = "Reloading configuration.." }):send()
   end)
 
+  Hyper:bind(keys.mods.caSc, "c", function()
+    hs.reload()
+    hs.notify.new({ title = "Hammerspoon", subTitle = "Reloading configuration.." }):send()
+  end)
+
+  Hyper:bind(keys.mods.CaSC, "p", nil, function()
+    if B.jump("chatgpt.com") then
+      return true
+    else
+      hs.urlevent.openURL("https://chatgpt.com")
+    end
+  end)
+
   -- Hyper:bind(keys.mods.casc, "d", function()
   --   hs.reload()
   --   hs.notify.new({ title = "Hammerspoon", subTitle = "Reloading configuration.." }):send()

@@ -94,9 +94,11 @@ local ATTACHED_BUFFERS = {}
 local function update_extmark(bufnr)
   bufnr = bufnr or vim.api.nvim_get_current_buf()
   local params = { textDocument = vim.lsp.util.make_text_document_params(bufnr) }
-  vim.lsp.buf_request(bufnr, "textDocument/documentColor", params, function(err, colors)
+  vim.lsp.buf_request(bufnr, "textDocument/documentColor", params, function(err, result, _ctx, _config)
+    -- local client_name = vim.lsp.get_client_by_id(ctx.client_id).name
+
     if err then return end
-    for _, c in ipairs(colors) do
+    for _, c in ipairs(result) do
       local color = c.color
       color.red = math.floor(color.red * 255 + 0.5)
       color.green = math.floor(color.green * 255 + 0.5)
@@ -200,12 +202,20 @@ require("mega.autocmds").augroup("DocumentColors", {
   {
     event = { "BufEnter" },
     desc = "Attach document color LSP functionality to a buffer",
-    command = function(evt) M.buf_attach(evt.buf, { single_column = true, col_count = 2, mode = "bg" }) end,
+    command = function(evt)
+      -- local client = assert(vim.lsp.get_client_by_id(evt.data.client_id), "must have valid ls client")
+      -- if not client or not client.supports_method("textDocument/documentColor", { bufnr = evt.buf }) then return end
+      M.buf_attach(evt.buf, { single_column = true, col_count = 2, mode = "bg" })
+    end,
   },
   {
     event = { "BufLeave" },
     desc = "Detach document color LSP functionality from a buffer",
-    command = function(evt) M.buf_detach(evt.buf) end,
+    command = function(evt)
+      -- local client = assert(vim.lsp.get_client_by_id(evt.data.client_id), "must have valid ls client")
+      -- if not client or not client.supports_method("textDocument/documentColor", { bufnr = evt.buf }) then return end
+      M.buf_detach(evt.buf)
+    end,
   },
 })
 

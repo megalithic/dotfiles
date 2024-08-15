@@ -7,7 +7,7 @@ local nnoremap = require("mega.mappings").nnoremap
 
 local cmds_by_ft = {
   ["lua"] = function(args)
-    if string.match(vim.fn.expand("%"), "hammerspoon") ~= nil then
+    if string.match(vim.fn.expand("%"), "hs") ~= nil then
       return "hs"
     else
       return "lua"

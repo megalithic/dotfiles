@@ -1,5 +1,7 @@
 return {
   "stevearc/oil.nvim",
+  -- event = "VeryLazy",
+  lazy = false,
   cmd = { "Oil" },
   config = function()
     local SETTINGS = require("mega.settings")
@@ -27,6 +29,7 @@ return {
 
     require("oil").setup({
       trash = false,
+      default_file_explorer = true,
       skip_confirm_for_simple_edits = true,
       trash_command = "trash-cli",
       prompt_save_on_select_new_entry = false,
@@ -75,6 +78,7 @@ return {
         show_hidden = true,
       },
       keymaps = {
+        ["<C-y>"] = "actions.yank_entry",
         ["g?"] = "actions.show_help",
         ["gs"] = "actions.change_sort",
         ["gx"] = "actions.open_external",

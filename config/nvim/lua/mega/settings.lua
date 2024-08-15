@@ -1,6 +1,8 @@
 local BORDER_STYLE = "none"
 local fmt = string.format
 
+vim.lsp.set_log_level("ERROR")
+
 local border_chars = {
   none = { " ", " ", " ", " ", " ", " ", " ", " " },
   single = { "🭽", "▔", "🭾", "▕", "🭿", "▁", "🭼", "▏" },
@@ -51,6 +53,8 @@ local hammerspoon_path = fmt("%s/config/hammerspoon", dotfiles_path)
 -- is_remote_dev = vim.trim(vim.fn.system("hostname")) == "seth-dev",
 -- is_local_dev = vim.trim(vim.fn.system("hostname")) ~= "seth-dev",
 
+--- @class Settings
+--- @field enabled_elixir_ls {"ElixirLS"|"Next LS"|"elixirls"|"nextls"|"lexical"}
 local M = {
   -- NOTE: char options (https://unicodeplus.com/): ┊│┆ ┊  ▎││ ▏▏│¦┆┊
   indent_scope_char = "│",
@@ -68,9 +72,10 @@ local M = {
   formatter = "conform", -- alt: null-ls/none-ls, conform
   tree = "neo-tree",
   explorer = "oil", -- alt: dirbuf, oil
-  tester = "vim-test", -- alt: neotest, nvim-test, vim-test
+  tester = "vim-test", -- alt: neotest, vim-test, quicktest
   gitter = "neogit", -- alt: neogit, fugitive
   snipper = "snippets", -- alt: vsnip, luasnip, snippets (nvim-builtin)
+  ai = "neocodeium", -- alt: minuet, neocodeium, codecompanion
   completer = "cmp", -- alt: cmp, epo
   ts_ignored_langs = {}, -- alt: { "svg", "json", "heex", "jsonc" }
   is_screen_sharing = false,
@@ -88,17 +93,20 @@ local M = {
     "folds",
     "env",
   },
-  controlled_language_servers = { "ElixirLS", "Next LS", "elixirls", "nextls", "lexical" },
+  disabled_semantic_tokens = { "lua" },
   disabled_lsp_formatters = { "tailwindcss", "html", "tsserver", "ls_emmet", "zk", "sumneko_lua" },
-  -- REF: elixir language servers: { ElixirLS, Next LS, elixirls, nextls, lexical }
-  enabled_elixir_ls = { "", "Next LS", "", "", "" },
-  completion_exclusions = { "ElixirLS", "", "elixirls", "nextls", "lexical" },
-  formatter_exclusions = { "ElixirLS", "", "elixirls", "nextls", "lexical" },
-  diagnostic_exclusions = { "ElixirLS", "", "elixirls", "nextls", "lexical", "tsserver" },
-  definition_exclusions = { "ElixirLS", "", "elixirls", "nextls", "lexical" },
-  max_diagnostic_exclusions = { "ElixirLS", "", "elixirls", "nextls", "lexical" },
+  ---@format disable
+  enabled_elixir_ls = { "", "", "elixirls", "nextls", "lexical" },
+  completion_exclusions = { "ElixirLS", "Next LS", "", "", "" },
+  formatter_exclusions = { "ElixirLS", "Next LS", "elixirls", "", "lexical" },
+  definition_exclusions = { "ElixirLS", "Next LS", "elixirls", "", "lexical" },
+  references_exclusions = { "ElixirLS", "Next LS", "elixirls", "", "lexical" },
+  diagnostic_exclusions = { "ElixirLS", "Next LS", "elixirls", "", "lexical", "tsserver" },
+  max_diagnostic_exclusions = { "ElixirLS", "Next LS", "elixirls", "", "lexical" },
+  ---@format enable
   disable_autolint = false,
   disable_autoformat = false,
+  enable_signsplaced = false,
   markdown_fenced_languages = {
     "shell=sh",
     "bash=sh",
@@ -139,9 +147,9 @@ local M = {
   icons = {
     lsp = {
       error = "", -- alts: 󰬌      
-      warn = "▲", -- alts: 󰬞 󰔷   ▲ 󰔷
+      warn = "󰔷", -- alts: 󰬞 󰔷   ▲ 󰔷
       info = "", -- alts: 󱂈 󰋼  󰬐 󰰃     ● 󰬐
-      hint = "", -- alts:  󰬏 󰰀  󰌶 󰰂 󰰂 󰰁 󰫵 󰋢   
+      hint = "▫", -- alts:  󰬏 󰰀  󰌶 󰰂 󰰂 󰰁 󰫵 󰋢   
       ok = "✓", -- alts: ✓✓
     },
     test = {
@@ -319,6 +327,12 @@ local M = {
   },
 }
 
+M.apply_abbreviations = function()
+  -- vim.cmd.cnoreabbrev("ntl NeotestLast")
+  -- vim.cmd.cnoreabbrev("nts NeotestSummary")
+  -- vim.cmd.cnoreabbrev("nto NeotestOutput")
+end
+
 M.apply = function()
   -- function modified_icon() return vim.bo.modified and M.icons.misc.circle or "" end
   local settings = {
@@ -335,19 +349,20 @@ M.apply = function()
         },
       },
       mkdp_theme = "dark",
-      colorscheme = M.colorscheme, -- alt: `vim` for default
+      colorscheme = M.colorscheme,
       default_colorcolumn = M.default_colorcolumn,
       notifier_enabled = M.notifier_enabled,
       debug_enabled = M.debug_enabled,
-      picker = M.picker, -- alt: telescope, fzf_lua
-      formatter = M.formatter, -- alt: null-ls/none-ls, conform
+      picker = M.picker,
+      formatter = M.formatter,
       tree = M.tree,
-      explorer = M.explorer, -- alt: dirbuf, oil
-      tester = M.tester, -- alt: neotest, nvim-test, vim-test
-      gitter = M.gitter, -- alt: neogit, fugitive
-      snipper = M.snipper, -- alt: vsnip, luasnip, snippets (nvim-builtin)
-      completer = M.completer, -- alt: cmp, epo
-      ts_ignored_langs = M.ts_ignored_langs, -- alt: { "svg", "json", "heex", "jsonc" }
+      explorer = M.explorer,
+      tester = M.tester,
+      gitter = M.gitter,
+      ai = M.ai,
+      snipper = M.snipper,
+      completer = M.completer,
+      ts_ignored_langs = M.ts_ignored_langs,
       is_screen_sharing = M.is_screen_sharing,
       disable_autolint = M.disable_autolint,
       disable_autoformat = M.disable_autoformat,
@@ -356,18 +371,23 @@ M.apply = function()
 
       open_command = is_macos and "open" or "xdg-open",
       is_tmux_popup = vim.env.TMUX_POPUP ~= nil,
-      code = fmt("%s/code", home_path),
+      code_path = fmt("%s/code", home_path),
+      projects_path = fmt("%s/code", home_path),
       vim_path = fmt("%s/.config/nvim", home_path),
+      dotfiles_path = fmt("%s/.dotfiles", home_path),
       nvim_path = fmt("%s/.config/nvim", home_path),
       cache_path = fmt("%s/.cache/nvim", home_path),
       local_state_path = fmt("%s/.local/state/nvim", home_path),
       local_share_path = fmt("%s/.local/share/nvim", home_path),
+      db_ui_path = fmt("%s/_sql", icloud_documents_path),
       notes_path = fmt("%s/_notes", icloud_documents_path),
       org_path = fmt("%s/_org", icloud_documents_path),
       neorg_path = fmt("%s/_org", icloud_documents_path),
       hs_emmy_path = fmt("%s/Spoons/EmmyLua.spoon", hammerspoon_path),
     },
     o = {
+      cmdwinheight = 7,
+      cmdheight = 1,
       diffopt = "internal,filler,closeoff,linematch:60",
       linebreak = true, -- lines wrap at words rather than random characters
       splitbelow = true,
@@ -377,6 +397,7 @@ M.apply = function()
       swapfile = false,
       undodir = vim.env.HOME .. "/.vim/undodir",
       undofile = true,
+      virtualedit = "block",
       wrapscan = true,
     },
     opt = {
@@ -490,6 +511,7 @@ M.apply = function()
       -- Tabline
       tabline = "",
       showtabline = 0,
+      guicursor = vim.opt.guicursor + "a:blinkon500-blinkoff100",
     },
   }
 
@@ -554,28 +576,20 @@ M.apply = function()
     },
     -- ['.*tmux.*conf$'] = 'tmux',
   })
-  function vim.pprint(...)
-    local s, args = pcall(vim.deepcopy, { ... })
-    if not s then args = { ... } end
-    vim.schedule_wrap(vim.notify)(vim.inspect(#args > 1 and args or unpack(args)))
+
+  M.apply_abbreviations()
+
+  -- NOTE: to use in one of our plugins:
+  -- `if not plugin_loaded("plugin_name") then return end`
+  function _G.plugin_loaded(plugin)
+    if not mega then return false end
+    local enabled_plugins = M.enabled_plugins
+
+    if not enabled_plugins then return false end
+    if not vim.tbl_contains(enabled_plugins, plugin) then return false end
+
+    return true
   end
-
-  function vim.lg(...)
-    if vim.in_fast_event() then return vim.schedule_wrap(vim.lg)(...) end
-    local d = debug.getinfo(2)
-    return vim.fn.writefile(
-      vim.fn.split(":" .. d.short_src .. ":" .. d.currentline .. ":\n" .. vim.inspect(#{ ... } > 1 and { ... } or ...), "\n"),
-      "/tmp/nlog",
-      "a"
-    )
-  end
-
-  function vim.lgclear() vim.fn.writefile({}, "/tmp/nlog") end
-
-  vim.api.nvim_create_user_command("Capture", function(opts)
-    vim.fn.writefile(vim.split(vim.api.nvim_exec2(opts.args, { output = true }).output, "\n"), "/tmp/nvim_out.capture")
-    vim.cmd.split("/tmp/nvim_out.capture")
-  end, { nargs = "*", complete = "command" })
 end
 
 return M

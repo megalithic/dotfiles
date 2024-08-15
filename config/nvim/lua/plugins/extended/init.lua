@@ -6,6 +6,10 @@ local icons = SETTINGS.icons
 return {
   {
     {
+      "max397574/better-escape.nvim",
+      config = function() require("better_escape").setup() end,
+    },
+    {
       "farmergreg/vim-lastplace",
       lazy = false,
       init = function()
@@ -34,7 +38,6 @@ return {
     { "numToStr/Comment.nvim", opts = {} },
     {
       "folke/trouble.nvim",
-      branch = "dev",
       cmd = { "TroubleToggle", "Trouble" },
       opts = {
         auto_open = false,
@@ -43,12 +46,15 @@ return {
     },
     {
       "folke/which-key.nvim",
+      version = "2.1.0",
+      pin = true,
       event = "VeryLazy",
       init = function()
         vim.o.timeout = true
         vim.o.timeoutlen = 300
       end,
       opts = {
+        -- preset = "modern",
         plugins = {
           marks = true, -- shows a list of your marks on ' and `
           registers = true, -- shows your registers on " in NORMAL or <C-r> in INSERT mode
@@ -103,6 +109,12 @@ return {
       config = function(_, opts) -- This is the function that runs, AFTER loading
         local wk = require("which-key")
         wk.setup(opts)
+        -- wk.add({
+        --   { "<leader>c", group = "[c]ode" },
+        --   { "<leader>d", group = "[d]ocument" },
+        --   { "<leader>e", group = "[e]dit files" },
+        --   { "<leader>e", group = "[e]dit files" },
+        -- })
 
         -- Document existing key chains
         wk.register({
@@ -110,7 +122,7 @@ return {
           ["<leader>d"] = { name = "[d]ocument", _ = "which_key_ignore" },
           ["<leader>e"] = {
             name = "+edit files",
-            r = { function() require("mega.utils.lsp").rename_file() end, "rename file (lsp) to <input>" },
+            r = { function() require("mega.utils").lsp.rename_file() end, "rename file (lsp) to <input>" },
             s = { [[<cmd>SaveAsFile<cr>]], "save file as <input>" },
             e = "oil: open (edit)", -- NOTE: change in plugins/extended/oil.lua
             v = "oil: open (vsplit)", -- NOTE: change in plugins/extended/oil.lua
@@ -153,6 +165,7 @@ return {
           ["<leader>r"] = { name = "[r]ename", _ = "which_key_ignore" },
           ["<leader>t"] = { name = "[t]erminal", _ = "which_key_ignore" },
           ["<leader>z"] = { name = "[z]k", _ = "which_key_ignore" },
+          ["<localleader>d"] = { name = "[d]ebug", _ = "which_key_ignore" },
           ["<localleader>g"] = { name = "[g]it", _ = "which_key_ignore" },
           ["<localleader>h"] = { name = "[h]unk", _ = "which_key_ignore" },
           ["<localleader>r"] = { name = "[r]epl", _ = "which_key_ignore" },
@@ -294,32 +307,214 @@ return {
     --     },
     --   },
     -- },
-    {
-      "kndndrj/nvim-dbee",
-      cmd = { "Dbee" },
-      dependencies = {
-        "MunifTanjim/nui.nvim",
-      },
-      build = function()
-        -- Install tries to automatically detect the install method.
-        -- if it fails, try calling it with one of these parameters:
-        --    "curl", "wget", "bitsadmin", "go"
-        require("dbee").install()
-      end,
-      config = function()
-        require("dbee").setup(--[[optional config]])
-      end,
-    },
   },
   {
     "nacro90/numb.nvim",
     event = "CmdlineEnter",
     opts = {},
   },
+
   {
-    "Exafunction/codeium.nvim",
-    cmd = "Codeium",
-    -- build = ":Codeium Auth",
-    opts = {},
+    "windwp/nvim-ts-autotag",
+    dependencies = { "nvim-treesitter/nvim-treesitter" },
+    event = { "BufReadPre", "BufNewFile" },
+    opts = {
+      aliases = {
+        ["elixir"] = "html",
+        ["heex"] = "html",
+        ["phoenix_html"] = "html",
+      },
+      opts = {
+
+        -- Defaults
+        enable_close = true, -- Auto close tags
+        enable_rename = true, -- Auto rename pairs of tags
+        enable_close_on_slash = false, -- Auto close on trailing </
+      },
+      -- Also override individual filetype configs, these take priority.
+      -- Empty by default, useful if one of the "opts" global settings
+      -- doesn't work well in a specific filetype
+      -- per_filetype = {
+      --   ["html"] = {
+      --     enable_close = false,
+      --   },
+      -- },
+    },
+  },
+  {
+    "kevinhwang91/nvim-bqf",
+    ft = "qf",
+    opts = {
+      preview = {
+        winblend = 0,
+      },
+    },
+  },
+  {
+    "yorickpeterse/nvim-pqf",
+    event = "BufReadPre",
+    config = function()
+      local icons = require("mega.settings").icons
+      require("pqf").setup({
+        signs = {
+          error = { text = icons.lsp.error, hl = "DiagnosticSignError" },
+          warning = { text = icons.lsp.warn, hl = "DiagnosticSignWarn" },
+          info = { text = icons.lsp.info, hl = "DiagnosticSignInfo" },
+          hint = { text = icons.lsp.hint, hl = "DiagnosticSignHint" },
+        },
+        show_multiple_lines = true,
+        max_filename_length = 40,
+      })
+    end,
+  },
+  { "lambdalisue/suda.vim", event = { "VeryLazy" } },
+
+  { -- lua alternative to the official codeium.vim plugin https://github.com/Exafunction/codeium.vim
+    "monkoose/neocodeium",
+    cond = function() return vim.g.ai == "neocodeium" end,
+    event = "InsertEnter",
+    cmd = "NeoCodeium",
+    opts = {
+      filetypes = {
+        oil = false,
+        gitcommit = false,
+        markdown = false,
+        DressingInput = false,
+        TelescopePrompt = false,
+        noice = false, -- sometimes triggered in error-buffers
+        text = false, -- `pass` passwords editing filetype is plaintext
+        ["rip-substitute"] = true,
+      },
+      silent = true,
+      show_label = false, -- signcolumn label for number of suggestions
+    },
+    init = function()
+      -- disable while recording
+      vim.api.nvim_create_autocmd("RecordingEnter", { command = "NeoCodeium disable" })
+      vim.api.nvim_create_autocmd("RecordingLeave", { command = "NeoCodeium enable" })
+    end,
+    keys = {
+			-- stylua: ignore start
+			{ "<C-y>", function() require("neocodeium").accept() end, mode = "i", desc = "󰚩 Accept full suggestion" },
+			{ "<C-t>", function() require("neocodeium").accept_line() end, mode = "i", desc = "󰚩 Accept line" },
+			-- { "<C-w>", function() require("neocodeium").accept_word() end, mode = "i", desc = "󰚩 Accept word" },
+			{ "<C-d>", function() require("neocodeium").cycle(1) end, mode = "i", desc = "󰚩 Next suggestion" },
+      -- stylua: ignore end
+      {
+        "<leader>oa",
+        function()
+          vim.cmd.NeoCodeium("toggle")
+          local on = require("neocodeium.options").options.enabled
+          require("config.utils").notify("NeoCodeium", on and "enabled" or "disabled", "info")
+        end,
+        desc = "󰚩 NeoCodeium Suggestions",
+      },
+    },
+  },
+  -- {
+  --   "milanglacier/minuet-ai.nvim",
+  --   dependencies = { { "nvim-lua/plenary.nvim" }, { "hrsh7th/nvim-cmp" } },
+  --   config = function()
+  --     require("minuet").setup({
+  --       provider = "openai", -- openai, codestral, gemini
+  --       request_timeout = 4,
+  --       throttle = 2000,
+  --       notify = "verbose",
+  --       provider_options = {
+  --         codestral = {
+  --           optional = {
+  --             stop = { "\n\n" },
+  --             max_tokens = 256,
+  --           },
+  --         },
+  --         gemini = {
+  --           optional = {
+  --             generationConfig = {
+  --               maxOutputTokens = 256,
+  --               topP = 0.9,
+  --             },
+  --             safetySettings = {
+  --               {
+  --                 category = "HARM_CATEGORY_DANGEROUS_CONTENT",
+  --                 threshold = "BLOCK_NONE",
+  --               },
+  --               {
+  --                 category = "HARM_CATEGORY_HATE_SPEECH",
+  --                 threshold = "BLOCK_NONE",
+  --               },
+  --               {
+  --                 category = "HARM_CATEGORY_HARASSMENT",
+  --                 threshold = "BLOCK_NONE",
+  --               },
+  --               {
+  --                 category = "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+  --                 threshold = "BLOCK_NONE",
+  --               },
+  --             },
+  --           },
+  --         },
+  --         openai = {
+  --           optional = {
+  --             max_tokens = 256,
+  --             top_p = 0.9,
+  --           },
+  --         },
+  --         openai_compatible = {
+  --           optional = {
+  --             max_tokens = 256,
+  --             top_p = 0.9,
+  --           },
+  --         },
+  --       },
+  --     })
+  --   end,
+  --   cond = function() return vim.g.ai == "minuet" end,
+  -- },
+  -- {
+  --   "olimorris/codecompanion.nvim",
+  --   cmd = { "CodeCompanion", "CodeCompanionActions" },
+  --   cond = function() return vim.g.ai == "codecompanion" end,
+  --   dependencies = {
+  --     "nvim-lua/plenary.nvim",
+  --     "nvim-treesitter/nvim-treesitter",
+  --     -- "stevearc/dressing.nvim", -- Optional: Improves the default Neovim UI
+  --   },
+  --   config = function()
+  --     local code_companion = require("codecompanion")
+  --     local adapters = require("codecompanion.adapters")
+  --
+  --     code_companion.setup({
+  --       adapters = {
+  --         ollama = adapters.use("ollama", {
+  --           schema = {
+  --             model = {
+  --               default = get_preferred_model(),
+  --             },
+  --           },
+  --         }),
+  --       },
+  --       strategies = {
+  --         chat = { adapter = "ollama" },
+  --         inline = { adapter = "ollama" },
+  --         agent = { adapter = "ollama" },
+  --       },
+  --     })
+  --   end,
+  -- },
+  {
+    "OXY2DEV/helpview.nvim",
+    lazy = false,
+    dependencies = {
+      "nvim-treesitter/nvim-treesitter",
+    },
+  },
+  {
+    "MagicDuck/grug-far.nvim",
+    cmd = "GrugFar",
+    config = function()
+      require("grug-far").setup({
+        windowCreationCommand = "botright vsplit %",
+      })
+    end,
   },
 }

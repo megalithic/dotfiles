@@ -104,22 +104,40 @@ return {
       -- },
 
       signs = {
-        add = { hl = "GitSignsAdd", culhl = "GitSignsAddCursorLine", numhl = "GitSignsAddNum", text = icons.git.add }, -- alts: ▕, ▎, ┃, │, ▌, ▎ 🮉
+        add = {
+          -- hl = "GitSignsAdd",
+          -- culhl = "GitSignsAddCursorLine",
+          -- numhl = "GitSignsAddNum",
+          text = icons.git.add,
+        }, -- alts: ▕, ▎, ┃, │, ▌, ▎ 🮉
         change = {
-          hl = "GitSignsChange",
-          culhl = "GitSignsChangeCursorLine",
-          numhl = "GitSignsChangeNum",
+          -- hl = "GitSignsChange",
+          -- culhl = "GitSignsChangeCursorLine",
+          -- numhl = "GitSignsChangeNum",
           text = icons.git.change,
         }, -- alts: ▎║▎
         delete = {
-          hl = "GitSignsDelete",
-          culhl = "GitSignsDeleteCursorLine",
-          numhl = "GitSignsDeleteNum",
+          -- hl = "GitSignsDelete",
+          -- culhl = "GitSignsDeleteCursorLine",
+          -- numhl = "GitSignsDeleteNum",
           text = icons.git.delete,
         }, -- alts: ┊▎▎
-        topdelete = { hl = "GitSignsDelete", text = icons.git.topdelete }, -- alts: ▌ ▄▀
-        changedelete = { hl = "GitSignsChange", text = icons.git.changedelete }, -- alts: ▌
-        untracked = { hl = "GitSignsAdd", text = icons.git.untracked }, -- alts: ┆ ▕
+        topdelete = {
+          -- hl = "GitSignsDelete",
+          text = icons.git.topdelete,
+        }, -- alts: ▌ ▄▀
+        changedelete = {
+          -- hl = "GitSignsChange",
+          text = icons.git.changedelete,
+        }, -- alts: ▌
+        untracked = {
+          -- hl = "GitSignsAdd",
+          text = icons.git.untracked,
+        }, -- alts: ┆ ▕
+        signs_staged = {
+          change = { text = "┋" },
+          delete = { text = "🢒" },
+        },
       },
       current_line_blame = not vim.fn.getcwd():match("dotfiles"),
       current_line_blame_formatter = " <author>, <author_time> · <summary>",
@@ -145,8 +163,8 @@ return {
         nmap("<localleader>gre", gs.reset_buffer, "git: reset entire buffer")
         nmap("<localleader>grh", gs.reset_hunk, "git: reset hunk")
         nmap("<leader>gm", function() gs.setqflist("all") end, "git: list modified in quickfix")
-        nmap("<leader>gd", function() gs.diffthis() end, "git: diff this")
-        nmap("<leader>gD", function() gs.diffthis("~") end, "git: diff this against ~")
+        nmap("<localleader>gd", function() gs.diffthis() end, "git: diff this")
+        nmap("<localleader>gD", function() gs.diffthis("~") end, "git: diff this against ~")
         -- Navigation
         bmap("n", "[h", function()
           if vim.wo.diff then return "[c" end
@@ -215,7 +233,7 @@ return {
   {
     "NeogitOrg/neogit",
     cmd = "Neogit",
-    branch = "nightly",
+    branch = "master",
     dependencies = { "nvim-lua/plenary.nvim" },
     -- commit = "b89ef391d20f45479e92bd4190e444c9ec9163a3",
     keys = git_keys,
@@ -246,7 +264,7 @@ return {
     "sindrets/diffview.nvim",
     cmd = { "DiffviewOpen", "DiffviewClose", "DiffviewToggleFiles", "DiffviewFocusFiles", "DiffviewFileHistory" },
     keys = {
-      { "<localleader>gd", "<Cmd>DiffviewOpen<CR>", desc = "diffview: open", mode = "n" },
+      { "<leader>gd", "<Cmd>DiffviewOpen<CR>", desc = "diffview: open", mode = "n" },
       { "gh", [[:'<'>DiffviewFileHistory<CR>]], desc = "diffview: file history", mode = "v" },
       {
         "<localleader>gh",
@@ -278,6 +296,7 @@ return {
     config = function()
       require("git-conflict").setup({
         disable_diagnostics = true,
+        list_opener = "copen", -- command or function to open the conflicts list
       })
 
       require("mega.autocmds").augroup("GitConflicts", {
@@ -286,18 +305,19 @@ return {
           pattern = { "GitConflictDetected" },
           command = function(args)
             vim.g.git_conflict_detected = true
-            mega.nnoremap("cq", "<cmd>GitConflictListQf<CR>", { desc = "git-conflict: send conflicts to qf", buffer = args.buf })
-            mega.nnoremap("[c", "<cmd>GitConflictPrevConflict<CR>|zz", { desc = "git-conflict: prev conflict", buffer = args.buf })
-            mega.nnoremap("]c", "<cmd>GitConflictNextConflict<CR>|zz", { desc = "git-conflict: next conflict", buffer = args.buf })
-            mega.notify(fmt("%s Conflicts detected.", mega.icons.lsp.error))
+            nnoremap("cq", "<cmd>GitConflictListQf<CR>", { desc = "git-conflict: send conflicts to qf", buffer = args.buf })
+            nnoremap("[c", "<cmd>GitConflictPrevConflict<CR>|zz", { desc = "git-conflict: prev conflict", buffer = args.buf })
+            nnoremap("]c", "<cmd>GitConflictNextConflict<CR>|zz", { desc = "git-conflict: next conflict", buffer = args.buf })
 
+            vim.cmd("Fidget suppress true")
             vim.defer_fn(function()
-              vim.diagnostic.disable(args.buf)
+              vim.diagnostic.enable(false, { bufnr = args.buf })
               vim.lsp.stop_client(vim.lsp.get_clients())
 
               local ok, gd = pcall(require, "garbage-day.utils")
               if ok then gd.stop_lsp() end
               vim.diagnostic.hide()
+              mega.notify(string.format("%s Conflicts detected.", icons.lsp.error))
             end, 250)
           end,
         },
@@ -305,18 +325,16 @@ return {
           event = { "User" },
           pattern = { "GitConflictResolved" },
           command = function(args)
-            mega.notify(fmt("%s All conflicts resolved!", mega.icons.lsp.ok))
             vim.defer_fn(function()
               vim.diagnostic.enable(args.buf)
               vim.cmd("LspStart")
               vim.g.git_conflict_detected = false
 
               local ok, gd = pcall(require, "garbage-day.utils")
-              if ok then
-                local stopped_lsp_clients = gd.stop_lsp()
-                gd.start_lsp(stopped_lsp_clients)
-              end
+              if ok then gd.start_lsp(gd.stop_lsp()) end
               vim.diagnostic.show()
+              mega.notify(string.format("%s All conflicts resolved!", icons.lsp.ok))
+              vim.cmd("Fidget suppress false")
             end, 250)
           end,
         },
@@ -415,5 +433,67 @@ return {
       debug = true,
       file_log = true,
     },
+  },
+  {
+    cond = false,
+    "Juksuu/worktrees.nvim",
+    event = "VeryLazy",
+    keys = {
+      {
+        "<leader>gww",
+        "<cmd>lua require('telescope').extensions.worktrees.list_worktrees()<cr>",
+        desc = "git-worktree: switch worktree",
+        -- mode = { "n", "v" },
+      },
+      {
+        "<leader>gwn",
+        "<cmd>GitWorktreeCreate<cr>",
+        desc = "git-worktree: create worktree",
+      },
+      {
+        "<leader>gwc",
+        "<cmd>GitWorktreeCreateExisting<cr>",
+        desc = "git-worktree: create existing worktree",
+      },
+    },
+    config = function()
+      -- telescope.load_extension("git_worktree")
+      require("worktrees").setup({})
+      require("telescope").load_extension("worktrees")
+    end,
+  },
+  {
+    -- "mgierada/git-worktree.nvim",
+    -- branch = "adapt-for-telescope-api-changes",
+
+    "awerebea/git-worktree.nvim", -- Temporary switch to fork
+    branch = "main",
+    event = "VeryLazy",
+    keys = {
+      {
+        "<leader>gww",
+        function() require("telescope").extensions.git_worktree.git_worktrees(mega.picker.dropdown({ path_display = {} })) end,
+        desc = "git-worktree: switch worktree",
+      },
+      {
+        "<leader>gwc",
+        function() require("telescope").extensions.git_worktree.create_git_worktree() end,
+        desc = "git-worktree: create worktree",
+      },
+    },
+    opts = {},
+    config = function()
+      local wt = require("git-worktree")
+      require("telescope").load_extension("git_worktree")
+      wt.on_tree_change(function(op, metadata)
+        if op == wt.Operations.Switch then
+          vim.notify("Switched from " .. metadata.prev_path .. " to " .. metadata.path)
+        elseif op == wt.Operations.Create then
+          vim.notify("Worktree created: " .. metadata.path .. " for branch " .. metadata.branch .. " with upstream " .. metadata.upstream)
+        elseif op == wt.Operations.Delete then
+          vim.notify("Worktree deleted: " .. metadata.path)
+        end
+      end)
+    end,
   },
 }

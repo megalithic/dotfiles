@@ -3,8 +3,7 @@
 # which is based on https://github.com/joshmedeski/tmux-nerd-font-window-name
 
 NAME=$1
-# SHOW_NAME="$(tmux show -gqv '@tmux-nerd-font-window-name-show-name')"
-SHOW_NAME="true"
+CWD=$2
 DEFAULT_SHELL_ICON="" # alts: 󱆃   
 FALLBACK_ICON=""       # alts: ?
 
@@ -15,7 +14,7 @@ function get_shell_icon() {
   # if [ "$shell_icon" != "" ]; then
   #   echo "$shell_icon"
   # else
-  echo "$default_shell_icon"
+  echo "$default_shell_icon $(basename "$CWD")"
   # fi
 }
 
@@ -122,7 +121,7 @@ get_icon() {
       if [ "$SHOW_NAME" == true ]; then
         echo "$FALLBACK_ICON"
       else
-        echo "$NAME"
+        echo "$(basename "$CWD")"
       fi
       ;;
   esac
@@ -130,9 +129,9 @@ get_icon() {
 
 ICON=$(get_icon)
 
-if [ "$SHOW_NAME" == true ]; then
-  [[ "$ICON" ]] && echo "$NAME $ICON" || echo "$NAME"
+# if [ "$SHOW_NAME" == true ]; then
+[[ -z "$ICON" ]] && echo "$NAME" || echo "$ICON ($NAME)"
 
-else
-  echo "$ICON"
-fi
+# else
+#   echo "$ICON"
+# fi

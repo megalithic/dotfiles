@@ -56,3 +56,6 @@
 [submodule "config/zsh/plugins/zsh-sweep"]
 	path = config/zsh/plugins/zsh-sweep
 	url = https://github.com/psprint/zsh-sweep.git
+[submodule "config/zsh/plugins/zsh-magic-dashboard"]
+	path = config/zsh/plugins/zsh-magic-dashboard
+	url = https://github.com/megalithic/zsh-magic-dashboard.git

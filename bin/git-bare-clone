@@ -4,8 +4,10 @@ set -Eeuo pipefail
 trap cleanup SIGINT SIGTERM ERR EXIT
 
 usage() {
-  cat << EOF # remove the space between << and EOF, this is due to web plugin issue
-Usage: $(basename "${BASH_SOURCE[0]}") [-h] [-v] [-l] repository
+  cat <<EOF # remove the space between << and EOF, this is due to web plugin issue
+Usage: $(
+    basename "${BASH_SOURCE[0]}"
+  ) [-h] [-v] [-l] repository
 
 Clone a bare git repo and set up environment for working comfortably and exclusively from worktrees.
 
@@ -13,7 +15,7 @@ Available options:
 
 -h, --help      Print this help and exit
 -v, --verbose   Print script debug info
--l, --location  Location of the bare repo contents (default: .bare)
+-l, --location  Location of the bare repo contents (default: .git)
 EOF
   exit
 }
@@ -42,19 +44,19 @@ die() {
 }
 
 parse_params() {
-  location='.bare'
+  location='.git'
 
   while :; do
     case "${1-}" in
-    -h | --help) usage ;;
-    -v | --verbose) set -x ;;
-    --no-color) NO_COLOR=1 ;;
-    -l | --location)
+      -h | --help) usage ;;
+      -v | --verbose) set -x ;;
+      --no-color) NO_COLOR=1 ;;
+      -l | --location)
         location="${2-}"
         shift
         ;;
-    -?*) die "Unknown option: $1" ;;
-    *) break ;;
+      -?*) die "Unknown option: $1" ;;
+      *) break ;;
     esac
     shift
   done
@@ -73,10 +75,10 @@ setup_colors
 
 msg "${YELLOW}Cloning bare repository to $location...${NOFORMAT}"
 git clone --bare "${args[@]}" "$location"
-pushd "$location" > /dev/null
+pushd "$location" >/dev/null
 msg "${YELLOW}Adjusting origin fetch locations...${NOFORMAT}"
 git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
-popd > /dev/null
+popd >/dev/null
 msg "${YELLOW}Setting .git file contents...${NOFORMAT}"
-echo "gitdir: ./$location" > .git
+# echo "gitdir: ./$location" >.git
 msg "${GREEN}Success.${NOFORMAT}"

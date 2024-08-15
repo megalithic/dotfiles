@@ -1,5 +1,6 @@
 local SETTINGS = mega.req("mega.settings")
 return {
+  { "echasnovski/mini.icons", version = false },
   {
     "echasnovski/mini.indentscope",
     config = function()
@@ -10,7 +11,7 @@ return {
         --   goto_bottom = "<leader>j",
         -- },
         draw = {
-          delay = 10,
+          delay = 0,
           animation = function() return 0 end,
         },
         options = { try_as_border = true, border = "both", indent_at_cursor = true },

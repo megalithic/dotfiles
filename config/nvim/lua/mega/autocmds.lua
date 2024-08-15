@@ -67,14 +67,17 @@ end
 function M.apply()
   M.augroup("Startup", {
     {
+      -- FIXME: handle situations where we use `ngit` or `ndb` from cli
       event = { "VimEnter" },
       pattern = { "*" },
+      enabled = false,
       once = true,
       desc = "Crazy behaviours for opening vim with arguments (or not)",
       command = function(args)
         -- TODO: handle situations where 2 file names given and the second is of the shape of a line number, e.g. `:200`;
         -- maybe use this? https://github.com/stevearc/dotfiles/commit/db4849d91328bb6f39481cf2e009866911c31757
         local arg = vim.api.nvim_eval("argv(0)")
+        -- P(arg, vim.fn.argv(1))
         if
           not vim.g.started_by_firenvim
           and (not vim.env.TMUX_POPUP and vim.env.TMUX_POPUP ~= 1)
@@ -186,6 +189,7 @@ function M.apply()
 
   M.augroup("HighlightYank", {
     {
+      -- TODO: https://github.com/ibhagwan/nvim-lua/blob/main/lua/autocmd.lua#L19-L51 (tmux/ssh copy)
       desc = "Highlight when yanking (copying) text",
       event = { "TextYankPost" },
       command = function() vim.highlight.on_yank() end,
@@ -195,8 +199,19 @@ function M.apply()
   M.augroup("CheckOutsideTime", {
     desc = "Automatically check for changed files outside vim",
     event = { "WinEnter", "BufWinEnter", "BufWinLeave", "BufRead", "BufEnter", "FocusGained" },
-    command = "silent! checktime",
+    command = function() vim.cmd.checktime() end,
   })
+
+  -- M.augroup("UpdateOnLeave", {
+  --   desc = "Automatically update modified buffer on leave..",
+  --   event = { "FocusLost", "BufLeave", "BufWinLeave" },
+  --   command = function()
+  --     if vim.bo.modified and not vim.bo.readonly and vim.fn.expand("%") ~= "" and vim.bo.buftype == "" then
+  --       vim.notify("updating...")
+  --       vim.api.nvim_command("silent w")
+  --     end
+  --   end,
+  -- })
 
   M.augroup("SmartCloseBuffers", {
     {
@@ -247,7 +262,7 @@ function M.apply()
     {
       -- make `:substitute` also notify how many changes were made
       -- works, as `CmdlineLeave` is triggered before the execution of the command
-      event = "CmdlineLeave",
+      event = "CmdlineEnter",
       command = function(ctx)
         if not ctx.match == ":" then return end
         local cmdline = vim.fn.getcmdline()
@@ -277,7 +292,6 @@ function M.apply()
           if ibl_ok then ibl.setup_buffer(evt.buf, { indent = { char = SETTINGS.indent_char } }) end
         end, 1)
         vim.wo.cursorline = true
-
         if not vim.g.started_by_firenvim then require("colorizer").attach_to_buffer(evt.buf) end
       end,
     },
@@ -300,98 +314,122 @@ function M.apply()
       enabled = not vim.g.started_by_firenvim,
       desc = "OnInsertEnter",
       event = { "InsertEnter" },
-      command = function(_evt)
-        vim.diagnostic.enable(not vim.diagnostic.is_enabled())
-        -- vim.wo.number = true
-        -- vim.wo.relativenumber = false
-      end,
+      command = function(_evt) vim.diagnostic.enable(not vim.diagnostic.is_enabled()) end,
     },
     {
       enabled = not vim.g.started_by_firenvim,
       desc = "OnInsertLeave",
       event = { "InsertLeave" },
-      command = function(_evt)
-        vim.diagnostic.enable()
-        -- vim.wo.number = true
-        -- vim.wo.relativenumber = true
-      end,
+      command = function(_evt) vim.diagnostic.enable() end,
     },
   })
-
-  -- M.augroup("CursorMovementBehaviours", {
-  --   {
-  --     desc = "Disable things on CursorMoved",
-  --     event = { "CursorMoved" },
-  --     command = function(evt)
-  --       vim.defer_fn(function()
-  --         local ibl_ok, ibl = pcall(require, "ibl")
-  --         if ibl_ok then ibl.setup_buffer(evt.buf, { indent = { char = "" } }) end
-  --         -- vim.b.miniindentscope_disable = true
-  --       end, 1)
-  --     end,
-  --   },
-  --   {
-  --     desc = "Enable things on CursorHold",
-  --     event = { "CursorHold" },
-  --     command = function(evt)
-  --       vim.defer_fn(function()
-  --         local ibl_ok, ibl = pcall(require, "ibl")
-  --         if ibl_ok then ibl.setup_buffer(evt.buf, { indent = { char = SETTINGS.indent_char } }) end
-  --         -- vim.b.miniindentscope_disable = false
-  --       end, 2)
-  --     end,
-  --   },
-  -- })
 
   -- -----------------------------------------------------------------------------
   -- # IncSearch behaviours
   -- HT: akinsho
   -- -----------------------------------------------------------------------------
-  vim.keymap.set({ "n", "v", "o", "i", "c", "t" }, "<Plug>(StopHL)", "execute(\"nohlsearch\")[-1]", { expr = true })
-  local function stop_hl()
-    if vim.v.hlsearch == 0 or vim.api.nvim_get_mode().mode ~= "n" then return end
-    vim.api.nvim_feedkeys(vim.keycode("<Plug>(StopHL)"), "m", false)
-  end
-  local function hl_search()
-    local col = vim.api.nvim_win_get_cursor(0)[2]
-    local curr_line = vim.api.nvim_get_current_line()
-    local ok, match = pcall(vim.fn.matchstrpos, curr_line, vim.fn.getreg("/"), 0)
-    if not ok then return end
-    local _, p_start, p_end = unpack(match)
-    -- if the cursor is in a search result, leave highlighting on
-    if col < p_start or col > p_end then stop_hl() end
-  end
+  -- vim.keymap.set({ "n", "v", "o", "i", "c", "t" }, "<Plug>(StopHL)", "execute(\"nohlsearch\")[-1]", { expr = true })
+  -- local function stop_hl()
+  --   if vim.v.hlsearch == 0 or vim.api.nvim_get_mode().mode ~= "n" then return end
+  --   vim.api.nvim_feedkeys(vim.keycode("<Plug>(StopHL)"), "m", false)
+  -- end
+  -- local function hl_search()
+  --   local col = vim.api.nvim_win_get_cursor(0)[2]
+  --   local curr_line = vim.api.nvim_get_current_line()
+  --   local ok, match = pcall(vim.fn.matchstrpos, curr_line, vim.fn.getreg("/"), 0)
+  --   if not ok then return end
+  --   local _, p_start, p_end = unpack(match)
+  --   -- if the cursor is in a search result, leave highlighting on
+  --   if col < p_start or col > p_end then stop_hl() end
+  -- end
+  -- M.augroup("IncSearchHighlight", {
+  --   {
+  --     event = { "CursorMoved" },
+  --     command = function() hl_search() end,
+  --   },
+  --   {
+  --     event = { "InsertEnter" },
+  --     command = function(evt)
+  --       if vim.bo[evt.buf].filetype == "megaterm" then return end
+  --       stop_hl()
+  --     end,
+  --   },
+  --   {
+  --     event = { "OptionSet" },
+  --     pattern = { "hlsearch" },
+  --     command = function()
+  --       vim.schedule(function() vim.cmd.redrawstatus() end)
+  --     end,
+  --   },
+  --   {
+  --     event = { "RecordingEnter" },
+  --     command = function() vim.o.hlsearch = false end,
+  --   },
+  --   {
+  --     event = { "RecordingLeave" },
+  --     command = function() vim.o.hlsearch = true end,
+  --   },
+  -- })
 
-  M.augroup("IncSearchHighlight", {
+  --- @trial: determining if this implementation of the above IncSearchHighlight autocmd is more reliable
+  -- REF: https://github.com/ibhagwan/nvim-lua/blob/main/lua/autocmd.lua#L111-L144
+  M.augroup("ToggleSearchHL", {
     {
       event = { "CursorMoved" },
-      command = function() hl_search() end,
+      command = function()
+        -- No bloat lua adpatation of: https://github.com/romainl/vim-cool
+        local view, rpos = vim.fn.winsaveview(), vim.fn.getpos(".")
+        -- Move the cursor to a position where (whereas in active search) pressing `n`
+        -- brings us to the original cursor position, in a forward search / that means
+        -- one column before the match, in a backward search ? we move one col forward
+        vim.cmd(string.format("silent! keepjumps go%s", (vim.fn.line2byte(view.lnum) + view.col + 1 - (vim.v.searchforward == 1 and 2 or 0))))
+        -- Attempt to goto next match, if we're in an active search cursor position
+        -- should be equal to original cursor position
+        local ok, _ = pcall(vim.cmd, "silent! keepjumps norm! n")
+        local in_search = ok and (function()
+          local npos = vim.fn.getpos(".")
+          return npos[2] == rpos[2] and npos[3] == rpos[3]
+        end)()
+        -- restore original view and position
+        vim.fn.winrestview(view)
+        if not in_search then vim.schedule(function() vim.cmd("nohlsearch") end) end
+      end,
     },
     {
       event = { "InsertEnter" },
       command = function(evt)
-        if vim.bo[evt.buf].filetype == "megaterm" then return end
-        stop_hl()
+        vim.schedule(function() vim.cmd("nohlsearch") end)
       end,
-    },
-    {
-      event = { "OptionSet" },
-      pattern = { "hlsearch" },
-      command = function()
-        vim.schedule(function() vim.cmd.redrawstatus() end)
-      end,
-    },
-    {
-      event = { "RecordingEnter" },
-      command = function() vim.o.hlsearch = false end,
-    },
-    {
-      event = { "RecordingLeave" },
-      command = function() vim.o.hlsearch = true end,
     },
   })
+  --   aucmd("InsertEnter", {
+  --     group = g,
+  --     callback = function()
+  --     end
+  --   })
+  --   aucmd("CursorMoved", {
+  --     group = g,
+  --     callback = function()
+  --     end
+  --   })
+  -- end)
 
   M.augroup("Utilities", {
+    {
+      event = { "UIEnter", "ColorScheme" },
+      desc = "remove terminal padding around neovim instance",
+      command = function(_args)
+        local normal = vim.api.nvim_get_hl(0, { name = "Normal" })
+        if not normal.bg then return end
+        io.write(string.format("\027]11;#%06x\027\\", normal.bg))
+      end,
+    },
+    {
+      event = { "UILeave" },
+      desc = "remove terminal padding around neovim instance",
+      command = function(_args) io.write("\027]111\027\\") end,
+    },
+
     {
       event = { "BufWritePost" },
       desc = "chmod +x shell scripts on-demand",
@@ -440,24 +478,35 @@ function M.apply()
     {
       event = { "BufEnter" },
       buffer = 0,
-      desc = "Crazy `gf` open behaviour",
-      command = function()
+      desc = "Extreeeeme `gf` open behaviour",
+      command = function(args)
         map("n", "gf", function()
           local target = vim.fn.expand("<cfile>")
+
           if U.is_image(target) then
             local root_dir = require("mega.utils.lsp").root_dir({ ".git" })
-            -- dd(root_dir)
-            -- naive for now:
             target = target:gsub("./samples", fmt("%s/samples", root_dir))
-            -- dd(target)
             return require("mega.utils").preview_file(target)
           end
+
           if target:match("https://") then return vim.cmd("norm gx") end
+
+          if vim.bo[args.buf].filetype == "elixir" then
+            vim.cmd([[setlocal iskeyword+=:,!,?,-]])
+            target = vim.fn.escape(vim.fn.expand("<cword>"), [[\/]])
+            target = string.sub(target, 2)
+
+            local url = fmt("https://hexdocs.pm/%s/", target)
+            vim.notify(fmt("Opening %s at %s", target, url))
+            vim.fn.jobstart(fmt("%s %s", vim.g.open_command, url))
+          end
+
           if not target or #vim.split(target, "/") ~= 2 then return vim.cmd("norm! gf") end
-          local url = fmt("https://www.github.com/%s", target)
+
+          local url = fmt("https://github.com/%s", target)
           vim.fn.jobstart(fmt("%s %s", vim.g.open_command, url))
           vim.notify(fmt("Opening %s at %s", target, url))
-        end, { desc = "[g]oto [f]ile (preview, github repo, url)" })
+        end, { desc = "[g]oto [f]ile (preview, github repo, hexdocs, url)" })
       end,
     },
   })

@@ -38,15 +38,12 @@ if vim.g.tester == "neotest" then
       mode = "n",
     },
     {
-      "<localleader>tp",
-      function() require("neotest").summary.toggle() end,
-      mode = "n",
-    },
-    {
       "<localleader>to",
-      function() require("neotest").output.open({ short = true }) end,
+      function() require("neotest").output.open() end,
       mode = "n",
     },
+    { "<localleader>tp", "<cmd>A<cr>", desc = "open alt (edit)" },
+    { "<localleader>tP", "<cmd>AV<cr>", desc = "open alt (vsplit)" },
   }
 elseif vim.g.tester == "vim-test" then
   keys = {
@@ -57,7 +54,7 @@ elseif vim.g.tester == "vim-test" then
     { "<localleader>ts", "<cmd>TestSuite<cr>", desc = "run test (s)uite" },
     -- { "<localleader>tT", "<cmd>TestLast<cr>", desc = "run _last test" },
     { "<localleader>tv", "<cmd>TestVisit<cr>", desc = "(v)isit last test" },
-    -- { "<localleader>tp", "<cmd>A<cr>", desc = "open alt (edit)" },
+    { "<localleader>tp", "<cmd>A<cr>", desc = "open alt (edit)" },
     -- { "<localleader><localleader>", "<cmd>A<cr>", desc = "open alt (edit)" },
     { "<localleader>tP", "<cmd>AV<cr>", desc = "open alt (vsplit)" },
   }
@@ -77,17 +74,15 @@ return {
       "AV",
     },
     keys = keys,
-    -- event = { "BufReadPost", "BufNewFile" },
     dependencies = { "tpope/vim-projectionist" },
     init = function()
       local function terminal_notifier(term_cmd, exit)
-        -- local system = vim.fn.system
         if exit == 0 then
           mega.notify(fmt("👍 [PASS] vim-test: %s", term_cmd), L.INFO)
-          -- system(string.format([[terminal-notifier -title "nvim [test]" -message "👍 test(s) passed"]], term_cmd))
+          -- vim.fn.system(string.format([[terminal-notifier -title "nvim [test]" -message "👍 test(s) passed"]], term_cmd))
         else
           mega.notify(fmt("👎 [FAIL] vim-test: %s", term_cmd), L.ERROR)
-          -- system(string.format([[terminal-notifier -title "nvim [test]" -message "👎 test(s) failed"]], term_cmd))
+          -- vim.fn.system(string.format([[terminal-notifier -title "nvim [test]" -message "👎 test(s) failed"]], term_cmd))
         end
       end
 
@@ -95,7 +90,7 @@ return {
         return vim.tbl_extend("force", {
           winnr = vim.fn.winnr(),
           cmd = cmd,
-          notifier = terminal_notifier,
+          notifier = vim.schedule_wrap(terminal_notifier),
           temp = true,
           open_startinsert = true,
           focus_startinsert = false,
@@ -130,7 +125,7 @@ return {
 
       vim.g["test#strategy"] = {
         nearest = "termvsplit",
-        file = "termtab",
+        file = "termvsplit",
         suite = "termfloat",
         last = "termvsplit",
       }
@@ -138,26 +133,84 @@ return {
   },
   {
     "nvim-neotest/neotest",
-    -- event = { "BufReadPost **.js,**.jsx,**.ts,**.tsx", "BufNewFile **.js,**.jsx,**.ts,**.tsx" },
-    cmd = { "Neotest" },
+    cmd = { "Neotest", "NeotestFile", "NeotestNearest", "NeotestLast", "NeotestAttach", "NeotestSummary", "A", "AV" },
     dependencies = {
-      "nvim-lua/plenary.nvim",
-      "nvim-treesitter/nvim-treesitter",
+      { "pablobfonseca/nvim-nio", branch = "fix-deprecations" },
+      { "nvim-neotest/neotest-plenary", dependencies = { "nvim-lua/plenary.nvim" } },
+      "tpope/vim-projectionist",
       "antoinemadec/FixCursorHold.nvim",
-      "megalithic/neotest-elixir",
+      "jfpedroza/neotest-elixir",
       "nvim-neotest/neotest-python",
-      "nvim-neotest/neotest-plenary",
       "nvim-neotest/neotest-jest",
-      "nvim-neotest/neotest-go",
-      "nvim-neotest/nvim-nio",
-      "stevearc/overseer.nvim",
-      "nvim-lua/plenary.nvim",
-      { "rcarriga/neotest-plenary", dependencies = { "nvim-lua/plenary.nvim" } },
+      {
+        "stevearc/overseer.nvim",
+        cmd = {
+          "OverseerToggle",
+          "OverseerOpen",
+          "OverseerRun",
+          "OverseerBuild",
+          "OverseerClose",
+          "OverseerLoadBundle",
+          "OverseerSaveBundle",
+          "OverseerDeleteBundle",
+          "OverseerRunCmd",
+          "OverseerQuickAction",
+          "OverseerTaskAction",
+        },
+        keys = {
+          -- { "<leader>ttR", "<cmd>OverseerRunCmd<cr>", desc = "Run Command" },
+          -- { "<leader>tta", "<cmd>OverseerTaskAction<cr>", desc = "Task Action" },
+          -- { "<leader>ttb", "<cmd>OverseerBuild<cr>", desc = "Build" },
+          -- { "<leader>ttc", "<cmd>OverseerClose<cr>", desc = "Close" },
+          -- { "<leader>ttd", "<cmd>OverseerDeleteBundle<cr>", desc = "Delete Bundle" },
+          -- { "<leader>ttl", "<cmd>OverseerLoadBundle<cr>", desc = "Load Bundle" },
+          -- { "<leader>tto", "<cmd>OverseerOpen<cr>", desc = "Open" },
+          -- { "<leader>ttq", "<cmd>OverseerQuickAction<cr>", desc = "Quick Action" },
+          -- { "<leader>ttr", "<cmd>OverseerRun<cr>", desc = "Run" },
+          -- { "<leader>tts", "<cmd>OverseerSaveBundle<cr>", desc = "Save Bundle" },
+          -- { "<leader>ttt", "<cmd>OverseerToggle<cr>", desc = "Toggle" },
+        },
+        opts = {},
+      },
     },
     keys = keys,
     config = function()
       local neotest = require("neotest")
-      local nt_ns = vim.api.nvim_create_namespace("neotest")
+      local neotest_ns = vim.api.nvim_create_namespace("neotest")
+      local nt = {}
+
+      nt.env = nil
+
+      function nt.run(arg)
+        local default_env = nt.env or {}
+        local args
+
+        if type(arg) == "table" then
+          local env = arg.env or {}
+          arg.env = vim.tbl_extend("force", default_env, env)
+          args = arg
+        else
+          args = { arg, env = default_env }
+        end
+
+        print("Neotest run called with arg", args[1])
+        require("neotest").run.run(args)
+      end
+
+      function nt.run_file(args)
+        args = args or {}
+        args[1] = vim.fn.expand("%")
+        nt.run(args)
+      end
+
+      function nt.run_suite(args)
+        args = args or {}
+        args[1] = vim.fn.getcwd()
+        nt.run(args)
+      end
+
+      function nt.read_env(...) nt.env = vim.fn.DotenvRead(...) end
+
       vim.diagnostic.config({
         virtual_text = {
           format = function(diagnostic)
@@ -165,7 +218,8 @@ return {
             return message
           end,
         },
-      }, nt_ns)
+      }, neotest_ns)
+
       require("neotest.logging"):set_level("trace")
 
       require("neotest").setup({
@@ -175,26 +229,27 @@ return {
         consumers = {
           overseer = require("neotest.consumers.overseer"),
         },
-        output = {
-          enabled = true,
-          open_on_run = false,
-        },
-        -- overseer = {
+        output = { open_on_run = true },
+        -- output = {
         --   enabled = true,
-        --   force_default = true,
+        --   open_on_run = false,
         -- },
+        overseer = {
+          enabled = true,
+          force_default = true,
+        },
         status = {
           enabled = true,
         },
-        output_panel = {
-          enabled = true,
-          open = "botright split | resize 25",
-        },
-        quickfix = {
-          enabled = false,
-          open = function() vim.cmd("Trouble quickfix") end,
-        },
-        floating = { border = SETTINGS.current_border },
+        -- output_panel = {
+        --   enabled = true,
+        --   open = "botright split | resize 25",
+        -- },
+        -- quickfix = {
+        --   enabled = false,
+        --   open = function() vim.cmd("Trouble quickfix") end,
+        -- },
+        -- floating = { border = SETTINGS.current_border },
         icons = {
           expanded = "",
           child_prefix = "",
@@ -247,6 +302,15 @@ return {
           }),
         },
       })
+
+      vim.api.nvim_create_user_command("Neotest", nt.run_suite, {})
+      vim.api.nvim_create_user_command("NeotestFile", nt.run_file, {})
+      vim.api.nvim_create_user_command("NeotestNearest", nt.run, {})
+      vim.api.nvim_create_user_command("NeotestLast", neotest.run.run_last, {})
+      vim.api.nvim_create_user_command("NeotestAttach", neotest.run.attach, {})
+      vim.api.nvim_create_user_command("NeotestSummary", neotest.summary.toggle, {})
+      vim.api.nvim_create_user_command("NeotestOutput", neotest.output.open, {})
+
       --
       -- vim.keymap.set("n", "<leader>tn", function() neotest.run.run({}) end)
       -- vim.keymap.set("n", "<leader>tt", function() neotest.run.run({ vim.api.nvim_buf_get_name(0) }) end)
@@ -260,5 +324,108 @@ return {
       -- vim.keymap.set("n", "<leader>tp", function() neotest.summary.toggle() end)
       -- vim.keymap.set("n", "<leader>to", function() neotest.output.open({ short = true }) end)
     end,
+  },
+  {
+    "quolpr/quicktest.nvim",
+    cond = vim.g.tester == "quicktest",
+    config = function()
+      local qt = require("quicktest")
+
+      qt.setup({
+        -- Choose your adapter, here all supported adapters are listed
+        adapters = {
+          require("quicktest.adapters.golang")({
+            additional_args = function(bufnr) return { "-race", "-count=1" } end,
+            -- bin = function(bufnr) return 'go' end
+            -- cwd = function(bufnr) return 'your-cwd' end
+          }),
+          require("quicktest.adapters.vitest")({
+            -- bin = function(bufnr) return 'vitest' end
+            -- cwd = function(bufnr) return bufnr end
+            -- config_path = function(bufnr) return 'vitest.config.js' end
+          }),
+          require("quicktest.adapters.elixir"),
+          require("quicktest.adapters.criterion"),
+          require("quicktest.adapters.dart"),
+        },
+        -- split or popup mode, when argument not specified
+        default_win_mode = "split",
+        -- Baleia make coloured output. Requires baleia package
+        use_baleia = true,
+      })
+    end,
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      "MunifTanjim/nui.nvim",
+      "m00qek/baleia.nvim",
+    },
+    keys = {
+      {
+        "<localleader>tl",
+        function()
+          local qt = require("quicktest")
+          -- current_win_mode return currently opened panel, split or popup
+          qt.run_line()
+          -- You can force open split or popup like this:
+          -- qt.run_line('split')
+          -- qt.run_line('popup')
+        end,
+        desc = "[T]est Run [L]line",
+      },
+      {
+        "<localleader>tf",
+        function()
+          local qt = require("quicktest")
+
+          qt.run_file()
+        end,
+        desc = "[T]est Run [F]ile",
+      },
+      {
+        "<localleader>td",
+        function()
+          local qt = require("quicktest")
+
+          qt.run_dir()
+        end,
+        desc = "[T]est Run [D]ir",
+      },
+      {
+        "<localleader>ta",
+        function()
+          local qt = require("quicktest")
+
+          qt.run_all()
+        end,
+        desc = "[T]est Run [A]ll",
+      },
+      {
+        "<localleader>tp",
+        function()
+          local qt = require("quicktest")
+
+          qt.run_previous()
+        end,
+        desc = "[T]est Run [P]revious",
+      },
+      {
+        "<localleader>tt",
+        function()
+          local qt = require("quicktest")
+
+          qt.toggle_win("split")
+        end,
+        desc = "[T]est [T]oggle Window",
+      },
+      {
+        "<localleader>tc",
+        function()
+          local qt = require("quicktest")
+
+          qt.cancel_current_run()
+        end,
+        desc = "[T]est [C]ancel Current Run",
+      },
+    },
   },
 }
