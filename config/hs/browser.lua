@@ -60,7 +60,7 @@ function obj.jump(url)
   local app = hs.application.get(BROWSER) or hs.application.frontmostApplication()
 
   if app and enum.contains(supportedBrowsers, app:name()) then
-    info("(jump) %s", app:name())
+    info(fmt("[%s.jump] %s (%s)", obj.name, app:name(), url))
 
     -- win.tabs().findIndex(tab => tab.url().match(/]] .. string.gsub(url, "/", "\\/") .. [[/));
     -- win.tabs().findIndex(tab => tab.url().match(/]] .. url .. [[/));

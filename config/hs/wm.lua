@@ -21,7 +21,7 @@ function obj.targetDisplay(hint)
 end
 
 obj.tile = function()
-  local windows = hs.fnutils.map(hs.window.filter.new():getWindows(), function(win)
+  local windows = enum.map(hs.window.filter.new():getWindows(), function(win)
     if win ~= hs.window.focusedWindow() then
       return {
         text = win:title(),
@@ -101,9 +101,21 @@ obj.placeApp = function(elementOrAppName, event, app)
         local win = winTitlePattern == nil and app:mainWindow() or hs.window.find(winTitlePattern)
 
         if win == nil then
-          warn(fmt("[wm] layouts/%s (%s): %s not found", app:bundleID(), utils.eventString(event), I(win)))
+          local standardWindows = enum.filter(app:allWindows(), function(w) return w:isStandard() end)
+          if standardWindows ~= nil or #standardWindows > 0 then
+            warn(
+              fmt(
+                "[wm] layouts/%s (%s): specific window not found; using all standard windows for app.",
+                app:bundleID(),
+                utils.eventString(event)
+              )
+            )
+            enum.each(standardWindows, function(w)
+              note(fmt("[wm] layouts/%s (%s): %s", app:bundleID(), utils.eventString(event), w:title()))
+              hs.grid.set(w, position, obj.targetDisplay(screenNum))
+            end)
+          end
         end
-
         if win ~= nil then
           note(fmt("[wm] layouts/%s (%s): %s", app:bundleID(), utils.eventString(event), app:focusedWindow():title()))
 

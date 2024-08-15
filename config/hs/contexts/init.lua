@@ -9,7 +9,9 @@ obj.contextsPath = utils.resourcePath("./")
 obj.contextModals = {}
 
 obj.loggableEvents = {
-  hs.uielement.watcher.windowCreated,
+  -- hs.uielement.watcher.windowCreated,
+  -- hs.uielement.watcher.elementDestroyed,
+  -- hs.uielement.watcher.titleChanged,
   hs.uielement.watcher.applicationActivated,
   hs.uielement.watcher.applicationDeactivated,
   hs.application.watcher.launched,

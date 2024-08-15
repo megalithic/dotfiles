@@ -23,7 +23,7 @@ hs.logger.defaultLogLevel = "error"
 hs.hotkey.setLogLevel("error")
 hs.keycodes.log.setLogLevel("error")
 
-window.animationDuration = 0
+window.animationDuration = 0.0
 window.highlight.ui.overlay = false
 window.setShadows(false)
 
