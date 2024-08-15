@@ -18,12 +18,15 @@ req("config")
 req("bindings")
 -- listing of *.watcher based modules; the core of the automation that takes place.
 -- NOTE: `app` contains the app layout and app context logic.
-req("watchers"):start({ "bluetooth", "usb", "dock", "app", "url" })
+req("watchers"):start({ "bluetooth", "usb", "dock", "app", "url", "files" })
 req("ptt"):start({ mode = "push-to-talk" })
 req("quitter"):start({ mode = "double" })
 
 -- experimental/wip modules and stuff..
 req("wip")
+
+-- hs.shutdownCallback = function() hs.settings.set("history", hs.console.getHistory()) end
+-- hs.console.setHistory(hs.settings.get("history"))
 
 hs.timer.doAfter(0.2, function()
   hs.notify.withdrawAll()

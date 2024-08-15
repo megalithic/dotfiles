@@ -75,6 +75,8 @@ function obj.dnd(dndStatus, slackStatus)
   -- if slackStatus ~= nil and slackStatus ~= "" then obj.slack(slackStatus) end
 end
 
+-- TODO:
+-- https://github.com/kiooss/dotmagic/blob/master/hammerspoon/slack.lua
 function obj.slack(slackStatus)
   if slackStatus ~= nil and slackStatus ~= "" then
     local slck = hs.task.new("/opt/homebrew/bin/zsh", function(stdTask, stdOut, stdErr)

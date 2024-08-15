@@ -54,6 +54,8 @@ req("hyper"):start({ id = "meeting" }):bind({}, "z", nil, function()
   end
 end)
 
+local axbrowse = req("axbrowse")
+local lastApp
 req("hyper")
   :start({ id = "utils" })
   :bind({ "shift" }, "r", nil, function()
@@ -61,6 +63,15 @@ req("hyper")
     hs.reload()
   end)
   :bind({ "shift", "ctrl" }, "l", nil, function() req("wm").placeAllApps() end)
+  :bind({ "shift" }, "b", nil, function()
+    local currentApp = hs.axuielement.applicationElement(hs.application.frontmostApplication())
+    if currentApp == lastApp then
+      axbrowse.browse() -- try to continue from where we left off
+    else
+      lastApp = currentApp
+      axbrowse.browse(currentApp) -- new app, so start over
+    end
+  end)
 
 -- [ MODAL LAUNCHERS ] ---------------------------------------------------------
 

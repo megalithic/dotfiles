@@ -1,5 +1,6 @@
 local obj = {}
-local Settings = require("hs.settings")
+-- TODO/IDEAS:
+-- https://github.com/kiooss/dotmagic/blob/master/hammerspoon/clippy.lua
 
 obj.__index = obj
 obj.name = "clipper"
