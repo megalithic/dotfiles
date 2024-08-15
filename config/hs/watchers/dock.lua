@@ -71,8 +71,8 @@ end
 --   task:start()
 -- end
 
-local function handleDockingStateChanges(_watcher, _path, _key, _oldValue, isConnected)
-  -- dbg({ _watcher, _path, _key, _oldValue, isConnected }, true)
+function obj.handleDockingStateChanges(_watcher, _path, _key, _oldValue, isConnected, isInitializing)
+  isInitializing = (isInitializing ~= nil and type(isInitializing) == "boolean") and isInitializing or false
   local connectedState = isConnected and "docked" or "undocked"
   local notifier = isConnected and _G.success or _G.warn
   notifier = _G.warn
@@ -85,18 +85,27 @@ local function handleDockingStateChanges(_watcher, _path, _key, _oldValue, isCon
 
   notifier(fmt("[watcher.dock] %s transitioned to %s", icon, label))
 
-  hs.alert.closeAll()
-  hs.alert.show(fmt("%s Transitioned to %s", icon, label))
+  if not isInitializing then
+    hs.alert.closeAll()
+    hs.alert.show(fmt("%s Transitioned to %s", icon, label))
 
-  hs.timer.doAfter(0.5, function() info(fmt("[watcher.dock] handling docking state changes (%s)", connectedState)) end)
+    hs.timer.doAfter(0.5, function()
+      info(fmt("[watcher.dock] handling docking state changes (%s)", connectedState))
+      req("wm").placeAllApps()
+    end)
+  end
+end
 
-  -- hs.timer.doAfter(1, function() WM.layoutRunningApps(C.bindings.apps) end)
-  -- WM.layoutRunningApps(C.bindings.apps)
+obj.watchExistingDevices = function()
+  for _, device in ipairs(hs.usb.attachedDevices()) do
+    if device.productID == DOCK.target.productID then obj.handleDockingStateChanges(nil, nil, nil, nil, true, true) end
+  end
 end
 
 function obj:start()
   info(fmt("[START] %s", self.name))
-  obj.watchers.dock = hs.watchable.watch("status.dock", handleDockingStateChanges)
+  self.watchers.dock = hs.watchable.watch("status.dock", self.handleDockingStateChanges)
+  self.watchExistingDevices()
 
   -- FIXME: we ought to execute this on start so that we always have the correct docking state and related actions performed.
 

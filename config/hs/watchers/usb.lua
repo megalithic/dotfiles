@@ -58,10 +58,18 @@ local function usbHandler(device)
   end
 end
 
+obj.watchExistingDevices = function()
+  for _, device in ipairs(hs.usb.attachedDevices()) do
+    if device.productID == DOCK.keyboard.productID then leelooHandler(nil, nil, nil, nil, true) end
+    if device.productID == DOCK.target.productID then obj.watchers.status.dock = true end
+  end
+end
+
 function obj:start()
   self.watchers.usb = hs.usb.watcher.new(usbHandler):start()
   self.watchers.status = hs.watchable.new("status", false) -- don't allow bi-directional status updates
 
+  self.watchExistingDevices()
   info(fmt("[START] %s", self.name))
   return self
 end

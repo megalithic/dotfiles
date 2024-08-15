@@ -119,7 +119,7 @@ function Windows()
   if type(app) == "string" then app = hs.application.get(app) end
   local windows = app == nil and hs.window.allWindows() or app:allWindows()
 
-  hs.fnutils.each(windows, function(win)
+  return hs.fnutils.each(windows, function(win)
     info(fmt("[WIN] %s (%s)", win:title(), win:application():bundleID()))
     note(I({
       id = win:id(),
@@ -136,35 +136,32 @@ function Windows()
       -- buttonFullScreen = axuiWindowElement(win):attributeValue('AXFullScreenButton'),
       -- isResizable      = axuiWindowElement(win):isAttributeSettable('AXSize')
     }))
+    return win
   end)
 end
 
 function Screens()
-  hs.fnutils.each(
-    hs.screen.allScreens(),
-    function(s)
-      print(hs.inspect({
-        name = s:name(),
-        id = s:id(),
-        position = s:position(),
-        frame = s:frame(),
-      }))
-    end
-  )
+  return hs.fnutils.each(hs.screen.allScreens(), function(s)
+    print(hs.inspect({
+      name = s:name(),
+      id = s:id(),
+      position = s:position(),
+      frame = s:frame(),
+    }))
+    return s
+  end)
 end
 
 function Usb()
-  hs.fnutils.each(
-    hs.usb.attachedDevices(),
-    function(d)
-      print(hs.inspect({
-        productID = d.productID,
-        productName = d.productName,
-        vendorID = d.vendorID,
-        vendorName = d.vendorName,
-      }))
-    end
-  )
+  return hs.fnutils.each(hs.usb.attachedDevices(), function(d)
+    print(hs.inspect({
+      productID = d.productID,
+      productName = d.productName,
+      vendorID = d.vendorID,
+      vendorName = d.vendorName,
+    }))
+    return d
+  end)
 end
 
 function AudioInput()

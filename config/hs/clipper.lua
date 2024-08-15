@@ -5,17 +5,17 @@ obj.__index = obj
 obj.name = "clipper"
 obj.debug = false
 obj.clipWatcher = {}
-obj.clip_data = {}
-obj.caps_dir = fmt("%s/screenshots", os.getenv("HOME"))
-obj.temp_image = "/tmp/tmp.png"
-obj.temp_ocr_image = "/tmp/ocr_tmp.png"
+obj.clipboardData = {}
+obj.capsPath = fmt("%s/screenshots", os.getenv("HOME"))
+obj.tempImage = "/tmp/tmp.png"
+obj.tempOcrImage = "/tmp/ocr_tmp.png"
 
 local dbg = function(str, ...)
   str = string.format(":: [%s] %s", obj.name, str)
   if obj.debug then return _G.dbg(string.format(str, ...), false) end
 end
 
-function obj.capper(image, open_image_url)
+function obj.captureImage(image, open_image_url)
   image = image or hs.pasteboard.readImage()
 
   if not image then
@@ -24,11 +24,11 @@ function obj.capper(image, open_image_url)
   end
 
   -- clear previous image url
-  hs.pasteboard.clearContents("imageURL")
+  hs.pasteboard.clearContents("imageUrl")
 
   local date = hs.execute("zsh -ci 'echo $EPOCHSECONDS'")
   local cap_name = fmt("cap_%s.png", date:gsub("\n", ""))
-  local cap = fmt("%s/%s", obj.caps_dir, cap_name)
+  local cap = fmt("%s/%s", obj.capsPath, cap_name)
 
   if image:saveToFile(cap) then
     local std_out, success, type, rc =
@@ -44,7 +44,7 @@ function obj.capper(image, open_image_url)
 
     if success then
       hs.pasteboard.setContents(cap_name, "imageName")
-      hs.pasteboard.setContents(url, "imageURL")
+      hs.pasteboard.setContents(url, "imageUrl")
       hs.pasteboard.setContents(image, "image")
       if open_image_url then hs.urlevent.openURLWithBundle(url, hs.urlevent.getDefaultHandler("https")) end
     else
@@ -55,7 +55,7 @@ function obj.capper(image, open_image_url)
   end
 end
 
-function obj.send_to_imgur(image, open_image_url)
+function obj.sendToImgur(image, open_image_url)
   image = image or hs.pasteboard.readImage()
 
   if not image then
@@ -64,10 +64,10 @@ function obj.send_to_imgur(image, open_image_url)
   end
 
   -- clear previous image url
-  hs.pasteboard.clearContents("imageURL")
+  hs.pasteboard.clearContents("imageUrl")
 
-  image:saveToFile(obj.temp_image)
-  local b64 = hs.execute("base64 -i " .. obj.temp_image)
+  image:saveToFile(obj.tempImage)
+  local b64 = hs.execute("base64 -i " .. obj.tempImage)
 
   local client_id, success, type, rc = hs.execute("zsh -ci 'echo $IMGUR_CLIENT_ID'")
   dbg("client_id: %s/%s/%s/%s", client_id:gsub("\n", ""), success, type, rc)
@@ -84,12 +84,12 @@ function obj.send_to_imgur(image, open_image_url)
     hs.http.asyncPost(req_url, req_payload, req_headers, function(status, body, headers)
       if status == 200 then
         local response = hs.json.decode(body)
-        local imageURL = response.data.link
-        hs.pasteboard.setContents(imageURL, "imageURL")
+        local imageUrl = response.data.link
+        hs.pasteboard.setContents(imageUrl, "imageUrl")
         hs.pasteboard.setContents(image, "image")
 
-        if open_image_url then hs.urlevent.openURLWithBundle(imageURL, hs.urlevent.getDefaultHandler("https")) end
-        hs.execute("rm " .. obj.temp_image)
+        if open_image_url then hs.urlevent.openURLWithBundle(imageUrl, hs.urlevent.getDefaultHandler("https")) end
+        hs.execute("rm " .. obj.tempImage)
       else
         error(fmt("status: %s, body: %s, headers: %s", status, body, I(headers)))
       end
@@ -97,11 +97,7 @@ function obj.send_to_imgur(image, open_image_url)
   end
 end
 
--- REF:
--- Slightly modifed version of:
--- https://github.com/dbalatero/dotfiles/blob/master/hammerspoon/ocr-paste.lua
---
-function obj.paste_ocr_text(image)
+function obj.saveOcrText(image)
   image = image or hs.pasteboard.readImage()
 
   if not image then
@@ -109,7 +105,7 @@ function obj.paste_ocr_text(image)
     return
   end
 
-  local imagePath = obj.temp_ocr_image
+  local imagePath = obj.tempOcrImage
   local outputPath = "/tmp/ocr_output"
   image:saveToFile(imagePath)
 
@@ -139,7 +135,7 @@ function obj.edit_clipboard_image(image)
   image = image or hs.pasteboard.readImage()
 
   if not image then
-    warn("[edit_clipboard_image] no image on clipboard")
+    warn("[clipper] no image on clipboard")
     return
   end
 
@@ -151,65 +147,54 @@ function obj.edit_clipboard_image(image)
   hs.execute("open -a Preview " .. tmpfile)
 
   hs.timer.doAfter(1, function() hs.application.find("Preview"):selectMenuItem({ "Tools", "Annotate", "Arrow" }) end)
+  note(fmt("[clipper] editClipboardImage: %s", obj.clipboardData))
 end
 
 function obj:init(opts)
   opts = opts or {}
   obj.clipWatcher = hs.pasteboard.watcher.new(function(pb)
-    dbg("clip_data: %s", I(obj.clip_data))
+    local browser = hs.application.get(BROWSER)
 
     if pb ~= nil and pb ~= "" then
-      obj.clip_data = pb
+      obj.clipboardData = pb
     else
-      obj.clip_data = hs.pasteboard.readImage()
-      obj.capper(obj.clip_data, false)
+      obj.clipboardData = hs.pasteboard.readImage()
+      obj.captureImage(obj.clipboardData, false)
 
       local pasteImageUrl = function()
-        local imageURL = hs.pasteboard.getContents("imageURL")
-        hs.eventtap.keyStrokes(imageURL)
-        dbg("imageURL: %s", imageURL)
+        local imageUrl = hs.pasteboard.getContents("imageUrl")
+        hs.eventtap.keyStrokes(imageUrl)
+        note(fmt("[clipper] imageUrl: %s", imageUrl))
       end
+
+      local pasteOcrText = function()
+        obj.saveOcrText(obj.clipboardData)
+        local ocrText = hs.pasteboard.getContents("ocrText")
+        hs.eventtap.keyStrokes(ocrText)
+        note(fmt("[clipper] ocrText: %s", ocrText))
+      end
+
       hs.hotkey.bind({ "cmd", "shift" }, "v", pasteImageUrl)
       hs.hotkey.bind({ "cmd", "ctrl" }, "v", pasteImageUrl)
-
-      local browser = hs.application.get(BROWSER)
-
-      if browser and browser == hs.application.frontmostApplication() then
-        hs.hotkey.bind({ "ctrl", "shift" }, "v", function()
-          local imageURL = hs.pasteboard.getContents("imageURL")
-          -- local imageName = hs.pasteboard.getContents("imageName")
-
-          local md_img = fmt([[<img src="%s" width="450" />]], imageURL)
-          hs.eventtap.keyStrokes(md_img)
-          dbg("markdown_image: %s", md_img)
-        end)
-      end
-
-      hs.hotkey.bind({ "cmd", "shift" }, "p", function()
-        obj.paste_ocr_text(obj.clip_data)
-        local ocr_text = hs.pasteboard.getContents("ocrText")
-        hs.eventtap.keyStrokes(ocr_text)
-        dbg("ocrText: %s", ocr_text)
-      end)
-      hs.hotkey.bind({ "cmd", "shift", "ctrl" }, "p", function()
-        obj.paste_ocr_text(obj.clip_data)
-        local ocr_text = hs.pasteboard.getContents("ocrText")
-        hs.eventtap.keyStrokes(ocr_text)
-        dbg("ocrText: %s", ocr_text)
-      end)
-
+      hs.hotkey.bind({ "cmd", "shift" }, "p", pasteOcrText)
+      hs.hotkey.bind({ "cmd", "shift", "ctrl" }, "p", pasteOcrText)
       hs.hotkey.bind({ "cmd", "shift" }, "e", function()
-        obj.edit_clipboard_image(obj.clip_data)
+        obj.edit_clipboard_image(obj.clipboardData)
         -- local ocr_text = hs.pasteboard.getContents("ocrText")
         -- hs.eventtap.keyStrokes(ocr_text)
         -- dbg("ocrText: %s", ocr_text)
       end)
-      -- hs.hotkey.bind({ "cmd", "shift" }, "v", function()
-      --   hs.eventtap.keyStrokes(hs.pasteboard.getContents())
-      --   -- local ocr_text = hs.pasteboard.getContents("ocrText")
-      --   -- hs.eventtap.keyStrokes(ocr_text)
-      --   -- dbg("ocrText: %s", ocr_text)
-      -- end)
+
+      if browser and browser == hs.application.frontmostApplication() then
+        hs.hotkey.bind({ "ctrl", "shift" }, "v", function()
+          local imageUrl = hs.pasteboard.getContents("imageUrl")
+          -- local imageName = hs.pasteboard.getContents("imageName")
+
+          local mdImgTag = fmt([[<img src="%s" width="450" />]], imageUrl)
+          hs.eventtap.keyStrokes(mdImgTag)
+          note(fmt("[clipper] mdImgTag: %s", mdImgTag))
+        end)
+      end
     end
   end)
 
