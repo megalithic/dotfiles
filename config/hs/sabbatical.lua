@@ -1,8 +1,9 @@
 -- simple reminder to look away from the screen periodically
 local obj = {}
 obj.__index = obj
-obj.name = "rest"
+obj.name = "sabbatical"
 obj.debug = false
+obj.timer = nil
 
 local drawing = require("hs.drawing")
 local timer = require("hs.timer")
@@ -27,7 +28,7 @@ local purgeShade = function(UUID)
     end
   end
   if indexToRemove then table.remove(obj._screenShades, indexToRemove) end
-  -- stop_sound:play()
+  stop_sound:play()
 end
 
 function obj:shade()
@@ -57,6 +58,9 @@ function obj:shade()
   end)
 end
 
--- Take eye breaks, look away every 20 minutes
-eye_breaks = hs.timer.new(restDuration * 60, obj.shade)
-eye_breaks:start()
+function obj:start()
+  self.timer = hs.timer.new(restDuration * 60, self.shade)
+  self.timer:start()
+
+  info(fmt("[START] %s", self.name))
+end

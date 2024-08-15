@@ -9,6 +9,7 @@ obj.clipboardData = {}
 obj.capsPath = fmt("%s/screenshots", os.getenv("HOME"))
 obj.tempImage = "/tmp/tmp.png"
 obj.tempOcrImage = "/tmp/ocr_tmp.png"
+obj.helpCanvas = nil
 
 local dbg = function(str, ...)
   str = string.format(":: [%s] %s", obj.name, str)
