@@ -17,11 +17,12 @@ local dbg = function(str, ...)
   if obj.debug then return _G.dbg(string.format(str, ...), false) end
 end
 
-function obj.captureImage(image, open_image_url)
+function obj.captureImage(image, openImageUrl)
   image = image or hs.pasteboard.readImage()
 
   if not image then
-    warn("[capper] no image on clipboard")
+    warn(fmt("[%s] captureImage: no image on clipboard", obj.name))
+
     return
   end
 
@@ -29,12 +30,12 @@ function obj.captureImage(image, open_image_url)
   hs.pasteboard.clearContents("imageUrl")
 
   local date = hs.execute("zsh -ci 'echo $EPOCHSECONDS'")
-  local cap_name = fmt("cap_%s.png", date:gsub("\n", ""))
-  local cap = fmt("%s/%s", obj.capsPath, cap_name)
+  local imageName = fmt("cap_%s.png", date:gsub("\n", ""))
+  local capturedImage = fmt("%s/%s", obj.capsPath, imageName)
 
-  if image:saveToFile(cap) then
+  if image:saveToFile(capturedImage) then
     local std_out, success, type, rc =
-      hs.execute(fmt("%s -ci '%s/.dotfiles/bin/capper %s'", os.getenv("SHELL"), os.getenv("HOME"), cap))
+      hs.execute(fmt("%s -ci '%s/.dotfiles/bin/capper %s'", os.getenv("SHELL"), os.getenv("HOME"), capturedImage))
 
     local std_out_lines = {}
     for s in std_out:gmatch("[^\r\n]+") do
@@ -45,15 +46,20 @@ function obj.captureImage(image, open_image_url)
     dbg("capper:\r\n%s\r\n%s\r\n%s\r\n%s", url, success, type, rc)
 
     if success then
-      hs.pasteboard.setContents(cap_name, "imageName")
+      hs.pasteboard.setContents(imageName, "imageName")
       hs.pasteboard.setContents(url, "imageUrl")
       hs.pasteboard.setContents(image, "image")
-      if open_image_url then hs.urlevent.openURLWithBundle(url, hs.urlevent.getDefaultHandler("https")) end
+      if openImageUrl then
+        hs.urlevent.openURLWithBundle(
+          url,
+          hs.urlevent.getDefaultHandler("https") or hs.urlevent.getDefaultHandler("http")
+        )
+      end
     else
-      error(fmt("failed to upload image to spaces (%s/%s/%s)..", url, type, rc))
+      error(fmt("[%s] captureImage: failed to upload image to spaces (%s/%s/%s)", obj.name, url, type, rc))
     end
   else
-    error(fmt("file %s doesn't exist for uploading to capper.", cap))
+    error(fmt("[%s] captureImage: file %s doesn't existing for uploading", obj.name, capturedImage))
   end
 end
 
@@ -61,7 +67,7 @@ function obj.sendToImgur(image, open_image_url)
   image = image or hs.pasteboard.readImage()
 
   if not image then
-    warn("[send_to_imgur] no image on clipboard")
+    warn(fmt("[%s] sendToImgur: no image on clipboard", obj.name))
     return
   end
 
@@ -93,7 +99,7 @@ function obj.sendToImgur(image, open_image_url)
         if open_image_url then hs.urlevent.openURLWithBundle(imageUrl, hs.urlevent.getDefaultHandler("https")) end
         hs.execute("rm " .. obj.tempImage)
       else
-        error(fmt("status: %s, body: %s, headers: %s", status, body, I(headers)))
+        error(fmt("[%s] sendToImgur: %s/%s/%s/%s", obj.name, status, body, I(headers)))
       end
     end)
   end
@@ -103,7 +109,7 @@ function obj.saveOcrText(image)
   image = image or hs.pasteboard.readImage()
 
   if not image then
-    warn("[paste_ocr_text] no image on clipboard")
+    warn(fmt("[%s] saveOcrText: no image on clipboard", obj.name))
     return
   end
 
@@ -127,17 +133,17 @@ function obj.saveOcrText(image)
     -- clean up
     hs.execute(fmt("rm %s %s.txt", imagePath, outputPath))
   else
-    error(fmt("ocrText [failed]: %s/%s/%s/%s", output, success, type, rc))
+    error(fmt("[%s] ocrText: %s/%s/%s/%s", obj.name, output, success, type, rc))
   end
 end
 
 --  REF: https://github.com/danielo515/dotfiles/blob/master/chezmoi/dot_hammerspoon/keybinds.lua#L44-L61
-function obj.edit_clipboard_image(image)
+function obj.editClipboardImage(image)
   -- Check if an image is in the clipboard
   image = image or hs.pasteboard.readImage()
 
   if not image then
-    warn("[clipper] no image on clipboard")
+    warn(fmt("[%s] editClipboardImage: no image on clipboard", obj.name))
     return
   end
 
@@ -149,7 +155,7 @@ function obj.edit_clipboard_image(image)
   hs.execute("open -a Preview " .. tmpfile)
 
   hs.timer.doAfter(1, function() hs.application.find("Preview"):selectMenuItem({ "Tools", "Annotate", "Arrow" }) end)
-  note(fmt("[clipper] editClipboardImage: %s", obj.clipboardData))
+  note(fmt("[%s] editClipboardImage: %s", obj.name, obj.clipboardData))
 end
 
 function obj:init(opts)
@@ -161,19 +167,20 @@ function obj:init(opts)
       obj.clipboardData = pb
     else
       obj.clipboardData = hs.pasteboard.readImage()
+      dbg(pb, true)
       obj.captureImage(obj.clipboardData, false)
 
       local pasteImageUrl = function()
         local imageUrl = hs.pasteboard.getContents("imageUrl")
         hs.eventtap.keyStrokes(imageUrl)
-        note(fmt("[clipper] imageUrl: %s", imageUrl))
+        note(fmt("[%s] imageUrl: %s", obj.name, imageUrl))
       end
 
       local pasteOcrText = function()
         obj.saveOcrText(obj.clipboardData)
         local ocrText = hs.pasteboard.getContents("ocrText")
         hs.eventtap.keyStrokes(ocrText)
-        note(fmt("[clipper] ocrText: %s", ocrText))
+        note(fmt("[%s] ocrText: %s", obj.name, ocrText))
       end
 
       hs.hotkey.bind({ "cmd", "shift" }, "v", pasteImageUrl)
@@ -181,7 +188,7 @@ function obj:init(opts)
       hs.hotkey.bind({ "cmd", "shift" }, "p", pasteOcrText)
       hs.hotkey.bind({ "cmd", "shift", "ctrl" }, "p", pasteOcrText)
       hs.hotkey.bind({ "cmd", "shift" }, "e", function()
-        obj.edit_clipboard_image(obj.clipboardData)
+        obj.editClipboardImage(obj.clipboardData)
         -- local ocr_text = hs.pasteboard.getContents("ocrText")
         -- hs.eventtap.keyStrokes(ocr_text)
         -- dbg("ocrText: %s", ocr_text)
@@ -194,7 +201,7 @@ function obj:init(opts)
 
           local mdImgTag = fmt([[<img src="%s" width="450" />]], imageUrl)
           hs.eventtap.keyStrokes(mdImgTag)
-          note(fmt("[clipper] mdImgTag: %s", mdImgTag))
+          note(fmt("[%s] mdImgTag: %s", obj.name, mdImgTag))
         end)
       end
     end

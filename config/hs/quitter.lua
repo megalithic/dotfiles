@@ -17,7 +17,7 @@ local function guarded()
   local app = hs.application.frontmostApplication()
   local enabled = hs.fnutils.find(QUITTERS, function(q) return q and q == app:bundleID() end) ~= nil
 
-  if enabled then note(fmt("[QUIT] %s/%s activated", obj.name, app:bundleID())) end
+  if enabled then note(fmt("[RUN] %s/%s activated", obj.name, app:bundleID())) end
 
   return enabled
 end

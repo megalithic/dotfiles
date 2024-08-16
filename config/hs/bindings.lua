@@ -2,6 +2,7 @@ local wm = req("wm")
 local summon = req("summon")
 local chain = req("chain")
 local enum = req("hs.fnutils")
+local utils = req("utils")
 
 -- [ APP LAUNCHERS ] -----------------------------------------------------------
 
@@ -62,7 +63,8 @@ req("hyper")
     hs.notify.new({ title = "hammerspork", subTitle = "config is reloading..." }):send()
     hs.reload()
   end)
-  :bind({ "shift", "ctrl" }, "l", nil, function() req("wm").placeAllApps() end)
+  :bind({ "shift", "ctrl" }, "l", nil, req("wm").placeAllApps)
+  -- WIP
   :bind({ "shift" }, "b", nil, function()
     local currentApp = hs.axuielement.applicationElement(hs.application.frontmostApplication())
     if currentApp == lastApp then
@@ -72,12 +74,15 @@ req("hyper")
       axbrowse.browse(currentApp) -- new app, so start over
     end
   end)
+  -- WIP
+  :bind({ "shift", "ctrl" }, "h", nil, utils.showAvailableHotkeys)
 
 -- [ MODAL LAUNCHERS ] ---------------------------------------------------------
 
 -- # window management ---------------------------------------------------------
 local modality = req("modality"):start({ id = "wm", key = "l" })
 modality
+  :bind({}, "r", req("wm").placeAllApps, function() modality:delayedExit(0.1) end)
   :bind({}, "escape", function() modality:exit() end)
   :bind({}, "return", function() wm.place(POSITIONS.full) end, function() modality:delayedExit(0.1) end)
   :bind({ "shift" }, "return", function()

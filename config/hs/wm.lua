@@ -105,19 +105,28 @@ obj.placeApp = function(elementOrAppName, event, app)
           if standardWindows ~= nil or #standardWindows > 0 then
             warn(
               fmt(
-                "[wm] layouts/%s (%s): specific window not found; using all standard windows for app.",
+                "[RUN] %s/layouts/%s (%s): specific window not found; using all standard windows for app.",
+                obj.name,
                 app:bundleID(),
                 utils.eventString(event)
               )
             )
             enum.each(standardWindows, function(w)
-              note(fmt("[wm] layouts/%s (%s): %s", app:bundleID(), utils.eventString(event), w:title()))
+              note(fmt("[RUN] %s/layouts/%s (%s): %s", obj.name, app:bundleID(), utils.eventString(event), w:title()))
               hs.grid.set(w, position, obj.targetDisplay(screenNum))
             end)
           end
         end
         if win ~= nil then
-          note(fmt("[wm] layouts/%s (%s): %s", app:bundleID(), utils.eventString(event), app:focusedWindow():title()))
+          note(
+            fmt(
+              "[RUN] %s/layouts/%s (%s): %s",
+              obj.name,
+              app:bundleID(),
+              utils.eventString(event),
+              app:focusedWindow():title()
+            )
+          )
 
           dbg(
             fmt(

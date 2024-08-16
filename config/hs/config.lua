@@ -130,7 +130,7 @@ LAUNCHERS = {
   { "com.spotify.client", "p", nil, false },
   { "com.freron.MailMate", "e", nil, false },
   { "com.flexibits.fantastical2.mac", "y", { "'" }, false },
-  { "com.raycast.macos", "space", { "c", "space" }, false },
+  { "com.raycast.macos", "space", nil, false },
   { "com.superultra.Homerow", nil, { ";" }, false },
   { "com.dexterleng.Homerow", nil, { ";" }, false },
   { "com.tinyspeck.slackmacgap", "s", nil, false },
