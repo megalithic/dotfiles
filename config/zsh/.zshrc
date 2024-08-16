@@ -21,6 +21,7 @@ zsh_add_plugin "megalithic/zsh-magic-dashboard" "magic_dashboard"
 # zsh_add_plugin "MichaelAquilina/zsh-auto-notify" "auto-notify.plugin"
 zsh_add_plugin "hlissner/zsh-autopair"
 zsh_add_plugin "psprint/zsh-sweep" # zsh linting
+zsh_add_plugin "ptavares/zsh-direnv"
 
 # adds `zmv` tool (https://twitter.com/wesbos/status/1443570300529086467)
 autoload -U zmv # builtin zsh rename command

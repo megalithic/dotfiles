@@ -499,6 +499,23 @@ local function seg_mode(truncate_at)
   return seg(string.upper(mode), mode_info.hl, { padding = { 1, 1 } })
 end
 
+local seg_lsp_servers = function(truncate_at)
+  if is_truncated(truncate_at) then return "" end
+
+  local bufnr = vim.api.nvim_get_current_buf()
+  local clients = vim.lsp.get_clients({ bufnr = bufnr })
+
+  if next(clients) == nil then return "" end
+
+  local c = {}
+
+  for _, client in pairs(clients) do
+    table.insert(c, client.name)
+  end
+
+  return seg("\u{f085} " .. table.concat(c, "◦"), { margin = { 1, 1 } })
+end
+
 local function seg_lsp_status(truncate_at)
   if is_truncated(truncate_at) then return "" end
 
@@ -674,6 +691,7 @@ function mega.ui.statusline.render()
     seg("%*"),
     seg("%{(&fenc!='utf-8'&&&fenc!='')?'['.&fenc.'] ':''}", "warningmsg"),
     seg("%*"),
+    seg_lsp_servers(120),
     seg_lsp_status(100),
     seg_git_status(120),
     -- seg(get_dap_status()),
