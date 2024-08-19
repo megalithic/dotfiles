@@ -1,6 +1,7 @@
 local enum = require("hs.fnutils")
 local obj = {}
 local browser = req("browser")
+local uri = hs.http.urlParts
 
 obj.__index = obj
 obj.name = "watcher.url"
@@ -10,14 +11,36 @@ obj.currentHandler = nil
 
 obj.callbacks = {
   {
+    pattern = "https:?://pop.com/*",
+    action = function(opts)
+      local handler = opts["handler"]
+      local url = opts["url"]
+      local urlDomain = url and uri(url).host
+
+      hs.urlevent.openURLWithBundle(url, hs.application.get(handler):bundleID())
+
+      local app = hs.application.get("com.pop.pop.app")
+
+      hs.timer.waitUntil(
+        function() return browser.hasTab(urlDomain) and hs.application.get(app) ~= nil end,
+        function()
+          req("watchers.app").runContextForAppBundleID(
+            app:name(),
+            hs.application.watcher.launched,
+            app,
+            { tabCount = obj.browserTabCount, url = urlDomain }
+          )
+        end
+      )
+    end,
+  },
+  {
     pattern = "https:?://meet.google.com/*",
-    -- FIXME: if the url passed to the PWA google meet app worked,
-    --  we'd not need to fiddle with this hackiness. :sadpanda:
     -- action = "com.brave.Browser.nightly.app.kjgfgldnnfoeklkmfkjfagphfepbbdan",
     action = function(opts)
       local handler = opts["handler"]
       local url = opts["url"]
-      local urlDomain = url and url:match("([%w%-%.]*%.[%w%-]+%.%w+)")
+      local urlDomain = url and uri(url).host
 
       local app = hs.application.get(handler) or hs.application.get(BROWSER)
 

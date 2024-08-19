@@ -18,33 +18,18 @@ function obj:start(opts)
 
   if obj.modal then obj.modal:enter() end
 
-  if
-    enum.contains({ hs.application.watcher.launched, hs.application.watcher.activated }, event) and not obj.launched
-  then
+  if enum.contains({ hs.application.watcher.launched }, event) and not obj.launched then
     local pop = hs.application.get("com.pop.pop.app")
-    -- FIXME: unable to run these actions only when a meeting window is created/opened;
-    --  no uielement events or hs.application events fire when this happens (other than subsequent activations)
-    --
-    -- local meetingWindowMenuItem = pop:findMenuItem({ "Window", "Focus Meeting Window" })
-    -- hs.timer.waitUntil(
-    --   function()
-    --     return meetingWindowMenuItem
-    --       and meetingWindowMenuItem.enabled
-    --       and pop:selectMenuItem({ "Window", "Focus Meeting Window" })
-    --   end,
-    --   function()
     req("utils").dnd(true, "zoom")
     hs.spotify.pause()
     req("ptt").setState("push-to-talk")
+    req("watchers.dock").refreshInput("docked")
     local browser = req("browser")
     if browser.hasTab("pop.com") then
       browser.killTabsByDomain("pop.com")
       pop:activate()
+      obj.launched = true
     end
-
-    obj.launched = true
-    --   end
-    -- )
   end
 
   return self

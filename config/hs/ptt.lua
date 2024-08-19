@@ -14,9 +14,13 @@ obj.defaultInputVolume = 65
 obj.pushed = false
 
 obj.icons = {
-  ["push-to-mute"] = req("hs.styledtext").new("", {
+  ["mic-on"] = req("hs.styledtext").new("◉", {
     color = { hex = "#c43e1f" },
     font = { name = DefaultFont.name, size = 15 },
+  }),
+  ["push-to-mute"] = req("hs.styledtext").new("", {
+    color = { hex = "#ffffff" },
+    font = { name = DefaultFont.name, size = 13 },
   }),
   ["push-to-talk"] = req("hs.styledtext").new("", {
     color = { hex = "#aaaaaa" },
@@ -85,7 +89,7 @@ function obj.updateMenubar()
 
   if obj.mode == "push-to-talk" then
     if obj.pushed then
-      obj.menubar:setTitle(obj.icons["push-to-mute"])
+      obj.menubar:setTitle(obj.icons["push-to-mute"] .. " " .. obj.icons["mic-on"])
       muted = false
     else
       obj.menubar:setTitle(obj.icons["push-to-talk"])
@@ -96,7 +100,7 @@ function obj.updateMenubar()
       obj.menubar:setTitle(obj.icons["push-to-talk"])
       muted = true
     else
-      obj.menubar:setTitle(obj.icons["push-to-mute"])
+      obj.menubar:setTitle(obj.icons["push-to-mute"] .. " " .. obj.icons["mic-on"])
       muted = false
     end
   end

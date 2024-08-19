@@ -20,7 +20,7 @@ function obj.setInput(device)
     function() end, -- Fake callback
     function(_task, stdOut, _stdErr)
       local continue = stdOut == string.format([[input audio device set to "%s"]], device)
-      success(fmt("[watcher.dock] audio input set to %s", device))
+      success(fmt("[%s] audio input set to %s", obj.name, device))
       return continue
     end,
     { "-t", "input", "-s", device }
@@ -34,7 +34,8 @@ function obj.setOutput(device)
     function() end, -- Fake callback
     function(_task, stdOut, _stdErr)
       local continue = stdOut == string.format([[output audio device set to "%s"]], device)
-      success(fmt("[watcher.dock] audio output set to %s", device))
+      success(fmt("[%s] audio output set to %s", obj.name, device))
+
       return continue
     end,
     { "-t", "output", "-s", device }
@@ -53,23 +54,22 @@ function obj:setAudio(devices)
 end
 
 -- ---@param dockState "docked"|"undocked"
--- function obj.refreshInput(dockState)
---   dockState = dockState or "docked"
---   local state = C.dock[dockState].input
---   local bin = hostname() == "megabookpro" and "/opt/homebrew/bin/SwitchAudioSource"
---     or "/usr/local/bin/SwitchAudioSource"
---   local task = hs.task.new(
---     bin,
---     function() end, -- Fake callback
---     function(task, stdOut, stdErr)
---       local continue = stdOut == string.format([[input audio device set to "%s"]], state)
---       success(fmt("[watcher.dock] audio input set to %s", state))
---       return continue
---     end,
---     { "-t", "input", "-s", state }
---   )
---   task:start()
--- end
+function obj.refreshInput(dockState)
+  dockState = dockState or "docked"
+  local state = DOCK[dockState].input
+  local task = hs.task.new(
+    "/opt/homebrew/bin/SwitchAudioSource",
+    function() end, -- Fake callback
+    function(task, stdOut, stdErr)
+      local continue = stdOut == string.format([[input audio device set to "%s"]], state)
+      success(fmt("[%s] audio output set to %s", obj.name, state))
+
+      return continue
+    end,
+    { "-t", "input", "-s", state }
+  )
+  task:start()
+end
 
 function obj.handleDockingStateChanges(_watcher, _path, _key, _oldValue, isConnected, isInitializing)
   isInitializing = (isInitializing ~= nil and type(isInitializing) == "boolean") and isInitializing or false

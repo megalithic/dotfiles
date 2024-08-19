@@ -307,7 +307,7 @@ local exception_types = {
 local function is_truncated(trunc)
   -- Use -1 to default to 'not truncated'
   -- get's just the current split window
-  local check = api.nvim_win_get_width(0) < (trunc or -1)
+  local check = vim.api.nvim_win_get_width(0) < (trunc or -1)
 
   -- gets the whole nvim window
   if vim.api.nvim_get_option("laststatus") == 3 then check = vim.o.columns < (trunc or -1) end
@@ -499,21 +499,20 @@ local function seg_mode(truncate_at)
   return seg(string.upper(mode), mode_info.hl, { padding = { 1, 1 } })
 end
 
-local seg_lsp_servers = function(truncate_at)
-  if is_truncated(truncate_at) then return "" end
-
+local function seg_lsp_servers(truncate_at)
   local bufnr = vim.api.nvim_get_current_buf()
   local clients = vim.lsp.get_clients({ bufnr = bufnr })
 
   if next(clients) == nil then return "" end
 
-  local c = {}
+  local client_names = {}
 
   for _, client in pairs(clients) do
-    table.insert(c, client.name)
+    table.insert(client_names, client.name)
   end
 
-  return seg("\u{f085} " .. table.concat(c, "◦"), { margin = { 1, 1 } })
+  if is_truncated(truncate_at) then return seg("\u{f085} " .. #client_names, { margin = { 1, 1 } }) end
+  return seg("\u{f085} " .. table.concat(client_names, "◦"), { margin = { 1, 1 } })
 end
 
 local function seg_lsp_status(truncate_at)
@@ -618,11 +617,13 @@ local function seg_git_status(truncate_at)
   local status = is_valid_git()
   if not status then return "" end
 
-  local branch = is_truncated(truncate_at) and truncate_str(status.head or "", 14) or status.head
+  local truncate_branch, truncate_symbol = unpack(truncate_at)
+
+  local branch = is_truncated(truncate_branch) and truncate_str(status.head or "", 14) or status.head
   -- if vim.fn.trim(vim.fn.system("git rev-parse --is-inside-work-tree")) == "true" then
   --   branch = vim.fn.trim(vim.fn.system("basename `git rev-parse --show-toplevel`"))
   -- end
-  return seg(branch, "StGitBranch", { margin = { 1, 1 }, prefix = seg_git_symbol(80), padding = { 1, 0 } })
+  return seg(branch, "StGitBranch", { margin = { 1, 1 }, prefix = seg_git_symbol(truncate_symbol), padding = { 1, 0 } })
 end
 
 local function seg_startuptime()
@@ -691,9 +692,9 @@ function mega.ui.statusline.render()
     seg("%*"),
     seg("%{(&fenc!='utf-8'&&&fenc!='')?'['.&fenc.'] ':''}", "warningmsg"),
     seg("%*"),
-    seg_lsp_servers(120),
+    seg_lsp_servers(150),
     seg_lsp_status(100),
-    seg_git_status(120),
+    seg_git_status({ 175, 80 }),
     -- seg(get_dap_status()),
     seg_lineinfo(75),
     -- seg_startuptime(),
