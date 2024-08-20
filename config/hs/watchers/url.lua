@@ -61,6 +61,14 @@ obj.callbacks = {
       )
     end,
   },
+  {
+    pattern = "https?://open.spotify.com/*",
+    action = "com.spotify.client",
+  },
+  {
+    pattern = "https?://figma.com/*",
+    action = "com.figma.Desktop",
+  },
 }
 
 function obj.handleUrlCallback(url, handler)
@@ -98,9 +106,6 @@ function obj.handleHttpCallback(scheme, _host, _params, fullURL, _senderPID)
 end
 
 function obj:start()
-  -- Tracking this issue to get working handoff to default browser:
-  -- REF: https://github.com/Hammerspoon/hammerspoon/pull/3635
-
   hs.urlevent.httpCallback = self.handleHttpCallback
   info(fmt("[START] %s", self.name))
 

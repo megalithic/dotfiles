@@ -55,6 +55,19 @@ req("hyper"):start({ id = "meeting" }):bind({}, "z", nil, function()
   end
 end)
 
+req("hyper"):start({ id = "figma" }):bind({ "shift" }, "f", nil, function()
+  local focusedApp = hs.application.frontmostApplication()
+  if hs.application.find("com.figma.Desktop") then
+    hs.application.launchOrFocusByBundleID("com.figma.Desktop")
+  elseif req("browser").hasTab("figma.com") then
+    req("browser").jump("figma.com")
+  else
+    info(fmt("%s: no meeting targets to focus", "bindings.hyper.meeting"))
+
+    focusedApp:activate()
+  end
+end)
+
 local axbrowse = req("axbrowse")
 local lastApp
 req("hyper")
@@ -79,11 +92,12 @@ req("hyper")
 
 -- [ MODAL LAUNCHERS ] ---------------------------------------------------------
 
--- # window management ---------------------------------------------------------
+-- # wm/window management ---------------------------------------------------------
 local modality = req("modality"):start({ id = "wm", key = "l" })
 modality
   :bind({}, "r", req("wm").placeAllApps, function() modality:delayedExit(0.1) end)
   :bind({}, "escape", function() modality:exit() end)
+  :bind({}, "space", function() wm.place(POSITIONS.preview) end, function() modality:delayedExit(0.1) end)
   :bind({}, "return", function() wm.place(POSITIONS.full) end, function() modality:delayedExit(0.1) end)
   :bind({ "shift" }, "return", function()
     wm.toNextScreen()

@@ -96,12 +96,12 @@ local M = {
   disabled_semantic_tokens = { "lua" },
   disabled_lsp_formatters = { "tailwindcss", "html", "tsserver", "ls_emmet", "zk", "sumneko_lua" },
   ---@format disable
-  enabled_elixir_ls = { "", "", "elixirls", "nextls", "lexical" },
+  enabled_elixir_ls = { "", "", "elixirls", "", "lexical" },
   completion_exclusions = { "ElixirLS", "Next LS", "", "", "" },
-  formatter_exclusions = { "ElixirLS", "Next LS", "elixirls", "", "lexical" },
-  definition_exclusions = { "ElixirLS", "Next LS", "elixirls", "", "lexical" },
-  references_exclusions = { "ElixirLS", "Next LS", "elixirls", "", "lexical" },
-  diagnostic_exclusions = { "ElixirLS", "Next LS", "elixirls", "", "lexical", "tsserver" },
+  formatter_exclusions = { "ElixirLS", "Next LS", "", "", "lexical" },
+  definition_exclusions = { "ElixirLS", "Next LS", "elixirls", "nextls", "" },
+  references_exclusions = { "ElixirLS", "Next LS", "elixirls", "nextls", "" },
+  diagnostic_exclusions = { "ElixirLS", "Next LS", "", "nextls", "lexical", "tsserver" },
   max_diagnostic_exclusions = { "ElixirLS", "Next LS", "elixirls", "", "lexical" },
   ---@format enable
   disable_autolint = false,

@@ -152,33 +152,29 @@ end
 -- (otherwise those symbols are not displayed).
 local CTRL_S = vim.keycode("<C-S>", true, true, true)
 local CTRL_V = vim.keycode("<C-V>", true, true, true)
--- stylua: ignore start
 local MODES = setmetatable({
-  ['n']    = { long = 'Normal',   short = 'N',   hl = 'StModeNormal' },
-  ['no']   = { long = 'N-OPERATOR PENDING',   short = 'N-OP',   hl = 'StModeNormal' },
-  ['nov']   = { long = 'N-OPERATOR BLOCK',   short = 'N-OPv',   hl = 'StModeNormal' },
-  ['noV']   = { long = 'N-OPERATOR LINE',   short = 'N-OPV',   hl = 'StModeNormal' },
-  ['v']    = { long = 'Visual',   short = 'V',   hl = 'StModeVisual' },
-  ['V']    = { long = 'V-Line',   short = 'V-L', hl = 'StModeVisual' },
-  [CTRL_V] = { long = 'V-Block',  short = 'V-B', hl = 'StModeVisual' },
-  ['s']    = { long = 'Select',   short = 'S',   hl = 'StModeVisual' },
-  ['S']    = { long = 'S-Line',   short = 'S-L', hl = 'StModeVisual' },
-  [CTRL_S] = { long = 'S-Block',  short = 'S-B', hl = 'StModeVisual' },
-  ['i']    = { long = 'Insert',   short = 'I',   hl = 'StModeInsert' },
-  ['R']    = { long = 'Replace',  short = 'R',   hl = 'StModeReplace' },
-  ['c']    = { long = 'Command',  short = 'C',   hl = 'StModeCommand' },
-  ['r']    = { long = 'Prompt',   short = 'P',   hl = 'StModeOther' },
-  ['!']    = { long = 'Shell',    short = 'Sh',  hl = 'StModeOther' },
-  ['t']    = { long = 'Terminal', short = 'T-I',   hl = 'StModeOther' },
-  ['nt']    = { long = 'N-Terminal', short = 'T-N',   hl = 'StModeNormal' },
-  ['r?']    = { long = 'Confirm', short = '?',   hl = 'StModeOther' },
+  ["n"] = { long = "Normal", short = "N", hl = "StModeNormal", separator_hl = "StSeparator" },
+  ["no"] = { long = "N-OPERATOR PENDING", short = "N-OP", hl = "StModeNormal", separator_hl = "StSeparator" },
+  ["nov"] = { long = "N-OPERATOR BLOCK", short = "N-OPv", hl = "StModeNormal", separator_hl = "StSeparator" },
+  ["noV"] = { long = "N-OPERATOR LINE", short = "N-OPV", hl = "StModeNormal", separator_hl = "StSeparator" },
+  ["v"] = { long = "Visual", short = "V", hl = "StModeVisual", separator_hl = "StSeparator" },
+  ["V"] = { long = "V-Line", short = "V-L", hl = "StModeVisual", separator_hl = "StSeparator" },
+  [CTRL_V] = { long = "V-Block", short = "V-B", hl = "StModeVisual", separator_hl = "StSeparator" },
+  ["s"] = { long = "Select", short = "S", hl = "StModeVisual", separator_hl = "StSeparator" },
+  ["S"] = { long = "S-Line", short = "S-L", hl = "StModeVisual", separator_hl = "StSeparator" },
+  [CTRL_S] = { long = "S-Block", short = "S-B", hl = "StModeVisual", separator_hl = "StSeparator" },
+  ["i"] = { long = "Insert", short = "I", hl = "StModeInsert", separator_hl = "StSeparator" },
+  ["R"] = { long = "Replace", short = "R", hl = "StModeReplace", separator_hl = "StSeparator" },
+  ["c"] = { long = "Command", short = "C", hl = "StModeCommand", separator_hl = "StSeparator" },
+  ["r"] = { long = "Prompt", short = "P", hl = "StModeOther", separator_hl = "StSeparator" },
+  ["!"] = { long = "Shell", short = "Sh", hl = "StModeOther", separator_hl = "StSeparator" },
+  ["t"] = { long = "Terminal", short = "T-I", hl = "StModeOther", separator_hl = "StSeparator" },
+  ["nt"] = { long = "N-Terminal", short = "T-N", hl = "StModeNormal", separator_hl = "StSeparator" },
+  ["r?"] = { long = "Confirm", short = "?", hl = "StModeOther", separator_hl = "StSeparator" },
 }, {
   -- By default return 'Unknown' but this shouldn't be needed
-  __index = function()
-    return   { long = 'Unknown',  short = 'U',   hl = 'StModeOther' }
-  end,
+  __index = function() return { long = "Unknown", short = "U", hl = "StModeOther", separator_hl = "StSeparator" } end,
 })
--- stylua: ignore end
 
 local plain_types = {
   filetypes = {
@@ -494,9 +490,12 @@ local function seg_suffix(truncate_at)
 end
 
 local function seg_mode(truncate_at)
+  -- Some useful glyphs:
+  -- https://www.nerdfonts.com/cheat-sheet
+  --           
   local mode_info = MODES[api.nvim_get_mode().mode]
   local mode = is_truncated(truncate_at) and mode_info.short or mode_info.long
-  return seg(string.upper(mode), mode_info.hl, { padding = { 1, 1 } })
+  return seg(string.upper(mode), mode_info.hl, { padding = { 1, 1 }, suffix = "░", suffix_hl = mode_info.separator_hl })
 end
 
 local function seg_lsp_servers(truncate_at)
@@ -512,7 +511,7 @@ local function seg_lsp_servers(truncate_at)
   end
 
   if is_truncated(truncate_at) then return seg("\u{f085} " .. #client_names, { margin = { 1, 1 } }) end
-  return seg("\u{f085} " .. table.concat(client_names, "◦"), { margin = { 1, 1 } })
+  return seg("\u{f085} " .. table.concat(client_names, "/"), { margin = { 1, 1 } })
 end
 
 local function seg_lsp_status(truncate_at)
@@ -655,7 +654,7 @@ function mega.ui.statusline.render()
     expandtab = vim.bo[bufnr].expandtab,
   }
 
-  if not is_focused() then return "%#StInactive# %F %m %r %= %{&spelllang} %y %8(%l,%c%) %8p%%" end
+  if not is_focused() then return "%#StatusLineInactive# %F %m %r %= %{&spelllang} %y %8(%l,%c%) %8p%%" end
 
   if is_plain() then
     local parts = {

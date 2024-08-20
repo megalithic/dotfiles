@@ -753,7 +753,6 @@ return {
   },
   {
     -- FIXME: https://github.com/mhanberg/output-panel.nvim/issues/5
-    enabled = false,
     "mhanberg/output-panel.nvim",
     lazy = false,
     keys = {

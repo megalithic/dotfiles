@@ -162,10 +162,12 @@ brew "ollama" # ai
 brew "olets/tap/zsh-abbr"
 brew "openssl"
 brew "openssl@1.1"
+brew 'opentofu' # required for formatting terraform files
 brew "p7zip"
 brew "pandoc"
 brew "perl"
 brew "pgcli"
+brew 'pgformatter' # format postgres sql files
 brew "pkg-config"
 brew "pigz"
 brew "pinentry-mac" if OS.mac?

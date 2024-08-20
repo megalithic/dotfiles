@@ -19,7 +19,7 @@ obj.icons = {
     font = { name = DefaultFont.name, size = 15 },
   }),
   ["push-to-mute"] = req("hs.styledtext").new("", {
-    color = { hex = "#ffffff" },
+    color = { hex = "#c43e1f" },
     font = { name = DefaultFont.name, size = 13 },
   }),
   ["push-to-talk"] = req("hs.styledtext").new("", {

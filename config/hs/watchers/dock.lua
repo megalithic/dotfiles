@@ -98,7 +98,11 @@ end
 
 obj.watchExistingDevices = function()
   for _, device in ipairs(hs.usb.attachedDevices()) do
-    if device.productID == DOCK.target.productID then obj.handleDockingStateChanges(nil, nil, nil, nil, true, true) end
+    if device.productID == DOCK.target.productID then
+      obj.handleDockingStateChanges(nil, nil, nil, nil, true, true)
+      -- else
+      --   obj.handleDockingStateChanges(nil, nil, nil, nil, false, true)
+    end
   end
 end
 
@@ -106,8 +110,6 @@ function obj:start()
   info(fmt("[START] %s", self.name))
   self.watchers.dock = hs.watchable.watch("status.dock", self.handleDockingStateChanges)
   self.watchExistingDevices()
-
-  -- FIXME: we ought to execute this on start so that we always have the correct docking state and related actions performed.
 
   return self
 end

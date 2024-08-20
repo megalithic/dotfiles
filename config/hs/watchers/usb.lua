@@ -61,7 +61,10 @@ end
 obj.watchExistingDevices = function()
   for _, device in ipairs(hs.usb.attachedDevices()) do
     if device.productID == DOCK.keyboard.productID then leelooHandler(nil, nil, nil, nil, true) end
-    if device.productID == DOCK.target.productID then obj.watchers.status.dock = true end
+    if device.productID == DOCK.target.productID then
+      obj.watchers.status.dock = true
+    else
+    end
   end
 end
 

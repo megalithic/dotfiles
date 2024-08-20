@@ -85,6 +85,7 @@ DISPLAYS = {
 
 POSITIONS = {
   full = "0,0 60x20",
+  preview = "0,0 60x2",
 
   center = {
     large = "6,1 48x18",
@@ -137,9 +138,10 @@ LAUNCHERS = {
   { "org.hammerspoon.Hammerspoon", "r", nil, false },
   { "com.apple.dt.Xcode", "x", nil, true },
   { "com.google.android.studio", "x", nil, true },
-  { "com.figma.Desktop", { { "shift" }, "f" }, nil, true },
   { "com.obsproject.obs-studio", "o", nil, true },
   { "com.kapeli.dashdoc", { { "shift" }, "d" }, { "d" }, false },
+  { "com.electron.postbird", { { "shift" }, "p" }, nil, false },
+  { "com.1password.1password", "1", nil, false },
 }
 
 LAYOUTS = {

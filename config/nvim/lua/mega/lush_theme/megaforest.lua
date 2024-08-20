@@ -951,7 +951,7 @@ local theme = lush(function(injected_functions)
 
     StatusLine({ fg = C.grey1, bg = C.bg1 }), -- status line of current window
     StatusLineNC({ fg = C.grey1, bg = C.bg0 }), -- status lines of not-current windows Note: if this is equal to "StatusLine" Vim will use "^^^" in the status line of the current window.
-    StInactive({ fg = C.bg_dark.lighten(20), bg = C.bg_dark, gui = "italic" }),
+    StatusLineInactive({ fg = C.bg_dark.lighten(20), bg = C.bg_dark, gui = "italic" }),
     StModeNormal({ bg = C.bg2, fg = C.bg5, gui = C.transparent }),
     StModeInsert({ bg = C.bg2, fg = C.green, gui = "bold" }),
     StModeVisual({ bg = C.bg2, fg = C.magenta, gui = "bold" }),
@@ -989,6 +989,7 @@ local theme = lush(function(injected_functions)
     StWarn({ DiagnosticWarn, bg = C.bg1 }),
     StInfo({ DiagnosticInfo, bg = C.bg1 }),
     StHint({ DiagnosticHint, bg = C.bg1 }),
+    StSeparator({ fg = C.bg0, bg = C.bg1 }),
 
     ---- :help statuscolumn  ---------------------------------------------------------
 
@@ -1003,7 +1004,7 @@ local theme = lush(function(injected_functions)
     ---- :help winbar  ---------------------------------------------------------
 
     WinBar({ StatusLine, gui = "italic" }),
-    WinBarNC({ StInactive }),
+    WinBarNC({ StatusLineInactive }),
 
     ---- :help ts-rainbow  -----------------------------------------------------
 

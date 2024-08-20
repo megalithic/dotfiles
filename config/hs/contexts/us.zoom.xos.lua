@@ -28,6 +28,7 @@ function obj:start(opts)
         hs.spotify.pause()
         require("ptt").setMode("push-to-talk")
         require("browser").killTabsByDomain("zoom.us")
+        req("watchers.dock").refreshInput("docked")
 
         local target_close_window = zoom:getWindow("Zoom")
         if target_close_window ~= nil then target_close_window:close() end
