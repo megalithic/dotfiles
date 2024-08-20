@@ -56,19 +56,8 @@ end
 -- ---@param dockState "docked"|"undocked"
 function obj.refreshInput(dockState)
   dockState = dockState or "docked"
-  local state = DOCK[dockState].input
-  local task = hs.task.new(
-    "/opt/homebrew/bin/SwitchAudioSource",
-    function() end, -- Fake callback
-    function(task, stdOut, stdErr)
-      local continue = stdOut == string.format([[input audio device set to "%s"]], state)
-      success(fmt("[%s] audio output set to %s", obj.name, state))
-
-      return continue
-    end,
-    { "-t", "input", "-s", state }
-  )
-  task:start()
+  local device = DOCK[dockState].input
+  obj.setInput(device)
 end
 
 function obj.handleDockingStateChanges(_watcher, _path, _key, _oldValue, isConnected, isInitializing)

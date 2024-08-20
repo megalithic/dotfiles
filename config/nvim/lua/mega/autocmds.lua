@@ -66,126 +66,139 @@ end
 
 function M.apply()
   M.augroup("Startup", {
+
     {
-      -- FIXME: handle situations where we use `ngit` or `ndb` from cli
       event = { "VimEnter" },
       pattern = { "*" },
-      enabled = false,
+      enabled = true,
       once = true,
       desc = "Crazy behaviours for opening vim with arguments (or not)",
-      command = function(args)
-        -- TODO: handle situations where 2 file names given and the second is of the shape of a line number, e.g. `:200`;
-        -- maybe use this? https://github.com/stevearc/dotfiles/commit/db4849d91328bb6f39481cf2e009866911c31757
-        local arg = vim.api.nvim_eval("argv(0)")
-        -- P(arg, vim.fn.argv(1))
+      command = function(evt)
+        local args = vim.api.nvim_eval("argv()")
+        local arg_count = #args
+
         if
           not vim.g.started_by_firenvim
           and (not vim.env.TMUX_POPUP and vim.env.TMUX_POPUP ~= 1)
-          and not vim.tbl_contains({ "NeogitStatus" }, vim.bo[args.buf].filetype)
+          and not vim.tbl_contains({ "NeogitStatus" }, vim.bo[evt.buf].filetype)
         then
-          if vim.fn.argc() > 1 then
-            local linenr = string.match(vim.fn.argv(1), "^:(%d+)$")
-            if string.find(vim.fn.argv(1), "^:%d*") ~= nil then
-              vim.cmd.edit({ args = { vim.fn.argv(0) } })
-              pcall(vim.api.nvim_win_set_cursor, 0, { tonumber(linenr), 0 })
-              vim.api.nvim_buf_delete(args.buf + 1, { force = true })
-            else
-              vim.schedule(function()
-                mega.resize_windows(args.buf)
-                require("virt-column").update()
-              end)
-            end
-          elseif vim.fn.argc() == 1 then
+          if arg_count == 0 then
+            if mega.picker ~= nil and mega.picker["startup"] ~= nil then mega.picker.startup(evt.buf) end
+          elseif arg_count == 1 then
+            print("arg_count == 2")
+            local arg = args[1]
             if vim.fn.isdirectory(arg) == 1 then
               require("oil").open(arg)
             else
-              -- handle editing an argument with `:300`(line number) at the end
-              local bufname = vim.api.nvim_buf_get_name(args.buf)
+              -- handle single argment like `filename.lua:300`
+              local bufname = vim.api.nvim_buf_get_name(evt.buf)
               local root, line = bufname:match("^(.*):(%d+)$")
               if vim.fn.filereadable(bufname) == 0 and root and line and vim.fn.filereadable(root) == 1 then
                 vim.schedule(function()
                   vim.cmd.edit({ args = { root } })
                   pcall(vim.api.nvim_win_set_cursor, 0, { tonumber(line), 0 })
-                  vim.api.nvim_buf_delete(args.buf, { force = true })
+                  vim.api.nvim_buf_delete(evt.buf, { force = true })
                 end)
               end
             end
-          elseif vim.fn.isdirectory(arg) == 1 then
-            require("oil").open(arg)
-          elseif mega.picker ~= nil and mega.picker["startup"] ~= nil then
-            mega.picker.startup(args.buf)
-          end
-        end
-      end,
-    },
-    {
-      enabled = false,
-      event = { "VimEnter" },
-      pattern = { "*" },
-      once = true,
-      desc = "Advanced startup behaviours based upon the arguments given..",
-      command = function(args)
-        local startup_allowed = function()
-          return not vim.g.started_by_firenvim
-            and (not vim.env.TMUX_POPUP and vim.env.TMUX_POPUP ~= 1)
-            and not vim.tbl_contains({ "NeogitStatus" }, vim.bo[args.buf].filetype)
-        end
-
-        -- TODO: handle situations where 2 file names given and the second is of the shape of a line number, e.g. `:200`;
-        -- maybe use this? https://github.com/stevearc/dotfiles/commit/db4849d91328bb6f39481cf2e009866911c31757
-        local startup_args = vim.api.nvim_eval("argv()")
-
-        if startup_allowed() then
-          -- cli_args > 1; usually a few files to open in splits, or a file and a `:ln_no`
-          if #startup_args > 1 then
-            -- we opened a file, and a line_no (e.g. path/to/file.txt :20)
-            local linenr = string.match(startup_args[1], "^:(%d+)$")
-            if string.find(startup_args[1], "^:%d*") ~= nil then
-              -- open the file
-              vim.cmd.edit({ args = { startup_args[0] } })
-              -- jump to the line number
-              pcall(vim.api.nvim_win_set_cursor, 0, { tonumber(linenr), 0 })
-              -- delete the empty buffer that got opened, too
-              vim.api.nvim_buf_delete(args.buf + 1, { force = true })
+          elseif arg_count == 2 then
+            local line = string.match(args[2], "^:(%d+)$")
+            local root = vim.api.nvim_buf_get_name(evt.buf)
+            -- handle argments like `filename.lua :300`
+            if string.find(args[2], "^:%d*") ~= nil then
+              if root and vim.fn.filereadable(root) == 1 and line then
+                vim.cmd.edit({ args = { root } })
+                pcall(vim.api.nvim_win_set_cursor, 0, { tonumber(line), 0 })
+                vim.api.nvim_buf_delete(evt.buf + 1, { force = true })
+              end
             else
-              -- we've simply opened a few files that need to be opened in splits and resized accordingly
               vim.schedule(function()
-                -- mega.resize_windows(args.buf)
-                -- require("virt-column").update()
-                pcall(mega.resize_windows, args.buf)
-                pcall(require("virt-column").update)
+                mega.resize_windows(evt.buf)
+                require("virt-column").update()
               end)
             end
-          -- we've passed in one (1) startup argument
-          elseif #startup_args == 1 then
-            -- our startup arg is a directory, according to vim..
-            if vim.fn.isdirectory(startup_args[0]) == 1 then
-              -- so, let's use oil to open the list of files/folders
-              local ok, oil = pcall(require, "oil")
-              if ok then oil.open(arg) end
-            else
-              -- handle editing an argument with `:300`(line number) at the end (e.g. this is when we have path/to/file.txt:20)
-              local bufname = vim.api.nvim_buf_get_name(args.buf)
-              local root, linenr = bufname:match("^(.*):(%d+)$")
-              if vim.fn.filereadable(bufname) == 0 and root and linenr and vim.fn.filereadable(root) == 1 then
-                vim.schedule(function()
-                  -- open the file
-                  vim.cmd.edit({ args = { root } })
-                  -- jump to the line number
-                  pcall(vim.api.nvim_win_set_cursor, 0, { tonumber(linenr), 0 })
-                  -- delete the empty buffer that got opened, too
-                  vim.api.nvim_buf_delete(args.buf, { force = true })
-                end)
-              end
-            end
           else
-            -- just opening vim without any arguments, just executes our preferred startup method
-            mega.picker.startup(args.buf)
+            vim.schedule(function()
+              mega.resize_windows(evt.buf)
+              require("virt-column").update()
+            end)
           end
         end
       end,
     },
   })
+
+  M.augroup("AutoSave", {
+    {
+
+      event = { "InsertLeave", "TextChanged", "BufLeave", "FocusLost" },
+      desc = "Auto-save on certain events",
+      command = function(ctx)
+        local bufnr = ctx.buf
+        local bo = vim.bo[bufnr]
+        local b = vim.b[bufnr]
+        if bo.buftype ~= "" or bo.ft == "gitcommit" or bo.readonly then return end
+        if b.saveQueued and ctx.event ~= "FocusLost" then return end
+
+        local debounce = ctx.event == "FocusLost" and 0 or 2000 -- save at once on focus loss
+        b.saveQueued = true
+        vim.defer_fn(function()
+          if not vim.api.nvim_buf_is_valid(bufnr) then return end
+          -- `noautocmd` prevents weird cursor movement
+          vim.api.nvim_buf_call(bufnr, function() vim.cmd("silent! noautocmd lockmarks update!") end)
+          b.saveQueued = false
+        end, debounce)
+      end,
+    },
+  })
+  --
+  -- --------------------------------------------------------------------------------
+  -- -- AUTO-NOHL & INLINE SEARCH COUNT
+  -- REF: https://github.com/chrisgrieser/.config/blob/main/nvim/lua/config/autocmds.lua#L122-L168
+  -- ---@param mode? "clear"
+  -- local function searchCountIndicator(mode)
+  --   local signColumnPlusScrollbarWidth = 2 + 3 -- CONFIG
+  --
+  --   local countNs = vim.api.nvim_create_namespace("searchCounter")
+  --   vim.api.nvim_buf_clear_namespace(0, countNs, 0, -1)
+  --   if mode == "clear" then return end
+  --
+  --   local row = vim.api.nvim_win_get_cursor(0)[1]
+  --   local count = vim.fn.searchcount()
+  --   if count.total == 0 then return end
+  --   local text = (" %d/%d "):format(count.current, count.total)
+  --   local line = vim.api.nvim_get_current_line():gsub("\t", (" "):rep(vim.bo.shiftwidth))
+  --   local lineFull = #line + signColumnPlusScrollbarWidth >= vim.api.nvim_win_get_width(0)
+  --   local margin = { (" "):rep(lineFull and signColumnPlusScrollbarWidth or 0) }
+  --
+  --   vim.api.nvim_buf_set_extmark(0, countNs, row - 1, 0, {
+  --     virt_text = { { text, "IncSearch" }, margin },
+  --     virt_text_pos = lineFull and "right_align" or "eol",
+  --     priority = 200, -- so it comes in front of lsp-endhints
+  --   })
+  -- end
+  --
+  -- -- without the `searchCountIndicator`, this `on_key` simply does `auto-nohl`
+  -- vim.on_key(function(char)
+  --   local key = vim.fn.keytrans(char)
+  --   local isCmdlineSearch = vim.fn.getcmdtype():find("[/?]") ~= nil
+  --   local isNormalMode = vim.api.nvim_get_mode().mode == "n"
+  --   local searchStarted = (key == "/" or key == "?") and isNormalMode
+  --   local searchConfirmed = (key == "<CR>" and isCmdlineSearch)
+  --   local searchCancelled = (key == "<Esc>" and isCmdlineSearch)
+  --   if not (searchStarted or searchConfirmed or searchCancelled or isNormalMode) then return end
+  --
+  --   -- works for RHS, therefore no need to consider remaps
+  --   local searchMovement = vim.tbl_contains({ "n", "N", "*", "#" }, key)
+  --
+  --   if (searchCancelled or not searchMovement) and not searchConfirmed then
+  --     vim.opt.hlsearch = false
+  --     searchCountIndicator("clear")
+  --   elseif searchMovement or searchConfirmed or searchStarted then
+  --     vim.opt.hlsearch = true
+  --     vim.defer_fn(searchCountIndicator, 1)
+  --   end
+  -- end, vim.api.nvim_create_namespace("autoNohlAndSearchCount"))
 
   M.augroup("HighlightYank", {
     {
@@ -414,10 +427,51 @@ function M.apply()
   --   })
   -- end)
 
+  --------------------------------------------------------------------------------
+  -- GIT CONFLICT MARKERS
+  -- if there are conflicts, jump to first conflict, highlight conflict markers,
+  -- and disable diagnostics (simplified version of `git-conflict.nvim`)
+  vim.api.nvim_create_autocmd({ "BufEnter", "FocusGained" }, {
+    callback = function(ctx)
+      local hlgroup = "DiagnosticVirtualTextInfo" -- CONFIG
+
+      local bufnr = ctx.buf
+      if not vim.api.nvim_buf_is_valid(bufnr) then return end
+
+      vim.system(
+        { "git", "diff", "--check", "--", vim.api.nvim_buf_get_name(bufnr) },
+        {},
+        vim.schedule_wrap(function(out)
+          local noConflicts = out.code == 0
+          local notGitRepo = vim.startswith(out.stdout, "warning: Not a git repository")
+          if noConflicts or notGitRepo then return end
+
+          local ns = vim.api.nvim_create_namespace("conflictMarkers")
+          local firstConflictLn
+          for conflictLnum in out.stdout:gmatch("(%d+): leftover conflict marker") do
+            local lnum = tonumber(conflictLnum)
+            vim.api.nvim_buf_add_highlight(bufnr, ns, hlgroup, lnum - 1, 0, -1)
+            if not firstConflictLn then firstConflictLn = lnum end
+          end
+          if not firstConflictLn then return end
+
+          vim.api.nvim_win_set_cursor(0, { firstConflictLn, 0 })
+          vim.diagnostic.enable(false, { bufnr = bufnr })
+          vim.notify_once("Conflict markers found.", nil, { title = "Git Conflicts" })
+        end)
+      )
+    end,
+  })
+
   M.augroup("Utilities", {
     {
+      event = { "QuickFixCmdPost" },
+      desc = "Goes to first item in quickfix list automatically",
+      command = function(_args) pcall(vim.cmd.cfirst) end,
+    },
+    {
       event = { "UIEnter", "ColorScheme" },
-      desc = "remove terminal padding around neovim instance",
+      desc = "Remove terminal padding around neovim instance",
       command = function(_args)
         local normal = vim.api.nvim_get_hl(0, { name = "Normal" })
         if not normal.bg then return end

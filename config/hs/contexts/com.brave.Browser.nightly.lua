@@ -11,20 +11,18 @@ obj.actions = {}
 
 function obj.browserTabWatcher(_event, metadata)
   if metadata ~= nil and metadata.url ~= nil then
+    local onOpen = metadata["onOpen"] or nil
+    local onClose = metadata["onClose"] or nil
+
     if browser.hasTab(metadata.url) then
-      -- if browser.tabCount() == metadata.tabCount + 1 and browser.hasTab(metadata.url) then
-      hs.spotify.pause()
-      req("utils").dnd(true)
-      req("ptt").setMode("push-to-talk")
-      req("watchers.dock").refreshInput("docked")
+      if onOpen ~= nil then onOpen() end
 
       -- hacky way of detecting when the tab is closed
       hs.timer.waitUntil(
-        function() return not browser.hasTab(metadata.url) end,
         -- function() return browser.tabCount() == metadata.tabCount and not browser.hasTab(metadata.url) end,
+        function() return not browser.hasTab(metadata.url) end,
         function()
-          req("utils").dnd(false)
-          req("ptt").setMode("push-to-talk")
+          if onClose ~= nil then onClose() end
         end
       )
     end
