@@ -396,9 +396,9 @@ DOCK = {
     vendorName = "ZMK Project",
   },
   docked = {
-    wifi = "off", -- wifi status
-    input = "Samson GoMic", -- microphone source
-    output = "phonak", -- speaker source
+    wifi = "off",
+    input = "Samson GoMic",
+    output = "phonak",
   },
   undocked = {
     wifi = "on",
