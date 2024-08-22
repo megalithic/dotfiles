@@ -65,13 +65,13 @@ I am pushing updates _constantly_, so there are **NO** guarantees of stability w
 
 A few of the _must-have_ tools I roll with:
 
-- [kitty](https://github.com/kovidgoyal/kitty)
-- [tmux](https://github.com/tmux/tmux/wiki)
-- [neovim](https://neovim.io/)
-- [zsh](https://www.zsh.org/)
-- [weechat](https://www.weechat.org/)
-- [asdf](https://asdf-vm.com/)
+- [ghostty](https://github.com/ghostty-org/ghostty)
 - [homebrew](https://brew.sh/)
+- [mise](https://github.com/jdx/mise)
+- [tmux](https://github.com/tmux/tmux/wiki)
+- [zsh](https://www.zsh.org/)
+- [neovim](https://github.com/neovim/neovim)
+- [weechat](https://www.weechat.org/)
 - `megaforest` for all the colours/themes
 - [jetbrains mono](https://www.jetbrains.com/lp/mono/) font ([nerd-fonts](https://github.com/ryanoasis/nerd-fonts#font-patcher) patched)
 - [hammerspoon](https://github.com/megalithic/dotfiles/tree/main/config/hs)
