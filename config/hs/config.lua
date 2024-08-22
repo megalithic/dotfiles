@@ -398,12 +398,12 @@ DOCK = {
   docked = {
     wifi = "off", -- wifi status
     input = "Samson GoMic", -- microphone source
-    output = "R-Phonak hearing aid", -- speaker source
+    output = "phonak", -- speaker source
   },
   undocked = {
     wifi = "on",
-    input = "R-Phonak hearing aid",
-    output = "R-Phonak hearing aid",
+    input = "phonak",
+    output = "phonak",
   },
 }
 

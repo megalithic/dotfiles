@@ -1,3 +1,4 @@
+local bt = req("watchers.bluetooth")
 local obj = {}
 
 obj.__index = obj
@@ -28,17 +29,23 @@ function obj.setInput(device)
   task:start()
 end
 
-function obj.setOutput(device)
+function obj.setOutput(deviceStr)
+  if not deviceStr then return end
+
+  local device = bt.devices[deviceStr]
+  if not bt.isBluetoothDeviceConnected(deviceStr) then device = bt.devices["airpods"] end
+
   local task = hs.task.new(
     obj.audioBin,
     function() end, -- Fake callback
     function(_task, stdOut, _stdErr)
-      local continue = stdOut == string.format([[output audio device set to "%s"]], device)
-      success(fmt("[%s] audio output set to %s", obj.name, device))
+      local continue = stdOut == string.format([[output audio device set to "%s"]], device.name)
+
+      success(fmt("[%s] audio output set to %s", obj.name, device.bt))
 
       return continue
     end,
-    { "-t", "output", "-s", device }
+    { "-t", "output", "-s", device.name }
   )
   task:start()
 end

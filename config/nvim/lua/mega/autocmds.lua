@@ -85,7 +85,6 @@ function M.apply()
           if arg_count == 0 then
             if mega.picker ~= nil and mega.picker["startup"] ~= nil then mega.picker.startup(evt.buf) end
           elseif arg_count == 1 then
-            print("arg_count == 2")
             local arg = args[1]
             if vim.fn.isdirectory(arg) == 1 then
               require("oil").open(arg)
@@ -131,7 +130,8 @@ function M.apply()
   M.augroup("AutoSave", {
     {
 
-      event = { "InsertLeave", "TextChanged", "BufLeave", "FocusLost" },
+      event = { "BufLeave", "FocusLost" },
+      -- event = { "InsertLeave", "TextChanged", "BufLeave", "FocusLost" },
       desc = "Auto-save on certain events",
       command = function(ctx)
         local bufnr = ctx.buf

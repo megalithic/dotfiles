@@ -97,18 +97,18 @@ function obj:splitTab(to_next_screen)
     local app = hs.application.get(BROWSER) or hs.application.frontmostApplication()
 
     if app and enum.contains(supportedBrowsers, app:name()) then
-      dbg("(splitTab) %s", app:name())
       local moveTab = { "Tab", "Move Tab to New Window" }
       if string.match(app:name() or "", "Safari") then moveTab = { "Window", "Move Tab to New Window" } end
       app:selectMenuItem(moveTab)
 
       -- Move the split tab to the right of the screen
       if to_next_screen then
-        dbg("(splitTab) to_next_screen: %s", DISPLAYS.internal)
         app:selectMenuItem({ "Window", fmt("Move to %s", DISPLAYS.internal) })
         wm.place(POSITIONS.full)
+        info(fmt("[%s.splitTab] %s (next screen, full)", obj.name, app:name()))
       else
         wm.place(POSITIONS.halves.right)
+        info(fmt("[%s.splitTab] %s (same screen, half)", obj.name, app:name()))
       end
     else
       warn(fmt("[browser.splitTab] unsupported browser: %s", app:name()))

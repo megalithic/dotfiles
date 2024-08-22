@@ -24,12 +24,14 @@ function obj:start(opts)
     hs.spotify.pause()
     req("ptt").setState("push-to-talk")
     req("watchers.dock").refreshInput("docked")
+
     local browser = req("browser")
     if browser.hasTab("pop.com") then
       browser.killTabsByDomain("pop.com")
       pop:activate()
-      obj.launched = true
     end
+
+    obj.launched = true
   end
 
   return self

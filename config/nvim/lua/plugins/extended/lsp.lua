@@ -144,39 +144,39 @@ return {
         --   vim.lsp.diagnostic.on_publish_diagnostics(err, result, ctx, config)
         -- end
 
-        local diagnostic_handler = vim.lsp.handlers["textDocument/publishDiagnostics"]
-        vim.lsp.handlers["textDocument/publishDiagnostics"] = function(err, result, ctx, config)
-          local client_name = vim.lsp.get_client_by_id(ctx.client_id).name
-          -- disables diagnostic reporting for specific clients
-          if vim.tbl_contains(SETTINGS.diagnostic_exclusions, client_name) then return end
+        -- local diagnostic_handler = vim.lsp.handlers["textDocument/publishDiagnostics"]
+        -- vim.lsp.handlers["textDocument/publishDiagnostics"] = function(err, result, ctx, config)
+        --   local client_name = vim.lsp.get_client_by_id(ctx.client_id).name
+        --   -- disables diagnostic reporting for specific clients
+        --   if vim.tbl_contains(SETTINGS.diagnostic_exclusions, client_name) then return end
+        --
+        --   diagnostic_handler(err, result, ctx, config)
+        -- end
 
-          diagnostic_handler(err, result, ctx, config)
-        end
+        -- local definition_handler = vim.lsp.handlers["textDocument/definition"]
+        -- vim.lsp.handlers["textDocument/definition"] = function(err, result, ctx, config)
+        --   local client_name = vim.lsp.get_client_by_id(ctx.client_id).name
+        --   -- disables diagnostic reporting for specific clients
+        --   if vim.tbl_contains(SETTINGS.definition_exclusions, client_name) then
+        --     print("returning for " .. client_name)
+        --     return
+        --   end
+        --
+        --   definition_handler(err, result, ctx, config)
+        -- end
 
-        local definition_handler = vim.lsp.handlers["textDocument/definition"]
-        vim.lsp.handlers["textDocument/definition"] = function(err, result, ctx, config)
-          local client_name = vim.lsp.get_client_by_id(ctx.client_id).name
-          -- disables diagnostic reporting for specific clients
-          if vim.tbl_contains(SETTINGS.definition_exclusions, client_name) then
-            print("returning for " .. client_name)
-            return
-          end
-
-          definition_handler(err, result, ctx, config)
-        end
-
-        local references_handler = vim.lsp.handlers["textDocument/references"]
-        vim.lsp.handlers["textDocument/references"] = function(err, result, ctx, config)
-          local client_name = vim.lsp.get_client_by_id(ctx.client_id).name
-          dbg(client_name)
-          -- disables diagnostic reporting for specific clients
-          if vim.tbl_contains(SETTINGS.references_exclusions, client_name) then
-            print("returning for " .. client_name)
-            return
-          end
-
-          references_handler(err, result, ctx, config)
-        end
+        -- local references_handler = vim.lsp.handlers["textDocument/references"]
+        -- vim.lsp.handlers["textDocument/references"] = function(err, result, ctx, config)
+        --   local client_name = vim.lsp.get_client_by_id(ctx.client_id).name
+        --   dbg(client_name)
+        --   -- disables diagnostic reporting for specific clients
+        --   if vim.tbl_contains(SETTINGS.references_exclusions, client_name) then
+        --     print("returning for " .. client_name)
+        --     return
+        --   end
+        --
+        --   references_handler(err, result, ctx, config)
+        -- end
 
         -- if action opens up qf list, open the first item and close the list
         local function choose_list_first(items)
@@ -754,6 +754,7 @@ return {
   {
     -- FIXME: https://github.com/mhanberg/output-panel.nvim/issues/5
     "mhanberg/output-panel.nvim",
+    enabled = false,
     lazy = false,
     keys = {
       {

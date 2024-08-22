@@ -33,6 +33,8 @@ function obj.watchApp(app, _)
     watcher = watcher,
   }
 
+  if watcher == nil then return end
+
   watcher:start({
     hs.uielement.watcher.windowCreated,
     hs.uielement.watcher.mainWindowChanged,
