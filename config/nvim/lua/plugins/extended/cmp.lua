@@ -5,9 +5,9 @@ local fmt = string.format
 return {
   {
     "hrsh7th/nvim-cmp",
-    -- event = { "InsertEnter *", "CmdlineEnter *" },
+    event = { "InsertEnter *", "CmdlineEnter *" },
     -- event = "InsertEnter",
-    lazy = false,
+    -- lazy = false,
     priority = 100,
     dependencies = {
       {
@@ -141,6 +141,7 @@ return {
             }, ","),
           }),
         },
+        -- TODO/REF: useful: https://github.com/hrsh7th/nvim-cmp/discussions/1983
         mapping = cmp.mapping.preset.insert({
           -- Select the [n]ext item
           ["<C-n>"] = cmp.mapping.select_next_item(),
@@ -201,6 +202,7 @@ return {
           },
         }),
 
+        -- TODO/REF: https://github.com/3rd/config/blob/master/dotfiles/nvim/lua/modules/completion/nvim-cmp.lua#L67C1-L80C4
         formatting = {
           expandable_indicator = true,
           fields = { "abbr", "kind", "menu" },

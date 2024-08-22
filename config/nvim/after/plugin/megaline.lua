@@ -603,6 +603,19 @@ local function seg_hydra(truncate_at)
   end
 end
 
+local function seg_ai(truncate_at)
+  local ok, ai = pcall(require, vim.g.ai, { silent = true })
+
+  if ok then
+    local ai_enabled = false
+
+    if vim.g.ai == "neocodeium" then ai_enabled = require("neocodeium.options").options.enabled end
+    return seg("󰭆", "StBright", not is_truncated(truncate_at) and ai_enabled, { margin = { 1, 1 }, padding = { 1, 1 } })
+  end
+
+  return ""
+end
+
 local function seg_git_symbol(truncate_at)
   if is_abnormal_buffer() or not is_valid_git() then return "" end
 
@@ -690,6 +703,8 @@ function mega.ui.statusline.render()
     seg("%{&ff!='unix'?'['.&ff.'] ':''}", "warningmsg"),
     seg("%*"),
     seg("%{(&fenc!='utf-8'&&&fenc!='')?'['.&fenc.'] ':''}", "warningmsg"),
+    seg("%*"),
+    seg_ai(175),
     seg("%*"),
     seg_lsp_servers(150),
     seg_lsp_status(100),

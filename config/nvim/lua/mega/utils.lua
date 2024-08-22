@@ -250,6 +250,13 @@ function M.close_floats()
   end
 end
 
+function M.deluxe_clear_ui(_opts)
+  vim.cmd.doautoall("User EscDeluxeStart")
+  M.clear_ui({ deluxe = true })
+  vim.cmd.doautoall("User EscDeluxeEnd")
+  vim.api.nvim_feedkeys(vim.keycode("<Esc>"), "n", true)
+end
+
 function M.clear_ui(opts)
   opts = opts or {}
   local deluxe = opts["deluxe"]
