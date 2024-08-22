@@ -74,14 +74,12 @@ return {
       local cmp = require("cmp")
       local MIN_MENU_WIDTH, MAX_MENU_WIDTH = 25, math.min(50, math.floor(vim.o.columns * 0.5))
 
-      local neocodeium = require("neocodeium")
-      local commands = require("neocodeium.commands")
-
+      -- local neocodeium = require("neocodeium")
+      -- local commands = require("neocodeium.commands")
       -- cmp.event:on("menu_opened", function()
-      --   commands.disable()
       --   neocodeium.clear()
+      --   commands.disable()
       -- end)
-      --
       -- cmp.event:on("menu_closed", function() commands.enable() end)
 
       local has_words_before = function()

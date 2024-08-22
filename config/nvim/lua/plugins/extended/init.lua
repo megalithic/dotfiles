@@ -376,6 +376,8 @@ return {
       filetypes = {
         oil = false,
         gitcommit = false,
+        NeogitCommit = false,
+        NeogitCommitMessage = false,
         markdown = false,
         DressingInput = false,
         TelescopePrompt = false,
@@ -392,18 +394,18 @@ return {
       vim.api.nvim_create_autocmd("RecordingLeave", { command = "NeoCodeium enable" })
     end,
     keys = {
-			-- stylua: ignore start
-			{ "<C-y>", function() require("neocodeium").accept() end, mode = "i", desc = "󰚩 Accept full suggestion" },
-			{ "<C-t>", function() require("neocodeium").accept_line() end, mode = "i", desc = "󰚩 Accept line" },
-			-- { "<C-w>", function() require("neocodeium").accept_word() end, mode = "i", desc = "󰚩 Accept word" },
-			{ "<C-d>", function() require("neocodeium").cycle(1) end, mode = "i", desc = "󰚩 Next suggestion" },
-      -- stylua: ignore end
+      { "<C-y>", function() require("neocodeium").accept() end, mode = "i", desc = "󰚩 Accept full suggestion" },
+      { "<C-t>", function() require("neocodeium").accept_line() end, mode = "i", desc = "󰚩 Accept line" },
+      -- { "<esc>", function() require("neocodeium").clear() end, mode = "i", desc = "󰚩 Clear suggestion" },
+      -- { "<C-w>", function() require("neocodeium").accept_word() end, mode = "i", desc = "󰚩 Accept word" },
+      { "<A-n>", function() require("neocodeium").cycle(1) end, mode = "i", desc = "󰚩 Next suggestion" },
+      { "<A-p>", function() require("neocodeium").cycle(-1) end, mode = "i", desc = "󰚩 Prev suggestion" },
       {
         "<leader>oa",
         function()
           vim.cmd.NeoCodeium("toggle")
-          local on = require("neocodeium.options").options.enabled
-          require("config.utils").notify("NeoCodeium", on and "enabled" or "disabled", "info")
+          -- local on = require("neocodeium.options").options.enabled
+          -- require("config.utils").notify("NeoCodeium", on and "enabled" or "disabled", "info")
         end,
         desc = "󰚩 NeoCodeium Suggestions",
       },
