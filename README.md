@@ -81,10 +81,8 @@ A few of the _must-have_ tools I roll with:
   - [surfingkeys (in-browser)](https://github.com/brookhong/Surfingkeys)
   - [homerow (macos-wide)](https://homerow.app)
 
-<p align="center" style="margin-top: 20px;">
-  <a href="https://megalithic.io" target="_blank">
-
-![alt text](https://raw.githubusercontent.com/megalithic/dotfiles/main/megadotfiles.png "megadotfiles logo")
-
-</a>
+<p align="center" style="margin-top: 20px; text-align:center; display: flex; align-items: center; justify-content: center;">
+  <a href="https://megalithic.io" target="_blank" style="display:block; height:150px;">
+    <img src="https://raw.githubusercontent.com/megalithic/dotfiles/main/megadotfiles.png" alt="megadotfiles logo" height="150px" />
+  </a>
 </p>

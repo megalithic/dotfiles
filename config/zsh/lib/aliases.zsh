@@ -201,6 +201,7 @@ fi
 alias ez="nvim $DOTS/config/zsh/.zshrc"
 alias ezz="nvim $DOTS/config/zsh/.zshenv"
 alias ea="nvim $DOTS/config/zsh/**/aliases.zsh"
+alias eaz=ea
 alias ezp="nvim $DOTS/config/zsh/prompt_megalithic_setup"
 alias ezf="nvim $DOTS/config/zsh/**/funcs.zsh"
 alias ezo="nvim $DOTS/config/zsh/**/opts.zsh"
@@ -495,7 +496,9 @@ alias ytaudio='yt --extract-audio --audio-format mp3 --audio-quality 0 --write-t
 
 alias b="m1ddc set luminance"
 
-alias gpt="chatgpt-cli -k $OPENAI_API_KEY"
+alias gpt="chatgpt-cli -k $OPENAI_API_KEY chat"
+
+alias fkill="ps -e | fzf | awk '{print $1}' | xargs kill"
 
 # FUNCTIONS
 # ------------------------------------------------------------------------------

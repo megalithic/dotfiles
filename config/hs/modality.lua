@@ -79,17 +79,17 @@ function obj:entered()
   local frame = hs.window.focusedWindow():frame()
 
   -- HT: @evantravers
-  obj.indicator = hs.canvas
-    .new(frame)
-    :appendElements({
-      type = "rectangle",
-      action = "stroke",
-      strokeWidth = 2.0,
-      -- strokeColor = { white = 0.8, alpha = 0.7 },
-      strokeColor = { hex = "#F74F9E", alpha = 0.7 },
-      roundedRectRadii = { xRadius = 14.0, yRadius = 14.0 },
-    })
-    :show()
+  -- obj.indicator = hs.canvas
+  --   .new(frame)
+  --   :appendElements({
+  --     type = "rectangle",
+  --     action = "stroke",
+  --     strokeWidth = 2.0,
+  --     -- strokeColor = { white = 0.8, alpha = 0.7 },
+  --     strokeColor = { hex = "#F74F9E", alpha = 0.7 },
+  --     roundedRectRadii = { xRadius = 14.0, yRadius = 14.0 },
+  --   })
+  --   :show()
 
   obj.alerts = hs.fnutils.map(hs.screen.allScreens(), function(screen)
     local win = hs.window.focusedWindow()

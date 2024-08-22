@@ -35,6 +35,7 @@ rails:include:ruby,rabl,erb
 --glob=!.git
 --glob=!.elixir_ls
 --glob=!.lexical
+--glob=!.elixir-tools
 --glob=!node_modules
 --glob=!yarn.lock
 --glob=!package-lock.json

@@ -1,6 +1,7 @@
 local enum = require("hs.fnutils")
 local obj = {}
 local browser = req("browser")
+local uri = hs.http.urlParts
 
 obj.__index = obj
 obj.name = "watcher.url"
@@ -10,33 +11,73 @@ obj.currentHandler = nil
 
 obj.callbacks = {
   {
-    pattern = "https:?://meet.google.com/*",
-    -- FIXME: if the url passed to the PWA google meet app worked,
-    --  we'd not need to fiddle with this hackiness. :sadpanda:
-    -- action = "com.brave.Browser.nightly.app.kjgfgldnnfoeklkmfkjfagphfepbbdan",
+    pattern = "https:?://pop.com/*",
     action = function(opts)
       local handler = opts["handler"]
       local url = opts["url"]
-      local urlDomain = url and url:match("([%w%-%.]*%.[%w%-]+%.%w+)")
+      local urlDomain = url and uri(url).host
+      local app = hs.application.get("com.pop.pop.app")
 
+      hs.urlevent.openURLWithBundle(url, hs.application.get(handler):bundleID())
+
+      hs.timer.waitUntil(function() return browser.hasTab(urlDomain) and hs.application.get(app) ~= nil end, function()
+        req("watchers.app").runContextForAppBundleID(app:name(), hs.application.watcher.launched, app, {
+          tabCount = obj.browserTabCount,
+          url = urlDomain,
+
+          onOpen = function()
+            -- if browser.tabCount() == metadata.tabCount + 1 and browser.hasTab(metadata.url) then
+            hs.spotify.pause()
+            req("utils").dnd(true)
+            req("ptt").setMode("push-to-talk")
+            req("watchers.dock").refreshInput("docked")
+          end,
+          onClose = function()
+            req("utils").dnd(false)
+            req("ptt").setMode("push-to-talk")
+          end,
+        })
+      end)
+    end,
+  },
+  {
+    pattern = "https:?://meet.google.com/*",
+    action = function(opts)
+      local handler = opts["handler"]
+      local url = opts["url"]
+      local urlDomain = url and uri(url).host
       local app = hs.application.get(handler) or hs.application.get(BROWSER)
 
       -- NOTE: order of this tabCount check matters!
       obj.browserTabCount = browser.tabCount()
       hs.urlevent.openURLWithBundle(url, app:bundleID())
 
-      hs.timer.waitUntil(
-        function() return browser.hasTab(urlDomain) end,
-        function()
-          req("watchers.app").runContextForAppBundleID(
-            app:name(),
-            hs.application.watcher.activated,
-            app,
-            { tabCount = obj.browserTabCount, url = urlDomain }
-          )
-        end
-      )
+      hs.timer.waitUntil(function() return browser.hasTab(urlDomain) end, function()
+        req("watchers.app").runContextForAppBundleID(app:name(), hs.application.watcher.activated, app, {
+          tabCount = obj.browserTabCount,
+          url = urlDomain,
+          onOpen = function()
+            -- if browser.tabCount() == metadata.tabCount + 1 and browser.hasTab(metadata.url) then
+            hs.spotify.pause()
+            req("utils").dnd(true)
+            req("ptt").setMode("push-to-talk")
+            req("watchers.dock").refreshInput("docked")
+          end,
+          onClose = function()
+            req("utils").dnd(false)
+            req("ptt").setMode("push-to-talk")
+          end,
+        })
+      end)
     end,
+  },
+  {
+    pattern = "https?://open.spotify.com/*",
+    action = "com.spotify.client",
+  },
+  {
+    pattern = "https?://figma.com/*",
+    action = "com.figma.Desktop",
   },
 }
 
@@ -75,9 +116,6 @@ function obj.handleHttpCallback(scheme, _host, _params, fullURL, _senderPID)
 end
 
 function obj:start()
-  -- Tracking this issue to get working handoff to default browser:
-  -- REF: https://github.com/Hammerspoon/hammerspoon/pull/3635
-
   hs.urlevent.httpCallback = self.handleHttpCallback
   info(fmt("[START] %s", self.name))
 

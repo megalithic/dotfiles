@@ -1,3 +1,4 @@
+local bt = req("watchers.bluetooth")
 local obj = {}
 
 obj.__index = obj
@@ -20,7 +21,7 @@ function obj.setInput(device)
     function() end, -- Fake callback
     function(_task, stdOut, _stdErr)
       local continue = stdOut == string.format([[input audio device set to "%s"]], device)
-      success(fmt("[watcher.dock] audio input set to %s", device))
+      success(fmt("[%s] audio input set to %s", obj.name, device))
       return continue
     end,
     { "-t", "input", "-s", device }
@@ -28,16 +29,23 @@ function obj.setInput(device)
   task:start()
 end
 
-function obj.setOutput(device)
+function obj.setOutput(deviceStr)
+  if not deviceStr then return end
+
+  local device = bt.devices[deviceStr]
+  if not bt.isBluetoothDeviceConnected(deviceStr) then device = bt.devices["airpods"] end
+
   local task = hs.task.new(
     obj.audioBin,
     function() end, -- Fake callback
     function(_task, stdOut, _stdErr)
-      local continue = stdOut == string.format([[output audio device set to "%s"]], device)
-      success(fmt("[watcher.dock] audio output set to %s", device))
+      local continue = stdOut == string.format([[output audio device set to "%s"]], device.name)
+
+      success(fmt("[%s] audio output set to %s", obj.name, device.bt))
+
       return continue
     end,
-    { "-t", "output", "-s", device }
+    { "-t", "output", "-s", device.name }
   )
   task:start()
 end
@@ -53,23 +61,11 @@ function obj:setAudio(devices)
 end
 
 -- ---@param dockState "docked"|"undocked"
--- function obj.refreshInput(dockState)
---   dockState = dockState or "docked"
---   local state = C.dock[dockState].input
---   local bin = hostname() == "megabookpro" and "/opt/homebrew/bin/SwitchAudioSource"
---     or "/usr/local/bin/SwitchAudioSource"
---   local task = hs.task.new(
---     bin,
---     function() end, -- Fake callback
---     function(task, stdOut, stdErr)
---       local continue = stdOut == string.format([[input audio device set to "%s"]], state)
---       success(fmt("[watcher.dock] audio input set to %s", state))
---       return continue
---     end,
---     { "-t", "input", "-s", state }
---   )
---   task:start()
--- end
+function obj.refreshInput(dockState)
+  dockState = dockState or "docked"
+  local device = DOCK[dockState].input
+  obj.setInput(device)
+end
 
 function obj.handleDockingStateChanges(_watcher, _path, _key, _oldValue, isConnected, isInitializing)
   isInitializing = (isInitializing ~= nil and type(isInitializing) == "boolean") and isInitializing or false
@@ -98,7 +94,11 @@ end
 
 obj.watchExistingDevices = function()
   for _, device in ipairs(hs.usb.attachedDevices()) do
-    if device.productID == DOCK.target.productID then obj.handleDockingStateChanges(nil, nil, nil, nil, true, true) end
+    if device.productID == DOCK.target.productID then
+      obj.handleDockingStateChanges(nil, nil, nil, nil, true, true)
+      -- else
+      --   obj.handleDockingStateChanges(nil, nil, nil, nil, false, true)
+    end
   end
 end
 
@@ -106,8 +106,6 @@ function obj:start()
   info(fmt("[START] %s", self.name))
   self.watchers.dock = hs.watchable.watch("status.dock", self.handleDockingStateChanges)
   self.watchExistingDevices()
-
-  -- FIXME: we ought to execute this on start so that we always have the correct docking state and related actions performed.
 
   return self
 end

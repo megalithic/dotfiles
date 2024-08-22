@@ -59,3 +59,6 @@
 [submodule "config/zsh/plugins/zsh-magic-dashboard"]
 	path = config/zsh/plugins/zsh-magic-dashboard
 	url = https://github.com/megalithic/zsh-magic-dashboard.git
+[submodule "config/zsh/plugins/zsh-direnv"]
+	path = config/zsh/plugins/zsh-direnv
+	url = https://github.com/ptavares/zsh-direnv.git

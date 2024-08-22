@@ -38,7 +38,7 @@ function obj.hasTab(url)
 
   if app and enum.contains(supportedBrowsers, app:name()) then
     url = string.gsub(url, "/", "\\/")
-    local _status, returnedObj, _descriptor = hs.osascript.javascript([[
+    local _status, hasTab, _descriptor = hs.osascript.javascript([[
     (function() {
       var browser = Application(']] .. app:name() .. [[');
       const foundTab = browser.windows().filter((win) => {
@@ -50,40 +50,42 @@ function obj.hasTab(url)
     })();
     ]])
 
-    return returnedObj
+    return hasTab
   end
 
-  return nil
+  return false
 end
 
 function obj.jump(url)
   local app = hs.application.get(BROWSER) or hs.application.frontmostApplication()
 
   if app and enum.contains(supportedBrowsers, app:name()) then
-    info("(jump) %s", app:name())
-
     -- win.tabs().findIndex(tab => tab.url().match(/]] .. string.gsub(url, "/", "\\/") .. [[/));
     -- win.tabs().findIndex(tab => tab.url().match(/]] .. url .. [[/));
-    local _success, object, _output = hs.osascript.javascript([[
+    local success, jumpedTab, output = hs.osascript.javascript([[
     (function() {
       var browser = Application(']] .. app:name() .. [[');
+      var foundTabUrl = "";
       browser.activate();
-      for (win of browser.windows()) {
-        var tabIndex =
-          win.tabs().findIndex(tab => tab.url().match(/]] .. string.gsub(url, "/", "\\/") .. [[/));
-        if (tabIndex != -1) {
-          win.activeTabIndex = (tabIndex + 1);
-          win.index = 1;
-          return true;
-        } else {
-          return false;
-        }
-      }
+      const foundTab = browser.windows().find((win) => {
+        const tabIndex = win.tabs().findIndex(tab =>  {
+          if (tab.url().match(/]] .. url .. [[/) !== null)
+            foundTabUrl = tab.url();
+          return tab.url().match(/]] .. url .. [[/) !== null;
+        });
+        if (tabIndex !== -1) win.activeTabIndex = (tabIndex + 1);
+
+        return tabIndex !== -1
+      })
+
+      return foundTabUrl;
     })();
     ]])
-    return object
+
+    info(fmt("[%s.jump] %s (%s)", obj.name, app:name(), jumpedTab or url))
+    return jumpedTab
   else
-    return false
+    return nil
   end
 end
 
@@ -95,18 +97,18 @@ function obj:splitTab(to_next_screen)
     local app = hs.application.get(BROWSER) or hs.application.frontmostApplication()
 
     if app and enum.contains(supportedBrowsers, app:name()) then
-      dbg("(splitTab) %s", app:name())
       local moveTab = { "Tab", "Move Tab to New Window" }
       if string.match(app:name() or "", "Safari") then moveTab = { "Window", "Move Tab to New Window" } end
       app:selectMenuItem(moveTab)
 
       -- Move the split tab to the right of the screen
       if to_next_screen then
-        dbg("(splitTab) to_next_screen: %s", DISPLAYS.internal)
         app:selectMenuItem({ "Window", fmt("Move to %s", DISPLAYS.internal) })
         wm.place(POSITIONS.full)
+        info(fmt("[%s.splitTab] %s (next screen, full)", obj.name, app:name()))
       else
         wm.place(POSITIONS.halves.right)
+        info(fmt("[%s.splitTab] %s (same screen, half)", obj.name, app:name()))
       end
     else
       warn(fmt("[browser.splitTab] unsupported browser: %s", app:name()))

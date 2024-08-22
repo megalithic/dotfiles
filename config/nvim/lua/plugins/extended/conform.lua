@@ -42,6 +42,7 @@ return {
       c = { "clang_format" },
       cpp = { "clang_format" },
       -- css = { "prettierd" },
+      -- elixir = { "mix", timeout_ms = 2000 },
       go = { "goimports", "gofmt", "gofumpt" },
       graphql = { prettier },
       html = { prettier },
@@ -57,6 +58,7 @@ return {
       -- sass = { "prettierd" },
       -- scss = { "prettierd" },
       sh = { shfmt },
+      terraform = { "tofu_fmt" },
       toml = { "taplo" },
       typescript = { prettier },
       typescriptreact = { prettier },
@@ -73,6 +75,9 @@ return {
       },
       dprint = {
         condition = function(ctx) return vim.fs.find({ "dprint.json" }, { path = ctx.filename, upward = true })[1] end,
+      },
+      mix = {
+        cwd = function(self, ctx) (require("conform.util").root_file({ "mix.exs" }))(self, ctx) end,
       },
     },
     log_level = vim.log.levels.DEBUG,

@@ -23,7 +23,7 @@ hs.logger.defaultLogLevel = "error"
 hs.hotkey.setLogLevel("error")
 hs.keycodes.log.setLogLevel("error")
 
-window.animationDuration = 0
+window.animationDuration = 0.0
 window.highlight.ui.overlay = false
 window.setShadows(false)
 
@@ -85,6 +85,7 @@ DISPLAYS = {
 
 POSITIONS = {
   full = "0,0 60x20",
+  preview = "0,0 60x2",
 
   center = {
     large = "6,1 48x18",
@@ -130,16 +131,17 @@ LAUNCHERS = {
   { "com.spotify.client", "p", nil, false },
   { "com.freron.MailMate", "e", nil, false },
   { "com.flexibits.fantastical2.mac", "y", { "'" }, false },
-  { "com.raycast.macos", "space", { "c", "space" }, false },
+  { "com.raycast.macos", "space", nil, false },
   { "com.superultra.Homerow", nil, { ";" }, false },
   { "com.dexterleng.Homerow", nil, { ";" }, false },
   { "com.tinyspeck.slackmacgap", "s", nil, false },
   { "org.hammerspoon.Hammerspoon", "r", nil, false },
   { "com.apple.dt.Xcode", "x", nil, true },
   { "com.google.android.studio", "x", nil, true },
-  { "com.figma.Desktop", { { "shift" }, "f" }, nil, true },
   { "com.obsproject.obs-studio", "o", nil, true },
   { "com.kapeli.dashdoc", { { "shift" }, "d" }, { "d" }, false },
+  { "com.electron.postbird", { { "shift" }, "p" }, nil, false },
+  { "com.1password.1password", "1", nil, false },
 }
 
 LAYOUTS = {
@@ -396,12 +398,12 @@ DOCK = {
   docked = {
     wifi = "off", -- wifi status
     input = "Samson GoMic", -- microphone source
-    output = "R-Phonak hearing aid", -- speaker source
+    output = "phonak", -- speaker source
   },
   undocked = {
     wifi = "on",
-    input = "R-Phonak hearing aid",
-    output = "R-Phonak hearing aid",
+    input = "phonak",
+    output = "phonak",
   },
 }
 

@@ -27,6 +27,9 @@ chatgpt-cli-*.json
 home/ssh/*
 !home/ssh/config
 
+*.env
+*.envrc
+
 # gnupg/gpg
 config/gnupg/**/*
 !config/gnupg/gpg-agent.conf

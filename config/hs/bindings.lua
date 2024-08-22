@@ -2,6 +2,7 @@ local wm = req("wm")
 local summon = req("summon")
 local chain = req("chain")
 local enum = req("hs.fnutils")
+local utils = req("utils")
 
 -- [ APP LAUNCHERS ] -----------------------------------------------------------
 
@@ -54,20 +55,49 @@ req("hyper"):start({ id = "meeting" }):bind({}, "z", nil, function()
   end
 end)
 
+req("hyper"):start({ id = "figma" }):bind({ "shift" }, "f", nil, function()
+  local focusedApp = hs.application.frontmostApplication()
+  if hs.application.find("com.figma.Desktop") then
+    hs.application.launchOrFocusByBundleID("com.figma.Desktop")
+  elseif req("browser").hasTab("figma.com") then
+    req("browser").jump("figma.com")
+  else
+    info(fmt("%s: no meeting targets to focus", "bindings.hyper.meeting"))
+
+    focusedApp:activate()
+  end
+end)
+
+local axbrowse = req("axbrowse")
+local lastApp
 req("hyper")
   :start({ id = "utils" })
   :bind({ "shift" }, "r", nil, function()
     hs.notify.new({ title = "hammerspork", subTitle = "config is reloading..." }):send()
     hs.reload()
   end)
-  :bind({ "shift", "ctrl" }, "l", nil, function() req("wm").placeAllApps() end)
+  :bind({ "shift", "ctrl" }, "l", nil, req("wm").placeAllApps)
+  -- WIP
+  :bind({ "shift" }, "b", nil, function()
+    local currentApp = hs.axuielement.applicationElement(hs.application.frontmostApplication())
+    if currentApp == lastApp then
+      axbrowse.browse() -- try to continue from where we left off
+    else
+      lastApp = currentApp
+      axbrowse.browse(currentApp) -- new app, so start over
+    end
+  end)
+  -- WIP
+  :bind({ "shift", "ctrl" }, "h", nil, utils.showAvailableHotkeys)
 
 -- [ MODAL LAUNCHERS ] ---------------------------------------------------------
 
--- # window management ---------------------------------------------------------
+-- # wm/window management ---------------------------------------------------------
 local modality = req("modality"):start({ id = "wm", key = "l" })
 modality
+  :bind({}, "r", req("wm").placeAllApps, function() modality:delayedExit(0.1) end)
   :bind({}, "escape", function() modality:exit() end)
+  :bind({}, "space", function() wm.place(POSITIONS.preview) end, function() modality:delayedExit(0.1) end)
   :bind({}, "return", function() wm.place(POSITIONS.full) end, function() modality:delayedExit(0.1) end)
   :bind({ "shift" }, "return", function()
     wm.toNextScreen()

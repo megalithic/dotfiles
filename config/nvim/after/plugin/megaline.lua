@@ -152,33 +152,29 @@ end
 -- (otherwise those symbols are not displayed).
 local CTRL_S = vim.keycode("<C-S>", true, true, true)
 local CTRL_V = vim.keycode("<C-V>", true, true, true)
--- stylua: ignore start
 local MODES = setmetatable({
-  ['n']    = { long = 'Normal',   short = 'N',   hl = 'StModeNormal' },
-  ['no']   = { long = 'N-OPERATOR PENDING',   short = 'N-OP',   hl = 'StModeNormal' },
-  ['nov']   = { long = 'N-OPERATOR BLOCK',   short = 'N-OPv',   hl = 'StModeNormal' },
-  ['noV']   = { long = 'N-OPERATOR LINE',   short = 'N-OPV',   hl = 'StModeNormal' },
-  ['v']    = { long = 'Visual',   short = 'V',   hl = 'StModeVisual' },
-  ['V']    = { long = 'V-Line',   short = 'V-L', hl = 'StModeVisual' },
-  [CTRL_V] = { long = 'V-Block',  short = 'V-B', hl = 'StModeVisual' },
-  ['s']    = { long = 'Select',   short = 'S',   hl = 'StModeVisual' },
-  ['S']    = { long = 'S-Line',   short = 'S-L', hl = 'StModeVisual' },
-  [CTRL_S] = { long = 'S-Block',  short = 'S-B', hl = 'StModeVisual' },
-  ['i']    = { long = 'Insert',   short = 'I',   hl = 'StModeInsert' },
-  ['R']    = { long = 'Replace',  short = 'R',   hl = 'StModeReplace' },
-  ['c']    = { long = 'Command',  short = 'C',   hl = 'StModeCommand' },
-  ['r']    = { long = 'Prompt',   short = 'P',   hl = 'StModeOther' },
-  ['!']    = { long = 'Shell',    short = 'Sh',  hl = 'StModeOther' },
-  ['t']    = { long = 'Terminal', short = 'T-I',   hl = 'StModeOther' },
-  ['nt']    = { long = 'N-Terminal', short = 'T-N',   hl = 'StModeNormal' },
-  ['r?']    = { long = 'Confirm', short = '?',   hl = 'StModeOther' },
+  ["n"] = { long = "Normal", short = "N", hl = "StModeNormal", separator_hl = "StSeparator" },
+  ["no"] = { long = "N-OPERATOR PENDING", short = "N-OP", hl = "StModeNormal", separator_hl = "StSeparator" },
+  ["nov"] = { long = "N-OPERATOR BLOCK", short = "N-OPv", hl = "StModeNormal", separator_hl = "StSeparator" },
+  ["noV"] = { long = "N-OPERATOR LINE", short = "N-OPV", hl = "StModeNormal", separator_hl = "StSeparator" },
+  ["v"] = { long = "Visual", short = "V", hl = "StModeVisual", separator_hl = "StSeparator" },
+  ["V"] = { long = "V-Line", short = "V-L", hl = "StModeVisual", separator_hl = "StSeparator" },
+  [CTRL_V] = { long = "V-Block", short = "V-B", hl = "StModeVisual", separator_hl = "StSeparator" },
+  ["s"] = { long = "Select", short = "S", hl = "StModeVisual", separator_hl = "StSeparator" },
+  ["S"] = { long = "S-Line", short = "S-L", hl = "StModeVisual", separator_hl = "StSeparator" },
+  [CTRL_S] = { long = "S-Block", short = "S-B", hl = "StModeVisual", separator_hl = "StSeparator" },
+  ["i"] = { long = "Insert", short = "I", hl = "StModeInsert", separator_hl = "StSeparator" },
+  ["R"] = { long = "Replace", short = "R", hl = "StModeReplace", separator_hl = "StSeparator" },
+  ["c"] = { long = "Command", short = "C", hl = "StModeCommand", separator_hl = "StSeparator" },
+  ["r"] = { long = "Prompt", short = "P", hl = "StModeOther", separator_hl = "StSeparator" },
+  ["!"] = { long = "Shell", short = "Sh", hl = "StModeOther", separator_hl = "StSeparator" },
+  ["t"] = { long = "Terminal", short = "T-I", hl = "StModeOther", separator_hl = "StSeparator" },
+  ["nt"] = { long = "N-Terminal", short = "T-N", hl = "StModeNormal", separator_hl = "StSeparator" },
+  ["r?"] = { long = "Confirm", short = "?", hl = "StModeOther", separator_hl = "StSeparator" },
 }, {
   -- By default return 'Unknown' but this shouldn't be needed
-  __index = function()
-    return   { long = 'Unknown',  short = 'U',   hl = 'StModeOther' }
-  end,
+  __index = function() return { long = "Unknown", short = "U", hl = "StModeOther", separator_hl = "StSeparator" } end,
 })
--- stylua: ignore end
 
 local plain_types = {
   filetypes = {
@@ -307,7 +303,7 @@ local exception_types = {
 local function is_truncated(trunc)
   -- Use -1 to default to 'not truncated'
   -- get's just the current split window
-  local check = api.nvim_win_get_width(0) < (trunc or -1)
+  local check = vim.api.nvim_win_get_width(0) < (trunc or -1)
 
   -- gets the whole nvim window
   if vim.api.nvim_get_option("laststatus") == 3 then check = vim.o.columns < (trunc or -1) end
@@ -494,9 +490,28 @@ local function seg_suffix(truncate_at)
 end
 
 local function seg_mode(truncate_at)
+  -- Some useful glyphs:
+  -- https://www.nerdfonts.com/cheat-sheet
+  --           
   local mode_info = MODES[api.nvim_get_mode().mode]
   local mode = is_truncated(truncate_at) and mode_info.short or mode_info.long
-  return seg(string.upper(mode), mode_info.hl, { padding = { 1, 1 } })
+  return seg(string.upper(mode), mode_info.hl, { padding = { 1, 1 }, suffix = "░", suffix_hl = mode_info.separator_hl })
+end
+
+local function seg_lsp_servers(truncate_at)
+  local bufnr = vim.api.nvim_get_current_buf()
+  local clients = vim.lsp.get_clients({ bufnr = bufnr })
+
+  if next(clients) == nil then return "" end
+
+  local client_names = {}
+
+  for _, client in pairs(clients) do
+    table.insert(client_names, client.name)
+  end
+
+  if is_truncated(truncate_at) then return seg("\u{f085} " .. #client_names, { margin = { 1, 1 } }) end
+  return seg("\u{f085} " .. table.concat(client_names, "/"), { margin = { 1, 1 } })
 end
 
 local function seg_lsp_status(truncate_at)
@@ -601,11 +616,13 @@ local function seg_git_status(truncate_at)
   local status = is_valid_git()
   if not status then return "" end
 
-  local branch = is_truncated(truncate_at) and truncate_str(status.head or "", 14) or status.head
+  local truncate_branch, truncate_symbol = unpack(truncate_at)
+
+  local branch = is_truncated(truncate_branch) and truncate_str(status.head or "", 14) or status.head
   -- if vim.fn.trim(vim.fn.system("git rev-parse --is-inside-work-tree")) == "true" then
   --   branch = vim.fn.trim(vim.fn.system("basename `git rev-parse --show-toplevel`"))
   -- end
-  return seg(branch, "StGitBranch", { margin = { 1, 1 }, prefix = seg_git_symbol(80), padding = { 1, 0 } })
+  return seg(branch, "StGitBranch", { margin = { 1, 1 }, prefix = seg_git_symbol(truncate_symbol), padding = { 1, 0 } })
 end
 
 local function seg_startuptime()
@@ -637,7 +654,7 @@ function mega.ui.statusline.render()
     expandtab = vim.bo[bufnr].expandtab,
   }
 
-  if not is_focused() then return "%#StInactive# %F %m %r %= %{&spelllang} %y %8(%l,%c%) %8p%%" end
+  if not is_focused() then return "%#StatusLineInactive# %F %m %r %= %{&spelllang} %y %8(%l,%c%) %8p%%" end
 
   if is_plain() then
     local parts = {
@@ -674,8 +691,9 @@ function mega.ui.statusline.render()
     seg("%*"),
     seg("%{(&fenc!='utf-8'&&&fenc!='')?'['.&fenc.'] ':''}", "warningmsg"),
     seg("%*"),
+    seg_lsp_servers(150),
     seg_lsp_status(100),
-    seg_git_status(120),
+    seg_git_status({ 175, 80 }),
     -- seg(get_dap_status()),
     seg_lineinfo(75),
     -- seg_startuptime(),

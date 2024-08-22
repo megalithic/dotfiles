@@ -162,10 +162,12 @@ brew "ollama" # ai
 brew "olets/tap/zsh-abbr"
 brew "openssl"
 brew "openssl@1.1"
+brew 'opentofu' # required for formatting terraform files
 brew "p7zip"
 brew "pandoc"
 brew "perl"
 brew "pgcli"
+brew 'pgformatter' # format postgres sql files
 brew "pkg-config"
 brew "pigz"
 brew "pinentry-mac" if OS.mac?
@@ -174,7 +176,7 @@ brew "pngpaste"
 # POST-install for postgresql:
 # initdb /usr/local/var/postgres -E utf8
 # psql -> CREATE USER postgres SUPERUSER;
-brew "postgresql@14", link: true, restart_service: true if OS.mac?
+brew "postgresql@14", link: true, restart_service: :changed if OS.mac?
 # brew "postgresql@15", link: false if OS.mac?
 #--
 # brew "python@3.7", link: false
