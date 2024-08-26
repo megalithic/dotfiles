@@ -120,6 +120,7 @@ _deps
 .ignore
 .yarn
 
+.envrc
 .worktrees
 
 # vim:ft=gitignore:tw=0

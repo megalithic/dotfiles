@@ -15,22 +15,6 @@
 # ## To reload: "exec zsh --login"
 
 # #-------------------------------------------------------------------------------
-# # Homebrew
-# #-------------------------------------------------------------------------------
-
-case `uname` in
-  Darwin)
-    # -- intel mac:
-    [ -f "/usr/local/bin/brew" ] && eval "$(/usr/local/bin/brew shellenv)"
-    # -- M1 mac:
-    [ -f "/opt/homebrew/bin/brew" ] && eval "$(/opt/homebrew/bin/brew shellenv)"
-    ;;
-  Linux)
-    [ -d "/home/linuxbrew/.linuxbrew" ] && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-    ;;
-esac
-
-# #-------------------------------------------------------------------------------
 # #               $PATH Updates
 # #-------------------------------------------------------------------------------
 # # NOTE: this is here because it must be loaded after homebrew is added to the
@@ -40,16 +24,25 @@ esac
 # # system rather than ARM i.e. for M1+. So replace the system ruby with an
 # # updated one from Homebrew and ensure it is before /usr/bin/ruby
 # # Prepend to PATH
-# export BREW_PREFIX="$(brew --prefix)"
-# export HOMEBREW_PREFIX="$BREW_PREFIX"
 
-# path=(
-#   "$BREW_PREFIX/opt/ruby/bin"
-#   "$BREW_PREFIX/lib/ruby/gems/3.0.0/bin"
-#   # NOTE: Add coreutils which make commands like ls run as they do on Linux rather than the BSD flavoured variant macos ships with
-#   "$BREW_PREFIX/opt/coreutils/libexec/gnubin"
-#   $path
-# )
+brew_prefix='/usr/local'
+if [[ "$(arch)" == "arm64" ]]; then
+  brew_prefix='/opt/homebrew'
+  # eval $(/opt/homebrew/bin/brew shellenv)
+# else
+#   eval $(/usr/local/bin/brew shellenv)
+fi
+
+export BREW_PREFIX="${brew_prefix}"
+export HOMEBREW_PREFIX="$BREW_PREFIX"
+
+path=(
+  "$BREW_PREFIX/opt/ruby/bin"
+  "$BREW_PREFIX/lib/ruby/gems/3.0.0/bin"
+  # NOTE: Add coreutils which make commands like ls run as they do on Linux rather than the BSD flavoured variant macos ships with
+  "$BREW_PREFIX/opt/coreutils/libexec/gnubin"
+  $path
+)
 
 # export MANPATH="$BREW_PREFIX/opt/coreutils/libexec/gnuman:${MANPATH}"
 
@@ -57,3 +50,5 @@ esac
 # source "$ZDOTDIR/lib/env.zsh"
 
 # # vim:ft=zsh:foldenable:foldmethod=marker:ts=2:sts=2:sw=2
+#
+#

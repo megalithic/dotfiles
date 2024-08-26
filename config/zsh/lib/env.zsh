@@ -47,8 +47,11 @@ export PROJECTS_DIR="$CODE"
 export PERSONAL_PROJECTS_DIR="${CODE}/personal"
 export GIT_REPO_DIR="$CODE"
 
-# ===================== from .zprofile =========================================
-case `uname` in
+#-------------------------------------------------------------------------------
+# Homebrew
+#-------------------------------------------------------------------------------
+
+case $(uname) in
   Darwin)
     # -- intel mac:
     [ -f "/usr/local/bin/brew" ] && eval "$(/usr/local/bin/brew shellenv)"
@@ -59,26 +62,6 @@ case `uname` in
     [ -d "/home/linuxbrew/.linuxbrew" ] && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
     ;;
 esac
-
-brew_prefix='/usr/local'
-if [[ "$(arch)" == "arm64" ]]; then
-  brew_prefix='/opt/homebrew'
-  eval $(/opt/homebrew/bin/brew shellenv)
-else
-  eval $(/usr/local/bin/brew shellenv)
-fi
-
-export BREW_PREFIX="${brew_prefix}"
-# export BREW_PREFIX="$(brew --prefix)"
-export HOMEBREW_PREFIX="$BREW_PREFIX"
-
-path=(
-  "$BREW_PREFIX/opt/ruby/bin"
-  "$BREW_PREFIX/lib/ruby/gems/3.0.0/bin"
-  # NOTE: Add coreutils which make commands like ls run as they do on Linux rather than the BSD flavoured variant macos ships with
-  "$BREW_PREFIX/opt/coreutils/libexec/gnubin"
-  $path
-)
 
 export MANPATH="$BREW_PREFIX/opt/coreutils/libexec/gnuman:${MANPATH}"
 # less colors for man pages
@@ -186,7 +169,7 @@ fi
 
 case "$(uname)" in
   Darwin)
-    export ANDROID_SDK_ROOT="${HOME}/Library/Android/sdk/"
+    export ANDROID_SDK_ROOT="${HOME}/Library/Android/sdk"
     export ANDROID_HOME="$ANDROID_SDK_ROOT"
     # export ANDROID_SDK_ROOT="/usr/local/share/android-sdk"
 
@@ -210,7 +193,7 @@ case "$(uname)" in
     export HOMEBREW_CASK_OPTS="--appdir=/Applications"
     export HOMEBREW_NO_INSTALL_CLEANUP=TRUE
     export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=FALSE
-    export HOMEBREW_NO_INSTALL_FROM_API=0
+    # export HOMEBREW_NO_INSTALL_FROM_API=0
     if which gh >/dev/null; then
       export HOMEBREW_GITHUB_API_TOKEN="$(gh auth token &>/dev/null)"
     fi
@@ -262,15 +245,15 @@ case "$(uname)" in
     path+=(
       ${JAVA_HOME}/bin(N-/)
     )
-      export KERL_CONFIGURE_OPTIONS="--disable-debug --without-javac"
-      export PATH="/home/linuxbrew/.linuxbrew/opt/openssl@1.1/bin:$PATH"
-      export BROWSER="xdg-open"
+    export KERL_CONFIGURE_OPTIONS="--disable-debug --without-javac"
+    export PATH="/home/linuxbrew/.linuxbrew/opt/openssl@1.1/bin:$PATH"
+    export BROWSER="xdg-open"
 
 
-      if which lemonade >/dev/null; then
-        export BROWSER="lemonade open"
-      fi
-      ;;
+    if which lemonade >/dev/null; then
+      export BROWSER="lemonade open"
+    fi
+    ;;
   esac
 
 
@@ -368,78 +351,89 @@ case "$(uname)" in
 
   # Set the list of directories that Zsh searches for programs.
   # "${HOME}/.asdf/installs/elixir/`asdf current elixir | awk '{print $1}'`/.mix"
+  #
   # NOTE: ASC for override, first-in-list wins
+  # path=(
+  #   ${HOME}/.local/share/lsp/bin(N-/)
+  #   $HOME/bin
+  #   $HOME/.bin
+  #   $HOME/.emacs.d/bin
+  #   $HOME/.local/bin(N-/)
+  #   $HOME/.dotfiles/bin(N-/)
+  #   ${PRIVATES}/bin
+  #   $GOBIN
+  #   ${GOPATH}/bin(N-/)
+  #   $CARGOPATH
+  #   $CARGOBIN
+  #   /usr/local/{bin,sbin}
+  #   /usr/local/share/npm/bin
+  #   /usr/local/lib/node_modules
+  #   /usr/{bin,sbin}
+  #   /{bin,sbin}
+  #
+  #   ${HOMEBREW_CELLAR}/git/*/share/git-core/contrib/git-jump(Nn[-1]-/)
+  #
+  #   ${CARGO_HOME}/bin(N-/)
+  #   ${GOBIN}(N-/)
+  #
+  #   ${HOME}/Library/Python/3.12/bin(Nn[-1]-/)
+  #   ${HOME}/Library/Python/3.11/bin(Nn[-1]-/)
+  #   ${HOME}/Library/Python/3.10/bin(Nn[-1]-/)
+  #   ${HOME}/Library/Python/3.9/bin(Nn[-1]-/)
+  #   ${HOME}/Library/Python/2.*/bin(Nn[-1]-/)
+  #   ${ANDROID_HOME}/emulator
+  #   ${ANDROID_HOME}/platform-tools
+  #
+  #   $path
+  # )
+
+  # Remove duplicate entries
+  # REF: https://github.com/mischavandenburg/dotfiles/blob/main/.zshrc#L16
+  # path=($^path(N-/))
+  #
+  # export PATH
+
   path=(
-    ${HOME}/.local/share/lsp/bin(N-/)
-    ${HOMEBREW_PREFIX}/{bin,sbin}
-    ${HOMEBREW_PREFIX}/opt
-    ./bin
-    ./.bin
-    ./vendor/bundle/bin
+    /nix/store/[^/]*/bin(Nn[-1]-/)
+    $HOME/.local/share/lsp/bin(N-/)
     $HOME/bin
     $HOME/.bin
-    $HOME/.emacs.d/bin
     $HOME/.local/bin(N-/)
     $HOME/.dotfiles/bin(N-/)
-    ${PRIVATES}/bin
+    $PRIVATES/bin
     $GOBIN
-    ${GOPATH}/bin(N-/)
+    $GOPATH/bin(N-/)
     $CARGOPATH
     $CARGOBIN
     /usr/local/{bin,sbin}
     /usr/local/share/npm/bin
     /usr/local/lib/node_modules
-    ${HOMEBREW_PREFIX}/opt/libffi/lib
-    ${HOMEBREW_PREFIX}/opt/icu4c/bin
-    ${HOMEBREW_PREFIX}/opt/gnu-sed/libexec/gnubin
-    ${HOMEBREW_PREFIX}/opt/postgresql@16/bin
-    ${HOMEBREW_PREFIX}/opt/postgresql@15/bin
-    ${HOMEBREW_PREFIX}/opt/postgresql@14/bin
-
-    # /usr/local/opt/openssl@1.1/bin
+    $HOMEBREW_PREFIX/bin
     /usr/{bin,sbin}
     /{bin,sbin}
 
-    ${HOMEBREW_PREFIX}/opt/curl/bin(N-/)
-    ${HOMEBREW_PREFIX}/opt/openssl@*/bin(Nn[-1]-/)
-    ${HOMEBREW_PREFIX}/opt/gnu-sed/libexec/gnubin(N-/)
-    ${HOMEBREW_PREFIX}/opt/coreutils/libexec/gnubin(N-/)
-    ${HOMEBREW_PREFIX}/opt/python@3.12/libexec/bin(Nn[-1]-/)
-    ${HOMEBREW_PREFIX}/opt/python@3.11/libexec/bin(Nn[-1]-/)
-    ${HOMEBREW_PREFIX}/opt/python@3.10/libexec/bin(Nn[-1]-/)
-    ${HOMEBREW_PREFIX}/opt/python@3.9/libexec/bin(Nn[-1]-/)
-    ${HOMEBREW_CELLAR}/git/*/share/git-core/contrib/git-jump(Nn[-1]-/)
+    $HOMEBREW_CELLAR/git/*/share/git-core/contrib/git-jump(Nn[-1]-/)
 
-    ${CARGO_HOME}/bin(N-/)
-    ${GOBIN}(N-/)
+    $CARGO_HOME/bin(N-/)
+    $GOBIN(N-/)
 
-    ${HOME}/Library/Python/3.12/bin(Nn[-1]-/)
-    ${HOME}/Library/Python/3.11/bin(Nn[-1]-/)
-    ${HOME}/Library/Python/3.10/bin(Nn[-1]-/)
-    ${HOME}/Library/Python/3.9/bin(Nn[-1]-/)
-    ${HOME}/Library/Python/2.*/bin(Nn[-1]-/)
-    ${HOMEBREW_PREFIX}/lib/python3.12/site-packages(N-/)
-    ${HOMEBREW_PREFIX}/lib/python3.11/site-packages(N-/)
-    ${HOMEBREW_PREFIX}/lib/python3.10/site-packages(N-/)
-    ${HOMEBREW_PREFIX}/lib/python3.9/site-packages(N-/)
-    ${HOMEBREW_PREFIX}/lib/python2.*/bin(Nn[-1]-/)
-    ${HOMEBREW_PREFIX}/lib/python2.*/site-packages(N-/)
-    ${HOMEBREW_PREFIX}/opt/python@3.*/bin(Nn[-1]-/)
-    ${HOMEBREW_PREFIX}/opt/python@2.*/bin(Nn[-1]-/)
+    $HOME/Library/Python/3.12/bin(Nn[-1]-/)
+    $HOME/Library/Python/3.11/bin(Nn[-1]-/)
+    $HOME/Library/Python/3.10/bin(Nn[-1]-/)
+    $HOME/Library/Python/3.9/bin(Nn[-1]-/)
+    $HOME/Library/Python/2.*/bin(Nn[-1]-/)
     $ANDROID_HOME/emulator
     $ANDROID_HOME/platform-tools
-    /Applications/WezTerm.app/Contents/MacOS
-    ${HOMEBREW_PREFIX}/{bin,sbin}
-    ${HOMEBREW_PREFIX}/opt
+    /nix/store/[^/]*/bin(Nn[-1]-/)
 
     $path
   )
-  export PATH
 
-  for path_file in /etc/paths.d/*(.N); do
-    path+=($(<$path_file))
-  done
-  unset path_file
+  # Remove duplicate entries
+  # REF: https://github.com/mischavandenburg/dotfiles/blob/main/.zshrc#L16
+  path=($^path(N-/))
+
+  export PATH
 
   fpath=(
     "$ZDOTDIR"
@@ -454,6 +448,8 @@ case "$(uname)" in
     "${fpath[@]}"
     "$fpath"
   )
+  fpath=($^fpath(N-/))
+
   export FPATH
 
   # -- zsh plugins

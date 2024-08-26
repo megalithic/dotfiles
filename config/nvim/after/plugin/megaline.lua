@@ -421,6 +421,7 @@ local function parse_filename(truncate_at)
 
   local fname = buf_expand(M.ctx.bufnr, modifier)
 
+  local icon, icon_hl = require("nvim-web-devicons").get_icon_color(fname)
   local name = exception_types.names[M.ctx.filetype]
   local exception_icon = exception_types.filetypes[M.ctx.filetype] or ""
   if type(name) == "function" then return "", "", fmt("%s %s", exception_icon, name(fname, M.ctx.bufnr)) end
@@ -437,7 +438,7 @@ local function parse_filename(truncate_at)
   -- parent = parent ~= "" and parent .. "/" or ""
   parent = parent ~= "" and parent .. "" or ""
 
-  return dir, parent, fname
+  return dir, parent, fname, icon, icon_hl
 end
 
 local function get_filename_parts(truncate_at)
@@ -451,12 +452,13 @@ local function get_filename_parts(truncate_at)
     filename_hl = H.adopt_winhighlight(M.ctx.winid, "StatusLine", "StCustomFilename", "StTitle")
   end
 
-  local directory, parent, file = parse_filename(truncate_at)
+  local directory, parent, file, icon, icon_hl = parse_filename(truncate_at)
 
   return {
     file = { item = file, hl = filename_hl },
     dir = { item = directory, hl = directory_hl },
     parent = { item = parent, hl = parent_hl },
+    icon = { item = icon, hl = icon_hl },
   }
 end
 
@@ -465,7 +467,7 @@ end
 local function seg_filename(truncate_at)
   local segments = get_filename_parts(truncate_at)
 
-  local dir, parent, file = segments.dir, segments.parent, segments.file
+  local dir, parent, file, icon = segments.dir, segments.parent, segments.file, segments.icon
 
   local file_hl = M.ctx.modified and "StModified" or file.hl
 
@@ -510,8 +512,10 @@ local function seg_lsp_servers(truncate_at)
     table.insert(client_names, client.name)
   end
 
-  if is_truncated(truncate_at) then return seg("\u{f085} " .. #client_names, { margin = { 1, 1 } }) end
-  return seg("\u{f085} " .. table.concat(client_names, "/"), { margin = { 1, 1 } })
+  local str = function(text) return fmt("%s %s", icons.lsp.clients, text) end
+
+  if is_truncated(truncate_at) then return seg(str(#client_names), { margin = { 1, 1 } }) end
+  return seg(str(table.concat(client_names, "/")), { margin = { 1, 1 } })
 end
 
 local function seg_lsp_status(truncate_at)
@@ -610,7 +614,7 @@ local function seg_ai(truncate_at)
     local ai_enabled = false
 
     if vim.g.ai == "neocodeium" then ai_enabled = require("neocodeium.options").options.enabled end
-    return seg("󰭆", "StBright", not is_truncated(truncate_at) and ai_enabled, { margin = { 1, 1 }, padding = { 1, 1 } })
+    return seg("󰭆", "StBright", not is_truncated(truncate_at) and ai_enabled, { padding = { 1, 1 } })
   end
 
   return ""
@@ -704,10 +708,9 @@ function mega.ui.statusline.render()
     seg("%*"),
     seg("%{(&fenc!='utf-8'&&&fenc!='')?'['.&fenc.'] ':''}", "warningmsg"),
     seg("%*"),
-    seg_ai(175),
-    seg("%*"),
     seg_lsp_servers(150),
     seg_lsp_status(100),
+    seg_ai(175),
     seg_git_status({ 175, 80 }),
     -- seg(get_dap_status()),
     seg_lineinfo(75),

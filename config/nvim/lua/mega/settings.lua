@@ -148,9 +148,10 @@ local M = {
     lsp = {
       error = "", -- alts: 󰬌      
       warn = "󰔷", -- alts: 󰬞 󰔷   ▲ 󰔷
-      info = "", -- alts: 󱂈 󰋼  󰬐 󰰃     ● 󰬐
+      info = "󰖧", -- alts: 󰖧 󱂈 󰋼  󰙎   󰬐 󰰃     ● 󰬐 
       hint = "▫", -- alts:  󰬏 󰰀  󰌶 󰰂 󰰂 󰰁 󰫵 󰋢   
       ok = "✓", -- alts: ✓✓
+      clients = "", -- alts:     󱉓 󱡠 󰾂 
     },
     test = {
       passed = "", --alts: 

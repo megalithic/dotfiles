@@ -8,14 +8,9 @@ obj.debug = false
 obj.clipWatcher = {}
 obj.clipboardData = {}
 obj.capsPath = fmt("%s/screenshots", os.getenv("HOME"))
-obj.tempImage = "/tmp/tmp.png"
-obj.tempOcrImage = "/tmp/ocr_tmp.png"
+obj.tempImage = fmt("/tmp/%s_tmp.png", obj.name)
+obj.tempOcrImage = fmt("/tmp/%s_ocr_tmp.png", obj.name)
 obj.helpCanvas = nil
-
-local dbg = function(str, ...)
-  str = string.format(":: [%s] %s", obj.name, str)
-  if obj.debug then return _G.dbg(string.format(str, ...), false) end
-end
 
 function obj.captureImage(image, openImageUrl)
   image = image or hs.pasteboard.readImage()
@@ -114,26 +109,34 @@ function obj.saveOcrText(image)
   end
 
   local imagePath = obj.tempOcrImage
-  local outputPath = "/tmp/ocr_output"
-  image:saveToFile(imagePath)
+  dbg(I(image), true)
+  local outputPath = "/tmp/ocr_output.txt"
+  dbg(I(imagePath), true)
+  dbg(I(outputPath), true)
 
-  local output, success, type, rc =
-    hs.execute(fmt("zsh -ic '/opt/homebrew/bin/tesseract -l eng %s %s'", imagePath, outputPath))
+  if image:saveToFile(imagePath) then
+    dbg(I(image), true)
 
-  if success then
-    -- Read in OCR result
-    local file = io.open(fmt("%s.txt", outputPath), "r")
-    local content = file:read("*all")
-    dbg("ocrText: %s", content)
-    file:close()
+    local output, success, type, rc =
+      hs.execute(fmt("/opt/homebrew/bin/zsh -ic '/opt/homebrew/bin/tesseract %s %s'", imagePath, outputPath))
 
-    -- Store OCR content in the pasteboard
-    hs.pasteboard.setContents(content, "ocrText")
+    if success then
+      -- Read in OCR result
+      local file = io.open(fmt("%s.txt", outputPath), "r")
+      local content = file:read("*all")
+      dbg("ocrText: %s", content)
+      file:close()
 
-    -- clean up
-    hs.execute(fmt("rm %s %s.txt", imagePath, outputPath))
+      -- Store OCR content in the pasteboard
+      hs.pasteboard.setContents(content, "ocrText")
+
+      -- clean up
+      hs.execute(fmt("rm %s %s.txt", imagePath, outputPath))
+    else
+      error(fmt("[%s] saveOcrText: %s/%s/%s/%s", obj.name, output, success, type, rc))
+    end
   else
-    error(fmt("[%s] ocrText: %s/%s/%s/%s", obj.name, output, success, type, rc))
+    warn(fmt("[%s] saveOcrText: unable to save image to path (%s)", obj.name, imagePath))
   end
 end
 
@@ -167,7 +170,6 @@ function obj:init(opts)
       obj.clipboardData = pb
     else
       obj.clipboardData = hs.pasteboard.readImage()
-      dbg(pb, true)
       obj.captureImage(obj.clipboardData, false)
 
       local pasteImageUrl = function()
@@ -177,16 +179,27 @@ function obj:init(opts)
       end
 
       local pasteOcrText = function()
+        dbg(I(obj), true)
+        dbg(obj.clipboardData, true)
         obj.saveOcrText(obj.clipboardData)
         local ocrText = hs.pasteboard.getContents("ocrText")
-        hs.eventtap.keyStrokes(ocrText)
-        note(fmt("[%s] ocrText: %s", obj.name, ocrText))
+        if ocrText == nil or ocrText == "" then
+          warn(fmt("[%s] ocrText: no ocr text to paste", obj.name))
+        else
+          hs.eventtap.keyStrokes(ocrText)
+          note(fmt("[%s] ocrText: %s", obj.name, ocrText))
+        end
       end
 
       hs.hotkey.bind({ "cmd", "shift" }, "v", pasteImageUrl)
       hs.hotkey.bind({ "cmd", "ctrl" }, "v", pasteImageUrl)
+
+      -----------------------------------------------------
+      -- FIXME: these are presently broken; not sure why...
       hs.hotkey.bind({ "cmd", "shift" }, "p", pasteOcrText)
       hs.hotkey.bind({ "cmd", "shift", "ctrl" }, "p", pasteOcrText)
+      -----------------------------------------------------
+
       hs.hotkey.bind({ "cmd", "shift" }, "e", function()
         obj.editClipboardImage(obj.clipboardData)
         -- local ocr_text = hs.pasteboard.getContents("ocrText")
