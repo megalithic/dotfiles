@@ -38,7 +38,6 @@ function obj.hasTab(url)
 
   if app and enum.contains(supportedBrowsers, app:name()) then
     url = string.gsub(url, "/", "\\/")
-    dbg(url, true)
     local _status, hasTab, _descriptor = hs.osascript.javascript([[
     (function() {
       var browser = Application(']] .. app:name() .. [[');

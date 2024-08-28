@@ -487,9 +487,10 @@ return {
             desc = "Handle lsp progress message scenarios",
             command = function(ev)
               local token = ev.data.params.token
+              if ev.data.result and ev.data.result.token then token = ev.data.result.token end
               local client_id = ev.data.client_id
-              local clnt = client_id and vim.lsp.get_client_by_id(client_id)
-              if clnt and token then require("fidget").notification.remove(clnt.name, token) end
+              local c = client_id and vim.lsp.get_client_by_id(client_id)
+              if c and token then require("fidget").notification.remove(c.name, token) end
             end,
           },
         })

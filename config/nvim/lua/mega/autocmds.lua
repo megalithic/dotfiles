@@ -232,11 +232,10 @@ function M.apply()
       desc = "Smart close certain filetypes with `q`",
       pattern = { "*" },
       command = function()
-        local is_unmapped = vim.fn.hasmapto("q", "n") == 0
-        local is_eligible = is_unmapped
-          or vim.wo.previewwindow
-          or vim.tbl_contains({}, vim.bo.buftype)
-          or vim.tbl_contains({
+        -- local is_unmapped = vim.fn.hasmapto("q", "n") == 0
+        local is_eligible =
+          -- is_unmapped
+          vim.wo.previewwindow or vim.tbl_contains({}, vim.bo.buftype) or vim.tbl_contains({
             "help",
             "git-status",
             "git-log",
@@ -262,6 +261,7 @@ function M.apply()
         if is_eligible then
           map("n", "q", function()
             if vim.fn.winnr("$") ~= 1 then
+              dbg("smart close quit mappings")
               vim.api.nvim_win_close(0, true)
               vim.cmd("wincmd p")
             end

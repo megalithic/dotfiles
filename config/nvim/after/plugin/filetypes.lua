@@ -73,9 +73,9 @@ ftplugin.extend_all({
     },
   },
   gitcommit = {
-    keys = {
-      { "q", vim.cmd.cquit, { nowait = true, buffer = true, desc = "abort", bang = true } },
-    },
+    -- keys = {
+    --   { "q", function() vim.cmd("cq!") end, { nowait = true, buffer = true, desc = "abort", bang = true } },
+    -- },
     opt = {
       list = false,
       number = false,
@@ -86,17 +86,20 @@ ftplugin.extend_all({
       colorcolumn = "50,72",
     },
     callback = function()
+      vim.keymap.set("n", "q", function() vim.cmd("cq!", { bang = true }) end, { buffer = true, nowait = true, desc = "Abort" })
       vim.fn.matchaddpos("DiagnosticVirtualTextError", { { 1, 50, 10000 } })
       if vim.fn.prevnonblank(".") ~= vim.fn.line(".") then vim.cmd.startinsert() end
     end,
   },
   gitrebase = {
-    function() vim.keymap.set("n", "q", vim.cmd.cquit, { nowait = true, desc = "abort", bang = true }) end,
+    function()
+      vim.keymap.set("n", "q", function() vim.cmd("cq!", { bang = true }) end, { nowait = true, desc = "abort" })
+    end,
   },
-  neogitcommitmessage = {
-    keys = {
-      { "q", vim.cmd.cquit, { nowait = true, buffer = true, desc = "abort", bang = true } },
-    },
+  ["NeogitCommitMessage"] = {
+    -- keys = {
+    --   { "q", function() vim.cmd("cq!") end, { nowait = true, buffer = true, desc = "abort", bang = true } },
+    -- },
     opt = {
       list = false,
       number = false,
@@ -107,7 +110,7 @@ ftplugin.extend_all({
       colorcolumn = "50,72",
     },
     callback = function()
-      map("n", "q", vim.cmd.cquit, { buffer = true, nowait = true, desc = "Abort", bang = true })
+      vim.keymap.set("n", "q", function() vim.cmd("cq!", { bang = true }) end, { buffer = true, nowait = true, desc = "Abort" })
       vim.fn.matchaddpos("DiagnosticVirtualTextError", { { 1, 50, 10000 } })
       if vim.fn.prevnonblank(".") ~= vim.fn.line(".") then vim.cmd.startinsert() end
     end,

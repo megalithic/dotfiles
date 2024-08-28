@@ -176,6 +176,8 @@ function M.tlen(t)
   return len
 end
 
+function M.strim(s) return (s:gsub("^%s*(.-)%s*$", "%1")) end
+
 -- https://github.com/ibhagwan/fzf-lua/blob/455744b9b2d2cce50350647253a69c7bed86b25f/lua/fzf-lua/utils.lua#L401
 function M.get_visual_selection()
   -- this will exit visual mode
@@ -210,6 +212,7 @@ function M.get_visual_selection()
   if n <= 0 then return "" end
   lines[n] = string.sub(lines[n], 1, cecol)
   lines[1] = string.sub(lines[1], cscol)
+
   return table.concat(lines, "\n")
 end
 

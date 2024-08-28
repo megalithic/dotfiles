@@ -59,8 +59,13 @@ case $1 in
       echo "iex -S mix phx.server"
       iex -S mix phx.server
     else
-      echo "iex --sname $1 --cookie ${2:-ternit} -S mix phx.server"
-      iex --sname $1 --cookie ${2:-ternit} -S mix phx.server
+      if [[ "$1" == *"tern"* ]]; then
+        echo "iex --sname $1 --cookie ternit -S mix phx.server"
+        iex --sname $1 --cookie ternit -S mix phx.server
+      else
+        echo "iex --sname $1 -S mix phx.server"
+        iex --sname $1 -S mix phx.server
+      fi
     fi
     ;;
 

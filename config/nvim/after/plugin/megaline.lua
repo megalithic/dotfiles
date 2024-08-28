@@ -1,14 +1,11 @@
-if not mega then return end
+if not mega then
+  vim.o.statusline = "%#Statusline# %2{mode()} | %F %m %r %= %{&spelllang} %y %8(%l,%c%) %8p%%"
+  return
+end
 
 mega.ui.statusline = {}
 
--- @akinsho, @echasnovski, @lukas-reineke, @kristijanhusak, @mfussenegger
-
--- if not plugin_loaded("megaline") then
---   vim.o.statusline = "%#Statusline# %2{mode()} | %F %m %r %= %{&spelllang} %y %8(%l,%c%) %8p%%"
---
---   return
--- end
+-- HT: @akinsho, @echasnovski, @lukas-reineke, @kristijanhusak, @mfussenegger
 
 local M = {}
 
@@ -25,6 +22,7 @@ local augroup = require("mega.autocmds").augroup
 local icons = require("mega.settings").icons
 
 vim.g.is_saving = false
+vim.g.lsp_progress_messages = ""
 local search_count_timer
 
 augroup("megaline", {
@@ -41,10 +39,26 @@ augroup("megaline", {
       end
     end,
   },
-  -- {
-  --   event = { "LspProgress" },
-  --   command = function() pcall(vim.cmd.redrawstatus) end,
-  -- },
+  {
+    event = { "LspProgress" },
+    command = function(ctx)
+      local clientName = vim.lsp.get_client_by_id(ctx.data.client_id).name
+      local progress = ctx.data.params.value ---@type {percentage: number, title?: string, kind: string, message?: string}
+      if not (progress and progress.title) then return end
+
+      local icons = { "󰫃", "󰫄", "󰫅", "󰫆", "󰫇", "󰫈" }
+      local idx = math.floor(#icons / 2)
+      if progress.percentage == 0 then idx = 1 end
+      if progress.percentage and progress.percentage > 0 then idx = math.ceil(progress.percentage / 100 * #icons) end
+      local firstWord = vim.split(progress.title, " ")[1]:lower()
+
+      local text = table.concat({ icons[idx], clientName, firstWord }, " ")
+      -- TODO: add slight delay to our `end` message clearing so we can actually see the last progress message
+      vim.g.lsp_progress_messages = progress.kind == "end" and "" or text
+
+      pcall(vim.cmd.redrawstatus)
+    end,
+  },
   {
     event = { "CursorMoved" },
     pattern = { "*" },
@@ -482,7 +496,7 @@ end
 local function seg_prefix(truncate_at)
   local mode_info = MODES[api.nvim_get_mode().mode]
   local prefix = is_truncated(truncate_at) and "" or vim.env.SESSION_ICON -- icons.misc.lblock
-  return seg(prefix, mode_info.hl, { padding = { 1, 1 } })
+  return seg(prefix, mode_info.hl, { padding = { 0, 0 } })
 end
 
 local function seg_suffix(truncate_at)
@@ -512,42 +526,28 @@ local function seg_lsp_servers(truncate_at)
     table.insert(client_names, client.name)
   end
 
-  local str = function(text) return fmt("%s %s", icons.lsp.clients, text) end
-
-  if is_truncated(truncate_at) then return seg(str(#client_names), { margin = { 1, 1 } }) end
-  return seg(str(table.concat(client_names, "/")), { margin = { 1, 1 } })
+  local clients_str = U.strim(table.concat(client_names, "/"))
+  if is_truncated(truncate_at) then return seg(#client_names, { prefix = icons.lsp.clients, margin = { 1, 1 } }) end
+  return seg(clients_str, { prefix = icons.lsp.clients, margin = { 1, 1 } })
 end
 
 local function seg_lsp_status(truncate_at)
   if is_truncated(truncate_at) then return "" end
 
-  -- local lsp_client_names = table.concat(
-  --   vim.tbl_map(function(client) return client.name end, vim.tbl_values(vim.lsp.get_clients({ bufnr = M.ctx.bufnr }))),
-  --   ", "
-  -- )
-
-  -- Enable once we get fidget doing all the right things:
   -- local enabled = not vim.g.disable_autoformat
-  -- return get_diagnostics(seg(icons.lsp.kind.Null, "StModeInsert", enabled))
+  -- return get_diagnostics(seg(icons.kind.Null, "StModeInsert", enabled))
 
-  -- Disable once we get fidget doing all the right things:
-  -- local ok_messages, messages = pcall(vim.lsp.status)
-  --
-  -- if ok_messages then
-  --   if messages == "" then
-  --     local enabled = not vim.g.disable_autoformat
-  --     return get_diagnostics(seg(icons.lsp.kind.Null, "StModeInsert", enabled))
-  --     -- else
-  --     --   messages = vim.iter(vim.split(messages, ", ")):last():gsub("%%", "%%%%")
-  --     -- dd(lsp_client_names)
-  --     --dd(messages)
-  --   end
-  -- end
+  -- -- Disable once we get fidget doing all the right things:
+  local ok_messages, messages = pcall(vim.lsp.status)
 
-  -- return get_lsp_status(messages)
+  if ok_messages then
+    if messages == "" and vim.g.lsp_progress_messages == "" then
+      local enabled = not vim.g.disable_autoformat
+      return get_diagnostics(seg(icons.kind.Null, "StModeInsert", enabled))
+    end
+  end
 
-  local enabled = not vim.g.disable_autoformat
-  return get_diagnostics(seg(icons.kind.Null, "StModeInsert", enabled))
+  return get_lsp_status(vim.g.lsp_progress_messages)
 end
 
 local function seg_lineinfo(truncate_at)
@@ -671,14 +671,15 @@ function mega.ui.statusline.render()
     expandtab = vim.bo[bufnr].expandtab,
   }
 
-  if not is_focused() then return "%#StatusLineInactive# %F %m %r %= %{&spelllang} %y %8(%l,%c%) %8p%%" end
+  -- vim.o.statusline = "%#Statusline# %2{mode()} | %F %m %r %= %{&spelllang} %y %8(%l,%c%) %8p%%"
+  if not is_focused() then return "%#StatusLineInactive# %F %m %r %{&paste?'[paste] ':''} %= %{&spelllang}  %y %8(%l,%c%) %8p%%" end
 
   if is_plain() then
     local parts = {
       seg([[%<]]),
       seg_filename(),
-      seg(modified_icon, "StModifiedIcon", M.ctx.modified, { margin = { 0, 1 } }), -- alts: "%m"
-      seg(icons.misc.lock, "StModifiedIcon", M.ctx.readonly, { margin = { 0, 1 } }), -- alts: "%r"
+      seg(modified_icon, "StModifiedIcon", M.ctx.modified, { margin = { 0, 1 } }),
+      seg(icons.misc.lock, "StModifiedIcon", M.ctx.readonly, { margin = { 0, 1 } }),
       "%=",
     }
 
@@ -690,18 +691,18 @@ function mega.ui.statusline.render()
     -- seg_prefix(100),
     seg_mode(120),
     seg_filename(120),
-    seg(modified_icon, "StModifiedIcon", M.ctx.modified, { margin = { 0, 1 } }), -- alts: "%m"
-    seg(icons.misc.lock, "StModifiedIcon", M.ctx.readonly, { margin = { 0, 1 } }), -- alts: "%r"
+    seg(modified_icon, "StModifiedIcon", M.ctx.modified, { margin = { 0, 1 } }),
+    seg(icons.misc.lock, "StModifiedIcon", M.ctx.readonly, { margin = { 0, 1 } }),
     -- seg("%{&paste?'[paste] ':''}", "warningmsg", { margin = { 1, 1 } }),
     seg("Saving…", "StComment", vim.g.is_saving, { margin = { 0, 1 } }),
     seg_search_results(120),
-    -- seg_opened_terms(120),
     -- end left alignment
     seg([[%=]]),
+
     -- seg(get_substitution_status()),
-    --
-    seg_hydra(120),
+    -- seg_hydra(120),
     seg([[%=]]),
+
     -- begin right alignment
     seg("%*"),
     seg("%{&ff!='unix'?'['.&ff.'] ':''}", "warningmsg"),
@@ -710,7 +711,7 @@ function mega.ui.statusline.render()
     seg("%*"),
     seg_lsp_servers(150),
     seg_lsp_status(100),
-    seg_ai(175),
+    seg_ai(120),
     seg_git_status({ 175, 80 }),
     -- seg(get_dap_status()),
     seg_lineinfo(75),
@@ -719,5 +720,4 @@ function mega.ui.statusline.render()
   })
 end
 
-print(vim.o.statusline)
 vim.o.statusline = "%{%v:lua.mega.ui.statusline.render()%}"

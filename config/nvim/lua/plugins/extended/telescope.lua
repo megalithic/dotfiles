@@ -42,10 +42,6 @@ return {
       "debugloop/telescope-undo.nvim",
       "folke/trouble.nvim",
       { "nvim-telescope/telescope-ui-select.nvim" },
-
-      -- Useful for getting pretty icons, but requires a Nerd Font.
-      { "nvim-tree/nvim-web-devicons", enabled = vim.g.have_nerd_font },
-      -- { "altermo/telescope-nucleo-sorter.nvim", build = "cargo build --release" },
     },
     config = function()
       mega.picker = {
@@ -211,7 +207,10 @@ return {
       mega.picker.dropdown = dropdown
 
       local function ivy(opts)
-        opts = vim.tbl_deep_extend("force", opts or {}, { layout_config = { height = 0.3 } })
+        opts = vim.tbl_deep_extend("force", opts or {}, {
+          disable_devicons = true,
+          layout_config = { height = 0.3 },
+        })
         return require("telescope.themes").get_ivy(get_border(opts))
       end
       mega.picker.ivy = ivy
@@ -450,15 +449,23 @@ return {
         defaults = {
           theme = "ivy",
           dynamic_preview_title = true,
+          color_devicons = false,
+          disable_devicons = true,
           selection_strategy = "reset",
           scroll_strategy = "limit",
           sorting_strategy = "ascending",
           path_display = { "filename_first, truncate" },
-          color_devicons = true,
-          file_previewer = require("telescope.previewers").vim_buffer_cat.new,
-          grep_previewer = require("telescope.previewers").vim_buffer_vimgrep.new,
-          qflist_previewer = require("telescope.previewers").vim_buffer_qflist.new,
+          -- file_previewer = require("telescope.previewers").vim_buffer_cat.new,
+          -- grep_previewer = require("telescope.previewers").vim_buffer_vimgrep.new,
+          -- qflist_previewer = require("telescope.previewers").vim_buffer_qflist.new,
           layout_strategy = "horizontal",
+          results_title = false,
+          prompt_prefix = " ",
+          selection_caret = " ",
+          entry_prefix = "  ",
+          multi_icon = "󰛄 ",
+          winblend = 0,
+          vimgrep_arguments = grep_files_cmd,
           -- NOTE: https://github.com/bangalcat/nvim/blob/main/lua/plugins/telescope.lua#L61
           get_selection_window = function()
             local wins = vim.api.nvim_list_wins()
@@ -472,33 +479,6 @@ return {
           layout_config = {
             prompt_position = "top",
           },
-          -- buffer_previewer_maker = new_maker,
-          -- preview = {
-          --   mime_hook = function(filepath, bufnr, opts)
-          --     local is_image = function(fp)
-          --       local image_extensions = { "png", "jpg" } -- Supported image formats
-          --       local split_path = vim.split(fp:lower(), ".", { plain = true })
-          --       local extension = split_path[#split_path]
-          --       return vim.tbl_contains(image_extensions, extension)
-          --     end
-          --
-          --     if is_image(filepath) then
-          --       local term = vim.api.nvim_open_term(bufnr, {})
-          --       local function send_output(_, data, _)
-          --         vim.pprint(data)
-          --         for _, d in ipairs(data) do
-          --           vim.api.nvim_chan_send(term, d .. "\r\n")
-          --         end
-          --       end
-          --       vim.fn.jobstart({
-          --         "catimg",
-          --         filepath, -- Terminal image viewer command
-          --       }, { on_stdout = send_output, stdout_buffered = true, pty = true })
-          --     else
-          --       require("telescope.previewers.utils").set_preview_message(bufnr, opts.winid, "Binary cannot be previewed")
-          --     end
-          --   end,
-          -- },
           mappings = {
             i = {
               ["<esc>"] = require("telescope.actions").close,
@@ -541,13 +521,6 @@ return {
               -- ["<c-o>"] = function(pb) multi(pb, "edit") end,
             },
           },
-          results_title = false,
-          prompt_prefix = " ",
-          selection_caret = " ",
-          entry_prefix = "  ",
-          multi_icon = "󰛄 ",
-          winblend = 0,
-          vimgrep_arguments = grep_files_cmd,
         },
         file_ignore_patterns = {
           ".DS_Store",
@@ -702,7 +675,8 @@ return {
             show_scores = false,
             ignore_patterns = { "*.git/*", "*/tmp/*" },
             match_algorithm = "fzf",
-            disable_devicons = false,
+            disable_devicons = true,
+            color_devicons = false,
             -- open_buffer_indicators = { previous = "👀", others = "🙈" },
             cwd_only = true,
             mappings = {
@@ -806,47 +780,54 @@ return {
       -- telescope.load_extension("zf-native")
 
       -- keys
-      local builtin = require("telescope.builtin")
-      map("n", "<leader>ff", function() mega.picker.find_files({ picker = "smart_open" }) end, { desc = "[f]ind [f]iles" })
-      map("n", "<leader>fh", ts.help_tags, { desc = "[f]ind [h]elp" })
-      map("n", "<leader>fa", ts.autocommands, { desc = "[f]ind [a]utocommands" })
-      map("n", "<leader>fk", ts.keymaps, { desc = "[f]ind [k]eymaps" })
-      -- map("n", "<leader>fs", ts.builtin, { desc = "[f]ind [f]elect Telescope" })
-      map("n", "<leader>fg", ts.egrepify, { desc = "egrepify (live)" })
+      if vim.g.picker == "telescope" then
+        local builtin = require("telescope.builtin")
+        map("n", "<leader>ff", function() mega.picker.find_files({ picker = "smart_open" }) end, { desc = "[f]ind [f]iles" })
+        map("n", "<leader>fh", ts.help_tags, { desc = "[f]ind [h]elp" })
+        map("n", "<leader>fa", ts.autocommands, { desc = "[f]ind [a]utocommands" })
+        map("n", "<leader>fk", ts.keymaps, { desc = "[f]ind [k]eymaps" })
+        -- map("n", "<leader>fs", ts.builtin, { desc = "[f]ind [f]elect Telescope" })
+        map("n", "<leader>fg", ts.egrepify, { desc = "egrepify (live)" })
 
-      map("n", "<leader>fg", function() mega.picker.grep({ picker = "egrepify" }) end, { desc = "[f]ind e[g]repify" })
-      map("n", "<leader>a", mega.picker.grep, { desc = "grep (live)" })
-      -- map("n", "<leader>A", ts.grep_string, { desc = "grep (under cursor)" })
-      map("n", "<leader>A", function() mega.picker.grep({ default_text = vim.fn.expand("<cword>") }) end, { desc = "grep (under cursor)" })
-      map({ "v", "x" }, "<leader>A", function()
-        local pattern = require("mega.utils").get_visual_selection()
-        mega.picker.grep({ default_text = pattern })
-      end, { desc = "grep (selection)" })
+        map("n", "<leader>fg", function() mega.picker.grep({ picker = "egrepify" }) end, { desc = "[f]ind e[g]repify" })
+        map("n", "<leader>a", mega.picker.grep, { desc = "grep (live)" })
+        -- map("n", "<leader>A", ts.grep_string, { desc = "grep (under cursor)" })
+        map("n", "<leader>A", function() mega.picker.grep({ default_text = vim.fn.expand("<cword>") }) end, { desc = "grep (under cursor)" })
+        map({ "v", "x" }, "<leader>A", function()
+          local pattern = require("mega.utils").get_visual_selection()
+          mega.picker.grep({ default_text = pattern })
+        end, { desc = "grep (selection)" })
 
-      map("n", "<leader>fu", ts.undo, { desc = "[f]ind [u]ndo" })
-      -- map("n", "<leader>fd", ts.diagnostics, { desc = "[f]ind [d]iagnostics" })
-      map("n", "<leader>fd", function() mega.picker.find_files({ picker = "smart_open", cwd = vim.g.dotfiles_path }) end, { desc = "[f]ind in [d]otfiles" })
-      map("n", "<leader>fc", function() mega.picker.find_files({ picker = "smart_open", cwd = vim.fn.stdpath("config") }) end, { desc = "[f]ind in [c]onfig" })
-      map(
-        "n",
-        "<leader>fp",
-        function() mega.picker.find_files({ picker = "smart_open", cwd = vim.fn.expand(vim.g.code_path), title = "in ~/code" }) end,
-        { desc = "[f]ind in ~/code [p]rojects" }
-      )
-      map("n", "<leader>fr", ts.resume, { desc = "[f]ind [r]esume" })
-      map("n", "<leader>f.", ts.oldfiles, { desc = "[f]ind Recent Files (\".\" for repeat)" })
-      map("n", "<leader><leader>", ts.buffers, { desc = "[ ] Find existing buffers" })
+        map("n", "<leader>fu", ts.undo, { desc = "[f]ind [u]ndo" })
+        -- map("n", "<leader>fd", ts.diagnostics, { desc = "[f]ind [d]iagnostics" })
+        map("n", "<leader>fd", function() mega.picker.find_files({ picker = "smart_open", cwd = vim.g.dotfiles_path }) end, { desc = "[f]ind in [d]otfiles" })
+        map(
+          "n",
+          "<leader>fc",
+          function() mega.picker.find_files({ picker = "smart_open", cwd = vim.fn.stdpath("config") }) end,
+          { desc = "[f]ind in [c]onfig" }
+        )
+        map(
+          "n",
+          "<leader>fp",
+          function() mega.picker.find_files({ picker = "smart_open", cwd = vim.fn.expand(vim.g.code_path), title = "in ~/code" }) end,
+          { desc = "[f]ind in ~/code [p]rojects" }
+        )
+        map("n", "<leader>fr", ts.resume, { desc = "[f]ind [r]esume" })
+        map("n", "<leader>f.", ts.oldfiles, { desc = "[f]ind Recent Files (\".\" for repeat)" })
+        map("n", "<leader><leader>", ts.buffers, { desc = "[ ] Find existing buffers" })
 
-      -- Slightly advanced example of overriding default behavior and theme
-      map("n", "<leader>/", function()
-        -- You can pass additional configuration to Telescope to change the theme, layout, etc.
-        builtin.current_buffer_fuzzy_find(require("telescope.themes").get_dropdown({
-          winblend = 10,
-          previewer = false,
-        }))
-      end, { desc = "[/] Fuzzily search in current buffer" })
+        -- Slightly advanced example of overriding default behavior and theme
+        map("n", "<leader>/", function()
+          -- You can pass additional configuration to Telescope to change the theme, layout, etc.
+          builtin.current_buffer_fuzzy_find(require("telescope.themes").get_dropdown({
+            winblend = 10,
+            previewer = false,
+          }))
+        end, { desc = "[/] Fuzzily search in current buffer" })
 
-      -- Shortcut for searching your Neovim configuration files
+        -- Shortcut for searching your Neovim configuration files
+      end
     end,
   },
 }
