@@ -26,9 +26,11 @@ function obj.toggle(appIdentifier, shouldHide)
       if mainWin == hs.window.focusedWindow() then
         if shouldHide then mainWin:application():hide() end
       else
-        mainWin:application():activate(true)
-        mainWin:application():unhide()
-        mainWin:focus()
+        if mainWin:application() ~= nil then
+          mainWin:application():activate(true)
+          mainWin:application():unhide()
+          mainWin:focus()
+        end
       end
     else
       -- assumes there is no "mainWindow" for the application in question, probably iTerm2

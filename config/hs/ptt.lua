@@ -159,6 +159,8 @@ function obj.toggleMode()
   return toggle_to.mode
 end
 
+function obj.currentMode() return obj.mode end
+
 function obj:start(opts)
   if opts["mode"] ~= nil then self.mode = opts["mode"] end
 

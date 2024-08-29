@@ -128,9 +128,7 @@ function M.apply()
 
   M.augroup("AutoSave", {
     {
-
-      -- event = { "BufLeave", "FocusLost" },
-      event = { "InsertLeave", "TextChanged", "BufLeave", "FocusLost" },
+      event = { "BufWinLeave", "BufLeave", "FocusLost" },
       desc = "Automatically update and write modified buffer on certain events",
       command = function(ctx)
         local bufnr = ctx.buf
@@ -160,17 +158,6 @@ function M.apply()
         end
       end,
     },
-  })
-
-  M.augroup("UpdateOnLeave", {
-    desc = "Automatically update and write modified buffer on leave..",
-    event = { "FocusLost", "BufLeave", "BufWinLeave" },
-    command = function()
-      if vim.bo.modified and not vim.bo.readonly and vim.fn.expand("%") ~= "" and vim.bo.buftype == "" then
-        vim.notify("updating...")
-        vim.api.nvim_command("silent w")
-      end
-    end,
   })
 
   M.augroup("HighlightYank", {
@@ -374,31 +361,35 @@ function M.apply()
 
   M.augroup("ToggleSearchHL", {
     {
+      -- enabled = false,
       event = { "CursorMoved" },
       command = function()
-        -- No bloat lua adpatation of: https://github.com/romainl/vim-cool
-        local view, rpos = vim.fn.winsaveview(), vim.fn.getpos(".")
-        -- Move the cursor to a position where (whereas in active search) pressing `n`
-        -- brings us to the original cursor position, in a forward search / that means
-        -- one column before the match, in a backward search ? we move one col forward
-        vim.cmd(string.format("silent! keepjumps go%s", (vim.fn.line2byte(view.lnum) + view.col + 1 - (vim.v.searchforward == 1 and 2 or 0))))
-        -- Attempt to goto next match, if we're in an active search cursor position
-        -- should be equal to original cursor position
-        local ok, _ = pcall(vim.cmd, "silent! keepjumps norm! n")
-        local in_search = ok and (function()
-          local npos = vim.fn.getpos(".")
-          return npos[2] == rpos[2] and npos[3] == rpos[3]
-        end)()
-        -- restore original view and position
-        vim.fn.winrestview(view)
-        if not in_search then
-          vim.schedule(function()
-            vim.cmd("nohlsearch")
-            searchCountIndicator("clear")
-          end)
-        else
-          searchCountIndicator()
-        end
+        vim.defer_fn(function()
+          -- No bloat lua adpatation of: https://github.com/romainl/vim-cool
+          local view, rpos = vim.fn.winsaveview(), vim.fn.getpos(".")
+          -- Move the cursor to a position where (whereas in active search) pressing `n`
+          -- brings us to the original cursor position, in a forward search / that means
+          -- one column before the match, in a backward search ? we move one col forward
+          vim.cmd(string.format("silent! keepjumps go%s", (vim.fn.line2byte(view.lnum) + view.col + 1 - (vim.v.searchforward == 1 and 2 or 0))))
+          -- Attempt to goto next match, if we're in an active search cursor position
+          -- should be equal to original cursor position
+          local ok, _ = pcall(vim.cmd, "silent! keepjumps norm! n")
+          local in_search = ok
+            and (function()
+              local npos = vim.fn.getpos(".")
+              return npos[2] == rpos[2] and npos[3] == rpos[3]
+            end)()
+          -- restore original view and position
+          vim.fn.winrestview(view)
+          if not in_search then
+            vim.schedule(function()
+              vim.cmd("nohlsearch")
+              searchCountIndicator("clear")
+            end)
+          else
+            vim.schedule(function() searchCountIndicator() end)
+          end
+        end, 250)
       end,
     },
     {
@@ -406,7 +397,7 @@ function M.apply()
       command = function(evt)
         vim.schedule(function()
           vim.cmd("nohlsearch")
-          searchCountIndicator("clear")
+          vim.schedule(function() searchCountIndicator("clear") end)
         end)
       end,
     },
