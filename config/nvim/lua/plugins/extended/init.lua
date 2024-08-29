@@ -402,4 +402,9 @@ return {
       })
     end,
   },
+  {
+    "tzachar/highlight-undo.nvim",
+    event = "VeryLazy",
+    config = true,
+  },
 }

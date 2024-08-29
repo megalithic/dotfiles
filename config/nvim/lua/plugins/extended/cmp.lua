@@ -74,7 +74,7 @@ return {
     init = function() vim.opt.completeopt = { "menu", "menuone", "noinsert", "noselect" } end,
     config = function()
       local cmp = require("cmp")
-      local MIN_MENU_WIDTH, MAX_MENU_WIDTH = 25, math.min(50, math.floor(vim.o.columns * 0.5))
+      local MIN_MENU_WIDTH, MAX_MENU_WIDTH = 20, math.min(40, math.floor(vim.o.columns * 0.5))
       local ELLIPSIS_CHAR = icons.misc.ellipsis
       local function get_ws(max, len) return (" "):rep(max - len) end
 
@@ -310,6 +310,8 @@ return {
             cmp.config.compare.offset,
             cmp.config.compare.exact,
             cmp.config.compare.score,
+            cmp.config.compare.recently_used,
+            require("cmp-under-comparator").under,
 
             -- INFO: sort by number of underscores
             function(entry1, entry2)
@@ -396,7 +398,10 @@ return {
         -- view = {
         --   entries = { name = "custom", direction = "bottom_up" },
         -- },
-        mapping = cmp.mapping.preset.cmdline(),
+        mapping = cmp.mapping.preset.cmdline({
+          ["<Down>"] = { c = cmp.mapping.select_next_item({ behavior = cmp.SelectBehavior.Insert }) },
+          ["<Up>"] = { c = cmp.mapping.select_prev_item({ behavior = cmp.SelectBehavior.Insert }) },
+        }),
         sources = cmp.config.sources({
           { name = "async_path" },
           -- { name = "path" },
@@ -417,10 +422,9 @@ return {
       ---@diagnostic disable-next-line missing-fields
       cmp.setup.filetype({ "gitcommit", "NeogitCommitMessage" }, {
         sources = cmp.config.sources({
-          { name = "git" }, -- You can specify the `git` source if [you were installed it](https://github.com/petertriho/cmp-git).
+          { name = "cmp_git" },
         }, {
           { name = "buffer" },
-          { name = "spell" },
         }),
       })
 

@@ -50,7 +50,7 @@ function _G.P(...)
 end
 _G.dbg = _G.P
 
-function vim.lg(msg, level, _opts)
+function vim.dbg(msg, level, _opts)
   if pcall(require, "plenary") then
     local log = require("plenary.log").new({
       plugin = "notify",
@@ -82,8 +82,8 @@ function vim.pprint(...)
   end
 end
 
-function vim.logfile(...)
-  if vim.in_fast_event() then return vim.schedule_wrap(vim.logfile)(...) end
+function vim.wlog(...)
+  if vim.in_fast_event() then return vim.schedule_wrap(vim.wlog)(...) end
   local d = debug.getinfo(2)
   return vim.fn.writefile(
     vim.fn.split(":" .. d.short_src .. ":" .. d.currentline .. ":\n" .. vim.inspect(#{ ... } > 1 and { ... } or ...), "\n"),
@@ -92,7 +92,7 @@ function vim.logfile(...)
   )
 end
 
-function vim.logfileclear() vim.fn.writefile({}, "/tmp/nlog") end
+function vim.wlogclear() vim.fn.writefile({}, "/tmp/nlog") end
 
 require("mega.settings").apply()
 require("mega.lazy")

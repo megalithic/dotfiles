@@ -90,6 +90,11 @@ req("hyper")
   -- WIP
   :bind({ "shift", "ctrl" }, "h", nil, utils.showAvailableHotkeys)
 
+--
+-- FIXME:
+--
+-- REF: https://github.com/jackieaskins/dotfiles/blob/main/hammerspoon/config/hotkeyStore.lua
+--
 -- local utilsModality = req("modality"):start({ id = "utils", key = "r", mods = { "shift" } })
 -- utilsModality
 --   :bind({}, "r", function()

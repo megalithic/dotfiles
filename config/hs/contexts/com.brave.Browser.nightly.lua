@@ -22,7 +22,7 @@ function obj.browserTabWatcher(_event, metadata)
         -- function() return browser.tabCount() == metadata.tabCount and not browser.hasTab(metadata.url) end,
         function() return not browser.hasTab(metadata.url) end,
         function()
-          dbg({ "onClose", metadata })
+          dbg({ "onClose", metadata }, true)
           if onClose ~= nil then onClose() end
         end
       )
