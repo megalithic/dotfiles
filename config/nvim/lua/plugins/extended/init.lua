@@ -30,10 +30,18 @@ return {
     {
       "NvChad/nvim-colorizer.lua",
       event = { "BufReadPre" },
+
       config = function() require("colorizer").setup(SETTINGS.colorizer) end,
     },
-    -- "gc" to comment visual regions/lines
-    { "numToStr/Comment.nvim", opts = {} },
+    {
+      "folke/ts-comments.nvim",
+      opts = {
+        langs = {
+          elixir = "# %s",
+          heex = [[<%!-- %s --%>]],
+        },
+      },
+    },
     {
       "folke/trouble.nvim",
       cmd = { "TroubleToggle", "Trouble" },
@@ -311,7 +319,19 @@ return {
     event = "CmdlineEnter",
     opts = {},
   },
+  -- require('nvim-autopairs').setup{}
+  -- local cmp_autopairs = require('nvim-autopairs.completion.cmp')
+  -- local cmp = require('cmp')
+  -- cmp.event:on(
+  --  'confirm_done',
+  --  cmp_autopairs.on_confirm_done()
+  -- )
 
+  {
+    "windwp/nvim-autopairs",
+    event = { "InsertEnter" },
+    config = true,
+  },
   {
     "windwp/nvim-ts-autotag",
     dependencies = { "nvim-treesitter/nvim-treesitter" },
@@ -327,7 +347,7 @@ return {
         -- Defaults
         enable_close = true, -- Auto close tags
         enable_rename = true, -- Auto rename pairs of tags
-        enable_close_on_slash = false, -- Auto close on trailing </
+        enable_close_on_slash = true, -- Auto close on trailing </
       },
       -- Also override individual filetype configs, these take priority.
       -- Empty by default, useful if one of the "opts" global settings

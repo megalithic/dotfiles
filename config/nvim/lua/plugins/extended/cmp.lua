@@ -4,7 +4,8 @@ local fmt = string.format
 
 return {
   {
-    "hrsh7th/nvim-cmp",
+    "yioneko/nvim-cmp",
+    branch = "perf",
     event = { "InsertEnter *", "CmdlineEnter *" },
     -- event = "InsertEnter",
     -- lazy = false,
@@ -155,7 +156,7 @@ return {
           -- Accept ([y]es) the completion.
           --  This will auto-import if your LSP supports it.
           --  This will expand snippets if the LSP sent a snippet.
-          -- ["<C-y>"] = cmp.mapping.confirm({ select = true }),
+          ["<C-y>"] = cmp.mapping.confirm({ select = true }),
 
           -- ["<C-y>"] = require("minuet").make_cmp_map(),
           ["<C-e>"] = cmp.mapping.abort(),
@@ -410,6 +411,11 @@ return {
           { name = "buffer" },
         },
       })
+
+      if pcall(require, "nvim-autopairs") then
+        local cmp_autopairs = require("nvim-autopairs.completion.cmp")
+        cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done())
+      end
     end,
   },
 }

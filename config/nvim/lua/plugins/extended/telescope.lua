@@ -33,7 +33,7 @@ return {
       "fdschmidt93/telescope-corrode.nvim",
       {
         "danielfalk/smart-open.nvim",
-        branch = "0.2.x",
+        branch = "0.2.x", -- NOTE: we're stuck here because `main` breaks keymaps
         dependencies = { "kkharji/sqlite.lua", { "nvim-telescope/telescope-fzf-native.nvim", build = "make" } },
       },
 
@@ -132,22 +132,77 @@ return {
         },
       })
 
-      local new_maker = function(filepath, bufnr, opts)
-        filepath = vim.fn.expand(filepath)
-        Job:new({
-          command = "file",
-          args = { "--mime-type", "-b", filepath },
-          on_exit = function(j)
-            local mime_type = vim.split(j:result()[1], "/")[1]
-            if mime_type == "text" then
-              previewers.buffer_previewer_maker(filepath, bufnr, opts)
-            else
-              -- maybe we want to write something to the buffer here
-              vim.schedule(function() vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "BINARY" }) end)
-            end
-          end,
-        }):sync()
-      end
+      -- REF: https://github.com/tjdevries/config.nvim/blob/master/lua/custom/telescope/multi-ripgrep.lua
+      -- local function multi_rg(opts)
+      --   local conf = require("telescope.config").values
+      --   local finders = require("telescope.finders")
+      --   local make_entry = require("telescope.make_entry")
+      --   local pickers = require("telescope.pickers")
+      --
+      --   local flatten = vim.tbl_flatten
+      --
+      --   -- i would like to be able to do telescope
+      --   -- and have telescope do some filtering on files and some grepping
+      --
+      --   -- return function(opts)
+      --   opts = opts or {}
+      --   opts.cwd = opts.cwd and vim.fn.expand(opts.cwd) or vim.loop.cwd()
+      --   opts.shortcuts = opts.shortcuts
+      --     or {
+      --       ["l"] = "*.lua",
+      --       ["v"] = "*.vim",
+      --       ["n"] = "*.{vim,lua}",
+      --       ["c"] = "*.c",
+      --       ["r"] = "*.rs",
+      --       ["g"] = "*.go",
+      --     }
+      --   opts.pattern = opts.pattern or "%s"
+      --
+      --   local custom_grep = finders.new_async_job({
+      --     command_generator = function(prompt)
+      --       if not prompt or prompt == "" then return nil end
+      --
+      --       local prompt_split = vim.split(prompt, "  ")
+      --
+      --       local args = { "rg" }
+      --       if prompt_split[1] then
+      --         table.insert(args, "-e")
+      --         table.insert(args, prompt_split[1])
+      --       end
+      --
+      --       if prompt_split[2] then
+      --         table.insert(args, "-g")
+      --
+      --         local pattern
+      --         if opts.shortcuts[prompt_split[2]] then
+      --           pattern = opts.shortcuts[prompt_split[2]]
+      --         else
+      --           pattern = prompt_split[2]
+      --         end
+      --
+      --         table.insert(args, string.format(opts.pattern, pattern))
+      --       end
+      --
+      --       return flatten({
+      --         args,
+      --         { "--color=never", "--no-heading", "--with-filename", "--line-number", "--column", "--smart-case" },
+      --       })
+      --     end,
+      --     entry_maker = make_entry.gen_from_vimgrep(opts),
+      --     cwd = opts.cwd,
+      --   })
+      --
+      --   pickers
+      --     .new(opts, {
+      --       debounce = 100,
+      --       prompt_title = "Live Grep (with shortcuts)",
+      --       finder = custom_grep,
+      --       previewer = conf.grep_previewer(opts),
+      --       sorter = require("telescope.sorters").empty(),
+      --     })
+      --     :find()
+      --   -- end
+      -- end
 
       -- Set current folder as prompt title
       local function with_title(opts, extra)
@@ -244,6 +299,8 @@ return {
               extensions("live_grep_args").live_grep_args(with_title(topts, { title = "live grep args" }))
             elseif key == "corrode" then
               extensions("corrode").corrode(with_title(topts, { title = "find files (corrode)" }))
+            -- elseif key == "multi_rg" then
+            --   multi_rg(with_title(topts, { title = "multi_rg" }))
             elseif key == "find_files" or key == "fd" then
               -- extensions("corrode").corrode(with_title(topts, { title = "find files (corrode)" }))
               builtin[key](with_title(topts, { title = "find files" }))
@@ -658,19 +715,37 @@ return {
             case_mode = "smart_case",
           },
           undo = {
-            -- use_delta = true,
-            -- use_custom_command = nil, -- setting this implies `use_delta = false`. Accepted format is: { "bash", "-c", "echo '$DIFF' | delta" }
-            -- side_by_side = false,
-            -- diff_context_lines = vim.o.scrolloff,
-            -- entry_format = "state #$ID, $STAT, $TIME",
-            -- time_format = "",
-            -- saved_only = false,
-            --side_by_side = true,
+            side_by_side = true,
             layout_strategy = "vertical",
             layout_config = {
-              preview_height = 0.8,
+              preview_height = 0.6,
+            },
+
+            mappings = {
+              i = {
+                ["<CR>"] = require("telescope-undo.actions").restore,
+                ["<TAB>"] = require("telescope-undo.actions").yank_additions,
+              },
+              n = {
+                ["y"] = require("telescope-undo.actions").yank_additions,
+                ["r"] = require("telescope-undo.actions").yank_deletions,
+              },
             },
           },
+          -- undo = {
+          --   -- use_delta = true,
+          --   -- use_custom_command = nil, -- setting this implies `use_delta = false`. Accepted format is: { "bash", "-c", "echo '$DIFF' | delta" }
+          --   -- side_by_side = false,
+          --   -- diff_context_lines = vim.o.scrolloff,
+          --   -- entry_format = "state #$ID, $STAT, $TIME",
+          --   -- time_format = "",
+          --   -- saved_only = false,
+          --   --side_by_side = true,
+          --   layout_strategy = "vertical",
+          --   layout_config = {
+          --     preview_height = 0.8,
+          --   },
+          -- },
           smart_open = {
             show_scores = false,
             ignore_patterns = { "*.git/*", "*/tmp/*" },
@@ -787,9 +862,10 @@ return {
         map("n", "<leader>fa", ts.autocommands, { desc = "[f]ind [a]utocommands" })
         map("n", "<leader>fk", ts.keymaps, { desc = "[f]ind [k]eymaps" })
         -- map("n", "<leader>fs", ts.builtin, { desc = "[f]ind [f]elect Telescope" })
-        map("n", "<leader>fg", ts.egrepify, { desc = "egrepify (live)" })
-
+        -- map("n", "<leader>fg", ts.egrepify, { desc = "egrepify (live)" })
         map("n", "<leader>fg", function() mega.picker.grep({ picker = "egrepify" }) end, { desc = "[f]ind e[g]repify" })
+
+        -- map("n", "<leader>fg", ts.multi_rg, { desc = "multi-rg (live)" })
         map("n", "<leader>a", mega.picker.grep, { desc = "grep (live)" })
         -- map("n", "<leader>A", ts.grep_string, { desc = "grep (under cursor)" })
         map("n", "<leader>A", function() mega.picker.grep({ default_text = vim.fn.expand("<cword>") }) end, { desc = "grep (under cursor)" })

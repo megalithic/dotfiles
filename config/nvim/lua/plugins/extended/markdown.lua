@@ -126,13 +126,13 @@ return {
           enabled = true,
           unchecked = {
             -- Replaces '[ ]' of 'task_list_marker_unchecked'
-            icon = "󰄱 ",
+            icon = " ", -- alts: 󰄱
             -- Highlight for the unchecked icon
             highlight = "RenderMarkdownUnchecked",
           },
           checked = {
             -- Replaces '[x]' of 'task_list_marker_checked'
-            icon = "󰱒 ",
+            icon = " ", -- alts: 󰱒
             -- Highligh for the checked icon
             highlight = "RenderMarkdownChecked",
           },
