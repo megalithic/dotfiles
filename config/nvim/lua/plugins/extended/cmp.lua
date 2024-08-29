@@ -67,6 +67,7 @@ return {
       { "lukas-reineke/cmp-under-comparator" },
       -- { "davidsierradz/cmp-conventionalcommits" },
       { "dmitmel/cmp-cmdline-history" },
+      { "petertriho/cmp-git" },
       { "andersevenrud/cmp-tmux", cond = false },
       -- { "kristijanhusak/vim-dadbod-completion"},
     },
@@ -74,6 +75,8 @@ return {
     config = function()
       local cmp = require("cmp")
       local MIN_MENU_WIDTH, MAX_MENU_WIDTH = 25, math.min(50, math.floor(vim.o.columns * 0.5))
+      local ELLIPSIS_CHAR = icons.misc.ellipsis
+      local function get_ws(max, len) return (" "):rep(max - len) end
 
       -- local neocodeium = require("neocodeium")
       -- local commands = require("neocodeium.commands")
@@ -209,7 +212,7 @@ return {
           fields = { "abbr", "kind", "menu" },
           maxwidth = MAX_MENU_WIDTH,
           minwidth = MIN_MENU_WIDTH,
-          ellipsis_char = icons.misc.ellipsis,
+          ellipsis_char = ELLIPSIS_CHAR,
           format = function(entry, item)
             if entry.source.name == "async_path" then
               local icon, hl_group = require("nvim-web-devicons").get_icon(entry:get_completion_item().label)
@@ -256,8 +259,17 @@ return {
 
             -- REF: https://github.com/zolrath/dotfiles/blob/main/dot_config/nvim/lua/plugins/cmp.lua#L45
             -- local max_length = 20
-            local max_length = math.floor(vim.o.columns * 0.5)
-            item.abbr = #item.abbr >= max_length and string.sub(item.abbr, 1, max_length) .. icons.misc.ellipsis or item.abbr
+            -- local max_length = math.floor(vim.o.columns * 0.5)
+            -- item.abbr = #item.abbr >= max_length and string.sub(item.abbr, 1, max_length) .. icons.misc.ellipsis or item.abbr
+            -- maximum width
+            -- src: https://github.com/hrsh7th/nvim-cmp/discussions/609#discussioncomment-3395522
+
+            local content = item.abbr
+            if #content > MAX_MENU_WIDTH then
+              item.abbr = vim.fn.strcharpart(content, 0, MAX_MENU_WIDTH) .. ELLIPSIS_CHAR
+            else
+              item.abbr = content .. get_ws(MAX_MENU_WIDTH, #content)
+            end
 
             item.abbr = string.gsub(item.abbr, "^%s+", "")
 
@@ -274,6 +286,7 @@ return {
                 nvim_lua = "[nlua]",
                 nvim_lsp_signature_help = "[sig]",
                 async_path = "[path]",
+                git = "[git]",
                 tmux = "[tmux]",
                 rg = "[rg]",
                 fuzzy_buffer = "[buf]",
@@ -400,9 +413,15 @@ return {
         }),
       })
 
+      -- Set configuration for specific filetype.
+      ---@diagnostic disable-next-line missing-fields
       cmp.setup.filetype({ "gitcommit", "NeogitCommitMessage" }, {
-        { name = "buffer" },
-        { name = "spell" },
+        sources = cmp.config.sources({
+          { name = "git" }, -- You can specify the `git` source if [you were installed it](https://github.com/petertriho/cmp-git).
+        }, {
+          { name = "buffer" },
+          { name = "spell" },
+        }),
       })
 
       cmp.setup.filetype({ "sql" }, {

@@ -613,11 +613,11 @@ return {
             format = diag_msg_format,
           },
           severity_sort = true,
-          -- virtual_text = false,
-          virtual_text = {
-            severity = { min = diag_level.ERROR },
-            suffix = function(diag) return diag_source_as_suffix(diag, "virtual_text") end,
-          },
+          virtual_text = false,
+          -- virtual_text = {
+          --   severity = { min = diag_level.ERROR },
+          --   suffix = function(diag) return diag_source_as_suffix(diag, "virtual_text") end,
+          -- },
           update_in_insert = false,
         })
 
