@@ -14,7 +14,7 @@ local function path(dir) return fmt("%s/%s", home, dir) end
 function obj:start()
   -- obj.watchedPaths.hs = pw(hs.configdir, function() hs.timer.doAfter(0.25, hs.reload) end)
   obj.watchedPaths.obs = pw(path("Movies/obs"), function(paths, _attrs)
-    -- auto-convert obs videos to .mov format once we shutdown obs
+    -- auto-convert obs videos to .mov format once
     hs.timer.waitUntil(function() return hs.application.get("com.obsproject.obs-studio") == nil end, function()
       enum.each(paths, function(p)
         local name = p:match(".*/(.+)")

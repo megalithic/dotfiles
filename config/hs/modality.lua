@@ -16,7 +16,6 @@ function obj:delayedExit(delay)
   end
 
   delayedExitTimer = hs.timer.doAfter(delay, function()
-    dbg("delaying exit..")
     self:exit()
     delayedExitTimer = nil
   end)
@@ -39,58 +38,63 @@ end
 -- end
 
 function obj:entered()
+  local win = hs.window.focusedWindow()
+
+  if win == nil then
+    obj:exit()
+    return
+  end
+
   obj.isOpen = true
-  hs.window.highlight.start()
-  local frame = hs.window.focusedWindow():frame()
+
+  -- hs.window.highlight.start()
+  local frame = win:frame()
+  local screen = win:screen()
 
   -- HT: @evantravers
-  -- obj.indicator = hs.canvas
-  --   .new(frame)
-  --   :appendElements({
-  --     type = "rectangle",
-  --     action = "stroke",
-  --     strokeWidth = 2.0,
-  --     -- strokeColor = { white = 0.8, alpha = 0.7 },
-  --     strokeColor = { hex = "#F74F9E", alpha = 0.7 },
-  --     roundedRectRadii = { xRadius = 14.0, yRadius = 14.0 },
-  --   })
-  --   :show()
+  obj.indicator = hs.canvas
+    .new(frame)
+    :appendElements({
+      type = "rectangle",
+      action = "stroke",
+      strokeWidth = 2.0,
+      -- strokeColor = { white = 0.8, alpha = 0.7 },
+      strokeColor = { hex = "#F74F9E", alpha = 0.7 },
+      roundedRectRadii = { xRadius = 14.0, yRadius = 14.0 },
+    })
+    :show()
 
-  obj.alerts = hs.fnutils.map(hs.screen.allScreens(), function(screen)
-    local win = hs.window.focusedWindow()
-
-    if win ~= nil then
-      if screen == hs.screen.mainScreen() then
-        local app_title = win:application():title()
-        local image = hs.image.imageFromAppBundle(win:application():bundleID())
-        local prompt = fmt("◱ : %s", app_title)
-        if image ~= nil then prompt = fmt(": %s", app_title) end
-        -- hs.alert.show({ text = prompt, image = image, screen = screen })
-        hs.alert.showWithImage(prompt, image, nil, screen)
-        self:delayedExit(1)
-      end
-    else
-      obj:exit()
+  if win ~= nil then
+    if screen == hs.screen.mainScreen() then
+      local AppTitle = win:application():title()
+      local image = hs.image.imageFromAppBundle(win:application():bundleID())
+      local prompt = fmt("◱ : %s", AppTitle)
+      if image ~= nil then prompt = fmt(": %s", AppTitle) end
+      -- hs.alert.show({ text = prompt, image = image, screen = screen })
+      hs.alert.showWithImage(prompt, image, nil, screen)
+      obj:delayedExit(0.9)
     end
-
-    return self
-  end)
-end
-
-function obj:exited()
-  obj.isOpen = false
-  hs.window.highlight.stop()
-  hs.fnutils.ieach(obj.alerts, function(id)
-    if hs.alert ~= nil then hs.alert.closeSpecific(id) end
-    if obj.indicator ~= nil then obj.indicator:delete() end
-  end)
-  hs.alert.closeAll()
-  dbg("exited modal")
+  else
+    obj:exit()
+  end
 
   return self
 end
 
-function obj:toggle()
+function obj:exited()
+  obj.isOpen = false
+  -- hs.window.highlight.stop()
+  hs.fnutils.ieach(obj.alerts, function(id)
+    if hs.alert ~= nil then hs.alert.closeSpecific(id) end
+  end)
+  if obj.indicator ~= nil then obj.indicator:delete() end
+
+  hs.alert.closeAll()
+
+  return self
+end
+
+function obj:toggle(_id)
   if obj.isOpen then
     obj:exit()
   else
@@ -121,7 +125,7 @@ function obj:start(opts)
   end
 
   local hyper = require("hyper"):start({ id = fmt("modality%s", modalityId) })
-  hyper:bind(modalityMods, modalityKey, function() obj:toggle() end)
+  hyper:bind(modalityMods, modalityKey, function() obj:toggle(opts["id"]) end)
 
   hs.window.animationDuration = 0
   hs.window.highlight.ui.overlay = true
@@ -134,6 +138,7 @@ end
 function obj:stop()
   self:delete()
   self.alerts = {}
+  self:exited()
 
   return self
 end

@@ -21,10 +21,15 @@ function obj:start(watchers)
   return self
 end
 
-function obj:stop()
+function obj:stop(watchers)
   if self.watched == nil then return end
 
-  enum.each(self.watched, function(mod) require(mod):stop() end)
+  dbg(self.watched, true)
+  dbg(watchers, true)
+
+  enum.each(self.watched, function(mod)
+    if pcall(require, mod) then require(mod):stop() end
+  end)
   self.watched = {}
 
   info(fmt("[STOP] %s", self.name))

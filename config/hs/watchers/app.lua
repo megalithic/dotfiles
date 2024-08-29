@@ -45,11 +45,13 @@ function obj.watchApp(app, _)
 end
 
 function obj.attachExistingApps()
-  local apps = enum.filter(hs.application.runningApplications(), function(app) return app:title() ~= "Hammerspoon" end)
-  enum.each(apps, function(app) obj.watchApp(app, true) end)
+  enum.each(hs.application.runningApplications(), function(app)
+    if app:title() ~= "Hammerspoon" then obj.watchApp(app, true) end
+  end)
 end
 
 function obj.runLayoutRulesForAppBundleID(elementOrAppName, event, app)
+  -- NOTE: only certain events are layout-runnable
   local layoutableEvents = {
     hs.application.watcher.launched,
     hs.application.watcher.terminated,
@@ -68,6 +70,7 @@ function obj.runLayoutRulesForAppBundleID(elementOrAppName, event, app)
   end
 end
 
+-- NOTE: all events are context-runnable
 function obj.runContextForAppBundleID(elementOrAppName, event, app, metadata)
   if not obj.watchers.context[app:bundleID()] then return end
 
