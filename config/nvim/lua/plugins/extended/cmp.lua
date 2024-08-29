@@ -74,8 +74,10 @@ return {
     init = function() vim.opt.completeopt = { "menu", "menuone", "noinsert", "noselect" } end,
     config = function()
       local cmp = require("cmp")
-      local MIN_MENU_WIDTH, MAX_MENU_WIDTH = 20, math.min(40, math.floor(vim.o.columns * 0.5))
+      local MIN_MENU_WIDTH = 25
+      local MAX_MENU_WIDTH = math.min(30, math.floor(vim.o.columns * 0.5))
       local ELLIPSIS_CHAR = icons.misc.ellipsis
+
       local function get_ws(max, len) return (" "):rep(max - len) end
 
       -- local neocodeium = require("neocodeium")
@@ -210,8 +212,8 @@ return {
         formatting = {
           expandable_indicator = true,
           fields = { "abbr", "kind", "menu" },
-          maxwidth = MAX_MENU_WIDTH,
-          minwidth = MIN_MENU_WIDTH,
+          -- maxwidth = MAX_MENU_WIDTH,
+          -- minwidth = MIN_MENU_WIDTH,
           ellipsis_char = ELLIPSIS_CHAR,
           format = function(entry, item)
             if entry.source.name == "async_path" then
@@ -259,8 +261,8 @@ return {
 
             -- REF: https://github.com/zolrath/dotfiles/blob/main/dot_config/nvim/lua/plugins/cmp.lua#L45
             -- local max_length = 20
-            -- local max_length = math.floor(vim.o.columns * 0.5)
-            -- item.abbr = #item.abbr >= max_length and string.sub(item.abbr, 1, max_length) .. icons.misc.ellipsis or item.abbr
+            local max_length = math.floor(vim.o.columns * 0.5)
+            item.abbr = #item.abbr >= max_length and string.sub(item.abbr, 1, max_length) .. ELLIPSIS_CHAR or item.abbr
             -- maximum width
             -- src: https://github.com/hrsh7th/nvim-cmp/discussions/609#discussioncomment-3395522
 
@@ -274,7 +276,7 @@ return {
             item.abbr = string.gsub(item.abbr, "^%s+", "")
 
             if entry.source.name == "nvim_lsp" then
-              item.menu = fmt("[lsp] %s", entry.source.source.client.name)
+              item.menu = fmt("[%s]", entry.source.source.client.name)
             else
               item.menu = ({
                 nvim_lsp = "[lsp]",

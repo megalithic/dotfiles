@@ -6,6 +6,7 @@ obj.debug = false
 obj.momentaryKey = { "cmd", "alt" }
 obj.toggleKey = { { "cmd", "alt" }, "p" }
 obj.mode = "push-to-talk"
+obj.tmuxMode = ""
 
 obj.mic = hs.audiodevice.defaultInputDevice()
 obj.inputs = hs.audiodevice.allInputDevices()
@@ -82,6 +83,10 @@ function obj.setAllInputsMuted(muted)
   obj.mic:setInputVolume(inputVolume)
 end
 
+function obj.updateTmux()
+  hs.task.new("/opt/homebrew/bin/tmux", function() end, { "refresh-client" }):start()
+end
+
 function obj.updateMenubar()
   if obj.pushed then log.df("device to handle: %s", obj.mic) end
 
@@ -90,17 +95,21 @@ function obj.updateMenubar()
   if obj.mode == "push-to-talk" then
     if obj.pushed then
       obj.menubar:setTitle(obj.icons["push-to-mute"] .. " " .. obj.icons["mic-on"])
+      obj.tmuxMode = "◉ unmuted"
       muted = false
     else
       obj.menubar:setTitle(obj.icons["push-to-talk"])
+      obj.tmuxMode = "󰍭 muted"
       muted = true
     end
   elseif obj.mode == "push-to-mute" then
     if obj.pushed then
       obj.menubar:setTitle(obj.icons["push-to-talk"])
+      obj.tmuxMode = "󰍭 muted"
       muted = true
     else
       obj.menubar:setTitle(obj.icons["push-to-mute"] .. " " .. obj.icons["mic-on"])
+      obj.tmuxMode = "◉ unmuted"
       muted = false
     end
   end
@@ -159,7 +168,7 @@ function obj.toggleMode()
   return toggle_to.mode
 end
 
-function obj.currentMode() return obj.mode end
+function obj.currentMode() return obj.tmuxMode end
 
 function obj:start(opts)
   if opts["mode"] ~= nil then self.mode = opts["mode"] end
@@ -183,6 +192,7 @@ function obj:start(opts)
       self.pushed = false
     end
 
+    self.updateTmux()
     self.updateMenubar()
   end)
   self.momentaryKeyWatcher:start()

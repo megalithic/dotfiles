@@ -5,10 +5,8 @@
 
 ptt_mode=$(hs -c "require('ptt').currentMode()")
 
-echo
-
-if [[ "$ptt_mode" == "push-to-talk" ]]; then
-  printf "󰍭 muted" # alts: 󰚎󰂠󰒲󱋑󱋒󰪓⏾󰤄 \uf59f
-elif [[ "$ptt_mode" == "push-to-mute" ]]; then
-  printf "#[fg=#e67e80]◉ unmuted" # alts: 󰚎󰂠󰒲󱋑󱋒󰪓⏾󰤄 \uf59f
+if [[ "$ptt_mode" =~ "unmuted" ]]; then
+  printf "#[fg=#e67e80]%s" "$ptt_mode" # alts: 󰚎󰂠󰒲󱋑󱋒󰪓⏾󰤄 \uf59f
+else
+  printf "%s" "$ptt_mode"
 fi
