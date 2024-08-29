@@ -120,6 +120,8 @@ _deps
 .ignore
 .yarn
 
+.envrc
 .worktrees
 
+**/erl_crash.dump
 # vim:ft=gitignore:tw=0

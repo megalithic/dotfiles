@@ -5,42 +5,7 @@ obj.name = "modality"
 obj.alerts = {}
 obj.isOpen = false
 obj.debug = false
-
-local dbg = function(str, ...)
-  if type(str) == "string" then
-    str = fmt(":: [%s] %s", obj.name, str)
-  else
-    str = fmt(":: [%s] %s", obj.name, I(str))
-  end
-
-  if obj.debug then
-    if ... == nil then
-      return _G.dbg(str, false)
-    else
-      return _G.dbg(fmt(str, ...), false)
-    end
-  end
-end
-
--- function obj:start(opts)
---   opts = opts or {}
---   local hyperKey = opts["hyperKey"] or HYPER
---
---   -- sets up our config'd hyper key as the "trigger" for hyper key things; likely F19
---   obj.hyperBind = hs.hotkey.bind({}, hyperKey, function() obj:enter() end, function() obj:exit() end)
---
---   info(fmt("[START] %s %s", obj.name, opts["id"] or ""))
---
---   return self
--- end
---
--- function obj:stop()
---   obj:delete()
---   obj.hyperBind:delete()
---
---   return self
--- end
---
+obj.modals = {}
 
 function obj:delayedExit(delay)
   delay = delay or 1
@@ -156,7 +121,7 @@ function obj:start(opts)
   end
 
   local hyper = require("hyper"):start({ id = fmt("modality%s", modalityId) })
-  hyper:bind(modalityMods, modalityKey, function() self:toggle() end)
+  hyper:bind(modalityMods, modalityKey, function() obj:toggle() end)
 
   hs.window.animationDuration = 0
   hs.window.highlight.ui.overlay = true
@@ -169,7 +134,6 @@ end
 function obj:stop()
   self:delete()
   self.alerts = {}
-  -- L.unload("lib.hyper", obj.name)
 
   return self
 end

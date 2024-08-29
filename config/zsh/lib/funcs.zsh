@@ -458,3 +458,29 @@ wezshare() {
   local mode="${1:-on}"
   wezterm-cli SCREEN_SHARE_MODE "$mode"
 }
+
+# By @ieure; copied from https://github.com/DanThiffault/dotfiles/blob/master/syms/.zshrc#L22C1-L48
+#
+# It finds a file, looking up through parent directories until it finds one.
+# Use it like this:
+#
+#   $ ls .tmux.conf
+#   ls: .tmux.conf: No such file or directory
+#
+#   $ ls `up .tmux.conf`
+#   /Users/grb/.tmux.conf
+#
+#   $ cat `up .tmux.conf`
+find_up() {
+  if [ "$1" != "" -a "$2" != "" ]; then
+      local DIR=$1
+      local TARGET=$2
+  elif [ "$1" ]; then
+      local DIR=$PWD
+      local TARGET=$1
+  fi
+  while [ ! -e $DIR/$TARGET -a $DIR != "/" ]; do
+      DIR=$(dirname $DIR)
+  done
+  test $DIR != "/" && echo $DIR/$TARGET
+}

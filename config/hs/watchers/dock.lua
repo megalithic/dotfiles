@@ -1,3 +1,4 @@
+local enum = require("hs.fnutils")
 local bt = req("watchers.bluetooth")
 local obj = {}
 
@@ -9,6 +10,8 @@ obj.audioBin = "/opt/homebrew/bin/SwitchAudioSource"
 obj.watchers = {
   dock = {},
 }
+obj.defaultAudioOutputStr = "MacBook Pro Speakers"
+obj.defaultAudioInputStr = "MacBook Pro Microphone"
 
 function obj.setWifi(connectedState)
   hs.execute("networksetup -setairportpower airport " .. connectedState, true)
@@ -16,37 +19,37 @@ function obj.setWifi(connectedState)
 end
 
 function obj.setInput(device)
-  local task = hs.task.new(
-    obj.audioBin,
-    function() end, -- Fake callback
-    function(_task, stdOut, _stdErr)
-      local continue = stdOut == string.format([[input audio device set to "%s"]], device)
-      success(fmt("[%s] audio input set to %s", obj.name, device))
-      return continue
-    end,
-    { "-t", "input", "-s", device }
-  )
+  local deviceExists = enum.find(hs.usb.attachedDevices(), function(d) return d.productName == device end)
+  if not deviceExists then device = obj.defaultAudioInputStr end
+
+  local task = hs.task.new(obj.audioBin, function(_exitCode, _stdOut, _stdErr) end, function(_task, stdOut, _stdErr)
+    stdOut = string.gsub(stdOut, "^%s*(.-)%s*$", "%1")
+    local continue = stdOut == fmt([[input audio device set to "%s"]], device)
+    if continue then success(fmt("[%s] audio input set to %s", obj.name, device)) end
+    return continue
+  end, { "-t", "input", "-s", device })
   task:start()
 end
 
 function obj.setOutput(deviceStr)
+  -- NOTE:
+  -- here, we're expecting deviceStr to first be "phonak"
   if not deviceStr then return end
 
   local device = bt.devices[deviceStr]
-  if not bt.isBluetoothDeviceConnected(deviceStr) then device = bt.devices["airpods"] end
 
-  local task = hs.task.new(
-    obj.audioBin,
-    function() end, -- Fake callback
-    function(_task, stdOut, _stdErr)
-      local continue = stdOut == string.format([[output audio device set to "%s"]], device.name)
+  if not bt.preferredBluetoothDevicesConnected() then
+    device = bt.devices["fallback"]
+  elseif not bt.isBluetoothDeviceConnected(deviceStr) then
+    device = bt.devices["airpods"]
+  end
 
-      success(fmt("[%s] audio output set to %s", obj.name, device.bt))
-
-      return continue
-    end,
-    { "-t", "output", "-s", device.name }
-  )
+  local task = hs.task.new(obj.audioBin, function(_exitCode, _stdOut, _stdErr) end, function(_task, stdOut, _stdErr)
+    stdOut = string.gsub(stdOut, "^%s*(.-)%s*$", "%1")
+    local continue = stdOut == fmt([[output audio device set to "%s"]], device.name)
+    if continue then success(fmt("[%s] audio output set to %s", obj.name, device.bt)) end
+    return continue
+  end, { "-t", "output", "-s", device.name })
   task:start()
 end
 

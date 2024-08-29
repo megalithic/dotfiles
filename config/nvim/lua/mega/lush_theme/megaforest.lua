@@ -952,6 +952,7 @@ local theme = lush(function(injected_functions)
     StatusLine({ fg = C.grey1, bg = C.bg1 }), -- status line of current window
     StatusLineNC({ fg = C.grey1, bg = C.bg0 }), -- status lines of not-current windows Note: if this is equal to "StatusLine" Vim will use "^^^" in the status line of the current window.
     StatusLineInactive({ fg = C.bg_dark.lighten(20), bg = C.bg_dark, gui = "italic" }),
+    StBright({ fg = C.fg.li(10), bg = C.bg1 }),
     StModeNormal({ bg = C.bg2, fg = C.bg5, gui = C.transparent }),
     StModeInsert({ bg = C.bg2, fg = C.green, gui = "bold" }),
     StModeVisual({ bg = C.bg2, fg = C.magenta, gui = "bold" }),

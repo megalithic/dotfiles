@@ -30,10 +30,18 @@ return {
     {
       "NvChad/nvim-colorizer.lua",
       event = { "BufReadPre" },
+
       config = function() require("colorizer").setup(SETTINGS.colorizer) end,
     },
-    -- "gc" to comment visual regions/lines
-    { "numToStr/Comment.nvim", opts = {} },
+    {
+      "folke/ts-comments.nvim",
+      opts = {
+        langs = {
+          elixir = "# %s",
+          heex = [[<%!-- %s --%>]],
+        },
+      },
+    },
     {
       "folke/trouble.nvim",
       cmd = { "TroubleToggle", "Trouble" },
@@ -311,7 +319,19 @@ return {
     event = "CmdlineEnter",
     opts = {},
   },
+  -- require('nvim-autopairs').setup{}
+  -- local cmp_autopairs = require('nvim-autopairs.completion.cmp')
+  -- local cmp = require('cmp')
+  -- cmp.event:on(
+  --  'confirm_done',
+  --  cmp_autopairs.on_confirm_done()
+  -- )
 
+  {
+    "windwp/nvim-autopairs",
+    event = { "InsertEnter" },
+    config = true,
+  },
   {
     "windwp/nvim-ts-autotag",
     dependencies = { "nvim-treesitter/nvim-treesitter" },
@@ -327,7 +347,7 @@ return {
         -- Defaults
         enable_close = true, -- Auto close tags
         enable_rename = true, -- Auto rename pairs of tags
-        enable_close_on_slash = false, -- Auto close on trailing </
+        enable_close_on_slash = true, -- Auto close on trailing </
       },
       -- Also override individual filetype configs, these take priority.
       -- Empty by default, useful if one of the "opts" global settings
@@ -366,139 +386,6 @@ return {
     end,
   },
   { "lambdalisue/suda.vim", event = { "VeryLazy" } },
-
-  { -- lua alternative to the official codeium.vim plugin https://github.com/Exafunction/codeium.vim
-    "monkoose/neocodeium",
-    cond = function() return vim.g.ai == "neocodeium" end,
-    event = "InsertEnter",
-    cmd = "NeoCodeium",
-    opts = {
-      filetypes = {
-        oil = false,
-        gitcommit = false,
-        markdown = false,
-        DressingInput = false,
-        TelescopePrompt = false,
-        noice = false, -- sometimes triggered in error-buffers
-        text = false, -- `pass` passwords editing filetype is plaintext
-        ["rip-substitute"] = true,
-      },
-      silent = true,
-      show_label = false, -- signcolumn label for number of suggestions
-    },
-    init = function()
-      -- disable while recording
-      vim.api.nvim_create_autocmd("RecordingEnter", { command = "NeoCodeium disable" })
-      vim.api.nvim_create_autocmd("RecordingLeave", { command = "NeoCodeium enable" })
-    end,
-    keys = {
-			-- stylua: ignore start
-			{ "<C-y>", function() require("neocodeium").accept() end, mode = "i", desc = "󰚩 Accept full suggestion" },
-			{ "<C-t>", function() require("neocodeium").accept_line() end, mode = "i", desc = "󰚩 Accept line" },
-			-- { "<C-w>", function() require("neocodeium").accept_word() end, mode = "i", desc = "󰚩 Accept word" },
-			{ "<C-d>", function() require("neocodeium").cycle(1) end, mode = "i", desc = "󰚩 Next suggestion" },
-      -- stylua: ignore end
-      {
-        "<leader>oa",
-        function()
-          vim.cmd.NeoCodeium("toggle")
-          local on = require("neocodeium.options").options.enabled
-          require("config.utils").notify("NeoCodeium", on and "enabled" or "disabled", "info")
-        end,
-        desc = "󰚩 NeoCodeium Suggestions",
-      },
-    },
-  },
-  -- {
-  --   "milanglacier/minuet-ai.nvim",
-  --   dependencies = { { "nvim-lua/plenary.nvim" }, { "hrsh7th/nvim-cmp" } },
-  --   config = function()
-  --     require("minuet").setup({
-  --       provider = "openai", -- openai, codestral, gemini
-  --       request_timeout = 4,
-  --       throttle = 2000,
-  --       notify = "verbose",
-  --       provider_options = {
-  --         codestral = {
-  --           optional = {
-  --             stop = { "\n\n" },
-  --             max_tokens = 256,
-  --           },
-  --         },
-  --         gemini = {
-  --           optional = {
-  --             generationConfig = {
-  --               maxOutputTokens = 256,
-  --               topP = 0.9,
-  --             },
-  --             safetySettings = {
-  --               {
-  --                 category = "HARM_CATEGORY_DANGEROUS_CONTENT",
-  --                 threshold = "BLOCK_NONE",
-  --               },
-  --               {
-  --                 category = "HARM_CATEGORY_HATE_SPEECH",
-  --                 threshold = "BLOCK_NONE",
-  --               },
-  --               {
-  --                 category = "HARM_CATEGORY_HARASSMENT",
-  --                 threshold = "BLOCK_NONE",
-  --               },
-  --               {
-  --                 category = "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-  --                 threshold = "BLOCK_NONE",
-  --               },
-  --             },
-  --           },
-  --         },
-  --         openai = {
-  --           optional = {
-  --             max_tokens = 256,
-  --             top_p = 0.9,
-  --           },
-  --         },
-  --         openai_compatible = {
-  --           optional = {
-  --             max_tokens = 256,
-  --             top_p = 0.9,
-  --           },
-  --         },
-  --       },
-  --     })
-  --   end,
-  --   cond = function() return vim.g.ai == "minuet" end,
-  -- },
-  -- {
-  --   "olimorris/codecompanion.nvim",
-  --   cmd = { "CodeCompanion", "CodeCompanionActions" },
-  --   cond = function() return vim.g.ai == "codecompanion" end,
-  --   dependencies = {
-  --     "nvim-lua/plenary.nvim",
-  --     "nvim-treesitter/nvim-treesitter",
-  --     -- "stevearc/dressing.nvim", -- Optional: Improves the default Neovim UI
-  --   },
-  --   config = function()
-  --     local code_companion = require("codecompanion")
-  --     local adapters = require("codecompanion.adapters")
-  --
-  --     code_companion.setup({
-  --       adapters = {
-  --         ollama = adapters.use("ollama", {
-  --           schema = {
-  --             model = {
-  --               default = get_preferred_model(),
-  --             },
-  --           },
-  --         }),
-  --       },
-  --       strategies = {
-  --         chat = { adapter = "ollama" },
-  --         inline = { adapter = "ollama" },
-  --         agent = { adapter = "ollama" },
-  --       },
-  --     })
-  --   end,
-  -- },
   {
     "OXY2DEV/helpview.nvim",
     lazy = false,

@@ -33,7 +33,7 @@ return {
       "fdschmidt93/telescope-corrode.nvim",
       {
         "danielfalk/smart-open.nvim",
-        branch = "0.2.x",
+        branch = "0.2.x", -- NOTE: we're stuck here because `main` breaks keymaps
         dependencies = { "kkharji/sqlite.lua", { "nvim-telescope/telescope-fzf-native.nvim", build = "make" } },
       },
 
@@ -42,10 +42,6 @@ return {
       "debugloop/telescope-undo.nvim",
       "folke/trouble.nvim",
       { "nvim-telescope/telescope-ui-select.nvim" },
-
-      -- Useful for getting pretty icons, but requires a Nerd Font.
-      { "nvim-tree/nvim-web-devicons", enabled = vim.g.have_nerd_font },
-      -- { "altermo/telescope-nucleo-sorter.nvim", build = "cargo build --release" },
     },
     config = function()
       mega.picker = {
@@ -136,22 +132,77 @@ return {
         },
       })
 
-      local new_maker = function(filepath, bufnr, opts)
-        filepath = vim.fn.expand(filepath)
-        Job:new({
-          command = "file",
-          args = { "--mime-type", "-b", filepath },
-          on_exit = function(j)
-            local mime_type = vim.split(j:result()[1], "/")[1]
-            if mime_type == "text" then
-              previewers.buffer_previewer_maker(filepath, bufnr, opts)
-            else
-              -- maybe we want to write something to the buffer here
-              vim.schedule(function() vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "BINARY" }) end)
-            end
-          end,
-        }):sync()
-      end
+      -- REF: https://github.com/tjdevries/config.nvim/blob/master/lua/custom/telescope/multi-ripgrep.lua
+      -- local function multi_rg(opts)
+      --   local conf = require("telescope.config").values
+      --   local finders = require("telescope.finders")
+      --   local make_entry = require("telescope.make_entry")
+      --   local pickers = require("telescope.pickers")
+      --
+      --   local flatten = vim.tbl_flatten
+      --
+      --   -- i would like to be able to do telescope
+      --   -- and have telescope do some filtering on files and some grepping
+      --
+      --   -- return function(opts)
+      --   opts = opts or {}
+      --   opts.cwd = opts.cwd and vim.fn.expand(opts.cwd) or vim.loop.cwd()
+      --   opts.shortcuts = opts.shortcuts
+      --     or {
+      --       ["l"] = "*.lua",
+      --       ["v"] = "*.vim",
+      --       ["n"] = "*.{vim,lua}",
+      --       ["c"] = "*.c",
+      --       ["r"] = "*.rs",
+      --       ["g"] = "*.go",
+      --     }
+      --   opts.pattern = opts.pattern or "%s"
+      --
+      --   local custom_grep = finders.new_async_job({
+      --     command_generator = function(prompt)
+      --       if not prompt or prompt == "" then return nil end
+      --
+      --       local prompt_split = vim.split(prompt, "  ")
+      --
+      --       local args = { "rg" }
+      --       if prompt_split[1] then
+      --         table.insert(args, "-e")
+      --         table.insert(args, prompt_split[1])
+      --       end
+      --
+      --       if prompt_split[2] then
+      --         table.insert(args, "-g")
+      --
+      --         local pattern
+      --         if opts.shortcuts[prompt_split[2]] then
+      --           pattern = opts.shortcuts[prompt_split[2]]
+      --         else
+      --           pattern = prompt_split[2]
+      --         end
+      --
+      --         table.insert(args, string.format(opts.pattern, pattern))
+      --       end
+      --
+      --       return flatten({
+      --         args,
+      --         { "--color=never", "--no-heading", "--with-filename", "--line-number", "--column", "--smart-case" },
+      --       })
+      --     end,
+      --     entry_maker = make_entry.gen_from_vimgrep(opts),
+      --     cwd = opts.cwd,
+      --   })
+      --
+      --   pickers
+      --     .new(opts, {
+      --       debounce = 100,
+      --       prompt_title = "Live Grep (with shortcuts)",
+      --       finder = custom_grep,
+      --       previewer = conf.grep_previewer(opts),
+      --       sorter = require("telescope.sorters").empty(),
+      --     })
+      --     :find()
+      --   -- end
+      -- end
 
       -- Set current folder as prompt title
       local function with_title(opts, extra)
@@ -211,7 +262,10 @@ return {
       mega.picker.dropdown = dropdown
 
       local function ivy(opts)
-        opts = vim.tbl_deep_extend("force", opts or {}, { layout_config = { height = 0.3 } })
+        opts = vim.tbl_deep_extend("force", opts or {}, {
+          disable_devicons = true,
+          layout_config = { height = 0.3 },
+        })
         return require("telescope.themes").get_ivy(get_border(opts))
       end
       mega.picker.ivy = ivy
@@ -245,6 +299,8 @@ return {
               extensions("live_grep_args").live_grep_args(with_title(topts, { title = "live grep args" }))
             elseif key == "corrode" then
               extensions("corrode").corrode(with_title(topts, { title = "find files (corrode)" }))
+            -- elseif key == "multi_rg" then
+            --   multi_rg(with_title(topts, { title = "multi_rg" }))
             elseif key == "find_files" or key == "fd" then
               -- extensions("corrode").corrode(with_title(topts, { title = "find files (corrode)" }))
               builtin[key](with_title(topts, { title = "find files" }))
@@ -450,15 +506,23 @@ return {
         defaults = {
           theme = "ivy",
           dynamic_preview_title = true,
+          color_devicons = false,
+          disable_devicons = true,
           selection_strategy = "reset",
           scroll_strategy = "limit",
           sorting_strategy = "ascending",
           path_display = { "filename_first, truncate" },
-          color_devicons = true,
-          file_previewer = require("telescope.previewers").vim_buffer_cat.new,
-          grep_previewer = require("telescope.previewers").vim_buffer_vimgrep.new,
-          qflist_previewer = require("telescope.previewers").vim_buffer_qflist.new,
+          -- file_previewer = require("telescope.previewers").vim_buffer_cat.new,
+          -- grep_previewer = require("telescope.previewers").vim_buffer_vimgrep.new,
+          -- qflist_previewer = require("telescope.previewers").vim_buffer_qflist.new,
           layout_strategy = "horizontal",
+          results_title = false,
+          prompt_prefix = " ",
+          selection_caret = " ",
+          entry_prefix = "  ",
+          multi_icon = "󰛄 ",
+          winblend = 0,
+          vimgrep_arguments = grep_files_cmd,
           -- NOTE: https://github.com/bangalcat/nvim/blob/main/lua/plugins/telescope.lua#L61
           get_selection_window = function()
             local wins = vim.api.nvim_list_wins()
@@ -472,33 +536,6 @@ return {
           layout_config = {
             prompt_position = "top",
           },
-          -- buffer_previewer_maker = new_maker,
-          -- preview = {
-          --   mime_hook = function(filepath, bufnr, opts)
-          --     local is_image = function(fp)
-          --       local image_extensions = { "png", "jpg" } -- Supported image formats
-          --       local split_path = vim.split(fp:lower(), ".", { plain = true })
-          --       local extension = split_path[#split_path]
-          --       return vim.tbl_contains(image_extensions, extension)
-          --     end
-          --
-          --     if is_image(filepath) then
-          --       local term = vim.api.nvim_open_term(bufnr, {})
-          --       local function send_output(_, data, _)
-          --         vim.pprint(data)
-          --         for _, d in ipairs(data) do
-          --           vim.api.nvim_chan_send(term, d .. "\r\n")
-          --         end
-          --       end
-          --       vim.fn.jobstart({
-          --         "catimg",
-          --         filepath, -- Terminal image viewer command
-          --       }, { on_stdout = send_output, stdout_buffered = true, pty = true })
-          --     else
-          --       require("telescope.previewers.utils").set_preview_message(bufnr, opts.winid, "Binary cannot be previewed")
-          --     end
-          --   end,
-          -- },
           mappings = {
             i = {
               ["<esc>"] = require("telescope.actions").close,
@@ -541,13 +578,6 @@ return {
               -- ["<c-o>"] = function(pb) multi(pb, "edit") end,
             },
           },
-          results_title = false,
-          prompt_prefix = " ",
-          selection_caret = " ",
-          entry_prefix = "  ",
-          multi_icon = "󰛄 ",
-          winblend = 0,
-          vimgrep_arguments = grep_files_cmd,
         },
         file_ignore_patterns = {
           ".DS_Store",
@@ -685,24 +715,43 @@ return {
             case_mode = "smart_case",
           },
           undo = {
-            -- use_delta = true,
-            -- use_custom_command = nil, -- setting this implies `use_delta = false`. Accepted format is: { "bash", "-c", "echo '$DIFF' | delta" }
-            -- side_by_side = false,
-            -- diff_context_lines = vim.o.scrolloff,
-            -- entry_format = "state #$ID, $STAT, $TIME",
-            -- time_format = "",
-            -- saved_only = false,
-            --side_by_side = true,
+            side_by_side = true,
             layout_strategy = "vertical",
             layout_config = {
-              preview_height = 0.8,
+              preview_height = 0.6,
+            },
+
+            mappings = {
+              i = {
+                ["<CR>"] = require("telescope-undo.actions").restore,
+                ["<TAB>"] = require("telescope-undo.actions").yank_additions,
+              },
+              n = {
+                ["y"] = require("telescope-undo.actions").yank_additions,
+                ["r"] = require("telescope-undo.actions").yank_deletions,
+              },
             },
           },
+          -- undo = {
+          --   -- use_delta = true,
+          --   -- use_custom_command = nil, -- setting this implies `use_delta = false`. Accepted format is: { "bash", "-c", "echo '$DIFF' | delta" }
+          --   -- side_by_side = false,
+          --   -- diff_context_lines = vim.o.scrolloff,
+          --   -- entry_format = "state #$ID, $STAT, $TIME",
+          --   -- time_format = "",
+          --   -- saved_only = false,
+          --   --side_by_side = true,
+          --   layout_strategy = "vertical",
+          --   layout_config = {
+          --     preview_height = 0.8,
+          --   },
+          -- },
           smart_open = {
             show_scores = false,
             ignore_patterns = { "*.git/*", "*/tmp/*" },
             match_algorithm = "fzf",
-            disable_devicons = false,
+            disable_devicons = true,
+            color_devicons = false,
             -- open_buffer_indicators = { previous = "👀", others = "🙈" },
             cwd_only = true,
             mappings = {
@@ -806,47 +855,55 @@ return {
       -- telescope.load_extension("zf-native")
 
       -- keys
-      local builtin = require("telescope.builtin")
-      map("n", "<leader>ff", function() mega.picker.find_files({ picker = "smart_open" }) end, { desc = "[f]ind [f]iles" })
-      map("n", "<leader>fh", ts.help_tags, { desc = "[f]ind [h]elp" })
-      map("n", "<leader>fa", ts.autocommands, { desc = "[f]ind [a]utocommands" })
-      map("n", "<leader>fk", ts.keymaps, { desc = "[f]ind [k]eymaps" })
-      -- map("n", "<leader>fs", ts.builtin, { desc = "[f]ind [f]elect Telescope" })
-      map("n", "<leader>fg", ts.egrepify, { desc = "egrepify (live)" })
+      if vim.g.picker == "telescope" then
+        local builtin = require("telescope.builtin")
+        map("n", "<leader>ff", function() mega.picker.find_files({ picker = "smart_open" }) end, { desc = "[f]ind [f]iles" })
+        map("n", "<leader>fh", ts.help_tags, { desc = "[f]ind [h]elp" })
+        map("n", "<leader>fa", ts.autocommands, { desc = "[f]ind [a]utocommands" })
+        map("n", "<leader>fk", ts.keymaps, { desc = "[f]ind [k]eymaps" })
+        -- map("n", "<leader>fs", ts.builtin, { desc = "[f]ind [f]elect Telescope" })
+        -- map("n", "<leader>fg", ts.egrepify, { desc = "egrepify (live)" })
+        map("n", "<leader>fg", function() mega.picker.grep({ picker = "egrepify" }) end, { desc = "[f]ind e[g]repify" })
 
-      map("n", "<leader>fg", function() mega.picker.grep({ picker = "egrepify" }) end, { desc = "[f]ind e[g]repify" })
-      map("n", "<leader>a", mega.picker.grep, { desc = "grep (live)" })
-      -- map("n", "<leader>A", ts.grep_string, { desc = "grep (under cursor)" })
-      map("n", "<leader>A", function() mega.picker.grep({ default_text = vim.fn.expand("<cword>") }) end, { desc = "grep (under cursor)" })
-      map({ "v", "x" }, "<leader>A", function()
-        local pattern = require("mega.utils").get_visual_selection()
-        mega.picker.grep({ default_text = pattern })
-      end, { desc = "grep (selection)" })
+        -- map("n", "<leader>fg", ts.multi_rg, { desc = "multi-rg (live)" })
+        map("n", "<leader>a", mega.picker.grep, { desc = "grep (live)" })
+        -- map("n", "<leader>A", ts.grep_string, { desc = "grep (under cursor)" })
+        map("n", "<leader>A", function() mega.picker.grep({ default_text = vim.fn.expand("<cword>") }) end, { desc = "grep (under cursor)" })
+        map({ "v", "x" }, "<leader>A", function()
+          local pattern = require("mega.utils").get_visual_selection()
+          mega.picker.grep({ default_text = pattern })
+        end, { desc = "grep (selection)" })
 
-      map("n", "<leader>fu", ts.undo, { desc = "[f]ind [u]ndo" })
-      -- map("n", "<leader>fd", ts.diagnostics, { desc = "[f]ind [d]iagnostics" })
-      map("n", "<leader>fd", function() mega.picker.find_files({ picker = "smart_open", cwd = vim.g.dotfiles_path }) end, { desc = "[f]ind in [d]otfiles" })
-      map("n", "<leader>fc", function() mega.picker.find_files({ picker = "smart_open", cwd = vim.fn.stdpath("config") }) end, { desc = "[f]ind in [c]onfig" })
-      map(
-        "n",
-        "<leader>fp",
-        function() mega.picker.find_files({ picker = "smart_open", cwd = vim.fn.expand(vim.g.code_path), title = "in ~/code" }) end,
-        { desc = "[f]ind in ~/code [p]rojects" }
-      )
-      map("n", "<leader>fr", ts.resume, { desc = "[f]ind [r]esume" })
-      map("n", "<leader>f.", ts.oldfiles, { desc = "[f]ind Recent Files (\".\" for repeat)" })
-      map("n", "<leader><leader>", ts.buffers, { desc = "[ ] Find existing buffers" })
+        map("n", "<leader>fu", ts.undo, { desc = "[f]ind [u]ndo" })
+        -- map("n", "<leader>fd", ts.diagnostics, { desc = "[f]ind [d]iagnostics" })
+        map("n", "<leader>fd", function() mega.picker.find_files({ picker = "smart_open", cwd = vim.g.dotfiles_path }) end, { desc = "[f]ind in [d]otfiles" })
+        map(
+          "n",
+          "<leader>fc",
+          function() mega.picker.find_files({ picker = "smart_open", cwd = vim.fn.stdpath("config") }) end,
+          { desc = "[f]ind in [c]onfig" }
+        )
+        map(
+          "n",
+          "<leader>fp",
+          function() mega.picker.find_files({ picker = "smart_open", cwd = vim.fn.expand(vim.g.code_path), title = "in ~/code" }) end,
+          { desc = "[f]ind in ~/code [p]rojects" }
+        )
+        map("n", "<leader>fr", ts.resume, { desc = "[f]ind [r]esume" })
+        map("n", "<leader>f.", ts.oldfiles, { desc = "[f]ind Recent Files (\".\" for repeat)" })
+        map("n", "<leader><leader>", ts.buffers, { desc = "[ ] Find existing buffers" })
 
-      -- Slightly advanced example of overriding default behavior and theme
-      map("n", "<leader>/", function()
-        -- You can pass additional configuration to Telescope to change the theme, layout, etc.
-        builtin.current_buffer_fuzzy_find(require("telescope.themes").get_dropdown({
-          winblend = 10,
-          previewer = false,
-        }))
-      end, { desc = "[/] Fuzzily search in current buffer" })
+        -- Slightly advanced example of overriding default behavior and theme
+        map("n", "<leader>/", function()
+          -- You can pass additional configuration to Telescope to change the theme, layout, etc.
+          builtin.current_buffer_fuzzy_find(require("telescope.themes").get_dropdown({
+            winblend = 10,
+            previewer = false,
+          }))
+        end, { desc = "[/] Fuzzily search in current buffer" })
 
-      -- Shortcut for searching your Neovim configuration files
+        -- Shortcut for searching your Neovim configuration files
+      end
     end,
   },
 }

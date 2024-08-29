@@ -5,5 +5,6 @@ if [[ -e "/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh" ]]; then
 fi
 
 alias ns="nix-shell"
-alias nsz="nix-shell --run zsh"
 alias nsp="nix-shell --pure"
+alias nsz="nix-shell --run zsh"
+alias nda="direnv allow ."

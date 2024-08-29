@@ -4,10 +4,11 @@ local fmt = string.format
 
 return {
   {
-    "hrsh7th/nvim-cmp",
-    -- event = { "InsertEnter *", "CmdlineEnter *" },
+    "yioneko/nvim-cmp",
+    branch = "perf",
+    event = { "InsertEnter *", "CmdlineEnter *" },
     -- event = "InsertEnter",
-    lazy = false,
+    -- lazy = false,
     priority = 100,
     dependencies = {
       {
@@ -74,14 +75,12 @@ return {
       local cmp = require("cmp")
       local MIN_MENU_WIDTH, MAX_MENU_WIDTH = 25, math.min(50, math.floor(vim.o.columns * 0.5))
 
-      local neocodeium = require("neocodeium")
-      local commands = require("neocodeium.commands")
-
+      -- local neocodeium = require("neocodeium")
+      -- local commands = require("neocodeium.commands")
       -- cmp.event:on("menu_opened", function()
-      --   commands.disable()
       --   neocodeium.clear()
+      --   commands.disable()
       -- end)
-      --
       -- cmp.event:on("menu_closed", function() commands.enable() end)
 
       local has_words_before = function()
@@ -143,6 +142,7 @@ return {
             }, ","),
           }),
         },
+        -- TODO/REF: useful: https://github.com/hrsh7th/nvim-cmp/discussions/1983
         mapping = cmp.mapping.preset.insert({
           -- Select the [n]ext item
           ["<C-n>"] = cmp.mapping.select_next_item(),
@@ -156,7 +156,7 @@ return {
           -- Accept ([y]es) the completion.
           --  This will auto-import if your LSP supports it.
           --  This will expand snippets if the LSP sent a snippet.
-          -- ["<C-y>"] = cmp.mapping.confirm({ select = true }),
+          ["<C-y>"] = cmp.mapping.confirm({ select = true }),
 
           -- ["<C-y>"] = require("minuet").make_cmp_map(),
           ["<C-e>"] = cmp.mapping.abort(),
@@ -203,6 +203,7 @@ return {
           },
         }),
 
+        -- TODO/REF: https://github.com/3rd/config/blob/master/dotfiles/nvim/lua/modules/completion/nvim-cmp.lua#L67C1-L80C4
         formatting = {
           expandable_indicator = true,
           fields = { "abbr", "kind", "menu" },
@@ -410,6 +411,11 @@ return {
           { name = "buffer" },
         },
       })
+
+      if pcall(require, "nvim-autopairs") then
+        local cmp_autopairs = require("nvim-autopairs.completion.cmp")
+        cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done())
+      end
     end,
   },
 }

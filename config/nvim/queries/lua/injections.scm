@@ -1,4 +1,5 @@
-;extends
+;; extends
+
 ; INFO injected languages require the TS parser name, not the vim filetype name,
 ; so "bash" works, but not "sh"
 ; see: https://github.com/nvim-treesitter/nvim-treesitter/blob/1f087c91f5ca76a2257b855d72d371a2b5302986/queries/lua/injections.scm
@@ -36,3 +37,18 @@
 (function_call
   name: (identifier) @_fmt (#any-of? @_fmt "fmt")
   arguments: (arguments (string content: _ @injection.content) (#set! injection.language "luap")))
+
+
+; ((function_call
+;   (identifier) @_1
+;   (identifier) @_2
+;   (identifier) @_3
+;   (identifier) @_4
+;   (function_arguments
+;     (string)
+;     (string) @injection.content))
+;  (#set! injection.language "scheme")
+;  (#eq? @_1 "vim")
+;  (#eq? @_2 "treesitter")
+;  (#eq? @_3 "query")
+;  (#eq? @_4 "parse"))

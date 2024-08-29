@@ -216,34 +216,36 @@ function fuzzy_find() {
 
   try_session "$(
     echo \
-      "$fzf_list" |
-      "$fzf_cmd" \
+      "${fzf_list}" |
+      "${fzf_cmd}" \
         --ansi \
         --reverse \
         --border=none \
         --scrollbar='▓' \
         --scrollbar="▌▐" \
         --padding="1" \
-        --prompt="$fzf_prompt_text" \
-        --header="$fzf_header_text" \
+        --prompt="${fzf_prompt_text}" \
+        --header="${fzf_header_text}" \
         --bind="change:first" \
         --bind="focus:transform-preview-label:echo [ {} ]" \
         --bind="?:toggle-preview" \
         --bind="ctrl-u:preview-half-page-up,ctrl-d:preview-half-page-down" \
         \
-        --bind="$CTRL_X_kill_session_bind" \
-        --bind="$CTRL_R_rename_session_bind" \
+        --bind="${CTRL_X_kill_session_bind}" \
+        --bind="${CTRL_R_rename_session_bind}" \
         \
         --bind="enter:replace-query+print-query" \
-        --preview="$preview_cmd" \
+        --preview="${preview_cmd}" \
         --preview-window="right:55%:nowrap" \
         --pointer=' ' \
         --marker='󰛄 ' \
         --print-query \
         --exit-0 \
-        --tac # --bind='ctrl-x:execute(tmux kill-session -t {})+reload(tmux list-sessions | sed -E "s/:.*$//")' \
-    # --bind='ctrl-r:execute(printf >&2 \"New session name: \";read name; tmux rename-session -t {} ${name};)+reload(tmux list-sessions | sed -E \"s/:.*$//\")' \
+        --tac
   )"
+  #
+  # --bind='ctrl-x:execute(tmux kill-session -t {})+reload(tmux list-sessions | sed -E "s/:.*$//")'
+  # --bind='ctrl-r:execute(printf >&2 \"New session name: \";read name; tmux rename-session -t {} ${name};)+reload(tmux list-sessions | sed -E \"s/:.*$//\")' \
 }
 
 # --bind 'ctrl-a:change-prompt(⚡  )+reload(sesh list)' \

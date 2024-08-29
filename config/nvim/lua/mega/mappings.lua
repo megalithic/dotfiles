@@ -126,13 +126,7 @@ imap("<C-a>", "<Home>")
 imap("<C-e>", "<End>")
 
 -- [[ ui/vim behaviours ]] -----------------------------------------------------
-map("n", "<esc>", function()
-  vim.cmd.doautoall("User EscDeluxeStart")
-  U.clear_ui({ deluxe = true })
-  vim.cmd.doautoall("User EscDeluxeEnd")
-
-  vim.api.nvim_feedkeys(vim.keycode("<Esc>"), "n", true)
-end, { noremap = false, silent = true, desc = "EscDeluxe + Clear/Reset UI" })
+map("n", "<esc>", function() U.deluxe_clear_ui() end, { noremap = false, silent = true, desc = "EscDeluxe + Clear/Reset UI" })
 
 --  See `:help wincmd` for a list of all window commands
 -- @see: smart-splits.nvim

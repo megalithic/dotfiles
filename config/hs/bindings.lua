@@ -90,19 +90,39 @@ req("hyper")
   -- WIP
   :bind({ "shift", "ctrl" }, "h", nil, utils.showAvailableHotkeys)
 
+-- local utilsModality = req("modality"):start({ id = "utils", key = "r", mods = { "shift" } })
+-- utilsModality
+--   :bind({}, "r", function()
+--     hs.notify.new({ title = "hammerspork", subTitle = "config is reloading..." }):send()
+--     hs.reload()
+--   end, function() utilsModality:delayedExit(0.1) end)
+--   :bind({}, "l", req("wm").placeAllApps, function() utilsModality:delayedExit(0.1) end)
+--   -- WIP
+--   :bind({}, "b", function()
+--     local currentApp = hs.axuielement.applicationElement(hs.application.frontmostApplication())
+--     if currentApp == lastApp then
+--       axbrowse.browse() -- try to continue from where we left off
+--     else
+--       lastApp = currentApp
+--       axbrowse.browse(currentApp) -- new app, so start over
+--     end
+--   end, function() utilsModality:delayedExit(0.1) end)
+--   -- WIP
+--   :bind({}, "h", utils.showAvailableHotkeys, function() utilsModality:delayedExit(0.1) end)
+
 -- [ MODAL LAUNCHERS ] ---------------------------------------------------------
 
 -- # wm/window management ---------------------------------------------------------
-local modality = req("modality"):start({ id = "wm", key = "l" })
-modality
-  :bind({}, "r", req("wm").placeAllApps, function() modality:delayedExit(0.1) end)
-  :bind({}, "escape", function() modality:exit() end)
-  :bind({}, "space", function() wm.place(POSITIONS.preview) end, function() modality:delayedExit(0.1) end)
-  :bind({}, "return", function() wm.place(POSITIONS.full) end, function() modality:delayedExit(0.1) end)
+local wmModality = req("modality"):start({ id = "wm", key = "l" })
+wmModality
+  :bind({}, "r", req("wm").placeAllApps, function() wmModality:delayedExit(0.1) end)
+  :bind({}, "escape", function() wmModality:exit() end)
+  :bind({}, "space", function() wm.place(POSITIONS.preview) end, function() wmModality:delayedExit(0.1) end)
+  :bind({}, "return", function() wm.place(POSITIONS.full) end, function() wmModality:delayedExit(0.1) end)
   :bind({ "shift" }, "return", function()
     wm.toNextScreen()
     wm.place(POSITIONS.full)
-  end, function() modality:delayedExit(0.1) end)
+  end, function() wmModality:delayedExit(0.1) end)
   :bind(
     {},
     "l",
@@ -111,14 +131,14 @@ modality
         if type(POSITIONS[size]) == "string" then return POSITIONS[size] end
         return POSITIONS[size]["right"]
       end),
-      modality,
+      wmModality,
       1.0
     )
   )
   :bind({ "shift" }, "l", function()
     wm.toNextScreen()
     wm.place(POSITIONS.halves.right)
-  end, function() modality:exit() end)
+  end, function() wmModality:exit() end)
   :bind(
     {},
     "h",
@@ -127,15 +147,15 @@ modality
         if type(POSITIONS[size]) == "string" then return POSITIONS[size] end
         return POSITIONS[size]["left"]
       end),
-      modality,
+      wmModality,
       1.0
     )
   )
   :bind({ "shift" }, "h", function()
     wm.toNextScreen()
     wm.place(POSITIONS.halves.right)
-  end, function() modality:exit() end)
-  :bind({}, "j", function() wm.toNextScreen() end, function() modality:delayedExit(0.1) end)
+  end, function() wmModality:exit() end)
+  :bind({}, "j", function() wm.toNextScreen() end, function() wmModality:delayedExit(0.1) end)
   :bind(
     {},
     "k",
@@ -145,19 +165,19 @@ modality
       POSITIONS.center.small,
       POSITIONS.center.tiny,
       POSITIONS.center.mini,
-    }, modality, 1.0)
+    }, wmModality, 1.0)
   )
   :bind({}, "v", function()
     wm.tile()
-    modality:exit()
+    wmModality:exit()
   end)
   :bind({}, "s", function()
     req("browser"):splitTab()
-    modality:exit()
+    wmModality:exit()
   end)
   :bind({ "shift" }, "s", function()
     req("browser"):splitTab(true)
-    modality:exit()
+    wmModality:exit()
   end)
   :bind({}, "m", function()
     local app = hs.application.frontmostApplication()
@@ -168,19 +188,19 @@ modality
       warn("Merge All Windows is unsupported for " .. app:bundleID())
     end
 
-    modality:exit()
+    wmModality:exit()
   end)
   :bind({}, "f", function()
     local focused = hs.window.focusedWindow()
     hs.fnutils.map(focused:otherWindowsAllScreens(), function(win) win:application():hide() end)
-    modality:exit()
+    wmModality:exit()
   end)
   :bind("", "c", function()
     local win = hs.window.focusedWindow()
     local screenWidth = win:screen():frame().w
     hs.window.focusedWindow():move(hs.geometry.rect(screenWidth / 2 - 300, 0, 600, 400))
 
-    modality:exit()
+    wmModality:exit()
   end)
 
 req("clipper"):init()

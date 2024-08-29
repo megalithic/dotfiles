@@ -147,6 +147,7 @@ return {
     end,
   },
   {
+    enabled = false,
     "echasnovski/mini.pairs",
     opts = {},
   },

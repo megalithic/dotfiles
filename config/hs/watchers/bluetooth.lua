@@ -1,3 +1,4 @@
+local enum = require("hs.fnutils")
 local obj = {}
 
 local default_balance = 0.7
@@ -13,6 +14,13 @@ obj.__index = obj
 obj.name = "watcher.bluetooth"
 obj.debug = false
 obj.devices = {
+  ["fallback"] = {
+    alias = "fallback",
+    name = "MacBook Pro Speakers",
+    bt = "MacBook Pro Speakers",
+    icon = "💻",
+    connected = false,
+  },
   ["phonak"] = {
     alias = "phonak",
     name = "R-Phonak hearing aid",
@@ -47,6 +55,17 @@ local dbg = function(str, ...)
   if obj.debug then return _G.dbg(string.format(str, ...), false) end
 end
 
+function obj.preferredBluetoothDevicesConnected()
+  local connectedDevices = enum.filter(
+    { "phonak", "airpods" },
+    function(deviceStr) return obj.isBluetoothDeviceConnected(deviceStr) end
+  )
+
+  if #connectedDevices > 0 then return true end
+
+  return false
+end
+
 ---@params device table|string
 function obj.isBluetoothDeviceConnected(device)
   local targetDevice = device
@@ -74,33 +93,7 @@ local function connectDevice(deviceStr)
     :start()
 end
 
--- local function checkDevice(deviceStr, fn)
---   local device = obj.devices[deviceStr]
---   if not device then return end
---
---   local isConnected = obj.isBluetoothDeviceConnected()
---
---   -- hs.task
---   --   .new(obj.btUtil, function(_, stdout)
---   --     stdout = string.gsub(stdout, "\n$", "")
---   --     local isConnected = stdout == "1"
---   --
---   --     connectedState = isConnected
---   --
---   --     fn(connectedState)
---   --   end, {
---   --     "--is-connected",
---   --     device.id,
---   --   })
---   --   :start()
---
---   return isConnected
--- end
-
 local function toggleDevice(deviceStr, fn)
-  -- local isConnected = false
-  -- TODO: try the hearing aids first (maybe after 5 tries), then try megapods (again, 5 tries), then abort with a message
-  -- local counter = 0
   hs.timer.doUntil(function()
     local isConnected = obj.isBluetoothDeviceConnected(deviceStr)
     fn(isConnected)
@@ -108,22 +101,6 @@ local function toggleDevice(deviceStr, fn)
     if isConnected then require("watchers.dock"):setAudio(DOCK.docked) end
 
     return isConnected
-
-    -- checkDevice(deviceStr, function(connectedState)
-    --   isConnected = connectedState
-    --
-    --   local device = obj.devices[deviceStr]
-    --
-    --   device.connected = connectedState
-    --
-    --   fn(connectedState)
-    --
-    --   return connectedState
-    -- end)
-
-    -- if isConnected then require("watchers.dock"):setAudio(DOCK.docked) end
-    --
-    -- return isConnected
   end, function() connectDevice(deviceStr) end)
 end
 
@@ -149,9 +126,17 @@ function obj:start()
 
   local hyper = require("hyper"):start({ id = "bluetooth" })
   hyper:bind({ "shift" }, "h", nil, function()
-    local device = self.devices["phonak"]
+    local device = nil
 
-    if not obj.isBluetoothDeviceConnected("phonak") then device = self.devices["airpods"] end
+    enum.each({ "phonak", "airpods" }, function(deviceStr)
+      if obj.isBluetoothDeviceConnected(deviceStr) then device = obj.devices[deviceStr] end
+    end)
+
+    if not device then
+      warn(fmt("[%s] no bluetooth devices found", obj.name))
+
+      return
+    end
 
     local toggledDevice = false
     toggleDevice(device.alias, function(isConnected)

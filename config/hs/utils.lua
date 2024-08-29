@@ -68,7 +68,7 @@ function obj.dnd(dndStatus, slackStatus)
 
   if dndStatus ~= nil then
     hs.task
-      .new(obj.dndCmd, function(_stdTask, _stdOut, _stdErr) info("[DND]: " .. dndStatus) end, { dndStatus })
+      .new(obj.dndCmd, function(_exitCode, _stdOut, _stdErr) info("[RUN] dnd/" .. dndStatus) end, { dndStatus })
       :start()
   end
 
@@ -79,9 +79,9 @@ end
 -- https://github.com/kiooss/dotmagic/blob/master/hammerspoon/slack.lua
 function obj.slack(slackStatus)
   if slackStatus ~= nil and slackStatus ~= "" then
-    local slck = hs.task.new("/opt/homebrew/bin/zsh", function(stdTask, stdOut, stdErr)
-      dbg({ stdTask, stdOut, stdErr }, true)
-      info("[SLCK]: " .. slackStatus)
+    local slck = hs.task.new("/opt/homebrew/bin/zsh", function(exitCode, stdOut, stdErr)
+      dbg({ exitCode, stdOut, stdErr }, true)
+      info("[RUN] slack/" .. slackStatus)
     end, { "-lc", obj.slckCmd, slackStatus })
     -- local slck = hs.task.new(obj.slckCmd, function(stdTask, stdOut, stdErr)
     --   dbg({ stdTask, stdOut, stdErr }, true)

@@ -3,6 +3,8 @@
 
 # zmodload zsh/zprof # -> top of your .zshrc file
 
+# set -o vi
+
 # -- required helpers and our env variables
 ZLIB="$ZDOTDIR/lib"
 [[ -f "$ZLIB/env.zsh" ]] && source "$ZLIB/env.zsh"
@@ -17,7 +19,7 @@ zsh_add_plugin "zsh-users/zsh-history-substring-search"
 zsh_add_plugin "zsh-users/zsh-autosuggestions"
 zsh_add_plugin "zsh-users/zsh-completions"
 zsh_add_plugin "djui/alias-tips"
-zsh_add_plugin "megalithic/zsh-magic-dashboard" "magic_dashboard"
+# zsh_add_plugin "megalithic/zsh-magic-dashboard" "magic_dashboard"
 # zsh_add_plugin "MichaelAquilina/zsh-auto-notify" "auto-notify.plugin"
 zsh_add_plugin "hlissner/zsh-autopair"
 zsh_add_plugin "psprint/zsh-sweep" # zsh linting

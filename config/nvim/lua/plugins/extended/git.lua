@@ -209,6 +209,7 @@ return {
       -- See: https://github.com/rhysd/committia.vim#variables
       vim.g.committia_min_window_width = 30
       vim.g.committia_edit_window_width = 100
+      vim.g.committia_use_singlecolumn = "always"
     end,
     config = function()
       vim.g.committia_hooks = {
@@ -305,6 +306,7 @@ return {
           pattern = { "GitConflictDetected" },
           command = function(args)
             vim.g.git_conflict_detected = true
+            nnoremap("<leader>gc", "<cmd>GitConflictListQf<cr>", { desc = "git-conflict: conflicts in qf", buffer = args.buf })
             nnoremap("cq", "<cmd>GitConflictListQf<CR>", { desc = "git-conflict: send conflicts to qf", buffer = args.buf })
             nnoremap("[c", "<cmd>GitConflictPrevConflict<CR>|zz", { desc = "git-conflict: prev conflict", buffer = args.buf })
             nnoremap("]c", "<cmd>GitConflictNextConflict<CR>|zz", { desc = "git-conflict: next conflict", buffer = args.buf })

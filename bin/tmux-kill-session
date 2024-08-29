@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+# usage:
+# bind -r C-k confirm-before -p "kill-session #S (y/n)?" "run-shell 'tmux-kill-session \"#S\" \"mega\"\'"
+
+kill_session=${1:-}
+switch_session=${2:-"mega"}
+
+# check if our target session to switch to exists
+# REF: thanks! https://davidltran.com/blog/check-tmux-session-exists-script
+if (! tmux has-session -t "$switch_session" != 0); then
+  # it does, so switch to it
+  tmux switch-client -t "$switch_session"
+else
+  tmux switch-client -n
+fi
+
+# kill our desired session
+tmux kill-session -t "$kill_session"
