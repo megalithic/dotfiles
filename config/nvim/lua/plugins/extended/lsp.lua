@@ -56,31 +56,22 @@ return {
 
       require("lspconfig.ui.windows").default_options.border = BORDER_STYLE
 
-      local function has_existing_floats()
-        local winids = vim.api.nvim_tabpage_list_wins(0)
-        for _, winid in ipairs(winids) do
-          if vim.api.nvim_win_get_config(winid).zindex then return true end
-        end
-      end
-
       local function diagnostic_popup(opts)
         local bufnr = opts
         if type(opts) == "table" then bufnr = opts.buf or 0 end
 
-        local diags = vim.diagnostic.open_float(bufnr, { focus = false, scope = "cursor" })
-
+        -- local diags = vim.diagnostic.open_float(bufnr, { focus = false, scope = "cursor" })
         -- If there's no diagnostic under the cursor show diagnostics of the entire line
-        if not diags then vim.diagnostic.open_float(bufnr, { focus = false, scope = "line" }) end
+        -- if not diags then vim.diagnostic.open_float(bufnr, { focus = false, scope = "line" }) end
 
-        -- if not vim.g.git_conflict_detected and not has_existing_floats() then
-        --   -- Try to open diagnostics under the cursor
-        --   local diags = vim.diagnostic.open_float(bufnr, { focus = false, scope = "cursor" })
-        --
-        --   -- If there's no diagnostic under the cursor show diagnostics of the entire line
-        --   if not diags then vim.diagnostic.open_float(bufnr, { focus = false, scope = "line" }) end
-        --
-        --   return diags
-        -- end
+        if not vim.g.git_conflict_detected then
+          -- Try to open diagnostics under the cursor
+          local diags = vim.diagnostic.open_float(bufnr, { focus = false, scope = "cursor" })
+          -- If there's no diagnostic under the cursor show diagnostics of the entire line
+          if not diags then vim.diagnostic.open_float(bufnr, { focus = false, scope = "line" }) end
+
+          return diags
+        end
       end
 
       local function goto_diagnostic_hl(dir)
@@ -117,6 +108,8 @@ return {
       --    an lsp (for example, opening `main.rs` is associated with `rust_analyzer`) this
       --    function will be executed to configure the current buffer
       function M.on_attach(client, bufnr)
+        -- if not client or not client.supports_method("textDocument/documentHighlight") then return end
+
         local disabled_lsp_formatting = SETTINGS.disabled_lsp_formatters
 
         for i = 1, #disabled_lsp_formatting do
@@ -550,7 +543,7 @@ return {
         ---@param diag vim.Diagnostic
         ---@param mode "virtual_text"|"float"
         ---@return string displayedText
-        ---@return string? highlight_group
+        ---@return string mode
         local function diag_source_as_suffix(diag, mode)
           if not (diag.source or diag.code) then return "" end
           local source = (diag.source or ""):gsub(" ?%.$", "") -- trailing dot for lua_ls
@@ -747,10 +740,54 @@ return {
     end,
   },
   {
-    cond = false,
+    "dgagn/diagflow.nvim",
+    event = "LspAttach",
+    opts = {
+      text_align = "left", -- 'left', 'right'
+      placement = "top", -- 'top', 'inline'
+    },
+  },
+  {
     "rachartier/tiny-inline-diagnostic.nvim",
-    event = "VeryLazy",
-    opts = true,
+    cond = false,
+    event = "LspAttach",
+    config = function()
+      require("tiny-inline-diagnostic").setup({
+        signs = {
+          left = "",
+          right = "",
+          diag = "●",
+          arrow = "    ",
+          up_arrow = "    ",
+          vertical = " │",
+          vertical_end = " └",
+        },
+        -- hi = {
+        --   -- background = "None",
+        --   mixing_color = require("theme").get_colors().base,
+        -- },
+        blend = {
+          factor = 0.3,
+        },
+        options = {
+          break_line = {
+            enabled = true,
+            after = 80,
+          },
+          virt_texts = {
+            priority = 4096,
+          },
+          multiple_diag_under_cursor = true,
+          show_source = true,
+          severity = {
+            vim.diagnostic.severity.ERROR,
+            vim.diagnostic.severity.WARN,
+            vim.diagnostic.severity.INFO,
+            vim.diagnostic.severity.HINT,
+          },
+        },
+      })
+    end,
   },
   {
     -- FIXME: https://github.com/mhanberg/output-panel.nvim/issues/5

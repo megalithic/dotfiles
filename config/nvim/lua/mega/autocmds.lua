@@ -467,7 +467,10 @@ function M.apply()
     {
       event = { "QuickFixCmdPost" },
       desc = "Goes to first item in quickfix list automatically",
-      command = function(_args) pcall(vim.cmd.cfirst) end,
+      command = function(_args)
+        vim.cmd([[Trouble qflist open]])
+        pcall(vim.cmd.cfirst)
+      end,
     },
     {
       event = { "UIEnter", "ColorScheme" },

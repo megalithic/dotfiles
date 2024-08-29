@@ -410,8 +410,12 @@ local function get_search_results()
   if not last_search or last_search == "" then return "" end
   local result = fn.searchcount({ maxcount = 9999 })
   if vim.tbl_isempty(result) then return "" end
+
   -- if result == nil or vim.tbl_isempty(result) then return "" end
   -- return " " .. last_search:gsub("\\v", "") .. " " .. result.current .. "/" .. result.total .. ""
+
+  -- FIXME: keep this blank as it blows up megaline with unescaped searches
+  last_search = ""
 
   if result.incomplete == 1 then -- timed out
     return fmt("%s %s ?/??", icons.misc.search, last_search)
@@ -514,7 +518,7 @@ local function seg_mode(truncate_at)
   return seg(string.upper(mode), mode_info.hl, { padding = { 1, 1 }, suffix = "░", suffix_hl = mode_info.separator_hl })
 end
 
-local function seg_lsp_servers(truncate_at)
+local function seg_lsp_clients(truncate_at)
   local bufnr = vim.api.nvim_get_current_buf()
   local clients = vim.lsp.get_clients({ bufnr = bufnr })
 
@@ -527,8 +531,8 @@ local function seg_lsp_servers(truncate_at)
   end
 
   local clients_str = U.strim(table.concat(client_names, "/"))
-  if is_truncated(truncate_at) then return seg(#client_names, { prefix = icons.lsp.clients, margin = { 1, 1 } }) end
-  return seg(clients_str, { prefix = icons.lsp.clients, margin = { 1, 1 } })
+  if is_truncated(truncate_at) then return seg(#client_names, { prefix = fmt("%s ", icons.lsp.clients), margin = { 1, 1 } }) end
+  return seg(clients_str, { prefix = fmt("%s ", icons.lsp.clients), margin = { 1, 1 } })
 end
 
 local function seg_lsp_status(truncate_at)
@@ -709,7 +713,7 @@ function mega.ui.statusline.render()
     seg("%*"),
     seg("%{(&fenc!='utf-8'&&&fenc!='')?'['.&fenc.'] ':''}", "warningmsg"),
     seg("%*"),
-    seg_lsp_servers(150),
+    seg_lsp_clients(150),
     seg_lsp_status(100),
     seg_ai(120),
     seg_git_status({ 175, 80 }),

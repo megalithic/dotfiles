@@ -194,7 +194,7 @@ end
 
 require("mega.autocmds").augroup("WindowsGoldenResizer", {
   {
-    event = { "WinEnter" },
+    event = { "WinEnter", "VimResized" },
     command = function(args) mega.resize_windows(args.buf) end,
     desc = "Auto-resize window with golden ratio",
   },
