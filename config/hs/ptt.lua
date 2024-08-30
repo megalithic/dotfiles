@@ -83,10 +83,6 @@ function obj.setAllInputsMuted(muted)
   obj.mic:setInputVolume(inputVolume)
 end
 
-function obj.updateTmux()
-  hs.task.new("/opt/homebrew/bin/tmux", function() end, { "refresh-client" }):start()
-end
-
 function obj.updateMenubar()
   if obj.pushed then log.df("device to handle: %s", obj.mic) end
 
@@ -192,7 +188,7 @@ function obj:start(opts)
       self.pushed = false
     end
 
-    self.updateTmux()
+    require("utils").tmux.update()
     self.updateMenubar()
   end)
   self.momentaryKeyWatcher:start()

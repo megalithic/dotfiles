@@ -22,7 +22,7 @@ function obj.toggle(appIdentifier, shouldHide)
   else
     local mainWin = app:mainWindow()
 
-    if mainWin then
+    if mainWin ~= nil then
       if mainWin == hs.window.focusedWindow() then
         if shouldHide then mainWin:application():hide() end
       else

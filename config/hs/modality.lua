@@ -19,6 +19,7 @@ function obj:delayedExit(delay)
     self:exit()
     delayedExitTimer = nil
   end)
+  -- if obj.indicator ~= nil then obj.indicator:delete() end
 
   return self
 end
@@ -84,10 +85,11 @@ end
 function obj:exited()
   obj.isOpen = false
   -- hs.window.highlight.stop()
+  if obj.indicator ~= nil then obj.indicator:delete() end
+
   hs.fnutils.ieach(obj.alerts, function(id)
     if hs.alert ~= nil then hs.alert.closeSpecific(id) end
   end)
-  if obj.indicator ~= nil then obj.indicator:delete() end
 
   hs.alert.closeAll()
 

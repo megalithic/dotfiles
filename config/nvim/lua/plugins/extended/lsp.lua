@@ -59,14 +59,12 @@ return {
       local function diagnostic_popup(opts)
         local bufnr = opts
         if type(opts) == "table" then bufnr = opts.buf or 0 end
-        if not vim.g.git_conflict_detected then
-          -- Try to open diagnostics under the cursor
-          local diags = vim.diagnostic.open_float(bufnr, { focus = false, scope = "cursor" })
-          -- If there's no diagnostic under the cursor show diagnostics of the entire line
-          if not diags then vim.diagnostic.open_float(bufnr, { focus = false, scope = "line" }) end
+        -- Try to open diagnostics under the cursor
+        local diags = vim.diagnostic.open_float(bufnr, { focus = false, scope = "cursor" })
+        -- If there's no diagnostic under the cursor show diagnostics of the entire line
+        if not diags then vim.diagnostic.open_float(bufnr, { focus = false, scope = "line" }) end
 
-          return diags
-        end
+        return diags
       end
 
       local function goto_diagnostic_hl(dir)
