@@ -25,7 +25,7 @@ function obj:start(opts)
   local hyperKey = opts["hyperKey"] or HYPER
   local hyperId = opts["id"] and fmt(".%s", opts["id"]) or ""
 
-  self.hyperBind = hs.hotkey.bind({}, hyperKey, function() self:enter() end, function() self:exit() end)
+  self.hyperBind = hs.hotkey.bind({}, hyperKey, function() obj:enter() end, function() obj:exit() end)
 
   info(fmt("[START] %s%s", self.name, hyperId))
 

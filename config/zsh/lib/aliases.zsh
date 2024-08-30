@@ -336,6 +336,7 @@ alias map="xargs -n1"
 (command -v hub &>/dev/null) && alias gub="hub"
 (command -v git-crypt &>/dev/null) && alias gc="git-crypt"
 
+alias it=git
 alias gt=g
 alias dangled="git dangled" #gitk --all $( git fsck --no-reflog | awk '/dangling commit/ {print $3}' )
 alias conflicted="git econs"

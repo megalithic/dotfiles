@@ -59,19 +59,12 @@ return {
       local function diagnostic_popup(opts)
         local bufnr = opts
         if type(opts) == "table" then bufnr = opts.buf or 0 end
-
-        -- local diags = vim.diagnostic.open_float(bufnr, { focus = false, scope = "cursor" })
+        -- Try to open diagnostics under the cursor
+        local diags = vim.diagnostic.open_float(bufnr, { focus = false, scope = "cursor" })
         -- If there's no diagnostic under the cursor show diagnostics of the entire line
-        -- if not diags then vim.diagnostic.open_float(bufnr, { focus = false, scope = "line" }) end
+        if not diags then vim.diagnostic.open_float(bufnr, { focus = false, scope = "line" }) end
 
-        if not vim.g.git_conflict_detected then
-          -- Try to open diagnostics under the cursor
-          local diags = vim.diagnostic.open_float(bufnr, { focus = false, scope = "cursor" })
-          -- If there's no diagnostic under the cursor show diagnostics of the entire line
-          if not diags then vim.diagnostic.open_float(bufnr, { focus = false, scope = "line" }) end
-
-          return diags
-        end
+        return diags
       end
 
       local function goto_diagnostic_hl(dir)
@@ -557,9 +550,8 @@ return {
           return ""
         end
 
-        local vim_diag = vim.diagnostic
-        local diag_level = vim_diag.severity
-        vim_diag.config({
+        local diag_level = vim.diagnostic.severity
+        vim.diagnostic.config({
           underline = true,
           signs = {
             text = {
@@ -613,11 +605,13 @@ return {
             format = diag_msg_format,
           },
           severity_sort = true,
-          -- virtual_text = false,
-          virtual_text = {
-            severity = { min = diag_level.ERROR },
-            suffix = function(diag) return diag_source_as_suffix(diag, "virtual_text") end,
-          },
+          virtual_text = false,
+          -- virtual_text = {
+          --   only_current_line = true,
+          --   highlight_whole_line = false,
+          --   severity = { min = diag_level.ERROR },
+          --   suffix = function(diag) return diag_source_as_suffix(diag, "virtual_text") end,
+          -- },
           update_in_insert = false,
         })
 
@@ -746,6 +740,11 @@ return {
       text_align = "left", -- 'left', 'right'
       placement = "top", -- 'top', 'inline'
     },
+  },
+  {
+    enabled = false,
+    "https://git.sr.ht/~whynothugo/lsp_lines.nvim",
+    config = true,
   },
   {
     "rachartier/tiny-inline-diagnostic.nvim",

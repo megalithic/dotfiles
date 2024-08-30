@@ -23,7 +23,6 @@ local icons = require("mega.settings").icons
 
 vim.g.is_saving = false
 vim.g.lsp_progress_messages = ""
-local search_count_timer
 
 augroup("megaline", {
   {
@@ -46,36 +45,17 @@ augroup("megaline", {
       local progress = ctx.data.params.value ---@type {percentage: number, title?: string, kind: string, message?: string}
       if not (progress and progress.title) then return end
 
-      local icons = { "󰫃", "󰫄", "󰫅", "󰫆", "󰫇", "󰫈" }
-      local idx = math.floor(#icons / 2)
+      local progress_icons = { "󰫃", "󰫄", "󰫅", "󰫆", "󰫇", "󰫈" }
+      local idx = math.floor(#progress_icons / 2)
       if progress.percentage == 0 then idx = 1 end
-      if progress.percentage and progress.percentage > 0 then idx = math.ceil(progress.percentage / 100 * #icons) end
+      if progress.percentage and progress.percentage > 0 then idx = math.ceil(progress.percentage / 100 * #progress_icons) end
       local firstWord = vim.split(progress.title, " ")[1]:lower()
 
-      local text = table.concat({ icons[idx], clientName, firstWord }, " ")
+      local text = table.concat({ progress_icons[idx], clientName, firstWord }, " ")
       -- TODO: add slight delay to our `end` message clearing so we can actually see the last progress message
       vim.g.lsp_progress_messages = progress.kind == "end" and "" or text
 
       pcall(vim.cmd.redrawstatus)
-    end,
-  },
-  {
-    event = { "CursorMoved" },
-    pattern = { "*" },
-    command = function()
-      -- TODO: wrap all of this in an xpcall to handle an error raised when searching, for example, for `dbg\(`
-      if vim.o.hlsearch then
-        local timer = vim.uv.new_timer()
-        search_count_timer = timer
-        timer:start(0, 200, function()
-          vim.schedule(function()
-            if timer == search_count_timer then
-              pcall(vim.fn.searchcount, { recompute = 1, maxcount = 0, timeout = 100 })
-              pcall(vim.cmd.redrawstatus)
-            end
-          end)
-        end)
-      end
     end,
   },
 })
@@ -699,7 +679,7 @@ function mega.ui.statusline.render()
     seg(icons.misc.lock, "StModifiedIcon", M.ctx.readonly, { margin = { 0, 1 } }),
     -- seg("%{&paste?'[paste] ':''}", "warningmsg", { margin = { 1, 1 } }),
     seg("Saving…", "StComment", vim.g.is_saving, { margin = { 0, 1 } }),
-    seg_search_results(120),
+    -- seg_search_results(120),
     -- end left alignment
     seg([[%=]]),
 

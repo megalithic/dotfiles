@@ -24,7 +24,7 @@ function obj:start(opts)
   if event == hs.application.watcher.launched then
     do
       hs.spotify.pause()
-      -- L.req("lib.menubar.keycastr"):start()
+      req("keycastr"):start()
       req("utils").dnd(true)
       req("ptt").setState("push-to-mute")
 
@@ -73,6 +73,7 @@ function obj:stop(opts)
   elseif event == hs.application.watcher.terminated then
     require("ptt").setState("push-to-talk")
     req("utils").dnd(false)
+    req("keycastr"):stop()
 
     do
       -- L.req("lib.menubar.keycastr"):stop()

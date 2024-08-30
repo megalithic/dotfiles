@@ -153,36 +153,42 @@ local function expand_bufnr(bufnr)
 end
 
 --- Can be called to manually update the color highlighting
-function M.update_highlight(bufnr, options)
+function M.update_highlight(bufnr, opts)
+  opts = opts or {}
+  local client = opts["client"] or nil
+
+  if not client or not client.supports_method("textDocument/documentColor", { bufnr = bufnr }) then return end
+
   local params = { textDocument = vim.lsp.util.make_text_document_params() }
   vim.lsp.buf_request(bufnr, "textDocument/documentColor", params, function(err, result, _, _)
     -- update_extmark(bufnr)
-    if err == nil and result ~= nil then buf_set_highlights(bufnr, result, options) end
+    if err == nil and result ~= nil then buf_set_highlights(bufnr, result, opts) end
   end)
 end
 
 --- Should be called `on_attach` when the LSP client attaches
-function M.buf_attach(bufnr, options)
+function M.buf_attach(bufnr, opts)
   bufnr = expand_bufnr(bufnr)
 
   if ATTACHED_BUFFERS[bufnr] then return end
   ATTACHED_BUFFERS[bufnr] = true
 
-  options = options or {}
+  opts = opts or {}
+  local client = opts["client"] or nil
 
   -- VSCode extension also does 200ms debouncing
-  local trigger_update_highlight, timer = U.debounce_trailing(M.update_highlight, options.debounce or 200, false)
+  local trigger_update_highlight, timer = U.debounce_trailing(function() M.update_highlight(bufnr, client) end, opts.debounce or 200, false)
 
   -- for the first request, the server needs some time before it's ready
   -- sometimes 200ms is not enough for this
   -- TODO: figure out when the first request can be send
-  trigger_update_highlight(bufnr, options)
+  trigger_update_highlight(bufnr, opts)
 
   -- react to changes
   vim.api.nvim_buf_attach(bufnr, false, {
     on_lines = function()
       if not ATTACHED_BUFFERS[bufnr] then return true end
-      trigger_update_highlight(bufnr, options)
+      trigger_update_highlight(bufnr, opts)
     end,
     on_detach = function()
       if timer ~= nil then timer:close() end
@@ -192,7 +198,7 @@ function M.buf_attach(bufnr, options)
 end
 
 --- Can be used to detach from the buffer at any time
-function M.buf_detach(bufnr)
+function M.buf_detach(bufnr, _client)
   bufnr = expand_bufnr(bufnr)
   vim.api.nvim_buf_clear_namespace(bufnr, NAMESPACE, 0, -1)
   ATTACHED_BUFFERS[bufnr] = nil
@@ -203,18 +209,19 @@ require("mega.autocmds").augroup("DocumentColors", {
     event = { "BufEnter" },
     desc = "Attach document color LSP functionality to a buffer",
     command = function(evt)
+      local client = (evt ~= nil and evt.data ~= nil and evt.data.client_id ~= nil) and vim.lsp.get_client_by_id(evt.data.client_id) or nil
       -- local client = assert(vim.lsp.get_client_by_id(evt.data.client_id), "must have valid ls client")
       -- if not client or not client.supports_method("textDocument/documentColor", { bufnr = evt.buf }) then return end
-      M.buf_attach(evt.buf, { single_column = true, col_count = 2, mode = "bg" })
+      M.buf_attach(evt.buf, { single_column = true, col_count = 2, mode = "bg", client = client })
     end,
   },
   {
     event = { "BufLeave" },
     desc = "Detach document color LSP functionality from a buffer",
     command = function(evt)
-      -- local client = assert(vim.lsp.get_client_by_id(evt.data.client_id), "must have valid ls client")
+      local client = (evt ~= nil and evt.data ~= nil and evt.data.client_id ~= nil) and vim.lsp.get_client_by_id(evt.data.client_id) or nil
       -- if not client or not client.supports_method("textDocument/documentColor", { bufnr = evt.buf }) then return end
-      M.buf_detach(evt.buf)
+      M.buf_detach(evt.buf, client)
     end,
   },
 })
