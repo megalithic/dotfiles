@@ -207,15 +207,26 @@ return {
           example = { raw = "[!EXAMPLE]", rendered = "󰉹 Example", highlight = "RenderMarkdownHint" },
           quote = { raw = "[!QUOTE]", rendered = "󱆨 Quote", highlight = "RenderMarkdownQuote" },
         },
+        -- link = {
+        --   -- Turn on / off inline link icon rendering
+        --   enabled = true,
+        --   -- Inlined with 'image' elements
+        --   image = "󰥶 ",
+        --   -- Inlined with 'inline_link' elements
+        --   hyperlink = "󰌹 ",
+        --   -- Applies to the inlined icon
+        --   highlight = "RenderMarkdownLink",
+        -- },
+        --
         link = {
-          -- Turn on / off inline link icon rendering
           enabled = true,
-          -- Inlined with 'image' elements
           image = "󰥶 ",
-          -- Inlined with 'inline_link' elements
+          email = "󰀓 ",
           hyperlink = "󰌹 ",
-          -- Applies to the inlined icon
           highlight = "RenderMarkdownLink",
+          custom = {
+            web = { pattern = "^http[s]?://", icon = "󰖟 ", highlight = "RenderMarkdownLink" },
+          },
         },
         sign = {
           -- Turn on / off sign rendering
@@ -251,49 +262,49 @@ return {
       al.create_mapping_hook("n", "O", al.new_before)
     end,
   },
-  {
-    "lukas-reineke/headlines.nvim",
-    event = {
-      "BufRead **.md,**.yaml,**.neorg,**.org",
-      "BufNewFile **.md,**.yaml,**.neorg,**.org",
-      -- "FileType gitcommit,NeogitCommitMessage,.git/COMMIT_EDITMSG",
-    },
-    dependencies = "nvim-treesitter",
-    config = function()
-      require("headlines").setup({
-        markdown = {
-          source_pattern_start = "^```",
-          source_pattern_end = "^```$",
-          dash_pattern = "-",
-          dash_highlight = "Dash",
-          dash_string = "󰇜",
-          quote_highlight = "Quote",
-          quote_string = "┃",
-          headline_pattern = "^#+",
-          headline_highlights = { "Headline1", "Headline2", "Headline3", "Headline4", "Headline5", "Headline6" },
-          fat_headlines = true,
-          fat_headline_upper_string = "▃",
-          fat_headline_lower_string = "🬂",
-          codeblock_highlight = "CodeBlock",
-          bullets = {},
-          bullet_highlights = {},
-          -- bullets = { "◉", "○", "✸", "✿" },
-          -- bullet_highlights = {
-          --   "@text.title.1.marker.markdown",
-          --   "@text.title.2.marker.markdown",
-          --   "@text.title.3.marker.markdown",
-          --   "@text.title.4.marker.markdown",
-          --   "@text.title.5.marker.markdown",
-          --   "@text.title.6.marker.markdown",
-          -- },
-        },
-        yaml = {
-          dash_pattern = "^---+$",
-          dash_highlight = "Dash",
-        },
-      })
-    end,
-  },
+  -- {
+  --   "lukas-reineke/headlines.nvim",
+  --   event = {
+  --     "BufRead **.md,**.yaml,**.neorg,**.org",
+  --     "BufNewFile **.md,**.yaml,**.neorg,**.org",
+  --     -- "FileType gitcommit,NeogitCommitMessage,.git/COMMIT_EDITMSG",
+  --   },
+  --   dependencies = "nvim-treesitter",
+  --   config = function()
+  --     require("headlines").setup({
+  --       markdown = {
+  --         source_pattern_start = "^```",
+  --         source_pattern_end = "^```$",
+  --         dash_pattern = "-",
+  --         dash_highlight = "Dash",
+  --         dash_string = "󰇜",
+  --         quote_highlight = "Quote",
+  --         quote_string = "┃",
+  --         headline_pattern = "^#+",
+  --         headline_highlights = { "Headline1", "Headline2", "Headline3", "Headline4", "Headline5", "Headline6" },
+  --         fat_headlines = true,
+  --         fat_headline_upper_string = "▃",
+  --         fat_headline_lower_string = "🬂",
+  --         codeblock_highlight = "CodeBlock",
+  --         bullets = {},
+  --         bullet_highlights = {},
+  --         -- bullets = { "◉", "○", "✸", "✿" },
+  --         -- bullet_highlights = {
+  --         --   "@text.title.1.marker.markdown",
+  --         --   "@text.title.2.marker.markdown",
+  --         --   "@text.title.3.marker.markdown",
+  --         --   "@text.title.4.marker.markdown",
+  --         --   "@text.title.5.marker.markdown",
+  --         --   "@text.title.6.marker.markdown",
+  --         -- },
+  --       },
+  --       yaml = {
+  --         dash_pattern = "^---+$",
+  --         dash_highlight = "Dash",
+  --       },
+  --     })
+  --   end,
+  -- },
   {
     enabled = false,
     "3rd/image.nvim",

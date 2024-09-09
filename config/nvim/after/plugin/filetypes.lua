@@ -84,6 +84,8 @@ ftplugin.extend_all({
       spell = true,
       spelllang = "en_gb",
       colorcolumn = "50,72",
+      conceallevel = 2,
+      concealcursor = "nc",
     },
     callback = function()
       vim.keymap.set("n", "q", function() vim.cmd("cq!", { bang = true }) end, { buffer = true, nowait = true, desc = "Abort" })
@@ -108,6 +110,8 @@ ftplugin.extend_all({
       spell = true,
       spelllang = "en_gb",
       colorcolumn = "50,72",
+      conceallevel = 2,
+      concealcursor = "nc",
     },
     callback = function()
       vim.keymap.set("n", "q", function() vim.cmd("cq!", { bang = true }) end, { buffer = true, nowait = true, desc = "Abort" })

@@ -23,7 +23,7 @@ if (Application("Music").running()) {
 
   let stateIcon = "";
   if (state === "playing") {
-    stateIcon = ""; // alts: 
+    stateIcon = ""; // alts: 
   } else {
     stateIcon = ""; // alts: 
   }

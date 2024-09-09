@@ -94,14 +94,14 @@ local M = {
     "env",
   },
   disabled_semantic_tokens = { "lua" },
-  disabled_lsp_formatters = { "tailwindcss", "html", "tsserver", "ls_emmet", "zk", "sumneko_lua" },
+  disabled_lsp_formatters = { "tailwindcss", "html", "ts_ls", "ls_emmet", "zk", "sumneko_lua" },
   ---@format disable
   enabled_elixir_ls = { "", "", "", "nextls", "" },
   completion_exclusions = { "ElixirLS", "Next LS", "", "", "" },
   formatter_exclusions = { "ElixirLS", "Next LS", "", "", "lexical" },
   definition_exclusions = { "ElixirLS", "Next LS", "elixirls", "nextls", "" },
   references_exclusions = { "ElixirLS", "Next LS", "elixirls", "nextls", "" },
-  diagnostic_exclusions = { "ElixirLS", "Next LS", "", "", "", "tsserver" },
+  diagnostic_exclusions = { "ElixirLS", "Next LS", "", "", "", "ts_ls" },
   max_diagnostic_exclusions = { "ElixirLS", "Next LS", "elixirls", "", "lexical" },
   ---@format enable
   disable_autolint = false,

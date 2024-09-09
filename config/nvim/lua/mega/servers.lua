@@ -538,7 +538,7 @@ M.list = function()
     teal_ls = {},
     terraformls = {},
     -- NOTE: presently enabled via typescript-tools
-    tsserver = function()
+    ts_ls = function()
       local function do_organize_imports()
         local params = {
           command = "_typescript.organizeImports",

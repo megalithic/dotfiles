@@ -20,6 +20,7 @@ return {
       {
         "j-hui/fidget.nvim",
         event = "LspAttach",
+        cond = false,
         opts = {
           progress = {
             display = {
@@ -472,11 +473,13 @@ return {
             event = { "LspProgress" },
             desc = "Handle lsp progress message scenarios",
             command = function(ev)
-              local token = ev.data.params.token
-              if ev.data.result and ev.data.result.token then token = ev.data.result.token end
-              local client_id = ev.data.client_id
-              local c = client_id and vim.lsp.get_client_by_id(client_id)
-              if c and token then require("fidget").notification.remove(c.name, token) end
+              if pcall(require, "fidget") then
+                local token = ev.data.params.token
+                if ev.data.result and ev.data.result.token then token = ev.data.result.token end
+                local client_id = ev.data.client_id
+                local c = client_id and vim.lsp.get_client_by_id(client_id)
+                if c and token then require("fidget").notification.remove(c.name, token) end
+              end
             end,
           },
         })
@@ -605,13 +608,13 @@ return {
             format = diag_msg_format,
           },
           severity_sort = true,
-          virtual_text = false,
-          -- virtual_text = {
-          --   only_current_line = true,
-          --   highlight_whole_line = false,
-          --   severity = { min = diag_level.ERROR },
-          --   suffix = function(diag) return diag_source_as_suffix(diag, "virtual_text") end,
-          -- },
+          -- virtual_text = false,
+          virtual_text = {
+            only_current_line = true,
+            highlight_whole_line = false,
+            severity = { min = diag_level.ERROR },
+            suffix = function(diag) return diag_source_as_suffix(diag, "virtual_text") end,
+          },
           update_in_insert = false,
         })
 
@@ -735,6 +738,7 @@ return {
   },
   {
     "dgagn/diagflow.nvim",
+    cond = false,
     event = "LspAttach",
     opts = {
       text_align = "left", -- 'left', 'right'
@@ -742,7 +746,7 @@ return {
     },
   },
   {
-    enabled = false,
+    cond = false,
     "https://git.sr.ht/~whynothugo/lsp_lines.nvim",
     config = true,
   },
