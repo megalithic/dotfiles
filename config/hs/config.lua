@@ -27,7 +27,7 @@ window.animationDuration = 0.0
 window.highlight.ui.overlay = false
 window.setShadows(false)
 
-ipc.cliUninstall()
+-- ipc.cliUninstall()
 ipc.cliInstall()
 
 hs.grid.setGrid("60x20")

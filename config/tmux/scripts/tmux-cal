@@ -82,11 +82,10 @@ calculate_times() {
     minutes_till_meeting=$((epoc_diff / 60))
     HOURS=$((epoc_diff / 3600))
     MINUTES=$((epoc_diff % 3600 / 60))
-    if [[ -n "$HOURS" ]]; then
-      hours_mins_till_meeting="${HOURS}h ${MINUTES}m"
+    if [[ "$HOURS" == "0" ]]; then
+      hours_mins_till_meeting="${MINUTES}m"
     else
-      hours_mins_till_meeting="${MINS}m"
-
+      hours_mins_till_meeting="${HOURS}h ${MINUTES}m"
     fi
   fi
 }
@@ -112,7 +111,7 @@ display_popup() {
 print_tmux_status() {
   if [[ $minutes_till_meeting -lt $ALERT_IF_IN_NEXT_MINUTES &&
     $minutes_till_meeting -gt -60 ]]; then
-    echo "#[fg=#d9bb80]$NERD_FONT_MEETING $title  in $hours_mins_till_meeting"
+    echo "#[fg=#d8caac]$NERD_FONT_MEETING $title  in $hours_mins_till_meeting"
     # echo "$NERD_FONT_MEETING $time $title ($minutes_till_meeting minutes)"
   else
     echo "$NERD_FONT_FREE $(date +"%a %b %d")"
