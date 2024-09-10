@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-NOW_PLAYING=$(osascript <<EOF
+NOW_PLAYING=$(osascript EOF
   if app_is_running("Spotify") then
     tell application "Spotify"
       if player state is playing then

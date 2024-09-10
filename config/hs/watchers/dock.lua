@@ -40,8 +40,8 @@ function obj.setOutput(deviceStr)
 
   if not bt.preferredBluetoothDevicesConnected() then
     device = bt.devices["fallback"]
-  elseif not bt.isBluetoothDeviceConnected(deviceStr) then
-    device = bt.devices["bose"]
+    -- elseif not bt.isBluetoothDeviceConnected(deviceStr) then
+    --   device = bt.devices["bose"]
   end
 
   local task = hs.task.new(obj.audioBin, function(_exitCode, _stdOut, _stdErr) end, function(_task, stdOut, _stdErr)

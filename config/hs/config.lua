@@ -1,4 +1,3 @@
-local enum = require("hs.fnutils")
 local window = require("hs.window")
 local ipc = require("hs.ipc")
 

@@ -1,7 +1,10 @@
 #!/bin/bash
 
-ALERT_IF_IN_NEXT_MINUTES=220
-ALERT_POPUP_BEFORE_SECONDS=5
+DISPLAY_IF_IN_NEXT_MINUTES=220
+ALERT_IF_IN_NEXT_MINUTES=15
+EMERGENCY_IF_IN_NEXT_MINUTES=5
+POPUP_BEFORE_SECONDS=300
+
 NERD_FONT_FREE=""
 NERD_FONT_MEETING=""
 
@@ -28,6 +31,7 @@ parse_attendees() {
   for line in $attendees; do
     attendees_array+=("$line")
   done
+
   number_of_attendees=$((${#attendees_array[@]} - 3))
 }
 
@@ -49,6 +53,7 @@ get_next_meeting() {
 get_next_next_meeting() {
   end_timestamp=$(date +"%Y-%m-%d ${end_time}:01 %z")
   tonight=$(date +"%Y-%m-%d 23:59:00 %z")
+
   next_next_meeting=$(
     icalBuddy \
       --includeEventProps "title,datetime" \
@@ -69,6 +74,7 @@ parse_result() {
   for line in $1; do
     array+=("$line")
   done
+
   time=$(echo "${array[2]}" | awk '{$1=$1};1')
   end_time=$(echo "${array[4]}" | awk '{$1=$1};1')
   title=$(echo "${array[*]:5:30}" | awk '{$1=$1};1')
@@ -80,6 +86,7 @@ calculate_times() {
     epoc_now=$(date +%s)
     epoc_diff=$((epoc_meeting - epoc_now))
     minutes_till_meeting=$((epoc_diff / 60))
+
     HOURS=$((epoc_diff / 3600))
     MINUTES=$((epoc_diff % 3600 / 60))
     if [[ "$HOURS" == "0" ]]; then
@@ -96,7 +103,7 @@ display_popup() {
     -w30% \
     -h30% \
     -d '#{pane_current_path}' \
-    -T meeting \
+    -T "Meeting - $title" \
     icalBuddy \
     --propertyOrder "datetime,title" \
     --noCalendarNames \
@@ -109,17 +116,20 @@ display_popup() {
 }
 
 print_tmux_status() {
-  if [[ $minutes_till_meeting -lt $ALERT_IF_IN_NEXT_MINUTES &&
-    $minutes_till_meeting -gt -60 ]]; then
-    echo "#[fg=#d8caac]$NERD_FONT_MEETING $title  in $hours_mins_till_meeting"
-    # echo "$NERD_FONT_MEETING $time $title ($minutes_till_meeting minutes)"
+  if [[ $minutes_till_meeting -lt $DISPLAY_IF_IN_NEXT_MINUTES &&
+    $minutes_till_meeting -gt -60 && ! $minutes_till_meeting =~ "-" && -n "$time" ]]; then
+    if [[ $minutes_till_meeting -lt $EMERGENCY_IF_IN_NEXT_MINUTES ]]; then
+      echo "#[fg=#e67e80]$NERD_FONT_MEETING $title  in $hours_mins_till_meeting"
+    elif [[ $minutes_till_meeting -lt $ALERT_IF_IN_NEXT_MINUTES ]]; then
+      echo "#[fg=#e39b7b]$NERD_FONT_MEETING $title  in $hours_mins_till_meeting"
+    else
+      echo "#[fg=#d8caac]$NERD_FONT_MEETING $title  in $hours_mins_till_meeting"
+    fi
   else
     echo "$NERD_FONT_FREE $(date +"%a %b %d")"
-    # echo "$NERD_FONT_FREE $title  in $hours_mins_till_meeting"
-    # echo "$NERD_FONT_FREE $time $title ($minutes_till_meeting minutes)"
   fi
 
-  if [[ $epoc_diff -gt $ALERT_POPUP_BEFORE_SECONDS && epoc_diff -lt $ALERT_POPUP_BEFORE_SECONDS+10 ]]; then
+  if [[ $epoc_diff -gt $POPUP_BEFORE_SECONDS && epoc_diff -lt $POPUP_BEFORE_SECONDS+10 ]]; then
     display_popup
   fi
 }

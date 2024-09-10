@@ -18,7 +18,12 @@ function obj:start(opts)
 
   if obj.modal then obj.modal:enter() end
 
-  if enum.contains({ hs.application.watcher.launched }, event) and not obj.launched then
+  if
+    enum.contains(
+      { hs.application.watcher.launched, hs.application.watcher.activated, hs.uielement.watcher.applicationActivated },
+      event
+    ) and not obj.launched
+  then
     local pop = hs.application.get("com.pop.pop.app")
     req("utils").dnd(true, "zoom")
     hs.spotify.pause()
