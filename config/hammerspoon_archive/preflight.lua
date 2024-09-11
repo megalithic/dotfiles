@@ -1,10 +1,16 @@
-_G.DefaultFont = { name = "JetBrainsMono Nerd Font", size = 18 }
-_G.fmt = string.format
+-- [ GLOBALS ] -----------------------------------------------------------------
+
+_G.mega = _G.mega or {
+  __loaded_modules = {},
+}
+_G.L = require("utils.loader")
+_G.U = require("utils")
 _G.ts = function(date)
   date = date or hs.timer.secondsSinceEpoch()
   -- return os.date("%Y-%m-%d %H:%M:%S " .. ((tostring(date):match("(%.%d+)$")) or ""), math.floor(date))
   return os.date("%Y-%m-%d %H:%M:%S", math.floor(date))
 end
+_G.fmt = string.format
 _G.P = function(...)
   if ... == nil then
     hs.rawprint("")
@@ -24,6 +30,7 @@ _G.P = function(...)
   hs.console.printStyledtext(ts() .. " -> " .. contents)
 end
 _G.I = hs.inspect.inspect
+_G.DefaultFont = { name = "JetBrainsMono Nerd Font", size = 18 }
 
 local stext = require("hs.styledtext").new
 local getInfo = function()
@@ -88,18 +95,7 @@ function _G.warn(msg, tag1, tag2)
   }))
 end
 
-function _G.dbg(msg, force, tag1, tag2)
-  if type(force) == "boolean" then
-    if force then
-      _G.debug_enabled = true
-    else
-      _G.debug_enabled = false
-    end
-  else
-    tag1 = force
-    tag2 = tag1
-  end
-
+function _G.dbg(msg, tag1, tag2)
   if not _G.debug_enabled then return end
 
   local tag = tag2 and "[DEBUG] " or "[DEBUG] "
@@ -114,12 +110,12 @@ function _G.dbg(msg, force, tag1, tag2)
   }))
 end
 
-function Windows()
+function _G.windows()
   local app
   if type(app) == "string" then app = hs.application.get(app) end
   local windows = app == nil and hs.window.allWindows() or app:allWindows()
 
-  return hs.fnutils.each(windows, function(win)
+  hs.fnutils.each(windows, function(win)
     info(fmt("[WIN] %s (%s)", win:title(), win:application():bundleID()))
     note(I({
       id = win:id(),
@@ -136,35 +132,38 @@ function Windows()
       -- buttonFullScreen = axuiWindowElement(win):attributeValue('AXFullScreenButton'),
       -- isResizable      = axuiWindowElement(win):isAttributeSettable('AXSize')
     }))
-    return win
   end)
 end
 
-function Screens()
-  return hs.fnutils.each(hs.screen.allScreens(), function(s)
-    print(hs.inspect({
-      name = s:name(),
-      id = s:id(),
-      position = s:position(),
-      frame = s:frame(),
-    }))
-    return s
-  end)
+function _G.screens()
+  hs.fnutils.each(
+    hs.screen.allScreens(),
+    function(s)
+      print(hs.inspect({
+        name = s:name(),
+        id = s:id(),
+        position = s:position(),
+        frame = s:frame(),
+      }))
+    end
+  )
 end
 
-function Usb()
-  return hs.fnutils.each(hs.usb.attachedDevices(), function(d)
-    print(hs.inspect({
-      productID = d.productID,
-      productName = d.productName,
-      vendorID = d.vendorID,
-      vendorName = d.vendorName,
-    }))
-    return d
-  end)
+function _G.usb()
+  hs.fnutils.each(
+    hs.usb.attachedDevices(),
+    function(d)
+      print(hs.inspect({
+        productID = d.productID,
+        productName = d.productName,
+        vendorID = d.vendorID,
+        vendorName = d.vendorName,
+      }))
+    end
+  )
 end
 
-function AudioInput()
+function _G.audioInput()
   hs.fnutils.each(
     hs.audiodevice.allInputDevices(),
     function(d)
@@ -188,7 +187,7 @@ function AudioInput()
   }))
 end
 
-function AudioOutput()
+function _G.audioOutput()
   hs.fnutils.each(
     hs.audiodevice.allOutputDevices(),
     function(d)
@@ -212,7 +211,7 @@ function AudioOutput()
   }))
 end
 
-function Hostname()
+function _G.hostname()
   local hostname = ""
   local handle = io.popen("hostname")
 
@@ -224,84 +223,37 @@ function Hostname()
   return hostname
 end
 
-info(fmt("[START] %s", "preflight"))
+_G.CONFIG_KEY = "_mega_config"
 
--- function tableFlip(t)
---   n = {}
+-- _G.application_events = function(e)
+--   local t = type(e)
 --
---   for k, v in pairs(t) do
---     n[v] = k
---   end
+--   local a = hs.application.watcher
 --
---   return n
+--   local enum_tbl = {
+--     [0] = a.launching,
+--     [1] = a.launched,
+--     [2] = a.terminated,
+--     [3] = a.hidden,
+--     [4] = a.unhidden,
+--     [5] = a.activated,
+--     [6] = a.deactivated,
+--   }
+--
+--   return enum_tbl[e]
 -- end
---
--- --------------------------------------------------------------------------------
--- -- Modal Helpers
--- --------------------------------------------------------------------------------
---
--- function activateModal(mods, key, timeout)
---   timeout = timeout or false
---   local modal = hs.hotkey.modal.new(mods, key)
---   local timer = hs.timer.new(1, function() modal:exit() end)
---   modal:bind("", "escape", nil, function() modal:exit() end)
---   modal:bind("ctrl", "c", nil, function() modal:exit() end)
---   function modal:entered()
---     if timeout then timer:start() end
---     print("modal entered")
---   end
---   function modal:exited()
---     if timeout then timer:stop() end
---     print("modal exited")
---   end
---   return modal
--- end
---
--- function modalBind(modal, key, fn, exitAfter)
---   exitAfter = exitAfter or false
---   modal:bind("", key, nil, function()
---     fn()
---     if exitAfter then modal:exit() end
---   end)
--- end
---
--- --------------------------------------------------------------------------------
--- -- Binding Helpers
--- --------------------------------------------------------------------------------
---
--- function registerKeyBindings(mods, bindings)
---   for key, binding in pairs(bindings) do
---     hs.hotkey.bind(mods, key, binding)
---   end
--- end
---
--- function registerModalBindings(mods, key, bindings, exitAfter)
---   exitAfter = exitAfter or false
---   local timeout = exitAfter == true
---   local modal = activateModal(mods, key, timeout)
---   for modalKey, binding in pairs(bindings) do
---     modalBind(modal, modalKey, binding, exitAfter)
---   end
---   return modal
--- end
---
--- function getPositions(sizes, leftOrRight, topOrBottom)
---   local applyLeftOrRight = function(size)
---     if type(POSITIONS[size]) == "string" then return POSITIONS[size] end
---     return POSITIONS[size][leftOrRight]
---   end
---
---   local applyTopOrBottom = function(position)
---     local h = math.floor(string.match(position, "x([0-9]+)") / 2)
---     position = string.gsub(position, "x[0-9]+", "x" .. h)
---     if topOrBottom == "bottom" then
---       local y = math.floor(string.match(position, ",([0-9]+)") + h)
---       position = string.gsub(position, ",[0-9]+", "," .. y)
---     end
---     return position
---   end
---
---   if topOrBottom then return hs.fnutils.map(hs.fnutils.map(sizes, applyLeftOrRight), applyTopOrBottom) end
---
---   return hs.fnutils.map(sizes, applyLeftOrRight)
--- end
+
+-- [ CONSOLE SETTINGS ] ---------------------------------------------------------
+
+local con = require("hs.console")
+con.darkMode(true)
+con.consoleFont(DefaultFont)
+con.alpha(0.985)
+local darkGrayColor = { red = 26 / 255, green = 28 / 255, blue = 39 / 255, alpha = 1.0 }
+local whiteColor = { white = 1.0, alpha = 1.0 }
+local lightGrayColor = { white = 1.0, alpha = 0.9 }
+local grayColor = { red = 24 * 4 / 255, green = 24 * 4 / 255, blue = 24 * 4 / 255, alpha = 1.0 }
+con.outputBackgroundColor(darkGrayColor)
+con.consoleCommandColor(whiteColor)
+con.consoleResultColor(lightGrayColor)
+con.consolePrintColor(grayColor)
