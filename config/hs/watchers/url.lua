@@ -97,8 +97,7 @@ end
 -- keeps track of the most recently used browser
 function obj.handleHttpCallback(scheme, _host, _params, fullURL, _senderPID)
   local allHandlers = hs.urlevent.getAllHandlersForScheme(scheme)
-  local currentBrowserBundleID = hs.application.get(BROWSER):bundleID()
-  local appHandler = enum.find(allHandlers, function(v) return v == currentBrowserBundleID end)
+  local appHandler = enum.find(allHandlers, function(v) return v == BROWSER end)
 
   if not appHandler then
     warn(fmt("[%s] invalid browser handler: %s", obj.name, obj.currentHandler))

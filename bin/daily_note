@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+
+export SESSION_ICON="󰎞" # alts: 󰂚󰞎󰵚󰵛
+export SESSION_FG="#f5c2e7"
+
+# Specify below the directory in which you want to create your daily note
+main_note_dir="${HOME}/Documents/_notes/daily"
+
+# Get current date components
+current_month_abbr=$(date +"%b")
+current_weekday=$(date +"%A")
+current_year=$(date +"%Y")
+current_month_num=$(date +"%m")
+current_day=$(date +"%d")
+
+# Construct the directory structure and filename
+note_dir="${main_note_dir}/${current_year}/${current_month_num}"
+note_name="${current_year}-${current_month_num}-${current_day}"
+full_path="${note_dir}/${note_name}.md"
+# Use note name as the session name
+tmux_session_name="daily-note_${note_name}"
+
+# Check if the directory exists, if not, create it
+if [ ! -d "$note_dir" ]; then
+  mkdir -p "$note_dir"
+fi
+
+# Create the daily note if it does not already exist
+if [ ! -f "$full_path" ]; then
+  cat <<EOF >"$full_path"
+tags:
+
+- #daily
+
+<!--toc:start-->
+
+- [Daily notes | ${note_name}](#daily-notes)
+
+<!--toc:end-->
+
+# Daily notes
+EOF
+fi
+
+if ! tmux has-session -t="$tmux_session_name" 2>/dev/null; then
+  tmux new-session -d -s "$tmux_session_name" -c "$note_dir" "nvim +norm\ G \"$full_path\""
+fi
+
+tmux setenv -t "$tmux_session_name" 'SESSION_ICON' "${SESSION_ICON}"
+tmux setenv -t "$tmux_session_name" 'SESSION_FG' "${SESSION_FG}"
+
+tmux switch-client -t "$tmux_session_name"
+tmux refresh-client

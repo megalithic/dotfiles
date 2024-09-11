@@ -8,7 +8,7 @@ local utils = req("utils")
 
 do
   local hyper = req("hyper"):start({ id = "apps" })
-  hs.fnutils.each(LAUNCHERS, function(bindingTable)
+  enum.each(LAUNCHERS, function(bindingTable)
     local bundleID, globalBind, localBinds, focusOnly = table.unpack(bindingTable)
     if globalBind ~= nil then
       local key = globalBind
@@ -26,7 +26,7 @@ do
       end)
     end
 
-    if localBinds then hs.fnutils.each(localBinds, function(key) hyper:bindPassThrough(key, bundleID) end) end
+    if localBinds then enum.each(localBinds, function(key) hyper:bindPassThrough(key, bundleID) end) end
   end)
 end
 
@@ -194,7 +194,7 @@ wmModality
   end)
   :bind({}, "f", function()
     local focused = hs.window.focusedWindow()
-    hs.fnutils.map(focused:otherWindowsAllScreens(), function(win) win:application():hide() end)
+    enum.map(focused:otherWindowsAllScreens(), function(win) win:application():hide() end)
     wmModality:exit()
   end)
   :bind("", "c", function()

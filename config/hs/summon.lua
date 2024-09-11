@@ -28,8 +28,8 @@ function obj.toggle(appIdentifier, shouldHide)
       else
         if mainWin:application() ~= nil then
           mainWin:application():activate(true)
-          mainWin:application():unhide()
-          mainWin:focus()
+          pcall(mainWin:application():unhide())
+          pcall(mainWin:focus())
         end
       end
     else

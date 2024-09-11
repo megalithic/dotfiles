@@ -8,7 +8,7 @@ function truncate(str, limit) {
   return str;
 }
 
-let output = "";
+let output = "not running";
 if (Application("Music").running()) {
   const track = Application("Music").currentTrack;
   const artist = track.artist();

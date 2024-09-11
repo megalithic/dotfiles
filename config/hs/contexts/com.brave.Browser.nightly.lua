@@ -51,7 +51,12 @@ function obj:start(opts)
   --
   if
     enum.contains(
-      { hs.application.watcher.deactivated, hs.application.watcher.activated, hs.application.watcher.launched },
+      {
+        hs.application.watcher.deactivated,
+        hs.application.watcher.activated,
+        hs.uielement.watcher.applicationActivated,
+        hs.application.watcher.launched,
+      },
       event
     )
   then

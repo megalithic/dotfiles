@@ -339,4 +339,61 @@ map("n", "<leader>tf", "<cmd>T direction=float move_on_direction_change=true<cr>
 map("n", "<leader>tv", "<cmd>T direction=vertical move_on_direction_change=true<cr>", { desc = "vertical" })
 map("n", "<leader>tp", "<cmd>T direction=tab<cr>", { desc = "tab-persistent" })
 
+-- [[ executions ]] ------------------------------------------------------------
+
+-- If this is a bash script, make it executable, and execute it in a tmux pane on the right
+-- Using a tmux pane allows me to easily select text
+-- Had to include quotes around "%" because there are some apple dirs that contain spaces, like iCloud
+map("n", "<leader>exf", function()
+  local filetype = vim.bo.ft
+  local file = vim.fn.expand("%") -- Get the current file name
+  local first_line = vim.fn.getline(1) -- Get the first line of the file
+  if string.match(first_line, "^#!/") then -- If first line contains shebang
+    local escaped_file = vim.fn.shellescape(file) -- Properly escape the file name for shell commands
+
+    -- Execute the script on a tmux pane on the right. On my mac I use zsh, so
+    -- running this script with bash to not execute my zshrc file after
+    -- vim.cmd("silent !tmux split-window -h -l 60 'bash -c \"" .. escaped_file .. "; exec bash\"'")
+    -- `-l 60` specifies the size of the tmux pane, in this case 60 columns
+    vim.notify("executing shell script in tmux split")
+    vim.cmd("silent !tmux split-window -h -l 60 'bash -c \"" .. escaped_file .. "; echo; echo Press any key to exit...; read -n 1; exit\"'")
+  elseif filetype == "lua" then
+    vim.notify("sourcing file")
+    vim.cmd("source %")
+  else
+    vim.notify("Not a script. Shebang line not found.")
+    -- vim.cmd("echo 'Not a script. Shebang line not found.'")
+  end
+end, { desc = "e[x]ecute [f]ile" })
+map("n", "<leader>exl", "<cmd>.lua<CR>", { desc = "e[x]ecute [l]ine" })
+
+-- Toggle a tmux pane on the right in bash, in the same directory as the current file
+-- Opening it in bash because it's faster, I don't have to run my .zshrc file,
+-- which pulls from my repo and a lot of other stuff
+map("n", "<leader>en", function()
+  local file_dir = vim.fn.expand(vim.g.notes_path)
+  -- local file_dir = vim.fn.expand("%:p:h") -- Get the directory of the current file
+  local pane_width = 60
+  local right_pane_id = vim.fn.system("tmux list-panes -F '#{pane_id} #{pane_width}' | awk '$2 == " .. pane_width .. " {print $1}'")
+  if right_pane_id ~= "" then
+    -- If the right pane exists, close it
+    vim.fn.system("tmux kill-pane -t " .. right_pane_id)
+  else
+    -- If the right pane doesn't exist, open it
+    vim.fn.system("tmux split-window -h -l " .. pane_width .. " 'cd \"" .. file_dir .. "\" && zsh -i'")
+  end
+end)
+map("n", "<leader>et", function()
+  local file_dir = vim.fn.expand("%:p:h") -- Get the directory of the current file
+  local pane_width = 60
+  local right_pane_id = vim.fn.system("tmux list-panes -F '#{pane_id} #{pane_width}' | awk '$2 == " .. pane_width .. " {print $1}'")
+  if right_pane_id ~= "" then
+    -- If the right pane exists, close it
+    vim.fn.system("tmux kill-pane -t " .. right_pane_id)
+  else
+    -- If the right pane doesn't exist, open it
+    vim.fn.system("tmux split-window -h -l " .. pane_width .. " 'cd \"" .. file_dir .. "\" && zsh -i'")
+  end
+end)
+
 return M

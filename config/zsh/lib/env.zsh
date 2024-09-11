@@ -180,20 +180,25 @@ case "$(uname)" in
       eval "$(luarocks --lua-version=5.1 path)"
     fi
 
+    export BROWSER="open"
+
     export SYNC_DIR="${HOME}/Dropbox"
-    export ICLOUD_DIR="$HOME/Library/Mobile Documents/com~apple~CloudDocs"
+
+    export ICLOUD_DIR="${HOME}/Library/Mobile Documents/com~apple~CloudDocs"
     export ICLOUD_DOCUMENTS_DIR="${ICLOUD_DIR}/Documents"
     export DOCUMENTS_DIR="${ICLOUD_DOCUMENTS_DIR}"
-    export OBSIDIAN_VAULT_DIR="${ICLOUD_DIR}/Documents/_notes/vault"
-    export ZK_NOTEBOOK_DIR="$DOCUMENTS_DIR/_notes"
-    export ZK_CONFIG_DIR="$XDG_CONFIG_HOME/zk"
 
-    export BROWSER="open"
+    export NOTES_DIR="${HOME}/Library/Mobile\ Documents/com~apple~CloudDocs/_notes"
+    export OBSIDIAN_VAULT_DIR="${NOTES_DIR}/obsidian"
+    export ZK_NOTEBOOK_DIR="${ICLOUD_DOCUMENTS_DIR}/_notes/zk"
+    export ZK_CONFIG_DIR="${XDG_CONFIG_HOME}/zk"
+
     export HOMEBREW_NO_ANALYTICS=1
     export HOMEBREW_CASK_OPTS="--appdir=/Applications"
     export HOMEBREW_NO_INSTALL_CLEANUP=TRUE
     export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=FALSE
     # export HOMEBREW_NO_INSTALL_FROM_API=0
+
     if which gh >/dev/null; then
       export HOMEBREW_GITHUB_API_TOKEN="$(gh auth token &>/dev/null)"
     fi

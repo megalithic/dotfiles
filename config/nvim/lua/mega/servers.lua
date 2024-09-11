@@ -338,7 +338,21 @@ M.list = function()
         },
       }
     end,
-    -- marksman = function() return (vim.g.started_by_firenvim or vim.env.TMUX_POPUP) and nil or {} end,
+    marksman = function()
+      return (vim.g.started_by_firenvim or vim.env.TMUX_POPUP) and nil
+        or {
+          on_attach = function(_client, _bufnr)
+            if string.match(vim.fn.expand("%:p:h"), "_notes") then
+              vim.keymap.set(
+                "n",
+                "<leader>ff",
+                function() mega.picker.find_files({ picker = "smart_open", cwd = vim.g.notes_path }) end,
+                { desc = "[f]ind in [n]otes" }
+              )
+            end
+          end,
+        }
+    end,
     nextls = function()
       if not U.lsp.is_enabled_elixir_ls("nextls") then return false end
 
@@ -538,7 +552,7 @@ M.list = function()
     teal_ls = {},
     terraformls = {},
     -- NOTE: presently enabled via typescript-tools
-    tsserver = function()
+    ts_ls = function()
       local function do_organize_imports()
         local params = {
           command = "_typescript.organizeImports",

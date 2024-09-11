@@ -435,8 +435,9 @@ function M.apply()
         local has_bin = string.match(vim.fn.getline(1), "/bin/")
         if not_executable and has_shebang and has_bin then
           vim.notify(fmt("made %s executable", args.file), L.INFO)
-          vim.cmd([[!chmod +x <afile>]]) -- or a+x ?
-          -- vim.schedule(function() vim.cmd("edit") end)
+          -- vim.cmd([[!chmod +x "%"]]) -- or a+x ?
+          vim.cmd([[silent !chmod +x <afile>]]) -- or a+x ?
+          vim.defer_fn(function() vim.cmd("edit") end, 100)
         end
       end,
     },

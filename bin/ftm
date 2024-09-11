@@ -178,10 +178,9 @@ function fuzzy_find() {
   # pane_capture="tmux capture-pane -ep -S- -E- -t {}"
   # REF: https://github.com/search?q=repo%3Asainnhe%2Ftmux-fzf%20preview&type=code
   pane_capture="tmux capture-pane -epT -t {}"
-
   preview_lines_of_output=50
   preview_cmd_layout_info="echo {} | sed 's/:.*$//' | xargs -I {} | xargs tmux has-session -t 2>/dev/null && xargs -I {}"
-  preview_cmd_preview="${pane_capture} | tail -f -n${FZF_PREVIEW_LINES:-25}" # | less -N +F"
+  preview_cmd_preview="${pane_capture}" # | tail -f -n${FZF_PREVIEW_LINES:-$preview_lines_of_output}" # | less -N +F"
   # preview_cmd_preview="${pane_capture} | tail -f -n$preview_lines_of_output | nl" # | less -N +F"
   # preview_cmd_layout_info="echo {} | sed 's/:.*$//' | xargs -I {} | xargs tmux has-session -t 2>/dev/null && xargs -I {} | echo '$(tput sgr 0 1)$(tput setaf 6) windows in session:$(tput sgr 0)\n' && tmux list-windows -F '░ #{window_index}:#W (#P/#{window_panes}) #(nerdwin #{pane_current_command})' -t {}"
   # preview_cmd_preview="echo '$(tput sgr 0 1)$(tput setaf 6) last $preview_lines_of_output lines of output:$(tput sgr 0)\n' && ${pane_capture} | tail -$preview_lines_of_output"
@@ -211,7 +210,7 @@ function fuzzy_find() {
 
   # ENTER_select_session_bind="enter:replace-query+print-query"
   # CTRL_R_rename_session_bind='ctrl-r:execute(printf >&2 "New session name: ";read name; tmux rename-session -t {} ${name};)+reload(echo "$sessions_list" | grep -v "^default\$" | grep -v "^$current_session\$")'
-  CTRL_X_kill_session_bind='ctrl-x:execute(tmux kill-session -t {})+reload(tmux list-sessions | sed -E "s/:.*$//")'
+  CTRL_X_kill_session_bind='ctrl-x:execute(tmux kill-session -t {})+change-prompt(⚡  )+reload(tmux list-sessions | sed -E "s/:.*$//")'
   CTRL_R_rename_session_bind='ctrl-r:execute(printf >&2 "New session name: ";read name; tmux rename-session -t {} ${name};)+reload(tmux list-sessions | sed -E "s/:.*$//")'
 
   try_session "$(
@@ -236,24 +235,14 @@ function fuzzy_find() {
         \
         --bind="enter:replace-query+print-query" \
         --preview="${preview_cmd}" \
-        --preview-window="right:55%:nowrap" \
+        --preview-window="bottom:65%:nowrap" \
         --pointer=' ' \
         --marker='󰛄 ' \
         --print-query \
         --exit-0 \
         --tac
   )"
-  #
-  # --bind='ctrl-x:execute(tmux kill-session -t {})+reload(tmux list-sessions | sed -E "s/:.*$//")'
-  # --bind='ctrl-r:execute(printf >&2 \"New session name: \";read name; tmux rename-session -t {} ${name};)+reload(tmux list-sessions | sed -E \"s/:.*$//\")' \
 }
-
-# --bind 'ctrl-a:change-prompt(⚡  )+reload(sesh list)' \
-# --bind 'ctrl-t:change-prompt(🪟  )+reload(sesh list -t)' \
-# --bind 'ctrl-g:change-prompt(⚙️  )+reload(sesh list -c)' \
-# --bind 'ctrl-x:change-prompt(📁  )+reload(sesh list -z)' \
-# --bind 'ctrl-f:change-prompt(🔎  )+reload(fd -H -d 2 -t d -E .Trash . ~)' \
-# --bind 'ctrl-d:execute(tmux kill-session -t {})+change-prompt(⚡  )+reload(sesh list)'
 
 # -- if we pass in a session_name: attach/switch to it or, create new session
 if [[ $session_name ]]; then

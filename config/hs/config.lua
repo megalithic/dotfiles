@@ -1,4 +1,3 @@
-local enum = require("hs.fnutils")
 local window = require("hs.window")
 local ipc = require("hs.ipc")
 
@@ -27,7 +26,7 @@ window.animationDuration = 0.0
 window.highlight.ui.overlay = false
 window.setShadows(false)
 
-ipc.cliUninstall()
+-- ipc.cliUninstall()
 ipc.cliInstall()
 
 hs.grid.setGrid("60x20")
@@ -398,12 +397,12 @@ DOCK = {
   docked = {
     wifi = "off",
     input = "Samson GoMic",
-    output = "phonak",
+    output = "bose",
   },
   undocked = {
     wifi = "on",
-    input = "phonak",
-    output = "phonak",
+    input = "bose",
+    output = "bose",
   },
 }
 

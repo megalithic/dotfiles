@@ -1,7 +1,7 @@
 local enum = require("hs.fnutils")
 local obj = {}
 
-local default_balance = 0.7
+local default_balance = 0.5
 
 -- REF:
 -- https://github.com/jasonrudolph/dotfiles/commit/8bc3e6c55bd9c95eb83e4cfa265cc32d9da6edc3
@@ -19,7 +19,6 @@ obj.devices = {
     name = "MacBook Pro Speakers",
     bt = "MacBook Pro Speakers",
     icon = "💻",
-    connected = false,
   },
   ["phonak"] = {
     alias = "phonak",
@@ -27,7 +26,6 @@ obj.devices = {
     bt = "R-Phonak hearing aid",
     id = "70-66-1b-c8-cc-b5",
     icon = "🎧",
-    connected = false,
   },
   ["leeloo"] = {
     alias = "leeloo",
@@ -35,7 +33,6 @@ obj.devices = {
     bt = "Leeloo",
     id = "F3-D9-8D-01-16-54",
     icon = "⌨️ ⌨️⌨️⌨️",
-    connected = false,
   },
   ["airpods"] = {
     alias = "airpods",
@@ -43,21 +40,23 @@ obj.devices = {
     bt = "AirPods Pro",
     id = "ac-90-85-c2-75-ab",
     icon = "🎧",
-    connected = false,
+  },
+  ["bose"] = {
+    alias = "bose",
+    name = "Bose QC Ultra Headphones",
+    bt = "Bose QC Ultra Headphones",
+    id = "BC-87-FA-28-CE-0F",
+    icon = "🎧",
   },
 }
-obj.btUtil = Hostname() == "megabookpro" and "/opt/homebrew/bin/blueutil" or "/usr/local/bin/blueutil"
+obj.preferredOutputDevices = { "bose", "phonak", "airpods" }
+obj.btUtil = "/opt/homebrew/bin/blueutil"
 obj.interval = (10 * 60)
 obj.lowBatteryTimer = nil
 
-local dbg = function(str, ...)
-  str = string.format(":: [%s] %s", obj.name, str)
-  if obj.debug then return _G.dbg(string.format(str, ...), false) end
-end
-
 function obj.preferredBluetoothDevicesConnected()
   local connectedDevices = enum.filter(
-    { "phonak", "airpods" },
+    obj.preferredOutputDevices,
     function(deviceStr) return obj.isBluetoothDeviceConnected(deviceStr) end
   )
 
@@ -72,9 +71,10 @@ function obj.isBluetoothDeviceConnected(device)
 
   if type(device) == "string" then targetDevice = obj.devices[device] end
 
+  -- FIXME: the bose qc ultra headphones i have do not show up here, only my hearing aids and my keyboard
   local connectedDevices = hs.battery.privateBluetoothBatteryInfo()
 
-  local connected = hs.fnutils.find(connectedDevices, function(device) return device.name == targetDevice.bt end) ~= nil
+  local connected = hs.fnutils.find(connectedDevices, function(d) return d.name == targetDevice.bt end) ~= nil
 
   return connected
 end
@@ -128,9 +128,12 @@ function obj:start()
   hyper:bind({ "shift" }, "h", nil, function()
     local device = nil
 
-    enum.each({ "phonak", "airpods" }, function(deviceStr)
-      if obj.isBluetoothDeviceConnected(deviceStr) then device = obj.devices[deviceStr] end
+    local connectedDevices = enum.map(obj.preferredOutputDevices, function(deviceStr)
+      if obj.isBluetoothDeviceConnected(deviceStr) then return obj.devices[deviceStr] end
+      -- if obj.isBluetoothDeviceConnected(deviceStr) then device = obj.devices[deviceStr] end
     end)
+
+    device = connectedDevices[1]
 
     if not device then
       warn(fmt("[%s] no bluetooth devices found", obj.name))
@@ -153,6 +156,9 @@ function obj:start()
       end
     end)
   end)
+
+  -- TODO: use an audio watchehr callback?
+  -- REF https://github.com/ivirshup/hammerspoon-config/blob/main/bluetooth_headphones.lua
 
   -- self.lowBatteryTimer = hs.timer.doEvery(self.interval, checkAndAlertLowBattery)
   -- checkAndAlertLowBattery()
