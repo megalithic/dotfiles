@@ -87,11 +87,16 @@ req("hyper")
       axbrowse.browse(currentApp) -- new app, so start over
     end
   end)
+  -- jump right to my daily note
+  :bind({ "shift" }, "o", nil, function()
+    local term = hs.application.get(TERMINAL)
+    hs.application.launchOrFocusByBundleID(TERMINAL)
+    hs.eventtap.keyStroke({ "ctrl" }, "space", term)
+    hs.eventtap.keyStroke({ "ctrl" }, "o", term)
+  end)
 
 -- FIXME:
---
--- REF: https://github.com/jackieaskins/dotfiles/blob/main/hammerspoon/config/hotkeyStore.lua
---
+-- Maybe use this? REF: https://github.com/jackieaskins/dotfiles/blob/main/hammerspoon/config/hotkeyStore.lua
 -- local utilsModality = req("modality"):start({ id = "utils", key = "r", mods = { "shift" } })
 -- utilsModality
 --   :bind({}, "r", function()
