@@ -1,3 +1,5 @@
+-- REF: reawlllly good keymaps for markdown and image things:
+-- https://github.com/linkarzu/dotfiles-latest/blob/main/neovim/neobean/lua/config/keymaps.lua
 return {
   -- {
   --   "ribru17/markdown-preview.nvim",
@@ -346,5 +348,25 @@ return {
       hijack_file_patterns = { "*.png", "*.jpg", "*.jpeg", "*.gif", "*.webp", "*.avif" }, -- render image files as images when opened
     },
     config = function(_, opts) require("image").setup(opts) end,
+  },
+  {
+    cond = false,
+    "epwalsh/obsidian.nvim",
+    version = "*", -- recommended, use latest release instead of latest commit
+    lazy = true,
+    ft = "markdown",
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+    },
+    config = function()
+      require("obsidian").setup({
+        workspaces = {
+          {
+            name = "notes",
+            path = vim.env.OBSIDIAN_VAULT_DIR,
+          },
+        },
+      })
+    end,
   },
 }

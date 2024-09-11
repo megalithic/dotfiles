@@ -130,7 +130,7 @@ print_tmux_status() {
   fi
 
   if [[ $epoc_diff -gt $POPUP_BEFORE_SECONDS && epoc_diff -lt $POPUP_BEFORE_SECONDS+10 ]]; then
-    display_popup
+    echo "#[fg=#e67e80]$NERD_FONT_MEETING $title  GET READY!"
   fi
 }
 

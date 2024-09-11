@@ -901,6 +901,7 @@ return {
             previewer = false,
           }))
         end, { desc = "[/] Fuzzily search in current buffer" })
+        map("n", "<leader>fn", function() mega.picker.find_files({ picker = "smart_open", cwd = vim.g.notes_path }) end, { desc = "[f]ind in [n]otes" })
 
         -- Shortcut for searching your Neovim configuration files
       end

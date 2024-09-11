@@ -338,7 +338,7 @@ M.list = function()
         },
       }
     end,
-    -- marksman = function() return (vim.g.started_by_firenvim or vim.env.TMUX_POPUP) and nil or {} end,
+    marksman = function() return (vim.g.started_by_firenvim or vim.env.TMUX_POPUP) and nil or {} end,
     nextls = function()
       if not U.lsp.is_enabled_elixir_ls("nextls") then return false end
 
