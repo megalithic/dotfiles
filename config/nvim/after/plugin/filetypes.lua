@@ -241,29 +241,29 @@ ftplugin.extend_all({
     --   -- { "<leader>td", require("markdown").task_mark_done },
     --   -- { "<leader>tu", require("markdown").task_mark_undone },
     -- },
-    -- callback = function(bufnr)
-    --   -- Allow bullets.vim and nvim-autopairs to coexist.
-    --   -- REF: https://github.com/ribru17/.dotfiles/blob/0f09207e5587b5217d631cb09885957906eaaa7a/.config/nvim/after/ftplugin/markdown.lua#L7-L19
-    --   -- vim.schedule(function()
-    --   -- vim.keymap.set("i", "<CR>", function()
-    --   --   -- local pair = require("nvim-autopairs").completion_confirm()
-    --   --   -- if pair == vim.api.nvim_replace_termcodes("<CR>", true, false, true) then
-    --   --   vim.cmd.InsertNewBullet()
-    --   --   -- else
-    --   --   --   vim.api.nvim_feedkeys(pair, "n", false)
-    --   --   -- end
-    --   -- end, {
-    --   --   buffer = bufnr,
-    --   -- })
-    --   -- end)
-    --   -- require("markdown").update_code_highlights(bufnr)
-    --   -- local aug = vim.api.nvim_create_augroup("MarkdownStyling", {})
-    --   -- vim.api.nvim_clear_autocmds({ buffer = bufnr, group = aug })
-    --   -- vim.api.nvim_create_autocmd({ "TextChanged", "InsertLeave" }, {
-    --   --   buffer = bufnr,
-    --   --   callback = vim.schedule_wrap(function(args) require("markdown").update_code_highlights(bufnr) end),
-    --   -- })
-    -- end,
+    callback = function(bufnr)
+      --   -- Allow bullets.vim and nvim-autopairs to coexist.
+      --   -- REF: https://github.com/ribru17/.dotfiles/blob/0f09207e5587b5217d631cb09885957906eaaa7a/.config/nvim/after/ftplugin/markdown.lua#L7-L19
+      --   -- vim.schedule(function()
+      --   -- vim.keymap.set("i", "<CR>", function()
+      --   --   -- local pair = require("nvim-autopairs").completion_confirm()
+      --   --   -- if pair == vim.api.nvim_replace_termcodes("<CR>", true, false, true) then
+      --   --   vim.cmd.InsertNewBullet()
+      --   --   -- else
+      --   --   --   vim.api.nvim_feedkeys(pair, "n", false)
+      --   --   -- end
+      --   -- end, {
+      --   --   buffer = bufnr,
+      --   -- })
+      --   -- end)
+      --   -- require("markdown").update_code_highlights(bufnr)
+      --   -- local aug = vim.api.nvim_create_augroup("MarkdownStyling", {})
+      --   -- vim.api.nvim_clear_autocmds({ buffer = bufnr, group = aug })
+      --   -- vim.api.nvim_create_autocmd({ "TextChanged", "InsertLeave" }, {
+      --   --   buffer = bufnr,
+      --   --   callback = vim.schedule_wrap(function(args) require("markdown").update_code_highlights(bufnr) end),
+      --   -- })
+    end,
   },
   ["neotest-summary"] = {
     opt = {

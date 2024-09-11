@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+export SESSION_ICON="󰎞" # alts: 󰂚󰞎󰵚󰵛
+export SESSION_FG="#f5c2e7"
+
 # Specify below the directory in which you want to create your daily note
 main_note_dir="${HOME}/Documents/_notes/daily"
 
@@ -43,4 +46,8 @@ if ! tmux has-session -t="$tmux_session_name" 2>/dev/null; then
   tmux new-session -d -s "$tmux_session_name" -c "$note_dir" "nvim +norm\ G \"$full_path\""
 fi
 
+tmux setenv -t "$tmux_session_name" 'SESSION_ICON' "${SESSION_ICON}"
+tmux setenv -t "$tmux_session_name" 'SESSION_FG' "${SESSION_FG}"
+
 tmux switch-client -t "$tmux_session_name"
+tmux refresh-client
