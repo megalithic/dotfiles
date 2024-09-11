@@ -89,6 +89,7 @@ req("hyper")
   end)
   -- jump right to my daily note
   :bind({ "shift" }, "o", nil, function()
+    -- TODO: if front most app is not terminal, split it with terminal, maybe even 35/65 split?
     local term = hs.application.get(TERMINAL)
     hs.application.launchOrFocusByBundleID(TERMINAL)
     hs.eventtap.keyStroke({ "ctrl" }, "space", term)
