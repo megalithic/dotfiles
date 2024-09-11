@@ -115,7 +115,7 @@
       path: config/helix
     ~/.config/hammerspoon:
       force: true
-      path: config/hs
+      path: config/hammerspoon
       if: "[ `uname` = Darwin ]"
     ~/.config/karabiner:
       force: true

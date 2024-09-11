@@ -1,10 +1,8 @@
 ```sh
-
-   ┌┬┐┌─┐┌─┐┌─┐┬  ┬┌┬┐┬ ┬┬┌─┐
-   │││├┤ │ ┬├─┤│  │ │ ├─┤││
-   ┴ ┴└─┘└─┘┴ ┴┴─┘┴ ┴ ┴ ┴┴└─┘
-   @megalithic 🗿
-
+┌┬┐┌─┐┌─┐┌─┐┬  ┬┌┬┐┬ ┬┬┌─┐
+│││├┤ │ ┬├─┤│  │ │ ├─┤││
+┴ ┴└─┘└─┘┴ ┴┴─┘┴ ┴ ┴ ┴┴└─┘
+@megalithic 🗿
 ```
 
 <p align="center">
@@ -43,21 +41,33 @@ cd ~/.dotfiles && make help
 make -C ~/.dotfiles help
 ```
 
-> **_NOTE_**: to execute a `make` command from anywhere, say, specifically for your dotfiles: `make -C ~/.dotfiles <GOAL>`
+> **_NOTE_**: to execute a `make` command from anywhere, say, specifically for
+> your dotfiles: `make -C ~/.dotfiles <GOAL>`
 
 ---
 
-This dotfiles repo is managed by [dotbot](https://github.com/anishathalye/dotbot); not near as over-the-top configurable as _Ansible_, but way more advanced than just _GNU Stow_.
+This dotfiles repo is managed by
+[dotbot](https://github.com/anishathalye/dotbot); not near as over-the-top
+configurable as _Ansible_, but way more advanced than just _GNU Stow_.
 
-I have tried to be platform agnostic, but the majority of scripts that run here are for macOS (specifically macOS Ventura -- x86 and arm), with a handful of Debian/Ubuntu Linux specific platform scripts and provisions. This means that certain tools/binaries I rely on might or might not install/configure on Linux. Though, I have tested it reasonably well on Ubuntu-based Linode and DigitalOcean instances.
+I have tried to be platform agnostic, but the majority of scripts that run here
+are for macOS (specifically macOS Ventura -- x86 and arm), with a handful of
+Debian/Ubuntu Linux specific platform scripts and provisions. This means that
+certain tools/binaries I rely on might or might not install/configure on Linux.
+Though, I have tested it reasonably well on Ubuntu-based Linode and DigitalOcean
+instances.
 
 #### 🐉 Thar be dragons
 
-I am pushing updates _constantly_, so there are **NO** guarantees of stability with my config!
+I am pushing updates _constantly_, so there are **NO** guarantees of stability
+with my config!
 
 > **Warning**
 >
-> I highly recommend you dig into the scripts and configs to see what all is going on (because it does a lot more than what I'm describing in this README) before you -- all willy-nilly, throw caution to the wind -- install a stranger's shell scripts. 🤣
+> I highly recommend you dig into the scripts and configs to see what all is
+> going on (because it does a lot more than what I'm describing in this README)
+> before you -- all willy-nilly, throw caution to the wind -- install a
+> stranger's shell scripts. 🤣
 
 ---
 
@@ -73,9 +83,11 @@ A few of the _must-have_ tools I roll with:
 - [neovim](https://github.com/neovim/neovim)
 - [weechat](https://www.weechat.org/)
 - `megaforest` for all the colours/themes
-- [jetbrains mono](https://www.jetbrains.com/lp/mono/) font ([nerd-fonts](https://github.com/ryanoasis/nerd-fonts#font-patcher) patched)
+- [jetbrains mono](https://www.jetbrains.com/lp/mono/) font
+  ([nerd-fonts](https://github.com/ryanoasis/nerd-fonts#font-patcher) patched)
 - [hammerspoon](https://github.com/megalithic/dotfiles/tree/main/config/hs)
-- [karabiner-elements](https://github.com/tekezo/Karabiner-Elements) ([leeloo ZMK](https://github.com/megalithic/zmk-config))
+- [karabiner-elements](https://github.com/tekezo/Karabiner-Elements)
+  ([leeloo ZMK](https://github.com/megalithic/zmk-config))
 - [gpg/yubikey/encryption](https://github.com/drduh/YubiKey-Guide)
 - `vim`-esque control
   - [surfingkeys (in-browser)](https://github.com/brookhong/Surfingkeys)

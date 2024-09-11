@@ -137,6 +137,7 @@ function obj:start()
 
     if not device then
       warn(fmt("[%s] no bluetooth devices found", obj.name))
+      require("watchers.dock"):setAudio(DOCK.docked)
 
       return
     end
