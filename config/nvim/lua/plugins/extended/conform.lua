@@ -73,6 +73,9 @@ return {
       beautysh = {
         prepend_args = { "-i", "2" },
       },
+      deno_fmt = {
+        prepend_args = { "--prose-wrap=preserve" },
+      },
       dprint = {
         condition = function(ctx) return vim.fs.find({ "dprint.json" }, { path = ctx.filename, upward = true })[1] end,
       },

@@ -53,7 +53,7 @@ function obj.tmuxTitle()
   if artist ~= nil then
     local icon = ""
     if isPaused() then
-      icon = "󰏤" -- alts:  
+      icon = "" -- alts:  
     else
       icon = "󰝚" -- alts:  
     end

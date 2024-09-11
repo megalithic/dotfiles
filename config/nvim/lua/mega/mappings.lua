@@ -277,7 +277,7 @@ map("x", "<leader>h", "\"hy:%s/<C-r>h/<C-r>h/gc<left><left><left>", {
 map("n", "<localleader>sj", "]s", { desc = "[spell] Move to next misspelling" })
 map("n", "<localleader>sk", "[s", { desc = "[spell] Move to previous misspelling" })
 map("n", "<localleader>sf", function()
-  local cur_pos = vim.api.nvim_win_get_sursor(0)
+  local cur_pos = vim.api.nvim_win_get_cursor(0)
   vim.cmd.normal({ "1z=", bang = true })
   vim.api.nvim_win_set_cursor(0, cur_pos)
 end, { desc = "[spell] Correct spelling of word under cursor" })
