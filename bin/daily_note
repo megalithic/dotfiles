@@ -25,15 +25,17 @@ fi
 # Create the daily note if it does not already exist
 if [ ! -f "$full_path" ]; then
   cat <<EOF >"$full_path"
-# Contents
+tags:
 
-<!-- toc -->
+- #daily
 
-- [Daily note](#daily-note)
+<!--toc:start-->
 
-<!-- tocstop -->
+- [Daily notes | ${note_name}](#daily-notes)
 
-## Daily note
+<!--toc:end-->
+
+# Daily notes
 EOF
 fi
 
