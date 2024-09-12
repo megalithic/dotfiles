@@ -60,5 +60,7 @@ erl_crash.dump
 **/priv/static/assets/*.js
 **/priv/static/assets/*.css
 **/priv/etc/**/*.sql
+**/.obsidian
+.obsidian
 
 # vim:ft=gitignore:tw=0

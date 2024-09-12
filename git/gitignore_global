@@ -124,4 +124,6 @@ _deps
 .worktrees
 
 **/erl_crash.dump
+obsidian/.obsidian
+
 # vim:ft=gitignore:tw=0

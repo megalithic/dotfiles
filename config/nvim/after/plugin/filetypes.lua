@@ -234,8 +234,15 @@ ftplugin.extend_all({
       -- comments = "sb:- [x],mb:- [ ],b:-,b:*,b:>",
       linebreak = true,
       wrap = true,
+      textwidth = 0,
+      wrapmargin = 0,
       suffixesadd = ".md",
       spell = true,
+      -- vim.o.textwidth = 0
+      -- vim.o.wrapmargin = 0
+      -- -- visual wrap (no real line cutting is made)
+      -- vim.o.wrap = true
+      -- vim.o.linebreak = true
     },
     -- keys = {
     --   -- { "<leader>td", require("markdown").task_mark_done },

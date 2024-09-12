@@ -7,11 +7,11 @@ function __help() {
   printf -- "  Usage: %s [options] session_name [command]\n" "tmux-launch"
   printf -- "\n"
   printf -- "  Example:\n"
-  printf -- "    tmux-launch expo cd ~/code/my_app; expo start\n"
+  printf -- "    tmux-launch \"expo cd ~/code/my_app; expo start\"\n"
   printf -- "\n"
   printf -- "  Options:\n"
   printf -- "    -h   This help text you're presently reading. 😄\n"
-  printf -- "    -d   Start with session detached\n"
+  printf -- "\n"
 }
 
 if [[ -z "${1:-}" ]]; then
@@ -49,5 +49,10 @@ if [[ -z "$CMD" ]]; then
   exit 1
 fi
 
-if ! tmux has-session -t "$SESSION_NAME" 2>/dev/null; then tmux new-session -d -s "$SESSION_NAME"; fi
-tmux send-keys -t "$SESSION_NAME" "$CMD" C-m
+if [[ -n "$TMUX" ]]; then
+  if ! tmux has-session -t "$SESSION_NAME" 2>/dev/null; then tmux new-session -d -s "$SESSION_NAME"; fi
+  tmux send-keys -t "$SESSION_NAME" "$CMD" C-m
+else
+  echo "executing outside of tmux.."
+  $CMD
+fi

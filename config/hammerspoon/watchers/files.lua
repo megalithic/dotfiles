@@ -13,38 +13,38 @@ local function path(dir) return fmt("%s/%s", home, dir) end
 
 function obj:start()
   -- obj.watchedPaths.hs = pw(hs.configdir, function() hs.timer.doAfter(0.25, hs.reload) end)
-  obj.watchedPaths.obs = pw(path("Movies/obs"), function(paths, _attrs)
-    -- auto-convert obs videos to .mov format once
-    hs.timer.waitUntil(function() return hs.application.get("com.obsproject.obs-studio") == nil end, function()
-      enum.each(paths, function(p)
-        local name = p:match(".*/(.+)")
-        local ext = p:match("%.(.+)$")
-        if ext == "mkv" then
-          note(fmt("[%s] %s", obj.name, p))
-
-          hs.task
-            .new(
-              "/opt/homebrew/bin/ffmpeg",
-              function(stdTask, stdOut, stdErr) dbg({ stdTask, stdOut, stdErr }, obj.debug) end,
-              {
-                "-i",
-                p,
-                "-vcodec",
-                "libx264",
-                "-crf",
-                "28",
-                "-preset",
-                "faster",
-                "-tune",
-                "film",
-                fmt("%s/%s.mov", path("Movies/obs"), name:gsub("." .. ext, "")),
-              }
-            )
-            :start()
-        end
-      end)
-    end)
-  end)
+  -- obj.watchedPaths.obs = pw(path("Movies/obs"), function(paths, _attrs)
+  --   -- auto-convert obs videos to .mov format once
+  --   hs.timer.waitUntil(function() return hs.application.get("com.obsproject.obs-studio") == nil end, function()
+  --     enum.each(paths, function(p)
+  --       local name = p:match(".*/(.+)")
+  --       local ext = p:match("%.(.+)$")
+  --       if ext == "mkv" then
+  --         note(fmt("[%s] %s", obj.name, p))
+  --
+  --         hs.task
+  --           .new(
+  --             "/opt/homebrew/bin/ffmpeg",
+  --             function(stdTask, stdOut, stdErr) dbg({ stdTask, stdOut, stdErr }, obj.debug) end,
+  --             {
+  --               "-i",
+  --               p,
+  --               "-vcodec",
+  --               "libx264",
+  --               "-crf",
+  --               "28",
+  --               "-preset",
+  --               "faster",
+  --               "-tune",
+  --               "film",
+  --               fmt("%s/%s.mov", path("Movies/obs"), name:gsub("." .. ext, "")),
+  --             }
+  --           )
+  --           :start()
+  --       end
+  --     end)
+  --   end)
+  -- end)
 
   enum.each(self.watchedPaths, function(w) w:start() end)
 

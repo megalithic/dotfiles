@@ -1,5 +1,4 @@
 local window = require("hs.window")
-local ipc = require("hs.ipc")
 
 -- Trace all Lua code
 function lineTraceHook(event, data)
@@ -25,9 +24,6 @@ hs.keycodes.log.setLogLevel("error")
 window.animationDuration = 0.0
 window.highlight.ui.overlay = false
 window.setShadows(false)
-
--- ipc.cliUninstall()
-ipc.cliInstall()
 
 hs.grid.setGrid("60x20")
 hs.grid.setMargins("0x0")

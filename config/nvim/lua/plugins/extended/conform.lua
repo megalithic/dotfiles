@@ -29,6 +29,18 @@ if vim.g.formatter == "conform" then
   }
 end
 
+---@param bufnr integer
+---@param ... string
+---@return string
+local function first(bufnr, ...)
+  local conform = require("conform")
+  for i = 1, select("#", ...) do
+    local formatter = select(i, ...)
+    if conform.get_formatter_info(formatter, bufnr).available then return formatter end
+  end
+  return select(1, ...)
+end
+
 return {
   "stevearc/conform.nvim",
   cond = vim.g.formatter == "conform",
@@ -36,35 +48,36 @@ return {
   cmd = "ConformInfo",
   keys = keys,
   opts = {
+    stop_after_first = true,
     formatters_by_ft = {
       ["*"] = { "trim_whitespace", "trim_newlines" },
-      bash = { shfmt },
+      bash = shfmt,
       c = { "clang_format" },
       cpp = { "clang_format" },
       -- css = { "prettierd" },
       -- elixir = { "mix", timeout_ms = 2000 },
       go = { "goimports", "gofmt", "gofumpt" },
-      graphql = { prettier },
-      html = { prettier },
-      javascript = { prettier },
-      javascriptreact = { prettier },
+      graphql = prettier,
+      html = prettier,
+      javascript = prettier,
+      javascriptreact = prettier,
       json = { prettier, "fixjson" },
       jsonc = { prettier, "fixjson" },
       lua = { "stylua" },
-      ["markdown"] = { "deno_fmt" },
-      ["markdown.mdx"] = { "deno_fmt" },
+      ["markdown"] = prettier,
+      ["markdown.mdx"] = prettier,
       python = { "isort", "black" },
       rust = { "rustfmt" },
       -- sass = { "prettierd" },
       -- scss = { "prettierd" },
-      sh = { shfmt },
+      sh = shfmt,
       terraform = { "tofu_fmt" },
       toml = { "taplo" },
-      typescript = { prettier },
-      typescriptreact = { prettier },
-      yaml = { prettier },
+      typescript = prettier,
+      typescriptreact = prettier,
+      yaml = prettier,
       zig = { "zigfmt" },
-      zsh = { shfmt },
+      zsh = shfmt,
     },
     formatters = {
       shfmt = {
@@ -74,7 +87,7 @@ return {
         prepend_args = { "-i", "2" },
       },
       deno_fmt = {
-        prepend_args = { "--prose-wrap=preserve" },
+        prepend_args = { "--prose-wrap", "preserve" },
       },
       dprint = {
         condition = function(ctx) return vim.fs.find({ "dprint.json" }, { path = ctx.filename, upward = true })[1] end,

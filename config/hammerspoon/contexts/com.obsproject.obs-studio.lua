@@ -76,8 +76,6 @@ function obj:stop(opts)
     req("keycastr"):stop()
 
     do
-      -- L.req("lib.menubar.keycastr"):stop()
-
       if browser ~= nil then
         local browser_win = browser:mainWindow()
         if browser_win ~= nil then browser_win:moveToUnit(hs.layout.maximized) end
@@ -102,6 +100,21 @@ function obj:stop(opts)
         local term_win = term:mainWindow()
         if term_win ~= nil then term_win:moveToUnit(hs.layout.maximized) end
       end
+    end
+
+    -- convert our video
+    local latest_obs_file = hs.execute("/bin/ls -at ~/Movies/obs/*.* | head -n 1", true)
+    if string.match(latest_obs_file, ".mkv") then
+      hs.task
+        .new("$HOME/.dotfiles/bin/vidconvert", function(_exitCode, _stdOut, _stdErr) end, function(_task, stdOut, _stdErr)
+          stdOut = string.gsub(stdOut, "^%s*(.-)%s*$", "%1")
+          local continue = string.match(stdOut, "Qavg:")
+
+          if continue then success(fmt("[%s] vidconvert completed", obj.name)) end
+
+          return continue
+        end, { "-t", "mov", latest_obs_file })
+        :start()
     end
   end
 

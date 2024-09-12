@@ -1,3 +1,7 @@
+local ipc = require("hs.ipc")
+ipc.cliUninstall()
+ipc.cliInstall()
+
 _G.DefaultFont = { name = "JetBrainsMono Nerd Font", size = 18 }
 _G.fmt = string.format
 _G.ts = function(date)
