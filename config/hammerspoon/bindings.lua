@@ -87,8 +87,14 @@ req("hyper")
       axbrowse.browse(currentApp) -- new app, so start over
     end
   end)
-  -- jump right to my daily note
-  :bind({ "shift" }, "o", nil, function() utils.tmux.focusDailyNote() end)
+  -- focus daily note; splitting it 30/70 with currently focused app window
+  :bind(
+    { "shift" },
+    "o",
+    nil,
+    function() utils.tmux.focusDailyNote(true) end
+  )
+  -- focus daily note; window layout untouched
   :bind({ "ctrl" }, "o", nil, function() utils.tmux.focusDailyNote() end)
   :bind({ "ctrl" }, "d", nil, function() utils.dnd() end)
 

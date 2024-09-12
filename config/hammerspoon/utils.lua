@@ -151,9 +151,22 @@ function obj.tmux.update()
   hs.task.new("/opt/homebrew/bin/tmux", function() end, { "refresh-client" }):start()
 end
 
-function obj.tmux.focusDailyNote()
+function obj.tmux.focusDailyNote(splitFocusedWindow)
+  local frontmostApp = hs.application.frontmostApplication()
+  local frontmostAppWindow = frontmostApp:focusedWindow()
   local term = hs.application.get(TERMINAL)
+  local termWindow
+
   if term then
+    termWindow = term:mainWindow()
+
+    if splitFocusedWindow and frontmostApp ~= term then
+      hs.layout.apply({
+        { nil, termWindow, frontmostAppWindow:screen(), hs.layout.left30, 0, 0 },
+        { nil, frontmostAppWindow, frontmostAppWindow:screen(), hs.layout.right70, 0, 0 },
+      })
+    end
+
     hs.application.launchOrFocusByBundleID(TERMINAL)
     -- mimics pressing the tmux prefix `ctrl-space`,
     hs.eventtap.keyStroke({ "ctrl" }, "space", term)

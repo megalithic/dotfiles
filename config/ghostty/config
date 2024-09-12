@@ -28,6 +28,7 @@ window-vsync = true
 window-padding-x = 10
 window-padding-y = 10
 window-padding-balance = true
+window-padding-color = background
 window-save-state = always
 
 shell-integration = zsh
