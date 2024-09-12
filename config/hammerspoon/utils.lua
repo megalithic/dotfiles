@@ -91,47 +91,75 @@ function obj.truncate(str, width, at_tail)
   return shorten(str, width, at_tail)
 end
 
----@param dndStatus boolean|string dnd status on or off as a boolean to pass to the dnd binary
----@param slackStatus string|nil slack status to pass to the slck binary
-function obj.dnd(dndStatus, slackStatus)
-  if type(dndStatus) == "boolean" then dndStatus = dndStatus and "on" or "off" end
+---@param status boolean|string|nil dnd status on or off as a boolean to pass to the dnd binary
+function obj.dnd(status)
+  if type(status) == "boolean" then status = status and "on" or "off" end
 
-  if dndStatus ~= nil then
-    hs.task
-      .new(obj.dndCmd, function(_exitCode, _stdOut, _stdErr) info("[RUN] dnd/" .. dndStatus) end, { dndStatus })
-      :start()
+  if status ~= nil then
+    hs.task.new(obj.dndCmd, function(_exitCode, _stdOut, _stdErr) info("[RUN] dnd/" .. status) end, { status }):start()
+  else
+    hs.task.new(obj.dndCmd, function(_exitCode, _stdOut, _stdErr) info("[RUN] dnd/toggle") end, { "toggle" }):start()
   end
-
-  -- if slackStatus ~= nil and slackStatus ~= "" then obj.slack(slackStatus) end
 end
 
 -- TODO:
 -- https://github.com/kiooss/dotmagic/blob/master/hammerspoon/slack.lua
-function obj.slack(slackStatus)
-  if slackStatus ~= nil and slackStatus ~= "" then
-    local slck = hs.task.new("/opt/homebrew/bin/zsh", function(exitCode, stdOut, stdErr)
-      dbg({ exitCode, stdOut, stdErr }, true)
-      info("[RUN] slack/" .. slackStatus)
-    end, { "-lc", obj.slckCmd, slackStatus })
-    -- local slck = hs.task.new(obj.slckCmd, function(stdTask, stdOut, stdErr)
-    --   dbg({ stdTask, stdOut, stdErr }, true)
-    --   info("[SLCK]: " .. slackStatus)
-    -- end, { slackStatus })
+---@param status string|nil slack status to pass to the slck binary
+function obj.slack(status)
+  dbg(status, true)
+  if status ~= nil and status ~= "" then
+    -- local slck = hs.task.new("/opt/homebrew/bin/zsh", function(exitCode, stdOut, stdErr)
+    --   dbg({ exitCode, stdOut, stdErr }, true)
+    --   info("[RUN] slack/" .. slackStatus)
+    -- end, { "-lc", obj.slckCmd, slackStatus })
+    local slck = hs.task.new(obj.slckCmd, function(_exitCode, _stdOut, _stdErr) end, function(stdTask, stdOut, stdErr)
+      dbg({ stdTask, stdOut, stdErr }, true)
+      local continue = true
+      -- info("[SLCK]: " .. slackStatus)
+      return continue
+    end, { status })
+
+    -- local slck = hs.task.new(
+    --   "/opt/homebrew/bin/zsh",
+    --   function(_exitCode, _stdOut, _stdErr) end,
+    --   function(stdTask, stdOut, stdErr)
+    --     dbg({ stdOut, stdErr }, true)
+    --     stdOut = string.gsub(stdOut, "^%s*(.-)%s*$", "%1")
+    --
+    --     local continue = true
+    --     -- local continue = stdOut == fmt([[input audio device set to "%s"]], device)
+    --     --
+    --     -- if continue then success(fmt("[%s] audio input set to %s", obj.name, device)) end
+    --
+    --     return continue
+    --   end,
+    --   { "-lc", obj.slckCmd, "-r", slackStatus }
+    -- )
     slck:setEnvironment({
       TERM = "xterm-256color",
-      -- HOMEBREW_PREFIX = "/opt/homebrew",
-      -- HOME = os.getenv("HOME"),
-      -- PATH = os.getenv("PATH") .. ":/opt/homebrew/bin",
+      HOMEBREW_PREFIX = "/opt/homebrew",
+      --   -- HOME = os.getenv("HOME"),
+      PATH = os.getenv("PATH") .. ":/opt/homebrew/bin",
     })
-
     slck:start()
 
-    dbg({ slck }, true)
+    -- dbg({ slck }, true)
   end
 end
 
 function obj.tmux.update()
   hs.task.new("/opt/homebrew/bin/tmux", function() end, { "refresh-client" }):start()
+end
+
+function obj.tmux.focusDailyNote()
+  local term = hs.application.get(TERMINAL)
+  if term then
+    hs.application.launchOrFocusByBundleID(TERMINAL)
+    -- mimics pressing the tmux prefix `ctrl-space`,
+    hs.eventtap.keyStroke({ "ctrl" }, "space", term)
+    -- then the daily note binding, `ctrl-o`.
+    hs.eventtap.keyStroke({ "ctrl" }, "o", term)
+  end
 end
 
 return obj

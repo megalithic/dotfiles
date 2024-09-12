@@ -62,7 +62,7 @@ shift "$((OPTIND - 1))"
 selected_status="$(echo "$(slck -s)" | $fzf_bin --reverse --border="none" --padding="1" --preview-window="hidden" --prompt=" select a status  " --header="supported slack statuses:" --bind="enter:replace-query+print-query")"
 
 if [[ -n "$selected_status" ]]; then
-  tmux-launch "$TMUX_LAUNCH_SESSION" "$slck_bin $selected_status"
+  tmux-launch "$TMUX_LAUNCH_SESSION" "$slck_bin -p $selected_status"
 else
   exit 0
 fi

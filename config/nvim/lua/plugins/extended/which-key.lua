@@ -73,6 +73,17 @@ return {
 
     -- Document existing key chains
     wk.register({
+      ["<leader>n"] = {
+        name = "[n]otes",
+        _ = "which_key_ignore",
+        d = {
+          function()
+            local obj = vim.system({ "daily_note", "-p", "| tr -d '[:space:]'" }, { text = true }):wait()
+            vim.cmd("vnew " .. obj.stdout)
+          end,
+          "open [d]aily note",
+        },
+      },
       ["<leader>c"] = { name = "[c]ode", _ = "which_key_ignore" },
       ["<leader>d"] = { name = "[d]ocument", _ = "which_key_ignore" },
       ["<leader>e"] = {
@@ -119,7 +130,6 @@ return {
         _ = "which_key_ignore",
       },
       ["<leader>g"] = { name = "[g]it", _ = "which_key_ignore" },
-      ["<leader>n"] = { name = "[n]otes", _ = "which_key_ignore" },
       ["<leader>p"] = { name = "[p]lugins", _ = "which_key_ignore" },
       ["<leader>r"] = { name = "[r]ename", _ = "which_key_ignore" },
       ["<leader>t"] = { name = "[t]erminal", _ = "which_key_ignore" },

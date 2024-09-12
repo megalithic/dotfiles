@@ -2,7 +2,7 @@ local wm = req("wm")
 local summon = req("summon")
 local chain = req("chain")
 local enum = req("hs.fnutils")
-local utils = req("utils")
+local utils = require("utils")
 
 -- [ APP LAUNCHERS ] -----------------------------------------------------------
 
@@ -88,13 +88,9 @@ req("hyper")
     end
   end)
   -- jump right to my daily note
-  :bind({ "shift" }, "o", nil, function()
-    -- TODO: if front most app is not terminal, split it with terminal, maybe even 35/65 split?
-    local term = hs.application.get(TERMINAL)
-    hs.application.launchOrFocusByBundleID(TERMINAL)
-    hs.eventtap.keyStroke({ "ctrl" }, "space", term)
-    hs.eventtap.keyStroke({ "ctrl" }, "o", term)
-  end)
+  :bind({ "shift" }, "o", nil, function() utils.tmux.focusDailyNote() end)
+  :bind({ "ctrl" }, "o", nil, function() utils.tmux.focusDailyNote() end)
+  :bind({ "ctrl" }, "d", nil, function() utils.dnd() end)
 
 -- FIXME:
 -- Maybe use this? REF: https://github.com/jackieaskins/dotfiles/blob/main/hammerspoon/config/hotkeyStore.lua
