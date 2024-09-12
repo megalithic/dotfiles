@@ -2,7 +2,6 @@
 # shellcheck shell=bash
 
 set -euo pipefail
-[[ -v DEBUG ]] && set -x
 
 source "$HOME/.config/zsh/lib/helpers.zsh"
 
@@ -31,68 +30,68 @@ function __help() {
   exit 0
 }
 
-if [[ "$1"  == "" ]]; then
+if [[ "$1" == "" ]]; then
   __help
 fi
 
 while getopts "ht:" OPTION; do
   case $OPTION in
-    h)
-      __help
+  h)
+    __help
+    ;;
+
+  t)
+    case "$OPTARG" in
+    "gif")
+      shift "$((OPTIND - 1))"
+      input="${1:-}"
+      output="${2:-${1%.*}}"
+
+      ffmpeg -i "$input" \
+        -s 891x576 \
+        -pix_fmt rgb24 \
+        -r 10 \
+        -f gif \
+        "$output.gif"
+      # send to gifsicle? https://gist.github.com/SheldonWangRJT/8d3f44a35c8d1386a396b9b49b43c385
       ;;
 
-    t)
-      case "$OPTARG" in
-        "gif")
-          shift "$((OPTIND - 1))"
-          input="${1:-}"
-          output="${2:-${1%.*}}"
+    "mov")
+      shift "$((OPTIND - 1))"
+      input="${1:-}"
+      output="${2:-${1%.*}}"
 
-          ffmpeg -i "$input" \
-            -s 891x576 \
-            -pix_fmt rgb24 \
-            -r 10 \
-            -f gif \
-            "$output.gif"
-          # send to gifsicle? https://gist.github.com/SheldonWangRJT/8d3f44a35c8d1386a396b9b49b43c385
-          ;;
+      # ffmpeg -i "$input" -c:v copy -c:a pcm_s24le -c:v libx265 -preset faster -crf 28 "$output.mov"
 
-        "mov")
-          shift "$((OPTIND - 1))"
-          input="${1:-}"
-          output="${2:-${1%.*}}"
-
-          # ffmpeg -i "$input" -c:v copy -c:a pcm_s24le -c:v libx265 -preset faster -crf 28 "$output.mov"
-
-          ffmpeg -i "$input" -vcodec libx264 -crf 28 -preset faster -tune film "$output.mov"
-          # ffmpeg -i "$input" -c:v copy -profile:v 3 -c:a pcm_s24le -crf 28 "$output.mov" # optionally: -vcodec libx265, REF: https://unix.stackexchange.com/a/38380
-          # ffmpeg "$input" -c:v copy -vf "scale=trunc(iw/4)*2:trunc(ih/4)*2" -c:a pcm_s24le -c:v libx265 -crf 28 "$output.mov"
-          ;;
-
-        "mp4")
-          shift "$((OPTIND - 1))"
-          input="${1:-}"
-          output="${2:-${1%.*}}"
-          ffmpeg -i "$input" -c:a aac -c:v copy "$output.mp4"
-          ;;
-
-        *)
-          shift "$((OPTIND - 1))"
-          input="${1:-}"
-          output="${2:-${1%.*}}"
-          ffmpeg -i "$input" -c:v copy -profile:v 3 -c:a pcm_s24le "$output.mov"
-          # ffmpeg -i "$input" -c:v copy -profile:v 3 -c:a pcm_s24le -crf 28 "$output.mov"
-          # ffmpeg "$input" -vf "scale=trunc(iw/4)*2:trunc(ih/4)*2" -c:v libx265 -crf 28 "$output.mov"
-          # ffmpeg "$input" -c:v copy -c:a pcm_s24le -c:v libx265 -crf 28 "$output.mov"
-          ;;
-      esac
+      ffmpeg -i "$input" -vcodec libx264 -crf 28 -preset faster -tune film "$output.mov"
+      # ffmpeg -i "$input" -c:v copy -profile:v 3 -c:a pcm_s24le -crf 28 "$output.mov" # optionally: -vcodec libx265, REF: https://unix.stackexchange.com/a/38380
+      # ffmpeg "$input" -c:v copy -vf "scale=trunc(iw/4)*2:trunc(ih/4)*2" -c:a pcm_s24le -c:v libx265 -crf 28 "$output.mov"
       ;;
 
-    \?)
-      # NOTE: this covers the case where an optarg may not be provided
-      # and will exit errored
-      echo "Invalid Option: -$OPTARG" 1>&2
-      __help
+    "mp4")
+      shift "$((OPTIND - 1))"
+      input="${1:-}"
+      output="${2:-${1%.*}}"
+      ffmpeg -i "$input" -c:a aac -c:v copy "$output.mp4"
       ;;
+
+    *)
+      shift "$((OPTIND - 1))"
+      input="${1:-}"
+      output="${2:-${1%.*}}"
+      ffmpeg -i "$input" -c:v copy -profile:v 3 -c:a pcm_s24le "$output.mov"
+      # ffmpeg -i "$input" -c:v copy -profile:v 3 -c:a pcm_s24le -crf 28 "$output.mov"
+      # ffmpeg "$input" -vf "scale=trunc(iw/4)*2:trunc(ih/4)*2" -c:v libx265 -crf 28 "$output.mov"
+      # ffmpeg "$input" -c:v copy -c:a pcm_s24le -c:v libx265 -crf 28 "$output.mov"
+      ;;
+    esac
+    ;;
+
+  \?)
+    # NOTE: this covers the case where an optarg may not be provided
+    # and will exit errored
+    echo "Invalid Option: -$OPTARG" 1>&2
+    __help
+    ;;
   esac
 done

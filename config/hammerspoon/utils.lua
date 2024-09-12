@@ -142,8 +142,46 @@ function obj.slack(status)
       PATH = os.getenv("PATH") .. ":/opt/homebrew/bin",
     })
     slck:start()
+  end
+end
 
-    -- dbg({ slck }, true)
+function obj.vidconvert(path, opts)
+  opts = opts or {
+    srcFormat = "mkv",
+    destFormat = "mov",
+  }
+
+  local srcFormat = opts["srcFormat"]
+  local destFormat = opts["destFormat"]
+
+  if
+    path
+    and type(path) == "string"
+    and string.match(path, fmt(".%s", srcFormat))
+    -- and hs.fs.displayName(path) ~= nil
+  then
+    local task = hs.task.new(
+      os.getenv("HOME") .. "/.dotfiles/bin/vidconvert",
+      function(_exitCode, _stdOut, _stdErr) end,
+      function(task, stdOut, stdErr)
+        stdOut = string.gsub(stdOut, "^%s*(.-)%s*$", "%1")
+        local foundStreamEnd = string.match(stdOut, "Qavg:")
+
+        if foundStreamEnd then success(fmt("[%s] vidconvert completed for %s", obj.name, path)) end
+
+        return not foundStreamEnd
+      end,
+      { "-t", destFormat, path }
+    )
+
+    task:setEnvironment({
+      TERM = "xterm-256color",
+      HOMEBREW_PREFIX = "/opt/homebrew",
+      HOME = os.getenv("HOME"),
+      PATH = os.getenv("PATH") .. ":/opt/homebrew/bin",
+    })
+
+    task:start()
   end
 end
 

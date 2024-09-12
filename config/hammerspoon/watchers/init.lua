@@ -24,8 +24,8 @@ end
 function obj:stop(watchers)
   if self.watched == nil then return end
 
-  dbg(self.watched, true)
-  dbg(watchers, true)
+  -- dbg(self.watched, true)
+  -- dbg(watchers, true)
 
   enum.each(self.watched, function(mod)
     if pcall(require, mod) then require(mod):stop() end
