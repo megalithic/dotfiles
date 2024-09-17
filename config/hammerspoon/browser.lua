@@ -82,7 +82,7 @@ function obj.jump(url)
     })();
     ]])
 
-    info(fmt("[%s.jump] %s (%s)", obj.name, app:name(), jumpedTab or url))
+    note(fmt("[RUN] %s.jump/%s (%s)", obj.name, app:bundleID(), jumpedTab or url))
     return jumpedTab
   else
     return nil
@@ -105,13 +105,13 @@ function obj:splitTab(to_next_screen)
       if to_next_screen then
         app:selectMenuItem({ "Window", fmt("Move to %s", DISPLAYS.internal) })
         wm.place(POSITIONS.full)
-        info(fmt("[%s.splitTab] %s (next screen, full)", obj.name, app:name()))
+        note(fmt("[RUN] %s.splitTab/%s (next screen, full)", obj.name, app:bundleID()))
       else
         wm.place(POSITIONS.halves.right)
-        info(fmt("[%s.splitTab] %s (same screen, half)", obj.name, app:name()))
+        note(fmt("[RUN] %s.splitTab/%s (same screen, half)", obj.name, app:bundleID()))
       end
     else
-      warn(fmt("[browser.splitTab] unsupported browser: %s", app:name()))
+      warn(fmt("[RUN] %s.splitTab/%s unsupported browser", obj.name, app:bundleID()))
     end
   end)
 end
@@ -190,7 +190,7 @@ function obj.updateBrowserTabBar()
 end
 
 function obj:init()
-  info(fmt("[INIT] %s", self.name))
+  -- info(fmt("[INIT] %s", self.name))
   -- self.updateBrowserTabBar()
 
   return self
@@ -200,4 +200,5 @@ function obj:start() return self end
 
 function obj:stop() return self end
 
-return obj:init()
+return obj
+-- return obj:init()

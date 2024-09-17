@@ -125,5 +125,6 @@ _deps
 
 **/erl_crash.dump
 obsidian/.obsidian
+**/.marksman.toml
 
 # vim:ft=gitignore:tw=0

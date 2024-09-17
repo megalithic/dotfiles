@@ -124,8 +124,7 @@ end
 function obj:start()
   self.menubar = hs.menubar.new()
 
-  local hyper = require("hyper"):start({ id = "bluetooth" })
-  hyper:bind({ "shift" }, "h", nil, function()
+  req("hyper", { id = "bluetooth" }):start():bind({ "shift" }, "h", nil, function()
     local device = nil
 
     local connectedDevices = enum.map(obj.preferredOutputDevices, function(deviceStr)

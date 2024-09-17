@@ -34,8 +34,34 @@ current_day=$(date +"%d")
 
 # Construct the directory structure and filename
 note_dir="${main_note_dir}/${current_year}/${current_month_num}"
-note_name="${current_year}-${current_month_num}-${current_day}"
-full_path="${note_dir}/${note_name}.md"
+note_date="${current_year}-${current_month_num}-${current_day}"
+full_path="${note_dir}/${note_date}.md"
+
+function __set_template() {
+  # NOTE: doesn't take args, just uses upper scope variables
+  if [ ! -f "$full_path" ]; then
+    cat <<EOF >"$full_path"
+tags:
+
+- #daily
+- #tasks
+
+<!--toc:start-->
+
+- [Daily notes | ${note_date}](#daily-notes)
+  - [Tasks](#tasks)
+
+<!--toc:end-->
+
+# Daily notes
+
+## Tasks
+
+- [ ] TODO item
+
+EOF
+  fi
+}
 
 function open_note() {
   nvim +norm\ G "$full_path"
@@ -44,7 +70,8 @@ function open_note() {
 while getopts "hpr" OPTION; do
   case $OPTION in
     p)
-      echo "$full_path"
+      echo "$full_path" | tr -d '\n'
+
       exit 0
       ;;
 
@@ -72,7 +99,7 @@ done
 shift "$(($OPTIND - 1))"
 
 # Use note name as the session name
-SESSION="daily-note_${note_name}"
+SESSION="daily-note-${note_date}"
 
 # Check if the directory exists, if not, create it
 if [ ! -d "$note_dir" ]; then
@@ -80,21 +107,7 @@ if [ ! -d "$note_dir" ]; then
 fi
 
 # Create the daily note if it does not already exist
-if [ ! -f "$full_path" ]; then
-  cat <<EOF >"$full_path"
-tags:
-
-- #daily
-
-<!--toc:start-->
-
-- [Daily notes | ${note_name}](#daily-notes)
-
-<!--toc:end-->
-
-# Daily notes
-EOF
-fi
+__set_template
 
 if ! tmux has-session -t "$SESSION" 2>/dev/null; then
   tmux new-session -d -s "$SESSION" -c "$note_dir" "nvim +norm\ G \"$full_path\""

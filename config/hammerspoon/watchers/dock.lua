@@ -74,7 +74,7 @@ function obj.handleDockingStateChanges(_watcher, _path, _key, _oldValue, isConne
   isInitializing = (isInitializing ~= nil and type(isInitializing) == "boolean") and isInitializing or false
   local connectedState = isConnected and "docked" or "undocked"
   local notifier = isConnected and _G.success or _G.warn
-  notifier = _G.warn
+  notifier = _G.success
   local icon = isConnected and "🖥️" or "💻"
   local label = isConnected and "desktop mode" or "laptop mode"
 

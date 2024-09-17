@@ -58,6 +58,7 @@ return {
       local transform_mod = require("telescope.actions.mt").transform_mod
       local actions = require("telescope.actions")
       local egrep_actions = require("telescope._extensions.egrepify.actions")
+      local undo_actions = require("telescope-undo.actions")
       local action_state = require("telescope.actions.state")
       local action_set = require("telescope.actions.set")
       local lga_actions = require("telescope-live-grep-args.actions")
@@ -312,7 +313,7 @@ return {
       })
 
       -- local grep = function(...) ts.live_grep(ivy(...)) end
-      local grep = function(opts)
+      local function grep(opts)
         opts = vim.tbl_deep_extend("force", opts or {}, {})
         local picker = opts and opts["picker"] or "live_grep"
         local theme = opts and opts["theme"] or "ivy"
@@ -340,7 +341,7 @@ return {
       -- * .git from cwd
       -- * cwd
       ---@param opts? table
-      local find_files = function(opts)
+      local function find_files(opts)
         opts = vim.tbl_deep_extend("force", opts or {}, {})
         local picker = opts and opts["picker"] or "find_files"
         local theme = opts and opts["theme"] or "ivy"
@@ -374,7 +375,6 @@ return {
           },
           action = function(match)
             local picker = require("telescope.actions.state").get_current_picker(prompt_bufnr)
-            dbg(picker)
             picker:set_selection(match.pos[1] - 1)
           end,
         })
@@ -715,37 +715,29 @@ return {
             case_mode = "smart_case",
           },
           undo = {
+            use_delta = true,
             side_by_side = true,
             layout_strategy = "vertical",
             layout_config = {
-              preview_height = 0.6,
+              preview_height = 0.8,
             },
 
             mappings = {
               i = {
-                ["<CR>"] = require("telescope-undo.actions").restore,
-                ["<TAB>"] = require("telescope-undo.actions").yank_additions,
+                -- ["<cr>"] = undo_actions.yank_additions,
+                -- ["<S-cr>"] = undo_actions.yank_deletions,
+                -- ["<C-cr>"] = undo_actions.restore,
+                ["<C-u>"] = undo_actions.restore,
+                ["<C-y>"] = undo_actions.yank_additions,
+                ["<C-d>"] = undo_actions.yank_deletions,
               },
               n = {
-                ["y"] = require("telescope-undo.actions").yank_additions,
-                ["r"] = require("telescope-undo.actions").yank_deletions,
+                ["y"] = undo_actions.yank_additions,
+                ["d"] = undo_actions.yank_deletions,
+                ["u"] = undo_actions.restore,
               },
             },
           },
-          -- undo = {
-          --   -- use_delta = true,
-          --   -- use_custom_command = nil, -- setting this implies `use_delta = false`. Accepted format is: { "bash", "-c", "echo '$DIFF' | delta" }
-          --   -- side_by_side = false,
-          --   -- diff_context_lines = vim.o.scrolloff,
-          --   -- entry_format = "state #$ID, $STAT, $TIME",
-          --   -- time_format = "",
-          --   -- saved_only = false,
-          --   --side_by_side = true,
-          --   layout_strategy = "vertical",
-          --   layout_config = {
-          --     preview_height = 0.8,
-          --   },
-          -- },
           smart_open = {
             show_scores = false,
             ignore_patterns = { "*.git/*", "*/tmp/*" },
@@ -757,7 +749,7 @@ return {
             mappings = {
               i = {
                 ["<cr>"] = stopinsert(function(pb) multi(pb, "vnew") end),
-                ["<esc>"] = require("telescope.actions").close,
+                ["<esc>"] = actions.close,
                 ["<c-v>"] = stopinsert(function(pb) multi(pb, "vnew") end),
                 ["<c-s>"] = stopinsert(function(pb) multi(pb, "new") end),
                 ["<c-o>"] = stopinsert(function(pb) multi(pb, "edit") end),
@@ -774,7 +766,7 @@ return {
                 ["<c-r>"] = lga_actions.quote_prompt(),
                 ["<c-i>"] = lga_actions.quote_prompt({ postfix = " --iglob " }),
                 ["<c-t>"] = lga_actions.quote_prompt({ postfix = " -t " }),
-                ["<esc>"] = require("telescope.actions").close,
+                ["<esc>"] = actions.close,
                 ["<c-v>"] = stopinsert(function(pb) multi(pb, "vnew") end),
                 ["<c-s>"] = stopinsert(function(pb) multi(pb, "new") end),
                 ["<c-o>"] = stopinsert(function(pb) multi(pb, "edit") end),
@@ -782,7 +774,7 @@ return {
                 ["<tab>"] = actions.toggle_selection + actions.move_selection_next,
               },
               n = {
-                ["<esc>"] = require("telescope.actions").close,
+                ["<esc>"] = actions.close,
                 ["<c-v>"] = function(pb) multi(pb, "vnew") end,
                 ["<c-s>"] = function(pb) multi(pb, "new") end,
                 ["<c-o>"] = function(pb) multi(pb, "edit") end,
@@ -902,6 +894,7 @@ return {
           }))
         end, { desc = "[/] Fuzzily search in current buffer" })
         map("n", "<leader>fn", function() mega.picker.find_files({ picker = "smart_open", cwd = vim.g.notes_path }) end, { desc = "[f]ind in [n]otes" })
+        map("n", "<leader>nf", function() mega.picker.find_files({ picker = "smart_open", cwd = vim.g.notes_path }) end, { desc = "[f]ind in [n]otes" })
 
         -- Shortcut for searching your Neovim configuration files
       end

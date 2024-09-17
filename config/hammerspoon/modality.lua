@@ -1,54 +1,31 @@
-local obj = hs.hotkey.modal.new({}, nil)
+local obj = hs.hotkey.modal.new({}, nil, "modality")
 
 obj.__index = obj
 obj.name = "modality"
+obj.mods = nil
+obj.key = nil
 obj.alerts = {}
 obj.isOpen = false
 obj.debug = false
-obj.modals = {}
+obj.hyper = {}
+obj.initOpts = {}
+obj.delayedExitTimer = nil
 
-function obj:delayedExit(delay)
-  delay = delay or 1
+function obj.cleanModality()
+  hs.window.highlight.stop()
+  if obj.indicator ~= nil then obj.indicator:delete() end
 
-  if delayedExitTimer ~= nil then
-    delayedExitTimer:stop()
-    delayedExitTimer = nil
-  end
-
-  delayedExitTimer = hs.timer.doAfter(delay, function()
-    self:exit()
-    delayedExitTimer = nil
+  hs.fnutils.ieach(obj.alerts, function(id)
+    if hs.alert ~= nil then hs.alert.closeSpecific(id) end
   end)
-  -- if obj.indicator ~= nil then obj.indicator:delete() end
 
-  return self
+  hs.alert.closeAll()
 end
 
--- function obj.selectWindow(index)
---   local app = obj.win():application()
---   local mainWindow = app:mainWindow()
---
---   local foundWin = mainWindow:otherWindowsAllScreens()[index]
---
---   if index < 1 or not foundWin then
---     warn(fmt("window not found for index %d", index))
---     return
---   end
---
---   app:getWindow(foundWin:title()):focus()
--- end
+function obj.updateIndicator(win)
+  obj.cleanModality()
 
-function obj:entered()
-  local win = hs.window.focusedWindow()
-
-  if win == nil then
-    obj:exit()
-    return
-  end
-
-  obj.isOpen = true
-
-  -- hs.window.highlight.start()
+  hs.window.highlight.start()
   local frame = win:frame()
   local screen = win:screen()
 
@@ -78,69 +55,117 @@ function obj:entered()
   else
     obj:exit()
   end
+end
+
+function obj:delayedExit(delay)
+  delay = delay or 1
+
+  if self.delayedExitTimer ~= nil then
+    self.delayedExitTimer:stop()
+    self.delayedExitTimer = nil
+  end
+
+  self.delayedExitTimer = hs.timer.doAfter(delay, function() self:exit() end)
 
   return self
 end
 
 function obj:exited()
-  obj.isOpen = false
-  -- hs.window.highlight.stop()
-  if obj.indicator ~= nil then obj.indicator:delete() end
+  self.isOpen = false
+  self.cleanModality()
+  self.delayedExitTimer:stop()
+  self.delayedExitTimer = nil
 
-  hs.fnutils.ieach(obj.alerts, function(id)
-    if hs.alert ~= nil then hs.alert.closeSpecific(id) end
-  end)
+  return self
+end
 
-  hs.alert.closeAll()
+function obj:entered()
+  local win = hs.window.focusedWindow()
+
+  if win == nil then
+    self:exit()
+
+    return
+  end
+
+  self.isOpen = true
+  self.updateIndicator(win)
 
   return self
 end
 
 function obj:toggle(_id)
-  if obj.isOpen then
-    obj:exit()
+  if self.isOpen then
+    self:exit()
   else
-    obj:enter()
+    self:enter()
   end
 
   return self
 end
 
--- function obj:init(opts)
---   opts = opts or {}
---   Hyper = L.load("lib.hyper", { id = obj.name }):start()
---
---   hs.window.animationDuration = 0
---   hs.window.highlight.ui.overlay = true
---
---   return self
--- end
---
-function obj:start(opts)
-  local modalityId = opts["id"] and fmt(".%s", opts["id"]) or ""
-  local modalityMods = opts["mods"] or {}
-  local modalityKey = opts["key"] or nil
+function obj:init(opts)
+  self.initOpts = opts or {}
 
-  if modalityKey == nil then
-    error(fmt("[ERROR] %s -> unable to start modality for modality%s; missing bind key", self.name, modalityId))
-    return self
+  if not self.initOpts["id"] then
+    error(fmt("[ERROR] %s -> unable to init this modality; missing id", self.name))
+    return
   end
 
-  local hyper = require("hyper"):start({ id = fmt("modality%s", modalityId) })
-  hyper:bind(modalityMods, modalityKey, function() obj:toggle(opts["id"]) end)
+  if _G.modalities[self.initOpts["id"]] ~= nil then
+    warn(fmt("[%s] %s%s (existing)", "INIT", self.name, self.initOpts["id"]))
+
+    return _G["modalities"][self.initOpts["id"]]
+  end
+
+  obj.mods = self.initOpts["mods"] or {}
+  obj.key = self.initOpts["key"] or nil
+
+  if obj.key == nil and obj.mods == nil then
+    error(
+      fmt("[ERROR] %s -> unable to start modality.%s; missing binding key or binding mods", self.name, self.initOpts.id)
+    )
+    return
+  end
+
+  obj.hyper = req("hyper", { id = fmt("modality.%s", self.initOpts["id"]) })
 
   hs.window.animationDuration = 0
   hs.window.highlight.ui.overlay = true
 
-  info(fmt("[START] %s%s", self.name, modalityId))
+  _G.modalities[self.initOpts["id"]] = self
+  info(fmt("[INIT] %s.%s", self.name, self.initOpts.id))
+
+  return self
+end
+
+function obj:start(opts)
+  opts = self.initOpts or opts or {}
+
+  self.hyper:start()
+  self.hyper:bind(self.mods, self.key, function()
+    self:toggle(opts["id"])
+    note(
+      fmt(
+        "[RUN] %s.%s/toggle/%s (%d)",
+        self.name,
+        self.initOpts.id,
+        obj.isOpen,
+        req("utils").table.length(_G.modalities)
+      )
+    )
+  end)
+
+  info(fmt("[START] %s.%s (%s)", self.name, self.initOpts.id, I(opts)))
 
   return self
 end
 
 function obj:stop()
-  self:delete()
+  self.hyper:stop()
   self.alerts = {}
-  self:exited()
+  self:exit()
+  self:delete()
 
   return self
 end

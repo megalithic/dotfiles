@@ -434,6 +434,7 @@ M.list = function()
         },
       }
     end,
+    nil_ls = {},
     -- prosemd_lsp = function() return (vim.g.started_by_firenvim or vim.env.TMUX_POPUP) and nil or {} end,
     pyright = {
       single_file_support = false,

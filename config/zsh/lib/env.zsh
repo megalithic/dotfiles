@@ -189,8 +189,8 @@ case "$(uname)" in
     export DOCUMENTS_DIR="${ICLOUD_DOCUMENTS_DIR}"
 
     export NOTES_DIR="${HOME}/Library/Mobile\ Documents/com~apple~CloudDocs/_notes"
-    export OBSIDIAN_VAULT_DIR="${NOTES_DIR}/obsidian"
-    export ZK_NOTEBOOK_DIR="${ICLOUD_DOCUMENTS_DIR}/_notes/zk"
+    export OBSIDIAN_VAULT_DIR="${ICLOUD_DOCUMENTS_DIR}/_obsidian"
+    export ZK_NOTEBOOK_DIR="${ICLOUD_DOCUMENTS_DIR}/_zk"
     export ZK_CONFIG_DIR="${XDG_CONFIG_HOME}/zk"
 
     export HOMEBREW_NO_ANALYTICS=1
@@ -327,22 +327,25 @@ case "$(uname)" in
   export ERL_AFLAGS="-kernel shell_history enabled"
 
   # -- paths ---------------------------------------------------------------------
-  typeset -agU cdpath fpath manpath infopath path
-
   # Set the the list of directories that cd searches.
+  typeset -agU cdpath
   cdpath=(
     $HOME/code
     $cdpath
   )
+  cdpath=($^cdpath(N-/))
 
   # Set the list of directories that info searches for manuals.
+  typeset -agU infopath
   infopath=(
     /usr/local/share/info
     /usr/share/info
     $infopath
   )
+  infopath=($^infopath(N-/))
 
   # Set the list of directories that man searches for manuals.
+  typeset -agU manpath
   manpath=(
     /usr/local/share/man
     /usr/share/man
@@ -353,51 +356,10 @@ case "$(uname)" in
     manpath+=($(<$man_file))
   done
   unset man_file
+  manpath=($^manpath(N-/))
 
-  # Set the list of directories that Zsh searches for programs.
-  # "${HOME}/.asdf/installs/elixir/`asdf current elixir | awk '{print $1}'`/.mix"
-  #
-  # NOTE: ASC for override, first-in-list wins
-  # path=(
-  #   ${HOME}/.local/share/lsp/bin(N-/)
-  #   $HOME/bin
-  #   $HOME/.bin
-  #   $HOME/.emacs.d/bin
-  #   $HOME/.local/bin(N-/)
-  #   $HOME/.dotfiles/bin(N-/)
-  #   ${PRIVATES}/bin
-  #   $GOBIN
-  #   ${GOPATH}/bin(N-/)
-  #   $CARGOPATH
-  #   $CARGOBIN
-  #   /usr/local/{bin,sbin}
-  #   /usr/local/share/npm/bin
-  #   /usr/local/lib/node_modules
-  #   /usr/{bin,sbin}
-  #   /{bin,sbin}
-  #
-  #   ${HOMEBREW_CELLAR}/git/*/share/git-core/contrib/git-jump(Nn[-1]-/)
-  #
-  #   ${CARGO_HOME}/bin(N-/)
-  #   ${GOBIN}(N-/)
-  #
-  #   ${HOME}/Library/Python/3.12/bin(Nn[-1]-/)
-  #   ${HOME}/Library/Python/3.11/bin(Nn[-1]-/)
-  #   ${HOME}/Library/Python/3.10/bin(Nn[-1]-/)
-  #   ${HOME}/Library/Python/3.9/bin(Nn[-1]-/)
-  #   ${HOME}/Library/Python/2.*/bin(Nn[-1]-/)
-  #   ${ANDROID_HOME}/emulator
-  #   ${ANDROID_HOME}/platform-tools
-  #
-  #   $path
-  # )
 
-  # Remove duplicate entries
-  # REF: https://github.com/mischavandenburg/dotfiles/blob/main/.zshrc#L16
-  # path=($^path(N-/))
-  #
-  # export PATH
-
+  typeset -agU path
   path=(
     /nix/store/[^/]*/bin(Nn[-1]-/)
     $HOME/.local/share/lsp/bin(N-/)
@@ -416,12 +378,9 @@ case "$(uname)" in
     $HOMEBREW_PREFIX/bin
     /usr/{bin,sbin}
     /{bin,sbin}
-
     $HOMEBREW_CELLAR/git/*/share/git-core/contrib/git-jump(Nn[-1]-/)
-
     $CARGO_HOME/bin(N-/)
     $GOBIN(N-/)
-
     $HOME/Library/Python/3.12/bin(Nn[-1]-/)
     $HOME/Library/Python/3.11/bin(Nn[-1]-/)
     $HOME/Library/Python/3.10/bin(Nn[-1]-/)
@@ -430,16 +389,14 @@ case "$(uname)" in
     $ANDROID_HOME/emulator
     $ANDROID_HOME/platform-tools
     /nix/store/[^/]*/bin(Nn[-1]-/)
-
     $path
   )
-
   # Remove duplicate entries
   # REF: https://github.com/mischavandenburg/dotfiles/blob/main/.zshrc#L16
   path=($^path(N-/))
-
   export PATH
 
+  typeset -agU fpath
   fpath=(
     "$ZDOTDIR"
     "${HOMEBREW_PREFIX}/share/zsh/site-functions"
@@ -454,7 +411,6 @@ case "$(uname)" in
     "$fpath"
   )
   fpath=($^fpath(N-/))
-
   export FPATH
 
   # -- zsh plugins

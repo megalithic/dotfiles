@@ -7,7 +7,7 @@ local utils = require("utils")
 -- [ APP LAUNCHERS ] -----------------------------------------------------------
 
 do
-  local hyper = req("hyper"):start({ id = "apps" })
+  local hyper = req("hyper", { id = "apps" }):start()
   enum.each(LAUNCHERS, function(bindingTable)
     local bundleID, globalBind, localBinds, focusOnly = table.unpack(bindingTable)
     if globalBind ~= nil then
@@ -32,7 +32,7 @@ end
 
 -- [ OTHER LAUNCHERS ] -----------------------------------------------------------
 
-req("hyper"):start({ id = "meeting" }):bind({}, "z", nil, function()
+req("hyper", { id = "meeting" }):start():bind({}, "z", nil, function()
   local focusedApp = hs.application.frontmostApplication()
   if hs.application.find("us.zoom.xos") then
     hs.application.launchOrFocusByBundleID("us.zoom.xos")
@@ -55,7 +55,7 @@ req("hyper"):start({ id = "meeting" }):bind({}, "z", nil, function()
   end
 end)
 
-req("hyper"):start({ id = "figma" }):bind({ "shift" }, "f", nil, function()
+req("hyper", { id = "figma" }):start():bind({ "shift" }, "f", nil, function()
   local focusedApp = hs.application.frontmostApplication()
   if hs.application.find("com.figma.Desktop") then
     hs.application.launchOrFocusByBundleID("com.figma.Desktop")
@@ -70,8 +70,8 @@ end)
 
 local axbrowse = req("axbrowse")
 local lastApp
-req("hyper")
-  :start({ id = "utils" })
+req("hyper", { id = "utils" })
+  :start()
   :bind({ "shift" }, "r", nil, function()
     hs.notify.new({ title = "hammerspork", subTitle = "config is reloading..." }):send()
     hs.reload()
@@ -123,7 +123,7 @@ req("hyper")
 -- [ MODAL LAUNCHERS ] ---------------------------------------------------------
 
 -- # wm/window management ---------------------------------------------------------
-local wmModality = req("modality"):start({ id = "wm", key = "l" })
+local wmModality = req("modality", { id = "wm", key = "l" }):start()
 wmModality
   :bind({}, "r", req("wm").placeAllApps, function() wmModality:delayedExit(0.1) end)
   :bind({}, "escape", function() wmModality:exit() end)
@@ -145,9 +145,9 @@ wmModality
       1.0
     )
   )
-  :bind({ "shift" }, "l", function()
-    wm.toNextScreen()
-    wm.place(POSITIONS.halves.right)
+  :bind({ "shift" }, "h", function()
+    wm.toPrevScreen()
+    wm.place(POSITIONS.halves.left)
   end, function() wmModality:exit() end)
   :bind(
     {},
@@ -161,11 +161,22 @@ wmModality
       1.0
     )
   )
-  :bind({ "shift" }, "h", function()
+  :bind({ "shift" }, "l", function()
     wm.toNextScreen()
     wm.place(POSITIONS.halves.right)
   end, function() wmModality:exit() end)
-  :bind({}, "j", function() wm.toNextScreen() end, function() wmModality:delayedExit(0.1) end)
+  -- :bind({}, "j", function() wm.toNextScreen() end, function() wmModality:delayedExit(0.1) end)
+  :bind(
+    {},
+    "j",
+    chain({
+      POSITIONS.center.mini,
+      POSITIONS.center.tiny,
+      POSITIONS.center.small,
+      POSITIONS.center.medium,
+      POSITIONS.center.large,
+    }, wmModality, 1.0)
+  )
   :bind(
     {},
     "k",
@@ -213,6 +224,6 @@ wmModality
     wmModality:exit()
   end)
 
-req("clipper"):init()
+req("clipper")
 
 info(fmt("[START] %s", "bindings"))

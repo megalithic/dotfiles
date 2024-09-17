@@ -18,8 +18,33 @@ return {
   --   "iamcco/markdown-preview.nvim",
   --   cmd = { "MarkdownPreviewToggle", "MarkdownPreview", "MarkdownPreviewStop" },
   --   ft = { "markdown" },
-  --   build = function() vim.fn["mkdp#util#install"]() end,
+  --   build = function(plugin)
+  --     if vim.fn.executable("npx") then
+  --       vim.cmd("!cd " .. plugin.dir .. " && cd app && npx --yes yarn install")
+  --     else
+  --       vim.cmd([[Lazy load markdown-preview.nvim]])
+  --       vim.fn["mkdp#util#install"]()
+  --     end
+  --   end,
+  --   init = function()
+  --     if vim.fn.executable("npx") then vim.g.mkdp_filetypes = { "markdown" } end
+  --   end,
   -- },
+  {
+    "jannis-baum/vivify.vim", -- Preview markdown files in the browser using `vivify`
+    file_types = {
+      "markdown",
+    },
+    init = function()
+      -- Refresh page contents on CursorHold and CursorHoldI
+      vim.g.vivify_instant_refresh = 1
+      -- additional filetypes to recognize as markdown
+      vim.g.vivify_filetypes = { "vimwiki" }
+    end,
+    keys = {
+      { "<localleader>mp", "<cmd>Vivify<cr>", desc = "Preview using vivify", ft = "markdown" },
+    },
+  },
   -- {
   --   "toppair/peek.nvim",
   --   event = { "VeryLazy" },
@@ -41,13 +66,14 @@ return {
           -- Turn on / off heading icon & background rendering
           enabled = true,
           -- Turn on / off any sign column related rendering
-          sign = true,
+          sign = false,
           -- Replaces '#+' of 'atx_h._marker'
           -- The number of '#' in the heading determines the 'level'
           -- The 'level' is used to index into the array using a cycle
           -- The result is left padded with spaces to hide any additional '#'
           icons = { "󰉫 ", "󰉬 ", "󰉭 ", "󰉮 ", "󰉯 ", "󰉰 " },
-
+          -- icons = { "󰉫 ", "󰉬 ", "󰉭 ", "󰉮 ", "󰉯 ", "󰉰 " },
+          -- icons = { "󰼏 ", "󰎨 " },
           -- icons = { "󰲡 ", "󰲣 ", "󰲥 ", "󰲧 ", "󰲩 ", "󰲫 " },
           -- Added to the sign column if enabled
           -- The 'level' is used to index into the array using a cycle
@@ -72,12 +98,21 @@ return {
             "RenderMarkdownH5",
             "RenderMarkdownH6",
           },
+          -- Used above heading for border
+          -- above = "▄",
+          -- Used below heading for border
+          -- below = "▀",
+          -- border = true,
+          -- width = { "full", "full", "block", "block", "block" },
+          -- left_pad = 2,
+          -- right_pad = 2,
+          -- min_width = 20,
         },
         code = {
           -- Turn on / off code block & inline code rendering
           enabled = true,
           -- Turn on / off any sign column related rendering
-          sign = true,
+          sign = false,
           -- Determines how code blocks & inline code are rendered:
           --  none: disables all rendering
           --  normal: adds highlight group to code blocks & inline code, adds padding to code blocks
@@ -86,6 +121,8 @@ return {
           style = "full",
           -- Amount of padding to add to the left of code blocks
           left_pad = 2,
+          right_pad = 4,
+          width = "block",
           -- Determins how the top / bottom of code block are rendered:
           --  thick: use the same highlight as the code body
           --  thin: when lines are empty overlay the above & below icons

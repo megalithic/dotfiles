@@ -12,7 +12,7 @@ const {
   imap,
   imapkey,
   getClickableElements,
-  vmapkey,
+  // vmapkey,
   vmap,
   map,
   cmap,
@@ -287,22 +287,22 @@ imap("<Ctrl-c>", "<Esc>");
 cmap("<Ctrl-[>", "<Esc>");
 cmap("<Ctrl-c>", "<Esc>");
 
-vmapkey("<Ctrl-[>", "#9Exit visual mode", function () {
-  if (Visual.state > 1) {
-    Visual.hideCursor();
-    Visual.selection.collapse(selection.anchorNode, selection.anchorOffset);
-    Visual.showCursor();
-  } else {
-    Visual.visualClear();
-    Visual.exit();
-  }
-  Visual.state--;
-  Visual._onStateChange();
-});
-
-vmapkey("<Ctrl-c>", "#9Exit visual mode", function () {
-  Visual.exit();
-});
+// vmapkey("<Ctrl-[>", "#9Exit visual mode", function () {
+//   if (Visual.state > 1) {
+//     Visual.hideCursor();
+//     Visual.selection.collapse(selection.anchorNode, selection.anchorOffset);
+//     Visual.showCursor();
+//   } else {
+//     Visual.visualClear();
+//     Visual.exit();
+//   }
+//   Visual.state--;
+//   Visual._onStateChange();
+// });
+//
+// vmapkey("<Ctrl-c>", "#9Exit visual mode", function () {
+//   Visual.exit();
+// });
 
 // set quick-tab-opening for `<C-1>`-`<C-0>` for tabs 1-10
 for (let i = 1; i <= 9; i++) {

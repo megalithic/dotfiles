@@ -78,10 +78,56 @@ return {
         _ = "which_key_ignore",
         d = {
           function()
-            local obj = vim.system({ "daily_note", "-p", "| tr -d '[:space:]'" }, { text = true }):wait()
-            vim.cmd("vnew " .. obj.stdout)
+            local notePathObj = vim.system({ "daily_note", "-p", "| tr -d '\n'" }, { text = true }):wait()
+            local notePath = string.gsub(notePathObj.stdout, "^%s*(.-)%s*$", "%1")
+
+            -- open only if we're not presently editing that buffer/file
+            if notePath ~= vim.api.nvim_buf_get_name(0) then vim.cmd("edit " .. notePath) end
           end,
           "open [d]aily note",
+        },
+        D = {
+          function()
+            local notePathObj = vim.system({ "daily_note", "-p", "| tr -d '\n'" }, { text = true }):wait()
+            local notePath = string.gsub(notePathObj.stdout, "^%s*(.-)%s*$", "%1")
+
+            vim.cmd("vnew " .. notePath)
+          end,
+          "open [d]aily note (vsplit)",
+        },
+        g = {
+          function() mega.picker.grep({ cwd = vim.g.notes_path, default_text = "" }) end,
+          "[g]rep notes",
+        },
+        l = {
+          function()
+            local notes = vim.split(
+              vim.fn.glob(
+                "`find "
+                  .. vim.env.HOME
+                  .. "/Documents/_notes/daily/**/*.md -type f -print0 | xargs -0 stat -f '%m %N' | sort -nr | head -2 | cut -f2- -d' ' | tail -n1`"
+              ),
+              "\n",
+              { trimempty = true }
+            )
+            if #notes == 1 then vim.cmd("edit " .. notes[1]) end
+          end,
+          "open [l]ast daily note",
+        },
+        L = {
+          function()
+            local notes = vim.split(
+              vim.fn.glob(
+                "`find "
+                  .. vim.env.HOME
+                  .. "/Documents/_notes/daily/**/*.md -type f -print0 | xargs -0 stat -f '%m %N' | sort -nr | head -2 | cut -f2- -d' ' | tail -n1`"
+              ),
+              "\n",
+              { trimempty = true }
+            )
+            if #notes == 1 then vim.cmd("vnew " .. notes[1]) end
+          end,
+          "open [l]ast daily note (vsplit)",
         },
       },
       ["<leader>c"] = { name = "[c]ode", _ = "which_key_ignore" },
@@ -116,7 +162,6 @@ return {
         xf = "execute file",
         xl = "execute line",
       },
-
       ["<leader>f"] = {
         name = "[f]ind (" .. vim.g.picker .. ")",
         _ = "which_key_ignore",

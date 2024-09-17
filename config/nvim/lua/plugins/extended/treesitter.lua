@@ -107,7 +107,6 @@ return {
           end
         end,
       },
-
       endwise = { enable = true },
       matchup = {
         enable = true,
@@ -225,11 +224,10 @@ return {
       require("nvim-treesitter.configs").setup(opts)
     end,
   },
-
   { "nvim-treesitter/nvim-treesitter-textobjects", cond = true, dependencies = { "nvim-treesitter/nvim-treesitter" } },
   { "RRethy/nvim-treesitter-textsubjects", cond = true, dependencies = { "nvim-treesitter/nvim-treesitter" } },
   { "nvim-treesitter/nvim-tree-docs", cond = true, dependencies = { "nvim-treesitter/nvim-treesitter" } },
-  { "RRethy/nvim-treesitter-endwise", dependencies = { "nvim-treesitter/nvim-treesitter" } },
+  { "pricehiller/nvim-treesitter-endwise", branch = "fix/iter-matches", dependencies = { "nvim-treesitter/nvim-treesitter" } },
   {
     "nvim-treesitter/nvim-treesitter-context",
     keys = {

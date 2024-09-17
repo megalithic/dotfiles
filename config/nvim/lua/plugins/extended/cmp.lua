@@ -216,13 +216,13 @@ return {
           -- minwidth = MIN_MENU_WIDTH,
           ellipsis_char = ELLIPSIS_CHAR,
           format = function(entry, item)
-            if entry.source.name == "async_path" then
-              local icon, hl_group = require("nvim-web-devicons").get_icon(entry:get_completion_item().label)
-              if icon then
-                item.kind = icon
-                item.kind_hl_group = hl_group
-              end
-            end
+            -- if entry.source.name == "async_path" then
+            --   local icon, hl_group = require("nvim-web-devicons").get_icon(entry:get_completion_item().label)
+            --   if icon then
+            --     item.kind = icon
+            --     item.kind_hl_group = hl_group
+            --   end
+            -- end
 
             if entry.source.name == "nvim_lsp_signature_help" then
               local parts = vim.split(item.abbr, " ", {})

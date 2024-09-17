@@ -96,13 +96,13 @@ local M = {
   disabled_semantic_tokens = { "lua" },
   disabled_lsp_formatters = { "tailwindcss", "html", "ts_ls", "ls_emmet", "zk", "sumneko_lua" },
   ---@format disable
-  enabled_elixir_ls = { "", "", "", "nextls", "" },
+  enabled_elixir_ls = { "", "", "", "", "lexical" },
   completion_exclusions = { "ElixirLS", "Next LS", "", "", "" },
-  formatter_exclusions = { "ElixirLS", "Next LS", "", "", "lexical" },
-  definition_exclusions = { "ElixirLS", "Next LS", "elixirls", "nextls", "" },
-  references_exclusions = { "ElixirLS", "Next LS", "elixirls", "nextls", "" },
-  diagnostic_exclusions = { "ElixirLS", "Next LS", "", "", "", "ts_ls" },
-  max_diagnostic_exclusions = { "ElixirLS", "Next LS", "elixirls", "", "lexical" },
+  formatter_exclusions = { "ElixirLS", "Next LS", "", "", "" },
+  definition_exclusions = { "ElixirLS", "Next LS", "elixirls", "", "" },
+  references_exclusions = { "ElixirLS", "Next LS", "elixirls", "", "" },
+  diagnostic_exclusions = { "ElixirLS", "Next LS", "elixirls", "", "", "ts_ls" },
+  max_diagnostic_exclusions = { "ElixirLS", "Next LS", "elixirls", "", "" },
   ---@format enable
   disable_autolint = false,
   disable_autoformat = false,
@@ -382,8 +382,8 @@ M.apply = function()
       local_share_path = fmt("%s/.local/share/nvim", home_path),
       db_ui_path = fmt("%s/_sql", icloud_documents_path),
       notes_path = fmt("%s/_notes", icloud_documents_path),
-      obsidian_path = fmt("%s/_notes/obsidian", icloud_documents_path),
-      zk_path = fmt("%s/_notes/zk", icloud_documents_path),
+      obsidian_path = fmt("%s/_obsidian", icloud_documents_path),
+      zk_path = fmt("%s/_zk", icloud_documents_path),
       org_path = fmt("%s/_org", icloud_documents_path),
       neorg_path = fmt("%s/_org", icloud_documents_path),
       hs_emmy_path = fmt("%s/Spoons/EmmyLua.spoon", hammerspoon_path),
@@ -410,10 +410,10 @@ M.apply = function()
       --  For more options, you can see `:help option-list`
 
       -- Make line numbers default
-      number = true,
+      number = false,
       -- You can also add relative line numbers, to help with jumping.
       --  Experiment for yourself to see if you like it!
-      relativenumber = true,
+      relativenumber = false,
 
       -- Enable mouse mode, can be useful for resizing splits for example!
       mouse = "a",

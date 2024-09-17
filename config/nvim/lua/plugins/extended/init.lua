@@ -190,17 +190,25 @@ return {
     opts = {},
   },
   -- require('nvim-autopairs').setup{}
-  -- local cmp_autopairs = require('nvim-autopairs.completion.cmp')
-  -- local cmp = require('cmp')
-  -- cmp.event:on(
-  --  'confirm_done',
-  --  cmp_autopairs.on_confirm_done()
-  -- )
 
   {
     "windwp/nvim-autopairs",
-    event = { "InsertEnter" },
-    config = true,
+    -- event = { "InsertEnter" },
+    lazy = true,
+    config = function()
+      local npairs = require("nvim-autopairs")
+      npairs.setup()
+
+      npairs.add_rules(require("nvim-autopairs.rules.endwise-elixir"))
+      npairs.add_rules(require("nvim-autopairs.rules.endwise-lua"))
+      npairs.add_rules(require("nvim-autopairs.rules.endwise-ruby"))
+
+      if pcall(require, "nvim-autopairs.completion.cmp") and pcall(require, "nvim-autopairs.completion.cmp") then
+        local cmp_autopairs = require("nvim-autopairs.completion.cmp")
+        local cmp = require("cmp")
+        cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done())
+      end
+    end,
   },
   {
     "windwp/nvim-ts-autotag",
@@ -278,4 +286,32 @@ return {
     config = true,
   },
   { "elixir-editors/vim-elixir" },
+
+  {
+    "jiaoshijie/undotree",
+    dependencies = "nvim-lua/plenary.nvim",
+    config = true,
+    keys = { -- load the plugin only when using it's keybinding:
+      { "<leader>su", "<cmd>lua require('undotree').toggle()<cr>", desc = "Toggle undotree" },
+    },
+    opts = {
+      float_diff = false, -- using float window previews diff, set this `true` will disable layout option
+      layout = "left_bottom", -- "left_bottom", "left_left_bottom"
+      position = "right", -- "right", "bottom"
+      ignore_filetype = { "undotree", "undotreeDiff", "qf", "TelescopePrompt", "spectre_panel", "tsplayground" },
+      window = {
+        winblend = 0,
+      },
+      keymaps = {
+        ["j"] = "move_next",
+        ["k"] = "move_prev",
+        ["gj"] = "move2parent",
+        ["J"] = "move_change_next",
+        ["K"] = "move_change_prev",
+        ["<cr>"] = "action_enter",
+        ["<tab>"] = "enter_diffbuf",
+        ["q"] = "quit",
+      },
+    },
+  },
 }

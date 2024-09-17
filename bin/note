@@ -10,6 +10,7 @@ __help() {
   printf -- "${grey}${bold}OPTIONS:${reset}\n"
   printf -- "  -h          view this help text\n"
   printf -- "  -t          optional note tag\n"
+  printf -- "  -d          create a daily note\n"
   printf -- "\n"
   printf -- "${grey}${bold}EXAMPLES:${reset}\n"
   printf -- "  note -t til this is the greatest note with amazing code snippets\n"
@@ -18,28 +19,34 @@ __help() {
   exit 0
 }
 
-while getopts "ht:" OPTION; do
+while getopts "hdt:" OPTION; do
   case $OPTION in
-  t)
-    # pass in an optional single tag to start;
-    # TODO: support comma separated tags
-    TAG="#$OPTARG"
-    ;;
+    t)
+      # pass in an optional single tag to start;
+      # TODO: support comma separated tags
+      TAG="#$OPTARG"
+      ;;
 
-  h)
-    __help
-    ;;
+    h)
+      __help
+      ;;
 
-  \?)
-    # NOTE: this covers the case where an optarg may not be provided
-    # and will exit errored
-    echo "Invalid Option: -$OPTARG" 1>&2
-    exit 1
-    ;;
-  :)
-    echo "Invalid Option: -$OPTARG requires an argument" 1>&2
-    exit 1
-    ;;
+    d)
+      daily_note -r
+      exit 0
+      ;;
+
+    \?)
+      # NOTE: this covers the case where an optarg may not be provided
+      # and will exit errored
+      echo "Invalid Option: -$OPTARG" 1>&2
+      exit 1
+      ;;
+
+    :)
+      echo "Invalid Option: -$OPTARG requires an argument" 1>&2
+      exit 1
+      ;;
   esac
 done
 shift "$(($OPTIND - 1))"
@@ -58,17 +65,12 @@ current_day=$(date +"%d")
 note_dir="${main_note_dir}"
 note_date="${current_year}-${current_month_num}-${current_day}"
 filename_from_title=$(echo "${TITLE// /-}" | tr '[:upper:]' '[:lower:]')
-
 full_path="${note_dir}/${filename_from_title}_${note_date}.md"
 
-# Check if the directory exists, if not, create it
-if [ ! -d "$note_dir" ]; then
-  mkdir -p "$note_dir"
-fi
-
-# Create the note if it does not already exist; with our templated content
-if [ ! -f "$full_path" ]; then
-  cat <<EOF >"$full_path"
+function __set_template() {
+  # NOTE: doesn't take args, just uses upper scope variables
+  if [ ! -f "$full_path" ]; then
+    cat <<EOF >"$full_path"
 date: ${note_date}
 
 tags:
@@ -83,8 +85,17 @@ tags:
 
 # ${TITLE}
 EOF
-  log_ok "created new note ${full_path}"
-  log "opening in $EDITOR..."
+    log_ok "created new note ${full_path}"
+    log "opening in $EDITOR..."
+  fi
+}
+
+# Check if the directory exists, if not, create it
+if [ ! -d "$note_dir" ]; then
+  mkdir -p "$note_dir"
 fi
+
+# Create the  note if it does not already exist
+__set_template
 
 $EDITOR +norm\ G "$full_path"

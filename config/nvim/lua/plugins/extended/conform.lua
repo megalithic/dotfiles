@@ -1,7 +1,7 @@
 local SETTINGS = require("mega.settings")
 local U = require("mega.utils")
 
-local prettier = { "dprint", "prettierd", "prettier" }
+local prettier = { "prettierd", "prettier", "dprint" }
 local shfmt = { "shfmt" } -- shellharden
 local timeout_ms = 1500
 local lsp_fallback = "always"
@@ -28,6 +28,22 @@ if vim.g.formatter == "conform" then
     },
   }
 end
+
+-- ---@param bufnr integer
+-- ---@param ... string
+-- ---@return string
+-- local function first(bufnr, ...)
+-- local function get(bufnr)
+--   local conform = require("conform")
+--   for i = 1, select("#", ...) do
+--     local formatter = select(i, ...)
+--     if conform.get_formatter_info(formatter, bufnr).available then return formatter end
+--   end
+--   return select(1, ...)
+-- end
+--
+--   return get(bufnr) end
+-- end
 
 ---@param bufnr integer
 ---@param ... string

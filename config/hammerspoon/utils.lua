@@ -1,4 +1,9 @@
-local obj = { tmux = {} }
+local obj = {
+  table = {},
+  string = {},
+  tmux = {},
+  file = {},
+}
 
 obj.__index = obj
 obj.name = "utils"
@@ -60,6 +65,7 @@ function obj.tlen(t)
   end
   return len
 end
+obj.table.length = obj.tlen
 
 function obj.truncate(str, width, at_tail)
   local ellipsis = "…"
@@ -205,11 +211,137 @@ function obj.tmux.focusDailyNote(splitFocusedWindow)
       })
     end
 
-    hs.application.launchOrFocusByBundleID(TERMINAL)
-    -- mimics pressing the tmux prefix `ctrl-space`,
-    hs.eventtap.keyStroke({ "ctrl" }, "space", term)
-    -- then the daily note binding, `ctrl-o`.
-    hs.eventtap.keyStroke({ "ctrl" }, "o", term)
+    term:activate()
+
+    hs.timer.waitUntil(function() return term:isFrontmost() end, function()
+      -- mimics pressing the tmux prefix `ctrl-space`,
+      hs.eventtap.keyStroke({ "ctrl" }, "space", 100000, term)
+      -- then the daily note binding, `ctrl-o`,
+      hs.eventtap.keyStroke({ "ctrl" }, "o", 100000, term)
+
+      -- FIXME: unreliable
+      -- then tell nvim to open my daily note.
+      -- hs.eventtap.keyStrokes(",nd", term)
+      -- hs.eventtap.keyStroke({}, "n", 100000, term)
+      -- hs.eventtap.keyStroke({}, "d", 100000, term)
+    end)
+  end
+end
+
+-- Takes a list of path parts, returns a string with the parts delimited by '/'
+function obj.file.toPath(...) return table.concat({ ... }, "/") end
+
+function obj.file.splitPath(file)
+  -- Splits a string by '/', returning the parent dir, filename (with extension),
+  -- and the extension alone.
+  local parent = file:match("(.+)/[^/]+$")
+  if parent == nil then parent = "." end
+  local filename = file:match("/([^/]+)$")
+  if filename == nil then filename = file end
+  local ext = filename:match("%.([^.]+)$")
+  return parent, filename, ext
+end
+
+function obj.file.exists(file)
+  -- Return true if the file exists, else false
+  local f = io.open(file, "r")
+  if f ~= nil then
+    io.close(f)
+    return true
+  else
+    return false
+  end
+end
+
+-- If any files are found in the given path, make a list of them and call the
+-- given callback function with that list.
+function obj.file.runOnFiles(path, callback)
+  local iter, data = hs.fs.dir(path)
+  local files = {}
+  repeat
+    local item = iter(data)
+    if item ~= nil then table.insert(files, obj.file.toPath(path, item)) end
+  until item == nil
+  if #files > 0 then callback(files) end
+end
+
+-- Make a parent dir for a file. Does not error if it exists already.
+function obj.file.makeParentDir(path)
+  local parent, _, _ = obj.file.splitPath(path)
+  local ok, err = hs.fs.mkdir(parent)
+  if ok == nil then
+    if err == "File exists" then ok = true end
+  end
+  return ok, err
+end
+
+-- Create a file (making parent directories if necessary).
+function obj.file.create(path)
+  if obj.file.makeParentDir(path) then io.open(path, "w"):close() end
+end
+
+-- Append a line of text to a file.
+function obj.file.append(file, text)
+  if text == "" then return end
+
+  local f = io.open(file, "a")
+  f:write(tostring(text) .. "\n")
+  f:close()
+end
+
+-- Move a file. This calls task (so runs asynchronously), so calls onSuccess
+-- and onFailure callback functions depending on the result. Set force to true
+-- to overwrite.
+function obj.file.move(from, to, force, onSuccess, onFailure)
+  force = force and "-f" or "-n"
+
+  local function callback(exitCode, stdOut, stdErr)
+    if exitCode == 0 then
+      onSuccess(stdOut)
+    else
+      onFailure(stdErr)
+    end
+  end
+
+  if obj.file.exists(from) then hs.task.new("/bin/mv", callback, { force, from, to }):start() end
+end
+
+-- If the given file is older than the given time (in epoch seconds), return
+-- true. This checks the inode change time, not the original file creation
+-- time.
+function obj.file.isOlderThan(file, seconds)
+  local age = os.time() - hs.fs.attributes(file, "change")
+  if age > seconds then return true end
+  return false
+end
+
+-- Return the last modified time of a file in epoch seconds.
+function obj.file.lastModified(file)
+  local when = os.time()
+  if obj.file.exists(file) then when = hs.fs.attributes(file, "modification") end
+  return when
+end
+
+function obj.file.moveFileToPath(file, toPath)
+  -- move a given file to toPath, overwriting the destination, with logging
+  local function onFileMoveSuccess(_) info("Moved " .. file .. " to " .. toPath) end
+
+  local function onFileMoveFailure(stdErr) error("Error moving " .. file .. " to " .. toPath .. ": " .. stdErr) end
+
+  obj.file.makeParentDir(toPath)
+  obj.file.move(file, toPath, true, onFileMoveSuccess, onFileMoveFailure)
+end
+
+-- Unhide the extension on the given file, if it matches the extension given,
+-- and that extension does not exist in the given hiddenExtensions table.
+function obj.file.unhideExtension(file, ext, hiddenExtensions)
+  if ext == nil or hiddenExtensions == nil or hiddenExtensions[ext] == nil then
+    local function unhide(exitCode, stdOut, stdErr)
+      if exitCode == 0 and tonumber(stdOut) == 1 then
+        hs.task.new("/usr/bin/SetFile", nil, { "-a", "e", file }):start()
+      end
+    end
+    hs.task.new("/usr/bin/GetFileInfo", unhide, { "-aE", file }):start()
   end
 end
 

@@ -3,14 +3,12 @@
 wan=$(dig +short myip.opendns.com @resolver1.opendns.com)
 
 tun=""
-for i in {0..5}
-do
+for i in {0..5}; do
   [[ -n $(ifconfig utun$i >/dev/null 2>&1 | rg 'inet ') ]] && tun=$(ifconfig utun$i >/dev/null 2>&1 | rg 'inet ' | awk '{print "["$3"]"}')
 done
 
 lan=""
-for i in {0..8}
-do
+for i in {0..8}; do
   [[ -n $(ifconfig en$i >/dev/null 2>&1 | rg 'inet ') ]] && lan=$(ifconfig en$i >/dev/null 2>&1 | rg 'inet ' | awk '{print $3}')
   # [[ -n $(ifconfig en$i >/dev/null 2>&1 | rg 'inet ') ]] && lan=$(ifconfig en$i >/dev/null 2>&1 | rg 'inet ' | awk '$2 ~ /^[[:blank:]]*192/ {print $2}')
 done
@@ -22,3 +20,13 @@ done
 [[ -n $wan ]] && echo "$wan\r"
 [[ -n $tun ]] && echo "$tun\r"
 [[ -n $lan ]] && echo "$lan\r"
+
+# TODO:
+#
+# More options to making this work.. presently I'm not quite sure what is correct, soooooo:
+#
+# REF: https://www.reddit.com/r/VPN/comments/fb189w/super_simple_shell_script_to_check_ip_and_dns/
+# printf "IP:\n"
+# curl whatismyip.akamai.com
+# printf "\nDNS:\n"
+# dig +short A whoami.akamai.net

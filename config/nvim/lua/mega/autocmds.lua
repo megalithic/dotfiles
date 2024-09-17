@@ -210,7 +210,7 @@ function M.apply()
         if is_eligible then
           map("n", "q", function()
             if vim.fn.winnr("$") ~= 1 then
-              dbg("smart close quit mappings")
+              -- dbg("smart close quit mappings")
               vim.api.nvim_win_close(0, true)
               vim.cmd("wincmd p")
             end
@@ -425,6 +425,37 @@ function M.apply()
       desc = "remove terminal padding around neovim instance",
       command = function(_args) io.write("\027]111\027\\") end,
     },
+
+    --     {
+    -- local no_lastplace = {
+    --     buftypes = {
+    --         "quickfix",
+    --         "nofile",
+    --         "help",
+    --         "terminal",
+    --     },
+    --     filetypes = {
+    --         "gitcommit",
+    --         "gitrebase",
+    --     },
+    -- }
+    --
+    -- aucmd({ "BufReadPost" }, {
+    --     pattern = "*",
+    --     desc = "Jump to last place in files",
+    --     group = augroup("JumpToLastPosition", { clear = true }),
+    --     callback = function()
+    --         if
+    --             vim.fn.line [['"]] >= 1
+    --             and vim.fn.line [['"]] <= vim.fn.line "$"
+    --             and not vim.tbl_contains(no_lastplace.buftypes, vim.o.buftype)
+    --             and not vim.tbl_contains(no_lastplace.filetypes, vim.o.filetype)
+    --         then
+    --             vim.cmd [[normal! g`" | zv]]
+    --         end
+    --     end,
+    -- })
+    --     },
 
     {
       event = { "BufWritePost" },

@@ -214,7 +214,7 @@ ftplugin.extend_all({
   },
   markdown = {
     abbr = {
-      -- ["-cc"] = "- [ ]",
+      cbt = "- [ ]",
       cb = "[ ]",
       cabag = [[Co-authored-by: Aaron Gunderson <aaron@ternit.com>]],
       cabdt = [[Co-authored-by: Dan Thiffault <dan@ternit.com>]],
@@ -226,6 +226,8 @@ ftplugin.extend_all({
       cbam = [[Co-authored-by: Ali Marsh<ali@ternit.com>]],
     },
     opt = {
+      relativenumber = false,
+      number = false,
       conceallevel = 2,
       shiftwidth = 2,
       tabstop = 2,
