@@ -37,13 +37,13 @@ return {
           },
         },
       },
-      { "folke/neodev.nvim", opts = {} },
+      -- { "folke/neodev.nvim", opts = {} },
     },
     config = function()
       local lsp_ok, lspconfig = pcall(require, "lspconfig")
       if not lsp_ok then return nil end
 
-      require("neodev").setup()
+      -- require("neodev").setup()
 
       local diagnostic_ns = vim.api.nvim_create_namespace("hl_diagnostic_region")
       local diagnostic_timer
@@ -60,10 +60,11 @@ return {
       local function diagnostic_popup(opts)
         local bufnr = opts
         if type(opts) == "table" then bufnr = opts.buf or 0 end
-        -- Try to open diagnostics under the cursor
-        local diags = vim.diagnostic.open_float(bufnr, { focus = false, scope = "cursor" })
-        -- If there's no diagnostic under the cursor show diagnostics of the entire line
-        if not diags then vim.diagnostic.open_float(bufnr, { focus = false, scope = "line" }) end
+        local diags = vim.diagnostic.open_float(bufnr, { focus = false, scope = "line" })
+        -- -- Try to open diagnostics under the cursor
+        -- local diags = vim.diagnostic.open_float(bufnr, { focus = false, scope = "cursor" })
+        -- -- If there's no diagnostic under the cursor show diagnostics of the entire line
+        -- if not diags then vim.diagnostic.open_float(bufnr, { focus = false, scope = "line" }) end
 
         return diags
       end
@@ -97,11 +98,90 @@ return {
         vim.diagnostic["goto_" .. dir]()
       end
 
+      local function fix_current_action()
+        local params = vim.lsp.util.make_range_params() -- get params for current position
+        params.context = {
+          diagnostics = vim.diagnostic.get(),
+          only = { "quickfix" },
+        }
+
+        local actions_per_client, err = vim.lsp.buf_request_sync(0, "textDocument/codeAction", params, 900)
+
+        if err then return end
+
+        if actions_per_client == nil or vim.tbl_isempty(actions_per_client) or #actions_per_client == 0 then
+          vim.notify("no quickfixes available")
+          return
+        end
+
+        -- Collect the available actions
+        local actions = {}
+        for cid, resp in pairs(actions_per_client) do
+          if resp.result ~= nil then
+            for _, result in pairs(resp.result) do
+              -- add the actions with a cid to the table
+              local action = {}
+              action["cid"] = cid
+              for k, v in pairs(result) do
+                action[k] = v
+              end
+              table.insert(actions, action)
+            end
+          end
+        end
+
+        -- Try to find a preferred action.
+        local preferred_action = nil
+        for _, action in ipairs(actions) do
+          if action.isPreferred then
+            preferred_action = action
+            break
+          end
+        end
+
+        -- If we failed to find a preferred action, try to find a non-null-ls action.
+        local non_null_ls_action = nil
+        for _, action in ipairs(actions) do
+          if action.command ~= "NULL_LS_CODE_ACTION" then
+            non_null_ls_action = action
+            break
+          end
+        end
+
+        -- If we failed to find a non-null-ls action, use the first one.
+        local first_action = nil
+        if #actions > 0 then first_action = actions[1] end
+
+        -- Using null-ls a lot of quickfixes are returned but all tend to be
+        -- worse than what the real LSP is offering, we try to use other
+        -- actions first, then only fall back to whatever null-ls is offering.
+        local top_action = preferred_action or non_null_ls_action or first_action
+
+        local picked_one = false
+
+        vim.lsp.buf.code_action({
+          context = {
+            only = { "quickfix" },
+          },
+          filter = function(action, ctx)
+            if picked_one then
+              return true
+            elseif top_action ~= nil and action.title == top_action.title then
+              picked_one = true
+              return false
+            else
+              return true
+            end
+          end,
+          apply = true,
+        })
+      end
+
       --  This function gets run when an LSP attaches to a particular buffer.
       --    That is to say, every time a new file is opened that is associated with
       --    an lsp (for example, opening `main.rs` is associated with `rust_analyzer`) this
       --    function will be executed to configure the current buffer
-      function M.on_attach(client, bufnr)
+      function M.on_attach(client, bufnr, cb)
         -- if not client or not client.supports_method("textDocument/documentHighlight") then return end
 
         local disabled_lsp_formatting = SETTINGS.disabled_lsp_formatters
@@ -165,18 +245,7 @@ return {
         --   references_handler(err, result, ctx, config)
         -- end
 
-        -- if action opens up qf list, open the first item and close the list
-        local function choose_list_first(items)
-          print(#items)
-          if #items > 1 then
-            U.qf_populate(items, { title = "Definitions" })
-            vim.cmd("Trouble qflist open")
-          end
-
-          -- vim.fn.setqflist({}, "r", items)
-          -- vim.cmd.cfirst()
-        end
-        local map = function(keys, func, desc) vim.keymap.set("n", keys, func, { buffer = bufnr, desc = "LSP: " .. desc }) end
+        local map = function(keys, func, desc) vim.keymap.set("n", keys, func, { buffer = bufnr, desc = "[lsp] " .. desc }) end
         local icons = require("mega.settings").icons
 
         -- if client and client.supports_method("textDocument/inlayHint", { bufnr = bufnr }) then
@@ -191,9 +260,13 @@ return {
         map("[d", function() goto_diagnostic_hl("prev") end, "Go to previous [D]iagnostic message")
         map("]d", function() goto_diagnostic_hl("next") end, "Go to next [D]iagnostic message")
 
-        map("gd", require("telescope.builtin").lsp_definitions, "[g]oto [d]efinition")
+        map("g.", function() fix_current_action() end, "[g]o run nearest/current code action")
+        -- map("gd", require("telescope.builtin").lsp_definitions, "[g]oto [d]efinition")
+        map("gd", function() require("telescope.builtin").lsp_definitions() end, "[g]oto [d]efinition")
         -- map("gd", function() vim.lsp.buf.definition({ on_list = choose_list_first }) end, "[g]oto [d]efinition")
-        -- map("gd", function() vim.cmd("Trouble lsp_definitions toggle focus=true") end, "[g]oto [d]efinition (trouble)")
+        -- map("gd", vim.lsp.buf.definition, "[g]oto [d]efinition")
+        map("gq", function() vim.cmd("Trouble diagnostics toggle focus=true filter.buf=0") end, "[g]oto [q]uickfixlist buffer diagnostics (trouble)")
+        map("gQ", function() vim.cmd("Trouble diagnostics toggle focus=true") end, "[g]oto [q]uickfixlist global diagnostics (trouble)")
         map("gD", function()
           vim.cmd.vsplit()
           vim.defer_fn(function()
@@ -444,16 +517,18 @@ return {
           qf_rename()
         end, "[r]ename")
 
-        if client.name == "ElixirLS" or client.name == "elixirls" then
+        if client.name == "elixirls" then
           vim.keymap.set("n", "<localleader>efp", ":ElixirFromPipe<cr>", { buffer = bufnr, noremap = true, desc = "from pipe" })
           vim.keymap.set("n", "<localleader>etp", ":ElixirToPipe<cr>", { buffer = bufnr, noremap = true, desc = "to pipe (|>)" })
           vim.keymap.set("v", "<localleader>eem", ":ElixirExpandMacro<cr>", { buffer = bufnr, noremap = true, desc = "expand macro" })
         end
+
         command(
           "LspLogDelete",
           function() vim.fn.system("rm " .. vim.lsp.get_log_path()) end,
           { desc = "Deletes the LSP log file. Useful for when it gets too big" }
         )
+
         command("LspCapabilities", function(ctx)
           local filter = ctx.args == "" and { bufnr = 0 } or { name = ctx.args }
           local clients = vim.lsp.get_clients(filter)
@@ -523,6 +598,45 @@ return {
         --     },
         --   })
         -- end
+
+        -- vim.diagnostic.config({
+        --   severity_sort = true,
+        --   virtual_text = {
+        --     -- source = 'always',
+        --     spacing = 2,
+        --     prefix = "", -- Could be '●', '▎', 'x'
+        --     format = function(diagnostic)
+        --       local source = diagnostic.source
+        --
+        --       if source then
+        --         local icon = utils.get_icon(vim.diagnostic.severity[diagnostic.severity]:lower())
+        --
+        --         return string.format("%s %s %s", icon, source, "[" .. (diagnostic.code ~= nil and diagnostic.code or diagnostic.message) .. "]")
+        --       end
+        --
+        --       return string.format("%s ", diagnostic.message)
+        --     end,
+        --   },
+        --   float = {
+        --     source = "if_many",
+        --     focusable = false,
+        --     prefix = function(diag)
+        --       local level = vim.diagnostic.severity[diag.severity]
+        --       local icon = utils.get_icon(level:lower())
+        --       local prefix = string.format(" %s ", icon)
+        --
+        --       return prefix, "Diagnostic" .. level:gsub("^%l", string.upper)
+        --     end,
+        --   },
+        --   signs = {
+        --     text = {
+        --       [vim.diagnostic.severity.ERROR] = utils.get_icon("error"),
+        --       [vim.diagnostic.severity.WARN] = utils.get_icon("warn"),
+        --       [vim.diagnostic.severity.HINT] = utils.get_icon("hint"),
+        --       [vim.diagnostic.severity.INFO] = utils.get_icon("info"),
+        --     },
+        --   },
+        -- })
 
         local max_width = math.min(math.floor(vim.o.columns * 0.7), 100)
         local max_height = math.min(math.floor(vim.o.lines * 0.3), 30)
@@ -613,10 +727,23 @@ return {
           severity_sort = true,
           -- virtual_text = false,
           virtual_text = {
+            spacing = 2,
+            prefix = "", -- Could be '●', '▎', 'x'
             only_current_line = true,
             highlight_whole_line = false,
             severity = { min = diag_level.ERROR },
             suffix = function(diag) return diag_source_as_suffix(diag, "virtual_text") end,
+            format = function(diagnostic)
+              local source = diagnostic.source
+
+              if source then
+                local icon = SETTINGS.icons.lsp[vim.diagnostic.severity[diagnostic.severity]:lower()]
+
+                return string.format("%s %s %s", icon, source, "[" .. (diagnostic.code ~= nil and diagnostic.code or diagnostic.message) .. "]")
+              end
+
+              return string.format("%s ", diagnostic.message)
+            end,
           },
           update_in_insert = false,
         })
@@ -669,6 +796,8 @@ return {
         --   show = max_diagnostics,
         --   hide = function(_, bn) orig_signs_handler.hide(ns, bn) end,
         -- }
+
+        if cb ~= nil and type(cb) == "function" then cb() end
       end
 
       augroup("LspAttach", {
@@ -687,7 +816,7 @@ return {
 
       local servers = require("mega.servers")
       if servers == nil then return end
-      local servers_list = servers.list()
+      local servers_list = servers.list(capabilities, M.on_attach)
 
       require("mason").setup()
       require("mason-lspconfig").setup()
@@ -727,7 +856,7 @@ return {
         end
 
         config.flags = { debounce_text_changes = 150 }
-        config.capabilities = vim.tbl_deep_extend("force", {}, capabilities, config.capabilities or {})
+        config.capabilities = vim.tbl_deep_extend("force", capabilities, config.capabilities or {})
 
         return config
       end

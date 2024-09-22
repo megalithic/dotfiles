@@ -16,14 +16,18 @@ __help() {
   printf -- "${grey}${bold}OPTIONS:${reset}\n"
   printf -- "  -h          view this help text\n"
   printf -- "  -p          return current daily note path\n"
+  printf -- "  -m          method used for daily note: [zk, note]\n"
   printf -- "  -r          opens raw daily note without interacting with tmux\n"
   printf -- "\n"
 
   exit 0
 }
 
+METHOD="zk"
+
 # Specify below the directory in which you want to create your daily note
-main_note_dir="${HOME}/Documents/_notes/daily"
+notes_dir="${HOME}/Documents/_notes/daily"
+zk_notes_dir="${HOME}/Documents/_zk"
 
 # Get current date components
 current_month_abbr=$(date +"%b")
@@ -33,9 +37,9 @@ current_month_num=$(date +"%m")
 current_day=$(date +"%d")
 
 # Construct the directory structure and filename
-note_dir="${main_note_dir}/${current_year}/${current_month_num}"
+daily_note_dir="${notes_dir}/${current_year}/${current_month_num}"
 note_date="${current_year}-${current_month_num}-${current_day}"
-full_path="${note_dir}/${note_date}.md"
+full_path="${daily_note_dir}/${note_date}.md"
 
 function __set_template() {
   # NOTE: doesn't take args, just uses upper scope variables
@@ -67,10 +71,16 @@ function open_note() {
   nvim +norm\ G "$full_path"
 }
 
-while getopts "hpr" OPTION; do
+while getopts "hprm:" OPTION; do
   case $OPTION in
+    m)
+      METHOD="${OPTARG:-zk}"
+      ;;
+
     p)
-      echo "$full_path" | tr -d '\n'
+      if [[ "$METHOD" == "note" ]]; then
+        echo "$full_path" | tr -d '\n'
+      fi
 
       exit 0
       ;;
@@ -98,19 +108,27 @@ while getopts "hpr" OPTION; do
 done
 shift "$(($OPTIND - 1))"
 
-# Use note name as the session name
-SESSION="daily-note-${note_date}"
+if [[ "$METHOD" == "note" ]]; then
+  # Use note name as the session name
+  SESSION="daily-note-${note_date}"
 
-# Check if the directory exists, if not, create it
-if [ ! -d "$note_dir" ]; then
-  mkdir -p "$note_dir"
-fi
+  # Check if the directory exists, if not, create it
+  if [ ! -d "$daily_note_dir" ]; then
+    mkdir -p "$daily_note_dir"
+  fi
 
-# Create the daily note if it does not already exist
-__set_template
+  # Create the daily note if it does not already exist
+  __set_template
 
-if ! tmux has-session -t "$SESSION" 2>/dev/null; then
-  tmux new-session -d -s "$SESSION" -c "$note_dir" "nvim +norm\ G \"$full_path\""
+  if ! tmux has-session -t "$SESSION" 2>/dev/null; then
+    tmux new-session -d -s "$SESSION" -c "$daily_note_dir" "nvim +norm\ G \"$full_path\""
+  fi
+elif [[ "$METHOD" == "zk" ]]; then
+  SESSION="daily-zk-${note_date}"
+
+  if ! tmux has-session -t "$SESSION" 2>/dev/null; then
+    tmux new-session -d -s "$SESSION" -c "$zk_notes_dir" "zk daily"
+  fi
 fi
 
 tmux setenv -t "$SESSION" 'SESSION_ICON' "${SESSION_ICON}"

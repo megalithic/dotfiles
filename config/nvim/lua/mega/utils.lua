@@ -10,6 +10,7 @@ local SETTINGS = require("mega.settings")
 local M = {
   hl = {},
   lsp = {},
+  notes = {},
 }
 
 function M.lsp.is_enabled_elixir_ls(client, enabled_clients)
@@ -36,7 +37,7 @@ local function prepare_file_rename(data)
       files = { { newUri = "file://" .. data.new_name, oldUri = "file://" .. data.old_name } },
     }
     ---@diagnostic disable-next-line: invisible
-    local resp = client.request_sync("workspace/willRenameFiles", params, 1000)
+    local resp = client.request_sync("workspace/willRenameFiles", params, 1000, bufnr)
     if resp then vim.lsp.util.apply_workspace_edit(resp.result, client.offset_encoding) end
   end
 end
@@ -53,6 +54,131 @@ function M.lsp.rename_file()
     prepare_file_rename({ old_name = old_name, new_name = new_name })
     -- lsp.util.rename(old_name, new_name)
   end)
+end
+
+local get_node = vim.treesitter.get_node
+local cur_pos = vim.api.nvim_win_get_cursor
+
+---An insert mode implementation of `vim.treesitter`'s `get_node`
+---@param opts table? Opts to be passed to `get_node`
+---@return TSNode node The node at the cursor
+local get_node_insert_mode = function(opts)
+  opts = opts or {}
+  local ins_curs = cur_pos(0)
+  ins_curs[1] = ins_curs[1] - 1
+  ins_curs[2] = ins_curs[2] - 1
+  opts.pos = ins_curs
+  return get_node(opts)
+end
+
+function M.notes.get_md_link_dest()
+  -- NOTE: Maybe in the future make this work for injected Markdown used in e.g.
+  -- documentation?
+  if vim.bo.filetype ~= "markdown" then return end
+  local current_node = get_node({ lang = "markdown_inline" })
+
+  while current_node do
+    local type = current_node:type()
+    if type == "inline_link" or type == "image" then return vim.treesitter.get_node_text(current_node:named_child(1), 0) end
+    if type == "link_text" then return vim.treesitter.get_node_text(current_node, 0) end
+    current_node = current_node:parent()
+
+    -- local get_classes = vim.treesitter.query.get_node_text(capture[1], 0)
+    -- dbg(I(vim.treesitter.get_node_text(current_node:named_child(1), 0)))
+  end
+
+  return nil
+end
+
+function M.notes.note_info(fpath, ...)
+  local args = { ... }
+  local path = vim.g.notes_path .. "/"
+  local starts_with_a_path = vim.fn.fnamemodify(fpath, ":h")
+  local starts_with_name = vim.fn.fnamemodify(fpath, ":t")
+  local where = string.gsub(starts_with_a_path .. "/", "^\\.", "")
+  local has_a_path = starts_with_a_path ~= "."
+  local fname = table.concat({
+    has_a_path and starts_with_name or fpath,
+    #args > 1 and table.concat(args, " ") or args[1],
+  }, " ") or ""
+
+  if has_a_path then path = path .. where end
+
+  path = path .. vim.fn.strftime("%Y%m%d%H%M") .. (fname and " " .. fname or "") .. ".md"
+
+  return {
+    path,
+    fname,
+    vim.fn.strftime("%Y-%m-%dT%H:%M"),
+  }
+end
+
+---Makes an LSP location object from the last selection in the current buffer.
+--
+---@return table LSP location object
+---@see https://microsoft.github.io/language-server-protocol/specifications/specification-current/#location
+function M.get_lsp_location_from_selection()
+  local params = vim.lsp.util.make_given_range_params()
+  return {
+    uri = params.textDocument.uri,
+    range = params.range,
+  }
+end
+
+---Fix to correct cursor location
+--
+---When working on link insertion, it was discovered that there may be
+---an off-by-one error for single point locations in glsp. This function
+---corrects that error.
+---@param location table An LSP location object representing a single cell
+---@return table The LSP location corrected one row up and one column right
+---@internal
+local function fix_cursor_location(location)
+  -- Cursor LSP position is a little weird.
+  -- It inserts one line down. Seems like an off by one error somewhere
+  local pos = location["range"]["start"]
+
+  pos["line"] = pos["line"] - 1
+  pos["character"] = pos["character"] + 1
+
+  location["range"]["start"] = pos
+  location["range"]["end"] = pos
+
+  return location
+end
+
+---Makes an LSP location object from the caret position in the current buffer.
+--
+---@return table LSP location object
+---@see https://microsoft.github.io/language-server-protocol/specifications/specification-current/#location
+function M.get_lsp_location_from_caret()
+  local params = vim.lsp.util.make_given_range_params()
+
+  local row, col = unpack(vim.api.nvim_win_get_cursor(0))
+  local position = { line = row, character = col }
+  return fix_cursor_location({
+    uri = params.textDocument.uri,
+    range = {
+      start = position,
+      ["end"] = position,
+    },
+  })
+end
+
+---Gets the text in the last visual selection
+--
+---@return string text in range
+function M.get_selected_text()
+  local region = vim.region(0, "'<", "'>", vim.fn.visualmode(), true)
+
+  local chunks = {}
+  local maxcol = vim.v.maxcol
+  for line, cols in vim.spairs(region) do
+    local endcol = cols[2] == maxcol and -1 or cols[2]
+    local chunk = vim.api.nvim_buf_get_text(0, line, cols[1], line, endcol, {})[1]
+    table.insert(chunks, chunk)
+  end
+  return table.concat(chunks, "\n")
 end
 
 --- Call the given function and use `vim.notify` to notify of any errors

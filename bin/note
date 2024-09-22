@@ -9,8 +9,9 @@ __help() {
   printf -- "\n"
   printf -- "${grey}${bold}OPTIONS:${reset}\n"
   printf -- "  -h          view this help text\n"
+  printf -- "  -c          create note only\n"
+  printf -- "  -d          new daily note\n"
   printf -- "  -t          optional note tag\n"
-  printf -- "  -d          create a daily note\n"
   printf -- "\n"
   printf -- "${grey}${bold}EXAMPLES:${reset}\n"
   printf -- "  note -t til this is the greatest note with amazing code snippets\n"
@@ -19,7 +20,9 @@ __help() {
   exit 0
 }
 
-while getopts "hdt:" OPTION; do
+CREATE_ONLY=false
+
+while getopts "hdct:" OPTION; do
   case $OPTION in
     t)
       # pass in an optional single tag to start;
@@ -29,6 +32,10 @@ while getopts "hdt:" OPTION; do
 
     h)
       __help
+      ;;
+
+    c)
+      CREATE_ONLY=true
       ;;
 
     d)
@@ -65,7 +72,11 @@ current_day=$(date +"%d")
 note_dir="${main_note_dir}"
 note_date="${current_year}-${current_month_num}-${current_day}"
 filename_from_title=$(echo "${TITLE// /-}" | tr '[:upper:]' '[:lower:]')
-full_path="${note_dir}/${filename_from_title}_${note_date}.md"
+if [[ "$TITLE" == "New note" ]]; then
+  full_path="${note_dir}/${filename_from_title}_${note_date}.md"
+else
+  full_path="${note_dir}/${filename_from_title}.md"
+fi
 
 function __set_template() {
   # NOTE: doesn't take args, just uses upper scope variables
@@ -86,7 +97,6 @@ tags:
 # ${TITLE}
 EOF
     log_ok "created new note ${full_path}"
-    log "opening in $EDITOR..."
   fi
 }
 
@@ -98,4 +108,9 @@ fi
 # Create the  note if it does not already exist
 __set_template
 
-$EDITOR +norm\ G "$full_path"
+if [ "$CREATE_ONLY" = false ]; then
+  log "opening in $EDITOR..."
+  $EDITOR +norm\ G "$full_path"
+else
+  echo "$full_path"
+fi

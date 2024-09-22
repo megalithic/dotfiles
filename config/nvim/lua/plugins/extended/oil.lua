@@ -112,6 +112,7 @@ return {
       },
     })
   end,
+
   keys = {
     {
       "<leader>ev",
@@ -120,12 +121,12 @@ return {
         vim.cmd([[vertical rightbelow split]])
         require("oil").open()
       end,
-      desc = "oil: open (vsplit)",
+      desc = "[e]xplore cwd -> oil ([v]split)",
     },
     {
       "<leader>ee",
       function() require("oil").open() end,
-      desc = "oil: open (edit)",
+      desc = "[e]xplore cwd -> oil ([e]dit)",
     },
   },
 }

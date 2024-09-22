@@ -38,6 +38,7 @@ return {
       opts = {
         langs = {
           elixir = "# %s",
+          eelixir = "# %s",
           heex = [[<%!-- %s --%>]],
         },
       },
@@ -120,15 +121,12 @@ return {
       keys = {
         {
           "s",
+          -- mode = { "n" },
           mode = { "n", "x", "o" },
           function() require("flash").jump() end,
         },
-        {
-          "m",
-          mode = { "o", "x" },
-          function() require("flash").treesitter() end,
-        },
-        { "vv", mode = { "n", "o", "x" }, function() require("flash").treesitter() end },
+        { "m", mode = { "o", "x" }, function() require("flash").treesitter() end },
+        { "vn", mode = { "n", "o", "x" }, function() require("flash").treesitter() end },
         {
           "r",
           function() require("flash").remote() end,
@@ -311,6 +309,22 @@ return {
         ["<cr>"] = "action_enter",
         ["<tab>"] = "enter_diffbuf",
         ["q"] = "quit",
+      },
+    },
+  },
+  {
+    "https://github.com/folke/lazydev.nvim",
+    -- dependencies = {
+    -- 	{ 'https://github.com/Bilal2453/luvit-meta', lazy = true }, -- optional `vim.uv` typings
+    -- },
+    ft = "lua",
+    opts = {
+      library = {
+        { path = "wezterm-types", mods = { "wezterm" } },
+        {
+          path = vim.env.HOME .. "/.hammerspoon/Spoons/EmmyLua.spoon/annotations",
+          words = { "hs" },
+        },
       },
     },
   },

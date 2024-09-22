@@ -504,7 +504,19 @@ function M.apply()
       -- end,
     },
     {
-      event = { "BufEnter" },
+      event = "BufWritePost",
+      pattern = ".envrc",
+      command = function()
+        if vim.fn.executable("direnv") then vim.cmd([[silent !direnv allow %]]) end
+      end,
+    },
+    {
+      event = "BufWritePost",
+      pattern = "*/spell/*.add",
+      command = "silent! :mkspell! %",
+    },
+    {
+      event = { "BufEnter", "BufRead", "BufNewFile" },
       buffer = 0,
       desc = "Extreeeeme `gf` open behaviour",
       command = function(args)
@@ -519,14 +531,26 @@ function M.apply()
 
           if target:match("https://") then return vim.cmd("norm gx") end
 
-          if vim.bo[args.buf].filetype == "elixir" then
-            vim.cmd([[setlocal iskeyword+=:,!,?,-]])
-            target = vim.fn.escape(vim.fn.expand("<cword>"), [[\/]])
-            target = string.sub(target, 2)
+          if args.file:match("mix.exs") then
+            local line = vim.fn.getline(".")
+            local _, _, pkg, _ = string.find(line, [[^%s*{:(.*), %s*"(.*)"}]])
 
-            local url = fmt("https://hexdocs.pm/%s/", target)
-            vim.notify(fmt("Opening %s at %s", target, url))
+            local url = fmt("https://hexdocs.pm/%s/", pkg)
+            vim.notify(fmt("Opening %s at %s", pkg, url))
             vim.fn.jobstart(fmt("%s %s", vim.g.open_command, url))
+
+            return false
+          end
+
+          if args.file:match("package.json") then
+            local line = vim.fn.getline(".")
+            local _, _, pkg, _ = string.find(line, [[^%s*"(.*)":%s*"(.*)"]])
+
+            local url = fmt("https://www.npmjs.com/package/%s", pkg)
+            vim.notify(fmt("Opening %s at %s", pkg, url))
+            vim.fn.jobstart(fmt("%s %s", vim.g.open_command, url))
+
+            return false
           end
 
           if not target or #vim.split(target, "/") ~= 2 then return vim.cmd("norm! gf") end
@@ -535,6 +559,37 @@ function M.apply()
           vim.fn.jobstart(fmt("%s %s", vim.g.open_command, url))
           vim.notify(fmt("Opening %s at %s", target, url))
         end, { desc = "[g]oto [f]ile (preview, github repo, hexdocs, url)" })
+      end,
+    },
+
+    {
+      event = { "BufRead", "BufNewFile" },
+      pattern = "package.json",
+      command = function(args)
+        vim.keymap.set({ "n" }, "gx", function()
+          local line = vim.fn.getline(".")
+          local _, _, pkg, _ = string.find(line, [[^%s*"(.*)":%s*"(.*)"]])
+
+          if pkg then
+            local url = "https://www.npmjs.com/package/" .. pkg
+            vim.ui.open(url)
+          end
+        end, { buffer = true, silent = true, desc = "[G]o to [p]ackage" })
+      end,
+    },
+    {
+      event = { "BufRead", "BufNewFile" },
+      pattern = "mix.exs",
+      command = function(args)
+        vim.keymap.set({ "n" }, "gx", function()
+          local line = vim.fn.getline(".")
+          local _, _, pkg, _ = string.find(line, [[^%s*{:(.*), %s*"(.*)"}]])
+
+          if pkg then
+            local url = fmt("https://hexdocs.pm/%s/", pkg)
+            vim.ui.open(url)
+          end
+        end, { buffer = true, silent = true, desc = "[G]o to [p]ackage" })
       end,
     },
   })

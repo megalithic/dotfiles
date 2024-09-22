@@ -54,7 +54,7 @@ local hammerspoon_path = fmt("%s/config/hammerspoon", dotfiles_path)
 -- is_local_dev = vim.trim(vim.fn.system("hostname")) ~= "seth-dev",
 
 --- @class Settings
---- @field enabled_elixir_ls {"ElixirLS"|"Next LS"|"elixirls"|"nextls"|"lexical"}
+--- @field enabled_elixir_ls {"elixirls"|"nextls"|"lexical"}
 local M = {
   -- NOTE: char options (https://unicodeplus.com/): ┊│┆ ┊  ▎││ ▏▏│¦┆┊
   indent_scope_char = "│",
@@ -75,6 +75,7 @@ local M = {
   tester = "vim-test", -- alt: neotest, vim-test, quicktest
   gitter = "neogit", -- alt: neogit, fugitive
   snipper = "snippets", -- alt: vsnip, luasnip, snippets (nvim-builtin)
+  note_taker = "marksman", -- alt: zk, marksman, markdown_oxide, obsidian
   ai = "", -- alt: minuet, neocodeium, codecompanion
   completer = "cmp", -- alt: cmp, epo
   ts_ignored_langs = {}, -- alt: { "svg", "json", "heex", "jsonc" }
@@ -96,16 +97,17 @@ local M = {
   disabled_semantic_tokens = { "lua" },
   disabled_lsp_formatters = { "tailwindcss", "html", "ts_ls", "ls_emmet", "zk", "sumneko_lua" },
   ---@format disable
-  enabled_elixir_ls = { "", "", "", "", "lexical" },
-  completion_exclusions = { "ElixirLS", "Next LS", "", "", "" },
-  formatter_exclusions = { "ElixirLS", "Next LS", "", "", "" },
-  definition_exclusions = { "ElixirLS", "Next LS", "elixirls", "", "" },
-  references_exclusions = { "ElixirLS", "Next LS", "elixirls", "", "" },
-  diagnostic_exclusions = { "ElixirLS", "Next LS", "elixirls", "", "", "ts_ls" },
-  max_diagnostic_exclusions = { "ElixirLS", "Next LS", "elixirls", "", "" },
+  enabled_elixir_ls = { "", "nextls", "" },
+  completion_exclusions = { "elixirls", "", "lexical" },
+  formatter_exclusions = { "elixirls", "", "lexical" },
+  definition_exclusions = { "elixirls", "", "lexical" },
+  references_exclusions = { "elixirls", "", "lexical" },
+  diagnostic_exclusions = { "elixirls", "", "lexical", "ts_ls" },
+  max_diagnostic_exclusions = { "elixirls", "", "lexical" },
   ---@format enable
   disable_autolint = false,
   disable_autoformat = false,
+  disable_autoresize = false,
   enable_signsplaced = false,
   markdown_fenced_languages = {
     "shell=sh",
@@ -363,10 +365,12 @@ M.apply = function()
       ai = M.ai,
       snipper = M.snipper,
       completer = M.completer,
+      note_taker = M.note_taker,
       ts_ignored_langs = M.ts_ignored_langs,
       is_screen_sharing = M.is_screen_sharing,
       disable_autolint = M.disable_autolint,
       disable_autoformat = M.disable_autoformat,
+      disable_autoresize = M.disable_autoresize,
       markdown_fenced_languages = M.markdown_fenced_languages,
       have_nerd_font = true,
 

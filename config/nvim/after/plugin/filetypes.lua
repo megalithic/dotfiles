@@ -53,9 +53,16 @@ ftplugin.extend_all({
       xmap("<localleader>err", [[:lua require("mega.utils").wrap_selected_nodes("{:error, ", "}")<CR>]], "copy module alias")
 
       local has_wk, wk = pcall(require, "which-key")
-      if has_wk then wk.register({
-        ["<localleader>e"] = { name = "[e]lixir" },
+      if has_wk then wk.add({
+        ["<localleader>e"] = { group = "[e]lixir" },
       }) end
+
+      local has_clue, clue = pcall(require, "mini.clue")
+      if has_clue then vim.b.miniclue_config = {
+        clues = {
+          { mode = "n", keys = "<localleader>e", desc = "+elixir" },
+        },
+      } end
     end,
   },
   heex = {
@@ -196,7 +203,6 @@ ftplugin.extend_all({
   },
   lua = {
     abbr = {
-      ["!="] = [[~=]],
       locla = "local",
       vll = "vim.log.levels",
     },
@@ -251,6 +257,27 @@ ftplugin.extend_all({
     --   -- { "<leader>tu", require("markdown").task_mark_undone },
     -- },
     callback = function(bufnr)
+      vim.cmd.iabbrev("!=", "~=")
+      -- local bufname = vim.api.nvim_buf_get_name(bufnr)
+      -- if bufname:match("daily") then
+      --   vim.keymap.set("n", "<bs><bs>", function()
+      --     local notes = vim.split(
+      --       vim.fn.glob(
+      --         "`find "
+      --           .. vim.env.HOME
+      --           .. "/Documents/_notes/daily/**/*.md -type f -print0 | xargs -0 stat -f '%m %N' | sort -nr | head -2 | cut -f2- -d' ' | tail -n1`"
+      --       ),
+      --       "\n",
+      --       { trimempty = true }
+      --     )
+      --     if notes ~= nil and #notes == 1 then
+      --       vim.cmd("edit " .. notes[1])
+      --     else
+      --       vim.notify("No last note found.", "WARN")
+      --     end
+      --   end)
+      -- end
+
       --   -- Allow bullets.vim and nvim-autopairs to coexist.
       --   -- REF: https://github.com/ribru17/.dotfiles/blob/0f09207e5587b5217d631cb09885957906eaaa7a/.config/nvim/after/ftplugin/markdown.lua#L7-L19
       --   -- vim.schedule(function()

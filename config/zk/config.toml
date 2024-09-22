@@ -68,6 +68,7 @@ template = "meeting.md"
 ## -- wiki
 [group.wiki]
 paths = ["wiki"]
+
 [group.wiki.note]
 # %Y-%m-%d is actually the default format, so you could use {{date now}} instead.
 filename = "{{title}}"
@@ -107,6 +108,8 @@ project = "--tag Project"
 [alias]
 links = "zk list -t 'links'"
 todos = "zk list -t 'todo'"
+tasks = "zk list -t 'tasks'"
+dailies = "zk list -t 'daily'"
 # Edit the last modified note.
 edlast = "zk edit --limit 1 --sort modified- $@"
 # Edit the notes selected interactively among the notes created the last two weeks.

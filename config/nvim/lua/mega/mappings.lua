@@ -1,10 +1,15 @@
-local U = require("mega.utils")
-
-local M = {}
-
---  See `:help vim.keymap.set()`
+local fmt = string.format
 local map = vim.keymap.set
 
+local U = require("mega.utils")
+local M = {}
+
+-- [[ unmap ]] -----------------------------------------------------------------
+vim.api.nvim_del_keymap("n", "gra") -- lsp default: code actions
+vim.api.nvim_del_keymap("n", "grn") -- lsp default: rename
+vim.api.nvim_del_keymap("n", "grr") -- lsp default: references
+
+-- `:help vim.keymap.set()`
 -- local nmap, cmap, xmap, imap, vmap, omap, tmap, smap
 -- local nnoremap, cnoremap, xnoremap, inoremap, vnoremap, onoremap, tnoremap, snoremap
 
@@ -43,8 +48,9 @@ local function mapper(mode, o)
 
     -- if not opts.has or client.server_capabilities[opts.has .. "Provider"] then
     if opts.label or opts.desc then
-      local ok, wk = pcall(require, "which-key")
-      if ok and wk then wk.register({ [lhs] = opts.label or opts.desc }, { mode = mode }) end
+      -- local ok, wk = pcall(require, "which-key")
+      -- if ok and wk then wk.add({ [lhs] = opts.label or opts.desc }, { mode = mode }) end
+      -- if ok and wk then wk.register({ [lhs] = opts.label or opts.desc }, { mode = mode }) end
       if opts.label and not opts.desc then opts.desc = opts.label end
       opts.label = nil
     end
@@ -81,6 +87,14 @@ for _, mode in ipairs({ "n", "x", "i", "v", "o", "t", "s", "c" }) do
   -- non-recursive global mappings
   M[mode .. "noremap"] = mapper(mode, noremap_opts)
   _G[mode .. "noremap"] = mapper(mode, noremap_opts)
+end
+local function leaderMapper(mode, key, rhs, opts)
+  if type(opts) == "string" then opts = { desc = opts } end
+  map(mode, "<leader>" .. key, rhs, opts)
+end
+local function localLeaderMapper(mode, key, rhs, opts)
+  if type(opts) == "string" then opts = { desc = opts } end
+  map(mode, "<localleader>" .. key, rhs, opts)
 end
 
 -- [[ tabs ]] ------------------------------------------------------------------
@@ -331,69 +345,168 @@ end
 map("n", "<localleader>,", modify_line_end_delimiter(","), { desc = "add comma `,` to end of current line" })
 map("n", "<localleader>;", modify_line_end_delimiter(";"), { desc = "add semicolon `;` to end of current line" })
 
--- [Terminal] ------------------------------------------------------------------
+-- [[ terminal ]] --------------------------------------------------------------
 
-local nnoremap = function(lhs, rhs, desc) vim.keymap.set("n", lhs, rhs, { buffer = 0, desc = "term: " .. desc }) end
 map("n", "<leader>tt", "<cmd>T direction=horizontal move_on_direction_change=true<cr>", { desc = "horizontal" })
 map("n", "<leader>tf", "<cmd>T direction=float move_on_direction_change=true<cr>", { desc = "float" })
 map("n", "<leader>tv", "<cmd>T direction=vertical move_on_direction_change=true<cr>", { desc = "vertical" })
 map("n", "<leader>tp", "<cmd>T direction=tab<cr>", { desc = "tab-persistent" })
 
--- [[ executions ]] ------------------------------------------------------------
+-- [[ edit files / file explorering / executions ]] ------------------------------------------------------------
+local editFileMappings = {
+  r = { function() require("mega.utils").lsp.rename_file() end, "[e]dit file -> lsp rename as <input>" },
+  s = { function() vim.cmd([[SaveAsFile]]) end, "[e]dit file -> [s]ave as <input>" },
+  f = { function() vim.ui.open(vim.fn.expand("%:p:h:~")) end, "[e]xplore cwd -> [f]inder" },
+  d = {
+    function()
+      if vim.fn.confirm("Duplicate file?", "&Yes\n&No", 2, "Question") == 1 then vim.cmd("Duplicate") end
+    end,
+    "[e]dit file -> duplicate?",
+  },
+  D = {
+    function()
+      if vim.fn.confirm("Delete file?", "&Yes\n&No", 2, "Question") == 1 then vim.cmd("Delete!") end
+    end,
+    "[e]dit file -> delete?",
+  },
+  yp = {
+    function()
+      vim.cmd([[let @+ = expand("%")]])
+      vim.notify(fmt("yanked %s to clipboard", vim.fn.expand("%")))
+    end,
+    "[e]xplore file -> yank path",
+  },
+  xf = {
+    function()
+      local filetype = vim.bo.ft
+      local file = vim.fn.expand("%") -- Get the current file name
+      local first_line = vim.fn.getline(1) -- Get the first line of the file
+      if string.match(first_line, "^#!/") then -- If first line contains shebang
+        local escaped_file = vim.fn.shellescape(file) -- Properly escape the file name for shell commands
 
--- If this is a bash script, make it executable, and execute it in a tmux pane on the right
--- Using a tmux pane allows me to easily select text
--- Had to include quotes around "%" because there are some apple dirs that contain spaces, like iCloud
-map("n", "<leader>exf", function()
-  local filetype = vim.bo.ft
-  local file = vim.fn.expand("%") -- Get the current file name
-  local first_line = vim.fn.getline(1) -- Get the first line of the file
-  if string.match(first_line, "^#!/") then -- If first line contains shebang
-    local escaped_file = vim.fn.shellescape(file) -- Properly escape the file name for shell commands
+        -- Execute the script on a tmux pane on the right. On my mac I use zsh, so
+        -- running this script with bash to not execute my zshrc file after
+        -- vim.cmd("silent !tmux split-window -h -l 60 'bash -c \"" .. escaped_file .. "; exec bash\"'")
+        -- `-l 60` specifies the size of the tmux pane, in this case 60 columns
+        vim.notify("executing shell script in tmux split")
+        vim.cmd("silent !tmux split-window -h -l 60 'bash -c \"" .. escaped_file .. "; echo; echo Press any key to exit...; read -n 1; exit\"'")
+      elseif filetype == "lua" then
+        vim.notify("sourcing file")
+        vim.cmd("source %")
+      else
+        vim.notify("Not a script. Shebang line not found.")
+        -- vim.cmd("echo 'Not a script. Shebang line not found.'")
+      end
+    end,
+    "e[x]ecute [f]ile",
+  },
+  xl = {
+    function()
+      local file_dir = vim.fn.expand(vim.g.notes_path)
+      -- local file_dir = vim.fn.expand("%:p:h") -- Get the directory of the current file
+      local pane_width = 60
+      local right_pane_id = vim.fn.system("tmux list-panes -F '#{pane_id} #{pane_width}' | awk '$2 == " .. pane_width .. " {print $1}'")
+      if right_pane_id ~= "" then
+        -- If the right pane exists, close it
+        vim.fn.system("tmux kill-pane -t " .. right_pane_id)
+      else
+        -- If the right pane doesn't exist, open it
+        vim.fn.system("tmux split-window -h -l " .. pane_width .. " 'cd \"" .. file_dir .. "\" && zsh -i'")
+      end
+    end,
+    "e[x]ecute [l]ine",
+  },
+  t = {
+    function()
+      local file_dir = vim.fn.expand("%:p:h") -- Get the directory of the current file
+      local pane_width = 60
+      local right_pane_id = vim.fn.system("tmux list-panes -F '#{pane_id} #{pane_width}' | awk '$2 == " .. pane_width .. " {print $1}'")
+      if right_pane_id ~= "" then
+        -- If the right pane exists, close it
+        vim.fn.system("tmux kill-pane -t " .. right_pane_id)
+      else
+        -- If the right pane doesn't exist, open it
+        vim.fn.system("tmux split-window -h -l " .. pane_width .. " 'cd \"" .. file_dir .. "\" && zsh -i'")
+      end
+    end,
+    "[e]xplore cwd files -> [t]mux",
+  },
+  n = {
+    function()
+      local file_dir = vim.fn.expand(vim.g.notes_path)
+      local pane_width = 60
+      local right_pane_id = vim.fn.system("tmux list-panes -F '#{pane_id} #{pane_width}' | awk '$2 == " .. pane_width .. " {print $1}'")
+      if right_pane_id ~= "" then
+        -- If the right pane exists, close it
+        vim.fn.system("tmux kill-pane -t " .. right_pane_id)
+      else
+        -- If the right pane doesn't exist, open it
+        vim.fn.system("tmux split-window -h -l " .. pane_width .. " 'cd \"" .. file_dir .. "\" && zsh -i'")
+      end
+    end,
+    "[e]xplore notes files -> tmux",
+  },
+}
+-- <leader>n<key>
+vim.iter(editFileMappings):each(function(key, rhs) leaderMapper("n", "e" .. key, rhs[1], rhs[2]) end)
 
-    -- Execute the script on a tmux pane on the right. On my mac I use zsh, so
-    -- running this script with bash to not execute my zshrc file after
-    -- vim.cmd("silent !tmux split-window -h -l 60 'bash -c \"" .. escaped_file .. "; exec bash\"'")
-    -- `-l 60` specifies the size of the tmux pane, in this case 60 columns
-    vim.notify("executing shell script in tmux split")
-    vim.cmd("silent !tmux split-window -h -l 60 'bash -c \"" .. escaped_file .. "; echo; echo Press any key to exit...; read -n 1; exit\"'")
-  elseif filetype == "lua" then
-    vim.notify("sourcing file")
-    vim.cmd("source %")
-  else
-    vim.notify("Not a script. Shebang line not found.")
-    -- vim.cmd("echo 'Not a script. Shebang line not found.'")
-  end
-end, { desc = "e[x]ecute [f]ile" })
-map("n", "<leader>exl", "<cmd>.lua<CR>", { desc = "e[x]ecute [l]ine" })
+-- [[ notes ]] -----------------------------------------------------------------
+local notesMappings = {
+  d = {
+    function()
+      local notePathObj = vim.system({ "daily_note", "-p", "| tr -d '\n'" }, { text = true }):wait()
+      local notePath = string.gsub(notePathObj.stdout, "^%s*(.-)%s*$", "%1")
 
--- Toggle a tmux pane on the right in bash, in the same directory as the current file
--- Opening it in bash because it's faster, I don't have to run my .zshrc file,
--- which pulls from my repo and a lot of other stuff
-map("n", "<leader>en", function()
-  local file_dir = vim.fn.expand(vim.g.notes_path)
-  -- local file_dir = vim.fn.expand("%:p:h") -- Get the directory of the current file
-  local pane_width = 60
-  local right_pane_id = vim.fn.system("tmux list-panes -F '#{pane_id} #{pane_width}' | awk '$2 == " .. pane_width .. " {print $1}'")
-  if right_pane_id ~= "" then
-    -- If the right pane exists, close it
-    vim.fn.system("tmux kill-pane -t " .. right_pane_id)
-  else
-    -- If the right pane doesn't exist, open it
-    vim.fn.system("tmux split-window -h -l " .. pane_width .. " 'cd \"" .. file_dir .. "\" && zsh -i'")
-  end
-end)
-map("n", "<leader>et", function()
-  local file_dir = vim.fn.expand("%:p:h") -- Get the directory of the current file
-  local pane_width = 60
-  local right_pane_id = vim.fn.system("tmux list-panes -F '#{pane_id} #{pane_width}' | awk '$2 == " .. pane_width .. " {print $1}'")
-  if right_pane_id ~= "" then
-    -- If the right pane exists, close it
-    vim.fn.system("tmux kill-pane -t " .. right_pane_id)
-  else
-    -- If the right pane doesn't exist, open it
-    vim.fn.system("tmux split-window -h -l " .. pane_width .. " 'cd \"" .. file_dir .. "\" && zsh -i'")
-  end
-end)
+      -- open only if we're not presently editing that buffer/file
+      if notePath ~= vim.api.nvim_buf_get_name(0) then vim.cmd("edit " .. notePath) end
+    end,
+    "open [d]aily note",
+  },
+  D = {
+    function()
+      local notePathObj = vim.system({ "daily_note", "-p", "| tr -d '\n'" }, { text = true }):wait()
+      local notePath = string.gsub(notePathObj.stdout, "^%s*(.-)%s*$", "%1")
+
+      vim.cmd("vnew " .. notePath)
+    end,
+    "open [d]aily note (vsplit)",
+  },
+  g = {
+    function() mega.picker.grep({ cwd = vim.g.notes_path, default_text = "" }) end,
+    "[g]rep notes",
+  },
+  l = {
+    function()
+      local notes = vim.split(
+        vim.fn.glob(
+          "`find "
+            .. vim.env.HOME
+            .. "/Documents/_notes/daily/**/*.md -type f -print0 | xargs -0 stat -f '%m %N' | sort -nr | head -2 | cut -f2- -d' ' | tail -n1`"
+        ),
+        "\n",
+        { trimempty = true }
+      )
+      if #notes == 1 then vim.cmd("edit " .. notes[1]) end
+    end,
+    "open [l]ast daily note",
+  },
+  L = {
+    function()
+      local notes = vim.split(
+        vim.fn.glob(
+          "`find "
+            .. vim.env.HOME
+            .. "/Documents/_notes/daily/**/*.md -type f -print0 | xargs -0 stat -f '%m %N' | sort -nr | head -2 | cut -f2- -d' ' | tail -n1`"
+        ),
+        "\n",
+        { trimempty = true }
+      )
+      if #notes == 1 then vim.cmd("vnew " .. notes[1]) end
+    end,
+    "open [l]ast daily note (vsplit)",
+  },
+}
+-- <leader>n<key>
+vim.iter(notesMappings):each(function(key, rhs) leaderMapper("n", "n" .. key, rhs[1], rhs[2]) end)
 
 return M

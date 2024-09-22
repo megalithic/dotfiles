@@ -121,6 +121,11 @@ return {
         -- NOTE: read `:help ins-completion`
         completion = { completeopt = "menu,menuone,noinsert,noselect" },
         -- entries = { name = "custom", selection_order = "near_cursor" },
+        entries = {
+          name = "custom",
+          selection_order = "near_cursor",
+          follow_cursor = true,
+        },
         window = {
           -- TODO:
           -- https://github.com/hrsh7th/nvim-cmp/wiki/Menu-Appearance#how-to-get-types-on-the-left-and-offset-the-menu
@@ -147,23 +152,13 @@ return {
             }, ","),
           }),
         },
-        -- TODO/REF: useful: https://github.com/hrsh7th/nvim-cmp/discussions/1983
         mapping = cmp.mapping.preset.insert({
-          -- Select the [n]ext item
           ["<C-n>"] = cmp.mapping.select_next_item(),
-          -- Select the [p]revious item
           ["<C-p>"] = cmp.mapping.select_prev_item(),
-
-          -- Scroll the documentation window [b]ack / [f]orward
           ["<C-b>"] = cmp.mapping.scroll_docs(-4),
           ["<C-f>"] = cmp.mapping.scroll_docs(4),
-
-          -- Accept ([y]es) the completion.
-          --  This will auto-import if your LSP supports it.
-          --  This will expand snippets if the LSP sent a snippet.
           ["<C-y>"] = cmp.mapping.confirm({ select = true }),
 
-          -- ["<C-y>"] = require("minuet").make_cmp_map(),
           ["<C-e>"] = cmp.mapping.abort(),
 
           ["<CR>"] = function(fallback)
@@ -215,7 +210,9 @@ return {
           -- maxwidth = MAX_MENU_WIDTH,
           -- minwidth = MIN_MENU_WIDTH,
           ellipsis_char = ELLIPSIS_CHAR,
-          format = function(entry, item)
+          -- TODO: format updates, clean up and document things pls!
+          -- REF: https://github.com/MariaSolOs/dotfiles/blob/main/.config/nvim/lua/plugins/nvim-cmp.lua#L113-L134
+          format = function(entry, vim_item)
             -- if entry.source.name == "async_path" then
             --   local icon, hl_group = require("nvim-web-devicons").get_icon(entry:get_completion_item().label)
             --   if icon then
@@ -225,30 +222,30 @@ return {
             -- end
 
             if entry.source.name == "nvim_lsp_signature_help" then
-              local parts = vim.split(item.abbr, " ", {})
+              local parts = vim.split(vim_item.abbr, " ", {})
               local argument = parts[1]
               argument = argument:gsub(":$", "")
               local type = table.concat(parts, " ", 2)
-              item.abbr = argument
-              if type ~= nil and type ~= "" then item.kind = type end
-              item.kind_hl_group = "Type"
+              vim_item.abbr = argument
+              if type ~= nil and type ~= "" then vim_item.kind = type end
+              vim_item.kind_hl_group = "Type"
             end
 
-            if item.kind == "Color" and entry.completion_item.documentation then
+            if vim_item.kind == "Color" and entry.completion_item.documentation then
               local _, _, r, g, b = string.find(entry.completion_item.documentation, "^rgb%((%d+), (%d+), (%d+)")
               if r then
                 local color = string.format("%02x", r) .. string.format("%02x", g) .. string.format("%02x", b)
                 local hl_group = "Tw_" .. color
                 if vim.fn.hlID(hl_group) < 1 then vim.api.nvim_set_hl(0, hl_group, { fg = "#" .. color }) end
-                item.kind = ""
-                item.kind_hl_group = hl_group
+                vim_item.kind = ""
+                vim_item.kind_hl_group = hl_group
               end
             else
-              item.kind = fmt("%s %s", icons.kind[item.kind], item.kind)
+              vim_item.kind = fmt("%s %s", icons.kind[vim_item.kind], vim_item.kind)
             end
 
             -- REF: https://github.com/3rd/config/blob/master/home/dotfiles/nvim/lua/modules/completion/nvim-cmp.lua
-            item.dup = ({
+            vim_item.dup = ({
               fuzzy_buffer = 0,
               buffer = 0,
               path = 0,
@@ -262,23 +259,23 @@ return {
             -- REF: https://github.com/zolrath/dotfiles/blob/main/dot_config/nvim/lua/plugins/cmp.lua#L45
             -- local max_length = 20
             local max_length = math.floor(vim.o.columns * 0.5)
-            item.abbr = #item.abbr >= max_length and string.sub(item.abbr, 1, max_length) .. ELLIPSIS_CHAR or item.abbr
+            vim_item.abbr = #vim_item.abbr >= max_length and string.sub(vim_item.abbr, 1, max_length) .. ELLIPSIS_CHAR or vim_item.abbr
             -- maximum width
             -- src: https://github.com/hrsh7th/nvim-cmp/discussions/609#discussioncomment-3395522
 
-            local content = item.abbr
+            local content = vim_item.abbr
             if #content > MAX_MENU_WIDTH then
-              item.abbr = vim.fn.strcharpart(content, 0, MAX_MENU_WIDTH) .. ELLIPSIS_CHAR
+              vim_item.abbr = vim.fn.strcharpart(content, 0, MAX_MENU_WIDTH) .. ELLIPSIS_CHAR
             else
-              item.abbr = content .. get_ws(MAX_MENU_WIDTH, #content)
+              vim_item.abbr = content .. get_ws(MAX_MENU_WIDTH, #content)
             end
 
-            item.abbr = string.gsub(item.abbr, "^%s+", "")
+            vim_item.abbr = string.gsub(vim_item.abbr, "^%s+", "")
 
             if entry.source.name == "nvim_lsp" then
-              item.menu = fmt("[%s]", entry.source.source.client.name)
+              vim_item.menu = fmt("[%s]", entry.source.source.client.name)
             else
-              item.menu = ({
+              vim_item.menu = ({
                 nvim_lsp = "[lsp]",
                 luasnip = "[lsnip]",
                 vsnip = "[vsnip]",
@@ -301,7 +298,7 @@ return {
               })[entry.source.name] or entry.source.name
             end
 
-            return item
+            return vim_item
           end,
         },
         sorting = {
@@ -363,7 +360,24 @@ return {
               min_match_length = 3,
               max_matches = 5,
               options = {
-                get_bufnrs = function() return vim.tbl_map(vim.api.nvim_win_get_buf, vim.api.nvim_list_wins()) end,
+                option = {
+                  -- https://github.com/hrsh7th/cmp-buffer#get_bufnrs-type-fun-number=
+                  -- https://github.com/hrsh7th/cmp-buffer#performance-on-large-text-files=
+                  get_bufnrs = function()
+                    local LIMIT = 1024 * 1024 -- 1 Megabyte max
+                    local bufs = {}
+
+                    for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+                      local line_count = vim.api.nvim_buf_line_count(buf)
+                      local byte_size = vim.api.nvim_buf_get_offset(buf, line_count)
+
+                      if byte_size < LIMIT then bufs[buf] = true end
+                    end
+
+                    return vim.tbl_keys(bufs)
+                  end,
+                },
+                -- get_bufnrs = function() return vim.tbl_map(vim.api.nvim_win_get_buf, vim.api.nvim_list_wins()) end,
               },
             },
           },
@@ -434,6 +448,21 @@ return {
         sources = {
           { name = "vim-dadbod-completion" },
           { name = "buffer" },
+        },
+      })
+
+      cmp.setup.filetype("markdown", {
+        sources = {
+          {
+            name = "nvim_lsp",
+            option = {
+              markdown_oxide = {
+                keyword_pattern = [[\(\k\| \|\/\|#\|\^\)\+]],
+              },
+            },
+          },
+          { name = "snippets" }, -- For luasnip users.
+          { name = "path" },
         },
       })
 

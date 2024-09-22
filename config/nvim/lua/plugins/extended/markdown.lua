@@ -56,6 +56,36 @@ return {
   --   end,
   -- },
   {
+    "ray-x/yamlmatter.nvim",
+    lazy = false,
+    -- event = "VeryLazy",
+    -- ft = { "markdown" },
+    config = function()
+      require("yamlmatter").setup({
+        key_value_padding = 4, -- Default padding between key and value
+        icon_mappings = {
+          -- Default icon mappings
+          title = "",
+          author = "",
+          date = "",
+          id = "",
+          tags = "",
+          category = "",
+          type = "",
+          default = "󰦨",
+        },
+        highlight_groups = {
+          -- icon = 'YamlFrontmatterIcon',
+          -- key = 'YamlFrontmatterKey',
+          -- value = 'YamlFrontmatterValue',
+          icon = "Identifier",
+          key = "Function",
+          value = "Type",
+        },
+      })
+    end,
+  },
+  {
     "MeanderingProgrammer/markdown.nvim",
     name = "render-markdown", -- Only needed if you have another plugin named markdown.nvim
     dependencies = { "nvim-treesitter/nvim-treesitter", "echasnovski/mini.nvim", "echasnovski/mini.icons" }, -- if you use the mini.nvim suite
@@ -179,8 +209,21 @@ return {
           --   'raw': Matched against the raw text of a 'shortcut_link'
           --   'rendered': Replaces the 'raw' value when rendering
           --   'highlight': Highlight for the 'rendered' icon
+          -- custom = {
+          --   todo = { raw = "[-]", rendered = "󰥔 ", highlight = "RenderMarkdownTodo" },
+          -- },
           custom = {
-            todo = { raw = "[-]", rendered = "󰥔 ", highlight = "RenderMarkdownTodo" },
+            -- todo = { raw = "[-]", rendered = " 󰥔 ", highlight = "RenderMarkdownTodo" },
+            todo = { raw = "[-]", rendered = "󰡖 ", highlight = "RenderMarkdownListTodo" },
+            skipped = { raw = "[/]", rendered = "󱋭 ", highlight = "RenderMarkdownListSkipped" },
+            fire = { raw = "[f]", rendered = "󰈸 ", highlight = "RenderMarkdownListFire" },
+            star = { raw = "[s]", rendered = " ", highlight = "RenderMarkdownListStar" },
+            idea = { raw = "[*]", rendered = "󰌵 ", highlight = "RenderMarkdownListIdea" },
+            yes = { raw = "[y]", rendered = "󰔓 ", highlight = "RenderMarkdownListYes" },
+            no = { raw = "[n]", rendered = "󰔑 ", highlight = "RenderMarkdownListNo" },
+            question = { raw = "[?]", rendered = " ", highlight = "RenderMarkdownListQuestion" },
+            info = { raw = "[i]", rendered = " ", highlight = "RenderMarkdownListInfo" },
+            important = { raw = "[!]", rendered = "󱅶 ", highlight = "RenderMarkdownListImportant" },
           },
         },
         quote = {
@@ -290,7 +333,7 @@ return {
       local al = require("autolist")
       al.setup()
       al.create_mapping_hook("i", "<CR>", al.new)
-      al.create_mapping_hook("i", "<Tab>", al.indent)
+      al.create_mapping_hook("i", "<Tab>", al.indent, "<C-t>")
       al.create_mapping_hook("i", "<S-Tab>", al.indent, "<C-d>")
       al.create_mapping_hook("n", "o", al.new)
       al.create_mapping_hook("n", "<C-c>", al.invert_entry)

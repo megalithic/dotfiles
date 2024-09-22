@@ -123,13 +123,11 @@ return {
       incremental_selection = {
         enable = true,
         keymaps = {
-          -- init_selection = ":lua require'wildfire'.init_selection()<CR>:lua require('flash').treesitter()<CR>",
-          --
-          -- @see: flash.nvim
-          init_selection = ":lua require('flash').treesitter()<CR>",
-          node_incremental = "v",
-          node_decremental = "V",
-          scope_incremental = "v", -- increment to the upper scope (as defined in locals.scm)
+          -- `vn` and `m` start flash.treesitter
+          init_selection = "<cr>",
+          node_incremental = "<cr>",
+          node_decremental = "<bs>",
+          scope_incremental = false,
         },
       },
     },

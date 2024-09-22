@@ -154,53 +154,44 @@ return {
       on_attach = function(bufnr)
         local gs = package.loaded.gitsigns
 
-        local function nmap(l, r, desc) vim.keymap.set("n", l, r, { buffer = bufnr, desc = desc }) end
-        local function bmap(mode, l, r, opts)
-          opts = opts or {}
-          opts.buffer = bufnr
-          vim.keymap.set(mode, l, r, opts)
-        end
+        local function map(mode, l, r, opts) vim.keymap.set(mode, l, r, opts) end
+        local function nmap(l, r, desc) map("n", l, r, { desc = desc }) end
+        local function bmap(l, r, desc) map("n", l, r, { buffer = bufnr, desc = desc }) end
+        local function hmap(l, r, desc) map({ "n", "v" }, l, r, { buffer = bufnr, desc = desc }) end
 
-        nmap("<localleader>hu", gs.undo_stage_hunk, "git(hunk): undo stage")
-        nmap("<localleader>hr", gs.reset_hunk, "git(hunk): reset hunk")
-        nmap("<localleader>hp", gs.preview_hunk, "git(hunk): preview hunk")
-        nmap("<localleader>hd", gs.toggle_deleted, "git(hunk): show deleted lines")
-        nmap("<localleader>hw", gs.toggle_word_diff, "git(hunk): toggle word diff")
-        nmap("<localleader>gw", gs.stage_buffer, "git: stage entire buffer")
-        nmap("<localleader>gre", gs.reset_buffer, "git: reset entire buffer")
-        nmap("<localleader>grh", gs.reset_hunk, "git: reset hunk")
         nmap("<leader>gm", function() gs.setqflist("all") end, "git: list modified in quickfix")
-        nmap("<localleader>gd", function() gs.diffthis() end, "git: diff this")
-        nmap("<localleader>gD", function() gs.diffthis("~") end, "git: diff this against ~")
-        -- Navigation
-        bmap("n", "[h", function()
+
+        map("n", "[h", function()
           if vim.wo.diff then return "[c" end
           vim.schedule(function() gs.nav_hunk("prev") end)
           return "<Ignore>"
         end, { expr = true, desc = "git: prev hunk" })
-        bmap("n", "]h", function()
+        map("n", "]h", function()
           if vim.wo.diff then return "]c" end
           vim.schedule(function() gs.nav_hunk("next") end)
           return "<Ignore>"
         end, { expr = true, desc = "git: next hunk" })
 
-        -- Actions
-        bmap({ "n", "v" }, "<localleader>hs", ":Gitsigns stage_hunk<CR>", { desc = "git: stage hunk" })
-        bmap({ "n", "v" }, "<localleader>gs", ":Gitsigns stage_hunk<CR>", { desc = "git: stage hunk" })
-        bmap({ "n", "v" }, "<localleader>hr", ":Gitsigns reset_hunk<CR>", { desc = "git: reset hunk" })
-        bmap({ "n", "v" }, "<localleader>gu", ":Gitsigns reset_hunk<CR>", { desc = "git: reset hunk" })
+        hmap("<localleader>hs", gs.stage_hunk, "git(hunk): stage hunk")
+        hmap("<localleader>hu", gs.undo_stage_hunk, "git(hunk): undo stage")
+        hmap("<localleader>hr", gs.reset_hunk, "git(hunk): reset hunk")
+        hmap("<localleader>hp", gs.preview_hunk, "git(hunk): preview hunk")
+
+        hmap("<localleader>hd", gs.toggle_deleted, "git(hunk): show deleted lines")
+        hmap("<localleader>hw", gs.toggle_word_diff, "git(hunk): toggle word diff")
+
+        hmap("<localleader>gs", gs.stage_hunk, "git(hunk): stage hunk")
+        hmap("<localleader>gr", gs.reset_hunk, "git(hunk): reset hunk")
+        hmap("<localleader>gu", gs.undo_stage_hunk, "git(hunk): undo staged hunk")
+
+        bmap("<localleader>gS", gs.stage_buffer, "git: stage buffer")
+        bmap("<localleader>gR", gs.reset_buffer, "git: reset buffer")
+
+        bmap("<localleader>gd", function() gs.diffthis() end, "git: diff this")
+        bmap("<localleader>gD", function() gs.diffthis("~") end, "git: diff this against ~")
 
         -- Text object
-        bmap({ "o", "x" }, "ih", ":<C-U>Gitsigns select_hunk<CR>", { desc = "git: select hunk" })
-
-        -- mega.nmap("[h", function()
-        --   vim.schedule(function() gs.prev_hunk() end)
-        --   return "<Ignore>"
-        -- end, { expr = true, desc = "go to previous git hunk" })
-        -- mega.nmap("]h", function()
-        --   vim.schedule(function() gs.next_hunk() end)
-        --   return "<Ignore>"
-        -- end, { expr = true, desc = "go to next git hunk" })
+        map({ "o", "x" }, "ih", ":<C-U>Gitsigns select_hunk<CR>", { desc = "git: select hunk" })
       end,
     },
   },
@@ -272,7 +263,15 @@ return {
     "sindrets/diffview.nvim",
     cmd = { "DiffviewOpen", "DiffviewClose", "DiffviewToggleFiles", "DiffviewFocusFiles", "DiffviewFileHistory" },
     keys = {
-      { "<leader>gd", "<Cmd>DiffviewOpen<CR>", desc = "diffview: open", mode = "n" },
+      {
+        "<leader>gd",
+        function()
+          vim.cmd("ToggleAutoResize")
+          vim.cmd("DiffviewOpen")
+        end,
+        desc = "diffview: open",
+        mode = "n",
+      },
       { "gh", [[:'<'>DiffviewFileHistory<CR>]], desc = "diffview: file history", mode = "v" },
       {
         "<localleader>gh",
@@ -287,12 +286,83 @@ return {
       hooks = {
         diff_buf_read = function()
           local opt = vim.opt_local
-          opt.wrap, opt.list, opt.relativenumber = false, false, false
+          opt.wrap = false
+          opt.list = false
+          opt.relativenumber = false
           opt.colorcolumn = ""
         end,
       },
+      file_panel = {
+        listing_style = "tree",
+        tree_options = {
+          flatten_dirs = true,
+          folder_statuses = "only_folded",
+        },
+        win_config = function()
+          local editor_width = vim.o.columns
+          return {
+            -- position = "left",
+            -- width = editor_width >= 247 and 45 or 35,
+            -- width = 100,
+            -- width = editor_width >= 247 and 45 or 35,
+            type = "split",
+            position = "right",
+            width = 50,
+          }
+        end,
+      },
+      file_history_panel = {
+        log_options = {
+          git = {
+            single_file = {
+              diff_merges = "first-parent",
+              follow = true,
+            },
+            multi_file = {
+              diff_merges = "first-parent",
+            },
+          },
+        },
+        win_config = {
+          position = "bottom",
+          height = 16,
+        },
+      },
       keymaps = {
-        view = { q = "<Cmd>DiffviewClose<CR>" },
+        -- view = { q = "<Cmd>DiffviewClose<CR>" },
+        -- disable_defaults = false, -- Disable the default keymaps
+        view = {
+          -- The `view` bindings are active in the diff buffers, only when the current
+          -- tabpage is a Diffview.
+          { "n", "q", "<Cmd>DiffviewClose<CR>", { desc = "close diffview" } },
+          -- { "n", "<tab>", require("diffview.actions").select_next_entry, { desc = "Open the diff for the next file" } },
+          -- { "n", "<s-tab>", require("diffview.actions").select_prev_entry, { desc = "Open the diff for the previous file" } },
+          -- { "n", "[F", require("diffview.actions").select_first_entry, { desc = "Open the diff for the first file" } },
+          -- { "n", "]F", require("diffview.actions").select_last_entry, { desc = "Open the diff for the last file" } },
+          -- { "n", "gf", require("diffview.actions").goto_file_edit, { desc = "Open the file in the previous tabpage" } },
+          -- { "n", "<C-w><C-f>", require("diffview.actions").goto_file_split, { desc = "Open the file in a new split" } },
+          -- { "n", "<C-w>gf", require("diffview.actions").goto_file_tab, { desc = "Open the file in a new tabpage" } },
+          -- { "n", "<leader>e", require("diffview.actions").focus_files, { desc = "Bring focus to the file panel" } },
+          -- { "n", "<leader>b", require("diffview.actions").toggle_files, { desc = "Toggle the file panel." } },
+          -- { "n", "g<C-x>", require("diffview.actions").cycle_layout, { desc = "Cycle through available layouts." } },
+          -- { "n", "[x", require("diffview.actions").prev_conflict, { desc = "In the merge-tool: jump to the previous conflict" } },
+          -- { "n", "]x", require("diffview.actions").next_conflict, { desc = "In the merge-tool: jump to the next conflict" } },
+          -- { "n", "<leader>co", require("diffview.actions").conflict_choose("ours"), { desc = "Choose the OURS version of a conflict" } },
+          -- { "n", "<leader>ct", require("diffview.actions").conflict_choose("theirs"), { desc = "Choose the THEIRS version of a conflict" } },
+          -- { "n", "<leader>cb", require("diffview.actions").conflict_choose("base"), { desc = "Choose the BASE version of a conflict" } },
+          -- { "n", "<leader>ca", require("diffview.actions").conflict_choose("all"), { desc = "Choose all the versions of a conflict" } },
+          -- { "n", "dx", require("diffview.actions").conflict_choose("none"), { desc = "Delete the conflict region" } },
+          -- { "n", "<leader>cO", require("diffview.actions").conflict_choose_all("ours"), { desc = "Choose the OURS version of a conflict for the whole file" } },
+          -- {
+          --   "n",
+          --   "<leader>cT",
+          --   require("diffview.actions").conflict_choose_all("theirs"),
+          --   { desc = "Choose the THEIRS version of a conflict for the whole file" },
+          -- },
+          -- { "n", "<leader>cB", require("diffview.actions").conflict_choose_all("base"), { desc = "Choose the BASE version of a conflict for the whole file" } },
+          -- { "n", "<leader>cA", require("diffview.actions").conflict_choose_all("all"), { desc = "Choose all the versions of a conflict for the whole file" } },
+          -- { "n", "dX", require("diffview.actions").conflict_choose_all("none"), { desc = "Delete the conflict region for the whole file" } },
+        },
         file_panel = { q = "<Cmd>DiffviewClose<CR>" },
         file_history_panel = { q = "<Cmd>DiffviewClose<CR>" },
       },
@@ -312,13 +382,16 @@ return {
           event = { "User" },
           pattern = { "GitConflictDetected" },
           command = function(args)
+            dbg(args)
             vim.g.git_conflict_detected = true
             nnoremap("<leader>gc", "<cmd>GitConflictListQf<cr>", { desc = "git-conflict: conflicts in qf", buffer = args.buf })
             nnoremap("cq", "<cmd>GitConflictListQf<CR>", { desc = "git-conflict: send conflicts to qf", buffer = args.buf })
             nnoremap("[c", "<cmd>GitConflictPrevConflict<CR>|zz", { desc = "git-conflict: prev conflict", buffer = args.buf })
             nnoremap("]c", "<cmd>GitConflictNextConflict<CR>|zz", { desc = "git-conflict: next conflict", buffer = args.buf })
+            nnoremap("[[", "<cmd>GitConflictPrevConflict<CR>|zz", { desc = "git-conflict: prev conflict", buffer = args.buf })
+            nnoremap("]]", "<cmd>GitConflictNextConflict<CR>|zz", { desc = "git-conflict: next conflict", buffer = args.buf })
 
-            vim.cmd("Fidget suppress true")
+            if pcall(require, "fidget") then vim.cmd("Fidget suppress true") end
             vim.defer_fn(function()
               vim.diagnostic.enable(false, { bufnr = args.buf })
               vim.lsp.stop_client(vim.lsp.get_clients())
@@ -343,7 +416,7 @@ return {
               if ok then gd.start_lsp(gd.stop_lsp()) end
               vim.diagnostic.show()
               mega.notify(string.format("%s All conflicts resolved!", icons.lsp.ok))
-              vim.cmd("Fidget suppress false")
+              if pcall(require, "fidget") then vim.cmd("Fidget suppress false") end
             end, 250)
           end,
         },
