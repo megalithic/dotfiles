@@ -454,7 +454,7 @@ vim.iter(editFileMappings):each(function(key, rhs) leaderMapper("n", "e" .. key,
 local notesMappings = {
   d = {
     function()
-      local notePathObj = vim.system({ "daily_note", "-p", "| tr -d '\n'" }, { text = true }):wait()
+      local notePathObj = vim.system({ "daily_note", "-c", "| tr -d '\n'" }, { text = true }):wait()
       local notePath = string.gsub(notePathObj.stdout, "^%s*(.-)%s*$", "%1")
 
       -- open only if we're not presently editing that buffer/file
@@ -464,7 +464,7 @@ local notesMappings = {
   },
   D = {
     function()
-      local notePathObj = vim.system({ "daily_note", "-p", "| tr -d '\n'" }, { text = true }):wait()
+      local notePathObj = vim.system({ "daily_note", "-c", "| tr -d '\n'" }, { text = true }):wait()
       local notePath = string.gsub(notePathObj.stdout, "^%s*(.-)%s*$", "%1")
 
       vim.cmd("vnew " .. notePath)
@@ -477,14 +477,14 @@ local notesMappings = {
   },
   l = {
     function()
-      local note = U.notes.get_last_daily_note()
+      local note = U.notes.get_previous_daily_note()
       if note ~= nil then vim.cmd("edit " .. note) end
     end,
     "open [l]ast daily note",
   },
   L = {
     function()
-      local note = U.notes.get_last_daily_note()
+      local note = U.notes.get_previous_daily_note()
       if note ~= nil then vim.cmd("vnew " .. note) end
     end,
     "open [l]ast daily note (vsplit)",

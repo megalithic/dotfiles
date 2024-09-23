@@ -11,10 +11,10 @@ __help() {
   printf -- "  -h          view this help text\n"
   printf -- "  -c          create note only\n"
   printf -- "  -d          new daily note\n"
-  printf -- "  -t          optional note tag\n"
+  printf -- "  -t          comma-separated tags\n"
   printf -- "\n"
   printf -- "${grey}${bold}EXAMPLES:${reset}\n"
-  printf -- "  note -t til this is the greatest note with amazing code snippets\n"
+  printf -- "  note -t til,snippets,quicknote this is the greatest note with amazing code snippets\n"
   printf -- "\n"
 
   exit 0
@@ -26,9 +26,7 @@ RETURN_PATH=false
 while getopts "hdct:" OPTION; do
   case $OPTION in
     t)
-      # pass in an optional single tag to start;
-      # TODO: support comma separated tags
-      TAG="#$OPTARG"
+      TAGS="${OPTARG}"
       ;;
 
     h)
@@ -78,20 +76,24 @@ note_dir="${main_note_dir}"
 note_date="${current_year}-${current_month_num}-${current_day}"
 filename_from_title=$(echo "${TITLE// /-}" | tr '[:upper:]' '[:lower:]')
 if [[ "$TITLE" == "Quick note" ]]; then
-  full_path="${note_dir}/${filename_from_title}_${note_date}.md"
+  full_note_path="${note_dir}/${filename_from_title}_${note_date}.md"
 else
-  full_path="${note_dir}/${filename_from_title}.md"
+  full_note_path="${note_dir}/${filename_from_title}.md"
 fi
+
+function __print_tags() {
+  if [[ -n "$TAGS" ]]; then
+    echo "tags:\n"
+    echo "- #$(echo -e ${TAGS} | sed "s/,/\n- #/g")"
+  fi
+}
 
 function __set_template() {
   # NOTE: doesn't take args, just uses upper scope variables
-  if [ ! -f "$full_path" ]; then
-    cat <<EOF >"$full_path"
+  if [ ! -f "$full_note_path" ]; then
+    cat <<EOF >"$full_note_path"
 date: ${note_date}
-
-tags:
-
-- ${TAG}
+$(__print_tags)
 
 <!--toc:start-->
 
@@ -102,7 +104,7 @@ tags:
 # ${TITLE}
 EOF
     if [ "$CREATE_ONLY" = false ]; then
-      log_ok "created new note ${full_path}"
+      log_ok "created new note ${full_note_path}"
     fi
   fi
 }
@@ -117,9 +119,9 @@ __set_template
 
 if [ "$CREATE_ONLY" = false ]; then
   log "opening in $EDITOR..."
-  $EDITOR +norm\ G "$full_path"
+  $EDITOR +norm\ G "$full_note_path"
 fi
 
 if [ "$RETURN_PATH" = true ]; then
-  echo "$full_path"
+  echo "$full_note_path"
 fi

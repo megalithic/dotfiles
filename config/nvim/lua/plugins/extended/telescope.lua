@@ -86,51 +86,50 @@ return {
             vim.api.nvim_set_hl(0, "TelescopeParent", { link = "Comment" })
           end,
         },
-        {
-
-          event = { "FileType" },
-          -- REF: https://github.com/chrisgrieser/.config/blob/main/nvim/lua/funcs/telescope-backdrop.lua
-          desc = "Telescope search results formatting for pretty results",
-          pattern = { "TelescopePrompt" },
-          command = function(ctx)
-            local backdropName = "TelescopeBackdrop"
-            local blend = 90
-
-            local telescopeBufnr = ctx.buf
-
-            -- `Telescope` apparently do not set a zindex, so it uses the default value
-            -- of `nvim_open_win`, which is 50: https://neovim.io/doc/user/api.html#nvim_open_win()
-            local telescopeZindex = 50
-
-            local bufnr = vim.api.nvim_create_buf(false, true)
-            local winnr = vim.api.nvim_open_win(bufnr, false, {
-              relative = "editor",
-              row = 0,
-              col = 0,
-              width = vim.o.columns,
-              height = vim.o.lines,
-              focusable = false,
-              style = "minimal",
-              zindex = telescopeZindex - 1, -- ensure it's below the reference window
-            })
-
-            vim.api.nvim_set_hl(0, backdropName, { bg = "#000000", default = true })
-            vim.wo[winnr].winhighlight = "Normal:" .. backdropName
-            vim.wo[winnr].winblend = blend
-            vim.bo[bufnr].buftype = "nofile"
-            vim.bo[bufnr].filetype = backdropName
-
-            -- close backdrop when the reference buffer is closed
-            vim.api.nvim_create_autocmd({ "WinClosed", "BufLeave" }, {
-              once = true,
-              buffer = telescopeBufnr,
-              callback = function()
-                if vim.api.nvim_win_is_valid(winnr) then vim.api.nvim_win_close(winnr, true) end
-                if vim.api.nvim_buf_is_valid(bufnr) then vim.api.nvim_buf_delete(bufnr, { force = true }) end
-              end,
-            })
-          end,
-        },
+        -- {
+        --   event = { "FileType" },
+        --   -- REF: https://github.com/chrisgrieser/.config/blob/main/nvim/lua/funcs/telescope-backdrop.lua
+        --   desc = "Telescope search results formatting for pretty results",
+        --   pattern = { "TelescopePrompt" },
+        --   command = function(ctx)
+        --     local backdropName = "TelescopeBackdrop"
+        --     local blend = 90
+        --
+        --     local telescopeBufnr = ctx.buf
+        --
+        --     -- `Telescope` apparently do not set a zindex, so it uses the default value
+        --     -- of `nvim_open_win`, which is 50: https://neovim.io/doc/user/api.html#nvim_open_win()
+        --     local telescopeZindex = 50
+        --
+        --     local bufnr = vim.api.nvim_create_buf(false, true)
+        --     local winnr = vim.api.nvim_open_win(bufnr, false, {
+        --       relative = "editor",
+        --       row = 0,
+        --       col = 0,
+        --       width = vim.o.columns,
+        --       height = vim.o.lines,
+        --       focusable = false,
+        --       style = "minimal",
+        --       zindex = telescopeZindex - 1, -- ensure it's below the reference window
+        --     })
+        --
+        --     vim.api.nvim_set_hl(0, backdropName, { bg = "#000000", default = true })
+        --     vim.wo[winnr].winhighlight = "Normal:" .. backdropName
+        --     vim.wo[winnr].winblend = blend
+        --     vim.bo[bufnr].buftype = "nofile"
+        --     vim.bo[bufnr].filetype = backdropName
+        --
+        --     -- close backdrop when the reference buffer is closed
+        --     vim.api.nvim_create_autocmd({ "WinClosed", "BufLeave" }, {
+        --       once = true,
+        --       buffer = telescopeBufnr,
+        --       callback = function()
+        --         if vim.api.nvim_win_is_valid(winnr) then vim.api.nvim_win_close(winnr, true) end
+        --         if vim.api.nvim_buf_is_valid(bufnr) then vim.api.nvim_buf_delete(bufnr, { force = true }) end
+        --       end,
+        --     })
+        --   end,
+        -- },
       })
 
       -- REF: https://github.com/tjdevries/config.nvim/blob/master/lua/custom/telescope/multi-ripgrep.lua
@@ -232,7 +231,7 @@ return {
       local function get_border(opts)
         opts = vim.tbl_deep_extend("force", opts or {}, {
           borderchars = {
-            { "", "", "", "", "", "", "", "" },
+            -- { "", "", "", "", "", "", "", "" },
             prompt = { "", "", "", "", "", "", "", "" },
             results = { "", "", "", "", "", "", "", "" },
             preview = { "", "", "", "", "", "", "", "" },
@@ -271,6 +270,236 @@ return {
       end
       mega.picker.ivy = ivy
 
+      local function fuse(opts)
+        local Layout = require("nui.layout")
+        local Popup = require("nui.popup")
+
+        local telescope = require("telescope")
+        local TSLayout = require("telescope.pickers.layout")
+
+        local function make_popup(options)
+          local popup = Popup(options)
+          function popup.border:change_title(title) popup.border.set_text(popup.border, "top", title) end
+          return TSLayout.Window(popup)
+        end
+
+        return {
+          disable_devicons = true,
+          layout_strategy = "flex",
+          layout_config = {
+            horizontal = {
+              size = {
+                width = "90%",
+                height = "60%",
+              },
+            },
+            vertical = {
+              size = {
+                width = "90%",
+                height = "90%",
+              },
+            },
+          },
+          create_layout = function(picker)
+            local border = {
+              results = {
+                top_left = "┌",
+                top = "─",
+                top_right = "┬",
+                right = "│",
+                bottom_right = "",
+                bottom = "",
+                bottom_left = "",
+                left = "│",
+              },
+              results_patch = {
+                minimal = {
+                  top_left = "┌",
+                  top_right = "┐",
+                },
+                horizontal = {
+                  top_left = "┌",
+                  top_right = "┬",
+                },
+                vertical = {
+                  top_left = "├",
+                  top_right = "┤",
+                },
+              },
+              prompt = {
+                top_left = "├",
+                top = "─",
+                top_right = "┤",
+                right = "│",
+                bottom_right = "┘",
+                bottom = "─",
+                bottom_left = "└",
+                left = "│",
+              },
+              prompt_patch = {
+                minimal = {
+                  bottom_right = "┘",
+                },
+                horizontal = {
+                  bottom_right = "┴",
+                },
+                vertical = {
+                  bottom_right = "┘",
+                },
+              },
+              preview = {
+                top_left = "┌",
+                top = "─",
+                top_right = "┐",
+                right = "│",
+                bottom_right = "┘",
+                bottom = "─",
+                bottom_left = "└",
+                left = "│",
+              },
+              preview_patch = {
+                minimal = {},
+                horizontal = {
+                  bottom = "─",
+                  bottom_left = "",
+                  bottom_right = "┘",
+                  left = "",
+                  top_left = "",
+                },
+                vertical = {
+                  bottom = "",
+                  bottom_left = "",
+                  bottom_right = "",
+                  left = "│",
+                  top_left = "┌",
+                },
+              },
+            }
+
+            local results = make_popup({
+              focusable = false,
+              border = {
+                style = border.results,
+                text = {
+                  top = picker.results_title,
+                  top_align = "center",
+                },
+              },
+              win_options = {
+                winhighlight = "Normal:Normal",
+              },
+            })
+
+            local prompt = make_popup({
+              enter = true,
+              border = {
+                style = border.prompt,
+                text = {
+                  top = picker.prompt_title,
+                  top_align = "center",
+                },
+              },
+              win_options = {
+                winhighlight = "Normal:Normal",
+              },
+            })
+
+            local preview = make_popup({
+              focusable = false,
+              border = {
+                style = border.preview,
+                text = {
+                  top = picker.preview_title,
+                  top_align = "center",
+                },
+              },
+            })
+
+            local box_by_kind = {
+              vertical = Layout.Box({
+                Layout.Box(preview, { grow = 1 }),
+                Layout.Box(results, { grow = 1 }),
+                Layout.Box(prompt, { size = 3 }),
+              }, { dir = "col" }),
+              horizontal = Layout.Box({
+                Layout.Box({
+                  Layout.Box(results, { grow = 1 }),
+                  Layout.Box(prompt, { size = 3 }),
+                }, { dir = "col", size = "50%" }),
+                Layout.Box(preview, { size = "50%" }),
+              }, { dir = "row" }),
+              minimal = Layout.Box({
+                Layout.Box(results, { grow = 1 }),
+                Layout.Box(prompt, { size = 3 }),
+              }, { dir = "col" }),
+            }
+
+            local function get_box()
+              local strategy = picker.layout_strategy
+              if strategy == "vertical" or strategy == "horizontal" then return box_by_kind[strategy], strategy end
+
+              local height, width = vim.o.lines, vim.o.columns
+              local box_kind = "horizontal"
+              if width < 100 then
+                box_kind = "vertical"
+                if height < 40 then box_kind = "minimal" end
+              end
+              return box_by_kind[box_kind], box_kind
+            end
+
+            local function prepare_layout_parts(layout, box_type)
+              layout.results = results
+              results.border:set_style(border.results_patch[box_type])
+
+              layout.prompt = prompt
+              prompt.border:set_style(border.prompt_patch[box_type])
+
+              if box_type == "minimal" then
+                layout.preview = nil
+              else
+                layout.preview = preview
+                preview.border:set_style(border.preview_patch[box_type])
+              end
+            end
+
+            local function get_layout_size(box_kind) return picker.layout_config[box_kind == "minimal" and "vertical" or box_kind].size end
+
+            local box, box_kind = get_box()
+            local layout = Layout({
+              relative = "editor",
+              position = "50%",
+              size = get_layout_size(box_kind),
+            }, box)
+
+            layout.picker = picker
+            prepare_layout_parts(layout, box_kind)
+
+            local layout_update = layout.update
+            function layout:update()
+              local box, box_kind = get_box()
+              prepare_layout_parts(layout, box_kind)
+              layout_update(self, { size = get_layout_size(box_kind) }, box)
+            end
+
+            return TSLayout(layout)
+          end,
+        }
+      end
+
+      -- https://github.com/nvim-telescope/telescope.nvim/wiki/Configuration-Recipes#fused-layout
+      local function big_ivy(opts)
+        opts = vim.tbl_deep_extend("force", opts or {}, {
+          disable_devicons = true,
+          -- layout_config = { height = 0.5 },
+          layout_config = {
+            height = 0.6,
+            -- height = vim.o.lines, -- maximally available lines
+            width = vim.o.columns, -- maximally available columns
+          },
+        })
+        return require("telescope.themes").get_ivy(get_border(opts))
+      end
+
       local ts = setmetatable({}, {
         __index = function(_, key)
           return function(topts)
@@ -290,7 +519,7 @@ return {
             if key == "grepify" or key == "egrepify" then
               extensions("egrepify").egrepify(with_title(topts, { title = "live grep (egrepify)" }))
             elseif key == "undo" then
-              extensions("undo").undo(with_title(topts, { title = "undo" }))
+              extensions("undo").undo(big_ivy(with_title(topts, { title = "undo" })))
             elseif key == "smart_open" or key == "smart" then
               -- FIXME: if we have a title in topts, use that title with the default title
               local title = "smartly find files"
@@ -357,6 +586,8 @@ return {
           ts[picker](ivy(opts))
         elseif theme == "dropdown" then
           ts[picker](dropdown(opts))
+        elseif theme == "fuse" then
+          ts[picker](fuse(opts))
         else
           ts[picker](opts)
         end
@@ -522,6 +753,20 @@ return {
           entry_prefix = "  ",
           multi_icon = "󰛄 ",
           winblend = 0,
+          border = {
+            --   prompt = { 0, 0, 0, 0 },
+            --   results = { 0, 0, 0, 0 },
+            --   preview = { 0, 0, 0, 0 },
+            prompt = { 0, 1, 1, 1 },
+            results = { 1, 1, 1, 1 },
+            preview = { 1, 1, 1, 1 },
+          },
+          -- borderchars = {
+          --   prompt = { " ", " ", "─", "│", "│", " ", "─", "└" },
+          --   results = { "─", " ", " ", "│", "┌", "─", " ", "│" },
+          --   preview = { "─", "│", "─", "│", "┬", "┐", "┘", "┴" },
+          -- },
+          borderchars = get_border().border_chars,
           vimgrep_arguments = grep_files_cmd,
           -- NOTE: https://github.com/bangalcat/nvim/blob/main/lua/plugins/telescope.lua#L61
           get_selection_window = function()
@@ -756,9 +1001,9 @@ return {
             side_by_side = true,
             layout_strategy = "vertical",
             layout_config = {
-              preview_height = 0.8,
+              -- preview_height = 0.8,
+              height = 0.6,
             },
-
             mappings = {
               i = {
                 -- ["<cr>"] = undo_actions.yank_additions,
@@ -886,7 +1131,7 @@ return {
       -- keys
       if vim.g.picker == "telescope" then
         local builtin = require("telescope.builtin")
-        map("n", "<leader>ff", function() mega.picker.find_files({ picker = "smart_open" }) end, { desc = "[f]ind [f]iles" })
+        map("n", "<leader>ff", function() mega.picker.find_files({ picker = "smart_open", theme = "ivy" }) end, { desc = "[f]ind [f]iles" })
         map("n", "<leader>fh", ts.help_tags, { desc = "[f]ind [h]elp" })
         map("n", "<leader>fa", ts.autocommands, { desc = "[f]ind [a]utocommands" })
         map("n", "<leader>fk", ts.keymaps, { desc = "[f]ind [k]eymaps" })

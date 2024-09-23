@@ -73,7 +73,7 @@ function M.notes.get_md_link_title()
   return nil
 end
 
-function M.notes.get_last_daily_note()
+function M.notes.get_previous_daily_note()
   local notes = vim.split(
     vim.fn.glob(
       "`find " .. vim.env.HOME .. "/Documents/_notes/daily/**/*.md -type f -print0 | xargs -0 stat -f '%m %N' | sort -nr | head -2 | cut -f2- -d' ' | tail -n1`"

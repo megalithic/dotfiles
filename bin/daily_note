@@ -15,8 +15,8 @@ __help() {
   printf -- "\n"
   printf -- "${grey}${bold}OPTIONS:${reset}\n"
   printf -- "  -h          view this help text\n"
-  printf -- "  -p          return current daily note path\n"
-  printf -- "  -p          return last daily note path\n"
+  printf -- "  -c          return current daily note path\n"
+  printf -- "  -p          return previous daily note path\n"
   printf -- "  -m          method used for daily note: [zk, note]\n"
   printf -- "  -r          opens raw daily note without interacting with tmux\n"
   printf -- "\n"
@@ -93,13 +93,13 @@ function open_note() {
   nvim +norm\ G "$daily_note_path"
 }
 
-while getopts "hprlm:" OPTION; do
+while getopts "hcrlm:" OPTION; do
   case $OPTION in
     m)
       METHOD="${OPTARG:-note}"
       ;;
 
-    p)
+    c)
       if [[ "$METHOD" == "note" ]]; then
         echo "${daily_note_path}" | tr -d '\n'
       fi
@@ -107,7 +107,7 @@ while getopts "hprlm:" OPTION; do
       exit 0
       ;;
 
-    l)
+    p)
       if [[ "$METHOD" == "note" ]]; then
         __get_last_daily_note_path
         echo "${last_daily_note_path}" | tr -d '\n'
