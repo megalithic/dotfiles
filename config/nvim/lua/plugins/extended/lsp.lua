@@ -37,13 +37,10 @@ return {
           },
         },
       },
-      -- { "folke/neodev.nvim", opts = {} },
     },
     config = function()
       local lsp_ok, lspconfig = pcall(require, "lspconfig")
       if not lsp_ok then return nil end
-
-      -- require("neodev").setup()
 
       local diagnostic_ns = vim.api.nvim_create_namespace("hl_diagnostic_region")
       local diagnostic_timer

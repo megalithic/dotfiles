@@ -136,14 +136,16 @@ wmModality
   :bind(
     {},
     "l",
-    chain(
-      enum.map({ "halves", "thirds", "twoThirds", "fiveSixths", "sixths" }, function(size)
-        if type(POSITIONS[size]) == "string" then return POSITIONS[size] end
-        return POSITIONS[size]["right"]
-      end),
-      wmModality,
-      1.0
-    )
+    function() wm.place(POSITIONS.halves.right) end,
+    -- chain(
+    --   enum.map({ "halves", "thirds", "twoThirds", "fiveSixths", "sixths" }, function(size)
+    --     if type(POSITIONS[size]) == "string" then return POSITIONS[size] end
+    --     return POSITIONS[size]["right"]
+    --   end),
+    --   wmModality,
+    --   1.0
+    -- )
+    function() wmModality:exit() end
   )
   :bind({ "shift" }, "h", function()
     wm.toPrevScreen()
@@ -152,14 +154,17 @@ wmModality
   :bind(
     {},
     "h",
-    chain(
-      enum.map({ "halves", "thirds", "twoThirds", "fiveSixths", "sixths" }, function(size)
-        if type(POSITIONS[size]) == "string" then return POSITIONS[size] end
-        return POSITIONS[size]["left"]
-      end),
-      wmModality,
-      1.0
-    )
+
+    function() wm.place(POSITIONS.halves.left) end,
+    -- chain(
+    --   enum.map({ "halves", "thirds", "twoThirds", "fiveSixths", "sixths" }, function(size)
+    --     if type(POSITIONS[size]) == "string" then return POSITIONS[size] end
+    --     return POSITIONS[size]["left"]
+    --   end),
+    --   wmModality,
+    --   1.0
+    -- )
+    function() wmModality:exit() end
   )
   :bind({ "shift" }, "l", function()
     wm.toNextScreen()
@@ -169,24 +174,28 @@ wmModality
   :bind(
     {},
     "j",
-    chain({
-      POSITIONS.center.mini,
-      POSITIONS.center.tiny,
-      POSITIONS.center.small,
-      POSITIONS.center.medium,
-      POSITIONS.center.large,
-    }, wmModality, 1.0)
+    function() wm.place(POSITIONS.center.large) end,
+    -- chain({
+    --   POSITIONS.center.mini,
+    --   POSITIONS.center.tiny,
+    --   POSITIONS.center.small,
+    --   POSITIONS.center.medium,
+    --   POSITIONS.center.large,
+    -- }, wmModality, 1.0)
+    function() wmModality:exit() end
   )
   :bind(
     {},
     "k",
-    chain({
-      POSITIONS.center.large,
-      POSITIONS.center.medium,
-      POSITIONS.center.small,
-      POSITIONS.center.tiny,
-      POSITIONS.center.mini,
-    }, wmModality, 1.0)
+    function() wm.place(POSITIONS.center.medium) end,
+    -- chain({
+    --   POSITIONS.center.large,
+    --   POSITIONS.center.medium,
+    --   POSITIONS.center.small,
+    --   POSITIONS.center.tiny,
+    --   POSITIONS.center.mini,
+    -- }, wmModality, 1.0)
+    function() wmModality:exit() end
   )
   :bind({}, "v", function()
     wm.tile()

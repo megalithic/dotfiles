@@ -21,6 +21,7 @@ __help() {
 }
 
 CREATE_ONLY=false
+RETURN_PATH=false
 
 while getopts "hdct:" OPTION; do
   case $OPTION in
@@ -36,6 +37,10 @@ while getopts "hdct:" OPTION; do
 
     c)
       CREATE_ONLY=true
+      ;;
+
+    p)
+      RETURN_PATH=true
       ;;
 
     d)
@@ -96,7 +101,9 @@ tags:
 
 # ${TITLE}
 EOF
-    log_ok "created new note ${full_path}"
+    if [ "$CREATE_ONLY" = false ]; then
+      log_ok "created new note ${full_path}"
+    fi
   fi
 }
 
@@ -111,6 +118,8 @@ __set_template
 if [ "$CREATE_ONLY" = false ]; then
   log "opening in $EDITOR..."
   $EDITOR +norm\ G "$full_path"
-else
+fi
+
+if [ "$RETURN_PATH" = true ]; then
   echo "$full_path"
 fi

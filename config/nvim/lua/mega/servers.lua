@@ -451,7 +451,10 @@ M.list = function(default_capabilities, default_on_attach)
                   end
 
                   os.execute("note -c " .. note_title)
-                end, { desc = "[g]o create note from link title" })
+                  vim.diagnostic.enable(false)
+                  vim.cmd("LspRestart marksman")
+                  vim.defer_fn(function() vim.diagnostic.enable(true) end, 50)
+                end, { desc = "[g]o create note from link title", buffer = bufnr })
               end
             end)
           end,
