@@ -447,7 +447,7 @@ local editFileMappings = {
     "[e]xplore notes files -> tmux",
   },
 }
--- <leader>n<key>
+-- <leader>e<key>
 vim.iter(editFileMappings):each(function(key, rhs) leaderMapper("n", "e" .. key, rhs[1], rhs[2]) end)
 
 -- [[ notes ]] -----------------------------------------------------------------
@@ -477,31 +477,15 @@ local notesMappings = {
   },
   l = {
     function()
-      local notes = vim.split(
-        vim.fn.glob(
-          "`find "
-            .. vim.env.HOME
-            .. "/Documents/_notes/daily/**/*.md -type f -print0 | xargs -0 stat -f '%m %N' | sort -nr | head -2 | cut -f2- -d' ' | tail -n1`"
-        ),
-        "\n",
-        { trimempty = true }
-      )
-      if #notes == 1 then vim.cmd("edit " .. notes[1]) end
+      local note = U.notes.get_last_daily_note()
+      if note ~= nil then vim.cmd("edit " .. note) end
     end,
     "open [l]ast daily note",
   },
   L = {
     function()
-      local notes = vim.split(
-        vim.fn.glob(
-          "`find "
-            .. vim.env.HOME
-            .. "/Documents/_notes/daily/**/*.md -type f -print0 | xargs -0 stat -f '%m %N' | sort -nr | head -2 | cut -f2- -d' ' | tail -n1`"
-        ),
-        "\n",
-        { trimempty = true }
-      )
-      if #notes == 1 then vim.cmd("vnew " .. notes[1]) end
+      local note = U.notes.get_last_daily_note()
+      if note ~= nil then vim.cmd("vnew " .. note) end
     end,
     "open [l]ast daily note (vsplit)",
   },

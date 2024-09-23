@@ -405,7 +405,7 @@ function M.apply()
   M.augroup("Utilities", {
     {
       event = { "QuickFixCmdPost" },
-      desc = "Goes to first item in quickfix list automatically",
+      desc = "Goes to first item in quickfix list automatically in Trouble",
       command = function(_args)
         vim.cmd([[Trouble qflist open]])
         pcall(vim.cmd.cfirst)

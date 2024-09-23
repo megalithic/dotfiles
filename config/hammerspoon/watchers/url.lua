@@ -72,11 +72,12 @@ obj.callbacks = {
     end,
   },
   {
-    pattern = "https?://open.spotify.com/*",
+    pattern = "https:?://open.spotify.com/*",
     action = "com.spotify.client",
   },
   {
-    pattern = "https?://figma.com/*",
+
+    pattern = "https:?://www.figma.com/*",
     action = "com.figma.Desktop",
   },
 }

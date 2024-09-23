@@ -63,7 +63,7 @@ while getopts "hdct:" OPTION; do
 done
 shift "$(($OPTIND - 1))"
 
-TITLE="${*:-New note}"
+TITLE="${*:-Quick note}"
 
 # Specify below the directory in which you want to create your note
 main_note_dir="${HOME}/Documents/_notes"
@@ -77,7 +77,7 @@ current_day=$(date +"%d")
 note_dir="${main_note_dir}"
 note_date="${current_year}-${current_month_num}-${current_day}"
 filename_from_title=$(echo "${TITLE// /-}" | tr '[:upper:]' '[:lower:]')
-if [[ "$TITLE" == "New note" ]]; then
+if [[ "$TITLE" == "Quick note" ]]; then
   full_path="${note_dir}/${filename_from_title}_${note_date}.md"
 else
   full_path="${note_dir}/${filename_from_title}.md"
