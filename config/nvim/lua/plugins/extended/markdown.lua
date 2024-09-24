@@ -216,6 +216,7 @@ return {
           custom = {
             -- todo = { raw = "[-]", rendered = " 󰥔 ", highlight = "RenderMarkdownTodo" },
             todo = { raw = "[-]", rendered = "󰡖 ", highlight = "RenderMarkdownListTodo" },
+            wip = { raw = "[.]", rendered = "󰦖 ", highlight = "RenderMarkdownListTodo" },
             skipped = { raw = "[/]", rendered = "󱋭 ", highlight = "RenderMarkdownListSkipped" },
             fire = { raw = "[f]", rendered = "󰈸 ", highlight = "RenderMarkdownListFire" },
             star = { raw = "[s]", rendered = " ", highlight = "RenderMarkdownListStar" },

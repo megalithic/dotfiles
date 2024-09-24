@@ -365,7 +365,49 @@ local editFileMappings = {
   },
   D = {
     function()
-      if vim.fn.confirm("Delete file?", "&Yes\n&No", 2, "Question") == 1 then vim.cmd("Delete!") end
+      local current_file = vim.fn.expand("%:p")
+      if current_file and current_file ~= "" then
+        -- Check if trash utility is installed
+        if vim.fn.executable("trash") == 0 then
+          vim.api.nvim_echo({
+            { "- Trash utility not installed. Make sure to install it first\n", "ErrorMsg" },
+            { "- In macOS run `brew install trash`\n", nil },
+          }, false, {})
+          return
+        end
+        -- Prompt for confirmation before deleting the file
+        if vim.fn.confirm(fmt("Delete %s?", current_file), "&Yes\n&No", 2, "Question") == 1 then
+          -- vim.ui.input({
+          --   prompt = "Type 'del' to delete the file '" .. current_file .. "': ",
+          -- }, function(input)
+          --   if input == "del" then
+          -- Delete the file using trash app
+          local success, _ = pcall(function() vim.fn.system({ "trash", vim.fn.fnameescape(current_file) }) end)
+          if success then
+            vim.api.nvim_echo({
+              { "File deleted from disk:\n", "Normal" },
+              { current_file, "Normal" },
+            }, false, {})
+            -- Close the buffer after deleting the file
+            vim.cmd("bd!")
+          else
+            vim.api.nvim_echo({
+              { "Failed to delete file:\n", "ErrorMsg" },
+              { current_file, "ErrorMsg" },
+            }, false, {})
+          end
+        else
+          vim.api.nvim_echo({
+            { "File deletion canceled.", "Normal" },
+          }, false, {})
+        end
+        -- end)
+      else
+        vim.api.nvim_echo({
+          { "No file to delete", "WarningMsg" },
+        }, false, {})
+      end
+      -- if vim.fn.confirm("Delete file?", "&Yes\n&No", 2, "Question") == 1 then vim.cmd("Delete") end
     end,
     "[e]dit file -> delete?",
   },
@@ -493,10 +535,10 @@ local notesMappings = {
   },
   tm = {
     function()
-      local tasks = U.notes.move_task_to_next_day()
-      if tasks ~= nil and U.tlen(tasks) > 0 then
+      local incomplete_tasks = U.notes.move_incomplete_tasks_to_next_day()
+      if incomplete_tasks ~= nil and U.tlen(incomplete_tasks) > 0 then
         -- vim.cmd("vnew " .. task)
-        P(tasks)
+        P(incomplete_tasks)
       end
     end,
     "[n]ote [t]ask [m]oved to next day",

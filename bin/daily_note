@@ -19,6 +19,7 @@ __help() {
   printf -- "  -p          return previous daily note path\n"
   printf -- "  -m          method used for daily note: [zk, note]\n"
   printf -- "  -r          opens raw daily note without interacting with tmux\n"
+  printf -- "  -t          displays the tasks for the day\n"
   printf -- "\n"
 
   exit 0
@@ -42,6 +43,10 @@ daily_note_dir="${notes_dir}/${current_year}/${current_month_num}"
 daily_note_date="${current_year}-${current_month_num}-${current_day}"
 daily_note_path="${daily_note_dir}/${daily_note_date}.md"
 
+function __get_note_tasks() {
+  sed '/^## Tasks$/,/^.*Links/!d;//d;/^$/d' "$1"
+}
+
 function __get_last_daily_note_path() {
   if [[ -f "$daily_note_path" ]]; then
     last_daily_note_path="$(find $HOME/Documents/_notes/daily/**/*.md -type f -print0 | xargs -0 stat -f '%m %N' | sort -nr | head -2 | cut -f2- -d' ' | tail -n1)"
@@ -51,6 +56,22 @@ function __get_last_daily_note_path() {
 
   last_daily_note_file_name=$(basename ${last_daily_note_path})
   last_daily_note_name=$(echo "$last_daily_note_file_name" | cut -d"." -f1)
+}
+
+function __get_last_daily_note_tasks() {
+  __get_note_tasks "${last_daily_note_path}"
+}
+
+function __build_tasks() {
+  # gets the previous day's tasks
+  tasks="$(__get_note_tasks ${last_daily_note_path})"
+
+  if [[ -n "$tasks" ]]; then
+    # remove completed tasks
+    printf -- "%s" $tasks | sed 's/- \[x\].*//g' | sed '/^[[:space:]]*$/d'
+  else
+    printf -- "- [ ] TODO item"
+  fi
 }
 
 function __set_template() {
@@ -74,7 +95,7 @@ tags:
 
 ## Tasks
 
-- [ ] TODO item
+$(__build_tasks)
 
 ## Links
 
@@ -87,7 +108,7 @@ function open_note() {
   nvim +norm\ G "$daily_note_path"
 }
 
-while getopts "hcrlm:" OPTION; do
+while getopts "hct:rlm:" OPTION; do
   case $OPTION in
     m)
       METHOD="${OPTARG:-note}"
@@ -107,6 +128,20 @@ while getopts "hcrlm:" OPTION; do
         echo "${last_daily_note_path}" | tr -d '\n'
       fi
 
+      exit 0
+      ;;
+
+    t)
+      WHICH_TASKS="${OPTARG:-today}"
+
+      if [[ "$WHICH_TASKS" == "today" ]]; then
+        tasks="$(__get_note_tasks ${daily_note_path})"
+      elif [[ "$WHICH_TASKS" == "prev" ]]; then
+        __get_last_daily_note_path
+        tasks="$(__get_note_tasks ${last_daily_note_path})"
+      fi
+
+      printf -- "%s" $tasks | sed 's/- \[/\[/g'
       exit 0
       ;;
 

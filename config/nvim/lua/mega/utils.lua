@@ -73,7 +73,7 @@ function M.notes.get_md_link_title()
   return nil
 end
 
-function M.notes.move_task_to_next_day()
+function M.notes.move_incomplete_tasks_to_next_day()
   if vim.bo.filetype ~= "markdown" then return end
   local bufnr = 0
   local get_node = vim.treesitter.get_node
@@ -131,6 +131,43 @@ function M.notes.move_task_to_next_day()
 
     -- end
   end
+
+  -- Save the current view
+  -- If I don't do this, my folds are lost when I run this keymap
+  vim.cmd("mkview")
+  -- Retrieves all lines from the current buffer
+  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+  local tasks_exist = false -- Flag to check if TOC marker exists
+  local tasks_heading_start = 0 -- To store the end line number of frontmatter
+  -- Check for frontmatter and TOC marker
+  for i, line in ipairs(lines) do
+    if i == 1 and line:match("^---$") then
+      -- Frontmatter start detected, now find the end
+      for j = i + 1, #lines do
+        if lines[j]:match("^.*Tasks$") then
+          tasks_heading_start = j -- Save the end line of the frontmatter
+          break
+        end
+      end
+    end
+
+    -- Checks for the TOC marker
+    if line:match("^%s*<!%-%-%s*toc%s*%-%->%s*$") then
+      tasks_exist = true -- Sets the flag if TOC marker is found
+      break -- Stops the loop if TOC marker is found
+    end
+  end
+  -- Inserts H1 heading and <!-- toc --> at the appropriate position
+  if tasks_exist then
+    if tasks_heading_start > 0 then
+      -- Insert after frontmatter
+      vim.api.nvim_buf_set_lines(bufnr, tasks_heading_start, tasks_heading_start, false, { "", "task 1" })
+    end
+  end
+  -- Silently save the file, in case TOC being created for first time (yes, you need the 2 saves)
+  vim.cmd("silent write")
+  -- Restore the saved view (including folds)
+  vim.cmd("loadview")
 
   -- local current_node = get_node({ lang = "markdown_inline" })
   --
