@@ -1022,7 +1022,7 @@ return {
           },
           smart_open = {
             show_scores = false,
-            ignore_patterns = { "*.git/*", "*/tmp/*" },
+            ignore_patterns = { "*.git/*", "*/tmp/*", "." },
             match_algorithm = "fzf",
             disable_devicons = true,
             color_devicons = false,

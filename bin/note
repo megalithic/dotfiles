@@ -84,22 +84,20 @@ fi
 function __print_tags() {
   if [[ -n "$TAGS" ]]; then
     echo "tags:\n"
-    echo "- #$(echo -e ${TAGS} | sed "s/,/\n- #/g")"
+    echo "  - #$(echo -e ${TAGS} | sed "s/,/\n  -  #/g")"
   fi
 }
 
 function __set_template() {
   # NOTE: doesn't take args, just uses upper scope variables
   if [ ! -f "$full_note_path" ]; then
+    local id="${filename_from_title}-${note_date}"
     cat <<EOF >"$full_note_path"
+---
+id: ${id}
 date: ${note_date}
 $(__print_tags)
-
-<!--toc:start-->
-
-- [${TITLE}](#${filename_from_title})
-
-<!--toc:end-->
+---
 
 # ${TITLE}
 EOF

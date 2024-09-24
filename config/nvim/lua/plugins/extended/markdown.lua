@@ -58,6 +58,7 @@ return {
   {
     "ray-x/yamlmatter.nvim",
     lazy = false,
+    cond = false,
     -- event = "VeryLazy",
     -- ft = { "markdown" },
     config = function()

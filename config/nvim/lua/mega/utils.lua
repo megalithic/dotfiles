@@ -73,6 +73,78 @@ function M.notes.get_md_link_title()
   return nil
 end
 
+function M.notes.move_task_to_next_day()
+  if vim.bo.filetype ~= "markdown" then return end
+  local bufnr = 0
+  local get_node = vim.treesitter.get_node
+  local _cur_pos = vim.api.nvim_win_get_cursor
+
+  local function get_root_node(buffnr, parser)
+    local parser = vim.treesitter.get_parser(buffnr, parser, {})
+    local tree = parser:parse()[1]
+    return tree:root()
+  end
+
+  local query = vim.treesitter.query.parse(
+    "markdown",
+    [[
+    [(list_item
+          (list_marker_minus)
+          (task_list_marker_unchecked)
+          (paragraph))] @incomplete_task
+    ]]
+  )
+
+  local incomplete_tasks = {}
+
+  local root = get_root_node(bufnr, "markdown")
+  for id, node in query:iter_captures(root, bufnr, 0, -1) do
+    local start_row, start_col, end_row, end_col = node:range()
+    -- local marker_col = col ~= 0 and col +2
+    if node:type() == "list_item" then
+      local found_incomplete_task = vim.treesitter.get_node_text(node, bufnr)
+      -- if found_list_item:match("- \[ \]") then
+      -- end
+      table.insert(incomplete_tasks, found_incomplete_task)
+    end
+
+    -- local new_marker_text = list_marker_text:gsub("[-*]", "•")
+
+    -- local count = 0
+    -- if count <= 0 then
+    --     P(new_marker_text)
+    --     count = count + 1
+    -- end
+    -- local marker_pos = string.find(list_marker_text, "-") or string.find(list_marker_text, "*")
+    -- local extmark_col
+
+    -- if marker_pos then
+    -- extmark_col = start_col + marker_pos - 1
+
+    -- vim.api.nvim_buf_set_extmark(bufnr, M.namespace, start_row, start_col, {
+    --   virt_text = { { new_marker_text, "prettyMdListMarker" } },
+    --   virt_text_pos = "overlay",
+    --   hl_mode = "combine",
+    --   end_col = end_col,
+    --   end_row = end_row,
+    -- })
+
+    -- end
+  end
+
+  -- local current_node = get_node({ lang = "markdown_inline" })
+  --
+  -- while current_node do
+  --   local type = current_node:type()
+  --   dbg(type)
+  --   -- if type == "inline_link" or type == "image" then return vim.treesitter.get_node_text(current_node:named_child(1), 0) end
+  --   if type == "task_list_marker_unchecked" then return vim.treesitter.get_node_text(current_node, 0) end
+  --   current_node = current_node:parent()
+  -- end
+
+  return incomplete_tasks
+end
+
 function M.notes.get_previous_daily_note()
   local notes = vim.split(
     vim.fn.glob(

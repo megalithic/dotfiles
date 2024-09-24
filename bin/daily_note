@@ -63,28 +63,22 @@ function __set_template() {
     fi
 
     cat <<EOF >"$daily_note_path"
+---
+id: daily-${daily_note_date}
 tags:
+  -  #daily
+  -  #tasks
+---
 
-- #daily
-- #tasks
-
-<!--toc:start-->
-
-- [Daily notes | ${daily_note_date}](#daily-notes)
-  - [Tasks](#tasks)
-- [Last daily note | ${last_daily_note_name}](#last-daily-note)
-
-<!--toc:end-->
-
-# Daily notes
+# Daily notes for ${daily_note_date}
 
 ## Tasks
 
 - [ ] TODO item
 
-# Last daily note
+## Links
 
-- [[${last_daily_note_file_name}]]
+- [last daily note](${last_daily_note_file_name})
 EOF
   fi
 }

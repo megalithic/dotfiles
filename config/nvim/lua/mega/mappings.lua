@@ -416,7 +416,7 @@ local editFileMappings = {
     end,
     "e[x]ecute [l]ine",
   },
-  t = {
+  tt = {
     function()
       local file_dir = vim.fn.expand("%:p:h") -- Get the directory of the current file
       local pane_width = 60
@@ -427,11 +427,12 @@ local editFileMappings = {
       else
         -- If the right pane doesn't exist, open it
         vim.fn.system("tmux split-window -h -l " .. pane_width .. " 'cd \"" .. file_dir .. "\" && zsh -i'")
+        vim.fn.system("tmux send-keys 'ls' 'C-m'")
       end
     end,
     "[e]xplore cwd files -> [t]mux",
   },
-  n = {
+  tn = {
     function()
       local file_dir = vim.fn.expand(vim.g.notes_path)
       local pane_width = 60
@@ -442,6 +443,7 @@ local editFileMappings = {
       else
         -- If the right pane doesn't exist, open it
         vim.fn.system("tmux split-window -h -l " .. pane_width .. " 'cd \"" .. file_dir .. "\" && zsh -i'")
+        vim.fn.system("tmux send-keys 'ls' 'C-m'")
       end
     end,
     "[e]xplore notes files -> tmux",
@@ -475,19 +477,29 @@ local notesMappings = {
     function() mega.picker.grep({ cwd = vim.g.notes_path, default_text = "" }) end,
     "[g]rep notes",
   },
-  l = {
+  p = {
     function()
       local note = U.notes.get_previous_daily_note()
       if note ~= nil then vim.cmd("edit " .. note) end
     end,
     "open [l]ast daily note",
   },
-  L = {
+  P = {
     function()
       local note = U.notes.get_previous_daily_note()
       if note ~= nil then vim.cmd("vnew " .. note) end
     end,
     "open [l]ast daily note (vsplit)",
+  },
+  tm = {
+    function()
+      local tasks = U.notes.move_task_to_next_day()
+      if tasks ~= nil and U.tlen(tasks) > 0 then
+        -- vim.cmd("vnew " .. task)
+        P(tasks)
+      end
+    end,
+    "[n]ote [t]ask [m]oved to next day",
   },
 }
 -- <leader>n<key>

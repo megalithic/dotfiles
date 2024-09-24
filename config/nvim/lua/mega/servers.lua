@@ -379,7 +379,7 @@ M.list = function(default_capabilities, default_on_attach)
       if vim.g.note_taker ~= "markdown_oxide" then return nil end
       return (vim.g.started_by_firenvim or vim.env.TMUX_POPUP) and nil
         or {
-          single_file_support = false,
+          single_file_support = true,
           capabilities = {
             workspace = {
               didChangeWatchedFiles = {
@@ -389,15 +389,15 @@ M.list = function(default_capabilities, default_on_attach)
           },
           on_attach = function(client, bufnr)
             default_on_attach(client, bufnr, function()
-              -- if string.match(vim.fn.expand("%:p:h"), "_notes") then
-              --   vim.keymap.set(
-              --     "n",
-              --     "<leader>ff",
-              --     function() mega.picker.find_files({ picker = "smart_open", cwd = vim.g.notes_path }) end,
-              --     { desc = "[f]ind in [n]otes" }
-              --   )
-              --   vim.keymap.set("n", "gd", "<cmd>lua vim.lsp.buf.definition()<CR>", { desc = "[f]ind in [n]otes" })
-              -- end
+              if string.match(vim.fn.expand("%:p:h"), "_notes") then
+                vim.keymap.set(
+                  "n",
+                  "<leader>ff",
+                  function() mega.picker.find_files({ cwd = vim.g.notes_path }) end,
+                  { desc = "[f]ind in [n]otes", buffer = bufnr }
+                )
+                vim.keymap.set("n", "gd", "<cmd>lua vim.lsp.buf.definition()<CR>", { desc = "[f]ind in [n]otes", buffer = bufnr })
+              end
 
               vim.api.nvim_create_user_command("Daily", function(args)
                 local input = args.args
@@ -405,6 +405,35 @@ M.list = function(default_capabilities, default_on_attach)
                 vim.lsp.buf.execute_command({ command = "jump", arguments = { input } })
               end, { desc = "[n]otes, [d]aily", nargs = "*" })
 
+              vim.keymap.set("n", "g.", function()
+                local note_title = require("mega.utils").notes.get_md_link_dest()
+                if note_title == nil or note_title == "" then
+                  vim.notify("Unable to create new note from link text", L.WARN)
+                  return
+                end
+
+                os.execute("note -c " .. note_title)
+                vim.diagnostic.enable(false)
+                vim.cmd("LspRestart " .. client.name)
+                vim.defer_fn(function() vim.diagnostic.enable(true) end, 50)
+              end, { desc = "[g]o create note from link title", buffer = bufnr })
+
+              local function check_codelens_support()
+                local clients = vim.lsp.get_clients({ bufnr = 0 })
+                for _, c in ipairs(clients) do
+                  if c.server_capabilities.codeLensProvider then return true end
+                end
+                return false
+              end
+
+              vim.api.nvim_create_autocmd({ "TextChanged", "InsertLeave", "CursorHold", "LspAttach", "BufEnter" }, {
+                buffer = bufnr,
+                callback = function()
+                  if check_codelens_support() then vim.lsp.codelens.refresh({ bufnr = 0 }) end
+                end,
+              })
+              -- trigger codelens refresh
+              vim.api.nvim_exec_autocmds("User", { pattern = "LspAttached" })
               -- vim.api.nvim_create_user_command("Daily", function(args)
               --   -- use client id to execute a command, instead of vim.lsp.buf.execute_command()
               --   local oxide_client = vim.lsp.get_client_by_id(client.id)
@@ -437,8 +466,8 @@ M.list = function(default_capabilities, default_on_attach)
                 vim.keymap.set(
                   "n",
                   "<leader>ff",
-                  function() mega.picker.find_files({ picker = "smart_open", cwd = vim.g.notes_path }) end,
-                  { desc = "[f]ind in [n]otes" }
+                  function() mega.picker.find_files({ cwd = vim.g.notes_path }) end,
+                  { desc = "[f]ind in [n]otes", buffer = bufnr }
                 )
 
                 vim.keymap.set("n", "gd", "<cmd>lua vim.lsp.buf.definition()<CR>", { desc = "[g]o to note [d]efinition", noremap = true, buffer = bufnr })
@@ -452,7 +481,7 @@ M.list = function(default_capabilities, default_on_attach)
 
                   os.execute("note -c " .. note_title)
                   vim.diagnostic.enable(false)
-                  vim.cmd("LspRestart marksman")
+                  vim.cmd("LspRestart " .. client.name)
                   vim.defer_fn(function() vim.diagnostic.enable(true) end, 50)
                 end, { desc = "[g]o create note from link title", buffer = bufnr })
               end
