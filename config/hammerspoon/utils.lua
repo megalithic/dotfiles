@@ -166,6 +166,8 @@ function obj.vidconvert(path, opts)
     and string.match(path, fmt(".%s", srcFormat))
     -- and hs.fs.displayName(path) ~= nil
   then
+    hs.notify(fmt("vidconvert started for %s at %s", path, os.date("%Y-%m-%d %H:%M:%S")))
+
     local task = hs.task.new(
       os.getenv("HOME") .. "/.dotfiles/bin/vidconvert",
       function(_exitCode, _stdOut, _stdErr) end,
@@ -173,7 +175,11 @@ function obj.vidconvert(path, opts)
         stdOut = string.gsub(stdOut, "^%s*(.-)%s*$", "%1")
         local foundStreamEnd = string.match(stdOut, "Qavg:")
 
-        if foundStreamEnd then success(fmt("[%s] vidconvert completed for %s", obj.name, path)) end
+        if foundStreamEnd then
+          success(fmt("[%s] vidconvert completed for %s", obj.name, path))
+
+          hs.notify(fmt("vidconvert finished at %s", os.date("%Y-%m-%d %H:%M:%S")))
+        end
 
         return not foundStreamEnd
       end,

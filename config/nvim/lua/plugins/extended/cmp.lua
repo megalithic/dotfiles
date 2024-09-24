@@ -4,6 +4,12 @@ local fmt = string.format
 
 return {
   {
+    "petertriho/cmp-git",
+    dependencies = { "yioneko/nvim-cmp" },
+    config = function() require("cmp_git").setup() end,
+    init = function() table.insert(require("cmp").get_config().sources, { name = "git" }) end,
+  },
+  {
     "yioneko/nvim-cmp",
     branch = "perf",
     event = { "InsertEnter *", "CmdlineEnter *" },
@@ -67,11 +73,25 @@ return {
       { "lukas-reineke/cmp-under-comparator" },
       -- { "davidsierradz/cmp-conventionalcommits" },
       { "dmitmel/cmp-cmdline-history" },
-      { "petertriho/cmp-git" },
       { "andersevenrud/cmp-tmux", cond = false },
       -- { "kristijanhusak/vim-dadbod-completion"},
     },
-    init = function() vim.opt.completeopt = { "menu", "menuone", "noinsert", "noselect" } end,
+    init = function()
+      vim.opt.completeopt = { "menu", "menuone", "noinsert", "noselect" }
+      vim.g.completion_enabled = true
+
+      local function toggle_completion()
+        local cmp = require("cmp")
+        if vim.g.completion_enabled then
+          pcall(cmp.setup, { completion = { autocomplete = false } })
+        else
+          pcall(cmp.setup, { completion = { autocomplete = { cmp.TriggerEvent.TextChanged } } })
+        end
+        vim.g.completion_enabled = not vim.g.completion_enabled
+      end
+
+      vim.api.nvim_create_user_command("ToggleNvimCmp", toggle_completion, {})
+    end,
     config = function()
       local cmp = require("cmp")
       local MIN_MENU_WIDTH = 25
@@ -438,7 +458,7 @@ return {
       ---@diagnostic disable-next-line missing-fields
       cmp.setup.filetype({ "gitcommit", "NeogitCommitMessage" }, {
         sources = cmp.config.sources({
-          { name = "cmp_git" },
+          { name = "git" },
         }, {
           { name = "buffer" },
         }),
@@ -461,7 +481,8 @@ return {
               },
             },
           },
-          { name = "snippets" }, -- For luasnip users.
+          { name = "snippets" },
+          { name = "git" },
           { name = "path" },
         },
       })
