@@ -67,11 +67,24 @@ function __build_tasks() {
   tasks="$(__get_note_tasks ${last_daily_note_path})"
 
   if [[ -n "$tasks" ]]; then
-    # remove completed tasks
-    printf -- "%s" $tasks | sed 's/- \[x\].*//g' | sed '/^[[:space:]]*$/d'
+    # removes completed tasks, removes blank lines, subs strings "tomorrow" -> "today"
+    printf -- "%s" $tasks | sed 's/- \[x\].*//g' | sed '/^[[:space:]]*$/d' | sed 's/tomorrow/today/g'
   else
     printf -- "- [ ] TODO item"
   fi
+}
+
+function __print_tasks() {
+  local which_tasks="$1"
+
+  if [[ "$which_tasks" == "today" ]]; then
+    tasks="$(__get_note_tasks ${daily_note_path})"
+  elif [[ "$which_tasks" == "prev" || "$which_tasks" == "yesterday" ]]; then
+    __get_last_daily_note_path
+    tasks="$(__get_note_tasks ${last_daily_note_path})"
+  fi
+
+  printf -- "%s" $tasks | sed 's/- \[/\[/g'
 }
 
 function __set_template() {
@@ -132,16 +145,7 @@ while getopts "hct:rlm:" OPTION; do
       ;;
 
     t)
-      WHICH_TASKS="${OPTARG:-today}"
-
-      if [[ "$WHICH_TASKS" == "today" ]]; then
-        tasks="$(__get_note_tasks ${daily_note_path})"
-      elif [[ "$WHICH_TASKS" == "prev" ]]; then
-        __get_last_daily_note_path
-        tasks="$(__get_note_tasks ${last_daily_note_path})"
-      fi
-
-      printf -- "%s" $tasks | sed 's/- \[/\[/g'
+      __print_tasks "${OPTARG:-today}"
       exit 0
       ;;
 

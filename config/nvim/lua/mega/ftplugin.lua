@@ -2,7 +2,7 @@
 ---@field abbr? table<string, string> Insert-mode abbreviations
 ---@field keys? table Buffer-local keymaps
 ---@field bufvar? table<string, any> Buffer-local variables
----@field callback? fun(bufnr: integer)
+---@field callback? fun(bufnr: integer, args: table?)
 ---@field opt? table<string, any> Buffer-local or window-local options
 ---@field compiler? string
 
@@ -69,7 +69,7 @@ local function coalesce(v1, v2)
   end
 end
 
-M.reapply_all_bufs = function()
+function M.reapply_all_bufs()
   for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
     M.apply(vim.bo[bufnr].filetype, bufnr)
   end
@@ -78,7 +78,7 @@ end
 ---Extend the configuration for a filetype, overriding values that conflict
 ---@param name string
 ---@param new_config FiletypeConfig
-M.extend = function(name, new_config)
+function M.extend(name, new_config)
   validate_keys(new_config.keys)
   local conf = configs[name] or {}
   conf.abbr = vim.tbl_deep_extend("force", conf.abbr or {}, new_config.abbr or {})
@@ -93,7 +93,7 @@ end
 
 ---Set many configs all at once
 ---@param confs table<string, FiletypeConfig>
-M.set_all = function(confs)
+function M.set_all(confs)
   for k, v in pairs(confs) do
     M.set(k, v)
   end
@@ -101,22 +101,35 @@ end
 
 ---Extend many configs all at once
 ---@param confs table<string, FiletypeConfig>
-M.extend_all = function(confs)
+function M.extend_all(confs)
   for k, v in pairs(confs) do
-    M.extend(k, v)
+    -- local commands = vim.iter(map):map(function(ft, settings)
+    -- local name = type(k) == "table" and table.concat(k, ",") or k
+    if type(k) == "table" then
+      vim.iter(k):map(function(ft_name)
+        -- for ft_name, _ft_conf in pairs(k) do
+        M.extend(ft_name, v)
+      end)
+    else
+      M.extend(k, v)
+    end
   end
 end
 
 ---@param name string
 ---@param winid integer
-local function _apply_win(name, winid)
+---@param args table?
+local function _apply_win(name, winid, args)
   local conf = configs[name]
   if not conf or not conf.opt then return end
   for k, v in pairs(conf.opt) do
     local opt_info = vim.api.nvim_get_option_info2(k, {})
     if opt_info.scope == "win" then
       local ok, err = pcall(vim.api.nvim_set_option_value, k, v, { scope = "local", win = winid })
-      if not ok then vim.notify(string.format("Error setting window option %s = %s: %s", k, vim.inspect(v), err), vim.log.levels.ERROR) end
+      if not ok then
+        vim.notify(string.format("Error setting window option %s = %s: %s", k, vim.inspect(v), err), vim.log.levels.ERROR)
+        dbg(args)
+      end
     end
   end
 end
@@ -124,25 +137,27 @@ end
 ---Apply window options
 ---@param name string
 ---@param winid integer
-M.apply_win = function(name, winid)
+---@param args table?
+function M.apply_win(name, winid, args)
   local pieces = vim.split(name, ".", { plain = true })
   if #pieces > 1 then
     for _, ft in ipairs(pieces) do
-      _apply_win(ft, winid)
+      _apply_win(ft, winid, args)
     end
   else
-    _apply_win(name, winid)
+    _apply_win(name, winid, args)
   end
 end
 
 ---Apply all filetype configs for a buffer
 ---@param name string
 ---@param bufnr integer
-M.apply = function(name, bufnr)
+---@param args table?
+function M.apply(name, bufnr, args)
   local pieces = vim.split(name, ".", { plain = true })
   if #pieces > 1 then
     for _, ft in ipairs(pieces) do
-      M.apply(ft, bufnr)
+      M.apply(ft, bufnr, args)
     end
     return
   end
@@ -167,7 +182,7 @@ M.apply = function(name, bufnr)
     end
     local winids = vim.tbl_filter(function(win) return vim.api.nvim_win_get_buf(win) == bufnr end, vim.api.nvim_list_wins())
     for _, winid in ipairs(winids) do
-      M.apply_win(name, winid)
+      M.apply_win(name, winid, args)
     end
   end
   if conf.bufvar then
@@ -177,9 +192,10 @@ M.apply = function(name, bufnr)
   end
   if conf.keys then
     for _, defn in ipairs(conf.keys) do
-      local mode = defn.mode or "n"
-      local lhs = defn[1]
-      local rhs = defn[2]
+      -- local mode = defn.mode or "n"
+      local mode = defn[1]
+      local lhs = defn[2]
+      local rhs = defn[3]
       vim.keymap.set(mode, lhs, rhs, {
         buffer = bufnr,
         desc = defn.desc,
@@ -189,7 +205,7 @@ M.apply = function(name, bufnr)
       })
     end
   end
-  if conf.callback then conf.callback(bufnr) end
+  if conf.callback then conf.callback(bufnr, args) end
 end
 
 ---@class FiletypeOpts
@@ -200,7 +216,7 @@ end
 --
 -- FIXME: switch to using my autocmds/augroup
 --
-M.setup = function(opts)
+function M.setup(opts)
   local conf = vim.tbl_deep_extend("keep", opts or {}, {
     augroup = nil,
   })
@@ -210,8 +226,9 @@ M.setup = function(opts)
     desc = "Set filetype-specific options",
     pattern = "*",
     group = conf.augroup,
-    callback = function(params) M.apply(params.match, params.buf) end,
+    callback = function(params) M.apply(params.match, params.buf, params) end,
   })
+
   vim.api.nvim_create_autocmd("BufWinEnter", {
     desc = "Set filetype-specific window options",
     pattern = "*",
@@ -222,9 +239,10 @@ M.setup = function(opts)
       local filetype = vim.bo[bufnr].filetype
       -- If we're in a terminal buffer, make the filetype "terminal"
       if vim.bo[bufnr].buftype == "terminal" then filetype = "terminal" end
-      M.apply_win(filetype, winid)
+      M.apply_win(filetype, winid, params)
     end,
   })
+
   vim.api.nvim_create_autocmd("TermEnter", {
     desc = "Set terminal-specific options",
     pattern = "*",
@@ -233,8 +251,8 @@ M.setup = function(opts)
       local winid = vim.api.nvim_get_current_win()
       local bufnr = vim.api.nvim_win_get_buf(winid)
       if vim.bo[bufnr].buftype ~= "terminal" then return end
-      M.apply("terminal", bufnr)
-      M.apply_win("terminal", winid)
+      M.apply("terminal", bufnr, params)
+      M.apply_win("terminal", winid, params)
     end,
   })
   did_setup = true

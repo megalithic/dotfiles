@@ -73,8 +73,11 @@ end
 function obj:exited()
   self.isOpen = false
   self.cleanModality()
-  self.delayedExitTimer:stop()
-  self.delayedExitTimer = nil
+
+  if self.delayedExitTimer ~= nil then
+    self.delayedExitTimer:stop()
+    self.delayedExitTimer = nil
+  end
 
   return self
 end

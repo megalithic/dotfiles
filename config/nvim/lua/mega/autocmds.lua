@@ -523,14 +523,26 @@ function M.apply()
         map("n", "gf", function()
           local target = vim.fn.expand("<cfile>")
 
-          if U.is_image(target) then
-            local root_dir = require("mega.utils.lsp").root_dir({ ".git" })
-            target = target:gsub("./samples", fmt("%s/samples", root_dir))
-            return require("mega.utils").preview_file(target)
+          -- FIXME: get working with ghostty
+          -- if U.is_image(target) then
+          --   local root_dir = require("mega.utils.lsp").root_dir({ ".git" })
+          --   target = target:gsub("./samples", fmt("%s/samples", root_dir))
+          --   return require("mega.utils").preview_file(target)
+          -- end
+
+          -- go to linear ticket
+          if target:match("TRN-") then
+            local url = fmt("https://linear.app/ternit/issue/%s", target)
+            vim.notify(fmt("Opening linear ticket %s at %s", target, url))
+            vim.fn.jobstart(fmt("%s %s", vim.g.open_command, url))
+
+            return false
           end
 
+          -- go to web address
           if target:match("https://") then return vim.cmd("norm gx") end
 
+          -- go to hex packages
           if args.file:match("mix.exs") then
             local line = vim.fn.getline(".")
             local _, _, pkg, _ = string.find(line, [[^%s*{:(.*), %s*"(.*)"}]])
@@ -542,6 +554,7 @@ function M.apply()
             return false
           end
 
+          -- go to node packages
           if args.file:match("package.json") then
             local line = vim.fn.getline(".")
             local _, _, pkg, _ = string.find(line, [[^%s*"(.*)":%s*"(.*)"]])
@@ -553,12 +566,14 @@ function M.apply()
             return false
           end
 
+          -- a normal file, so do the normal go-to-file thing
           if not target or #vim.split(target, "/") ~= 2 then return vim.cmd("norm! gf") end
 
+          -- maybe it's a github repo? try it and see..
           local url = fmt("https://github.com/%s", target)
           vim.fn.jobstart(fmt("%s %s", vim.g.open_command, url))
           vim.notify(fmt("Opening %s at %s", target, url))
-        end, { desc = "[g]oto [f]ile (preview, github repo, hexdocs, url)" })
+        end, { desc = "[g]oto [f]ile (on steroids)" })
       end,
     },
 
@@ -574,7 +589,7 @@ function M.apply()
             local url = "https://www.npmjs.com/package/" .. pkg
             vim.ui.open(url)
           end
-        end, { buffer = true, silent = true, desc = "[G]o to [p]ackage" })
+        end, { buffer = true, silent = true, desc = "[g]o to node [p]ackage" })
       end,
     },
     {
@@ -589,7 +604,7 @@ function M.apply()
             local url = fmt("https://hexdocs.pm/%s/", pkg)
             vim.ui.open(url)
           end
-        end, { buffer = true, silent = true, desc = "[G]o to [p]ackage" })
+        end, { buffer = true, silent = true, desc = "[g]o to hex [p]ackage" })
       end,
     },
   })

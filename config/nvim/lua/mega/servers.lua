@@ -377,6 +377,7 @@ M.list = function(default_capabilities, default_on_attach)
     -- end,
     markdown_oxide = function()
       if vim.g.note_taker ~= "markdown_oxide" then return nil end
+
       return (vim.g.started_by_firenvim or vim.env.TMUX_POPUP) and nil
         or {
           single_file_support = true,
@@ -418,22 +419,6 @@ M.list = function(default_capabilities, default_on_attach)
                 vim.defer_fn(function() vim.diagnostic.enable(true) end, 50)
               end, { desc = "[g]o create note from link title", buffer = bufnr })
 
-              local function check_codelens_support()
-                local clients = vim.lsp.get_clients({ bufnr = 0 })
-                for _, c in ipairs(clients) do
-                  if c.server_capabilities.codeLensProvider then return true end
-                end
-                return false
-              end
-
-              vim.api.nvim_create_autocmd({ "TextChanged", "InsertLeave", "CursorHold", "LspAttach", "BufEnter" }, {
-                buffer = bufnr,
-                callback = function()
-                  if check_codelens_support() then vim.lsp.codelens.refresh({ bufnr = 0 }) end
-                end,
-              })
-              -- trigger codelens refresh
-              vim.api.nvim_exec_autocmds("User", { pattern = "LspAttached" })
               -- vim.api.nvim_create_user_command("Daily", function(args)
               --   -- use client id to execute a command, instead of vim.lsp.buf.execute_command()
               --   local oxide_client = vim.lsp.get_client_by_id(client.id)
@@ -450,6 +435,7 @@ M.list = function(default_capabilities, default_on_attach)
     end,
     marksman = function()
       if vim.g.note_taker ~= "marksman" then return nil end
+
       return (vim.g.started_by_firenvim or vim.env.TMUX_POPUP) and nil
         or {
           single_file_support = false,

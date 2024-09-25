@@ -53,7 +53,10 @@ return {
       }
 
       local fmt = string.format
-      local map = vim.keymap.set
+      local map = function(mode, lhs, rhs, desc)
+        if type(desc) == "table" then desc = desc[1] end
+        vim.keymap.set(mode, lhs, rhs, { desc = fmt("[+%s] %s", vim.g.picker, desc) })
+      end
       local telescope = require("telescope")
       local transform_mod = require("telescope.actions.mt").transform_mod
       local actions = require("telescope.actions")
@@ -1131,41 +1134,36 @@ return {
       -- keys
       if vim.g.picker == "telescope" then
         local builtin = require("telescope.builtin")
-        map("n", "<leader>ff", function() mega.picker.find_files({ picker = "smart_open", theme = "ivy" }) end, { desc = "[f]ind [f]iles" })
-        map("n", "<leader>fh", ts.help_tags, { desc = "[f]ind [h]elp" })
-        map("n", "<leader>fa", ts.autocommands, { desc = "[f]ind [a]utocommands" })
-        map("n", "<leader>fk", ts.keymaps, { desc = "[f]ind [k]eymaps" })
-        -- map("n", "<leader>fs", ts.builtin, { desc = "[f]ind [f]elect Telescope" })
-        -- map("n", "<leader>fg", ts.egrepify, { desc = "egrepify (live)" })
-        map("n", "<leader>fg", function() mega.picker.grep({ picker = "egrepify" }) end, { desc = "[f]ind e[g]repify" })
+        map("n", "<leader>ff", function() mega.picker.find_files({ picker = "smart_open", theme = "ivy" }) end, "[f]ind [f]iles")
+        map("n", "<leader>fh", ts.help_tags, { "[f]ind [h]elp" })
+        map("n", "<leader>fa", ts.autocommands, { "[f]ind [a]utocommands" })
+        map("n", "<leader>fk", ts.keymaps, { "[f]ind [k]eymaps" })
+        -- map("n", "<leader>fs", ts.builtin, {  "[f]ind [f]elect Telescope" })
+        -- map("n", "<leader>fg", ts.egrepify, {  "egrepify (live)" })
+        map("n", "<leader>fg", function() mega.picker.grep({ picker = "egrepify" }) end, { "[f]ind e[g]repify" })
 
-        -- map("n", "<leader>fg", ts.multi_rg, { desc = "multi-rg (live)" })
-        map("n", "<leader>a", mega.picker.grep, { desc = "grep (live)" })
-        -- map("n", "<leader>A", ts.grep_string, { desc = "grep (under cursor)" })
-        map("n", "<leader>A", function() mega.picker.grep({ default_text = vim.fn.expand("<cword>") }) end, { desc = "grep (under cursor)" })
+        -- map("n", "<leader>fg", ts.multi_rg, {  "multi-rg (live)" })
+        map("n", "<leader>a", mega.picker.grep, { "grep (live)" })
+        -- map("n", "<leader>A", ts.grep_string, {  "grep (under cursor)" })
+        map("n", "<leader>A", function() mega.picker.grep({ default_text = vim.fn.expand("<cword>") }) end, { "grep (under cursor)" })
         map({ "v", "x" }, "<leader>A", function()
           local pattern = require("mega.utils").get_visual_selection()
           mega.picker.grep({ default_text = pattern })
-        end, { desc = "grep (selection)" })
+        end, { "grep (selection)" })
 
-        map("n", "<leader>fu", ts.undo, { desc = "[f]ind [u]ndo" })
-        -- map("n", "<leader>fd", ts.diagnostics, { desc = "[f]ind [d]iagnostics" })
-        map("n", "<leader>fd", function() mega.picker.find_files({ picker = "smart_open", cwd = vim.g.dotfiles_path }) end, { desc = "[f]ind in [d]otfiles" })
-        map(
-          "n",
-          "<leader>fc",
-          function() mega.picker.find_files({ picker = "smart_open", cwd = vim.fn.stdpath("config") }) end,
-          { desc = "[f]ind in [c]onfig" }
-        )
+        map("n", "<leader>fu", ts.undo, { "[f]ind [u]ndo" })
+        -- map("n", "<leader>fd", ts.diagnostics, {  "[f]ind [d]iagnostics" })
+        map("n", "<leader>fd", function() mega.picker.find_files({ picker = "smart_open", cwd = vim.g.dotfiles_path }) end, { "[f]ind in [d]otfiles" })
+        map("n", "<leader>fc", function() mega.picker.find_files({ picker = "smart_open", cwd = vim.fn.stdpath("config") }) end, { "[f]ind in [c]onfig" })
         map(
           "n",
           "<leader>fp",
           function() mega.picker.find_files({ picker = "smart_open", cwd = vim.fn.expand(vim.g.code_path), title = "in ~/code" }) end,
-          { desc = "[f]ind in ~/code [p]rojects" }
+          { "[f]ind in ~/code [p]rojects" }
         )
-        map("n", "<leader>fr", ts.resume, { desc = "[f]ind [r]esume" })
-        map("n", "<leader>f.", ts.oldfiles, { desc = "[f]ind Recent Files (\".\" for repeat)" })
-        map("n", "<leader><leader>", ts.buffers, { desc = "[ ] Find existing buffers" })
+        map("n", "<leader>fr", ts.resume, { "[f]ind [r]esume" })
+        map("n", "<leader>f.", ts.oldfiles, { "[f]ind recent files" })
+        map("n", "gb", ts.buffers, { "find existing buffers" })
 
         -- Slightly advanced example of overriding default behavior and theme
         map("n", "<leader>/", function()
@@ -1174,9 +1172,9 @@ return {
             winblend = 10,
             previewer = false,
           }))
-        end, { desc = "[/] Fuzzily search in current buffer" })
-        map("n", "<leader>fn", function() mega.picker.find_files({ picker = "smart_open", cwd = vim.g.notes_path }) end, { desc = "[f]ind in [n]otes" })
-        map("n", "<leader>nf", function() mega.picker.find_files({ picker = "smart_open", cwd = vim.g.notes_path }) end, { desc = "[f]ind in [n]otes" })
+        end, { "[/] Fuzzily search in current buffer" })
+        map("n", "<leader>fn", function() mega.picker.find_files({ picker = "smart_open", cwd = vim.g.notes_path }) end, { "[f]ind in [n]otes" })
+        map("n", "<leader>nf", function() mega.picker.find_files({ picker = "smart_open", cwd = vim.g.notes_path }) end, { "[f]ind in [n]otes" })
 
         -- Shortcut for searching your Neovim configuration files
       end

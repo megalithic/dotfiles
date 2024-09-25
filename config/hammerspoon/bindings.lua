@@ -125,14 +125,14 @@ req("hyper", { id = "utils" })
 -- # wm/window management ---------------------------------------------------------
 local wmModality = req("modality", { id = "wm", key = "l" }):start()
 wmModality
-  :bind({}, "r", req("wm").placeAllApps, function() wmModality:delayedExit(0.1) end)
+  :bind({}, "r", req("wm").placeAllApps, function() wmModality:exit(0.1) end)
   :bind({}, "escape", function() wmModality:exit() end)
-  :bind({}, "space", function() wm.place(POSITIONS.preview) end, function() wmModality:delayedExit(0.1) end)
-  :bind({}, "return", function() wm.place(POSITIONS.full) end, function() wmModality:delayedExit(0.1) end)
+  :bind({}, "space", function() wm.place(POSITIONS.preview) end, function() wmModality:exit(0.1) end)
+  :bind({}, "return", function() wm.place(POSITIONS.full) end, function() wmModality:exit(0.1) end)
   :bind({ "shift" }, "return", function()
     wm.toNextScreen()
     wm.place(POSITIONS.full)
-  end, function() wmModality:delayedExit(0.1) end)
+  end, function() wmModality:exit() end)
   :bind(
     {},
     "l",

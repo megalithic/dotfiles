@@ -1,7 +1,95 @@
-local ftplugin = require("mega.ftplugin")
+------@class FiletypeSettings
+------@field g table<string, any>
+------@field bo vim.bo
+------@field wo vim.wo
+------@field opt vim.Option
+------@field plugins {[string]: fun(module: table)}
+---
+------@param args {[1]: string, [2]: string, [3]: string, [string]: boolean | integer}[]
+------@param buf integer
+---local function apply_ft_key_mappings(args, buf)
+---  vim.iter(args):each(function(m)
+---    assert(#m == 3, "map args must be a table with at least 3 items")
+---    local opts = vim.iter(m):fold({ buffer = buf }, function(acc, key, item)
+---      if type(key) == "string" then acc[key] = item end
+---      return acc
+---    end)
+---    map(m[1], m[2], m[3], opts)
+---  end)
+---end
+---
+------ A convenience wrapper that calls the ftplugin config for a plugin if it exists
+------ and warns me if the plugin is not installed
+------@param configs table<string, fun(module: table)>
+---local function ftplugin_conf(configs)
+---  if type(configs) ~= "table" then return end
+---  for name, callback in pairs(configs) do
+---    local ok, plugin = mega.pcall(require, name)
+---    if ok then callback(plugin) end
+---  end
+---end
+---
+------ This function is an alternative API to using ftplugin files. It allows defining
+------ filetype settings in a single place, then creating FileType autocommands from this definition
+------
+------ e.g.
+------ ```lua
+------   as.filetype_settings({
+------     lua = {
+------      opt = {foldmethod = 'expr' },
+------      bo = { shiftwidth = 2 }
+------     },
+------    [{'c', 'cpp'}] = {
+------      bo = { shiftwidth = 2 }
+------    }
+------   })
+------ ```
+------
+----- ---@param map {[string|string[]]: FiletypeSettings | {[integer]: fun(args: AutocmdArgs)}}
+---local function ft_settings(map)
+---  local commands = vim.iter(map):map(function(ft, settings)
+---    local name = type(ft) == "table" and table.concat(ft, ",") or ft
+---    return {
+---      pattern = ft,
+---      event = "FileType",
+---      desc = ("ft settings for %s"):format(name),
+---      command = function(args)
+---        local bufnr = args.buf
+---        vim.iter(settings):each(function(key, value)
+---          if key == "opt" then key = "opt_local" end
+---          if key == "bufvar" then
+---            for k, v in pairs(value) do
+---              vim.api.nvim_buf_set_var(bufnr, k, v)
+---            end
+---          end
+---          if key == "mappings" or key == "keys" then return apply_ft_key_mappings(value, bufnr) end
+---          if key == "compiler" then vim.api.nvim_buf_call(bufnr, function() vim.cmd.compiler({ args = { value } }) end) end
+---          if key == "plugins" then return ftplugin_conf(value) end
+---          if key == "callback" and type(value) == "function" then return mega.pcall(value, args) end
+---          if key == "abbr" then
+---            vim.api.nvim_buf_call(bufnr, function()
+---              for k, v in pairs(value) do
+---                -- vim.cmd(string.format("iabbrev <buffer> %s %s", k, v))
+---                dbg(value)
+---
+---                vim.cmd.iabbrev(string.format("<buffer> %s %s", k, v))
+---              end
+---            end)
+---          end
+---          if type(key) == "function" then return mega.pcall(key, args) end
+---
+---          vim.iter(value):each(function(option, setting) vim[key][option] = setting end)
+---        end)
+---      end,
+---    }
+---  end)
+---  require("mega.autocmds").augroup("mega-filetype-settings", unpack(commands:totable()))
+---end
 
+local ftplugin = require("mega.ftplugin")
 ftplugin.extend_all({
-  elixir = {
+  -- ft_settings({
+  [{ "elixir", "eelixir" }] = {
     abbr = {
       ep = "|>",
       epry = [[require IEx; IEx.pry]],
@@ -17,9 +105,22 @@ ftplugin.extend_all({
     --   iskeyword = vim.opt.iskeyword + { "!", "?", "-" },
     --   indentkeys = vim.opt.indentkeys + { "end" },
     -- },
-    callback = function()
+    callback = function(args)
+      dbg(args)
+
+      local function ElixirPryTransform(cmd)
+        local modified_cmd = cmd:gsub("^mix%s*", "")
+        local returned_cmd = "MIX_ENV=test iex --dbg pry -S mix do " .. modified_cmd .. " --trace + run -e 'System.halt'"
+        dbg(returned_cmd)
+
+        return returned_cmd
+      end
+      vim.b["test#custom_transformations"] = { elixir = ElixirPryTransform }
+      vim.b["test#transformation"] = "elixir"
+
       -- REF:
       -- running tests in iex:
+      -- https://www.elixirstreams.com/tips/test-breakpoints
       -- https://curiosum.com/til/run-tests-in-elixir-iex-shell?utm_medium=email&utm_source=elixir-radar
       vim.cmd([[setlocal iskeyword+=!,?,-]])
       vim.cmd([[setlocal indentkeys-=0{]])
@@ -79,36 +180,16 @@ ftplugin.extend_all({
       commentstring = [[# %s]],
     },
   },
-  gitcommit = {
-    -- keys = {
-    --   { "q", function() vim.cmd("cq!") end, { nowait = true, buffer = true, desc = "abort", bang = true } },
-    -- },
-    opt = {
-      list = false,
-      number = false,
-      relativenumber = false,
-      cursorline = false,
-      spell = true,
-      spelllang = "en_gb",
-      colorcolumn = "50,72",
-      conceallevel = 2,
-      concealcursor = "nc",
-    },
-    callback = function()
-      vim.keymap.set("n", "q", function() vim.cmd("cq!", { bang = true }) end, { buffer = true, nowait = true, desc = "Abort" })
-      vim.fn.matchaddpos("DiagnosticVirtualTextError", { { 1, 50, 10000 } })
-      if vim.fn.prevnonblank(".") ~= vim.fn.line(".") then vim.cmd.startinsert() end
-    end,
-  },
   gitrebase = {
     function()
       vim.keymap.set("n", "q", function() vim.cmd("cq!", { bang = true }) end, { nowait = true, desc = "abort" })
     end,
   },
-  ["NeogitCommitMessage"] = {
+  [{ "gitcommit", "NeogitCommitMessage" }] = {
     -- keys = {
-    --   { "q", function() vim.cmd("cq!") end, { nowait = true, buffer = true, desc = "abort", bang = true } },
+    --   { "n", "q", function() vim.cmd("cq!") end, { nowait = true, buffer = true, desc = "abort", bang = true } },
     -- },
+    bo = { bufhidden = "delete" },
     opt = {
       list = false,
       number = false,
@@ -123,17 +204,17 @@ ftplugin.extend_all({
     callback = function()
       vim.keymap.set("n", "q", function() vim.cmd("cq!", { bang = true }) end, { buffer = true, nowait = true, desc = "Abort" })
       vim.fn.matchaddpos("DiagnosticVirtualTextError", { { 1, 50, 10000 } })
-      if vim.fn.prevnonblank(".") ~= vim.fn.line(".") then vim.cmd.startinsert() end
+      if vim.fn.prevnonblank(0) ~= vim.fn.line(".") then vim.cmd.startinsert() end
     end,
   },
   fugitiveblame = {
     keys = {
-      { "gp", "<CMD>echo system('git findpr ' . expand('<cword>'))<CR>" },
+      { "n", "gp", "<CMD>echo system('git findpr ' . expand('<cword>'))<CR>" },
     },
   },
   help = {
     keys = {
-      { "gd", "<C-]>" },
+      { "n", "gd", "<C-]>" },
     },
     opt = {
       signcolumn = "no",
@@ -160,7 +241,7 @@ ftplugin.extend_all({
   },
   man = {
     keys = {
-      { "gd", "<C-]>" },
+      { "n", "gd", "<C-]>" },
     },
     opt = {
       signcolumn = "no",
@@ -207,7 +288,7 @@ ftplugin.extend_all({
       vll = "vim.log.levels",
     },
     keys = {
-      { "gh", "<CMD>exec 'help ' . expand('<cword>')<CR>" },
+      { "n", "gh", "<CMD>exec 'help ' . expand('<cword>')<CR>" },
     },
     opt = {
       comments = ":---,:--",
@@ -230,6 +311,7 @@ ftplugin.extend_all({
       cbdt = [[Co-authored-by: Dan Thiffault <dan@ternit.com>]],
       cbjm = [[Co-authored-by: Jia Mu <jia@ternit.com>]],
       cbam = [[Co-authored-by: Ali Marsh<ali@ternit.com>]],
+      mtg = [[## Meeting 󱛡 -> ]],
     },
     opt = {
       relativenumber = false,
@@ -253,7 +335,7 @@ ftplugin.extend_all({
       -- vim.o.linebreak = true
     },
     -- keys = {
-    --   -- { "<leader>td", require("markdown").task_mark_done },
+    --   -- { "n", "<leader>td", require("markdown").task_mark_done },
     --   -- { "<leader>tu", require("markdown").task_mark_undone },
     -- },
     callback = function(bufnr)
@@ -262,93 +344,93 @@ ftplugin.extend_all({
       local is_in_notes = bufname:match("_notes") ~= nil
       local is_in_daily = bufname:match("daily") ~= nil
 
-      if is_in_notes then
-        -- Generate/update a Markdown TOC
-        -- To generate the TOC I use the markdown-toc plugin
-        -- https://github.com/jonschlinkert/markdown-toc
-        -- And the markdown-toc plugin installed as a LazyExtra
-        -- vim.keymap.set("n", "<leader>mt", function()
-        --   local path = vim.fn.expand("%") -- Expands the current file name to a full path
-        --   local bufnr = 0 -- The current buffer number, 0 references the current active buffer
-        --   -- Save the current view
-        --   -- If I don't do this, my folds are lost when I run this keymap
-        --   vim.cmd("mkview")
-        --   -- Retrieves all lines from the current buffer
-        --   local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-        --   local toc_exists = false -- Flag to check if TOC marker exists
-        --   local frontmatter_end = 0 -- To store the end line number of frontmatter
-        --   -- Check for frontmatter and TOC marker
-        --   for i, line in ipairs(lines) do
-        --     if i == 1 and line:match("^---$") then
-        --       -- Frontmatter start detected, now find the end
-        --       for j = i + 1, #lines do
-        --         if lines[j]:match("^---$") then
-        --           frontmatter_end = j -- Save the end line of the frontmatter
-        --           break
-        --         end
-        --       end
-        --     end
-        --     -- Checks for the TOC marker
-        --     if line:match("^%s*<!%-%-%s*toc%s*%-%->%s*$") then
-        --       toc_exists = true -- Sets the flag if TOC marker is found
-        --       break -- Stops the loop if TOC marker is found
-        --     end
-        --   end
-        --   -- Inserts H1 heading and <!-- toc --> at the appropriate position
-        --   if not toc_exists then
-        --     if frontmatter_end > 0 then
-        --       -- Insert after frontmatter
-        --       vim.api.nvim_buf_set_lines(bufnr, frontmatter_end, frontmatter_end, false, { "", "# Contents", "<!-- toc -->" })
-        --     else
-        --       -- Insert at the top if no frontmatter
-        --       vim.api.nvim_buf_set_lines(bufnr, 0, 0, false, { "# Contents", "<!-- toc -->" })
-        --     end
-        --   end
-        --   -- Silently save the file, in case TOC being created for first time (yes, you need the 2 saves)
-        --   vim.cmd("silent write")
-        --   -- Silently run markdown-toc to update the TOC without displaying command output
-        --   vim.fn.system("markdown-toc -i " .. path)
-        --   vim.cmd("edit!") -- Reloads the file to reflect the changes made by markdown-toc
-        --   vim.cmd("silent write") -- Silently save the file
-        --   vim.notify("TOC updated and file saved", L.INFO)
-        --   -- -- In case a cleanup is needed, leaving this old code here as a reference
-        --   -- -- I used this code before I implemented the frontmatter check
-        --   -- -- Moves the cursor to the top of the file
-        --   -- vim.api.nvim_win_set_cursor(bufnr, { 1, 0 })
-        --   -- -- Deletes leading blank lines from the top of the file
-        --   -- while true do
-        --   --   -- Retrieves the first line of the buffer
-        --   --   local line = vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1]
-        --   --   -- Checks if the line is empty
-        --   --   if line == "" then
-        --   --     -- Deletes the line if it's empty
-        --   --     vim.api.nvim_buf_set_lines(bufnr, 0, 1, false, {})
-        --   --   else
-        --   --     -- Breaks the loop if the line is not empty, indicating content or TOC marker
-        --   --     break
-        --   --   end
-        --   -- end
-        --   -- Restore the saved view (including folds)
-        --   vim.cmd("loadview")
-        -- end, { desc = "[P]Insert/update Markdown TOC" })
-
-        --   vim.keymap.set("n", "<bs><bs>", function()
-        --     local notes = vim.split(
-        --       vim.fn.glob(
-        --         "`find "
-        --           .. vim.env.HOME
-        --           .. "/Documents/_notes/daily/**/*.md -type f -print0 | xargs -0 stat -f '%m %N' | sort -nr | head -2 | cut -f2- -d' ' | tail -n1`"
-        --       ),
-        --       "\n",
-        --       { trimempty = true }
-        --     )
-        --     if notes ~= nil and #notes == 1 then
-        --       vim.cmd("edit " .. notes[1])
-        --     else
-        --       vim.notify("No last note found.", "WARN")
-        --     end
-        --   end)
-      end
+      -- if is_in_notes then
+      --   -- Generate/update a Markdown TOC
+      --   -- To generate the TOC I use the markdown-toc plugin
+      --   -- https://github.com/jonschlinkert/markdown-toc
+      --   -- And the markdown-toc plugin installed as a LazyExtra
+      --   -- vim.keymap.set("n", "<leader>mt", function()
+      --   --   local path = vim.fn.expand("%") -- Expands the current file name to a full path
+      --   --   local bufnr = 0 -- The current buffer number, 0 references the current active buffer
+      --   --   -- Save the current view
+      --   --   -- If I don't do this, my folds are lost when I run this keymap
+      --   --   vim.cmd("mkview")
+      --   --   -- Retrieves all lines from the current buffer
+      --   --   local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+      --   --   local toc_exists = false -- Flag to check if TOC marker exists
+      --   --   local frontmatter_end = 0 -- To store the end line number of frontmatter
+      --   --   -- Check for frontmatter and TOC marker
+      --   --   for i, line in ipairs(lines) do
+      --   --     if i == 1 and line:match("^---$") then
+      --   --       -- Frontmatter start detected, now find the end
+      --   --       for j = i + 1, #lines do
+      --   --         if lines[j]:match("^---$") then
+      --   --           frontmatter_end = j -- Save the end line of the frontmatter
+      --   --           break
+      --   --         end
+      --   --       end
+      --   --     end
+      --   --     -- Checks for the TOC marker
+      --   --     if line:match("^%s*<!%-%-%s*toc%s*%-%->%s*$") then
+      --   --       toc_exists = true -- Sets the flag if TOC marker is found
+      --   --       break -- Stops the loop if TOC marker is found
+      --   --     end
+      --   --   end
+      --   --   -- Inserts H1 heading and <!-- toc --> at the appropriate position
+      --   --   if not toc_exists then
+      --   --     if frontmatter_end > 0 then
+      --   --       -- Insert after frontmatter
+      --   --       vim.api.nvim_buf_set_lines(bufnr, frontmatter_end, frontmatter_end, false, { "", "# Contents", "<!-- toc -->" })
+      --   --     else
+      --   --       -- Insert at the top if no frontmatter
+      --   --       vim.api.nvim_buf_set_lines(bufnr, 0, 0, false, { "# Contents", "<!-- toc -->" })
+      --   --     end
+      --   --   end
+      --   --   -- Silently save the file, in case TOC being created for first time (yes, you need the 2 saves)
+      --   --   vim.cmd("silent write")
+      --   --   -- Silently run markdown-toc to update the TOC without displaying command output
+      --   --   vim.fn.system("markdown-toc -i " .. path)
+      --   --   vim.cmd("edit!") -- Reloads the file to reflect the changes made by markdown-toc
+      --   --   vim.cmd("silent write") -- Silently save the file
+      --   --   vim.notify("TOC updated and file saved", L.INFO)
+      --   --   -- -- In case a cleanup is needed, leaving this old code here as a reference
+      --   --   -- -- I used this code before I implemented the frontmatter check
+      --   --   -- -- Moves the cursor to the top of the file
+      --   --   -- vim.api.nvim_win_set_cursor(bufnr, { 1, 0 })
+      --   --   -- -- Deletes leading blank lines from the top of the file
+      --   --   -- while true do
+      --   --   --   -- Retrieves the first line of the buffer
+      --   --   --   local line = vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1]
+      --   --   --   -- Checks if the line is empty
+      --   --   --   if line == "" then
+      --   --   --     -- Deletes the line if it's empty
+      --   --   --     vim.api.nvim_buf_set_lines(bufnr, 0, 1, false, {})
+      --   --   --   else
+      --   --   --     -- Breaks the loop if the line is not empty, indicating content or TOC marker
+      --   --   --     break
+      --   --   --   end
+      --   --   -- end
+      --   --   -- Restore the saved view (including folds)
+      --   --   vim.cmd("loadview")
+      --   -- end, { desc = "[P]Insert/update Markdown TOC" })
+      --
+      --   --   vim.keymap.set("n", "<bs><bs>", function()
+      --   --     local notes = vim.split(
+      --   --       vim.fn.glob(
+      --   --         "`find "
+      --   --           .. vim.env.HOME
+      --   --           .. "/Documents/_notes/daily/**/*.md -type f -print0 | xargs -0 stat -f '%m %N' | sort -nr | head -2 | cut -f2- -d' ' | tail -n1`"
+      --   --       ),
+      --   --       "\n",
+      --   --       { trimempty = true }
+      --   --     )
+      --   --     if notes ~= nil and #notes == 1 then
+      --   --       vim.cmd("edit " .. notes[1])
+      --   --     else
+      --   --       vim.notify("No last note found.", "WARN")
+      --   --     end
+      --   --   end)
+      -- end
 
       --   -- Allow bullets.vim and nvim-autopairs to coexist.
       --   -- REF: https://github.com/ribru17/.dotfiles/blob/0f09207e5587b5217d631cb09885957906eaaa7a/.config/nvim/after/ftplugin/markdown.lua#L7-L19

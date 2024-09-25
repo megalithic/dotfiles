@@ -242,7 +242,7 @@ return {
         --   references_handler(err, result, ctx, config)
         -- end
 
-        local map = function(keys, func, desc) vim.keymap.set("n", keys, func, { buffer = bufnr, desc = "[lsp] " .. desc }) end
+        local map = function(keys, func, desc) vim.keymap.set("n", keys, func, { buffer = bufnr, desc = "[+lsp] " .. desc }) end
         local icons = require("mega.settings").icons
 
         -- if client and client.supports_method("textDocument/inlayHint", { bufnr = bufnr }) then
@@ -372,7 +372,7 @@ return {
                   vim.notify(
                     string.format("could not perform rename: %s -> %s", position_params.oldName, position_params.newName),
                     L.ERROR,
-                    { title = "[LSP] rename", timeout = 500 }
+                    { title = "[lsp] rename", timeout = 500 }
                   )
 
                   return
@@ -548,13 +548,37 @@ return {
             pattern = "end",
             event = { "LspProgress" },
             desc = "Handle lsp progress message scenarios",
-            command = function(ev)
+            command = function(evt)
               if pcall(require, "fidget") then
-                local token = ev.data.params.token
-                if ev.data.result and ev.data.result.token then token = ev.data.result.token end
-                local client_id = ev.data.client_id
+                local token = evt.data.params.token
+                if evt.data.result and evt.data.result.token then token = evt.data.result.token end
+                local client_id = evt.data.client_id
                 local c = client_id and vim.lsp.get_client_by_id(client_id)
                 if c and token then require("fidget").notification.remove(c.name, token) end
+              end
+            end,
+          },
+        })
+
+        augroup("LspCodeLens", {
+          {
+            event = { "TextChanged", "InsertLeave", "CursorHold", "LspAttach", "BufEnter" },
+            desc = "Show codelens entries",
+            command = function(evt)
+              local bufnr = evt.buf
+
+              -- FIXME: refactor and DRY this func:
+              local function check_codelens_support()
+                local clients = vim.lsp.get_clients({ bufnr = bufnr })
+                for _, c in ipairs(clients) do
+                  if c.server_capabilities.codeLensProvider then return true end
+                end
+                return false
+              end
+
+              if check_codelens_support() then
+                vim.lsp.codelens.refresh({ bufnr = bufnr })
+                vim.api.nvim_exec_autocmds("User", { pattern = "LspAttached" })
               end
             end,
           },
@@ -567,20 +591,6 @@ return {
             command = diagnostic_popup,
           },
         })
-
-        -- augroup("LspFormat", {
-        --   {
-        --     event = { "BufWritePre" },
-        --     desc = "Auto format via LSP",
-        --     command = function(args)
-        --       require("conform").format({
-        --         bufnr = args.buf,
-        --         lsp_fallback = true,
-        --         quiet = true,
-        --       })
-        --     end,
-        --   },
-        -- })
 
         -- if client and client.server_capabilities.documentHighlightProvider then
         --   augroup("LspDocumentHighlights", {

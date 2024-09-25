@@ -163,6 +163,7 @@ map("i", "?", "?<C-g>u")
 -- we don't want line joining with `J`
 map("n", "J", "<nop>")
 
+-- go to last buffer
 map("n", "<localleader><localleader>", "<C-^>")
 
 -- [[ better movements within a buffer ]] --------------------------------------
