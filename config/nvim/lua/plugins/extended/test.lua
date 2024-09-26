@@ -47,14 +47,13 @@ if vim.g.tester == "neotest" then
   }
 elseif vim.g.tester == "vim-test" then
   keys = {
-    { "<localleader>td", "<cmd>TestNearest<cr>", desc = "debug (n)earest test" },
-    { "<localleader>tn", "<cmd>TestNearest<cr>", desc = "run (n)earest test" },
-    { "<localleader>ta", "<cmd>TestFile<cr>", desc = "run (a)ll tests in file" },
-    { "<localleader>tf", "<cmd>TestFile<cr>", desc = "run (a)ll tests in file" },
-    { "<localleader>tl", "<cmd>TestLast<cr>", desc = "run (l)ast test" },
-    { "<localleader>ts", "<cmd>TestSuite<cr>", desc = "run test (s)uite" },
+    { "<localleader>tn", "<cmd>TestNearest<cr>", desc = "run [n]earest test" },
+    { "<localleader>ta", "<cmd>TestFile<cr>", desc = "run [a]ll tests in file" },
+    { "<localleader>tf", "<cmd>TestFile<cr>", desc = "run [a]ll tests in [f]ile" },
+    { "<localleader>tl", "<cmd>TestLast<cr>", desc = "run [l]ast test" },
+    { "<localleader>ts", "<cmd>TestSuite<cr>", desc = "run test [s]uite" },
     -- { "<localleader>tT", "<cmd>TestLast<cr>", desc = "run _last test" },
-    { "<localleader>tv", "<cmd>TestVisit<cr>", desc = "(v)isit last test" },
+    { "<localleader>tv", "<cmd>TestVisit<cr>", desc = "[v]isit last test" },
     { "<localleader>tp", "<cmd>A<cr>", desc = "open alt (edit)" },
     -- { "<localleader><localleader>", "<cmd>A<cr>", desc = "open alt (edit)" },
     { "<localleader>tP", "<cmd>AV<cr>", desc = "open alt (vsplit)" },
@@ -114,7 +113,6 @@ return {
       vim.g["test#custom_strategies"] = {
         termsplit = function(cmd) mega.term(term_opts(cmd)) end,
         termvsplit = function(cmd)
-          dbg(cmd)
           if vim.opt.lines:get() * 4 < vim.opt.columns:get() then
             mega.term(term_opts(cmd, { direction = "vertical", size = 100 }))
           else

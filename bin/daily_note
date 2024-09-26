@@ -19,7 +19,7 @@ __help() {
   printf -- "  -p          return previous daily note path\n"
   printf -- "  -m          method used for daily note: [zk, note]\n"
   printf -- "  -r          opens raw daily note without interacting with tmux\n"
-  printf -- "  -t          displays the tasks for the day\n"
+  printf -- "  -t          displays the day's tasks: [today, yesterday]\n"
   printf -- "\n"
 
   exit 0
@@ -58,17 +58,13 @@ function __get_last_daily_note_path() {
   last_daily_note_name=$(echo "$last_daily_note_file_name" | cut -d"." -f1)
 }
 
-function __get_last_daily_note_tasks() {
-  __get_note_tasks "${last_daily_note_path}"
-}
-
 function __build_tasks() {
   # gets the previous day's tasks
   tasks="$(__get_note_tasks ${last_daily_note_path})"
 
   if [[ -n "$tasks" ]]; then
     # removes completed tasks, removes blank lines, subs strings "tomorrow" -> "today"
-    printf -- "%s" $tasks | sed 's/- \[x\].*//g' | sed '/^[[:space:]]*$/d' | sed 's/tomorrow/today/g'
+    printf -- "%s" $tasks | sed 's/- \[[x/]\].*//g' | sed '/^[[:space:]]*$/d' | sed 's/tomorrow/today/g'
   else
     printf -- "- [ ] TODO item"
   fi

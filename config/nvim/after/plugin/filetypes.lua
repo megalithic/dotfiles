@@ -105,19 +105,7 @@ ftplugin.extend_all({
     --   iskeyword = vim.opt.iskeyword + { "!", "?", "-" },
     --   indentkeys = vim.opt.indentkeys + { "end" },
     -- },
-    callback = function(args)
-      dbg(args)
-
-      local function ElixirPryTransform(cmd)
-        local modified_cmd = cmd:gsub("^mix%s*", "")
-        local returned_cmd = "MIX_ENV=test iex --dbg pry -S mix do " .. modified_cmd .. " --trace + run -e 'System.halt'"
-        dbg(returned_cmd)
-
-        return returned_cmd
-      end
-      vim.b["test#custom_transformations"] = { elixir = ElixirPryTransform }
-      vim.b["test#transformation"] = "elixir"
-
+    callback = function(bufnr, args)
       -- REF:
       -- running tests in iex:
       -- https://www.elixirstreams.com/tips/test-breakpoints
@@ -152,6 +140,21 @@ ftplugin.extend_all({
       xmap("<localleader>ok", [[:lua require("mega.utils").wrap_selected_nodes("{:ok, ", "}")<CR>]], "copy module alias")
       nmap("<localleader>err", [[:lua require("mega.utils").wrap_cursor_node("{:error, ", "}")<CR>]], "copy module alias")
       xmap("<localleader>err", [[:lua require("mega.utils").wrap_selected_nodes("{:error, ", "}")<CR>]], "copy module alias")
+
+      if vim.g.tester == "vim-test" then
+        nmap("<localleader>td", function()
+          local function elixir_dbg_transform(cmd)
+            -- local modified_cmd = cmd:gsub("^mix%s*", "")
+            -- local returned_cmd = "MIX_ENV=test iex --dbg pry -S mix do " .. modified_cmd .. " --trace + run -e 'System.halt'"
+            local returned_cmd = string.format("iex -S %s -b", cmd)
+
+            return returned_cmd
+          end
+          vim.g["test#custom_transformations"] = { elixir = elixir_dbg_transform }
+          vim.g["test#transformation"] = "elixir"
+          vim.cmd("TestNearest")
+        end, "[d]ebug [n]earest test")
+      end
 
       local has_wk, wk = pcall(require, "which-key")
       if has_wk then wk.add({

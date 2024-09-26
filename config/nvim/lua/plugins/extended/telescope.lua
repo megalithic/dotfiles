@@ -538,7 +538,11 @@ return {
               -- extensions("corrode").corrode(with_title(topts, { title = "find files (corrode)" }))
               builtin[key](with_title(topts, { title = "find files" }))
             else
-              builtin[key](ivy(topts))
+              if topts["theme"] ~= nil then
+                builtin[key](topts)
+              else
+                builtin[key](ivy(topts))
+              end
             end
           end
         end,
@@ -746,9 +750,13 @@ return {
           scroll_strategy = "limit",
           sorting_strategy = "ascending",
           path_display = { "filename_first, truncate" },
-          -- file_previewer = require("telescope.previewers").vim_buffer_cat.new,
-          -- grep_previewer = require("telescope.previewers").vim_buffer_vimgrep.new,
-          -- qflist_previewer = require("telescope.previewers").vim_buffer_qflist.new,
+          -- file_previewer = previewers.cat.new,
+          -- grep_previewer = previewers.cat.new,
+          -- qflist_previewer = previewers.cat.new,
+
+          -- file_previewer = previewers.vim_buffer_cat.new,
+          -- grep_previewer = previewers.vim_buffer_vimgrep.new,
+          -- qflist_previewer = previewers.vim_buffer_qflist.new,
           layout_strategy = "horizontal",
           results_title = false,
           prompt_prefix = " ",
@@ -850,7 +858,13 @@ return {
         },
         pickers = {
           lsp_definitions = ivy({}),
-          buffers = dropdown({}),
+          buffers = dropdown({
+            mappings = {
+              n = {
+                ["d"] = require("telescope.actions").delete_buffer,
+              },
+            },
+          }),
           highlights = ivy({}),
           find_files = ivy({
             path_display = filename_first,
@@ -1163,7 +1177,7 @@ return {
         )
         map("n", "<leader>fr", ts.resume, { "[f]ind [r]esume" })
         map("n", "<leader>f.", ts.oldfiles, { "[f]ind recent files" })
-        map("n", "gb", ts.buffers, { "find existing buffers" })
+        map("n", "gb", function() ts.buffers({ theme = "dropdown" }) end, { "find existing buffers" })
 
         -- Slightly advanced example of overriding default behavior and theme
         map("n", "<leader>/", function()

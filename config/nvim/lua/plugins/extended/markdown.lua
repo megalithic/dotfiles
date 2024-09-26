@@ -135,8 +135,9 @@ return {
           -- below = "▀",
           -- border = true,
           -- width = { "full", "full", "block", "block", "block" },
-          -- left_pad = 2,
-          -- right_pad = 2,
+          width = { "full", "full", "block" },
+          left_pad = 1,
+          right_pad = 2,
           -- min_width = 20,
         },
         code = {
@@ -199,7 +200,7 @@ return {
           },
           checked = {
             -- Replaces '[x]' of 'task_list_marker_checked'
-            icon = "󰱒 ", -- alts: 󰱒
+            icon = " ", -- alts: 󰱒   
             -- Highligh for the checked icon
             highlight = "RenderMarkdownChecked",
           },
@@ -216,9 +217,10 @@ return {
           custom = {
             -- todo = { raw = "[-]", rendered = " 󰥔 ", highlight = "RenderMarkdownTodo" },
             todo = { raw = "[-]", rendered = "󱗽 ", highlight = "RenderMarkdownListTodo" },
-            event = { raw = "[|]", rendered = "󰀠 ", highlight = "RenderMarkdownListTodo" },
-            wip = { raw = "[.]", rendered = "󰡖 ", highlight = "RenderMarkdownListTodo" },
-            skipped = { raw = "[/]", rendered = "󱋭 ", highlight = "RenderMarkdownListSkipped" },
+            event = { raw = "[|]", rendered = "󰀠 ", highlight = "RenderMarkdownListEvent" },
+            wip = { raw = "[.]", rendered = "󰡖 ", highlight = "RenderMarkdownListWip" },
+            -- skipped = { raw = "[/]", rendered = "󱋭 ", highlight = "RenderMarkdownListSkipped" },
+            trash = { raw = "[/]", rendered = " ", highlight = "RenderMarkdownListSkipped" },
 
             fire = { raw = "[f]", rendered = "󰈸 ", highlight = "RenderMarkdownListFire" },
             star = { raw = "[s]", rendered = " ", highlight = "RenderMarkdownListStar" },

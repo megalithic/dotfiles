@@ -5,6 +5,7 @@ if not ok then
 end
 
 local C = require("mega.lush_theme.colors")
+local colors = C
 local tc = {
   black = C.bg0,
   red = C.red,
@@ -275,7 +276,7 @@ local theme = lush(function(injected_functions)
     LspReferenceRead({ bg = C.transparent, gui = "underline" }),
     LspReferenceWrite({ DiagnosticInfo, bg = C.bg_dark, gui = "underline,bold,italic" }),
 
-    LspCodeLens({ DiagnosticInfo, fg = C.bg2 }), -- Used to color the virtual text of the codelens,
+    LspCodeLens({ DiagnosticInfo, fg = C.bg2.li(3) }), -- Used to color the virtual text of the codelens,
     LspCodeLensSeparator({ DiagnosticHint }),
 
     LspInlayHint({ NonText }),
@@ -759,6 +760,16 @@ local theme = lush(function(injected_functions)
 
     ---- :help elixir -------------------------------------------
 
+    -- elixirFunctionDeclaration = "rustAttribute",
+    -- elixirDefine = "typescriptBOMWindowMethod",
+    -- elixirModuleDefine = "typescriptBOMWindowMethod",
+    -- elixirBlockDefinition = "typescriptBOMWindowMethod",
+    -- elixirModuleDeclaration = "typescriptDecorator",
+    -- elixirInclude = "rustEnum",
+    elixirAlias({ SpecialChar }),
+    elixirAtom({ Number }),
+    -- elixirId({ Type }),
+
     elixirStringDelimiter({ Green }),
     elixirKeyword({ Orange }),
     elixirInterpolation({ Yellow }),
@@ -766,8 +777,9 @@ local theme = lush(function(injected_functions)
     elixirSelf({ Purple }),
     elixirPseudoVariable({ Purple }),
     elixirModuleDefine({ Red, gui = "italic,bold" }),
+    elixirBlock({ fg = C.brown }),
     elixirBlockDefinition({ RedItalic }),
-    elixirDefine({ RedItalic }),
+    elixirDefine({ RedItalic, gui = "bold,italic" }),
     elixirPrivateDefine({ PurpleItalic }),
     -- elixirPrivateFunctionDeclaration({ Purple }),
     elixirGuard({ RedItalic }),
@@ -1196,6 +1208,37 @@ local theme = lush(function(injected_functions)
     OilTypeFile({ NonText }),
     OilTypeLink({ Constant }),
     OilTypeSocket({ Keyword }),
+
+    ---- render-markdown -------------------------------------------------------
+    RenderMarkdownChecked({ fg = colors.green }),
+    RenderMarkdownUnchecked({ fg = colors.blue }),
+    RenderMarkdownTodo({ RenderMarkdownUnchecked }),
+
+    RenderMarkdownH1({ fg = colors.green, bg = C.bg_green, gui = "bold,italic,underline" }),
+    RenderMarkdownH2({ fg = colors.yellow, bg = C.bg_yellow.li(5) }),
+    RenderMarkdownH3({ fg = colors.blue, bg = C.bg_blue }),
+    RenderMarkdownH4({ fg = colors.orange }),
+    RenderMarkdownH5({ fg = colors.red }),
+    RenderMarkdownH6({ fg = colors.brown }),
+
+    RenderMarkdownH1Bg({ RenderMarkdownH1 }),
+    RenderMarkdownH2Bg({ RenderMarkdownH2 }),
+    RenderMarkdownH3Bg({ RenderMarkdownH3 }),
+    RenderMarkdownH4Bg({ RenderMarkdownH4 }),
+    RenderMarkdownH5Bg({ RenderMarkdownH5 }),
+
+    RenderMarkdownListYes({ fg = colors.green }),
+    RenderMarkdownListWip({ fg = colors.cyan }),
+    RenderMarkdownListTodo({ fg = colors.orange }),
+    RenderMarkdownListNo({ fg = colors.red }),
+    RenderMarkdownListFire({ fg = colors.red }),
+    RenderMarkdownListIdea({ fg = colors.yellow }),
+    RenderMarkdownListStar({ fg = colors.yellow }),
+    RenderMarkdownListSkipped({ fg = colors.red }),
+    RenderMarkdownListTrash({ fg = colors.red }),
+    RenderMarkdownListQuestion({ fg = colors.yellow }),
+    RenderMarkdownListInfo({ fg = colors.cyan }),
+    RenderMarkdownListImportant({ fg = colors.orange }),
   }
 end)
 
