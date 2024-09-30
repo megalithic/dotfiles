@@ -252,6 +252,7 @@ return {
           { mode = "n", keys = "<leader>t", desc = "+terminal" },
           { mode = "n", keys = "<leader>r", desc = "+repl" },
           { mode = "n", keys = "<leader>l", desc = "+lsp" },
+          { mode = "n", keys = "<leader>n", desc = "+notes" },
           { mode = "n", keys = "<leader>g", desc = "+git" },
           { mode = "n", keys = "<leader>p", desc = "+plugins" },
           { mode = "n", keys = "<leader>z", desc = "+zk" },
@@ -260,6 +261,7 @@ return {
           { mode = "n", keys = "<localleader>t", desc = "+test" },
           { mode = "n", keys = "<localleader>s", desc = "+spell" },
           { mode = "n", keys = "<localleader>d", desc = "+debug" },
+          { mode = "n", keys = "<localleader>y", desc = "+yank" },
 
           { mode = "n", keys = "[", desc = "+prev" },
           { mode = "n", keys = "]", desc = "+next" },

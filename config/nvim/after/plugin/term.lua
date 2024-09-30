@@ -1,6 +1,10 @@
 -- @attribution: this initially was a blend of several basic and complicated term
 -- plugin ideas; ultimately, I've taken many brilliant ideas from @akinsho and @kassio
 -- and created my own version for my specific needs. they are the real ones here.
+--
+-- TODO
+-- - similar behaviour to here.nvim; aka, quick flip between terminal and current buffer
+--    REF: https://github.com/jaimecgomezz/nvim/blob/9a29163c39efc7d28f21ae2ef715e8ba3f41a4e2/lua/plugins/term.lua
 
 if not mega then return end
 

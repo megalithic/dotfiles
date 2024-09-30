@@ -290,7 +290,7 @@ return {
     dependencies = "nvim-lua/plenary.nvim",
     config = true,
     keys = { -- load the plugin only when using it's keybinding:
-      { "<leader>su", "<cmd>lua require('undotree').toggle()<cr>", desc = "Toggle undotree" },
+      { "<leader>eu", "<cmd>lua require('undotree').toggle()<cr>", desc = "[u]ndo tree" },
     },
     opts = {
       float_diff = false, -- using float window previews diff, set this `true` will disable layout option
@@ -328,5 +328,23 @@ return {
       },
     },
   },
-  { "famiu/bufdelete.nvim", cmd = { "Bdelete", "Bwipeout" } },
+  {
+    "Bekaboo/dropbar.nvim",
+    dependencies = {
+      "nvim-telescope/telescope-fzf-native.nvim",
+    },
+  },
+  {
+    cond = false,
+    "jaimecgomezz/here.term",
+    opts = {
+      dependencies = {
+        { "willothy/flatten.nvim", config = true, priority = 1001 },
+      },
+      mappings = {
+        toggle = "<C-.>",
+        kill = "<C-S-.>",
+      },
+    },
+  },
 }

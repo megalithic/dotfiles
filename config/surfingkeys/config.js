@@ -12,7 +12,7 @@ const {
   imap,
   imapkey,
   getClickableElements,
-  // vmapkey,
+  vmapkey,
   vmap,
   map,
   cmap,
@@ -27,12 +27,10 @@ const {
   Normal,
   RUNTIME,
 } = api;
-const vmapkey = vmap;
 
 function dbg(s) {
-  console.log("[megakeys]: ", s);
+  console.log("[megakeys]: " + s);
 }
-// dbg(api);
 
 // -----------------------------------------------------------------------------------------------------------------------
 // -- [ SETTINGS ]

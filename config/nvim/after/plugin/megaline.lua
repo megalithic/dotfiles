@@ -336,6 +336,17 @@ local function special_buffers()
   return nil
 end
 
+local function get_buffer_count()
+  local buffers = vim.fn.execute("ls")
+  local count = 0
+  -- Match only lines that represent buffers, typically starting with a number followed by a space
+  for line in string.gmatch(buffers, "[^\r\n]+") do
+    if string.match(line, "^%s*%d+") then count = count + 1 end
+  end
+
+  return count
+end
+
 local function is_plain() return matches(M.ctx.filetype, plain_types.filetypes) or matches(M.ctx.buftype, plain_types.buftypes) or M.ctx.preview end
 
 local function is_abnormal_buffer()
@@ -481,6 +492,15 @@ local function seg_prefix(truncate_at)
   local mode_info = MODES[api.nvim_get_mode().mode]
   local prefix = is_truncated(truncate_at) and "" or vim.env.SESSION_ICON -- icons.misc.lblock
   return seg(prefix, mode_info.hl, { padding = { 0, 0 } })
+end
+
+local function seg_buffer_count(truncate_at)
+  local buffer_count = get_buffer_count()
+
+  local msg = is_truncated(truncate_at) and "" or fmt("%s", buffer_count)
+
+  if buffer_count <= 1 then return "" end
+  return seg(msg, "StInfo", { padding = { 0, 0 } })
 end
 
 local function seg_suffix(truncate_at)
@@ -674,6 +694,7 @@ function mega.ui.statusline.render()
     seg([[%<]]),
     -- seg_prefix(100),
     seg_mode(120),
+    seg_buffer_count(100),
     seg_filename(120),
     seg(modified_icon, "StModifiedIcon", M.ctx.modified, { margin = { 0, 1 } }),
     seg(icons.misc.lock, "StModifiedIcon", M.ctx.readonly, { margin = { 0, 1 } }),

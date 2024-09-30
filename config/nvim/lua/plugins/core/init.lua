@@ -38,6 +38,20 @@ return {
     end,
   },
   {
+    "ribru17/bamboo.nvim",
+    lazy = false,
+    cond = vim.g.colorscheme == "bamboo",
+    priority = 1000,
+    opts = {
+      style = "multiplex", -- Choose between 'vulgaris' (regular), 'multiplex' (greener), and 'light'
+      transparent = true,
+    },
+    config = function(_, opts)
+      require("bamboo").setup(opts)
+      require("bamboo").load()
+    end,
+  },
+  {
     "zenbones-theme/zenbones.nvim",
     dependencies = "rktjmp/lush.nvim",
     cond = vim.g.colorscheme == "forestbones",

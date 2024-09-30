@@ -166,7 +166,9 @@ local theme = lush(function(injected_functions)
     debugPC({ fg = C.bg0, bg = C.green }), --    debugging statements
     debugBreakpoint({ fg = C.bg0, bg = C.red }), --    debugging statements
     Bold({ gui = "bold" }),
+    TransparentBold({ gui = "bold", bg = C.transparent }),
     Italic({ gui = "italic" }),
+    TransparentItalic({ gui = "italic", bg = C.transparent }),
     Underlined({ fg = C.transparent, bg = "NONE", gui = "underline" }),
     CurrentWord({ bg = C.fg, fg = C.bg0 }),
     Fg({ fg = C.fg, bg = C.transparent }),
@@ -1211,7 +1213,7 @@ local theme = lush(function(injected_functions)
 
     ---- render-markdown -------------------------------------------------------
     RenderMarkdownChecked({ fg = colors.green }),
-    RenderMarkdownUnchecked({ fg = colors.blue }),
+    RenderMarkdownUnchecked({ fg = colors.bg_green }),
     RenderMarkdownTodo({ RenderMarkdownUnchecked }),
 
     RenderMarkdownH1({ fg = colors.green, bg = C.bg_green, gui = "bold,italic,underline" }),
@@ -1227,15 +1229,16 @@ local theme = lush(function(injected_functions)
     RenderMarkdownH4Bg({ RenderMarkdownH4 }),
     RenderMarkdownH5Bg({ RenderMarkdownH5 }),
 
-    RenderMarkdownListYes({ fg = colors.green }),
-    RenderMarkdownListWip({ fg = colors.cyan }),
+    RenderMarkdownListWip({ fg = colors.blue }),
     RenderMarkdownListTodo({ fg = colors.orange }),
+    RenderMarkdownListSkipped({ fg = colors.yellow }),
+    RenderMarkdownListTrash({ fg = colors.red }),
+
+    RenderMarkdownListYes({ fg = colors.green }),
     RenderMarkdownListNo({ fg = colors.red }),
     RenderMarkdownListFire({ fg = colors.red }),
     RenderMarkdownListIdea({ fg = colors.yellow }),
     RenderMarkdownListStar({ fg = colors.yellow }),
-    RenderMarkdownListSkipped({ fg = colors.red }),
-    RenderMarkdownListTrash({ fg = colors.red }),
     RenderMarkdownListQuestion({ fg = colors.yellow }),
     RenderMarkdownListInfo({ fg = colors.cyan }),
     RenderMarkdownListImportant({ fg = colors.orange }),

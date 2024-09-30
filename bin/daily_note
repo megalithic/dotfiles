@@ -108,7 +108,7 @@ $(__build_tasks)
 
 ## Links
 
-- [last daily note](${last_daily_note_file_name})
+- [previous daily note](${last_daily_note_file_name})
 EOF
   fi
 }

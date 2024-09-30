@@ -6,7 +6,7 @@ local git_keys = {}
 if vim.g.gitter == "neogit" then
   git_keys = {
     { "<leader>gS", function() require("neogit").open() end, desc = "neogit: open status buffer" },
-    { "<leader>G", function() require("neogit").open() end, desc = "neogit: open status buffer" },
+    { "<leader>gg", function() require("neogit").open() end, desc = "neogit: open status buffer" },
     {
       "<localleader>gc",
       function() require("neogit").open({ "commit", "-v" }) end,
@@ -41,7 +41,7 @@ if vim.g.gitter == "neogit" then
 elseif vim.g.gitter == "fugitive" then
   git_keys = {
     { "<leader>gS", "<cmd>Git<cr>", desc = "git: open status buffer" },
-    { "<leader>G", "<cmd>Git<cr>", desc = "git: open status buffer" },
+    { "<leader>gg", "<cmd>Git<cr>", desc = "git: open status buffer" },
     {
       "<localleader>gc",
       "<cmd>tabn|Git commit<cr>",
@@ -181,8 +181,11 @@ return {
         hmap("<localleader>hw", gs.toggle_word_diff, "git(hunk): toggle word diff")
 
         hmap("<localleader>gs", gs.stage_hunk, "git(hunk): stage hunk")
+        map("x", "<localleader>gs", function() gs.stage_hunk({ vim.fn.line("."), vim.fn.line("v") }) end)
         hmap("<localleader>gr", gs.reset_hunk, "git(hunk): reset hunk")
+        map("x", "<localleader>gr", function() gs.reset_hunk({ vim.fn.line("."), vim.fn.line("v") }) end)
         hmap("<localleader>gu", gs.undo_stage_hunk, "git(hunk): undo staged hunk")
+        map("x", "<localleader>gu", function() gs.undo_stage_hunk({ vim.fn.line("."), vim.fn.line("v") }) end)
 
         bmap("<localleader>gS", gs.stage_buffer, "git: stage buffer")
         bmap("<localleader>gR", gs.reset_buffer, "git: reset buffer")

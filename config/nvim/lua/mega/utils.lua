@@ -44,6 +44,7 @@ end
 
 function M.lsp.rename_file()
   local old_name = vim.api.nvim_buf_get_name(0)
+  local cursor_pos = vim.api.nvim_win_get_cursor(0) -- Save the cursor position
   -- vim.fs.basename(old_name)
   -- nvim_buf_get_name(0)
   -- -- -> fnamemodify(':t')
@@ -52,7 +53,12 @@ function M.lsp.rename_file()
     if not name then return end
     local new_name = fmt("%s/%s", vim.fs.dirname(old_name), name)
     prepare_file_rename({ old_name = old_name, new_name = new_name })
-    -- lsp.util.rename(old_name, new_name)
+    vim.lsp.util.rename(old_name, new_name)
+
+    -- Restore the cursor position
+    vim.api.nvim_win_set_cursor(0, cursor_pos)
+    -- Redraw the screen
+    vim.cmd("redraw!")
   end)
 end
 
@@ -555,7 +561,7 @@ function M.get_visible_qflists()
   return vim.iter(vim.api.nvim_tabpage_list_wins(0)):filter(function(winnr) return vim.fn.getwininfo(winnr)[1].quickfix == 1 end)
 end
 
-function M.qf_populate(lines, opts)
+function M.qflist_populate(lines, opts)
   -- set qflist and open
   if not lines or #lines == 0 then return end
 
