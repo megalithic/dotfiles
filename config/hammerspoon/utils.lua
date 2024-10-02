@@ -166,7 +166,9 @@ function obj.vidconvert(path, opts)
     and string.match(path, fmt(".%s", srcFormat))
     -- and hs.fs.displayName(path) ~= nil
   then
-    hs.notify(fmt("vidconvert started for %s at %s", path, os.date("%Y-%m-%d %H:%M:%S")))
+    hs.notify
+      .new({ title = "vidconvert", subTitle = fmt("started for %s at %s", path, os.date("%Y-%m-%d %H:%M:%S")) })
+      :send()
 
     local task = hs.task.new(
       os.getenv("HOME") .. "/.dotfiles/bin/vidconvert",
@@ -178,7 +180,7 @@ function obj.vidconvert(path, opts)
         if foundStreamEnd then
           success(fmt("[%s] vidconvert completed for %s", obj.name, path))
 
-          hs.notify(fmt("vidconvert finished at %s", os.date("%Y-%m-%d %H:%M:%S")))
+          hs.notify.new({ title = "vidconvert", subTitle = fmt("finished at %s", os.date("%Y-%m-%d %H:%M:%S")) }):send()
         end
 
         return not foundStreamEnd

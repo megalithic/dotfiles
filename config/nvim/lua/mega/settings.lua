@@ -153,7 +153,7 @@ local M = {
       info = "󰖧", -- alts: 󰖧 󱂈 󰋼  󰙎   󰬐 󰰃     ● 󰬐 
       hint = "▫", -- alts:  󰬏 󰰀  󰌶 󰰂 󰰂 󰰁 󰫵 󰋢   
       ok = "✓", -- alts: ✓✓
-      clients = "", -- alts:     󱉓 󱡠 󰾂 
+      clients = "", -- alts:     󱉓 󱡠 󰾂 
     },
     test = {
       passed = "", --alts: 
@@ -249,6 +249,7 @@ local M = {
     },
     misc = {
       formatter = "", -- alts: 󰉼
+      buffers = "",
       clock = "",
       ellipsis = "…",
       lblock = "▌",

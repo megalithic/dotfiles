@@ -176,6 +176,13 @@ ftplugin.extend_all({
       commentstring = [[<%!-- %s --%>]],
     },
   },
+  terminal = {
+    opt = {
+      relativenumber = false,
+      number = false,
+      signcolumn = "yes:1",
+    },
+  },
   gitconfig = {
     opt = {
       tabstop = 2,

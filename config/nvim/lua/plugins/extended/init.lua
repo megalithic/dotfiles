@@ -33,6 +33,8 @@ return {
 
       config = function() require("colorizer").setup(SETTINGS.colorizer) end,
     },
+    -- "gc" to comment visual regions/lines
+    { "numToStr/Comment.nvim", opts = {} },
     {
       "folke/ts-comments.nvim",
       opts = {
@@ -330,6 +332,43 @@ return {
   },
   {
     "Bekaboo/dropbar.nvim",
+    cond = not vim.g.started_by_firenvim,
+    opts = {
+      bar = {
+        -- padding = { left = 0, right = 0 },
+        -- truncate = false,
+        sources = function(buf, _)
+          local sources = require("dropbar.sources")
+          local utils = require("dropbar.utils")
+
+          if vim.bo[buf].ft == "markdown" then
+            return {
+              -- path,
+              utils.source.fallback({
+                sources.treesitter,
+                sources.markdown,
+                sources.lsp,
+              }),
+            }
+          end
+          return {
+            -- path,
+            utils.source.fallback({
+              sources.lsp,
+              sources.treesitter,
+            }),
+          }
+        end,
+      },
+      sources = {
+        path = {
+          relative_to = function(bufnr)
+            -- get dirname of current buffer
+            return vim.fn.fnamemodify(vim.api.nvim_buf_get_name(bufnr), ":p:h")
+          end,
+        },
+      },
+    },
     dependencies = {
       "nvim-telescope/telescope-fzf-native.nvim",
     },

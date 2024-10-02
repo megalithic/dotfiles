@@ -605,6 +605,27 @@ function M.root_has_file(name)
   return lsputil.path.exists(lsputil.path.join(cwd, name)), lsputil.path.join(cwd, name)
 end
 
+function M.get_bufnrs()
+  local bufnrs = vim.tbl_filter(function(bufnr)
+    local bufname = vim.api.nvim_buf_get_name(bufnr)
+
+    if not vim.api.nvim_buf_is_loaded(bufnr) then return false end
+    if not vim.api.nvim_buf_is_valid(bufnr) then return false end
+
+    if bufname == "" then return false end
+    if string.match(bufname, "term:") then return false end
+    if vim.bo[bufnr].buftype == "terminal" then return false end
+    if vim.bo[bufnr].filetype == "megaterm" then return false end
+    if vim.bo[bufnr].filetype == "terminal" then return false end
+
+    if 1 ~= vim.fn.buflisted(bufnr) then return false end
+
+    return true
+  end, vim.api.nvim_list_bufs())
+
+  return M.tlen(bufnrs)
+end
+
 --[[
 -- HIGHLIGHTS -----------------------------------------------------------------
 --]]

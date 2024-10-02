@@ -204,6 +204,11 @@ local exception_types = {
     terminal = fmt("%s ", icons.misc.terminal),
     quickfix = fmt("%s ", icons.misc.terminal),
   },
+  filenames = {
+    __committia_diff__ = "git commit (diff)",
+    __committia_status__ = "git commit (status)",
+    COMMIT_EDITMSG = "git commit (message)",
+  },
   filetypes = {
     alpha = "",
     org = "",
@@ -274,7 +279,12 @@ local exception_types = {
       local shell = fnamemodify(vim.env.SHELL, ":t")
       local mode = MODES[api.nvim_get_mode().mode]
       local mode_hl = mode.short == "T-I" and "StModeTermInsert" or "StModeTermNormal"
-      return seg(fmt("megaterm#%d(%s)[%s]", api.nvim_buf_get_var(buf, "term_buf"), shell, api.nvim_buf_get_var(buf, "term_cmd") or buf), mode_hl)
+      -- if pcall(api.nvim_buf_get_var(buf, "term_buf")) and pcall(api.nvim_buf_get_var(buf, "term_cmd")) then
+      --   return seg(fmt("megaterm#%d(%s)[%s]", api.nvim_buf_get_var(buf, "term_buf"), shell, api.nvim_buf_get_var(buf, "term_cmd") or buf), mode_hl)
+      -- end
+      return seg(fmt("megaterm#%d(%s)[%s]", vim.g.term_bufnr, shell, vim.api.nvim_buf_get_var(buf, "term_cmd") or buf), mode_hl)
+
+      -- return ""
     end,
     ["dap-repl"] = "Debugger REPL",
     kittybuf = "Kitty Scrollback Buffer",
@@ -283,6 +293,17 @@ local exception_types = {
 }
 
 -- ( UTILITIES ) ---------------------------------------------------------------
+
+local function current_file()
+  local f = {}
+
+  f.path = vim.fn.expand("%:p")
+  f.name = vim.fn.fnamemodify(f.path, ":t")
+  f.extension = vim.fn.fnamemodify(f.path, ":e")
+  f.directory = vim.fn.fnamemodify(f.path, ":h")
+
+  return f
+end
 
 --- Decide whether to truncate
 ---
@@ -334,17 +355,6 @@ local function special_buffers()
   if M.ctx.preview then return "preview" end
 
   return nil
-end
-
-local function get_buffer_count()
-  local buffers = vim.fn.execute("ls")
-  local count = 0
-  -- Match only lines that represent buffers, typically starting with a number followed by a space
-  for line in string.gmatch(buffers, "[^\r\n]+") do
-    if string.match(line, "^%s*%d+") then count = count + 1 end
-  end
-
-  return count
 end
 
 local function is_plain() return matches(M.ctx.filetype, plain_types.filetypes) or matches(M.ctx.buftype, plain_types.buftypes) or M.ctx.preview end
@@ -425,6 +435,7 @@ local function parse_filename(truncate_at)
   local function buf_expand(bufnr, mod) return expand("#" .. bufnr .. mod) end
 
   local modifier = ":t"
+  local special_file_names = special_buffers()
   local special_buf = special_buffers()
   if special_buf then return "", "", special_buf end
 
@@ -432,6 +443,7 @@ local function parse_filename(truncate_at)
 
   local icon, icon_hl = require("nvim-web-devicons").get_icon_color(fname)
   local name = exception_types.names[M.ctx.filetype]
+  if exception_types.filenames[current_file().name] ~= nil then name = exception_types.filenames[current_file().name] end
   local exception_icon = exception_types.filetypes[M.ctx.filetype] or ""
   if type(name) == "function" then return "", "", fmt("%s %s", exception_icon, name(fname, M.ctx.bufnr)) end
 
@@ -495,9 +507,9 @@ local function seg_prefix(truncate_at)
 end
 
 local function seg_buffer_count(truncate_at)
-  local buffer_count = get_buffer_count()
+  local buffer_count = U.get_bufnrs()
 
-  local msg = is_truncated(truncate_at) and "" or fmt("%s", buffer_count)
+  local msg = is_truncated(truncate_at) or vim.g.started_by_firenvim and "" or fmt("%s%s", icons.misc.buffers, buffer_count)
 
   if buffer_count <= 1 then return "" end
   return seg(msg, "StInfo", { padding = { 0, 0 } })

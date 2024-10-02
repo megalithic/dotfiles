@@ -175,6 +175,7 @@ return {
           -- The icon gets repeated across the window's width
           -- icon = "─",
           icon = "┈",
+          -- icon = "░",
           -- Highlight for the whole line generated from the icon
           highlight = "RenderMarkdownDash",
         },

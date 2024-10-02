@@ -764,44 +764,44 @@ return {
           local hl = "DiagnosticSign" .. type
           vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = hl })
         end
-        --
-        -- -- Create a custom namespace. This will aggregate signs from all other
-        -- -- namespaces and only show the one with the highest severity on a
-        -- -- given line
-        -- local ns = vim.api.nvim_create_namespace("mega_lsp_diagnostics")
-        -- -- Get a reference to the original signs handler
-        -- local orig_signs_handler = vim.diagnostic.handlers.signs
-        -- -- Override the built-in signs handler
-        -- local max_diagnostics = function(_, bn, _, opts)
-        --   -- Get all diagnostics from the whole buffer rather than just the
-        --   -- diagnostics passed to the handler
-        --   local diagnostics = vim.diagnostic.get(bn)
-        --   -- Find the "worst" diagnostic per line
-        --   local max_severity_per_line = {}
-        --   for _, d in pairs(diagnostics) do
-        --     local m = max_severity_per_line[d.lnum]
-        --     if not m or d.severity < m.severity then max_severity_per_line[d.lnum] = d end
-        --   end
-        --   -- Pass the filtered diagnostics (with our custom namespace) to
-        --   -- the original handler
-        --   local filtered_diagnostics = vim.tbl_values(max_severity_per_line)
-        --   orig_signs_handler.show(ns, bn, filtered_diagnostics, opts)
-        -- end
-        --
-        -- if vim.tbl_contains(SETTINGS.max_diagnostic_exclusions, client.name) then
-        --   vim.diagnostic.handlers.signs = orig_signs_handler
-        -- else
-        --   vim.diagnostic.handlers.signs = vim.tbl_extend("force", orig_signs_handler, {
-        --     show = max_diagnostics,
-        --     hide = function(_, bn) orig_signs_handler.hide(ns, bn) end,
-        --   })
-        -- end
-        -- -- vim.diagnostic.handlers.signs = {
-        -- --   show = max_diagnostics,
-        -- --   hide = function(_, bn) orig_signs_handler.hide(ns, bn) end,
-        -- -- }
-        --
-        -- if cb ~= nil and type(cb) == "function" then cb() end
+
+        -- Create a custom namespace. This will aggregate signs from all other
+        -- namespaces and only show the one with the highest severity on a
+        -- given line
+        local ns = vim.api.nvim_create_namespace("mega_lsp_diagnostics")
+        -- Get a reference to the original signs handler
+        local orig_signs_handler = vim.diagnostic.handlers.signs
+        -- Override the built-in signs handler
+        local max_diagnostics = function(_, bn, _, opts)
+          -- Get all diagnostics from the whole buffer rather than just the
+          -- diagnostics passed to the handler
+          local diagnostics = vim.diagnostic.get(bn)
+          -- Find the "worst" diagnostic per line
+          local max_severity_per_line = {}
+          for _, d in pairs(diagnostics) do
+            local m = max_severity_per_line[d.lnum]
+            if not m or d.severity < m.severity then max_severity_per_line[d.lnum] = d end
+          end
+          -- Pass the filtered diagnostics (with our custom namespace) to
+          -- the original handler
+          local filtered_diagnostics = vim.tbl_values(max_severity_per_line)
+          orig_signs_handler.show(ns, bn, filtered_diagnostics, opts)
+        end
+
+        if vim.tbl_contains(SETTINGS.max_diagnostic_exclusions, client.name) then
+          vim.diagnostic.handlers.signs = orig_signs_handler
+        else
+          vim.diagnostic.handlers.signs = vim.tbl_extend("force", orig_signs_handler, {
+            show = max_diagnostics,
+            hide = function(_, bn) orig_signs_handler.hide(ns, bn) end,
+          })
+        end
+        -- vim.diagnostic.handlers.signs = {
+        --   show = max_diagnostics,
+        --   hide = function(_, bn) orig_signs_handler.hide(ns, bn) end,
+        -- }
+
+        if cb ~= nil and type(cb) == "function" then cb() end
       end
 
       local capabilities = vim.lsp.protocol.make_client_capabilities()
