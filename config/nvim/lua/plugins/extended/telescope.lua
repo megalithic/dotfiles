@@ -29,7 +29,7 @@ return {
 
       "natecraddock/telescope-zf-native.nvim",
       "nvim-telescope/telescope-file-browser.nvim",
-      { "fdschmidt93/telescope-egrepify.nvim", branch = "fix/preview" },
+      { "fdschmidt93/telescope-egrepify.nvim" },
       "fdschmidt93/telescope-corrode.nvim",
       {
         "danielfalk/smart-open.nvim",
@@ -1156,6 +1156,30 @@ return {
         -- map("n", "<leader>fg", ts.egrepify, {  "egrepify (live)" })
         map("n", "<leader>fg", function() mega.picker.grep({ picker = "egrepify" }) end, { "[f]ind e[g]repify" })
 
+        -- vim.keymap.set('n', '<leader>fw', function ()
+        --   egrepify(
+        --     themes.get_ivy({ default_text = vim.fn.expand("<cword>") })
+        --   )
+        -- end, { desc = '[f]ind [w]ord under cursor'})
+        -- vim.keymap.set('v', '<leader>fw', function ()
+        --   egrepify(
+        --     themes.get_ivy({
+        --       default_text = get_visual_selection(),
+        --       layout_config = {
+        --         height = 30,
+        --       },
+        --     })
+        --   )
+        -- end, { desc = '[f]ind select [w]ord'})
+
+        -- vim.keymap.set("n", "<leader>fl", function()
+        --   egrepify(themes.get_ivy({
+        --     layout_config = {
+        --       height = 30,
+        --     }
+        --   }))
+        -- end)
+
         -- map("n", "<leader>fg", ts.multi_rg, {  "multi-rg (live)" })
         map("n", "<leader>a", mega.picker.grep, { "grep (live)" })
         -- map("n", "<leader>A", ts.grep_string, {  "grep (under cursor)" })
@@ -1177,7 +1201,8 @@ return {
         )
         map("n", "<leader>fr", ts.resume, { "[f]ind [r]esume" })
         map("n", "<leader>f.", ts.oldfiles, { "[f]ind recent files" })
-        map("n", "gb", function() ts.buffers({ theme = "dropdown" }) end, { "find existing buffers" })
+        map("n", "gb", function() ts.buffers({ theme = "dropdown", sort_mru = true, ignore_current_buffer = true }) end, { "find existing buffers" })
+        map("n", ",,", function() ts.buffers({ theme = "dropdown", sort_mru = true, ignore_current_buffer = true }) end, { "find existing buffers" })
 
         -- Slightly advanced example of overriding default behavior and theme
         map("n", "<leader>/", function()

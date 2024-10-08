@@ -34,9 +34,10 @@ return {
       config = function() require("colorizer").setup(SETTINGS.colorizer) end,
     },
     -- "gc" to comment visual regions/lines
-    { "numToStr/Comment.nvim", opts = {} },
+    { "numToStr/Comment.nvim", cond = false, opts = {} },
     {
       "folke/ts-comments.nvim",
+      cond = false,
       opts = {
         langs = {
           elixir = "# %s",
@@ -80,10 +81,10 @@ return {
           end,
         },
         -- swapping buffers between windows
-        { "<leader><leader>h", function() require("smart-splits").swap_buf_left() end, desc = "swap left" },
-        { "<leader><leader>j", function() require("smart-splits").swap_buf_down() end, desc = "swap down" },
-        { "<leader><leader>k", function() require("smart-splits").swap_buf_up() end, desc = "swap up" },
-        { "<leader><leader>l", function() require("smart-splits").swap_buf_right() end, desc = "swap right" },
+        -- { "<leader><leader>h", function() require("smart-splits").swap_buf_left() end, desc = "swap left" },
+        -- { "<leader><leader>j", function() require("smart-splits").swap_buf_down() end, desc = "swap down" },
+        -- { "<leader><leader>k", function() require("smart-splits").swap_buf_up() end, desc = "swap up" },
+        -- { "<leader><leader>l", function() require("smart-splits").swap_buf_right() end, desc = "swap right" },
       },
     },
     {

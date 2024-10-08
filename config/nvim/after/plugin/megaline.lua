@@ -282,7 +282,12 @@ local exception_types = {
       -- if pcall(api.nvim_buf_get_var(buf, "term_buf")) and pcall(api.nvim_buf_get_var(buf, "term_cmd")) then
       --   return seg(fmt("megaterm#%d(%s)[%s]", api.nvim_buf_get_var(buf, "term_buf"), shell, api.nvim_buf_get_var(buf, "term_cmd") or buf), mode_hl)
       -- end
-      return seg(fmt("megaterm#%d(%s)[%s]", vim.g.term_bufnr, shell, vim.api.nvim_buf_get_var(buf, "term_cmd") or buf), mode_hl)
+
+      if vim.g.term_bufnr ~= nil then
+        return seg(fmt("megaterm#%d(%s)[%s]", vim.g.term_bufnr, shell, vim.api.nvim_buf_get_var(buf, "term_cmd") or buf), mode_hl)
+      end
+
+      return seg(fmt("megaterm#%d(%s)[%s]", api.nvim_buf_get_var(buf, "term_buf"), shell, api.nvim_buf_get_var(buf, "term_cmd") or buf), mode_hl)
 
       -- return ""
     end,
@@ -509,7 +514,7 @@ end
 local function seg_buffer_count(truncate_at)
   local buffer_count = U.get_bufnrs()
 
-  local msg = is_truncated(truncate_at) or vim.g.started_by_firenvim and "" or fmt("%s%s", icons.misc.buffers, buffer_count)
+  local msg = (is_truncated(truncate_at) or vim.g.started_by_firenvim) and "" or fmt("%s%s", icons.misc.buffers, buffer_count)
 
   if buffer_count <= 1 then return "" end
   return seg(msg, "StInfo", { padding = { 0, 0 } })
@@ -543,8 +548,8 @@ local function seg_lsp_clients(truncate_at)
   end
 
   local clients_str = U.strim(table.concat(client_names, "/"))
-  if is_truncated(truncate_at) then return seg(#client_names, { prefix = fmt("%s ", icons.lsp.clients), margin = { 1, 1 } }) end
-  return seg(clients_str, { prefix = fmt("%s ", icons.lsp.clients), margin = { 1, 1 } })
+  if is_truncated(truncate_at) then return seg(#client_names, { prefix = fmt("%s ", icons.lsp.clients), margin = { 0, 0 } }) end
+  return seg(clients_str, { prefix = fmt("%s ", icons.lsp.clients), margin = { 0, 0 } })
 end
 
 local function seg_lsp_status(truncate_at)

@@ -4,14 +4,10 @@ local fmt = string.format
 
 return {
   {
-    "petertriho/cmp-git",
-    dependencies = { "yioneko/nvim-cmp" },
-    config = function() require("cmp_git").setup() end,
-    init = function() table.insert(require("cmp").get_config().sources, { name = "git" }) end,
-  },
-  {
-    "yioneko/nvim-cmp",
-    branch = "perf",
+    -- "yioneko/nvim-cmp",
+    -- branch = "perf",
+    "iguanacucumber/magazine.nvim",
+    name = "nvim-cmp",
     event = { "InsertEnter *", "CmdlineEnter *" },
     -- event = "InsertEnter",
     -- lazy = false,
@@ -42,6 +38,12 @@ return {
             },
           },
         },
+      },
+      {
+        "petertriho/cmp-git",
+        -- dependencies = { "yioneko/nvim-cmp" },
+        config = function() require("cmp_git").setup() end,
+        init = function() table.insert(require("cmp").get_config().sources, { name = "git" }) end,
       },
       {
         "garymjr/nvim-snippets",
@@ -78,7 +80,7 @@ return {
     },
     init = function()
       vim.opt.completeopt = { "menu", "menuone", "noinsert", "noselect" }
-      vim.g.completion_enabled = true
+      vim.g.autocompletion_enabled = true
 
       local function toggle_completion()
         local cmp = require("cmp")
@@ -180,19 +182,22 @@ return {
           ["<C-y>"] = cmp.mapping.confirm({ select = true }),
 
           ["<C-e>"] = cmp.mapping.abort(),
-
-          ["<CR>"] = function(fallback)
-            if vim.g.snipper == "luasnip" then
-              cmp.mapping.confirm({ select = false, behavior = cmp.ConfirmBehavior.Replace })(fallback)
-            else
-              if cmp.visible() then
-                -- cmp.confirm({ behavior = cmp.ConfirmBehavior.Replace, select = true })
-                cmp.mapping.confirm({ select = false, behavior = cmp.ConfirmBehavior.Replace })(fallback)
-              else
-                fallback()
-              end
-            end
-          end,
+          ["<CR>"] = cmp.mapping.confirm({
+            behavior = cmp.ConfirmBehavior.Insert,
+            select = false,
+          }),
+          -- ["<CR>"] = function(fallback)
+          --   -- if vim.g.snipper == "luasnip" then
+          --   --   cmp.mapping.confirm({ select = false, behavior = cmp.ConfirmBehavior.Replace })(fallback)
+          --   -- else
+          --   if cmp.visible() then
+          --     -- cmp.confirm({ behavior = cmp.ConfirmBehavior.Replace, select = true })
+          --     cmp.mapping.confirm({ select = false, behavior = cmp.ConfirmBehavior.Replace })(fallback)
+          --   else
+          --     fallback()
+          --   end
+          --   -- end
+          -- end,
           ["<Tab>"] = {
             i = tab,
             s = tab,
@@ -251,7 +256,7 @@ return {
               vim_item.kind_hl_group = "Type"
             end
 
-            if vim_item.kind == "Color" and entry.completion_item.documentation then
+            if vim_item.kind == "Color" and entry.completion_item.documentation and type(entry.completion_item.documentation) == "string" then
               local _, _, r, g, b = string.find(entry.completion_item.documentation, "^rgb%((%d+), (%d+), (%d+)")
               if r then
                 local color = string.format("%02x", r) .. string.format("%02x", g) .. string.format("%02x", b)

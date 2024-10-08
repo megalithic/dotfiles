@@ -576,7 +576,11 @@ function M.apply()
         end, { desc = "[g]oto [f]ile (on steroids)" })
       end,
     },
-
+    {
+      event = { "BufRead", "BufNewFile" },
+      pattern = "*/doc/*.txt",
+      command = function(args) vim.bo.filetype = "help" end,
+    },
     {
       event = { "BufRead", "BufNewFile" },
       pattern = "package.json",

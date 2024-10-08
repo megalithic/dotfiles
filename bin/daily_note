@@ -169,8 +169,8 @@ done
 shift "$(($OPTIND - 1))"
 
 if [[ "$METHOD" == "note" ]]; then
-  # Use note name as the session name
-  SESSION="daily-note-${daily_note_date}"
+  # SESSION="daily-note-${daily_note_date}"
+  SESSION="daily-note"
 
   # Check if the directory exists, if not, create it
   if [ ! -d "$daily_note_dir" ]; then

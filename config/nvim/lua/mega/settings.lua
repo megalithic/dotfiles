@@ -414,6 +414,7 @@ M.apply = function()
       -- NOTE: You can change these options as you wish!
       --  For more options, you can see `:help option-list`
 
+      -- cia = "kind,abbr,menu",
       -- Make line numbers default
       number = false,
       -- You can also add relative line numbers, to help with jumping.

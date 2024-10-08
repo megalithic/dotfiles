@@ -161,6 +161,7 @@
   rs = restore --staged
 
   rbi = rebase -i
+  rbif = !git fetch origin && git rebase -i origin/main
   rbc = rebase --continue
   rba = rebase --abort
 

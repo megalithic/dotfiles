@@ -1,16 +1,17 @@
 lastupdatecheck: 0
 recentrepos:
-- /Users/seth/.dotfiles
-- /Users/seth/code/tern/director
-- /Users/seth/code/tern/bellhop
-- /Users/seth/.local/share/src/neovim
-- /Users/seth/code/telescope-egrepify.nvim
+    - /Users/seth/code/tern/director
+    - /Users/seth/.dotfiles
+    - /Users/seth/code/tern/bellhop
+    - /Users/seth/.local/share/src/neovim
+    - /Users/seth/code/telescope-egrepify.nvim
 startuppopupversion: 5
-lastversion: 0.41.0
+lastversion: 0.44.1
 customcommandshistory: []
 hidecommandlog: false
 ignorewhitespaceindiffview: false
 diffcontextsize: 3
+renamesimilaritythreshold: 50
 localbranchsortorder: recency
 remotebranchsortorder: alphabetical
 gitlogorder: topo-order

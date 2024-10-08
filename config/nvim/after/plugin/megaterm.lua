@@ -10,7 +10,6 @@ if not mega then return end
 
 local fmt = string.format
 local api = vim.api
-local fn = vim.fn
 local U = require("mega.utils")
 local augroup = require("mega.autocmds").augroup
 local command = vim.api.nvim_create_user_command
@@ -410,7 +409,7 @@ end
 --- Toggles open, or hides a custom terminal
 --- @param args TermOpts|ParsedArgs|string
 function mega.toggleterm(args)
-  -- REF: https://gist.github.com/shivamashtikar/16a4d7b83b743c9619e29b47a66138e0
+  -- REF: https://gist.github.com/shivamashtikar/16a4d7b83b743c9619e29b47a66138e0?permalink_comment_id=4924914#gistcomment-4924914
   U.clear_ui()
 
   local parsed_opts = args or {}
@@ -448,6 +447,7 @@ function mega.toggleterm(args)
   vim.g.term_winnr = vim.api.nvim_get_current_win()
 
   if is_valid_buffer(vim.g.term_bufnr) then
+    dbg({ vim.g.term_winnr, vim.g.term_bufnr })
     -- vim.api.nvim_set_current_buf(vim.g.term_bufnr)
     vim.api.nvim_win_set_buf(vim.g.term_winnr, vim.g.term_bufnr)
     vim.g.term_bufnr = vim.api.nvim_win_get_buf(vim.g.term_winnr)

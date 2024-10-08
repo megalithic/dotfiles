@@ -62,6 +62,47 @@ function M.lsp.rename_file()
   end)
 end
 
+---@return nil|TSNode
+function M.notes.get_task_list_marker()
+  local markers = {}
+  local node = vim.treesitter.get_node()
+  while node and node:type() ~= "list_item" do
+    node = node:parent()
+  end
+
+  if not node then return end
+
+  for child in node:iter_children() do
+    dbg(child:type())
+    if child:type():match("^task_list_marker") then return child end
+  end
+end
+
+---@param replacement string
+local function replace_marker(replacement)
+  local line = vim.api.nvim_get_current_line()
+
+  local prefix, box = line:match("^(%s*[-*] )(%[.%])")
+
+  if replacement == nil then
+    if box == "[x]" then
+      replacement = "[ ]"
+    else
+      replacement = "[x]"
+    end
+  end
+
+  if not prefix or not box then return end
+  local cur = vim.api.nvim_win_get_cursor(0)
+  vim.api.nvim_buf_set_text(0, cur[1] - 1, prefix:len(), cur[1] - 1, prefix:len() + box:len(), { replacement })
+end
+
+---@param new_status string
+function M.notes.task_mutate(new_status)
+  return function() replace_marker(new_status) end
+  -- return function() replace_marker("[" .. new_status .. "]") end
+end
+
 function M.notes.get_md_link_title()
   if vim.bo.filetype ~= "markdown" then return end
   local get_node = vim.treesitter.get_node
@@ -624,6 +665,19 @@ function M.get_bufnrs()
   end, vim.api.nvim_list_bufs())
 
   return M.tlen(bufnrs)
+end
+
+function M.get_buf_lines(bufnr)
+  bufnr = bufnr or vim.api.nvim_get_current_buf()
+
+  return vim.api.nvim_buf_get_lines(bufnr or 0, 0, -1, false)
+end
+
+function M.get_buf_current_line(bufnr)
+  bufnr = bufnr or vim.api.nvim_get_current_buf()
+  local cursor = vim.api.nvim_win_get_cursor(0)
+  local start_line = cursor[1] - 1
+  return vim.api.nvim_buf_get_lines(bufnr, start_line, start_line + 1, false)[1] or ""
 end
 
 --[[

@@ -95,6 +95,36 @@ return {
         vim.diagnostic["goto_" .. dir]()
       end
 
+      local function go_to_unique_definition()
+        vim.lsp.buf_request(0, "textDocument/definition", vim.lsp.util.make_position_params(), function(_, result, _, _)
+          if not result or vim.tbl_isempty(result) then
+            print("No definitions found")
+            return
+          end
+
+          local unique_results = {}
+          local seen = {}
+
+          for _, def in ipairs(result) do
+            local uri = def.uri or def.targetUri
+            seen[uri] = def
+          end
+
+          for _, def in pairs(seen) do
+            table.insert(unique_results, def)
+          end
+
+          if #unique_results == 1 then
+            vim.lsp.util.jump_to_location(unique_results[1], "utf-8")
+            mega.blink_cursorline(100, true)
+          else
+            local items = vim.lsp.util.locations_to_items(unique_results, "utf-8")
+            vim.fn.setqflist({}, "r", { title = "LSP Definitions", items = items })
+            vim.api.nvim_command("copen")
+          end
+        end)
+      end
+
       local function fix_current_action()
         local params = vim.lsp.util.make_range_params() -- get params for current position
         params.context = {
@@ -242,7 +272,10 @@ return {
         --   references_handler(err, result, ctx, config)
         -- end
 
-        local map = function(keys, func, desc) vim.keymap.set("n", keys, func, { buffer = bufnr, desc = "[+lsp] " .. desc }) end
+        local desc = function(d) return "[+lsp] " .. d end
+        local map = vim.keymap.set
+        local nmap = function(keys, func, d) map("n", keys, func, { buffer = bufnr, desc = desc(d) }) end
+        local vnmap = function(keys, func, d) map({ "v", "n" }, keys, func, { buffer = bufnr, desc = desc(d) }) end
         local icons = require("mega.settings").icons
 
         -- if client and client.supports_method("textDocument/inlayHint", { bufnr = bufnr }) then
@@ -255,49 +288,46 @@ return {
           vim.cmd.cfirst()
         end
 
-        map("<leader>lic", [[<cmd>LspInfo<CR>]], "connected client info")
-        map("<leader>lim", [[<cmd>Mason<CR>]], "mason info")
-        map("<leader>lil", [[<cmd>LspLog<CR>]], "logs (vsplit)")
+        nmap("<leader>lic", [[<cmd>LspInfo<CR>]], "connected client info")
+        nmap("<leader>lim", [[<cmd>Mason<CR>]], "mason info")
+        nmap("<leader>lil", [[<cmd>LspLog<CR>]], "logs (vsplit)")
 
-        map("ge", show_diagnostic_popup, "[g]o to diagnostic hover")
-        map("[d", function() goto_diagnostic_hl("prev") end, "Go to previous [D]iagnostic message")
-        map("]d", function() goto_diagnostic_hl("next") end, "Go to next [D]iagnostic message")
+        nmap("ge", show_diagnostic_popup, "[g]o to diagnostic hover")
+        nmap("[d", function() goto_diagnostic_hl("prev") end, "Go to previous [D]iagnostic message")
+        nmap("]d", function() goto_diagnostic_hl("next") end, "Go to next [D]iagnostic message")
 
-        map("gq", function() vim.cmd("Trouble diagnostics toggle focus=true filter.buf=0") end, "[g]oto [q]uickfixlist buffer diagnostics (trouble)")
-        map("gQ", function() vim.cmd("Trouble diagnostics toggle focus=true") end, "[g]oto [q]uickfixlist global diagnostics (trouble)")
+        nmap("gq", function() vim.cmd("Trouble diagnostics toggle focus=true filter.buf=0") end, "[g]oto [q]uickfixlist buffer diagnostics (trouble)")
+        nmap("gQ", function() vim.cmd("Trouble diagnostics toggle focus=true") end, "[g]oto [q]uickfixlist global diagnostics (trouble)")
 
         -- map("gd", function() require("telescope.builtin").lsp_definitions() end, "[g]oto [d]efinition")
         -- map("gd", require("telescope.builtin").lsp_definitions, "[g]oto [d]efinition")
         -- map("gd", function() vim.lsp.buf.definition({ on_list = choose_list_first }) end, "[g]oto [d]efinition")
         -- map("gd", vim.lsp.buf.definition, "[g]oto [d]efinition")
-        map("gd", function() vim.lsp.buf.definition({ on_list = choose_list_first }) end, "[g]oto [d]efinition")
-        map("gD", function()
-          vim.cmd.split({ mods = { tab = vim.fn.tabpagenr() + 1 } })
-          vim.lsp.buf.definition({ on_list = choose_list_first })
+        -- nmap("gd", go_to_unique_definition, "[g]oto [d]efinition")
+        nmap("gd", function() vim.lsp.buf.definition({ on_list = choose_list_first }) end, "[g]oto [d]efinition")
+        nmap("gD", function()
+          vim.cmd.split({ mods = { vertical = true, split = "botright" } })
+          vim.schedule(function()
+            -- vim.lsp.buf.definition({ on_list = choose_list_first, reuse_win = false })
+            go_to_unique_definition()
+          end)
         end, "[g]oto [d]efinition (split)")
-        -- map("gD", function()
-        --   vim.cmd.vsplit()
-        --   vim.defer_fn(function()
-        --     vim.lsp.buf.definition({ reuse_win = true })
-        --     vim.cmd.normal("zz")
-        --   end, 1000)
-        --   -- vim.lsp.buf.definition({ on_list = choose_list_first })
-        -- end, "[g]oto [d]efinition (split)")
         -- map("gr", function() vim.cmd.Trouble("lsp_references focus=true") end, "[g]oto [r]eferences")
         -- map("gr", function() vim.cmd.FzfLua("lsp_references") end, "[g]oto [r]eferences")
-        map("gr", require("telescope.builtin").lsp_references, "[g]oto [r]eferences")
-        map("gI", require("telescope.builtin").lsp_implementations, "[g]oto [i]mplementation")
-        map("<leader>ltd", require("telescope.builtin").lsp_type_definitions, "[t]ype [d]efinition")
-        map("<leader>lsd", require("telescope.builtin").lsp_document_symbols, "[d]ocument [s]ymbols")
-        map("<leader>lsw", require("telescope.builtin").lsp_dynamic_workspace_symbols, "[w]orkspace [s]ymbols")
-        map("<leader>lca", vim.lsp.buf.code_action, "[c]ode [a]ctions")
-        map("gca", function() vim.cmd.FzfLua("lsp_code_actions") end, "[g]o [c]ode [a]ctions")
-        map("g.", function() fix_current_action() end, "[g]o run nearest/current code action")
-        map("<leader>la", vim.lsp.buf.code_action, "code [a]ctions")
-        map("K", vim.lsp.buf.hover, "hover documentation")
+        nmap("gr", require("telescope.builtin").lsp_references, "[g]oto [r]eferences")
+        nmap("gI", require("telescope.builtin").lsp_implementations, "[g]oto [i]mplementation")
+        nmap("<leader>ltd", require("telescope.builtin").lsp_type_definitions, "[t]ype [d]efinition")
+        nmap("<leader>lsd", require("telescope.builtin").lsp_document_symbols, "[d]ocument [s]ymbols")
+        nmap("<leader>lsw", require("telescope.builtin").lsp_dynamic_workspace_symbols, "[w]orkspace [s]ymbols")
+        vnmap("g.", function() fix_current_action() end, "[g]o run nearest/current code action")
+        vnmap("<leader>la", vim.lsp.buf.code_action, "code [a]ctions")
+        vnmap("<leader>lca", vim.lsp.buf.code_action, "[c]ode [a]ctions")
+        nmap("gca", function() vim.cmd.FzfLua("lsp_code_actions") end, "[g]o [c]ode [a]ctions")
+        nmap("K", vim.lsp.buf.hover, "hover documentation")
+        map("i", "<C-k>", vim.lsp.buf.signature_help, { buffer = bufnr, desc = desc("signature help") })
         -- map("gD", vim.lsp.buf.declaration, "[g]oto [d]eclaration (e.g. to a header file in C)")
         -- rename symbol starting with empty prompt, highlight references
-        map("<leader>rn", function()
+        nmap("<leader>rn", function()
           local bufnr = vim.api.nvim_get_current_buf()
           local params = vim.lsp.util.make_position_params()
           params.context = { includeDeclaration = true }
@@ -382,7 +412,7 @@ return {
         --   end, bufnr)
         -- end, "[R]e[n]ame")
         --
-        map("gn", function()
+        nmap("gn", function()
           local params = vim.lsp.util.make_position_params()
           client.request("textDocument/references", params, function(_, result)
             if not result or vim.tbl_isempty(result) then

@@ -88,6 +88,8 @@ return {
   },
   {
     "MeanderingProgrammer/markdown.nvim",
+    cond = not vim.g.started_by_firenvim,
+    -- cond = false,
     name = "render-markdown", -- Only needed if you have another plugin named markdown.nvim
     dependencies = { "nvim-treesitter/nvim-treesitter", "echasnovski/mini.nvim", "echasnovski/mini.icons" }, -- if you use the mini.nvim suite
     file_types = { "markdown", "vimwiki", "gitcommit" },
@@ -328,13 +330,19 @@ return {
     end,
   },
   {
+    "dkarter/bullets.vim",
+    cond = false,
+    ft = { "markdown", "text", "gitcommit" },
+    cmd = { "InsertNewBullet" },
+  },
+  {
     "gaoDean/autolist.nvim",
     event = {
       "BufRead **.md,**.neorg,**.org",
       "BufNewFile **.md,**.neorg,**.org",
       "FileType gitcommit,NeogitCommitMessage,.git/COMMIT_EDITMSG",
     },
-    -- enabled = false,
+    -- cond = false,
     version = "2.3.0",
     config = function()
       local al = require("autolist")
@@ -343,8 +351,8 @@ return {
       al.create_mapping_hook("i", "<Tab>", al.indent, "<C-t>")
       al.create_mapping_hook("i", "<S-Tab>", al.indent, "<C-d>")
       al.create_mapping_hook("n", "o", al.new)
-      al.create_mapping_hook("n", "<C-c>", al.invert_entry)
-      al.create_mapping_hook("n", "<C-x>", al.invert_entry)
+      -- al.create_mapping_hook("n", "<C-c>", al.invert_entry)
+      -- al.create_mapping_hook("n", "<C-x>", al.invert_entry)
       al.create_mapping_hook("n", "O", al.new_before)
     end,
   },
@@ -453,8 +461,4 @@ return {
       })
     end,
   },
-  -- {
-  --   "andrewferrier/wrapping.nvim",
-  --   config = function() require("wrapping").setup() end,
-  -- },
 }
