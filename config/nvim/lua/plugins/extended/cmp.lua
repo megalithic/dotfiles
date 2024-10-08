@@ -143,6 +143,10 @@ return {
         -- NOTE: read `:help ins-completion`
         completion = { completeopt = "menu,menuone,noinsert,noselect" },
         -- entries = { name = "custom", selection_order = "near_cursor" },
+        confirmation = {
+          default_behavior = require("cmp.types").cmp.ConfirmBehavior.Insert,
+          get_commit_characters = function(commit_characters) return commit_characters end,
+        },
         entries = {
           name = "custom",
           selection_order = "near_cursor",
@@ -182,22 +186,17 @@ return {
           ["<C-y>"] = cmp.mapping.confirm({ select = true }),
 
           ["<C-e>"] = cmp.mapping.abort(),
-          ["<CR>"] = cmp.mapping.confirm({
-            behavior = cmp.ConfirmBehavior.Insert,
-            select = false,
-          }),
-          -- ["<CR>"] = function(fallback)
-          --   -- if vim.g.snipper == "luasnip" then
-          --   --   cmp.mapping.confirm({ select = false, behavior = cmp.ConfirmBehavior.Replace })(fallback)
-          --   -- else
-          --   if cmp.visible() then
-          --     -- cmp.confirm({ behavior = cmp.ConfirmBehavior.Replace, select = true })
-          --     cmp.mapping.confirm({ select = false, behavior = cmp.ConfirmBehavior.Replace })(fallback)
-          --   else
-          --     fallback()
-          --   end
-          --   -- end
-          -- end,
+          -- ["<CR>"] = cmp.mapping.confirm({
+          --   behavior = cmp.ConfirmBehavior.Insert,
+          --   select = false,
+          -- }),
+          ["<CR>"] = function(fallback)
+            if cmp.visible() then
+              cmp.mapping.confirm({ select = false, behavior = cmp.ConfirmBehavior.Replace })(fallback)
+            else
+              fallback()
+            end
+          end,
           ["<Tab>"] = {
             i = tab,
             s = tab,

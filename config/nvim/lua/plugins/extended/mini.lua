@@ -3,6 +3,7 @@ return {
   { "echasnovski/mini.icons", version = false },
   {
     "echasnovski/mini.comment",
+    cond = false,
     version = false,
     opts = {
       -- Options which control module behavior

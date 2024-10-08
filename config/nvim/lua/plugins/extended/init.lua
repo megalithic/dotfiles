@@ -34,7 +34,22 @@ return {
       config = function() require("colorizer").setup(SETTINGS.colorizer) end,
     },
     -- "gc" to comment visual regions/lines
-    { "numToStr/Comment.nvim", cond = false, opts = {} },
+    {
+      "numToStr/Comment.nvim",
+      cond = true,
+      opts = {
+        ignore = "^$", -- ignore blank lines
+      },
+      config = function(_, opts)
+        -- require("Comment.ft")
+        --   -- Set only line comment
+        --   .set("heex", { "<%!-- %s --%>" })
+        -- Or set both line and block commentstring
+        -- .set("javascript", { "//%s", "/*%s*/" })
+
+        require("Comment").setup(opts)
+      end,
+    },
     {
       "folke/ts-comments.nvim",
       cond = false,
@@ -335,6 +350,9 @@ return {
     "Bekaboo/dropbar.nvim",
     cond = not vim.g.started_by_firenvim,
     opts = {
+      general = {
+        update_interval = 100,
+      },
       bar = {
         -- padding = { left = 0, right = 0 },
         -- truncate = false,

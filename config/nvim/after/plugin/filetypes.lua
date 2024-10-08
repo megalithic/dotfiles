@@ -175,6 +175,7 @@ ftplugin.extend_all({
       shiftwidth = 2,
       commentstring = [[<%!-- %s --%>]],
     },
+    callback = function(bufnr, args) vim.bo[bufnr].commentstring = [[<%!-- %s --%>]] end,
   },
   terminal = {
     opt = {
@@ -191,8 +192,8 @@ ftplugin.extend_all({
     },
   },
   gitrebase = {
-    function()
-      vim.keymap.set("n", "q", function() vim.cmd("cq!", { bang = true }) end, { nowait = true, desc = "abort" })
+    callback = function(bufnr, args)
+      vim.keymap.set("n", "q", function() vim.cmd("cq!", { bang = true }) end, { buffer = bufnr, nowait = true, desc = "abort" })
     end,
   },
   [{ "gitcommit", "NeogitCommitMessage" }] = {

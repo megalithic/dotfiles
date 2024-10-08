@@ -294,6 +294,84 @@ function M.tlen(t)
   return len
 end
 
+function M.tcopy(t)
+  local u = {}
+  for k, v in pairs(t) do
+    u[k] = v
+  end
+
+  return setmetatable(u, getmetatable(t))
+end
+
+--- deeply compare two objects and return the diff
+--- REF: https://gist.github.com/sapphyrus/fd9aeb871e3ce966cc4b0b969f62f539
+function M.compare(o1, o2)
+  -- same object
+  if o1 == o2 then return nil end
+
+  local o1Type = type(o1)
+  local o2Type = type(o2)
+  --- different type
+  if o1Type ~= o2Type then -- don't expand tables to make it more readable
+    return { _1 = o1Type == "table" and o1Type or o1, _2 = o2Type == "table" and o2Type or o2 }
+  end
+  --- same type but not table, already compared above
+  if o1Type ~= "table" then return nil end
+
+  local diff = {}
+
+  -- iterate over o1
+  for key1, value1 in pairs(o1) do
+    local value2 = o2[key1]
+    diff[key1] = M.compare(value1, value2)
+  end
+
+  --- check keys in o2 but missing from o1
+  for key2, value2 in pairs(o2) do
+    diff[key2] = M.compare(nil, value2)
+  end
+  local gen, param, state = pairs(diff)
+  if gen(param, state) ~= nil then
+    return diff
+  else
+    return nil
+  end
+end
+
+function M.deep_equals(o1, o2, ignore_mt)
+  -- same object
+  if o1 == o2 then return true end
+
+  local o1Type = type(o1)
+  local o2Type = type(o2)
+  --- different type
+  if o1Type ~= o2Type then return false end
+  --- same type but not table, already compared above
+  if o1Type ~= "table" then return false end
+
+  -- use metatable method
+  if not ignore_mt then
+    local mt1 = getmetatable(o1)
+    if mt1 and mt1.__eq then
+      --compare using built in method
+      return o1 == o2
+    end
+  end
+
+  -- iterate over o1
+  for key1, value1 in pairs(o1) do
+    local value2 = o2[key1]
+    if value2 == nil or M.deep_equals(value1, value2, ignore_mt) == false then return false end
+  end
+
+  --- check keys in o2 but missing from o1
+  for key2, _ in pairs(o2) do
+    if o1[key2] == nil then return false end
+  end
+
+  return true
+end
+
 function M.strim(s) return (s:gsub("^%s*(.-)%s*$", "%1")) end
 
 -- https://github.com/ibhagwan/fzf-lua/blob/455744b9b2d2cce50350647253a69c7bed86b25f/lua/fzf-lua/utils.lua#L401
