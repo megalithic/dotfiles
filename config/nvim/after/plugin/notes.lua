@@ -7,6 +7,7 @@ function M.format_notes(bufnr, lines)
   bufnr = bufnr or vim.api.nvim_get_current_buf()
   lines = lines or vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
 
+  -- specific task status priorities.. your mileage my vary
   local function get_priority_from_status(status)
     if status == "." then
       return 1 -- In-progress
@@ -21,6 +22,8 @@ function M.format_notes(bufnr, lines)
     end
   end
 
+  -- allows for extracting discrete parts of a task list item for further evaluation
+  ---@diagnostic disable-next-line: redefined-local
   local function extract(lines)
     local tasks = {}
 
@@ -32,16 +35,22 @@ function M.format_notes(bufnr, lines)
     return tasks, tasks[1].index
   end
 
+  -- sorts by status priority first, then alphanumerically
   local function sort(tasks)
-    table.sort(tasks, function(a, b)
+    local sorted_tasks = U.tcopy(tasks)
+
+    table.sort(sorted_tasks, function(a, b)
       if a.status == b.status then
-        return a.text < b.text -- Sort alphabetically if status are the same
+        return a.text < b.text -- sort by alphanumerics if the statuses are the same
       else
-        return get_priority_from_status(a.status) < get_priority_from_status(b.status) -- Sort by status
+        return get_priority_from_status(a.status) < get_priority_from_status(b.status) -- otherwise, sort by our statuses
       end
     end)
+
+    return sorted_tasks
   end
 
+  ---@diagnostic disable-next-line: redefined-local
   local function replace(bufnr, sorted_tasks, starting_task_line, _lines)
     local sorted_tasks_texts = {}
 
@@ -58,12 +67,13 @@ function M.format_notes(bufnr, lines)
   -- used for comparison later
   local originally_extracted_tasks = U.tcopy(tasks)
 
-  sort(tasks)
+  -- sorts by status priority, then alphanumerically
+  local sorted_tasks = sort(tasks)
 
-  -- verifies our mutated-tasks table (sorted) is different from the tasks before we sorted to know if we ought to replace them. This prevents needless buffer re-writes.
-  if not U.deep_equals(originally_extracted_tasks, tasks) then replace(bufnr, tasks, starting_task_line, lines) end
+  -- prevents unncessary re-writes of the buffer..
+  if not U.deep_equals(originally_extracted_tasks, sorted_tasks) then replace(bufnr, sorted_tasks, starting_task_line, lines) end
 end
 
-vim.api.nvim_create_user_command("FormatNotes", M.format_notes, {})
+vim.api.nvim_create_user_command("FormatNotes", function() M.format_notes() end, {})
 
 return M

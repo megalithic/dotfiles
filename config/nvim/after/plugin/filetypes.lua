@@ -349,21 +349,9 @@ ftplugin.extend_all({
       { "n", "<C-x>", require("mega.utils").notes.task_mutate() },
     },
     callback = function(bufnr)
-      -- -- Allow bullets.vim and nvim-autopairs to coexist.
       vim.keymap.set("n", "<leader>w", function()
         vim.schedule(function()
-          print("sorting and replacing..")
           pcall(vim.cmd.FormatNotes)
-          --   vim.keymap.set("i", "<CR>", function()
-          --     local pair = require("nvim-autopairs").completion_confirm()
-          --     if pair == vim.api.nvim_replace_termcodes("<CR>", true, false, true) then
-          --       vim.cmd.InsertNewBullet()
-          --     else
-          --       vim.api.nvim_feedkeys(pair, "n", false)
-          --     end
-          --   end, {
-          --     buffer = 0,
-          --   })
           vim.cmd.write({ bang = true })
         end)
       end, { buffer = bufnr })
