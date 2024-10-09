@@ -204,13 +204,7 @@ return {
         })
       end
 
-      --  This function gets run when an LSP attaches to a particular buffer.
-      --    That is to say, every time a new file is opened that is associated with
-      --    an lsp (for example, opening `main.rs` is associated with `rust_analyzer`) this
-      --    function will be executed to configure the current buffer
       function M.on_attach(client, bufnr, cb)
-        -- if not client or not client.supports_method("textDocument/documentHighlight") then return end
-
         local disabled_lsp_formatting = SETTINGS.disabled_lsp_formatters
 
         if client.server_capabilities.codeLensProvider then vim.lsp.codelens.refresh({ bufnr = bufnr }) end
@@ -223,56 +217,12 @@ return {
         end
 
         local filetype = vim.bo[bufnr].filetype
+
         if SETTINGS.disabled_semantic_tokens[filetype] then client.server_capabilities.semanticTokensProvider = nil end
 
-        -- ---@diagnostic disable-line: duplicate-set-field
-        -- vim.lsp.handlers["textDocument/publishDiagnostics"] = function(err, result, ctx, config)
-        --   result.diagnostics = vim.tbl_map(function(diag)
-        --     if
-        --       (diag.source == "biome" and diag.code == "lint/suspicious/noConsoleLog")
-        --       or (diag.source == "stylelintplus" and diag.code == "declaration-no-important")
-        --     then
-        --       diag.severity = vim.diagnostic.severity.HINT
-        --     end
-        --     return diag
-        --   end, result.diagnostics)
-        --
-        --   vim.lsp.diagnostic.on_publish_diagnostics(err, result, ctx, config)
-        -- end
-
-        -- local diagnostic_handler = vim.lsp.handlers["textDocument/publishDiagnostics"]
-        -- vim.lsp.handlers["textDocument/publishDiagnostics"] = function(err, result, ctx, config)
-        --   local client_name = vim.lsp.get_client_by_id(ctx.client_id).name
-        --   -- disables diagnostic reporting for specific clients
-        --   if vim.tbl_contains(SETTINGS.diagnostic_exclusions, client_name) then return end
-        --
-        --   diagnostic_handler(err, result, ctx, config)
-        -- end
-
-        -- local definition_handler = vim.lsp.handlers["textDocument/definition"]
-        -- vim.lsp.handlers["textDocument/definition"] = function(err, result, ctx, config)
-        --   local client_name = vim.lsp.get_client_by_id(ctx.client_id).name
-        --   -- disables diagnostic reporting for specific clients
-        --   if vim.tbl_contains(SETTINGS.definition_exclusions, client_name) then
-        --     print("returning for " .. client_name)
-        --     return
-        --   end
-        --
-        --   definition_handler(err, result, ctx, config)
-        -- end
-
-        -- local references_handler = vim.lsp.handlers["textDocument/references"]
-        -- vim.lsp.handlers["textDocument/references"] = function(err, result, ctx, config)
-        --   local client_name = vim.lsp.get_client_by_id(ctx.client_id).name
-        --   dbg(client_name)
-        --   -- disables diagnostic reporting for specific clients
-        --   if vim.tbl_contains(SETTINGS.references_exclusions, client_name) then
-        --     print("returning for " .. client_name)
-        --     return
-        --   end
-        --
-        --   references_handler(err, result, ctx, config)
-        -- end
+        if client and client.supports_method("textDocument/inlayHint", { bufnr = bufnr }) then
+          if SETTINGS.enabled_inlay_hints[filetype] then vim.lsp.inlay_hint.enable(true) end
+        end
 
         local desc = function(d) return "[+lsp] " .. d end
         local map = vim.keymap.set
@@ -280,10 +230,6 @@ return {
         local vnmap = function(keys, func, d) map({ "v", "n" }, keys, func, { buffer = bufnr, desc = desc(d) }) end
         local icons = require("mega.settings").icons
 
-        -- if client and client.supports_method("textDocument/inlayHint", { bufnr = bufnr }) then
-        --   vim.lsp.inlay_hint.enable(bufnr, true)
-        --   -- vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
-        -- end
         -- if action opens up qf list, open the first item and close the list
         local function choose_list_first(options)
           vim.fn.setqflist({}, " ", options)
@@ -626,13 +572,13 @@ return {
           },
         })
 
-        augroup("LspDiagnostics", {
-          {
-            event = { "CursorHold" },
-            desc = "Show diagnostics",
-            command = show_diagnostic_popup,
-          },
-        })
+        -- augroup("LspDiagnostics", {
+        --   {
+        --     event = { "CursorHold" },
+        --     desc = "Show diagnostics",
+        --     command = show_diagnostic_popup,
+        --   },
+        -- })
 
         -- if client and client.server_capabilities.documentHighlightProvider then
         --   augroup("LspDocumentHighlights", {
@@ -760,38 +706,21 @@ return {
           update_in_insert = false,
         })
 
-        -- vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, {
-        --   border = BORDER_STYLE,
-        -- })
-        -- vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, {
-        --   border = BORDER_STYLE,
-        -- })
-
         local signs = { Error = icons.lsp.error, Warn = icons.lsp.warn, Hint = icons.lsp.hint, Info = icons.lsp.info }
         for type, icon in pairs(signs) do
           local hl = "DiagnosticSign" .. type
           vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = hl })
         end
 
-        -- Create a custom namespace. This will aggregate signs from all other
-        -- namespaces and only show the one with the highest severity on a
-        -- given line
         local ns = vim.api.nvim_create_namespace("mega_lsp_diagnostics")
-        -- Get a reference to the original signs handler
         local orig_signs_handler = vim.diagnostic.handlers.signs
-        -- Override the built-in signs handler
         local max_diagnostics = function(_, bn, _, opts)
-          -- Get all diagnostics from the whole buffer rather than just the
-          -- diagnostics passed to the handler
           local diagnostics = vim.diagnostic.get(bn)
-          -- Find the "worst" diagnostic per line
           local max_severity_per_line = {}
           for _, d in pairs(diagnostics) do
             local m = max_severity_per_line[d.lnum]
             if not m or d.severity < m.severity then max_severity_per_line[d.lnum] = d end
           end
-          -- Pass the filtered diagnostics (with our custom namespace) to
-          -- the original handler
           local filtered_diagnostics = vim.tbl_values(max_severity_per_line)
           orig_signs_handler.show(ns, bn, filtered_diagnostics, opts)
         end
@@ -804,11 +733,8 @@ return {
             hide = function(_, bn) orig_signs_handler.hide(ns, bn) end,
           })
         end
-        -- vim.diagnostic.handlers.signs = {
-        --   show = max_diagnostics,
-        --   hide = function(_, bn) orig_signs_handler.hide(ns, bn) end,
-        -- }
 
+        -- invoke any additional custom on_attach things passed in
         if cb ~= nil and type(cb) == "function" then cb() end
       end
 

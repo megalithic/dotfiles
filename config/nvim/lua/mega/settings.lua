@@ -95,6 +95,7 @@ local M = {
     "env",
   },
   disabled_semantic_tokens = { "lua" },
+  enabled_inlay_hints = {},
   disabled_lsp_formatters = { "tailwindcss", "html", "ts_ls", "ls_emmet", "zk", "sumneko_lua" },
   ---@format disable
   enabled_elixir_ls = { "", "nextls", "" },
