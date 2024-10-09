@@ -213,6 +213,8 @@ return {
 
         local disabled_lsp_formatting = SETTINGS.disabled_lsp_formatters
 
+        if client.server_capabilities.codeLensProvider then vim.lsp.codelens.refresh({ bufnr = bufnr }) end
+
         for i = 1, #disabled_lsp_formatting do
           if disabled_lsp_formatting[i] == client.name then
             client.server_capabilities.documentFormattingProvider = false
@@ -619,30 +621,6 @@ return {
                 local client_id = evt.data.client_id
                 local c = client_id and vim.lsp.get_client_by_id(client_id)
                 if c and token then require("fidget").notification.remove(c.name, token) end
-              end
-            end,
-          },
-        })
-
-        augroup("LspCodeLens", {
-          {
-            event = { "TextChanged", "InsertLeave", "CursorHold", "LspAttach", "BufEnter" },
-            desc = "Show codelens entries",
-            command = function(evt)
-              local buf = evt.buf
-
-              -- FIXME: refactor and DRY this func:
-              local function check_codelens_support()
-                local clients = vim.lsp.get_clients({ bufnr = buf })
-                for _, c in ipairs(clients) do
-                  if c.server_capabilities.codeLensProvider then return true end
-                end
-                return false
-              end
-
-              if check_codelens_support() then
-                vim.lsp.codelens.refresh({ bufnr = buf })
-                vim.api.nvim_exec_autocmds("User", { pattern = "LspAttached" })
               end
             end,
           },

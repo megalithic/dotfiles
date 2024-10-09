@@ -539,6 +539,19 @@ function M.apply()
             return false
           end
 
+          -- go to PR for specific repos
+          -- if target:match("PR#") then
+          --   -- DIR-PR#116
+          --   local pr_num, repo = target:match("^([DIR|BELL|RET|MOB])[PR#](%d)(%[(.)%])%s(.*)")
+          --   -- local prefix, box, status, task_text = line:match("^(%s*[-*] )(%[(.)%])%s(.*)")
+
+          --   local url = fmt("https://github.com.app/ternit/issue/%s", target)
+          --   vim.notify(fmt("Opening linear ticket %s at %s", target, url))
+          --   vim.fn.jobstart(fmt("%s %s", vim.g.open_command, url))
+
+          --   return false
+          -- end
+
           -- go to web address
           if target:match("https://") then return vim.cmd("norm gx") end
 

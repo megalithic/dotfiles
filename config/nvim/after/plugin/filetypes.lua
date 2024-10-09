@@ -322,7 +322,8 @@ ftplugin.extend_all({
       cbdt = [[Co-authored-by: Dan Thiffault <dan@ternit.com>]],
       cbjm = [[Co-authored-by: Jia Mu <jia@ternit.com>]],
       cbam = [[Co-authored-by: Ali Marsh<ali@ternit.com>]],
-      mtg = [[## Meeting 󱛡 -> ]],
+      ["mtg:"] = [[## Meeting 󱛡 ->]],
+      ["trn:"] = [[### Linear Ticket  ->]],
     },
     opt = {
       relativenumber = false,
@@ -345,15 +346,15 @@ ftplugin.extend_all({
       -- vim.o.wrap = true
       -- vim.o.linebreak = true
     },
-    keys = {
-      { "n", "<C-x>", require("mega.utils").notes.task_mutate() },
-    },
     callback = function(bufnr)
       vim.keymap.set("n", "<leader>w", function()
         vim.schedule(function()
           pcall(vim.cmd.FormatNotes)
           vim.cmd.write({ bang = true })
         end)
+      end, { buffer = bufnr })
+      vim.keymap.set("n", "<C-x>", function()
+        vim.schedule(function() pcall(vim.cmd.ToggleTask) end)
       end, { buffer = bufnr })
     end,
   },

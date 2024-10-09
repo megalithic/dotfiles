@@ -102,6 +102,8 @@ tags:
 
 # Daily notes for ${daily_note_date}
 
+## Notes
+
 ## Tasks
 
 $(__build_tasks)
