@@ -235,7 +235,12 @@ ftplugin.extend_all({
       list = false,
       textwidth = 80,
     },
-    callback = function() pcall(vim.treesitter.start) end,
+    cmp = {
+      sources = {
+        { name = "git" },
+        { name = "buffer" },
+      },
+    },
   },
   prompt = {
     opt = {
@@ -344,11 +349,28 @@ ftplugin.extend_all({
       -- vim.o.wrap = true
       -- vim.o.linebreak = true
     },
-    callback = function(bufnr)
-      -- vim.keymap.set("n", "<C-x>", function()
-      --   vim.schedule(function() pcall(vim.cmd.ToggleTask) end)
-      -- end, { buffer = bufnr })
-    end,
+    cmp = {
+      sources = {
+        {
+          name = "nvim_lsp",
+          markdown_oxide = {
+            keyword_pattern = [[\(\k\| \|\/\|#\|\^\)\+]],
+          },
+          -- or maybe this?
+          --
+          -- option = {
+          --   markdown_oxide = {
+          --     keyword_pattern = [[\(\k\| \|\/\|#\|\^\)\+]],
+          --   },
+          -- },
+        },
+        { name = "snippets" },
+        { name = "git" },
+        { name = "path" },
+        { name = "spell" },
+      },
+    },
+    callback = function(_bufnr) end,
   },
   ["neotest-summary"] = {
     opt = {
@@ -478,6 +500,12 @@ ftplugin.extend_all({
       tabstop = 2,
       shiftwidth = 2,
       commentstring = [[-- %s]],
+    },
+    cmp = {
+      sources = {
+        { name = "vim-dadbod-completion" },
+        { name = "buffer" },
+      },
     },
   },
 })

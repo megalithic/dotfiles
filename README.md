@@ -57,7 +57,7 @@ certain tools/binaries I rely on might or might not install/configure on Linux.
 Though, I have tested it reasonably well on Ubuntu-based Linode and DigitalOcean
 instances.
 
-#### 🐉 Thar be dragons
+### 🐉 Thar be dragons
 
 I am pushing updates _constantly_, so there are **NO** guarantees of stability
 with my config!

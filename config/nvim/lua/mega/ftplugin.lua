@@ -3,6 +3,7 @@
 ---@field keys? table Buffer-local keymaps
 ---@field bufvar? table<string, any> Buffer-local variables
 ---@field callback? fun(bufnr: integer, args: table?)
+---@field cmp? table<string, any> Filetype specific nvim-cmp setup
 ---@field opt? table<string, any> Buffer-local or window-local options
 ---@field compiler? string
 
@@ -84,6 +85,7 @@ function M.extend(name, new_config)
   conf.abbr = vim.tbl_deep_extend("force", conf.abbr or {}, new_config.abbr or {})
   conf.opt = vim.tbl_deep_extend("force", conf.opt or {}, new_config.opt or {})
   conf.bufvar = vim.tbl_deep_extend("force", conf.bufvar or {}, new_config.bufvar or {})
+  conf.cmp = vim.tbl_deep_extend("force", conf.cmp or {}, new_config.cmp or {})
   conf.callback = merge_callbacks(conf.callback, new_config.callback)
   conf.keys = merge_keys(conf.keys, new_config.keys)
   conf.compiler = coalesce(new_config.compiler, conf.compiler)
@@ -163,6 +165,12 @@ function M.apply(name, bufnr, args)
   end
   local conf = configs[name]
   if not conf then return end
+  if conf.cmp then
+    vim.api.nvim_buf_call(bufnr, function()
+      local ok_cmp, cmp = pcall(require, "cmp")
+      if ok_cmp then vim.schedule(function() cmp.setup.filetype(vim.bo[bufnr].filetype, conf.cmp) end) end
+    end)
+  end
   if conf.abbr then
     vim.api.nvim_buf_call(bufnr, function()
       for k, v in pairs(conf.abbr) do

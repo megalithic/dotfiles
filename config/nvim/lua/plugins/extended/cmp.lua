@@ -2,108 +2,7 @@ local SETTINGS = require("mega.settings")
 local icons = SETTINGS.icons
 local fmt = string.format
 
-return {
-  {
-    -- fixes ffi error:
-    -- https://github.com/Saghen/blink.cmp/issues/90#issuecomment-2407226850
-    "neovim-plugin/blink.cmp",
-
-    -- "saghen/blink.cmp",
-    --
-    cond = vim.g.completer == "blink",
-    lazy = false, -- lazy loading handled internally
-    -- optional: provides snippets for the snippet source
-    dependencies = "rafamadriz/friendly-snippets",
-
-    -- use a release tag to download pre-built binaries
-    -- version = "v0.*",
-    -- version = "v0.2.1", -- REQUIRED release tag to download pre-built binaries
-    -- OR build from source, requires nightly: https://rust-lang.github.io/rustup/concepts/channels.html#working-with-nightly-rust
-    build = "cargo build --release",
-    -- On musl libc based systems you need to add this flag
-    -- build = 'RUSTFLAGS="-C target-feature=-crt-static" cargo build --release',
-
-    opts = {
-      highlight = {
-        -- sets the fallback highlight groups to nvim-cmp's highlight groups
-        -- useful for when your theme doesn't support blink.cmp
-        -- will be removed in a future release, assuming themes add support
-        use_nvim_cmp_as_default = true,
-      },
-      keymap = {
-        accept = "<CR>",
-        hide = "<C-e>",
-        select_prev = { "<S-Tab>", "<Up>", "<C-p>" },
-        select_next = { "<Tab>", "<Down>", "<C-n>" },
-        scroll_documentation_down = "<C-j>",
-        scroll_documentation_up = "<C-k>",
-        snippet_forward = { "<Tab>", "<C-l>" },
-        snippet_backward = { "<S-Tab>", "<C-h>" },
-      },
-      -- set to 'mono' for 'Nerd Font Mono' or 'normal' for 'Nerd Font'
-      -- adjusts spacing to ensure icons are aligned
-      nerd_font_variant = "normal",
-
-      -- experimental auto-brackets support
-      accept = { auto_brackets = { enabled = true } },
-
-      -- experimental signature help support
-      trigger = {
-        completion = {
-          show_on_insert_on_trigger_character = false,
-        },
-        signature_help = { enabled = true },
-      },
-      windows = {
-        autocomplete = {
-          preselect = false,
-        },
-      },
-      sources = {
-        providers = {
-          {
-            { "blink.cmp.sources.lsp" },
-            { "blink.cmp.sources.path" },
-            {
-              "blink.cmp.sources.snippets",
-              keyword_length = 1,
-              score_offset = -3,
-              opts = {
-                extended_filetypes = {
-                  javascriptreact = { "javascript" },
-                  eelixir = { "elixir" },
-                  typescript = { "javascript" },
-                  typescriptreact = {
-                    "javascript",
-                    "javascriptreact",
-                    "typescript",
-                  },
-                },
-                friendly_snippets = false,
-              },
-            },
-          },
-          {
-            { "blink.cmp.sources.buffer", keyword_length = 2 },
-          },
-        },
-      },
-    },
-  },
-  {
-    -- "hrsh7th/nvim-cmp",
-    --
-    -- "yioneko/nvim-cmp",
-    -- branch = "perf",
-    --
-    "iguanacucumber/magazine.nvim",
-    cond = vim.g.completer == "cmp",
-    name = "nvim-cmp",
-    event = { "InsertEnter *", "CmdlineEnter *" },
-    -- event = "InsertEnter",
-    -- lazy = false,
-    priority = 100,
-    dependencies = {
+--[[ Luasnips if I want it:
       {
         "saadparwaiz1/cmp_luasnip",
         cond = vim.g.snipper == "luasnip",
@@ -169,6 +68,21 @@ return {
           },
         },
       },
+--]]
+
+return {
+  {
+    -- "hrsh7th/nvim-cmp",
+    --
+    -- "yioneko/nvim-cmp",
+    -- branch = "perf",
+    --
+    "iguanacucumber/magazine.nvim",
+    cond = vim.g.completer == "cmp",
+    name = "nvim-cmp",
+    event = { "InsertEnter *", "CmdlineEnter *" },
+    priority = 100,
+    dependencies = {
       {
         "petertriho/cmp-git",
         -- dependencies = { "yioneko/nvim-cmp" },
@@ -224,8 +138,7 @@ return {
 
       vim.api.nvim_create_user_command("ToggleNvimCmp", toggle_completion, {})
     end,
-
-    config = function()
+    opts = function()
       local cmp = require("cmp")
       local ls_ok, ls = pcall(require, "luasnip")
 
@@ -246,7 +159,8 @@ return {
         local line, col = unpack(vim.api.nvim_win_get_cursor(0))
         return col ~= 0 and vim.api.nvim_buf_get_lines(0, line - 1, line, true)[1]:sub(col, col):match("%s") == nil
       end
-      local tab = function(fallback)
+
+      local function tab(fallback)
         if cmp.visible() then
           cmp.select_next_item()
         elseif ls_ok and ls.expand_or_locally_jumpable() then
@@ -259,7 +173,8 @@ return {
           fallback()
         end
       end
-      local shift_tab = function(fallback)
+
+      local function stab(fallback)
         if cmp.visible() then
           cmp.select_prev_item()
         elseif ls_ok and ls.jumpable(-1) then
@@ -271,7 +186,76 @@ return {
         end
       end
 
-      cmp.setup({
+      local keymaps = {
+        ["<C-n>"] = cmp.mapping.select_next_item(),
+        ["<C-p>"] = cmp.mapping.select_prev_item(),
+        ["<C-b>"] = cmp.mapping.scroll_docs(-4),
+        ["<C-f>"] = cmp.mapping.scroll_docs(4),
+        ["<C-y>"] = cmp.mapping.confirm({ select = true }),
+        ["<C-e>"] = cmp.mapping(function()
+          if vim.snippet.active({ direction = 1 }) then vim.snippet.stop() end
+          cmp.mapping.abort()
+        end, { "i", "s" }),
+        ["<CR>"] = cmp.mapping(function(fallback)
+          if cmp.core.view:visible() or vim.fn.pumvisible() == 1 then
+            if vim.api.nvim_get_mode().mode == "i" then vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<c-G>u", true, true, true), "n", false) end
+            if cmp.confirm({ select = true }) then return end
+          end
+
+          return fallback()
+        end),
+        -- ["<CR>"] = cmp.mapping.confirm({
+        --   behavior = cmp.ConfirmBehavior.Insert,
+        -- }),
+        -- ["<CR>"] = cmp.mapping.confirm({
+        --   behavior = cmp.ConfirmBehavior.Insert,
+        --   select = false,
+        -- }),
+        -- ["<CR>"] = function(fallback)
+        --   if cmp.visible() then
+        --     cmp.mapping.confirm({ select = false, behavior = cmp.ConfirmBehavior.Replace })(fallback)
+        --   else
+        --     fallback()
+        --   end
+        -- end,
+        ["<Tab>"] = {
+          i = tab,
+          s = tab,
+          c = function()
+            -- if vim.fn.getcmdline():sub(1, 1) == "!" then
+            --   vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<C-z>", true, false, true), "n", false)
+            --   return
+            -- end
+            if cmp.visible() then
+              cmp.confirm({ select = true })
+            else
+              cmp.complete()
+              cmp.select_next_item()
+              cmp.select_prev_item({ behavior = cmp.SelectBehavior.Insert })
+            end
+          end,
+        },
+        ["<S-Tab>"] = {
+          i = stab,
+          s = stab,
+          c = function()
+            if cmp.visible() then
+              cmp.select_prev_item({ behavior = cmp.SelectBehavior.Insert })
+            else
+              cmp.complete()
+            end
+          end,
+        },
+      }
+
+      local winhighlight = table.concat({
+        "Normal:NormalFloat",
+        "FloatBorder:FloatBorder",
+        "CursorLine:Visual",
+        "Search:None",
+      }, ",")
+
+      return {
         preselect = cmp.PreselectMode.None,
         snippet = {
           expand = function(args)
@@ -282,12 +266,11 @@ return {
             end
           end,
         },
-        -- NOTE: read `:help ins-completion`
         completion = { completeopt = "menu,menuone,noinsert,noselect" },
-        confirmation = {
-          default_behavior = require("cmp.types").cmp.ConfirmBehavior.Insert,
-          get_commit_characters = function(commit_characters) return commit_characters end,
-        },
+        -- confirmation = {
+        --   default_behavior = require("cmp.types").cmp.ConfirmBehavior.Insert,
+        --   get_commit_characters = function(commit_characters) return commit_characters end,
+        -- },
         entries = {
           name = "custom",
           selection_order = "near_cursor",
@@ -297,15 +280,14 @@ return {
           -- TODO:
           -- https://github.com/hrsh7th/nvim-cmp/wiki/Menu-Appearance#how-to-get-types-on-the-left-and-offset-the-menu
           completion = {
-            winhighlight = table.concat({
-              "Normal:NormalFloat",
-              "FloatBorder:FloatBorder",
-              "CursorLine:Visual",
-              "Search:None",
-            }, ","),
+            winhighlight = winhighlight,
             zindex = 1001,
             col_offset = 0,
             border = SETTINGS.border,
+            max_height = math.floor(vim.o.lines * 0.5),
+            max_width = math.floor(vim.o.columns * 0.4),
+            height = math.floor(vim.o.lines * 0.5),
+            width = math.floor(vim.o.columns * 0.4),
             side_padding = 1,
             scrollbar = true,
           },
@@ -313,75 +295,10 @@ return {
             border = SETTINGS.border,
             max_height = math.floor(vim.o.lines * 0.5),
             max_width = math.floor(vim.o.columns * 0.4),
-            winhighlight = table.concat({
-              "Normal:NormalFloat",
-              "FloatBorder:FloatBorder",
-              "CursorLine:Visual",
-              "Search:None",
-            }, ","),
+            winhighlight = winhighlight,
           }),
         },
-        mapping = cmp.mapping.preset.insert({
-          ["<C-n>"] = cmp.mapping.select_next_item(),
-          ["<C-p>"] = cmp.mapping.select_prev_item(),
-          ["<C-b>"] = cmp.mapping.scroll_docs(-4),
-          ["<C-f>"] = cmp.mapping.scroll_docs(4),
-          ["<C-y>"] = cmp.mapping.confirm({ select = true }),
-          ["<C-e>"] = cmp.mapping(function()
-            if vim.snippet.active({ direction = 1 }) then vim.snippet.stop() end
-            cmp.mapping.abort()
-          end, { "i", "s" }),
-          -- ["<CR>"] = cmp.mapping(function(fallback)
-          --   if cmp.core.view:visible() or vim.fn.pumvisible() == 1 then
-          --     if vim.api.nvim_get_mode().mode == "i" then vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<c-G>u", true, true, true), "n", false) end
-          --     if cmp.confirm({ select = true }) then return end
-          --   end
-
-          --   return fallback()
-          -- end),
-          ["<CR>"] = cmp.mapping.confirm({
-            behavior = cmp.ConfirmBehavior.Insert,
-          }),
-          -- ["<CR>"] = cmp.mapping.confirm({
-          --   behavior = cmp.ConfirmBehavior.Insert,
-          --   select = false,
-          -- }),
-          -- ["<CR>"] = function(fallback)
-          --   if cmp.visible() then
-          --     cmp.mapping.confirm({ select = false, behavior = cmp.ConfirmBehavior.Replace })(fallback)
-          --   else
-          --     fallback()
-          --   end
-          -- end,
-          ["<Tab>"] = {
-            i = tab,
-            s = tab,
-            c = function()
-              -- if vim.fn.getcmdline():sub(1, 1) == "!" then
-              --   vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<C-z>", true, false, true), "n", false)
-              --   return
-              -- end
-              if cmp.visible() then
-                cmp.confirm({ select = true })
-              else
-                cmp.complete()
-                cmp.select_next_item()
-                cmp.select_prev_item({ behavior = cmp.SelectBehavior.Insert })
-              end
-            end,
-          },
-          ["<S-Tab>"] = {
-            i = shift_tab,
-            s = shift_tab,
-            c = function()
-              if cmp.visible() then
-                cmp.select_prev_item({ behavior = cmp.SelectBehavior.Insert })
-              else
-                cmp.complete()
-              end
-            end,
-          },
-        }),
+        mapping = cmp.mapping.preset.insert(keymaps),
 
         -- TODO/REF: https://github.com/3rd/config/blob/master/dotfiles/nvim/lua/modules/completion/nvim-cmp.lua#L67C1-L80C4
         formatting = {
@@ -396,15 +313,7 @@ return {
           format = function(entry, vim_item)
             local item_maxwidth = 30
             local ellipsis_char = ELLIPSIS_CHAR
-            -- if entry.source.name == "async_path" then
-            --   local icon, hl_group = require("nvim-web-devicons").get_icon(entry:get_completion_item().label)
-            --   if icon then
-            --     item.kind = icon
-            --     item.kind_hl_group = hl_group
-            --   end
-            -- end
 
-            --- limit vim_item sub attribute width
             ---@param item string
             ---@return string limited string
             local function truncate(item)
@@ -454,30 +363,8 @@ return {
 
               vim_item.kind = fmt("%s %s", icons.kind[vim_item.kind], vim_item.kind)
             end
-
-            -- REF: https://github.com/3rd/config/blob/master/home/dotfiles/nvim/lua/modules/completion/nvim-cmp.lua
-            -- vim_item.dup = ({
-            --   fuzzy_buffer = 0,
-            --   buffer = 0,
-            --   path = 0,
-            --   async_path = 0,
-            --   nvim_lsp = 0,
-            --   luasnip = 0,
-            --   vsnip = 0,
-            --   snippets = 0,
-            -- })[entry.source.name] or 0
-
             vim_item.menu = truncate(vim_item.menu)
             vim_item.abbr = truncate(vim_item.abbr)
-
-            -- vim_item.abbr = #vim_item.abbr >= max_length and string.sub(vim_item.abbr, 1, max_length) .. ELLIPSIS_CHAR or vim_item.abbr
-            -- local content = vim_item.abbr
-            -- if #content > MAX_MENU_WIDTH then
-            --   vim_item.abbr = vim.fn.strcharpart(content, 0, MAX_MENU_WIDTH) .. ELLIPSIS_CHAR
-            -- else
-            --   vim_item.abbr = content .. get_ws(MAX_MENU_WIDTH, #content)
-            -- end
-            -- vim_item.abbr = string.gsub(vim_item.abbr, "^%s+", "")
 
             if entry.source.name == "nvim_lsp" then
               vim_item.menu = fmt("[%s]", entry.source.source.client.name)
@@ -568,39 +455,52 @@ return {
               return true
             end,
           },
-          { name = "async_path", option = { trailing_slash = true } },
+          { name = "async_path", trailing_slash = true },
         }, {
           {
             name = "fuzzy_buffer",
             group_index = 2,
             priority = 1,
-            option = {
-              group_index = 2,
-              priority = 1,
-              min_match_length = 3,
-              max_matches = 5,
-              options = {
-                option = {
-                  -- https://github.com/hrsh7th/cmp-buffer#get_bufnrs-type-fun-number=
-                  -- https://github.com/hrsh7th/cmp-buffer#performance-on-large-text-files=
-                  get_bufnrs = function()
-                    local LIMIT = 1024 * 1024 -- 1 Megabyte max
-                    local bufs = {}
+            min_match_length = 3,
+            max_item_count = 5,
+            max_matches = 5,
+            get_bufnrs = function()
+              local LIMIT = 1024 * 1024 -- 1 Megabyte max
+              local bufs = {}
 
-                    for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-                      local line_count = vim.api.nvim_buf_line_count(buf)
-                      local byte_size = vim.api.nvim_buf_get_offset(buf, line_count)
+              for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+                local line_count = vim.api.nvim_buf_line_count(buf)
+                local byte_size = vim.api.nvim_buf_get_offset(buf, line_count)
 
-                      if byte_size < LIMIT then bufs[buf] = true end
-                    end
+                if byte_size < LIMIT then bufs[buf] = true end
+              end
 
-                    return vim.tbl_keys(bufs)
-                  end,
-                },
-                -- get_bufnrs = function() return vim.tbl_map(vim.api.nvim_win_get_buf, vim.api.nvim_list_wins()) end,
-              },
-            },
+              return vim.tbl_keys(bufs)
+            end,
           },
+          -- option = {
+          --   group_index = 2,
+          --   priority = 1,
+          --   min_match_length = 3,
+          --   max_matches = 5,
+          --   options = {
+          --     option = {
+          --       get_bufnrs = function()
+          --         local LIMIT = 1024 * 1024 -- 1 Megabyte max
+          --         local bufs = {}
+
+          --         for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+          --           local line_count = vim.api.nvim_buf_line_count(buf)
+          --           local byte_size = vim.api.nvim_buf_get_offset(buf, line_count)
+
+          --           if byte_size < LIMIT then bufs[buf] = true end
+          --         end
+
+          --         return vim.tbl_keys(bufs)
+          --       end,
+          --     },
+          --   },
+          -- },
           -- {
           --   name = "buffer",
           --   keyword_length = 4,
@@ -611,80 +511,48 @@ return {
           -- },
           { name = "spell" },
         }),
-        -- sources = {
-        --   { name = "nvim_lsp" },
-        --   { name = "luasnip" },
-        --   { name = "path" },
-        -- },
-      })
+      }
+    end,
+    config = function(_, opts)
+      local cmp = require("cmp")
+
+      cmp.setup(opts)
+
+      local cmdline_keymaps = {
+        ["<Down>"] = { c = cmp.mapping.select_next_item({ behavior = cmp.SelectBehavior.Insert }) },
+        ["<Up>"] = { c = cmp.mapping.select_prev_item({ behavior = cmp.SelectBehavior.Insert }) },
+      }
 
       cmp.setup.cmdline({ "/", "?" }, {
-        -- view = {
-        --   entries = { name = "custom", direction = "bottom_up" },
-        -- },
-        mapping = cmp.mapping.preset.cmdline(),
+        mapping = cmp.mapping.preset.cmdline(cmdline_keymaps),
         sources = {
           { name = "nvim_lsp_document_symbol" },
-          -- { name = "fuzzy_buffer", option = { min_match_length = 3 } },
-          { name = "buffer", option = { min_match_length = 2 } },
+          { name = "fuzzy_buffer", min_match_length = 3, max_item_count = 5 },
+          { name = "buffer", min_match_length = 2, max_item_count = 5 },
         },
       })
 
       cmp.setup.cmdline(":", {
-        -- view = {
-        --   entries = { name = "custom", direction = "bottom_up" },
-        -- },
-        mapping = cmp.mapping.preset.cmdline({
-          ["<Down>"] = { c = cmp.mapping.select_next_item({ behavior = cmp.SelectBehavior.Insert }) },
-          ["<Up>"] = { c = cmp.mapping.select_prev_item({ behavior = cmp.SelectBehavior.Insert }) },
-        }),
+        mapping = cmp.mapping.preset.cmdline(cmdline_keymaps),
         sources = cmp.config.sources({
           { name = "async_path" },
-          -- { name = "path" },
           {
             name = "cmdline",
             keyword_length = 2,
-            option = {
-              ignore_cmds = {},
-              -- ignore_cmds = { "Man", "!" },
-            },
+            max_item_count = 5,
+            ignore_cmds = {},
+            -- ignore_cmds = { "Man", "!" },
             keyword_pattern = [=[[^[:blank:]\!]*]=],
           },
-          -- { name = "cmdline_history", priority = 10, max_item_count = 3 },
-        }),
-      })
-
-      -- Set configuration for specific filetype.
-      ---@diagnostic disable-next-line missing-fields
-      cmp.setup.filetype({ "gitcommit", "NeogitCommitMessage" }, {
-        sources = cmp.config.sources({
-          { name = "git" },
-        }, {
-          { name = "buffer" },
-        }),
-      })
-
-      cmp.setup.filetype({ "sql" }, {
-        sources = {
-          { name = "vim-dadbod-completion" },
-          { name = "buffer" },
-        },
-      })
-
-      cmp.setup.filetype("markdown", {
-        sources = {
           {
-            name = "nvim_lsp",
-            option = {
-              markdown_oxide = {
-                keyword_pattern = [[\(\k\| \|\/\|#\|\^\)\+]],
-              },
-            },
+            name = "cmdline_history",
+            keyword_length = 2,
+            max_item_count = 5,
+            ignore_cmds = {},
+            -- ignore_cmds = { "Man", "!" },
+            keyword_pattern = [=[[^[:blank:]\!]*]=],
           },
-          { name = "snippets" },
-          { name = "git" },
-          { name = "path" },
-        },
+        }),
       })
 
       if pcall(require, "nvim-autopairs") then

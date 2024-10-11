@@ -522,6 +522,7 @@ M.apply = function()
       tabline = "",
       showtabline = 0,
       guicursor = vim.opt.guicursor + "a:blinkon500-blinkoff100",
+      pumheight = 25, -- also controls nvim-cmp completion window height
     },
   }
 
