@@ -6,45 +6,29 @@ local map = vim.keymap.set
 
 local M = {}
 
----@return nil|TSNode
-function M.get_task_list_marker()
-  local markers = {}
-  local node = vim.treesitter.get_node()
-  while node and node:type() ~= "list_item" do
-    node = node:parent()
-  end
-
-  if not node then return end
-
-  for child in node:iter_children() do
-    dbg(child:type())
-    if child:type():match("^task_list_marker") then return child end
-  end
-end
-
----@param replacement string?
-local function replace_marker(replacement)
+---@param status string?
+function M.toggle_task(status)
+  -- TODO: https://github.com/epilande/checkbox-cycle.nvim/blob/main/lua/checkbox-cycle/init.lua
   local line = vim.api.nvim_get_current_line()
+  local default_empty_status = " "
 
-  local prefix, box = line:match("^(%s*[-*] )(%[.%])")
-
-  if replacement == nil then
-    if box == "[x]" then
-      replacement = "[ ]"
-    else
-      replacement = "[x]"
-    end
-  end
+  local prefix, box, _box_status, _task_text = line:match("^(%s*[-*] )(%[(.)%])%s(.*)")
 
   if not prefix or not box then return end
-  local cur = vim.api.nvim_win_get_cursor(0)
-  vim.api.nvim_buf_set_text(0, cur[1] - 1, prefix:len(), cur[1] - 1, prefix:len() + box:len(), { replacement })
-end
+  local function wrap_status(s) return string.format("[%s]", s) end
 
-function M.toggle_task()
-  replace_marker()
-  -- return function() replace_marker() end
-  -- return function() replace_marker("[" .. new_status .. "]") end
+  if status == nil or status == "" then
+    if box == "[x]" then
+      status = wrap_status(default_empty_status)
+    else
+      status = wrap_status("x")
+    end
+  else
+    status = wrap_status(status)
+  end
+
+  local cursor = vim.api.nvim_win_get_cursor(0)
+  vim.api.nvim_buf_set_text(0, cursor[1] - 1, prefix:len(), cursor[1] - 1, prefix:len() + box:len(), { status })
 end
 
 function M.get_md_link_title()
@@ -67,7 +51,7 @@ end
 function M.get_previous_daily_note()
   local notes = vim.split(
     vim.fn.glob(
-      "`find " .. vim.env.HOME .. "/Documents/_notes/daily/**/*.md -type f -print0 | xargs -0 stat -f '%m %N' | sort -nr | head -2 | cut -f2- -d' ' | tail -n1`"
+      "`find " .. vim.env.HOME .. "/Documents/_notes/daily -type f -name '*.md' -print0 | xargs -0 ls -Ur | sort -nr | head -2 | cut -f2- -d' ' | tail -n1`"
     ),
     "\n",
     { trimempty = true }
@@ -172,186 +156,141 @@ function M.format_notes(bufnr, lines)
   if not U.deep_equals(originally_extracted_tasks, sorted_tasks) then replace(bufnr, sorted_tasks, starting_task_line, lines) end
 end
 
--- [[ commands ]] --------------------------------------------------------------
+function M.execute_line()
+  if vim.bo.filetype ~= "markdown" then return end
 
-command("ToggleTask", function() M.toggle_task() end, {})
-command("FormatNotes", function() M.format_notes() end, {})
-
-command("ExecuteLine", function()
-  -- if vim.bo.filetype ~= "markdown" then return end
+  -- https://github.com/AckslD/nvim-FeMaco.lua/blob/main/lua/femaco/edit.lua
   local ts = vim.treesitter
+  local get_node_range = ts.get_node_range
+  local query = require("nvim-treesitter.query")
 
-  -- Function to check if the current line is in a markdown code block and get its language
-  local function is_in_markdown_code_block()
-    -- Get the parser for the current buffer
-    local parser = ts.get_parser(0, "markdown") -- Ensure we use the markdown parser
-    local tree = parser:parse()[1] -- Get the first parsed tree
-    local root = tree:root() -- Get the root of the syntax tree
-
-    -- Get the current cursor position (0-indexed)
-    local cursor_row, cursor_col = unpack(vim.api.nvim_win_get_cursor(0))
-    cursor_row = cursor_row - 1 -- Convert from 1-indexed to 0-indexed
-
-    -- Function to check if a node contains the cursor
-    local function node_contains_cursor(node)
-      local start_row, start_col, end_row, end_col = node:range()
-      return start_row <= cursor_row and end_row >= cursor_row
+  local any = function(func, items)
+    for _, item in ipairs(items) do
+      if func(item) then return true end
     end
+    return false
+  end
 
-    -- Tree-sitter query to find fenced code blocks and their language identifier
-    local query = [[
-        (fenced_code_block
-            (info_string) @lang)
-    ]]
+  -- Maybe we could use https://github.com/nvim-treesitter/nvim-treesitter/pull/3487
+  -- if they get merged
+  local is_in_range = function(range, line, col)
+    local start_line, start_col, end_line, end_col = unpack(range)
+    if line >= start_line and line <= end_line then
+      if line == start_line and line == end_line then
+        return col >= start_col and col < end_col
+      elseif line == start_line then
+        return col >= start_col
+      elseif line == end_line then
+        return col < end_col
+      else
+        return true
+      end
+    else
+      return false
+    end
+  end
 
-    local lang_tree = ts.query.parse("markdown", query)
-    for _, captures, _ in lang_tree:iter_matches(root, 0, cursor_row, cursor_row + 1) do
-      local lang_node = captures[1] -- The 'info_string' node that contains the language
-      local code_block_node = lang_node:parent() -- The parent node of the language identifier
+  local get_match_range = function(match)
+    if match.metadata ~= nil and match.metadata.range ~= nil then
+      return unpack(match.metadata.range)
+    else
+      return get_node_range(match.node)
+    end
+  end
 
-      if node_contains_cursor(code_block_node) then
-        -- Get the text of the language identifier (e.g., `lua`, `python`, etc.)
-        local lang = ts.get_node_text(lang_node, 0)
-        return true, lang
+  local get_match_text = function(match, bufnr)
+    local srow, scol, erow, ecol = get_match_range(match)
+    return table.concat(vim.api.nvim_buf_get_text(bufnr, srow, scol, erow, ecol, {}), "\n")
+  end
+
+  local parse_match = function(match)
+    local language = match.language or match._lang or (match.injection and match.injection.language)
+    if language == nil then
+      for lang, val in pairs(match) do
+        return {
+          lang = lang,
+          content = val,
+        }
       end
     end
+    local lang
+    local lang_range
+    if type(language) == "string" then
+      lang = language
+    else
+      lang = get_match_text(language, 0)
+      lang_range = { get_match_range(language) }
+    end
+    local content = match.content or (match.injection and match.injection.content)
 
-    return false, nil
+    return {
+      lang = lang,
+      lang_range = lang_range,
+      content = content,
+    }
   end
 
-  -- Usage example
-  local in_code_block, lang = is_in_markdown_code_block()
+  local get_match_at_cursor = function()
+    local row, col = unpack(vim.api.nvim_win_get_cursor(0))
 
-  if in_code_block then
-    print("Cursor is inside a code block for language:", lang)
+    local contains_cursor = function(range) return is_in_range(range, row - 1, col) or (range[3] == row - 1 and range[4] == col) end
+
+    local is_after_cursor = function(range) return range[1] == row - 1 and range[2] > col end
+
+    local is_before_cursor = function(range) return range[3] == row - 1 and range[4] < col end
+
+    local matches = query.get_matches(vim.api.nvim_get_current_buf(), "injections")
+    local before_cursor = {}
+    local after_cursor = {}
+    for _, match in ipairs(matches) do
+      local match_data = parse_match(match)
+      local content_range = { get_match_range(match_data.content) }
+      local ranges = { content_range }
+      if match_data.lang_range then table.insert(ranges, match_data.lang_range) end
+      if any(contains_cursor, ranges) then
+        return { lang = match_data.lang, content = match_data.content, range = content_range }
+      elseif any(is_after_cursor, ranges) then
+        table.insert(after_cursor, { lang = match_data.lang, content = match_data.content, range = content_range })
+      elseif any(is_before_cursor, ranges) then
+        table.insert(before_cursor, { lang = match_data.lang, content = match_data.content, range = content_range })
+      end
+    end
+    if #after_cursor > 0 then
+      return after_cursor[1]
+    elseif #before_cursor > 0 then
+      return before_cursor[#before_cursor]
+    end
+  end
+
+  local match_data = get_match_at_cursor()
+  if match_data == nil then return end
+  -- local match_lines = vim.split(get_match_text(match_data.content, 0), "\n")
+  local filetype = match_data.lang
+
+  local current_line_to_execute = vim.api.nvim_get_current_line()
+
+  local function exec(args, cmd, ft)
+    cmd = cmd and cmd .. " " or ""
+    vim.notify(string.format("%s: executing %s%s", ft, cmd, current_line_to_execute))
+    mega.toggleterm({ cmd = "zsh -lc '" .. cmd .. args .. "; echo; echo Press any key to exit...; read -n 1; exit'" })
+  end
+
+  if filetype == "sh" then
+    exec(current_line_to_execute)
+  elseif filetype == "elixir" then
+    exec(current_line_to_execute, "elixir", filetype)
+  elseif filetype == "lua" then
+    exec(current_line_to_execute, "lua", filetype)
   else
-    print("Cursor is not inside a code block.")
+    vim.notify(string.format("%s: unable to execute `%s`", filetype, current_line_to_execute))
   end
+end
 
-  -- local bufnr = vim.api.nvim_get_current_buf()
-  -- local content = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-  -- local ts = vim.treesitter
-  -- local get_node_text = require("vim.treesitter").get_node_text
+-- [[ commands ]] --------------------------------------------------------------
 
-  -- if vim.bo.filetype ~= "markdown" then return end
-  -- local get_node = ts.get_node
-  -- local _cur_pos = vim.api.nvim_win_get_cursor
-
-  -- local current_node = get_node({ lang = "markdown" })
-  -- local node = current_node
-
-  -- while node ~= nil and node:type() ~= "code_fence_content" and node:type() ~= "fenced_code_block" do
-  --   node = node:parent()
-  --   P(node:type())
-  -- end
-
-  -- local language = ""
-  -- for child_node in node:iter_children() do
-  --   print(child_node:type())
-  --   if child_node:type() == "code_fence_content" or node:type() == "fenced_code_block" then node = child_node end
-  --   if child_node:type() == "info_string" then
-  --     for c in child_node:iter_children() do
-  --       if c:type() == "language" then language = get_node_text(c, 0) end
-  --     end
-  --   end
-  -- end
-
-  -- while node ~= nil and node:type() ~= "code_fence_content" and node:type() ~= "fenced_code_block" do
-  --   node = node:parent()
-  --   P(node:type())
-  -- end
-
-  -- local codeblock_content = vim.split(get_node_text(node, 0):gsub("\n>?%s-$", ""), "\n")
-  -- dbg(codeblock_content)
-
-  -- while node ~= nil and node:type() ~= "code_fence_content" and node:type() ~= "fenced_code_block" do
-  --   node = node:parent()
-  -- end
-
-  -- -- return node ~= nil and (node:type() == "code_fence_content" or node:type() == "fenced_code_block")
-  -- if node ~= nil and (node:type() == "code_fence_content" or node:type() == "fenced_code_block") then
-  --   local language = ""
-  --   for child_node in node:iter_children() do
-  --     dbg(child_node:type())
-  --     if child_node:type() == "code_fence_content" then node = child_node end
-  --     if child_node:type() == "info_string" then
-  --       for c in child_node:iter_children() do
-  --         if c:type() == "language" then language = get_node_text(c, 0) end
-  --       end
-  --     end
-  --   end
-
-  --   print(language)
-
-  --   -- local current_line = vim.api.nvim_get_current_line()
-  --   -- print(current_line)
-  -- end
-
-  -- while current_node do
-  --   local type = current_node:type()
-  --   dbg(type)
-  --   -- if type == "inline_link" or type == "image" then return vim.treesitter.get_node_text(current_node:named_child(1), 0) end
-  --   if type == "link_text" then print(ts.get_node_text(current_node, 0)) end
-  --   -- if type == "link_text" then return ts.get_node_text(current_node, 0) end
-  --   current_node = current_node:parent()
-  -- end
-
-  -- local tsparser = vim.treesitter.get_string_parser(self.content, "markdown")
-  -- local tstree = tsparser:parse()[1]
-  -- local parent_node = tstree:root()
-
-  -- local ts = vim.treesitter
-
-  -- -- Function to check if the current line is in a code fence block
-  -- local function is_in_code_fence_block()
-  --   local parser = ts.get_parser(0) -- Get parser for the current buffer
-  --   local tree = parser:parse()[1] -- Get the first parsed tree
-  --   local root = tree:root() -- Root of the syntax tree
-
-  --   local cursor_row, cursor_col = unpack(vim.api.nvim_win_get_cursor(0)) -- Get cursor position
-  --   cursor_row = cursor_row - 1 -- Make it 0-indexed
-
-  --   -- Function to find the code block node at cursor position
-  --   local function node_contains_cursor(node)
-  --     local start_row, start_col, end_row, end_col = node:range()
-  --     return start_row <= cursor_row and end_row >= cursor_row
-  --   end
-
-  --   local function find_code_fence_node()
-  --     local query = [[
-  --         ;; Query to find code fences in markdown-like languages
-  --         (fenced_code_block
-  --           (info_string) @lang)
-  --       ]]
-  --     local lang_tree = ts.query.parse("markdown", query)
-  --     for _, captures, metadata in lang_tree:iter_matches(root, 0, cursor_row, cursor_row + 1) do
-  --       local lang_node = captures[1] -- The 'info_string' node that specifies the language
-  --       if lang_node ~= nil and node_contains_cursor(lang_node:parent()) then
-  --         return lang_node -- The node that specifies the language
-  --       end
-  --     end
-  --     return nil
-  --   end
-
-  --   -- Check if we are inside a fenced code block and get the language
-  --   local lang_node = find_code_fence_node()
-  --   if lang_node then
-  --     -- Extract the language (i.e., the programming language after ```)
-  --     local lang = ts.get_node_text(lang_node, 0)
-  --     return true, lang
-  --   else
-  --     return false, nil
-  --   end
-  -- end
-
-  -- -- Usage
-  -- local in_fence, lang = is_in_code_fence_block()
-  -- if in_fence then
-  --   print("Cursor is inside a code fence block for language:", lang)
-  -- else
-  --   print("Cursor is not in a code fence block.")
-  -- end
-end, {})
+command("ToggleTask", function(evt) M.toggle_task(evt.args) end, {})
+command("FormatNotes", function() M.format_notes() end, {})
+command("ExecuteLine", function() M.execute_line() end, {})
 
 -- [[ mappings ]] --------------------------------------------------------------
 local notesMappings = {
@@ -399,12 +338,75 @@ local function leaderMapper(mode, key, rhs, opts)
   map(mode, "<leader>" .. key, rhs, opts)
 end
 
-local function localLeaderMapper(mode, key, rhs, opts)
-  if type(opts) == "string" then opts = { desc = opts } end
-  map(mode, "<localleader>" .. key, rhs, opts)
-end
-
 -- <leader>n<key>
 vim.iter(notesMappings):each(function(key, rhs) leaderMapper("n", "n" .. key, rhs[1], rhs[2]) end)
+
+local notesAbbrevs = {
+  ["mtg:"] = [[### Meeting 󱛡 ->]],
+  ["trn:"] = [[### Linear Ticket  ->]],
+  ["pr:"] = [[### Pull Request  ->]],
+  ["call:"] = [[Call: ]],
+  ["email:"] = [[Email: ]],
+  ["contact:"] = [[Contact: 󰻞]],
+}
+
+require("mega.autocmds").augroup("NotesLoaded", {
+  {
+    event = { "LspAttach", "BufEnter" },
+    desc = "Use various notes related functions upon markdown entering or markdown-oxide lsp attaching",
+    command = function(evt)
+      local buf = evt.buf
+      if vim.bo[buf].filetype == "markdown" then
+        vim.api.nvim_buf_call(buf, function()
+          for k, v in pairs(notesAbbrevs) do
+            vim.cmd.iabbrev(string.format("<buffer> %s %s", k, v))
+          end
+        end)
+
+        map("n", "g.", vim.cmd.ExecuteLine, { desc = "execute line", buffer = buf })
+        local clients = vim.lsp.get_clients({ bufnr = buf })
+        for _, client in ipairs(clients) do
+          -- only use these bindings when we're in markdown_oxide document AND our notes path
+          if client.name == "markdown_oxide" and string.match(vim.fn.expand("%:p:h"), "_notes") then
+            map("n", "<leader>w", function()
+              vim.schedule(function()
+                M.format_notes(buf)
+                vim.cmd.write({ bang = true })
+              end)
+            end, { buffer = buf, desc = "[notes] format and save" })
+
+            map("n", "<C-x>d", function() M.toggle_task("x") end, { buffer = buf, desc = "[notes] toggle -> done" })
+            map("n", "<C-x>t", function() M.toggle_task("-") end, { buffer = buf, desc = "[notes] toggle -> todo" })
+            map("n", "<C-x>s", function() M.toggle_task(".") end, { buffer = buf, desc = "[notes] toggle -> started" })
+            map("n", "<C-x><C-x>", function() M.toggle_task(" ") end, { buffer = buf, desc = "[notes] toggle -> not-started" })
+            map("n", "<leader>ff", function() mega.picker.find_files({ cwd = vim.g.notes_path }) end, { desc = "[notes] find", buffer = buf })
+            map("n", "<leader>a", function() mega.picker.grep({ cwd = vim.g.notes_path }) end, { desc = "[notes] grep" })
+            map(
+              "n",
+              "<leader>A",
+              function() mega.picker.grep({ cwd = vim.g.notes_path, default_text = vim.fn.expand("<cword>") }) end,
+              { desc = "[notes] grep cursorword" }
+            )
+            -- map("n", "<leader>a", function() mega.picker.grep({ picker = "egrepify", cwd = vim.g.notes_path }) end, { desc = "[notes] grep", buffer = buf })
+            -- map("n", "<leader>a", function() mega.picker.grep({ picker = "egrepify", cwd = vim.g.notes_path }) end, { desc = "[notes] grep", buffer = buf })
+            -- map("n", "gd", "<cmd>lua vim.lsp.buf.definition()<CR>", { desc = "[f]ind in [n]otes", buffer = buf })
+            -- map("n", "g.", function()
+            --   local note_title = require("mega.utils").notes.get_md_link_dest()
+            --   if note_title == nil or note_title == "" then
+            --     vim.notify("Unable to create new note from link text", L.WARN)
+            --     return
+            --   end
+
+            --   os.execute("note -c " .. note_title)
+            --   vim.diagnostic.enable(false)
+            --   vim.cmd("LspRestart " .. client.name)
+            --   vim.defer_fn(function() vim.diagnostic.enable(true) end, 50)
+            -- end, { desc = "[g]o create note from link title", buffer = buf })
+          end
+        end
+      end
+    end,
+  },
+})
 
 return M

@@ -740,6 +740,8 @@ return {
 
       local capabilities = vim.lsp.protocol.make_client_capabilities()
       if pcall(require, "cmp_nvim_lsp") then capabilities = require("cmp_nvim_lsp").default_capabilities() end
+      capabilities.textDocument.completion.completionItem.snippetSupport = true
+      capabilities.textDocument.foldingRange = { dynamicRegistration = false, lineFoldingOnly = true }
 
       local servers = require("mega.servers")
       if servers == nil then return end
@@ -876,5 +878,16 @@ return {
     },
     cmd = { "OutputPanel" },
     opts = true,
+  },
+  { -- signature hints
+    cond = vim.g.completer ~= "blink",
+    "ray-x/lsp_signature.nvim",
+    event = "BufReadPre",
+    opts = {
+      hint_prefix = " 󰏪 ",
+      hint_scheme = "Todo", -- highlight group, alt: @variable.parameter
+      floating_window = false,
+      always_trigger = true,
+    },
   },
 }

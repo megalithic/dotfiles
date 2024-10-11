@@ -219,11 +219,11 @@ return {
       npairs.add_rules(require("nvim-autopairs.rules.endwise-lua"))
       npairs.add_rules(require("nvim-autopairs.rules.endwise-ruby"))
 
-      if pcall(require, "nvim-autopairs.completion.cmp") and pcall(require, "nvim-autopairs.completion.cmp") then
-        local cmp_autopairs = require("nvim-autopairs.completion.cmp")
-        local cmp = require("cmp")
-        cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done())
-      end
+      -- if pcall(require, "nvim-autopairs.completion.cmp") then
+      --   local cmp_autopairs = require("nvim-autopairs.completion.cmp")
+      --   local cmp = require("cmp")
+      --   cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done())
+      -- end
     end,
   },
   {
@@ -298,6 +298,7 @@ return {
   },
   {
     "tzachar/highlight-undo.nvim",
+    enabled = false, -- presently breaking
     event = "VeryLazy",
     config = true,
   },
@@ -348,7 +349,7 @@ return {
   },
   {
     "Bekaboo/dropbar.nvim",
-    cond = not vim.g.started_by_firenvim,
+    cond = false, -- not vim.g.started_by_firenvim,
     opts = {
       general = {
         update_interval = 100,

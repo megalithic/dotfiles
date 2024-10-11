@@ -223,9 +223,9 @@ function obj.tmux.focusDailyNote(splitFocusedWindow)
 
     hs.timer.waitUntil(function() return term:isFrontmost() end, function()
       -- mimics pressing the tmux prefix `ctrl-space`,
-      hs.eventtap.keyStroke({ "ctrl" }, "space", 100000, term)
+      hs.eventtap.keyStroke({ "ctrl" }, "space", 10000, term)
       -- then the daily note binding, `ctrl-o`,
-      hs.eventtap.keyStroke({ "ctrl" }, "o", 100000, term)
+      hs.eventtap.keyStroke({ "ctrl" }, "o", 10000, term)
 
       -- FIXME: unreliable
       -- then tell nvim to open my daily note.

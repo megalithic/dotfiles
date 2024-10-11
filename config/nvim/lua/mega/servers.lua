@@ -390,45 +390,11 @@ M.list = function(default_capabilities, default_on_attach)
           },
           on_attach = function(client, bufnr)
             default_on_attach(client, bufnr, function()
-              if string.match(vim.fn.expand("%:p:h"), "_notes") then
-                vim.keymap.set(
-                  "n",
-                  "<leader>ff",
-                  function() mega.picker.find_files({ cwd = vim.g.notes_path }) end,
-                  { desc = "[f]ind in [n]otes", buffer = bufnr }
-                )
-                vim.keymap.set("n", "gd", "<cmd>lua vim.lsp.buf.definition()<CR>", { desc = "[f]ind in [n]otes", buffer = bufnr })
-              end
-
               vim.api.nvim_create_user_command("Daily", function(args)
                 local input = args.args
 
                 vim.lsp.buf.execute_command({ command = "jump", arguments = { input } })
               end, { desc = "[n]otes, [d]aily", nargs = "*" })
-
-              vim.keymap.set("n", "g.", function()
-                local note_title = require("mega.utils").notes.get_md_link_dest()
-                if note_title == nil or note_title == "" then
-                  vim.notify("Unable to create new note from link text", L.WARN)
-                  return
-                end
-
-                os.execute("note -c " .. note_title)
-                vim.diagnostic.enable(false)
-                vim.cmd("LspRestart " .. client.name)
-                vim.defer_fn(function() vim.diagnostic.enable(true) end, 50)
-              end, { desc = "[g]o create note from link title", buffer = bufnr })
-
-              -- vim.api.nvim_create_user_command("Daily", function(args)
-              --   -- use client id to execute a command, instead of vim.lsp.buf.execute_command()
-              --   local oxide_client = vim.lsp.get_client_by_id(client.id)
-              --   if oxide_client then
-              --     oxide_client.request("workspace/executeCommand", {
-              --       command = "jump",
-              --       arguments = { args.args },
-              --     })
-              --   end
-              -- end, { desc = "open [n]otes, [d]aily", nargs = "*" })
             end)
           end,
         }

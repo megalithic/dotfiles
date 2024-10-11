@@ -87,7 +87,7 @@ req("hyper", { id = "utils" })
       axbrowse.browse(currentApp) -- new app, so start over
     end
   end)
-  -- focus daily note; splitting it 30/70 with currently focused app window
+  -- focus daily notes; splitting it 30/70 with currently focused app window
   :bind(
     { "shift" },
     "o",

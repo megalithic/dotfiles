@@ -42,7 +42,8 @@ function M.augroup(name, commands)
 
   assert(name ~= "User", "The name of an augroup CANNOT be User")
 
-  local id = vim.api.nvim_create_augroup(fmt("mega-%s", name), { clear = true })
+  local auname = fmt("mega-%s", name)
+  local id = vim.api.nvim_create_augroup(auname, { clear = true })
 
   for _, autocmd in ipairs(commands) do
     if autocmd.enabled == nil or autocmd.enabled == true then
@@ -222,8 +223,6 @@ function M.apply()
 
   M.augroup("CmdlineBehaviours", {
     {
-      -- make `:substitute` also notify how many changes were made
-      -- works, as `CmdlineLeave` is triggered before the execution of the command
       event = "CmdlineEnter",
       command = function(ctx)
         if not ctx.match == ":" then return end
@@ -363,6 +362,11 @@ function M.apply()
     {
       event = { "CursorMoved" },
       command = function()
+        if vim.snippet.active() then
+          vim.cmd.nohlsearch()
+          return
+        end
+
         vim.defer_fn(function()
           -- No bloat lua adpatation of: https://github.com/romainl/vim-cool
           local view, rpos = vim.fn.winsaveview(), vim.fn.getpos(".")
@@ -382,7 +386,7 @@ function M.apply()
           vim.fn.winrestview(view)
           if not in_search then
             vim.schedule(function()
-              vim.cmd("nohlsearch")
+              vim.cmd.nohlsearch()
               searchCountIndicator("clear")
             end)
           else
@@ -394,8 +398,12 @@ function M.apply()
     {
       event = { "InsertEnter" },
       command = function(evt)
+        if vim.snippet.active() then
+          vim.cmd.nohlsearch()
+          return
+        end
         vim.schedule(function()
-          vim.cmd("nohlsearch")
+          vim.cmd.nohlsearch()
           vim.schedule(function() searchCountIndicator("clear") end)
         end)
       end,
@@ -540,20 +548,21 @@ function M.apply()
           end
 
           -- go to PR for specific repos
-          -- if target:match("PR#") then
-          --   -- DIR-PR#116
-          --   local pr_num, repo = target:match("^([DIR|BELL|RET|MOB])[PR#](%d)(%[(.)%])%s(.*)")
-          --   -- local prefix, box, status, task_text = line:match("^(%s*[-*] )(%[(.)%])%s(.*)")
+          if target:match("^PR%-([DIR|BELL|RET|MOB]*)#(%d*)") then
+            local repo_abbr, pr_num = target:match("^PR%-([DIR|BELL|RET|MOB]*)#(%d*)")
+            local repos = {
+              DIR = "director",
+              BELL = "bellhop",
+              RET = "retriever",
+              MOB = "ternreturns",
+            }
 
-          --   local url = fmt("https://github.com.app/ternit/issue/%s", target)
-          --   vim.notify(fmt("Opening linear ticket %s at %s", target, url))
-          --   vim.fn.jobstart(fmt("%s %s", vim.g.open_command, url))
+            local url = fmt("https://github.com/TernSystems/%s/pull/%s", repos[repo_abbr], pr_num)
+            vim.notify(fmt("Opening PR %d on %s", pr_num, repos[repo_abbr]))
+            vim.fn.jobstart(fmt("%s %s", vim.g.open_command, url))
 
-          --   return false
-          -- end
-
-          -- go to web address
-          if target:match("https://") then return vim.cmd("norm gx") end
+            return false
+          end
 
           -- go to hex packages
           if args.file:match("mix.exs") then
@@ -578,6 +587,9 @@ function M.apply()
 
             return false
           end
+
+          -- go to web address
+          if target:match("https://") then return vim.cmd("norm gx") end
 
           -- a normal file, so do the normal go-to-file thing
           if not target or #vim.split(target, "/") ~= 2 then return vim.cmd("norm! gf") end

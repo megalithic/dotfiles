@@ -312,8 +312,6 @@ ftplugin.extend_all({
   },
   markdown = {
     abbr = {
-      cbt = "- [ ]",
-      cb = "[ ]",
       cabag = [[Co-authored-by: Aaron Gunderson <aaron@ternit.com>]],
       cabdt = [[Co-authored-by: Dan Thiffault <dan@ternit.com>]],
       cabjm = [[Co-authored-by: Jia Mu <jia@ternit.com>]],
@@ -322,8 +320,8 @@ ftplugin.extend_all({
       cbdt = [[Co-authored-by: Dan Thiffault <dan@ternit.com>]],
       cbjm = [[Co-authored-by: Jia Mu <jia@ternit.com>]],
       cbam = [[Co-authored-by: Ali Marsh<ali@ternit.com>]],
-      ["mtg:"] = [[## Meeting 󱛡 ->]],
-      ["trn:"] = [[### Linear Ticket  ->]],
+      cbt = "- [ ]",
+      cb = "[ ]",
     },
     opt = {
       relativenumber = false,
@@ -347,15 +345,9 @@ ftplugin.extend_all({
       -- vim.o.linebreak = true
     },
     callback = function(bufnr)
-      vim.keymap.set("n", "<leader>w", function()
-        vim.schedule(function()
-          pcall(vim.cmd.FormatNotes)
-          vim.cmd.write({ bang = true })
-        end)
-      end, { buffer = bufnr })
-      vim.keymap.set("n", "<C-x>", function()
-        vim.schedule(function() pcall(vim.cmd.ToggleTask) end)
-      end, { buffer = bufnr })
+      -- vim.keymap.set("n", "<C-x>", function()
+      --   vim.schedule(function() pcall(vim.cmd.ToggleTask) end)
+      -- end, { buffer = bufnr })
     end,
   },
   ["neotest-summary"] = {

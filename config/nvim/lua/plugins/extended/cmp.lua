@@ -4,9 +4,100 @@ local fmt = string.format
 
 return {
   {
+    -- fixes ffi error:
+    -- https://github.com/Saghen/blink.cmp/issues/90#issuecomment-2407226850
+    "neovim-plugin/blink.cmp",
+
+    -- "saghen/blink.cmp",
+    --
+    cond = vim.g.completer == "blink",
+    lazy = false, -- lazy loading handled internally
+    -- optional: provides snippets for the snippet source
+    dependencies = "rafamadriz/friendly-snippets",
+
+    -- use a release tag to download pre-built binaries
+    -- version = "v0.*",
+    -- version = "v0.2.1", -- REQUIRED release tag to download pre-built binaries
+    -- OR build from source, requires nightly: https://rust-lang.github.io/rustup/concepts/channels.html#working-with-nightly-rust
+    build = "cargo build --release",
+    -- On musl libc based systems you need to add this flag
+    -- build = 'RUSTFLAGS="-C target-feature=-crt-static" cargo build --release',
+
+    opts = {
+      highlight = {
+        -- sets the fallback highlight groups to nvim-cmp's highlight groups
+        -- useful for when your theme doesn't support blink.cmp
+        -- will be removed in a future release, assuming themes add support
+        use_nvim_cmp_as_default = true,
+      },
+      keymap = {
+        accept = "<CR>",
+        hide = "<C-e>",
+        select_prev = { "<S-Tab>", "<Up>", "<C-p>" },
+        select_next = { "<Tab>", "<Down>", "<C-n>" },
+        scroll_documentation_down = "<C-j>",
+        scroll_documentation_up = "<C-k>",
+        snippet_forward = { "<Tab>", "<C-l>" },
+        snippet_backward = { "<S-Tab>", "<C-h>" },
+      },
+      -- set to 'mono' for 'Nerd Font Mono' or 'normal' for 'Nerd Font'
+      -- adjusts spacing to ensure icons are aligned
+      nerd_font_variant = "normal",
+
+      -- experimental auto-brackets support
+      accept = { auto_brackets = { enabled = true } },
+
+      -- experimental signature help support
+      trigger = {
+        completion = {
+          show_on_insert_on_trigger_character = false,
+        },
+        signature_help = { enabled = true },
+      },
+      windows = {
+        autocomplete = {
+          preselect = false,
+        },
+      },
+      sources = {
+        providers = {
+          {
+            { "blink.cmp.sources.lsp" },
+            { "blink.cmp.sources.path" },
+            {
+              "blink.cmp.sources.snippets",
+              keyword_length = 1,
+              score_offset = -3,
+              opts = {
+                extended_filetypes = {
+                  javascriptreact = { "javascript" },
+                  eelixir = { "elixir" },
+                  typescript = { "javascript" },
+                  typescriptreact = {
+                    "javascript",
+                    "javascriptreact",
+                    "typescript",
+                  },
+                },
+                friendly_snippets = false,
+              },
+            },
+          },
+          {
+            { "blink.cmp.sources.buffer", keyword_length = 2 },
+          },
+        },
+      },
+    },
+  },
+  {
+    -- "hrsh7th/nvim-cmp",
+    --
     -- "yioneko/nvim-cmp",
     -- branch = "perf",
+    --
     "iguanacucumber/magazine.nvim",
+    cond = vim.g.completer == "cmp",
     name = "nvim-cmp",
     event = { "InsertEnter *", "CmdlineEnter *" },
     -- event = "InsertEnter",
@@ -36,6 +127,45 @@ return {
                 config = function() require("luasnip.loaders.from_vscode").lazy_load() end,
               },
             },
+            config = function()
+              local ls = require("luasnip")
+              ls.setup({
+                link_children = true,
+                link_roots = false,
+                keep_roots = false,
+                update_events = { "TextChanged", "TextChangedI" },
+              })
+              local c = ls.choice_node
+              ls.choice_node = function(pos, choices, opts)
+                P(opts)
+                if opts then
+                  opts.restore_cursor = true
+                else
+                  opts = { restore_cursor = true }
+                end
+                return c(pos, choices, opts)
+              end
+
+              vim.cmd.runtime({ args = { "lua/snippets/*.lua" }, bang = true }) -- load custom snippets
+
+              vim.keymap.set({ "i", "x" }, "<C-j>", function()
+                if ls.expand_or_jumpable() then ls.expand_or_jump() end
+              end, { silent = true, desc = "expand snippet or jump to the next snippet node" })
+
+              vim.keymap.set({ "i", "x" }, "<C-k>", function()
+                if ls.jumpable(-1) then ls.jump(-1) end
+              end, { silent = true, desc = "previous spot in the snippet" })
+
+              vim.keymap.set({ "i", "x" }, "<C-l>", function()
+                if ls.choice_active() then ls.change_choice(1) end
+              end, { silent = true, desc = "next snippet choice" })
+
+              vim.keymap.set({ "i", "x" }, "<C-h>", function()
+                if ls.choice_active() then ls.change_choice(-1) end
+              end, { silent = true, desc = "previous snippet choice" })
+
+              require("luasnip.loaders.from_vscode").lazy_load()
+            end,
           },
         },
       },
@@ -67,7 +197,7 @@ return {
       { "hrsh7th/cmp-path" },
       { "FelipeLema/cmp-async-path" },
       { "hrsh7th/cmp-cmdline" }, -- event = { "CmdlineEnter" } },
-      { "hrsh7th/cmp-nvim-lsp-signature-help" },
+      { "hrsh7th/cmp-nvim-lsp-signature-help", cond = false },
       { "hrsh7th/cmp-nvim-lsp-document-symbol" },
       -- { "hrsh7th/cmp-emoji" },
       { "f3fora/cmp-spell" },
@@ -94,13 +224,15 @@ return {
 
       vim.api.nvim_create_user_command("ToggleNvimCmp", toggle_completion, {})
     end,
+
     config = function()
       local cmp = require("cmp")
-      local MIN_MENU_WIDTH = 25
-      local MAX_MENU_WIDTH = math.min(30, math.floor(vim.o.columns * 0.5))
-      local ELLIPSIS_CHAR = icons.misc.ellipsis
+      local ls_ok, ls = pcall(require, "luasnip")
 
-      local function get_ws(max, len) return (" "):rep(max - len) end
+      local ELLIPSIS_CHAR = icons.misc.ellipsis
+      -- local MIN_MENU_WIDTH = 25
+      -- local MAX_MENU_WIDTH = math.min(30, math.floor(vim.o.columns * 0.5))
+      -- local function get_ws(max, len) return (" "):rep(max - len) end
 
       -- local neocodeium = require("neocodeium")
       -- local commands = require("neocodeium.commands")
@@ -117,6 +249,8 @@ return {
       local tab = function(fallback)
         if cmp.visible() then
           cmp.select_next_item()
+        elseif ls_ok and ls.expand_or_locally_jumpable() then
+          ls.expand_or_jump()
         elseif vim.snippet.active({ direction = 1 }) then
           vim.schedule(function() vim.snippet.jump(1) end)
         elseif has_words_before() then
@@ -128,6 +262,8 @@ return {
       local shift_tab = function(fallback)
         if cmp.visible() then
           cmp.select_prev_item()
+        elseif ls_ok and ls.jumpable(-1) then
+          ls.jump(-1)
         elseif vim.snippet.active({ direction = -1 }) then
           vim.schedule(function() vim.snippet.jump(-1) end)
         else
@@ -138,11 +274,16 @@ return {
       cmp.setup({
         preselect = cmp.PreselectMode.None,
         snippet = {
-          expand = function(args) vim.snippet.expand(args.body) end,
+          expand = function(args)
+            if vim.g.snipper == "luasnip" then
+              require("luasnip").lsp_expand(args.body) -- For `luasnip` users.
+            else
+              vim.snippet.expand(args.body)
+            end
+          end,
         },
         -- NOTE: read `:help ins-completion`
         completion = { completeopt = "menu,menuone,noinsert,noselect" },
-        -- entries = { name = "custom", selection_order = "near_cursor" },
         confirmation = {
           default_behavior = require("cmp.types").cmp.ConfirmBehavior.Insert,
           get_commit_characters = function(commit_characters) return commit_characters end,
@@ -170,6 +311,8 @@ return {
           },
           documentation = cmp.config.window.bordered({
             border = SETTINGS.border,
+            max_height = math.floor(vim.o.lines * 0.5),
+            max_width = math.floor(vim.o.columns * 0.4),
             winhighlight = table.concat({
               "Normal:NormalFloat",
               "FloatBorder:FloatBorder",
@@ -184,19 +327,32 @@ return {
           ["<C-b>"] = cmp.mapping.scroll_docs(-4),
           ["<C-f>"] = cmp.mapping.scroll_docs(4),
           ["<C-y>"] = cmp.mapping.confirm({ select = true }),
+          ["<C-e>"] = cmp.mapping(function()
+            if vim.snippet.active({ direction = 1 }) then vim.snippet.stop() end
+            cmp.mapping.abort()
+          end, { "i", "s" }),
+          -- ["<CR>"] = cmp.mapping(function(fallback)
+          --   if cmp.core.view:visible() or vim.fn.pumvisible() == 1 then
+          --     if vim.api.nvim_get_mode().mode == "i" then vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<c-G>u", true, true, true), "n", false) end
+          --     if cmp.confirm({ select = true }) then return end
+          --   end
 
-          ["<C-e>"] = cmp.mapping.abort(),
+          --   return fallback()
+          -- end),
+          ["<CR>"] = cmp.mapping.confirm({
+            behavior = cmp.ConfirmBehavior.Insert,
+          }),
           -- ["<CR>"] = cmp.mapping.confirm({
           --   behavior = cmp.ConfirmBehavior.Insert,
           --   select = false,
           -- }),
-          ["<CR>"] = function(fallback)
-            if cmp.visible() then
-              cmp.mapping.confirm({ select = false, behavior = cmp.ConfirmBehavior.Replace })(fallback)
-            else
-              fallback()
-            end
-          end,
+          -- ["<CR>"] = function(fallback)
+          --   if cmp.visible() then
+          --     cmp.mapping.confirm({ select = false, behavior = cmp.ConfirmBehavior.Replace })(fallback)
+          --   else
+          --     fallback()
+          --   end
+          -- end,
           ["<Tab>"] = {
             i = tab,
             s = tab,
@@ -230,6 +386,7 @@ return {
         -- TODO/REF: https://github.com/3rd/config/blob/master/dotfiles/nvim/lua/modules/completion/nvim-cmp.lua#L67C1-L80C4
         formatting = {
           expandable_indicator = true,
+          deprecated = true,
           fields = { "abbr", "kind", "menu" },
           -- maxwidth = MAX_MENU_WIDTH,
           -- minwidth = MIN_MENU_WIDTH,
@@ -237,6 +394,8 @@ return {
           -- TODO: format updates, clean up and document things pls!
           -- REF: https://github.com/MariaSolOs/dotfiles/blob/main/.config/nvim/lua/plugins/nvim-cmp.lua#L113-L134
           format = function(entry, vim_item)
+            local item_maxwidth = 30
+            local ellipsis_char = ELLIPSIS_CHAR
             -- if entry.source.name == "async_path" then
             --   local icon, hl_group = require("nvim-web-devicons").get_icon(entry:get_completion_item().label)
             --   if icon then
@@ -245,14 +404,35 @@ return {
             --   end
             -- end
 
+            --- limit vim_item sub attribute width
+            ---@param item string
+            ---@return string limited string
+            local function truncate(item)
+              if item ~= nil and item:len() > item_maxwidth then
+                item = item:sub(0, item_maxwidth) .. ellipsis_char
+                return item
+              end
+              return item
+            end
+
             if entry.source.name == "nvim_lsp_signature_help" then
               local parts = vim.split(vim_item.abbr, " ", {})
               local argument = parts[1]
               argument = argument:gsub(":$", "")
               local type = table.concat(parts, " ", 2)
               vim_item.abbr = argument
-              if type ~= nil and type ~= "" then vim_item.kind = type end
-              vim_item.kind_hl_group = "Type"
+              if type ~= nil and type ~= "" then
+                -- icons.kind[vim_item.kind]
+                if icons.kind[type] then
+                  vim_item.kind = icons.kind[type]
+                else
+                  vim_item.kind = ""
+                end
+                vim_item.menu = type
+              end
+              -- vim_item.kind_hl_group = "Type"
+              vim_item.menu_hl_group = "Type"
+              dbg({ parts, argument, type })
             end
 
             if vim_item.kind == "Color" and entry.completion_item.documentation and type(entry.completion_item.documentation) == "string" then
@@ -265,36 +445,39 @@ return {
                 vim_item.kind_hl_group = hl_group
               end
             else
+              -- local icon, hl = require("mini.icons").get("lsp", vim_item.kind)
+              -- if icon ~= nil then
+              --   vim_item.kind = icon
+              --   vim_item.kind_hl_group = hl
+              --   dbg({ icon, hl })
+              -- end
+
               vim_item.kind = fmt("%s %s", icons.kind[vim_item.kind], vim_item.kind)
             end
 
             -- REF: https://github.com/3rd/config/blob/master/home/dotfiles/nvim/lua/modules/completion/nvim-cmp.lua
-            vim_item.dup = ({
-              fuzzy_buffer = 0,
-              buffer = 0,
-              path = 0,
-              async_path = 0,
-              nvim_lsp = 0,
-              luasnip = 0,
-              vsnip = 0,
-              snippets = 0,
-            })[entry.source.name] or 0
+            -- vim_item.dup = ({
+            --   fuzzy_buffer = 0,
+            --   buffer = 0,
+            --   path = 0,
+            --   async_path = 0,
+            --   nvim_lsp = 0,
+            --   luasnip = 0,
+            --   vsnip = 0,
+            --   snippets = 0,
+            -- })[entry.source.name] or 0
 
-            -- REF: https://github.com/zolrath/dotfiles/blob/main/dot_config/nvim/lua/plugins/cmp.lua#L45
-            -- local max_length = 20
-            local max_length = math.floor(vim.o.columns * 0.5)
-            vim_item.abbr = #vim_item.abbr >= max_length and string.sub(vim_item.abbr, 1, max_length) .. ELLIPSIS_CHAR or vim_item.abbr
-            -- maximum width
-            -- src: https://github.com/hrsh7th/nvim-cmp/discussions/609#discussioncomment-3395522
+            vim_item.menu = truncate(vim_item.menu)
+            vim_item.abbr = truncate(vim_item.abbr)
 
-            local content = vim_item.abbr
-            if #content > MAX_MENU_WIDTH then
-              vim_item.abbr = vim.fn.strcharpart(content, 0, MAX_MENU_WIDTH) .. ELLIPSIS_CHAR
-            else
-              vim_item.abbr = content .. get_ws(MAX_MENU_WIDTH, #content)
-            end
-
-            vim_item.abbr = string.gsub(vim_item.abbr, "^%s+", "")
+            -- vim_item.abbr = #vim_item.abbr >= max_length and string.sub(vim_item.abbr, 1, max_length) .. ELLIPSIS_CHAR or vim_item.abbr
+            -- local content = vim_item.abbr
+            -- if #content > MAX_MENU_WIDTH then
+            --   vim_item.abbr = vim.fn.strcharpart(content, 0, MAX_MENU_WIDTH) .. ELLIPSIS_CHAR
+            -- else
+            --   vim_item.abbr = content .. get_ws(MAX_MENU_WIDTH, #content)
+            -- end
+            -- vim_item.abbr = string.gsub(vim_item.abbr, "^%s+", "")
 
             if entry.source.name == "nvim_lsp" then
               vim_item.menu = fmt("[%s]", entry.source.source.client.name)
@@ -357,7 +540,20 @@ return {
         },
         sources = cmp.config.sources({
           { name = "nvim_lsp_signature_help" },
-          { name = "snippets", group_index = 1, max_item_count = 5, keyword_length = 1 },
+          {
+            name = "snippets",
+            group_index = 1,
+            max_item_count = 5,
+            keyword_length = 1,
+            -- Don't show snippet completions in comments or strings.
+            entry_filter = function()
+              local ctx = require("cmp.config.context")
+              local in_string = ctx.in_syntax_group("String") or ctx.in_treesitter_capture("string")
+              local in_comment = ctx.in_syntax_group("Comment") or ctx.in_treesitter_capture("comment")
+
+              return not in_string and not in_comment
+            end,
+          },
           { name = "luasnip", group_index = 1, max_item_count = 5, keyword_length = 1 },
           { name = "vsnip", group_index = 1, max_item_count = 5, keyword_length = 1 },
           { name = "nvim_lua" },
@@ -429,8 +625,8 @@ return {
         mapping = cmp.mapping.preset.cmdline(),
         sources = {
           { name = "nvim_lsp_document_symbol" },
-          { name = "fuzzy_buffer", option = { min_match_length = 3 } },
-          -- { name = "buffer", option = { min_match_length = 2 } },
+          -- { name = "fuzzy_buffer", option = { min_match_length = 3 } },
+          { name = "buffer", option = { min_match_length = 2 } },
         },
       })
 

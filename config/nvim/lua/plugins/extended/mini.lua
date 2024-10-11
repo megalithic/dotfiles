@@ -261,6 +261,7 @@ return {
           { mode = "n", keys = "<localleader>" },
           { mode = "x", keys = "<localleader>" },
 
+          { mode = "n", keys = "<C-x>", desc = "+task toggling" },
           -- Built-in completion
           { mode = "i", keys = "<C-x>" },
 

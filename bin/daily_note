@@ -49,9 +49,13 @@ function __get_note_tasks() {
 
 function __get_last_daily_note_path() {
   if [[ -f "$daily_note_path" ]]; then
-    last_daily_note_path="$(find $HOME/Documents/_notes/daily/**/*.md -type f -print0 | xargs -0 stat -f '%m %N' | sort -nr | head -2 | cut -f2- -d' ' | tail -n1)"
+    # last_daily_note_path="$(find $HOME/Documents/_notes/daily/**/*.md -type f -print0 | xargs -0 stat -f '%m %N' | sort -nr | head -2 | cut -f2- -d' ' | tail -n1)"
+    last_daily_note_path="$(find $HOME/Documents/_notes/daily -type f -name "*.md" -print0 | xargs -0 ls -Ur | sort -nr | head -2 | cut -f2- -d' ' | tail -n1)"
+  #
   else
-    last_daily_note_path="$(find $HOME/Documents/_notes/daily/**/*.md -type f -print0 | xargs -0 stat -f '%m %N' | sort -nr | head -2 | cut -f2- -d' ' | head -n1)"
+    # last_daily_note_path="$(find $HOME/Documents/_notes/daily/**/*.md -type f -print0 | xargs -0 stat -f '%m %N' | sort -nr | head -2 | cut -f2- -d' ' | head -n1)"
+    last_daily_note_path="$(find $HOME/Documents/_notes/daily -type f -name "*.md" -print0 | xargs -0 ls -Ur | sort -nr | head -2 | cut -f2- -d' ' | head -n1)"
+  # find ./daily -type f -name "*.md" -print0 | xargs -0 ls -Ur | sort -nr | head -2 | cut -f2- -d' ' | head -n1
   fi
 
   last_daily_note_file_name=$(basename ${last_daily_note_path})
@@ -110,7 +114,7 @@ $(__build_tasks)
 
 ## Links
 
-- [previous daily note](${last_daily_note_file_name})
+- [Previous daily note (${last_daily_note_name})](${last_daily_note_file_name})
 EOF
   fi
 }
@@ -182,9 +186,14 @@ if [[ "$METHOD" == "note" ]]; then
   # Create the daily note if it does not already exist
   __set_template
 
-  if ! tmux has-session -t "$SESSION" 2>/dev/null; then
-    tmux new-session -d -s "$SESSION" -c "$daily_note_dir" "nvim +norm\ G \"$daily_note_path\""
+  # if ! tmux has-session -t "$SESSION" 2>/dev/null; then
+  #   tmux new-session -d -s "$SESSION" -c "$daily_note_dir" "nvim +norm\ G \"$daily_note_path\""
+  # fi
+  if tmux has-session -t "$SESSION" 2>/dev/null; then
+    tmux kill-session -t "$SESSION"
   fi
+
+  tmux new-session -d -s "$SESSION" -c "$daily_note_dir" "nvim +norm\ G \"$daily_note_path\""
 elif [[ "$METHOD" == "zk" ]]; then
   SESSION="daily-zk-${daily_note_date}"
 
