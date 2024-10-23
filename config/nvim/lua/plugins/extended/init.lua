@@ -33,11 +33,30 @@ return {
 
       config = function() require("colorizer").setup(SETTINGS.colorizer) end,
     },
+    -- "gc" to comment visual regions/lines
+    {
+      "numToStr/Comment.nvim",
+      cond = true,
+      opts = {
+        ignore = "^$", -- ignore blank lines
+      },
+      config = function(_, opts)
+        -- require("Comment.ft")
+        --   -- Set only line comment
+        --   .set("heex", { "<%!-- %s --%>" })
+        -- Or set both line and block commentstring
+        -- .set("javascript", { "//%s", "/*%s*/" })
+
+        require("Comment").setup(opts)
+      end,
+    },
     {
       "folke/ts-comments.nvim",
+      cond = false,
       opts = {
         langs = {
           elixir = "# %s",
+          eelixir = "# %s",
           heex = [[<%!-- %s --%>]],
         },
       },
@@ -77,10 +96,10 @@ return {
           end,
         },
         -- swapping buffers between windows
-        { "<leader><leader>h", function() require("smart-splits").swap_buf_left() end, desc = "swap left" },
-        { "<leader><leader>j", function() require("smart-splits").swap_buf_down() end, desc = "swap down" },
-        { "<leader><leader>k", function() require("smart-splits").swap_buf_up() end, desc = "swap up" },
-        { "<leader><leader>l", function() require("smart-splits").swap_buf_right() end, desc = "swap right" },
+        -- { "<leader><leader>h", function() require("smart-splits").swap_buf_left() end, desc = "swap left" },
+        -- { "<leader><leader>j", function() require("smart-splits").swap_buf_down() end, desc = "swap down" },
+        -- { "<leader><leader>k", function() require("smart-splits").swap_buf_up() end, desc = "swap up" },
+        -- { "<leader><leader>l", function() require("smart-splits").swap_buf_right() end, desc = "swap right" },
       },
     },
     {
@@ -120,15 +139,12 @@ return {
       keys = {
         {
           "s",
+          -- mode = { "n" },
           mode = { "n", "x", "o" },
           function() require("flash").jump() end,
         },
-        {
-          "m",
-          mode = { "o", "x" },
-          function() require("flash").treesitter() end,
-        },
-        { "vv", mode = { "n", "o", "x" }, function() require("flash").treesitter() end },
+        { "m", mode = { "o", "x" }, function() require("flash").treesitter() end },
+        { "vn", mode = { "n", "o", "x" }, function() require("flash").treesitter() end },
         {
           "r",
           function() require("flash").remote() end,
@@ -189,18 +205,59 @@ return {
     event = "CmdlineEnter",
     opts = {},
   },
-  -- require('nvim-autopairs').setup{}
-  -- local cmp_autopairs = require('nvim-autopairs.completion.cmp')
-  -- local cmp = require('cmp')
-  -- cmp.event:on(
-  --  'confirm_done',
-  --  cmp_autopairs.on_confirm_done()
-  -- )
+  -- {
+  --   "windwp/nvim-autopairs",
+  --   lazy = true,
+  --   config = function()
+  --     local npairs = require("nvim-autopairs")
+  --     npairs.setup()
 
-  {
-    "windwp/nvim-autopairs",
-    event = { "InsertEnter" },
-    config = true,
+  --     npairs.add_rules(require("nvim-autopairs.rules.endwise-elixir"))
+  --     npairs.add_rules(require("nvim-autopairs.rules.endwise-lua"))
+  --     npairs.add_rules(require("nvim-autopairs.rules.endwise-ruby"))
+  --   end,
+  -- },
+  { -- auto-pair
+    -- EXAMPLE config of the plugin: https://github.com/Bekaboo/nvim/blob/master/lua/configs/ultimate-autopair.lua
+    "altermo/ultimate-autopair.nvim",
+    branch = "v0.6", -- recommended as each new version will have breaking changes
+    event = { "InsertEnter", "CmdlineEnter" },
+    opts = {
+      bs = {
+        space = "balance",
+        cmap = false, -- keep my `<BS>` mapping for the cmdline
+      },
+      fastwarp = {
+        map = "<D-f>",
+        rmap = "<D-F>", -- backwards
+        hopout = true,
+        nocursormove = true,
+        multiline = false,
+      },
+      cr = { autoclose = true },
+      space = { enable = true },
+      space2 = { enable = true },
+
+      config_internal_pairs = {
+        { "'", "'", nft = { "markdown" } }, -- since used as apostroph
+        { "\"", "\"", nft = { "vim" } }, -- vimscript uses quotes as comments
+      },
+      -- INFO custom keys need to be "appended" to the opts as a list
+      { "*", "*", ft = { "markdown" } }, -- italics
+      { "__", "__", ft = { "markdown" } }, -- bold
+      { [[\"]], [[\"]], ft = { "zsh", "json", "applescript" } }, -- escaped quote
+
+      { -- commit scope (= only first word) for commit messages
+        "(",
+        "): ",
+        ft = { "gitcommit" },
+        cond = function(_) return not vim.api.nvim_get_current_line():find(" ") end,
+      },
+
+      -- for keymaps like `<C-a>`
+      { "<", ">", ft = { "vim" } },
+      { "<", ">", ft = { "lua" }, cond = function(fn) return fn.in_string() end },
+    },
   },
   {
     "windwp/nvim-ts-autotag",
@@ -265,17 +322,167 @@ return {
   },
   {
     "MagicDuck/grug-far.nvim",
-    cmd = "GrugFar",
     config = function()
       require("grug-far").setup({
         windowCreationCommand = "botright vsplit %",
       })
     end,
+    cmd = {
+      "GrugFar",
+    },
+    keys = {
+      {
+        "<space>fr",
+        ":GrugFar<cr>",
+        desc = "GrugFar",
+      },
+    },
   },
   {
     "tzachar/highlight-undo.nvim",
+    enabled = false, -- presently breaking
     event = "VeryLazy",
     config = true,
   },
   { "elixir-editors/vim-elixir" },
+  {
+    "nvim-neo-tree/neo-tree.nvim",
+    branch = "v3.x",
+    lazy = false,
+    opts = {
+      filesystem = {
+        filtered_items = {
+          hide_dotfiles = false,
+        },
+      },
+      event_handlers = {
+        {
+          event = "file_opened",
+          handler = function() vim.cmd.Neotree("close") end,
+          id = "close-on-enter",
+        },
+      },
+    },
+    config = function(_, opts) require("neo-tree").setup(opts) end,
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      "nvim-tree/nvim-web-devicons", -- not strictly required, but recommended
+      "MunifTanjim/nui.nvim",
+    },
+    cmd = {
+      "Neotree",
+    },
+    keys = {
+      {
+        "<C-.>",
+        function() vim.cmd.Neotree("reveal", "toggle=true") end,
+        mode = "n",
+        desc = "Toggle Neotree",
+      },
+    },
+  },
+  {
+    "jiaoshijie/undotree",
+    dependencies = "nvim-lua/plenary.nvim",
+    config = true,
+    keys = { -- load the plugin only when using it's keybinding:
+      { "<leader>eu", "<cmd>lua require('undotree').toggle()<cr>", desc = "[u]ndo tree" },
+    },
+    opts = {
+      float_diff = false, -- using float window previews diff, set this `true` will disable layout option
+      layout = "left_bottom", -- "left_bottom", "left_left_bottom"
+      position = "right", -- "right", "bottom"
+      ignore_filetype = { "undotree", "undotreeDiff", "qf", "TelescopePrompt", "spectre_panel", "tsplayground" },
+      window = {
+        winblend = 0,
+      },
+      keymaps = {
+        ["j"] = "move_next",
+        ["k"] = "move_prev",
+        ["gj"] = "move2parent",
+        ["J"] = "move_change_next",
+        ["K"] = "move_change_prev",
+        ["<cr>"] = "action_enter",
+        ["<tab>"] = "enter_diffbuf",
+        ["q"] = "quit",
+      },
+    },
+  },
+  {
+    "https://github.com/folke/lazydev.nvim",
+    -- dependencies = {
+    -- 	{ 'https://github.com/Bilal2453/luvit-meta', lazy = true }, -- optional `vim.uv` typings
+    -- },
+    ft = "lua",
+    opts = {
+      library = {
+        { path = "wezterm-types", mods = { "wezterm" } },
+        {
+          path = vim.env.HOME .. "/.hammerspoon/Spoons/EmmyLua.spoon/annotations",
+          words = { "hs" },
+        },
+      },
+    },
+  },
+  {
+    "Bekaboo/dropbar.nvim",
+    cond = false, -- not vim.g.started_by_firenvim,
+    opts = {
+      general = {
+        update_interval = 100,
+      },
+      bar = {
+        -- padding = { left = 0, right = 0 },
+        -- truncate = false,
+        sources = function(buf, _)
+          local sources = require("dropbar.sources")
+          local utils = require("dropbar.utils")
+
+          if vim.bo[buf].ft == "markdown" then
+            return {
+              -- path,
+              utils.source.fallback({
+                sources.treesitter,
+                sources.markdown,
+                sources.lsp,
+              }),
+            }
+          end
+          return {
+            -- path,
+            utils.source.fallback({
+              sources.lsp,
+              sources.treesitter,
+            }),
+          }
+        end,
+      },
+      sources = {
+        path = {
+          relative_to = function(bufnr)
+            -- get dirname of current buffer
+            return vim.fn.fnamemodify(vim.api.nvim_buf_get_name(bufnr), ":p:h")
+          end,
+        },
+      },
+    },
+    dependencies = {
+      "nvim-telescope/telescope-fzf-native.nvim",
+    },
+  },
+  {
+    cond = false,
+    "jaimecgomezz/here.term",
+    opts = {
+      dependencies = {
+        { "willothy/flatten.nvim", config = true, priority = 1001 },
+      },
+      mappings = {
+        toggle = "<C-.>",
+        kill = "<C-S-.>",
+      },
+    },
+  },
+  -- doesn't exactly do what i was expecting when you use statuscolumn settings (gitsigns, diags, etc)
+  { "jake-stewart/force-cul.nvim", opts = {}, cond = false },
 }

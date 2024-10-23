@@ -29,7 +29,7 @@ return {
 
       "natecraddock/telescope-zf-native.nvim",
       "nvim-telescope/telescope-file-browser.nvim",
-      { "fdschmidt93/telescope-egrepify.nvim", branch = "fix/preview" },
+      { "fdschmidt93/telescope-egrepify.nvim" },
       "fdschmidt93/telescope-corrode.nvim",
       {
         "danielfalk/smart-open.nvim",
@@ -53,11 +53,15 @@ return {
       }
 
       local fmt = string.format
-      local map = vim.keymap.set
+      local map = function(mode, lhs, rhs, desc)
+        if type(desc) == "table" then desc = desc[1] end
+        vim.keymap.set(mode, lhs, rhs, { desc = fmt("[+%s] %s", vim.g.picker, desc) })
+      end
       local telescope = require("telescope")
       local transform_mod = require("telescope.actions.mt").transform_mod
       local actions = require("telescope.actions")
       local egrep_actions = require("telescope._extensions.egrepify.actions")
+      local undo_actions = require("telescope-undo.actions")
       local action_state = require("telescope.actions.state")
       local action_set = require("telescope.actions.set")
       local lga_actions = require("telescope-live-grep-args.actions")
@@ -85,51 +89,50 @@ return {
             vim.api.nvim_set_hl(0, "TelescopeParent", { link = "Comment" })
           end,
         },
-        {
-
-          event = { "FileType" },
-          -- REF: https://github.com/chrisgrieser/.config/blob/main/nvim/lua/funcs/telescope-backdrop.lua
-          desc = "Telescope search results formatting for pretty results",
-          pattern = { "TelescopePrompt" },
-          command = function(ctx)
-            local backdropName = "TelescopeBackdrop"
-            local blend = 90
-
-            local telescopeBufnr = ctx.buf
-
-            -- `Telescope` apparently do not set a zindex, so it uses the default value
-            -- of `nvim_open_win`, which is 50: https://neovim.io/doc/user/api.html#nvim_open_win()
-            local telescopeZindex = 50
-
-            local bufnr = vim.api.nvim_create_buf(false, true)
-            local winnr = vim.api.nvim_open_win(bufnr, false, {
-              relative = "editor",
-              row = 0,
-              col = 0,
-              width = vim.o.columns,
-              height = vim.o.lines,
-              focusable = false,
-              style = "minimal",
-              zindex = telescopeZindex - 1, -- ensure it's below the reference window
-            })
-
-            vim.api.nvim_set_hl(0, backdropName, { bg = "#000000", default = true })
-            vim.wo[winnr].winhighlight = "Normal:" .. backdropName
-            vim.wo[winnr].winblend = blend
-            vim.bo[bufnr].buftype = "nofile"
-            vim.bo[bufnr].filetype = backdropName
-
-            -- close backdrop when the reference buffer is closed
-            vim.api.nvim_create_autocmd({ "WinClosed", "BufLeave" }, {
-              once = true,
-              buffer = telescopeBufnr,
-              callback = function()
-                if vim.api.nvim_win_is_valid(winnr) then vim.api.nvim_win_close(winnr, true) end
-                if vim.api.nvim_buf_is_valid(bufnr) then vim.api.nvim_buf_delete(bufnr, { force = true }) end
-              end,
-            })
-          end,
-        },
+        -- {
+        --   event = { "FileType" },
+        --   -- REF: https://github.com/chrisgrieser/.config/blob/main/nvim/lua/funcs/telescope-backdrop.lua
+        --   desc = "Telescope search results formatting for pretty results",
+        --   pattern = { "TelescopePrompt" },
+        --   command = function(ctx)
+        --     local backdropName = "TelescopeBackdrop"
+        --     local blend = 90
+        --
+        --     local telescopeBufnr = ctx.buf
+        --
+        --     -- `Telescope` apparently do not set a zindex, so it uses the default value
+        --     -- of `nvim_open_win`, which is 50: https://neovim.io/doc/user/api.html#nvim_open_win()
+        --     local telescopeZindex = 50
+        --
+        --     local bufnr = vim.api.nvim_create_buf(false, true)
+        --     local winnr = vim.api.nvim_open_win(bufnr, false, {
+        --       relative = "editor",
+        --       row = 0,
+        --       col = 0,
+        --       width = vim.o.columns,
+        --       height = vim.o.lines,
+        --       focusable = false,
+        --       style = "minimal",
+        --       zindex = telescopeZindex - 1, -- ensure it's below the reference window
+        --     })
+        --
+        --     vim.api.nvim_set_hl(0, backdropName, { bg = "#000000", default = true })
+        --     vim.wo[winnr].winhighlight = "Normal:" .. backdropName
+        --     vim.wo[winnr].winblend = blend
+        --     vim.bo[bufnr].buftype = "nofile"
+        --     vim.bo[bufnr].filetype = backdropName
+        --
+        --     -- close backdrop when the reference buffer is closed
+        --     vim.api.nvim_create_autocmd({ "WinClosed", "BufLeave" }, {
+        --       once = true,
+        --       buffer = telescopeBufnr,
+        --       callback = function()
+        --         if vim.api.nvim_win_is_valid(winnr) then vim.api.nvim_win_close(winnr, true) end
+        --         if vim.api.nvim_buf_is_valid(bufnr) then vim.api.nvim_buf_delete(bufnr, { force = true }) end
+        --       end,
+        --     })
+        --   end,
+        -- },
       })
 
       -- REF: https://github.com/tjdevries/config.nvim/blob/master/lua/custom/telescope/multi-ripgrep.lua
@@ -231,7 +234,7 @@ return {
       local function get_border(opts)
         opts = vim.tbl_deep_extend("force", opts or {}, {
           borderchars = {
-            { "", "", "", "", "", "", "", "" },
+            -- { "", "", "", "", "", "", "", "" },
             prompt = { "", "", "", "", "", "", "", "" },
             results = { "", "", "", "", "", "", "", "" },
             preview = { "", "", "", "", "", "", "", "" },
@@ -270,6 +273,236 @@ return {
       end
       mega.picker.ivy = ivy
 
+      local function fuse(opts)
+        local Layout = require("nui.layout")
+        local Popup = require("nui.popup")
+
+        local telescope = require("telescope")
+        local TSLayout = require("telescope.pickers.layout")
+
+        local function make_popup(options)
+          local popup = Popup(options)
+          function popup.border:change_title(title) popup.border.set_text(popup.border, "top", title) end
+          return TSLayout.Window(popup)
+        end
+
+        return {
+          disable_devicons = true,
+          layout_strategy = "flex",
+          layout_config = {
+            horizontal = {
+              size = {
+                width = "90%",
+                height = "60%",
+              },
+            },
+            vertical = {
+              size = {
+                width = "90%",
+                height = "90%",
+              },
+            },
+          },
+          create_layout = function(picker)
+            local border = {
+              results = {
+                top_left = "┌",
+                top = "─",
+                top_right = "┬",
+                right = "│",
+                bottom_right = "",
+                bottom = "",
+                bottom_left = "",
+                left = "│",
+              },
+              results_patch = {
+                minimal = {
+                  top_left = "┌",
+                  top_right = "┐",
+                },
+                horizontal = {
+                  top_left = "┌",
+                  top_right = "┬",
+                },
+                vertical = {
+                  top_left = "├",
+                  top_right = "┤",
+                },
+              },
+              prompt = {
+                top_left = "├",
+                top = "─",
+                top_right = "┤",
+                right = "│",
+                bottom_right = "┘",
+                bottom = "─",
+                bottom_left = "└",
+                left = "│",
+              },
+              prompt_patch = {
+                minimal = {
+                  bottom_right = "┘",
+                },
+                horizontal = {
+                  bottom_right = "┴",
+                },
+                vertical = {
+                  bottom_right = "┘",
+                },
+              },
+              preview = {
+                top_left = "┌",
+                top = "─",
+                top_right = "┐",
+                right = "│",
+                bottom_right = "┘",
+                bottom = "─",
+                bottom_left = "└",
+                left = "│",
+              },
+              preview_patch = {
+                minimal = {},
+                horizontal = {
+                  bottom = "─",
+                  bottom_left = "",
+                  bottom_right = "┘",
+                  left = "",
+                  top_left = "",
+                },
+                vertical = {
+                  bottom = "",
+                  bottom_left = "",
+                  bottom_right = "",
+                  left = "│",
+                  top_left = "┌",
+                },
+              },
+            }
+
+            local results = make_popup({
+              focusable = false,
+              border = {
+                style = border.results,
+                text = {
+                  top = picker.results_title,
+                  top_align = "center",
+                },
+              },
+              win_options = {
+                winhighlight = "Normal:Normal",
+              },
+            })
+
+            local prompt = make_popup({
+              enter = true,
+              border = {
+                style = border.prompt,
+                text = {
+                  top = picker.prompt_title,
+                  top_align = "center",
+                },
+              },
+              win_options = {
+                winhighlight = "Normal:Normal",
+              },
+            })
+
+            local preview = make_popup({
+              focusable = false,
+              border = {
+                style = border.preview,
+                text = {
+                  top = picker.preview_title,
+                  top_align = "center",
+                },
+              },
+            })
+
+            local box_by_kind = {
+              vertical = Layout.Box({
+                Layout.Box(preview, { grow = 1 }),
+                Layout.Box(results, { grow = 1 }),
+                Layout.Box(prompt, { size = 3 }),
+              }, { dir = "col" }),
+              horizontal = Layout.Box({
+                Layout.Box({
+                  Layout.Box(results, { grow = 1 }),
+                  Layout.Box(prompt, { size = 3 }),
+                }, { dir = "col", size = "50%" }),
+                Layout.Box(preview, { size = "50%" }),
+              }, { dir = "row" }),
+              minimal = Layout.Box({
+                Layout.Box(results, { grow = 1 }),
+                Layout.Box(prompt, { size = 3 }),
+              }, { dir = "col" }),
+            }
+
+            local function get_box()
+              local strategy = picker.layout_strategy
+              if strategy == "vertical" or strategy == "horizontal" then return box_by_kind[strategy], strategy end
+
+              local height, width = vim.o.lines, vim.o.columns
+              local box_kind = "horizontal"
+              if width < 100 then
+                box_kind = "vertical"
+                if height < 40 then box_kind = "minimal" end
+              end
+              return box_by_kind[box_kind], box_kind
+            end
+
+            local function prepare_layout_parts(layout, box_type)
+              layout.results = results
+              results.border:set_style(border.results_patch[box_type])
+
+              layout.prompt = prompt
+              prompt.border:set_style(border.prompt_patch[box_type])
+
+              if box_type == "minimal" then
+                layout.preview = nil
+              else
+                layout.preview = preview
+                preview.border:set_style(border.preview_patch[box_type])
+              end
+            end
+
+            local function get_layout_size(box_kind) return picker.layout_config[box_kind == "minimal" and "vertical" or box_kind].size end
+
+            local box, box_kind = get_box()
+            local layout = Layout({
+              relative = "editor",
+              position = "50%",
+              size = get_layout_size(box_kind),
+            }, box)
+
+            layout.picker = picker
+            prepare_layout_parts(layout, box_kind)
+
+            local layout_update = layout.update
+            function layout:update()
+              local box, box_kind = get_box()
+              prepare_layout_parts(layout, box_kind)
+              layout_update(self, { size = get_layout_size(box_kind) }, box)
+            end
+
+            return TSLayout(layout)
+          end,
+        }
+      end
+
+      -- https://github.com/nvim-telescope/telescope.nvim/wiki/Configuration-Recipes#fused-layout
+      local function big_ivy(opts)
+        opts = vim.tbl_deep_extend("force", opts or {}, {
+          disable_devicons = true,
+          -- layout_config = { height = 0.5 },
+          layout_config = {
+            height = 0.6,
+            -- height = vim.o.lines, -- maximally available lines
+            width = vim.o.columns, -- maximally available columns
+          },
+        })
+        return require("telescope.themes").get_ivy(get_border(opts))
+      end
+
       local ts = setmetatable({}, {
         __index = function(_, key)
           return function(topts)
@@ -289,7 +522,7 @@ return {
             if key == "grepify" or key == "egrepify" then
               extensions("egrepify").egrepify(with_title(topts, { title = "live grep (egrepify)" }))
             elseif key == "undo" then
-              extensions("undo").undo(with_title(topts, { title = "undo" }))
+              extensions("undo").undo(big_ivy(with_title(topts, { title = "undo" })))
             elseif key == "smart_open" or key == "smart" then
               -- FIXME: if we have a title in topts, use that title with the default title
               local title = "smartly find files"
@@ -305,14 +538,18 @@ return {
               -- extensions("corrode").corrode(with_title(topts, { title = "find files (corrode)" }))
               builtin[key](with_title(topts, { title = "find files" }))
             else
-              builtin[key](ivy(topts))
+              if topts["theme"] ~= nil then
+                builtin[key](topts)
+              else
+                builtin[key](ivy(topts))
+              end
             end
           end
         end,
       })
 
       -- local grep = function(...) ts.live_grep(ivy(...)) end
-      local grep = function(opts)
+      local function grep(opts)
         opts = vim.tbl_deep_extend("force", opts or {}, {})
         local picker = opts and opts["picker"] or "live_grep"
         local theme = opts and opts["theme"] or "ivy"
@@ -340,7 +577,7 @@ return {
       -- * .git from cwd
       -- * cwd
       ---@param opts? table
-      local find_files = function(opts)
+      local function find_files(opts)
         opts = vim.tbl_deep_extend("force", opts or {}, {})
         local picker = opts and opts["picker"] or "find_files"
         local theme = opts and opts["theme"] or "ivy"
@@ -356,6 +593,8 @@ return {
           ts[picker](ivy(opts))
         elseif theme == "dropdown" then
           ts[picker](dropdown(opts))
+        elseif theme == "fuse" then
+          ts[picker](fuse(opts))
         else
           ts[picker](opts)
         end
@@ -374,7 +613,6 @@ return {
           },
           action = function(match)
             local picker = require("telescope.actions.state").get_current_picker(prompt_bufnr)
-            dbg(picker)
             picker:set_selection(match.pos[1] - 1)
           end,
         })
@@ -512,9 +750,13 @@ return {
           scroll_strategy = "limit",
           sorting_strategy = "ascending",
           path_display = { "filename_first, truncate" },
-          -- file_previewer = require("telescope.previewers").vim_buffer_cat.new,
-          -- grep_previewer = require("telescope.previewers").vim_buffer_vimgrep.new,
-          -- qflist_previewer = require("telescope.previewers").vim_buffer_qflist.new,
+          -- file_previewer = previewers.cat.new,
+          -- grep_previewer = previewers.cat.new,
+          -- qflist_previewer = previewers.cat.new,
+
+          -- file_previewer = previewers.vim_buffer_cat.new,
+          -- grep_previewer = previewers.vim_buffer_vimgrep.new,
+          -- qflist_previewer = previewers.vim_buffer_qflist.new,
           layout_strategy = "horizontal",
           results_title = false,
           prompt_prefix = " ",
@@ -522,6 +764,20 @@ return {
           entry_prefix = "  ",
           multi_icon = "󰛄 ",
           winblend = 0,
+          border = {
+            --   prompt = { 0, 0, 0, 0 },
+            --   results = { 0, 0, 0, 0 },
+            --   preview = { 0, 0, 0, 0 },
+            prompt = { 0, 1, 1, 1 },
+            results = { 1, 1, 1, 1 },
+            preview = { 1, 1, 1, 1 },
+          },
+          -- borderchars = {
+          --   prompt = { " ", " ", "─", "│", "│", " ", "─", "└" },
+          --   results = { "─", " ", " ", "│", "┌", "─", " ", "│" },
+          --   preview = { "─", "│", "─", "│", "┬", "┐", "┘", "┴" },
+          -- },
+          borderchars = get_border().border_chars,
           vimgrep_arguments = grep_files_cmd,
           -- NOTE: https://github.com/bangalcat/nvim/blob/main/lua/plugins/telescope.lua#L61
           get_selection_window = function()
@@ -602,7 +858,13 @@ return {
         },
         pickers = {
           lsp_definitions = ivy({}),
-          buffers = dropdown({}),
+          buffers = dropdown({
+            mappings = {
+              n = {
+                ["d"] = require("telescope.actions").delete_buffer,
+              },
+            },
+          }),
           highlights = ivy({}),
           find_files = ivy({
             path_display = filename_first,
@@ -708,6 +970,43 @@ return {
           }),
         },
         extensions = {
+          ["zf-native"] = {
+            -- options for sorting file-like items
+            file = {
+              -- override default telescope file sorter
+              enable = true,
+
+              -- highlight matching text in results
+              highlight_results = true,
+
+              -- enable zf filename match priority
+              match_filename = true,
+
+              -- optional function to define a sort order when the query is empty
+              initial_sort = nil,
+
+              -- set to false to enable case sensitive matching
+              smart_case = true,
+            },
+
+            -- options for sorting all other items
+            generic = {
+              -- override default telescope generic item sorter
+              enable = true,
+
+              -- highlight matching text in results
+              highlight_results = true,
+
+              -- disable zf filename match priority
+              match_filename = false,
+
+              -- optional function to define a sort order when the query is empty
+              initial_sort = nil,
+
+              -- set to false to enable case sensitive matching
+              smart_case = true,
+            },
+          },
           fzf = {
             fuzzy = true,
             override_generic_sorter = true,
@@ -715,40 +1014,32 @@ return {
             case_mode = "smart_case",
           },
           undo = {
+            use_delta = true,
             side_by_side = true,
             layout_strategy = "vertical",
             layout_config = {
-              preview_height = 0.6,
+              -- preview_height = 0.8,
+              height = 0.6,
             },
-
             mappings = {
               i = {
-                ["<CR>"] = require("telescope-undo.actions").restore,
-                ["<TAB>"] = require("telescope-undo.actions").yank_additions,
+                -- ["<cr>"] = undo_actions.yank_additions,
+                -- ["<S-cr>"] = undo_actions.yank_deletions,
+                -- ["<C-cr>"] = undo_actions.restore,
+                ["<C-u>"] = undo_actions.restore,
+                ["<C-y>"] = undo_actions.yank_additions,
+                ["<C-d>"] = undo_actions.yank_deletions,
               },
               n = {
-                ["y"] = require("telescope-undo.actions").yank_additions,
-                ["r"] = require("telescope-undo.actions").yank_deletions,
+                ["y"] = undo_actions.yank_additions,
+                ["d"] = undo_actions.yank_deletions,
+                ["u"] = undo_actions.restore,
               },
             },
           },
-          -- undo = {
-          --   -- use_delta = true,
-          --   -- use_custom_command = nil, -- setting this implies `use_delta = false`. Accepted format is: { "bash", "-c", "echo '$DIFF' | delta" }
-          --   -- side_by_side = false,
-          --   -- diff_context_lines = vim.o.scrolloff,
-          --   -- entry_format = "state #$ID, $STAT, $TIME",
-          --   -- time_format = "",
-          --   -- saved_only = false,
-          --   --side_by_side = true,
-          --   layout_strategy = "vertical",
-          --   layout_config = {
-          --     preview_height = 0.8,
-          --   },
-          -- },
           smart_open = {
             show_scores = false,
-            ignore_patterns = { "*.git/*", "*/tmp/*" },
+            ignore_patterns = { "*.git/*", "*/tmp/*", "." },
             match_algorithm = "fzf",
             disable_devicons = true,
             color_devicons = false,
@@ -757,7 +1048,7 @@ return {
             mappings = {
               i = {
                 ["<cr>"] = stopinsert(function(pb) multi(pb, "vnew") end),
-                ["<esc>"] = require("telescope.actions").close,
+                ["<esc>"] = actions.close,
                 ["<c-v>"] = stopinsert(function(pb) multi(pb, "vnew") end),
                 ["<c-s>"] = stopinsert(function(pb) multi(pb, "new") end),
                 ["<c-o>"] = stopinsert(function(pb) multi(pb, "edit") end),
@@ -774,7 +1065,7 @@ return {
                 ["<c-r>"] = lga_actions.quote_prompt(),
                 ["<c-i>"] = lga_actions.quote_prompt({ postfix = " --iglob " }),
                 ["<c-t>"] = lga_actions.quote_prompt({ postfix = " -t " }),
-                ["<esc>"] = require("telescope.actions").close,
+                ["<esc>"] = actions.close,
                 ["<c-v>"] = stopinsert(function(pb) multi(pb, "vnew") end),
                 ["<c-s>"] = stopinsert(function(pb) multi(pb, "new") end),
                 ["<c-o>"] = stopinsert(function(pb) multi(pb, "edit") end),
@@ -782,7 +1073,7 @@ return {
                 ["<tab>"] = actions.toggle_selection + actions.move_selection_next,
               },
               n = {
-                ["<esc>"] = require("telescope.actions").close,
+                ["<esc>"] = actions.close,
                 ["<c-v>"] = function(pb) multi(pb, "vnew") end,
                 ["<c-s>"] = function(pb) multi(pb, "new") end,
                 ["<c-o>"] = function(pb) multi(pb, "edit") end,
@@ -857,41 +1148,61 @@ return {
       -- keys
       if vim.g.picker == "telescope" then
         local builtin = require("telescope.builtin")
-        map("n", "<leader>ff", function() mega.picker.find_files({ picker = "smart_open" }) end, { desc = "[f]ind [f]iles" })
-        map("n", "<leader>fh", ts.help_tags, { desc = "[f]ind [h]elp" })
-        map("n", "<leader>fa", ts.autocommands, { desc = "[f]ind [a]utocommands" })
-        map("n", "<leader>fk", ts.keymaps, { desc = "[f]ind [k]eymaps" })
-        -- map("n", "<leader>fs", ts.builtin, { desc = "[f]ind [f]elect Telescope" })
-        -- map("n", "<leader>fg", ts.egrepify, { desc = "egrepify (live)" })
-        map("n", "<leader>fg", function() mega.picker.grep({ picker = "egrepify" }) end, { desc = "[f]ind e[g]repify" })
+        map("n", "<leader>ff", function() mega.picker.find_files({ picker = "smart_open", theme = "ivy" }) end, "[f]ind [f]iles")
+        map("n", "<leader>fh", ts.help_tags, { "[f]ind [h]elp" })
+        map("n", "<leader>fa", ts.autocommands, { "[f]ind [a]utocommands" })
+        map("n", "<leader>fk", ts.keymaps, { "[f]ind [k]eymaps" })
+        -- map("n", "<leader>fs", ts.builtin, {  "[f]ind [f]elect Telescope" })
+        -- map("n", "<leader>fg", ts.egrepify, {  "egrepify (live)" })
+        map("n", "<leader>fg", function() mega.picker.grep({ picker = "egrepify" }) end, { "[f]ind e[g]repify" })
 
-        -- map("n", "<leader>fg", ts.multi_rg, { desc = "multi-rg (live)" })
-        map("n", "<leader>a", mega.picker.grep, { desc = "grep (live)" })
-        -- map("n", "<leader>A", ts.grep_string, { desc = "grep (under cursor)" })
-        map("n", "<leader>A", function() mega.picker.grep({ default_text = vim.fn.expand("<cword>") }) end, { desc = "grep (under cursor)" })
+        -- vim.keymap.set('n', '<leader>fw', function ()
+        --   egrepify(
+        --     themes.get_ivy({ default_text = vim.fn.expand("<cword>") })
+        --   )
+        -- end, { desc = '[f]ind [w]ord under cursor'})
+        -- vim.keymap.set('v', '<leader>fw', function ()
+        --   egrepify(
+        --     themes.get_ivy({
+        --       default_text = get_visual_selection(),
+        --       layout_config = {
+        --         height = 30,
+        --       },
+        --     })
+        --   )
+        -- end, { desc = '[f]ind select [w]ord'})
+
+        -- vim.keymap.set("n", "<leader>fl", function()
+        --   egrepify(themes.get_ivy({
+        --     layout_config = {
+        --       height = 30,
+        --     }
+        --   }))
+        -- end)
+
+        -- map("n", "<leader>fg", ts.multi_rg, {  "multi-rg (live)" })
+        map("n", "<leader>a", mega.picker.grep, { "grep (live)" })
+        -- map("n", "<leader>A", ts.grep_string, {  "grep (under cursor)" })
+        map("n", "<leader>A", function() mega.picker.grep({ default_text = vim.fn.expand("<cword>") }) end, { "grep (under cursor)" })
         map({ "v", "x" }, "<leader>A", function()
           local pattern = require("mega.utils").get_visual_selection()
           mega.picker.grep({ default_text = pattern })
-        end, { desc = "grep (selection)" })
+        end, { "grep (selection)" })
 
-        map("n", "<leader>fu", ts.undo, { desc = "[f]ind [u]ndo" })
-        -- map("n", "<leader>fd", ts.diagnostics, { desc = "[f]ind [d]iagnostics" })
-        map("n", "<leader>fd", function() mega.picker.find_files({ picker = "smart_open", cwd = vim.g.dotfiles_path }) end, { desc = "[f]ind in [d]otfiles" })
-        map(
-          "n",
-          "<leader>fc",
-          function() mega.picker.find_files({ picker = "smart_open", cwd = vim.fn.stdpath("config") }) end,
-          { desc = "[f]ind in [c]onfig" }
-        )
+        map("n", "<leader>fu", ts.undo, { "[f]ind [u]ndo" })
+        -- map("n", "<leader>fd", ts.diagnostics, {  "[f]ind [d]iagnostics" })
+        map("n", "<leader>fd", function() mega.picker.find_files({ picker = "smart_open", cwd = vim.g.dotfiles_path }) end, { "[f]ind in [d]otfiles" })
+        map("n", "<leader>fc", function() mega.picker.find_files({ picker = "smart_open", cwd = vim.fn.stdpath("config") }) end, { "[f]ind in [c]onfig" })
         map(
           "n",
           "<leader>fp",
           function() mega.picker.find_files({ picker = "smart_open", cwd = vim.fn.expand(vim.g.code_path), title = "in ~/code" }) end,
-          { desc = "[f]ind in ~/code [p]rojects" }
+          { "[f]ind in ~/code [p]rojects" }
         )
-        map("n", "<leader>fr", ts.resume, { desc = "[f]ind [r]esume" })
-        map("n", "<leader>f.", ts.oldfiles, { desc = "[f]ind Recent Files (\".\" for repeat)" })
-        map("n", "<leader><leader>", ts.buffers, { desc = "[ ] Find existing buffers" })
+        map("n", "<leader>fr", ts.resume, { "[f]ind [r]esume" })
+        map("n", "<leader>f.", ts.oldfiles, { "[f]ind recent files" })
+        map("n", "gb", function() ts.buffers({ theme = "dropdown", sort_mru = true, ignore_current_buffer = true }) end, { "find existing buffers" })
+        map("n", ",,", function() ts.buffers({ theme = "dropdown", sort_mru = true, ignore_current_buffer = true }) end, { "find existing buffers" })
 
         -- Slightly advanced example of overriding default behavior and theme
         map("n", "<leader>/", function()
@@ -900,8 +1211,9 @@ return {
             winblend = 10,
             previewer = false,
           }))
-        end, { desc = "[/] Fuzzily search in current buffer" })
-        map("n", "<leader>fn", function() mega.picker.find_files({ picker = "smart_open", cwd = vim.g.notes_path }) end, { desc = "[f]ind in [n]otes" })
+        end, { "[/] Fuzzily search in current buffer" })
+        map("n", "<leader>fn", function() mega.picker.find_files({ picker = "smart_open", cwd = vim.g.notes_path }) end, { "[f]ind in [n]otes" })
+        map("n", "<leader>nf", function() mega.picker.find_files({ picker = "smart_open", cwd = vim.g.notes_path }) end, { "[f]ind in [n]otes" })
 
         -- Shortcut for searching your Neovim configuration files
       end

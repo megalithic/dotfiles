@@ -161,6 +161,7 @@
   rs = restore --staged
 
   rbi = rebase -i
+  rbif = !git fetch origin && git rebase -i origin/main
   rbc = rebase --continue
   rba = rebase --abort
 
@@ -207,7 +208,7 @@
   ; branch = !gitin branch
   br = !gitin branch
   ; st = !gitin status
-
+  edit = "!f() { nvim -p $(git diff "HEAD~${1-0}" --name-only --diff-filter=d); }; f"
   ; promote = !$DOTFILES/bin/git-promote
   ; wtf     = !$DOTFILES/bin/git-wtf
   ; rank-contributers = !$DOTFILES/bin/git-rank-contributers
@@ -240,6 +241,7 @@
   ; pr = "!f() { git fetch upstream refs/pull/$1/head:pr/$1; } ; f"
 
   # <3 @jeffweiss / @gifwise
+  recommit = commit -C ORIG_HEAD
   oops = !git commit --amend -CHEAD
   fixup = !git commit --amend -CHEAD
   fpush = !git push origin +HEAD

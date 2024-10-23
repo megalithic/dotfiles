@@ -47,6 +47,9 @@ obj.placeInSequence = function(movements, modal, interval)
     obj.lastSeenWindow = id
 
     hs.grid.set(win, movements[sequenceNumber])
+
+    if modal ~= nil then modal.updateIndicator(win) end
+
     sequenceNumber = sequenceNumber % cycleLength + 1
 
     if modal ~= nil then modal:delayedExit(interval) end

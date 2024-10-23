@@ -235,6 +235,7 @@ brew "xclip" if OS.linux?
 brew "vivid"
 brew "vim"
 brew "viu" # used with fzf-lua for image rendering
+brew "jannis-baum/tap/vivify"
 brew "ykman"
 brew "yubikey-personalization" if OS.mac?
 brew "yj"
@@ -305,6 +306,7 @@ cask "docker"
 # cask "espanso" if OS.mac?
 # cask "discord"
 # cask "expressvpn"
+cask "eqmac"
 cask "figma"
 cask "firefox-developer-edition"
 cask "flux"
@@ -314,6 +316,8 @@ cask "hazel"
 cask "hammerspoon", greedy: true
 # FIXME: needs an !arm64 check
 # cask "intel-power-gadget" # requires restart with security allow (intel things)
+cask "jordanbaird-ice" if OS.mac?
+cask "iina"
 cask "insomnia"
 # cask "inkscape"
 cask "istat-menus"
@@ -342,6 +346,7 @@ cask "slack"
 # cask "skim" if OS.mac?
 cask "soundsource", greedy: true
 cask "spotify"
+cask "stats" if OS.mac?
 # cask "thingsmacsandboxhelper"
 # cask "vimac"  # FIXME: this requires a click-based install (https://install.appcenter.ms/users/dexterleng/apps/vimac/distribution_groups/sparkle)
 cask "the-unarchiver"

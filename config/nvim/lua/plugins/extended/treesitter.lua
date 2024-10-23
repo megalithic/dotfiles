@@ -90,7 +90,7 @@ return {
         --  the list of additional_vim_regex_highlighting and disabled languages for indent.
         additional_vim_regex_highlighting = {
           "ruby",
-          "elixir",
+          -- "elixir",
           "python",
           -- "lua",
           "vim",
@@ -107,7 +107,6 @@ return {
           end
         end,
       },
-
       endwise = { enable = true },
       matchup = {
         enable = true,
@@ -124,13 +123,11 @@ return {
       incremental_selection = {
         enable = true,
         keymaps = {
-          -- init_selection = ":lua require'wildfire'.init_selection()<CR>:lua require('flash').treesitter()<CR>",
-          --
-          -- @see: flash.nvim
-          init_selection = ":lua require('flash').treesitter()<CR>",
-          node_incremental = "v",
-          node_decremental = "V",
-          scope_incremental = "v", -- increment to the upper scope (as defined in locals.scm)
+          -- `vn` and `m` start flash.treesitter
+          init_selection = "<cr>",
+          node_incremental = "<cr>",
+          node_decremental = "<bs>",
+          scope_incremental = false,
         },
       },
     },
@@ -225,49 +222,52 @@ return {
       require("nvim-treesitter.configs").setup(opts)
     end,
   },
-
   { "nvim-treesitter/nvim-treesitter-textobjects", cond = true, dependencies = { "nvim-treesitter/nvim-treesitter" } },
   { "RRethy/nvim-treesitter-textsubjects", cond = true, dependencies = { "nvim-treesitter/nvim-treesitter" } },
   { "nvim-treesitter/nvim-tree-docs", cond = true, dependencies = { "nvim-treesitter/nvim-treesitter" } },
-  { "RRethy/nvim-treesitter-endwise", dependencies = { "nvim-treesitter/nvim-treesitter" } },
+  { "pricehiller/nvim-treesitter-endwise", branch = "fix/iter-matches", dependencies = { "nvim-treesitter/nvim-treesitter" } },
   {
     "nvim-treesitter/nvim-treesitter-context",
+    -- event = { "BufReadPost" },
     keys = {
       {
         "[[",
+        function() require("treesitter-context").go_to_context(-vim.v.count1) end,
+      },
+      {
+        "]]",
         function() require("treesitter-context").go_to_context(vim.v.count1) end,
       },
     },
-    config = function()
-      require("treesitter-context").setup({
-        enable = true,
-        separator = "‾", --, "TreesitterContextBorder", -- alts: ▁▁ ─ ▄─▁-_‾
-        -- min_window_height = 5,
-        max_lines = 2, -- How many lines the window should span. Values <= 0 mean no limi
-        trim_scope = "outer",
-        patterns = { -- Match patterns for TS nodes. These get wrapped to match at word boundaries.
-          -- For all filetypes
-          -- Note that setting an entry here replaces all other patterns for this entry.
-          -- By setting the 'default' entry below, you can control which nodes you want to
-          -- appear in the context window.
-          default = {
-            "class",
-            "function",
-            "method",
-            "for", -- These won't appear in the context
-            "while",
-            "if",
-            "switch",
-            "case",
-            "element",
-            "call",
-          },
+    opts = {
+      -- enable = true,
+      separator = "▁", --, "TreesitterContextBorder", -- alts: ‾▁▁ ─ ▄─▁-_‾
+      -- min_window_height = 5,
+      max_lines = 2, -- How many lines the window should span. Values <= 0 mean no limi
+      trim_scope = "outer",
+      patterns = { -- Match patterns for TS nodes. These get wrapped to match at word boundaries.
+        -- For all filetypes
+        -- Note that setting an entry here replaces all other patterns for this entry.
+        -- By setting the 'default' entry below, you can control which nodes you want to
+        -- appear in the context window.
+        default = {
+          "class",
+          "function",
+          "method",
+          "for", -- These won't appear in the context
+          "while",
+          "if",
+          "switch",
+          "case",
+          "element",
+          "call",
         },
-        exact_patterns = {},
-        zindex = 20, -- The Z-index of the context window
-        mode = "cursor", -- Line used to calculate context. Choices: 'cursor', 'topline'
-      })
-    end,
+      },
+      exact_patterns = {},
+      zindex = 20, -- The Z-index of the context window
+      mode = "cursor", -- Line used to calculate context. Choices: 'cursor', 'topline'
+    },
+    config = function(_, opts) require("treesitter-context").setup(opts) end,
   },
   {
     "andymass/vim-matchup",
@@ -347,5 +347,61 @@ return {
         blacklist = { "c", "cpp" },
       }
     end,
+  },
+  {
+    "mtrajano/tssorter.nvim",
+    cmd = "TSSort",
+    version = "*", -- latest stable version, use `main` to keep up with the latest changes
+    opts = {
+      sortables = {
+        markdown = { -- filetype
+          list = { -- sortable name
+            node = "list_item", -- treesitter node to capture
+            ordinal = "inline", -- OPTIONAL: nested node to do the sorting by. If this is not specified it will just sort based on
+            -- node's text contents.
+
+            -- It's possible that for the ordinal config above the node name could be one of multiple values. For example in markdown
+            -- if you would like to sort by the task status this value could be `task_list_marker_unchecked` or `task_list_marker_checked`
+            -- depending on that task status. In this case you could pass a table to ordinal and it would match based on the first one found.
+            -- ordinal = {'task_list_marker_unchecked', 'task_list_marker_checked'}
+
+            -- OPTIONAL: function that takes in two nodes and returns true when first node should come first
+            -- these are just tsnodes so you have all that functionality available to you
+            -- if ordinals are specified in the config above they will be included at the end
+            order_by = function(node1, node2, ordinal1, ordinal2)
+              if ordinal1 and ordinal2 then return ordinal1 < ordinal2 end
+
+              -- TODO: add more helpers to make it easier to interact with these
+              local line1 = require("tssorter.tshelper").get_text(node1)
+              local line2 = require("tssorter.tshelper").get_text(node2)
+
+              return line1 < line2
+            end,
+          },
+        },
+        lua = {
+          list = {
+            node = "field",
+          },
+          assign = {
+            node = "assignment_statement", -- treesitter node to capture
+
+            -- ordinal = 'inline', -- OPTIONAL: nested node to do the sorting by. If this is not specified it will just sort based on
+            -- node's text contents.
+
+            -- OPTIONAL: function that takes in two nodes and returns true when first node should come first
+            -- these are just tsnodes so you have all that functionality available to you
+            -- if ordinals are specified in the config above they will be included at the end
+            order_by = function(node1, node2, ordinal1, ordinal2)
+              if ordinal1 and ordinal2 then return ordinal1 < ordinal2 end
+              local line1 = require("tssorter.tshelper").get_text(node1)
+              local line2 = require("tssorter.tshelper").get_text(node2)
+              print(line1, line2)
+              return line1 < line2
+            end,
+          },
+        },
+      },
+    },
   },
 }

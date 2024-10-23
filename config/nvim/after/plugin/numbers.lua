@@ -17,6 +17,7 @@ vim.g.number_filetype_exclusions = {
   "fzf",
   "fzf-lua",
   "fzflua",
+  "markdown",
   "gitcommit",
   "help",
   "lazy",

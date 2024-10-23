@@ -18,8 +18,33 @@ return {
   --   "iamcco/markdown-preview.nvim",
   --   cmd = { "MarkdownPreviewToggle", "MarkdownPreview", "MarkdownPreviewStop" },
   --   ft = { "markdown" },
-  --   build = function() vim.fn["mkdp#util#install"]() end,
+  --   build = function(plugin)
+  --     if vim.fn.executable("npx") then
+  --       vim.cmd("!cd " .. plugin.dir .. " && cd app && npx --yes yarn install")
+  --     else
+  --       vim.cmd([[Lazy load markdown-preview.nvim]])
+  --       vim.fn["mkdp#util#install"]()
+  --     end
+  --   end,
+  --   init = function()
+  --     if vim.fn.executable("npx") then vim.g.mkdp_filetypes = { "markdown" } end
+  --   end,
   -- },
+  {
+    "jannis-baum/vivify.vim", -- Preview markdown files in the browser using `vivify`
+    file_types = {
+      "markdown",
+    },
+    init = function()
+      -- Refresh page contents on CursorHold and CursorHoldI
+      vim.g.vivify_instant_refresh = 1
+      -- additional filetypes to recognize as markdown
+      vim.g.vivify_filetypes = { "vimwiki" }
+    end,
+    keys = {
+      { "<localleader>mp", "<cmd>Vivify<cr>", desc = "Preview using vivify", ft = "markdown" },
+    },
+  },
   -- {
   --   "toppair/peek.nvim",
   --   event = { "VeryLazy" },
@@ -31,7 +56,40 @@ return {
   --   end,
   -- },
   {
+    "ray-x/yamlmatter.nvim",
+    lazy = false,
+    cond = false,
+    -- event = "VeryLazy",
+    -- ft = { "markdown" },
+    config = function()
+      require("yamlmatter").setup({
+        key_value_padding = 4, -- Default padding between key and value
+        icon_mappings = {
+          -- Default icon mappings
+          title = "",
+          author = "",
+          date = "",
+          id = "",
+          tags = "",
+          category = "",
+          type = "",
+          default = "󰦨",
+        },
+        highlight_groups = {
+          -- icon = 'YamlFrontmatterIcon',
+          -- key = 'YamlFrontmatterKey',
+          -- value = 'YamlFrontmatterValue',
+          icon = "Identifier",
+          key = "Function",
+          value = "Type",
+        },
+      })
+    end,
+  },
+  {
     "MeanderingProgrammer/markdown.nvim",
+    cond = not vim.g.started_by_firenvim,
+    -- cond = false,
     name = "render-markdown", -- Only needed if you have another plugin named markdown.nvim
     dependencies = { "nvim-treesitter/nvim-treesitter", "echasnovski/mini.nvim", "echasnovski/mini.icons" }, -- if you use the mini.nvim suite
     file_types = { "markdown", "vimwiki", "gitcommit" },
@@ -41,13 +99,14 @@ return {
           -- Turn on / off heading icon & background rendering
           enabled = true,
           -- Turn on / off any sign column related rendering
-          sign = true,
+          sign = false,
           -- Replaces '#+' of 'atx_h._marker'
           -- The number of '#' in the heading determines the 'level'
           -- The 'level' is used to index into the array using a cycle
           -- The result is left padded with spaces to hide any additional '#'
           icons = { "󰉫 ", "󰉬 ", "󰉭 ", "󰉮 ", "󰉯 ", "󰉰 " },
-
+          -- icons = { "󰉫 ", "󰉬 ", "󰉭 ", "󰉮 ", "󰉯 ", "󰉰 " },
+          -- icons = { "󰼏 ", "󰎨 " },
           -- icons = { "󰲡 ", "󰲣 ", "󰲥 ", "󰲧 ", "󰲩 ", "󰲫 " },
           -- Added to the sign column if enabled
           -- The 'level' is used to index into the array using a cycle
@@ -72,12 +131,22 @@ return {
             "RenderMarkdownH5",
             "RenderMarkdownH6",
           },
+          -- Used above heading for border
+          -- above = "▄",
+          -- Used below heading for border
+          -- below = "▀",
+          -- border = true,
+          -- width = { "full", "full", "block", "block", "block" },
+          width = { "full", "full", "block" },
+          left_pad = 1,
+          right_pad = 2,
+          -- min_width = 20,
         },
         code = {
           -- Turn on / off code block & inline code rendering
           enabled = true,
           -- Turn on / off any sign column related rendering
-          sign = true,
+          sign = false,
           -- Determines how code blocks & inline code are rendered:
           --  none: disables all rendering
           --  normal: adds highlight group to code blocks & inline code, adds padding to code blocks
@@ -86,6 +155,8 @@ return {
           style = "full",
           -- Amount of padding to add to the left of code blocks
           left_pad = 2,
+          right_pad = 4,
+          width = "block",
           -- Determins how the top / bottom of code block are rendered:
           --  thick: use the same highlight as the code body
           --  thin: when lines are empty overlay the above & below icons
@@ -106,6 +177,7 @@ return {
           -- The icon gets repeated across the window's width
           -- icon = "─",
           icon = "┈",
+          -- icon = "░",
           -- Highlight for the whole line generated from the icon
           highlight = "RenderMarkdownDash",
         },
@@ -131,7 +203,7 @@ return {
           },
           checked = {
             -- Replaces '[x]' of 'task_list_marker_checked'
-            icon = " ", -- alts: 󰱒
+            icon = " ", -- alts: 󰱒   
             -- Highligh for the checked icon
             highlight = "RenderMarkdownChecked",
           },
@@ -142,8 +214,25 @@ return {
           --   'raw': Matched against the raw text of a 'shortcut_link'
           --   'rendered': Replaces the 'raw' value when rendering
           --   'highlight': Highlight for the 'rendered' icon
+          -- custom = {
+          --   todo = { raw = "[-]", rendered = "󰥔 ", highlight = "RenderMarkdownTodo" },
+          -- },
           custom = {
-            todo = { raw = "[-]", rendered = "󰥔 ", highlight = "RenderMarkdownTodo" },
+            -- todo = { raw = "[-]", rendered = " 󰥔 ", highlight = "RenderMarkdownTodo" },
+            todo = { raw = "[-]", rendered = "󱗽 ", highlight = "RenderMarkdownListTodo" },
+            event = { raw = "[|]", rendered = "󰀠 ", highlight = "RenderMarkdownListEvent" },
+            wip = { raw = "[.]", rendered = "󰡖 ", highlight = "RenderMarkdownListWip" },
+            -- skipped = { raw = "[/]", rendered = "󱋭 ", highlight = "RenderMarkdownListSkipped" },
+            trash = { raw = "[/]", rendered = " ", highlight = "RenderMarkdownListSkipped" },
+
+            fire = { raw = "[f]", rendered = "󰈸 ", highlight = "RenderMarkdownListFire" },
+            star = { raw = "[s]", rendered = " ", highlight = "RenderMarkdownListStar" },
+            idea = { raw = "[*]", rendered = "󰌵 ", highlight = "RenderMarkdownListIdea" },
+            yes = { raw = "[y]", rendered = "󰔓 ", highlight = "RenderMarkdownListYes" },
+            no = { raw = "[n]", rendered = "󰔑 ", highlight = "RenderMarkdownListNo" },
+            question = { raw = "[?]", rendered = " ", highlight = "RenderMarkdownListQuestion" },
+            info = { raw = "[i]", rendered = " ", highlight = "RenderMarkdownListInfo" },
+            important = { raw = "[!]", rendered = "󱅶 ", highlight = "RenderMarkdownListImportant" },
           },
         },
         quote = {
@@ -241,23 +330,29 @@ return {
     end,
   },
   {
+    "dkarter/bullets.vim",
+    cond = false,
+    ft = { "markdown", "text", "gitcommit" },
+    cmd = { "InsertNewBullet" },
+  },
+  {
     "gaoDean/autolist.nvim",
     event = {
       "BufRead **.md,**.neorg,**.org",
       "BufNewFile **.md,**.neorg,**.org",
       "FileType gitcommit,NeogitCommitMessage,.git/COMMIT_EDITMSG",
     },
-    -- enabled = false,
+    -- cond = false,
     version = "2.3.0",
     config = function()
       local al = require("autolist")
       al.setup()
       al.create_mapping_hook("i", "<CR>", al.new)
-      al.create_mapping_hook("i", "<Tab>", al.indent)
+      al.create_mapping_hook("i", "<Tab>", al.indent, "<C-t>")
       al.create_mapping_hook("i", "<S-Tab>", al.indent, "<C-d>")
       al.create_mapping_hook("n", "o", al.new)
-      al.create_mapping_hook("n", "<C-c>", al.invert_entry)
-      al.create_mapping_hook("n", "<C-x>", al.invert_entry)
+      -- al.create_mapping_hook("n", "<C-c>", al.invert_entry)
+      -- al.create_mapping_hook("n", "<C-x>", al.invert_entry)
       al.create_mapping_hook("n", "O", al.new_before)
     end,
   },
@@ -305,13 +400,28 @@ return {
   --   end,
   -- },
   {
+    -- Still having issues with magick luarock not installing
     enabled = false,
     "3rd/image.nvim",
     dependencies = {
-      "leafo/magick",
+      { "leafo/magick" },
+      -- {
+      --   -- luarocks.nvim is a Neovim plugin designed to streamline the installation
+      --   -- of luarocks packages directly within Neovim. It simplifies the process
+      --   -- of managing Lua dependencies, ensuring a hassle-free experience for
+      --   -- Neovim users.
+      --   -- https://github.com/vhyrro/luarocks.nvim
+      --   "vhyrro/luarocks.nvim",
+      --   -- this plugin needs to run before anything else
+      --   priority = 1001,
+      --   opts = {
+      --     rocks = { "magick" },
+      --   },
+      -- },
     },
     opts = {
       backend = "kitty",
+      kitty_method = "normal",
       integrations = {
         markdown = {
           enabled = true,
@@ -320,24 +430,17 @@ return {
           only_render_image_at_cursor = true,
           filetypes = { "markdown", "vimwiki" }, -- markdown extensions (ie. quarto) can go here
         },
-        neorg = {
-          enabled = true,
-          clear_in_insert_mode = false,
-          download_remote_images = true,
-          only_render_image_at_cursor = true,
-          filetypes = { "norg" },
-        },
         html = {
-          enabled = false,
+          enabled = true,
         },
         css = {
-          enabled = false,
+          enabled = true,
         },
       },
       max_width = nil,
       max_height = nil,
       max_width_window_percentage = nil,
-      max_height_window_percentage = 50,
+      max_height_window_percentage = 40,
       window_overlap_clear_enabled = false, -- toggles images when windows are overlapped
       window_overlap_clear_ft_ignore = { "cmp_menu", "cmp_docs", "" },
       editor_only_render_when_focused = true, -- auto show/hide images when the editor gains/looses focus
@@ -366,8 +469,4 @@ return {
       })
     end,
   },
-  -- {
-  --   "andrewferrier/wrapping.nvim",
-  --   config = function() require("wrapping").setup() end,
-  -- },
 }

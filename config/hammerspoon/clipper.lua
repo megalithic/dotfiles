@@ -16,7 +16,7 @@ function obj.captureImage(image, openImageUrl)
   image = image or hs.pasteboard.readImage()
 
   if not image then
-    warn(fmt("[%s] captureImage: no image on clipboard", obj.name))
+    -- warn(fmt("[%s] captureImage: no image on clipboard", obj.name))
 
     return
   end
@@ -38,7 +38,7 @@ function obj.captureImage(image, openImageUrl)
     end
     local url = std_out_lines[#std_out_lines]
 
-    dbg("capper:\r\n%s\r\n%s\r\n%s\r\n%s", url, success, type, rc)
+    dbg(fmt("capper:\r\n%s\r\n%s\r\n%s\r\n%s", url, success, type, rc))
 
     if success then
       hs.pasteboard.setContents(imageName, "imageName")

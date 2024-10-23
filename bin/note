@@ -9,42 +9,59 @@ __help() {
   printf -- "\n"
   printf -- "${grey}${bold}OPTIONS:${reset}\n"
   printf -- "  -h          view this help text\n"
-  printf -- "  -t          optional note tag\n"
+  printf -- "  -c          create note only\n"
+  printf -- "  -d          new daily note\n"
+  printf -- "  -t          comma-separated tags\n"
   printf -- "\n"
   printf -- "${grey}${bold}EXAMPLES:${reset}\n"
-  printf -- "  note -t til this is the greatest note with amazing code snippets\n"
+  printf -- "  note -t til,snippets,quicknote this is the greatest note with amazing code snippets\n"
   printf -- "\n"
 
   exit 0
 }
 
-while getopts "ht:" OPTION; do
+CREATE_ONLY=false
+RETURN_PATH=false
+
+while getopts "hdct:" OPTION; do
   case $OPTION in
-  t)
-    # pass in an optional single tag to start;
-    # TODO: support comma separated tags
-    TAG="#$OPTARG"
-    ;;
+    t)
+      TAGS="${OPTARG}"
+      ;;
 
-  h)
-    __help
-    ;;
+    h)
+      __help
+      ;;
 
-  \?)
-    # NOTE: this covers the case where an optarg may not be provided
-    # and will exit errored
-    echo "Invalid Option: -$OPTARG" 1>&2
-    exit 1
-    ;;
-  :)
-    echo "Invalid Option: -$OPTARG requires an argument" 1>&2
-    exit 1
-    ;;
+    c)
+      CREATE_ONLY=true
+      ;;
+
+    p)
+      RETURN_PATH=true
+      ;;
+
+    d)
+      daily_note -r
+      exit 0
+      ;;
+
+    \?)
+      # NOTE: this covers the case where an optarg may not be provided
+      # and will exit errored
+      echo "Invalid Option: -$OPTARG" 1>&2
+      exit 1
+      ;;
+
+    :)
+      echo "Invalid Option: -$OPTARG requires an argument" 1>&2
+      exit 1
+      ;;
   esac
 done
 shift "$(($OPTIND - 1))"
 
-TITLE="${*:-New note}"
+TITLE="${*:-Quick note}"
 
 # Specify below the directory in which you want to create your note
 main_note_dir="${HOME}/Documents/_notes"
@@ -58,33 +75,51 @@ current_day=$(date +"%d")
 note_dir="${main_note_dir}"
 note_date="${current_year}-${current_month_num}-${current_day}"
 filename_from_title=$(echo "${TITLE// /-}" | tr '[:upper:]' '[:lower:]')
+if [[ "$TITLE" == "Quick note" ]]; then
+  full_note_path="${note_dir}/${filename_from_title}_${note_date}.md"
+else
+  full_note_path="${note_dir}/${filename_from_title}.md"
+fi
 
-full_path="${note_dir}/${filename_from_title}_${note_date}.md"
+function __print_tags() {
+  if [[ -n "$TAGS" ]]; then
+    echo "tags:\n"
+    echo "  - #$(echo -e ${TAGS} | sed "s/,/\n  -  #/g")"
+  fi
+}
+
+function __set_template() {
+  # NOTE: doesn't take args, just uses upper scope variables
+  if [ ! -f "$full_note_path" ]; then
+    local id="${filename_from_title}-${note_date}"
+    cat <<EOF >"$full_note_path"
+---
+id: ${id}
+date: ${note_date}
+$(__print_tags)
+---
+
+# ${TITLE}
+EOF
+    if [ "$CREATE_ONLY" = false ]; then
+      log_ok "created new note ${full_note_path}"
+    fi
+  fi
+}
 
 # Check if the directory exists, if not, create it
 if [ ! -d "$note_dir" ]; then
   mkdir -p "$note_dir"
 fi
 
-# Create the note if it does not already exist; with our templated content
-if [ ! -f "$full_path" ]; then
-  cat <<EOF >"$full_path"
-date: ${note_date}
+# Create the  note if it does not already exist
+__set_template
 
-tags:
-
-- ${TAG}
-
-<!--toc:start-->
-
-- [${TITLE}](#${filename_from_title})
-
-<!--toc:end-->
-
-# ${TITLE}
-EOF
-  log_ok "created new note ${full_path}"
+if [ "$CREATE_ONLY" = false ]; then
   log "opening in $EDITOR..."
+  $EDITOR +norm\ G "$full_note_path"
 fi
 
-$EDITOR +norm\ G "$full_path"
+if [ "$RETURN_PATH" = true ]; then
+  echo "$full_note_path"
+fi

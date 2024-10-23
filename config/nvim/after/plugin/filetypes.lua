@@ -1,7 +1,95 @@
-local ftplugin = require("mega.ftplugin")
+------@class FiletypeSettings
+------@field g table<string, any>
+------@field bo vim.bo
+------@field wo vim.wo
+------@field opt vim.Option
+------@field plugins {[string]: fun(module: table)}
+---
+------@param args {[1]: string, [2]: string, [3]: string, [string]: boolean | integer}[]
+------@param buf integer
+---local function apply_ft_key_mappings(args, buf)
+---  vim.iter(args):each(function(m)
+---    assert(#m == 3, "map args must be a table with at least 3 items")
+---    local opts = vim.iter(m):fold({ buffer = buf }, function(acc, key, item)
+---      if type(key) == "string" then acc[key] = item end
+---      return acc
+---    end)
+---    map(m[1], m[2], m[3], opts)
+---  end)
+---end
+---
+------ A convenience wrapper that calls the ftplugin config for a plugin if it exists
+------ and warns me if the plugin is not installed
+------@param configs table<string, fun(module: table)>
+---local function ftplugin_conf(configs)
+---  if type(configs) ~= "table" then return end
+---  for name, callback in pairs(configs) do
+---    local ok, plugin = mega.pcall(require, name)
+---    if ok then callback(plugin) end
+---  end
+---end
+---
+------ This function is an alternative API to using ftplugin files. It allows defining
+------ filetype settings in a single place, then creating FileType autocommands from this definition
+------
+------ e.g.
+------ ```lua
+------   as.filetype_settings({
+------     lua = {
+------      opt = {foldmethod = 'expr' },
+------      bo = { shiftwidth = 2 }
+------     },
+------    [{'c', 'cpp'}] = {
+------      bo = { shiftwidth = 2 }
+------    }
+------   })
+------ ```
+------
+----- ---@param map {[string|string[]]: FiletypeSettings | {[integer]: fun(args: AutocmdArgs)}}
+---local function ft_settings(map)
+---  local commands = vim.iter(map):map(function(ft, settings)
+---    local name = type(ft) == "table" and table.concat(ft, ",") or ft
+---    return {
+---      pattern = ft,
+---      event = "FileType",
+---      desc = ("ft settings for %s"):format(name),
+---      command = function(args)
+---        local bufnr = args.buf
+---        vim.iter(settings):each(function(key, value)
+---          if key == "opt" then key = "opt_local" end
+---          if key == "bufvar" then
+---            for k, v in pairs(value) do
+---              vim.api.nvim_buf_set_var(bufnr, k, v)
+---            end
+---          end
+---          if key == "mappings" or key == "keys" then return apply_ft_key_mappings(value, bufnr) end
+---          if key == "compiler" then vim.api.nvim_buf_call(bufnr, function() vim.cmd.compiler({ args = { value } }) end) end
+---          if key == "plugins" then return ftplugin_conf(value) end
+---          if key == "callback" and type(value) == "function" then return mega.pcall(value, args) end
+---          if key == "abbr" then
+---            vim.api.nvim_buf_call(bufnr, function()
+---              for k, v in pairs(value) do
+---                -- vim.cmd(string.format("iabbrev <buffer> %s %s", k, v))
+---                dbg(value)
+---
+---                vim.cmd.iabbrev(string.format("<buffer> %s %s", k, v))
+---              end
+---            end)
+---          end
+---          if type(key) == "function" then return mega.pcall(key, args) end
+---
+---          vim.iter(value):each(function(option, setting) vim[key][option] = setting end)
+---        end)
+---      end,
+---    }
+---  end)
+---  require("mega.autocmds").augroup("mega-filetype-settings", unpack(commands:totable()))
+---end
 
+local ftplugin = require("mega.ftplugin")
 ftplugin.extend_all({
-  elixir = {
+  -- ft_settings({
+  [{ "elixir", "eelixir" }] = {
     abbr = {
       ep = "|>",
       epry = [[require IEx; IEx.pry]],
@@ -17,9 +105,10 @@ ftplugin.extend_all({
     --   iskeyword = vim.opt.iskeyword + { "!", "?", "-" },
     --   indentkeys = vim.opt.indentkeys + { "end" },
     -- },
-    callback = function()
+    callback = function(bufnr, args)
       -- REF:
       -- running tests in iex:
+      -- https://www.elixirstreams.com/tips/test-breakpoints
       -- https://curiosum.com/til/run-tests-in-elixir-iex-shell?utm_medium=email&utm_source=elixir-radar
       vim.cmd([[setlocal iskeyword+=!,?,-]])
       vim.cmd([[setlocal indentkeys-=0{]])
@@ -52,10 +141,33 @@ ftplugin.extend_all({
       nmap("<localleader>err", [[:lua require("mega.utils").wrap_cursor_node("{:error, ", "}")<CR>]], "copy module alias")
       xmap("<localleader>err", [[:lua require("mega.utils").wrap_selected_nodes("{:error, ", "}")<CR>]], "copy module alias")
 
+      if vim.g.tester == "vim-test" then
+        nmap("<localleader>td", function()
+          local function elixir_dbg_transform(cmd)
+            -- local modified_cmd = cmd:gsub("^mix%s*", "")
+            -- local returned_cmd = "MIX_ENV=test iex --dbg pry -S mix do " .. modified_cmd .. " --trace + run -e 'System.halt'"
+            local returned_cmd = string.format("iex -S %s -b", cmd)
+
+            return returned_cmd
+          end
+          vim.g["test#custom_transformations"] = { elixir = elixir_dbg_transform }
+          vim.g["test#transformation"] = "elixir"
+          vim.cmd("TestNearest")
+        end, "[d]ebug [n]earest test")
+      end
+
       local has_wk, wk = pcall(require, "which-key")
-      if has_wk then wk.register({
-        ["<localleader>e"] = { name = "[e]lixir" },
+      if has_wk then wk.add({
+        ["<localleader>e"] = { group = "[e]lixir" },
       }) end
+
+      if pcall(require, "mini.clue") then
+        vim.b.miniclue_config = {
+          clues = {
+            { mode = "n", keys = "<localleader>e", desc = "+elixir" },
+          },
+        }
+      end
     end,
   },
   heex = {
@@ -63,6 +175,14 @@ ftplugin.extend_all({
       tabstop = 2,
       shiftwidth = 2,
       commentstring = [[<%!-- %s --%>]],
+    },
+    callback = function(bufnr, args) vim.bo[bufnr].commentstring = [[<%!-- %s --%>]] end,
+  },
+  terminal = {
+    opt = {
+      relativenumber = false,
+      number = false,
+      signcolumn = "yes:1",
     },
   },
   gitconfig = {
@@ -72,36 +192,16 @@ ftplugin.extend_all({
       commentstring = [[# %s]],
     },
   },
-  gitcommit = {
-    -- keys = {
-    --   { "q", function() vim.cmd("cq!") end, { nowait = true, buffer = true, desc = "abort", bang = true } },
-    -- },
-    opt = {
-      list = false,
-      number = false,
-      relativenumber = false,
-      cursorline = false,
-      spell = true,
-      spelllang = "en_gb",
-      colorcolumn = "50,72",
-      conceallevel = 2,
-      concealcursor = "nc",
-    },
-    callback = function()
-      vim.keymap.set("n", "q", function() vim.cmd("cq!", { bang = true }) end, { buffer = true, nowait = true, desc = "Abort" })
-      vim.fn.matchaddpos("DiagnosticVirtualTextError", { { 1, 50, 10000 } })
-      if vim.fn.prevnonblank(".") ~= vim.fn.line(".") then vim.cmd.startinsert() end
-    end,
-  },
   gitrebase = {
-    function()
-      vim.keymap.set("n", "q", function() vim.cmd("cq!", { bang = true }) end, { nowait = true, desc = "abort" })
+    callback = function(bufnr, args)
+      vim.keymap.set("n", "q", function() vim.cmd("cq!", { bang = true }) end, { buffer = bufnr, nowait = true, desc = "abort" })
     end,
   },
-  ["NeogitCommitMessage"] = {
+  [{ "gitcommit", "NeogitCommitMessage" }] = {
     -- keys = {
-    --   { "q", function() vim.cmd("cq!") end, { nowait = true, buffer = true, desc = "abort", bang = true } },
+    --   { "n", "q", function() vim.cmd("cq!") end, { nowait = true, buffer = true, desc = "abort", bang = true } },
     -- },
+    bo = { bufhidden = "delete" },
     opt = {
       list = false,
       number = false,
@@ -116,17 +216,17 @@ ftplugin.extend_all({
     callback = function()
       vim.keymap.set("n", "q", function() vim.cmd("cq!", { bang = true }) end, { buffer = true, nowait = true, desc = "Abort" })
       vim.fn.matchaddpos("DiagnosticVirtualTextError", { { 1, 50, 10000 } })
-      if vim.fn.prevnonblank(".") ~= vim.fn.line(".") then vim.cmd.startinsert() end
+      if vim.fn.prevnonblank(0) ~= vim.fn.line(".") then vim.cmd.startinsert() end
     end,
   },
   fugitiveblame = {
     keys = {
-      { "gp", "<CMD>echo system('git findpr ' . expand('<cword>'))<CR>" },
+      { "n", "gp", "<CMD>echo system('git findpr ' . expand('<cword>'))<CR>" },
     },
   },
   help = {
     keys = {
-      { "gd", "<C-]>" },
+      { "n", "gd", "<C-]>" },
     },
     opt = {
       signcolumn = "no",
@@ -136,7 +236,12 @@ ftplugin.extend_all({
       list = false,
       textwidth = 80,
     },
-    callback = function() pcall(vim.treesitter.start) end,
+    cmp = {
+      sources = {
+        { name = "git" },
+        { name = "buffer" },
+      },
+    },
   },
   prompt = {
     opt = {
@@ -153,7 +258,7 @@ ftplugin.extend_all({
   },
   man = {
     keys = {
-      { "gd", "<C-]>" },
+      { "n", "gd", "<C-]>" },
     },
     opt = {
       signcolumn = "no",
@@ -196,12 +301,11 @@ ftplugin.extend_all({
   },
   lua = {
     abbr = {
-      ["!="] = [[~=]],
       locla = "local",
       vll = "vim.log.levels",
     },
     keys = {
-      { "gh", "<CMD>exec 'help ' . expand('<cword>')<CR>" },
+      { "n", "gh", "<CMD>exec 'help ' . expand('<cword>')<CR>" },
     },
     opt = {
       comments = ":---,:--",
@@ -214,8 +318,6 @@ ftplugin.extend_all({
   },
   markdown = {
     abbr = {
-      -- ["-cc"] = "- [ ]",
-      cb = "[ ]",
       cabag = [[Co-authored-by: Aaron Gunderson <aaron@ternit.com>]],
       cabdt = [[Co-authored-by: Dan Thiffault <dan@ternit.com>]],
       cabjm = [[Co-authored-by: Jia Mu <jia@ternit.com>]],
@@ -224,8 +326,12 @@ ftplugin.extend_all({
       cbdt = [[Co-authored-by: Dan Thiffault <dan@ternit.com>]],
       cbjm = [[Co-authored-by: Jia Mu <jia@ternit.com>]],
       cbam = [[Co-authored-by: Ali Marsh<ali@ternit.com>]],
+      cbt = "- [ ]",
+      cb = "[ ]",
     },
     opt = {
+      relativenumber = false,
+      number = false,
       conceallevel = 2,
       shiftwidth = 2,
       tabstop = 2,
@@ -244,32 +350,55 @@ ftplugin.extend_all({
       -- vim.o.wrap = true
       -- vim.o.linebreak = true
     },
-    -- keys = {
-    --   -- { "<leader>td", require("markdown").task_mark_done },
-    --   -- { "<leader>tu", require("markdown").task_mark_undone },
-    -- },
-    callback = function(bufnr)
-      --   -- Allow bullets.vim and nvim-autopairs to coexist.
-      --   -- REF: https://github.com/ribru17/.dotfiles/blob/0f09207e5587b5217d631cb09885957906eaaa7a/.config/nvim/after/ftplugin/markdown.lua#L7-L19
-      --   -- vim.schedule(function()
-      --   -- vim.keymap.set("i", "<CR>", function()
-      --   --   -- local pair = require("nvim-autopairs").completion_confirm()
-      --   --   -- if pair == vim.api.nvim_replace_termcodes("<CR>", true, false, true) then
-      --   --   vim.cmd.InsertNewBullet()
-      --   --   -- else
-      --   --   --   vim.api.nvim_feedkeys(pair, "n", false)
-      --   --   -- end
-      --   -- end, {
-      --   --   buffer = bufnr,
-      --   -- })
-      --   -- end)
-      --   -- require("markdown").update_code_highlights(bufnr)
-      --   -- local aug = vim.api.nvim_create_augroup("MarkdownStyling", {})
-      --   -- vim.api.nvim_clear_autocmds({ buffer = bufnr, group = aug })
-      --   -- vim.api.nvim_create_autocmd({ "TextChanged", "InsertLeave" }, {
-      --   --   buffer = bufnr,
-      --   --   callback = vim.schedule_wrap(function(args) require("markdown").update_code_highlights(bufnr) end),
-      --   -- })
+    cmp = {
+      sources = {
+        {
+          name = "nvim_lsp",
+          markdown_oxide = {
+            keyword_pattern = [[\(\k\| \|\/\|#\|\^\)\+]],
+          },
+          -- or maybe this?
+          --
+          -- option = {
+          --   markdown_oxide = {
+          --     keyword_pattern = [[\(\k\| \|\/\|#\|\^\)\+]],
+          --   },
+          -- },
+        },
+        { name = "snippets" },
+        { name = "git" },
+        { name = "path" },
+        { name = "spell" },
+      },
+    },
+    callback = function(_bufnr)
+      if pcall(require, "mini.clue") then
+        vim.b.miniclue_config = {
+          clues = {
+            { mode = "n", keys = "<localleader>m", desc = "+markdown" },
+          },
+        }
+      end
+
+      vim.keymap.set("v", "<localleader>mll", function()
+        -- Copy what's currently in my clipboard to the register "a lamw25wmal
+        vim.cmd("let @a = getreg('+')")
+        -- delete selected text
+        vim.cmd("normal d")
+        -- Insert the following in insert mode
+        vim.cmd("startinsert")
+        vim.api.nvim_put({ "[]() " }, "c", true, true)
+        -- Move to the left, paste, and then move to the right
+        vim.cmd("normal F[pf(")
+        -- Copy what's on the "a register back to the clipboard
+        vim.cmd("call setreg('+', @a)")
+        -- Paste what's on the clipboard
+        vim.cmd("normal p")
+        -- Leave me in normal mode or command mode
+        vim.cmd("stopinsert")
+        -- Leave me in insert mode to start typing
+        -- vim.cmd("startinsert")
+      end, { desc = "[P]Convert to link" })
     end,
   },
   ["neotest-summary"] = {
@@ -395,11 +524,41 @@ ftplugin.extend_all({
       })
     end,
   },
+  query = {
+    callback = function(bufnr)
+      if vim.bo[bufnr].buftype == "nofile" then return end
+      vim.lsp.start({
+        name = "ts_query_ls",
+        cmd = {
+          vim.fs.joinpath(vim.env.HOME, "Documents/CodeProjects/ts_query_ls/target/release/ts_query_ls"),
+        },
+        root_dir = vim.fs.root(0, { "queries" }),
+        settings = {
+          parser_install_directories = {
+            -- If using nvim-treesitter with lazy.nvim
+            vim.fs.joinpath(vim.fn.stdpath("data"), "/lazy/nvim-treesitter/parser/"),
+          },
+          parser_aliases = {
+            ecma = "javascript",
+          },
+          language_retrieval_patterns = {
+            "languages/src/([^/]+)/[^/]+\\.scm$",
+          },
+        },
+      })
+    end,
+  },
   sql = {
     opt = {
       tabstop = 2,
       shiftwidth = 2,
       commentstring = [[-- %s]],
+    },
+    cmp = {
+      sources = {
+        { name = "vim-dadbod-completion" },
+        { name = "buffer" },
+      },
     },
   },
 })

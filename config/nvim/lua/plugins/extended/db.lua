@@ -34,6 +34,7 @@ return {
       vim.g.db_ui_hide_schemas = { "pg_catalog", "pg_toast_temp.*", "crdb_internal", "information_schema", "pg_extension" }
       vim.g.db_ui_force_echo_notifications = 1
       vim.g.db_ui_show_database_icon = 1
+      vim.g.db_ui_auto_execute_table_helpers = 1
       vim.g.db_ui_show_help = 1
       vim.g.db_ui_debug = 1
       vim.g.db_ui_win_position = "left"

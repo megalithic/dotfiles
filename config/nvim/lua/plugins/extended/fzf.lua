@@ -44,9 +44,9 @@ local function ivy(opts, ...)
     fzf_opts = { ["--layout"] = "reverse" },
     winopts = {
       title_pos = opts["winopts"].title and "center" or nil,
-      height = 0.35,
+      height = 0.55,
       width = 1.00,
-      row = 0.98,
+      row = 1,
       col = 1,
       border = { " ", " ", " ", " ", " ", " ", " ", " " },
       preview = {
@@ -247,7 +247,7 @@ return {
           title_pos = nil,
           height = 0.35,
           width = 1.00,
-          row = 0.94,
+          row = 1,
           col = 1,
           border = { " ", " ", " ", " ", " ", " ", " ", " " },
           -- hl = { border = "TelescopeBorder" },
@@ -295,39 +295,39 @@ return {
         },
         highlights = {
           prompt = prompt,
-          winopts = { title = title("Highlights", "󰏘") },
+          winopts = { title = title("highlights", "󰏘") },
         },
         helptags = {
           prompt = prompt,
-          winopts = { title = title("Help", "󰋖") },
+          winopts = { title = title("help", "󰋖") },
         },
         oldfiles = dropdown({
           cwd_only = true,
           stat_file = true, -- verify files exist on disk
           include_current_session = false, -- include bufs from current session
-          winopts = { title = title("History", "") },
+          winopts = { title = title("history", "") },
         }),
         files = {
           multiprocess = true,
           prompt = prompt,
-          winopts = { title = title("Files", "") },
+          winopts = { title = title("files", "") },
           -- previewer = "builtin",
           -- action = { ["ctrl-r"] = fzf.actions.arg_add },
         },
         buffers = dropdown({
           fzf_opts = { ["--delimiter"] = "' '", ["--with-nth"] = "-1.." },
-          winopts = { title = title("Buffers", "󰈙") },
+          winopts = { title = title("buffers", "󰈙") },
         }),
         keymaps = dropdown({
-          winopts = { title = title("Keymaps", "") },
+          winopts = { title = title("keymaps", "") },
         }),
         registers = cursor_dropdown({
-          winopts = { title = title("Registers", ""), width = 0.6 },
+          winopts = { title = title("registers", ""), width = 0.6 },
         }),
-        grep = {
+        grep = ivy({
           multiprocess = true,
           prompt = " ",
-          winopts = { title = title("Grep", "󰈭") },
+          winopts = { title = title("grep", "󰈭") },
           rg_opts = "--hidden --column --line-number --no-ignore-vcs --no-heading --color=always --smart-case -g '!.git'",
           rg_glob = true, -- enable glob parsing by default to all
           glob_flag = "--iglob", -- for case sensitive globs use '--glob'
@@ -344,7 +344,7 @@ return {
           -- fzf_opts = {
           --   ["--keep-right"] = "",
           -- },
-        },
+        }),
         lsp = {
           cwd_only = true,
           symbols = {
@@ -353,42 +353,45 @@ return {
             symbol_hl = function(s) return mega.colors.lsp[s] end,
           },
           code_actions = cursor_dropdown({
-            winopts = { title = title("Code Actions", "", "@type") },
+            winopts = { title = title("code actions", "", "@type") },
+          }),
+          references = ivy({
+            winopts = { title = title("references", "", "@type") },
           }),
         },
         jumps = dropdown({
-          winopts = { title = title("Jumps", ""), preview = { hidden = "nohidden" } },
+          winopts = { title = title("jumps", ""), preview = { hidden = "nohidden" } },
         }),
         changes = dropdown({
           prompt = "",
-          winopts = { title = title("Changes", "⟳"), preview = { hidden = "nohidden" } },
+          winopts = { title = title("changes", "⟳"), preview = { hidden = "nohidden" } },
         }),
-        diagnostics = dropdown({
-          winopts = { title = title("Diagnostics", "", "DiagnosticError") },
+        diagnostics = ivy({
+          winopts = { title = title("diagnostics", "", "DiagnosticError") },
         }),
         git = {
           files = dropdown({
             path_shorten = false, -- this doesn't use any clever strategy unlike telescope so is somewhat useless
             cmd = "git ls-files --others --cached --exclude-standard",
-            winopts = { title = title("Git Files", "") },
+            winopts = { title = title("git files", "") },
           }),
           branches = dropdown({
-            winopts = { title = title("Branches", ""), height = 0.3, row = 0.4 },
+            winopts = { title = title("branches", ""), height = 0.3, row = 0.4 },
           }),
           status = {
             prompt = "",
             preview_pager = "delta --width=$FZF_PREVIEW_COLUMNS",
-            winopts = { title = title("Git Status", "") },
+            winopts = { title = title("git status", "") },
           },
           bcommits = {
             prompt = "",
             preview_pager = "delta --width=$FZF_PREVIEW_COLUMNS",
-            winopts = { title = title("", "Buffer Commits") },
+            winopts = { title = title("buffer commits", "") },
           },
           commits = {
             prompt = "",
             preview_pager = "delta --width=$FZF_PREVIEW_COLUMNS",
-            winopts = { title = title("", "Commits") },
+            winopts = { title = title("commits", "") },
           },
           icons = {
             ["M"] = { icon = icons.git.mod, color = "yellow" },
@@ -403,7 +406,7 @@ return {
       })
 
       fzf.register_ui_select(dropdown({
-        winopts = { title = title("Select one of:"), height = 0.33, row = 0.5 },
+        winopts = { title = title("select one of:"), height = 0.33, row = 0.5 },
       }))
     end,
   },

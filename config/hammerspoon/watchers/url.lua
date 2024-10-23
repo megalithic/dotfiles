@@ -18,6 +18,9 @@ obj.callbacks = {
       local urlDomain = url and uri(url).host
       local app = hs.application.get("com.pop.pop.app")
 
+      dbg(handler)
+      dbg(app:bundleID())
+
       hs.urlevent.openURLWithBundle(url, hs.application.get(handler):bundleID())
 
       hs.timer.waitUntil(function() return browser.hasTab(urlDomain) and hs.application.get(app) ~= nil end, function()
@@ -48,6 +51,9 @@ obj.callbacks = {
       local urlDomain = url and uri(url).host
       local app = hs.application.get(handler) or hs.application.get(BROWSER)
 
+      dbg(handler)
+      dbg(app:bundleID())
+
       -- NOTE: order of this tabCount check matters!
       obj.browserTabCount = browser.tabCount()
       hs.urlevent.openURLWithBundle(url, app:bundleID())
@@ -72,11 +78,12 @@ obj.callbacks = {
     end,
   },
   {
-    pattern = "https?://open.spotify.com/*",
+    pattern = "https:?://open.spotify.com/*",
     action = "com.spotify.client",
   },
   {
-    pattern = "https?://figma.com/*",
+
+    pattern = "https:?://www.figma.com/*",
     action = "com.figma.Desktop",
   },
 }

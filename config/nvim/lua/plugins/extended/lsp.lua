@@ -4,6 +4,8 @@ local SETTINGS = require("mega.settings")
 local BORDER_STYLE = SETTINGS.border
 local augroup = require("mega.autocmds").augroup
 local command = vim.api.nvim_create_user_command
+local methods = vim.lsp.protocol.Methods
+
 local M = {}
 
 return {
@@ -37,13 +39,10 @@ return {
           },
         },
       },
-      { "folke/neodev.nvim", opts = {} },
     },
     config = function()
       local lsp_ok, lspconfig = pcall(require, "lspconfig")
       if not lsp_ok then return nil end
-
-      require("neodev").setup()
 
       local diagnostic_ns = vim.api.nvim_create_namespace("hl_diagnostic_region")
       local diagnostic_timer
@@ -57,15 +56,13 @@ return {
 
       require("lspconfig.ui.windows").default_options.border = BORDER_STYLE
 
-      local function diagnostic_popup(opts)
+      local function show_diagnostic_popup(opts)
         local bufnr = opts
         if type(opts) == "table" then bufnr = opts.buf or 0 end
         -- Try to open diagnostics under the cursor
         local diags = vim.diagnostic.open_float(bufnr, { focus = false, scope = "cursor" })
         -- If there's no diagnostic under the cursor show diagnostics of the entire line
         if not diags then vim.diagnostic.open_float(bufnr, { focus = false, scope = "line" }) end
-
-        return diags
       end
 
       local function goto_diagnostic_hl(dir)
@@ -94,17 +91,114 @@ return {
         end
 
         diagnostic_timer = vim.defer_fn(hl_cancel, 500)
-        vim.diagnostic["goto_" .. dir]()
+        vim.diagnostic["goto_" .. dir]({ float = true })
       end
 
-      --  This function gets run when an LSP attaches to a particular buffer.
-      --    That is to say, every time a new file is opened that is associated with
-      --    an lsp (for example, opening `main.rs` is associated with `rust_analyzer`) this
-      --    function will be executed to configure the current buffer
-      function M.on_attach(client, bufnr)
-        -- if not client or not client.supports_method("textDocument/documentHighlight") then return end
+      local function go_to_unique_definition()
+        vim.lsp.buf_request(0, "textDocument/definition", vim.lsp.util.make_position_params(), function(_, result, _, _)
+          if not result or vim.tbl_isempty(result) then
+            print("No definitions found")
+            return
+          end
 
+          local unique_results = {}
+          local seen = {}
+
+          for _, def in ipairs(result) do
+            local uri = def.uri or def.targetUri
+            seen[uri] = def
+          end
+
+          for _, def in pairs(seen) do
+            table.insert(unique_results, def)
+          end
+
+          if #unique_results == 1 then
+            vim.lsp.util.jump_to_location(unique_results[1], "utf-8")
+            mega.blink_cursorline(100, true)
+          else
+            local items = vim.lsp.util.locations_to_items(unique_results, "utf-8")
+            vim.fn.setqflist({}, "r", { title = "LSP Definitions", items = items })
+            vim.api.nvim_command("copen")
+          end
+        end)
+      end
+
+      local function fix_current_action()
+        local params = vim.lsp.util.make_range_params() -- get params for current position
+        params.context = {
+          diagnostics = vim.diagnostic.get(),
+          only = { "quickfix" },
+        }
+
+        local actions_per_client, err = vim.lsp.buf_request_sync(0, "textDocument/codeAction", params, 900)
+
+        if err then return end
+
+        if actions_per_client == nil or vim.tbl_isempty(actions_per_client) or #actions_per_client == 0 then
+          vim.notify("no quickfixes available")
+          return
+        end
+
+        -- Collect the available actions
+        local actions = {}
+        for cid, resp in pairs(actions_per_client) do
+          if resp.result ~= nil then
+            for _, result in pairs(resp.result) do
+              -- add the actions with a cid to the table
+              local action = {}
+              action["cid"] = cid
+              for k, v in pairs(result) do
+                action[k] = v
+              end
+              table.insert(actions, action)
+            end
+          end
+        end
+
+        -- Try to find a preferred action.
+        local preferred_action = nil
+        for _, action in ipairs(actions) do
+          if action.isPreferred then
+            preferred_action = action
+            break
+          end
+        end
+
+        -- If we failed to find a non-null-ls action, use the first one.
+        local first_action = nil
+        if #actions > 0 then first_action = actions[1] end
+
+        local top_action = preferred_action or first_action
+
+        local picked_one = false
+
+        vim.lsp.buf.code_action({
+          context = {
+            only = { "quickfix" },
+            diagnostics = vim.diagnostic.get(),
+          },
+          filter = function(action)
+            if picked_one then
+              return true
+            elseif top_action ~= nil and action.title == top_action.title then
+              picked_one = true
+              return false
+            else
+              return true
+            end
+          end,
+          apply = true,
+        })
+      end
+
+      function M.on_attach(client, bufnr, cb)
+        local filetype = vim.bo[bufnr].filetype
         local disabled_lsp_formatting = SETTINGS.disabled_lsp_formatters
+
+        if SETTINGS.disabled_semantic_tokens[filetype] then client.server_capabilities.semanticTokensProvider = vim.NIL end
+
+        if client.server_capabilities.codeLensProvider then vim.lsp.codelens.refresh({ bufnr = bufnr }) end
 
         for i = 1, #disabled_lsp_formatting do
           if disabled_lsp_formatting[i] == client.name then
@@ -113,117 +207,218 @@ return {
           end
         end
 
-        local filetype = vim.bo[bufnr].filetype
-        if SETTINGS.disabled_semantic_tokens[filetype] then client.server_capabilities.semanticTokensProvider = nil end
-
-        -- ---@diagnostic disable-line: duplicate-set-field
-        -- vim.lsp.handlers["textDocument/publishDiagnostics"] = function(err, result, ctx, config)
-        --   result.diagnostics = vim.tbl_map(function(diag)
-        --     if
-        --       (diag.source == "biome" and diag.code == "lint/suspicious/noConsoleLog")
-        --       or (diag.source == "stylelintplus" and diag.code == "declaration-no-important")
-        --     then
-        --       diag.severity = vim.diagnostic.severity.HINT
-        --     end
-        --     return diag
-        --   end, result.diagnostics)
-        --
-        --   vim.lsp.diagnostic.on_publish_diagnostics(err, result, ctx, config)
-        -- end
-
-        -- local diagnostic_handler = vim.lsp.handlers["textDocument/publishDiagnostics"]
-        -- vim.lsp.handlers["textDocument/publishDiagnostics"] = function(err, result, ctx, config)
-        --   local client_name = vim.lsp.get_client_by_id(ctx.client_id).name
-        --   -- disables diagnostic reporting for specific clients
-        --   if vim.tbl_contains(SETTINGS.diagnostic_exclusions, client_name) then return end
-        --
-        --   diagnostic_handler(err, result, ctx, config)
-        -- end
-
-        -- local definition_handler = vim.lsp.handlers["textDocument/definition"]
-        -- vim.lsp.handlers["textDocument/definition"] = function(err, result, ctx, config)
-        --   local client_name = vim.lsp.get_client_by_id(ctx.client_id).name
-        --   -- disables diagnostic reporting for specific clients
-        --   if vim.tbl_contains(SETTINGS.definition_exclusions, client_name) then
-        --     print("returning for " .. client_name)
-        --     return
-        --   end
-        --
-        --   definition_handler(err, result, ctx, config)
-        -- end
-
-        -- local references_handler = vim.lsp.handlers["textDocument/references"]
-        -- vim.lsp.handlers["textDocument/references"] = function(err, result, ctx, config)
-        --   local client_name = vim.lsp.get_client_by_id(ctx.client_id).name
-        --   dbg(client_name)
-        --   -- disables diagnostic reporting for specific clients
-        --   if vim.tbl_contains(SETTINGS.references_exclusions, client_name) then
-        --     print("returning for " .. client_name)
-        --     return
-        --   end
-        --
-        --   references_handler(err, result, ctx, config)
-        -- end
-
-        -- if action opens up qf list, open the first item and close the list
-        local function choose_list_first(items)
-          print(#items)
-          if #items > 1 then
-            U.qf_populate(items, { title = "Definitions" })
-            vim.cmd("Trouble qflist open")
-          end
-
-          -- vim.fn.setqflist({}, "r", items)
-          -- vim.cmd.cfirst()
+        if client and client.supports_method("textDocument/inlayHint", { bufnr = bufnr }) then
+          if SETTINGS.enabled_inlay_hints[filetype] then vim.lsp.inlay_hint.enable(true) end
         end
-        local map = function(keys, func, desc) vim.keymap.set("n", keys, func, { buffer = bufnr, desc = "LSP: " .. desc }) end
+
+        -- EXCLUDE certain servers for diagnostics
+        local diagnostic_handler = vim.lsp.handlers[methods.textDocument_publishDiagnostics]
+        vim.lsp.handlers[methods.textDocument_publishDiagnostics] = function(err, result, ctx, config)
+          local client_name = vim.lsp.get_client_by_id(ctx.client_id).name
+          if vim.tbl_contains(SETTINGS.diagnostic_exclusions, client_name) then
+            print("skipping diagnostics for " .. client_name)
+            return
+          end
+          diagnostic_handler(err, result, ctx, config)
+        end
+
+        -- EXCLUDE certain servers for definitions
+        local definition_handler = vim.lsp.handlers[methods.textDocument_definition]
+        vim.lsp.handlers[methods.textDocument_definition] = function(err, result, ctx, config)
+          local client_name = vim.lsp.get_client_by_id(ctx.client_id).name
+          if vim.tbl_contains(SETTINGS.definition_exclusions, client_name) then
+            print("skipping definitions for " .. client_name)
+            return
+          end
+          definition_handler(err, result, ctx, config)
+        end
+
+        -- EXCLUDE certain servers for references
+        local references_handler = vim.lsp.handlers[methods.textDocument_references]
+        vim.lsp.handlers[methods.textDocument_references] = function(err, result, ctx, config)
+          local client_name = vim.lsp.get_client_by_id(ctx.client_id).name
+          if vim.tbl_contains(SETTINGS.references_exclusions, client_name) then
+            print("skipping references for " .. client_name)
+            return
+          end
+          references_handler(err, result, ctx, config)
+        end
+
+        local md_namespace = vim.api.nvim_create_namespace("lsp_floats")
+
+        --- Adds extra inline highlights to the given buffer.
+        ---@param buf integer
+        local function add_inline_highlights(buf)
+          for l, line in ipairs(vim.api.nvim_buf_get_lines(buf, 0, -1, false)) do
+            for pattern, hl_group in pairs({
+              ["@%S+"] = "@parameter",
+              ["^%s*(Parameters:)"] = "@text.title",
+              ["^%s*(Return:)"] = "@text.title",
+              ["^%s*(See also:)"] = "@text.title",
+              ["{%S-}"] = "@parameter",
+              ["|%S-|"] = "@text.reference",
+            }) do
+              local from = 1 ---@type integer?
+              while from do
+                local to
+                from, to = line:find(pattern, from)
+                if from then
+                  vim.api.nvim_buf_set_extmark(buf, md_namespace, l - 1, from - 1, {
+                    end_col = to,
+                    hl_group = hl_group,
+                  })
+                end
+                from = to and to + 1 or nil
+              end
+            end
+          end
+        end
+
+        --- LSP handler that adds extra inline highlights, keymaps, and window options.
+        --- Code inspired from `noice`.
+        ---@param handler fun(err: any, result: any, ctx: any, config: any): integer?, integer?
+        ---@param focusable boolean
+        ---@return fun(err: any, result: any, ctx: any, config: any)
+        local function enhanced_float_handler(handler, focusable)
+          return function(err, result, ctx, config)
+            local bufnr, winnr = handler(
+              err,
+              result,
+              ctx,
+              vim.tbl_deep_extend("force", config or {}, {
+                border = "rounded",
+                focusable = focusable,
+                max_height = math.floor(vim.o.lines * 0.3),
+                max_width = math.floor(vim.o.columns * 0.4),
+              })
+            )
+
+            if not bufnr or not winnr then return end
+
+            -- Conceal everything.
+            vim.wo[winnr].concealcursor = "n"
+
+            -- Extra highlights.
+            add_inline_highlights(bufnr)
+
+            -- Add keymaps for opening links.
+            if focusable and not vim.b[bufnr].markdown_keys then
+              vim.keymap.set("n", "K", function()
+                -- Vim help links.
+                local url = (vim.fn.expand("<cWORD>") --[[@as string]]):match("|(%S-)|")
+                if url then return vim.cmd.help(url) end
+
+                -- Markdown links.
+                local col = vim.api.nvim_win_get_cursor(0)[2] + 1
+                local from, to
+                from, to, url = vim.api.nvim_get_current_line():find("%[.-%]%((%S-)%)")
+                if from and col >= from and col <= to then
+                  vim.system({ "xdg-open", url }, nil, function(res)
+                    if res.code ~= 0 then vim.notify("Failed to open URL" .. url, vim.log.levels.ERROR) end
+                  end)
+                end
+              end, { buffer = bufnr, silent = true })
+              vim.b[bufnr].markdown_keys = true
+            end
+          end
+        end
+        vim.lsp.handlers[methods.textDocument_hover] = enhanced_float_handler(vim.lsp.handlers.hover, true)
+        vim.lsp.handlers[methods.textDocument_signatureHelp] = enhanced_float_handler(vim.lsp.handlers.signature_help, false)
+
+        local desc = function(d) return "[+lsp] " .. d end
+        local map = vim.keymap.set
+        local nmap = function(keys, func, d) map("n", keys, func, { buffer = bufnr, desc = desc(d) }) end
+        local vnmap = function(keys, func, d) map({ "v", "n" }, keys, func, { buffer = bufnr, desc = desc(d) }) end
         local icons = require("mega.settings").icons
 
-        -- if client and client.supports_method("textDocument/inlayHint", { bufnr = bufnr }) then
-        --   vim.lsp.inlay_hint.enable(bufnr, true)
-        --   -- vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
-        -- end
+        -- if action opens up qf list, open the first item and close the list
+        local function choose_list_first(options)
+          vim.fn.setqflist({}, " ", options)
+          vim.cmd.cfirst()
+        end
 
-        map("<leader>lic", [[<cmd>LspInfo<CR>]], "connected client info")
-        map("<leader>lim", [[<cmd>Mason<CR>]], "mason info")
-        map("<leader>lil", [[<cmd>LspLog<CR>]], "logs (vsplit)")
+        nmap("<leader>lic", [[<cmd>LspInfo<CR>]], "connected client info")
+        nmap("<leader>lim", [[<cmd>Mason<CR>]], "mason info")
+        nmap("<leader>lil", [[<cmd>LspLog<CR>]], "logs (vsplit)")
 
-        map("[d", function() goto_diagnostic_hl("prev") end, "Go to previous [D]iagnostic message")
-        map("]d", function() goto_diagnostic_hl("next") end, "Go to next [D]iagnostic message")
+        nmap("ge", show_diagnostic_popup, "[g]o to diagnostic hover")
+        nmap("[d", function() goto_diagnostic_hl("prev") end, "Go to previous [D]iagnostic message")
+        nmap("]d", function() goto_diagnostic_hl("next") end, "Go to next [D]iagnostic message")
 
-        map("gd", require("telescope.builtin").lsp_definitions, "[g]oto [d]efinition")
+        nmap("gq", function() vim.cmd("Trouble diagnostics toggle focus=true filter.buf=0") end, "[g]oto [q]uickfixlist buffer diagnostics (trouble)")
+        nmap("gQ", function() vim.cmd("Trouble diagnostics toggle focus=true") end, "[g]oto [q]uickfixlist global diagnostics (trouble)")
+
+        -- map("gd", function() require("telescope.builtin").lsp_definitions() end, "[g]oto [d]efinition")
+        -- map("gd", require("telescope.builtin").lsp_definitions, "[g]oto [d]efinition")
         -- map("gd", function() vim.lsp.buf.definition({ on_list = choose_list_first }) end, "[g]oto [d]efinition")
-        -- map("gd", function() vim.cmd("Trouble lsp_definitions toggle focus=true") end, "[g]oto [d]efinition (trouble)")
-        map("gD", function()
-          vim.cmd.vsplit()
-          vim.lsp.buf.definition()
-          vim.cmd.normal("zz")
-          -- vim.lsp.buf.definition({ on_list = choose_list_first })
+        -- map("gd", vim.lsp.buf.definition, "[g]oto [d]efinition")
+        -- nmap("gd", go_to_unique_definition, "[g]oto [d]efinition")
+        nmap("gd", function()
+          vim.lsp.buf.definition({ on_list = choose_list_first })
+          vim.schedule(function()
+            vim.cmd.norm("zz")
+            mega.blink_cursorline(175)
+          end)
+        end, "[g]oto [d]efinition")
+        nmap("gD", function()
+          -- vim.schedule(function()
+          --   vim.cmd("vsplit | lua vim.lsp.buf.definition()")
+          --   vim.cmd("norm zz")
+          -- end)
+
+          vim.cmd.split({ mods = { vertical = true, split = "botright" } })
+          vim.defer_fn(function()
+            vim.lsp.buf.definition({ on_list = choose_list_first, reuse_win = false })
+            -- vim.cmd.FzfLua("lsp_definitions")
+            -- go_to_unique_definition()
+          end, 700)
         end, "[g]oto [d]efinition (split)")
-        map("gr", require("telescope.builtin").lsp_references, "[g]oto [r]eferences")
-        map("gI", require("telescope.builtin").lsp_implementations, "[g]oto [i]mplementation")
-        map("<leader>ltd", require("telescope.builtin").lsp_type_definitions, "[t]ype [d]efinition")
-        map("<leader>lsd", require("telescope.builtin").lsp_document_symbols, "[d]ocument [s]ymbols")
-        map("<leader>lsw", require("telescope.builtin").lsp_dynamic_workspace_symbols, "[w]orkspace [s]ymbols")
-        map("<leader>lca", vim.lsp.buf.code_action, "[c]ode [a]ctions")
-        map("K", vim.lsp.buf.hover, "hover documentation")
+        -- map("gr", function() vim.cmd.Trouble("lsp_references focus=true") end, "[g]oto [r]eferences")
+        -- map("gr", function() vim.cmd.FzfLua("lsp_references") end, "[g]oto [r]eferences")
+        nmap("gr", function()
+          if not vim.tbl_contains(SETTINGS.references_exclusions, client.name) then require("telescope.builtin").lsp_references() end
+        end, "[g]oto [r]eferences")
+        nmap("gI", require("telescope.builtin").lsp_implementations, "[g]oto [i]mplementation")
+        nmap("<leader>ltd", require("telescope.builtin").lsp_type_definitions, "[t]ype [d]efinition")
+        nmap("<leader>lsd", require("telescope.builtin").lsp_document_symbols, "[d]ocument [s]ymbols")
+        nmap("<leader>lsw", require("telescope.builtin").lsp_dynamic_workspace_symbols, "[w]orkspace [s]ymbols")
+        vnmap("g.", function() fix_current_action() end, "[g]o run nearest/current code action")
+        vnmap("<leader>la", vim.lsp.buf.code_action, "code [a]ctions")
+        vnmap("<leader>lca", vim.lsp.buf.code_action, "[c]ode [a]ctions")
+        nmap("ga", function() vim.cmd.FzfLua("lsp_code_actions") end, "[g]o [c]ode [a]ctions")
+        -- nmap("K", vim.lsp.buf.hover, "hover documentation")
+
+        if client.supports_method(methods.textDocument_signatureHelp) then
+          -- map("i", "<C-k>", vim.lsp.buf.signature_help, { buffer = bufnr, desc = desc("signature help") })
+          map("i", "<C-k>", function()
+            -- Close the completion menu first (if open).
+            local cmp = require("cmp")
+            if cmp.visible() then cmp.close() end
+
+            vim.lsp.buf.signature_help()
+          end, { buffer = bufnr, desc = desc("signature help") })
+        end
         -- map("gD", vim.lsp.buf.declaration, "[g]oto [d]eclaration (e.g. to a header file in C)")
-        map("<leader>rn", function()
+        -- rename symbol starting with empty prompt, highlight references
+        nmap("<leader>rn", function()
+          local bufnr = vim.api.nvim_get_current_buf()
           local params = vim.lsp.util.make_position_params()
-          local current_symbol = vim.fn.expand("<cword>")
-          params.old_symbol = current_symbol
           params.context = { includeDeclaration = true }
           local clients = vim.lsp.get_clients()
-          client = clients[1]
+          if not clients or #clients == 0 then
+            vim.print("No attached clients.")
+            return
+          end
+          local clnt = clients[1]
           for _, possible_client in pairs(clients) do
             if possible_client.server_capabilities.renameProvider then
-              client = possible_client
+              clnt = possible_client
               break
             end
           end
-          local ns = vim.api.nvim_create_namespace("LspRenamespace")
 
-          client.request("textDocument/references", params, function(_, result)
+          local ns = vim.api.nvim_create_namespace("LspRenamespace")
+          clnt.request("textDocument/references", params, function(_, result)
             if not result or vim.tbl_isempty(result) then
               vim.notify("Nothing to rename.")
               return
@@ -236,20 +431,61 @@ return {
                 local start_char = v.range.start.character
                 local end_char = v.range["end"].character
                 if buf == bufnr then
-                  -- print(line, start_char, end_char)
+                  print(line, start_char, end_char)
                   vim.api.nvim_buf_add_highlight(bufnr, ns, "LspReferenceWrite", line, start_char, end_char)
                 end
               end
             end
             vim.cmd.redraw()
-            local new_name = vim.fn.input({ prompt = fmt("%s (%d) -> ", params.old_symbol, #result) })
+            local new_name = vim.fn.input({ prompt = "New name: " })
             vim.api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
             if #new_name == 0 then return end
             vim.lsp.buf.rename(new_name)
           end, bufnr)
-        end, "[R]e[n]ame")
+        end, "[r]e[n]ame")
 
-        map("gn", function()
+        -- map("<leader>rn", function()
+        --   local params = vim.lsp.util.make_position_params()
+        --   local current_symbol = vim.fn.expand("<cword>")
+        --   params.old_symbol = current_symbol
+        --   params.context = { includeDeclaration = true }
+        --   local clients = vim.lsp.get_clients()
+        --   client = clients[1]
+        --   for _, possible_client in pairs(clients) do
+        --     if possible_client.server_capabilities.renameProvider then
+        --       client = possible_client
+        --       break
+        --     end
+        --   end
+        --   local ns = vim.api.nvim_create_namespace("LspRenamespace")
+        --
+        --   client.request("textDocument/references", params, function(_, result)
+        --     if not result or vim.tbl_isempty(result) then
+        --       vim.notify("Nothing to rename.")
+        --       return
+        --     end
+        --
+        --     for _, v in ipairs(result) do
+        --       if v.range then
+        --         local buf = vim.uri_to_bufnr(v.uri)
+        --         local line = v.range.start.line
+        --         local start_char = v.range.start.character
+        --         local end_char = v.range["end"].character
+        --         if buf == bufnr then
+        --           -- print(line, start_char, end_char)
+        --           vim.api.nvim_buf_add_highlight(bufnr, ns, "LspReferenceWrite", line, start_char, end_char)
+        --         end
+        --       end
+        --     end
+        --     vim.cmd.redraw()
+        --     local new_name = vim.fn.input({ prompt = fmt("%s (%d) -> ", params.old_symbol, #result) })
+        --     vim.api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
+        --     if #new_name == 0 then return end
+        --     vim.lsp.buf.rename(new_name)
+        --   end, bufnr)
+        -- end, "[R]e[n]ame")
+        --
+        nmap("gn", function()
           local params = vim.lsp.util.make_position_params()
           client.request("textDocument/references", params, function(_, result)
             if not result or vim.tbl_isempty(result) then
@@ -264,9 +500,9 @@ return {
             local default_rename_prompt = " -> "
             local current_name = ""
 
-            local position_params = vim.lsp.util.make_position_params()
-            position_params.oldName = vim.fn.expand("<cword>")
-            position_params.context = { includeDeclaration = true }
+            local pos_params = vim.lsp.util.make_position_params()
+            pos_params.oldName = vim.fn.expand("<cword>")
+            pos_params.context = { includeDeclaration = true }
 
             local function cleanup_rename_callback(winnr)
               vim.api.nvim_win_close(winnr or 0, true)
@@ -282,23 +518,23 @@ return {
               if input == nil then
                 vim.notify("aborted", L.WARN, { title = "[lsp] rename" })
                 return
-              elseif input == position_params.oldName then
+              elseif input == pos_params.oldName then
                 vim.notify("input text matches current text; try again.", L.WARN, { title = "[lsp] rename" })
                 return
               end
 
               cleanup_rename_callback()
 
-              position_params.newName = input
+              pos_params.newName = input
 
-              vim.lsp.buf_request(0, "textDocument/rename", position_params, function(err, result, ctx, config)
+              vim.lsp.buf_request(0, "textDocument/rename", pos_params, function(err, result, ctx, config)
                 -- result not provided, error at lsp end
                 -- no changes made
-                if not result or (not result.documentChanges and not result.changes) then
+                if not result or not result.changes then
                   vim.notify(
-                    string.format("could not perform rename: %s -> %s", position_params.oldName, position_params.newName),
+                    string.format("could not perform rename: %s -> %s", pos_params.oldName, pos_params.newName),
                     L.ERROR,
-                    { title = "[LSP] rename", timeout = 500 }
+                    { title = "[lsp] rename", timeout = 500 }
                   )
 
                   return
@@ -309,32 +545,6 @@ return {
 
                 local notification, entries = {}, {}
                 local num_files, num_updates = 0, 0
-
-                -- collect changes
-                if result.documentChanges then
-                  for _, document in pairs(result.documentChanges) do
-                    num_files = num_files + 1
-                    local uri = document.textDocument.uri
-                    bufnr = vim.uri_to_bufnr(uri)
-
-                    for _, edit in ipairs(document.edits) do
-                      local start_line = edit.range.start.line + 1
-                      local line = vim.api.nvim_buf_get_lines(bufnr, start_line - 1, start_line, false)[1]
-
-                      table.insert(entries, {
-                        bufnr = bufnr,
-                        lnum = start_line,
-                        col = edit.range.start.character + 1,
-                        text = line,
-                      })
-                    end
-
-                    num_updates = num_updates + vim.tbl_count(document.edits)
-
-                    local short_uri = string.sub(vim.uri_to_fname(uri), #vim.loop.cwd() + 2)
-                    table.insert(notification, string.format("\t- %d in %s", vim.tbl_count(document.edits), short_uri))
-                  end
-                end
 
                 -- collect changes
                 if result.changes then
@@ -374,23 +584,24 @@ return {
 
                   -- add word "change"/"changes" at this point
                   local insert_loc = notification_str:find("in")
+                  if insert_loc ~= nil then
+                    notification_str = table.concat({
+                      notification_str:sub(1, insert_loc - 1),
+                      string.format("change%s ", (num_updates > 1 and "s") or ""),
+                      notification_str:sub(insert_loc),
+                    }, "")
 
-                  notification_str = table.concat({
-                    notification_str:sub(1, insert_loc - 1),
-                    string.format("change%s ", (num_updates > 1 and "s") or ""),
-                    notification_str:sub(insert_loc),
-                  }, "")
+                    vim.notify(notification_str, L.INFO, {
+                      title = string.format("[LSP] rename: %s -> %s", pos_params.oldName, pos_params.newName),
+                      timeout = 2500,
+                    })
+                  end
                 end
-
-                -- vim.notify(notification_str, L.INFO, {
-                --   title = string.format("[LSP] rename: %s -> %s", position_params.oldName, position_params.newName),
-                --   timeout = 2500,
-                -- })
 
                 -- set qflist if more than 1 file
                 if num_files > 1 then
-                  U.qf_populate(entries, { title = "Applied Rename Changes" })
-                  vim.cmd("Trouble qflist open")
+                  U.qflist_populate(entries, { title = "Applied Rename Changes" })
+                  vim.cmd.Trouble("qflist open focus=true")
                 end
               end)
             end
@@ -399,9 +610,9 @@ return {
               current_name = vim.fn.expand("<cword>")
               rename_prompt = current_name .. default_rename_prompt
               bufnr = vim.api.nvim_create_buf(false, true)
-              vim.api.nvim_buf_set_option(bufnr, "buftype", "prompt")
-              vim.api.nvim_buf_set_option(bufnr, "bufhidden", "wipe")
-              vim.api.nvim_buf_set_option(bufnr, "filetype", "prompt")
+              vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = bufnr })
+              vim.api.nvim_set_option_value("buftype", "prompt", { buf = bufnr })
+              vim.api.nvim_set_option_value("filetype", "prompt", { buf = bufnr })
               vim.api.nvim_buf_add_highlight(bufnr, -1, "Title", 0, 0, #rename_prompt)
               vim.fn.prompt_setprompt(bufnr, rename_prompt)
               local width = #current_name + #rename_prompt + 15
@@ -415,15 +626,15 @@ return {
                 border = BORDER_STYLE,
               })
 
-              vim.api.nvim_win_set_option(
-                winnr,
+              vim.api.nvim_set_option_value(
                 "winhl",
                 table.concat({
                   "Normal:NormalFloat",
                   "FloatBorder:FloatBorder",
                   "CursorLine:Visual",
                   "Search:None",
-                }, ",")
+                }, ","),
+                { win = winnr }
               )
 
               vim.keymap.set("i", "<CR>", rename_callback, { buffer = bufnr })
@@ -441,16 +652,18 @@ return {
           qf_rename()
         end, "[r]ename")
 
-        if client.name == "ElixirLS" or client.name == "elixirls" then
+        if client.name == "elixirls" then
           vim.keymap.set("n", "<localleader>efp", ":ElixirFromPipe<cr>", { buffer = bufnr, noremap = true, desc = "from pipe" })
           vim.keymap.set("n", "<localleader>etp", ":ElixirToPipe<cr>", { buffer = bufnr, noremap = true, desc = "to pipe (|>)" })
           vim.keymap.set("v", "<localleader>eem", ":ElixirExpandMacro<cr>", { buffer = bufnr, noremap = true, desc = "expand macro" })
         end
+
         command(
           "LspLogDelete",
           function() vim.fn.system("rm " .. vim.lsp.get_log_path()) end,
           { desc = "Deletes the LSP log file. Useful for when it gets too big" }
         )
+
         command("LspCapabilities", function(ctx)
           local filter = ctx.args == "" and { bufnr = 0 } or { name = ctx.args }
           local clients = vim.lsp.get_clients(filter)
@@ -466,60 +679,6 @@ return {
             return clients
           end,
         })
-
-        augroup("LspProgress", {
-          {
-            pattern = "end",
-            event = { "LspProgress" },
-            desc = "Handle lsp progress message scenarios",
-            command = function(ev)
-              if pcall(require, "fidget") then
-                local token = ev.data.params.token
-                if ev.data.result and ev.data.result.token then token = ev.data.result.token end
-                local client_id = ev.data.client_id
-                local c = client_id and vim.lsp.get_client_by_id(client_id)
-                if c and token then require("fidget").notification.remove(c.name, token) end
-              end
-            end,
-          },
-        })
-
-        augroup("LspDiagnostics", {
-          {
-            event = { "CursorHold" },
-            desc = "Show diagnostics",
-            command = diagnostic_popup,
-          },
-        })
-
-        -- augroup("LspFormat", {
-        --   {
-        --     event = { "BufWritePre" },
-        --     desc = "Auto format via LSP",
-        --     command = function(args)
-        --       require("conform").format({
-        --         bufnr = args.buf,
-        --         lsp_fallback = true,
-        --         quiet = true,
-        --       })
-        --     end,
-        --   },
-        -- })
-
-        -- if client and client.server_capabilities.documentHighlightProvider then
-        --   augroup("LspDocumentHighlights", {
-        --     {
-        --       event = { "CursorHold", "CursorHoldI" },
-        --       buffer = bufnr,
-        --       command = vim.lsp.buf.document_highlight,
-        --     },
-        --     {
-        --       event = { "CursorMoved", "CursorMovedI" },
-        --       buffer = bufnr,
-        --       command = vim.lsp.buf.clear_references,
-        --     },
-        --   })
-        -- end
 
         local max_width = math.min(math.floor(vim.o.columns * 0.7), 100)
         local max_height = math.min(math.floor(vim.o.lines * 0.3), 30)
@@ -539,18 +698,19 @@ return {
         ---@param diag vim.Diagnostic
         ---@param mode "virtual_text"|"float"
         ---@return string displayedText
-        ---@return string mode
+        ---@return string highlight
         local function diag_source_as_suffix(diag, mode)
-          if not (diag.source or diag.code) then return "" end
+          if not (diag.source or diag.code) then return "", "" end
           local source = (diag.source or ""):gsub(" ?%.$", "") -- trailing dot for lua_ls
           local rule = diag.code and ": " .. diag.code or ""
 
           if mode == "virtual_text" then
-            return (" (%s%s)"):format(source, rule)
+            return (" (%s%s)"):format(source, rule), "Comment"
           elseif mode == "float" then
             return (" %s%s"):format(source, rule), "Comment"
           end
-          return ""
+
+          return "", ""
         end
 
         local diag_level = vim.diagnostic.severity
@@ -579,7 +739,7 @@ return {
           },
           float = {
             show_header = true,
-            source = true, -- or "always", "if_many" (for more than one source)
+            source = true,
             border = BORDER_STYLE,
             focusable = false,
             severity_sort = true,
@@ -595,7 +755,7 @@ return {
               "BufWritePre",
               "BufWritePost",
             },
-            scope = "cursor",
+            -- scope = "cursor",
             header = { " Diagnostics:", "DiagnosticHeader" },
             suffix = function(diag) return diag_source_as_suffix(diag, "float") end,
             prefix = function(diag, _index, total)
@@ -607,23 +767,36 @@ return {
             end,
             format = diag_msg_format,
           },
+          -- jump = {
+          --   -- Do not show floating window
+          --   float = false,
+
+          --   -- Wrap around buffer
+          --   wrap = true,
+          -- },
           severity_sort = true,
-          -- virtual_text = false,
-          virtual_text = {
-            only_current_line = true,
-            highlight_whole_line = false,
-            severity = { min = diag_level.ERROR },
-            suffix = function(diag) return diag_source_as_suffix(diag, "virtual_text") end,
-          },
+          virtual_text = false,
+          -- virtual_text = {
+          --   spacing = 2,
+          --   prefix = "", -- Could be '●', '▎', 'x'
+          --   only_current_line = true,
+          --   highlight_whole_line = false,
+          --   severity = { min = diag_level.ERROR },
+          --   suffix = function(diag) return diag_source_as_suffix(diag, "virtual_text") end,
+          --   format = function(diag)
+          --     local source = diag.source
+
+          --     if source then
+          --       local icon = SETTINGS.icons.lsp[vim.diagnostic.severity[diag.severity]:lower()]
+
+          --       return string.format("%s %s %s", icon, source, "[" .. (diag.code ~= nil and diag.code or diag.message) .. "]")
+          --     end
+
+          --     return string.format("%s ", diag.message)
+          --   end,
+          -- },
           update_in_insert = false,
         })
-
-        -- vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, {
-        --   border = BORDER_STYLE,
-        -- })
-        -- vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, {
-        --   border = BORDER_STYLE,
-        -- })
 
         local signs = { Error = icons.lsp.error, Warn = icons.lsp.warn, Hint = icons.lsp.hint, Info = icons.lsp.info }
         for type, icon in pairs(signs) do
@@ -631,25 +804,15 @@ return {
           vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = hl })
         end
 
-        -- Create a custom namespace. This will aggregate signs from all other
-        -- namespaces and only show the one with the highest severity on a
-        -- given line
         local ns = vim.api.nvim_create_namespace("mega_lsp_diagnostics")
-        -- Get a reference to the original signs handler
         local orig_signs_handler = vim.diagnostic.handlers.signs
-        -- Override the built-in signs handler
         local max_diagnostics = function(_, bn, _, opts)
-          -- Get all diagnostics from the whole buffer rather than just the
-          -- diagnostics passed to the handler
           local diagnostics = vim.diagnostic.get(bn)
-          -- Find the "worst" diagnostic per line
           local max_severity_per_line = {}
           for _, d in pairs(diagnostics) do
             local m = max_severity_per_line[d.lnum]
             if not m or d.severity < m.severity then max_severity_per_line[d.lnum] = d end
           end
-          -- Pass the filtered diagnostics (with our custom namespace) to
-          -- the original handler
           local filtered_diagnostics = vim.tbl_values(max_severity_per_line)
           orig_signs_handler.show(ns, bn, filtered_diagnostics, opts)
         end
@@ -662,29 +825,86 @@ return {
             hide = function(_, bn) orig_signs_handler.hide(ns, bn) end,
           })
         end
-        -- vim.diagnostic.handlers.signs = {
-        --   show = max_diagnostics,
-        --   hide = function(_, bn) orig_signs_handler.hide(ns, bn) end,
-        -- }
-      end
 
-      augroup("LspAttach", {
-        {
-          event = { "LspAttach" },
-          desc = "Attach various functionality to an LSP-connected buffer/client",
-          command = function(args)
-            local client = assert(vim.lsp.get_client_by_id(args.data.client_id), "must have valid ls client")
-            if client ~= nil then M.on_attach(client, args.buf) end
-          end,
-        },
-      })
+        -- require("mega.lsp_diagnostics")
+
+        augroup("LspProgress", {
+          {
+            pattern = "end",
+            event = { "LspProgress" },
+            desc = "Handle lsp progress message scenarios",
+            command = function(evt)
+              if pcall(require, "fidget") then
+                local token = evt.data.params.token
+                if evt.data.result and evt.data.result.token then token = evt.data.result.token end
+                local client_id = evt.data.client_id
+                local c = client_id and vim.lsp.get_client_by_id(client_id)
+                if c and token then require("fidget").notification.remove(c.name, token) end
+              end
+            end,
+          },
+        })
+
+        augroup("LspDiagnostics", {
+          {
+            event = { "CursorHold" },
+            desc = "Show diagnostics",
+            command = show_diagnostic_popup,
+          },
+        })
+
+        -- if client and client.server_capabilities.documentHighlightProvider then
+        --   augroup("LspDocumentHighlights", {
+        --     {
+        --       event = { "CursorHold", "CursorHoldI" },
+        --       buffer = bufnr,
+        --       command = vim.lsp.buf.document_highlight,
+        --     },
+        --     {
+        --       event = { "CursorMoved", "CursorMovedI" },
+        --       buffer = bufnr,
+        --       command = vim.lsp.buf.clear_references,
+        --     },
+        --   })
+        -- end
+
+        -- invoke any additional custom on_attach things passed in
+        if cb ~= nil and type(cb) == "function" then cb() end
+
+        -- dbg({ client.name, filetype, client.server_capabilities.semanticTokensProvider })
+      end
 
       local capabilities = vim.lsp.protocol.make_client_capabilities()
       if pcall(require, "cmp_nvim_lsp") then capabilities = require("cmp_nvim_lsp").default_capabilities() end
+      capabilities.textDocument.completion.completionItem.snippetSupport = true
+      capabilities.textDocument.foldingRange = { dynamicRegistration = false, lineFoldingOnly = true }
+      capabilities.textDocument.completion.completionItem = {
+        documentationFormat = { "markdown", "plaintext" },
+        snippetSupport = true,
+        preselectSupport = true,
+        insertReplaceSupport = false,
+        labelDetailsSupport = true,
+        deprecatedSupport = true,
+        commitCharactersSupport = true,
+        tagSupport = { valueSet = { 1 } },
+        resolveSupport = {
+          properties = {
+            "documentation",
+            "detail",
+            "additionalTextEdits",
+          },
+        },
+      }
+
+      -- if SETTINGS.disabled_semantic_tokens[filetype] then
+      --   capabilities.textDocument.semanticTokens = nil
+      --   capabilities.workspace.semanticTokens = nil
+      -- end
 
       local servers = require("mega.servers")
       if servers == nil then return end
-      local servers_list = servers.list()
+      local servers_list = servers.list(capabilities, M.on_attach)
+      servers.load_unofficial()
 
       require("mason").setup()
       require("mason-lspconfig").setup()
@@ -724,7 +944,11 @@ return {
         end
 
         config.flags = { debounce_text_changes = 150 }
-        config.capabilities = vim.tbl_deep_extend("force", {}, capabilities, config.capabilities or {})
+        config.capabilities = vim.tbl_deep_extend("force", capabilities, config.capabilities or {})
+        -- config.on_init = function(client, _)
+        --   client.server_capabilities.semanticTokensProvider = nil
+        --   if config.on_init ~= nil and type(config.on_init) == "function" then config.on_init(client, _bufnr) end
+        -- end
 
         return config
       end
@@ -734,60 +958,15 @@ return {
         if cfg == nil then return end
         lspconfig[server_name].setup(cfg)
       end)
-    end,
-  },
-  {
-    "dgagn/diagflow.nvim",
-    cond = false,
-    event = "LspAttach",
-    opts = {
-      text_align = "left", -- 'left', 'right'
-      placement = "top", -- 'top', 'inline'
-    },
-  },
-  {
-    cond = false,
-    "https://git.sr.ht/~whynothugo/lsp_lines.nvim",
-    config = true,
-  },
-  {
-    "rachartier/tiny-inline-diagnostic.nvim",
-    cond = false,
-    event = "LspAttach",
-    config = function()
-      require("tiny-inline-diagnostic").setup({
-        signs = {
-          left = "",
-          right = "",
-          diag = "●",
-          arrow = "    ",
-          up_arrow = "    ",
-          vertical = " │",
-          vertical_end = " └",
-        },
-        -- hi = {
-        --   -- background = "None",
-        --   mixing_color = require("theme").get_colors().base,
-        -- },
-        blend = {
-          factor = 0.3,
-        },
-        options = {
-          break_line = {
-            enabled = true,
-            after = 80,
-          },
-          virt_texts = {
-            priority = 4096,
-          },
-          multiple_diag_under_cursor = true,
-          show_source = true,
-          severity = {
-            vim.diagnostic.severity.ERROR,
-            vim.diagnostic.severity.WARN,
-            vim.diagnostic.severity.INFO,
-            vim.diagnostic.severity.HINT,
-          },
+
+      augroup("LspAttach", {
+        {
+          event = { "LspAttach" },
+          desc = "Attach various functionality to an LSP-connected buffer/client",
+          command = function(args)
+            local client = assert(vim.lsp.get_client_by_id(args.data.client_id), "must have valid ls client")
+            if client ~= nil then M.on_attach(client, args.buf) end
+          end,
         },
       })
     end,
@@ -795,7 +974,6 @@ return {
   {
     -- FIXME: https://github.com/mhanberg/output-panel.nvim/issues/5
     "mhanberg/output-panel.nvim",
-    enabled = false,
     lazy = false,
     keys = {
       {
@@ -806,5 +984,16 @@ return {
     },
     cmd = { "OutputPanel" },
     opts = true,
+  },
+  { -- signature hints
+    cond = vim.g.completer ~= "blink",
+    "ray-x/lsp_signature.nvim",
+    event = "BufReadPre",
+    opts = {
+      hint_prefix = " 󰏪 ",
+      hint_scheme = "Todo", -- highlight group, alt: @variable.parameter
+      floating_window = false,
+      always_trigger = true,
+    },
   },
 }

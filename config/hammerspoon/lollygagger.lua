@@ -9,10 +9,6 @@ obj.name = "lollygagger"
 obj.debug = true
 obj.cache = cache
 
-local dbg = function(...)
-  if obj.debug then return _G.dbg(fmt(...), false) end
-end
-
 local function killApp(app)
   if app == nil then return end
   app:kill()
@@ -31,10 +27,10 @@ obj.quitAfter = function(app, interval, event)
       if cache.timers[bundleID] ~= nil then cache.timers[bundleID]:stop() end
 
       if event == hs.application.watcher.deactivated then
-        note(fmt("[RUN] %s/%s quitting after %sm", obj.name, app:bundleID(), interval))
+        note(fmt("[RUN] %s/%s/quitting in %sm", obj.name, app:bundleID(), interval))
         cache.timers[bundleID] = hs.timer.doAfter((interval * 60), function()
           killApp(app)
-          info(fmt("[RUN] %s/%s quit", obj.name, app:bundleID()))
+          note(fmt("[RUN] %s/%s/quit", obj.name, app:bundleID()))
         end)
       end
     end
@@ -51,10 +47,10 @@ obj.hideAfter = function(app, interval, event)
       if cache.timers[bundleID] ~= nil then cache.timers[bundleID]:stop() end
 
       if event == hs.application.watcher.deactivated then
-        note(fmt("[RUN] %s/%s hiding after %sm", obj.name, app:bundleID(), interval))
+        note(fmt("[RUN] %s/%s/hiding in %sm", obj.name, app:bundleID(), interval))
         cache.timers[bundleID] = hs.timer.doAfter((interval * 60), function()
           app:hide()
-          info(fmt("[RUN] %s/%s hidden", obj.name, app:bundleID(), interval))
+          note(fmt("[RUN] %s/%s/hidden", obj.name, app:bundleID(), interval))
         end)
       end
     end

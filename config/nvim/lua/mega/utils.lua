@@ -10,6 +10,7 @@ local SETTINGS = require("mega.settings")
 local M = {
   hl = {},
   lsp = {},
+  notes = {},
 }
 
 function M.lsp.is_enabled_elixir_ls(client, enabled_clients)
@@ -36,13 +37,14 @@ local function prepare_file_rename(data)
       files = { { newUri = "file://" .. data.new_name, oldUri = "file://" .. data.old_name } },
     }
     ---@diagnostic disable-next-line: invisible
-    local resp = client.request_sync("workspace/willRenameFiles", params, 1000)
+    local resp = client.request_sync("workspace/willRenameFiles", params, 1000, bufnr)
     if resp then vim.lsp.util.apply_workspace_edit(resp.result, client.offset_encoding) end
   end
 end
 
 function M.lsp.rename_file()
   local old_name = vim.api.nvim_buf_get_name(0)
+  local cursor_pos = vim.api.nvim_win_get_cursor(0) -- Save the cursor position
   -- vim.fs.basename(old_name)
   -- nvim_buf_get_name(0)
   -- -- -> fnamemodify(':t')
@@ -51,8 +53,29 @@ function M.lsp.rename_file()
     if not name then return end
     local new_name = fmt("%s/%s", vim.fs.dirname(old_name), name)
     prepare_file_rename({ old_name = old_name, new_name = new_name })
-    -- lsp.util.rename(old_name, new_name)
+    vim.lsp.util.rename(old_name, new_name)
+
+    -- Restore the cursor position
+    vim.api.nvim_win_set_cursor(0, cursor_pos)
+    -- Redraw the screen
+    vim.cmd("redraw!")
   end)
+end
+
+---Gets the text in the last visual selection
+--
+---@return string text in range
+function M.get_selected_text()
+  local region = vim.region(0, "'<", "'>", vim.fn.visualmode(), true)
+
+  local chunks = {}
+  local maxcol = vim.v.maxcol
+  for line, cols in vim.spairs(region) do
+    local endcol = cols[2] == maxcol and -1 or cols[2]
+    local chunk = vim.api.nvim_buf_get_text(0, line, cols[1], line, endcol, {})[1]
+    table.insert(chunks, chunk)
+  end
+  return table.concat(chunks, "\n")
 end
 
 --- Call the given function and use `vim.notify` to notify of any errors
@@ -174,6 +197,84 @@ function M.tlen(t)
     len = len + 1
   end
   return len
+end
+
+function M.tcopy(t)
+  local u = {}
+  for k, v in pairs(t) do
+    u[k] = v
+  end
+
+  return setmetatable(u, getmetatable(t))
+end
+
+--- deeply compare two objects and return the diff
+--- REF: https://gist.github.com/sapphyrus/fd9aeb871e3ce966cc4b0b969f62f539
+function M.compare(o1, o2)
+  -- same object
+  if o1 == o2 then return nil end
+
+  local o1Type = type(o1)
+  local o2Type = type(o2)
+  --- different type
+  if o1Type ~= o2Type then -- don't expand tables to make it more readable
+    return { _1 = o1Type == "table" and o1Type or o1, _2 = o2Type == "table" and o2Type or o2 }
+  end
+  --- same type but not table, already compared above
+  if o1Type ~= "table" then return nil end
+
+  local diff = {}
+
+  -- iterate over o1
+  for key1, value1 in pairs(o1) do
+    local value2 = o2[key1]
+    diff[key1] = M.compare(value1, value2)
+  end
+
+  --- check keys in o2 but missing from o1
+  for key2, value2 in pairs(o2) do
+    diff[key2] = M.compare(nil, value2)
+  end
+  local gen, param, state = pairs(diff)
+  if gen(param, state) ~= nil then
+    return diff
+  else
+    return nil
+  end
+end
+
+function M.deep_equals(o1, o2, ignore_mt)
+  -- same object
+  if o1 == o2 then return true end
+
+  local o1Type = type(o1)
+  local o2Type = type(o2)
+  --- different type
+  if o1Type ~= o2Type then return false end
+  --- same type but not table, already compared above
+  if o1Type ~= "table" then return false end
+
+  -- use metatable method
+  if not ignore_mt then
+    local mt1 = getmetatable(o1)
+    if mt1 and mt1.__eq then
+      --compare using built in method
+      return o1 == o2
+    end
+  end
+
+  -- iterate over o1
+  for key1, value1 in pairs(o1) do
+    local value2 = o2[key1]
+    if value2 == nil or M.deep_equals(value1, value2, ignore_mt) == false then return false end
+  end
+
+  --- check keys in o2 but missing from o1
+  for key2, _ in pairs(o2) do
+    if o1[key2] == nil then return false end
+  end
+
+  return true
 end
 
 function M.strim(s) return (s:gsub("^%s*(.-)%s*$", "%1")) end
@@ -484,7 +585,7 @@ function M.get_visible_qflists()
   return vim.iter(vim.api.nvim_tabpage_list_wins(0)):filter(function(winnr) return vim.fn.getwininfo(winnr)[1].quickfix == 1 end)
 end
 
-function M.qf_populate(lines, opts)
+function M.qflist_populate(lines, opts)
   -- set qflist and open
   if not lines or #lines == 0 then return end
 
@@ -526,6 +627,40 @@ function M.root_has_file(name)
   local cwd = vim.uv.cwd()
   local lsputil = require("lspconfig.util")
   return lsputil.path.exists(lsputil.path.join(cwd, name)), lsputil.path.join(cwd, name)
+end
+
+function M.get_bufnrs()
+  local bufnrs = vim.tbl_filter(function(bufnr)
+    local bufname = vim.api.nvim_buf_get_name(bufnr)
+
+    if not vim.api.nvim_buf_is_loaded(bufnr) then return false end
+    if not vim.api.nvim_buf_is_valid(bufnr) then return false end
+
+    if bufname == "" then return false end
+    if string.match(bufname, "term:") then return false end
+    if vim.bo[bufnr].buftype == "terminal" then return false end
+    if vim.bo[bufnr].filetype == "megaterm" then return false end
+    if vim.bo[bufnr].filetype == "terminal" then return false end
+
+    if 1 ~= vim.fn.buflisted(bufnr) then return false end
+
+    return true
+  end, vim.api.nvim_list_bufs())
+
+  return M.tlen(bufnrs)
+end
+
+function M.get_buf_lines(bufnr)
+  bufnr = bufnr or vim.api.nvim_get_current_buf()
+
+  return vim.api.nvim_buf_get_lines(bufnr or 0, 0, -1, false)
+end
+
+function M.get_buf_current_line(bufnr)
+  bufnr = bufnr or vim.api.nvim_get_current_buf()
+  local cursor = vim.api.nvim_win_get_cursor(0)
+  local start_line = cursor[1] - 1
+  return vim.api.nvim_buf_get_lines(bufnr, start_line, start_line + 1, false)[1] or ""
 end
 
 --[[

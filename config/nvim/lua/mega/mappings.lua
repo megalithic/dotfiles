@@ -1,10 +1,15 @@
-local U = require("mega.utils")
-
-local M = {}
-
---  See `:help vim.keymap.set()`
+local fmt = string.format
 local map = vim.keymap.set
 
+local U = require("mega.utils")
+local M = {}
+
+-- [[ unmap ]] -----------------------------------------------------------------
+vim.api.nvim_del_keymap("n", "gra") -- lsp default: code actions
+vim.api.nvim_del_keymap("n", "grn") -- lsp default: rename
+vim.api.nvim_del_keymap("n", "grr") -- lsp default: references
+
+-- `:help vim.keymap.set()`
 -- local nmap, cmap, xmap, imap, vmap, omap, tmap, smap
 -- local nnoremap, cnoremap, xnoremap, inoremap, vnoremap, onoremap, tnoremap, snoremap
 
@@ -43,8 +48,9 @@ local function mapper(mode, o)
 
     -- if not opts.has or client.server_capabilities[opts.has .. "Provider"] then
     if opts.label or opts.desc then
-      local ok, wk = pcall(require, "which-key")
-      if ok and wk then wk.register({ [lhs] = opts.label or opts.desc }, { mode = mode }) end
+      -- local ok, wk = pcall(require, "which-key")
+      -- if ok and wk then wk.add({ [lhs] = opts.label or opts.desc }, { mode = mode }) end
+      -- if ok and wk then wk.register({ [lhs] = opts.label or opts.desc }, { mode = mode }) end
       if opts.label and not opts.desc then opts.desc = opts.label end
       opts.label = nil
     end
@@ -81,6 +87,14 @@ for _, mode in ipairs({ "n", "x", "i", "v", "o", "t", "s", "c" }) do
   -- non-recursive global mappings
   M[mode .. "noremap"] = mapper(mode, noremap_opts)
   _G[mode .. "noremap"] = mapper(mode, noremap_opts)
+end
+local function leaderMapper(mode, key, rhs, opts)
+  if type(opts) == "string" then opts = { desc = opts } end
+  map(mode, "<leader>" .. key, rhs, opts)
+end
+local function localLeaderMapper(mode, key, rhs, opts)
+  if type(opts) == "string" then opts = { desc = opts } end
+  map(mode, "<localleader>" .. key, rhs, opts)
 end
 
 -- [[ tabs ]] ------------------------------------------------------------------
@@ -149,6 +163,7 @@ map("i", "?", "?<C-g>u")
 -- we don't want line joining with `J`
 map("n", "J", "<nop>")
 
+-- go to last buffer
 map("n", "<localleader><localleader>", "<C-^>")
 
 -- [[ better movements within a buffer ]] --------------------------------------
@@ -274,21 +289,34 @@ map("x", "<leader>h", "\"hy:%s/<C-r>h/<C-r>h/gc<left><left><left>", {
 
 -- [[ spelling ]] --------------------------------------------------------------
 -- map("n", "<leader>s", "z=e") -- Correct current word
-map("n", "<localleader>sj", "]s", { desc = "[spell] Move to next misspelling" })
-map("n", "<localleader>sk", "[s", { desc = "[spell] Move to previous misspelling" })
+map("n", "<localleader>sj", "]s", { desc = "[spell] move to next misspelling" })
+map("n", "<localleader>sk", "[s", { desc = "[spell] move to previous misspelling" })
 map("n", "<localleader>sf", function()
   local cur_pos = vim.api.nvim_win_get_cursor(0)
   vim.cmd.normal({ "1z=", bang = true })
   vim.api.nvim_win_set_cursor(0, cur_pos)
-end, { desc = "[spell] Correct spelling of word under cursor" })
+end, { desc = "[spell] fix spelling of word under cursor" })
+
+-- Undo zw, remove the word from the entry in 'spellfile'.
+map("n", "<localleader>su", function() vim.cmd("normal! zug") end, { desc = "[spell] remove word from list" })
 
 map("n", "<localleader>sa", function()
   local cur_pos = vim.api.nvim_win_get_cursor(0)
   vim.cmd.normal({ "zg", bang = true })
   vim.api.nvim_win_set_cursor(0, cur_pos)
-end, { desc = "[spell] Add word under cursor to dictionary" })
-
-map("n", "<localleader>si", function() vim.cmd.normal("ysiw`") end, { desc = "[spell] Ignore spelling of word under cursor" })
+end, { desc = "[spell] add word under cursor to dict" })
+map("n", "<localleader>ss", function()
+  -- Simulate pressing "z=" with "m" option using feedkeys
+  -- vim.api.nvim_replace_termcodes ensures "z=" is correctly interpreted
+  -- 'm' is the {mode}, which in this case is 'Remap keys'. This is default.
+  -- If {mode} is absent, keys are remapped.
+  --
+  -- I tried this keymap as usually with
+  vim.cmd("normal! 1z=")
+  -- But didn't work, only with nvim_feedkeys
+  -- vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("z=", true, false, true), "m", true)
+end, { desc = "[spell] suggestions" })
+-- map("n", "<localleader>si", function() vim.cmd.normal({ "ysiw`", bang = true }) end, { desc = "[spell] ignore spelling of word under cursor" })
 
 -- [[ selections ]] ------------------------------------------------------------
 map("n", "gv", "`[v`]", { desc = "reselect pasted content" })
@@ -313,7 +341,7 @@ map("n", "<leader>v", "ggVG", { desc = "select whole buffer" })
 -- - ";"
 ---@param character string
 ---@return function
-local function modify_line_end_delimiter(character)
+local function toggle_line_end_delimiter(character)
   local delimiters = { ",", ";" }
   return function()
     local line = vim.api.nvim_get_current_line()
@@ -328,72 +356,183 @@ local function modify_line_end_delimiter(character)
   end
 end
 
-map("n", "<localleader>,", modify_line_end_delimiter(","), { desc = "add comma `,` to end of current line" })
-map("n", "<localleader>;", modify_line_end_delimiter(";"), { desc = "add semicolon `;` to end of current line" })
+map("n", "<localleader>,", toggle_line_end_delimiter(","), { desc = "add comma `,` to end of current line" })
+map("n", "<localleader>/", toggle_line_end_delimiter("/"), { desc = "add slash `/` to end of current line" })
+map("n", "<localleader>;", toggle_line_end_delimiter(";"), { desc = "add semicolon `;` to end of current line" })
 
--- [Terminal] ------------------------------------------------------------------
+map({ "x", "n" }, "gcd", function()
+  local win = vim.api.nvim_get_current_win()
+  local cur = vim.api.nvim_win_get_cursor(win)
+  local vstart = vim.fn.getpos("v")[2]
+  local current_line = vim.fn.line(".")
+  local set_cur = vim.api.nvim_win_set_cursor
+  if vstart == current_line then
+    vim.cmd.yank()
+    vim.cmd.normal("gcc")
+    vim.cmd.put()
+    set_cur(win, { cur[1] + 1, cur[2] })
+  else
+    if vstart < current_line then
+      vim.cmd(":" .. vstart .. "," .. current_line .. "y")
+      vim.cmd.put()
+      set_cur(win, { vim.fn.line("."), cur[2] })
+    else
+      vim.cmd(":" .. current_line .. "," .. vstart .. "y")
+      set_cur(win, { vstart, cur[2] })
+      vim.cmd.put()
+      set_cur(win, { vim.fn.line("."), cur[2] })
+    end
+    vim.cmd.normal("gvgc")
+  end
+end, { silent = true, desc = "[g]o [c]omment and [d]uplicate selected lines" })
 
-local nnoremap = function(lhs, rhs, desc) vim.keymap.set("n", lhs, rhs, { buffer = 0, desc = "term: " .. desc }) end
+-- [[ terminal ]] --------------------------------------------------------------
+
 map("n", "<leader>tt", "<cmd>T direction=horizontal move_on_direction_change=true<cr>", { desc = "horizontal" })
 map("n", "<leader>tf", "<cmd>T direction=float move_on_direction_change=true<cr>", { desc = "float" })
 map("n", "<leader>tv", "<cmd>T direction=vertical move_on_direction_change=true<cr>", { desc = "vertical" })
 map("n", "<leader>tp", "<cmd>T direction=tab<cr>", { desc = "tab-persistent" })
 
--- [[ executions ]] ------------------------------------------------------------
+-- [[ edit files / file explorering / executions ]] ------------------------------------------------------------
+local editFileMappings = {
+  r = { function() require("mega.utils").lsp.rename_file() end, "[e]dit file -> lsp rename as <input>" },
+  s = { function() vim.cmd([[SaveAsFile]]) end, "[e]dit file -> [s]ave as <input>" },
+  f = { function() vim.ui.open(vim.fn.expand("%:p:h:~")) end, "[e]xplore cwd -> [f]inder" },
+  d = {
+    function()
+      if vim.fn.confirm("Duplicate file?", "&Yes\n&No", 2, "Question") == 1 then vim.cmd("Duplicate") end
+    end,
+    "[e]dit file -> duplicate?",
+  },
+  D = {
+    function()
+      local current_file = vim.fn.expand("%:p")
+      if current_file and current_file ~= "" then
+        -- Check if trash utility is installed
+        if vim.fn.executable("trash") == 0 then
+          vim.api.nvim_echo({
+            { "- Trash utility not installed. Make sure to install it first\n", "ErrorMsg" },
+            { "- In macOS run `brew install trash`\n", nil },
+          }, false, {})
+          return
+        end
+        -- Prompt for confirmation before deleting the file
+        if vim.fn.confirm(fmt("Delete %s?", current_file), "&Yes\n&No", 2, "Question") == 1 then
+          -- vim.ui.input({
+          --   prompt = "Type 'del' to delete the file '" .. current_file .. "': ",
+          -- }, function(input)
+          --   if input == "del" then
+          -- Delete the file using trash app
+          local success, _ = pcall(function() vim.fn.system({ "trash", vim.fn.fnameescape(current_file) }) end)
+          if success then
+            vim.api.nvim_echo({
+              { "File deleted from disk:\n", "Normal" },
+              { current_file, "Normal" },
+            }, false, {})
+            -- Close the buffer after deleting the file
+            vim.cmd("bd!")
+          else
+            vim.api.nvim_echo({
+              { "Failed to delete file:\n", "ErrorMsg" },
+              { current_file, "ErrorMsg" },
+            }, false, {})
+          end
+        else
+          vim.api.nvim_echo({
+            { "File deletion canceled.", "Normal" },
+          }, false, {})
+        end
+        -- end)
+      else
+        vim.api.nvim_echo({
+          { "No file to delete", "WarningMsg" },
+        }, false, {})
+      end
+      -- if vim.fn.confirm("Delete file?", "&Yes\n&No", 2, "Question") == 1 then vim.cmd("Delete") end
+    end,
+    "[e]dit file -> delete?",
+  },
+  yp = {
+    function()
+      vim.cmd([[let @+ = expand("%")]])
+      vim.notify(fmt("yanked %s to clipboard", vim.fn.expand("%")))
+    end,
+    "[e]xplore file -> yank path",
+  },
+  xf = {
+    function()
+      local filetype = vim.bo.ft
+      local file = vim.fn.expand("%") -- Get the current file name
+      local first_line = vim.fn.getline(1) -- Get the first line of the file
+      if string.match(first_line, "^#!/") then -- If first line contains shebang
+        local escaped_file = vim.fn.shellescape(file) -- Properly escape the file name for shell commands
 
--- If this is a bash script, make it executable, and execute it in a tmux pane on the right
--- Using a tmux pane allows me to easily select text
--- Had to include quotes around "%" because there are some apple dirs that contain spaces, like iCloud
-map("n", "<leader>exf", function()
-  local filetype = vim.bo.ft
-  local file = vim.fn.expand("%") -- Get the current file name
-  local first_line = vim.fn.getline(1) -- Get the first line of the file
-  if string.match(first_line, "^#!/") then -- If first line contains shebang
-    local escaped_file = vim.fn.shellescape(file) -- Properly escape the file name for shell commands
-
-    -- Execute the script on a tmux pane on the right. On my mac I use zsh, so
-    -- running this script with bash to not execute my zshrc file after
-    -- vim.cmd("silent !tmux split-window -h -l 60 'bash -c \"" .. escaped_file .. "; exec bash\"'")
-    -- `-l 60` specifies the size of the tmux pane, in this case 60 columns
-    vim.notify("executing shell script in tmux split")
-    vim.cmd("silent !tmux split-window -h -l 60 'bash -c \"" .. escaped_file .. "; echo; echo Press any key to exit...; read -n 1; exit\"'")
-  elseif filetype == "lua" then
-    vim.notify("sourcing file")
-    vim.cmd("source %")
-  else
-    vim.notify("Not a script. Shebang line not found.")
-    -- vim.cmd("echo 'Not a script. Shebang line not found.'")
-  end
-end, { desc = "e[x]ecute [f]ile" })
-map("n", "<leader>exl", "<cmd>.lua<CR>", { desc = "e[x]ecute [l]ine" })
-
--- Toggle a tmux pane on the right in bash, in the same directory as the current file
--- Opening it in bash because it's faster, I don't have to run my .zshrc file,
--- which pulls from my repo and a lot of other stuff
-map("n", "<leader>en", function()
-  local file_dir = vim.fn.expand(vim.g.notes_path)
-  -- local file_dir = vim.fn.expand("%:p:h") -- Get the directory of the current file
-  local pane_width = 60
-  local right_pane_id = vim.fn.system("tmux list-panes -F '#{pane_id} #{pane_width}' | awk '$2 == " .. pane_width .. " {print $1}'")
-  if right_pane_id ~= "" then
-    -- If the right pane exists, close it
-    vim.fn.system("tmux kill-pane -t " .. right_pane_id)
-  else
-    -- If the right pane doesn't exist, open it
-    vim.fn.system("tmux split-window -h -l " .. pane_width .. " 'cd \"" .. file_dir .. "\" && zsh -i'")
-  end
-end)
-map("n", "<leader>et", function()
-  local file_dir = vim.fn.expand("%:p:h") -- Get the directory of the current file
-  local pane_width = 60
-  local right_pane_id = vim.fn.system("tmux list-panes -F '#{pane_id} #{pane_width}' | awk '$2 == " .. pane_width .. " {print $1}'")
-  if right_pane_id ~= "" then
-    -- If the right pane exists, close it
-    vim.fn.system("tmux kill-pane -t " .. right_pane_id)
-  else
-    -- If the right pane doesn't exist, open it
-    vim.fn.system("tmux split-window -h -l " .. pane_width .. " 'cd \"" .. file_dir .. "\" && zsh -i'")
-  end
-end)
+        -- Execute the script on a tmux pane on the right. On my mac I use zsh, so
+        -- running this script with bash to not execute my zshrc file after
+        -- vim.cmd("silent !tmux split-window -h -l 60 'bash -c \"" .. escaped_file .. "; exec bash\"'")
+        -- `-l 60` specifies the size of the tmux pane, in this case 60 columns
+        vim.notify("executing shell script in tmux split")
+        vim.cmd("silent !tmux split-window -h -l 60 'bash -c \"" .. escaped_file .. "; echo; echo Press any key to exit...; read -n 1; exit\"'")
+      elseif filetype == "lua" then
+        vim.notify("sourcing file")
+        vim.cmd("source %")
+      else
+        vim.notify("Not a script. Shebang line not found.")
+        -- vim.cmd("echo 'Not a script. Shebang line not found.'")
+      end
+    end,
+    "e[x]ecute [f]ile",
+  },
+  xl = {
+    function()
+      local file_dir = vim.fn.expand(vim.g.notes_path)
+      -- local file_dir = vim.fn.expand("%:p:h") -- Get the directory of the current file
+      local pane_width = 60
+      local right_pane_id = vim.fn.system("tmux list-panes -F '#{pane_id} #{pane_width}' | awk '$2 == " .. pane_width .. " {print $1}'")
+      if right_pane_id ~= "" then
+        -- If the right pane exists, close it
+        vim.fn.system("tmux kill-pane -t " .. right_pane_id)
+      else
+        -- If the right pane doesn't exist, open it
+        vim.fn.system("tmux split-window -h -l " .. pane_width .. " 'cd \"" .. file_dir .. "\" && zsh -i'")
+      end
+    end,
+    "e[x]ecute [l]ine",
+  },
+  tt = {
+    function()
+      local file_dir = vim.fn.expand("%:p:h") -- Get the directory of the current file
+      local pane_width = 60
+      local right_pane_id = vim.fn.system("tmux list-panes -F '#{pane_id} #{pane_width}' | awk '$2 == " .. pane_width .. " {print $1}'")
+      if right_pane_id ~= "" then
+        -- If the right pane exists, close it
+        vim.fn.system("tmux kill-pane -t " .. right_pane_id)
+      else
+        -- If the right pane doesn't exist, open it
+        vim.fn.system("tmux split-window -h -l " .. pane_width .. " 'cd \"" .. file_dir .. "\" && zsh -i'")
+        vim.fn.system("tmux send-keys 'ls' 'C-m'")
+      end
+    end,
+    "[e]xplore cwd files -> [t]mux",
+  },
+  tn = {
+    function()
+      local file_dir = vim.fn.expand(vim.g.notes_path)
+      local pane_width = 60
+      local right_pane_id = vim.fn.system("tmux list-panes -F '#{pane_id} #{pane_width}' | awk '$2 == " .. pane_width .. " {print $1}'")
+      if right_pane_id ~= "" then
+        -- If the right pane exists, close it
+        vim.fn.system("tmux kill-pane -t " .. right_pane_id)
+      else
+        -- If the right pane doesn't exist, open it
+        vim.fn.system("tmux split-window -h -l " .. pane_width .. " 'cd \"" .. file_dir .. "\" && zsh -i'")
+        vim.fn.system("tmux send-keys 'ls' 'C-m'")
+      end
+    end,
+    "[e]xplore notes files -> tmux",
+  },
+}
+-- <leader>e<key>
+vim.iter(editFileMappings):each(function(key, rhs) leaderMapper("n", "e" .. key, rhs[1], rhs[2]) end)
 
 return M

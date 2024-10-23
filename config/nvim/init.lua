@@ -12,9 +12,26 @@ vim.noti = vim.notify
 
 _G.mega = {
   ui = {},
-  lsp = {},
+  lsp = {
+    on_attach = function(on_attach, name)
+      -- `mega.lsp.on_attach` usage:
+      --
+      -- mega.lsp.on_attach(function(client, buffer)
+      --   if client.name == "zk" then
+      --     -- do a thing
+      --   end
+      -- end)
+      return vim.api.nvim_create_autocmd("LspAttach", {
+        callback = function(args)
+          local buffer = args.buf ---@type number
+          local client = vim.lsp.get_client_by_id(args.data.client_id)
+          if client and (not name or client.name == name) then return on_attach(client, buffer) end
+        end,
+      })
+    end,
+  },
   req = require("mega.req"),
-  resize_windows = function() end,
+  resize_windows = function() end, -- stubbed
   term = nil,
   notify = vim.noti,
 }

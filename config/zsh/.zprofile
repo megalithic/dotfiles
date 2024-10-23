@@ -41,6 +41,7 @@ path=(
   "$BREW_PREFIX/lib/ruby/gems/3.0.0/bin"
   # NOTE: Add coreutils which make commands like ls run as they do on Linux rather than the BSD flavoured variant macos ships with
   "$BREW_PREFIX/opt/coreutils/libexec/gnubin"
+  /nix/store/[^/]*/bin(Nn[-1]-/)
   $path
 )
 

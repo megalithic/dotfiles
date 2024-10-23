@@ -15,15 +15,21 @@ __help() {
   printf -- "\n"
   printf -- "${grey}${bold}OPTIONS:${reset}\n"
   printf -- "  -h          view this help text\n"
-  printf -- "  -p          return current daily note path\n"
+  printf -- "  -c          return current daily note path\n"
+  printf -- "  -p          return previous daily note path\n"
+  printf -- "  -m          method used for daily note: [zk, note]\n"
   printf -- "  -r          opens raw daily note without interacting with tmux\n"
+  printf -- "  -t          displays the day's tasks: [today, yesterday]\n"
   printf -- "\n"
 
   exit 0
 }
 
+METHOD="note"
+
 # Specify below the directory in which you want to create your daily note
-main_note_dir="${HOME}/Documents/_notes/daily"
+notes_dir="${HOME}/Documents/_notes/daily"
+zk_notes_dir="${HOME}/Documents/_zk"
 
 # Get current date components
 current_month_abbr=$(date +"%b")
@@ -33,18 +39,115 @@ current_month_num=$(date +"%m")
 current_day=$(date +"%d")
 
 # Construct the directory structure and filename
-note_dir="${main_note_dir}/${current_year}/${current_month_num}"
-note_name="${current_year}-${current_month_num}-${current_day}"
-full_path="${note_dir}/${note_name}.md"
+daily_note_dir="${notes_dir}/${current_year}/${current_month_num}"
+daily_note_date="${current_year}-${current_month_num}-${current_day}"
+daily_note_path="${daily_note_dir}/${daily_note_date}.md"
 
-function open_note() {
-  nvim +norm\ G "$full_path"
+function __get_note_tasks() {
+  sed '/^## Tasks$/,/^.*Links/!d;//d;/^$/d' "$1"
 }
 
-while getopts "hpr" OPTION; do
+function __get_last_daily_note_path() {
+  if [[ -f "$daily_note_path" ]]; then
+    # last_daily_note_path="$(find $HOME/Documents/_notes/daily/**/*.md -type f -print0 | xargs -0 stat -f '%m %N' | sort -nr | head -2 | cut -f2- -d' ' | tail -n1)"
+    last_daily_note_path="$(find $HOME/Documents/_notes/daily -type f -name "*.md" -print0 | xargs -0 ls -Ur | sort -nr | head -2 | cut -f2- -d' ' | tail -n1)"
+  #
+  else
+    # last_daily_note_path="$(find $HOME/Documents/_notes/daily/**/*.md -type f -print0 | xargs -0 stat -f '%m %N' | sort -nr | head -2 | cut -f2- -d' ' | head -n1)"
+    last_daily_note_path="$(find $HOME/Documents/_notes/daily -type f -name "*.md" -print0 | xargs -0 ls -Ur | sort -nr | head -2 | cut -f2- -d' ' | head -n1)"
+  # find ./daily -type f -name "*.md" -print0 | xargs -0 ls -Ur | sort -nr | head -2 | cut -f2- -d' ' | head -n1
+  fi
+
+  last_daily_note_file_name=$(basename ${last_daily_note_path})
+  last_daily_note_name=$(echo "$last_daily_note_file_name" | cut -d"." -f1)
+}
+
+function __build_tasks() {
+  # gets the previous day's tasks
+  tasks="$(__get_note_tasks ${last_daily_note_path})"
+
+  if [[ -n "$tasks" ]]; then
+    # removes completed tasks, removes blank lines, subs strings "tomorrow" -> "today"
+    printf -- "%s" $tasks | sed 's/- \[[x/]\].*//g' | sed '/^[[:space:]]*$/d' | sed 's/tomorrow/today/g'
+  else
+    printf -- "- [ ] TODO item"
+  fi
+}
+
+function __print_tasks() {
+  local which_tasks="$1"
+
+  if [[ "$which_tasks" == "today" ]]; then
+    tasks="$(__get_note_tasks ${daily_note_path})"
+  elif [[ "$which_tasks" == "prev" || "$which_tasks" == "yesterday" ]]; then
+    __get_last_daily_note_path
+    tasks="$(__get_note_tasks ${last_daily_note_path})"
+  fi
+
+  printf -- "%s" $tasks | sed 's/- \[/\[/g'
+}
+
+function __set_template() {
+  # NOTE: doesn't take args, just uses upper scope variables
+  if [ ! -f "$daily_note_path" ]; then
+    touch "$daily_note_path"
+
+    if [ -f "$daily_note_path" ]; then
+      __get_last_daily_note_path
+    fi
+
+    cat <<EOF >"$daily_note_path"
+---
+id: daily-${daily_note_date}
+tags:
+  -  #daily
+  -  #tasks
+---
+
+# Daily notes for ${daily_note_date}
+
+## Notes
+
+## Tasks
+
+$(__build_tasks)
+
+## Links
+
+- [Previous daily note (${last_daily_note_name})](${last_daily_note_file_name})
+EOF
+  fi
+}
+
+function open_note() {
+  nvim +norm\ G "$daily_note_path"
+}
+
+while getopts "hct:rlm:" OPTION; do
   case $OPTION in
+    m)
+      METHOD="${OPTARG:-note}"
+      ;;
+
+    c)
+      if [[ "$METHOD" == "note" ]]; then
+        echo "${daily_note_path}" | tr -d '\n'
+      fi
+
+      exit 0
+      ;;
+
     p)
-      echo "$full_path"
+      if [[ "$METHOD" == "note" ]]; then
+        __get_last_daily_note_path
+        echo "${last_daily_note_path}" | tr -d '\n'
+      fi
+
+      exit 0
+      ;;
+
+    t)
+      __print_tasks "${OPTARG:-today}"
       exit 0
       ;;
 
@@ -71,33 +174,32 @@ while getopts "hpr" OPTION; do
 done
 shift "$(($OPTIND - 1))"
 
-# Use note name as the session name
-SESSION="daily-note_${note_name}"
+if [[ "$METHOD" == "note" ]]; then
+  # SESSION="daily-note-${daily_note_date}"
+  SESSION="daily-note"
 
-# Check if the directory exists, if not, create it
-if [ ! -d "$note_dir" ]; then
-  mkdir -p "$note_dir"
-fi
+  # Check if the directory exists, if not, create it
+  if [ ! -d "$daily_note_dir" ]; then
+    mkdir -p "$daily_note_dir"
+  fi
 
-# Create the daily note if it does not already exist
-if [ ! -f "$full_path" ]; then
-  cat <<EOF >"$full_path"
-tags:
+  # Create the daily note if it does not already exist
+  __set_template
 
-- #daily
+  # if ! tmux has-session -t "$SESSION" 2>/dev/null; then
+  #   tmux new-session -d -s "$SESSION" -c "$daily_note_dir" "nvim +norm\ G \"$daily_note_path\""
+  # fi
+  if tmux has-session -t "$SESSION" 2>/dev/null; then
+    tmux kill-session -t "$SESSION"
+  fi
 
-<!--toc:start-->
+  tmux new-session -d -s "$SESSION" -c "$daily_note_dir" "nvim +norm\ G \"$daily_note_path\""
+elif [[ "$METHOD" == "zk" ]]; then
+  SESSION="daily-zk-${daily_note_date}"
 
-- [Daily notes | ${note_name}](#daily-notes)
-
-<!--toc:end-->
-
-# Daily notes
-EOF
-fi
-
-if ! tmux has-session -t "$SESSION" 2>/dev/null; then
-  tmux new-session -d -s "$SESSION" -c "$note_dir" "nvim +norm\ G \"$full_path\""
+  if ! tmux has-session -t "$SESSION" 2>/dev/null; then
+    tmux new-session -d -s "$SESSION" -c "$zk_notes_dir" "zk daily"
+  fi
 fi
 
 tmux setenv -t "$SESSION" 'SESSION_ICON' "${SESSION_ICON}"

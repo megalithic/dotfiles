@@ -9,9 +9,34 @@ local M = {}
 -- local root_pattern = require("mega.utils.lsp").root_pattern
 local root_pattern = lspconfig.util.root_pattern
 
-M.list = function()
+M.list = function(default_capabilities, default_on_attach)
   return {
-    bashls = {},
+    bashls = {
+      filetypes = { "sh", "zsh", "bash" }, -- work in zsh as well
+      settings = {
+        bashIde = {
+          shellcheckPath = "", -- disable while using efm
+          shellcheckArguments = "--shell=bash", -- PENDING https://github.com/bash-lsp/bash-language-server/issues/1064
+          shfmt = { spaceRedirects = true },
+        },
+      },
+    },
+    -- basics_ls = {
+    --   enabled = false,
+    --   settings = {
+    --     buffer = {
+    --       enable = true,
+    --       minCompletionLength = 3, -- only provide completions for words longer than 4 characters
+    --     },
+    --     path = {
+    --       enable = true,
+    --     },
+    --     snippet = {
+    --       enable = false,
+    --       sources = { vim.fn.stdpath("config") .. "/snippets" },
+    --     },
+    --   },
+    -- },
     -- biome = {
     --   manual_install = true,
     --   root_dir = root_pattern({ "biome.json", ".biome.json", ".eslintrc.js", ".prettierrc.js" }),
@@ -23,6 +48,9 @@ M.list = function()
           lint = {
             unknownProperties = "ignore",
             unknownAtRules = "ignore",
+            vendorPrefix = "ignore", -- needed for scrollbars
+            duplicateProperties = "warning",
+            zeroUnits = "warning",
           },
         },
         scss = {
@@ -103,10 +131,13 @@ M.list = function()
     end,
     elmls = {},
     emmet_ls = {
+      init_options = {
+        showSuggestionsAsSnippets = false,
+      },
       settings = {
         includeLanguages = {
-          -- ["html-eex"] = "html",
-          -- ["phoenix-heex"] = "html",
+          ["html-eex"] = "html",
+          ["phoenix-heex"] = "html",
           eruby = "html",
         },
       },
@@ -116,12 +147,12 @@ M.list = function()
         "typescriptreact",
         -- "elixir",
         -- "eelixir",
-        -- "html.heex",
-        -- "heex",
-        -- "html_heex",
-        -- "html_eex",
-        -- "phoenix-heex",
-        -- "phoenix_heex",
+        "html.heex",
+        "heex",
+        "html_heex",
+        "html_eex",
+        "phoenix-heex",
+        "phoenix_heex",
         "eruby",
       },
     },
@@ -246,7 +277,7 @@ M.list = function()
                 continuation_indent_size = "2",
               },
             },
-            semantic = { enable = false },
+            -- semantic = { enable = false },
             hint = {
               enable = true,
               arrayIndex = "Disable", -- "Enable", "Auto", "Disable"
@@ -336,20 +367,115 @@ M.list = function()
             },
           },
         },
+        handlers = {
+          -- always go to the first definition
+          ["textDocument/definition"] = function(err, result, ...)
+            if vim.islist(result) or type(result) == "table" then result = result[1] end
+            vim.lsp.handlers["textDocument/definition"](err, result, ...)
+          end,
+        },
       }
     end,
-    marksman = function()
+    -- markdown_oxide = function()
+    --
+    --   require("lspconfig").markdown_oxide.setup({
+    --     on_attach = function(client, buffer)
+    --       default_on_attach(client, buffer)
+    --
+    --       -- code lens for ui reference counters
+    --       if client.server_capabilities.codeLensProvider then
+    --         vim.api.nvim_create_autocmd({ "TextChanged", "InsertLeave", "CursorHold", "BufEnter" }, {
+    --           buffer = buffer,
+    --           callback = function() vim.lsp.codelens.refresh() end,
+    --         })
+    --       end
+    --
+    --       -- open daily notes with `Daily today`, `Daily two days ago`, `Daily next monday`
+    --       vim.api.nvim_create_user_command("Daily", function(args)
+    --         -- use client id to execute a command, instead of vim.lsp.buf.execute_command()
+    --         local oxide_client = vim.lsp.get_client_by_id(client.id)
+    --         if oxide_client then
+    --           oxide_client.request("workspace/executeCommand", {
+    --             command = "jump",
+    --             arguments = { args.args },
+    --           })
+    --         end
+    --       end, { desc = "Open daily notes", nargs = "*" })
+    --     end,
+    --     capabilities = {
+    --       default_capabilities,
+    --       -- this allows creating unresolved files and resolving completions for unindexed code blocks
+    --       workspace = {
+    --         didChangeWatchedFiles = {
+    --           dynamicRegistration = true,
+    --         },
+    --       },
+    --     },
+    --   })
+    -- end,
+    markdown_oxide = function()
+      if vim.g.note_taker ~= "markdown_oxide" then return nil end
+
       return (vim.g.started_by_firenvim or vim.env.TMUX_POPUP) and nil
         or {
-          on_attach = function(_client, _bufnr)
-            if string.match(vim.fn.expand("%:p:h"), "_notes") then
-              vim.keymap.set(
-                "n",
-                "<leader>ff",
-                function() mega.picker.find_files({ picker = "smart_open", cwd = vim.g.notes_path }) end,
-                { desc = "[f]ind in [n]otes" }
-              )
-            end
+          single_file_support = true,
+          capabilities = {
+            workspace = {
+              didChangeWatchedFiles = {
+                dynamicRegistration = true,
+              },
+            },
+          },
+          on_attach = function(client, bufnr)
+            default_on_attach(client, bufnr, function()
+              vim.api.nvim_create_user_command("Daily", function(args)
+                local input = args.args
+
+                vim.lsp.buf.execute_command({ command = "jump", arguments = { input } })
+              end, { desc = "[n]otes, [d]aily", nargs = "*" })
+            end)
+          end,
+        }
+    end,
+    marksman = function()
+      if vim.g.note_taker ~= "marksman" then return nil end
+
+      return (vim.g.started_by_firenvim or vim.env.TMUX_POPUP) and nil
+        or {
+          single_file_support = false,
+          capabilities = {
+            workspace = {
+              didChangeWatchedFiles = {
+                dynamicRegistration = true,
+              },
+            },
+          },
+          on_attach = function(client, bufnr)
+            default_on_attach(client, bufnr, function()
+              if string.match(vim.fn.expand("%:p:h"), "_notes") then
+                vim.keymap.set(
+                  "n",
+                  "<leader>ff",
+                  function() mega.picker.find_files({ cwd = vim.g.notes_path }) end,
+                  { desc = "[f]ind in [n]otes", buffer = bufnr }
+                )
+
+                vim.keymap.set("n", "gd", "<cmd>lua vim.lsp.buf.definition()<CR>", { desc = "[g]o to note [d]efinition", noremap = true, buffer = bufnr })
+
+                vim.keymap.set("n", "g.", function()
+                  local note_title = require("mega.utils").notes.get_md_link_dest()
+                  if note_title == nil or note_title == "" then
+                    vim.notify("Unable to create new note from link text", L.WARN)
+                    return
+                  end
+
+                  os.execute("note -c " .. note_title)
+                  vim.diagnostic.enable(false)
+                  vim.cmd("LspRestart " .. client.name)
+                  vim.defer_fn(function() vim.diagnostic.enable(true) end, 50)
+                end, { desc = "[g]o create note from link title", buffer = bufnr })
+              end
+            end)
           end,
         }
     end,
@@ -434,6 +560,7 @@ M.list = function()
         },
       }
     end,
+    nil_ls = {},
     -- prosemd_lsp = function() return (vim.g.started_by_firenvim or vim.env.TMUX_POPUP) and nil or {} end,
     pyright = {
       single_file_support = false,
@@ -623,6 +750,29 @@ M.list = function()
       },
     },
   }
+end
+
+M.unofficial = {
+  basics_ls = function()
+    local configs = require("lspconfig.configs")
+
+    if not configs.basics_ls then
+      configs.basics_ls = {
+        default_config = {
+          cmd = "basics-language-server",
+          single_file_support = true,
+          log_level = vim.lsp.protocol.MessageType.Log,
+          message_level = vim.lsp.protocol.MessageType.Log,
+        },
+      }
+    end
+  end,
+}
+
+M.load_unofficial = function()
+  for _server_name, loader in pairs(M.unofficial) do
+    loader()
+  end
 end
 
 return M

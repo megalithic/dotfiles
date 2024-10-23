@@ -25,6 +25,7 @@ local plugin_spec = {
 }
 
 require("lazy").setup(plugin_spec, {
+  -- rocks = true,
   -- debug = false,
   -- defaults = { lazy = true },
   -- checker = { enabled = false },

@@ -103,19 +103,8 @@ function obj:stop(opts)
     end
 
     -- convert our video
-    local latest_obs_file = hs.execute("/bin/ls -at ~/Movies/obs/*.* | head -n 1", true)
-    if string.match(latest_obs_file, ".mkv") then
-      hs.task
-        .new("$HOME/.dotfiles/bin/vidconvert", function(_exitCode, _stdOut, _stdErr) end, function(_task, stdOut, _stdErr)
-          stdOut = string.gsub(stdOut, "^%s*(.-)%s*$", "%1")
-          local continue = string.match(stdOut, "Qavg:")
-
-          if continue then success(fmt("[%s] vidconvert completed", obj.name)) end
-
-          return continue
-        end, { "-t", "mov", latest_obs_file })
-        :start()
-    end
+    local latest_obs_file = hs.execute("/bin/ls -at ~/Movies/obs/*.* | head -n 1 | tr -d '\n'", true)
+    require("utils").vidconvert(latest_obs_file)
   end
 
   return self

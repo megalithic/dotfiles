@@ -6,6 +6,7 @@
 @typescript-eslint/typescript-estree
 babel-eslint
 bash-language-server
+basics-language-server
 clipboard-cli
 convert-snippets
 dockerfile-language-server-nodejs

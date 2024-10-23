@@ -204,6 +204,11 @@ local exception_types = {
     terminal = fmt("%s ", icons.misc.terminal),
     quickfix = fmt("%s ", icons.misc.terminal),
   },
+  filenames = {
+    __committia_diff__ = "git commit (diff)",
+    __committia_status__ = "git commit (status)",
+    COMMIT_EDITMSG = "git commit (message)",
+  },
   filetypes = {
     alpha = "",
     org = "",
@@ -274,7 +279,19 @@ local exception_types = {
       local shell = fnamemodify(vim.env.SHELL, ":t")
       local mode = MODES[api.nvim_get_mode().mode]
       local mode_hl = mode.short == "T-I" and "StModeTermInsert" or "StModeTermNormal"
-      return seg(fmt("megaterm#%d(%s)[%s]", api.nvim_buf_get_var(buf, "term_buf"), shell, api.nvim_buf_get_var(buf, "term_cmd") or buf), mode_hl)
+      -- if pcall(api.nvim_buf_get_var(buf, "term_buf")) and pcall(api.nvim_buf_get_var(buf, "term_cmd")) then
+      --   return seg(fmt("megaterm#%d(%s)[%s]", api.nvim_buf_get_var(buf, "term_buf"), shell, api.nvim_buf_get_var(buf, "term_cmd") or buf), mode_hl)
+      -- end
+
+      return seg(string.format("megaterm#(%s)[%s]", shell, buf), mode_hl)
+      -- if vim.g.term_bufnr ~= nil then
+      --   return seg(string.format("megaterm#(%s)[%s]", shell, vim.api.nvim_buf_get_var(buf, "term_cmd") or buf), mode_hl)
+      --   -- return seg(fmt("megaterm#%d(%s)[%s]", vim.g.term_bufnr, shell, vim.api.nvim_buf_get_var(buf, "term_cmd") or buf), mode_hl)
+      -- end
+
+      -- return seg(fmt("megaterm#%d(%s)[%s]", api.nvim_buf_get_var(buf, "term_buf"), shell, api.nvim_buf_get_var(buf, "term_cmd") or buf), mode_hl)
+
+      -- return ""
     end,
     ["dap-repl"] = "Debugger REPL",
     kittybuf = "Kitty Scrollback Buffer",
@@ -283,6 +300,17 @@ local exception_types = {
 }
 
 -- ( UTILITIES ) ---------------------------------------------------------------
+
+local function current_file()
+  local f = {}
+
+  f.path = vim.fn.expand("%:p")
+  f.name = vim.fn.fnamemodify(f.path, ":t")
+  f.extension = vim.fn.fnamemodify(f.path, ":e")
+  f.directory = vim.fn.fnamemodify(f.path, ":h")
+
+  return f
+end
 
 --- Decide whether to truncate
 ---
@@ -414,6 +442,7 @@ local function parse_filename(truncate_at)
   local function buf_expand(bufnr, mod) return expand("#" .. bufnr .. mod) end
 
   local modifier = ":t"
+  local special_file_names = special_buffers()
   local special_buf = special_buffers()
   if special_buf then return "", "", special_buf end
 
@@ -421,6 +450,7 @@ local function parse_filename(truncate_at)
 
   local icon, icon_hl = require("nvim-web-devicons").get_icon_color(fname)
   local name = exception_types.names[M.ctx.filetype]
+  if exception_types.filenames[current_file().name] ~= nil then name = exception_types.filenames[current_file().name] end
   local exception_icon = exception_types.filetypes[M.ctx.filetype] or ""
   if type(name) == "function" then return "", "", fmt("%s %s", exception_icon, name(fname, M.ctx.bufnr)) end
 
@@ -483,6 +513,15 @@ local function seg_prefix(truncate_at)
   return seg(prefix, mode_info.hl, { padding = { 0, 0 } })
 end
 
+local function seg_buffer_count(truncate_at)
+  local buffer_count = U.get_bufnrs()
+
+  local msg = (is_truncated(truncate_at) or vim.g.started_by_firenvim) and "" or fmt("%s%s", icons.misc.buffers, buffer_count)
+
+  if buffer_count <= 1 then return "" end
+  return seg(msg, "StInfo", { padding = { 0, 0 } })
+end
+
 local function seg_suffix(truncate_at)
   local mode_info = MODES[api.nvim_get_mode().mode]
   local prefix = is_truncated(truncate_at) and "" or icons.misc.rblock
@@ -511,8 +550,8 @@ local function seg_lsp_clients(truncate_at)
   end
 
   local clients_str = U.strim(table.concat(client_names, "/"))
-  if is_truncated(truncate_at) then return seg(#client_names, { prefix = fmt("%s ", icons.lsp.clients), margin = { 1, 1 } }) end
-  return seg(clients_str, { prefix = fmt("%s ", icons.lsp.clients), margin = { 1, 1 } })
+  if is_truncated(truncate_at) then return seg(#client_names, { prefix = fmt("%s ", icons.lsp.clients), margin = { 0, 0 } }) end
+  return seg(clients_str, { prefix = fmt("%s ", icons.lsp.clients), margin = { 0, 0 } })
 end
 
 local function seg_lsp_status(truncate_at)
@@ -598,7 +637,7 @@ local function seg_ai(truncate_at)
     local ai_enabled = false
 
     if vim.g.ai == "neocodeium" then ai_enabled = require("neocodeium.options").options.enabled end
-    return seg("󰭆", "StBright", not is_truncated(truncate_at) and ai_enabled, { padding = { 1, 1 } })
+    return seg(icons.misc.robot, "StBright", not is_truncated(truncate_at) and ai_enabled, { padding = { 1, 1 } })
   end
 
   return ""
@@ -674,6 +713,7 @@ function mega.ui.statusline.render()
     seg([[%<]]),
     -- seg_prefix(100),
     seg_mode(120),
+    seg_buffer_count(100),
     seg_filename(120),
     seg(modified_icon, "StModifiedIcon", M.ctx.modified, { margin = { 0, 1 } }),
     seg(icons.misc.lock, "StModifiedIcon", M.ctx.readonly, { margin = { 0, 1 } }),

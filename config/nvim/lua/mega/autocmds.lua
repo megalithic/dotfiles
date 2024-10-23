@@ -42,7 +42,8 @@ function M.augroup(name, commands)
 
   assert(name ~= "User", "The name of an augroup CANNOT be User")
 
-  local id = vim.api.nvim_create_augroup(fmt("mega-%s", name), { clear = true })
+  local auname = fmt("mega-%s", name)
+  local id = vim.api.nvim_create_augroup(auname, { clear = true })
 
   for _, autocmd in ipairs(commands) do
     if autocmd.enabled == nil or autocmd.enabled == true then
@@ -131,31 +132,45 @@ function M.apply()
       event = { "BufWinLeave", "BufLeave", "FocusLost" },
       desc = "Automatically update and write modified buffer on certain events",
       command = function(ctx)
+        local saveInstantly = ctx.event == "FocusLost" or ctx.event == "BufLeave"
         local bufnr = ctx.buf
         local bo = vim.bo[bufnr]
         local b = vim.b[bufnr]
         if bo.buftype ~= "" or bo.ft == "gitcommit" or bo.readonly then return end
-        if b.saveQueued and ctx.event ~= "FocusLost" then return end
+        if b.saveQueued and not saveInstantly then return end
 
-        if vim.bo.modified and not vim.bo.readonly and vim.fn.expand("%") ~= "" and vim.bo.buftype == "" then
-          local debounce = ctx.event == "FocusLost" and 0 or 1000 -- save at once on focus loss
-          b.saveQueued = true
-          vim.defer_fn(function()
-            if not vim.api.nvim_buf_is_valid(bufnr) then return end
-            -- `noautocmd` prevents weird cursor movement
-            vim.api.nvim_buf_call(bufnr, function()
-              vim.cmd("silent! noautocmd lockmarks update!")
-              vim.cmd("silent! write")
-              vim.g.is_saving = true
-            end)
-            b.saveQueued = false
+        b.saveQueued = true
+        vim.defer_fn(function()
+          if not vim.api.nvim_buf_is_valid(bufnr) then return end
+          -- `noautocmd` prevents weird cursor movement
+          vim.api.nvim_buf_call(bufnr, function() vim.cmd("silent! noautocmd lockmarks update!") end)
+          b.saveQueued = false
+        end, saveInstantly and 0 or 2000)
+        -- local bufnr = ctx.buf
+        -- local bo = vim.bo[bufnr]
+        -- local b = vim.b[bufnr]
+        -- if bo.buftype ~= "" or bo.ft == "gitcommit" or bo.readonly then return end
+        -- if b.saveQueued and ctx.event ~= "FocusLost" then return end
 
-            vim.defer_fn(function()
-              vim.g.is_saving = false
-              pcall(vim.cmd.redrawstatus)
-            end, 500)
-          end, debounce)
-        end
+        -- if vim.bo.modified and not vim.bo.readonly and vim.fn.expand("%") ~= "" and vim.bo.buftype == "" then
+        --   local debounce = ctx.event == "FocusLost" and 0 or 1000 -- save at once on focus loss
+        --   b.saveQueued = true
+        --   vim.defer_fn(function()
+        --     if not vim.api.nvim_buf_is_valid(bufnr) then return end
+        --     -- `noautocmd` prevents weird cursor movement
+        --     vim.api.nvim_buf_call(bufnr, function()
+        --       vim.cmd("silent! noautocmd lockmarks update!")
+        --       vim.cmd("silent! write")
+        --       vim.g.is_saving = true
+        --     end)
+        --     b.saveQueued = false
+
+        --     vim.defer_fn(function()
+        --       vim.g.is_saving = false
+        --       pcall(vim.cmd.redrawstatus)
+        --     end, 500)
+        --   end, debounce)
+        -- end
       end,
     },
   })
@@ -210,7 +225,7 @@ function M.apply()
         if is_eligible then
           map("n", "q", function()
             if vim.fn.winnr("$") ~= 1 then
-              dbg("smart close quit mappings")
+              -- dbg("smart close quit mappings")
               vim.api.nvim_win_close(0, true)
               vim.cmd("wincmd p")
             end
@@ -222,8 +237,6 @@ function M.apply()
 
   M.augroup("CmdlineBehaviours", {
     {
-      -- make `:substitute` also notify how many changes were made
-      -- works, as `CmdlineLeave` is triggered before the execution of the command
       event = "CmdlineEnter",
       command = function(ctx)
         if not ctx.match == ":" then return end
@@ -336,7 +349,7 @@ function M.apply()
   --- @trial: determining if this implementation of the above IncSearchHighlight autocmd is more reliable
   -- REF: https://github.com/ibhagwan/nvim-lua/blob/main/lua/autocmd.lua#L111-L144
 
-  local function searchCountIndicator(mode)
+  function mega.searchCountIndicator(mode)
     local signColumnPlusScrollbarWidth = 2 + 3 -- CONFIG
 
     local countNs = vim.api.nvim_create_namespace("searchCounter")
@@ -359,53 +372,84 @@ function M.apply()
     })
   end
 
-  M.augroup("ToggleSearchHL", {
-    {
-      event = { "CursorMoved" },
-      command = function()
-        vim.defer_fn(function()
-          -- No bloat lua adpatation of: https://github.com/romainl/vim-cool
-          local view, rpos = vim.fn.winsaveview(), vim.fn.getpos(".")
-          -- Move the cursor to a position where (whereas in active search) pressing `n`
-          -- brings us to the original cursor position, in a forward search / that means
-          -- one column before the match, in a backward search ? we move one col forward
-          vim.cmd(string.format("silent! keepjumps go%s", (vim.fn.line2byte(view.lnum) + view.col + 1 - (vim.v.searchforward == 1 and 2 or 0))))
-          -- Attempt to goto next match, if we're in an active search cursor position
-          -- should be equal to original cursor position
-          local ok, _ = pcall(vim.cmd, "silent! keepjumps norm! n")
-          local in_search = ok
-            and (function()
-              local npos = vim.fn.getpos(".")
-              return npos[2] == rpos[2] and npos[3] == rpos[3]
-            end)()
-          -- restore original view and position
-          vim.fn.winrestview(view)
-          if not in_search then
-            vim.schedule(function()
-              vim.cmd("nohlsearch")
-              searchCountIndicator("clear")
-            end)
-          else
-            vim.schedule(function() searchCountIndicator() end)
-          end
-        end, 250)
-      end,
-    },
-    {
-      event = { "InsertEnter" },
-      command = function(evt)
-        vim.schedule(function()
-          vim.cmd("nohlsearch")
-          vim.schedule(function() searchCountIndicator("clear") end)
-        end)
-      end,
-    },
-  })
+  -- without the `searchCountIndicator`, this `on_key` simply does `auto-nohl`
+  vim.on_key(function(char)
+    local key = vim.fn.keytrans(char)
+    local isCmdlineSearch = vim.fn.getcmdtype():find("[/?]") ~= nil
+    local isNormalMode = vim.api.nvim_get_mode().mode == "n"
+    local searchStarted = (key == "/" or key == "?") and isNormalMode
+    local searchConfirmed = (key == "<CR>" and isCmdlineSearch)
+    local searchCancelled = (key == "<Esc>" and isCmdlineSearch)
+    if not (searchStarted or searchConfirmed or searchCancelled or isNormalMode) then return end
+
+    -- works for RHS, therefore no need to consider remaps
+    local searchMovement = vim.tbl_contains({ "n", "N", "*", "#" }, key)
+
+    if searchCancelled or (not searchMovement and not searchConfirmed) then
+      vim.opt.hlsearch = false
+      mega.searchCountIndicator("clear")
+    elseif searchMovement or searchConfirmed or searchStarted then
+      vim.opt.hlsearch = true
+      vim.defer_fn(mega.searchCountIndicator, 1)
+    end
+  end, vim.api.nvim_create_namespace("autoNohlAndSearchCount"))
+
+  -- M.augroup("ToggleSearchHL", {
+  --   {
+  --     event = { "CursorMoved" },
+  --     command = function()
+  --       if vim.snippet.active() then
+  --         vim.cmd.nohlsearch()
+  --         return
+  --       end
+
+  --       vim.defer_fn(function()
+  --         -- No bloat lua adpatation of: https://github.com/romainl/vim-cool
+  --         local view, rpos = vim.fn.winsaveview(), vim.fn.getpos(".")
+  --         -- Move the cursor to a position where (whereas in active search) pressing `n`
+  --         -- brings us to the original cursor position, in a forward search / that means
+  --         -- one column before the match, in a backward search ? we move one col forward
+  --         vim.cmd(string.format("silent! keepjumps go%s", (vim.fn.line2byte(view.lnum) + view.col + 1 - (vim.v.searchforward == 1 and 2 or 0))))
+  --         -- Attempt to goto next match, if we're in an active search cursor position
+  --         -- should be equal to original cursor position
+  --         local ok, _ = pcall(vim.cmd, "silent! keepjumps norm! n")
+  --         local in_search = ok
+  --           and (function()
+  --             local npos = vim.fn.getpos(".")
+  --             return npos[2] == rpos[2] and npos[3] == rpos[3]
+  --           end)()
+  --         -- restore original view and position
+  --         vim.fn.winrestview(view)
+  --         if not in_search then
+  --           vim.schedule(function()
+  --             vim.cmd.nohlsearch()
+  --             mega.searchCountIndicator("clear")
+  --           end)
+  --         else
+  --           vim.schedule(function() mega.searchCountIndicator() end)
+  --         end
+  --       end, 250)
+  --     end,
+  --   },
+  --   {
+  --     event = { "InsertEnter" },
+  --     command = function(evt)
+  --       if vim.snippet.active() then
+  --         vim.cmd.nohlsearch()
+  --         return
+  --       end
+  --       vim.schedule(function()
+  --         vim.cmd.nohlsearch()
+  --         vim.schedule(function() mega.searchCountIndicator("clear") end)
+  --       end)
+  --     end,
+  --   },
+  -- })
 
   M.augroup("Utilities", {
     {
       event = { "QuickFixCmdPost" },
-      desc = "Goes to first item in quickfix list automatically",
+      desc = "Goes to first item in quickfix list automatically in Trouble",
       command = function(_args)
         vim.cmd([[Trouble qflist open]])
         pcall(vim.cmd.cfirst)
@@ -425,6 +469,37 @@ function M.apply()
       desc = "remove terminal padding around neovim instance",
       command = function(_args) io.write("\027]111\027\\") end,
     },
+
+    --     {
+    -- local no_lastplace = {
+    --     buftypes = {
+    --         "quickfix",
+    --         "nofile",
+    --         "help",
+    --         "terminal",
+    --     },
+    --     filetypes = {
+    --         "gitcommit",
+    --         "gitrebase",
+    --     },
+    -- }
+    --
+    -- aucmd({ "BufReadPost" }, {
+    --     pattern = "*",
+    --     desc = "Jump to last place in files",
+    --     group = augroup("JumpToLastPosition", { clear = true }),
+    --     callback = function()
+    --         if
+    --             vim.fn.line [['"]] >= 1
+    --             and vim.fn.line [['"]] <= vim.fn.line "$"
+    --             and not vim.tbl_contains(no_lastplace.buftypes, vim.o.buftype)
+    --             and not vim.tbl_contains(no_lastplace.filetypes, vim.o.filetype)
+    --         then
+    --             vim.cmd [[normal! g`" | zv]]
+    --         end
+    --     end,
+    -- })
+    --     },
 
     {
       event = { "BufWritePost" },
@@ -473,37 +548,128 @@ function M.apply()
       -- end,
     },
     {
-      event = { "BufEnter" },
+      event = "BufWritePost",
+      pattern = ".envrc",
+      command = function()
+        if vim.fn.executable("direnv") then vim.cmd([[silent !direnv allow %]]) end
+      end,
+    },
+    {
+      event = "BufWritePost",
+      pattern = "*/spell/*.add",
+      command = "silent! :mkspell! %",
+    },
+    {
+      event = { "BufEnter", "BufRead", "BufNewFile" },
       buffer = 0,
       desc = "Extreeeeme `gf` open behaviour",
       command = function(args)
         map("n", "gf", function()
           local target = vim.fn.expand("<cfile>")
 
-          if U.is_image(target) then
-            local root_dir = require("mega.utils.lsp").root_dir({ ".git" })
-            target = target:gsub("./samples", fmt("%s/samples", root_dir))
-            return require("mega.utils").preview_file(target)
+          -- FIXME: get working with ghostty
+          -- if U.is_image(target) then
+          --   local root_dir = require("mega.utils.lsp").root_dir({ ".git" })
+          --   target = target:gsub("./samples", fmt("%s/samples", root_dir))
+          --   return require("mega.utils").preview_file(target)
+          -- end
+
+          -- go to linear ticket
+          if target:match("TRN-") then
+            local url = fmt("https://linear.app/ternit/issue/%s", target)
+            vim.notify(fmt("Opening linear ticket %s at %s", target, url))
+            vim.fn.jobstart(fmt("%s %s", vim.g.open_command, url))
+
+            return false
           end
 
+          -- go to PR for specific repos
+          if target:match("^PR%-([DIR|BELL|RET|MOB]*)#(%d*)") then
+            local repo_abbr, pr_num = target:match("^PR%-([DIR|BELL|RET|MOB]*)#(%d*)")
+            local repos = {
+              DIR = "director",
+              BELL = "bellhop",
+              RET = "retriever",
+              MOB = "ternreturns",
+            }
+
+            local url = fmt("https://github.com/TernSystems/%s/pull/%s", repos[repo_abbr], pr_num)
+            vim.notify(fmt("Opening PR %d on %s", pr_num, repos[repo_abbr]))
+            vim.fn.jobstart(fmt("%s %s", vim.g.open_command, url))
+
+            return false
+          end
+
+          -- go to hex packages
+          if args.file:match("mix.exs") then
+            local line = vim.fn.getline(".")
+            local _, _, pkg, _ = string.find(line, [[^%s*{:(.*), %s*"(.*)"}]])
+
+            local url = fmt("https://hexdocs.pm/%s/", pkg)
+            vim.notify(fmt("Opening %s at %s", pkg, url))
+            vim.fn.jobstart(fmt("%s %s", vim.g.open_command, url))
+
+            return false
+          end
+
+          -- go to node packages
+          if args.file:match("package.json") then
+            local line = vim.fn.getline(".")
+            local _, _, pkg, _ = string.find(line, [[^%s*"(.*)":%s*"(.*)"]])
+
+            local url = fmt("https://www.npmjs.com/package/%s", pkg)
+            vim.notify(fmt("Opening %s at %s", pkg, url))
+            vim.fn.jobstart(fmt("%s %s", vim.g.open_command, url))
+
+            return false
+          end
+
+          -- go to web address
           if target:match("https://") then return vim.cmd("norm gx") end
 
-          if vim.bo[args.buf].filetype == "elixir" then
-            vim.cmd([[setlocal iskeyword+=:,!,?,-]])
-            target = vim.fn.escape(vim.fn.expand("<cword>"), [[\/]])
-            target = string.sub(target, 2)
-
-            local url = fmt("https://hexdocs.pm/%s/", target)
-            vim.notify(fmt("Opening %s at %s", target, url))
-            vim.fn.jobstart(fmt("%s %s", vim.g.open_command, url))
-          end
-
+          -- a normal file, so do the normal go-to-file thing
           if not target or #vim.split(target, "/") ~= 2 then return vim.cmd("norm! gf") end
 
+          -- maybe it's a github repo? try it and see..
           local url = fmt("https://github.com/%s", target)
           vim.fn.jobstart(fmt("%s %s", vim.g.open_command, url))
           vim.notify(fmt("Opening %s at %s", target, url))
-        end, { desc = "[g]oto [f]ile (preview, github repo, hexdocs, url)" })
+        end, { desc = "[g]oto [f]ile (on steroids)" })
+      end,
+    },
+    {
+      event = { "BufRead", "BufNewFile" },
+      pattern = "*/doc/*.txt",
+      command = function(args) vim.bo.filetype = "help" end,
+    },
+    {
+      event = { "BufRead", "BufNewFile" },
+      pattern = "package.json",
+      command = function(args)
+        vim.keymap.set({ "n" }, "gx", function()
+          local line = vim.fn.getline(".")
+          local _, _, pkg, _ = string.find(line, [[^%s*"(.*)":%s*"(.*)"]])
+
+          if pkg then
+            local url = "https://www.npmjs.com/package/" .. pkg
+            vim.ui.open(url)
+          end
+        end, { buffer = true, silent = true, desc = "[g]o to node [p]ackage" })
+      end,
+    },
+    {
+      event = { "BufRead", "BufNewFile" },
+      pattern = "mix.exs",
+      command = function(args)
+        vim.keymap.set({ "n" }, "gx", function()
+          local line = vim.fn.getline(".")
+          local _, _, pkg, _ = string.find(line, [[^%s*{:(.*), %s*"(.*)"}]])
+
+          if pkg then
+            local url = fmt("https://hexdocs.pm/%s/", pkg)
+            vim.ui.open(url)
+          end
+        end, { buffer = true, silent = true, desc = "[g]o to hex [p]ackage" })
       end,
     },
   })

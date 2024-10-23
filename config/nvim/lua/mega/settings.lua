@@ -18,14 +18,14 @@ local telescope_border_chars = {
   shadow = { "", "", "", "", "", "", "", "" },
 }
 
-local connected_telescope_border_chars = {
-  none = { "", "", "", "", "", "", "", "" },
-  single = { "─", "│", "─", "│", "┌", "┐", "┤", "├" },
-  double = { "═", "║", "═", "║", "╔", "╗", "╣", "╠" },
-  rounded = { "─", "│", "─", "│", "╭", "╮", "┤", "├" },
-  solid = { " ", " ", " ", " ", " ", " ", " ", " " },
-  shadow = { "", "", "", "", "", "", "", "" },
-}
+-- local connected_telescope_border_chars = {
+--   none = { "", "", "", "", "", "", "", "" },
+--   single = { "─", "│", "─", "│", "┌", "┐", "┤", "├" },
+--   double = { "═", "║", "═", "║", "╔", "╗", "╣", "╠" },
+--   rounded = { "─", "│", "─", "│", "╭", "╮", "┤", "├" },
+--   solid = { " ", " ", " ", " ", " ", " ", " ", " " },
+--   shadow = { "", "", "", "", "", "", "", "" },
+-- }
 
 local current_border = function(opts)
   opts = opts or { hl = "FloatBorder", style = BORDER_STYLE }
@@ -54,7 +54,7 @@ local hammerspoon_path = fmt("%s/config/hammerspoon", dotfiles_path)
 -- is_local_dev = vim.trim(vim.fn.system("hostname")) ~= "seth-dev",
 
 --- @class Settings
---- @field enabled_elixir_ls {"ElixirLS"|"Next LS"|"elixirls"|"nextls"|"lexical"}
+--- @field enabled_elixir_ls {"elixirls"|"nextls"|"lexical"}
 local M = {
   -- NOTE: char options (https://unicodeplus.com/): ┊│┆ ┊  ▎││ ▏▏│¦┆┊
   indent_scope_char = "│",
@@ -64,7 +64,7 @@ local M = {
   border = current_border(),
   border_chars = border_chars[BORDER_STYLE],
   telescope_border_chars = telescope_border_chars[BORDER_STYLE],
-  colorscheme = "megaforest", -- alt: `vim` for default
+  colorscheme = "megaforest", -- alt: megaforest, onedark, bamboo, `vim` for default, forestbones, everforest
   default_colorcolumn = "81",
   notifier_enabled = true,
   debug_enabled = false,
@@ -75,8 +75,9 @@ local M = {
   tester = "vim-test", -- alt: neotest, vim-test, quicktest
   gitter = "neogit", -- alt: neogit, fugitive
   snipper = "snippets", -- alt: vsnip, luasnip, snippets (nvim-builtin)
+  note_taker = "markdown_oxide", -- alt: zk, marksman, markdown_oxide, obsidian
   ai = "", -- alt: minuet, neocodeium, codecompanion
-  completer = "cmp", -- alt: cmp, epo
+  completer = "cmp", -- alt: cmp, blink, epo
   ts_ignored_langs = {}, -- alt: { "svg", "json", "heex", "jsonc" }
   is_screen_sharing = false,
   enabled_plugins = {
@@ -93,19 +94,25 @@ local M = {
     "folds",
     "env",
   },
-  disabled_semantic_tokens = { "lua" },
+  disabled_semantic_tokens = {
+    -- "typescript",
+    -- "javascript",
+    -- "lua",
+  },
+  enabled_inlay_hints = {},
   disabled_lsp_formatters = { "tailwindcss", "html", "ts_ls", "ls_emmet", "zk", "sumneko_lua" },
   ---@format disable
-  enabled_elixir_ls = { "", "", "", "nextls", "" },
-  completion_exclusions = { "ElixirLS", "Next LS", "", "", "" },
-  formatter_exclusions = { "ElixirLS", "Next LS", "", "", "lexical" },
-  definition_exclusions = { "ElixirLS", "Next LS", "elixirls", "nextls", "" },
-  references_exclusions = { "ElixirLS", "Next LS", "elixirls", "nextls", "" },
-  diagnostic_exclusions = { "ElixirLS", "Next LS", "", "", "", "ts_ls" },
-  max_diagnostic_exclusions = { "ElixirLS", "Next LS", "elixirls", "", "lexical" },
+  enabled_elixir_ls = { "", "nextls", "" },
+  completion_exclusions = { "elixirls", "", "lexical" },
+  formatter_exclusions = { "elixirls", "", "lexical" },
+  definition_exclusions = { "elixirls", "", "lexical" },
+  references_exclusions = { "elixirls", "", "lexical" },
+  diagnostic_exclusions = { "elixirls", "", "lexical" },
+  max_diagnostic_exclusions = { "elixirls", "", "lexical" },
   ---@format enable
   disable_autolint = false,
   disable_autoformat = false,
+  disable_autoresize = false,
   enable_signsplaced = false,
   markdown_fenced_languages = {
     "shell=sh",
@@ -151,7 +158,7 @@ local M = {
       info = "󰖧", -- alts: 󰖧 󱂈 󰋼  󰙎   󰬐 󰰃     ● 󰬐 
       hint = "▫", -- alts:  󰬏 󰰀  󰌶 󰰂 󰰂 󰰁 󰫵 󰋢   
       ok = "✓", -- alts: ✓✓
-      clients = "", -- alts:     󱉓 󱡠 󰾂 
+      clients = "", -- alts:     󱉓 󱡠 󰾂 
     },
     test = {
       passed = "", --alts: 
@@ -247,6 +254,7 @@ local M = {
     },
     misc = {
       formatter = "", -- alts: 󰉼
+      buffers = "",
       clock = "",
       ellipsis = "…",
       lblock = "▌",
@@ -260,7 +268,7 @@ local M = {
       dashboard = "",
       history = "󰄉",
       comment = "󰅺",
-      robot = "󰚩",
+      robot = "󰚩", -- alts: 󰭆
       lightbulb = "󰌵",
       file_tree = "󰙅",
       help = "󰋖", -- alts: 󰘥 󰮥 󰮦 󰋗 󰞋 󰋖
@@ -363,10 +371,12 @@ M.apply = function()
       ai = M.ai,
       snipper = M.snipper,
       completer = M.completer,
+      note_taker = M.note_taker,
       ts_ignored_langs = M.ts_ignored_langs,
       is_screen_sharing = M.is_screen_sharing,
       disable_autolint = M.disable_autolint,
       disable_autoformat = M.disable_autoformat,
+      disable_autoresize = M.disable_autoresize,
       markdown_fenced_languages = M.markdown_fenced_languages,
       have_nerd_font = true,
 
@@ -382,8 +392,8 @@ M.apply = function()
       local_share_path = fmt("%s/.local/share/nvim", home_path),
       db_ui_path = fmt("%s/_sql", icloud_documents_path),
       notes_path = fmt("%s/_notes", icloud_documents_path),
-      obsidian_path = fmt("%s/_notes/obsidian", icloud_documents_path),
-      zk_path = fmt("%s/_notes/zk", icloud_documents_path),
+      obsidian_path = fmt("%s/_obsidian", icloud_documents_path),
+      zk_path = fmt("%s/_zk", icloud_documents_path),
       org_path = fmt("%s/_org", icloud_documents_path),
       neorg_path = fmt("%s/_org", icloud_documents_path),
       hs_emmy_path = fmt("%s/Spoons/EmmyLua.spoon", hammerspoon_path),
@@ -409,11 +419,12 @@ M.apply = function()
       -- NOTE: You can change these options as you wish!
       --  For more options, you can see `:help option-list`
 
+      -- cia = "kind,abbr,menu",
       -- Make line numbers default
-      number = true,
+      number = false,
       -- You can also add relative line numbers, to help with jumping.
       --  Experiment for yourself to see if you like it!
-      relativenumber = true,
+      relativenumber = false,
 
       -- Enable mouse mode, can be useful for resizing splits for example!
       mouse = "a",
@@ -515,6 +526,7 @@ M.apply = function()
       tabline = "",
       showtabline = 0,
       guicursor = vim.opt.guicursor + "a:blinkon500-blinkoff100",
+      pumheight = 25, -- also controls nvim-cmp completion window height
     },
   }
 
@@ -531,6 +543,7 @@ M.apply = function()
       ["~/.dotfiles/config"] = "gitconfig",
       [".env"] = "bash",
       [".eslintrc"] = "jsonc",
+      [".eslintrc.json"] = "jsonc",
       [".gitignore"] = "conf",
       [".prettierrc"] = "jsonc",
       [".tool-versions"] = "conf",
@@ -567,6 +580,8 @@ M.apply = function()
       [".*%.conf"] = "conf",
       -- [".*%.env%..*"] = "env",
       [".*%.eslintrc%..*"] = "jsonc",
+      ["tsconfig*.json"] = "jsonc",
+      [".*/%.vscode/.*%.json"] = "jsonc",
       [".*%.gradle"] = "groovy",
       [".*%.html.en"] = "html",
       [".*%.jst.eco"] = "jst",

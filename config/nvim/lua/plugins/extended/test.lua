@@ -47,13 +47,13 @@ if vim.g.tester == "neotest" then
   }
 elseif vim.g.tester == "vim-test" then
   keys = {
-    { "<localleader>tn", "<cmd>TestNearest<cr>", desc = "run (n)earest test" },
-    { "<localleader>ta", "<cmd>TestFile<cr>", desc = "run (a)ll tests in file" },
-    { "<localleader>tf", "<cmd>TestFile<cr>", desc = "run (a)ll tests in file" },
-    { "<localleader>tl", "<cmd>TestLast<cr>", desc = "run (l)ast test" },
-    { "<localleader>ts", "<cmd>TestSuite<cr>", desc = "run test (s)uite" },
+    { "<localleader>tn", "<cmd>TestNearest<cr>", desc = "run [n]earest test" },
+    { "<localleader>ta", "<cmd>TestFile<cr>", desc = "run [a]ll tests in file" },
+    { "<localleader>tf", "<cmd>TestFile<cr>", desc = "run [a]ll tests in [f]ile" },
+    { "<localleader>tl", "<cmd>TestLast<cr>", desc = "run [l]ast test" },
+    { "<localleader>ts", "<cmd>TestSuite<cr>", desc = "run test [s]uite" },
     -- { "<localleader>tT", "<cmd>TestLast<cr>", desc = "run _last test" },
-    { "<localleader>tv", "<cmd>TestVisit<cr>", desc = "(v)isit last test" },
+    { "<localleader>tv", "<cmd>TestVisit<cr>", desc = "[v]isit last test" },
     { "<localleader>tp", "<cmd>A<cr>", desc = "open alt (edit)" },
     -- { "<localleader><localleader>", "<cmd>A<cr>", desc = "open alt (edit)" },
     { "<localleader>tP", "<cmd>AV<cr>", desc = "open alt (vsplit)" },
@@ -122,6 +122,14 @@ return {
         termfloat = function(cmd) mega.term(term_opts(cmd, { direction = "float", focus_on_open = true })) end,
         termtab = function(cmd) mega.term(term_opts(cmd, { direction = "tab", focus_on_open = true })) end,
       }
+
+      -- function! VagrantTransform(cmd) abort
+      --   let vagrant_project = get(matchlist(s:cat('Vagrantfile'), '\vconfig\.vm.synced_folder ["''].+[''"], ["''](.+)[''"]'), 1)
+      --   return 'vagrant ssh --command '.shellescape('cd '.vagrant_project.'; '.a:cmd)
+      -- endfunction
+      --
+      -- let g:test#custom_transformations = {'vagrant': function('VagrantTransform')}
+      -- let g:test#transformation = 'vagrant'
 
       vim.g["test#strategy"] = {
         nearest = "termvsplit",

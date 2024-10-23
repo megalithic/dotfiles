@@ -14,6 +14,7 @@ local M = {
   column_clear = {
     "startify",
     "vimwiki",
+    "markdown",
     "packer",
     "help",
     "fugitive",

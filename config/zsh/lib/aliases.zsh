@@ -177,7 +177,7 @@ if type nvim >/dev/null 2>&1; then
   # alias folkevim="NVIM_APPNAME=folkevim nvim"
   # alias akinvim="NVIM_APPNAME=akinvim nvim"
   # alias ribvim="NVIM_APPNAME=ribvim nvim"
-  # alias kickvim="NVIM_APPNAME=kickvim nvim"
+  alias kickvim="NVIM_APPNAME=kickvim nvim"
   alias e="NVIM_APPNAME=wipvim nvim"
   alias ogvim="NVIM_APPNAME=ogvim nvim"
   alias og="NVIM_APPNAME=ogvim nvim"
@@ -190,6 +190,7 @@ if type nvim >/dev/null 2>&1; then
   alias novim="nvim -u NONE"
   alias barevim="nvim -u NONE"
   alias ngit="nvim -c \":bd|:Neogit kind=replace\""
+  alias ndiff="nvim -c \":bd|:DiffviewOpen\""
   alias ndb="nvim -c \":bd|:DBUI\""
 
   # suffix aliases set the program type to use to open a particular file with an extension
@@ -422,6 +423,7 @@ alias rmds="find . -name '*.DS_Store' -type f -delete"
 # Enhanced WHOIS lookups
 # alias whois="whois -h whois-servers.net"
 
+alias dns="dig"
 # Flush Directory Service cache; http://osxdaily.com/2014/11/20/flush-dns-cache-mac-os-x/
 alias dnsflush="sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder"
 alias flush="dscacheutil -flushcache"

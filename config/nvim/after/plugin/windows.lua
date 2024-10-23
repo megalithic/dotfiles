@@ -1,5 +1,4 @@
 if not mega then return end
-if not plugin_loaded("windows") then return end
 
 local GOLDEN_RATIO = 1.618
 
@@ -34,6 +33,7 @@ local ft_ignores = {
   "startuptime",
   "undotree",
   "DiffviewFiles",
+  "DiffviewFilePanel",
   "neotest-summary",
 }
 
@@ -56,6 +56,8 @@ local bt_ignores = {
   "neo-tree",
   "packer",
   "startuptime",
+  "DiffviewFiles",
+  "DiffviewFilePanel",
 }
 
 local function ignored_by_window_resize_flag()
@@ -80,6 +82,7 @@ local function is_ignored(bufnr)
     or vim.tbl_contains(ft_ignores, vim.bo[bufnr].filetype)
     or vim.bo[bufnr].filetype == ""
     or ignored_by_window_resize_flag()
+    or vim.g.disable_autoresize
     or is_floating_win()
 
   -- dd({ vim.bo[bufnr].filetype, vim.bo[bufnr].buftype, bufnr, should_ignore })
@@ -192,6 +195,22 @@ function mega.resize_windows(bufnr)
   end
 end
 
+vim.api.nvim_create_user_command("ToggleAutoResize", function()
+  vim.g.disable_autoresize = not vim.g.disable_autoresize
+  if vim.g.disable_autoresize then
+    vim.notify("Disabled auto-window-resizing.", L.WARN)
+  else
+    vim.notify("Enabled auto-window-resizing.", L.INFO)
+    -- NOTE: probably better to NOT run formatter (elixir related formatting is wonky)
+    -- require("conform").format({
+    --   timeout_ms = timeout_ms,
+    --   lsp_fallback = lsp_fallback,
+    --   filter = U.lsp.formatting_filter,
+    --   bufnr = 0,
+    -- })
+  end
+end, {})
+
 require("mega.autocmds").augroup("WindowsGoldenResizer", {
   {
     event = { "WinEnter", "VimResized" },
@@ -201,7 +220,7 @@ require("mega.autocmds").augroup("WindowsGoldenResizer", {
   {
     event = { "WinEnter" },
     command = function(_)
-      if vim.tbl_contains(bt_ignores, vim.bo.buftype) then
+      if vim.tbl_contains(bt_ignores, vim.bo.buftype) or vim.g.disable_autoresize then
         vim.w.focus_disable = true
       else
         vim.w.focus_disable = false
@@ -212,7 +231,7 @@ require("mega.autocmds").augroup("WindowsGoldenResizer", {
   {
     event = { "FileType" },
     command = function(_)
-      if vim.tbl_contains(ft_ignores, vim.bo.filetype) then
+      if vim.tbl_contains(ft_ignores, vim.bo.filetype) or vim.g.disable_autoresize then
         vim.b.focus_disable = true
       else
         vim.b.focus_disable = false

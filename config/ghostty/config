@@ -28,6 +28,7 @@ window-vsync = true
 window-padding-x = 10
 window-padding-y = 10
 window-padding-balance = true
+window-padding-color = background
 window-save-state = always
 
 shell-integration = zsh
@@ -131,5 +132,9 @@ keybind = ctrl+nine=text:\x00\x39
 
 keybind = super+shift+r=reload_config
 keybind = super+t=text:\x00\x63
+
+# DO NOT DELETE THIS:
+# this stops me from hitting this mapping thinking i'm using a browser's inspect and end up with passing `C` to nvim and changing to end of line 🤦
+keybind = cmd+shift+c=ignore
 
 # vim: ft=ghostty
