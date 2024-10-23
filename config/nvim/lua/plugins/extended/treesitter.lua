@@ -232,39 +232,42 @@ return {
     keys = {
       {
         "[[",
+        function() require("treesitter-context").go_to_context(-vim.v.count1) end,
+      },
+      {
+        "]]",
         function() require("treesitter-context").go_to_context(vim.v.count1) end,
       },
     },
-    config = function()
-      require("treesitter-context").setup({
-        enable = true,
-        separator = "‾", --, "TreesitterContextBorder", -- alts: ▁▁ ─ ▄─▁-_‾
-        -- min_window_height = 5,
-        max_lines = 2, -- How many lines the window should span. Values <= 0 mean no limi
-        trim_scope = "outer",
-        patterns = { -- Match patterns for TS nodes. These get wrapped to match at word boundaries.
-          -- For all filetypes
-          -- Note that setting an entry here replaces all other patterns for this entry.
-          -- By setting the 'default' entry below, you can control which nodes you want to
-          -- appear in the context window.
-          default = {
-            "class",
-            "function",
-            "method",
-            "for", -- These won't appear in the context
-            "while",
-            "if",
-            "switch",
-            "case",
-            "element",
-            "call",
-          },
+    opts = {
+      -- enable = true,
+      separator = "▁", --, "TreesitterContextBorder", -- alts: ‾▁▁ ─ ▄─▁-_‾
+      -- min_window_height = 5,
+      max_lines = 2, -- How many lines the window should span. Values <= 0 mean no limi
+      trim_scope = "outer",
+      patterns = { -- Match patterns for TS nodes. These get wrapped to match at word boundaries.
+        -- For all filetypes
+        -- Note that setting an entry here replaces all other patterns for this entry.
+        -- By setting the 'default' entry below, you can control which nodes you want to
+        -- appear in the context window.
+        default = {
+          "class",
+          "function",
+          "method",
+          "for", -- These won't appear in the context
+          "while",
+          "if",
+          "switch",
+          "case",
+          "element",
+          "call",
         },
-        exact_patterns = {},
-        zindex = 20, -- The Z-index of the context window
-        mode = "cursor", -- Line used to calculate context. Choices: 'cursor', 'topline'
-      })
-    end,
+      },
+      exact_patterns = {},
+      zindex = 20, -- The Z-index of the context window
+      mode = "cursor", -- Line used to calculate context. Choices: 'cursor', 'topline'
+    },
+    config = function(_, opts) require("treesitter-context").setup(opts) end,
   },
   {
     "andymass/vim-matchup",

@@ -289,21 +289,34 @@ map("x", "<leader>h", "\"hy:%s/<C-r>h/<C-r>h/gc<left><left><left>", {
 
 -- [[ spelling ]] --------------------------------------------------------------
 -- map("n", "<leader>s", "z=e") -- Correct current word
-map("n", "<localleader>sj", "]s", { desc = "[spell] Move to next misspelling" })
-map("n", "<localleader>sk", "[s", { desc = "[spell] Move to previous misspelling" })
+map("n", "<localleader>sj", "]s", { desc = "[spell] move to next misspelling" })
+map("n", "<localleader>sk", "[s", { desc = "[spell] move to previous misspelling" })
 map("n", "<localleader>sf", function()
   local cur_pos = vim.api.nvim_win_get_cursor(0)
   vim.cmd.normal({ "1z=", bang = true })
   vim.api.nvim_win_set_cursor(0, cur_pos)
-end, { desc = "[spell] Correct spelling of word under cursor" })
+end, { desc = "[spell] fix spelling of word under cursor" })
+
+-- Undo zw, remove the word from the entry in 'spellfile'.
+map("n", "<localleader>su", function() vim.cmd("normal! zug") end, { desc = "[spell] remove word from list" })
 
 map("n", "<localleader>sa", function()
   local cur_pos = vim.api.nvim_win_get_cursor(0)
   vim.cmd.normal({ "zg", bang = true })
   vim.api.nvim_win_set_cursor(0, cur_pos)
-end, { desc = "[spell] Add word under cursor to dictionary" })
-
-map("n", "<localleader>si", function() vim.cmd.normal("ysiw`") end, { desc = "[spell] Ignore spelling of word under cursor" })
+end, { desc = "[spell] add word under cursor to dict" })
+map("n", "<localleader>ss", function()
+  -- Simulate pressing "z=" with "m" option using feedkeys
+  -- vim.api.nvim_replace_termcodes ensures "z=" is correctly interpreted
+  -- 'm' is the {mode}, which in this case is 'Remap keys'. This is default.
+  -- If {mode} is absent, keys are remapped.
+  --
+  -- I tried this keymap as usually with
+  vim.cmd("normal! 1z=")
+  -- But didn't work, only with nvim_feedkeys
+  -- vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("z=", true, false, true), "m", true)
+end, { desc = "[spell] suggestions" })
+-- map("n", "<localleader>si", function() vim.cmd.normal({ "ysiw`", bang = true }) end, { desc = "[spell] ignore spelling of word under cursor" })
 
 -- [[ selections ]] ------------------------------------------------------------
 map("n", "gv", "`[v`]", { desc = "reselect pasted content" })
@@ -328,7 +341,7 @@ map("n", "<leader>v", "ggVG", { desc = "select whole buffer" })
 -- - ";"
 ---@param character string
 ---@return function
-local function modify_line_end_delimiter(character)
+local function toggle_line_end_delimiter(character)
   local delimiters = { ",", ";" }
   return function()
     local line = vim.api.nvim_get_current_line()
@@ -343,8 +356,35 @@ local function modify_line_end_delimiter(character)
   end
 end
 
-map("n", "<localleader>,", modify_line_end_delimiter(","), { desc = "add comma `,` to end of current line" })
-map("n", "<localleader>;", modify_line_end_delimiter(";"), { desc = "add semicolon `;` to end of current line" })
+map("n", "<localleader>,", toggle_line_end_delimiter(","), { desc = "add comma `,` to end of current line" })
+map("n", "<localleader>/", toggle_line_end_delimiter("/"), { desc = "add slash `/` to end of current line" })
+map("n", "<localleader>;", toggle_line_end_delimiter(";"), { desc = "add semicolon `;` to end of current line" })
+
+map({ "x", "n" }, "gcd", function()
+  local win = vim.api.nvim_get_current_win()
+  local cur = vim.api.nvim_win_get_cursor(win)
+  local vstart = vim.fn.getpos("v")[2]
+  local current_line = vim.fn.line(".")
+  local set_cur = vim.api.nvim_win_set_cursor
+  if vstart == current_line then
+    vim.cmd.yank()
+    vim.cmd.normal("gcc")
+    vim.cmd.put()
+    set_cur(win, { cur[1] + 1, cur[2] })
+  else
+    if vstart < current_line then
+      vim.cmd(":" .. vstart .. "," .. current_line .. "y")
+      vim.cmd.put()
+      set_cur(win, { vim.fn.line("."), cur[2] })
+    else
+      vim.cmd(":" .. current_line .. "," .. vstart .. "y")
+      set_cur(win, { vstart, cur[2] })
+      vim.cmd.put()
+      set_cur(win, { vim.fn.line("."), cur[2] })
+    end
+    vim.cmd.normal("gvgc")
+  end
+end, { silent = true, desc = "[g]o [c]omment and [d]uplicate selected lines" })
 
 -- [[ terminal ]] --------------------------------------------------------------
 

@@ -41,7 +41,7 @@ vim.g.VM_Extend_hl = "Visual"
 vim.g.VM_Cursor_hl = "Cursor"
 vim.g.VM_Insert_hl = "Cursor"
 
----@diagnostic disable: undefined-global
+---@diagnostic disable
 local theme = lush(function(injected_functions)
   local sym = injected_functions.sym
 
@@ -204,6 +204,7 @@ local theme = lush(function(injected_functions)
     DiagnosticWarn({ fg = C.orange, bg = C.transparent }),
     DiagnosticInfo({ fg = C.cyan, bg = C.transparent }),
     DiagnosticHint({ fg = C.grey2, bg = C.transparent }),
+    DiagnosticTitle({ Title, fg = C.blue.darken(10) }),
 
     -- REF: https://github.com/neovim/neovim/pull/15585
     DiagnosticFloatingError({ DiagnosticError }),
@@ -447,10 +448,12 @@ local theme = lush(function(injected_functions)
     sym("@function.call")({ fg = C.cyan }),
     sym("@include")({ PurpleItalic }),
     sym("@interface")({ Purple }),
+
     sym("@keyword")({ Red, gui = "" }),
     sym("@keyword.function")({ fg = C.pale_red, gui = "bold,italic" }),
     sym("@keyword.return")({ fg = C.pale_red, gui = "bold,italic" }),
     sym("@keyword.operator")({ fg = C.red }),
+    sym("@keyword.modifier")({ fg = C.blue.da(5) }), -- keywords modifying other constructs (e.g. `const`, `static`, `public`)
     sym("@label")({ Orange }),
     sym("@macro")({ Green, gui = "italic" }),
 
@@ -524,6 +527,11 @@ local theme = lush(function(injected_functions)
     sym("@text.reference")({ fg = C.cyan }),
     sym("@type")({ Aqua }),
     sym("@type.builtin")({ BlueItalic }),
+    -- Types
+    sym("@type")({ fg = C.cyan }), -- type or class definitions and annotations
+    sym("@type.builtin")({ fg = C.blue.da(5) }), -- built-in types
+    sym("@type.definition")({ fg = C.cyan }), -- identifiers in type definitions (e.g. `typedef <type> <identifier>` in C)
+
     sym("@underline")({ fg = C.transparent, bg = "NONE", gui = "underline" }),
     sym("@uri")({ fg = C.blue, bg = C.transparent, gui = "underline" }),
     sym("@variable")({ fg = C.fg }),
@@ -647,6 +655,72 @@ local theme = lush(function(injected_functions)
     -- @markup.raw.block.markdown links to Special markdown
 
     sym("@markup.raw.block.markdown")({ sym("@comment") }),
+
+    --
+    -- LSP semantic tokens
+    --
+    -- The help page :h lsp-semantic-highlight
+    -- A short guide: https://gist.github.com/swarn/fb37d9eefe1bc616c2a7e476c0bc0316
+    -- Token types and modifiers are described here: https://code.visualstudio.com/api/language-extensions/semantic-highlight-guide
+    sym("@lsp.type.namespace")({ sym("@module") }),
+    sym("@lsp.type.type")({ sym("@type") }),
+    sym("@lsp.type.class")({ sym("@type") }),
+    sym("@lsp.type.enum")({ sym("@keyword.type") }),
+    sym("@lsp.type.interface")({ sym("@type") }),
+    sym("@lsp.type.struct")({ sym("@type") }),
+    sym("@lsp.type.typeParameter")({ sym("@type.definition") }),
+    sym("@lsp.type.parameter")({ sym("@variable.parameter") }),
+    sym("@lsp.type.variable")({ sym("@variable") }),
+    sym("@lsp.type.property")({ sym("@property") }),
+    sym("@lsp.type.enumMember")({ fg = C.blue }),
+    sym("@lsp.type.event")({ sym("@type") }),
+    sym("@lsp.type.function")({ sym("@function") }),
+    sym("@lsp.type.method")({ sym("@function") }),
+    sym("@lsp.type.macro")({ sym("@constant.macro") }),
+    sym("@lsp.type.keyword")({ sym("@keyword") }),
+    -- sym("@lsp.type.comment")({ sym("@comment") }),
+    sym("@lsp.type.string")({ sym("@string") }),
+    sym("@lsp.type.number")({ sym("@number") }),
+    sym("@lsp.type.regexp")({ sym("@string.regexp") }),
+    sym("@lsp.type.operator")({ sym("@operator") }),
+    sym("@lsp.type.decorator")({ sym("@attribute") }),
+    sym("@lsp.type.escapeSequence")({ sym("@string.escape") }),
+    sym("@lsp.type.formatSpecifier")({ fg = C.blue.li(5) }),
+    sym("@lsp.type.builtinType")({ sym("@type.builtin") }),
+    sym("@lsp.type.typeAlias")({ sym("@type.definition") }),
+    sym("@lsp.type.unresolvedReference")({ gui = "undercurl", sp = C.red }),
+    sym("@lsp.type.lifetime")({ sym("@keyword.modifier") }),
+    sym("@lsp.type.generic")({ sym("@variable") }),
+    sym("@lsp.type.selfKeyword")({ sym("@variable.builtin") }),
+    sym("@lsp.type.selfTypeKeyword")({ sym("@variable.builtin") }),
+    sym("@lsp.type.deriveHelper")({ sym("@attribute") }),
+    sym("@lsp.type.modifier")({ sym("@keyword.modifier") }),
+    sym("@lsp.typemod.type.defaultLibrary")({ sym("@type.builtin") }),
+    sym("@lsp.typemod.typeAlias.defaultLibrary")({ sym("@type.builtin") }),
+    sym("@lsp.typemod.class.defaultLibrary")({ sym("@type.builtin") }),
+    sym("@lsp.typemod.variable.defaultLibrary")({ sym("@variable.builtin") }),
+    sym("@lsp.typemod.function.defaultLibrary")({ sym("@function.builtin") }),
+    sym("@lsp.typemod.method.defaultLibrary")({ sym("@function.builtin") }),
+    sym("@lsp.typemod.macro.defaultLibrary")({ sym("@function.builtin") }),
+    sym("@lsp.typemod.struct.defaultLibrary")({ sym("@type.builtin") }),
+    sym("@lsp.typemod.enum.defaultLibrary")({ sym("@type.builtin") }),
+    sym("@lsp.typemod.enumMember.defaultLibrary")({ sym("@constant.builtin") }),
+    sym("@lsp.typemod.variable.readonly")({ fg = C.blue }),
+    sym("@lsp.typemod.variable.callable")({ sym("@function") }),
+    sym("@lsp.typemod.variable.static")({ sym("@constant") }),
+    sym("@lsp.typemod.property.readonly")({ fg = C.blue }),
+    sym("@lsp.typemod.keyword.async")({ sym("@keyword.coroutine") }),
+    sym("@lsp.typemod.keyword.injected")({ sym("@keyword") }),
+    -- -- Set injected highlights. Mainly for Rust doc comments and also works for
+    -- -- other lsps that inject tokens in comments.
+    -- -- Ref: https://github.com/folke/tokyonight.nvim/pull/340
+    sym("@lsp.typemod.operator.injected")({ sym("@operator") }),
+    sym("@lsp.typemod.string.injected")({ sym("@string") }),
+    sym("@lsp.typemod.variable.injected")({ sym("@variable") }),
+
+    -- -- Language specific
+    -- -- Lua
+    -- sym("@lsp.type.property.lua")({ sym("@variable.member.lua") }),
 
     ---- :help treesitter-context ----------------------------------------------
 
@@ -838,12 +912,12 @@ local theme = lush(function(injected_functions)
     CmpDocumentationBorder({ fg = C.fg, bg = C.bg1 }),
 
     CmpItemAbbr({ fg = C.fg }),
-    CmpItemAbbrMatch({ fg = C.cyan, gui = "bold,italic" }),
-    CmpItemAbbrMatchFuzzy({ fg = C.yellow, gui = "italic" }),
+    CmpItemAbbrMatch({ fg = C.blue, gui = "bold,italic" }),
+    CmpItemAbbrMatchFuzzy({ fg = C.cyan.da(5), gui = "italic" }),
     CmpItemMenu({ NonText, gui = "italic" }),
 
     CmpItemKind({ fg = C.blue }),
-    CmpItemKindText({ fg = C.fg }),
+    CmpItemKindText({ fg = C.yellow }),
     CmpItemKindMethod({ fg = C.blue }),
     CmpItemKindFunction({ CmpItemKindMethod }),
     CmpItemKindConstructor({ fg = C.cyan }),
@@ -873,6 +947,7 @@ local theme = lush(function(injected_functions)
     CmpBorderedWindow_FloatBorder({ Normal, fg = C.bg1, bg = C.bg1 }),
     CmpBorderedWindow_CursorLine({ Visual, bg = C.bg1 }),
 
+    BlinkCmpLabelMatch({ CmpItemAbbrMatch }),
     -- nvim-dap
     -- DebugBreakpoint({ fg = cs.red }),
     -- DebugBreakpointLine({ fg = cs.red, gui = "underline" }),
@@ -1244,5 +1319,6 @@ local theme = lush(function(injected_functions)
     RenderMarkdownListImportant({ fg = colors.orange }),
   }
 end)
+---@diagnostic enable
 
 return theme

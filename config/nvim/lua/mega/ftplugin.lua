@@ -168,7 +168,11 @@ function M.apply(name, bufnr, args)
   if conf.cmp then
     vim.api.nvim_buf_call(bufnr, function()
       local ok_cmp, cmp = pcall(require, "cmp")
-      if ok_cmp then vim.schedule(function() cmp.setup.filetype(vim.bo[bufnr].filetype, conf.cmp) end) end
+      if ok_cmp then
+        vim.schedule(function()
+          if vim.api.nvim_buf_is_valid(bufnr) and vim.api.nvim_buf_is_loaded(bufnr) then cmp.setup.filetype(vim.bo[bufnr].filetype, conf.cmp) end
+        end)
+      end
     end)
   end
   if conf.abbr then

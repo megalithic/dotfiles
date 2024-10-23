@@ -312,7 +312,7 @@ return {
         -- end)
 
         -- disable cmp autocomplete
-        require("cmp").setup.buffer({ enabled = false })
+        if pcall(require, "cmp") then require("cmp").setup.buffer({ enabled = false }) end
 
         bufnr = params.buf or vim.api.nvim_get_current_buf() or 0
 

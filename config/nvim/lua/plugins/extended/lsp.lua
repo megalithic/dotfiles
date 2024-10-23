@@ -4,6 +4,8 @@ local SETTINGS = require("mega.settings")
 local BORDER_STYLE = SETTINGS.border
 local augroup = require("mega.autocmds").augroup
 local command = vim.api.nvim_create_user_command
+local methods = vim.lsp.protocol.Methods
+
 local M = {}
 
 return {
@@ -57,13 +59,10 @@ return {
       local function show_diagnostic_popup(opts)
         local bufnr = opts
         if type(opts) == "table" then bufnr = opts.buf or 0 end
-        -- local diags = vim.diagnostic.open_float(bufnr, { focus = false, scope = "line" })
         -- Try to open diagnostics under the cursor
         local diags = vim.diagnostic.open_float(bufnr, { focus = false, scope = "cursor" })
         -- If there's no diagnostic under the cursor show diagnostics of the entire line
         if not diags then vim.diagnostic.open_float(bufnr, { focus = false, scope = "line" }) end
-
-        return diags
       end
 
       local function goto_diagnostic_hl(dir)
@@ -92,7 +91,7 @@ return {
         end
 
         diagnostic_timer = vim.defer_fn(hl_cancel, 500)
-        vim.diagnostic["goto_" .. dir]()
+        vim.diagnostic["goto_" .. dir]({ float = true })
       end
 
       local function go_to_unique_definition()
@@ -166,31 +165,20 @@ return {
           end
         end
 
-        -- If we failed to find a preferred action, try to find a non-null-ls action.
-        local non_null_ls_action = nil
-        for _, action in ipairs(actions) do
-          if action.command ~= "NULL_LS_CODE_ACTION" then
-            non_null_ls_action = action
-            break
-          end
-        end
-
         -- If we failed to find a non-null-ls action, use the first one.
         local first_action = nil
         if #actions > 0 then first_action = actions[1] end
 
-        -- Using null-ls a lot of quickfixes are returned but all tend to be
-        -- worse than what the real LSP is offering, we try to use other
-        -- actions first, then only fall back to whatever null-ls is offering.
-        local top_action = preferred_action or non_null_ls_action or first_action
+        local top_action = preferred_action or first_action
 
         local picked_one = false
 
         vim.lsp.buf.code_action({
           context = {
             only = { "quickfix" },
+            diagnostics = vim.diagnostic.get(),
           },
-          filter = function(action, ctx)
+          filter = function(action)
             if picked_one then
               return true
             elseif top_action ~= nil and action.title == top_action.title then
@@ -205,7 +193,10 @@ return {
       end
 
       function M.on_attach(client, bufnr, cb)
+        local filetype = vim.bo[bufnr].filetype
         local disabled_lsp_formatting = SETTINGS.disabled_lsp_formatters
+
+        if SETTINGS.disabled_semantic_tokens[filetype] then client.server_capabilities.semanticTokensProvider = vim.NIL end
 
         if client.server_capabilities.codeLensProvider then vim.lsp.codelens.refresh({ bufnr = bufnr }) end
 
@@ -216,13 +207,123 @@ return {
           end
         end
 
-        local filetype = vim.bo[bufnr].filetype
-
-        if SETTINGS.disabled_semantic_tokens[filetype] then client.server_capabilities.semanticTokensProvider = nil end
-
         if client and client.supports_method("textDocument/inlayHint", { bufnr = bufnr }) then
           if SETTINGS.enabled_inlay_hints[filetype] then vim.lsp.inlay_hint.enable(true) end
         end
+
+        -- EXCLUDE certain servers for diagnostics
+        local diagnostic_handler = vim.lsp.handlers[methods.textDocument_publishDiagnostics]
+        vim.lsp.handlers[methods.textDocument_publishDiagnostics] = function(err, result, ctx, config)
+          local client_name = vim.lsp.get_client_by_id(ctx.client_id).name
+          if vim.tbl_contains(SETTINGS.diagnostic_exclusions, client_name) then
+            print("skipping diagnostics for " .. client_name)
+            return
+          end
+          diagnostic_handler(err, result, ctx, config)
+        end
+
+        -- EXCLUDE certain servers for definitions
+        local definition_handler = vim.lsp.handlers[methods.textDocument_definition]
+        vim.lsp.handlers[methods.textDocument_definition] = function(err, result, ctx, config)
+          local client_name = vim.lsp.get_client_by_id(ctx.client_id).name
+          if vim.tbl_contains(SETTINGS.definition_exclusions, client_name) then
+            print("skipping definitions for " .. client_name)
+            return
+          end
+          definition_handler(err, result, ctx, config)
+        end
+
+        -- EXCLUDE certain servers for references
+        local references_handler = vim.lsp.handlers[methods.textDocument_references]
+        vim.lsp.handlers[methods.textDocument_references] = function(err, result, ctx, config)
+          local client_name = vim.lsp.get_client_by_id(ctx.client_id).name
+          if vim.tbl_contains(SETTINGS.references_exclusions, client_name) then
+            print("skipping references for " .. client_name)
+            return
+          end
+          references_handler(err, result, ctx, config)
+        end
+
+        local md_namespace = vim.api.nvim_create_namespace("lsp_floats")
+
+        --- Adds extra inline highlights to the given buffer.
+        ---@param buf integer
+        local function add_inline_highlights(buf)
+          for l, line in ipairs(vim.api.nvim_buf_get_lines(buf, 0, -1, false)) do
+            for pattern, hl_group in pairs({
+              ["@%S+"] = "@parameter",
+              ["^%s*(Parameters:)"] = "@text.title",
+              ["^%s*(Return:)"] = "@text.title",
+              ["^%s*(See also:)"] = "@text.title",
+              ["{%S-}"] = "@parameter",
+              ["|%S-|"] = "@text.reference",
+            }) do
+              local from = 1 ---@type integer?
+              while from do
+                local to
+                from, to = line:find(pattern, from)
+                if from then
+                  vim.api.nvim_buf_set_extmark(buf, md_namespace, l - 1, from - 1, {
+                    end_col = to,
+                    hl_group = hl_group,
+                  })
+                end
+                from = to and to + 1 or nil
+              end
+            end
+          end
+        end
+
+        --- LSP handler that adds extra inline highlights, keymaps, and window options.
+        --- Code inspired from `noice`.
+        ---@param handler fun(err: any, result: any, ctx: any, config: any): integer?, integer?
+        ---@param focusable boolean
+        ---@return fun(err: any, result: any, ctx: any, config: any)
+        local function enhanced_float_handler(handler, focusable)
+          return function(err, result, ctx, config)
+            local bufnr, winnr = handler(
+              err,
+              result,
+              ctx,
+              vim.tbl_deep_extend("force", config or {}, {
+                border = "rounded",
+                focusable = focusable,
+                max_height = math.floor(vim.o.lines * 0.3),
+                max_width = math.floor(vim.o.columns * 0.4),
+              })
+            )
+
+            if not bufnr or not winnr then return end
+
+            -- Conceal everything.
+            vim.wo[winnr].concealcursor = "n"
+
+            -- Extra highlights.
+            add_inline_highlights(bufnr)
+
+            -- Add keymaps for opening links.
+            if focusable and not vim.b[bufnr].markdown_keys then
+              vim.keymap.set("n", "K", function()
+                -- Vim help links.
+                local url = (vim.fn.expand("<cWORD>") --[[@as string]]):match("|(%S-)|")
+                if url then return vim.cmd.help(url) end
+
+                -- Markdown links.
+                local col = vim.api.nvim_win_get_cursor(0)[2] + 1
+                local from, to
+                from, to, url = vim.api.nvim_get_current_line():find("%[.-%]%((%S-)%)")
+                if from and col >= from and col <= to then
+                  vim.system({ "xdg-open", url }, nil, function(res)
+                    if res.code ~= 0 then vim.notify("Failed to open URL" .. url, vim.log.levels.ERROR) end
+                  end)
+                end
+              end, { buffer = bufnr, silent = true })
+              vim.b[bufnr].markdown_keys = true
+            end
+          end
+        end
+        vim.lsp.handlers[methods.textDocument_hover] = enhanced_float_handler(vim.lsp.handlers.hover, true)
+        vim.lsp.handlers[methods.textDocument_signatureHelp] = enhanced_float_handler(vim.lsp.handlers.signature_help, false)
 
         local desc = function(d) return "[+lsp] " .. d end
         local map = vim.keymap.set
@@ -252,17 +353,31 @@ return {
         -- map("gd", function() vim.lsp.buf.definition({ on_list = choose_list_first }) end, "[g]oto [d]efinition")
         -- map("gd", vim.lsp.buf.definition, "[g]oto [d]efinition")
         -- nmap("gd", go_to_unique_definition, "[g]oto [d]efinition")
-        nmap("gd", function() vim.lsp.buf.definition({ on_list = choose_list_first }) end, "[g]oto [d]efinition")
-        nmap("gD", function()
-          vim.cmd.split({ mods = { vertical = true, split = "botright" } })
+        nmap("gd", function()
+          vim.lsp.buf.definition({ on_list = choose_list_first })
           vim.schedule(function()
-            -- vim.lsp.buf.definition({ on_list = choose_list_first, reuse_win = false })
-            go_to_unique_definition()
+            vim.cmd.norm("zz")
+            mega.blink_cursorline(175)
           end)
+        end, "[g]oto [d]efinition")
+        nmap("gD", function()
+          -- vim.schedule(function()
+          --   vim.cmd("vsplit | lua vim.lsp.buf.definition()")
+          --   vim.cmd("norm zz")
+          -- end)
+
+          vim.cmd.split({ mods = { vertical = true, split = "botright" } })
+          vim.defer_fn(function()
+            vim.lsp.buf.definition({ on_list = choose_list_first, reuse_win = false })
+            -- vim.cmd.FzfLua("lsp_definitions")
+            -- go_to_unique_definition()
+          end, 700)
         end, "[g]oto [d]efinition (split)")
         -- map("gr", function() vim.cmd.Trouble("lsp_references focus=true") end, "[g]oto [r]eferences")
         -- map("gr", function() vim.cmd.FzfLua("lsp_references") end, "[g]oto [r]eferences")
-        nmap("gr", require("telescope.builtin").lsp_references, "[g]oto [r]eferences")
+        nmap("gr", function()
+          if not vim.tbl_contains(SETTINGS.references_exclusions, client.name) then require("telescope.builtin").lsp_references() end
+        end, "[g]oto [r]eferences")
         nmap("gI", require("telescope.builtin").lsp_implementations, "[g]oto [i]mplementation")
         nmap("<leader>ltd", require("telescope.builtin").lsp_type_definitions, "[t]ype [d]efinition")
         nmap("<leader>lsd", require("telescope.builtin").lsp_document_symbols, "[d]ocument [s]ymbols")
@@ -270,9 +385,19 @@ return {
         vnmap("g.", function() fix_current_action() end, "[g]o run nearest/current code action")
         vnmap("<leader>la", vim.lsp.buf.code_action, "code [a]ctions")
         vnmap("<leader>lca", vim.lsp.buf.code_action, "[c]ode [a]ctions")
-        nmap("gca", function() vim.cmd.FzfLua("lsp_code_actions") end, "[g]o [c]ode [a]ctions")
-        nmap("K", vim.lsp.buf.hover, "hover documentation")
-        map("i", "<C-k>", vim.lsp.buf.signature_help, { buffer = bufnr, desc = desc("signature help") })
+        nmap("ga", function() vim.cmd.FzfLua("lsp_code_actions") end, "[g]o [c]ode [a]ctions")
+        -- nmap("K", vim.lsp.buf.hover, "hover documentation")
+
+        if client.supports_method(methods.textDocument_signatureHelp) then
+          -- map("i", "<C-k>", vim.lsp.buf.signature_help, { buffer = bufnr, desc = desc("signature help") })
+          map("i", "<C-k>", function()
+            -- Close the completion menu first (if open).
+            local cmp = require("cmp")
+            if cmp.visible() then cmp.close() end
+
+            vim.lsp.buf.signature_help()
+          end, { buffer = bufnr, desc = desc("signature help") })
+        end
         -- map("gD", vim.lsp.buf.declaration, "[g]oto [d]eclaration (e.g. to a header file in C)")
         -- rename symbol starting with empty prompt, highlight references
         nmap("<leader>rn", function()
@@ -555,46 +680,6 @@ return {
           end,
         })
 
-        augroup("LspProgress", {
-          {
-            pattern = "end",
-            event = { "LspProgress" },
-            desc = "Handle lsp progress message scenarios",
-            command = function(evt)
-              if pcall(require, "fidget") then
-                local token = evt.data.params.token
-                if evt.data.result and evt.data.result.token then token = evt.data.result.token end
-                local client_id = evt.data.client_id
-                local c = client_id and vim.lsp.get_client_by_id(client_id)
-                if c and token then require("fidget").notification.remove(c.name, token) end
-              end
-            end,
-          },
-        })
-
-        -- augroup("LspDiagnostics", {
-        --   {
-        --     event = { "CursorHold" },
-        --     desc = "Show diagnostics",
-        --     command = show_diagnostic_popup,
-        --   },
-        -- })
-
-        -- if client and client.server_capabilities.documentHighlightProvider then
-        --   augroup("LspDocumentHighlights", {
-        --     {
-        --       event = { "CursorHold", "CursorHoldI" },
-        --       buffer = bufnr,
-        --       command = vim.lsp.buf.document_highlight,
-        --     },
-        --     {
-        --       event = { "CursorMoved", "CursorMovedI" },
-        --       buffer = bufnr,
-        --       command = vim.lsp.buf.clear_references,
-        --     },
-        --   })
-        -- end
-
         local max_width = math.min(math.floor(vim.o.columns * 0.7), 100)
         local max_height = math.min(math.floor(vim.o.lines * 0.3), 30)
 
@@ -682,27 +767,34 @@ return {
             end,
             format = diag_msg_format,
           },
+          -- jump = {
+          --   -- Do not show floating window
+          --   float = false,
+
+          --   -- Wrap around buffer
+          --   wrap = true,
+          -- },
           severity_sort = true,
-          -- virtual_text = false,
-          virtual_text = {
-            spacing = 2,
-            prefix = "", -- Could be '●', '▎', 'x'
-            only_current_line = true,
-            highlight_whole_line = false,
-            severity = { min = diag_level.ERROR },
-            suffix = function(diag) return diag_source_as_suffix(diag, "virtual_text") end,
-            format = function(diag)
-              local source = diag.source
+          virtual_text = false,
+          -- virtual_text = {
+          --   spacing = 2,
+          --   prefix = "", -- Could be '●', '▎', 'x'
+          --   only_current_line = true,
+          --   highlight_whole_line = false,
+          --   severity = { min = diag_level.ERROR },
+          --   suffix = function(diag) return diag_source_as_suffix(diag, "virtual_text") end,
+          --   format = function(diag)
+          --     local source = diag.source
 
-              if source then
-                local icon = SETTINGS.icons.lsp[vim.diagnostic.severity[diag.severity]:lower()]
+          --     if source then
+          --       local icon = SETTINGS.icons.lsp[vim.diagnostic.severity[diag.severity]:lower()]
 
-                return string.format("%s %s %s", icon, source, "[" .. (diag.code ~= nil and diag.code or diag.message) .. "]")
-              end
+          --       return string.format("%s %s %s", icon, source, "[" .. (diag.code ~= nil and diag.code or diag.message) .. "]")
+          --     end
 
-              return string.format("%s ", diag.message)
-            end,
-          },
+          --     return string.format("%s ", diag.message)
+          --   end,
+          -- },
           update_in_insert = false,
         })
 
@@ -734,18 +826,85 @@ return {
           })
         end
 
+        -- require("mega.lsp_diagnostics")
+
+        augroup("LspProgress", {
+          {
+            pattern = "end",
+            event = { "LspProgress" },
+            desc = "Handle lsp progress message scenarios",
+            command = function(evt)
+              if pcall(require, "fidget") then
+                local token = evt.data.params.token
+                if evt.data.result and evt.data.result.token then token = evt.data.result.token end
+                local client_id = evt.data.client_id
+                local c = client_id and vim.lsp.get_client_by_id(client_id)
+                if c and token then require("fidget").notification.remove(c.name, token) end
+              end
+            end,
+          },
+        })
+
+        augroup("LspDiagnostics", {
+          {
+            event = { "CursorHold" },
+            desc = "Show diagnostics",
+            command = show_diagnostic_popup,
+          },
+        })
+
+        -- if client and client.server_capabilities.documentHighlightProvider then
+        --   augroup("LspDocumentHighlights", {
+        --     {
+        --       event = { "CursorHold", "CursorHoldI" },
+        --       buffer = bufnr,
+        --       command = vim.lsp.buf.document_highlight,
+        --     },
+        --     {
+        --       event = { "CursorMoved", "CursorMovedI" },
+        --       buffer = bufnr,
+        --       command = vim.lsp.buf.clear_references,
+        --     },
+        --   })
+        -- end
+
         -- invoke any additional custom on_attach things passed in
         if cb ~= nil and type(cb) == "function" then cb() end
+
+        -- dbg({ client.name, filetype, client.server_capabilities.semanticTokensProvider })
       end
 
       local capabilities = vim.lsp.protocol.make_client_capabilities()
       if pcall(require, "cmp_nvim_lsp") then capabilities = require("cmp_nvim_lsp").default_capabilities() end
       capabilities.textDocument.completion.completionItem.snippetSupport = true
       capabilities.textDocument.foldingRange = { dynamicRegistration = false, lineFoldingOnly = true }
+      capabilities.textDocument.completion.completionItem = {
+        documentationFormat = { "markdown", "plaintext" },
+        snippetSupport = true,
+        preselectSupport = true,
+        insertReplaceSupport = false,
+        labelDetailsSupport = true,
+        deprecatedSupport = true,
+        commitCharactersSupport = true,
+        tagSupport = { valueSet = { 1 } },
+        resolveSupport = {
+          properties = {
+            "documentation",
+            "detail",
+            "additionalTextEdits",
+          },
+        },
+      }
+
+      -- if SETTINGS.disabled_semantic_tokens[filetype] then
+      --   capabilities.textDocument.semanticTokens = nil
+      --   capabilities.workspace.semanticTokens = nil
+      -- end
 
       local servers = require("mega.servers")
       if servers == nil then return end
       local servers_list = servers.list(capabilities, M.on_attach)
+      servers.load_unofficial()
 
       require("mason").setup()
       require("mason-lspconfig").setup()
@@ -786,6 +945,10 @@ return {
 
         config.flags = { debounce_text_changes = 150 }
         config.capabilities = vim.tbl_deep_extend("force", capabilities, config.capabilities or {})
+        -- config.on_init = function(client, _)
+        --   client.server_capabilities.semanticTokensProvider = nil
+        --   if config.on_init ~= nil and type(config.on_init) == "function" then config.on_init(client, _bufnr) end
+        -- end
 
         return config
       end
@@ -809,65 +972,8 @@ return {
     end,
   },
   {
-    "dgagn/diagflow.nvim",
-    cond = false,
-    event = "LspAttach",
-    opts = {
-      text_align = "left", -- 'left', 'right'
-      placement = "top", -- 'top', 'inline'
-    },
-  },
-  {
-    cond = false,
-    "https://git.sr.ht/~whynothugo/lsp_lines.nvim",
-    config = true,
-  },
-  {
-    "rachartier/tiny-inline-diagnostic.nvim",
-    cond = false,
-    event = "LspAttach",
-    config = function()
-      require("tiny-inline-diagnostic").setup({
-        signs = {
-          left = "",
-          right = "",
-          diag = "●",
-          arrow = "    ",
-          up_arrow = "    ",
-          vertical = " │",
-          vertical_end = " └",
-        },
-        -- hi = {
-        --   -- background = "None",
-        --   mixing_color = require("theme").get_colors().base,
-        -- },
-        blend = {
-          factor = 0.3,
-        },
-        options = {
-          break_line = {
-            enabled = true,
-            after = 80,
-          },
-          virt_texts = {
-            priority = 4096,
-          },
-          multiple_diag_under_cursor = true,
-          show_source = true,
-          severity = {
-            vim.diagnostic.severity.ERROR,
-            vim.diagnostic.severity.WARN,
-            vim.diagnostic.severity.INFO,
-            vim.diagnostic.severity.HINT,
-          },
-        },
-      })
-    end,
-  },
-  {
     -- FIXME: https://github.com/mhanberg/output-panel.nvim/issues/5
     "mhanberg/output-panel.nvim",
-    enabled = false,
     lazy = false,
     keys = {
       {

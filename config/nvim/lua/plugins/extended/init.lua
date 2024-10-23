@@ -205,26 +205,59 @@ return {
     event = "CmdlineEnter",
     opts = {},
   },
-  -- require('nvim-autopairs').setup{}
+  -- {
+  --   "windwp/nvim-autopairs",
+  --   lazy = true,
+  --   config = function()
+  --     local npairs = require("nvim-autopairs")
+  --     npairs.setup()
 
-  {
-    "windwp/nvim-autopairs",
-    -- event = { "InsertEnter" },
-    lazy = true,
-    config = function()
-      local npairs = require("nvim-autopairs")
-      npairs.setup()
+  --     npairs.add_rules(require("nvim-autopairs.rules.endwise-elixir"))
+  --     npairs.add_rules(require("nvim-autopairs.rules.endwise-lua"))
+  --     npairs.add_rules(require("nvim-autopairs.rules.endwise-ruby"))
+  --   end,
+  -- },
+  { -- auto-pair
+    -- EXAMPLE config of the plugin: https://github.com/Bekaboo/nvim/blob/master/lua/configs/ultimate-autopair.lua
+    "altermo/ultimate-autopair.nvim",
+    branch = "v0.6", -- recommended as each new version will have breaking changes
+    event = { "InsertEnter", "CmdlineEnter" },
+    opts = {
+      bs = {
+        space = "balance",
+        cmap = false, -- keep my `<BS>` mapping for the cmdline
+      },
+      fastwarp = {
+        map = "<D-f>",
+        rmap = "<D-F>", -- backwards
+        hopout = true,
+        nocursormove = true,
+        multiline = false,
+      },
+      cr = { autoclose = true },
+      space = { enable = true },
+      space2 = { enable = true },
 
-      npairs.add_rules(require("nvim-autopairs.rules.endwise-elixir"))
-      npairs.add_rules(require("nvim-autopairs.rules.endwise-lua"))
-      npairs.add_rules(require("nvim-autopairs.rules.endwise-ruby"))
+      config_internal_pairs = {
+        { "'", "'", nft = { "markdown" } }, -- since used as apostroph
+        { "\"", "\"", nft = { "vim" } }, -- vimscript uses quotes as comments
+      },
+      -- INFO custom keys need to be "appended" to the opts as a list
+      { "*", "*", ft = { "markdown" } }, -- italics
+      { "__", "__", ft = { "markdown" } }, -- bold
+      { [[\"]], [[\"]], ft = { "zsh", "json", "applescript" } }, -- escaped quote
 
-      -- if pcall(require, "nvim-autopairs.completion.cmp") then
-      --   local cmp_autopairs = require("nvim-autopairs.completion.cmp")
-      --   local cmp = require("cmp")
-      --   cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done())
-      -- end
-    end,
+      { -- commit scope (= only first word) for commit messages
+        "(",
+        "): ",
+        ft = { "gitcommit" },
+        cond = function(_) return not vim.api.nvim_get_current_line():find(" ") end,
+      },
+
+      -- for keymaps like `<C-a>`
+      { "<", ">", ft = { "vim" } },
+      { "<", ">", ft = { "lua" }, cond = function(fn) return fn.in_string() end },
+    },
   },
   {
     "windwp/nvim-ts-autotag",
@@ -289,12 +322,21 @@ return {
   },
   {
     "MagicDuck/grug-far.nvim",
-    cmd = "GrugFar",
     config = function()
       require("grug-far").setup({
         windowCreationCommand = "botright vsplit %",
       })
     end,
+    cmd = {
+      "GrugFar",
+    },
+    keys = {
+      {
+        "<space>fr",
+        ":GrugFar<cr>",
+        desc = "GrugFar",
+      },
+    },
   },
   {
     "tzachar/highlight-undo.nvim",
@@ -303,7 +345,42 @@ return {
     config = true,
   },
   { "elixir-editors/vim-elixir" },
-
+  {
+    "nvim-neo-tree/neo-tree.nvim",
+    branch = "v3.x",
+    lazy = false,
+    opts = {
+      filesystem = {
+        filtered_items = {
+          hide_dotfiles = false,
+        },
+      },
+      event_handlers = {
+        {
+          event = "file_opened",
+          handler = function() vim.cmd.Neotree("close") end,
+          id = "close-on-enter",
+        },
+      },
+    },
+    config = function(_, opts) require("neo-tree").setup(opts) end,
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      "nvim-tree/nvim-web-devicons", -- not strictly required, but recommended
+      "MunifTanjim/nui.nvim",
+    },
+    cmd = {
+      "Neotree",
+    },
+    keys = {
+      {
+        "<C-.>",
+        function() vim.cmd.Neotree("reveal", "toggle=true") end,
+        mode = "n",
+        desc = "Toggle Neotree",
+      },
+    },
+  },
   {
     "jiaoshijie/undotree",
     dependencies = "nvim-lua/plenary.nvim",
@@ -406,4 +483,6 @@ return {
       },
     },
   },
+  -- doesn't exactly do what i was expecting when you use statuscolumn settings (gitsigns, diags, etc)
+  { "jake-stewart/force-cul.nvim", opts = {}, cond = false },
 }

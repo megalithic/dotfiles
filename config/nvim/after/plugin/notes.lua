@@ -85,7 +85,7 @@ function M.note_info(fpath, ...)
   }
 end
 
-function M.format_notes(bufnr, lines)
+function M.sort_tasks(bufnr, lines)
   bufnr = bufnr or vim.api.nvim_get_current_buf()
   lines = lines or vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
 
@@ -154,6 +154,81 @@ function M.format_notes(bufnr, lines)
 
   -- prevents unncessary re-writes of the buffer..
   if not U.deep_equals(originally_extracted_tasks, sorted_tasks) then replace(bufnr, sorted_tasks, starting_task_line, lines) end
+end
+
+function M.compile_links(bufnr, lines)
+  bufnr = bufnr or vim.api.nvim_get_current_buf()
+  lines = lines or vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+
+  local links = {}
+
+  for i, line in ipairs(lines) do
+    local url = line:match("((https?)://([%w_.~!*:@&+$/?%%#-]-)(%w[-.%w]*%.)(%w%w%w?%w?)(:?)(%d*)(/?)([%w_.~!*:@&+$/?%%#=-]*))")
+
+    if url ~= nil then table.insert(links, { index = i, line = line, url = url }) end
+  end
+
+  return links
+end
+
+function M.extract_links(bufnr, lines)
+  local bufnr = bufnr or vim.api.nvim_get_current_buf()
+  local inline_query = vim.treesitter.query.parse("markdown_inline", [[(inline_link) @link]])
+  local auto_query = vim.treesitter.query.parse("markdown_inline", [[(uri_autolink) @link]])
+
+  local get_root = function(str)
+    local parser = vim.treesitter.get_string_parser(str, "markdown_inline")
+    return parser:parse()[1]:root()
+  end
+
+  local get_text = vim.treesitter.get_node_text
+
+  local function markdown_links(bufnr, str)
+    local inline_links = vim
+      .iter(inline_query:iter_captures(get_root(str), str))
+      :map(function(_, node)
+        local text = get_text(node:child(1), str)
+        local link = get_text(node:child(4), str)
+        return { url = link, text = text }
+      end)
+      :totable()
+
+    local autolinks = vim
+      .iter(auto_query:iter_captures(get_root(str), str))
+      :map(function(_, node)
+        local text = get_text(node, str):sub(2, -2)
+        return { text = text }
+      end)
+      :totable()
+
+    -- local raw_urls = vim
+    --   .iter(str)
+    --   :map(function(_, node)
+    --     local text = get_text(node, str):sub(2, -2)
+    --     return text, text
+    --   end)
+    --   :totable()
+
+    return vim.list_extend(inline_links, autolinks)
+  end
+
+  local function raw_urls(bufnr, lines) return M.compile_links(bufnr, lines) end
+
+  local links = markdown_links(bufnr, table.concat(lines, "\n"))
+  local urls = raw_urls(bufnr, lines)
+
+  dbg(vim.list_extend(links, urls))
+
+  return vim.list_extend(links, urls)
+end
+
+function M.format_notes(bufnr, lines)
+  bufnr = bufnr or vim.api.nvim_get_current_buf()
+  lines = lines or vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+
+  M.sort_tasks(bufnr, lines)
+  M.extract_links(bufnr, lines)
+  -- M.compile_links(bufnr, lines)
 end
 
 function M.execute_line()
@@ -345,9 +420,10 @@ local notesAbbrevs = {
   ["mtg:"] = [[### Meeting 󱛡 ->]],
   ["trn:"] = [[### Linear Ticket  ->]],
   ["pr:"] = [[### Pull Request  ->]],
-  ["call:"] = [[Call: ]],
-  ["email:"] = [[Email: ]],
-  ["contact:"] = [[Contact: 󰻞]],
+  ["call:"] = [[ (call) ]],
+  ["email:"] = [[ (email) ]],
+  ["contact:"] = [[󰻞 (contact) ]],
+  ["chat:"] = [[󰻞 (contact) ]],
 }
 
 require("mega.autocmds").augroup("NotesLoaded", {
@@ -387,6 +463,25 @@ require("mega.autocmds").augroup("NotesLoaded", {
               function() mega.picker.grep({ cwd = vim.g.notes_path, default_text = vim.fn.expand("<cword>") }) end,
               { desc = "[notes] grep cursorword" }
             )
+            -- Search DOWN for a markdown header
+            -- Make sure to follow proper markdown convention, and you have a single H1
+            -- heading at the very top of the file
+            -- This will only search for H2 headings and above
+            map({ "n", "v" }, "<localleader>n", function()
+              -- `/` - Start a search forwards from the current cursor position.
+              -- `^` - Match the beginning of a line.
+              -- `##` - Match 2 ## symbols
+              -- `\\+` - Match one or more occurrences of prev element (#)
+              -- `\\s` - Match exactly one whitespace character following the hashes
+              -- `.*` - Match any characters (except newline) following the space
+              -- `$` - Match extends to end of line
+              vim.cmd("silent! /^##\\+\\sNotes.*$")
+              -- Clear the search highlight
+              vim.schedule(function()
+                vim.cmd.nohlsearch()
+                mega.searchCountIndicator("clear")
+              end)
+            end, { desc = "go to main notes section" })
             -- map("n", "<leader>a", function() mega.picker.grep({ picker = "egrepify", cwd = vim.g.notes_path }) end, { desc = "[notes] grep", buffer = buf })
             -- map("n", "<leader>a", function() mega.picker.grep({ picker = "egrepify", cwd = vim.g.notes_path }) end, { desc = "[notes] grep", buffer = buf })
             -- map("n", "gd", "<cmd>lua vim.lsp.buf.definition()<CR>", { desc = "[f]ind in [n]otes", buffer = buf })

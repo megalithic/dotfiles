@@ -161,12 +161,13 @@ ftplugin.extend_all({
         ["<localleader>e"] = { group = "[e]lixir" },
       }) end
 
-      local has_clue, clue = pcall(require, "mini.clue")
-      if has_clue then vim.b.miniclue_config = {
-        clues = {
-          { mode = "n", keys = "<localleader>e", desc = "+elixir" },
-        },
-      } end
+      if pcall(require, "mini.clue") then
+        vim.b.miniclue_config = {
+          clues = {
+            { mode = "n", keys = "<localleader>e", desc = "+elixir" },
+          },
+        }
+      end
     end,
   },
   heex = {
@@ -370,7 +371,35 @@ ftplugin.extend_all({
         { name = "spell" },
       },
     },
-    callback = function(_bufnr) end,
+    callback = function(_bufnr)
+      if pcall(require, "mini.clue") then
+        vim.b.miniclue_config = {
+          clues = {
+            { mode = "n", keys = "<localleader>m", desc = "+markdown" },
+          },
+        }
+      end
+
+      vim.keymap.set("v", "<localleader>mll", function()
+        -- Copy what's currently in my clipboard to the register "a lamw25wmal
+        vim.cmd("let @a = getreg('+')")
+        -- delete selected text
+        vim.cmd("normal d")
+        -- Insert the following in insert mode
+        vim.cmd("startinsert")
+        vim.api.nvim_put({ "[]() " }, "c", true, true)
+        -- Move to the left, paste, and then move to the right
+        vim.cmd("normal F[pf(")
+        -- Copy what's on the "a register back to the clipboard
+        vim.cmd("call setreg('+', @a)")
+        -- Paste what's on the clipboard
+        vim.cmd("normal p")
+        -- Leave me in normal mode or command mode
+        vim.cmd("stopinsert")
+        -- Leave me in insert mode to start typing
+        -- vim.cmd("startinsert")
+      end, { desc = "[P]Convert to link" })
+    end,
   },
   ["neotest-summary"] = {
     opt = {
@@ -490,6 +519,30 @@ ftplugin.extend_all({
         filter = {
           fzf = {
             extra_opts = { "--bind", "ctrl-o:toggle-all", "--delimiter", "│" },
+          },
+        },
+      })
+    end,
+  },
+  query = {
+    callback = function(bufnr)
+      if vim.bo[bufnr].buftype == "nofile" then return end
+      vim.lsp.start({
+        name = "ts_query_ls",
+        cmd = {
+          vim.fs.joinpath(vim.env.HOME, "Documents/CodeProjects/ts_query_ls/target/release/ts_query_ls"),
+        },
+        root_dir = vim.fs.root(0, { "queries" }),
+        settings = {
+          parser_install_directories = {
+            -- If using nvim-treesitter with lazy.nvim
+            vim.fs.joinpath(vim.fn.stdpath("data"), "/lazy/nvim-treesitter/parser/"),
+          },
+          parser_aliases = {
+            ecma = "javascript",
+          },
+          language_retrieval_patterns = {
+            "languages/src/([^/]+)/[^/]+\\.scm$",
           },
         },
       })

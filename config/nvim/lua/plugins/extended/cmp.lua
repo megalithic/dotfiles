@@ -80,6 +80,7 @@ return {
     "iguanacucumber/magazine.nvim",
     cond = vim.g.completer == "cmp",
     name = "nvim-cmp",
+    -- event = { "CmdlineEnter *" },
     event = { "InsertEnter *", "CmdlineEnter *" },
     priority = 100,
     dependencies = {
@@ -101,16 +102,16 @@ return {
           search_paths = { vim.fn.stdpath("config") .. "/snippets" },
         },
       },
-      { "hrsh7th/cmp-buffer" },
+      -- { "hrsh7th/cmp-buffer" },
       {
         "tzachar/cmp-fuzzy-buffer",
         dependencies = { "tzachar/fuzzy.nvim" },
       },
-      { "hrsh7th/cmp-nvim-lsp" },
-      { "hrsh7th/cmp-nvim-lua" },
+      -- { "hrsh7th/cmp-nvim-lsp" },
+      -- { "hrsh7th/cmp-nvim-lua" },
       { "hrsh7th/cmp-path" },
       { "FelipeLema/cmp-async-path" },
-      { "hrsh7th/cmp-cmdline" }, -- event = { "CmdlineEnter" } },
+      -- { "hrsh7th/cmp-cmdline" }, -- event = { "CmdlineEnter" } },
       { "hrsh7th/cmp-nvim-lsp-signature-help", cond = false },
       { "hrsh7th/cmp-nvim-lsp-document-symbol" },
       -- { "hrsh7th/cmp-emoji" },
@@ -120,6 +121,13 @@ return {
       -- { "davidsierradz/cmp-conventionalcommits" },
       { "dmitmel/cmp-cmdline-history" },
       { "andersevenrud/cmp-tmux", cond = false },
+
+      { "iguanacucumber/mag-nvim-lsp", name = "cmp-nvim-lsp", opts = {} },
+      { "iguanacucumber/mag-nvim-lua", name = "cmp-nvim-lua" },
+      { "iguanacucumber/mag-buffer", name = "cmp-buffer" },
+      { "iguanacucumber/mag-cmdline", name = "cmp-cmdline" },
+
+      { url = "https://codeberg.org/FelipeLema/cmp-async-path" }, -- not by me, but better than cmp-path
       -- { "kristijanhusak/vim-dadbod-completion"},
     },
     init = function()
@@ -146,14 +154,6 @@ return {
       -- local MIN_MENU_WIDTH = 25
       -- local MAX_MENU_WIDTH = math.min(30, math.floor(vim.o.columns * 0.5))
       -- local function get_ws(max, len) return (" "):rep(max - len) end
-
-      -- local neocodeium = require("neocodeium")
-      -- local commands = require("neocodeium.commands")
-      -- cmp.event:on("menu_opened", function()
-      --   neocodeium.clear()
-      --   commands.disable()
-      -- end)
-      -- cmp.event:on("menu_closed", function() commands.enable() end)
 
       local has_words_before = function()
         local line, col = unpack(vim.api.nvim_win_get_cursor(0))
@@ -192,14 +192,15 @@ return {
         ["<C-b>"] = cmp.mapping.scroll_docs(-4),
         ["<C-f>"] = cmp.mapping.scroll_docs(4),
         ["<C-y>"] = cmp.mapping.confirm({ select = true }),
-        ["<C-e>"] = cmp.mapping(function()
-          if vim.snippet.active({ direction = 1 }) then vim.snippet.stop() end
-          cmp.mapping.abort()
-        end, { "i", "s" }),
+        ["<C-e>"] = cmp.mapping.abort(),
+        -- ["<C-e>"] = cmp.mapping(function()
+        --   if vim.snippet.active({ direction = 1 }) then vim.snippet.stop() end
+        --   cmp.mapping.abort()
+        -- end, { "i", "s" }),
         ["<CR>"] = cmp.mapping(function(fallback)
           if cmp.core.view:visible() or vim.fn.pumvisible() == 1 then
             if vim.api.nvim_get_mode().mode == "i" then vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<c-G>u", true, true, true), "n", false) end
-            if cmp.confirm({ select = true }) then return end
+            if cmp.confirm({ select = false }) then return end
           end
 
           return fallback()
@@ -227,7 +228,7 @@ return {
             --   return
             -- end
             if cmp.visible() then
-              cmp.confirm({ select = true })
+              cmp.confirm({ select = false })
             else
               cmp.complete()
               cmp.select_next_item()
@@ -256,15 +257,18 @@ return {
       }, ",")
 
       return {
+        performance = {
+          debounce = 60,
+          throttle = 30,
+          fetching_timeout = 500,
+          filtering_context_budget = 3,
+          confirm_resolve_timeout = 80,
+          async_budget = 1,
+          max_view_entries = 200,
+        },
         preselect = cmp.PreselectMode.None,
         snippet = {
-          expand = function(args)
-            if vim.g.snipper == "luasnip" then
-              require("luasnip").lsp_expand(args.body) -- For `luasnip` users.
-            else
-              vim.snippet.expand(args.body)
-            end
-          end,
+          expand = function(args) vim.snippet.expand(args.body) end,
         },
         completion = { completeopt = "menu,menuone,noinsert,noselect" },
         -- confirmation = {
@@ -284,17 +288,17 @@ return {
             zindex = 1001,
             col_offset = 0,
             border = SETTINGS.border,
-            max_height = math.floor(vim.o.lines * 0.5),
-            max_width = math.floor(vim.o.columns * 0.4),
-            height = math.floor(vim.o.lines * 0.5),
-            width = math.floor(vim.o.columns * 0.4),
+            -- max_height = math.floor(vim.o.lines * 0.5),
+            -- max_width = math.floor(vim.o.columns * 0.4),
+            -- height = math.floor(vim.o.lines * 0.5),
+            -- width = math.floor(vim.o.columns * 0.4),
             side_padding = 1,
             scrollbar = true,
           },
           documentation = cmp.config.window.bordered({
             border = SETTINGS.border,
-            max_height = math.floor(vim.o.lines * 0.5),
-            max_width = math.floor(vim.o.columns * 0.4),
+            -- max_height = math.floor(vim.o.lines * 0.5),
+            -- max_width = math.floor(vim.o.columns * 0.4),
             winhighlight = winhighlight,
           }),
         },
@@ -324,6 +328,15 @@ return {
               return item
             end
 
+            if entry.source.name == "path" then
+              local icon, hl_group = require("nvim-web-devicons").get_icon(entry:get_completion_item().label)
+              if icon then
+                vim_item.kind = icon
+                vim_item.kind_hl_group = hl_group
+                return vim_item
+              end
+            end
+
             if entry.source.name == "nvim_lsp_signature_help" then
               local parts = vim.split(vim_item.abbr, " ", {})
               local argument = parts[1]
@@ -341,19 +354,31 @@ return {
               end
               -- vim_item.kind_hl_group = "Type"
               vim_item.menu_hl_group = "Type"
-              dbg({ parts, argument, type })
             end
 
-            if vim_item.kind == "Color" and entry.completion_item.documentation and type(entry.completion_item.documentation) == "string" then
-              local _, _, r, g, b = string.find(entry.completion_item.documentation, "^rgb%((%d+), (%d+), (%d+)")
-              if r then
-                local color = string.format("%02x", r) .. string.format("%02x", g) .. string.format("%02x", b)
-                local hl_group = "Tw_" .. color
-                if vim.fn.hlID(hl_group) < 1 then vim.api.nvim_set_hl(0, hl_group, { fg = "#" .. color }) end
-                vim_item.kind = ""
-                vim_item.kind_hl_group = hl_group
-              end
+            local colors_icon = "󱓻"
+            local entryItem = entry:get_completion_item()
+            local color = entryItem.documentation
+
+            if color and type(color) == "string" and color:match("^#%x%x%x%x%x%x$") then
+              local hl = "hex-" .. color:sub(2)
+
+              if #vim.api.nvim_get_hl(0, { name = hl }) == 0 then vim.api.nvim_set_hl(0, hl, { fg = color }) end
+
+              vim_item.kind = " " .. colors_icon
+              vim_item.kind_hl_group = hl
+              vim_item.menu_hl_group = hl
             else
+              -- if vim_item.kind == "Color" and entry.completion_item.documentation and type(entry.completion_item.documentation) == "string" then
+              --   local _, _, r, g, b = string.find(entry.completion_item.documentation, "^rgb%((%d+), (%d+), (%d+)")
+              --   if r then
+              --     local color = string.format("%02x", r) .. string.format("%02x", g) .. string.format("%02x", b)
+              --     local hl_group = "Tw_" .. color
+              --     if vim.fn.hlID(hl_group) < 1 then vim.api.nvim_set_hl(0, hl_group, { fg = "#" .. color }) end
+              --     vim_item.kind = ""
+              --     vim_item.kind_hl_group = hl_group
+              --   end
+              -- else
               -- local icon, hl = require("mini.icons").get("lsp", vim_item.kind)
               -- if icon ~= nil then
               --   vim_item.kind = icon
@@ -443,7 +468,7 @@ return {
           },
           { name = "luasnip", group_index = 1, max_item_count = 5, keyword_length = 1 },
           { name = "vsnip", group_index = 1, max_item_count = 5, keyword_length = 1 },
-          { name = "nvim_lua" },
+          -- { name = "nvim_lua" },
           {
             name = "nvim_lsp",
             group_index = 1,
@@ -478,37 +503,6 @@ return {
               return vim.tbl_keys(bufs)
             end,
           },
-          -- option = {
-          --   group_index = 2,
-          --   priority = 1,
-          --   min_match_length = 3,
-          --   max_matches = 5,
-          --   options = {
-          --     option = {
-          --       get_bufnrs = function()
-          --         local LIMIT = 1024 * 1024 -- 1 Megabyte max
-          --         local bufs = {}
-
-          --         for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-          --           local line_count = vim.api.nvim_buf_line_count(buf)
-          --           local byte_size = vim.api.nvim_buf_get_offset(buf, line_count)
-
-          --           if byte_size < LIMIT then bufs[buf] = true end
-          --         end
-
-          --         return vim.tbl_keys(bufs)
-          --       end,
-          --     },
-          --   },
-          -- },
-          -- {
-          --   name = "buffer",
-          --   keyword_length = 4,
-          --   max_item_count = 5,
-          --   options = {
-          --     get_bufnrs = function() return vim.tbl_map(vim.api.nvim_win_get_buf, vim.api.nvim_list_wins()) end,
-          --   },
-          -- },
           { name = "spell" },
         }),
       }
@@ -558,6 +552,35 @@ return {
       if pcall(require, "nvim-autopairs") then
         local cmp_autopairs = require("nvim-autopairs.completion.cmp")
         cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done())
+      end
+
+      -- Override the documentation handler to remove the redundant detail section.
+      ---@diagnostic disable-next-line: duplicate-set-field
+      require("cmp.entry").get_documentation = function(self)
+        local item = self.completion_item
+
+        if item.documentation then return vim.lsp.util.convert_input_to_markdown_lines(item.documentation) end
+
+        -- Use the item's detail as a fallback if there's no documentation.
+        if item.detail then
+          local ft = self.context.filetype
+          local dot_index = string.find(ft, "%.")
+          if dot_index ~= nil then ft = string.sub(ft, 0, dot_index - 1) end
+          return (vim.split(("```%s\n%s```"):format(ft, vim.trim(item.detail)), "\n"))
+        end
+
+        return {}
+      end
+
+      if pcall(require, "neocodeium") then
+        local neocodeium = require("neocodeium")
+        local commands = require("neocodeium.commands")
+        cmp.event:on("menu_opened", function() neocodeium.clear() end)
+
+        cmp.event:on("menu_closed", function()
+          commands.enable()
+          neocodeium.cycle_or_complete()
+        end)
       end
     end,
   },

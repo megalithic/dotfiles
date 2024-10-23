@@ -283,11 +283,13 @@ local exception_types = {
       --   return seg(fmt("megaterm#%d(%s)[%s]", api.nvim_buf_get_var(buf, "term_buf"), shell, api.nvim_buf_get_var(buf, "term_cmd") or buf), mode_hl)
       -- end
 
-      if vim.g.term_bufnr ~= nil then
-        return seg(fmt("megaterm#%d(%s)[%s]", vim.g.term_bufnr, shell, vim.api.nvim_buf_get_var(buf, "term_cmd") or buf), mode_hl)
-      end
+      return seg(string.format("megaterm#(%s)[%s]", shell, buf), mode_hl)
+      -- if vim.g.term_bufnr ~= nil then
+      --   return seg(string.format("megaterm#(%s)[%s]", shell, vim.api.nvim_buf_get_var(buf, "term_cmd") or buf), mode_hl)
+      --   -- return seg(fmt("megaterm#%d(%s)[%s]", vim.g.term_bufnr, shell, vim.api.nvim_buf_get_var(buf, "term_cmd") or buf), mode_hl)
+      -- end
 
-      return seg(fmt("megaterm#%d(%s)[%s]", api.nvim_buf_get_var(buf, "term_buf"), shell, api.nvim_buf_get_var(buf, "term_cmd") or buf), mode_hl)
+      -- return seg(fmt("megaterm#%d(%s)[%s]", api.nvim_buf_get_var(buf, "term_buf"), shell, api.nvim_buf_get_var(buf, "term_cmd") or buf), mode_hl)
 
       -- return ""
     end,
@@ -635,7 +637,7 @@ local function seg_ai(truncate_at)
     local ai_enabled = false
 
     if vim.g.ai == "neocodeium" then ai_enabled = require("neocodeium.options").options.enabled end
-    return seg("󰭆", "StBright", not is_truncated(truncate_at) and ai_enabled, { padding = { 1, 1 } })
+    return seg(icons.misc.robot, "StBright", not is_truncated(truncate_at) and ai_enabled, { padding = { 1, 1 } })
   end
 
   return ""

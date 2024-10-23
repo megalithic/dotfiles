@@ -11,7 +11,32 @@ local root_pattern = lspconfig.util.root_pattern
 
 M.list = function(default_capabilities, default_on_attach)
   return {
-    bashls = {},
+    bashls = {
+      filetypes = { "sh", "zsh", "bash" }, -- work in zsh as well
+      settings = {
+        bashIde = {
+          shellcheckPath = "", -- disable while using efm
+          shellcheckArguments = "--shell=bash", -- PENDING https://github.com/bash-lsp/bash-language-server/issues/1064
+          shfmt = { spaceRedirects = true },
+        },
+      },
+    },
+    -- basics_ls = {
+    --   enabled = false,
+    --   settings = {
+    --     buffer = {
+    --       enable = true,
+    --       minCompletionLength = 3, -- only provide completions for words longer than 4 characters
+    --     },
+    --     path = {
+    --       enable = true,
+    --     },
+    --     snippet = {
+    --       enable = false,
+    --       sources = { vim.fn.stdpath("config") .. "/snippets" },
+    --     },
+    --   },
+    -- },
     -- biome = {
     --   manual_install = true,
     --   root_dir = root_pattern({ "biome.json", ".biome.json", ".eslintrc.js", ".prettierrc.js" }),
@@ -23,6 +48,9 @@ M.list = function(default_capabilities, default_on_attach)
           lint = {
             unknownProperties = "ignore",
             unknownAtRules = "ignore",
+            vendorPrefix = "ignore", -- needed for scrollbars
+            duplicateProperties = "warning",
+            zeroUnits = "warning",
           },
         },
         scss = {
@@ -103,10 +131,13 @@ M.list = function(default_capabilities, default_on_attach)
     end,
     elmls = {},
     emmet_ls = {
+      init_options = {
+        showSuggestionsAsSnippets = false,
+      },
       settings = {
         includeLanguages = {
-          -- ["html-eex"] = "html",
-          -- ["phoenix-heex"] = "html",
+          ["html-eex"] = "html",
+          ["phoenix-heex"] = "html",
           eruby = "html",
         },
       },
@@ -116,12 +147,12 @@ M.list = function(default_capabilities, default_on_attach)
         "typescriptreact",
         -- "elixir",
         -- "eelixir",
-        -- "html.heex",
-        -- "heex",
-        -- "html_heex",
-        -- "html_eex",
-        -- "phoenix-heex",
-        -- "phoenix_heex",
+        "html.heex",
+        "heex",
+        "html_heex",
+        "html_eex",
+        "phoenix-heex",
+        "phoenix_heex",
         "eruby",
       },
     },
@@ -246,7 +277,7 @@ M.list = function(default_capabilities, default_on_attach)
                 continuation_indent_size = "2",
               },
             },
-            semantic = { enable = false },
+            -- semantic = { enable = false },
             hint = {
               enable = true,
               arrayIndex = "Disable", -- "Enable", "Auto", "Disable"
@@ -335,6 +366,13 @@ M.list = function(default_capabilities, default_on_attach)
               enable = false,
             },
           },
+        },
+        handlers = {
+          -- always go to the first definition
+          ["textDocument/definition"] = function(err, result, ...)
+            if vim.islist(result) or type(result) == "table" then result = result[1] end
+            vim.lsp.handlers["textDocument/definition"](err, result, ...)
+          end,
         },
       }
     end,
@@ -712,6 +750,29 @@ M.list = function(default_capabilities, default_on_attach)
       },
     },
   }
+end
+
+M.unofficial = {
+  basics_ls = function()
+    local configs = require("lspconfig.configs")
+
+    if not configs.basics_ls then
+      configs.basics_ls = {
+        default_config = {
+          cmd = "basics-language-server",
+          single_file_support = true,
+          log_level = vim.lsp.protocol.MessageType.Log,
+          message_level = vim.lsp.protocol.MessageType.Log,
+        },
+      }
+    end
+  end,
+}
+
+M.load_unofficial = function()
+  for _server_name, loader in pairs(M.unofficial) do
+    loader()
+  end
 end
 
 return M

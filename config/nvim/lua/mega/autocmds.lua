@@ -132,31 +132,45 @@ function M.apply()
       event = { "BufWinLeave", "BufLeave", "FocusLost" },
       desc = "Automatically update and write modified buffer on certain events",
       command = function(ctx)
+        local saveInstantly = ctx.event == "FocusLost" or ctx.event == "BufLeave"
         local bufnr = ctx.buf
         local bo = vim.bo[bufnr]
         local b = vim.b[bufnr]
         if bo.buftype ~= "" or bo.ft == "gitcommit" or bo.readonly then return end
-        if b.saveQueued and ctx.event ~= "FocusLost" then return end
+        if b.saveQueued and not saveInstantly then return end
 
-        if vim.bo.modified and not vim.bo.readonly and vim.fn.expand("%") ~= "" and vim.bo.buftype == "" then
-          local debounce = ctx.event == "FocusLost" and 0 or 1000 -- save at once on focus loss
-          b.saveQueued = true
-          vim.defer_fn(function()
-            if not vim.api.nvim_buf_is_valid(bufnr) then return end
-            -- `noautocmd` prevents weird cursor movement
-            vim.api.nvim_buf_call(bufnr, function()
-              vim.cmd("silent! noautocmd lockmarks update!")
-              vim.cmd("silent! write")
-              vim.g.is_saving = true
-            end)
-            b.saveQueued = false
+        b.saveQueued = true
+        vim.defer_fn(function()
+          if not vim.api.nvim_buf_is_valid(bufnr) then return end
+          -- `noautocmd` prevents weird cursor movement
+          vim.api.nvim_buf_call(bufnr, function() vim.cmd("silent! noautocmd lockmarks update!") end)
+          b.saveQueued = false
+        end, saveInstantly and 0 or 2000)
+        -- local bufnr = ctx.buf
+        -- local bo = vim.bo[bufnr]
+        -- local b = vim.b[bufnr]
+        -- if bo.buftype ~= "" or bo.ft == "gitcommit" or bo.readonly then return end
+        -- if b.saveQueued and ctx.event ~= "FocusLost" then return end
 
-            vim.defer_fn(function()
-              vim.g.is_saving = false
-              pcall(vim.cmd.redrawstatus)
-            end, 500)
-          end, debounce)
-        end
+        -- if vim.bo.modified and not vim.bo.readonly and vim.fn.expand("%") ~= "" and vim.bo.buftype == "" then
+        --   local debounce = ctx.event == "FocusLost" and 0 or 1000 -- save at once on focus loss
+        --   b.saveQueued = true
+        --   vim.defer_fn(function()
+        --     if not vim.api.nvim_buf_is_valid(bufnr) then return end
+        --     -- `noautocmd` prevents weird cursor movement
+        --     vim.api.nvim_buf_call(bufnr, function()
+        --       vim.cmd("silent! noautocmd lockmarks update!")
+        --       vim.cmd("silent! write")
+        --       vim.g.is_saving = true
+        --     end)
+        --     b.saveQueued = false
+
+        --     vim.defer_fn(function()
+        --       vim.g.is_saving = false
+        --       pcall(vim.cmd.redrawstatus)
+        --     end, 500)
+        --   end, debounce)
+        -- end
       end,
     },
   })
@@ -335,7 +349,7 @@ function M.apply()
   --- @trial: determining if this implementation of the above IncSearchHighlight autocmd is more reliable
   -- REF: https://github.com/ibhagwan/nvim-lua/blob/main/lua/autocmd.lua#L111-L144
 
-  local function searchCountIndicator(mode)
+  function mega.searchCountIndicator(mode)
     local signColumnPlusScrollbarWidth = 2 + 3 -- CONFIG
 
     local countNs = vim.api.nvim_create_namespace("searchCounter")
@@ -358,57 +372,79 @@ function M.apply()
     })
   end
 
-  M.augroup("ToggleSearchHL", {
-    {
-      event = { "CursorMoved" },
-      command = function()
-        if vim.snippet.active() then
-          vim.cmd.nohlsearch()
-          return
-        end
+  -- without the `searchCountIndicator`, this `on_key` simply does `auto-nohl`
+  vim.on_key(function(char)
+    local key = vim.fn.keytrans(char)
+    local isCmdlineSearch = vim.fn.getcmdtype():find("[/?]") ~= nil
+    local isNormalMode = vim.api.nvim_get_mode().mode == "n"
+    local searchStarted = (key == "/" or key == "?") and isNormalMode
+    local searchConfirmed = (key == "<CR>" and isCmdlineSearch)
+    local searchCancelled = (key == "<Esc>" and isCmdlineSearch)
+    if not (searchStarted or searchConfirmed or searchCancelled or isNormalMode) then return end
 
-        vim.defer_fn(function()
-          -- No bloat lua adpatation of: https://github.com/romainl/vim-cool
-          local view, rpos = vim.fn.winsaveview(), vim.fn.getpos(".")
-          -- Move the cursor to a position where (whereas in active search) pressing `n`
-          -- brings us to the original cursor position, in a forward search / that means
-          -- one column before the match, in a backward search ? we move one col forward
-          vim.cmd(string.format("silent! keepjumps go%s", (vim.fn.line2byte(view.lnum) + view.col + 1 - (vim.v.searchforward == 1 and 2 or 0))))
-          -- Attempt to goto next match, if we're in an active search cursor position
-          -- should be equal to original cursor position
-          local ok, _ = pcall(vim.cmd, "silent! keepjumps norm! n")
-          local in_search = ok
-            and (function()
-              local npos = vim.fn.getpos(".")
-              return npos[2] == rpos[2] and npos[3] == rpos[3]
-            end)()
-          -- restore original view and position
-          vim.fn.winrestview(view)
-          if not in_search then
-            vim.schedule(function()
-              vim.cmd.nohlsearch()
-              searchCountIndicator("clear")
-            end)
-          else
-            vim.schedule(function() searchCountIndicator() end)
-          end
-        end, 250)
-      end,
-    },
-    {
-      event = { "InsertEnter" },
-      command = function(evt)
-        if vim.snippet.active() then
-          vim.cmd.nohlsearch()
-          return
-        end
-        vim.schedule(function()
-          vim.cmd.nohlsearch()
-          vim.schedule(function() searchCountIndicator("clear") end)
-        end)
-      end,
-    },
-  })
+    -- works for RHS, therefore no need to consider remaps
+    local searchMovement = vim.tbl_contains({ "n", "N", "*", "#" }, key)
+
+    if searchCancelled or (not searchMovement and not searchConfirmed) then
+      vim.opt.hlsearch = false
+      mega.searchCountIndicator("clear")
+    elseif searchMovement or searchConfirmed or searchStarted then
+      vim.opt.hlsearch = true
+      vim.defer_fn(mega.searchCountIndicator, 1)
+    end
+  end, vim.api.nvim_create_namespace("autoNohlAndSearchCount"))
+
+  -- M.augroup("ToggleSearchHL", {
+  --   {
+  --     event = { "CursorMoved" },
+  --     command = function()
+  --       if vim.snippet.active() then
+  --         vim.cmd.nohlsearch()
+  --         return
+  --       end
+
+  --       vim.defer_fn(function()
+  --         -- No bloat lua adpatation of: https://github.com/romainl/vim-cool
+  --         local view, rpos = vim.fn.winsaveview(), vim.fn.getpos(".")
+  --         -- Move the cursor to a position where (whereas in active search) pressing `n`
+  --         -- brings us to the original cursor position, in a forward search / that means
+  --         -- one column before the match, in a backward search ? we move one col forward
+  --         vim.cmd(string.format("silent! keepjumps go%s", (vim.fn.line2byte(view.lnum) + view.col + 1 - (vim.v.searchforward == 1 and 2 or 0))))
+  --         -- Attempt to goto next match, if we're in an active search cursor position
+  --         -- should be equal to original cursor position
+  --         local ok, _ = pcall(vim.cmd, "silent! keepjumps norm! n")
+  --         local in_search = ok
+  --           and (function()
+  --             local npos = vim.fn.getpos(".")
+  --             return npos[2] == rpos[2] and npos[3] == rpos[3]
+  --           end)()
+  --         -- restore original view and position
+  --         vim.fn.winrestview(view)
+  --         if not in_search then
+  --           vim.schedule(function()
+  --             vim.cmd.nohlsearch()
+  --             mega.searchCountIndicator("clear")
+  --           end)
+  --         else
+  --           vim.schedule(function() mega.searchCountIndicator() end)
+  --         end
+  --       end, 250)
+  --     end,
+  --   },
+  --   {
+  --     event = { "InsertEnter" },
+  --     command = function(evt)
+  --       if vim.snippet.active() then
+  --         vim.cmd.nohlsearch()
+  --         return
+  --       end
+  --       vim.schedule(function()
+  --         vim.cmd.nohlsearch()
+  --         vim.schedule(function() mega.searchCountIndicator("clear") end)
+  --       end)
+  --     end,
+  --   },
+  -- })
 
   M.augroup("Utilities", {
     {

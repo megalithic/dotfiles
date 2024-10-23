@@ -288,6 +288,13 @@ return {
           { mode = "n", keys = "z" },
           { mode = "x", keys = "z" },
 
+          -- mini.surround
+          { mode = "n", keys = "s" },
+
+          -- Operator-pending mode key
+          { mode = "o", keys = "a" },
+          { mode = "o", keys = "i" },
+
           -- Moving between stuff.
           { mode = "n", keys = "[" },
           { mode = "n", keys = "]" },

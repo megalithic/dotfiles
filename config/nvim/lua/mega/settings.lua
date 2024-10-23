@@ -18,14 +18,14 @@ local telescope_border_chars = {
   shadow = { "", "", "", "", "", "", "", "" },
 }
 
-local connected_telescope_border_chars = {
-  none = { "", "", "", "", "", "", "", "" },
-  single = { "─", "│", "─", "│", "┌", "┐", "┤", "├" },
-  double = { "═", "║", "═", "║", "╔", "╗", "╣", "╠" },
-  rounded = { "─", "│", "─", "│", "╭", "╮", "┤", "├" },
-  solid = { " ", " ", " ", " ", " ", " ", " ", " " },
-  shadow = { "", "", "", "", "", "", "", "" },
-}
+-- local connected_telescope_border_chars = {
+--   none = { "", "", "", "", "", "", "", "" },
+--   single = { "─", "│", "─", "│", "┌", "┐", "┤", "├" },
+--   double = { "═", "║", "═", "║", "╔", "╗", "╣", "╠" },
+--   rounded = { "─", "│", "─", "│", "╭", "╮", "┤", "├" },
+--   solid = { " ", " ", " ", " ", " ", " ", " ", " " },
+--   shadow = { "", "", "", "", "", "", "", "" },
+-- }
 
 local current_border = function(opts)
   opts = opts or { hl = "FloatBorder", style = BORDER_STYLE }
@@ -64,7 +64,7 @@ local M = {
   border = current_border(),
   border_chars = border_chars[BORDER_STYLE],
   telescope_border_chars = telescope_border_chars[BORDER_STYLE],
-  colorscheme = "megaforest", -- alt: megaforest, bamboo, `vim` for default, forestbones, everforest
+  colorscheme = "megaforest", -- alt: megaforest, onedark, bamboo, `vim` for default, forestbones, everforest
   default_colorcolumn = "81",
   notifier_enabled = true,
   debug_enabled = false,
@@ -94,7 +94,11 @@ local M = {
     "folds",
     "env",
   },
-  disabled_semantic_tokens = { "lua" },
+  disabled_semantic_tokens = {
+    -- "typescript",
+    -- "javascript",
+    -- "lua",
+  },
   enabled_inlay_hints = {},
   disabled_lsp_formatters = { "tailwindcss", "html", "ts_ls", "ls_emmet", "zk", "sumneko_lua" },
   ---@format disable
@@ -103,7 +107,7 @@ local M = {
   formatter_exclusions = { "elixirls", "", "lexical" },
   definition_exclusions = { "elixirls", "", "lexical" },
   references_exclusions = { "elixirls", "", "lexical" },
-  diagnostic_exclusions = { "elixirls", "", "lexical", "ts_ls" },
+  diagnostic_exclusions = { "elixirls", "", "lexical" },
   max_diagnostic_exclusions = { "elixirls", "", "lexical" },
   ---@format enable
   disable_autolint = false,
@@ -264,7 +268,7 @@ local M = {
       dashboard = "",
       history = "󰄉",
       comment = "󰅺",
-      robot = "󰚩",
+      robot = "󰚩", -- alts: 󰭆
       lightbulb = "󰌵",
       file_tree = "󰙅",
       help = "󰋖", -- alts: 󰘥 󰮥 󰮦 󰋗 󰞋 󰋖
@@ -539,6 +543,7 @@ M.apply = function()
       ["~/.dotfiles/config"] = "gitconfig",
       [".env"] = "bash",
       [".eslintrc"] = "jsonc",
+      [".eslintrc.json"] = "jsonc",
       [".gitignore"] = "conf",
       [".prettierrc"] = "jsonc",
       [".tool-versions"] = "conf",
@@ -575,6 +580,8 @@ M.apply = function()
       [".*%.conf"] = "conf",
       -- [".*%.env%..*"] = "env",
       [".*%.eslintrc%..*"] = "jsonc",
+      ["tsconfig*.json"] = "jsonc",
+      [".*/%.vscode/.*%.json"] = "jsonc",
       [".*%.gradle"] = "groovy",
       [".*%.html.en"] = "html",
       [".*%.jst.eco"] = "jst",
