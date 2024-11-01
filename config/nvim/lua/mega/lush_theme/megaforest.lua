@@ -103,8 +103,9 @@ local theme = lush(function(injected_functions)
     MoreMsg({ fg = C.yellow, bg = C.transparent, gui = "bold" }), -- |more-prompt|
     FoldMoreMsg({ Comment, gui = "italic,bold" }), -- |more-prompt|
     WildMenu({ PmenuSel }), -- current match in 'wildmenu' completion
-    NormalFloat({ Pmenu }), -- Normal text in floating windows.
-    FloatBorder({ Pmenu, fg = C.bg2.darken(10) }),
+    NormalFloat({ bg = C.bg2 }), -- Normal text in floating windows.
+    FloatBorder({ NormalFloat, fg = NormalFloat.bg }),
+    -- FloatBorder({ NormalFloat, fg = NormalFloat.bg.darken(10) }),
     NotifyBackground({ bg = C.bg2.darken(10) }),
     NotifyFloat({ NotifyBackground, fg = C.bg2.darken(10) }),
     FloatTitle({ Visual }),
@@ -316,7 +317,7 @@ local theme = lush(function(injected_functions)
     healthSuccess({ Green }),
     healthWarning({ Yellow }),
 
-    ---- :help headlines.txt -------------------------------------------
+    ---- :help headlines.txt ---------------------------------------------------
 
     Headline1({ fg = C.green, bg = C.bg_green, gui = "bold,italic" }),
     Headline2({ fg = C.yellow, bg = C.bg_yellow, gui = "bold" }),
@@ -327,10 +328,41 @@ local theme = lush(function(injected_functions)
     Dash({ fg = C.bg3, gui = "bold" }),
     CodeBlock({ bg = C.bg2 }),
 
-    ---- *render-markdown.txt* -------------------------------------------------
+    ---- :help render-markdown.txt ---------------------------------------------
 
     RenderMarkdownDash({ Dash }),
     RenderMarkdownCode({ CodeBlock }),
+
+    RenderMarkdownChecked({ fg = colors.green }),
+    RenderMarkdownUnchecked({ fg = colors.bg_green }),
+    RenderMarkdownTodo({ RenderMarkdownUnchecked }),
+
+    RenderMarkdownH1({ fg = colors.green, bg = C.bg_green, gui = "bold,italic" }),
+    RenderMarkdownH2({ fg = colors.yellow, guisp = C.bg_yellow.li(5), gui = "bold,italic,underline" }),
+    RenderMarkdownH3({ fg = colors.blue, guisp = C.bg_blue, gui = "underline" }),
+    RenderMarkdownH4({ fg = colors.orange, gui = "bold" }),
+    RenderMarkdownH5({ fg = colors.red, gui = "italic" }),
+    RenderMarkdownH6({ fg = colors.brown }),
+
+    RenderMarkdownH1Bg({ RenderMarkdownH1 }),
+    RenderMarkdownH2Bg({ RenderMarkdownH2 }),
+    RenderMarkdownH3Bg({ RenderMarkdownH3 }),
+    RenderMarkdownH4Bg({ RenderMarkdownH4 }),
+    RenderMarkdownH5Bg({ RenderMarkdownH5 }),
+
+    RenderMarkdownListWip({ fg = colors.blue }),
+    RenderMarkdownListTodo({ fg = colors.orange }),
+    RenderMarkdownListSkipped({ fg = colors.yellow }),
+    RenderMarkdownListTrash({ fg = colors.red }),
+
+    RenderMarkdownListYes({ fg = colors.green }),
+    RenderMarkdownListNo({ fg = colors.red }),
+    RenderMarkdownListFire({ fg = colors.red }),
+    RenderMarkdownListIdea({ fg = colors.yellow }),
+    RenderMarkdownListStar({ fg = colors.yellow }),
+    RenderMarkdownListQuestion({ fg = colors.yellow }),
+    RenderMarkdownListInfo({ fg = colors.cyan }),
+    RenderMarkdownListImportant({ fg = colors.orange }),
 
     ---- :help nvim-treesitter-highlights (external plugin) ----
     -- https://github.com/folke/tokyonight.nvim/blob/main/lua/tokyonight/treesitter.lua#L20
@@ -1285,38 +1317,6 @@ local theme = lush(function(injected_functions)
     OilTypeFile({ NonText }),
     OilTypeLink({ Constant }),
     OilTypeSocket({ Keyword }),
-
-    ---- render-markdown -------------------------------------------------------
-    RenderMarkdownChecked({ fg = colors.green }),
-    RenderMarkdownUnchecked({ fg = colors.bg_green }),
-    RenderMarkdownTodo({ RenderMarkdownUnchecked }),
-
-    RenderMarkdownH1({ fg = colors.green, bg = C.bg_green, gui = "bold,italic,underline" }),
-    RenderMarkdownH2({ fg = colors.yellow, bg = C.bg_yellow.li(5) }),
-    RenderMarkdownH3({ fg = colors.blue, bg = C.bg_blue }),
-    RenderMarkdownH4({ fg = colors.orange }),
-    RenderMarkdownH5({ fg = colors.red }),
-    RenderMarkdownH6({ fg = colors.brown }),
-
-    RenderMarkdownH1Bg({ RenderMarkdownH1 }),
-    RenderMarkdownH2Bg({ RenderMarkdownH2 }),
-    RenderMarkdownH3Bg({ RenderMarkdownH3 }),
-    RenderMarkdownH4Bg({ RenderMarkdownH4 }),
-    RenderMarkdownH5Bg({ RenderMarkdownH5 }),
-
-    RenderMarkdownListWip({ fg = colors.blue }),
-    RenderMarkdownListTodo({ fg = colors.orange }),
-    RenderMarkdownListSkipped({ fg = colors.yellow }),
-    RenderMarkdownListTrash({ fg = colors.red }),
-
-    RenderMarkdownListYes({ fg = colors.green }),
-    RenderMarkdownListNo({ fg = colors.red }),
-    RenderMarkdownListFire({ fg = colors.red }),
-    RenderMarkdownListIdea({ fg = colors.yellow }),
-    RenderMarkdownListStar({ fg = colors.yellow }),
-    RenderMarkdownListQuestion({ fg = colors.yellow }),
-    RenderMarkdownListInfo({ fg = colors.cyan }),
-    RenderMarkdownListImportant({ fg = colors.orange }),
   }
 end)
 ---@diagnostic enable

@@ -18,9 +18,6 @@ obj.callbacks = {
       local urlDomain = url and uri(url).host
       local app = hs.application.get("com.pop.pop.app")
 
-      dbg(handler)
-      dbg(app:bundleID())
-
       hs.urlevent.openURLWithBundle(url, hs.application.get(handler):bundleID())
 
       hs.timer.waitUntil(function() return browser.hasTab(urlDomain) and hs.application.get(app) ~= nil end, function()

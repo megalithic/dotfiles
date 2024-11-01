@@ -23,37 +23,6 @@ return {
     end,
   },
   {
-    "megalithic/megaforest.nvim",
-    priority = 1001, -- Ensure it loads first
-    opts = {
-      {
-        colors = {
-          onedark = {
-            bg = "#2f3d44",
-            fg = "#d8caac",
-            red = "#e67e80",
-            orange = "#e39b7b",
-            yellow = "#d9bb80",
-            green = "#a7c080",
-            cyan = "#87c095",
-            blue = "#7fbbb3",
-            purple = "#d39bb6",
-            white = "#abb2bf",
-            black = "#2b3339",
-            gray = "#868d80",
-            highlight = "#5d5c50",
-            comment = "#5c6370",
-            none = "NONE",
-          },
-        },
-      },
-    },
-    config = function(_, opts)
-      require("onedarkpro").setup(opts)
-      pcall(vim.cmd.colorscheme, vim.g.colorscheme)
-    end,
-  },
-  {
     "neanias/everforest-nvim",
     cond = vim.g.colorscheme == "everforest",
     version = false,

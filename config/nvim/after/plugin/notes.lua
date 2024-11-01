@@ -113,8 +113,9 @@ function M.sort_tasks(bufnr, lines)
       local prefix, box, status, task_text = line:match("^(%s*[-*] )(%[(.)%])%s(.*)")
       if prefix ~= nil and box ~= nil and status ~= nil then table.insert(tasks, { index = i, line = line, status = status, text = task_text }) end
     end
+    if tasks and U.tlen(tasks) > 0 then return tasks, tasks[1].index end
 
-    return tasks, tasks[1].index
+    return nil, nil
   end
 
   -- sorts by status priority first, then alphanumerically
@@ -145,6 +146,8 @@ function M.sort_tasks(bufnr, lines)
 
   -- extract tasks and the first line the tasks start on
   local tasks, starting_task_line = extract(lines)
+
+  if tasks == nil then return end
 
   -- used for comparison later
   local originally_extracted_tasks = U.tcopy(tasks)
@@ -416,46 +419,46 @@ end
 -- <leader>n<key>
 vim.iter(notesMappings):each(function(key, rhs) leaderMapper("n", "n" .. key, rhs[1], rhs[2]) end)
 
-local notesAbbrevs = {
-  ["mtg:"] = [[### Meeting 󱛡 ->]],
-  ["trn:"] = [[### Linear Ticket  ->]],
-  ["pr:"] = [[### Pull Request  ->]],
-  ["call:"] = [[ (call) ]],
-  ["email:"] = [[ (email) ]],
-  ["contact:"] = [[󰻞 (contact) ]],
-  ["chat:"] = [[󰻞 (contact) ]],
-}
-
 require("mega.autocmds").augroup("NotesLoaded", {
   {
     event = { "LspAttach", "BufEnter" },
     desc = "Use various notes related functions upon markdown entering or markdown-oxide lsp attaching",
     command = function(evt)
-      local buf = evt.buf
-      if vim.bo[buf].filetype == "markdown" then
-        vim.api.nvim_buf_call(buf, function()
+      local bufnr = evt.buf
+      if vim.bo[bufnr].filetype == "markdown" then
+        local notesAbbrevs = {
+          ["mtg:"] = [[### Meeting 󱛡 ->]],
+          ["trn:"] = [[### Linear Ticket  ->]],
+          ["pr:"] = [[### Pull Request  ->]],
+          ["call:"] = [[ (call) ]],
+          ["email:"] = [[ (email) ]],
+          ["contact:"] = [[󰻞 (contact) ]],
+          ["chat:"] = [[󰻞 (contact) ]],
+        }
+
+        vim.api.nvim_buf_call(bufnr, function()
           for k, v in pairs(notesAbbrevs) do
             vim.cmd.iabbrev(string.format("<buffer> %s %s", k, v))
           end
         end)
 
-        map("n", "g.", vim.cmd.ExecuteLine, { desc = "execute line", buffer = buf })
-        local clients = vim.lsp.get_clients({ bufnr = buf })
+        map("n", "gx", vim.cmd.ExecuteLine, { desc = "execute line", buffer = bufnr })
+        local clients = vim.lsp.get_clients({ bufnr = bufnr })
         for _, client in ipairs(clients) do
           -- only use these bindings when we're in markdown_oxide document AND our notes path
           if client.name == "markdown_oxide" and string.match(vim.fn.expand("%:p:h"), "_notes") then
             map("n", "<leader>w", function()
               vim.schedule(function()
-                M.format_notes(buf)
+                M.format_notes(bufnr)
                 vim.cmd.write({ bang = true })
               end)
-            end, { buffer = buf, desc = "[notes] format and save" })
+            end, { buffer = bufnr, desc = "[notes] format and save" })
 
-            map("n", "<C-x>d", function() M.toggle_task("x") end, { buffer = buf, desc = "[notes] toggle -> done" })
-            map("n", "<C-x>t", function() M.toggle_task("-") end, { buffer = buf, desc = "[notes] toggle -> todo" })
-            map("n", "<C-x>s", function() M.toggle_task(".") end, { buffer = buf, desc = "[notes] toggle -> started" })
-            map("n", "<C-x><C-x>", function() M.toggle_task(" ") end, { buffer = buf, desc = "[notes] toggle -> not-started" })
-            map("n", "<leader>ff", function() mega.picker.find_files({ cwd = vim.g.notes_path }) end, { desc = "[notes] find", buffer = buf })
+            map("n", "<C-x>d", function() M.toggle_task("x") end, { buffer = bufnr, desc = "[notes] toggle -> done" })
+            map("n", "<C-x>t", function() M.toggle_task("-") end, { buffer = bufnr, desc = "[notes] toggle -> todo" })
+            map("n", "<C-x>s", function() M.toggle_task(".") end, { buffer = bufnr, desc = "[notes] toggle -> started" })
+            map("n", "<C-x><C-x>", function() M.toggle_task(" ") end, { buffer = bufnr, desc = "[notes] toggle -> not-started" })
+            map("n", "<leader>ff", function() mega.picker.find_files({ cwd = vim.g.notes_path }) end, { desc = "[notes] find", buffer = bufnr })
             map("n", "<leader>a", function() mega.picker.grep({ cwd = vim.g.notes_path }) end, { desc = "[notes] grep" })
             map(
               "n",
@@ -485,18 +488,6 @@ require("mega.autocmds").augroup("NotesLoaded", {
             -- map("n", "<leader>a", function() mega.picker.grep({ picker = "egrepify", cwd = vim.g.notes_path }) end, { desc = "[notes] grep", buffer = buf })
             -- map("n", "<leader>a", function() mega.picker.grep({ picker = "egrepify", cwd = vim.g.notes_path }) end, { desc = "[notes] grep", buffer = buf })
             -- map("n", "gd", "<cmd>lua vim.lsp.buf.definition()<CR>", { desc = "[f]ind in [n]otes", buffer = buf })
-            -- map("n", "g.", function()
-            --   local note_title = require("mega.utils").notes.get_md_link_dest()
-            --   if note_title == nil or note_title == "" then
-            --     vim.notify("Unable to create new note from link text", L.WARN)
-            --     return
-            --   end
-
-            --   os.execute("note -c " .. note_title)
-            --   vim.diagnostic.enable(false)
-            --   vim.cmd("LspRestart " .. client.name)
-            --   vim.defer_fn(function() vim.diagnostic.enable(true) end, 50)
-            -- end, { desc = "[g]o create note from link title", buffer = buf })
           end
         end
       end

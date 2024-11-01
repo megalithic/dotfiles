@@ -102,13 +102,13 @@ local M = {
   enabled_inlay_hints = {},
   disabled_lsp_formatters = { "tailwindcss", "html", "ts_ls", "ls_emmet", "zk", "sumneko_lua" },
   ---@format disable
-  enabled_elixir_ls = { "", "nextls", "" },
+  enabled_elixir_ls = { "elixirls", "nextls", "" },
   completion_exclusions = { "elixirls", "", "lexical" },
   formatter_exclusions = { "elixirls", "", "lexical" },
   definition_exclusions = { "elixirls", "", "lexical" },
   references_exclusions = { "elixirls", "", "lexical" },
-  diagnostic_exclusions = { "elixirls", "", "lexical" },
-  max_diagnostic_exclusions = { "elixirls", "", "lexical" },
+  diagnostic_exclusions = { "", "", "lexical" },
+  max_diagnostic_exclusions = { "", "", "lexical" },
   ---@format enable
   disable_autolint = false,
   disable_autoformat = false,

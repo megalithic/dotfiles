@@ -205,6 +205,7 @@ brew "sk" # alt to fzf
 brew "ssh-copy-id"
 # brew "stack"
 # brew "starship"
+brew "statix" # for nix linting
 brew "stow"
 # brew "sketchybar", restart_service: true if OS.mac? # sketchybar
 # brew "svim" if OS.mac? # restart_service: true if OS.mac? # sketchyvim

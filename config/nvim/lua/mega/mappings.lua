@@ -164,7 +164,9 @@ map("i", "?", "?<C-g>u")
 map("n", "J", "<nop>")
 
 -- go to last buffer
-map("n", "<localleader><localleader>", "<C-^>")
+map("n", "gbn", "<cmd>bnext<cr>", { desc = "next buffer" })
+map("n", "gbp", "<cmd>bprev<cr>", { desc = "prev buffer" })
+map("n", "<localleader><localleader>", "<C-^>", { desc = "last buffer" })
 
 -- [[ better movements within a buffer ]] --------------------------------------
 map("n", "H", "^")

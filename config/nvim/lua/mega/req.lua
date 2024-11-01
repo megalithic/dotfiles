@@ -18,7 +18,7 @@ return function(...)
       if not first_mod then first_mod = mod end
       table.insert(mods, mod)
     else
-      vim.notify_once(string.format("Missing module: %s", arg), vim.log.levels.WARN)
+      vim.notify_once(string.format("Missing module: %s", arg), L.WARN)
       -- Return a dummy item that returns functions, so we can do things like
       -- p.require("module").setup()
       local dummy = {}

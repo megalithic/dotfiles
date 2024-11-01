@@ -1,3 +1,5 @@
+-- REF:
+-- - https://github.com/ahmedelgabri/dotfiles/blob/5ceb4f3220980f95bc674b0785c920fbd9fc45ed/config/nvim/lua/plugins/formatter.lua#L75
 local SETTINGS = require("mega.settings")
 local U = require("mega.utils")
 
@@ -60,7 +62,7 @@ end
 return {
   "stevearc/conform.nvim",
   cond = vim.g.formatter == "conform",
-  event = { "BufReadPre", "BufNewFile", "BufWritePre", "BufWritePost" },
+  event = { "BufReadPre", "BufNewFile", "BufWritePre", "BufWritePost", "LspAttach" },
   cmd = "ConformInfo",
   keys = keys,
   opts = {
@@ -82,6 +84,7 @@ return {
       lua = { "stylua" },
       ["markdown"] = prettier,
       ["markdown.mdx"] = prettier,
+      nix = { "nixpkgs_fmt", "statix" },
       python = { "isort", "black" },
       rust = { "rustfmt" },
       -- sass = { "prettierd" },
@@ -110,6 +113,11 @@ return {
       },
       mix = {
         cwd = function(self, ctx) (require("conform.util").root_file({ "mix.exs" }))(self, ctx) end,
+      },
+      statix = {
+        command = "statix",
+        args = { "fix", "--stdin" },
+        stdin = true,
       },
     },
     log_level = vim.log.levels.DEBUG,

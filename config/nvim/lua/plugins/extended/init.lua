@@ -1,4 +1,3 @@
-local fmt = string.format
 local SETTINGS = require("mega.settings")
 
 return {
@@ -205,20 +204,22 @@ return {
     event = "CmdlineEnter",
     opts = {},
   },
-  -- {
-  --   "windwp/nvim-autopairs",
-  --   lazy = true,
-  --   config = function()
-  --     local npairs = require("nvim-autopairs")
-  --     npairs.setup()
+  {
+    "windwp/nvim-autopairs",
+    cond = true,
+    lazy = true,
+    config = function()
+      local npairs = require("nvim-autopairs")
+      npairs.setup()
 
-  --     npairs.add_rules(require("nvim-autopairs.rules.endwise-elixir"))
-  --     npairs.add_rules(require("nvim-autopairs.rules.endwise-lua"))
-  --     npairs.add_rules(require("nvim-autopairs.rules.endwise-ruby"))
-  --   end,
-  -- },
+      npairs.add_rules(require("nvim-autopairs.rules.endwise-elixir"))
+      npairs.add_rules(require("nvim-autopairs.rules.endwise-lua"))
+      npairs.add_rules(require("nvim-autopairs.rules.endwise-ruby"))
+    end,
+  },
   { -- auto-pair
     -- EXAMPLE config of the plugin: https://github.com/Bekaboo/nvim/blob/master/lua/configs/ultimate-autopair.lua
+    cond = false,
     "altermo/ultimate-autopair.nvim",
     branch = "v0.6", -- recommended as each new version will have breaking changes
     event = { "InsertEnter", "CmdlineEnter" },

@@ -14,16 +14,21 @@ local C = {
 local bg_thicc = "#273433"
 local bg_hard = "#2b3339"
 local bg_medium = "#2b3339"
-local bg_low = "#323d43"
+local bg_soft = "#323d43"
 
 C.transparent = nil
 C.none = "none"
-C.bg0 = hsluv(bg_low) -- #2f3d44 / #323d43
+C.bg0 = hsluv(bg_soft) -- #2f3d44 / #323d43
 C.bg1 = C.bg0.lighten(5) -- #3c474d
 C.bg2 = C.bg0.lighten(10) -- #465258
 C.bg3 = C.bg0.lighten(15) -- #505a60
 C.bg4 = C.bg0.lighten(20) -- #576268
 C.bg5 = C.bg0.lighten(25) -- #626262
+
+C.bg_hard = hsluv(bg_hard)
+C.bg_medium = hsluv(bg_medium)
+C.bg_soft = hsluv(bg_soft)
+C.bg_thicc = hsluv(bg_thicc)
 
 C.bg_dark_raw = bg_hard
 C.bg_dark = hsluv(bg_hard)

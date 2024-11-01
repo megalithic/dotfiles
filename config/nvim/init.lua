@@ -111,6 +111,16 @@ end
 
 function vim.wlogclear() vim.fn.writefile({}, "/tmp/nlog") end
 
+function _G.prequire(name)
+  local ok, mod = pcall(require, name)
+  if ok then
+    return mod
+  else
+    vim.notify_once(string.format("Missing module: %s", mod), vim.log.levels.WARN)
+    return nil
+  end
+end
+
 require("mega.settings").apply()
 require("mega.lazy")
 require("mega.autocmds").apply()

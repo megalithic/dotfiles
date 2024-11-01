@@ -30,17 +30,17 @@ function obj.updateIndicator(win)
   local screen = win:screen()
 
   -- HT: @evantravers
-  obj.indicator = hs.canvas
-    .new(frame)
-    :appendElements({
-      type = "rectangle",
-      action = "stroke",
-      strokeWidth = 2.0,
-      -- strokeColor = { white = 0.8, alpha = 0.7 },
-      strokeColor = { hex = "#F74F9E", alpha = 0.7 },
-      roundedRectRadii = { xRadius = 14.0, yRadius = 14.0 },
-    })
-    :show()
+  -- obj.indicator = hs.canvas
+  --   .new(frame)
+  --   :appendElements({
+  --     type = "rectangle",
+  --     action = "stroke",
+  --     strokeWidth = 2.0,
+  --     -- strokeColor = { white = 0.8, alpha = 0.7 },
+  --     strokeColor = { hex = "#F74F9E", alpha = 0.7 },
+  --     roundedRectRadii = { xRadius = 14.0, yRadius = 14.0 },
+  --   })
+  --   :show()
 
   if win ~= nil then
     if screen == hs.screen.mainScreen() then

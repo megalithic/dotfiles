@@ -96,7 +96,7 @@ function __set_template() {
       __get_last_daily_note_path
     fi
 
-    cat <<EOF >"$daily_note_path"
+    cat << EOF > "$daily_note_path"
 ---
 id: daily-${daily_note_date}
 tags:
@@ -114,6 +114,8 @@ $(__build_tasks)
 
 ## Links
 
+- [[ADHD]]
+- [[ENG]]
 - [Previous daily note (${last_daily_note_name})](${last_daily_note_file_name})
 EOF
   fi
@@ -125,51 +127,51 @@ function open_note() {
 
 while getopts "hct:rlm:" OPTION; do
   case $OPTION in
-    m)
-      METHOD="${OPTARG:-note}"
-      ;;
+  m)
+    METHOD="${OPTARG:-note}"
+    ;;
 
-    c)
-      if [[ "$METHOD" == "note" ]]; then
-        echo "${daily_note_path}" | tr -d '\n'
-      fi
+  c)
+    if [[ "$METHOD" == "note" ]]; then
+      echo "${daily_note_path}" | tr -d '\n'
+    fi
 
-      exit 0
-      ;;
+    exit 0
+    ;;
 
-    p)
-      if [[ "$METHOD" == "note" ]]; then
-        __get_last_daily_note_path
-        echo "${last_daily_note_path}" | tr -d '\n'
-      fi
+  p)
+    if [[ "$METHOD" == "note" ]]; then
+      __get_last_daily_note_path
+      echo "${last_daily_note_path}" | tr -d '\n'
+    fi
 
-      exit 0
-      ;;
+    exit 0
+    ;;
 
-    t)
-      __print_tasks "${OPTARG:-today}"
-      exit 0
-      ;;
+  t)
+    __print_tasks "${OPTARG:-today}"
+    exit 0
+    ;;
 
-    r)
-      open_note
-      exit 0
-      ;;
+  r)
+    open_note
+    exit 0
+    ;;
 
-    h)
-      __help
-      ;;
+  h)
+    __help
+    ;;
 
-    \?)
-      # NOTE: this covers the case where an optarg may not be provided
-      # and will exit errored
-      echo "Invalid Option: -$OPTARG" 1>&2
-      exit 1
-      ;;
-    :)
-      echo "Invalid Option: -$OPTARG requires an argument" 1>&2
-      exit 1
-      ;;
+  \?)
+    # NOTE: this covers the case where an optarg may not be provided
+    # and will exit errored
+    echo "Invalid Option: -$OPTARG" 1>&2
+    exit 1
+    ;;
+  :)
+    echo "Invalid Option: -$OPTARG requires an argument" 1>&2
+    exit 1
+    ;;
   esac
 done
 shift "$(($OPTIND - 1))"
@@ -189,7 +191,7 @@ if [[ "$METHOD" == "note" ]]; then
   # if ! tmux has-session -t "$SESSION" 2>/dev/null; then
   #   tmux new-session -d -s "$SESSION" -c "$daily_note_dir" "nvim +norm\ G \"$daily_note_path\""
   # fi
-  if tmux has-session -t "$SESSION" 2>/dev/null; then
+  if tmux has-session -t "$SESSION" 2> /dev/null; then
     tmux kill-session -t "$SESSION"
   fi
 
@@ -197,7 +199,7 @@ if [[ "$METHOD" == "note" ]]; then
 elif [[ "$METHOD" == "zk" ]]; then
   SESSION="daily-zk-${daily_note_date}"
 
-  if ! tmux has-session -t "$SESSION" 2>/dev/null; then
+  if ! tmux has-session -t "$SESSION" 2> /dev/null; then
     tmux new-session -d -s "$SESSION" -c "$zk_notes_dir" "zk daily"
   fi
 fi

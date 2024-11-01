@@ -178,6 +178,17 @@ ftplugin.extend_all({
     },
     callback = function(bufnr, args) vim.bo[bufnr].commentstring = [[<%!-- %s --%>]] end,
   },
+  ghostty = {
+    opt = {
+      commentstring = [[# %s]],
+    },
+  },
+  nix = {
+    opt = {
+      commentstring = "# %s",
+      -- nil_ls = {},
+    },
+  },
   terminal = {
     opt = {
       relativenumber = false,
@@ -488,7 +499,7 @@ ftplugin.extend_all({
         fugitive_pv_timer = vim.defer_fn(function()
           if not is_loaded then vim.api.nvim_buf_call(bufnr, function() vim.cmd(("do fugitive BufReadCmd %s"):format(bufname)) end) end
           require("bqf.preview.handler").open(qwinid, nil, true)
-          vim.api.nvim_buf_set_option(require("bqf.preview.session").float_bufnr(), "filetype", "git")
+          vim.api.nvim_set_option_value("filetype", "git", { buf = require("bqf.preview.session").float_bufnr(), win = qwinid })
         end, is_loaded and 0 or 60)
         return true
       end

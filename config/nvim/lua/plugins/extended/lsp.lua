@@ -215,11 +215,18 @@ return {
         local diagnostic_handler = vim.lsp.handlers[methods.textDocument_publishDiagnostics]
         vim.lsp.handlers[methods.textDocument_publishDiagnostics] = function(err, result, ctx, config)
           local client_name = vim.lsp.get_client_by_id(ctx.client_id).name
-          if vim.tbl_contains(SETTINGS.diagnostic_exclusions, client_name) then
+
+          local fname = vim.api.nvim_buf_get_name(bufnr)
+          local fext = fname:match("%.[^.]+$")
+
+          -- FIXME: once "the one elixir ls to rule them all" (aka "Expert") is released, you can probably get rid of all of this non-sense i'm using to manage multiple elixir ls'
+          -- this lets certain elixir language servers that i use to report diagnostics for test files (nextls doesn't, so i have to rely on elixirls or lexical to do this)
+          if vim.tbl_contains(SETTINGS.diagnostic_exclusions, client_name) and fext ~= ".exs" then
             print("skipping diagnostics for " .. client_name)
             return
+          else
+            diagnostic_handler(err, result, ctx, config)
           end
-          diagnostic_handler(err, result, ctx, config)
         end
 
         -- EXCLUDE certain servers for definitions
@@ -874,36 +881,63 @@ return {
         -- dbg({ client.name, filetype, client.server_capabilities.semanticTokensProvider })
       end
 
+      -- TODO: fixes for nvim 10?
+      -- REF: https://github.com/dkarter/dotfiles/blob/master/config/nvim/lua/plugins/mason/lsp.lua#L53
       local capabilities = vim.lsp.protocol.make_client_capabilities()
       if pcall(require, "cmp_nvim_lsp") then capabilities = require("cmp_nvim_lsp").default_capabilities() end
-      capabilities.textDocument.completion.completionItem.snippetSupport = true
+
       capabilities.textDocument.foldingRange = { dynamicRegistration = false, lineFoldingOnly = true }
-      capabilities.textDocument.completion.completionItem = {
-        documentationFormat = { "markdown", "plaintext" },
-        snippetSupport = true,
-        preselectSupport = true,
-        insertReplaceSupport = false,
-        labelDetailsSupport = true,
-        deprecatedSupport = true,
-        commitCharactersSupport = true,
-        tagSupport = { valueSet = { 1 } },
-        resolveSupport = {
-          properties = {
-            "documentation",
-            "detail",
-            "additionalTextEdits",
+      capabilities.textDocument.completion = {
+        dynamicRegistration = false,
+        completionItem = {
+          snippetSupport = true,
+          documentationFormat = { "markdown", "plaintext" },
+          commitCharactersSupport = true,
+          deprecatedSupport = true,
+          preselectSupport = true,
+          tagSupport = {
+            valueSet = {
+              1, -- Deprecated
+            },
+          },
+          insertReplaceSupport = true,
+          resolveSupport = {
+            properties = {
+              "documentation",
+              "detail",
+              "additionalTextEdits",
+              "sortText",
+              "filterText",
+              "insertText",
+              "textEdit",
+              "insertTextFormat",
+              "insertTextMode",
+            },
+          },
+          insertTextModeSupport = {
+            valueSet = {
+              1, -- asIs
+              2, -- adjustIndentation
+            },
+          },
+          labelDetailsSupport = true,
+        },
+        contextSupport = true,
+        insertTextMode = 1,
+        completionList = {
+          itemDefaults = {
+            "commitCharacters",
+            "editRange",
+            "insertTextFormat",
+            "insertTextMode",
+            "data",
           },
         },
       }
 
-      -- if SETTINGS.disabled_semantic_tokens[filetype] then
-      --   capabilities.textDocument.semanticTokens = nil
-      --   capabilities.workspace.semanticTokens = nil
-      -- end
-
       local servers = require("mega.servers")
       if servers == nil then return end
-      local servers_list = servers.list(capabilities, M.on_attach)
+      local server_list = servers.list(capabilities, M.on_attach)
       servers.load_unofficial()
 
       require("mason").setup()
@@ -917,10 +951,11 @@ return {
         "prettierd",
         "ruff",
         "stylua",
+        "nixpkgs-fmt",
       }
 
       local servers_to_install = vim.tbl_filter(function(key)
-        local s = servers_list[key]
+        local s = server_list[key]
         if type(s) == "table" then
           return not s.manual_install
         elseif type(s) == "function" then
@@ -929,13 +964,13 @@ return {
         else
           return s
         end
-      end, vim.tbl_keys(servers_list))
+      end, vim.tbl_keys(server_list))
       vim.list_extend(ensure_installed, servers_to_install)
 
       require("mason-tool-installer").setup({ ensure_installed = ensure_installed })
 
       function M.get_config(name)
-        local config = name and servers_list[name] or {}
+        local config = name and server_list[name] or {}
         if not config or config == nil then return end
 
         if type(config) == "function" then
@@ -953,11 +988,62 @@ return {
         return config
       end
 
-      vim.iter(servers_list):each(function(server_name, _)
+      vim.iter(server_list):each(function(server_name, _)
         local cfg = M.get_config(server_name)
         if cfg == nil then return end
         lspconfig[server_name].setup(cfg)
       end)
+
+      -- local ok_ex, elixir = pcall(require, "elixir")
+      -- if ok_ex then
+      --   local elixirls = require("elixir.elixirls")
+      --   elixir.setup({
+      --     credo = {
+      --       on_attach = M.on_attach,
+      --       enable = false,
+      --     },
+      --     nextls = {
+      --       enable = false,
+      --       version = "0.23.1",
+      --       on_attach = M.on_attach,
+      --       init_options = {
+      --         experimental = {
+      --           completions = {
+      --             enable = true, -- control if completions are enabled. defaults to false
+      --           },
+      --         },
+      --       },
+      --     },
+
+      --     -- actually lexical
+      --     elixirls = {
+      --       enable = true,
+      --       settings = elixirls.settings({
+      --         incrementalDialyzer = true,
+      --         dialyzerEnabled = true,
+      --         dialyzerFormat = "dialyxir_long",
+      --         enableTestLenses = true,
+      --         suggestSpecs = true,
+      --         autoInsertRequiredAlias = true,
+      --         signatureAfterComplete = true,
+      --       }),
+      --       cmd = vim.env.XDG_DATA_HOME .. "/lsp/lexical/_build/dev/package/lexical/bin/start_lexical.sh",
+      --       on_attach = function(client, bufnr)
+      --         -- NOTE: this on_attach fires before my own LspAttach autocmd handler below
+      --         -- vim.keymap.set("n", "<space>pf", ":ElixirFromPipe<cr>", { buffer = true, noremap = true })
+      --         -- vim.keymap.set("n", "<space>pt", ":ElixirToPipe<cr>", { buffer = true, noremap = true })
+      --         -- vim.keymap.set("v", "<space>em", ":ElixirExpandMacro<cr>", { buffer = true, noremap = true })
+
+      --         vim.api.nvim_buf_create_user_command(bufnr, "Format", function()
+      --           local params = require("vim.lsp.util").make_formatting_params()
+      --           client.request("textDocument/formatting", params, nil, bufnr)
+      --         end, { nargs = 0 })
+
+      --         M.on_attach(client, bufnr)
+      --       end,
+      --     },
+      --   })
+      -- end
 
       augroup("LspAttach", {
         {
@@ -971,6 +1057,7 @@ return {
       })
     end,
   },
+  { "elixir-tools/elixir-tools.nvim", dependencies = { "nvim-lua/plenary.nvim" } },
   {
     -- FIXME: https://github.com/mhanberg/output-panel.nvim/issues/5
     "mhanberg/output-panel.nvim",
@@ -985,6 +1072,7 @@ return {
     cmd = { "OutputPanel" },
     opts = true,
   },
+  { "RaafatTurki/corn.nvim", opts = {}, enabled = false },
   { -- signature hints
     cond = vim.g.completer ~= "blink",
     "ray-x/lsp_signature.nvim",

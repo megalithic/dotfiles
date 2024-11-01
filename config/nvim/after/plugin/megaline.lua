@@ -271,27 +271,19 @@ local exception_types = {
       -- dd(parts)
       return seg(fmt("Oil %s", vim.fn.expand("%:p")))
     end,
-    toggleterm = function(_, buf)
+    toggleterm = function(_, bufnr)
       local shell = fnamemodify(vim.env.SHELL, ":t")
-      return seg(fmt("Terminal(%s)[%s]", shell, api.nvim_buf_get_var(buf, "toggle_number")))
+      return seg(fmt("Terminal(%s)[%s]", shell, api.nvim_buf_get_var(bufnr, "toggle_number")))
     end,
-    megaterm = function(_, buf)
-      local shell = fnamemodify(vim.env.SHELL, ":t")
+    megaterm = function(_, bufnr)
+      local shell = fnamemodify(vim.env.SHELL, ":t") or vim.o.shell
       local mode = MODES[api.nvim_get_mode().mode]
       local mode_hl = mode.short == "T-I" and "StModeTermInsert" or "StModeTermNormal"
-      -- if pcall(api.nvim_buf_get_var(buf, "term_buf")) and pcall(api.nvim_buf_get_var(buf, "term_cmd")) then
-      --   return seg(fmt("megaterm#%d(%s)[%s]", api.nvim_buf_get_var(buf, "term_buf"), shell, api.nvim_buf_get_var(buf, "term_cmd") or buf), mode_hl)
-      -- end
+      if vim.g.term_bufnr ~= nil then
+        return seg(string.format("megaterm#%d(%s)[%s]", vim.g.term_bufnr, shell, vim.api.nvim_buf_get_var(bufnr, "term_cmd") or bufnr), mode_hl)
+      end
 
-      return seg(string.format("megaterm#(%s)[%s]", shell, buf), mode_hl)
-      -- if vim.g.term_bufnr ~= nil then
-      --   return seg(string.format("megaterm#(%s)[%s]", shell, vim.api.nvim_buf_get_var(buf, "term_cmd") or buf), mode_hl)
-      --   -- return seg(fmt("megaterm#%d(%s)[%s]", vim.g.term_bufnr, shell, vim.api.nvim_buf_get_var(buf, "term_cmd") or buf), mode_hl)
-      -- end
-
-      -- return seg(fmt("megaterm#%d(%s)[%s]", api.nvim_buf_get_var(buf, "term_buf"), shell, api.nvim_buf_get_var(buf, "term_cmd") or buf), mode_hl)
-
-      -- return ""
+      return seg(string.format("megaterm#%d(%s)", bufnr, shell), mode_hl)
     end,
     ["dap-repl"] = "Debugger REPL",
     kittybuf = "Kitty Scrollback Buffer",
