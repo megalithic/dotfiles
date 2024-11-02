@@ -200,7 +200,7 @@ vim.keymap.set({ "n", "v", "t" }, "<localleader>x", function()
 end, { desc = "term: build and run file" })
 
 -- map({ "n", "t" }, "<C-x>", "<cmd>TermRepl<cr>", { desc = "repl (ft)" })
-nnoremap("<C-x>", "<cmd>TermRepl<cr>", "repl (ft)")
+nnoremap("<localleader>r", "<cmd>TermRepl<cr>", "repl (ft)")
 nnoremap("<leader>re", "<cmd>TermElixir<cr>", "elixir")
 nnoremap("<leader>rE", "<cmd>TermElixir!<cr>", "elixir (current file)")
 nnoremap("<leader>rr", "<cmd>TermRuby<cr>", "ruby")

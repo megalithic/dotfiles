@@ -222,8 +222,8 @@ return {
             todo = { raw = "[-]", rendered = "󱗽 ", highlight = "RenderMarkdownListTodo" },
             event = { raw = "[|]", rendered = "󰀠 ", highlight = "RenderMarkdownListEvent" },
             wip = { raw = "[.]", rendered = "󰡖 ", highlight = "RenderMarkdownListWip" },
-            -- skipped = { raw = "[/]", rendered = "󱋭 ", highlight = "RenderMarkdownListSkipped" },
-            trash = { raw = "[/]", rendered = " ", highlight = "RenderMarkdownListSkipped" },
+            -- trash = { raw = "[/]", rendered = " ", highlight = "RenderMarkdownListSkipped" },
+            skip = { raw = "[/]", rendered = " ", highlight = "RenderMarkdownListTrash" },
 
             fire = { raw = "[f]", rendered = "󰈸 ", highlight = "RenderMarkdownListFire" },
             star = { raw = "[s]", rendered = " ", highlight = "RenderMarkdownListStar" },

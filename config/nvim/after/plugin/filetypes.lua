@@ -382,16 +382,31 @@ ftplugin.extend_all({
         { name = "spell" },
       },
     },
-    callback = function(_bufnr)
+    callback = function(bufnr)
+      local map = vim.keymap.set
+
+      ---sets `buffer`, `silent` and `nowait` to true
+      ---@param mode string|string[]
+      ---@param lhs string
+      ---@param rhs string|function
+      ---@param opts? { desc: string, remap: boolean }
+      local function bmap(mode, lhs, rhs, opts)
+        opts = vim.tbl_extend("force", { buffer = bufnr, silent = true, nowait = true }, opts or {})
+        map(mode, lhs, rhs, opts)
+      end
+
       if pcall(require, "mini.clue") then
         vim.b.miniclue_config = {
           clues = {
             { mode = "n", keys = "<localleader>m", desc = "+markdown" },
+            { mode = "n", keys = "<C-g>", desc = "+markdown" },
+            { mode = "i", keys = "<C-g>", desc = "+markdown" },
+            { mode = "x", keys = "<C-g>", desc = "+markdown" },
           },
         }
       end
 
-      vim.keymap.set("v", "<localleader>mll", function()
+      bmap("v", "<localleader>mll", function()
         -- Copy what's currently in my clipboard to the register "a lamw25wmal
         vim.cmd("let @a = getreg('+')")
         -- delete selected text
@@ -410,6 +425,26 @@ ftplugin.extend_all({
         -- Leave me in insert mode to start typing
         -- vim.cmd("startinsert")
       end, { desc = "[P]Convert to link" })
+
+      -- ctrl+g/ctrl+l: markdown link
+      bmap("n", "<C-g><C-l>", "bi[<Esc>ea]()<Esc>hp", { desc = "[markdown]  link" })
+      bmap("x", "<C-g><C-l>", "<Esc>`<i[<Esc>`>la]()<Esc>hp", { desc = "[markdown]  link" })
+      bmap("i", "<C-g><C-l>", "[]()<Left><Left><Left>", { desc = "[markdown]  link" })
+
+      -- ctrl+g/ctrl+b: bold
+      bmap("n", "<C-g><C-b>", "bi**<Esc>ea**<Esc>", { desc = "[markdown]  bold" })
+      bmap("i", "<C-g><C-b>", "****<Left><Left>", { desc = "[markdown]  bold" })
+      bmap("x", "<C-g><C-b>", "<Esc>`<i**<Esc>`>lla**<Esc>", { desc = "[markdown]  bold" })
+
+      -- ctrl+g/ctrl+i: italics
+      bmap("n", "<C-g><C-i>", "bi*<Esc>ea*<Esc>", { desc = "[markdown]  italics" })
+      bmap("i", "<C-g><C-i>", "**<Left>", { desc = "[markdown]  italics" })
+      bmap("x", "<C-g><C-i>", "<Esc>`<i*<Esc>`>la*<Esc>", { desc = "[markdown]  italics" })
+
+      -- ctrl+g ctrl+s: strike-through
+      bmap("n", "<C-g><C-s>", "bi~~<Esc>ea~~<Esc>", { desc = "[markdown] 󰊁 strikethrough" })
+      bmap("i", "<C-g><C-s>", "~~~~<Left><Left>", { desc = "[markdown] 󰊁 strikethrough" })
+      bmap("x", "<C-g><C-s>", "<Esc>`<i~~<Esc>`>la~~<Esc>", { desc = "[markdown] 󰊁 strikethrough" })
     end,
   },
   ["neotest-summary"] = {

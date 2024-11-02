@@ -142,7 +142,7 @@ return {
           mode = { "n", "x", "o" },
           function() require("flash").jump() end,
         },
-        { "m", mode = { "o", "x" }, function() require("flash").treesitter() end },
+        -- { "m", mode = { "o", "x" }, function() require("flash").treesitter() end },
         { "vn", mode = { "n", "o", "x" }, function() require("flash").treesitter() end },
         {
           "r",

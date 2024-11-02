@@ -475,7 +475,6 @@ require("mega.autocmds").augroup("NotesLoaded", {
         map("n", "gx", vim.cmd.ExecuteLine, { desc = "execute line", buffer = bufnr })
         local clients = vim.lsp.get_clients({ bufnr = bufnr })
         for _, client in ipairs(clients) do
-          -- only use these bindings when we're in markdown_oxide document AND our notes path
           if client.name == "markdown_oxide" and string.match(vim.fn.expand("%:p:h"), "_notes") then
             map("n", "<leader>w", function()
               vim.schedule(function()
@@ -483,6 +482,15 @@ require("mega.autocmds").augroup("NotesLoaded", {
                 vim.cmd.write({ bang = true })
               end)
             end, { buffer = bufnr, desc = "[notes] format and save" })
+            if pcall(require, "mini.clue") then
+              vim.b.miniclue_config = {
+                clues = {
+                  { mode = "n", keys = "<C-x>", desc = "+tasks" },
+                  { mode = "i", keys = "<C-x>", desc = "+tasks" },
+                  { mode = "x", keys = "<C-x>", desc = "+tasks" },
+                },
+              }
+            end
 
             map("n", "<C-x>d", function() M.toggle_task("x") end, { buffer = bufnr, desc = "[notes] toggle -> done" })
             map("n", "<C-x>t", function() M.toggle_task("-") end, { buffer = bufnr, desc = "[notes] toggle -> todo" })
@@ -497,10 +505,6 @@ require("mega.autocmds").augroup("NotesLoaded", {
               function() mega.picker.grep({ cwd = vim.g.notes_path, default_text = vim.fn.expand("<cword>") }) end,
               { desc = "[notes] grep cursorword" }
             )
-            -- Search DOWN for a markdown header
-            -- Make sure to follow proper markdown convention, and you have a single H1
-            -- heading at the very top of the file
-            -- This will only search for H2 headings and above
             map({ "n", "v" }, "<localleader>n", function()
               -- `/` - Start a search forwards from the current cursor position.
               -- `^` - Match the beginning of a line.

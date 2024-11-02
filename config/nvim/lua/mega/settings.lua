@@ -151,6 +151,13 @@ local M = {
     },
     -- all the sub-options of filetypes apply to buftypes
   },
+  lsp_lookup = {
+    elixirls = "ex",
+    nextls = "next",
+    lua_ls = "lua",
+    tailwindcss = "twcss",
+    emmet_ls = "em",
+  },
   icons = {
     lsp = {
       error = "", -- alts: 󰬌      

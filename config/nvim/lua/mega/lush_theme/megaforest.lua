@@ -517,8 +517,17 @@ local theme = lush(function(injected_functions)
     sym("@markup.link")({ Tag }),
     sym("@markup.environment")({ fg = C.cyan, gui = "bold" }),
     sym("@markup.environment.name")({ Type }),
+
+    sym("@markup.strong.markdown_inline")({
+      fg = C.grey2,
+      gui = "bold",
+    }),
+    sym("@markup.italic.markdown_inline")({
+      fg = C.grey0,
+      gui = "italic",
+    }),
     sym("@markup.strikethrough.markdown_inline")({
-      fg = C.orange,
+      fg = C.dark_brown,
       gui = "strikethrough",
     }),
     sym("@method")({ Green }),

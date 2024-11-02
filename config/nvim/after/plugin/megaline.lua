@@ -17,6 +17,7 @@ local fnamemodify = fn.fnamemodify
 local fmt = string.format
 
 local U = require("mega.utils")
+local SETTINGS = require("mega.settings")
 local H = U.hl
 local augroup = require("mega.autocmds").augroup
 local icons = require("mega.settings").icons
@@ -537,8 +538,16 @@ local function seg_lsp_clients(truncate_at)
 
   local client_names = {}
 
+  local function lsp_lookup(name)
+    if U.tlen(clients) <= 1 then return name end
+    local ls = SETTINGS.lsp_lookup[name]
+    if ls == nil then ls = name end
+
+    return ls
+  end
+
   for _, client in pairs(clients) do
-    table.insert(client_names, client.name)
+    table.insert(client_names, lsp_lookup(client.name))
   end
 
   local clients_str = U.strim(table.concat(client_names, "/"))
