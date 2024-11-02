@@ -116,6 +116,7 @@ $(__build_tasks)
 
 - [[ADHD]]
 - [[ENG]]
+- [[Tinker]]
 - [Previous daily note (${last_daily_note_name})](${last_daily_note_file_name})
 EOF
   fi

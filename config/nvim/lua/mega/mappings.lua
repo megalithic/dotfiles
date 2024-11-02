@@ -1,13 +1,15 @@
 local fmt = string.format
 local map = vim.keymap.set
+local unmap = vim.api.nvim_del_keymap
 
 local U = require("mega.utils")
 local M = {}
 
 -- [[ unmap ]] -----------------------------------------------------------------
-vim.api.nvim_del_keymap("n", "gra") -- lsp default: code actions
-vim.api.nvim_del_keymap("n", "grn") -- lsp default: rename
-vim.api.nvim_del_keymap("n", "grr") -- lsp default: references
+unmap("n", "gra") -- lsp default: code actions
+unmap("n", "grn") -- lsp default: rename
+unmap("n", "grr") -- lsp default: references
+unmap("n", "gri") -- lsp default: implementation
 
 -- `:help vim.keymap.set()`
 -- local nmap, cmap, xmap, imap, vmap, omap, tmap, smap

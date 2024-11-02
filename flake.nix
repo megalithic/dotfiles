@@ -111,6 +111,23 @@
       # forAllSystems = fn: nixpkgs.lib.genAttrs systems (system: fn { pkgs = import nixpkgs { inherit system; }; });
     in
     {
+      # nixosConfigurations = {
+      #   nixos = nixpkgs.lib.nixosSystem {
+      #     system = "x86_64-linux";
+      #     modules = [
+      #       nixos-wsl.nixosModules.wsl
+      #       ./nixos/configuration.nix
+      #       ./.config/wsl
+      #       home-manager.nixosModules.home-manager
+      #       {
+      #         home-manager = {
+      #           users.nixos = import ./home-manager;
+      #         };
+      #         nix.settings.trusted-users = [ "nixos" ];
+      #       }
+      #     ];
+      #   };
+      # };
       darwinConfigurations = {
         "megabookpro" = darwinSystem {
           user = "seth";

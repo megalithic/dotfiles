@@ -138,7 +138,10 @@ function M.sort_tasks(bufnr, lines)
     local sorted_tasks_texts = {}
 
     for _, task in ipairs(sorted_tasks) do
-      table.insert(sorted_tasks_texts, task.line)
+      local text = task.text
+      if task.status == "/" then text = string.format("~~%s~~", task.text) end
+      local task_line = string.format("- [%s] %s", task.status, text)
+      table.insert(sorted_tasks_texts, task_line)
     end
 
     vim.api.nvim_buf_set_lines(bufnr, starting_task_line - 1, starting_task_line + U.tlen(sorted_tasks_texts), false, sorted_tasks_texts)
@@ -175,7 +178,7 @@ function M.compile_links(bufnr, lines)
 end
 
 function M.extract_links(bufnr, lines)
-  local bufnr = bufnr or vim.api.nvim_get_current_buf()
+  bufnr = bufnr or vim.api.nvim_get_current_buf()
   local inline_query = vim.treesitter.query.parse("markdown_inline", [[(inline_link) @link]])
   local auto_query = vim.treesitter.query.parse("markdown_inline", [[(uri_autolink) @link]])
 
@@ -220,9 +223,31 @@ function M.extract_links(bufnr, lines)
   local links = markdown_links(bufnr, table.concat(lines, "\n"))
   local urls = raw_urls(bufnr, lines)
 
-  dbg(vim.list_extend(links, urls))
-
   return vim.list_extend(links, urls)
+end
+
+function M.parse_due_dates(bufnr, lines)
+  bufnr = bufnr or vim.api.nvim_get_current_buf()
+
+  local tasks_due = {}
+
+  for i, line in ipairs(lines) do
+    local prefix, box, status, text, date_parse_string, due_date = line:match("^(%s*[-*] )(%[(.)%])%s(.*(DUE:%<(.*)%>))")
+    if prefix ~= nil and box ~= nil and status ~= nil then
+      text = U.strim(string.gsub(text, date_parse_string, ""))
+
+      table.insert(tasks_due, { index = i, line = line, status = status, text = text, date_parse_string = date_parse_string, due_date = due_date })
+
+      vim.fn.jobstart(string.format([[reme "%s" "%s"]], text, due_date), {
+        detach = false,
+        on_exit = function(job_id, exit_code, event)
+          if vim.tbl_contains({ 0, 127, 129, 130 }, exit_code) then vim.notify(string.format("set reminder '%s' for %s", text, due_date)) end
+        end,
+      })
+    end
+  end
+
+  if tasks_due and U.tlen(tasks_due) > 0 then return tasks_due end
 end
 
 function M.format_notes(bufnr, lines)
@@ -231,6 +256,7 @@ function M.format_notes(bufnr, lines)
 
   M.sort_tasks(bufnr, lines)
   M.extract_links(bufnr, lines)
+  M.parse_due_dates(bufnr, lines)
   -- M.compile_links(bufnr, lines)
 end
 
@@ -430,10 +456,14 @@ require("mega.autocmds").augroup("NotesLoaded", {
           ["mtg:"] = [[### Meeting 󱛡 ->]],
           ["trn:"] = [[### Linear Ticket  ->]],
           ["pr:"] = [[### Pull Request  ->]],
+          ["self:"] = [[### Self  ->]],
+          ["prep:"] = [[## Daily Game Plan Prep]],
+          ["end:"] = [[## End of Day Wrap-up (😃😐😞)]],
           ["call:"] = [[ (call) ]],
           ["email:"] = [[ (email) ]],
           ["contact:"] = [[󰻞 (contact) ]],
           ["chat:"] = [[󰻞 (contact) ]],
+          ["act:"] = [[_Action item:_ ]],
         }
 
         vim.api.nvim_buf_call(bufnr, function()
@@ -457,6 +487,7 @@ require("mega.autocmds").augroup("NotesLoaded", {
             map("n", "<C-x>d", function() M.toggle_task("x") end, { buffer = bufnr, desc = "[notes] toggle -> done" })
             map("n", "<C-x>t", function() M.toggle_task("-") end, { buffer = bufnr, desc = "[notes] toggle -> todo" })
             map("n", "<C-x>s", function() M.toggle_task(".") end, { buffer = bufnr, desc = "[notes] toggle -> started" })
+            map("n", "<C-x>u", function() M.toggle_task("/") end, { buffer = bufnr, desc = "[notes] toggle -> undo/skip/trash" })
             map("n", "<C-x><C-x>", function() M.toggle_task(" ") end, { buffer = bufnr, desc = "[notes] toggle -> not-started" })
             map("n", "<leader>ff", function() mega.picker.find_files({ cwd = vim.g.notes_path }) end, { desc = "[notes] find", buffer = bufnr })
             map("n", "<leader>a", function() mega.picker.grep({ cwd = vim.g.notes_path }) end, { desc = "[notes] grep" })
@@ -485,9 +516,6 @@ require("mega.autocmds").augroup("NotesLoaded", {
                 mega.searchCountIndicator("clear")
               end)
             end, { desc = "go to main notes section" })
-            -- map("n", "<leader>a", function() mega.picker.grep({ picker = "egrepify", cwd = vim.g.notes_path }) end, { desc = "[notes] grep", buffer = buf })
-            -- map("n", "<leader>a", function() mega.picker.grep({ picker = "egrepify", cwd = vim.g.notes_path }) end, { desc = "[notes] grep", buffer = buf })
-            -- map("n", "gd", "<cmd>lua vim.lsp.buf.definition()<CR>", { desc = "[f]ind in [n]otes", buffer = buf })
           end
         end
       end

@@ -334,7 +334,7 @@ return {
 
         local desc = function(d) return "[+lsp] " .. d end
         local map = vim.keymap.set
-        local nmap = function(keys, func, d) map("n", keys, func, { buffer = bufnr, desc = desc(d) }) end
+        local nmap = function(keys, func, d) map("n", keys, func, { buffer = bufnr, desc = desc(d), noremap = false }) end
         local vnmap = function(keys, func, d) map({ "v", "n" }, keys, func, { buffer = bufnr, desc = desc(d) }) end
         local icons = require("mega.settings").icons
 
@@ -1057,7 +1057,7 @@ return {
       })
     end,
   },
-  { "elixir-tools/elixir-tools.nvim", dependencies = { "nvim-lua/plenary.nvim" } },
+  -- { "elixir-tools/elixir-tools.nvim", dependencies = { "nvim-lua/plenary.nvim" } },
   {
     -- FIXME: https://github.com/mhanberg/output-panel.nvim/issues/5
     "mhanberg/output-panel.nvim",
