@@ -333,7 +333,7 @@ return {
     },
     keys = {
       {
-        "<space>fr",
+        "<localleader>fr",
         ":GrugFar<cr>",
         desc = "GrugFar",
       },
@@ -345,7 +345,7 @@ return {
     event = "VeryLazy",
     config = true,
   },
-  { "elixir-editors/vim-elixir" },
+  { "elixir-editors/vim-elixir", enabled = true },
   {
     "nvim-neo-tree/neo-tree.nvim",
     branch = "v3.x",

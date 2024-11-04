@@ -157,6 +157,7 @@ local M = {
     lua_ls = "lua",
     tailwindcss = "twcss",
     emmet_ls = "em",
+    lexical = "lex",
   },
   icons = {
     lsp = {

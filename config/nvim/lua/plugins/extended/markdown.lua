@@ -330,9 +330,15 @@ return {
     end,
   },
   {
+    -- this hates me; with bullets enabled markdown/elixir/heex.vim syntax errors occur
     "dkarter/bullets.vim",
     cond = false,
-    ft = { "markdown", "text", "gitcommit" },
+    -- ft = { "markdown", "text", "gitcommit" },
+    event = {
+      "BufRead **.md,**.neorg,**.org",
+      "BufNewFile **.md,**.neorg,**.org",
+      "FileType gitcommit,NeogitCommitMessage,.git/COMMIT_EDITMSG,markdown,text,plaintext",
+    },
     cmd = { "InsertNewBullet" },
   },
   {

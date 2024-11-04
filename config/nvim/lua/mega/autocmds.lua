@@ -1,5 +1,6 @@
 local fmt = string.format
 local map = vim.keymap.set
+
 local SETTINGS = require("mega.settings")
 local U = require("mega.utils")
 

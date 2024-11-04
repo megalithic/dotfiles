@@ -232,7 +232,8 @@ function M.parse_due_dates(bufnr, lines)
   local tasks_due = {}
 
   for i, line in ipairs(lines) do
-    local prefix, box, status, text, date_parse_string, due_date = line:match("^(%s*[-*] )(%[(.)%])%s(.*(DUE:%<(.*)%>))")
+    -- matches: `- [ ] some sort of task that has a due date @@today at 3pm!`
+    local prefix, box, status, text, date_parse_string, due_date = line:match("^(%s*[-*] )(%[(.)%])%s(.*(@@(.*)!))")
     if prefix ~= nil and box ~= nil and status ~= nil then
       text = U.strim(string.gsub(text, date_parse_string, ""))
 

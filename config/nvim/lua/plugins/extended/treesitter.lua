@@ -1,6 +1,5 @@
-local disable_max_size = 2000000 -- 2MB
-
 local function should_disable(lang, bufnr)
+  local disable_max_size = 2000000 -- 2MB
   local size = vim.fn.getfsize(vim.api.nvim_buf_get_name(bufnr or 0))
   -- size will be -2 if it doesn't fit into a number
   if size > disable_max_size or size == -2 then return true end
@@ -81,6 +80,7 @@ return {
       },
       ignore_install = { "comment" },
       auto_install = true,
+      sync_install = false,
       highlight = {
         enable = vim.g.vscode ~= 1,
         disable = should_disable,
@@ -92,6 +92,7 @@ return {
           "ruby",
           -- "elixir",
           "python",
+          -- "heex",
           -- "lua",
           "vim",
           "zsh",

@@ -177,6 +177,7 @@ if type nvim >/dev/null 2>&1; then
   # alias folkevim="NVIM_APPNAME=folkevim nvim"
   # alias akinvim="NVIM_APPNAME=akinvim nvim"
   # alias ribvim="NVIM_APPNAME=ribvim nvim"
+  alias ribvim="NVIM_APPNAME=ribvim nvim"
   alias kickvim="NVIM_APPNAME=kickvim nvim"
   alias e="NVIM_APPNAME=wipvim nvim"
   alias ogvim="NVIM_APPNAME=ogvim nvim"

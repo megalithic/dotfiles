@@ -203,6 +203,45 @@ local function fdm(lnum)
   return fn.foldclosed(lnum) == -1 and fcs.foldopen or fcs.foldclose
 end
 
+local function get_num_wraps()
+  -- Calculate the actual buffer width, accounting for splits, number columns, and other padding
+  local wrapped_lines = vim.api.nvim_win_call(0, function()
+    local winid = vim.api.nvim_get_current_win()
+
+    -- get the width of the buffer
+    local winwidth = vim.api.nvim_win_get_width(winid)
+    local numberwidth = vim.wo.number and vim.wo.numberwidth or 0
+    local signwidth = vim.fn.exists("*sign_define") == 1 and vim.fn.sign_getdefined() and 2 or 0
+    local foldwidth = vim.wo.foldcolumn or 0
+
+    -- subtract the number of empty spaces in your statuscol. I have
+    -- four extra spaces in mine, to enhance readability for me
+    local bufferwidth = winwidth - numberwidth - signwidth - foldwidth - 4
+
+    -- fetch the line and calculate its display width
+    local line = vim.fn.getline(vim.v.lnum)
+    local line_length = vim.fn.strdisplaywidth(line)
+
+    return math.floor(line_length / bufferwidth)
+  end)
+
+  return wrapped_lines
+end
+
+-- local function draw_wrap_symbols(virtnum)
+--   if virtnum < 0 then
+--     return "-"
+--   elseif virtnum > 0 and (vim.wo.number or vim.wo.relativenumber) then
+--     local num_wraps = get_num_wraps()
+
+--     if virtnum == num_wraps then
+--       return "└"
+--     else
+--       return "├"
+--     end
+--   end
+-- end
+
 ---@param win integer
 ---@param line_count integer
 ---@param lnum integer
@@ -211,7 +250,11 @@ end
 ---@return string
 local function nr(win, lnum, relnum, virtnum, line_count)
   local col_width = api.nvim_strwidth(tostring(line_count))
+  -- local num_wraps = get_num_wraps()
+  -- dbg(num_wraps)
+
   if virtnum and virtnum ~= 0 then return space:rep(col_width - 1) .. (virtnum < 0 and shade or space) end -- virtual line
+
   local num = vim.wo[win].relativenumber and not U.falsy(relnum) and relnum or lnum
   if line_count > 999 then col_width = col_width + 1 end
   local ln = tostring(num):reverse():gsub("(%d%d%d)", "%1,"):reverse():gsub("^,", "")

@@ -1,95 +1,12 @@
-------@class FiletypeSettings
-------@field g table<string, any>
-------@field bo vim.bo
-------@field wo vim.wo
-------@field opt vim.Option
-------@field plugins {[string]: fun(module: table)}
----
-------@param args {[1]: string, [2]: string, [3]: string, [string]: boolean | integer}[]
-------@param buf integer
----local function apply_ft_key_mappings(args, buf)
----  vim.iter(args):each(function(m)
----    assert(#m == 3, "map args must be a table with at least 3 items")
----    local opts = vim.iter(m):fold({ buffer = buf }, function(acc, key, item)
----      if type(key) == "string" then acc[key] = item end
----      return acc
----    end)
----    map(m[1], m[2], m[3], opts)
----  end)
----end
----
------- A convenience wrapper that calls the ftplugin config for a plugin if it exists
------- and warns me if the plugin is not installed
-------@param configs table<string, fun(module: table)>
----local function ftplugin_conf(configs)
----  if type(configs) ~= "table" then return end
----  for name, callback in pairs(configs) do
----    local ok, plugin = mega.pcall(require, name)
----    if ok then callback(plugin) end
----  end
----end
----
------- This function is an alternative API to using ftplugin files. It allows defining
------- filetype settings in a single place, then creating FileType autocommands from this definition
-------
------- e.g.
------- ```lua
-------   as.filetype_settings({
-------     lua = {
-------      opt = {foldmethod = 'expr' },
-------      bo = { shiftwidth = 2 }
-------     },
-------    [{'c', 'cpp'}] = {
-------      bo = { shiftwidth = 2 }
-------    }
-------   })
------- ```
-------
------ ---@param map {[string|string[]]: FiletypeSettings | {[integer]: fun(args: AutocmdArgs)}}
----local function ft_settings(map)
----  local commands = vim.iter(map):map(function(ft, settings)
----    local name = type(ft) == "table" and table.concat(ft, ",") or ft
----    return {
----      pattern = ft,
----      event = "FileType",
----      desc = ("ft settings for %s"):format(name),
----      command = function(args)
----        local bufnr = args.buf
----        vim.iter(settings):each(function(key, value)
----          if key == "opt" then key = "opt_local" end
----          if key == "bufvar" then
----            for k, v in pairs(value) do
----              vim.api.nvim_buf_set_var(bufnr, k, v)
----            end
----          end
----          if key == "mappings" or key == "keys" then return apply_ft_key_mappings(value, bufnr) end
----          if key == "compiler" then vim.api.nvim_buf_call(bufnr, function() vim.cmd.compiler({ args = { value } }) end) end
----          if key == "plugins" then return ftplugin_conf(value) end
----          if key == "callback" and type(value) == "function" then return mega.pcall(value, args) end
----          if key == "abbr" then
----            vim.api.nvim_buf_call(bufnr, function()
----              for k, v in pairs(value) do
----                -- vim.cmd(string.format("iabbrev <buffer> %s %s", k, v))
----                dbg(value)
----
----                vim.cmd.iabbrev(string.format("<buffer> %s %s", k, v))
----              end
----            end)
----          end
----          if type(key) == "function" then return mega.pcall(key, args) end
----
----          vim.iter(value):each(function(option, setting) vim[key][option] = setting end)
----        end)
----      end,
----    }
----  end)
----  require("mega.autocmds").augroup("mega-filetype-settings", unpack(commands:totable()))
----end
-
 local ftplugin = require("mega.ftplugin")
 ftplugin.extend_all({
-  -- ft_settings({
   [{ "elixir", "eelixir" }] = {
+    opt = {
+      syntax = "OFF",
+      tabstop = 2,
+      shiftwidth = 2,
+      commentstring = [[# %s]],
+    },
     abbr = {
       ep = "|>",
       epry = [[require IEx; IEx.pry]],
@@ -172,6 +89,7 @@ ftplugin.extend_all({
   },
   heex = {
     opt = {
+      syntax = "OFF",
       tabstop = 2,
       shiftwidth = 2,
       commentstring = [[<%!-- %s --%>]],
@@ -347,6 +265,7 @@ ftplugin.extend_all({
       shiftwidth = 2,
       tabstop = 2,
       softtabstop = 2,
+      syntax = "OFF",
       -- formatoptions = "jqlnr",
       -- comments = "sb:- [x],mb:- [ ],b:-,b:*,b:>",
       linebreak = true,
@@ -368,13 +287,6 @@ ftplugin.extend_all({
           markdown_oxide = {
             keyword_pattern = [[\(\k\| \|\/\|#\|\^\)\+]],
           },
-          -- or maybe this?
-          --
-          -- option = {
-          --   markdown_oxide = {
-          --     keyword_pattern = [[\(\k\| \|\/\|#\|\^\)\+]],
-          --   },
-          -- },
         },
         { name = "snippets" },
         { name = "git" },
@@ -384,6 +296,19 @@ ftplugin.extend_all({
     },
     callback = function(bufnr)
       local map = vim.keymap.set
+
+      -- vim.schedule(function()
+      --   map("i", "<CR>", function()
+      --     local pair = require("nvim-autopairs").completion_confirm()
+      --     if vim.bo.ft == "markdown" and pair == vim.api.nvim_replace_termcodes("<CR>", true, false, true) then
+      --       vim.cmd.InsertNewBullet()
+      --     else
+      --       vim.api.nvim_feedkeys(pair, "n", false)
+      --     end
+      --   end, {
+      --     buffer = bufnr,
+      --   })
+      -- end)
 
       ---sets `buffer`, `silent` and `nowait` to true
       ---@param mode string|string[]

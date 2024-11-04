@@ -27,6 +27,18 @@ function M.lsp.formatting_filter(client, exclusions)
   return not vim.tbl_contains(exclusions, client_name)
 end
 
+function M.diagnostics_available(bufnr)
+  bufnr = bufnr or 0
+  local clients = vim.lsp.get_clients({ bufnr = bufnr })
+  local diagnostics = vim.lsp.protocol.Methods.textDocument_publishDiagnostics
+
+  for _, cfg in pairs(clients) do
+    if cfg.supports_method(diagnostics) then return true end
+  end
+
+  return false
+end
+
 ---@param data { old_name: string, new_name: string }
 local function prepare_file_rename(data)
   local bufnr = vim.fn.bufnr(data.old_name)
@@ -621,6 +633,55 @@ function M.qflist_populate(lines, opts)
 
     vim.cmd(commands)
   end
+end
+
+local branch_cache = {}
+local remote_cache = {}
+
+--- get the path to the root of the current file. The
+-- root can be anything we define, such as ".git",
+-- "Makefile", etc.
+-- see https://www.reddit.com/r/neovim/comments/zy5s0l/you_dont_need_vimrooter_usually_or_how_to_set_up/
+-- @tparam  path: file to get root of
+-- @treturn path to the root of the filepath parameter
+function M.get_path_root(path)
+  if path == "" then return end
+
+  local root = vim.b.path_root
+  if root ~= nil then return root end
+
+  local root_items = {
+    ".git",
+  }
+
+  root = vim.fs.root(0, root_items)
+  if root == nil then return nil end
+  vim.b.path_root = root
+
+  return root
+end
+
+-- get the name of the remote repository
+function M.get_git_remote_name(root)
+  if root == nil then return end
+
+  local remote = remote_cache[root]
+  if remote ~= nil then return remote end
+
+  -- see https://stackoverflow.com/a/42543006
+  -- "basename" "-s" ".git" "`git config --get remote.origin.url`"
+  local cmd = table.concat({ "git", "config", "--get remote.origin.url" }, " ")
+  remote = vim.fn.system(cmd)
+
+  if vim.v.shell_error ~= 0 then return nil end
+
+  remote = vim.fs.basename(remote)
+  if remote == nil then return end
+
+  remote = vim.fn.fnamemodify(remote, ":r")
+  remote_cache[root] = remote
+
+  return remote
 end
 
 function M.root_has_file(name)
