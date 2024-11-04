@@ -332,7 +332,6 @@ return {
   {
     -- this hates me; with bullets enabled markdown/elixir/heex.vim syntax errors occur
     "dkarter/bullets.vim",
-    cond = false,
     -- ft = { "markdown", "text", "gitcommit" },
     event = {
       "BufRead **.md,**.neorg,**.org",

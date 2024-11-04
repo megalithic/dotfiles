@@ -199,14 +199,14 @@ return {
         background_colour = "NotifyBackground",
         max_width = function() return math.floor(vim.o.columns * 0.8) end,
         max_height = function() return math.floor(vim.o.lines * 0.8) end,
-        on_open = function(winnr)
-          if vim.api.nvim_win_is_valid(winnr) then
-            -- vim.api.nvim_win_set_config(winnr, { border = "", focusable = false })
-            local buf = vim.api.nvim_win_get_buf(winnr)
-            vim.api.nvim_buf_set_option(buf, "filetype", "markdown")
-            -- vim.cmd([[setlocal nospell]])
-          end
-        end,
+        -- on_open = function(winnr)
+        --   if vim.api.nvim_win_is_valid(winnr) then
+        --     -- vim.api.nvim_win_set_config(winnr, { border = "", focusable = false })
+        --     local buf = vim.api.nvim_win_get_buf(winnr)
+        --     vim.api.nvim_buf_set_option(buf, "filetype", "markdown")
+        --     -- vim.cmd([[setlocal nospell]])
+        --   end
+        -- end,
         -- stages = "slide", -- alts: "static", "slide"
         stages = stages("slide"), -- alts: "static", "slide", "fade"
         -- render = "compact",

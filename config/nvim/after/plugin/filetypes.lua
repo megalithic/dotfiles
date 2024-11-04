@@ -297,18 +297,18 @@ ftplugin.extend_all({
     callback = function(bufnr)
       local map = vim.keymap.set
 
-      -- vim.schedule(function()
-      --   map("i", "<CR>", function()
-      --     local pair = require("nvim-autopairs").completion_confirm()
-      --     if vim.bo.ft == "markdown" and pair == vim.api.nvim_replace_termcodes("<CR>", true, false, true) then
-      --       vim.cmd.InsertNewBullet()
-      --     else
-      --       vim.api.nvim_feedkeys(pair, "n", false)
-      --     end
-      --   end, {
-      --     buffer = bufnr,
-      --   })
-      -- end)
+      vim.schedule(function()
+        map("i", "<CR>", function()
+          local pair = require("nvim-autopairs").completion_confirm()
+          if vim.bo.ft == "markdown" and pair == vim.api.nvim_replace_termcodes("<CR>", true, false, true) then
+            vim.cmd.InsertNewBullet()
+          else
+            vim.api.nvim_feedkeys(pair, "n", false)
+          end
+        end, {
+          buffer = bufnr,
+        })
+      end)
 
       ---sets `buffer`, `silent` and `nowait` to true
       ---@param mode string|string[]

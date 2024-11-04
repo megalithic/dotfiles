@@ -1,4 +1,4 @@
-;; extends
+; extends
 
 ; NOTE:
 ; COMMENTED OUT FOR NOW, USING MARKDOWN.NVIM

@@ -385,7 +385,8 @@ M.apply = function()
       disable_autolint = M.disable_autolint,
       disable_autoformat = M.disable_autoformat,
       disable_autoresize = M.disable_autoresize,
-      markdown_fenced_languages = M.markdown_fenced_languages,
+      -- This is breaking elixir/heex.vim syntax files; not sure why
+      -- markdown_fenced_languages = M.markdown_fenced_languages,
       have_nerd_font = true,
 
       open_command = is_macos and "open" or "xdg-open",
