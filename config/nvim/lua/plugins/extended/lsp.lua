@@ -17,6 +17,7 @@ return {
       "b0o/schemastore.nvim",
       "onsails/lspkind.nvim",
       "williamboman/mason.nvim",
+      "youssef-lr/lsp-overloads.nvim",
       "williamboman/mason-lspconfig.nvim",
       "WhoIsSethDaniel/mason-tool-installer.nvim",
       {
@@ -198,6 +199,7 @@ return {
 
         if SETTINGS.disabled_semantic_tokens[filetype] then client.server_capabilities.semanticTokensProvider = vim.NIL end
 
+        -- if client.server_capabilities.signatureHelpProvider then require("mega.lsp_signature").setup(client) end
         if client.server_capabilities.codeLensProvider then vim.lsp.codelens.refresh({ bufnr = bufnr }) end
 
         for i = 1, #disabled_lsp_formatting do
@@ -373,17 +375,29 @@ return {
           --   vim.cmd("norm zz")
           -- end)
 
-          vim.cmd.split({ mods = { vertical = true, split = "botright" } })
-          vim.defer_fn(function()
-            vim.lsp.buf.definition({ on_list = choose_list_first, reuse_win = false })
-            -- vim.cmd.FzfLua("lsp_definitions")
-            -- go_to_unique_definition()
-          end, 700)
+          -- vim.cmd.split({ mods = { vertical = true, split = "botright" } })
+          -- vim.defer_fn(function()
+          --   vim.lsp.buf.definition({ on_list = choose_list_first, reuse_win = false })
+          --   -- vim.cmd.FzfLua("lsp_definitions")
+          --   -- go_to_unique_definition()
+
+          -- end, 700)
+
+          require("fzf-lua").lsp_definitions({
+            sync = true,
+            jump_to_single_result = true,
+            jump_to_single_result_action = require("fzf-lua.actions").file_vsplit,
+          })
         end, "[g]oto [d]efinition (split)")
         -- map("gr", function() vim.cmd.Trouble("lsp_references focus=true") end, "[g]oto [r]eferences")
         -- map("gr", function() vim.cmd.FzfLua("lsp_references") end, "[g]oto [r]eferences")
         nmap("gr", function()
-          if not vim.tbl_contains(SETTINGS.references_exclusions, client.name) then require("telescope.builtin").lsp_references() end
+          if not vim.tbl_contains(SETTINGS.references_exclusions, client.name) then
+            require("fzf-lua").lsp_references({
+              includeDeclaration = false,
+              ignore_current_line = true,
+            })
+          end
         end, "[g]oto [r]eferences")
         nmap("gI", require("telescope.builtin").lsp_implementations, "[g]oto [i]mplementation")
         nmap("<leader>ltd", require("telescope.builtin").lsp_type_definitions, "[t]ype [d]efinition")
@@ -395,16 +409,44 @@ return {
         nmap("ga", function() vim.cmd.FzfLua("lsp_code_actions") end, "[g]o [c]ode [a]ctions")
         -- nmap("K", vim.lsp.buf.hover, "hover documentation")
 
-        if client.supports_method(methods.textDocument_signatureHelp) then
-          -- map("i", "<C-k>", vim.lsp.buf.signature_help, { buffer = bufnr, desc = desc("signature help") })
-          map("i", "<C-k>", function()
-            -- Close the completion menu first (if open).
-            local cmp = require("cmp")
-            if cmp.visible() then cmp.close() end
+        -- if client.supports_method(methods.textDocument_signatureHelp) then
+        --   if client and client.server_capabilities.signatureHelpProvider then
+        --     require("lsp-overloads").setup(client, {
+        --       -- UI options are mostly the same as those passed to vim.lsp.util.open_floating_preview
+        --       silent = true,
+        --       floating_window_above_cur_line = true,
+        --       ui = {
+        --         border = "rounded", -- The border to use for the signature popup window. Accepts same border values as |nvim_open_win()|.
+        --         max_width = 130, -- Maximum signature popup width
+        --         focusable = true, -- Make the popup float focusable
+        --         focus = false, -- If focusable is also true, and this is set to true, navigating through overloads will focus into the popup window (probably not what you want)
+        --         silent = true, -- Prevents noisy notifications (make false to help debug why signature isn't working)
+        --         highlight = {
+        --           italic = true,
+        --           bold = true,
+        --           fg = "#ffffff",
+        --         },
+        --       },
+        --       keymaps = {
+        --         next_signature = "<M-j>",
+        --         previous_signature = "<M-k>",
+        --         next_parameter = "<M-l>",
+        --         previous_parameter = "<M-h>",
+        --       },
+        --       display_automatically = true, -- Uses trigger characters to automatically display the signature overloads when typing a method signature
+        --     })
+        --   end
+        --   -- -- map("i", "<C-k>", vim.lsp.buf.signature_help, { buffer = bufnr, desc = desc("signature help") })
+        --   -- map("i", "<C-s>", function()
+        --   --   -- Close the completion menu first (if open).
+        --   --   local cmp = require("cmp")
+        --   --   if cmp.visible() then cmp.close() end
 
-            vim.lsp.buf.signature_help()
-          end, { buffer = bufnr, desc = desc("signature help") })
-        end
+        --   --   -- vim.lsp.buf.signature_help()
+
+        --   --   vim.cmd.LspOverloadsSignature()
+        --   -- end, { buffer = bufnr, silent = true, noremap = true, desc = desc("signature help") })
+        -- end
         -- map("gD", vim.lsp.buf.declaration, "[g]oto [d]eclaration (e.g. to a header file in C)")
         -- rename symbol starting with empty prompt, highlight references
         nmap("<leader>rn", function()
@@ -690,6 +732,27 @@ return {
         local max_width = math.min(math.floor(vim.o.columns * 0.7), 100)
         local max_height = math.min(math.floor(vim.o.lines * 0.3), 30)
 
+        -- local sev_to_icon = {}
+        -- M.signs = { linehl = {}, numhl = {}, text = {} }
+
+        -- local SIGN_TYPES = { "Error", "Warn", "Info", "Hint" }
+        -- for _, type in ipairs(SIGN_TYPES) do
+        --   local hl = ("DiagnosticSign%s"):format(type)
+        --   local icon = icons.lsp[type:lower()]
+
+        --   local key = type:upper()
+        --   local code = vim.diagnostic.severity[key]
+
+        --   -- for vim.notify icon
+        --   sev_to_icon[code] = icon
+
+        --   -- vim.diagnostic.config signs
+        --   local sign = ("%s "):format(icon)
+        --   M.signs.text[code] = sign
+        --   M.signs.numhl[code] = hl
+        --   vim.fn.sign_define(hl, { numhl = hl, text = sign })
+        -- end
+
         ---@param diag vim.Diagnostic
         ---@return string
         local function diag_msg_format(diag)
@@ -719,6 +782,47 @@ return {
 
           return "", ""
         end
+
+        --       local function float_format(diagnostic)
+        --         --[[ e.g.
+        -- {
+        --   bufnr = 1,
+        --   code = "trailing-space",
+        --   col = 4,
+        --   end_col = 5,
+        --   end_lnum = 44,
+        --   lnum = 44,
+        --   message = "Line with postspace.",
+        --   namespace = 12,
+        --   severity = 4,
+        --   source = "Lua Diagnostics.",
+        --   user_data = {
+        --     lsp = {
+        --       code = "trailing-space"
+        --     }
+        --   }
+        -- }
+        -- ]]
+
+        --         -- diagnostic.message may be pre-parsed in lspconfig's handlers
+        --         -- ["textDocument/publishDiagnostics"]
+        --         -- e.g. ts_ls in dko/plugins/lsp.lua
+
+        --         local symbol = sev_to_icon[diagnostic.severity] or "-"
+        --         local source = diagnostic.source
+        --         if source then
+        --           if source.sub(source, -1, -1) == "." then
+        --             -- strip period at end
+        --             source = source:sub(1, -2)
+        --           end
+        --         else
+        --           source = "NIL.SOURCE"
+        --           vim.print(diagnostic)
+        --         end
+        --         local source_tag = U.smallcaps(("%s"):format(source))
+        --         local code = diagnostic.code and ("[%s]"):format(diagnostic.code) or ""
+        --         return ("%s %s %s\n%s"):format(symbol, source_tag, code, diagnostic.message)
+        --       end
 
         local diag_level = vim.diagnostic.severity
         vim.diagnostic.config({
@@ -884,8 +988,14 @@ return {
       -- TODO: fixes for nvim 10?
       -- REF: https://github.com/dkarter/dotfiles/blob/master/config/nvim/lua/plugins/mason/lsp.lua#L53
       local capabilities = vim.lsp.protocol.make_client_capabilities()
-      if pcall(require, "cmp_nvim_lsp") then capabilities = require("cmp_nvim_lsp").default_capabilities() end
+      if pcall(require, "cmp_nvim_lsp") then capabilities = require("cmp_nvim_lsp").default_capabilities(capabilities) end
+      if pcall(require, "blink.cmp") then capabilities = require("blink.cmp").get_lsp_capabilities(capabilities) end
 
+      capabilities.workspace = {
+        didChangeWatchedFiles = {
+          dynamicRegistration = false,
+        },
+      }
       capabilities.textDocument.foldingRange = { dynamicRegistration = false, lineFoldingOnly = true }
       capabilities.textDocument.completion = {
         dynamicRegistration = false,
@@ -1057,6 +1167,37 @@ return {
       })
     end,
   },
+  -- {
+  --   "stevearc/aerial.nvim",
+  --   opts = {
+  --     backends = { "lsp", "treesitter" },
+  --     guides = {
+  --       mid_item = " ├─",
+  --       last_item = " └─",
+  --       nested_top = " │",
+  --     },
+  --     layout = {
+  --       close_on_select = false,
+  --       max_width = 35,
+  --       min_width = 35,
+  --     },
+  --     show_guides = true,
+  --     open_automatic = function(bufnr)
+  --       local aerial = require("aerial")
+  --       return vim.api.nvim_win_get_width(0) > 120
+  --         and aerial.num_symbols(bufnr) > 0
+  --         and not aerial.was_closed()
+  --         and not vim.tbl_contains({ "markdown" }, vim.bo[bufnr].ft)
+  --     end,
+  --   },
+  --   config = function(_, opts)
+  --     require("aerial").setup(opts)
+
+  --     vim.keymap.set("n", "<F18>", "<cmd>AerialToggle<cr>", { silent = true })
+
+  --     vim.api.nvim_set_hl(0, "AerialLine", { link = "PmenuSel" })
+  --   end,
+  -- },
   -- { "elixir-tools/elixir-tools.nvim", dependencies = { "nvim-lua/plenary.nvim" } },
   {
     -- FIXME: https://github.com/mhanberg/output-panel.nvim/issues/5
@@ -1072,15 +1213,18 @@ return {
     cmd = { "OutputPanel" },
     opts = true,
   },
+
+  -- { "Issafalcon/lsp-overloads.nvim", cmd = { "LspOverloadsSignatureAutoToggle", "LspOverloadsSignature" }, opts = {}, event = { "LspAttach", "TextChangedI" } },
   { "RaafatTurki/corn.nvim", opts = {}, enabled = false },
   { -- signature hints
+    -- enabled = false,
     cond = vim.g.completer ~= "blink",
     "ray-x/lsp_signature.nvim",
     event = "BufReadPre",
     opts = {
       hint_prefix = " 󰏪 ",
       hint_scheme = "Todo", -- highlight group, alt: @variable.parameter
-      floating_window = false,
+      floating_window = true,
       always_trigger = true,
     },
   },

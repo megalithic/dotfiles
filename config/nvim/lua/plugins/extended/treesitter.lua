@@ -13,7 +13,7 @@ return {
   {
     "nvim-treesitter/nvim-treesitter",
     build = ":TSUpdate",
-    lazy = false,
+    event = "VeryLazy",
     opts = {
       ensure_installed = {
         "bash",
@@ -101,7 +101,7 @@ return {
       indent = {
         enable = true,
         disable = function(lang, bufnr)
-          if lang == "lua" then -- or lang == "python" then
+          if vim.tbl_contains({ "lua" }, lang) then
             return true
           else
             return should_disable(lang, bufnr)
@@ -113,7 +113,7 @@ return {
         enable = true,
         include_match_words = true,
         disable = function(lang, bufnr)
-          if vim.tbl_contains({ "ruby", "typescriptreact", "javascriptreact", "typescript", "javascript" }, lang) then -- or lang == "python" then
+          if vim.tbl_contains({ "ruby", "typescriptreact", "javascriptreact", "typescript", "javascript" }, lang) then
             return true
           else
             return should_disable(lang, bufnr)
@@ -132,6 +132,15 @@ return {
         },
       },
     },
+    init = function()
+      -- use bash parser for zsh files
+      vim.treesitter.language.register("bash", "zsh")
+
+      -- FIX for `comments` parser https://github.com/stsewd/tree-sitter-comment/issues/22
+      vim.api.nvim_create_autocmd("ColorScheme", {
+        callback = function() vim.api.nvim_set_hl(0, "@lsp.type.comment", {}) end,
+      })
+    end,
     config = function(_, opts)
       local ft_to_parser_aliases = {
         dotenv = "bash",
@@ -273,9 +282,8 @@ return {
   {
     "andymass/vim-matchup",
     dependencies = { "nvim-treesitter/nvim-treesitter" },
-    cond = false,
-    lazy = false,
-    config = function()
+    event = { "BufReadPost", "BufNewFile" },
+    init = function()
       vim.g.matchup_matchparen_nomode = "i"
       vim.g.matchup_delim_noskips = 1 -- recognize symbols within comments
       vim.g.matchup_matchparen_deferred_show_delay = 400

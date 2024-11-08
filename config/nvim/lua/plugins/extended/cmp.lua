@@ -151,7 +151,7 @@ return {
       local ls_ok, ls = pcall(require, "luasnip")
 
       local ELLIPSIS_CHAR = icons.misc.ellipsis
-      -- local MIN_MENU_WIDTH = 25
+      local MIN_MENU_WIDTH = 25
       -- local MAX_MENU_WIDTH = math.min(30, math.floor(vim.o.columns * 0.5))
       -- local function get_ws(max, len) return (" "):rep(max - len) end
 
@@ -287,7 +287,7 @@ return {
             winhighlight = winhighlight,
             zindex = 1001,
             col_offset = 0,
-            border = SETTINGS.border,
+            border = SETTINGS.borders.empty,
             -- max_height = math.floor(vim.o.lines * 0.5),
             -- max_width = math.floor(vim.o.columns * 0.4),
             -- height = math.floor(vim.o.lines * 0.5),
@@ -296,7 +296,7 @@ return {
             scrollbar = true,
           },
           documentation = cmp.config.window.bordered({
-            border = SETTINGS.border,
+            border = SETTINGS.borders.empty,
             -- max_height = math.floor(vim.o.lines * 0.5),
             -- max_width = math.floor(vim.o.columns * 0.4),
             winhighlight = winhighlight,
@@ -310,7 +310,7 @@ return {
           deprecated = true,
           fields = { "abbr", "kind", "menu" },
           -- maxwidth = MAX_MENU_WIDTH,
-          -- minwidth = MIN_MENU_WIDTH,
+          minwidth = MIN_MENU_WIDTH,
           ellipsis_char = ELLIPSIS_CHAR,
           -- TODO: format updates, clean up and document things pls!
           -- REF: https://github.com/MariaSolOs/dotfiles/blob/main/.config/nvim/lua/plugins/nvim-cmp.lua#L113-L134
@@ -344,9 +344,9 @@ return {
               local type = table.concat(parts, " ", 2)
               vim_item.abbr = argument
               if type ~= nil and type ~= "" then
-                -- icons.kind[vim_item.kind]
-                if icons.kind[type] then
-                  vim_item.kind = icons.kind[type]
+                local icon = icons.vscode[type]
+                if icon ~= nil then
+                  vim_item.kind = icon
                 else
                   vim_item.kind = ""
                 end
@@ -369,23 +369,6 @@ return {
               vim_item.kind_hl_group = hl
               vim_item.menu_hl_group = hl
             else
-              -- if vim_item.kind == "Color" and entry.completion_item.documentation and type(entry.completion_item.documentation) == "string" then
-              --   local _, _, r, g, b = string.find(entry.completion_item.documentation, "^rgb%((%d+), (%d+), (%d+)")
-              --   if r then
-              --     local color = string.format("%02x", r) .. string.format("%02x", g) .. string.format("%02x", b)
-              --     local hl_group = "Tw_" .. color
-              --     if vim.fn.hlID(hl_group) < 1 then vim.api.nvim_set_hl(0, hl_group, { fg = "#" .. color }) end
-              --     vim_item.kind = ""
-              --     vim_item.kind_hl_group = hl_group
-              --   end
-              -- else
-              -- local icon, hl = require("mini.icons").get("lsp", vim_item.kind)
-              -- if icon ~= nil then
-              --   vim_item.kind = icon
-              --   vim_item.kind_hl_group = hl
-              --   dbg({ icon, hl })
-              -- end
-
               vim_item.kind = fmt("%s %s", icons.kind[vim_item.kind], vim_item.kind)
             end
             vim_item.menu = truncate(vim_item.menu)

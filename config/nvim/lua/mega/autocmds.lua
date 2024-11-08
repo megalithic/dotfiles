@@ -178,10 +178,9 @@ function M.apply()
 
   M.augroup("HighlightYank", {
     {
-      -- TODO: https://github.com/ibhagwan/nvim-lua/blob/main/lua/autocmd.lua#L19-L51 (tmux/ssh copy)
       desc = "Highlight when yanking (copying) text",
       event = { "TextYankPost" },
-      command = function() vim.highlight.on_yank() end,
+      command = function() vim.highlight.on_yank({ timeout = 500, on_visual = false, higroup = "VisualYank" }) end,
     },
   })
 
@@ -236,6 +235,21 @@ function M.apply()
     },
   })
 
+  local function clear_commandline()
+    --- Track the timer object and stop any previous timers before setting
+    --- a new one so that each change waits for 10secs and that 10secs is
+    --- deferred each time
+    local timer
+
+    return function()
+      if timer then timer:stop() end
+
+      timer = vim.defer_fn(function()
+        if vim.fn.mode() == "n" then vim.cmd.echon("''") end
+      end, 10000)
+    end
+  end
+
   M.augroup("CmdlineBehaviours", {
     {
       event = "CmdlineEnter",
@@ -255,6 +269,12 @@ function M.apply()
           if lineJump then vim.fn.histdel(":", -1) end
         end, 100)
       end,
+    },
+    {
+      event = { "CmdlineLeave", "CmdlineChanged" },
+      desc = "Clear command line messages",
+      pattern = { ":" },
+      command = clear_commandline(),
     },
   })
 
@@ -449,6 +469,16 @@ function M.apply()
 
   M.augroup("Utilities", {
     {
+      event = { "VimResized" },
+      --     desc = "Automatically resize windows in all tabpages when resizing Vim",
+      command = function(args)
+        vim.schedule(function()
+          vim.cmd("tabdo wincmd =")
+          mega.resize_windows(args.buf)
+        end)
+      end,
+    },
+    {
       event = { "QuickFixCmdPost" },
       desc = "Goes to first item in quickfix list automatically in Trouble",
       command = function(_args)
@@ -469,6 +499,13 @@ function M.apply()
       event = { "UILeave" },
       desc = "remove terminal padding around neovim instance",
       command = function(_args) io.write("\027]111\027\\") end,
+    },
+    {
+      event = { "TermClose" },
+      command = function(args)
+        --- automatically close a terminal if the job was successful
+        if U.falsy(vim.v.event.status) and U.falsy(vim.bo[args.buf].ft) then vim.cmd.bdelete({ args.buf, bang = true }) end
+      end,
     },
 
     --     {

@@ -215,13 +215,24 @@ map("n", "zo", "zO", { desc = "Open all folds descending from current line" })
 
 -- [[ plugin management ]] -----------------------------------------------------
 map("n", "<leader>ps", "<cmd>Lazy sync<cr>", { desc = "[lazy] sync plugins" })
+map("n", "<leader>pm", "<cmd>Lazy<cr>", { desc = "[lazy] plugins" })
+
+-- [[ indents ]] ---------------------------------------------------------------
+local indent_opts = { desc = "VSCode-style block indentation" }
+map("x", ">>", function() vim.cmd.normal({ vim.v.count1 .. ">gv", bang = true }) end, indent_opts)
+map("x", "<<", function() vim.cmd.normal({ vim.v.count1 .. "<gv", bang = true }) end, indent_opts)
 
 -- [[ opening/closing delimiters/matchup/pairs ]] ------------------------------
 map({ "n", "o", "s", "v", "x" }, "<Tab>", "%", { desc = "jump to opening/closing delimiter", remap = true, silent = false })
+-- map({ "n" }, "<Tab>", "%", { desc = "jump to opening/closing delimiter", remap = true, silent = false })
 
 -- [[ copy/paste/yank/registers ]] ---------------------------------------------
 -- don't yank the currently pasted text // thanks @theprimeagen
 vim.cmd([[xnoremap <expr> p 'pgv"' . v:register . 'y']])
+
+map("i", "<C-n>", "<Nop>", { desc = "Disable default autocompletion menu" })
+map("i", "<C-p>", "<C-r>\"", { desc = "Paste from register in insert mode" })
+
 -- xnoremap("p", "\"_dP", "paste with saved register contents")
 
 -- yank to empty register for D, c, etc.
@@ -389,6 +400,23 @@ map({ "x", "n" }, "gcd", function()
     vim.cmd.normal("gvgc")
   end
 end, { silent = true, desc = "[g]o [c]omment and [d]uplicate selected lines" })
+
+-- [[ treesitter captures ]] ---------------------------------------------------
+
+map("n", "Ss", function() vim.print(vim.treesitter.get_captures_at_cursor()) end, { desc = "Print treesitter captures under cursor" })
+
+map("n", "Sy", function()
+  local captures = vim.treesitter.get_captures_at_cursor()
+  if #captures == 0 then
+    vim.notify("No treesitter captures under cursor", vim.log.levels.ERROR, { title = "Yank failed", render = "wrapped-compact" })
+    return
+  end
+
+  local parsedCaptures = vim.iter(captures):map(function(capture) return ("@%s"):format(capture) end):totable()
+  local resultString = vim.inspect(parsedCaptures)
+  vim.fn.setreg("+", resultString .. "\n")
+  vim.notify(resultString, vim.log.levels.INFO, { title = "Yanked capture", render = "wrapped-compact" })
+end, { desc = "Copy treesitter captures under cursor" })
 
 -- [[ terminal ]] --------------------------------------------------------------
 

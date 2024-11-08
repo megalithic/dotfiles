@@ -96,7 +96,7 @@ local theme = lush(function(injected_functions)
     CurSearch({ IncSearch }),
     Search({ fg = C.bg0, bg = C.green, gui = "italic,bold" }), -- Last search pattern highlighting (see 'hlsearch').  Also used for similar items that need to stand out.
     Substitute({ fg = C.bg0, bg = C.yellow, gui = "strikethrough,bold" }), -- |:substitute| replacement text highlighting
-    MatchParen({ fg = C.transparent, bg = C.bg4 }), -- The character under the cursor or just before it, if it is a paired bracket, and its match. |pi_paren.txt|
+    MatchParen({ fg = C.transparent, bg = C.bg_abyss.li(5), gui = "bold,underline" }), -- The character under the cursor or just before it, if it is a paired bracket, and its match. |pi_paren.txt|
     ModeMsg({ fg = C.fg, bg = C.transparent, gui = "bold" }), -- 'showmode' message (e.g., "-- INSERT -- ")
     MsgArea({ bg = C.bg0 }), -- Area for messages and cmdline
     MsgSeparator({ bg = C.bg0 }), -- Separator for scrolled messages, `msgsep` flag of 'display'
@@ -1079,48 +1079,51 @@ local theme = lush(function(injected_functions)
 
     ---- megaline -- :help statusline ------------------------------------------
 
-    StatusLine({ fg = C.grey1, bg = C.bg1 }), -- status line of current window
+    StatusLineBg({ bg = C.transparent }),
+    -- StatusLineNCBg({bg=C.transparent}),
+    -- StatusLineInactiveBg({bg=C.transparent}),
+    StatusLine({ fg = C.grey1, bg = StatusLineBg.bg }), -- status line of current window
     StatusLineNC({ fg = C.grey1, bg = C.bg0 }), -- status lines of not-current windows Note: if this is equal to "StatusLine" Vim will use "^^^" in the status line of the current window.
     StatusLineInactive({ fg = C.bg_dark.lighten(20), bg = C.bg_dark, gui = "italic" }),
-    StBright({ fg = C.fg.li(10), bg = C.bg1 }),
-    StModeNormal({ bg = C.bg2, fg = C.bg5, gui = C.transparent }),
-    StModeInsert({ bg = C.bg2, fg = C.green, gui = "bold" }),
-    StModeVisual({ bg = C.bg2, fg = C.magenta, gui = "bold" }),
-    StModeReplace({ bg = C.bg2, fg = C.dark_red, gui = "bold" }),
-    StModeCommand({ bg = C.bg2, fg = C.green, gui = "bold" }),
-    StModeTermNormal({ StModeNormal, bg = C.bg1 }),
+    StModeNormal({ bg = StatusLineBg.bg, fg = C.bg5, gui = C.transparent }), -- alts: bg = C.bg2
+    StModeInsert({ bg = StatusLineBg.bg, fg = C.green, gui = "bold" }),
+    StModeVisual({ bg = StatusLineBg.bg, fg = C.magenta, gui = "bold" }),
+    StModeReplace({ bg = StatusLineBg.bg, fg = C.dark_red, gui = "bold" }),
+    StModeCommand({ bg = StatusLineBg.bg, fg = C.green, gui = "bold" }),
+    StModeTermNormal({ StModeNormal, bg = StatusLineBg.bg }),
     StModeTermInsert({ StModeTermNormal, fg = C.green, gui = "bold,italic", sp = C.green }),
-    StMetadata({ Comment, bg = C.bg1 }),
-    StMetadataPrefix({ Comment, bg = C.bg1 }),
-    StIndicator({ fg = C.dark_blue, bg = C.bg1 }),
-    StModified({ fg = C.pale_red, bg = C.bg1, gui = "bold,italic" }),
-    StModifiedIcon({ fg = C.pale_red, bg = C.bg1, gui = "bold" }),
-    StGitSymbol({ fg = C.light_red, bg = C.bg1 }),
-    StGitBranch({ fg = C.blue, bg = C.bg1 }),
-    StGitSigns({ fg = C.dark_blue, bg = C.bg1 }),
-    StGitSignsAdd({ GreenSign, bg = C.bg1 }),
-    StGitSignsDelete({ RedSign, bg = C.bg1 }),
-    StGitSignsChange({ OrangeSign, bg = C.bg1 }),
-    StNumber({ fg = C.purple, bg = C.bg1 }),
+    StBright({ fg = C.fg.li(10), bg = StatusLineBg.bg }),
+    StMetadata({ Comment, bg = StatusLineBg.bg }),
+    StMetadataPrefix({ Comment, bg = StatusLineBg.bg }),
+    StIndicator({ fg = C.dark_blue, bg = StatusLineBg.bg }),
+    StModified({ fg = C.pale_red, bg = StatusLineBg.bg, gui = "bold,italic" }),
+    StModifiedIcon({ fg = C.pale_red, bg = StatusLineBg.bg, gui = "bold" }),
+    StGitSymbol({ fg = C.light_red, bg = StatusLineBg.bg }),
+    StGitBranch({ fg = C.blue, bg = StatusLineBg.bg }),
+    StGitSigns({ fg = C.dark_blue, bg = StatusLineBg.bg }),
+    StGitSignsAdd({ GreenSign, bg = StatusLineBg.bg }),
+    StGitSignsDelete({ RedSign, bg = StatusLineBg.bg }),
+    StGitSignsChange({ OrangeSign, bg = StatusLineBg.bg }),
+    StNumber({ fg = C.purple, bg = StatusLineBg.bg }),
     StCount({ fg = C.bg0, bg = C.blue, gui = "bold" }),
     StPrefix({ fg = C.fg, bg = C.bg2 }),
-    StDirectory({ bg = C.bg1, fg = C.grey0, gui = "italic" }),
-    StParentDirectory({ bg = C.bg1, fg = C.blue, gui = "" }),
-    StFilename({ bg = C.bg1, fg = C.fg, gui = "bold" }),
-    StFilenameInactive({ fg = C.light_grey, bg = C.bg1, gui = "italic,bold" }),
-    StIdentifier({ fg = C.blue, bg = C.bg1 }),
-    StTitle({ bg = C.bg1, fg = C.grey2, gui = "bold" }),
-    StComment({ Comment, bg = C.bg1 }),
-    StLineNumber({ fg = C.grey2, bg = C.bg1, gui = "bold" }),
-    StLineSep({ fg = C.grey0, bg = C.bg1, gui = "" }),
-    StLineTotal({ fg = C.grey1, bg = C.bg1 }),
-    StLineColumn({ fg = C.grey2, bg = C.bg1 }),
-    StClient({ bg = C.bg1, fg = C.fg, gui = "bold" }),
-    StError({ DiagnosticError, bg = C.bg1 }),
-    StWarn({ DiagnosticWarn, bg = C.bg1 }),
-    StInfo({ DiagnosticInfo, bg = C.bg1 }),
-    StHint({ DiagnosticHint, bg = C.bg1 }),
-    StSeparator({ fg = C.bg0, bg = C.bg1 }),
+    StDirectory({ bg = StatusLineBg.bg, fg = C.grey0, gui = "italic" }),
+    StParentDirectory({ bg = StatusLineBg.bg, fg = C.blue, gui = "" }),
+    StFilename({ bg = StatusLineBg.bg, fg = C.fg, gui = "bold" }),
+    StFilenameInactive({ fg = C.light_grey, bg = StatusLineBg.bg, gui = "italic,bold" }),
+    StIdentifier({ fg = C.blue, bg = StatusLineBg.bg }),
+    StTitle({ bg = StatusLineBg.bg, fg = C.grey2, gui = "bold" }),
+    StComment({ Comment, bg = StatusLineBg.bg }),
+    StLineNumber({ fg = C.grey2, bg = StatusLineBg.bg, gui = "bold" }),
+    StLineSep({ fg = C.grey0, bg = StatusLineBg.bg, gui = "" }),
+    StLineTotal({ fg = C.grey1, bg = StatusLineBg.bg }),
+    StLineColumn({ fg = C.grey2, bg = StatusLineBg.bg }),
+    StClient({ bg = StatusLineBg.bg, fg = C.fg, gui = "bold" }),
+    StError({ DiagnosticError, bg = StatusLineBg.bg }),
+    StWarn({ DiagnosticWarn, bg = StatusLineBg.bg }),
+    StInfo({ DiagnosticInfo, bg = StatusLineBg.bg }),
+    StHint({ DiagnosticHint, bg = StatusLineBg.bg }),
+    StSeparator({ fg = C.bg0, bg = StatusLineBg.bg }),
 
     ---- :help statuscolumn  ---------------------------------------------------------
 

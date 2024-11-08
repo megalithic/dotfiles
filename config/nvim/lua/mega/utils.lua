@@ -143,13 +143,42 @@ function M.capitalize(str) return (str:gsub("^%l", string.upper)) end
 ---@return boolean found true if needle in haystack
 function M.starts_with(haystack, needle) return type(haystack) == "string" and haystack:sub(1, needle:len()) == needle end
 
--- alt F ғ (ghayn)
--- alt Q ꞯ (currently using ogonek)
-local smallcaps = "ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘǫʀsᴛᴜᴠᴡxʏᴢ‹›⁰¹²³⁴⁵⁶⁷⁸⁹"
-local normal = "ABCDEFGHIJKLMNOPQRSTUVWXYZ<>0123456789"
+local smallcaps_mappings = {
+  -- alt F ғ (ghayn)
+  -- alt Q ꞯ (currently using ogonek)
+  alpha = {
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+    "ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘǫʀsᴛᴜᴠᴡxʏᴢ",
+  },
+  symbols = {
+    "‹›",
+    "<>",
+  },
+  numbers = {
+    "⁰¹²³⁴⁵⁶⁷⁸⁹",
+    "0123456789",
+  },
+}
+
+---@class SmallcapsOptions
+---@field numbers? boolean whether to smallcaps numbers
+---@field symbols? boolean whether to smallcaps symbols
 
 ---@param text string
-function M.smallcaps(text) return vim.fn.tr(text:upper(), normal, smallcaps) end
+---@param options? SmallcapsOptions
+M.smallcaps = function(text, options)
+  if not text then return text end
+
+  local result = text:upper()
+
+  result = vim.fn.tr(result, smallcaps_mappings.alpha[1], smallcaps_mappings.alpha[2])
+
+  if not options or options.numbers then result = vim.fn.tr(result, smallcaps_mappings.numbers[1], smallcaps_mappings.numbers[2]) end
+
+  if not options or options.symbols then result = vim.fn.tr(result, smallcaps_mappings.symbols[1], smallcaps_mappings.symbols[2]) end
+
+  return result
+end
 
 --- Convert a list or map of items into a value by iterating all it's fields and transforming
 --- them with a callback
@@ -401,6 +430,32 @@ function M.clear_ui(opts)
   end
 
   M.clear_commandline()
+end
+
+---Close quickfix and loclist, then delete buffer from buffer list
+M.buf_close = function()
+  vim.cmd.cclose()
+  vim.cmd.lclose()
+  local ok, bufremove = pcall(require, "mini.bufremove")
+  if ok then
+    bufremove.delete(nil, true)
+  else
+    vim.cmd.bdelete({ bang = true })
+  end
+  -- user will be on the previous buffer now
+  -- BUT the alt buffer (<C-^>) is the one we just deleted!
+  -- Set the alt buffer to the previous listed buffer in buflist, or to current
+  -- buffer (as if switching back to undeleted buffer)
+  local curr = vim.fn.bufnr()
+  local prev = nil
+  for _, nr in ipairs(vim.api.nvim_list_bufs()) do
+    if nr == curr then
+      -- set alt buffer to previous listed, or current (no alt)
+      vim.cmd(("let @# = %d"):format(prev or curr))
+      return
+    end
+    if vim.bo[nr].buflisted then prev = nr end
+  end
 end
 
 function M.is_chonky(bufnr, filepath)

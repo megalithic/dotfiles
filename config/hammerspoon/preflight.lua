@@ -1,8 +1,7 @@
-local ipc = require("hs.ipc")
--- ipc.cliUninstall()
-ipc.cliInstall()
+if not hs.ipc.cliStatus() then hs.ipc.cliInstall() end
+require("hs.ipc")
 
-_G["modalities"] = {}
+-- _G["modalities"] = {}
 _G["hypers"] = {}
 _G.DefaultFont = { name = "JetBrainsMono Nerd Font", size = 18 }
 _G.fmt = string.format
@@ -11,7 +10,8 @@ _G.ts = function(date)
   -- return os.date("%Y-%m-%d %H:%M:%S " .. ((tostring(date):match("(%.%d+)$")) or ""), math.floor(date))
   return os.date("%Y-%m-%d %H:%M:%S", math.floor(date))
 end
-_G.P = function(...)
+
+function P(...)
   if ... == nil then
     hs.rawprint("")
     print("")
@@ -29,7 +29,7 @@ _G.P = function(...)
   hs.rawprint(...)
   hs.console.printStyledtext(ts() .. " -> " .. contents)
 end
-_G.I = hs.inspect.inspect
+I = hs.inspect.inspect
 
 local stext = require("hs.styledtext").new
 local getInfo = function()

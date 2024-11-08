@@ -2,10 +2,10 @@ local SETTINGS = require("mega.settings")
 
 return {
   {
-    {
-      "max397574/better-escape.nvim",
-      config = function() require("better_escape").setup() end,
-    },
+    -- {
+    --   "max397574/better-escape.nvim",
+    --   config = function() require("better_escape").setup() end,
+    -- },
     {
       "farmergreg/vim-lastplace",
       lazy = false,
@@ -23,7 +23,7 @@ return {
     { "tpope/vim-scriptease", event = { "VeryLazy" }, cmd = { "Messages", "Mess", "Noti" } },
     { "tpope/vim-sleuth" }, -- Detect tabstop and shiftwidth automatically
     { "EinfachToll/DidYouMean", event = { "BufNewFile" }, init = function() vim.g.dym_use_fzf = true end },
-    { "ConradIrwin/vim-bracketed-paste" }, -- FIXME: delete?
+    -- { "ConradIrwin/vim-bracketed-paste" }, -- FIXME: delete?
     { "ryvnf/readline.vim", event = "CmdlineEnter" },
     -- { "brenoprata10/nvim-highlight-colors", opts = { enable_tailwind = true } },
     {
@@ -32,7 +32,6 @@ return {
 
       config = function() require("colorizer").setup(SETTINGS.colorizer) end,
     },
-    -- "gc" to comment visual regions/lines
     {
       "numToStr/Comment.nvim",
       cond = true,
@@ -49,17 +48,17 @@ return {
         require("Comment").setup(opts)
       end,
     },
-    {
-      "folke/ts-comments.nvim",
-      cond = false,
-      opts = {
-        langs = {
-          elixir = "# %s",
-          eelixir = "# %s",
-          heex = [[<%!-- %s --%>]],
-        },
-      },
-    },
+    -- {
+    --   "folke/ts-comments.nvim",
+    --   cond = false,
+    --   opts = {
+    --     langs = {
+    --       elixir = "# %s",
+    --       eelixir = "# %s",
+    --       heex = [[<%!-- %s --%>]],
+    --     },
+    --   },
+    -- },
     {
       "folke/trouble.nvim",
       cmd = { "TroubleToggle", "Trouble" },
@@ -205,6 +204,33 @@ return {
     opts = {},
   },
   {
+    "windwp/nvim-ts-autotag",
+    dependencies = { "nvim-treesitter/nvim-treesitter" },
+    event = { "BufReadPre", "BufNewFile" },
+    opts = {
+      aliases = {
+        ["elixir"] = "html",
+        ["heex"] = "html",
+        ["phoenix_html"] = "html",
+      },
+      opts = {
+
+        -- Defaults
+        enable_close = true, -- Auto close tags
+        enable_rename = true, -- Auto rename pairs of tags
+        enable_close_on_slash = true, -- Auto close on trailing </
+      },
+      -- Also override individual filetype configs, these take priority.
+      -- Empty by default, useful if one of the "opts" global settings
+      -- doesn't work well in a specific filetype
+      -- per_filetype = {
+      --   ["html"] = {
+      --     enable_close = false,
+      --   },
+      -- },
+    },
+  },
+  {
     "windwp/nvim-autopairs",
     cond = true,
     lazy = true,
@@ -219,8 +245,8 @@ return {
   },
   { -- auto-pair
     -- EXAMPLE config of the plugin: https://github.com/Bekaboo/nvim/blob/master/lua/configs/ultimate-autopair.lua
-    cond = false,
     "altermo/ultimate-autopair.nvim",
+    cond = false,
     branch = "v0.6", -- recommended as each new version will have breaking changes
     event = { "InsertEnter", "CmdlineEnter" },
     opts = {
@@ -258,33 +284,6 @@ return {
       -- for keymaps like `<C-a>`
       { "<", ">", ft = { "vim" } },
       { "<", ">", ft = { "lua" }, cond = function(fn) return fn.in_string() end },
-    },
-  },
-  {
-    "windwp/nvim-ts-autotag",
-    dependencies = { "nvim-treesitter/nvim-treesitter" },
-    event = { "BufReadPre", "BufNewFile" },
-    opts = {
-      aliases = {
-        ["elixir"] = "html",
-        ["heex"] = "html",
-        ["phoenix_html"] = "html",
-      },
-      opts = {
-
-        -- Defaults
-        enable_close = true, -- Auto close tags
-        enable_rename = true, -- Auto rename pairs of tags
-        enable_close_on_slash = true, -- Auto close on trailing </
-      },
-      -- Also override individual filetype configs, these take priority.
-      -- Empty by default, useful if one of the "opts" global settings
-      -- doesn't work well in a specific filetype
-      -- per_filetype = {
-      --   ["html"] = {
-      --     enable_close = false,
-      --   },
-      -- },
     },
   },
   {
@@ -333,15 +332,25 @@ return {
     },
     keys = {
       {
-        "<localleader>fr",
-        ":GrugFar<cr>",
-        desc = "GrugFar",
+        "<localleader>er",
+        [[<Cmd>GrugFar<CR>]],
+        desc = "[grugfar] find and replace",
+      },
+      {
+        "<localleader>eR",
+        function() require("grug-far").grug_far({ prefills = { search = vim.fn.expand("<cword>") } }) end,
+        desc = "[grugfar] find and replace current word",
+      },
+      {
+        "<C-r>",
+        [[:<C-U>lua require('grug-far').with_visual_selection({ prefills = { paths = vim.fn.expand("%") } })<CR>]],
+        mode = { "v", "x" },
+        desc = "[grugfar] find and replace visual selection",
       },
     },
   },
   {
     "tzachar/highlight-undo.nvim",
-    enabled = false, -- presently breaking
     event = "VeryLazy",
     config = true,
   },
@@ -410,13 +419,14 @@ return {
     },
   },
   {
-    "https://github.com/folke/lazydev.nvim",
+    "folke/lazydev.nvim",
     -- dependencies = {
     -- 	{ 'https://github.com/Bilal2453/luvit-meta', lazy = true }, -- optional `vim.uv` typings
     -- },
     ft = "lua",
     opts = {
       library = {
+        { path = "luvit-meta/library", words = { "vim%.uv" } },
         { path = "wezterm-types", mods = { "wezterm" } },
         {
           path = vim.env.HOME .. "/.hammerspoon/Spoons/EmmyLua.spoon/annotations",
@@ -426,64 +436,31 @@ return {
     },
   },
   {
-    "Bekaboo/dropbar.nvim",
-    cond = false, -- not vim.g.started_by_firenvim,
-    opts = {
-      general = {
-        update_interval = 100,
-      },
-      bar = {
-        -- padding = { left = 0, right = 0 },
-        -- truncate = false,
-        sources = function(buf, _)
-          local sources = require("dropbar.sources")
-          local utils = require("dropbar.utils")
+    "mcauley-penney/visual-whitespace.nvim",
+    branch = "async",
+    config = function()
+      local U = require("mega.utils")
+      -- local ws_bg = U.get_hl_hex({ name = "Visual" })["bg"]
+      -- local ws_fg = U.get_hl_hex({ name = "Comment" })["fg"]
 
-          if vim.bo[buf].ft == "markdown" then
-            return {
-              -- path,
-              utils.source.fallback({
-                sources.treesitter,
-                sources.markdown,
-                sources.lsp,
-              }),
-            }
-          end
-          return {
-            -- path,
-            utils.source.fallback({
-              sources.lsp,
-              sources.treesitter,
-            }),
-          }
-        end,
-      },
-      sources = {
-        path = {
-          relative_to = function(bufnr)
-            -- get dirname of current buffer
-            return vim.fn.fnamemodify(vim.api.nvim_buf_get_name(bufnr), ":p:h")
-          end,
+      local ws_bg = U.hl.get_hl("Visual", "bg")
+      local ws_fg = U.hl.get_hl("Comment", "fg")
+
+      require("visual-whitespace").setup({
+        highlight = { bg = ws_bg, fg = ws_fg },
+        nl_char = "¬",
+        excluded = {
+          filetypes = { "aerial" },
+          buftypes = { "help" },
         },
-      },
-    },
-    dependencies = {
-      "nvim-telescope/telescope-fzf-native.nvim",
-    },
+      })
+    end,
   },
   {
-    cond = false,
-    "jaimecgomezz/here.term",
+    "aaron-p1/match-visual.nvim",
     opts = {
-      dependencies = {
-        { "willothy/flatten.nvim", config = true, priority = 1001 },
-      },
-      mappings = {
-        toggle = "<C-.>",
-        kill = "<C-S-.>",
-      },
+      min_length = 3,
     },
+    init = function() vim.api.nvim_set_hl(0, "VisualMatch", { link = "MatchParen" }) end,
   },
-  -- doesn't exactly do what i was expecting when you use statuscolumn settings (gitsigns, diags, etc)
-  { "jake-stewart/force-cul.nvim", opts = {}, cond = false },
 }

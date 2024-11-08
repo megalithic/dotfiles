@@ -252,45 +252,101 @@ return {
         end,
       })
 
-      -- HT: https://github.com/davidosomething/dotfiles/blob/dev/nvim/lua/dko/plugins/notify.lua#L32
-      local notify_override = function(msg, level, opts)
-        if not opts then opts = {} end
+      ---@param msg string
+      ---@param level? number vim.log.levels.*
+      ---@param opts? table
+      local override = function(msg, level, opts)
+        opts = opts or {}
+
+        if opts.title == "package-info.nvim" then return end
+
+        local fok, fidget = pcall(require, "fidget")
+        if opts.title == "nvim-treesitter" then
+          if fok then
+            fidget.notify(msg, level, opts)
+          else
+            vim.print(msg)
+          end
+          return
+        end
+
         if not opts.title then
           if U.starts_with(msg, "[LSP]") then
             local client, found_client = msg:gsub("^%[LSP%]%[(.-)%] .*", "%1")
             if found_client > 0 then
-              opts.title = ("LSP %s %s"):format(icons.misc.caret_right, client)
+              opts.title = ("[LSP] %s"):format(client)
             else
-              opts.title = "LSP"
+              opts.title = "[LSP]"
             end
             msg = msg:gsub("^%[.*%] (.*)", "%1")
           elseif msg == "No code actions available" then
             -- https://github.com/neovim/neovim/blob/master/runtime/lua/vim/lsp/buf.lua#LL629C39-L629C39
-            opts.title = "LSP"
+            opts.title = "[LSP]"
           end
-          -- opts.render = "wrapped-compact"
         end
 
-        notify(msg, level, opts)
-      end
-
-      if not pcall(require, "plenary") then
-        vim.notify = notify_override
-      else
-        local log = require("plenary.log").new({
-          plugin = "notify",
-          level = "debug",
-          use_console = false,
-          use_quickfix = false,
-          use_file = false,
-        })
-
-        vim.notify = function(msg, level, opts)
-          log.info(msg, level, opts)
-
-          notify_override(msg, level, opts)
+        local nok, notify = pcall(require, "notify")
+        if nok then
+          if opts.title and U.starts_with(opts.title, "[LSP]") then opts.render = "wrapped-compact" end
+          notify(msg, level, opts)
+          return
         end
+
+        vim.print(("%s: %s"):format(opts.title, msg))
+
+        -- if pcall(require, "plenary") then
+        --   local log = require("plenary.log").new({
+        --     plugin = "notify",
+        --     level = "debug",
+        --     use_console = false,
+        --     use_quickfix = false,
+        --     use_file = false,
+        --   })
+
+        --   log.info(msg, level, opts)
+        -- end
       end
+      vim.notify = override
+
+      -- -- HT: https://github.com/davidosomething/dotfiles/blob/dev/nvim/lua/dko/plugins/notify.lua#L32
+      -- local notify_override = function(msg, level, opts)
+      --   if not opts then opts = {} end
+      --   if not opts.title then
+      --     if U.starts_with(msg, "[LSP]") then
+      --       local client, found_client = msg:gsub("^%[LSP%]%[(.-)%] .*", "%1")
+      --       if found_client > 0 then
+      --         opts.title = ("LSP %s %s"):format(icons.misc.caret_right, client)
+      --       else
+      --         opts.title = "LSP"
+      --       end
+      --       msg = msg:gsub("^%[.*%] (.*)", "%1")
+      --     elseif msg == "No code actions available" then
+      --       -- https://github.com/neovim/neovim/blob/master/runtime/lua/vim/lsp/buf.lua#LL629C39-L629C39
+      --       opts.title = "LSP"
+      --     end
+      --     -- opts.render = "wrapped-compact"
+      --   end
+
+      --   notify(msg, level, opts)
+      -- end
+
+      -- if not pcall(require, "plenary") then
+      --   vim.notify = notify_override
+      -- else
+      --   local log = require("plenary.log").new({
+      --     plugin = "notify",
+      --     level = "debug",
+      --     use_console = false,
+      --     use_quickfix = false,
+      --     use_file = false,
+      --   })
+
+      --   vim.notify = function(msg, level, opts)
+      --     log.info(msg, level, opts)
+
+      --     notify_override(msg, level, opts)
+      --   end
+      -- end
     end,
   },
 }

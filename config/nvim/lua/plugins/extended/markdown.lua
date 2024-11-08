@@ -334,9 +334,10 @@ return {
     "dkarter/bullets.vim",
     -- ft = { "markdown", "text", "gitcommit" },
     event = {
-      "BufRead **.md,**.neorg,**.org",
-      "BufNewFile **.md,**.neorg,**.org",
-      "FileType gitcommit,NeogitCommitMessage,.git/COMMIT_EDITMSG,markdown,text,plaintext",
+      -- "BufRead **.md,**.neorg,**.org",
+      -- "BufNewFile **.md,**.neorg,**.org",
+      "FileType gitcommit,NeogitCommitMessage,.git/COMMIT_EDITMSG",
+      -- "FileType gitcommit,NeogitCommitMessage,.git/COMMIT_EDITMSG,markdown,text,plaintext",
     },
     cmd = { "InsertNewBullet" },
   },

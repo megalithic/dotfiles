@@ -1,3 +1,7 @@
+---@param text string
+---@param replace string
+local function abbr(text, replace, bufnr) vim.keymap.set("ia", text, replace, { buffer = bufnr or true }) end
+
 local ftplugin = require("mega.ftplugin")
 ftplugin.extend_all({
   [{ "elixir", "eelixir" }] = {
@@ -228,6 +232,18 @@ ftplugin.extend_all({
       end, "grep files in dir")
     end,
   },
+  [{ "javascript", "typescript" }] = {
+    callback = function(bufnr)
+      -- ABBREVIATIONS
+      abbr("dbg", "console.debug", bufnr)
+      abbr("cosnt", "const", bufnr)
+      abbr("local", "const", bufnr)
+      abbr("--", "//", bufnr)
+      abbr("~=", "!==", bufnr)
+      abbr("elseif", "else if", bufnr)
+      abbr("()", "() =>", bufnr) -- quicker arrow function
+    end,
+  },
   lua = {
     abbr = {
       locla = "local",
@@ -239,6 +255,10 @@ ftplugin.extend_all({
     opt = {
       comments = ":---,:--",
     },
+    callback = function(bufnr)
+      -- ABBREVIATIONS
+      abbr("!=", "~=", bufnr)
+    end,
   },
   make = {
     opt = {
@@ -297,18 +317,18 @@ ftplugin.extend_all({
     callback = function(bufnr)
       local map = vim.keymap.set
 
-      vim.schedule(function()
-        map("i", "<CR>", function()
-          local pair = require("nvim-autopairs").completion_confirm()
-          if vim.bo.ft == "markdown" and pair == vim.api.nvim_replace_termcodes("<CR>", true, false, true) then
-            vim.cmd.InsertNewBullet()
-          else
-            vim.api.nvim_feedkeys(pair, "n", false)
-          end
-        end, {
-          buffer = bufnr,
-        })
-      end)
+      -- vim.schedule(function()
+      --   map("i", "<CR>", function()
+      --     local pair = require("nvim-autopairs").completion_confirm()
+      --     if vim.bo.ft == "markdown" and pair == vim.api.nvim_replace_termcodes("<CR>", true, false, true) then
+      --       vim.cmd.InsertNewBullet()
+      --     else
+      --       vim.api.nvim_feedkeys(pair, "n", false)
+      --     end
+      --   end, {
+      --     buffer = bufnr,
+      --   })
+      -- end)
 
       ---sets `buffer`, `silent` and `nowait` to true
       ---@param mode string|string[]

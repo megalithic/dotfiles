@@ -73,7 +73,6 @@ function obj:stop(opts)
   elseif event == hs.application.watcher.terminated then
     require("ptt").setState("push-to-talk")
     req("utils").dnd(false)
-    req("keycastr"):stop()
 
     do
       if browser ~= nil then
@@ -105,6 +104,8 @@ function obj:stop(opts)
     -- convert our video
     local latest_obs_file = hs.execute("/bin/ls -at ~/Movies/obs/*.* | head -n 1 | tr -d '\n'", true)
     require("utils").vidconvert(latest_obs_file)
+
+    hs.timer.doAfter(2, function() req("keycastr"):stop() end)
   end
 
   return self

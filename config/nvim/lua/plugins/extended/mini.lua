@@ -49,6 +49,7 @@ return {
   },
   {
     "echasnovski/mini.indentscope",
+    cond = false,
     config = function()
       mega.req("mini.indentscope").setup({
         symbol = SETTINGS.indent_scope_char,
@@ -290,7 +291,7 @@ return {
           { mode = "x", keys = "z" },
 
           -- mini.surround
-          { mode = "n", keys = "s" },
+          { mode = "n", keys = "S", desc = "+treesitter" },
 
           -- Operator-pending mode key
           { mode = "o", keys = "a" },
