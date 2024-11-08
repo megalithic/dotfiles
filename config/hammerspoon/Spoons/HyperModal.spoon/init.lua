@@ -13,7 +13,6 @@ obj.indicatorColor = "#F74F9E"
 obj.delayedExitTimer = nil
 
 function obj.toggleIndicator(win, terminate)
-  terminate = terminate or false
   win = win or hs.window.focusedWindow()
 
   local frame = win:frame()
@@ -30,6 +29,7 @@ function obj.toggleIndicator(win, terminate)
 
   if terminate then
     obj.indicator:delete()
+    obj.indicator = nil
   else
     if obj.indicator:isShowing() then
       obj.indicator:hide()
@@ -87,7 +87,7 @@ end
 function obj:exited()
   obj.isOpen = false
   hs.fnutils.ieach(obj.alertUuids, function(uuid) hs.alert.closeSpecific(uuid) end)
-  obj.toggleIndicator()
+  obj.toggleIndicator(nil, true)
 
   if obj.delayedExitTimer ~= nil then
     obj.delayedExitTimer:stop()
