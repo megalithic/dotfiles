@@ -180,7 +180,20 @@ wmModality
     function() wmModality:exit(0.1) end
   )
   :bind({}, "escape", function() wmModality:exit() end)
-  :bind({}, "space", function() wm.place(POSITIONS.preview) end, function() wmModality:exit(0.1) end)
+  -- :bind({}, "space", function() wm.place(POSITIONS.preview) end, function() wmModality:exit(0.1) end)
+  :bind(
+    {},
+    "space",
+    chain({
+      POSITIONS.full,
+      POSITIONS.center.large,
+      POSITIONS.center.medium,
+      POSITIONS.center.small,
+      POSITIONS.center.tiny,
+      POSITIONS.center.mini,
+      POSITIONS.preview,
+    }, wmModality, 1.0)
+  )
   :bind({}, "return", function() wm.place(POSITIONS.full) end, function() wmModality:exit(0.1) end)
   :bind({ "shift" }, "return", function()
     wm.toNextScreen()
@@ -188,41 +201,50 @@ wmModality
   end, function() wmModality:exit() end)
   :bind(
     {},
+    "h",
+    chain(
+      enum.map({ "halves", "thirds", "twoThirds", "fiveSixths", "sixths" }, function(size)
+        if type(POSITIONS[size]) == "string" then return POSITIONS[size] end
+        return POSITIONS[size]["left"]
+      end),
+      wmModality,
+      1.0
+    )
+  )
+  :bind(
+    {},
     "l",
-    function() wm.place(POSITIONS.halves.right) end,
-    -- chain(
-    --   enum.map({ "halves", "thirds", "twoThirds", "fiveSixths", "sixths" }, function(size)
-    --     if type(POSITIONS[size]) == "string" then return POSITIONS[size] end
-    --     return POSITIONS[size]["right"]
-    --   end),
-    --   wmModality,
-    --   1.0
-    -- )
-    function() wmModality:exit() end
+    chain(
+      enum.map({ "halves", "thirds", "twoThirds", "fiveSixths", "sixths" }, function(size)
+        if type(POSITIONS[size]) == "string" then return POSITIONS[size] end
+        return POSITIONS[size]["right"]
+      end),
+      wmModality,
+      1.0
+    )
   )
   :bind({ "shift" }, "h", function()
     wm.toPrevScreen()
-    wm.place(POSITIONS.halves.left)
-  end, function() wmModality:exit() end)
-  :bind(
-    {},
-    "h",
-
-    function() wm.place(POSITIONS.halves.left) end,
-    -- chain(
-    --   enum.map({ "halves", "thirds", "twoThirds", "fiveSixths", "sixths" }, function(size)
-    --     if type(POSITIONS[size]) == "string" then return POSITIONS[size] end
-    --     return POSITIONS[size]["left"]
-    --   end),
-    --   wmModality,
-    --   1.0
-    -- )
-    function() wmModality:exit() end
-  )
+    chain(
+      enum.map({ "halves", "thirds", "twoThirds", "fiveSixths", "sixths" }, function(size)
+        if type(POSITIONS[size]) == "string" then return POSITIONS[size] end
+        return POSITIONS[size]["left"]
+      end),
+      wmModality,
+      1.0
+    )
+  end)
   :bind({ "shift" }, "l", function()
     wm.toNextScreen()
-    wm.place(POSITIONS.halves.right)
-  end, function() wmModality:exit() end)
+    chain(
+      enum.map({ "halves", "thirds", "twoThirds", "fiveSixths", "sixths" }, function(size)
+        if type(POSITIONS[size]) == "string" then return POSITIONS[size] end
+        return POSITIONS[size]["right"]
+      end),
+      wmModality,
+      1.0
+    )
+  end)
   -- :bind({}, "j", function() wm.toNextScreen() end, function() wmModality:delayedExit(0.1) end)
   :bind(
     {},

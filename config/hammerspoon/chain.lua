@@ -44,8 +44,6 @@ obj.placeInSequence = function(movements, modal, interval)
 
     hs.grid.set(win, movements[sequenceNumber])
 
-    if modal ~= nil then modal.updateIndicator(win) end
-
     sequenceNumber = sequenceNumber % cycleLength + 1
 
     if modal ~= nil then
@@ -55,6 +53,8 @@ obj.placeInSequence = function(movements, modal, interval)
         modal:exit()
       end
     end
+
+    if modal ~= nil then modal.toggleIndicator(win, true) end
   end
 end
 

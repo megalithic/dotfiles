@@ -2,10 +2,15 @@ local SETTINGS = require("mega.settings")
 
 return {
   {
-    -- {
-    --   "max397574/better-escape.nvim",
-    --   config = function() require("better_escape").setup() end,
-    -- },
+    { "tpope/vim-eunuch", cmd = { "Move", "Rename", "Remove", "Delete", "Mkdir", "SudoWrite", "Chmod" } },
+    { "tpope/vim-rhubarb", event = { "VeryLazy" } },
+    { "tpope/vim-repeat", lazy = false },
+    { "tpope/vim-unimpaired", event = { "VeryLazy" } },
+    { "tpope/vim-apathy", event = { "VeryLazy" } },
+    { "tpope/vim-scriptease", event = { "VeryLazy" }, cmd = { "Messages", "Mess", "Noti" } },
+    { "tpope/vim-sleuth" }, -- Detect tabstop and shiftwidth automatically
+    { "EinfachToll/DidYouMean", event = { "BufNewFile" }, init = function() vim.g.dym_use_fzf = true end },
+    { "ryvnf/readline.vim", event = "CmdlineEnter" },
     {
       "farmergreg/vim-lastplace",
       lazy = false,
@@ -15,56 +20,24 @@ return {
         vim.g.lastplace_open_folds = true
       end,
     },
-    { "tpope/vim-eunuch", cmd = { "Move", "Rename", "Remove", "Delete", "Mkdir", "SudoWrite", "Chmod" } },
-    { "tpope/vim-rhubarb", event = { "VeryLazy" } },
-    { "tpope/vim-repeat", lazy = false },
-    { "tpope/vim-unimpaired", event = { "VeryLazy" } },
-    { "tpope/vim-apathy", event = { "VeryLazy" } },
-    { "tpope/vim-scriptease", event = { "VeryLazy" }, cmd = { "Messages", "Mess", "Noti" } },
-    { "tpope/vim-sleuth" }, -- Detect tabstop and shiftwidth automatically
-    { "EinfachToll/DidYouMean", event = { "BufNewFile" }, init = function() vim.g.dym_use_fzf = true end },
-    -- { "ConradIrwin/vim-bracketed-paste" }, -- FIXME: delete?
-    { "ryvnf/readline.vim", event = "CmdlineEnter" },
-    -- { "brenoprata10/nvim-highlight-colors", opts = { enable_tailwind = true } },
     {
       "NvChad/nvim-colorizer.lua",
       event = { "BufReadPre" },
-
       config = function() require("colorizer").setup(SETTINGS.colorizer) end,
     },
     {
       "numToStr/Comment.nvim",
-      cond = true,
       opts = {
         ignore = "^$", -- ignore blank lines
       },
-      config = function(_, opts)
-        -- require("Comment.ft")
-        --   -- Set only line comment
-        --   .set("heex", { "<%!-- %s --%>" })
-        -- Or set both line and block commentstring
-        -- .set("javascript", { "//%s", "/*%s*/" })
-
-        require("Comment").setup(opts)
-      end,
+      config = function(_, opts) require("Comment").setup(opts) end,
     },
-    -- {
-    --   "folke/ts-comments.nvim",
-    --   cond = false,
-    --   opts = {
-    --     langs = {
-    --       elixir = "# %s",
-    --       eelixir = "# %s",
-    --       heex = [[<%!-- %s --%>]],
-    --     },
-    --   },
-    -- },
     {
       "folke/trouble.nvim",
       cmd = { "TroubleToggle", "Trouble" },
       opts = {
         auto_open = false,
-        use_diagnostic_signs = true, -- en
+        use_diagnostic_signs = true,
       },
     },
     {
@@ -72,11 +45,9 @@ return {
       lazy = false,
       commit = "36bfe63246386fc5ae2679aa9b17a7746b7403d5",
       opts = { at_edge = "stop" },
-      -- build = "./kitty/install-kittens.bash",
       keys = {
         { "<A-h>", function() require("smart-splits").resize_left() end },
         { "<A-l>", function() require("smart-splits").resize_right() end },
-        -- moving between splits
         {
           "<C-h>",
           function()
@@ -93,11 +64,6 @@ return {
             vim.cmd.normal("zz")
           end,
         },
-        -- swapping buffers between windows
-        -- { "<leader><leader>h", function() require("smart-splits").swap_buf_left() end, desc = "swap left" },
-        -- { "<leader><leader>j", function() require("smart-splits").swap_buf_down() end, desc = "swap down" },
-        -- { "<leader><leader>k", function() require("smart-splits").swap_buf_up() end, desc = "swap up" },
-        -- { "<leader><leader>l", function() require("smart-splits").swap_buf_right() end, desc = "swap right" },
       },
     },
     {
@@ -137,12 +103,11 @@ return {
       keys = {
         {
           "s",
-          -- mode = { "n" },
           mode = { "n", "x", "o" },
           function() require("flash").jump() end,
         },
-        -- { "m", mode = { "o", "x" }, function() require("flash").treesitter() end },
-        { "vn", mode = { "n", "o", "x" }, function() require("flash").treesitter() end },
+        { "m", mode = { "o", "x" }, function() require("flash").treesitter() end },
+        -- { "vn", mode = { "n", "o", "x" }, function() require("flash").treesitter() end },
         {
           "r",
           function() require("flash").remote() end,
@@ -156,47 +121,13 @@ return {
           desc = "Toggle Flash Search",
         },
         {
-          "R",
+          "S",
           function() require("flash").treesitter_search() end,
           mode = { "o", "x" },
           desc = "Flash Treesitter Search",
         },
       },
     },
-    -- {
-    --   "stevearc/conform.nvim",
-    --   lazy = false,
-    --   keys = {
-    --     {
-    --       "<leader>f",
-    --       function() require("conform").format({ async = true, lsp_fallback = true }) end,
-    --       mode = "",
-    --       desc = "[F]ormat buffer",
-    --     },
-    --   },
-    --   opts = {
-    --     notify_on_error = false,
-    --     format_on_save = function(bufnr)
-    --       -- Disable "format_on_save lsp_fallback" for languages that don't
-    --       -- have a well standardized coding style. You can add additional
-    --       -- languages here or re-enable it for the disabled ones.
-    --       local disable_filetypes = { c = true, cpp = true }
-    --       return {
-    --         timeout_ms = 500,
-    --         lsp_fallback = not disable_filetypes[vim.bo[bufnr].filetype],
-    --       }
-    --     end,
-    --     formatters_by_ft = {
-    --       lua = { "stylua" },
-    --       -- Conform can also run multiple formatters sequentially
-    --       -- python = { "isort", "black" },
-    --       --
-    --       -- You can use a sub-list to tell conform to run *until* a formatter
-    --       -- is found.
-    --       -- javascript = { { "prettierd", "prettier" } },
-    --     },
-    --   },
-    -- },
   },
   {
     "nacro90/numb.nvim",
@@ -214,20 +145,10 @@ return {
         ["phoenix_html"] = "html",
       },
       opts = {
-
-        -- Defaults
         enable_close = true, -- Auto close tags
         enable_rename = true, -- Auto rename pairs of tags
         enable_close_on_slash = true, -- Auto close on trailing </
       },
-      -- Also override individual filetype configs, these take priority.
-      -- Empty by default, useful if one of the "opts" global settings
-      -- doesn't work well in a specific filetype
-      -- per_filetype = {
-      --   ["html"] = {
-      --     enable_close = false,
-      --   },
-      -- },
     },
   },
   {
@@ -242,49 +163,6 @@ return {
       npairs.add_rules(require("nvim-autopairs.rules.endwise-lua"))
       npairs.add_rules(require("nvim-autopairs.rules.endwise-ruby"))
     end,
-  },
-  { -- auto-pair
-    -- EXAMPLE config of the plugin: https://github.com/Bekaboo/nvim/blob/master/lua/configs/ultimate-autopair.lua
-    "altermo/ultimate-autopair.nvim",
-    cond = false,
-    branch = "v0.6", -- recommended as each new version will have breaking changes
-    event = { "InsertEnter", "CmdlineEnter" },
-    opts = {
-      bs = {
-        space = "balance",
-        cmap = false, -- keep my `<BS>` mapping for the cmdline
-      },
-      fastwarp = {
-        map = "<D-f>",
-        rmap = "<D-F>", -- backwards
-        hopout = true,
-        nocursormove = true,
-        multiline = false,
-      },
-      cr = { autoclose = true },
-      space = { enable = true },
-      space2 = { enable = true },
-
-      config_internal_pairs = {
-        { "'", "'", nft = { "markdown" } }, -- since used as apostroph
-        { "\"", "\"", nft = { "vim" } }, -- vimscript uses quotes as comments
-      },
-      -- INFO custom keys need to be "appended" to the opts as a list
-      { "*", "*", ft = { "markdown" } }, -- italics
-      { "__", "__", ft = { "markdown" } }, -- bold
-      { [[\"]], [[\"]], ft = { "zsh", "json", "applescript" } }, -- escaped quote
-
-      { -- commit scope (= only first word) for commit messages
-        "(",
-        "): ",
-        ft = { "gitcommit" },
-        cond = function(_) return not vim.api.nvim_get_current_line():find(" ") end,
-      },
-
-      -- for keymaps like `<C-a>`
-      { "<", ">", ft = { "vim" } },
-      { "<", ">", ft = { "lua" }, cond = function(fn) return fn.in_string() end },
-    },
   },
   {
     "kevinhwang91/nvim-bqf",
@@ -322,11 +200,10 @@ return {
   },
   {
     "MagicDuck/grug-far.nvim",
-    config = function()
-      require("grug-far").setup({
-        windowCreationCommand = "botright vsplit %",
-      })
-    end,
+    opts = {
+      windowCreationCommand = "botright vsplit %",
+    },
+    config = function(_, opts) require("grug-far").setup(opts) end,
     cmd = {
       "GrugFar",
     },
@@ -351,10 +228,8 @@ return {
   },
   {
     "tzachar/highlight-undo.nvim",
-    event = "VeryLazy",
-    config = true,
+    opts = {},
   },
-  { "elixir-editors/vim-elixir", enabled = true },
   {
     "nvim-neo-tree/neo-tree.nvim",
     branch = "v3.x",
@@ -392,37 +267,7 @@ return {
     },
   },
   {
-    "jiaoshijie/undotree",
-    dependencies = "nvim-lua/plenary.nvim",
-    config = true,
-    keys = { -- load the plugin only when using it's keybinding:
-      { "<leader>eu", "<cmd>lua require('undotree').toggle()<cr>", desc = "[u]ndo tree" },
-    },
-    opts = {
-      float_diff = false, -- using float window previews diff, set this `true` will disable layout option
-      layout = "left_bottom", -- "left_bottom", "left_left_bottom"
-      position = "right", -- "right", "bottom"
-      ignore_filetype = { "undotree", "undotreeDiff", "qf", "TelescopePrompt", "spectre_panel", "tsplayground" },
-      window = {
-        winblend = 0,
-      },
-      keymaps = {
-        ["j"] = "move_next",
-        ["k"] = "move_prev",
-        ["gj"] = "move2parent",
-        ["J"] = "move_change_next",
-        ["K"] = "move_change_prev",
-        ["<cr>"] = "action_enter",
-        ["<tab>"] = "enter_diffbuf",
-        ["q"] = "quit",
-      },
-    },
-  },
-  {
     "folke/lazydev.nvim",
-    -- dependencies = {
-    -- 	{ 'https://github.com/Bilal2453/luvit-meta', lazy = true }, -- optional `vim.uv` typings
-    -- },
     ft = "lua",
     opts = {
       library = {
@@ -455,12 +300,5 @@ return {
         },
       })
     end,
-  },
-  {
-    "aaron-p1/match-visual.nvim",
-    opts = {
-      min_length = 3,
-    },
-    init = function() vim.api.nvim_set_hl(0, "VisualMatch", { link = "MatchParen" }) end,
   },
 }

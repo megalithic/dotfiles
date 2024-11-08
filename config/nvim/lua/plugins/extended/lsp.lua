@@ -1,4 +1,3 @@
-local fmt = string.format
 local U = require("mega.utils")
 local SETTINGS = require("mega.settings")
 local BORDER_STYLE = SETTINGS.border
@@ -331,7 +330,7 @@ return {
             end
           end
         end
-        vim.lsp.handlers[methods.textDocument_hover] = enhanced_float_handler(vim.lsp.handlers.hover, true)
+        -- vim.lsp.handlers[methods.textDocument_hover] = enhanced_float_handler(vim.lsp.handlers.hover, true)
         vim.lsp.handlers[methods.textDocument_signatureHelp] = enhanced_float_handler(vim.lsp.handlers.signature_help, false)
 
         local desc = function(d) return "[+lsp] " .. d end
@@ -409,44 +408,44 @@ return {
         nmap("ga", function() vim.cmd.FzfLua("lsp_code_actions") end, "[g]o [c]ode [a]ctions")
         -- nmap("K", vim.lsp.buf.hover, "hover documentation")
 
-        -- if client.supports_method(methods.textDocument_signatureHelp) then
-        --   if client and client.server_capabilities.signatureHelpProvider then
-        --     require("lsp-overloads").setup(client, {
-        --       -- UI options are mostly the same as those passed to vim.lsp.util.open_floating_preview
-        --       silent = true,
-        --       floating_window_above_cur_line = true,
-        --       ui = {
-        --         border = "rounded", -- The border to use for the signature popup window. Accepts same border values as |nvim_open_win()|.
-        --         max_width = 130, -- Maximum signature popup width
-        --         focusable = true, -- Make the popup float focusable
-        --         focus = false, -- If focusable is also true, and this is set to true, navigating through overloads will focus into the popup window (probably not what you want)
-        --         silent = true, -- Prevents noisy notifications (make false to help debug why signature isn't working)
-        --         highlight = {
-        --           italic = true,
-        --           bold = true,
-        --           fg = "#ffffff",
-        --         },
-        --       },
-        --       keymaps = {
-        --         next_signature = "<M-j>",
-        --         previous_signature = "<M-k>",
-        --         next_parameter = "<M-l>",
-        --         previous_parameter = "<M-h>",
-        --       },
-        --       display_automatically = true, -- Uses trigger characters to automatically display the signature overloads when typing a method signature
-        --     })
-        --   end
-        --   -- -- map("i", "<C-k>", vim.lsp.buf.signature_help, { buffer = bufnr, desc = desc("signature help") })
-        --   -- map("i", "<C-s>", function()
-        --   --   -- Close the completion menu first (if open).
-        --   --   local cmp = require("cmp")
-        --   --   if cmp.visible() then cmp.close() end
+        if client.supports_method(methods.textDocument_signatureHelp) then
+          if client and client.server_capabilities.signatureHelpProvider then
+            require("lsp-overloads").setup(client, {
+              -- UI options are mostly the same as those passed to vim.lsp.util.open_floating_preview
+              silent = true,
+              floating_window_above_cur_line = true,
+              ui = {
+                border = "rounded", -- The border to use for the signature popup window. Accepts same border values as |nvim_open_win()|.
+                max_width = 130, -- Maximum signature popup width
+                focusable = true, -- Make the popup float focusable
+                focus = false, -- If focusable is also true, and this is set to true, navigating through overloads will focus into the popup window (probably not what you want)
+                silent = true, -- Prevents noisy notifications (make false to help debug why signature isn't working)
+                highlight = {
+                  italic = true,
+                  bold = true,
+                  fg = "#ffffff",
+                },
+              },
+              keymaps = {
+                next_signature = "<M-j>",
+                previous_signature = "<M-k>",
+                next_parameter = "<M-l>",
+                previous_parameter = "<M-h>",
+              },
+              display_automatically = true, -- Uses trigger characters to automatically display the signature overloads when typing a method signature
+            })
+          end
+          -- -- map("i", "<C-k>", vim.lsp.buf.signature_help, { buffer = bufnr, desc = desc("signature help") })
+          -- map("i", "<C-s>", function()
+          --   -- Close the completion menu first (if open).
+          --   local cmp = require("cmp")
+          --   if cmp.visible() then cmp.close() end
 
-        --   --   -- vim.lsp.buf.signature_help()
+          --   -- vim.lsp.buf.signature_help()
 
-        --   --   vim.cmd.LspOverloadsSignature()
-        --   -- end, { buffer = bufnr, silent = true, noremap = true, desc = desc("signature help") })
-        -- end
+          --   vim.cmd.LspOverloadsSignature()
+          -- end, { buffer = bufnr, silent = true, noremap = true, desc = desc("signature help") })
+        end
         -- map("gD", vim.lsp.buf.declaration, "[g]oto [d]eclaration (e.g. to a header file in C)")
         -- rename symbol starting with empty prompt, highlight references
         nmap("<leader>rn", function()
@@ -925,7 +924,13 @@ return {
             if not m or d.severity < m.severity then max_severity_per_line[d.lnum] = d end
           end
           local filtered_diagnostics = vim.tbl_values(max_severity_per_line)
-          orig_signs_handler.show(ns, bn, filtered_diagnostics, opts)
+
+          if filtered_diagnostics == nil or U.tlen(filtered_diagnostics) == 0 then
+            dbg(filtered_diagnostics)
+            orig_signs_handler.show(ns, bn, diagnostics, opts)
+          else
+            orig_signs_handler.show(ns, bn, filtered_diagnostics, opts)
+          end
         end
 
         if vim.tbl_contains(SETTINGS.max_diagnostic_exclusions, client.name) then
@@ -1214,10 +1219,9 @@ return {
     opts = true,
   },
 
-  -- { "Issafalcon/lsp-overloads.nvim", cmd = { "LspOverloadsSignatureAutoToggle", "LspOverloadsSignature" }, opts = {}, event = { "LspAttach", "TextChangedI" } },
   { "RaafatTurki/corn.nvim", opts = {}, enabled = false },
-  { -- signature hints
-    -- enabled = false,
+  {
+    enabled = false,
     cond = vim.g.completer ~= "blink",
     "ray-x/lsp_signature.nvim",
     event = "BufReadPre",

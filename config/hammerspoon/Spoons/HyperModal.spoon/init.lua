@@ -2,8 +2,8 @@ local obj = hs.hotkey.modal.new({}, nil)
 
 obj.name = "HyperModal"
 obj.version = "0.0.2"
-obj.originator = "Evan Travers <evantravers@gmail.com>"
-obj.author = "Seth Messer <seth.messer@gmail.com>"
+obj.author = "Evan Travers <evantravers@gmail.com>"
+obj.contributor = "Seth Messer <seth.messer@gmail.com>"
 obj.license = "MIT <https://opensource.org/licenses/MIT>"
 obj.homepage = "https://github.com/megalithic/dotfiles/config/hammerspoon/Spoons/HyperModal/"
 
@@ -12,7 +12,8 @@ obj.indicator = nil
 obj.indicatorColor = "#F74F9E"
 obj.delayedExitTimer = nil
 
-function obj.toggleIndicator(win)
+function obj.toggleIndicator(win, terminate)
+  terminate = terminate or false
   win = win or hs.window.focusedWindow()
 
   local frame = win:frame()
@@ -27,10 +28,14 @@ function obj.toggleIndicator(win)
     })
   end
 
-  if obj.indicator:isShowing() then
-    obj.indicator:hide()
+  if terminate then
+    obj.indicator:delete()
   else
-    obj.indicator:show()
+    if obj.indicator:isShowing() then
+      obj.indicator:hide()
+    else
+      obj.indicator:show()
+    end
   end
 
   return obj.indicator

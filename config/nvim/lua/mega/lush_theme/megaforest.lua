@@ -1093,6 +1093,7 @@ local theme = lush(function(injected_functions)
     StModeTermNormal({ StModeNormal, bg = StatusLineBg.bg }),
     StModeTermInsert({ StModeTermNormal, fg = C.green, gui = "bold,italic", sp = C.green }),
     StBright({ fg = C.fg.li(10), bg = StatusLineBg.bg }),
+    StBrightItalic({ StBright, gui = "italic" }),
     StMetadata({ Comment, bg = StatusLineBg.bg }),
     StMetadataPrefix({ Comment, bg = StatusLineBg.bg }),
     StIndicator({ fg = C.dark_blue, bg = StatusLineBg.bg }),

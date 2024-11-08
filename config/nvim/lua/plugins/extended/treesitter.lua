@@ -90,12 +90,8 @@ return {
         --  the list of additional_vim_regex_highlighting and disabled languages for indent.
         additional_vim_regex_highlighting = {
           "ruby",
-          -- "elixir",
           "python",
-          -- "heex",
-          -- "lua",
           "vim",
-          "zsh",
         },
       },
       indent = {

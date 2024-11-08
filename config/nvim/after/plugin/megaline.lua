@@ -45,7 +45,6 @@ augroup("megaline", {
       local clientName = vim.lsp.get_client_by_id(ctx.data.client_id).name
       local progress = ctx.data.params.value ---@type {percentage: number, title?: string, kind: string, message?: string}
       if not (progress and progress.title) then return end
-
       local progress_icons = { "󰫃", "󰫄", "󰫅", "󰫆", "󰫇", "󰫈" }
       local idx = math.floor(#progress_icons / 2)
       if progress.percentage == 0 then idx = 1 end
@@ -394,7 +393,7 @@ end
 
 local function get_lsp_status(messages)
   --TODO: do some gsub replacements on the messages
-  return seg(messages, { margin = { 1, 1 } })
+  return seg(messages, "StBrightItalic", { margin = { 1, 1 } })
 end
 
 local function get_dap_status()
