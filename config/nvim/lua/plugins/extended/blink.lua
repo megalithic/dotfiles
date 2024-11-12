@@ -43,6 +43,7 @@ return {
       use_nvim_cmp_as_default = true,
     },
 
+    blocked_filetypes = { "firenvim" },
     nerd_font_variant = "mono",
 
     sources = {
@@ -92,25 +93,23 @@ return {
         },
       },
     },
-    -- https://caps.nyc3.cdn.digitaloceanspaces.com/screenshots/cap_1730918327.png
-    -- item desc, kind icon, kind label, source/client name
     windows = {
       documentation = {
         border = SETTINGS.borders.blink_empty,
         auto_show = true,
-        auto_show_delay_ms = 0,
-        min_width = 30,
+        min_width = 15,
         max_width = 60,
         max_height = 20,
+        auto_show_delay_ms = 250,
       },
       signature_help = {
-        -- border = require("config.ui.border").default_border,
+        border = SETTINGS.borders.blink_empty,
       },
       autocomplete = {
         min_width = 25,
         max_height = 30,
         scrollbar = true,
-        border = SETTINGS.borders.blink,
+        border = SETTINGS.borders.blink_empty,
         selection = "manual", -- alts: preselect, manual, auto_insert
         draw = function(ctx)
           local icon = ctx.kind_icon
@@ -124,7 +123,7 @@ return {
               " " .. ctx.item.label .. " ",
               fill = true,
               hl_group = ctx.deprecated and "BlinkCmpLabelDeprecated" or "BlinkCmpLabel",
-              max_width = 45,
+              max_width = 35,
             },
             {
               icon .. ctx.icon_gap .. ctx.kind .. " ",

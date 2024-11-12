@@ -409,7 +409,7 @@ return {
         -- nmap("K", vim.lsp.buf.hover, "hover documentation")
 
         if client.supports_method(methods.textDocument_signatureHelp) then
-          if client and client.server_capabilities.signatureHelpProvider then
+          if client and client.server_capabilities.signatureHelpProvider and vim.g.completer == "cmp" then
             require("lsp-overloads").setup(client, {
               -- UI options are mostly the same as those passed to vim.lsp.util.open_floating_preview
               silent = true,

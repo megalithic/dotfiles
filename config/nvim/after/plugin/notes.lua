@@ -251,15 +251,7 @@ function M.parse_due_dates(bufnr, lines)
   if tasks_due and U.tlen(tasks_due) > 0 then return tasks_due end
 end
 
-function M.format_notes(bufnr, lines)
-  bufnr = bufnr or vim.api.nvim_get_current_buf()
-  lines = lines or vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-
-  M.sort_tasks(bufnr, lines)
-  M.extract_links(bufnr, lines)
-  M.parse_due_dates(bufnr, lines)
-  -- M.compile_links(bufnr, lines)
-end
+function M.format_notes(bufnr, lines) end
 
 function M.execute_line()
   if vim.bo.filetype ~= "markdown" then return end
@@ -479,7 +471,17 @@ require("mega.autocmds").augroup("NotesLoaded", {
           if client.name == "markdown_oxide" and string.match(vim.fn.expand("%:p:h"), "_notes") then
             map("n", "<leader>w", function()
               vim.schedule(function()
-                M.format_notes(bufnr)
+                local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+
+                if string.match(vim.fn.expand("%:p:h"), "daily") then
+                  M.sort_tasks(bufnr, lines)
+                  M.parse_due_dates(bufnr, lines)
+
+                  -- FIXME: do we need link related parsing for _only_ daily notes?
+                  M.extract_links(bufnr, lines)
+                  -- M.compile_links(bufnr, lines)
+                end
+
                 vim.cmd.write({ bang = true })
               end)
             end, { buffer = bufnr, desc = "[notes] format and save" })
