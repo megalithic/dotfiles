@@ -17,6 +17,7 @@ local fnamemodify = fn.fnamemodify
 local fmt = string.format
 
 local U = require("mega.utils")
+local SETTINGS = require("mega.settings")
 local H = U.hl
 local augroup = require("mega.autocmds").augroup
 local icons = require("mega.settings").icons
@@ -44,7 +45,6 @@ augroup("megaline", {
       local clientName = vim.lsp.get_client_by_id(ctx.data.client_id).name
       local progress = ctx.data.params.value ---@type {percentage: number, title?: string, kind: string, message?: string}
       if not (progress and progress.title) then return end
-
       local progress_icons = { "󰫃", "󰫄", "󰫅", "󰫆", "󰫇", "󰫈" }
       local idx = math.floor(#progress_icons / 2)
       if progress.percentage == 0 then idx = 1 end
@@ -271,27 +271,19 @@ local exception_types = {
       -- dd(parts)
       return seg(fmt("Oil %s", vim.fn.expand("%:p")))
     end,
-    toggleterm = function(_, buf)
+    toggleterm = function(_, bufnr)
       local shell = fnamemodify(vim.env.SHELL, ":t")
-      return seg(fmt("Terminal(%s)[%s]", shell, api.nvim_buf_get_var(buf, "toggle_number")))
+      return seg(fmt("Terminal(%s)[%s]", shell, api.nvim_buf_get_var(bufnr, "toggle_number")))
     end,
-    megaterm = function(_, buf)
-      local shell = fnamemodify(vim.env.SHELL, ":t")
+    megaterm = function(_, bufnr)
+      local shell = fnamemodify(vim.env.SHELL, ":t") or vim.o.shell
       local mode = MODES[api.nvim_get_mode().mode]
       local mode_hl = mode.short == "T-I" and "StModeTermInsert" or "StModeTermNormal"
-      -- if pcall(api.nvim_buf_get_var(buf, "term_buf")) and pcall(api.nvim_buf_get_var(buf, "term_cmd")) then
-      --   return seg(fmt("megaterm#%d(%s)[%s]", api.nvim_buf_get_var(buf, "term_buf"), shell, api.nvim_buf_get_var(buf, "term_cmd") or buf), mode_hl)
-      -- end
+      if vim.g.term_bufnr ~= nil then
+        return seg(string.format("megaterm#%d(%s)[%s]", vim.g.term_bufnr, shell, vim.api.nvim_buf_get_var(bufnr, "term_cmd") or bufnr), mode_hl)
+      end
 
-      return seg(string.format("megaterm#(%s)[%s]", shell, buf), mode_hl)
-      -- if vim.g.term_bufnr ~= nil then
-      --   return seg(string.format("megaterm#(%s)[%s]", shell, vim.api.nvim_buf_get_var(buf, "term_cmd") or buf), mode_hl)
-      --   -- return seg(fmt("megaterm#%d(%s)[%s]", vim.g.term_bufnr, shell, vim.api.nvim_buf_get_var(buf, "term_cmd") or buf), mode_hl)
-      -- end
-
-      -- return seg(fmt("megaterm#%d(%s)[%s]", api.nvim_buf_get_var(buf, "term_buf"), shell, api.nvim_buf_get_var(buf, "term_cmd") or buf), mode_hl)
-
-      -- return ""
+      return seg(string.format("megaterm#%d(%s)", bufnr, shell), mode_hl)
     end,
     ["dap-repl"] = "Debugger REPL",
     kittybuf = "Kitty Scrollback Buffer",
@@ -401,7 +393,7 @@ end
 
 local function get_lsp_status(messages)
   --TODO: do some gsub replacements on the messages
-  return seg(messages, { margin = { 1, 1 } })
+  return seg(messages, "StBrightItalic", { margin = { 1, 1 } })
 end
 
 local function get_dap_status()
@@ -545,8 +537,16 @@ local function seg_lsp_clients(truncate_at)
 
   local client_names = {}
 
+  local function lsp_lookup(name)
+    if U.tlen(clients) <= 1 then return name end
+    local ls = SETTINGS.lsp_lookup[name]
+    if ls == nil then ls = name end
+
+    return ls
+  end
+
   for _, client in pairs(clients) do
-    table.insert(client_names, client.name)
+    table.insert(client_names, lsp_lookup(client.name))
   end
 
   local clients_str = U.strim(table.concat(client_names, "/"))

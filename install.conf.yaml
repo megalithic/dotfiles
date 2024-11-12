@@ -117,6 +117,10 @@
       force: true
       path: config/hammerspoon
       if: "[ `uname` = Darwin ]"
+    ~/.config/borders:
+      force: true
+      path: config/borders
+      if: "[ `uname` = Darwin ]"
     ~/.config/karabiner:
       force: true
       path: config/karabiner

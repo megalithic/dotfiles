@@ -113,8 +113,9 @@ function M.sort_tasks(bufnr, lines)
       local prefix, box, status, task_text = line:match("^(%s*[-*] )(%[(.)%])%s(.*)")
       if prefix ~= nil and box ~= nil and status ~= nil then table.insert(tasks, { index = i, line = line, status = status, text = task_text }) end
     end
+    if tasks and U.tlen(tasks) > 0 then return tasks, tasks[1].index end
 
-    return tasks, tasks[1].index
+    return nil, nil
   end
 
   -- sorts by status priority first, then alphanumerically
@@ -137,7 +138,10 @@ function M.sort_tasks(bufnr, lines)
     local sorted_tasks_texts = {}
 
     for _, task in ipairs(sorted_tasks) do
-      table.insert(sorted_tasks_texts, task.line)
+      local text = task.text
+      if task.status == "/" then text = string.format("~~%s~~", task.text) end
+      local task_line = string.format("- [%s] %s", task.status, text)
+      table.insert(sorted_tasks_texts, task_line)
     end
 
     vim.api.nvim_buf_set_lines(bufnr, starting_task_line - 1, starting_task_line + U.tlen(sorted_tasks_texts), false, sorted_tasks_texts)
@@ -145,6 +149,8 @@ function M.sort_tasks(bufnr, lines)
 
   -- extract tasks and the first line the tasks start on
   local tasks, starting_task_line = extract(lines)
+
+  if tasks == nil then return end
 
   -- used for comparison later
   local originally_extracted_tasks = U.tcopy(tasks)
@@ -172,7 +178,7 @@ function M.compile_links(bufnr, lines)
 end
 
 function M.extract_links(bufnr, lines)
-  local bufnr = bufnr or vim.api.nvim_get_current_buf()
+  bufnr = bufnr or vim.api.nvim_get_current_buf()
   local inline_query = vim.treesitter.query.parse("markdown_inline", [[(inline_link) @link]])
   local auto_query = vim.treesitter.query.parse("markdown_inline", [[(uri_autolink) @link]])
 
@@ -217,19 +223,35 @@ function M.extract_links(bufnr, lines)
   local links = markdown_links(bufnr, table.concat(lines, "\n"))
   local urls = raw_urls(bufnr, lines)
 
-  dbg(vim.list_extend(links, urls))
-
   return vim.list_extend(links, urls)
 end
 
-function M.format_notes(bufnr, lines)
+function M.parse_due_dates(bufnr, lines)
   bufnr = bufnr or vim.api.nvim_get_current_buf()
-  lines = lines or vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
 
-  M.sort_tasks(bufnr, lines)
-  M.extract_links(bufnr, lines)
-  -- M.compile_links(bufnr, lines)
+  local tasks_due = {}
+
+  for i, line in ipairs(lines) do
+    -- matches: `- [ ] some sort of task that has a due date @@today at 3pm!`
+    local prefix, box, status, text, date_parse_string, due_date = line:match("^(%s*[-*] )(%[(.)%])%s(.*(@@(.*)!))")
+    if prefix ~= nil and box ~= nil and status ~= nil then
+      text = U.strim(string.gsub(text, date_parse_string, ""))
+
+      table.insert(tasks_due, { index = i, line = line, status = status, text = text, date_parse_string = date_parse_string, due_date = due_date })
+
+      vim.fn.jobstart(string.format([[reme "%s" "%s"]], text, due_date), {
+        detach = false,
+        on_exit = function(job_id, exit_code, event)
+          if vim.tbl_contains({ 0, 127, 129, 130 }, exit_code) then vim.notify(string.format("set reminder '%s' for %s", text, due_date)) end
+        end,
+      })
+    end
+  end
+
+  if tasks_due and U.tlen(tasks_due) > 0 then return tasks_due end
 end
+
+function M.format_notes(bufnr, lines) end
 
 function M.execute_line()
   if vim.bo.filetype ~= "markdown" then return end
@@ -416,46 +438,69 @@ end
 -- <leader>n<key>
 vim.iter(notesMappings):each(function(key, rhs) leaderMapper("n", "n" .. key, rhs[1], rhs[2]) end)
 
-local notesAbbrevs = {
-  ["mtg:"] = [[### Meeting 󱛡 ->]],
-  ["trn:"] = [[### Linear Ticket  ->]],
-  ["pr:"] = [[### Pull Request  ->]],
-  ["call:"] = [[ (call) ]],
-  ["email:"] = [[ (email) ]],
-  ["contact:"] = [[󰻞 (contact) ]],
-  ["chat:"] = [[󰻞 (contact) ]],
-}
-
 require("mega.autocmds").augroup("NotesLoaded", {
   {
     event = { "LspAttach", "BufEnter" },
     desc = "Use various notes related functions upon markdown entering or markdown-oxide lsp attaching",
     command = function(evt)
-      local buf = evt.buf
-      if vim.bo[buf].filetype == "markdown" then
-        vim.api.nvim_buf_call(buf, function()
+      local bufnr = evt.buf
+      if vim.bo[bufnr].filetype == "markdown" then
+        local notesAbbrevs = {
+          ["mtg:"] = [[### Meeting 󱛡 ->]],
+          ["trn:"] = [[### Linear Ticket  ->]],
+          ["pr:"] = [[### Pull Request  ->]],
+          ["self:"] = [[### Self  ->]],
+          ["prep:"] = [[## Daily Game Plan Prep]],
+          ["end:"] = [[## End of Day Wrap-up (😃😐😞)]],
+          ["call:"] = [[ (call) ]],
+          ["email:"] = [[ (email) ]],
+          ["contact:"] = [[󰻞 (contact) ]],
+          ["chat:"] = [[󰻞 (contact) ]],
+          ["act:"] = [[_Action item:_ ]],
+        }
+
+        vim.api.nvim_buf_call(bufnr, function()
           for k, v in pairs(notesAbbrevs) do
             vim.cmd.iabbrev(string.format("<buffer> %s %s", k, v))
           end
         end)
 
-        map("n", "g.", vim.cmd.ExecuteLine, { desc = "execute line", buffer = buf })
-        local clients = vim.lsp.get_clients({ bufnr = buf })
+        map("n", "gx", vim.cmd.ExecuteLine, { desc = "execute line", buffer = bufnr })
+        local clients = vim.lsp.get_clients({ bufnr = bufnr })
         for _, client in ipairs(clients) do
-          -- only use these bindings when we're in markdown_oxide document AND our notes path
           if client.name == "markdown_oxide" and string.match(vim.fn.expand("%:p:h"), "_notes") then
             map("n", "<leader>w", function()
               vim.schedule(function()
-                M.format_notes(buf)
+                local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+
+                if string.match(vim.fn.expand("%:p:h"), "daily") then
+                  M.sort_tasks(bufnr, lines)
+                  M.parse_due_dates(bufnr, lines)
+
+                  -- FIXME: do we need link related parsing for _only_ daily notes?
+                  M.extract_links(bufnr, lines)
+                  -- M.compile_links(bufnr, lines)
+                end
+
                 vim.cmd.write({ bang = true })
               end)
-            end, { buffer = buf, desc = "[notes] format and save" })
+            end, { buffer = bufnr, desc = "[notes] format and save" })
+            if pcall(require, "mini.clue") then
+              vim.b.miniclue_config = {
+                clues = {
+                  { mode = "n", keys = "<C-x>", desc = "+tasks" },
+                  { mode = "i", keys = "<C-x>", desc = "+tasks" },
+                  { mode = "x", keys = "<C-x>", desc = "+tasks" },
+                },
+              }
+            end
 
-            map("n", "<C-x>d", function() M.toggle_task("x") end, { buffer = buf, desc = "[notes] toggle -> done" })
-            map("n", "<C-x>t", function() M.toggle_task("-") end, { buffer = buf, desc = "[notes] toggle -> todo" })
-            map("n", "<C-x>s", function() M.toggle_task(".") end, { buffer = buf, desc = "[notes] toggle -> started" })
-            map("n", "<C-x><C-x>", function() M.toggle_task(" ") end, { buffer = buf, desc = "[notes] toggle -> not-started" })
-            map("n", "<leader>ff", function() mega.picker.find_files({ cwd = vim.g.notes_path }) end, { desc = "[notes] find", buffer = buf })
+            map("n", "<C-x>d", function() M.toggle_task("x") end, { buffer = bufnr, desc = "[notes] toggle -> done" })
+            map("n", "<C-x>t", function() M.toggle_task("-") end, { buffer = bufnr, desc = "[notes] toggle -> todo" })
+            map("n", "<C-x>s", function() M.toggle_task(".") end, { buffer = bufnr, desc = "[notes] toggle -> started" })
+            map("n", "<C-x>u", function() M.toggle_task("/") end, { buffer = bufnr, desc = "[notes] toggle -> undo/skip/trash" })
+            map("n", "<C-x><C-x>", function() M.toggle_task(" ") end, { buffer = bufnr, desc = "[notes] toggle -> not-started" })
+            map("n", "<leader>ff", function() mega.picker.find_files({ cwd = vim.g.notes_path }) end, { desc = "[notes] find", buffer = bufnr })
             map("n", "<leader>a", function() mega.picker.grep({ cwd = vim.g.notes_path }) end, { desc = "[notes] grep" })
             map(
               "n",
@@ -463,10 +508,6 @@ require("mega.autocmds").augroup("NotesLoaded", {
               function() mega.picker.grep({ cwd = vim.g.notes_path, default_text = vim.fn.expand("<cword>") }) end,
               { desc = "[notes] grep cursorword" }
             )
-            -- Search DOWN for a markdown header
-            -- Make sure to follow proper markdown convention, and you have a single H1
-            -- heading at the very top of the file
-            -- This will only search for H2 headings and above
             map({ "n", "v" }, "<localleader>n", function()
               -- `/` - Start a search forwards from the current cursor position.
               -- `^` - Match the beginning of a line.
@@ -482,21 +523,6 @@ require("mega.autocmds").augroup("NotesLoaded", {
                 mega.searchCountIndicator("clear")
               end)
             end, { desc = "go to main notes section" })
-            -- map("n", "<leader>a", function() mega.picker.grep({ picker = "egrepify", cwd = vim.g.notes_path }) end, { desc = "[notes] grep", buffer = buf })
-            -- map("n", "<leader>a", function() mega.picker.grep({ picker = "egrepify", cwd = vim.g.notes_path }) end, { desc = "[notes] grep", buffer = buf })
-            -- map("n", "gd", "<cmd>lua vim.lsp.buf.definition()<CR>", { desc = "[f]ind in [n]otes", buffer = buf })
-            -- map("n", "g.", function()
-            --   local note_title = require("mega.utils").notes.get_md_link_dest()
-            --   if note_title == nil or note_title == "" then
-            --     vim.notify("Unable to create new note from link text", L.WARN)
-            --     return
-            --   end
-
-            --   os.execute("note -c " .. note_title)
-            --   vim.diagnostic.enable(false)
-            --   vim.cmd("LspRestart " .. client.name)
-            --   vim.defer_fn(function() vim.diagnostic.enable(true) end, 50)
-            -- end, { desc = "[g]o create note from link title", buffer = buf })
           end
         end
       end

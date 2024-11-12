@@ -222,8 +222,8 @@ return {
             todo = { raw = "[-]", rendered = "󱗽 ", highlight = "RenderMarkdownListTodo" },
             event = { raw = "[|]", rendered = "󰀠 ", highlight = "RenderMarkdownListEvent" },
             wip = { raw = "[.]", rendered = "󰡖 ", highlight = "RenderMarkdownListWip" },
-            -- skipped = { raw = "[/]", rendered = "󱋭 ", highlight = "RenderMarkdownListSkipped" },
-            trash = { raw = "[/]", rendered = " ", highlight = "RenderMarkdownListSkipped" },
+            -- trash = { raw = "[/]", rendered = " ", highlight = "RenderMarkdownListSkipped" },
+            skip = { raw = "[/]", rendered = " ", highlight = "RenderMarkdownListTrash" },
 
             fire = { raw = "[f]", rendered = "󰈸 ", highlight = "RenderMarkdownListFire" },
             star = { raw = "[s]", rendered = " ", highlight = "RenderMarkdownListStar" },
@@ -330,9 +330,15 @@ return {
     end,
   },
   {
+    -- this hates me; with bullets enabled markdown/elixir/heex.vim syntax errors occur
     "dkarter/bullets.vim",
-    cond = false,
-    ft = { "markdown", "text", "gitcommit" },
+    -- ft = { "markdown", "text", "gitcommit" },
+    event = {
+      -- "BufRead **.md,**.neorg,**.org",
+      -- "BufNewFile **.md,**.neorg,**.org",
+      "FileType gitcommit,NeogitCommitMessage,.git/COMMIT_EDITMSG",
+      -- "FileType gitcommit,NeogitCommitMessage,.git/COMMIT_EDITMSG,markdown,text,plaintext",
+    },
     cmd = { "InsertNewBullet" },
   },
   {
@@ -340,7 +346,7 @@ return {
     event = {
       "BufRead **.md,**.neorg,**.org",
       "BufNewFile **.md,**.neorg,**.org",
-      "FileType gitcommit,NeogitCommitMessage,.git/COMMIT_EDITMSG",
+      "FileType gitcommit,NeogitCommitMessage,.git/COMMIT_EDITMSG,markdown",
     },
     -- cond = false,
     version = "2.3.0",

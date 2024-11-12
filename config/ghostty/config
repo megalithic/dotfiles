@@ -1,7 +1,7 @@
 title = "Ghostty 👻"
 
 # background-opacity = 0.95
-# background-blur-radius = 30
+background-blur-radius = 20
 # unfocused-split-opacity = 0.90
 
 minimum-contrast = 1.0
@@ -13,7 +13,7 @@ adjust-cell-height = 10%
 # adjust-underline-thickness = -50%
 # adjust-underline-position = 25%
 
-macos-option-as-alt     = true
+macos-option-as-alt = true
 
 fullscreen = true
 
@@ -25,8 +25,10 @@ window-theme = "dark"
 window-decoration       = false
 window-colorspace = display-p3
 window-vsync = true
-window-padding-x = 10
-window-padding-y = 10
+window-padding-x = 5
+window-padding-y = 10,0
+# window-padding-x = 10
+# window-padding-y = 10
 window-padding-balance = true
 window-padding-color = background
 window-save-state = always
@@ -41,6 +43,7 @@ cursor-style-blink = true
 clipboard-read = allow
 clipboard-write = allow
 copy-on-select = clipboard
+clipboard-trim-trailing-spaces = true
 clipboard-paste-protection = false
 
 confirm-close-surface = false
@@ -65,15 +68,25 @@ font-style-bold-italic  = "ExtraBold Italic"
 
 font-size = 14
 font-thicken = true
-# font-feature = zero
-# font-feature = ss01
-# font-feature = ss02
-# font-feature = ss03
-# font-feature = ss04
-# font-feature = ss05
-# font-feature = ss06
-# font-feature = calt
-# font-feature = liga
+
+# adjust-cell-width = -5%
+# adjust-cell-height = 20%
+# adjust-underline-position = 6
+# adjust-underline-thickness = 100%
+# adjust-cursor-thickness = 150%
+
+font-feature = zero
+# font-feature = ss01 # serif f
+# font-feature = ss02 # curly l
+font-feature = ss03
+font-feature = ss04
+font-feature = ss05
+font-feature = ss06
+font-feature = ss07
+font-feature = ss08
+font-feature = liga
+font-feature = dlig
+font-feature = calt
 
 # https://github.com/ryanoasis/nerd-fonts/wiki/Glyph-Sets-and-Code-Points
 # powerline & powerline-extras
@@ -87,6 +100,46 @@ font-codepoint-map = U+e5fa-U+e6b1=JetBrainsMono Nerd Font Mono
 
 # codicons
 font-codepoint-map = U+ea60-U+ebeb=JetBrainsMono Nerd Font Mono
+
+# ## Font mapping
+# # Pomicons
+# font-codepoint-map = U+E000-U+E00D=Monolisa
+#
+# # Powerline
+# font-codepoint-map = U+e0a0-U+e0a2,U+e0b0-U+e0b3=Monolisa
+#
+# # Powerline Extra
+# font-codepoint-map = U+e0a3-U+e0a3,U+e0b4-U+e0c8,U+e0cc-U+e0d2,U+e0d4-U+e0d4=Monolisa
+#
+# # Symbols original
+# font-codepoint-map = U+e5fa-U+e62b=Monolisa
+#
+# # Devicons
+# font-codepoint-map = U+e700-U+e7c5=Monolisa
+#
+# # Font awesome
+# font-codepoint-map = U+f000-U+f2e0=Monolisa
+#
+# # Font awesome extension
+# font-codepoint-map = U+e200-U+e2a9=Monolisa
+#
+# # Octicons
+# font-codepoint-map = U+f400-U+f4a8,U+2665-U+2665,U+26A1-U+26A1,U+f27c-U+f27c=Monolisa
+#
+# # Font Linux
+# font-codepoint-map = U+F300-U+F313=Monolisa
+#
+# # Nerd Fonts - Font Power Symbols
+# font-codepoint-map = U+23fb-U+23fe,U+2b58-U+2b58=Monolisa
+#
+# # Material Design Icons
+# font-codepoint-map = U+f500-U+fd46=Monolisa
+#
+# # Weather Icons
+# font-codepoint-map = U+e300-U+e3eb=Monolisa
+#
+# # Misc Code Point Fixes
+# font-codepoint-map = U+21B5,U+25B8,U+2605,U+2630,U+2632,U+2714,U+E0A3,U+E615,U+E62B=Monolisa
 
 # megaforest color theme
 background = #323d43
@@ -130,11 +183,13 @@ keybind = ctrl+seven=text:\x00\x37
 keybind = ctrl+eight=text:\x00\x38
 keybind = ctrl+nine=text:\x00\x39
 
+keybind = cmd+t=text:\x00\x63
+
 keybind = super+shift+r=reload_config
-keybind = super+t=text:\x00\x63
+keybind = global:cmd+ctrl+k=toggle_quick_terminal
 
 # DO NOT DELETE THIS:
 # this stops me from hitting this mapping thinking i'm using a browser's inspect and end up with passing `C` to nvim and changing to end of line 🤦
 keybind = cmd+shift+c=ignore
 
-# vim: ft=ghostty
+# vim: ft=conf

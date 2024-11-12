@@ -21,7 +21,9 @@ function obj.targetDisplay(hint)
 end
 
 obj.tile = function()
-  local windows = enum.map(hs.window.filter.new():getWindows(), function(win)
+  local windows = enum.map(hs.window:allWindows(), function(win)
+    if not win:isStandard() then return end
+
     if win ~= hs.window.focusedWindow() then
       return {
         text = win:title(),

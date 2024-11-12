@@ -6,6 +6,7 @@ return {
     -- NOTE: we also have `mini.indentscope` that is handling current scope
     "lukas-reineke/indent-blankline.nvim",
     event = { "LazyFile" },
+    cond = false,
     main = "ibl",
     opts = {
       indent = {

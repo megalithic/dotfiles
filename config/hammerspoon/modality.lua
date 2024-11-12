@@ -115,11 +115,11 @@ function obj:init(opts)
     return
   end
 
-  if _G.modalities[self.initOpts["id"]] ~= nil then
-    warn(fmt("[%s] %s%s (existing)", "INIT", self.name, self.initOpts["id"]))
+  -- if _G.modalities[self.initOpts["id"]] ~= nil then
+  --   warn(fmt("[%s] %s%s (existing)", "INIT", self.name, self.initOpts["id"]))
 
-    return _G["modalities"][self.initOpts["id"]]
-  end
+  --   return _G["modalities"][self.initOpts["id"]]
+  -- end
 
   obj.mods = self.initOpts["mods"] or {}
   obj.key = self.initOpts["key"] or nil
@@ -136,7 +136,7 @@ function obj:init(opts)
   hs.window.animationDuration = 0
   hs.window.highlight.ui.overlay = true
 
-  _G.modalities[self.initOpts["id"]] = self
+  -- _G.modalities[self.initOpts["id"]] = self
   info(fmt("[INIT] %s.%s", self.name, self.initOpts.id))
 
   return self
@@ -148,15 +148,15 @@ function obj:start(opts)
   self.hyper:start()
   self.hyper:bind(self.mods, self.key, function()
     self:toggle(opts["id"])
-    note(
-      fmt(
-        "[RUN] %s.%s/toggle/%s (%d)",
-        self.name,
-        self.initOpts.id,
-        obj.isOpen,
-        req("utils").table.length(_G.modalities)
-      )
-    )
+    -- note(
+    --   fmt(
+    --     "[RUN] %s.%s/toggle/%s (%d)",
+    --     self.name,
+    --     self.initOpts.id,
+    --     obj.isOpen,
+    --     req("utils").table.length(_G.modalities)
+    --   )
+    -- )
   end)
 
   info(fmt("[START] %s.%s (%s)", self.name, self.initOpts.id, I(opts)))

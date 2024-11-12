@@ -96,15 +96,16 @@ local theme = lush(function(injected_functions)
     CurSearch({ IncSearch }),
     Search({ fg = C.bg0, bg = C.green, gui = "italic,bold" }), -- Last search pattern highlighting (see 'hlsearch').  Also used for similar items that need to stand out.
     Substitute({ fg = C.bg0, bg = C.yellow, gui = "strikethrough,bold" }), -- |:substitute| replacement text highlighting
-    MatchParen({ fg = C.transparent, bg = C.bg4 }), -- The character under the cursor or just before it, if it is a paired bracket, and its match. |pi_paren.txt|
+    MatchParen({ fg = C.transparent, bg = C.bg_abyss.li(5), gui = "bold,underline" }), -- The character under the cursor or just before it, if it is a paired bracket, and its match. |pi_paren.txt|
     ModeMsg({ fg = C.fg, bg = C.transparent, gui = "bold" }), -- 'showmode' message (e.g., "-- INSERT -- ")
     MsgArea({ bg = C.bg0 }), -- Area for messages and cmdline
     MsgSeparator({ bg = C.bg0 }), -- Separator for scrolled messages, `msgsep` flag of 'display'
     MoreMsg({ fg = C.yellow, bg = C.transparent, gui = "bold" }), -- |more-prompt|
     FoldMoreMsg({ Comment, gui = "italic,bold" }), -- |more-prompt|
     WildMenu({ PmenuSel }), -- current match in 'wildmenu' completion
-    NormalFloat({ Pmenu }), -- Normal text in floating windows.
-    FloatBorder({ Pmenu, fg = C.bg2.darken(10) }),
+    NormalFloat({ bg = C.bg2 }), -- Normal text in floating windows.
+    FloatBorder({ NormalFloat, fg = NormalFloat.bg }),
+    -- FloatBorder({ NormalFloat, fg = NormalFloat.bg.darken(10) }),
     NotifyBackground({ bg = C.bg2.darken(10) }),
     NotifyFloat({ NotifyBackground, fg = C.bg2.darken(10) }),
     FloatTitle({ Visual }),
@@ -316,7 +317,7 @@ local theme = lush(function(injected_functions)
     healthSuccess({ Green }),
     healthWarning({ Yellow }),
 
-    ---- :help headlines.txt -------------------------------------------
+    ---- :help headlines.txt ---------------------------------------------------
 
     Headline1({ fg = C.green, bg = C.bg_green, gui = "bold,italic" }),
     Headline2({ fg = C.yellow, bg = C.bg_yellow, gui = "bold" }),
@@ -327,10 +328,41 @@ local theme = lush(function(injected_functions)
     Dash({ fg = C.bg3, gui = "bold" }),
     CodeBlock({ bg = C.bg2 }),
 
-    ---- *render-markdown.txt* -------------------------------------------------
+    ---- :help render-markdown.txt ---------------------------------------------
 
     RenderMarkdownDash({ Dash }),
     RenderMarkdownCode({ CodeBlock }),
+
+    RenderMarkdownChecked({ fg = C.green }),
+    RenderMarkdownUnchecked({ fg = C.bg_green }),
+    RenderMarkdownTodo({ RenderMarkdownUnchecked }),
+
+    RenderMarkdownH1({ fg = C.green, bg = C.bg_green, gui = "bold,italic" }),
+    RenderMarkdownH2({ fg = C.yellow, guisp = C.bg_yellow.li(5), gui = "bold,italic,underline" }),
+    RenderMarkdownH3({ fg = C.purple, guisp = C.bg_blue, gui = "underline" }),
+    RenderMarkdownH4({ fg = C.orange, gui = "bold" }),
+    RenderMarkdownH5({ fg = C.red, gui = "italic" }),
+    RenderMarkdownH6({ fg = C.brown }),
+
+    RenderMarkdownH1Bg({ RenderMarkdownH1 }),
+    RenderMarkdownH2Bg({ RenderMarkdownH2 }),
+    RenderMarkdownH3Bg({ RenderMarkdownH3 }),
+    RenderMarkdownH4Bg({ RenderMarkdownH4 }),
+    RenderMarkdownH5Bg({ RenderMarkdownH5 }),
+
+    RenderMarkdownListWip({ fg = C.blue }),
+    RenderMarkdownListTodo({ fg = C.orange }),
+    RenderMarkdownListSkipped({ fg = C.yellow }),
+    RenderMarkdownListTrash({ fg = C.red }),
+
+    RenderMarkdownListYes({ fg = C.green }),
+    RenderMarkdownListNo({ fg = C.red }),
+    RenderMarkdownListFire({ fg = C.red }),
+    RenderMarkdownListIdea({ fg = C.yellow }),
+    RenderMarkdownListStar({ fg = C.yellow }),
+    RenderMarkdownListQuestion({ fg = C.yellow }),
+    RenderMarkdownListInfo({ fg = C.cyan }),
+    RenderMarkdownListImportant({ fg = C.orange }),
 
     ---- :help nvim-treesitter-highlights (external plugin) ----
     -- https://github.com/folke/tokyonight.nvim/blob/main/lua/tokyonight/treesitter.lua#L20
@@ -485,8 +517,17 @@ local theme = lush(function(injected_functions)
     sym("@markup.link")({ Tag }),
     sym("@markup.environment")({ fg = C.cyan, gui = "bold" }),
     sym("@markup.environment.name")({ Type }),
+
+    sym("@markup.strong.markdown_inline")({
+      fg = C.grey2,
+      gui = "bold",
+    }),
+    sym("@markup.italic.markdown_inline")({
+      fg = C.grey0,
+      gui = "italic",
+    }),
     sym("@markup.strikethrough.markdown_inline")({
-      fg = C.orange,
+      fg = C.dark_brown,
       gui = "strikethrough",
     }),
     sym("@method")({ Green }),
@@ -1038,48 +1079,52 @@ local theme = lush(function(injected_functions)
 
     ---- megaline -- :help statusline ------------------------------------------
 
-    StatusLine({ fg = C.grey1, bg = C.bg1 }), -- status line of current window
+    StatusLineBg({ bg = C.transparent }),
+    -- StatusLineNCBg({bg=C.transparent}),
+    -- StatusLineInactiveBg({bg=C.transparent}),
+    StatusLine({ fg = C.grey1, bg = StatusLineBg.bg }), -- status line of current window
     StatusLineNC({ fg = C.grey1, bg = C.bg0 }), -- status lines of not-current windows Note: if this is equal to "StatusLine" Vim will use "^^^" in the status line of the current window.
     StatusLineInactive({ fg = C.bg_dark.lighten(20), bg = C.bg_dark, gui = "italic" }),
-    StBright({ fg = C.fg.li(10), bg = C.bg1 }),
-    StModeNormal({ bg = C.bg2, fg = C.bg5, gui = C.transparent }),
-    StModeInsert({ bg = C.bg2, fg = C.green, gui = "bold" }),
-    StModeVisual({ bg = C.bg2, fg = C.magenta, gui = "bold" }),
-    StModeReplace({ bg = C.bg2, fg = C.dark_red, gui = "bold" }),
-    StModeCommand({ bg = C.bg2, fg = C.green, gui = "bold" }),
-    StModeTermNormal({ StModeNormal, bg = C.bg1 }),
+    StModeNormal({ bg = StatusLineBg.bg, fg = C.bg5, gui = C.transparent }), -- alts: bg = C.bg2
+    StModeInsert({ bg = StatusLineBg.bg, fg = C.green, gui = "bold" }),
+    StModeVisual({ bg = StatusLineBg.bg, fg = C.magenta, gui = "bold" }),
+    StModeReplace({ bg = StatusLineBg.bg, fg = C.dark_red, gui = "bold" }),
+    StModeCommand({ bg = StatusLineBg.bg, fg = C.green, gui = "bold" }),
+    StModeTermNormal({ StModeNormal, bg = StatusLineBg.bg }),
     StModeTermInsert({ StModeTermNormal, fg = C.green, gui = "bold,italic", sp = C.green }),
-    StMetadata({ Comment, bg = C.bg1 }),
-    StMetadataPrefix({ Comment, bg = C.bg1 }),
-    StIndicator({ fg = C.dark_blue, bg = C.bg1 }),
-    StModified({ fg = C.pale_red, bg = C.bg1, gui = "bold,italic" }),
-    StModifiedIcon({ fg = C.pale_red, bg = C.bg1, gui = "bold" }),
-    StGitSymbol({ fg = C.light_red, bg = C.bg1 }),
-    StGitBranch({ fg = C.blue, bg = C.bg1 }),
-    StGitSigns({ fg = C.dark_blue, bg = C.bg1 }),
-    StGitSignsAdd({ GreenSign, bg = C.bg1 }),
-    StGitSignsDelete({ RedSign, bg = C.bg1 }),
-    StGitSignsChange({ OrangeSign, bg = C.bg1 }),
-    StNumber({ fg = C.purple, bg = C.bg1 }),
+    StBright({ fg = C.fg.li(10), bg = StatusLineBg.bg }),
+    StBrightItalic({ StBright, fg = StBright.fg.da(5), gui = "italic" }),
+    StMetadata({ Comment, bg = StatusLineBg.bg }),
+    StMetadataPrefix({ Comment, bg = StatusLineBg.bg }),
+    StIndicator({ fg = C.dark_blue, bg = StatusLineBg.bg }),
+    StModified({ fg = C.pale_red, bg = StatusLineBg.bg, gui = "bold,italic" }),
+    StModifiedIcon({ fg = C.pale_red, bg = StatusLineBg.bg, gui = "bold" }),
+    StGitSymbol({ fg = C.light_red, bg = StatusLineBg.bg }),
+    StGitBranch({ fg = C.blue, bg = StatusLineBg.bg }),
+    StGitSigns({ fg = C.dark_blue, bg = StatusLineBg.bg }),
+    StGitSignsAdd({ GreenSign, bg = StatusLineBg.bg }),
+    StGitSignsDelete({ RedSign, bg = StatusLineBg.bg }),
+    StGitSignsChange({ OrangeSign, bg = StatusLineBg.bg }),
+    StNumber({ fg = C.purple, bg = StatusLineBg.bg }),
     StCount({ fg = C.bg0, bg = C.blue, gui = "bold" }),
     StPrefix({ fg = C.fg, bg = C.bg2 }),
-    StDirectory({ bg = C.bg1, fg = C.grey0, gui = "italic" }),
-    StParentDirectory({ bg = C.bg1, fg = C.blue, gui = "" }),
-    StFilename({ bg = C.bg1, fg = C.fg, gui = "bold" }),
-    StFilenameInactive({ fg = C.light_grey, bg = C.bg1, gui = "italic,bold" }),
-    StIdentifier({ fg = C.blue, bg = C.bg1 }),
-    StTitle({ bg = C.bg1, fg = C.grey2, gui = "bold" }),
-    StComment({ Comment, bg = C.bg1 }),
-    StLineNumber({ fg = C.grey2, bg = C.bg1, gui = "bold" }),
-    StLineSep({ fg = C.grey0, bg = C.bg1, gui = "" }),
-    StLineTotal({ fg = C.grey1, bg = C.bg1 }),
-    StLineColumn({ fg = C.grey2, bg = C.bg1 }),
-    StClient({ bg = C.bg1, fg = C.fg, gui = "bold" }),
-    StError({ DiagnosticError, bg = C.bg1 }),
-    StWarn({ DiagnosticWarn, bg = C.bg1 }),
-    StInfo({ DiagnosticInfo, bg = C.bg1 }),
-    StHint({ DiagnosticHint, bg = C.bg1 }),
-    StSeparator({ fg = C.bg0, bg = C.bg1 }),
+    StDirectory({ bg = StatusLineBg.bg, fg = C.grey0, gui = "italic" }),
+    StParentDirectory({ bg = StatusLineBg.bg, fg = C.blue, gui = "" }),
+    StFilename({ bg = StatusLineBg.bg, fg = C.fg, gui = "bold" }),
+    StFilenameInactive({ fg = C.light_grey, bg = StatusLineBg.bg, gui = "italic,bold" }),
+    StIdentifier({ fg = C.blue, bg = StatusLineBg.bg }),
+    StTitle({ bg = StatusLineBg.bg, fg = C.grey2, gui = "bold" }),
+    StComment({ Comment, bg = StatusLineBg.bg }),
+    StLineNumber({ fg = C.grey2, bg = StatusLineBg.bg, gui = "bold" }),
+    StLineSep({ fg = C.grey0, bg = StatusLineBg.bg, gui = "" }),
+    StLineTotal({ fg = C.grey1, bg = StatusLineBg.bg }),
+    StLineColumn({ fg = C.grey2, bg = StatusLineBg.bg }),
+    StClient({ bg = StatusLineBg.bg, fg = C.fg, gui = "bold" }),
+    StError({ DiagnosticError, bg = StatusLineBg.bg }),
+    StWarn({ DiagnosticWarn, bg = StatusLineBg.bg }),
+    StInfo({ DiagnosticInfo, bg = StatusLineBg.bg }),
+    StHint({ DiagnosticHint, bg = StatusLineBg.bg }),
+    StSeparator({ fg = C.bg0, bg = StatusLineBg.bg }),
 
     ---- :help statuscolumn  ---------------------------------------------------------
 
@@ -1285,38 +1330,6 @@ local theme = lush(function(injected_functions)
     OilTypeFile({ NonText }),
     OilTypeLink({ Constant }),
     OilTypeSocket({ Keyword }),
-
-    ---- render-markdown -------------------------------------------------------
-    RenderMarkdownChecked({ fg = colors.green }),
-    RenderMarkdownUnchecked({ fg = colors.bg_green }),
-    RenderMarkdownTodo({ RenderMarkdownUnchecked }),
-
-    RenderMarkdownH1({ fg = colors.green, bg = C.bg_green, gui = "bold,italic,underline" }),
-    RenderMarkdownH2({ fg = colors.yellow, bg = C.bg_yellow.li(5) }),
-    RenderMarkdownH3({ fg = colors.blue, bg = C.bg_blue }),
-    RenderMarkdownH4({ fg = colors.orange }),
-    RenderMarkdownH5({ fg = colors.red }),
-    RenderMarkdownH6({ fg = colors.brown }),
-
-    RenderMarkdownH1Bg({ RenderMarkdownH1 }),
-    RenderMarkdownH2Bg({ RenderMarkdownH2 }),
-    RenderMarkdownH3Bg({ RenderMarkdownH3 }),
-    RenderMarkdownH4Bg({ RenderMarkdownH4 }),
-    RenderMarkdownH5Bg({ RenderMarkdownH5 }),
-
-    RenderMarkdownListWip({ fg = colors.blue }),
-    RenderMarkdownListTodo({ fg = colors.orange }),
-    RenderMarkdownListSkipped({ fg = colors.yellow }),
-    RenderMarkdownListTrash({ fg = colors.red }),
-
-    RenderMarkdownListYes({ fg = colors.green }),
-    RenderMarkdownListNo({ fg = colors.red }),
-    RenderMarkdownListFire({ fg = colors.red }),
-    RenderMarkdownListIdea({ fg = colors.yellow }),
-    RenderMarkdownListStar({ fg = colors.yellow }),
-    RenderMarkdownListQuestion({ fg = colors.yellow }),
-    RenderMarkdownListInfo({ fg = colors.cyan }),
-    RenderMarkdownListImportant({ fg = colors.orange }),
   }
 end)
 ---@diagnostic enable

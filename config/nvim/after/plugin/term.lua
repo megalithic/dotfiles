@@ -29,7 +29,6 @@ local function is_valid_buffer(bufnr) return vim.api.nvim_buf_is_valid(bufnr) en
 local function is_valid_window(winnr) return vim.api.nvim_win_is_valid(winnr) end
 local function find_windows_by_bufnr(bufnr) return fn.win_findbuf(bufnr) end
 
---
 --- @class TermOpts
 --- @field direction? "horizontal"|"vertical"|"float"|"tab"
 --- @field size? number

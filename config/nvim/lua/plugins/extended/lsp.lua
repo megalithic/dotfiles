@@ -1,4 +1,3 @@
-local fmt = string.format
 local U = require("mega.utils")
 local SETTINGS = require("mega.settings")
 local BORDER_STYLE = SETTINGS.border
@@ -17,6 +16,7 @@ return {
       "b0o/schemastore.nvim",
       "onsails/lspkind.nvim",
       "williamboman/mason.nvim",
+      "youssef-lr/lsp-overloads.nvim",
       "williamboman/mason-lspconfig.nvim",
       "WhoIsSethDaniel/mason-tool-installer.nvim",
       {
@@ -198,6 +198,7 @@ return {
 
         if SETTINGS.disabled_semantic_tokens[filetype] then client.server_capabilities.semanticTokensProvider = vim.NIL end
 
+        -- if client.server_capabilities.signatureHelpProvider then require("mega.lsp_signature").setup(client) end
         if client.server_capabilities.codeLensProvider then vim.lsp.codelens.refresh({ bufnr = bufnr }) end
 
         for i = 1, #disabled_lsp_formatting do
@@ -215,11 +216,18 @@ return {
         local diagnostic_handler = vim.lsp.handlers[methods.textDocument_publishDiagnostics]
         vim.lsp.handlers[methods.textDocument_publishDiagnostics] = function(err, result, ctx, config)
           local client_name = vim.lsp.get_client_by_id(ctx.client_id).name
-          if vim.tbl_contains(SETTINGS.diagnostic_exclusions, client_name) then
+
+          local fname = vim.api.nvim_buf_get_name(bufnr)
+          local fext = fname:match("%.[^.]+$")
+
+          -- FIXME: once "the one elixir ls to rule them all" (aka "Expert") is released, you can probably get rid of all of this non-sense i'm using to manage multiple elixir ls'
+          -- this lets certain elixir language servers that i use to report diagnostics for test files (nextls doesn't, so i have to rely on elixirls or lexical to do this)
+          if vim.tbl_contains(SETTINGS.diagnostic_exclusions, client_name) and fext ~= ".exs" then
             print("skipping diagnostics for " .. client_name)
             return
+          else
+            diagnostic_handler(err, result, ctx, config)
           end
-          diagnostic_handler(err, result, ctx, config)
         end
 
         -- EXCLUDE certain servers for definitions
@@ -322,12 +330,12 @@ return {
             end
           end
         end
-        vim.lsp.handlers[methods.textDocument_hover] = enhanced_float_handler(vim.lsp.handlers.hover, true)
+        -- vim.lsp.handlers[methods.textDocument_hover] = enhanced_float_handler(vim.lsp.handlers.hover, true)
         vim.lsp.handlers[methods.textDocument_signatureHelp] = enhanced_float_handler(vim.lsp.handlers.signature_help, false)
 
         local desc = function(d) return "[+lsp] " .. d end
         local map = vim.keymap.set
-        local nmap = function(keys, func, d) map("n", keys, func, { buffer = bufnr, desc = desc(d) }) end
+        local nmap = function(keys, func, d) map("n", keys, func, { buffer = bufnr, desc = desc(d), noremap = false }) end
         local vnmap = function(keys, func, d) map({ "v", "n" }, keys, func, { buffer = bufnr, desc = desc(d) }) end
         local icons = require("mega.settings").icons
 
@@ -366,17 +374,29 @@ return {
           --   vim.cmd("norm zz")
           -- end)
 
-          vim.cmd.split({ mods = { vertical = true, split = "botright" } })
-          vim.defer_fn(function()
-            vim.lsp.buf.definition({ on_list = choose_list_first, reuse_win = false })
-            -- vim.cmd.FzfLua("lsp_definitions")
-            -- go_to_unique_definition()
-          end, 700)
+          -- vim.cmd.split({ mods = { vertical = true, split = "botright" } })
+          -- vim.defer_fn(function()
+          --   vim.lsp.buf.definition({ on_list = choose_list_first, reuse_win = false })
+          --   -- vim.cmd.FzfLua("lsp_definitions")
+          --   -- go_to_unique_definition()
+
+          -- end, 700)
+
+          require("fzf-lua").lsp_definitions({
+            sync = true,
+            jump_to_single_result = true,
+            jump_to_single_result_action = require("fzf-lua.actions").file_vsplit,
+          })
         end, "[g]oto [d]efinition (split)")
         -- map("gr", function() vim.cmd.Trouble("lsp_references focus=true") end, "[g]oto [r]eferences")
         -- map("gr", function() vim.cmd.FzfLua("lsp_references") end, "[g]oto [r]eferences")
         nmap("gr", function()
-          if not vim.tbl_contains(SETTINGS.references_exclusions, client.name) then require("telescope.builtin").lsp_references() end
+          if not vim.tbl_contains(SETTINGS.references_exclusions, client.name) then
+            require("fzf-lua").lsp_references({
+              includeDeclaration = false,
+              ignore_current_line = true,
+            })
+          end
         end, "[g]oto [r]eferences")
         nmap("gI", require("telescope.builtin").lsp_implementations, "[g]oto [i]mplementation")
         nmap("<leader>ltd", require("telescope.builtin").lsp_type_definitions, "[t]ype [d]efinition")
@@ -389,14 +409,42 @@ return {
         -- nmap("K", vim.lsp.buf.hover, "hover documentation")
 
         if client.supports_method(methods.textDocument_signatureHelp) then
-          -- map("i", "<C-k>", vim.lsp.buf.signature_help, { buffer = bufnr, desc = desc("signature help") })
-          map("i", "<C-k>", function()
-            -- Close the completion menu first (if open).
-            local cmp = require("cmp")
-            if cmp.visible() then cmp.close() end
+          if client and client.server_capabilities.signatureHelpProvider and vim.g.completer == "cmp" then
+            require("lsp-overloads").setup(client, {
+              -- UI options are mostly the same as those passed to vim.lsp.util.open_floating_preview
+              silent = true,
+              floating_window_above_cur_line = true,
+              ui = {
+                border = "rounded", -- The border to use for the signature popup window. Accepts same border values as |nvim_open_win()|.
+                max_width = 130, -- Maximum signature popup width
+                focusable = true, -- Make the popup float focusable
+                focus = false, -- If focusable is also true, and this is set to true, navigating through overloads will focus into the popup window (probably not what you want)
+                silent = true, -- Prevents noisy notifications (make false to help debug why signature isn't working)
+                highlight = {
+                  italic = true,
+                  bold = true,
+                  fg = "#ffffff",
+                },
+              },
+              keymaps = {
+                next_signature = "<M-j>",
+                previous_signature = "<M-k>",
+                next_parameter = "<M-l>",
+                previous_parameter = "<M-h>",
+              },
+              display_automatically = true, -- Uses trigger characters to automatically display the signature overloads when typing a method signature
+            })
+          end
+          -- -- map("i", "<C-k>", vim.lsp.buf.signature_help, { buffer = bufnr, desc = desc("signature help") })
+          -- map("i", "<C-s>", function()
+          --   -- Close the completion menu first (if open).
+          --   local cmp = require("cmp")
+          --   if cmp.visible() then cmp.close() end
 
-            vim.lsp.buf.signature_help()
-          end, { buffer = bufnr, desc = desc("signature help") })
+          --   -- vim.lsp.buf.signature_help()
+
+          --   vim.cmd.LspOverloadsSignature()
+          -- end, { buffer = bufnr, silent = true, noremap = true, desc = desc("signature help") })
         end
         -- map("gD", vim.lsp.buf.declaration, "[g]oto [d]eclaration (e.g. to a header file in C)")
         -- rename symbol starting with empty prompt, highlight references
@@ -683,6 +731,27 @@ return {
         local max_width = math.min(math.floor(vim.o.columns * 0.7), 100)
         local max_height = math.min(math.floor(vim.o.lines * 0.3), 30)
 
+        -- local sev_to_icon = {}
+        -- M.signs = { linehl = {}, numhl = {}, text = {} }
+
+        -- local SIGN_TYPES = { "Error", "Warn", "Info", "Hint" }
+        -- for _, type in ipairs(SIGN_TYPES) do
+        --   local hl = ("DiagnosticSign%s"):format(type)
+        --   local icon = icons.lsp[type:lower()]
+
+        --   local key = type:upper()
+        --   local code = vim.diagnostic.severity[key]
+
+        --   -- for vim.notify icon
+        --   sev_to_icon[code] = icon
+
+        --   -- vim.diagnostic.config signs
+        --   local sign = ("%s "):format(icon)
+        --   M.signs.text[code] = sign
+        --   M.signs.numhl[code] = hl
+        --   vim.fn.sign_define(hl, { numhl = hl, text = sign })
+        -- end
+
         ---@param diag vim.Diagnostic
         ---@return string
         local function diag_msg_format(diag)
@@ -712,6 +781,47 @@ return {
 
           return "", ""
         end
+
+        --       local function float_format(diagnostic)
+        --         --[[ e.g.
+        -- {
+        --   bufnr = 1,
+        --   code = "trailing-space",
+        --   col = 4,
+        --   end_col = 5,
+        --   end_lnum = 44,
+        --   lnum = 44,
+        --   message = "Line with postspace.",
+        --   namespace = 12,
+        --   severity = 4,
+        --   source = "Lua Diagnostics.",
+        --   user_data = {
+        --     lsp = {
+        --       code = "trailing-space"
+        --     }
+        --   }
+        -- }
+        -- ]]
+
+        --         -- diagnostic.message may be pre-parsed in lspconfig's handlers
+        --         -- ["textDocument/publishDiagnostics"]
+        --         -- e.g. ts_ls in dko/plugins/lsp.lua
+
+        --         local symbol = sev_to_icon[diagnostic.severity] or "-"
+        --         local source = diagnostic.source
+        --         if source then
+        --           if source.sub(source, -1, -1) == "." then
+        --             -- strip period at end
+        --             source = source:sub(1, -2)
+        --           end
+        --         else
+        --           source = "NIL.SOURCE"
+        --           vim.print(diagnostic)
+        --         end
+        --         local source_tag = U.smallcaps(("%s"):format(source))
+        --         local code = diagnostic.code and ("[%s]"):format(diagnostic.code) or ""
+        --         return ("%s %s %s\n%s"):format(symbol, source_tag, code, diagnostic.message)
+        --       end
 
         local diag_level = vim.diagnostic.severity
         vim.diagnostic.config({
@@ -814,7 +924,13 @@ return {
             if not m or d.severity < m.severity then max_severity_per_line[d.lnum] = d end
           end
           local filtered_diagnostics = vim.tbl_values(max_severity_per_line)
-          orig_signs_handler.show(ns, bn, filtered_diagnostics, opts)
+
+          if filtered_diagnostics == nil or U.tlen(filtered_diagnostics) == 0 then
+            dbg(filtered_diagnostics)
+            orig_signs_handler.show(ns, bn, diagnostics, opts)
+          else
+            orig_signs_handler.show(ns, bn, filtered_diagnostics, opts)
+          end
         end
 
         if vim.tbl_contains(SETTINGS.max_diagnostic_exclusions, client.name) then
@@ -874,36 +990,69 @@ return {
         -- dbg({ client.name, filetype, client.server_capabilities.semanticTokensProvider })
       end
 
+      -- TODO: fixes for nvim 10?
+      -- REF: https://github.com/dkarter/dotfiles/blob/master/config/nvim/lua/plugins/mason/lsp.lua#L53
       local capabilities = vim.lsp.protocol.make_client_capabilities()
-      if pcall(require, "cmp_nvim_lsp") then capabilities = require("cmp_nvim_lsp").default_capabilities() end
-      capabilities.textDocument.completion.completionItem.snippetSupport = true
+      if pcall(require, "cmp_nvim_lsp") then capabilities = require("cmp_nvim_lsp").default_capabilities(capabilities) end
+      if pcall(require, "blink.cmp") then capabilities = require("blink.cmp").get_lsp_capabilities(capabilities) end
+
+      capabilities.workspace = {
+        didChangeWatchedFiles = {
+          dynamicRegistration = false,
+        },
+      }
       capabilities.textDocument.foldingRange = { dynamicRegistration = false, lineFoldingOnly = true }
-      capabilities.textDocument.completion.completionItem = {
-        documentationFormat = { "markdown", "plaintext" },
-        snippetSupport = true,
-        preselectSupport = true,
-        insertReplaceSupport = false,
-        labelDetailsSupport = true,
-        deprecatedSupport = true,
-        commitCharactersSupport = true,
-        tagSupport = { valueSet = { 1 } },
-        resolveSupport = {
-          properties = {
-            "documentation",
-            "detail",
-            "additionalTextEdits",
+      capabilities.textDocument.completion = {
+        dynamicRegistration = false,
+        completionItem = {
+          snippetSupport = true,
+          documentationFormat = { "markdown", "plaintext" },
+          commitCharactersSupport = true,
+          deprecatedSupport = true,
+          preselectSupport = true,
+          tagSupport = {
+            valueSet = {
+              1, -- Deprecated
+            },
+          },
+          insertReplaceSupport = true,
+          resolveSupport = {
+            properties = {
+              "documentation",
+              "detail",
+              "additionalTextEdits",
+              "sortText",
+              "filterText",
+              "insertText",
+              "textEdit",
+              "insertTextFormat",
+              "insertTextMode",
+            },
+          },
+          insertTextModeSupport = {
+            valueSet = {
+              1, -- asIs
+              2, -- adjustIndentation
+            },
+          },
+          labelDetailsSupport = true,
+        },
+        contextSupport = true,
+        insertTextMode = 1,
+        completionList = {
+          itemDefaults = {
+            "commitCharacters",
+            "editRange",
+            "insertTextFormat",
+            "insertTextMode",
+            "data",
           },
         },
       }
 
-      -- if SETTINGS.disabled_semantic_tokens[filetype] then
-      --   capabilities.textDocument.semanticTokens = nil
-      --   capabilities.workspace.semanticTokens = nil
-      -- end
-
       local servers = require("mega.servers")
       if servers == nil then return end
-      local servers_list = servers.list(capabilities, M.on_attach)
+      local server_list = servers.list(capabilities, M.on_attach)
       servers.load_unofficial()
 
       require("mason").setup()
@@ -917,10 +1066,11 @@ return {
         "prettierd",
         "ruff",
         "stylua",
+        "nixpkgs-fmt",
       }
 
       local servers_to_install = vim.tbl_filter(function(key)
-        local s = servers_list[key]
+        local s = server_list[key]
         if type(s) == "table" then
           return not s.manual_install
         elseif type(s) == "function" then
@@ -929,13 +1079,13 @@ return {
         else
           return s
         end
-      end, vim.tbl_keys(servers_list))
+      end, vim.tbl_keys(server_list))
       vim.list_extend(ensure_installed, servers_to_install)
 
       require("mason-tool-installer").setup({ ensure_installed = ensure_installed })
 
       function M.get_config(name)
-        local config = name and servers_list[name] or {}
+        local config = name and server_list[name] or {}
         if not config or config == nil then return end
 
         if type(config) == "function" then
@@ -953,11 +1103,62 @@ return {
         return config
       end
 
-      vim.iter(servers_list):each(function(server_name, _)
+      vim.iter(server_list):each(function(server_name, _)
         local cfg = M.get_config(server_name)
         if cfg == nil then return end
         lspconfig[server_name].setup(cfg)
       end)
+
+      -- local ok_ex, elixir = pcall(require, "elixir")
+      -- if ok_ex then
+      --   local elixirls = require("elixir.elixirls")
+      --   elixir.setup({
+      --     credo = {
+      --       on_attach = M.on_attach,
+      --       enable = false,
+      --     },
+      --     nextls = {
+      --       enable = false,
+      --       version = "0.23.1",
+      --       on_attach = M.on_attach,
+      --       init_options = {
+      --         experimental = {
+      --           completions = {
+      --             enable = true, -- control if completions are enabled. defaults to false
+      --           },
+      --         },
+      --       },
+      --     },
+
+      --     -- actually lexical
+      --     elixirls = {
+      --       enable = true,
+      --       settings = elixirls.settings({
+      --         incrementalDialyzer = true,
+      --         dialyzerEnabled = true,
+      --         dialyzerFormat = "dialyxir_long",
+      --         enableTestLenses = true,
+      --         suggestSpecs = true,
+      --         autoInsertRequiredAlias = true,
+      --         signatureAfterComplete = true,
+      --       }),
+      --       cmd = vim.env.XDG_DATA_HOME .. "/lsp/lexical/_build/dev/package/lexical/bin/start_lexical.sh",
+      --       on_attach = function(client, bufnr)
+      --         -- NOTE: this on_attach fires before my own LspAttach autocmd handler below
+      --         -- vim.keymap.set("n", "<space>pf", ":ElixirFromPipe<cr>", { buffer = true, noremap = true })
+      --         -- vim.keymap.set("n", "<space>pt", ":ElixirToPipe<cr>", { buffer = true, noremap = true })
+      --         -- vim.keymap.set("v", "<space>em", ":ElixirExpandMacro<cr>", { buffer = true, noremap = true })
+
+      --         vim.api.nvim_buf_create_user_command(bufnr, "Format", function()
+      --           local params = require("vim.lsp.util").make_formatting_params()
+      --           client.request("textDocument/formatting", params, nil, bufnr)
+      --         end, { nargs = 0 })
+
+      --         M.on_attach(client, bufnr)
+      --       end,
+      --     },
+      --   })
+      -- end
 
       augroup("LspAttach", {
         {
@@ -971,6 +1172,38 @@ return {
       })
     end,
   },
+  -- {
+  --   "stevearc/aerial.nvim",
+  --   opts = {
+  --     backends = { "lsp", "treesitter" },
+  --     guides = {
+  --       mid_item = " ├─",
+  --       last_item = " └─",
+  --       nested_top = " │",
+  --     },
+  --     layout = {
+  --       close_on_select = false,
+  --       max_width = 35,
+  --       min_width = 35,
+  --     },
+  --     show_guides = true,
+  --     open_automatic = function(bufnr)
+  --       local aerial = require("aerial")
+  --       return vim.api.nvim_win_get_width(0) > 120
+  --         and aerial.num_symbols(bufnr) > 0
+  --         and not aerial.was_closed()
+  --         and not vim.tbl_contains({ "markdown" }, vim.bo[bufnr].ft)
+  --     end,
+  --   },
+  --   config = function(_, opts)
+  --     require("aerial").setup(opts)
+
+  --     vim.keymap.set("n", "<F18>", "<cmd>AerialToggle<cr>", { silent = true })
+
+  --     vim.api.nvim_set_hl(0, "AerialLine", { link = "PmenuSel" })
+  --   end,
+  -- },
+  -- { "elixir-tools/elixir-tools.nvim", dependencies = { "nvim-lua/plenary.nvim" } },
   {
     -- FIXME: https://github.com/mhanberg/output-panel.nvim/issues/5
     "mhanberg/output-panel.nvim",
@@ -985,14 +1218,17 @@ return {
     cmd = { "OutputPanel" },
     opts = true,
   },
-  { -- signature hints
+
+  { "RaafatTurki/corn.nvim", opts = {}, enabled = false },
+  {
+    enabled = false,
     cond = vim.g.completer ~= "blink",
     "ray-x/lsp_signature.nvim",
     event = "BufReadPre",
     opts = {
       hint_prefix = " 󰏪 ",
       hint_scheme = "Todo", -- highlight group, alt: @variable.parameter
-      floating_window = false,
+      floating_window = true,
       always_trigger = true,
     },
   },

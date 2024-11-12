@@ -35,13 +35,13 @@ function obj.updateTitle()
   if artist ~= nil then
     local icon = ""
     if isPaused() then
-      icon = "" -- alts: 󰏤  
+      icon = " " -- alts: 󰏤  
     else
-      icon = "" -- alts: 󰝚  
+      icon = "󰝚 " -- alts: 󰝚  
     end
 
     icon = stext(icon, { font = { name = DefaultFont.name, size = 13 } })
-    titleInfo = icon .. fmt(" %s - %s", artist, utils.truncate(track, 25))
+    titleInfo = icon .. fmt("%s - %s", artist, utils.truncate(track, 25))
   end
 
   return titleInfo
@@ -98,7 +98,7 @@ function obj:start()
 end
 
 function obj:stop()
-  -- if obj.menubar then obj.menubar:delete() end
+  if obj.menubar then obj.menubar:delete() end
   if obj.updateTimer then obj.updateTimer:stop() end
 
   return self

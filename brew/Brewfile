@@ -28,7 +28,7 @@ tap "espanso/espanso" if OS.mac?
 
 tap "wez/wezterm" if OS.mac?
 
-tap "FelixKratz/formulae" if OS.mac? # sketchyvim
+tap "FelixKratz/formulae" if OS.mac? # sketchyvim, jankyborders, etc
 tap "koekeishiya/formulae" if OS.mac?
 
 # -- for qmk_toolbox --
@@ -205,6 +205,7 @@ brew "sk" # alt to fzf
 brew "ssh-copy-id"
 # brew "stack"
 # brew "starship"
+brew "statix" # for nix linting
 brew "stow"
 # brew "sketchybar", restart_service: true if OS.mac? # sketchybar
 # brew "svim" if OS.mac? # restart_service: true if OS.mac? # sketchyvim

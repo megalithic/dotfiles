@@ -5,11 +5,10 @@ vim.env.DYLD_LIBRARY_PATH = "$BREW_PREFIX/lib/"
 vim.g.mapleader = ","
 vim.g.maplocalleader = " "
 
-_G.L = vim.log.levels
-_G.I = vim.inspect
-
 vim.noti = vim.notify
 
+_G.L = vim.log.levels
+_G.I = vim.inspect
 _G.mega = {
   ui = {},
   lsp = {
@@ -17,7 +16,7 @@ _G.mega = {
       -- `mega.lsp.on_attach` usage:
       --
       -- mega.lsp.on_attach(function(client, buffer)
-      --   if client.name == "zk" then
+      --   if client.name == "some_ls" then
       --     -- do a thing
       --   end
       -- end)
@@ -111,7 +110,18 @@ end
 
 function vim.wlogclear() vim.fn.writefile({}, "/tmp/nlog") end
 
+function _G.prequire(name)
+  local ok, mod = pcall(require, name)
+  if ok then
+    return mod
+  else
+    vim.notify_once(string.format("Missing module: %s", mod), vim.log.levels.WARN)
+    return nil
+  end
+end
+
 require("mega.settings").apply()
 require("mega.lazy")
+require("mega.commands")
 require("mega.autocmds").apply()
 require("mega.mappings")

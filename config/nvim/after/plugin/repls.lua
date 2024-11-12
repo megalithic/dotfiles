@@ -4,9 +4,10 @@ local U = require("mega.utils")
 local command = vim.api.nvim_create_user_command
 local fmt = string.format
 local nnoremap = require("mega.mappings").nnoremap
+local map = vim.keymap.set
 
 local cmds_by_ft = {
-  ["lua"] = function(args)
+  ["lua"] = function(_args)
     if string.match(vim.fn.expand("%"), "([hs][hammerspoon]+)") ~= nil then
       return "hs"
     else
@@ -18,14 +19,14 @@ local cmds_by_ft = {
   ["javascriptreact"] = "node",
   ["typescript"] = "node",
   ["typescriptreact"] = "node",
-  ["ruby"] = function(args)
+  ["ruby"] = function(_args)
     if U.root_has_file("Gemfile") then
       return "rails c"
     else
       return "irb"
     end
   end,
-  ["elixir"] = function(args)
+  ["elixir"] = function(_args)
     if U.root_has_file("mix.exs") then
       return "iex -S mix"
     else
@@ -53,7 +54,7 @@ command("TermElixir", function(args)
     ---@diagnostic disable-next-line: unused-local
     on_after_open = function(bufnr, _winnr)
       vim.api.nvim_buf_set_var(bufnr, "term_cmd", cmd)
-      vim.cmd("startinsert")
+      vim.cmd.startinsert()
     end,
   })
 end, { bang = true })
@@ -78,7 +79,7 @@ command("TermRuby", function(args)
     ---@diagnostic disable-next-line: unused-local
     on_after_open = function(bufnr, _winnr)
       vim.api.nvim_buf_set_var(bufnr, "term_cmd", cmd)
-      vim.cmd("startinsert")
+      vim.cmd.startinsert()
     end,
   })
 end, { bang = true })
@@ -93,7 +94,7 @@ command("TermLua", function()
     ---@diagnostic disable-next-line: unused-local
     on_after_open = function(bufnr, _winnr)
       vim.api.nvim_buf_set_var(bufnr, "term_cmd", cmd)
-      vim.cmd("startinsert")
+      vim.cmd.startinsert()
     end,
   })
 end, {})
@@ -108,7 +109,7 @@ command("TermHammerspoon", function()
     ---@diagnostic disable-next-line: unused-local
     on_after_open = function(bufnr, _winnr)
       vim.api.nvim_buf_set_var(bufnr, "term_cmd", cmd)
-      vim.cmd("startinsert")
+      vim.cmd.startinsert()
     end,
   })
 end, {})
@@ -122,7 +123,7 @@ command("TermPython", function()
     ---@diagnostic disable-next-line: unused-local
     on_after_open = function(bufnr, _winnr)
       vim.api.nvim_buf_set_var(bufnr, "term_cmd", cmd)
-      vim.cmd("startinsert")
+      vim.cmd.startinsert()
     end,
   })
 end, {})
@@ -137,7 +138,7 @@ command("TermNode", function(args)
     ---@diagnostic disable-next-line: unused-local
     on_after_open = function(bufnr, _winnr)
       vim.api.nvim_buf_set_var(bufnr, "term_cmd", cmd)
-      vim.cmd("startinsert")
+      vim.cmd.startinsert()
     end,
   })
 end, { bang = true })
@@ -145,25 +146,61 @@ end, { bang = true })
 command("TermRepl", function(args)
   local bufnr = args.buf or 0
   local ft = vim.bo[bufnr].ft
+  if ft == "megaterm" then
+    -- This prevent me from trying to launch a repl within an existing megaterm;
+    -- and instead, simply toggles hidden the existing megaterm.
+    mega.tt.toggle({
+      id = "megaterm_term",
+    })
+  end
+
   local cmd = cmds_by_ft[ft]
 
   if type(cmd) == "function" then cmd = cmd(args) end
 
-  -- if args.bang then cmd = fmt("node %s", vim.fn.expand("%")) end
-
-  mega.term({
+  mega.tt.toggle({
+    id = "repl_" .. ft,
     cmd = cmd,
-    temp = true,
     ---@diagnostic disable-next-line: unused-local
-    on_after_open = function(bn, _winnr)
-      vim.api.nvim_buf_set_var(bn, "term_cmd", cmd)
-      vim.cmd("startinsert")
+    on_open = function(buf, _winnr)
+      vim.api.nvim_buf_set_var(buf, "term_cmd", cmd)
+      vim.cmd.startinsert()
     end,
   })
 end, { bang = true })
 
-nnoremap("<localleader>r", "<cmd>TermRepl<cr>", "repl (ft)")
+vim.keymap.set({ "n", "v", "t" }, "<localleader>x", function()
+  mega.tt.runner({
+    id = "run_and_build_term",
+    pos = "vsp",
+    cmd = function()
+      local file = vim.fn.expand("%")
+      local sfile = vim.fn.expand("%:r")
+      local ft = vim.bo.ft
+      local ft_cmds = {
+        sh = "bash " .. file,
+        elixir = "elixir " .. file,
+        lua = "lua " .. file,
+        rust = "cargo " .. file,
+        python = "python3 " .. file,
+        javascript = "node " .. file,
+        java = "javac " .. file .. " && java " .. sfile,
+        go = "go build && go run " .. file,
+        c = "g++ " .. file .. " -o " .. sfile .. " && ./" .. sfile,
+        cpp = "g++ " .. file .. " -o " .. sfile .. " && ./" .. sfile,
+        typescript = "deno compile " .. file .. " && deno run " .. file,
+      }
 
+      -- don't execute this for certain filetypes
+      if vim.tbl_contains({ "markdown" }, ft) then return end
+
+      return ft_cmds[ft]
+    end,
+  })
+end, { desc = "term: build and run file" })
+
+-- map({ "n", "t" }, "<C-x>", "<cmd>TermRepl<cr>", { desc = "repl (ft)" })
+nnoremap("<localleader>r", "<cmd>TermRepl<cr>", "repl (ft)")
 nnoremap("<leader>re", "<cmd>TermElixir<cr>", "elixir")
 nnoremap("<leader>rE", "<cmd>TermElixir!<cr>", "elixir (current file)")
 nnoremap("<leader>rr", "<cmd>TermRuby<cr>", "ruby")

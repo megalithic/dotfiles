@@ -16,31 +16,32 @@ obj.callbacks = {
       local handler = opts["handler"]
       local url = opts["url"]
       local urlDomain = url and uri(url).host
-      local app = hs.application.get("com.pop.pop.app")
 
-      dbg(handler)
-      dbg(app:bundleID())
+      if hs.urlevent.openURLWithBundle(url, hs.application.get(handler):bundleID()) then
+        local app = hs.application.get("com.pop.pop.app")
 
-      hs.urlevent.openURLWithBundle(url, hs.application.get(handler):bundleID())
+        hs.timer.waitUntil(
+          function() return browser.hasTab(urlDomain) and hs.application.get(app) ~= nil end,
+          function()
+            req("watchers.app").runContextForAppBundleID(app:name(), hs.application.watcher.launched, app, {
+              tabCount = obj.browserTabCount,
+              url = urlDomain,
 
-      hs.timer.waitUntil(function() return browser.hasTab(urlDomain) and hs.application.get(app) ~= nil end, function()
-        req("watchers.app").runContextForAppBundleID(app:name(), hs.application.watcher.launched, app, {
-          tabCount = obj.browserTabCount,
-          url = urlDomain,
-
-          onOpen = function()
-            -- if browser.tabCount() == metadata.tabCount + 1 and browser.hasTab(metadata.url) then
-            hs.spotify.pause()
-            req("utils").dnd(true)
-            req("ptt").setMode("push-to-talk")
-            req("watchers.dock").refreshInput("docked")
-          end,
-          onClose = function()
-            req("utils").dnd(false)
-            req("ptt").setMode("push-to-talk")
-          end,
-        })
-      end)
+              onOpen = function()
+                -- if browser.tabCount() == metadata.tabCount + 1 and browser.hasTab(metadata.url) then
+                hs.spotify.pause()
+                req("utils").dnd(true)
+                req("ptt").setMode("push-to-talk")
+                req("watchers.dock").refreshInput("docked")
+              end,
+              onClose = function()
+                req("utils").dnd(false)
+                req("ptt").setMode("push-to-talk")
+              end,
+            })
+          end
+        )
+      end
     end,
   },
   {

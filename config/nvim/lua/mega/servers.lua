@@ -6,7 +6,6 @@ local ok_lsp, lspconfig = pcall(require, "lspconfig")
 if not ok_lsp then return nil end
 
 local M = {}
--- local root_pattern = require("mega.utils.lsp").root_pattern
 local root_pattern = lspconfig.util.root_pattern
 
 M.list = function(default_capabilities, default_on_attach)
@@ -90,12 +89,14 @@ M.list = function(default_capabilities, default_on_attach)
         cmd = { vim.env.XDG_DATA_HOME .. "/lsp/lexical/_build/dev/package/lexical/bin/start_lexical.sh" },
         single_file_support = true,
         filetypes = { "elixir", "eelixir", "heex", "surface" },
-        root_dir = root_pattern("mix.exs", ".git"),
-        -- log_level = vim.lsp.protocol.MessageType.Log,
-        -- message_level = vim.lsp.protocol.MessageType.Log,
-        -- settings = {
-        --   dialyzerEnabled = true,
-        -- },
+        root_dir = function(fname)
+          local matches = vim.fs.find({ "mix.exs" }, { upward = true, limit = 2, path = fname })
+          local child_or_root_path, maybe_umbrella_path = unpack(matches)
+          local root_dir = vim.fs.dirname(maybe_umbrella_path or child_or_root_path)
+
+          -- right now i just want lexical for handling eelixir files (aka .exs files);
+          if string.match(fname, "%.exs") ~= nil then return root_dir end
+        end,
       }
     end,
     elixirls = function()
@@ -435,6 +436,20 @@ M.list = function(default_capabilities, default_on_attach)
               end, { desc = "[n]otes, [d]aily", nargs = "*" })
             end)
           end,
+          commands = {
+            Today = {
+              function() vim.lsp.buf.execute_command({ command = "jump", arguments = { "today" } }) end,
+              description = "Open today's daily note",
+            },
+            Tomorrow = {
+              function() vim.lsp.buf.execute_command({ command = "jump", arguments = { "tomorrow" } }) end,
+              description = "Open tomorrow's daily note",
+            },
+            Yesterday = {
+              function() vim.lsp.buf.execute_command({ command = "jump", arguments = { "yesterday" } }) end,
+              description = "Open yesterday's daily note",
+            },
+          },
         }
     end,
     marksman = function()
@@ -561,6 +576,40 @@ M.list = function(default_capabilities, default_on_attach)
       }
     end,
     nil_ls = {},
+    -- TODO: nil -> nixd
+    -- REF: https://github.com/ahmedelgabri/dotfiles/commit/5dd61158f6872d4c4b85ddf5df550e0222093ae8
+    -- nixd = {
+    --   -- https://github.com/nix-community/nixvim/issues/2390#issuecomment-2408101568
+    --   -- offset_encoding = 'utf-8',
+    --   settings = {
+    --     nixd = {
+    --       nixpkgs = {
+    --         expr = vim.fs.root(0, { "shell.nix" }) ~= nil and "import <nixpkgs> { }"
+    --           or string.format("import (builtins.getFlake \"%s\").inputs.nixpkgs { }", vim.fs.root(0, { "flake.nix" }) or vim.fn.expand("$DOTFILES")),
+    --       },
+    --       formatting = {
+    --         command = { "nixpkgs-fmt" },
+    --       },
+    --       options = vim.tbl_extend("force", {
+    --         -- home_manager = {
+    --         -- 	expr = string.format(
+    --         -- 		'(builtins.getFlake "%s").homeConfigurations.%s.options',
+    --         -- 		vim.fn.expand '$DOTFILES',
+    --         -- 		vim.fn.hostname()
+    --         -- 	),
+    --         -- },
+    --       }, vim.fn.has("macunix") and {
+    --         ["nix-darwin"] = {
+    --           expr = string.format("(builtins.getFlake \"%s\").darwinConfigurations.%s.options", vim.fn.expand("$DOTFILES"), vim.fn.hostname()),
+    --         },
+    --       } or {
+    --         nixos = {
+    --           expr = string.format("(builtins.getFlake \"%s\").nixosConfigurations.%s.options", vim.fn.expand("$DOTFILES"), vim.fn.hostname()),
+    --         },
+    --       }),
+    --     },
+    --   },
+    -- },
     -- prosemd_lsp = function() return (vim.g.started_by_firenvim or vim.env.TMUX_POPUP) and nil or {} end,
     pyright = {
       single_file_support = false,

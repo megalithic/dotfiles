@@ -18,14 +18,23 @@ local telescope_border_chars = {
   shadow = { "", "", "", "", "", "", "", "" },
 }
 
--- local connected_telescope_border_chars = {
---   none = { "", "", "", "", "", "", "", "" },
---   single = { "─", "│", "─", "│", "┌", "┐", "┤", "├" },
---   double = { "═", "║", "═", "║", "╔", "╗", "╣", "╠" },
---   rounded = { "─", "│", "─", "│", "╭", "╮", "┤", "├" },
---   solid = { " ", " ", " ", " ", " ", " ", " ", " " },
---   shadow = { "", "", "", "", "", "", "", "" },
--- }
+local borders = {
+  round = { "╭", "─", "╮", "│", "╯", "─", "╰", "│" },
+  none = { "", "", "", "", "", "", "", "" },
+  empty = { " ", " ", " ", " ", " ", " ", " ", " " },
+  blink_empty = { " ", " ", " ", " ", " ", " ", " ", " " },
+  inner_thick = { " ", "▄", " ", "▌", " ", "▀", " ", "▐" },
+  outer_thick = { "▛", "▀", "▜", "▐", "▟", "▄", "▙", "▌" },
+  cmp_items = { "▛", "▀", "▀", " ", "▄", "▄", "▙", "▌" },
+  cmp_doc = { "▀", "▀", "▀", " ", "▄", "▄", "▄", "▏" },
+  outer_thin = { "🭽", "▔", "🭾", "▕", "🭿", "▁", "🭼", "▏" },
+  inner_thin = { " ", "▁", " ", "▏", " ", "▔", " ", "▕" },
+  outer_thin_telescope = { "▔", "▕", "▁", "▏", "🭽", "🭾", "🭿", "🭼" },
+  outer_thick_telescope = { "▀", "▐", "▄", "▌", "▛", "▜", "▟", "▙" },
+  rounded_telescope = { "─", "│", "─", "│", "╭", "╮", "╯", "╰" },
+  square = { "┌", "─", "┐", "│", "┘", "─", "└", "│" },
+  square_telescope = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
+}
 
 local current_border = function(opts)
   opts = opts or { hl = "FloatBorder", style = BORDER_STYLE }
@@ -50,9 +59,6 @@ local obsidian_vault_path = vim.env.OBSIDIAN_VAULT_DIR
 local dotfiles_path = vim.env.DOTS or vim.fn.expand("~/.dotfiles")
 local hammerspoon_path = fmt("%s/config/hammerspoon", dotfiles_path)
 
--- is_remote_dev = vim.trim(vim.fn.system("hostname")) == "seth-dev",
--- is_local_dev = vim.trim(vim.fn.system("hostname")) ~= "seth-dev",
-
 --- @class Settings
 --- @field enabled_elixir_ls {"elixirls"|"nextls"|"lexical"}
 local M = {
@@ -64,6 +70,7 @@ local M = {
   border = current_border(),
   border_chars = border_chars[BORDER_STYLE],
   telescope_border_chars = telescope_border_chars[BORDER_STYLE],
+  borders = borders,
   colorscheme = "megaforest", -- alt: megaforest, onedark, bamboo, `vim` for default, forestbones, everforest
   default_colorcolumn = "81",
   notifier_enabled = true,
@@ -102,13 +109,13 @@ local M = {
   enabled_inlay_hints = {},
   disabled_lsp_formatters = { "tailwindcss", "html", "ts_ls", "ls_emmet", "zk", "sumneko_lua" },
   ---@format disable
-  enabled_elixir_ls = { "", "nextls", "" },
+  enabled_elixir_ls = { "elixirls", "nextls", "" },
   completion_exclusions = { "elixirls", "", "lexical" },
   formatter_exclusions = { "elixirls", "", "lexical" },
   definition_exclusions = { "elixirls", "", "lexical" },
   references_exclusions = { "elixirls", "", "lexical" },
-  diagnostic_exclusions = { "elixirls", "", "lexical" },
-  max_diagnostic_exclusions = { "elixirls", "", "lexical" },
+  diagnostic_exclusions = { "", "", "lexical" },
+  max_diagnostic_exclusions = { "", "", "lexical" },
   ---@format enable
   disable_autolint = false,
   disable_autoformat = false,
@@ -151,6 +158,14 @@ local M = {
     },
     -- all the sub-options of filetypes apply to buftypes
   },
+  lsp_lookup = {
+    elixirls = "ex",
+    nextls = "next",
+    lua_ls = "lua",
+    tailwindcss = "twcss",
+    emmet_ls = "em",
+    lexical = "lex",
+  },
   icons = {
     lsp = {
       error = "", -- alts: 󰬌      
@@ -166,6 +181,33 @@ local M = {
       running = "",
       skipped = "○",
       unknown = "", -- alts: 
+    },
+    vscode = {
+      Text = "󰉿 ",
+      Method = "󰆧 ",
+      Function = "󰊕 ",
+      Constructor = " ",
+      Field = "󰜢 ",
+      Variable = "󰀫 ",
+      Class = "󰠱 ",
+      Interface = " ",
+      Module = " ",
+      Property = "󰜢 ",
+      Unit = "󰑭 ",
+      Value = "󰎠 ",
+      Enum = " ",
+      Keyword = "󰌋 ",
+      Snippet = " ",
+      Color = "󰏘 ",
+      File = "󰈙 ",
+      Reference = "󰈇 ",
+      Folder = "󰉋 ",
+      EnumMember = " ",
+      Constant = "󰏿 ",
+      Struct = "󰙅 ",
+      Event = " ",
+      Operator = "󰆕 ",
+      TypeParameter = " ",
     },
     kind = {
       Array = "",
@@ -377,7 +419,8 @@ M.apply = function()
       disable_autolint = M.disable_autolint,
       disable_autoformat = M.disable_autoformat,
       disable_autoresize = M.disable_autoresize,
-      markdown_fenced_languages = M.markdown_fenced_languages,
+      -- This is breaking elixir/heex.vim syntax files; not sure why
+      -- markdown_fenced_languages = M.markdown_fenced_languages,
       have_nerd_font = true,
 
       open_command = is_macos and "open" or "xdg-open",
@@ -412,6 +455,11 @@ M.apply = function()
       undofile = true,
       virtualedit = "block",
       wrapscan = true,
+      -- foldcolumn = "1",
+      -- foldlevel = 99,
+      -- vim.opt.foldlevelstart = 99
+      -- foldmethod = "indent",
+      -- foldtext = "v:lua.vim.treesitter.foldtext()",
     },
     opt = {
       -- [[ Setting options ]]

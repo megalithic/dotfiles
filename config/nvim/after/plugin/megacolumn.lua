@@ -1,3 +1,4 @@
+-- if true then return end
 if not mega then return end
 
 mega.ui.statuscolumn = {}
@@ -203,6 +204,48 @@ local function fdm(lnum)
   return fn.foldclosed(lnum) == -1 and fcs.foldopen or fcs.foldclose
 end
 
+local function get_num_wraps()
+  -- Calculate the actual buffer width, accounting for splits, number columns, and other padding
+  local wrapped_lines = vim.api.nvim_win_call(0, function()
+    local winid = vim.api.nvim_get_current_win()
+
+    -- get the width of the buffer
+    local winwidth = vim.api.nvim_win_get_width(winid)
+    local numberwidth = vim.wo.number and vim.wo.numberwidth or 0
+    local signwidth = vim.fn.exists("*sign_define") == 1 and vim.fn.sign_getdefined() and 2 or 0
+    local foldwidth = vim.wo.foldcolumn or 0
+
+    -- subtract the number of empty spaces in your statuscol. I have
+    -- four extra spaces in mine, to enhance readability for me
+    local bufferwidth = winwidth - numberwidth - signwidth - foldwidth - 4
+
+    -- fetch the line and calculate its display width
+    local line = vim.fn.getline(vim.v.lnum)
+    local line_length = vim.fn.strdisplaywidth(line)
+
+    return math.floor(line_length / bufferwidth)
+  end)
+
+  return wrapped_lines
+end
+
+local function draw_wrap_symbols(virtnum, col_width)
+  -- if virtnum < 0 then
+  --   -- return "-"
+  --   return space:rep(col_width - 1) .. "-"
+  -- elseif virtnum > 0 and (vim.wo.number or vim.wo.relativenumber) then
+
+  -- if virtnum > 0 and (vim.wo.number or vim.wo.relativenumber) then
+  local num_wraps = get_num_wraps()
+
+  if virtnum == num_wraps then
+    return "└"
+  else
+    return "│" -- alts: │├
+  end
+  -- end
+end
+
 ---@param win integer
 ---@param line_count integer
 ---@param lnum integer
@@ -211,7 +254,15 @@ end
 ---@return string
 local function nr(win, lnum, relnum, virtnum, line_count)
   local col_width = api.nvim_strwidth(tostring(line_count))
-  if virtnum and virtnum ~= 0 then return space:rep(col_width - 1) .. (virtnum < 0 and shade or space) end -- virtual line
+  -- local num_wraps = get_num_wraps()
+  -- dbg(num_wraps)
+
+  -- if virtnum and virtnum ~= 0 then
+  --   return space:rep(col_width - 1) .. (virtnum < 0 and shade or space)
+  -- end -- virtual line
+
+  if virtnum and virtnum ~= 0 then return draw_wrap_symbols(virtnum, col_width) end -- virtual line
+
   local num = vim.wo[win].relativenumber and not U.falsy(relnum) and relnum or lnum
   if line_count > 999 then col_width = col_width + 1 end
   local ln = tostring(num):reverse():gsub("(%d%d%d)", "%1,"):reverse():gsub("^,", "")
@@ -277,36 +328,22 @@ local function extmark_signs(curbuf, lnum)
   return sns.git, sns.other
 end
 
---- The vast majority of the complexity in this statuscolumn is due to the fact
---- that you cannot place signs in a particular separate column in neovim e.g. gitsigns
---- cannot be placed in the same column as other git signs which means they have to be manually
---- split out and placed.
 function mega.ui.statuscolumn.render(is_active)
   local lnum, relnum, virtnum = v.lnum, v.relnum, v.virtnum
   local win = api.nvim_get_current_win()
   local buf = api.nvim_win_get_buf(win)
   local line_count = api.nvim_buf_line_count(buf)
 
-  -- local gitsigns, sns = extmark_signs(buf, lnum)
-  local gitsigns, other_sns = extmark_signs(buf, lnum)
-  local sns
-
-  if SETTINGS.enable_signsplaced then
-    sns = signplaced_signs(buf, lnum)
-    vim.list_extend(sns, other_sns)
-  else
-    sns = other_sns
-  end
-
+  local gitsign, sns = extmark_signs(buf, lnum)
   while #sns < MIN_SIGN_WIDTH do
     table.insert(sns, spacer(1))
   end
 
   local r1_hl = is_active and "" or "StatusColumnInactiveLineNr"
 
-  local r1 = is_active and section:new(spacer(1), { { { nr(win, lnum, relnum, virtnum, line_count), r1_hl } } }, unpack(gitsigns))
-    or section:new(spacer(1), { { { nr(win, lnum, relnum, virtnum, line_count), r1_hl } } }, spacer(1))
-  local r2 = section:new({ { { "", "LineNr" } }, after = "" }, { { { fdm(lnum) } } })
+  local r1 = is_active and section:new(spacer(1), { { { nr(win, lnum, relnum, virtnum, line_count), r1_hl } } }, unpack(gitsign), spacer(1))
+    or section:new(spacer(1), { { { nr(win, lnum, relnum, virtnum, line_count), r1_hl } } }, spacer(2))
+  local r2 = section:new({ { { "", "LineNr" } }, after = "" }, is_active and vim.o.foldlevel > 0 and { { { fdm(lnum), "FoldColumn" } } } or spacer(2))
 
   return is_active and display({ section:new(spacer(1)), sns, r1 + r2 }) or display({ section:new(spacer(2)), r1 + r2 })
 end

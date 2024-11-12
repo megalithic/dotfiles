@@ -1,16 +1,17 @@
+-- if true then return end
 if not mega then return end
 
+local api = vim.api
 local M = {}
 
-local api = vim.api
-local g = vim.g
 local U = require("mega.utils")
 local augroup = require("mega.autocmds").augroup
+local map = vim.keymap.set
 local fmt = string.format
 local set_buf = api.nvim_set_current_buf
 local command = vim.api.nvim_create_user_command
 
-g.mega_terms = {}
+vim.g.megaterms = {}
 
 local pos_data = {
   sp = { resize = "height", area = "lines" },
@@ -20,7 +21,8 @@ local pos_data = {
 }
 
 local config = {
-  winopts = {
+  term_opts = {},
+  win_opts = {
     number = false,
     relativenumber = false,
     winhighlight = table.concat({
@@ -44,21 +46,40 @@ local config = {
 }
 
 -- used for initially resizing terms
-vim.g.megahterm = false
-vim.g.megavterm = false
+vim.g.megatermh = false
+vim.g.megatermv = false
 
 -------------------------- util funcs -----------------------------
+local function set_term_opts(buf, opts, should_bufdelete)
+  dbg(should_bufdelete)
+  should_bufdelete = should_bufdelete ~= nil and should_bufdelete or false
+  dbg(should_bufdelete)
 
-local function save_term_info(index, val)
-  local terms_list = g.mega_terms
-  terms_list[tostring(index)] = val
-  g.mega_terms = terms_list
+  local terms_list = vim.g.megaterms
+  terms_list[tostring(buf)] = opts
+  vim.g.megaterms = terms_list
+
+  if opts ~= nil then
+    vim.api.nvim_buf_set_var(buf, "term_cmd", opts and opts.cmd or vim.o.shell)
+    vim.api.nvim_buf_set_var(buf, "term_buf", buf)
+    vim.api.nvim_buf_set_var(buf, "term_win", opts.winnr)
+    vim.api.nvim_buf_set_var(buf, "term_dir", opts.dir or "horizontal")
+    vim.api.nvim_buf_set_var(buf, "term_id", opts.id)
+  end
+
+  if opts == nil and should_bufdelete and vim.api.nvim_buf_is_loaded(buf) then vim.api.nvim_buf_delete(buf, { force = true }) end
 end
 
-local function opts_to_id(id)
-  for _, opts in pairs(g.mega_terms) do
-    if opts.id == id then return opts end
+local function get_term_opts_by_id(id)
+  local term_opts = nil
+
+  for _, opts in pairs(vim.g.megaterms) do
+    if opts.id == id then term_opts = opts end
   end
+
+  dbg({ "found term_opts?", id, term_opts })
+
+  return term_opts
 end
 
 local function create_float(buffer, float_opts)
@@ -72,32 +93,31 @@ local function create_float(buffer, float_opts)
   vim.api.nvim_open_win(buffer, true, opts)
 end
 
-local function set_keymaps(bufnr, direction)
-  local opts = { buffer = bufnr, silent = false }
+local function set_keymaps(buf, dir)
+  local opts = { buffer = buf, silent = false }
   local function quit()
-    save_term_info(bufnr, nil)
+    set_term_opts(buf, nil, true)
     vim.cmd("wincmd p")
   end
 
-  local map = function(mode, lhs, rhs) vim.keymap.set(mode, lhs, rhs, opts) end
-  local nmap = function(lhs, rhs) vim.keymap.set("n", lhs, rhs, opts) end
-  local tmap = function(lhs, rhs) vim.keymap.set("t", lhs, rhs, opts) end
-
-  if direction ~= "tab" then nmap("q", quit) end
-
-  -- map({ "n", "t" }, "<C-;>", [[<cmd>TT<cr>]])
+  local nmap = function(lhs, rhs) map("n", lhs, rhs, opts) end
+  local tmap = function(lhs, rhs) map("t", lhs, rhs, opts) end
 
   tmap("<esc>", [[<C-\><C-n>]])
   tmap("<C-h>", [[<cmd>wincmd p<cr>]])
   tmap("<C-j>", [[<cmd>wincmd p<cr>]])
   tmap("<C-k>", [[<cmd>wincmd p<cr>]])
   tmap("<C-l>", [[<cmd>wincmd p<cr>]])
-  tmap("<C-x>", quit)
+  tmap("<C-q>", quit)
+
+  nmap("q", quit)
 end
 
 local function format_cmd(cmd) return type(cmd) == "string" and cmd or cmd() end
 
 M.display = function(opts)
+  opts.pos = opts and opts.pos or "sp"
+
   if opts.pos == "float" then
     create_float(opts.buf, opts.float_opts)
   else
@@ -109,10 +129,9 @@ M.display = function(opts)
 
   vim.bo[opts.buf].filetype = "megaterm"
   vim.bo[opts.buf].buflisted = false
-  vim.cmd("startinsert")
 
   -- resize non floating wins initially + or only when they're toggleable
-  if (opts.pos == "sp" and not vim.g.megahterm) or (opts.pos == "vsp" and not vim.g.megavterm) or (opts.pos ~= "float") then
+  if (opts.pos == "sp" and not vim.g.megatermh) or (opts.pos == "vsp" and not vim.g.megatermv) or (opts.pos ~= "float") then
     local pos_type = pos_data[opts.pos]
     local size = opts.size and opts.size or config.sizes[opts.pos]
     local new_size = vim.o[pos_type.area] * size
@@ -121,15 +140,24 @@ M.display = function(opts)
 
   api.nvim_win_set_buf(win, opts.buf)
 
-  local winopts = vim.tbl_deep_extend("force", config.winopts, opts.winopts or {})
+  local win_opts = vim.tbl_deep_extend("force", config.win_opts, opts.win_opts or {})
 
-  for k, v in pairs(winopts) do
+  for k, v in pairs(win_opts) do
     vim.wo[win][k] = v
   end
 
-  set_keymaps(opts.buf, opts.pos)
+  set_keymaps(opts.buf)
 
-  save_term_info(opts.buf, opts)
+  set_term_opts(opts.buf, opts)
+
+  -- custom on_open
+  if opts ~= nil and opts.on_open ~= nil and opts.on_open == "function" then
+    opts.on_open(opts.buf)
+  else
+    -- default_on_open
+    -- vim.api.nvim_command([[normal! G]])
+    vim.cmd.startinsert()
+  end
 end
 
 local function create(opts)
@@ -138,53 +166,66 @@ local function create(opts)
 
   -- handle cmd opt
   local shell = fmt("%s/bin/zsh", vim.env.HOMEBREW_PREFIX) or vim.o.shell
-  local cmd = { shell }
+  local cmd = shell
 
-  if opts.cmd and opts.buf then
-    cmd = { shell, "-c", format_cmd(opts.cmd) .. "; " .. shell }
-  else
-    cmd = { shell }
-  end
+  if opts.cmd and opts.buf then cmd = fmt("%s -c %s; %s", shell, format_cmd(opts.cmd), shell) end
 
   M.display(opts)
 
-  save_term_info(opts.buf, opts)
+  set_term_opts(opts.buf, opts)
 
   if not buf_exists then
+    local term_cmd = (opts and opts.pre_cmd) and fmt("%s; %s", opts.pre_cmd, opts.cmd) or opts.cmd
     vim.fn.termopen(cmd, opts.termopen_opts or {
-      detach = false,
-
       ---@diagnostic disable-next-line: unused-local
       on_exit = function(job_id, exit_code, event)
-        -- if we get a custom on_exit, run it instead...
         if opts and opts.on_exit ~= nil and type(opts.on_exit) == "function" then
-          opts.on_exit(job_id, exit_code, event, cmd, opts and opts.caller_winnr, opts.buf)
+          opts.on_exit(job_id, exit_code, event, term_cmd, opts and opts.caller_winnr, opts.buf)
         else
           vim.defer_fn(function()
             if vim.tbl_contains({ 0, 127, 129, 130 }, exit_code) then
-              -- unset_term(true)
+              set_term_opts(opts.buf, nil, true)
             else
               vim.notify(fmt("exit status: %s/%s/%s", job_id, exit_code, event), L.debug)
             end
           end, 100)
         end
 
-        if opts.notifier ~= nil and type(opts.notifier) == "function" then opts.notifier(opts.buf, exit_code) end
-        -- vim.cmd(opts.caller_winnr .. [[wincmd w]])
+        if opts.notifier ~= nil and type(opts.notifier) == "function" then opts.notifier(term_cmd, exit_code) end
         vim.cmd([[wincmd p]])
       end,
+      detach = false,
     })
   end
 
-  vim.g.megahterm = opts.pos == "sp"
-  vim.g.megavterm = opts.pos == "vsp"
+  vim.g.megatermh = opts.pos == "sp"
+  vim.g.megatermv = opts.pos == "vsp"
 end
 
 --------------------------- user api -------------------------------
+--- @class MegatermOpts
+--- @field id? string
+--- @field dir? "horizontal"|"vertical"|"float"|"tab"
+--- @field buf? number
+--- @field win? number
+--- @field size? number
+--- @field cmd? string
+--- @field pre_cmd? string
+--- @field on_open? function
+--- @field on_exit? function
+--- @field notifier? function
+--- @field focus_on_open? boolean,
+--- @field move_on_dir_change? boolean,
+--- @field toggle? boolean,
+--- @field caller_winnr? number
+--- @field start_insert? boolean
+--- @field temp? boolean
+--- @field job_id? number
+
 M.new = function(opts) create(opts) end
 
 M.toggle = function(opts)
-  local x = opts_to_id(opts.id)
+  local x = get_term_opts_by_id(opts.id)
   opts.buf = x and x.buf or nil
 
   if (x == nil or not api.nvim_buf_is_valid(x.buf)) or vim.fn.bufwinid(x.buf) == -1 then
@@ -196,7 +237,7 @@ end
 
 -- spawns term with *cmd & runs the *cmd if the keybind is run again
 M.runner = function(opts)
-  local x = opts_to_id(opts.id)
+  local x = get_term_opts_by_id(opts.id)
   local clear_cmd = opts.clear_cmd or "clear; "
   opts.buf = x and x.buf or nil
 
@@ -210,53 +251,21 @@ M.runner = function(opts)
     local cmd = format_cmd(opts.cmd)
 
     if x.buf == api.nvim_get_current_buf() then
-      set_buf(g.buf_history[#g.buf_history - 1])
+      set_buf(vim.g.buf_history[#vim.g.buf_history - 1])
       cmd = format_cmd(opts.cmd)
       set_buf(x.buf)
     end
 
     local job_id = vim.b[x.buf].terminal_job_id
     vim.api.nvim_chan_send(job_id, clear_cmd .. cmd .. " \n")
+
+    if opts ~= nil and opts.on_open ~= nil and opts.on_open == "function" then opts.on_open(opts.buf) end
   end
 end
 
---------------------------- autocmds -------------------------------
-api.nvim_create_autocmd("TermClose", {
-  callback = function(args) save_term_info(args.buf, nil) end,
-})
+command("CT", function(opts) M.toggle({ pos = "sp", id = "megaterm_toggle" }) end, { nargs = "*" })
+map({ "n", "t" }, "<C-;>", function() M.toggle({ pos = "sp", id = "megaterm_toggle" }) end, { desc = "term: toggle" })
 
-command("TT", function(opts) M.toggle(opts.args) end, { nargs = "*" })
-
-vim.keymap.set({ "n", "t" }, "<C-;>", function() M.toggle({ pos = "sp", id = "spterm" }) end, { desc = "term: toggle" })
-
-vim.keymap.set({ "n", "v", "i", "t" }, "<C-x>", function()
-  M.runner({
-    id = "run_and_build_term",
-    pos = "vsp",
-    cmd = function()
-      local file = vim.fn.expand("%")
-      local sfile = vim.fn.expand("%:r")
-      local ft = vim.bo.ft
-      local ft_cmds = {
-        sh = "bash " .. file,
-        elixir = "elixir " .. file,
-        lua = "lua " .. file,
-        rust = "cargo " .. file,
-        python = "python3 " .. file,
-        javascript = "node " .. file,
-        java = "javac " .. file .. " && java " .. sfile,
-        go = "go build && go run " .. file,
-        c = "g++ " .. file .. " -o " .. sfile .. " && ./" .. sfile,
-        cpp = "g++ " .. file .. " -o " .. sfile .. " && ./" .. sfile,
-        typescript = "deno compile " .. file .. " && deno run " .. file,
-      }
-
-      -- don't execute this for certain filetypes
-      if vim.tbl_contains({ "markdown" }, ft) then return end
-
-      return ft_cmds[ft]
-    end,
-  })
-end, { desc = "term: build and run file" })
+mega.tt = M
 
 return M

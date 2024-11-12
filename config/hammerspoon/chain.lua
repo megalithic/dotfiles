@@ -22,37 +22,39 @@ obj.lastSeenWindow = nil
 obj.lastSeenAt = nil
 
 obj.placeInSequence = function(movements, modal, interval)
-  interval = interval or 1.0
-
   local chainResetInterval = 2 -- seconds
   local cycleLength = #movements
   local sequenceNumber = 1
-
-  -- dbg(I({ movements, modal }), true)
 
   return function()
     local win = hs.window.frontmostWindow()
     local id = win:id()
     local now = hs.timer.secondsSinceEpoch()
-    -- local screen = win:screen()
+    local screen = win:screen()
 
     if obj.lastSeenChain ~= movements or obj.lastSeenAt < now - chainResetInterval or obj.lastSeenWindow ~= id then
       sequenceNumber = 1
       obj.lastSeenChain = movements
-      --  elseif (sequenceNumber == 1) then
-      --    -- At end of chain, restart chain on next screen.
-      --    screen = screen:next()
+    elseif sequenceNumber == 1 then
+      -- At end of chain, restart chain on next screen.
+      screen = screen:next()
     end
     obj.lastSeenAt = now
     obj.lastSeenWindow = id
 
     hs.grid.set(win, movements[sequenceNumber])
 
-    if modal ~= nil then modal.updateIndicator(win) end
-
     sequenceNumber = sequenceNumber % cycleLength + 1
 
-    if modal ~= nil then modal:delayedExit(interval) end
+    if modal ~= nil then
+      if interval ~= nil then
+        modal:delayedExit(interval)
+      else
+        modal:exit()
+      end
+    end
+
+    if modal ~= nil then modal.toggleIndicator(win, true) end
   end
 end
 

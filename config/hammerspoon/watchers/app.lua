@@ -90,7 +90,8 @@ function obj:start()
   self.watchers.global = hs.application.watcher
     .new(function(appName, event, app) obj.handleWatchedEvent(appName, event, nil, app) end)
     :start()
-  self.attachExistingApps()
+  -- NOTE: this slows it ALL down
+  -- self.attachExistingApps()
   self.lollygagger:start()
 
   info(fmt("[START] %s", self.name))
@@ -100,17 +101,23 @@ end
 
 function obj:stop()
   if self.watchers.global then
-    self.watchers.global:stop()
+    -- self.watchers.global:stop()
     self.watchers.global = nil
   end
 
   if self.watchers.app then
-    enum.each(self.watchers.app, function(w) w:stop() end)
+    enum.each(self.watchers.app, function(w)
+      w:stop()
+      w = nil
+    end)
     self.watchers.app = nil
   end
 
   if self.watchers.contexts then
-    enum.each(self.watchers.contexts, function(w) w:stop() end)
+    enum.each(self.watchers.contexts, function(w)
+      w:stop()
+      w = nil
+    end)
     self.watchers.contexts = nil
   end
 

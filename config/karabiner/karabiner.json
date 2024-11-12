@@ -252,83 +252,6 @@
                                     "key_code": "delete_or_backspace",
                                     "modifiers": {
                                         "mandatory": ["control"],
-                                        "optional": ["option"]
-                                    }
-                                },
-                                "to": [{ "key_code": "delete_forward" }],
-                                "type": "basic"
-                            }
-                        ]
-                    }
-                ]
-            },
-            "devices": [
-                {
-                    "identifiers": {
-                        "is_keyboard": true,
-                        "product_id": 636,
-                        "vendor_id": 1452
-                    },
-                    "ignore": true
-                },
-                {
-                    "identifiers": {
-                        "is_keyboard": true,
-                        "product_id": 34304,
-                        "vendor_id": 1452
-                    },
-                    "ignore": true
-                },
-                {
-                    "disable_built_in_keyboard_if_exists": true,
-                    "identifiers": {
-                        "is_keyboard": true,
-                        "product_id": 24674,
-                        "vendor_id": 65261
-                    },
-                    "manipulate_caps_lock_led": false
-                },
-                {
-                    "disable_built_in_keyboard_if_exists": true,
-                    "identifiers": {
-                        "is_pointing_device": true,
-                        "product_id": 24674,
-                        "vendor_id": 65261
-                    },
-                    "ignore": false
-                }
-            ],
-            "fn_function_keys": [
-                {
-                    "from": { "key_code": "f3" },
-                    "to": [{ "key_code": "mission_control" }]
-                },
-                {
-                    "from": { "key_code": "f4" },
-                    "to": [{ "key_code": "launchpad" }]
-                },
-                {
-                    "from": { "key_code": "f5" },
-                    "to": [{ "key_code": "illumination_decrement" }]
-                },
-                {
-                    "from": { "key_code": "f6" },
-                    "to": [{ "key_code": "illumination_increment" }]
-                }
-            ],
-            "name": "atreus62"
-        },
-        {
-            "complex_modifications": {
-                "rules": [
-                    {
-                        "description": "Change ctrl+delete to forward delete",
-                        "manipulators": [
-                            {
-                                "from": {
-                                    "key_code": "delete_or_backspace",
-                                    "modifiers": {
-                                        "mandatory": ["control"],
                                         "optional": ["caps_lock", "option"]
                                     }
                                 },
@@ -498,7 +421,8 @@
                 }
             ],
             "name": "leeloo",
-            "selected": true
+            "selected": true,
+            "virtual_hid_keyboard": { "keyboard_type_v2": "ansi" }
         }
     ]
 }

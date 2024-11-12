@@ -17,7 +17,7 @@ vim.g.number_filetype_exclusions = {
   "fzf",
   "fzf-lua",
   "fzflua",
-  "markdown",
+  -- "markdown",
   "gitcommit",
   "help",
   "lazy",
@@ -119,7 +119,7 @@ require("mega.autocmds").augroup("ToggleRelativeLineNumbers", {
     command = function() enable_relative_number() end,
   },
   {
-    event = { "FocusLost", "BufLeave", "InsertEnter", "TermOpen", "CmdlineEnter" },
+    event = { "FocusLost", "WinLeave", "BufLeave", "InsertEnter", "TermOpen", "CmdlineEnter" },
     command = function() disable_relative_number() end,
   },
 })

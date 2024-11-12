@@ -49,40 +49,9 @@ handle_image() {
   image/*)
     # chafa "$2" -f symbols
     # kitty icat --clear --transfer-mode file "$2"
-    # kitty icat --clear --transfer-mode=memory "$2"
-    kitty icat --clear --transfer-mode=file --stdin=no --place=${FZF_PREVIEW_COLUMNS}x${FZF_PREVIEW_LINES}@0x0 "$2" | sed \$d
-
-    # UB_PID_FILE="$UEBERZUG_TMP_DIR/.$(uuidgen)"
-    # ueberzugpp layer --no-stdin --silent --use-escape-codes --pid-file "$UB_PID_FILE"
-    # UB_PID=$(cat "$UB_PID_FILE")
-    #
-    # export SOCKET="$UEBERZUG_TMP_DIR"/ueberzugpp-"$UB_PID".socket
-    # export X=$(($(tput cols) / 2 + 1))
-    # # --max-width $FZF_PREVIEW_COLUMNS --max-height $FZF_PREVIEW_LINES
-    # # if FZF_PREVIEW_COLUMNS exists, use it, otherwise use tput cols
-    # [ -z "$FZF_PREVIEW_COLUMNS" ] && max_width=$(($(tput cols) - 2)) || max_width=$FZF_PREVIEW_COLUMNS
-    # [ -z "$FZF_PREVIEW_LINES" ] && max_height=$(($(tput lines) - 2)) || max_height=$FZF_PREVIEW_LINES
-    #
-    # # run fzf with preview
-    # ueberzugpp cmd -s "$SOCKET" -i fzfpreview -a add -x "$X" -y 1 --max-width "$max_width" --max-height "$max_height" -f "$2"
-    # ueberzugpp cmd -s "$SOCKET" -a exit
-
-    # wezterm imgcat "$2"
-    # sleep 86400
-    # wait
-    # case "$image_previewer" in
-    #   "ueberuzgpp")
-    #     # mediainfo "$2"
-    #     # ueberzugpp layer -o "$ueberzug_image" --silent <"$FIFO" &
-    #     # exec 3>"${FIFO}"
-    #     # start_preview "$2"
-    #     # wait
-    #     chafa "$2" -f symbols
-    #     ;;
-    #   *)
-    #     chafa "$2" -f symbols
-    #     ;;
-    # esac
+    # kitty icat --stdin=no "$2"
+    kitty icat --clear --transfer-mode=file --stdin=no --place=200x200@10x0 "$2"
+    # kitty icat --clear --transfer-mode=file --stdin=no --place=${FZF_PREVIEW_COLUMNS}x${FZF_PREVIEW_LINES}@0x0 "$2"
     ;;
   *) exiftool -All "$2" ;;
   esac
@@ -108,7 +77,7 @@ case "$mime" in
 text/*) handle_text "$mime" "$1" ;;
 inode/directory) exa -ahFT -L=1 --color=always --icons --sort=size --group-directories-first "$1" ;;
 inode/symlink) printf "symlink to: \e[34m%s\e[0m." "$(readlink "$1")" ;;
-application/json) jq --color-output <"$1" ;;
+application/json) jq --color-output < "$1" ;;
 application/x-bittorrent) transmission-show --unsorted "$1" ;;
 application/x-executable | application/x-pie-executable | application/x-sharedlib) readelf --wide --demangle=auto --all "$1" ;;
 application/zip) atool --list "$1" ;;

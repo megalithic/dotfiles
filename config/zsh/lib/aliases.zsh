@@ -53,6 +53,7 @@ if $(gls &>/dev/null); then
 fi
 
 if $(\eza &>/dev/null); then
+  alias exa=\eza
   alias ls="\eza -gahF --group-directories-first"
   alias l="\eza -lahF --icons --group-directories-first --git"
 elif $(exa &>/dev/null); then
@@ -177,6 +178,10 @@ if type nvim >/dev/null 2>&1; then
   # alias folkevim="NVIM_APPNAME=folkevim nvim"
   # alias akinvim="NVIM_APPNAME=akinvim nvim"
   # alias ribvim="NVIM_APPNAME=ribvim nvim"
+  alias ribvim="NVIM_APPNAME=ribvim nvim"
+  alias penvim="NVIM_APPNAME=penvim nvim"
+  alias newvim="NVIM_APPNAME=newmega nvim"
+  alias mvim=newvim
   alias kickvim="NVIM_APPNAME=kickvim nvim"
   alias e="NVIM_APPNAME=wipvim nvim"
   alias ogvim="NVIM_APPNAME=ogvim nvim"
