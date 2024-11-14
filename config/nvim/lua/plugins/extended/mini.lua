@@ -49,7 +49,7 @@ return {
   },
   {
     "echasnovski/mini.indentscope",
-    cond = false,
+    cond = true,
     config = function()
       mega.req("mini.indentscope").setup({
         symbol = SETTINGS.indent_scope_char,

@@ -678,7 +678,7 @@ local function is_focused() return tonumber(vim.g.actual_curwin) == vim.api.nvim
 function mega.ui.statusline.render()
   local winnr = vim.g.statusline_winid or 0
   local bufnr = api.nvim_win_get_buf(winnr)
-  local modified_icon = vim.g.started_by_firenvim and "?" or fmt("[%s]", icons.misc.modified)
+  local modified_icon = vim.g.started_by_firenvim and "?" or fmt("%s", icons.misc.modified)
 
   M.ctx = {
     bufnr = bufnr,

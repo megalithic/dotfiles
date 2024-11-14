@@ -147,8 +147,7 @@ function obj:start()
         success(fmt("[%s] connected %s %s", obj.name, device.icon, device.name))
 
         local audioDevice = hs.audiodevice.defaultOutputDevice()
-        cur_balance = audioDevice:balance()
-        if cur_balance ~= default_balance then audioDevice:setBalance(default_balance) end
+        if audioDevice:balance() ~= default_balance then audioDevice:setBalance(default_balance) end
 
         hs.notify.withdrawAll()
         hs.notify.new({ title = self.name, subTitle = fmt("%s %s Connected", device.name, device.icon) }):send()
@@ -157,7 +156,7 @@ function obj:start()
     end)
   end)
 
-  -- TODO: use an audio watchehr callback?
+  -- TODO: use an audio watcher callback instead?
   -- REF https://github.com/ivirshup/hammerspoon-config/blob/main/bluetooth_headphones.lua
 
   -- self.lowBatteryTimer = hs.timer.doEvery(self.interval, checkAndAlertLowBattery)

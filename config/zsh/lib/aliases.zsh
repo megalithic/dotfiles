@@ -233,6 +233,7 @@ alias evt="nvim $DOTS/config/nvim/after/plugin/term.lua"
 alias ehs="nvim $DOTS/config/hammerspoon/config.lua"
 alias eh="nvim $DOTS/config/hammerspoon/init.lua"
 alias eg="nvim $DOTS/git/gitconfig"
+alias egc="nvim $DOTS/config/ghostty/config"
 alias eb="nvim $DOTS/brew/Brewfile"
 alias essh="nvim $DOTS/home/ssh/config"
 

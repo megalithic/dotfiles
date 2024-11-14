@@ -91,6 +91,10 @@ ftplugin.extend_all({
       end
     end,
   },
+
+  eelixir = {
+    callback = function(bufnr, args) dbg(args) end,
+  },
   heex = {
     opt = {
       syntax = "OFF",

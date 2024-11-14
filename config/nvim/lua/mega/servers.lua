@@ -7,6 +7,7 @@ if not ok_lsp then return nil end
 
 local M = {}
 local root_pattern = lspconfig.util.root_pattern
+-- local root_pattern = function() return require("lspconfig").util.root_pattern('.obsidian', '.moxide.toml', '.git')(fname) or vim.uv.cwd() end
 
 M.list = function(default_capabilities, default_on_attach)
   return {

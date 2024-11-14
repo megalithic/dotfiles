@@ -86,10 +86,12 @@ req("hyper", { id = "meeting" }):start():bind({}, "z", nil, function()
   elseif hs.application.find("com.pop.pop.app") then
     hs.application.launchOrFocusByBundleID("com.pop.pop.app")
     local app = hs.application.find("com.pop.pop.app")
-    local targetWin = app:mainWindow()
-    if targetWin ~= nil and targetWin:isStandard() and targetWin:frame().w > 1000 and targetWin:frame().h > 1000 then
-      targetWin:focus()
-    end
+    local targetWin = enum.find(
+      app:allWindows(),
+      function(win) return win:isStandard() and win:frame().w > 1000 and win:frame().h > 1000 end
+    )
+
+    if targetWin ~= nil then targetWin:focus() end
   elseif req("browser").hasTab("meet.google.com|hangouts.google.com.call") then
     req("browser").jump("meet.google.com|hangouts.google.com.call")
   else
