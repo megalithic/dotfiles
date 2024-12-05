@@ -120,7 +120,8 @@ POSITIONS = {
 -- bundleID, global, { local }, focusOnly
 LAUNCHERS = {
   { "com.brave.Browser.nightly", "j", nil, false },
-  { "com.mitchellh.ghostty", "k", nil, false },
+  { "com.mitchellh.ghostty", "k", { "`" }, false },
+  -- { "net.kovidgoyal.kitty", "k", nil, false },
   { "com.apple.MobileSMS", "m", nil, false },
   { "com.apple.finder", "f", nil, false },
   { "com.spotify.client", "p", nil, false },

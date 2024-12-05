@@ -9,21 +9,20 @@ obj.homepage = "https://github.com/megalithic/dotfiles/config/hammerspoon/Spoons
 
 obj.isOpen = false
 obj.indicator = nil
-obj.indicatorColor = "#F74F9E"
+obj.indicatorColor = "#e39b7b"
 obj.delayedExitTimer = nil
 
 function obj.toggleIndicator(win, terminate)
   win = win or hs.window.focusedWindow()
 
-  local frame = win:frame()
-
-  if obj.indicator == nil then
+  if obj.indicator == nil and win ~= nil then
+    local frame = win:frame()
     obj.indicator = hs.canvas.new(frame):appendElements({
       type = "rectangle",
       action = "stroke",
       strokeWidth = 2.0,
       strokeColor = { hex = obj.indicatorColor, alpha = 0.7 },
-      roundedRectRadii = { xRadius = 14.0, yRadius = 14.0 },
+      roundedRectRadii = { xRadius = 12.0, yRadius = 12.0 },
     })
   end
 
@@ -60,7 +59,6 @@ function obj:entered()
           return hs.alert.showWithImage(prompt, image, nil, screen)
         end
 
-        -- local prompt = string.format("🖥 : %s", win:application():title())
         return hs.alert.show(prompt, hs.alert.defaultStyle, screen, true)
       end
     end)
@@ -112,6 +110,7 @@ function obj:start()
 
   -- provide alternate escapes
   obj:bind("ctrl", "[", function() obj:exit() end):bind("", "escape", function() obj:exit() end)
+  obj:bind("ctrl", "c", function() obj:exit() end):bind("", "escape", function() obj:exit() end)
 
   return self
 end

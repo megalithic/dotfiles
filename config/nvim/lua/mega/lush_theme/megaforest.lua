@@ -1096,6 +1096,7 @@ local theme = lush(function(injected_functions)
     StBrightItalic({ StBright, fg = StBright.fg.da(5), gui = "italic" }),
     StMetadata({ Comment, bg = StatusLineBg.bg }),
     StMetadataPrefix({ Comment, bg = StatusLineBg.bg }),
+    StLspMessages({ fg = C.fg.da(20), bg = StatusLineBg.bg, gui = "italic" }),
     StIndicator({ fg = C.dark_blue, bg = StatusLineBg.bg }),
     StModified({ fg = C.pale_red, bg = StatusLineBg.bg, gui = "bold,italic" }),
     StModifiedIcon({ fg = C.pale_red, bg = StatusLineBg.bg, gui = "bold" }),

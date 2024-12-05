@@ -40,7 +40,7 @@ _G.mega = {
 -- @see: https://www.reddit.com/r/neovim/comments/p84iu2/useful_functions_to_explore_lua_objects/
 -- USAGE:
 -- in lua: P({1, 2, 3})
--- in commandline: :lua P(vim.loop)
+-- in commandline: :P vim.loop
 ---@vararg any
 function _G.P(...)
   local printables = {}

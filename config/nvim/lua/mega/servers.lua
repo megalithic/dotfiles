@@ -83,8 +83,6 @@ M.list = function(default_capabilities, default_on_attach)
     lexical = function()
       if not U.lsp.is_enabled_elixir_ls("lexical") then return false end
 
-      -- local function cmd() return vim.env.XDG_DATA_HOME .. "/lsp/lexical/_build/dev/package/lexical/bin/start_lexical.sh" end
-
       return {
         manual_install = true,
         cmd = { vim.env.XDG_DATA_HOME .. "/lsp/lexical/_build/dev/package/lexical/bin/start_lexical.sh" },
@@ -96,7 +94,9 @@ M.list = function(default_capabilities, default_on_attach)
           local root_dir = vim.fs.dirname(maybe_umbrella_path or child_or_root_path)
 
           -- right now i just want lexical for handling eelixir files (aka .exs files);
-          if string.match(fname, "%.exs") ~= nil then return root_dir end
+          -- if string.match(fname, "%.exs") ~= nil then return root_dir end
+
+          return root_dir
         end,
       }
     end,

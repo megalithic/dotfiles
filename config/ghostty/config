@@ -1,7 +1,9 @@
+# REF: https://github.com/hackrmomo/.config.macos/blob/main/ghostty/config
+
 title = "Ghostty 👻"
 
 # background-opacity = 0.95
-background-blur-radius = 20
+# background-blur-radius = 20
 # unfocused-split-opacity = 0.90
 
 minimum-contrast = 1.0
@@ -20,9 +22,10 @@ fullscreen = true
 # visible-menu
 macos-non-native-fullscreen = visible-menu
 # macos-titlebar-tabs=false # FIXME: deprecated?
+macos-titlebar-style = hidden
 
-window-theme = "dark"
-window-decoration       = false
+window-theme = ghostty
+window-decoration = false
 window-colorspace = display-p3
 window-vsync = true
 window-padding-x = 5
@@ -52,21 +55,19 @@ quit-after-last-window-closed = true
 mouse-hide-while-typing = true
 mouse-shift-capture = true
 
+quick-terminal-position = left
 
-# Default font
 font-family             = "JetBrainsMono Nerd Font Mono"
 font-style              = "Medium"
-# Bold
 font-family-bold        = "JetBrainsMono Nerd Font Mono"
 font-style-bold         = "ExtraBold"
-# Italic
 font-family-italic      = "JetBrainsMono Nerd Font Mono"
 font-style-italic       = "Italic"
-# Bold and Italic
 font-family-bold-italic = "JetBrainsMono Nerd Font Mono"
 font-style-bold-italic  = "ExtraBold Italic"
 
-font-size = 14
+
+font-size = 13
 font-thicken = true
 
 # adjust-cell-width = -5%
@@ -225,7 +226,7 @@ keybind = ctrl+nine=text:\x00\x39
 keybind = cmd+t=text:\x00\x63
 
 keybind = super+shift+r=reload_config
-keybind = global:cmd+ctrl+k=toggle_quick_terminal
+keybind = global:cmd+ctrl+shift+opt+`=toggle_quick_terminal
 
 # DO NOT DELETE THIS:
 # this stops me from hitting this mapping thinking i'm using a browser's inspect and end up with passing `C` to nvim and changing to end of line 🤦

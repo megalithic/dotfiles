@@ -1183,7 +1183,14 @@ return {
     cmd = { "OutputPanel" },
     opts = true,
   },
-
+  -- {
+  --   "Dan7h3x/signup.nvim",
+  --   branch = "main",
+  --   opts = {
+  --     -- Your configuration options here
+  --   },
+  --   config = function(_, opts) require("signup").setup(opts) end,
+  -- },
   { "RaafatTurki/corn.nvim", opts = {}, enabled = false },
   {
     enabled = false,

@@ -108,9 +108,22 @@ defmodule U do
     val
   end
 
+  # TODO: https://blog.brettbeatty.com/2024_09_28_iex_any_helper.html
   def generate_repo_alias(repo) do
     quote do
       alias unquote(repo), as: Repo
+
+      # alias Surge.Accounts.User
+
+      # defmodule IExHelpers do
+      #   if Code.ensure_loaded?(Repo) do
+      #     def any(query) do
+      #       query
+      #       |> limit(1)
+      #       |> Repo.one()
+      #     end
+      #   end
+      # end
     end
   end
 end

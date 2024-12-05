@@ -46,7 +46,6 @@ ftplugin.extend_all({
 
       local nmap = function(lhs, rhs, desc) vim.keymap.set("n", lhs, rhs, { buffer = 0, desc = "ex: " .. desc }) end
       local xmap = function(lhs, rhs, desc) vim.keymap.set("x", lhs, rhs, { buffer = 0, desc = "ex: " .. desc }) end
-      -- nnoremap("<leader>ed", [[orequire IEx; IEx.pry; #respawn() to leave pry<ESC>:w<CR>]])
       nmap("<localleader>ep", [[o|><ESC>a]], "pipe (new line)")
       nmap("<localleader>ed", [[o|> dbg()<ESC>a]], "dbg (new line)")
       nmap("<localleader>ei", [[o|> IO.inspect()<ESC>i]], "inspect (new line)")
@@ -61,6 +60,29 @@ ftplugin.extend_all({
       xmap("<localleader>ok", [[:lua require("mega.utils").wrap_selected_nodes("{:ok, ", "}")<CR>]], "copy module alias")
       nmap("<localleader>err", [[:lua require("mega.utils").wrap_cursor_node("{:error, ", "}")<CR>]], "copy module alias")
       xmap("<localleader>err", [[:lua require("mega.utils").wrap_selected_nodes("{:error, ", "}")<CR>]], "copy module alias")
+
+      -- NOTE: these workspace commands only work with elixir-ls
+      -- local lsp_execute = function(opts)
+      --   local params = {
+      --     command = opts.command,
+      --     arguments = opts.arguments,
+      --   }
+      --   vim.lsp.buf_request(0, "workspace/executeCommand", params, opts.handler)
+      -- end
+      -- nmap("<localleader>ePt", function()
+      --   local params = vim.lsp.util.make_position_params()
+      --   lsp_execute({
+      --     command = "manipulatePipes:serverid",
+      --     arguments = { "toPipe", params.textDocument.uri, params.position.line, params.position.character },
+      --   })
+      -- end, "pipes: to pipe")
+      -- nmap("<localleader>ePf", function()
+      --   local params = vim.lsp.util.make_position_params()
+      --   lsp_execute({
+      --     command = "manipulatePipes:serverid",
+      --     arguments = { "fromPipe", params.textDocument.uri, params.position.line, params.position.character },
+      --   })
+      -- end, "pipes: from pipe")
 
       if vim.g.tester == "vim-test" then
         nmap("<localleader>td", function()
@@ -80,20 +102,33 @@ ftplugin.extend_all({
       local has_wk, wk = pcall(require, "which-key")
       if has_wk then wk.add({
         ["<localleader>e"] = { group = "[e]lixir" },
+        ["<localleader>eP"] = { group = "[e]lixir [P]ipes" },
       }) end
 
       if pcall(require, "mini.clue") then
         vim.b.miniclue_config = {
           clues = {
             { mode = "n", keys = "<localleader>e", desc = "+elixir" },
+            { mode = "n", keys = "<localleader>eP", desc = "+elixir -> pipes" },
           },
         }
       end
-    end,
-  },
 
-  eelixir = {
-    callback = function(bufnr, args) dbg(args) end,
+      -- Inside an attribute: <button type| pressing = -> <button type="|"
+      vim.keymap.set("i", "=", function()
+        local cursor = vim.api.nvim_win_get_cursor(0)
+        local left_of_cursor_range = { cursor[1] - 1, cursor[2] - 1 }
+
+        -- The cursor location does not give us the correct node in this case, so we
+        -- need to get the node to the left of the cursor
+        local node = vim.treesitter.get_node({ pos = left_of_cursor_range })
+        local nodes_active_in = { "attribute_name", "directive_argument", "directive_name" }
+        dbg(node:type())
+        if not node or not vim.tbl_contains(nodes_active_in, node:type()) then return "=" end
+
+        return "=\"\"<left>"
+      end, { expr = true, buffer = bufnr })
+    end,
   },
   heex = {
     opt = {
@@ -102,7 +137,42 @@ ftplugin.extend_all({
       shiftwidth = 2,
       commentstring = [[<%!-- %s --%>]],
     },
-    callback = function(bufnr, args) vim.bo[bufnr].commentstring = [[<%!-- %s --%>]] end,
+    callback = function(bufnr, args)
+      vim.bo[bufnr].commentstring = [[<%!-- %s --%>]]
+
+      -- Inside an attribute: <button type| pressing = -> <button type="|"
+      vim.keymap.set("i", "=", function()
+        local cursor = vim.api.nvim_win_get_cursor(0)
+        local left_of_cursor_range = { cursor[1] - 1, cursor[2] - 1 }
+
+        -- The cursor location does not give us the correct node in this case, so we
+        -- need to get the node to the left of the cursor
+        local node = vim.treesitter.get_node({ pos = left_of_cursor_range })
+        local nodes_active_in = { "attribute_name", "directive_argument", "directive_name" }
+        if not node or not vim.tbl_contains(nodes_active_in, node:type()) then return "=" end
+
+        return "=\"\"<left>"
+      end, { expr = true, buffer = bufnr })
+    end,
+  },
+  html = {
+    callback = function(bufnr, args)
+      vim.bo[bufnr].commentstring = [[<%!-- %s --%>]]
+
+      -- Inside an attribute: <button type| pressing = -> <button type="|"
+      vim.keymap.set("i", "=", function()
+        local cursor = vim.api.nvim_win_get_cursor(0)
+        local left_of_cursor_range = { cursor[1] - 1, cursor[2] - 1 }
+
+        -- The cursor location does not give us the correct node in this case, so we
+        -- need to get the node to the left of the cursor
+        local node = vim.treesitter.get_node({ pos = left_of_cursor_range })
+        local nodes_active_in = { "attribute_name", "directive_argument", "directive_name" }
+        if not node or not vim.tbl_contains(nodes_active_in, node:type()) then return "=" end
+
+        return "=\"\"<left>"
+      end, { expr = true, buffer = bufnr })
+    end,
   },
   ghostty = {
     opt = {

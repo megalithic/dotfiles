@@ -60,7 +60,7 @@ handle_image() {
 handle_text() {
   case "$2" in
   *.md) glow --style=auto "$2" ;;
-  *.htm | *.html) elinks -dump "$2" ;;
+  *.htm | *.html) links -dump "$2" ;;
   *) bat -p --color=always --number "$2" ;;
     # *) bat -p --color=always --style=header,grid --line-range :300 "$2" ;;
     # *) bat --theme=base16 --color=always --paging=never --number --italic-text=never --tabs=2 --wrap=never "$2" ;;

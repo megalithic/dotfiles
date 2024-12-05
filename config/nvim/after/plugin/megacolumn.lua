@@ -221,7 +221,10 @@ local function get_num_wraps()
 
     -- fetch the line and calculate its display width
     local line = vim.fn.getline(vim.v.lnum)
-    local line_length = vim.fn.strdisplaywidth(line)
+
+    -- subtract one to solve issue where the cursor is right on the edge of a line
+    -- and makes it so that the last line should be the end of the wraps but isn't
+    local line_length = vim.fn.strdisplaywidth(line) - 1
 
     return math.floor(line_length / bufferwidth)
   end)
@@ -230,20 +233,30 @@ local function get_num_wraps()
 end
 
 local function draw_wrap_symbols(virtnum, col_width)
-  -- if virtnum < 0 then
-  --   -- return "-"
-  --   return space:rep(col_width - 1) .. "-"
-  -- elseif virtnum > 0 and (vim.wo.number or vim.wo.relativenumber) then
-
-  -- if virtnum > 0 and (vim.wo.number or vim.wo.relativenumber) then
   local num_wraps = get_num_wraps()
+  local mode = vim.fn.mode()
+  local normalized_mode = vim.fn.strtrans(mode):lower():gsub("%W", "")
+  local line = ""
 
   if virtnum == num_wraps then
-    return "└"
+    line = "└"
   else
-    return "│" -- alts: │├
+    line = "│"
   end
-  -- end
+
+  -- return line
+
+  if normalized_mode == "v" then
+    local pos_list = vim.fn.getregionpos(vim.fn.getpos("v"), vim.fn.getpos("."), { type = mode, eol = true })
+    local s_row, e_row = pos_list[1][1][2], pos_list[#pos_list][2][2]
+    if vim.v.lnum >= s_row and vim.v.lnum <= e_row then return line, "CursorLineNr" end
+  end
+
+  if vim.fn.line(".") == vim.v.lnum then
+    return line, "CursorLineNr"
+  else
+    return line, "LineNr"
+  end
 end
 
 ---@param win integer
@@ -261,7 +274,11 @@ local function nr(win, lnum, relnum, virtnum, line_count)
   --   return space:rep(col_width - 1) .. (virtnum < 0 and shade or space)
   -- end -- virtual line
 
-  if virtnum and virtnum ~= 0 then return draw_wrap_symbols(virtnum, col_width) end -- virtual line
+  if virtnum and virtnum ~= 0 then
+    local line, hl = draw_wrap_symbols(virtnum, col_width)
+
+    return line -- virtual line
+  end
 
   local num = vim.wo[win].relativenumber and not U.falsy(relnum) and relnum or lnum
   if line_count > 999 then col_width = col_width + 1 end

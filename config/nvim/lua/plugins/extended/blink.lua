@@ -9,7 +9,7 @@ return {
   cond = vim.g.completer == "blink",
   dependencies = {
     "rafamadriz/friendly-snippets",
-    "saghen/blink.compat",
+    { "saghen/blink.compat", version = "*", opts = { impersonate_nvim_cmp = true } },
     { "chrisgrieser/cmp-nerdfont", lazy = true },
     { "hrsh7th/cmp-emoji", lazy = true },
   },
@@ -36,7 +36,7 @@ return {
     },
 
     trigger = {
-      signature_help = { enabled = true },
+      signature_help = { enabled = false },
     },
 
     highlight = {
@@ -60,6 +60,19 @@ return {
         },
       },
       providers = {
+        snippets = {
+          -- don't show when triggered manually (= zero length), useful for JSON keys
+          min_keyword_length = 1,
+          score_offset = -1,
+        },
+        buffer = {
+          -- disable being fallback for LSP, but limit its display via
+          -- the other settings
+          fallback_for = {},
+          max_items = 4,
+          min_keyword_length = 4,
+          score_offset = -3,
+        },
         -- dont show LuaLS require statements when lazydev has items
         lsp = { fallback_for = { "lazydev" } },
         lazydev = { name = "LazyDev", module = "lazydev.integrations.blink" },

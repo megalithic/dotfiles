@@ -131,6 +131,7 @@ return {
     init = function()
       -- use bash parser for zsh files
       vim.treesitter.language.register("bash", "zsh")
+      vim.treesitter.language.register("markdown", "livebook")
 
       -- FIX for `comments` parser https://github.com/stsewd/tree-sitter-comment/issues/22
       vim.api.nvim_create_autocmd("ColorScheme", {

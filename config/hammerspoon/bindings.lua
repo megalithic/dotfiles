@@ -114,8 +114,6 @@ req("hyper", { id = "figma" }):start():bind({ "shift" }, "f", nil, function()
   end
 end)
 
-local axbrowse = req("axbrowse")
-local lastApp
 req("hyper", { id = "utils" })
   :start()
   :bind({ "shift" }, "r", nil, function()
@@ -123,16 +121,6 @@ req("hyper", { id = "utils" })
     hs.reload()
   end)
   :bind({ "shift", "ctrl" }, "l", nil, req("wm").placeAllApps)
-  -- WIP
-  -- :bind({ "shift" }, "b", nil, function()
-  --   local currentApp = hs.axuielement.applicationElement(hs.application.frontmostApplication())
-  --   if currentApp == lastApp then
-  --     axbrowse.browse() -- try to continue from where we left off
-  --   else
-  --     lastApp = currentApp
-  --     axbrowse.browse(currentApp) -- new app, so start over
-  --   end
-  -- end)
   -- focus daily notes; splitting it 30/70 with currently focused app window
   :bind(
     { "shift" },
@@ -275,7 +263,7 @@ wmModality
     function() wmModality:exit() end
   )
   :bind({}, "v", function()
-    wm.tile()
+    require("wm").tile()
     wmModality:exit()
   end)
   :bind({}, "s", function()
@@ -471,6 +459,7 @@ req("hyper", { id = "wm" })
 ]]
 --
 
+req("snipper")
 req("clipper")
 
 info(fmt("[START] %s", "bindings"))

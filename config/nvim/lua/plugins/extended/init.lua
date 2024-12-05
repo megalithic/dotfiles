@@ -22,6 +22,7 @@ return {
     },
     {
       "NvChad/nvim-colorizer.lua",
+      enabled = false, -- presently using mini-hipatterns
       event = { "BufReadPre" },
       config = function() require("colorizer").setup(SETTINGS.colorizer) end,
     },
@@ -282,7 +283,6 @@ return {
   },
   {
     "mcauley-penney/visual-whitespace.nvim",
-    branch = "async",
     config = function()
       local U = require("mega.utils")
       -- local ws_bg = U.get_hl_hex({ name = "Visual" })["bg"]

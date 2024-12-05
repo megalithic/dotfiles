@@ -52,8 +52,22 @@ augroup("megaline", {
       local firstWord = vim.split(progress.title, " ")[1]:lower()
 
       local text = table.concat({ progress_icons[idx], clientName, firstWord }, " ")
-      -- TODO: add slight delay to our `end` message clearing so we can actually see the last progress message
-      vim.g.lsp_progress_messages = progress.kind == "end" and "" or text
+      if progress.kind == "end" then
+        vim.g.lsp_progress_messages = fmt("%s %s loaded.", icons.lsp.ok, clientName)
+        local timer = vim.uv.new_timer()
+        if timer then
+          timer:start(
+            2500,
+            0,
+            vim.schedule_wrap(function()
+              vim.g.lsp_progress_messages = ""
+              pcall(vim.cmd.redrawstatus)
+            end)
+          )
+        end
+      else
+        vim.g.lsp_progress_messages = text
+      end
 
       pcall(vim.cmd.redrawstatus)
     end,
@@ -393,6 +407,11 @@ end
 
 local function get_lsp_status(messages)
   --TODO: do some gsub replacements on the messages
+  if string.match(messages, "loaded.") then
+    return seg(string.gsub(messages, "loaded.", ""), "StModeInsert", { margin = { 1, 1 } })
+  else
+    return seg(messages, "StLspMessages", { margin = { 1, 1 } })
+  end
   return seg(messages, "StBrightItalic", { margin = { 1, 1 } })
 end
 
@@ -710,7 +729,7 @@ function mega.ui.statusline.render()
   end
 
   return table.concat({
-    seg([[%<]]),
+    -- seg([[%<]]),
     -- seg_prefix(100),
     seg_mode(120),
     seg_buffer_count(100),

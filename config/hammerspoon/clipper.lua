@@ -163,8 +163,11 @@ end
 
 function obj:init(opts)
   opts = opts or {}
+
   obj.clipWatcher = hs.pasteboard.watcher.new(function(pb)
     local browser = hs.application.get(BROWSER)
+
+    dbg(pb)
 
     if pb ~= nil and pb ~= "" then
       obj.clipboardData = pb

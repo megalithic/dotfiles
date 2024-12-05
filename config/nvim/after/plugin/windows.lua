@@ -1,6 +1,7 @@
 if not mega then return end
 
 local GOLDEN_RATIO = 1.618
+local cmdheight = vim.o.cmdheight
 
 local golden_ratio_width = function()
   local maxwidth = vim.o.columns
@@ -150,7 +151,7 @@ local function resize(bufnr)
   if height < golden_ratio_minheight() then height = golden_ratio_minheight() end
 
   -- save cmdheight to ensure it is not changed by nvim_win_set_height
-  local cmdheight = vim.o.cmdheight
+  cmdheight = vim.o.cmdheight
 
   local fixed = save_fixed_win_dims()
 
@@ -164,7 +165,7 @@ end
 
 function mega.resize_windows(bufnr)
   -- necessary to avoid split widths from going tooo small
-  vim.o.cmdheight = 1
+  vim.o.cmdheight = cmdheight
   vim.o.cmdwinheight = 7
 
   vim.o.winminwidth = 20
