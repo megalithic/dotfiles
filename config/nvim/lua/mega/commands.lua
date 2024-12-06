@@ -108,3 +108,16 @@ end, {
   nargs = "?",
   complete = function() return { vim.fn.expand("%") } end,
 })
+
+-- run :AICommitMsg from a commit buffer to get an AI generated commit message
+command("AICommitMsg", function()
+  local text = vim.fn.system("$DOTS/bin/ai_commit_msg.sh")
+  vim.api.nvim_put(vim.split(text, "\n", {}), "", false, true)
+end, {})
+
+-- stage everything, then open a commit buffer with an AI generated commit message
+command("AICommit", function()
+  vim.fn.system("git add .")
+  vim.cmd("Git commit")
+  vim.cmd("AICommitMsg")
+end, {})
