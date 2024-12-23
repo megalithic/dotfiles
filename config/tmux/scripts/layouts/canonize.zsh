@@ -3,7 +3,7 @@
 SESSION="canonize"
 CWD="$CODE/$SESSION"
 
-export SESSION_ICON="󰴓"
+export SESSION_ICON="" # alts:  󰴓 󰃀   
 export SESSION_FG="#e39b7b"
 # export SESSION_BG="#626262"
 

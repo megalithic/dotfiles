@@ -98,6 +98,7 @@ M.list = function(default_capabilities, default_on_attach)
 
           return root_dir
         end,
+        settings = { dialyzerEnabled = true },
       }
     end,
     elixirls = function()

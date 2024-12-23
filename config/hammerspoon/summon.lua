@@ -50,7 +50,8 @@ function obj.toggle(appId, shouldHide)
         if shouldHide then mainWin:application():hide() end
       else
         if mainWin:application() ~= nil then
-          -- mainWin:application():activate(true)
+          -- always activate the entire application (brings all windows to the front);
+          mainWin:application():activate(true)
           pcall(mainWin:application():unhide())
           pcall(mainWin:focus())
         end

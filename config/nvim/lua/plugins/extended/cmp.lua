@@ -458,7 +458,7 @@ return {
             priority = 100,
             -- max_item_count = 35,
             entry_filter = function(entry)
-              if vim.tbl_contains(SETTINGS.completion_exclusions, entry.source.source.client.name) then return false end
+              if SETTINGS.completion_exclusions and vim.tbl_contains(SETTINGS.completion_exclusions, entry.source.source.client.name) then return false end
 
               return true
             end,

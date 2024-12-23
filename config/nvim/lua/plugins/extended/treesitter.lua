@@ -149,81 +149,52 @@ return {
         typescriptreact = "tsx",
         zsh = "bash",
         eelixir = "elixir",
+        ex = "elixir",
+        pl = "perl",
+        bash = "sh", -- reversing these two from the treesitter source
+        uxn = "uxntal",
+        ts = "typescript",
       }
 
       for ft, parser in pairs(ft_to_parser_aliases) do
         vim.treesitter.language.register(parser, ft)
       end
+      -- additional language registration
+      vim.treesitter.language.register("json", { "chart" })
 
-      -- local non_filetype_match_injection_language_aliases = {
-      --   ex = "elixir",
-      --   pl = "perl",
-      --   bash = "sh", -- reversing these two from the treesitter source
-      --   uxn = "uxntal",
-      --   ts = "typescript",
-      -- }
+      -- extra icons that do not have a filetype entry in
+      -- mini.icons
+      local icon_overrides = {
+        plantuml = "",
+        ebnf = "󱘎",
+        chart = "",
+        nroff = "󰗚",
+      }
 
-      -- -- extra fallbacks for icons that do not have a filetype entry in nvim-
-      -- -- devicons
-      -- local icon_fallbacks = {
-      --   mermaid = "󰈺",
-      --   plantuml = "",
-      --   ebnf = "󱘎",
-      --   chart = "",
-      --   nroff = "",
-      -- }
+      local get_icon = nil
+      local non_filetype_match_injection_language_aliases = {
+        ex = "elixir",
+        pl = "perl",
+        bash = "sh", -- reversing these two from the treesitter source
+        uxn = "uxntal",
+        ts = "typescript",
+      }
+      local ft_conceal = function(match, _, source, pred, metadata)
+        ---@cast pred integer[]
+        local capture_id = pred[2]
+        if not metadata[capture_id] then metadata[capture_id] = {} end
 
-      -- local get_icon = nil
+        local node = match[pred[2]]
+        local node_text = vim.treesitter.get_node_text(node, source)
 
-      -- local ft_conceal = function(match, _, source, pred, metadata)
-      --   ---@cast pred integer[]
-      --   local capture_id = pred[2]
-      --   if not metadata[capture_id] then metadata[capture_id] = {} end
+        local ft = vim.filetype.match({ filename = "a." .. node_text })
+        node_text = ft or non_filetype_match_injection_language_aliases[node_text] or node_text
 
-      --   local node = match[pred[2]]
-      --   local node_text = vim.treesitter.get_node_text(node, source)
+        if not get_icon then get_icon = require("mini.icons").get end
+        metadata.conceal = icon_overrides[node_text] or get_icon("filetype", node_text) or "󰡯"
+      end
 
-      --   local ft = vim.filetype.match({ filename = "a." .. node_text })
-      --   node_text = ft or non_filetype_match_injection_language_aliases[node_text] or node_text
-
-      --   if not get_icon then get_icon = require("nvim-web-devicons").get_icon_by_filetype end
-      --   metadata.conceal = get_icon(node_text) or icon_fallbacks[node_text] or "󰡯"
-      -- end
-
-      -- local offset_first_n = function(match, _, _, pred, metadata)
-      --   ---@cast pred integer[]
-      --   local capture_id = pred[2]
-      --   if not metadata[capture_id] then metadata[capture_id] = {} end
-
-      --   local range = metadata[capture_id].range or { match[capture_id]:range() }
-      --   local offset = pred[3] or 0
-
-      --   range[4] = range[2] + offset
-      --   metadata[capture_id].range = range
-      -- end
-
-      -- -- predicates for formatting of query files
-      -- vim.treesitter.query.add_predicate("has-type?", function(match, _, _, pred)
-      --   local node = match[pred[2]]
-      --   if not node then return true end
-
-      --   local types = { unpack(pred, 3) }
-      --   local type = node:type()
-      --   for _, value in pairs(types) do
-      --     if value == type then return true end
-      --   end
-      --   return false
-      -- end, true)
-
-      -- vim.treesitter.query.add_predicate("is-start-of-line?", function(match, _, _, pred)
-      --   local node = match[pred[2]]
-      --   if not node then return true end
-      --   local start_row, start_col = node:start()
-      --   return vim.fn.indent(start_row + 1) == start_col
-      -- end)
-
-      -- vim.treesitter.query.add_directive("offset-first-n!", offset_first_n, true)
-      -- vim.treesitter.query.add_directive("ft-conceal!", ft_conceal, true)
+      vim.treesitter.query.add_directive("ft-conceal!", ft_conceal, { force = true })
 
       require("nvim-treesitter.install").prefer_git = true
       require("nvim-treesitter.configs").setup(opts)

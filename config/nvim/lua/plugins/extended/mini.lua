@@ -142,7 +142,7 @@ return {
           note = { pattern = "%f[%w]()NOTE()%f[%W]", group = "MiniHipatternsNote" },
           ref = { pattern = "%f[%w]()REF()%f[%W]", group = "MiniHipatternsRef" },
           refs = { pattern = "%f[%w]()REFS()%f[%W]", group = "MiniHipatternsRef" },
-          due = { pattern = "%f[%w]()@@()%f[%W]!", group = "MiniHipatternsDue" },
+          due = { pattern = "%f[%w]()@@%f![%W]", group = "MiniHipatternsDue" },
 
           hex_color = hi.gen_highlighter.hex_color({ priority = 2000 }),
           shorthand = {
@@ -234,9 +234,21 @@ return {
     end,
   },
   {
-    enabled = false,
     "echasnovski/mini.pairs",
-    opts = {},
+    enabled = true,
+    cond = true,
+    opts = {
+      modes = { insert = true, command = true, terminal = false },
+      -- skip autopair when next character is one of these
+      skip_next = [=[[%w%%%'%[%"%.%`%$]]=],
+      -- skip autopair when the cursor is inside these treesitter nodes
+      skip_ts = { "string" },
+      -- skip autopair when next character is closing pair
+      -- and there are more closing pairs than opening pairs
+      skip_unbalanced = true,
+      -- better deal with markdown code blocks
+      markdown = true,
+    },
   },
   {
     "echasnovski/mini.clue",

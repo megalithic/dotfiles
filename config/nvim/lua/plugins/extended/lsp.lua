@@ -19,26 +19,7 @@ return {
       "youssef-lr/lsp-overloads.nvim",
       "williamboman/mason-lspconfig.nvim",
       "WhoIsSethDaniel/mason-tool-installer.nvim",
-      {
-        "j-hui/fidget.nvim",
-        event = "LspAttach",
-        cond = false,
-        opts = {
-          progress = {
-            display = {
-              done_icon = SETTINGS.icons.lsp.ok,
-            },
-          },
-          notification = {
-            view = {
-              group_separator = "─────", -- digraph `hh`
-            },
-            window = {
-              winblend = 0,
-            },
-          },
-        },
-      },
+      "saghen/blink.cmp",
     },
     config = function()
       local lsp_ok, lspconfig = pcall(require, "lspconfig")
@@ -196,7 +177,7 @@ return {
         local filetype = vim.bo[bufnr].filetype
         local disabled_lsp_formatting = SETTINGS.disabled_lsp_formatters
 
-        if SETTINGS.disabled_semantic_tokens[filetype] then client.server_capabilities.semanticTokensProvider = vim.NIL end
+        -- if SETTINGS.disabled_semantic_tokens[filetype] then client.server_capabilities.semanticTokensProvider = vim.NIL end
 
         -- if client.server_capabilities.signatureHelpProvider then require("mega.lsp_signature").setup(client) end
         if client.server_capabilities.codeLensProvider then vim.lsp.codelens.refresh({ bufnr = bufnr }) end
@@ -222,7 +203,7 @@ return {
 
           -- FIXME: once "the one elixir ls to rule them all" (aka "Expert") is released, you can probably get rid of all of this non-sense i'm using to manage multiple elixir ls'
           -- this lets certain elixir language servers that i use to report diagnostics for test files (nextls doesn't, so i have to rely on elixirls or lexical to do this)
-          if vim.tbl_contains(SETTINGS.diagnostic_exclusions, client_name) then
+          if SETTINGS.diagnostic_exclusions and vim.tbl_contains(SETTINGS.diagnostic_exclusions, client_name) then
             if client.name == "elixirls" and fext ~= ".exs" then
               diagnostic_handler(err, result, ctx, config)
             else
@@ -238,7 +219,7 @@ return {
         local definition_handler = vim.lsp.handlers[methods.textDocument_definition]
         vim.lsp.handlers[methods.textDocument_definition] = function(err, result, ctx, config)
           local client_name = vim.lsp.get_client_by_id(ctx.client_id).name
-          if vim.tbl_contains(SETTINGS.definition_exclusions, client_name) then
+          if SETTINGS.definition_exclusions and vim.tbl_contains(SETTINGS.definition_exclusions, client_name) then
             print("skipping definitions for " .. client_name)
             return
           end
@@ -249,7 +230,7 @@ return {
         local references_handler = vim.lsp.handlers[methods.textDocument_references]
         vim.lsp.handlers[methods.textDocument_references] = function(err, result, ctx, config)
           local client_name = vim.lsp.get_client_by_id(ctx.client_id).name
-          if vim.tbl_contains(SETTINGS.references_exclusions, client_name) then
+          if SETTINGS.references_exclusions and vim.tbl_contains(SETTINGS.references_exclusions, client_name) then
             print("skipping references for " .. client_name)
             return
           end
@@ -395,11 +376,12 @@ return {
         -- map("gr", function() vim.cmd.Trouble("lsp_references focus=true") end, "[g]oto [r]eferences")
         -- map("gr", function() vim.cmd.FzfLua("lsp_references") end, "[g]oto [r]eferences")
         nmap("gr", function()
-          if not vim.tbl_contains(SETTINGS.references_exclusions, client.name) then
-            require("fzf-lua").lsp_references({
-              includeDeclaration = false,
-              ignore_current_line = true,
-            })
+          if not SETTINGS.references_exclusions or not vim.tbl_contains(SETTINGS.references_exclusions, client.name) then
+            require("telescope.builtin").lsp_references()
+            -- require("fzf-lua").lsp_references({
+            --   include_declaration = false,
+            --   ignore_current_line = true,
+            -- })
           end
         end, "[g]oto [r]eferences")
         nmap("gI", require("telescope.builtin").lsp_implementations, "[g]oto [i]mplementation")
@@ -900,7 +882,10 @@ return {
         local fname = vim.api.nvim_buf_get_name(bufnr)
         local fext = fname:match("%.[^.]+$")
 
-        if vim.tbl_contains(SETTINGS.max_diagnostic_exclusions, client.name) or (client.name == "elixirls" and fext ~= ".exs") then
+        if
+          SETTINGS.max_diagnostic_exclusions and vim.tbl_contains(SETTINGS.max_diagnostic_exclusions, client.name)
+          or (client.name == "elixirls" and fext ~= ".exs")
+        then
           vim.diagnostic.handlers.signs = orig_signs_handler
         else
           vim.diagnostic.handlers.signs = vim.tbl_extend("force", orig_signs_handler, {
@@ -909,13 +894,27 @@ return {
           })
         end
 
+        -- vim.lsp.handlers["window/showMessage"] = function(_, result)
+        --   -- if require("vim.lsp.log").should_log(convert_lsp_log_level_to_neovim_log_level(result.type)) then
+        --   vim.print(result.message)
+        --   local levels = {
+        --     "ERROR",
+        --     "WARN",
+        --     "INFO",
+        --     "DEBUG",
+        --     [0] = "TRACE",
+        --   }
+        --   vim.notify(result.message, vim.log.levels[levels[result.type]])
+        --   -- end
+        -- end
+
         augroup("LspProgress", {
           {
             pattern = "end",
             event = { "LspProgress" },
             desc = "Handle lsp progress message scenarios",
             command = function(evt)
-              if pcall(require, "fidget") then
+              if pcall(require, "fidget") and package.loaded("fidget.nvim") then
                 local token = evt.data.params.token
                 if evt.data.result and evt.data.result.token then token = evt.data.result.token end
                 local client_id = evt.data.client_id
@@ -958,8 +957,8 @@ return {
       -- TODO: fixes for nvim 10?
       -- REF: https://github.com/dkarter/dotfiles/blob/master/config/nvim/lua/plugins/mason/lsp.lua#L53
       local capabilities = vim.lsp.protocol.make_client_capabilities()
-      if pcall(require, "cmp_nvim_lsp") then capabilities = require("cmp_nvim_lsp").default_capabilities(capabilities) end
-      if pcall(require, "blink.cmp") then capabilities = require("blink.cmp").get_lsp_capabilities(capabilities) end
+      if pcall(require, "cmp_nvim_lsp") and vim.g.completer == "cmp" then capabilities = require("cmp_nvim_lsp").default_capabilities(capabilities) end
+      if pcall(require, "blink.cmp") and vim.g.completer == "blink" then capabilities = require("blink.cmp").get_lsp_capabilities(capabilities) end
 
       capabilities.workspace = {
         didChangeWatchedFiles = {

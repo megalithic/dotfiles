@@ -202,13 +202,6 @@ vim.api.nvim_create_user_command("ToggleAutoResize", function()
     vim.notify("Disabled auto-window-resizing.", L.WARN)
   else
     vim.notify("Enabled auto-window-resizing.", L.INFO)
-    -- NOTE: probably better to NOT run formatter (elixir related formatting is wonky)
-    -- require("conform").format({
-    --   timeout_ms = timeout_ms,
-    --   lsp_fallback = lsp_fallback,
-    --   filter = U.lsp.formatting_filter,
-    --   bufnr = 0,
-    -- })
   end
 end, {})
 

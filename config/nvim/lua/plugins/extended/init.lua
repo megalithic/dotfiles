@@ -154,7 +154,8 @@ return {
   },
   {
     "windwp/nvim-autopairs",
-    cond = true,
+    enabled = true,
+    cond = false,
     lazy = true,
     config = function()
       local npairs = require("nvim-autopairs")
@@ -228,6 +229,9 @@ return {
     },
   },
   {
+    cond = false,
+    event = "VeryLazy",
+
     "tzachar/highlight-undo.nvim",
     opts = {},
   },
@@ -272,6 +276,8 @@ return {
     ft = "lua",
     opts = {
       library = {
+        { path = "${3rd}/luv/library", words = { "vim%.uv" } },
+        { path = "lazy.nvim", words = { "LazyVim" } },
         { path = "luvit-meta/library", words = { "vim%.uv" } },
         { path = "wezterm-types", mods = { "wezterm" } },
         {
@@ -280,6 +286,13 @@ return {
         },
       },
     },
+  },
+  {
+    -- Meta type definitions for the Lua platform Luvit.
+    -- SEE: https://github.com/Bilal2453/luvit-meta
+    "Bilal2453/luvit-meta",
+
+    lazy = true,
   },
   {
     "mcauley-penney/visual-whitespace.nvim",
@@ -300,5 +313,28 @@ return {
         },
       })
     end,
+  },
+  -- <C-n> to select next word with new cursor
+  {
+    "brenton-leighton/multiple-cursors.nvim",
+    version = "*",
+    enabled = false,
+    opts = {
+      pre_hook = function()
+        if pcall(require, "cmp") then require("cmp").setup({ enabled = false }) end
+      end,
+      post_hook = function()
+        if pcall(require, "cmp") then require("cmp").setup({ enabled = true }) end
+      end,
+    },
+    keys = {
+      -- {"<C-j>", "<Cmd>MultipleCursorsAddDown<CR>", mode = {"n", "x"}, desc = "Add cursor and move down"},
+      -- {"<C-k>", "<Cmd>MultipleCursorsAddUp<CR>", mode = {"n", "x"}, desc = "Add cursor and move up"},
+      { "<C-x>", "<Cmd>MultipleCursorsMouseAddDelete<CR>", mode = { "n", "i" }, desc = "Add or remove cursor" },
+      { "<C-n>", "<Cmd>MultipleCursorsAddMatches<CR>", mode = { "n", "x" }, desc = "Add cursors to cword" },
+      -- {"<Leader>d", "<Cmd>MultipleCursorsAddJumpNextMatch<CR>", mode = {"n", "x"}, desc = "Add cursor and jump to next cword"},
+      -- {"<Leader>D", "<Cmd>MultipleCursorsJumpNextMatch<CR>", mode = {"n", "x"}, desc = "Jump to next cword"},
+      -- {"<leader>l", "<Cmd>MultipleCursorsLock<CR>", mode = {"n", "x"}, desc = "Lock virtual cursors"},
+    },
   },
 }

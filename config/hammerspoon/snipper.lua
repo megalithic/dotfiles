@@ -1,5 +1,6 @@
 -- HT: https://github.com/evantravers/dotfiles/blob/master/.config/hammerspoon/browserSnip.lua
 
+local fmt = string.format
 local obj = {}
 obj.__index = obj
 obj.name = "snipper"
@@ -11,55 +12,73 @@ local function magiclines(s)
   return s:gmatch("(.-)\n")
 end
 
-function obj.sendToCanonize(url, title, quote, textStart, textEnd)
-  print("url:")
-  print(url)
-  print("title:")
-  print(title)
-  print("quote:")
-  print(quote)
+function obj.sendToCanonize(url, title, quote, tags)
+  local dev_url = "https://canonize.megalithic.dev/api/snippet"
+  local prod_url = "https://canonize.app/api/snippet"
+  -- local req_headers = { Authorization = fmt("Client-ID %s", client_id:gsub("\n", "")) }
 
-  -- if b64 ~= nil then
-  --   b64 = hs.http.encodeForQuery(string.gsub(b64, "\n", ""))
+  hs.http.asyncPost(
+    dev_url,
+    hs.json.encode({
+      ["snippet"] = {
+        ["title"] = title,
+        ["url"] = url,
+        ["highlight"] = quote,
+        ["tags"] = tags,
+      },
+    }),
+    {
+      ["Content-Type"] = "application/json; charset=UTF-8",
+      ["Authorization"] = "Bearer foo",
+    },
+    function(status, body, headers)
+      if status == 200 or status == 201 then
+        local response = hs.json.decode(body)
+        success(response)
+      else
+        error(string.format("[%s] %s\r\n%s", obj.name, status, require("utils").truncate(body, 100)))
+      end
 
-  --   local req_url = "https://canonize.app/api/snippet"
-  --   local req_headers = { Authorization = fmt("Client-ID %s", client_id:gsub("\n", "")) }
-  --   local req_payload = "type='base64'&image=" .. b64
+      hs.pasteboard.clearContents()
+    end
+  )
+end
 
-  --   dbg("request: %s/%s", req_url, I(req_headers))
-
-  --   hs.http.asyncPost(req_url, req_payload, req_headers, function(status, body, headers)
-  --     if status == 200 then
-  --       local response = hs.json.decode(body)
-  --       local imageUrl = response.data.link
-  --       hs.pasteboard.setContents(imageUrl, "imageUrl")
-  --       hs.pasteboard.setContents(image, "image")
-
-  --       if open_image_url then hs.urlevent.openURLWithBundle(imageUrl, hs.urlevent.getDefaultHandler("https")) end
-  --       hs.execute("rm " .. obj.tempImage)
-  --     else
-  --       error(fmt("[%s] sendToImgur: %s/%s/%s/%s", obj.name, status, body, I(headers)))
-  --     end
-  --   end)
-  -- end
+local function copyToClipboard(app)
+  if app:bundleID() == "com.mitchellh.ghostty" then
+    hs.eventtap.keyStroke("", "y")
+  else
+    hs.eventtap.keyStroke("command", "c")
+  end
 end
 
 function obj:init(opts)
   opts = opts or {}
 
   req("hyper", { id = self.name }):start():bind({ "shift" }, "s", nil, function()
-    local browser = hs.application.get(BROWSER)
-    if not browser or browser ~= hs.application.frontmostApplication() then return end
-
-    local win = hs.window.focusedWindow()
-    local title = win:title():gsub("- Brave Canary", "")
-
-    -- get the highlighted item
-    hs.eventtap.keyStroke("command", "c")
-    local highlight = hs.pasteboard.readString()
-
+    local tags = "snippets"
     local words = {}
     local quote = ""
+    local highlight = nil
+
+    local browser = hs.application.get(BROWSER)
+    local frontMostApp = hs.application.frontmostApplication()
+    local is_browser_active = browser and browser == frontMostApp
+
+    local win = hs.window.focusedWindow()
+    local title = is_browser_active and win:title():gsub("- Brave Canary", "") or win:title()
+
+    print(is_browser_active)
+    print(title)
+
+    -- get the highlighted item
+    -- hs.pasteboard.clearContents()
+    hs.eventtap.keyStroke("command", "c")
+    -- copyToClipboard(frontMostApp)
+
+    highlight = hs.pasteboard.readString()
+    print(highlight)
+
     if highlight ~= nil then
       for word in string.gmatch(highlight, "([^%s]+)") do
         table.insert(words, word)
@@ -69,21 +88,28 @@ function obj:init(opts)
       -- local textEnd = hs.http.encodeForQuery(words[#words - 1] .. " " .. words[#words])
 
       for line in magiclines(highlight) do
-        -- quote = quote .. "> " .. line .. "\n"
         quote = quote .. " " .. line .. "\n"
       end
+
+      tags = tags .. ",quote"
     end
 
-    local _, url = hs.osascript.applescript(
-      "tell application \"" .. browser:name() .. "\" to return URL of active tab of front window"
-    )
-    url = url:gsub("?utm_source=.*", "")
+    if is_browser_active then
+      local _, url = hs.osascript.applescript(
+        "tell application \"" .. browser:name() .. "\" to return URL of active tab of front window"
+      )
+      url = url:gsub("?utm_source=.*", "")
+      tags = tags .. ",bookmark"
 
-    obj.sendToCanonize(url, title, quote)
-    -- hs.notify.show("Snipped!", "The snippet has been sent to Drafts", "")
+      print(url)
+
+      obj.sendToCanonize(url, title, quote, tags)
+    else
+      obj.sendToCanonize("", title, quote, tags)
+    end
   end)
 
-  info(fmt("[INIT] bindings.%s", self.name))
+  info(string.format("[INIT] bindings.%s", self.name))
 end
 
 return obj

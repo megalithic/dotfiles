@@ -448,6 +448,20 @@ addSearchAlias(
   },
 );
 
+addSearchAlias(
+  "twcss",
+  "tailwindcss",
+  "https://tailwindcss.com/docs/",
+  "",
+  "https://tailwindcss.com/docs/",
+  function (response) {
+    var res = JSON.parse(response.text);
+    return res.map(function (r) {
+      return r.phrase;
+    });
+  },
+);
+
 // set theme
 settings.theme = `
   :root {

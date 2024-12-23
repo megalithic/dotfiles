@@ -4,7 +4,6 @@ vim.env.DYLD_LIBRARY_PATH = "$BREW_PREFIX/lib/"
 
 vim.g.mapleader = ","
 vim.g.maplocalleader = " "
-
 vim.noti = vim.notify
 
 _G.L = vim.log.levels
@@ -13,6 +12,7 @@ _G.mega = {
   ui = {},
   lsp = {
     on_attach = function(on_attach, name)
+      -- NOTE:
       -- `mega.lsp.on_attach` usage:
       --
       -- mega.lsp.on_attach(function(client, buffer)

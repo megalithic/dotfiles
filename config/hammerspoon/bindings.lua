@@ -158,6 +158,9 @@ req("hyper", { id = "utils" })
 
 -- # wm/window management ---------------------------------------------------------
 
+-- local tiler = req("hyper", { id = "apps" }):start()
+-- tiler:bind({}, "v", function() require("wm").tile() end)
+
 local wmModality = spoon.HyperModal
 wmModality
   :start()
@@ -290,13 +293,47 @@ wmModality
     enum.map(focused:otherWindowsAllScreens(), function(win) win:application():hide() end)
     wmModality:exit()
   end)
-  :bind("", "c", function()
+  :bind({}, "c", function()
     local win = hs.window.focusedWindow()
     local screenWidth = win:screen():frame().w
     hs.window.focusedWindow():move(hs.geometry.rect(screenWidth / 2 - 300, 0, 600, 400))
+    -- resizes to a small console window at the top middle
 
     wmModality:exit()
   end)
+-- :bind({}, "b", function()
+--   hs.timer.doAfter(5, function()
+--     local focusedWindow = hs.window.focusedWindow()
+
+--     if focusedWindow then
+--       local axWindow = hs.axuielement.windowElement(focusedWindow)
+
+--       function printAXElements(element, indent)
+--         indent = indent or ""
+
+--         print(indent .. "Element: " .. tostring(element))
+
+--         local attributes = element:attributeNames()
+--         for _, attr in ipairs(attributes) do
+--           local value = element:attributeValue(attr)
+--           print(indent .. "  " .. attr .. ": " .. tostring(value))
+--         end
+
+--         local children = element:childElements()
+--         if children then
+--           for _, child in ipairs(children) do
+--             printAXElements(child, indent .. "  ")
+--           end
+--         end
+--       end
+
+--       print("AX Elements for Focused Window:")
+--       printAXElements(axWindow)
+--     else
+--       print("No focused window found.")
+--     end
+--   end)
+-- end)
 
 req("hyper", { id = "wm" }):bind({}, "l", function() wmModality:toggle() end)
 

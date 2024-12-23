@@ -312,6 +312,17 @@ return {
       {
         filter = {
           event = "msg_show",
+          any = {
+            { find = "Starting Supermaven" },
+            { find = "Supermaven Free Tier" },
+          },
+        },
+        skip = true,
+      },
+
+      {
+        filter = {
+          event = "msg_show",
           kind = "",
           find = "^E486: Pattern not found",
         },

@@ -126,7 +126,17 @@ return {
       -- if async_format or vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then return end
       if vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then return end
       -- dd("format on save")
-      return { timeout_ms = timeout_ms, lsp_fallback = lsp_fallback, filter = U.lsp.formatting_filter }
+      return {
+        timeout_ms = timeout_ms,
+        lsp_fallback = lsp_fallback,
+        filter = function(client, exclusions)
+          local client_name = type(client) == "table" and client.name or client
+          exclusions = exclusions or SETTINGS.formatter_exclusions
+          if not exclusions then return false end
+
+          return not vim.tbl_contains(exclusions, client_name)
+        end,
+      }
     end,
     -- format_after_save = function(bufnr)
     --   -- local async_format = vim.g.async_format_filetypes[vim.bo[bufnr].filetype]

@@ -399,10 +399,10 @@ local function get_diagnostics(seg_formatters_status)
 
   local segments = ""
   for _, d in ipairs(diags) do
-    if d.num > 0 then segments = fmt("%s %s", segments, seg(fmt("%s%s", d.num, d.sign), d.hl)) end
+    if d.num > 0 then segments = fmt("%s%s", segments, seg(fmt("%s%s", d.num, d.sign), d.hl, { padding = { 1, 1 } })) end
   end
 
-  return seg(segments .. " " .. seg_formatters_status, { margin = { 1, 1 } })
+  return seg(segments .. "" .. seg_formatters_status, { margin = { 1, 1 } })
 end
 
 local function get_lsp_status(messages)
@@ -413,40 +413,6 @@ local function get_lsp_status(messages)
     return seg(messages, "StLspMessages", { margin = { 1, 1 } })
   end
   return seg(messages, "StBrightItalic", { margin = { 1, 1 } })
-end
-
-local function get_dap_status()
-  local ok, dap = pcall(require, "dap")
-  if not ok then return "" end
-  local status = dap.status()
-  if status ~= "" then return status .. " | " end
-  return ""
-end
-
-local function get_search_results()
-  if vim.v.hlsearch == 0 then return "" end
-  local last_search = fn.getreg("/")
-  if not last_search or last_search == "" then return "" end
-  local result = fn.searchcount({ maxcount = 9999 })
-  if vim.tbl_isempty(result) then return "" end
-
-  -- if result == nil or vim.tbl_isempty(result) then return "" end
-  -- return " " .. last_search:gsub("\\v", "") .. " " .. result.current .. "/" .. result.total .. ""
-
-  -- FIXME: keep this blank as it blows up megaline with unescaped searches
-  last_search = ""
-
-  if result.incomplete == 1 then -- timed out
-    return fmt("%s %s ?/??", icons.misc.search, last_search)
-  elseif result.incomplete == 2 then -- max count exceeded
-    if result.total > result.maxcount and result.current > result.maxcount then
-      return fmt("%s %s >%d/>%d", icons.misc.search, last_search, result.current, result.total)
-    elseif result.total > result.maxcount then
-      return fmt("%s %s %d/>%d (%s)", icons.misc.search, last_search, result.current, result.total)
-    end
-  end
-
-  return fmt("%s %s %d/%d", icons.misc.search, last_search, result.current, result.total)
 end
 
 local function parse_filename(truncate_at)
@@ -508,6 +474,9 @@ local function seg_filename(truncate_at)
 
   local dir, parent, file, icon = segments.dir, segments.parent, segments.file, segments.icon
 
+  -- local filename = file.item
+  -- if icon.item ~= nil then filename = fmt("%s %s", icon.item, file.item) end
+
   local file_hl = M.ctx.modified and "StModified" or file.hl
 
   -- usually our custom titles, like for megaterm, neo-tree, etc
@@ -515,13 +484,12 @@ local function seg_filename(truncate_at)
     return seg(fmt("%s%s%s", seg(dir.item, dir.hl), seg(parent.item, parent.hl), seg(file.item, file_hl)), { margin = { 1, 1 } })
   end
 
-  return seg(fmt("%s/%s/%s", seg(dir.item, dir.hl), seg(parent.item, parent.hl), seg(file.item, file_hl)), { margin = { 1, 1 } })
-end
+  -- if icon.item == nil or icon.item == "" then
+  --   return seg(fmt("%s/%s/%s", seg(dir.item, dir.hl), seg(parent.item, parent.hl), seg(file.item, file_hl)), { margin = { 1, 1 } })
+  -- end
+  -- return seg(fmt("%s/%s/ %s %s", seg(dir.item, dir.hl), seg(parent.item, parent.hl), seg(icon.item, file_hl), seg(file.item, file_hl)), { margin = { 1, 1 } })
 
-local function seg_prefix(truncate_at)
-  local mode_info = MODES[api.nvim_get_mode().mode]
-  local prefix = is_truncated(truncate_at) and "" or vim.env.SESSION_ICON -- icons.misc.lblock
-  return seg(prefix, mode_info.hl, { padding = { 0, 0 } })
+  return seg(fmt("%s/%s/%s", seg(dir.item, dir.hl), seg(parent.item, parent.hl), seg(file.item, file_hl)), { margin = { 1, 1 } })
 end
 
 local function seg_buffer_count(truncate_at)
@@ -530,13 +498,7 @@ local function seg_buffer_count(truncate_at)
   local msg = (is_truncated(truncate_at) or vim.g.started_by_firenvim) and "" or fmt("%s%s", icons.misc.buffers, buffer_count)
 
   if buffer_count <= 1 then return "" end
-  return seg(msg, "StInfo", { padding = { 0, 0 } })
-end
-
-local function seg_suffix(truncate_at)
-  local mode_info = MODES[api.nvim_get_mode().mode]
-  local prefix = is_truncated(truncate_at) and "" or icons.misc.rblock
-  return seg(prefix, mode_info.hl)
+  return seg(msg, "StBufferCount", { padding = { 0, 0 } })
 end
 
 local function seg_mode(truncate_at)
@@ -545,7 +507,8 @@ local function seg_mode(truncate_at)
   --           
   local mode_info = MODES[api.nvim_get_mode().mode]
   local mode = is_truncated(truncate_at) and mode_info.short or mode_info.long
-  return seg(string.upper(mode), mode_info.hl, { padding = { 1, 1 }, suffix = "░", suffix_hl = mode_info.separator_hl })
+  return seg(string.upper(mode), mode_info.hl, { padding = { 1, 1 } })
+  -- return seg(string.upper(mode), mode_info.hl, { padding = { 1, 1 }, suffix = "░", suffix_hl = mode_info.separator_hl })
 end
 
 local function seg_lsp_clients(truncate_at)
@@ -557,7 +520,7 @@ local function seg_lsp_clients(truncate_at)
   local client_names = {}
 
   local function lsp_lookup(name)
-    if U.tlen(clients) <= 1 then return name end
+    if U.tlen(clients) <= 2 then return name end
     local ls = SETTINGS.lsp_lookup[name]
     if ls == nil then ls = name end
 
@@ -585,7 +548,7 @@ local function seg_lsp_status(truncate_at)
   if ok_messages then
     if messages == "" and vim.g.lsp_progress_messages == "" then
       local enabled = not vim.g.disable_autoformat
-      return get_diagnostics(seg(icons.kind.Null, "StModeInsert", enabled))
+      return get_diagnostics(seg(icons.kind.Null, "StModeInsert", enabled, { margin = { 1, 0 } }))
     end
   end
 
@@ -612,50 +575,13 @@ local function seg_lineinfo(truncate_at)
   )
 end
 
-local function seg_search_results(truncate_at)
-  return seg(fmt("%s", get_search_results()), "StCount", not is_truncated(truncate_at) and vim.v.hlsearch > 0, { margin = { 1, 1 }, padding = { 1, 1 } })
-end
-
-local function seg_opened_terms(truncate_at)
-  local function is_valid(buf_num)
-    if not buf_num or buf_num < 1 then return false end
-    local exists = vim.api.nvim_buf_is_valid(buf_num)
-    return vim.bo[buf_num].buflisted and exists
-  end
-
-  ---@return number[]
-  ---@diagnostic disable-next-line: return-type-mismatch
-  local function get_valid_buffers() return vim.tbl_filter(is_valid, vim.api.nvim_list_bufs()) end
-  local bufs = {}
-  for i, buf_id in ipairs(get_valid_buffers()) do
-    table.insert(bufs, vim.api.nvim_buf_get_name(buf_id))
-  end
-  -- P(get_valid_buffers())
-  return seg(fmt(" %s ", unpack(bufs)), "StCount", not is_truncated(truncate_at))
-end
-
-local function seg_hydra(truncate_at)
-  local ok_hydra, hydra = pcall(require, "hydra", { silent = true })
-
-  if ok_hydra then
-    return seg(
-      fmt("%s", hydra.statusline.get_name()),
-      hydra.statusline.get_color(),
-      not is_truncated(truncate_at) and hydra.statusline.is_active(),
-      { margin = { 1, 1 }, padding = { 1, 1 } }
-    )
-  else
-    return ""
-  end
-end
-
 local function seg_ai(truncate_at)
   local ok, ai = pcall(require, vim.g.ai, { silent = true })
 
   if ok then
     local ai_enabled = false
 
-    if vim.g.ai == "neocodeium" then ai_enabled = require("neocodeium.options").options.enabled end
+    if vim.tbl_contains({ "neocodeium", "codecompanion", "supermaven" }, vim.g.ai) then ai_enabled = true end
     return seg(icons.misc.robot, "StBright", not is_truncated(truncate_at) and ai_enabled, { padding = { 1, 1 } })
   end
 
@@ -682,12 +608,6 @@ local function seg_git_status(truncate_at)
   --   branch = vim.fn.trim(vim.fn.system("basename `git rev-parse --show-toplevel`"))
   -- end
   return seg(branch, "StGitBranch", { margin = { 1, 1 }, prefix = seg_git_symbol(truncate_symbol), padding = { 1, 0 } })
-end
-
-local function seg_startuptime()
-  local stats = require("lazy").stats()
-  local ms = (math.floor(stats.startuptime * 100 + 0.5) / 100)
-  return seg(ms, "StComment", { margin = { 1, 1 }, prefix = " ", suffix = "ms", padding = { 0, 0 } })
 end
 
 local function is_focused() return tonumber(vim.g.actual_curwin) == vim.api.nvim_get_current_win() end
