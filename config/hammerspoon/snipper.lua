@@ -13,12 +13,10 @@ local function magiclines(s)
 end
 
 function obj.sendToCanonize(url, title, quote, tags)
-  local dev_url = "https://canonize.megalithic.dev/api/snippet"
-  local prod_url = "https://canonize.app/api/snippet"
-  -- local req_headers = { Authorization = fmt("Client-ID %s", client_id:gsub("\n", "")) }
+  local api_url = os.getenv("CANONIZE_SNIPPET_URL")
 
   hs.http.asyncPost(
-    dev_url,
+    api_url,
     hs.json.encode({
       ["snippet"] = {
         ["title"] = title,
