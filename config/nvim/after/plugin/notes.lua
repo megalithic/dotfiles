@@ -520,7 +520,7 @@ require("mega.autocmds").augroup("NotesLoaded", {
               -- Clear the search highlight
               vim.schedule(function()
                 vim.cmd.nohlsearch()
-                mega.searchCountIndicator("clear")
+                pcall(mega.searchCountIndicator, "clear")
               end)
             end, { desc = "go to main notes section" })
           end

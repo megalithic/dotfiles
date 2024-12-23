@@ -70,7 +70,8 @@ function __build_tasks() {
     # removes completed tasks, removes blank lines, subs strings "tomorrow" -> "today"
     printf -- "%s" $tasks | sed 's/- \[[x/]\].*//g' | sed '/^[[:space:]]*$/d' | sed 's/tomorrow/today/g'
   else
-    printf -- "- [ ] TODO item"
+    printf -- "- [ ] DAILY CHORES #life"
+    printf -- "- [ ] Read book chapter #life"
   fi
 }
 
@@ -117,6 +118,7 @@ $(__build_tasks)
 - [[ADHD]]
 - [[ENG]]
 - [[Tinker]]
+- [[Prayer]]
 - [Previous daily note (${last_daily_note_name})](${last_daily_note_file_name})
 EOF
   fi

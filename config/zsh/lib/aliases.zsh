@@ -233,6 +233,7 @@ alias evt="nvim $DOTS/config/nvim/after/plugin/term.lua"
 alias ehs="nvim $DOTS/config/hammerspoon/config.lua"
 alias eh="nvim $DOTS/config/hammerspoon/init.lua"
 alias eg="nvim $DOTS/git/gitconfig"
+alias egc="nvim $DOTS/config/ghostty/config"
 alias eb="nvim $DOTS/brew/Brewfile"
 alias essh="nvim $DOTS/home/ssh/config"
 
@@ -243,7 +244,7 @@ alias eks="nvim $DOTS/config/kitty/sessions/default.session"
 alias eq="nvim $DOTS/home/qutebrowser/config.py"
 
 alias ew="nvim $DOTS/config/wezterm/wezterm.lua"
-alias wezup="brew upgrade --cask wezterm-nightly --no-quarantine --greedy-latest"
+alias wezup="brew upgrade wezterm@nightly --no-quarantine --greedy-latest"
 
 alias ezmk="nvim $HOME/code/zmk-config/config/leeloo.keymap"
 alias eqmk="nvim $HOME/code/megalithic_qmk/keyboards/atreus62/keymaps/megalithic/keymap.c"

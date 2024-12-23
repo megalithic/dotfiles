@@ -389,6 +389,7 @@ return {
     -- emoji fallback 👉 👀 😁 💩 ✅
     "Noto Color Emoji",
   }),
+  max_fps = 240,
   window_padding = {
     left = "20px",
     right = "10px",

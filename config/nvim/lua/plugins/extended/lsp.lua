@@ -19,32 +19,13 @@ return {
       "youssef-lr/lsp-overloads.nvim",
       "williamboman/mason-lspconfig.nvim",
       "WhoIsSethDaniel/mason-tool-installer.nvim",
-      {
-        "j-hui/fidget.nvim",
-        event = "LspAttach",
-        cond = false,
-        opts = {
-          progress = {
-            display = {
-              done_icon = SETTINGS.icons.lsp.ok,
-            },
-          },
-          notification = {
-            view = {
-              group_separator = "─────", -- digraph `hh`
-            },
-            window = {
-              winblend = 0,
-            },
-          },
-        },
-      },
+      "saghen/blink.cmp",
     },
     config = function()
       local lsp_ok, lspconfig = pcall(require, "lspconfig")
       if not lsp_ok then return nil end
 
-      local diagnostic_ns = vim.api.nvim_create_namespace("hl_diagnostic_region")
+      local diagnostic_ns = vim.api.nvim_create_namespace("mega.hl_diagnostic_region")
       local diagnostic_timer
       local hl_cancel
       local hl_map = {
@@ -196,7 +177,7 @@ return {
         local filetype = vim.bo[bufnr].filetype
         local disabled_lsp_formatting = SETTINGS.disabled_lsp_formatters
 
-        if SETTINGS.disabled_semantic_tokens[filetype] then client.server_capabilities.semanticTokensProvider = vim.NIL end
+        -- if SETTINGS.disabled_semantic_tokens[filetype] then client.server_capabilities.semanticTokensProvider = vim.NIL end
 
         -- if client.server_capabilities.signatureHelpProvider then require("mega.lsp_signature").setup(client) end
         if client.server_capabilities.codeLensProvider then vim.lsp.codelens.refresh({ bufnr = bufnr }) end
@@ -222,9 +203,13 @@ return {
 
           -- FIXME: once "the one elixir ls to rule them all" (aka "Expert") is released, you can probably get rid of all of this non-sense i'm using to manage multiple elixir ls'
           -- this lets certain elixir language servers that i use to report diagnostics for test files (nextls doesn't, so i have to rely on elixirls or lexical to do this)
-          if vim.tbl_contains(SETTINGS.diagnostic_exclusions, client_name) and fext ~= ".exs" then
-            print("skipping diagnostics for " .. client_name)
-            return
+          if SETTINGS.diagnostic_exclusions and vim.tbl_contains(SETTINGS.diagnostic_exclusions, client_name) then
+            if client.name == "elixirls" and fext ~= ".exs" then
+              diagnostic_handler(err, result, ctx, config)
+            else
+              print("skipping diagnostics for " .. client_name)
+              return
+            end
           else
             diagnostic_handler(err, result, ctx, config)
           end
@@ -234,7 +219,7 @@ return {
         local definition_handler = vim.lsp.handlers[methods.textDocument_definition]
         vim.lsp.handlers[methods.textDocument_definition] = function(err, result, ctx, config)
           local client_name = vim.lsp.get_client_by_id(ctx.client_id).name
-          if vim.tbl_contains(SETTINGS.definition_exclusions, client_name) then
+          if SETTINGS.definition_exclusions and vim.tbl_contains(SETTINGS.definition_exclusions, client_name) then
             print("skipping definitions for " .. client_name)
             return
           end
@@ -245,14 +230,14 @@ return {
         local references_handler = vim.lsp.handlers[methods.textDocument_references]
         vim.lsp.handlers[methods.textDocument_references] = function(err, result, ctx, config)
           local client_name = vim.lsp.get_client_by_id(ctx.client_id).name
-          if vim.tbl_contains(SETTINGS.references_exclusions, client_name) then
+          if SETTINGS.references_exclusions and vim.tbl_contains(SETTINGS.references_exclusions, client_name) then
             print("skipping references for " .. client_name)
             return
           end
           references_handler(err, result, ctx, config)
         end
 
-        local md_namespace = vim.api.nvim_create_namespace("lsp_floats")
+        local md_namespace = vim.api.nvim_create_namespace("mega.lsp_floats")
 
         --- Adds extra inline highlights to the given buffer.
         ---@param buf integer
@@ -391,11 +376,12 @@ return {
         -- map("gr", function() vim.cmd.Trouble("lsp_references focus=true") end, "[g]oto [r]eferences")
         -- map("gr", function() vim.cmd.FzfLua("lsp_references") end, "[g]oto [r]eferences")
         nmap("gr", function()
-          if not vim.tbl_contains(SETTINGS.references_exclusions, client.name) then
-            require("fzf-lua").lsp_references({
-              includeDeclaration = false,
-              ignore_current_line = true,
-            })
+          if not SETTINGS.references_exclusions or not vim.tbl_contains(SETTINGS.references_exclusions, client.name) then
+            require("telescope.builtin").lsp_references()
+            -- require("fzf-lua").lsp_references({
+            --   include_declaration = false,
+            --   ignore_current_line = true,
+            -- })
           end
         end, "[g]oto [r]eferences")
         nmap("gI", require("telescope.builtin").lsp_implementations, "[g]oto [i]mplementation")
@@ -465,7 +451,7 @@ return {
             end
           end
 
-          local ns = vim.api.nvim_create_namespace("LspRenamespace")
+          local ns = vim.api.nvim_create_namespace("mega.lsp_rename")
           clnt.request("textDocument/references", params, function(_, result)
             if not result or vim.tbl_isempty(result) then
               vim.notify("Nothing to rename.")
@@ -492,47 +478,6 @@ return {
           end, bufnr)
         end, "[r]e[n]ame")
 
-        -- map("<leader>rn", function()
-        --   local params = vim.lsp.util.make_position_params()
-        --   local current_symbol = vim.fn.expand("<cword>")
-        --   params.old_symbol = current_symbol
-        --   params.context = { includeDeclaration = true }
-        --   local clients = vim.lsp.get_clients()
-        --   client = clients[1]
-        --   for _, possible_client in pairs(clients) do
-        --     if possible_client.server_capabilities.renameProvider then
-        --       client = possible_client
-        --       break
-        --     end
-        --   end
-        --   local ns = vim.api.nvim_create_namespace("LspRenamespace")
-        --
-        --   client.request("textDocument/references", params, function(_, result)
-        --     if not result or vim.tbl_isempty(result) then
-        --       vim.notify("Nothing to rename.")
-        --       return
-        --     end
-        --
-        --     for _, v in ipairs(result) do
-        --       if v.range then
-        --         local buf = vim.uri_to_bufnr(v.uri)
-        --         local line = v.range.start.line
-        --         local start_char = v.range.start.character
-        --         local end_char = v.range["end"].character
-        --         if buf == bufnr then
-        --           -- print(line, start_char, end_char)
-        --           vim.api.nvim_buf_add_highlight(bufnr, ns, "LspReferenceWrite", line, start_char, end_char)
-        --         end
-        --       end
-        --     end
-        --     vim.cmd.redraw()
-        --     local new_name = vim.fn.input({ prompt = fmt("%s (%d) -> ", params.old_symbol, #result) })
-        --     vim.api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
-        --     if #new_name == 0 then return end
-        --     vim.lsp.buf.rename(new_name)
-        --   end, bufnr)
-        -- end, "[R]e[n]ame")
-        --
         nmap("gn", function()
           local params = vim.lsp.util.make_position_params()
           client.request("textDocument/references", params, function(_, result)
@@ -914,9 +859,9 @@ return {
           vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = hl })
         end
 
-        local ns = vim.api.nvim_create_namespace("mega_lsp_diagnostics")
+        local ns = vim.api.nvim_create_namespace("mega.lsp_max_severity_diagnostics")
         local orig_signs_handler = vim.diagnostic.handlers.signs
-        local max_diagnostics = function(_, bn, _, opts)
+        local max_diagnostics = function(_ns, bn, _diagnostics, opts)
           local diagnostics = vim.diagnostic.get(bn)
           local max_severity_per_line = {}
           for _, d in pairs(diagnostics) do
@@ -925,15 +870,22 @@ return {
           end
           local filtered_diagnostics = vim.tbl_values(max_severity_per_line)
 
+          -- dbg(filtered_diagnostics)
+
           if filtered_diagnostics == nil or U.tlen(filtered_diagnostics) == 0 then
-            dbg(filtered_diagnostics)
             orig_signs_handler.show(ns, bn, diagnostics, opts)
           else
             orig_signs_handler.show(ns, bn, filtered_diagnostics, opts)
           end
         end
 
-        if vim.tbl_contains(SETTINGS.max_diagnostic_exclusions, client.name) then
+        local fname = vim.api.nvim_buf_get_name(bufnr)
+        local fext = fname:match("%.[^.]+$")
+
+        if
+          SETTINGS.max_diagnostic_exclusions and vim.tbl_contains(SETTINGS.max_diagnostic_exclusions, client.name)
+          or (client.name == "elixirls" and fext ~= ".exs")
+        then
           vim.diagnostic.handlers.signs = orig_signs_handler
         else
           vim.diagnostic.handlers.signs = vim.tbl_extend("force", orig_signs_handler, {
@@ -942,7 +894,19 @@ return {
           })
         end
 
-        -- require("mega.lsp_diagnostics")
+        -- vim.lsp.handlers["window/showMessage"] = function(_, result)
+        --   -- if require("vim.lsp.log").should_log(convert_lsp_log_level_to_neovim_log_level(result.type)) then
+        --   vim.print(result.message)
+        --   local levels = {
+        --     "ERROR",
+        --     "WARN",
+        --     "INFO",
+        --     "DEBUG",
+        --     [0] = "TRACE",
+        --   }
+        --   vim.notify(result.message, vim.log.levels[levels[result.type]])
+        --   -- end
+        -- end
 
         augroup("LspProgress", {
           {
@@ -950,7 +914,7 @@ return {
             event = { "LspProgress" },
             desc = "Handle lsp progress message scenarios",
             command = function(evt)
-              if pcall(require, "fidget") then
+              if pcall(require, "fidget") and package.loaded("fidget.nvim") then
                 local token = evt.data.params.token
                 if evt.data.result and evt.data.result.token then token = evt.data.result.token end
                 local client_id = evt.data.client_id
@@ -993,8 +957,8 @@ return {
       -- TODO: fixes for nvim 10?
       -- REF: https://github.com/dkarter/dotfiles/blob/master/config/nvim/lua/plugins/mason/lsp.lua#L53
       local capabilities = vim.lsp.protocol.make_client_capabilities()
-      if pcall(require, "cmp_nvim_lsp") then capabilities = require("cmp_nvim_lsp").default_capabilities(capabilities) end
-      if pcall(require, "blink.cmp") then capabilities = require("blink.cmp").get_lsp_capabilities(capabilities) end
+      if pcall(require, "cmp_nvim_lsp") and vim.g.completer == "cmp" then capabilities = require("cmp_nvim_lsp").default_capabilities(capabilities) end
+      if pcall(require, "blink.cmp") and vim.g.completer == "blink" then capabilities = require("blink.cmp").get_lsp_capabilities(capabilities) end
 
       capabilities.workspace = {
         didChangeWatchedFiles = {
@@ -1218,7 +1182,14 @@ return {
     cmd = { "OutputPanel" },
     opts = true,
   },
-
+  -- {
+  --   "Dan7h3x/signup.nvim",
+  --   branch = "main",
+  --   opts = {
+  --     -- Your configuration options here
+  --   },
+  --   config = function(_, opts) require("signup").setup(opts) end,
+  -- },
   { "RaafatTurki/corn.nvim", opts = {}, enabled = false },
   {
     enabled = false,

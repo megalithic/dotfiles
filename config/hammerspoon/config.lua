@@ -120,7 +120,8 @@ POSITIONS = {
 -- bundleID, global, { local }, focusOnly
 LAUNCHERS = {
   { "com.brave.Browser.nightly", "j", nil, false },
-  { "com.mitchellh.ghostty", "k", nil, false },
+  { "com.mitchellh.ghostty", "k", { "`" }, false },
+  -- { "net.kovidgoyal.kitty", "k", nil, false },
   { "com.apple.MobileSMS", "m", nil, false },
   { "com.apple.finder", "f", nil, false },
   { "com.spotify.client", "p", nil, false },
@@ -129,7 +130,7 @@ LAUNCHERS = {
   { "com.raycast.macos", "space", nil, false },
   { "com.superultra.Homerow", nil, { ";" }, false },
   { "com.dexterleng.Homerow", nil, { ";" }, false },
-  { "com.tinyspeck.slackmacgap", "s", nil, false },
+  { "com.tinyspeck.slackmacgap", "s", nil, true },
   { "org.hammerspoon.Hammerspoon", "r", nil, false },
   { "com.apple.dt.Xcode", "x", nil, true },
   { "com.google.android.studio", "x", nil, true },
@@ -166,6 +167,7 @@ LAYOUTS = {
     bundleID = "com.mitchellh.ghostty",
     name = "ghostty",
     rules = {
+      { "Software Update", 1, POSITIONS.center.small },
       { "", 1, POSITIONS.full },
     },
   },

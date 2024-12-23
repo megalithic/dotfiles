@@ -7,7 +7,7 @@ local obj = {
 
 obj.__index = obj
 obj.name = "utils"
-obj.debug = false
+obj.debug = true
 
 obj.dndCmd = os.getenv("HOME") .. "/.dotfiles/bin/dnd"
 obj.slckCmd = os.getenv("HOME") .. "/.dotfiles/bin/slck"
@@ -166,27 +166,39 @@ function obj.vidconvert(path, opts)
     and string.match(path, fmt(".%s", srcFormat))
     -- and hs.fs.displayName(path) ~= nil
   then
+    info(fmt("[%s] vidconvert started for %s at %s", obj.name, path, os.date("%H:%M:%S")))
     hs.notify
-      .new({ title = "vidconvert", subTitle = fmt("started for %s at %s", path, os.date("%Y-%m-%d %H:%M:%S")) })
+      .new({ title = "vidconvert", subTitle = fmt("STARTED converting %s at %s", path, os.date("%H:%M:%S")) })
       :send()
 
-    local task = hs.task.new(
-      os.getenv("HOME") .. "/.dotfiles/bin/vidconvert",
-      function(_exitCode, _stdOut, _stdErr) end,
-      function(task, stdOut, stdErr)
-        stdOut = string.gsub(stdOut, "^%s*(.-)%s*$", "%1")
-        local foundStreamEnd = string.match(stdOut, "Qavg:")
+    local task = hs.task.new(os.getenv("HOME") .. "/.dotfiles/bin/vidconvert", function(exitCode, stdOut, stdErr)
+      -- dbg(fmt("sync func: \r\n %s \r\n %s \r\n %s", stdOut, stdErr, exitCode))
 
-        if foundStreamEnd then
-          success(fmt("[%s] vidconvert completed for %s", obj.name, path))
+      local foundStreamEnd = exitCode == 0
+      -- dbg(fmt("sync foundStreamEnd: %s", foundStreamEnd), true)
 
-          hs.notify.new({ title = "vidconvert", subTitle = fmt("finished at %s", os.date("%Y-%m-%d %H:%M:%S")) }):send()
-        end
+      if foundStreamEnd then
+        success(fmt("[%s] vidconvert compeleted for %s at %s", obj.name, path, os.date("%H:%M:%S")))
+        hs.notify.new({ title = "vidconvert", subTitle = fmt("FINISHED converting at %s", os.date("%H:%M:%S")) }):send()
+      end
 
-        return not foundStreamEnd
-      end,
-      { "-t", destFormat, path }
-    )
+      -- end, function(_task, stdOut, stdErr)
+      --   -- TODO: figure out why ffmpeg outputs stdOut to stdErr (or is it a hs.task issue?)
+
+      --   stdErr = string.gsub(stdErr, "^%s*(.-)%s*$", "%1")
+      --   local foundStreamEnd = string.match(stdErr, "Qavg:")
+      --   -- dbg(fmt("stream foundStreamEnd: %s", foundStreamEnd), true)
+
+      --   if foundStreamEnd then
+      --     success(fmt("[%s] vidconvert completed for %s", obj.name, path))
+
+      --     hs.notify.new({ title = "vidconvert", subTitle = fmt("FINISHED converting at %s", os.date("%H:%M:%S")) }):send()
+
+      --     return foundStreamEnd
+      --   end
+
+      --   return not foundStreamEnd
+    end, { "-t", destFormat, path })
 
     task:setEnvironment({
       TERM = "xterm-256color",

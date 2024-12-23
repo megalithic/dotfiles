@@ -89,10 +89,9 @@ return {
   {
     "MeanderingProgrammer/markdown.nvim",
     cond = not vim.g.started_by_firenvim,
-    -- cond = false,
     name = "render-markdown", -- Only needed if you have another plugin named markdown.nvim
     dependencies = { "nvim-treesitter/nvim-treesitter", "echasnovski/mini.nvim", "echasnovski/mini.icons" }, -- if you use the mini.nvim suite
-    file_types = { "markdown", "vimwiki", "gitcommit" },
+    ft = { "markdown", "codecompanion", "vimwiki", "gitcommit" },
     config = function()
       require("render-markdown").setup({
         heading = {
@@ -113,14 +112,14 @@ return {
           signs = { "󰫎 " },
           -- The 'level' is used to index into the array using a clamp
           -- Highlight for the heading icon and extends through the entire line
-          backgrounds = {
-            "RenderMarkdownH1Bg",
-            "RenderMarkdownH2Bg",
-            "RenderMarkdownH3Bg",
-            "RenderMarkdownH4Bg",
-            "RenderMarkdownH5Bg",
-            "RenderMarkdownH6Bg",
-          },
+          -- backgrounds = {
+          --   "RenderMarkdownH1Bg",
+          --   "RenderMarkdownH2Bg",
+          --   "RenderMarkdownH3Bg",
+          --   "RenderMarkdownH4Bg",
+          --   "RenderMarkdownH5Bg",
+          --   "RenderMarkdownH6Bg",
+          -- },
           -- The 'level' is used to index into the array using a clamp
           -- Highlight for the heading and sign icons
           foregrounds = {
@@ -137,9 +136,9 @@ return {
           -- below = "▀",
           -- border = true,
           -- width = { "full", "full", "block", "block", "block" },
-          width = { "full", "full", "block" },
-          left_pad = 1,
-          right_pad = 2,
+          -- width = { "full", "full", "block" },
+          -- left_pad = 1,
+          -- right_pad = 2,
           -- min_width = 20,
         },
         code = {

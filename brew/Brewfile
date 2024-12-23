@@ -70,6 +70,7 @@ brew "ccls"  # c-lang lsp vs., c-lang lsp in llvm
 brew "chafa" # image renderer for telescope/bat/fzf/etc
 
 brew "chatgpt-cli"
+brew "cloudflared"
 brew "cmake" if OS.mac?
 brew "coreutils" if OS.mac?
 brew "curl"
@@ -278,6 +279,7 @@ cask "font-recursive-code-nerd-font"
 cask "font-maple"
 cask "font-noto-sans-mono"
 cask "font-monaspace-nerd-font"
+cask "font-0xproto-nerd-font"
 
 cask "font-cascadia-mono"
 cask "font-3270-nerd-font"

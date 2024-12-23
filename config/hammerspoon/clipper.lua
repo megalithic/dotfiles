@@ -157,14 +157,17 @@ function obj.editClipboardImage(image)
   -- Open the image in Preview and start annotation
   hs.execute("open -a Preview " .. tmpfile)
 
-  hs.timer.doAfter(1, function() hs.application.find("Preview"):selectMenuItem({ "Tools", "Annotate", "Arrow" }) end)
+  -- hs.timer.doAfter(1, function() hs.application.find("Preview"):selectMenuItem({ "Tools", "Annotate", "Arrow" }) end)
   note(fmt("[%s] editClipboardImage: %s", obj.name, obj.clipboardData))
 end
 
 function obj:init(opts)
   opts = opts or {}
+
   obj.clipWatcher = hs.pasteboard.watcher.new(function(pb)
     local browser = hs.application.get(BROWSER)
+
+    -- dbg(pb)
 
     if pb ~= nil and pb ~= "" then
       obj.clipboardData = pb

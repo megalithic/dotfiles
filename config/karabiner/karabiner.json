@@ -238,7 +238,8 @@
             "name": "internal",
             "virtual_hid_keyboard": {
                 "caps_lock_delay_milliseconds": 0,
-                "keyboard_type": "ansi"
+                "keyboard_type": "ansi",
+                "keyboard_type_v2": "ansi"
             }
         },
         {
@@ -418,6 +419,13 @@
                         "vendor_id": 4152
                     },
                     "ignore": false
+                },
+                {
+                    "disable_built_in_keyboard_if_exists": true,
+                    "identifiers": {
+                        "device_address": "f3-d9-8d-01-16-54",
+                        "is_keyboard": true
+                    }
                 }
             ],
             "name": "leeloo",

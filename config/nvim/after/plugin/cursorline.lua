@@ -57,7 +57,7 @@ local M = {
 }
 
 local blink_active = false
-local timer = vim.loop.new_timer()
+local timer = vim.uv.new_timer()
 
 local function is_floating_win() return vim.fn.win_gettype() == "popup" end
 
@@ -104,7 +104,7 @@ end
 function mega.blink_cursorline(delay, should_center)
   if is_ignored() then return end
 
-  timer = vim.loop.new_timer()
+  timer = vim.uv.new_timer()
   blink_active = true
 
   if should_center ~= nil and should_center then vim.cmd.normal("zz") end

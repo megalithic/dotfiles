@@ -288,7 +288,7 @@ function M.apply()
           if ibl_ok then ibl.setup_buffer(evt.buf, { indent = { char = SETTINGS.indent_char } }) end
         end, 1)
         vim.wo.cursorline = true
-        if not vim.g.started_by_firenvim then require("colorizer").attach_to_buffer(evt.buf) end
+        -- if not vim.g.started_by_firenvim then require("colorizer").attach_to_buffer(evt.buf) end
       end,
     },
     {
@@ -300,7 +300,7 @@ function M.apply()
           if ibl_ok then ibl.setup_buffer(evt.buf, { indent = { char = "" } }) end
         end, 1)
         vim.wo.cursorline = false
-        if not vim.g.started_by_firenvim then require("colorizer").detach_from_buffer(evt.buf) end
+        -- if not vim.g.started_by_firenvim then require("colorizer").detach_from_buffer(evt.buf) end
       end,
     },
   })

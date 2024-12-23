@@ -3,11 +3,15 @@
 SESSION="canonize"
 CWD="$CODE/$SESSION"
 
-export SESSION_ICON="󰴓"
+export SESSION_ICON="" # alts:  󰴓 󰃀   
 export SESSION_FG="#e39b7b"
 # export SESSION_BG="#626262"
 
 cd $CWD
+
+# if [ -f $CWD/development/scripts/setup_dev_ips.sh ]; then
+#   source $CWD/development/scripts/setup_dev_ips.sh
+# fi
 
 # Create the session and the first window. Manually switch to root
 # directory if required to support tmux < 1.9
@@ -37,7 +41,7 @@ tmux send-keys -t "$SESSION":3.1 "rm ./.overmind.sock 2>/dev/null && overmind st
 tmux splitw -c "$CWD" -t "$SESSION":3
 tmux select-layout -t "$SESSION":3 tiled
 tmux send-keys -t "$SESSION":3.2 "nix-shell --run zsh && sleep 1" "C-m"
-tmux send-keys -t "$SESSION":3.2 "m s canonize" "C-m"
+tmux send-keys -t "$SESSION":3.2 "m s $SESSION" "C-m"
 
 tmux select-layout -t "$SESSION":3 tiled
 tmux select-layout -t "$SESSION":3 even-horizontal

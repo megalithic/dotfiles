@@ -247,7 +247,7 @@ return {
           row = 1,
           col = 1,
           border = { " ", " ", " ", " ", " ", " ", " ", " " },
-          hl = {
+          hls = {
             border = "TelescopeBorder",
             header_bind = "NonText",
             header_text = "NonText",

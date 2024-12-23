@@ -86,10 +86,12 @@ req("hyper", { id = "meeting" }):start():bind({}, "z", nil, function()
   elseif hs.application.find("com.pop.pop.app") then
     hs.application.launchOrFocusByBundleID("com.pop.pop.app")
     local app = hs.application.find("com.pop.pop.app")
-    local targetWin = app:mainWindow()
-    if targetWin ~= nil and targetWin:isStandard() and targetWin:frame().w > 1000 and targetWin:frame().h > 1000 then
-      targetWin:focus()
-    end
+    local targetWin = enum.find(
+      app:allWindows(),
+      function(win) return win:isStandard() and win:frame().w > 1000 and win:frame().h > 1000 end
+    )
+
+    if targetWin ~= nil then targetWin:focus() end
   elseif req("browser").hasTab("meet.google.com|hangouts.google.com.call") then
     req("browser").jump("meet.google.com|hangouts.google.com.call")
   else
@@ -112,8 +114,6 @@ req("hyper", { id = "figma" }):start():bind({ "shift" }, "f", nil, function()
   end
 end)
 
-local axbrowse = req("axbrowse")
-local lastApp
 req("hyper", { id = "utils" })
   :start()
   :bind({ "shift" }, "r", nil, function()
@@ -121,16 +121,6 @@ req("hyper", { id = "utils" })
     hs.reload()
   end)
   :bind({ "shift", "ctrl" }, "l", nil, req("wm").placeAllApps)
-  -- WIP
-  -- :bind({ "shift" }, "b", nil, function()
-  --   local currentApp = hs.axuielement.applicationElement(hs.application.frontmostApplication())
-  --   if currentApp == lastApp then
-  --     axbrowse.browse() -- try to continue from where we left off
-  --   else
-  --     lastApp = currentApp
-  --     axbrowse.browse(currentApp) -- new app, so start over
-  --   end
-  -- end)
   -- focus daily notes; splitting it 30/70 with currently focused app window
   :bind(
     { "shift" },
@@ -167,6 +157,9 @@ req("hyper", { id = "utils" })
 -- [ MODAL LAUNCHERS ] ---------------------------------------------------------
 
 -- # wm/window management ---------------------------------------------------------
+
+-- local tiler = req("hyper", { id = "apps" }):start()
+-- tiler:bind({}, "v", function() require("wm").tile() end)
 
 local wmModality = spoon.HyperModal
 wmModality
@@ -273,7 +266,7 @@ wmModality
     function() wmModality:exit() end
   )
   :bind({}, "v", function()
-    wm.tile()
+    require("wm").tile()
     wmModality:exit()
   end)
   :bind({}, "s", function()
@@ -300,13 +293,47 @@ wmModality
     enum.map(focused:otherWindowsAllScreens(), function(win) win:application():hide() end)
     wmModality:exit()
   end)
-  :bind("", "c", function()
+  :bind({}, "c", function()
     local win = hs.window.focusedWindow()
     local screenWidth = win:screen():frame().w
     hs.window.focusedWindow():move(hs.geometry.rect(screenWidth / 2 - 300, 0, 600, 400))
+    -- resizes to a small console window at the top middle
 
     wmModality:exit()
   end)
+-- :bind({}, "b", function()
+--   hs.timer.doAfter(5, function()
+--     local focusedWindow = hs.window.focusedWindow()
+
+--     if focusedWindow then
+--       local axWindow = hs.axuielement.windowElement(focusedWindow)
+
+--       function printAXElements(element, indent)
+--         indent = indent or ""
+
+--         print(indent .. "Element: " .. tostring(element))
+
+--         local attributes = element:attributeNames()
+--         for _, attr in ipairs(attributes) do
+--           local value = element:attributeValue(attr)
+--           print(indent .. "  " .. attr .. ": " .. tostring(value))
+--         end
+
+--         local children = element:childElements()
+--         if children then
+--           for _, child in ipairs(children) do
+--             printAXElements(child, indent .. "  ")
+--           end
+--         end
+--       end
+
+--       print("AX Elements for Focused Window:")
+--       printAXElements(axWindow)
+--     else
+--       print("No focused window found.")
+--     end
+--   end)
+-- end)
 
 req("hyper", { id = "wm" }):bind({}, "l", function() wmModality:toggle() end)
 
@@ -469,6 +496,7 @@ req("hyper", { id = "wm" })
 ]]
 --
 
+req("snipper")
 req("clipper")
 
 info(fmt("[START] %s", "bindings"))

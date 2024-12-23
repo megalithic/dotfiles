@@ -1,7 +1,9 @@
+# REF: https://github.com/hackrmomo/.config.macos/blob/main/ghostty/config
+
 title = "Ghostty 👻"
 
 # background-opacity = 0.95
-background-blur-radius = 20
+# background-blur-radius = 20
 # unfocused-split-opacity = 0.90
 
 minimum-contrast = 1.0
@@ -20,9 +22,10 @@ fullscreen = true
 # visible-menu
 macos-non-native-fullscreen = visible-menu
 # macos-titlebar-tabs=false # FIXME: deprecated?
+macos-titlebar-style = hidden
 
-window-theme = "dark"
-window-decoration       = false
+window-theme = ghostty
+window-decoration = false
 window-colorspace = display-p3
 window-vsync = true
 window-padding-x = 5
@@ -52,21 +55,19 @@ quit-after-last-window-closed = true
 mouse-hide-while-typing = true
 mouse-shift-capture = true
 
+quick-terminal-position = left
 
-# Default font
 font-family             = "JetBrainsMono Nerd Font Mono"
 font-style              = "Medium"
-# Bold
 font-family-bold        = "JetBrainsMono Nerd Font Mono"
 font-style-bold         = "ExtraBold"
-# Italic
 font-family-italic      = "JetBrainsMono Nerd Font Mono"
 font-style-italic       = "Italic"
-# Bold and Italic
 font-family-bold-italic = "JetBrainsMono Nerd Font Mono"
 font-style-bold-italic  = "ExtraBold Italic"
 
-font-size = 14
+
+font-size = 13
 font-thicken = true
 
 # adjust-cell-width = -5%
@@ -88,18 +89,53 @@ font-feature = liga
 font-feature = dlig
 font-feature = calt
 
-# https://github.com/ryanoasis/nerd-fonts/wiki/Glyph-Sets-and-Code-Points
-# powerline & powerline-extras
-font-codepoint-map = U+e0b0-U+e0b3,U+e0b4-U+e0c8,U+e0cc-U+e0d4,U+e0ca=JetBrainsMono Nerd Font Mono
+# Seti-UI + Custom
+# font-codepoint-map = U+E5FA-U+E62B=Symbols Nerd Font
+# # Devicons
+# font-codepoint-map = U+E700-U+E7C5=Symbols Nerd Font
+# # Font Awesome
+# font-codepoint-map = U+F000-U+F2E0=Symbols Nerd Font
+# # Font Awesome Extension
+# font-codepoint-map = U+E200-U+E2A9=Symbols Nerd Font
+# # Material Design Icons
+# font-codepoint-map = U+F500-U+FD46=Symbols Nerd Font
+# # Weather
+# font-codepoint-map = U+E300-U+E3EB=Symbols Nerd Font
+# # Octicons
+# font-codepoint-map = U+F400-U+F4A8,U+2665,U+26A1,U+F27C=Symbols Nerd Font
+# # Powerline Extra Symbols
+# font-codepoint-map = U+E0A3,U+E0B4-U+E0C8,U+E0CC-U+E0D2,U+E0D4=Symbols Nerd Font
+# # IEC Power Symbols
+# font-codepoint-map = U+23FB-U+23FE,U+2b58=Symbols Nerd Font
+# # Font Logos
+# font-codepoint-map = U+F300-U+F313=Symbols Nerd Font
+# # Pomicons
+# font-codepoint-map = U+E000-U+E00D=Symbols Nerd Font
 
-# font-awesome
-font-codepoint-map = U+f000-U+f2e0,U+e200-U+e2a9=JetBrainsMono Nerd Font Mono
+# # https://github.com/ryanoasis/nerd-fonts/wiki/Glyph-Sets-and-Code-Points
+# # powerline & powerline-extras
+# font-codepoint-map = U+e0b0-U+e0b3,U+e0b4-U+e0c8,U+e0cc-U+e0d4,U+e0ca=CommitMono Nerd Font Mono
 
-# seti-ui
-font-codepoint-map = U+e5fa-U+e6b1=JetBrainsMono Nerd Font Mono
+# # font-awesome
+# font-codepoint-map = U+f000-U+f2e0,U+e200-U+e2a9=CommitMono Nerd Font Mono
 
-# codicons
-font-codepoint-map = U+ea60-U+ebeb=JetBrainsMono Nerd Font Mono
+# # seti-ui
+# font-codepoint-map = U+e5fa-U+e6b1=CommitMono Nerd Font Mono
+
+# # codicons
+# font-codepoint-map = U+ea60-U+ebeb=CommitMono Nerd Font Mono
+
+# # Devicons
+# font-codepoint-map = U+e700-U+e7c5=CommitMono Nerd Font Mono
+
+# # Font awesome
+# font-codepoint-map = U+f000-U+f2e0=CommitMono Nerd Font Mono
+
+# # Font awesome extension
+# font-codepoint-map = U+e200-U+e2a9=CommitMono Nerd Font Mono
+
+# # Octicons
+# font-codepoint-map = U+f400-U+f4a8,U+2665-U+2665,U+26A1-U+26A1,U+f27c-U+f27c=CommitMono Nerd Font Mono
 
 # ## Font mapping
 # # Pomicons
@@ -140,6 +176,10 @@ font-codepoint-map = U+ea60-U+ebeb=JetBrainsMono Nerd Font Mono
 #
 # # Misc Code Point Fixes
 # font-codepoint-map = U+21B5,U+25B8,U+2605,U+2630,U+2632,U+2714,U+E0A3,U+E615,U+E62B=Monolisa
+
+
+# font-codepoint-map = U+23FB-U+23FE,U+2665,U+26A1,U+2B58,U+E000-U+E00A,U+E0A0-U+E0A3,U+E0B0-U+E0D4,U+E200-U+E2A9,U+E300-U+E3E3,U+E5FA-U+E6AA,U+E700-U+E7C5,U+EA60-U+EBEB,U+F000-U+F2E0,U+F300-U+F32F,U+F400-U+F4A9,U+F500-U+F8FF,U+F0001-U+F1AF0=CommitMono Nerd Font Mono
+# font-codepoint-map = U+4E00-U+9FFF,U+3400-U+4DBF=CommitMono Nerd Font Mono
 
 # megaforest color theme
 background = #323d43
@@ -186,7 +226,7 @@ keybind = ctrl+nine=text:\x00\x39
 keybind = cmd+t=text:\x00\x63
 
 keybind = super+shift+r=reload_config
-keybind = global:cmd+ctrl+k=toggle_quick_terminal
+keybind = global:cmd+ctrl+shift+opt+`=toggle_quick_terminal
 
 # DO NOT DELETE THIS:
 # this stops me from hitting this mapping thinking i'm using a browser's inspect and end up with passing `C` to nvim and changing to end of line 🤦

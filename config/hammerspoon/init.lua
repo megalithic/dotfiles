@@ -28,7 +28,6 @@ local watchers = {
   "bluetooth",
   "usb",
   "dock",
-  --
   "app",
   "url",
   "files",
@@ -37,11 +36,13 @@ local watchers = {
 req("config")
 req("bindings")
 req("watchers"):start(watchers)
+req("spotify"):start()
+req("browser"):start()
 req("ptt"):start({ mode = "push-to-talk" })
 req("quitter"):start({ mode = "double" })
 
 -- experimental/wip modules and stuff..
-req("wip")
+-- req("wip")
 
 hs.shutdownCallback = function() req("watchers"):stop(watchers) end
 

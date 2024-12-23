@@ -83,7 +83,7 @@ obj.callbacks = {
     action = "com.spotify.client",
   },
   {
-
+    -- FIXME: ignore certain parts of a pattern here.. (e.g., ignore `/app_auth/` path)
     pattern = "https:?://www.figma.com/*",
     action = "com.figma.Desktop",
   },

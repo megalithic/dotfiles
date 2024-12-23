@@ -138,67 +138,67 @@ function obj.killTabsByDomain(domain)
   end
 end
 
-function obj.updateBrowserTabBar()
+function obj.updateTabCountMenubar()
+  tabCountMenubar = hs.menubar.new(true)
   local previousCount = -1
-  local countDir = "-"
-  local openTabsBar = hs.menubar.new(true)
-
+  -- local countDir = "-"
+  local tab_icon = "󰓩" -- alts: 
   local function updateOpenTabs()
     local count = obj.tabCount()
 
     if count ~= previousCount then
-      if count > previousCount and previousCount ~= -1 then countDir = "▲" end
-      if count < previousCount then countDir = "▼" end
+      if count > previousCount and previousCount ~= -1 then
+        countDir = ""
+        tab_icon = "󰝜"
+      end
+      if count < previousCount then
+        countDir = ""
+        tab_icon = "󰭋"
+      end
 
       previousCount = count
     end
 
-    TARGET = 50
-    styled = hs.styledtext.new({
-      "  " .. count .. "  " .. countDir .. "  ",
-      tonumber(count) > TARGET and {
-        starts = 2,
-        attributes = {
-          backgroundColor = { red = 1 },
-          color = { white = 1 },
-        },
-      },
+    MAX_TABS_COUNT = 50
+    local text_color = tonumber(count) >= MAX_TABS_COUNT and { hex = "#c43e1f" } or { hex = "#eeeeee" }
+
+    local tab_text = req("hs.styledtext").new(string.format("%s %s", tab_icon, count), {
+      color = text_color,
+      font = { name = DefaultFont.name, size = 13 },
     })
 
-    openTabsBar:setTitle(styled)
+    if tonumber(count) < MAX_TABS_COUNT then tab_text = "" end
+
+    tabCountMenubar:setTitle(tab_text)
   end
 
-  if openTabsBar then
-    icon = [[ASCII:
-    ............
-    ............
-    ............
-    ..C......D..
-    ............
-    ............
-    ............
-    A.B......E.F
-    H..........I
-    K..........L
-    ............
-    ............]]
-    openTabsBar:setIcon(icon)
-
+  if tabCountMenubar then
     -- if you don't assign to a global the timer will be garbage collected
-    tabTimer = hs.timer.doEvery(3, updateOpenTabs)
+    tabCountMenubarUpdater = hs.timer.doEvery(5, updateOpenTabs)
   end
 end
 
 function obj:init()
   -- info(fmt("[INIT] %s", self.name))
-  -- self.updateBrowserTabBar()
 
   return self
 end
 
-function obj:start() return self end
+function obj:start()
+  -- self.updateTabCountMenubar()
+  return self
+end
 
-function obj:stop() return self end
+function obj:stop()
+  -- if tabCountMenubar then
+  --   tabCountMenubar:delete()
+  --   tabCountMenubar = nil
+  -- end
+
+  -- if tabCountMenubarUpdater then tabCountMenubarUpdater:stop() end
+
+  return self
+end
 
 return obj
 -- return obj:init()

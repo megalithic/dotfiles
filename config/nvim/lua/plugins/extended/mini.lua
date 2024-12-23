@@ -49,7 +49,7 @@ return {
   },
   {
     "echasnovski/mini.indentscope",
-    cond = false,
+    cond = true,
     config = function()
       mega.req("mini.indentscope").setup({
         symbol = SETTINGS.indent_scope_char,
@@ -128,24 +128,63 @@ return {
   },
   {
     "echasnovski/mini.hipatterns",
-    opts = {
-      -- Highlight standalone "FIXME", "ERROR", "HACK", "TODO", "NOTE", "WARN", "REF"
-      highlighters = {
-        fixme = { pattern = "%f[%w]()FIXME()%f[%W]", group = "MiniHipatternsFixme" },
-        error = { pattern = "%f[%w]()ERROR()%f[%W]", group = "MiniHipatternsError" },
-        hack = { pattern = "%f[%w]()HACK()%f[%W]", group = "MiniHipatternsHack" },
-        warn = { pattern = "%f[%w]()WARN()%f[%W]", group = "MiniHipatternsWarn" },
-        todo = { pattern = "%f[%w]()TODO()%f[%W]", group = "MiniHipatternsTodo" },
-        note = { pattern = "%f[%w]()NOTE()%f[%W]", group = "MiniHipatternsNote" },
-        ref = { pattern = "%f[%w]()REF()%f[%W]", group = "MiniHipatternsRef" },
-        refs = { pattern = "%f[%w]()REFS()%f[%W]", group = "MiniHipatternsRef" },
-        due = { pattern = "%f[%w]()@@()%f[%W]!", group = "MiniHipatternsDue" },
+    opts = function()
+      local hi = require("mini.hipatterns")
+      return {
 
-        -- Highlight hex color strings (`#rrggbb`) using that color
-        -- hex_color = hipatterns.gen_highlighter.hex_color(),
-      },
-      -- vim.b.minihipatterns_disable = not context.in_treesitter_capture("comment") or not context.in_syntax_group("Comment")
-    },
+        -- Highlight standalone "FIXME", "ERROR", "HACK", "TODO", "NOTE", "WARN", "REF"
+        highlighters = {
+          fixme = { pattern = "%f[%w]()FIXME()%f[%W]", group = "MiniHipatternsFixme" },
+          error = { pattern = "%f[%w]()ERROR()%f[%W]", group = "MiniHipatternsError" },
+          hack = { pattern = "%f[%w]()HACK()%f[%W]", group = "MiniHipatternsHack" },
+          warn = { pattern = "%f[%w]()WARN()%f[%W]", group = "MiniHipatternsWarn" },
+          todo = { pattern = "%f[%w]()TODO()%f[%W]", group = "MiniHipatternsTodo" },
+          note = { pattern = "%f[%w]()NOTE()%f[%W]", group = "MiniHipatternsNote" },
+          ref = { pattern = "%f[%w]()REF()%f[%W]", group = "MiniHipatternsRef" },
+          refs = { pattern = "%f[%w]()REFS()%f[%W]", group = "MiniHipatternsRef" },
+          due = { pattern = "%f[%w]()@@%f![%W]", group = "MiniHipatternsDue" },
+
+          hex_color = hi.gen_highlighter.hex_color({ priority = 2000 }),
+          shorthand = {
+            pattern = "()#%x%x%x()%f[^%x%w]",
+            group = function(_, _, data)
+              ---@type string
+              local match = data.full_match
+              local r, g, b = match:sub(2, 2), match:sub(3, 3), match:sub(4, 4)
+              local hex_color = "#" .. r .. r .. g .. g .. b .. b
+
+              return MiniHipatterns.compute_hex_color_group(hex_color, "bg")
+            end,
+            extmark_opts = { priority = 2000 },
+          },
+        },
+
+        tailwind = {
+          enabled = true,
+          ft = {
+            "astro",
+            "css",
+            "heex",
+            "html",
+            "html-eex",
+            "javascript",
+            "javascriptreact",
+            "rust",
+            "svelte",
+            "typescript",
+            "typescriptreact",
+            "vue",
+            "elixir",
+            "phoenix-html",
+            "heex",
+          },
+          -- full: the whole css class will be highlighted
+          -- compact: only the color will be highlighted
+          style = "full",
+        },
+      }
+    end,
+    config = function(_, opts) require("mini.hipatterns").setup(opts) end,
   },
   {
     "echasnovski/mini.ai",
@@ -195,9 +234,21 @@ return {
     end,
   },
   {
-    enabled = false,
     "echasnovski/mini.pairs",
-    opts = {},
+    enabled = true,
+    cond = true,
+    opts = {
+      modes = { insert = true, command = true, terminal = false },
+      -- skip autopair when next character is one of these
+      skip_next = [=[[%w%%%'%[%"%.%`%$]]=],
+      -- skip autopair when the cursor is inside these treesitter nodes
+      skip_ts = { "string" },
+      -- skip autopair when next character is closing pair
+      -- and there are more closing pairs than opening pairs
+      skip_unbalanced = true,
+      -- better deal with markdown code blocks
+      markdown = true,
+    },
   },
   {
     "echasnovski/mini.clue",

@@ -91,15 +91,19 @@ function obj:init()
 end
 
 function obj:start()
-  setMenubarTitle()
-  obj.updateTimer = hs.timer.new(obj.refreshInterval, function() setMenubarTitle() end):start()
+  if hs.application.get("Spotify") then
+    setMenubarTitle()
+    obj.updateTimer = hs.timer.new(obj.refreshInterval, function() setMenubarTitle() end):start()
+  end
 
   return self
 end
 
 function obj:stop()
-  if obj.menubar then obj.menubar:delete() end
-  if obj.updateTimer then obj.updateTimer:stop() end
+  if self.menubar then self.menubar:delete() end
+  if self.updateTimer then self.updateTimer:stop() end
+
+  info("stopping spotify things")
 
   return self
 end
