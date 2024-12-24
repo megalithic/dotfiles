@@ -1,6 +1,8 @@
 if not hs.ipc.cliStatus() then hs.ipc.cliInstall() end
 require("hs.ipc")
 
+hs.settings.set("secrets", hs.json.read(".secrets.json"))
+
 -- _G["modalities"] = {}
 _G["hypers"] = {}
 _G.DefaultFont = { name = "JetBrainsMono Nerd Font", size = 18 }

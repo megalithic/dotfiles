@@ -5,6 +5,7 @@ local obj = {}
 obj.__index = obj
 obj.name = "snipper"
 obj.debug = true
+obj.secrets = hs.settings.get("secrets")
 
 -- https://stackoverflow.com/questions/19326368/iterate-over-lines-including-blank-lines
 local function magiclines(s)
@@ -12,8 +13,18 @@ local function magiclines(s)
   return s:gmatch("(.-)\n")
 end
 
+local function get_api_url(env)
+  env = env and env or "dev"
+
+  if obj.secrets["canonize"]["snippetsApiUrl"][env] then
+    return obj.secrets["canonize"]["snippetsApiUrl"][env]
+  else
+    warn("You need to set Canonize Snippets API URL under secrets.canonize.snippetsApiUrl." .. env)
+  end
+end
+
 function obj.sendToCanonize(url, title, quote, tags)
-  local api_url = os.getenv("CANONIZE_SNIPPET_URL")
+  local api_url = get_api_url()
 
   hs.http.asyncPost(
     api_url,
