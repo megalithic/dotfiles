@@ -67,9 +67,109 @@ return {
         },
       },
     },
+    -- {
+    --   "FluxxField/smart-motion.nvim",
+    --   opts = {
+    --     keys = "fjdksleirughtynm",
+    --     highlight = {
+    --       dim = "SmartMotionDim",
+    --       hint = "SmartMotionHint",
+    --       first_char = "SmartMotionFirstChar",
+    --       second_char = "SmartMotionSecondChar",
+    --       first_char_dim = "SmartMotionFirstCharDim",
+    --     },
+    --     multi_line = true,
+
+    --     presets = {
+    --       lines = false,
+    --       words = true,
+    --       search = true,
+    --       delete = true,
+    --       yank = true,
+    --       change = true,
+    --     },
+    --   },
+    -- },
+    {
+      "yehuohan/hop.nvim",
+      event = "VeryLazy",
+      opts = { match_mappings = { "noshift", "zh", "zh_sc" } },
+      keys = {
+        -- {
+        --   "f",
+        --   mode = { "n", "x", "o" },
+        --   "<Cmd>HopCharCL<CR>",
+        -- },
+        -- {
+        --   "F",
+        --   mode = { "n", "x", "o" },
+        --   "<Cmd>HopAnywhereCL<CR>",
+        -- },
+        {
+          "s",
+          mode = { "n", "x" },
+          "<Cmd>HopChar<CR>",
+        },
+        {
+          "S",
+          mode = { "n", "x" },
+          "<Cmd>HopWord<CR>",
+        },
+      },
+      config = function(_, opts)
+        local hop = require("hop")
+        hop.setup(opts)
+      end,
+    },
+    {
+      "jake-stewart/multicursor.nvim",
+      config = function()
+        local mc = require("multicursor-nvim")
+        mc.setup()
+        local map = vim.keymap.set
+
+        map("n", "<localleader>c", mc.toggleCursor, { desc = "Toggle cursor" })
+        map("x", "<localleader>c", function()
+          mc.action(function(ctx)
+            ctx:forEachCursor(function(cur) cur:splitVisualLines() end)
+          end)
+          mc.feedkeys("<Esc>", { remap = false, keycodes = true })
+        end, { desc = "Create cursors from visual" })
+        map({ "n", "x" }, "<localleader>v", function() mc.matchAddCursor(1) end, { desc = "Create cursors from word/selection" })
+        map("x", "<localleader>m", mc.matchCursors, { desc = "Match cursors from visual" })
+        map("x", "<localleader>s", mc.splitCursors, { desc = "Split cursors from visual" })
+        map("n", "<localleader>a", mc.alignCursors, { desc = "Align cursors" })
+
+        mc.addKeymapLayer(function(layer)
+          local hop = require("hop")
+          local move_mc = require("hop.jumper").move_multicursor
+          layer({ "n", "x" }, "s", function() hop.char({ jump = move_mc }) end)
+          layer({ "n", "x" }, "S", function() hop.word({ jump = move_mc }) end)
+          layer({ "n", "x", "o" }, "f", "f")
+          layer({ "n", "x", "o" }, "F", "F")
+          layer({ "n", "x" }, "<leader>j", function() hop.vertical({ jump = move_mc }) end)
+          layer({ "n", "x" }, "<leader>k", function() hop.vertical({ jump = move_mc }) end)
+
+          layer({ "n", "x" }, "n", function() mc.matchAddCursor(1) end)
+          layer({ "n", "x" }, "N", function() mc.matchAddCursor(-1) end)
+          layer({ "n", "x" }, "m", function() mc.matchSkipCursor(1) end)
+          layer({ "n", "x" }, "M", function() mc.matchSkipCursor(-1) end)
+          layer("n", "<leader><Esc>", mc.disableCursors)
+          layer("n", "<Esc>", function()
+            if mc.cursorsEnabled() then
+              mc.clearCursors()
+            else
+              mc.enableCursors()
+            end
+          end)
+        end)
+      end,
+      event = "VeryLazy",
+    },
     {
       "folke/flash.nvim",
       event = "VeryLazy",
+      enabled = false,
       opts = {
         jump = { nohlsearch = true, autojump = false },
         prompt = {
@@ -166,6 +266,61 @@ return {
       npairs.add_rules(require("nvim-autopairs.rules.endwise-ruby"))
     end,
   },
+  {
+    "altermo/ultimate-autopair.nvim",
+    branch = "v0.6", -- recommended as each new version will have breaking changes
+    event = { "InsertEnter", "CmdlineEnter" },
+    keys = {
+      -- Open new scope (`remap` to trigger auto-pairing)
+      { "<D-o>", "a{<CR>", desc = " Open new scope", remap = true },
+      { "<D-o>", "{<CR>", mode = "i", desc = " Open new scope", remap = true },
+    },
+    opts = {
+      bs = {
+        space = "balance",
+        cmap = false, -- keep my `<BS>` mapping for the cmdline
+      },
+      fastwarp = {
+        map = "<D-f>",
+        rmap = "<D-F>", -- backwards
+        hopout = true,
+        nocursormove = true,
+        multiline = false,
+      },
+      cr = { autoclose = true },
+      space = { enable = true },
+      space2 = { enable = true },
+
+      config_internal_pairs = {
+        { "'", "'", nft = { "markdown" } }, -- since used as apostroph
+        { "\"", "\"", nft = { "vim" } }, -- vimscript uses quotes as comments
+      },
+      -- INFO custom keys need to be "appended" to the opts as a list
+      { "**", "**", ft = { "markdown" } }, -- bold
+      { [[\"]], [[\"]], ft = { "zsh", "json", "applescript" } }, -- escaped quote
+
+      { -- commit scope (= only first word) for commit messages
+        "(",
+        "): ",
+        ft = { "gitcommit" },
+        cond = function(_fn) return not vim.api.nvim_get_current_line():find(" ") end,
+      },
+
+      -- for keymaps like `<C-a>`
+      { "<", ">", ft = { "vim" } },
+      {
+        "<",
+        ">",
+        ft = { "lua" },
+        cond = function(fn)
+          -- FIX https://github.com/altermo/ultimate-autopair.nvim/issues/88
+          local inLuaLua = vim.endswith(vim.api.nvim_buf_get_name(0), "/ftplugin/lua.lua")
+          return not inLuaLua and fn.in_string()
+        end,
+      },
+    },
+  },
+
   {
     "kevinhwang91/nvim-bqf",
     ft = "qf",
@@ -291,11 +446,25 @@ return {
     -- Meta type definitions for the Lua platform Luvit.
     -- SEE: https://github.com/Bilal2453/luvit-meta
     "Bilal2453/luvit-meta",
-
     lazy = true,
+  },
+
+  {
+    "sphamba/smear-cursor.nvim",
+    enabled = false,
+    opts = {
+      stiffness = 0.8, -- 0.6      [0, 1]
+      trailing_stiffness = 0.5, -- 0.3      [0, 1]
+      distance_stop_animating = 0.5, -- 0.1      > 0
+      hide_target_hack = false, -- true     boolean
+      -- legacy_computing_symbols_support = true,
+      min_horizontal_distance_smear = 10,
+      min_vertical_distance_smear = 10,
+    },
   },
   {
     "mcauley-penney/visual-whitespace.nvim",
+    enabled = false,
     config = function()
       local U = require("mega.utils")
       -- local ws_bg = U.get_hl_hex({ name = "Visual" })["bg"]
@@ -316,25 +485,59 @@ return {
   },
   -- <C-n> to select next word with new cursor
   {
-    "brenton-leighton/multiple-cursors.nvim",
-    version = "*",
-    enabled = false,
-    opts = {
-      pre_hook = function()
-        if pcall(require, "cmp") then require("cmp").setup({ enabled = false }) end
-      end,
-      post_hook = function()
-        if pcall(require, "cmp") then require("cmp").setup({ enabled = true }) end
-      end,
-    },
-    keys = {
-      -- {"<C-j>", "<Cmd>MultipleCursorsAddDown<CR>", mode = {"n", "x"}, desc = "Add cursor and move down"},
-      -- {"<C-k>", "<Cmd>MultipleCursorsAddUp<CR>", mode = {"n", "x"}, desc = "Add cursor and move up"},
-      { "<C-x>", "<Cmd>MultipleCursorsMouseAddDelete<CR>", mode = { "n", "i" }, desc = "Add or remove cursor" },
-      { "<C-n>", "<Cmd>MultipleCursorsAddMatches<CR>", mode = { "n", "x" }, desc = "Add cursors to cword" },
-      -- {"<Leader>d", "<Cmd>MultipleCursorsAddJumpNextMatch<CR>", mode = {"n", "x"}, desc = "Add cursor and jump to next cword"},
-      -- {"<Leader>D", "<Cmd>MultipleCursorsJumpNextMatch<CR>", mode = {"n", "x"}, desc = "Jump to next cword"},
-      -- {"<leader>l", "<Cmd>MultipleCursorsLock<CR>", mode = {"n", "x"}, desc = "Lock virtual cursors"},
-    },
+    "ghostty",
+    dir = "/Applications/Ghostty.app/Contents/Resources/vim/vimfiles/",
+    lazy = false,
   },
+  {
+    "hat0uma/csvview.nvim",
+    opts = {
+      parser = { comments = { "#", "//" } },
+      keymaps = {
+        -- Text objects for selecting fields
+        textobject_field_inner = { "if", mode = { "o", "x" } },
+        textobject_field_outer = { "af", mode = { "o", "x" } },
+        -- Excel-like navigation:
+        -- Use <Tab> and <S-Tab> to move horizontally between fields.
+        -- Use <Enter> and <S-Enter> to move vertically between rows and place the cursor at the end of the field.
+        -- Note: In terminals, you may need to enable CSI-u mode to use <S-Tab> and <S-Enter>.
+        jump_next_field_end = { "<Tab>", mode = { "n", "v" } },
+        jump_prev_field_end = { "<S-Tab>", mode = { "n", "v" } },
+        jump_next_row = { "<Enter>", mode = { "n", "v" } },
+        jump_prev_row = { "<S-Enter>", mode = { "n", "v" } },
+      },
+    },
+    cmd = { "CsvViewEnable", "CsvViewDisable", "CsvViewToggle" },
+  },
+  -- {
+  --   "leobeosab/brr.nvim",
+  --   cmd = { "Scratch", "ScratchList" },
+  --   opts = {
+  --     root = vim.g.notes_path .. "/scratch", -- Root where all scratch files are stored, I throw mine in an Obsidian vault
+  --     style = {
+  --       width = 0.8, -- 0-1, 1 being full width, 0 being, well, 0
+  --       height = 0.8, -- 0-1
+  --       title_padding = 2, -- number of spaces as padding in the top border title
+  --     },
+  --   },
+  --   keys = { -- You'll probably want to change my weird keybinds, these are just examples
+  --     { "<leader>.", "<cmd>Scratch scratch.md<cr>", desc = "Open persistent scratch" },
+  --     { "<leader>sd", "<cmd>Scratch<cr>", desc = "Open daily scratch" },
+  --     { "<leader>sf", "<cmd>ScratchList<cr>", desc = "Find scratch" },
+  --   },
+  -- },
+
+  -- {
+  --   cond = false,
+  --   "dbernheisel/tailwind-tools.nvim",
+  --   branch = "db-extend-root-and-on-attach",
+  --   name = "tailwind-tools",
+  --   build = ":UpdateRemotePlugins",
+  --   dependencies = {
+  --     "nvim-treesitter/nvim-treesitter",
+  --     "nvim-telescope/telescope.nvim", -- optional
+  --     "neovim/nvim-lspconfig", -- optional
+  --   },
+  --   opts = {},
+  -- },
 }

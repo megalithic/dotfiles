@@ -1,3 +1,6 @@
+print("test")
+if true then return end
+
 local SETTINGS = require("mega.settings")
 local icons = SETTINGS.icons.lsp
 local fmt = string.format

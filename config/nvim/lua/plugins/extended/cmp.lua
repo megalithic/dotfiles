@@ -85,10 +85,23 @@ return {
     priority = 100,
     dependencies = {
       {
+        "xzbdmw/colorful-menu.nvim",
+        lazy = true,
+        opts = {},
+      },
+      {
         "petertriho/cmp-git",
         -- dependencies = { "yioneko/nvim-cmp" },
         config = function() require("cmp_git").setup() end,
         init = function() table.insert(require("cmp").get_config().sources, { name = "git" }) end,
+      },
+      {
+        "MattiasMTS/cmp-dbee",
+        dependencies = {
+          { "kndndrj/nvim-dbee" },
+        },
+        ft = { "sql", "psql", "mysql", "plsql", "dbee" }, -- optional but good to have
+        opts = {}, -- needed
       },
       {
         "garymjr/nvim-snippets",
@@ -398,6 +411,15 @@ return {
                 cmdline_history = "[cmdhist]",
                 emoji = "[emo]",
               })[entry.source.name] or entry.source.name
+            end
+
+            local highlights_info = require("colorful-menu").cmp_highlights(entry)
+
+            -- if highlight_info==nil, which means missing ts parser, let's fallback to use default `vim_item.abbr`.
+            -- What this plugin offers is two fields: `vim_item.abbr_hl_group` and `vim_item.abbr`.
+            if highlights_info ~= nil then
+              vim_item.abbr_hl_group = highlights_info.highlights
+              vim_item.abbr = highlights_info.text
             end
 
             return vim_item

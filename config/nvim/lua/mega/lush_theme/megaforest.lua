@@ -5,7 +5,6 @@ if not ok then
 end
 
 local C = require("mega.lush_theme.colors")
-local colors = C
 local tc = {
   black = C.bg0,
   red = C.red,
@@ -1121,10 +1120,10 @@ local theme = lush(function(injected_functions)
     StLineTotal({ fg = C.grey1, bg = StatusLineBg.bg }),
     StLineColumn({ fg = C.grey2, bg = StatusLineBg.bg }),
     StClient({ bg = StatusLineBg.bg, fg = C.fg, gui = "bold" }),
-    StError({ bg = DiagnosticError.fg, fg = "#000000" }),
-    StWarn({ bg = DiagnosticWarn.fg, fg = "#000000" }),
-    StInfo({ bg = DiagnosticInfo.fg, fg = "#000000" }),
-    StHint({ bg = DiagnosticHint.fg, fg = "#000000" }),
+    StError({ fg = DiagnosticError.fg }),
+    StWarn({ fg = DiagnosticWarn.fg }),
+    StInfo({ fg = DiagnosticInfo.fg }),
+    StHint({ fg = DiagnosticHint.fg }),
     StBufferCount({ fg = DiagnosticInfo.fg }),
     StSeparator({ fg = C.bg0, bg = StatusLineBg.bg }),
 

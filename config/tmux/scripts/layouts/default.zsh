@@ -30,6 +30,7 @@ if [[ -n $SESSION ]]; then
 
   # Window "code"
   tmux new-window -c "$CWD" -t "$SESSION":2 -n code
+  tmux send-keys -t "$SESSION":2.1 "cd $CODE" "C-m"
   tmux send-keys -t "$SESSION":2.1 ls "C-m"
 
   tmux select-layout -t "$SESSION":2 tiled
@@ -38,6 +39,7 @@ if [[ -n $SESSION ]]; then
   tmux select-pane -t "$SESSION":2.1
 
   tmux new-window -c "$CWD" -t "$SESSION":3 -n services
+  tmux send-keys -t "$SESSION":3.1 "cd $CODE" "C-m"
 
   # focus
   tmux select-window -t "$SESSION":2

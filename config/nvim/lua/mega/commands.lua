@@ -81,7 +81,7 @@ command("Rename", function(opts)
       }
 
       for _, client in ipairs(clients) do
-        if client.supports_method(Methods.workspace_willRenameFiles) then
+        if client:supports_method(Methods.workspace_willRenameFiles) then
           local resp = client.request_sync(Methods.workspace_willRenameFiles, changes, 1000, 0)
           if resp and resp.result ~= nil then vim.lsp.util.apply_workspace_edit(resp.result, client.offset_encoding) end
         end
@@ -94,7 +94,7 @@ command("Rename", function(opts)
 
     if changes ~= nil and #clients and type(prevpath) == "string" then
       for _, client in ipairs(clients) do
-        if client.supports_method(Methods.workspace_didRenameFiles) then client.notify(Methods.workspace_didRenameFiles, changes) end
+        if client:supports_method(Methods.workspace_didRenameFiles) then client:notify(Methods.workspace_didRenameFiles, changes) end
       end
     else
       return

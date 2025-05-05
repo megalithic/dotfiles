@@ -135,7 +135,7 @@ LAUNCHERS = {
   { "com.apple.dt.Xcode", "x", nil, true },
   { "com.google.android.studio", "x", nil, true },
   { "com.obsproject.obs-studio", "o", nil, true },
-  { "com.kapeli.dashdoc", { { "shift" }, "d" }, { "d" }, false },
+  -- { "com.kapeli.dashdoc", { { "shift" }, "d" }, { "d" }, false },
   { "com.electron.postbird", { { "shift" }, "p" }, nil, false },
   { "com.1password.1password", "1", nil, false },
 }
@@ -348,6 +348,13 @@ LAYOUTS = {
       { "", 1, POSITIONS.halves.right },
     },
   },
+  ["com.softfever3d.orca-slicer"] = {
+    bundleID = "com.softfever3d.orca-slicer",
+    name = "OrcaSlicer",
+    rules = {
+      { "", 1, POSITIONS.full },
+    },
+  },
 }
 
 QUITTERS = {
@@ -393,7 +400,7 @@ DOCK = {
     vendorName = "ZMK Project",
   },
   docked = {
-    wifi = "off",
+    wifi = "on",
     input = "Samson GoMic",
     output = "bose",
   },

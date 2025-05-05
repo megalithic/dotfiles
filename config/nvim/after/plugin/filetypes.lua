@@ -4,6 +4,16 @@ local function abbr(text, replace, bufnr) vim.keymap.set("ia", text, replace, { 
 
 local ftplugin = require("mega.ftplugin")
 ftplugin.extend_all({
+  -- dbee = {
+  --   keys = {
+  --     { "n", "H", "^" },
+  --     { "n", "L", "$" },
+  --     -- map("n", "H", "^")
+  --     -- map("n", "L", "$")
+  --     -- map({ "v", "x" }, "L", "g_")
+  --     -- map("n", "0", "^")
+  --   },
+  -- },
   [{ "elixir", "eelixir" }] = {
     opt = {
       syntax = "OFF",
@@ -613,7 +623,7 @@ ftplugin.extend_all({
       })
     end,
   },
-  sql = {
+  [{ "sql", "dbee" }] = {
     opt = {
       tabstop = 2,
       shiftwidth = 2,
@@ -621,6 +631,7 @@ ftplugin.extend_all({
     },
     cmp = {
       sources = {
+        { name = "cmp-dbee" },
         { name = "vim-dadbod-completion" },
         { name = "buffer" },
       },

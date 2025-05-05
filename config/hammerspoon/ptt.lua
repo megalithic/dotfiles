@@ -11,7 +11,7 @@ obj.tmuxMode = ""
 obj.mic = hs.audiodevice.defaultInputDevice()
 obj.inputs = hs.audiodevice.allInputDevices()
 
-obj.defaultInputVolume = 65
+obj.defaultInputVolume = 55
 obj.pushed = false
 
 obj.icons = {

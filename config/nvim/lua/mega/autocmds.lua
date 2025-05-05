@@ -1,8 +1,27 @@
 local fmt = string.format
 local map = vim.keymap.set
+local uv = vim.uv or vim.loop
 
 local SETTINGS = require("mega.settings")
 local U = require("mega.utils")
+
+-- Function to check if a buffer is empty
+local function is_buffer_empty(bufnr)
+  local lines = vim.api.nvim_buf_line_count(bufnr)
+  return lines == 0
+end
+
+-- Function to close empty buffers
+local function close_empty_buffers()
+  local winid = vim.api.nvim_get_current_win()
+  local bufs = vim.api.nvim_list_bufs()
+  for _, bufnr in ipairs(bufs) do
+    if is_buffer_empty(bufnr) then vim.api.nvim_buf_delete(bufnr, { force = true }) end
+  end
+
+  -- Return to original window
+  vim.api.nvim_set_current_win(winid)
+end
 
 local M = {}
 
@@ -66,8 +85,86 @@ function M.augroup(name, commands)
   return id
 end
 
+local persist_buffer = function(bufnr)
+  bufnr = bufnr or vim.api.nvim_get_current_buf()
+  vim.fn.setbufvar(bufnr, "bufpersist", 1)
+end
+
+local close_unpersisted_buffers = function()
+  local curbufnr = vim.api.nvim_get_current_buf()
+  local buflist = vim.api.nvim_list_bufs()
+  for _, bufnr in ipairs(buflist) do
+    if vim.bo[bufnr].buflisted and bufnr ~= curbufnr and (vim.fn.getbufvar(bufnr, "bufpersist") ~= 1) then vim.cmd("bd " .. tostring(bufnr)) end
+  end
+end
+
 function M.apply()
   M.augroup("Startup", {
+    -- {
+    --   event = { "BufReadPost", "FocusGained", "BufNewFile" },
+    --   pattern = { "*" },
+    --   desc = "Auto-close unused buffers",
+    --   command = function(evt)
+    --     local closedBuffers = {}
+    --     vim
+    --       .iter(vim.api.nvim_list_bufs())
+    --       :filter(function(bufnr)
+    --         local valid = vim.api.nvim_buf_is_valid(bufnr)
+    --         local loaded = vim.api.nvim_buf_is_loaded(bufnr)
+    --         return valid and loaded
+    --       end)
+    --       :filter(function(bufnr)
+    --         local bufPath = vim.api.nvim_buf_get_name(bufnr)
+    --         local doesNotExist = uv.fs_stat(bufPath) == nil
+    --         local notSpecialBuffer = vim.bo[bufnr].buftype == ""
+    --         local notNewBuffer = bufPath ~= ""
+    --         return doesNotExist and notSpecialBuffer and notNewBuffer
+    --       end)
+    --       :each(function(bufnr)
+    --         local bufName = vim.fs.basename(vim.api.nvim_buf_get_name(bufnr))
+    --         table.insert(closedBuffers, bufName)
+    --         vim.api.nvim_buf_delete(bufnr, { force = true })
+    --       end)
+
+    --     if #closedBuffers == 0 then return end
+
+    --     if #closedBuffers == 1 then
+    --       vim.notify("Buffer closed: " .. closedBuffers[1])
+    --     else
+    --       local text = "- " .. table.concat(closedBuffers, "\n- ")
+    --       vim.notify("Buffers closed:\n" .. text)
+    --     end
+    --     -- local buffers = vim.api.nvim_list_bufs()
+    --     -- for _, bufnr in ipairs(buffers) do
+    --     --   if vim.api.nvim_buf_is_loaded(bufnr) and vim.api.nvim_buf_get_name(bufnr) == "" and vim.api.nvim_buf_get_option(bufnr, "buftype") == "" then
+    --     --     local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+    --     --     local total_characters = 0
+    --     --     for _, line in ipairs(lines) do
+    --     --       total_characters = total_characters + #line
+    --     --     end
+    --     --     if total_characters == 0 then vim.api.nvim_buf_delete(bufnr, { force = true }) end
+    --     --   end
+    --     -- end
+    --   end,
+    -- },
+    -- {
+    --   event = { "BufRead" },
+    --   pattern = { "*" },
+    --   desc = "Persists valid buffers",
+    --   command = function(evt)
+    --     vim.api.nvim_create_autocmd({ "InsertEnter", "BufModifiedSet" }, {
+    --       buffer = evt.buf,
+    --       once = true,
+    --       callback = function() persist_buffer(evt.buf) end,
+    --     })
+    --   end,
+    -- },
+    -- {
+    --   event = { "BufReadPost" },
+    --   pattern = { "*" },
+    --   desc = "Deletes invalid buffers",
+    --   command = function(evt) close_unpersisted_buffers() end,
+    -- },
     {
       event = { "VimEnter" },
       pattern = { "*" },
@@ -80,6 +177,7 @@ function M.apply()
 
         if
           not vim.g.started_by_firenvim
+          and (not vim.env.CUSTOM_NVIM and vim.env.CUSTOM_NVIM ~= 1)
           and (not vim.env.TMUX_POPUP and vim.env.TMUX_POPUP ~= 1)
           and not vim.tbl_contains({ "NeogitStatus" }, vim.bo[evt.buf].filetype)
         then
@@ -123,6 +221,8 @@ function M.apply()
               require("virt-column").update()
             end)
           end
+        else
+          -- close_empty_buffers()
         end
       end,
     },

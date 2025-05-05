@@ -416,6 +416,7 @@ M.list = function(default_capabilities, default_on_attach)
     --     },
     --   })
     -- end,
+    kotlin_language_server = {},
     markdown_oxide = function()
       if vim.g.note_taker ~= "markdown_oxide" then return nil end
 
@@ -517,7 +518,7 @@ M.list = function(default_capabilities, default_on_attach)
         return { fmt("%s/lsp/bin/nextls", vim.env.XDG_DATA_HOME), "--stdio" }
       end
 
-      local homebrew_enabled = false
+      local homebrew_enabled = true
 
       return {
         manual_install = true,
@@ -613,6 +614,23 @@ M.list = function(default_capabilities, default_on_attach)
     --   },
     -- },
     -- prosemd_lsp = function() return (vim.g.started_by_firenvim or vim.env.TMUX_POPUP) and nil or {} end,
+    postgres_lsp = {
+      manual_install = true,
+      capabilities = {
+        workspace = {
+          didChangeConfiguration = { dynamicRegistration = true },
+        },
+      },
+      cmd = { vim.env.XDG_DATA_HOME .. "/lsp/bin/postgrestools", "lsp-proxy" },
+      filetypes = { "sql", "dbee" },
+      single_file_support = true,
+      settings = {
+        db = {
+          username = vim.env.USER,
+          password = vim.env.USER,
+        },
+      },
+    },
     pyright = {
       single_file_support = false,
       settings = {
@@ -664,69 +682,97 @@ M.list = function(default_capabilities, default_on_attach)
         end,
       }
     end,
-    tailwindcss = {
-      init_options = {
-        userLanguages = {
-          eelixir = "phoenix-heex",
-          elixir = "phoenix-heex",
-          eruby = "erb",
-          heex = "phoenix-heex",
-          surface = "phoenix-heex",
+    tailwindcss = function()
+      return {
+        init_options = {
+          userLanguages = {
+            eelixir = "phoenix-heex",
+            elixir = "phoenix-heex",
+            eruby = "erb",
+            heex = "phoenix-heex",
+            surface = "phoenix-heex",
+          },
         },
-      },
-      settings = {
-        tailwindCSS = {
-          lint = {
-            cssConflict = "warning",
-            invalidApply = "error",
-            invalidConfigPath = "error",
-            invalidScreen = "error",
-            invalidTailwindDirective = "error",
-            invalidVariant = "error",
-            recommendedVariantOrder = "warning",
-          },
-          classAttributes = {
-            "class",
-            "className",
-            "classList",
-          },
-          experimental = {
-            classRegex = {
-              [[class= "([^"]*)]],
-              [[additional_classes= "([^"]*)]],
-              [[class: "([^"]*)]],
-              [[~H""".*class="([^"]*)".*"""]],
-              [[~H""".*additional_classes="([^"]*)".*"""]],
-              "~H\"\"\".*class=\"([^\"]*)\".*\"\"\"",
-              "~H\"\"\".*additional_classes=\"([^\"]*)\".*\"\"\"",
+        settings = {
+          tailwindCSS = {
+            lint = {
+              cssConflict = "warning",
+              invalidApply = "error",
+              invalidConfigPath = "error",
+              invalidScreen = "error",
+              invalidTailwindDirective = "error",
+              invalidVariant = "error",
+              recommendedVariantOrder = "warning",
             },
+            classAttributes = {
+              "class",
+              "className",
+              "classList",
+            },
+            experimental = {
+              classRegex = {
+                [[class= "([^"]*)]],
+                [[additional_classes= "([^"]*)]],
+                [[class: "([^"]*)]],
+                [[~H""".*class="([^"]*)".*"""]],
+                [[~H""".*additional_classes="([^"]*)".*"""]],
+                "~H\"\"\".*class=\"([^\"]*)\".*\"\"\"",
+                "~H\"\"\".*additional_classes=\"([^\"]*)\".*\"\"\"",
+              },
+            },
+            validate = true,
           },
-          validate = true,
         },
-      },
-      filetypes = {
-        "css",
-        "scss",
-        "sass",
-        "html",
-        "heex",
-        "elixir", -- this is causing a delay on bufenter for elixir files (white then coloured)
-        "javascript",
-        "javascriptreact",
-        "typescript",
-        "typescriptreact",
-      },
-      root_dir = root_pattern(
-        "./assets/tailwind.config.js",
-        "tailwind.config.js",
-        "tailwind.config.ts",
-        "postcss.config.js",
-        "postcss.config.ts",
-        "package.json",
-        "node_modules",
-        ".git"
-      ),
-    },
+        filetypes = {
+          "css",
+          "scss",
+          "sass",
+          "html",
+          "heex",
+          "elixir", -- this is causing a delay on bufenter for elixir files (white then coloured)
+          "javascript",
+          "javascriptreact",
+          "typescript",
+          "typescriptreact",
+        },
+        root_dir = function(fname)
+          local util = require("lspconfig.util")
+          local function insert_mix_exs(root_files, package_name, fname)
+            local path = vim.fn.fnamemodify(fname, ":h")
+            local root_with_mix = vim.fs.dirname(vim.fs.find("mix.lock", { path = path, upward = true })[1])
+
+            if root_with_mix then
+              -- only add mix.exs if it contains field parameter
+              for line in io.lines(root_with_mix .. "/" .. "mix.lock") do
+                if line:find(package_name) then
+                  root_files[#root_files + 1] = "mix.exs"
+                  break
+                end
+              end
+            end
+
+            return root_files
+          end
+
+          local root_markers = {
+            "apps/**/assets/tailwind.config.js",
+            "./assets/tailwind.config.js",
+            "./assets/tailwind.config.js",
+            "tailwind.config.js",
+            "tailwind.config.cjs",
+            "tailwind.config.mjs",
+            "tailwind.config.ts",
+            "postcss.config.js",
+            "postcss.config.cjs",
+            "postcss.config.mjs",
+            "postcss.config.ts",
+          }
+          root_markers = util.insert_package_json(root_markers, "tailwindcss", fname)
+          root_files = insert_mix_exs(root_markers, "tailwind", fname)
+          return util.root_pattern(unpack(root_files))(fname)
+        end,
+      }
+    end,
     teal_ls = {},
     terraformls = {},
     -- NOTE: presently enabled via typescript-tools

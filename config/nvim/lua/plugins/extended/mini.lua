@@ -1,5 +1,6 @@
 local SETTINGS = mega.req("mega.settings")
 return {
+  { "echasnovski/mini.jump", version = false, opts = {} },
   { "echasnovski/mini.icons", version = false },
   {
     "echasnovski/mini.comment",

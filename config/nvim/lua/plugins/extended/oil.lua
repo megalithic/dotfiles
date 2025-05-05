@@ -28,10 +28,10 @@ return {
     })
 
     require("oil").setup({
-      trash = false,
+      delete_to_trash = true,
       default_file_explorer = true,
       skip_confirm_for_simple_edits = true,
-      trash_command = "trash-cli",
+      -- trash_command = "trash-cli",
       prompt_save_on_select_new_entry = false,
       use_default_keymaps = false,
       is_always_hidden = function(name, _bufnr) return name == ".." end,

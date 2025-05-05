@@ -6,6 +6,8 @@ local fmt = string.format
 local levels = vim.log.levels
 local L = levels
 local SETTINGS = require("mega.settings")
+local get_node = vim.treesitter.get_node
+local cur_pos = vim.api.nvim_win_get_cursor
 
 local M = {
   hl = {},
@@ -144,6 +146,7 @@ local smallcaps_mappings = {
   alpha = {
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
     "ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘǫʀsᴛᴜᴠᴡxʏᴢ",
+    -- "ᴀ ʙ ᴄ ᴅ ᴇ ꜰ ɢ ʜ ɪ ᴊ ᴋ ʟ ᴍ ɴ ᴏ ᴘ ꞯ ʀ ꜱ ᴛ ᴜ ᴠ ᴡ x ʏ ᴢ"
   },
   symbols = {
     "‹›",
@@ -1053,6 +1056,26 @@ end
 function M.command(name, command, opts)
   opts = opts or {}
   vim.api.nvim_create_user_command(name, command, opts)
+end
+
+---An insert mode implementation of `vim.treesitter`'s `get_node`
+---@param opts table? Opts to be passed to `get_node`
+---@return TSNode node The node at the cursor
+local get_node_insert_mode = function(opts)
+  opts = opts or {}
+  local ins_curs = cur_pos(0)
+  ins_curs[1] = math.max(ins_curs[1] - 1, 0)
+  ins_curs[2] = math.max(ins_curs[2] - 1, 0)
+  opts.pos = ins_curs
+  return get_node(opts) --[[@as TSNode]]
+end
+
+---Whether or not the cursor is in a JSX-tag region
+---@param insert_mode boolean Whether or not the cursor is in insert mode
+---@return boolean
+function M.in_jsx_tags(insert_mode)
+  local current_node = insert_mode and get_node_insert_mode() or get_node()
+  return current_node and current_node:__has_ancestor({ "jsx_element" }) or false
 end
 
 return M

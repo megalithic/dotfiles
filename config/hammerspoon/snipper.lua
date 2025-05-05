@@ -5,6 +5,7 @@ local obj = {}
 obj.__index = obj
 obj.name = "snipper"
 obj.debug = true
+obj.env = "prod"
 obj.secrets = hs.settings.get("secrets")
 
 -- https://stackoverflow.com/questions/19326368/iterate-over-lines-including-blank-lines
@@ -14,22 +15,33 @@ local function magiclines(s)
 end
 
 local function get_api_url(env)
-  env = env and env or "dev"
+  env = env and env or obj.env
 
-  if obj.secrets["canonize"]["snippetsApiUrl"][env] then
-    return obj.secrets["canonize"]["snippetsApiUrl"][env]
+  if obj.secrets["canonize"]["bookmarksApiUrl"][env] then
+    return obj.secrets["canonize"]["bookmarksApiUrl"][env]
   else
-    warn("You need to set Canonize Snippets API URL under secrets.canonize.snippetsApiUrl." .. env)
+    warn("You need to set Canonize bookmarks API URL under secrets.canonize.bookmarksApiUrl." .. env)
   end
 end
 
-function obj.sendToCanonize(url, title, quote, tags)
-  local api_url = get_api_url()
+local function get_api_token(env)
+  env = env and env or obj.env
+
+  if obj.secrets["canonize"]["bookmarksApiToken"][env] then
+    return obj.secrets["canonize"]["bookmarksApiToken"][env]
+  else
+    warn("You need to set Canonize bookmarks API Token under secrets.canonize.bookmarksApiToken." .. env)
+  end
+end
+
+function obj.sendToCanonize(url, title, quote, tags, env)
+  local api_url = get_api_url(env)
+  local api_token = get_api_token(env)
 
   hs.http.asyncPost(
     api_url,
     hs.json.encode({
-      ["snippet"] = {
+      ["bookmark"] = {
         ["title"] = title,
         ["url"] = url,
         ["highlight"] = quote,
@@ -38,9 +50,11 @@ function obj.sendToCanonize(url, title, quote, tags)
     }),
     {
       ["Content-Type"] = "application/json; charset=UTF-8",
-      ["Authorization"] = "Bearer foo",
+      ["Authorization"] = "Bearer " .. api_token,
     },
     function(status, body, headers)
+      dbg({ status, url, title, quote, tags })
+
       if status == 200 or status == 201 then
         local response = hs.json.decode(body)
         success(response)
@@ -53,21 +67,25 @@ function obj.sendToCanonize(url, title, quote, tags)
   )
 end
 
-local function copyToClipboard(app)
-  if app:bundleID() == "com.mitchellh.ghostty" then
-    hs.eventtap.keyStroke("", "y")
-  else
-    hs.eventtap.keyStroke("command", "c")
-  end
+function obj.getSelectedText()
+  local element = hs.uielement.focusedElement()
+  local selection
+
+  if element then selection = element:selectedText() end
+
+  return selection
 end
 
 function obj:init(opts)
   opts = opts or {}
 
-  req("hyper", { id = self.name }):start():bind({ "shift" }, "s", nil, function()
-    local tags = "snippets"
+  local function snip(env)
+    env = env or obj.env
+    local tags = "bookmark"
     local words = {}
     local quote = ""
+    local textStart = nil
+    local textEnd = nil
     local highlight = nil
 
     local browser = hs.application.get(BROWSER)
@@ -77,24 +95,23 @@ function obj:init(opts)
     local win = hs.window.focusedWindow()
     local title = is_browser_active and win:title():gsub("- Brave Canary", "") or win:title()
 
-    print(is_browser_active)
-    print(title)
-
     -- get the highlighted item
-    -- hs.pasteboard.clearContents()
-    hs.eventtap.keyStroke("command", "c")
-    -- copyToClipboard(frontMostApp)
+    -- hs.eventtap.keyStroke("command", "c")
+    -- highlight = hs.pasteboard.readString()
 
-    highlight = hs.pasteboard.readString()
-    print(highlight)
+    highlight = obj.getSelectedText()
+
+    -- local _, url = hs.osascript.javascript(
+    --   "window.getSelection()"
+    -- )
 
     if highlight ~= nil then
       for word in string.gmatch(highlight, "([^%s]+)") do
         table.insert(words, word)
       end
 
-      -- local textStart = hs.http.encodeForQuery(words[1] .. " " .. words[2])
-      -- local textEnd = hs.http.encodeForQuery(words[#words - 1] .. " " .. words[#words])
+      -- textStart = hs.http.encodeForQuery(words[1] .. " " .. words[2])
+      -- textEnd = hs.http.encodeForQuery(words[#words - 1] .. " " .. words[#words])
 
       for line in magiclines(highlight) do
         quote = quote .. " " .. line .. "\n"
@@ -108,15 +125,18 @@ function obj:init(opts)
         "tell application \"" .. browser:name() .. "\" to return URL of active tab of front window"
       )
       url = url:gsub("?utm_source=.*", "")
-      tags = tags .. ",bookmark"
 
-      print(url)
+      -- local template = string.format([[%s%s [%s](%s#:~:text=%s,%s)]], title, quote, title, url, textStart, textEnd)
+      -- dbg(template, true)
 
-      obj.sendToCanonize(url, title, quote, tags)
+      obj.sendToCanonize(url, title, quote, tags, env)
     else
-      obj.sendToCanonize("", title, quote, tags)
+      obj.sendToCanonize("", title, quote, tags, env)
     end
-  end)
+  end
+
+  req("hyper", { id = self.name }):start():bind({ "shift" }, "s", nil, function() snip("prod") end)
+  req("hyper", { id = self.name }):start():bind({ "ctrl" }, "s", nil, function() snip("dev") end)
 
   info(string.format("[INIT] bindings.%s", self.name))
 end

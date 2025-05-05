@@ -21,6 +21,8 @@ function obj.targetDisplay(hint)
 end
 
 obj.tile = function()
+  -- local wf = hs.window.filter.default:getWindows(hs.window.filter.sortByFocusedLast)
+  -- local windows = enum.map(wf, function(win)
   local windows = enum.map(hs.window.orderedWindows(), function(win)
     -- local windows = enum.map(hs.window.filter.default:getWindows(), function(win)
     -- local windows = enum.map(hs.window.filter.new():getWindows(), function(win)

@@ -37,7 +37,7 @@ autoload -U promptinit && promptinit # Enable prompt themes
 prompt megalithic                    # Set prompt
 
 # -- scripts/libs/etc
-for file in $ZLIB/{nix,keybindings,opts,aliases,funcs,ssh,tmux,kitty,gpg}.zsh; do
+for file in $ZLIB/{keybindings,opts,aliases,funcs,ssh,tmux,kitty,gpg}.zsh; do
   # for funcs: https://github.com/akinsho/dotfiles/commit/01816d72160e96921e2af9bc3f1c52be7d1f1502
   [[ -r "$file" && -f "$file" ]] && source "$file"
 done
@@ -47,19 +47,13 @@ if exists zoxide; then
   eval "$(zoxide init zsh)"
 fi
 
-# NOTE: https://github.com/jdxcode/rtx#rtx-activate
-zsh_add_file "lib/mise.zsh"
-
-# NOTE: http://asdf-vm.com/learn-more/faq.html#shell-not-detecting-newly-installed-shims
-# FIXME: some libs (elixir-ls, lulwat?) still require this
-# zsh_add_file "lib/asdf.zsh"
-
-# deprecated work-related things
-[[ -n "$DESK_ENV" ]] && source "$DESK_ENV" || true
-
 # fzf just desparately wants this here
 [[ -f ~/.fzf.zsh ]] && source ~/.fzf.zsh
 zsh_add_file "lib/fzf.zsh"
+
+# NOTE: https://github.com/jdxcode/rtx#rtx-activate
+zsh_add_file "lib/mise.zsh"
+zsh_add_file "lib/nix.zsh"
 
 # replaces ctrl_r keybinding for faster, more robust history search
 # zsh_add_file "lib/mcfly.zsh"

@@ -82,15 +82,14 @@ brew "diff-so-fancy"
 brew "difftastic"
 brew "dnsmasq"
 brew "dockutil" if OS.mac?
+brew "docker-compose"
 # USE DOCKER CASK FOR MUCH EASE!
 # brew "docker"
-# brew "docker-compose"
 # brew "docker-credential-helper-ecr"
 # brew "docker-machine" # , restart_service: true, link: false
 
 brew "duck" # cli for cyberduck
 brew "federico-terzi/espanso/espanso" if OS.mac?
-brew "exa"
 brew "eza"
 brew "exercism" if OS.mac?
 brew "fasd"
@@ -98,10 +97,11 @@ brew "fd"
 brew "ffind"
 brew "findutils"
 brew "fswatch"
-brew "superfly/tap/flyctl"
+brew "flyctl"
+# brew "superfly/tap/flyctl"
 brew "fontforge" if OS.mac?
 brew "fop" # used for asdf erlang
-brew "fx"  # jq but better
+# brew "fx"  # jq but better FIXME: requires node, boo
 brew "fzf" # -> $(brew --prefix)/opt/fzf/install
 brew "gawk"
 brew "gdb"
@@ -169,6 +169,7 @@ brew "pandoc"
 brew "perl"
 brew "pgcli"
 brew 'pgformatter' # format postgres sql files
+brew "pianobar"
 brew "pkg-config"
 brew "pigz"
 brew "pinentry-mac" if OS.mac?
@@ -237,6 +238,7 @@ brew "xclip" if OS.linux?
 brew "vivid"
 brew "vim"
 brew "viu" # used with fzf-lua for image rendering
+brew "vizidata"
 brew "jannis-baum/tap/vivify"
 brew "ykman"
 brew "yubikey-personalization" if OS.mac?

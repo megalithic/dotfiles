@@ -92,8 +92,8 @@ req("hyper", { id = "meeting" }):start():bind({}, "z", nil, function()
     )
 
     if targetWin ~= nil then targetWin:focus() end
-  elseif req("browser").hasTab("meet.google.com|hangouts.google.com.call") then
-    req("browser").jump("meet.google.com|hangouts.google.com.call")
+  elseif req("browser").hasTab("meet.google.com|hangouts.google.com.call|www.valant.io|telehealth.px.athena.io") then
+    req("browser").jump("meet.google.com|hangouts.google.com.call|www.valant.io|telehealth.px.athena.io")
   else
     info(fmt("%s: no meeting targets to focus", "bindings.hyper.meeting"))
 
@@ -300,6 +300,10 @@ wmModality
     -- resizes to a small console window at the top middle
 
     wmModality:exit()
+  end)
+  :bind({}, "b", function()
+    local wip = require("wip")
+    wip.bowser()
   end)
 -- :bind({}, "b", function()
 --   hs.timer.doAfter(5, function()

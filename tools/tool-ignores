@@ -59,7 +59,9 @@ erl_crash.dump
 **/android
 **/priv/static/assets/*.js
 **/priv/static/assets/*.css
-**/priv/etc/**/*.sql
+**/priv/**/*.sql
+**/priv/**/*.bak
+**/*.bak
 **/.obsidian
 .obsidian
 

@@ -6,7 +6,8 @@ return {
   -- },
   { -- use LSP as folding provider
     "kevinhwang91/nvim-ufo",
-    cond = vim.o.foldlevel > 0 and vim.o.foldmethod ~= "manual",
+    -- cond = vim.o.foldlevel > 0 and vim.o.foldmethod ~= "manual",
+    enabled = false,
     dependencies = "kevinhwang91/promise-async",
     event = "UIEnter", -- needed for folds to load in time and comments being closed
     keys = {

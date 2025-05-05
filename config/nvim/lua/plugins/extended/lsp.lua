@@ -75,6 +75,22 @@ return {
         vim.diagnostic["goto_" .. dir]({ float = true })
       end
 
+      local function jump_to_location(location)
+        local uri = location.uri or location.targetUri
+        if uri == nil then return end
+        local bufnr = vim.uri_to_bufnr(uri)
+
+        if vim.api.nvim_buf_is_loaded(bufnr) then
+          local wins = vim.fn.win_findbuf(bufnr)
+          if wins then vim.fn.win_gotoid(wins[1]) end
+        end
+
+        if vim.lsp.util.jump_to_location(location, "utf-8", true) then
+          vim.cmd("normal! zz")
+          mega.blink_cursorline(175)
+        end
+      end
+
       local function go_to_unique_definition()
         vim.lsp.buf_request(0, "textDocument/definition", vim.lsp.util.make_position_params(), function(_, result, _, _)
           if not result or vim.tbl_isempty(result) then
@@ -189,7 +205,7 @@ return {
           end
         end
 
-        if client and client.supports_method("textDocument/inlayHint", { bufnr = bufnr }) then
+        if client and client:supports_method("textDocument/inlayHint", { bufnr = bufnr }) then
           if SETTINGS.enabled_inlay_hints[filetype] then vim.lsp.inlay_hint.enable(true) end
         end
 
@@ -197,6 +213,8 @@ return {
         local diagnostic_handler = vim.lsp.handlers[methods.textDocument_publishDiagnostics]
         vim.lsp.handlers[methods.textDocument_publishDiagnostics] = function(err, result, ctx, config)
           local client_name = vim.lsp.get_client_by_id(ctx.client_id).name
+
+          if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then return end
 
           local fname = vim.api.nvim_buf_get_name(bufnr)
           local fext = fname:match("%.[^.]+$")
@@ -341,51 +359,68 @@ return {
         nmap("gq", function() vim.cmd("Trouble diagnostics toggle focus=true filter.buf=0") end, "[g]oto [q]uickfixlist buffer diagnostics (trouble)")
         nmap("gQ", function() vim.cmd("Trouble diagnostics toggle focus=true") end, "[g]oto [q]uickfixlist global diagnostics (trouble)")
 
+        if client:supports_method(methods.textDocument_definition) then
+          nmap("gd", function() require("fzf-lua").lsp_definitions({ jump1 = true }) end, "Go to definition")
+          nmap("gD", function() require("fzf-lua").lsp_definitions({ jump1 = false }) end, "Peek definition")
+        end
+
+        if client:supports_method(methods.textDocument_signatureHelp) then
+          local blink_window = require("blink.cmp.completion.windows.menu")
+          local blink = require("blink.cmp")
+
+          imap("<C-k>", function()
+            -- Close the completion menu first (if open).
+            if blink_window.win:is_open() then blink.hide() end
+
+            vim.lsp.buf.signature_help()
+          end, "Signature help")
+        end
         -- map("gd", function() require("telescope.builtin").lsp_definitions() end, "[g]oto [d]efinition")
         -- map("gd", require("telescope.builtin").lsp_definitions, "[g]oto [d]efinition")
         -- map("gd", function() vim.lsp.buf.definition({ on_list = choose_list_first }) end, "[g]oto [d]efinition")
         -- map("gd", vim.lsp.buf.definition, "[g]oto [d]efinition")
         -- nmap("gd", go_to_unique_definition, "[g]oto [d]efinition")
-        nmap("gd", function()
-          vim.lsp.buf.definition({ on_list = choose_list_first })
-          vim.schedule(function()
-            vim.cmd.norm("zz")
-            mega.blink_cursorline(175)
-          end)
-        end, "[g]oto [d]efinition")
-        nmap("gD", function()
-          -- vim.schedule(function()
-          --   vim.cmd("vsplit | lua vim.lsp.buf.definition()")
-          --   vim.cmd("norm zz")
-          -- end)
+        -- nmap("gd", function()
+        --   vim.lsp.buf.definition({ on_list = choose_list_first })
+        --   vim.schedule(function()
+        --     vim.cmd.norm("zz")
+        --     mega.blink_cursorline(175)
+        --   end)
+        -- end, "[g]oto [d]efinition")
+        -- nmap("gD", function()
+        --   -- vim.schedule(function()
+        --   --   vim.cmd("vsplit | lua vim.lsp.buf.definition()")
+        --   --   vim.cmd("norm zz")
+        --   -- end)
 
-          -- vim.cmd.split({ mods = { vertical = true, split = "botright" } })
-          -- vim.defer_fn(function()
-          --   vim.lsp.buf.definition({ on_list = choose_list_first, reuse_win = false })
-          --   -- vim.cmd.FzfLua("lsp_definitions")
-          --   -- go_to_unique_definition()
+        --   -- vim.cmd.split({ mods = { vertical = true, split = "botright" } })
+        --   -- vim.defer_fn(function()
+        --   --   vim.lsp.buf.definition({ on_list = choose_list_first, reuse_win = false })
+        --   --   -- vim.cmd.FzfLua("lsp_definitions")
+        --   --   -- go_to_unique_definition()
 
-          -- end, 700)
+        --   -- end, 700)
 
-          require("fzf-lua").lsp_definitions({
-            sync = true,
-            jump_to_single_result = true,
-            jump_to_single_result_action = require("fzf-lua.actions").file_vsplit,
-          })
-        end, "[g]oto [d]efinition (split)")
+        --   require("fzf-lua").lsp_definitions({
+        --     sync = true,
+        --     jump_to_single_result = true,
+        --     jump_to_single_result_action = require("fzf-lua.actions").file_vsplit,
+        --   })
+        -- end, "[g]oto [d]efinition (split)")
         -- map("gr", function() vim.cmd.Trouble("lsp_references focus=true") end, "[g]oto [r]eferences")
         -- map("gr", function() vim.cmd.FzfLua("lsp_references") end, "[g]oto [r]eferences")
         nmap("gr", function()
           if not SETTINGS.references_exclusions or not vim.tbl_contains(SETTINGS.references_exclusions, client.name) then
-            require("telescope.builtin").lsp_references()
-            -- require("fzf-lua").lsp_references({
-            --   include_declaration = false,
-            --   ignore_current_line = true,
-            -- })
+            -- require("telescope.builtin").lsp_references()
+            require("fzf-lua").lsp_references({
+              include_declaration = false,
+              ignore_current_line = true,
+            })
           end
         end, "[g]oto [r]eferences")
         nmap("gI", require("telescope.builtin").lsp_implementations, "[g]oto [i]mplementation")
         nmap("<leader>ltd", require("telescope.builtin").lsp_type_definitions, "[t]ype [d]efinition")
+        nmap("\\dS", require("telescope.builtin").lsp_document_symbols, "[d]ocument [s]ymbols")
         nmap("<leader>lsd", require("telescope.builtin").lsp_document_symbols, "[d]ocument [s]ymbols")
         nmap("<leader>lsw", require("telescope.builtin").lsp_dynamic_workspace_symbols, "[w]orkspace [s]ymbols")
         vnmap("g.", function() fix_current_action() end, "[g]o run nearest/current code action")
@@ -394,7 +429,7 @@ return {
         nmap("ga", function() vim.cmd.FzfLua("lsp_code_actions") end, "[g]o [c]ode [a]ctions")
         -- nmap("K", vim.lsp.buf.hover, "hover documentation")
 
-        if client.supports_method(methods.textDocument_signatureHelp) then
+        if client:supports_method(methods.textDocument_signatureHelp) then
           if client and client.server_capabilities.signatureHelpProvider and vim.g.completer == "cmp" then
             require("lsp-overloads").setup(client, {
               -- UI options are mostly the same as those passed to vim.lsp.util.open_floating_preview
@@ -830,6 +865,9 @@ return {
           --   wrap = true,
           -- },
           severity_sort = true,
+          -- virtual_lines = {
+          --   current_line = true,
+          -- },
           virtual_text = false,
           -- virtual_text = {
           --   spacing = 2,
@@ -1020,18 +1058,14 @@ return {
       servers.load_unofficial()
 
       require("mason").setup()
-      require("mason-lspconfig").setup()
 
-      local ensure_installed = {
-        "black",
-        "eslint_d",
-        "isort",
-        "prettier",
-        "prettierd",
-        "ruff",
-        "stylua",
-        "nixpkgs-fmt",
+      local ensure_servers_installed = {
+        -- "postgres_lsp",
+        -- "tailwindcss@0.12.18",
+        -- "lua_ls",
+        -- "tailwindcss-language-server@0.0.27",
       }
+      require("mason-lspconfig").setup({ ensure_installed = ensure_servers_installed, automatic_installation = false })
 
       local servers_to_install = vim.tbl_filter(function(key)
         local s = server_list[key]
@@ -1044,9 +1078,22 @@ return {
           return s
         end
       end, vim.tbl_keys(server_list))
-      vim.list_extend(ensure_installed, servers_to_install)
+      vim.list_extend(ensure_servers_installed, servers_to_install)
 
-      require("mason-tool-installer").setup({ ensure_installed = ensure_installed })
+      local ensure_tools_installed = {
+        "black",
+        "eslint_d",
+        "isort",
+        "prettier",
+        "prettierd",
+        "ruff",
+        "stylua",
+        "nixpkgs-fmt",
+        -- "tailwindcss-language-server@0.12.18",
+        -- "tailwindcss-language-server@0.0.27",
+      }
+
+      require("mason-tool-installer").setup({ ensure_installed = ensure_tools_installed })
 
       function M.get_config(name)
         local config = name and server_list[name] or {}
@@ -1071,6 +1118,7 @@ return {
         local cfg = M.get_config(server_name)
         if cfg == nil then return end
         lspconfig[server_name].setup(cfg)
+        -- vim.lsp.config(server_name, cfg)
       end)
 
       -- local ok_ex, elixir = pcall(require, "elixir")

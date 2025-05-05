@@ -60,7 +60,6 @@ local dotfiles_path = vim.env.DOTS or vim.fn.expand("~/.dotfiles")
 local hammerspoon_path = fmt("%s/config/hammerspoon", dotfiles_path)
 
 --- @class Settings
---- @field enabled_elixir_ls {"elixirls"|"nextls"|"lexical"}
 local M = {
   -- NOTE: char options (https://unicodeplus.com/): ┊│┆ ┊  ▎││ ▏▏│¦┆┊
   indent_scope_char = "│",
@@ -108,7 +107,7 @@ local M = {
   },
   enabled_inlay_hints = {},
   disabled_lsp_formatters = { "tailwindcss", "html", "ts_ls", "ls_emmet", "zk", "sumneko_lua" },
-  enabled_elixir_ls = { "", "", "lexical" },
+  enabled_elixir_ls = { "", "", "lexical" }, -- opts: {"elixirls", "nextls", "lexical"}
   completion_exclusions = {},
   formatter_exclusions = {},
   definition_exclusions = {},
@@ -442,6 +441,7 @@ M.apply = function()
     o = {
       cmdwinheight = 7,
       cmdheight = 1,
+      -- winborder = BORDER_STYLE,
       diffopt = "internal,filler,closeoff,linematch:60",
       linebreak = true, -- lines wrap at words rather than random characters
       splitbelow = true,
@@ -453,6 +453,7 @@ M.apply = function()
       undofile = true,
       virtualedit = "block",
       wrapscan = true,
+      redrawtime = 4000,
       -- foldcolumn = "1",
       -- foldlevel = 99,
       -- vim.opt.foldlevelstart = 99

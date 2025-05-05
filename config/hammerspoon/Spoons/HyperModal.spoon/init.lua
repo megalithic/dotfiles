@@ -41,29 +41,33 @@ function obj.toggleIndicator(win, terminate)
 end
 
 function obj:entered()
-  local win = hs.window.focusedWindow()
-
-  if win ~= nil then
-    obj.isOpen = true
-    obj.toggleIndicator(win)
-    obj.alertUuids = hs.fnutils.map(hs.screen.allScreens(), function(screen)
-      if screen == hs.screen.mainScreen() then
-        local app_title = win:application():title()
-        local image = hs.image.imageFromAppBundle(win:application():bundleID())
-        local prompt = fmt("◱ : %s", app_title)
-
-        obj:delayedExit()
-        if image ~= nil then
-          prompt = fmt(": %s", app_title)
-
-          return hs.alert.showWithImage(prompt, image, nil, screen)
-        end
-
-        return hs.alert.show(prompt, hs.alert.defaultStyle, screen, true)
-      end
-    end)
+  if obj.custom_on_entered ~= nil and type(obj.custom_on_entered) == "function" then
+    obj.custom_on_entered(obj.isOpen)
   else
-    obj:exit()
+    local win = hs.window.focusedWindow()
+
+    if win ~= nil then
+      obj.isOpen = true
+      obj.toggleIndicator(win)
+      obj.alertUuids = hs.fnutils.map(hs.screen.allScreens(), function(screen)
+        if screen == hs.screen.mainScreen() then
+          local app_title = win:application():title()
+          local image = hs.image.imageFromAppBundle(win:application():bundleID())
+          local prompt = fmt("◱ : %s", app_title)
+
+          obj:delayedExit()
+          if image ~= nil then
+            prompt = fmt(": %s", app_title)
+
+            return hs.alert.showWithImage(prompt, image, nil, screen)
+          end
+
+          return hs.alert.show(prompt, hs.alert.defaultStyle, screen, true)
+        end
+      end)
+    else
+      obj:exit()
+    end
   end
 
   return self
@@ -84,7 +88,11 @@ end
 
 function obj:exited()
   obj.isOpen = false
-  hs.fnutils.ieach(obj.alertUuids, function(uuid) hs.alert.closeSpecific(uuid) end)
+  if obj.alertUuids ~= nil then
+    hs.fnutils.ieach(obj.alertUuids, function(uuid)
+      if uuid ~= nil then hs.alert.closeSpecific(uuid) end
+    end)
+  end
   obj.toggleIndicator(nil, true)
 
   if obj.delayedExitTimer ~= nil then
@@ -105,8 +113,9 @@ function obj:toggle()
   return self
 end
 
-function obj:start()
+function obj:start(on_entered)
   hs.window.animationDuration = 0
+  obj.custom_on_entered = on_entered
 
   -- provide alternate escapes
   obj:bind("ctrl", "[", function() obj:exit() end):bind("", "escape", function() obj:exit() end)

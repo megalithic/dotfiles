@@ -10,7 +10,7 @@ obj.modal = false
 obj.actions = {}
 obj.onOpenOccurred = false
 
-function obj.browserTabWatcher(_event, metadata)
+function obj.browserTabWatcher(event, metadata)
   if metadata ~= nil and metadata.url ~= nil then
     local onOpen = metadata["onOpen"] or nil
     local onClose = metadata["onClose"] or nil
@@ -24,9 +24,11 @@ function obj.browserTabWatcher(_event, metadata)
         end
       end
 
+      dbg(req("utils").eventString(event))
+
       -- hacky way of detecting when the tab is closed
       hs.timer.waitUntil(
-        -- function() return browser.tabCount() == metadata.tabCount and not browser.hasTab(metadata.url) end,
+        -- function() return browser.tabCount() < metadata.tabCount and not browser.hasTab(metadata.url) end,
         function() return not browser.hasTab(metadata.url) end,
         function()
           if onClose ~= nil then
@@ -50,15 +52,12 @@ function obj:start(opts)
   -- - add ability to track the opening of specific tabs, as well as closing.
   --
   if
-    enum.contains(
-      {
-        hs.application.watcher.deactivated,
-        hs.application.watcher.activated,
-        hs.uielement.watcher.applicationActivated,
-        hs.application.watcher.launched,
-      },
-      event
-    )
+    enum.contains({
+      hs.application.watcher.deactivated,
+      hs.application.watcher.activated,
+      hs.uielement.watcher.applicationActivated,
+      hs.application.watcher.launched,
+    }, event)
   then
     if obj.modal then obj.modal:enter() end
   end

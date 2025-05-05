@@ -194,9 +194,9 @@ if type nvim >/dev/null 2>&1; then
   alias vi="/usr/local/bin/vim"
   alias novim="nvim -u NONE"
   alias barevim="nvim -u NONE"
-  alias ngit="nvim -c \":bd|:Neogit kind=replace\""
-  alias ndiff="nvim -c \":bd|:DiffviewOpen\""
-  alias ndb="nvim -c \":bd|:DBUI\""
+  alias ngit="CUSTOM_NVIM=1 nvim -c \":Neogit kind=replace\""
+  alias ndiff="CUSTOM_NVIM=1 nvim -c \":DiffviewOpen\""
+  alias ndb="CUSTOM_NVIM=1 nvim -c \":Dbee toggle\""
 
   # suffix aliases set the program type to use to open a particular file with an extension
   alias -s {js,html,js,ts,css,md}=nvim
@@ -508,6 +508,7 @@ alias b="m1ddc set luminance"
 alias gpt="chatgpt-cli -k $OPENAI_API_KEY chat"
 
 alias fkill="ps -e | fzf | awk '{print $1}' | xargs kill"
+alias ms="m s"
 
 # FUNCTIONS
 # ------------------------------------------------------------------------------

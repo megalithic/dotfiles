@@ -1,6 +1,6 @@
 [settings]
 # whether to prompt to install plugins and runtimes if they're not already installed
-missing_runtime_behavior = 'autoinstall' # other options: 'ignore', 'warn', 'prompt', 'autoinstall'
+# missing_runtime_behavior = 'autoinstall' # other options: 'ignore', 'warn', 'prompt', 'autoinstall'
 
 # plugins can read the versions files used by other version managers (if enabled by the plugin)
 # for example, .nvmrc in the case of nodejs's nvm
@@ -23,7 +23,7 @@ shorthands_file = '~/.config/mise/shorthands.toml' # path to the shorthands file
 disable_default_shorthands = false # disable the default shorthands, see `RTX_DISABLE_DEFAULT_SHORTHANDS`
 
 experimental = false # enable experimental features such as shims
-shims_dir = '~/.local/share/mise/shims' # [experimental] directory where shims are stored
+# shims_dir = '~/.local/share/mise/shims' # [experimental] directory where shims are stored
 
 [alias.nodejs]
 my_custom_node = '18'  # makes `rtx install nodejs@my_custom_node` install node-18.x

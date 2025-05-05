@@ -283,7 +283,7 @@ local exception_types = {
       -- local shell = fnamemodify(vim.env.SHELL, ":t")
       -- local parts = vim.split(fname, " ")
       -- dd(parts)
-      return seg(fmt("Oil %s", vim.fn.expand("%:p")))
+      return seg(fmt("%s", vim.fn.expand("%:p")))
     end,
     toggleterm = function(_, bufnr)
       local shell = fnamemodify(vim.env.SHELL, ":t")
@@ -412,7 +412,7 @@ local function get_lsp_status(messages)
   else
     return seg(messages, "StLspMessages", { margin = { 1, 1 } })
   end
-  return seg(messages, "StBrightItalic", { margin = { 1, 1 } })
+  -- return seg(messages, "StBrightItalic", { margin = { 1, 1 } })
 end
 
 local function parse_filename(truncate_at)

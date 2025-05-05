@@ -521,7 +521,10 @@ function _prompt_deskfile_loaded() {
 }
 
 function _prompt_nix_shell_loaded() {
-  [[ -n $IN_NIX_SHELL ]] && echo "%F{243}[%f%F{#ffffff}$NIX_SHELL_ICON%f %F{245}$NIX_PROJECT%f%F{243}]%f"
+  if [[ -n $IN_NIX_SHELL ]]; then
+    # [[ $+commands[mise] ]] && mise deactivate
+    echo "%F{243}[%f%F{#ffffff}$NIX_SHELL_ICON%f %F{245}$NIX_PROJECT%f%F{243}]%f"
+  fi
 }
 
 function _prompt_sudo() {

@@ -42,7 +42,7 @@ req("ptt"):start({ mode = "push-to-talk" })
 req("quitter"):start({ mode = "double" })
 
 -- experimental/wip modules and stuff..
--- req("wip")
+req("wip")
 
 hs.shutdownCallback = function() req("watchers"):stop(watchers) end
 

@@ -193,11 +193,11 @@ case "$(uname)" in
     export ZK_NOTEBOOK_DIR="${ICLOUD_DOCUMENTS_DIR}/_zk"
     export ZK_CONFIG_DIR="${XDG_CONFIG_HOME}/zk"
 
-    export HOMEBREW_NO_ANALYTICS=1
     export HOMEBREW_CASK_OPTS="--appdir=/Applications"
-    export HOMEBREW_NO_INSTALL_CLEANUP=TRUE
-    export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=FALSE
-    # export HOMEBREW_NO_INSTALL_FROM_API=0
+    export HOMEBREW_NO_ANALYTICS=1
+    export HOMEBREW_NO_INSTALL_CLEANUP=1
+    export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=
+    # export HOMEBREW_NO_INSTALL_FROM_API=
 
     if which gh >/dev/null; then
       export HOMEBREW_GITHUB_API_TOKEN="$(gh auth token &>/dev/null)"
@@ -309,6 +309,9 @@ case "$(uname)" in
   export CURL_CA_BUNDLE=''
 
   export ABDUCO_CMD="echo 'abduco started'"
+
+  # FOR EXLA / elixir / NX
+  # export CPLUS_INCLUDE_PATH="/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1"
 
   #
   # yubikey

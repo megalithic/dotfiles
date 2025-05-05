@@ -139,7 +139,7 @@ return {
           delete = { text = "🢒" },
         },
       },
-      current_line_blame = not vim.fn.getcwd():match("dotfiles"),
+      current_line_blame = not vim.fn.getcwd():match("dotfiles") and not vim.fn.getcwd():match("canonize"),
       current_line_blame_formatter = " <author>, <author_time> · <summary>",
       current_line_blame_opts = {
         virt_text = true,
@@ -373,6 +373,7 @@ return {
   },
   {
     "akinsho/git-conflict.nvim",
+    tag = "v2.1.0",
     event = { "BufReadPre", "BufWritePre" },
     config = function()
       require("git-conflict").setup({
