@@ -377,7 +377,7 @@ return {
     event = { "BufReadPre", "BufWritePre" },
     config = function()
       require("git-conflict").setup({
-        disable_diagnostics = true,
+        -- disable_diagnostics = false,
         list_opener = "copen", -- command or function to open the conflicts list
       })
 
@@ -412,7 +412,7 @@ return {
           pattern = { "GitConflictResolved" },
           command = function(args)
             vim.defer_fn(function()
-              vim.diagnostic.enable(args.buf)
+              vim.diagnostic.enable(true, { bufnr = args.buf })
               vim.cmd("LspStart")
               vim.g.git_conflict_detected = false
 

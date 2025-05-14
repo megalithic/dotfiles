@@ -121,6 +121,9 @@
       force: true
       path: config/borders
       if: "[ `uname` = Darwin ]"
+    ~/.config/exercism:
+      force: true
+      path: config/exercism
     ~/.config/karabiner:
       force: true
       path: config/karabiner
