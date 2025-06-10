@@ -1,4 +1,4 @@
-if mega and vim.tbl_contains(mega.enabled_plugins, "lsp") then return {} end
+if Plugin_enabled("lsp") then return {} end
 
 local U = require("mega.utils")
 local SETTINGS = require("mega.settings")

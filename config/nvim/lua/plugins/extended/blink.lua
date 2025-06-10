@@ -312,6 +312,7 @@ return {
               auto_insert = true,
             },
           },
+          -- trigger = { show_on_insert_on_trigger_character = true },
           accept = {
             auto_brackets = {
               -- Whether to auto-insert brackets for functions

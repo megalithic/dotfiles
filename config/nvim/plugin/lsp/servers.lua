@@ -25,6 +25,7 @@ return {
         shellcheckPath = "", -- disable while using efm
         shellcheckArguments = "--shell=bash", -- PENDING https://github.com/bash-lsp/bash-language-server/issues/1064
         shfmt = { spaceRedirects = true },
+        globPattern = "*@(.sh|.inc|.bash|.command|.zsh|zshrc|zsh_*)",
       },
     },
   },
@@ -307,6 +308,12 @@ return {
             setType = true,
           },
           diagnostics = {
+            disable = {
+              "missing-parameter",
+              "return-type-mismatch",
+              "undefined-global",
+              "need-check-nil",
+            },
             globals = {
               "packer_plugins",
               "Color",
@@ -346,6 +353,10 @@ return {
               "xmap",
               "xnoremap",
               "Snacks",
+              "P",
+              "L",
+              "H",
+              "U",
             },
             -- groupSeverity = {
             --   strong = "Warning",
@@ -374,7 +385,7 @@ return {
           },
           misc = {
             parameters = {
-              "--log-level=trace",
+              "--log-level=error",
             },
           },
           workspace = {
@@ -766,132 +777,148 @@ return {
   --   root_markers = { ".git" },
   -- },
 
-  tailwindcss = {
-    cmd = { "tailwindcss-language-server", "--stdio" },
-    -- filetypes copied and adjusted from tailwindcss-intellisense
-    filetypes = {
-      -- html
-      "aspnetcorerazor",
-      "astro",
-      "astro-markdown",
-      "blade",
-      "clojure",
-      "django-html",
-      "htmldjango",
-      "edge",
-      "eelixir", -- vim ft
-      "elixir",
-      "ejs",
-      "erb",
-      "eruby", -- vim ft
-      "gohtml",
-      "gohtmltmpl",
-      "haml",
-      "handlebars",
-      "hbs",
-      "html",
-      "htmlangular",
-      "html-eex",
-      "heex",
-      "jade",
-      "leaf",
-      "liquid",
-      "markdown",
-      "mdx",
-      "mustache",
-      "njk",
-      "nunjucks",
-      "php",
-      "razor",
-      "slim",
-      "twig",
-      -- css
-      "css",
-      "less",
-      "postcss",
-      "sass",
-      "scss",
-      "stylus",
-      "sugarss",
-      -- js
-      "javascript",
-      "javascriptreact",
-      "reason",
-      "rescript",
-      "typescript",
-      "typescriptreact",
-      -- mixed
-      "vue",
-      "svelte",
-      "templ",
-    },
-    settings = {
-      tailwindCSS = {
-        validate = true,
-        lint = {
-          cssConflict = "warning",
-          invalidApply = "error",
-          invalidScreen = "error",
-          invalidVariant = "error",
-          invalidConfigPath = "error",
-          invalidTailwindDirective = "error",
-          recommendedVariantOrder = "warning",
-        },
-        classAttributes = {
-          "class",
-          "className",
-          "class:list",
-          "classList",
-          "ngClass",
-        },
-        includeLanguages = {
-          eelixir = "html-eex",
-          elixir = "phoenix-heex",
-          eruby = "erb",
-          heex = "phoenix-heex",
-          htmlangular = "html",
-          templ = "html",
+  tailwindcss = function()
+    local function find_tailwind_root_phoenix(fname)
+      local util = require("lspconfig.util")
+      local phoenix_root = util.root_pattern("mix.exs")(fname)
+      if phoenix_root then
+        if vim.fn.isdirectory(phoenix_root) == 1 then return phoenix_root end
+      end
+
+      return util.root_pattern("package.json", "tailwind.config.js", "vite.config.js")(fname)
+    end
+
+    return {
+      cmd = { "tailwindcss-language-server", "--stdio" },
+      -- filetypes copied and adjusted from tailwindcss-intellisense
+      filetypes = {
+        -- html
+        "aspnetcorerazor",
+        "astro",
+        "astro-markdown",
+        "blade",
+        "clojure",
+        "django-html",
+        "htmldjango",
+        "edge",
+        "eelixir", -- vim ft
+        "elixir",
+        "ejs",
+        "erb",
+        "eruby", -- vim ft
+        "gohtml",
+        "gohtmltmpl",
+        "haml",
+        "handlebars",
+        "hbs",
+        "html",
+        "htmlangular",
+        "html-eex",
+        "heex",
+        "jade",
+        "leaf",
+        "liquid",
+        "markdown",
+        "mdx",
+        "mustache",
+        "njk",
+        "nunjucks",
+        "php",
+        "razor",
+        "slim",
+        "twig",
+        -- css
+        "css",
+        "less",
+        "postcss",
+        "sass",
+        "scss",
+        "stylus",
+        "sugarss",
+        -- js
+        "javascript",
+        "javascriptreact",
+        "reason",
+        "rescript",
+        "typescript",
+        "typescriptreact",
+        -- mixed
+        "vue",
+        "svelte",
+        "templ",
+      },
+      settings = {
+        tailwindCSS = {
+          validate = true,
+          lint = {
+            cssConflict = "warning",
+            invalidApply = "error",
+            invalidScreen = "error",
+            invalidVariant = "error",
+            invalidConfigPath = "error",
+            invalidTailwindDirective = "error",
+            recommendedVariantOrder = "warning",
+          },
+          classAttributes = {
+            "class",
+            "className",
+            "class:list",
+            "classList",
+            "ngClass",
+          },
+          includeLanguages = {
+            eelixir = "html-eex",
+            elixir = "phoenix-heex",
+            eruby = "erb",
+            heex = "phoenix-heex",
+            htmlangular = "html",
+            templ = "html",
+          },
         },
       },
-    },
-    before_init = function(_, config)
-      if not config.settings then config.settings = {} end
-      if not config.settings.editor then config.settings.editor = {} end
-      if not config.settings.editor.tabSize then config.settings.editor.tabSize = vim.lsp.util.get_effective_tabstop() end
-    end,
-    workspace_required = true,
-    root_dir = function(bufnr, on_dir)
-      local root_files = {
-        -- Generic
-        "tailwind.config.js",
-        "tailwind.config.cjs",
-        "tailwind.config.mjs",
-        "tailwind.config.ts",
-        "postcss.config.js",
-        "postcss.config.cjs",
-        "postcss.config.mjs",
-        "postcss.config.ts",
-        -- Phoenix
-        "assets/tailwind.config.js",
-        "assets/tailwind.config.cjs",
-        "assets/tailwind.config.mjs",
-        "assets/tailwind.config.ts",
-        -- Django
-        "theme/static_src/tailwind.config.js",
-        "theme/static_src/tailwind.config.cjs",
-        "theme/static_src/tailwind.config.mjs",
-        "theme/static_src/tailwind.config.ts",
-        "theme/static_src/postcss.config.js",
-        -- Rails
-        "app/assets/stylesheets/application.tailwind.css",
-        "app/assets/tailwind/application.css",
-      }
-      local fname = vim.api.nvim_buf_get_name(bufnr)
-      root_files = util.insert_package_json(root_files, "tailwindcss", fname)
-      root_files = util.root_markers_with_field(root_files, { "mix.lock" }, "tailwind", fname)
-      on_dir(vim.fs.dirname(vim.fs.find(root_files, { path = fname, upward = true })[1]))
-    end,
-  },
+      before_init = function(_, config)
+        if not config.settings then config.settings = {} end
+        if not config.settings.editor then config.settings.editor = {} end
+        if not config.settings.editor.tabSize then config.settings.editor.tabSize = vim.lsp.util.get_effective_tabstop() end
+      end,
+      workspace_required = true,
+      root_dir = function(bufnr, on_dir)
+        local root_files = {
+          -- Generic
+          "tailwind.config.js",
+          "tailwind.config.cjs",
+          "tailwind.config.mjs",
+          "tailwind.config.ts",
+          "postcss.config.js",
+          "postcss.config.cjs",
+          "postcss.config.mjs",
+          "postcss.config.ts",
+          -- Phoenix
+          "assets/tailwind.config.js",
+          "assets/tailwind.config.cjs",
+          "assets/tailwind.config.mjs",
+          "assets/tailwind.config.ts",
+          -- Django
+          "theme/static_src/tailwind.config.js",
+          "theme/static_src/tailwind.config.cjs",
+          "theme/static_src/tailwind.config.mjs",
+          "theme/static_src/tailwind.config.ts",
+          "theme/static_src/postcss.config.js",
+          -- Rails
+          "app/assets/stylesheets/application.tailwind.css",
+          "app/assets/tailwind/application.css",
+        }
+
+        local util = require("lspconfig.util")
+        local fname = vim.api.nvim_buf_get_name(bufnr)
+        root_files = util.insert_package_json(root_files, "tailwindcss", fname)
+        root_files = util.root_markers_with_field(root_files, { "mix.lock" }, "tailwind", fname)
+
+        -- P(vim.fs.dirname(vim.fs.find(root_files, { path = fname, upward = true })[1]))
+        on_dir(vim.fs.dirname(vim.fs.find(root_files, { path = fname, upward = true })[1]))
+      end,
+    }
+  end,
   terraformls = {},
   -- NOTE: presently enabled via typescript-tools
   ts_ls = function()

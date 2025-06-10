@@ -1,4 +1,4 @@
-if not mega or not vim.tbl_contains(mega.enabled_plugins, "lsp") then return end
+if not Plugin_enabled() then return end
 
 local fmt = string.format
 local SETTINGS = require("mega.settings")
@@ -12,7 +12,7 @@ local function lsp_method(client, method)
   local not_supported_msg = fmt("%s not supported for %s", method, client.name)
   local method_supported = client:supports_method(method)
   if not method_supported then
-    vim.notify(not_supported_msg, L.WARN)
+    -- vim.notify(not_supported_msg, L.WARN)
     -- Echom(not_supported_msg, "Question")
 
     return function(...) return false end
@@ -312,11 +312,11 @@ local function make_commands(client, bufnr)
     vim.lsp.stop_client(vim.lsp.get_clients())
   end
 
-  command("LspInfo", function() vim.cmd.checkhealth("lsp") end, { desc = "View LSP info" })
+  Command("LspInfo", function() vim.cmd.checkhealth("lsp") end, { desc = "View LSP info" })
 
-  command("LspLogDelete", function() vim.fn.system("rm " .. vim.lsp.get_log_path()) end, { desc = "Deletes the LSP log file. Useful for when it gets too big" })
+  Command("LspLogDelete", function() vim.fn.system("rm " .. vim.lsp.get_log_path()) end, { desc = "Deletes the LSP log file. Useful for when it gets too big" })
 
-  command("LspRestart", function(cmd)
+  Command("LspRestart", function(cmd)
     local parts = vim.split(vim.trim(cmd.args), "%s+")
     if cmd.args == "" then parts = {} end
 
@@ -331,8 +331,8 @@ local function make_commands(client, bufnr)
     nargs = "*",
   })
 
-  command("LspStart", enable, {})
-  command("LspStop", disable, {})
+  Command("LspStart", enable, {})
+  Command("LspStop", disable, {})
 end
 
 local function make_keymaps(client, bufnr)
@@ -510,13 +510,6 @@ local function on_attach(client, bufnr, client_id)
   --     end,
   --   })
   -- end
-
-  lsp_method(client, "textDocument/completion")(function()
-    if client.name == "lua-language-server" then client.server_capabilities.completionProvider.triggerCharacters = { ".", ":" } end
-    vim.lsp.completion.enable(true, client_id or client.id, bufnr, { autotrigger = true })
-  end)
-
-  lsp_method(client, "textDocument/documentColor")(function() vim.lsp.document_color.enable(true, bufnr, { style = "virtual" }) end)
 
   -- load diagnostics config
   local ok_diagnostics, diagnostics = pcall(dofile, vim.fn.stdpath("config") .. "/plugin/lsp/diagnostics.lua")

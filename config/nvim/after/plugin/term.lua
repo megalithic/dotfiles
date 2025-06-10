@@ -6,7 +6,7 @@
 -- - similar behaviour to here.nvim; aka, quick flip between terminal and current buffer
 --    REF: https://github.com/jaimecgomezz/nvim/blob/9a29163c39efc7d28f21ae2ef715e8ba3f41a4e2/lua/plugins/term.lua
 
-if not mega then return end
+if not Plugin_enabled() then return end
 
 local fmt = string.format
 local api = vim.api

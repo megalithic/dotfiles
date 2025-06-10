@@ -1,6 +1,6 @@
 if true then return end
 
-if not mega then
+if not Plugin_enabled() then 
   vim.o.statusline = "%#Statusline# %2{mode()} | %F %m %r %= %{&spelllang} %y %8(%l,%c%) %8p%%"
   return
 end

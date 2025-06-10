@@ -559,6 +559,8 @@ return {
     opts = true,
   },
   {
+    -- FIXME: this is a no go; crashes rpc
+    enabled = false,
     "synic/refactorex.nvim",
     ft = "elixir",
     opts = {},

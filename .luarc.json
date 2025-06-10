@@ -3,7 +3,8 @@
   "Lua.diagnostics.disable": [
     "missing-parameter",
     "return-type-mismatch",
-    "need-check-nil"
+    "need-check-nil",
+    "undefined-global"
   ],
   "Lua.workspace.checkThirdParty": false
 }

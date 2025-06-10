@@ -1,4 +1,4 @@
-if not mega and not vim.tbl_contains(mega.enabled_plugins, "megaline") then
+if not Plugin_enabled() then
   vim.o.statusline = "%#Statusline# %2{mode()} | %F %m %r %= %{&spelllang} %y %8(%l,%c%) %8p%%"
   return
 end
@@ -24,7 +24,7 @@ local icons = require("mega.settings").icons
 vim.g.is_saving = false
 vim.g.lsp_progress_messages = ""
 
-augroup("megaline", {
+Augroup("megaline", {
   {
     event = { "BufWritePre" },
     command = function()

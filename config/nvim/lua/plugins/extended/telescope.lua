@@ -27,7 +27,6 @@ return {
         cond = function() return vim.fn.executable("make") == 1 end,
       },
 
-      "natecraddock/telescope-zf-native.nvim",
       "nvim-telescope/telescope-file-browser.nvim",
       { "fdschmidt93/telescope-egrepify.nvim" },
       "fdschmidt93/telescope-corrode.nvim",
@@ -970,43 +969,6 @@ return {
           }),
         },
         extensions = {
-          ["zf-native"] = {
-            -- options for sorting file-like items
-            file = {
-              -- override default telescope file sorter
-              enable = true,
-
-              -- highlight matching text in results
-              highlight_results = true,
-
-              -- enable zf filename match priority
-              match_filename = true,
-
-              -- optional function to define a sort order when the query is empty
-              initial_sort = nil,
-
-              -- set to false to enable case sensitive matching
-              smart_case = true,
-            },
-
-            -- options for sorting all other items
-            generic = {
-              -- override default telescope generic item sorter
-              enable = true,
-
-              -- highlight matching text in results
-              highlight_results = true,
-
-              -- disable zf filename match priority
-              match_filename = false,
-
-              -- optional function to define a sort order when the query is empty
-              initial_sort = nil,
-
-              -- set to false to enable case sensitive matching
-              smart_case = true,
-            },
-          },
           fzf = {
             fuzzy = true,
             override_generic_sorter = true,

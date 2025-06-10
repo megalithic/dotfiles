@@ -13,7 +13,7 @@ return {
   {
     "nvim-treesitter/nvim-treesitter",
     build = ":TSUpdate",
-    event = "VeryLazy",
+    lazy = false,
     opts = {
       ensure_installed = {
         "bash",
@@ -79,7 +79,8 @@ return {
         "vimdoc",
         "yaml",
       },
-      ignore_install = { "comment" },
+      ignore_install = {},
+      -- ignore_install = { "comment" },
       auto_install = true,
       sync_install = false,
       highlight = {
@@ -130,10 +131,6 @@ return {
       },
     },
     init = function()
-      -- use bash parser for zsh files
-      vim.treesitter.language.register("bash", "zsh")
-      vim.treesitter.language.register("markdown", "livebook")
-
       -- FIX for `comments` parser https://github.com/stsewd/tree-sitter-comment/issues/22
       vim.api.nvim_create_autocmd("ColorScheme", {
         callback = function() vim.api.nvim_set_hl(0, "@lsp.type.comment", {}) end,
@@ -144,31 +141,36 @@ return {
         dotenv = "bash",
         gitcommit = "NeogitCommitMessage",
         javascriptreact = "jsx",
+        chart = "json",
         json = "jsonc",
         keymap = "devicetree",
         kittybuf = "bash",
+        livebook = "markdown",
         typescriptreact = "tsx",
-        zsh = "bash",
         eelixir = "elixir",
         ex = "elixir",
         pl = "perl",
         bash = "sh", -- reversing these two from the treesitter source
         uxn = "uxntal",
         ts = "typescript",
+        zsh = "bash",
       }
 
       for ft, parser in pairs(ft_to_parser_aliases) do
         vim.treesitter.language.register(parser, ft)
       end
-      -- additional language registration
-      vim.treesitter.language.register("json", { "chart" })
 
       require("nvim-treesitter.install").prefer_git = true
       require("nvim-treesitter.configs").setup(opts)
     end,
   },
   { "nvim-treesitter/nvim-treesitter-textobjects", cond = true, dependencies = { "nvim-treesitter/nvim-treesitter" } },
-  { "RRethy/nvim-treesitter-textsubjects", cond = true, dependencies = { "nvim-treesitter/nvim-treesitter" } },
+  -- { "RRethy/nvim-treesitter-textsubjects", cond = true, dependencies = { "nvim-treesitter/nvim-treesitter" } },
+  {
+    "mfussenegger/nvim-treehopper",
+    event = "LazyFile",
+    config = function() require("tsht").config.hint_keys = { "h", "j", "f", "d", "n", "v", "s", "l", "a" } end,
+  },
   { "RRethy/nvim-treesitter-endwise", dependencies = { "nvim-treesitter/nvim-treesitter" } },
   {
     "andymass/vim-matchup",

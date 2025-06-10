@@ -1,4 +1,4 @@
-if not mega then return end
+if not Plugin_enabled() then return end
 
 local U = require("mega.utils")
 local command = vim.api.nvim_create_user_command

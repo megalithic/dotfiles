@@ -1,3 +1,5 @@
+if not Plugin_enabled() then return end
+
 ---@param text string
 ---@param replace string
 local function abbr(text, replace, bufnr) vim.keymap.set("ia", text, replace, { buffer = bufnr or true }) end

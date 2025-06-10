@@ -13,7 +13,7 @@ vim.api.nvim_create_autocmd("BufWritePre", {
   callback = function(args) require("conform").format({ bufnr = args.buf }) end,
 })
 
-command("ToggleAutoFormat", function()
+Command("ToggleAutoFormat", function()
   vim.g.disable_autoformat = not vim.g.disable_autoformat
   if vim.g.disable_autoformat then
     vim.notify("Disabled auto-formatting.", L.WARN)
@@ -94,9 +94,9 @@ return {
       },
       formatters_by_ft = {
         lua = { "stylua" },
-        elixir = { "mix" },
-        eelixir = { "mix" },
-        heex = { "mix" },
+        -- elixir = { "mix" },
+        -- eelixir = { "mix" },
+        -- heex = { "mix" },
         typescriptreact = {
           "eslint_d",
           "prettierd",

@@ -1,4 +1,4 @@
-if not mega then return end
+if not Plugin_enabled() then return end
 
 local GOLDEN_RATIO = 1.618
 local cmdheight = vim.o.cmdheight

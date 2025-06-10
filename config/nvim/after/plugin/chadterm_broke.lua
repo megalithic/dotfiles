@@ -1,5 +1,5 @@
 if true then return end
-if not mega then return end
+if not Plugin_enabled() then return end
 
 local M = {}
 

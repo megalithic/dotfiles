@@ -1,3 +1,5 @@
+if not Plugin_enabled() then return end
+
 local opt = vim.opt
 
 opt.clipboard = "unnamedplus"
