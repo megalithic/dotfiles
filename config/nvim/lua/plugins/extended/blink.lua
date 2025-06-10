@@ -6,11 +6,43 @@ local in_jsx = U.in_jsx_tags
 local keep_text_entries = { "emmet_language_server", "marksman" }
 local text = vim.lsp.protocol.CompletionItemKind.Text
 
--- DOCS https://github.com/saghen/blink.cmp#configuration
---------------------------------------------------------------------------------
----@diagnostic disable: missing-fields -- pending https://github.com/Saghen/blink.cmp/issues/427
---------------------------------------------------------------------------------
+local function esc(cmd) return vim.api.nvim_replace_termcodes(cmd, true, false, true) end
 
+local function feedkeys(key, mode) vim.fn.feedkeys(esc(key), mode or "") end
+
+local function has_words_before()
+  local line, col = unpack(vim.api.nvim_win_get_cursor(0))
+  return col ~= 0 and vim.api.nvim_buf_get_lines(0, line - 1, line, true)[1]:sub(col, col):match("%s") == nil
+end
+
+local function expand_snippet()
+  local filetype_map = {
+    typescriptreact = "javascript",
+    typescript = "javascript",
+    javascriptreact = "javascript",
+  }
+  local line_to_cursor = vim.fn.getline("."):sub(1, vim.fn.col(".") - 1)
+  local keyword = vim.fn.matchstr(line_to_cursor, [[\k\+$]])
+  local filetype = filetype_map[vim.bo.filetype] or vim.bo.filetype
+  local path = vim.fn.stdpath("config") .. "/snippets/" .. filetype .. ".json"
+  local fs_stat = vim.uv.fs_stat(path)
+  if not fs_stat or fs_stat.type ~= "file" then return end
+  ---@type { prefix: string[], body: string[] }[]
+  local data = vim.json.decode(table.concat(vim.fn.readfile(path), "\n"))
+
+  for _, snippet in pairs(data) do
+    if snippet.prefix[1] == keyword then
+      vim.fn.feedkeys(esc("<C-w>"), "n")
+      vim.schedule(function() vim.snippet.expand(table.concat(snippet.body, "\n")) end)
+      return true
+    end
+  end
+end
+
+-- -- DOCS https://github.com/saghen/blink.cmp#configuration
+-- --------------------------------------------------------------------------------
+-- ---@diagnostic disable: missing-fields -- pending https://github.com/Saghen/blink.cmp/issues/427
+-- --------------------------------------------------------------------------------
 return {
   {
     "saghen/blink.cmp",
@@ -23,6 +55,7 @@ return {
       { "MattiasMTS/cmp-dbee", ft = { "sql", "psql", "mysql", "plsql", "dbee" }, opts = {}, lazy = true },
       { "hrsh7th/cmp-emoji", lazy = true },
       { "xzbdmw/colorful-menu.nvim", lazy = true, opts = {} },
+      "mikavilpas/blink-ripgrep.nvim",
     },
     event = { "InsertEnter", "CmdlineEnter" },
     version = "*",
@@ -31,8 +64,31 @@ return {
       local blink = require("blink.cmp")
       local sort_text = require("blink.cmp.fuzzy.sort").sort_text
       blink.setup({
+        -- keymap = {
+        --   ["<C-e>"] = { "hide", "fallback" },
+        --   ["<CR>"] = { "accept", "fallback" },
+
+        --   ["<Tab>"] = {
+        --     function(cmp) return cmp.select_next() end,
+        --     "snippet_forward",
+        --     "fallback",
+        --   },
+        --   ["<S-Tab>"] = {
+        --     function(cmp) return cmp.select_prev() end,
+        --     "snippet_backward",
+        --     "fallback",
+        --   },
+
+        --   ["<Up>"] = { "select_prev", "fallback" },
+        --   ["<Down>"] = { "select_next", "fallback" },
+        --   ["<C-p>"] = { "select_prev", "fallback" },
+        --   ["<C-n>"] = { "select_next", "fallback" },
+        --   ["<C-up>"] = { "scroll_documentation_up", "fallback" },
+        --   ["<C-down>"] = { "scroll_documentation_down", "fallback" },
+        -- },
         keymap = {
           preset = "none", -- default?
+          ["<C-e>"] = { "hide", "fallback" },
           ["<C-c>"] = { "cancel" },
           ["<C-y>"] = { "select_and_accept", "fallback" },
           -- ["<CR>"] = { "accept", "fallback" },
@@ -164,6 +220,21 @@ return {
             },
             dadbod = { name = "Dadbod", module = "vim_dadbod_completion.blink" },
             dbee = { name = "cmp-dbee", module = "blink.compat.source" },
+
+            ripgrep = {
+              name = "[rg]",
+              module = "blink-ripgrep",
+              score_offset = -10,
+              opts = {
+                prefix_min_len = 4,
+                project_root_marker = { "package.json", ".git", "mix.exs" },
+                future_features = {
+                  backend = {
+                    use = "gitgrep-or-ripgrep",
+                  },
+                },
+              },
+            },
             snippets = {
               name = "[snip]",
               min_keyword_length = 1,
@@ -238,10 +309,7 @@ return {
             cycle = { from_top = false }, -- cycle at bottom, but not at the top
             selection = {
               preselect = false,
-              auto_insert = false,
-              -- or a function
-              -- preselect = function(ctx) return not require("blink.cmp").snippet_active({ direction = 1 }) end,
-              -- auto_insert = function(ctx) return vim.bo.filetype ~= "markdown" end,
+              auto_insert = true,
             },
           },
           accept = {
@@ -346,6 +414,7 @@ return {
         },
       })
     end,
+
     -- allows extending the providers array elsewhere in your config
     -- without having to redefine it
     opts_extend = { "sources.default" },

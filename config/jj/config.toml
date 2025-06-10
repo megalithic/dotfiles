@@ -1,0 +1,44 @@
+[user]
+name = "Seth Messer"
+email = "seth@megalithic.io"
+
+[ui]
+diff-editor = ":builtin"
+default-command = "log"
+
+[aliases]
+s = ["status"]
+l = ["log"]
+ll = ["log", "-T", "builtin_log_compact_full_description"]
+d = ["diff"]
+rb = ["rebase"]
+b = ["bookmark"]
+g = ["git"]
+
+[templates]
+draft_commit_description = '''
+concat(
+  description,
+  surround(
+    "\nJJ: This commit contains the following changes:\n", "",
+    indent("JJ:     ", diff.summary()),
+  ),
+  "\nJJ: ignore-rest\n",
+  diff.git(),
+)
+'''
+
+[fix.tools.gofmt]
+command = ["gofmt"]
+patterns = ["glob:'**/*.go'"]
+
+[fix.tools.rustfmt]
+command = ["rustfmt", "--emit", "stdout"]
+patterns = ["glob:'**/*.rs'"]
+
+[fix.tools.zigfmt]
+command = ["zig", "fmt", "--stdin"]
+patterns = ["glob:'**/*.zig'"]
+
+[merge-tools.difft]
+diff-args = ["--color=always", "$left", "$right"]

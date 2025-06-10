@@ -1,3 +1,7 @@
+-- REF:
+--
+-- ollama-copilot??
+-- https://github.com/ViViDboarder/vim-settings/blob/master/neovim/lua/plugins/ollama_copilot.lua
 local key = function(mode, lhs, rhs, opts)
   local defaults = { silent = true, noremap = true }
   if type(opts) == "string" then defaults.desc = opts end

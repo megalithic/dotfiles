@@ -1,58 +1,12 @@
-local SETTINGS = mega.req("mega.settings")
+local SETTINGS = require("mega.settings")
+
 return {
   { "echasnovski/mini.jump", version = false, opts = {} },
   { "echasnovski/mini.icons", version = false },
   {
-    "echasnovski/mini.comment",
-    cond = false,
-    version = false,
-    opts = {
-      -- Options which control module behavior
-      options = {
-        -- Function to compute custom 'commentstring' (optional)
-        custom_commentstring = nil,
-
-        -- Whether to ignore blank lines when commenting
-        ignore_blank_line = true,
-
-        -- Whether to recognize as comment only lines without indent
-        start_of_line = false,
-
-        -- Whether to force single space inner padding for comment parts
-        pad_comment_parts = true,
-      },
-
-      -- Module mappings. Use `''` (empty string) to disable one.
-      mappings = {
-        -- Toggle comment (like `gcip` - comment inner paragraph) for both
-        -- Normal and Visual modes
-        comment = "gc",
-
-        -- Toggle comment on current line
-        comment_line = "gcc",
-
-        -- Toggle comment on visual selection
-        comment_visual = "gc",
-
-        -- Define 'comment' textobject (like `dgc` - delete whole comment block)
-        -- Works also in Visual mode if mapping differs from `comment_visual`
-        textobject = "gc",
-      },
-
-      -- Hook functions to be executed at certain stage of commenting
-      hooks = {
-        -- Before successful commenting. Does nothing by default.
-        pre = function() end,
-        -- After successful commenting. Does nothing by default.
-        post = function() end,
-      },
-    },
-  },
-  {
     "echasnovski/mini.indentscope",
-    cond = true,
     config = function()
-      mega.req("mini.indentscope").setup({
+      require("mini.indentscope").setup({
         symbol = SETTINGS.indent_scope_char,
         -- mappings = {
         --   goto_top = "<leader>k",
@@ -65,7 +19,7 @@ return {
         options = { try_as_border = true, border = "both", indent_at_cursor = true },
       })
 
-      mega.req("mega.autocmds").augroup("mini.indentscope", {
+      Augroup("mini.indentscope", {
         {
           event = "FileType",
           pattern = {
@@ -236,8 +190,6 @@ return {
   },
   {
     "echasnovski/mini.pairs",
-    enabled = true,
-    cond = true,
     opts = {
       modes = { insert = true, command = true, terminal = false },
       -- skip autopair when next character is one of these
@@ -255,7 +207,8 @@ return {
     "echasnovski/mini.clue",
     event = "VeryLazy",
     opts = function()
-      local clue = require("mini.clue")
+      local ok, clue = pcall(require, "mini.clue")
+      if not ok then return end
       -- REF: https://github.com/ahmedelgabri/dotfiles/blob/main/config/nvim/lua/plugins/mini.lua#L314
       -- Clues for a-z/A-Z marks.
       local function mark_clues()

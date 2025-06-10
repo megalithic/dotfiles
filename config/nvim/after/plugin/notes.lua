@@ -468,7 +468,7 @@ require("mega.autocmds").augroup("NotesLoaded", {
         map("n", "gx", vim.cmd.ExecuteLine, { desc = "execute line", buffer = bufnr })
         local clients = vim.lsp.get_clients({ bufnr = bufnr })
         for _, client in ipairs(clients) do
-          if client.name == "markdown_oxide" and string.match(vim.fn.expand("%:p:h"), "_notes") then
+          if vim.tbl_contains({ "markdown_oxide", "marksman", "obsidian" }, client.name) and string.match(vim.fn.expand("%:p:h"), "_notes") then
             map("n", "<leader>w", function()
               vim.schedule(function()
                 local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)

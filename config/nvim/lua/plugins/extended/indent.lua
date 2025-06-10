@@ -1,4 +1,4 @@
-local SETTINGS = mega.req("mega.settings")
+local SETTINGS = require("mega.settings")
 
 return {
   { "megalithic/virt-column.nvim", opts = { char = SETTINGS.virt_column_char }, event = "VimEnter" },

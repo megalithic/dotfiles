@@ -74,7 +74,7 @@ local M = {
   default_colorcolumn = "81",
   notifier_enabled = true,
   debug_enabled = false,
-  picker = "telescope", -- alt: telescope, fzf_lua
+  picker = "telescope", -- alt: telescope, fzf_lua, snacks
   formatter = "conform", -- alt: null-ls/none-ls, conform
   tree = "neo-tree",
   explorer = "oil", -- alt: dirbuf, oil
@@ -162,6 +162,7 @@ local M = {
     tailwindcss = "twcss",
     emmet_ls = "em",
     lexical = "lex",
+    postgres_lsp = "pglsp",
   },
   icons = {
     lsp = {
@@ -578,10 +579,11 @@ M.apply = function()
   }
 
   -- apply the above settings
-  for scope, ops in pairs(settings) do
-    local op_group = vim[scope]
-    for op_key, op_value in pairs(ops) do
-      op_group[op_key] = op_value
+  for scope, opts in pairs(settings) do
+    local opt_group = vim[scope]
+
+    for opt_key, opt_value in pairs(opts) do
+      opt_group[opt_key] = opt_value
     end
   end
 

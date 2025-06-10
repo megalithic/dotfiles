@@ -88,7 +88,7 @@ export LS_COLORS="$(vivid generate nord)"
 
 # -- editors
 if which nvim >/dev/null; then
-  export EDITOR="nvim"
+  export EDITOR="nvim -O"
   export VISUAL="$EDITOR"
   export MANPAGER="$EDITOR +Man!"
   # export ELIXIR_EDITOR="$EDITOR +__LINE__ __FILE__"
@@ -158,8 +158,8 @@ export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
 
 # -- imagemagick thing
 # REF: https://github.com/3rd/image.nvim?tab=readme-ov-file#installing-imagemagick
-# export DYLD_LIBRARY_PATH="$(brew --prefix)/lib:$DYLD_LIBRARY_PATH"
-export DYLD_LIBRARY_PATH="$(brew --prefix)/lib"
+
+export DYLD_LIBRARY_PATH="$XDG_DATA_HOME/mise/installs/python/3.13/lib/libpython3.13.dylib:$(brew --prefix)/lib:$DYLD_LIBRARY_PATH"
 
 # -- bat
 if which bat >/dev/null; then
@@ -197,6 +197,7 @@ case "$(uname)" in
     export HOMEBREW_NO_ANALYTICS=1
     export HOMEBREW_NO_INSTALL_CLEANUP=1
     export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=
+    export HOMEBREW_NO_AUTO_UPDATE=1
     # export HOMEBREW_NO_INSTALL_FROM_API=
 
     if which gh >/dev/null; then
@@ -384,10 +385,7 @@ case "$(uname)" in
     $HOMEBREW_CELLAR/git/*/share/git-core/contrib/git-jump(Nn[-1]-/)
     $CARGO_HOME/bin(N-/)
     $GOBIN(N-/)
-    $HOME/Library/Python/3.12/bin(Nn[-1]-/)
-    $HOME/Library/Python/3.11/bin(Nn[-1]-/)
-    $HOME/Library/Python/3.10/bin(Nn[-1]-/)
-    $HOME/Library/Python/3.9/bin(Nn[-1]-/)
+    $HOME/Library/Python/3.*/bin(Nn[-1]-/)
     $HOME/Library/Python/2.*/bin(Nn[-1]-/)
     $ANDROID_HOME/emulator
     $ANDROID_HOME/platform-tools

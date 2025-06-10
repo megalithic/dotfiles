@@ -282,6 +282,8 @@ return {
         desc = "diffview: file history",
         mode = "n",
       },
+      { "<localleader>gb", "<cmd>DiffviewFileHistory %<cr>", desc = "Show git history", mode = { "n", "x" } },
+      { "<localleader>gb", ":DiffviewFileHistory<cr>", desc = "Show git history", mode = { "v" } },
     },
     opts = {
       default_args = { DiffviewFileHistory = { "%" } },
@@ -386,7 +388,6 @@ return {
           event = { "User" },
           pattern = { "GitConflictDetected" },
           command = function(args)
-            dbg(args)
             vim.g.git_conflict_detected = true
             nnoremap("<leader>gc", "<cmd>GitConflictListQf<cr>", { desc = "git-conflict: conflicts in qf", buffer = args.buf })
             nnoremap("cq", "<cmd>GitConflictListQf<CR>", { desc = "git-conflict: send conflicts to qf", buffer = args.buf })
@@ -487,13 +488,13 @@ return {
         mode = { "n", "v" },
       },
       {
-        "<localleader>gb",
+        "<leader>gb",
         "<cmd>GitLink! blame<cr>",
         desc = "gitlinker: blame in browser",
         mode = { "n", "v" },
       },
       {
-        "<localleader>gB",
+        "<leader>gB",
         "<cmd>GitLink blame<cr>",
         desc = "gitlinker: copy blame to clipboard",
         mode = { "n", "v" },

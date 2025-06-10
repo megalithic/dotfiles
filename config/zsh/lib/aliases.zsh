@@ -181,11 +181,11 @@ if type nvim >/dev/null 2>&1; then
   alias ribvim="NVIM_APPNAME=ribvim nvim"
   alias penvim="NVIM_APPNAME=penvim nvim"
   alias newvim="NVIM_APPNAME=newmega nvim"
-  alias mvim=newvim
   alias kickvim="NVIM_APPNAME=kickvim nvim"
   alias e="NVIM_APPNAME=wipvim nvim"
   alias ogvim="NVIM_APPNAME=ogvim nvim"
   alias og="NVIM_APPNAME=ogvim nvim"
+  alias mvim="NVIM_APPNAME=minimal-vim nvim"
   # alias kv="kickvim"
   # alias kvim="kickvim"
   alias minvim="NVIM_APPNAME=minvim nvim"

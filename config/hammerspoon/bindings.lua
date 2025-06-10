@@ -55,17 +55,23 @@ do
     if globalBind ~= nil then
       local key = globalBind
       local mods = {}
+      local pressCount = nil
+
       if type(key) == "table" then
-        mods, key = table.unpack(globalBind)
+        mods, key, pressCount = table.unpack(globalBind)
       end
 
-      hyper:bind(mods, key, function()
-        if focusOnly ~= nil and focusOnly then
-          summon.focus(bundleID)
-        else
-          summon.toggle(bundleID)
-        end
-      end)
+      if string.match(bundleID, "noop") then
+        hyper:bind(mods, key, function() end)
+      else
+        hyper:bind(mods, key, function()
+          if focusOnly ~= nil and focusOnly then
+            summon.focus(bundleID)
+          else
+            summon.toggle(bundleID)
+          end
+        end)
+      end
     end
 
     if localBinds then enum.each(localBinds, function(key) hyper:bindPassThrough(key, bundleID) end) end
@@ -108,7 +114,7 @@ req("hyper", { id = "figma" }):start():bind({ "shift" }, "f", nil, function()
   elseif req("browser").hasTab("figma.com") then
     req("browser").jump("figma.com")
   else
-    info(fmt("%s: no meeting targets to focus", "bindings.hyper.meeting"))
+    info(fmt("%s: neither figma.app, nor figma web are opened", "bindings.hyper.figma"))
 
     focusedApp:activate()
   end

@@ -14,19 +14,13 @@ obj.__index = obj
 obj.name = "watcher.bluetooth"
 obj.debug = false
 obj.devices = {
-  ["fallback"] = {
-    alias = "fallback",
-    name = "MacBook Pro Speakers",
-    bt = "MacBook Pro Speakers",
-    icon = "💻",
-  },
-  ["phonak"] = {
-    alias = "phonak",
-    name = "Seth R-Phonak hearing aid",
-    bt = "Seth R-Phonak hearing aid",
-    id = "80-28-3c-1c-7f-27",
-    icon = "🎧",
-  },
+  -- ["phonak"] = {
+  --   alias = "phonak",
+  --   name = "Seth R-Phonak hearing aid",
+  --   bt = "Seth R-Phonak hearing aid",
+  --   id = "80-28-3c-1c-7f-27",
+  --   icon = "🎧",
+  -- },
   ["leeloo"] = {
     alias = "leeloo",
     name = "Leeloo",
@@ -49,7 +43,19 @@ obj.devices = {
     icon = "🎧",
   },
 }
-obj.preferredOutputDevices = { "bose", "phonak", "airpods" }
+
+obj.devices["fallback"] = {
+  alias = "fallback",
+  name = obj.devices["bose"].name,
+  bt = obj.devices["bose"].bt,
+  icon = obj.devices["bose"].icon,
+
+  -- name = "MacBook Pro Speakers",
+  -- bt = "MacBook Pro Speakers",
+  -- icon = "💻",
+}
+
+obj.preferredOutputDevices = { "bose", "airpods" }
 obj.btUtil = "/opt/homebrew/bin/blueutil"
 obj.interval = (10 * 60)
 obj.lowBatteryTimer = nil

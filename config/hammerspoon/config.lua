@@ -5,6 +5,7 @@ function lineTraceHook(event, data)
   lineInfo = debug.getinfo(2, "Snl")
   print("TRACE: " .. (lineInfo["short_src"] or "<unknown source>") .. ":" .. (lineInfo["linedefined"] or "<??>"))
 end
+
 -- Uncomment the following line to enable tracing
 -- debug.sethook(lineTraceHook, "l")
 
@@ -122,7 +123,7 @@ LAUNCHERS = {
   { "com.brave.Browser.nightly", "j", nil, false },
   { "com.mitchellh.ghostty", "k", { "`" }, false },
   -- { "net.kovidgoyal.kitty", "k", nil, false },
-  { "com.apple.MobileSMS", "m", nil, false },
+  { "noop-com.apple.MobileSMS", "m", nil, false }, -- NOOP for now.. TODO: implement a binding feature that let's us require n-presses before we execute
   { "com.apple.finder", "f", nil, false },
   { "com.spotify.client", "p", nil, false },
   { "com.freron.MailMate", "e", nil, false },
@@ -146,7 +147,7 @@ LAYOUTS = {
     name = "Raycast",
     bundleID = "com.raycast.macos",
     rules = {
-      { "", 1, POSITIONS.center.large },
+      { nil, 1, POSITIONS.center.large },
     },
   },
   ["net.kovidgoyal.kitty"] = {
@@ -259,9 +260,9 @@ LAYOUTS = {
     bundleID = "com.freron.MailMate",
     name = "MailMate",
     rules = {
-      { "", 2, POSITIONS.halves.left },
-      { "Inbox", 2, POSITIONS.full },
-      { "All Messages", 2, POSITIONS.full },
+      { nil, 1, POSITIONS.halves.left },
+      { "Inbox", 1, POSITIONS.full },
+      { "All Messages", 1, POSITIONS.full },
     },
   },
   ["com.apple.finder"] = {
@@ -289,7 +290,7 @@ LAYOUTS = {
     bundleID = "com.apple.MobileSMS",
     name = "Messages",
     rules = {
-      { "", 2, POSITIONS.halves.right },
+      { "", 1, POSITIONS.thirds.right },
     },
   },
   ["org.whispersystems.signal-desktop"] = {
@@ -303,49 +304,49 @@ LAYOUTS = {
     bundleID = "com.tinyspeck.slackmacgap",
     name = "Slack",
     rules = {
-      { "", 2, POSITIONS.full },
+      { nil, 2, POSITIONS.full },
     },
   },
   ["com.agilebits.onepassword7"] = {
     bundleID = "com.1password.1password",
     name = "1Password",
     rules = {
-      { "", 1, POSITIONS.center.medium },
+      { nil, 1, POSITIONS.center.medium },
     },
   },
   ["org.hammerspoon.Hammerspoon"] = {
     bundleID = "org.hammerspoon.Hammerspoon",
     name = "Hammerspoon",
     rules = {
-      { "", 2, POSITIONS.full },
+      { nil, 1, POSITIONS.full },
     },
   },
   ["com.dexterleng.Homerow"] = {
     bundleID = "com.dexterleng.Homerow",
     name = "Homerow",
     rules = {
-      { "", 1, POSITIONS.center.large },
+      { nil, 1, POSITIONS.center.large },
     },
   },
   ["com.flexibits.fantastical2.mac"] = {
     bundleID = "com.flexibits.fantastical2.mac",
     name = "Fantastical",
     rules = {
-      { "", 1, POSITIONS.center.large },
+      { nil, 1, POSITIONS.center.large },
     },
   },
   ["com.figma.Desktop"] = {
     bundleID = "com.figma.Desktop",
     name = "Figma",
     rules = {
-      { "", 1, POSITIONS.full },
+      { nil, 1, POSITIONS.full },
     },
   },
   ["com.apple.iphonesimulator"] = {
     bundleID = "com.apple.iphonesimulator",
     name = "iPhone Simulator",
     rules = {
-      { "", 1, POSITIONS.halves.right },
+      { nil, 1, POSITIONS.halves.right },
     },
   },
   ["com.softfever3d.orca-slicer"] = {

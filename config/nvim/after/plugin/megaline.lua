@@ -1,4 +1,4 @@
-if not mega then
+if not mega and not vim.tbl_contains(mega.enabled_plugins, "megaline") then
   vim.o.statusline = "%#Statusline# %2{mode()} | %F %m %r %= %{&spelllang} %y %8(%l,%c%) %8p%%"
   return
 end
@@ -19,7 +19,6 @@ local fmt = string.format
 local U = require("mega.utils")
 local SETTINGS = require("mega.settings")
 local H = U.hl
-local augroup = require("mega.autocmds").augroup
 local icons = require("mega.settings").icons
 
 vim.g.is_saving = false
@@ -43,15 +42,21 @@ augroup("megaline", {
     event = { "LspProgress" },
     command = function(ctx)
       local clientName = vim.lsp.get_client_by_id(ctx.data.client_id).name
-      local progress = ctx.data.params.value ---@type {percentage: number, title?: string, kind: string, message?: string}
+
+      ---@type {percentage: number, title?: string, kind: string, message?: string}
+      local progress = ctx.data.params.value
+
       if not (progress and progress.title) then return end
       local progress_icons = { "󰫃", "󰫄", "󰫅", "󰫆", "󰫇", "󰫈" }
       local idx = math.floor(#progress_icons / 2)
+      -- local percentage = string.format("%.0f %% ", 0)
       if progress.percentage == 0 then idx = 1 end
+      -- if progress.percentage ~= nil and progress.percentage > 0 then percentage = string.format("%.0f %% ", progress.percentage) end
       if progress.percentage and progress.percentage > 0 then idx = math.ceil(progress.percentage / 100 * #progress_icons) end
       local firstWord = vim.split(progress.title, " ")[1]:lower()
 
       local text = table.concat({ progress_icons[idx], clientName, firstWord }, " ")
+      -- local text = table.concat({ progress_icons[idx], percentage, clientName, firstWord }, " ")
       if progress.kind == "end" then
         vim.g.lsp_progress_messages = fmt("%s %s loaded.", icons.lsp.ok, clientName)
         local timer = vim.uv.new_timer()

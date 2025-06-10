@@ -146,7 +146,7 @@
       path: config/ripgrep
     ~/.config/mise:
       force: true
-      path: config/mise/config.toml
+      path: config/mise
     ~/.config/surfingkeys:
       force: true
       path: config/surfingkeys

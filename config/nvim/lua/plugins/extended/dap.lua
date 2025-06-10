@@ -30,7 +30,7 @@ return {
       ensure_installed = {
         "delve",
         "python",
-        "elixir",
+        -- "elixir",
         -- "node2",
         -- "chrome",
         -- "firefox",

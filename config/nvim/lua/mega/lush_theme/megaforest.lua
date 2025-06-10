@@ -1187,6 +1187,37 @@ local theme = lush(function(injected_functions)
 
     EgrepifySuffix({ fg = C.bright_blue.darken(20), bg = C.bg_dark.lighten(5) }),
 
+    ---- :help snacks.pick -----------------------------------------------------
+    SnacksPicker({ TelescopeNormal }),
+    SnacksPickerDir({ fg = C.grey2, gui = "italic" }),
+    SnacksPickerBorder({ TelescopeBorder }),
+    SnacksPickerListCursorLine({ TelescopeSelection }),
+    SnacksPickerPrompt({ TelescopePromptPrefix }),
+    SnacksPickerSelected({ TelescopeSelectionCaret }),
+    SnacksPickerTitle({ TelescopeTitle }),
+    -- SnacksPickerToggle({ bg = "${purple}", fg = "${picker_results}", gui = "italic" }),
+    -- SnacksPickerTotals({ bg = "${picker_results}", fg = "${purple}", gui = "bold" }),
+    -- SnacksPickerUnselected({ bg = "${picker_results}" }),
+
+    SnacksPickerPreview({ TelescopePreviewNormal }),
+    SnacksPickerPreviewBorder({ TelescopePreviewBorder }),
+    SnacksPickerPreviewTitle({ TelescopePreviewTitle }),
+
+    -- SnacksPicker({ bg = "${picker_results}" }),
+    -- SnacksPickerDir({ fg = "${gray}", gui = "italic" }),
+    -- SnacksPickerBorder({ fg = "${picker_results}", bg = "${picker_results}" }),
+    -- SnacksPickerListCursorLine({ bg = "${picker_selection}" }),
+    -- SnacksPickerPrompt({ bg = "${picker_results}", fg = "${purple}", gui = "bold" }),
+    -- SnacksPickerSelected({ bg = "${picker_results}", fg = "${orange}" }),
+    -- SnacksPickerTitle({ bg = "${purple}", fg = "${picker_results}", gui = "bold" }),
+    -- SnacksPickerToggle({ bg = "${purple}", fg = "${picker_results}", gui = "italic" }),
+    -- SnacksPickerTotals({ bg = "${picker_results}", fg = "${purple}", gui = "bold" }),
+    -- SnacksPickerUnselected({ bg = "${picker_results}" }),
+
+    -- SnacksPickerPreview({ bg = "${bg}" }),
+    -- SnacksPickerPreviewBorder({ fg = "${bg}", bg = "${bg}" }),
+    -- SnacksPickerPreviewTitle({ bg = "${green}", fg = "${bg}", gui = "bold" }),
+
     ---- :help fzf-lua ---------------------------------------------------------
     -- REF: https://github.com/ibhagwan/fzf-lua#highlights
 

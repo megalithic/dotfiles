@@ -167,7 +167,7 @@ command("TermRepl", function(args)
       vim.cmd.startinsert()
     end,
   })
-end, { bang = true })
+end, {})
 
 vim.keymap.set({ "n", "v", "t" }, "<localleader>x", function()
   mega.tt.runner({
@@ -176,6 +176,7 @@ vim.keymap.set({ "n", "v", "t" }, "<localleader>x", function()
     cmd = function()
       local file = vim.fn.expand("%")
       local sfile = vim.fn.expand("%:r")
+      print(file)
       local ft = vim.bo.ft
       local ft_cmds = {
         sh = "bash " .. file,

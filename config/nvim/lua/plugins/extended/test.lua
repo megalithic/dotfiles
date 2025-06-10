@@ -105,11 +105,9 @@ return {
       -- https://github.com/roginfarrer/dotfiles/blob/main/nvim/.config/nvim/lua/rf/plugins/vim-test.lua#L19
 
       vim.g["test#strategy"] = "neovim"
-      vim.g["test#ruby#use_binstubs"] = 0
-      vim.g["test#ruby#bundle_exec"] = 0
       vim.g["test#filename_modifier"] = ":."
       vim.g["test#preserve_screen"] = 1
-
+      vim.g["test#javascript#runner"] = "jest"
       vim.g["test#custom_strategies"] = {
         termsplit = function(cmd) mega.term(term_opts(cmd)) end,
         termvsplit = function(cmd)

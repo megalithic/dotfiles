@@ -53,7 +53,7 @@ function obj.sendToCanonize(url, title, quote, tags, env)
       ["Authorization"] = "Bearer " .. api_token,
     },
     function(status, body, headers)
-      dbg({ status, url, title, quote, tags })
+      dbg({ env, status, url, title, quote, tags })
 
       if status == 200 or status == 201 then
         local response = hs.json.decode(body)

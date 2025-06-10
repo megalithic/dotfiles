@@ -5,37 +5,33 @@
 
 from __future__ import print_function, unicode_literals
 
+import copy
+import errno
+import hashlib
+import json
+import os
+import random
+import re
+import socket
+import ssl
+import string
+import sys
+import textwrap
+import time
+import traceback
 from collections import OrderedDict, namedtuple
 from datetime import date, datetime, timedelta
 from functools import partial, wraps
 from io import StringIO
 from itertools import chain, count, islice
 
-import copy
-import errno
-import textwrap
-import time
-import json
-import hashlib
-import os
-import re
-import sys
-import traceback
-import ssl
-import random
-import socket
-import string
-
 # Prevent websocket from using numpy (it's an optional dependency). We do this
 # because numpy causes python (and thus weechat) to crash when it's reloaded.
 # See https://github.com/numpy/numpy/issues/11925
 sys.modules["numpy"] = None
 
-from websocket import (  # noqa: E402
-    ABNF,
-    create_connection,
-    WebSocketConnectionClosedException,
-)
+from websocket import (ABNF, WebSocketConnectionClosedException,  # noqa: E402
+                       create_connection)
 
 try:
     basestring  # Python 2
@@ -45,14 +41,8 @@ except NameError:  # Python 3
     basestring = unicode = str
 
 try:
-    from collections.abc import (
-        ItemsView,
-        Iterable,
-        KeysView,
-        Mapping,
-        Reversible,
-        ValuesView,
-    )
+    from collections.abc import (ItemsView, Iterable, KeysView, Mapping,
+                                 Reversible, ValuesView)
 except ImportError:
     from collections import ItemsView, Iterable, KeysView, Mapping, ValuesView
 
@@ -2060,7 +2050,9 @@ class SlackChannelCommon(object):
             f |= re.MULTILINE if "m" in flags else 0
             f |= re.DOTALL if "s" in flags else 0
             old_message_text = message.message_json["text"]
-            new_message_text = re.sub(old, new, old_message_text, num_replace, f)
+            new_message_text = re.sub(
+                old, new, old_message_text, count=num_replace, flags=f
+            )
             if new_message_text != old_message_text:
                 post_data = {
                     "channel": self.identifier,
@@ -7179,8 +7171,9 @@ def initiate_connection(token):
                 if response_json["error"] == "user_is_restricted":
                     w.prnt(
                         "",
-                        "You are a restricted user in this team, "
-                        "{} not loaded".format(data_type),
+                        "You are a restricted user in this team, {} not loaded".format(
+                            data_type
+                        ),
                     )
                 else:
                     initial_data["errors"].append(

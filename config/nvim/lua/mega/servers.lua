@@ -88,17 +88,19 @@ M.list = function(default_capabilities, default_on_attach)
         cmd = { vim.env.XDG_DATA_HOME .. "/lsp/lexical/_build/dev/package/lexical/bin/start_lexical.sh" },
         single_file_support = true,
         filetypes = { "elixir", "eelixir", "heex", "surface" },
-        root_dir = function(fname)
-          local matches = vim.fs.find({ "mix.exs" }, { upward = true, limit = 2, path = fname })
-          local child_or_root_path, maybe_umbrella_path = unpack(matches)
-          local root_dir = vim.fs.dirname(maybe_umbrella_path or child_or_root_path)
+        -- root_dir = function(fname)
+        --   local matches = vim.fs.find({ "mix.exs" }, { upward = true, limit = 2, path = fname })
+        --   local child_or_root_path, maybe_umbrella_path = unpack(matches)
+        --   local root_dir = vim.fs.dirname(maybe_umbrella_path or child_or_root_path)
 
-          -- right now i just want lexical for handling eelixir files (aka .exs files);
-          -- if string.match(fname, "%.exs") ~= nil then return root_dir end
+        --   -- right now i just want lexical for handling eelixir files (aka .exs files);
+        --   -- if string.match(fname, "%.exs") ~= nil then return root_dir end
 
-          return root_dir
-        end,
+        --   return root_dir
+        -- end,
         settings = { dialyzerEnabled = true },
+
+        root_dir = function(fname) return root_pattern("mix.exs", ".git")(fname) or vim.uv.cwd() end,
       }
     end,
     elixirls = function()
@@ -159,34 +161,34 @@ M.list = function(default_capabilities, default_on_attach)
         "eruby",
       },
     },
-    gopls = {
-      settings = {
-        gopls = {
-          gofumpt = true,
-          codelenses = {
-            generate = true,
-            gc_details = false,
-            test = true,
-            tidy = true,
-          },
-          hints = {
-            assignVariableTypes = true,
-            compositeLiteralFields = true,
-            constantValues = true,
-            functionTypeParameters = true,
-            parameterNames = true,
-            rangeVariableTypes = true,
-          },
-          analyses = {
-            unusedparams = true,
-          },
-          usePlaceholders = true,
-          completeUnimported = true,
-          staticcheck = true,
-          directoryFilters = { "-node_modules" },
-        },
-      },
-    },
+    -- gopls = {
+    --   settings = {
+    --     gopls = {
+    --       gofumpt = true,
+    --       codelenses = {
+    --         generate = true,
+    --         gc_details = false,
+    --         test = true,
+    --         tidy = true,
+    --       },
+    --       hints = {
+    --         assignVariableTypes = true,
+    --         compositeLiteralFields = true,
+    --         constantValues = true,
+    --         functionTypeParameters = true,
+    --         parameterNames = true,
+    --         rangeVariableTypes = true,
+    --       },
+    --       analyses = {
+    --         unusedparams = true,
+    --       },
+    --       usePlaceholders = true,
+    --       completeUnimported = true,
+    --       staticcheck = true,
+    --       directoryFilters = { "-node_modules" },
+    --     },
+    --   },
+    -- },
     graphql = {},
     html = {
       settings = {
@@ -266,6 +268,7 @@ M.list = function(default_capabilities, default_on_attach)
       local wezterm = ("%s/nvim/lazy/wezterm-types/types"):format(fn.stdpath("data"))
 
       return {
+        manual_install = true,
         settings = {
           Lua = {
             runtime = {
@@ -379,43 +382,6 @@ M.list = function(default_capabilities, default_on_attach)
         },
       }
     end,
-    -- markdown_oxide = function()
-    --
-    --   require("lspconfig").markdown_oxide.setup({
-    --     on_attach = function(client, buffer)
-    --       default_on_attach(client, buffer)
-    --
-    --       -- code lens for ui reference counters
-    --       if client.server_capabilities.codeLensProvider then
-    --         vim.api.nvim_create_autocmd({ "TextChanged", "InsertLeave", "CursorHold", "BufEnter" }, {
-    --           buffer = buffer,
-    --           callback = function() vim.lsp.codelens.refresh() end,
-    --         })
-    --       end
-    --
-    --       -- open daily notes with `Daily today`, `Daily two days ago`, `Daily next monday`
-    --       vim.api.nvim_create_user_command("Daily", function(args)
-    --         -- use client id to execute a command, instead of vim.lsp.buf.execute_command()
-    --         local oxide_client = vim.lsp.get_client_by_id(client.id)
-    --         if oxide_client then
-    --           oxide_client.request("workspace/executeCommand", {
-    --             command = "jump",
-    --             arguments = { args.args },
-    --           })
-    --         end
-    --       end, { desc = "Open daily notes", nargs = "*" })
-    --     end,
-    --     capabilities = {
-    --       default_capabilities,
-    --       -- this allows creating unresolved files and resolving completions for unindexed code blocks
-    --       workspace = {
-    --         didChangeWatchedFiles = {
-    --           dynamicRegistration = true,
-    --         },
-    --       },
-    --     },
-    --   })
-    -- end,
     kotlin_language_server = {},
     markdown_oxide = function()
       if vim.g.note_taker ~= "markdown_oxide" then return nil end
@@ -622,7 +588,7 @@ M.list = function(default_capabilities, default_on_attach)
         },
       },
       cmd = { vim.env.XDG_DATA_HOME .. "/lsp/bin/postgrestools", "lsp-proxy" },
-      filetypes = { "sql", "dbee" },
+      filetypes = { "sql" },
       single_file_support = true,
       settings = {
         db = {
@@ -684,6 +650,7 @@ M.list = function(default_capabilities, default_on_attach)
     end,
     tailwindcss = function()
       return {
+        manual_install = true,
         init_options = {
           userLanguages = {
             eelixir = "phoenix-heex",
@@ -735,6 +702,8 @@ M.list = function(default_capabilities, default_on_attach)
           "typescript",
           "typescriptreact",
         },
+        workspace_required = true,
+        root_markers = { ".git" },
         root_dir = function(fname)
           local util = require("lspconfig.util")
           local function insert_mix_exs(root_files, package_name, fname)
@@ -773,7 +742,6 @@ M.list = function(default_capabilities, default_on_attach)
         end,
       }
     end,
-    teal_ls = {},
     terraformls = {},
     -- NOTE: presently enabled via typescript-tools
     ts_ls = function()

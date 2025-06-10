@@ -464,7 +464,6 @@ return {
   },
   {
     "mcauley-penney/visual-whitespace.nvim",
-    enabled = false,
     config = function()
       local U = require("mega.utils")
       -- local ws_bg = U.get_hl_hex({ name = "Visual" })["bg"]
@@ -540,4 +539,28 @@ return {
   --   },
   --   opts = {},
   -- },
+
+  { "neovim/nvim-lspconfig" },
+  { "nvim-lua/lsp_extensions.nvim" },
+  { "b0o/schemastore.nvim" },
+  { "onsails/lspkind.nvim" },
+  {
+    -- FIXME: https://github.com/mhanberg/output-panel.nvim/issues/5
+    "mhanberg/output-panel.nvim",
+    lazy = false,
+    keys = {
+      {
+        "<leader>lip",
+        ":OutputPanel<CR>",
+        desc = "lsp: open output panel",
+      },
+    },
+    cmd = { "OutputPanel" },
+    opts = true,
+  },
+  {
+    "synic/refactorex.nvim",
+    ft = "elixir",
+    opts = {},
+  },
 }

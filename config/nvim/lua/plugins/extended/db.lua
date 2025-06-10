@@ -1,5 +1,70 @@
 local map = vim.keymap.set
 
+local dbee_json_config = vim.fn.stdpath("config") .. "/.dbee_persistence.json"
+local get_default_connection_for_cwd = function(default_id)
+  local function find_matching_id()
+    local config_path = dbee_json_config
+    local cwd = vim.uv.cwd()
+
+    local ok_lsp, lspconfig = pcall(require, "lspconfig")
+    if ok_lsp then
+      local root_pattern = lspconfig.util.root_pattern
+      local fname = vim.api.nvim_buf_get_name(0)
+      cwd = root_pattern("mix.exs", "package.json", "shell.nix", ".git")(fname)
+    end
+
+    cwd = vim.fn.fnamemodify(cwd, ":t")
+
+    -- Check if file exists
+    if vim.fn.filereadable(config_path) == 0 then return nil end
+
+    -- Read file content
+    local file = io.open(config_path, "r")
+    if not file then return nil end
+
+    local content = file:read("*all")
+    file:close()
+
+    -- Parse JSON
+    local ok, data = pcall(vim.json.decode, content)
+    if not ok or not data then return nil end
+
+    -- Collect matching IDs with priority
+    local matches = {}
+
+    if type(data) == "table" then
+      for _, item in pairs(data) do
+        if type(item) == "table" and item.id then
+          -- Check if the id contains or matches the current working directory
+          if string.find(item.id, cwd, 1, true) or string.find(cwd, item.id, 1, true) then table.insert(matches, item.id) end
+        end
+      end
+    end
+
+    if #matches == 0 then return nil end
+
+    -- Prioritize matches: prefer "-local" over "-prod"
+    local local_match = nil
+    local prod_match = nil
+    local other_match = default_id
+
+    for _, id in ipairs(matches) do
+      if string.find(id, "_local", 1, true) then
+        local_match = id
+      elseif string.find(id, "_prod", 1, true) then
+        prod_match = id
+      else
+        other_match = other_match or id -- Take first other match
+      end
+    end
+
+    -- Return in priority order: local > other > prod
+    return local_match or other_match or prod_match
+  end
+
+  return find_matching_id() or default_id
+end
+
 return {
   {
     "kristijanhusak/vim-dadbod-ui",
@@ -8,7 +73,7 @@ return {
     },
     dependencies = {
       { "tpope/vim-dadbod", lazy = true },
-      { "kristijanhusak/vim-dadbod-completion", ft = { "dbee", "sql", "mysql", "plsql" }, lazy = true },
+      { "kristijanhusak/vim-dadbod-completion", ft = { "sql", "mysql", "plsql" }, lazy = true },
     },
     cmd = {
       "DBUI",
@@ -44,81 +109,95 @@ return {
       "MunifTanjim/nui.nvim",
     },
     keys = {
-      { "<leader>d", "<Cmd>Dbee<CR>", desc = "dbee: ui toggle", mode = "n" },
+      {
+        "<leader>d",
+        function()
+          vim.cmd("Dbee")
+
+          -- vim.schedule(function() require("dbee").api.ui.editor_search_note_with_file("default.sql") end)
+          -- vim.schedule(function() require("dbee").api.ui.editor_set_current_note("") end)
+        end,
+        desc = ")dbee: ui toggle",
+        mode = "n",
+      },
     },
     cmd = {
       "Dbee",
     },
     build = function() require("dbee").install() end,
-    opts = {
-      sources = {
-        require("dbee.sources").MemorySource:new({
-          {
-            name = "localhost",
-            type = "postgres",
-            url = "postgresql:///"
-              .. (vim.env.PGDATABASE or "postgres")
-              .. "?host="
-              .. (vim.env.PGHOST or "localhost")
-              .. "&port="
-              .. (vim.env.PGPORT or "5432")
-              .. "&sslmode="
-              .. (vim.env.PGSSLMODE or "disable"),
-          },
-        }),
-        require("dbee.sources").EnvSource:new("DBEE_CONNECTIONS"),
-        require("dbee.sources").FileSource:new(vim.fn.stdpath("config") .. "/.dbee_persistence.json"),
-      },
-      call_log = {
-        window_options = {
-          number = false,
-          relativenumber = false,
-          signcolumn = "no",
-        },
-      },
-      drawer = {
-        disable_help = true,
-        window_options = {
-          number = false,
-          relativenumber = false,
-          signcolumn = "no",
-        },
-      },
-      editor = {
-        mappings = {
-          { key = "gx", mode = "v", action = "run_selection" },
-          -- { key = "<s-cr>", mode = "n", action = "run_file" },
-          -- {
-          --   action = "run_selection",
-          --   key = "<C-M>",
-          --   mode = "x",
-          --   opts = { noremap = true, nowait = true, expr = true },
-          -- },
-        },
-      },
-      result = {
-        mappings = {
-          { action = "cancel_call", key = "<C-c>", mode = "" },
-          { action = "page_next", key = "<C-n>", mode = "" },
-          { action = "page_prev", key = "<C-p>", mode = "" },
-          { action = "yank_current_json", key = "yaj", mode = "n" },
-          { action = "yank_selection_json", key = "yaj", mode = "v" },
-          { action = "yank_all_json", key = "yaJ", mode = "" },
-          { action = "yank_current_csv", key = "yac", mode = "n" },
-          { action = "yank_selection_csv", key = "yac", mode = "v" },
-          { action = "yank_all_csv", key = "yaC", mode = "" },
-        },
-        window_options = {
-          number = false,
-          relativenumber = false,
-          signcolumn = "no",
-        },
-      },
-    },
-    config = function(_, opts)
-      local has_db, db = pcall(require, "dbee")
-
+    config = function()
+      local has_db, dbee = pcall(require, "dbee")
       if has_db then
+        local default_connection = get_default_connection_for_cwd("director_local")
+
+        local opts = {
+          default_connection = default_connection,
+          sources = {
+            require("dbee.sources").MemorySource:new({
+              {
+                name = "localhost",
+                type = "postgres",
+                url = "postgresql:///"
+                  .. (vim.env.PGDATABASE or "postgres")
+                  .. "?host="
+                  .. (vim.env.PGHOST or "localhost")
+                  .. "&port="
+                  .. (vim.env.PGPORT or "5432")
+                  .. "&sslmode="
+                  .. (vim.env.PGSSLMODE or "disable"),
+              },
+            }),
+            require("dbee.sources").EnvSource:new("DBEE_CONNECTIONS"),
+            require("dbee.sources").FileSource:new(dbee_json_config),
+          },
+          call_log = {
+            window_options = {
+              number = false,
+              relativenumber = false,
+              signcolumn = "no",
+            },
+          },
+          drawer = {
+            disable_help = true,
+            window_options = {
+              number = false,
+              relativenumber = false,
+              signcolumn = "no",
+            },
+          },
+          editor = {
+            directory = vim.g.db_ui_path .. "/dbee",
+            mappings = {
+              { key = "gx", mode = "v", action = "run_selection" },
+              -- { key = "<s-cr>", mode = "n", action = "run_file" },
+              -- {
+              --   action = "run_selection",
+              --   key = "<C-M>",
+              --   mode = "x",
+              --   opts = { noremap = true, nowait = true, expr = true },
+              -- },
+            },
+          },
+          result = {
+            mappings = {
+              { action = "cancel_call", key = "<C-c>", mode = "" },
+              { action = "page_next", key = "<C-n>", mode = "" },
+              { action = "page_prev", key = "<C-p>", mode = "" },
+              { action = "yank_current_json", key = "yaj", mode = "n" },
+              { action = "yank_selection_json", key = "yaj", mode = "v" },
+              { action = "yank_all_json", key = "yaJ", mode = "" },
+              { action = "yank_current_csv", key = "yac", mode = "n" },
+              { action = "yank_selection_csv", key = "yac", mode = "v" },
+              { action = "yank_all_csv", key = "yaC", mode = "" },
+            },
+            window_options = {
+              number = false,
+              relativenumber = false,
+              signcolumn = "no",
+            },
+          },
+        }
+
         map("n", "gx", function()
           local ts = vim.treesitter
           local parsers = require("nvim-treesitter.parsers")
@@ -171,8 +250,9 @@ return {
             end
           end
         end, { desc = "dbee: execute current line" })
+
+        dbee.setup(opts)
       end
-      db.setup(opts)
     end,
   },
 }
