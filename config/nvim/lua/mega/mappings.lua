@@ -403,7 +403,7 @@ end, { silent = true, desc = "[g]o [c]omment and [d]uplicate selected lines" })
 
 -- [[ treesitter captures ]] ---------------------------------------------------
 
-map({ "o", "x" }, "m", ":<C-U>lua require('tsht').nodes()<cr>", { desc = "ts hop range ops" })
+-- map({ "o", "x" }, "m", ":<C-U>lua require('tsht').nodes()<cr>", { desc = "ts hop range ops" })
 
 map("n", "Ss", function() vim.print(vim.treesitter.get_captures_at_cursor()) end, { desc = "Print treesitter captures under cursor" })
 

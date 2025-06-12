@@ -10,6 +10,8 @@ local function should_disable(lang, bufnr)
 end
 
 return {
+  { "fei6409/log-highlight.nvim", event = "BufRead *.log", opts = {} },
+  { "brianhuster/treesitter-endwise.nvim" },
   {
     "nvim-treesitter/nvim-treesitter",
     build = ":TSUpdate",
@@ -21,7 +23,7 @@ return {
         "cpp",
         "css",
         "csv",
-        "comment", -- too slow still.
+        -- "comment", -- too slow still.
         -- "dap_repl",
         "devicetree",
         "dockerfile",
@@ -79,8 +81,7 @@ return {
         "vimdoc",
         "yaml",
       },
-      ignore_install = {},
-      -- ignore_install = { "comment" },
+      ignore_install = { "comment" },
       auto_install = true,
       sync_install = false,
       highlight = {
@@ -166,11 +167,11 @@ return {
   },
   { "nvim-treesitter/nvim-treesitter-textobjects", cond = true, dependencies = { "nvim-treesitter/nvim-treesitter" } },
   -- { "RRethy/nvim-treesitter-textsubjects", cond = true, dependencies = { "nvim-treesitter/nvim-treesitter" } },
-  {
-    "mfussenegger/nvim-treehopper",
-    event = "LazyFile",
-    config = function() require("tsht").config.hint_keys = { "h", "j", "f", "d", "n", "v", "s", "l", "a" } end,
-  },
+  -- {
+  --   "mfussenegger/nvim-treehopper",
+  --   event = "LazyFile",
+  --   config = function() require("tsht").config.hint_keys = { "h", "j", "f", "d", "n", "v", "s", "l", "a" } end,
+  -- },
   { "RRethy/nvim-treesitter-endwise", dependencies = { "nvim-treesitter/nvim-treesitter" } },
   {
     "andymass/vim-matchup",

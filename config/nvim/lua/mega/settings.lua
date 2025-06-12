@@ -166,10 +166,11 @@ local M = {
   },
   icons = {
     lsp = {
-      error = "", -- alts: 󰬌      
-      warn = "󰔷", -- alts: 󰬞 󰔷   ▲ 󰔷
-      info = "󰖧", -- alts: 󰖧 󱂈 󰋼  󰙎   󰬐 󰰃     ● 󰬐 
-      hint = "▫", -- alts:  󰬏 󰰀  󰌶 󰰂 󰰂 󰰁 󰫵 󰋢   
+
+      error = "", -- alts:  󰬌      
+      warn = "󰔷", -- alts: 󰬞 󰔷   ▲ 󰔷  󰲉
+      info = "", -- alts: 󰖧 󱂈 󰋼  󰙎   󰬐 󰰃     ● 󰬐  ∙  󰌶
+      hint = "▫", -- alts:  󰬏 󰰀  󰰂 󰰂 󰰁 󰫵 󰋢    ∴
       ok = "✓", -- alts: ✓✓
       clients = "", -- alts:     󱉓 󱡠 󰾂 
     },

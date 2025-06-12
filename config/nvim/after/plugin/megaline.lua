@@ -45,18 +45,15 @@ Augroup("megaline", {
 
       ---@type {percentage: number, title?: string, kind: string, message?: string}
       local progress = ctx.data.params.value
+      local progress_icons = { "󰫃", "󰫄", "󰫅", "󰫆", "󰫇", "󰫈" }
 
       if not (progress and progress.title) then return end
-      local progress_icons = { "󰫃", "󰫄", "󰫅", "󰫆", "󰫇", "󰫈" }
+
       local idx = math.floor(#progress_icons / 2)
-      -- local percentage = string.format("%.0f %% ", 0)
-      if progress.percentage == 0 then idx = 1 end
-      -- if progress.percentage ~= nil and progress.percentage > 0 then percentage = string.format("%.0f %% ", progress.percentage) end
-      if progress.percentage and progress.percentage > 0 then idx = math.ceil(progress.percentage / 100 * #progress_icons) end
+      local percentage = string.format("%.0f󱉸 ", 0)
+      local text = ""
       local firstWord = vim.split(progress.title, " ")[1]:lower()
 
-      local text = table.concat({ progress_icons[idx], clientName, firstWord }, " ")
-      -- local text = table.concat({ progress_icons[idx], percentage, clientName, firstWord }, " ")
       if progress.kind == "end" then
         vim.g.lsp_progress_messages = fmt("%s %s loaded.", icons.lsp.ok, clientName)
         local timer = vim.uv.new_timer()
@@ -71,7 +68,28 @@ Augroup("megaline", {
           )
         end
       else
-        vim.g.lsp_progress_messages = text
+        if progress.percentage ~= nil then
+          if progress.percentage == nil or progress.percentage == 0 then
+            idx = 1
+          elseif progress.percentage > 0 and progress.percentage < 100 then
+            idx = math.ceil(progress.percentage / 100 * #progress_icons)
+            percentage = string.format("%.0f󱉸 ", progress.percentage)
+          else
+            percentage = ""
+          end
+
+          P(percentage)
+
+          local firstWord = vim.split(progress.title, " ")[1]:lower()
+
+          text = table.concat({ progress_icons[idx], percentage, clientName, firstWord }, " ")
+
+          vim.g.lsp_progress_messages = text
+        else
+          text = table.concat({ clientName, firstWord }, " ")
+
+          vim.g.lsp_progress_messages = text
+        end
       end
 
       pcall(vim.cmd.redrawstatus)

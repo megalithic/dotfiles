@@ -52,69 +52,76 @@ return {
         },
         ["pg_format"] = {
           command = "pg_format",
-          args = { "--inplace", "--config", ".pg_format.conf" },
+          -- args = { "--inplace", "--config", ".pg_format.conf" },
+          args = {
+            "--comma-start",
+            "--comma-break",
+            "--spaces",
+            "2",
+            "--keyword-case",
+            "1",
+            "--placeholder",
+            "\":: \"",
+            "--format-type",
+            "--inplace",
+          },
           cwd = require("conform.util").root_file({ ".pg_format.conf" }),
         },
-
         shfmt = {
           prepend_args = { "-i", "2", "-ci" },
         },
         beautysh = {
           prepend_args = { "-i", "2" },
         },
-        --       deno_fmt = {
-        --         prepend_args = { "--prose-wrap", "preserve" },
-        --       },
-        --       dprint = {
-        --         condition = function(ctx) return vim.fs.find({ "dprint.json" }, { path = ctx.filename, upward = true })[1] end,
-        --       },
-        --       mix = {
-        --         cwd = function(self, ctx) (require("conform.util").root_file({ "mix.exs" }))(self, ctx) end,
-        --       },
-        --       ["pg_format"] = {
-        --         command = "pg_format",
-        --         -- args = { "--inplace", "--config", ".pg_format.conf" },
-        --         args = {
-        --           "--comma-start",
-        --           "--comma-break",
-        --           "--spaces",
-        --           "2",
-        --           "--keyword-case",
-        --           "1",
-        --           "--placeholder",
-        --           "\":: \"",
-        --           "--format-type",
-        --           "--inplace",
-        --         },
-        --         -- cwd = require("conform.util").root_file({ ".pg_format.conf" }),
-
+        deno_fmt = {
+          prepend_args = { "--prose-wrap", "preserve" },
+        },
+        dprint = {
+          condition = function(ctx) return vim.fs.find({ "dprint.json" }, { path = ctx.filename, upward = true })[1] end,
+        },
         mix = {
           cwd = function(self, ctx) (require("conform.util").root_file({ "mix.exs" }))(self, ctx) end,
         },
+        statix = {
+          command = "statix",
+          args = { "fix", "--stdin" },
+          stdin = true,
+        },
       },
       formatters_by_ft = {
+        ["*"] = { "trim_whitespace", "trim_newlines" },
         lua = { "stylua" },
-        -- elixir = { "mix" },
+        -- elixir = { "mix", timeout_ms = 1000 },
         -- eelixir = { "mix" },
         -- heex = { "mix" },
-        typescriptreact = {
-          "eslint_d",
-          "prettierd",
-        },
-        typescript = {
-          "eslint_d",
-          "prettierd",
-        },
-        json = {
-          "prettierd",
-        },
-        javascript = {
-          "eslint_d",
-          "prettierd",
-        },
-        sql = {
-          "pg_format",
-        },
+        json = { "fixjson", "prettierd", "prettier", "dprint" },
+        jsonc = { "fixjson", "prettierd", "prettier", "dprint" },
+        json5 = { "fixjson", "prettierd", "prettier", "dprint" },
+        javascript = { "prettierd", "prettier", "dprint" },
+        javascriptreact = { "prettierd", "prettier", "dprint" },
+        bash = { "shfmt" }, -- shellharden
+        c = { "clang_format" },
+        cpp = { "clang_format" },
+        -- css = { "prettierd" },
+        go = { "goimports", "gofmt", "gofumpt" },
+        graphql = { "prettierd", "prettier", "dprint" },
+        html = { "prettierd", "prettier", "dprint" },
+        markdown = { "prettierd", "prettier", "dprint" },
+        ["markdown.mdx"] = { "prettierd", "prettier", "dprint" },
+        nix = { "nixpkgs_fmt", "statix" },
+        python = { "isort", "black" },
+        rust = { "rustfmt" },
+        -- sass = { "prettierd" },
+        -- scss = { "prettierd" },
+        sh = { "shfmt" }, -- shellharden
+        sql = { "pg_format", "sqlfluff" },
+        terraform = { "tofu_fmt" },
+        toml = { "taplo" },
+        typescript = { "prettierd", "prettier", "dprint" },
+        typescriptreact = { "prettierd", "prettier", "dprint" },
+        yaml = { "prettierd", "prettier", "dprint" },
+        zig = { "zigfmt" },
+        zsh = { "shfmt" }, -- shellhardenhfmt,
       },
       default_format_opts = {
         lsp_format = "fallback",
@@ -222,39 +229,6 @@ return {
 --       zig = { "zigfmt" },
 --       zsh = shfmt,
 --     },
---     formatters = {
---       shfmt = {
---         prepend_args = { "-i", "2", "-ci" },
---       },
---       beautysh = {
---         prepend_args = { "-i", "2" },
---       },
---       deno_fmt = {
---         prepend_args = { "--prose-wrap", "preserve" },
---       },
---       dprint = {
---         condition = function(ctx) return vim.fs.find({ "dprint.json" }, { path = ctx.filename, upward = true })[1] end,
---       },
---       mix = {
---         cwd = function(self, ctx) (require("conform.util").root_file({ "mix.exs" }))(self, ctx) end,
---       },
---       ["pg_format"] = {
---         command = "pg_format",
---         -- args = { "--inplace", "--config", ".pg_format.conf" },
---         args = {
---           "--comma-start",
---           "--comma-break",
---           "--spaces",
---           "2",
---           "--keyword-case",
---           "1",
---           "--placeholder",
---           "\":: \"",
---           "--format-type",
---           "--inplace",
---         },
---         -- cwd = require("conform.util").root_file({ ".pg_format.conf" }),
---       },
 --       statix = {
 --         command = "statix",
 --         args = { "fix", "--stdin" },

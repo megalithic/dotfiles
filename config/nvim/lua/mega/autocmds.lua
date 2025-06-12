@@ -654,9 +654,31 @@ function M.apply()
         end
       end,
     },
+    {
+      event = { "BufWritePost" },
+      desc = "restart automatically if changes are made to any config file",
+      enabled = false,
+      command = function(args)
+        local bufnr = args.buf
+        local filepath = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(bufnr), ":p")
+
+        local _, err = io.open(filepath, "r")
+        if err ~= nil then return end
+
+        if not vim.endswith(filepath, ".lua") and not vim.endswith(filepath, ".vim") then return end
+
+        local config_path = vim.fn.stdpath("config")
+        local real_config_path = vim.loop.fs_realpath(config_path)
+
+        if not real_config_path then return end
+
+        if not vim.startswith(filepath, real_config_path) then return end
+
+        vim.cmd("restart")
+      end,
+    },
     -- REF: https://github.com/ribru17/nvim/blob/master/lua/autocmds.lua#L68
     -->> "RUN ONCE" ON FILE OPEN COMMANDS <<--
-    --
     {
       event = { "BufRead", "BufNewFile" },
       enabled = false,

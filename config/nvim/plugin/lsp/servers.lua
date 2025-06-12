@@ -17,7 +17,7 @@ local function root_pattern(bufnr, on_dir, markers)
   on_dir(root_dir)
 end
 
-return {
+M = {
   bashls = {
     filetypes = { "sh", "zsh", "bash" }, -- work in zsh as well
     settings = {
@@ -238,11 +238,11 @@ return {
     },
   },
   jsonls = {
-    commands = {
-      Format = {
-        function() lsp.buf.range_formatting({}, { 0, 0 }, { fn.line("$"), 0 }) end,
-      },
-    },
+    -- commands = {
+    --   Format = {
+    --     function() lsp.buf.range_formatting({}, { 0, 0 }, { fn.line("$"), 0 }) end,
+    --   },
+    -- },
     init_options = { provideFormatter = false },
     single_file_support = true,
     on_new_config = function(new_config)
@@ -252,7 +252,7 @@ return {
     settings = {
       json = {
         format = { enable = false },
-        -- schemas = require("schemastore").json.schemas(),
+        schemas = require("schemastore").json.schemas(),
         validate = { enable = true },
       },
     },
@@ -827,6 +827,7 @@ return {
         "razor",
         "slim",
         "twig",
+        "phoenix-heex",
         -- css
         "css",
         "less",
@@ -847,6 +848,18 @@ return {
         "svelte",
         "templ",
       },
+      init_options = {
+        userLanguages = {
+          eruby = "erb",
+          eelixir = "html-eex",
+          elixir = "phoenix-heex",
+          heex = "phoenix-heex",
+          -- elixir = "html-eex",
+          -- eelixir = "html-eex",
+          -- heex = "html-eex",
+        },
+      },
+      filetypes_include = { "heex" },
       settings = {
         tailwindCSS = {
           validate = true,
@@ -861,18 +874,46 @@ return {
           },
           classAttributes = {
             "class",
+            "classes",
+            "additional_classes",
+            "additional_class",
             "className",
             "class:list",
             "classList",
             "ngClass",
           },
           includeLanguages = {
+            eruby = "erb",
             eelixir = "html-eex",
             elixir = "phoenix-heex",
-            eruby = "erb",
             heex = "phoenix-heex",
-            htmlangular = "html",
-            templ = "html",
+            -- elixir = "html-eex",
+            -- eelixir = "html-eex",
+            -- heex = "html-eex",
+          },
+          experimental = {
+            classRegex = {
+              -- [[class= "([^"]*)]],
+              -- [[*class= "([^"]*)]],
+              -- [[*_class= "([^"]*)]],
+              -- [[class: "([^"]*)]],
+              -- [[classes= "([^"]*)]],
+              -- [[*classes= "([^"]*)]],
+              -- [[*_classes= "([^"]*)]],
+              -- [[classes: "([^"]*)]],
+
+              -- [[~H""".*class="([^"]*)".*"""]],
+              -- [[~H""".*additional_classes="([^"]*)".*"""]],
+              -- "~H\"\"\".*class=\"([^\"]*)\".*\"\"\"",
+              -- "~H\"\"\".*additional_classes=\"([^\"]*)\".*\"\"\"",
+              [[class="([^"]*)]],
+              [[additional_classes="([^"]*)]],
+              [[class:"([^"]*)]],
+              [[~H""".*class="([^"]*)".*"""]],
+              [[~H""".*additional_classes="([^"]*)".*"""]],
+              "~H\"\"\".*class=\"([^\"]*)\".*\"\"\"",
+              "~H\"\"\".*additional_classes=\"([^\"]*)\".*\"\"\"",
+            },
           },
         },
       },
@@ -883,6 +924,9 @@ return {
       end,
       workspace_required = true,
       root_dir = function(bufnr, on_dir)
+        local util = require("lspconfig.util")
+        local fname = vim.api.nvim_buf_get_name(bufnr)
+
         local root_files = {
           -- Generic
           "tailwind.config.js",
@@ -909,13 +953,12 @@ return {
           "app/assets/tailwind/application.css",
         }
 
-        local util = require("lspconfig.util")
-        local fname = vim.api.nvim_buf_get_name(bufnr)
+        local elixir_root_dir = root_pattern(bufnr, on_dir, { "mix.exs" })
         root_files = util.insert_package_json(root_files, "tailwindcss", fname)
-        root_files = util.root_markers_with_field(root_files, { "mix.lock" }, "tailwind", fname)
+        root_files = util.root_markers_with_field(root_files, { "mix.exs" }, "tailwind", fname)
 
-        -- P(vim.fs.dirname(vim.fs.find(root_files, { path = fname, upward = true })[1]))
-        on_dir(vim.fs.dirname(vim.fs.find(root_files, { path = fname, upward = true })[1]))
+        -- P(vim.fs.dirname(vim.fs.find(root_matches or root_files, { path = fname, upward = true })[1]))
+        on_dir(vim.fs.dirname(vim.fs.find(root_matches or root_files, { path = fname, upward = true })[1]))
       end,
     }
   end,
@@ -928,7 +971,7 @@ return {
         arguments = { vim.api.nvim_buf_get_name(0) },
         title = "",
       }
-      lsp.buf.execute_command(params)
+      vim.lsp.buf.execute_command(params)
     end
 
     return {
@@ -992,3 +1035,78 @@ return {
     },
   },
 }
+
+-- M.tailwindcss = function()
+--   return {
+--     init_options = {
+--       userLanguages = {
+--         eelixir = "phoenix-heex",
+--         elixir = "phoenix-heex",
+--         eruby = "erb",
+--         heex = "phoenix-heex",
+--         surface = "phoenix-heex",
+--       },
+--     },
+--     settings = {
+--       tailwindCSS = {
+--         lint = {
+--           cssConflict = "warning",
+--           invalidApply = "error",
+--           invalidConfigPath = "error",
+--           invalidScreen = "error",
+--           invalidTailwindDirective = "error",
+--           invalidVariant = "error",
+--           recommendedVariantOrder = "warning",
+--         },
+--         classAttributes = {
+--           "class",
+--           "className",
+--           "classList",
+--         },
+--         experimental = {
+--           classRegex = {
+--             [[class="([^"]*)]],
+--             [[additional_classes="([^"]*)]],
+--             [[class:"([^"]*)]],
+--             [[~H""".*class="([^"]*)".*"""]],
+--             [[~H""".*additional_classes="([^"]*)".*"""]],
+--             "~H\"\"\".*class=\"([^\"]*)\".*\"\"\"",
+--             "~H\"\"\".*additional_classes=\"([^\"]*)\".*\"\"\"",
+--           },
+--         },
+--         validate = true,
+--       },
+--     },
+--     filetypes = {
+--       "css",
+--       "scss",
+--       "sass",
+--       "html",
+--       "heex",
+--       "elixir", -- this is causing a delay on bufenter for elixir files (white then coloured)
+--       "javascript",
+--       "javascriptreact",
+--       "typescript",
+--       "typescriptreact",
+--     },
+--     root_dir = function(bufnr, on_dir)
+--       -- local elixir_root_dir = root_pattern(bufnr, on_dir, { "mix.exs" })
+
+--       local root_dir = root_pattern(bufnr, on_dir, {
+--         "./assets/tailwind.config.js",
+--         "assets/tailwind.config.js",
+--         "tailwind.config.js",
+--         "tailwind.config.ts",
+--         "postcss.config.ts",
+--         "package.json",
+--         "node_modules",
+--         "mix.exs",
+--         ".git",
+--       })
+
+--       on_dir(root_dir)
+--     end,
+--   }
+-- end
+
+return M

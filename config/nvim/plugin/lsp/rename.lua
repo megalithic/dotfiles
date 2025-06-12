@@ -55,7 +55,7 @@ local function rename()
       if result.changes then
         for uri, edits in pairs(result.changes) do
           num_files = num_files + 1
-          bufnr = vim.uri_to_bufnr(uri)
+          local bufnr = vim.uri_to_bufnr(uri)
 
           for _, edit in ipairs(edits) do
             local start_line = edit.range.start.line + 1

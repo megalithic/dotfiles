@@ -123,7 +123,7 @@ LAUNCHERS = {
   { "com.brave.Browser.nightly", "j", nil, false },
   { "com.mitchellh.ghostty", "k", { "`" }, false },
   -- { "net.kovidgoyal.kitty", "k", nil, false },
-  { "noop-com.apple.MobileSMS", "m", nil, false }, -- NOOP for now.. TODO: implement a binding feature that let's us require n-presses before we execute
+  { "com.apple.MobileSMS", "m", nil, false }, -- NOOP for now.. TODO: implement a binding feature that let's us require n-presses before we execute
   { "com.apple.finder", "f", nil, false },
   { "com.spotify.client", "p", nil, false },
   { "com.freron.MailMate", "e", nil, false },

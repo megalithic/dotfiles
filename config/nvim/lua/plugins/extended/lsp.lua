@@ -1,4 +1,5 @@
-if Plugin_enabled("lsp") then return {} end
+-- presently using plugin/lsp/* instead
+if true then return {} end
 
 local U = require("mega.utils")
 local SETTINGS = require("mega.settings")

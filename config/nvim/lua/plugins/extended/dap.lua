@@ -1,6 +1,7 @@
 local SETTINGS = require("mega.settings")
 
 return {
+  cond = false,
   "mfussenegger/nvim-dap",
   event = { "LazyFile" },
   dependencies = {

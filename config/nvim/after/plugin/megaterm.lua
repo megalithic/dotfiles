@@ -50,9 +50,9 @@ vim.g.megatermv = false
 
 -------------------------- util funcs -----------------------------
 local function set_term_opts(buf, opts, should_bufdelete)
-  dbg(should_bufdelete)
+  P(should_bufdelete)
   should_bufdelete = should_bufdelete ~= nil and should_bufdelete or false
-  dbg(should_bufdelete)
+  P(should_bufdelete)
 
   local terms_list = vim.g.megaterms
   terms_list[tostring(buf)] = opts
@@ -76,7 +76,7 @@ local function get_term_opts_by_id(id)
     if opts.id == id then term_opts = opts end
   end
 
-  dbg({ "found term_opts?", id, term_opts })
+  P({ "found term_opts?", id, term_opts })
 
   return term_opts
 end

@@ -1,10 +1,15 @@
-if not Plugin_enabled() then return end
+-- if not Plugin_enabled("lsp") then return end
 
 local fmt = string.format
 local SETTINGS = require("mega.settings")
 local BORDER_STYLE = SETTINGS.border
 local methods = vim.lsp.protocol.Methods
-local lsp_group = vim.api.nvim_create_augroup("lsp", { clear = true })
+local lsp_group = vim.api.nvim_create_augroup("mega.lsp", { clear = true })
+local preview_opts = {
+  border = "rounded",
+  focusable = false,
+  silent = true,
+}
 
 local function lsp_method(client, method)
   assert(client, "must have valid language server client")
@@ -75,7 +80,12 @@ local function goto_diagnostic_hl(dir)
   end
 
   diagnostic_timer = vim.defer_fn(hl_cancel, 500)
-  vim.diagnostic["goto_" .. dir]({ float = true })
+  vim.diagnostic["goto_" .. dir]({
+    float = false,
+    virtual_lines = {
+      current_line = true,
+    },
+  })
 end
 
 local function fix_current_action()
@@ -234,65 +244,54 @@ local function on_init(client, result)
 end
 
 local function get_capabilitites()
-  -- TODO: fixes for nvim 10?
-  -- REF: https://github.com/dkarter/dotfiles/blob/master/config/nvim/lua/plugins/mason/lsp.lua#L53
   local capabilities = vim.lsp.protocol.make_client_capabilities()
+
   if pcall(require, "cmp_nvim_lsp") and vim.g.completer == "cmp" then capabilities = require("cmp_nvim_lsp").default_capabilities(capabilities) end
   if pcall(require, "blink.cmp") and vim.g.completer == "blink" then capabilities = require("blink.cmp").get_lsp_capabilities(capabilities) end
 
-  capabilities.workspace = {
-    didChangeWatchedFiles = {
-      dynamicRegistration = false,
-    },
-  }
-  capabilities.textDocument.foldingRange = { dynamicRegistration = false, lineFoldingOnly = true }
-  capabilities.textDocument.completion = {
-    dynamicRegistration = false,
-    completionItem = {
-      snippetSupport = true,
-      documentationFormat = { "markdown", "plaintext" },
-      commitCharactersSupport = true,
-      deprecatedSupport = true,
-      preselectSupport = true,
-      tagSupport = {
-        valueSet = {
-          1, -- Deprecated
-        },
-      },
-      insertReplaceSupport = true,
-      resolveSupport = {
-        properties = {
-          "documentation",
-          "detail",
-          "additionalTextEdits",
-          "sortText",
-          "filterText",
-          "insertText",
-          "textEdit",
-          "insertTextFormat",
-          "insertTextMode",
-        },
-      },
-      insertTextModeSupport = {
-        valueSet = {
-          1, -- asIs
-          2, -- adjustIndentation
-        },
-      },
-      labelDetailsSupport = true,
-    },
-    contextSupport = true,
-    insertTextMode = 1,
-    completionList = {
-      itemDefaults = {
-        "commitCharacters",
-        "editRange",
-        "insertTextFormat",
-        "insertTextMode",
-        "data",
+  capabilities = vim.tbl_deep_extend("force", capabilities, {
+    workspace = {
+      didChangeWatchedFiles = {
+        dynamicRegistration = false,
       },
     },
-  }
+    foldingRange = { dynamicRegistration = false, lineFoldingOnly = true },
+    textDocument = {
+      completion = {
+        dynamicRegistration = false,
+        completionItem = {
+          snippetSupport = true,
+          commitCharactersSupport = true,
+          deprecatedSupport = true,
+          preselectSupport = true,
+          resolveSupport = {
+            properties = {
+              "documentation",
+              "detail",
+              "additionalTextEdits",
+              "sortText",
+              "filterText",
+              "insertText",
+              "textEdit",
+              "insertTextFormat",
+              "insertTextMode",
+            },
+          },
+          labelDetailsSupport = true,
+        },
+        contextSupport = true,
+        completionList = {
+          itemDefaults = {
+            "commitCharacters",
+            "editRange",
+            "insertTextFormat",
+            "insertTextMode",
+            "data",
+          },
+        },
+      },
+    },
+  })
 
   return capabilities
 end
@@ -338,7 +337,10 @@ end
 local function make_keymaps(client, bufnr)
   local snacks = require("snacks").picker
 
-  local desc = function(str) return "[+lsp] " .. str end
+  local desc = function(str)
+    if str == nil then return "" end
+    return "[+lsp] " .. str
+  end
 
   local map = function(modes, keys, func, d, opts)
     opts = vim.tbl_deep_extend("keep", { buffer = bufnr, desc = desc(d) }, opts or {})
@@ -362,6 +364,45 @@ local function make_keymaps(client, bufnr)
 
   -- "<leader>ss", function() Snacks.picker.lsp_symbols() end, desc = "LSP Symbols" },
   --    { "<leader>sS", function() Snacks.picker.lsp_workspace_symbols() end, desc = "LSP Workspace Symbols" },
+
+  -- vnmap("grn", function()
+  --   -- local bufnr = vim.api.nvim_get_current_buf()
+  --   local params = vim.lsp.util.make_position_params(0, "utf-8")
+  --   params.context = { includeDeclaration = true }
+  --   local clients = vim.lsp.get_clients()
+  --   if not clients or #clients == 0 then
+  --     vim.print("No attached clients.")
+  --     return
+  --   end
+  --   local client = clients[1]
+  --   for _, possible_client in pairs(clients) do
+  --     if possible_client.server_capabilities.renameProvider then
+  --       client = possible_client
+  --       break
+  --     end
+  --   end
+  --   local ns = vim.api.nvim_create_namespace("LspRenamespace")
+
+  --   client:request("textDocument/references", params, function(_, result)
+  --     if result and not vim.tbl_isempty(result) then
+  --       for _, v in ipairs(result) do
+  --         if v.range then
+  --           local buf = vim.uri_to_bufnr(v.uri)
+  --           local line = v.range.start.line
+  --           local start_char = v.range.start.character
+  --           local end_char = v.range["end"].character
+  --           if buf == bufnr then vim.hl.range(bufnr, ns, "LspReferenceWrite", line, start_char, end_char) end
+  --         end
+  --       end
+  --       vim.cmd.redraw()
+  --     end
+
+  --     local new_name = vim.fn.input({ prompt = "New name: " })
+  --     vim.api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
+  --     if #new_name == 0 then return end
+  --     vim.lsp.buf.rename(new_name)
+  --   end, bufnr)
+  -- end, "rename symbol/references")
 
   vnmap("gn", function()
     local ok_rename, rename = pcall(dofile, vim.fn.stdpath("config") .. "/plugin/lsp/rename.lua")
@@ -409,9 +450,9 @@ local function make_keymaps(client, bufnr)
   end)
 
   lsp_method(client, "textDocument/definition")(function()
-    nmap("gd", "<cmd>vsplit<cr><cmd>lua require('snacks').picker.lsp_definitions()<cr>", "goto definition (vsplit)")
-    -- nmap("gd", function() require("fzf-lua").lsp_definitions({ jump1 = true }) end, "Go to definition")
-    -- nmap("gD", function() require("fzf-lua").lsp_definitions({ jump1 = false }) end, "Peek definition")
+    -- nmap("gd", "<cmd>vsplit<cr><cmd>lua require('snacks').picker.lsp_definitions()<cr>", "goto definition (vsplit)")
+    nmap("gd", function() require("fzf-lua").lsp_definitions({ jump1 = true }) end, "Go to definition")
+    nmap("gD", function() require("fzf-lua").lsp_definitions({ jump1 = false }) end, "Peek definition")
     -- nmap("gd", "<cmd>vsplit | lua vim.lsp.buf.definition()<cr>", "Goto Definition in Vertical Split")
   end)
 
@@ -445,70 +486,108 @@ end
 
 local function on_attach(client, bufnr, client_id)
   vim.b[bufnr].lsp = client.name
+  local filetype = vim.bo[bufnr].filetype
+  local disabled_lsp_formatting = SETTINGS.disabled_lsp_formatters
 
   make_commands(client, bufnr)
   make_keymaps(client, bufnr)
 
+  -- Auto-formatting on save
+  lsp_method(client, methods.textDocument_formatting)(function()
+    for i = 1, #disabled_lsp_formatting do
+      if disabled_lsp_formatting[i] == client.name then
+        client.server_capabilities.documentFormattingProvider = false
+        client.server_capabilities.documentRangeFormattingProvider = false
+      end
+    end
+
+    -- if not lsp_method(client, methods.textDocument_willSaveWaitUntil) then
+    -- vim.api.nvim_create_autocmd("BufWritePre", {
+    --   group = lsp_group,
+    --   buffer = bufnr,
+    --   callback = function()
+    --     local autoformat =
+    --       vim.F.if_nil(client.settings and client.settings.autoformat, vim.b.lsp and vim.b.lsp.autoformat, vim.g.lsp and vim.g.lsp.autoformat, false)
+    --     if autoformat then vim.lsp.buf.format({ bufnr = bufnr, id = client_id or client.id }) end
+    --   end,
+    -- })
+    -- end
+  end)
+
+  lsp_method(client, methods.textDocument_semanticTokens_full)(function()
+    if SETTINGS.disabled_semantic_tokens[filetype] then client.server_capabilities.semanticTokensProvider = vim.NIL end
+  end)
+
+  lsp_method(client, methods.textDocument_inlayHint)(function()
+    if SETTINGS.enabled_inlay_hints[filetype] then vim.lsp.inlay_hint.enable(true) end
+  end)
+
+  lsp_method(client, methods.textDocument_documentSymbol)(function()
+    if pcall(require, "nvim-navic") then require("nvim-navic").attach(client, bufnr) end
+  end)
+
   -- Document highlighting
-  lsp_method(client, "textDocument/documentHighlight")(function()
+  lsp_method(client, methods.textDocument_documentHighlight)(function()
     Augroup(lsp_group, {
       {
-
         event = { "CursorHold", "InsertLeave" },
-        buffer = bufnr,
+        -- buffer = bufnr,
         command = function() vim.lsp.buf.document_highlight() end,
       },
-
       {
-
         event = { "CursorMoved", "InsertEnter" },
-        buffer = bufnr,
+        -- buffer = bufnr,
         command = function() vim.lsp.buf.clear_references() end,
       },
     })
   end)
 
   -- Code lens
-  lsp_method(client, "textDocument/codeLens")(function()
-    vim.api.nvim_create_autocmd("LspProgress", {
-      group = lsp_group,
-      pattern = "end",
-      callback = function(progress_args)
-        if progress_args.buf == bufnr then vim.lsp.codelens.refresh({ bufnr = bufnr }) end
-      end,
-    })
-    vim.api.nvim_create_autocmd({ "BufEnter", "TextChanged", "InsertLeave" }, {
-      group = lsp_group,
-      buffer = bufnr,
-      callback = function() vim.lsp.codelens.refresh({ bufnr = bufnr }) end,
+  lsp_method(client, methods.textDocument_codeLens)(function()
+    Augroup(lsp_group, {
+      {
+        event = { "LspProgress" },
+        pattern = "end",
+        command = function(args)
+          if args.buf == bufnr then vim.lsp.codelens.refresh({ bufnr = args.buf }) end
+        end,
+      },
+      {
+        event = { "BufEnter", "TextChanged", "InsertLeave" },
+        buffer = bufnr,
+        command = function(args) vim.lsp.codelens.refresh({ bufnr = args.buf }) end,
+      },
     })
 
     vim.lsp.codelens.refresh({ bufnr = bufnr })
   end)
 
-  -- Folding
-  lsp_method(client, "textDocument/foldingRange")(function()
-    -- vim.wo[0][0].foldmethod = "expr"
-    -- vim.wo[0][0].foldexpr = "v:lua.vim.lsp.foldexpr()"
-
-    -- foldcolumn = "1",
-    -- foldlevel = 99,
-    -- vim.opt.foldlevelstart = 99
-    -- foldmethod = "indent",
-    -- foldtext = "v:lua.vim.treesitter.foldtext()",
+  lsp_method(client, methods.textDocument_signatureHelp)(function()
+    Augroup(lsp_group, {
+      {
+        event = { "CursorHoldI" },
+        buffer = bufnr,
+        command = function(args)
+          local node = vim.treesitter.get_node()
+          if node and (node:type() == "arguments" or (node:parent() and node:parent():type() == "arguments")) then
+            vim.defer_fn(function() vim.lsp.buf.signature_help(preview_opts) end, 500)
+          end
+        end,
+      },
+    })
   end)
 
-  -- Auto-formatting on save
-  -- if not lsp_method(client, "textDocument/willSaveWaitUntil") and lsp_method(client, "textDocument/formatting") then
-  --   vim.api.nvim_create_autocmd("BufWritePre", {
-  --     group = lsp_group,
-  --     buffer = bufnr,
-  --     callback = function()
-  --       local autoformat =
-  --         vim.F.if_nil(client.settings and client.settings.autoformat, vim.b.lsp and vim.b.lsp.autoformat, vim.g.lsp and vim.g.lsp.autoformat, false)
-  --       if autoformat then vim.lsp.buf.format({ bufnr = bufnr, id = client_id or client.id }) end
-  --     end,
-  --   })
+  -- Folding
+  -- vim.opt.foldmethod = "expr"
+  -- if lsp_method(client, methods.textDocument_foldingRange) and vim.lsp.foldexpr then
+  --   vim.opt.foldexpr = "v:lua.vim.lsp.foldexpr()"
+  --   vim.opt.foldtext = "v:lua.vim.lsp.foldtext()"
+  -- elseif vim.treesitter.foldexpr then
+  --   vim.opt.foldexpr = "v:lua.vim.treesitter.foldexpr()"
+  --   vim.opt.foldtext = ""
+  -- else
+  --   vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
+  --   vim.opt.foldtext = ""
   -- end
 
   -- load diagnostics config
@@ -545,7 +624,7 @@ Augroup(lsp_group, {
   {
     event = { "LspProgress" },
     pattern = "*",
-    command = function(args) vim.cmd.redrawstatus() end,
+    command = function(_args) vim.cmd.redrawstatus() end,
   },
 })
 

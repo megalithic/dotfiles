@@ -50,6 +50,15 @@ local M = {}
 M.L = vim.log.levels
 M.I = vim.inspect
 
+-- Echo a message with optional highlighting and history
+function M.echo(msg, hl, history)
+  history = history or false
+  return vim.api.nvim_echo({ { msg, hl } }, history, {})
+end
+
+-- Echo a message with history enabled
+function M.echom(msg, hl) return M.echo(msg, hl, true) end
+
 -- inspect the contents of an object very quickly
 -- in your code or from the command-line:
 -- @see: https://www.reddit.com/r/neovim/comments/p84iu2/useful_functions_to_explore_lua_objects/
@@ -57,7 +66,7 @@ M.I = vim.inspect
 -- in lua: P({1, 2, 3})
 -- in commandline: :P vim.loop
 ---@vararg any
-function M.P(...)
+function M.D(...)
   local debug_info = debug.getinfo(2)
   local mod_name = vim.fn.fnamemodify(debug_info.short_src, ":t")
   local mod_line = debug_info.currentline
@@ -84,22 +93,40 @@ function M.P(...)
   -- vim.schedule_wrap(function() print(vim.inspect(#printables > 1 and printables or unpack(printables))) end)
   -- end
 
-  local formatter = function(msg) return string.format("[%s] %s %s:%s -> %s", "DEBUG", os.date("%H:%M:%S"), mod_name, mod_line, msg) end
-  Echom(formatter(vim.inspect(#printables > 1 and printables or unpack(printables))), "Question")
+  vim.schedule_wrap(function()
+    local formatter = function(msg) return string.format("[%s] %s %s:%s -> %s", "DEBUG", os.date("%H:%M:%S"), mod_name, mod_line, msg) end
+    M.echom(formatter(vim.inspect(#printables > 1 and printables or unpack(printables))), "Question")
+  end)
 
   return ...
 end
 
-M.dbg = M.P
+-- inspect the contents of an object very quickly
+-- in your code or from the command-line:
+-- @see: https://www.reddit.com/r/neovim/comments/p84iu2/useful_functions_to_explore_lua_objects/
+-- USAGE:
+-- in lua: P({1, 2, 3})
+-- in commandline: :P vim.loop
+---@vararg any
+function M.P(...)
+  local debug_info = debug.getinfo(2)
+  local mod_name = vim.fn.fnamemodify(debug_info.short_src, ":t")
+  local mod_line = debug_info.currentline
 
--- Echo a message with optional highlighting and history
-function M.echo(msg, hl, history)
-  history = history or false
-  return vim.api.nvim_echo({ { msg, hl } }, history, {})
+  local printables = {}
+  for i = 1, select("#", ...) do
+    local v = select(i, ...)
+    table.insert(printables, vim.inspect(v))
+  end
+
+  -- local formatter = function(msg) return string.format("[%s] %s -> %s", "INFO", os.date("%H:%M:%S"), msg) end
+  vim.schedule_wrap(function()
+    local formatter = function(msg) return string.format("[%s] %s %s:%s -> %s", "INFO", os.date("%H:%M:%S"), mod_name, mod_line, msg) end
+    M.echom(formatter(vim.inspect(#printables > 1 and printables or unpack(printables))), "Comment")
+  end)
+
+  return ...
 end
-
--- Echo a message with history enabled
-function M.echom(msg, hl) return M.echo(msg, hl, true) end
 
 -- Map a key in the given mode. Defaults to non-recursive and silent.
 function M.keymap(modes, from, to, opts)
@@ -270,6 +297,10 @@ function M.augroup(name, commands)
       return accum
     end, cmd, {})
     if #incorrect == 0 then return end
+    local debug_info = debug.getinfo(2)
+    local mod_name = vim.fn.fnamemodify(debug_info.short_src, ":t:r")
+    local mod_line = debug_info.currentline
+
     vim.schedule(
       function()
         vim.notify("Incorrect keys: " .. table.concat(incorrect, ", "), vim.log.levels.ERROR, {

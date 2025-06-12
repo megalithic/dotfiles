@@ -100,26 +100,41 @@ return {
           ["<Up>"] = { "select_prev", "fallback" },
           ["<C-u>"] = { "scroll_documentation_up", "fallback" },
           ["<C-d>"] = { "scroll_documentation_down", "fallback" },
+          ["<C-Up>"] = { "scroll_documentation_up", "fallback" },
+          ["<C-Down>"] = { "scroll_documentation_down", "fallback" },
           ["<Tab>"] = { "snippet_forward", "select_next", "fallback" },
           ["<S-Tab>"] = { "snippet_backward", "select_prev", "fallback" },
-
+          --   ["<Tab>"] = {
+          --     function(cmp) return cmp.select_next() end,
+          --     "snippet_forward",
+          --     "fallback",
+          --   },
           -- ["<Tab>"] = {
-          --   function()
+          --   function(blink)
           --     if blink.is_visible() then
-          --       blink.select_next({ auto_insert = true })
+          --       blink.select_next()
           --     elseif vim.fn.mode() == "c" then
           --       vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Down>", true, true, true), "n", true)
           --     end
           --   end,
+          --   "snippet_forward",
+          --   "fallback",
           -- },
+          --   ["<S-Tab>"] = {
+          --     function(cmp) return cmp.select_prev() end,
+          --     "snippet_backward",
+          --     "fallback",
+          --   },
           -- ["<S-Tab>"] = {
-          --   function()
-          --     if blink.is_visible() then
-          --       blink.select_prev({ auto_insert = true })
+          --   function(cmp)
+          --     if cmp.is_visible() then
+          --       cmp.select_prev()
           --     elseif vim.fn.mode() == "c" then
           --       vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Up>", true, true, true), "n", true)
           --     end
           --   end,
+          --   "snippet_backward",
+          --   "fallback",
           -- },
         },
         signature = { enabled = true },

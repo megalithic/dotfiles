@@ -1,17 +1,17 @@
 local SETTINGS = require("mega.settings")
 
 return {
-  { "echasnovski/mini.jump", version = false, opts = {} },
+  { "echasnovski/mini.jump", enabled = false, version = false, opts = {} },
   { "echasnovski/mini.icons", version = false },
   {
     "echasnovski/mini.indentscope",
     config = function()
       require("mini.indentscope").setup({
         symbol = SETTINGS.indent_scope_char,
-        -- mappings = {
-        --   goto_top = "<leader>k",
-        --   goto_bottom = "<leader>j",
-        -- },
+        mappings = {
+          goto_top = "]]",
+          goto_bottom = "[[",
+        },
         draw = {
           delay = 0,
           animation = function() return 0 end,
@@ -78,7 +78,8 @@ return {
         },
       })
 
-      vim.keymap.set("x", "S", [[:<C-u>lua MiniSurround.add('visual')<CR>]])
+      Keymap("x", "S", [[:<C-u>lua MiniSurround.add('visual')<CR>]])
+      Keymap("n", "yss", "ys_", { noremap = false })
     end,
   },
   {
@@ -190,8 +191,9 @@ return {
   },
   {
     "echasnovski/mini.pairs",
+    enabled = true,
     opts = {
-      modes = { insert = true, command = true, terminal = false },
+      modes = { insert = true, command = false, terminal = false },
       -- skip autopair when next character is one of these
       skip_next = [=[[%w%%%'%[%"%.%`%$]]=],
       -- skip autopair when the cursor is inside these treesitter nodes

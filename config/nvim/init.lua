@@ -1,4 +1,5 @@
 if vim.loader then vim.loader.enable() end
+if vim.fn.has("nvim-0.12") == 1 then require("vim._extui").enable({}) end
 
 _G.mega = {}
 
@@ -22,6 +23,7 @@ _G.mega = {
     "clipboard",
     "folds",
     "env",
+    "notes",
     "filetypes",
   },
   ui = { statusline = {}, statuscolumn = {} },
@@ -58,9 +60,9 @@ end
 -- TODO: derive plugin name automatically
 function _G.Plugin_enabled(plugin)
   local debug_info = debug.getinfo(2)
-  local mod_name = vim.fn.fnamemodify(debug_info.short_src, ":t:r")
+  plugin = plugin ~= nil and plugin or vim.fn.fnamemodify(debug_info.short_src, ":t:r")
 
-  return mega ~= nil and vim.tbl_contains(mega.enabled_plugins, plugin or mod_name)
+  return vim.tbl_contains(mega.enabled_plugins, plugin)
 end
 
 require("mega.macros")
@@ -69,5 +71,3 @@ require("mega.lazy")
 require("mega.commands")
 require("mega.autocmds").apply()
 require("mega.mappings")
-
--- mega.notify(string.format("%d global modules loaded..", #global_mods), L.WARN)
