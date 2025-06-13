@@ -1,6 +1,6 @@
 if not Plugin_enabled() then return end
 
-local U = require("mega.utils")
+local U = require("config.utils")
 local command = vim.api.nvim_create_user_command
 local map = vim.keymap.set
 
@@ -438,7 +438,7 @@ end
 -- <leader>n<key>
 vim.iter(notesMappings):each(function(key, rhs) leaderMapper("n", "n" .. key, rhs[1], rhs[2]) end)
 
-require("mega.autocmds").augroup("NotesLoaded", {
+require("config.autocmds").augroup("NotesLoaded", {
   {
     event = { "LspAttach", "BufEnter" },
     desc = "Use various notes related functions upon markdown entering or markdown-oxide lsp attaching",

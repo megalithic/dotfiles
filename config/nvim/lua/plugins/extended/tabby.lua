@@ -7,7 +7,7 @@ return {
   dependencies = { "rktjmp/lush.nvim" },
   cond = false, --not vim.g.started_by_firenvim and not vim.env.TMUX_POPUP,
   config = function()
-    local SETTINGS = require("mega.settings")
+    local SETTINGS = require("config.settings")
     local icons = SETTINGS.icons
     local fmt = string.format
 

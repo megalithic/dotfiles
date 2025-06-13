@@ -5,7 +5,7 @@ local api = vim.api
 local fmt = string.format
 local levels = vim.log.levels
 local L = levels
-local SETTINGS = require("mega.settings")
+local SETTINGS = require("config.settings")
 local get_node = vim.treesitter.get_node
 local cur_pos = vim.api.nvim_win_get_cursor
 

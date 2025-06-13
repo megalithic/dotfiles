@@ -325,7 +325,7 @@ Useful PEPs for this section (not exhaustive):
     config = function(_, opts)
       local plugin = require("supermaven-nvim")
       local api = require("supermaven-nvim.api")
-      local utils = require("mega.utils")
+      local utils = require("config.utils")
 
       local function toggle()
         local is_on = api.is_running()

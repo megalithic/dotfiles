@@ -1,4 +1,4 @@
-local icons = require("mega.settings").icons
+local icons = require("config.settings").icons
 return {
   "nvim-neo-tree/neo-tree.nvim",
   keys = {
@@ -147,7 +147,7 @@ return {
       commands = {
         image_preview = function(state)
           local node = state.tree:get_node()
-          if node.type == "file" then require("mega.utils").preview_file(node.path) end
+          if node.type == "file" then require("config.utils").preview_file(node.path) end
         end,
       },
     })

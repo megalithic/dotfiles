@@ -1,7 +1,7 @@
--- if not Plugin_enabled("lsp") then return end
+if not Plugin_enabled("lsp") then return end
 
 local fmt = string.format
-local SETTINGS = require("mega.settings")
+local SETTINGS = require("config.settings")
 local BORDER_STYLE = SETTINGS.border
 local methods = vim.lsp.protocol.Methods
 local lsp_group = vim.api.nvim_create_augroup("mega.lsp", { clear = true })
@@ -44,6 +44,7 @@ end
 local function goto_diagnostic_hl(dir)
   assert(dir == "prev" or dir == "next")
 
+  local step = dir == "next" and 1 or -1
   local diagnostic_ns = vim.api.nvim_create_namespace("mega.hl_diagnostic_region")
   local diagnostic_timer
   local hl_cancel
@@ -53,8 +54,6 @@ local function goto_diagnostic_hl(dir)
     [vim.diagnostic.severity.HINT] = "DiagnosticVirtualTextHint",
     [vim.diagnostic.severity.INFO] = "DiagnosticVirtualTextInfo",
   }
-
-  -- require("lspconfig.ui.windows").default_options.border = BORDER_STYLE
 
   local diagnostic = vim.diagnostic["get_" .. dir]()
   if not diagnostic then return end
@@ -80,7 +79,9 @@ local function goto_diagnostic_hl(dir)
   end
 
   diagnostic_timer = vim.defer_fn(hl_cancel, 500)
-  vim.diagnostic["goto_" .. dir]({
+  -- vim.diagnostic["goto_" .. dir]({
+  vim.diagnostic.jump({
+    count = step,
     float = false,
     virtual_lines = {
       current_line = true,
@@ -312,7 +313,7 @@ local function make_commands(client, bufnr)
   end
 
   Command("LspInfo", function() vim.cmd.checkhealth("lsp") end, { desc = "View LSP info" })
-
+  Command("LspLog", function() vim.cmd.tabnew(vim.lsp.get_log_path()) end, { desc = "Opens LSP log file in new tab." })
   Command("LspLogDelete", function() vim.fn.system("rm " .. vim.lsp.get_log_path()) end, { desc = "Deletes the LSP log file. Useful for when it gets too big" })
 
   Command("LspRestart", function(cmd)
@@ -349,6 +350,10 @@ local function make_keymaps(client, bufnr)
   local nmap = function(keys, func, d) map("n", keys, func, d, { noremap = false }) end
   local imap = function(keys, func, d) map("i", keys, func, d, { noremap = false }) end
   local vnmap = function(keys, func, d, opts) map({ "v", "n" }, keys, func, d, opts) end
+
+  nmap("<leader>lic", [[<cmd>LspInfo<CR>]], "connected client info")
+  nmap("<leader>lim", [[<cmd>Mason<CR>]], "mason info")
+  nmap("<leader>lil", [[<cmd>LspLog<CR>]], "logs (vsplit)")
 
   nmap("gl", show_diagnostic_popup, "[g]o to diagnostic hover")
   nmap("K", vim.lsp.buf.hover, "hover docs")
@@ -609,6 +614,7 @@ Augroup(lsp_group, {
       if client_config ~= nil then
         assert(client_config.on_attach, "must have an on_attach function for language server client")
         client_config.on_attach(client, bufnr)
+        P("lsp clients on_attach'd")
       end
     end,
   },

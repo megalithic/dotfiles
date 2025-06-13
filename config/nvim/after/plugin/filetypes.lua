@@ -4,7 +4,7 @@ if not Plugin_enabled() then return end
 ---@param replace string
 local function abbr(text, replace, bufnr) vim.keymap.set("ia", text, replace, { buffer = bufnr or true }) end
 
-local ftplugin = require("mega.ftplugin")
+local ftplugin = require("config.ftplugin")
 ftplugin.extend_all({
   -- dbee = {
   --   keys = {
@@ -68,10 +68,10 @@ ftplugin.extend_all({
         vim.cmd("edit")
       end, "format")
 
-      nmap("<localleader>ok", [[:lua require("mega.utils").wrap_cursor_node("{:ok, ", "}")<CR>]], "copy module alias")
-      xmap("<localleader>ok", [[:lua require("mega.utils").wrap_selected_nodes("{:ok, ", "}")<CR>]], "copy module alias")
-      nmap("<localleader>err", [[:lua require("mega.utils").wrap_cursor_node("{:error, ", "}")<CR>]], "copy module alias")
-      xmap("<localleader>err", [[:lua require("mega.utils").wrap_selected_nodes("{:error, ", "}")<CR>]], "copy module alias")
+      nmap("<localleader>ok", [[:lua require("config.utils").wrap_cursor_node("{:ok, ", "}")<CR>]], "copy module alias")
+      xmap("<localleader>ok", [[:lua require("config.utils").wrap_selected_nodes("{:ok, ", "}")<CR>]], "copy module alias")
+      nmap("<localleader>err", [[:lua require("config.utils").wrap_cursor_node("{:error, ", "}")<CR>]], "copy module alias")
+      xmap("<localleader>err", [[:lua require("config.utils").wrap_selected_nodes("{:error, ", "}")<CR>]], "copy module alias")
 
       -- NOTE: these workspace commands only work with elixir-ls
       -- local lsp_execute = function(opts)

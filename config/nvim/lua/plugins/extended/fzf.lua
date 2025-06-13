@@ -25,7 +25,7 @@ local function reqcall(require_path)
   })
 end
 
-local SETTINGS = require("mega.settings")
+local SETTINGS = require("config.settings")
 local icons = SETTINGS.icons
 local prompt = icons.misc.search .. "  "
 
@@ -125,7 +125,7 @@ if vim.g.picker == "fzf_lua" then
   -- || 	.../share/nvim/lazy/fzf-lua/lua/fzf-lua/providers/files.lua:41: in function 'files'
   -- || 	/Users/seth/.config/nvim/lua/mega/plugins/fzf.lua:94: in function 'file_picker'
   -- || 	/Users/seth/.config/nvim/lua/mega/plugins/fzf.lua:123: in function </Users/seth/.config/nvim/lua/mega/plugins/fzf.lua:116>
-  -- require("mega.autocmds").augroup("FzfStartup", {
+  -- require("config.autocmds").augroup("FzfStartup", {
   --   {
   --     event = { "VimEnter" },
   --     pattern = { "*" },

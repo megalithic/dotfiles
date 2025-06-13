@@ -1,4 +1,4 @@
-local SETTINGS = require("mega.settings")
+local SETTINGS = require("config.settings")
 local icons = SETTINGS.icons
 
 local git_keys = {}
@@ -139,7 +139,7 @@ return {
           delete = { text = "🢒" },
         },
       },
-      current_line_blame = not vim.fn.getcwd():match("dotfiles") and not vim.fn.getcwd():match("canonize"),
+      current_line_blame = false, -- not vim.fn.getcwd():match("dotfiles") and not vim.fn.getcwd():match("canonize"),
       current_line_blame_formatter = " <author>, <author_time> · <summary>",
       current_line_blame_opts = {
         virt_text = true,
@@ -256,7 +256,7 @@ return {
         },
       })
 
-      require("mega.autocmds").augroup("Neogit", {
+      require("config.autocmds").augroup("Neogit", {
         pattern = "NeogitPushComplete",
         callback = require("neogit").close,
       })
@@ -383,7 +383,7 @@ return {
         list_opener = "copen", -- command or function to open the conflicts list
       })
 
-      require("mega.autocmds").augroup("GitConflicts", {
+      require("config.autocmds").augroup("GitConflicts", {
         {
           event = { "User" },
           pattern = { "GitConflictDetected" },

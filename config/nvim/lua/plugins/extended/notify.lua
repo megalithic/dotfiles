@@ -20,8 +20,8 @@ return {
     config = function()
       local notify = require("notify")
       local base = require("notify.render.base")
-      local U = require("mega.utils")
-      local SETTINGS = require("mega.settings")
+      local U = require("config.utils")
+      local SETTINGS = require("config.settings")
       local icons = SETTINGS.icons
 
       -- local stages_util = require("notify.stages.util")

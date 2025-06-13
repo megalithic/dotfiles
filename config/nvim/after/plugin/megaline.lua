@@ -15,11 +15,14 @@ local expand = fn.expand
 local strwidth = fn.strwidth
 local fnamemodify = fn.fnamemodify
 local fmt = string.format
+local get_opt = api.nvim_get_option_value
 
-local U = require("mega.utils")
-local SETTINGS = require("mega.settings")
+local mini_icons = require("mini.icons")
+
+local U = require("config.utils")
+local SETTINGS = require("config.settings")
 local H = U.hl
-local icons = require("mega.settings").icons
+local icons = require("config.settings").icons
 
 vim.g.is_saving = false
 vim.g.lsp_progress_messages = ""
@@ -175,6 +178,16 @@ local function seg_spacer(size, filler)
   else
     return seg("")
   end
+end
+
+-- insert grouping separators in numbers
+-- viml regex: https://stackoverflow.com/a/42911668
+-- lua pattern: stolen from Akinsho
+local function group_number(num, sep)
+  if num < 999 then return tostring(num) end
+
+  num = tostring(num)
+  return num:reverse():gsub("(%d%d%d)", "%1" .. sep):reverse():gsub("^,", "")
 end
 
 -- ( CONSTANTS ) ---------------------------------------------------------------
@@ -578,16 +591,39 @@ local function seg_lsp_status(truncate_at)
   return get_lsp_status(vim.g.lsp_progress_messages)
 end
 
+-- file/selection info -------------------------------------
+local function fileinfo_widget()
+  local ft = get_opt("filetype", {})
+  local lines = group_number(api.nvim_buf_line_count(0), ",")
+  -- local str = ICON.fileinfo .. " "
+  local str = " "
+  local nonprog_modes = {
+    ["markdown"] = true,
+    ["org"] = true,
+    ["orgagenda"] = true,
+    ["text"] = true,
+  }
+
+  if not nonprog_modes[ft] then return str .. string.format("%3s lines", lines) end
+
+  local wc = fn.wordcount()
+  if not wc.visual_words then return str .. string.format("%3s lines  %3s words", lines, group_number(wc.words, ",")) end
+
+  local vlines = math.abs(fn.line(".") - fn.line("v")) + 1
+  return str
+    .. string.format("%3s lines %3s words  %3s chars", group_number(vlines, ","), group_number(wc.visual_words, ","), group_number(wc.visual_chars, ","))
+end
+
 local function seg_lineinfo(truncate_at)
   local prefix = icons.misc.ln_sep or "L"
   local sep_hl = "StLineSep"
 
   -- Use virtual column number to allow update when paste last column
   if is_truncated(truncate_at) then return "%l/%L:%v" end
-
   return seg(
     table.concat({
       wrap("StMetadataPrefix", prefix .. " "),
+      -- wrap("StMetadataPrefix", fileinfo_widget()),
       wrap("StLineNumber", "%l"),
       wrap(sep_hl, "/"),
       wrap("StLineTotal", "%L"),

@@ -4,7 +4,7 @@ return {
   lazy = false,
   cmd = { "Oil" },
   config = function()
-    local SETTINGS = require("mega.settings")
+    local SETTINGS = require("config.settings")
     local icons = SETTINGS.icons
     local icon_file = vim.trim(icons.kind.File)
     local icon_dir = vim.trim(icons.kind.Folder)
@@ -104,7 +104,7 @@ return {
             local fileName = entry["name"]
             local fullName = dir .. fileName
 
-            require("mega.utils").preview_file(fullName)
+            require("config.utils").preview_file(fullName)
           else
             return ""
           end

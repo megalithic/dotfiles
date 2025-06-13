@@ -2,7 +2,7 @@ local fmt = string.format
 local map = vim.keymap.set
 local unmap = vim.api.nvim_del_keymap
 
-local U = require("mega.utils")
+local U = require("config.utils")
 local M = {}
 
 -- [[ unmap ]] -----------------------------------------------------------------
@@ -174,6 +174,7 @@ map("n", "<localleader><localleader>", "<C-^>", { desc = "last buffer" })
 map("n", "H", "^")
 map("n", "L", "$")
 map({ "v", "x" }, "L", "g_")
+map({ "v", "x" }, "H", "g^")
 map("n", "0", "^")
 
 -- Map <localleader>o & <localleader>O to newline without insert mode
@@ -429,7 +430,7 @@ map("n", "<leader>tp", "<cmd>T direction=tab<cr>", { desc = "tab-persistent" })
 
 -- [[ edit files / file explorering / executions ]] ------------------------------------------------------------
 local editFileMappings = {
-  r = { function() require("mega.utils").lsp.rename_file() end, "[e]dit file -> lsp rename as <input>" },
+  r = { function() require("config.utils").lsp.rename_file() end, "[e]dit file -> lsp rename as <input>" },
   s = { function() vim.cmd([[SaveAsFile]]) end, "[e]dit file -> [s]ave as <input>" },
   f = { function() vim.ui.open(vim.fn.expand("%:p:h:~")) end, "[e]xplore cwd -> [f]inder" },
   d = {

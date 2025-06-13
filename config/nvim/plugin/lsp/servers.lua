@@ -1,7 +1,7 @@
 local fn, lsp = vim.fn, vim.lsp
 local fmt = string.format
 local L = vim.log.levels
-local U = require("mega.utils")
+local U = require("config.utils")
 
 local M = {}
 
@@ -289,6 +289,7 @@ M = {
             path = path,
             version = "LuaJIT",
           },
+          signatureHelp = { enabled = true },
           format = {
             enable = false,
             defaultConfig = {
@@ -472,7 +473,7 @@ M = {
         --       vim.keymap.set("n", "gd", "<cmd>lua vim.lsp.buf.definition()<CR>", { desc = "[g]o to note [d]efinition", noremap = true, buffer = bufnr })
 
         --       vim.keymap.set("n", "g.", function()
-        --         local note_title = require("mega.utils").notes.get_md_link_dest()
+        --         local note_title = require("config.utils").notes.get_md_link_dest()
         --         if note_title == nil or note_title == "" then
         --           vim.notify("Unable to create new note from link text", L.WARN)
         --           return

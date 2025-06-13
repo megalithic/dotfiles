@@ -1,6 +1,6 @@
 -- REF:
 -- - https://github.com/ahmedelgabri/dotfiles/blob/5ceb4f3220980f95bc674b0785c920fbd9fc45ed/config/nvim/lua/plugins/formatter.lua#L75
-local SETTINGS = require("mega.settings")
+local SETTINGS = require("config.settings")
 
 local prettier = { "prettierd", "prettier", "dprint" }
 local shfmt = { "shfmt" } -- shellharden
@@ -69,6 +69,16 @@ return {
         },
         shfmt = {
           prepend_args = { "-i", "2", "-ci" },
+        },
+        stylua = {
+          command = "stylua",
+          args = {
+            "--search-parent-directories",
+            -- "--respect-ignores",
+            "--stdin-filepath",
+            "$FILENAME",
+            "-",
+          },
         },
         beautysh = {
           prepend_args = { "-i", "2" },

@@ -1,6 +1,6 @@
-local SETTINGS = require("mega.settings")
+local SETTINGS = require("config.settings")
 local icons = SETTINGS.icons
-local U = require("mega.utils")
+local U = require("config.utils")
 
 local in_jsx = U.in_jsx_tags
 local keep_text_entries = { "emmet_language_server", "marksman" }
@@ -323,7 +323,7 @@ return {
           list = {
             cycle = { from_top = false }, -- cycle at bottom, but not at the top
             selection = {
-              preselect = false,
+              preselect = function(ctx) return ctx.mode == "cmdline" and true or false end,
               auto_insert = true,
             },
           },

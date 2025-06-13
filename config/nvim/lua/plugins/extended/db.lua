@@ -1,6 +1,7 @@
 local map = vim.keymap.set
 
 local dbee_json_config = vim.fn.stdpath("config") .. "/.dbee_persistence.json"
+
 local get_default_connection_for_cwd = function(default_id)
   local function find_matching_id()
     local config_path = dbee_json_config
@@ -46,7 +47,7 @@ local get_default_connection_for_cwd = function(default_id)
     -- Prioritize matches: prefer "-local" over "-prod"
     local local_match = nil
     local prod_match = nil
-    local other_match = default_id
+    local default_match = default_id
 
     for _, id in ipairs(matches) do
       if string.find(id, "_local", 1, true) then
@@ -54,16 +55,20 @@ local get_default_connection_for_cwd = function(default_id)
       elseif string.find(id, "_prod", 1, true) then
         prod_match = id
       else
-        other_match = other_match or id -- Take first other match
+        default_match = default_match or id -- Take first other match
       end
     end
 
     -- Return in priority order: local > other > prod
-    return local_match or other_match or prod_match
+    return local_match or (default_match or prod_match)
   end
 
-  return find_matching_id() or default_id
+  local matching_id = find_matching_id()
+
+  return matching_id ~= nil, matching_id
 end
+
+local _, has_default_connection = get_default_connection_for_cwd()
 
 return {
   {
@@ -108,6 +113,7 @@ return {
     dependencies = {
       "MunifTanjim/nui.nvim",
     },
+    -- cond = function() return get_default_connection_for_cwd() end,
     keys = {
       {
         "<leader>d",
@@ -128,7 +134,7 @@ return {
     config = function()
       local has_db, dbee = pcall(require, "dbee")
       if has_db then
-        local default_connection = get_default_connection_for_cwd("director_local")
+        local has_default_connection, default_connection = get_default_connection_for_cwd("director_local")
 
         local opts = {
           default_connection = default_connection,

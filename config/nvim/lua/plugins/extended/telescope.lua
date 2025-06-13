@@ -68,7 +68,7 @@ return {
       local Job = require("plenary.job")
       local current_fn = nil
 
-      require("mega.autocmds").augroup("Telescope", {
+      require("config.autocmds").augroup("Telescope", {
         {
           desc = "Telescope preview formatting",
           event = { "User" },
@@ -556,7 +556,7 @@ return {
         local fn = vim.api.nvim_buf_get_name(bufnr)
 
         current_fn = fn
-        -- opts.cwd = require("mega.utils").get_root()
+        -- opts.cwd = require("config.utils").get_root()
         -- vim.notify(fmt("current project files root: %s", opts.cwd), vim.log.levels.DEBUG, { title = "telescope" })
         -- local picker = ts["find_files"]
 
@@ -584,7 +584,7 @@ return {
         local fn = vim.api.nvim_buf_get_name(bufnr)
 
         current_fn = fn
-        -- opts.cwd = require("mega.utils").get_root()
+        -- opts.cwd = require("config.utils").get_root()
         -- vim.notify(fmt("current project files root: %s", opts.cwd), vim.log.levels.DEBUG, { title = "telescope" })
         -- local picker = ts["find_files"]
 
@@ -1147,7 +1147,7 @@ return {
         -- map("n", "<leader>A", ts.grep_string, {  "grep (under cursor)" })
         map("n", "<leader>A", function() mega.picker.grep({ default_text = vim.fn.expand("<cword>") }) end, { "grep (under cursor)" })
         map({ "v", "x" }, "<leader>A", function()
-          local pattern = require("mega.utils").get_visual_selection()
+          local pattern = require("config.utils").get_visual_selection()
           mega.picker.grep({ default_text = pattern })
         end, { "grep (selection)" })
 

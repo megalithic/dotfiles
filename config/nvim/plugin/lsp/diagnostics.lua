@@ -1,5 +1,5 @@
-local U = require("mega.utils")
-local SETTINGS = require("mega.settings")
+local U = require("config.utils")
+local SETTINGS = require("config.settings")
 local icons = SETTINGS.icons
 local BORDER_STYLE = SETTINGS.border
 local max_width = math.min(math.floor(vim.o.columns * 0.7), 100)

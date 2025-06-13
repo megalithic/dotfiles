@@ -2,8 +2,8 @@ local fmt = string.format
 local map = vim.keymap.set
 local uv = vim.uv or vim.loop
 
-local SETTINGS = require("mega.settings")
-local U = require("mega.utils")
+local SETTINGS = require("config.settings")
+local U = require("config.utils")
 
 -- Function to check if a buffer is empty
 local function is_buffer_empty(bufnr)
@@ -223,6 +223,26 @@ function M.apply()
           end
         else
           -- close_empty_buffers()
+        end
+      end,
+    },
+    {
+      event = { "VimEnter" },
+      pattern = { "*" },
+      enabled = true,
+      once = true,
+      desc = "Clear LSP log file, if it's a certain size, on startup",
+      command = function(args)
+        local lsp_log = vim.fn.stdpath("state") .. "/lsp.log"
+        local max_size = 2 * 1024 * 1024 -- 1MB
+        local file = io.open(lsp_log, "r")
+        if file then
+          local size = file:seek("end")
+          file:close()
+          if size > max_size then
+            io.open(lsp_log, "w"):close()
+            vim.notify("LSP log cleared (was over 2MB)", vim.log.levels.INFO)
+          end
         end
       end,
     },
@@ -677,6 +697,7 @@ function M.apply()
         vim.cmd("restart")
       end,
     },
+
     -- REF: https://github.com/ribru17/nvim/blob/master/lua/autocmds.lua#L68
     -->> "RUN ONCE" ON FILE OPEN COMMANDS <<--
     {
@@ -729,9 +750,9 @@ function M.apply()
 
           -- FIXME: get working with ghostty
           -- if U.is_image(target) then
-          --   local root_dir = require("mega.utils.lsp").root_dir({ ".git" })
+          --   local root_dir = require("config.utils.lsp").root_dir({ ".git" })
           --   target = target:gsub("./samples", fmt("%s/samples", root_dir))
-          --   return require("mega.utils").preview_file(target)
+          --   return require("config.utils").preview_file(target)
           -- end
 
           -- go to linear ticket

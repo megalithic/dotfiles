@@ -6,8 +6,8 @@ mega.ui.statuscolumn = {}
 ---@alias ExtmarkSign {[1]: number, [2]: number, [3]: number, [4]: {sign_text: string, sign_hl_group: string}}
 
 local fn, v, api, opt = vim.fn, vim.v, vim.api, vim.opt
-local U = require("mega.utils")
-local SETTINGS = require("mega.settings")
+local U = require("config.utils")
+local SETTINGS = require("config.settings")
 local sep = SETTINGS.icons.separators
 local strwidth = vim.api.nvim_strwidth
 local fmt = string.format
@@ -423,7 +423,7 @@ function mega.ui.statuscolumn.set(bufnr, is_active)
   end
 end
 
-require("mega.autocmds").augroup("MegaColumn", {
+require("config.autocmds").augroup("MegaColumn", {
   {
     event = { "BufEnter", "BufReadPost", "FileType", "FocusGained", "WinEnter", "TermLeave" },
     command = function(args) mega.ui.statuscolumn.set(args.buf, true) end,

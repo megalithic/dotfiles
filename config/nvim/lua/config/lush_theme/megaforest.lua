@@ -4,7 +4,7 @@ if not ok then
   return
 end
 
-local C = require("mega.lush_theme.colors")
+local C = require("config.lush_theme.colors")
 local tc = {
   black = C.bg0,
   red = C.red,
@@ -1052,13 +1052,18 @@ local theme = lush(function(injected_functions)
 
     ---- :help tabline ---------------------------------------------------------
 
-    TabLine({ fg = "#abb2bf", bg = C.bg_dark }),
-    TabLineHead({ fg = C.bg_dark, bg = C.bg_dark }),
+    TabLine({ fg = "#abb2bf", bg = C.bg1 }),
+
     -- TabLineHead({ fg = C.bg1, bg = C.bg2 }),
-    TabLineTabActive({ fg = C.green, bg = C.bg0, gui = "bold" }),
+    TabLineTabActive({ fg = C.green, bg = C.bg0, gui = "bold,italic" }),
     TabLineWinActive({ fg = C.green, bg = C.bg0, gui = "italic" }),
     TabLineInactive({ fg = C.grey2, bg = C.bg1 }),
-    TabFill({ bg = C.bg_dark }),
+    TabFill({ TabLine }),
+
+    TabLineFill({ TabFill }),
+    TabLineSel({ TabLineTabActive }),
+    TabLineHead({ fg = C.bg_dark, bg = C.bg_dark }),
+
     NavicSeparator({ bg = C.bg_dark }),
 
     ---- :help megaterm  -----------------------------------------------------

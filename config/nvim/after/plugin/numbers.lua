@@ -113,7 +113,7 @@ end
 --   end
 -- end)
 
-require("mega.autocmds").augroup("ToggleRelativeLineNumbers", {
+require("config.autocmds").augroup("ToggleRelativeLineNumbers", {
   {
     event = { "BufEnter", "FileType", "FocusGained", "InsertLeave", "TermLeave", "CmdlineLeave" },
     command = function() enable_relative_number() end,

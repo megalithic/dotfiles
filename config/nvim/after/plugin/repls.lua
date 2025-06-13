@@ -1,9 +1,9 @@
 if not Plugin_enabled() then return end
 
-local U = require("mega.utils")
+local U = require("config.utils")
 local command = vim.api.nvim_create_user_command
 local fmt = string.format
-local nnoremap = require("mega.mappings").nnoremap
+local nnoremap = require("config.keymaps").nnoremap
 local map = vim.keymap.set
 
 local cmds_by_ft = {
@@ -39,7 +39,7 @@ command("TermElixir", function(args)
   -- local pre_cmd = ""
   local cmd = "iex"
   -- load up our Deskfile if we have one..
-  -- if require("mega.utils").root_has_file("Deskfile") then pre_cmd = "eval $(desk load)" end
+  -- if require("config.utils").root_has_file("Deskfile") then pre_cmd = "eval $(desk load)" end
 
   if args.bang then
     cmd = fmt("elixir %s", vim.fn.expand("%"))

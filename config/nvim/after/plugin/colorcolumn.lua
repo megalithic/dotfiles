@@ -1,6 +1,6 @@
 if not Plugin_enabled() then return end
 
-local SETTINGS = require("mega.settings")
+local SETTINGS = require("config.settings")
 local ok_vc, vc = pcall(require, "virt-column")
 
 local M = {

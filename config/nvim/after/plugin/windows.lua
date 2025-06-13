@@ -210,7 +210,7 @@ vim.api.nvim_create_user_command("ToggleAutoResize", function()
   end
 end, {})
 
-require("mega.autocmds").augroup("WindowsGoldenResizer", {
+require("config.autocmds").augroup("WindowsGoldenResizer", {
   {
     event = { "WinEnter", "VimResized" },
     command = function(args) mega.resize_windows(args.buf) end,

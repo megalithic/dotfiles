@@ -1,10 +1,10 @@
 -- presently using plugin/lsp/* instead
 if true then return {} end
 
-local U = require("mega.utils")
-local SETTINGS = require("mega.settings")
+local U = require("config.utils")
+local SETTINGS = require("config.settings")
 local BORDER_STYLE = SETTINGS.border
-local augroup = require("mega.autocmds").augroup
+local augroup = require("config.autocmds").augroup
 local command = vim.api.nvim_create_user_command
 local methods = vim.lsp.protocol.Methods
 -- local snacks = require("snacks").picker
@@ -153,7 +153,7 @@ return {
 
         -- if SETTINGS.disabled_semantic_tokens[filetype] then client.server_capabilities.semanticTokensProvider = vim.NIL end
 
-        -- if client.server_capabilities.signatureHelpProvider then require("mega.lsp_signature").setup(client) end
+        -- if client.server_capabilities.signatureHelpProvider then require("config.lsp_signature").setup(client) end
         if client.server_capabilities.codeLensProvider then vim.lsp.codelens.refresh({ bufnr = bufnr }) end
 
         for i = 1, #disabled_lsp_formatting do
@@ -302,7 +302,7 @@ return {
         local nmap = function(keys, func, d) map("n", keys, func, d, { noremap = false }) end
         local imap = function(keys, func, d) map("i", keys, func, d, { noremap = false }) end
         local vnmap = function(keys, func, d, opts) map({ "v", "n" }, keys, func, d, opts) end
-        local icons = require("mega.settings").icons
+        local icons = require("config.settings").icons
 
         local max_width = math.min(math.floor(vim.o.columns * 0.7), 100)
         local max_height = math.min(math.floor(vim.o.lines * 0.3), 30)
@@ -827,7 +827,7 @@ return {
         },
       }
 
-      local servers = require("mega.servers")
+      local servers = require("config.servers")
       if servers == nil then return end
       local server_list = servers.list(capabilities, M.on_attach)
       servers.load_unofficial()

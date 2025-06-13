@@ -51,7 +51,7 @@ command("Delete", function()
     vim.notify(table.concat({ fp, err }, "\n"), vim.log.levels.ERROR, { title = ":Delete failed" })
     vim.cmd.bwipeout()
   else
-    require("mega.utils").buf_close()
+    require("config.utils").buf_close()
     vim.notify(fp, vim.log.levels.INFO, { title = ":Delete succeeded" })
   end
 end, { desc = "Delete current file" })

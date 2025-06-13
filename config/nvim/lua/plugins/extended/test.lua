@@ -2,7 +2,7 @@
 -- https://github.com/jfpedroza/neotest-elixir
 -- https://github.com/jfpedroza/neotest-elixir/pull/23
 
-local SETTINGS = require("mega.settings")
+local SETTINGS = require("config.settings")
 local icons = SETTINGS.icons
 local keys = {}
 local fmt = string.format

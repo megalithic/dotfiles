@@ -6,7 +6,7 @@ return {
     init = function()
       local colorscheme = "megaforest"
 
-      local theme = string.format("mega.lush_theme.%s", colorscheme)
+      local theme = string.format("config.lush_theme.%s", colorscheme)
       local ok, lush_theme = pcall(require, theme)
 
       if ok then
@@ -17,7 +17,10 @@ return {
       end
 
       pcall(vim.cmd.colorscheme, vim.g.colorscheme)
-      mega.colors = require("mega.lush_theme.colors")
+      P("colorscheme loaded")
+
+      mega.colors = require("config.lush_theme.colors")
+      P("colors loaded")
     end,
   },
 }

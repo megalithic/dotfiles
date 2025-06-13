@@ -15,6 +15,7 @@ config/karabiner/automatic_backups/*
 *.lock.json
 .elixir_ls
 .lexical
+.jj
 cache
 config/tmux/plugins
 *~

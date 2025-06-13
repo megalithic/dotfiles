@@ -3,8 +3,8 @@ if not Plugin_enabled() then return end
 local api = vim.api
 local M = {}
 
-local U = require("mega.utils")
-local augroup = require("mega.autocmds").augroup
+local U = require("config.utils")
+local augroup = require("config.autocmds").augroup
 local map = vim.keymap.set
 local fmt = string.format
 local set_buf = api.nvim_set_current_buf

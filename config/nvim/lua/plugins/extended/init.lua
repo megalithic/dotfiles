@@ -1,4 +1,4 @@
-local SETTINGS = require("mega.settings")
+local SETTINGS = require("config.settings")
 
 return {
   { "tpope/vim-eunuch", cmd = { "Move", "Rename", "Remove", "Delete", "Mkdir", "SudoWrite", "Chmod" } },
@@ -300,7 +300,7 @@ return {
     "yorickpeterse/nvim-pqf",
     event = "BufReadPre",
     config = function()
-      local icons = require("mega.settings").icons
+      local icons = require("config.settings").icons
       require("pqf").setup({
         signs = {
           error = { text = icons.lsp.error, hl = "DiagnosticSignError" },
@@ -418,7 +418,7 @@ return {
   {
     "mcauley-penney/visual-whitespace.nvim",
     config = function()
-      local U = require("mega.utils")
+      local U = require("config.utils")
       -- local ws_bg = U.get_hl_hex({ name = "Visual" })["bg"]
       -- local ws_fg = U.get_hl_hex({ name = "Comment" })["fg"]
 

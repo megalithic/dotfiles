@@ -1,4 +1,4 @@
-local SETTINGS = require("mega.settings")
+local SETTINGS = require("config.settings")
 local icons = SETTINGS.icons
 local fmt = string.format
 

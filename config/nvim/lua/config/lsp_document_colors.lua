@@ -1,6 +1,6 @@
 -- Credits: contains some code snippets from https://github.com/norcalli/nvim-colorizer.lua
 local bit = require("bit")
-local U = require("mega.utils")
+local U = require("config.utils")
 
 local M = {}
 
@@ -204,7 +204,7 @@ function M.buf_detach(bufnr, _client)
   ATTACHED_BUFFERS[bufnr] = nil
 end
 
-require("mega.autocmds").augroup("DocumentColors", {
+require("config.autocmds").augroup("DocumentColors", {
   {
     event = { "BufEnter" },
     desc = "Attach document color LSP functionality to a buffer",

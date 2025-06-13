@@ -11,8 +11,8 @@ if not Plugin_enabled() then return end
 local fmt = string.format
 local api = vim.api
 local fn = vim.fn
-local U = require("mega.utils")
-local augroup = require("mega.autocmds").augroup
+local U = require("config.utils")
+local augroup = require("config.autocmds").augroup
 local command = vim.api.nvim_create_user_command
 local nnoremap = function(lhs, rhs, desc) vim.keymap.set("n", lhs, rhs, { buffer = 0, desc = "term: " .. desc }) end
 
