@@ -1,7 +1,7 @@
 if not Plugin_enabled() then return end
 
 local U = require("config.utils")
-local C = require("config.lush_theme.colors")
+local C = require("lush_theme.colors")
 local M = {
   blink_delay = 150,
   minimal_jump = 20,

@@ -1,4 +1,4 @@
-local SETTINGS = require("config.settings")
+local SETTINGS = require("config.options")
 local icons = SETTINGS.icons
 local fmt = string.format
 

@@ -134,6 +134,7 @@ return {
     config = function()
       local has_db, dbee = pcall(require, "dbee")
       if has_db then
+        -- local default_connection = "director_local"
         local has_default_connection, default_connection = get_default_connection_for_cwd("director_local")
 
         local opts = {

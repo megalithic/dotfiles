@@ -1,4 +1,4 @@
-local SETTINGS = require("config.settings")
+local SETTINGS = require("config.options")
 local icons = SETTINGS.icons
 local U = require("config.utils")
 
@@ -172,6 +172,7 @@ return {
           },
         },
         cmdline = {
+          -- keymap = { preset = "inherit" },
           completion = {
             menu = {
               auto_show = function()

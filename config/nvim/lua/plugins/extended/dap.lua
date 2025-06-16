@@ -1,4 +1,4 @@
-local SETTINGS = require("config.settings")
+local SETTINGS = require("config.options")
 
 return {
   cond = false,

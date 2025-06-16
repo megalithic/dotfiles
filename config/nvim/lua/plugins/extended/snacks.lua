@@ -1,17 +1,8 @@
 return {
   {
     "folke/snacks.nvim",
-    priority = 1000,
     opts = {
-      bigfile = {
-        enable = true,
-        setup = function(ctx)
-          vim.g.disable_autoformat = true
-          vim.schedule(function() vim.bo[ctx.buf].syntax = ctx.ft end)
-        end,
-      },
       -- skip loading plugins when writing to a not yet existing file
-      quickfile = { enabled = true },
       picker = {
         win = {
           -- input window
@@ -73,6 +64,8 @@ return {
       explorer = {},
     },
     keys = function()
+      if vim.g.picker ~= "snacks" then return {} end
+
       local Snacks = require("snacks")
       -- local function with_title(opts, extra)
       --   extra = extra or {}

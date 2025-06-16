@@ -1,7 +1,7 @@
 if not Plugin_enabled("lsp") then return end
 
 local fmt = string.format
-local SETTINGS = require("config.settings")
+local SETTINGS = require("config.options")
 local BORDER_STYLE = SETTINGS.border
 local methods = vim.lsp.protocol.Methods
 local lsp_group = vim.api.nvim_create_augroup("mega.lsp", { clear = true })
@@ -313,7 +313,7 @@ local function make_commands(client, bufnr)
   end
 
   Command("LspInfo", function() vim.cmd.checkhealth("lsp") end, { desc = "View LSP info" })
-  Command("LspLog", function() vim.cmd.tabnew(vim.lsp.get_log_path()) end, { desc = "Opens LSP log file in new tab." })
+  Command("LspLog", function() vim.cmd.tabnew(vim.lsp.log.get_filename()) end, { desc = "Opens LSP log file in new tab." })
   Command("LspLogDelete", function() vim.fn.system("rm " .. vim.lsp.get_log_path()) end, { desc = "Deletes the LSP log file. Useful for when it gets too big" })
 
   Command("LspRestart", function(cmd)
@@ -336,7 +336,7 @@ local function make_commands(client, bufnr)
 end
 
 local function make_keymaps(client, bufnr)
-  local snacks = require("snacks").picker
+  local ok_snacks = pcall(require, "snacks")
 
   local desc = function(str)
     if str == nil then return "" end
@@ -439,18 +439,16 @@ local function make_keymaps(client, bufnr)
   end, "rename symbol/references")
 
   lsp_method(client, "textDocument/references")(function()
-    map(
-      "n",
-      "gr",
-      function()
-        snacks.lsp_references({
-          include_declaration = false,
-          include_current = false,
-        })
-      end,
-      "[g]oto [r]eferences",
-      { nowait = true }
-    )
+    map("n", "gr", function()
+      require("fzf-lua").lsp_references({
+        include_declaration = false,
+        ignore_current_line = true,
+      })
+      -- Snacks.picker.lsp_references({
+      --   include_declaration = false,
+      --   include_current = false,
+      -- })
+    end, "[g]oto [r]eferences", { nowait = true })
     -- { "gr", function() Snacks.picker.lsp_references() end, nowait = true, desc = "References" },
   end)
 
@@ -614,7 +612,6 @@ Augroup(lsp_group, {
       if client_config ~= nil then
         assert(client_config.on_attach, "must have an on_attach function for language server client")
         client_config.on_attach(client, bufnr)
-        P("lsp clients on_attach'd")
       end
     end,
   },

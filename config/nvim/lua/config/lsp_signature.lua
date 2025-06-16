@@ -1,5 +1,5 @@
 local M = {}
-local SETTINGS = require("config.settings")
+local SETTINGS = require("config.options")
 local augroup = vim.api.nvim_create_augroup
 local autocmd = vim.api.nvim_create_autocmd
 local lsp_util = require("vim.lsp.util")

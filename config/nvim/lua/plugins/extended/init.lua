@@ -1,5 +1,3 @@
-local SETTINGS = require("config.settings")
-
 return {
   { "tpope/vim-eunuch", cmd = { "Move", "Rename", "Remove", "Delete", "Mkdir", "SudoWrite", "Chmod" } },
   { "tpope/vim-rhubarb", event = { "VeryLazy" } },
@@ -18,12 +16,6 @@ return {
       vim.g.lastplace_ignore_buftype = "quickfix,nofile,help,terminal"
       vim.g.lastplace_open_folds = true
     end,
-  },
-  {
-    "NvChad/nvim-colorizer.lua",
-    enabled = false, -- presently using mini-hipatterns
-    event = { "BufReadPre" },
-    config = function() require("colorizer").setup(SETTINGS.colorizer) end,
   },
   {
     "numToStr/Comment.nvim",
@@ -300,7 +292,7 @@ return {
     "yorickpeterse/nvim-pqf",
     event = "BufReadPre",
     config = function()
-      local icons = require("config.settings").icons
+      local icons = require("config.options").icons
       require("pqf").setup({
         signs = {
           error = { text = icons.lsp.error, hl = "DiagnosticSignError" },
@@ -348,13 +340,6 @@ return {
         desc = "[grugfar] find and replace visual selection",
       },
     },
-  },
-  {
-    cond = false,
-    event = "VeryLazy",
-
-    "tzachar/highlight-undo.nvim",
-    opts = {},
   },
   {
     "nvim-neo-tree/neo-tree.nvim",
@@ -408,34 +393,32 @@ return {
       },
     },
   },
-  {
-    -- Meta type definitions for the Lua platform Luvit.
-    -- SEE: https://github.com/Bilal2453/luvit-meta
-    "Bilal2453/luvit-meta",
-    lazy = true,
-  },
+  -- {
+  --   -- Meta type definitions for the Lua platform Luvit.
+  --   -- SEE: https://github.com/Bilal2453/luvit-meta
+  --   "Bilal2453/luvit-meta",
+  --   lazy = true,
+  -- },
+  -- {
+  --   "mcauley-penney/visual-whitespace.nvim",
+  --   config = function()
+  --     local U = require("config.utils")
+  --     -- local ws_bg = U.get_hl_hex({ name = "Visual" })["bg"]
+  --     -- local ws_fg = U.get_hl_hex({ name = "Comment" })["fg"]
 
-  {
-    "mcauley-penney/visual-whitespace.nvim",
-    config = function()
-      local U = require("config.utils")
-      -- local ws_bg = U.get_hl_hex({ name = "Visual" })["bg"]
-      -- local ws_fg = U.get_hl_hex({ name = "Comment" })["fg"]
+  --     local ws_bg = U.hl.get_hl("Visual", "bg")
+  --     local ws_fg = U.hl.get_hl("Comment", "fg")
 
-      local ws_bg = U.hl.get_hl("Visual", "bg")
-      local ws_fg = U.hl.get_hl("Comment", "fg")
-
-      require("visual-whitespace").setup({
-        highlight = { bg = ws_bg, fg = ws_fg },
-        nl_char = "¬",
-        excluded = {
-          filetypes = { "aerial" },
-          buftypes = { "help" },
-        },
-      })
-    end,
-  },
-  -- <C-n> to select next word with new cursor
+  --     require("visual-whitespace").setup({
+  --       highlight = { bg = ws_bg, fg = ws_fg },
+  --       nl_char = "¬",
+  --       excluded = {
+  --         filetypes = { "aerial" },
+  --         buftypes = { "help" },
+  --       },
+  --     })
+  --   end,
+  -- },
   {
     "ghostty",
     dir = "/Applications/Ghostty.app/Contents/Resources/vim/vimfiles/",
@@ -476,7 +459,73 @@ return {
   { "neovim/nvim-lspconfig" },
   { "nvim-lua/lsp_extensions.nvim" },
   { "b0o/schemastore.nvim" },
+  {
+    cond = false,
+    "Bekaboo/dropbar.nvim",
+    -- optional, but required for fuzzy finder support
+    -- dependencies = {
+    --   "nvim-telescope/telescope-fzf-native.nvim",
+    --   build = "make",
+    -- },
+    name = "dropbar",
+    -- config = function()
+    --   local dropbar_api = require("dropbar.api")
+    --   -- vim.keymap.set("n", "<Leader>;", dropbar_api.pick, { desc = "Pick symbols in winbar" })
+    --   vim.keymap.set("n", "[;", dropbar_api.goto_context_start, { desc = "Go to start of current context" })
+    --   vim.keymap.set("n", "];", dropbar_api.select_next_context, { desc = "Select next context" })
+    -- end,
+    event = { "BufReadPost", "BufNewFile" },
+    -- keys = {
+    --   Keymap({ "n" }, "<leader>p", function() require("dropbar.api").pick(vim.v.count ~= 0 and vim.v.count) end, "Toggle dropbar menu"),
+    -- },
+    opts = {},
+  },
+  -- { "SmiteshP/nvim-navic" },
   { "onsails/lspkind.nvim" },
+  {
+    "stevearc/aerial.nvim", -- Toggled list of classes, methods etc in current file
+    opts = {
+      cmd = { "AerialToggle" },
+      attach_mode = "global",
+      close_on_select = true,
+      layout = {
+        min_width = 30,
+        default_direction = "prefer_right",
+      },
+      -- Use nvim-navic icons
+      icons = {
+        File = "󰈙 ",
+        Module = " ",
+        Namespace = "󰌗 ",
+        Package = " ",
+        Class = "󰌗 ",
+        Method = "󰆧 ",
+        Property = " ",
+        Field = " ",
+        Constructor = " ",
+        Enum = "󰕘",
+        Interface = "󰕘",
+        Function = "󰊕 ",
+        Variable = "󰆧 ",
+        Constant = "󰏿 ",
+        String = "󰀬 ",
+        Number = "󰎠 ",
+        Boolean = "◩ ",
+        Array = "󰅪 ",
+        Object = "󰅩 ",
+        Key = "󰌋 ",
+        Null = "󰟢 ",
+        EnumMember = " ",
+        Struct = "󰌗 ",
+        Event = " ",
+        Operator = "󰆕 ",
+        TypeParameter = "󰊄 ",
+      },
+    },
+    -- keys = {
+    --   { "<C-t>", "<cmd>AerialToggle<CR>", mode = { "n", "x", "o" }, desc = "Aerial Toggle" },
+    -- },
+  },
   {
     -- FIXME: https://github.com/mhanberg/output-panel.nvim/issues/5
     "mhanberg/output-panel.nvim",
@@ -491,16 +540,16 @@ return {
     cmd = { "OutputPanel" },
     opts = true,
   },
-  {
-    -- FIXME: this is a no go; crashes rpc
-    enabled = false,
-    "synic/refactorex.nvim",
-    ft = "elixir",
-    opts = {
-      auto_update = true,
-      pin_version = nil,
-    },
-  },
+  -- {
+  --   -- FIXME: this is a no go; crashes rpc
+  --   enabled = false,
+  --   "synic/refactorex.nvim",
+  --   ft = "elixir",
+  --   opts = {
+  --     auto_update = true,
+  --     pin_version = nil,
+  --   },
+  -- },
 
   -- {
   --   "luckasRanarison/tailwind-tools.nvim",

@@ -21,7 +21,7 @@ return {
       local notify = require("notify")
       local base = require("notify.render.base")
       local U = require("config.utils")
-      local SETTINGS = require("config.settings")
+      local SETTINGS = require("config.options")
       local icons = SETTINGS.icons
 
       -- local stages_util = require("notify.stages.util")

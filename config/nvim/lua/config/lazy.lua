@@ -30,7 +30,7 @@ require("lazy").setup({
     patterns = { "megalithic" },
     fallback = true, -- Fallback to git when local plugin doesn't exist
   },
-  install = { missing = false },
+  install = { missing = true, colorscheme = { vim.g.colorscheme, "default", "habamax" } },
   change_detection = { enabled = true, notify = false },
   rocks = { enabled = false },
   performance = {

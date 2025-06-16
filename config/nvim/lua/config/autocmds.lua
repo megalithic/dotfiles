@@ -2,7 +2,7 @@ local fmt = string.format
 local map = vim.keymap.set
 local uv = vim.uv or vim.loop
 
-local SETTINGS = require("config.settings")
+local SETTINGS = require("config.options")
 local U = require("config.utils")
 
 -- Function to check if a buffer is empty
@@ -212,13 +212,13 @@ function M.apply()
             else
               vim.schedule(function()
                 mega.resize_windows(evt.buf)
-                require("virt-column").update()
+                if pcall(require, "virt-column") then require("virt-column").update() end
               end)
             end
           else
             vim.schedule(function()
               mega.resize_windows(evt.buf)
-              require("virt-column").update()
+              if pcall(require, "virt-column") then require("virt-column").update() end
             end)
           end
         else

@@ -2,7 +2,7 @@
 if true then return {} end
 
 local U = require("config.utils")
-local SETTINGS = require("config.settings")
+local SETTINGS = require("config.options")
 local BORDER_STYLE = SETTINGS.border
 local augroup = require("config.autocmds").augroup
 local command = vim.api.nvim_create_user_command
@@ -302,7 +302,7 @@ return {
         local nmap = function(keys, func, d) map("n", keys, func, d, { noremap = false }) end
         local imap = function(keys, func, d) map("i", keys, func, d, { noremap = false }) end
         local vnmap = function(keys, func, d, opts) map({ "v", "n" }, keys, func, d, opts) end
-        local icons = require("config.settings").icons
+        local icons = require("config.options").icons
 
         local max_width = math.min(math.floor(vim.o.columns * 0.7), 100)
         local max_height = math.min(math.floor(vim.o.lines * 0.3), 30)

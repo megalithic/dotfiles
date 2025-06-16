@@ -7,7 +7,7 @@ mega.ui.statuscolumn = {}
 
 local fn, v, api, opt = vim.fn, vim.v, vim.api, vim.opt
 local U = require("config.utils")
-local SETTINGS = require("config.settings")
+local SETTINGS = require("config.options")
 local sep = SETTINGS.icons.separators
 local strwidth = vim.api.nvim_strwidth
 local fmt = string.format
@@ -18,6 +18,48 @@ local shade = sep.light_shade_block
 
 local CLICK_END = "%X"
 local padding = " "
+
+local excluded_bts = { "terminal", "nofile" }
+local excluded_fts = {
+  "NeogitCommitMessage",
+  "NeogitCommitView",
+  "NeogitRebaseTodo",
+  "NeogitStatus",
+  "NvimTree",
+  "Trouble",
+  "dap-repl",
+  "fidget",
+  "firenvim",
+  "fugitive",
+  "gitcommit",
+  "help",
+  "himalaya",
+  "lazy",
+  "list",
+  "log",
+  "man",
+  "megaterm",
+  "neo-tree",
+  "neotest-summary",
+  "oil",
+  "org",
+  "orgagenda",
+  "outputpanel",
+  "qf",
+  "quickfix",
+  "quickfixlist",
+  "startify",
+  "telescope",
+  "TelescopePrompt",
+  "TelescopeResults",
+  "terminal",
+  "toggleterm",
+  "undotree",
+  "vim-plug",
+  "vimwiki",
+}
+
+local should_hide_numbers = function(filetype, buftype) return vim.tbl_contains(excluded_fts, filetype) or vim.tbl_contains(excluded_bts, buftype) end
 
 ---@return StringComponent
 local function separator() return { component = "%=", length = 0, priority = 0 } end
@@ -299,24 +341,6 @@ local function format_text(t, k)
 end
 
 ---@param curbuf integer
----@param lnum integer
----@return StringComponent[] sgns non-git signs
-local function signplaced_signs(curbuf, lnum)
-  return vim
-    .iter(fn.sign_getplaced(curbuf, { group = "*", lnum = lnum })[1].signs)
-    :map(function(s)
-      local sign = format_text(fn.sign_getdefined(s.name)[1], "text")
-
-      if sign then
-        -- if sign.text ~= "" and sign.text ~= " " then print(sign.text) end
-
-        return { { { sign.text, sign.texthl } }, after = "" }
-      end
-    end)
-    :totable()
-end
-
----@param curbuf integer
 ---@return StringComponent[], StringComponent[]
 local function extmark_signs(curbuf, lnum)
   lnum = lnum - 1
@@ -405,25 +429,24 @@ local excluded = {
 
 function mega.ui.statuscolumn.set(bufnr, is_active)
   local statuscolumn = ""
+
   if is_active then
     statuscolumn = [[%!v:lua.mega.ui.statuscolumn.render(v:true)]]
   else
     statuscolumn = [[%!v:lua.mega.ui.statuscolumn.render(v:false)]]
   end
 
-  if vim.api.nvim_buf_is_valid(bufnr) then
-    local buf = vim.bo[bufnr]
-    if buf.bt ~= "" or vim.tbl_contains(excluded, buf.ft) then
-      vim.opt_local.statuscolumn = ""
-    else
-      vim.opt_local.statuscolumn = statuscolumn
-    end
+  local buftype = vim.bo[bufnr].buftype
+  local filetype = vim.bo[bufnr].filetype
+
+  if should_hide_numbers(filetype, buftype) then
+    vim.api.nvim_buf_call(bufnr, function() vim.opt_local.statuscolumn = "" end)
   else
-    vim.opt_local.statuscolumn = statuscolumn
+    vim.api.nvim_buf_call(bufnr, function() vim.opt_local.statuscolumn = statuscolumn end)
   end
 end
 
-require("config.autocmds").augroup("MegaColumn", {
+Augroup("mega.ui.statuscolumn", {
   {
     event = { "BufEnter", "BufReadPost", "FileType", "FocusGained", "WinEnter", "TermLeave" },
     command = function(args) mega.ui.statuscolumn.set(args.buf, true) end,

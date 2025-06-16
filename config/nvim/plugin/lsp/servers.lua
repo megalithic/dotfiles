@@ -237,26 +237,29 @@ M = {
       provideFormatter = false,
     },
   },
-  jsonls = {
-    -- commands = {
-    --   Format = {
-    --     function() lsp.buf.range_formatting({}, { 0, 0 }, { fn.line("$"), 0 }) end,
-    --   },
-    -- },
-    init_options = { provideFormatter = false },
-    single_file_support = true,
-    on_new_config = function(new_config)
-      new_config.settings.json.schemas = new_config.settings.json.schemas or {}
-      vim.list_extend(new_config.settings.json.schemas, require("schemastore").json.schemas())
-    end,
-    settings = {
-      json = {
-        format = { enable = false },
-        schemas = require("schemastore").json.schemas(),
-        validate = { enable = true },
+  jsonls = function()
+    local ok_schemastore = pcall(require, "schemastore")
+    return {
+      -- commands = {
+      --   Format = {
+      --     function() lsp.buf.range_formatting({}, { 0, 0 }, { fn.line("$"), 0 }) end,
+      --   },
+      -- },
+      init_options = { provideFormatter = false },
+      single_file_support = true,
+      on_new_config = function(new_config)
+        new_config.settings.json.schemas = new_config.settings.json.schemas or {}
+        vim.list_extend(new_config.settings.json.schemas, ok_schemastore and require("schemastore").json.schemas() or {})
+      end,
+      settings = {
+        json = {
+          format = { enable = false },
+          schemas = ok_schemastore and require("schemastore").json.schemas() or {},
+          validate = { enable = true },
+        },
       },
-    },
-  },
+    }
+  end,
   lua_ls = function()
     local path = vim.split(package.path, ";")
     table.insert(path, "lua/?.lua")
@@ -1021,20 +1024,24 @@ M = {
   end,
   vimls = { init_options = { isNeovim = true } },
   --- https://github.com/golang/tools/blob/master/gopls/doc/settings.md
-  yamlls = {
-    settings = {
-      yaml = {
-        format = { enable = true },
-        validate = true,
-        hover = true,
-        completion = true,
-        schemas = require("schemastore").json.schemas(),
-        customTags = {
-          "!reference sequence", -- necessary for gitlab-ci.yaml files
+  yamlls = function()
+    local ok_schemastore = pcall(require, "schemastore")
+
+    return {
+      settings = {
+        yaml = {
+          format = { enable = true },
+          validate = true,
+          hover = true,
+          completion = true,
+          schemas = ok_schemastore and require("schemastore").json.schemas() or {},
+          customTags = {
+            "!reference sequence", -- necessary for gitlab-ci.yaml files
+          },
         },
       },
-    },
-  },
+    }
+  end,
 }
 
 -- M.tailwindcss = function()

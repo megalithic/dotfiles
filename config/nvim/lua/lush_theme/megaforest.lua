@@ -4,7 +4,7 @@ if not ok then
   return
 end
 
-local C = require("config.lush_theme.colors")
+local C = require("lush_theme.colors")
 local tc = {
   black = C.bg0,
   red = C.red,

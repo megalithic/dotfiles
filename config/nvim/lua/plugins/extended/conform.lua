@@ -1,6 +1,6 @@
 -- REF:
 -- - https://github.com/ahmedelgabri/dotfiles/blob/5ceb4f3220980f95bc674b0785c920fbd9fc45ed/config/nvim/lua/plugins/formatter.lua#L75
-local SETTINGS = require("config.settings")
+local SETTINGS = require("config.options")
 
 local prettier = { "prettierd", "prettier", "dprint" }
 local shfmt = { "shfmt" } -- shellharden

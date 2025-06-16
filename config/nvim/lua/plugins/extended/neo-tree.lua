@@ -1,4 +1,4 @@
-local icons = require("config.settings").icons
+local icons = require("config.options").icons
 return {
   "nvim-neo-tree/neo-tree.nvim",
   keys = {

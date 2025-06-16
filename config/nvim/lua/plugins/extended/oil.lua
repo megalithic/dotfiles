@@ -4,7 +4,7 @@ return {
   lazy = false,
   cmd = { "Oil" },
   config = function()
-    local SETTINGS = require("config.settings")
+    local SETTINGS = require("config.options")
     local icons = SETTINGS.icons
     local icon_file = vim.trim(icons.kind.File)
     local icon_dir = vim.trim(icons.kind.Folder)

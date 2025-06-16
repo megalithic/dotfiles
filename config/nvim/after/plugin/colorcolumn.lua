@@ -1,6 +1,6 @@
 if not Plugin_enabled() then return end
 
-local SETTINGS = require("config.settings")
+local SETTINGS = require("config.options")
 local ok_vc, vc = pcall(require, "virt-column")
 
 local M = {
@@ -45,26 +45,28 @@ local function set_colorcolumn(leaving)
   if vim.wo.colorcolumn == "" then
     -- TODO:
     -- https://github.com/Wansmer/nvim-config/blob/main/lua/autocmd.lua#L81-L87
-    vim.wo.colorcolumn = tostring(vim.g.default_colorcolumn)
+    vim.wo.colorcolumn = tostring(vim.g.default_colorcolumn or 80)
     if ok_vc then vc.setup_buffer({ char = SETTINGS.virt_column_char, virtcolumn = vim.wo.colorcolumn }) end
   end
 end
 
--- REF: https://github.com/m4xshen/smartcolumn.nvim/blob/main/lua/smartcolumn.lua
-Augroup("ToggleColorColumn", {
-  {
-    -- Update the cursor column to match current window size
-    event = { "FocusGained", "WinEnter", "BufEnter", "VimResized", "FileType" }, -- BufWinEnter instead of WinEnter?
-    command = function()
-      local leaving = false
-      set_colorcolumn(leaving)
-    end,
-  },
-  {
-    event = { "FocusLost", "WinLeave", "BufLeave" },
-    command = function()
-      local leaving = true
-      set_colorcolumn(leaving)
-    end,
-  },
-})
+if Augroup then
+  -- REF: https://github.com/m4xshen/smartcolumn.nvim/blob/main/lua/smartcolumn.lua
+  Augroup("ToggleColorColumn", {
+    {
+      -- Update the cursor column to match current window size
+      event = { "FocusGained", "WinEnter", "BufEnter", "VimResized", "FileType" }, -- BufWinEnter instead of WinEnter?
+      command = function()
+        local leaving = false
+        set_colorcolumn(leaving)
+      end,
+    },
+    {
+      event = { "FocusLost", "WinLeave", "BufLeave" },
+      command = function()
+        local leaving = true
+        set_colorcolumn(leaving)
+      end,
+    },
+  })
+end

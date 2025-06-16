@@ -131,12 +131,12 @@ return {
         },
       },
     },
-    init = function()
-      -- FIX for `comments` parser https://github.com/stsewd/tree-sitter-comment/issues/22
-      vim.api.nvim_create_autocmd("ColorScheme", {
-        callback = function() vim.api.nvim_set_hl(0, "@lsp.type.comment", {}) end,
-      })
-    end,
+    -- init = function()
+    --   -- FIX for `comments` parser https://github.com/stsewd/tree-sitter-comment/issues/22
+    --   vim.api.nvim_create_autocmd("ColorScheme", {
+    --     callback = function() vim.api.nvim_set_hl(0, "@lsp.type.comment", {}) end,
+    --   })
+    -- end,
     config = function(_, opts)
       local ft_to_parser_aliases = {
         dotenv = "bash",
@@ -182,13 +182,13 @@ return {
       vim.g.matchup_delim_noskips = 1 -- recognize symbols within comments
       vim.g.matchup_matchparen_deferred_show_delay = 400
       vim.g.matchup_matchparen_deferred_hide_delay = 400
-      vim.g.matchup_matchparen_offscreen = {}
-      -- vim.g.matchup_matchparen_offscreen = {
-      --   method = "popup",
-      --   -- fullwidth = true,
-      --   highlight = "TreesitterContext",
-      --   border = "",
-      -- }
+      -- vim.g.matchup_matchparen_offscreen = {}
+      vim.g.matchup_matchparen_offscreen = {
+        method = "popup",
+        -- fullwidth = true,
+        highlight = "TreesitterContext",
+        border = "",
+      }
       vim.g.matchup_matchparen_deferred = 1
       vim.g.matchup_matchparen_timeout = 300
       vim.g.matchup_matchparen_insert_timeout = 60
@@ -208,20 +208,20 @@ return {
     dependencies = { "nvim-treesitter/nvim-treesitter" },
   },
   { "yorickpeterse/nvim-tree-pairs", dependencies = { "nvim-treesitter/nvim-treesitter" }, opts = {} },
-  -- {
-  --   "laytan/tailwind-sorter.nvim",
-  --   cond = false,
-  --   event = "VeryLazy",
-  --   dependencies = {
-  --     "nvim-treesitter/nvim-treesitter",
-  --     "nvim-lua/plenary.nvim",
-  --   },
-  --   build = "cd formatter && npm i && npm run build",
-  --   opts = {
-  --     on_save_enabled = true,
-  --     on_save_pattern = { "*.html", "*.js", "*.jsx", "*.tsx", "*.twig", "*.hbs", "*.php", "*.heex" }, -- The file patterns to watch and sort.
-  --   },
-  -- },
+  {
+    "laytan/tailwind-sorter.nvim",
+    cond = false,
+    event = "VeryLazy",
+    dependencies = {
+      "nvim-treesitter/nvim-treesitter",
+      "nvim-lua/plenary.nvim",
+    },
+    build = "cd formatter && npm i && npm run build",
+    opts = {
+      on_save_enabled = true,
+      on_save_pattern = { "*.html", "*.js", "*.jsx", "*.tsx", "*.twig", "*.hbs", "*.php", "*.heex", ".ex" }, -- The file patterns to watch and sort.
+    },
+  },
   {
     "HiPhish/rainbow-delimiters.nvim",
     dependencies = { "nvim-treesitter/nvim-treesitter" },

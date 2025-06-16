@@ -601,6 +601,11 @@ ftplugin.extend_all({
       })
     end,
   },
+  lazy = {
+    opt = {
+      signcolumn = "no",
+    },
+  },
   query = {
     callback = function(bufnr)
       if vim.bo[bufnr].buftype == "nofile" then return end

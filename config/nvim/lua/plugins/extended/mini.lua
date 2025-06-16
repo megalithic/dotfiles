@@ -1,4 +1,6 @@
-local SETTINGS = require("config.settings")
+local SETTINGS = require("config.options")
+
+if not SETTINGS or not Keymap or not Augroup then return {} end
 
 return {
   { "echasnovski/mini.jump", enabled = false, version = false, opts = {} },
@@ -311,7 +313,7 @@ return {
 
         clues = {
           { mode = "n", keys = "<leader>e", desc = "+explore/edit files" },
-          { mode = "n", keys = "<leader>f", desc = "+find (" .. vim.g.picker .. ")" },
+          { mode = "n", keys = "<leader>f", desc = "+find (" .. vim.g.picker or "default" .. ")" },
           { mode = "n", keys = "<leader>t", desc = "+terminal" },
           { mode = "n", keys = "<leader>r", desc = "+repl" },
           { mode = "n", keys = "<leader>l", desc = "+lsp" },
