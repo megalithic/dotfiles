@@ -27,6 +27,14 @@ local icons = SETTINGS.icons
 vim.g.is_saving = false
 vim.g.lsp_progress_messages = ""
 
+local redrawstatus = vim.schedule_wrap(function()
+  vim.cmd.redrawstatus()
+  -- api.nvim__redraw({ statusline = true })
+end)
+
+local clear_messages_timer
+local clear_messages_on_end
+
 Augroup("mega.ui.statusline", {
   {
     event = { "BufWritePre" },
@@ -40,6 +48,15 @@ Augroup("mega.ui.statusline", {
         end, 500)
       end
     end,
+  },
+  {
+    event = { "User" },
+    pattern = "GitSignsUpdate",
+    command = redrawstatus,
+  },
+  {
+    event = { "DiagnosticChanged" },
+    command = redrawstatus,
   },
   {
     event = { "LspProgress" },
@@ -57,19 +74,22 @@ Augroup("mega.ui.statusline", {
       local text = ""
       local firstWord = vim.split(progress.title, " ")[1]:lower()
 
+      if clear_messages_timer then
+        clear_messages_timer:close()
+        clear_messages_on_end()
+      end
+
+      clear_messages_on_end = function()
+        clear_messages_timer = nil
+        clear_messages_on_end = nil
+        vim.g.lsp_progress_messages = ""
+        pcall(vim.cmd.redrawstatus)
+      end
+
       if progress.kind == "end" then
         vim.g.lsp_progress_messages = fmt("%s %s loaded.", icons.lsp.ok, clientName)
-        local timer = vim.uv.new_timer()
-        if timer then
-          timer:start(
-            2500,
-            0,
-            vim.schedule_wrap(function()
-              vim.g.lsp_progress_messages = ""
-              pcall(vim.cmd.redrawstatus)
-            end)
-          )
-        end
+
+        clear_messages_timer = vim.defer_fn(clear_messages_on_end, 1000)
       else
         if progress.percentage ~= nil then
           if progress.percentage == nil or progress.percentage == 0 then
@@ -617,24 +637,63 @@ local function fileinfo_widget()
     .. string.format("%3s lines %3s words  %3s chars", group_number(vlines, ","), group_number(wc.visual_words, ","), group_number(wc.visual_chars, ","))
 end
 
-local function seg_lineinfo(truncate_at)
-  local prefix = icons.misc.ln_sep or "L"
+local function seg_selection_info()
   local sep_hl = "StLineSep"
+  if not vim.fn.mode():find("[Vv]") then return "" end
 
-  -- Use virtual column number to allow update when paste last column
-  if is_truncated(truncate_at) then return "%l/%L:%v" end
+  local wc = vim.fn.wordcount()
+  local starts = vim.fn.line("v")
+  local ends = vim.fn.line(".")
+  local lines = starts <= ends and ends - starts + 1 or starts - ends + 1
+  local words = wc.visual_words
+  local chars = wc.visual_chars
+
+  -- return seg(
+  --   table.concat({
+  --     wrap("StMetadataPrefix", "" .. " "),
+  --     wrap("StLineNumber", tostring(chars)),
+  --     wrap(sep_hl, "/"),
+  --     wrap("StLineTotal", tostring(words)),
+  --     wrap(sep_hl, ":"),
+  --     wrap("StLineColumn", tostring(lines)), -- alts: "%-3c" (for padding of 3)
+  --   }),
+  --   { margin = { 1, 1 } }
+  -- )
+
   return seg(
     table.concat({
-      wrap("StMetadataPrefix", prefix .. " "),
-      -- wrap("StMetadataPrefix", fileinfo_widget()),
-      wrap("StLineNumber", "%l"),
+      wrap("StModifiedIcon", "" .. " "),
+      wrap("StLineNumber", tostring(chars) .. "c"),
       wrap(sep_hl, "/"),
-      wrap("StLineTotal", "%L"),
-      wrap(sep_hl, ":"),
-      wrap("StLineColumn", "%-c"), -- alts: "%-3c" (for padding of 3)
+      wrap("StLineTotal", tostring(words) .. "w"),
+      wrap(sep_hl, "/"),
+      wrap("StLineColumn", tostring(lines) .. "l"), -- alts: "%-3c" (for padding of 3)
     }),
     { margin = { 1, 1 } }
   )
+end
+
+local function seg_lineinfo(truncate_at)
+  local sep_hl = "StLineSep"
+
+  -- Use virtual column number to allow update when paste last column
+  if vim.fn.mode():find("[Vv]") then
+    return seg_selection_info()
+  else
+    if is_truncated(truncate_at) then return "%l/%L:%v" end
+
+    return seg(
+      table.concat({
+        wrap("StMetadataPrefix", icons.misc.ln_sep .. " "),
+        wrap("StLineNumber", "%l"),
+        wrap(sep_hl, "/"),
+        wrap("StLineTotal", "%L"),
+        wrap(sep_hl, ":"),
+        wrap("StLineColumn", "%-c"), -- alts: "%-3c" (for padding of 3)
+      }),
+      { margin = { 1, 1 } }
+    )
+  end
 end
 
 local function seg_ai(truncate_at)
@@ -657,19 +716,44 @@ local function seg_git_symbol(truncate_at)
   return seg(symbol, "StGitSymbol")
 end
 
+local function hunks()
+  if vim.b.gitsigns_status then
+    if vim.b.gitsigns_status ~= "" then return vim.b.gitsigns_head, vim.b.gitsigns_status end
+    return vim.b.gitsigns_head, nil
+  end
+
+  if vim.g.gitsigns_head then return vim.g.gitsigns_head, nil end
+
+  return nil, nil
+end
+
 local function seg_git_status(truncate_at)
   if is_abnormal_buffer() then return "" end
 
-  local status = is_valid_git()
-  if not status then return "" end
-
   local truncate_branch, truncate_symbol = unpack(truncate_at)
+  local git_branch, git_status = hunks()
+  if U.falsy(git_branch) then return "" end
 
-  local branch = is_truncated(truncate_branch) and truncate_str(status.head or "", 14) or status.head
-  -- if vim.fn.trim(vim.fn.system("git rev-parse --is-inside-work-tree")) == "true" then
-  --   branch = vim.fn.trim(vim.fn.system("basename `git rev-parse --show-toplevel`"))
-  -- end
-  return seg(branch, "StGitBranch", { margin = { 1, 1 }, prefix = seg_git_symbol(truncate_symbol), padding = { 1, 0 } })
+  local branch = is_truncated(truncate_branch) and truncate_str(git_branch or "", 14) or git_branch
+
+  return seg(
+    table.concat({
+      wrap("StGitBranch", branch),
+      seg(git_status, "StBright", not U.falsy(git_status), { margin = { 1, 0 } }),
+    }),
+    {
+      margin = { 1, 1 },
+      prefix = seg_git_symbol(truncate_symbol),
+      padding = { 1, 0 },
+    }
+  )
+end
+
+local function seg_rec_macro()
+  local recording_register = vim.fn.reg_recording()
+  local str = ""
+  if recording_register ~= "" then str = " " .. recording_register end
+  return seg(str, "StGitBranch", { margin = { 1, 1 }, padding = { 1, 0 } })
 end
 
 local function is_focused() return tonumber(vim.g.actual_curwin) == vim.api.nvim_get_current_win() end
@@ -724,6 +808,7 @@ function mega.ui.statusline.render()
     -- end left alignment
     seg([[%=]]),
 
+    seg_rec_macro(),
     -- seg(get_substitution_status()),
     -- seg_hydra(120),
     seg([[%=]]),

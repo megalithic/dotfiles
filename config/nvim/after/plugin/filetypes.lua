@@ -609,25 +609,25 @@ ftplugin.extend_all({
   query = {
     callback = function(bufnr)
       if vim.bo[bufnr].buftype == "nofile" then return end
-      vim.lsp.start({
-        name = "ts_query_ls",
-        cmd = {
-          vim.fs.joinpath(vim.env.HOME, "Documents/CodeProjects/ts_query_ls/target/release/ts_query_ls"),
-        },
-        root_dir = vim.fs.root(0, { "queries" }),
-        settings = {
-          parser_install_directories = {
-            -- If using nvim-treesitter with lazy.nvim
-            vim.fs.joinpath(vim.fn.stdpath("data"), "/lazy/nvim-treesitter/parser/"),
-          },
-          parser_aliases = {
-            ecma = "javascript",
-          },
-          language_retrieval_patterns = {
-            "languages/src/([^/]+)/[^/]+\\.scm$",
-          },
-        },
-      })
+      -- vim.lsp.start({
+      --   name = "ts_query_ls",
+      --   cmd = {
+      --     vim.fs.joinpath(vim.env.HOME, "/code/ts_query_ls/target/release/ts_query_ls"),
+      --   },
+      --   root_dir = vim.fs.root(0, { "queries" }),
+      --   settings = {
+      --     parser_install_directories = {
+      --       -- If using nvim-treesitter with lazy.nvim
+      --       vim.fs.joinpath(vim.fn.stdpath("data"), "/lazy/nvim-treesitter/parser/"),
+      --     },
+      --     parser_aliases = {
+      --       ecma = "javascript",
+      --     },
+      --     language_retrieval_patterns = {
+      --       "languages/src/([^/]+)/[^/]+\\.scm$",
+      --     },
+      --   },
+      -- })
     end,
   },
   [{ "sql", "dbee" }] = {

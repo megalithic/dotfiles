@@ -79,7 +79,7 @@ local function goto_diagnostic_hl(dir)
   end
 
   diagnostic_timer = vim.defer_fn(hl_cancel, 500)
-  -- vim.diagnostic["goto_" .. dir]({
+
   vim.diagnostic.jump({
     count = step,
     float = false,

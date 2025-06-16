@@ -428,6 +428,20 @@ map("n", "<leader>tf", "<cmd>T direction=float move_on_direction_change=true<cr>
 map("n", "<leader>tv", "<cmd>T direction=vertical move_on_direction_change=true<cr>", { desc = "vertical" })
 map("n", "<leader>tp", "<cmd>T direction=tab<cr>", { desc = "tab-persistent" })
 
+-- map("n", "<leader>`", function()
+--   if term_win_id and vim.api.nvim_win_is_valid(term_win_id) then
+--     vim.api.nvim_set_current_win(term_win_id)
+--     vim.cmd("startinsert")
+--     return
+--   end
+
+--   vim.cmd("botright 15split")
+--   vim.cmd("terminal")
+--   vim.cmd("startinsert")
+
+--   term_win_id = vim.api.nvim_get_current_win()
+-- end, { desc = "term: open static terminal" })
+
 -- [[ edit files / file explorering / executions ]] ------------------------------------------------------------
 local editFileMappings = {
   r = { function() require("config.utils").lsp.rename_file() end, "[e]dit file -> lsp rename as <input>" },

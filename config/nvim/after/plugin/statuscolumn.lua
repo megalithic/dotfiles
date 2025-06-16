@@ -373,59 +373,53 @@ function mega.ui.statuscolumn.render(is_active)
   local win = api.nvim_get_current_win()
   local buf = api.nvim_win_get_buf(win)
   local line_count = api.nvim_buf_line_count(buf)
+  local is_actively_folding = is_active and vim.o.foldlevel > 0
 
-  local gitsign, sns = extmark_signs(buf, lnum)
-  while #sns < MIN_SIGN_WIDTH do
-    table.insert(sns, spacer(1))
+  local git_signs, other_signs = extmark_signs(buf, lnum)
+
+  while #other_signs < MIN_SIGN_WIDTH do
+    table.insert(other_signs, spacer(1))
   end
 
   local r1_hl = is_active and "" or "StatusColumnInactiveLineNr"
 
-  local r1 = is_active and section:new(spacer(1), { { { nr(win, lnum, relnum, virtnum, line_count), r1_hl } } }, unpack(gitsign), spacer(1))
-    or section:new(spacer(1), { { { nr(win, lnum, relnum, virtnum, line_count), r1_hl } } }, spacer(2))
-  local r2 = section:new({ { { "", "LineNr" } }, after = "" }, is_active and vim.o.foldlevel > 0 and { { { fdm(lnum), "FoldColumn" } } } or spacer(2))
+  local ln_col = { nr(win, lnum, relnum, virtnum, line_count), r1_hl }
+  local fold_col = {
+    {
+      { fdm(lnum), "FoldColumn" },
+    },
+  }
 
-  return is_active and display({ section:new(spacer(1)), sns, r1 + r2 }) or display({ section:new(spacer(2)), r1 + r2 })
+  local r1 = is_active and section:new(spacer(1), {
+    {
+      ln_col,
+    },
+  }, unpack(git_signs), spacer(1)) or section:new(spacer(1), {
+    {
+      ln_col,
+    },
+  }, spacer(2))
+
+  local r2 = section:new({
+    {
+      { "", "LineNr" },
+    },
+    after = "",
+  }, is_actively_folding and fold_col or spacer(2))
+
+  if is_active then
+    return display({
+      section:new(spacer(1)),
+      other_signs,
+      r1 + r2,
+    })
+  else
+    return display({
+      section:new(spacer(2)),
+      r1 + r2,
+    })
+  end
 end
-
-local excluded = {
-  "NeogitCommitMessage",
-  "NeogitCommitView",
-  "NeogitRebaseTodo",
-  "NeogitStatus",
-  "NvimTree",
-  "Trouble",
-  "dap-repl",
-  "fidget",
-  "firenvim",
-  "fugitive",
-  "gitcommit",
-  "help",
-  "himalaya",
-  "lazy",
-  "list",
-  "log",
-  "man",
-  "megaterm",
-  "neo-tree",
-  "neotest-summary",
-  "oil",
-  "org",
-  "orgagenda",
-  "outputpanel",
-  "qf",
-  "quickfix",
-  "quickfixlist",
-  "startify",
-  "telescope",
-  "TelescopePrompt",
-  "TelescopeResults",
-  "terminal",
-  "toggleterm",
-  "undotree",
-  "vim-plug",
-  "vimwiki",
-}
 
 function mega.ui.statuscolumn.set(bufnr, is_active)
   local statuscolumn = ""
@@ -440,14 +434,17 @@ function mega.ui.statuscolumn.set(bufnr, is_active)
   local filetype = vim.bo[bufnr].filetype
 
   if should_hide_numbers(filetype, buftype) then
-    vim.api.nvim_buf_call(bufnr, function() vim.opt_local.statuscolumn = "" end)
+    vim.opt_local.statuscolumn = ""
+    -- vim.api.nvim_buf_call(bufnr, function() vim.opt.statuscolumn = "" end)
   else
-    vim.api.nvim_buf_call(bufnr, function() vim.opt_local.statuscolumn = statuscolumn end)
+    vim.opt_local.statuscolumn = statuscolumn
+    -- vim.api.nvim_buf_call(bufnr, function() vim.opt.statuscolumn = statuscolumn end)
   end
 end
 
 Augroup("mega.ui.statuscolumn", {
   {
+    -- event = { "BufEnter", "BufReadPost", "FileType", "FocusGained", "BufWinEnter", "TermLeave", "WinNew", "TermOpen" },
     event = { "BufEnter", "BufReadPost", "FileType", "FocusGained", "WinEnter", "TermLeave" },
     command = function(args) mega.ui.statuscolumn.set(args.buf, true) end,
   },

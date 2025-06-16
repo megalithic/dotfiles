@@ -131,12 +131,13 @@ return {
         },
       },
     },
-    -- init = function()
-    --   -- FIX for `comments` parser https://github.com/stsewd/tree-sitter-comment/issues/22
-    --   vim.api.nvim_create_autocmd("ColorScheme", {
-    --     callback = function() vim.api.nvim_set_hl(0, "@lsp.type.comment", {}) end,
-    --   })
-    -- end,
+    init = function()
+      vim.g.loaded_nvim_treesitter = 1
+      -- FIX for `comments` parser https://github.com/stsewd/tree-sitter-comment/issues/22
+      vim.api.nvim_create_autocmd("ColorScheme", {
+        callback = function() vim.api.nvim_set_hl(0, "@lsp.type.comment", {}) end,
+      })
+    end,
     config = function(_, opts)
       local ft_to_parser_aliases = {
         dotenv = "bash",
@@ -165,6 +166,28 @@ return {
       require("nvim-treesitter.configs").setup(opts)
     end,
   },
+  -- {
+  --   "lewis6991/ts-install.nvim",
+  --   build = ":TS update",
+  --   config = function()
+  --     require("ts-install").setup({
+  --       auto_install = true,
+  --       ignore_install = {
+  --         "verilog",
+  --         "tcl",
+  --         "tmux",
+  --       },
+  --       parsers = {
+  --         zsh = {
+  --           install_info = {
+  --             url = "https://github.com/tree-sitter-grammars/tree-sitter-zsh",
+  --             branch = "master",
+  --           },
+  --         },
+  --       },
+  --     })
+  --   end,
+  -- },
   { "nvim-treesitter/nvim-treesitter-textobjects", cond = true, dependencies = { "nvim-treesitter/nvim-treesitter" } },
   -- { "RRethy/nvim-treesitter-textsubjects", cond = true, dependencies = { "nvim-treesitter/nvim-treesitter" } },
   -- {
@@ -174,6 +197,17 @@ return {
   -- },
   { "RRethy/nvim-treesitter-endwise", dependencies = { "nvim-treesitter/nvim-treesitter" } },
   {
+    "nvim-treesitter/nvim-treesitter-context",
+    dependencies = { "nvim-treesitter/nvim-treesitter" },
+    config = function()
+      require("treesitter-context").setup({
+        max_lines = 5,
+        trim_scope = "outer",
+        multiwindow = false,
+      })
+    end,
+  },
+  {
     "andymass/vim-matchup",
     dependencies = { "nvim-treesitter/nvim-treesitter" },
     event = { "BufReadPost", "BufNewFile" },
@@ -182,13 +216,13 @@ return {
       vim.g.matchup_delim_noskips = 1 -- recognize symbols within comments
       vim.g.matchup_matchparen_deferred_show_delay = 400
       vim.g.matchup_matchparen_deferred_hide_delay = 400
-      -- vim.g.matchup_matchparen_offscreen = {}
-      vim.g.matchup_matchparen_offscreen = {
-        method = "popup",
-        -- fullwidth = true,
-        highlight = "TreesitterContext",
-        border = "",
-      }
+      vim.g.matchup_matchparen_offscreen = {}
+      -- vim.g.matchup_matchparen_offscreen = {
+      --   method = "popup",
+      --   -- fullwidth = true,
+      --   highlight = "TreesitterContext",
+      --   border = "",
+      -- }
       vim.g.matchup_matchparen_deferred = 1
       vim.g.matchup_matchparen_timeout = 300
       vim.g.matchup_matchparen_insert_timeout = 60

@@ -96,16 +96,16 @@ return {
       --   mode = { "n", "x", "o" },
       --   "<Cmd>HopAnywhereCL<CR>",
       -- },
-      {
-        "s",
-        mode = { "n", "x" },
-        "<Cmd>HopChar<CR>",
-      },
-      {
-        "S",
-        mode = { "n", "x" },
-        "<Cmd>HopWord<CR>",
-      },
+      -- {
+      --   "s",
+      --   mode = { "n", "x" },
+      --   "<Cmd>HopChar<CR>",
+      -- },
+      -- {
+      --   "S",
+      --   mode = { "n", "x" },
+      --   "<Cmd>HopWord<CR>",
+      -- },
     },
     config = function(_, opts)
       local hop = require("hop")
@@ -114,6 +114,7 @@ return {
   },
   {
     "jake-stewart/multicursor.nvim",
+    event = "VeryLazy",
     config = function()
       local mc = require("multicursor-nvim")
       mc.setup()
@@ -155,7 +156,6 @@ return {
         end)
       end)
     end,
-    event = "VeryLazy",
   },
   -- {
   --   "folke/flash.nvim",
@@ -234,7 +234,7 @@ return {
     opts = {},
     keys = {
       { "s", mode = { "n", "x", "o" }, function() require("flash").jump() end, desc = "Flash" },
-      -- { "S", mode = { "n", "x", "o" }, function() require("flash").treesitter() end, desc = "Flash Treesitter" },
+      { "S", mode = { "n" }, function() require("flash").treesitter() end, desc = "Flash Treesitter" },
       { "m", mode = { "o", "x" }, function() require("flash").treesitter() end },
       { "r", mode = "o", function() require("flash").remote() end, desc = "Remote Flash" },
       { "R", mode = { "o", "x" }, function() require("flash").treesitter_search() end, desc = "Treesitter Search" },
@@ -443,7 +443,33 @@ return {
   -- },
 
   -- {
-  --   cond = false,
+  --   "luckasRanarison/tailwind-tools.nvim",
+  --   dependencies = { "nvim-lspconfig" },
+  --   build = ":UpdateRemotePlugins",
+  --   name = "tailwind-tools",
+  --   opts = {
+  --     server = {
+  --       override = true,
+  --       settings = {},
+  --     },
+  --   },
+  --   config = function(_, opts)
+  --     local function find_tailwind_root_phoenix(fname)
+  --       local util = require("lspconfig.util")
+  --       local phoenix_root = util.root_pattern("mix.exs")(fname)
+  --       if phoenix_root then
+  --         if vim.fn.isdirectory(phoenix_root) == 1 then return phoenix_root end
+  --       end
+  --       return util.root_pattern("package.json", "tailwind.config.js", "vite.config.js")(fname)
+  --     end
+
+  --     opts.server.root_dir = find_tailwind_root_phoenix
+
+  --     require("tailwind-tools").setup(opts)
+  --   end,
+  -- },
+
+  -- {
   --   "dbernheisel/tailwind-tools.nvim",
   --   branch = "db-extend-root-and-on-attach",
   --   name = "tailwind-tools",
@@ -454,9 +480,95 @@ return {
   --     "neovim/nvim-lspconfig", -- optional
   --   },
   --   opts = {},
-  -- },
+  -- }
 
+  -- {
+  --   "luckasRanarison/tailwind-tools.nvim",
+  --   lazy = true,
+  --   name = "tailwind-tools",
+  --   build = ":UpdateRemotePlugins",
+  --   init = function()
+  --     vim.api.nvim_create_autocmd("LspAttach", {
+  --       callback = function(args)
+  --         local client = vim.lsp.get_client_by_id(args.data.client_id)
+  --         if client and client.name == "tailwindcss" then
+  --           require("tailwind-tools")
+  --           return true
+  --         end
+  --       end,
+  --     })
+  --   end,
+  --   opts = {
+  --     conceal = {
+  --       symbol = "…",
+  --     },
+  --   },
+  --   config = function(_, opts)
+  --     local function find_tailwind_root_phoenix(fname)
+  --       local util = require("lspconfig.util")
+  --       local phoenix_root = util.root_pattern("mix.exs")(fname)
+  --       if phoenix_root then
+  --         if vim.fn.isdirectory(phoenix_root) == 1 then return phoenix_root end
+  --       end
+  --       return util.root_pattern("package.json", "tailwind.config.js", "vite.config.js")(fname)
+  --     end
+
+  --     opts = vim.tbl_extend("keep", opts, {
+  --       server = {
+  --         override = true,
+  --         root_dir = find_tailwind_root_phoenix,
+  --         settings = {},
+  --       },
+  --     })
+
+  --     require("tailwind-tools").setup(opts)
+  --     -- custom.cmp_format.before = require("tailwind-tools.cmp").lspkind_format
+  --   end,
+  -- },
   { "neovim/nvim-lspconfig" },
+  {
+    --[[
+    local ensure_installed_tools = {
+      'stylua',
+      'prettierd',
+      'biome',
+      'bash-language-server',
+      'marksman',
+      'elixir-ls',
+      'lua-language-server',
+      'vtsls',
+      'tailwindcss-language-server',
+      'markdownlint-cli2',
+      'markdown-toc',
+      'js-debug-adapter',
+      'emmet-language-server',
+    }
+    local unique_tools = {}
+    for _, tool in ipairs(ensure_installed_tools) do
+      unique_tools[tool] = true
+    end
+    require('mason-tool-installer').setup {
+      ensure_installed = vim.tbl_keys(unique_tools),
+    }
+    --]]
+    -- FIXME: this still wants mason itself..
+    cond = false,
+    "WhoIsSethDaniel/mason-tool-installer.nvim",
+    opts = {
+      ensure_installed = {
+        "black",
+        "eslint_d",
+        "isort",
+        "prettier",
+        "prettierd",
+        "ruff",
+        "stylua",
+        "nixpkgs-fmt",
+        -- "tailwindcss-language-server@0.12.18",
+        -- "tailwindcss-language-server@0.0.27",
+      },
+    },
+  },
   { "nvim-lua/lsp_extensions.nvim" },
   { "b0o/schemastore.nvim" },
   {
@@ -538,7 +650,7 @@ return {
       },
     },
     cmd = { "OutputPanel" },
-    opts = true,
+    opts = { max_buffer_size = 5000 },
   },
   -- {
   --   -- FIXME: this is a no go; crashes rpc
@@ -549,49 +661,5 @@ return {
   --     auto_update = true,
   --     pin_version = nil,
   --   },
-  -- },
-
-  -- {
-  --   "luckasRanarison/tailwind-tools.nvim",
-  --   lazy = true,
-  --   name = "tailwind-tools",
-  --   build = ":UpdateRemotePlugins",
-  --   init = function()
-  --     vim.api.nvim_create_autocmd("LspAttach", {
-  --       callback = function(args)
-  --         local client = vim.lsp.get_client_by_id(args.data.client_id)
-  --         if client and client.name == "tailwindcss" then
-  --           require("tailwind-tools")
-  --           return true
-  --         end
-  --       end,
-  --     })
-  --   end,
-  --   opts = {
-  --     conceal = {
-  --       symbol = "…",
-  --     },
-  --   },
-  --   config = function(_, opts)
-  --     local function find_tailwind_root_phoenix(fname)
-  --       local util = require("lspconfig.util")
-  --       local phoenix_root = util.root_pattern("mix.exs")(fname)
-  --       if phoenix_root then
-  --         if vim.fn.isdirectory(phoenix_root) == 1 then return phoenix_root end
-  --       end
-  --       return util.root_pattern("package.json", "tailwind.config.js", "vite.config.js")(fname)
-  --     end
-
-  --     opts = vim.tbl_extend("keep", opts, {
-  --       server = {
-  --         override = true,
-  --         root_dir = find_tailwind_root_phoenix,
-  --         settings = {},
-  --       },
-  --     })
-
-  --     require("tailwind-tools").setup(opts)
-  --     -- custom.cmp_format.before = require("tailwind-tools.cmp").lspkind_format
-  --   end,
   -- },
 }

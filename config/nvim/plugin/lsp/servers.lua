@@ -5,6 +5,38 @@ local U = require("config.utils")
 
 local M = {}
 
+--
+-- TODO:
+-- custom LSP actions and commands..
+-- REF: examples of that: https://github.com/clifinger/nvim/blob/main/lua/plugins/lsp.lua#L83
+--
+-- code_action:
+-- vim.lsp.buf.code_action { context = { only = { 'source.addMissingImports.ts' } }, apply = true }
+--
+-- command:
+--[[
+  local params = vim.lsp.util.make_position_params()
+  client.request('workspace/executeCommand', {
+    command = 'typescript.goToSourceDefinition',
+    arguments = { params.textDocument.uri, params.position },
+    open = true,
+  }, function(err, result)
+    if err then
+      print('Error executing goToSourceDefinition:', vim.inspect(err))
+    end
+  end)
+
+  client.request('workspace/executeCommand', {
+    command = 'typescript.findAllFileReferences',
+    arguments = { vim.uri_from_bufnr(buffer) },
+    open = true,
+  }, function(err, result)
+    if err then
+      print('Error executing findAllFileReferences:', vim.inspect(err))
+    end
+  end)
+--]]
+
 local function root_pattern(bufnr, on_dir, markers)
   markers = markers == nil and { ".git" } or markers
   markers = type(markers) == "string" and { markers } or markers

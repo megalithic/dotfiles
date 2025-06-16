@@ -99,7 +99,7 @@ return {
         },
       },
       formatters_by_ft = {
-        ["*"] = { "trim_whitespace", "trim_newlines" },
+        -- ["*"] = { "trim_whitespace", "trim_newlines" },
         lua = { "stylua" },
         -- elixir = { "mix", timeout_ms = 1000 },
         -- eelixir = { "mix" },

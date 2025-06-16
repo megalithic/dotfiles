@@ -1086,7 +1086,7 @@ local theme = lush(function(injected_functions)
     StatusLineBg({ bg = C.transparent }),
     -- StatusLineNCBg({bg=C.transparent}),
     -- StatusLineInactiveBg({bg=C.transparent}),
-    StatusLine({ fg = C.grey1, bg = StatusLineBg.bg }), -- status line of current window
+    StatusLine({ fg = C.grey1 }), -- status line of current window
     StatusLineNC({ fg = C.grey1, bg = C.bg0 }), -- status lines of not-current windows Note: if this is equal to "StatusLine" Vim will use "^^^" in the status line of the current window.
     StatusLineInactive({ fg = C.bg_dark.lighten(20), bg = C.bg_dark, gui = "italic" }),
     StModeNormal({ bg = StatusLineBg.bg, fg = C.bg5, gui = C.transparent }), -- alts: bg = C.bg2
@@ -1099,7 +1099,7 @@ local theme = lush(function(injected_functions)
     StBright({ fg = C.fg.li(10), bg = StatusLineBg.bg }),
     StBrightItalic({ StBright, fg = StBright.fg.da(5), gui = "italic" }),
     StMetadata({ Comment, bg = StatusLineBg.bg }),
-    StMetadataPrefix({ fg = C.fg, bg = StatusLineBg.bg, gui = "" }),
+    StMetadataPrefix({ fg = C.fg, gui = "" }),
     StLspMessages({ fg = C.fg.da(20), bg = StatusLineBg.bg, gui = "italic" }),
     StIndicator({ fg = C.dark_blue, bg = StatusLineBg.bg }),
     StModified({ fg = C.pale_red, bg = StatusLineBg.bg, gui = "bold,italic" }),
@@ -1120,10 +1120,10 @@ local theme = lush(function(injected_functions)
     StIdentifier({ fg = C.blue, bg = StatusLineBg.bg }),
     StTitle({ bg = StatusLineBg.bg, fg = C.grey2, gui = "bold" }),
     StComment({ Comment, bg = StatusLineBg.bg }),
-    StLineNumber({ fg = C.grey2, bg = StatusLineBg.bg, gui = "bold" }),
-    StLineSep({ fg = C.grey0, bg = StatusLineBg.bg, gui = "" }),
-    StLineTotal({ fg = C.grey1, bg = StatusLineBg.bg }),
-    StLineColumn({ fg = C.grey2, bg = StatusLineBg.bg }),
+    StLineNumber({ fg = C.grey2, gui = "bold" }),
+    StLineSep({ fg = C.grey0, gui = "" }),
+    StLineTotal({ fg = C.grey1 }),
+    StLineColumn({ fg = C.grey2 }),
     StClient({ bg = StatusLineBg.bg, fg = C.fg, gui = "bold" }),
     StError({ fg = DiagnosticError.fg }),
     StWarn({ fg = DiagnosticWarn.fg }),

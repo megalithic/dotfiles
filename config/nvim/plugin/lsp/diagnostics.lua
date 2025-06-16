@@ -8,13 +8,6 @@ local diagnostic_ns = vim.api.nvim_create_namespace("mega.lsp_diagnostics")
 local diagnostic_group = vim.api.nvim_create_augroup("mega.lsp_diagnostics", { clear = true })
 
 return function(client, bufnr)
-  -- --- @param diagnostic? vim.Diagnostic
-  -- --- @param bufnr integer
-  -- local function on_jump(diagnostic, bufnr)
-  --   if not diagnostic then return end
-  --   vim.diagnostic.show(virt_lines_ns, bufnr, { diagnostic }, { virtual_lines = { current_line = true }, virtual_text = false })
-  -- end
-
   local diag_level = vim.diagnostic.severity
   vim.diagnostic.config({
     -- virtual_text = {

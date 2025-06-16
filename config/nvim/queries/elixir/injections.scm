@@ -81,6 +81,12 @@
 (sigil
   (sigil_name) @_sigil_name
   (quoted_content) @injection.content
+ (#eq? @_sigil_name "j")
+ (#set! injection.language "json"))
+
+(sigil
+  (sigil_name) @_sigil_name
+  (quoted_content) @injection.content
  (#eq? @_sigil_name "YAML")
  (#set! injection.language "yaml"))
 
@@ -119,6 +125,18 @@
   (quoted_content) @injection.content
  (#eq? @_sigil_name "LVN")
  (#set! injection.language "heex"))
+
+(call target: (identifier) @_script
+   (do_block
+     (string (quoted_content) @injection.content))
+ (#eq? @_script "script")
+ (#set! injection.language "javascript"))
+
+(call target: (identifier) @_style
+   (do_block
+     (string (quoted_content) @injection.content))
+ (#eq? @_style "style")
+ (#set! injection.language "css"))
 
 ; from https://github.com/elixir-tools/elixir-tools.nvim/blob/main/queries/elixir/injections.scm
 (call

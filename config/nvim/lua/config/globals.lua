@@ -490,6 +490,14 @@ end
 -- Execute vim command
 function M.exec(cmd) vim.api.nvim_exec2(cmd, {}) end
 
+--- Same as require() but don't abort on error
+--- @param mod string
+function M.safe_require(mod)
+  --- @diagnostic disable-next-line: no-unknown
+  local ok, r = xpcall(require, debug.traceback, mod)
+  if not ok then vim.schedule(function() error(r) end) end
+end
+
 Load_macros(M)
 
 return M

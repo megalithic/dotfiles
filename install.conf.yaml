@@ -132,6 +132,12 @@
       force: true
       # if: "[ `uname` = Darwin ]"
       path: config/kitty
+    ~/.config/kanata:
+      force: true
+      path: config/kanata
+    ~/.config/jj:
+      force: true
+      path: config/jj
     ~/.config/lazygit:
       force: true
       path: config/lazygit

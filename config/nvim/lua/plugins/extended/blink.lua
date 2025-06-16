@@ -172,8 +172,17 @@ return {
           },
         },
         cmdline = {
-          -- keymap = { preset = "inherit" },
+          keymap = {
+            ["<Down>"] = { "select_next", "fallback" },
+            ["<Up>"] = { "select_prev", "fallback" },
+          },
           completion = {
+            list = {
+              selection = {
+                preselect = true,
+                auto_insert = true,
+              },
+            },
             menu = {
               auto_show = function()
                 local ctype = vim.fn.getcmdtype()
@@ -356,7 +365,7 @@ return {
             auto_show_delay_ms = 250,
             window = {
               border = SETTINGS.borders.blink_empty,
-              max_width = 50,
+              max_width = 100,
               max_height = 15,
             },
           },
@@ -374,10 +383,6 @@ return {
               components = {
                 label = {
                   width = { max = 30, fill = true },
-                  -- defaults:
-                  -- text = function(ctx) return require("colorful-menu").blink_components_text(ctx) end,
-                  -- highlight = function(ctx) return require("colorful-menu").blink_components_highlight(ctx) end,
-                  --
                   -- customs:
                   text = function(ctx)
                     local highlights_info = require("colorful-menu").blink_highlights(ctx)

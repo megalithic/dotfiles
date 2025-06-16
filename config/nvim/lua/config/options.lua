@@ -164,6 +164,7 @@ local M = {
     lexical = "lex",
     postgres_lsp = "pglsp",
   },
+
   icons = {
     lsp = {
 
