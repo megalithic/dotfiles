@@ -41,7 +41,16 @@ alias l='ls -lFh' # size,show type,human readable
 # grc overides for ls
 #   Made possible through contributions from generous benefactors like
 #   `brew install coreutils`
-if $(gls &>/dev/null); then
+
+if $(eza &>/dev/null); then
+  alias exa=\eza
+  alias ls="\eza -gahF --group-directories-first"
+  # alias l="\eza -lahF --icons --group-directories-first --git"
+  alias l="\eza --long --git-repos --all --git --color=always --group-directories-first --icons $@"
+elif $(exa &>/dev/null); then
+  alias ls="exa -gahF --group-directories-first"
+  alias l="exa -lahF --icons --group-directories-first --git"
+elif $(gls &>/dev/null); then
   alias gls="tmux select-pane -P bg=default,fg=default &> /dev/null; gls --color=auto --group-directories-first"
   alias ls="gls -FA"
   alias lst="gls -FAt"
@@ -50,15 +59,6 @@ if $(gls &>/dev/null); then
   alias ll="gls -l"
   alias la="gls -A"
   alias las='find . -maxdepth 1 -type l -printf "%p -> %l\n" | sort'
-fi
-
-if $(\eza &>/dev/null); then
-  alias exa=\eza
-  alias ls="\eza -gahF --group-directories-first"
-  alias l="\eza -lahF --icons --group-directories-first --git"
-elif $(exa &>/dev/null); then
-  alias ls="exa -gahF --group-directories-first"
-  alias l="exa -lahF --icons --group-directories-first --git"
 fi
 
 if $(erdtree &>/dev/null); then

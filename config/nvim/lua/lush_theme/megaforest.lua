@@ -764,11 +764,11 @@ local theme = lush(function(injected_functions)
 
     ---- :help treesitter-context ----------------------------------------------
 
-    TreesitterContext({ bg = C.bg1 }),
-    TreesitterContextLineNumber({ fg = LineNr.fg.li(20), bg = TreesitterContext.bg, gui = "bold,italic" }),
-    TreesitterContextBottom({ sp = C.bg_dark.da(20), bg = C.bg1, gui = "" }),
-    TreesitterContextLineNumberBottom({ sp = C.bg_dark.da(20), bg = C.bg1, gui = "" }),
-    TreesitterContextSeparator({ fg = TreesitterContext.bg.da(15), bg = C.transparent }),
+    TreesitterContext({ bg = C.bg1.li(4) }),
+    TreesitterContextLineNumber({ fg = LineNr.fg.da(10), bg = TreesitterContext.bg, gui = "bold,italic" }),
+    TreesitterContextBottom({ bg = TreesitterContext.bg }),
+    TreesitterContextLineNumberBottom({ fg = LineNr.fg.li(20), bg = TreesitterContext.bg }),
+    TreesitterContextSeparator({ bg = C.bg1.da(2), fg = C.bg0.da(20) }),
 
     -- TS: Markdown
     -- sym("@markdown.punct.special") {Special},
@@ -1107,10 +1107,10 @@ local theme = lush(function(injected_functions)
     StGitSymbol({ fg = C.light_red, bg = StatusLineBg.bg }),
     StGitBranch({ fg = C.blue, bg = StatusLineBg.bg }),
     StGitSigns({ fg = C.dark_blue, bg = StatusLineBg.bg }),
-    StGitSignsAdd({ GreenSign, bg = StatusLineBg.bg }),
-    StGitSignsDelete({ RedSign, bg = StatusLineBg.bg }),
-    StGitSignsChange({ OrangeSign, bg = StatusLineBg.bg }),
-    StNumber({ fg = C.purple, bg = StatusLineBg.bg }),
+    StGitSignsAdd({ GreenSign, bg = "NONE" }),
+    StGitSignsDelete({ RedSign, bg = "NONE" }),
+    StGitSignsChange({ OrangeSign, bg = "NONE" }),
+    StNumber({ fg = C.purple, bg = C.transparent }),
     StCount({ fg = C.bg0, bg = C.blue, gui = "bold" }),
     StPrefix({ fg = C.fg, bg = C.bg2 }),
     StDirectory({ bg = StatusLineBg.bg, fg = C.grey0, gui = "italic" }),

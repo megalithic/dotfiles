@@ -42,6 +42,7 @@ return {
 
     require("conform").setup({
       formatters = {
+        injected = { options = { ignore_errors = true } },
         ["eslint_d"] = {
           command = "eslint_d",
           args = { "--fix-to-stdout", "--stdin", "--stdin-filename", "$FILENAME" },
@@ -99,6 +100,7 @@ return {
         },
       },
       formatters_by_ft = {
+        ["*"] = { "injected" },
         -- ["*"] = { "trim_whitespace", "trim_newlines" },
         lua = { "stylua" },
         -- elixir = { "mix", timeout_ms = 1000 },

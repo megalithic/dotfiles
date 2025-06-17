@@ -124,7 +124,6 @@ bindkey "$terminfo[kcud1]" history-substring-search-down
 
 bindkey '^]' clear-screen
 
-
 # -- edit command in vim
 # REF:
 # - https://nuclearsquid.com/writings/edit-long-commands/
@@ -152,5 +151,8 @@ bindkey "^V" edit-command-line
 # bindkey -M vicmd '^g' repeat-prev-command
 # bindkey '^g' repeat-prev-command
 
-
 bindkey '^y' autosuggest-accept
+
+# Enable shift-tab to cycle back completions
+bindkey -M menuselect '^[[Z' reverse-menu-complete
+setopt menu_complete

@@ -615,27 +615,6 @@ local function seg_lsp_status(truncate_at)
 end
 
 -- file/selection info -------------------------------------
-local function fileinfo_widget()
-  local ft = get_opt("filetype", {})
-  local lines = group_number(api.nvim_buf_line_count(0), ",")
-  -- local str = ICON.fileinfo .. " "
-  local str = " "
-  local nonprog_modes = {
-    ["markdown"] = true,
-    ["org"] = true,
-    ["orgagenda"] = true,
-    ["text"] = true,
-  }
-
-  if not nonprog_modes[ft] then return str .. string.format("%3s lines", lines) end
-
-  local wc = fn.wordcount()
-  if not wc.visual_words then return str .. string.format("%3s lines  %3s words", lines, group_number(wc.words, ",")) end
-
-  local vlines = math.abs(fn.line(".") - fn.line("v")) + 1
-  return str
-    .. string.format("%3s lines %3s words  %3s chars", group_number(vlines, ","), group_number(wc.visual_words, ","), group_number(wc.visual_chars, ","))
-end
 
 local function seg_selection_info()
   local sep_hl = "StLineSep"
@@ -648,27 +627,18 @@ local function seg_selection_info()
   local words = wc.visual_words
   local chars = wc.visual_chars
 
-  -- return seg(
-  --   table.concat({
-  --     wrap("StMetadataPrefix", "" .. " "),
-  --     wrap("StLineNumber", tostring(chars)),
-  --     wrap(sep_hl, "/"),
-  --     wrap("StLineTotal", tostring(words)),
-  --     wrap(sep_hl, ":"),
-  --     wrap("StLineColumn", tostring(lines)), -- alts: "%-3c" (for padding of 3)
-  --   }),
-  --   { margin = { 1, 1 } }
-  -- )
-
   return seg(
-    table.concat({
-      wrap("StModifiedIcon", "" .. " "),
-      wrap("StLineNumber", tostring(chars) .. "c"),
-      wrap(sep_hl, "/"),
-      wrap("StLineTotal", tostring(words) .. "w"),
-      wrap(sep_hl, "/"),
-      wrap("StLineColumn", tostring(lines) .. "l"), -- alts: "%-3c" (for padding of 3)
-    }),
+    wrap(
+      "VisualYank",
+      table.concat({
+        wrap("StModifiedIcon", "" .. " "),
+        wrap("StLineNumber", tostring(chars) .. "ꮯ"),
+        wrap(sep_hl, "/"),
+        wrap("StLineTotal", tostring(words) .. "w"),
+        wrap(sep_hl, ":"),
+        wrap("StLineColumn", tostring(lines) .. "ꮮ"), -- alts: "%-3c" (for padding of 3)
+      })
+    ),
     { margin = { 1, 1 } }
   )
 end
@@ -709,42 +679,52 @@ local function seg_ai(truncate_at)
   return ""
 end
 
-local function seg_git_symbol(truncate_at)
-  if is_abnormal_buffer() or not is_valid_git() then return "" end
-
-  local symbol = is_truncated(truncate_at) and "" or icons.git.symbol
-  return seg(symbol, "StGitSymbol")
-end
-
 local function hunks()
-  if vim.b.gitsigns_status then
-    if vim.b.gitsigns_status ~= "" then return vim.b.gitsigns_head, vim.b.gitsigns_status end
-    return vim.b.gitsigns_head, nil
+  local status = vim.b[M.ctx.bufnr].gitsigns_status
+  local head = vim.b[M.ctx.bufnr].gitsigns_head
+  local status_dict = vim.b[M.ctx.bufnr].gitsigns_status_dict
+
+  if status then
+    if not U.falsy(status) then return head, status_dict, status end
+    return head, {}, nil
   end
 
-  if vim.g.gitsigns_head then return vim.g.gitsigns_head, nil end
+  if head then return head, {}, nil end
 
-  return nil, nil
+  return nil, {}, nil
 end
 
 local function seg_git_status(truncate_at)
   if is_abnormal_buffer() then return "" end
 
-  local truncate_branch, truncate_symbol = unpack(truncate_at)
-  local git_branch, git_status = hunks()
+  local truncate_branch_at, truncate_symbol_at = unpack(truncate_at)
+  local git_branch, git_status_dict, git_status = hunks()
   if U.falsy(git_branch) then return "" end
 
-  local branch = is_truncated(truncate_branch) and truncate_str(git_branch or "", 14) or git_branch
+  local branch = is_truncated(truncate_branch_at) and truncate_str(git_branch or "", 14) or git_branch
+
+  local added = string.format("+%s ", git_status_dict.added)
+  local removed = string.format("-%s ", git_status_dict.removed)
+  local changed = string.format("~%s ", git_status_dict.changed)
 
   return seg(
     table.concat({
       wrap("StGitBranch", branch),
-      seg(git_status, "StBright", not U.falsy(git_status), { margin = { 1, 0 } }),
+      -- seg(git_status, "StBright", not U.falsy(git_status), { margin = { 1, 0 } }),
+      seg(
+        table.concat({
+          wrap("StGitSignsAdd", added),
+          wrap("StGitSignsDelete", removed),
+          wrap("StGitSignsChange", changed),
+        }),
+        "Statusline",
+        not U.falsy(git_status),
+        { margin = { 1, 0 } }
+      ),
     }),
+
     {
-      margin = { 1, 1 },
-      prefix = seg_git_symbol(truncate_symbol),
-      padding = { 1, 0 },
+      margin = { 1, 0 },
     }
   )
 end

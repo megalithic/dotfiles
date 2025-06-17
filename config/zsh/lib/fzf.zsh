@@ -37,6 +37,7 @@ export FZF_DEFAULT_OPTS="
 --pointer=' '
 --marker='󰛄 '
 --scrollbar='▓',
+--tiebreak=index
 "
 
 # alts: 󰛄
@@ -116,7 +117,8 @@ if has fd; then
 
   export FZF_ALT_C_OPTS="--preview 'exa -T {}' --height=60%"
   # export FZF_ALT_C_COMMAND="fd -t d -d 1"
-  export FZF_ALT_C_COMMAND="fd -t d -d 1 --follow --hidden --color=always --no-ignore-vcs --exclude 'Library'"
+  # export FZF_ALT_C_COMMAND="fd -I -t d -d 1 --follow --hidden --color=always --no-ignore-vcs --exclude 'Library'"
+  export FZF_ALT_C_COMMAND="fd -I -t d --max-depth 5 --follow --hidden --color=always --no-ignore-vcs --exclude 'Library' | proximity-sort ."
   # export FZF_ALT_C_COMMAND="fd --type d --follow --hidden --color=always --no-ignore-vcs --exclude 'Library'"
 fi
 
@@ -128,9 +130,9 @@ _fzf_comprun() {
   shift
 
   case "$command" in
-    git) git --help -a | grep -E '^\s+' | awk '{print $1}' | fzf "$@" ;;
-    cd) fzf --preview 'tree -C {} | head -200' "$@" ;;
-    *) fzf "$@" ;;
+  git) git --help -a | grep -E '^\s+' | awk '{print $1}' | fzf "$@" ;;
+  cd) fzf --preview 'tree -C {} | head -200' "$@" ;;
+  *) fzf "$@" ;;
   esac
 }
 

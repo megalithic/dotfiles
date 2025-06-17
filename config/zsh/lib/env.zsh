@@ -424,7 +424,8 @@ case "$(uname)" in
   export ZSH_AUTOSUGGEST_MANUAL_REBIND=1  # make prompt faster
   export ZSH_AUTOSUGGEST_USE_ASYNC=1
   # export ZSH_AUTOSUGGEST_STRATEGY=(history completion) # or match_prev_cmd
-  export ZSH_AUTOSUGGEST_STRATEGY=("match_prev_cmd" "completion")
+  export ZSH_AUTOSUGGEST_CLEAR_WIDGETS=(buffer-empty bracketed-paste accept-line push-line-or-edit)
+  export ZSH_AUTOSUGGEST_STRATEGY=(match_prev_cmd completion history)
 
   # zsh magic dashboard
   # Size of the dashboard

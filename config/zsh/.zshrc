@@ -24,6 +24,7 @@ zsh_add_plugin "djui/alias-tips"
 zsh_add_plugin "hlissner/zsh-autopair"
 zsh_add_plugin "psprint/zsh-sweep" # zsh linting
 zsh_add_plugin "ptavares/zsh-direnv"
+# zsh_add_plugin "lewis6991/fancy-prompt"
 
 # adds `zmv` tool (https://twitter.com/wesbos/status/1443570300529086467)
 autoload -U zmv # builtin zsh rename command
@@ -37,7 +38,7 @@ autoload -U promptinit && promptinit # Enable prompt themes
 prompt megalithic                    # Set prompt
 
 # -- scripts/libs/etc
-for file in $ZLIB/{keybindings,opts,aliases,funcs,ssh,tmux,kitty,gpg}.zsh; do
+for file in $ZLIB/{keymaps,opts,aliases,funcs,ssh,tmux,kitty,gpg}.zsh; do
   # for funcs: https://github.com/akinsho/dotfiles/commit/01816d72160e96921e2af9bc3f1c52be7d1f1502
   [[ -r "$file" && -f "$file" ]] && source "$file"
 done

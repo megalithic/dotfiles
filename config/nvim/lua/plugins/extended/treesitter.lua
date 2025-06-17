@@ -14,6 +14,7 @@ return {
   { "brianhuster/treesitter-endwise.nvim" },
   {
     "nvim-treesitter/nvim-treesitter",
+    branch = "master",
     build = ":TSUpdate",
     lazy = false,
     opts = {
@@ -132,7 +133,7 @@ return {
       },
     },
     init = function()
-      vim.g.loaded_nvim_treesitter = 1
+      -- vim.g.loaded_nvim_treesitter = 1
       -- FIX for `comments` parser https://github.com/stsewd/tree-sitter-comment/issues/22
       vim.api.nvim_create_autocmd("ColorScheme", {
         callback = function() vim.api.nvim_set_hl(0, "@lsp.type.comment", {}) end,
@@ -199,10 +200,21 @@ return {
   {
     "nvim-treesitter/nvim-treesitter-context",
     dependencies = { "nvim-treesitter/nvim-treesitter" },
+    -- keys = {
+    --   {
+    --     "[[",
+    --     function() require("treesitter-context").go_to_context(-vim.v.count1) end,
+    --   },
+    --   {
+    --     "]]",
+    --     function() require("treesitter-context").go_to_context(vim.v.count1) end,
+    --   },
+    -- },
     config = function()
       require("treesitter-context").setup({
         max_lines = 5,
         trim_scope = "outer",
+        separator = "🮏", --, "TreesitterContextBorder", -- alts: 🮑🮏▁‾▁▁ ─ ▄─▁-_‾
         multiwindow = false,
       })
     end,

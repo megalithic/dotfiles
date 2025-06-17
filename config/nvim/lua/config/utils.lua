@@ -409,13 +409,19 @@ function M.clear_ui(opts)
 
   -- Stop highlighting searches
   vim.cmd.nohlsearch()
-
   vim.cmd.diffupdate()
   vim.cmd("syntax sync fromstart")
+
   M.close_floats()
 
   pcall(mega.blink_cursorline)
+
   vim.cmd.redraw({ bang = true })
+
+  do
+    local ok, tsc = pcall(require, "treesitter-context")
+    if ok then tsc.enable() end
+  end
 
   do
     local ok, mj = pcall(require, "mini.jump")
