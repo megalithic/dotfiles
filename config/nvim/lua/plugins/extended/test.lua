@@ -78,10 +78,10 @@ return {
     init = function()
       local function terminal_notifier(term_cmd, exit)
         if exit == 0 then
-          mega.notify(fmt("👍 [PASS] vim-test: %s", term_cmd), L.INFO)
+          Echom(fmt("👍 [PASS] vim-test: %s", term_cmd), "GitSignsAdd")
           -- vim.fn.system(string.format([[terminal-notifier -title "nvim [test]" -message "👍 test(s) passed"]], term_cmd))
         else
-          mega.notify(fmt("👎 [FAIL] vim-test: %s", term_cmd), L.ERROR)
+          Echom(fmt("👎 [FAIL] vim-test: %s", term_cmd), L.ERROR)
           -- vim.fn.system(string.format([[terminal-notifier -title "nvim [test]" -message "👎 test(s) failed"]], term_cmd))
         end
       end

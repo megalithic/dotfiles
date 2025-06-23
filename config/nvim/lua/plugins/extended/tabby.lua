@@ -5,12 +5,13 @@ return {
   "nanozuki/tabby.nvim",
   event = { "BufReadPost" },
   dependencies = { "rktjmp/lush.nvim" },
-  cond = false, --not vim.g.started_by_firenvim and not vim.env.TMUX_POPUP,
+  cond = not vim.g.started_by_firenvim and not vim.env.TMUX_POPUP,
   config = function()
     local SETTINGS = require("config.options")
     local icons = SETTINGS.icons
     local fmt = string.format
 
+    -- if #vim.api.nvim_list_tabpages() > 1 then vim.o.showtabline = 2 end
     vim.o.showtabline = 2
     -- function tab_modified(tab)
     --   local wins = require("tabby.module.api").get_tab_wins(tab)
@@ -51,8 +52,11 @@ return {
 
     local function tab_name(number, name, active)
       local icon = active and "" or ""
+      name = string.gsub(name, "%[..%]", "")
+      local index = string.find(name, "%[%d")
+      local tname = index and string.sub(name, 1, index - 1) or name
 
-      return fmt(" %s:%s %s ", number, string.gsub(name, "%[..%]", ""), icon)
+      return fmt(" %s:%s %s ", number, tname, icon)
       -- return fmt(" %s %s ", number, icon)
     end
 
@@ -62,35 +66,50 @@ return {
       return fmt(" %s %s ", icon, name)
     end
 
-    require("tabby.tabline").set(function(line)
-      return {
-        {
-          { icons.misc.lblock, hl = theme.head },
-        },
-        line.tabs().foreach(function(tab)
-          local hl = tab.is_current() and theme.current_tab or theme.inactive_tab
-          return {
-            -- line.sep(" ", hl, theme.fill),
-            tab_name(tab.number(), tab.name(), tab.is_current()),
-            hl = hl,
-            margin = " ",
-          }
-        end),
-        line.spacer(),
-        line.wins_in_tab(line.api.get_current_tab()).foreach(function(win)
-          local hl = win.is_current() and theme.current_win or theme.inactive_win
-          return {
-            -- line.sep(" ", hl, theme.fill),
-            win_name(win.buf_name(), win.is_current()),
-            hl = hl,
-            margin = " ",
-          }
-        end),
-        {
-          { icons.misc.rblock, hl = theme.tail },
-        },
-        hl = theme.fill,
-      }
-    end)
+    require("tabby").setup({
+      line = function(line)
+        -- require("tabby.tabline").set(function(line)
+        return {
+          {
+            { icons.misc.lblock, hl = theme.head },
+          },
+          line.tabs().foreach(function(tab)
+            local hl = tab.is_current() and theme.current_tab or theme.inactive_tab
+            local modified = false
+            local win_ids = require("tabby.module.api").get_tab_wins(tab.id)
+            for _, win_id in ipairs(win_ids) do
+              if pcall(vim.api.nvim_win_get_buf, win_id) then
+                local bufid = vim.api.nvim_win_get_buf(win_id)
+                if vim.api.nvim_buf_get_option(bufid, "modified") then
+                  modified = true
+                  break
+                end
+              end
+            end
+            return {
+              -- line.sep(" ", hl, theme.fill),
+              tab_name(tab.number(), tab.name(), tab.is_current()),
+              modified and "",
+              hl = hl,
+              margin = " ",
+            }
+          end),
+          line.spacer(),
+          line.wins_in_tab(line.api.get_current_tab()).foreach(function(win)
+            local hl = win.is_current() and theme.current_win or theme.inactive_win
+            return {
+              -- line.sep(" ", hl, theme.fill),
+              win_name(win.buf_name(), win.is_current()),
+              hl = hl,
+              margin = " ",
+            }
+          end),
+          {
+            { icons.misc.rblock, hl = theme.tail },
+          },
+          hl = theme.fill,
+        }
+      end,
+    })
   end,
 }

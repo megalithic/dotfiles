@@ -764,11 +764,11 @@ local theme = lush(function(injected_functions)
 
     ---- :help treesitter-context ----------------------------------------------
 
-    TreesitterContext({ bg = C.bg1.li(4) }),
+    TreesitterContext({ bg = C.bg1.li(5) }),
     TreesitterContextLineNumber({ fg = LineNr.fg.da(10), bg = TreesitterContext.bg, gui = "bold,italic" }),
     TreesitterContextBottom({ bg = TreesitterContext.bg }),
     TreesitterContextLineNumberBottom({ fg = LineNr.fg.li(20), bg = TreesitterContext.bg }),
-    TreesitterContextSeparator({ bg = C.bg1.da(2), fg = C.bg0.da(20) }),
+    TreesitterContextSeparator({ bg = C.bg1.da(5), fg = C.bg0.da(20) }),
 
     -- TS: Markdown
     -- sym("@markdown.punct.special") {Special},
@@ -1114,7 +1114,7 @@ local theme = lush(function(injected_functions)
     StCount({ fg = C.bg0, bg = C.blue, gui = "bold" }),
     StPrefix({ fg = C.fg, bg = C.bg2 }),
     StDirectory({ bg = StatusLineBg.bg, fg = C.grey0, gui = "italic" }),
-    StParentDirectory({ bg = StatusLineBg.bg, fg = C.blue, gui = "" }),
+    StParentDirectory({ bg = StatusLineBg.bg, fg = C.blue, gui = "italic" }),
     StFilename({ bg = StatusLineBg.bg, fg = C.fg, gui = "bold" }),
     StFilenameInactive({ fg = C.light_grey, bg = StatusLineBg.bg, gui = "italic,bold" }),
     StIdentifier({ fg = C.blue, bg = StatusLineBg.bg }),

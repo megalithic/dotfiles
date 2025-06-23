@@ -221,7 +221,7 @@ return {
             silent = true,
           }
           local function map(mode, lhs, rhs) vim.keymap.set(mode, lhs, rhs, opts) end
-          map("n", "q", "<cmd>quit<CR>")
+          map("n", "q", "<cmd>cquit!<CR>")
           map("i", "<C-d>", "<Plug>(committia-scroll-diff-down-half)")
           map("i", "<C-u>", "<Plug>(committia-scroll-diff-up-half)")
           map("i", "<C-f>", "<Plug>(committia-scroll-diff-down-page)")
@@ -374,55 +374,62 @@ return {
     },
   },
   {
-    "akinsho/git-conflict.nvim",
-    tag = "v2.1.0",
+    "megalithic/git-conflict.nvim",
     event = { "BufReadPre", "BufWritePre" },
-    config = function()
-      require("git-conflict").setup({
-        -- disable_diagnostics = false,
-        list_opener = "copen", -- command or function to open the conflicts list
-      })
-
-      require("config.autocmds").augroup("GitConflicts", {
+    opts = {
+      disable_diagnostics = true,
+      disable_mappings = true,
+      list_opener = "copen", -- command or function to open the conflicts list
+      highlights = { -- They must have background color, otherwise the default color will be used
+        incoming = "GitConflictIncoming",
+        current = "GitConflictCurrent",
+        ancestor = "GitConflictAncestor",
+      },
+    },
+    config = function(_, opts)
+      local conflict = require("git-conflict")
+      conflict.setup(opts)
+      Augroup("GitConflicts", {
         {
           event = { "User" },
           pattern = { "GitConflictDetected" },
           command = function(args)
-            vim.g.git_conflict_detected = true
-            nnoremap("<leader>gc", "<cmd>GitConflictListQf<cr>", { desc = "git-conflict: conflicts in qf", buffer = args.buf })
-            nnoremap("cq", "<cmd>GitConflictListQf<CR>", { desc = "git-conflict: send conflicts to qf", buffer = args.buf })
-            nnoremap("[c", "<cmd>GitConflictPrevConflict<CR>|zz", { desc = "git-conflict: prev conflict", buffer = args.buf })
-            nnoremap("]c", "<cmd>GitConflictNextConflict<CR>|zz", { desc = "git-conflict: next conflict", buffer = args.buf })
-            nnoremap("[[", "<cmd>GitConflictPrevConflict<CR>|zz", { desc = "git-conflict: prev conflict", buffer = args.buf })
-            nnoremap("]]", "<cmd>GitConflictNextConflict<CR>|zz", { desc = "git-conflict: next conflict", buffer = args.buf })
+            vim.b[args.buf].git_conflict_detected = true
+
+            nnoremap("co", "<Plug>(git-conflict-ours)", { desc = "git-[c]onflict: resolve with [o]urs/current" })
+            nnoremap("cc", "<Plug>(git-conflict-ours)", { desc = "git-[c]onflict: resolve with [c]urrent/ours" })
+            nnoremap("ct", "<Plug>(git-conflict-theirs)", { desc = "git-[c]onflict: resolve with [t]heirs/incoming" })
+            nnoremap("ci", "<Plug>(git-conflict-theirs)", { desc = "git-[c]onflict: resolve with [i]ncoming/theirs" })
+            nnoremap("cb", "<Plug>(git-conflict-both)", { desc = "git-[c]onflict: resolve with [b]oth" })
+            nnoremap("c0", "<Plug>(git-conflict-none)", { desc = "git-[c]onflict: no resolution" })
+            nnoremap("cn", "<Plug>(git-conflict-none)", { desc = "git-[c]onflict: resolve [n]othing" })
+            nnoremap("cq", "<cmd>GitConflictListQf<CR>", { desc = "git-[c]onflict: send conflicts to [q]f" })
+            nnoremap("[c", function()
+              conflict.find_prev("ours")
+              vim.schedule_wrap(function()
+                vim.cmd.norm("zz")
+                pcall(mega.blink_cursorline)
+              end)
+            end, { desc = "git-[c]onflict: prev conflict" })
+            nnoremap("]c", function()
+              conflict.find_next("ours")
+              vim.schedule_wrap(function()
+                vim.cmd.norm("zz")
+                pcall(mega.blink_cursorline)
+              end)
+            end, { desc = "git-[c]onflict: next conflict" })
 
             if pcall(require, "fidget") then vim.cmd("Fidget suppress true") end
-            vim.defer_fn(function()
-              vim.diagnostic.enable(false, { bufnr = args.buf })
-              vim.lsp.stop_client(vim.lsp.get_clients())
-
-              local ok, gd = pcall(require, "garbage-day.utils")
-              if ok then gd.stop_lsp() end
-              vim.diagnostic.hide()
-              mega.notify(string.format("%s Conflicts detected.", icons.lsp.error))
-            end, 250)
+            mega.notify(string.format("%s Conflicts detected.", icons.lsp.error))
           end,
         },
         {
           event = { "User" },
           pattern = { "GitConflictResolved" },
           command = function(args)
-            vim.defer_fn(function()
-              vim.diagnostic.enable(true, { bufnr = args.buf })
-              vim.cmd("LspStart")
-              vim.g.git_conflict_detected = false
-
-              local ok, gd = pcall(require, "garbage-day.utils")
-              if ok then gd.start_lsp(gd.stop_lsp()) end
-              vim.diagnostic.show()
-              mega.notify(string.format("%s All conflicts resolved!", icons.lsp.ok))
-              if pcall(require, "fidget") then vim.cmd("Fidget suppress false") end
-            end, 250)
+            vim.b[args.buf].git_conflict_detected = false
+            if pcall(require, "fidget") then vim.cmd("Fidget suppress false") end
+            mega.notify(string.format("%s All conflicts resolved!", icons.lsp.ok))
           end,
         },
       })
@@ -447,34 +454,6 @@ return {
     dependencies = "nvim-lua/plenary.nvim",
     cmd = { "GitLink" },
     keys = {
-      -- {
-      --   "<localleader>gy",
-      --   function() linker().get_buf_range_url("n") end,
-      --   desc = "gitlinker: copy line to clipboard",
-      -- },
-      -- {
-      --   "<localleader>gy",
-      --   function() linker().get_buf_range_url("v") end,
-      --   desc = "gitlinker: copy range to clipboard",
-      --   mode = { "v" },
-      -- },
-      -- {
-      --   "<localleader>go",
-      --   function() linker().get_repo_url(browser_open()) end,
-      --   desc = "gitlinker: open in browser",
-      -- },
-      -- {
-      --   "<localleader>go",
-      --   function() linker().get_buf_range_url("n", browser_open()) end,
-      --   desc = "gitlinker: open current line in browser",
-      -- },
-      -- {
-      --   "<localleader>go",
-      --   function() linker().get_buf_range_url("v", browser_open()) end,
-      --   desc = "gitlinker: open current selection in browser",
-      --   mode = { "v" },
-      -- },
-
       {
         "<localleader>go",
         "<cmd>GitLink!<cr>",
@@ -521,66 +500,66 @@ return {
       file_log = true,
     },
   },
-  {
-    cond = false,
-    "Juksuu/worktrees.nvim",
-    event = "VeryLazy",
-    keys = {
-      {
-        "<leader>gww",
-        "<cmd>lua require('telescope').extensions.worktrees.list_worktrees()<cr>",
-        desc = "git-worktree: switch worktree",
-        -- mode = { "n", "v" },
-      },
-      {
-        "<leader>gwn",
-        "<cmd>GitWorktreeCreate<cr>",
-        desc = "git-worktree: create worktree",
-      },
-      {
-        "<leader>gwc",
-        "<cmd>GitWorktreeCreateExisting<cr>",
-        desc = "git-worktree: create existing worktree",
-      },
-    },
-    config = function()
-      -- telescope.load_extension("git_worktree")
-      require("worktrees").setup({})
-      require("telescope").load_extension("worktrees")
-    end,
-  },
-  {
-    -- "mgierada/git-worktree.nvim",
-    -- branch = "adapt-for-telescope-api-changes",
+  -- {
+  --   cond = false,
+  --   "Juksuu/worktrees.nvim",
+  --   event = "VeryLazy",
+  --   keys = {
+  --     {
+  --       "<leader>gww",
+  --       "<cmd>lua require('telescope').extensions.worktrees.list_worktrees()<cr>",
+  --       desc = "git-worktree: switch worktree",
+  --       -- mode = { "n", "v" },
+  --     },
+  --     {
+  --       "<leader>gwn",
+  --       "<cmd>GitWorktreeCreate<cr>",
+  --       desc = "git-worktree: create worktree",
+  --     },
+  --     {
+  --       "<leader>gwc",
+  --       "<cmd>GitWorktreeCreateExisting<cr>",
+  --       desc = "git-worktree: create existing worktree",
+  --     },
+  --   },
+  --   config = function()
+  --     -- telescope.load_extension("git_worktree")
+  --     require("worktrees").setup({})
+  --     require("telescope").load_extension("worktrees")
+  --   end,
+  -- },
+  -- {
+  --   -- "mgierada/git-worktree.nvim",
+  --   -- branch = "adapt-for-telescope-api-changes",
 
-    "awerebea/git-worktree.nvim", -- Temporary switch to fork
-    branch = "main",
-    event = "VeryLazy",
-    keys = {
-      {
-        "<leader>gww",
-        function() require("telescope").extensions.git_worktree.git_worktrees(mega.picker.dropdown({ path_display = {} })) end,
-        desc = "git-worktree: switch worktree",
-      },
-      {
-        "<leader>gwc",
-        function() require("telescope").extensions.git_worktree.create_git_worktree() end,
-        desc = "git-worktree: create worktree",
-      },
-    },
-    opts = {},
-    config = function()
-      local wt = require("git-worktree")
-      require("telescope").load_extension("git_worktree")
-      wt.on_tree_change(function(op, metadata)
-        if op == wt.Operations.Switch then
-          vim.notify("Switched from " .. metadata.prev_path .. " to " .. metadata.path)
-        elseif op == wt.Operations.Create then
-          vim.notify("Worktree created: " .. metadata.path .. " for branch " .. metadata.branch .. " with upstream " .. metadata.upstream)
-        elseif op == wt.Operations.Delete then
-          vim.notify("Worktree deleted: " .. metadata.path)
-        end
-      end)
-    end,
-  },
+  --   "awerebea/git-worktree.nvim", -- Temporary switch to fork
+  --   branch = "main",
+  --   event = "VeryLazy",
+  --   keys = {
+  --     {
+  --       "<leader>gww",
+  --       function() require("telescope").extensions.git_worktree.git_worktrees(mega.picker.dropdown({ path_display = {} })) end,
+  --       desc = "git-worktree: switch worktree",
+  --     },
+  --     {
+  --       "<leader>gwc",
+  --       function() require("telescope").extensions.git_worktree.create_git_worktree() end,
+  --       desc = "git-worktree: create worktree",
+  --     },
+  --   },
+  --   opts = {},
+  --   config = function()
+  --     local wt = require("git-worktree")
+  --     require("telescope").load_extension("git_worktree")
+  --     wt.on_tree_change(function(op, metadata)
+  --       if op == wt.Operations.Switch then
+  --         vim.notify("Switched from " .. metadata.prev_path .. " to " .. metadata.path)
+  --       elseif op == wt.Operations.Create then
+  --         vim.notify("Worktree created: " .. metadata.path .. " for branch " .. metadata.branch .. " with upstream " .. metadata.upstream)
+  --       elseif op == wt.Operations.Delete then
+  --         vim.notify("Worktree deleted: " .. metadata.path)
+  --       end
+  --     end)
+  --   end,
+  -- },
 }

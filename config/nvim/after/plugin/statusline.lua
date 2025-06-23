@@ -533,14 +533,14 @@ local function seg_filename(truncate_at)
 
   local dir, parent, file, icon = segments.dir, segments.parent, segments.file, segments.icon
 
-  -- local filename = file.item
-  -- if icon.item ~= nil then filename = fmt("%s %s", icon.item, file.item) end
+  local filename = file.item
+  -- if icon.item ~= nil then filename = fmt(" %s %s", icon.item, file.item) end
 
   local file_hl = M.ctx.modified and "StModified" or file.hl
 
   -- usually our custom titles, like for megaterm, neo-tree, etc
   if dir.item == "" and parent.item == "" then
-    return seg(fmt("%s%s%s", seg(dir.item, dir.hl), seg(parent.item, parent.hl), seg(file.item, file_hl)), { margin = { 1, 1 } })
+    return seg(fmt("%s%s%s", seg(dir.item, dir.hl), seg(parent.item, parent.hl), seg(filename, file_hl)), { margin = { 1, 1 } })
   end
 
   -- if icon.item == nil or icon.item == "" then
@@ -548,7 +548,9 @@ local function seg_filename(truncate_at)
   -- end
   -- return seg(fmt("%s/%s/ %s %s", seg(dir.item, dir.hl), seg(parent.item, parent.hl), seg(icon.item, file_hl), seg(file.item, file_hl)), { margin = { 1, 1 } })
 
-  return seg(fmt("%s/%s/%s", seg(dir.item, dir.hl), seg(parent.item, parent.hl), seg(file.item, file_hl)), { margin = { 1, 1 } })
+  if dir.item == "/" then return seg(fmt("/%s/%s", seg(parent.item, parent.hl), seg(filename, file_hl)), { margin = { 1, 1 } }) end
+
+  return seg(fmt("%s/%s/%s", seg(dir.item, dir.hl), seg(parent.item, parent.hl), seg(filename, file_hl)), { margin = { 1, 1 } })
 end
 
 local function seg_buffer_count(truncate_at)
@@ -718,7 +720,7 @@ local function seg_git_status(truncate_at)
           wrap("StGitSignsChange", changed),
         }),
         "Statusline",
-        not U.falsy(git_status),
+        not U.falsy(git_status) and not is_truncated(truncate_branch_at),
         { margin = { 1, 0 } }
       ),
     }),

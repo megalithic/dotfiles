@@ -2,7 +2,6 @@ return {
   {
     "folke/snacks.nvim",
     opts = {
-      -- skip loading plugins when writing to a not yet existing file
       picker = {
         win = {
           -- input window

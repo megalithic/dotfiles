@@ -230,6 +230,31 @@ function M.keymap(modes, from, to, opts)
   end
 end
 
+local function Load_global_keymap_fns()
+  local remap_opts = { remap = true, silent = true }
+  local noremap_opts = { remap = false, silent = true }
+
+  -- TODO: https://github.com/b0o/nvim-conf/blob/main/lua/user/mappings.lua#L19-L37
+
+  for _, mode in ipairs({ "n", "x", "i", "v", "o", "t", "s", "c" }) do
+    -- {
+    -- n = "normal",
+    -- v = "visual",
+    -- s = "select",
+    -- x = "visual & select",
+    -- i = "insert",
+    -- o = "operator",
+    -- t = "terminal",
+    -- c = "command",
+    -- }
+
+    -- recursive global mappings
+    _G[mode .. "map"] = function(m, from, to, opts) return M.keymap({ m }, from, to, vim.tbl_extend("keep", remap_opts, opts or {})) end
+    -- non-recursive global mappings
+    _G[mode .. "noremap"] = function(m, from, to, opts) return M.keymap({ m }, from, to, vim.tbl_extend("keep", noremap_opts, opts or {})) end
+  end
+end
+
 -- Create autocmd with optional clearing
 local function autocmd_impl(clear, ...)
   local args = { ... }
@@ -499,5 +524,7 @@ function M.safe_require(mod)
 end
 
 Load_macros(M)
+
+Load_global_keymap_fns()
 
 return M

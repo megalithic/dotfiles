@@ -130,6 +130,7 @@ return {
     cmd = {
       "Dbee",
     },
+    ft = { "sql", "dbee" },
     build = function() require("dbee").install() end,
     config = function()
       local has_db, dbee = pcall(require, "dbee")

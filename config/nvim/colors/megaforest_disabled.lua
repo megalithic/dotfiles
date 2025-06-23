@@ -12,7 +12,4 @@ if ok then
 end
 
 pcall(vim.cmd.colorscheme, vim.g.colorscheme)
-if pcall(require, "lush_theme.colors") then
-mega.colors = require("lush_theme.colors")
-end
-
+if pcall(require, "lush_theme.colors") then mega.colors = require("lush_theme.colors") end

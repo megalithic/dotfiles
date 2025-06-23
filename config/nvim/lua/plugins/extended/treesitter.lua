@@ -16,7 +16,8 @@ return {
     "nvim-treesitter/nvim-treesitter",
     branch = "master",
     build = ":TSUpdate",
-    lazy = false,
+    -- lazy = false,
+    event = "VeryLazy",
     opts = {
       ensure_installed = {
         "bash",
@@ -212,7 +213,7 @@ return {
     -- },
     config = function()
       require("treesitter-context").setup({
-        max_lines = 5,
+        max_lines = 3,
         trim_scope = "outer",
         separator = "🮏", --, "TreesitterContextBorder", -- alts: 🮑🮏▁‾▁▁ ─ ▄─▁-_‾
         multiwindow = false,

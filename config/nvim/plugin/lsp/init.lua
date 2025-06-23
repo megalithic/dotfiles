@@ -83,10 +83,13 @@ local function goto_diagnostic_hl(dir)
   vim.diagnostic.jump({
     count = step,
     float = false,
+    virtual_text = false,
     virtual_lines = {
       current_line = true,
     },
   })
+
+  require("tiny-inline-diagnostic").enable()
 end
 
 local function fix_current_action()
@@ -495,8 +498,8 @@ local function on_attach(client, bufnr, client_id)
   make_commands(client, bufnr)
   make_keymaps(client, bufnr)
 
-  -- Auto-formatting on save
   lsp_method(client, methods.textDocument_formatting)(function()
+    -- Disable formatting for certain language servers
     for i = 1, #disabled_lsp_formatting do
       if disabled_lsp_formatting[i] == client.name then
         client.server_capabilities.documentFormattingProvider = false
@@ -504,6 +507,7 @@ local function on_attach(client, bufnr, client_id)
       end
     end
 
+    -- Auto-formatting on save
     -- if not lsp_method(client, methods.textDocument_willSaveWaitUntil) then
     -- vim.api.nvim_create_autocmd("BufWritePre", {
     --   group = lsp_group,

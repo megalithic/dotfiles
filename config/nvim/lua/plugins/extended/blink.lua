@@ -57,8 +57,8 @@ return {
       { "xzbdmw/colorful-menu.nvim", lazy = true, opts = {} },
       "mikavilpas/blink-ripgrep.nvim",
     },
-    event = { "InsertEnter", "CmdlineEnter" },
-    version = "*",
+    -- event = { "InsertEnter", "CmdlineEnter" },
+    build = "cargo build --release",
     cond = vim.g.completer == "blink",
     config = function()
       local blink = require("blink.cmp")
@@ -173,6 +173,8 @@ return {
         },
         cmdline = {
           keymap = {
+            ["<CR>"] = { "select_accept_and_enter", "fallback" },
+            ["<C-y>"] = { "select_and_accept", "fallback" },
             ["<Down>"] = { "select_next", "fallback" },
             ["<Up>"] = { "select_prev", "fallback" },
           },
@@ -193,13 +195,14 @@ return {
                   or ctype == "@"
               end,
             },
+            ghost_text = { enabled = true },
           },
           sources = function()
             local type = vim.fn.getcmdtype()
             -- Search forward and backward
             if type == "/" or type == "?" then return { "buffer" } end
             -- Commands
-            if type == ":" then return { "cmdline" } end
+            if type == ":" or type == "@" then return { "cmdline", "buffer" } end
             return {}
           end,
         },
@@ -333,7 +336,7 @@ return {
           list = {
             cycle = { from_top = false }, -- cycle at bottom, but not at the top
             selection = {
-              preselect = function(ctx) return ctx.mode == "cmdline" and true or false end,
+              preselect = false,
               auto_insert = true,
             },
           },

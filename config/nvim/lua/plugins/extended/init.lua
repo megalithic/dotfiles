@@ -652,14 +652,56 @@ return {
     cmd = { "OutputPanel" },
     opts = { max_buffer_size = 5000 },
   },
-  -- {
-  --   -- FIXME: this is a no go; crashes rpc
-  --   enabled = false,
-  --   "synic/refactorex.nvim",
-  --   ft = "elixir",
-  --   opts = {
-  --     auto_update = true,
-  --     pin_version = nil,
-  --   },
-  -- },
+  {
+    -- FIXME: this is a no go; crashes rpc content chunk things
+    cond = false,
+    "synic/refactorex.nvim",
+    ft = "elixir",
+    opts = {
+      auto_update = true,
+      pin_version = nil,
+    },
+  },
+  {
+    "rachartier/tiny-inline-diagnostic.nvim",
+    event = "VeryLazy",
+    priority = 1000, -- needs to be loaded in first
+    opts = {
+      hi = {
+        error = "DiagnosticError",
+        warn = "DiagnosticWarn",
+        info = "DiagnosticInfo",
+        hint = "DiagnosticHint",
+        arrow = "Normal",
+        background = "CursorLine",
+        mixing_color = "None",
+      },
+      signs = {
+        left = " ",
+        right = " ",
+        diag = "",
+        arrow = " ",
+        up_arrow = " ",
+        -- arrow = "  ",
+        -- up_arrow = "  ",
+        vertical = " ",
+        vertical_end = " ",
+      },
+      blend = {
+        factor = 0.27,
+      },
+      options = {
+        multiple_diag_under_cursor = true,
+        format = function(d)
+          local icon = require("config.options").icons.lsp[vim.diagnostic.severity[d.severity]:lower()]
+          return string.format("%s %s\r\n%s", icon, d.source, d.message)
+        end,
+      },
+    },
+    config = function(_, opts)
+      -- require("tiny-inline-diagnostic.highlights").setup_highlights = function(...) D(...) end
+      require("tiny-inline-diagnostic").setup(opts)
+      vim.diagnostic.config({ virtual_text = false })
+    end,
+  },
 }

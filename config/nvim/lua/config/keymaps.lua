@@ -90,6 +90,7 @@ for _, mode in ipairs({ "n", "x", "i", "v", "o", "t", "s", "c" }) do
   M[mode .. "noremap"] = mapper(mode, noremap_opts)
   _G[mode .. "noremap"] = mapper(mode, noremap_opts)
 end
+
 local function leaderMapper(mode, key, rhs, opts)
   if type(opts) == "string" then opts = { desc = opts } end
   map(mode, "<leader>" .. key, rhs, opts)
@@ -113,12 +114,12 @@ end
 --
 -- NOTE: This won't work in all terminal emulators/tmux/etc. Try your own mapping
 -- or just use <C-\><C-n> to exit terminal mode
-map("t", "<Esc><Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
+tmap("<Esc><Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
 
 -- [[ command mode ]] ----------------------------------------------------------
-map("v", "<leader>S", ":!sort<cr>", { desc = "Sort selection" })
-map("n", "<leader>:", ":!", { desc = "Execute last command" })
-map("n", "<leader>;", ":<Up>", { desc = "Go to last command" })
+vmap("<leader>S", ":!sort<cr>", { desc = "Sort selection" })
+nmap("<leader>:", ":!", { desc = "Execute last command" })
+nmap("<leader>;", ":<Up>", { desc = "Go to last command" })
 -- https://github.com/tpope/vim-rsi/blob/master/plugin/rsi.vim
 -- c-a / c-e everywhere - RSI.vim provides these
 cmap("<C-n>", "<Down>")

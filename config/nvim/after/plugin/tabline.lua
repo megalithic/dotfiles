@@ -188,9 +188,7 @@ end
 
 function mega.ui.tabline.render()
   local parts = {} --- @type string[]
-
   local len = 0
-
   local sel_start --- @type integer
 
   for i = 1, fn.tabpagenr("$") do
@@ -224,13 +222,15 @@ local function hldefs()
   end
 end
 
-local group = api.nvim_create_augroup("tabline", {})
-api.nvim_create_autocmd("ColorScheme", {
-  group = group,
-  callback = hldefs,
-})
-hldefs()
+if #vim.api.nvim_list_tabpages() > 1 then
+  local group = api.nvim_create_augroup("tabline", {})
+  api.nvim_create_autocmd("ColorScheme", {
+    group = group,
+    callback = hldefs,
+  })
+  hldefs()
 
--- vim.opt.tabline = "%!v:lua.require'lewis6991.tabline'.tabline()"
-
-vim.opt.tabline = "%!v:lua.mega.ui.tabline.render()"
+  vim.opt.tabline = "%!v:lua.mega.ui.tabline.render()"
+else
+  vim.opt.tabline = ""
+end

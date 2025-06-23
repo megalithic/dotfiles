@@ -1,20 +1,19 @@
 vim.loader.enable()
 
-if vim.fn.has("nvim-0.12") == 1 then
-  -- extui
-  require("vim._extui").enable({
-    enable = true,
-    msg = {
-      target = "cmd",
-    },
-  })
+-- if vim.fn.has("nvim-0.12") == 1 then
+--   -- extui
+--   require("vim._extui").enable({
+--     enable = true,
+--     msg = {
+--       target = "cmd",
+--     },
+--   })
 
-  vim.api.nvim_create_autocmd("FileType", {
-    pattern = { "cmd", "msg", "pager", "dialog" },
-
-    callback = function() vim.api.nvim_set_option_value("winhl", "Normal:Normal,FloatBorder:FloatBorder", {}) end,
-  })
-end
+--   vim.api.nvim_create_autocmd("FileType", {
+--     pattern = { "cmd", "msg", "pager", "dialog" },
+--     callback = function() vim.api.nvim_set_option_value("winhl", "Normal:TelescopePreviewNormal,FloatBorder:TelescopePreviewBorder", {}) end,
+--   })
+-- end
 
 --- @diagnostic disable-next-line: duplicate-set-field
 vim.deprecate = function() end -- no-op deprecation messages

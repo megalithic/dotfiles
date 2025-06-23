@@ -111,12 +111,6 @@ ftplugin.extend_all({
         end, "[d]ebug [n]earest test")
       end
 
-      local has_wk, wk = pcall(require, "which-key")
-      if has_wk then wk.add({
-        ["<localleader>e"] = { group = "[e]lixir" },
-        ["<localleader>eP"] = { group = "[e]lixir [P]ipes" },
-      }) end
-
       if pcall(require, "mini.clue") then
         vim.b.miniclue_config = {
           clues = {
@@ -134,11 +128,14 @@ ftplugin.extend_all({
         -- The cursor location does not give us the correct node in this case, so we
         -- need to get the node to the left of the cursor
         local node = vim.treesitter.get_node({ pos = left_of_cursor_range })
+        local node_type = node:type()
+        local parent_type = node:parent():type()
+        D({ node_type, parent_type })
         local nodes_active_in = { "attribute_name", "directive_argument", "directive_name" }
-        P(node:type())
-        if not node or not vim.tbl_contains(nodes_active_in, node:type()) then return "=" end
-
-        return "=\"\"<left>"
+        if node and (vim.tbl_contains(nodes_active_in, node_type) or (node_type == "quoted_content" and parent_type == "sigil")) then
+          return "={\"\"}<left><left>"
+        end
+        return "="
       end, { expr = true, buffer = bufnr })
     end,
   },
@@ -160,10 +157,13 @@ ftplugin.extend_all({
         -- The cursor location does not give us the correct node in this case, so we
         -- need to get the node to the left of the cursor
         local node = vim.treesitter.get_node({ pos = left_of_cursor_range })
+        local node_type = node:type()
+        local parent_type = node:parent():type()
+        D({ node_type, parent_type })
         local nodes_active_in = { "attribute_name", "directive_argument", "directive_name" }
-        if not node or not vim.tbl_contains(nodes_active_in, node:type()) then return "=" end
+        if not node or not vim.tbl_contains(nodes_active_in, node_type) then return "=" end
 
-        return "=\"\"<left>"
+        return "={\"\"}<left><left>"
       end, { expr = true, buffer = bufnr })
     end,
   },
@@ -179,8 +179,9 @@ ftplugin.extend_all({
         -- The cursor location does not give us the correct node in this case, so we
         -- need to get the node to the left of the cursor
         local node = vim.treesitter.get_node({ pos = left_of_cursor_range })
+        local node_type = node:type()
         local nodes_active_in = { "attribute_name", "directive_argument", "directive_name" }
-        if not node or not vim.tbl_contains(nodes_active_in, node:type()) then return "=" end
+        if not node or not vim.tbl_contains(nodes_active_in, node_type) then return "=" end
 
         return "=\"\"<left>"
       end, { expr = true, buffer = bufnr })

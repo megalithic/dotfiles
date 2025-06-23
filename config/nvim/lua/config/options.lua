@@ -103,7 +103,7 @@ local M = {
   disabled_semantic_tokens = {
     -- "typescript",
     -- "javascript",
-    -- "lua",
+    "lua",
   },
   enabled_inlay_hints = {},
   disabled_lsp_formatters = { "tailwindcss", "html", "ts_ls", "ls_emmet", "zk", "sumneko_lua" },
@@ -579,7 +579,6 @@ M.apply = function()
       hlsearch = true,
 
       -- Tabline
-      tabline = "",
       showtabline = 0,
       guicursor = vim.opt.guicursor + "a:blinkon500-blinkoff100",
       pumheight = 25, -- also controls nvim-cmp completion window height

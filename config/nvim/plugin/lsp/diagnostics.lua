@@ -74,17 +74,19 @@ return function(client, bufnr)
 
       if #view_diagnostics == 0 then view_diagnostics = line_diagnostics end
 
-      vim.diagnostic.show(diagnostic_ns, args.buf, view_diagnostics, {
-        virtual_text = {
-          prefix = function(diag)
-            local icon = icons.lsp[vim.diagnostic.severity[diag.severity]:lower()]
-            return icon or ""
-          end,
-        },
-      })
+      -- vim.diagnostic.show(diagnostic_ns, args.buf, view_diagnostics, {
+      --   virtual_text = {
+      --     prefix = function(diag)
+      --       local icon = icons.lsp[vim.diagnostic.severity[diag.severity]:lower()]
+      --       return icon or ""
+      --     end,
+      --   },
+      -- })
+
       vim.diagnostic.show(nil, args.buf, nil, {
         signs = vim.diagnostic.config().signs,
       })
+      require("tiny-inline-diagnostic").enable()
     end)
   end
 
@@ -92,7 +94,10 @@ return function(client, bufnr)
     vim.diagnostic.setloclist({ open = false, namespace = diagnostic_ns })
     show_diagnostics(args)
     local loclist = vim.fn.getloclist(0, { items = 0, winid = 0 })
-    if vim.tbl_isempty(loclist.items) and loclist.winid > 0 then vim.api.nvim_win_close(loclist.winid, true) end
+    if vim.tbl_isempty(loclist.items) and loclist.winid > 0 then
+      vim.api.nvim_win_close(loclist.winid, true)
+      require("tiny-inline-diagnostic").disable()
+    end
   end
 
   Augroup(diagnostic_group, {

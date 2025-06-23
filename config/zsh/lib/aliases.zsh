@@ -356,6 +356,7 @@ alias gcv="git cv"
 alias gcm='git commit -m "$(gum input)" -m "$(gum write)"'
 alias gaa="git aa"
 alias gcp="git branch --show-current | tr -d '[:space:]' | pbcopy"
+alias gcy="git branch --show-current | tr -d '[:space:]' | pbcopy"
 alias gup="git up"
 # alias rebase="git pull --rebase origin master"
 # alias grm="git status | grep deleted | awk '{\$1=\$2=\"\"; print \$0}' | \
@@ -365,7 +366,7 @@ alias gup="git up"
 # -----------------------------------------------------------------------------
 alias ghc='gh repo clone'
 alias ghv='gh repo view -w'
-pr() {
+prs() {
   get_pr="$(gh pr list | fzf | awk '{ print $1 }')"
 
   echo "$get_pr"
@@ -373,10 +374,19 @@ pr() {
   [[ -z $get_pr ]] && gh pr view -w "$get_pr"
 }
 # alias ghpr="gh pr create --web"
-function ghpr() {
-  # GH_FORCE_TTY=100% gh pr list | fzf --query "$1" --ansi --preview 'GH_FORCE_TTY=100% gh pr view {1}' --preview-window down --header-lines 3 | awk '{print $1}' | xargs gh pr checkout
-  gh pr create --web
+function pr() {
+  # gh pr create --web
+  gh pr view --web
 }
+function prr() {
+  export GH_PEERS="alinmarsh
+  DanThiffault
+  jia614
+  agundy"
+
+  echo $GH_PEERS | fzf -m --tmux |  sed "N;s/\n/,/" | xargs gh pr edit --add-reviewer
+}
+
 alias ghb="gh browse"
 alias ghi="gh issue create --label='' --assignee='@me' --body='' --title"
 
