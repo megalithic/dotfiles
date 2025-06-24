@@ -378,10 +378,32 @@ function M.clear_commandline()
   return function()
     if timer then timer:stop() end
     timer = vim.defer_fn(function()
-      if fn.mode() == "n" then vim.cmd([[echon '']]) end
-    end, 2500)
+      if fn.mode() == "n" then
+        vim.api.nvim_echo({}, false, {})
+        vim.cmd.echon("''")
+        -- vim.cmd([[echon '']])
+      end
+    end, 3000)
   end
 end
+
+-- local function clear_commandline()
+--   --- Track the timer object and stop any previous timers before setting
+--   --- a new one so that each change waits for 10secs and that 10secs is
+--   --- deferred each time
+--   local timer
+
+--   return function()
+--     if timer then timer:stop() end
+
+--     timer = vim.defer_fn(function()
+--       if vim.fn.mode() == "n" then
+--         vim.api.nvim_echo({}, false, {})
+--         vim.cmd.echon("''")
+--       end
+--     end, 10000)
+--   end
+-- end
 
 -- https://www.reddit.com/r/neovim/comments/nrz9hp/can_i_close_all_floating_windows_without_closing/h0lg5m1/
 function M.close_floats()

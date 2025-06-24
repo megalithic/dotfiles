@@ -5,6 +5,7 @@ local SETTINGS = require("config.options")
 local BORDER_STYLE = SETTINGS.border
 local methods = vim.lsp.protocol.Methods
 local lsp_group = vim.api.nvim_create_augroup("mega.lsp", { clear = true })
+local diagnostics_mod
 local preview_opts = {
   border = "rounded",
   focusable = false,
@@ -30,66 +31,6 @@ local function lsp_method(client, method)
       -- vim.notify(not_supported_msg, L.WARN)
     end
   end
-end
-
-local function show_diagnostic_popup(opts)
-  local bufnr = opts
-  if type(opts) == "table" then bufnr = opts.buf or 0 end
-  -- Try to open diagnostics under the cursor
-  local diags = vim.diagnostic.open_float(bufnr, { focus = false, scope = "cursor" })
-  -- If there's no diagnostic under the cursor show diagnostics of the entire line
-  if not diags then vim.diagnostic.open_float(bufnr, { focus = false, scope = "line" }) end
-end
-
-local function goto_diagnostic_hl(dir)
-  assert(dir == "prev" or dir == "next")
-
-  local step = dir == "next" and 1 or -1
-  local diagnostic_ns = vim.api.nvim_create_namespace("mega.hl_diagnostic_region")
-  local diagnostic_timer
-  local hl_cancel
-  local hl_map = {
-    [vim.diagnostic.severity.ERROR] = "DiagnosticVirtualTextError",
-    [vim.diagnostic.severity.WARN] = "DiagnosticVirtualTextWarn",
-    [vim.diagnostic.severity.HINT] = "DiagnosticVirtualTextHint",
-    [vim.diagnostic.severity.INFO] = "DiagnosticVirtualTextInfo",
-  }
-
-  local diagnostic = vim.diagnostic["get_" .. dir]()
-  if not diagnostic then return end
-
-  if diagnostic_timer then
-    diagnostic_timer:close()
-    hl_cancel()
-  end
-
-  -- if end_col is 999, typically we'd get an out of range error from extmarks api
-  if diagnostic.end_col ~= 999 then
-    vim.api.nvim_buf_set_extmark(0, diagnostic_ns, diagnostic.lnum, diagnostic.col, {
-      end_row = diagnostic.end_lnum,
-      end_col = diagnostic.end_col,
-      hl_group = hl_map[diagnostic.severity],
-    })
-  end
-
-  hl_cancel = function()
-    diagnostic_timer = nil
-    hl_cancel = nil
-    pcall(vim.api.nvim_buf_clear_namespace, 0, diagnostic_ns, 0, -1)
-  end
-
-  diagnostic_timer = vim.defer_fn(hl_cancel, 500)
-
-  vim.diagnostic.jump({
-    count = step,
-    float = false,
-    virtual_text = false,
-    virtual_lines = {
-      current_line = true,
-    },
-  })
-
-  require("tiny-inline-diagnostic").enable()
 end
 
 local function fix_current_action()
@@ -358,14 +299,14 @@ local function make_keymaps(client, bufnr)
   nmap("<leader>lim", [[<cmd>Mason<CR>]], "mason info")
   nmap("<leader>lil", [[<cmd>LspLog<CR>]], "logs (vsplit)")
 
-  nmap("gl", show_diagnostic_popup, "[g]o to diagnostic hover")
+  nmap("gl", diagnostics_mod.show_diagnostic_popup, "[g]o to diagnostic hover")
   nmap("K", vim.lsp.buf.hover, "hover docs")
   nmap("gD", vim.lsp.buf.declaration, "goto declaration")
   vnmap("ga", vim.lsp.buf.code_action, "code actions")
   vnmap("g.", function() fix_current_action() end, "[g]o run nearest/current code action")
 
-  nmap("[d", function() goto_diagnostic_hl("prev") end, "Go to previous [D]iagnostic message")
-  nmap("]d", function() goto_diagnostic_hl("next") end, "Go to next [D]iagnostic message")
+  nmap("[d", function() diagnostics_mod.goto_diagnostic_hl("prev") end, "Go to previous [D]iagnostic message")
+  nmap("]d", function() diagnostics_mod.goto_diagnostic_hl("next") end, "Go to next [D]iagnostic message")
 
   nmap("gq", function() vim.cmd("Trouble diagnostics toggle focus=true filter.buf=0") end, "[g]oto [q]uickfixlist buffer diagnostics (trouble)")
   nmap("gQ", function() vim.cmd("Trouble diagnostics toggle focus=true") end, "[g]oto [q]uickfixlist global diagnostics (trouble)")
@@ -495,6 +436,10 @@ local function on_attach(client, bufnr, client_id)
   local filetype = vim.bo[bufnr].filetype
   local disabled_lsp_formatting = SETTINGS.disabled_lsp_formatters
 
+  -- load diagnostics config
+  local ok_diagnostics, setup_diagnostics = pcall(dofile, vim.fn.stdpath("config") .. "/plugin/lsp/diagnostics.lua")
+  if ok_diagnostics then diagnostics_mod = setup_diagnostics(client, bufnr) end
+
   make_commands(client, bufnr)
   make_keymaps(client, bufnr)
 
@@ -596,10 +541,6 @@ local function on_attach(client, bufnr, client_id)
   --   vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
   --   vim.opt.foldtext = ""
   -- end
-
-  -- load diagnostics config
-  local ok_diagnostics, diagnostics = pcall(dofile, vim.fn.stdpath("config") .. "/plugin/lsp/diagnostics.lua")
-  if ok_diagnostics then diagnostics(client, bufnr) end
 end
 
 -- Create autogroup for LSP events

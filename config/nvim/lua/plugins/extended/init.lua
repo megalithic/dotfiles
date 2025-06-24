@@ -677,15 +677,15 @@ return {
         mixing_color = "None",
       },
       signs = {
-        left = " ",
-        right = " ",
+        left = "",
+        right = "",
         diag = "",
-        arrow = " ",
-        up_arrow = " ",
+        arrow = "",
+        up_arrow = "",
         -- arrow = "  ",
         -- up_arrow = "  ",
-        vertical = " ",
-        vertical_end = " ",
+        vertical = "",
+        vertical_end = "",
       },
       blend = {
         factor = 0.27,
@@ -693,15 +693,27 @@ return {
       options = {
         multiple_diag_under_cursor = true,
         format = function(d)
+          local msg = d.message
           local icon = require("config.options").icons.lsp[vim.diagnostic.severity[d.severity]:lower()]
-          return string.format("%s %s\r\n%s", icon, d.source, d.message)
+          if d.source == "typos" then
+            msg = msg:gsub("should be", "󰁔"):gsub("`", "")
+          elseif d.source == "Lua Diagnostics." then
+            msg = msg:gsub("%.$", "")
+          end
+
+          local source = (d.source or ""):gsub(" ?%.$", "") -- trailing dot for lua_ls
+          local rule = d.code and ": " .. d.code or ""
+
+          -- return string.format("%s %s\r\n%s", icon, d.source, d.message)
+          return string.format("%s %s [%s]", icon, msg, ("%s%s"):format(source, rule))
+          -- return string.format("%s [%s]", msg, ("%s%s"):format(source, rule))
         end,
       },
     },
     config = function(_, opts)
       -- require("tiny-inline-diagnostic.highlights").setup_highlights = function(...) D(...) end
       require("tiny-inline-diagnostic").setup(opts)
-      vim.diagnostic.config({ virtual_text = false })
+      -- vim.diagnostic.config({ virtual_text = false })
     end,
   },
 }
