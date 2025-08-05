@@ -3,6 +3,18 @@ local fmt = string.format
 local L = vim.log.levels
 local U = require("config.utils")
 
+local mason_bin_path = vim.fs.joinpath(vim.env.XDG_DATA_HOME, "lsp/mason/bin/")
+
+local function mason_bin(opts)
+  if type(opts) == "table" then
+    local cmd, args = U.tshift(opts)
+
+    return { mason_bin_path .. cmd, unpack(args) }
+  else
+    return mason_bin_path .. opts
+  end
+end
+
 local M = {}
 
 --
@@ -61,26 +73,6 @@ M = {
       },
     },
   },
-  -- basics_ls = {
-  --   enabled = false,
-  --   settings = {
-  --     buffer = {
-  --       enable = true,
-  --       minCompletionLength = 3, -- only provide completions for words longer than 4 characters
-  --     },
-  --     path = {
-  --       enable = true,
-  --     },
-  --     snippet = {
-  --       enable = false,
-  --       sources = { vim.fn.stdpath("config") .. "/snippets" },
-  --     },
-  --   },
-  -- },
-  -- biome = {
-  --   manual_install = true,
-  --   root_dir = U.root_pattern({ "biome.json", ".biome.json", ".eslintrc.js", ".prettierrc.js" }),
-  -- },
   cssls = {
     settings = {
       css = {
@@ -156,7 +148,8 @@ M = {
     if not U.lsp.is_enabled_elixir_ls("elixirls") then return false end
 
     return {
-      cmd = { fmt("%s/lsp/elixir-ls/%s", vim.env.XDG_DATA_HOME, "language_server.sh") },
+      manual_install = true,
+      cmd = { string.format("%s/lsp/elixir-ls/%s", vim.env.XDG_DATA_HOME, "language_server.sh") },
       filetypes = { "elixir", "eelixir", "heex", "surface" },
       root_markers = { "mix.exs", ".git" },
       root_dir = function(bufnr, on_dir)
@@ -168,41 +161,27 @@ M = {
         on_dir(root_dir)
       end,
       single_file_support = true,
-      mixEnv = "dev",
-      mixTarget = "host",
-      mix_env = "dev",
-      mix_target = "host",
-      --
-      autoBuild = true,
-      fetchDeps = true,
-      incrementalDialyzer = true,
-      dialyzerEnabled = true,
-      dialyzerFormat = "dialyxir_long",
-      enableTestLenses = true,
-      suggestSpecs = true,
-      autoInsertRequiredAlias = true,
-      signatureAfterComplete = true,
-      --
       settings = {
-        mixEnv = "dev",
-        mixTarget = "host",
-        mix_env = "dev",
-        mix_target = "host",
-        --
-        autoBuild = true,
-        fetchDeps = true,
-        incrementalDialyzer = true,
-        dialyzerEnabled = true,
-        dialyzerFormat = "dialyxir_long",
-        enableTestLenses = true,
-        suggestSpecs = true,
-        autoInsertRequiredAlias = true,
-        signatureAfterComplete = true,
+        elixirLS = {
+          mixEnv = "dev",
+          mixTarget = "host",
+          autoBuild = true,
+          fetchDeps = true,
+          dialyzerEnabled = false,
+          dialyzerFormat = "dialyxir_long",
+          incrementalDialyzer = false,
+          enableTestLenses = true,
+          dotFormatter = ".formatter.exs",
+          suggestSpecs = true,
+          autoInsertRequiredAlias = true,
+          signatureAfterComplete = true,
+        },
       },
     }
   end,
   elmls = {},
-  emmet_ls = {
+  emmet_language_server = {
+    cmd = { "emmet-language-server", "--stdio" },
     init_options = {
       showSuggestionsAsSnippets = false,
     },
@@ -256,7 +235,6 @@ M = {
   --     },
   --   },
   -- },
-  graphql = {},
   html = {
     settings = {
       includeLanguages = {
@@ -325,6 +303,9 @@ M = {
       },
     }
   end,
+  emmylua_ls = {
+    enabled = false,
+  },
   lua_ls = function()
     local path = vim.split(package.path, ";")
     table.insert(path, "lua/?.lua")
@@ -338,6 +319,7 @@ M = {
     local wezterm = ("%s/nvim/lazy/wezterm-types/types"):format(fn.stdpath("data"))
 
     return {
+      enabled = true,
       cmd = { "lua-language-server" },
       manual_install = true,
       filetypes = { "lua" },
@@ -459,7 +441,7 @@ M = {
           },
           workspace = {
             ignoreSubmodules = true,
-            library = { fn.expand("$VIMRUNTIME/lua"), plugins, plenary, hammerspoon, wezterm },
+            library = { vim.fn.expand("$VIMRUNTIME/lua"), plugins, plenary, hammerspoon, wezterm, vim.api.nvim_get_runtime_file("", true) },
             checkThirdParty = false,
           },
           telemetry = {
@@ -476,13 +458,11 @@ M = {
       },
     }
   end,
-  kotlin_language_server = {},
   markdown_oxide = function()
     if vim.g.note_taker ~= "markdown_oxide" then return nil end
 
     return (vim.g.started_by_firenvim or vim.env.TMUX_POPUP) and nil
       or {
-        single_file_support = true,
         capabilities = {
           workspace = {
             didChangeWatchedFiles = {
@@ -571,14 +551,14 @@ M = {
       local os_name = string.lower(vim.uv.os_uname().sysname)
       local current_arch = arch[string.lower(vim.uv.os_uname().machine)]
       local build_bin = fmt("next_ls_%s_%s", os_name, current_arch)
-
       if use_homebrew then return { "nextls", "--stdio" } end
       -- P({ fmt("%s/lsp/next-ls/burrito_out/%s", vim.env.XDG_DATA_HOME, build_bin), "--stdio" })
-      -- return { fmt("%s/lsp/next-ls/burrito_out/%s", vim.env.XDG_DATA_HOME, build_bin), "--stdio" }
-      return { fmt("%s/lsp/bin/nextls", vim.env.XDG_DATA_HOME), "--stdio" }
+
+      return { fmt("%s/lsp/next-ls/burrito_out/%s", vim.env.XDG_DATA_HOME, build_bin), "--stdio" }
+      -- return { fmt("%s/lsp/bin/nextls", vim.env.XDG_DATA_HOME), "--stdio" }
     end
 
-    local homebrew_enabled = true
+    local homebrew_enabled = false
 
     return {
       manual_install = true,
@@ -677,13 +657,14 @@ M = {
   -- },
   -- prosemd_lsp = function() return (vim.g.started_by_firenvim or vim.env.TMUX_POPUP) and nil or {} end,
   postgres_lsp = {
-    manual_install = true,
+    -- manual_install = true,
+    cmd = mason_bin({ "postgrestools", "lsp-proxy" }),
+    -- cmd = { "postgrestools", "lsp-proxy" },
     capabilities = {
       workspace = {
         didChangeConfiguration = { dynamicRegistration = true },
       },
     },
-    cmd = { vim.env.XDG_DATA_HOME .. "/lsp/bin/postgrestools", "lsp-proxy" },
     filetypes = { "sql" },
     single_file_support = true,
     settings = {
@@ -731,11 +712,9 @@ M = {
       },
     },
   },
-  -- sourcekit = {
-  --   filetypes = { 'swift', 'objective-c', 'objective-cpp' },
-  -- },
   sqlls = function()
     return {
+      cmd = { "sql-language-server", "up", "--method", "stdio" },
       root_dir = function(bufnr, on_dir) root_pattern(bufnr, on_dir) end,
       single_file_support = false,
       on_new_config = function(new_config, new_rootdir)
@@ -744,132 +723,14 @@ M = {
       end,
     }
   end,
-  -- tailwindcss = {
-  --   cmd = { "tailwindcss-language-server", "--stdio" },
-  --   -- NOTE: do NOT set a root_dir, instead we use the one provided by:
-  --   -- https://github.com/neovim/nvim-lspconfig/blob/master/lsp/tailwindcss.lua#L109-L139
-  --   filetypes = {
-  --     -- html
-  --     "aspnetcorerazor",
-  --     "astro",
-  --     "astro-markdown",
-  --     "blade",
-  --     "clojure",
-  --     "django-html",
-  --     "htmldjango",
-  --     "edge",
-  --     "eelixir", -- vim ft
-  --     "elixir",
-  --     "ejs",
-  --     "erb",
-  --     "eruby", -- vim ft
-  --     "gohtml",
-  --     "gohtmltmpl",
-  --     "haml",
-  --     "handlebars",
-  --     "hbs",
-  --     "html",
-  --     "htmlangular",
-  --     "html-eex",
-  --     "heex",
-  --     "jade",
-  --     "leaf",
-  --     "liquid",
-  --     "markdown",
-  --     "mdx",
-  --     "mustache",
-  --     "njk",
-  --     "nunjucks",
-  --     "php",
-  --     "razor",
-  --     "slim",
-  --     "twig",
-  --     -- css
-  --     "css",
-  --     "less",
-  --     "postcss",
-  --     "sass",
-  --     "scss",
-  --     "stylus",
-  --     "sugarss",
-  --     -- js
-  --     "javascript",
-  --     "javascriptreact",
-  --     "reason",
-  --     "rescript",
-  --     "typescript",
-  --     "typescriptreact",
-  --     -- mixed
-  --     "vue",
-  --     "svelte",
-  --     "templ",
-  --   },
-  --   settings = {
-  --     tailwindCSS = {
-  --       validate = true,
-  --       lint = {
-  --         cssConflict = "warning",
-  --         invalidApply = "error",
-  --         invalidScreen = "error",
-  --         invalidVariant = "error",
-  --         invalidConfigPath = "error",
-  --         invalidTailwindDirective = "error",
-  --         recommendedVariantOrder = "warning",
-  --       },
-  --       classAttributes = {
-  --         "class",
-  --         "className",
-  --         "class:list",
-  --         "classList",
-  --         "ngClass",
-  --       },
-  --       includeLanguages = {
-  --         eelixir = "html-eex",
-  --         elixir = "phoenix-heex",
-  --         eruby = "erb",
-  --         heex = "phoenix-heex",
-  --         htmlangular = "html",
-  --         templ = "html",
-  --       },
-  --       experimental = {
-  --         classRegex = {
-  --           [[class= "([^"]*)]],
-  --           [[*class= "([^"]*)]],
-  --           [[*_class= "([^"]*)]],
-  --           [[class: "([^"]*)]],
-  --           [[classes= "([^"]*)]],
-  --           [[*classes= "([^"]*)]],
-  --           [[*_classes= "([^"]*)]],
-  --           [[classes: "([^"]*)]],
-
-  --           [[~H""".*class="([^"]*)".*"""]],
-  --           [[~H""".*additional_classes="([^"]*)".*"""]],
-  --           "~H\"\"\".*class=\"([^\"]*)\".*\"\"\"",
-  --           "~H\"\"\".*additional_classes=\"([^\"]*)\".*\"\"\"",
-  --         },
-  --       },
-  --     },
-  --   },
-  --   workspace_required = true,
-  --   root_markers = { ".git" },
-  -- },
-
   tailwindcss = function()
-    local function find_tailwind_root_phoenix(fname)
-      local util = require("lspconfig.util")
-      local phoenix_root = util.root_pattern("mix.exs")(fname)
-      if phoenix_root then
-        if vim.fn.isdirectory(phoenix_root) == 1 then return phoenix_root end
-      end
-
-      return util.root_pattern("package.json", "tailwind.config.js", "vite.config.js")(fname)
-    end
+    -- bypasses my config and uses tailwind-tools instead..
+    if package.loaded["tailwind-tools"] ~= nil then return nil end
 
     return {
+      manual_install = true,
       cmd = { "tailwindcss-language-server", "--stdio" },
-      -- filetypes copied and adjusted from tailwindcss-intellisense
       filetypes = {
-        -- html
         "aspnetcorerazor",
         "astro",
         "astro-markdown",
@@ -878,11 +739,11 @@ M = {
         "django-html",
         "htmldjango",
         "edge",
-        "eelixir", -- vim ft
+        "eelixir",
         "elixir",
         "ejs",
         "erb",
-        "eruby", -- vim ft
+        "eruby",
         "gohtml",
         "gohtmltmpl",
         "haml",
@@ -895,7 +756,7 @@ M = {
         "jade",
         "leaf",
         "liquid",
-        "markdown",
+        -- "markdown",
         "mdx",
         "mustache",
         "njk",
@@ -905,7 +766,6 @@ M = {
         "slim",
         "twig",
         "phoenix-heex",
-        -- css
         "css",
         "less",
         "postcss",
@@ -913,29 +773,27 @@ M = {
         "scss",
         "stylus",
         "sugarss",
-        -- js
         "javascript",
         "javascriptreact",
         "reason",
         "rescript",
         "typescript",
         "typescriptreact",
-        -- mixed
         "vue",
         "svelte",
         "templ",
       },
-      init_options = {
-        userLanguages = {
-          eruby = "erb",
-          eelixir = "html-eex",
-          elixir = "phoenix-heex",
-          heex = "phoenix-heex",
-          -- elixir = "html-eex",
-          -- eelixir = "html-eex",
-          -- heex = "html-eex",
-        },
-      },
+      -- init_options = {
+      --   userLanguages = {
+      --     eruby = "erb",
+      --     eelixir = "html-eex",
+      --     elixir = "phoenix-heex",
+      --     heex = "phoenix-heex",
+      --     -- elixir = "html-eex",
+      --     -- eelixir = "html-eex",
+      --     -- heex = "html-eex",
+      --   },
+      -- },
       filetypes_include = { "heex" },
       settings = {
         tailwindCSS = {
@@ -969,7 +827,12 @@ M = {
             -- heex = "html-eex",
           },
           experimental = {
+            configFile = "",
             classRegex = {
+              [[class="([^"]*)]],
+              [[additional_classes="([^"]*)]],
+              [[class:"([^"]*)]],
+
               -- [[class= "([^"]*)]],
               -- [[*class= "([^"]*)]],
               -- [[*_class= "([^"]*)]],
@@ -979,13 +842,6 @@ M = {
               -- [[*_classes= "([^"]*)]],
               -- [[classes: "([^"]*)]],
 
-              -- [[~H""".*class="([^"]*)".*"""]],
-              -- [[~H""".*additional_classes="([^"]*)".*"""]],
-              -- "~H\"\"\".*class=\"([^\"]*)\".*\"\"\"",
-              -- "~H\"\"\".*additional_classes=\"([^\"]*)\".*\"\"\"",
-              [[class="([^"]*)]],
-              [[additional_classes="([^"]*)]],
-              [[class:"([^"]*)]],
               [[~H""".*class="([^"]*)".*"""]],
               [[~H""".*additional_classes="([^"]*)".*"""]],
               "~H\"\"\".*class=\"([^\"]*)\".*\"\"\"",
@@ -1000,47 +856,48 @@ M = {
         if not config.settings.editor.tabSize then config.settings.editor.tabSize = vim.lsp.util.get_effective_tabstop() end
       end,
       workspace_required = true,
-      root_dir = function(bufnr, on_dir)
-        local util = require("lspconfig.util")
-        local fname = vim.api.nvim_buf_get_name(bufnr)
+      -- root_dir = function(bufnr, on_dir)
+      --   local util = require("lspconfig.util")
+      --   local fname = vim.api.nvim_buf_get_name(bufnr)
 
-        local root_files = {
-          -- Generic
-          "tailwind.config.js",
-          "tailwind.config.cjs",
-          "tailwind.config.mjs",
-          "tailwind.config.ts",
-          "postcss.config.js",
-          "postcss.config.cjs",
-          "postcss.config.mjs",
-          "postcss.config.ts",
-          -- Phoenix
-          "assets/tailwind.config.js",
-          "assets/tailwind.config.cjs",
-          "assets/tailwind.config.mjs",
-          "assets/tailwind.config.ts",
-          -- Django
-          "theme/static_src/tailwind.config.js",
-          "theme/static_src/tailwind.config.cjs",
-          "theme/static_src/tailwind.config.mjs",
-          "theme/static_src/tailwind.config.ts",
-          "theme/static_src/postcss.config.js",
-          -- Rails
-          "app/assets/stylesheets/application.tailwind.css",
-          "app/assets/tailwind/application.css",
-        }
+      --   local root_files = {
+      --     -- Generic
+      --     "tailwind.config.js",
+      --     "tailwind.config.cjs",
+      --     "tailwind.config.mjs",
+      --     "tailwind.config.ts",
+      --     "postcss.config.js",
+      --     "postcss.config.cjs",
+      --     "postcss.config.mjs",
+      --     "postcss.config.ts",
+      --     -- Phoenix
+      --     "assets/tailwind.config.js",
+      --     "assets/tailwind.config.cjs",
+      --     "assets/tailwind.config.mjs",
+      --     "assets/tailwind.config.ts",
+      --     -- Django
+      --     "theme/static_src/tailwind.config.js",
+      --     "theme/static_src/tailwind.config.cjs",
+      --     "theme/static_src/tailwind.config.mjs",
+      --     "theme/static_src/tailwind.config.ts",
+      --     "theme/static_src/postcss.config.js",
+      --     -- Rails
+      --     "app/assets/stylesheets/application.tailwind.css",
+      --     "app/assets/tailwind/application.css",
+      --   }
 
-        local elixir_root_dir = root_pattern(bufnr, on_dir, { "mix.exs" })
-        root_files = util.insert_package_json(root_files, "tailwindcss", fname)
-        root_files = util.root_markers_with_field(root_files, { "mix.exs" }, "tailwind", fname)
+      --   local elixir_root_dir = root_pattern(bufnr, on_dir, { "mix.exs" })
+      --   root_files = util.insert_package_json(root_files, "tailwindcss", fname)
+      --   root_files = util.root_markers_with_field(root_files, { "mix.exs" }, "tailwind", fname)
 
-        -- P(vim.fs.dirname(vim.fs.find(root_matches or root_files, { path = fname, upward = true })[1]))
-        on_dir(vim.fs.dirname(vim.fs.find(root_matches or root_files, { path = fname, upward = true })[1]))
-      end,
+      --   -- P(vim.fs.dirname(vim.fs.find(root_matches or root_files, { path = fname, upward = true })[1]))
+      --   on_dir(vim.fs.dirname(vim.fs.find(root_matches or root_files, { path = fname, upward = true })[1]))
+      -- end,
     }
   end,
   terraformls = {},
   -- NOTE: presently enabled via typescript-tools
+  tinymist = {},
   ts_ls = function()
     local function do_organize_imports()
       local params = {
@@ -1116,78 +973,5 @@ M = {
     }
   end,
 }
-
--- M.tailwindcss = function()
---   return {
---     init_options = {
---       userLanguages = {
---         eelixir = "phoenix-heex",
---         elixir = "phoenix-heex",
---         eruby = "erb",
---         heex = "phoenix-heex",
---         surface = "phoenix-heex",
---       },
---     },
---     settings = {
---       tailwindCSS = {
---         lint = {
---           cssConflict = "warning",
---           invalidApply = "error",
---           invalidConfigPath = "error",
---           invalidScreen = "error",
---           invalidTailwindDirective = "error",
---           invalidVariant = "error",
---           recommendedVariantOrder = "warning",
---         },
---         classAttributes = {
---           "class",
---           "className",
---           "classList",
---         },
---         experimental = {
---           classRegex = {
---             [[class="([^"]*)]],
---             [[additional_classes="([^"]*)]],
---             [[class:"([^"]*)]],
---             [[~H""".*class="([^"]*)".*"""]],
---             [[~H""".*additional_classes="([^"]*)".*"""]],
---             "~H\"\"\".*class=\"([^\"]*)\".*\"\"\"",
---             "~H\"\"\".*additional_classes=\"([^\"]*)\".*\"\"\"",
---           },
---         },
---         validate = true,
---       },
---     },
---     filetypes = {
---       "css",
---       "scss",
---       "sass",
---       "html",
---       "heex",
---       "elixir", -- this is causing a delay on bufenter for elixir files (white then coloured)
---       "javascript",
---       "javascriptreact",
---       "typescript",
---       "typescriptreact",
---     },
---     root_dir = function(bufnr, on_dir)
---       -- local elixir_root_dir = root_pattern(bufnr, on_dir, { "mix.exs" })
-
---       local root_dir = root_pattern(bufnr, on_dir, {
---         "./assets/tailwind.config.js",
---         "assets/tailwind.config.js",
---         "tailwind.config.js",
---         "tailwind.config.ts",
---         "postcss.config.ts",
---         "package.json",
---         "node_modules",
---         "mix.exs",
---         ".git",
---       })
-
---       on_dir(root_dir)
---     end,
---   }
--- end
 
 return M

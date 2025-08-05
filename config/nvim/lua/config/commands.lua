@@ -36,7 +36,18 @@ end, { nargs = "*" })
 -- command("Noti", [[Notifications]])
 command("Noti", [[Messages | Notifications]], {})
 vim.cmd.cnoreabbrev("noti Noti")
-command("Mess", [[messages]], {})
+-- command("Mess", [[messages]], {})
+-- open messages in a new buffer (by EstudiandoAjedrez)
+command("Messages", function()
+  scratch_buffer = vim.api.nvim_create_buf(false, true)
+  vim.bo[scratch_buffer].filetype = "vim"
+  local messages = vim.split(vim.fn.execute("messages", "silent"), "\n")
+  vim.api.nvim_buf_set_text(scratch_buffer, 0, 0, 0, 0, messages)
+  vim.cmd("vertical sbuffer " .. scratch_buffer)
+  vim.opt_local.wrap = true
+  vim.bo.buflisted = false
+  vim.bo.bufhidden = "wipe"
+end, {})
 vim.cmd.cnoreabbrev("mess Mess")
 command("LogRead", function(_opts) vim.cmd.vnew("/tmp/nlog") end, {})
 command("Capture", function(opts)
@@ -108,16 +119,3 @@ end, {
   nargs = "?",
   complete = function() return { vim.fn.expand("%") } end,
 })
-
--- run :AICommitMsg from a commit buffer to get an AI generated commit message
-command("AICommitMsg", function()
-  local text = vim.fn.system("$DOTS/bin/ai_commit_msg.sh")
-  vim.api.nvim_put(vim.split(text, "\n", {}), "", false, true)
-end, {})
-
--- stage everything, then open a commit buffer with an AI generated commit message
-command("AICommit", function()
-  vim.fn.system("git add .")
-  vim.cmd("Git commit")
-  vim.cmd("AICommitMsg")
-end, {})

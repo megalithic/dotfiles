@@ -8,8 +8,8 @@ obj.debug = false
 obj.clipWatcher = {}
 obj.clipboardData = {}
 obj.capsPath = fmt("%s/screenshots", os.getenv("HOME"))
-obj.tempImage = fmt("/tmp/%s_tmp.png", obj.name)
-obj.tempOcrImage = fmt("/tmp/%s_ocr_tmp.png", obj.name)
+obj.tempImage = fmt("%s/tmp/%s_tmp.png", os.getenv("HOME"), obj.name)
+obj.tempOcrImage = fmt("%s/tmp/%s_ocr_tmp.png", os.getenv("HOME"), obj.name)
 obj.helpCanvas = nil
 
 function obj.captureImage(image, openImageUrl)

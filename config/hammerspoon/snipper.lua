@@ -92,7 +92,7 @@ function obj:init(opts)
     local frontMostApp = hs.application.frontmostApplication()
     local is_browser_active = browser and browser == frontMostApp
 
-    local win = hs.window.focusedWindow()
+    local win = frontMostApp:mainWindow() or hs.window.focusedWindow()
     local title = is_browser_active and win:title():gsub("- Brave Canary", "") or win:title()
 
     -- get the highlighted item

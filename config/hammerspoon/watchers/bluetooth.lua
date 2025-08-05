@@ -56,7 +56,7 @@ obj.devices["fallback"] = {
 }
 
 obj.preferredOutputDevices = { "bose", "airpods" }
-obj.btUtil = "/opt/homebrew/bin/blueutil"
+obj.btUtil = "/usr/local/bin/blueutil"
 obj.interval = (10 * 60)
 obj.lowBatteryTimer = nil
 
@@ -123,13 +123,16 @@ function obj.isBluetoothDeviceConnected(device)
 end
 
 local function connectDevice(deviceStr)
+  dbg(deviceStr, true)
   local device = obj.devices[deviceStr]
+  dbg(device, true)
   if not device then return end
 
   note(fmt("[%s] connecting %s %s..", obj.name, device.icon, device.name))
 
   hs.task
     .new(obj.btUtil, function(_exitCode, _stdOut, _stdErr) end, {
+      "--use-system-profiler",
       "--connect",
       device.id,
     })

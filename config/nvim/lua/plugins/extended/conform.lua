@@ -31,18 +31,158 @@ end, {})
 
 return {
   "stevearc/conform.nvim",
-  version = "*",
-
+  keys = {
+    {
+      "<Leader>F",
+      function()
+        require("conform").format({
+          async = true,
+          lsp_format = "fallback",
+          timeout_ms = 5000,
+        })
+        vim.notify(
+          "Formatted " .. (vim.api.nvim_get_mode().mode == "n" and "buffer" or "selection"),
+          vim.log.levels.INFO,
+          { id = "toggle_conform", title = "Conform" }
+        )
+      end,
+      mode = { "n", "x" },
+      desc = "Format buffer or selection",
+    },
+  },
   init = function() vim.o.formatexpr = "v:lua.require'conform'.formatexpr()" end,
   config = function(_, opts)
     if vim.g.started_by_firenvim then
       opts.format_on_save = false
+
+      -- if vim.g.formatter == "conform" then
+      --   keys = {
+      --     {
+      --       "=",
+      --       function()
+      --         vim.notify("formatting with conform")
+      --         require("conform").format({ async = true, lsp_fallback = true })
+      --       end,
+      --       mode = "",
+      --       desc = "Format buffer (async)",
+      --     },
+      --     {
+      --       "<leader>F",
+      --       function()
+      --         vim.notify("formatting with conform")
+      --         require("conform").format({ async = false, lsp_fallback = true })
+      --       end,
+      --       desc = "Format buffer (sync)",
+      --     },
+      --   }
+      -- end
+
+      -- ---@param bufnr integer
+      -- ---@param ... string
+      -- ---@return string
+      -- local function first(bufnr, ...)
+      --   local conform = require("conform")
+      --   for i = 1, select("#", ...) do
+      --     local formatter = select(i, ...)
+      --     if conform.get_formatter_info(formatter, bufnr).available then
+      --       return formatter
+      --     end
+      --   end
+      --   return select(1, ...)
+      -- end
+
+      -- require("conform").setup({
+      --   formatters_by_ft = {
+      --     markdown = function(bufnr)
+      --       return { first(bufnr, "prettierd", "prettier"), "injected" }
+      --     end,
+      --   },
+      -- })
+
+      -- return {
+      --   "stevearc/conform.nvim",
+      --   cond = vim.g.formatter == "conform",
+      --   event = { "BufReadPre", "BufNewFile", "BufWritePre", "BufWritePost", "LspAttach" },
+      --   cmd = "ConformInfo",
+      --   keys = keys,
+      --   opts = {
+      --     -- stop_after_first = true,
+      --     formatters_by_ft = {
+      --       -- ["*"] = { "trim_whitespace", "trim_newlines" },
+      --       bash = shfmt,
+      --       c = { "clang_format" },
+      --       cpp = { "clang_format" },
+      --       -- css = { "prettierd" },
+      --       -- elixir = { "mix", timeout_ms = 2000 },
+      --       go = { "goimports", "gofmt", "gofumpt" },
+      --       graphql = prettier,
+      --       html = prettier,
+      --       javascript = prettier,
+      --       javascriptreact = prettier,
+      --       json = { "fixjson", "prettierd", "prettier", "dprint" },
+      --       jsonc = { "fixjson", "prettierd", "prettier", "dprint" },
+      --       lua = { "stylua" },
+      --       markdown = prettier,
+      --       ["markdown.mdx"] = prettier,
+      --       nix = { "nixpkgs_fmt", "statix" },
+      --       python = { "isort", "black" },
+      --       rust = { "rustfmt" },
+      --       -- sass = { "prettierd" },
+      --       -- scss = { "prettierd" },
+      --       sh = shfmt,
+      --       sql = { "pg_format", "sqlfluff" },
+      --       terraform = { "tofu_fmt" },
+      --       toml = { "taplo" },
+      --       typescript = prettier,
+      --       typescriptreact = prettier,
+      --       yaml = prettier,
+      --       zig = { "zigfmt" },
+      --       zsh = shfmt,
+      --     },
+      --       statix = {
+      --         command = "statix",
+      --         args = { "fix", "--stdin" },
+      --         stdin = true,
+      --       },
+      --     },
+      --     log_level = vim.log.levels.DEBUG,
+      --     format_on_save = function(bufnr)
+      --       -- local async_format = vim.g.async_format_filetypes[vim.bo[bufnr].filetype]
+      --       -- if async_format or vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then return end
+      --       if vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then return end
+      --       -- dd("format on save")
+      --       return {
+      --         timeout_ms = timeout_ms,
+      --         lsp_fallback = lsp_fallback,
+      --         filter = function(client, exclusions)
+      --           local client_name = type(client) == "table" and client.name or client
+      --           exclusions = exclusions or SETTINGS.formatter_exclusions
+      --           if not exclusions then return false end
+
+      --           return not vim.tbl_contains(exclusions, client_name)
+      --         end,
+      --       }
+      --     end,
+      --     user_async_format_filetypes = {
+      --       python = true,
+      --     },
+      --   },
+      --   init = function() vim.o.formatexpr = "v:lua.require'conform'.formatexpr()" end,
+      --   config = function(_, opts)
+      --     if vim.g.started_by_firenvim then
+      --       opts.format_on_save = false
+      --       opts.format_after_save = false
+      --     end
+      --     vim.g.async_format_filetypes = opts.user_async_format_filetypes
+
+      --     require("conform").setup(opts)
+      --   end,
+      -- }
       opts.format_after_save = false
     end
 
     require("conform").setup({
       formatters = {
-        -- injected = { options = { ignore_errors = true } },
         ["eslint_d"] = {
           command = "eslint_d",
           args = { "--fix-to-stdout", "--stdin", "--stdin-filename", "$FILENAME" },
@@ -100,12 +240,7 @@ return {
         },
       },
       formatters_by_ft = {
-        -- ["*"] = { "injected" },
-        -- ["*"] = { "trim_whitespace", "trim_newlines" },
         lua = { "stylua" },
-        -- elixir = { "mix", timeout_ms = 1000 },
-        -- eelixir = { "mix" },
-        -- heex = { "mix" },
         json = { "fixjson", "prettierd", "prettier", "dprint" },
         jsonc = { "fixjson", "prettierd", "prettier", "dprint" },
         json5 = { "fixjson", "prettierd", "prettier", "dprint" },
@@ -114,7 +249,7 @@ return {
         bash = { "shfmt" }, -- shellharden
         c = { "clang_format" },
         cpp = { "clang_format" },
-        -- css = { "prettierd" },
+        css = { "prettierd", "prettier" },
         go = { "goimports", "gofmt", "gofumpt" },
         graphql = { "prettierd", "prettier", "dprint" },
         html = { "prettierd", "prettier", "dprint" },
@@ -123,8 +258,8 @@ return {
         nix = { "nixpkgs_fmt", "statix" },
         python = { "isort", "black" },
         rust = { "rustfmt" },
-        -- sass = { "prettierd" },
-        -- scss = { "prettierd" },
+        sass = { "prettierd", "prettier" },
+        scss = { "prettierd", "prettier" },
         sh = { "shfmt" }, -- shellharden
         sql = { "pg_format", "sqlfluff" },
         terraform = { "tofu_fmt" },
@@ -134,6 +269,7 @@ return {
         yaml = { "prettierd", "prettier", "dprint" },
         zig = { "zigfmt" },
         zsh = { "shfmt" }, -- shellhardenhfmt,
+        ["_"] = { "trim_whitespace", "trim_newlines", lsp_format = "last" },
       },
       default_format_opts = {
         lsp_format = "fallback",
@@ -156,127 +292,3 @@ return {
     })
   end,
 }
-
--- if vim.g.formatter == "conform" then
---   keys = {
---     {
---       "=",
---       function()
---         vim.notify("formatting with conform")
---         require("conform").format({ async = true, lsp_fallback = true })
---       end,
---       mode = "",
---       desc = "Format buffer (async)",
---     },
---     {
---       "<leader>F",
---       function()
---         vim.notify("formatting with conform")
---         require("conform").format({ async = false, lsp_fallback = true })
---       end,
---       desc = "Format buffer (sync)",
---     },
---   }
--- end
-
--- ---@param bufnr integer
--- ---@param ... string
--- ---@return string
--- local function first(bufnr, ...)
---   local conform = require("conform")
---   for i = 1, select("#", ...) do
---     local formatter = select(i, ...)
---     if conform.get_formatter_info(formatter, bufnr).available then
---       return formatter
---     end
---   end
---   return select(1, ...)
--- end
-
--- require("conform").setup({
---   formatters_by_ft = {
---     markdown = function(bufnr)
---       return { first(bufnr, "prettierd", "prettier"), "injected" }
---     end,
---   },
--- })
-
--- return {
---   "stevearc/conform.nvim",
---   cond = vim.g.formatter == "conform",
---   event = { "BufReadPre", "BufNewFile", "BufWritePre", "BufWritePost", "LspAttach" },
---   cmd = "ConformInfo",
---   keys = keys,
---   opts = {
---     -- stop_after_first = true,
---     formatters_by_ft = {
---       -- ["*"] = { "trim_whitespace", "trim_newlines" },
---       bash = shfmt,
---       c = { "clang_format" },
---       cpp = { "clang_format" },
---       -- css = { "prettierd" },
---       -- elixir = { "mix", timeout_ms = 2000 },
---       go = { "goimports", "gofmt", "gofumpt" },
---       graphql = prettier,
---       html = prettier,
---       javascript = prettier,
---       javascriptreact = prettier,
---       json = { "fixjson", "prettierd", "prettier", "dprint" },
---       jsonc = { "fixjson", "prettierd", "prettier", "dprint" },
---       lua = { "stylua" },
---       markdown = prettier,
---       ["markdown.mdx"] = prettier,
---       nix = { "nixpkgs_fmt", "statix" },
---       python = { "isort", "black" },
---       rust = { "rustfmt" },
---       -- sass = { "prettierd" },
---       -- scss = { "prettierd" },
---       sh = shfmt,
---       sql = { "pg_format", "sqlfluff" },
---       terraform = { "tofu_fmt" },
---       toml = { "taplo" },
---       typescript = prettier,
---       typescriptreact = prettier,
---       yaml = prettier,
---       zig = { "zigfmt" },
---       zsh = shfmt,
---     },
---       statix = {
---         command = "statix",
---         args = { "fix", "--stdin" },
---         stdin = true,
---       },
---     },
---     log_level = vim.log.levels.DEBUG,
---     format_on_save = function(bufnr)
---       -- local async_format = vim.g.async_format_filetypes[vim.bo[bufnr].filetype]
---       -- if async_format or vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then return end
---       if vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then return end
---       -- dd("format on save")
---       return {
---         timeout_ms = timeout_ms,
---         lsp_fallback = lsp_fallback,
---         filter = function(client, exclusions)
---           local client_name = type(client) == "table" and client.name or client
---           exclusions = exclusions or SETTINGS.formatter_exclusions
---           if not exclusions then return false end
-
---           return not vim.tbl_contains(exclusions, client_name)
---         end,
---       }
---     end,
---     user_async_format_filetypes = {
---       python = true,
---     },
---   },
---   init = function() vim.o.formatexpr = "v:lua.require'conform'.formatexpr()" end,
---   config = function(_, opts)
---     if vim.g.started_by_firenvim then
---       opts.format_on_save = false
---       opts.format_after_save = false
---     end
---     vim.g.async_format_filetypes = opts.user_async_format_filetypes
-
---     require("conform").setup(opts)
---   end,
--- }

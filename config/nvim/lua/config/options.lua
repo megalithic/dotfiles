@@ -48,6 +48,12 @@ local current_border = function(opts)
   return border
 end
 
+local function get_enabled_elixir_ls()
+  local ls = "elixirls"
+  if vim.env.ELIXIR_LS ~= nil then ls = vim.env.ELIXIR_LS end
+  return { ls }
+end
+
 local uname = vim.uv.os_uname().sysname
 local is_macos = uname == "Darwin"
 local is_linux = uname == "Linux"
@@ -58,6 +64,7 @@ local icloud_documents_path = vim.env.ICLOUD_DOCUMENTS_DIR
 local obsidian_vault_path = vim.env.OBSIDIAN_VAULT_DIR
 local dotfiles_path = vim.env.DOTS or vim.fn.expand("~/.dotfiles")
 local hammerspoon_path = fmt("%s/config/hammerspoon", dotfiles_path)
+local proton_path = vim.env.PROTON_DIR
 
 --- @class Settings
 local M = {
@@ -74,14 +81,14 @@ local M = {
   default_colorcolumn = "81",
   notifier_enabled = true,
   debug_enabled = false,
-  picker = "telescope", -- alt: telescope, fzf_lua, snacks
+  picker = "telescope", -- alt: telescope, fzf_lua, snacks.pick
   formatter = "conform", -- alt: null-ls/none-ls, conform
   tree = "neo-tree",
   explorer = "oil", -- alt: dirbuf, oil
   tester = "vim-test", -- alt: neotest, vim-test, quicktest
   gitter = "neogit", -- alt: neogit, fugitive
   snipper = "snippets", -- alt: vsnip, luasnip, snippets (nvim-builtin)
-  note_taker = "markdown_oxide", -- alt: zk, marksman, markdown_oxide, obsidian
+  note_taker = "", -- alt: zk, marksman, markdown_oxide, obsidian
   ai = "", -- alt: minuet, neocodeium, codecompanion, supermaven, avante, copilot
   completer = "blink", -- alt: cmp, blink, epo
   ts_ignored_langs = {}, -- alt: { "svg", "json", "heex", "jsonc" }
@@ -107,7 +114,7 @@ local M = {
   },
   enabled_inlay_hints = {},
   disabled_lsp_formatters = { "tailwindcss", "html", "ts_ls", "ls_emmet", "zk", "sumneko_lua" },
-  enabled_elixir_ls = { "", "", "lexical" }, -- opts: {"elixirls", "nextls", "lexical"}
+  enabled_elixir_ls = get_enabled_elixir_ls(), --- opts: {"elixirls", "nextls", "lexical"}
   completion_exclusions = {},
   formatter_exclusions = {},
   definition_exclusions = {},
@@ -137,6 +144,74 @@ local M = {
     "yaml",
     "json",
   },
+  ts_ensure_installed = {
+    "bash",
+    "c",
+    "cpp",
+    "css",
+    "csv",
+    -- "comment", -- too slow still.
+    -- "dap_repl",
+    "commonlisp",
+    "devicetree",
+    "dockerfile",
+    "diff",
+    "elixir",
+    "elm",
+    "eex",
+    "embedded_template",
+    "erlang",
+    "fish",
+    "git_config",
+    "git_rebase",
+    "gitattributes",
+    "gitcommit",
+    "gitignore",
+    "gleam",
+    "go",
+    "graphql",
+    "heex",
+    "html",
+    "javascript",
+    "jq",
+    "jsdoc",
+    "json",
+    "jsonc",
+    "json5",
+    "lua",
+    "luadoc",
+    "luap",
+    "kotlin",
+    "make",
+    "markdown",
+    "markdown_inline",
+    "nix",
+    -- "org",
+    "perl",
+    "printf",
+    "psv",
+    "python",
+    "query",
+    "regex",
+    "ruby",
+    "rust",
+    "scss",
+    "scheme",
+    "sql",
+    "surface",
+    -- "teal",
+    "terraform",
+    "tmux",
+    "toml",
+    "tsv",
+    "tsx",
+    "typescript",
+    "vim",
+    "vimdoc",
+    "yaml",
+  },
+  -- FIXME: still need to get indentions working correctly
+  ts_branch = "main",
   colorizer = {
     filetypes = { "*", "!lazy", "!gitcommit", "!NeogitCommitMessage", "!oil" },
     buftypes = { "*", "!prompt", "!nofile", "!oil" },
@@ -155,12 +230,27 @@ local M = {
     },
     -- all the sub-options of filetypes apply to buftypes
   },
+  chat = {
+    provider = "anthropic.claude",
+    api_key = os.getenv("ANTHROPIC_API_KEY"),
+    model = "claude-3-5-sonnet-latest",
+    system = "Be concise and direct in your responses. Respond without unnecessary explanation.",
+    signs = {
+      context = "∙",
+      highlight = "DiagnosticInfo",
+    },
+    keymaps = {
+      ask = "<leader>c",
+      mark = "<leader>m",
+    },
+  },
   lsp_lookup = {
     elixirls = "ex",
     nextls = "next",
     lua_ls = "lua",
     tailwindcss = "twcss",
     emmet_ls = "em",
+    emmet_language_server = "em",
     lexical = "lex",
     postgres_lsp = "pglsp",
   },
@@ -361,13 +451,13 @@ local M = {
     },
     git = {
       add = "▕", -- alts:  ▕,▕, ▎, ┃, │, ▌, ▎ 🮉
-      change = "▕", -- alts:  ▕ ▎║▎
+      change = "🮉", -- alts:  ▕ ▎║▎ ▀, ▁, ▂, ▃, ▄, ▅, ▆, ▇, █, ▉, ▊, ▋, ▌, ▍, ▎, ▏, ▐
+      delete = "█", -- alts: ┊▎▎
+      topdelete = "▀",
+      changedelete = "▄",
+      untracked = "▕",
       mod = "",
       remove = "", -- alts: 
-      delete = "🮉", -- alts: ┊▎▎
-      topdelete = "🮉",
-      changedelete = "🮉",
-      untracked = "▕",
       ignore = "",
       rename = "",
       diff = "",
@@ -446,15 +536,15 @@ M.apply = function()
       loaded_perl_provider = 0,
       loaded_ruby_provider = 0,
     },
-    o = {
+    opt = {
       cmdwinheight = 7,
       cmdheight = 1,
-      -- winborder = BORDER_STYLE,
-      diffopt = "internal,filler,closeoff,linematch:60",
+      winborder = BORDER_STYLE,
       linebreak = true, -- lines wrap at words rather than random characters
       splitbelow = true,
       splitkeep = "screen",
       splitright = true,
+      whichwrap = vim.opt.whichwrap + "h,l,<,>,[,]",
       startofline = true,
       swapfile = false,
       undodir = vim.env.HOME .. "/.vim/undodir",
@@ -468,12 +558,6 @@ M.apply = function()
       -- vim.opt.foldlevelstart = 99
       -- foldmethod = "indent",
       -- foldtext = "v:lua.vim.treesitter.foldtext()",
-    },
-    opt = {
-      -- [[ Setting options ]]
-      -- See `:help vim.opt`
-      -- NOTE: You can change these options as you wish!
-      --  For more options, you can see `:help option-list`
 
       -- cia = "kind,abbr,menu",
       -- Make line numbers default
@@ -524,16 +608,6 @@ M.apply = function()
         precedes = "‹", -- alts: … «
         trail = "·", -- alts: • BULLET (U+2022, UTF-8: E2 80 A2)
       },
-      formatoptions = vim.opt.formatoptions
-        - "a" -- Auto formatting is BAD.
-        - "t" -- Don't auto format my code. I got linters for that.
-        + "c" -- In general, I like it when comments respect textwidth
-        + "q" -- Allow formatting comments w/ gq
-        - "o" -- O and o, don't continue comments
-        + "r" -- But do continue when pressing enter.
-        + "n" -- Indent past the formatlistpat, not underneath it.
-        + "j" -- Auto-remove comments if possible.
-        - "2", -- I'm not in gradeschool anymore
 
       fillchars = {
         horiz = "━",
@@ -543,10 +617,10 @@ M.apply = function()
         -- vertleft  = '┫',
         -- vertright = '┣',
         -- verthoriz = '╋',
-        fold = " ",
         eob = " ", -- suppress ~ at EndOfBuffer
         diff = "╱", -- alts: = ⣿ ░ ─
         msgsep = " ", -- alts: ‾ ─
+        fold = " ",
         foldopen = M.icons.misc.fold_open, -- alts: ▾
         -- foldsep = "│",
         foldsep = " ",
@@ -555,6 +629,29 @@ M.apply = function()
         stlnc = " ", -- alts: ─
       },
 
+      formatoptions = vim.opt.formatoptions
+        - "a" -- Auto formatting is BAD.
+        - "t" -- Don't auto format my code. I got linters for that.
+        + "c" -- In general, I like it when comments respect textwidth
+        + "q" -- Allow formatting comments w/ `gq`
+        + "w" -- Trailing whitespace indicates a paragraph
+        - "o" -- Insert comment leader after hitting `o` or `O`
+        + "r" -- Insert comment leader after hitting Enter
+        + "n" -- Indent past the formatlistpat, not underneath it.
+        + "j" -- Remove comment leader when makes sense (joining lines)
+        -- + "2" -- Use the second line's indent vale when indenting (allows indented first line)
+        - "2", -- I'm not in gradeschool anymore
+
+      shortmess = vim.opt.shortmess:append({
+        I = true, -- No splash screen
+        W = true, -- Don't print "written" when editing
+        a = true, -- Use abbreviations in messages ([RO] intead of [readonly])
+        c = true, -- Do not show ins-completion-menu messages (match 1 of 2)
+        F = true, -- Do not print file name when opening a file
+        s = true, -- Do not show "Search hit BOTTOM" message
+      }),
+
+      suffixesadd = { ".md", ".js", ".ts", ".tsx" }, -- File extensions not required when opening with `gf`
       diffopt = {
         "vertical",
         "iwhite",
@@ -564,7 +661,14 @@ M.apply = function()
         "algorithm:histogram",
         "indent-heuristic",
         "linematch:60",
+        "internal",
+        "filler",
+        "closeoff",
       },
+
+      sessionoptions = vim.opt.sessionoptions:remove({ "buffers", "folds" }),
+
+      shada = { "!", "'1000", "<50", "s10", "h" }, -- Increase the shadafile size so that history is longer
 
       -- Preview substitutions live, as you type!
       inccommand = "split",
@@ -582,6 +686,16 @@ M.apply = function()
       showtabline = 0,
       guicursor = vim.opt.guicursor + "a:blinkon500-blinkoff100",
       pumheight = 25, -- also controls nvim-cmp completion window height
+      path = "**",
+      grepprg = "rg --ignore-case --vimgrep",
+      grepformat = "%f:%l:%c:%m,%f:%l:%m",
+      wildignore = {
+        "**/node_modules/**",
+        "**/coverage/**",
+        "**/.idea/**",
+        "**/.git/**",
+        "**/.nuxt/**",
+      },
     },
   }
 
@@ -643,12 +757,29 @@ M.apply = function()
       [".*%.jst.eco"] = "jst",
       [".*%.prettierrc%..*"] = "jsonc",
       [".*%.theme"] = "conf",
-      [".*env%..*"] = "bash",
+      -- [".*env%..*"] = "bash",
       [".*ignore"] = "conf",
       [".nvimrc"] = "lua",
       ["default-*%-packages"] = "conf",
     },
     -- ['.*tmux.*conf$'] = 'tmux',
+  })
+
+  ---@diagnostic disable-next-line: param-type-mismatch
+  local base = vim.fs.joinpath(vim.fn.stdpath("state"), "dbee", "notes")
+  local pattern = string.format("%s/.*", base)
+  vim.filetype.add({
+    extension = {
+      sql = function(path, _)
+        if path:match(pattern) then return "sql.dbee" end
+
+        return "sql"
+      end,
+    },
+
+    pattern = {
+      [pattern] = "sql.dbee",
+    },
   })
 
   M.apply_abbreviations()

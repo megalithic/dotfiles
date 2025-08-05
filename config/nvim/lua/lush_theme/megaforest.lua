@@ -1088,6 +1088,7 @@ local theme = lush(function(injected_functions)
     -- StatusLineInactiveBg({bg=C.transparent}),
     StatusLine({ fg = C.grey1 }), -- status line of current window
     StatusLineNC({ fg = C.grey1, bg = C.bg0 }), -- status lines of not-current windows Note: if this is equal to "StatusLine" Vim will use "^^^" in the status line of the current window.
+    StatusLineTerm({ fg = C.grey1, bg = C.bg0 }), -- status lines of not-current windows Note: if this is equal to "StatusLine" Vim will use "^^^" in the status line of the current window.
     StatusLineInactive({ fg = C.bg_dark.lighten(20), bg = C.bg_dark, gui = "italic" }),
     StModeNormal({ bg = StatusLineBg.bg, fg = C.bg5, gui = C.transparent }), -- alts: bg = C.bg2
     StModeInsert({ bg = StatusLineBg.bg, fg = C.green, gui = "bold" }),
@@ -1144,7 +1145,7 @@ local theme = lush(function(injected_functions)
 
     ---- :help winbar  ---------------------------------------------------------
 
-    WinBar({ StatusLine, gui = "italic" }),
+    WinBar({ StatusLine, fg = Title.fg, gui = "italic" }),
     WinBarNC({ StatusLineInactive }),
 
     ---- :help ts-rainbow  -----------------------------------------------------
@@ -1176,8 +1177,8 @@ local theme = lush(function(injected_functions)
 
     TelescopePreviewTitle({ fg = C.fg, bg = C.bg_blue, gui = "italic" }),
     -- darkens the whole preview panel + my faux-no-border
-    TelescopePreviewBorder({ bg = PanelBackground.bg, fg = C.transparent }),
-    TelescopePreviewNormal({ bg = PanelBackground.bg, fg = C.transparent }),
+    TelescopePreviewBorder({ bg = PanelBackground.bg, fg = PanelBackground.bg }),
+    TelescopePreviewNormal({ bg = PanelBackground.bg, fg = PanelBackground.bg }),
 
     TelescopePrompt({ bg = C.bg2.darken(10) }),
     TelescopePromptPrefix({ fg = C.orange, bg = C.bg2.darken(10) }),
@@ -1226,20 +1227,20 @@ local theme = lush(function(injected_functions)
     ---- :help fzf-lua ---------------------------------------------------------
     -- REF: https://github.com/ibhagwan/fzf-lua#highlights
 
-    FzfLuaNormal({ fg = C.fg }),
-    FzfLuaBorder({}),
-    FzfLuaTitle({ fg = C.orange }),
-    FzfLuaInfo({ fg = C.bg4 }),
-    FzfLuaHeader({ fg = C.orange }),
-    FzfLuaPrompt({ fg = C.cyan, gui = "italic" }),
-    FzfLuaSeparator({ FzfLuaInfo }),
+    -- FzfLuaNormal({ fg = C.fg }),
+    -- FzfLuaBorder({}),
+    -- FzfLuaTitle({ fg = C.orange }),
+    -- FzfLuaInfo({ fg = C.bg4 }),
+    -- FzfLuaHeader({ fg = C.orange }),
+    -- FzfLuaPrompt({ fg = C.cyan, gui = "italic" }),
+    -- FzfLuaSeparator({ FzfLuaInfo }),
 
-    FzfLuaScrollBorderFull({ TelescopePromptNormal }),
-    FzfLuaScrollBorderEmpty({ TelescopePromptNormal }),
+    -- FzfLuaScrollBorderFull({ TelescopePromptNormal }),
+    -- FzfLuaScrollBorderEmpty({ TelescopePromptNormal }),
 
-    FzfLuaPreviewNormal({ TelescopePreviewNormal }),
-    FzfLuaPreviewBorder({ TelescopePreviewBorder }),
-    FzfLuaPreviewTitle({ TelescopePreviewTitle }),
+    -- FzfLuaPreviewNormal({ TelescopePreviewNormal }),
+    -- FzfLuaPreviewBorder({ TelescopePreviewBorder }),
+    -- FzfLuaPreviewTitle({ TelescopePreviewTitle }),
 
     ---- :help: trouble.txt ----------------------------------------------------
 

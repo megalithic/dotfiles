@@ -38,9 +38,9 @@ return {
     },
     completion = {
       -- Enables completion using nvim_cmp
-      nvim_cmp = true,
+      nvim_cmp = vim.g.completer == "cmp",
       -- Enables completion using blink.cmp
-      blink = false,
+      blink = vim.g.completer == "blink",
       -- Trigger completion at 2 chars.
       min_chars = 2,
     },
@@ -58,12 +58,12 @@ return {
       return suffix
     end,
     picker = {
-      name = "snacks.pick",
+      name = "telescope.nvim",
     },
+    checkbox = {},
     ui = {
       -- use render-markdown instead for these
       enable = false,
-      checkboxes = {},
       bullets = {},
       external_link_icon = {},
     },

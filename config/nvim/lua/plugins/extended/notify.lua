@@ -1,22 +1,9 @@
 -- REF: https://github.com/rcarriga/nvim-notify/wiki/Usage-Recipes
 return {
   {
-    "echasnovski/mini.notify",
-    event = "VeryLazy",
-    cond = false,
-    config = function()
-      local win_config = function()
-        local has_statusline = vim.o.laststatus > 0
-        local bottom_space = vim.o.cmdheight + (has_statusline and 1 or 0)
-        return { anchor = "SE", col = vim.o.columns, row = vim.o.lines - bottom_space, border = "none" }
-      end
-      require("mini.notify").setup({ window = { config = win_config } })
-    end,
-  },
-  {
     "rcarriga/nvim-notify",
-    event = "VeryLazy",
-    cond = vim.g.notifier_enabled and not vim.g.started_by_firenvim,
+    lazy = false,
+    cond = not vim.g.started_by_firenvim,
     config = function()
       local notify = require("notify")
       local base = require("notify.render.base")

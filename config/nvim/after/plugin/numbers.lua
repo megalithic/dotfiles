@@ -17,6 +17,7 @@ local excluded_fts = {
   "fzf",
   "fzf-lua",
   "fzflua",
+  "snacks",
   -- "markdown",
   "gitcommit",
   "help",

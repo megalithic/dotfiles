@@ -32,7 +32,11 @@ require("lazy").setup({
   },
   install = { missing = true, colorscheme = { vim.g.colorscheme, "default", "habamax" } },
   change_detection = { enabled = true, notify = false },
-  rocks = { enabled = false },
+  {
+    rocks = {
+      hererocks = true,
+    },
+  },
   performance = {
     rtp = {
       disabled_plugins = {

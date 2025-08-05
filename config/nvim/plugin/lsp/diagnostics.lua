@@ -9,36 +9,35 @@ local has_tiny_diagnostic = pcall(require, "tiny-inline-diagnostic")
 
 return function(_client, _connected_client_bufnr)
   local M = {}
-  local diag_level = vim.diagnostic.severity
+  local diag_sev = vim.diagnostic.severity
   vim.diagnostic.config({
     virtual_text = false,
     signs = {
       text = {
-        [diag_level.ERROR] = icons.lsp.error,
-        [diag_level.WARN] = icons.lsp.warn,
-        [diag_level.HINT] = icons.lsp.hint,
-        [diag_level.INFO] = icons.lsp.info,
+        [diag_sev.ERROR] = icons.lsp.error,
+        [diag_sev.WARN] = icons.lsp.warn,
+        [diag_sev.HINT] = icons.lsp.hint,
+        [diag_sev.INFO] = icons.lsp.info,
       },
       texthl = {
-        [diag_level.ERROR] = "DiagnosticSignError",
-        [diag_level.WARN] = "DiagnosticSignWarn",
-        [diag_level.INFO] = "DiagnosticSignInfo",
-        [diag_level.HINT] = "DiagnosticSignHint",
+        [diag_sev.ERROR] = "DiagnosticSignError",
+        [diag_sev.WARN] = "DiagnosticSignWarn",
+        [diag_sev.INFO] = "DiagnosticSignInfo",
+        [diag_sev.HINT] = "DiagnosticSignHint",
       },
       numhl = {
-        [diag_level.ERROR] = "DiagnosticSignError",
-        [diag_level.WARN] = "DiagnosticSignWarn",
-        [diag_level.INFO] = "DiagnosticSignInfo",
-        [diag_level.HINT] = "DiagnosticSignHint",
+        [diag_sev.ERROR] = "DiagnosticSignError",
+        [diag_sev.WARN] = "DiagnosticSignWarn",
+        [diag_sev.INFO] = "DiagnosticSignInfo",
+        [diag_sev.HINT] = "DiagnosticSignHint",
       },
     },
     update_in_insert = false,
     underline = true,
     severity_sort = true,
-    severity = { min = diag_level.WARN },
+    severity = { min = diag_sev.WARN },
     float = {
-      show_header = true,
-      source = true,
+      source = false,
       border = border_style,
       focusable = false,
       severity_sort = true,
@@ -54,6 +53,7 @@ return function(_client, _connected_client_bufnr)
         "BufWritePre",
         "BufWritePost",
       },
+      -- header = { "diagnostics:", "DiagnosticHeader" },
       header = {},
       suffix = function(d)
         if not (d.source or d.code) then return "", "" end
@@ -62,12 +62,14 @@ return function(_client, _connected_client_bufnr)
 
         return (" %s%s"):format(source, rule), "Comment"
       end,
-      prefix = function(d, _index, total)
-        if total == 1 then return "", "" end
-        local level = d.severity[d.severity]
-        local prefix = string.format("%s ", SETTINGS.icons.lsp[level:lower()])
-        return prefix, "Diagnostic" .. level:gsub("^%l", string.upper)
-      end,
+      -- prefix = function(d, _index, total)
+      --   if total == 1 then return "", "" end
+
+      --   local sev = diag_sev[d.severity]
+      --   local icon = icons.lsp[sev:lower()]
+
+      --   return icon, "Diagnostic" .. sev:gsub("^%l", string.upper)
+      -- end,
       format = function(d)
         local msg = d.message
         if d.source == "typos" then
@@ -78,7 +80,13 @@ return function(_client, _connected_client_bufnr)
         return msg
       end,
     },
-    jump = { on_jump = M.on_jump },
+    jump = {
+      on_jump = function(d, b)
+        if not d then return end
+
+        M.show_diagnostics({ buf = b, diagnostic = { d } })
+      end,
+    },
   })
 
   local function override_diagnostic_signs(_args)
@@ -99,78 +107,15 @@ return function(_client, _connected_client_bufnr)
   end
   override_diagnostic_signs()
 
-  function M.show_diagnostics(args)
-    if args.buf and vim.api.nvim_buf_is_valid(args.buf) then
-      if has_tiny_diagnostic then require("tiny-inline-diagnostic").disable() end
-
-      vim.schedule(function()
-        local cursor = vim.api.nvim_win_get_cursor(0)
-        local line = cursor[1] - 1
-        local col = cursor[2]
-
-        local valid_diagnostics, _ = pcall(vim.diagnostic.get, args.buf, { lnum = line })
-        if not valid_diagnostics then return end
-
-        local line_diagnostics = args.diagnostic or vim.diagnostic.get(args.buf, { lnum = line })
-        local view_diagnostics = vim.tbl_filter(function(item) return col >= item.col and col < item.end_col end, line_diagnostics)
-
-        if #view_diagnostics == 0 then view_diagnostics = line_diagnostics end
-
-        if view_diagnostics and #view_diagnostics > 0 then
-          local count = select(2, view_diagnostics[1].message:gsub("\n", "\n"))
-          if count > 1 then
-            -- vim.diagnostic.show(diagnostic_ns, args.buf, view_diagnostics, {
-            -- virtual_text = {
-            --   prefix = function(diag)
-            --     local icon = icons.lsp[vim.diagnostic.severity[diag.severity]:lower()]
-            --     return icon or ""
-            --   end,
-            -- },
-            -- })
-
-            M.show_diagnostic_popup(args.buf)
-          else
-            if has_tiny_diagnostic then require("tiny-inline-diagnostic").enable() end
-          end
-        end
-
-        vim.diagnostic.show(nil, args.buf, nil, {
-          signs = vim.diagnostic.config().signs,
-        })
-      end)
-    end
-  end
-
-  function M.refresh_diagnostics(args)
-    if args.buf and vim.api.nvim_buf_is_valid(args.buf) then
-      if has_tiny_diagnostic then
-        local ns = vim.api.nvim_create_namespace("TinyInlineDiagnostic")
-        pcall(vim.api.nvim_buf_clear_namespace, args.buf, ns, 0, -1)
-      end
-
-      vim.diagnostic.setloclist({ open = false, namespace = diagnostic_ns })
-      M.show_diagnostics(args)
-      local loclist = vim.fn.getloclist(0, { items = 0, winid = 0 })
-      if vim.tbl_isempty(loclist.items) and loclist.winid > 0 then
-        vim.api.nvim_win_close(loclist.winid, true)
-        if has_tiny_diagnostic then require("tiny-inline-diagnostic").disable() end
-      end
-    end
-  end
-
-  --- @param diagnostic? vim.Diagnostic
-  --- @param buf integer
-  function M.on_jump(diagnostic, buf)
-    if not diagnostic then return end
-
-    M.show_diagnostics({ buf = buf, diagnostic = { diagnostic } })
-  end
-
   function M.show_diagnostic_popup(opts)
     local bufnr = opts
     if type(opts) == "table" then bufnr = opts.buf or 0 end
-    local diags = vim.diagnostic.open_float(bufnr, { focus = false, scope = "cursor" })
-    if not diags then vim.diagnostic.open_float(bufnr, { focus = false, scope = "line" }) end
+
+    local ok_diags, diags = pcall(vim.diagnostic.open_float, { bufnr = bufnr, scope = "cursor" })
+    if not ok_diags and diags then
+      local ok_line_diags, _line_diags = pcall(vim.diagnostic.open_float, { bufnr = bufnr })
+      if not ok_line_diags then vim.diagnostic.open_float() end
+    end
   end
 
   function M.goto_diagnostic_hl(dir)
@@ -216,13 +161,74 @@ return function(_client, _connected_client_bufnr)
     })
   end
 
+  function M.show_diagnostics(args)
+    if args.buf and vim.api.nvim_buf_is_valid(args.buf) then
+      if has_tiny_diagnostic then require("tiny-inline-diagnostic").disable() end
+
+      vim.schedule(function()
+        local cursor = vim.api.nvim_win_get_cursor(0)
+        local line = cursor[1] - 1
+        local col = cursor[2]
+
+        local valid_diagnostics, _ = pcall(vim.diagnostic.get, args.buf, { lnum = line })
+        if not valid_diagnostics then return end
+
+        local line_diagnostics = args.diagnostic or vim.diagnostic.get(args.buf, { lnum = line })
+        local view_diagnostics = vim.tbl_filter(function(item) return col >= item.col and col < item.end_col end, line_diagnostics)
+
+        if #view_diagnostics == 0 then view_diagnostics = line_diagnostics end
+
+        if view_diagnostics and #view_diagnostics > 0 and view_diagnostics[1].message ~= nil then
+          local diagnostic_num_lines = select(2, view_diagnostics[1].message:gsub("\n", "\n"))
+          if diagnostic_num_lines > 1 then
+            -- vim.diagnostic.show(diagnostic_ns, args.buf, view_diagnostics, {
+            -- virtual_text = {
+            --   prefix = function(d)
+            --     local icon = icons.lsp[vim.diagnostic.severity[d.severity]:lower()]
+            --     return icon or ""
+            --   end,
+            -- },
+            -- })
+
+            M.show_diagnostic_popup(args.buf)
+          else
+            if has_tiny_diagnostic then require("tiny-inline-diagnostic").enable() end
+          end
+        end
+
+        vim.diagnostic.show(nil, args.buf, nil, {
+          signs = vim.diagnostic.config().signs,
+        })
+      end)
+    end
+  end
+
+  function M.refresh_diagnostics(args)
+    if args.buf and vim.api.nvim_buf_is_valid(args.buf) then
+      if has_tiny_diagnostic then
+        local ns = vim.api.nvim_create_namespace("TinyInlineDiagnostic")
+        pcall(vim.api.nvim_buf_clear_namespace, args.buf, ns, 0, -1)
+      end
+
+      vim.diagnostic.setloclist({ open = false, namespace = diagnostic_ns })
+      M.show_diagnostics(args)
+      local loclist = vim.fn.getloclist(0, { items = 0, winid = 0 })
+      if vim.tbl_isempty(loclist.items) and loclist.winid > 0 then
+        vim.api.nvim_win_close(loclist.winid, true)
+        if has_tiny_diagnostic then require("tiny-inline-diagnostic").disable() end
+      end
+
+      if vim.tbl_contains({ "InsertEnter" }, args.event) then vim.diagnostic.hide(nil, args.buf) end
+    end
+  end
+
   Augroup(diagnostic_group, {
     {
       event = { "CursorHold" },
       command = M.show_diagnostics,
     },
     {
-      event = { "BufLeave", "WinLeave", "VimResized", "DiagnosticChanged" },
+      event = { "BufLeave", "WinLeave", "VimResized", "DiagnosticChanged", "InsertLeave", "InsertEnter" },
       command = M.refresh_diagnostics,
     },
   })

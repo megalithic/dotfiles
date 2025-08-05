@@ -2,7 +2,6 @@ if not Plugin_enabled("lsp") then return end
 
 local fmt = string.format
 local SETTINGS = require("config.options")
-local BORDER_STYLE = SETTINGS.border
 local methods = vim.lsp.protocol.Methods
 local lsp_group = vim.api.nvim_create_augroup("mega.lsp", { clear = true })
 local diagnostics_mod
@@ -143,8 +142,8 @@ local function enhanced_float_handler(handler, focusable)
       vim.tbl_deep_extend("force", config or {}, {
         border = "rounded",
         focusable = focusable,
-        max_height = math.floor(vim.o.lines * 0.3),
-        max_width = math.floor(vim.o.columns * 0.4),
+        -- max_height = math.floor(vim.o.lines * 0.3),
+        -- max_width = math.floor(vim.o.columns * 0.4),
       })
     )
 
@@ -177,8 +176,18 @@ local function enhanced_float_handler(handler, focusable)
     end
   end
 end
+
+-- local hover_handler = vim.lsp.buf.hover
+-- local signature_handler = vim.lsp.buf.signature_help
+-- ---@diagnostic disable-next-line: duplicate-set-field
+-- vim.lsp.buf.hover = function() return enhanced_float_handler(hover_handler, true) end
+-- ---@diagnostic disable-next-line: duplicate-set-field
+-- vim.lsp.buf.signature_help = function() return enhanced_float_handler(signature_handler, true) end
+
+-- vim.lsp.handlers[methods.textDocument_hover] = enhanced_float_handler(hover_handler, true)
+-- vim.lsp.handlers[methods.textDocument_signatureHelp] = enhanced_float_handler(signature_handler, false)
 -- vim.lsp.handlers[methods.textDocument_hover] = enhanced_float_handler(vim.lsp.handlers.hover, true)
-vim.lsp.handlers[methods.textDocument_signatureHelp] = enhanced_float_handler(vim.lsp.handlers.signature_help, false)
+-- vim.lsp.handlers[methods.textDocument_signatureHelp] = enhanced_float_handler(vim.lsp.handlers.signature_help, false)
 
 -- LSP initialization callback
 local function on_init(client, result)
@@ -300,13 +309,17 @@ local function make_keymaps(client, bufnr)
   nmap("<leader>lil", [[<cmd>LspLog<CR>]], "logs (vsplit)")
 
   nmap("gl", diagnostics_mod.show_diagnostic_popup, "[g]o to diagnostic hover")
-  nmap("K", vim.lsp.buf.hover, "hover docs")
+  nmap("K", function() vim.lsp.buf.hover({ border = "rounded" }) end, "hover docs")
   nmap("gD", vim.lsp.buf.declaration, "goto declaration")
-  vnmap("ga", vim.lsp.buf.code_action, "code actions")
-  vnmap("g.", function() fix_current_action() end, "[g]o run nearest/current code action")
+  vnmap("ga", function() require("fzf-lua").lsp_code_actions({ silent = true }) end, "run code actions")
+  vnmap("gl", vim.lsp.codelens.run, "run code lens")
+  vnmap("g==", function() fix_current_action() end, "[g]o run nearest/current code action")
 
-  nmap("[d", function() diagnostics_mod.goto_diagnostic_hl("prev") end, "Go to previous [D]iagnostic message")
-  nmap("]d", function() diagnostics_mod.goto_diagnostic_hl("next") end, "Go to next [D]iagnostic message")
+  nmap("[e", function() diagnostics_mod.goto_diagnostic_hl("prev", { severity = L.ERROR }) end, "Go to previous [e]rror diagnostic message")
+  nmap("]e", function() diagnostics_mod.goto_diagnostic_hl("next", { severity = L.ERROR }) end, "Go to next [e]rror diagnostic message")
+
+  nmap("[d", function() diagnostics_mod.goto_diagnostic_hl("prev") end, "Go to previous [d]iagnostic message")
+  nmap("]d", function() diagnostics_mod.goto_diagnostic_hl("next") end, "Go to next [d]iagnostic message")
 
   nmap("gq", function() vim.cmd("Trouble diagnostics toggle focus=true filter.buf=0") end, "[g]oto [q]uickfixlist buffer diagnostics (trouble)")
   nmap("gQ", function() vim.cmd("Trouble diagnostics toggle focus=true") end, "[g]oto [q]uickfixlist global diagnostics (trouble)")
@@ -353,7 +366,48 @@ local function make_keymaps(client, bufnr)
   --   end, bufnr)
   -- end, "rename symbol/references")
 
+  nmap("<leader>ln", function()
+    local bufnr = vim.api.nvim_get_current_buf()
+    local params = vim.lsp.util.make_position_params(nil, "utf-8")
+    params.context = { includeDeclaration = true }
+    local clients = vim.lsp.get_clients()
+    if not clients or #clients == 0 then
+      vim.print("No attached clients.")
+      return
+    end
+    local client = clients[1]
+    for _, possible_client in pairs(clients) do
+      if possible_client.server_capabilities.renameProvider then
+        client = possible_client
+        break
+      end
+    end
+    local ns = vim.api.nvim_create_namespace("LspRenamespace")
+
+    client:request("textDocument/references", params, function(_, result)
+      if result and not vim.tbl_isempty(result) then
+        for _, v in ipairs(result) do
+          if v.range then
+            local buf = vim.uri_to_bufnr(v.uri)
+            local start_line = v.range.start.line
+            local start_char = v.range.start.character
+            local end_line = v.range["end"].line
+            local end_char = v.range["end"].character
+            if buf == bufnr then vim.hl.range(bufnr, ns, "LspReferenceWrite", { start_line, start_char }, { end_line, end_char }) end
+          end
+        end
+        vim.cmd.redraw()
+      end
+
+      local new_name = vim.fn.input({ prompt = "New name: " })
+      vim.api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
+      if #new_name == 0 then return end
+      vim.lsp.buf.rename(new_name)
+    end, bufnr)
+  end)
+
   vnmap("gn", function()
+    -- if lsp_method(client, "textDocument/rename") then return require("grug-far").open({ prefills = { search = vim.fn.expand("<cword>") } }) end
     local ok_rename, rename = pcall(dofile, vim.fn.stdpath("config") .. "/plugin/lsp/rename.lua")
 
     if ok_rename then
@@ -393,13 +447,39 @@ local function make_keymaps(client, bufnr)
       --   include_current = false,
       -- })
     end, "[g]oto [r]eferences", { nowait = true })
-    -- { "gr", function() Snacks.picker.lsp_references() end, nowait = true, desc = "References" },
+
+    map(
+      "n",
+      "gR",
+      function()
+        Snacks.picker.lsp_references({
+          include_declaration = false,
+          include_current = false,
+          auto_confirm = true,
+          jump = { tagstack = true, reuse_win = true },
+        })
+      end,
+      "[g]oto [r]eferences",
+      { nowait = true }
+    )
   end)
 
   lsp_method(client, "textDocument/definition")(function()
-    -- nmap("gd", "<cmd>vsplit<cr><cmd>lua require('snacks').picker.lsp_definitions()<cr>", "goto definition (vsplit)")
-    nmap("gd", function() require("fzf-lua").lsp_definitions({ jump1 = true }) end, "Go to definition")
-    nmap("gD", function() require("fzf-lua").lsp_definitions({ jump1 = false }) end, "Peek definition")
+    nmap("gd", function() require("fzf-lua").lsp_definitions({ jump1 = true }) end, "[g]oto [d]efinition")
+    -- nmap(
+    --   "gd",
+    --   function()
+    --     Snacks.picker.lsp_definitions({
+    --       include_declaration = false,
+    --       include_current = false,
+    --       auto_confirm = true,
+    --       jump = { tagstack = true, reuse_win = true },
+    --     })
+    --   end,
+    --   "[g]oto [d]efinition"
+    -- )
+    -- nmap("gD", function() require("fzf-lua").lsp_definitions({ jump1 = false }) end, "Peek definition")
+    nmap("gD", "<CMD>Glance definitions<CR>", "[g]lance [d]efinition")
     -- nmap("gd", "<cmd>vsplit | lua vim.lsp.buf.definition()<cr>", "Goto Definition in Vertical Split")
   end)
 
@@ -555,8 +635,13 @@ Augroup(lsp_group, {
 
       local client_config = vim.lsp.config[client.name]
       if client_config ~= nil then
-        assert(client_config.on_attach, "must have an on_attach function for language server client")
-        client_config.on_attach(client, bufnr)
+        -- assert(client_config.on_attach, "must have an on_attach function for language server client")
+
+        if client_config.on_attach and type(client_config.on_attach == "function") then
+          client_config.on_attach(client, bufnr)
+        else
+          vim.notify(string.format("No on_attach found for %s", client.name), L.WARN)
+        end
       end
     end,
   },
@@ -593,8 +678,9 @@ local enabled_servers = {}
 
 vim.iter(servers):each(function(name, config)
   if type(config) == "function" then config = config() end
+  if type(config) == "boolean" then config = {} end
 
-  if config ~= nil and config then
+  if config ~= nil and config and (config.enabled == nil or config.enabled == true) then
     table.insert(enabled_servers, name)
 
     if config.on_attach ~= nil and type(config.on_attach) == "function" then

@@ -8,18 +8,24 @@
 
 if not Plugin_enabled() then return end
 
+-- REF: https://github.com/folke/snacks.nvim/blob/main/lua/snacks/terminal.lua
+-- REF: https://github.com/folke/snacks.nvim/blob/main/lua/snacks/init.lua
+-- REF: https://github.com/folke/snacks.nvim/blob/main/lua/snacks/win.lua
+
 local fmt = string.format
 local api = vim.api
 local fn = vim.fn
 local U = require("config.utils")
 local augroup = require("config.autocmds").augroup
 local command = vim.api.nvim_create_user_command
-local nnoremap = function(lhs, rhs, desc) vim.keymap.set("n", lhs, rhs, { buffer = 0, desc = "term: " .. desc }) end
 
-local nil_id = 999999
+local terminals = {}
+
+local nil_id = -1
 local term_win_id = nil_id
 local term_buf_id = nil_id
 local term_tab_id = nil
+local term_job_id = nil
 local Term = nil
 
 local __buftype = "terminal"
@@ -31,6 +37,7 @@ local function find_windows_by_bufnr(bufnr) return fn.win_findbuf(bufnr) end
 
 --- @class TermOpts
 --- @field direction? "horizontal"|"vertical"|"float"|"tab"
+--- @field position? "bottom"|"right"|"float"|"full"|"tab"
 --- @field size? number
 --- @field cmd? string
 --- @field pre_cmd? string
@@ -38,7 +45,7 @@ local function find_windows_by_bufnr(bufnr) return fn.win_findbuf(bufnr) end
 --- @field on_exit? function
 --- @field notifier? function
 --- @field focus_on_open? boolean,
---- @field move_on_direction_change? boolean,
+--- @field move_on_position_change? boolean,
 --- @field caller_winnr? number
 --- @field start_insert? boolean
 --- @field temp? boolean
@@ -63,17 +70,19 @@ end
 local function unset_term(should_delete)
   if should_delete and api.nvim_buf_is_loaded(term_buf_id) then api.nvim_buf_delete(term_buf_id, { force = true }) end
   term_buf_id = nil_id
-  term_win_id = nil
+  term_win_id = nil_id
+  term_job_id = nil_id
   term_tab_id = nil
+
   Term = {}
 end
 
 ---@class ParsedArgs
----@field direction string?
+---@field position string?
 ---@field cmd string?
 ---@field dir string?
 ---@field size number?
----@field move_on_direction_change boolean?
+---@field move_on_position_change boolean?
 
 ---Take a users command arguments in the format "cmd='git commit' dir=~/.dotfiles"
 ---and parse this into a table of arguments
@@ -111,13 +120,14 @@ local function command_parser(args)
         local key, value = arg[1], arg[2]
         if key == "size" then
           value = tonumber(value)
-        elseif vim.tbl_contains({ "move_on_direction_change" }, key) then
+        elseif vim.tbl_contains({ "move_on_position_change" }, key) then
           value = value ~= "0"
         end
         result[key] = value
       end
     end
   end
+
   return result
 end
 
@@ -142,7 +152,7 @@ local function set_term_opts(term)
   pcall(vim.api.nvim_buf_set_option, term_buf_id, "filetype", __filetype)
   pcall(vim.api.nvim_buf_set_option, term_buf_id, "buftype", __buftype)
 
-  if vim.tbl_contains({ "float", "tab" }, term.direction) then
+  if vim.tbl_contains({ "float", "tab" }, term.position) then
     vim.opt_local.signcolumn = "no"
     vim.bo.bufhidden = "wipe"
     vim.cmd("setlocal bufhidden=wipe")
@@ -150,12 +160,12 @@ local function set_term_opts(term)
 end
 
 local function set_win_size()
-  if Term and Term.direction == "vertical" then
+  if Term and Term.position == "right" then
     vim.cmd(fmt("let &winwidth=%d", Term.size))
     vim.opt_local.winfixwidth = true
     vim.opt_local.winminwidth = Term.size / 2
     vim.api.nvim_win_set_width(Term.winnr, Term.size)
-  elseif Term and Term.direction == "horizontal" then
+  elseif Term and Term.position == "bottom" then
     vim.cmd(fmt("let &winheight=%d", Term.size))
     vim.opt_local.winfixheight = true
     vim.opt_local.winminheight = Term.size / 2
@@ -219,12 +229,12 @@ end
 
 local default_opts = {
   cmd = fmt("%s/bin/zsh", vim.env.HOMEBREW_PREFIX),
-  direction = "horizontal",
+  position = "bottom",
   start_insert = true,
 }
 
 local split_opts = {
-  ["horizontal"] = {
+  ["bottom"] = {
     new = "botright new",
     split = "rightbelow sbuffer",
     dimension = "height",
@@ -232,7 +242,7 @@ local split_opts = {
     res = "resize",
     winc = "J",
   },
-  ["vertical"] = {
+  ["right"] = {
     new = "botright vnew",
     split = "rightbelow sbuffer",
     dimension = "width",
@@ -258,7 +268,7 @@ local split_opts = {
   },
 }
 
-local function set_keymaps(bufnr, direction)
+local function set_keymaps(bufnr, position)
   local opts = { buffer = bufnr, silent = false }
   local function quit()
     unset_term(true)
@@ -268,20 +278,23 @@ local function set_keymaps(bufnr, direction)
   local nmap = function(lhs, rhs) vim.keymap.set("n", lhs, rhs, opts) end
   local tmap = function(lhs, rhs) vim.keymap.set("t", lhs, rhs, opts) end
 
-  if direction ~= "tab" then nmap("q", quit) end
+  if position ~= "tab" then nmap("q", quit) end
 
   tmap("<esc>", [[<C-\><C-n>]])
   tmap("<C-h>", [[<cmd>wincmd p<cr>]])
   tmap("<C-j>", [[<cmd>wincmd p<cr>]])
   tmap("<C-k>", [[<cmd>wincmd p<cr>]])
   tmap("<C-l>", [[<cmd>wincmd p<cr>]])
+  tmap("<C-;>", mega.toggle)
   tmap("<C-x>", quit)
 end
 
 local function create_term(opts)
   -- REF: https://github.com/seblj/dotfiles/commit/fcdfc17e2987631cbfd4727c9ba94e6294948c40#diff-bbe1851dbfaaa99c8fdbb7229631eafc4f8048e09aa116ef3ad59cde339ef268L56-R90
   local term_cmd = opts.pre_cmd and fmt("%s; %s", opts.pre_cmd, opts.cmd) or opts.cmd
-  vim.fn.termopen(term_cmd, {
+
+  term_job_id = vim.fn.jobstart(term_cmd, {
+    term = true,
     ---@diagnostic disable-next-line: unused-local
     on_exit = function(job_id, exit_code, event)
       -- if we get a custom on_exit, run it instead...
@@ -302,16 +315,19 @@ local function create_term(opts)
       vim.cmd([[wincmd p]])
     end,
   })
+
+  return term_job_id
 end
 
 local function create_win(opts)
-  if opts.direction == "float" then
+  if opts.position == "float" then
     local winnr, bufnr = opts.new(opts.size, opts.caller_winnr)
     set_term(winnr, bufnr, nil, opts)
-  elseif opts.direction == "tab" then
+  elseif opts.position == "tab" then
     api.nvim_command(fmt("%s", opts.new))
     set_term(api.nvim_get_current_win(), api.nvim_get_current_buf(), api.nvim_get_current_tabpage(), opts)
   else
+    -- D(fmt("%s | wincmd %s | lua vim.api.nvim_win_set_%s(%s, %s)", opts.new, opts.winc, opts.dimension, 0, opts.size))
     api.nvim_command(fmt("%s | wincmd %s | lua vim.api.nvim_win_set_%s(%s, %s)", opts.new, opts.winc, opts.dimension, 0, opts.size))
     set_term(api.nvim_get_current_win(), api.nvim_get_current_buf(), nil, opts)
   end
@@ -326,7 +342,7 @@ local function set_autocmds(opts)
       event = { "BufEnter" },
       command = function(params)
         if vim.bo[params.buf].filetype == "megaterm" then
-          if vim.tbl_contains({ "vertical", "horizontal" }, Term.direction) then set_win_size() end
+          if vim.tbl_contains({ "right", "bottom" }, Term.position) then set_win_size() end
         end
       end,
     },
@@ -345,7 +361,7 @@ local function __enter(opts)
   end
 
   set_term_opts(Term)
-  if vim.tbl_contains({ "vertical", "horizontal", "tab" }, Term.direction) then
+  if vim.tbl_contains({ "right", "bottom", "tab" }, Term.position) then
     set_win_hls()
   else
     set_win_hls({
@@ -356,9 +372,9 @@ local function __enter(opts)
     })
     vim.wo[term_win_id].winblend = 0
   end
-  if vim.tbl_contains({ "vertical", "horizontal" }, Term.direction) then set_win_size() end
+  if vim.tbl_contains({ "right", "bottom" }, Term.position) then set_win_size() end
 
-  set_keymaps(term_buf_id, Term.direction)
+  set_keymaps(term_buf_id, Term.position)
   set_mode(term_buf_id, "t")
 
   -- custom on_open
@@ -374,7 +390,9 @@ local function __enter(opts)
   api.nvim_buf_set_var(term_buf_id, "term_cmd", Term.cmd)
   api.nvim_buf_set_var(term_buf_id, "term_buf", term_buf_id)
   api.nvim_buf_set_var(term_buf_id, "term_win", term_win_id)
-  api.nvim_buf_set_var(term_buf_id, "term_direction", Term.direction)
+  api.nvim_buf_set_var(term_buf_id, "term_position", Term.position)
+  api.nvim_buf_set_var(term_buf_id, "term_name", __filetype)
+  -- api.nvim_buf_set_name(term_buf_id, __filetype) -- 0 refers to the current buffer
 
   vim.cmd([[do User MegaTermOpened]])
 
@@ -391,15 +409,17 @@ local function new_term(opts)
   if not opts.focus_on_open then vim.cmd("wincmd p | stopinsert") end
 
   -- we only want new tab terms each time
-  if opts.direction == "tab" then unset_term(false) end
+  if opts.position == "tab" then unset_term(false) end
+
+  return term_buf_id ~= nil_id and term_win_id ~= nil_id and term_job_id ~= nil_id
 end
 
 local function build_defaults(opts)
   opts = vim.tbl_extend("force", default_opts, opts or {})
-  opts = vim.tbl_extend("force", split_opts[opts.direction], opts)
+  opts = vim.tbl_extend("force", split_opts[opts.position], opts)
   opts = vim.tbl_extend("keep", opts, { caller_winnr = vim.fn.winnr() })
   opts = vim.tbl_extend("keep", opts, { focus_on_open = true })
-  opts = vim.tbl_extend("keep", opts, { move_on_direction_change = true })
+  opts = vim.tbl_extend("keep", opts, { move_on_position_change = true })
 
   return opts
 end
@@ -430,8 +450,8 @@ function mega.term(args)
 
     vim.validate({
       size = { parsed_opts.size, "number", true },
-      direction = { parsed_opts.direction, "string", true },
-      move_on_direction_change = { parsed_opts.move_on_direction_change, "boolean", true },
+      position = { parsed_opts.position, "string", true },
+      move_on_position_change = { parsed_opts.move_on_position_change, "boolean", true },
     })
 
     if parsed_opts.size then parsed_opts.size = tonumber(parsed_opts.size) end
@@ -440,6 +460,219 @@ function mega.term(args)
   new_or_open_term(parsed_opts)
 end
 
+function mega.toggle(opts)
+  D({ "mega.toggle", term_win_id, term_buf_id, term_job_id, term_tab_id })
+
+  opts = build_defaults(opts or {})
+  local function cleanup()
+    term_buf_id = nil_id
+    term_win_id = nil_id
+    term_tab_id = nil_id
+    term_job_id = nil_id
+  end
+
+  local function is_visible()
+    -- Check if our terminal buffer exists and is displayed in any window
+    if not term_buf_id or not vim.api.nvim_buf_is_valid(term_buf_id) then return false end
+
+    for _, tab in ipairs(vim.api.nvim_list_tabpages()) do
+      for _, win in ipairs(vim.api.nvim_tabpage_list_wins(tab)) do
+        if vim.api.nvim_win_get_buf(win) == term_buf_id then
+          term_win_id = win
+          term_tab_id = tab
+
+          break
+        end
+      end
+
+      if term_win_id ~= nil_id then return true end
+    end
+
+    -- Buffer exists but no window displays it
+    term_win_id = nil_id
+    return false
+  end
+
+  local function is_valid()
+    -- First check if we have a valid buffer
+    if not term_buf_id or not vim.api.nvim_buf_is_valid(term_buf_id) then
+      cleanup()
+      return false
+    end
+
+    -- If buffer is valid but window is invalid, try to find a window displaying this buffer
+    if not term_win_id or not vim.api.nvim_win_is_valid(term_win_id) then
+      -- Search all windows for our terminal buffer
+      -- local windows = vim.api.nvim_list_wins()
+      -- for _, win in ipairs(windows) do
+      --   if vim.api.nvim_win_get_buf(win) == term_buf_id then
+      --     -- Found a window displaying our terminal buffer, update the tracked window ID
+      --     term_win_id = win
+      --     logger.debug("terminal", "Recovered terminal window ID:", win)
+      --     return true
+      --   end
+      -- end
+      for _, tab in ipairs(vim.api.nvim_list_tabpages()) do
+        for _, win in ipairs(vim.api.nvim_tabpage_list_wins(tab)) do
+          if vim.api.nvim_win_get_buf(win) == term_buf_id then
+            term_win_id = win
+            term_tab_id = tab
+
+            break
+          end
+        end
+
+        if term_win_id ~= nil_id then return true end
+      end
+
+      -- Buffer exists but no window displays it - this is normal for hidden terminals
+      return true -- Buffer is valid even though not visible
+    end
+
+    -- Both buffer and window are valid
+    return true
+  end
+
+  local function focus()
+    if is_valid() then
+      vim.api.nvim_set_current_win(term_win_id)
+      vim.cmd("startinsert")
+    end
+  end
+
+  local function find()
+    -- Iterate through all existing buffers and find the opencode buffer
+    for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+      if pcall(vim.api.nvim_buf_get_var, buf, "term_name") and vim.api.nvim_buf_get_var(buf, "term_name") == __filetype then
+        -- if string.find(vim.api.nvim_buf_get_name(buf), __filetype, 1, true) then
+        term_buf_id = buf
+
+        break
+      end
+    end
+
+    if term_buf_id then
+      -- Iterate through all tabpages and their windows to find where the buffer is
+      for _, tab in ipairs(vim.api.nvim_list_tabpages()) do
+        for _, win in ipairs(vim.api.nvim_tabpage_list_wins(tab)) do
+          if vim.api.nvim_win_get_buf(win) == term_buf_id then
+            term_win_id = win
+            term_tab_id = tab
+
+            break
+          end
+        end
+
+        if term_win_id ~= nil_id then
+          break -- Found the tab, exit outer loop
+        end
+      end
+    end
+
+    return term_win_id, term_buf_id, term_tab_id
+  end
+
+  local function hide()
+    -- Hide the terminal window but keep the buffer and job alive
+    if term_buf_id and vim.api.nvim_buf_is_valid(term_buf_id) and term_win_id and vim.api.nvim_win_is_valid(term_win_id) then
+      -- Set buffer to hide instead of being wiped when window closes
+      vim.api.nvim_buf_set_var(term_buf_id, "bufhidden", "hide")
+
+      -- Close the window - this preserves the buffer and job
+      vim.api.nvim_win_close(term_win_id, false)
+      term_win_id = nil_id -- Clear window reference
+
+      vim.notify("terminal: Terminal window hidden, process preserved", L.INFO)
+    end
+  end
+
+  local function show(opts, focus)
+    -- Show an existing hidden terminal buffer in a new window
+    if not term_buf_id or not vim.api.nvim_buf_is_valid(term_buf_id) then return false end
+
+    -- Check if it's already visible
+    if is_visible() then
+      if focus then focus() end
+      return true
+    end
+
+    local original_win = vim.api.nvim_get_current_win()
+
+    -- Create a new window for the existing buffer
+    local width = math.floor(vim.o.columns * 0.30)
+    local full_height = vim.o.lines
+    local placement_modifier
+
+    if opts.split_side == "left" then
+      placement_modifier = "topleft "
+    else
+      placement_modifier = "botright "
+    end
+
+    vim.cmd(placement_modifier .. width .. "vsplit")
+    local new_winid = vim.api.nvim_get_current_win()
+    vim.api.nvim_win_set_height(new_winid, full_height)
+
+    -- Set the existing buffer in the new window
+    vim.api.nvim_win_set_buf(new_winid, term_buf_id)
+    term_win_id = new_winid
+
+    if focus then
+      -- Focus the terminal: switch to terminal window and enter insert mode
+      vim.api.nvim_set_current_win(term_win_id)
+      vim.cmd("startinsert")
+    else
+      -- Preserve user context: return to the window they were in before showing terminal
+      vim.api.nvim_set_current_win(original_win)
+    end
+
+    return true
+  end
+
+  -- Check if we have a valid terminal buffer (process running)
+  local has_buffer = term_buf_id and vim.api.nvim_buf_is_valid(term_buf_id)
+  local buf_visible = has_buffer and is_visible()
+
+  if buf_visible then
+    D({ "buf_visible? yes", term_win_id, term_buf_id, term_job_id, term_tab_id })
+    -- Terminal is visible, hide it (but keep process running)
+    hide()
+  else
+    -- Terminal is not visible
+    if has_buffer then
+      D({ "has_buffer? yes", term_win_id, term_buf_id, term_job_id, term_tab_id })
+
+      -- -- Terminal process exists but is hidden, show it
+      if show(opts, true) then
+        vim.notify("terminal: showing hidden term", L.INFO)
+      else
+        vim.notify("terminal: failed to show hidden term", L.ERROR)
+      end
+    else
+      -- No terminal process exists, check if there's an existing one we lost track of
+      local existing_win, existing_buf, _existing_tab = find()
+
+      if existing_buf ~= nil_id and existing_win ~= nil_id then
+        -- Recover the existing terminal
+        term_buf_id = existing_buf
+        term_win_id = existing_win
+        vim.notify("terminal: Recovered existing megaterm", L.INFO)
+
+        focus()
+      else
+        -- No existing terminal found, create a new one
+        if not new_term(opts) then vim.notify("failed to find or create a megaterm", L.ERROR) end
+      end
+    end
+  end
+end
+
 -- [COMMANDS] ------------------------------------------------------------------
 
-command("T", function(opts) mega.term(opts.args) end, { nargs = "*" })
+-- _G.Megat = mega.toggle
+Command("T", function(opts) mega.term(opts.args) end, { nargs = "*" })
+nnoremap("<C-;>", function(args) mega.term(args) end, { desc = "toggle megaterm (split)" })
+-- Nnoremap("<C-;>", function() mega.toggle() end, { desc = "toggle megaterm (split)" })
+-- nnoremap("<C-/>", function() mega.term({ position = "right" }) end, { desc = "toggle megaterm (vsplit)" })
+
+return M

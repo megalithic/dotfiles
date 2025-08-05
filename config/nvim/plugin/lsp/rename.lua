@@ -1,7 +1,8 @@
 local M = {}
+local BORDER_STYLE = require("config.options").border
 
 -- populate qf list with changes (if multiple files modified)
-local function rename()
+function M.rename(client)
   local rename_prompt = ""
   local default_rename_prompt = " -> "
   local current_name = ""
@@ -18,7 +19,7 @@ local function rename()
     rename_prompt = default_rename_prompt
   end
 
-  local function rename_cb()
+  local function rename_cb(client, winnr, bufnr)
     local input = vim.trim(vim.fn.getline("."):sub(#rename_prompt, -1))
 
     if input == nil then
@@ -29,9 +30,15 @@ local function rename()
       return
     end
 
-    cleanup_cb()
-
     pos_params.newName = input
+
+    if not client:supports_method("textDocument/rename") or not client:supports_method("textDocument/prepareRename") then
+      require("grug-far").open({ prefills = { search = pos_params.oldName, replacement = pos_params.newName } })
+      vim.schedule(function() cleanup_cb(winnr) end)
+      return
+    else
+      cleanup_cb(winnr)
+    end
 
     vim.lsp.buf_request(0, "textDocument/rename", pos_params, function(err, result, ctx, config)
       -- result not provided, error at lsp end
@@ -111,13 +118,14 @@ local function rename()
     end)
   end
 
-  local function prepare_rename()
+  local function prepare_rename(client)
     current_name = vim.fn.expand("<cword>")
     rename_prompt = current_name .. default_rename_prompt
-    bufnr = vim.api.nvim_create_buf(false, true)
+    local bufnr = vim.api.nvim_create_buf(false, true)
     vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = bufnr })
     vim.api.nvim_set_option_value("buftype", "prompt", { buf = bufnr })
     vim.api.nvim_set_option_value("filetype", "prompt", { buf = bufnr })
+    -- vim.api.nvim_set_hl(bufnr, 'GitSignsAddCul', { link = 'GitSignsAddCursorLine' })
     vim.api.nvim_buf_add_highlight(bufnr, -1, "Title", 0, 0, #rename_prompt)
     vim.fn.prompt_setprompt(bufnr, rename_prompt)
     local width = #current_name + #rename_prompt + 15
@@ -142,26 +150,25 @@ local function rename()
       { win = winnr }
     )
 
-    vim.keymap.set("i", "<CR>", rename_cb, { buffer = bufnr })
+    vim.keymap.set("i", "<CR>", function() rename_cb(client, winnr, bufnr) end, { buffer = bufnr })
     vim.keymap.set("i", "<esc>", function() cleanup_cb(winnr) end, { buffer = bufnr })
     vim.keymap.set("i", "<c-c>", function() cleanup_cb(winnr) end, { buffer = bufnr })
 
     vim.cmd.startinsert()
   end
 
-  prepare_rename()
-  -- vim.ui.input({ prompt = "rename to -> ", default = position_params.oldName }, rename_callback)
+  prepare_rename(client)
 end
 
 return function(client)
-  local params = vim.lsp.util.make_position_params(0, "utf-8")
+  -- local params = vim.lsp.util.make_position_params(0, "utf-8")
 
-  client.request("textDocument/references", params, function(_, result)
-    if not result or vim.tbl_isempty(result) then
-      vim.notify("nothing to rename.")
-      return
-    end
-  end)
+  -- client.request("textDocument/references", params, function(_, result)
+  --   if not result or vim.tbl_isempty(result) then
+  --     vim.notify("nothing to rename.")
+  --     return
+  --   end
+  -- end)
 
-  rename()
+  M.rename(client)
 end

@@ -33,7 +33,7 @@ local M = {}
 ---@field nested  boolean
 ---@field once    boolean
 ---@field buffer  number
----@field enabled boolean
+---@field enabled? boolean
 
 ---Create an autocommand
 ---returns the group ID so that it can be cleared or manipulated.
@@ -231,19 +231,42 @@ function M.apply()
       pattern = { "*" },
       enabled = true,
       once = true,
-      desc = "Clear LSP log file, if it's a certain size, on startup",
-      command = function(args)
-        local lsp_log = vim.fn.stdpath("state") .. "/lsp.log"
-        local max_size = 2 * 1024 * 1024 -- 1MB
-        local file = io.open(lsp_log, "r")
-        if file then
-          local size = file:seek("end")
-          file:close()
-          if size > max_size then
-            io.open(lsp_log, "w"):close()
-            vim.notify("LSP log cleared (was over 2MB)", vim.log.levels.INFO)
+      desc = "Backup log files when they are greater than a certain size, on startup",
+      command = function(_args)
+        local log_files = vim.split(vim.fn.glob(vim.fn.stdpath("state") .. "/*.log"), "\n", { trimempty = true })
+        local max_size = 3 * 1024 * 1024
+
+        vim.iter(log_files):each(function(log_filepath)
+          local stat = uv.fs_stat(log_filepath)
+
+          if stat and stat.size > max_size then
+            local backup_filepath = string.format("%s.%s", log_filepath, os.date("%Y%m%d%H%M%S"))
+            D(backup_filepath)
+            uv.fs_unlink(backup_filepath)
+            uv.fs_rename(log_filepath, backup_filepath)
+            vim.notify(
+              string.format(
+                "Log file %s renamed to  (was over %sMB)",
+                vim.fn.fnamemodify(log_filepath, ":t"),
+                vim.fn.fnamemodify(backup_filepath, ":t"),
+                max_size
+              ),
+              L.WARN
+            )
           end
-        end
+
+          -- Optionally, we might want to clear the file instead
+          -- local file = io.open(log_filepath, "r")
+          -- if file then
+          --   local backup = log_filepath .. ".1"
+          --   local size = file:seek("end")
+          --   file:close()
+          --   if size > max_size then
+          --     io.open(log_filepath, "w"):close()
+          --     vim.notify(string.format("Log file %s cleared (was over %sMB)", vim.fn.fnamemodify(log_filepath, ":t"), max_size), vim.log.levels.INFO)
+          --   end
+          -- end
+        end)
       end,
     },
   })
@@ -606,6 +629,7 @@ function M.apply()
       command = function(_args) io.write("\027]111\027\\") end,
     },
     {
+      enabled = false,
       event = { "TermClose" },
       command = function(args)
         --- automatically close a terminal if the job was successful
@@ -854,6 +878,15 @@ function M.apply()
         end
       end,
     },
+  })
+
+  vim.api.nvim_create_autocmd("BufEnter", {
+    pattern = "COMMIT_EDITMSG",
+    callback = function()
+      vim.keymap.set("n", "q", "<cmd>cq!<CR>", { noremap = true, buffer = true })
+      vim.keymap.set("n", "<c-c><c-c>", "<cmd>cq!<CR>", { noremap = true, buffer = true })
+      vim.keymap.set("i", "<c-c><c-c>", "<esc><cmd>cq!<CR>", { noremap = true, buffer = true })
+    end,
   })
 end
 

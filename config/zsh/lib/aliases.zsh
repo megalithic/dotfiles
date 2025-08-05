@@ -373,11 +373,14 @@ prs() {
 
   [[ -z $get_pr ]] && gh pr view -w "$get_pr"
 }
-# alias ghpr="gh pr create --web"
 function pr() {
-  # gh pr create --web
-  gh pr view --web
+  gh pr view --web &> /dev/null
+
+  if [ $? -ne 0 ]; then
+    gh pr create --web
+  fi
 }
+alias ghpr="pr"
 function prr() {
   export GH_PEERS="alinmarsh
   DanThiffault

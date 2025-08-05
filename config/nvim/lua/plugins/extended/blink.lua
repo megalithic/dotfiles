@@ -6,86 +6,32 @@ local in_jsx = U.in_jsx_tags
 local keep_text_entries = { "emmet_language_server", "marksman" }
 local text = vim.lsp.protocol.CompletionItemKind.Text
 
-local function esc(cmd) return vim.api.nvim_replace_termcodes(cmd, true, false, true) end
-
-local function feedkeys(key, mode) vim.fn.feedkeys(esc(key), mode or "") end
-
-local function has_words_before()
-  local line, col = unpack(vim.api.nvim_win_get_cursor(0))
-  return col ~= 0 and vim.api.nvim_buf_get_lines(0, line - 1, line, true)[1]:sub(col, col):match("%s") == nil
-end
-
-local function expand_snippet()
-  local filetype_map = {
-    typescriptreact = "javascript",
-    typescript = "javascript",
-    javascriptreact = "javascript",
-  }
-  local line_to_cursor = vim.fn.getline("."):sub(1, vim.fn.col(".") - 1)
-  local keyword = vim.fn.matchstr(line_to_cursor, [[\k\+$]])
-  local filetype = filetype_map[vim.bo.filetype] or vim.bo.filetype
-  local path = vim.fn.stdpath("config") .. "/snippets/" .. filetype .. ".json"
-  local fs_stat = vim.uv.fs_stat(path)
-  if not fs_stat or fs_stat.type ~= "file" then return end
-  ---@type { prefix: string[], body: string[] }[]
-  local data = vim.json.decode(table.concat(vim.fn.readfile(path), "\n"))
-
-  for _, snippet in pairs(data) do
-    if snippet.prefix[1] == keyword then
-      vim.fn.feedkeys(esc("<C-w>"), "n")
-      vim.schedule(function() vim.snippet.expand(table.concat(snippet.body, "\n")) end)
-      return true
-    end
-  end
-end
-
 -- -- DOCS https://github.com/saghen/blink.cmp#configuration
 -- --------------------------------------------------------------------------------
 -- ---@diagnostic disable: missing-fields -- pending https://github.com/Saghen/blink.cmp/issues/427
 -- --------------------------------------------------------------------------------
+
 return {
   {
     "saghen/blink.cmp",
     dependencies = {
       "ribru17/blink-cmp-spell",
       "rafamadriz/friendly-snippets",
-      "MeanderingProgrammer/render-markdown.nvim",
       { "saghen/blink.compat", version = "*", opts = { impersonate_nvim_cmp = true } },
       { "chrisgrieser/cmp-nerdfont", lazy = true },
-      { "MattiasMTS/cmp-dbee", ft = { "sql", "psql", "mysql", "plsql", "dbee" }, opts = {}, lazy = true },
+      { "MattiasMTS/cmp-dbee", ft = { "sql", "psql", "mysql", "plsql", "dbee" }, opts = {} },
       { "hrsh7th/cmp-emoji", lazy = true },
       { "xzbdmw/colorful-menu.nvim", lazy = true, opts = {} },
       "mikavilpas/blink-ripgrep.nvim",
     },
-    -- event = { "InsertEnter", "CmdlineEnter" },
-    build = "cargo build --release",
+    event = { "InsertEnter", "CmdlineEnter" },
+    -- lazy = false,
+    build = { "rustup update beta", "cargo build --release" },
     cond = vim.g.completer == "blink",
     config = function()
       local blink = require("blink.cmp")
-      local sort_text = require("blink.cmp.fuzzy.sort").sort_text
+      -- local sort_text = require("blink.cmp.fuzzy.sort").sort_text
       blink.setup({
-        -- keymap = {
-        --   ["<C-e>"] = { "hide", "fallback" },
-        --   ["<CR>"] = { "accept", "fallback" },
-
-        --   ["<Tab>"] = {
-        --     function(cmp) return cmp.select_next() end,
-        --     "snippet_forward",
-        --     "fallback",
-        --   },
-        --   ["<S-Tab>"] = {
-        --     function(cmp) return cmp.select_prev() end,
-        --     "snippet_backward",
-        --     "fallback",
-        --   },
-
-        --   ["<Up>"] = { "select_prev", "fallback" },
-        --   ["<Down>"] = { "select_next", "fallback" },
-        --   ["<C-p>"] = { "select_prev", "fallback" },
-        --   ["<C-n>"] = { "select_next", "fallback" },
-        --   ["<C-up>"] = { "scroll_documentation_up", "fallback" },
-        --   ["<C-down>"] = { "scroll_documentation_down", "fallback" },
-        -- },
         keymap = {
           preset = "none", -- default?
           ["<C-e>"] = { "hide", "fallback" },
@@ -138,7 +84,6 @@ return {
           -- },
         },
         signature = { enabled = true },
-
         appearance = {
           use_nvim_cmp_as_default = true,
           nerd_font_variant = "mono",
@@ -171,56 +116,66 @@ return {
             TypeParameter = "󰅲",
           },
         },
+        -- cmdline = {
+        --   enabled = false,
+        --   keymap = {
+        --     ["<CR>"] = { "select_accept_and_enter", "fallback" },
+        --     ["<C-y>"] = { "select_and_accept", "fallback" },
+        --     ["<Down>"] = { "select_next", "fallback" },
+        --     ["<Up>"] = { "select_prev", "fallback" },
+        --   },
+        --   completion = {
+        --     list = {
+        --       selection = {
+        --         preselect = false,
+        --         auto_insert = false,
+        --       },
+        --     },
+        --     menu = {
+        --       auto_show = function()
+        --         local ctype = vim.fn.getcmdtype()
+        --         return ctype == ":"
+        --           -- or ctype == "/"
+        --           -- or ctype == "?"
+        --           -- enable for inputs as well, with:
+        --           or ctype == "@"
+        --       end,
+        --     },
+        --     ghost_text = { enabled = false },
+        --   },
+        --   -- sources = function()
+        --   --   local type = vim.fn.getcmdtype()
+        --   --   -- Search forward and backward
+        --   --   if type == "/" or type == "?" then return { "buffer" } end
+        --   --   -- Commands
+        --   --   if type == ":" or type == "@" then return { "cmdline", "buffer" } end
+        --   --   return {}
+        --   -- end,
+        -- },
         cmdline = {
           keymap = {
-            ["<CR>"] = { "select_accept_and_enter", "fallback" },
-            ["<C-y>"] = { "select_and_accept", "fallback" },
-            ["<Down>"] = { "select_next", "fallback" },
-            ["<Up>"] = { "select_prev", "fallback" },
+            preset = "inherit",
+            ["<Tab>"] = { "show", "accept", "fallback" },
+            ["<C-y>"] = { "select_and_accept" },
           },
-          completion = {
-            list = {
-              selection = {
-                preselect = true,
-                auto_insert = true,
-              },
-            },
-            menu = {
-              auto_show = function()
-                local ctype = vim.fn.getcmdtype()
-                return ctype == ":"
-                  or ctype == "/"
-                  or ctype == "?"
-                  -- enable for inputs as well, with:
-                  or ctype == "@"
-              end,
-            },
-            ghost_text = { enabled = true },
-          },
-          sources = function()
-            local type = vim.fn.getcmdtype()
-            -- Search forward and backward
-            if type == "/" or type == "?" then return { "buffer" } end
-            -- Commands
-            if type == ":" or type == "@" then return { "cmdline", "buffer" } end
-            return {}
-          end,
+          completion = { menu = { auto_show = false }, ghost_text = { enabled = true } },
         },
         fuzzy = {
           implementation = "prefer_rust_with_warning",
-          sorts = {
-            function(a, b)
-              if (a.client_name == nil or b.client_name == nil) or (a.client_name == b.client_name) then return end
-              return b.client_name == "emmet_ls"
-            end,
-            -- default sorts
-            "score",
-            "sort_text",
-          },
+          prebuilt_binaries = { ignore_version_mismatch = true },
         },
         sources = {
-          default = { "lsp", "path", "snippets", "spell", "buffer" },
+          default = function(_ctx)
+            local success, node = pcall(vim.treesitter.get_node)
+            if success and node and vim.tbl_contains({ "comment", "line_comment", "block_comment" }, node:type()) then
+              return { "buffer", "path", "spell" }
+            else
+              return { "lsp", "path", "snippets", "spell", "buffer" }
+            end
+          end,
+
           per_filetype = {
+            codecompanion = { "codecompanion" }, -- Add any other source to include here
             sql = { "lsp", "dadbod", "dbee", "buffer" }, -- Add any other source to include here
           },
           providers = {
@@ -248,7 +203,6 @@ return {
             },
             dadbod = { name = "Dadbod", module = "vim_dadbod_completion.blink" },
             dbee = { name = "cmp-dbee", module = "blink.compat.source" },
-
             ripgrep = {
               name = "[rg]",
               module = "blink-ripgrep",
@@ -330,9 +284,7 @@ return {
         },
 
         completion = {
-          -- ghost_text = {
-          --   enabled = true,
-          -- },
+          ghost_text = { enabled = true },
           list = {
             cycle = { from_top = false }, -- cycle at bottom, but not at the top
             selection = {
@@ -367,9 +319,8 @@ return {
             auto_show = true,
             auto_show_delay_ms = 250,
             window = {
-              border = SETTINGS.borders.blink_empty,
-              max_width = 100,
-              max_height = 15,
+              -- max_width = 100,
+              max_height = 30,
             },
           },
           menu = {
@@ -385,7 +336,7 @@ return {
               },
               components = {
                 label = {
-                  width = { max = 30, fill = true },
+                  width = { max = 50, fill = true },
                   -- customs:
                   text = function(ctx)
                     local highlights_info = require("colorful-menu").blink_highlights(ctx)
@@ -407,7 +358,7 @@ return {
                     return highlights
                   end,
                 },
-                label_description = { width = { max = 20 } },
+                label_description = { width = { max = 50, fill = true } },
                 kind_icon = {
                   text = function(ctx)
                     -- detect emmet-ls
@@ -443,5 +394,106 @@ return {
     -- allows extending the providers array elsewhere in your config
     -- without having to redefine it
     opts_extend = { "sources.default" },
+  },
+  {
+    cond = false,
+    "saghen/blink.pairs",
+    version = "*", -- (recommended) only required with prebuilt binaries
+
+    -- download prebuilt binaries from github releases
+    dependencies = "saghen/blink.download",
+    -- OR build from source, requires nightly:
+    -- https://rust-lang.github.io/rustup/concepts/channels.html#working-with-nightly-rust
+    -- build = 'cargo build --release',
+    -- If you use nix, you can build from source using latest nightly rust with:
+    -- build = 'nix run .#build-plugin',
+
+    --- @module 'blink.pairs'
+    --- @type blink.pairs.Config
+    opts = {
+      mappings = {
+        -- you can call require("blink.pairs.mappings").enable()
+        -- and require("blink.pairs.mappings").disable()
+        -- to enable/disable mappings at runtime
+        enabled = true,
+        cmdline = true,
+        -- or disable with `vim.g.pairs = false` (global) and `vim.b.pairs = false` (per-buffer)
+        -- and/or with `vim.g.blink_pairs = false` and `vim.b.blink_pairs = false`
+        disabled_filetypes = {},
+        -- see the defaults:
+        -- https://github.com/Saghen/blink.pairs/blob/main/lua/blink/pairs/config/mappings.lua#L14
+        pairs = {},
+      },
+      highlights = {
+        enabled = true,
+        -- requires require('vim._extui').enable({}), otherwise has no effect
+        cmdline = true,
+        groups = {
+          "BlinkPairsOrange",
+          "BlinkPairsPurple",
+          "BlinkPairsBlue",
+        },
+        unmatched_group = "BlinkPairsUnmatched",
+
+        -- highlights matching pairs under the cursor
+        matchparen = {
+          enabled = true,
+          -- known issue where typing won't update matchparen highlight, disabled by default
+          cmdline = false,
+          group = "BlinkPairsMatchParen",
+        },
+      },
+      debug = false,
+    },
+  },
+  {
+    cond = false,
+    "saghen/blink.indent",
+    --- @module 'blink.indent'
+    --- @type blink.indent.Config
+    opts = {
+      -- or disable with `vim.g.indent_guide = false` (global) or `vim.b.indent_guide = false` (per-buffer)
+      blocked = {
+        buftypes = {},
+        filetypes = {},
+      },
+      static = {
+        enabled = true,
+        char = "▎",
+        priority = 1,
+        -- specify multiple highlights here for rainbow-style indent guides
+        -- highlights = { 'BlinkIndentRed', 'BlinkIndentOrange', 'BlinkIndentYellow', 'BlinkIndentGreen', 'BlinkIndentViolet', 'BlinkIndentCyan' },
+        highlights = { "BlinkIndent" },
+      },
+      scope = {
+        enabled = true,
+        char = "▎",
+        priority = 1024,
+        -- set this to a single highlight, such as 'BlinkIndent' to disable rainbow-style indent guides
+        -- highlights = { 'BlinkIndent' },
+        highlights = {
+          "BlinkIndentOrange",
+          "BlinkIndentViolet",
+          "BlinkIndentBlue",
+          -- 'BlinkIndentRed',
+          -- 'BlinkIndentCyan',
+          -- 'BlinkIndentYellow',
+          -- 'BlinkIndentGreen',
+        },
+        underline = {
+          -- enable to show underlines on the line above the current scope
+          enabled = false,
+          highlights = {
+            "BlinkIndentOrangeUnderline",
+            "BlinkIndentVioletUnderline",
+            "BlinkIndentBlueUnderline",
+            -- 'BlinkIndentRedUnderline',
+            -- 'BlinkIndentCyanUnderline',
+            -- 'BlinkIndentYellowUnderline',
+            -- 'BlinkIndentGreenUnderline',
+          },
+        },
+      },
+    },
   },
 }

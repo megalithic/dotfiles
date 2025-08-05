@@ -25,14 +25,6 @@ return {
     config = function(_, opts) require("Comment").setup(opts) end,
   },
   {
-    "folke/trouble.nvim",
-    cmd = { "TroubleToggle", "Trouble" },
-    opts = {
-      auto_open = false,
-      use_diagnostic_signs = true,
-    },
-  },
-  {
     "mrjones2014/smart-splits.nvim",
     lazy = false,
     commit = "36bfe63246386fc5ae2679aa9b17a7746b7403d5",
@@ -107,10 +99,7 @@ return {
       --   "<Cmd>HopWord<CR>",
       -- },
     },
-    config = function(_, opts)
-      local hop = require("hop")
-      hop.setup(opts)
-    end,
+    config = function(_, opts) require("hop").setup(opts) end,
   },
   {
     "jake-stewart/multicursor.nvim",
@@ -120,17 +109,17 @@ return {
       mc.setup()
       local map = vim.keymap.set
 
-      map("n", "<localleader>c", mc.toggleCursor, { desc = "Toggle cursor" })
+      map("n", "<localleader>c", mc.toggleCursor, { desc = "[mc] toggle cursor" })
       map("x", "<localleader>c", function()
         mc.action(function(ctx)
           ctx:forEachCursor(function(cur) cur:splitVisualLines() end)
         end)
         mc.feedkeys("<Esc>", { remap = false, keycodes = true })
-      end, { desc = "Create cursors from visual" })
-      map({ "n", "x" }, "<localleader>v", function() mc.matchAddCursor(1) end, { desc = "Create cursors from word/selection" })
-      map("x", "<localleader>m", mc.matchCursors, { desc = "Match cursors from visual" })
-      map("x", "<localleader>s", mc.splitCursors, { desc = "Split cursors from visual" })
-      map("n", "<localleader>a", mc.alignCursors, { desc = "Align cursors" })
+      end, { desc = "[mc] create cursors from visual" })
+      map({ "n", "x" }, "<localleader>v", function() mc.matchAddCursor(1) end, { desc = "[mc] create cursors from word/selection" })
+      map("x", "<localleader>m", mc.matchCursors, { desc = "[mc] match cursors from visual" })
+      map("x", "<localleader>s", mc.splitCursors, { desc = "[mc] split cursors from visual" })
+      map("n", "<localleader>a", mc.alignCursors, { desc = "[mc] align cursors" })
 
       mc.addKeymapLayer(function(layer)
         local hop = require("hop")
@@ -230,7 +219,6 @@ return {
   {
     "folke/flash.nvim",
     event = "VeryLazy",
-    ---@type Flash.Config
     opts = {},
     keys = {
       { "s", mode = { "n", "x", "o" }, function() require("flash").jump() end, desc = "Flash" },
@@ -263,22 +251,25 @@ return {
       },
     },
   },
+  {
+    "windwp/nvim-autopairs",
+    event = "InsertEnter",
+    opts = {
+      check_ts = true,
+      enable_moveright = true,
+      -- fast_wrap = {
+      --   map = "<c-e>",
+      -- },
+    },
+    config = function(_, opts)
+      local npairs = require("nvim-autopairs")
+      npairs.setup(opts)
 
-  -- {
-  --   "windwp/nvim-autopairs",
-  --   enabled = false,
-  --   lazy = true,
-  --   opts = { check_ts = true },
-  --   config = function(_, opts)
-  --     local npairs = require("nvim-autopairs")
-  --     npairs.setup()
-
-  --     npairs.add_rules(require("nvim-autopairs.rules.endwise-elixir"))
-  --     npairs.add_rules(require("nvim-autopairs.rules.endwise-lua"))
-  --     npairs.add_rules(require("nvim-autopairs.rules.endwise-ruby"))
-  --   end,
-  -- },
-
+      npairs.add_rules(require("nvim-autopairs.rules.endwise-elixir"))
+      npairs.add_rules(require("nvim-autopairs.rules.endwise-lua"))
+      npairs.add_rules(require("nvim-autopairs.rules.endwise-ruby"))
+    end,
+  },
   {
     "kevinhwang91/nvim-bqf",
     ft = "qf",
@@ -306,35 +297,38 @@ return {
     end,
   },
   { "lambdalisue/suda.vim", event = { "VeryLazy" } },
-  {
-    "OXY2DEV/helpview.nvim",
-    lazy = false,
-    dependencies = {
-      "nvim-treesitter/nvim-treesitter",
-    },
-  },
+  -- {
+  --   "OXY2DEV/helpview.nvim",
+  --   lazy = false,
+  --   dependencies = {
+  --     "nvim-treesitter/nvim-treesitter",
+  --   },
+  -- },
   {
     "MagicDuck/grug-far.nvim",
-    opts = {
-      windowCreationCommand = "botright vsplit %",
-    },
     config = function(_, opts) require("grug-far").setup(opts) end,
     cmd = {
       "GrugFar",
     },
     keys = {
       {
-        "<localleader>er",
+        "<leader>sr",
         [[<Cmd>GrugFar<CR>]],
         desc = "[grugfar] find and replace",
       },
       {
-        "<localleader>eR",
-        function() require("grug-far").grug_far({ prefills = { search = vim.fn.expand("<cword>") } }) end,
+        "<leader>sR",
+        function() require("grug-far").open({ prefills = { search = vim.fn.expand("<cword>") } }) end,
         desc = "[grugfar] find and replace current word",
       },
       {
         "<C-r>",
+        [[:<C-U>lua require('grug-far').with_visual_selection({ prefills = { paths = vim.fn.expand("%") } })<CR>]],
+        mode = { "v", "x" },
+        desc = "[grugfar] find and replace visual selection",
+      },
+      {
+        "<leader>sr",
         [[:<C-U>lua require('grug-far').with_visual_selection({ prefills = { paths = vim.fn.expand("%") } })<CR>]],
         mode = { "v", "x" },
         desc = "[grugfar] find and replace visual selection",
@@ -424,296 +418,133 @@ return {
     dir = "/Applications/Ghostty.app/Contents/Resources/vim/vimfiles/",
     lazy = false,
   },
+  {
+    "wurli/contextindent.nvim",
+    -- This is the only config option; you can use it to restrict the files
+    -- which this plugin will affect (see :help autocommand-pattern).
+    opts = { pattern = "*" },
+    dependencies = { "nvim-treesitter/nvim-treesitter" },
+  },
+  { "darfink/vim-plist" },
+  {
+    "axelvc/template-string.nvim",
+    opts = {
+      filetypes = { "typescript", "javascript", "typescriptreact", "javascriptreact", "vue" },
+      remove_template_string = true,
+      restore_quotes = {
+        normal = [[']],
+        jsx = [["]],
+      },
+    },
+    event = "InsertEnter",
+    ft = { "typescript", "javascript", "typescriptreact", "javascriptreact", "vue" },
+  },
   -- {
-  --   "leobeosab/brr.nvim",
-  --   cmd = { "Scratch", "ScratchList" },
-  --   opts = {
-  --     root = vim.g.notes_path .. "/scratch", -- Root where all scratch files are stored, I throw mine in an Obsidian vault
-  --     style = {
-  --       width = 0.8, -- 0-1, 1 being full width, 0 being, well, 0
-  --       height = 0.8, -- 0-1
-  --       title_padding = 2, -- number of spaces as padding in the top border title
-  --     },
-  --   },
-  --   keys = { -- You'll probably want to change my weird keybinds, these are just examples
-  --     { "<leader>.", "<cmd>Scratch scratch.md<cr>", desc = "Open persistent scratch" },
-  --     { "<leader>sd", "<cmd>Scratch<cr>", desc = "Open daily scratch" },
-  --     { "<leader>sf", "<cmd>ScratchList<cr>", desc = "Find scratch" },
-  --   },
-  -- },
+  --   "folke/edgy.nvim",
+  --   opts = function(_, opts)
+  --     for _, pos in ipairs({ "top", "bottom", "left", "right" }) do
+  --       opts[pos] = opts[pos] or {}
+  --       table.insert(opts[pos], {
+  --         ft = "megaterm",
+  --         size = { height = 0.3, width = 0.3 },
+  --         title = "%{b:megaterm.id}: %{b:term_title}",
+  --         filter = function(_buf, win)
+  --           local edgy_filter = vim.w[win].megaterm_win
+  --             and vim.w[win].megaterm_win.position == pos
+  --             and vim.w[win].megaterm_win.relative == "editor"
+  --             and not vim.w[win].trouble_preview
 
-  -- {
-  --   "luckasRanarison/tailwind-tools.nvim",
-  --   dependencies = { "nvim-lspconfig" },
-  --   build = ":UpdateRemotePlugins",
-  --   name = "tailwind-tools",
-  --   opts = {
-  --     server = {
-  --       override = true,
-  --       settings = {},
-  --     },
-  --   },
-  --   config = function(_, opts)
-  --     local function find_tailwind_root_phoenix(fname)
-  --       local util = require("lspconfig.util")
-  --       local phoenix_root = util.root_pattern("mix.exs")(fname)
-  --       if phoenix_root then
-  --         if vim.fn.isdirectory(phoenix_root) == 1 then return phoenix_root end
-  --       end
-  --       return util.root_pattern("package.json", "tailwind.config.js", "vite.config.js")(fname)
+  --           return edgy_filter
+  --         end,
+  --       })
   --     end
-
-  --     opts.server.root_dir = find_tailwind_root_phoenix
-
-  --     require("tailwind-tools").setup(opts)
   --   end,
   -- },
-
-  -- {
-  --   "dbernheisel/tailwind-tools.nvim",
-  --   branch = "db-extend-root-and-on-attach",
-  --   name = "tailwind-tools",
-  --   build = ":UpdateRemotePlugins",
-  --   dependencies = {
-  --     "nvim-treesitter/nvim-treesitter",
-  --     "nvim-telescope/telescope.nvim", -- optional
-  --     "neovim/nvim-lspconfig", -- optional
-  --   },
-  --   opts = {},
-  -- }
-
-  -- {
-  --   "luckasRanarison/tailwind-tools.nvim",
-  --   lazy = true,
-  --   name = "tailwind-tools",
-  --   build = ":UpdateRemotePlugins",
-  --   init = function()
-  --     vim.api.nvim_create_autocmd("LspAttach", {
-  --       callback = function(args)
-  --         local client = vim.lsp.get_client_by_id(args.data.client_id)
-  --         if client and client.name == "tailwindcss" then
-  --           require("tailwind-tools")
-  --           return true
-  --         end
-  --       end,
-  --     })
-  --   end,
-  --   opts = {
-  --     conceal = {
-  --       symbol = "…",
-  --     },
-  --   },
-  --   config = function(_, opts)
-  --     local function find_tailwind_root_phoenix(fname)
-  --       local util = require("lspconfig.util")
-  --       local phoenix_root = util.root_pattern("mix.exs")(fname)
-  --       if phoenix_root then
-  --         if vim.fn.isdirectory(phoenix_root) == 1 then return phoenix_root end
-  --       end
-  --       return util.root_pattern("package.json", "tailwind.config.js", "vite.config.js")(fname)
-  --     end
-
-  --     opts = vim.tbl_extend("keep", opts, {
-  --       server = {
-  --         override = true,
-  --         root_dir = find_tailwind_root_phoenix,
-  --         settings = {},
-  --       },
-  --     })
-
-  --     require("tailwind-tools").setup(opts)
-  --     -- custom.cmp_format.before = require("tailwind-tools.cmp").lspkind_format
-  --   end,
-  -- },
-  { "neovim/nvim-lspconfig" },
   {
-    --[[
-    local ensure_installed_tools = {
-      'stylua',
-      'prettierd',
-      'biome',
-      'bash-language-server',
-      'marksman',
-      'elixir-ls',
-      'lua-language-server',
-      'vtsls',
-      'tailwindcss-language-server',
-      'markdownlint-cli2',
-      'markdown-toc',
-      'js-debug-adapter',
-      'emmet-language-server',
-    }
-    local unique_tools = {}
-    for _, tool in ipairs(ensure_installed_tools) do
-      unique_tools[tool] = true
-    end
-    require('mason-tool-installer').setup {
-      ensure_installed = vim.tbl_keys(unique_tools),
-    }
-    --]]
-    -- FIXME: this still wants mason itself..
-    cond = false,
-    "WhoIsSethDaniel/mason-tool-installer.nvim",
-    opts = {
-      ensure_installed = {
-        "black",
-        "eslint_d",
-        "isort",
-        "prettier",
-        "prettierd",
-        "ruff",
-        "stylua",
-        "nixpkgs-fmt",
-        -- "tailwindcss-language-server@0.12.18",
-        -- "tailwindcss-language-server@0.0.27",
-      },
-    },
-  },
-  { "nvim-lua/lsp_extensions.nvim" },
-  { "b0o/schemastore.nvim" },
-  {
-    cond = false,
-    "Bekaboo/dropbar.nvim",
-    -- optional, but required for fuzzy finder support
-    -- dependencies = {
-    --   "nvim-telescope/telescope-fzf-native.nvim",
-    --   build = "make",
-    -- },
-    name = "dropbar",
-    -- config = function()
-    --   local dropbar_api = require("dropbar.api")
-    --   -- vim.keymap.set("n", "<Leader>;", dropbar_api.pick, { desc = "Pick symbols in winbar" })
-    --   vim.keymap.set("n", "[;", dropbar_api.goto_context_start, { desc = "Go to start of current context" })
-    --   vim.keymap.set("n", "];", dropbar_api.select_next_context, { desc = "Select next context" })
-    -- end,
-    event = { "BufReadPost", "BufNewFile" },
-    -- keys = {
-    --   Keymap({ "n" }, "<leader>p", function() require("dropbar.api").pick(vim.v.count ~= 0 and vim.v.count) end, "Toggle dropbar menu"),
-    -- },
-    opts = {},
-  },
-  -- { "SmiteshP/nvim-navic" },
-  { "onsails/lspkind.nvim" },
-  {
-    "stevearc/aerial.nvim", -- Toggled list of classes, methods etc in current file
-    opts = {
-      cmd = { "AerialToggle" },
-      attach_mode = "global",
-      close_on_select = true,
-      layout = {
-        min_width = 30,
-        default_direction = "prefer_right",
-      },
-      -- Use nvim-navic icons
-      icons = {
-        File = "󰈙 ",
-        Module = " ",
-        Namespace = "󰌗 ",
-        Package = " ",
-        Class = "󰌗 ",
-        Method = "󰆧 ",
-        Property = " ",
-        Field = " ",
-        Constructor = " ",
-        Enum = "󰕘",
-        Interface = "󰕘",
-        Function = "󰊕 ",
-        Variable = "󰆧 ",
-        Constant = "󰏿 ",
-        String = "󰀬 ",
-        Number = "󰎠 ",
-        Boolean = "◩ ",
-        Array = "󰅪 ",
-        Object = "󰅩 ",
-        Key = "󰌋 ",
-        Null = "󰟢 ",
-        EnumMember = " ",
-        Struct = "󰌗 ",
-        Event = " ",
-        Operator = "󰆕 ",
-        TypeParameter = "󰊄 ",
-      },
-    },
-    -- keys = {
-    --   { "<C-t>", "<cmd>AerialToggle<CR>", mode = { "n", "x", "o" }, desc = "Aerial Toggle" },
-    -- },
-  },
-  {
-    -- FIXME: https://github.com/mhanberg/output-panel.nvim/issues/5
-    "mhanberg/output-panel.nvim",
-    lazy = false,
-    keys = {
-      {
-        "<leader>lip",
-        ":OutputPanel<CR>",
-        desc = "lsp: open output panel",
-      },
-    },
-    cmd = { "OutputPanel" },
-    opts = { max_buffer_size = 5000 },
-  },
-  {
-    -- FIXME: this is a no go; crashes rpc content chunk things
-    cond = false,
-    "synic/refactorex.nvim",
-    ft = "elixir",
-    opts = {
-      auto_update = true,
-      pin_version = nil,
-    },
-  },
-  {
-    "rachartier/tiny-inline-diagnostic.nvim",
+    -- TODO: Add timeout option for popup menu | like which-key
+    "otavioschwanck/arrow.nvim", -- Harpoon like alternative
     event = "VeryLazy",
-    priority = 1000, -- needs to be loaded in first
+    lazy = true,
     opts = {
-      hi = {
-        error = "DiagnosticError",
-        warn = "DiagnosticWarn",
-        info = "DiagnosticInfo",
-        hint = "DiagnosticHint",
-        arrow = "Normal",
-        background = "CursorLine",
-        mixing_color = "None",
-      },
-      signs = {
-        left = "",
-        right = "",
-        diag = "",
-        arrow = "",
-        up_arrow = "",
-        -- arrow = "  ",
-        -- up_arrow = "  ",
-        vertical = "",
-        vertical_end = "",
-      },
-      blend = {
-        factor = 0.27,
-      },
-      options = {
-        multiple_diag_under_cursor = true,
-        format = function(d)
-          local msg = d.message
-          local icon = require("config.options").icons.lsp[vim.diagnostic.severity[d.severity]:lower()]
-          if d.source == "typos" then
-            msg = msg:gsub("should be", "󰁔"):gsub("`", "")
-          elseif d.source == "Lua Diagnostics." then
-            msg = msg:gsub("%.$", "")
-          end
+      show_icons = true,
+      leader_key = "\\",
+      buffer_leader_key = "<A-\\>",
+      always_show_path = true,
+      separate_by_branch = true,
+    },
+  },
 
-          local source = (d.source or ""):gsub(" ?%.$", "") -- trailing dot for lua_ls
-          local rule = d.code and ": " .. d.code or ""
+  {
+    "samjwill/nvim-unception",
+    lazy = false,
+    init = function()
+      -- vim.g.unception_open_buffer_in_new_tab = true
+      vim.g.unception_enable_flavor_text = false
+      vim.g.unception_block_while_host_edits = true
+    end,
+  },
 
-          -- return string.format("%s %s\r\n%s", icon, d.source, d.message)
-          return string.format("%s %s [%s]", icon, msg, ("%s%s"):format(source, rule))
-          -- return string.format("%s [%s]", msg, ("%s%s"):format(source, rule))
+  {
+    "willothy/flatten.nvim",
+    version = "*",
+    lazy = false,
+    priority = 1001,
+    opts = {
+      callbacks = {
+        should_block = function(argv)
+          -- adds support for kubectl edit, sops and probably many other tools
+          return vim.startswith(argv[#argv], "/tmp") or require("flatten").default_should_block(argv)
         end,
       },
+      window = { open = "smart" },
     },
-    config = function(_, opts)
-      -- require("tiny-inline-diagnostic.highlights").setup_highlights = function(...) D(...) end
-      require("tiny-inline-diagnostic").setup(opts)
-      -- vim.diagnostic.config({ virtual_text = false })
-    end,
+  },
+
+  {
+    "kawre/neotab.nvim",
+    event = "InsertEnter",
+    --- @module 'neotab'
+    opts = {
+      behavior = "nested", ---@type ntab.behavior
+      pairs = { ---@type ntab.pair[]
+        { open = "(", close = ")" },
+        { open = "[", close = "]" },
+        { open = "{", close = "}" },
+        { open = "'", close = "'" },
+        { open = "\"", close = "\"" },
+        { open = "`", close = "`" },
+        { open = "<", close = ">" },
+      },
+      smart_punctuators = {
+        enabled = true,
+        semicolon = {
+          enabled = true,
+          ft = { "javascript", "typescript", "javascriptreact", "typescriptreact", "rust" },
+        },
+        escape = {
+          enabled = true,
+          triggers = { ---@type table<string, ntab.trigger>
+            -- [','] = {
+            -- 	pairs = {
+            -- 		{ open = "'", close = "'" },
+            -- 		{ open = '"', close = '"' },
+            -- 		{ open = '{', close = '}' },
+            -- 		{ open = '[', close = ']' },
+            -- 	},
+            -- 	format = '%s ', -- ", "
+            -- },
+            ["="] = {
+              pairs = {
+                { open = "(", close = ")" },
+              },
+              ft = { "javascript", "typescript" },
+              format = " %s> ", -- ` => `
+              -- string.match(text_between_pairs, cond)
+              cond = "^$", -- match only pairs with empty content
+            },
+          },
+        },
+      },
+    },
   },
 }

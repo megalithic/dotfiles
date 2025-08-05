@@ -35,3 +35,14 @@ home/ssh/*
 config/gnupg/**/*
 !config/gnupg/gpg-agent.conf
 !config/gnupg/gpg.conf
+
+# claude-code
+home/claude/ide
+home/claude/projects
+home/claude/statsig
+home/claude/todos
+home/claude/local
+home/claude/shell-snapshots
+
+# cloudflared
+home/cloudflared/cert.pem

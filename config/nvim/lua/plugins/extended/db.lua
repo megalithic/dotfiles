@@ -3,18 +3,23 @@ local map = vim.keymap.set
 local dbee_json_config = vim.fn.stdpath("config") .. "/.dbee_persistence.json"
 
 local get_default_connection_for_cwd = function(default_id)
+  local function root_pattern(bufnr, markers)
+    markers = markers == nil and { ".git" } or markers
+    markers = type(markers) == "string" and { markers } or markers
+
+    local fname = vim.api.nvim_buf_get_name(bufnr)
+    local matches = vim.fs.find(markers, { upward = true, limit = 2, path = fname })
+    local child_or_root_path, maybe_umbrella_path = unpack(matches)
+
+    local found_root = vim.fs.dirname(maybe_umbrella_path or child_or_root_path)
+
+    return vim.fn.fnamemodify(found_root, ":t")
+  end
+
   local function find_matching_id()
     local config_path = dbee_json_config
     local cwd = vim.uv.cwd()
-
-    local ok_lsp, lspconfig = pcall(require, "lspconfig")
-    if ok_lsp then
-      local root_pattern = lspconfig.util.root_pattern
-      local fname = vim.api.nvim_buf_get_name(0)
-      cwd = root_pattern("mix.exs", "package.json", "shell.nix", ".git")(fname)
-    end
-
-    cwd = vim.fn.fnamemodify(cwd, ":t")
+    cwd = root_pattern(0, { "mix.exs", "package.json", "shell.nix", ".git" })
 
     -- Check if file exists
     if vim.fn.filereadable(config_path) == 0 then return nil end
@@ -42,33 +47,25 @@ local get_default_connection_for_cwd = function(default_id)
       end
     end
 
-    if #matches == 0 then return nil end
+    if #matches == 0 then return default_id end
 
-    -- Prioritize matches: prefer "-local" over "-prod"
-    local local_match = nil
-    local prod_match = nil
-    local default_match = default_id
+    local match = default_id
 
     for _, id in ipairs(matches) do
       if string.find(id, "_local", 1, true) then
-        local_match = id
+        match = id
       elseif string.find(id, "_prod", 1, true) then
-        prod_match = id
-      else
-        default_match = default_match or id -- Take first other match
+        match = id
       end
     end
 
-    -- Return in priority order: local > other > prod
-    return local_match or (default_match or prod_match)
+    return match
   end
 
   local matching_id = find_matching_id()
 
   return matching_id ~= nil, matching_id
 end
-
-local _, has_default_connection = get_default_connection_for_cwd()
 
 return {
   {
@@ -109,21 +106,26 @@ return {
     end,
   },
   {
-    "kndndrj/nvim-dbee",
+    dev = true,
+    "megalithic/nvim-dbee",
     dependencies = {
       "MunifTanjim/nui.nvim",
     },
-    -- cond = function() return get_default_connection_for_cwd() end,
     keys = {
       {
         "<leader>d",
         function()
-          vim.cmd("Dbee")
+          local dbee = require("dbee")
+          dbee.toggle()
 
-          -- vim.schedule(function() require("dbee").api.ui.editor_search_note_with_file("default.sql") end)
-          -- vim.schedule(function() require("dbee").api.ui.editor_set_current_note("") end)
+          if dbee.is_open() then
+            local _, default_connection = get_default_connection_for_cwd("director_local")
+            local local_notes = dbee.api.ui.editor_namespace_get_notes(default_connection)
+
+            if local_notes and #local_notes > 0 then pcall(dbee.api.ui.editor_set_current_note, local_notes[1].id) end
+          end
         end,
-        desc = ")dbee: ui toggle",
+        desc = "dbee: ui toggle",
         mode = "n",
       },
     },
@@ -135,8 +137,7 @@ return {
     config = function()
       local has_db, dbee = pcall(require, "dbee")
       if has_db then
-        -- local default_connection = "director_local"
-        local has_default_connection, default_connection = get_default_connection_for_cwd("director_local")
+        local _has_default_connection, default_connection = get_default_connection_for_cwd("director_local")
 
         local opts = {
           default_connection = default_connection,
@@ -187,29 +188,36 @@ return {
             },
           },
           result = {
-            mappings = {
-              { action = "cancel_call", key = "<C-c>", mode = "" },
-              { action = "page_next", key = "<C-n>", mode = "" },
-              { action = "page_prev", key = "<C-p>", mode = "" },
-              { action = "yank_current_json", key = "yaj", mode = "n" },
-              { action = "yank_selection_json", key = "yaj", mode = "v" },
-              { action = "yank_all_json", key = "yaJ", mode = "" },
-              { action = "yank_current_csv", key = "yac", mode = "n" },
-              { action = "yank_selection_csv", key = "yac", mode = "v" },
-              { action = "yank_all_csv", key = "yaC", mode = "" },
-            },
+            page_size = 50,
+            focus_result = false,
             window_options = {
               number = false,
               relativenumber = false,
               signcolumn = "no",
             },
           },
+          mappings = {
+            { action = "cancel_call", key = "<C-c>", mode = "" },
+            { action = "page_next", key = "<C-n>", mode = "" },
+            { action = "page_prev", key = "<C-p>", mode = "" },
+            { action = "yank_current_json", key = "yaj", mode = "n" },
+            { action = "yank_selection_json", key = "yaj", mode = "v" },
+            { action = "yank_all_json", key = "yaJ", mode = "" },
+            { action = "yank_current_csv", key = "yac", mode = "n" },
+            { action = "yank_selection_csv", key = "yac", mode = "v" },
+            { action = "yank_all_csv", key = "yaC", mode = "" },
+          },
         }
 
-        map("n", "gx", function()
+        local function execute_query()
+          local utils = require("dbee.utils")
+
           local ts = vim.treesitter
           local parsers = require("nvim-treesitter.parsers")
           local bufnr = vim.api.nvim_get_current_buf()
+          local ft = vim.bo[bufnr].filetype
+          if ft ~= "sql" then return end
+
           local lang = parsers.get_buf_lang(bufnr)
           if not lang or not parsers.has_parser(lang) then return end
 
@@ -227,9 +235,40 @@ return {
   ]]
           )
 
+          -- local query, srow, erow = utils.query_under_cursor(bufnr)
+          -- if query ~= "" then
+          --   -- highlight the statement that will be executed
+          --   local ns_id = vim.api.nvim_create_namespace("dbee_query_highlight")
+          --   vim.api.nvim_buf_clear_namespace(bufnr, ns_id, 0, -1)
+          --   vim.api.nvim_buf_set_extmark(bufnr, ns_id, srow, 0, {
+          --     end_row = erow + 1,
+          --     end_col = 0,
+          --     hl_group = "DiffText",
+          --     priority = 100,
+          --   })
+
+          --   -- vim.api.nvim_win_set_cursor(0, { start_row + 1, start_col })
+          --   -- vim.cmd("normal! v")
+          --   -- vim.api.nvim_win_set_cursor(0, { end_row + 1, end_col })
+          --   -- vim.defer_fn(function() require("dbee.api").ui.editor_do_action("run_selection") end, 100)
+
+          --   -- remove highlighting after delay
+          --   vim.defer_fn(function() vim.api.nvim_buf_clear_namespace(bufnr, ns_id, 0, -1) end, 750)
+          -- end
+
           for id, node in query:iter_captures(root, bufnr, cursor_row, cursor_row + 1) do
             local name = query.captures[id]
-            local start_row, start_col, end_row, end_col = node:range()
+            local srow, scol, erow, ecol = node:range()
+
+            local ns_id = vim.api.nvim_create_namespace("db_query_highlight")
+            vim.api.nvim_buf_clear_namespace(bufnr, ns_id, 0, -1)
+
+            vim.api.nvim_buf_set_extmark(bufnr, ns_id, srow, 0, {
+              end_row = erow + 1,
+              end_col = 0,
+              hl_group = "DiffText",
+              priority = 100,
+            })
 
             if name == "comment" then
               local text = ts.get_node_text(node, bufnr)
@@ -240,24 +279,78 @@ return {
 
                 local marker_len = #marker
                 local space_adjust = text:match("^%-%-%s") and 1 or 0
-                local comment_start_col = start_col + marker_len + space_adjust
+                local comment_start_col = scol + marker_len + space_adjust
                 local comment_end_col = comment_start_col + #content
 
-                vim.api.nvim_win_set_cursor(0, { start_row + 1, comment_start_col })
+                vim.api.nvim_win_set_cursor(0, { srow + 1, comment_start_col })
                 vim.cmd("normal! v")
-                vim.api.nvim_win_set_cursor(0, { start_row + 1, comment_end_col })
+                vim.api.nvim_win_set_cursor(0, { srow + 1, comment_end_col })
+
                 vim.defer_fn(function() require("dbee.api").ui.editor_do_action("run_selection") end, 100)
-                return
+
+                vim.defer_fn(function() vim.api.nvim_buf_clear_namespace(bufnr, ns_id, 0, -1) end, 250)
+
+                break
               end
             elseif name == "statement" then
-              vim.api.nvim_win_set_cursor(0, { start_row + 1, start_col })
+              vim.api.nvim_win_set_cursor(0, { srow + 1, scol })
               vim.cmd("normal! v")
-              vim.api.nvim_win_set_cursor(0, { end_row + 1, end_col })
+              vim.api.nvim_win_set_cursor(0, { erow + 1, ecol })
               vim.defer_fn(function() require("dbee.api").ui.editor_do_action("run_selection") end, 100)
-              return
+
+              vim.defer_fn(function() vim.api.nvim_buf_clear_namespace(bufnr, ns_id, 0, -1) end, 250)
+              break
             end
           end
-        end, { desc = "dbee: execute current line" })
+        end
+
+        -- local function visual_selection()
+        --   -- return to normal mode ('< and '> become available only after you exit visual mode)
+        --   local key = vim.api.nvim_replace_termcodes("<esc>", true, false, true)
+        --   vim.api.nvim_feedkeys(key, "x", false)
+
+        --   local _, srow, scol, _ = unpack(vim.fn.getpos("'<"))
+        --   local _, erow, ecol, _ = unpack(vim.fn.getpos("'>"))
+        --   if ecol > 200000 then ecol = 20000 end
+        --   if srow < erow or (srow == erow and scol <= ecol) then
+        --     return srow - 1, scol - 1, erow - 1, ecol
+        --   else
+        --     return erow - 1, ecol - 1, srow - 1, scol
+        --   end
+        -- end
+
+        -- local get_visual_selection = function()
+        --   local mode = vim.api.nvim_get_mode().mode
+        --   local opts = {}
+        --   if mode == "v" or mode == "V" or mode == "\22" then opts.type = mode end
+        --   return vim.fn.getregion(vim.fn.getpos("v"), vim.fn.getpos("."), opts)
+        -- end
+
+        map({ "n", "x" }, "gx", execute_query, { desc = "dbee: execute current query" })
+        map({ "n" }, "g==", function()
+          vim.defer_fn(function() require("dbee.api").ui.editor_do_action("run_under_cursor") end, 100)
+        end, { desc = "dbee: run query under cursor" })
+
+        map({ "x", "v" }, "yuc", function()
+          vim.cmd("normal! y")
+
+          local copiedContent = vim.fn.getreg("+")
+          local values = vim.split(require("config.utils").strim(copiedContent), "%s+")
+          local csv_values = vim.iter(values):filter(function(v) return v ~= "" and v ~= nil end)
+          csv_values = table.concat(values, ",")
+
+          vim.fn.setreg("+", csv_values)
+        end, { desc = "yank visual selection to csv formatted register" })
+
+        -- map({ "n" }, "ypc", function()
+        --   local copiedContent = vim.fn.getreg("+")
+        --   local values = vim.split(require("config.utils").strim(copiedContent), "%s+")
+        --   local csv_values = vim.iter(values):filter(function(v) return v ~= "" and v ~= nil end)
+        --   csv_values = table.concat(values, ",")
+
+        --   vim.fn.setreg("+", csv_values)
+        --   vim.cmd("normal! \"+p")
+        -- end, { desc = "paste visual selection as csv formatted" })
 
         dbee.setup(opts)
       end

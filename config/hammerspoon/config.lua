@@ -126,6 +126,7 @@ LAUNCHERS = {
   { "com.apple.MobileSMS", "m", nil, false }, -- NOOP for now.. TODO: implement a binding feature that let's us require n-presses before we execute
   { "com.apple.finder", "f", nil, false },
   { "com.spotify.client", "p", nil, false },
+  -- { "com.apple.Mail", "e", nil, false },
   { "com.freron.MailMate", "e", nil, false },
   { "com.flexibits.fantastical2.mac", "y", { "'" }, false },
   { "com.raycast.macos", "space", nil, false },

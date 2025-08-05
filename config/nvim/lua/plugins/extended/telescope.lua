@@ -1,3 +1,75 @@
+local conf = require("telescope.config").values
+local finders = require("telescope.finders")
+local make_entry = require("telescope.make_entry")
+local pickers = require("telescope.pickers")
+
+local flatten = vim.tbl_flatten
+
+-- i would like to be able to do telescope
+-- and have telescope do some filtering on files and some grepping
+
+local function multirip(opts)
+  opts = opts or {}
+  opts.cwd = opts.cwd and vim.fn.expand(opts.cwd) or vim.loop.cwd()
+  opts.shortcuts = opts.shortcuts
+    or {
+      ["l"] = "*.lua",
+      ["v"] = "*.vim",
+      ["n"] = "*.{vim,lua}",
+      ["e"] = "*.ex",
+      ["s"] = "*.exs",
+      ["h"] = "*.html.heex",
+      -- ["c"] = "*.c",
+      -- ["r"] = "*.rs",
+      -- ["g"] = "*.go",
+    }
+  opts.pattern = opts.pattern or "%s"
+
+  local custom_grep = finders.new_async_job({
+    command_generator = function(prompt)
+      if not prompt or prompt == "" then return nil end
+
+      local prompt_split = vim.split(prompt, "  ")
+
+      local args = { "rg" }
+      if prompt_split[1] then
+        table.insert(args, "-e")
+        table.insert(args, prompt_split[1])
+      end
+
+      if prompt_split[2] then
+        table.insert(args, "-g")
+
+        local pattern
+        if opts.shortcuts[prompt_split[2]] then
+          pattern = opts.shortcuts[prompt_split[2]]
+        else
+          pattern = prompt_split[2]
+        end
+
+        table.insert(args, string.format(opts.pattern, pattern))
+      end
+
+      return flatten({
+        args,
+        { "--color=never", "--no-heading", "--with-filename", "--line-number", "--column", "--smart-case" },
+      })
+    end,
+    entry_maker = make_entry.gen_from_vimgrep(opts),
+    cwd = opts.cwd,
+  })
+
+  pickers
+    .new(opts, {
+      debounce = 100,
+      prompt_title = "Live Grep (with shortcuts)",
+      finder = custom_grep,
+      previewer = conf.grep_previewer(opts),
+      sorter = require("telescope.sorters").empty(),
+    })
+    :find()
+end
+
 return {
   {
     "nvim-telescope/telescope.nvim",
@@ -899,6 +971,7 @@ return {
                   -- actions.select_vertical(pb)
                 end),
                 ["<C-r>"] = actions.to_fuzzy_refine,
+                ["<C-f>"] = actions.to_fuzzy_refine,
                 -- ["<C-s>"] = actions.to_fuzzy_refine,
               },
             },
@@ -1024,7 +1097,7 @@ return {
             -- define mappings, e.g.
             mappings = { -- extend mappings
               i = {
-                ["<c-r>"] = lga_actions.quote_prompt(),
+                ["<c-q>"] = lga_actions.quote_prompt(),
                 ["<c-i>"] = lga_actions.quote_prompt({ postfix = " --iglob " }),
                 ["<c-t>"] = lga_actions.quote_prompt({ postfix = " -t " }),
                 ["<esc>"] = actions.close,
@@ -1033,6 +1106,9 @@ return {
                 ["<c-o>"] = stopinsert(function(pb) multi(pb, "edit") end),
                 ["<cr>"] = stopinsert(function(pb) multi(pb, "vnew") end),
                 ["<tab>"] = actions.toggle_selection + actions.move_selection_next,
+
+                ["<C-r>"] = lga_actions.to_fuzzy_refine,
+                ["<C-f>"] = lga_actions.to_fuzzy_refine,
               },
               n = {
                 ["<esc>"] = actions.close,
@@ -1072,11 +1148,41 @@ return {
               -- HOW TO OPT OUT OF PREFIX
               -- ^ is not a default prefix and safe example
               ["^"] = false,
+              ["#"] = {
+                -- #$REMAINDER
+                -- # is caught prefix
+                -- `input` becomes $REMAINDER
+                -- in the above example #lua,md -> input: lua,md
+                flag = "glob",
+                cb = function(input) return string.format([[*.{%s}]], input) end,
+              },
+              -- filter for (partial) folder names
+              -- example prompt: >conf $MY_PROMPT
+              -- searches with ripgrep prompt $MY_PROMPT in paths that have "conf" in folder
+              -- i.e. rg --glob="**/conf*/**" -- $MY_PROMPT
+              [">"] = {
+                flag = "glob",
+                cb = function(input) return string.format([[**/{%s}*/**]], input) end,
+              },
+              -- filter for (partial) file names
+              -- example prompt: &egrep $MY_PROMPT
+              -- searches with ripgrep prompt $MY_PROMPT in paths that have "egrep" in file name
+              -- i.e. rg --glob="*egrep*" -- $MY_PROMPT
+              ["&"] = {
+                flag = "glob",
+                cb = function(input) return string.format([[*{%s}*]], input) end,
+              },
             },
+            wrap_results = false,
+            preview = true,
             -- default mappings
             mappings = {
               i = {
-                -- toggle prefixes, prefixes is default
+                ["<esc>"] = actions.close,
+                ["<c-v>"] = stopinsert(function(pb) multi(pb, "vnew") end),
+                ["<c-s>"] = stopinsert(function(pb) multi(pb, "new") end),
+                ["<c-o>"] = stopinsert(function(pb) multi(pb, "edit") end),
+                ["<cr>"] = stopinsert(function(pb) multi(pb, "vnew") end),
                 ["<C-z>"] = egrep_actions.toggle_prefixes,
                 -- toggle AND, AND is default, AND matches tokens and any chars in between
                 ["<C-a>"] = egrep_actions.toggle_and,
@@ -1104,9 +1210,6 @@ return {
       telescope.load_extension("corrode")
       telescope.load_extension("smart_open")
 
-      -- telescope.load_extension("nucleo")
-      -- telescope.load_extension("zf-native")
-
       -- keys
       if vim.g.picker == "telescope" then
         local builtin = require("telescope.builtin")
@@ -1114,9 +1217,11 @@ return {
         map("n", "<leader>fh", ts.help_tags, { "[f]ind [h]elp" })
         map("n", "<leader>fa", ts.autocommands, { "[f]ind [a]utocommands" })
         map("n", "<leader>fk", ts.keymaps, { "[f]ind [k]eymaps" })
+        map("n", "<leader>fg", multirip, { "multi-ripgrep" })
         -- map("n", "<leader>fs", ts.builtin, {  "[f]ind [f]elect Telescope" })
         -- map("n", "<leader>fg", ts.egrepify, {  "egrepify (live)" })
-        map("n", "<leader>fg", function() mega.picker.grep({ picker = "egrepify" }) end, { "[f]ind e[g]repify" })
+        -- map("n", "<leader>fg", function() mega.picker.grep() end, { "grep (live)" })
+        -- map("n", "<leader>fg", function() mega.picker.grep({ picker = "egrepify" }) end, { "[f]ind e[g]repify" })
 
         -- vim.keymap.set('n', '<leader>fw', function ()
         --   egrepify(
@@ -1143,13 +1248,13 @@ return {
         -- end)
 
         -- map("n", "<leader>fg", ts.multi_rg, {  "multi-rg (live)" })
-        map("n", "<leader>a", mega.picker.grep, { "grep (live)" })
+        map("n", "<leader>a", function() mega.picker.grep({ theme = "ivy" }) end, { "egrepify (live)" })
         -- map("n", "<leader>A", ts.grep_string, {  "grep (under cursor)" })
-        map("n", "<leader>A", function() mega.picker.grep({ default_text = vim.fn.expand("<cword>") }) end, { "grep (under cursor)" })
+        map("n", "<leader>A", function() mega.picker.grep({ theme = "ivy", default_text = vim.fn.expand("<cword>") }) end, { "egrepify (under cursor)" })
         map({ "v", "x" }, "<leader>A", function()
           local pattern = require("config.utils").get_visual_selection()
-          mega.picker.grep({ default_text = pattern })
-        end, { "grep (selection)" })
+          mega.picker.grep({ theme = "ivy", default_text = pattern })
+        end, { "egrepify (selection)" })
 
         map("n", "<leader>fu", ts.undo, { "[f]ind [u]ndo" })
         -- map("n", "<leader>fd", ts.diagnostics, {  "[f]ind [d]iagnostics" })

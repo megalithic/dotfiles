@@ -11,8 +11,8 @@ return {
       require("mini.indentscope").setup({
         symbol = SETTINGS.indent_scope_char,
         mappings = {
-          goto_top = "]]",
-          goto_bottom = "[[",
+          goto_top = "[[",
+          goto_bottom = "]]",
         },
         draw = {
           delay = 0,
@@ -193,7 +193,7 @@ return {
   },
   {
     "echasnovski/mini.pairs",
-    enabled = true,
+    enabled = false,
     opts = {
       modes = { insert = true, command = false, terminal = false },
       -- skip autopair when next character is one of these

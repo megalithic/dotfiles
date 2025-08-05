@@ -30,4 +30,6 @@ return {
       pcall(vim.cmd.colorscheme, vim.g.colorscheme)
     end,
   },
+
+  { "brianhuster/unnest.nvim" },
 }

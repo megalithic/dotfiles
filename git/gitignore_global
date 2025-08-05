@@ -127,4 +127,5 @@ _deps
 obsidian/.obsidian
 **/.marksman.toml
 
+**/*.bak
 # vim:ft=gitignore:tw=0

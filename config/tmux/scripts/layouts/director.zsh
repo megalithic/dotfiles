@@ -32,7 +32,7 @@ tmux send-keys -t "$SESSION":3.1 "rm ./.overmind.sock 2>/dev/null && overmind st
 tmux splitw -c "$CWD" -t "$SESSION":3
 tmux select-layout -t "$SESSION":3 tiled
 tmux send-keys -t "$SESSION":3.2 "nix-shell --run zsh && sleep 1 && direnv allow . && sleep 1" "C-m"
-tmux send-keys -t "$SESSION":3.2 "iex --sname $SESSION-tern --cookie ternit -S mix phx.server" "C-m"
+tmux send-keys -t "$SESSION":3.2 "ms $SESSION-tern" "C-m"
 
 tmux select-layout -t "$SESSION":3 tiled
 tmux select-layout -t "$SESSION":3 even-horizontal

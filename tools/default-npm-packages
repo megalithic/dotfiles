@@ -1,7 +1,9 @@
+# prefer 1.0.27 for coder/claudecode.nvim
+# @anthropic-ai/claude-code
+
 @biomejs/biome
 @elm-tooling/elm-language-server
 @fsouza/prettierd
-@guysherman/kittymux
 #@tailwindcss/language-server
 @typescript-eslint/typescript-estree
 babel-eslint

@@ -1,5 +1,6 @@
 .yarn
 .git
+.jj
 .elixir_ls
 **/.elixir_ls
 .lexical

@@ -1,3 +1,5 @@
+if true then return {} end
+
 -- REF: reawlllly good keymaps for markdown and image things:
 -- https://github.com/linkarzu/dotfiles-latest/blob/main/neovim/neobean/lua/config/keymaps.lua
 return {

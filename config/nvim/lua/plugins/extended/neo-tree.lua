@@ -2,7 +2,7 @@ local icons = require("config.options").icons
 return {
   "nvim-neo-tree/neo-tree.nvim",
   keys = {
-    { "<leader>et", "<cmd>Neotree toggle reveal position=left<cr>", desc = "Toggle Neo-Tree" },
+    { "<leader>eT", "<cmd>Neotree toggle reveal position=left<cr>", desc = "Toggle Neo-Tree" },
   },
   cond = vim.g.tree == "neo-tree",
   cmd = { "NeoTree" },

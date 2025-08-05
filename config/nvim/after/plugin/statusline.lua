@@ -35,6 +35,21 @@ end)
 local clear_messages_timer
 local clear_messages_on_end
 
+-- local function setup_highlights()
+--   vim.api.nvim_set_hl(0, "BuffersActive", state.config.colors.active)
+--   vim.api.nvim_set_hl(0, "BuffersPrevious", state.config.colors.previous)
+--   vim.api.nvim_set_hl(0, "BuffersInactive", state.config.colors.inactive)
+--   vim.api.nvim_set_hl(0, "BuffersError", state.config.colors.error)
+--   vim.api.nvim_set_hl(0, "BuffersModified", state.config.colors.modified)
+-- end
+
+--
+---- Include parent directory for index files or duplicates
+-- if name:match("^index%.") or has_duplicate then
+--   local parent = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(bufnr), ":h:t")
+--   return parent .. "/" .. name
+-- end
+
 Augroup("mega.ui.statusline", {
   {
     event = { "BufWritePre" },
@@ -347,8 +362,16 @@ local exception_types = {
       local shell = fnamemodify(vim.env.SHELL, ":t") or vim.o.shell
       local mode = MODES[api.nvim_get_mode().mode]
       local mode_hl = mode.short == "T-I" and "StModeTermInsert" or "StModeTermNormal"
-      if vim.g.term_bufnr ~= nil then
-        return seg(string.format("megaterm#%d(%s)[%s]", vim.g.term_bufnr, shell, vim.api.nvim_buf_get_var(bufnr, "term_cmd") or bufnr), mode_hl)
+      local term_buf_var = vim.api.nvim_buf_get_var(bufnr, "term_buf")
+      if vim.g.term_buf ~= nil or term_buf_var ~= nil then
+        return seg(
+          string.format("%s(%s)[%s]", vim.api.nvim_buf_get_var(bufnr, "term_name"), shell, vim.api.nvim_buf_get_var(bufnr, "term_cmd") or bufnr),
+          mode_hl
+        )
+        -- return seg(
+        --   string.format("megaterm#%d(%s)[%s]", vim.api.nvim_buf_get_var(bufnr, "term_buf"), shell, vim.api.nvim_buf_get_var(bufnr, "term_cmd") or bufnr),
+        --   mode_hl
+        -- )
       end
 
       return seg(string.format("megaterm#%d(%s)", bufnr, shell), mode_hl)
@@ -681,7 +704,7 @@ local function seg_ai(truncate_at)
   return ""
 end
 
-local function hunks()
+local function get_git_hunks()
   local status = vim.b[M.ctx.bufnr].gitsigns_status
   local head = vim.b[M.ctx.bufnr].gitsigns_head
   local status_dict = vim.b[M.ctx.bufnr].gitsigns_status_dict
@@ -700,7 +723,7 @@ local function seg_git_status(truncate_at)
   if is_abnormal_buffer() then return "" end
 
   local truncate_branch_at, truncate_symbol_at = unpack(truncate_at)
-  local git_branch, git_status_dict, git_status = hunks()
+  local git_branch, git_status_dict, git_status = get_git_hunks()
   if U.falsy(git_branch) then return "" end
 
   local branch = is_truncated(truncate_branch_at) and truncate_str(git_branch or "", 14) or git_branch
@@ -724,11 +747,16 @@ local function seg_git_status(truncate_at)
         { margin = { 1, 0 } }
       ),
     }),
-
-    {
-      margin = { 1, 0 },
-    }
+    { margin = { 1, 0 } }
   )
+end
+
+local function seg_megaterms()
+  if Megaterm == nil then return "" end
+  local megaterms = Megaterm.list()
+  --        or icons.misc.terminal
+  if #megaterms > 0 then return seg(fmt("%s %s", "", #megaterms)) end
+  return ""
 end
 
 local function seg_rec_macro()
@@ -777,7 +805,8 @@ function mega.ui.statusline.render()
   end
 
   return table.concat({
-    -- seg([[%<]]),
+    -- LEFT --------------------------------------------------------------------
+    seg([[%<]]),
     -- seg_prefix(100),
     seg_mode(120),
     seg_buffer_count(100),
@@ -787,15 +816,14 @@ function mega.ui.statusline.render()
     -- seg("%{&paste?'[paste] ':''}", "warningmsg", { margin = { 1, 1 } }),
     seg("Saving…", "StComment", vim.g.is_saving, { margin = { 0, 1 } }),
     -- seg_search_results(120),
-    -- end left alignment
     seg([[%=]]),
-
+    -- CENTER ------------------------------------------------------------------
     seg_rec_macro(),
+    seg_megaterms(),
     -- seg(get_substitution_status()),
     -- seg_hydra(120),
     seg([[%=]]),
-
-    -- begin right alignment
+    -- RIGHT -------------------------------------------------------------------
     seg("%*"),
     seg("%{&ff!='unix'?'['.&ff.'] ':''}", "warningmsg"),
     seg("%*"),

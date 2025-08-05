@@ -54,14 +54,20 @@ return {
           takeover = "always",
           priority = 1,
         },
-        ["^https://docs\\.google\\.com/"] = {
+        ["^https?://docs\\.google\\.com/"] = {
           takeover = "never",
           priority = 1,
         },
-        ["^https://meet\\.google\\.com/"] = {
+        ["^https?://meet\\.google\\.com/"] = {
           takeover = "never",
           priority = 1,
         },
+        -- ["^https?://vega\\.github\\.io/editor"] = {
+        --   cmdline = "neovim", -- or firenvim
+        --   selector = "[data-keybinding-context='1'] .monaco-editor .monaco-scrollable-element",
+        --   priority = 1,
+        -- },
+        -- data-keybinding-context="1"
         -- ["https?://gitter.im/"] = {
         --   takeover = "never",
         --   priority = 1,

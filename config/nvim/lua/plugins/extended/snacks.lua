@@ -8,13 +8,14 @@ return {
           input = {
             keys = {
               ["<Esc>"] = { "close", mode = { "n", "i" } },
+              ["<C-c>"] = { "cancel", mode = "i" },
               -- ["<CR>"] = { "edit_vsplit", mode = { "i", "n" } },
               -- ["<c-e>"] = { "confirm", mode = { "i", "n" } },
             },
-            wo = { foldcolumn = "0" },
+            wo = { foldcolumn = "0", number = false, relativenumber = false },
           },
           list = {
-            wo = { foldcolumn = "0" },
+            wo = { foldcolumn = "0", number = false, relativenumber = false },
             keys = {
               ["<CR>"] = { "edit_vsplit" },
               ["<c-e>"] = { "confirm" },
@@ -60,10 +61,82 @@ return {
           },
         },
       },
+      terminal = {
+        bo = {
+          filetype = "snacks_terminal",
+        },
+        wo = {},
+        keys = {
+          q = "hide",
+          gf = function(self)
+            local f = vim.fn.findfile(vim.fn.expand("<cfile>"), "**")
+            if f == "" then
+              Snacks.notify.warn("No file under cursor")
+            else
+              self:hide()
+              vim.schedule(function() vim.cmd("e " .. f) end)
+            end
+          end,
+          term_normal = {
+            "<esc>",
+            function(self)
+              self.esc_timer = self.esc_timer or (vim.uv or vim.loop).new_timer()
+              if self.esc_timer:is_active() then
+                self.esc_timer:stop()
+                vim.cmd("stopinsert")
+              else
+                self.esc_timer:start(200, 0, function() end)
+                return "<esc>"
+              end
+            end,
+            mode = "t",
+            expr = true,
+            desc = "Double escape to normal mode",
+          },
+        },
+      },
       explorer = {},
+      input = {
+        only_scope = true,
+        enabled = true,
+      },
+      image = {
+        enabled = not vim.g.started_by_firenvim,
+        -- Only images, not PDFs nor videos
+        formats = { "png", "jpg", "jpeg", "gif", "bmp", "webp", "tiff", "heic", "avif" },
+      },
+      lazygit = {
+        enabled = false,
+      },
+      indent = {
+        enabled = false,
+        animate = { enabled = true },
+        only_scope = true,
+        only_current = true,
+      },
+      scope = {
+        enabled = true,
+        treesitter = {
+          blocks = {
+            enabled = true, -- enable to use the following blocks
+            "function_declaration",
+            "function_definition",
+            "method_declaration",
+            "method_definition",
+            "class_declaration",
+            "class_definition",
+            "do_statement",
+            "do_block",
+            "while_statement",
+            "repeat_statement",
+            "if_statement",
+            "for_statement",
+          },
+        },
+      },
     },
     keys = function()
-      if vim.g.picker ~= "snacks" then return {} end
+      -- if vim.g.picker ~= "snacks" then return {} end
 
       local Snacks = require("snacks")
       -- local function with_title(opts, extra)
@@ -90,41 +163,102 @@ return {
       local function desc(d) return "[+pick (snacks)] " .. d end
       return {
         {
-          "<leader>ff",
+          "yoz",
+          function() Snacks.zen.zoom() end,
+          desc = "toggle windowzoom",
+        },
+        {
+          "<leader>fF",
           function()
-            local title = "smartly find files"
-            -- Snacks.picker.smart(with_title({ title = title }))
-            Snacks.picker.smart()
+            Snacks.picker.smart({
+              -- exclude = { "@types/" },
+              hidden = false,
+              ignored = false,
+              matcher = {
+                cwd_bonus = true,
+                frecency = true,
+                sort_empty = true,
+              },
+            })
           end,
           desc = desc("find files (smart)"),
         },
+        -- {
+        --   "<leader>fF",
+        --   function()
+        --     Snacks.picker.smart({
+        --       -- exclude = { "@types/" },
+        --       hidden = false,
+        --       ignored = false,
+        --       matcher = {
+        --         cwd_bonus = true,
+        --         frecency = true,
+        --         sort_empty = true,
+        --       },
+        --     })
+        --   end,
+        --   desc = desc("find files (smart)"),
+        -- },
+        -- {
+        --   "<leader>ff",
+        --   function()
+        --     local title = "smartly find files"
+        --     -- Snacks.picker.smart(with_title({ title = title }))
+        --     Snacks.picker.smart()
+        --   end,
+        --   desc = desc("find files (smart)"),
+        -- },
         {
           "<leader>fu",
           function() Snacks.picker.undo() end,
           desc = desc("undo"),
         },
+        -- {
+        --   "<leader>fh",
+        --   function() Snacks.picker.highlights({ pattern = "hl_group:^Snacks" }) end,
+        --   desc = desc("snacks highlights"),
+        -- },
+        -- {
+        --   "<leader>a",
+        --   function() Snacks.picker.undo() end,
+        --   desc = desc("undo"),
+        -- },
         {
-          "<leader>a",
-          function() Snacks.picker.undo() end,
-          desc = desc("undo"),
+          "<leader>ss",
+          function() Snacks.picker.grep({ hidden = false, ignored = false }) end,
+          desc = "grep",
         },
         {
-          "ga",
-          function() Snacks.picker.grep() end,
-          desc = "Grep",
-        },
-        {
-          "<leader>A",
-          function() Snacks.picker.grep_word() end,
-          desc = "Visual selection or word",
+          "<leader>sS",
+          function() Snacks.picker.grep_word({ hidden = false, ignored = false }) end,
+          desc = "visual selection or word",
           mode = { "n", "x" },
         },
         {
-          "gA",
-          function() Snacks.picker.grep_word() end,
-          desc = "Visual selection or word",
+          "<leader>sa",
+          function() Snacks.picker.grep({ hidden = true, ignored = true }) end,
+          desc = "grep",
+        },
+        {
+          "<leader>sA",
+          function() Snacks.picker.grep_word({ hidden = true, ignored = true }) end,
+          desc = "visual selection or word",
           mode = { "n", "x" },
         },
+        -- {
+        --   "<C-;>",
+        --   function()
+        --     local cmd = string.format("%s/bin/zsh", vim.env.HOMEBREW_PREFIX)
+        --     Snacks.terminal(cmd, { win = { position = "bottom" } })
+        --   end,
+        --   desc = "toggle terminal",
+        -- },
+        -- {
+        --   "gA",
+        --   function() Snacks.picker.grep_word() end,
+        --   desc = "Visual selection or word",
+        --   mode = { "n", "x" },
+        -- },
         -- {
         --   "<leader>,",
         --   function()

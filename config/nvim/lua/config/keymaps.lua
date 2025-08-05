@@ -1,6 +1,6 @@
 local fmt = string.format
 local map = vim.keymap.set
-local unmap = vim.api.nvim_del_keymap
+local unmap = vim.keymap.del
 
 local U = require("config.utils")
 local M = {}
@@ -9,6 +9,7 @@ local M = {}
 unmap("n", "gra") -- lsp default: code actions
 unmap("n", "grn") -- lsp default: rename
 unmap("n", "grr") -- lsp default: references
+unmap("n", "grt") -- lsp default: type_definitions
 unmap("n", "gri") -- lsp default: implementation
 
 -- `:help vim.keymap.set()`
@@ -33,68 +34,69 @@ unmap("n", "gri") -- lsp default: implementation
   ╰────────────────────────────────────────────────────────────────────────────╯
   --]]
 
----create a mapping function factory
----@param mode string
----@param o table
----@return fun(lhs: string, rhs: string|function, opts: table|nil) 'create a mapping'
-local function mapper(mode, o)
-  -- copy the opts table as extends will mutate the opts table passed in otherwise
-  local parent_opts = vim.deepcopy(o)
-  ---Create a mapping
-  ---@param lhs string
-  ---@param rhs string|function
-  ---@param opts table
-  return function(lhs, rhs, opts)
-    -- If the label is all that was passed in, set the opts automagically
-    opts = type(opts) == "string" and { label = opts } or opts and vim.deepcopy(opts) or {}
+-- ---create a mapping function factory
+-- ---@param mode string
+-- ---@param o table
+-- ---@return fun(lhs: string, rhs: string|function, opts: table|nil) 'create a mapping'
+-- local function mapper(mode, o)
+--   -- copy the opts table as extends will mutate the opts table passed in otherwise
+--   local parent_opts = vim.deepcopy(o)
+--   ---Create a mapping
+--   ---@param lhs string
+--   ---@param rhs string|function
+--   ---@param opts table
+--   return function(lhs, rhs, opts)
+--     -- If the label is all that was passed in, set the opts automagically
+--     opts = type(opts) == "string" and { label = opts } or opts and vim.deepcopy(opts) or {}
 
-    -- if not opts.has or client.server_capabilities[opts.has .. "Provider"] then
-    if opts.label or opts.desc then
-      -- local ok, wk = pcall(require, "which-key")
-      -- if ok and wk then wk.add({ [lhs] = opts.label or opts.desc }, { mode = mode }) end
-      -- if ok and wk then wk.register({ [lhs] = opts.label or opts.desc }, { mode = mode }) end
-      if opts.label and not opts.desc then opts.desc = opts.label end
-      opts.label = nil
-    end
+--     -- if not opts.has or client.server_capabilities[opts.has .. "Provider"] then
+--     if opts.label or opts.desc then
+--       -- local ok, wk = pcall(require, "which-key")
+--       -- if ok and wk then wk.add({ [lhs] = opts.label or opts.desc }, { mode = mode }) end
+--       -- if ok and wk then wk.register({ [lhs] = opts.label or opts.desc }, { mode = mode }) end
+--       if opts.label and not opts.desc then opts.desc = opts.label end
+--       opts.label = nil
+--     end
 
-    if rhs == nil then
-      vim.pprint(mode, lhs, rhs, opts, parent_opts)
-    else
-      map(mode, lhs, rhs, vim.tbl_extend("keep", opts, parent_opts))
-    end
-  end
-end
+--     if rhs == nil then
+--       vim.pprint(mode, lhs, rhs, opts, parent_opts)
+--     else
+--       map(mode, lhs, rhs, vim.tbl_extend("keep", opts, parent_opts))
+--     end
+--   end
+-- end
 
-local map_opts = { remap = true, silent = true }
-local noremap_opts = { remap = false, silent = true }
+-- local map_opts = { remap = true, silent = true }
+-- local noremap_opts = { remap = false, silent = true }
 
--- TODO: https://github.com/b0o/nvim-conf/blob/main/lua/user/mappings.lua#L19-L37
+-- -- TODO: https://github.com/b0o/nvim-conf/blob/main/lua/user/mappings.lua#L19-L37
 
-for _, mode in ipairs({ "n", "x", "i", "v", "o", "t", "s", "c" }) do
-  -- {
-  -- n = "normal",
-  -- v = "visual",
-  -- s = "select",
-  -- x = "visual & select",
-  -- i = "insert",
-  -- o = "operator",
-  -- t = "terminal",
-  -- c = "command",
-  -- }
+-- for _, mode in ipairs({ "n", "x", "i", "v", "o", "t", "s", "c" }) do
+--   -- {
+--   -- n = "normal",
+--   -- v = "visual",
+--   -- s = "select",
+--   -- x = "visual & select",
+--   -- i = "insert",
+--   -- o = "operator",
+--   -- t = "terminal",
+--   -- c = "command",
+--   -- }
 
-  -- recursive global mappings
-  -- mega[mode .. "map"] = mapper(mode, map_opts)
-  M[mode .. "map"] = mapper(mode, map_opts)
-  _G[mode .. "map"] = mapper(mode, map_opts)
-  -- non-recursive global mappings
-  M[mode .. "noremap"] = mapper(mode, noremap_opts)
-  _G[mode .. "noremap"] = mapper(mode, noremap_opts)
-end
+--   -- recursive global mappings
+--   -- mega[mode .. "map"] = mapper(mode, map_opts)
+--   M[mode .. "map"] = mapper(mode, map_opts)
+--   _G[mode .. "map"] = mapper(mode, map_opts)
+--   -- non-recursive global mappings
+--   M[mode .. "noremap"] = mapper(mode, noremap_opts)
+--   _G[mode .. "noremap"] = mapper(mode, noremap_opts)
+-- end
 
 local function leaderMapper(mode, key, rhs, opts)
   if type(opts) == "string" then opts = { desc = opts } end
   map(mode, "<leader>" .. key, rhs, opts)
 end
+
 local function localLeaderMapper(mode, key, rhs, opts)
   if type(opts) == "string" then opts = { desc = opts } end
   map(mode, "<localleader>" .. key, rhs, opts)
@@ -120,6 +122,7 @@ tmap("<Esc><Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
 vmap("<leader>S", ":!sort<cr>", { desc = "Sort selection" })
 nmap("<leader>:", ":!", { desc = "Execute last command" })
 nmap("<leader>;", ":<Up>", { desc = "Go to last command" })
+
 -- https://github.com/tpope/vim-rsi/blob/master/plugin/rsi.vim
 -- c-a / c-e everywhere - RSI.vim provides these
 cmap("<C-n>", "<Down>")
@@ -199,6 +202,9 @@ nnoremap("<C-b>", "<C-b>zz<Esc><Cmd>lua mega.blink_cursorline(75)<CR>")
 
 nnoremap("<C-d>", "<C-d>zz<Esc><Cmd>lua mega.blink_cursorline(75)<CR>")
 nnoremap("<C-u>", "<C-u>zz<Esc><Cmd>lua mega.blink_cursorline(75)<CR>")
+
+-- noremap Zz <c-w>_ \| <c-w>\|
+-- noremap Zo <c-w>=
 
 -- [[ macros ]] ----------------------------------------------------------------
 -- Map Q to replay q register for macro

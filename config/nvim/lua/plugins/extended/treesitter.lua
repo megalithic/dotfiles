@@ -1,8 +1,16 @@
+local SETTINGS = require("config.options")
+
+if SETTINGS.ts_branch == "main" then return {} end
+
 local function should_disable(lang, bufnr)
+  local fname = vim.api.nvim_buf_get_name(bufnr)
   local disable_max_size = 2000000 -- 2MB
   local size = vim.fn.getfsize(vim.api.nvim_buf_get_name(bufnr or 0))
   -- size will be -2 if it doesn't fit into a number
   if size > disable_max_size or size == -2 then return true end
+
+  -- for some reason, right now, these two files crash nvim
+  if vim.tbl_contains({ "CLAUDE.md", "AGENTS.md" }, vim.fn.fnamemodify(fname, ":t")) then return true end
 
   if vim.tbl_contains({ "ruby" }, lang) then return true end
 
@@ -11,78 +19,44 @@ end
 
 return {
   { "fei6409/log-highlight.nvim", event = "BufRead *.log", opts = {} },
+  -- { "RRethy/nvim-treesitter-endwise", dependencies = { "nvim-treesitter/nvim-treesitter" } },
   { "brianhuster/treesitter-endwise.nvim" },
+  {
+    "mtrajano/tssorter.nvim",
+    version = "*",
+    opts = {
+      sortables = {
+        elixir = {
+          alias = {
+            node = "call",
+            ordinal = "arguments",
+          },
+          alias_group = {
+            node = "alias",
+          },
+        },
+      },
+    },
+    config = function()
+      vim.api.nvim_create_user_command("Sort", function() require("tssorter").sort({}) end, { nargs = 0 })
+    end,
+  },
+  -- {
+  --   "yorickpeterse/nvim-tree-pairs",
+  --   main = "tree-pairs",
+  --   opts = true,
+  --   keys = {
+  --     { "%", mode = { "n", "v", "o" } },
+  --   },
+  -- },
   {
     "nvim-treesitter/nvim-treesitter",
     branch = "master",
     build = ":TSUpdate",
-    -- lazy = false,
-    event = "VeryLazy",
+    -- event = { "LazyFile", "VeryLazy" },
+    lazy = false,
     opts = {
-      ensure_installed = {
-        "bash",
-        "c",
-        "cpp",
-        "css",
-        "csv",
-        -- "comment", -- too slow still.
-        -- "dap_repl",
-        "devicetree",
-        "dockerfile",
-        "diff",
-        "elixir",
-        "elm",
-        "embedded_template",
-        "erlang",
-        "fish",
-        "git_config",
-        "git_rebase",
-        "gitattributes",
-        "gitcommit",
-        "gitignore",
-        "gleam",
-        "go",
-        "graphql",
-        "heex",
-        "html",
-        "javascript",
-        "jq",
-        "jsdoc",
-        "json",
-        "jsonc",
-        "json5",
-        "lua",
-        "luadoc",
-        "luap",
-        "kotlin",
-        "make",
-        "markdown",
-        "markdown_inline",
-        "nix",
-        -- "org",
-        "perl",
-        "printf",
-        "psv",
-        "python",
-        "query",
-        "regex",
-        "ruby",
-        "rust",
-        "scss",
-        "scheme",
-        "sql",
-        "surface",
-        -- "teal",
-        "terraform",
-        "tmux",
-        "toml",
-        "tsv",
-        "tsx",
-        "typescript",
-        "vim",
-        "vimdoc",
-        "yaml",
-      },
+      ensure_installed = SETTINGS.ts_ensure_installed,
       ignore_install = { "comment" },
       auto_install = true,
       sync_install = false,
@@ -157,6 +131,7 @@ return {
         bash = "sh", -- reversing these two from the treesitter source
         uxn = "uxntal",
         ts = "typescript",
+        kbd = "lisp",
         zsh = "bash",
       }
 
@@ -197,7 +172,6 @@ return {
   --   event = "LazyFile",
   --   config = function() require("tsht").config.hint_keys = { "h", "j", "f", "d", "n", "v", "s", "l", "a" } end,
   -- },
-  { "RRethy/nvim-treesitter-endwise", dependencies = { "nvim-treesitter/nvim-treesitter" } },
   {
     "nvim-treesitter/nvim-treesitter-context",
     dependencies = { "nvim-treesitter/nvim-treesitter" },

@@ -23,6 +23,12 @@
   # };
 
   inputs = {
+    # Lix - A modern Nix implementation
+    lix-module = {
+      url = "https://git.lix.systems/lix-project/nixos-module/archive/2.90.0.tar.gz";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # Nixpkgs
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     # nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -79,16 +85,17 @@
     let
       inherit (self) outputs;
 
-      darwinSystem = { user, arch ? "aarch64-darwin" }:
+      darwinSystem = { user, hostname, arch ? "aarch64-darwin" }:
         darwin.lib.darwinSystem {
           system = arch;
           modules = [
+            inputs.lix-module.nixosModules.default
             ./config/nix/darwin/darwin.nix
             home-manager.darwinModules.home-manager
             {
               _module.args = { inherit inputs; };
               home-manager = {
-                users.${user} = import ./home-manager;
+                users.${user} = import ./config/nix/hostnames/${hostname}.nix;
               };
               users.users.${user}.home = "/Users/${user}";
               nix.settings.trusted-users = [ user ];
@@ -131,10 +138,12 @@
       darwinConfigurations = {
         "megabookpro" = darwinSystem {
           user = "seth";
+          hostname = "megabookpro";
           arch = "aarch64-darwin";
         };
         "oldmbpro" = darwinSystem {
           user = "seth";
+          hostname = "oldmbpro";
           arch = "x86_64-darwin";
         };
       };

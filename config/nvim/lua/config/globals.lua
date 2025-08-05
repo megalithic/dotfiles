@@ -12,6 +12,7 @@ _G.mega = {
     -- "winbar",
     -- "tabline",
     "term",
+    -- "megaterm",
     "lsp",
     "repls",
     "cursorline",
@@ -20,9 +21,10 @@ _G.mega = {
     "numbers",
     "clipboard",
     "folds",
-    "env",
+    "dotenv",
     "notes",
     "filetypes",
+    -- "chat",
   },
   ui = {},
   term = nil,
@@ -231,27 +233,44 @@ function M.keymap(modes, from, to, opts)
 end
 
 local function Load_global_keymap_fns()
-  local remap_opts = { remap = true, silent = true }
-  local noremap_opts = { remap = false, silent = true }
+  local remap_opts = { noremap = false, silent = true }
+  local noremap_opts = { noremap = true, silent = true }
 
   -- TODO: https://github.com/b0o/nvim-conf/blob/main/lua/user/mappings.lua#L19-L37
 
   for _, mode in ipairs({ "n", "x", "i", "v", "o", "t", "s", "c" }) do
-    -- {
-    -- n = "normal",
-    -- v = "visual",
-    -- s = "select",
-    -- x = "visual & select",
-    -- i = "insert",
-    -- o = "operator",
-    -- t = "terminal",
-    -- c = "command",
-    -- }
+    --[[
+
+  local nmap, cmap, xmap, imap, vmap, omap, tmap, smap
+  local nnoremap, cnoremap, xnoremap, inoremap, vnoremap, onoremap, tnoremap, snoremap
+
+  ╭────────────────────────────────────────────────────────────────────────────╮
+  │  Str  │  Help page   │  Affected modes                           │  VimL   │
+  │────────────────────────────────────────────────────────────────────────────│
+  │  ''   │  mapmode-nvo │  Normal, Visual, Select, Operator-pending │  :map   │
+  │  'n'  │  mapmode-n   │  Normal                                   │  :nmap  │
+  │  'v'  │  mapmode-v   │  Visual and Select                        │  :vmap  │
+  │  's'  │  mapmode-s   │  Select                                   │  :smap  │
+  │  'x'  │  mapmode-x   │  Visual                                   │  :xmap  │
+  │  'o'  │  mapmode-o   │  Operator-pending                         │  :omap  │
+  │  '!'  │  mapmode-ic  │  Insert and Command-line                  │  :map!  │
+  │  'i'  │  mapmode-i   │  Insert                                   │  :imap  │
+  │  'l'  │  mapmode-l   │  Insert, Command-line, Lang-Arg           │  :lmap  │
+  │  'c'  │  mapmode-c   │  Command-line                             │  :cmap  │
+  │  't'  │  mapmode-t   │  Terminal                                 │  :tmap  │
+  ╰────────────────────────────────────────────────────────────────────────────╯
+  --]]
 
     -- recursive global mappings
-    _G[mode .. "map"] = function(m, from, to, opts) return M.keymap({ m }, from, to, vim.tbl_extend("keep", remap_opts, opts or {})) end
+    _G[mode .. "map"] = function(from, to, opts)
+      if type(opts) == "string" then opts = { desc = opts } end
+      return M.keymap(mode, from, to, vim.tbl_extend("keep", remap_opts, opts or {}))
+    end
     -- non-recursive global mappings
-    _G[mode .. "noremap"] = function(m, from, to, opts) return M.keymap({ m }, from, to, vim.tbl_extend("keep", noremap_opts, opts or {})) end
+    _G[mode .. "noremap"] = function(from, to, opts)
+      if type(opts) == "string" then opts = { desc = opts } end
+      return M.keymap(mode, from, to, vim.tbl_extend("keep", noremap_opts, opts or {}))
+    end
   end
 end
 

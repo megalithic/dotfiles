@@ -91,6 +91,8 @@ local function is_ignored(bufnr)
     or vim.g.disable_autoresize
     or is_floating_win()
 
+  -- D("window resize; should_ignore buffer? ", bufnr, should_ignore)
+
   -- dd({ vim.bo[bufnr].filetype, vim.bo[bufnr].buftype, bufnr, should_ignore })
   return should_ignore
 end
@@ -212,7 +214,7 @@ end, {})
 
 require("config.autocmds").augroup("WindowsGoldenResizer", {
   {
-    event = { "WinEnter", "VimResized" },
+    event = { "BufEnter", "WinEnter", "VimResized" },
     command = function(args) mega.resize_windows(args.buf) end,
     desc = "Auto-resize window with golden ratio",
   },

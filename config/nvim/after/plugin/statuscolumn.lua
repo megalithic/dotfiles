@@ -1,4 +1,7 @@
-if not Plugin_enabled() then return end
+if not Plugin_enabled() then
+  vim.opt.statuscolumn = "%C%=%4{&nu && v:virtnum <= 0 ? (&rnu ? (v:lnum == line('.') ? v:lnum . ' ' : v:relnum) : v:lnum) : ''}%=%s"
+  return
+end
 
 mega.ui.statuscolumn = {}
 

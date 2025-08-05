@@ -15,25 +15,35 @@ local M = {
   notes = {},
   strings = {},
   commands = {},
+  ts = {},
 }
+
+function M.ts.get_language_tree_for_cursor_location(bufnr)
+  bufnr = bufnr or 0
+  local cursor = vim.api.nvim_win_get_cursor(bufnr)
+  local language_tree = vim.treesitter.get_parser(bufnr):language_for_range({ cursor[1], cursor[2], cursor[1], cursor[2] })
+
+  return language_tree
+end
+
+---@param types string[] Will return the first node that matches one of these types
+---@param node TSNode|nil
+---@return TSNode|nil
+function M.ts.find_node_ancestor(types, node)
+  if not node then return nil end
+
+  if vim.tbl_contains(types, node:type()) then return node end
+
+  local parent = node:parent()
+
+  return M.ts.find_node_ancestor(types, parent)
+end
 
 function M.lsp.is_enabled_elixir_ls(client, enabled_clients)
   local client_name = type(client) == "table" and client.name or client
   enabled_clients = enabled_clients or SETTINGS.enabled_elixir_ls
 
   return vim.tbl_contains(enabled_clients, client_name)
-end
-
-function M.diagnostics_available(bufnr)
-  bufnr = bufnr or 0
-  local clients = vim.lsp.get_clients({ bufnr = bufnr })
-  local diagnostics = vim.lsp.protocol.Methods.textDocument_publishDiagnostics
-
-  for _, cfg in pairs(clients) do
-    if cfg.supports_method(diagnostics) then return true end
-  end
-
-  return false
 end
 
 ---@param data { old_name: string, new_name: string }
@@ -46,7 +56,7 @@ local function prepare_file_rename(data)
       files = { { newUri = "file://" .. data.new_name, oldUri = "file://" .. data.old_name } },
     }
     ---@diagnostic disable-next-line: invisible
-    local resp = client.request_sync("workspace/willRenameFiles", params, 1000, bufnr)
+    local resp = client:request_sync("workspace/willRenameFiles", params, 1000, bufnr)
     if resp then vim.lsp.util.apply_workspace_edit(resp.result, client.offset_encoding) end
   end
 end
@@ -245,6 +255,19 @@ function M.tcopy(t)
   end
 
   return setmetatable(u, getmetatable(t))
+end
+
+function M.tshift(tbl)
+  if #tbl == 0 then return nil, {} end
+
+  local first = tbl[1]
+  local rest = {}
+
+  for i = 2, #tbl do
+    rest[i - 1] = tbl[i]
+  end
+
+  return first, rest
 end
 
 --- deeply compare two objects and return the diff

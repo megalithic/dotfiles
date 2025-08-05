@@ -61,3 +61,4 @@ zsh_add_file "lib/nix.zsh"
 
 # zprof # -> bottom of .zshrc
 # vim:ft=zsh:foldenable:foldmethod=marker:ts=2:sts=2:sw=2
+

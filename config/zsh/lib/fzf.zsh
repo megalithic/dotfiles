@@ -37,8 +37,8 @@ export FZF_DEFAULT_OPTS="
 --pointer=' '
 --marker='󰛄 '
 --scrollbar='▓',
---tiebreak=index
 "
+# --tiebreak=index
 
 # alts: 󰛄
 # --bind=ctrl-f:page-down,ctrl-b:page-up
@@ -118,8 +118,8 @@ if has fd; then
   export FZF_ALT_C_OPTS="--preview 'exa -T {}' --height=60%"
   # export FZF_ALT_C_COMMAND="fd -t d -d 1"
   # export FZF_ALT_C_COMMAND="fd -I -t d -d 1 --follow --hidden --color=always --no-ignore-vcs --exclude 'Library'"
-  export FZF_ALT_C_COMMAND="fd -I -t d --max-depth 5 --follow --hidden --color=always --no-ignore-vcs --exclude 'Library' | proximity-sort ."
-  # export FZF_ALT_C_COMMAND="fd --type d --follow --hidden --color=always --no-ignore-vcs --exclude 'Library'"
+  # export FZF_ALT_C_COMMAND="fd -I -t d --max-depth 5 --follow --hidden --color=always --no-ignore-vcs --exclude 'Library' | proximity-sort ."
+  export FZF_ALT_C_COMMAND="fd --type d --follow --hidden --color=always --no-ignore-vcs --exclude 'Library'"
 fi
 
 # Advanced customization of fzf options via _fzf_comprun function

@@ -1,0 +1,74 @@
+#!/bin/bash
+
+## about
+
+# this does two things 1) provides a visual indicator when moving between panes
+# 2) cleverly cycles between the previous pane on all windows across the session.
+# NOTE this script does echo out every single tmux focus switch to a file in /tmp/
+# so unless you turn your machine off every night you'll want to find some way of
+# dealing with that.
+
+#       ## add to ~/.config/tmux/tmux.conf
+#
+#       ## clever switching to last pane or window in session
+#       bind -n C-Tab run-shell "~/.local/bin/tmux_panefocus.sh --focuslast"
+#
+#       ## enable focus hooks
+#       set -g focus-events on
+#
+#       ## flashes pane and echoes out current pane for clever focus switching.
+#       set-hook -g pane-focus-in 'run-shell "~/.local/bin/tmux_panefocus.sh --onfocus"'
+
+## pick a color
+flashcolor="#415c6d"
+current=$(tmux display-message -p "#{session_id} #{window_id}.#{pane_id}")
+
+case $1 in
+--onfocus)
+  ## compare with last line in hist
+  prev=$(cat /tmp/tmuxpanehist | tail -n 1)
+
+  ## to prevent flashing pane when moving from outside tmux, or if there's only one pane
+  if ! [[ ${current} == ${prev} ]] && [[ $(tmux list-panes | wc -l) -gt 1 ]]; then
+    ## make the pane flash
+    tmux selectp -P bg=${flashcolor}
+    sleep 0.1
+    tmux selectp -P bg=default
+  fi
+
+  ## echo out the pane details to temp file
+  echo "$current" >> /tmp/tmuxpanehist
+  ;;
+
+--focuslast)
+  ## take current details as variable
+  current=$(tmux display-message -p "#{session_id} #{window_id}.#{pane_id}")
+  current_session=${current%% *}
+  current_windowpane=${current##* }
+  current_window=${current_windowpane%%.*}
+  current_pane=${current_windowpane##*.}
+  ## half of these aren't needed but i won't need to look up substring manipulation
+  ## if i decide to change something.
+
+  ## check tempfile for current session, filtering out dupes
+  prev=$(grep ${current_session} /tmp/tmuxpanehist | grep -v "${current_windowpane}" | tail -n 1)
+  if [[ $prev == "" ]]; then
+    tmux display-message -d 5000 "no prev"
+    exit
+  fi
+  prev_session=${prev%% *}
+  prev_windowpane=${prev##* }
+  prev_window=${prev_windowpane%%.*}
+  prev_pane=${prev_windowpane##*.}
+
+  ## check whether last pane is in current window
+  ## TODO need to think of a better fallback if prev window has been closed
+  if [[ ${current_window} == ${prev_window} ]]; then
+    tmux select-pane -Z -t "${prev_window}.${prev_pane}" || tmux select-pane -t :.- -Z
+  else
+    ## if not switch window first
+    tmux select-window -t "${prev_window}" || tmux select-pane -t :.- -Z
+    tmux select-pane -Z -t "${prev_pane}" || tmux select-pane -t :.- -Z
+  fi
+  ;;
+esac

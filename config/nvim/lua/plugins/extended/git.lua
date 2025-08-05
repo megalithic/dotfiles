@@ -269,6 +269,7 @@ return {
       {
         "<leader>gd",
         function()
+          vim.g.disable_autoresize = true
           vim.cmd("ToggleAutoResize")
           vim.cmd("DiffviewOpen")
         end,
@@ -282,8 +283,8 @@ return {
         desc = "diffview: file history",
         mode = "n",
       },
-      { "<localleader>gb", "<cmd>DiffviewFileHistory %<cr>", desc = "Show git history", mode = { "n", "x" } },
-      { "<localleader>gb", ":DiffviewFileHistory<cr>", desc = "Show git history", mode = { "v" } },
+      -- { "<localleader>gb", "<cmd>DiffviewFileHistory %<cr>", desc = "Show git history", mode = { "n", "x" } },
+      -- { "<localleader>gb", ":DiffviewFileHistory<cr>", desc = "Show git history", mode = { "v" } },
     },
     opts = {
       default_args = { DiffviewFileHistory = { "%" } },

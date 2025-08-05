@@ -1,0 +1,27 @@
+{
+  "format": {
+    "enable": false,
+    "defaultConfig": {
+      "indent_style": "space",
+      "indent_size": "2",
+      "continuation_indent_size": "2"
+    }
+  },
+  "runtime": {
+    "version": "LuaJIT",
+    "requirePattern": [
+      "lua/?.lua",
+      "lua/?/init.lua",
+      "?/lua/?.lua",
+      "?/lua/?/init.lua"
+    ]
+  },
+  "workspace": {
+    "library": [
+      "$VIMRUNTIME",
+      "$DOTS/config/hammerspoon/annotations",
+      "$HOME/.local/share/nvim/lazy"
+    ],
+    "ignoreGlobs": ["**/*_spec.lua"]
+  }
+}

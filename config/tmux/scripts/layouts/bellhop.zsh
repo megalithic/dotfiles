@@ -42,7 +42,7 @@ tmux splitw -c "$CWD" -t "$SESSION":3
 tmux select-layout -t "$SESSION":3 tiled
 # tmux send-keys -t "$SESSION":3.2 "nix-shell --run zsh && iex -S mix phx.server" "C-m"
 tmux send-keys -t "$SESSION":3.2 "nix-shell --run zsh" "C-m"
-tmux send-keys -t "$SESSION":3.2 "iex --sname $SESSION-tern --cookie ternit -S mix phx.server" "C-m"
+tmux send-keys -t "$SESSION":3.2 "ms $SESSION-tern" "C-m"
 
 tmux select-layout -t "$SESSION":3 tiled
 tmux select-layout -t "$SESSION":3 even-horizontal

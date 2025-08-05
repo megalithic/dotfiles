@@ -33,6 +33,12 @@ do_install() {
     cargo install distant   # https://github.com/chipsenkbeil/distant
     cargo install taplo-lsp # https://taplo.tamasfe.dev/lsp/
     cargo install cbfmt
+    # Install the language server
+    cargo install emmylua_ls
+    # Install documentation generator
+    cargo install emmylua_doc_cli
+    # Install static analyzer
+    cargo install emmylua_check
     cargo install shellharden
     cargo install proximity-sort
     cargo install --git https://github.com/solidiquis/erdtree

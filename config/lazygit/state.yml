@@ -1,8 +1,8 @@
 lastupdatecheck: 0
 recentrepos:
+    - /Users/seth/code/canonize
     - /Users/seth/.dotfiles
     - /Users/seth/code/tern/director
-    - /Users/seth/code/tern/bellhop
     - /Users/seth/.local/share/src/neovim
     - /Users/seth/code/telescope-egrepify.nvim
 startuppopupversion: 5

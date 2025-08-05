@@ -366,6 +366,7 @@ case "$(uname)" in
   typeset -agU path
   path=(
     /nix/store/[^/]*/bin(Nn[-1]-/)
+    $HOME/.opencode/bin
     $HOME/.local/share/lsp/bin(N-/)
     $HOME/bin
     $HOME/.bin
