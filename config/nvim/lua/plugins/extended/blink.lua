@@ -50,38 +50,6 @@ return {
           ["<C-Down>"] = { "scroll_documentation_down", "fallback" },
           ["<Tab>"] = { "snippet_forward", "select_next", "fallback" },
           ["<S-Tab>"] = { "snippet_backward", "select_prev", "fallback" },
-          --   ["<Tab>"] = {
-          --     function(cmp) return cmp.select_next() end,
-          --     "snippet_forward",
-          --     "fallback",
-          --   },
-          -- ["<Tab>"] = {
-          --   function(blink)
-          --     if blink.is_visible() then
-          --       blink.select_next()
-          --     elseif vim.fn.mode() == "c" then
-          --       vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Down>", true, true, true), "n", true)
-          --     end
-          --   end,
-          --   "snippet_forward",
-          --   "fallback",
-          -- },
-          --   ["<S-Tab>"] = {
-          --     function(cmp) return cmp.select_prev() end,
-          --     "snippet_backward",
-          --     "fallback",
-          --   },
-          -- ["<S-Tab>"] = {
-          --   function(cmp)
-          --     if cmp.is_visible() then
-          --       cmp.select_prev()
-          --     elseif vim.fn.mode() == "c" then
-          --       vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Up>", true, true, true), "n", true)
-          --     end
-          --   end,
-          --   "snippet_backward",
-          --   "fallback",
-          -- },
         },
         signature = { enabled = true },
         appearance = {
@@ -116,42 +84,6 @@ return {
             TypeParameter = "󰅲",
           },
         },
-        -- cmdline = {
-        --   enabled = false,
-        --   keymap = {
-        --     ["<CR>"] = { "select_accept_and_enter", "fallback" },
-        --     ["<C-y>"] = { "select_and_accept", "fallback" },
-        --     ["<Down>"] = { "select_next", "fallback" },
-        --     ["<Up>"] = { "select_prev", "fallback" },
-        --   },
-        --   completion = {
-        --     list = {
-        --       selection = {
-        --         preselect = false,
-        --         auto_insert = false,
-        --       },
-        --     },
-        --     menu = {
-        --       auto_show = function()
-        --         local ctype = vim.fn.getcmdtype()
-        --         return ctype == ":"
-        --           -- or ctype == "/"
-        --           -- or ctype == "?"
-        --           -- enable for inputs as well, with:
-        --           or ctype == "@"
-        --       end,
-        --     },
-        --     ghost_text = { enabled = false },
-        --   },
-        --   -- sources = function()
-        --   --   local type = vim.fn.getcmdtype()
-        --   --   -- Search forward and backward
-        --   --   if type == "/" or type == "?" then return { "buffer" } end
-        --   --   -- Commands
-        --   --   if type == ":" or type == "@" then return { "cmdline", "buffer" } end
-        --   --   return {}
-        --   -- end,
-        -- },
         cmdline = {
           keymap = {
             preset = "inherit",
@@ -292,8 +224,9 @@ return {
               auto_insert = true,
             },
           },
-          -- trigger = { show_on_insert_on_trigger_character = true },
+          trigger = { show_in_snippet = false },
           accept = {
+            create_undo_point = true,
             auto_brackets = {
               -- Whether to auto-insert brackets for functions
               enabled = true,
