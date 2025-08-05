@@ -44,5 +44,7 @@ home/claude/todos
 home/claude/local
 home/claude/shell-snapshots
 
+home/opencode/bin
+
 # cloudflared
 home/cloudflared/cert.pem
