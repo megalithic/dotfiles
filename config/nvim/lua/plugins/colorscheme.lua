@@ -17,7 +17,7 @@ return {
         require("lush")(lush_theme)
       end
 
-      mega.colors = require("lush_theme.colors")
+      mega.ui.colors = require("lush_theme.colors")
     end,
   },
   {

@@ -1,6 +1,13 @@
+# config suggestions:
+# https://github.com/jj-vcs/jj/discussions/5812
+
 [user]
 name = "Seth Messer"
 email = "seth@megalithic.io"
+
+[git]
+sign-on-push = true
+subprocess = true
 
 [ui]
 diff-editor = ":builtin"
@@ -14,6 +21,21 @@ d = ["diff"]
 rb = ["rebase"]
 b = ["bookmark"]
 g = ["git"]
+main = ["bookmark", "move", "main", "--to", "@-"]
+tug = ["bookmark", "move", "--from", "closest_bookmark(@-)", "--to", "@-"]
+
+[revset-aliases]
+# Custom revsets.
+# https://jj-vcs.github.io/jj/latest/revsets
+# https://jj-vcs.github.io/jj/latest/revsets/#examples
+# HEAD        = '@-'
+log_default = "present(@) | ancestors(immutable_heads().., 2) | present(trunk())"
+recent      = "latest(log_default, 30)"   # latest 30 of default log
+'person(x)' = 'author(x) | committer(x)'  # authored or committed by specified person
+# "all commits authored by me that are not merged into main that can be rebased on main"
+mymergeable = "all:mutable() & mine()"
+
+'closest_bookmark(to)' = 'heads(::to & bookmarks())'
 
 [templates]
 draft_commit_description = '''
@@ -39,6 +61,10 @@ patterns = ["glob:'**/*.rs'"]
 [fix.tools.zigfmt]
 command = ["zig", "fmt", "--stdin"]
 patterns = ["glob:'**/*.zig'"]
+
+[fix.tools.mix]
+command = ["mix", "format", "--stdin"]
+patterns = ["glob:'**/*.{ex,exs,heex}'"]
 
 [merge-tools.difft]
 diff-args = ["--color=always", "$left", "$right"]

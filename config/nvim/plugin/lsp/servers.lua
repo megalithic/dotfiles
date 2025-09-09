@@ -171,12 +171,31 @@ M = {
           dialyzerFormat = "dialyxir_long",
           incrementalDialyzer = false,
           enableTestLenses = true,
-          dotFormatter = ".formatter.exs",
+          dotFormatter = nil,
           suggestSpecs = true,
           autoInsertRequiredAlias = true,
           signatureAfterComplete = true,
         },
       },
+    }
+  end,
+  expert = function()
+    if not U.lsp.is_enabled_elixir_ls("expert") then return false end
+
+    return {
+      manual_install = true,
+      cmd = { string.format("%s/lsp/expert/%s", vim.env.XDG_DATA_HOME, "expert_darwin_arm64") },
+      filetypes = { "elixir", "eelixir", "heex", "surface" },
+      root_markers = { "mix.exs", ".git" },
+      root_dir = function(bufnr, on_dir)
+        local fname = vim.api.nvim_buf_get_name(bufnr)
+        local matches = vim.fs.find({ "mix.exs" }, { upward = true, limit = 2, path = fname })
+        local child_or_root_path, maybe_umbrella_path = unpack(matches)
+        local root_dir = vim.fs.dirname(maybe_umbrella_path or child_or_root_path)
+
+        on_dir(root_dir)
+      end,
+      single_file_support = true,
     }
   end,
   elmls = {},
@@ -303,9 +322,7 @@ M = {
       },
     }
   end,
-  emmylua_ls = {
-    enabled = false,
-  },
+  emmylua_ls = {},
   lua_ls = function()
     local path = vim.split(package.path, ";")
     table.insert(path, "lua/?.lua")
@@ -319,7 +336,7 @@ M = {
     local wezterm = ("%s/nvim/lazy/wezterm-types/types"):format(fn.stdpath("data"))
 
     return {
-      enabled = true,
+      enabled = false,
       cmd = { "lua-language-server" },
       manual_install = true,
       filetypes = { "lua" },
@@ -468,29 +485,6 @@ M = {
             didChangeWatchedFiles = {
               dynamicRegistration = true,
             },
-          },
-        },
-        -- on_attach = function(client, bufnr)
-        --   default_on_attach(client, bufnr, function()
-        --     vim.api.nvim_create_user_command("Daily", function(args)
-        --       local input = args.args
-
-        --       vim.lsp.buf.execute_command({ command = "jump", arguments = { input } })
-        --     end, { desc = "[n]otes, [d]aily", nargs = "*" })
-        --   end)
-        -- end,
-        commands = {
-          Today = {
-            function() vim.lsp.buf.execute_command({ command = "jump", arguments = { "today" } }) end,
-            description = "Open today's daily note",
-          },
-          Tomorrow = {
-            function() vim.lsp.buf.execute_command({ command = "jump", arguments = { "tomorrow" } }) end,
-            description = "Open tomorrow's daily note",
-          },
-          Yesterday = {
-            function() vim.lsp.buf.execute_command({ command = "jump", arguments = { "yesterday" } }) end,
-            description = "Open yesterday's daily note",
           },
         },
       }
@@ -723,235 +717,183 @@ M = {
       end,
     }
   end,
-  tailwindcss = function()
-    -- bypasses my config and uses tailwind-tools instead..
-    if package.loaded["tailwind-tools"] ~= nil then return nil end
+  tailwindcss = {},
+  -- tailwindcss = function()
+  --   -- bypasses my config and uses tailwind-tools instead..
+  --   if package.loaded["tailwind-tools"] ~= nil then return nil end
 
-    return {
-      manual_install = true,
-      cmd = { "tailwindcss-language-server", "--stdio" },
-      filetypes = {
-        "aspnetcorerazor",
-        "astro",
-        "astro-markdown",
-        "blade",
-        "clojure",
-        "django-html",
-        "htmldjango",
-        "edge",
-        "eelixir",
-        "elixir",
-        "ejs",
-        "erb",
-        "eruby",
-        "gohtml",
-        "gohtmltmpl",
-        "haml",
-        "handlebars",
-        "hbs",
-        "html",
-        "htmlangular",
-        "html-eex",
-        "heex",
-        "jade",
-        "leaf",
-        "liquid",
-        -- "markdown",
-        "mdx",
-        "mustache",
-        "njk",
-        "nunjucks",
-        "php",
-        "razor",
-        "slim",
-        "twig",
-        "phoenix-heex",
-        "css",
-        "less",
-        "postcss",
-        "sass",
-        "scss",
-        "stylus",
-        "sugarss",
-        "javascript",
-        "javascriptreact",
-        "reason",
-        "rescript",
-        "typescript",
-        "typescriptreact",
-        "vue",
-        "svelte",
-        "templ",
-      },
-      -- init_options = {
-      --   userLanguages = {
-      --     eruby = "erb",
-      --     eelixir = "html-eex",
-      --     elixir = "phoenix-heex",
-      --     heex = "phoenix-heex",
-      --     -- elixir = "html-eex",
-      --     -- eelixir = "html-eex",
-      --     -- heex = "html-eex",
-      --   },
-      -- },
-      filetypes_include = { "heex" },
-      settings = {
-        tailwindCSS = {
-          validate = true,
-          lint = {
-            cssConflict = "warning",
-            invalidApply = "error",
-            invalidScreen = "error",
-            invalidVariant = "error",
-            invalidConfigPath = "error",
-            invalidTailwindDirective = "error",
-            recommendedVariantOrder = "warning",
-          },
-          classAttributes = {
-            "class",
-            "classes",
-            "additional_classes",
-            "additional_class",
-            "className",
-            "class:list",
-            "classList",
-            "ngClass",
-          },
-          includeLanguages = {
-            eruby = "erb",
-            eelixir = "html-eex",
-            elixir = "phoenix-heex",
-            heex = "phoenix-heex",
-            -- elixir = "html-eex",
-            -- eelixir = "html-eex",
-            -- heex = "html-eex",
-          },
-          experimental = {
-            configFile = "",
-            classRegex = {
-              [[class="([^"]*)]],
-              [[additional_classes="([^"]*)]],
-              [[class:"([^"]*)]],
+  --   return {
+  --     manual_install = true,
+  --     cmd = { "tailwindcss-language-server", "--stdio" },
+  --     filetypes = {
+  --       "aspnetcorerazor",
+  --       "astro",
+  --       "astro-markdown",
+  --       "blade",
+  --       "clojure",
+  --       "django-html",
+  --       "htmldjango",
+  --       "edge",
+  --       "eelixir",
+  --       "elixir",
+  --       "ejs",
+  --       "erb",
+  --       "eruby",
+  --       "gohtml",
+  --       "gohtmltmpl",
+  --       "haml",
+  --       "handlebars",
+  --       "hbs",
+  --       "html",
+  --       "htmlangular",
+  --       "html-eex",
+  --       "heex",
+  --       "jade",
+  --       "leaf",
+  --       "liquid",
+  --       -- "markdown",
+  --       "mdx",
+  --       "mustache",
+  --       "njk",
+  --       "nunjucks",
+  --       "php",
+  --       "razor",
+  --       "slim",
+  --       "twig",
+  --       "phoenix-heex",
+  --       "css",
+  --       "less",
+  --       "postcss",
+  --       "sass",
+  --       "scss",
+  --       "stylus",
+  --       "sugarss",
+  --       "javascript",
+  --       "javascriptreact",
+  --       "reason",
+  --       "rescript",
+  --       "typescript",
+  --       "typescriptreact",
+  --       "vue",
+  --       "svelte",
+  --       "templ",
+  --     },
+  --     -- init_options = {
+  --     --   userLanguages = {
+  --     --     eruby = "erb",
+  --     --     eelixir = "html-eex",
+  --     --     elixir = "phoenix-heex",
+  --     --     heex = "phoenix-heex",
+  --     --     -- elixir = "html-eex",
+  --     --     -- eelixir = "html-eex",
+  --     --     -- heex = "html-eex",
+  --     --   },
+  --     -- },
+  --     filetypes_include = { "heex" },
+  --     settings = {
+  --       tailwindCSS = {
+  --         validate = true,
+  --         lint = {
+  --           cssConflict = "warning",
+  --           invalidApply = "error",
+  --           invalidScreen = "error",
+  --           invalidVariant = "error",
+  --           invalidConfigPath = "error",
+  --           invalidTailwindDirective = "error",
+  --           recommendedVariantOrder = "warning",
+  --         },
+  --         classAttributes = {
+  --           "class",
+  --           "classes",
+  --           "additional_classes",
+  --           "additional_class",
+  --           "className",
+  --           "class:list",
+  --           "classList",
+  --           "ngClass",
+  --         },
+  --         includeLanguages = {
+  --           eruby = "erb",
+  --           eelixir = "html-eex",
+  --           elixir = "phoenix-heex",
+  --           heex = "phoenix-heex",
+  --           -- elixir = "html-eex",
+  --           -- eelixir = "html-eex",
+  --           -- heex = "html-eex",
+  --         },
+  --         experimental = {
+  --           configFile = "",
+  --           classRegex = {
+  --             [[class="([^"]*)]],
+  --             [[additional_classes="([^"]*)]],
+  --             [[class:"([^"]*)]],
 
-              -- [[class= "([^"]*)]],
-              -- [[*class= "([^"]*)]],
-              -- [[*_class= "([^"]*)]],
-              -- [[class: "([^"]*)]],
-              -- [[classes= "([^"]*)]],
-              -- [[*classes= "([^"]*)]],
-              -- [[*_classes= "([^"]*)]],
-              -- [[classes: "([^"]*)]],
+  --             -- [[class= "([^"]*)]],
+  --             -- [[*class= "([^"]*)]],
+  --             -- [[*_class= "([^"]*)]],
+  --             -- [[class: "([^"]*)]],
+  --             -- [[classes= "([^"]*)]],
+  --             -- [[*classes= "([^"]*)]],
+  --             -- [[*_classes= "([^"]*)]],
+  --             -- [[classes: "([^"]*)]],
 
-              [[~H""".*class="([^"]*)".*"""]],
-              [[~H""".*additional_classes="([^"]*)".*"""]],
-              "~H\"\"\".*class=\"([^\"]*)\".*\"\"\"",
-              "~H\"\"\".*additional_classes=\"([^\"]*)\".*\"\"\"",
-            },
-          },
-        },
-      },
-      before_init = function(_, config)
-        if not config.settings then config.settings = {} end
-        if not config.settings.editor then config.settings.editor = {} end
-        if not config.settings.editor.tabSize then config.settings.editor.tabSize = vim.lsp.util.get_effective_tabstop() end
-      end,
-      workspace_required = true,
-      -- root_dir = function(bufnr, on_dir)
-      --   local util = require("lspconfig.util")
-      --   local fname = vim.api.nvim_buf_get_name(bufnr)
+  --             [[~H""".*class="([^"]*)".*"""]],
+  --             [[~H""".*additional_classes="([^"]*)".*"""]],
+  --             "~H\"\"\".*class=\"([^\"]*)\".*\"\"\"",
+  --             "~H\"\"\".*additional_classes=\"([^\"]*)\".*\"\"\"",
+  --           },
+  --         },
+  --       },
+  --     },
+  --     before_init = function(_, config)
+  --       if not config.settings then config.settings = {} end
+  --       if not config.settings.editor then config.settings.editor = {} end
+  --       if not config.settings.editor.tabSize then config.settings.editor.tabSize = vim.lsp.util.get_effective_tabstop() end
+  --     end,
+  --     workspace_required = true,
+  --     -- root_dir = function(bufnr, on_dir)
+  --     --   local util = require("lspconfig.util")
+  --     --   local fname = vim.api.nvim_buf_get_name(bufnr)
 
-      --   local root_files = {
-      --     -- Generic
-      --     "tailwind.config.js",
-      --     "tailwind.config.cjs",
-      --     "tailwind.config.mjs",
-      --     "tailwind.config.ts",
-      --     "postcss.config.js",
-      --     "postcss.config.cjs",
-      --     "postcss.config.mjs",
-      --     "postcss.config.ts",
-      --     -- Phoenix
-      --     "assets/tailwind.config.js",
-      --     "assets/tailwind.config.cjs",
-      --     "assets/tailwind.config.mjs",
-      --     "assets/tailwind.config.ts",
-      --     -- Django
-      --     "theme/static_src/tailwind.config.js",
-      --     "theme/static_src/tailwind.config.cjs",
-      --     "theme/static_src/tailwind.config.mjs",
-      --     "theme/static_src/tailwind.config.ts",
-      --     "theme/static_src/postcss.config.js",
-      --     -- Rails
-      --     "app/assets/stylesheets/application.tailwind.css",
-      --     "app/assets/tailwind/application.css",
-      --   }
+  --     --   local root_files = {
+  --     --     -- Generic
+  --     --     "tailwind.config.js",
+  --     --     "tailwind.config.cjs",
+  --     --     "tailwind.config.mjs",
+  --     --     "tailwind.config.ts",
+  --     --     "postcss.config.js",
+  --     --     "postcss.config.cjs",
+  --     --     "postcss.config.mjs",
+  --     --     "postcss.config.ts",
+  --     --     -- Phoenix
+  --     --     "assets/tailwind.config.js",
+  --     --     "assets/tailwind.config.cjs",
+  --     --     "assets/tailwind.config.mjs",
+  --     --     "assets/tailwind.config.ts",
+  --     --     -- Django
+  --     --     "theme/static_src/tailwind.config.js",
+  --     --     "theme/static_src/tailwind.config.cjs",
+  --     --     "theme/static_src/tailwind.config.mjs",
+  --     --     "theme/static_src/tailwind.config.ts",
+  --     --     "theme/static_src/postcss.config.js",
+  --     --     -- Rails
+  --     --     "app/assets/stylesheets/application.tailwind.css",
+  --     --     "app/assets/tailwind/application.css",
+  --     --   }
 
-      --   local elixir_root_dir = root_pattern(bufnr, on_dir, { "mix.exs" })
-      --   root_files = util.insert_package_json(root_files, "tailwindcss", fname)
-      --   root_files = util.root_markers_with_field(root_files, { "mix.exs" }, "tailwind", fname)
+  --     --   local elixir_root_dir = root_pattern(bufnr, on_dir, { "mix.exs" })
+  --     --   root_files = util.insert_package_json(root_files, "tailwindcss", fname)
+  --     --   root_files = util.root_markers_with_field(root_files, { "mix.exs" }, "tailwind", fname)
 
-      --   -- P(vim.fs.dirname(vim.fs.find(root_matches or root_files, { path = fname, upward = true })[1]))
-      --   on_dir(vim.fs.dirname(vim.fs.find(root_matches or root_files, { path = fname, upward = true })[1]))
-      -- end,
-    }
-  end,
+  --     --   -- P(vim.fs.dirname(vim.fs.find(root_matches or root_files, { path = fname, upward = true })[1]))
+  --     --   on_dir(vim.fs.dirname(vim.fs.find(root_matches or root_files, { path = fname, upward = true })[1]))
+  --     -- end,
+  --   }
+  -- end,
   terraformls = {},
   -- NOTE: presently enabled via typescript-tools
   tinymist = {},
-  ts_ls = function()
-    local function do_organize_imports()
-      local params = {
-        command = "_typescript.organizeImports",
-        arguments = { vim.api.nvim_buf_get_name(0) },
-        title = "",
-      }
-      vim.lsp.buf.execute_command(params)
-    end
-
-    return {
-      -- cmd = lsp_cmd_override({ ".bin/typescript-language-server", "typescript-language-server" }, { "stdio" }),
-      init_options = {
-        hostInfo = "neovim",
-        logVerbosity = "verbose",
-      },
-      commands = {
-        OrganizeImports = {
-          do_organize_imports,
-          description = "Organize Imports",
-        },
-      },
-      filetypes = {
-        "javascript",
-        "javascriptreact",
-        "typescript",
-        "typescriptreact",
-      },
-      settings = {
-        typescript = {
-          inlayHints = {
-            includeInlayParameterNameHints = "literal", -- alts: all
-            includeInlayParameterNameHintsWhenArgumentMatchesName = false,
-            includeInlayFunctionParameterTypeHints = true,
-            includeInlayVariableTypeHints = true,
-            includeInlayPropertyDeclarationTypeHints = true,
-            includeInlayFunctionLikeReturnTypeHints = true,
-            includeInlayEnumMemberValueHints = true,
-          },
-        },
-        javascript = {
-          inlayHints = {
-            includeInlayParameterNameHints = "all",
-            includeInlayParameterNameHintsWhenArgumentMatchesName = false,
-            includeInlayFunctionParameterTypeHints = false,
-            includeInlayVariableTypeHints = true,
-            includeInlayPropertyDeclarationTypeHints = true,
-            includeInlayFunctionLikeReturnTypeHints = true,
-            includeInlayEnumMemberValueHints = true,
-          },
-        },
-      },
-    }
-  end,
+  ts_ls = {},
   vimls = { init_options = { isNeovim = true } },
   --- https://github.com/golang/tools/blob/master/gopls/doc/settings.md
   yamlls = function()

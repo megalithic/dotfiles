@@ -1,75 +1,3 @@
-local conf = require("telescope.config").values
-local finders = require("telescope.finders")
-local make_entry = require("telescope.make_entry")
-local pickers = require("telescope.pickers")
-
-local flatten = vim.tbl_flatten
-
--- i would like to be able to do telescope
--- and have telescope do some filtering on files and some grepping
-
-local function multirip(opts)
-  opts = opts or {}
-  opts.cwd = opts.cwd and vim.fn.expand(opts.cwd) or vim.loop.cwd()
-  opts.shortcuts = opts.shortcuts
-    or {
-      ["l"] = "*.lua",
-      ["v"] = "*.vim",
-      ["n"] = "*.{vim,lua}",
-      ["e"] = "*.ex",
-      ["s"] = "*.exs",
-      ["h"] = "*.html.heex",
-      -- ["c"] = "*.c",
-      -- ["r"] = "*.rs",
-      -- ["g"] = "*.go",
-    }
-  opts.pattern = opts.pattern or "%s"
-
-  local custom_grep = finders.new_async_job({
-    command_generator = function(prompt)
-      if not prompt or prompt == "" then return nil end
-
-      local prompt_split = vim.split(prompt, "  ")
-
-      local args = { "rg" }
-      if prompt_split[1] then
-        table.insert(args, "-e")
-        table.insert(args, prompt_split[1])
-      end
-
-      if prompt_split[2] then
-        table.insert(args, "-g")
-
-        local pattern
-        if opts.shortcuts[prompt_split[2]] then
-          pattern = opts.shortcuts[prompt_split[2]]
-        else
-          pattern = prompt_split[2]
-        end
-
-        table.insert(args, string.format(opts.pattern, pattern))
-      end
-
-      return flatten({
-        args,
-        { "--color=never", "--no-heading", "--with-filename", "--line-number", "--column", "--smart-case" },
-      })
-    end,
-    entry_maker = make_entry.gen_from_vimgrep(opts),
-    cwd = opts.cwd,
-  })
-
-  pickers
-    .new(opts, {
-      debounce = 100,
-      prompt_title = "Live Grep (with shortcuts)",
-      finder = custom_grep,
-      previewer = conf.grep_previewer(opts),
-      sorter = require("telescope.sorters").empty(),
-    })
-    :find()
-end
-
 return {
   {
     "nvim-telescope/telescope.nvim",
@@ -87,32 +15,25 @@ return {
           end
         end,
       },
-      { -- If encountering errors, see telescope-fzf-native README for installation instructions
+      {
         "nvim-telescope/telescope-fzf-native.nvim",
-
-        -- `build` is used to run some command when the plugin is installed/updated.
-        -- This is only run then, not every time Neovim starts up.
         build = "make",
-
-        -- `cond` is a condition used to determine whether this plugin should be
-        -- installed and loaded.
         cond = function() return vim.fn.executable("make") == 1 end,
       },
 
       "nvim-telescope/telescope-file-browser.nvim",
-      { "fdschmidt93/telescope-egrepify.nvim" },
+      "fdschmidt93/telescope-egrepify.nvim",
       "fdschmidt93/telescope-corrode.nvim",
       {
         "danielfalk/smart-open.nvim",
         branch = "0.2.x", -- NOTE: we're stuck here because `main` breaks keymaps
         dependencies = { "kkharji/sqlite.lua", { "nvim-telescope/telescope-fzf-native.nvim", build = "make" } },
       },
-
       -- "danielvolchek/tailiscope.nvim"
       "nvim-telescope/telescope-live-grep-args.nvim",
       "debugloop/telescope-undo.nvim",
       "folke/trouble.nvim",
-      { "nvim-telescope/telescope-ui-select.nvim" },
+      "nvim-telescope/telescope-ui-select.nvim",
     },
     config = function()
       mega.picker = {
@@ -136,6 +57,7 @@ return {
       local action_state = require("telescope.actions.state")
       local action_set = require("telescope.actions.set")
       local lga_actions = require("telescope-live-grep-args.actions")
+      local lga_fns = require("telescope-live-grep-args.shortcuts")
       local previewers = require("telescope.previewers")
       local Job = require("plenary.job")
       local current_fn = nil
@@ -589,6 +511,7 @@ return {
             local builtin = require("telescope.builtin")
             local mode = vim.api.nvim_get_mode().mode
             topts = topts or {}
+
             if mode == "v" or mode == "V" or mode == "" then topts.default_text = table.concat(get_selection()) end
             if key == "grepify" or key == "egrepify" then
               extensions("egrepify").egrepify(with_title(topts, { title = "live grep (egrepify)" }))
@@ -599,20 +522,24 @@ return {
               local title = "smartly find files"
               -- if topts.title ~= nil then title = fmt("smartly find files (%s)", topts.title) end
               extensions("smart_open").smart_open(with_title(topts, { title = title }))
-            elseif key == "grep" or key == "live_grep" then
+            elseif key == "grep" or key == "live_grep" or key == "live_grep_args" then
               extensions("live_grep_args").live_grep_args(with_title(topts, { title = "live grep args" }))
             elseif key == "corrode" then
               extensions("corrode").corrode(with_title(topts, { title = "find files (corrode)" }))
-            -- elseif key == "multi_rg" then
-            --   multi_rg(with_title(topts, { title = "multi_rg" }))
+            elseif key == "multi_rg" then
+              -- multi_rg(with_title(topts, { title = "multi_rg" }))
             elseif key == "find_files" or key == "fd" then
               -- extensions("corrode").corrode(with_title(topts, { title = "find files (corrode)" }))
               builtin[key](with_title(topts, { title = "find files" }))
             else
+              local ok, _msg = pcall(builtin[key])
+              local fn = builtin[key]
+
+              if not ok then fn = key end
               if topts["theme"] ~= nil then
-                builtin[key](topts)
+                fn(with_title(topts, { title = topts.title }))
               else
-                builtin[key](ivy(topts))
+                fn(ivy(with_title(topts, { title = topts.title })))
               end
             end
           end
@@ -1094,12 +1021,8 @@ return {
           },
           live_grep_args = {
             auto_quoting = true, -- enable/disable auto-quoting
-            -- define mappings, e.g.
             mappings = { -- extend mappings
               i = {
-                ["<c-q>"] = lga_actions.quote_prompt(),
-                ["<c-i>"] = lga_actions.quote_prompt({ postfix = " --iglob " }),
-                ["<c-t>"] = lga_actions.quote_prompt({ postfix = " -t " }),
                 ["<esc>"] = actions.close,
                 ["<c-v>"] = stopinsert(function(pb) multi(pb, "vnew") end),
                 ["<c-s>"] = stopinsert(function(pb) multi(pb, "new") end),
@@ -1107,8 +1030,12 @@ return {
                 ["<cr>"] = stopinsert(function(pb) multi(pb, "vnew") end),
                 ["<tab>"] = actions.toggle_selection + actions.move_selection_next,
 
-                ["<C-r>"] = lga_actions.to_fuzzy_refine,
-                ["<C-f>"] = lga_actions.to_fuzzy_refine,
+                ["<c-k>"] = lga_actions.quote_prompt(),
+                ["<c-g>"] = lga_actions.quote_prompt({ postfix = " -F " }),
+                ["<c-i>"] = lga_actions.quote_prompt({ postfix = " --iglob " }),
+                ["<c-t>"] = lga_actions.quote_prompt({ postfix = " -t " }),
+                ["<c-r>"] = lga_actions.to_fuzzy_refine,
+                ["<c-f>"] = lga_actions.to_fuzzy_refine,
               },
               n = {
                 ["<esc>"] = actions.close,
@@ -1217,7 +1144,7 @@ return {
         map("n", "<leader>fh", ts.help_tags, { "[f]ind [h]elp" })
         map("n", "<leader>fa", ts.autocommands, { "[f]ind [a]utocommands" })
         map("n", "<leader>fk", ts.keymaps, { "[f]ind [k]eymaps" })
-        map("n", "<leader>fg", multirip, { "multi-ripgrep" })
+        -- map("n", "<leader>fg", multirip, { "multi-ripgrep" })
         -- map("n", "<leader>fs", ts.builtin, {  "[f]ind [f]elect Telescope" })
         -- map("n", "<leader>fg", ts.egrepify, {  "egrepify (live)" })
         -- map("n", "<leader>fg", function() mega.picker.grep() end, { "grep (live)" })
@@ -1247,14 +1174,19 @@ return {
         --   }))
         -- end)
 
-        -- map("n", "<leader>fg", ts.multi_rg, {  "multi-rg (live)" })
-        map("n", "<leader>a", function() mega.picker.grep({ theme = "ivy" }) end, { "egrepify (live)" })
-        -- map("n", "<leader>A", ts.grep_string, {  "grep (under cursor)" })
-        map("n", "<leader>A", function() mega.picker.grep({ theme = "ivy", default_text = vim.fn.expand("<cword>") }) end, { "egrepify (under cursor)" })
-        map({ "v", "x" }, "<leader>A", function()
+        map("n", "<leader>a", function() mega.picker.grep({ theme = "ivy", title = "live grep", picker = "egrepify" }) end, { "live grep" })
+        map(
+          { "n" },
+          "<leader>A",
+          function() mega.picker.grep({ theme = "ivy", title = "live grep (cursor)", picker = "egrepify", default_text = vim.fn.expand("<cword>") }) end,
+          { "live grep (cursor)" }
+        )
+        -- map("n", "<leader>A", function() mega.picker.grep({ theme = "ivy", default_text = vim.fn.expand("<cword>") }) end)
+        map({ "v", "x", "s" }, "<leader>A", function()
           local pattern = require("config.utils").get_visual_selection()
-          mega.picker.grep({ theme = "ivy", default_text = pattern })
-        end, { "egrepify (selection)" })
+          -- mega.picker.grep({ theme = "ivy", default_text = pattern })
+          mega.picker.grep({ theme = "ivy", title = "live grep (selection)", picker = "egrepify", default_text = pattern })
+        end, { "live grep (selection)" })
 
         map("n", "<leader>fu", ts.undo, { "[f]ind [u]ndo" })
         -- map("n", "<leader>fd", ts.diagnostics, {  "[f]ind [d]iagnostics" })
@@ -1279,8 +1211,8 @@ return {
             previewer = false,
           }))
         end, { "[/] Fuzzily search in current buffer" })
-        map("n", "<leader>fn", function() mega.picker.find_files({ picker = "smart_open", cwd = vim.g.notes_path }) end, { "[f]ind in [n]otes" })
-        map("n", "<leader>nf", function() mega.picker.find_files({ picker = "smart_open", cwd = vim.g.notes_path }) end, { "[f]ind in [n]otes" })
+        -- map("n", "<leader>fn", function() mega.picker.find_files({ picker = "smart_open", cwd = vim.g.notes_path }) end, { "[f]ind in [n]otes" })
+        -- map("n", "<leader>nf", function() mega.picker.find_files({ picker = "smart_open", cwd = vim.g.notes_path }) end, { "[f]ind in [n]otes" })
 
         -- Shortcut for searching your Neovim configuration files
       end

@@ -2,6 +2,7 @@
 --
 -- https://github.com/ViViDboarder/vim-settings/blob/master/neovim/lua/lazy/obsidian.lua
 --
+
 return {
   "obsidian-nvim/obsidian.nvim",
   version = "*", -- recommended, use latest release instead of latest commit
@@ -10,7 +11,6 @@ return {
   dependencies = {
     "nvim-lua/plenary.nvim",
     "hrsh7th/nvim-cmp",
-    "folke/snacks.nvim",
     "nvim-treesitter/nvim-treesitter",
   },
   ---@module 'obsidian'
@@ -42,7 +42,9 @@ return {
       -- Enables completion using blink.cmp
       blink = vim.g.completer == "blink",
       -- Trigger completion at 2 chars.
-      min_chars = 2,
+      min_chars = 0,
+
+      create_new = true,
     },
     note_id_func = function(title)
       local suffix = ""
@@ -68,6 +70,19 @@ return {
       external_link_icon = {},
     },
   },
+  -- config = function(_, opts)
+  --   require("obsidian.nvim").setup(opts)
+
+  --   -- vim.api.nvim_create_autocmd("User", {
+  --   --   pattern = "ObsidianNoteEnter",
+  --   --   callback = function(evt)
+  --   --     vim.keymap.set("n", "<leader>ch", "<cmd>Obsidian toggle_checkbox<cr>", {
+  --   --       buffer = ev.buf,
+  --   --       desc = "Toggle checkbox",
+  --   --     })
+  --   --   end,
+  --   -- })
+  -- end,
 }
 -- return {
 --   "epwalsh/obsidian.nvim",

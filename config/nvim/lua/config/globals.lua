@@ -147,10 +147,8 @@ function M.D(...)
   -- vim.schedule_wrap(function() print(vim.inspect(#printables > 1 and printables or unpack(printables))) end)
   -- end
 
-  -- vim.schedule_wrap(function()
   local formatter = function(msg) return string.format("[%s] %s %s:%s -> %s", "DEBUG", os.date("%H:%M:%S"), mod_name, mod_line, msg) end
   M.echom(formatter(vim.inspect(#printables > 1 and printables or unpack(printables))), "Question")
-  -- end)
 
   return ...
 end

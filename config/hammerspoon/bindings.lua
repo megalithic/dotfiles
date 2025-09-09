@@ -89,15 +89,21 @@ req("hyper", { id = "meeting" }):start():bind({}, "z", nil, function()
     if targetWin and targetWin:isStandard() then targetWin:focus() end
   elseif hs.application.find("com.brave.Browser.nightly.app.kjgfgldnnfoeklkmfkjfagphfepbbdan") then
     hs.application.launchOrFocusByBundleID("com.brave.Browser.nightly.app.kjgfgldnnfoeklkmfkjfagphfepbbdan")
+  elseif hs.application.find("com.microsoft.teams2") then
+    wm.focusMainWindow("com.microsoft.teams2")
   elseif hs.application.find("com.pop.pop.app") then
-    hs.application.launchOrFocusByBundleID("com.pop.pop.app")
-    local app = hs.application.find("com.pop.pop.app")
-    local targetWin = enum.find(
-      app:allWindows(),
-      function(win) return win:isStandard() and win:frame().w > 1000 and win:frame().h > 1000 end
-    )
+    wm.focusMainWindow("com.pop.pop.app")
 
-    if targetWin ~= nil then targetWin:focus() end
+    -- hs.application.launchOrFocusByBundleID("com.pop.pop.app")
+    -- local app = hs.application.find("com.pop.pop.app")
+    -- local targetWin = enum.find(
+    --   app:allWindows(),
+    --   function(win)
+    --     return app:mainWindow() == win and win:isStandard() and win:frame().w > 1000 and win:frame().h > 1000
+    --   end
+    -- )
+
+    -- if targetWin ~= nil then targetWin:focus() end
   elseif req("browser").hasTab("meet.google.com|hangouts.google.com.call|www.valant.io|telehealth.px.athena.io") then
     req("browser").jump("meet.google.com|hangouts.google.com.call|www.valant.io|telehealth.px.athena.io")
   else

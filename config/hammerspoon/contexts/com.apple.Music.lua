@@ -14,16 +14,16 @@ function obj:start(opts)
   local event = opts["event"]
   local bundleID = opts["bundleID"]
 
-  -- Never run Apple Music; I never use it!
-  -- if event == hs.application.watcher.launched and bundleID == "com.apple.Music" then
-  --   local app = hs.application.get(bundleID)
-  --   app:kill()
+  -- always force close apple music
+  if event == hs.application.watcher.launched and bundleID == "com.apple.Music" then
+    local app = hs.application.get(bundleID)
+    app:kill()
 
-  --   hs.timer.waitUntil(function() return not app:isRunning() end, function()
-  --     hs.application.launchOrFocus("Spotify")
-  --     hs.spotify.play()
-  --   end)
-  -- end
+    -- hs.timer.waitUntil(function() return not app:isRunning() end, function()
+    --   hs.application.launchOrFocus("Spotify")
+    --   hs.spotify.play()
+    -- end)
+  end
 
   return self
 end

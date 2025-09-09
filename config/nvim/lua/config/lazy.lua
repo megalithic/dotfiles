@@ -20,8 +20,9 @@ if le_ok then
 end
 
 require("lazy").setup({
-  { import = "plugins.core" },
-  { import = "plugins.extended" },
+  { import = "plugins" },
+  -- { import = "plugins.core" },
+  -- { import = "plugins.extended" },
 }, {
   dev = {
     -- directory where you store your local plugin projects

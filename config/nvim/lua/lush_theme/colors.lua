@@ -40,8 +40,8 @@ local bg_soft = "#323d43"
 
 C.transparent = "none"
 C.none = "none"
-C.bg0 = hsluv(bg_soft) -- #2f3d44 / #323d43
-C.bg1 = C.bg0.lighten(5) -- #3c474d
+C.bg0 = hsluv(bg_soft)    -- #2f3d44 / #323d43
+C.bg1 = C.bg0.lighten(5)  -- #3c474d
 C.bg2 = C.bg0.lighten(10) -- #465258
 C.bg3 = C.bg0.lighten(15) -- #505a60
 C.bg4 = C.bg0.lighten(20) -- #576268
@@ -108,8 +108,8 @@ C.lsp.info = C.teal
 
 C.transparent = nil
 C.none = "none"
-C.bg0 = hsluv(bg_soft) -- #2f3d44 / #323d43
-C.bg1 = C.bg0.lighten(5) -- #3c474d
+C.bg0 = hsluv(bg_soft)    -- #2f3d44 / #323d43
+C.bg1 = C.bg0.lighten(5)  -- #3c474d
 C.bg2 = C.bg0.lighten(10) -- #465258
 C.bg3 = C.bg0.lighten(15) -- #505a60
 C.bg4 = C.bg0.lighten(20) -- #576268

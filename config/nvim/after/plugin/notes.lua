@@ -468,7 +468,7 @@ require("config.autocmds").augroup("NotesLoaded", {
         map("n", "gx", vim.cmd.ExecuteLine, { desc = "execute line", buffer = bufnr })
         local clients = vim.lsp.get_clients({ bufnr = bufnr })
         for _, client in ipairs(clients) do
-          if vim.tbl_contains({ "markdown_oxide", "marksman", "obsidian" }, client.name) and string.match(vim.fn.expand("%:p:h"), "_notes") then
+          if vim.tbl_contains({ "markdown_oxide", "marksman", "obsidian-ls" }, client.name) and string.match(vim.fn.expand("%:p:h"), "_notes") then
             map("n", "<leader>w", function()
               vim.schedule(function()
                 local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
@@ -500,14 +500,16 @@ require("config.autocmds").augroup("NotesLoaded", {
             map("n", "<C-x>s", function() M.toggle_task(".") end, { buffer = bufnr, desc = "[notes] toggle -> started" })
             map("n", "<C-x>u", function() M.toggle_task("/") end, { buffer = bufnr, desc = "[notes] toggle -> undo/skip/trash" })
             map("n", "<C-x><C-x>", function() M.toggle_task(" ") end, { buffer = bufnr, desc = "[notes] toggle -> not-started" })
-            map("n", "<leader>ff", function() mega.picker.find_files({ cwd = vim.g.notes_path }) end, { desc = "[notes] find", buffer = bufnr })
-            map("n", "<leader>a", function() mega.picker.grep({ cwd = vim.g.notes_path }) end, { desc = "[notes] grep" })
+            map("n", "<leader>ff", "<cmd>Obsidian quick_switch<cr>", { desc = "[notes] find", buffer = bufnr })
+            map("n", "<leader>a", "<cmd>Obsidian search<cr>", { desc = "[notes] grep" })
+            map("n", "<leader>A", string.format("<cmd>Obsidian search %s<cr>", vim.fn.expand("<cword>")), { desc = "[notes] grep cursor" })
             map(
-              "n",
+              { "x", "v" },
               "<leader>A",
-              function() mega.picker.grep({ cwd = vim.g.notes_path, default_text = vim.fn.expand("<cword>") }) end,
-              { desc = "[notes] grep cursorword" }
+              string.format("<cmd>Obsidian search %s<cr>", require("config.utils").get_selected_text()),
+              { desc = "[notes] grep selection" }
             )
+
             map({ "n", "v" }, "<localleader>n", function()
               -- `/` - Start a search forwards from the current cursor position.
               -- `^` - Match the beginning of a line.

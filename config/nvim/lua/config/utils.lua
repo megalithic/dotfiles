@@ -393,20 +393,23 @@ end
 --- automatically clear commandline messages after a few seconds delay
 --- source: http://unix.stackexchange.com/a/613645
 ---@return function
-function M.clear_commandline()
+function M.clear_commandline(delay)
   --- Track the timer object and stop any previous timers before setting
   --- a new one so that each change waits for 10secs and that 10secs is
   --- deferred each time
   local timer
   return function()
     if timer then timer:stop() end
+    if delay == nil then
+      if timer then timer:stop() end
+      return
+    end
     timer = vim.defer_fn(function()
       if fn.mode() == "n" then
         vim.api.nvim_echo({}, false, {})
         vim.cmd.echon("''")
-        -- vim.cmd([[echon '']])
       end
-    end, 3000)
+    end, delay)
   end
 end
 

@@ -166,10 +166,8 @@ return {
           termsplit = function(cmd) mega.term(term_opts(cmd)) end,
           termvsplit = function(cmd)
             if vim.opt.lines:get() * 4 < vim.opt.columns:get() then
-              -- Snacks.terminal(cmd, { win = { position = "right", width = 50 }, interactive = false, auto_insert = true, auto_close = false })
               mega.term(term_opts(cmd, { position = "right", size = 100 }))
             else
-              -- Snacks.terminal(cmd, { win = { position = "bottom", height = 100 }, interactive = true })
               mega.term(term_opts(cmd, { position = "bottom", size = 100 }))
             end
           end,

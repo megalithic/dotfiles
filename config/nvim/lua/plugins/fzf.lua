@@ -295,6 +295,7 @@ if vim.g.picker == "fzf_lua" then
     -- },
   }
 end
+-- table.insert(keys, { "<leader>sa", fzf.live_grep_glob, desc = "live grep" })
 
 table.insert(keys, {
   "<c-p>",

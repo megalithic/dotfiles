@@ -6,6 +6,25 @@ obj.__index = obj
 obj.name = "wm"
 obj.debug = false
 
+function obj.focusMainWindow(bundleID, opts)
+  local app
+  if bundleID == nil and bundleID == "" then
+    app = hs.application.frontmostApplication()
+  else
+    app = hs.application.find(bundleID)
+  end
+
+  opts = opts or { h = 800, w = 800 }
+  local targetWin = hs.fnutils.find(
+    app:allWindows(),
+    function(win)
+      return app:mainWindow() == win and win:isStandard() and win:frame().w > opts.w and win:frame().h > opts.h
+    end
+  )
+
+  if targetWin ~= nil then targetWin:focus() end
+end
+
 function obj.targetDisplay(hint)
   local displays = hs.screen.allScreens() or {}
 

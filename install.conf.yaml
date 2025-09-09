@@ -146,6 +146,9 @@
     ~/.config/ngrok:
       force: true
       path: config/ngrok
+    ~/.config/opencode:
+      force: true
+      path: config/opencode
     ~/.config/ripgrep:
       force: true
       path: config/ripgrep

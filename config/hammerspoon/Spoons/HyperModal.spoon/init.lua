@@ -12,6 +12,29 @@ obj.indicator = nil
 obj.indicatorColor = "#e39b7b"
 obj.delayedExitTimer = nil
 
+function obj.focusMainWindow(bundleID, opts)
+  local app
+  if bundleID == nil or bundleID == "" then
+    app = hs.application.frontmostApplication()
+  else
+    app = hs.application.find(bundleID)
+  end
+
+  opts = opts or { h = 800, w = 800, focus = true }
+  local win = hs.fnutils.find(
+    app:allWindows(),
+    function(win)
+      return app:mainWindow() == win and win:isStandard() and win:frame().w >= opts.w and win:frame().h >= opts.h
+    end
+  )
+
+  if win ~= nil and opts.focus then win:focus() end
+
+  print(string.format(":: [%s] %s (%s)", obj.name, app:bundleID(), app:mainWindow():title()))
+
+  return win
+end
+
 function obj.toggleIndicator(win, terminate)
   win = win or hs.window.focusedWindow()
 
@@ -41,10 +64,10 @@ function obj.toggleIndicator(win, terminate)
 end
 
 function obj:entered()
-  if obj.custom_on_entered ~= nil and type(obj.custom_on_entered) == "function" then
-    obj.custom_on_entered(obj.isOpen)
+  if obj.customOnEntered ~= nil and type(obj.customOnEntered) == "function" then
+    obj.customOnEntered(obj.isOpen)
   else
-    local win = hs.window.focusedWindow()
+    local win = obj.focusMainWindow() or hs.window.focusedWindow()
 
     if win ~= nil then
       obj.isOpen = true
@@ -115,7 +138,7 @@ end
 
 function obj:start(on_entered)
   hs.window.animationDuration = 0
-  obj.custom_on_entered = on_entered
+  obj.customOnEntered = on_entered
 
   -- provide alternate escapes
   obj:bind("ctrl", "[", function() obj:exit() end):bind("", "escape", function() obj:exit() end)

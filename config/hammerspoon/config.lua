@@ -261,9 +261,9 @@ LAYOUTS = {
     bundleID = "com.freron.MailMate",
     name = "MailMate",
     rules = {
-      { nil, 1, POSITIONS.halves.left },
-      { "Inbox", 1, POSITIONS.full },
-      { "All Messages", 1, POSITIONS.full },
+      { nil, 2, POSITIONS.halves.left },
+      { "Inbox", 2, POSITIONS.full },
+      { "All Messages", 2, POSITIONS.full },
     },
   },
   ["com.apple.finder"] = {
@@ -291,7 +291,9 @@ LAYOUTS = {
     bundleID = "com.apple.MobileSMS",
     name = "Messages",
     rules = {
-      { "", 1, POSITIONS.thirds.right },
+      -- { "", 2, POSITIONS.full },
+      -- { "", 2, POSITIONS.thirds.left },
+      { "", 2, POSITIONS.halves.left },
     },
   },
   ["org.whispersystems.signal-desktop"] = {

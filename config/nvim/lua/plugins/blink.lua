@@ -3,7 +3,7 @@ local icons = SETTINGS.icons
 local U = require("config.utils")
 
 local in_jsx = U.in_jsx_tags
-local keep_text_entries = { "emmet_language_server", "marksman" }
+local keep_text_entries = { "emmet_language_server", "marksman", "obsidian-ls" }
 local text = vim.lsp.protocol.CompletionItemKind.Text
 
 -- -- DOCS https://github.com/saghen/blink.cmp#configuration
@@ -24,9 +24,10 @@ return {
       { "xzbdmw/colorful-menu.nvim", lazy = true, opts = {} },
       "mikavilpas/blink-ripgrep.nvim",
     },
+    version = "1.*",
     event = { "InsertEnter", "CmdlineEnter" },
     -- lazy = false,
-    build = { "rustup update beta", "cargo build --release" },
+    -- build = { "rustup update beta", "cargo build --release" },
     cond = vim.g.completer == "blink",
     config = function()
       local blink = require("blink.cmp")
@@ -87,20 +88,35 @@ return {
         cmdline = {
           keymap = {
             preset = "inherit",
+            ["<CR>"] = { "fallback" },
             ["<Tab>"] = { "show", "accept", "fallback" },
             ["<C-y>"] = { "select_and_accept" },
           },
-          completion = { menu = { auto_show = false }, ghost_text = { enabled = true } },
+          completion = {
+            list = {
+              selection = {
+                preselect = false,
+                auto_insert = false,
+              },
+            },
+            menu = {
+              auto_show = function(_ctx)
+                return vim.fn.getcmdtype() == ":"
+                -- enable for inputs as well, with:
+                -- or vim.fn.getcmdtype() == '@'
+              end,
+            },
+          },
         },
         fuzzy = {
           implementation = "prefer_rust_with_warning",
-          prebuilt_binaries = { ignore_version_mismatch = true },
+          -- prebuilt_binaries = { ignore_version_mismatch = true },
         },
         sources = {
           default = function(_ctx)
             local success, node = pcall(vim.treesitter.get_node)
             if success and node and vim.tbl_contains({ "comment", "line_comment", "block_comment" }, node:type()) then
-              return { "buffer", "path", "spell" }
+              return { "spell", "path", "buffer" }
             else
               return { "lsp", "path", "snippets", "spell", "buffer" }
             end
@@ -135,6 +151,7 @@ return {
             },
             dadbod = { name = "Dadbod", module = "vim_dadbod_completion.blink" },
             dbee = { name = "cmp-dbee", module = "blink.compat.source" },
+            opencode = { name = "opencode", module = "opencode.cmp.blink" },
             ripgrep = {
               name = "[rg]",
               module = "blink-ripgrep",
@@ -327,106 +344,5 @@ return {
     -- allows extending the providers array elsewhere in your config
     -- without having to redefine it
     opts_extend = { "sources.default" },
-  },
-  {
-    cond = false,
-    "saghen/blink.pairs",
-    version = "*", -- (recommended) only required with prebuilt binaries
-
-    -- download prebuilt binaries from github releases
-    dependencies = "saghen/blink.download",
-    -- OR build from source, requires nightly:
-    -- https://rust-lang.github.io/rustup/concepts/channels.html#working-with-nightly-rust
-    -- build = 'cargo build --release',
-    -- If you use nix, you can build from source using latest nightly rust with:
-    -- build = 'nix run .#build-plugin',
-
-    --- @module 'blink.pairs'
-    --- @type blink.pairs.Config
-    opts = {
-      mappings = {
-        -- you can call require("blink.pairs.mappings").enable()
-        -- and require("blink.pairs.mappings").disable()
-        -- to enable/disable mappings at runtime
-        enabled = true,
-        cmdline = true,
-        -- or disable with `vim.g.pairs = false` (global) and `vim.b.pairs = false` (per-buffer)
-        -- and/or with `vim.g.blink_pairs = false` and `vim.b.blink_pairs = false`
-        disabled_filetypes = {},
-        -- see the defaults:
-        -- https://github.com/Saghen/blink.pairs/blob/main/lua/blink/pairs/config/mappings.lua#L14
-        pairs = {},
-      },
-      highlights = {
-        enabled = true,
-        -- requires require('vim._extui').enable({}), otherwise has no effect
-        cmdline = true,
-        groups = {
-          "BlinkPairsOrange",
-          "BlinkPairsPurple",
-          "BlinkPairsBlue",
-        },
-        unmatched_group = "BlinkPairsUnmatched",
-
-        -- highlights matching pairs under the cursor
-        matchparen = {
-          enabled = true,
-          -- known issue where typing won't update matchparen highlight, disabled by default
-          cmdline = false,
-          group = "BlinkPairsMatchParen",
-        },
-      },
-      debug = false,
-    },
-  },
-  {
-    cond = false,
-    "saghen/blink.indent",
-    --- @module 'blink.indent'
-    --- @type blink.indent.Config
-    opts = {
-      -- or disable with `vim.g.indent_guide = false` (global) or `vim.b.indent_guide = false` (per-buffer)
-      blocked = {
-        buftypes = {},
-        filetypes = {},
-      },
-      static = {
-        enabled = true,
-        char = "▎",
-        priority = 1,
-        -- specify multiple highlights here for rainbow-style indent guides
-        -- highlights = { 'BlinkIndentRed', 'BlinkIndentOrange', 'BlinkIndentYellow', 'BlinkIndentGreen', 'BlinkIndentViolet', 'BlinkIndentCyan' },
-        highlights = { "BlinkIndent" },
-      },
-      scope = {
-        enabled = true,
-        char = "▎",
-        priority = 1024,
-        -- set this to a single highlight, such as 'BlinkIndent' to disable rainbow-style indent guides
-        -- highlights = { 'BlinkIndent' },
-        highlights = {
-          "BlinkIndentOrange",
-          "BlinkIndentViolet",
-          "BlinkIndentBlue",
-          -- 'BlinkIndentRed',
-          -- 'BlinkIndentCyan',
-          -- 'BlinkIndentYellow',
-          -- 'BlinkIndentGreen',
-        },
-        underline = {
-          -- enable to show underlines on the line above the current scope
-          enabled = false,
-          highlights = {
-            "BlinkIndentOrangeUnderline",
-            "BlinkIndentVioletUnderline",
-            "BlinkIndentBlueUnderline",
-            -- 'BlinkIndentRedUnderline',
-            -- 'BlinkIndentCyanUnderline',
-            -- 'BlinkIndentYellowUnderline',
-            -- 'BlinkIndentGreenUnderline',
-          },
-        },
-      },
-    },
   },
 }

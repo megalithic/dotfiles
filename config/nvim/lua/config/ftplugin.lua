@@ -226,7 +226,7 @@ end
 ---Create autocommands that will apply the configs
 ---@param opts? FiletypeOpts
 --
--- FIXME: switch to using my autocmds/augroup
+-- TODO: switch to using my autocmds/augroup?
 --
 function M.setup(opts)
   local conf = vim.tbl_deep_extend("keep", opts or {}, {

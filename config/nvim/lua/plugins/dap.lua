@@ -22,7 +22,7 @@ return {
     "jay-babu/mason-nvim-dap.nvim",
   },
   config = function()
-    local dap = require("dap")
+    local dap = require('plugins.dap')
     local dapui = require("dapui")
     require("nvim-dap-repl-highlights").setup()
     require("mason-nvim-dap").setup({

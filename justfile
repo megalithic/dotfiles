@@ -44,3 +44,9 @@ update: update-brew update-flake hm
 
 news:
   home-manager news --flake .
+
+
+# legacy dotbot usages
+[macos]
+link:
+  source ~/.dotfiles/install --only link

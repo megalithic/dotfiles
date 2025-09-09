@@ -110,6 +110,7 @@ nnoremap <Leader>p "0p
 nnoremap p p`]
 vnoremap y y`]
 vnoremap p p`]
+
 " don't yank the currently pasted text
 xnoremap <expr> p 'pgv"' . v:register . 'y'
 

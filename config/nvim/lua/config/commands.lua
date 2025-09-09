@@ -5,15 +5,15 @@ local command = function(lhs, rhs, opts)
   vim.api.nvim_create_user_command(lhs, rhs, opts)
 end
 
--- command("Rg", function(opts) require("telescope.builtin").live_grep_string({ search = vim.api.nvim_eval(fmt("%s", opts.args)) }) end, { nargs = "*" })
--- vim.cmd([[
---   command! -nargs=1 Rg lua require("telescope.builtin").grep_string({ search = vim.api.nvim_eval('"<args>"') })
--- ]])
-
 command("Todo", [[noautocmd silent! grep! 'TODO\|FIXME\|BUG\|HACK' | copen]], {})
 command("ReloadModule", function(tbl) require("plenary.reload").reload_module(tbl.args) end, {
   nargs = 1,
 })
+
+-- command("Rg", function(opts) require("telescope.builtin").live_grep_string({ search = vim.api.nvim_eval(fmt("%s", opts.args)) }) end, { nargs = "*" })
+-- vim.cmd([[
+--   command! -nargs=1 Rg lua require("telescope.builtin").grep_string({ search = vim.api.nvim_eval('"<args>"') })
+-- ]])
 command("Rg", function(opts) require("telescope.builtin").grep_string({ search = vim.api.nvim_eval("\"<args>\"") }) end, { nargs = "*" })
 command(
   "DuplicateFile",

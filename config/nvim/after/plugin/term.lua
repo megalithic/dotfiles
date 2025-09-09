@@ -6,6 +6,17 @@
 -- - similar behaviour to here.nvim; aka, quick flip between terminal and current buffer
 --    REF: https://github.com/jaimecgomezz/nvim/blob/9a29163c39efc7d28f21ae2ef715e8ba3f41a4e2/lua/plugins/term.lua
 
+-- Error in function test#run[25]..test#execute[23]..test#shell:
+-- line   17:
+
+-- vim/_editor.lua:0: function test#run[25]..test#execute[23]..test#shell[17]..script nvim_exec2() called at test#shell:17[1]..BufEnter Autocommands for "*": Vim(append):E36: Not enough room
+-- stack traceback:
+--         [C]: in function 'nvim_exec2'
+--         vim/_editor.lua: in function 'cmd'
+--         /Users/seth/.dotfiles/config/nvim/after/plugin/term.lua:430: in function 'new_or_open_term'
+--         /Users/seth/.dotfiles/config/nvim/after/plugin/term.lua:460: in function 'term'
+--         /Users/seth/.config/nvim/lua/plugins/extended/test.lua:173: in function </Users/seth/.config/nvim/lua/plugins/extended/test.lua:167>
+
 if not Plugin_enabled() then return end
 
 -- REF: https://github.com/folke/snacks.nvim/blob/main/lua/snacks/terminal.lua
@@ -272,7 +283,7 @@ local function set_keymaps(bufnr, position)
   local opts = { buffer = bufnr, silent = false }
   local function quit()
     unset_term(true)
-    vim.cmd("wincmd p")
+    vim.cmd("silent! wincmd p")
   end
 
   local nmap = function(lhs, rhs) vim.keymap.set("n", lhs, rhs, opts) end
@@ -312,7 +323,7 @@ local function create_term(opts)
 
       if opts.notifier ~= nil and type(opts.notifier) == "function" then opts.notifier(term_cmd, exit_code) end
       -- vim.cmd(opts.caller_winnr .. [[wincmd w]])
-      vim.cmd([[wincmd p]])
+      vim.cmd([[silent! wincmd p]])
     end,
   })
 
@@ -340,9 +351,13 @@ local function set_autocmds(opts)
   augroup("megaterm", {
     {
       event = { "BufEnter" },
-      command = function(params)
-        if vim.bo[params.buf].filetype == "megaterm" then
-          if vim.tbl_contains({ "right", "bottom" }, Term.position) then set_win_size() end
+      command = function(args)
+        if vim.bo[args.buf].filetype == "megaterm" and term_win_id ~= nil and term_win_id ~= -1 and vim.api.nvim_win_is_valid(term_win_id) then
+          if vim.tbl_contains({ "right", "bottom" }, Term.position) then
+            if vim.api.nvim_win_get_width(term_win_id) > Term.size then Term.position = Term.position == "right" and "bottom" or Term.position end
+
+            set_win_size()
+          end
         end
       end,
     },
@@ -406,7 +421,7 @@ local function new_term(opts)
   create_term(opts)
   __enter(opts)
 
-  if not opts.focus_on_open then vim.cmd("wincmd p | stopinsert") end
+  if not opts.focus_on_open then vim.cmd("silent! wincmd p | stopinsert") end
 
   -- we only want new tab terms each time
   if opts.position == "tab" then unset_term(false) end
@@ -426,14 +441,37 @@ end
 
 local function new_or_open_term(opts)
   opts = build_defaults(opts)
-  new_term(opts)
-  if not opts.focus_on_open then vim.cmd("wincmd p") end
+  -- local ok, err = pcall(build_defaults, opts)
+  -- if not ok and (err and err:find("E444")) then
+  -- local ok, err = pcall(vim.api.nvim_win_close, win, true)
+  -- if not ok and (err and err:find("E444")) then
+  --   -- last window, so creat a split and close it again
+  --   vim.cmd("silent! vsplit")
+  --   pcall(vim.api.nvim_win_close, win, true)
+  -- elseif not ok then
+  --   error(err)
+  -- end
+
+  -- local ok, err = pcall(new_term, opts)
+
+  -- D({ ok, err })
+
+  -- if not ok and (err and err:find("E36")) then
+  --   opts.position = opts.position == "right" and "bottom" or opts.position
+
+  --   pcall(new_term, opts)
+  -- else
+  -- end
+
+  pcall(new_term, opts)
+
+  -- if not opts.focus_on_open then vim.cmd("silent! wincmd p") end
 end
 
 local function hide_term(is_moving)
   if fn.win_gotoid(term_win_id) == 1 then
     api.nvim_command("hide")
-    if not is_moving then vim.cmd([[wincmd p]]) end
+    if not is_moving then vim.cmd([[silent! wincmd p]]) end
   end
 end
 
@@ -536,7 +574,7 @@ function mega.toggle(opts)
   local function focus()
     if is_valid() then
       vim.api.nvim_set_current_win(term_win_id)
-      vim.cmd("startinsert")
+      vim.cmd.startinsert()
     end
   end
 
@@ -609,7 +647,7 @@ function mega.toggle(opts)
       placement_modifier = "botright "
     end
 
-    vim.cmd(placement_modifier .. width .. "vsplit")
+    vim.cmd("silent! " .. placement_modifier .. width .. "vsplit")
     local new_winid = vim.api.nvim_get_current_win()
     vim.api.nvim_win_set_height(new_winid, full_height)
 
@@ -620,7 +658,7 @@ function mega.toggle(opts)
     if focus then
       -- Focus the terminal: switch to terminal window and enter insert mode
       vim.api.nvim_set_current_win(term_win_id)
-      vim.cmd("startinsert")
+      vim.cmd.startinsert()
     else
       -- Preserve user context: return to the window they were in before showing terminal
       vim.api.nvim_set_current_win(original_win)
@@ -634,13 +672,13 @@ function mega.toggle(opts)
   local buf_visible = has_buffer and is_visible()
 
   if buf_visible then
-    D({ "buf_visible? yes", term_win_id, term_buf_id, term_job_id, term_tab_id })
+    -- D({ "buf_visible? yes", term_win_id, term_buf_id, term_job_id, term_tab_id })
     -- Terminal is visible, hide it (but keep process running)
     hide()
   else
     -- Terminal is not visible
     if has_buffer then
-      D({ "has_buffer? yes", term_win_id, term_buf_id, term_job_id, term_tab_id })
+      -- D({ "has_buffer? yes", term_win_id, term_buf_id, term_job_id, term_tab_id })
 
       -- -- Terminal process exists but is hidden, show it
       if show(opts, true) then

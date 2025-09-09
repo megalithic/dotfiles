@@ -152,13 +152,15 @@ function obj.editClipboardImage(image)
 
   -- Save the image to a temporary file
   local tmpfile = os.tmpname() .. ".png"
-  image:saveToFile(tmpfile)
+  if image ~= nil and tmpfile ~= nil then
+    image:saveToFile(tmpfile)
 
-  -- Open the image in Preview and start annotation
-  hs.execute("open -a Preview " .. tmpfile)
+    -- Open the image in Preview and start annotation
+    hs.execute("open -a Preview " .. tmpfile)
 
-  -- hs.timer.doAfter(1, function() hs.application.find("Preview"):selectMenuItem({ "Tools", "Annotate", "Arrow" }) end)
-  note(fmt("[%s] editClipboardImage: %s", obj.name, obj.clipboardData))
+    -- hs.timer.doAfter(1, function() hs.application.find("Preview"):selectMenuItem({ "Tools", "Annotate", "Arrow" }) end)
+    note(fmt("[%s] editClipboardImage: %s", obj.name, obj.clipboardData))
+  end
 end
 
 function obj:init(opts)

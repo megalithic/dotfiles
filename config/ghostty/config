@@ -48,6 +48,7 @@ shell-integration-features = cursor,sudo,title
 
 # custom-shader = shaders/cursor_blaze_no_trail.glsl
 # custom-shader = shaders/cursor_smear.glsl
+custom-shader = ~/.config/ghostty/cursor.glsl
 cursor-style = block
 cursor-style-blink = true
 # selection-invert-fg-bg = true
@@ -76,7 +77,7 @@ font-family-bold-italic = "JetBrainsMono Nerd Font Mono"
 font-style-bold-italic  = "ExtraBold Italic"
 
 
-font-size = 13
+font-size = 14
 font-thicken = true
 
 font-codepoint-map = U+2610-U+2612=Noto Sans Symbols 2
@@ -85,7 +86,7 @@ adjust-underline-position = 99
 adjust-underline-thickness = 50%
 
 # adjust-cell-width = -5%
-# adjust-cell-height = 20%
+adjust-cell-height = 10%
 # adjust-underline-position = 6
 # adjust-underline-thickness = 100%
 # adjust-cursor-thickness = 150%

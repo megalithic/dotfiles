@@ -23,6 +23,7 @@ export PLATFORM="$PLATFORM"
 XDG_CONFIG_HOME="$HOME/.config"
 XDG_CACHE_HOME="$HOME/.cache"
 XDG_DATA_HOME="$HOME/.local/share"
+XDG_BIN_DIR="$HOME/.local/bin"
 
 ZDOTDIR="$XDG_CONFIG_HOME/zsh"
 ZSH_CACHE_DIR="$XDG_CACHE_HOME/zsh"
@@ -35,6 +36,7 @@ fi
 export XDG_CONFIG_HOME
 export XDG_CACHE_HOME
 export XDG_DATA_HOME
+export XDG_BIN_DIR
 export ZDOTDIR
 export ZSH_CACHE_DIR
 
@@ -366,7 +368,6 @@ case "$(uname)" in
   typeset -agU path
   path=(
     /nix/store/[^/]*/bin(Nn[-1]-/)
-    $HOME/.opencode/bin
     $HOME/.local/share/lsp/bin(N-/)
     $HOME/bin
     $HOME/.bin

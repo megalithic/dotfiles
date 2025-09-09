@@ -1,6 +1,6 @@
 local SETTINGS = require("config.options")
 
-if SETTINGS.ts_branch == "main" then return {} end
+if SETTINGS.treesitter_branch == "main" then return {} end
 
 local function should_disable(lang, bufnr)
   local fname = vim.api.nvim_buf_get_name(bufnr)
@@ -53,10 +53,10 @@ return {
     "nvim-treesitter/nvim-treesitter",
     branch = "master",
     build = ":TSUpdate",
-    -- event = { "LazyFile", "VeryLazy" },
-    lazy = false,
+    event = { "LazyFile", "VeryLazy" },
+    -- lazy = false,
     opts = {
-      ensure_installed = SETTINGS.ts_ensure_installed,
+      ensure_installed = SETTINGS.treesitter_ensure_installed,
       ignore_install = { "comment" },
       auto_install = true,
       sync_install = false,

@@ -1,6 +1,6 @@
 local SETTINGS = require("config.options")
 
-if SETTINGS.ts_branch == "master" then return {} end
+if SETTINGS.treesitter_branch == "master" then return {} end
 
 local include_surrounding_whitespace = {
   ["@function.outer"] = true,
@@ -20,17 +20,17 @@ local function should_disable(lang, bufnr)
 end
 
 return {
-  -- { "brianhuster/treesitter-endwise.nvim" },
+  { "brianhuster/treesitter-endwise.nvim" },
   {
     "nvim-treesitter/nvim-treesitter",
     branch = "main",
     lazy = false,
-    build = { function() require("nvim-treesitter").install(require("config.options").ts_ensure_installed) end, ":TSUpdate" },
+    build = { function() require("nvim-treesitter").install(SETTINGS.treesitter_ensure_installed) end, ":TSUpdate" },
     config = function(_, opts)
       require("nvim-treesitter").setup()
 
       local installed = require("nvim-treesitter.config").get_installed("parsers")
-      local not_installed = vim.tbl_filter(function(parser) return not vim.tbl_contains(installed, parser) end, require("config.options").ts_ensure_installed)
+      local not_installed = vim.tbl_filter(function(parser) return not vim.tbl_contains(installed, parser) end, SETTINGS.treesitter_ensure_installed)
       if #not_installed > 0 then require("nvim-treesitter").install(not_installed) end
 
       local syntax_on = {
@@ -267,7 +267,105 @@ return {
       -- require("nvim-treesitter.configs").setup(opts)
     end,
   },
+  {
+    "saghen/blink.pairs",
+    version = "*", -- (recommended) only required with prebuilt binaries
 
+    -- download prebuilt binaries from github releases
+    dependencies = "saghen/blink.download",
+    -- OR build from source, requires nightly:
+    -- https://rust-lang.github.io/rustup/concepts/channels.html#working-with-nightly-rust
+    -- build = 'cargo build --release',
+    -- If you use nix, you can build from source using latest nightly rust with:
+    -- build = 'nix run .#build-plugin',
+
+    --- @module 'blink.pairs'
+    --- @type blink.pairs.Config
+    opts = {
+      mappings = {
+        -- you can call require("blink.pairs.mappings").enable()
+        -- and require("blink.pairs.mappings").disable()
+        -- to enable/disable mappings at runtime
+        enabled = true,
+        -- cmdline = true,
+        -- or disable with `vim.g.pairs = false` (global) and `vim.b.pairs = false` (per-buffer)
+        -- and/or with `vim.g.blink_pairs = false` and `vim.b.blink_pairs = false`
+        disabled_filetypes = {},
+        -- see the defaults:
+        -- https://github.com/Saghen/blink.pairs/blob/main/lua/blink/pairs/config/mappings.lua#L14
+        pairs = {},
+      },
+      highlights = {
+        enabled = true,
+        -- requires require('vim._extui').enable({}), otherwise has no effect
+        cmdline = true,
+        groups = {
+          "BlinkPairsOrange",
+          "BlinkPairsPurple",
+          "BlinkPairsBlue",
+        },
+        unmatched_group = "BlinkPairsUnmatched",
+
+        -- highlights matching pairs under the cursor
+        matchparen = {
+          enabled = true,
+          -- known issue where typing won't update matchparen highlight, disabled by default
+          cmdline = false,
+          group = "BlinkPairsMatchParen",
+        },
+      },
+      debug = false,
+    },
+  },
+  -- {
+  --   "saghen/blink.indent",
+  --   --- @module 'blink.indent'
+  --   --- @type blink.indent.Config
+  --   opts = {
+  --     -- or disable with `vim.g.indent_guide = false` (global) or `vim.b.indent_guide = false` (per-buffer)
+  --     blocked = {
+  --       buftypes = {},
+  --       filetypes = {},
+  --     },
+  --     static = {
+  --       enabled = true,
+  --       char = "▎",
+  --       priority = 1,
+  --       -- specify multiple highlights here for rainbow-style indent guides
+  --       -- highlights = { 'BlinkIndentRed', 'BlinkIndentOrange', 'BlinkIndentYellow', 'BlinkIndentGreen', 'BlinkIndentViolet', 'BlinkIndentCyan' },
+  --       highlights = { "BlinkIndent" },
+  --     },
+  --     scope = {
+  --       enabled = true,
+  --       char = "▎",
+  --       priority = 1024,
+  --       -- set this to a single highlight, such as 'BlinkIndent' to disable rainbow-style indent guides
+  --       -- highlights = { 'BlinkIndent' },
+  --       highlights = {
+  --         "BlinkIndentOrange",
+  --         "BlinkIndentViolet",
+  --         "BlinkIndentBlue",
+  --         -- 'BlinkIndentRed',
+  --         -- 'BlinkIndentCyan',
+  --         -- 'BlinkIndentYellow',
+  --         -- 'BlinkIndentGreen',
+  --       },
+  --       underline = {
+  --         -- enable to show underlines on the line above the current scope
+  --         enabled = false,
+  --         highlights = {
+  --           "BlinkIndentOrangeUnderline",
+  --           "BlinkIndentVioletUnderline",
+  --           "BlinkIndentBlueUnderline",
+  --           -- 'BlinkIndentRedUnderline',
+  --           -- 'BlinkIndentCyanUnderline',
+  --           -- 'BlinkIndentYellowUnderline',
+  --           -- 'BlinkIndentGreenUnderline',
+  --         },
+  --       },
+  --     },
+  --   },
+  -- },
   {
     "yorickpeterse/nvim-tree-pairs",
     main = "tree-pairs",

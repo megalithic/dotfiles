@@ -11,7 +11,7 @@ end
 
 return {
   {
-    -- cond = vim.g.ai == "claudecode",
+    cond = vim.g.ai == "claudecode",
     "coder/claudecode.nvim",
     dependencies = { "folke/snacks.nvim" },
     opts = {

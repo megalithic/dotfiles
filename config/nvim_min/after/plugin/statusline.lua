@@ -1,5 +1,171 @@
 if not Plugin_enabled() then
-  vim.o.statusline = "%#Statusline# %2{mode()} | %F %m %r %= %{&spelllang} %y %8(%l,%c%) %8p%%"
+  local autocmd = vim.api.nvim_create_autocmd
+  local augroup = vim.api.nvim_create_augroup("mega_minvim_statusline", { clear = true })
+  local set_hl = vim.api.nvim_set_hl
+
+  local function is_truncated(trunc)
+    return vim.api.nvim_win_get_width(0) < (trunc or -1)
+  end
+
+  local function wrap(opening_hl, contents, closing_hl)
+    assert(opening_hl, "A highlight name must be specified")
+    contents = contents or ""
+    closing_hl = closing_hl or "StatusLine"
+    return "%#" .. opening_hl .. "#" .. contents .. "%#" .. closing_hl .. "#"
+  end
+
+  -- Git branch function
+  local function git_branch()
+    local branch = vim.fn.system("git branch --show-current 2>/dev/null | tr -d '\n'")
+    if branch ~= "" then return "  " .. branch .. " " end
+    return ""
+  end
+
+  -- File type with icon
+  local function file_type()
+    local ft = vim.bo.filetype
+    local icons = {
+      -- lua = "[LUA]",
+      -- python = "[PY]",
+      -- javascript = "[JS]",
+      -- html = "[HTML]",
+      -- css = "[CSS]",
+      -- json = "[JSON]",
+      -- markdown = "[MD]",
+      -- vim = "[VIM]",
+      -- sh = "[SH]",
+    }
+
+    if ft == "" then return "  " end
+
+    return (icons[ft] or "")
+  end
+
+  -- LSP status
+  local function lsp_status()
+    local clients = vim.lsp.get_clients({ bufnr = 0 })
+    if #clients > 0 then return "lsp" end
+    return ""
+  end
+
+  -- File size
+  local function file_size()
+    local size = vim.fn.getfsize(vim.fn.expand("%"))
+    if size < 0 then return "" end
+    if size < 1024 then
+      return size .. "B "
+    elseif size < 1024 * 1024 then
+      return string.format("%.1fK", size / 1024)
+    else
+      return string.format("%.1fM", size / 1024 / 1024)
+    end
+  end
+
+  local CTRL_S = vim.keycode("<C-S>", true, true, true)
+  local CTRL_V = vim.keycode("<C-V>", true, true, true)
+  local MODES = setmetatable({
+    ["n"] = { long = "Normal", short = "N", hl = "StModeNormal", separator_hl = "StSeparator" },
+    ["no"] = { long = "N-OPERATOR PENDING", short = "N-OP", hl = "StModeNormal", separator_hl = "StSeparator" },
+    ["nov"] = { long = "N-OPERATOR BLOCK", short = "N-OPv", hl = "StModeNormal", separator_hl = "StSeparator" },
+    ["noV"] = { long = "N-OPERATOR LINE", short = "N-OPV", hl = "StModeNormal", separator_hl = "StSeparator" },
+    ["v"] = { long = "Visual", short = "V", hl = "StModeVisual", separator_hl = "StSeparator" },
+    ["V"] = { long = "V-Line", short = "V-L", hl = "StModeVisual", separator_hl = "StSeparator" },
+    [CTRL_V] = { long = "V-Block", short = "V-B", hl = "StModeVisual", separator_hl = "StSeparator" },
+    ["s"] = { long = "Select", short = "S", hl = "StModeVisual", separator_hl = "StSeparator" },
+    ["S"] = { long = "S-Line", short = "S-L", hl = "StModeVisual", separator_hl = "StSeparator" },
+    [CTRL_S] = { long = "S-Block", short = "S-B", hl = "StModeVisual", separator_hl = "StSeparator" },
+    ["i"] = { long = "Insert", short = "I", hl = "StModeInsert", separator_hl = "StSeparator" },
+    ["R"] = { long = "Replace", short = "R", hl = "StModeReplace", separator_hl = "StSeparator" },
+    ["c"] = { long = "Command", short = "C", hl = "StModeCommand", separator_hl = "StSeparator" },
+    ["r"] = { long = "Prompt", short = "P", hl = "StModeOther", separator_hl = "StSeparator" },
+    ["!"] = { long = "Shell", short = "Sh", hl = "StModeOther", separator_hl = "StSeparator" },
+    ["t"] = { long = "Terminal", short = "T-I", hl = "StModeOther", separator_hl = "StSeparator" },
+    ["nt"] = { long = "N-Terminal", short = "T-N", hl = "StModeNormal", separator_hl = "StSeparator" },
+    ["r?"] = { long = "Confirm", short = "?", hl = "StModeOther", separator_hl = "StSeparator" },
+  }, {
+    -- By default return 'Unknown' but this shouldn't be needed
+    __index = function() return { long = "Unknown", short = "U", hl = "StModeOther", separator_hl = "StSeparator" } end,
+  })
+
+  local function mode(truncate_at)
+    local mode_info = MODES[vim.api.nvim_get_mode().mode]
+    local mode = is_truncated(truncate_at) and mode_info.short or mode_info.long
+    return seg(string.upper(mode), mode_info.hl, { padding = { 1, 1 } })
+  end
+
+  -- Mode indicators with icons
+  local function mode_icon()
+    local mode = vim.fn.mode()
+    local modes = {
+      n = "NORMAL",
+      i = "INSERT",
+      v = "VISUAL",
+      V = "V-LINE",
+      ["\22"] = "V-BLOCK", -- Ctrl-V
+      c = "COMMAND",
+      s = "SELECT",
+      S = "S-LINE",
+      ["\19"] = "S-BLOCK", -- Ctrl-S
+      R = "REPLACE",
+      r = "REPLACE",
+      ["!"] = "SHELL",
+      t = "TERMINAL",
+    }
+    return modes[mode] or "  " .. mode:upper()
+  end
+
+  _G.mode_icon = mode_icon
+  _G.git_branch = git_branch
+  _G.file_type = file_type
+  _G.file_size = file_size
+  _G.lsp_status = lsp_status
+
+  -- set_hl(0, "StatusLineBold", { bold = true })
+  -- set_hl(0, "StatusLineNC", { bold = true })
+  -- set_hl(0, "StatusLineModified", { bold = true, fg = "#e67e80" })
+
+  autocmd({ "WinEnter", "BufEnter", "FocusGained" }, {
+    group = augroup,
+    desc = "Focused statusline",
+    callback = function()
+      vim.opt_local.statusline = table.concat({
+        "%#StatusLine#",
+        "%<",
+        wrap("StatusLineBold", "%{v:lua.mode_icon()}"),
+        " ",
+        "%f %h",
+        " ",
+        wrap("StModified", "%m"),
+        " ",
+        "%r",
+        "%{v:lua.file_type()}",
+        " ",
+        "%{v:lua.file_size()}",
+        "%=", -- center
+        "%{v:lua.lsp_status()}",
+        "%=", -- right
+        "%{v:lua.git_branch()}",
+        "%l:%c  %P ", -- Line:Column and Percentage
+      })
+    end,
+  })
+
+  autocmd({ "WinLeave", "BufLeave", "FocusLost" }, {
+    group = augroup,
+    desc = "Unfocused statusline",
+    callback = function()
+      -- vim.opt_local.statusline = "%f %h%m%r"
+      vim.opt_local.statusline = table.concat({
+        "%#StatusLineInactive#",
+        "%f %h%m%r",
+      })
+    end,
+  })
+  -- vim.cmd.highlight("StatusLineBold gui=bold cterm=bold")
+  -- vim.cmd.highlight("StatusLineModified gui=bold cterm=bold fg=#")
+
+  -- vim.o.statusline = "%#Statusline#%2{mode()} | %F %m %r %= %{&spelllang} %y %8(%l,%c%) %8p%%"
+
   return
 end
 
@@ -19,10 +185,10 @@ local get_opt = api.nvim_get_option_value
 
 -- local mini_icons = require("mini.icons")
 
-local U = require("config.utils")
-local SETTINGS = require("config.options")
-local H = U.hl
-local icons = SETTINGS.icons
+local U = require("config.utils") or {}
+local SETTINGS = require("config.options") or {}
+local H = U.hl or {}
+local icons = SETTINGS.icons or {}
 
 vim.g.is_saving = false
 vim.g.lsp_progress_messages = ""
@@ -178,10 +344,10 @@ local function seg(contents, hl, cond, opts)
   opts = vim.tbl_extend("force", {
     margin = { 0, 0 },
     prefix = "",
-    prefix_hl = hl,
+    prefix_hl = "Statusline",
     padding = { 0, 0 },
     suffix = "",
-    suffix_hl = hl,
+    suffix_hl = "Statusline",
   }, opts or {})
 
   -- local segment = "%#" .. hl .. "#" .. contents
@@ -365,7 +531,12 @@ local exception_types = {
       local term_buf_var = vim.api.nvim_buf_get_var(bufnr, "term_buf")
       if vim.g.term_buf ~= nil or term_buf_var ~= nil then
         return seg(
-          string.format("%s(%s)[%s]", vim.api.nvim_buf_get_var(bufnr, "term_name"), shell, vim.api.nvim_buf_get_var(bufnr, "term_cmd") or bufnr),
+          string.format(
+            "%s(%s)[%s]",
+            vim.api.nvim_buf_get_var(bufnr, "term_name"),
+            shell,
+            vim.api.nvim_buf_get_var(bufnr, "term_cmd") or bufnr
+          ),
           mode_hl
         )
         -- return seg(
@@ -447,7 +618,9 @@ local function special_buffers()
   return nil
 end
 
-local function is_plain() return matches(M.ctx.filetype, plain_types.filetypes) or matches(M.ctx.buftype, plain_types.buftypes) or M.ctx.preview end
+local function is_plain()
+  return matches(M.ctx.filetype, plain_types.filetypes) or matches(M.ctx.buftype, plain_types.buftypes) or M.ctx.preview
+end
 
 local function is_abnormal_buffer()
   -- For more information see ":h buftype"
@@ -476,7 +649,9 @@ local function get_diagnostics(seg_formatters_status)
 
   local segments = ""
   for _, d in ipairs(diags) do
-    if d.num > 0 then segments = fmt("%s%s", segments, seg(fmt("%s%s", d.num, d.sign), d.hl, { padding = { 1, 1 } })) end
+    if d.num > 0 then
+      segments = fmt("%s%s", segments, seg(fmt("%s%s", d.num, d.sign), d.hl, { padding = { 1, 1 } }))
+    end
   end
 
   return seg(segments .. "" .. seg_formatters_status, { margin = { 1, 1 } })
@@ -509,7 +684,9 @@ local function parse_filename(truncate_at)
   end
 
   local name = exception_types.names[M.ctx.filetype]
-  if exception_types.filenames[current_file().name] ~= nil then name = exception_types.filenames[current_file().name] end
+  if exception_types.filenames[current_file().name] ~= nil then
+    name = exception_types.filenames[current_file().name]
+  end
   local exception_icon = exception_types.filetypes[M.ctx.filetype] or ""
   if type(name) == "function" then return "", "", fmt("%s %s", exception_icon, name(fname, M.ctx.bufnr)) end
 
@@ -563,7 +740,10 @@ local function seg_filename(truncate_at)
 
   -- usually our custom titles, like for megaterm, neo-tree, etc
   if dir.item == "" and parent.item == "" then
-    return seg(fmt("%s%s%s", seg(dir.item, dir.hl), seg(parent.item, parent.hl), seg(filename, file_hl)), { margin = { 1, 1 } })
+    return seg(
+      fmt("%s%s%s", seg(dir.item, dir.hl), seg(parent.item, parent.hl), seg(filename, file_hl)),
+      { margin = { 1, 1 } }
+    )
   end
 
   -- if icon.item == nil or icon.item == "" then
@@ -571,15 +751,21 @@ local function seg_filename(truncate_at)
   -- end
   -- return seg(fmt("%s/%s/ %s %s", seg(dir.item, dir.hl), seg(parent.item, parent.hl), seg(icon.item, file_hl), seg(file.item, file_hl)), { margin = { 1, 1 } })
 
-  if dir.item == "/" then return seg(fmt("/%s/%s", seg(parent.item, parent.hl), seg(filename, file_hl)), { margin = { 1, 1 } }) end
+  if dir.item == "/" then
+    return seg(fmt("/%s/%s", seg(parent.item, parent.hl), seg(filename, file_hl)), { margin = { 1, 1 } })
+  end
 
-  return seg(fmt("%s/%s/%s", seg(dir.item, dir.hl), seg(parent.item, parent.hl), seg(filename, file_hl)), { margin = { 1, 1 } })
+  return seg(
+    fmt("%s/%s/%s", seg(dir.item, dir.hl), seg(parent.item, parent.hl), seg(filename, file_hl)),
+    { margin = { 1, 1 } }
+  )
 end
 
 local function seg_buffer_count(truncate_at)
   local buffer_count = U.get_bufnrs()
 
-  local msg = (is_truncated(truncate_at) or vim.g.started_by_firenvim) and "" or fmt("%s%s", icons.misc.buffers, buffer_count)
+  local msg = (is_truncated(truncate_at) or vim.g.started_by_firenvim) and ""
+    or fmt("%s%s", icons.misc.buffers, buffer_count)
 
   if buffer_count <= 1 then return "" end
   return seg(msg, "StBufferCount", { padding = { 0, 0 } })
@@ -616,7 +802,9 @@ local function seg_lsp_clients(truncate_at)
   end
 
   local clients_str = U.strim(table.concat(client_names, "/"))
-  if is_truncated(truncate_at) then return seg(#client_names, { prefix = fmt("%s ", icons.lsp.clients), margin = { 0, 0 } }) end
+  if is_truncated(truncate_at) then
+    return seg(#client_names, { prefix = fmt("%s ", icons.lsp.clients), margin = { 0, 0 } })
+  end
   return seg(clients_str, { prefix = fmt("%s ", icons.lsp.clients), margin = { 0, 0 } })
 end
 
@@ -790,7 +978,9 @@ function mega.ui.statusline.render()
   }
 
   -- vim.o.statusline = "%#Statusline# %2{mode()} | %F %m %r %= %{&spelllang} %y %8(%l,%c%) %8p%%"
-  if not is_focused() then return "%#StatusLineInactive# %F %m %r %{&paste?'[paste] ':''} %= %{&spelllang}  %y %8(%l,%c%) %8p%%" end
+  if not is_focused() then
+    return "%#StatusLineInactive# %F %m %r %{&paste?'[paste] ':''} %= %{&spelllang}  %y %8(%l,%c%) %8p%%"
+  end
 
   if is_plain() then
     local parts = {

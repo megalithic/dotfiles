@@ -16,7 +16,7 @@ erlang 27.3.4.1
 elm latest
 lua 5.1.5
 ruby 3.3.0
-rust latest
+rust beta
 golang 1.20.2
 yarn 1.22.22
 # zig latest

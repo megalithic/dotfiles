@@ -379,30 +379,42 @@ function M.apply()
   })
 
   M.augroup("CmdlineBehaviours", {
+    -- {
+    --   event = "CmdlineEnter",
+    --   command = function(ctx)
+    --     if not ctx.match == ":" then return end
+    --     local cmdline = vim.fn.getcmdline()
+    --     local isSubstitution = cmdline:find("s ?/.+/.-/%a*$")
+    --     if isSubstitution then vim.cmd(cmdline .. "ne") end
+    --   end,
+    -- },
+    -- {
+    --   event = "CmdlineLeave",
+    --   command = function(ctx)
+    --     if not ctx.match == ":" then return end
+    --     vim.defer_fn(function()
+    --       local lineJump = vim.fn.histget(":", -1):match("^%d+$")
+    --       if lineJump then vim.fn.histdel(":", -1) end
+    --     end, 100)
+    --   end,
+    -- },
     {
-      event = "CmdlineEnter",
-      command = function(ctx)
-        if not ctx.match == ":" then return end
-        local cmdline = vim.fn.getcmdline()
-        local isSubstitution = cmdline:find("s ?/.+/.-/%a*$")
-        if isSubstitution then vim.cmd(cmdline .. "ne") end
+      event = { "CmdlineEnter", "CmdwinEnter" },
+      desc = "Reset command line message clearing",
+      pattern = { ":" },
+      command = function(args)
+        vim.g.extui_msg_timeout = -1
+        require("config.utils").clear_commandline(nil)
       end,
     },
     {
-      event = "CmdlineLeave",
-      command = function(ctx)
-        if not ctx.match == ":" then return end
-        vim.defer_fn(function()
-          local lineJump = vim.fn.histget(":", -1):match("^%d+$")
-          if lineJump then vim.fn.histdel(":", -1) end
-        end, 100)
-      end,
-    },
-    {
-      event = { "CmdlineLeave", "CmdlineChanged" },
+      event = { "CmdlineLeave", "CmdlineChanged", "CmdwinLeave" },
       desc = "Clear command line messages",
       pattern = { ":" },
-      command = require("config.utils").clear_commandline(),
+      command = function(args)
+        vim.g.extui_msg_timeout = 5000
+        require("config.utils").clear_commandline(5000)
+      end,
     },
   })
 
@@ -597,7 +609,7 @@ function M.apply()
 
   M.augroup("Utilities", {
     {
-      event = { "VimResized" },
+      event = { "VimResized", "WinResized" },
       --     desc = "Automatically resize windows in all tabpages when resizing Vim",
       command = function(args)
         vim.schedule(function()

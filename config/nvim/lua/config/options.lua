@@ -91,7 +91,6 @@ local M = {
   note_taker = "", -- alt: zk, marksman, markdown_oxide, obsidian
   ai = "", -- alt: minuet, neocodeium, codecompanion, supermaven, avante, copilot
   completer = "blink", -- alt: cmp, blink, epo
-  ts_ignored_langs = {}, -- alt: { "svg", "json", "heex", "jsonc" }
   is_screen_sharing = false,
   enabled_plugins = {
     "abbreviations",
@@ -116,7 +115,7 @@ local M = {
   disabled_lsp_formatters = { "tailwindcss", "html", "ts_ls", "ls_emmet", "zk", "sumneko_lua" },
   enabled_elixir_ls = get_enabled_elixir_ls(), --- opts: {"elixirls", "nextls", "lexical"}
   completion_exclusions = {},
-  formatter_exclusions = {},
+  formatter_exclusions = { "emmylua_ls" },
   definition_exclusions = {},
   references_exclusions = {},
   diagnostic_exclusions = {},
@@ -144,7 +143,8 @@ local M = {
     "yaml",
     "json",
   },
-  ts_ensure_installed = {
+  treesitter_ignored_langs = {}, -- alt: { "svg", "json", "heex", "jsonc" }
+  treesitter_ensure_installed = {
     "bash",
     "c",
     "cpp",
@@ -211,7 +211,7 @@ local M = {
     "yaml",
   },
   -- FIXME: still need to get indentions working correctly
-  ts_branch = "main",
+  treesitter_branch = "master",
   colorizer = {
     filetypes = { "*", "!lazy", "!gitcommit", "!NeogitCommitMessage", "!oil" },
     buftypes = { "*", "!prompt", "!nofile", "!oil" },
@@ -503,7 +503,6 @@ M.apply = function()
       snipper = M.snipper,
       completer = M.completer,
       note_taker = M.note_taker,
-      ts_ignored_langs = M.ts_ignored_langs,
       is_screen_sharing = M.is_screen_sharing,
       disable_autolint = M.disable_autolint,
       disable_autoformat = M.disable_autoformat,

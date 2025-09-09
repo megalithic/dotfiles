@@ -445,11 +445,16 @@ return {
     dependencies = { "neovim/nvim-lspconfig" },
     build = ":UpdateRemotePlugins",
     name = "tailwind-tools",
-    opts = {
-      -- server = {
-      --   override = false,
-      -- },
-    },
+    -- opts = function()
+    --   local _ok_lsp, lsp = pcall(dofile, vim.fn.stdpath("config") .. "/plugin/lsp/init.lua")
+    --   return {
+    --     server = {
+    --       override = false,
+    --       -- on_attach = lsp.on_attach,
+    --     },
+    --   }
+    -- end,
+    opts = { server = { override = false } },
   },
   {
     "dnlhc/glance.nvim",
@@ -509,4 +514,26 @@ return {
       })
     end,
   },
+  -- {
+  --   "pmizio/typescript-tools.nvim",
+  --   ft = { "typescript", "typescriptreact", "javascript", "javascriptreact", "vue" },
+  --   config = function()
+  --     local lsp = dofile(vim.fn.stdpath("config") .. "/plugin/lsp/init.lua")
+  --     require("typescript-tools").setup({
+  --       filetypes = {
+  --         "javascript",
+  --         "javascriptreact",
+  --         "typescript",
+  --         "typescriptreact",
+  --         "vue",
+  --       },
+  --       settings = {
+  --         tsserver_plugins = {
+  --           "@vue/typescript-plugin",
+  --         },
+  --       },
+  --       capabilities = lsp.capabilities(),
+  --     })
+  --   end,
+  -- },
 }

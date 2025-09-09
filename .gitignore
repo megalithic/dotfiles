@@ -48,3 +48,4 @@ home/opencode/bin
 
 # cloudflared
 home/cloudflared/cert.pem
+home/cloudflared/*.json

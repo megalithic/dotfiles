@@ -81,11 +81,11 @@ do_pip_install() {
 do_lazy_install() {
   log "running lazy.nvim package manager.."
   rm -rfv ~/.cache/nvim/packer/packer_compiled.lua ~/.local/share/nvim/site/pack/packer ~/.local/share/nvim/lazy ~/.local/state/nvim/lazy
-  if [[ -e "$HOME/.dotfiles/config/nvim/lazy-lock.json" ]]; then
-    nvim --headless "+Lazy! restore" +qa
-  else
-    nvim --headless "+Lazy! sync" +qa
-  fi
+  # if [[ -e "$HOME/.dotfiles/config/nvim/lazy-lock.json" ]]; then
+  #   nvim --headless "+Lazy! restore" +qa
+  # else
+  #   nvim --headless "+Lazy! sync" +qa
+  # fi
 }
 
 do_build() {

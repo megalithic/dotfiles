@@ -32,6 +32,9 @@ local ft_ignores = {
   "dbui",
   "neo-tree",
   "lazy",
+  "opencode",
+  "claude",
+  "claudecode",
   "packer",
   "startuptime",
   "undotree",
@@ -42,7 +45,7 @@ local ft_ignores = {
 
 local bt_ignores = {
   "help",
-  -- "acwrite",
+  "acwrite", -- maybe not?
   "undotree",
   "quickfix",
   "nerdtree",

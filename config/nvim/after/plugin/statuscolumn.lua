@@ -248,13 +248,14 @@ local function fdm(lnum)
   return fn.foldclosed(lnum) == -1 and fcs.foldopen or fcs.foldclose
 end
 
-local function get_num_wraps()
+local function get_num_wraps(winnr)
   -- Calculate the actual buffer width, accounting for splits, number columns, and other padding
-  local wrapped_lines = vim.api.nvim_win_call(0, function()
-    local winid = vim.api.nvim_get_current_win()
+  -- local wrapped_lines = vim.api.nvim_win_call(winnr or 0, function()
+  local wrapped_lines = vim.api.nvim_win_call(winnr or 0, function()
+    -- local winid = vim.api.nvim_get_current_win()
 
     -- get the width of the buffer
-    local winwidth = vim.api.nvim_win_get_width(winid)
+    local winwidth = vim.api.nvim_win_get_width(winnr)
     local numberwidth = vim.wo.number and vim.wo.numberwidth or 0
     local signwidth = vim.fn.exists("*sign_define") == 1 and vim.fn.sign_getdefined() and 2 or 0
     local foldwidth = vim.wo.foldcolumn or 0
@@ -276,8 +277,8 @@ local function get_num_wraps()
   return wrapped_lines
 end
 
-local function draw_wrap_symbols(virtnum, col_width)
-  local num_wraps = get_num_wraps()
+local function draw_wrap_symbols(winnr, virtnum, col_width)
+  local num_wraps = get_num_wraps(winnr)
   local mode = vim.fn.mode()
   local normalized_mode = vim.fn.strtrans(mode):lower():gsub("%W", "")
   local line = ""
@@ -287,8 +288,6 @@ local function draw_wrap_symbols(virtnum, col_width)
   else
     line = "│"
   end
-
-  -- return line
 
   if normalized_mode == "v" then
     local pos_list = vim.fn.getregionpos(vim.fn.getpos("v"), vim.fn.getpos("."), { type = mode, eol = true })
@@ -319,7 +318,7 @@ local function nr(win, lnum, relnum, virtnum, line_count)
   -- end -- virtual line
 
   if virtnum and virtnum ~= 0 then
-    local line, hl = draw_wrap_symbols(virtnum, col_width)
+    local line, hl = draw_wrap_symbols(win, virtnum, col_width)
 
     return line -- virtual line
   end
@@ -373,12 +372,12 @@ end
 
 function mega.ui.statuscolumn.render(is_active)
   local lnum, relnum, virtnum = v.lnum, v.relnum, v.virtnum
-  local win = api.nvim_get_current_win()
-  local buf = api.nvim_win_get_buf(win)
-  local line_count = api.nvim_buf_line_count(buf)
+  local winnr = api.nvim_get_current_win()
+  local bufnr = api.nvim_win_get_buf(winnr)
+  local line_count = api.nvim_buf_line_count(bufnr)
   local is_actively_folding = is_active and vim.o.foldlevel > 0
 
-  local git_signs, other_signs = extmark_signs(buf, lnum)
+  local git_signs, other_signs = extmark_signs(bufnr, lnum)
 
   while #other_signs < MIN_SIGN_WIDTH do
     table.insert(other_signs, spacer(1))
@@ -386,7 +385,7 @@ function mega.ui.statuscolumn.render(is_active)
 
   local r1_hl = is_active and "" or "StatusColumnInactiveLineNr"
 
-  local ln_col = { nr(win, lnum, relnum, virtnum, line_count), r1_hl }
+  local ln_col = { nr(winnr, lnum, relnum, virtnum, line_count), r1_hl }
   local fold_col = {
     {
       { fdm(lnum), "FoldColumn" },
