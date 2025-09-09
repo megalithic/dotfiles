@@ -26,7 +26,7 @@ tmux -2 select-pane -t "$SESSION":2.1
 # Window "services"
 tmux new-window -c "$CWD" -t "$SESSION":3 -n services
 tmux send-keys -t "$SESSION":3.1 "nix-shell --run zsh" "C-m"
-tmux send-keys -t "$SESSION":3.1 "iex --sname $SESSION-tern --cookie ternit -S mix" "C-m"
+tmux send-keys -t "$SESSION":3.1 "m $SESSION-tern" "C-m"
 
 # focus
 tmux -2 select-window -t "$SESSION":2

@@ -41,7 +41,16 @@ alias l='ls -lFh' # size,show type,human readable
 # grc overides for ls
 #   Made possible through contributions from generous benefactors like
 #   `brew install coreutils`
-if $(gls &>/dev/null); then
+
+if $(eza &>/dev/null); then
+  alias exa=\eza
+  alias ls="\eza -gahF --group-directories-first"
+  # alias l="\eza -lahF --icons --group-directories-first --git"
+  alias l="\eza --long --git-repos --all --git --color=always --group-directories-first --icons $@"
+elif $(exa &>/dev/null); then
+  alias ls="exa -gahF --group-directories-first"
+  alias l="exa -lahF --icons --group-directories-first --git"
+elif $(gls &>/dev/null); then
   alias gls="tmux select-pane -P bg=default,fg=default &> /dev/null; gls --color=auto --group-directories-first"
   alias ls="gls -FA"
   alias lst="gls -FAt"
@@ -50,15 +59,6 @@ if $(gls &>/dev/null); then
   alias ll="gls -l"
   alias la="gls -A"
   alias las='find . -maxdepth 1 -type l -printf "%p -> %l\n" | sort'
-fi
-
-if $(\eza &>/dev/null); then
-  alias exa=\eza
-  alias ls="\eza -gahF --group-directories-first"
-  alias l="\eza -lahF --icons --group-directories-first --git"
-elif $(exa &>/dev/null); then
-  alias ls="exa -gahF --group-directories-first"
-  alias l="exa -lahF --icons --group-directories-first --git"
 fi
 
 if $(erdtree &>/dev/null); then
@@ -181,22 +181,20 @@ if type nvim >/dev/null 2>&1; then
   alias ribvim="NVIM_APPNAME=ribvim nvim"
   alias penvim="NVIM_APPNAME=penvim nvim"
   alias newvim="NVIM_APPNAME=newmega nvim"
-  alias mvim=newvim
   alias kickvim="NVIM_APPNAME=kickvim nvim"
   alias e="NVIM_APPNAME=wipvim nvim"
   alias ogvim="NVIM_APPNAME=ogvim nvim"
   alias og="NVIM_APPNAME=ogvim nvim"
-  # alias kv="kickvim"
-  # alias kvim="kickvim"
+  alias mvim="NVIM_APPNAME=mvim nvim"
+  alias rvim="NVIM_APPNAME=rvim nvim"
   alias minvim="NVIM_APPNAME=minvim nvim"
-  # alias wansvim="NVIM_APPNAME=wansvim nvim"
   alias v=vim
   alias vi="/usr/local/bin/vim"
   alias novim="nvim -u NONE"
   alias barevim="nvim -u NONE"
-  alias ngit="nvim -c \":bd|:Neogit kind=replace\""
-  alias ndiff="nvim -c \":bd|:DiffviewOpen\""
-  alias ndb="nvim -c \":bd|:DBUI\""
+  alias ngit="CUSTOM_NVIM=1 nvim -c \":Neogit kind=replace\""
+  alias ndiff="CUSTOM_NVIM=1 nvim -c \":DiffviewOpen\""
+  alias ndb="CUSTOM_NVIM=1 nvim -c \":Dbee toggle\""
 
   # suffix aliases set the program type to use to open a particular file with an extension
   alias -s {js,html,js,ts,css,md}=nvim
@@ -216,17 +214,14 @@ alias ezkb="nvim $DOTS/config/zsh/**/keybindings.zsh"
 alias ezl="nvim $DOTS/config/zsh/**/local.zsh"
 
 alias ev="nvim $DOTS/config/nvim/init.lua"
-alias evk="nvim $CODE/kickstart.nvim/init.lua"
-alias evv="nvim $DOTS/config/nvim/vimrc"
-alias evp="nvim $DOTS/config/nvim/lua/plugins/core/init.lua $DOTS/config/nvim/lua/plugins/extended/init.lua"
-# alias evo="nvim $DOTS/config/nvim/lua/mega/options.lua"
-alias evo="nvim $DOTS/config/nvim/lua/mega/settings.lua"
-alias evg="nvim $DOTS/config/nvim/lua/mega/globals.lua"
-alias evu="nvim $DOTS/config/nvim/lua/mega/utils/init.lua"
-alias evs="nvim $DOTS/config/nvim/lua/mega/servers.lua"
-alias evm="nvim $DOTS/config/nvim/lua/mega/mappings.lua"
-alias eva="nvim $DOTS/config/nvim/lua/mega/autocmds.lua"
-alias evl="nvim $DOTS/config/nvim/lua/plugins/extended/lsp.lua"
+alias evp="nvim $DOTS/config/nvim/lua/plugins/init.lua"
+alias evo="nvim $DOTS/config/nvim/lua/config/options.lua"
+alias evg="nvim $DOTS/config/nvim/lua/config/globals.lua"
+alias evu="nvim $DOTS/config/nvim/lua/config/utils/init.lua"
+alias evk="nvim $DOTS/config/nvim/lua/config/keymaps.lua"
+alias eva="nvim $DOTS/config/nvim/lua/config/autocmds.lua"
+alias evl="nvim $DOTS/config/nvim/plugin/lsp/init.lua"
+alias evs="nvim $DOTS/config/nvim/plugin/lsp/servers.lua"
 alias evf="nvim $DOTS/config/nvim/after/plugin/filetypes.lua"
 alias evt="nvim $DOTS/config/nvim/after/plugin/term.lua"
 
@@ -359,6 +354,7 @@ alias gcv="git cv"
 alias gcm='git commit -m "$(gum input)" -m "$(gum write)"'
 alias gaa="git aa"
 alias gcp="git branch --show-current | tr -d '[:space:]' | pbcopy"
+alias gcy="git branch --show-current | tr -d '[:space:]' | pbcopy"
 alias gup="git up"
 # alias rebase="git pull --rebase origin master"
 # alias grm="git status | grep deleted | awk '{\$1=\$2=\"\"; print \$0}' | \
@@ -368,18 +364,30 @@ alias gup="git up"
 # -----------------------------------------------------------------------------
 alias ghc='gh repo clone'
 alias ghv='gh repo view -w'
-pr() {
+prs() {
   get_pr="$(gh pr list | fzf | awk '{ print $1 }')"
 
   echo "$get_pr"
 
   [[ -z $get_pr ]] && gh pr view -w "$get_pr"
 }
-# alias ghpr="gh pr create --web"
-function ghpr() {
-  # GH_FORCE_TTY=100% gh pr list | fzf --query "$1" --ansi --preview 'GH_FORCE_TTY=100% gh pr view {1}' --preview-window down --header-lines 3 | awk '{print $1}' | xargs gh pr checkout
-  gh pr create --web
+function pr() {
+  gh pr view --web &> /dev/null
+
+  if [ $? -ne 0 ]; then
+    gh pr create --web
+  fi
 }
+alias ghpr="pr"
+function prr() {
+  export GH_PEERS="alinmarsh
+  DanThiffault
+  jia614
+  agundy"
+
+  echo $GH_PEERS | fzf -m --tmux |  sed "N;s/\n/,/" | xargs gh pr edit --add-reviewer
+}
+
 alias ghb="gh browse"
 alias ghi="gh issue create --label='' --assignee='@me' --body='' --title"
 
@@ -508,6 +516,7 @@ alias b="m1ddc set luminance"
 alias gpt="chatgpt-cli -k $OPENAI_API_KEY chat"
 
 alias fkill="ps -e | fzf | awk '{print $1}' | xargs kill"
+alias ms="m s"
 
 # FUNCTIONS
 # ------------------------------------------------------------------------------

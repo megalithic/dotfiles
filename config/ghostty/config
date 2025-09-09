@@ -30,15 +30,25 @@ window-colorspace = display-p3
 window-vsync = true
 window-padding-x = 5
 window-padding-y = 10,0
+# window-padding-y = 0
+# window-padding-x = 0
 # window-padding-x = 10
 # window-padding-y = 10
 window-padding-balance = true
 window-padding-color = background
 window-save-state = always
 
+# start maximized
+window-height = 9999
+window-width = 9999
+
 shell-integration = zsh
 shell-integration-features = cursor,sudo,title
 
+
+# custom-shader = shaders/cursor_blaze_no_trail.glsl
+# custom-shader = shaders/cursor_smear.glsl
+custom-shader = ~/.config/ghostty/cursor.glsl
 cursor-style = block
 cursor-style-blink = true
 # selection-invert-fg-bg = true
@@ -67,11 +77,16 @@ font-family-bold-italic = "JetBrainsMono Nerd Font Mono"
 font-style-bold-italic  = "ExtraBold Italic"
 
 
-font-size = 13
+font-size = 14
 font-thicken = true
 
+font-codepoint-map = U+2610-U+2612=Noto Sans Symbols 2
+font-codepoint-map = U+25E0-U+25E1,U+2026=DejaVu Sans Mono
+adjust-underline-position = 99
+adjust-underline-thickness = 50%
+
 # adjust-cell-width = -5%
-# adjust-cell-height = 20%
+adjust-cell-height = 10%
 # adjust-underline-position = 6
 # adjust-underline-thickness = 100%
 # adjust-cursor-thickness = 150%
@@ -233,3 +248,4 @@ keybind = global:cmd+ctrl+shift+opt+`=toggle_quick_terminal
 keybind = cmd+shift+c=ignore
 
 # vim: ft=conf
+keybind = shift+enter=text:\n

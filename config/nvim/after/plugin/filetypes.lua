@@ -1,9 +1,21 @@
+if not Plugin_enabled() then return end
+
 ---@param text string
 ---@param replace string
 local function abbr(text, replace, bufnr) vim.keymap.set("ia", text, replace, { buffer = bufnr or true }) end
 
-local ftplugin = require("mega.ftplugin")
+local ftplugin = require("config.ftplugin")
 ftplugin.extend_all({
+  -- dbee = {
+  --   keys = {
+  --     { "n", "H", "^" },
+  --     { "n", "L", "$" },
+  --     -- map("n", "H", "^")
+  --     -- map("n", "L", "$")
+  --     -- map({ "v", "x" }, "L", "g_")
+  --     -- map("n", "0", "^")
+  --   },
+  -- },
   [{ "elixir", "eelixir" }] = {
     opt = {
       syntax = "OFF",
@@ -56,10 +68,10 @@ ftplugin.extend_all({
         vim.cmd("edit")
       end, "format")
 
-      nmap("<localleader>ok", [[:lua require("mega.utils").wrap_cursor_node("{:ok, ", "}")<CR>]], "copy module alias")
-      xmap("<localleader>ok", [[:lua require("mega.utils").wrap_selected_nodes("{:ok, ", "}")<CR>]], "copy module alias")
-      nmap("<localleader>err", [[:lua require("mega.utils").wrap_cursor_node("{:error, ", "}")<CR>]], "copy module alias")
-      xmap("<localleader>err", [[:lua require("mega.utils").wrap_selected_nodes("{:error, ", "}")<CR>]], "copy module alias")
+      nmap("<localleader>ok", [[:lua require("config.utils").wrap_cursor_node("{:ok, ", "}")<CR>]], "copy module alias")
+      xmap("<localleader>ok", [[:lua require("config.utils").wrap_selected_nodes("{:ok, ", "}")<CR>]], "copy module alias")
+      nmap("<localleader>err", [[:lua require("config.utils").wrap_cursor_node("{:error, ", "}")<CR>]], "copy module alias")
+      xmap("<localleader>err", [[:lua require("config.utils").wrap_selected_nodes("{:error, ", "}")<CR>]], "copy module alias")
 
       -- NOTE: these workspace commands only work with elixir-ls
       -- local lsp_execute = function(opts)
@@ -99,12 +111,6 @@ ftplugin.extend_all({
         end, "[d]ebug [n]earest test")
       end
 
-      local has_wk, wk = pcall(require, "which-key")
-      if has_wk then wk.add({
-        ["<localleader>e"] = { group = "[e]lixir" },
-        ["<localleader>eP"] = { group = "[e]lixir [P]ipes" },
-      }) end
-
       if pcall(require, "mini.clue") then
         vim.b.miniclue_config = {
           clues = {
@@ -119,15 +125,188 @@ ftplugin.extend_all({
         local cursor = vim.api.nvim_win_get_cursor(0)
         local left_of_cursor_range = { cursor[1] - 1, cursor[2] - 1 }
 
-        -- The cursor location does not give us the correct node in this case, so we
-        -- need to get the node to the left of the cursor
-        local node = vim.treesitter.get_node({ pos = left_of_cursor_range })
-        local nodes_active_in = { "attribute_name", "directive_argument", "directive_name" }
-        dbg(node:type())
-        if not node or not vim.tbl_contains(nodes_active_in, node:type()) then return "=" end
+        local current_node = vim.treesitter.get_node({ ignore_injections = false, pos = left_of_cursor_range })
+        local html_attr_node = require("config.utils").ts.find_node_ancestor({ "attribute_name", "directive_argument", "directive_name" }, current_node)
 
-        return "=\"\"<left>"
+        if html_attr_node then
+          return "={\"\"}<left><left>"
+        else
+          return "="
+        end
       end, { expr = true, buffer = bufnr })
+
+      vim.keymap.set("n", "<localleader>ic", function()
+        local cursor = vim.api.nvim_win_get_cursor(0)
+        local left_of_cursor_range = { cursor[1] - 1, cursor[2] - 1 }
+
+        local lang_tree = require("config.utils").ts.get_language_tree_for_cursor_location()
+        local tree = lang_tree:parse()[1]
+        local lang = tree._lang
+
+        local current_node = vim.treesitter.get_node({ ignore_injections = false, pos = left_of_cursor_range })
+        local html_attr_node = require("config.utils").ts.find_node_ancestor({ "attribute_name", "directive_argument", "directive_name" }, current_node)
+
+        -- local buf_lang = vim.treesitter.language.get_lang(vim.bo[0].filetype)
+        -- local ok_parser, parser = pcall(vim.treesitter.get_string_parser, text, buf_lang)
+
+        -- local function include_language_tree(root_lang, lang)
+        --   -- We should not attempt to format html inside markdown
+        --   -- See https://github.com/stevearc/conform.nvim/issues/485
+        --   if root_lang == "markdown" and lang == "html" then return false end
+        --   -- Don't format the root language with the injected formatter
+        --   return root_lang ~= lang
+        -- end
+
+        -- local function accum_range(ranges, range)
+        --   local last_range = ranges[#ranges]
+        --   if last_range then
+        --     if last_range[1] == range[1] and last_range[4] == range[2] and last_range[5] == range[3] then
+        --       last_range[4] = range[4]
+        --       last_range[5] = range[5]
+        --       return
+        --     end
+        --   end
+        --   table.insert(ranges, range)
+        -- end
+
+        -- if ok_parser then
+        --   parser:parse(true)
+        --   local root_lang = parser:lang()
+        --   ---@type LangRange[]
+        --   local regions = {}
+
+        --   for lang, lang_tree in pairs(parser:children()) do
+        --     if include_language_tree(root_lang, lang) then
+        --       for _, ranges in ipairs(lang_tree:included_regions()) do
+        --         for _, region in ipairs(ranges) do
+        --           local start_row, start_col, _, end_row, end_col, _ = unpack(region)
+        --           accum_range(regions, { lang, start_row + 1, start_col, end_row + 1, end_col })
+
+        --           -- local formatters = get_formatters(lang)
+        --           -- if formatters == nil then
+        --           --   log.info("No formatters found for injected treesitter language %s", lang)
+        --           -- else
+        --           --   -- The types are wrong. included_regions should be Range[][] not integer[][]
+        --           --   ---@diagnostic disable-next-line: param-type-mismatch
+        --           --   local start_row, start_col, _, end_row, end_col, _ = unpack(region)
+        --           --   accum_range(regions, { lang, start_row + 1, start_col, end_row + 1, end_col })
+        --           -- end
+        --         end
+        --       end
+        --     end
+        --   end
+
+        --   -- regions = merge_ranges_with_prefix(regions, ctx.buf, buf_lang)
+
+        --   --     if ctx.range then
+        --   --       regions = vim.tbl_filter(function(region)
+        --   --         return in_range(ctx.range, region[2], region[4])
+        --   --       end, regions)
+        --   --     end
+
+        --   --     -- Sort from largest start_lnum to smallest
+        --   --     table.sort(regions, function(a, b)
+        --   --       return a[2] > b[2]
+        --   --     end)
+        --   D("Injected formatter regions %s", regions)
+        -- end
+
+        local contents = {}
+
+        table.insert(contents, string.format("lang: %s", lang))
+        table.insert(contents, string.format("node named: %s", current_node:named()))
+        table.insert(contents, string.format("node type: %s", current_node:type()))
+        table.insert(contents, string.format("parent_node type: %s", current_node:parent():type()))
+
+        -- P(contents)
+
+        -- table.insert(contents, {
+        --   filename = "language tree:",
+        --   text = lang,
+        --   type = "I",
+        --   valid = 1,
+        --   -- lnum = cursor[1],
+        -- })
+        -- table.insert(contents, {
+        --   filename = "node type:",
+        --   text = current_node:type(),
+        --   type = "I",
+        --   valid = 1,
+        --   -- lnum = cursor[1],
+        -- })
+        -- table.insert(contents, {
+        --   filename = "parent node type: ",
+        --   text = current_node:parent():type(),
+        --   type = "I",
+        --   valid = 1,
+        --   -- lnum = cursor[1],
+        -- })
+
+        local popup_bufnr = vim.api.nvim_create_buf(false, true)
+        vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = popup_bufnr })
+        vim.api.nvim_set_option_value("buftype", "prompt", { buf = popup_bufnr })
+        vim.api.nvim_set_option_value("filetype", "prompt", { buf = popup_bufnr })
+        local BORDER_STYLE = require("config.options").border
+        local winnr = vim.api.nvim_open_win(popup_bufnr, true, {
+          relative = "cursor",
+          width = 30,
+          height = 5,
+          row = -3,
+          col = 1,
+          style = "minimal",
+          border = BORDER_STYLE,
+        })
+
+        vim.api.nvim_set_option_value(
+          "winhl",
+          table.concat({
+            "Normal:NormalFloat",
+            "FloatBorder:FloatBorder",
+            "CursorLine:Visual",
+            "Search:None",
+          }, ","),
+          { win = winnr }
+        )
+
+        vim.keymap.set({ "n", "i" }, "<esc>", function()
+          vim.api.nvim_win_close(winnr or 0, true)
+          vim.api.nvim_feedkeys(vim.keycode("<Esc>"), "i", true)
+        end, { buffer = popup_bufnr })
+
+        vim.keymap.set({ "n", "i" }, "<c-c>", function()
+          vim.api.nvim_win_close(winnr or 0, true)
+          vim.api.nvim_feedkeys(vim.keycode("<Esc>"), "i", true)
+        end, { buffer = popup_bufnr })
+
+        -- vim.fn.setqflist(contents, "r")
+        -- vim.cmd("copen")
+        -- vim.cmd("Trouble open")
+
+        -- local Popup = require("nui.popup")
+        -- local event = require("nui.utils.autocmd").event
+
+        -- local popup = Popup({
+        --   enter = true,
+        --   focusable = true,
+        --   border = {
+        --     style = "rounded",
+        --   },
+        --   relative = "cursor",
+        --   size = {
+        --     width = "40%",
+        --     height = "40%",
+        --   },
+        -- })
+
+        -- -- mount/open the component
+        -- popup:mount()
+
+        -- -- unmount component when cursor leaves buffer
+        -- popup:on(event.BufLeave, function() popup:unmount() end)
+
+        -- -- set content
+        vim.api.nvim_buf_set_lines(popup_bufnr, 0, 1, false, contents)
+      end, { buffer = bufnr })
     end,
   },
   heex = {
@@ -140,37 +319,41 @@ ftplugin.extend_all({
     callback = function(bufnr, args)
       vim.bo[bufnr].commentstring = [[<%!-- %s --%>]]
 
-      -- Inside an attribute: <button type| pressing = -> <button type="|"
       vim.keymap.set("i", "=", function()
         local cursor = vim.api.nvim_win_get_cursor(0)
         local left_of_cursor_range = { cursor[1] - 1, cursor[2] - 1 }
 
-        -- The cursor location does not give us the correct node in this case, so we
-        -- need to get the node to the left of the cursor
-        local node = vim.treesitter.get_node({ pos = left_of_cursor_range })
-        local nodes_active_in = { "attribute_name", "directive_argument", "directive_name" }
-        if not node or not vim.tbl_contains(nodes_active_in, node:type()) then return "=" end
+        local current_node = vim.treesitter.get_node({ ignore_injections = false, pos = left_of_cursor_range })
+        local html_attr_node = require("config.utils").ts.find_node_ancestor({ "attribute_name", "directive_argument", "directive_name" }, current_node)
 
-        return "=\"\"<left>"
+        if html_attr_node then
+          return "={\"\"}<left><left>"
+        else
+          return "="
+        end
       end, { expr = true, buffer = bufnr })
     end,
   },
   html = {
+    opt = {
+      commentstring = [[<!-- %s -->]],
+    },
     callback = function(bufnr, args)
-      vim.bo[bufnr].commentstring = [[<%!-- %s --%>]]
+      vim.bo[bufnr].commentstring = [[<!-- %s -->]]
 
       -- Inside an attribute: <button type| pressing = -> <button type="|"
       vim.keymap.set("i", "=", function()
         local cursor = vim.api.nvim_win_get_cursor(0)
         local left_of_cursor_range = { cursor[1] - 1, cursor[2] - 1 }
 
-        -- The cursor location does not give us the correct node in this case, so we
-        -- need to get the node to the left of the cursor
-        local node = vim.treesitter.get_node({ pos = left_of_cursor_range })
-        local nodes_active_in = { "attribute_name", "directive_argument", "directive_name" }
-        if not node or not vim.tbl_contains(nodes_active_in, node:type()) then return "=" end
+        local current_node = vim.treesitter.get_node({ ignore_injections = false, pos = left_of_cursor_range })
+        local html_attr_node = require("config.utils").ts.find_node_ancestor({ "attribute_name", "directive_argument", "directive_name" }, current_node)
 
-        return "=\"\"<left>"
+        if html_attr_node then
+          return "=\"\"<left>"
+        else
+          return "="
+        end
       end, { expr = true, buffer = bufnr })
     end,
   },
@@ -223,7 +406,7 @@ ftplugin.extend_all({
     callback = function()
       vim.keymap.set("n", "q", function() vim.cmd("cq!", { bang = true }) end, { buffer = true, nowait = true, desc = "Abort" })
       vim.fn.matchaddpos("DiagnosticVirtualTextError", { { 1, 50, 10000 } })
-      if vim.fn.prevnonblank(0) ~= vim.fn.line(".") then vim.cmd.startinsert() end
+      if vim.api.nvim_get_current_line() == "" then vim.cmd.startinsert() end
     end,
   },
   fugitiveblame = {
@@ -589,31 +772,36 @@ ftplugin.extend_all({
       })
     end,
   },
+  lazy = {
+    opt = {
+      signcolumn = "no",
+    },
+  },
   query = {
     callback = function(bufnr)
       if vim.bo[bufnr].buftype == "nofile" then return end
-      vim.lsp.start({
-        name = "ts_query_ls",
-        cmd = {
-          vim.fs.joinpath(vim.env.HOME, "Documents/CodeProjects/ts_query_ls/target/release/ts_query_ls"),
-        },
-        root_dir = vim.fs.root(0, { "queries" }),
-        settings = {
-          parser_install_directories = {
-            -- If using nvim-treesitter with lazy.nvim
-            vim.fs.joinpath(vim.fn.stdpath("data"), "/lazy/nvim-treesitter/parser/"),
-          },
-          parser_aliases = {
-            ecma = "javascript",
-          },
-          language_retrieval_patterns = {
-            "languages/src/([^/]+)/[^/]+\\.scm$",
-          },
-        },
-      })
+      -- vim.lsp.start({
+      --   name = "ts_query_ls",
+      --   cmd = {
+      --     vim.fs.joinpath(vim.env.HOME, "/code/ts_query_ls/target/release/ts_query_ls"),
+      --   },
+      --   root_dir = vim.fs.root(0, { "queries" }),
+      --   settings = {
+      --     parser_install_directories = {
+      --       -- If using nvim-treesitter with lazy.nvim
+      --       vim.fs.joinpath(vim.fn.stdpath("data"), "/lazy/nvim-treesitter/parser/"),
+      --     },
+      --     parser_aliases = {
+      --       ecma = "javascript",
+      --     },
+      --     language_retrieval_patterns = {
+      --       "languages/src/([^/]+)/[^/]+\\.scm$",
+      --     },
+      --   },
+      -- })
     end,
   },
-  sql = {
+  [{ "sql", "dbee" }] = {
     opt = {
       tabstop = 2,
       shiftwidth = 2,
@@ -621,6 +809,7 @@ ftplugin.extend_all({
     },
     cmp = {
       sources = {
+        { name = "cmp-dbee" },
         { name = "vim-dadbod-completion" },
         { name = "buffer" },
       },

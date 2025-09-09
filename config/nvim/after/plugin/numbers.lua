@@ -1,9 +1,9 @@
-if not mega then return end
+if not Plugin_enabled() then return end
 
 local api = vim.api
 local M = {}
 
-vim.g.number_filetype_exclusions = {
+local excluded_fts = {
   "NeogitCommitMessage",
   "NeogitCommitMessage",
   "NeogitRebaseTodo",
@@ -17,6 +17,7 @@ vim.g.number_filetype_exclusions = {
   "fzf",
   "fzf-lua",
   "fzflua",
+  "snacks",
   -- "markdown",
   "gitcommit",
   "help",
@@ -38,7 +39,7 @@ vim.g.number_filetype_exclusions = {
   "vimwiki",
 }
 
-vim.g.number_buftype_exclusions = {
+local excluded_bts = {
   "prompt",
   "terminal",
   "help",
@@ -47,18 +48,12 @@ vim.g.number_buftype_exclusions = {
   "quickfix",
 }
 
-vim.g.number_buftype_ignored = { "quickfix" }
-
 local function is_floating_win() return vim.fn.win_gettype() == "popup" end
 
 local is_enabled = true
 
----Determines whether or not a window should be ignored by this plugin
----@return boolean
-local function is_ignored() return vim.tbl_contains(vim.g.number_buftype_ignored, vim.bo.buftype) or is_floating_win() or vim.env.TMUX_POPUP end
-
 -- block list certain plugins and buffer types
-local function is_blocked()
+local function is_excluded()
   local win_type = vim.fn.win_gettype()
 
   if not api.nvim_buf_is_valid(0) and not api.nvim_buf_is_loaded(0) then return true end
@@ -69,18 +64,21 @@ local function is_blocked()
 
   if vim.wo.previewwindow then return true end
 
-  for _, ft in ipairs(vim.g.number_filetype_exclusions) do
+  if is_floating_win() or vim.env.TMUX_POPUP then return true end
+
+  for _, ft in ipairs(excluded_fts) do
     if vim.bo.ft == ft or string.match(vim.bo.ft, ft) then return true end
   end
 
-  if vim.tbl_contains(vim.g.number_buftype_exclusions, vim.bo.buftype) then return true end
+  if vim.tbl_contains(excluded_bts, vim.bo.buftype) then return true end
+
   return false
 end
 
 local function enable_relative_number()
   if not is_enabled then return end
-  if is_ignored() then return end
-  if is_blocked() then
+
+  if is_excluded() then
     -- setlocal nonumber norelativenumber
     vim.wo.number = false
     vim.wo.relativenumber = false
@@ -92,8 +90,7 @@ local function enable_relative_number()
 end
 
 local function disable_relative_number()
-  if is_ignored() then return end
-  if is_blocked() then
+  if is_excluded() then
     -- setlocal nonumber norelativenumber
     vim.wo.number = false
     vim.wo.relativenumber = false
@@ -113,7 +110,7 @@ end
 --   end
 -- end)
 
-require("mega.autocmds").augroup("ToggleRelativeLineNumbers", {
+require("config.autocmds").augroup("ToggleRelativeLineNumbers", {
   {
     event = { "BufEnter", "FileType", "FocusGained", "InsertLeave", "TermLeave", "CmdlineLeave" },
     command = function() enable_relative_number() end,

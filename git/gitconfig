@@ -70,13 +70,9 @@
 [difftool "nvimdiff"]
   cmd = "nvim -d \"$LOCAL\" \"$REMOTE\""
 [difftool "vscode"]
-  cmd = code --wait --diff \"$LOCAL\" \"$REMOTE\"
-[difftool "kitty"]
-  cmd = kitty +kitten diff \"$LOCAL\" \"$REMOTE\"
-[difftool "kitty.gui"]
-  cmd = kitty kitty +kitten diff \"$LOCAL\" \"$REMOTE\"
+  cmd = "code --wait --diff \"$LOCAL\" \"$REMOTE\""
 [difftool "nvim"]
-  cmd = nvim -d \"$LOCAL\" \"$REMOTE\"
+  cmd = "nvim -d \"$LOCAL\" \"$REMOTE\""
 
 [help]
   autocorrect = 1
@@ -110,8 +106,7 @@
   clb = clone --bare
 
   cons = !git ls-files -u | cut -f 2 | sort -u
-  econs = !git diff --name-only --diff-filter=U | uniq | xargs $EDITOR
-  ; econs = !git diff --name-only --diff-filter=U | uniq | xargs $EDITOR -O
+  econs = !git diff --name-only --diff-filter=U | uniq | xargs nvim -p
   dangled = !git fsck --no-reflog | awk '/dangling commit/ {print $3}'
 
   cr = !git-crypt

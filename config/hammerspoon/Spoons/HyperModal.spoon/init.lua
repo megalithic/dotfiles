@@ -12,6 +12,29 @@ obj.indicator = nil
 obj.indicatorColor = "#e39b7b"
 obj.delayedExitTimer = nil
 
+function obj.focusMainWindow(bundleID, opts)
+  local app
+  if bundleID == nil or bundleID == "" then
+    app = hs.application.frontmostApplication()
+  else
+    app = hs.application.find(bundleID)
+  end
+
+  opts = opts or { h = 800, w = 800, focus = true }
+  local win = hs.fnutils.find(
+    app:allWindows(),
+    function(win)
+      return app:mainWindow() == win and win:isStandard() and win:frame().w >= opts.w and win:frame().h >= opts.h
+    end
+  )
+
+  if win ~= nil and opts.focus then win:focus() end
+
+  print(string.format(":: [%s] %s (%s)", obj.name, app:bundleID(), app:mainWindow():title()))
+
+  return win
+end
+
 function obj.toggleIndicator(win, terminate)
   win = win or hs.window.focusedWindow()
 
@@ -41,29 +64,33 @@ function obj.toggleIndicator(win, terminate)
 end
 
 function obj:entered()
-  local win = hs.window.focusedWindow()
-
-  if win ~= nil then
-    obj.isOpen = true
-    obj.toggleIndicator(win)
-    obj.alertUuids = hs.fnutils.map(hs.screen.allScreens(), function(screen)
-      if screen == hs.screen.mainScreen() then
-        local app_title = win:application():title()
-        local image = hs.image.imageFromAppBundle(win:application():bundleID())
-        local prompt = fmt("◱ : %s", app_title)
-
-        obj:delayedExit()
-        if image ~= nil then
-          prompt = fmt(": %s", app_title)
-
-          return hs.alert.showWithImage(prompt, image, nil, screen)
-        end
-
-        return hs.alert.show(prompt, hs.alert.defaultStyle, screen, true)
-      end
-    end)
+  if obj.customOnEntered ~= nil and type(obj.customOnEntered) == "function" then
+    obj.customOnEntered(obj.isOpen)
   else
-    obj:exit()
+    local win = obj.focusMainWindow() or hs.window.focusedWindow()
+
+    if win ~= nil then
+      obj.isOpen = true
+      obj.toggleIndicator(win)
+      obj.alertUuids = hs.fnutils.map(hs.screen.allScreens(), function(screen)
+        if screen == hs.screen.mainScreen() then
+          local app_title = win:application():title()
+          local image = hs.image.imageFromAppBundle(win:application():bundleID())
+          local prompt = fmt("◱ : %s", app_title)
+
+          obj:delayedExit()
+          if image ~= nil then
+            prompt = fmt(": %s", app_title)
+
+            return hs.alert.showWithImage(prompt, image, nil, screen)
+          end
+
+          return hs.alert.show(prompt, hs.alert.defaultStyle, screen, true)
+        end
+      end)
+    else
+      obj:exit()
+    end
   end
 
   return self
@@ -84,7 +111,11 @@ end
 
 function obj:exited()
   obj.isOpen = false
-  hs.fnutils.ieach(obj.alertUuids, function(uuid) hs.alert.closeSpecific(uuid) end)
+  if obj.alertUuids ~= nil then
+    hs.fnutils.ieach(obj.alertUuids, function(uuid)
+      if uuid ~= nil then hs.alert.closeSpecific(uuid) end
+    end)
+  end
   obj.toggleIndicator(nil, true)
 
   if obj.delayedExitTimer ~= nil then
@@ -105,8 +136,9 @@ function obj:toggle()
   return self
 end
 
-function obj:start()
+function obj:start(on_entered)
   hs.window.animationDuration = 0
+  obj.customOnEntered = on_entered
 
   -- provide alternate escapes
   obj:bind("ctrl", "[", function() obj:exit() end):bind("", "escape", function() obj:exit() end)

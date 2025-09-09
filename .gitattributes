@@ -44,3 +44,7 @@ misc/megalithic_dev.conf filter=crypt diff=crypt merge=crypt
 home/ssh/* filter=crypt diff=crypt merge=crypt
 home/s3cfg filter=crypt diff=crypt merge=crypt
 bin/capper filter=crypt diff=crypt merge=crypt
+config/hammerspoon/.secrets.json filter=crypt diff=crypt merge=crypt
+config/nvim/.dbee_persistence.json filter=crypt diff=crypt merge=crypt
+config/exercism/user.json filter=crypt diff=crypt merge=crypt
+home/cloudflared/config.yaml filter=crypt diff=crypt merge=crypt

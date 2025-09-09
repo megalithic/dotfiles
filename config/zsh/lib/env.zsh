@@ -23,6 +23,7 @@ export PLATFORM="$PLATFORM"
 XDG_CONFIG_HOME="$HOME/.config"
 XDG_CACHE_HOME="$HOME/.cache"
 XDG_DATA_HOME="$HOME/.local/share"
+XDG_BIN_DIR="$HOME/.local/bin"
 
 ZDOTDIR="$XDG_CONFIG_HOME/zsh"
 ZSH_CACHE_DIR="$XDG_CACHE_HOME/zsh"
@@ -35,6 +36,7 @@ fi
 export XDG_CONFIG_HOME
 export XDG_CACHE_HOME
 export XDG_DATA_HOME
+export XDG_BIN_DIR
 export ZDOTDIR
 export ZSH_CACHE_DIR
 
@@ -88,7 +90,7 @@ export LS_COLORS="$(vivid generate nord)"
 
 # -- editors
 if which nvim >/dev/null; then
-  export EDITOR="nvim"
+  export EDITOR="nvim -O"
   export VISUAL="$EDITOR"
   export MANPAGER="$EDITOR +Man!"
   # export ELIXIR_EDITOR="$EDITOR +__LINE__ __FILE__"
@@ -158,8 +160,8 @@ export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
 
 # -- imagemagick thing
 # REF: https://github.com/3rd/image.nvim?tab=readme-ov-file#installing-imagemagick
-# export DYLD_LIBRARY_PATH="$(brew --prefix)/lib:$DYLD_LIBRARY_PATH"
-export DYLD_LIBRARY_PATH="$(brew --prefix)/lib"
+
+export DYLD_LIBRARY_PATH="$XDG_DATA_HOME/mise/installs/python/3.13/lib/libpython3.13.dylib:$(brew --prefix)/lib:$DYLD_LIBRARY_PATH"
 
 # -- bat
 if which bat >/dev/null; then
@@ -193,11 +195,12 @@ case "$(uname)" in
     export ZK_NOTEBOOK_DIR="${ICLOUD_DOCUMENTS_DIR}/_zk"
     export ZK_CONFIG_DIR="${XDG_CONFIG_HOME}/zk"
 
-    export HOMEBREW_NO_ANALYTICS=1
     export HOMEBREW_CASK_OPTS="--appdir=/Applications"
-    export HOMEBREW_NO_INSTALL_CLEANUP=TRUE
-    export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=FALSE
-    # export HOMEBREW_NO_INSTALL_FROM_API=0
+    export HOMEBREW_NO_ANALYTICS=1
+    export HOMEBREW_NO_INSTALL_CLEANUP=1
+    export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=
+    export HOMEBREW_NO_AUTO_UPDATE=1
+    # export HOMEBREW_NO_INSTALL_FROM_API=
 
     if which gh >/dev/null; then
       export HOMEBREW_GITHUB_API_TOKEN="$(gh auth token &>/dev/null)"
@@ -310,6 +313,9 @@ case "$(uname)" in
 
   export ABDUCO_CMD="echo 'abduco started'"
 
+  # FOR EXLA / elixir / NX
+  # export CPLUS_INCLUDE_PATH="/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1"
+
   #
   # yubikey
   # GNUpg setup: https://github.com/drduh/YubiKey-Guide#create-temporary-working-directory-for-gpg
@@ -381,10 +387,7 @@ case "$(uname)" in
     $HOMEBREW_CELLAR/git/*/share/git-core/contrib/git-jump(Nn[-1]-/)
     $CARGO_HOME/bin(N-/)
     $GOBIN(N-/)
-    $HOME/Library/Python/3.12/bin(Nn[-1]-/)
-    $HOME/Library/Python/3.11/bin(Nn[-1]-/)
-    $HOME/Library/Python/3.10/bin(Nn[-1]-/)
-    $HOME/Library/Python/3.9/bin(Nn[-1]-/)
+    $HOME/Library/Python/3.*/bin(Nn[-1]-/)
     $HOME/Library/Python/2.*/bin(Nn[-1]-/)
     $ANDROID_HOME/emulator
     $ANDROID_HOME/platform-tools
@@ -423,7 +426,8 @@ case "$(uname)" in
   export ZSH_AUTOSUGGEST_MANUAL_REBIND=1  # make prompt faster
   export ZSH_AUTOSUGGEST_USE_ASYNC=1
   # export ZSH_AUTOSUGGEST_STRATEGY=(history completion) # or match_prev_cmd
-  export ZSH_AUTOSUGGEST_STRATEGY=("match_prev_cmd" "completion")
+  export ZSH_AUTOSUGGEST_CLEAR_WIDGETS=(buffer-empty bracketed-paste accept-line push-line-or-edit)
+  export ZSH_AUTOSUGGEST_STRATEGY=(match_prev_cmd completion history)
 
   # zsh magic dashboard
   # Size of the dashboard

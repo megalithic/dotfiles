@@ -14,19 +14,13 @@ obj.__index = obj
 obj.name = "watcher.bluetooth"
 obj.debug = false
 obj.devices = {
-  ["fallback"] = {
-    alias = "fallback",
-    name = "MacBook Pro Speakers",
-    bt = "MacBook Pro Speakers",
-    icon = "💻",
-  },
-  ["phonak"] = {
-    alias = "phonak",
-    name = "R-Phonak hearing aid",
-    bt = "R-Phonak hearing aid",
-    id = "70-66-1b-c8-cc-b5",
-    icon = "🎧",
-  },
+  -- ["phonak"] = {
+  --   alias = "phonak",
+  --   name = "Seth R-Phonak hearing aid",
+  --   bt = "Seth R-Phonak hearing aid",
+  --   id = "80-28-3c-1c-7f-27",
+  --   icon = "🎧",
+  -- },
   ["leeloo"] = {
     alias = "leeloo",
     name = "Leeloo",
@@ -49,10 +43,59 @@ obj.devices = {
     icon = "🎧",
   },
 }
-obj.preferredOutputDevices = { "bose", "phonak", "airpods" }
-obj.btUtil = "/opt/homebrew/bin/blueutil"
+
+obj.devices["fallback"] = {
+  alias = "fallback",
+  name = obj.devices["bose"].name,
+  bt = obj.devices["bose"].bt,
+  icon = obj.devices["bose"].icon,
+
+  -- name = "MacBook Pro Speakers",
+  -- bt = "MacBook Pro Speakers",
+  -- icon = "💻",
+}
+
+obj.preferredOutputDevices = { "bose", "airpods" }
+obj.btUtil = "/usr/local/bin/blueutil"
 obj.interval = (10 * 60)
 obj.lowBatteryTimer = nil
+
+function obj.toggle_bt_device(device_alias, state)
+  -- https://coderwall.com/p/fyfp0w/applescript-to-connect-bluetooth-headphones
+  -- https://stuartmccoll.github.io/posts/2020-05-02-applescript-bluetooth-devices/
+  -- https://github.com/aesadde/dotfiles/blob/master/ARCHIVE/hammerspoon/bluetooth.lua
+  -- https://github.com/mgriffin/dotfiles/blob/main/hammerspoon/init.lua
+  -- https://github.com/juanedi/dotfiles/blob/master/hammerspoon/sound_control.lua
+
+  local bt_name = obj.devices[device_alias].bt
+
+  if bt_name == nil then return end
+  print(bt_name)
+
+  local s = [[
+    activate application "SystemUIServer"
+    tell application "System Events"
+      tell process "SystemUIServer"
+        set btMenu to (menu bar item 1 of menu bar 1 whose description contains "bluetooth")
+        tell btMenu
+          click
+  ]] .. "tell (menu item \"" .. bt_name .. "\" of menu 1)\n" .. [[
+            click
+            if exists menu item "Connect" of menu 1 then
+              click menu item "Connect" of menu 1
+              return "Connecting ..."
+            else
+              click menu item "Disconnect" of menu 1
+              return "Disconnecting ..."
+            end if
+          end tell
+        end tell
+      end tell
+    end tell
+  ]]
+
+  return hs.osascript.applescript(s)
+end
 
 function obj.preferredBluetoothDevicesConnected()
   local connectedDevices = enum.filter(
@@ -80,13 +123,16 @@ function obj.isBluetoothDeviceConnected(device)
 end
 
 local function connectDevice(deviceStr)
+  dbg(deviceStr, true)
   local device = obj.devices[deviceStr]
+  dbg(device, true)
   if not device then return end
 
   note(fmt("[%s] connecting %s %s..", obj.name, device.icon, device.name))
 
   hs.task
     .new(obj.btUtil, function(_exitCode, _stdOut, _stdErr) end, {
+      "--use-system-profiler",
       "--connect",
       device.id,
     })
@@ -123,6 +169,16 @@ end
 
 function obj:start()
   self.menubar = hs.menubar.new()
+
+  -- local btModality = spoon.HyperModal
+  -- btModality
+  --   :start(function(is_open)
+  --     if is_open then hs.alert.show("bluetooth toggle initiated", hs.alert.defaultStyle, 0, true) end
+  --   end)
+  --   :bind({}, "b", function() obj.toggle_bt_device("bose") end, function() btModality:exit(0.1) end)
+  --   :bind({}, "p", function() obj.toggle_bt_device("phonak") end, function() btModality:exit(0.1) end)
+  --   :bind({}, "escape", function() btModality:exit() end)
+  -- req("hyper", { id = "bluetooth" }):bind({ "shift" }, "h", function() btModality:toggle() end)
 
   req("hyper", { id = "bluetooth" }):start():bind({ "shift" }, "h", nil, function()
     local device = nil

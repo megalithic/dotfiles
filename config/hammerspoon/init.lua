@@ -34,15 +34,15 @@ local watchers = {
 }
 
 req("config")
+req("libs")
 req("bindings")
 req("watchers"):start(watchers)
-req("spotify"):start()
+-- req("spotify"):start()
 req("browser"):start()
 req("ptt"):start({ mode = "push-to-talk" })
 req("quitter"):start({ mode = "double" })
 
 -- experimental/wip modules and stuff..
--- req("wip")
 
 hs.shutdownCallback = function() req("watchers"):stop(watchers) end
 

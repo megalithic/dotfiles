@@ -1,4 +1,4 @@
-if not mega then return end
+if not Plugin_enabled() then return end
 
 local GOLDEN_RATIO = 1.618
 local cmdheight = vim.o.cmdheight
@@ -24,12 +24,17 @@ local ft_ignores = {
   "dirbuf",
   "SidebarNvim",
   "fidget",
+  "dbee",
+  "dbee-result",
   "Trouble",
   "trouble",
   "qf",
   "dbui",
   "neo-tree",
   "lazy",
+  "opencode",
+  "claude",
+  "claudecode",
   "packer",
   "startuptime",
   "undotree",
@@ -40,7 +45,7 @@ local ft_ignores = {
 
 local bt_ignores = {
   "help",
-  -- "acwrite",
+  "acwrite", -- maybe not?
   "undotree",
   "quickfix",
   "nerdtree",
@@ -49,9 +54,12 @@ local bt_ignores = {
   "Trouble",
   "trouble",
   "qf",
+  "dbee",
   "LuaTree",
   "NvimTree",
   "terminal",
+  "dbee",
+  "dbee-result",
   "dirbuf",
   "tsplayground",
   "neo-tree",
@@ -85,6 +93,8 @@ local function is_ignored(bufnr)
     or ignored_by_window_resize_flag()
     or vim.g.disable_autoresize
     or is_floating_win()
+
+  -- D("window resize; should_ignore buffer? ", bufnr, should_ignore)
 
   -- dd({ vim.bo[bufnr].filetype, vim.bo[bufnr].buftype, bufnr, should_ignore })
   return should_ignore
@@ -205,9 +215,9 @@ vim.api.nvim_create_user_command("ToggleAutoResize", function()
   end
 end, {})
 
-require("mega.autocmds").augroup("WindowsGoldenResizer", {
+require("config.autocmds").augroup("WindowsGoldenResizer", {
   {
-    event = { "WinEnter", "VimResized" },
+    event = { "BufEnter", "WinEnter", "VimResized" },
     command = function(args) mega.resize_windows(args.buf) end,
     desc = "Auto-resize window with golden ratio",
   },

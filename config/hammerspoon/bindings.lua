@@ -55,17 +55,23 @@ do
     if globalBind ~= nil then
       local key = globalBind
       local mods = {}
+      local pressCount = nil
+
       if type(key) == "table" then
-        mods, key = table.unpack(globalBind)
+        mods, key, pressCount = table.unpack(globalBind)
       end
 
-      hyper:bind(mods, key, function()
-        if focusOnly ~= nil and focusOnly then
-          summon.focus(bundleID)
-        else
-          summon.toggle(bundleID)
-        end
-      end)
+      if string.match(bundleID, "noop") then
+        hyper:bind(mods, key, function() end)
+      else
+        hyper:bind(mods, key, function()
+          if focusOnly ~= nil and focusOnly then
+            summon.focus(bundleID)
+          else
+            summon.toggle(bundleID)
+          end
+        end)
+      end
     end
 
     if localBinds then enum.each(localBinds, function(key) hyper:bindPassThrough(key, bundleID) end) end
@@ -83,17 +89,23 @@ req("hyper", { id = "meeting" }):start():bind({}, "z", nil, function()
     if targetWin and targetWin:isStandard() then targetWin:focus() end
   elseif hs.application.find("com.brave.Browser.nightly.app.kjgfgldnnfoeklkmfkjfagphfepbbdan") then
     hs.application.launchOrFocusByBundleID("com.brave.Browser.nightly.app.kjgfgldnnfoeklkmfkjfagphfepbbdan")
+  elseif hs.application.find("com.microsoft.teams2") then
+    wm.focusMainWindow("com.microsoft.teams2")
   elseif hs.application.find("com.pop.pop.app") then
-    hs.application.launchOrFocusByBundleID("com.pop.pop.app")
-    local app = hs.application.find("com.pop.pop.app")
-    local targetWin = enum.find(
-      app:allWindows(),
-      function(win) return win:isStandard() and win:frame().w > 1000 and win:frame().h > 1000 end
-    )
+    wm.focusMainWindow("com.pop.pop.app")
 
-    if targetWin ~= nil then targetWin:focus() end
-  elseif req("browser").hasTab("meet.google.com|hangouts.google.com.call") then
-    req("browser").jump("meet.google.com|hangouts.google.com.call")
+    -- hs.application.launchOrFocusByBundleID("com.pop.pop.app")
+    -- local app = hs.application.find("com.pop.pop.app")
+    -- local targetWin = enum.find(
+    --   app:allWindows(),
+    --   function(win)
+    --     return app:mainWindow() == win and win:isStandard() and win:frame().w > 1000 and win:frame().h > 1000
+    --   end
+    -- )
+
+    -- if targetWin ~= nil then targetWin:focus() end
+  elseif req("browser").hasTab("meet.google.com|hangouts.google.com.call|www.valant.io|telehealth.px.athena.io") then
+    req("browser").jump("meet.google.com|hangouts.google.com.call|www.valant.io|telehealth.px.athena.io")
   else
     info(fmt("%s: no meeting targets to focus", "bindings.hyper.meeting"))
 
@@ -108,7 +120,7 @@ req("hyper", { id = "figma" }):start():bind({ "shift" }, "f", nil, function()
   elseif req("browser").hasTab("figma.com") then
     req("browser").jump("figma.com")
   else
-    info(fmt("%s: no meeting targets to focus", "bindings.hyper.meeting"))
+    info(fmt("%s: neither figma.app, nor figma web are opened", "bindings.hyper.figma"))
 
     focusedApp:activate()
   end
@@ -300,6 +312,10 @@ wmModality
     -- resizes to a small console window at the top middle
 
     wmModality:exit()
+  end)
+  :bind({}, "b", function()
+    local wip = require("wip")
+    wip.bowser()
   end)
 -- :bind({}, "b", function()
 --   hs.timer.doAfter(5, function()

@@ -56,6 +56,28 @@ function obj.hasTab(url)
   return false
 end
 
+-- function obj.hasHighlightedText()
+--   local app = hs.application.get(BROWSER) or hs.application.frontmostApplication()
+
+--   if app and enum.contains(supportedBrowsers, app:name()) then
+--     local _status, hasHighlightedText, _descriptor = hs.osascript.javascript([[
+--     (function() {
+--       var browser = Application(']] .. app:name() .. [[');
+--       const highlightedText = browser.windows().filter((win) => {
+--         const tabIndex = win.tabs().findIndex(tab => tab.url().match(/]] .. url .. [[/));
+--         return tabIndex !== -1
+--       })
+
+--       return highlightedText.baseOffset > 0;
+--     })();
+--     ]])
+
+--     return hasTab
+--   end
+
+--   return false
+-- end
+
 function obj.jump(url)
   local app = hs.application.get(BROWSER) or hs.application.frontmostApplication()
 

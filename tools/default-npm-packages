@@ -1,8 +1,10 @@
+# prefer 1.0.27 for coder/claudecode.nvim
+# @anthropic-ai/claude-code
+
 @biomejs/biome
 @elm-tooling/elm-language-server
 @fsouza/prettierd
-@guysherman/kittymux
-@tailwindcss/language-server
+#@tailwindcss/language-server
 @typescript-eslint/typescript-estree
 babel-eslint
 bash-language-server
@@ -30,7 +32,7 @@ neovim
 node-fetch
 prettier
 prettier-plugin-eex
-prettier-plugin-tailwindcss
+#prettier-plugin-tailwindcss
 prettier-plugin-erb
 @prettier/plugin-ruby
 pyright

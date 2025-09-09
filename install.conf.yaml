@@ -121,14 +121,22 @@
       force: true
       path: config/borders
       if: "[ `uname` = Darwin ]"
+    ~/.config/exercism:
+      force: true
+      path: config/exercism
     ~/.config/karabiner:
       force: true
       path: config/karabiner
       if: "[ `uname` = Darwin ]"
     ~/.config/kitty:
       force: true
-      # if: "[ `uname` = Darwin ]"
       path: config/kitty
+    ~/.config/kanata:
+      force: true
+      path: config/kanata
+    ~/.config/jj:
+      force: true
+      path: config/jj
     ~/.config/lazygit:
       force: true
       path: config/lazygit
@@ -138,12 +146,15 @@
     ~/.config/ngrok:
       force: true
       path: config/ngrok
+    ~/.config/opencode:
+      force: true
+      path: config/opencode
     ~/.config/ripgrep:
       force: true
       path: config/ripgrep
     ~/.config/mise:
       force: true
-      path: config/mise/config.toml
+      path: config/mise
     ~/.config/surfingkeys:
       force: true
       path: config/surfingkeys
@@ -218,6 +229,7 @@
       force: true
       if: "[ `uname` = Darwin ]"
       path: misc/mailmate/megabindings.plist
+
       # POST-symlink: ensure you add `, Mega` to the keybind settings in Mailmate
     ~/Library/Application Support/Google/Chrome/NativeMessagingHosts/surfingkeys.json:
       force: true

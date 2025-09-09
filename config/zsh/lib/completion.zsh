@@ -21,6 +21,9 @@ compinit -C
 # https://github.com/mhanberg/.dotfiles/blob/main/zsh/git.zsh
 compdef g=git
 
+# REF: https://jj-vcs.github.io/jj/latest/install-and-setup/#zsh
+source <(jj util completion zsh)
+
 # FIXME: fixes insecure directory warnings
 # TODO: should we run this on every sourcing?
 # compaudit | xargs chmod g-w

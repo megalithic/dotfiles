@@ -1,5 +1,6 @@
 .yarn
 .git
+.jj
 .elixir_ls
 **/.elixir_ls
 .lexical
@@ -59,7 +60,9 @@ erl_crash.dump
 **/android
 **/priv/static/assets/*.js
 **/priv/static/assets/*.css
-**/priv/etc/**/*.sql
+**/priv/**/*.sql
+**/priv/**/*.bak
+**/*.bak
 **/.obsidian
 .obsidian
 

@@ -1,8 +1,7 @@
--- if true then return end
-if not mega then return end
+if not Plugin_enabled() then return end
 
-local U = require("mega.utils")
-local C = require("mega.lush_theme.colors")
+local U = require("config.utils")
+local C = require("lush_theme.colors")
 local M = {
   blink_delay = 150,
   minimal_jump = 20,
@@ -32,7 +31,7 @@ local M = {
     "startify",
     "help",
     "orgagenda",
-    "oil",
+    -- "oil",
     "org",
     "Trouble",
     "Telescope",
@@ -198,7 +197,7 @@ end
 --   if M.cursorline_delay ~= 0 then unhighlight_cursorline() end
 -- end
 
-require("mega.autocmds").augroup("ToggleCursorLine", {
+require("config.autocmds").augroup("ToggleCursorLine", {
   {
     event = { "BufEnter", "WinEnter", "FocusGained" },
     command = function() enable_cursorline(true) end,

@@ -15,6 +15,7 @@ config/karabiner/automatic_backups/*
 *.lock.json
 .elixir_ls
 .lexical
+.jj
 cache
 config/tmux/plugins
 *~
@@ -34,3 +35,17 @@ home/ssh/*
 config/gnupg/**/*
 !config/gnupg/gpg-agent.conf
 !config/gnupg/gpg.conf
+
+# claude-code
+home/claude/ide
+home/claude/projects
+home/claude/statsig
+home/claude/todos
+home/claude/local
+home/claude/shell-snapshots
+
+home/opencode/bin
+
+# cloudflared
+home/cloudflared/cert.pem
+home/cloudflared/*.json

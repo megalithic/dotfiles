@@ -1,19 +1,29 @@
-nodejs 20.11.0
+nodejs 22.17.0
 # elixir 1.15.5-otp-26
 # elixir 1.16.0-otp-26
-elixir 1.16.1-otp-26
-elixir 1.17.0-otp-26
-erlang 26.0.2
-erlang 26.2.2
-elm 0.19.1
+# elixir 1.16.1-otp-26
+# elixir 1.17.0-otp-26
+
+elixir 1.18.3-otp-27
+elixir 1.18.4-otp-27
+# elixir 1.18.4-otp-28
+
+erlang 27.3.4
+erlang 27.3.4.1
+# erlang 28.0
+# erlang 28.0.1
+
+elm latest
 lua 5.1.5
 ruby 3.3.0
-rust latest
+rust beta
 golang 1.20.2
-yarn 1.22.4
+yarn 1.22.22
+# zig latest
 zig 0.11.0
-python 3.11
+# python 3.11
 python 3.12.2
+python 3.13.4
 # erlang 24.3.4
 # erlang 25.0.3
 # erlang 24.3.2

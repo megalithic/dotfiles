@@ -8,8 +8,8 @@ obj.debug = false
 obj.clipWatcher = {}
 obj.clipboardData = {}
 obj.capsPath = fmt("%s/screenshots", os.getenv("HOME"))
-obj.tempImage = fmt("/tmp/%s_tmp.png", obj.name)
-obj.tempOcrImage = fmt("/tmp/%s_ocr_tmp.png", obj.name)
+obj.tempImage = fmt("%s/tmp/%s_tmp.png", os.getenv("HOME"), obj.name)
+obj.tempOcrImage = fmt("%s/tmp/%s_ocr_tmp.png", os.getenv("HOME"), obj.name)
 obj.helpCanvas = nil
 
 function obj.captureImage(image, openImageUrl)
@@ -152,13 +152,15 @@ function obj.editClipboardImage(image)
 
   -- Save the image to a temporary file
   local tmpfile = os.tmpname() .. ".png"
-  image:saveToFile(tmpfile)
+  if image ~= nil and tmpfile ~= nil then
+    image:saveToFile(tmpfile)
 
-  -- Open the image in Preview and start annotation
-  hs.execute("open -a Preview " .. tmpfile)
+    -- Open the image in Preview and start annotation
+    hs.execute("open -a Preview " .. tmpfile)
 
-  -- hs.timer.doAfter(1, function() hs.application.find("Preview"):selectMenuItem({ "Tools", "Annotate", "Arrow" }) end)
-  note(fmt("[%s] editClipboardImage: %s", obj.name, obj.clipboardData))
+    -- hs.timer.doAfter(1, function() hs.application.find("Preview"):selectMenuItem({ "Tools", "Annotate", "Arrow" }) end)
+    note(fmt("[%s] editClipboardImage: %s", obj.name, obj.clipboardData))
+  end
 end
 
 function obj:init(opts)
@@ -167,7 +169,7 @@ function obj:init(opts)
   obj.clipWatcher = hs.pasteboard.watcher.new(function(pb)
     local browser = hs.application.get(BROWSER)
 
-    -- dbg(pb)
+    -- dbg(pb, true)
 
     if pb ~= nil and pb ~= "" then
       obj.clipboardData = pb

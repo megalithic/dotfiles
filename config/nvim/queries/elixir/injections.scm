@@ -1,4 +1,15 @@
 ; extends
+
+; Documentation
+(unary_operator
+  operator: "@"
+  operand: (call
+    target: ((identifier) @_identifier (#any-of? @_identifier "moduledoc" "typedoc" "shortdoc" "doc"))
+    (arguments [
+      (string (quoted_content) @injection.content)
+      (sigil (quoted_content) @injection.content)
+    ])
+    (#set! injection.language "markdown")))
 ; HTML string blocks
 ((comment) @_comment
   .
@@ -57,6 +68,11 @@
 
 (sigil
   (sigil_name) @_sigil_name
+  (quoted_content) @json
+(#eq? @_sigil_name "j"))
+
+(sigil
+  (sigil_name) @_sigil_name
   (quoted_content) @elixir
 (#any-of? @_sigil_name "q" "S" "E"))
 
@@ -75,8 +91,20 @@
 (sigil
   (sigil_name) @_sigil_name
   (quoted_content) @injection.content
- (#eq? @_sigil_name "JSON")
+ (#any-of? @_sigil_name "LVN" "H")
+ (#set! injection.language "heex"))
+
+(sigil
+  (sigil_name) @_sigil_name
+  (quoted_content) @injection.content
+ (#any-of? @_sigil_name "j" "J" "JSON")
  (#set! injection.language "jsonc"))
+
+(sigil
+  (sigil_name) @_sigil_name
+  (quoted_content) @injection.content
+ (#any-of? @_sigil_name "RTF")
+ (#set! injection.language "heex"))
 
 (sigil
   (sigil_name) @_sigil_name
@@ -108,17 +136,18 @@
  (#eq? @_sigil_name "R")
  (#set! injection.language "regex"))
 
-(sigil
-  (sigil_name) @_sigil_name
-  (quoted_content) @injection.content
- (#eq? @_sigil_name "H")
- (#set! injection.language "heex"))
 
-(sigil
-  (sigil_name) @_sigil_name
-  (quoted_content) @injection.content
- (#eq? @_sigil_name "LVN")
- (#set! injection.language "heex"))
+(call target: (identifier) @_script
+   (do_block
+     (string (quoted_content) @injection.content))
+ (#eq? @_script "script")
+ (#set! injection.language "javascript"))
+
+(call target: (identifier) @_style
+   (do_block
+     (string (quoted_content) @injection.content))
+ (#eq? @_style "style")
+ (#set! injection.language "css"))
 
 ; from https://github.com/elixir-tools/elixir-tools.nvim/blob/main/queries/elixir/injections.scm
 (call

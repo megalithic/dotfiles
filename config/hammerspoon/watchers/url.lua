@@ -26,7 +26,6 @@ obj.callbacks = {
             req("watchers.app").runContextForAppBundleID(app:name(), hs.application.watcher.launched, app, {
               tabCount = obj.browserTabCount,
               url = urlDomain,
-
               onOpen = function()
                 -- if browser.tabCount() == metadata.tabCount + 1 and browser.hasTab(metadata.url) then
                 hs.spotify.pause()
@@ -82,11 +81,25 @@ obj.callbacks = {
     pattern = "https:?://open.spotify.com/*",
     action = "com.spotify.client",
   },
-  {
-    -- FIXME: ignore certain parts of a pattern here.. (e.g., ignore `/app_auth/` path)
-    pattern = "https:?://www.figma.com/*",
-    action = "com.figma.Desktop",
-  },
+  -- {
+  --   pattern = "https:?://www.figma.com/proto/*",
+  --   action = "com.figma.Desktop",
+  -- },
+  -- {
+  --   pattern = "https:?://www.figma.com/file/*",
+  --   action = "com.figma.Desktop",
+  -- },
+  -- {
+  --   -- FIXME: ignore certain parts of a pattern here.. (e.g., ignore `/app_auth/` path)
+  --   pattern = "https:?://www.figma.com/*",
+  --   action = function(opts) print(I(opts)) end,
+  -- },
+  -- {
+  --   -- FIXME: ignore certain parts of a pattern here.. (e.g., ignore `/app_auth/` path)
+  --   pattern = "https:?://*.figma.com/*",
+  --   -- action = "com.figma.Desktop",
+  --   action = function(opts) print(I(opts)) end,
+  -- },
 }
 
 function obj.handleUrlCallback(url, handler)

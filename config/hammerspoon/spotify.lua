@@ -85,25 +85,25 @@ function obj.toggle(show)
 end
 
 function obj:init()
-  setMenubarTitle()
+  -- setMenubarTitle()
 
   return self
 end
 
 function obj:start()
-  if hs.application.get("Spotify") then
-    setMenubarTitle()
-    obj.updateTimer = hs.timer.new(obj.refreshInterval, function() setMenubarTitle() end):start()
-  end
+  -- if hs.application.get("Spotify") then
+  --   setMenubarTitle()
+  --   obj.updateTimer = hs.timer.new(obj.refreshInterval, function() setMenubarTitle() end):start()
+  -- end
 
   return self
 end
 
 function obj:stop()
-  if self.menubar then self.menubar:delete() end
-  if self.updateTimer then self.updateTimer:stop() end
+  -- if self.menubar then self.menubar:delete() end
+  -- if self.updateTimer then self.updateTimer:stop() end
 
-  info("stopping spotify things")
+  -- info("stopping spotify things")
 
   return self
 end

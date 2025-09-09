@@ -1,14 +1,13 @@
-if true then return end
-
-if not mega then return end
+if not Plugin_enabled() then return end
 
 mega.ui.winbar = {}
 
 local api = vim.api
 local fn = vim.fn
 
-local NO_NAME = "[No name]"
+local function hl_str(hl, str) return "%#" .. hl .. "#" .. str .. "%*" end
 
+local NO_NAME = "[No name]"
 function mega.ui.winbar.render()
   local win = vim.g.statusline_winid
   local buf = api.nvim_win_get_buf(win)
@@ -38,8 +37,22 @@ function mega.ui.winbar.render()
     name = fn.fnamemodify(bufname, ":.")
     flags = "%( %m%r%)"
   end
+  -- "%{%v:lua.require'nvim-navic'.get_location()%}"
 
-  return table.concat({ name, flags, " ", "%#WinBarFill#" }, "")
+  return table.concat({ " ", name, flags, " ", "%#WinBarFill#", "%{%v:lua.require'nvim-navic'.get_location()%}", " ", "%#WinBarFill#" }, "")
 end
 
-vim.o.winbar = "%!v:lua.mega.ui.winbar.render()"
+Augroup("mega.ui.winbar", {
+  {
+    event = { "BufEnter", "BufReadPost", "FileType", "FocusGained", "WinEnter", "TermLeave", "LspAttach" },
+    command = function(args) vim.o.winbar = "%!v:lua.mega.ui.winbar.render()" end,
+  },
+  {
+    event = { "BufLeave", "WinLeave", "FocusLost" },
+    command = function(args) vim.o.winbar = "" end,
+  },
+  -- {
+  --   event = { "BufWinLeave" },
+  --   command = function(args) mega.ui.statuscolumn.set(args.buf, false) end,
+  -- },
+})

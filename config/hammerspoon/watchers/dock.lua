@@ -72,15 +72,15 @@ end
 
 function obj.handleDockingStateChanges(_watcher, _path, _key, _oldValue, isConnected, isInitializing)
   isInitializing = (isInitializing ~= nil and type(isInitializing) == "boolean") and isInitializing or false
-  local connectedState = isConnected and "docked" or "undocked"
+  local state = isConnected and "docked" or "undocked"
   local notifier = isConnected and _G.success or _G.warn
   notifier = _G.success
   local icon = isConnected and "🖥️" or "💻"
   local label = isConnected and "desktop mode" or "laptop mode"
 
-  obj.setWifi(DOCK[connectedState].wifi)
-  obj.setInput(DOCK[connectedState].input)
-  obj.setOutput(DOCK[connectedState].output)
+  obj.setWifi(DOCK[state].wifi)
+  obj.setInput(DOCK[state].input)
+  obj.setOutput(DOCK[state].output)
 
   notifier(fmt("[watcher.dock] %s transitioned to %s", icon, label))
 
@@ -89,14 +89,14 @@ function obj.handleDockingStateChanges(_watcher, _path, _key, _oldValue, isConne
     hs.alert.show(fmt("%s Transitioned to %s", icon, label))
 
     hs.timer.doAfter(0.5, function()
-      info(fmt("[watcher.dock] handling docking state changes (%s)", connectedState))
+      info(fmt("[watcher.dock] handling docking state changes (%s)", state))
       req("wm").placeAllApps()
     end)
   end
 end
 
 obj.watchExistingDevices = function()
-  for _, device in ipairs(hs.usb.attachedDevices()) do
+  for _, device in ipairs(hs.usb.attachedDevices() or {}) do
     if device.productID == DOCK.target.productID then
       obj.handleDockingStateChanges(nil, nil, nil, nil, true, true)
       -- else
