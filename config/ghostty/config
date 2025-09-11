@@ -48,7 +48,7 @@ shell-integration-features = cursor,sudo,title
 
 # custom-shader = shaders/cursor_blaze_no_trail.glsl
 # custom-shader = shaders/cursor_smear.glsl
-custom-shader = ~/.config/ghostty/cursor.glsl
+# custom-shader = shaders/cursor.glsl
 cursor-style = block
 cursor-style-blink = true
 # selection-invert-fg-bg = true

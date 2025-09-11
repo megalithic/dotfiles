@@ -422,12 +422,14 @@ case "$(uname)" in
   zs_set_path=1
 
   # autosuggest
-  export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#465258,bold,underline"
-  export ZSH_AUTOSUGGEST_MANUAL_REBIND=1  # make prompt faster
-  export ZSH_AUTOSUGGEST_USE_ASYNC=1
+  ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#465258,bold,underline"
+  ZSH_AUTOSUGGEST_MANUAL_REBIND=1  # make prompt faster
+  # export ZSH_AUTOSUGGEST_USE_ASYNC=1
+  ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE="20"
+  ZSH_AUTOSUGGEST_USE_ASYNC=1
   # export ZSH_AUTOSUGGEST_STRATEGY=(history completion) # or match_prev_cmd
-  export ZSH_AUTOSUGGEST_CLEAR_WIDGETS=(buffer-empty bracketed-paste accept-line push-line-or-edit)
-  export ZSH_AUTOSUGGEST_STRATEGY=(match_prev_cmd completion history)
+   ZSH_AUTOSUGGEST_CLEAR_WIDGETS=(buffer-empty bracketed-paste accept-line push-line-or-edit)
+   ZSH_AUTOSUGGEST_STRATEGY=(match_prev_cmd completion history)
 
   # zsh magic dashboard
   # Size of the dashboard

@@ -25,11 +25,13 @@ tmux -2 new-window -c "$CWD" -t "$SESSION":2 -n dots
 # tmux -2 new-window -c "$DOTS" -t "$SESSION":3 -n ssh-dots
 
 # Window "chats"
-if tmux has-session -t "weechat" 2>/dev/null; then
-  tmux -2 send-keys -t "$SESSION":1 tmux\ link-window\ -s\ weechat:weechat\ -t\ 0\ \&\&\ exit C-m
-else
-  tmux -2 send-keys -t "$SESSION":1 weechat C-m
-fi
+# if tmux has-session -t "weechat" 2>/dev/null; then
+#   tmux -2 send-keys -t "$SESSION":1 tmux\ link-window\ -s\ weechat:weechat\ -t\ 0\ \&\&\ exit C-m
+# else
+#   tmux -2 send-keys -t "$SESSION":1 weechat C-m
+# fi
+
+tmux -2 send-keys -t "$SESSION":1 ls C-m
 
 # Window "dots"
 tmux -2 send-keys -t "$SESSION":2 ls C-m

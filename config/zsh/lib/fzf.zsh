@@ -1,5 +1,7 @@
 #!/usr/bin/env zsh
 
+[[ -f ~/.fzf.zsh ]] && source ~/.fzf.zsh
+
 # https://github.com/junegunn/fzf/wiki/Color-schemes#color-configuration
 # interactive color picker for fzf themes: https://minsw.github.io/fzf-color-picker/
 #

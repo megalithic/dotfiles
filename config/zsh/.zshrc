@@ -1,9 +1,9 @@
 #!/usr/bin/env zsh
 # shellcheck shell=bash
-
 # zmodload zsh/zprof # -> top of your .zshrc file
 
 # set -o vi
+set -o emacs
 
 # -- required helpers and our env variables
 ZLIB="$ZDOTDIR/lib"
@@ -33,10 +33,6 @@ autoload -U zmv # builtin zsh rename command
 zsh_add_file "lib/completion.zsh"
 zsh_add_file "lib/last_working_dir.zsh"
 
-# -- prompt
-autoload -U promptinit && promptinit # Enable prompt themes
-prompt megalithic                    # Set prompt
-
 # -- scripts/libs/etc
 for file in $ZLIB/{keymaps,opts,aliases,funcs,ssh,tmux,kitty,gpg}.zsh; do
   # for funcs: https://github.com/akinsho/dotfiles/commit/01816d72160e96921e2af9bc3f1c52be7d1f1502
@@ -49,16 +45,48 @@ if exists zoxide; then
 fi
 
 # fzf just desparately wants this here
-[[ -f ~/.fzf.zsh ]] && source ~/.fzf.zsh
 zsh_add_file "lib/fzf.zsh"
 
 # NOTE: https://github.com/jdxcode/rtx#rtx-activate
 zsh_add_file "lib/mise.zsh"
 zsh_add_file "lib/nix.zsh"
 
+# -- prompt
+if exists starship; then
+bindkey -v # enables vi mode, using -e = emacs
+export KEYTIMEOUT=1
+
+# Add vi-mode text objects e.g. da" ca(
+autoload -Uz select-bracketed select-quoted
+zle -N select-quoted
+zle -N select-bracketed
+for km in viopp visual; do
+  bindkey -M $km -- '-' vi-up-line-or-history
+  for c in {a,i}${(s..)^:-\'\"\`\|,./:;=+@}; do
+    bindkey -M $km $c select-quoted
+  done
+  for c in {a,i}${(s..)^:-'()[]{}<>bB'}; do
+    bindkey -M $km $c select-bracketed
+  done
+done
+
+# Mimic tpope's vim-surround
+autoload -Uz surround
+zle -N delete-surround surround
+zle -N add-surround surround
+zle -N change-surround surround
+bindkey -M vicmd cs change-surround
+bindkey -M vicmd ds delete-surround
+bindkey -M vicmd ys add-surround
+bindkey -M visual S add-surround
+  eval "$(starship init zsh)"
+else
+  autoload -U promptinit && promptinit # Enable prompt themes
+  prompt megalithic                    # Set custom megalithic prompt
+fi
+
 # replaces ctrl_r keybinding for faster, more robust history search
 # zsh_add_file "lib/mcfly.zsh"
 
 # zprof # -> bottom of .zshrc
 # vim:ft=zsh:foldenable:foldmethod=marker:ts=2:sts=2:sw=2
-
