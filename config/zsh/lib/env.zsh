@@ -457,10 +457,10 @@ case "$(uname)" in
   PROMPT_EOL_MARK=""
 
   # use .localrc/local.zsh for SUPER SECRET stuff
-  if [[ -f "$ZDOTDIR/lib/local.zsh" && "$(uname)" == "Darwin" ]]; then
-    source "$ZDOTDIR/lib/local.zsh"
-  fi
+  # if [[ -f "$ZDOTDIR/lib/local.zsh" && "$(uname)" == "Darwin" ]]; then
+  #   source "$ZDOTDIR/lib/local.zsh"
+  # fi
 
-  if [ -f "$HOME/.localrc" ]; then
-    source "$HOME/.localrc"
-  fi
+  # if [ -f "$HOME/.localrc" ]; then
+  #   source "$HOME/.localrc"
+  # fi

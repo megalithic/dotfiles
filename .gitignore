@@ -18,6 +18,7 @@ config/karabiner/automatic_backups/*
 .jj
 cache
 config/tmux/plugins
+config/zsh/plugins
 *~
 config/gh/hosts.yml
 **/packer_compiled.lua

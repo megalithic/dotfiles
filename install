@@ -14,16 +14,16 @@ fi
 
 [[ -f "$HOME/.dotfiles/config/zsh/lib/helpers.zsh" ]] && source "$HOME/.dotfiles/config/zsh/lib/helpers.zsh"
 
-  # gather sudo privileges:
-  log_warn "needs sudo for things:"
-  sudo -v || exit 1
+# gather sudo privileges:
+log_warn "needs sudo for things:"
+sudo -v || exit 1
 
-  # Keep-alive: update existing `sudo` time stamp until setup has finished
-  while true; do
-    sudo -n true
-    sleep 60
-    kill -0 "$$" || exit
-  done 2>/dev/null &
+# Keep-alive: update existing `sudo` time stamp until setup has finished
+while true; do
+  sudo -n true
+  sleep 60
+  kill -0 "$$" || exit
+done 2> /dev/null &
 
 BASEDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -34,7 +34,7 @@ DOTBOT_BIN="bin/dotbot"
 # all of this helps to fix submodules that use ssh vs. https
 config="$(git config --get-all url.https://github.com/.insteadOf)"
 set +e
-read -r -d '' expected_config <<'EOF'
+read -r -d '' expected_config << 'EOF'
 git@github.com:
 ssh://git@github.com/
 http://github.com/
