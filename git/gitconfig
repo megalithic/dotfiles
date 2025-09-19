@@ -330,10 +330,15 @@
 
 [ghq]
   root = ~/code
-[url "https://github.com/"]
-  insteadOf = "git@github.com:"
-  insteadOf = "ssh://git@github.com/"
-  insteadOf = "http://github.com/"
+
+# [url "https://github.com/"]
+#   insteadOf = "git@github.com:"
+#   insteadOf = "ssh://git@github.com/"
+#   insteadOf = "http://github.com/"
+
+[url "ssh://git@github.com/"]
+  insteadOf = https://github.com/
+
 [browse-remote "github.com"]
   top  = https://{host}/{path}
   ref  = https://{host}/{path}/tree/{short_ref}
@@ -437,5 +442,6 @@
   # A local gitconfig, outside of version control.
   # If the file doesn't exist it is silently ignored
   path = ~/.gitconfig_local
+
 [init]
 	defaultBranch = main
