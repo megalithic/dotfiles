@@ -1,5 +1,1 @@
-export GPG_TTY="$(tty)"
-# gpg-connect-agent updatestartuptty /bye &>/dev/null
-# unset SSH_AGENT_PID
-# export SSH_AUTH_SOCK="$(gpgconf --list-dirs agent-ssh-socket)"
-# gpgconf --launch gpg-agent
+/nix/store/cjafgr8rza8hb2j261h6lc2rjz2w6m2v-home-manager-files/.config/zsh/lib/gpg.zsh

@@ -1,6 +1,1 @@
-# fix up permissions every time, just in case
-umask 002
-if [[ -d "$HOME/.ssh" ]]; then
-	chmod 700 "$HOME/.ssh" 2>/dev/null
-	chmod 600 "$HOME/.ssh/*" 2>/dev/null
-fi
+/nix/store/cjafgr8rza8hb2j261h6lc2rjz2w6m2v-home-manager-files/.config/zsh/lib/ssh.zsh

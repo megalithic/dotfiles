@@ -1,0 +1,251 @@
+# REF: https://github.com/hackrmomo/.config.macos/blob/main/ghostty/config
+
+title = "Ghostty 👻"
+
+# background-opacity = 0.95
+# background-blur-radius = 20
+# unfocused-split-opacity = 0.90
+
+minimum-contrast = 1.0
+
+# Leading
+adjust-cell-height = 10%
+
+# adjust-underline-thickness = 0.5
+# adjust-underline-thickness = -50%
+# adjust-underline-position = 25%
+
+macos-option-as-alt = true
+
+fullscreen = true
+
+# visible-menu
+macos-non-native-fullscreen = visible-menu
+# macos-titlebar-tabs=false # FIXME: deprecated?
+macos-titlebar-style = hidden
+
+window-theme = ghostty
+window-decoration = false
+window-colorspace = display-p3
+window-vsync = true
+window-padding-x = 5
+window-padding-y = 10,0
+# window-padding-y = 0
+# window-padding-x = 0
+# window-padding-x = 10
+# window-padding-y = 10
+window-padding-balance = true
+window-padding-color = background
+window-save-state = always
+
+# start maximized
+window-height = 9999
+window-width = 9999
+
+shell-integration = zsh
+shell-integration-features = cursor,sudo,title
+
+
+# custom-shader = shaders/cursor_blaze_no_trail.glsl
+# custom-shader = shaders/cursor_smear.glsl
+# custom-shader = shaders/cursor.glsl
+cursor-style = block
+cursor-style-blink = true
+# selection-invert-fg-bg = true
+
+clipboard-read = allow
+clipboard-write = allow
+copy-on-select = clipboard
+clipboard-trim-trailing-spaces = true
+clipboard-paste-protection = false
+
+confirm-close-surface = false
+quit-after-last-window-closed = true
+
+mouse-hide-while-typing = true
+mouse-shift-capture = true
+
+quick-terminal-position = left
+
+font-family             = "JetBrainsMono Nerd Font Mono"
+font-style              = "Medium"
+font-family-bold        = "JetBrainsMono Nerd Font Mono"
+font-style-bold         = "ExtraBold"
+font-family-italic      = "JetBrainsMono Nerd Font Mono"
+font-style-italic       = "Italic"
+font-family-bold-italic = "JetBrainsMono Nerd Font Mono"
+font-style-bold-italic  = "ExtraBold Italic"
+
+
+font-size = 14
+font-thicken = true
+
+font-codepoint-map = U+2610-U+2612=Noto Sans Symbols 2
+font-codepoint-map = U+25E0-U+25E1,U+2026=DejaVu Sans Mono
+adjust-underline-position = 99
+adjust-underline-thickness = 50%
+
+# adjust-cell-width = -5%
+adjust-cell-height = 10%
+# adjust-underline-position = 6
+# adjust-underline-thickness = 100%
+# adjust-cursor-thickness = 150%
+
+font-feature = zero
+# font-feature = ss01 # serif f
+# font-feature = ss02 # curly l
+font-feature = ss03
+font-feature = ss04
+font-feature = ss05
+font-feature = ss06
+font-feature = ss07
+font-feature = ss08
+font-feature = liga
+font-feature = dlig
+font-feature = calt
+
+# Seti-UI + Custom
+# font-codepoint-map = U+E5FA-U+E62B=Symbols Nerd Font
+# # Devicons
+# font-codepoint-map = U+E700-U+E7C5=Symbols Nerd Font
+# # Font Awesome
+# font-codepoint-map = U+F000-U+F2E0=Symbols Nerd Font
+# # Font Awesome Extension
+# font-codepoint-map = U+E200-U+E2A9=Symbols Nerd Font
+# # Material Design Icons
+# font-codepoint-map = U+F500-U+FD46=Symbols Nerd Font
+# # Weather
+# font-codepoint-map = U+E300-U+E3EB=Symbols Nerd Font
+# # Octicons
+# font-codepoint-map = U+F400-U+F4A8,U+2665,U+26A1,U+F27C=Symbols Nerd Font
+# # Powerline Extra Symbols
+# font-codepoint-map = U+E0A3,U+E0B4-U+E0C8,U+E0CC-U+E0D2,U+E0D4=Symbols Nerd Font
+# # IEC Power Symbols
+# font-codepoint-map = U+23FB-U+23FE,U+2b58=Symbols Nerd Font
+# # Font Logos
+# font-codepoint-map = U+F300-U+F313=Symbols Nerd Font
+# # Pomicons
+# font-codepoint-map = U+E000-U+E00D=Symbols Nerd Font
+
+# # https://github.com/ryanoasis/nerd-fonts/wiki/Glyph-Sets-and-Code-Points
+# # powerline & powerline-extras
+# font-codepoint-map = U+e0b0-U+e0b3,U+e0b4-U+e0c8,U+e0cc-U+e0d4,U+e0ca=CommitMono Nerd Font Mono
+
+# # font-awesome
+# font-codepoint-map = U+f000-U+f2e0,U+e200-U+e2a9=CommitMono Nerd Font Mono
+
+# # seti-ui
+# font-codepoint-map = U+e5fa-U+e6b1=CommitMono Nerd Font Mono
+
+# # codicons
+# font-codepoint-map = U+ea60-U+ebeb=CommitMono Nerd Font Mono
+
+# # Devicons
+# font-codepoint-map = U+e700-U+e7c5=CommitMono Nerd Font Mono
+
+# # Font awesome
+# font-codepoint-map = U+f000-U+f2e0=CommitMono Nerd Font Mono
+
+# # Font awesome extension
+# font-codepoint-map = U+e200-U+e2a9=CommitMono Nerd Font Mono
+
+# # Octicons
+# font-codepoint-map = U+f400-U+f4a8,U+2665-U+2665,U+26A1-U+26A1,U+f27c-U+f27c=CommitMono Nerd Font Mono
+
+# ## Font mapping
+# # Pomicons
+# font-codepoint-map = U+E000-U+E00D=Monolisa
+#
+# # Powerline
+# font-codepoint-map = U+e0a0-U+e0a2,U+e0b0-U+e0b3=Monolisa
+#
+# # Powerline Extra
+# font-codepoint-map = U+e0a3-U+e0a3,U+e0b4-U+e0c8,U+e0cc-U+e0d2,U+e0d4-U+e0d4=Monolisa
+#
+# # Symbols original
+# font-codepoint-map = U+e5fa-U+e62b=Monolisa
+#
+# # Devicons
+# font-codepoint-map = U+e700-U+e7c5=Monolisa
+#
+# # Font awesome
+# font-codepoint-map = U+f000-U+f2e0=Monolisa
+#
+# # Font awesome extension
+# font-codepoint-map = U+e200-U+e2a9=Monolisa
+#
+# # Octicons
+# font-codepoint-map = U+f400-U+f4a8,U+2665-U+2665,U+26A1-U+26A1,U+f27c-U+f27c=Monolisa
+#
+# # Font Linux
+# font-codepoint-map = U+F300-U+F313=Monolisa
+#
+# # Nerd Fonts - Font Power Symbols
+# font-codepoint-map = U+23fb-U+23fe,U+2b58-U+2b58=Monolisa
+#
+# # Material Design Icons
+# font-codepoint-map = U+f500-U+fd46=Monolisa
+#
+# # Weather Icons
+# font-codepoint-map = U+e300-U+e3eb=Monolisa
+#
+# # Misc Code Point Fixes
+# font-codepoint-map = U+21B5,U+25B8,U+2605,U+2630,U+2632,U+2714,U+E0A3,U+E615,U+E62B=Monolisa
+
+
+# font-codepoint-map = U+23FB-U+23FE,U+2665,U+26A1,U+2B58,U+E000-U+E00A,U+E0A0-U+E0A3,U+E0B0-U+E0D4,U+E200-U+E2A9,U+E300-U+E3E3,U+E5FA-U+E6AA,U+E700-U+E7C5,U+EA60-U+EBEB,U+F000-U+F2E0,U+F300-U+F32F,U+F400-U+F4A9,U+F500-U+F8FF,U+F0001-U+F1AF0=CommitMono Nerd Font Mono
+# font-codepoint-map = U+4E00-U+9FFF,U+3400-U+4DBF=CommitMono Nerd Font Mono
+
+# megaforest color theme
+background = #323d43
+foreground = #d8caac
+# black
+palette = 0=#505a60
+palette = 8=#5c6370
+# red
+palette = 1=#e67e80
+palette = 9=#E06C75
+# green
+palette = 2=#a7c080
+palette = 10=#A7CF9B
+# yellow
+palette = 3=#d9bb80
+palette = 11=#e5c07b
+# blue
+palette = 4=#7fbbb3
+palette = 12=#7FBBD0
+# purple
+palette = 5=#d39bb6
+palette = 13=#FCC5E9
+# aqua
+palette = 6=#7eb48b
+palette = 14=#78BA91
+# white
+palette = 7=#ffffff
+palette = 15=#ffffff
+
+# Keybinds
+# \x02 is ctrl+b (default tmux prefix)
+# \x01 is ctrl+a (common alternative tmux prefix)
+# \x00 is ctrl+space (common alternative tmux prefix)
+keybind = ctrl+one=text:\x00\x31
+keybind = ctrl+two=text:\x00\x32
+keybind = ctrl+three=text:\x00\x33
+keybind = ctrl+four=text:\x00\x34
+keybind = ctrl+five=text:\x00\x35
+keybind = ctrl+six=text:\x00\x36
+keybind = ctrl+seven=text:\x00\x37
+keybind = ctrl+eight=text:\x00\x38
+keybind = ctrl+nine=text:\x00\x39
+
+keybind = cmd+t=text:\x00\x63
+
+keybind = super+shift+r=reload_config
+keybind = global:cmd+ctrl+shift+opt+`=toggle_quick_terminal
+
+# DO NOT DELETE THIS:
+# this stops me from hitting this mapping thinking i'm using a browser's inspect and end up with passing `C` to nvim and changing to end of line 🤦
+keybind = cmd+shift+c=ignore
+
+# vim: ft=conf
+keybind = shift+enter=text:\n

@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+dnd_status=$(dnd status)
+
+echo
+
+if [[ "$dnd_status" == "on" ]]; then
+  printf "󰤄 DND" # alts: 󰚎󰂠󰒲󱋑󱋒󰪓⏾󰤄 \uf59f
+elif [[ "$dnd_status" == "off" ]]; then
+  printf ""
+fi

@@ -1,0 +1,122 @@
+thm_bg="#323d43" # -- #2b3339, #2f3d44, #323d43
+thm_bg_dark="#2b3339"
+thm_bg_alt="#3c474d"
+thm_bg_cyan="#54816B"
+thm_bg_popup="#3c474d" # (bg1)
+thm_bg_blue="#415c6d"
+thm_bg_green="#4e6053"
+thm_bg_yellow="#5d5c50"
+thm_bg_red="#614b51"
+thm_fg="#d8caac"
+thm_cyan="#87c095"
+thm_black="#2b3339"
+thm_white="#eeeeee"
+thm_grey="#7c8377"
+thm_grey2="#999f93"
+thm_magenta="#d39bb6"
+thm_pink="#f5c2e7"
+thm_red="#e67e80"
+thm_green="#a7c080"
+thm_yellow="#d9bb80"
+thm_blue="#7fbbb3"
+thm_orange="#e39b7b"
+thm_brown="#795430"
+
+session_fg="#(tmux-var 'SESSION_FG')"
+session_bg="#(tmux-var 'SESSION_BG')"
+thm_active_fg="#{?$session_fg,${session_fg},${thm_blue}}"
+thm_active_border="#{?$session_fg,${session_fg},${thm_bg_blue}}"
+thm_inactive_fg="$thm_bg_blue"
+
+# --- pane-border configuration ------------------------------------------------
+setw -g pane-border-status top # currently renders incorrectly in HEAD, top/off
+tmux_pane_name="#(sleep 0.5; ps -t #{pane_tty} -o args= | head -n 2)"
+tmux_pane_name_icons="#($(sleep 0.5; tmux-icons $(ps -t #{pane_tty} -o args= | head -n 2))"
+setw -g pane-border-format "" # "${tmux_pane_name_icons}"
+setw -g pane-border-style "fg=${thm_bg_popup},bg=${thm_bg}"
+setw -g pane-active-border-style "fg=${thm_bg_blue},bg=${thm_bg}"
+# display arrows for current pane
+set -g pane-border-indicators both # opts: off, colour, arrows, both
+setw -g pane-border-lines single  # opts: single, double, heavy, simple, number
+
+# dim inactive window text -- FIXME: failing when inactive set!
+# setw -g window-style "bg=$thm_bg_alt,fg=$thm_fg"
+setw -g window-active-style "fg=$thm_fg,bg=$thm_bg"
+setw -g window-status-activity-style none
+setw -g window-status-bell-style "fg=$thm_red,bg=$thm_bg_popup,dim"
+setw -g window-status-separator ""
+
+# setw -g window-status-style
+# setw -g window-status-activity-style
+# setw -g window-status-bell-style
+# setw -g window-status-content-style
+# setw -g window-status-current-style
+# setw -g window-status-last-style
+
+set -g clock-mode-colour "$thm_white"
+set -g mode-style "fg=$thm_black,bg=$thm_white"
+
+# colorize messages in the command line
+set -g status-style "fg=$thm_grey2,bg=default"
+# Styling when in command mode i.e. vi or emacs mode in tmux command line
+set -g message-command-style "fg=green bg=terminal,bold,blink"
+# Regular tmux commandline styling
+set -g message-style "fg=$thm_red bg=terminal,italics,bold"
+
+# -- popup style
+# NOTE: had to alter fzf colors for my fzf scripts (disabling bg colours)
+set -g popup-style "bg=$thm_bg_popup"
+set -g popup-border-style "fg=$thm_bg_popup,bg=$thm_bg_popup"
+set -g popup-border-lines "padded"
+
+# = layout --
+sep="⋮" # alts: ⋮󰇘󱗿󱗽󱗼󱥸󱗾
+status_sep="#[fg=$thm_bg_green,bg=terminal]  $sep  #[fg=default,bg=default]"
+
+zoom_icon="#{?window_zoomed_flag,#[fg=$thm_red]#($HOME/.dotfiles/bin/tmux-fancy-numbers\ #P),#{?#{>:#{window_panes},1},#($HOME/.dotfiles/bin/tmux-fancy-numbers\ #P),}} " # alts: 
+current_window_pane_count="#[default]#{?window_active,#[fg=$thm_active_fg]#($HOME/.dotfiles/bin/tmux-fancy-numbers\ #{window_panes}),}"
+status_items="#[default]#{?window_bell_flag,#[fg=$thm_red] 󰂞,}$zoom_icon"
+
+# - left -
+set -g status-left "#[fg=$thm_fg,bg=$thm_bg_alt]#{tmux_mode_indicator} " # alts: 
+set -g status-left-length 100
+
+# - windows -
+setw -g window-status-style "fg=$thm_inactive_fg"
+setw -g window-status-current-style "bg=default,fg=$thm_active_fg"
+# NOTE: #T uses title string, #W uses window name
+# TODO: #[fg=colour243]#(cd #{pane_current_path}; git rev-parse --abbrev-ref HEAD)
+setw -g window-status-current-format " #[italics,bold]#[fg=blue,bg=terminal] #I:#W$status_items" # ●■□▪▫
+# setw -g window-status-current-format " #[italics,bold]#[fg=blue,bg=terminal] #I:#($HOME/.dotfiles/bin/nerdwin\ #W)$status_items" # ●■□▪▫
+setw -g window-status-format "  #I:#W$status_items" # alts: ●◯
+# setw -g window-status-format "  #I:#($HOME/.dotfiles/bin/nerdwin\ #W)$status_items" # alts: ●◯
+
+# - middle -
+# set -g status-middle "test"
+
+# - right -
+ram="#[bold,italics]#{ram_fg_color}#{ram_icon}${reset}"
+cpu="#[bold,italics]#{cpu_fg_color}#{cpu_percentage}${reset}"
+pomodoro_display="#{pomodoro_status} "
+dnd="#($HOME/.dotfiles/config/tmux/scripts/tmux-dnd)"
+dnd_display="#{?$dnd,#[fg=#5d5c50]${dnd}  #[fg=${thm_bg_blue}]$sep  ,}"
+ptt="#($HOME/.dotfiles/config/tmux/scripts/tmux-ptt)"
+ptt_display="#{?$ptt,#[fg=#5d5c50]${ptt}  #[fg=${thm_bg_blue}]$sep  ,}"
+ptt_display=""
+cal="#($HOME/.dotfiles/config/tmux/scripts/tmux-cal)"
+cal_display="#{?$ptt,#[fg=$thm_cyan]${cal}  #[fg=${thm_bg_blue}]$sep  ,}"
+tunes="#($HOME/.dotfiles/config/tmux/scripts/tmux-spotify)"
+# tunes_display="#[fg=$thm_grey]#{?$tunes,${tunes}  #[fg=${thm_bg_blue}]$sep  ,}"
+tunes_display=""
+battery_display="#[bg=default,nobold]#{battery_color_fg}#[bg=default,nobold]#{battery_percentage} #{battery_icon_status}"
+# REF: http://manpages.ubuntu.com/manpages/precise/en/man3/strftime.3.html
+time="#[fg=$thm_blue] #(TZ='/usr/share/zoneinfo/US/Eastern' date +'%H:%M') #[fg=colour250]"
+utc="UTC #[fg=colour244]#(TZ='/usr/share/zoneinfo/UTC' date '+%%H:%%M')"
+pst="PST #[fg=colour244]#(TZ='/usr/share/zoneinfo/US/Pacific' date '+%%H:%%M')"
+# cest="CEST #[fg=colour244]#(TZ='/usr/share/zoneinfo/Europe/Amsterdam' date '+%%H:%%M')"
+alt_times="#[fg=colour244]($pst / $utc#[fg=colour244])"
+
+set -g status-right "#{tmate_ssh}#{tmate_ssh_ro}${ptt_display}${dnd_display}${tunes_display}$battery_display$status_sep#[bg=$thm_bg_alt]$time$alt_times${pomodoro_display}"
+set -g status-right-length 200
+
+# vim:ft=tmux tw=0

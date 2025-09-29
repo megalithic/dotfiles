@@ -1,0 +1,525 @@
+# -- [ prefix ] ----------------------------------------------------------------
+
+unbind C-a
+unbind C-b
+unbind C-space
+unbind space
+unbind c
+unbind g
+unbind C-g
+unbind C-z
+unbind -T copy-mode-vi 'Enter'
+unbind C-/
+
+# NOTE / FIXME: C-a prefix binding is required for my kitty.conf pass-through bindings 😢
+set -g prefix C-space
+bind C-space send-prefix
+
+# unbind C-b
+# set -g prefix2 C-b
+# bind C-b send-prefix
+# set -g prefix2 C-enter
+# bind C-return send-prefix
+
+# -- [ general settings ] ------------------------------------------------------
+
+set -g history-limit 20000
+set -g default-shell "${HOMEBREW_PREFIX}/bin/zsh"
+set -g update-environment "DISPLAY SSH_AUTH_SOCK SSH_ASKPASS SSH_AGENT_PID SSH_CONNECTION SSH_HOME WINDOWID XAUTHORITY SSHHOME TMUX GPG_AGENT" # https://github.com/cdown/dotfiles/blob/master/.tmux.conf
+
+# if-shell 'infocmp tmux-256color' { set default-terminal tmux-256color } { set default-terminal screen-256color }
+
+# NOTE: this overrides specify terminal capabilities you are overriding within tmux,
+# this should "normally" be "xterm-256color" or "tmux-256color" but in the case of
+# kitty it should be "xterm-kitty" so the solution/workaround here is to use the
+# value of $TERM. This might not work for all terminals.
+# see:
+# https://jdhao.github.io/2018/10/19/tmux_nvim_true_color/
+# https://sw.kovidgoyal.net/kitty/conf/#opt-kitty.term
+# set -g default-terminal "xterm-ghostty" # alts: xterm-ghostty,wezterm,screen-254color,xterm-256color,xterm-kitty,tmux-256color
+set -g default-terminal "${TERM}"
+
+# True colour support, the terminal info is from the outside of tmux https://sunaku.github.io/tmux-24bit-color.html#usage
+set -ga terminal-overrides ",${TERM}:Tc"
+set -as terminal-overrides ",${TERM}:RGB"
+set -as terminal-features ",${TERM}:RGB"
+# Neovim cursor changing support https://github.com/neovim/neovim/wiki/FAQ#cursor-shape-doesnt-change-in-tmux
+set -ga terminal-overrides ',*:Ss=\E[%p1%d q:Se=\E[2 q'
+# Italics support
+# set -as terminal-overrides ",${TERM}:sitm=\E[3m"
+set -as terminal-overrides ',xterm*:sitm=\E[3m'
+# Strikethrough support https://github.com/tmux/tmux/issues/612#issuecomment-288408841
+set -as terminal-overrides ',xterm*:smxx=\E[9m'
+# set -as terminal-overrides ",${TERM}:smxx=\E[9m"
+set -ga terminal-features '*:clipboard:strikethrough:usstyle:RGB'
+# Undercurl support
+set -as terminal-overrides ',*:Smulx=\E[4::%p1%dm'
+# Enable colored underlines (e.g. in Vim)
+set -a terminal-features '*:usstyle'
+
+set -sa terminal-features ',xterm-ghostty:RGB'
+# Add colors to underscore/undercurl inside neovim [source: https://github.com/folke/tokyonight.nvim#making-undercurls-work-properly-in-tmux]
+set -as terminal-overrides ',*:Setulc=\E[58::2::%p1%{65536}%/%d::%p1%{256}%/%{255}%&%d::%p1%{255}%&%d%;m'  # underscore colours - needs tmux-3.0
+# kitty graphics protocol (and other things)
+set -gq allow-passthrough on
+set extended-keys on # allows for meta, ctrl, opt keys, etc.
+
+set -q -g status-utf8 on                  # expect UTF-8 (tmux < 2.2)
+set -g base-index 1 # 0 by default
+set -g renumber-windows on # re-number windows when one is closed
+set -g mouse on # FIXME: this potentially jacks with kitty's mouse copy selection stuff
+# bind -n WheelUpPane if-shell -F -t = "#{mouse_any_flag}" "send-keys -M" "if -Ft= '#{pane_in_mode}' 'send-keys -M' 'select-pane -t=; copy-mode -e; send-keys -M'"
+# bind -n WheelDownPane select-pane -t= \; send-keys -M
+set -g assume-paste-time 0            # Disable assume-paste-time, so that iTerm2's "Send Hex Codes" feature works with tmux 2.1. (https://github.com/edruder/maximum-awesome/commit/9e3d07f450ac60ec142c82e8b2ffb2777bf99fb4)
+set -g repeat-time 0                  # Allow the arrow key to be used immediately after changing windows
+# Neovim https://github.com/neovim/neovim/wiki/FAQ#esc-in-tmux-or-gnu-screen-is-delayed
+set -sg escape-time 0
+set -g focus-events on
+set -w -g wrap-search off             # Don't wrap searches; it's super confusing given tmux's reverse-ordering of position info in copy mode.
+set -g detach-on-destroy off
+# emacs key bindings in tmux command prompt (prefix + :) are better than actually
+# vi keys, even for vim users.
+set -g status-keys emacs
+
+# set -g visual-bell off
+# set -g bell-action none
+setw -g pane-base-index 1
+setw -q -g utf8 on
+setw -g xterm-keys on
+setw -g aggressive-resize on          # allows multiple sessions to connect to the same server. only shows the resize border when both sessions are on the same windowe
+setw -g monitor-activity on
+setw -g visual-activity off
+setw -g mode-keys vi
+set -g @yank_action "copy-pipe"
+# -- [ key bindings ] ----------------------------------------------------------
+# = to see current bindings: `tmux list-keys` or <prefix-?>
+
+bind -r C-R \
+  set @mode_indicator_custom_prompt "  RELOADING " \; \
+  set @mode_indicator_custom_mode_style 'fg=#3c474d,bg=#e67e80,italics' \; \
+  source-file "$XDG_CONFIG_HOME/tmux/tmux.conf" \; \
+  set -u @mode_indicator_custom_prompt \; \
+  set -u @mode_indicator_custom_mode_style \; \
+  refresh-client \;
+
+bind r refresh-client
+
+# = backward search ------------------------------------------------------------
+
+bind -T copy-mode-vi "?" \
+  command-prompt -ip "search up:" "send -X search-backward-incremental '%%%'"
+bind -T copy-mode-vi "/" \
+  command-prompt -ip "search down:" "send -X search-forward-incremental '%%%'"
+
+# = splitting panes ------------------------------------------------------------
+
+unbind |
+unbind -
+unbind s
+bind v split-window -h -l 150 -c "#{pane_current_path}"
+bind s split-window -v -l 40 -c "#{pane_current_path}"
+
+is_vim="ps -o state= -o comm= -t '#{pane_tty}' \
+    | grep -iqE '^[^TXZ ]+ +(\\S+\\/)?g?(view|n?vim?x?)(diff)?$'"
+
+bind-key -n C-h if-shell "$is_vim" "send-keys C-h" "select-pane -L"
+bind-key -n C-j if-shell "$is_vim" "send-keys C-j" "select-pane -D"
+bind-key -n C-k if-shell "$is_vim" "send-keys C-k" "select-pane -U"
+bind-key -n C-l if-shell "$is_vim" "send-keys C-l" "select-pane -R"
+
+bind-key -n M-h if-shell "$is_vim" "send-keys M-h" "resize-pane -L 3"
+bind-key -n M-j if-shell "$is_vim" "send-keys M-j" "resize-pane -D 3"
+bind-key -n M-k if-shell "$is_vim" "send-keys M-k" "resize-pane -U 3"
+bind-key -n M-l if-shell "$is_vim" "send-keys M-l" "resize-pane -R 3"
+
+tmux_version='$(tmux -V | sed -En "s/^tmux ([0-9]+(.[0-9]+)?).*/\1/p")'
+if-shell -b '[ "$(echo "$tmux_version < 3.0" | bc)" = 1 ]' \
+    "bind-key -n 'C-\\' if-shell \"$is_vim\" 'send-keys C-\\'  'select-pane -l'"
+if-shell -b '[ "$(echo "$tmux_version >= 3.0" | bc)" = 1 ]' \
+    "bind-key -n 'C-\\' if-shell \"$is_vim\" 'send-keys C-\\\\'  'select-pane -l'"
+
+bind-key -T copy-mode-vi C-h select-pane -L
+bind-key -T copy-mode-vi C-j select-pane -D
+bind-key -T copy-mode-vi C-k select-pane -U
+bind-key -T copy-mode-vi C-l select-pane -R
+bind-key -T copy-mode-vi C-\\ select-pane -l
+
+
+# = resizing -------------------------------------------------------------------
+
+bind -r H resize-pane -L 10      # grow the current pane leftwards with <C-t>H
+bind -r J resize-pane -D 10      # grow the current pane downwards with <C-t>J
+bind -r K resize-pane -U 10      # grow the current pane upwards with <C-t>K
+bind -r L resize-pane -R 10      # grow the current pane rightwards with <C-t>L
+
+                                # Any of the above can be repeated easily by holding down Ctrl,
+                                # hitting 'a' and then pressing H, J, K, or L repeatedly until the
+                                # pane is the desired size.
+
+# = new and kill ---------------------------------------------------------------
+
+# bind -r C-k confirm -p "kill-session #{session_name}? (y/n)" "kill-session"
+
+bind -r C-k confirm-before -p "kill-session #S (y/n)?" "run-shell 'tmux-kill-session \"#S\" \"mega\"'"
+
+# bind -r C-k confirm-before -p "kill-session #S (y/n)?" "run-shell 'tmux switch-client -t \"mega\"\\; kill-session -t \"#S\"'"
+# bind -r C-k confirm-before -p "kill-session #S (y/n)?" "run-shell 'tmux switch-client -n \\\; kill-session -t \"#S\"'"
+# if-shell -F '#{==:#{session_name},slack}' { set -s status off } { set -s status on }
+
+
+bind -r C-x confirm -p "kill-window #{window_name}? (y/n)" "kill-window"
+bind x confirm -p "kill-pane #{pane_index}? (y/n)" "kill-pane"
+bind -r C-t new-window -c "#{pane_current_path}"
+bind -r t new-window -c "#{pane_current_path}"
+
+# = reorder windows ------------------------------------------------------------
+
+bind -r C-H swap-window -t -1 # move window one position to the left
+bind -r C-L swap-window -t +1 # move window one position to the right
+
+# Pressing Ctrl+Shift+Left (will move the current window to the left. Similarly
+# right. No need to use the modifier (C-b).
+bind -n C-S-Left swap-window -t -1
+bind -n C-S-Right swap-window -t +1
+
+# Make the current window the first window
+bind T swap-window -t 1
+
+# = sessions -------------------------------------------------------------------
+
+# create new session
+bind C-c command-prompt -p " new session ->" "run-shell \"ftm %1\""
+
+# = popups ---------------------------------------------------------------------
+
+bind C-Space display-popup -T " sessions " -w "40%" -h "50%" "ftm -p && tmux display-popup -C"
+
+
+# switch to my main specific session if switch-client -l fails..
+bind -r C-l run-shell "\
+  tmux switch-client -l; \
+  if [ $? -eq 0 ]; then \
+    tmux refresh-client; \
+  else \
+    tmux switch-client -t mega; \
+    tmux refresh-client; \
+  fi; \
+"
+
+bind -r g display-popup -w "80%" -h "80%" -d "#{pane_current_path}" -E "lazygit"
+bind -r C-g display-popup -w "80%" -h "80%" -d "#{pane_current_path}" -E "lazygit"
+
+
+# run an arbitrary command in a popup; interactive
+bind C-z display-popup -E -w "45%" -h "35%" "zsh -l"
+# bind C-n display-popup -E 'zsh -c "export TMUX_POPUP=1 && nvim"'
+# FIXME: THIS allows for some crazy popup moving with mouse stuff .. in tmux?!
+# bind -n C-. if-shell -F '#{==:#{session_name},scratch}' {
+#     detach
+# } {
+#     display-popup -b rounded -h 80% -w 80% -E "TERM=xterm tmux new-session -A -s scratch"
+# }
+
+
+# notes ------------------------------------------------------------------------
+bind C-n display-popup -EE -T "quick note" -w "60%" -h "50%" "note"
+bind C-o run-shell "$HOME/.dotfiles/bin/daily_note -m note"
+# bind C-o run-shell "tmux neww $HOME/.dotfiles/bin/daily_note -m note"
+bind C-e run-shell "tmux neww nvim +c :Telescope find_files cwd=$HOME/Documents/_notes"
+
+# bind C-o display-popup -EE -T " zk - 1:1 with dan " -w "60%" -h "50%" "export TMUX_POPUP=1 && zk edit 202302272113"
+# bind C-k confirm -p "kill-session ${CURRENT_SESSION_NAME}? (y/n)"
+# bind C-x confirm -p "kill-window ${CURRENT_SESSION_NAME}? (y/n)"
+
+# slack ------------------------------------------------------------------------
+bind C-s display-popup -w "25%" -h "25%" "export TMUX_POPUP=1 && fslck; tmux display-popup -C"
+
+# search windows in current session
+# bind -r C-w display-popup -E "\
+#     tmux list-windows -F '#{window_index} #{window_name}' |\
+#     sed '/^$/d' |\
+#     fzf --reverse --header jump-to-window |\
+#     cut -d ' ' -f 1 |\
+#     xargs tmux select-window -t"
+
+# use vim keybindings in search/copy mode
+setw -g other-pane-height 25
+setw -g other-pane-width 80
+
+# turn off status-line for scratch sessions
+set-hook -g client-session-changed {
+  if-shell -F '#{==:#{session_name},slack}' { set -s status off } { set -s status on }
+  if-shell -F '#{==:#{session_name},weechat}' { set -s status off } { set -s status on }
+  if-shell -F '#{==:#{session_name},scratch}' { set -s status off } { set -s status on }
+}
+
+ set-hook -g pane-focus-in 'run-shell "~/.dotfiles/bin/tmux-pane-focus --onfocus"'
+
+# = copy mode ------------------------------------------------------------------
+
+# put us in copy-mode
+bind -r C-b copy-mode
+
+# don't exit copy mode when we hit the bottom
+set -g @scroll-down-exit-copy-mode "off"
+
+# select text with 'v' and copy with 'y'
+# https://github.com/zanshin/dotfiles/blob/master/tmux/tmux.conf
+bind -T copy-mode-vi v send-keys -X begin-selection
+bind -T copy-mode-vi V send-keys -X select-line
+bind -T copy-mode-vi 'C-v' send-keys -X rectangle-toggle
+# bind -T copy-mode-vi y send-keys -X copy-pipe-and-cancel "reattach-to-user-namespace pbcopy"
+bind -T copy-mode-vi y send-keys -X copy-pipe-and-cancel "pbcopy"
+bind -T copy-mode-vi Escape send-keys -X cancel
+bind -T copy-mode-vi 'Enter' send-keys -X copy-pipe-and-cancel "reattach-to-user-namespace pbcopy"
+# bind -T copy-mode-vi y if-shell "test ! -z $KITTY_WINDOW_ID" "send-keys -X copy-pipe-and-cancel 'kitty +kitten clipboard'" "send-keys -X copy-pipe-and-cancel  'pbcopy'"
+# bind -T copy-mode-vi MouseDragEnd1Pane if-shell "test ! -z $KITTY_WINDOW_ID" "send-keys -X copy-pipe-and-cancel 'kitty +kitten clipboard'" "send-keys -X copy-pipe-and-cancel  'pbcopy'"
+
+# -- copy with a mouse
+bind -n WheelUpPane if-shell -F -t = "#{mouse_any_flag}" "send-keys -M" "if -Ft= '#{pane_in_mode}' 'send-keys -M' 'select-pane -t=; copy-mode -e; send-keys -M'"
+bind -n WheelDownPane select-pane -t= \; send-keys -M
+bind -n C-WheelUpPane select-pane -t= \; copy-mode -e \; send-keys -M
+bind -T copy-mode-vi    C-WheelUpPane   send-keys -X halfpage-up
+bind -T copy-mode-vi    C-WheelDownPane send-keys -X halfpage-down
+bind -T copy-mode-emacs C-WheelUpPane   send-keys -X halfpage-up
+bind -T copy-mode-emacs C-WheelDownPane send-keys -X halfpage-down
+
+# To copy, left click and drag to highlight text in yellow,
+# once you release left click yellow text will disappear and will automatically be available in clibboard
+# # Use vim keybindings in copy mode
+setw -g mode-keys vi
+
+# Update default binding of `Enter` to also use copy-pipe
+unbind -T copy-mode-vi Enter
+bind-key -T copy-mode-vi Enter send-keys -X copy-pipe-and-cancel "pbcopy"
+bind-key -T copy-mode-vi MouseDragEnd1Pane send-keys -X copy-pipe-no-clear "pbcopy"
+# --
+
+# copy to macOS clipboard
+if -b 'command -v pbcopy > /dev/null 2>&1' 'bind y run -b "tmux save-buffer - | pbcopy"'
+if -b 'command -v reattach-to-user-namespace > /dev/null 2>&1' 'bind y run -b "tmux save-buffer - | reattach-to-user-namespace pbcopy"'
+
+# copy to X11 clipboard
+if -b 'command -v xsel > /dev/null 2>&1' 'bind y run -b "tmux save-buffer - | xsel -i -b"'
+if -b '! command -v xsel > /dev/null 2>&1 && command -v xclip > /dev/null 2>&1' 'bind y run -b "tmux save-buffer - | xclip -i -selection clipboard >/dev/null 2>&1"'
+
+# copy to Windows clipboard
+if -b 'command -v clip.exe > /dev/null 2>&1' 'bind y run -b "tmux save-buffer - | clip.exe"'
+if -b '[ -c /dev/clipboard ]' 'bind y run -b "tmux save-buffer - > /dev/clipboard"'
+
+# -- [ status bar ] ------------------------------------------------------------
+
+set -g status on # set to `2` for double height
+set -g status-interval 3 # statusbar refresh
+set -g status-justify left
+set -g status-position top
+set -g set-titles on # set terminal title
+set -g allow-rename on
+setw -g automatic-rename on # set to `on` in order to work with nvim auto titlestring updating
+set -g automatic-rename-format "#{pane_current_command}"
+# set -g automatic-rename-format "#(nerdwin #{pane_current_command} #{pane_current_path})"
+
+# set -g set-titles-string "#S | #W | #{pane_current_command}"
+# set -g set-titles-string "tmux [#{s/@//:window_id}][#P/#{window_panes}]{#F}:  #T"
+set -g set-titles-string "◫ #S:#I#($HOME/.dotfiles/bin/tmux-fancy-numbers\ #P) ◦ #{pane_current_command}"
+set -g display-time 1000 # tmux messages are displayed for n milliseconds
+set -g display-panes-time 800 # slightly longer pane indicators display time
+
+# = theme/colors/layout/statusbar ----------------------------------------------
+if-shell 'test -f "$XDG_CONFIG_HOME/tmux/megaforest.tmux.conf"' 'source -q $XDG_CONFIG_HOME/tmux/megaforest.tmux.conf'
+
+# -- [ tpm/plugins ] -----------------------------------------------------------
+# tmux plugin manager: https://github.com/tmux-plugins/tpm
+set-environment -g "TMUX_PLUGIN_MANAGER_PATH" "$XDG_CONFIG_HOME/tmux/plugins"
+
+# === plugins list -------------------------------------------------------------
+# NOTE:
+# prefix+I            -> install
+# prefix+U            -> update
+# prefix+alt+u (M-u)  -> uninstall
+
+set -g @plugin "tmux-plugins/tpm"
+set -g @plugin "tmux-plugins/tmux-battery"
+set -g @plugin "tmux-plugins/tmux-cpu"
+set -g @plugin "tmux-plugins/tmux-copycat"
+set -g @plugin "tmux-plugins/tmux-yank"
+# https://github.com/kylo252/dotfiles/commit/f884b2fdf42ab8ee06d74fbc98e90bf10f35da29#diff-f0c0f9ad689dff385a5855e5cccf30cd20b8558b48dcab71d30a1dad4bee32d8R228
+if-shell "command -v xdg-open 2>/dev/null" { set -g @plugin 'tmux-plugins/tmux-open' }
+set -g @plugin 'MunifTanjim/tmux-mode-indicator'
+set -g @plugin "NHDaly/tmux-better-mouse-mode"
+set -g @plugin "soyuka/tmux-current-pane-hostname"
+set -g @plugin "roosta/tmux-pop" # flashes the pane you're switching to
+set -g @plugin "roosta/tmux-fuzzback" # prefix + / (fzf search backwards)
+set -g @plugin "schasse/tmux-jump" # prefix + s (like easyjump, or hop.nvim)
+set -g @plugin "fcsonline/tmux-thumbs" # prefix + f (copy things)
+set -g @plugin "tmux-plugins/tmux-cowboy" # prefix + * (kill process in current pane with extreme prejudice)
+# set -g @plugin "jaclu/tmux-menus" # prefix + c-m (actions menu)
+# set -g @plugin "laktak/extrakto" # prefix + tab (fzf the screen & dump to pane or to clipboard)
+# set -g @plugin "megalithic/tmux-pomodoro-plus"
+set -g @plugin 'MunifTanjim/tmux-suspend'
+# set -g @plugin 'Neo-Oli/tmux-text-macros'
+# set -g @plugin "tmux-plugins/tmux-prefix-highlight"
+# set -g @plugin 'ofirgall/tmux-window-name'
+# set -g @plugin "whame/tmux-modal" # modal mode for various tmux things
+# set -g @plugin "tmux-plugins/tmux-resurrect" # disable resurrection/restore of tmux session for now?
+# set -g @plugin "tmux-plugins/tmux-continuum"
+# set -g @plugin 'omerxx/tmux-sessionx'
+# set -g @sessionx-bind 'i'
+
+# === plugins settings ---------------------------------------------------------
+## -- tmux-suspend
+set -g @suspend_key 'F6'
+set -g @suspend_suspended_options " \
+  @mode_indicator_custom_prompt:: 󰏤 , \
+  @mode_indicator_custom_mode_style::bg=#3c474d\\,fg=red, \
+"
+
+## -- tmux-mode-indicator
+session_icon="#(tmux-var 'SESSION_ICON')"
+session_fg="#(tmux-var 'SESSION_FG')"
+session_bg="#(tmux-var 'SESSION_BG')"
+
+# prompt to display when tmux prefix key is pressed
+set -g @mode_indicator_prefix_prompt "  WAIT " # alts: …
+# prompt to display when tmux is in copy mode
+set -g @mode_indicator_copy_prompt "  COPY "
+# prompt to display when tmux has synchronized panes
+set -g @mode_indicator_sync_prompt " 󰓦 SYNC "
+# prompt to display when tmux is in normal mode
+set -g @mode_indicator_empty_prompt " ${session_icon} #S " # alts: (\uf490)﬿
+# style values for prefix prompt
+set -g @mode_indicator_prefix_mode_style 'fg=#e67e80,bg=#323d43,italics'
+# style values for copy prompt
+set -g @mode_indicator_copy_mode_style 'fg=#3c474d,bg=#d9bb80,bold'
+# style values for sync prompt
+set -g @mode_indicator_sync_mode_style 'fg=black,bg=#e67e80,italics'
+# style values for empty prompt
+set -g @mode_indicator_empty_mode_style "fg=${session_fg},bg=${session_bg},bold"
+
+## -- tmux-copycat
+# set -g @copycat_search C-/
+
+## -- tmux cpu
+set -g @cpu_percentage_format "%3.0f%% "
+
+## -- tmux-pomodoro-plus
+set -g @pomodoro_notifications 'on'
+
+set -g @pomodoro_toggle 'p'                    # Start/pause a Pomodoro/break
+set -g @pomodoro_cancel 'P'                    # Cancel the current session
+set -g @pomodoro_skip '-'                      # Skip a Pomodoro/break
+
+set -g @pomodoro_mins 25                       # The duration of the Pomodoro
+set -g @pomodoro_break_mins 5                  # The duration of the break after the Pomodoro completes
+set -g @pomodoro_intervals 4                   # The number of intervals before a longer break is started
+set -g @pomodoro_long_break_mins 25            # The duration of the long break
+set -g @pomodoro_repeat 'off'                  # Automatically repeat the Pomodoros?
+
+set -g @pomodoro_on "#[fg=red,italics] "       # alts: 🍅
+set -g @pomodoro_complete "#[fg=green] "
+set -g @pomodoro_pause "#[fg=yellow] "         # The formatted output when the Pomodoro/break is paused
+set -g @pomodoro_prompt_break "  break?"       # The formatted output when waiting to start a break
+set -g @pomodoro_prompt_pomodoro "  start?"    # The formatted output when waiting to start a Pomodoro
+set -g @pomodoro_show_intervals "#[fg=$color_gray] [%s/%s]"
+
+set -g @pomodoro_menu_position "R"             # The location of the menu relative to the screen
+set -g @pomodoro_sound 'Pop'                   # Sound for desktop notifications (Run `ls /System/Library/Sounds` for a list of sounds to use on Mac)
+set -g @pomodoro_notifications 'on'            # Enable desktop notifications from your terminal
+set -g @pomodoro_granularity 'off'
+
+## -- tmux-fuzzback
+set -g @fuzzback-bind 'f'
+# set -g @fuzzback-bind '-n C-//'
+set -g @fuzzback-popup 0
+set -g @fuzzback-popup-size '80%'
+
+## -- tmux-cpu
+set -g @cpu_medium_fg_color "#[fg=orange]"
+set -g @cpu_high_fg_color "#[fg=red]"
+
+## -- tmux-jump
+set -g @jump-key "/"
+
+## -- tmux-navigate
+set -g @navigate-left  "-n C-h"
+set -g @navigate-down  "-n C-j"
+set -g @navigate-up    "-n C-k"
+set -g @navigate-right "-n C-l"
+# set -g @navigate-back  "-n C-\\"
+
+## -- tmux-thumbs
+set -g @thumbs-key 'C-f'
+set -g @thumbs-unique enabled
+# set -g @thumbs-regexp-1 '[a-z]+@[a-z]+.[a-z]+' # Match emails
+# set -g @thumbs-regexp-2 '[a-f0-9]{2}:[a-f0-9]{2}:[a-f0-9]{2}:[a-f0-9]{2}:[a-f0-9]{2}:[a-f0-9]{2}:' # Match MAC addresses
+# set -g @thumbs-regexp-3 '\-\-[a-zA-Z0-9_]+' # options
+set -g @thumbs-contrast 1
+set -g @thumbs-hint-fg-color red
+set -g @thumbs-command 'echo -n {} | xargs open'
+set -g @thumbs-upcase-command 'echo -n {} | pbcopy && tmux display-message \"Copied {}\"'
+
+## -- tmux-battery
+# REF: https://github.com/tmux-plugins/tmux-battery#iconscolors
+set -g @batt_icon_charge_tier8 ""
+set -g @batt_icon_charge_tier7 ""
+set -g @batt_icon_charge_tier6 ""
+set -g @batt_icon_charge_tier5 ""
+set -g @batt_icon_charge_tier4 ""
+set -g @batt_icon_charge_tier3 ""
+set -g @batt_icon_charge_tier2 ""
+set -g @batt_icon_charge_tier1 ""
+set -g @batt_icon_status_charged "󱈑"
+set -g @batt_icon_status_charging "󰂄"
+set -g @batt_icon_status_discharging "󰂌"
+set -g @batt_icon_status_attached "" # alts: ﮣ
+set -g @batt_icon_status_unknown "󰂑" # alts: 󱐋󰂑󱐋
+# set -g @batt_color_status_primary_discharging "#e39b7b"
+set -g @batt_color_status_primary_charged "#a7c080"
+set -g @batt_color_status_primary_charging "#d9bb80"
+set -g @batt_color_status_primary_unknown "#795430"
+# set -g @batt_color_charge_primary_discharging "#e39b7b"
+set -g @batt_color_charge_primary_charged "#a7c080"
+set -g @batt_color_charge_primary_charging "#d9bb80"
+set -g @batt_color_charge_primary_unknown "#795430"
+# set -g @batt_color_primary_discharging "#e39b7b"
+set -g @batt_color_primary_charged "#a7c080"
+set -g @batt_color_primary_charging "#d9bb80"
+set -g @batt_color_primary_unknown "#795430"
+set -g @batt_remain_short true
+
+## -- tmux-popup / fzf options
+TMUX_FZF_OPTIONS="-p -w 50% -h 50% -m"
+# TMUX_FZF_LAUNCH_KEY="C-t"
+
+## -- tmux-menus
+# unbind the default tmux menus:
+unbind-key -n MouseDown3Pane
+unbind-key -n M-MouseDown3Pane
+unbind-key -n MouseDown3Status
+unbind-key -n MouseDown3StatusLeft
+unbind-key <
+unbind-key >
+set -g @menus_trigger "C-m"
+
+## -- extrakto
+set -g @extrakto_key "tab"
+set -g @extrakto_popup_size "50%"
+
+# -- tmux-window-names
+# set -g @tmux_window_name_ignored_programs "['sqlite3', 'weechat']"
+# set -g @tmux_window_name_dir_programs "['nvim', 'git', 'fugitive', 'git_tree']"
+
+# -- tmux-text-macros
+set -g @ttm-load-default-macros on # no default macros
+set -g @ttm-window-mode 'vertical'
+
+# install tpm if not already installed
+if "test ! -d ~/.local/share/tmux/plugins/tpm" \
+   "run 'git clone https://github.com/tmux-plugins/tpm ~/.local/share/tmux/plugins/tpm'"
+run-shell "~/.local/share/tmux/plugins/tpm/tpm"
+
+# -- load additional scripts --
+# if-shell 'test "$PLATFORM" = "macos"' 'source -q ~/.tmux-macos.conf' 'source -q ~/.tmux-linux.conf'
+# if-shell 'test -f "~/.tmux.config.local"' 'source -q ~/.tmux.config.local'
+
+# vim:ft=tmux tw=0

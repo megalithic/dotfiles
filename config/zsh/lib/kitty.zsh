@@ -1,16 +1,1 @@
-# https://sw.kovidgoyal.net/kitty/shell-integration/?highlight=tmux#manual-shell-integration
-
-if [[ -n $KITTY_INSTALLATION_DIR ]]; then
-  export KITTY_SHELL_INTEGRATION="enabled"
-  autoload -Uz -- "$KITTY_INSTALLATION_DIR/shell-integration/zsh/kitty-integration"
-  kitty-integration
-  unfunction kitty-integration
-fi
-
-# if [[ ! -z "${KITTY_WINDOW_ID}" ]]; then
-#   kitty + complete setup zsh | source /dev/stdin
-# fi
-
-# export KITTY_LISTEN_ON="tcp:localhost:45876"
-export KITTY_LISTEN_ON="unix:/tmp/mykitty"
-
+/nix/store/cjafgr8rza8hb2j261h6lc2rjz2w6m2v-home-manager-files/.config/zsh/lib/kitty.zsh

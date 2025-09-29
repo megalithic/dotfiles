@@ -1,6 +1,1 @@
-{
-  "$schema": "https://opencode.ai/config.json",
-  "theme": "system",
-  "model": "anthropic/claude-sonnet-4-20250514",
-  "autoupdate": true
-}
+/nix/store/qdypjw1vymq71fa8d0cdg9vxqlhha658-home-manager-files/.config/opencode/opencode.json

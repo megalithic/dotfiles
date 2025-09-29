@@ -1,11 +1,1 @@
-#!/usr/bin/env bash
-
-# NOTE: this script is for use with tmux _ONLY_
-
-ptt_mode=$(hs -c "require('ptt').currentMode()")
-
-if [[ "$ptt_mode" =~ "unmuted" ]]; then
-  printf "#[fg=#e67e80]%s" "$ptt_mode"
-else
-  printf "%s" "$ptt_mode"
-fi
+/nix/store/qdypjw1vymq71fa8d0cdg9vxqlhha658-home-manager-files/.config/tmux/scripts/tmux-ptt

@@ -1,5 +1,1 @@
-# GRC colorizes nifty unix tools all over the place
-if $(grc &>/dev/null) && ! $(brew &>/dev/null)
-then
-  source `brew --prefix`/etc/grc.bashrc
-fi
+/nix/store/cjafgr8rza8hb2j261h6lc2rjz2w6m2v-home-manager-files/.config/zsh/lib/grc.zsh
