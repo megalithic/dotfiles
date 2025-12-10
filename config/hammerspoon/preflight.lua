@@ -162,8 +162,7 @@ function _G.dbg(msg, force, tag1, tag2)
   }))
 end
 
-function Windows()
-  local app
+function Windows(app)
   if type(app) == "string" then app = hs.application.get(app) end
   local windows = app == nil and hs.window.allWindows() or app:allWindows()
 
