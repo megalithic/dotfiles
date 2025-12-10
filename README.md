@@ -1,15 +1,24 @@
 ```sh
-┌┬┐┌─┐┌─┐┌─┐┬  ┬┌┬┐┬ ┬┬┌─┐
-│││├┤ │ ┬├─┤│  │ │ ├─┤││
+┌┬┐┌─┐┌─┐┌─┐┬ ┬┌┬┐┬ ┬┬┌─┐
+│││├┤ │ ┬├─┤│ │ │ ├─┤││
 ┴ ┴└─┘└─┘┴ ┴┴─┘┴ ┴ ┴ ┴┴└─┘
 @megalithic 🗿
 ```
 
 <p align="center">
 
-![alt text](https://raw.githubusercontent.com/megalithic/dotfiles/main/screenshot.png "screenshot")
+![alt text](https://raw.githubusercontent.com/megalithic/dotfiles/main/screenshot.png 'screenshot')
 
 </p>
+
+## 🛑 Deprecated.
+
+I've migrated to using `nix` for managing my dotfiles, I'm experimenting with
+that over at
+[megalithic/dotfiles-nix](https://github.com/megalithic/dotfiles-nix)
+
+I'll eventually migrate the _Final Form™_ of my dotfiles from dotfiles-nix back
+to here.
 
 ## 🚀 Installation
 
