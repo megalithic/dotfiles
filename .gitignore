@@ -49,3 +49,6 @@ home/opencode/bin
 # cloudflared
 home/cloudflared/cert.pem
 home/cloudflared/*.json
+
+# local documentation (migration plans, etc.)
+_docs/
