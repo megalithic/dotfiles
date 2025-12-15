@@ -98,6 +98,6 @@ A few of the _must-have_ tools I roll with:
 
 <p align="center" style="margin-top: 20px; text-align:center; display: flex; align-items: center; justify-content: center;">
   <a href="https://megalithic.io" target="_blank" style="display:block; height:150px;">
-    <img src="https://raw.githubusercontent.com/megalithic/dotfiles/main/megadotfiles.png" alt="megadotfiles logo" height="150px" />
+    <img src="https://raw.githubusercontent.com/megalithic/dotfiles/main/assets/megadotfiles.png" alt="megadotfiles logo" height="150px" />
   </a>
 </p>
