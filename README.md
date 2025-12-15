@@ -11,14 +11,53 @@
 
 </p>
 
-## 🛑 Deprecated.
+## 🛑 Legacy Branch
 
-I've migrated to using `nix` for managing my dotfiles, I'm experimenting with
-that over at
-[megalithic/dotfiles-nix](https://github.com/megalithic/dotfiles-nix)
+This is the archived `legacy_dotbot` branch containing the original dotbot-based
+dotfiles configuration. The `main` branch now contains a nix-darwin/home-manager
+based configuration.
 
-I'll eventually migrate the _Final Form™_ of my dotfiles from dotfiles-nix back
-to here.
+### Restoring This Configuration
+
+If you need to work with this legacy configuration after cloning:
+
+```bash
+# 1. Switch to this branch
+git checkout legacy_dotbot
+
+# 2. Initialize and update all submodules
+git submodule update --init --recursive
+
+# 3. Re-initialize transcrypt (you'll need the password from your password manager)
+transcrypt -c aes-256-cbc
+
+# 4. Verify encrypted files are decrypted
+git ls-files | xargs -I {} sh -c 'git check-attr filter -- {} | grep -q "filter: crypt" && echo {}'
+```
+
+### Encrypted Files (via transcrypt)
+
+The following files are encrypted and require transcrypt to be initialized:
+
+- `bin/capper`
+- `bin/slck`
+- `config/exercism/user.json`
+- `config/hammerspoon/.secrets.json`
+- `config/ngrok/ngrok.yml`
+- `config/nvim/.dbee_persistence.json`
+- `config/weechat/*.conf`
+- `config/zsh/lib/local.zsh`
+- `home/cloudflared/config.yaml`
+- `home/s3cfg`
+- `home/ssh/config`
+- `misc/megalithic_dev.conf`
+
+### Submodules
+
+This branch uses 19 git submodules for dotbot plugins and zsh plugins.
+They must be initialized with `git submodule update --init --recursive`.
+
+---
 
 ## 🚀 Installation
 
