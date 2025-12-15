@@ -18,14 +18,14 @@ You are a Nix expert specializing in:
 ## User's Environment
 
 - **Platform**: macOS (aarch64-darwin)
-- **Dotfiles**: `~/.dotfiles-nix/` (flake-based)
-- **Rebuild command**: `sudo darwin-rebuild switch --flake ~/.dotfiles-nix`
+- **Dotfiles**: `~/.dotfiles/` (flake-based)
+- **Rebuild command**: `sudo darwin-rebuild switch --flake ~/.dotfiles`
 - **Package search**: `nix search nixpkgs#<package>`
 
 ## Key Paths
 
 ```
-~/.dotfiles-nix/
+~/.dotfiles/
 ├── flake.nix              # Main flake entry point
 ├── flake.lock             # Locked dependencies
 ├── hosts/                 # Per-machine configs
@@ -135,7 +135,7 @@ nh search <query>
 
 # Darwin rebuild (equivalent to darwin-rebuild switch --flake .)
 nh darwin switch .
-nh darwin switch ~/.dotfiles-nix
+nh darwin switch ~/.dotfiles
 
 # Build without switching
 nh darwin build .
@@ -349,9 +349,9 @@ All custom helpers are under `lib.mega.*`:
 - `lib.mega.imports` - Smart module path resolution
 
 **In `home/lib.nix` (home-manager module, via `config.lib.mega`):**
-- `config.lib.mega.linkConfig "path"` - Symlink to `~/.dotfiles-nix/config/{path}`
-- `config.lib.mega.linkHome "path"` - Symlink to `~/.dotfiles-nix/home/{path}`
-- `config.lib.mega.linkBin` - Symlink to `~/.dotfiles-nix/bin`
+- `config.lib.mega.linkConfig "path"` - Symlink to `~/.dotfiles/config/{path}`
+- `config.lib.mega.linkHome "path"` - Symlink to `~/.dotfiles/home/{path}`
+- `config.lib.mega.linkBin` - Symlink to `~/.dotfiles/bin`
 - `config.lib.mega.linkDotfile "path"` - Generic dotfiles symlink
 
 ## Best Practices

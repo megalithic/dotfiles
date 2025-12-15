@@ -50,7 +50,7 @@ ntfy pending
 
 ## General Workflow
 
-- When working in this repo (dotfiles-nix), always check the `justfile` to see available commands
+- When working in this repo (dotfiles), always check the `justfile` to see available commands
 - To rebuild darwin, use `sudo darwin-rebuild switch --flake ./` - this produces clean, verifiable output
 - Avoid `just mac` and `nh darwin switch` as they produce excessive animated output that's hard to verify success/failure
 
@@ -261,5 +261,5 @@ git config core.hooksPath .githooks
 
 - When creating shell scripts that take arguments, always assume we want long and short form arguments supported.
 - When working through nix-related code, remember, I am on macOS, so I use nix-darwin. I am also on aarch64-darwin architecture.
-- Any markdown documents you create, without my explicit request, should always go into a _docs folder in the root of the CWD you were called from. So, for this CWD, `.dotfiles-nix` which is the dotfiles-nix repo for my github user @megalithic, any docs that you auto-generate (again, ones that i didn't explicitly ask you to create), should go into .dotfiles-nix/_docs (and that directory should be added to .gitignore)
+- Any markdown documents you create, without my explicit request, should always go into a _docs folder in the root of the CWD you were called from. So, for this CWD, `.dotfiles` which is the dotfiles repo for my github user @megalithic, any docs that you auto-generate (again, ones that i didn't explicitly ask you to create), should go into .dotfiles/_docs (and that directory should be added to .gitignore)
 - Always check that the remote origin/main isn't ahead of us before trying to push to main on github. Remember that we have a github workflow that gets the latest flake updates, so we need to pull the latest lock file from remote origin/main.

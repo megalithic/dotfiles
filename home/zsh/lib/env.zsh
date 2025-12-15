@@ -187,7 +187,7 @@ case "$(uname)" in
     # ---------------------------------------------------------------------------------------------
     # NOTE: migrated from megabookpro.nix environment.variables:
     export CODE "$HOME/code"
-    export DOTS "$HOME/.dotfiles-nix"
+    export DOTS "$HOME/.dotfiles"
     export PROTON_HOME "$HOME/protondrive"
     export ICLOUD_HOME "$HOME/iclouddrive"
     export ICLOUD_DOCUMENTS_HOME "$ICLOUD_HOME/Documents"

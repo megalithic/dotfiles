@@ -172,9 +172,9 @@ pcall(require, "nix_path")
 NIX_PATH = NIX_PATH or nil
 if NIX_PATH then
   PATH =
-    table.concat({ NIX_PATH, "/opt/homebrew/bin", os.getenv("HOME") .. "/.dotfiles-nix/bin", os.getenv("PATH") }, ":")
+    table.concat({ NIX_PATH, "/opt/homebrew/bin", os.getenv("HOME") .. "/.dotfiles/bin", os.getenv("PATH") }, ":")
 else
-  PATH = table.concat({ "/opt/homebrew/bin", os.getenv("HOME") .. "/.dotfiles-nix/bin", os.getenv("PATH") }, ":")
+  PATH = table.concat({ "/opt/homebrew/bin", os.getenv("HOME") .. "/.dotfiles/bin", os.getenv("PATH") }, ":")
 end
 
 --- Created by muescha.

@@ -27,7 +27,7 @@ function obj.captureImage(image, openImageUrl)
   local savedImage = image:saveToFile(capturedImage)
 
   if savedImage then
-    local capperBin = fmt("%s/.dotfiles-nix/bin/capper", os.getenv("HOME"))
+    local capperBin = fmt("%s/.dotfiles/bin/capper", os.getenv("HOME"))
 
     local task = hs.task.new("/bin/zsh", function(exitCode, stdOut, stdErr)
       if exitCode == 0 then

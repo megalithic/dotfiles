@@ -33,7 +33,7 @@ in {
   home.sessionPath = [
     "${config.home.homeDirectory}/.local/bin"
     "${config.home.homeDirectory}/bin"
-    "${config.home.homeDirectory}/.dotfiles-nix/bin"
+    "${config.home.homeDirectory}/.dotfiles/bin"
     "${config.home.homeDirectory}/.cargo/bin"
   ];
 
@@ -75,7 +75,7 @@ in {
   );
 
   # Create symlinks in ~/.local/bin for nix-managed binaries
-  # This keeps ~/.dotfiles-nix/bin clean for version-controlled hand-written scripts
+  # This keeps ~/.dotfiles/bin clean for version-controlled hand-written scripts
   # These are recreated on each rebuild to track changing store paths
   home.activation.linkBinaries = let
     # Define custom packages that should have CLI symlinks in ~/.local/bin

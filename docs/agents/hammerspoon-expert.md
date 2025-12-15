@@ -24,7 +24,7 @@ Use this agent when working with:
 
 ### Configuration Knowledge
 
-This agent understands the specific architecture of `@megalithic/dotfiles-nix`:
+This agent understands the specific architecture of `@megalithic/dotfiles`:
 
 ```
 config/hammerspoon/

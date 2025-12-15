@@ -14,7 +14,7 @@ set -euo pipefail
 # echo "Downloading wallpaper from $WALLPAPER_URL to $WALLPAPER_PATH"
 # curl -s "$WALLPAPER_URL" -o "$WALLPAPER_PATH"
 
-# WALLPAPER_PATH="$HOME/.dotfiles-nix/assets/bokeh_dark.jpg"
+# WALLPAPER_PATH="$HOME/.dotfiles/assets/bokeh_dark.jpg"
 
 # Create Photos album, import image, and set as desktop wallpaper.
 osascript <<EOF
@@ -37,6 +37,6 @@ osascript <<EOF
 #     quit
 # end tell
 
-tell application "Finder" to set desktop picture to POSIX file "$HOME/.dotfiles-nix/assets/bokeh_dark.jpg"
+tell application "Finder" to set desktop picture to POSIX file "$HOME/.dotfiles/assets/bokeh_dark.jpg"
 
 EOF

@@ -34,7 +34,7 @@ init host=`hostname`:
   #!/usr/bin/env bash
   set -Eueo pipefail
 
-  DOTFILES_DIR="$HOME/.dotfiles-nix"
+  DOTFILES_DIR="$HOME/.dotfiles"
   SUDO_USER=$(whoami)
 
   if ! command -v xcode-select >/dev/null; then
@@ -45,9 +45,8 @@ init host=`hostname`:
   fi
 
   if [ -z "$DOTFILES_DIR" ]; then
-    echo ":: Cloning bare dotfiles-nix repo to $DOTFILES_DIR.." && \
-    echo "NOTE: we maintain our repo in $HOME/.dotfiles-nix.." && \
-      git clone --bare https://github.com/megalithic/dotfiles-nix "$DOTFILES_DIR"
+    echo ":: Cloning dotfiles repo to $DOTFILES_DIR.." && \
+      git clone https://github.com/megalithic/dotfiles "$DOTFILES_DIR"
   fi
 
   if ! command -v brew >/dev/null; then

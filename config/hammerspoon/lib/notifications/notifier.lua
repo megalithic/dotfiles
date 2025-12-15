@@ -170,7 +170,7 @@ function M.getCurrentFocusMode()
 
   -- Fetch fresh focus mode status
   -- Uses fast JXA script: bin/get-focus-mode
-  local output, status = hs.execute(os.getenv("HOME") .. "/.dotfiles-nix/bin/get-focus-mode 2>/dev/null")
+  local output, status = hs.execute(os.getenv("HOME") .. "/.dotfiles/bin/get-focus-mode 2>/dev/null")
 
   if status then
     local mode = output and output:match("^%s*(.-)%s*$") or nil

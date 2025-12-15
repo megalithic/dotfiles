@@ -28,13 +28,9 @@ tmux -2 send-keys -t "$SESSION":1 cd\ "$CWD" C-m
 # fi
 tmux -2 send-keys -t "$SESSION":1 ls C-m
 
-# Window "dots-nix"
-tmux -2 new-window -c "$CWD" -t "$SESSION":2 -n dots-nix
-tmux -2 send-keys -t "$SESSION":2 cd\ ~/.dotfiles-nix C-m
-
 # Window "dots"
-tmux -2 new-window -c "$CWD" -t "$SESSION":3 -n dots
-tmux -2 send-keys -t "$SESSION":3 cd\ ~/code/dotfiles C-m
+tmux -2 new-window -c "$CWD" -t "$SESSION":2 -n dots
+tmux -2 send-keys -t "$SESSION":2 cd\ ~/.dotfiles C-m
 
 # Window "ssh-dots"
 # tmux -2 send-keys -t "$SESSION":3 et\ -c\ \""cd ~/.dotfiles && ls; exec /usr/bin/zsh"\"\ seth-dev C-m

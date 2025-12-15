@@ -2,7 +2,7 @@
 
 set -Eueo pipefail
 
-DOTFILES_NAME="dotfiles-nix"
+DOTFILES_NAME="dotfiles"
 DOTFILES_REPO="https://github.com/megalithic/$DOTFILES_NAME"
 DOTFILES_DIR="$HOME/.$DOTFILES_NAME"
 SUDO_USER=$(whoami)

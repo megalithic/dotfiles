@@ -25,7 +25,7 @@ Agenix uses your SSH keys (stored in 1Password) to encrypt/decrypt secrets. Secr
 ### 1. Create a New Secret
 
 ```bash
-cd ~/.dotfiles-nix/secrets
+cd ~/.dotfiles/secrets
 
 # Create/edit a secret (opens in $EDITOR)
 agenix -e env-vars.age
@@ -40,7 +40,7 @@ export GITHUB_TOKEN="ghp_xxx"
 ### 2. Rebuild to Decrypt Secrets
 
 ```bash
-# From dotfiles-nix directory
+# From dotfiles directory
 just mac  # or: darwin-rebuild switch --flake .
 ```
 
@@ -156,7 +156,7 @@ Both formats work with `source` command used in shell configs.
 
 Make sure you're in the secrets directory or use the full path:
 ```bash
-cd ~/.dotfiles-nix/secrets
+cd ~/.dotfiles/secrets
 agenix -e env-vars.age
 ```
 

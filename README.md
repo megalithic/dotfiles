@@ -26,10 +26,10 @@ curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix 
 source "/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh"
 ```
 
-3. Run the installer (clones the repo to ~/.dotfiles-nix)
+3. Run the installer (clones the repo to ~/.dotfiles)
 
 ```bash
-nix run github:megalithic/dotfiles-nix
+nix run github:megalithic/dotfiles
 ```
 
 ## Usage

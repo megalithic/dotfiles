@@ -158,8 +158,8 @@ ntfy send -t "Task Done" -m "Deployment completed successfully" -p
 ## Related Files
 
 - `~/bin/ntfy` - Main notification script
-- `~/.dotfiles-nix/config/hammerspoon/lib/notifications/notifier.lua` - Canvas rendering
-- `~/.dotfiles-nix/config/hammerspoon/watchers/notification.lua` - NC capture
+- `~/.dotfiles/config/hammerspoon/lib/notifications/notifier.lua` - Canvas rendering
+- `~/.dotfiles/config/hammerspoon/watchers/notification.lua` - NC capture
 - `~/.local/share/hammerspoon/hammerspoon.db` - Notification history
 
 ## Troubleshooting

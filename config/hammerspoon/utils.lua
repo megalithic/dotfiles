@@ -12,10 +12,10 @@ M.__index = M
 M.name = "utils"
 M.debug = true
 
-M.dndCmd = os.getenv("HOME") .. "/.dotfiles-nix/bin/dnd"
-M.slckCmd = os.getenv("HOME") .. "/.dotfiles-nix/bin/slck"
+M.dndCmd = os.getenv("HOME") .. "/.dotfiles/bin/dnd"
+M.slckCmd = os.getenv("HOME") .. "/.dotfiles/bin/slck"
 
-function M.bin(cmd) return string.format([[%s/.dotfiles-nix/bin/%s]], os.getenv("HOME"), cmd) end
+function M.bin(cmd) return string.format([[%s/.dotfiles/bin/%s]], os.getenv("HOME"), cmd) end
 
 function M.run(cmd, use_env)
   local output = hs.execute(cmd, use_env)

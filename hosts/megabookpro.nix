@@ -70,7 +70,7 @@ in {
     XDG_STATE_HOME = "/Users/${username}/.local/state";
 
     CODE = "/Users/${username}/code";
-    DOTS = "/Users/${username}/.dotfiles-nix";
+    DOTS = "/Users/${username}/.dotfiles";
 
     PROTON_HOME = "${proton_home}";
     ICLOUD_HOME = "${icloud_home}";
