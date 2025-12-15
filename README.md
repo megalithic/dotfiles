@@ -7,7 +7,9 @@
 
 <p align="center">
 
-![alt text](https://raw.githubusercontent.com/megalithic/dotfiles/main/screenshot.png 'screenshot')
+![ghostty + tmux + nvim](https://raw.githubusercontent.com/megalithic/dotfiles/main/assets/megadots_ghostty_tmux_nvim.png 'ghostty + tmux + nvim')
+
+![ghostty + tmux + fish + fzf](https://raw.githubusercontent.com/megalithic/dotfiles/main/assets/megadots_ghostty_tmux_fish_fzf.png 'ghostty + tmux + fish + fzf')
 
 </p>
 
