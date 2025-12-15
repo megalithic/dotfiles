@@ -1,7 +1,11 @@
-if not Plugin_enabled() then return end
+if not Plugin_enabled() then
+  function mega.ui.blink_cursorline() end
+
+  return
+end
 
 local U = require("config.utils")
-local C = require("lush_theme.colors")
+local C = mega.ui.colors
 local M = {
   blink_delay = 150,
   minimal_jump = 20,
@@ -58,7 +62,9 @@ local M = {
 local blink_active = false
 local timer = vim.uv.new_timer()
 
-local function is_floating_win() return vim.fn.win_gettype() == "popup" end
+local function is_floating_win()
+  return vim.fn.win_gettype() == "popup"
+end
 
 ---Determines whether or not a buffer/window should be ignored by this plugin
 ---@return boolean
@@ -100,13 +106,17 @@ end
 -- REF:
 -- https://neovim.discourse.group/t/how-to-use-repeat-on-timer-start-in-a-lua-function/1645
 -- https://vi.stackexchange.com/questions/33056/how-to-use-vim-loop-interactively-in-neovim
-function mega.blink_cursorline(delay, should_center)
-  if is_ignored() then return end
+function mega.ui.blink_cursorline(delay, should_center)
+  if is_ignored() then
+    return
+  end
 
   timer = vim.uv.new_timer()
   blink_active = true
 
-  if should_center ~= nil and should_center then vim.cmd.normal("zz") end
+  if should_center ~= nil and should_center then
+    vim.cmd.normal("zz")
+  end
 
   vim.wo.cursorlineopt = "both"
   highlight_cursorline()
@@ -131,7 +141,9 @@ function mega.blink_cursorline(delay, should_center)
 end
 
 local function disable_cursorline()
-  if is_ignored() then return end
+  if is_ignored() then
+    return
+  end
 
   vim.wo.cursorlineopt = "number" -- optionally -> "screenline,number"
   vim.wo.cursorline = false
@@ -139,11 +151,15 @@ local function disable_cursorline()
 end
 
 local function enable_cursorline(should_blink)
-  if is_ignored() then return end
+  if is_ignored() then
+    return
+  end
 
   vim.wo.cursorlineopt = "both"
 
-  if should_blink then mega.blink_cursorline() end
+  if should_blink then
+    mega.ui.blink_cursorline()
+  end
 
   set_cursorline()
   highlight_cursorline()
@@ -192,23 +208,29 @@ end
 --     end)
 --   )
 --
---   if should_blink then mega.blink_cursorline() end
+--   if should_blink then mega.ui.blink_cursorline() end
 --
 --   if M.cursorline_delay ~= 0 then unhighlight_cursorline() end
 -- end
 
-require("config.autocmds").augroup("ToggleCursorLine", {
+Augroup("ToggleCursorLine", {
   {
     event = { "BufEnter", "WinEnter", "FocusGained" },
-    command = function() enable_cursorline(true) end,
+    command = function()
+      enable_cursorline(true)
+    end,
   },
   {
     event = { "InsertLeave", "FocusLost" },
-    command = function() enable_cursorline(false) end,
+    command = function()
+      enable_cursorline(false)
+    end,
   },
   {
     event = { "BufLeave", "WinLeave" },
-    command = function() disable_cursorline() end,
+    command = function()
+      disable_cursorline()
+    end,
   },
   {
     event = { "InsertEnter", "CursorMovedI" },

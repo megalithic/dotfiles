@@ -1,20 +1,37 @@
 return {
   "stevearc/oil.nvim",
-  -- event = "VeryLazy",
   lazy = false,
   cmd = { "Oil" },
+  keys = {
+    {
+      "<leader>ev",
+      function()
+        -- vim.cmd([[vertical rightbelow split|vertical resize 60]])
+        vim.cmd([[vertical rightbelow split]])
+        require("oil").open()
+      end,
+      desc = "[e]xplore cwd -> oil ([v]split)",
+    },
+    {
+      "<leader>ee",
+      function()
+        require("oil").open()
+      end,
+      desc = "[e]xplore cwd -> oil ([e]dit)",
+    },
+  },
   config = function()
-    local SETTINGS = require("config.options")
-    local icons = SETTINGS.icons
-    local icon_file = vim.trim(icons.kind.File)
-    local icon_dir = vim.trim(icons.kind.Folder)
+    local icon_file = vim.trim(Icons.kind.File)
+    local icon_dir = vim.trim(Icons.kind.Folder)
     local permission_hlgroups = setmetatable({
       ["-"] = "OilPermissionNone",
       ["r"] = "OilPermissionRead",
       ["w"] = "OilPermissionWrite",
       ["x"] = "OilPermissionExecute",
     }, {
-      __index = function() return "OilDir" end,
+      __index = function()
+        return "OilDir"
+      end,
     })
 
     local type_hlgroups = setmetatable({
@@ -24,7 +41,9 @@ return {
       ["l"] = "OilTypeLink",
       ["s"] = "OilTypeSocket",
     }, {
-      __index = function() return "OilTypeFile" end,
+      __index = function()
+        return "OilTypeFile"
+      end,
     })
 
     require("oil").setup({
@@ -34,7 +53,9 @@ return {
       -- trash_command = "trash-cli",
       prompt_save_on_select_new_entry = false,
       use_default_keymaps = false,
-      is_always_hidden = function(name, _bufnr) return name == ".." end,
+      is_always_hidden = function(name, _bufnr)
+        return name == ".."
+      end,
       -- columns = {
       --   "icon",
       --   -- "permissions",
@@ -52,7 +73,9 @@ return {
             link = "l",
             socket = "s",
           },
-          highlight = function(type_str) return type_hlgroups[type_str] end,
+          highlight = function(type_str)
+            return type_hlgroups[type_str]
+          end,
         },
         {
           "permissions",
@@ -83,6 +106,9 @@ return {
         ["gs"] = "actions.change_sort",
         ["gx"] = "actions.open_external",
         ["g."] = "actions.toggle_hidden",
+        ["<BS>"] = function()
+          require("oil").open()
+        end,
         ["gd"] = {
           desc = "Toggle detail view",
           callback = function()
@@ -95,59 +121,8 @@ return {
             end
           end,
         },
-        ["gr"] = {
-          callback = function()
-            -- get the current directory
-            local prefills = { paths = oil.get_current_dir() }
-
-            local grug_far = require("grug-far")
-            -- instance check
-            if not grug_far.has_instance("explorer") then
-              grug_far.open({
-                instanceName = "explorer",
-                prefills = prefills,
-                staticTitle = "Find and Replace from Explorer",
-              })
-            else
-              grug_far.get_instance("explorer"):open()
-              -- updating the prefills without clearing the search and other fields
-              grug_far.get_instance("explorer"):update_input_values(prefills, false)
-            end
-          end,
-          desc = "oil: Search in directory",
-        },
         ["<CR>"] = "actions.select",
-        ["gp"] = function()
-          local oil = require("oil")
-          local entry = oil.get_cursor_entry()
-          if entry["type"] == "file" then
-            local dir = oil.get_current_dir()
-            local fileName = entry["name"]
-            local fullName = dir .. fileName
-
-            require("config.utils").preview_file(fullName)
-          else
-            return ""
-          end
-        end,
       },
     })
   end,
-
-  keys = {
-    {
-      "<leader>ev",
-      function()
-        -- vim.cmd([[vertical rightbelow split|vertical resize 60]])
-        vim.cmd([[vertical rightbelow split]])
-        require("oil").open()
-      end,
-      desc = "[e]xplore cwd -> oil ([v]split)",
-    },
-    {
-      "<leader>ee",
-      function() require("oil").open() end,
-      desc = "[e]xplore cwd -> oil ([e]dit)",
-    },
-  },
 }

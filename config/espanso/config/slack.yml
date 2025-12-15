@@ -1,0 +1,9 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/espanso/espanso/dev/schemas/config.schema.json
+#───────────────────────────────────────────────────────────────────────────────
+# DOCS https://espanso.org/docs/configuration/app-specific-configurations/
+
+# also include browser, for Slack/Discord in the browser
+filter_class: com.tinyspeck.slackmacgap
+
+extra_includes:
+  - ../match/_emoji-reactions.yml

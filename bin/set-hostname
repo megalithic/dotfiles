@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+set -Eueo pipefail
+
+HOSTNAME=${1:-$(hostname -s)}
+
+echo "░ -> setting hostname to $HOSTNAME.." &&
+  (sudo scutil --set HostName "$HOSTNAME" &&
+    sudo scutil --set LocalHostName "$HOSTNAME" &&
+    sudo scutil --set ComputerName "$HOSTNAME" &&
+    sudo defaults write /Library/Preferences/SystemConfiguration/com.apple.smb.server NetBIOSName -string "$HOSTNAME") &&
+  echo "░ [✓] set new hostname to $HOSTNAME" ||
+  echo "░ [x] failed to completely set new hostname"

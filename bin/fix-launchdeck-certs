@@ -1,0 +1,85 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "🔐 LaunchDeck Certificate Trust Fix"
+echo "===================================="
+echo
+
+CA_URL="https://vault.platform.launchdeck.internal:8200/v1/pki/ca/pem"
+CA_FILE="/tmp/vault-ca.pem"
+CA_NAME="C Spire LaunchDeck Vault CA"
+
+echo "📥 Downloading root CA certificate..."
+curl -sk "$CA_URL" -o "$CA_FILE"
+
+if [[ ! -s "$CA_FILE" ]]; then
+    echo "❌ Failed to download CA certificate"
+    exit 1
+fi
+
+echo "✅ CA certificate downloaded"
+echo
+
+# Verify it's a valid certificate
+echo "📋 Certificate details:"
+openssl x509 -in "$CA_FILE" -text -noout | grep -E "(Issuer|Subject|Not)" | head -6
+echo
+
+# macOS System Keychain (affects Safari, system tools)
+echo "🍎 Adding to macOS System Keychain (requires sudo)..."
+if sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain "$CA_FILE" 2>/dev/null; then
+    echo "✅ Added to System Keychain (Safari will trust)"
+else
+    echo "ℹ️  Certificate may already exist in System Keychain"
+fi
+echo
+
+# Chrome/Chromium/Brave/Edge (uses macOS keychain on macOS)
+echo "🔷 Chrome/Chromium/Brave/Edge..."
+echo "   These browsers use the macOS System Keychain, so they should now trust the CA"
+echo
+
+# Firefox (uses its own certificate store)
+echo "🦊 Firefox Configuration..."
+
+# Find Firefox profiles
+FIREFOX_PROFILES=""
+if [[ -d "$HOME/Library/Application Support/Firefox/Profiles" ]]; then
+    FIREFOX_PROFILES=$(find "$HOME/Library/Application Support/Firefox/Profiles" -maxdepth 1 -type d -name "*.default*" 2>/dev/null || true)
+fi
+
+if [[ -z "$FIREFOX_PROFILES" ]]; then
+    echo "   ℹ️  No Firefox profiles found (install Firefox or it will auto-trust when installed)"
+else
+    # Check if certutil is available (from nss-tools)
+    if command -v certutil >/dev/null 2>&1; then
+        for profile in $FIREFOX_PROFILES; do
+            profile_name=$(basename "$profile")
+            echo "   Adding to profile: $profile_name"
+            certutil -A -n "$CA_NAME" -t "C,," -i "$CA_FILE" -d "sql:$profile" 2>/dev/null || \
+                echo "   ⚠️  May already exist or certutil error"
+        done
+        echo "✅ Firefox certificate store updated"
+    else
+        echo "   ⚠️  certutil not found. Install it with: nix-env -iA nixpkgs.nssTools"
+        echo "   Or run: nix-shell -p nssTools --run 'certutil -A -n \"$CA_NAME\" -t \"C,,\" -i \"$CA_FILE\" -d sql:$profile'"
+    fi
+fi
+echo
+
+# Helium (Chromium-based, should use system keychain)
+echo "🎈 Helium Browser..."
+echo "   Helium is Chromium-based and should use the macOS System Keychain"
+echo
+
+echo "✅ Certificate trust setup complete!"
+echo
+echo "📝 Next steps:"
+echo "   1. Restart all browsers to pick up the new certificate"
+echo "   2. For Firefox, if certutil wasn't available, run:"
+echo "      nix-shell -p nssTools --run '$0 firefox-only'"
+echo "   3. Test by visiting: https://smesser-dev.developers.launchdeck.internal"
+echo
+echo "💡 To verify trust:"
+echo "   curl https://smesser-dev.developers.launchdeck.internal"
+echo "   (should work without -k flag)"

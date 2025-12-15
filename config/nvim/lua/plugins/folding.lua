@@ -1,3 +1,7 @@
+if true then
+  return {}
+end
+
 return {
   -- { -- QoL features for folding
   --   "chrisgrieser/nvim-origami",
@@ -12,15 +16,41 @@ return {
     event = "UIEnter", -- needed for folds to load in time and comments being closed
     keys = {
       { "z?", vim.cmd.UfoInspect, desc = "󱃄 :UfoInspect" },
-      { "zm", function() require("ufo").closeAllFolds() end, desc = "󱃄 Close All Folds" },
+      {
+        "zm",
+        function()
+          require("ufo").closeAllFolds()
+        end,
+        desc = "󱃄 Close All Folds",
+      },
       {
         "zr",
-        function() require("ufo").openFoldsExceptKinds({ "comment", "imports" }) end,
+        function()
+          require("ufo").openFoldsExceptKinds({ "comment", "imports" })
+        end,
         desc = "󱃄 Open Regular Folds",
       },
-      { "z1", function() require("ufo").closeFoldsWith(1) end, desc = "󱃄 Close L1 Folds" },
-      { "z2", function() require("ufo").closeFoldsWith(2) end, desc = "󱃄 Close L2 Folds" },
-      { "z3", function() require("ufo").closeFoldsWith(3) end, desc = "󱃄 Close L3 Folds" },
+      {
+        "z1",
+        function()
+          require("ufo").closeFoldsWith(1)
+        end,
+        desc = "󱃄 Close L1 Folds",
+      },
+      {
+        "z2",
+        function()
+          require("ufo").closeFoldsWith(2)
+        end,
+        desc = "󱃄 Close L2 Folds",
+      },
+      {
+        "z3",
+        function()
+          require("ufo").closeFoldsWith(3)
+        end,
+        desc = "󱃄 Close L3 Folds",
+      },
     },
     init = function()
       -- INFO fold commands usually change the foldlevel, which fixes folds, e.g.
@@ -41,9 +71,13 @@ return {
       open_fold_hl_timeout = 800,
       provider_selector = function(_, ft, buftype)
         -- PERF disable folds on `log`, and only use `indent` for `bib` files
-        if vim.tbl_contains({ "log", "ghostty", "conf", "tmux" }, ft) then return "" end
+        if vim.tbl_contains({ "log", "ghostty", "conf", "tmux" }, ft) then
+          return ""
+        end
         -- ufo accepts only two kinds as priority, see https://github.com/kevinhwang91/nvim-ufo/issues/256
-        if ft == "" or buftype ~= "" or vim.startswith(ft, "git") or ft == "applescript" then return "indent" end
+        if ft == "" or buftype ~= "" or vim.startswith(ft, "git") or ft == "applescript" then
+          return "indent"
+        end
         return { "lsp", "treesitter" }
       end,
       -- show folds with number of folded lines instead of just the icon
@@ -65,7 +99,9 @@ return {
             local hlGroup = chunk[2]
             table.insert(newVirtText, { chunkText, hlGroup })
             chunkWidth = vim.fn.strdisplaywidth(chunkText)
-            if curWidth + chunkWidth < targetWidth then suffix = suffix .. (" "):rep(targetWidth - curWidth - chunkWidth) end
+            if curWidth + chunkWidth < targetWidth then
+              suffix = suffix .. (" "):rep(targetWidth - curWidth - chunkWidth)
+            end
             break
           end
           curWidth = curWidth + chunkWidth

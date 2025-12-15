@@ -3,7 +3,7 @@
 -- https://github.com/jfpedroza/neotest-elixir/pull/23
 
 local SETTINGS = require("config.options")
-local icons = SETTINGS.icons
+local icons = Icons
 local keys = {}
 local fmt = string.format
 if vim.g.tester == "neotest" then
@@ -302,7 +302,7 @@ return {
         --   enabled = false,
         --   open = function() vim.cmd("Trouble quickfix") end,
         -- },
-        -- floating = { border = SETTINGS.current_border },
+        -- floating = { border = vim.g.current_border },
         icons = {
           expanded = "",
           child_prefix = "",

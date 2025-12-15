@@ -1,52 +1,109 @@
-require("preflight")
+local ok, mod_or_err = pcall(require, "preflight")
+if not ok then
+  error("Error preloading hammerspork; unable to continue...\n" .. mod_or_err)
+  return
+end
 
-hs.loadSpoon("EmmyLua")
-hs.loadSpoon("HyperModal")
+local ok, mod_or_err = pcall(require, "config")
+if not ok then
+  error("Error loading hammerspork config; unable to continue...\n" .. mod_or_err)
+  return
+end
+_G.C = mod_or_err
 
 --- @diagnostic disable-next-line: lowercase-global
-function req(mod, ...)
+function _G.req(mod, ...)
+  -- local function lineTraceHook(event, data)
+  --   local lineInfo = debug.getinfo(2, "Snl")
+  --   print("TRACE: " .. (lineInfo["short_src"] or "<unknown source>") .. ":" .. (lineInfo["linedefined"] or "<??>"))
+  -- end
+
   local ok, reqmod = pcall(require, mod)
+  -- G[mod:sub(5)] = reqmod
+  -- print(hs.inspect(G[mod:sub(5)]))
+
   if not ok then
+    -- debug.sethook(lineTraceHook, "l")
+    -- hs.alert(reqmod, 5)
     error(reqmod)
+
+    return false
   else
     -- if there is an init function; invoke it first.
-    if type(reqmod) == "table" and reqmod.init ~= nil and type(reqmod.init) == "function" then
-      -- if initializedModules[reqmod.name] ~= nil then
-      reqmod:init(...)
-      -- initializedModules[reqmod.name] = reqmod
-      -- end
-    end
+    if type(reqmod) == "table" and reqmod.init ~= nil and type(reqmod.init) == "function" then reqmod:init(...) end
 
     -- always return the module.. we typically end up immediately invoking it.
     return reqmod
   end
 end
 
--- Our listing of *.watcher based modules; the core of the automation that takes place.
--- NOTE: `app` contains the app layout and app context logic.
-local watchers = {
-  "bluetooth",
-  "usb",
-  "dock",
-  "app",
-  "url",
-  "files",
-}
+_G.U = req("utils")
+_G.I = hs.inspect -- `i()` to easier inspect in the console
 
-req("config")
-req("libs")
+-- Initialize unified notification system
+_G.N = req("lib.notifications")
+N.init()
+
+-- Backward compatibility (temporary during transition)
+_G.NotifyDB = N.db
+_G.NotifyMenubar = N.menubar
+
+function _G.P(...)
+  -- local function getFnLocation()
+  --   local w = debug.getinfo(3, "S")
+  --   return w.short_src:gsub(".*/", "") .. ":" .. w.linedefined
+  -- end
+
+  local function getLocation()
+    local info = debug.getinfo(2, "Snl")
+    return string.format("%s:%s", info.short_src, info.currentline)
+  end
+
+  function callerInfo()
+    local info = debug.getinfo(2, "Sl") -- Get info from the caller (level 2)
+    if info then
+      return string.format("%s:%d", info.short_src, info.currentline)
+    else
+      print("Could not determine caller information")
+    end
+  end
+
+  if ... == nil then
+    hs.console.printStyledtext(U.ts() .. " => " .. "")
+    -- TODO: add line debugging so we can see where blank P statements are
+
+    return
+  end
+
+  local contents = ...
+
+  if type(...) ~= "string" then
+    contents = hs.inspect(...)
+  else
+    if select("#", ...) > 1 then
+      contents = string.format(...)
+    else
+      contents = ...
+    end
+  end
+
+  hs.console.printStyledtext(U.ts() .. " (" .. callerInfo() .. ")" .. " => " .. contents)
+end
+
+hs.loadSpoon("EmmyLua")
+
+local watchers = { "audio", "dock", "app", "notification", "camera" }
+
+-- req("lib.seal")
 req("bindings")
-req("watchers"):start(watchers)
--- req("spotify"):start()
-req("browser"):start()
-req("ptt"):start({ mode = "push-to-talk" })
-req("quitter"):start({ mode = "double" })
+req("watchers", { watchers = watchers })
+req("ptt", { push = { { "cmd", "alt" }, nil }, toggle = { { "cmd", "alt" }, "p" } }):start()
 
--- experimental/wip modules and stuff..
+hs.shutdownCallback = function()
+  require("watchers"):stop({ watchers = watchers })
+  if N and N.cleanup then N.cleanup() end
+end
 
-hs.shutdownCallback = function() req("watchers"):stop(watchers) end
-
-hs.timer.doAfter(0.2, function()
-  hs.notify.withdrawAll()
-  hs.notify.new({ title = "hammerspork", subTitle = "config is loaded." }):send()
-end)
+hs.notify.withdrawAll()
+hs.notify.new({ title = "hammerspork", subTitle = "config is loaded.", alwaysPresent = true }):send()
+U.log.o("hammerspork config is loaded")

@@ -1,0 +1,651 @@
+#!/usr/bin/env bash
+
+# VPN Connection Script for Cisco Secure Client and OpenConnect
+# Supports GUI, Cisco CLI, and OpenConnect CLI methods
+
+set -euo pipefail
+
+# Get script directory for finding ntfy
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+NTFY_CMD="$SCRIPT_DIR/ntfy"
+
+# Default configuration
+DEFAULT_VPN_URL="vpn.edge.launchdeck.tech"
+DEFAULT_METHOD="gui"
+ENABLE_NOTIFICATIONS=false
+AUTO_RECONNECT=false
+BACKGROUND_MODE=false
+OPENCONNECT_PID_FILE="/tmp/openconnect-vpn.pid"
+
+# Paths to VPN clients
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  VPNCLI="/opt/cisco/secureclient/bin/vpn"
+  VPN_APP="/Applications/Cisco/Cisco Secure Client.app"
+else
+  VPNCLI="/opt/cisco/anyconnect/bin/vpn"
+  VPN_APP=""
+fi
+
+# OpenConnect CLI (available via nix)
+OPENCONNECT=$(command -v openconnect || echo "")
+
+# Color output helpers
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+log_info() {
+  echo -e "${BLUE}[INFO]${NC} $*"
+}
+
+log_success() {
+  echo -e "${GREEN}[SUCCESS]${NC} $*"
+}
+
+log_warn() {
+  echo -e "${YELLOW}[WARN]${NC} $*"
+}
+
+log_error() {
+  echo -e "${RED}[ERROR]${NC} $*"
+}
+
+# Show usage information
+show_usage() {
+  cat <<EOF
+Usage: vpn-connect [OPTIONS]
+
+Connect to Cisco Secure Client VPN using GUI, Cisco CLI, or OpenConnect.
+
+OPTIONS:
+    -m, --method <METHOD>      Connection method (default: $DEFAULT_METHOD)
+                               Methods: gui, cisco-cli, openconnect
+    -u, --url <url>            VPN server URL (default: $DEFAULT_VPN_URL)
+    -n, --notify               Enable notifications (default: disabled)
+    -s, --status               Check VPN connection status
+    -d, --disconnect           Disconnect from VPN
+    -r, --auto-reconnect       Auto-reconnect on disconnect (openconnect only)
+    -b, --background           Run in background/daemon mode (openconnect only)
+    -h, --help                 Show this help message
+
+Long options also support = syntax:
+    --method=gui --url=vpn.example.com --notify
+
+EXAMPLES:
+    # Connect using GUI method (default)
+    vpn-connect
+
+    # Connect using CLI method (short form)
+    vpn-connect -m cli
+
+    # Connect using CLI method (long form)
+    vpn-connect --method cli
+
+    # Connect using CLI method (= syntax)
+    vpn-connect --method=cli
+
+    # Connect to custom VPN URL (short form)
+    vpn-connect -u vpn.example.com
+
+    # Connect to custom VPN URL (long form)
+    vpn-connect --url vpn.example.com
+
+    # Connect to custom VPN URL (= syntax)
+    vpn-connect --url=vpn.example.com
+
+    # Combine options (short form)
+    vpn-connect -m cli -u vpn.example.com
+
+    # Combine options (long form)
+    vpn-connect --method cli --url vpn.example.com
+
+    # Combine options (= syntax)
+    vpn-connect --method=cli --url=vpn.example.com
+
+    # Check connection status (short form)
+    vpn-connect -s
+
+    # Check connection status (long form)
+    vpn-connect --status
+
+    # Disconnect from VPN (short form)
+    vpn-connect -d
+
+    # Disconnect from VPN (long form)
+    vpn-connect --disconnect
+
+    # Connect with notifications enabled (short form)
+    vpn-connect -n
+
+    # Connect with notifications enabled (long form)
+    vpn-connect --notify
+
+    # Connect with CLI method and notifications
+    vpn-connect -m cli -n
+
+METHODS:
+    gui           - Launch Cisco Secure Client GUI and open connection URL
+    cisco-cli     - Use Cisco command-line interface (requires credentials)
+    openconnect   - Use OpenConnect CLI (best for automation)
+
+NOTES:
+    - GUI method is recommended for interactive use with MFA/2FA
+    - cisco-cli method may prompt for credentials in terminal
+    - openconnect method supports auto-reconnect and background modes
+    - VPN credentials can be stored in 1Password for future automation
+    - openconnect requires sudo privileges for network changes
+EOF
+}
+
+# Check if Cisco Secure Client is installed
+check_vpn_installed() {
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    if [[ ! -d "$VPN_APP" ]] && [[ ! -f "$VPNCLI" ]]; then
+      log_error "Cisco Secure Client not found"
+      log_error "Install from: https://www.cisco.com/c/en/us/support/security/anyconnect-secure-mobility-client/"
+      return 1
+    fi
+  else
+    if [[ ! -f "$VPNCLI" ]]; then
+      log_error "Cisco AnyConnect VPN CLI not found at: $VPNCLI"
+      return 1
+    fi
+  fi
+  return 0
+}
+
+# Get VPN connection status
+get_vpn_status() {
+  if [[ ! -f "$VPNCLI" ]]; then
+    log_warn "VPN CLI not found, cannot check status"
+    return 1
+  fi
+
+  local status_output
+  status_output=$($VPNCLI state 2>/dev/null || echo "Disconnected")
+
+  if echo "$status_output" | grep -q "state: Connected"; then
+    return 0 # Connected
+  else
+    return 1 # Not connected
+  fi
+}
+
+# Check VPN status and display
+check_status() {
+  log_info "Checking VPN connection status..."
+
+  if get_vpn_status; then
+    local status_details
+    status_details=$($VPNCLI state 2>/dev/null)
+    log_success "VPN is connected"
+    echo "$status_details"
+    return 0
+  else
+    log_info "VPN is disconnected"
+    return 1
+  fi
+}
+
+# Disconnect from VPN
+disconnect_vpn() {
+  log_info "Disconnecting from VPN..."
+
+  if ! get_vpn_status; then
+    log_info "VPN is already disconnected"
+    return 0
+  fi
+
+  if [[ -f "$VPNCLI" ]]; then
+    $VPNCLI disconnect
+    log_success "Disconnected from VPN"
+    if [[ "$ENABLE_NOTIFICATIONS" == true ]]; then
+      $NTFY_CMD send -t "VPN Disconnected" -m "Successfully disconnected from VPN" -u normal
+    fi
+  else
+    log_error "VPN CLI not found, cannot disconnect"
+    return 1
+  fi
+}
+
+# Connect using GUI method
+connect_gui() {
+  local vpn_url="$1"
+
+  log_info "Launching Cisco Secure Client GUI..."
+  log_info "VPN URL: $vpn_url"
+
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    # Open the application
+    open "$VPN_APP"
+
+    # Wait a moment for app to launch
+    sleep 2
+
+    # Use AppleScript to automate connection and watch for auth dialogs
+    log_info "Setting VPN URL and connecting..."
+
+    osascript <<-EOF
+        tell application "System Events"
+            tell process "Cisco Secure Client"
+                -- Wait for main window to be available
+                repeat 10 times
+                    if exists window "Cisco Secure Client" then
+                        exit repeat
+                    end if
+                    delay 0.5
+                end repeat
+
+                tell window "Cisco Secure Client"
+                    -- Set the VPN URL in the combo box
+                    set value of combo box 1 to "$vpn_url"
+                    delay 0.5
+
+                    -- Click Connect button
+                    if exists button "Connect" then
+                        click button "Connect"
+                    else
+                        error "Connect button not found. May already be connected."
+                    end if
+                end tell
+
+                -- Monitor for authentication dialog with better timing
+                delay 2
+                repeat 30 times
+                    try
+                        set windowList to name of windows
+
+                        repeat with windowName in windowList
+                            -- Check for auth dialog names
+                            if windowName contains "Login" or windowName contains "Authentication" or windowName contains "Credentials" then
+                                -- Give the window a moment to stabilize
+                                delay 0.5
+
+                                -- Verify window still exists and is ready
+                                if exists window windowName then
+                                    -- Try to bring application to front first
+                                    try
+                                        tell application "Cisco Secure Client" to activate
+                                        delay 0.3
+                                    end try
+
+                                    -- Now try to focus the specific window
+                                    try
+                                        set frontmost of window windowName to true
+                                        return "Auth dialog detected and brought to front: " & windowName
+                                    on error errMsg
+                                        -- Window exists but can't be brought to front yet, continue waiting
+                                        log "Window not ready yet: " & errMsg
+                                    end try
+                                end if
+                            end if
+                        end repeat
+
+                        -- Check if connection completed without auth dialog
+                        if exists window "Cisco Secure Client" then
+                            tell window "Cisco Secure Client"
+                                -- Look for "Disconnect" button which indicates successful connection
+                                if exists button "Disconnect" then
+                                    return "Connection established without auth dialog"
+                                end if
+                            end tell
+                        end if
+                    on error errMsg
+                        -- Log but don't fail, window may not be ready yet
+                        log "Monitoring error (will retry): " & errMsg
+                    end try
+
+                    delay 0.5
+                end repeat
+
+                return "Connection timeout - no auth dialog or completion detected"
+            end tell
+        end tell
+EOF
+
+    local script_result=$?
+
+    if [[ $script_result -eq 0 ]]; then
+      log_success "VPN connection process completed"
+
+      # Wait a moment and check final connection status
+      sleep 2
+      if get_vpn_status; then
+        log_success "VPN is now connected"
+        if [[ "$ENABLE_NOTIFICATIONS" == true ]]; then
+          $NTFY_CMD send -t "VPN Connected" -m "Successfully connected to $vpn_url" -u normal
+        fi
+      else
+        log_info "VPN handshake in progress or authentication required"
+        log_info "Please complete authentication in the GUI if prompted"
+        if [[ "$ENABLE_NOTIFICATIONS" == true ]]; then
+          $NTFY_CMD send -t "VPN Connection" -m "Connection to $vpn_url initiated. Complete authentication if prompted." -u normal
+        fi
+      fi
+    else
+      log_warn "VPN automation encountered issues"
+      log_info "Checking connection status..."
+
+      # Even if AppleScript failed, connection might have succeeded
+      sleep 2
+      if get_vpn_status; then
+        log_success "VPN is connected despite automation warnings"
+        if [[ "$ENABLE_NOTIFICATIONS" == true ]]; then
+          $NTFY_CMD send -t "VPN Connected" -m "Connected to $vpn_url" -u normal
+        fi
+      else
+        log_error "Failed to initiate VPN connection. Please connect manually and try again."
+        if [[ "$ENABLE_NOTIFICATIONS" == true ]]; then
+          $NTFY_CMD send -t "VPN Connection Failed" -m "Could not automate connection. Please connect manually." -u high
+        fi
+        return 1
+      fi
+    fi
+  else
+    log_error "GUI method only supported on macOS"
+    return 1
+  fi
+}
+
+# Connect using CLI method
+connect_cli() {
+  local vpn_url="$1"
+
+  if [[ ! -f "$VPNCLI" ]]; then
+    log_error "VPN CLI not found at: $VPNCLI"
+    log_error "Please install Cisco Secure Client or use --method gui"
+    return 1
+  fi
+
+  log_info "Connecting to VPN via CLI..."
+  log_info "VPN URL: $vpn_url"
+
+  # Check if already connected
+  if get_vpn_status; then
+    log_warn "Already connected to VPN"
+    log_info "Use --disconnect to disconnect first"
+    return 0
+  fi
+
+  # Attempt connection (will prompt for credentials interactively)
+  log_info "Starting connection (you may be prompted for credentials)..."
+
+  if $VPNCLI -s connect "$vpn_url"; then
+    log_success "Successfully connected to VPN"
+
+    # Show connection details
+    $VPNCLI state
+
+    if [[ "$ENABLE_NOTIFICATIONS" == true ]]; then
+      $NTFY_CMD send -t "VPN Connected" -m "Successfully connected to $vpn_url" -u normal
+    fi
+    return 0
+  else
+    log_error "Failed to connect to VPN"
+    if [[ "$ENABLE_NOTIFICATIONS" == true ]]; then
+      $NTFY_CMD send -t "VPN Connection Failed" -m "Could not connect to $vpn_url" -u high
+    fi
+    return 1
+  fi
+}
+
+# Check if OpenConnect is running
+is_openconnect_running() {
+  if [[ -f "$OPENCONNECT_PID_FILE" ]]; then
+    local pid
+    pid=$(cat "$OPENCONNECT_PID_FILE" 2>/dev/null || echo "")
+    if [[ -n "$pid" ]] && ps -p "$pid" >/dev/null 2>&1; then
+      return 0
+    else
+      # Stale PID file
+      rm -f "$OPENCONNECT_PID_FILE"
+      return 1
+    fi
+  fi
+  # Also check by process name
+  pgrep -f "openconnect.*$DEFAULT_VPN_URL" >/dev/null 2>&1
+}
+
+# Disconnect OpenConnect
+disconnect_openconnect() {
+  log_info "Disconnecting OpenConnect VPN..."
+
+  if ! is_openconnect_running; then
+    log_info "OpenConnect VPN is already disconnected"
+    return 0
+  fi
+
+  if [[ -f "$OPENCONNECT_PID_FILE" ]]; then
+    local pid
+    pid=$(cat "$OPENCONNECT_PID_FILE")
+    log_info "Sending clean shutdown signal to OpenConnect (PID: $pid)..."
+    sudo kill -INT "$pid" 2>/dev/null || true
+    sleep 2
+
+    # Force kill if still running
+    if ps -p "$pid" >/dev/null 2>&1; then
+      log_warn "Clean shutdown failed, forcing termination..."
+      sudo kill -TERM "$pid" 2>/dev/null || true
+    fi
+
+    rm -f "$OPENCONNECT_PID_FILE"
+  else
+    # Kill by process name
+    sudo pkill -INT -f "openconnect.*$DEFAULT_VPN_URL" || true
+  fi
+
+  log_success "Disconnected from VPN"
+  if [[ "$ENABLE_NOTIFICATIONS" == true ]]; then
+    $NTFY_CMD send -t "VPN Disconnected" -m "OpenConnect disconnected successfully" -u normal
+  fi
+}
+
+# Connect using OpenConnect
+connect_openconnect() {
+  local vpn_url="$1"
+
+  if [[ -z "$OPENCONNECT" ]]; then
+    log_error "OpenConnect not found. Install via: nix-env -iA nixpkgs.openconnect"
+    return 1
+  fi
+
+  log_info "Connecting via OpenConnect..."
+  log_info "VPN URL: $vpn_url"
+
+  # Check if already connected
+  if is_openconnect_running; then
+    log_warn "OpenConnect is already running"
+    log_info "Use --disconnect to disconnect first"
+    return 0
+  fi
+
+  # Build openconnect command
+  local openconnect_cmd="sudo $OPENCONNECT"
+
+  # Add background mode if requested
+  if [[ "$BACKGROUND_MODE" == true ]]; then
+    openconnect_cmd="$openconnect_cmd --background"
+    openconnect_cmd="$openconnect_cmd --pid-file=$OPENCONNECT_PID_FILE"
+  fi
+
+  # Add VPN URL
+  openconnect_cmd="$openconnect_cmd $vpn_url"
+
+  log_info "Executing: $openconnect_cmd"
+  log_info "You may be prompted for sudo password and VPN credentials..."
+
+  # Connect with or without auto-reconnect
+  if [[ "$AUTO_RECONNECT" == true ]]; then
+    log_info "Auto-reconnect enabled - VPN will automatically reconnect on disconnect"
+    log_info "Press Ctrl+C to stop"
+
+    while true; do
+      if eval "$openconnect_cmd"; then
+        log_success "Successfully connected to VPN"
+        if [[ "$ENABLE_NOTIFICATIONS" == true ]]; then
+          $NTFY_CMD send -t "VPN Connected" -m "OpenConnect connected to $vpn_url" -u normal
+        fi
+      else
+        log_error "Connection failed"
+        if [[ "$ENABLE_NOTIFICATIONS" == true ]]; then
+          $NTFY_CMD send -t "VPN Connection Failed" -m "OpenConnect failed to connect to $vpn_url" -u high
+        fi
+      fi
+
+      log_info "Disconnected. Reconnecting in 5 seconds..."
+      sleep 5
+    done
+  else
+    if eval "$openconnect_cmd"; then
+      log_success "Successfully connected to VPN"
+      if [[ "$ENABLE_NOTIFICATIONS" == true ]]; then
+        $NTFY_CMD send -t "VPN Connected" -m "OpenConnect connected to $vpn_url" -u normal
+      fi
+      return 0
+    else
+      log_error "Failed to connect to VPN"
+      if [[ "$ENABLE_NOTIFICATIONS" == true ]]; then
+        $NTFY_CMD send -t "VPN Connection Failed" -m "OpenConnect failed to connect to $vpn_url" -u high
+      fi
+      return 1
+    fi
+  fi
+}
+
+# Main function
+main() {
+  local method="$DEFAULT_METHOD"
+  local vpn_url="$DEFAULT_VPN_URL"
+  local action="connect"
+
+  # Parse arguments
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+    -m | --method)
+      method="$2"
+      shift 2
+      ;;
+    --method=*)
+      method="${1#*=}"
+      shift
+      ;;
+    -u | --url)
+      vpn_url="$2"
+      shift 2
+      ;;
+    --url=*)
+      vpn_url="${1#*=}"
+      shift
+      ;;
+    -n | --notify)
+      ENABLE_NOTIFICATIONS=true
+      shift
+      ;;
+    -r | --auto-reconnect)
+      AUTO_RECONNECT=true
+      shift
+      ;;
+    -b | --background)
+      BACKGROUND_MODE=true
+      shift
+      ;;
+    -s | --status)
+      action="status"
+      shift
+      ;;
+    -d | --disconnect)
+      action="disconnect"
+      shift
+      ;;
+    -h | --help)
+      show_usage
+      exit 0
+      ;;
+    *)
+      log_error "Unknown option: $1"
+      echo ""
+      show_usage
+      exit 1
+      ;;
+    esac
+  done
+
+  # Backwards compatibility: map "cli" to "cisco-cli"
+  if [[ "$method" == "cli" ]]; then
+    method="cisco-cli"
+    log_info "Note: 'cli' method is deprecated, use 'cisco-cli' instead"
+  fi
+
+  # Validate method
+  if [[ "$method" != "cisco-cli" && "$method" != "gui" && "$method" != "openconnect" ]]; then
+    log_error "Invalid method: $method (must be 'gui', 'cisco-cli', or 'openconnect')"
+    exit 1
+  fi
+
+  # Validate advanced options only work with openconnect
+  if [[ "$AUTO_RECONNECT" == true || "$BACKGROUND_MODE" == true ]] && [[ "$method" != "openconnect" ]]; then
+    log_error "Auto-reconnect and background modes only work with --method openconnect"
+    exit 1
+  fi
+
+  # Check installation
+  if ! check_vpn_installed; then
+    exit 1
+  fi
+
+  # Execute action
+  case "$action" in
+  status)
+    check_status
+    # Also check openconnect status if available
+    if [[ -n "$OPENCONNECT" ]]; then
+      if is_openconnect_running; then
+        log_info "OpenConnect is running (PID file: $OPENCONNECT_PID_FILE)"
+      else
+        log_info "OpenConnect is not running"
+      fi
+    fi
+    ;;
+  disconnect)
+    # Disconnect based on what's running
+    local disconnected=false
+    if get_vpn_status; then
+      disconnect_vpn
+      disconnected=true
+    fi
+    if is_openconnect_running; then
+      disconnect_openconnect
+      disconnected=true
+    fi
+    if [[ "$disconnected" == false ]]; then
+      log_info "No VPN connections detected"
+    fi
+    ;;
+  connect)
+    case "$method" in
+    gui)
+      connect_gui "$vpn_url"
+      ;;
+    cisco-cli)
+      connect_cli "$vpn_url"
+      ;;
+    openconnect)
+      connect_openconnect "$vpn_url"
+      ;;
+    *)
+      log_error "Unknown method: $method"
+      exit 1
+      ;;
+    esac
+    ;;
+  *)
+    log_error "Unknown action: $action"
+    exit 1
+    ;;
+  esac
+}
+
+# Run main function
+main "$@"

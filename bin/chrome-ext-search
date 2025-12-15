@@ -1,0 +1,126 @@
+#!/usr/bin/env bash
+# Search Chrome Web Store for extensions by name
+#
+# Usage: chrome-ext-search <query> [--limit N] [--details]
+#
+# Options:
+#   --limit N     Show only first N results (default: 5)
+#   --details     Fetch full details (version, hash) for each result
+
+set -euo pipefail
+
+QUERY=""
+LIMIT=5
+SHOW_DETAILS=false
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --limit|-l)
+      LIMIT="$2"
+      shift 2
+      ;;
+    --details|-d)
+      SHOW_DETAILS=true
+      shift
+      ;;
+    *)
+      if [ -z "$QUERY" ]; then
+        QUERY="$1"
+      else
+        echo "Error: Unknown argument: $1" >&2
+        exit 1
+      fi
+      shift
+      ;;
+  esac
+done
+
+if [ -z "$QUERY" ]; then
+  echo "Usage: $0 <query> [--limit N] [--details]" >&2
+  echo "Example: $0 surfingkeys" >&2
+  echo "Example: $0 \"ublock origin\" --limit 3 --details" >&2
+  exit 1
+fi
+
+# URL encode the query
+ENCODED_QUERY=$(printf %s "$QUERY" | jq -sRr @uri)
+
+echo "Searching Chrome Web Store for: $QUERY" >&2
+echo "" >&2
+
+# Fetch search results
+HTML=$(curl -fsSL "https://chrome.google.com/webstore/search/${ENCODED_QUERY}" 2>/dev/null)
+
+if [ -z "$HTML" ]; then
+  echo "Error: Failed to fetch search results" >&2
+  exit 1
+fi
+
+# Extract extension IDs and titles
+IDS=$(echo "$HTML" | grep -o 'data-item-id="[^"]*"' | sed 's/data-item-id="//;s/"$//' | head -"$LIMIT")
+
+if [ -z "$IDS" ]; then
+  echo "No extensions found matching: $QUERY" >&2
+  exit 1
+fi
+
+echo "Found $(echo "$IDS" | wc -l | tr -d ' ') results:" >&2
+echo "" >&2
+
+# For each ID, extract the title from the HTML
+COUNT=1
+echo "$IDS" | while read -r ID; do
+  # Extract title - look for the extension's detail page link and title
+  TITLE=$(echo "$HTML" | grep -A 20 "data-item-id=\"$ID\"" | grep -o '<h2 class="CiI2if">[^<]*</h2>' | sed 's/<[^>]*>//g' | head -1)
+
+  if [ -z "$TITLE" ]; then
+    TITLE="(Unknown)"
+  fi
+
+  echo "[$COUNT] $TITLE" >&2
+  echo "    ID: $ID" >&2
+
+  if [ "$SHOW_DETAILS" = true ]; then
+    echo "    Fetching details..." >&2
+
+    # Download and extract version
+    CRX_URL="https://clients2.google.com/service/update2/crx?response=redirect&acceptformat=crx3&prodversion=120.0.0.0&x=id%3D${ID}%26installsource%3Dondemand%26uc"
+
+    TEMP_DIR=$(mktemp -d)
+    TEMP_FILE="$TEMP_DIR/${ID}.crx"
+    EXTRACT_DIR="$TEMP_DIR/extracted"
+
+    if curl -fsSL "$CRX_URL" -o "$TEMP_FILE" 2>/dev/null; then
+      mkdir -p "$EXTRACT_DIR"
+      unzip -q "$TEMP_FILE" -d "$EXTRACT_DIR" 2>/dev/null || true
+
+      MANIFEST="$EXTRACT_DIR/manifest.json"
+      if [ -f "$MANIFEST" ]; then
+        VERSION=$(jq -r '.version' "$MANIFEST" 2>/dev/null || echo "unknown")
+        echo "    Version: $VERSION" >&2
+
+        # Compute hash
+        HASH=$(nix hash file --type sha256 "$TEMP_FILE" 2>/dev/null || echo "")
+        if [ -n "$HASH" ]; then
+          echo "    SHA256: $HASH" >&2
+        fi
+      fi
+
+      rm -rf "$TEMP_DIR"
+    else
+      echo "    (Could not fetch extension details)" >&2
+    fi
+  fi
+
+  echo "" >&2
+
+  # Output structured data for piping
+  if [ "$SHOW_DETAILS" = true ] && [ -n "${VERSION:-}" ] && [ -n "${HASH:-}" ]; then
+    echo "$ID|$TITLE|$VERSION|$HASH"
+  else
+    echo "$ID|$TITLE"
+  fi
+
+  COUNT=$((COUNT + 1))
+done

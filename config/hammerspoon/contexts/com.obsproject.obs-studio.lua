@@ -25,7 +25,7 @@ function obj:start(opts)
     do
       hs.spotify.pause()
       req("keycastr"):start()
-      req("utils").dnd(true)
+      req("config.utils").dnd(true)
       req("ptt").setState("push-to-mute")
 
       hs.layout.apply({
@@ -72,7 +72,7 @@ function obj:stop(opts)
     _appObj:kill()
   elseif event == hs.application.watcher.terminated then
     require("ptt").setState("push-to-talk")
-    req("utils").dnd(false)
+    req("config.utils").dnd(false)
 
     do
       if browser ~= nil then
@@ -103,7 +103,7 @@ function obj:stop(opts)
 
     -- convert our video
     local latest_obs_file = hs.execute("/bin/ls -at ~/Movies/obs/*.* | head -n 1 | tr -d '\n'", true)
-    require("utils").vidconvert(latest_obs_file)
+    require("config.utils").vidconvert(latest_obs_file)
 
     hs.timer.doAfter(2, function() req("keycastr"):stop() end)
   end

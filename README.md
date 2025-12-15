@@ -1,7 +1,7 @@
-```sh
+```bash
 ┌┬┐┌─┐┌─┐┌─┐┬ ┬┌┬┐┬ ┬┬┌─┐
 │││├┤ │ ┬├─┤│ │ │ ├─┤││
-┴ ┴└─┘└─┘┴ ┴┴─┘┴ ┴ ┴ ┴┴└─┘
+┴ ┴└─┘└─┘┴ ┴┴─┴ ┴ ┴ ┴┴└─┘
 @megalithic 🗿
 ```
 
@@ -11,60 +11,49 @@
 
 </p>
 
-## 🛑 Deprecated.
-
-I've migrated to using `nix` for managing my dotfiles, I'm experimenting with
-that over at
-[megalithic/dotfiles-nix](https://github.com/megalithic/dotfiles-nix)
-
-I'll eventually migrate the _Final Form™_ of my dotfiles from dotfiles-nix back
-to here.
-
 ## 🚀 Installation
 
-_If you want to kick the tires, you can simply:_
+1. Install
+   [Determinate `nix`](https://github.com/DeterminateSystems/nix-installer).
 
 ```bash
-git clone https://github.com/megalithic/dotfiles.git ~/.dotfiles && cd ~/.dotfiles && make install
+curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
 ```
 
-_If you want to update an existing installation:_
+2. Source nix to run nix things
 
 ```bash
-make -C ~/.dotfiles up
+source "/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh"
 ```
 
-_For platform specific installations:_
+3. Run the installer (clones the repo to ~/.dotfiles-nix)
 
 ```bash
-cd ~/.dotfiles && make macos # or, `linux`
-# or, for easier use:
-make -C ~/.dotfiles macos
+nix run github:megalithic/dotfiles-nix
 ```
 
-_Get some help:_
+## Usage
+
+You can see the current tasks by running `just --list`
 
 ```bash
-cd ~/.dotfiles && make help
-# or, for easier use:
-make -C ~/.dotfiles help
+$ just --list
+Available recipes:
+default
+fix-shell-files # fix shell files. this happens sometimes with nix-darwin
+hm              # run home-manager switch
+news
+mac | rebuild # rebuild nix darwin
+uninstall     # uninstalls the nix determinate installer
+update        # updates brew, flake, and runs home-manager
+update-brew   # update and upgrade homebrew packages
+update-flake  # update your flake.lock
+upgrade-nix   # upgrades nix
 ```
 
-> **_NOTE_**: to execute a `make` command from anywhere, say, specifically for
-> your dotfiles: `make -C ~/.dotfiles <GOAL>`
+> **_NOTE_**: this nix setup is super unstable at the moment.
 
 ---
-
-This dotfiles repo is managed by
-[dotbot](https://github.com/anishathalye/dotbot); not near as over-the-top
-configurable as _Ansible_, but way more advanced than just _GNU Stow_.
-
-I have tried to be platform agnostic, but the majority of scripts that run here
-are for macOS (specifically macOS Ventura -- x86 and arm), with a handful of
-Debian/Ubuntu Linux specific platform scripts and provisions. This means that
-certain tools/binaries I rely on might or might not install/configure on Linux.
-Though, I have tested it reasonably well on Ubuntu-based Linode and DigitalOcean
-instances.
 
 ### 🐉 Thar be dragons
 
@@ -84,17 +73,20 @@ with my config!
 
 A few of the _must-have_ tools I roll with:
 
+- [nix](https://search.nixos.org/packages)
+  ([home-manager](https://home-manager-options.extranix.com/)/[nix-darwin](https://nix-darwin.github.io/nix-darwin/manual/index.html))
 - [ghostty](https://github.com/ghostty-org/ghostty)
 - [homebrew](https://brew.sh/)
 - [mise](https://github.com/jdx/mise)
 - [tmux](https://github.com/tmux/tmux/wiki)
-- [zsh](https://www.zsh.org/)
+- [fish](https://fishshell.com/)
 - [neovim](https://github.com/neovim/neovim)
 - [weechat](https://www.weechat.org/)
 - `megaforest` for all the colours/themes
 - [jetbrains mono](https://www.jetbrains.com/lp/mono/) font
   ([nerd-fonts](https://github.com/ryanoasis/nerd-fonts#font-patcher) patched)
 - [hammerspoon](https://github.com/megalithic/dotfiles/tree/main/config/hs)
+- [kanata](https://github.com/jtroo/kanata)
 - [karabiner-elements](https://github.com/tekezo/Karabiner-Elements)
   ([leeloo ZMK](https://github.com/megalithic/zmk-config))
 - [gpg/yubikey/encryption](https://github.com/drduh/YubiKey-Guide)

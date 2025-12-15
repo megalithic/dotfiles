@@ -1,27 +1,26 @@
-if not mega then return end
+if not _G.mega then
+  return
+end
 
 local fn = vim.fn
-local api = vim.api
 local fmt = string.format
-local levels = vim.log.levels
-local L = levels
-local SETTINGS = require("config.options")
 local get_node = vim.treesitter.get_node
 local cur_pos = vim.api.nvim_win_get_cursor
 
 local M = {
-  hl = {},
   lsp = {},
   notes = {},
-  strings = {},
-  commands = {},
+  str = {},
+  cmds = {},
   ts = {},
+  hl = {},
 }
 
 function M.ts.get_language_tree_for_cursor_location(bufnr)
   bufnr = bufnr or 0
   local cursor = vim.api.nvim_win_get_cursor(bufnr)
-  local language_tree = vim.treesitter.get_parser(bufnr):language_for_range({ cursor[1], cursor[2], cursor[1], cursor[2] })
+  local language_tree =
+    vim.treesitter.get_parser(bufnr):language_for_range({ cursor[1], cursor[2], cursor[1], cursor[2] })
 
   return language_tree
 end
@@ -30,9 +29,13 @@ end
 ---@param node TSNode|nil
 ---@return TSNode|nil
 function M.ts.find_node_ancestor(types, node)
-  if not node then return nil end
+  if not node then
+    return nil
+  end
 
-  if vim.tbl_contains(types, node:type()) then return node end
+  if vim.tbl_contains(types, node:type()) then
+    return node
+  end
 
   local parent = node:parent()
 
@@ -41,7 +44,7 @@ end
 
 function M.lsp.is_enabled_elixir_ls(client, enabled_clients)
   local client_name = type(client) == "table" and client.name or client
-  enabled_clients = enabled_clients or SETTINGS.enabled_elixir_ls
+  enabled_clients = enabled_clients or vim.g.enabled_elixir_ls
 
   return vim.tbl_contains(enabled_clients, client_name)
 end
@@ -51,13 +54,17 @@ local function prepare_file_rename(data)
   local bufnr = vim.fn.bufnr(data.old_name)
   for _, client in pairs(vim.lsp.get_clients({ bufnr = bufnr })) do
     local rename_path = { "server_capabilities", "workspace", "fileOperations", "willRename" }
-    if not vim.tbl_get(client, rename_path) then return vim.notify(fmt("%s does not LSP file rename", client.name), L.INFO, { title = "LSP" }) end
+    if not vim.tbl_get(client, rename_path) then
+      return vim.notify(fmt("%s does not LSP file rename", client.name), L.INFO, { title = "LSP" })
+    end
     local params = {
       files = { { newUri = "file://" .. data.new_name, oldUri = "file://" .. data.old_name } },
     }
     ---@diagnostic disable-next-line: invisible
     local resp = client:request_sync("workspace/willRenameFiles", params, 1000, bufnr)
-    if resp then vim.lsp.util.apply_workspace_edit(resp.result, client.offset_encoding) end
+    if resp then
+      vim.lsp.util.apply_workspace_edit(resp.result, client.offset_encoding)
+    end
   end
 end
 
@@ -69,7 +76,9 @@ function M.lsp.rename_file()
   -- -- -> fnamemodify(':t')
   -- vim.fs.basename(vim.api.nvim_buf_get_name(0))
   vim.ui.input({ prompt = fmt("rename %s to -> ", vim.fs.basename(old_name)) }, function(name)
-    if not name then return end
+    if not name then
+      return
+    end
     local new_name = fmt("%s/%s", vim.fs.dirname(old_name), name)
     prepare_file_rename({ old_name = old_name, new_name = new_name })
     vim.lsp.util.rename(old_name, new_name)
@@ -113,7 +122,9 @@ function M.pcall(msg, func, ...)
   end
   return xpcall(func, function(err)
     msg = debug.traceback(msg and fmt("%s:\n%s\n%s", msg, vim.inspect(args), err) or err)
-    vim.schedule(function() vim.notify(msg, L.ERROR, { title = "ERROR", render = "default" }) end)
+    vim.schedule(function()
+      vim.notify(msg, L.ERROR, { title = "ERROR", render = "default" })
+    end)
   end, unpack(args))
 end
 
@@ -141,14 +152,20 @@ end
 ---@vararg any
 ---@return boolean, any
 ---@overload fun(fun: function, ...): boolean, any
-function M.wrap_err(msg, func, ...) return M.pcall(msg, func, ...) end
+function M.wrap_err(msg, func, ...)
+  return M.pcall(msg, func, ...)
+end
 
-function M.capitalize(str) return (str:gsub("^%l", string.upper)) end
+function M.capitalize(str)
+  return (str:gsub("^%l", string.upper))
+end
 
 ---@param haystack string
 ---@param needle string
 ---@return boolean found true if needle in haystack
-function M.starts_with(haystack, needle) return type(haystack) == "string" and haystack:sub(1, needle:len()) == needle end
+function M.starts_with(haystack, needle)
+  return type(haystack) == "string" and haystack:sub(1, needle:len()) == needle
+end
 
 local smallcaps_mappings = {
   -- alt F ғ (ghayn)
@@ -175,15 +192,21 @@ local smallcaps_mappings = {
 ---@param text string
 ---@param options? SmallcapsOptions
 M.smallcaps = function(text, options)
-  if not text then return text end
+  if not text then
+    return text
+  end
 
   local result = text:upper()
 
   result = vim.fn.tr(result, smallcaps_mappings.alpha[1], smallcaps_mappings.alpha[2])
 
-  if not options or options.numbers then result = vim.fn.tr(result, smallcaps_mappings.numbers[1], smallcaps_mappings.numbers[2]) end
+  if not options or options.numbers then
+    result = vim.fn.tr(result, smallcaps_mappings.numbers[1], smallcaps_mappings.numbers[2])
+  end
 
-  if not options or options.symbols then result = vim.fn.tr(result, smallcaps_mappings.symbols[1], smallcaps_mappings.symbols[2]) end
+  if not options or options.symbols then
+    result = vim.fn.tr(result, smallcaps_mappings.symbols[1], smallcaps_mappings.symbols[2])
+  end
 
   return result
 end
@@ -219,7 +242,9 @@ end
 ---@return boolean
 function M.any(target, list)
   for _, item in ipairs(list) do
-    if target:match(item) then return true end
+    if target:match(item) then
+      return true
+    end
   end
   return false
 end
@@ -258,7 +283,9 @@ function M.tcopy(t)
 end
 
 function M.tshift(tbl)
-  if #tbl == 0 then return nil, {} end
+  if #tbl == 0 then
+    return nil, {}
+  end
 
   local first = tbl[1]
   local rest = {}
@@ -274,7 +301,9 @@ end
 --- REF: https://gist.github.com/sapphyrus/fd9aeb871e3ce966cc4b0b969f62f539
 function M.compare(o1, o2)
   -- same object
-  if o1 == o2 then return nil end
+  if o1 == o2 then
+    return nil
+  end
 
   local o1Type = type(o1)
   local o2Type = type(o2)
@@ -283,7 +312,9 @@ function M.compare(o1, o2)
     return { _1 = o1Type == "table" and o1Type or o1, _2 = o2Type == "table" and o2Type or o2 }
   end
   --- same type but not table, already compared above
-  if o1Type ~= "table" then return nil end
+  if o1Type ~= "table" then
+    return nil
+  end
 
   local diff = {}
 
@@ -307,14 +338,20 @@ end
 
 function M.deep_equals(o1, o2, ignore_mt)
   -- same object
-  if o1 == o2 then return true end
+  if o1 == o2 then
+    return true
+  end
 
   local o1Type = type(o1)
   local o2Type = type(o2)
   --- different type
-  if o1Type ~= o2Type then return false end
+  if o1Type ~= o2Type then
+    return false
+  end
   --- same type but not table, already compared above
-  if o1Type ~= "table" then return false end
+  if o1Type ~= "table" then
+    return false
+  end
 
   -- use metatable method
   if not ignore_mt then
@@ -328,18 +365,24 @@ function M.deep_equals(o1, o2, ignore_mt)
   -- iterate over o1
   for key1, value1 in pairs(o1) do
     local value2 = o2[key1]
-    if value2 == nil or M.deep_equals(value1, value2, ignore_mt) == false then return false end
+    if value2 == nil or M.deep_equals(value1, value2, ignore_mt) == false then
+      return false
+    end
   end
 
   --- check keys in o2 but missing from o1
   for key2, _ in pairs(o2) do
-    if o1[key2] == nil then return false end
+    if o1[key2] == nil then
+      return false
+    end
   end
 
   return true
 end
 
-function M.strim(s) return (s:gsub("^%s*(.-)%s*$", "%1")) end
+function M.strim(s)
+  return (s:gsub("^%s*(.-)%s*$", "%1"))
+end
 
 -- https://github.com/ibhagwan/fzf-lua/blob/455744b9b2d2cce50350647253a69c7bed86b25f/lua/fzf-lua/utils.lua#L401
 function M.get_visual_selection()
@@ -372,7 +415,9 @@ function M.get_visual_selection()
   local lines = vim.fn.getline(csrow, cerow)
   -- local n = cerow-csrow+1
   local n = M.tlen(lines)
-  if n <= 0 then return "" end
+  if n <= 0 then
+    return ""
+  end
   lines[n] = string.sub(lines[n], 1, cecol)
   lines[1] = string.sub(lines[1], cscol)
 
@@ -399,9 +444,13 @@ function M.clear_commandline(delay)
   --- deferred each time
   local timer
   return function()
-    if timer then timer:stop() end
+    if timer then
+      timer:stop()
+    end
     if delay == nil then
-      if timer then timer:stop() end
+      if timer then
+        timer:stop()
+      end
       return
     end
     timer = vim.defer_fn(function()
@@ -436,7 +485,9 @@ function M.close_floats()
   for _, win in ipairs(vim.api.nvim_list_wins()) do
     if vim.api.nvim_win_is_valid(win) then
       local config = vim.api.nvim_win_get_config(win)
-      if config.relative ~= "" and config.relative ~= "win" and config ~= "laststatus" then vim.api.nvim_win_close(win, false) end
+      if config.relative ~= "" and config.relative ~= "win" and config ~= "laststatus" then
+        vim.api.nvim_win_close(win, false)
+      end
     end
   end
 end
@@ -462,9 +513,10 @@ function M.clear_ui(opts)
 
   M.close_floats()
 
-  pcall(mega.blink_cursorline)
+  pcall(mega.ui.blink_cursorline)
 
   vim.cmd.redraw({ bang = true })
+  vim.cmd.update({ bang = true })
 
   -- do
   --   local ok, tsc = pcall(require, "treesitter-context")
@@ -473,12 +525,16 @@ function M.clear_ui(opts)
 
   do
     local ok, mj = pcall(require, "mini.jump")
-    if ok then mj.stop_jumping() end
+    if ok then
+      mj.stop_jumping()
+    end
   end
 
   do
     local ok, n = pcall(require, "notify")
-    if ok then n.dismiss() end
+    if ok then
+      n.dismiss()
+    end
   end
 
   M.clear_commandline()
@@ -506,7 +562,9 @@ M.buf_close = function()
       vim.cmd(("let @# = %d"):format(prev or curr))
       return
     end
-    if vim.bo[nr].buflisted then prev = nr end
+    if vim.bo[nr].buflisted then
+      prev = nr
+    end
   end
 end
 
@@ -520,7 +578,9 @@ function M.is_chonky(bufnr, filepath)
   local is_too_large = false
 
   local ok, stats = pcall(vim.uv.fs_stat, filepath)
-  if ok and stats and stats.size > max_filesize then is_too_large = true end
+  if ok and stats and stats.size > max_filesize then
+    is_too_large = true
+  end
 
   return (is_too_long or is_too_large)
 end
@@ -530,22 +590,38 @@ function M.exec(c, bool)
   vim.api.nvim_exec(c, bool)
 end
 
-function M.has(feature) return fn.has(feature) > 0 end
+function M.has(feature)
+  return fn.has(feature) > 0
+end
 
-function M.has_plugin(plugin) return require("lazy.core.config").spec.plugins[plugin] ~= nil end
+function M.has_plugin(plugin)
+  return require("lazy.core.config").spec.plugins[plugin] ~= nil
+end
 
-function M.executable(e) return fn.executable(e) > 0 end
+function M.executable(e)
+  return fn.executable(e) > 0
+end
 
 ---Determine if a value of any type is empty
 ---@param item any
 ---@return boolean?
 function M.falsy(item)
-  if not item then return true end
+  if not item then
+    return true
+  end
   local item_type = type(item)
-  if item_type == "boolean" then return not item end
-  if item_type == "string" then return item == "" end
-  if item_type == "number" then return item <= 0 end
-  if item_type == "table" then return vim.tbl_isempty(item) end
+  if item_type == "boolean" then
+    return not item
+  end
+  if item_type == "string" then
+    return item == ""
+  end
+  if item_type == "number" then
+    return item <= 0
+  end
+  if item_type == "table" then
+    return vim.tbl_isempty(item)
+  end
   return item ~= nil
 end
 
@@ -553,7 +629,9 @@ end
 ---@param item any
 ---@return boolean
 function M.empty(item)
-  if not item then return true end
+  if not item then
+    return true
+  end
   local item_type = type(item)
   if item_type == "string" then
     return item == ""
@@ -612,7 +690,9 @@ function M.debounce_trailing(func, ms, first)
       local argv = { ... }
       local argc = select("#", ...)
 
-      timer:start(ms, 0, function() pcall(vim.schedule_wrap(func), unpack(argv, 1, argc)) end)
+      timer:start(ms, 0, function()
+        pcall(vim.schedule_wrap(func), unpack(argv, 1, argc))
+      end)
     end
   else
     local argv, argc
@@ -620,7 +700,9 @@ function M.debounce_trailing(func, ms, first)
       argv = argv or { ... }
       argc = argc or select("#", ...)
 
-      timer:start(ms, 0, function() pcall(vim.schedule_wrap(func), unpack(argv, 1, argc)) end)
+      timer:start(ms, 0, function()
+        pcall(vim.schedule_wrap(func), unpack(argv, 1, argc))
+      end)
     end
   end
 
@@ -669,7 +751,9 @@ function M.wrap_selected_nodes(before, after)
   M.wrap_range(bufnr, range, before, after)
 end
 
-function M.get_file_extension(filepath) return filepath:match("^.+(%..+)$") end
+function M.get_file_extension(filepath)
+  return filepath:match("^.+(%..+)$")
+end
 
 function M.is_image(filepath)
   local ext = M.get_file_extension(filepath)
@@ -701,12 +785,16 @@ end
 
 function M.get_visible_qflists()
   -- get winnrs for qflists visible in current tab
-  return vim.iter(vim.api.nvim_tabpage_list_wins(0)):filter(function(winnr) return vim.fn.getwininfo(winnr)[1].quickfix == 1 end)
+  return vim.iter(vim.api.nvim_tabpage_list_wins(0)):filter(function(winnr)
+    return vim.fn.getwininfo(winnr)[1].quickfix == 1
+  end)
 end
 
-function M.qflist_populate(lines, opts)
+function M.setqflist(lines, opts)
   -- set qflist and open
-  if not lines or #lines == 0 then return end
+  if not lines or #lines == 0 then
+    return
+  end
 
   opts = vim.tbl_deep_extend("force", {
     simple_list = false,
@@ -722,9 +810,12 @@ function M.qflist_populate(lines, opts)
       return { filename = item, lnum = 1, col = 1, text = item }
     end)
   end
+  vim.print(lines)
 
   -- close any prior lists visible in current tab
-  if not vim.tbl_isempty(M.get_visible_qflists()) then vim.cmd([[ cclose ]]) end
+  if not vim.tbl_isempty(M.get_visible_qflists()) then
+    vim.cmd([[ cclose ]])
+  end
 
   vim.fn.setqflist(lines, opts.mode)
 
@@ -752,17 +843,23 @@ local remote_cache = {}
 -- @tparam  path: file to get root of
 -- @treturn path to the root of the filepath parameter
 function M.get_path_root(path)
-  if path == "" then return end
+  if path == "" then
+    return
+  end
 
   local root = vim.b.path_root
-  if root ~= nil then return root end
+  if root ~= nil then
+    return root
+  end
 
   local root_items = {
     ".git",
   }
 
   root = vim.fs.root(0, root_items)
-  if root == nil then return nil end
+  if root == nil then
+    return nil
+  end
   vim.b.path_root = root
 
   return root
@@ -770,20 +867,28 @@ end
 
 -- get the name of the remote repository
 function M.get_git_remote_name(root)
-  if root == nil then return end
+  if root == nil then
+    return
+  end
 
   local remote = remote_cache[root]
-  if remote ~= nil then return remote end
+  if remote ~= nil then
+    return remote
+  end
 
   -- see https://stackoverflow.com/a/42543006
   -- "basename" "-s" ".git" "`git config --get remote.origin.url`"
   local cmd = table.concat({ "git", "config", "--get remote.origin.url" }, " ")
   remote = vim.fn.system(cmd)
 
-  if vim.v.shell_error ~= 0 then return nil end
+  if vim.v.shell_error ~= 0 then
+    return nil
+  end
 
   remote = vim.fs.basename(remote)
-  if remote == nil then return end
+  if remote == nil then
+    return
+  end
 
   remote = vim.fn.fnamemodify(remote, ":r")
   remote_cache[root] = remote
@@ -801,16 +906,32 @@ function M.get_bufnrs()
   local bufnrs = vim.tbl_filter(function(bufnr)
     local bufname = vim.api.nvim_buf_get_name(bufnr)
 
-    if not vim.api.nvim_buf_is_loaded(bufnr) then return false end
-    if not vim.api.nvim_buf_is_valid(bufnr) then return false end
+    if not vim.api.nvim_buf_is_loaded(bufnr) then
+      return false
+    end
+    if not vim.api.nvim_buf_is_valid(bufnr) then
+      return false
+    end
 
-    if bufname == "" then return false end
-    if string.match(bufname, "term:") then return false end
-    if vim.bo[bufnr].buftype == "terminal" then return false end
-    if vim.bo[bufnr].filetype == "megaterm" then return false end
-    if vim.bo[bufnr].filetype == "terminal" then return false end
+    if bufname == "" then
+      return false
+    end
+    if string.match(bufname, "term:") then
+      return false
+    end
+    if vim.bo[bufnr].buftype == "terminal" then
+      return false
+    end
+    if vim.bo[bufnr].filetype == "megaterm" then
+      return false
+    end
+    if vim.bo[bufnr].filetype == "terminal" then
+      return false
+    end
 
-    if 1 ~= vim.fn.buflisted(bufnr) then return false end
+    if 1 ~= vim.fn.buflisted(bufnr) then
+      return false
+    end
 
     return true
   end, vim.api.nvim_list_bufs())
@@ -831,167 +952,6 @@ function M.get_buf_current_line(bufnr)
   return vim.api.nvim_buf_get_lines(bufnr, start_line, start_line + 1, false)[1] or ""
 end
 
---[[
--- HIGHLIGHTS -----------------------------------------------------------------
---]]
-
----Convert a hex color to RGB
----@param color string
----@return number
----@return number
----@return number
-local function hex_to_rgb(color)
-  local hex = color:gsub("#", "")
-  return tonumber(hex:sub(1, 2), 16), tonumber(hex:sub(3, 4), 16), tonumber(hex:sub(5), 16)
-end
-
-local function alter(attr, percent) return math.floor(attr * (100 + percent) / 100) end
-
----@source https://stackoverflow.com/q/5560248
----@see: https://stackoverflow.com/a/37797380
----Darken a specified hex color
----@param color string
----@param percent number
----@return string
-function M.hl.alter_color(color, percent)
-  local r, g, b = hex_to_rgb(color)
-  if not r or not g or not b then return "NONE" end
-  r, g, b = alter(r, percent), alter(g, percent), alter(b, percent)
-  r, g, b = math.min(r, 255), math.min(g, 255), math.min(b, 255)
-  return fmt("#%02x%02x%02x", r, g, b)
-end
-
-function M.hl.extend(target, source, opts) M.hl.set(target, vim.tbl_extend("force", M.hl.get(source), opts or {})) end
-
---- Check if the current window has a winhighlight
---- which includes the specific target highlight
---- @param win_id integer
---- @vararg string
---- @return boolean, string
-function M.hl.winhighlight_exists(win_id, ...)
-  local win_hl = vim.wo[win_id].winhighlight
-  for _, target in ipairs({ ... }) do
-    if win_hl:match(target) ~= nil then return true, win_hl end
-  end
-  return false, win_hl
-end
-
----@param group_name string A highlight group name
-local function get_hl(group_name)
-  local ok, hl = pcall(api.nvim_get_hl_by_name, group_name, true)
-  if ok then
-    hl.foreground = hl.foreground and "#" .. bit.tohex(hl.foreground, 6)
-    hl.background = hl.background and "#" .. bit.tohex(hl.background, 6)
-    hl[true] = nil -- BUG: API returns a true key which errors during the merge
-    return hl
-  end
-  return {}
-end
-
----A mechanism to allow inheritance of the winhighlight of a specific
----group in a window
----@param win_id number
----@param target string
----@param name string
----@param fallback string
-function M.hl.adopt_winhighlight(win_id, target, name, fallback)
-  local win_hl_name = name .. win_id
-  local _, win_hl = M.hl.winhighlight_exists(win_id, target)
-  local hl_exists = fn.hlexists(win_hl_name) > 0
-  if hl_exists then return win_hl_name end
-  local parts = vim.split(win_hl, ",")
-  local found = M.find(parts, function(part) return part:match(target) end)
-  if not found then return fallback end
-  local hl_group = vim.split(found, ":")[2]
-  local bg = M.hl.get_hl(hl_group, "bg")
-  M.hl.set_hl(win_hl_name, { background = bg, inherit = fallback })
-  return win_hl_name
-end
-
----This helper takes a table of highlights and converts any highlights
----specified as `highlight_prop = { from = 'group'}` into the underlying colour
----by querying the highlight property of the from group so it can be used when specifying highlights
----as a shorthand to derive the right color.
----For example:
----```lua
----  M.set_hl({ MatchParen = {foreground = {from = 'ErrorMsg'}}})
----```
----This will take the foreground colour from ErrorMsg and set it to the foreground of MatchParen.
----@param opts table<string, string|boolean|table<string,string>>
-local function convert_hl_to_val(opts)
-  for name, value in pairs(opts) do
-    if type(value) == "table" and value.from then opts[name] = M.hl.get_hl(value.from, vim.F.if_nil(value.attr, name)) end
-  end
-end
-
----@param name string
----@param opts table
-function M.hl.set_hl(name, opts)
-  assert(name and opts, "Both 'name' and 'opts' must be specified")
-  local hl = get_hl(opts.inherit or name)
-  convert_hl_to_val(opts)
-  opts.inherit = nil
-  local ok, msg = pcall(api.nvim_set_hl, 0, name, vim.tbl_deep_extend("force", hl, opts))
-  if not ok then vim.notify(fmt("Failed to set %s because: %s", name, msg)) end
-end
-M.hl.set = M.hl.set_hl
-
----Get the value a highlight group whilst handling errors, fallbacks as well as returning a gui value
----in the right format
----@param group string
----@param attribute string
----@param fallback string?
----@return string
-function M.hl.get_hl(group, attribute, fallback)
-  if not group then
-    vim.notify("Cannot get a highlight without specifying a group", levels.ERROR)
-    return "NONE"
-  end
-  local hl = get_hl(group)
-  attribute = ({ fg = "foreground", bg = "background" })[attribute] or attribute
-  local color = hl[attribute] or fallback
-  if not color then
-    vim.schedule(function() vim.notify(fmt("%s %s does not exist", group, attribute), levels.INFO) end)
-    return "NONE"
-  end
-  -- convert the decimal RGBA value from the hl by name to a 6 character hex + padding if needed
-  return color
-end
-M.hl.get = M.hl.get_hl
-
-function M.hl.clear_hl(name)
-  assert(name, "name is required to clear a highlight")
-  api.nvim_set_hl(0, name, {})
-end
-M.hl.clear = M.hl.clear_hl
-
----Apply a list of highlights
----@param hls table<string, table<string, boolean|string>>
-function M.hl.all(hls)
-  for name, hl in pairs(hls) do
-    M.hl.set_hl(name, hl)
-  end
-end
-
-function M.hl.group(name, opts) vim.api.nvim_set_hl(0, name, opts) end
-
----------------------------------------------------------------------------------
--- Plugin highlights
----------------------------------------------------------------------------------
----Apply highlights for a plugin and refresh on colorscheme change
----@param name string plugin name
----@vararg table<string, table> map of highlights
-function M.hl.plugin(name, hls)
-  name = name:gsub("^%l", string.upper) -- capitalise the name for autocommand convention sake
-  M.all(hls)
-  mega.augroup(fmt("%sHighlightOverrides", name), {
-    {
-      event = { "ColorScheme" },
-      command = function() M.all(hls) end,
-    },
-  })
-end
-
 ---Truncate a string in the middle, inserting a separator.
 ---
 ---@param str string The string to be truncated
@@ -1000,7 +960,7 @@ end
 ---             separator - The separator to insert in the middle of the truncated string
 ---@return string string The truncated string
 ---TODO: be able to choose the position of the separator (left, right, center)
-function M.strings.truncateString(str, opts)
+function M.str.truncateString(str, opts)
   opts = opts or {}
 
   local length = opts.length or vim.o.columns / 2
@@ -1022,7 +982,7 @@ end
 ---@return HighlightedChunks chunks The truncated chunks
 ---TODO: be able to choose the position of the separator (left, right, center)
 ---TODO: support chunks nesting
-function M.strings.truncateChunks(chunks, opts)
+function M.str.truncateChunks(chunks, opts)
   opts = opts or {}
 
   local length = opts.length or vim.o.columns / 2
@@ -1036,7 +996,9 @@ function M.strings.truncateChunks(chunks, opts)
   end
 
   -- if total length is less or equal to the maxium length, return the original chunks
-  if total_length <= length then return chunks end
+  if total_length <= length then
+    return chunks
+  end
 
   local sep_length = #separator
   local part_length = math.floor((length - sep_length) / 2)
@@ -1092,7 +1054,9 @@ function M.strings.truncateChunks(chunks, opts)
 
     local is_valid = is_string and has_text and not is_in_range
 
-    if is_valid then table.insert(truncated_chunks, v) end
+    if is_valid then
+      table.insert(truncated_chunks, v)
+    end
   end
 
   table.insert(truncated_chunks, #truncated_chunks / 2, { separator, separator_hg })
@@ -1100,36 +1064,126 @@ function M.strings.truncateChunks(chunks, opts)
   return truncated_chunks
 end
 
-function M.echo(chunks, async, opts)
-  async = async or false
-  opts = opts or {}
-
-  vim.api.nvim_echo(chunks, async, opts)
-end
-
-function M.command(name, command, opts)
-  opts = opts or {}
-  vim.api.nvim_create_user_command(name, command, opts)
-end
-
----An insert mode implementation of `vim.treesitter`'s `get_node`
----@param opts table? Opts to be passed to `get_node`
----@return TSNode node The node at the cursor
-local get_node_insert_mode = function(opts)
-  opts = opts or {}
-  local ins_curs = cur_pos(0)
-  ins_curs[1] = math.max(ins_curs[1] - 1, 0)
-  ins_curs[2] = math.max(ins_curs[2] - 1, 0)
-  opts.pos = ins_curs
-  return get_node(opts) --[[@as TSNode]]
-end
-
 ---Whether or not the cursor is in a JSX-tag region
 ---@param insert_mode boolean Whether or not the cursor is in insert mode
 ---@return boolean
 function M.in_jsx_tags(insert_mode)
+  ---An insert mode implementation of `vim.treesitter`'s `get_node`
+  ---@param opts table? Opts to be passed to `get_node`
+  ---@return TSNode node The node at the cursor
+  local get_node_insert_mode = function(opts)
+    opts = opts or {}
+    local ins_curs = cur_pos(0)
+    ins_curs[1] = math.max(ins_curs[1] - 1, 0)
+    ins_curs[2] = math.max(ins_curs[2] - 1, 0)
+    opts.pos = ins_curs
+    return get_node(opts) --[[@as TSNode]]
+  end
+
   local current_node = insert_mode and get_node_insert_mode() or get_node()
   return current_node and current_node:__has_ancestor({ "jsx_element" }) or false
+end
+
+---- Utilities for color manipulation and blending
+-- Inspired by the Vesper theme's color utilities
+-- See: https://github.com/datsfilipe/vesper.nvim
+--------------------------------------------------
+
+---Convert a hexadecimal color string to RGB values
+---@param hex string The hex color code (format: #RRGGBB)
+---@return table RGB values as a table {r, g, b} with values from 0-255
+local function hex_to_rgb(hex)
+  local hex_type = "[abcdef0-9][abcdef0-9]"
+  local pat = "^#(" .. hex_type .. ")(" .. hex_type .. ")(" .. hex_type .. ")$"
+  hex = string.lower(hex)
+
+  assert(string.find(hex, pat) ~= nil, "hex_to_rgb: invalid hex: " .. tostring(hex))
+
+  local red, green, blue = string.match(hex, pat)
+  return { tonumber(red, 16), tonumber(green, 16), tonumber(blue, 16) }
+end
+
+---Blend two colors together based on a specified percentage
+---@param color1 string The first hex color (#RRGGBB)
+---@param color2 string The second hex color (#RRGGBB)
+---@param percentage number The percentage of color1 to use (0.0 to 1.0)
+---@return string A hex color string representing the blended result
+function M.hl.mix(color1, color2, percentage)
+  assert(type(color1) == "string", string.format("color1 must be a string, got %s", type(color1)))
+  assert(type(color2) == "string", string.format("color2 must be a string, got %s", type(color2)))
+
+  local rgb1 = hex_to_rgb(color1)
+  local rgb2 = hex_to_rgb(color2)
+
+  local blend_channel = function(i)
+    local ret = (percentage * rgb1[i] + ((1 - percentage) * rgb2[i]))
+    return math.floor(math.min(math.max(0, ret), 255) + 0.5)
+  end
+
+  return string.format("#%02X%02X%02X", blend_channel(1), blend_channel(2), blend_channel(3))
+end
+
+---Lighten a color by mixing it with white
+---@param color string The hex color to lighten (#RRGGBB)
+---@param value number How much white to mix in (0.0 to 1.0)
+---@return string A lightened hex color string
+function M.hl.tint(color, value)
+  return M.hl.mix("#ffffff", color, math.abs(value))
+end
+
+---Darken a color by mixing it with black
+---@param color string The hex color to darken (#RRGGBB)
+---@param value number How much black to mix in (0.0 to 1.0)
+---@return string A darkened hex color string
+function M.hl.shade(color, value)
+  return M.hl.mix("#000000", color, math.abs(value))
+end
+
+function M.sudo_exec(cmd, print_output)
+  vim.fn.inputsave()
+  local password = vim.fn.inputsecret("Password: ")
+  vim.fn.inputrestore()
+  if not password or #password == 0 then
+    M.warn("Invalid password, sudo aborted")
+    return false
+  end
+  local ok, res = pcall(function()
+    return vim.system({ "sh", "-c", string.format("echo '%s' | sudo -p '' -S %s", password, cmd) }):wait()
+  end)
+  if not ok or res.code ~= 0 then
+    print("\r\n")
+    M.err(not ok and res or res.stderr)
+    return false
+  end
+  if print_output then
+    print("\r\n", res.stderr)
+  end
+  return true
+end
+
+function M.sudo_write(tmpfile, filepath)
+  if not tmpfile then
+    tmpfile = vim.fn.tempname()
+  end
+  if not filepath then
+    filepath = vim.fn.expand("%")
+  end
+  if not filepath or #filepath == 0 then
+    M.err("E32: No file name")
+    return
+  end
+  -- `bs=1048576` is equivalent to `bs=1M` for GNU dd or `bs=1m` for BSD dd
+  -- Both `bs=1M` and `bs=1m` are non-POSIX
+  local cmd = string.format("dd if=%s of=%s bs=1048576", vim.fn.shellescape(tmpfile), vim.fn.shellescape(filepath))
+  -- no need to check error as this fails the entire function
+  vim.api.nvim_exec2(string.format("write! %s", tmpfile), { output = true })
+  if M.sudo_exec(cmd) then
+    -- refreshes the buffer and prints the "written" message
+    vim.cmd.checktime()
+    -- exit command mode
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", true)
+  end
+  vim.fn.delete(tmpfile)
 end
 
 return M

@@ -1,0 +1,171 @@
+#!/usr/bin/env bash
+# Get Chrome extension info formatted for Nix chromium extensions
+#
+# Usage: chrome-ext-info <extension-id-or-name> [--name NAME] [--hash]
+#
+# Options:
+#   --name NAME    Optional human-readable name for comments
+#   --hash         Download and compute SHA256 hash
+#
+# If input is a 32-character lowercase ID, fetch that extension directly.
+# Otherwise, search Chrome Web Store and show results.
+
+set -euo pipefail
+
+QUERY=""
+NAME=""
+COMPUTE_HASH=false
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --name|-n)
+      NAME="$2"
+      shift 2
+      ;;
+    --hash|-h)
+      COMPUTE_HASH=true
+      shift
+      ;;
+    *)
+      if [ -z "$QUERY" ]; then
+        QUERY="$1"
+      else
+        echo "Error: Unknown argument: $1" >&2
+        exit 1
+      fi
+      shift
+      ;;
+  esac
+done
+
+if [ -z "$QUERY" ]; then
+  echo "Usage: $0 <extension-id-or-name> [--name NAME] [--hash]" >&2
+  echo "Example: $0 gfbliohnnapiefjpjlpjnehglfpaknnc --name surfingkeys --hash" >&2
+  echo "Example: $0 surfingkeys --hash" >&2
+  exit 1
+fi
+
+# Check if input is an extension ID (32 lowercase letters)
+if [[ "$QUERY" =~ ^[a-z]{32}$ ]]; then
+  # Direct ID lookup
+  EXTENSION_ID="$QUERY"
+else
+  # Search mode
+  echo "Searching for: $QUERY" >&2
+  echo "" >&2
+
+  # URL encode the query
+  ENCODED_QUERY=$(printf %s "$QUERY" | jq -sRr @uri)
+
+  # Fetch search results
+  HTML=$(curl -fsSL "https://chrome.google.com/webstore/search/${ENCODED_QUERY}" 2>/dev/null)
+
+  if [ -z "$HTML" ]; then
+    echo "Error: Failed to fetch search results" >&2
+    exit 1
+  fi
+
+  # Extract extension IDs
+  IDS=$(echo "$HTML" | grep -o 'data-item-id="[^"]*"' | sed 's/data-item-id="//;s/"$//' | head -5)
+
+  if [ -z "$IDS" ]; then
+    echo "No extensions found matching: $QUERY" >&2
+    exit 1
+  fi
+
+  # Show results
+  COUNT=1
+  echo "Found extensions:" >&2
+  echo "$IDS" | while read -r ID; do
+    TITLE=$(echo "$HTML" | grep -A 20 "data-item-id=\"$ID\"" | grep -o '<h2 class="CiI2if">[^<]*</h2>' | sed 's/<[^>]*>//g' | head -1)
+    if [ -z "$TITLE" ]; then
+      TITLE="(Unknown)"
+    fi
+    echo "  [$COUNT] $TITLE" >&2
+    echo "      ID: $ID" >&2
+    COUNT=$((COUNT + 1))
+  done
+  echo "" >&2
+
+  # Use first result
+  EXTENSION_ID=$(echo "$IDS" | head -1)
+  TITLE=$(echo "$HTML" | grep -A 20 "data-item-id=\"$EXTENSION_ID\"" | grep -o '<h2 class="CiI2if">[^<]*</h2>' | sed 's/<[^>]*>//g' | head -1)
+
+  if [ -z "$NAME" ] && [ -n "$TITLE" ]; then
+    NAME="$TITLE"
+  fi
+
+  echo "Using: $NAME (ID: $EXTENSION_ID)" >&2
+  echo "" >&2
+fi
+
+# Download the CRX file to extract version info
+CRX_URL="https://clients2.google.com/service/update2/crx?response=redirect&acceptformat=crx3&prodversion=120.0.0.0&x=id%3D${EXTENSION_ID}%26installsource%3Dondemand%26uc"
+
+echo "Downloading extension..." >&2
+TEMP_DIR=$(mktemp -d)
+TEMP_FILE="$TEMP_DIR/${EXTENSION_ID}.crx"
+EXTRACT_DIR="$TEMP_DIR/extracted"
+
+if ! curl -fsSL "$CRX_URL" -o "$TEMP_FILE" 2>/dev/null; then
+  rm -rf "$TEMP_DIR"
+  echo "Error: Failed to download extension '$EXTENSION_ID'" >&2
+  exit 1
+fi
+
+# Extract the CRX file (it's a ZIP after the header)
+mkdir -p "$EXTRACT_DIR"
+
+# CRX files have a header, need to skip it and extract the ZIP
+# Try unzip first (sometimes works directly), suppress errors
+unzip -q "$TEMP_FILE" -d "$EXTRACT_DIR" 2>/dev/null || true
+
+# Extract version from manifest.json
+MANIFEST="$EXTRACT_DIR/manifest.json"
+if [ -f "$MANIFEST" ]; then
+  VERSION=$(jq -r '.version' "$MANIFEST" 2>/dev/null || echo "")
+else
+  rm -rf "$TEMP_DIR"
+  echo "Error: Could not extract manifest.json from extension" >&2
+  exit 1
+fi
+
+if [ -z "$VERSION" ]; then
+  rm -rf "$TEMP_DIR"
+  echo "Error: Could not parse version from manifest" >&2
+  exit 1
+fi
+
+# Compute hash if requested
+HASH=""
+if [ "$COMPUTE_HASH" = true ]; then
+  echo "Computing hash..." >&2
+  HASH=$(nix hash file --type sha256 "$TEMP_FILE" 2>/dev/null || nix-hash --type sha256 --flat --base32 "$TEMP_FILE" 2>/dev/null)
+  if [ -z "$HASH" ]; then
+    echo "Warning: Failed to compute hash with nix tools, trying shasum..." >&2
+    RAW_HASH=$(shasum -a 256 "$TEMP_FILE" | awk '{print $1}')
+    if [ -n "$RAW_HASH" ]; then
+      HASH="sha256-${RAW_HASH}"
+    fi
+  fi
+  echo "Hash computed successfully" >&2
+fi
+
+rm -rf "$TEMP_DIR"
+
+# Output formatted Nix code
+echo "{"
+echo "  id = \"$EXTENSION_ID\";"
+if [ -n "$NAME" ]; then
+  echo "  # $NAME"
+fi
+echo "  version = \"$VERSION\";"
+
+if [ -n "$HASH" ]; then
+  echo "  sha256 = \"$HASH\";"
+else
+  echo "  sha256 = lib.fakeSha256; # Run with --hash to compute"
+fi
+
+echo "}"

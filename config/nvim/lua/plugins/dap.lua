@@ -7,7 +7,12 @@ return {
   dependencies = {
     "rcarriga/nvim-dap-ui",
     "theHamsta/nvim-dap-virtual-text",
-    { "LiadOz/nvim-dap-repl-highlights", build = function() vim.cmd("TSInstall dap_repl") end },
+    {
+      "LiadOz/nvim-dap-repl-highlights",
+      build = function()
+        vim.cmd("TSInstall dap_repl")
+      end,
+    },
     -- {
     --   "jbyuki/one-small-step-for-vimkind",
     --   keys = {
@@ -22,7 +27,7 @@ return {
     "jay-babu/mason-nvim-dap.nvim",
   },
   config = function()
-    local dap = require('plugins.dap')
+    local dap = require("plugins.dap")
     local dapui = require("dapui")
     require("nvim-dap-repl-highlights").setup()
     require("mason-nvim-dap").setup({
@@ -46,7 +51,9 @@ return {
     vim.keymap.set("n", "<localleader>do", dap.step_over, { desc = "debug: Step Over" })
     vim.keymap.set("n", "<localleader>dt", dap.step_out, { desc = "Debug: Step Out" })
     vim.keymap.set("n", "<localleader>db", dap.toggle_breakpoint, { desc = "Debug: Toggle Breakpoint" })
-    vim.keymap.set("n", "<localleader>dB", function() dap.set_breakpoint(vim.fn.input("Breakpoint condition: ")) end, { desc = "Debug: Set Breakpoint" })
+    vim.keymap.set("n", "<localleader>dB", function()
+      dap.set_breakpoint(vim.fn.input("Breakpoint condition: "))
+    end, { desc = "Debug: Set Breakpoint" })
 
     vim.keymap.set("n", "<localleader>dc", dap.run_to_cursor, { desc = "Debug: Run to cursor" })
     vim.keymap.set("n", "<localleader>dx", dap.terminate, { desc = "Debug: Terminate" })
@@ -125,28 +132,33 @@ return {
     vim.fn.sign_define({
       {
         name = "DapBreakpoint",
-        text = SETTINGS.icons.misc.bug,
+        text = Icons.misc.bug,
         texthl = "DapBreakpoint",
         linehl = "",
         numhl = "",
       },
       {
         name = "DapStopped",
-        text = SETTINGS.icons.misc.bookmark,
+        text = Icons.misc.bookmark,
         texthl = "DapStopped",
         linehl = "",
         numhl = "",
       },
     })
 
-    vim.keymap.set("n", "<localleader>d?", function() require("dapui").eval(nil, { enter = true }) end)
+    vim.keymap.set("n", "<localleader>d?", function()
+      require("dapui").eval(nil, { enter = true })
+    end)
     -- Toggle to see last session result. Without this, you can't see session output in case of unhandled exception.
     vim.keymap.set("n", "<localleader>dl", dapui.toggle, { desc = "Debug: See last session result." })
 
-    dap.adapters.nlua = function(callback, config) callback({ type = "server", host = config.host or "127.0.0.1", port = config.port or 8086 }) end
+    dap.adapters.nlua = function(callback, config)
+      callback({ type = "server", host = config.host or "127.0.0.1", port = config.port or 8086 })
+    end
 
     -- local elixir_ls_debugger = vim.fn.exepath("elixir-ls-debugger")
-    local elixir_ls_debugger = vim.fn.expand(string.format("%s/lsp/elixir-ls/%s", vim.env.XDG_DATA_HOME, "debug_adapter.sh"))
+    local elixir_ls_debugger =
+      vim.fn.expand(string.format("%s/lsp/elixir-ls/%s", vim.env.XDG_DATA_HOME, "debug_adapter.sh"))
 
     if elixir_ls_debugger ~= "" then
       dap.adapters.mix_task = {
@@ -199,6 +211,48 @@ return {
       }
     end
 
+    -- Python remote debugging for LaunchDeck devspace
+    dap.adapters.python = {
+      type = "server",
+      host = "localhost",
+      port = 5678,
+    }
+
+    dap.configurations.python = {
+      {
+        type = "python",
+        request = "attach",
+        name = "🚀 Attach to LaunchDeck DevSpace API",
+        connect = {
+          host = "localhost",
+          port = 5678,
+        },
+        pathMappings = {
+          {
+            localRoot = vim.fn.getcwd() .. "/app",
+            remoteRoot = "/app/app",
+          },
+        },
+      },
+      {
+        type = "python",
+        request = "attach",
+        name = "🚀 Attach to LaunchDeck DevSpace API (custom path)",
+        connect = {
+          host = "localhost",
+          port = 5678,
+        },
+        pathMappings = {
+          {
+            localRoot = function()
+              return vim.fn.input("Local root path: ", vim.fn.getcwd(), "file")
+            end,
+            remoteRoot = "/app/app",
+          },
+        },
+      },
+    }
+
     dap.configurations.lua = {
       {
         type = "nlua",
@@ -207,10 +261,20 @@ return {
       },
     }
 
-    dap.listeners.before.attach.dapui_config = function() dapui.open() end
-    dap.listeners.before.launch.dapui_config = function() dapui.open() end
-    dap.listeners.before.event_terminated.dapui_config = function() dapui.close() end
-    dap.listeners.before.event_exited.dapui_config = function() dapui.close() end
-    dap.listeners.after.event_initialized.dapui_config = function() dapui.open() end
+    dap.listeners.before.attach.dapui_config = function()
+      dapui.open()
+    end
+    dap.listeners.before.launch.dapui_config = function()
+      dapui.open()
+    end
+    dap.listeners.before.event_terminated.dapui_config = function()
+      dapui.close()
+    end
+    dap.listeners.before.event_exited.dapui_config = function()
+      dapui.close()
+    end
+    dap.listeners.after.event_initialized.dapui_config = function()
+      dapui.open()
+    end
   end,
 }

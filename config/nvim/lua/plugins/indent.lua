@@ -1,7 +1,7 @@
 local SETTINGS = require("config.options")
 
 return {
-  { "megalithic/virt-column.nvim", opts = { char = SETTINGS.virt_column_char }, event = "VimEnter" },
+  { "megalithic/virt-column.nvim", opts = { char = vim.g.virt_column_char }, event = "VimEnter" },
   -- {
   --   -- NOTE: we also have `mini.indentscope` that is handling current scope
   --   "lukas-reineke/indent-blankline.nvim",
@@ -10,7 +10,7 @@ return {
   --   main = "ibl",
   --   opts = {
   --     indent = {
-  --       char = SETTINGS.indent_char,
+  --       char = vim.g.indent_char,
   --       smart_indent_cap = false,
   --     },
   --     scope = {

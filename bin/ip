@@ -1,25 +1,37 @@
-#!/usr/bin/env zsh
+#!/usr/bin/env bash
 
 wan=$(dig +short myip.opendns.com @resolver1.opendns.com)
 
 tun=""
 for i in {0..5}; do
-  [[ -n $(ifconfig utun$i >/dev/null 2>&1 | rg 'inet ') ]] && tun=$(ifconfig utun$i >/dev/null 2>&1 | rg 'inet ' | awk '{print "["$3"]"}')
+  [[ -n $(ifconfig utun$i > /dev/null 2>&1 | rg 'inet ') ]] && tun=$(ifconfig utun$i > /dev/null 2>&1 | rg 'inet ' | awk '{print "["$3"]"}')
 done
 
 lan=""
 for i in {0..8}; do
-  [[ -n $(ifconfig en$i >/dev/null 2>&1 | rg 'inet ') ]] && lan=$(ifconfig en$i >/dev/null 2>&1 | rg 'inet ' | awk '{print $3}')
+  [[ -n $(ifconfig en$i > /dev/null 2>&1 | rg 'inet ') ]] && lan=$(ifconfig en$i > /dev/null 2>&1 | rg 'inet ' | awk '{print $3}')
   # [[ -n $(ifconfig en$i >/dev/null 2>&1 | rg 'inet ') ]] && lan=$(ifconfig en$i >/dev/null 2>&1 | rg 'inet ' | awk '$2 ~ /^[[:blank:]]*192/ {print $2}')
 done
+
+# wifi=""
+# for i in {0..8}; do
+#   networksetup -getairportpower en$i > /dev/null 2>&1
+#   if $? -eq 0; then
+#     wifi = "en$i"
+#   else
+#     break
+#   fi
+# done
 
 [[ -n $wan ]] && wan="$(tput setaf 2)(wan) 󰖈 $wan"
 [[ -n $tun ]] && tun="$(tput setaf 4)(vpn) 󰌚 $tun"
 [[ -n $lan ]] && lan="$(tput setaf 3)(lan)  $lan"
+# [[ -n $wifi ]] && wifi="$(tput setaf 6)(wifi)  $wifi"
 
 [[ -n $wan ]] && echo "$wan\r"
 [[ -n $tun ]] && echo "$tun\r"
 [[ -n $lan ]] && echo "$lan\r"
+# [[ -n $wifi ]] && echo "$wifi\r"
 
 # TODO:
 #

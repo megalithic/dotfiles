@@ -8,7 +8,7 @@ return {
   cond = not vim.g.started_by_firenvim and not vim.env.TMUX_POPUP,
   config = function()
     local SETTINGS = require("config.options")
-    local icons = SETTINGS.icons
+    local icons = Icons
     local fmt = string.format
 
     -- if #vim.api.nvim_list_tabpages() > 1 then vim.o.showtabline = 2 end

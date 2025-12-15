@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+# set -euo pipefail
+
+PREFERRED_DEVICES=("Samson GoMic" "megabose")
+
+AVAILABLE_INPUTS=$(SwitchAudioSource -a -t input)
+
+if [ -n "$1" ]; then
+  echo "Adding $1 to available inputs"
+  AVAILABLE_INPUTS="$AVAILABLE_INPUTS"$'\n'"$1"
+fi
+
+echo "Available inputs: $AVAILABLE_INPUTS"
+
+for DEVICE in "${PREFERRED_DEVICES[@]}"; do
+  if echo "$AVAILABLE_INPUTS" | grep -q "$DEVICE"; then
+    SwitchAudioSource -t input -s "$DEVICE"
+    osascript -e "display notification \"Input switched to $DEVICE\" with title \"Audio Input\""
+    exit 0
+  fi
+done
+
+SwitchAudioSource -t input -s "MacBook Pro Microphone"
+osascript -e "display notification \"Input switched to default: MacBook Pro Microphone\" with title \"Audio Input\""

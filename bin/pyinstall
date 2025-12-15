@@ -1,9 +1,0 @@
-#!/bin/bash
-
-[[ -f "$ZDOTDIR/lib/helpers.zsh" ]] && source "$ZDOTDIR/lib/helpers.zsh"
-
-log "updating pip.."
-python -m pip install --upgrade pip
-
-log "installing python packages.."
-cat "$DOTS/asdf/default-python-packages" | xargs pip3 install

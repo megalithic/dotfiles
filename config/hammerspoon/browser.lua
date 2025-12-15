@@ -1,5 +1,6 @@
 local wm = require("wm")
 local enum = require("hs.fnutils")
+local fmt = string.format
 
 local obj = {}
 obj.__index = obj
@@ -11,7 +12,9 @@ local supportedBrowsers =
 
 local dbg = function(str, ...)
   str = string.format(":: [%s] %s", "browser", str)
-  if true then return print(string.format(str, ...)) end
+  if true then
+    return print(string.format(str, ...))
+  end
 end
 
 function obj.tabCount()
@@ -104,7 +107,7 @@ function obj.jump(url)
     })();
     ]])
 
-    note(fmt("[RUN] %s.jump/%s (%s)", obj.name, app:bundleID(), jumpedTab or url))
+    U.log.i(fmt("[RUN] %s.jump/%s (%s)", obj.name, app:bundleID(), jumpedTab or url))
     return jumpedTab
   else
     return nil
@@ -113,27 +116,31 @@ end
 
 function obj:splitTab(to_next_screen)
   -- Move current window to the left half
-  if not to_next_screen then wm.place(POSITIONS.halves.left) end
+  if not to_next_screen then
+    wm.place(C.grid.halves.left)
+  end
 
   hs.timer.doAfter(0.25, function()
     local app = hs.application.get(BROWSER) or hs.application.frontmostApplication()
 
     if app and enum.contains(supportedBrowsers, app:name()) then
       local moveTab = { "Tab", "Move Tab to New Window" }
-      if string.match(app:name() or "", "Safari") then moveTab = { "Window", "Move Tab to New Window" } end
+      if string.match(app:name() or "", "Safari") then
+        moveTab = { "Window", "Move Tab to New Window" }
+      end
       app:selectMenuItem(moveTab)
 
       -- Move the split tab to the right of the screen
       if to_next_screen then
-        app:selectMenuItem({ "Window", fmt("Move to %s", DISPLAYS.internal) })
-        wm.place(POSITIONS.full)
-        note(fmt("[RUN] %s.splitTab/%s (next screen, full)", obj.name, app:bundleID()))
+        app:selectMenuItem({ "Window", fmt("Move to %s", C.displays.internal) })
+        wm.place(C.grid.full)
+        U.log.i(fmt("[RUN] %s.splitTab/%s (next screen, full)", obj.name, app:bundleID()))
       else
-        wm.place(POSITIONS.halves.right)
-        note(fmt("[RUN] %s.splitTab/%s (same screen, half)", obj.name, app:bundleID()))
+        wm.place(C.grid.halves.right)
+        U.log.i(fmt("[RUN] %s.splitTab/%s (same screen, half)", obj.name, app:bundleID()))
       end
     else
-      warn(fmt("[RUN] %s.splitTab/%s unsupported browser", obj.name, app:bundleID()))
+      U.log.w(fmt("[RUN] %s.splitTab/%s unsupported browser", obj.name, app:bundleID()))
     end
   end)
 end
@@ -189,7 +196,9 @@ function obj.updateTabCountMenubar()
       font = { name = DefaultFont.name, size = 13 },
     })
 
-    if tonumber(count) < MAX_TABS_COUNT then tab_text = "" end
+    if tonumber(count) < MAX_TABS_COUNT then
+      tab_text = ""
+    end
 
     tabCountMenubar:setTitle(tab_text)
   end

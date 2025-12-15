@@ -15,10 +15,8 @@ function obj:start(opts)
   _appObj = opts["appObj"]
   local event = opts["event"]
 
-  if obj.modal then obj.modal:enter() end
-
-  if event == hs.application.watcher.activated or event == hs.application.watcher.launched then
-    require("spotify"):start()
+  if obj.modal then
+    obj.modal:enter()
   end
 
   return self
@@ -28,7 +26,9 @@ function obj:stop(opts)
   opts = opts or {}
   local event = opts["event"]
 
-  if obj.modal then obj.modal:exit() end
+  if obj.modal then
+    obj.modal:exit()
+  end
 
   if
     _appObj
@@ -36,8 +36,6 @@ function obj:stop(opts)
     and (#_appObj:allWindows() == 0 or (#_appObj:allWindows() == 1 and _appObj:getWindow("") ~= nil))
   then
     _appObj:kill()
-  elseif event == hs.application.watcher.terminated then
-    require("spotify"):stop()
   end
 
   return self

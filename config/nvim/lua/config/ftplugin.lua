@@ -11,12 +11,16 @@ local did_setup = false
 local M = {}
 
 local function validate_keys(keys)
-  if not keys then return end
+  if not keys then
+    return
+  end
   vim.validate({
     bindings = { keys, "t" },
   })
   for _, v in ipairs(keys) do
-    if type(v) ~= "table" then error("ftplugin keys must be an array of arrays") end
+    if type(v) ~= "table" then
+      error("ftplugin keys must be an array of arrays")
+    end
   end
 end
 
@@ -34,10 +38,14 @@ end
 ---Get a filetype config
 ---@param name string
 ---@return FiletypeConfig|nil
-M.get = function(name) return configs[name] end
+M.get = function(name)
+  return configs[name]
+end
 
 local function merge_callbacks(fn1, fn2)
-  if not fn1 and not fn2 then return nil end
+  if not fn1 and not fn2 then
+    return nil
+  end
   if fn1 then
     if fn2 then
       return function(...)
@@ -90,7 +98,9 @@ function M.extend(name, new_config)
   conf.keys = merge_keys(conf.keys, new_config.keys)
   conf.compiler = coalesce(new_config.compiler, conf.compiler)
   configs[name] = conf
-  if did_setup then M.reapply_all_bufs() end
+  if did_setup then
+    M.reapply_all_bufs()
+  end
 end
 
 ---Set many configs all at once
@@ -123,14 +133,18 @@ end
 ---@param args table?
 local function _apply_win(name, winid, args)
   local conf = configs[name]
-  if not conf or not conf.opt then return end
+  if not conf or not conf.opt then
+    return
+  end
   for k, v in pairs(conf.opt) do
     local opt_info = vim.api.nvim_get_option_info2(k, {})
     if opt_info.scope == "win" then
       local ok, err = pcall(vim.api.nvim_set_option_value, k, v, { scope = "local", win = winid })
       if not ok then
-        vim.notify(string.format("Error setting window option %s = %s: %s", k, vim.inspect(v), err), vim.log.levels.ERROR)
-        dbg(args)
+        vim.notify(
+          string.format("Error setting window option %s = %s: %s", k, vim.inspect(v), err),
+          vim.log.levels.ERROR
+        )
       end
     end
   end
@@ -164,13 +178,17 @@ function M.apply(name, bufnr, args)
     return
   end
   local conf = configs[name]
-  if not conf then return end
+  if not conf then
+    return
+  end
   if conf.cmp then
     vim.api.nvim_buf_call(bufnr, function()
       local ok_cmp, cmp = pcall(require, "cmp")
       if ok_cmp then
         vim.schedule(function()
-          if vim.api.nvim_buf_is_valid(bufnr) and vim.api.nvim_buf_is_loaded(bufnr) then cmp.setup.filetype(vim.bo[bufnr].filetype, conf.cmp) end
+          if vim.api.nvim_buf_is_valid(bufnr) and vim.api.nvim_buf_is_loaded(bufnr) then
+            cmp.setup.filetype(vim.bo[bufnr].filetype, conf.cmp)
+          end
         end)
       end
     end)
@@ -183,16 +201,27 @@ function M.apply(name, bufnr, args)
       end
     end)
   end
-  if conf.compiler then vim.api.nvim_buf_call(bufnr, function() vim.cmd.compiler({ args = { conf.compiler } }) end) end
+  if conf.compiler then
+    vim.api.nvim_buf_call(bufnr, function()
+      vim.cmd.compiler({ args = { conf.compiler } })
+    end)
+  end
   if conf.opt then
     for k, v in pairs(conf.opt) do
       local opt_info = vim.api.nvim_get_option_info2(k, {})
       if opt_info.scope == "buf" then
         local ok, err = pcall(vim.api.nvim_set_option_value, k, v, { buf = bufnr })
-        if not ok then vim.notify(string.format("Error setting buffer option %s = %s: %s", k, vim.inspect(v), err), vim.log.levels.ERROR) end
+        if not ok then
+          vim.notify(
+            string.format("Error setting buffer option %s = %s: %s", k, vim.inspect(v), err),
+            vim.log.levels.ERROR
+          )
+        end
       end
     end
-    local winids = vim.tbl_filter(function(win) return vim.api.nvim_win_get_buf(win) == bufnr end, vim.api.nvim_list_wins())
+    local winids = vim.tbl_filter(function(win)
+      return vim.api.nvim_win_get_buf(win) == bufnr
+    end, vim.api.nvim_list_wins())
     for _, winid in ipairs(winids) do
       M.apply_win(name, winid, args)
     end
@@ -217,7 +246,9 @@ function M.apply(name, bufnr, args)
       })
     end
   end
-  if conf.callback then conf.callback(bufnr, args) end
+  if conf.callback then
+    conf.callback(bufnr, args)
+  end
 end
 
 ---@class FiletypeOpts
@@ -232,13 +263,17 @@ function M.setup(opts)
   local conf = vim.tbl_deep_extend("keep", opts or {}, {
     augroup = nil,
   })
-  if not conf.augroup then conf.augroup = vim.api.nvim_create_augroup("FiletypePlugin", {}) end
+  if not conf.augroup then
+    conf.augroup = vim.api.nvim_create_augroup("FiletypePlugin", {})
+  end
 
   vim.api.nvim_create_autocmd("FileType", {
     desc = "Set filetype-specific options",
     pattern = "*",
     group = conf.augroup,
-    callback = function(params) M.apply(params.match, params.buf, params) end,
+    callback = function(params)
+      M.apply(params.match, params.buf, params)
+    end,
   })
 
   vim.api.nvim_create_autocmd("BufWinEnter", {
@@ -250,7 +285,9 @@ function M.setup(opts)
       local bufnr = vim.api.nvim_win_get_buf(winid)
       local filetype = vim.bo[bufnr].filetype
       -- If we're in a terminal buffer, make the filetype "terminal"
-      if vim.bo[bufnr].buftype == "terminal" then filetype = "terminal" end
+      if vim.bo[bufnr].buftype == "terminal" then
+        filetype = "terminal"
+      end
       M.apply_win(filetype, winid, params)
     end,
   })
@@ -262,7 +299,9 @@ function M.setup(opts)
     callback = function(params)
       local winid = vim.api.nvim_get_current_win()
       local bufnr = vim.api.nvim_win_get_buf(winid)
-      if vim.bo[bufnr].buftype ~= "terminal" then return end
+      if vim.bo[bufnr].buftype ~= "terminal" then
+        return
+      end
       M.apply("terminal", bufnr, params)
       M.apply_win("terminal", winid, params)
     end,

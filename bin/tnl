@@ -1,0 +1,238 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# tnl - Simple cloudflared tunnel manager
+# Usage: tnl {start|stop|status} [--config=path | -c path]
+
+COMMAND="${1:-}"
+CONFIG_FILE="${CLOUDFLARED_CONFIG:-}"
+
+# Parse arguments
+shift || true
+while [[ $# -gt 0 ]]; do
+  case $1 in
+  --config=*)
+    CONFIG_FILE="${1#*=}"
+    shift
+    ;;
+  -c)
+    CONFIG_FILE="$2"
+    shift 2
+    ;;
+  *)
+    shift
+    ;;
+  esac
+done
+
+# Validate config
+if [[ -z "$CONFIG_FILE" ]]; then
+  echo "✖ Error: No config file specified"
+  echo "  Set CLOUDFLARED_CONFIG env var or use --config/-c flag"
+  echo "  Usage: tnl {start|stop|status} [--config=path]"
+  exit 1
+fi
+
+if [[ ! -f "$CONFIG_FILE" ]]; then
+  echo "✖ Error: Config file not found: $CONFIG_FILE"
+  exit 1
+fi
+
+# Determine project root from config location
+PROJECT_ROOT="$(cd "$(dirname "$CONFIG_FILE")/../.." && pwd)"
+PID_FILE="$PROJECT_ROOT/.tnl.pid"
+LOG_FILE="$PROJECT_ROOT/.tnl.log"
+
+# Extract tunnel ID/name from config file
+get_tunnel_id() {
+  grep "^tunnel:" "$CONFIG_FILE" 2>/dev/null | awk '{print $2}' | tr -d '\r\n'
+}
+
+# Start command: Launch and return immediately
+cmd_start() {
+  # Check if already running
+  if [[ -f "$PID_FILE" ]]; then
+    local pid=$(cat "$PID_FILE")
+    if kill -0 "$pid" 2>/dev/null; then
+      echo "⚠ Tunnel already running (PID: $pid)"
+      echo "  Run 'tnl status' to check health"
+      return 0
+    else
+      # Stale PID file, clean it up
+      rm -f "$PID_FILE"
+    fi
+  fi
+
+  echo "Starting cloudflared tunnel..."
+
+  # Start tunnel in background with nohup
+  nohup cloudflared tunnel --config "$CONFIG_FILE" run >"$LOG_FILE" 2>&1 &
+  local pid=$!
+
+  # Save PID immediately
+  echo "$pid" >"$PID_FILE"
+
+  echo "✓ Cloudflared tunnel started (PID: $pid)"
+  echo "  Logs: tail -f $LOG_FILE"
+  echo "  Check status: tnl status"
+}
+
+# Stop command: Kill tunnel and clean up
+cmd_stop() {
+  if [[ ! -f "$PID_FILE" ]]; then
+    echo "⚠ No PID file found"
+    echo "  Searching for cloudflared processes..."
+
+    # Try to find by config file
+    local pid=$(pgrep -f "cloudflared.*$CONFIG_FILE" 2>/dev/null | head -1 || echo "")
+    if [[ -n "$pid" ]]; then
+      echo "Found tunnel process (PID: $pid)"
+      kill "$pid" 2>/dev/null && echo "✓ Tunnel stopped"
+    else
+      echo "⚠ No cloudflared tunnel found"
+    fi
+    return 0
+  fi
+
+  local pid=$(cat "$PID_FILE")
+
+  if kill -0 "$pid" 2>/dev/null; then
+    echo "Stopping tunnel (PID: $pid)..."
+    kill "$pid" 2>/dev/null && echo "✓ Tunnel stopped"
+  else
+    echo "⚠ Process not running (stale PID file)"
+  fi
+
+  # Clean up files
+  rm -f "$PID_FILE" && echo "✓ Cleaned up PID file" || echo "✖ Unable to clean up PID file"
+}
+
+# Info command: Passthrough to cloudflared tunnel info
+cmd_info() {
+  local tunnel_id=""
+
+  if [[ $# -eq 0 ]]; then
+    # No tunnel name provided, try to extract from config
+    tunnel_id=$(get_tunnel_id)
+    if [[ -z "$tunnel_id" ]]; then
+      echo "✖ Error: Could not extract tunnel ID from config"
+      echo "  Usage: tnl info <tunnel-name>"
+      return 1
+    fi
+    echo "✓ Using tunnel from config: $tunnel_id"
+    echo ""
+    cloudflared tunnel info "$tunnel_id"
+  else
+    cloudflared tunnel info "$@"
+  fi
+}
+
+# Status command: Check health (can take time)
+cmd_status() {
+  # Check PID file
+  if [[ ! -f "$PID_FILE" ]]; then
+    echo "⚠ Status: Not running (no PID file)"
+
+    # Search for orphaned processes
+    local pid=$(pgrep -f "cloudflared.*$CONFIG_FILE" 2>/dev/null | head -1 || echo "")
+    if [[ -n "$pid" ]]; then
+      echo ""
+      echo "⚠ Found orphaned tunnel process (PID: $pid)"
+      echo "  Run 'tnl stop' to clean up"
+    fi
+    return 1
+  fi
+
+  local pid=$(cat "$PID_FILE")
+
+  # Check if process is alive
+  if ! kill -0 "$pid" 2>/dev/null; then
+    echo "⚠ Status: Not running (PID file exists but process dead)"
+    echo "  PID: $pid (stale)"
+    echo "  Run 'tnl stop' to clean up"
+    return 1
+  fi
+
+  # Process is alive
+  echo "✓ Status: Running"
+  echo "  PID: $pid"
+
+  # Get process uptime
+  if command -v ps >/dev/null 2>&1; then
+    local uptime=$(ps -p "$pid" -o etime= 2>/dev/null | xargs || echo "unknown")
+    echo "  Uptime: $uptime"
+  fi
+
+  # Show tunnel ID from config
+  local tunnel_id=$(get_tunnel_id)
+  if [[ -n "$tunnel_id" ]]; then
+    echo "  Tunnel: $tunnel_id"
+  fi
+
+  # Parse log file for connection status
+  if [[ ! -f "$LOG_FILE" ]]; then
+    echo "✖ Error: No log file found"
+    return 0
+  fi
+
+  # Check for registered connections
+  local connections=$(grep "Registered tunnel connection" "$LOG_FILE" 2>/dev/null | tail -5)
+  if [[ -n "$connections" ]]; then
+    echo "✓ Tunnel connected"
+    echo ""
+    echo "Recent connections:"
+    echo "$connections" | sed 's/^/  /'
+  fi
+
+  # Check for errors in recent logs
+  local errors=$(tail -n 50 "$LOG_FILE" 2>/dev/null | grep -i "error\|failed\|fatal" | tail -3)
+  if [[ -n "$errors" ]]; then
+    echo ""
+    echo "⚠ Recent errors:"
+    echo "$errors" | sed 's/^/  /'
+  fi
+
+  # Extract tunnel URL if available
+  local tunnel_url=$(grep -oE "https://[a-zA-Z0-9-]+\.trycloudflare\.com" "$LOG_FILE" 2>/dev/null | tail -1)
+  if [[ -n "$tunnel_url" ]]; then
+    echo ""
+    echo "Tunnel URL: $tunnel_url"
+  fi
+
+  echo ""
+  echo "Logs: tail -f $LOG_FILE"
+}
+
+# Execute command
+case "$COMMAND" in
+start)
+  cmd_start
+  ;;
+stop)
+  cmd_stop
+  ;;
+status)
+  cmd_status
+  ;;
+info)
+  # Pass remaining args to info command
+  cmd_info "$@"
+  ;;
+"")
+  echo "Usage: tnl {start|stop|status|info} [--config=path | -c path]"
+  echo ""
+  echo "Commands:"
+  echo "  start            Start the tunnel (non-blocking)"
+  echo "  stop             Stop the tunnel"
+  echo "  status           Show tunnel health and connection status"
+  echo "  info [name]      Get cloudflared tunnel info (auto-detects from config)"
+  echo ""
+  echo "Environment: CLOUDFLARED_CONFIG=${CLOUDFLARED_CONFIG:-not set}"
+  exit 1
+  ;;
+*)
+  echo "Unknown command: $COMMAND"
+  echo "Usage: tnl {start|stop|status|info} [--config=path | -c path]"
+  exit 1
+  ;;
+esac

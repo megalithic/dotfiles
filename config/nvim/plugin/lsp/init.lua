@@ -3,9 +3,8 @@ if not Plugin_enabled("lsp") then return end
 local M = {}
 
 local fmt = string.format
-local SETTINGS = require("config.options")
 local methods = vim.lsp.protocol.Methods
-local lsp_group = vim.api.nvim_create_augroup("mega.lsp", { clear = true })
+local lsp_group = vim.api.nvim_create_augroup("mega_mvim.lsp", { clear = true })
 local diagnostics_mod
 local preview_opts = {
   border = "rounded",
@@ -35,7 +34,7 @@ local function lsp_method(client, method)
 end
 
 local function fix_current_action()
-  local params = vim.lsp.util.make_range_params(0, "utf-8") -- get params for current position
+  local params = vim.lsp.util.make_range_params(0, "utf-16") -- get params for current position
   params.context = {
     diagnostics = vim.diagnostic.get(),
     only = { "quickfix" },
@@ -120,10 +119,12 @@ local function add_inline_highlights(buf)
       while from do
         local to
         from, to = line:find(pattern, from)
-        if from then vim.api.nvim_buf_set_extmark(buf, md_namespace, l - 1, from - 1, {
-          end_col = to,
-          hl_group = hl_group,
-        }) end
+        if from then
+          vim.api.nvim_buf_set_extmark(buf, md_namespace, l - 1, from - 1, {
+            end_col = to,
+            hl_group = hl_group,
+          })
+        end
         from = to and to + 1 or nil
       end
     end
@@ -145,7 +146,10 @@ end
 ---@param results lsp.LocationLink[]
 ---@return lsp.LocationLink[]
 local function filter_out_libraries_from_lsp_items(results)
-  local without_node_modules = vim.tbl_filter(function(item) return item.targetUri and not string.match(item.targetUri, "node_modules") end, results)
+  local without_node_modules = vim.tbl_filter(
+    function(item) return item.targetUri and not string.match(item.targetUri, "node_modules") end,
+    results
+  )
 
   if #without_node_modules > 0 then return without_node_modules end
 
@@ -179,7 +183,7 @@ local function list_or_jump(action, title, opts)
 
   opts = opts or {}
 
-  local params = vim.lsp.util.make_position_params(0, "utf-8")
+  local params = vim.lsp.util.make_position_params(0, "utf-16")
   vim.lsp.buf_request(0, action, params, function(err, result, ctx)
     if err then
       vim.api.nvim_err_writeln("Error when executing " .. action .. " : " .. err.message)
@@ -253,7 +257,9 @@ local function definitions(opts) return list_or_jump("textDocument/definition", 
 
 -- LSP initialization callback
 local function on_init(client, result)
-  lsp_method(client, "textDocument/signatureHelp")(function() client.server_capabilities.signatureHelpProvider.triggerCharacters = {} end)
+  lsp_method(client, "textDocument/signatureHelp")(
+    function() client.server_capabilities.signatureHelpProvider.triggerCharacters = {} end
+  )
 
   -- Handle off-spec "offsetEncoding" server capability
   if result.offsetEncoding then client.offset_encoding = result.offsetEncoding end
@@ -262,8 +268,12 @@ end
 function M.capabilitites()
   local capabilities = vim.lsp.protocol.make_client_capabilities()
 
-  if pcall(require, "cmp_nvim_lsp") and vim.g.completer == "cmp" then capabilities = require("cmp_nvim_lsp").default_capabilities(capabilities) end
-  if pcall(require, "blink.cmp") and vim.g.completer == "blink" then capabilities = require("blink.cmp").get_lsp_capabilities(capabilities) end
+  if pcall(require, "cmp_nvim_lsp") and vim.g.completer == "cmp" then
+    capabilities = require("cmp_nvim_lsp").default_capabilities(capabilities)
+  end
+  if pcall(require, "blink.cmp") and vim.g.completer == "blink" then
+    capabilities = require("blink.cmp").get_lsp_capabilities(capabilities)
+  end
 
   return vim.tbl_deep_extend("force", capabilities, {
     workspace = {
@@ -328,8 +338,16 @@ local function make_commands(client, bufnr)
   end
 
   Command("LspInfo", function() vim.cmd.checkhealth("lsp") end, { desc = "View LSP info" })
-  Command("LspLog", function() vim.cmd.tabnew(vim.lsp.log.get_filename()) end, { desc = "Opens LSP log file in new tab." })
-  Command("LspLogDelete", function() vim.fn.system("rm " .. vim.lsp.get_log_path()) end, { desc = "Deletes the LSP log file. Useful for when it gets too big" })
+  Command(
+    "LspLog",
+    function() vim.cmd.tabnew(vim.lsp.log.get_filename()) end,
+    { desc = "Opens LSP log file in new tab." }
+  )
+  Command(
+    "LspLogDelete",
+    function() vim.fn.system("rm " .. vim.lsp.get_log_path()) end,
+    { desc = "Deletes the LSP log file. Useful for when it gets too big" }
+  )
 
   Command("LspRestart", function(cmd)
     local parts = vim.split(vim.trim(cmd.args), "%s+")
@@ -337,7 +355,9 @@ local function make_commands(client, bufnr)
 
     local clients = vim.lsp.get_clients({ bufnr = bufnr })
 
-    if #parts > 0 then clients = vim.tbl_filter(function(client) return vim.tbl_contains(parts, client.name) end, clients) end
+    if #parts > 0 then
+      clients = vim.tbl_filter(function(client) return vim.tbl_contains(parts, client.name) end, clients)
+    end
 
     vim.lsp.stop_client(clients)
     vim.cmd.update()
@@ -375,26 +395,42 @@ local function make_keymaps(client, bufnr)
     vim.diagnostic.hide(nil, bufnr)
     vim.lsp.buf.hover({ border = "rounded" })
   end, "hover docs")
-  nmap("gD", vim.lsp.buf.declaration, "[g]oto [d]eclaration")
-  vnmap("ga", function() require("fzf-lua").lsp_code_actions({ silent = true }) end, "run code actions")
+  -- nmap("gD", vim.lsp.buf.declaration, "[g]oto [d]eclaration")
+  vnmap("ga", vim.lsp.buf.code_action, "run code actions")
   vnmap("gl", vim.lsp.codelens.run, "run code lens")
   vnmap("g==", function() fix_current_action() end, "[g]o run nearest/current code action")
 
-  nmap("[e", function() diagnostics_mod.goto_diagnostic_hl("prev", { severity = L.ERROR }) end, "Go to previous [e]rror diagnostic message")
-  nmap("]e", function() diagnostics_mod.goto_diagnostic_hl("next", { severity = L.ERROR }) end, "Go to next [e]rror diagnostic message")
+  nmap(
+    "[e",
+    function() diagnostics_mod.goto_diagnostic_hl("prev", { severity = L.ERROR }) end,
+    "Go to previous [e]rror diagnostic message"
+  )
+  nmap(
+    "]e",
+    function() diagnostics_mod.goto_diagnostic_hl("next", { severity = L.ERROR }) end,
+    "Go to next [e]rror diagnostic message"
+  )
 
   nmap("[d", function() diagnostics_mod.goto_diagnostic_hl("prev") end, "[g]oto previous [d]iagnostic message")
   nmap("]d", function() diagnostics_mod.goto_diagnostic_hl("next") end, "[g]oto next [d]iagnostic message")
 
-  nmap("gq", function() vim.cmd("Trouble diagnostics toggle focus=true filter.buf=0") end, "[g]oto [q]uickfixlist buffer diagnostics (trouble)")
-  nmap("gQ", function() vim.cmd("Trouble diagnostics toggle focus=true") end, "[g]oto [q]uickfixlist global diagnostics (trouble)")
+  nmap(
+    "gq",
+    function() vim.cmd("Trouble diagnostics toggle focus=true filter.buf=0") end,
+    "[g]oto [q]uickfixlist buffer diagnostics (trouble)"
+  )
+  nmap(
+    "gQ",
+    function() vim.cmd("Trouble diagnostics toggle focus=true") end,
+    "[g]oto [q]uickfixlist global diagnostics (trouble)"
+  )
 
   -- "<leader>ss", function() Snacks.picker.lsp_symbols() end, desc = "LSP Symbols" },
   --    { "<leader>sS", function() Snacks.picker.lsp_workspace_symbols() end, desc = "LSP Workspace Symbols" },
 
   -- vnmap("grn", function()
   --   -- local bufnr = vim.api.nvim_get_current_buf()
-  --   local params = vim.lsp.util.make_position_params(0, "utf-8")
+  --   local params = vim.lsp.util.make_position_params(0, "utf-16")
   --   params.context = { includeDeclaration = true }
   --   local clients = vim.lsp.get_clients()
   --   if not clients or #clients == 0 then
@@ -434,7 +470,7 @@ local function make_keymaps(client, bufnr)
   vnmap("gn", function()
     local bufnr = vim.api.nvim_get_current_buf()
     local old_name = vim.fn.expand("<cword>")
-    local params = vim.lsp.util.make_position_params(nil, "utf-8")
+    local params = vim.lsp.util.make_position_params(nil, "utf-16")
     params.context = { includeDeclaration = true }
     local clients = vim.lsp.get_clients()
     if not clients or #clients == 0 then
@@ -452,38 +488,6 @@ local function make_keymaps(client, bufnr)
       end
     end
 
-    local function input(old_val)
-      local Input = require("nui.input")
-      local event = require("nui.utils.autocmd").event
-
-      local opts = {
-        relative = "cursor",
-        position = {
-          row = 1,
-          col = 0,
-        },
-        size = 20,
-        border = {
-          style = "rounded",
-          text = {
-            top = "[Input]",
-            top_align = "left",
-          },
-        },
-        win_options = {
-          winhighlight = "Normal:Normal",
-        },
-      }
-
-      return Input(opts, {
-        prompt = string.format("%s > ", old_val),
-        default_value = old_val,
-        on_close = function() print("Input closed!") end,
-        on_submit = function(value) print("Value submitted: ", value) end,
-        on_change = function(value) print("Value changed: ", value) end,
-      })
-    end
-
     local ns = vim.api.nvim_create_namespace("LspRenamespace")
 
     client:request("textDocument/references", params, function(_, result)
@@ -495,7 +499,9 @@ local function make_keymaps(client, bufnr)
             local start_char = v.range.start.character
             local end_line = v.range["end"].line
             local end_char = v.range["end"].character
-            if buf == bufnr then vim.hl.range(bufnr, ns, "LspReferenceWrite", { start_line, start_char }, { end_line, end_char }) end
+            if buf == bufnr then
+              vim.hl.range(bufnr, ns, "LspReferenceWrite", { start_line, start_char }, { end_line, end_char })
+            end
           end
         end
         vim.cmd.redraw()
@@ -509,7 +515,9 @@ local function make_keymaps(client, bufnr)
       if is_valid_client then
         vim.lsp.buf.rename(new_name)
       else
-        require("grug-far").open({ prefills = { search = old_name, replacement = new_name, paths = vim.fn.expand("%") } })
+        require("grug-far").open({
+          prefills = { search = old_name, replacement = new_name, paths = vim.fn.expand("%") },
+        })
       end
     end, bufnr)
   end)
@@ -545,50 +553,50 @@ local function make_keymaps(client, bufnr)
   end, "rename symbol/references")
 
   lsp_method(client, "textDocument/references")(function()
-    map("n", "gr", function()
-      require("fzf-lua").lsp_references({
-        include_declaration = false,
-        ignore_current_line = true,
-      })
-      -- Snacks.picker.lsp_references({
-      --   include_declaration = false,
-      --   include_current = false,
-      -- })
-    end, "[g]oto [r]eferences", { nowait = true })
+    -- map("n", "gr", function()
+    --   vim.cmd.Pick('lsp scope="references"')
+    --   -- require("fzf-lua").lsp_references({
+    --   --   include_declaration = false,
+    --   --   ignore_current_line = true,
+    --   -- })
+    --   -- Snacks.picker.lsp_references({
+    --   --   include_declaration = false,
+    --   --   include_current = false,
+    --   -- })
+    -- end, "[g]oto [r]eferences", { nowait = true })
 
-    map(
-      "n",
-      "gR",
+    -- map("n", "gR", function()
+    --   Snacks.picker.lsp_references({
+    --     include_declaration = false,
+    --     include_current = false,
+    --     auto_confirm = true,
+    --     jump = { tagstack = true, reuse_win = true },
+    --   })
+    -- end, "[g]oto [r]eferences", { nowait = true })
+  end)
+
+  lsp_method(client, "textDocument/definition")(function()
+    -- nmap("gd", function()
+    --   -- require("telescope").lsp_definitions({ jump1 = true })
+    --
+    --   vim.cmd.Pick('lsp scope="definitions"')
+    --   -- MiniPick.registry.LspPicker("definition", true)
+    -- end, "[g]oto [d]efinition")
+    nmap(
+      "gd",
       function()
-        Snacks.picker.lsp_references({
+        Snacks.picker.lsp_definitions({
           include_declaration = false,
           include_current = false,
           auto_confirm = true,
           jump = { tagstack = true, reuse_win = true },
         })
       end,
-      "[g]oto [r]eferences",
-      { nowait = true }
+      "[g]oto [d]efinition"
     )
-  end)
-
-  lsp_method(client, "textDocument/definition")(function()
-    nmap("gd", function() require("fzf-lua").lsp_definitions({ jump1 = true }) end, "[g]oto [d]efinition")
-    -- nmap(
-    --   "gd",
-    --   function()
-    --     Snacks.picker.lsp_definitions({
-    --       include_declaration = false,
-    --       include_current = false,
-    --       auto_confirm = true,
-    --       jump = { tagstack = true, reuse_win = true },
-    --     })
-    --   end,
-    --   "[g]oto [d]efinition"
-    -- )
     -- nmap("gD", function() require("fzf-lua").lsp_definitions({ jump1 = false }) end, "Peek definition")
-    nmap("gD", "<CMD>Glance definitions<CR>", "[g]lance [d]efinition")
-    -- nmap("gd", "<cmd>vsplit | lua vim.lsp.buf.definition()<cr>", "Goto Definition in Vertical Split")
+    -- nmap("gD", "<CMD>Glance definitions<CR>", "[g]lance [d]efinition")
+    nmap("gD", "<cmd>vsplit | lua vim.lsp.buf.definition()<cr>", "Goto Definition in Vertical Split")
     nmap("<C-]>", definitions, "goto definition")
   end)
 
@@ -631,9 +639,11 @@ function M.on_detach(args)
 end
 
 function M.on_attach(client, bufnr, _client_id)
+  client.flags.allow_incremental_sync = true
+
   vim.b[bufnr].lsp = client.name
   local filetype = vim.bo[bufnr].filetype
-  local disabled_lsp_formatting = SETTINGS.disabled_lsp_formatters
+  local disabled_lsp_formatting = vim.g.disabled_lsp_formatters
 
   -- load diagnostics config
   local ok_diagnostics, setup_diagnostics = pcall(dofile, vim.fn.stdpath("config") .. "/plugin/lsp/diagnostics.lua")
@@ -651,6 +661,24 @@ function M.on_attach(client, bufnr, _client_id)
       end
     end
 
+    vim.api.nvim_create_autocmd("BufWritePre", {
+      pattern = "*",
+      callback = function(args)
+        require("conform").format({
+          bufnr = args.buf,
+          async = true,
+          lsp_format = "fallback",
+          timeout_ms = 5000,
+          filter = function(client, exclusions)
+            local client_name = type(client) == "table" and client.name or client
+            exclusions = exclusions or disabled_lsp_formatting
+
+            return not exclusions or not vim.tbl_contains(exclusions, client_name)
+          end,
+        })
+      end,
+    })
+
     -- Auto-formatting on save
     -- if not lsp_method(client, methods.textDocument_willSaveWaitUntil) then
     -- vim.api.nvim_create_autocmd("BufWritePre", {
@@ -666,11 +694,11 @@ function M.on_attach(client, bufnr, _client_id)
   end)
 
   lsp_method(client, methods.textDocument_semanticTokens_full)(function()
-    if SETTINGS.disabled_semantic_tokens[filetype] then client.server_capabilities.semanticTokensProvider = vim.NIL end
+    if vim.g.disabled_semantic_tokens[filetype] then client.server_capabilities.semanticTokensProvider = vim.NIL end
   end)
 
   lsp_method(client, methods.textDocument_inlayHint)(function()
-    if SETTINGS.enabled_inlay_hints[filetype] then vim.lsp.inlay_hint.enable(true) end
+    if vim.g.enabled_inlay_hints[filetype] then vim.lsp.inlay_hint.enable(true) end
   end)
 
   lsp_method(client, methods.textDocument_documentSymbol)(function()
@@ -693,25 +721,29 @@ function M.on_attach(client, bufnr, _client_id)
     })
   end)
 
-  -- Code lens
-  lsp_method(client, methods.textDocument_codeLens)(function()
-    Augroup(lsp_group, {
-      {
-        event = { "LspProgress" },
-        pattern = "end",
-        command = function(args)
-          if args.buf == bufnr then vim.lsp.codelens.refresh({ bufnr = args.buf }) end
-        end,
-      },
-      {
-        event = { "BufEnter", "TextChanged", "InsertLeave" },
-        buffer = bufnr,
-        command = function(args) vim.lsp.codelens.refresh({ bufnr = args.buf }) end,
-      },
-    })
-
-    vim.lsp.codelens.refresh({ bufnr = bufnr })
-  end)
+  -- -- Code lens
+  -- lsp_method(client, methods.textDocument_codeLens)(function()
+  --   Augroup(lsp_group, {
+  --     {
+  --       event = { "LspProgress" },
+  --       pattern = "end",
+  --       command = function(args)
+  --         if args.buf == bufnr then
+  --           vim.lsp.codelens.refresh({ bufnr = args.buf })
+  --         end
+  --       end,
+  --     },
+  --     {
+  --       event = { "BufEnter", "TextChanged", "InsertLeave" },
+  --       buffer = bufnr,
+  --       command = function(args)
+  --         vim.lsp.codelens.refresh({ bufnr = args.buf })
+  --       end,
+  --     },
+  --   })
+  --
+  --   vim.lsp.codelens.refresh({ bufnr = bufnr })
+  -- end)
 
   lsp_method(client, methods.textDocument_signatureHelp)(function()
     Augroup(lsp_group, {
@@ -771,9 +803,11 @@ Augroup(lsp_group, {
 
       vim.schedule(function()
         local buf = args.buf
-        vim.b[buf].lsp = nil
-        vim.lsp.buf.clear_references()
-        vim.api.nvim_clear_autocmds({ group = lsp_group, buffer = buf })
+        if vim.api.nvim_buf_is_valid(buf) then
+          vim.b[buf].lsp = nil
+          vim.lsp.buf.clear_references()
+          vim.api.nvim_clear_autocmds({ group = lsp_group, buffer = buf })
+        end
       end)
     end,
   },
@@ -806,13 +840,13 @@ vim.lsp.config("*", {
 })
 
 local ok_servers, servers = pcall(dofile, vim.fn.stdpath("config") .. "/plugin/lsp/servers.lua")
--- local ok_servers, servers = pcall(dofile, vim.fn.stdpath("config") .. "/plugin/lsp/servers.lua")
 if not ok_servers then
-  Echom("Unable to load language server list", "Error")
+  Echom(string.format("Unable to load language server list: \r\n%s", servers), "Error")
   return
 end
 
 local enabled_servers = {}
+-- local lsp_cmds = require("lsp_cmds")
 
 vim.iter(servers):each(function(name, config)
   if type(config) == "function" then config = config() end
@@ -835,9 +869,16 @@ vim.iter(servers):each(function(name, config)
       config["on_attach"] = M.on_attach
     end
 
+    -- if lsp_cmds[name] then
+    --   vim.inspect(lsp_cmds[name])
+    --   config.cmd = lsp_cmds[name]
+    -- end
+
     vim.lsp.config[name] = config
     vim.lsp.enable(name, true)
   end
 end)
+
+Load_macros(M, "on_attach")
 
 return M

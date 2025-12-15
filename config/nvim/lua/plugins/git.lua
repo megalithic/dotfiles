@@ -1,26 +1,76 @@
-local SETTINGS = require("config.options")
-local icons = SETTINGS.icons
+local icons = Icons
 
 local git_keys = {}
+vim.g.gitter = "neogit"
 
 if vim.g.gitter == "neogit" then
   git_keys = {
-    { "<leader>gS", function() require("neogit").open() end, desc = "neogit: open status buffer" },
-    { "<leader>gg", function() require("neogit").open() end, desc = "neogit: open status buffer" },
+    {
+      "<leader>gS",
+      function() require("neogit").open() end,
+      desc = "neogit: open status buffer",
+    },
+    {
+      "<leader>gg",
+      function() require("neogit").open() end,
+      desc = "neogit: open status buffer",
+    },
     {
       "<localleader>gc",
       function() require("neogit").open({ "commit", "-v" }) end,
       desc = "neogit: open commit buffer",
     },
-    { "<localleader>gl", function() require("neogit").popups.pull.create() end, desc = "neogit: pull commit(s)" },
-    { "<localleader>gp", function() require("neogit").popups.push.create() end, desc = "neogit: push commit(s)" },
     {
-      "<localleader>gbb",
+      "<localleader>gl",
+      function() require("neogit").popups.pull.create() end,
+      desc = "neogit: pull commit(s)",
+    },
+    {
+      "<localleader>gp",
+      function() require("neogit").popups.push.create() end,
+      desc = "neogit: push commit(s)",
+    },
+    {
+      "<leader>gf",
+      function() require("neogit").action("log", "log_current", { "--", vim.fn.expand("%") })() end,
+      desc = "neogit: git log for file",
+    },
+    {
+      "<leader>gf",
+      function()
+        local file = vim.fn.expand("%")
+        vim.cmd([[execute "normal! \<ESC>"]])
+        local line_start = vim.fn.getpos("'<")[2]
+        local line_end = vim.fn.getpos("'>")[2]
+
+        require("neogit").action("log", "log_current", { "-L" .. line_start .. "," .. line_end .. ":" .. file })()
+      end,
+      desc = "neogit: git log for selection",
+      mode = "v",
+    },
+    {
+      "<leader>gbc",
+      function()
+        local current_file = vim.loop.fs_realpath(vim.api.nvim_buf_get_name(0))
+        if current_file then
+          local result = vim
+            .system({ "git", "blame", "-L" .. vim.fn.line(".") .. "," .. vim.fn.line("."), current_file }, { text = true })
+            :wait()
+
+          local commit_sha, _ = result.stdout:gsub("%s.*$", "")
+          vim.cmd("DiffviewOpen " .. commit_sha .. "^.." .. commit_sha)
+        end
+      end,
+      desc = "git: blame commit",
+    },
+    {
+      "<localleader>gbl",
       function()
         local line = vim.api.nvim_win_get_cursor(0)[1]
         local line_range = line .. "," .. line
 
-        local annotation = vim.fn.systemlist("git annotate -M --porcelain " .. vim.fn.expand("%:p") .. " -L" .. line_range)[1]
+        local annotation =
+          vim.fn.systemlist("git annotate -M --porcelain " .. vim.fn.expand("%:p") .. " -L" .. line_range)[1]
         if vim.v.shell_error ~= 0 then
           vim.notify(annotation, vim.log.levels.ERROR)
           return
@@ -35,7 +85,7 @@ if vim.g.gitter == "neogit" then
         local commit_view = require("neogit.buffers.commit_view").new(ref, false)
         commit_view:open()
       end,
-      desc = "git: view full line blame commit",
+      desc = "neogit: view full line blame commit",
     },
   }
 elseif vim.g.gitter == "fugitive" then
@@ -87,6 +137,53 @@ elseif vim.g.gitter == "fugitive" then
 end
 
 return {
+  {
+    "esmuellert/vscode-diff.nvim",
+    dependencies = { "MunifTanjim/nui.nvim" },
+    cmd = "CodeDiff",
+  },
+  {
+    "nvim-mini/mini.diff",
+    version = false,
+    config = function()
+      vim.schedule(function()
+        require("mini.diff").setup({
+          view = {
+            -- Visualization style. Possible values are 'sign' and 'number'.
+            -- Default: 'number' if line numbers are enabled, 'sign' otherwise.
+            style = "sign",
+
+            -- Signs used for hunks with 'sign' view
+            signs = { add = "", change = "", delete = "" },
+
+            -- Priority of used visualization extmarks
+            priority = 1,
+          },
+        })
+      end)
+
+      -- Keymaps
+      local nmap_localleader = function(suffix, rhs, desc)
+        vim.keymap.set("n", "<localleader>" .. suffix, rhs, { desc = desc })
+      end
+      local nmap_leader = function(suffix, rhs, desc) vim.keymap.set("n", "<Leader>" .. suffix, rhs, { desc = desc }) end
+
+      nmap_localleader("gd", "<Cmd>lua MiniDiff.toggle_overlay()<CR>", "git: toggle diff overlay")
+    end,
+
+    -- keys = {
+    --   {
+    --     "<localleader>gd",
+    --     function() MiniDiff.toggle_overlay() end,
+    --     "Toggle Diff Overlay",
+    --   },
+    -- },
+  },
+  {
+    "julienvincent/hunk.nvim",
+    cmd = { "DiffEditor" },
+    config = function() require("hunk").setup() end,
+  },
   -- Here is a more advanced example where we pass configuration
   -- options to `gitsigns.nvim`. This is equivalent to the following Lua:
   --    require('gitsigns').setup({ ... })
@@ -149,7 +246,7 @@ return {
         virt_text_priority = 100,
       },
       preview_config = {
-        border = SETTINGS.border,
+        border = vim.g.border,
       },
       on_attach = function(bufnr)
         local gs = package.loaded.gitsigns
@@ -190,7 +287,7 @@ return {
         bmap("<localleader>gS", gs.stage_buffer, "git: stage buffer")
         bmap("<localleader>gR", gs.reset_buffer, "git: reset buffer")
 
-        bmap("<localleader>gd", function() gs.diffthis() end, "git: diff this")
+        -- bmap("<localleader>gd", function() gs.diffthis() end, "git: diff this")
         bmap("<localleader>gD", function() gs.diffthis("~") end, "git: diff this against ~")
 
         -- Text object
@@ -239,24 +336,29 @@ return {
     dependencies = { "nvim-lua/plenary.nvim" },
     -- commit = "b89ef391d20f45479e92bd4190e444c9ec9163a3",
     keys = git_keys,
-    config = function()
-      require("neogit").setup({
-        disable_signs = false,
-        disable_hint = true,
-        disable_commit_confirmation = true,
-        disable_builtin_notifications = true,
-        disable_insert_on_commit = false,
-        signs = {
-          section = { "", "" }, -- "󰁙", "󰁊"
-          item = { "▸", "▾" },
-          hunk = { "󰐕", "󰍴" },
-        },
-        integrations = {
-          diffview = true,
-        },
-      })
+    opts = {
+      disable_signs = false,
+      disable_hint = true,
+      disable_commit_confirmation = true,
+      disable_builtin_notifications = true,
+      disable_insert_on_commit = false,
+      fetch_after_checkout = true,
+      signs = {
+        section = { "", "" }, -- "󰁙", "󰁊"
+        item = { "▸", "▾" },
+        hunk = { "󰐕", "󰍴" },
+      },
+      integrations = {
+        diffview = true,
+        mini_pick = true,
+      },
+      graph_style = "kitty",
+      process_spinner = "true",
+    },
+    config = function(_, opts)
+      require("neogit").setup(opts)
 
-      require("config.autocmds").augroup("Neogit", {
+      Augroup("Neogit", {
         pattern = "NeogitPushComplete",
         callback = require("neogit").close,
       })
@@ -468,13 +570,13 @@ return {
         mode = { "n", "v" },
       },
       {
-        "<leader>gb",
+        "<localleader>gb",
         "<cmd>GitLink! blame<cr>",
         desc = "gitlinker: blame in browser",
         mode = { "n", "v" },
       },
       {
-        "<leader>gB",
+        "<localleader>gB",
         "<cmd>GitLink blame<cr>",
         desc = "gitlinker: copy blame to clipboard",
         mode = { "n", "v" },

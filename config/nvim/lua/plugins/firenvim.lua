@@ -110,7 +110,7 @@ return {
       vim.opt_local.statuscolumn = ""
       vim.opt_local.cursorlineopt = "screenline,number"
       vim.opt_local.cursorline = true
-      vim.api.nvim_set_option("guifont", "JetBrainsMono Nerd Font:h22")
+      vim.api.nvim_set_option("guifont", "JetBrainsMono Nerd Font Mono:h22")
       vim.api.nvim_set_option("buftype", "firenvim")
 
       vim.diagnostic.enable(false, { bufnr = bufnr })
@@ -216,7 +216,7 @@ return {
           inoremap <D-r> <nop>
         ]])
 
-        vim.api.nvim_set_keymap("", "<D-c>", "\"+y", { noremap = true, silent = true }) -- Copy
+        vim.api.nvim_set_keymap("", "<D-c>", '"+y', { noremap = true, silent = true }) -- Copy
         vim.api.nvim_set_keymap("", "<D-v>", "+p<CR>", { noremap = true, silent = true })
         vim.api.nvim_set_keymap("!", "<D-v>", "<C-R>+", { noremap = true, silent = true })
         vim.api.nvim_set_keymap("t", "<D-v>", "<C-R>+", { noremap = true, silent = true })
@@ -234,6 +234,8 @@ return {
         vim.o.signcolumn = "no"
         vim.o.showcmd = false
         vim.o.linespace = -2
+        vim.o.laststatus = 0
+        vim.o.cmdheight = 0
         -- vim.cmd("colo carbonfox")
 
         vim.fn.timer_start(100, function()
@@ -267,7 +269,11 @@ return {
         -- 	end,
         -- })
 
-        map("n", "<Esc>", "<cmd>wall | call firenvim#hide_frame() | call firenvim#press_keys('<LT>Esc>') | call firenvim#focus_page()<CR>")
+        map(
+          "n",
+          "<Esc>",
+          "<cmd>wall | call firenvim#hide_frame() | call firenvim#press_keys('<LT>Esc>') | call firenvim#focus_page()<CR>"
+        )
         map("n", "<C-z>", "<cmd>wall | call firenvim#hide_frame() | call firenvim#focus_input()<CR>")
         map("n", "<C-c>", "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR><Esc>norm! ggdGa<CR>")
         map("n", "<C-c>", "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR><Esc>norm! ggdGa<CR>")
@@ -326,7 +332,7 @@ return {
       end
     end
 
-    require("config.autocmds").augroup("Firenvim", {
+    require("autocmds").augroup("Firenvim", {
       {
         event = { "UIEnter" },
         -- once = true,

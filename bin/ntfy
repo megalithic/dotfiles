@@ -1,0 +1,235 @@
+#!/usr/bin/env bash
+# ntfy - Slim AI agent notification wrapper
+# Delegates all logic to Hammerspoon's N.send() API
+#
+# Usage:
+#   ntfy send -t "Title" -m "Message" [-u urgency] [-p] [-P] [-q]
+#   ntfy answer [-t "Title"] [-m "Message"]
+#   ntfy pending
+#   ntfy help
+#
+set -euo pipefail
+
+show_help() {
+  cat << 'EOF'
+Usage: ntfy <command> [options]
+
+Commands:
+  send      Send a notification
+  answer    Mark a question as answered
+  pending   List pending questions
+  help      Show this help message
+
+Send Options:
+  -t, --title <title>      Notification title (required)
+  -m, --message <message>  Notification message (required)
+  -u, --urgency <level>    normal|high|critical (default: normal)
+  -s, --source <name>      Source app name (auto-detected if omitted)
+  -S, --no-source          Disable source prefix in title
+  -p, --phone              Send to phone via iMessage
+  -P, --pushover           Send via Pushover
+  -q, --question           Track for retry if unanswered
+
+Answer Options:
+  -t, --title <title>      Question title (for lookup)
+  -m, --message <message>  Question message (for lookup)
+  -i, --id <id>            Question ID (from send response)
+
+Examples:
+  ntfy send -t "Done" -m "Tests passed"              # Auto-detects source (e.g., "[claude] Done")
+  ntfy send -t "Done" -m "Tests passed" -S           # No source prefix
+  ntfy send -t "Done" -m "Tests passed" -s "myapp"   # Custom source: "[myapp] Done"
+  ntfy send -t "Error" -m "Build failed" -u critical
+  ntfy send -t "Question" -m "Continue?" -q
+  ntfy answer -t "Question" -m "Continue?"
+  ntfy pending
+EOF
+}
+
+# Get tmux session context (or tty) for attention detection
+# Format: session:window_index:pane_index for precise pane-level detection
+get_context() {
+  if [[ -n "${TMUX:-}" ]]; then
+    # Use #S:#I:#P (session:window_index:pane_index) for pane-level detection
+    # Hammerspoon queries tmux directly to compare against active pane
+    tmux display-message -p '#S:#I:#P' 2>/dev/null || echo ""
+  else
+    tty 2>/dev/null | sed 's|/dev/||' || echo ""
+  fi
+}
+
+# Auto-detect the source application by walking up the process tree
+# Returns the first "interesting" parent (not shell, not system processes)
+detect_source() {
+  local pid=$PPID
+  # Shells and interpreters to skip (we want the app that launched them)
+  local skip_names="bash|zsh|fish|sh|dash|tcsh|csh|node|python|python3|python3.1[0-9]|ruby|perl|npm|npx|pnpm|yarn|bun"
+
+  # Walk up the process tree (max 10 levels)
+  for _ in {1..10}; do
+    [[ -z "$pid" || "$pid" == "1" ]] && break
+
+    local comm
+    comm=$(ps -o comm= -p "$pid" 2>/dev/null | tr -d ' ')
+    [[ -z "$comm" ]] && break
+
+    # Extract just the binary name (handles /nix/store/.../bin/node -> node)
+    local name="${comm##*/}"
+    # Strip leading dash (login shell indicator like -fish)
+    name="${name#-}"
+
+    # Skip shells and interpreters, look for the actual app
+    if [[ ! "$name" =~ ^($skip_names)$ ]]; then
+      echo "$name"
+      return 0
+    fi
+
+    # Move to parent
+    pid=$(ps -o ppid= -p "$pid" 2>/dev/null | tr -d ' ')
+  done
+
+  # No interesting parent found
+  echo ""
+}
+
+# Escape string for Lua (handle special characters)
+lua_escape() {
+  local str="$1"
+  # Use [[ ]] Lua string literals which handle most escaping
+  # But we need to escape ]] sequences
+  str="${str//]]/] ]}"
+  echo "$str"
+}
+
+# Send notification via N.send()
+cmd_send() {
+  local title="" message="" urgency="normal" source=""
+  local phone="false" pushover="false" question="false"
+  local no_source="false"
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      -t|--title) title="$2"; shift 2 ;;
+      -m|--message) message="$2"; shift 2 ;;
+      -u|--urgency) urgency="$2"; shift 2 ;;
+      -s|--source) source="$2"; shift 2 ;;
+      -S|--no-source) no_source="true"; shift ;;
+      -p|--phone) phone="true"; shift ;;
+      -P|--pushover) pushover="true"; shift ;;
+      -q|--question) question="true"; shift ;;
+      --title=*) title="${1#*=}"; shift ;;
+      --message=*) message="${1#*=}"; shift ;;
+      --urgency=*) urgency="${1#*=}"; shift ;;
+      --source=*) source="${1#*=}"; shift ;;
+      *) shift ;;
+    esac
+  done
+
+  if [[ -z "$title" ]] || [[ -z "$message" ]]; then
+    echo "Error: title and message are required" >&2
+    echo "Usage: ntfy send -t 'Title' -m 'Message'" >&2
+    return 1
+  fi
+
+  # Auto-detect source if not provided and not disabled
+  if [[ "$no_source" != "true" && -z "$source" ]]; then
+    source=$(detect_source)
+  fi
+
+  # Prepend source to title if we have one
+  if [[ -n "$source" ]]; then
+    title="[$source] $title"
+  fi
+
+  local context
+  context=$(get_context)
+
+  # Escape for Lua
+  local lua_title lua_message lua_context
+  lua_title=$(lua_escape "$title")
+  lua_message=$(lua_escape "$message")
+  lua_context=$(lua_escape "$context")
+
+  # Single Hammerspoon call with all data
+  local result
+  result=$(hs -c "
+local N = require('lib.notifications')
+local result = N.send({
+  title = [[${lua_title}]],
+  message = [[${lua_message}]],
+  urgency = '${urgency}',
+  phone = ${phone},
+  pushover = ${pushover},
+  question = ${question},
+  context = [[${lua_context}]],
+})
+local channels = table.concat(result.channels, ',')
+print(result.sent and 'sent' or 'suppressed', result.reason, channels, result.questionId or '')
+" 2>&1)
+
+  echo "$result"
+}
+
+# Mark question as answered
+cmd_answer() {
+  local title="" message="" id=""
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      -t|--title) title="$2"; shift 2 ;;
+      -m|--message) message="$2"; shift 2 ;;
+      -i|--id) id="$2"; shift 2 ;;
+      --title=*) title="${1#*=}"; shift ;;
+      --message=*) message="${1#*=}"; shift ;;
+      --id=*) id="${1#*=}"; shift ;;
+      *) shift ;;
+    esac
+  done
+
+  if [[ -z "$id" ]] && [[ -z "$title" || -z "$message" ]]; then
+    echo "Error: either --id or both --title and --message are required" >&2
+    return 1
+  fi
+
+  local lua_id="${id:-nil}"
+  local lua_title lua_message
+  lua_title=$(lua_escape "$title")
+  lua_message=$(lua_escape "$message")
+
+  [[ -n "$id" ]] && lua_id="'$id'"
+  [[ -z "$title" ]] && lua_title=""
+  [[ -z "$message" ]] && lua_message=""
+
+  local result
+  result=$(hs -c "
+local N = require('lib.notifications')
+local success = N.answerQuestion(${lua_id}, [[${lua_title}]] ~= '' and [[${lua_title}]] or nil, [[${lua_message}]] ~= '' and [[${lua_message}]] or nil)
+print(success and 'answered' or 'not_found')
+" 2>&1)
+
+  echo "$result"
+}
+
+# List pending questions
+cmd_pending() {
+  hs -c "
+local N = require('lib.notifications')
+local pending = N.getPendingQuestions()
+if #pending == 0 then
+  print('No pending questions')
+else
+  for _, q in ipairs(pending) do
+    print(string.format('%s | %s | retries=%d | age=%ds', q.id, q.title, q.retryCount, q.age))
+  end
+end
+"
+}
+
+# Main command dispatcher
+case "${1:-help}" in
+  send) shift; cmd_send "$@" ;;
+  answer) shift; cmd_answer "$@" ;;
+  pending) cmd_pending ;;
+  help|--help|-h) show_help ;;
+  *) echo "Unknown command: $1. Use 'ntfy help'" >&2; exit 1 ;;
+esac

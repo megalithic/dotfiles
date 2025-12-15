@@ -4,8 +4,7 @@ if not Plugin_enabled() then return end
 ---@param replace string
 local function abbr(text, replace, bufnr) vim.keymap.set("ia", text, replace, { buffer = bufnr or true }) end
 
-local ftplugin = require("config.ftplugin")
-ftplugin.extend_all({
+require("config.ftplugin").extend_all({
   -- dbee = {
   --   keys = {
   --     { "n", "H", "^" },
@@ -16,6 +15,23 @@ ftplugin.extend_all({
   --     -- map("n", "0", "^")
   --   },
   -- },
+  cmdline = {
+    opt = {
+      number = false,
+      relativenumber = false,
+    },
+  },
+--  [{ "cmd", "msg", "pager", "dialog" }] = {
+--
+--    opt = {
+--      signcolumn = false,
+--      number = false,
+--      relativenumber = false,
+--    },
+--    callback = function(bufnr, args)
+--      vim.api.nvim_set_option_value("winhl", "Normal:PanelBackground,FloatBorder:PanelBorder", {})
+--    end,
+--  },
   [{ "elixir", "eelixir" }] = {
     opt = {
       syntax = "OFF",
@@ -39,6 +55,9 @@ ftplugin.extend_all({
     --   indentkeys = vim.opt.indentkeys + { "end" },
     -- },
     callback = function(bufnr, args)
+      -- TODO:
+      -- very handle to/from_pipe macros: https://github.com/pejrich/nvim_config/blob/master/lua/utils.lua#L146-L208
+      --
       -- REF:
       -- running tests in iex:
       -- https://www.elixirstreams.com/tips/test-breakpoints
@@ -69,9 +88,21 @@ ftplugin.extend_all({
       end, "format")
 
       nmap("<localleader>ok", [[:lua require("config.utils").wrap_cursor_node("{:ok, ", "}")<CR>]], "copy module alias")
-      xmap("<localleader>ok", [[:lua require("config.utils").wrap_selected_nodes("{:ok, ", "}")<CR>]], "copy module alias")
-      nmap("<localleader>err", [[:lua require("config.utils").wrap_cursor_node("{:error, ", "}")<CR>]], "copy module alias")
-      xmap("<localleader>err", [[:lua require("config.utils").wrap_selected_nodes("{:error, ", "}")<CR>]], "copy module alias")
+      xmap(
+        "<localleader>ok",
+        [[:lua require("config.utils").wrap_selected_nodes("{:ok, ", "}")<CR>]],
+        "copy module alias"
+      )
+      nmap(
+        "<localleader>err",
+        [[:lua require("config.utils").wrap_cursor_node("{:error, ", "}")<CR>]],
+        "copy module alias"
+      )
+      xmap(
+        "<localleader>err",
+        [[:lua require("config.utils").wrap_selected_nodes("{:error, ", "}")<CR>]],
+        "copy module alias"
+      )
 
       -- NOTE: these workspace commands only work with elixir-ls
       -- local lsp_execute = function(opts)
@@ -126,10 +157,13 @@ ftplugin.extend_all({
         local left_of_cursor_range = { cursor[1] - 1, cursor[2] - 1 }
 
         local current_node = vim.treesitter.get_node({ ignore_injections = false, pos = left_of_cursor_range })
-        local html_attr_node = require("config.utils").ts.find_node_ancestor({ "attribute_name", "directive_argument", "directive_name" }, current_node)
+        local html_attr_node = require("config.utils").ts.find_node_ancestor(
+          { "attribute_name", "directive_argument", "directive_name" },
+          current_node
+        )
 
         if html_attr_node then
-          return "={\"\"}<left><left>"
+          return '={""}<left><left>'
         else
           return "="
         end
@@ -144,7 +178,10 @@ ftplugin.extend_all({
         local lang = tree._lang
 
         local current_node = vim.treesitter.get_node({ ignore_injections = false, pos = left_of_cursor_range })
-        local html_attr_node = require("config.utils").ts.find_node_ancestor({ "attribute_name", "directive_argument", "directive_name" }, current_node)
+        local html_attr_node = require("config.utils").ts.find_node_ancestor(
+          { "attribute_name", "directive_argument", "directive_name" },
+          current_node
+        )
 
         -- local buf_lang = vim.treesitter.language.get_lang(vim.bo[0].filetype)
         -- local ok_parser, parser = pcall(vim.treesitter.get_string_parser, text, buf_lang)
@@ -324,10 +361,13 @@ ftplugin.extend_all({
         local left_of_cursor_range = { cursor[1] - 1, cursor[2] - 1 }
 
         local current_node = vim.treesitter.get_node({ ignore_injections = false, pos = left_of_cursor_range })
-        local html_attr_node = require("config.utils").ts.find_node_ancestor({ "attribute_name", "directive_argument", "directive_name" }, current_node)
+        local html_attr_node = require("config.utils").ts.find_node_ancestor(
+          { "attribute_name", "directive_argument", "directive_name" },
+          current_node
+        )
 
         if html_attr_node then
-          return "={\"\"}<left><left>"
+          return '={""}<left><left>'
         else
           return "="
         end
@@ -347,10 +387,13 @@ ftplugin.extend_all({
         local left_of_cursor_range = { cursor[1] - 1, cursor[2] - 1 }
 
         local current_node = vim.treesitter.get_node({ ignore_injections = false, pos = left_of_cursor_range })
-        local html_attr_node = require("config.utils").ts.find_node_ancestor({ "attribute_name", "directive_argument", "directive_name" }, current_node)
+        local html_attr_node = require("config.utils").ts.find_node_ancestor(
+          { "attribute_name", "directive_argument", "directive_name" },
+          current_node
+        )
 
         if html_attr_node then
-          return "=\"\"<left>"
+          return '=""<left>'
         else
           return "="
         end
@@ -384,7 +427,12 @@ ftplugin.extend_all({
   },
   gitrebase = {
     callback = function(bufnr, args)
-      vim.keymap.set("n", "q", function() vim.cmd("cq!", { bang = true }) end, { buffer = bufnr, nowait = true, desc = "abort" })
+      vim.keymap.set(
+        "n",
+        "q",
+        function() vim.cmd("cq!", { bang = true }) end,
+        { buffer = bufnr, nowait = true, desc = "abort" }
+      )
     end,
   },
   [{ "gitcommit", "NeogitCommitMessage" }] = {
@@ -404,7 +452,12 @@ ftplugin.extend_all({
       concealcursor = "nc",
     },
     callback = function()
-      vim.keymap.set("n", "q", function() vim.cmd("cq!", { bang = true }) end, { buffer = true, nowait = true, desc = "Abort" })
+      vim.keymap.set(
+        "n",
+        "q",
+        function() vim.cmd("cq!", { bang = true }) end,
+        { buffer = true, nowait = true, desc = "Abort" }
+      )
       vim.fn.matchaddpos("DiagnosticVirtualTextError", { { 1, 50, 10000 } })
       if vim.api.nvim_get_current_line() == "" then vim.cmd.startinsert() end
     end,
@@ -474,19 +527,6 @@ ftplugin.extend_all({
       map("q", "<cmd>q<cr>", "quit")
       map("<leader>ed", "<cmd>q<cr>", "quit")
       map("<BS>", function() require("oil").open() end, "goto parent dir")
-
-      map("<localleader>ff", function()
-        local oil = require("oil")
-        local dir = oil.get_current_dir()
-        if vim.api.nvim_win_get_config(0).relative ~= "" then vim.api.nvim_win_close(0, true) end
-        mega.picker.find_files({ cwd = dir, hidden = true })
-      end, "find files in dir")
-      map("<localleader>a", function()
-        local oil = require("oil")
-        local dir = oil.get_current_dir()
-        if vim.api.nvim_win_get_config(0).relative ~= "" then vim.api.nvim_win_close(0, true) end
-        mega.picker.grep({ cwd = dir })
-      end, "grep files in dir")
     end,
   },
   [{ "javascript", "typescript" }] = {
@@ -517,6 +557,25 @@ ftplugin.extend_all({
       abbr("!=", "~=", bufnr)
     end,
   },
+  mail = {
+    callback = function(bufnr)
+      vim.keymap.set("n", "j", "gj", { buffer = true })
+      vim.keymap.set("n", "k", "gk", { buffer = true })
+
+      vim.opt_local.textwidth = 80
+      vim.opt_local.wrap = true
+      vim.opt_local.linebreak = true
+      vim.opt_local.spell = true
+      vim.opt_local.spelllang = "en"
+      vim.opt_local.formatoptions = "tcqwan"
+      vim.opt_local.list = false
+      vim.opt_local.synmaxcol = 0
+
+      -- Start in insert mode after headers
+      vim.cmd("normal! }o")
+      vim.cmd.startinsert()
+    end,
+  },
   make = {
     opt = {
       expandtab = false,
@@ -524,14 +583,7 @@ ftplugin.extend_all({
   },
   markdown = {
     abbr = {
-      cabag = [[Co-authored-by: Aaron Gunderson <aaron@ternit.com>]],
-      cabdt = [[Co-authored-by: Dan Thiffault <dan@ternit.com>]],
-      cabjm = [[Co-authored-by: Jia Mu <jia@ternit.com>]],
-      cabam = [[Co-authored-by: Ali Marsh<ali@ternit.com>]],
-      cbag = [[Co-authored-by: Aaron Gunderson <aaron@ternit.com>]],
-      cbdt = [[Co-authored-by: Dan Thiffault <dan@ternit.com>]],
-      cbjm = [[Co-authored-by: Jia Mu <jia@ternit.com>]],
-      cbam = [[Co-authored-by: Ali Marsh<ali@ternit.com>]],
+      cab = [[Co-authored-by: First Last <email@example.com>]],
       cbt = "- [ ]",
       cb = "[ ]",
     },
@@ -681,96 +733,106 @@ ftplugin.extend_all({
       buflisted = false,
       wrap = false,
     },
-    callback = function()
-      vim.cmd("wincmd J")
-      vim.cmd([[
-        " Autosize quickfix to match its minimum content
-        " https://vim.fandom.com/wiki/Automatically_fitting_a_quickfix_window_height
-        function! s:adjust_height(minheight, maxheight)
-          exe max([min([line("$"), a:maxheight]), a:minheight]) . "wincmd _"
-        endfunction
-
-        " force quickfix to open beneath all other splits
-        call s:adjust_height(3, 10)
-
-        " REF: https://github.com/romainl/vim-qf/blob/2e385e6d157314cb7d0385f8da0e1594a06873c5/autoload/qf.vim#L22
-      ]])
-
-      -- nnoremap("<C-n>", function()
-      --   pcall(function()
-      --     vim.cmd.lne({
-      --       count = vim.v.count1,
-      --     })
-      --   end)
-      -- end, { buffer = 0, label = "QF: next" })
-      -- nnoremap("<C-p>", function()
-      --   pcall(function()
-      --     vim.cmd.lp({
-      --       count = vim.v.count1,
-      --     })
-      --   end)
-      -- end, { buffer = 0, label = "QF: previous" })
-      -- vim.keymap.set(
-      --   { "n", "x" },
-      --   "<CR>",
-      --   function()
-      --     vim.cmd.ll({
-      --       count = vim.api.nvim_win_get_cursor(0)[1],
-      --     })
-      --   end,
-      --   {
-      --     buffer = true,
-      --   }
-      -- )
-
-      local ok_bqf, bqf = pcall(require, "bqf")
-      if not ok_bqf then return end
-
-      local fugitive_pv_timer
-      local preview_fugitive = function(bufnr, qwinid, bufname)
-        local is_loaded = vim.api.nvim_buf_is_loaded(bufnr)
-        if fugitive_pv_timer and fugitive_pv_timer:get_due_in() > 0 then
-          fugitive_pv_timer:stop()
-          fugitive_pv_timer = nil
-        end
-        fugitive_pv_timer = vim.defer_fn(function()
-          if not is_loaded then vim.api.nvim_buf_call(bufnr, function() vim.cmd(("do fugitive BufReadCmd %s"):format(bufname)) end) end
-          require("bqf.preview.handler").open(qwinid, nil, true)
-          vim.api.nvim_set_option_value("filetype", "git", { buf = require("bqf.preview.session").float_bufnr(), win = qwinid })
-        end, is_loaded and 0 or 60)
-        return true
-      end
-
-      bqf.setup({
-        auto_enable = true,
-        auto_resize_height = true,
-        preview = {
-          auto_preview = true,
-          win_height = 15,
-          win_vheight = 15,
-          delay_syntax = 80,
-          border_chars = { "┃", "┃", "━", "━", "┏", "┓", "┗", "┛", "█" },
-          ---@diagnostic disable-next-line: unused-local
-          should_preview_cb = function(bufnr, qwinid)
-            local bufname = vim.api.nvim_buf_get_name(bufnr)
-            local fsize = vim.fn.getfsize(bufname)
-            if fsize > 100 * 1024 then
-              -- skip file size greater than 100k
-              return false
-            elseif bufname:match("^fugitive://") then
-              return preview_fugitive(bufnr, qwinid, bufname)
-            end
-
-            return true
-          end,
-        },
-        filter = {
-          fzf = {
-            extra_opts = { "--bind", "ctrl-o:toggle-all", "--delimiter", "│" },
-          },
-        },
-      })
-    end,
+    -- callback = function()
+    --   vim.cmd("wincmd J")
+    --   vim.cmd([[
+    --     " Autosize quickfix to match its minimum content
+    --     " https://vim.fandom.com/wiki/Automatically_fitting_a_quickfix_window_height
+    --     function! s:adjust_height(minheight, maxheight)
+    --       exe max([min([line("$"), a:maxheight]), a:minheight]) . "wincmd _"
+    --     endfunction
+    --
+    --     " force quickfix to open beneath all other splits
+    --     call s:adjust_height(3, 10)
+    --
+    --     " REF: https://github.com/romainl/vim-qf/blob/2e385e6d157314cb7d0385f8da0e1594a06873c5/autoload/qf.vim#L22
+    --   ]])
+    --
+    --   -- nnoremap("<C-n>", function()
+    --   --   pcall(function()
+    --   --     vim.cmd.lne({
+    --   --       count = vim.v.count1,
+    --   --     })
+    --   --   end)
+    --   -- end, { buffer = 0, label = "QF: next" })
+    --   -- nnoremap("<C-p>", function()
+    --   --   pcall(function()
+    --   --     vim.cmd.lp({
+    --   --       count = vim.v.count1,
+    --   --     })
+    --   --   end)
+    --   -- end, { buffer = 0, label = "QF: previous" })
+    --   -- vim.keymap.set(
+    --   --   { "n", "x" },
+    --   --   "<CR>",
+    --   --   function()
+    --   --     vim.cmd.ll({
+    --   --       count = vim.api.nvim_win_get_cursor(0)[1],
+    --   --     })
+    --   --   end,
+    --   --   {
+    --   --     buffer = true,
+    --   --   }
+    --   -- )
+    --
+    --   local ok_bqf, bqf = pcall(require, "bqf")
+    --   if not ok_bqf then
+    --     return
+    --   end
+    --
+    --   local fugitive_pv_timer
+    --   local preview_fugitive = function(bufnr, qwinid, bufname)
+    --     local is_loaded = vim.api.nvim_buf_is_loaded(bufnr)
+    --     if fugitive_pv_timer and fugitive_pv_timer:get_due_in() > 0 then
+    --       fugitive_pv_timer:stop()
+    --       fugitive_pv_timer = nil
+    --     end
+    --     fugitive_pv_timer = vim.defer_fn(function()
+    --       if not is_loaded then
+    --         vim.api.nvim_buf_call(bufnr, function()
+    --           vim.cmd(("do fugitive BufReadCmd %s"):format(bufname))
+    --         end)
+    --       end
+    --       require("bqf.preview.handler").open(qwinid, nil, true)
+    --       vim.api.nvim_set_option_value(
+    --         "filetype",
+    --         "git",
+    --         { buf = require("bqf.preview.session").float_bufnr(), win = qwinid }
+    --       )
+    --     end, is_loaded and 0 or 60)
+    --     return true
+    --   end
+    --
+    --   bqf.setup({
+    --     auto_enable = true,
+    --     auto_resize_height = true,
+    --     preview = {
+    --       auto_preview = true,
+    --       win_height = 15,
+    --       win_vheight = 15,
+    --       delay_syntax = 80,
+    --       border_chars = { "┃", "┃", "━", "━", "┏", "┓", "┗", "┛", "█" },
+    --       ---@diagnostic disable-next-line: unused-local
+    --       should_preview_cb = function(bufnr, qwinid)
+    --         local bufname = vim.api.nvim_buf_get_name(bufnr)
+    --         local fsize = vim.fn.getfsize(bufname)
+    --         if fsize > 100 * 1024 then
+    --           -- skip file size greater than 100k
+    --           return false
+    --         elseif bufname:match("^fugitive://") then
+    --           return preview_fugitive(bufnr, qwinid, bufname)
+    --         end
+    --
+    --         return true
+    --       end,
+    --     },
+    --     filter = {
+    --       fzf = {
+    --         extra_opts = { "--bind", "ctrl-o:toggle-all", "--delimiter", "│" },
+    --       },
+    --     },
+    --   })
+    -- end,
   },
   lazy = {
     opt = {
@@ -817,4 +879,4 @@ ftplugin.extend_all({
   },
 })
 
-ftplugin.setup()
+require("config.ftplugin").setup()

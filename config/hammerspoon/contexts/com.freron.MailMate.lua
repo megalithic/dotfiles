@@ -99,7 +99,7 @@ function obj:stop(opts)
   --     obj.mouseClick:stop()
 
   --     require("ptt").setMode("push-to-talk")
-  --     require("utils").dnd(false, "back")
+  --     require("config.utils").dnd(false, "back")
 
   --     do
   --       if hs.application.get(BROWSER) ~= nil then

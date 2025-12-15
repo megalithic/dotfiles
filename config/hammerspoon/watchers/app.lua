@@ -1,39 +1,40 @@
 local enum = req("hs.fnutils")
-local utils = req("utils")
 local contexts = req("contexts")
+local fmt = string.format
 
-local obj = {}
+local M = {}
 
-obj.__index = obj
-obj.name = "watcher.app"
-obj.debug = false
-obj.watchers = {
+M.__index = M
+M.name = "watcher.app"
+M.debug = false
+M.watchers = {
   global = nil,
   app = {},
   context = {},
 }
-obj.lollygagger = req("lollygagger")
+-- obj.lollygagger = req("lollygagger")
 
 -- interface: (element, event, watcher, info)
-function obj.handleWatchedEvent(elementOrAppName, event, _watcher, app)
+function M.handleWatchedEvent(elementOrAppName, event, _watcher, app)
   if elementOrAppName ~= nil then
-    obj.runLayoutRulesForAppBundleID(elementOrAppName, event, app)
-    obj.runContextForAppBundleID(elementOrAppName, event, app)
-    obj.lollygagger:run(elementOrAppName, event, app)
+    -- M.runLayoutRulesForAppBundleID(elementOrAppName, event, app)
+    M.runContextForAppBundleID(elementOrAppName, event, app)
+
+    -- if M.lollygagger then
+    --   M.lollygagger:run(elementOrAppName, event, app)
+    -- end
   end
 end
 
 -- interface: (app, initializing)
-function obj.watchApp(app, _)
-  if app == nil then return end
-  if obj.watchers.app[app:pid()] then return end
+function M.watchApp(app, _)
+  if app == nil or app:bundleID() == nil then return end
+  if M.watchers.app[app:bundleID()] then return end
 
-  local watcher = app:newWatcher(obj.handleWatchedEvent, app)
-  obj.watchers.app[app:pid()] = {
-    watcher = watcher,
-  }
-
+  local watcher = app:newWatcher(M.handleWatchedEvent, app)
   if watcher == nil then return end
+
+  M.watchers.app[app:bundleID()] = watcher
 
   watcher:start({
     hs.uielement.watcher.windowCreated,
@@ -44,13 +45,7 @@ function obj.watchApp(app, _)
   })
 end
 
-function obj.attachExistingApps()
-  enum.each(hs.application.runningApplications(), function(app)
-    if app:title() ~= "Hammerspoon" then obj.watchApp(app, true) end
-  end)
-end
-
-function obj.runLayoutRulesForAppBundleID(elementOrAppName, event, app)
+function M.runLayoutRulesForAppBundleID(elementOrAppName, event, app)
   -- NOTE: only certain events are layout-runnable
   local layoutableEvents = {
     hs.application.watcher.launched,
@@ -71,11 +66,14 @@ function obj.runLayoutRulesForAppBundleID(elementOrAppName, event, app)
 end
 
 -- NOTE: all events are context-runnable
-function obj.runContextForAppBundleID(elementOrAppName, event, app, metadata)
-  if not obj.watchers.context[app:bundleID()] then return end
+function M.runContextForAppBundleID(elementOrAppName, event, app, metadata)
+  if not M.watchers.context[app:bundleID()] then
+    -- U.log.wf("%s context failed to run", app:bundleID())
+    return
+  end
 
   contexts:run({
-    context = obj.watchers.context[app:bundleID()],
+    context = M.watchers.context[app:bundleID()],
     element = type(elementOrAppName) ~= "string" and elementOrAppName or nil,
     event = event,
     appObj = app,
@@ -84,46 +82,65 @@ function obj.runContextForAppBundleID(elementOrAppName, event, app, metadata)
   })
 end
 
-function obj:start()
-  self.watchers.app = {}
-  self.watchers.context = contexts:start()
-  self.watchers.global = hs.application.watcher
-    .new(function(appName, event, app) obj.handleWatchedEvent(appName, event, nil, app) end)
-    :start()
-  -- NOTE: this slows it ALL down
-  -- self.attachExistingApps()
-  self.lollygagger:start()
+function M:start()
+  -- Stop existing watchers first to avoid duplicates
+  if self.watchers.global then
+    self.watchers.global:stop()
+    self.watchers.global = nil
+  end
 
-  info(fmt("[START] %s", self.name))
+  -- for watching all app events; the orchestrator, if you will
+  self.watchers.global = hs.application.watcher
+    .new(function(appName, appEvent, appObj)
+      M.handleWatchedEvent(appName, appEvent, nil, appObj)
+      M.watchApp(appObj)
+    end)
+    :start()
+
+  -- for watching individual apps
+  self.watchers.app = {}
+  self.watchers.context = contexts:preload()
+
+  -- if M.lollygagger then
+  --   self.lollygagger:start()
+  -- end
+
+  U.log.i(fmt("started", self.name))
 
   return self
 end
 
-function obj:stop()
+function M:stop()
   if self.watchers.global then
-    -- self.watchers.global:stop()
+    self.watchers.global:stop()
     self.watchers.global = nil
   end
 
   if self.watchers.app then
     enum.each(self.watchers.app, function(w)
-      w:stop()
+      if w and type(w["stop"]) == "function" then
+        U.log.f("stopping app/element watcher %s", w:element())
+        w:stop()
+      end
       w = nil
     end)
     self.watchers.app = nil
   end
 
-  if self.watchers.contexts then
-    enum.each(self.watchers.contexts, function(w)
-      w:stop()
+  if self.watchers.context then
+    enum.each(self.watchers.context, function(w)
+      if w and type(w["stop"]) == "function" then
+        U.log.f("stopping %s", w.name)
+        w:stop()
+      end
       w = nil
     end)
-    self.watchers.contexts = nil
+    self.watchers.context = nil
   end
 
-  info(fmt("[STOP] %s", self.name))
+  U.log.i(fmt("stopped", self.name))
 
   return self
 end
 
-return obj
+return M

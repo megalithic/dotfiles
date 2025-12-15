@@ -1,4 +1,16 @@
 return {
+  {
+    -- NOTE: using this until it's fixed in blink
+    -- BUG https://github.com/Saghen/blink.cmp/issues/1670
+    "ray-x/lsp_signature.nvim",
+    event = "InsertEnter",
+    opts = {
+      hint_prefix = "󰏪 ",
+      hint_scheme = "Todo",
+      floating_window = false,
+      always_trigger = true,
+    },
+  },
   { "b0o/schemastore.nvim" },
   {
     "WhoIsSethDaniel/mason-tool-installer.nvim",
@@ -168,16 +180,16 @@ return {
         ensure_installed = {},
       })
 
-      require("mason-tool-installer").setup({
-        ensure_installed = ensure_installed,
-        auto_update = false,
-        run_on_start = true,
-        integrations = {
-          ["mason-lspconfig"] = true,
-          ["mason-null-ls"] = true,
-          ["mason-nvim-dap"] = true,
-        },
-      })
+      -- require("mason-tool-installer").setup({
+      --   ensure_installed = ensure_installed,
+      --   auto_update = false,
+      --   run_on_start = true,
+      --   integrations = {
+      --     ["mason-lspconfig"] = true,
+      --     ["mason-null-ls"] = true,
+      --     ["mason-nvim-dap"] = true,
+      --   },
+      -- })
     end,
   },
   -- {
@@ -392,7 +404,7 @@ return {
   {
     "rachartier/tiny-inline-diagnostic.nvim",
     event = "VeryLazy",
-    priority = 1000, -- needs to be loaded in first
+    priority = 2000, -- needs to be loaded in first
     opts = {
       hi = {
         error = "DiagnosticError",
@@ -421,7 +433,7 @@ return {
         multiple_diag_under_cursor = true,
         format = function(d)
           local msg = d.message
-          local icon = require("config.options").icons.lsp[vim.diagnostic.severity[d.severity]:lower()]
+          local icon = Icons.lsp[vim.diagnostic.severity[d.severity]:lower()]
           if d.source == "typos" then
             msg = msg:gsub("should be", "󰁔"):gsub("`", "")
           elseif d.source == "Lua Diagnostics." then
@@ -438,6 +450,14 @@ return {
       },
     },
     config = function(_, opts) require("tiny-inline-diagnostic").setup(opts) end,
+  },
+  {
+    "rachartier/tiny-code-action.nvim",
+    dependencies = {
+      { "nvim-lua/plenary.nvim" },
+    },
+    event = "LspAttach",
+    opts = { picker = "select" },
   },
   {
     -- cond = false,
@@ -458,6 +478,7 @@ return {
   },
   {
     "dnlhc/glance.nvim",
+    enabled = false,
     config = function()
       -- Glance
       local actions = require("glance").actions

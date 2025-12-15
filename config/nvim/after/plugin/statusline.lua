@@ -21,8 +21,6 @@ local get_opt = api.nvim_get_option_value
 
 local U = require("config.utils")
 local SETTINGS = require("config.options")
-local H = U.hl
-local icons = SETTINGS.icons
 
 vim.g.is_saving = false
 vim.g.lsp_progress_messages = ""
@@ -102,7 +100,7 @@ Augroup("mega.ui.statusline", {
       end
 
       if progress.kind == "end" then
-        vim.g.lsp_progress_messages = fmt("%s %s loaded.", icons.lsp.ok, clientName)
+        vim.g.lsp_progress_messages = fmt("%s %s loaded.", Icons.lsp.ok, clientName)
 
         clear_messages_timer = vim.defer_fn(clear_messages_on_end, 1000)
       else
@@ -284,8 +282,8 @@ local plain_types = {
 
 local exception_types = {
   buftypes = {
-    terminal = fmt("%s ", icons.misc.terminal),
-    quickfix = fmt("%s ", icons.misc.terminal),
+    terminal = fmt("%s ", Icons.misc.terminal),
+    quickfix = fmt("%s ", Icons.misc.terminal),
   },
   filenames = {
     __committia_diff__ = "git commit (diff)",
@@ -298,22 +296,22 @@ local exception_types = {
     orgagenda = "",
     dbui = "",
     tsplayground = "󰺔",
-    fugitive = icons.vcs,
-    fugitiveblame = icons.vcs,
-    gitcommit = icons.vcs,
-    NeogitCommitMessage = icons.vcs,
+    fugitive = Icons.vcs,
+    fugitiveblame = Icons.vcs,
+    gitcommit = Icons.vcs,
+    NeogitCommitMessage = Icons.vcs,
     Trouble = "",
-    NeogitStatus = icons.git.symbol,
+    NeogitStatus = Icons.git.symbol,
     vimwiki = "󰖬",
-    help = icons.misc.help,
-    undotree = fmt("%s", icons.misc.file_tree),
-    NvimTree = fmt("%s", icons.misc.file_tree),
+    help = Icons.misc.help,
+    undotree = fmt("%s", Icons.misc.file_tree),
+    NvimTree = fmt("%s", Icons.misc.file_tree),
     dirbuf = "",
     oil = "",
-    ["neo-tree"] = fmt("%s", icons.misc.file_tree),
-    toggleterm = fmt("%s ", icons.misc.terminal),
-    megaterm = fmt("%s ", icons.misc.terminal),
-    terminal = fmt("%s ", icons.misc.terminal),
+    ["neo-tree"] = fmt("%s", Icons.misc.file_tree),
+    toggleterm = fmt("%s ", Icons.misc.terminal),
+    megaterm = fmt("%s ", Icons.misc.terminal),
+    terminal = fmt("%s ", Icons.misc.terminal),
     calendar = "",
     minimap = "",
     octo = "",
@@ -365,7 +363,12 @@ local exception_types = {
       local term_buf_var = vim.api.nvim_buf_get_var(bufnr, "term_buf")
       if vim.g.term_buf ~= nil or term_buf_var ~= nil then
         return seg(
-          string.format("%s(%s)[%s]", vim.api.nvim_buf_get_var(bufnr, "term_name"), shell, vim.api.nvim_buf_get_var(bufnr, "term_cmd") or bufnr),
+          string.format(
+            "%s(%s)[%s]",
+            vim.api.nvim_buf_get_var(bufnr, "term_name"),
+            shell,
+            vim.api.nvim_buf_get_var(bufnr, "term_cmd") or bufnr
+          ),
           mode_hl
         )
         -- return seg(
@@ -377,8 +380,7 @@ local exception_types = {
       return seg(string.format("megaterm#%d(%s)", bufnr, shell), mode_hl)
     end,
     ["dap-repl"] = "Debugger REPL",
-    kittybuf = "Kitty Scrollback Buffer",
-    firenvim = function(fname, buf) return seg(fmt("%s firenvim (%s)", icons.misc.flames, M.ctx.filetype)) end,
+    firenvim = function(fname, buf) return seg(fmt("%s firenvim (%s)", Icons.misc.flames, M.ctx.filetype)) end,
   },
 }
 
@@ -422,8 +424,8 @@ end
 --- @return string
 local function truncate_str(str, max_size)
   if not max_size or strwidth(str) < max_size then return str end
-  local match, count = str:gsub("(['\"]).*%1", "%1" .. icons.misc.ellipsis .. "%1")
-  return count > 0 and match or str:sub(1, max_size - 1) .. icons.misc.ellipsis
+  local match, count = str:gsub("(['\"]).*%1", "%1" .. Icons.misc.ellipsis .. "%1")
+  return count > 0 and match or str:sub(1, max_size - 1) .. Icons.misc.ellipsis
 end
 
 local function matches(str, list)
@@ -447,7 +449,9 @@ local function special_buffers()
   return nil
 end
 
-local function is_plain() return matches(M.ctx.filetype, plain_types.filetypes) or matches(M.ctx.buftype, plain_types.buftypes) or M.ctx.preview end
+local function is_plain()
+  return matches(M.ctx.filetype, plain_types.filetypes) or matches(M.ctx.buftype, plain_types.buftypes) or M.ctx.preview
+end
 
 local function is_abnormal_buffer()
   -- For more information see ":h buftype"
@@ -468,15 +472,17 @@ local function get_diagnostics(seg_formatters_status)
   if vim.tbl_isempty(vim.lsp.get_clients({ bufnr = M.ctx.bufnr })) then return "" end
 
   local diags = {
-    { num = count(vim.diagnostic.severity.ERROR), sign = icons.lsp.error, hl = "StError" },
-    { num = count(vim.diagnostic.severity.WARN), sign = icons.lsp.warn, hl = "StWarn" },
-    { num = count(vim.diagnostic.severity.INFO), sign = icons.lsp.info, hl = "StInfo" },
-    { num = count(vim.diagnostic.severity.HINT), sign = icons.lsp.hint, hl = "StHint" },
+    { num = count(vim.diagnostic.severity.ERROR), sign = Icons.lsp.error, hl = "StError" },
+    { num = count(vim.diagnostic.severity.WARN), sign = Icons.lsp.warn, hl = "StWarn" },
+    { num = count(vim.diagnostic.severity.INFO), sign = Icons.lsp.info, hl = "StInfo" },
+    { num = count(vim.diagnostic.severity.HINT), sign = Icons.lsp.hint, hl = "StHint" },
   }
 
   local segments = ""
   for _, d in ipairs(diags) do
-    if d.num > 0 then segments = fmt("%s%s", segments, seg(fmt("%s%s", d.num, d.sign), d.hl, { padding = { 1, 1 } })) end
+    if d.num > 0 then
+      segments = fmt("%s%s", segments, seg(fmt("%s%s", d.num, d.sign), d.hl, { padding = { 1, 1 } }))
+    end
   end
 
   return seg(segments .. "" .. seg_formatters_status, { margin = { 1, 1 } })
@@ -509,7 +515,9 @@ local function parse_filename(truncate_at)
   end
 
   local name = exception_types.names[M.ctx.filetype]
-  if exception_types.filenames[current_file().name] ~= nil then name = exception_types.filenames[current_file().name] end
+  if exception_types.filenames[current_file().name] ~= nil then
+    name = exception_types.filenames[current_file().name]
+  end
   local exception_icon = exception_types.filetypes[M.ctx.filetype] or ""
   if type(name) == "function" then return "", "", fmt("%s %s", exception_icon, name(fname, M.ctx.bufnr)) end
 
@@ -533,11 +541,11 @@ local function get_filename_parts(truncate_at)
   local parent_hl = "StParentDirectory"
   local filename_hl = "StFilename"
 
-  if H.winhighlight_exists(M.ctx.winid, "Normal", "StatusLine") then
-    directory_hl = H.adopt_winhighlight(M.ctx.winid, "StatusLine", "StCustomDirectory", "StTitle")
-    parent_hl = H.adopt_winhighlight(M.ctx.winid, "StatusLine", "StCustomParentDir", "StTitle")
-    filename_hl = H.adopt_winhighlight(M.ctx.winid, "StatusLine", "StCustomFilename", "StTitle")
-  end
+  -- if H.winhighlight_exists(M.ctx.winid, "Normal", "StatusLine") then
+  --   directory_hl = H.adopt_winhighlight(M.ctx.winid, "StatusLine", "StCustomDirectory", "StTitle")
+  --   parent_hl = H.adopt_winhighlight(M.ctx.winid, "StatusLine", "StCustomParentDir", "StTitle")
+  --   filename_hl = H.adopt_winhighlight(M.ctx.winid, "StatusLine", "StCustomFilename", "StTitle")
+  -- end
 
   local directory, parent, file, icon, icon_hl = parse_filename(truncate_at)
 
@@ -563,7 +571,10 @@ local function seg_filename(truncate_at)
 
   -- usually our custom titles, like for megaterm, neo-tree, etc
   if dir.item == "" and parent.item == "" then
-    return seg(fmt("%s%s%s", seg(dir.item, dir.hl), seg(parent.item, parent.hl), seg(filename, file_hl)), { margin = { 1, 1 } })
+    return seg(
+      fmt("%s%s%s", seg(dir.item, dir.hl), seg(parent.item, parent.hl), seg(filename, file_hl)),
+      { margin = { 1, 1 } }
+    )
   end
 
   -- if icon.item == nil or icon.item == "" then
@@ -571,15 +582,21 @@ local function seg_filename(truncate_at)
   -- end
   -- return seg(fmt("%s/%s/ %s %s", seg(dir.item, dir.hl), seg(parent.item, parent.hl), seg(icon.item, file_hl), seg(file.item, file_hl)), { margin = { 1, 1 } })
 
-  if dir.item == "/" then return seg(fmt("/%s/%s", seg(parent.item, parent.hl), seg(filename, file_hl)), { margin = { 1, 1 } }) end
+  if dir.item == "/" then
+    return seg(fmt("/%s/%s", seg(parent.item, parent.hl), seg(filename, file_hl)), { margin = { 1, 1 } })
+  end
 
-  return seg(fmt("%s/%s/%s", seg(dir.item, dir.hl), seg(parent.item, parent.hl), seg(filename, file_hl)), { margin = { 1, 1 } })
+  return seg(
+    fmt("%s/%s/%s", seg(dir.item, dir.hl), seg(parent.item, parent.hl), seg(filename, file_hl)),
+    { margin = { 1, 1 } }
+  )
 end
 
 local function seg_buffer_count(truncate_at)
   local buffer_count = U.get_bufnrs()
 
-  local msg = (is_truncated(truncate_at) or vim.g.started_by_firenvim) and "" or fmt("%s%s", icons.misc.buffers, buffer_count)
+  local msg = (is_truncated(truncate_at) or vim.g.started_by_firenvim) and ""
+    or fmt("%s%s", Icons.misc.buffers, buffer_count)
 
   if buffer_count <= 1 then return "" end
   return seg(msg, "StBufferCount", { padding = { 0, 0 } })
@@ -605,7 +622,7 @@ local function seg_lsp_clients(truncate_at)
 
   local function lsp_lookup(name)
     if U.tlen(clients) <= 2 then return name end
-    local ls = SETTINGS.lsp_lookup[name]
+    local ls = vim.g.lsp_lookup[name]
     if ls == nil then ls = name end
 
     return ls
@@ -616,8 +633,10 @@ local function seg_lsp_clients(truncate_at)
   end
 
   local clients_str = U.strim(table.concat(client_names, "/"))
-  if is_truncated(truncate_at) then return seg(#client_names, { prefix = fmt("%s ", icons.lsp.clients), margin = { 0, 0 } }) end
-  return seg(clients_str, { prefix = fmt("%s ", icons.lsp.clients), margin = { 0, 0 } })
+  if is_truncated(truncate_at) then
+    return seg(#client_names, { prefix = fmt("%s ", Icons.lsp.clients), margin = { 0, 0 } })
+  end
+  return seg(clients_str, { prefix = fmt("%s ", Icons.lsp.clients), margin = { 0, 0 } })
 end
 
 local function seg_lsp_status(truncate_at)
@@ -632,7 +651,7 @@ local function seg_lsp_status(truncate_at)
   if ok_messages then
     if messages == "" and vim.g.lsp_progress_messages == "" then
       local enabled = not vim.g.disable_autoformat
-      return get_diagnostics(seg(icons.kind.Null, "StModeInsert", enabled, { margin = { 1, 0 } }))
+      return get_diagnostics(seg(Icons.kind.Null, "StModeInsert", enabled, { margin = { 1, 0 } }))
     end
   end
 
@@ -679,7 +698,7 @@ local function seg_lineinfo(truncate_at)
 
     return seg(
       table.concat({
-        wrap("StMetadataPrefix", icons.misc.ln_sep .. " "),
+        wrap("StMetadataPrefix", Icons.misc.ln_sep .. " "),
         wrap("StLineNumber", "%l"),
         wrap(sep_hl, "/"),
         wrap("StLineTotal", "%L"),
@@ -689,19 +708,6 @@ local function seg_lineinfo(truncate_at)
       { margin = { 1, 1 } }
     )
   end
-end
-
-local function seg_ai(truncate_at)
-  local ok, ai = pcall(require, vim.g.ai, { silent = true })
-
-  if ok then
-    local ai_enabled = false
-
-    if vim.tbl_contains({ "neocodeium", "codecompanion", "supermaven" }, vim.g.ai) then ai_enabled = true end
-    return seg(icons.misc.robot, "StBright", not is_truncated(truncate_at) and ai_enabled, { padding = { 1, 1 } })
-  end
-
-  return ""
 end
 
 local function get_git_hunks()
@@ -773,7 +779,7 @@ local function is_focused() return tonumber(vim.g.actual_curwin) == vim.api.nvim
 function mega.ui.statusline.render()
   local winnr = vim.g.statusline_winid or 0
   local bufnr = api.nvim_win_get_buf(winnr)
-  local modified_icon = vim.g.started_by_firenvim and "?" or fmt("%s", icons.misc.modified)
+  local modified_icon = vim.g.started_by_firenvim and "?" or fmt("%s", Icons.misc.modified)
 
   M.ctx = {
     bufnr = bufnr,
@@ -790,14 +796,16 @@ function mega.ui.statusline.render()
   }
 
   -- vim.o.statusline = "%#Statusline# %2{mode()} | %F %m %r %= %{&spelllang} %y %8(%l,%c%) %8p%%"
-  if not is_focused() then return "%#StatusLineInactive# %F %m %r %{&paste?'[paste] ':''} %= %{&spelllang}  %y %8(%l,%c%) %8p%%" end
+  if not is_focused() then
+    return "%#StatusLineInactive# %F %m %r %{&paste?'[paste] ':''} %= %{&spelllang}  %y %8(%l,%c%) %8p%%"
+  end
 
   if is_plain() then
     local parts = {
       seg([[%<]]),
       seg_filename(),
       seg(modified_icon, "StModifiedIcon", M.ctx.modified, { margin = { 0, 1 } }),
-      seg(icons.misc.lock, "StModifiedIcon", M.ctx.readonly, { margin = { 0, 1 } }),
+      seg(Icons.misc.lock, "StModifiedIcon", M.ctx.readonly, { margin = { 0, 1 } }),
       "%=",
     }
 
@@ -812,7 +820,7 @@ function mega.ui.statusline.render()
     seg_buffer_count(100),
     seg_filename(120),
     seg(modified_icon, "StModifiedIcon", M.ctx.modified, { margin = { 0, 1 } }),
-    seg(icons.misc.lock, "StModifiedIcon", M.ctx.readonly, { margin = { 0, 1 } }),
+    seg(Icons.misc.lock, "StModifiedIcon", M.ctx.readonly, { margin = { 0, 1 } }),
     -- seg("%{&paste?'[paste] ':''}", "warningmsg", { margin = { 1, 1 } }),
     seg("Saving…", "StComment", vim.g.is_saving, { margin = { 0, 1 } }),
     -- seg_search_results(120),
@@ -831,7 +839,6 @@ function mega.ui.statusline.render()
     seg("%*"),
     seg_lsp_clients(150),
     seg_lsp_status(100),
-    seg_ai(120),
     seg_git_status({ 175, 80 }),
     -- seg(get_dap_status()),
     seg_lineinfo(75),

@@ -1,5 +1,8 @@
 if not Plugin_enabled() then
-  vim.opt.statuscolumn = "%C%=%4{&nu && v:virtnum <= 0 ? (&rnu ? (v:lnum == line('.') ? v:lnum . ' ' : v:relnum) : v:lnum) : ''}%=%s"
+  -- vim.o.statuscolumn = "%C%=%4{&nu && v:virtnum <= 0 ? (&rnu ? (v:lnum == line('.') ? v:lnum . ' ' : v:relnum) : v:lnum) : ''}%=%s"
+  vim.o.statuscolumn =
+    [[%C%=%4{&nu && v:virtnum <= 0 ? (&rnu ? (v:lnum == line('.') ? v:lnum . ' ' : v:relnum) : v:lnum) : ''}%{foldlevel(v:lnum) > foldlevel(v:lnum - 1) ? (foldclosed(v:lnum) == -1 ? "" : "") : " " }%=%s]]
+  -- vim.o.statuscolumn = '%{foldlevel(v:lnum) > foldlevel(v:lnum - 1) ? (foldclosed(v:lnum) == -1 ? "" : "") : " " }%l%s'
   return
 end
 
@@ -10,8 +13,7 @@ mega.ui.statuscolumn = {}
 
 local fn, v, api, opt = vim.fn, vim.v, vim.api, vim.opt
 local U = require("config.utils")
-local SETTINGS = require("config.options")
-local sep = SETTINGS.icons.separators
+local sep = Icons.separators
 local strwidth = vim.api.nvim_strwidth
 local fmt = string.format
 
@@ -22,10 +24,11 @@ local shade = sep.light_shade_block
 local CLICK_END = "%X"
 local padding = " "
 
-local excluded_bts = { "terminal", "nofile" }
+local excluded_bts = { "terminal", "nofile", "input", "prompt" }
 local excluded_fts = {
   "NeogitCommitMessage",
   "NeogitCommitView",
+  "cmdline",
   "NeogitRebaseTodo",
   "NeogitStatus",
   "NvimTree",
@@ -43,6 +46,11 @@ local excluded_fts = {
   "man",
   "megaterm",
   "neo-tree",
+  "prompt",
+  "cmd",
+  "msg",
+  "pager",
+  "dialog",
   "neotest-summary",
   "oil",
   "org",
@@ -60,9 +68,12 @@ local excluded_fts = {
   "undotree",
   "vim-plug",
   "vimwiki",
+  "snacks",
 }
 
-local should_hide_numbers = function(filetype, buftype) return vim.tbl_contains(excluded_fts, filetype) or vim.tbl_contains(excluded_bts, buftype) end
+local should_hide_numbers = function(filetype, buftype)
+  return vim.tbl_contains(excluded_fts, filetype) or vim.tbl_contains(excluded_bts, buftype)
+end
 
 ---@return StringComponent
 local function separator() return { component = "%=", length = 0, priority = 0 } end
@@ -407,7 +418,8 @@ function mega.ui.statuscolumn.render(is_active)
       { "", "LineNr" },
     },
     after = "",
-  }, is_actively_folding and fold_col or spacer(2))
+  }, spacer(2))
+  -- }, is_actively_folding and fold_col or spacer(2))
 
   if is_active then
     return display({
@@ -444,7 +456,7 @@ function mega.ui.statuscolumn.set(bufnr, is_active)
   end
 end
 
-Augroup("mega.ui.statuscolumn", {
+Augroup("mega_mvim.ui.statuscolumn", {
   {
     -- event = { "BufEnter", "BufReadPost", "FileType", "FocusGained", "BufWinEnter", "TermLeave", "WinNew", "TermOpen" },
     event = { "BufEnter", "BufReadPost", "FileType", "FocusGained", "WinEnter", "TermLeave" },
@@ -454,8 +466,4 @@ Augroup("mega.ui.statuscolumn", {
     event = { "BufLeave", "WinLeave", "FocusLost" },
     command = function(args) mega.ui.statuscolumn.set(args.buf, false) end,
   },
-  -- {
-  --   event = { "BufWinLeave" },
-  --   command = function(args) mega.ui.statuscolumn.set(args.buf, false) end,
-  -- },
 })

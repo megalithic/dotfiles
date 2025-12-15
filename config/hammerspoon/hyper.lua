@@ -1,12 +1,14 @@
-local obj = hs.hotkey.modal.new({}, nil)
+local fmt = string.format
+local M = hs.hotkey.modal.new({}, nil)
+_G.Hypers = {}
 
-obj.__index = obj
-obj.name = "hyper"
-obj.hyper = nil
-obj.key = HYPER
+M.__index = M
+M.name = "hyper"
+M.hyper = nil
+M.key = HYPER
 
-function obj:bindPassThrough(key, app)
-  self:bind({}, key, nil, function()
+function M:bindPassThrough(mods, key, app)
+  self:bind(mods, key, nil, function()
     if hs.application.get(app) then
       hs.eventtap.keyStroke({ "cmd", "alt", "shift", "ctrl" }, key)
     else
@@ -21,43 +23,40 @@ function obj:bindPassThrough(key, app)
   return self
 end
 
-function obj:init(opts)
+function M:init(opts)
   opts = opts or {}
 
-  if not opts["id"] then
-    error(fmt("[ERROR] %s -> unable to start this hyper; missing id", obj.name))
+  if not opts.id then
+    U.log.e("unable to start this instance; missing id")
     return
   end
 
-  if _G.hypers[opts["id"]] ~= nil then
-    warn(fmt("[%s] %s%s (existing)", "INIT", self.name, opts["id"]))
+  if _G.Hypers[opts.id] ~= nil then
+    U.log.w(fmt("%s used", _G.Hypers[opts.id].id))
 
-    return _G["hypers"][opts["id"]]
+    return _G["Hypers"][opts.id]
   end
 
-  local hyperId = opts["id"] and fmt(".%s", opts["id"]) or ""
+  self.id = opts.id
+  self.key = opts.key or HYPER
+  self.hyper = hs.hotkey.bind({}, self.key, function() self:enter() end, function() self:exit() end)
 
-  obj.key = opts["key"] or HYPER
+  _G.Hypers[opts.id] = self
 
-  self.hyper = hs.hotkey.bind({}, obj.key, function() obj:enter() end, function() obj:exit() end)
-
-  _G.hypers[opts["id"]] = self
-  info(fmt("[%s] %s%s", "INIT", self.name, hyperId))
-
-  return self
-end
-
-function obj:start(opts)
-  if opts ~= nil then info(fmt("[%s] %s (%s)", "START", self.name, I(opts))) end
+  U.log.i(fmt("%s initialized", _G.Hypers[opts.id].id))
 
   return self
 end
 
-function obj:stop()
-  self:delete()
+function M:start(opts) return self end
+
+function M:stop()
+  _G.Hypers[self] = nil
+
   self.hyper:delete()
+  self:delete()
 
   return self
 end
 
-return obj
+return M

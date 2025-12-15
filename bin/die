@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+query="${1:-}"
+
+while true; do
+  result=$(ps -eo pid,ppid,user,%cpu,%mem,command |
+    tail -n +2 |
+    grep -v "fzf" |
+    grep -v "$$" |
+    fzf --multi \
+      --ansi \
+      --reverse \
+      --border=none \
+      --padding="1" \
+      --header=" $(tput sitm)$(tput setaf 5)processes: $(tput sgr 0)[ $(tput setaf 255)<c-k>$(tput sgr 0): $(tput setaf 245)kill selected process(s) $(tput sgr 0)]" \
+      --header-first \
+      --prompt="search processes » " \
+      --query="$query" \
+      --preview="preview --process {1}" \
+      --preview-window="right:50%:wrap" \
+      --bind="esc:abort" \
+      --print-query)
+
+  query=$(echo "$result" | head -n 1)
+  selected=$(echo "$result" | tail -n +2)
+
+  if [[ -z "$selected" ]]; then
+    exit 0
+  fi
+
+  killed_pids=()
+  killed_names=()
+
+  while IFS= read -r line; do
+    pid=$(echo "$line" | awk '{print $1}')
+    name=$(echo "$line" | awk '{for(i=6;i<=NF;i++) printf "%s ", $i; print ""}' | sed 's/ $//')
+
+    # Try graceful kill first (SIGTERM)
+    if kill "$pid" 2>/dev/null; then
+      # Wait briefly to see if process exits gracefully
+      sleep 0.2
+
+      # If process still exists, force kill it (SIGKILL)
+      if kill -0 "$pid" 2>/dev/null; then
+        kill -9 "$pid" 2>/dev/null || true
+      fi
+
+      killed_pids+=("$pid")
+      killed_names+=("$name")
+    else
+      # If graceful kill failed (no permission or process already dead), try force kill
+      kill -9 "$pid" 2>/dev/null && {
+        killed_pids+=("$pid")
+        killed_names+=("$name")
+      } || true
+    fi
+  done <<<"$selected"
+
+  if [[ ${#killed_pids[@]} -gt 0 ]]; then
+    pids_str=$(
+      IFS=', '
+      echo "${killed_pids[*]}"
+    )
+    names_str=$(printf '%s\n' "${killed_names[@]}" | head -n 3 | paste -sd ', ' -)
+
+    if [[ ${#killed_names[@]} -gt 3 ]]; then
+      names_str="$names_str, ... (${#killed_names[@]} total)"
+    fi
+
+    osascript -e "display notification \"PIDs: $pids_str\" with title \"Killed Processes\" subtitle \"$names_str\""
+  fi
+done

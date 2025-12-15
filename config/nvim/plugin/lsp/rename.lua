@@ -1,7 +1,8 @@
 local M = {}
-local BORDER_STYLE = require("config.options").border
+local BORDER_STYLE = vim.g.border
 
 -- populate qf list with changes (if multiple files modified)
+-- TODO: possible rewrite to this: https://github.com/mcauley-penney/nvim/blob/main/lua/aucmd/rename.lua
 function M.rename(client)
   local rename_prompt = ""
   local default_rename_prompt = " -> "
@@ -32,9 +33,13 @@ function M.rename(client)
 
     pos_params.newName = input
 
-    if not client:supports_method("textDocument/rename") or not client:supports_method("textDocument/prepareRename") then
+    if
+      not client:supports_method("textDocument/rename") or not client:supports_method("textDocument/prepareRename")
+    then
       require("grug-far").open({ prefills = { search = pos_params.oldName, replacement = pos_params.newName } })
-      vim.schedule(function() cleanup_cb(winnr) end)
+      vim.schedule(function()
+        cleanup_cb(winnr)
+      end)
       return
     else
       cleanup_cb(winnr)
@@ -87,7 +92,11 @@ function M.rename(client)
       local notification_str = ""
       if num_files > 1 then
         -- add header
-        table.insert(notification, 1, string.format("made %d change%s in %d files", num_updates, (num_updates > 1 and "s") or "", num_files))
+        table.insert(
+          notification,
+          1,
+          string.format("made %d change%s in %d files", num_updates, (num_updates > 1 and "s") or "", num_files)
+        )
 
         notification_str = table.concat(notification, "\n")
       else
@@ -150,9 +159,15 @@ function M.rename(client)
       { win = winnr }
     )
 
-    vim.keymap.set("i", "<CR>", function() rename_cb(client, winnr, bufnr) end, { buffer = bufnr })
-    vim.keymap.set("i", "<esc>", function() cleanup_cb(winnr) end, { buffer = bufnr })
-    vim.keymap.set("i", "<c-c>", function() cleanup_cb(winnr) end, { buffer = bufnr })
+    vim.keymap.set("i", "<CR>", function()
+      rename_cb(client, winnr, bufnr)
+    end, { buffer = bufnr })
+    vim.keymap.set("i", "<esc>", function()
+      cleanup_cb(winnr)
+    end, { buffer = bufnr })
+    vim.keymap.set("i", "<c-c>", function()
+      cleanup_cb(winnr)
+    end, { buffer = bufnr })
 
     vim.cmd.startinsert()
   end

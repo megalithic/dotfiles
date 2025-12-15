@@ -1,54 +1,48 @@
-.DS_Store
-private
-localrc
-.localrc
-**/*.swp
-**/*.log
-**/logs
-**/*.weechatlog
-config/karabiner/automatic_backups/*
-**/*.zwc
-**/.zcomp*
-**/.zsh_sessions
-**/.zsh_history
-.chpwd-recent-dirs
-*.lock.json
-.elixir_ls
-.lexical
-.jj
-cache
-config/tmux/plugins
-*~
-config/gh/hosts.yml
-**/packer_compiled.lua
-packer_compiled.lua
+local.nix
 
-chatgpt-cli-*.json
-
-home/ssh/*
-!home/ssh/config
-
-*.env
-*.envrc
-
-# gnupg/gpg
-config/gnupg/**/*
-!config/gnupg/gpg-agent.conf
-!config/gnupg/gpg.conf
-
-# claude-code
-home/claude/ide
-home/claude/projects
-home/claude/statsig
-home/claude/todos
-home/claude/local
-home/claude/shell-snapshots
-
-home/opencode/bin
-
-# cloudflared
-home/cloudflared/cert.pem
-home/cloudflared/*.json
-
-# local documentation (migration plans, etc.)
+# Auto-generated documentation
 _docs/
+
+# Devenv
+.devenv*
+devenv.local.nix
+
+# pre-commit
+.pre-commit-config.yaml
+
+# Devenv
+.devenv*
+devenv.local.nix
+
+# direnv
+.direnv
+
+# *~
+.DS_Store
+.vim-test
+./tags
+.elixir_ls
+.envrc
+.projections.json
+.init.local.lua
+.direnv
+.mise.local.toml
+
+todo.txt
+
+.elixir-tools/
+.elixir-tools
+.lexical
+.node_modules
+.opencode
+.claude
+!.ignore
+.jj
+.direnv
+**/.direnv
+**/.jj
+
+weechat
+home/config/weechat
+.direnv/
+_planned

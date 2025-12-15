@@ -25,38 +25,38 @@ RETURN_PATH=false
 
 while getopts "hdct:" OPTION; do
   case $OPTION in
-    t)
-      TAGS="${OPTARG}"
-      ;;
+  t)
+    TAGS="${OPTARG}"
+    ;;
 
-    h)
-      __help
-      ;;
+  h)
+    __help
+    ;;
 
-    c)
-      CREATE_ONLY=true
-      ;;
+  c)
+    CREATE_ONLY=true
+    ;;
 
-    p)
-      RETURN_PATH=true
-      ;;
+  p)
+    RETURN_PATH=true
+    ;;
 
-    d)
-      daily_note -r
-      exit 0
-      ;;
+  d)
+    daily_note -r
+    exit 0
+    ;;
 
-    \?)
-      # NOTE: this covers the case where an optarg may not be provided
-      # and will exit errored
-      echo "Invalid Option: -$OPTARG" 1>&2
-      exit 1
-      ;;
+  \?)
+    # NOTE: this covers the case where an optarg may not be provided
+    # and will exit errored
+    echo "Invalid Option: -$OPTARG" 1>&2
+    exit 1
+    ;;
 
-    :)
-      echo "Invalid Option: -$OPTARG requires an argument" 1>&2
-      exit 1
-      ;;
+  :)
+    echo "Invalid Option: -$OPTARG requires an argument" 1>&2
+    exit 1
+    ;;
   esac
 done
 shift "$(($OPTIND - 1))"
@@ -64,7 +64,7 @@ shift "$(($OPTIND - 1))"
 TITLE="${*:-Quick note}"
 
 # Specify below the directory in which you want to create your note
-main_note_dir="${HOME}/Documents/_notes"
+main_note_dir="$NOTES_HOME"
 
 # Get current date components
 current_year=$(date +"%Y")

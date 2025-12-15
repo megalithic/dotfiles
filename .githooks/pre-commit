@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# Pre-commit hook: Block symlinks pointing to /nix/store/
+#
+# Nix store symlinks are ephemeral build artifacts that should never
+# be committed to version control.
+
+set -euo pipefail
+
+# Get staged files that are symlinks
+staged_symlinks=$(git diff --cached --name-only --diff-filter=A | while read -r file; do
+  if [[ -L "$file" ]]; then
+    echo "$file"
+  fi
+done)
+
+if [[ -z "$staged_symlinks" ]]; then
+  exit 0
+fi
+
+# Check if any symlink points to /nix/store/
+bad_symlinks=""
+while IFS= read -r symlink; do
+  [[ -z "$symlink" ]] && continue
+  target=$(readlink "$symlink" 2>/dev/null || true)
+  if [[ "$target" == /nix/store/* ]]; then
+    bad_symlinks+="  $symlink -> $target"$'\n'
+  fi
+done <<< "$staged_symlinks"
+
+if [[ -n "$bad_symlinks" ]]; then
+  echo "ERROR: Refusing to commit symlinks pointing to /nix/store/"
+  echo ""
+  echo "The following staged symlinks point to the nix store:"
+  echo "$bad_symlinks"
+  echo "These are ephemeral build artifacts and should not be version controlled."
+  echo ""
+  echo "To fix: git reset HEAD <file> to unstage, or add to .gitignore"
+  exit 1
+fi
+
+exit 0

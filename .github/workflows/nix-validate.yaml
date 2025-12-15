@@ -1,0 +1,47 @@
+name: Nix Config Validation
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "**.nix"
+      - "flake.lock"
+      - ".github/workflows/nix-validate.yaml"
+  pull_request:
+    paths:
+      - "**.nix"
+      - "flake.lock"
+      - ".github/workflows/nix-validate.yaml"
+
+jobs:
+  validate:
+    name: Validate Nix Configuration
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+
+      - name: Enable Nix flakes
+        run: |
+          mkdir -p ~/.config/nix
+          echo "experimental-features = nix-command flakes" >> ~/.config/nix/nix.conf
+
+      - name: Check flake
+        run: nix flake check --show-trace
+
+      - name: Show flake info
+        run: nix flake show
+
+      - name: Verify flake metadata
+        run: nix flake metadata
+
+      - name: Build darwin configuration (dry-run)
+        run: |
+          nix build .#darwinConfigurations.megabookpro.system \
+            --dry-run \
+            --show-trace \
+            || echo "⚠️  Dry-run build failed - check configuration"

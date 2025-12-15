@@ -1,0 +1,447 @@
+# vim:foldenable:foldmethod=marker:ft=gitconfig
+
+[user]
+  name = Seth Messer
+  email = seth@megalithic.io
+  color = auto
+[core]
+  ; pager = `brew --prefix git`/share/git-core/contrib/diff-highlight/diff-highlight | less
+  pager = delta --dark --diff-so-fancy # https://github.com/dandavison/delta
+  ; whitespace=fix,-indent-with-non-tab,trailing-space,cr-at-eol
+	; editor = nvim
+	; autocrlf = input
+  editor = "nvim" # "nvr --remote-wait-silent" # or nvim
+  excludesfile ="~/.gitignore"
+[interactive]
+	diffFilter = delta --color-only
+# [pager]
+# 	blame  = delta
+# 	diff   = delta
+# 	reflog = delta
+# 	show   = delta
+[hub]
+  protocol = https
+[github.com]
+	user = megalithic
+  protocol = https
+[git]
+  user = megalithic
+  protocol = https
+[github]
+	user = megalithic
+  protocol = https
+[delta]
+  ; plus-color = "#012800"
+  ; minus-color = "#340001"
+  theme = 'Nord'
+  features = line-numbers decorations
+  hyperlinks = false
+
+[delta "decorations"]
+  commit-decoration-style = bold yellow box ul
+  file-style = bold yellow ul
+
+[interactive]
+  diffFilter = delta --color-only
+# [delta]
+# 	line-numbers = true
+# 	features = decorations
+# 	navigate = true
+# 	side-by-side = false
+#   true-color = always
+#   syntax-theme = 'Forest%20Night%20Italic'
+# [delta "decorations"]
+# 	file-decoration-style = bold yellow ul
+# 	file-style = yellow bold
+# 	hunk-header-decoration-style = yellow box ul
+# 	hunk-header-file-style = yellow
+# 	hunk-header-line-number-style = grey bold italic
+# 	hunk-header-style = line-number syntax italic
+# 	line-numbers-minus-style = red bold italic
+# 	line-numbers-plus-style = green bold italic
+# 	line-numbers-zero-style = grey italic
+# 	minus-emph-style = syntax auto
+# 	minus-style = syntax auto
+# 	zero-style = syntax
+
+[diff]
+[difftool]
+  prompt = false
+[difftool "nvimdiff"]
+  cmd = "nvim -d \"$LOCAL\" \"$REMOTE\""
+[difftool "vscode"]
+  cmd = "code --wait --diff \"$LOCAL\" \"$REMOTE\""
+[difftool "nvim"]
+  cmd = "nvim -d \"$LOCAL\" \"$REMOTE\""
+
+[help]
+  autocorrect = 1
+
+[alias]
+  aa = add --all :/
+  ap = add --patch
+
+  aliases = "!git config -l | grep ^alias | cut -c 7- | sort"
+
+  b = branch
+  br = branch
+  ; ba = branch -A
+  ; bm = branch -m
+  ; bd = branch -d
+  ; bbd = branch -D $1 && push origin --delete $1
+
+  clean = !git clean -i
+
+  c = commit
+  cv = commit -v
+  cm = commit -m
+  ; cm = !git commit -m "$(gum input)" -m "$(gum write)"
+  ca = commit --amend
+  cp = commit -p
+
+  co = checkout
+  cob = checkout -b
+
+  cl = clone
+  clb = clone --bare
+
+  cons = !git ls-files -u | cut -f 2 | sort -u
+  econs = !git diff --name-only --diff-filter=U | uniq | xargs nvim -p
+  dangled = !git fsck --no-reflog | awk '/dangling commit/ {print $3}'
+
+  cr = !git-crypt
+
+  ; pr = !$HOME/.dotfiles/bin/git-bin/git-pr
+
+  # stash
+  ; sshow = "!f() { git stash show stash^{/$*} -p; }; f"
+  ; sapply = "!f() { git stash apply stash^{/$*}; }; f"
+
+  d = diff
+  ds = diff --staged
+  di = diff
+  dc = diff --cached
+  df = diff
+  ; ds = diff --stat=160,120
+
+  ; mf = merge --ff-only
+  ; m = merge --no-ff
+  ; ff = merge --no-ff
+
+  info = !git diff && git remote -v && git status
+
+  # REF: https://evantravers.com/articles/2022/04/14/git-jump-to-vim-quickfix/#git-jump
+  jump = "!$(brew --prefix git)/share/git-core/contrib/git-jump/git-jump"
+
+  # open rebase/merge conflicted files
+	fix = !sh -c "'vim `git diff --name-only --diff-filter=U`'"
+	# add unmerged files (when conflicts are resolved)
+	au = !sh -c "'git add `git diff --name-only --diff-filter=U`'"
+
+  ; plf = pull --ff-only
+  ; plom = pull origin master
+
+  ; fa = fetch --all
+  ; pom = push origin master
+
+  s = status -sb
+  st = status
+
+  # git submodules
+	subpull = submodule foreach git pull
+
+	squash = "!f() { git rebase -i HEAD~$1; }; f"
+
+  r = restore
+  rs = restore --staged
+
+  rbi = rebase -i
+  rbif = !git fetch origin && git rebase -i origin/main
+  rbc = rebase --continue
+  rba = rebase --abort
+
+  pick = cherry-pick
+
+  ; sha = name-rev --name-only --refs=refs/heads/*
+  ; g = grep --break --heading --line-number
+  ; gi = grep --break --heading --line-number -i
+  tree = log --graph --pretty=oneline --decorate
+  undo = reset --soft HEAD^
+  reset-to-main = !git reset --hard origin/main
+  # Reset previous commit, but keep all the associated changes. Useful for avoiding nasty git merge commits.
+  uncommit = reset --soft HEAD^
+	unamend = reset --soft HEAD@{1}
+  abort = reset --hard HEAD^
+
+  # Divergence (commits we added and commits remote added)
+  div = divergence
+
+  # Goodness (summary of diff lines added/removed/total)
+  gn = goodness
+  gnc = goodness --cached
+
+  # Fancy logging.
+  #   h = head
+  #   hp = head with patch
+  #   r = recent commits, only current branch
+  #   ra = recent commits, all reachable refs
+  #   l = all commits, only current branch
+  #   la = all commits, all reachable refs
+  head = !git l -1
+  ; h = !git head
+  ; hp = "!. ~/.githelpers && show_git_head"
+  ; r = !git l -30
+  ; ra = !git r --all
+  ; l = "!. ~/.githelpers && pretty_git_log"
+  ; la = !git l --all
+  last = !git log --max-count=1 | awk '{print $2}' | awk 'NR==1{print $1}'
+  ; lg = log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
+  log = log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
+  ; log = !gitin log
+  ; lg = !gitin log
+  lg = !lazygit
+  ; branch = !gitin branch
+  br = !gitin branch
+  ; st = !gitin status
+  edit = "!f() { nvim -p $(git diff "HEAD~${1-0}" --name-only --diff-filter=d); }; f"
+  ; promote = !$DOTFILES/bin/git-promote
+  ; wtf     = !$DOTFILES/bin/git-wtf
+  ; rank-contributers = !$DOTFILES/bin/git-rank-contributers
+  ; count   = !git shortlog -sn
+  ; this = !git init && git add . && git commit -m \"Initial commit\"
+  ; who = shortlog -s -n --no-merges
+	standup = shortlog --since=yesterday
+	today = shortlog --since=midnight
+	subs = submodule foreach git pull origin master
+	hist = for-each-ref --count=5 --sort=-committerdate --format='%(refname:short)' refs/heads/
+  ; refresh = !ssh-add -l && STASH=$(git stash) && git fetch && git rebase origin/master && test \"$STASH\" != \"No local changes to save\" && git stash pop
+
+  ; fix = !$DOTFILES/bin/git-recent
+
+  # files = "!f() { git diff --name-status \"$1^\" \"$1\"; }; f"
+  # up = !git pull --autostash --rebase && git log --color --pretty=oneline --abbrev-commit HEAD@{1}.. | sed 's/^/  /'
+  up = "!f() { \
+    git pull --autostash --rebase ${1-} \
+    && git log --color --pretty=oneline --abbrev-commit HEAD@{1}.. \
+    | sed 's/^/  /';\
+    }; f"
+
+  wt = !git worktree
+  # wt = !~/.dotfiles/bin/git-wt
+  ; rb = rebase
+  ; rb = rebase -i
+
+
+  ; using hub pr and gh pr instead
+  ; pr = "!f() { git fetch upstream refs/pull/$1/head:pr/$1; } ; f"
+
+  # <3 @jeffweiss / @gifwise
+  recommit = commit -C ORIG_HEAD
+  oops = !git commit --amend -CHEAD
+  fixup = !git commit --amend -CHEAD
+  fpush = !git push origin +HEAD
+
+  cf = clean -fd
+	cof = !git for-each-ref --format='%(refname:short)' --sort=-committerdate refs/heads | fzf --header checkout | xargs git checkout
+  ; cof = !git branch --sort=-committerdate | fzf --header Checkout | xargs git checkout'
+
+  ; stash specific file(s) with a contextual message
+  ; git stash push -m <message> <filename>
+
+  ; https://git.tsundere.moe/Frederick888/frederick-settings/blob/master/.gitconfig
+
+  set-prod-api = !git stash push -m "dev-use-prod-api"
+  get-prod-api = !git stash apply stash^{/dev-use-prod-api}
+
+[clean]
+  requireForce = true
+
+[mergetool]
+  prompt = true
+
+[merge]
+  tool = nvimdiff
+  conflictstyle = zdiff3
+  ff = true
+
+[mergetool "nvimdiff"]
+  keepBackup = false
+	cmd = "nvim -d \"$LOCAL\" \"$MERGED\" \"$REMOTE\""
+	trustExitCode = true
+
+; [merge "railsschema"]
+;   name = newer Rails schema version
+;   driver = "ruby -e '\n\
+;     system %(git), %(merge-file), %(--marker-size=%L), %(%A), %(%O), %(%B)\n\
+;     b = File.read(%(%A))\n\
+;     b.sub!(/^<+ .*\\nActiveRecord::Schema\\.define.:version => (\\d+). do\\n=+\\nActiveRecord::Schema\\.define.:version => (\\d+). do\\n>+ .*/) do\n\
+;     %(ActiveRecord::Schema.define(:version => #{[$1, $2].max}) do)\n\
+;     end\n\
+;     File.open(%(%A), %(w)) {|f| f.write(b)}\n\
+;     exit 1 if b.include?(%(<)*%L)'"
+
+[color]
+	branch = auto
+	diff = auto
+	status = auto
+	interactive = true
+  ui = true
+  pager = true
+
+[color "diff"]
+  old = red strike
+  new = green italic
+[apply]
+  whitespace = fix
+  #whitespace = nowarn
+[push]
+	default = current # or upstream?
+[web]
+  browser = open
+[branch]
+  autosetuprebase = always
+[rebase]
+	autosquash = true
+	autostash = true
+	autoStash = true
+[pull]
+	rebase = true
+	ff = only
+[rerere]
+  enabled = true
+  autoupdate = true
+[diff-so-fancy]
+  markEmptyLines = true
+  stripLeadingSymbols = true
+
+# [delta]
+#   ; plus-color = "#012800"
+#   ; minus-color = "#340001"
+#   theme = 'Nord'
+#   features = line-numbers decorations
+#   hyperlinks = false
+#
+# [delta "decorations"]
+#   commit-decoration-style = bold yellow box ul
+#   file-style = bold yellow ul
+#
+# [interactive]
+#   diffFilter = delta --color-only
+
+[ghq]
+  root = ~/code
+
+# [url "https://github.com/"]
+#   insteadOf = "git@github.com:"
+#   insteadOf = "ssh://git@github.com/"
+#   insteadOf = "http://github.com/"
+
+[url "ssh://git@github.com/"]
+  insteadOf = https://github.com/
+
+[browse-remote "github.com"]
+  top  = https://{host}/{path}
+  ref  = https://{host}/{path}/tree/{short_ref}
+  rev  = https://{host}/{path}/commit/{commit}
+  pr   = https://{host}/{path}/pull/{short_ref}
+  file = "https://{host}/{path}/{file.directory? and :tree or :blob}/{short_rev}/{file}{lines && \"#L%s\" % lines.join(\"-\")}"
+
+; [pager]
+;   #diff = diff-so-fancy | less --tabs=4 -RFX
+;   diff = diff-so-fancy | less --tabs=1,5 -RFX --pattern '^(Date|added|deleted|modified): '
+; 	show = diff-so-fancy | less --tabs=1,5 -RFX
+;   log = diff-so-fancy | less --tab=1,5 -RFX
+
+# [interactive]
+# 	diffFilter = diff-so-fancy | less --tabs=4 -RFX
+
+[diff]
+	compactionHeuristic = true
+	indentHeuristic = true
+  colorMoved = default
+  navigate = true  # use n and N to move between diff sections
+  algorithm = histogram
+
+[color "diff-highlight"]
+	oldNormal = red bold
+	oldHighlight = red bold 52
+	newNormal = green bold
+	newHighlight = green bold 22
+
+[filter "lfs"]
+  clean = git-lfs clean -- %f
+  smudge = git-lfs smudge -- %f
+  process = git-lfs filter-process
+  required = true
+
+# -------------------------------------------------------
+# Nova Colorscheme Stuffs
+[color]
+  pager = true
+  ui = auto
+  status = auto
+  diff = auto
+  branch = auto
+  showBranch = auto
+  interactive = auto
+  grep = auto
+[color "status"]
+  header = black bold
+  branch = cyan
+  nobranch = red
+  unmerged = red
+  untracked = cyan
+  added = green
+  changed = red bold
+[color "diff"]
+  meta = red bold
+  frag = black bold
+  func = blue
+  old = red strike
+  new = green
+  commit = blue
+  whitespace = red
+  context = normal
+[color "branch"]
+  current = cyan
+  local = blue
+  remote = magenta
+  upstream = magenta
+  plain = normal
+[color "decorate"]
+  branch = blue
+  remoteBranch = magenta
+  tag = magenta
+  stash = cyan
+  HEAD = blue
+[color "interactive"]
+  prompt = red
+  header = red bold
+  error = red
+  help = black bold
+[color "grep"]
+  context = normal
+  match = cyan
+  filename = blue
+  function = blue
+  selected = normal
+  separator = red bold
+  linenumber = normal
+
+[include]
+  # A local gitconfig, outside of version control.
+  # If the file doesn't exist it is silently ignored
+  # path = ~/.gitconfig_macos
+
+[include]
+  # A local gitconfig, outside of version control.
+  # If the file doesn't exist it is silently ignored
+  # path = ~/.gitconfig_linux
+
+[include]
+  # A local gitconfig, outside of version control.
+  # If the file doesn't exist it is silently ignored
+  # path = ~/.gitconfig_local
+
+[init]
+	defaultBranch = main

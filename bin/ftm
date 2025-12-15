@@ -32,14 +32,17 @@ __root="$(cd "$(dirname "$__dir")" && pwd)"
 __invocation="$(printf %q "$__file")$( (($#)) && printf ' %q' "$@" || true)"
 
 TMUX="${TMUX:-}"
+TMUX_LAYOUTS="${TMUX_LAYOUTS:-"$HOME/.config/tmux/layouts"}"
 POPUP="false"
 SAVED_SESSION_NAME="${SAVED_SESSION_NAME:-}"
+
+SESSION_ICON="${SESSION_ICON:-󰢩}"
 
 # -- check for our dependencies..
 [[ -n $TMUX ]] && TMUX_RUNNING="running" || TMUX_RUNNING="not running"
 (command -v fzf &>/dev/null) && FZF_FOUND="installed" || FZF_FOUND="not installed"
 (command -v sk &>/dev/null) && SKIM_FOUND="installed" || SKIM_FOUND="not installed"
-[[ -d "$HOME/.config/tmux/scripts/layouts" ]] && layouts_dir="$HOME/.config/tmux/scripts/layouts" || layouts_dir=""
+[[ -d "$TMUX_LAYOUTS" ]] && layouts_dir="$TMUX_LAYOUTS" || layouts_dir=""
 
 # -- friendly help if -h option given
 function __help() {
@@ -188,7 +191,7 @@ function fuzzy_find() {
   # preview_cmd="${preview_cmd_preview}"
   preview_cmd="${preview_cmd_layout_info} && echo "" && ${preview_cmd_preview}"
 
-  header_icon="$SESSION_ICON" || "󰢩"
+  header_icon="󰢩"
 
   # -- do certain things based upon only one active session
   if [[ $sessions_count == 1 ]]; then
@@ -243,6 +246,7 @@ function fuzzy_find() {
   #       --exit-0 \
   #       --tac
   # )"
+  export FZF_TMUX_HEIGHT='22%'
   selected_session="$(
     echo \
       "${fzf_list}" |
@@ -255,23 +259,25 @@ function fuzzy_find() {
         --padding="1" \
         --prompt="${fzf_prompt_text}" \
         --header="${fzf_header_text}" \
+        --color="bg:#3c474d,bg+:#323d43" \
         --bind="change:first" \
         --bind="focus:transform-preview-label:echo [ {} ]" \
         --bind="?:toggle-preview" \
+        --no-preview \
         --bind="ctrl-u:preview-half-page-up,ctrl-d:preview-half-page-down" \
         \
         --bind="${CTRL_X_kill_session_bind}" \
         --bind="${CTRL_R_rename_session_bind}" \
         \
         --bind="enter:replace-query+print-query" \
-        --preview="${preview_cmd}" \
-        --preview-window="bottom:65%:nowrap" \
         --pointer=' ' \
         --marker='󰛄 ' \
         --print-query \
         --exit-0 \
         --tac
   )"
+  # --preview="${preview_cmd}" \
+  # --preview-window="bottom:65%:nowrap" \
 
   echo "$selected_session"
   try_session "$selected_session"

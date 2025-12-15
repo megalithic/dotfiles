@@ -1,0 +1,54 @@
+#!/usr/bin/env osascript -l JavaScript
+
+// Get current macOS Focus Mode
+// Returns: Focus mode name or "No focus" if none active
+// Based on: https://gist.github.com/drewkerr/0f2b61ce34e2b9e3ce0ec6a92ab05c18
+
+const app = Application.currentApplication()
+app.includeStandardAdditions = true
+
+function getJSON(path) {
+  const fullPath = path.replace(/^~/, app.pathTo('home folder'))
+  const contents = app.read(fullPath)
+  return JSON.parse(contents)
+}
+
+function run() {
+  let focus = "No focus" // default
+
+  try {
+    const assert = getJSON("~/Library/DoNotDisturb/DB/Assertions.json").data[0].storeAssertionRecords
+    const config = getJSON("~/Library/DoNotDisturb/DB/ModeConfigurations.json").data[0].modeConfigurations
+
+    if (assert) { // focus set manually
+      const modeid = assert[0].assertionDetails.assertionDetailsModeIdentifier
+      focus = config[modeid].mode.name
+    } else { // focus set by trigger
+      const date = new Date
+      const now = date.getHours() * 60 + date.getMinutes()
+
+      for (const modeid in config) {
+        const triggers = config[modeid].triggers.triggers[0]
+        if (triggers && triggers.enabledSetting == 2) {
+          const start = triggers.timePeriodStartTimeHour * 60 + triggers.timePeriodStartTimeMinute
+          const end = triggers.timePeriodEndTimeHour * 60 + triggers.timePeriodEndTimeMinute
+
+          if (start < end) {
+            if (now >= start && now < end) {
+              focus = config[modeid].mode.name
+            }
+          } else if (start > end) { // includes midnight
+            if (now >= start || now < end) {
+              focus = config[modeid].mode.name
+            }
+          }
+        }
+      }
+    }
+  } catch (e) {
+    // If files don't exist or can't be read, return "No focus"
+    focus = "No focus"
+  }
+
+  return focus
+}

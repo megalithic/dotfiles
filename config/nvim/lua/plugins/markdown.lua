@@ -1,95 +1,122 @@
-if true then return {} end
+if false then return {} end
 
 -- REF: reawlllly good keymaps for markdown and image things:
 -- https://github.com/linkarzu/dotfiles-latest/blob/main/neovim/neobean/lua/config/keymaps.lua
 return {
-  -- {
-  --   "ribru17/markdown-preview.nvim",
-  --   -- anchor links have an issue, see
-  --   -- https://github.com/iamcco/markdown-preview.nvim/pull/575
-  --   cmd = { "MarkdownPreviewToggle", "MarkdownPreview", "MarkdownPreviewStop" },
-  --   ft = "markdown",
-  --   build = "cd app && npx --yes yarn install",
-  -- },
-  -- {
-  --   "dkarter/bullets.vim",
-  --   ft = { "markdown", "text", "gitcommit" },
-  --   cmd = { "InsertNewBullet" },
-  -- },
-  -- {
-  --   "iamcco/markdown-preview.nvim",
-  --   cmd = { "MarkdownPreviewToggle", "MarkdownPreview", "MarkdownPreviewStop" },
-  --   ft = { "markdown" },
-  --   build = function(plugin)
-  --     if vim.fn.executable("npx") then
-  --       vim.cmd("!cd " .. plugin.dir .. " && cd app && npx --yes yarn install")
-  --     else
-  --       vim.cmd([[Lazy load markdown-preview.nvim]])
-  --       vim.fn["mkdp#util#install"]()
-  --     end
-  --   end,
-  --   init = function()
-  --     if vim.fn.executable("npx") then vim.g.mkdp_filetypes = { "markdown" } end
-  --   end,
-  -- },
   {
-    "jannis-baum/vivify.vim", -- Preview markdown files in the browser using `vivify`
-    file_types = {
-      "markdown",
-    },
-    init = function()
-      -- Refresh page contents on CursorHold and CursorHoldI
-      vim.g.vivify_instant_refresh = 1
-      -- additional filetypes to recognize as markdown
-      vim.g.vivify_filetypes = { "vimwiki" }
-    end,
-    keys = {
-      { "<localleader>mp", "<cmd>Vivify<cr>", desc = "Preview using vivify", ft = "markdown" },
+    "MeanderingProgrammer/render-markdown.nvim",
+    cond = not vim.g.started_by_firenvim,
+    dependencies = "echasnovski/mini.icons",
+    ft = { "markdown", "codecompanion", "vimwiki", "gitcommit", "obsidian" },
+    -- keys = {
+    --   {
+    --     "<leader>oc",
+    --     function() require("render-markdown").toggle() end,
+    --     ft = "markdown",
+    --     desc = " Markdown render",
+    --   },
+    -- },
+    opts = {
+      restart_highlighter = true, -- nvim core bug fix https://github.com/MeanderingProgrammer/render-markdown.nvim/issues/488#issuecomment-3154937211
+
+      sign = { enabled = false },
+      latex = { enabled = false },
+      render_modes = { "n", "c", "i", "v", "V" },
+      html = {
+        comment = { text = "󰆈" },
+      },
+      heading = {
+        position = "inline", -- remove indentation of headings
+        -- icons = { "󰲠 ", "󰲢 ", "󰲤 ", "󰲦 ", "󰲨 ", "󰲪 " },
+
+        icons = { "󰉫 ", "󰉬 ", "󰉭 ", "󰉮 ", "󰉯 ", "󰉰 " },
+      },
+      bullet = {
+        -- icons = { "▪️", "▫️", "•", "◦" },
+        icons = { "•", "∘", "▪", "▫", "" }, -- alts: ◦
+        ordered_icons = "", -- empty string = disable
+      },
+
+      -- checkbox = {
+      --   -- Turn on / off checkbox state rendering
+      --   enabled = true,
+      --   unchecked = {
+      --     -- Replaces '[ ]' of 'task_list_marker_unchecked'
+      --     icon = " ", -- alts: 󰄱
+      --     -- Highlight for the unchecked icon
+      --     highlight = "RenderMarkdownUnchecked",
+      --   },
+      --   checked = {
+      --     -- Replaces '[x]' of 'task_list_marker_checked'
+      --     icon = " ", -- alts: 󰱒   
+      --     -- Highligh for the checked icon
+      --     highlight = "RenderMarkdownChecked",
+      --   },
+      --   -- Define custom checkbox states, more involved as they are not part of the markdown grammar
+      --   -- As a result this requires neovim >= 0.10.0 since it relies on 'inline' extmarks
+      --   -- Can specify as many additional states as you like following the 'todo' pattern below
+      --   --   The key in this case 'todo' is for healthcheck and to allow users to change its values
+      --   --   'raw': Matched against the raw text of a 'shortcut_link'
+      --   --   'rendered': Replaces the 'raw' value when rendering
+      --   --   'highlight': Highlight for the 'rendered' icon
+      --   -- custom = {
+      --   --   todo = { raw = "[-]", rendered = "󰥔 ", highlight = "RenderMarkdownTodo" },
+      --   -- },
+      --   custom = {
+      --     -- todo = { raw = "[-]", rendered = " 󰥔 ", highlight = "RenderMarkdownTodo" },
+      --     todo = { raw = "[-]", rendered = "󱗽 ", highlight = "RenderMarkdownListTodo" },
+      --     event = { raw = "[|]", rendered = "󰀠 ", highlight = "RenderMarkdownListEvent" },
+      --     wip = { raw = "[.]", rendered = "󰡖 ", highlight = "RenderMarkdownListWip" },
+      --     -- trash = { raw = "[/]", rendered = " ", highlight = "RenderMarkdownListSkipped" },
+      --     skip = { raw = "[/]", rendered = " ", highlight = "RenderMarkdownListTrash" },
+      --
+      --     fire = { raw = "[f]", rendered = "󰈸 ", highlight = "RenderMarkdownListFire" },
+      --     star = { raw = "[s]", rendered = " ", highlight = "RenderMarkdownListStar" },
+      --     idea = { raw = "[*]", rendered = "󰌵 ", highlight = "RenderMarkdownListIdea" },
+      --     yes = { raw = "[y]", rendered = "󰔓 ", highlight = "RenderMarkdownListYes" },
+      --     no = { raw = "[n]", rendered = "󰔑 ", highlight = "RenderMarkdownListNo" },
+      --     question = { raw = "[?]", rendered = " ", highlight = "RenderMarkdownListQuestion" },
+      --     info = { raw = "[i]", rendered = " ", highlight = "RenderMarkdownListInfo" },
+      --     important = { raw = "[!]", rendered = "󱅶 ", highlight = "RenderMarkdownListImportant" },
+      --   },
+      -- },
+      dash = {
+        icon = "┈",
+      },
+      code = {
+        border = "thick",
+        position = "left",
+      },
+      link = {
+        image = "󰥶 ",
+        email = "󰀓 ",
+        hyperlink = "󰌹 ",
+        custom = {
+          web = { pattern = "^http[s]?://", icon = "󰖟 ", highlight = "RenderMarkdownLink" },
+          -- myWebsite = { pattern = "https://chris%-grieser.de", icon = " " },
+          mastodon = { pattern = "%.social/@", icon = " " },
+          linkedin = { pattern = "linkedin%.com", icon = "󰌻 " },
+          -- researchgate = { pattern = "researchgate%.net", icon = "󰙨 " },
+        },
+      },
+      -- makes toggling this plugin also toggle conceallevel
+      win_options = {
+        conceallevel = { default = 0, rendered = 2 },
+      },
+      -- LSP hovers: hide code block lines (CAVEAT: also affects code-companion)
+      -- overrides = {
+      -- 	buftype = {
+      -- 		nofile = {
+      -- 			code = { border = "hide", style = "normal" },
+      -- 		},
+      -- 	},
+      -- },
     },
   },
-  -- {
-  --   "toppair/peek.nvim",
-  --   event = { "VeryLazy" },
-  --   build = "deno task --quiet build:fast",
-  --   config = function()
-  --     require("peek").setup()
-  --     vim.api.nvim_create_user_command("PeekOpen", require("peek").open, {})
-  --     vim.api.nvim_create_user_command("PeekClose", require("peek").close, {})
-  --   end,
-  -- },
-  {
-    "ray-x/yamlmatter.nvim",
-    lazy = false,
-    cond = false,
-    -- event = "VeryLazy",
-    -- ft = { "markdown" },
-    config = function()
-      require("yamlmatter").setup({
-        key_value_padding = 4, -- Default padding between key and value
-        icon_mappings = {
-          -- Default icon mappings
-          title = "",
-          author = "",
-          date = "",
-          id = "",
-          tags = "",
-          category = "",
-          type = "",
-          default = "󰦨",
-        },
-        highlight_groups = {
-          -- icon = 'YamlFrontmatterIcon',
-          -- key = 'YamlFrontmatterKey',
-          -- value = 'YamlFrontmatterValue',
-          icon = "Identifier",
-          key = "Function",
-          value = "Type",
-        },
-      })
-    end,
-  },
+
   {
     "MeanderingProgrammer/markdown.nvim",
+    enabled = false,
     cond = not vim.g.started_by_firenvim,
     name = "render-markdown", -- Only needed if you have another plugin named markdown.nvim
     dependencies = { "nvim-treesitter/nvim-treesitter", "echasnovski/mini.nvim", "echasnovski/mini.icons" }, -- if you use the mini.nvim suite
@@ -331,6 +358,62 @@ return {
     end,
   },
   {
+    "jannis-baum/vivify.vim", -- Preview markdown files in the browser using `vivify`
+    file_types = {
+      "markdown",
+    },
+    init = function()
+      -- Refresh page contents on CursorHold and CursorHoldI
+      vim.g.vivify_instant_refresh = 1
+      -- additional filetypes to recognize as markdown
+      vim.g.vivify_filetypes = { "vimwiki" }
+    end,
+    keys = {
+      { "<localleader>mp", "<cmd>Vivify<cr>", desc = "Preview using vivify", ft = "markdown" },
+    },
+  },
+  -- {
+  --   "toppair/peek.nvim",
+  --   event = { "VeryLazy" },
+  --   build = "deno task --quiet build:fast",
+  --   config = function()
+  --     require("peek").setup()
+  --     vim.api.nvim_create_user_command("PeekOpen", require("peek").open, {})
+  --     vim.api.nvim_create_user_command("PeekClose", require("peek").close, {})
+  --   end,
+  -- },
+  {
+    "ray-x/yamlmatter.nvim",
+    lazy = false,
+    cond = false,
+    -- event = "VeryLazy",
+    -- ft = { "markdown" },
+    config = function()
+      require("yamlmatter").setup({
+        key_value_padding = 4, -- Default padding between key and value
+        icon_mappings = {
+          -- Default icon mappings
+          title = "",
+          author = "",
+          date = "",
+          id = "",
+          tags = "",
+          category = "",
+          type = "",
+          default = "󰦨",
+        },
+        highlight_groups = {
+          -- icon = 'YamlFrontmatterIcon',
+          -- key = 'YamlFrontmatterKey',
+          -- value = 'YamlFrontmatterValue',
+          icon = "Identifier",
+          key = "Function",
+          value = "Type",
+        },
+      })
+    end,
+  },
+  {
     -- this hates me; with bullets enabled markdown/elixir/heex.vim syntax errors occur
     "dkarter/bullets.vim",
     -- ft = { "markdown", "text", "gitcommit" },
@@ -363,49 +446,6 @@ return {
       al.create_mapping_hook("n", "O", al.new_before)
     end,
   },
-  -- {
-  --   "lukas-reineke/headlines.nvim",
-  --   event = {
-  --     "BufRead **.md,**.yaml,**.neorg,**.org",
-  --     "BufNewFile **.md,**.yaml,**.neorg,**.org",
-  --     -- "FileType gitcommit,NeogitCommitMessage,.git/COMMIT_EDITMSG",
-  --   },
-  --   dependencies = "nvim-treesitter",
-  --   config = function()
-  --     require("headlines").setup({
-  --       markdown = {
-  --         source_pattern_start = "^```",
-  --         source_pattern_end = "^```$",
-  --         dash_pattern = "-",
-  --         dash_highlight = "Dash",
-  --         dash_string = "󰇜",
-  --         quote_highlight = "Quote",
-  --         quote_string = "┃",
-  --         headline_pattern = "^#+",
-  --         headline_highlights = { "Headline1", "Headline2", "Headline3", "Headline4", "Headline5", "Headline6" },
-  --         fat_headlines = true,
-  --         fat_headline_upper_string = "▃",
-  --         fat_headline_lower_string = "🬂",
-  --         codeblock_highlight = "CodeBlock",
-  --         bullets = {},
-  --         bullet_highlights = {},
-  --         -- bullets = { "◉", "○", "✸", "✿" },
-  --         -- bullet_highlights = {
-  --         --   "@text.title.1.marker.markdown",
-  --         --   "@text.title.2.marker.markdown",
-  --         --   "@text.title.3.marker.markdown",
-  --         --   "@text.title.4.marker.markdown",
-  --         --   "@text.title.5.marker.markdown",
-  --         --   "@text.title.6.marker.markdown",
-  --         -- },
-  --       },
-  --       yaml = {
-  --         dash_pattern = "^---+$",
-  --         dash_highlight = "Dash",
-  --       },
-  --     })
-  --   end,
-  -- },
   {
     -- Still having issues with magick luarock not installing
     enabled = false,
@@ -456,24 +496,4 @@ return {
     },
     config = function(_, opts) require("image").setup(opts) end,
   },
-  -- {
-  --   cond = false,
-  --   "epwalsh/obsidian.nvim",
-  --   version = "*", -- recommended, use latest release instead of latest commit
-  --   lazy = true,
-  --   ft = "markdown",
-  --   dependencies = {
-  --     "nvim-lua/plenary.nvim",
-  --   },
-  --   config = function()
-  --     require("obsidian").setup({
-  --       workspaces = {
-  --         {
-  --           name = "notes",
-  --           path = vim.env.OBSIDIAN_VAULT_DIR,
-  --         },
-  --       },
-  --     })
-  --   end,
-  -- },
 }

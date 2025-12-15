@@ -1,118 +1,146 @@
+local fmt = string.format
 local enum = require("hs.fnutils")
-local bt = req("watchers.bluetooth")
-local obj = {}
 
-obj.__index = obj
-obj.name = "watcher.dock"
-obj.audioInput = nil
-obj.audioOutput = nil
-obj.audioBin = "/opt/homebrew/bin/SwitchAudioSource"
-obj.watchers = {
-  dock = {},
-}
-obj.defaultAudioOutputStr = "MacBook Pro Speakers"
-obj.defaultAudioInputStr = "MacBook Pro Microphone"
+local M = {}
 
-function obj.setWifi(connectedState)
-  hs.execute("networksetup -setairportpower airport " .. connectedState, true)
-  success(fmt("[watcher.dock] wifi set to %s", connectedState))
-end
+M.is_docked = nil
+M.defaultWifiDevice = "en0"
 
-function obj.setInput(device)
-  local deviceExists = enum.find(hs.usb.attachedDevices(), function(d) return d.productName == device end)
-  if not deviceExists then device = obj.defaultAudioInputStr end
+local function wifiDevice()
+  local device = U.run(U.bin("network-status -f -d wifi", true))
 
-  local task = hs.task.new(obj.audioBin, function(_exitCode, _stdOut, _stdErr) end, function(_task, stdOut, _stdErr)
-    stdOut = string.gsub(stdOut, "^%s*(.-)%s*$", "%1")
-    local continue = stdOut == fmt([[input audio device set to "%s"]], device)
-    if continue then success(fmt("[%s] audio input set to %s", obj.name, device)) end
-    return continue
-  end, { "-t", "input", "-s", device })
-  task:start()
-end
-
-function obj.setOutput(deviceStr)
-  -- NOTE:
-  -- here, we're expecting deviceStr to first be "phonak"
-  if not deviceStr then return end
-
-  local device = bt.devices[deviceStr]
-
-  if not bt.preferredBluetoothDevicesConnected() then
-    device = bt.devices["fallback"]
-    -- elseif not bt.isBluetoothDeviceConnected(deviceStr) then
-    --   device = bt.devices["bose"]
+  -- If device is nil or empty, use default
+  if device == nil or device == "" then
+    U.log.wf("defaulting wifi device to %s", M.defaultWifiDevice)
+    return M.defaultWifiDevice
   end
 
-  local task = hs.task.new(obj.audioBin, function(_exitCode, _stdOut, _stdErr) end, function(_task, stdOut, _stdErr)
-    stdOut = string.gsub(stdOut, "^%s*(.-)%s*$", "%1")
-    local continue = stdOut == fmt([[output audio device set to "%s"]], device.name)
-    if continue then success(fmt("[%s] audio output set to %s", obj.name, device.bt)) end
-    return continue
-  end, { "-t", "output", "-s", device.name })
-  task:start()
+  return device
 end
 
-function obj:setAudio(devices)
-  self.audioInput = devices.input
-  self.audioOutput = devices.output
+local function setWifi(state) U.run(fmt("networksetup -setairportpower %s %s", wifiDevice(), state), true) end
 
-  obj.setInput(self.audioInput)
-  obj.setOutput(self.audioOutput)
+local function docked()
+  if M.is_docked ~= nil and M.is_docked == true then
+    U.log.w("already docked; skipping setup.")
+    return
+  end
 
-  return self
+  U.log.i("running docked setup..")
+  M.is_docked = true
+  setWifi(C.dock.docked.wifi)
 end
 
--- ---@param dockState "docked"|"undocked"
-function obj.refreshInput(dockState)
-  dockState = dockState or "docked"
-  local device = DOCK[dockState].input
-  obj.setInput(device)
+local function undocked()
+  U.log.i("running undocked setup..")
+  M.is_docked = false
+  setWifi(C.dock.undocked.wifi)
 end
 
-function obj.handleDockingStateChanges(_watcher, _path, _key, _oldValue, isConnected, isInitializing)
-  isInitializing = (isInitializing ~= nil and type(isInitializing) == "boolean") and isInitializing or false
-  local state = isConnected and "docked" or "undocked"
-  local notifier = isConnected and _G.success or _G.warn
-  notifier = _G.success
-  local icon = isConnected and "🖥️" or "💻"
-  local label = isConnected and "desktop mode" or "laptop mode"
-
-  obj.setWifi(DOCK[state].wifi)
-  obj.setInput(DOCK[state].input)
-  obj.setOutput(DOCK[state].output)
-
-  notifier(fmt("[watcher.dock] %s transitioned to %s", icon, label))
-
-  if not isInitializing then
-    hs.alert.closeAll()
-    hs.alert.show(fmt("%s Transitioned to %s", icon, label))
-
-    hs.timer.doAfter(0.5, function()
-      info(fmt("[watcher.dock] handling docking state changes (%s)", state))
-      req("wm").placeAllApps()
-    end)
+local function dockChangedState(state)
+  if state == "removed" then
+    undocked()
+  elseif state == "added" then
+    docked()
+  else
+    U.log.wf("unknown dock state: ", state)
   end
 end
 
-obj.watchExistingDevices = function()
-  for _, device in ipairs(hs.usb.attachedDevices() or {}) do
-    if device.productID == DOCK.target.productID then
-      obj.handleDockingStateChanges(nil, nil, nil, nil, true, true)
-      -- else
-      --   obj.handleDockingStateChanges(nil, nil, nil, nil, false, true)
+local function switchKanataProfile(profile)
+  if not C.dock.kanata.enabled then return end
+
+  local profilePath = fmt("%s/%s", C.dock.kanata.configPath, profile)
+  local activeLink = fmt("%s/active.kbd", C.dock.kanata.configPath)
+
+  -- Verify target profile exists
+  local fileExists = U.run(fmt("test -f %s && echo 'exists' || echo 'missing'", profilePath), true)
+  if not fileExists or not fileExists:match("exists") then
+    U.log.wf("Kanata config file not found: %s", profilePath)
+    return
+  end
+
+  U.log.f("Switching Kanata profile to: %s", profile)
+
+  -- Update the active.kbd symlink to point to the new profile
+  U.run(fmt("ln -sf %s %s", profilePath, activeLink), true)
+
+  -- Kill the kanata process - launchd will auto-restart it with the new config
+  -- Note: Requires kanata daemon to be set up with KeepAlive in launchd
+  U.run("sudo pkill kanata", true)
+
+  -- Wait briefly for the daemon to restart
+  hs.timer.doAfter(0.8, function()
+    -- Verify kanata restarted
+    local isRunning = U.run("pgrep kanata", true)
+    if isRunning and isRunning ~= "" then
+      U.log.of("Kanata profile switched to %s (PID: %s)", profile, isRunning:gsub("%s+", ""))
+    else
+      U.log.wf("Kanata did not restart - check launchd service status")
     end
+  end)
+end
+
+local function keyboardChangedState(state)
+  local karabiner_cli = [[/Library/Application\ Support/org.pqrs/Karabiner-Elements/bin/karabiner_cli]]
+
+  if state == "removed" then
+    local status = U.run(fmt([[%s --select-profile %s]], karabiner_cli, C.dock.keyboard.disconnected), true)
+    if status then
+      U.log.of("%s keyboard profile activated", C.dock.keyboard.disconnected)
+
+      -- Switch Kanata profile
+      if C.dock.kanata.enabled then switchKanataProfile(C.dock.kanata.disconnected) end
+    end
+  elseif state == "added" then
+    local status = U.run(fmt([[%s --select-profile %s]], karabiner_cli, C.dock.keyboard.connected), true)
+    if status then
+      U.log.of("%s keyboard profile activated", C.dock.keyboard.connected)
+
+      -- Switch Kanata profile
+      if C.dock.kanata.enabled then switchKanataProfile(C.dock.kanata.connected) end
+    end
+  else
+    U.log.wf("unknown keyboard state: ", state)
   end
 end
 
-function obj:start()
-  info(fmt("[START] %s", self.name))
-  self.watchers.dock = hs.watchable.watch("status.dock", self.handleDockingStateChanges)
-  self.watchExistingDevices()
-
-  return self
+local function usbWatcherCallback(data)
+  if data.productID == C.dock.target_alt.productID then dockChangedState(data.eventType) end
+  if data.productID == C.dock.keyboard.productID then keyboardChangedState(data.eventType) end
 end
 
-function obj:stop() return self end
+function M.isDocked()
+  return enum.find(
+    hs.usb.attachedDevices(),
+    function(device) return device.productID == C.dock.target_alt.productID end
+  ) ~= nil
+end
 
-return obj
+function M:start()
+  -- Stop existing watcher first to avoid duplicates
+  if M.watcher then
+    M.watcher:stop()
+    M.watcher = nil
+  end
+
+  if M.isDocked() == true then
+    dockChangedState("added")
+    M.is_docked = true
+    U.log.of("%s %s mode active", "🖥️", "desktop")
+  else
+    dockChangedState("removed")
+    M.is_docked = false
+    U.log.of("%s %s mode active", "💻", "laptop")
+  end
+
+  -- Set up watcher for future dock connects/disconnects
+  M.watcher = hs.usb.watcher.new(usbWatcherCallback)
+  M.watcher:start()
+end
+
+function M:stop()
+  if M.watcher then M.watcher:stop() end
+end
+
+return M

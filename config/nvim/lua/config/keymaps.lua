@@ -1,9 +1,112 @@
 local fmt = string.format
 local map = vim.keymap.set
 local unmap = vim.keymap.del
-
+local remap_opts = { noremap = false, silent = true }
+local noremap_opts = { noremap = true, silent = true }
 local U = require("config.utils")
-local M = {}
+
+-- -- Map a key in the given mode. Defaults to non-recursive and silent.
+local function keymap(modes, from, to, opts)
+  opts = opts or {}
+
+  -- Ensure modes is a table
+  if type(modes) == "string" then
+    modes = { modes }
+  end
+
+  -- Handle function callbacks
+  local callback = nil
+  local cmd = to
+  if type(to) == "function" then
+    callback = to
+    cmd = ""
+    -- Set description if not provided
+    if not opts.desc then
+      opts.desc = "generic keymap"
+    end
+  elseif type(to) ~= "string" then
+    callback = to
+    cmd = ""
+    if not opts.desc then
+      opts.desc = tostring(to)
+    end
+  end
+
+  -- Set default options
+  if opts.noremap == nil then
+    opts.noremap = true
+  end
+  if opts.expr and opts.replace_keycodes == nil then
+    opts.replace_keycodes = true
+  end
+  if opts.silent == nil then
+    opts.silent = true
+  end
+
+  -- Handle buffer-specific mappings
+  local buf = nil
+  if opts.buffer == true then
+    buf = 0
+  elseif type(opts.buffer) == "number" then
+    buf = opts.buffer
+  end
+  opts.buffer = nil
+
+  -- Create mappings for each mode
+  for _, mode in ipairs(modes) do
+    if callback then
+      opts.callback = callback
+      vim.keymap.set(mode, from, callback, opts)
+    else
+      if buf then
+        vim.api.nvim_buf_set_keymap(buf, mode, from, cmd, opts)
+      else
+        vim.api.nvim_set_keymap(mode, from, cmd, opts)
+      end
+    end
+  end
+end
+_G.Keymap = keymap
+
+for _, mode in ipairs({ "n", "x", "i", "v", "o", "t", "s", "c" }) do
+  --[[
+
+  local nmap, cmap, xmap, imap, vmap, omap, tmap, smap
+  local nnoremap, cnoremap, xnoremap, inoremap, vnoremap, onoremap, tnoremap, snoremap
+  ╭────────────────────────────────────────────────────────────────────────────╮
+  │  Str  │  Help page   │  Affected modes                           │  VimL   │
+  │────────────────────────────────────────────────────────────────────────────│
+  │  ''   │  mapmode-nvo │  Normal, Visual, Select, Operator-pending │  :map   │
+  │  'n'  │  mapmode-n   │  Normal                                   │  :nmap  │
+  │  'v'  │  mapmode-v   │  Visual and Select                        │  :vmap  │
+  │  's'  │  mapmode-s   │  Select                                   │  :smap  │
+  │  'x'  │  mapmode-x   │  Visual                                   │  :xmap  │
+  │  'o'  │  mapmode-o   │  Operator-pending                         │  :omap  │
+  │  '!'  │  mapmode-ic  │  Insert and Command-line                  │  :map!  │
+  │  'i'  │  mapmode-i   │  Insert                                   │  :imap  │
+  │  'l'  │  mapmode-l   │  Insert, Command-line, Lang-Arg           │  :lmap  │
+  │  'c'  │  mapmode-c   │  Command-line                             │  :cmap  │
+  │  't'  │  mapmode-t   │  Terminal                                 │  :tmap  │
+  ╰────────────────────────────────────────────────────────────────────────────╯
+  --]]
+
+  -- recursive global mappings
+  _G[mode .. "map"] = function(from, to, opts)
+    if type(opts) == "string" then
+      opts = { desc = opts }
+    end
+    return keymap(mode, from, to, vim.tbl_extend("keep", remap_opts, opts or {}))
+  end
+  -- non-recursive global mappings
+  _G[mode .. "noremap"] = function(from, to, opts)
+    if type(opts) == "string" then
+      opts = { desc = opts }
+    end
+    return keymap(mode, from, to, vim.tbl_extend("keep", noremap_opts, opts or {}))
+  end
+end
+
+local M = { keymap = keymap }
 
 -- [[ unmap ]] -----------------------------------------------------------------
 unmap("n", "gra") -- lsp default: code actions
@@ -12,22 +115,55 @@ unmap("n", "grr") -- lsp default: references
 unmap("n", "grt") -- lsp default: type_definitions
 unmap("n", "gri") -- lsp default: implementation
 
+-- `:help vim.keymap.set()`
+-- local nmap, cmap, xmap, imap, vmap, omap, tmap, smap
+-- local nnoremap, cnoremap, xnoremap, inoremap, vnoremap, onoremap, tnoremap, snoremap
+
+--[[
+  ╭────────────────────────────────────────────────────────────────────────────╮
+  │  Str  │  Help page   │  Affected modes                           │  VimL   │
+  │────────────────────────────────────────────────────────────────────────────│
+  │  ''   │  mapmode-nvo │  Normal, Visual, Select, Operator-pending │  :map   │
+  │  'n'  │  mapmode-n   │  Normal                                   │  :nmap  │
+  │  'v'  │  mapmode-v   │  Visual and Select                        │  :vmap  │
+  │  's'  │  mapmode-s   │  Select                                   │  :smap  │
+  │  'x'  │  mapmode-x   │  Visual                                   │  :xmap  │
+  │  'o'  │  mapmode-o   │  Operator-pending                         │  :omap  │
+  │  '!'  │  mapmode-ic  │  Insert and Command-line                  │  :map!  │
+  │  'i'  │  mapmode-i   │  Insert                                   │  :imap  │
+  │  'l'  │  mapmode-l   │  Insert, Command-line, Lang-Arg           │  :lmap  │
+  │  'c'  │  mapmode-c   │  Command-line                             │  :cmap  │
+  │  't'  │  mapmode-t   │  Terminal                                 │  :tmap  │
+  ╰────────────────────────────────────────────────────────────────────────────╯
+  --]]
+
 local function leaderMapper(mode, key, rhs, opts)
-  if type(opts) == "string" then opts = { desc = opts } end
+  if type(opts) == "string" then
+    opts = { desc = opts }
+  end
   map(mode, "<leader>" .. key, rhs, opts)
 end
 
 local function localLeaderMapper(mode, key, rhs, opts)
-  if type(opts) == "string" then opts = { desc = opts } end
+  if type(opts) == "string" then
+    opts = { desc = opts }
+  end
   map(mode, "<localleader>" .. key, rhs, opts)
 end
 
 -- [[ tabs ]] ------------------------------------------------------------------
 -- jump to tab
 for i = 0, 9 do
-  if i + 1 >= 10 then break end
+  if i + 1 >= 10 then
+    break
+  end
   local key_string = tostring(i + 1)
-  map("n", "<localleader>" .. key_string, string.format("<cmd>%stabnext<cr>", key_string), { desc = string.format("tab: jump to tab %s", key_string) })
+  map(
+    "n",
+    "<localleader>" .. key_string,
+    string.format("<cmd>%stabnext<cr>", key_string),
+    { desc = string.format("tab: jump to tab %s", key_string) }
+  )
 end
 
 -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
@@ -41,7 +177,13 @@ tmap("<Esc><Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
 -- [[ command mode ]] ----------------------------------------------------------
 vmap("<leader>S", ":!sort<cr>", { desc = "Sort selection" })
 nmap("<leader>:", ":!", { desc = "Execute last command" })
+
 nmap("<leader>;", ":<up>", { desc = "Go to last command" })
+-- nmap("<leader>;", function()
+--   vim.cmd("<Up>")
+--   -- vim.api.nvim_feedkeys("<Up>", "m", true)
+--   -- vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("z=", true, false, true), "m", true)
+-- end, { desc = "Go to last command" })
 
 -- https://github.com/tpope/vim-rsi/blob/master/plugin/rsi.vim
 -- c-a / c-e everywhere - RSI.vim provides these
@@ -66,17 +208,21 @@ imap("<C-a>", "<Home>")
 imap("<C-e>", "<End>")
 
 -- [[ ui/vim behaviours ]] -----------------------------------------------------
-map("n", "<esc>", function() U.deluxe_clear_ui() end, { noremap = false, silent = true, desc = "EscDeluxe + Clear/Reset UI" })
+map("n", "<esc>", function()
+  U.deluxe_clear_ui()
+end, { noremap = false, silent = true, desc = "EscDeluxe + Clear/Reset UI" })
 
 --  See `:help wincmd` for a list of all window commands
 -- @see: smart-splits.nvim
--- map("n", "<C-h>", "<C-w><C-h>", { desc = "Move focus to the left window" })
--- map("n", "<C-l>", "<C-w><C-l>", { desc = "Move focus to the right window" })
--- map("n", "<C-j>", "<C-w><C-j>", { desc = "Move focus to the lower window" })
--- map("n", "<C-k>", "<C-w><C-k>", { desc = "Move focus to the upper window" })
+map("n", "<C-h>", "<C-w><C-h>", { desc = "Move focus to the left window" })
+map("n", "<C-l>", "<C-w><C-l>", { desc = "Move focus to the right window" })
+map("n", "<C-j>", "<C-w><C-j>", { desc = "Move focus to the lower window" })
+map("n", "<C-k>", "<C-w><C-k>", { desc = "Move focus to the upper window" })
 
-map("n", "<leader>w", function(_args) vim.api.nvim_command("silent! write") end, { desc = "write buffer" })
-map("n", "<leader>W", "<cmd>SudaWrite<cr>", { desc = "sudo write buffer" })
+map("n", "<leader>w", function(_args)
+  vim.api.nvim_command("silent! write")
+end, { desc = "write buffer" })
+map("n", "<leader>W", require("config.utils").sudo_write, { desc = "sudo write buffer" })
 map("n", "<leader>q", "<cmd>q<cr>", { desc = "quit" })
 map("n", "<leader>Q", "<cmd>q!<cr>", { desc = "really quit" })
 
@@ -102,26 +248,26 @@ map({ "v", "x" }, "H", "g^")
 map("n", "0", "^")
 
 -- Map <localleader>o & <localleader>O to newline without insert mode
-map("n", "<localleader>o", ":<C-u>call append(line(\".\"), repeat([\"\"], v:count1))<CR>")
-map("n", "<localleader>O", ":<C-u>call append(line(\".\")-1, repeat([\"\"], v:count1))<CR>")
+map("n", "<localleader>o", ':<C-u>call append(line("."), repeat([""], v:count1))<CR>')
+map("n", "<localleader>O", ':<C-u>call append(line(".")-1, repeat([""], v:count1))<CR>')
 
 -- ignores line wraps
 map("n", "k", "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = true })
 map("n", "j", "v:count == 0 ? 'gj' : 'j'", { expr = true, silent = true })
 
--- map({ "n", "x", "o" }, "n", "nzz<esc><cmd>lua mega.blink_cursorline(50)<cr>")
--- map({ "n", "x", "o" }, "N", "Nzz<esc><cmd>lua mega.blink_cursorline(50)<cr>")
+-- map({ "n", "x", "o" }, "n", "nzz<esc><cmd>lua mega.ui.blink_cursorline(50)<cr>")
+-- map({ "n", "x", "o" }, "N", "Nzz<esc><cmd>lua mega.ui.blink_cursorline(50)<cr>")
 -- map({ "n", "x", "o" }, "n", "nzz")
 -- map({ "n", "x", "o" }, "N", "Nzz")
 
-map({ "n", "x", "o" }, "n", "nzzzv<esc><cmd>lua mega.blink_cursorline(150)<cr>", { desc = "Fwd  search '/' or '?'" })
-map({ "n", "x", "o" }, "N", "Nzzzv<esc><cmd>lua mega.blink_cursorline(150)<cr>", { desc = "Back search '/' or '?'" })
+map({ "n", "x", "o" }, "n", "nzzzv<esc><cmd>lua mega.ui.blink_cursorline(150)<cr>", { desc = "Fwd  search '/' or '?'" })
+map({ "n", "x", "o" }, "N", "Nzzzv<esc><cmd>lua mega.ui.blink_cursorline(150)<cr>", { desc = "Back search '/' or '?'" })
 
-nnoremap("<C-f>", "<C-f>zz<Esc><Cmd>lua mega.blink_cursorline(75)<CR>")
-nnoremap("<C-b>", "<C-b>zz<Esc><Cmd>lua mega.blink_cursorline(75)<CR>")
+nnoremap("<C-f>", "<C-f>zz<Esc><Cmd>lua mega.ui.blink_cursorline(75)<CR>")
+nnoremap("<C-b>", "<C-b>zz<Esc><Cmd>lua mega.ui.blink_cursorline(75)<CR>")
 
-nnoremap("<C-d>", "<C-d>zz<Esc><Cmd>lua mega.blink_cursorline(75)<CR>")
-nnoremap("<C-u>", "<C-u>zz<Esc><Cmd>lua mega.blink_cursorline(75)<CR>")
+nnoremap("<C-d>", "<C-d>zz<Esc><Cmd>lua mega.ui.blink_cursorline(75)<CR>")
+nnoremap("<C-u>", "<C-u>zz<Esc><Cmd>lua mega.ui.blink_cursorline(75)<CR>")
 
 -- noremap Zz <c-w>_ \| <c-w>\|
 -- noremap Zo <c-w>=
@@ -136,9 +282,15 @@ map("n", "Q", ":norm @q<CR>", { desc = "macros: run `q` macro (selection)" })
 -- [[ folds ]] -----------------------------------------------------------------
 map("n", "<leader>z", "za", { desc = "Toggle current fold" })
 map("x", "<leader>z", "zf", { desc = "Create fold from selection" })
-map("n", "zf", function() vim.cmd.normal("zMzv") end, { desc = "Fold all except current" })
-map("n", "zF", function() vim.cmd.normal("zMzvzczo") end, { desc = "Fold all except current and children of current" })
-map("n", "zO", function() vim.cmd.normal("zR") end, { desc = "Open all folds" })
+map("n", "zf", function()
+  vim.cmd.normal("zMzv")
+end, { desc = "Fold all except current" })
+map("n", "zF", function()
+  vim.cmd.normal("zMzvzczo")
+end, { desc = "Fold all except current and children of current" })
+map("n", "zO", function()
+  vim.cmd.normal("zR")
+end, { desc = "Open all folds" })
 map("n", "zo", "zO", { desc = "Open all folds descending from current line" })
 
 -- [[ plugin management ]] -----------------------------------------------------
@@ -147,11 +299,20 @@ map("n", "<leader>pm", "<cmd>Lazy<cr>", { desc = "[lazy] plugins" })
 
 -- [[ indents ]] ---------------------------------------------------------------
 local indent_opts = { desc = "VSCode-style block indentation" }
-map("x", ">>", function() vim.cmd.normal({ vim.v.count1 .. ">gv", bang = true }) end, indent_opts)
-map("x", "<<", function() vim.cmd.normal({ vim.v.count1 .. "<gv", bang = true }) end, indent_opts)
+map("x", ">>", function()
+  vim.cmd.normal({ vim.v.count1 .. ">gv", bang = true })
+end, indent_opts)
+map("x", "<<", function()
+  vim.cmd.normal({ vim.v.count1 .. "<gv", bang = true })
+end, indent_opts)
 
 -- [[ opening/closing delimiters/matchup/pairs ]] ------------------------------
-map({ "n", "o", "s", "v", "x" }, "<Tab>", "%", { desc = "jump to opening/closing delimiter", remap = false, silent = false })
+map(
+  { "n", "o", "s", "v", "x" },
+  "<Tab>",
+  "%",
+  { desc = "jump to opening/closing delimiter", remap = false, silent = false }
+)
 -- map({ "n" }, "<Tab>", "%", { desc = "jump to opening/closing delimiter", remap = true, silent = false })
 
 -- [[ copy/paste/yank/registers ]] ---------------------------------------------
@@ -159,27 +320,27 @@ map({ "n", "o", "s", "v", "x" }, "<Tab>", "%", { desc = "jump to opening/closing
 vim.cmd([[xnoremap <expr> p 'pgv"' . v:register . 'y']])
 
 map("i", "<C-n>", "<Nop>", { desc = "Disable default autocompletion menu" })
-map("i", "<C-p>", "<C-r>\"", { desc = "Paste from register in insert mode" })
+map("i", "<C-p>", '<C-r>"', { desc = "Paste from register in insert mode" })
 
 -- xnoremap("p", "\"_dP", "paste with saved register contents")
 
 -- yank to empty register for D, c, etc.
-map("n", "x", "\"_x")
-map("n", "X", "\"_X")
-map("n", "D", "\"_D")
-map("n", "c", "\"_c")
-map("n", "C", "\"_C")
-map("n", "cc", "\"_S")
+map("n", "x", '"_x')
+map("n", "X", '"_X')
+map("n", "D", '"_D')
+map("n", "c", '"_c')
+map("n", "C", '"_C')
+map("n", "cc", '"_S')
 
-map("x", "x", "\"_x")
-map("x", "X", "\"_X")
-map("x", "D", "\"_D")
-map("x", "c", "\"_c")
-map("x", "C", "\"_C")
+map("x", "x", '"_x')
+map("x", "X", '"_X')
+map("x", "D", '"_D')
+map("x", "c", '"_c')
+map("x", "C", '"_C')
 
 map("n", "dd", function()
   if vim.fn.prevnonblank(".") ~= vim.fn.line(".") then
-    return "\"_dd"
+    return '"_dd'
   else
     return "dd"
   end
@@ -188,11 +349,20 @@ end, { expr = true, desc = "Special Line Delete" })
 map("n", "<localleader>yts", function()
   local captures = vim.treesitter.get_captures_at_cursor()
   if #captures == 0 then
-    vim.notify("No treesitter captures under cursor", L.ERROR, { title = "[yank] failed to yank treesitter captures", render = "compact" })
+    vim.notify(
+      "No treesitter captures under cursor",
+      L.ERROR,
+      { title = "[yank] failed to yank treesitter captures", render = "compact" }
+    )
     return
   end
 
-  local parsedCaptures = vim.iter(captures):map(function(capture) return ("@%s"):format(capture) end):totable()
+  local parsedCaptures = vim
+    .iter(captures)
+    :map(function(capture)
+      return ("@%s"):format(capture)
+    end)
+    :totable()
   local resultString = vim.inspect(parsedCaptures)
   vim.fn.setreg("+", resultString .. "\n")
   vim.notify(resultString, L.INFO, { title = "[yank] yanked treesitter capture", render = "compact" })
@@ -200,7 +370,9 @@ end, { desc = "[yank] copy treesitter captures under cursor" })
 
 map("n", "<localleader>yn", function()
   local res = vim.fn.expand("%:t", false, false)
-  if type(res) ~= "string" then return end
+  if type(res) ~= "string" then
+    return
+  end
   if res == "" then
     vim.notify("Buffer has no filename", L.ERROR, { title = "[yank] failed to yank filename", render = "compact" })
     return
@@ -211,7 +383,9 @@ end, { desc = "[yank] yank the filename of current buffer" })
 
 map("n", "<localleader>yp", function()
   local res = vim.fn.expand("%:p", false, false)
-  if type(res) ~= "string" then return end
+  if type(res) ~= "string" then
+    return
+  end
   res = res == "" and vim.uv.cwd() or res
   if res:len() then
     vim.fn.setreg("+", res)
@@ -222,10 +396,20 @@ end, { desc = "[yank] yank the full filepath of current buffer" })
 -- [[ search ]] --------------------------------------------
 map("n", "*", "m`<cmd>keepjumps normal! *``<CR>", { desc = "Don't jump on first * -- simpler vim-asterisk" })
 
-map("n", "<leader>h", ":%s/\\<<C-r><C-w>\\>/<C-r><C-w>/gIc<Left><Left><Left><Left>", { desc = "Replace instances of hovered word" })
-map("n", "<leader>H", ":%S/<C-r><C-w>/<C-r><C-w>/gcw<Left><Left><Left><Left>", { desc = "Replace instances of hovered word (matching case)" })
+map(
+  "n",
+  "<leader>h",
+  ":%s/\\<<C-r><C-w>\\>/<C-r><C-w>/gIc<Left><Left><Left><Left>",
+  { desc = "Replace instances of hovered word" }
+)
+map(
+  "n",
+  "<leader>H",
+  ":%S/<C-r><C-w>/<C-r><C-w>/gcw<Left><Left><Left><Left>",
+  { desc = "Replace instances of hovered word (matching case)" }
+)
 
-map("x", "<leader>h", "\"hy:%s/<C-r>h/<C-r>h/gc<left><left><left>", {
+map("x", "<leader>h", '"hy:%s/<C-r>h/<C-r>h/gc<left><left><left>', {
   desc = [[Crude search & replace visual selection
                  (breaks on multiple lines & special chars)]],
 })
@@ -241,7 +425,9 @@ map("n", "<localleader>sf", function()
 end, { desc = "[spell] fix spelling of word under cursor" })
 
 -- Undo zw, remove the word from the entry in 'spellfile'.
-map("n", "<localleader>su", function() vim.cmd("normal! zug") end, { desc = "[spell] remove word from list" })
+map("n", "<localleader>su", function()
+  vim.cmd("normal! zug")
+end, { desc = "[spell] remove word from list" })
 
 map("n", "<localleader>sa", function()
   local cur_pos = vim.api.nvim_win_get_cursor(0)
@@ -333,16 +519,27 @@ end, { silent = true, desc = "[g]o [c]omment and [d]uplicate selected lines" })
 
 -- map({ "o", "x" }, "m", ":<C-U>lua require('tsht').nodes()<cr>", { desc = "ts hop range ops" })
 
-map("n", "Ss", function() vim.print(vim.treesitter.get_captures_at_cursor()) end, { desc = "Print treesitter captures under cursor" })
+map("n", "Ss", function()
+  vim.print(vim.treesitter.get_captures_at_cursor())
+end, { desc = "Print treesitter captures under cursor" })
 
 map("n", "Sy", function()
   local captures = vim.treesitter.get_captures_at_cursor()
   if #captures == 0 then
-    vim.notify("No treesitter captures under cursor", vim.log.levels.ERROR, { title = "Yank failed", render = "wrapped-compact" })
+    vim.notify(
+      "No treesitter captures under cursor",
+      vim.log.levels.ERROR,
+      { title = "Yank failed", render = "wrapped-compact" }
+    )
     return
   end
 
-  local parsedCaptures = vim.iter(captures):map(function(capture) return ("@%s"):format(capture) end):totable()
+  local parsedCaptures = vim
+    .iter(captures)
+    :map(function(capture)
+      return ("@%s"):format(capture)
+    end)
+    :totable()
   local resultString = vim.inspect(parsedCaptures)
   vim.fn.setreg("+", resultString .. "\n")
   vim.notify(resultString, vim.log.levels.INFO, { title = "Yanked capture", render = "wrapped-compact" })
@@ -372,12 +569,29 @@ map("n", "<leader>tp", "<cmd>T direction=tab<cr>", { desc = "tab-persistent" })
 -- [[ edit files / file explorering / executions ]] ------------------------------------------------------------
 local editFileMappings = {
   r = { vim.cmd.restart, "[e]dit -> restart" },
-  R = { function() require("config.utils").lsp.rename_file() end, "[e]dit file -> lsp rename as <input>" },
-  s = { function() vim.cmd([[SaveAsFile]]) end, "[e]dit file -> [s]ave as <input>" },
-  f = { function() vim.ui.open(vim.fn.expand("%:p:h:~")) end, "[e]xplore cwd -> [f]inder" },
+  R = {
+    function()
+      require("config.utils").lsp.rename_file()
+    end,
+    "[e]dit file -> lsp rename as <input>",
+  },
+  s = {
+    function()
+      vim.cmd([[SaveAsFile]])
+    end,
+    "[e]dit file -> [s]ave as <input>",
+  },
+  f = {
+    function()
+      vim.ui.open(vim.fn.expand("%:p:h:~"))
+    end,
+    "[e]xplore cwd -> [f]inder",
+  },
   d = {
     function()
-      if vim.fn.confirm("Duplicate file?", "&Yes\n&No", 2, "Question") == 1 then vim.cmd("Duplicate") end
+      if vim.fn.confirm("Duplicate file?", "&Yes\n&No", 2, "Question") == 1 then
+        vim.cmd("Duplicate")
+      end
     end,
     "[e]dit file -> duplicate?",
   },
@@ -400,7 +614,9 @@ local editFileMappings = {
           -- }, function(input)
           --   if input == "del" then
           -- Delete the file using trash app
-          local success, _ = pcall(function() vim.fn.system({ "trash", vim.fn.fnameescape(current_file) }) end)
+          local success, _ = pcall(function()
+            vim.fn.system({ "trash", vim.fn.fnameescape(current_file) })
+          end)
           if success then
             vim.api.nvim_echo({
               { "File deleted from disk:\n", "Normal" },
@@ -449,7 +665,11 @@ local editFileMappings = {
         -- vim.cmd("silent !tmux split-window -h -l 60 'bash -c \"" .. escaped_file .. "; exec bash\"'")
         -- `-l 60` specifies the size of the tmux pane, in this case 60 columns
         vim.notify("executing shell script in tmux split")
-        vim.cmd("silent !tmux split-window -h -l 60 'bash -c \"" .. escaped_file .. "; echo; echo Press any key to exit...; read -n 1; exit\"'")
+        vim.cmd(
+          "silent !tmux split-window -h -l 60 'bash -c \""
+            .. escaped_file
+            .. "; echo; echo Press any key to exit...; read -n 1; exit\"'"
+        )
       elseif filetype == "lua" then
         vim.notify("sourcing file")
         vim.cmd("source %")
@@ -465,7 +685,8 @@ local editFileMappings = {
       local file_dir = vim.fn.expand(vim.g.notes_path)
       -- local file_dir = vim.fn.expand("%:p:h") -- Get the directory of the current file
       local pane_width = 60
-      local right_pane_id = vim.fn.system("tmux list-panes -F '#{pane_id} #{pane_width}' | awk '$2 == " .. pane_width .. " {print $1}'")
+      local right_pane_id =
+        vim.fn.system("tmux list-panes -F '#{pane_id} #{pane_width}' | awk '$2 == " .. pane_width .. " {print $1}'")
       if right_pane_id ~= "" then
         -- If the right pane exists, close it
         vim.fn.system("tmux kill-pane -t " .. right_pane_id)
@@ -480,7 +701,8 @@ local editFileMappings = {
     function()
       local file_dir = vim.fn.expand("%:p:h") -- Get the directory of the current file
       local pane_width = 60
-      local right_pane_id = vim.fn.system("tmux list-panes -F '#{pane_id} #{pane_width}' | awk '$2 == " .. pane_width .. " {print $1}'")
+      local right_pane_id =
+        vim.fn.system("tmux list-panes -F '#{pane_id} #{pane_width}' | awk '$2 == " .. pane_width .. " {print $1}'")
       if right_pane_id ~= "" then
         -- If the right pane exists, close it
         vim.fn.system("tmux kill-pane -t " .. right_pane_id)
@@ -496,7 +718,8 @@ local editFileMappings = {
     function()
       local file_dir = vim.fn.expand(vim.g.notes_path)
       local pane_width = 60
-      local right_pane_id = vim.fn.system("tmux list-panes -F '#{pane_id} #{pane_width}' | awk '$2 == " .. pane_width .. " {print $1}'")
+      local right_pane_id =
+        vim.fn.system("tmux list-panes -F '#{pane_id} #{pane_width}' | awk '$2 == " .. pane_width .. " {print $1}'")
       if right_pane_id ~= "" then
         -- If the right pane exists, close it
         vim.fn.system("tmux kill-pane -t " .. right_pane_id)
@@ -510,6 +733,8 @@ local editFileMappings = {
   },
 }
 -- <leader>e<key>
-vim.iter(editFileMappings):each(function(key, rhs) leaderMapper("n", "e" .. key, rhs[1], rhs[2]) end)
+vim.iter(editFileMappings):each(function(key, rhs)
+  leaderMapper("n", "e" .. key, rhs[1], rhs[2])
+end)
 
 return M

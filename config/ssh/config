@@ -1,0 +1,60 @@
+# NOTE:
+# In the event you're unable to push:
+# ssh -T git@github.com
+# then, likely:
+# chmod 0700 ~/.ssh/config
+
+Host *
+  IdentityAgent "~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
+
+Host github.com gh
+  Hostname github.com
+  User git
+  StrictHostKeyChecking no
+  UserKnownHostsFile=/dev/null
+  IdentityAgent "/Users/seth/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
+  BatchMode yes
+  PasswordAuthentication no
+  ControlMaster auto
+  ControlPersist 120
+  LogLevel QUIET
+  ForwardAgent yes
+
+# Host megalithic.dev ocean
+#   HostName megalithic.dev
+#   User replicant
+#   ControlPath /tmp/ssh_mux_%r@%h:%p
+#   IdentityFile ~/.ssh/seth-megabookpro
+
+
+Host *.devspace
+  StrictHostKeyChecking no
+  UserKnownHostsFile=/dev/null
+  IdentityAgent "/Users/seth/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
+  BatchMode yes
+  PasswordAuthentication no
+  ControlMaster auto
+  ControlPath /Users/seth/.ssh/control-%C
+  ControlPersist 10m
+  LogLevel QUIET
+
+# DevSpace Start launchdeck-portal.devspace
+Host launchdeck-portal.devspace
+  HostName localhost
+  LogLevel error
+  Port 10013
+  IdentityFile "~/.devspace/ssh/id_devspace_ecdsa"
+  StrictHostKeyChecking no
+  UserKnownHostsFile /dev/null
+  User devspace
+# DevSpace End launchdeck-portal.devspace
+# DevSpace Start launchdeck-portal-api.devspace
+Host launchdeck-portal-api.devspace
+  HostName localhost
+  LogLevel error
+  Port 11224
+  IdentityFile "~/.devspace/ssh/id_devspace_ecdsa"
+  StrictHostKeyChecking no
+  UserKnownHostsFile /dev/null
+  User devspace
+# DevSpace End launchdeck-portal-api.devspace

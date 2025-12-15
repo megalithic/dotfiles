@@ -9,7 +9,7 @@ return {
       local base = require("notify.render.base")
       local U = require("config.utils")
       local SETTINGS = require("config.options")
-      local icons = SETTINGS.icons
+      local icons = Icons
 
       -- local stages_util = require("notify.stages.util")
       -- local function initial(direction, opacity)

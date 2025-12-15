@@ -1,0 +1,206 @@
+#!/bin/bash
+
+# Launch Brave Browser Nightly with remote debugging enabled for chrome-devtools-mcp
+#
+# Usage:
+#   brave-debug           # Launch with remote debugging on port 9222
+#   brave-debug -p 9333   # Launch with custom port
+#   brave-debug --port 9333
+#   brave-debug --kill    # Kill existing debug instance
+#   brave-debug --status  # Check if debug instance is running
+
+set -euo pipefail
+
+# Find Brave Browser Nightly - prefer nix store, fallback to /Applications
+find_brave() {
+  # Check for nix-installed version first (via home-manager symlink)
+  local hm_app="$HOME/Applications/Home Manager Apps/Brave Browser Nightly.app/Contents/MacOS/Brave Browser Nightly"
+  if [[ -x "$hm_app" ]]; then
+    echo "$hm_app"
+    return
+  fi
+
+  # Fallback to /Applications (Homebrew cask)
+  local apps_app="/Applications/Brave Browser Nightly.app/Contents/MacOS/Brave Browser Nightly"
+  if [[ -x "$apps_app" ]]; then
+    echo "$apps_app"
+    return
+  fi
+
+  # Not found
+  echo ""
+}
+
+BRAVE_APP="$(find_brave)"
+DEFAULT_PORT=9222
+USER_DATA_DIR="${HOME}/.cache/brave-debug-profile"
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+NC='\033[0m' # No Color
+
+usage() {
+  cat <<EOF
+Usage: $(basename "$0") [OPTIONS]
+
+Launch Brave Browser Nightly with remote debugging enabled for chrome-devtools-mcp.
+
+Options:
+  -p, --port PORT    Remote debugging port (default: $DEFAULT_PORT)
+  -k, --kill         Kill existing debug instance
+  -s, --status       Check if debug instance is running
+  -h, --help         Show this help message
+
+Examples:
+  $(basename "$0")              # Launch with debugging on port 9222
+  $(basename "$0") -p 9333      # Use custom port
+  $(basename "$0") --status     # Check status
+  $(basename "$0") --kill       # Stop debug instance
+
+Note: chrome-devtools-mcp will automatically connect to the browser.
+      Security warning: Any app on your machine can connect to the debug port.
+EOF
+}
+
+get_debug_pid() {
+  pgrep -f "remote-debugging-port" 2>/dev/null | head -1 || true
+}
+
+check_port() {
+  local port="$1"
+  lsof -i ":$port" -sTCP:LISTEN >/dev/null 2>&1
+}
+
+do_status() {
+  local pid
+  pid=$(get_debug_pid)
+
+  if [ -n "$pid" ]; then
+    echo -e "${GREEN}Brave debug instance running${NC} (PID: $pid)"
+    if check_port "$DEFAULT_PORT"; then
+      echo -e "  Debugging port: ${GREEN}$DEFAULT_PORT (listening)${NC}"
+    fi
+    return 0
+  else
+    echo -e "${YELLOW}No Brave debug instance running${NC}"
+    return 1
+  fi
+}
+
+do_kill() {
+  local pid
+  pid=$(get_debug_pid)
+
+  if [ -n "$pid" ]; then
+    echo -e "${YELLOW}Stopping Brave debug instance${NC} (PID: $pid)"
+    kill "$pid" 2>/dev/null || true
+    sleep 1
+    if [ -n "$(get_debug_pid)" ]; then
+      echo -e "${RED}Force killing...${NC}"
+      kill -9 "$pid" 2>/dev/null || true
+    fi
+    echo -e "${GREEN}Stopped${NC}"
+  else
+    echo -e "${YELLOW}No debug instance to kill${NC}"
+  fi
+}
+
+do_launch() {
+  local port="$1"
+
+  # Check if Brave was found
+  if [[ -z "$BRAVE_APP" ]]; then
+    echo -e "${RED}Error: Brave Browser Nightly not found${NC}"
+    echo "Looked in:"
+    echo "  - ~/Applications/Home Manager Apps/Brave Browser Nightly.app"
+    echo "  - /Applications/Brave Browser Nightly.app"
+    return 1
+  fi
+
+  # Check if already running
+  if [ -n "$(get_debug_pid)" ]; then
+    echo -e "${YELLOW}Debug instance already running${NC}"
+    do_status
+    return 0
+  fi
+
+  # Check if port is in use
+  if check_port "$port"; then
+    echo -e "${RED}Error: Port $port is already in use${NC}"
+    echo "Use --port to specify a different port, or --kill to stop existing instance"
+    return 1
+  fi
+
+  # Create user data dir if needed
+  mkdir -p "$USER_DATA_DIR"
+
+  echo -e "${GREEN}Launching Brave Browser Nightly with remote debugging${NC}"
+  echo -e "  Port: $port"
+  echo -e "  Profile: $USER_DATA_DIR"
+  echo ""
+  echo -e "${YELLOW}Security note:${NC} Debug port is accessible to any local application"
+
+  # Launch in background
+  nohup "$BRAVE_APP" \
+    --remote-debugging-port="$port" \
+    --user-data-dir="$USER_DATA_DIR" \
+    >/dev/null 2>&1 &
+
+  # Wait for port to be available
+  local attempts=0
+  while ! check_port "$port" && [ $attempts -lt 10 ]; do
+    sleep 0.5
+    attempts=$((attempts + 1))
+  done
+
+  if check_port "$port"; then
+    echo -e "${GREEN}Ready!${NC} Connect via http://127.0.0.1:$port"
+  else
+    echo -e "${YELLOW}Browser started but port not yet ready${NC}"
+    echo "Check status with: $(basename "$0") --status"
+  fi
+}
+
+# Parse arguments
+PORT="$DEFAULT_PORT"
+ACTION="launch"
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    -p|--port)
+      PORT="$2"
+      shift 2
+      ;;
+    -k|--kill)
+      ACTION="kill"
+      shift
+      ;;
+    -s|--status)
+      ACTION="status"
+      shift
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      echo -e "${RED}Unknown option: $1${NC}"
+      usage
+      exit 1
+      ;;
+  esac
+done
+
+case "$ACTION" in
+  launch)
+    do_launch "$PORT"
+    ;;
+  kill)
+    do_kill
+    ;;
+  status)
+    do_status
+    ;;
+esac

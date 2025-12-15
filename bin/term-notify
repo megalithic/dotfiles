@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+if [ -n "$GHOSTTY_RESOURCES_DIR" ]; then
+  if [ -n "$TMUX" ]; then
+    printf "\x1bPtmux;\x1b\x1b]9;%s\a\x1b\\\\" "$*"
+  else
+    printf "\x1b]9;%s\a" "$*"
+  fi
+elif hash terminal-notifier 2> /dev/null; then
+  terminal-notifier -message "$*"
+else
+  /usr/bin/osascript -e "display notification \"$*\" with title \"Terminal\""
+fi

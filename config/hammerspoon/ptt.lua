@@ -1,217 +1,201 @@
-local obj = {}
-obj.__index = obj
-obj.name = "ptt"
-obj.debug = false
+local M = {}
+M.__index = M
 
-obj.momentaryKey = { "cmd", "alt" }
-obj.toggleKey = { { "cmd", "alt" }, "p" }
-obj.mode = "push-to-talk"
-obj.tmuxMode = ""
+M.name = "ptt"
+M.defaultState = "push-to-talk"
+M.push_mappings = {}
+M.toggle_mappings = {}
+M.state = M.defaultState
+M.states = { "push-to-talk", "push-to-mute" }
+M.pushed = false
+M.inputVolume = 75
+--- PushToTalk.app_switcher
+--- Variable
+--- Takes mapping from application name to mic state.
+--- For example this `{ ['zoom.us'] = 'push-to-talk' }` will switch mic to `push-to-talk` state when Zoom app starts.
+M.app_switcher = {}
 
-obj.mic = hs.audiodevice.defaultInputDevice()
-obj.inputs = hs.audiodevice.allInputDevices()
-
-obj.defaultInputVolume = 55
-obj.pushed = false
-
-obj.icons = {
-  ["mic-on"] = req("hs.styledtext").new("◉", {
-    color = { hex = "#c43e1f" },
-    font = { name = DefaultFont.name, size = 15 },
-  }),
-  ["push-to-mute"] = req("hs.styledtext").new("", {
-    color = { hex = "#c43e1f" },
-    font = { name = DefaultFont.name, size = 13 },
-  }),
-  ["push-to-talk"] = req("hs.styledtext").new("", {
-    color = { hex = "#aaaaaa" },
-    font = { name = DefaultFont.name, size = 13 },
-  }),
-}
-
-local function dbg(...)
-  if obj.debug then
-    return _G.dbg(fmt(...), false)
-  else
-    return ""
-  end
-end
-
-local log = {
-  df = function(...) dbg(..., false) end,
-}
-
-function obj.menuKeyFormatter(tbl)
-  local modLookup = {
-    cmd = "⌘",
-    ctrl = "⌃",
-    alt = "⌥",
-    opt = "⌥",
-    shift = "⇧",
-  }
-
-  local s = ""
-
-  for _, p in ipairs(tbl) do
-    s = s .. " " .. modLookup[p]
-  end
-
-  -- removes first separator (+,space, etc)
-  local v = string.sub(s, 2)
-
-  return v
-end
-
-function obj.getModes(currentMode)
-  currentMode = currentMode or obj.mode
-
-  return {
-    { title = "push-to-talk", mode = "push-to-talk", checked = (currentMode == "push-to-talk") },
-    { title = "push-to-mute", mode = "push-to-mute", checked = (currentMode == "push-to-mute") },
-  }
-end
-
-function obj.setAllInputsMuted(muted)
-  local inputVolume = muted and 0 or obj.defaultInputVolume
-
-  for _i, input in ipairs(obj.inputs) do
-    input:setInputMuted(muted)
-    input:setInputVolume(inputVolume)
-  end
-
-  obj.mic:setInputMuted(muted)
-  obj.mic:setInputVolume(inputVolume)
-end
-
-function obj.updateMenubar()
-  if obj.pushed then log.df("device to handle: %s", obj.mic) end
-
+local function showState()
+  local device = hs.audiodevice.defaultInputDevice()
   local muted = false
 
-  if obj.mode == "push-to-talk" then
-    if obj.pushed then
-      obj.menubar:setTitle(obj.icons["push-to-mute"] .. " " .. obj.icons["mic-on"])
-      obj.tmuxMode = "◉ unmuted"
-      muted = false
+  if M.state == "unmute" then
+    M.menubar:setIcon(hs.image.imageFromPath("assets/speak.pdf"))
+  elseif M.state == "mute" then
+    M.menubar:setIcon(hs.image.imageFromPath("assets/muted.pdf"))
+    muted = true
+  elseif M.state == "push-to-talk" then
+    if M.pushed then
+      M.menubar:setIcon(hs.image.imageFromPath("assets/record.pdf"), false)
+      M.menubar:setTitle(hs.styledtext.new("", {
+        color = { hex = "#c43e1f" },
+        font = { name = "Symbols Nerd Font Mono", size = 15 },
+      }))
     else
-      obj.menubar:setTitle(obj.icons["push-to-talk"])
-      obj.tmuxMode = "󰍭 muted"
+      M.menubar:setIcon(hs.image.imageFromPath("assets/unrecord.pdf"))
+      M.menubar:setTitle(hs.styledtext.new(" ", {
+        color = { hex = "#aaaaaa" },
+        font = { name = "Symbols Nerd Font Mono", size = 14 },
+      }))
       muted = true
     end
-  elseif obj.mode == "push-to-mute" then
-    if obj.pushed then
-      obj.menubar:setTitle(obj.icons["push-to-talk"])
-      obj.tmuxMode = "󰍭 muted"
+  elseif M.state == "push-to-mute" then
+    if M.pushed then
+      M.menubar:setIcon(hs.image.imageFromPath("assets/unrecord.pdf"))
+
+      M.menubar:setTitle(hs.styledtext.new("", {
+        color = { hex = "#aaaaaa" },
+        font = { name = "Symbols Nerd Font Mono", size = 15 },
+      }))
       muted = true
     else
-      obj.menubar:setTitle(obj.icons["push-to-mute"] .. " " .. obj.icons["mic-on"])
-      obj.tmuxMode = "◉ unmuted"
-      muted = false
+      M.menubar:setIcon(hs.image.imageFromPath("assets/record.pdf"), false)
+
+      M.menubar:setTitle(hs.styledtext.new("", {
+        color = { hex = "#c43e1f" },
+        font = { name = "Symbols Nerd Font Mono", size = 15 },
+      }))
     end
   end
 
-  obj.setAllInputsMuted(muted)
+  M.toggleInputState(device, muted)
 end
 
-function obj.buildMenubar()
-  local menutable = hs.fnutils.map(obj.getModes(), function(item)
-    local title = ""
-    if item.checked then
-      title = req("utils").template(
-        "{menu_title}\t\t {menu_keys}",
-        { menu_title = tostring(item.title), menu_keys = obj.menuKeyFormatter(obj.momentaryKey) }
-      )
-    else
-      title = item.title
+function M.toggleInputState(device, state)
+  device:setInputMuted(state)
+  device:setInputVolume(M.inputVolume)
+end
+
+function M.setState(s)
+  M.state = s
+  showState()
+end
+
+M.menutable = {
+  {
+    title = "push-to-talk (fn)",
+    fn = function() M.setState("push-to-talk") end,
+  },
+  {
+    title = "push-to-mute (fn)",
+    fn = function() M.setState("push-to-mute") end,
+  },
+  {
+    title = "unmuted",
+    fn = function() M.setState("unmute") end,
+  },
+  {
+    title = "muted",
+    fn = function() M.setState("mute") end,
+  },
+}
+
+local function appWatcher(appName, eventType, appObject)
+  local new_app_state = M.app_switcher[appName]
+  if new_app_state then
+    if eventType == hs.application.watcher.launching then
+      M.setState(new_app_state)
+    elseif eventType == hs.application.watcher.terminated then
+      M.setState(M.defaultState)
     end
-
-    return {
-      title = title,
-      fn = function() obj.setMode(item.mode) end,
-      checked = item.checked,
-    }
-  end)
-
-  return menutable
-end
-
-function obj.setMode(s)
-  obj.mode = s
-  log.df("Setting PTT mode to %s", s)
-
-  -- local muted = obj.mode == "push-to-talk"
-  -- hs.audiodevice.defaultInputDevice():setInputMuted(muted)
-
-  if obj.menubar ~= nil then
-    obj.menubar:setMenu(obj.buildMenubar())
-    obj.menubar:setTitle(obj.icons[obj.mode])
-
-    obj.updateMenubar()
   end
 end
-obj.setState = obj.setMode
 
-function obj.toggleMode()
-  local currentMode = obj.mode
-  local toggle_to = hs.fnutils.find(obj.getModes(currentMode), function(item)
-    if not item.checked then return item end
-  end) or obj.mode
+local function eventTapWatcher(evt)
+  local push_mods, _push_key = table.unpack(M.push_mappings)
+  local modifiersMatch = function(modifiers)
+    local match = true
 
-  obj.setMode(toggle_to.mode)
+    for _, key in ipairs(push_mods) do
+      if modifiers[key] ~= true then match = false end
+    end
 
-  log.df("Toggling PTT mode to %s", toggle_to.mode, currentMode)
+    return match
+  end
 
-  return toggle_to.mode
+  M.pushed = modifiersMatch(evt:getFlags())
+
+  -- if modifiersMatch(evt:getFlags()) then
+  --   M.pushed = true
+  -- else
+  --   M.pushed = false
+  -- end
+
+  showState()
 end
 
-function obj.currentMode() return obj.tmuxMode end
+--- PushToTalk:init()
+--- Method
+--- Initial setup. It's empty currently
+function M:init(mappings)
+  if mappings and type(mappings) == "table" and U.tlen(mappings) > 0 then
+    M.push_mappings = mappings["push"]
+    M.toggle_mappings = mappings["toggle"]
 
-function obj:start(opts)
-  if opts["mode"] ~= nil then self.mode = opts["mode"] end
+    U.log.i("started")
+  else
+    U.log.e("no mappings to capture")
+  end
+
+  return self
+end
+
+--- PushToTalk:init()
+--- Method
+--- Starts menu and key watcher
+function M:start()
+  local push_mods, push_key = table.unpack(M.push_mappings)
+  local toggle_mods, toggle_key = table.unpack(M.toggle_mappings)
 
   self:stop()
+  M.appWatcher = hs.application.watcher.new(appWatcher)
+  M.appWatcher:start()
 
-  self.momentaryKeyWatcher = hs.eventtap.new({ hs.eventtap.event.types.flagsChanged }, function(evt)
-    local modifiersMatch = function(modifiers)
-      local modifiersMatch = true
+  if push_key == nil then
+    M.eventTapWatcher = hs.eventtap.new({ hs.eventtap.event.types.flagsChanged }, eventTapWatcher)
+    M.eventTapWatcher:start()
+  else
+    M.pushHotkey = hs.hotkey.bind(push_mods, push_key, function() showState() end)
+  end
 
-      for _, key in ipairs(obj.momentaryKey) do
-        if modifiers[key] ~= true then modifiersMatch = false end
-      end
+  self.toggleHotkey = hs.hotkey.bind(toggle_mods, toggle_key, function() self:toggleStates() end)
 
-      return modifiersMatch
-    end
-
-    if modifiersMatch(evt:getFlags()) then
-      self.pushed = true
-    else
-      self.pushed = false
-    end
-
-    require("utils").tmux.update()
-    self.updateMenubar()
-  end)
-  self.momentaryKeyWatcher:start()
-
-  if self.menubar == nil then self.menubar = hs.menubar.new() end
-
-  self.setMode(self.mode)
-
-  local toggleMod, toggleKey = table.unpack(self.toggleKey)
-  hs.hotkey.bind(toggleMod, toggleKey, function()
-    local newMode = self.toggleMode()
-    hs.alert.closeAll()
-    hs.alert.show("Toggled to -> " .. newMode)
-  end)
-
-  info(fmt("[START] %s (%s)", self.name, self.mode))
+  M.menubar = hs.menubar.new()
+  M.menubar:setMenu(M.menutable)
+  M.setState(M.state)
 
   return self
 end
 
-function obj:stop()
-  if self.momentaryKeyWatcher then self.momentaryKeyWatcher:stop() end
+--- PushToTalk:stop()
+--- Method
+--- Stops PushToTalk
+function M:stop()
+  if M.appWatcher then M.appWatcher:stop() end
+  if M.eventTapWatcher then M.eventTapWatcher:stop() end
+  if M.menubar then M.menubar:delete() end
+  if M.pushHotkey then M.pushHotkey:delete() end
+  if M.toggleHotkey then M.toggleHotkey:delete() end
+
   return self
 end
 
-return obj
+--- PushToTalk:toggleStates()
+--- Method
+--- Cycle states in order
+---
+--- Parameters:
+---  * states - A array of states to toggle. For example: `{'push-to-talk', 'push-to-mute'}`
+function M:toggleStates(states)
+  states = states or M.states
+  local updatedState = states[1]
+  for i, v in pairs(states) do
+    if v == M.state then updatedState = states[(i % #states) + 1] end
+  end
+  M.setState(updatedState)
+
+  hs.alert.closeAll()
+  hs.alert.show("toggled to -> " .. updatedState)
+end
+
+return M

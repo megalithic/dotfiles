@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# Get Mac App Store app info formatted for packages-mas.nix
+# Usage: mas-info <app-name-or-id>
+
+set -euo pipefail
+
+QUERY="$1"
+if [ -z "$QUERY" ]; then
+  echo "Usage: $0 <app-name-or-id>" >&2
+  echo "Example: $0 Xcode" >&2
+  echo "Example: $0 497799835" >&2
+  exit 1
+fi
+
+# Check if query is numeric (app ID) or text (app name)
+if [[ "$QUERY" =~ ^[0-9]+$ ]]; then
+  # It's an ID, get info directly
+  INFO=$(mas info "$QUERY" 2>&1)
+  if echo "$INFO" | grep -q "Error:"; then
+    echo "Error: App ID $QUERY not found" >&2
+    exit 1
+  fi
+
+  # First line format: "AppName Version [Price]"
+  # Extract just the app name (everything before version number)
+  APP_NAME=$(echo "$INFO" | head -1 | sed -E 's/ [0-9]+(\.[0-9]+)*.*//')
+  APP_ID="$QUERY"
+else
+  # It's a name, search for it
+  SEARCH_RESULT=$(mas search "$QUERY" 2>/dev/null | head -1)
+
+  if [ -z "$SEARCH_RESULT" ]; then
+    echo "Error: No apps found for '$QUERY'" >&2
+    echo "Try: mas search \"$QUERY\"" >&2
+    exit 1
+  fi
+
+  APP_ID=$(echo "$SEARCH_RESULT" | awk '{print $1}')
+  # Extract app name - everything between ID and version (in parentheses)
+  APP_NAME=$(echo "$SEARCH_RESULT" | sed -E 's/^[0-9]+[[:space:]]+//' | sed -E 's/[[:space:]]+\([^)]+\)$//' | xargs)
+fi
+
+# Output formatted for packages-mas.nix
+echo "    \"$APP_NAME\" = $APP_ID;"
+echo ""
+echo "# To add to packages-mas.nix, copy the line above into the masApps attrset"

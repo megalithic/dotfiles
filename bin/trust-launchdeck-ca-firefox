@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+CA_URL="https://vault.platform.launchdeck.internal:8200/v1/pki/ca/pem"
+CA_FILE="/tmp/vault-ca.pem"
+CA_NAME="C Spire LaunchDeck Vault CA"
+
+echo "🦊 Firefox-only certificate trust setup"
+echo "========================================"
+echo
+
+# Download CA if not present
+if [[ ! -f "$CA_FILE" ]]; then
+    echo "📥 Downloading CA certificate..."
+    curl -sk "$CA_URL" -o "$CA_FILE"
+fi
+
+# Find Firefox profiles
+FIREFOX_PROFILES=$(find "$HOME/Library/Application Support/Firefox/Profiles" -maxdepth 1 -type d -name "*.default*" 2>/dev/null || true)
+
+if [[ -z "$FIREFOX_PROFILES" ]]; then
+    echo "❌ No Firefox profiles found"
+    exit 1
+fi
+
+for profile in $FIREFOX_PROFILES; do
+    profile_name=$(basename "$profile")
+    echo "📦 Adding to profile: $profile_name"
+    certutil -A -n "$CA_NAME" -t "C,," -i "$CA_FILE" -d "sql:$profile" 2>/dev/null && \
+        echo "   ✅ Added successfully" || \
+        echo "   ℹ️  May already exist"
+done
+
+echo
+echo "✅ Firefox setup complete! Restart Firefox to take effect."

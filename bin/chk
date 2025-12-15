@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+query="${1:-}"
+
+while true; do
+  result=$(ps -eo pid,ppid,user,%cpu,%mem,command |
+    tail -n +2 |
+    grep -v "fzf" |
+    grep -v "$$" |
+    fzf --no-multi \
+      --ansi \
+      --reverse \
+      --border=none \
+      --padding="1" \
+      --header=" $(tput sitm)$(tput setaf 5)processes: $(tput sgr 0)[ $(tput setaf 255)ctrl-k$(tput sgr 0): $(tput setaf 245)kill -9 $(tput sgr 0)] [ $(tput setaf 255)ctrl-y$(tput sgr 0): $(tput setaf 245)copy pid $(tput sgr 0)]" \
+      --header-first \
+      --prompt="search processes » " \
+      --query="$query" \
+      --preview="preview --process {1}" \
+      --preview-window="right:50%:wrap" \
+      --bind="esc:abort" \
+      --bind="enter:ignore" \
+      --bind="ctrl-y:execute-silent(echo -n {1} | pbcopy)+abort" \
+      --bind="ctrl-k:become(echo KILL {1})" \
+      --print-query) || exit 0
+
+  query=$(echo "$result" | head -n 1)
+  action_line=$(echo "$result" | tail -n 1)
+
+  # Check if we got a KILL action
+  if [[ "$action_line" == KILL* ]]; then
+    pid=$(echo "$action_line" | awk '{print $2}')
+    name=$(ps -p "$pid" -o command= 2>/dev/null || echo "unknown")
+
+    if pkill -9 -P "$pid" 2>/dev/null || kill -9 "$pid" 2>/dev/null; then
+      osascript -e "display notification \"PID: $pid\" with title \"Killed Process\" subtitle \"$name\""
+    fi
+  fi
+done

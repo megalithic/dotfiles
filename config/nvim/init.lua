@@ -1,35 +1,35 @@
-_G.mega = {}
-
 vim.loader.enable()
+vim.g.colorscheme = "megaforest"
 
 require("vim._extui").enable({
   enable = true,
-  msg = {
-    target = "cmd", -- for now I'm happy with 'cmd'; 'box' seems buggy
-    timeout = vim.g.extui_msg_timeout or 5000, -- Time a message is visible in the message window.
-  },
+  -- msg = {
+  --   -- msg: similar rendering to the notifier.nvim plugin
+  --   -- cmd: normal cmd mode looking stuff
+  --   target = "cmd",
+  --   -- timeout = vim.g.extui_msg_timeout or 5000,
+  -- },
 })
 
-vim.api.nvim_create_autocmd("FileType", {
-  pattern = { "cmd", "msg", "pager", "dialog" },
-  callback = function() vim.api.nvim_set_option_value("winhl", "Normal:PanelBackground,FloatBorder:PanelBorder", {}) end,
-})
+-- vim.api.nvim_create_autocmd("FileType", {
+--   pattern = { "cmd", "msg", "pager", "dialog" },
+--   callback = function(_evt)
+--     vim.api.nvim_set_option_value("winhl", "Normal:PanelBackground,FloatBorder:PanelBorder", {})
+--   end,
+-- })
 
 --- @diagnostic disable-next-line: duplicate-set-field
 vim.deprecate = function() end -- no-op deprecation messages
-
-vim.g.mapleader = ","
-vim.g.maplocalleader = " "
-
-local ok, err = pcall(require, "config.globals")
+local ok, mod_or_err = pcall(require, "config.globals")
 if ok then
-  require("config.options").apply()
-  require("config.lazy")
+  -- if not vim.g.started_by_firenvim then
+  --   mod_or_err.version()
+  -- end
+  require("config.options")
   require("config.commands")
-  require("config.autocmds").apply()
+  require("config.autocmds")
   require("config.keymaps")
+  require("config.lazy")
 else
-  function _G.Plugin_enabled(_plugin) return false end
-  vim.notify("Error loading `config/globals.lua`; unable to continue...\n" .. err)
-  vim.cmd.runtime("minvimrc.vim")
+  vim.notify("Error loading `globals.lua`; unable to continue...\n" .. mod_or_err)
 end

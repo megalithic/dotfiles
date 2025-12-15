@@ -1,0 +1,52 @@
+{
+  "$schema": "https://raw.githubusercontent.com/EmmyLuaLs/emmylua-analyzer-rust/refs/heads/main/crates/emmylua_code_analysis/resources/schema.json",
+  "format": {
+    "externalTool": {
+      "program": "stylua",
+      "args": [
+        "-",
+        "--stdin-filepath",
+        "--indent-width=2",
+        "--indent-type",
+        "--use-spaces",
+        "${file}"
+      ],
+      "timeout": 5000
+    }
+  },
+  "runtime": {
+    "version": "LuaJIT",
+    "INFO": "`?/lua/` is needed to pick up nvim plugins that are not in `./lua` relative to this emmyrc.json",
+    "requirePattern": [
+      "lua/?.lua",
+      "lua/?/init.lua",
+      "?/lua/?.lua",
+      "?/lua/?/init.lua"
+    ]
+  },
+  "workspace": {
+    "library": [
+      "$VIMRUNTIME",
+      "$DOTS/config/hammerspoon",
+      "$DOTS/config/hammerspoon/annotations",
+      "$DOTS/config/nvim",
+      "$DOTS/config/mvim",
+      "$DOTS/config/nvim_min",
+      "$HOME/.local/share/nvim/lazy",
+      "${3rd}/luv/library"
+    ],
+    "ignoreGlobs": ["**/*_spec.lua"],
+    "ignoreDir": ["**/.config/nvim/undo/", ".direnv"]
+  },
+  "diagnostics": {
+    "disable": ["unnecessary-if"],
+    "globals": ["vim", "hs", "mega"]
+  },
+  "codeAction": {
+    "insertSpace": true
+  },
+  "strict": {
+    "typeCall": true,
+    "arrayIndex": true
+  }
+}

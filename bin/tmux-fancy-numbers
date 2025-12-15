@@ -12,6 +12,5 @@ numbers_arr[7]="⁷"
 numbers_arr[8]="⁸"
 numbers_arr[9]="⁹"
 
-
 num=${1:-}
 echo "${numbers_arr[$num]}"

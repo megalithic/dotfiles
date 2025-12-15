@@ -1,5 +1,7 @@
 local map = vim.keymap.set
 
+-- M.dbPath = os.getenv("XDG_DATA_HOME") or (os.getenv("HOME") .. "/.local/share")
+-- local dbee_json_config = vim.fn.stdpath("data") .. "/dbee/dbee_persistence.json"
 local dbee_json_config = vim.fn.stdpath("config") .. "/.dbee_persistence.json"
 
 local get_default_connection_for_cwd = function(default_id)
@@ -42,7 +44,9 @@ local get_default_connection_for_cwd = function(default_id)
       for _, item in pairs(data) do
         if type(item) == "table" and item.id then
           -- Check if the id contains or matches the current working directory
-          if string.find(item.id, cwd, 1, true) or string.find(cwd, item.id, 1, true) then table.insert(matches, item.id) end
+          if string.find(item.id, cwd, 1, true) or string.find(cwd, item.id, 1, true) then
+            table.insert(matches, item.id)
+          end
         end
       end
     end
@@ -87,14 +91,15 @@ return {
       vim.g.db_ui_save_location = vim.g.db_ui_path
       vim.g.db_ui_tmp_query_location = "~/code/queries"
       vim.g.db_ui_auto_execute_table_helpers = 1
-      vim.g.db_ui_default_query = "select * from \"{table}\" limit 20 desc;"
+      vim.g.db_ui_default_query = 'select * from "{table}" limit 20 desc;'
       vim.g.db_ui_table_helpers = {
         postgresql = {
-          ["List"] = "select * from \"{table}\" limit 10",
+          ["List"] = 'select * from "{table}" limit 10',
         },
       }
 
-      vim.g.db_ui_hide_schemas = { "pg_catalog", "pg_toast_temp.*", "crdb_internal", "information_schema", "pg_extension" }
+      vim.g.db_ui_hide_schemas =
+        { "pg_catalog", "pg_toast_temp.*", "crdb_internal", "information_schema", "pg_extension" }
       vim.g.db_ui_force_echo_notifications = 1
       vim.g.db_ui_show_database_icon = 1
       vim.g.db_ui_auto_execute_table_helpers = 1
@@ -158,6 +163,22 @@ return {
             }),
             require("dbee.sources").EnvSource:new("DBEE_CONNECTIONS"),
             require("dbee.sources").FileSource:new(dbee_json_config),
+            require("dbee.sources").MemorySource:new({
+              {
+                id = "hs",
+                name = "Hammerspoon",
+                type = "sqlite", -- type of database driver
+                url = "~/.local/share/hammerspoon/hammerspoon.db",
+              },
+            }),
+            require("dbee.sources").MemorySource:new({
+              {
+                id = "hs_notifications",
+                name = "Hammerspoon Notifications",
+                type = "sqlite", -- type of database driver
+                url = "~/.local/share/hammerspoon/notifications.db",
+              },
+            }),
           },
           call_log = {
             window_options = {

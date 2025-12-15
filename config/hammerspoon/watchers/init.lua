@@ -1,39 +1,39 @@
 local enum = require("hs.fnutils")
 
-local obj = {}
+local M = {}
 
-obj.__index = obj
-obj.name = "watchers"
-obj.watched = {}
+function M:init(opts)
+  M.watchers = opts.watchers
+  U.log.f("initializing %s", table.concat(opts.watchers, ", "))
 
-function obj:start(watchers)
-  if watchers == nil then return self end
-
-  enum.each(watchers, function(modTarget)
-    local modPath = "watchers." .. modTarget
-    local mod = require(modPath):start()
-
-    self.watched[modPath] = mod
+  enum.each(opts.watchers or {}, function(watcher)
+    local ok, mod = pcall(require, string.format("watchers.%s", watcher))
+    if ok then
+      mod:start()
+    else
+      U.log.e(string.format("%s failed to start", watcher))
+      U.log.e(string.format("%s %s", watcher, mod))
+    end
   end)
-
-  info(fmt("[START] %s (%s)", self.name, I(watchers)))
 
   return self
 end
 
-function obj:stop(watchers)
-  if self.watched == nil then return end
+function M:stop(opts)
+  local watchers = opts.watchers and opts.watchers or M.watchers
+  U.log.f("stopping", watchers)
 
-  -- dbg(self.watched, true)
-  -- dbg(watchers, true)
-
-  enum.each(self.watched, function(mod)
-    if pcall(require, mod) then require(mod):stop() end
+  enum.each(watchers or {}, function(watcher)
+    local ok, mod = pcall(require, string.format("watchers.%s", watcher))
+    if ok then
+      mod:stop()
+    else
+      U.log.e(string.format("%s failed to stop", watcher))
+      U.log.e(string.format("%s %s", watcher, mod))
+    end
   end)
-  self.watched = {}
 
-  info(fmt("[STOP] %s", self.name))
   return self
 end
 
-return obj
+return M

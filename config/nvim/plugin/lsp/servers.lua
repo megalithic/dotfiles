@@ -15,6 +15,29 @@ local function mason_bin(opts)
   end
 end
 
+-- -- Some LSP are part of npm packages, so the binaries live inside node_modules/.bin
+-- -- this function helps getting the correct path to the binary and falling
+-- -- back to a global binary if none is found in the local node_modules
+-- local function get_lsp_bin(bin)
+--   -- Get the closest `node_modules` first
+--   local root = vim.fs.root(0, "node_modules/.bin")
+--   local bin_path = string.format("%s/.bin/%s", root, bin)
+--
+--   if vim.uv.fs_stat(bin_path) ~= nil then
+--     return bin_path
+--   end
+--
+--   -- Then maybe we might be in a monorepo, so get the root `node_modules`, maybe it's hoisted up there
+--   root = vim.fs.root(0, ".git")
+--   bin_path = string.format("%s/node_modules/.bin/%s", root, bin)
+--
+--   if vim.uv.fs_stat(bin_path) ~= nil then
+--     return bin_path
+--   end
+--
+--   return bin
+-- end
+
 local M = {}
 
 --
@@ -184,7 +207,8 @@ M = {
 
     return {
       manual_install = true,
-      cmd = { string.format("%s/lsp/expert/%s", vim.env.XDG_DATA_HOME, "expert_darwin_arm64") },
+      cmd = { "expert", "--stdio" },
+      -- cmd = { string.format("%s/lsp/expert/%s", vim.env.XDG_DATA_HOME, "expert_darwin_arm64") },
       filetypes = { "elixir", "eelixir", "heex", "surface" },
       root_markers = { "mix.exs", ".git" },
       root_dir = function(bufnr, on_dir)
@@ -311,7 +335,10 @@ M = {
       single_file_support = true,
       on_new_config = function(new_config)
         new_config.settings.json.schemas = new_config.settings.json.schemas or {}
-        vim.list_extend(new_config.settings.json.schemas, ok_schemastore and require("schemastore").json.schemas() or {})
+        vim.list_extend(
+          new_config.settings.json.schemas,
+          ok_schemastore and require("schemastore").json.schemas() or {}
+        )
       end,
       settings = {
         json = {
@@ -322,7 +349,7 @@ M = {
       },
     }
   end,
-  emmylua_ls = {},
+  -- emmylua_ls = {},
   lua_ls = function()
     local path = vim.split(package.path, ";")
     table.insert(path, "lua/?.lua")
@@ -336,7 +363,7 @@ M = {
     local wezterm = ("%s/nvim/lazy/wezterm-types/types"):format(fn.stdpath("data"))
 
     return {
-      enabled = false,
+      enabled = true,
       cmd = { "lua-language-server" },
       manual_install = true,
       filetypes = { "lua" },
@@ -458,7 +485,14 @@ M = {
           },
           workspace = {
             ignoreSubmodules = true,
-            library = { vim.fn.expand("$VIMRUNTIME/lua"), plugins, plenary, hammerspoon, wezterm, vim.api.nvim_get_runtime_file("", true) },
+            library = {
+              vim.fn.expand("$VIMRUNTIME/lua"),
+              plugins,
+              plenary,
+              hammerspoon,
+              wezterm,
+              vim.api.nvim_get_runtime_file("", true),
+            },
             checkThirdParty = false,
           },
           telemetry = {
@@ -614,8 +648,48 @@ M = {
       },
     }
   end,
-  nil_ls = {},
-  -- TODO: nil -> nixd
+  nixd = {
+    settings = {
+      nixd = {
+        nixpkgs = {
+          expr = vim.fs.root(0, { "shell.nix" }) ~= nil and "import <nixpkgs> { }" or string.format(
+            'import (builtins.getFlake "%s").inputs.nixpkgs { }',
+            vim.fs.root(0, { "flake.nix" }) or vim.fn.expand("$DOTFILES")
+          ),
+        },
+        formatting = {
+          command = { "alejandra" },
+        },
+        -- options = vim.tbl_extend("force", {
+        --   -- home_manager = {
+        --   -- 	expr = string.format(
+        --   -- 		'(builtins.getFlake "%s").homeConfigurations.%s.options',
+        --   -- 		vim.fn.expand '$DOTFILES',
+        --   -- 		vim.fn.hostname()
+        --   -- 	),
+        --   -- },
+        -- }, vim.fn.has("macunix") and {
+        --   ["nix-darwin"] = {
+        --     expr = string.format(
+        --       '(builtins.getFlake "%s").darwinConfigurations.%s.options',
+        --       vim.fn.expand("$DOTFILES"),
+        --       vim.fn.hostname()
+        --     ),
+        --   },
+        -- } or {
+        --   nixos = {
+        --     expr = string.format(
+        --       '(builtins.getFlake "%s").nixosConfigurations.%s.options',
+        --       vim.fn.expand("$DOTFILES"),
+        --       vim.fn.hostname()
+        --     ),
+        --   },
+        -- }),
+      },
+    },
+  },
+  -- nil_ls = {},
+  -- TODO: nil -> nixd?
   -- REF: https://github.com/ahmedelgabri/dotfiles/commit/5dd61158f6872d4c4b85ddf5df550e0222093ae8
   -- nixd = {
   --   -- https://github.com/nix-community/nixvim/issues/2390#issuecomment-2408101568
@@ -668,15 +742,116 @@ M = {
       },
     },
   },
-  pyright = {
+
+  -- pyright = {
+  --   enabled = false,
+  --   single_file_support = false,
+  --   settings = {
+  --     pyright = {
+  --       -- Using Ruff's import organizer
+  --       disableOrganizeImports = true,
+  --     },
+  --     python = {
+  --       format = false,
+  --       analysis = {
+  --         autoSearchPaths = true,
+  --         diagnosticMode = "workspace",
+  --         useLibraryCodeForTypes = true,
+  --         -- Ignore all files for analysis to exclusively use Ruff for linting
+  --         ignore = { "*" },
+  --       },
+  --     },
+  --   },
+  -- },
+  -- pylsp = {
+  --   settings = {
+  --     pylsp = {
+  --       -- :PyLspInstall <tab>
+  --       plugins = {
+  --         -- Unklar, was es macht, wird ggfl. auch von ruff[-lsp] übernommen
+  --         rope = {
+  --           enabled = false,
+  --         },
+  --         -- All disabled to avoid overlap with ruff
+  --         -- list from python-lsp-ruff
+  --         pycodestyle = {
+  --           enabled = false,
+  --           maxLineLength = 150,
+  --         },
+  --         mccabe = {
+  --           enabled = false,
+  --         },
+  --         pydocstyle = {
+  --           enabled = false,
+  --         },
+  --         -- autopep8, yapf formatieren beide, Unterschied unklar. yapf = false, autopep8 = true macht es so, wie ich es möchte
+  --         yapf = {
+  --           enabled = false,
+  --         },
+  --         autopep8 = {
+  --           enabled = false,
+  --         },
+  --       },
+  --     },
+  --   },
+  -- },
+
+  basedpyright = {
+    enabled = true,
     single_file_support = false,
     settings = {
+      basedpyright = {
+        -- Using Ruff's import organizer
+        disableOrganizeImports = true,
+        -- analysis = {
+        --   useLibraryCodeForTypes = true,
+        --   typeCheckingMode = "standard",
+        --   diagnosticMode = "workspace",
+        --   autoSearchPath = true,
+        --   inlayHints = {
+        --     callArgumentNames = true,
+        --   },
+        --   extraPaths = {
+        --     "...",
+        --     "...",
+        --   },
+        -- },
+        -- reportImplicitOverride = false,
+        reportMissingSuperCall = "none",
+        -- reportUnusedImport = false,
+        -- basedpyright very intrusive with errors, this calms it down
+        typeCheckingMode = "standard",
+        -- works, if pyproject.toml is used
+        reportAttributeAccessIssue = false,
+        -- doesn't work, even if pyproject.toml is used
+        analysis = {
+          inlayHints = {
+            callArgumentNames = true, -- = basedpyright.analysis.inlayHints.callArgumentNames
+          },
+          autoSearchPaths = true,
+          diagnosticMode = "openFilesOnly",
+          useLibraryCodeForTypes = true,
+          typeCheckingMode = "standard",
+          diagnosticSeverityOverrides = {
+            reportAny = false,
+            reportMissingTypeArgument = false,
+            reportMissingTypeStubs = false,
+            reportUnknownArgumentType = false,
+            reportUnknownMemberType = false,
+            reportUnknownParameterType = false,
+            reportUnknownVariableType = false,
+            reportUnusedCallResult = false,
+          },
+        },
+      },
       python = {
         format = false,
         analysis = {
           autoSearchPaths = true,
           diagnosticMode = "workspace",
           useLibraryCodeForTypes = true,
+          -- Ignore all files for analysis to exclusively use Ruff for linting
+          ignore = { "*" },
         },
       },
     },
@@ -693,6 +868,7 @@ M = {
       },
     },
   },
+
   solargraph = {
     manual_install = true,
     single_file_support = false,
@@ -706,6 +882,7 @@ M = {
       },
     },
   },
+
   sqlls = function()
     return {
       cmd = { "sql-language-server", "up", "--method", "stdio" },
@@ -717,6 +894,7 @@ M = {
       end,
     }
   end,
+
   tailwindcss = {},
   -- tailwindcss = function()
   --   -- bypasses my config and uses tailwind-tools instead..
@@ -890,11 +1068,207 @@ M = {
   --     -- end,
   --   }
   -- end,
+  taplo = {
+    settings = {
+      -- Use the defaults that the VSCode extension uses: https://github.com/tamasfe/taplo/blob/2e01e8cca235aae3d3f6d4415c06fd52e1523934/editors/vscode/package.json
+      taplo = {
+        configFile = { enabled = true },
+        schema = {
+          enabled = true,
+          catalogs = {
+            "https://www.schemastore.org/api/json/catalog.json",
+          },
+          cache = {
+            memoryExpiration = 60,
+            diskExpiration = 600,
+          },
+        },
+      },
+    },
+  },
   terraformls = {},
   -- NOTE: presently enabled via typescript-tools
   tinymist = {},
-  ts_ls = {},
+
+  -- ts_ls = {
+  --   cmd = { "typescript-language-server", "--stdio" },
+  --   filetypes = {
+  --     "javascript",
+  --     "javascriptreact",
+  --     "javascript.jsx",
+  --     "typescript",
+  --     "typescriptreact",
+  --     "typescript.tsx",
+  --     "vue",
+  --   },
+  --   -- workspace_required = true,
+  --   root_dir = function(_, on_dir)
+  --     on_dir(not vim.fs.root(0, { ".flowconfig", "deno.json", "deno.jsonc" }) and vim.fs.root(0, {
+  --       "tsconfig.json",
+  --       "jsconfig.json",
+  --       "package.json",
+  --       ".git",
+  --       vim.api.nvim_buf_get_name(0),
+  --     }))
+  --   end,
+  -- },
+  -- ts_ls = {
+  --
+  --   init_options = { hostInfo = "neovim" },
+  --   cmd = { "typescript-language-server", "--stdio" },
+  --   filetypes = {
+  --     "javascript",
+  --     "javascriptreact",
+  --     "javascript.jsx",
+  --     "typescript",
+  --     "typescriptreact",
+  --     "typescript.tsx",
+  --     "vue",
+  --   },
+  --   root_dir = function(bufnr, on_dir)
+  --     -- The project root is where the LSP can be started from
+  --     -- As stated in the documentation above, this LSP supports monorepos and simple projects.
+  --     -- We select then from the project root, which is identified by the presence of a package
+  --     -- manager lock file.
+  --     local root_markers = { "package-lock.json", "yarn.lock", "pnpm-lock.yaml", "bun.lockb", "bun.lock" }
+  --     -- Give the root markers equal priority by wrapping them in a table
+  --     root_markers = vim.fn.has("nvim-0.11.3") == 1 and { root_markers, { ".git" } }
+  --       or vim.list_extend(root_markers, { ".git" })
+  --     -- We fallback to the current working directory if no project root is found
+  --     local project_root = vim.fs.root(bufnr, root_markers) or vim.fn.getcwd()
+  --
+  --     on_dir(project_root)
+  --   end,
+  --   handlers = {
+  --     -- handle rename request for certain code actions like extracting functions / types
+  --     ["_typescript.rename"] = function(_, result, ctx)
+  --       local client = assert(vim.lsp.get_client_by_id(ctx.client_id))
+  --       vim.lsp.util.show_document({
+  --         uri = result.textDocument.uri,
+  --         range = {
+  --           start = result.position,
+  --           ["end"] = result.position,
+  --         },
+  --       }, client.offset_encoding)
+  --       vim.lsp.buf.rename()
+  --       return vim.NIL
+  --     end,
+  --   },
+  --   commands = {
+  --     ["editor.action.showReferences"] = function(command, ctx)
+  --       local client = assert(vim.lsp.get_client_by_id(ctx.client_id))
+  --       local file_uri, position, references = unpack(command.arguments)
+  --
+  --       local quickfix_items = vim.lsp.util.locations_to_items(references, client.offset_encoding)
+  --       vim.fn.setqflist({}, " ", {
+  --         title = command.title,
+  --         items = quickfix_items,
+  --         context = {
+  --           command = command,
+  --           bufnr = ctx.bufnr,
+  --         },
+  --       })
+  --
+  --       vim.lsp.util.show_document({
+  --         uri = file_uri,
+  --         range = {
+  --           start = position,
+  --           ["end"] = position,
+  --         },
+  --       }, client.offset_encoding)
+  --
+  --       vim.cmd("botright copen")
+  --     end,
+  --   },
+  --   on_attach = function(client, bufnr)
+  --     -- ts_ls provides `source.*` code actions that apply to the whole file. These only appear in
+  --     -- `vim.lsp.buf.code_action()` if specified in `context.only`.
+  --     vim.api.nvim_buf_create_user_command(bufnr, "LspTypescriptSourceAction", function()
+  --       local source_actions = vim.tbl_filter(function(action)
+  --         return vim.startswith(action, "source.")
+  --       end, client.server_capabilities.codeActionProvider.codeActionKinds)
+  --
+  --       vim.lsp.buf.code_action({
+  --         context = {
+  --           only = source_actions,
+  --         },
+  --       })
+  --     end, {})
+  --   end,
+  -- },
+  tsgo = {
+    cmd = { "tsgo", "--lsp", "--stdio" },
+    filetypes = {
+      "javascript",
+      "javascriptreact",
+      "javascript.jsx",
+      "typescript",
+      "typescriptreact",
+      "typescript.tsx",
+    },
+    root_dir = function(bufnr, on_dir)
+      -- The project root is where the LSP can be started from
+      -- As stated in the documentation above, this LSP supports monorepos and simple projects.
+      -- We select then from the project root, which is identified by the presence of a package
+      -- manager lock file.
+      local root_markers = { "package-lock.json", "yarn.lock", "pnpm-lock.yaml", "bun.lockb", "bun.lock" }
+      -- Give the root markers equal priority by wrapping them in a table
+      root_markers = vim.fn.has("nvim-0.11.3") == 1 and { root_markers, { ".git" } }
+        or vim.list_extend(root_markers, { ".git" })
+      -- We fallback to the current working directory if no project root is found
+      local project_root = vim.fs.root(bufnr, root_markers) or vim.fn.getcwd()
+
+      on_dir(project_root)
+    end,
+  },
+  -- tsgo = {
+  --   cmd = { "tsgo", "lsp", "--stdio" },
+  --   filetypes = { "typescript", "javascript", "vue" },
+  --   workspace_required = true,
+  --   root_dir = function(_, on_dir)
+  --     on_dir(not vim.fs.root(0, { ".flowconfig", "deno.json", "deno.jsonc" }) and vim.fs.root(0, {
+  --       "tsconfig.json",
+  --       "jsconfig.json",
+  --       "package.json",
+  --       ".git",
+  --       vim.api.nvim_buf_get_name(0),
+  --     }))
+  --   end,
+  -- },
+  typos_lsp = {
+    filetypes = { "markdown" },
+    cmd_env = { RUST_LOG = "error" },
+    init_options = {
+      -- Custom config. Used together with a config file found in the workspace or its parents,
+      -- taking precedence for settings declared in both.
+      -- Equivalent to the typos `--config` cli argument.
+      -- config = '~/code/typos-lsp/crates/typos-lsp/tests/typos.toml',
+      -- How typos are rendered in the editor, can be one of an Error, Warning, Info or Hint.
+      -- Defaults to error.
+      config = "~/.config/typos.toml",
+      diagnosticSeverity = "Hint",
+    },
+  },
   vimls = { init_options = { isNeovim = true } },
+  vtsls = {
+    package = "vtsls",
+    settings = {
+      vtsls = {
+        enableMoveToFileCodeAction = true,
+        autoUseWorkspaceTsdk = true,
+      },
+      typescript = {
+        updateImportsOnFileMove = { enabled = "always" },
+        suggest = { completeFunctionCalls = true },
+        inlayHints = {
+          -- Disable to save some memory
+          parameterNames = { enabled = "none" },
+          propertyDeclarationTypes = { enabled = false },
+          variableTypes = { enabled = false },
+        },
+      },
+    },
+  },
   --- https://github.com/golang/tools/blob/master/gopls/doc/settings.md
   yamlls = function()
     local ok_schemastore = pcall(require, "schemastore")

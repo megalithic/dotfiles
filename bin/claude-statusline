@@ -1,0 +1,204 @@
+#!/usr/bin/env bash
+#
+# Claude Code statusline script
+# Receives JSON via stdin with session info, outputs formatted statusline
+#
+# JSON input includes: model, workspace, cost, output_style, version
+# See: https://code.claude.com/docs/en/statusline
+
+set -euo pipefail
+
+# ===========================================================================
+# Colors (ANSI)
+# ===========================================================================
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+MAGENTA='\033[0;35m'
+CYAN='\033[0;36m'
+WHITE='\033[0;37m'
+DIM='\033[0;90m'
+RESET='\033[0m'
+
+# ===========================================================================
+# Read JSON input
+# ===========================================================================
+input=$(cat)
+
+# ===========================================================================
+# Helper functions
+# ===========================================================================
+get_json() { echo "$input" | jq -r "$1 // \"$2\""; }
+
+# Time-based arc spinner - cycles through frames based on current second
+# Gives illusion of animation since statusline refreshes periodically
+# Uses same spinner as aerc email client for consistency
+get_spinner() {
+  local frames=("◜" "◠" "◝" "◞" "◡" "◟")
+  local idx=$(( $(date +%s) % ${#frames[@]} ))
+  echo "${frames[$idx]}"
+}
+
+get_model_name() { get_json '.model.display_name' 'Unknown'; }
+get_current_dir() { get_json '.workspace.current_dir' '.'; }
+get_project_dir() { get_json '.workspace.project_dir' '.'; }
+get_cost() {
+  local cost
+  cost=$(get_json '.cost.total_cost_usd' '0')
+  printf "\$%.2f" "$cost"
+}
+
+# Get VCS info: prefer jj if .jj exists, otherwise git
+get_vcs_info() {
+  local project_dir="$1"
+
+  # Check for jj first
+  if [ -d "${project_dir}/.jj" ]; then
+    # Get current jj change ID and bookmark
+    local jj_id jj_bookmark jj_info
+    jj_id=$(cd "$project_dir" && jj log -r @ --no-graph -T 'change_id.shortest(8)' 2>/dev/null)
+    jj_bookmark=$(cd "$project_dir" && jj log -r @ --no-graph -T 'bookmarks.join(",")' 2>/dev/null)
+
+    if [ -n "$jj_id" ]; then
+      if [ -n "$jj_bookmark" ]; then
+        # Show bookmark name with change ID
+        jj_info="${jj_bookmark} (${jj_id})"
+      else
+        # No bookmark, show just change ID
+        jj_info="${jj_id}"
+      fi
+      echo "jj:${jj_info}"
+      return
+    fi
+  fi
+
+  # Fall back to git
+  if [ -d "${project_dir}/.git" ] || git -C "$project_dir" rev-parse --git-dir >/dev/null 2>&1; then
+    local branch
+    branch=$(git -C "$project_dir" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "detached")
+
+    # Add dirty indicator
+    local dirty=""
+    if ! git -C "$project_dir" diff --quiet 2>/dev/null || ! git -C "$project_dir" diff --cached --quiet 2>/dev/null; then
+      dirty="*"
+    fi
+
+    echo "git:${branch}${dirty}"
+    return
+  fi
+
+  echo "no-vcs"
+}
+
+# Get account info from keychain
+# Maps subscriptionType to account identifier
+get_account_info() {
+  local creds sub_type
+  creds=$(security find-generic-password -s "Claude Code-credentials" -w 2>/dev/null) || { echo "?"; return; }
+  sub_type=$(echo "$creds" | jq -r '.claudeAiOauth.subscriptionType // "unknown"' 2>/dev/null)
+
+  case "$sub_type" in
+    team)     echo "work" ;;      # smesser@cscontract
+    pro|max)  echo "personal" ;;  # seth@megalithic.io
+    free)     echo "free" ;;
+    *)        echo "?" ;;
+  esac
+}
+
+# Get token usage from transcript file
+# Parses the transcript JSON to sum token counts from last assistant message
+# Returns formatted string like "45.2K (28%)" with color coding
+get_token_usage() {
+  local transcript_path
+  transcript_path=$(get_json '.transcript_path' '')
+
+  if [ -z "$transcript_path" ] || [ ! -f "$transcript_path" ]; then
+    echo "$(get_spinner)"
+    return
+  fi
+
+  # Get last assistant message with usage data (tail for speed)
+  local total_tokens
+  total_tokens=$(tail -n 100 "$transcript_path" 2>/dev/null | \
+    jq -s 'map(select(.type == "assistant" and .message.usage)) |
+           last |
+           .message.usage |
+           (.input_tokens // 0) +
+           (.output_tokens // 0) +
+           (.cache_creation_input_tokens // 0) +
+           (.cache_read_input_tokens // 0)' 2>/dev/null)
+
+  # Default to 0 if parsing failed
+  total_tokens=${total_tokens:-0}
+  if [ "$total_tokens" = "null" ] || [ -z "$total_tokens" ]; then
+    echo "$(get_spinner)"
+    return
+  fi
+
+  # Compaction threshold: ~80% of 200k = 160k
+  # Add 3% conservative buffer since we can't see all overhead (system prompt, tools, etc.)
+  local compaction_threshold=160000
+  local percentage=$(( (total_tokens * 100 / compaction_threshold) + 3 ))
+
+  # Format token count (K for thousands)
+  local token_display
+  if [ "$total_tokens" -ge 1000 ]; then
+    token_display=$(printf "%.1fK" "$(echo "scale=1; $total_tokens/1000" | bc)")
+  else
+    token_display="$total_tokens"
+  fi
+
+  # Color code percentage: green < 70%, yellow 70-90%, red > 90%
+  local color
+  if [ "$percentage" -ge 90 ]; then
+    color="$RED"
+  elif [ "$percentage" -ge 70 ]; then
+    color="$YELLOW"
+  else
+    color="$GREEN"
+  fi
+
+  echo "${token_display} (${color}${percentage}%${RESET})"
+}
+
+# ===========================================================================
+# Extract values
+# ===========================================================================
+model=$(get_model_name)
+current_dir=$(get_current_dir)
+project_dir=$(get_project_dir)
+cost_display=$(get_cost)
+
+# Get project name and handle subdirectory display
+project=$(basename "$project_dir")
+if [ "$current_dir" != "$project_dir" ]; then
+  subdir=$(basename "$current_dir")
+  project="${project}:${subdir}"
+fi
+
+# Get VCS, account, and token info
+vcs_info=$(get_vcs_info "$project_dir")
+account=$(get_account_info)
+tokens=$(get_token_usage)
+
+# ===========================================================================
+# Build statusline
+# ===========================================================================
+statusline=""
+# Icon options (uncomment one):
+# statusline+="${BLUE}🤖 ${project}${RESET}"  # Unicode robot emoji
+# statusline+="${BLUE}󰚩 ${project}${RESET}"   # Nerd Font robot (nf-md-robot \U000f06a9)
+statusline+="${BLUE}${project}${RESET}"
+statusline+=" ${DIM}│${RESET} "
+statusline+="${GREEN}${vcs_info}${RESET}"
+statusline+=" ${DIM}│${RESET} "
+statusline+="${MAGENTA}${model}${RESET}"
+statusline+=" ${DIM}│${RESET} "
+statusline+="${CYAN}${cost_display}${RESET}"
+statusline+=" ${DIM}│${RESET} "
+statusline+="${WHITE}${tokens}${RESET}"
+statusline+=" ${DIM}│${RESET} "
+statusline+="${DIM}@${account}${RESET}"
+
+echo -e "$statusline"

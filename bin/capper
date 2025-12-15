@@ -1,13 +1,40 @@
-U2FsdGVkX18iw/0Pa9lyZHuDJpolURVfSTjMtPaEqsH7k8YS9wqI1iuCupt4fTaM
-FiV3YFL9ijG67D8LVZtTuOVRFwwjp7HXZHKpiKS/dOR+S3yA5poaUnvKp3B5LNDv
-5NRSYCni8BtgF/aXMegA1Q9ZCdWnjJF4Lr4/39ufMC3Oi+fNjWwebq5//kEPREq7
-4XH7s9YnLrD/qivstJ0n6qY1UGIhAHODd3vHWqkF8peIes50CQ7VpkAjPNdWOfWB
-CxiLgnzXzSW4iKUvaQNZ6KIW2JGCBqwvAwbaezM77d4v2vFGDyCc3u/ohb1sU6W1
-YjqFHAl7qP7z4dBKBOT4emzho9runTvd4f/RgTs/OXztxSAAky4+cFcUq0Bzc3jH
-Ds3MbDX3ASbDc+PKR3QTdsLxuFKfZ9VqKAmvLS39dVdBeeXOmaLuqHaTgZouz/Ri
-QOqWieMggkkIJWWRl0qO3UBK/ocawT+r5702gJmsU13N+z/iVeIILAABUYyY3g0q
-drbEdcnyonjOYh8cVoibvhR0Hvo7yP0YM4MvxlwVg7pq31IIS5N/SyTmb/zX9UnW
-pQI2dCziLEgV/7+e4Lb0+37pvfTJsuB96VkuaaRktZnCV+Ciw7msNwE9wnFp2WLc
-aJQe5qk9Io4s3Arncu7ht+HapBPAfDAemSwWpcBMVW5JbEqFSSVP3n3o28qTBZT7
-at8Y8q/8FvF71MboxEp/CnO7ToPH3A7PynPrxDA4XmmCLjhIWQyywwjA+dCQMw2k
-wWk7X+BqKMS+jPYelomaNdjwqE7d3cTatvQfM4V0/PvOxiwd7XrhXlvi8PX1y0Hf
+#!/usr/bin/env zsh
+
+# TODO: setup certbot and own cdn domain with digital-ocean:
+# https://www.digitalocean.com/community/tutorials/how-to-use-certbot-standalone-mode-to-retrieve-let-s-encrypt-ssl-certificates-on-ubuntu-1804
+
+# Source environment variables from agenix (required for Hammerspoon context)
+ENV_VARS_PATH="$(getconf DARWIN_USER_TEMP_DIR)/agenix/env-vars"
+if [[ -f "$ENV_VARS_PATH" ]]; then
+  source "$ENV_VARS_PATH"
+fi
+
+# Ensure nix binaries are in PATH (required for Hammerspoon context)
+export PATH="/etc/profiles/per-user/$USER/bin:/run/current-system/sw/bin:$PATH"
+
+if [ ! -n "$1" ]; then
+  echo "Usage: $0 [file]"
+  return
+fi
+
+file="$1"
+friendly=$(echo "$1" | sed -e "s#$HOME/_screenshots/##g" \
+  -e 's/^cap_//' \
+  -e 's/-\([0-9]\{4\}\)\.png$/_\1.png/' \
+  -e 's/T/_/' \
+  -e 's/://g' \
+  -e 's/-//g')
+
+s3cmd --access_key="$DO_SPACES_CAPS_KEY" \
+  --secret_key="$DO_SPACES_CAPS_SECRET" \
+  --host="${DO_SPACES_CAPS_REGION}.digitaloceanspaces.com" \
+  --host-bucket='%(bucket)s.'"${DO_SPACES_CAPS_REGION}"'.digitaloceanspaces.com' \
+  -P put "$file" "s3://${DO_SPACES_CAPS_SPACE}/screenshots/$friendly"
+
+if [ "$?" -ne 0 ]; then
+  echo "There was a problem uploading '$file' to 's3://${DO_SPACES_CAPS_SPACE}/screenshots/$friendly'"
+
+  exit 1
+else
+  echo "${DO_SPACES_CAPS_CDN_URL}/screenshots/$friendly"
+fi

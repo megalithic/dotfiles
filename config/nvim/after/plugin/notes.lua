@@ -51,7 +51,9 @@ end
 function M.get_previous_daily_note()
   local notes = vim.split(
     vim.fn.glob(
-      "`find " .. vim.env.HOME .. "/Documents/_notes/daily -type f -name '*.md' -print0 | xargs -0 ls -Ur | sort -nr | head -2 | cut -f2- -d' ' | tail -n1`"
+      "`find "
+        .. vim.env.NOTES_HOME
+        .. "/daily -type f -name '*.md' -print0 | xargs -0 ls -Ur | sort -nr | head -2 | cut -f2- -d' ' | tail -n1`"
     ),
     "\n",
     { trimempty = true }
@@ -111,7 +113,9 @@ function M.sort_tasks(bufnr, lines)
 
     for i, line in ipairs(lines) do
       local prefix, box, status, task_text = line:match("^(%s*[-*] )(%[(.)%])%s(.*)")
-      if prefix ~= nil and box ~= nil and status ~= nil then table.insert(tasks, { index = i, line = line, status = status, text = task_text }) end
+      if prefix ~= nil and box ~= nil and status ~= nil then
+        table.insert(tasks, { index = i, line = line, status = status, text = task_text })
+      end
     end
     if tasks and U.tlen(tasks) > 0 then return tasks, tasks[1].index end
 
@@ -144,7 +148,13 @@ function M.sort_tasks(bufnr, lines)
       table.insert(sorted_tasks_texts, task_line)
     end
 
-    vim.api.nvim_buf_set_lines(bufnr, starting_task_line - 1, starting_task_line + U.tlen(sorted_tasks_texts), false, sorted_tasks_texts)
+    vim.api.nvim_buf_set_lines(
+      bufnr,
+      starting_task_line - 1,
+      starting_task_line + U.tlen(sorted_tasks_texts),
+      false,
+      sorted_tasks_texts
+    )
   end
 
   -- extract tasks and the first line the tasks start on
@@ -159,7 +169,9 @@ function M.sort_tasks(bufnr, lines)
   local sorted_tasks = sort(tasks)
 
   -- prevents unncessary re-writes of the buffer..
-  if not U.deep_equals(originally_extracted_tasks, sorted_tasks) then replace(bufnr, sorted_tasks, starting_task_line, lines) end
+  if not U.deep_equals(originally_extracted_tasks, sorted_tasks) then
+    replace(bufnr, sorted_tasks, starting_task_line, lines)
+  end
 end
 
 function M.compile_links(bufnr, lines)
@@ -169,7 +181,8 @@ function M.compile_links(bufnr, lines)
   local links = {}
 
   for i, line in ipairs(lines) do
-    local url = line:match("((https?)://([%w_.~!*:@&+$/?%%#-]-)(%w[-.%w]*%.)(%w%w%w?%w?)(:?)(%d*)(/?)([%w_.~!*:@&+$/?%%#=-]*))")
+    local url =
+      line:match("((https?)://([%w_.~!*:@&+$/?%%#-]-)(%w[-.%w]*%.)(%w%w%w?%w?)(:?)(%d*)(/?)([%w_.~!*:@&+$/?%%#=-]*))")
 
     if url ~= nil then table.insert(links, { index = i, line = line, url = url }) end
   end
@@ -237,12 +250,21 @@ function M.parse_due_dates(bufnr, lines)
     if prefix ~= nil and box ~= nil and status ~= nil then
       text = U.strim(string.gsub(text, date_parse_string, ""))
 
-      table.insert(tasks_due, { index = i, line = line, status = status, text = text, date_parse_string = date_parse_string, due_date = due_date })
+      table.insert(tasks_due, {
+        index = i,
+        line = line,
+        status = status,
+        text = text,
+        date_parse_string = date_parse_string,
+        due_date = due_date,
+      })
 
       vim.fn.jobstart(string.format([[reme "%s" "%s"]], text, due_date), {
         detach = false,
         on_exit = function(job_id, exit_code, event)
-          if vim.tbl_contains({ 0, 127, 129, 130 }, exit_code) then vim.notify(string.format("set reminder '%s' for %s", text, due_date)) end
+          if vim.tbl_contains({ 0, 127, 129, 130 }, exit_code) then
+            vim.notify(string.format("set reminder '%s' for %s", text, due_date))
+          end
         end,
       })
     end
@@ -330,7 +352,9 @@ function M.execute_line()
   local get_match_at_cursor = function()
     local row, col = unpack(vim.api.nvim_win_get_cursor(0))
 
-    local contains_cursor = function(range) return is_in_range(range, row - 1, col) or (range[3] == row - 1 and range[4] == col) end
+    local contains_cursor = function(range)
+      return is_in_range(range, row - 1, col) or (range[3] == row - 1 and range[4] == col)
+    end
 
     local is_after_cursor = function(range) return range[1] == row - 1 and range[2] > col end
 
@@ -468,7 +492,10 @@ require("config.autocmds").augroup("NotesLoaded", {
         map("n", "gx", vim.cmd.ExecuteLine, { desc = "execute line", buffer = bufnr })
         local clients = vim.lsp.get_clients({ bufnr = bufnr })
         for _, client in ipairs(clients) do
-          if vim.tbl_contains({ "markdown_oxide", "marksman", "obsidian-ls" }, client.name) and string.match(vim.fn.expand("%:p:h"), "_notes") then
+          if
+            vim.tbl_contains({ "markdown_oxide", "marksman", "obsidian-ls" }, client.name)
+            and string.match(vim.fn.expand("%:p:h"), vim.env.NOTES_HOME)
+          then
             map("n", "<leader>w", function()
               vim.schedule(function()
                 local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
@@ -497,12 +524,32 @@ require("config.autocmds").augroup("NotesLoaded", {
 
             map("n", "<C-x>d", function() M.toggle_task("x") end, { buffer = bufnr, desc = "[notes] toggle -> done" })
             map("n", "<C-x>t", function() M.toggle_task("-") end, { buffer = bufnr, desc = "[notes] toggle -> todo" })
-            map("n", "<C-x>s", function() M.toggle_task(".") end, { buffer = bufnr, desc = "[notes] toggle -> started" })
-            map("n", "<C-x>u", function() M.toggle_task("/") end, { buffer = bufnr, desc = "[notes] toggle -> undo/skip/trash" })
-            map("n", "<C-x><C-x>", function() M.toggle_task(" ") end, { buffer = bufnr, desc = "[notes] toggle -> not-started" })
+            map(
+              "n",
+              "<C-x>s",
+              function() M.toggle_task(".") end,
+              { buffer = bufnr, desc = "[notes] toggle -> started" }
+            )
+            map(
+              "n",
+              "<C-x>u",
+              function() M.toggle_task("/") end,
+              { buffer = bufnr, desc = "[notes] toggle -> undo/skip/trash" }
+            )
+            map(
+              "n",
+              "<C-x><C-x>",
+              function() M.toggle_task(" ") end,
+              { buffer = bufnr, desc = "[notes] toggle -> not-started" }
+            )
             map("n", "<leader>ff", "<cmd>Obsidian quick_switch<cr>", { desc = "[notes] find", buffer = bufnr })
             map("n", "<leader>a", "<cmd>Obsidian search<cr>", { desc = "[notes] grep" })
-            map("n", "<leader>A", string.format("<cmd>Obsidian search %s<cr>", vim.fn.expand("<cword>")), { desc = "[notes] grep cursor" })
+            map(
+              "n",
+              "<leader>A",
+              string.format("<cmd>Obsidian search %s<cr>", vim.fn.expand("<cword>")),
+              { desc = "[notes] grep cursor" }
+            )
             map(
               { "x", "v" },
               "<leader>A",

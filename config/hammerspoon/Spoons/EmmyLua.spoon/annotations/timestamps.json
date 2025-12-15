@@ -1,4 +1,10 @@
 {
-  "\/Applications\/Hammerspoon.app\/Contents\/Resources\/docs.json" : 1724024251,
-  "\/Users\/seth\/.config\/hammerspoon\/Spoons\/EmmyLua.spoon\/docs.json" : 1731436027
+  "\/nix\/store\/xsgdmmlvpzcrhwwgd5372bw7cphszml8-hammerspoon-1.0.0\/Applications\/Hammerspoon.app\/Contents\/Resources\/docs.json" : 1,
+  "\/Users\/seth\/.config\/hammerspoon\/Spoons\/Seal.spoon\/docs.json" : 1764728045,
+  "\/nix\/store\/fkl5zwbn5xkydp17v17yaavvkf2aqqa6-hammerspoon-1.0.0\/Applications\/Hammerspoon.app\/Contents\/Resources\/docs.json" : 1,
+  "\/Users\/seth\/Applications\/Home Manager Apps\/Hammerspoon.app\/Contents\/Resources\/docs.json" : 1,
+  "\/Applications\/Hammerspoon.app\/Contents\/Resources\/docs.json" : 1722910901,
+  "\/Users\/seth\/.config\/hammerspoon\/Spoons\/EmmyLua.spoon\/docs.json" : 1764728045,
+  "\/Users\/seth\/.config\/hammerspoon\/Spoons\/PushToTalk.spoon\/docs.json" : 1580077270,
+  "\/Users\/seth\/.hammerspoon\/Spoons\/EmmyLua.spoon\/docs.json" : 1759195954
 }

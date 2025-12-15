@@ -1,84 +1,121 @@
 #!/usr/bin/env bash
 
-source "${HOME}/.dotfiles/config/zsh/lib/helpers.zsh"
+# Ensure UTF-8 encoding for unicode character support
+export LC_ALL=en_US.UTF-8
+export LANG=en_US.UTF-8
+
+source "$HOME/bin/helpers"
 
 [ "$1" = "" ] && exit 1
 
-case "$(uname -a)" in
-  *Darwin*) UEBERZUG_TMP_DIR="$TMPDIR" ;;
-  *) UEBERZUG_TMP_DIR="/tmp" ;;
-esac
+if [[ "$1" == "--process" ]]; then
+  pid="$2"
 
-cleanup() {
-  ueberzugpp cmd -s "$SOCKET" -a exit
-}
-trap cleanup HUP INT QUIT TERM EXIT
+  ps -p "$pid" -o pid,ppid,user,%cpu,%mem,vsz,rss,tty,stat,start,time,command 2>/dev/null | tail -n +2 | while IFS= read -r line; do
+    echo "PID:       $(echo "$line" | awk '{print $1}')"
+    echo "PPID:      $(echo "$line" | awk '{print $2}')"
+    echo "User:      $(echo "$line" | awk '{print $3}')"
+    echo "CPU %:     $(echo "$line" | awk '{print $4}')"
+    echo "Memory %:  $(echo "$line" | awk '{print $5}')"
+    echo "VSZ:       $(echo "$line" | awk '{print $6}') KB"
+    echo "RSS:       $(echo "$line" | awk '{print $7}') KB"
+    echo "TTY:       $(echo "$line" | awk '{print $8}')"
+    echo "Stat:      $(echo "$line" | awk '{print $9}')"
+    echo "Start:     $(echo "$line" | awk '{print $10}')"
+    echo "Time:      $(echo "$line" | awk '{print $11}')"
+    echo "Command:"
+    echo "  $(echo "$line" | awk '{for(i=12;i<=NF;i++) printf "%s ", $i; print ""}')"
+  done
+  if lsof -p "$pid" >/dev/null 2>&1; then
+    echo "═══════════════════════════════════════"
+    echo "Open Files:"
+    lsof -p "$pid" 2>/dev/null | tail -n +2 | head -20
+  fi
 
-# FIFO="/tmp/fzf_preview_fifo"
-#
-# cleanup() {
-#   pkill ueberzugpp
-#   rm /tmp/ueberzugpp-*.socket 2>/dev/null
-#   rm -f "$FIFO"
-# }
-#
-# if [ "$1" = "--cleanup" ]; then
-#   cleanup
-#   exit 0
-# fi
-#
-# case "$1" in
-#   "--ueberzugpp")
-#     set -- "$2" >/dev/null
-#     ueberzugpp_x="$(($(tput cols) / 2 + 1))"
-#     ueberzugpp_y="1"
-#     ueberzugpp_width="$FZF_PREVIEW_COLUMNS"
-#     ueberzugpp_height="$FZF_PREVIEW_LINES"
-#     ueberzug_image="chafa" # chafa, x11, wayland, kitty, sixel, iterm2
-#     image_previewer="ueberuzgpp"
-#     [ -p "$FIFO" ] || mkfifo "$FIFO"
-#     ;;
-# esac
-#
-# start_preview() {
-#   echo '{"path": "'"$1"'", "action": "add", "identifier": "fzfpreview", "x": "'"$ueberzugpp_x"'", "y": "'"$ueberzugpp_y"'", "width": "'"$ueberzugpp_width"'", "height": "'"$ueberzugpp_height"'"}' >"$FIFO"
-# }
+  exit 0
+fi
 
 handle_image() {
   case "$1" in
-    image/*)
-      # chafa "$2" -f symbols
-      # kitty icat --clear --transfer-mode file "$2"
-      # kitty icat --stdin=no "$2"
-      kitty icat --clear --transfer-mode=file --stdin=no --place=200x200@10x0 "$2"
-      # kitty icat --clear --transfer-mode=file --stdin=no --place=${FZF_PREVIEW_COLUMNS}x${FZF_PREVIEW_LINES}@0x0 "$2"
-      ;;
-    *) exiftool -All "$2" ;;
+  image/*)
+    # # Check if we're in a terminal that supports kitty graphics protocol
+    # if [[ "$TERM" == *"kitty"* ]] || [[ "$TERM" == *"ghostty"* ]]; then
+    # Use fzf preview dimensions if available, otherwise default
+    local width="${FZF_PREVIEW_COLUMNS:-80}"
+    local height="${FZF_PREVIEW_LINES:-40}"
+    # kitty icat --clear --transfer-mode=file --stdin=no --place="${width}x${height}@0x0" "$2"
+    kitty icat --clear --transfer-mode=file --stdin=no --place=200x200@10x0 "$2"
+    # else
+    #   # Fallback to exiftool if graphics protocol not supported
+    #   exiftool -All "$2"
+    # fi
+    ;;
+  *) exiftool -All "$2" ;;
   esac
 }
 
 handle_text() {
-  case "$2" in
-    *.md) glow --style=auto "$2" ;;
-    *.htm | *.html) links -dump "$2" ;;
-    *) bat -p --color=always --number "$2" ;;
-      # *) bat -p --color=always --style=header,grid --line-range :300 "$2" ;;
-      # *) bat --theme=base16 --color=always --paging=never --number --italic-text=never --tabs=2 --wrap=never "$2" ;;
+  local input="$1"
+  case "$input" in
+  *.md) CLICOLOR_FORCE=1 COLORTERM=truecolor glow -p -s dark -w 150 "$input" ;;
+  *.htm | *.html) links -dump "$input" ;;
+  # *.json | *.jsonc | *.json5) jq --color-output '"$@"' <<<"$input" ;;
+  *) bat --theme=base16 --color=always --style=numbers --line-range :300 "$input" ;;
   esac
 }
 
 test -d "$HOME/.cache/fzf" || mkdir -p "$HOME/.cache/fzf"
-# cache="$HOME/.cache/fzf/thumbnail.$(stat --printf '%n\0%i\0%F\0%s\0%W\0%Y' -- "$(readlink -f "$1")" | sha256sum | awk '{print $1}'))"
 cache="$HOME/.cache/fzf/thumbnail.$(stat "$(readlink -f "$1")" | sha256sum | awk '{print $1}')"
-mime="$(file --brief --mime-type "$1")"
+mime="$(file --mime-type -b "$1")"
+fullpath="$(printf "%s\n" "$(readlink -f "$1")")"
+width="${FZF_PREVIEW_COLUMNS:-$(tput cols)}"
 
-printf " %s\n\n" "$mime"
-case "$mime" in
-  text/*) handle_text "$mime" "$1" ;;
-  inode/directory) eza -ahFT -L=1 --color=always --icons --sort=size --group-directories-first "$1" ;;
+# Alternative characters: ─ (box drawing), ━ (heavy), ═ (double), ▁ (lower block), ‾ (overline), 🮏🮑🮏▁‾▁▁ ─ ▄─▁-_‾
+printf "░   -> $yellow$mime$reset\n"
+printf "░ 󰙅  -> $blue$fullpath$reset\n"
+printf "$dark_grey%${width}s\n$reset" | sed 's/ /‾/g'
+printf "\n"
+
+case "$1" in
+*.md) handle_text "$1" ;;
+*.htm | *.html) handle_text "$1" ;;
+*.tgz | *.tar.gz) tar tzf "$1" ;;
+*.tar.bz2 | *.tbz2) tar tjf "$1" ;;
+*.tar.txz | *.txz) xz --list "$1" ;;
+*.tar) tar tf "$1" ;;
+*.zip | *.jar | *.war | *.ear | *.oxt) unzip -l "$1" ;;
+*.rar) unrar l "$1" ;;
+*.7z) 7z l "$1" ;;
+*.[1-8]) man "$1" | col -b ;;
+*.o) nm "$1" ;;
+*.torrent) transmission-show "$1" ;;
+*.iso) iso-info --no-header -l "$1" ;;
+*.odt | *.ods | *.odp | *.sxw) odt2txt "$1" ;;
+*.doc) catdoc "$1" ;;
+*.docx) docx2txt "$1" - ;;
+*.xls | *.xlsx) ssconvert --export-type=Gnumeric_stf:stf_csv "$1" "fd://1" | batorcat --language=csv ;;
+*.wav | *.mp3 | *.flac | *.m4a | *.wma | *.ape | *.ac3 | *.og[agx] | *.spx | *.opus | *.as[fx] | *.mka) exiftool "$1" ;;
+*.svg)
+  [ ! -f "${cache}.jpg" ] && convert "$1" "${cache}.jpg"
+  handle_image "image/*" "${cache}.jpg"
+  ;;
+*)
+  # [mime-type matchers] --------------------------------------------------------------------------
+  case "$mime" in
+  text/*) handle_text "$1" ;;
+  inode/directory) eza -ahFT -L=1 --color=always --icons=always --sort=size --group-directories-first "$1" ;;
   inode/symlink) printf "symlink to: \e[34m%s\e[0m." "$(readlink "$1")" ;;
-  application/json) jq --color-output <"$1" ;;
-  application/x-bittorrent) transmission-show --unsorted "$1" ;;
+  application/json)
+    handle_text "$1"
+    ;;
+    # case "$mime" in
+    # *.json | *.jsonc | *.json5) jq --color-output '"$@"' <<<"$1" ;;
+    # *.toml | *.tml) yq --color-output <"$1" ;;
+    # *.yaml | *.yml) yq --color-output <"$1" ;;
+    # esac
+    # ;;
+  # application/yaml) yq --color-output <"$1" ;;
+  # application/x-bittorrent) transmission-show --unsorted "$1" ;;
   application/x-executable | application/x-pie-executable | application/x-sharedlib) readelf --wide --demangle=auto --all "$1" ;;
   application/zip) atool --list "$1" ;;
   application/x-x509-ca-cert) openssl x509 -text -noout -in "$1" ;;
@@ -86,51 +123,20 @@ case "$mime" in
     pdftoppm -jpeg -f 1 -singlefile "$1" "$cache"
     handle_image "image/*" "$cache.jpg"
     ;;
-  image/*)
-    handle_image "$mime" "$1"
-    ;;
+  application/*) handle_text "$1" ;;
+  image/*) handle_image "$mime" "$1" ;;
   video/*)
     ffmpegthumbnailer -i "$1" -o "${cache}.jpg" -s 200
     handle_image "image/*" "${cache}.jpg"
     ;;
-  # image/* | video/*)
-  #   handle_image "$mime" "$1"
-  #   stop_preview
-  #   ;;
   font/* | application/vnd.ms-opentype)
     echo "previewing font.."
     preview_font "$1"
     ;;
   *)
-    case "$(printf "%s\n" "$(readlink -f "$1")" | awk '{print tolower($0)}')" in
-      *.tgz | *.tar.gz) tar tzf "$1" ;;
-      *.tar.bz2 | *.tbz2) tar tjf "$1" ;;
-      *.tar.txz | *.txz) xz --list "$1" ;;
-      *.tar) tar tf "$1" ;;
-      *.zip | *.jar | *.war | *.ear | *.oxt) unzip -l "$1" ;;
-      *.rar) unrar l "$1" ;;
-      *.7z) 7z l "$1" ;;
-      *.[1-8]) man "$1" | col -b ;;
-      *.o) nm "$1" ;;
-      *.torrent) transmission-show "$1" ;;
-      *.iso) iso-info --no-header -l "$1" ;;
-      *.odt | *.ods | *.odp | *.sxw) odt2txt "$1" ;;
-      *.doc) catdoc "$1" ;;
-      *.docx) docx2txt "$1" - ;;
-      *.xls | *.xlsx)
-        ssconvert --export-type=Gnumeric_stf:stf_csv "$1" "fd://1" | batorcat --language=csv
-        ;;
-      *.wav | *.mp3 | *.flac | *.m4a | *.wma | *.ape | *.ac3 | *.og[agx] | *.spx | *.opus | *.as[fx] | *.mka)
-        exiftool "$1"
-        ;;
-      *.svg)
-        [ ! -f "${cache}.jpg" ] &&
-          convert "$1" "${cache}.jpg"
-        handle_image "image/*" "${cache}.jpg"
-        ;;
-      *)
-        exit 1
-        ;;
-    esac
+    log_error "oops; no handler found"
+    exit 1
     ;;
+  esac
+  ;;
 esac

@@ -9,6 +9,74 @@ obj.__index = obj
 obj.name = "context.messages"
 obj.debug = true
 obj.appObj = nil
+
+obj.modal = true
+obj.actions = {
+  getMessageLinks = {
+    action = function()
+      obj.getChatMessageLinks(obj.appObj)
+    end,
+    hotkey = { "alt", "o" },
+  },
+  nextConversation = {
+    -- action = function() _appObj:selectMenuItem({ "Window", "Go to Next Conversation" }) end,
+    action = function()
+      hs.eventtap.keyStroke({ "cmd", "shift" }, "]")
+    end,
+    hotkey = { { "ctrl" }, "n" },
+  },
+  prevConversation = {
+    -- action = function() _appObj:selectMenuItem({ "Window", "Go to Previous Conversation" }) end,
+    action = function()
+      hs.eventtap.keyStroke({ "cmd", "shift" }, "[")
+    end,
+    hotkey = { { "ctrl" }, "p" },
+  },
+  -- FIXME: it's saying ctrl-1,2,3,4 are all being used somewhere?! sooo, we use ctrl-h,j,k,l instead.
+  gotoConversation1 = {
+    action = function()
+      hs.eventtap.keyStroke({ "cmd" }, "1")
+    end,
+    hotkey = { { "ctrl" }, "h" },
+  },
+  gotoConversation2 = {
+    action = function()
+      hs.eventtap.keyStroke({ "cmd" }, "2")
+    end,
+    hotkey = { { "ctrl" }, "j" },
+  },
+  gotoConversation3 = {
+    action = function()
+      hs.eventtap.keyStroke({ "cmd" }, "3")
+    end,
+    hotkey = { { "ctrl" }, "k" },
+  },
+  gotoConversation4 = {
+    action = function()
+      hs.eventtap.keyStroke({ "cmd" }, "4")
+    end,
+    hotkey = { { "ctrl" }, "l" },
+  },
+  replyToLastMessage = {
+    action = function()
+      hs.eventtap.keyStroke({ "cmd" }, "r")
+    end,
+    hotkey = { { "ctrl" }, "r" },
+  },
+  tapbackLastMessage = {
+    action = function()
+      hs.eventtap.keyStroke({ "cmd" }, "t")
+    end,
+    hotkey = { { "ctrl" }, "t" },
+  },
+  editLastMessage = {
+    action = function()
+      hs.eventtap.keyStroke({ "cmd" }, "e")
+    end,
+    hotkey = { { "ctrl" }, "u" },
+  },
+}
+
 -- USAGE
 -- { ..., {"AXWindow", "AXRoleDescription", "standard window"}, ..., {"AXSplitGroup", 1}, ...}
 function obj.getUIElement(appOrWindowOrAx, uiPathTable)
@@ -42,7 +110,9 @@ function obj.getUIElement(appOrWindowOrAx, uiPathTable)
 
     -- if 0 children, return
     print(hs.inspect(children))
-    if not children or utils.tlen(children) == 0 then return nil end
+    if not children or utils.tlen(children) == 0 then
+      return nil
+    end
 
     -- for the current pathItem, checking for an index/attribute-value reference
     if tonumber(indexOrAttribute) then
@@ -73,7 +143,9 @@ function obj.getUIElement(appOrWindowOrAx, uiPathTable)
         break
       end
     end
-    if not match then return nil end
+    if not match then
+      return nil
+    end
   end
 
   return targetElement
@@ -89,7 +161,9 @@ function obj.cycleUIElements(hsAppObj, parentUIGroup, elementRole, direction)
   for _, element in ipairs(elements) do
     if element:attributeValue("AXRole") == elementRole then
       totalElements = totalElements + 1
-      if element:attributeValue("AXValue") == 1 then selectedElement = totalElements end
+      if element:attributeValue("AXValue") == 1 then
+        selectedElement = totalElements
+      end
     end
   end
   if direction == "next" then
@@ -127,57 +201,12 @@ function obj.getChatMessageLinks(app)
     local url = link:attributeValue("AXChildren")[1]:attributeValue("AXValue")
     table.insert(choices, { text = url })
   end
-  if utils.tlen(choices) == 0 then table.insert(choices, { text = "No Links" }) end
+  if utils.tlen(choices) == 0 then
+    table.insert(choices, { text = "No Links" })
+  end
   dbg(I(choices), true)
   -- fuzzyChooser:start(chooserCallback, choices, { "text" })
 end
-
-obj.modal = true
-obj.actions = {
-  getMessageLinks = {
-    action = function() obj.getChatMessageLinks(obj.appObj) end,
-    hotkey = { "alt", "o" },
-  },
-  nextConversation = {
-    -- action = function() _appObj:selectMenuItem({ "Window", "Go to Next Conversation" }) end,
-    action = function() hs.eventtap.keyStroke({ "cmd", "shift" }, "]") end,
-    hotkey = { { "ctrl" }, "n" },
-  },
-  prevConversation = {
-    -- action = function() _appObj:selectMenuItem({ "Window", "Go to Previous Conversation" }) end,
-    action = function() hs.eventtap.keyStroke({ "cmd", "shift" }, "[") end,
-    hotkey = { { "ctrl" }, "p" },
-  },
-  -- FIXME: it's saying ctrl-1,2,3,4 are all being used somewhere?! sooo, we use ctrl-h,j,k,l instead.
-  gotoConversation1 = {
-    action = function() hs.eventtap.keyStroke({ "cmd" }, "1") end,
-    hotkey = { { "ctrl" }, "h" },
-  },
-  gotoConversation2 = {
-    action = function() hs.eventtap.keyStroke({ "cmd" }, "2") end,
-    hotkey = { { "ctrl" }, "j" },
-  },
-  gotoConversation3 = {
-    action = function() hs.eventtap.keyStroke({ "cmd" }, "3") end,
-    hotkey = { { "ctrl" }, "k" },
-  },
-  gotoConversation4 = {
-    action = function() hs.eventtap.keyStroke({ "cmd" }, "4") end,
-    hotkey = { { "ctrl" }, "l" },
-  },
-  replyToLastMessage = {
-    action = function() hs.eventtap.keyStroke({ "cmd" }, "r") end,
-    hotkey = { { "ctrl" }, "r" },
-  },
-  tapbackLastMessage = {
-    action = function() hs.eventtap.keyStroke({ "cmd" }, "t") end,
-    hotkey = { { "ctrl" }, "t" },
-  },
-  editLastMessage = {
-    action = function() hs.eventtap.keyStroke({ "cmd" }, "e") end,
-    hotkey = { { "ctrl" }, "u" },
-  },
-}
 
 function obj:start(opts)
   opts = opts or {}
@@ -186,7 +215,9 @@ function obj:start(opts)
 
   if enum.contains({ hs.application.watcher.activated, hs.uielement.watcher.applicationActivated }, event) then
     -- function obj.modal:entered() dbg(I(obj.actions), true) end
-    if self.modal ~= nil then self.modal:enter() end
+    if self.modal ~= nil then
+      self.modal:enter()
+    end
   end
 
   return self
@@ -196,7 +227,9 @@ function obj:stop(opts)
   opts = opts or {}
   local event = opts["event"]
 
-  if self.modal ~= nil then self.modal:exit() end
+  if self.modal ~= nil then
+    self.modal:exit()
+  end
 
   return self
 end

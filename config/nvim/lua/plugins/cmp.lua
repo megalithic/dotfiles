@@ -1,5 +1,5 @@
 local SETTINGS = require("config.options")
-local icons = SETTINGS.icons
+local icons = Icons
 local fmt = string.format
 
 --[[ Luasnips if I want it:
@@ -300,7 +300,7 @@ return {
             winhighlight = winhighlight,
             zindex = 1001,
             col_offset = 0,
-            border = SETTINGS.borders.empty,
+            border = vim.g.borders.empty,
             -- max_height = math.floor(vim.o.lines * 0.5),
             -- max_width = math.floor(vim.o.columns * 0.4),
             -- height = math.floor(vim.o.lines * 0.5),
@@ -309,7 +309,7 @@ return {
             scrollbar = true,
           },
           documentation = cmp.config.window.bordered({
-            border = SETTINGS.borders.empty,
+            border = vim.g.borders.empty,
             -- max_height = math.floor(vim.o.lines * 0.5),
             -- max_width = math.floor(vim.o.columns * 0.4),
             winhighlight = winhighlight,
@@ -480,7 +480,7 @@ return {
             priority = 100,
             -- max_item_count = 35,
             entry_filter = function(entry)
-              if SETTINGS.completion_exclusions and vim.tbl_contains(SETTINGS.completion_exclusions, entry.source.source.client.name) then return false end
+              if vim.g.completion_exclusions and vim.tbl_contains(vim.g.completion_exclusions, entry.source.source.client.name) then return false end
 
               return true
             end,
