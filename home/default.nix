@@ -71,7 +71,10 @@ in {
 
   # Activation script to symlink apps that require /Applications folder
   home.activation.linkSystemApplications = lib.hm.dag.entryAfter ["writeBoundary"] (
-    lib.mega.mkAppActivation {inherit pkgs; packages = config.home.packages;}
+    lib.mega.mkAppActivation {
+      inherit pkgs;
+      inherit (config.home) packages;
+    }
   );
 
   # Create symlinks in ~/.local/bin for nix-managed binaries
@@ -81,9 +84,9 @@ in {
     # Define custom packages that should have CLI symlinks in ~/.local/bin
     # Format: { name = package; } where package has bin/${name}
     customBinaries = {
-      brave-browser-nightly = pkgs.brave-browser-nightly;
-      fantastical = pkgs.fantastical;
-      helium = pkgs.helium;
+      inherit (pkgs) brave-browser-nightly;
+      inherit (pkgs) fantastical;
+      inherit (pkgs) helium-browser;
     };
 
     # Generate removal commands for all binaries
@@ -107,10 +110,20 @@ in {
       ${linkCommands}
     '';
 
+  # Set desktop wallpaper declaratively using desktoppr
+  # Runs on every darwin-rebuild, sets wallpaper for all screens
+  home.activation.setWallpaper = lib.hm.dag.entryAfter ["writeBoundary"] ''
+    WALLPAPER="${config.home.homeDirectory}/.dotfiles/assets/bokeh_dark.jpg"
+    if [ -f "$WALLPAPER" ]; then
+      run ${pkgs.desktoppr}/bin/desktoppr "$WALLPAPER"
+    fi
+  '';
+
   xdg.enable = true;
 
   xdg.configFile."ghostty".source = ./ghostty;
   xdg.configFile."ghostty".recursive = true;
+  xdg.configFile."ghostty".force = true;
 
   xdg.configFile."hammerspoon".source = config.lib.mega.linkConfig "hammerspoon";
   xdg.configFile."hammerspoon".recursive = true;
@@ -127,6 +140,7 @@ in {
   # FIXME: remove when sure; i don't use zsh anymore, i don't need this, right?
   xdg.configFile."zsh".source = ./zsh;
   xdg.configFile."zsh".recursive = true;
+  xdg.configFile."zsh".force = true;
 
   xdg.configFile."1Password/ssh/agent.toml".text = ''
     [[ssh-keys]]

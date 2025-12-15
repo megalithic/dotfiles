@@ -97,8 +97,10 @@ in {
   # ===========================================================================
   # Privacy-focused browser based on ungoogled-chromium
   # Requires Widevine from Brave Browser Nightly for DRM content
-  programs.helium = {
-    enable = false;
+  # - REF: https://github.com/scuggo/pkgs/blob/main/pkgs/by-name/he/helium-browser/helium-patcher.nix
+  programs.helium-browser = {
+    enable = true;
+    package = pkgs.helium-browser;
     bundleId = "net.imput.helium"; # macOS bundle identifier for Application Support path
     dictionaries = [pkgs.hunspellDictsChromium.en_US];
     inherit extensions;
@@ -164,7 +166,7 @@ in {
   # ===========================================================================
   # Enable developer mode to allow user scripts (required for SurfingKeys Advanced Mode)
   # This ensures extensions.ui.developer_mode is set in each browser's Secure Preferences
-  home.activation.heliumEnableDeveloperMode = lib.hm.dag.entryAfter ["writeBoundary"] ''
+  home.activation.heliumBrowserEnableDeveloperMode = lib.hm.dag.entryAfter ["writeBoundary"] ''
     HELIUM_PREFS="${config.home.homeDirectory}/Library/Application Support/net.imput.helium/Default/Secure Preferences"
 
     # Only modify if Helium profile exists
@@ -199,10 +201,10 @@ in {
   # Automatically installs Widevine from Brave Browser Nightly to Helium.
   # This activation script runs AFTER linkSystemApplications to ensure
   # Brave Browser Nightly is installed in /Applications first.
-  home.activation.heliumInstallWidevine = lib.hm.dag.entryAfter ["writeBoundary" "linkSystemApplications"] ''
+  home.activation.heliumBrowserInstallWidevine = lib.hm.dag.entryAfter ["writeBoundary" "linkSystemApplications"] ''
     # Find Helium in nix store
     # rg: -v = invert match (exclude lines containing "wrapped")
-    HELIUM_NIX_APP=$(ls -d /nix/store/*-helium-0.*/Applications/Helium.app 2>/dev/null | ${pkgs.ripgrep}/bin/rg -v "wrapped" | sort -V | tail -1)
+    HELIUM_NIX_APP=$(ls -d /nix/store/*-helium-browser-0.*/Applications/Helium.app 2>/dev/null | ${pkgs.ripgrep}/bin/rg -v "wrapped" | sort -V | tail -1)
 
     if [ -z "$HELIUM_NIX_APP" ] || [ ! -d "$HELIUM_NIX_APP" ]; then
       $DRY_RUN_CMD echo "Helium package not found in nix store, skipping Widevine installation"

@@ -8,7 +8,7 @@
   inherit (lib) literalExpression mkOption types mkEnableOption;
 
   supportedBrowsers = {
-    helium = "Helium";
+    helium-browser = "Helium";
     brave-browser-nightly = "Brave Browser Nightly";
   };
 
@@ -299,7 +299,10 @@
     browserName = supportedBrowsers.${browser};
 
     # Use bundleId if provided, otherwise fall back to browser name
-    darwinDir = if cfg.bundleId != null then cfg.bundleId else browser;
+    darwinDir =
+      if cfg.bundleId != null
+      then cfg.bundleId
+      else browser;
     linuxDir = browser;
 
     configDir =
@@ -338,13 +341,13 @@
 
     # Create wrapper .app for macOS GUI launching with command-line args
     wrapperApp = mkWrapperApp {
-      name = cfg.darwinWrapperApp.name;
+      inherit (cfg.darwinWrapperApp) name;
       originalApp = originalAppPath;
       appName = browserName;
-      executableName = cfg.executableName;
+      inherit (cfg) executableName;
       args = cfg.commandLineArgs;
-      iconFile = cfg.iconFile;
-      bundleId = cfg.darwinWrapperApp.bundleId;
+      inherit (cfg) iconFile;
+      inherit (cfg.darwinWrapperApp) bundleId;
     };
 
     # CLI wrapper for terminal usage with custom args
@@ -355,24 +358,24 @@
       if cfg.commandLineArgs != [] && cfg.package ? pname
       then
         pkgs.runCommand "${cfg.package.name or cfg.package.pname}-cli-wrapped"
-          {
-            nativeBuildInputs = [pkgs.makeWrapper];
-            passthru = cfg.package.passthru or {};
-            meta = cfg.package.meta or {};
-          }
-          ''
-            # Only create wrapper if source bin exists
-            if [ -x "${cfg.package}/bin/${cfg.package.pname}" ]; then
-              mkdir -p $out/bin
-              # Use different name to avoid collision with base package
-              makeWrapper ${cfg.package}/bin/${cfg.package.pname} $out/bin/${cliWrapperName} \
-                --add-flags "${lib.escapeShellArgs cfg.commandLineArgs}"
-              echo "Created CLI wrapper: ${cliWrapperName}"
-            else
-              # Create empty output for packages without bin/
-              mkdir -p $out
-            fi
-          ''
+        {
+          nativeBuildInputs = [pkgs.makeWrapper];
+          passthru = cfg.package.passthru or {};
+          meta = cfg.package.meta or {};
+        }
+        ''
+          # Only create wrapper if source bin exists
+          if [ -x "${cfg.package}/bin/${cfg.package.pname}" ]; then
+            mkdir -p $out/bin
+            # Use different name to avoid collision with base package
+            makeWrapper ${cfg.package}/bin/${cfg.package.pname} $out/bin/${cliWrapperName} \
+              --add-flags "${lib.escapeShellArgs cfg.commandLineArgs}"
+            echo "Created CLI wrapper: ${cliWrapperName}"
+          else
+            # Create empty output for packages without bin/
+            mkdir -p $out
+          fi
+        ''
       else null;
   in
     lib.mkIf cfg.enable {

@@ -55,7 +55,7 @@ init host=`hostname`:
   fi
 
   echo ":: Running nix-darwin for the first time.." && \
-    sudo nix --experimental-features 'nix-command flakes' run nix-darwin/nix-darwin-25.05 -- switch --option eval-cache false --flake $DOTFILES_DIR#{{host}} --refresh
+    sudo nix --experimental-features 'nix-command flakes' run nix-darwin/nix-darwin-25.11 -- switch --option eval-cache false --flake $DOTFILES_DIR#{{host}} --refresh
 
   # echo ":: Running home-manager for the first time.." && \
   #   sudo nix --experimental-features 'nix-command flakes' run home-manager/master -- switch --option eval-cache false --flake "$DOTFILES_DIR#$FLAKE" --refresh

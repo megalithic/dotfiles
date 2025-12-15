@@ -6,8 +6,6 @@
   username,
   ...
 }:
-# TODO:
-# - wallpaper setting: https://github.com/Lalit64/snowflake/blob/main/modules/darwin/suites/desktop/default.nix#L25
 # NOTE: docs for nix-darwin found
 # https://daiderd.com/nix-darwin/manual/index.html
 # macOS user-specific defaults using home-manager's built-in support

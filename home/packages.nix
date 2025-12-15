@@ -12,9 +12,11 @@
   cliPkgs = with pkgs; [
     amber
     argc
+    desktoppr # declarative wallpaper setter
     awscli2
     bash # macOS ships with ancient bash
     blueutil
+    chafa
     curlie
     delta
     devbox
@@ -42,7 +44,7 @@
     sqlite
     switchaudio-osx
     terminal-notifier
-    tmux
+    unstable.tmux
     transcrypt
     w3m
     yubikey-manager
