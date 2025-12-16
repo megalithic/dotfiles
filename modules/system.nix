@@ -392,22 +392,8 @@
           };
         };
 
-        "com.brave.Browser.nightly" = {
-          NSUserKeyEquivalents = {
-            "Close Tab" = "^w";
-            # collides with surfingkeys
-            # "Find..." = "^f";
-            "New Private Window" = "^$n";
-            "New Tab" = "^t";
-            "Select Previous Tab" = "^h";
-            "Select Next Tab" = "^l";
-            "Reload This Page" = "^r";
-            "Reopen Closed Tab" = "^$t";
-            "Reset zoom" = "^0";
-            "Zoom In" = "^=";
-            "Zoom Out" = "^-";
-          };
-        };
+        # NOTE: Browser keybindings moved to home/programs/browsers/chromium.nix
+        # using the keyEquivalents option in mkChromiumBrowser module
       };
     };
     keyboard = {

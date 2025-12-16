@@ -66,6 +66,25 @@
   ];
 
   # ===========================================================================
+  # Shared Keyboard Shortcuts
+  # ===========================================================================
+  # macOS NSUserKeyEquivalents for both browsers
+  # Format: ^ = Ctrl, $ = Shift, ~ = Option, @ = Cmd
+  sharedKeyEquivalents = {
+    "Close Tab" = "^w";
+    # "Find..." = "^f";  # collides with surfingkeys
+    "New Private Window" = "^$n";
+    "New Tab" = "^t";
+    "Select Previous Tab" = "^h";
+    "Select Next Tab" = "^l";
+    "Reload This Page" = "^r";
+    "Reopen Closed Tab" = "^$t";
+    "Reset zoom" = "^0";
+    "Zoom In" = "^=";
+    "Zoom Out" = "^-";
+  };
+
+  # ===========================================================================
   # Shared Command-Line Arguments
   # ===========================================================================
   # Common args for both browsers
@@ -131,6 +150,9 @@ in {
         # Feature flags (comma-separated)
         "--enable-features=TouchpadOverscrollHistoryNavigation,NoReferrers"
       ];
+
+    # Use shared keyboard shortcuts
+    keyEquivalents = sharedKeyEquivalents;
   };
 
   # ===========================================================================
@@ -154,6 +176,9 @@ in {
         # Brave-specific cache location
         "--disk-cache=${config.home.homeDirectory}/Library/Caches/brave-browser-nightly"
       ];
+
+    # Use shared keyboard shortcuts
+    keyEquivalents = sharedKeyEquivalents;
 
     # Create a wrapper .app that can be launched from Dock/Spotlight with debug args
     darwinWrapperApp = {

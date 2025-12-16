@@ -183,6 +183,27 @@
       # Use this for apps that have custom activation handling (e.g., Widevine installation for Helium)
       customActivation = mkEnableOption "Skip adding to home.packages (use when custom activation scripts manage the app)";
 
+      # macOS keyboard shortcuts (NSUserKeyEquivalents)
+      # These are set via targets.darwin.defaults using the browser's bundleId
+      # Key format: ^ = Ctrl, $ = Shift, ~ = Option, @ = Cmd
+      keyEquivalents = mkOption {
+        inherit visible;
+        type = types.attrsOf types.str;
+        default = {};
+        example = {
+          "Close Tab" = "^w";
+          "New Tab" = "^t";
+          "Select Previous Tab" = "^h";
+          "Select Next Tab" = "^l";
+        };
+        description = ''
+          macOS keyboard shortcut overrides for ${name} menu items.
+          Uses NSUserKeyEquivalents format:
+            ^ = Control, $ = Shift, ~ = Option, @ = Command
+          Example: "^$n" = Ctrl+Shift+N
+        '';
+      };
+
       # macOS-specific: Create a wrapper .app for GUI launching with args
       darwinWrapperApp = {
         enable = mkEnableOption "Create a wrapper .app bundle for macOS that launches with commandLineArgs";
@@ -404,6 +425,12 @@
           };
         }
       );
+
+      # Set macOS keyboard shortcuts via targets.darwin.defaults
+      # Uses bundleId to target the correct application preferences
+      targets.darwin.defaults = lib.mkIf (pkgs.stdenv.isDarwin && cfg.keyEquivalents != {}) {
+        "${darwinDir}".NSUserKeyEquivalents = cfg.keyEquivalents;
+      };
     };
 in {
   options.programs =
