@@ -375,6 +375,20 @@
             "64".enabled = false;
             # Disable 'Cmd + Alt + Space' for Finder search window
             "65".enabled = false;
+
+            # Disable Mission Control "Switch to Desktop N" shortcuts (Ctrl+1-9)
+            # These conflict with Hammerspoon bindings for Messages app navigation
+            # REF: https://gist.github.com/jimratliff/227088cc936065598bedfd91c360334e
+            # IDs 118-126 = Switch to Desktop 1-9 (default: Ctrl+1 through Ctrl+9)
+            "118".enabled = false; # Switch to Desktop 1 (Ctrl+1)
+            "119".enabled = false; # Switch to Desktop 2 (Ctrl+2)
+            "120".enabled = false; # Switch to Desktop 3 (Ctrl+3)
+            "121".enabled = false; # Switch to Desktop 4 (Ctrl+4)
+            "122".enabled = false; # Switch to Desktop 5 (Ctrl+5)
+            "123".enabled = false; # Switch to Desktop 6 (Ctrl+6)
+            "124".enabled = false; # Switch to Desktop 7 (Ctrl+7)
+            "125".enabled = false; # Switch to Desktop 8 (Ctrl+8)
+            "126".enabled = false; # Switch to Desktop 9 (Ctrl+9)
           };
         };
 
@@ -407,4 +421,11 @@
 
   security.pam.services.sudo_local.touchIdAuth = true;
   security.sudo.extraConfig = "${username}    ALL = (ALL) NOPASSWD: ALL";
+
+  # Apply symbolic hotkey changes immediately (without requiring logout)
+  # REF: https://zameermanji.com/blog/2021/6/8/applying-com-apple-symbolichotkeys-changes-instantaneously/
+  # NOTE: postUserActivation was removed; using postActivation with sudo -u instead
+  system.activationScripts.postActivation.text = ''
+    sudo -u ${username} /System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u
+  '';
 }

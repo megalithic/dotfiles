@@ -393,16 +393,9 @@ M.notifier = {
       },
     },
 
-    -- Fantastical Calendar Alerts (non-urgent, like 15/30 min warnings)
-    {
-      name = "Fantastical Calendar Alerts",
-      appBundleID = "com.flexibits.fantastical2.mac",
-      duration = 10,
-      alwaysShowInTerminal = false,
-      showWhenAppFocused = false,
-      overrideFocusModes = { "Personal", "Work" },
-      appImageID = "com.flexibits.fantastical2.mac",
-    },
+    -- NOTE: Non-urgent Fantastical alerts (15/30 min warnings) are NOT intercepted.
+    -- They go through macOS Notification Center normally. Only TIME SENSITIVE alerts
+    -- (matched above by sender) are captured and shown via our custom canvas.
 
     {
       name = "Important Messages",

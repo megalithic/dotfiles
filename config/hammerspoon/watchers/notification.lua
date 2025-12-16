@@ -112,6 +112,15 @@ local function handleNotification(element)
     title, message = table.unpack(staticTexts)
   elseif #staticTexts == 3 then
     title, subtitle, message = table.unpack(staticTexts)
+  elseif #staticTexts >= 4 then
+    -- Fantastical (and possibly other apps) send 4+ texts:
+    -- [1] = alert type ("TIME SENSITIVE" or app name)
+    -- [2] = event title
+    -- [3] = time
+    -- [4] = location/URL
+    title = staticTexts[1]
+    subtitle = staticTexts[2]
+    message = staticTexts[3] .. (staticTexts[4] and (" • " .. staticTexts[4]) or "")
   end
 
   -- Process routing rules

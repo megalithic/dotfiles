@@ -32,30 +32,44 @@ obj.actions = {
     end,
     hotkey = { { "ctrl" }, "p" },
   },
-  -- FIXME: it's saying ctrl-1,2,3,4 are all being used somewhere?! sooo, we use ctrl-h,j,k,l instead.
+  -- Jump to pinned conversations 1-9 via Ctrl+number
+  -- NOTE: Mission Control's "Switch to Desktop N" shortcuts (Ctrl+1-9) are disabled
+  -- in system.nix via com.apple.symbolichotkeys to allow these bindings to work
   gotoConversation1 = {
-    action = function()
-      hs.eventtap.keyStroke({ "cmd" }, "1")
-    end,
-    hotkey = { { "ctrl" }, "h" },
+    action = function() hs.eventtap.keyStroke({ "cmd" }, "1") end,
+    hotkey = { { "ctrl" }, "1" },
   },
   gotoConversation2 = {
-    action = function()
-      hs.eventtap.keyStroke({ "cmd" }, "2")
-    end,
-    hotkey = { { "ctrl" }, "j" },
+    action = function() hs.eventtap.keyStroke({ "cmd" }, "2") end,
+    hotkey = { { "ctrl" }, "2" },
   },
   gotoConversation3 = {
-    action = function()
-      hs.eventtap.keyStroke({ "cmd" }, "3")
-    end,
-    hotkey = { { "ctrl" }, "k" },
+    action = function() hs.eventtap.keyStroke({ "cmd" }, "3") end,
+    hotkey = { { "ctrl" }, "3" },
   },
   gotoConversation4 = {
-    action = function()
-      hs.eventtap.keyStroke({ "cmd" }, "4")
-    end,
-    hotkey = { { "ctrl" }, "l" },
+    action = function() hs.eventtap.keyStroke({ "cmd" }, "4") end,
+    hotkey = { { "ctrl" }, "4" },
+  },
+  gotoConversation5 = {
+    action = function() hs.eventtap.keyStroke({ "cmd" }, "5") end,
+    hotkey = { { "ctrl" }, "5" },
+  },
+  gotoConversation6 = {
+    action = function() hs.eventtap.keyStroke({ "cmd" }, "6") end,
+    hotkey = { { "ctrl" }, "6" },
+  },
+  gotoConversation7 = {
+    action = function() hs.eventtap.keyStroke({ "cmd" }, "7") end,
+    hotkey = { { "ctrl" }, "7" },
+  },
+  gotoConversation8 = {
+    action = function() hs.eventtap.keyStroke({ "cmd" }, "8") end,
+    hotkey = { { "ctrl" }, "8" },
+  },
+  gotoConversation9 = {
+    action = function() hs.eventtap.keyStroke({ "cmd" }, "9") end,
+    hotkey = { { "ctrl" }, "9" },
   },
   replyToLastMessage = {
     action = function()
