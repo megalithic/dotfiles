@@ -218,3 +218,36 @@ Always provide:
 1. `rg "pkgs\.X\b" ~/.dotfiles --type nix`
 2. Check `home/packages.nix` for direct installs
 3. Check program modules for `package = pkgs.X` patterns
+
+### "How do I install macOS app X via Nix?"
+
+**CRITICAL: Always verify the correct install method for PKG files!**
+
+1. Find the download URL (DMG, ZIP, or PKG)
+2. Get the hash: `nix-prefetch-url --name "safe-name.pkg" "<url>"`
+3. **For PKG files, inspect contents to determine method:**
+   ```bash
+   pkgutil --payload-files /nix/store/...-safe-name.pkg | head -30
+   ```
+
+4. **Decision:**
+   - If ONLY `./Applications/SomeApp.app/*` → use `artifactType = "pkg"` (extract)
+   - If contains `./Library/SystemExtensions/*`, `./Library/LaunchDaemons/*`, etc. → use `installMethod = "native"`
+
+5. Add to `pkgs/default.nix`:
+   ```nix
+   myapp = mkApp {
+     pname = "myapp";
+     version = "1.0";
+     appName = "MyApp.app";
+     src = { url = "..."; sha256 = "..."; };
+     artifactType = "pkg";  # For PKG extraction (most apps)
+     # OR: installMethod = "native";  # Only if truly needed!
+   };
+   ```
+
+6. Add to `home/packages.nix` (for extract) or `hosts/*.nix` (for native)
+
+**Real examples:**
+- TalkTastic: `artifactType = "pkg"` - PKG only has app bundle
+- Karabiner: `installMethod = "native"` - Has DriverKit extension

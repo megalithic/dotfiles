@@ -5,6 +5,7 @@
 }: let
   # ── gui tools ──────────────────────────────────────────────────────────────────
   guiPkgs = with pkgs; [
+    talktastic
     telegram-desktop
   ];
 
@@ -43,6 +44,7 @@
     s3cmd
     sqlite
     switchaudio-osx
+    tesseract # OCR fallback for clipper (Vision is primary)
     terminal-notifier
     unstable.tmux
     transcrypt

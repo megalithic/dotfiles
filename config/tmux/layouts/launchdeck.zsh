@@ -43,7 +43,7 @@ tmux send-keys -t "$SESSION":3.1 "claude --allow-dangerously-skip-permissions"
 tmux -2 new-window -c "$CWD" -t "$SESSION":4 -n services
 tmux send-keys -t "$SESSION":4.1 "cd ~/code/work/cspire/launchdeck" C-m
 # tmux send-keys -t "$SESSION":4.1 "devspace purge" C-m
-tmux send-keys -t "$SESSION":4.1 "mprocs" C-m
+tmux send-keys -t "$SESSION":4.1 "./start" C-m
 
 # ZOOM A PANE:
 # tmux resize-pane -Z -t "$SESSION":3.2

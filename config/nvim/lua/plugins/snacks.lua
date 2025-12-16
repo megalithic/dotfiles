@@ -227,6 +227,7 @@ if true then
                 ["<CR>"] = { "jump_or_split", mode = { "i", "n" } },
                 ["<Esc>"] = { "close", mode = { "i" } },
                 ["<C-c>"] = { "cancel", mode = "i" },
+                ["<c-i>"] = { "toggle_hidden", mode = { "i", "n" } },
               },
             },
             list = {

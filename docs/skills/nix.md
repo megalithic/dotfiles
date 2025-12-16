@@ -339,7 +339,7 @@ homebrew = {
 All custom helpers are under `lib.mega.*`:
 
 **In `lib/default.nix` (flake-level):**
-- `lib.mega.mkApp` - Build macOS apps from DMG/ZIP/PKG
+- `lib.mega.mkApp` - Build macOS apps from DMG/ZIP/PKG (see detailed guide below)
 - `lib.mega.mkApps` - Build multiple apps from a list
 - `lib.mega.mkMas` - Install Mac App Store apps
 - `lib.mega.mkAppActivation` - Symlink apps to /Applications
@@ -347,6 +347,110 @@ All custom helpers are under `lib.mega.*`:
 - `lib.mega.capitalize` - Capitalize first letter of string
 - `lib.mega.compactAttrs` - Filter null values from attrset
 - `lib.mega.imports` - Smart module path resolution
+
+## mkApp - Installing macOS Applications
+
+The `mkApp` function in `lib/mkApp.nix` supports three install methods. **ALWAYS verify which method is needed before choosing.**
+
+### Install Methods
+
+| Method | Use Case | Config Location |
+|--------|----------|-----------------|
+| `extract` (default) | Most apps - DMG, ZIP, or simple PKG | `home/packages.nix` |
+| `native` | Apps with system extensions | `hosts/*.nix` + enable service |
+| `mas` | Mac App Store apps | Either |
+
+### How to Determine the Correct Method for PKG Files
+
+**IMPORTANT: Most PKG files do NOT need native installation!**
+
+```bash
+# Step 1: Download the PKG and get its hash
+nix-prefetch-url --name "safe-name.pkg" "https://example.com/Install%20App.pkg"
+
+# Step 2: Inspect PKG contents
+pkgutil --payload-files /nix/store/...-safe-name.pkg | head -30
+```
+
+**Decision tree:**
+
+1. If output shows ONLY `./Applications/SomeApp.app/*` → **Use extract method**
+   ```nix
+   mkApp {
+     pname = "myapp";
+     version = "1.0";
+     appName = "MyApp.app";
+     src = { url = "..."; sha256 = "..."; };
+     artifactType = "pkg";  # <-- This is the key!
+   }
+   ```
+
+2. If output shows ANY of these → **Use native method** (verify with postinstall check):
+   - `./Library/SystemExtensions/*` (DriverKit)
+   - `./Library/LaunchDaemons/*` or `./Library/LaunchAgents/*`
+   - `./Library/PrivilegedHelperTools/*`
+   - `./usr/local/bin/*` (privileged binaries)
+
+3. To verify postinstall scripts need privilege:
+   ```bash
+   pkgutil --expand /path/to/installer.pkg /tmp/pkg-expanded
+   cat /tmp/pkg-expanded/*/Scripts/postinstall
+   # Look for: systemextensionsctl, launchctl load, SMJobBless
+   ```
+
+### Examples
+
+**Simple app from DMG (most common):**
+```nix
+# In pkgs/default.nix
+fantastical = mkApp {
+  pname = "fantastical";
+  version = "4.1.5";
+  appName = "Fantastical.app";
+  src = {
+    url = "https://cdn.flexibits.com/Fantastical_4.1.5.zip";
+    sha256 = "...";
+  };
+};
+```
+
+**App from PKG (extracts .app, NO native installer needed):**
+```nix
+# In pkgs/default.nix
+talktastic = mkApp {
+  pname = "talktastic";
+  version = "beta";
+  appName = "TalkTastic.app";
+  src = {
+    url = "https://storage.googleapis.com/oasis-desktop/installer/Install%20TalkTastic.pkg";
+    sha256 = "...";
+  };
+  artifactType = "pkg";  # Extracts .app from PKG payload
+};
+```
+
+**App requiring native PKG installer (rare - verify first!):**
+```nix
+# In pkgs/karabiner-elements.nix (separate file)
+lib.mega.mkApp {inherit pkgs lib;} {
+  pname = "karabiner-elements";
+  version = "15.7.0";
+  src = { url = "..."; sha256 = "..."; };
+  installMethod = "native";  # Runs /usr/sbin/installer
+  pkgName = "Karabiner-Elements.pkg";
+  # Also needs: services.native-pkg-installer.enable = true; in host config
+}
+```
+
+### Real-World Examples of Native vs Extract
+
+| App | Method | Reason |
+|-----|--------|--------|
+| TalkTastic | `extract` | PKG only contains `./Applications/TalkTastic.app/*` |
+| Fantastical | `extract` | Standard ZIP with .app bundle |
+| Brave Browser | `extract` | Standard DMG with .app bundle |
+| Karabiner-Elements | `native` | Has DriverKit virtual HID extension |
+| Little Snitch | `native` | Has network kernel extension |
 
 **In `home/lib.nix` (home-manager module, via `config.lib.mega`):**
 - `config.lib.mega.linkConfig "path"` - Symlink to `~/.dotfiles/config/{path}`

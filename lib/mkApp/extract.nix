@@ -1,7 +1,23 @@
-# mkApp/extract.nix - Extract-based installation method
+# mkApp/extract.nix - Extract-based installation method (DEFAULT - use this!)
 #
-# Extracts DMG/ZIP/TBZ/PKG contents into nix store.
-# This is the original mkCask behavior.
+# Extracts DMG/ZIP/TBZ/PKG contents into nix store, then symlinks to /Applications.
+# This method works for the VAST MAJORITY of macOS apps.
+#
+# ══════════════════════════════════════════════════════════════════════════════
+# PKG EXTRACTION
+# ══════════════════════════════════════════════════════════════════════════════
+#
+# When artifactType = "pkg", this uses `pkgutil --expand-full` to extract the
+# PKG payload, then finds the .app bundle inside. This works because most PKGs
+# are just fancy ZIP files containing an app bundle.
+#
+# To verify a PKG can be extracted (vs needing native install):
+#   pkgutil --payload-files /path/to/installer.pkg | head -30
+#
+# If output shows only ./Applications/SomeApp.app/* → extraction works fine!
+# If output shows ./Library/SystemExtensions/* or similar → need native install
+#
+# ══════════════════════════════════════════════════════════════════════════════
 {
   pkgs,
   lib ? pkgs.lib,

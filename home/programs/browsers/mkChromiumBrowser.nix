@@ -178,6 +178,11 @@
         '';
       };
 
+      # Skip adding package to home.packages (for apps with custom activation scripts)
+      # When true, the package won't be auto-linked by home-manager to ~/Applications/Home Manager Apps/
+      # Use this for apps that have custom activation handling (e.g., Widevine installation for Helium)
+      customActivation = mkEnableOption "Skip adding to home.packages (use when custom activation scripts manage the app)";
+
       # macOS-specific: Create a wrapper .app for GUI launching with args
       darwinWrapperApp = {
         enable = mkEnableOption "Create a wrapper .app bundle for macOS that launches with commandLineArgs";
@@ -379,8 +384,11 @@
       else null;
   in
     lib.mkIf cfg.enable {
-      home.packages = lib.mkIf (cfg.package != null) (
-        # Always include the base package
+      # Only add to home.packages if customActivation is NOT enabled
+      # When customActivation = true, the app is managed by custom activation scripts
+      # and should NOT be auto-linked by home-manager to ~/Applications/Home Manager Apps/
+      home.packages = lib.mkIf (cfg.package != null && !cfg.customActivation) (
+        # Include the base package (only if not using custom activation)
         [cfg.package]
         # Add CLI wrapper if applicable
         ++ lib.optional (cliWrapper != null) cliWrapper

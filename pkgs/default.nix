@@ -66,4 +66,17 @@ in {
     desc = "Privacy-focused web browser based on ungoogled-chromium";
     homepage = "https://github.com/imputnet/helium-chromium";
   };
+
+  talktastic = mkApp {
+    pname = "talktastic";
+    version = "beta"; # No version in URL, using beta marker
+    appName = "TalkTastic.app";
+    src = {
+      url = "https://storage.googleapis.com/oasis-desktop/installer/Install%20TalkTastic.pkg";
+      sha256 = "0q2vflgd9ypbmhgq4a0jiw41l4qvxhckhi4vh0rm3lia3yvygmva";
+    };
+    artifactType = "pkg"; # Extract .app from PKG (no system extensions needed)
+    desc = "AI voice dictation for macOS - write with your voice in any app";
+    homepage = "https://talktastic.com";
+  };
 }

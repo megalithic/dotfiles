@@ -2,12 +2,61 @@
 #
 # Supports three installation methods:
 #   - "extract" (default): Extract DMG/ZIP/PKG to nix store, symlink/copy to /Applications
-#   - "native": Run native PKG installer during activation (for apps with system extensions, code signing requirements)
+#   - "native": Run native PKG installer during activation (requires sudo, use sparingly!)
 #   - "mas": Install from Mac App Store (delegates to mkMas)
 #
-# Usage:
+# ══════════════════════════════════════════════════════════════════════════════
+# CHOOSING THE RIGHT METHOD
+# ══════════════════════════════════════════════════════════════════════════════
+#
+# PREFER "extract" (default) for most apps. It works with:
+#   - DMG files containing .app bundles
+#   - ZIP files containing .app bundles
+#   - PKG files that simply contain .app bundles (most apps!)
+#
+# Use "native" ONLY when the app TRULY requires it. Signs you need native:
+#   - App has DriverKit system extensions (e.g., virtual HID devices)
+#   - App has kernel extensions (kexts) - rare on modern macOS
+#   - App installs to /Library/ or requires privileged postinstall scripts
+#   - App fails to launch when extracted (code signing path validation issues)
+#
+# ══════════════════════════════════════════════════════════════════════════════
+# HOW TO VERIFY IF AN APP NEEDS NATIVE INSTALL
+# ══════════════════════════════════════════════════════════════════════════════
+#
+# 1. Download the PKG and inspect its contents:
+#      pkgutil --payload-files /path/to/installer.pkg | head -30
+#
+# 2. If it ONLY contains ./Applications/SomeApp.app/* → use "extract"
+#
+# 3. If it contains any of these → likely needs "native":
+#      - ./Library/SystemExtensions/*
+#      - ./Library/LaunchDaemons/*
+#      - ./Library/PrivilegedHelperTools/*
+#      - ./usr/local/bin/* (privileged binaries)
+#
+# 4. Check for postinstall scripts:
+#      pkgutil --expand /path/to/installer.pkg /tmp/pkg-expanded
+#      cat /tmp/pkg-expanded/*/Scripts/postinstall
+#    If it runs systemextensionsctl, launchctl, or other privileged ops → native
+#
+# Example: TalkTastic.pkg only contains ./Applications/TalkTastic.app/* → extract
+# Example: Karabiner.pkg contains DriverKit extensions and postinstall → native
+#
+# ══════════════════════════════════════════════════════════════════════════════
+# USAGE EXAMPLES
+# ══════════════════════════════════════════════════════════════════════════════
+#
+#   # Simple app from DMG (most common)
 #   mkApp { pname = "mailmate"; version = "5673"; src = { url = "..."; sha256 = "..."; }; }
+#
+#   # App from PKG (extracts .app, no installer needed)
+#   mkApp { pname = "talktastic"; src = { ... }; artifactType = "pkg"; }
+#
+#   # App requiring native PKG installer (rare - verify first!)
 #   mkApp { pname = "karabiner"; installMethod = "native"; src = { ... }; pkgName = "Karabiner.pkg"; }
+#
+#   # Mac App Store app
 #   mkApp { pname = "xcode"; installMethod = "mas"; appStoreId = 497799835; }
 {
   pkgs,

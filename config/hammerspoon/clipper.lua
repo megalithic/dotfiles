@@ -1,254 +1,747 @@
 local fmt = string.format
 local obj = {}
--- TODO/IDEAS:
--- https://github.com/kiooss/dotmagic/blob/master/hammerspoon/clippy.lua
+
+--[[
+  Clipper: Screenshot capture, upload, and OCR module
+
+  Features:
+  - Watches pasteboard for new screenshots
+  - Async upload to DigitalOcean Spaces
+  - Vision-based OCR (with tesseract fallback)
+  - Modal paste mode with single-key actions
+  - Responsive cheatsheet (480w external, 320w internal display)
+  - Retina-optimized thumbnail (source scaled ÷4)
+
+  Usage:
+  1. Take screenshot with ⌘⌃⇧4 (standard macOS)
+  2. Cheatsheet appears showing capture + upload status
+  3. Press HYPER+⇧V to enter paste modal
+  4. Press single key: v=URL, m=markdown, h=HTML, p=OCR, e=edit
+  5. Or wait 1s to auto-paste URL
+  6. Can re-invoke modal for additional actions
+]]
 
 obj.__index = obj
 obj.name = "clipper"
 obj.debug = false
-obj.clipWatcher = {}
-obj.clipboardData = {}
+
+-- File paths
 obj.capsPath = fmt("%s/_screenshots", os.getenv("HOME"))
 obj.tempImage = fmt("%s/tmp/%s_tmp.png", os.getenv("HOME"), obj.name)
 obj.tempOcrImage = fmt("%s/tmp/%s_ocr_tmp.png", os.getenv("HOME"), obj.name)
-obj.helpCanvas = nil
 
-function obj.captureImage(image, openImageUrl)
-  image = image or hs.pasteboard.readImage()
+-- Watcher reference
+obj.clipWatcher = nil
 
-  if not image then return end
+-- State for active capture (avoids memory leak from dynamic bindings)
+obj.activeCapture = {
+  image = nil, -- hs.image object
+  imagePath = nil, -- Local file path
+  imageName = nil, -- Filename
+  imageUrl = nil, -- DO Spaces URL (set after upload completes)
+  ocrText = nil, -- OCR extracted text (lazy loaded)
+  timestamp = 0, -- When capture occurred (for 60s timeout)
+  uploadStatus = "idle", -- "idle" | "uploading" | "complete" | "failed"
+}
 
-  -- clear previous image url
-  hs.pasteboard.clearContents("imageUrl")
+-- Modal state
+obj.modal = nil -- hs.hotkey.modal instance
+obj.modalTimeout = nil -- Timer for 1s auto-paste
+obj.isModalActive = false
 
-  local date = hs.execute([[date +"%Y-%m-%dT%H:%M:%S%z"]], true)
-  local imageName = fmt("cap_%s.png", date:gsub("\n", ""))
-  local capturedImage = fmt("%s/%s", obj.capsPath, imageName)
-  local savedImage = image:saveToFile(capturedImage)
+-- Cheatsheet canvas reference
+obj.cheatsheet = nil
+obj.cheatsheetTimer = nil
+obj.escapeHotkey = nil -- Enabled only when cheatsheet is visible
 
-  if savedImage then
-    local capperBin = fmt("%s/.dotfiles/bin/capper", os.getenv("HOME"))
+-- Configuration
+obj.config = {
+  captureTimeout = 60, -- Seconds before capture becomes inactive
+  cheatsheetDuration = 10, -- Auto-dismiss passive cheatsheet after N seconds
+  modalTimeout = 5, -- Seconds before modal auto-pastes URL
+  -- Responsive cheatsheet sizing (external display = larger)
+  cheatsheetWidth = {
+    external = 480,
+    internal = 320,
+  },
+  thumbnailScaleFactor = 4, -- Divide source image by this for retina (5K = 2x, so 4 = crisp)
+}
 
-    local task = hs.task.new("/bin/zsh", function(exitCode, stdOut, stdErr)
-      if exitCode == 0 then
-        -- Extract URL from last line of output
-        local lines = {}
-        for line in stdOut:gmatch("[^\r\n]+") do
-          table.insert(lines, line)
-        end
-        local url = lines[#lines]
+-- ══════════════════════════════════════════════════════════════════════════════
+-- State Management
+-- ══════════════════════════════════════════════════════════════════════════════
 
-        -- Update pasteboard
-        hs.pasteboard.setContents(imageName, "imageName")
-        hs.pasteboard.setContents(url, "imageUrl")
-        hs.pasteboard.setContents(image, "image")
+function obj.hasActiveCapture()
+  if not obj.activeCapture.image then return false end
 
-        local notification = hs.notify.new(function(notif)
-          if notif:activationType() == hs.notify.activationTypes.contentsClicked then
-            hs.urlevent.openURLWithBundle(
-              url,
-              hs.urlevent.getDefaultHandler("https") or hs.urlevent.getDefaultHandler("http")
-            )
-          end
-        end, {
-          title = "Screenshot Uploaded",
-          informativeText = url,
-          contentImage = hs.image.imageFromPath(capturedImage),
-          withdrawAfter = 5,
-        })
-        notification:send()
-      else
-        U.log.e(
-          fmt("[%s] captureImage: failed to upload image to spaces\nexit: %s\nstderr: %s", obj.name, exitCode, stdErr)
-        )
+  local elapsed = os.time() - obj.activeCapture.timestamp
+  return elapsed < obj.config.captureTimeout
+end
 
-        -- Notification on failure
-        hs.notify
-          .new(function() end, {
-            title = "Screenshot Upload Failed",
-            informativeText = "Check logs for details",
-            withdrawAfter = 5,
-          })
-          :send()
-      end
-    end, { "-c", fmt("%s %s", capperBin, capturedImage) })
+function obj.clearCapture()
+  obj.activeCapture = {
+    image = nil,
+    imagePath = nil,
+    imageName = nil,
+    imageUrl = nil,
+    ocrText = nil,
+    timestamp = 0,
+    uploadStatus = "idle",
+  }
+end
 
-    task:start()
+function obj.setCapture(image, imagePath, imageName)
+  obj.activeCapture = {
+    image = image,
+    imagePath = imagePath,
+    imageName = imageName,
+    imageUrl = nil, -- Set after upload completes
+    ocrText = nil, -- Lazy loaded on demand
+    timestamp = os.time(),
+    uploadStatus = "uploading",
+  }
+end
+
+-- ══════════════════════════════════════════════════════════════════════════════
+-- Color Scheme (follows system dark/light mode)
+-- ══════════════════════════════════════════════════════════════════════════════
+
+function obj.getColors()
+  local appearance = hs.host.interfaceStyle()
+  if appearance == "Dark" then
+    return {
+      background = { red = 0.12, green = 0.12, blue = 0.13, alpha = 0.95 },
+      border = { red = 0.30, green = 0.30, blue = 0.31, alpha = 0.85 },
+      title = { red = 0.92, green = 0.92, blue = 0.92, alpha = 1.0 },
+      subtitle = { red = 0.70, green = 0.70, blue = 0.70, alpha = 1.0 },
+      keybind = { red = 0.5, green = 0.7, blue = 1.0, alpha = 1.0 }, -- Blue accent
+      keybindActive = { red = 0.3, green = 0.9, blue = 0.5, alpha = 1.0 }, -- Green when modal active
+      success = { red = 0.4, green = 0.8, blue = 0.4, alpha = 1.0 }, -- Green
+      uploading = { red = 1.0, green = 0.7, blue = 0.2, alpha = 1.0 }, -- Orange
+      error = { red = 1.0, green = 0.4, blue = 0.4, alpha = 1.0 }, -- Red
+      modalHighlight = { red = 0.2, green = 0.25, blue = 0.3, alpha = 1.0 }, -- Subtle highlight
+    }
   else
-    U.log.e(fmt("[%s] captureImage: failed to save image for uploading", obj.name, capturedImage))
+    return {
+      background = { red = 0.98, green = 0.98, blue = 0.98, alpha = 0.95 },
+      border = { red = 0.85, green = 0.85, blue = 0.85, alpha = 0.6 },
+      title = { red = 0.1, green = 0.1, blue = 0.1, alpha = 1.0 },
+      subtitle = { red = 0.4, green = 0.4, blue = 0.4, alpha = 1.0 },
+      keybind = { red = 0.2, green = 0.4, blue = 0.8, alpha = 1.0 },
+      keybindActive = { red = 0.1, green = 0.6, blue = 0.3, alpha = 1.0 },
+      success = { red = 0.2, green = 0.6, blue = 0.2, alpha = 1.0 },
+      uploading = { red = 0.8, green = 0.5, blue = 0.0, alpha = 1.0 },
+      error = { red = 0.8, green = 0.2, blue = 0.2, alpha = 1.0 },
+      modalHighlight = { red = 0.92, green = 0.94, blue = 0.96, alpha = 1.0 },
+    }
   end
 end
 
-function obj.sendToImgur(image, open_image_url)
-  image = image or hs.pasteboard.readImage()
+-- ══════════════════════════════════════════════════════════════════════════════
+-- Cheatsheet Canvas
+-- ══════════════════════════════════════════════════════════════════════════════
 
-  if not image then
-    U.log.w(fmt("[%s] sendToImgur: no image on clipboard", obj.name))
-    return
+function obj.showCheatsheet(isModalMode)
+  -- Dismiss any existing cheatsheet first
+  obj.hideCheatsheet()
+
+  local colors = obj.getColors()
+  local screen = hs.screen.mainScreen()
+  local screenFrame = screen:frame()
+  local screenName = screen:name()
+
+  -- Load display config from global config
+  local config = req("config")
+  local isExternalDisplay = screenName == config.displays.external
+
+  -- Portrait layout: thumbnail on top, status, then shortcuts
+  local width = isExternalDisplay and 320 or 240
+  local margin = math.floor(width * 0.05) -- 5% margin
+  local cornerRadius = math.floor(width * 0.04)
+
+  -- Thumbnail dimensions (wide rectangle, not square)
+  local thumbWidth = width - (margin * 2)
+  local thumbHeight = math.floor(thumbWidth * 0.6) -- 16:10ish aspect
+
+  -- Text sizes
+  local textSize = isExternalDisplay and 13 or 11
+  local smallTextSize = isExternalDisplay and 11 or 9
+
+  -- Calculate heights for each section
+  local thumbSectionHeight = thumbHeight + margin
+  local statusHeight = 24
+  local keyRowHeight = isExternalDisplay and 22 or 18
+
+  -- Keybindings
+  local keybindings
+  if isModalMode then
+    keybindings = {
+      { key = "v", desc = "Paste URL (default)" },
+      { key = "m", desc = "Markdown" },
+      { key = "h", desc = "HTML tag" },
+      { key = "p", desc = "OCR text" },
+      { key = "e", desc = "Edit in Preview" },
+    }
+  else
+    keybindings = {
+      { key = "HYPER+⇧V", desc = "Enter paste mode" },
+      { key = "⌘V", desc = "Paste image directly" },
+      { key = "Esc", desc = "Dismiss" },
+    }
   end
 
-  -- clear previous image url
-  hs.pasteboard.clearContents("imageUrl")
+  local keysHeight = #keybindings * keyRowHeight
 
-  image:saveToFile(obj.tempImage)
-  local b64 = hs.execute("base64 -i " .. obj.tempImage)
+  -- Footer (only in modal mode)
+  local footerHeight = isModalMode and 20 or 0
 
-  local client_id, success, type, rc = hs.execute("bash -ci 'echo $IMGUR_CLIENT_ID'")
-  U.log.d("client_id: %s/%s/%s/%s", client_id:gsub("\n", ""), success, type, rc)
+  -- Total height
+  local height = margin + thumbSectionHeight + statusHeight + keysHeight + footerHeight + margin
 
-  if b64 ~= nil then
-    b64 = hs.http.encodeForQuery(string.gsub(b64, "\n", ""))
+  -- Position: bottom-center of screen
+  local x = screenFrame.x + (screenFrame.w - width) / 2
+  local y = screenFrame.y + screenFrame.h - height - 40
 
-    local req_url = "https://api.imgur.com/3/upload.json"
-    local req_headers = { Authorization = fmt("Client-ID %s", client_id:gsub("\n", "")) }
-    local req_payload = "type='base64'&image=" .. b64
+  local canvas = hs.canvas.new({ x = x, y = y, w = width, h = height })
 
-    U.log.d("request: %s/%s", req_url, I(req_headers))
+  -- Background
+  canvas:appendElements({
+    type = "rectangle",
+    action = "fill",
+    fillColor = colors.background,
+    roundedRectRadii = { xRadius = cornerRadius, yRadius = cornerRadius },
+    frame = { x = 0, y = 0, w = width, h = height },
+  })
 
-    hs.http.asyncPost(req_url, req_payload, req_headers, function(status, body, headers)
-      if status == 200 then
-        local response = hs.json.decode(body)
-        local imageUrl = response.data.link
-        hs.pasteboard.setContents(imageUrl, "imageUrl")
-        hs.pasteboard.setContents(image, "image")
+  -- Border
+  local borderColor = isModalMode
+      and { red = 0.3, green = 0.7, blue = 0.4, alpha = 0.9 }
+    or colors.border
+  canvas:appendElements({
+    type = "rectangle",
+    action = "stroke",
+    strokeColor = borderColor,
+    strokeWidth = isModalMode and 2 or 1.5,
+    roundedRectRadii = { xRadius = cornerRadius, yRadius = cornerRadius },
+    frame = { x = 0, y = 0, w = width, h = height },
+  })
 
-        if open_image_url then hs.urlevent.openURLWithBundle(imageUrl, hs.urlevent.getDefaultHandler("https")) end
-        hs.execute("rm " .. obj.tempImage)
-      else
-        U.log.e(fmt("[%s] sendToImgur: %s/%s/%s/%s", obj.name, status, body, I(headers)))
+  -- Track vertical position
+  local yPos = margin
+
+  -- Thumbnail at top
+  if obj.activeCapture.image then
+    local sourceImage = obj.activeCapture.image
+    local sourceSize = sourceImage:size()
+    local scaleFactor = obj.config.thumbnailScaleFactor
+    local scaledWidth = math.floor(sourceSize.w / scaleFactor)
+    local scaledHeight = math.floor(sourceSize.h / scaleFactor)
+    local scaledImage = sourceImage:copy():size({ w = scaledWidth, h = scaledHeight }, true)
+
+    canvas:appendElements({
+      type = "image",
+      image = scaledImage,
+      frame = { x = margin, y = yPos, w = thumbWidth, h = thumbHeight },
+      imageScaling = "scaleProportionally",
+      imageAlignment = "center",
+    })
+  else
+    -- Placeholder rectangle when no image
+    canvas:appendElements({
+      type = "rectangle",
+      action = "fill",
+      fillColor = { red = 0.2, green = 0.2, blue = 0.2, alpha = 0.3 },
+      roundedRectRadii = { xRadius = 6, yRadius = 6 },
+      frame = { x = margin, y = yPos, w = thumbWidth, h = thumbHeight },
+    })
+  end
+  yPos = yPos + thumbSectionHeight
+
+  -- Upload status
+  local statusText, statusColor
+  if obj.activeCapture.uploadStatus == "uploading" then
+    statusText = "⏳ Uploading..."
+    statusColor = colors.uploading
+  elseif obj.activeCapture.uploadStatus == "complete" then
+    statusText = "✓ Uploaded"
+    statusColor = colors.success
+  elseif obj.activeCapture.uploadStatus == "failed" then
+    statusText = "✗ Upload failed"
+    statusColor = colors.error
+  else
+    statusText = "Ready"
+    statusColor = colors.subtitle
+  end
+
+  canvas:appendElements({
+    type = "text",
+    text = statusText,
+    textColor = statusColor,
+    textSize = textSize,
+    textFont = ".AppleSystemUIFont",
+    frame = { x = margin, y = yPos, w = thumbWidth, h = statusHeight },
+    textAlignment = "center",
+  })
+  yPos = yPos + statusHeight
+
+  -- Keybindings
+  local keyColWidth = isModalMode and 24 or (isExternalDisplay and 85 or 70)
+  local keyColor = isModalMode and colors.keybindActive or colors.keybind
+
+  for i, kb in ipairs(keybindings) do
+    -- Key
+    canvas:appendElements({
+      type = "text",
+      text = kb.key,
+      textColor = keyColor,
+      textSize = smallTextSize,
+      textFont = "Menlo",
+      frame = { x = margin, y = yPos, w = keyColWidth, h = keyRowHeight },
+    })
+    -- Description
+    canvas:appendElements({
+      type = "text",
+      text = kb.desc,
+      textColor = colors.subtitle,
+      textSize = smallTextSize,
+      textFont = ".AppleSystemUIFont",
+      frame = { x = margin + keyColWidth + 8, y = yPos, w = thumbWidth - keyColWidth - 8, h = keyRowHeight },
+    })
+    yPos = yPos + keyRowHeight
+  end
+
+  -- Footer hint (modal only)
+  if isModalMode then
+    canvas:appendElements({
+      type = "text",
+      text = "Auto-pasting URL in 5s...",
+      textColor = { red = 0.5, green = 0.5, blue = 0.5, alpha = 0.7 },
+      textSize = smallTextSize,
+      textFont = ".AppleSystemUIFont",
+      frame = { x = margin, y = yPos, w = thumbWidth, h = footerHeight },
+      textAlignment = "center",
+    })
+  end
+
+  canvas:level("overlay")
+  canvas:show()
+
+  obj.cheatsheet = canvas
+
+  -- Enable escape hotkey to dismiss
+  if obj.escapeHotkey then
+    obj.escapeHotkey:enable()
+  end
+
+  -- Auto-dismiss timer (only for passive mode)
+  if not isModalMode then
+    obj.cheatsheetTimer = hs.timer.doAfter(obj.config.cheatsheetDuration, function()
+      if not obj.isModalActive then
+        obj.hideCheatsheet()
       end
     end)
   end
 end
 
-function obj.saveOcrText(image)
-  image = image or hs.pasteboard.readImage()
-
-  if not image then
-    U.log.w(fmt("[%s] saveOcrText: no image on clipboard", obj.name))
-    return
+function obj.hideCheatsheet()
+  if obj.cheatsheet then
+    obj.cheatsheet:delete(0.2) -- Quick fade out
+    obj.cheatsheet = nil
   end
+  if obj.cheatsheetTimer then
+    obj.cheatsheetTimer:stop()
+    obj.cheatsheetTimer = nil
+  end
+  -- Disable escape hotkey when cheatsheet is hidden
+  if obj.escapeHotkey then
+    obj.escapeHotkey:disable()
+  end
+end
 
-  local imagePath = obj.tempOcrImage
-  U.log.d(I(image), true)
-  local outputPath = "/tmp/ocr_output.txt"
-  U.log.d(I(imagePath), true)
-  U.log.d(I(outputPath), true)
+function obj.updateCheatsheetStatus(status)
+  obj.activeCapture.uploadStatus = status
 
-  if image:saveToFile(imagePath) then
-    U.log.d(I(image), true)
+  -- Refresh cheatsheet if visible
+  if obj.cheatsheet then
+    obj.showCheatsheet(obj.isModalActive)
+  end
+end
 
-    local output, success, type, rc = hs.execute(fmt("bash -ic 'tesseract %s %s'", imagePath, outputPath))
+-- ══════════════════════════════════════════════════════════════════════════════
+-- Upload to DigitalOcean Spaces
+-- ══════════════════════════════════════════════════════════════════════════════
 
-    if success then
-      -- Read in OCR result
-      local file = io.open(fmt("%s.txt", outputPath), "r")
-      local content = file:read("*all")
-      U.log.d("ocrText: %s", content)
-      file:close()
+function obj.uploadToSpaces(imagePath, imageName)
+  local capperBin = fmt("%s/.dotfiles/bin/capper", os.getenv("HOME"))
 
-      -- Store OCR content in the pasteboard
-      hs.pasteboard.setContents(content, "ocrText")
+  obj.updateCheatsheetStatus("uploading")
 
-      -- clean up
-      hs.execute(fmt("rm %s %s.txt", imagePath, outputPath))
+  local task = hs.task.new("/bin/zsh", function(exitCode, stdOut, stdErr)
+    if exitCode == 0 then
+      -- Extract URL from last line of output
+      local lines = {}
+      for line in stdOut:gmatch("[^\r\n]+") do
+        table.insert(lines, line)
+      end
+      local url = lines[#lines]
+
+      -- Update active capture state
+      obj.activeCapture.imageUrl = url
+      obj.updateCheatsheetStatus("complete")
+
+      -- Also update named pasteboards for compatibility
+      hs.pasteboard.setContents(imageName, "imageName")
+      hs.pasteboard.setContents(url, "imageUrl")
+
+      U.log.i(fmt("[%s] uploaded: %s", obj.name, url))
     else
-      U.log.e(fmt("[%s] saveOcrText: %s/%s/%s/%s", obj.name, output, success, type, rc))
+      obj.updateCheatsheetStatus("failed")
+      U.log.e(fmt("[%s] upload failed: exit=%s stderr=%s", obj.name, exitCode, stdErr))
     end
-  else
-    U.log.w(fmt("[%s] saveOcrText: unable to save image to path (%s)", obj.name, imagePath))
-  end
+  end, { "-c", fmt("%s %s", capperBin, imagePath) })
+
+  task:start()
 end
 
---  REF: https://github.com/danielo515/dotfiles/blob/master/chezmoi/dot_hammerspoon/keybinds.lua#L44-L61
-function obj.editClipboardImage(image)
-  -- Check if an image is in the clipboard
-  image = image or hs.pasteboard.readImage()
+-- ══════════════════════════════════════════════════════════════════════════════
+-- OCR (Vision with tesseract fallback)
+-- ══════════════════════════════════════════════════════════════════════════════
 
-  if not image then
-    U.log.w(fmt("[%s] editClipboardImage: no image on clipboard", obj.name))
+function obj.extractOcrText(callback)
+  -- Return cached OCR if available
+  if obj.activeCapture.ocrText then
+    callback(obj.activeCapture.ocrText)
     return
   end
 
-  -- Save the image to a temporary file
-  local tmpfile = os.tmpname() .. ".png"
-  if image ~= nil and tmpfile ~= nil then
-    image:saveToFile(tmpfile)
-
-    -- Open the image in Preview and start annotation
-    hs.execute("open -a Preview " .. tmpfile)
-
-    -- hs.timer.doAfter(1, function() hs.application.find("Preview"):selectMenuItem({ "Tools", "Annotate", "Arrow" }) end)
-    U.log.n(fmt("[%s] editClipboardImage: %s", obj.name, obj.clipboardData))
+  if not obj.activeCapture.imagePath then
+    U.log.w(fmt("[%s] OCR: no image path available", obj.name))
+    callback(nil)
+    return
   end
+
+  local imagePath = obj.activeCapture.imagePath
+  local visionOcrBin = fmt("%s/.dotfiles/bin/vision-ocr", os.getenv("HOME"))
+
+  -- Try Vision first
+  local task = hs.task.new(visionOcrBin, function(exitCode, stdOut, stdErr)
+    if exitCode == 0 and stdOut and #stdOut > 0 then
+      obj.activeCapture.ocrText = stdOut:gsub("^%s*(.-)%s*$", "%1") -- Trim
+      callback(obj.activeCapture.ocrText)
+    else
+      -- Fallback to tesseract
+      U.log.d(fmt("[%s] Vision OCR failed, trying tesseract", obj.name))
+      obj.extractOcrWithTesseract(imagePath, callback)
+    end
+  end, { imagePath })
+
+  task:start()
 end
+
+function obj.extractOcrWithTesseract(imagePath, callback)
+  local outputPath = "/tmp/clipper_ocr"
+
+  local task = hs.task.new("/bin/zsh", function(exitCode, stdOut, stdErr)
+    if exitCode == 0 then
+      local file = io.open(outputPath .. ".txt", "r")
+      if file then
+        local content = file:read("*all")
+        file:close()
+        obj.activeCapture.ocrText = content:gsub("^%s*(.-)%s*$", "%1") -- Trim
+
+        -- Cleanup
+        os.remove(outputPath .. ".txt")
+
+        callback(obj.activeCapture.ocrText)
+      else
+        callback(nil)
+      end
+    else
+      U.log.e(fmt("[%s] tesseract failed: %s", obj.name, stdErr))
+      callback(nil)
+    end
+  end, { "-c", fmt("tesseract '%s' '%s' --psm 6", imagePath, outputPath) })
+
+  task:start()
+end
+
+-- ══════════════════════════════════════════════════════════════════════════════
+-- Paste Actions
+-- ══════════════════════════════════════════════════════════════════════════════
+
+function obj.pasteRawUrl()
+  if not obj.activeCapture.imageUrl then
+    U.log.w(fmt("[%s] URL not yet available (still uploading?)", obj.name))
+    hs.alert.show("Still uploading...", 1)
+    return false
+  end
+
+  hs.eventtap.keyStrokes(obj.activeCapture.imageUrl)
+  U.log.n(fmt("[%s] pasted URL: %s", obj.name, obj.activeCapture.imageUrl))
+  return true
+end
+
+function obj.pasteMarkdown()
+  if not obj.activeCapture.imageUrl then
+    U.log.w(fmt("[%s] URL not yet available (still uploading?)", obj.name))
+    hs.alert.show("Still uploading...", 1)
+    return false
+  end
+
+  local md = fmt("![screenshot](%s)", obj.activeCapture.imageUrl)
+  hs.eventtap.keyStrokes(md)
+  U.log.n(fmt("[%s] pasted markdown: %s", obj.name, md))
+  return true
+end
+
+function obj.pasteHtmlTag()
+  if not obj.activeCapture.imageUrl then
+    U.log.w(fmt("[%s] URL not yet available (still uploading?)", obj.name))
+    hs.alert.show("Still uploading...", 1)
+    return false
+  end
+
+  local html = fmt([[<img src="%s" width="450" />]], obj.activeCapture.imageUrl)
+  hs.eventtap.keyStrokes(html)
+  U.log.n(fmt("[%s] pasted HTML: %s", obj.name, html))
+  return true
+end
+
+-- Paste OCR text via clipboard (preserves formatting better)
+-- Temporarily swaps clipboard, pastes, then restores the original image data
+function obj.pasteOcrTextViaClipboard()
+  -- Show loading indicator
+  hs.alert.show("Extracting text...", 1)
+
+  -- Save the raw image data from clipboard (not hs.image object)
+  -- This preserves the exact format that apps like Claude expect
+  local savedImageData = hs.pasteboard.readDataForUTI("public.png")
+  if not savedImageData then
+    -- Fallback: try TIFF format
+    savedImageData = hs.pasteboard.readDataForUTI("public.tiff")
+  end
+  local savedUTI = savedImageData and "public.png" or nil
+
+  obj.extractOcrText(function(text)
+    if text and #text > 0 then
+      -- Put OCR text on clipboard
+      hs.pasteboard.setContents(text)
+
+      -- Small delay to ensure clipboard is set, then paste
+      hs.timer.doAfter(0.05, function()
+        hs.eventtap.keyStroke({ "cmd" }, "v")
+
+        -- Restore the original image data to clipboard after paste completes
+        hs.timer.doAfter(0.15, function()
+          if savedImageData and savedUTI then
+            hs.pasteboard.clearContents()
+            hs.pasteboard.writeDataForUTI(savedUTI, savedImageData)
+            U.log.d(fmt("[%s] restored image data to clipboard", obj.name))
+          elseif obj.activeCapture.image then
+            -- Fallback: restore from hs.image object
+            hs.pasteboard.writeObjects({ obj.activeCapture.image })
+            U.log.d(fmt("[%s] restored image object to clipboard (fallback)", obj.name))
+          end
+        end)
+      end)
+
+      U.log.n(fmt("[%s] pasted OCR text (clipboard): %d chars", obj.name, #text))
+    else
+      U.log.w(fmt("[%s] no text found in image", obj.name))
+      hs.alert.show("No text found", 2)
+    end
+  end)
+  return true
+end
+
+function obj.editInPreview()
+  if obj.activeCapture.imagePath then
+    hs.execute(fmt("open -a Preview '%s'", obj.activeCapture.imagePath))
+    U.log.n(fmt("[%s] opened in Preview: %s", obj.name, obj.activeCapture.imagePath))
+  elseif obj.activeCapture.image then
+    -- Save to temp file and open
+    local tmpfile = os.tmpname() .. ".png"
+    obj.activeCapture.image:saveToFile(tmpfile)
+    hs.execute(fmt("open -a Preview '%s'", tmpfile))
+    U.log.n(fmt("[%s] opened temp file in Preview", obj.name))
+  end
+  return true
+end
+
+-- ══════════════════════════════════════════════════════════════════════════════
+-- Modal Mode
+-- ══════════════════════════════════════════════════════════════════════════════
+
+function obj.enterModal()
+  if not obj.hasActiveCapture() then
+    U.log.w(fmt("[%s] no active capture for modal", obj.name))
+    hs.alert.show("No recent screenshot", 1)
+    return
+  end
+
+  obj.isModalActive = true
+
+  -- Show modal cheatsheet
+  obj.showCheatsheet(true)
+
+  -- Enter the modal hotkey mode
+  obj.modal:enter()
+
+  -- Start 1s timeout for auto-paste URL
+  obj.modalTimeout = hs.timer.doAfter(obj.config.modalTimeout, function()
+    if obj.isModalActive then
+      obj.pasteRawUrl()
+      obj.exitModal()
+    end
+  end)
+
+  U.log.d(fmt("[%s] entered modal mode", obj.name))
+end
+
+function obj.exitModal()
+  obj.isModalActive = false
+
+  -- Cancel timeout
+  if obj.modalTimeout then
+    obj.modalTimeout:stop()
+    obj.modalTimeout = nil
+  end
+
+  -- Exit modal hotkey mode
+  obj.modal:exit()
+
+  -- Hide cheatsheet
+  obj.hideCheatsheet()
+
+  U.log.d(fmt("[%s] exited modal mode", obj.name))
+end
+
+function obj.modalAction(action)
+  -- Cancel the auto-paste timeout
+  if obj.modalTimeout then
+    obj.modalTimeout:stop()
+    obj.modalTimeout = nil
+  end
+
+  -- Perform the action
+  local success = action()
+
+  -- Exit modal
+  obj.exitModal()
+
+  return success
+end
+
+-- ══════════════════════════════════════════════════════════════════════════════
+-- Capture Handler (called by pasteboard watcher)
+-- ══════════════════════════════════════════════════════════════════════════════
+
+function obj.handleNewCapture(image)
+  if not image then return end
+
+  -- Generate filename
+  local date = hs.execute([[date +"%Y-%m-%dT%H:%M:%S%z"]], true)
+  local imageName = fmt("cap_%s.png", date:gsub("\n", ""))
+  local imagePath = fmt("%s/%s", obj.capsPath, imageName)
+
+  -- Save to disk
+  local saved = image:saveToFile(imagePath)
+  if not saved then
+    U.log.e(fmt("[%s] failed to save image to %s", obj.name, imagePath))
+    return
+  end
+
+  -- Update state
+  obj.setCapture(image, imagePath, imageName)
+
+  -- Keep image on clipboard for immediate paste
+  hs.pasteboard.setContents(image, "image")
+
+  -- Start async upload
+  obj.uploadToSpaces(imagePath, imageName)
+
+  -- Show passive cheatsheet (not in modal mode)
+  obj.showCheatsheet(false)
+
+  U.log.i(fmt("[%s] captured: %s", obj.name, imageName))
+end
+
+-- ══════════════════════════════════════════════════════════════════════════════
+-- Setup Bindings
+-- ══════════════════════════════════════════════════════════════════════════════
+
+function obj.setupBindings()
+  -- Create modal for single-key paste actions
+  obj.modal = hs.hotkey.modal.new()
+
+  -- Modal bindings (active only when modal is entered)
+  obj.modal:bind({}, "v", function()
+    obj.modalAction(obj.pasteRawUrl)
+  end)
+
+  obj.modal:bind({}, "m", function()
+    obj.modalAction(obj.pasteMarkdown)
+  end)
+
+  obj.modal:bind({}, "h", function()
+    obj.modalAction(obj.pasteHtmlTag)
+  end)
+
+  obj.modal:bind({}, "p", function()
+    obj.modalAction(obj.pasteOcrTextViaClipboard)
+  end)
+
+  obj.modal:bind({}, "e", function()
+    obj.modalAction(obj.editInPreview)
+  end)
+
+  obj.modal:bind({}, "escape", function()
+    obj.exitModal()
+  end)
+
+  -- Entry binding: HYPER+⇧V
+  local hyper = req("hyper", { id = "clipper" })
+  hyper:start():bind({ "shift" }, "v", function()
+    obj.enterModal()
+  end)
+
+  -- Escape to dismiss cheatsheet (only active when cheatsheet is visible)
+  obj.escapeHotkey = hs.hotkey.new({}, "escape", function()
+    if obj.isModalActive then
+      obj.exitModal()
+    elseif obj.cheatsheet then
+      obj.hideCheatsheet()
+    end
+  end)
+  -- Starts disabled, enabled when cheatsheet shows
+
+  U.log.d(fmt("[%s] bindings set up", obj.name))
+end
+
+-- ══════════════════════════════════════════════════════════════════════════════
+-- Initialization
+-- ══════════════════════════════════════════════════════════════════════════════
 
 function obj:init(opts)
   opts = opts or {}
 
+  -- Set up bindings and modal
+  obj.setupBindings()
+
+  -- Set up pasteboard watcher
   obj.clipWatcher = hs.pasteboard.watcher.new(function(pb)
-    local browser = hs.application.get(BROWSER)
-
-    -- U.log.d(pb, true)
-
-    if pb ~= nil and pb ~= "" then
-      obj.clipboardData = pb
-    else
-      obj.clipboardData = hs.pasteboard.readImage()
-      obj.captureImage(obj.clipboardData, false)
-
-      local pasteImageUrl = function()
-        local imageUrl = hs.pasteboard.getContents("imageUrl")
-        hs.eventtap.keyStrokes(imageUrl)
-        U.log.n(fmt("[%s] imageUrl: %s", obj.name, imageUrl))
-      end
-
-      local pasteOcrText = function()
-        U.log.d(I(obj), true)
-        U.log.d(obj.clipboardData, true)
-        obj.saveOcrText(obj.clipboardData)
-        local ocrText = hs.pasteboard.getContents("ocrText")
-        if ocrText == nil or ocrText == "" then
-          U.log.w(fmt("[%s] ocrText: no ocr text to paste", obj.name))
-        else
-          hs.eventtap.keyStrokes(ocrText)
-          U.log.n(fmt("[%s] ocrText: %s", obj.name, ocrText))
-        end
-      end
-
-      hs.hotkey.bind({ "cmd", "shift" }, "v", pasteImageUrl)
-      hs.hotkey.bind({ "cmd", "ctrl" }, "v", pasteImageUrl)
-
-      -----------------------------------------------------
-      -- FIXME: these are presently broken; not sure why...
-      hs.hotkey.bind({ "cmd", "shift" }, "p", pasteOcrText)
-      hs.hotkey.bind({ "cmd", "shift", "ctrl" }, "p", pasteOcrText)
-      -----------------------------------------------------
-
-      hs.hotkey.bind({ "cmd", "shift" }, "e", function()
-        obj.editClipboardImage(obj.clipboardData)
-        -- local ocr_text = hs.pasteboard.getContents("ocrText")
-        -- hs.eventtap.keyStrokes(ocr_text)
-        -- U.log.d("ocrText: %s", ocr_text)
-      end)
-
-      if browser and browser == hs.application.frontmostApplication() then
-        hs.hotkey.bind({ "ctrl", "shift" }, "v", function()
-          local imageUrl = hs.pasteboard.getContents("imageUrl")
-          -- local imageName = hs.pasteboard.getContents("imageName")
-
-          local mdImgTag = fmt([[<img src="%s" width="450" />]], imageUrl)
-          hs.eventtap.keyStrokes(mdImgTag)
-          U.log.n(fmt("[%s] mdImgTag: %s", obj.name, mdImgTag))
-        end)
+    -- pb is nil when clipboard contains image (not text)
+    if pb == nil or pb == "" then
+      local image = hs.pasteboard.readImage()
+      if image then
+        obj.handleNewCapture(image)
       end
     end
   end)
 
   obj.clipWatcher:start()
 
-  U.log.i("initialized")
-  -- U.log.i(fmt("[INIT] bindings.%s", self.name))
+  U.log.i(fmt("[%s] initialized", obj.name))
 
   return self
 end

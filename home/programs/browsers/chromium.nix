@@ -86,6 +86,10 @@
     "--disable-breakpad" # Disable crash reporter
     "--disable-wake-on-wifi"
     "--no-pings" # Disable hyperlink auditing pings
+
+    # Disable auto-update checks - we manage updates via nix
+    # REF: https://github.com/NixOS/nixpkgs/issues/289020
+    "--disable-features=OutdatedBuildDetector"
   ];
 in {
   # REFS:
@@ -104,6 +108,11 @@ in {
     bundleId = "net.imput.helium"; # macOS bundle identifier for Application Support path
     dictionaries = [pkgs.hunspellDictsChromium.en_US];
     inherit extensions;
+
+    # Use custom activation for Helium - the heliumBrowserInstallWidevine script below
+    # copies Helium to /Applications for Widevine installation, so we don't want
+    # home-manager to also auto-link it to ~/Applications/Home Manager Apps/
+    customActivation = true;
 
     # REFS: Command-line arguments for Helium:
     # https://peter.sh/experiments/chromium-command-line-switches/

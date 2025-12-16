@@ -1,16 +1,40 @@
-# mkApp/native.nix - Native PKG installer method
+# mkApp/native.nix - Native PKG installer method (USE SPARINGLY!)
 #
-# For apps that MUST use the official PKG installer due to:
-#   - System extension requirements (DriverKit, kernel extensions)
-#   - Code signature validation against install paths
-#   - PKG postinstall scripts that handle privileged operations
+# ══════════════════════════════════════════════════════════════════════════════
+# ⚠️  WARNING: VERIFY YOU ACTUALLY NEED THIS METHOD FIRST!
+# ══════════════════════════════════════════════════════════════════════════════
+#
+# Most apps do NOT need native installation. Before using this method:
+#
+# 1. Download the PKG and check its contents:
+#      nix-prefetch-url --name safe-name.pkg "https://example.com/Install%20App.pkg"
+#      pkgutil --payload-files /nix/store/...-safe-name.pkg | head -30
+#
+# 2. If it ONLY contains ./Applications/SomeApp.app/* → USE EXTRACT METHOD INSTEAD!
+#      mkApp { pname = "app"; artifactType = "pkg"; src = { ... }; }
+#
+# 3. Only use native if PKG contains:
+#      - ./Library/SystemExtensions/* (DriverKit)
+#      - ./Library/LaunchDaemons/* or ./Library/LaunchAgents/*
+#      - ./Library/PrivilegedHelperTools/*
+#      - Postinstall scripts that run systemextensionsctl, launchctl, etc.
+#
+# ══════════════════════════════════════════════════════════════════════════════
+# WHEN NATIVE IS TRULY REQUIRED
+# ══════════════════════════════════════════════════════════════════════════════
+#
+# Apps that MUST use native PKG installer:
+#   - Karabiner-Elements: DriverKit virtual HID device extension
+#   - Little Snitch: Kernel/network extensions
+#   - Apps with privileged helper tools requiring SMJobBless
 #
 # This method:
 #   1. Stores the source DMG/PKG in the nix store (declarative, reproducible)
 #   2. Generates install/uninstall scripts
 #   3. Provides passthru attributes for activation module to discover and run
 #
-# The actual installation happens during nix-darwin activation, NOT during derivation build.
+# The actual installation happens during nix-darwin activation with sudo,
+# NOT during derivation build. This is why it requires system-level config.
 {
   pkgs,
   lib ? pkgs.lib,

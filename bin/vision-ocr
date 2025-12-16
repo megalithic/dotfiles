@@ -1,0 +1,87 @@
+#!/usr/bin/env swift
+
+// vision-ocr: Extract text from images using macOS Vision framework
+// Usage: vision-ocr <image_path> [--json]
+// Output: Recognized text to stdout
+
+import Foundation
+import Vision
+import AppKit
+
+let args = CommandLine.arguments
+
+guard args.count >= 2 else {
+    fputs("Usage: vision-ocr <image_path> [--json]\n", stderr)
+    exit(1)
+}
+
+let imagePath = args[1]
+let jsonOutput = args.contains("--json")
+
+// Load image
+guard let image = NSImage(contentsOfFile: imagePath) else {
+    fputs("Error: Could not load image at \(imagePath)\n", stderr)
+    exit(1)
+}
+
+guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
+    fputs("Error: Could not convert image to CGImage\n", stderr)
+    exit(1)
+}
+
+// Create Vision request handler
+let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+
+// Create text recognition request
+let request = VNRecognizeTextRequest()
+request.recognitionLevel = .accurate
+request.usesLanguageCorrection = true
+request.recognitionLanguages = ["en-US", "en-GB"]
+
+// Perform synchronously
+do {
+    try handler.perform([request])
+} catch {
+    fputs("Error: \(error.localizedDescription)\n", stderr)
+    exit(1)
+}
+
+// Get results
+guard let observations = request.results else {
+    exit(0) // No text found is not an error
+}
+
+if observations.isEmpty {
+    exit(0)
+}
+
+if jsonOutput {
+    var results: [[String: Any]] = []
+
+    for observation in observations {
+        guard let candidate = observation.topCandidates(1).first else { continue }
+
+        let boundingBox = observation.boundingBox
+        results.append([
+            "text": candidate.string,
+            "confidence": candidate.confidence,
+            "boundingBox": [
+                "x": boundingBox.origin.x,
+                "y": boundingBox.origin.y,
+                "width": boundingBox.width,
+                "height": boundingBox.height
+            ]
+        ])
+    }
+
+    if let jsonData = try? JSONSerialization.data(withJSONObject: results, options: .prettyPrinted),
+       let jsonString = String(data: jsonData, encoding: .utf8) {
+        print(jsonString)
+    }
+} else {
+    let text = observations.compactMap { observation in
+        observation.topCandidates(1).first?.string
+    }.joined(separator: "\n")
+
+    print(text)
+}

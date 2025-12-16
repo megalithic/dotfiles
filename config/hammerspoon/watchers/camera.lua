@@ -51,7 +51,10 @@ local function detectCameraApp()
             local window = app:focusedWindow() or app:mainWindow()
             local isMeeting, meetingMethod = U.app.isMeetingWindow(app, window)
             U.log.df("VDC candidate: %s (meeting: %s, %s)", bundleID, tostring(isMeeting), meetingMethod or "n/a")
-            table.insert(candidates, { bundleID = bundleID, app = app, isMeeting = isMeeting, method = "vdc", reason = meetingMethod })
+            table.insert(
+              candidates,
+              { bundleID = bundleID, app = app, isMeeting = isMeeting, method = "vdc", reason = meetingMethod }
+            )
           end
         else
           -- Fallback: check VIDEO_BUNDLES mapping
@@ -60,8 +63,19 @@ local function detectCameraApp()
             local mappedApp = hs.application.get(bundleID)
             local window = mappedApp and (mappedApp:focusedWindow() or mappedApp:mainWindow())
             local isMeeting, meetingMethod = U.app.isMeetingWindow(mappedApp, window)
-            U.log.df("VDC mapped candidate: %s (meeting: %s, %s)", bundleID, tostring(isMeeting), meetingMethod or "n/a")
-            table.insert(candidates, { bundleID = bundleID, app = mappedApp, isMeeting = isMeeting, method = "vdc_mapped", reason = meetingMethod })
+            U.log.df(
+              "VDC mapped candidate: %s (meeting: %s, %s)",
+              bundleID,
+              tostring(isMeeting),
+              meetingMethod or "n/a"
+            )
+            table.insert(candidates, {
+              bundleID = bundleID,
+              app = mappedApp,
+              isMeeting = isMeeting,
+              method = "vdc_mapped",
+              reason = meetingMethod,
+            })
           end
         end
       end
@@ -281,9 +295,7 @@ local function cameraInactive(camera, property)
 
   -- Delay meeting end to handle lobby→room transitions
   -- If camera reactivates within MEETING_END_DELAY, we won't stop meeting mode
-  if pendingMeetingEnd then
-    pendingMeetingEnd:stop()
-  end
+  if pendingMeetingEnd then pendingMeetingEnd:stop() end
 
   U.log.df("Scheduling meeting end in %.1fs (lobby debounce)", MEETING_END_DELAY)
   pendingMeetingEnd = hs.timer.doAfter(MEETING_END_DELAY, function()
@@ -292,7 +304,18 @@ local function cameraInactive(camera, property)
       U.log.d("Camera still inactive after delay - stopping meeting mode")
       stopMeetingMode()
     else
-      U.log.d("Camera reactivated during delay - keeping meeting mode")
+      -- Camera is in use - need to ensure meeting mode is started
+      -- This handles the case where camera reactivation was debounced
+      U.log.d("Camera reactivated during delay - ensuring meeting mode is started")
+      local appBundleID, detectionMethod, isMeeting = detectCameraApp()
+      local app = appBundleID and hs.application.get(appBundleID)
+      local appName = app and app:name() or appBundleID or "unknown"
+
+      if isMeeting ~= false then
+        startMeetingMode(appName, "reactivated_during_delay")
+      else
+        U.log.d("Camera active but not a meeting - skipping meeting mode")
+      end
     end
     pendingMeetingEnd = nil
   end)
