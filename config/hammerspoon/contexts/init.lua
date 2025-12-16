@@ -7,17 +7,38 @@ M.__index = M
 M.name = "contexts"
 M.contextModals = {}
 
-M.loggableEvents = {
-  -- hs.uielement.watcher.windowCreated,
-  -- hs.uielement.watcher.elementDestroyed,
-  -- hs.uielement.watcher.titleChanged,
-  -- hs.uielement.watcher.applicationActivated,
-  -- hs.uielement.watcher.applicationDeactivated,
+-- Events that trigger context activation
+M.activationEvents = {
+  hs.application.watcher.activated,
   hs.application.watcher.launched,
-  -- hs.application.watcher.activated,
-  -- hs.application.watcher.deactivated,
+  hs.uielement.watcher.windowCreated,
+  hs.uielement.watcher.titleChanged,
+  hs.uielement.watcher.applicationActivated,
+}
+
+-- Events that trigger context deactivation
+M.deactivationEvents = {
+  hs.application.watcher.terminated,
+  hs.application.watcher.deactivated,
+  hs.uielement.watcher.elementDestroyed,
+  hs.uielement.watcher.titleChanged,
+  hs.uielement.watcher.applicationDeactivated,
+}
+
+M.loggableEvents = {
+  hs.application.watcher.launched,
   hs.application.watcher.terminated,
 }
+
+-- Helper: check if event is activation type
+local function isActivationEvent(event)
+  return enum.contains(M.activationEvents, event)
+end
+
+-- Helper: check if event is deactivation type
+local function isDeactivationEvent(event)
+  return enum.contains(M.deactivationEvents, event)
+end
 
 function M:run(opts)
   local context = opts["context"]
@@ -28,40 +49,45 @@ function M:run(opts)
   local contextId = opts["bundleID"] and bundleID or app:bundleID()
 
   if context == nil or U.tlen(context) == 0 then
-    -- U.log.wf("[WARN] %s: No context found for %s", self.name, app:bundleID())
     return self
   end
 
-  if
-    enum.contains({
-      hs.application.watcher.activated,
-      hs.application.watcher.launched,
-      hs.uielement.watcher.windowCreated,
-      hs.uielement.watcher.titleChanged,
-      hs.uielement.watcher.applicationActivated,
-    }, event)
-  then
-    context:start({
-      event = event,
-      appObj = app,
-      bundleID = app:bundleID(),
-      metadata = metadata,
-    })
-  elseif
-    enum.contains({
-      hs.application.watcher.terminated,
-      hs.application.watcher.deactivated,
-      hs.uielement.watcher.elementDestroyed,
-      hs.uielement.watcher.titleChanged,
-      hs.uielement.watcher.applicationDeactivated,
-    }, event)
-  then
-    context:stop({
-      event = event,
-      appObj = app,
-      bundleID = app:bundleID(),
-      metadata = metadata,
-    })
+  local callOpts = {
+    event = event,
+    appObj = app,
+    bundleID = app:bundleID(),
+    metadata = metadata,
+  }
+
+  if isActivationEvent(event) then
+    -- Centralized modal management with guard
+    if context.modal and not context._modalActive then
+      context._modalActive = true
+      context.modal:enter()
+    end
+
+    -- Call context's custom activation hook if defined
+    if context.onActivate then
+      context:onActivate(callOpts)
+    -- Backward compatibility: call start() if no onActivate
+    elseif context.start then
+      context:start(callOpts)
+    end
+
+  elseif isDeactivationEvent(event) then
+    -- Centralized modal management with guard
+    if context.modal and context._modalActive then
+      context._modalActive = false
+      context.modal:exit()
+    end
+
+    -- Call context's custom deactivation hook if defined
+    if context.onDeactivate then
+      context:onDeactivate(callOpts)
+    -- Backward compatibility: call stop() if no onDeactivate
+    elseif context.stop then
+      context:stop(callOpts)
+    end
   end
 
   if enum.contains(M.loggableEvents, event) then
@@ -83,8 +109,11 @@ function M.preload()
         local basenameAndBundleID = string.sub(file, 1, -5)
         local script = dofile(contextsScriptsPath .. file)
         if basenameAndBundleID ~= "init" then
+          -- Create modal if context has actions defined
           if script.actions ~= nil then
             script.modal = hs.hotkey.modal.new()
+            script._modalActive = false -- Initialize guard flag
+
             for _, value in pairs(script.actions) do
               local hotkey = value.hotkey
               if hotkey then

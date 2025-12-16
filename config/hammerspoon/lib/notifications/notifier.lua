@@ -446,8 +446,10 @@ function M.sendCanvasNotification(title, subtitle, message, duration, opts)
   local shouldRedact = currentFocus == "Do Not Disturb" or currentFocus == "Work"
 
   if shouldRedact then
-    -- Redact message content only (keep title visible)
-    message = "•••••••••••••••••••"
+    -- Redact message content character-by-character (preserve spaces)
+    message = message:gsub(".", function(c)
+      return c == " " and " " or "•"
+    end)
   end
 
   -- Close any existing notification before showing new one

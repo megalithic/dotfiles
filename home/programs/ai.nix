@@ -92,6 +92,26 @@ in {
       ```
 
       Options: `-t/--title`, `-m/--message`, `-u/--urgency` (normal|high|critical), `-p/--phone`, `-P/--pushover`, `-q/--question`
+
+      ## Nix is the Source of Truth
+
+      **CRITICAL**: This Mac is configured almost entirely through Nix (nix-darwin + home-manager). When investigating or modifying ANY system behavior:
+
+      1. **Check nix configs FIRST** before assuming manual configuration
+      2. **Never suggest manual changes** to things managed by nix (will be overwritten on rebuild)
+      3. **Use the nix skill** for inline guidance on nix syntax/patterns
+      4. **Spawn the nix agent** for exploration tasks (finding configs, tracing options)
+
+      Common mappings:
+      - System preferences → `modules/system.nix` (system.defaults.*)
+      - Keyboard shortcuts → `modules/system.nix` (com.apple.symbolichotkeys)
+      - User programs → `home/programs/*.nix`
+      - Environment variables → program-specific or `home/default.nix`
+      - Launch agents → `launchd.user.agents` in darwin modules
+      - Homebrew packages → `modules/brew.nix` (declarative, not `brew install`)
+      - Claude Code config → `home/programs/ai.nix` (this file!)
+
+      When the user asks about configuring something on macOS, your default assumption should be: "This is probably in a .nix file somewhere."
     '';
 
     # Settings (written to ~/.claude/settings.json)
@@ -147,8 +167,8 @@ in {
     mcpServers = mcpServersConfig // customMcpServers;
 
     # ===========================================================================
-    # Skills - Specialized capabilities for Claude Code
-    # Skills are defined in docs/skills/ and loaded via builtins.readFile
+    # Skills - Inline reference knowledge for Claude Code
+    # Invoked synchronously for guidance during conversation
     # ===========================================================================
     skills = {
       # Nix ecosystem expert for dotfiles, darwin, home-manager, and project flakes
@@ -157,6 +177,16 @@ in {
       # Smart notification system with deep knowledge of the ntfy script
       # and Hammerspoon integration for multi-channel notifications
       smart-ntfy = builtins.readFile ../../docs/skills/smart-ntfy.md;
+    };
+
+    # ===========================================================================
+    # Agents - Autonomous subprocesses for delegated tasks
+    # Spawned via Task tool for exploration, research, and complex operations
+    # ===========================================================================
+    agents = {
+      # Nix exploration agent for autonomous investigation of nix configs
+      # Use for: tracing options, finding patterns, debugging evaluation
+      nix = builtins.readFile ../../docs/agents/nix.md;
     };
   };
 

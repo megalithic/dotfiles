@@ -1,6 +1,8 @@
--- local fuzzyChooser = require("utils.fuzzychooser")
+-- Messages.app context
+-- Modal hotkeys are managed automatically by contexts/init.lua
+-- Only define actions and any custom helpers needed
+
 local AX = req("hs.axuielement")
-local enum = req("hs.fnutils")
 local utils = req("utils")
 
 local obj = {}
@@ -8,103 +10,62 @@ local obj = {}
 obj.__index = obj
 obj.name = "context.messages"
 obj.debug = true
-obj.appObj = nil
 
-obj.modal = true
+-- Actions define hotkey bindings - modal enter/exit handled by loader
 obj.actions = {
   getMessageLinks = {
-    action = function()
-      obj.getChatMessageLinks(obj.appObj)
-    end,
-    hotkey = { "alt", "o" },
+    action = function() obj.getChatMessageLinks() end,
+    hotkey = { { "alt" }, "o" },
   },
   nextConversation = {
-    -- action = function() _appObj:selectMenuItem({ "Window", "Go to Next Conversation" }) end,
-    action = function()
-      hs.eventtap.keyStroke({ "cmd", "shift" }, "]")
-    end,
+    action = function() hs.eventtap.keyStroke({ "cmd", "shift" }, "]") end,
     hotkey = { { "ctrl" }, "n" },
   },
   prevConversation = {
-    -- action = function() _appObj:selectMenuItem({ "Window", "Go to Previous Conversation" }) end,
-    action = function()
-      hs.eventtap.keyStroke({ "cmd", "shift" }, "[")
-    end,
+    action = function() hs.eventtap.keyStroke({ "cmd", "shift" }, "[") end,
     hotkey = { { "ctrl" }, "p" },
   },
-  -- Jump to pinned conversations 1-9 via Ctrl+number
-  -- NOTE: Mission Control's "Switch to Desktop N" shortcuts (Ctrl+1-9) are disabled
-  -- in system.nix via com.apple.symbolichotkeys to allow these bindings to work
+  -- Jump to pinned conversations 1-4 via Ctrl+H/J/K/L (vim-style)
   gotoConversation1 = {
     action = function() hs.eventtap.keyStroke({ "cmd" }, "1") end,
-    hotkey = { { "ctrl" }, "1" },
+    hotkey = { { "ctrl" }, "h" },
   },
   gotoConversation2 = {
     action = function() hs.eventtap.keyStroke({ "cmd" }, "2") end,
-    hotkey = { { "ctrl" }, "2" },
+    hotkey = { { "ctrl" }, "j" },
   },
   gotoConversation3 = {
     action = function() hs.eventtap.keyStroke({ "cmd" }, "3") end,
-    hotkey = { { "ctrl" }, "3" },
+    hotkey = { { "ctrl" }, "k" },
   },
   gotoConversation4 = {
     action = function() hs.eventtap.keyStroke({ "cmd" }, "4") end,
-    hotkey = { { "ctrl" }, "4" },
-  },
-  gotoConversation5 = {
-    action = function() hs.eventtap.keyStroke({ "cmd" }, "5") end,
-    hotkey = { { "ctrl" }, "5" },
-  },
-  gotoConversation6 = {
-    action = function() hs.eventtap.keyStroke({ "cmd" }, "6") end,
-    hotkey = { { "ctrl" }, "6" },
-  },
-  gotoConversation7 = {
-    action = function() hs.eventtap.keyStroke({ "cmd" }, "7") end,
-    hotkey = { { "ctrl" }, "7" },
-  },
-  gotoConversation8 = {
-    action = function() hs.eventtap.keyStroke({ "cmd" }, "8") end,
-    hotkey = { { "ctrl" }, "8" },
-  },
-  gotoConversation9 = {
-    action = function() hs.eventtap.keyStroke({ "cmd" }, "9") end,
-    hotkey = { { "ctrl" }, "9" },
+    hotkey = { { "ctrl" }, "l" },
   },
   replyToLastMessage = {
-    action = function()
-      hs.eventtap.keyStroke({ "cmd" }, "r")
-    end,
+    action = function() hs.eventtap.keyStroke({ "cmd" }, "r") end,
     hotkey = { { "ctrl" }, "r" },
   },
   tapbackLastMessage = {
-    action = function()
-      hs.eventtap.keyStroke({ "cmd" }, "t")
-    end,
+    action = function() hs.eventtap.keyStroke({ "cmd" }, "t") end,
     hotkey = { { "ctrl" }, "t" },
   },
   editLastMessage = {
-    action = function()
-      hs.eventtap.keyStroke({ "cmd" }, "e")
-    end,
+    action = function() hs.eventtap.keyStroke({ "cmd" }, "e") end,
     hotkey = { { "ctrl" }, "u" },
   },
 }
 
--- USAGE
--- { ..., {"AXWindow", "AXRoleDescription", "standard window"}, ..., {"AXSplitGroup", 1}, ...}
-function obj.getUIElement(appOrWindowOrAx, uiPathTable)
-  local n
-  local match
-  local numeralIndexReferenceMode
-  local role
-  local indexOrAttribute
-  local attributeValue
-  local children
+--------------------------------------------------------------------------------
+-- AX Helpers (unique to Messages context)
+--------------------------------------------------------------------------------
 
+-- Traverse AX hierarchy to find specific UI element
+-- Usage: { {"AXWindow", "AXRoleDescription", "standard window"}, {"AXSplitGroup", 1} }
+function obj.getUIElement(appOrWindowOrAx, uiPathTable)
   local targetElement
 
-  -- if an hsapp
+  -- Determine starting element type
   if appOrWindowOrAx.bundleID then
     targetElement = AX.applicationElement(appOrWindowOrAx)
   elseif appOrWindowOrAx.maximize then
@@ -113,33 +74,20 @@ function obj.getUIElement(appOrWindowOrAx, uiPathTable)
     targetElement = appOrWindowOrAx
   end
 
-  -- pathItem is sent by the user
   for _, pathItem in ipairs(uiPathTable) do
-    role = pathItem[1]
-    indexOrAttribute = pathItem[2]
-    -- iterator
-    n = 1
-    -- all child UI elements
-    children = targetElement:attributeValue("AXChildren")
+    local role = pathItem[1]
+    local indexOrAttribute = pathItem[2]
+    local children = targetElement:attributeValue("AXChildren")
 
-    -- if 0 children, return
-    print(hs.inspect(children))
-    if not children or utils.tlen(children) == 0 then
-      return nil
-    end
+    if not children or utils.tlen(children) == 0 then return nil end
 
-    -- for the current pathItem, checking for an index/attribute-value reference
-    if tonumber(indexOrAttribute) then
-      numeralIndexReferenceMode = true
-    else
-      numeralIndexReferenceMode = false
-      attributeValue = pathItem[3]
-    end
-    match = false
+    local numeralIndexReferenceMode = tonumber(indexOrAttribute) ~= nil
+    local attributeValue = not numeralIndexReferenceMode and pathItem[3] or nil
+    local n = 1
+    local match = false
+
     for _, childElement in ipairs(children) do
-      -- checking for matching role
       if childElement:attributeValue("AXRole") == role then
-        -- checking if a numeral index
         if numeralIndexReferenceMode then
           if indexOrAttribute == n then
             match = true
@@ -151,101 +99,45 @@ function obj.getUIElement(appOrWindowOrAx, uiPathTable)
         end
       end
       if match then
-        -- break the current loop as there's no need to continue traversing the current children heirarchy
-        -- assign the newly found targetElement back to the targetElement var
         targetElement = childElement
         break
       end
     end
-    if not match then
-      return nil
-    end
+
+    if not match then return nil end
   end
 
   return targetElement
 end
 
-function obj.cycleUIElements(hsAppObj, parentUIGroup, elementRole, direction)
-  -- cycles left (next) or right (prev) through a group of similar ui elements, under a common parent
-  local axParent = obj.getUIElement(hsAppObj, parentUIGroup)
-  local elements = axParent:attributeValue("AXChildren")
-  local totalElements = 0
-  local selectedElement = 0
-  local targetElement
-  for _, element in ipairs(elements) do
-    if element:attributeValue("AXRole") == elementRole then
-      totalElements = totalElements + 1
-      if element:attributeValue("AXValue") == 1 then
-        selectedElement = totalElements
-      end
-    end
-  end
-  if direction == "next" then
-    if selectedElement == totalElements then
-      targetElement = 1
-    else
-      targetElement = selectedElement + 1
-    end
-  elseif direction == "prev" then
-    if selectedElement == 1 then
-      targetElement = totalElements
-    else
-      targetElement = selectedElement - 1
-    end
-  end
-  -- create the new target element as string, add it to the ui path
-  targetElement = { elementRole, targetElement }
-  table.insert(parentUIGroup, targetElement)
-  obj.getUIElement(hsAppObj, parentUIGroup):performAction("AXPress")
-end
+-- Get all links from current chat conversation
+function obj.getChatMessageLinks()
+  local app = hs.application.get("com.apple.MobileSMS")
+  if not app then return end
 
--- local function chooserCallback(choice) os.execute(string.format([["/usr/bin/open" "%s"]], choice.text)) end
---
-function obj.getChatMessageLinks(app)
-  local linkElements = obj
-    .getUIElement(app:mainWindow(), {
-      { "AXSplitGroup", 1 },
-      { "AXScrollArea", 2 },
-      { "AXWebArea", 1 },
-    })
-    :attributeValue("AXLinkUIElements")
+  local linkElements = obj.getUIElement(app:mainWindow(), {
+    { "AXSplitGroup", 1 },
+    { "AXScrollArea", 2 },
+    { "AXWebArea", 1 },
+  })
+
+  if not linkElements then return end
+
+  local links = linkElements:attributeValue("AXLinkUIElements")
+  if not links then return end
 
   local choices = {}
-  for _, link in ipairs(linkElements) do
-    local url = link:attributeValue("AXChildren")[1]:attributeValue("AXValue")
-    table.insert(choices, { text = url })
-  end
-  if utils.tlen(choices) == 0 then
-    table.insert(choices, { text = "No Links" })
-  end
-  dbg(I(choices), true)
-  -- fuzzyChooser:start(chooserCallback, choices, { "text" })
-end
-
-function obj:start(opts)
-  opts = opts or {}
-  self.appObj = opts["appObj"]
-  local event = opts["event"]
-
-  if enum.contains({ hs.application.watcher.activated, hs.uielement.watcher.applicationActivated }, event) then
-    -- function obj.modal:entered() dbg(I(obj.actions), true) end
-    if self.modal ~= nil then
-      self.modal:enter()
+  for _, link in ipairs(links) do
+    local children = link:attributeValue("AXChildren")
+    if children and children[1] then
+      local url = children[1]:attributeValue("AXValue")
+      if url then table.insert(choices, { text = url }) end
     end
   end
 
-  return self
-end
+  if utils.tlen(choices) == 0 then table.insert(choices, { text = "No Links" }) end
 
-function obj:stop(opts)
-  opts = opts or {}
-  local event = opts["event"]
-
-  if self.modal ~= nil then
-    self.modal:exit()
-  end
-
-  return self
+  dbg(I(choices), true)
 end
 
 return obj
