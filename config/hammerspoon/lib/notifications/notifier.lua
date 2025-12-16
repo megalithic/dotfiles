@@ -543,6 +543,10 @@ function M.sendCanvasNotification(title, subtitle, message, duration, opts)
   -- Create canvas
   local canvas = hs.canvas.new({ x = x, y = y, h = height, w = width })
 
+  -- IMPORTANT: Prevent clicking on canvas from activating/raising Hammerspoon
+  -- This keeps notifications unobtrusive and prevents the console from coming to front
+  canvas:clickActivating(false)
+
   -- Get color scheme based on system appearance
   local colors = M.getColorScheme()
 

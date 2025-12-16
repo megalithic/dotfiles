@@ -12,7 +12,7 @@ M.watchers = {
   app = {},
   context = {},
 }
--- obj.lollygagger = req("lollygagger")
+M.lollygagger = req("lollygagger")
 
 -- interface: (element, event, watcher, info)
 function M.handleWatchedEvent(elementOrAppName, event, _watcher, app)
@@ -20,9 +20,9 @@ function M.handleWatchedEvent(elementOrAppName, event, _watcher, app)
     -- M.runLayoutRulesForAppBundleID(elementOrAppName, event, app)
     M.runContextForAppBundleID(elementOrAppName, event, app)
 
-    -- if M.lollygagger then
-    --   M.lollygagger:run(elementOrAppName, event, app)
-    -- end
+    if M.lollygagger then
+      M.lollygagger:run(elementOrAppName, event, app)
+    end
   end
 end
 
@@ -101,9 +101,9 @@ function M:start()
   self.watchers.app = {}
   self.watchers.context = contexts:preload()
 
-  -- if M.lollygagger then
-  --   self.lollygagger:start()
-  -- end
+  if M.lollygagger then
+    self.lollygagger:start()
+  end
 
   U.log.i(fmt("started", self.name))
 
@@ -136,6 +136,11 @@ function M:stop()
       w = nil
     end)
     self.watchers.context = nil
+  end
+
+  -- Clean up lollygagger timers
+  if M.lollygagger then
+    M.lollygagger:stop()
   end
 
   U.log.i(fmt("stopped", self.name))

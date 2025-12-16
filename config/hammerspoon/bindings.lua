@@ -55,38 +55,50 @@ end
 
 -- Generic meeting window finder
 -- Searches for windows using U.app.isMeetingWindow for classification
+-- Returns: window (if meeting found), nil (if no meeting)
+-- IMPORTANT: Does NOT fall back to "any window" - only returns confirmed/likely meetings
 local function findMeetingWindow(app)
   if not app then return nil end
 
   local windows = app:allWindows()
 
-  -- Pass 1: Find a window confirmed as a meeting by isMeetingWindow
+  -- Pass 1: Find a window CONFIRMED as a meeting by isMeetingWindow
+  -- This is the most reliable detection - explicit "yes this is a meeting"
   for _, window in ipairs(windows) do
     if window:isStandard() then
-      local isMeeting, _ = U.app.isMeetingWindow(app, window)
-      if isMeeting == true then return window end
-    end
-  end
-
-  -- Pass 2: For unknown windows, use size heuristic (large window on external screen = likely meeting)
-  for _, window in ipairs(windows) do
-    if window:isStandard() then
-      local isMeeting, _ = U.app.isMeetingWindow(app, window)
-      local windowScreen = window:screen()
-      local screenName = windowScreen and windowScreen:name() or ""
-      local isOnExternalScreen = screenName ~= C.displays.internal and screenName ~= ""
-      if isMeeting ~= false and isOnExternalScreen then -- unknown or nil, not explicitly settings
-        local frame = window:frame()
-        if frame.w >= 2000 and frame.h >= 1400 then return window end
+      local isMeeting, reason = U.app.isMeetingWindow(app, window)
+      if isMeeting == true then
+        U.log.d(string.format("[meeting] Found confirmed meeting: %s (%s)", window:title(), reason))
+        return window
       end
     end
   end
 
-  -- Pass 3: Fallback to any standard window
+  -- Pass 2: For UNKNOWN windows (nil, not false), use size heuristic
+  -- Only on external screen, only large windows - likely a video call
+  -- Skip if isMeetingWindow returned false (e.g., Teams main window)
   for _, window in ipairs(windows) do
-    if window:isStandard() then return window end
+    if window:isStandard() then
+      local isMeeting, reason = U.app.isMeetingWindow(app, window)
+      -- Only consider windows where detection was uncertain (nil), NOT explicitly false
+      if isMeeting == nil then
+        local windowScreen = window:screen()
+        local screenName = windowScreen and windowScreen:name() or ""
+        local isOnExternalScreen = screenName ~= C.displays.internal and screenName ~= ""
+        if isOnExternalScreen then
+          local frame = window:frame()
+          if frame.w >= 2000 and frame.h >= 1400 then
+            U.log.d(string.format("[meeting] Found likely meeting via size heuristic: %s", window:title()))
+            return window
+          end
+        end
+      end
+    end
   end
 
+  -- NO Pass 3 fallback! If we can't confirm it's a meeting, return nil.
+  -- This prevents focusing Teams/Zoom/etc when they're running but not in a meeting.
+  U.log.d(string.format("[meeting] No meeting window found for %s", app:bundleID()))
   return nil
 end
 
@@ -618,6 +630,31 @@ function M.loadNotifications()
   end
 end
 
+-- Check if a hyper key is reserved before binding
+-- Used to prevent conflicts with reserved keys like HYPER+Q
+local function assertKeyAvailable(key)
+  local reservedKeys = C.reservedHyperKeys or {}
+  local lowerKey = key:lower()
+  if reservedKeys[lowerKey] then
+    error(string.format("HYPER+%s is reserved for: %s", key:upper(), reservedKeys[lowerKey]))
+  end
+end
+
+-- HYPER+Q: Force quit (NUKE IT!) the frontmost application
+-- Uses kill9() for immediate termination (SIGKILL equivalent)
+-- Silent operation - no alerts, just console logging
+function M.loadForceQuit()
+  req("hyper", { id = "force-quit" }):start():bind({}, "q", nil, function()
+    local app = hs.application.frontmostApplication()
+    if app then
+      local appName = app:name()
+      local bundleID = app:bundleID()
+      U.log.i(string.format("[NUKE] Force quitting %s (%s)", appName, bundleID))
+      app:kill9()
+    end
+  end)
+end
+
 function M:init()
   M.loadApps()
   M.loadMeeting()
@@ -625,6 +662,7 @@ function M:init()
   M.loadUtils()
   M.loadWm()
   M.loadNotifications()
+  M.loadForceQuit()
 
   -- req("snipper")
   req("clipper")

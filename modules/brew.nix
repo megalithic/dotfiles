@@ -35,7 +35,7 @@
       "raycast"
       "slack"
       "spotify"
-      # "thingsmacsandboxhelper"
+      "thingsmacsandboxhelper"
       "vial"
       "yubico-authenticator"
       "visual-studio-code"
@@ -43,6 +43,7 @@
     ];
     masApps = {
       "Xcode" = 497799835;
+      "Things3" = 904280696;
       # "Fantastical" = 975937182;
       # "Fantastical" = 435003921;  # Not available via mas CLI (subscription app with restricted API access)
       # "Things" = 904280696;

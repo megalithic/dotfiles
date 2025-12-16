@@ -92,15 +92,20 @@ end
 
 hs.loadSpoon("EmmyLua")
 
+-- Development/spike modules (available via Spike.* global)
+require("spike-ax-meeting")
+
 local watchers = { "audio", "dock", "app", "notification", "camera" }
 
 -- req("lib.seal")
 req("bindings")
 req("watchers", { watchers = watchers })
 req("ptt", { push = { { "cmd", "alt" }, nil }, toggle = { { "cmd", "alt" }, "p" } }):start()
+req("quitter"):start()
 
 hs.shutdownCallback = function()
   require("watchers"):stop({ watchers = watchers })
+  require("quitter"):stop()
   if N and N.cleanup then N.cleanup() end
 end
 

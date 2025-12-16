@@ -1,0 +1,278 @@
+#!/usr/bin/env swift
+
+// meeting-detect: Detect meeting state using macOS Accessibility APIs
+// Uses private AXEnhancedUserInterface attribute to force Electron apps to expose their AX tree
+//
+// Usage: meeting-detect <bundle-id>
+// Output: JSON with meeting state detection results
+
+import Foundation
+import AppKit
+import ApplicationServices
+
+// MARK: - AX Helpers
+
+func getRunningApp(bundleID: String) -> NSRunningApplication? {
+    return NSWorkspace.shared.runningApplications.first { $0.bundleIdentifier == bundleID }
+}
+
+func createAXApp(pid: pid_t) -> AXUIElement {
+    return AXUIElementCreateApplication(pid)
+}
+
+func setAXAttribute(_ element: AXUIElement, attribute: String, value: CFTypeRef) -> Bool {
+    let result = AXUIElementSetAttributeValue(element, attribute as CFString, value)
+    return result == .success
+}
+
+func getAXAttribute(_ element: AXUIElement, attribute: String) -> CFTypeRef? {
+    var value: CFTypeRef?
+    let result = AXUIElementCopyAttributeValue(element, attribute as CFString, &value)
+    return result == .success ? value : nil
+}
+
+func getAXChildren(_ element: AXUIElement) -> [AXUIElement] {
+    guard let children = getAXAttribute(element, attribute: kAXChildrenAttribute as String) as? [AXUIElement] else {
+        return []
+    }
+    return children
+}
+
+func getAXRole(_ element: AXUIElement) -> String? {
+    return getAXAttribute(element, attribute: kAXRoleAttribute as String) as? String
+}
+
+func getAXTitle(_ element: AXUIElement) -> String? {
+    return getAXAttribute(element, attribute: kAXTitleAttribute as String) as? String
+}
+
+func getAXDescription(_ element: AXUIElement) -> String? {
+    return getAXAttribute(element, attribute: kAXDescriptionAttribute as String) as? String
+}
+
+func getAXValue(_ element: AXUIElement) -> String? {
+    return getAXAttribute(element, attribute: kAXValueAttribute as String) as? String
+}
+
+func getAXIdentifier(_ element: AXUIElement) -> String? {
+    return getAXAttribute(element, attribute: "AXIdentifier") as? String
+}
+
+// MARK: - Meeting Detection
+
+struct MeetingIndicator {
+    let role: String
+    let title: String
+    let description: String
+    let identifier: String
+    let matchedKeyword: String
+    let depth: Int
+}
+
+let meetingKeywords = [
+    "mute", "unmute",
+    "camera", "video", "turn on video", "turn off video",
+    "share", "stop sharing", "present", "stop presenting",
+    "leave", "end", "hang up", "end call",
+    "participants", "people",
+    "chat", "raise hand", "react"
+]
+
+func searchForMeetingIndicators(element: AXUIElement, depth: Int = 0, maxDepth: Int = 20) -> [MeetingIndicator] {
+    guard depth < maxDepth else { return [] }
+
+    var indicators: [MeetingIndicator] = []
+
+    let role = getAXRole(element) ?? ""
+    let title = getAXTitle(element) ?? ""
+    let desc = getAXDescription(element) ?? ""
+    let identifier = getAXIdentifier(element) ?? ""
+    let value = getAXValue(element) ?? ""
+
+    let combined = "\(title) \(desc) \(identifier) \(value)".lowercased()
+
+    for keyword in meetingKeywords {
+        if combined.contains(keyword) {
+            indicators.append(MeetingIndicator(
+                role: role,
+                title: title,
+                description: desc,
+                identifier: identifier,
+                matchedKeyword: keyword,
+                depth: depth
+            ))
+            break
+        }
+    }
+
+    // Recurse into children
+    for child in getAXChildren(element) {
+        indicators.append(contentsOf: searchForMeetingIndicators(element: child, depth: depth + 1, maxDepth: maxDepth))
+    }
+
+    return indicators
+}
+
+// MARK: - Main
+
+let args = CommandLine.arguments
+
+guard args.count >= 2 else {
+    fputs("Usage: meeting-detect <bundle-id>\n", stderr)
+    fputs("Example: meeting-detect com.microsoft.teams2\n", stderr)
+    exit(1)
+}
+
+let bundleID = args[1]
+let verbose = args.contains("--verbose") || args.contains("-v")
+
+guard let app = getRunningApp(bundleID: bundleID) else {
+    let result: [String: Any] = [
+        "error": "App not running",
+        "bundleID": bundleID
+    ]
+    if let json = try? JSONSerialization.data(withJSONObject: result, options: .prettyPrinted),
+       let str = String(data: json, encoding: .utf8) {
+        print(str)
+    }
+    exit(1)
+}
+
+let axApp = createAXApp(pid: app.processIdentifier)
+
+// Try to enable enhanced accessibility (private API)
+// AXEnhancedUserInterface is what VoiceOver uses
+var enabledEnhanced = false
+var enabledManual = false
+
+// Try AXEnhancedUserInterface (private, VoiceOver uses this)
+if setAXAttribute(axApp, attribute: "AXEnhancedUserInterface", value: kCFBooleanTrue) {
+    enabledEnhanced = true
+    if verbose { fputs("✓ Enabled AXEnhancedUserInterface\n", stderr) }
+}
+
+// Try AXManualAccessibility (documented but often fails)
+if setAXAttribute(axApp, attribute: "AXManualAccessibility", value: kCFBooleanTrue) {
+    enabledManual = true
+    if verbose { fputs("✓ Enabled AXManualAccessibility\n", stderr) }
+}
+
+// Give the app time to build the accessibility tree
+usleep(500000) // 500ms
+
+// Get all windows
+guard let windows = getAXAttribute(axApp, attribute: kAXWindowsAttribute as String) as? [AXUIElement] else {
+    let result: [String: Any] = [
+        "error": "Could not get windows",
+        "bundleID": bundleID,
+        "appName": app.localizedName ?? "Unknown"
+    ]
+    if let json = try? JSONSerialization.data(withJSONObject: result, options: .prettyPrinted),
+       let str = String(data: json, encoding: .utf8) {
+        print(str)
+    }
+    exit(1)
+}
+
+// Search all windows for meeting indicators
+var allIndicators: [MeetingIndicator] = []
+var windowInfo: [[String: Any]] = []
+
+for (index, window) in windows.enumerated() {
+    let windowTitle = getAXTitle(window) ?? "(no title)"
+    let indicators = searchForMeetingIndicators(element: window, depth: 0, maxDepth: 20)
+    allIndicators.append(contentsOf: indicators)
+
+    windowInfo.append([
+        "index": index,
+        "title": windowTitle,
+        "indicatorsFound": indicators.count
+    ])
+}
+
+// Analyze indicators to determine meeting state
+var inMeeting = false
+var isMuted: Bool? = nil
+var cameraOn: Bool? = nil
+var isSharing: Bool? = nil
+var confidence = 0
+var evidence: [String] = []
+
+for indicator in allIndicators {
+    let keyword = indicator.matchedKeyword.lowercased()
+
+    if keyword == "unmute" {
+        isMuted = true
+        inMeeting = true
+        evidence.append("Found 'Unmute' - user is muted")
+    } else if keyword == "mute" && isMuted == nil {
+        isMuted = false
+        inMeeting = true
+        evidence.append("Found 'Mute' - user is unmuted")
+    }
+
+    if keyword.contains("turn on video") || keyword.contains("turn on camera") {
+        cameraOn = false
+        inMeeting = true
+        evidence.append("Found 'Turn on video' - camera is off")
+    } else if keyword.contains("turn off video") || keyword.contains("turn off camera") {
+        cameraOn = true
+        inMeeting = true
+        evidence.append("Found 'Turn off video' - camera is on")
+    }
+
+    if keyword.contains("stop sharing") || keyword.contains("stop presenting") {
+        isSharing = true
+        inMeeting = true
+        evidence.append("Found 'Stop sharing' - user is presenting")
+    }
+
+    if keyword.contains("leave") || keyword.contains("end") || keyword.contains("hang up") {
+        inMeeting = true
+        confidence += 30
+        evidence.append("Found '\(keyword)' button")
+    }
+}
+
+if inMeeting {
+    confidence += 40
+    if isMuted != nil { confidence += 15 }
+    if cameraOn != nil { confidence += 15 }
+}
+
+// Build result
+var result: [String: Any] = [
+    "bundleID": bundleID,
+    "appName": app.localizedName ?? "Unknown",
+    "axEnhancedEnabled": enabledEnhanced,
+    "axManualEnabled": enabledManual,
+    "windowCount": windows.count,
+    "windows": windowInfo,
+    "indicatorsFound": allIndicators.count,
+    "inMeeting": inMeeting,
+    "confidence": min(confidence, 100),
+    "isMuted": isMuted as Any,
+    "cameraOn": cameraOn as Any,
+    "isSharing": isSharing as Any,
+    "evidence": evidence
+]
+
+if verbose {
+    var indicatorDetails: [[String: Any]] = []
+    for ind in allIndicators {
+        indicatorDetails.append([
+            "role": ind.role,
+            "title": ind.title,
+            "description": ind.description,
+            "identifier": ind.identifier,
+            "matchedKeyword": ind.matchedKeyword,
+            "depth": ind.depth
+        ])
+    }
+    result["indicators"] = indicatorDetails
+}
+
+if let json = try? JSONSerialization.data(withJSONObject: result, options: .prettyPrinted),
+   let str = String(data: json, encoding: .utf8) {
+    print(str)
+}

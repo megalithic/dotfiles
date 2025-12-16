@@ -280,23 +280,48 @@ M.layouts = {
   },
 }
 
+-- Quitter Configuration
+-- Prevents accidental Cmd+Q quits for important apps
+-- Modes:
+--   "single" = one Cmd+Q quits (use with nuke=true for instant death)
+--   "double" = press Cmd+Q twice within 1s to quit
+--   "long"   = hold Cmd+Q for 1s to quit
+-- Options:
+--   nuke = true means use kill9() (SIGKILL) instead of graceful kill()
 M.quitters = {
-  "org.chromium.Thorium",
-  "org.chromium.Chromium",
-  "Brave Browser Nightly",
-  "com.pop.pop.app",
-  "com.kagi.kagimacOS",
-  "com.brave.Browser.nightly",
-  "com.brave.Browser.dev",
-  "com.brave.Browser",
-  "com.raycast.macos",
-  "com.runningwithcrayons.Alfred",
-  "net.kovidgoyal.kitty",
-  "org.mozilla.firefoxdeveloperedition",
-  "com.apple.SafariTechnologyPreview",
-  "com.apple.Safari",
-  "com.mitchellh.ghostty",
-  "com.github.wez.wezterm",
+  -- Zoom gets instant death - one Cmd+Q = NUKE (kill9)
+  ["us.zoom.xos"] = { mode = "single", nuke = true },
+
+  -- Browsers: double-tap to quit (graceful)
+  ["com.brave.Browser.nightly"] = { mode = "double" },
+  ["com.brave.Browser.dev"] = { mode = "double" },
+  ["com.brave.Browser"] = { mode = "double" },
+  ["net.imput.helium"] = { mode = "double" },
+  ["org.chromium.Thorium"] = { mode = "double" },
+  ["org.chromium.Chromium"] = { mode = "double" },
+  ["com.kagi.kagimacOS"] = { mode = "double" },
+  ["org.mozilla.firefoxdeveloperedition"] = { mode = "double" },
+  ["com.apple.SafariTechnologyPreview"] = { mode = "double" },
+  ["com.apple.Safari"] = { mode = "double" },
+
+  -- Terminals: double-tap to quit (graceful)
+  ["com.mitchellh.ghostty"] = { mode = "double" },
+  ["net.kovidgoyal.kitty"] = { mode = "double" },
+  ["com.github.wez.wezterm"] = { mode = "double" },
+
+  -- Launchers: double-tap to quit (graceful)
+  ["com.raycast.macos"] = { mode = "double" },
+  ["com.runningwithcrayons.Alfred"] = { mode = "double" },
+
+  -- Other apps
+  ["com.pop.pop.app"] = { mode = "double" },
+}
+
+-- Reserved Hyper Keys
+-- Keys that are globally reserved and cannot be bound to other actions
+-- Used to prevent future binding conflicts (e.g., HYPER+Q for force quit)
+M.reservedHyperKeys = {
+  q = "Force Quit (NUKE IT!)",
 }
 
 M.lollygaggers = {
