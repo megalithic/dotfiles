@@ -39,6 +39,7 @@
 
     # Input package aliases (convenient access without inputs.foo.packages.system)
     ai-tools = inputs.nix-ai-tools.packages.${prev.stdenv.hostPlatform.system};
+    llm-agents = inputs.llm-agents.packages.${prev.stdenv.hostPlatform.system};
     mcphub = inputs.mcp-hub.packages.${prev.stdenv.hostPlatform.system}.default;
     nvim-nightly = inputs.neovim-nightly-overlay.packages.${prev.stdenv.hostPlatform.system}.default;
     expert = inputs.expert.packages.${prev.stdenv.hostPlatform.system}.default;

@@ -1,0 +1,158 @@
+#!/usr/bin/env bash
+# tmux-process-name - Translate interpreter processes to friendly application names
+#
+# Usage: tmux-process-name [tty]
+#   tty: The pane tty (e.g., /dev/ttys001). If omitted, uses current tty.
+#
+# This script looks at the full command line and returns a friendly name
+# for known applications that run under interpreters (Python, Node, etc.)
+
+set -euo pipefail
+
+tty="${1:-$(tty 2>/dev/null || echo '')}"
+
+# If no tty provided, fall back to basic process name
+if [[ -z "$tty" ]]; then
+  echo "shell"
+  exit 0
+fi
+
+# Get the foreground process on this tty (STAT contains '+')
+# This avoids picking up background child processes (like MCP servers spawned by Claude)
+fg_line=$(ps -t "$tty" -o stat=,args= 2>/dev/null | grep '^[^TXZ ]*+' | head -1 || echo "")
+cmd="${fg_line#* }"  # Strip STAT column, keep ARGS
+
+# If no foreground process found, fall back to last process
+if [[ -z "$cmd" ]]; then
+  cmd=$(ps -t "$tty" -o args= 2>/dev/null | tail -1 || echo "shell")
+fi
+
+# Get process name for the foreground process
+fg_proc_line=$(ps -t "$tty" -o stat=,comm= 2>/dev/null | grep '^[^TXZ ]*+' | head -1 || echo "")
+proc="${fg_proc_line#* }"  # Strip STAT column, keep COMM
+
+# Fallback for proc
+if [[ -z "$proc" ]]; then
+  proc=$(ps -t "$tty" -o comm= 2>/dev/null | tail -1 || echo "shell")
+fi
+
+# Debug: uncomment to see what we're working with
+# echo "cmd: $cmd, proc: $proc" >> /tmp/tmux-process-name.log
+
+# === TRANSLATION RULES ===
+# Add patterns here: check the command line and return a friendly name
+
+# Claude Code (Python-based CLI)
+if [[ "$cmd" =~ claude|anthropic ]]; then
+  echo "claude"
+  exit 0
+fi
+
+# Neovim (sometimes launched via wrapper scripts)
+if [[ "$cmd" =~ nvim|neovim ]]; then
+  echo "nvim"
+  exit 0
+fi
+
+# Node.js applications - extract script name
+if [[ "$proc" == "node" ]] && [[ "$cmd" =~ node[[:space:]]+(.+) ]]; then
+  script="${BASH_REMATCH[1]}"
+  # Get basename and remove .js extension
+  name=$(basename "$script" .js 2>/dev/null || echo "$script")
+  # Common Node CLI tools
+  case "$name" in
+    npm|npx|yarn|pnpm) echo "$name" ;;
+    *) echo "${name:0:15}" ;;  # Truncate long names
+  esac
+  exit 0
+fi
+
+# Python applications - check for known tools or extract script name
+if [[ "$proc" =~ ^python ]]; then
+  # Check for -m module invocation (e.g., python -m pytest)
+  if [[ "$cmd" =~ python[^[:space:]]*[[:space:]]+-m[[:space:]]+([^[:space:]]+) ]]; then
+    module="${BASH_REMATCH[1]}"
+    echo "$module"
+    exit 0
+  fi
+
+  # Check for script path
+  if [[ "$cmd" =~ python[^[:space:]]*[[:space:]]+([^[:space:]-][^[:space:]]*) ]]; then
+    script="${BASH_REMATCH[1]}"
+    name=$(basename "$script" .py 2>/dev/null || echo "$script")
+    # Strip common path prefixes for nix store
+    name="${name##*/}"
+    echo "${name:0:15}"
+    exit 0
+  fi
+
+  # Fallback: just "python"
+  echo "python"
+  exit 0
+fi
+
+# Ruby applications
+if [[ "$proc" == "ruby" ]] && [[ "$cmd" =~ ruby[[:space:]]+(.+) ]]; then
+  script="${BASH_REMATCH[1]}"
+  name=$(basename "$script" .rb 2>/dev/null || echo "$script")
+  echo "${name:0:15}"
+  exit 0
+fi
+
+# Perl applications
+if [[ "$proc" == "perl" ]] && [[ "$cmd" =~ perl[[:space:]]+(.+) ]]; then
+  script="${BASH_REMATCH[1]}"
+  name=$(basename "$script" .pl 2>/dev/null || echo "$script")
+  echo "${name:0:15}"
+  exit 0
+fi
+
+# Java applications - try to extract main class or jar name
+if [[ "$proc" == "java" ]]; then
+  if [[ "$cmd" =~ -jar[[:space:]]+([^[:space:]]+) ]]; then
+    jar="${BASH_REMATCH[1]}"
+    name=$(basename "$jar" .jar 2>/dev/null || echo "$jar")
+    echo "${name:0:15}"
+    exit 0
+  fi
+  echo "java"
+  exit 0
+fi
+
+# Shell scripts - might want to show the script name
+if [[ "$proc" =~ ^(bash|zsh|sh|fish)$ ]] && [[ "$cmd" =~ $proc[[:space:]]+([^[:space:]-][^[:space:]]*) ]]; then
+  script="${BASH_REMATCH[1]}"
+  # Only show script name if it's not a common shell invocation
+  if [[ ! "$script" =~ ^(-|--) ]]; then
+    name=$(basename "$script" 2>/dev/null || echo "$script")
+    name="${name%.sh}"
+    name="${name%.bash}"
+    name="${name%.zsh}"
+    # Don't show if it's just the shell config
+    if [[ ! "$name" =~ ^(\.|config|rc|profile) ]]; then
+      echo "${name:0:15}"
+      exit 0
+    fi
+  fi
+fi
+
+# SSH sessions - show user@host
+if [[ "$proc" == "ssh" ]] && [[ "$cmd" =~ ssh[[:space:]]+([^[:space:]]+@)?([^[:space:]]+) ]]; then
+  user="${BASH_REMATCH[1]:-}"
+  host="${BASH_REMATCH[2]}"
+  if [[ -n "$user" ]]; then
+    echo "ssh:${user}${host}"
+  else
+    echo "ssh:${host}"
+  fi
+  exit 0
+fi
+
+# Nix store paths - extract the package name
+if [[ "$cmd" =~ /nix/store/[^/]+/bin/([^[:space:]]+) ]]; then
+  echo "${BASH_REMATCH[1]}"
+  exit 0
+fi
+
+# Default: return the process name (basename of comm)
+echo "${proc##*/}"

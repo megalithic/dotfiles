@@ -44,11 +44,29 @@
 # Example: Karabiner.pkg contains DriverKit extensions and postinstall → native
 #
 # ══════════════════════════════════════════════════════════════════════════════
+# APP LOCATION OPTIONS
+# ══════════════════════════════════════════════════════════════════════════════
+#
+# appLocation controls where the .app bundle is installed:
+#
+#   "home-manager"  (default) Let home-manager handle it → ~/Applications/Home Manager Apps/
+#   "symlink"       Symlink to /Applications (for apps that need /Applications path)
+#   "copy"          Copy to /Applications (for code-signed apps like Fantastical)
+#
+# Use "copy" when an app:
+#   - Has strict code signing that breaks with symlinks
+#   - Needs to write to its own bundle (updates, plugins)
+#   - Validates its installation path
+#
+# ══════════════════════════════════════════════════════════════════════════════
 # USAGE EXAMPLES
 # ══════════════════════════════════════════════════════════════════════════════
 #
-#   # Simple app from DMG (most common)
+#   # Simple app from DMG (most common) - goes to ~/Applications/Home Manager Apps/
 #   mkApp { pname = "mailmate"; version = "5673"; src = { url = "..."; sha256 = "..."; }; }
+#
+#   # App needing /Applications with code signing (Fantastical, etc.)
+#   mkApp { pname = "fantastical"; src = { ... }; appLocation = "copy"; }
 #
 #   # App from PKG (extracts .app, no installer needed)
 #   mkApp { pname = "talktastic"; src = { ... }; artifactType = "pkg"; }
@@ -73,9 +91,8 @@
   homepage ? null,
   # Extract method options
   artifactType ? "app", # "app", "pkg", or "binary"
-  binaries ? [],
-  requireSystemApplicationsFolder ? false,
-  copyToApplications ? false,
+  binaries ? [pname], # CLI commands to expose in ~/.local/bin (defaults to pname)
+  appLocation ? "home-manager", # "home-manager" | "symlink" | "copy"
   # Native method options
   pkgName ? null, # Name of PKG file inside DMG (e.g., "Karabiner-Elements.pkg")
   postNativeInstall ? "", # Script to run after native installer completes
@@ -104,8 +121,7 @@ in
         homepage
         artifactType
         binaries
-        requireSystemApplicationsFolder
-        copyToApplications
+        appLocation
         ;
       url = src.url;
       sha256 = src.sha256;

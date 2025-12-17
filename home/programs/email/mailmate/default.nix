@@ -94,11 +94,11 @@ in {
     # Neovim external editor bundle (edit emails in Neovim via Ghostty)
     # Usage: ⌃⇧O (Control+Shift+O) in composer
     "Library/Application Support/MailMate/Bundles/neovim.mmbundle/info.plist".source =
-      ./bundle/info.plist;
+      ./neovim_bundle/info.plist;
     "Library/Application Support/MailMate/Bundles/neovim.mmbundle/Commands/edit.mmCommand".source =
-      ./bundle/Commands/edit.mmCommand;
+      ./neovim_bundle/Commands/edit.mmCommand;
     "Library/Application Support/MailMate/Bundles/neovim.mmbundle/Support/bin/edit" = {
-      source = ./bundle/Support/bin/edit;
+      source = ./neovim_bundle/Support/bin/edit;
       executable = true;
     };
 

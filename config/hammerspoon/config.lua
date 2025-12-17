@@ -353,6 +353,7 @@ M.launchers = {
   { "com.apple.dt.Xcode", "x", nil, true },
   { "com.obsproject.obs-studio", "o", nil, true },
   { "com.microsoft.VSCode", "v", nil, true },
+  { "com.culturedcode.ThingsMac", nil, { "return" } },
 }
 
 M.dock = {
@@ -457,6 +458,7 @@ M.notifier = {
     {
       name = "Messages",
       appBundleID = "com.apple.MobileSMS",
+      alwaysShowInTerminal = false,
       -- No overrideFocusModes = blocks during any focus mode
     },
 

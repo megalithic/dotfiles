@@ -69,46 +69,16 @@ in {
 
   home.preferXdgDirectories = true;
 
-  # Activation script to symlink apps that require /Applications folder
+  # Activation script to copy/symlink apps that require /Applications folder
+  # Uses config.mega.customApps (all mkApp-built packages) NOT home.packages
+  # This avoids duplicates: home-manager handles appLocation="home-manager" apps,
+  # while mkAppActivation handles appLocation="symlink"|"copy" apps
   home.activation.linkSystemApplications = lib.hm.dag.entryAfter ["writeBoundary"] (
     lib.mega.mkAppActivation {
       inherit pkgs;
-      inherit (config.home) packages;
+      packages = config.mega.customApps;
     }
   );
-
-  # Create symlinks in ~/.local/bin for nix-managed binaries
-  # This keeps ~/.dotfiles/bin clean for version-controlled hand-written scripts
-  # These are recreated on each rebuild to track changing store paths
-  home.activation.linkBinaries = let
-    # Define custom packages that should have CLI symlinks in ~/.local/bin
-    # Format: { name = package; } where package has bin/${name}
-    customBinaries = {
-      inherit (pkgs) brave-browser-nightly;
-      inherit (pkgs) fantastical;
-      inherit (pkgs) helium-browser;
-    };
-
-    # Generate removal commands for all binaries
-    removeCommands = lib.concatStringsSep "\n" (
-      lib.mapAttrsToList (name: _: ''rm -f "$BIN_DIR/${name}" 2>/dev/null || true'') customBinaries
-    );
-
-    # Generate symlink commands for all binaries
-    linkCommands = lib.concatStringsSep "\n" (
-      lib.mapAttrsToList (name: pkg: ''ln -sf "${pkg}/bin/${name}" "$BIN_DIR/${name}"'') customBinaries
-    );
-  in
-    lib.hm.dag.entryAfter ["writeBoundary"] ''
-      BIN_DIR="${config.home.homeDirectory}/.local/bin"
-      mkdir -p "$BIN_DIR"
-
-      # Remove old symlinks (they may point to outdated store paths)
-      ${removeCommands}
-
-      # Create fresh symlinks to current store paths
-      ${linkCommands}
-    '';
 
   # Set desktop wallpaper declaratively using desktoppr
   # Runs on every darwin-rebuild, sets wallpaper for all screens

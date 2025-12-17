@@ -484,15 +484,15 @@ function M.send(opts)
     reason = attention.state,
     questionId = questionId,
   }
-
-  -- Log the notification
-  U.log.f(
-    "N.send: title=%s, urgency=%s, attention=%s, channels=[%s]",
-    opts.title:sub(1, 30),
-    opts.urgency,
-    attention.state,
-    table.concat(channels, ",")
-  )
+  -- NOTE: too much noise for now
+  -- -- Log the notification
+  -- U.log.f(
+  --   "N.send: title=%s, urgency=%s, attention=%s, channels=[%s]",
+  --   opts.title:sub(1, 30),
+  --   opts.urgency,
+  --   attention.state,
+  --   table.concat(channels, ",")
+  -- )
 
   return result
 end

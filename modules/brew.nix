@@ -10,12 +10,9 @@
     casks = [
       "1password"
       "1password-cli"
-      # "brave-browser@nightly"
       "colorsnapper"
       "contexts"
       "discord"
-      # FIXME: create derivation to pull the 3.x.x archive from their website
-      # "fantastical"
       "figma"
       "ghostty@tip"
       "hammerspoon"
@@ -44,9 +41,6 @@
     masApps = {
       "Xcode" = 497799835;
       "Things3" = 904280696;
-      # "Fantastical" = 975937182;
-      # "Fantastical" = 435003921;  # Not available via mas CLI (subscription app with restricted API access)
-      # "Things" = 904280696;
     };
     onActivation = {
       cleanup = "zap";

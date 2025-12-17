@@ -319,26 +319,7 @@
         # tell HS where to find its config file
         "org.hammerspoon.Hammerspoon".MJConfigFile = "~/.config/hammerspoon/init.lua";
 
-        # https://tyler.io/2020/04/additional-mailmate-tips/
-        "com.freron.MailMate" = {
-          SoftwareUpdateChannel = "beta";
-          MmShowTips = "never";
-          MmCustomKeyBindingsEnabled = true;
-          MmCustomKeyBindingsName = "Mega";
-          MmComposerInitialFocus = "alwaysTextView";
-          MmShowAttachmentsFirst = true;
-          MmSingleMessageWindowClosesAfterMove = true;
-
-          MmHeadersViewWebKitDefaultFontSize = 13;
-          MmHeadersViewWebKitStandardFont = "Helvetica";
-          MmMessagesWebViewMinimumFontSize = 12;
-          MmMessagesWebViewWebKitDefaultFixedFontSize = 13;
-          MmMessagesWebViewWebKitDefaultFontSize = 13;
-          MmMessagesWebViewWebKitMinimumFontSize = 12;
-          MmMessagesWebViewWebKitStandardFont = "Helvetica";
-          MmMessagesOutlineOpenMessageOnDoubleClick = true;
-          MmMessagesOutlineShowUnreadMessagesInBold = true;
-        };
+        # MailMate settings moved to home/programs/email/mailmate.nix
 
         "com.apple.SoftwareUpdate" = {
           AutomaticCheckEnabled = true;

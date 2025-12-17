@@ -46,25 +46,34 @@ obj.activeCapture = {
 
 -- Modal state
 obj.modal = nil -- hs.hotkey.modal instance
-obj.modalTimeout = nil -- Timer for 1s auto-paste
+obj.modalTimeout = nil -- Timer for auto-paste
 obj.isModalActive = false
+obj.currentModalTimeout = nil -- Current timeout value (for display)
 
 -- Cheatsheet canvas reference
 obj.cheatsheet = nil
 obj.cheatsheetTimer = nil
+obj.cheatsheetAnimTimer = nil -- Animation timer
 obj.escapeHotkey = nil -- Enabled only when cheatsheet is visible
 
 -- Configuration
 obj.config = {
-  captureTimeout = 60, -- Seconds before capture becomes inactive
+  captureTimeout = 300, -- Seconds before capture becomes inactive (5 minutes)
   cheatsheetDuration = 10, -- Auto-dismiss passive cheatsheet after N seconds
-  modalTimeout = 5, -- Seconds before modal auto-pastes URL
+  modalTimeoutQuick = 3, -- Seconds before quick modal (⌘⇧V) auto-pastes URL
+  modalTimeoutSlow = 10, -- Seconds before slow modal (HYPER+⇧V) auto-pastes URL
   -- Responsive cheatsheet sizing (external display = larger)
   cheatsheetWidth = {
     external = 480,
     internal = 320,
   },
   thumbnailScaleFactor = 4, -- Divide source image by this for retina (5K = 2x, so 4 = crisp)
+  -- Animation settings
+  animation = {
+    enabled = true,
+    duration = 0.25, -- Slide-up duration in seconds
+    slideDistance = 40, -- Pixels to slide up from starting position
+  },
 }
 
 -- ══════════════════════════════════════════════════════════════════════════════
@@ -184,7 +193,8 @@ function obj.showCheatsheet(isModalMode)
     }
   else
     keybindings = {
-      { key = "HYPER+⇧V", desc = "Enter paste mode" },
+      { key = "⌘⇧V", desc = "Quick paste (3s)" },
+      { key = "HYPER+⇧V", desc = "Slow paste (10s)" },
       { key = "⌘V", desc = "Paste image directly" },
       { key = "Esc", desc = "Dismiss" },
     }
@@ -200,9 +210,15 @@ function obj.showCheatsheet(isModalMode)
 
   -- Position: bottom-center of screen
   local x = screenFrame.x + (screenFrame.w - width) / 2
-  local y = screenFrame.y + screenFrame.h - height - 40
+  local finalY = screenFrame.y + screenFrame.h - height - 40
 
-  local canvas = hs.canvas.new({ x = x, y = y, w = width, h = height })
+  -- Animation setup: start below final position
+  local animConfig = obj.config.animation or {}
+  local animEnabled = animConfig.enabled ~= false
+  local slideDistance = animConfig.slideDistance or 40
+  local startY = animEnabled and (finalY + slideDistance) or finalY
+
+  local canvas = hs.canvas.new({ x = x, y = startY, w = width, h = height })
 
   -- Background
   canvas:appendElements({
@@ -312,9 +328,10 @@ function obj.showCheatsheet(isModalMode)
 
   -- Footer hint (modal only)
   if isModalMode then
+    local timeout = obj.currentModalTimeout or obj.config.modalTimeoutSlow
     canvas:appendElements({
       type = "text",
-      text = "Auto-pasting URL in 5s...",
+      text = fmt("Auto-pasting URL in %ds...", timeout),
       textColor = { red = 0.5, green = 0.5, blue = 0.5, alpha = 0.7 },
       textSize = smallTextSize,
       textFont = ".AppleSystemUIFont",
@@ -324,7 +341,35 @@ function obj.showCheatsheet(isModalMode)
   end
 
   canvas:level("overlay")
-  canvas:show()
+
+  -- Show with fade-in, then animate slide-up
+  if animEnabled then
+    canvas:alpha(0)
+    canvas:show()
+
+    local animDuration = animConfig.duration or 0.25
+    local fps = 60
+    local totalFrames = math.floor(animDuration * fps)
+    local currentFrame = 0
+
+    obj.cheatsheetAnimTimer = hs.timer.doUntil(function()
+      return currentFrame >= totalFrames
+    end, function()
+      currentFrame = currentFrame + 1
+      -- Ease-out cubic for smooth deceleration
+      local progress = currentFrame / totalFrames
+      local eased = 1 - math.pow(1 - progress, 3)
+
+      -- Animate position (slide up)
+      local newY = startY - (slideDistance * eased)
+      canvas:topLeft({ x = x, y = newY })
+
+      -- Animate alpha (fade in)
+      canvas:alpha(eased)
+    end, 1 / fps)
+  else
+    canvas:show()
+  end
 
   obj.cheatsheet = canvas
 
@@ -344,6 +389,10 @@ function obj.showCheatsheet(isModalMode)
 end
 
 function obj.hideCheatsheet()
+  if obj.cheatsheetAnimTimer then
+    obj.cheatsheetAnimTimer:stop()
+    obj.cheatsheetAnimTimer = nil
+  end
   if obj.cheatsheet then
     obj.cheatsheet:delete(0.2) -- Quick fade out
     obj.cheatsheet = nil
@@ -572,12 +621,16 @@ end
 -- Modal Mode
 -- ══════════════════════════════════════════════════════════════════════════════
 
-function obj.enterModal()
+function obj.enterModal(timeout)
   if not obj.hasActiveCapture() then
     U.log.w(fmt("[%s] no active capture for modal", obj.name))
     hs.alert.show("No recent screenshot", 1)
     return
   end
+
+  -- Use provided timeout or default to slow
+  timeout = timeout or obj.config.modalTimeoutSlow
+  obj.currentModalTimeout = timeout -- Store for cheatsheet display
 
   obj.isModalActive = true
 
@@ -587,15 +640,15 @@ function obj.enterModal()
   -- Enter the modal hotkey mode
   obj.modal:enter()
 
-  -- Start 1s timeout for auto-paste URL
-  obj.modalTimeout = hs.timer.doAfter(obj.config.modalTimeout, function()
+  -- Start timeout for auto-paste URL
+  obj.modalTimeout = hs.timer.doAfter(timeout, function()
     if obj.isModalActive then
       obj.pasteRawUrl()
       obj.exitModal()
     end
   end)
 
-  U.log.d(fmt("[%s] entered modal mode", obj.name))
+  U.log.d(fmt("[%s] entered modal mode (timeout=%ds)", obj.name, timeout))
 end
 
 function obj.exitModal()
@@ -699,10 +752,16 @@ function obj.setupBindings()
     obj.exitModal()
   end)
 
-  -- Entry binding: HYPER+⇧V
+  -- Entry bindings for paste modal
+  -- ⌘⇧V: Quick paste (3s timeout) - fast action
+  hs.hotkey.bind({ "cmd", "shift" }, "v", function()
+    obj.enterModal(obj.config.modalTimeoutQuick)
+  end)
+
+  -- HYPER+⇧V: Slow paste (10s timeout) - deliberate selection
   local hyper = req("hyper", { id = "clipper" })
   hyper:start():bind({ "shift" }, "v", function()
-    obj.enterModal()
+    obj.enterModal(obj.config.modalTimeoutSlow)
   end)
 
   -- Escape to dismiss cheatsheet (only active when cheatsheet is visible)

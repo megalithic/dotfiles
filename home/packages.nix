@@ -1,11 +1,27 @@
 {
   config,
   pkgs,
+  lib,
   ...
 }: let
   # ── gui tools ──────────────────────────────────────────────────────────────────
-  guiPkgs = with pkgs; [
+  # Custom apps built with mkApp - these have passthru.appLocation
+  customApps = with pkgs; [
+    bloom
+    brave-browser-nightly
+    fantastical
+    helium-browser
     talktastic
+  ];
+
+  # Filter: only apps with appLocation = "home-manager" go to home.packages
+  # (home-manager copies these to ~/Applications/Home Manager Apps/)
+  homeManagerApps = builtins.filter (pkg:
+    (pkg.passthru or {}).appLocation or "home-manager" == "home-manager"
+  ) customApps;
+
+  # Standard GUI apps from nixpkgs (not custom mkApp derivations)
+  guiPkgs = with pkgs; [
     telegram-desktop
   ];
 
@@ -46,6 +62,7 @@
     switchaudio-osx
     tesseract # OCR fallback for clipper (Vision is primary)
     terminal-notifier
+    tldr
     unstable.tmux
     transcrypt
     w3m
@@ -132,5 +149,13 @@
     markdown-oxide
   ];
 in {
-  home.packages = cliPkgs ++ fontPkgs ++ langPkgs ++ guiPkgs;
+  # Export customApps for mkAppActivation (used in default.nix)
+  # These are ALL custom apps regardless of appLocation
+  options.mega.customApps = lib.mkOption {
+    type = lib.types.listOf lib.types.package;
+    default = customApps;
+    description = "Custom apps built with mkApp for activation script processing";
+  };
+
+  config.home.packages = cliPkgs ++ fontPkgs ++ langPkgs ++ guiPkgs ++ homeManagerApps;
 }

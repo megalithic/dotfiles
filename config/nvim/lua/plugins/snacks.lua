@@ -75,8 +75,11 @@ if true then
   return {
     {
       "dmtrKovalenko/fff.nvim",
-      build = "cargo build --release",
       lazy = false, -- make fff initialize on startup
+      pin = true,
+      commit = "65aeacf9e2c663c9af2b1003727aa25acac96db4",
+      -- build = function() require("fff.download").download_or_build_binary() end,
+      build = "cargo build --release",
       opts = {
         max_results = 400,
         max_threads = 8,

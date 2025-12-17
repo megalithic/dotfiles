@@ -178,10 +178,9 @@
         '';
       };
 
-      # Skip adding package to home.packages (for apps with custom activation scripts)
-      # When true, the package won't be auto-linked by home-manager to ~/Applications/Home Manager Apps/
-      # Use this for apps that have custom activation handling (e.g., Widevine installation for Helium)
-      customActivation = mkEnableOption "Skip adding to home.packages (use when custom activation scripts manage the app)";
+      # DEPRECATED: Use appLocation in mkApp instead
+      # This option is kept for backwards compatibility but is now auto-detected from package.passthru.appLocation
+      customActivation = mkEnableOption "DEPRECATED: Skip adding to home.packages (auto-detected from appLocation now)";
 
       # macOS keyboard shortcuts (NSUserKeyEquivalents)
       # These are set via targets.darwin.defaults using the browser's bundleId
@@ -403,19 +402,24 @@
           fi
         ''
       else null;
+    # Determine if this package should be managed by home-manager's copyApps
+    # Check package's passthru.appLocation - if "symlink" or "copy", mkAppActivation handles it
+    # Only "home-manager" (default) should be added to home.packages
+    appLocation = (cfg.package.passthru or {}).appLocation or "home-manager";
+    shouldAddToHomePackages = appLocation == "home-manager" && !cfg.customActivation;
   in
     lib.mkIf cfg.enable {
-      # Only add to home.packages if customActivation is NOT enabled
-      # When customActivation = true, the app is managed by custom activation scripts
-      # and should NOT be auto-linked by home-manager to ~/Applications/Home Manager Apps/
-      home.packages = lib.mkIf (cfg.package != null && !cfg.customActivation) (
-        # Include the base package (only if not using custom activation)
-        [cfg.package]
-        # Add CLI wrapper if applicable
+      # Add packages to home.packages with smart handling:
+      # - Base package: only if appLocation is "home-manager" (avoid duplicates with mkAppActivation)
+      # - CLI wrapper: always (it's a CLI tool, not an .app)
+      # - Darwin wrapper .app: always if enabled (needed to launch with command line args from Finder)
+      home.packages =
+        # Base package - only if managed by home-manager
+        lib.optionals (cfg.package != null && shouldAddToHomePackages) [cfg.package]
+        # CLI wrapper - always add if available
         ++ lib.optional (cliWrapper != null) cliWrapper
-        # Add macOS wrapper .app if enabled
-        ++ lib.optional (pkgs.stdenv.isDarwin && cfg.darwinWrapperApp.enable && cfg.commandLineArgs != []) wrapperApp
-      );
+        # macOS wrapper .app - always add if enabled (this is how Finder launches with args)
+        ++ lib.optional (pkgs.stdenv.isDarwin && cfg.darwinWrapperApp.enable && cfg.commandLineArgs != []) wrapperApp;
       home.file = lib.optionalAttrs (!isProprietaryChrome) (
         lib.listToAttrs ((map extensionJson (cfg.extensions or [])) ++ (map dictionary (cfg.dictionaries or [])))
         // lib.optionalAttrs ((cfg.nativeMessagingHosts or []) != []) {

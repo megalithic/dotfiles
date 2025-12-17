@@ -32,9 +32,8 @@
   desc ? null,
   homepage ? null,
   artifactType ? "app", # "app", "pkg", or "binary"
-  binaries ? [],
-  requireSystemApplicationsFolder ? false,
-  copyToApplications ? false,
+  binaries ? [pname], # CLI commands to expose in ~/.local/bin (defaults to pname)
+  appLocation ? "home-manager", # "home-manager" | "symlink" | "copy"
 }: let
   # Detect artifact type based on URL if not specified
   detectedType =
@@ -246,30 +245,37 @@ in
         runHook postInstall
       '';
 
-    postInstall = lib.optionalString (isApp || isPkg) ''
-      echo "Removing quarantine attributes..."
+    postInstall =
+      lib.optionalString (isApp || isPkg)
+      ''
+        echo "Removing quarantine attributes..."
 
-      if [ -d "$out/Applications" ]; then
-        for app in $(fd -t d -e app . "$out/Applications" 2>/dev/null || true); do
-          xattr -dr com.apple.quarantine "$app" 2>/dev/null || true
-        done
-      fi
+        if [ -d "$out/Applications" ]; then
+          for app in $(fd -t d -e app . "$out/Applications" 2>/dev/null || true); do
+            # Clear ALL extended attributes to prevent "damaged app" errors
+            xattr -cr "$app" 2>/dev/null || true
+          done
+        fi
 
-      if [ -d "$out/Library" ]; then
-        xattr -dr com.apple.quarantine "$out/Library" 2>/dev/null || true
-      fi
-    '';
+        if [ -d "$out/Library" ]; then
+          xattr -cr "$out/Library" 2>/dev/null || true
+        fi
+      '';
 
-    passthru = lib.optionalAttrs requireSystemApplicationsFolder {
-      inherit appName;
-      needsSystemApplicationsFolder = true;
-      inherit copyToApplications;
+    passthru = {
+      inherit appName binaries appLocation;
       installMethod = "extract";
     };
 
     meta = {
-      description = if desc != null then desc else "macOS application";
-      homepage = if homepage != null then homepage else "";
+      description =
+        if desc != null
+        then desc
+        else "macOS application";
+      homepage =
+        if homepage != null
+        then homepage
+        else "";
       platforms = lib.platforms.darwin;
       mainProgram =
         if (isBinary && !isApp)

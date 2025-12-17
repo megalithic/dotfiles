@@ -39,8 +39,21 @@ in {
       url = "https://cdn.flexibits.com/Fantastical_4.1.5.zip";
       sha256 = "095747c4f1b1syyzfhcv651rmy6y4cx4pm9qy4sdqsxp8kqgrm97";
     };
+    appLocation = "copy"; # Needs /Applications for code signing
     desc = "Calendar and tasks app";
     homepage = "https://flexibits.com/fantastical";
+  };
+
+  bloom = mkApp {
+    pname = "bloom";
+    version = "1.5.17";
+    appName = "Bloom.app";
+    src = {
+      url = "https://bloomapp.club/downloads/bloom/Bloom-v1.5.17.dmg";
+      sha256 = "sha256-1E7a+izJ1R4KLQGtEeMTMNO/Dq3/TcKdSlS8O4RWrNg=";
+    };
+    desc = "Refined Finder Experience, Reimagined for Productivity.";
+    homepage = "https://bloomapp.club";
   };
 
   brave-browser-nightly = mkApp {
@@ -63,6 +76,9 @@ in {
       url = "https://github.com/imputnet/helium-macos/releases/download/0.7.4.1/helium_0.7.4.1_arm64-macos.dmg";
       sha256 = "sha256-9EEECuaiALU/LzdkrjllgUN+cHcxkDvPgyc52nouFrw=";
     };
+    # "wrapper" = mkChromiumBrowser's darwinWrapperApp handles installation
+    # Don't symlink/copy to /Applications - wrapper app in ~/Applications/Home Manager Apps/ is the entry point
+    appLocation = "wrapper";
     desc = "Privacy-focused web browser based on ungoogled-chromium";
     homepage = "https://github.com/imputnet/helium-chromium";
   };
@@ -76,6 +92,7 @@ in {
       sha256 = "0q2vflgd9ypbmhgq4a0jiw41l4qvxhckhi4vh0rm3lia3yvygmva";
     };
     artifactType = "pkg"; # Extract .app from PKG (no system extensions needed)
+    binaries = []; # PKG apps don't have CLI wrappers
     desc = "AI voice dictation for macOS - write with your voice in any app";
     homepage = "https://talktastic.com";
   };
