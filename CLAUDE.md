@@ -54,6 +54,56 @@ ntfy pending
 - To rebuild darwin, use `sudo darwin-rebuild switch --flake ./` - this produces clean, verifiable output
 - Avoid `just mac` and `nh darwin switch` as they produce excessive animated output that's hard to verify success/failure
 
+## Configuration Organization
+
+**CRITICAL**: This dotfiles repo follows strict organizational patterns for configuration files.
+
+### Directory Structure Conventions
+
+**`config/` directory** - For files loaded DIRECTLY by applications (NOT Nix-managed):
+- `config/hammerspoon/` - Loaded directly by Hammerspoon (not via home-manager)
+- `config/ghostty/` - Loaded directly by Ghostty (not via home-manager)
+- These files are NOT symlinked through the Nix store
+- Used for configurations that applications read from their expected paths
+
+**`home/programs/` directory** - For Nix-managed configurations:
+- Module structure: `home/programs/<program>/default.nix` (if resources needed)
+- Or single file: `home/programs/<program>.nix` (if no resources)
+- Resources (bundles, layouts, templates) live alongside their module:
+  - `home/programs/email/mailmate/default.nix` (the module)
+  - `home/programs/email/mailmate/bundle/` (neovim bundle files)
+  - `home/programs/email/mailmate/layouts/` (custom layouts)
+- Reference resources using relative paths: `./bundle/info.plist` or `./layouts/foo.plist`
+
+### When to Use Which Pattern
+
+**Use `config/` when:**
+- Application reads config directly from a specific path
+- No home-manager/Nix intervention needed
+- Examples: Hammerspoon modules, Ghostty config
+
+**Use `home/programs/` with colocated resources when:**
+- Config is managed via `home.file` with `.source` attribute
+- Resources are symlinked through Nix store to target locations
+- Need to version control resources alongside module code
+- Examples: MailMate bundles/layouts, aerc stylesets
+
+### Anti-Pattern to Avoid
+
+❌ **DO NOT** put Nix-managed resources in `config/`:
+```nix
+# BAD: Resource is Nix-managed but stored in config/
+home.file."Library/...".source = "${inputs.self}/config/mailmate/bundle/..."
+```
+
+✅ **DO** colocate Nix-managed resources with their module:
+```nix
+# GOOD: Resource stored alongside module, referenced relatively
+home.file."Library/...".source = ./bundle/...
+```
+
+This separation ensures clarity about what's Nix-managed vs directly loaded.
+
 ## Hammerspoon
 
 - **Configuration file**: Always check `config/hammerspoon/config.lua` first for settings, constants, and configuration including:

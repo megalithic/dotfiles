@@ -1,0 +1,190 @@
+{
+	name = "Correspondence Arcs";
+	rootViewer =
+	{
+		viewerType = "MmSplitView";
+		orientation = "horizontal";
+		children =
+		(
+			{
+				// Mailboxes sidebar
+				viewerType = "MmBoxView";
+				orientation = "vertical";
+				defaultSize = 200;
+				minWidth = 100;
+				autoresize = 0;
+				toggleMenuTitle = "Mailboxes";
+				toggleKeyEquivalent = "^~@d";
+
+				dragRect = { width = 16.0; height = 16.0; location = "bottomRight"; };
+
+				children =
+				(
+					{
+						identifier = "mailboxesOutline";
+						viewerType = "MmMailboxesOutlineView";
+						stickyMessages = 1;
+					},
+					{
+						viewerType = "MmMailboxesStatusBar";
+					},
+				);
+			},
+			{
+				// Main window view
+				// Split the entire window vertically to separate sidebar from mailbox view
+				viewerType = "MmSplitView";
+				orientation = "vertical";
+				collapsibleSubview = 2; // Incomplete support -- no way to get it back (1 = first, 2 = last)
+				children =
+				(
+					{
+						// Top of main view
+						identifier = "pathOutlineBox";
+						viewerType = "MmBoxView";
+						orientation = "vertical";
+						defaultSize = 1000;
+						autoresize = 0;
+						children =
+						(
+							{
+								identifier = "pathControl";
+								viewerType = "MmPathControlView";
+								sources = ( { sourceIdentifier = "mailboxesOutline"; } );
+							},
+							{
+								viewerType = "MmSeparatorView"; showWithViews = ( "pathControl" );
+							},
+							{
+								viewerType = "MmSplitView";
+								minHeight = 50;
+								orientation = "horizontal";
+								children =
+								(
+									{
+										// Message list
+										viewerType = "MmBoxView";
+										orientation = "vertical";
+										defaultSize = 800;
+										minWidth = 500;
+										autoresize = 0;
+										children =
+										(
+											{
+												viewerType = "MmLabelView";
+												// TODO: Make label state current mailbox
+												label = "Messages";
+											},
+											{	viewerType = "MmSeparatorView"; },
+											{
+												identifier = "mainOutline";
+												viewerType = "MmMessagesOutlineView";
+												/* columnSettings = "outlineColumns"; */
+												sources = ( { sourceIdentifier = "pathControl"; } );
+											},
+										);
+									},
+									{
+										// Correspondence view
+										viewerType = "MmBoxView";
+										orientation = "vertical";
+										defaultSize = 300;
+										minWidth = 300;
+										autoresize = 0;
+										children =
+										(
+											{
+												viewerType = "MmLabelView";
+												label = "Correspondence";
+											},
+											{	viewerType = "MmSeparatorView"; },
+											{
+												identifier = "correspondenceOutline";
+												viewerType = "MmMessagesOutlineView";
+												minWidth = 100;
+												sources = ( { sourceIdentifier = "mainOutline"; } );
+												selectionSources = ( { sourceIdentifier = "mainOutline"; } );
+												// FIXME: The transformation does not work 'per' message, i.e., it tries to combine any 'from' with any 'to' in $mainOutline.
+												transformation = "$ALL_MESSAGES.filter((from.address = $mainOutline.from.address and #recipient.address = $mainOutline.#recipient.address) or (from.address = $mainOutline.#recipient.address and #recipient.address = $mainOutline.from.address))";
+												defaultColumns = ( "subject", "relativeDate" );
+												outlineColumn = "subject";
+											},
+										);
+										toggleMenuTitle = "Correspondence View";
+										toggleKeyEquivalent = "^~@c";
+									},
+									{
+										// Thread arcs view
+										viewerType = "MmThreadArcsView";
+										sources = ( { sourceIdentifier = "mainOutline"; } );
+										selectionSources = ( { sourceIdentifier = "mainOutline"; } );
+										transformation = "$ALL_MESSAGES.filter(#thread-id =[c] $mainOutline.#thread-id)";
+										minWidth = 40;
+										defaultSize = 40;
+										orientation = "vertical";
+										toggleMenuTitle = "Thread Arc View";
+										toggleKeyEquivalent = "";
+									},
+								);
+							},
+						);
+					},
+					{
+						// Bottom of main view
+						// Split the main window horizontally to separate messages from message list
+						viewerType = "MmSplitView";
+						orientation = "horizontal";
+						children =
+						(
+							{
+								// Email view
+								viewerType = "MmBoxView";
+								orientation = "vertical";
+								children =
+								(
+									{
+										identifier = "headersView";
+										viewerType = "MmHeadersView";
+										sources = ( { sourceIdentifier = "correspondenceOutline"; } );
+										inject = ( "headersFormatting.plist" );
+									},
+									{	viewerType = "MmSeparatorView"; showWithViews = ( "headersView" ); },
+									{
+										identifier = "tagsEditor";
+										viewerType = "MmTagsEditor";
+										sources = ( { sourceIdentifier = "correspondenceOutline"; } );
+									},
+									{	viewerType = "MmSeparatorView"; showWithViews = ( "tagsEditor" ); },
+									{
+										identifier = "blockingView";
+										viewerType = "MmImageBlockingView";
+										sources = ( { sourceIdentifier = "correspondenceOutline"; } );
+										transformation = "$correspondenceOutline.filter(##blocked-count exists)";
+									},
+									{	viewerType = "MmSeparatorView"; showWithViews = ( "blockingView" ); },
+									{
+										identifier = "securityView";
+										viewerType = "MmSecurityView";
+										sources = ( { sourceIdentifier = "correspondenceOutline"; } );
+										transformation = "$correspondenceOutline.filter(##security-problem exists)";
+									},
+									{	viewerType = "MmSeparatorView"; showWithViews = ( "securityView" ); },
+									{
+										identifier = "messageView";
+										viewerType = "MmWebView";
+										sources = ( { sourceIdentifier = "correspondenceOutline"; } );
+										minWidth = 175;
+										minHeight = 50;
+									},
+								);
+							}
+						);
+
+						toggleMenuTitle = "Message View";
+						toggleKeyEquivalent = "^~@h";
+					},
+				);
+			},
+		);
+	};
+}

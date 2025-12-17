@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+# neovim.mmbundle - Edit MailMate emails in Neovim via Ghostty
+# Nix-compatible: sources nix profile and uses nix-darwin paths
+
+set -euo pipefail
+
+FILEPATH="${1:-}"
+LINE_NUMBER="${2:-1}"
+
+if [[ -z "$FILEPATH" ]]; then
+    echo "Error: No filepath provided" >&2
+    exit 1
+fi
+
+# === Nix Environment Setup ===
+# Source nix profile for GUI apps that don't inherit shell environment
+if [[ -f /etc/profiles/per-user/$USER/etc/profile.d/hm-session-vars.sh ]]; then
+    source /etc/profiles/per-user/$USER/etc/profile.d/hm-session-vars.sh
+fi
+
+# Ensure nix-darwin and home-manager paths are available
+export PATH="/etc/profiles/per-user/$USER/bin:/run/current-system/sw/bin:$HOME/.nix-profile/bin:$PATH"
+
+# Also add common non-nix locations as fallback
+export PATH="$PATH:/opt/homebrew/bin:/usr/local/bin"
+
+# === Find executables ===
+NVIM=$(command -v nvim 2>/dev/null || echo "")
+GHOSTTY=$(command -v ghostty 2>/dev/null || echo "")
+
+# Fallback: check Applications folder for Ghostty
+if [[ -z "$GHOSTTY" ]] && [[ -x "/Applications/Ghostty.app/Contents/MacOS/ghostty" ]]; then
+    GHOSTTY="/Applications/Ghostty.app/Contents/MacOS/ghostty"
+fi
+
+if [[ -z "$NVIM" ]]; then
+    osascript -e 'display alert "Neovim not found" message "Could not find nvim in PATH. Check your Nix configuration."'
+    exit 1
+fi
+
+if [[ -z "$GHOSTTY" ]]; then
+    osascript -e 'display alert "Ghostty not found" message "Could not find ghostty. Install Ghostty or update PATH."'
+    exit 1
+fi
+
+# === Launch Neovim in Ghostty ===
+# Options:
+#   --title: Window title for easy identification
+#   --class: App class for window management
+#   -e: Execute command
+#
+# Neovim options:
+#   +{line}: Jump to line number
+#   -c "set ft=mail": Set filetype for syntax highlighting
+#   -c "set spell": Enable spell checking for emails
+
+exec "$GHOSTTY" \
+    --title="MailMate - Neovim" \
+    --class="mailmate-nvim" \
+    -e "$NVIM" \
+        +"$LINE_NUMBER" \
+        -c "setlocal filetype=mail" \
+        -c "setlocal spell spelllang=en_us" \
+        -c "setlocal wrap linebreak" \
+        -c "setlocal textwidth=72" \
+        "$FILEPATH"

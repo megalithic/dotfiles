@@ -1,0 +1,87 @@
+/*	Custom MailMate (http://freron.com) layout for Mailboxes view. Extends the installed widescreen 
+	layout by adding a vertical thread arcs view at the right. Save it to 
+	"~/Library/Application Support/MailMate/Resources/Layouts/Mailboxes/widescreen_with_thread_arcs.plist" 
+	and it will be available after a restart of MailMate. */
+
+{
+  name = "Widescreen with Thread Arcs";
+	rootViewer =
+	{
+		viewerType = "MmSplitView";
+		orientation = "horizontal";
+		children =
+		(
+			{
+				viewerType = "MmBoxView";
+				orientation = "vertical";
+				defaultSize = 200;
+				minWidth = 100;
+				autoresize = 0;
+				toggleMenuTitle = "Mailboxes";
+				toggleKeyEquivalent = "^~@d";
+
+				dragRect = { width = 16.0; height = 16.0; location = "bottomRight"; };
+
+				children =
+				(
+					{
+						identifier = "mailboxesOutline";
+						viewerType = "MmMailboxesOutlineView";
+						stickyMessages = 1;
+					},
+					{
+						viewerType = "MmMailboxesStatusBar";
+					},
+				);
+			},
+			{
+				viewerType = "MmBoxView";
+				orientation = "vertical";
+				children =
+				(
+					{
+						identifier = "pathControl";
+						viewerType = "MmPathControlView";
+						sources = ( { sourceIdentifier = "mailboxesOutline"; } );
+					},
+					{	viewerType = "MmSeparatorView"; showWithViews = ( "pathControl" ); },
+					{
+						viewerType = "MmSplitView";
+						collapsibleSubview = 2; // Incomplete support -- no way to get it back (1 = first, 2 = last)
+						children =
+						(
+							{
+								identifier = "mainOutline";
+								viewerType = "MmMessagesOutlineView";
+								columnSettings = "outlineColumns";
+								sources = ( { sourceIdentifier = "pathControl"; } );
+							},
+							{
+								inject = ( "messageView.plist" );
+							},
+							// additional vertical thread arcs view
+							{
+								viewerType = "MmThreadArcsView";
+								sources = ( { sourceIdentifier = "mainOutline"; } );
+								selectionSources = ( { sourceIdentifier = "mainOutline"; } );
+								transformation = "$ALL_MESSAGES.filter(#thread-id =[c] $mainOutline.#thread-id)";
+								defaultSize = 50;
+								minHeight = 30;
+								minWidth = 50;
+								orientation = vertical;
+								toolTipFormatting = 
+								{
+									children =
+									(
+										{ formatString = "${from.name:${from.address}}"; },
+										{ prefixString = ", "; formatString = "${#date-received-relative}"; },
+									);
+								};
+							},
+						);
+					},
+				);
+			},
+		);
+	};
+}

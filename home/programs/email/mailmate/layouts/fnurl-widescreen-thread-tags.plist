@@ -1,0 +1,184 @@
+{
+  name = "Widescreen: Thread+Tag";
+  rootViewer =
+  {
+    viewerType = "MmSplitView";
+    orientation = "horizontal";
+    children =
+    (
+      // Mailboxes
+      {
+        viewerType = "MmBoxView";
+        orientation = "vertical";
+        defaultSize = 200;
+        minWidth = 100;
+        autoresize = 0;
+        toggleMenuTitle = "Mailboxes";
+        toggleKeyEquivalent = "^~@d";
+
+        dragRect = { width = 16.0; height = 16.0; location = "bottomRight"; };
+
+        children =
+        (
+          {
+            identifier = "mailboxesOutline";
+            viewerType = "MmMailboxesOutlineView";
+            stickyMessages = 1;
+          },
+          {
+            viewerType = "MmMailboxesStatusBar";
+          },
+        );
+      },
+      {
+        viewerType = "MmBoxView";
+        orientation = "vertical";
+        children =
+        (
+          {
+            identifier = "pathControl";
+            viewerType = "MmPathControlView";
+            sources = ( { sourceIdentifier = "mailboxesOutline"; } );
+          },
+          { viewerType = "MmSeparatorView"; showWithViews = ( "pathControl" ); },
+          {
+            viewerType = "MmSplitView";
+            collapsibleSubview = 2; // Incomplete support -- no way to get it back (1 = first, 2 = last)
+            children =
+            (
+              // middle panel
+              {
+                viewerType = "MmSplitView";
+                orientation = "vertical";
+                collapsibleSubview = 2; // Incomplete support -- no way to get it back (1 = first, 2 = last)
+                children =
+                (
+                  // here is the main message outline
+                  {
+                    identifier = "mainOutline";
+                    viewerType = "MmMessagesOutlineView";
+                    columnSettings = "outlineColumns";
+                    sources = ( { sourceIdentifier = "pathControl"; } );
+                  },
+
+
+                  // Thread and Correspondance MmBoxViews
+                  {
+                    viewerType = "MmSplitView";
+                    orientation = "vertical";
+                    collapsibleSubview = 2; // Incomplete support -- no way to get it back (1 = first, 2 = last)
+                    children =
+                    (
+                      // Thread list. Need to put views with labels in a MmBoxView
+                      {
+                        viewerType = "MmBoxView";
+                        children = 
+                        (
+                          {
+                            viewerType = "MmLabelView";
+                            label = "Thread (other messages part of the thread)";
+                          },
+                          { viewerType = "MmSeparatorView"; },
+                          {
+                            identifier = "threadOutline";
+                            viewerType = "MmMessagesOutlineView";
+                            minWidth = 100;
+                            sources = ( { sourceIdentifier = "mainOutline"; } );
+                            selectionSources = ( { sourceIdentifier = "mainOutline"; } );
+                            transformation = "$ALL_MESSAGES.filter(#thread-id =[c] $mainOutline.#thread-id)";
+                            defaultColumns = ( "relativeDate", "subject", "from", "mailbox" );
+                            outlineColumn = "relativeDate";
+                          }, // end message list
+                        ); // end of MmBoxView children (label + outline)
+                      }, // end of MmBoxView (Thread MmBoxView)
+    
+                      // ### Tag listing (Need to put views with labels in a MmBoxView)
+                      {
+                        viewerType = "MmBoxView";
+                        children = 
+                        (
+                          {
+                            viewerType = "MmLabelView";
+                            label = "Tag (other messages with the same tags)";
+                          },
+                          { viewerType = "MmSeparatorView"; },
+                          {
+                            identifier = "tagOutline";
+                            viewerType = "MmMessagesOutlineView";
+                            minWidth = 100;
+
+                            sources = ( { sourceIdentifier = "mainOutline"; } );
+                            selectionSources = ( { sourceIdentifier = "threadOutline"; } );
+                            transformation = "$ALL_MESSAGES.filter(##tags.tag =[c] $mainOutline.##tags.tag)";
+                            defaultColumns = ( "relativeDate", "subject", "from", "mailbox" );
+                            outlineColumn = "relativeDate";
+                          }, // end message list
+                        );
+                      }, // end of tag panel
+                    );
+                    toggleMenuTitle = "Thread & Tag View";
+                    toggleKeyEquivalent = "^~@c";
+                  }, // end of panel with Thread + Tag 
+                );
+              }, // end of midddle panel
+
+              // Rightmost panel
+              {
+                viewerType = "MmBoxView";
+                orientation = "vertical";
+                minHeight = 150;
+                children =
+                (
+                  {
+                    identifier = "headersView";
+                    viewerType = "MmHeadersView";
+                    sources = ( { sourceIdentifier = "tagOutline"; } );
+                    inject = ( "headersFormatting.plist" );
+                  },
+                  { viewerType = "MmSeparatorView"; showWithViews = ( "headersView" ); },
+                  {
+                    identifier = "tagsEditor";
+                    viewerType = "MmTagsEditor";
+                    sources = ( { sourceIdentifier = "tagOutline"; } );
+                  },
+                  { viewerType = "MmSeparatorView"; showWithViews = ( "tagsEditor" ); },
+                  {
+                    identifier = "blockingView";
+                    viewerType = "MmImageBlockingView";
+                    sources = ( { sourceIdentifier = "tagOutline"; } );
+                    transformation = "$tagOutline.filter(##blocked-count exists)";
+                  },
+                  { viewerType = "MmSeparatorView"; showWithViews = ( "blockingView" ); },
+                  {
+                    identifier = "dummyMessageView";
+                    viewerType = "MmDummyMessageView";
+                    sources = ( { sourceIdentifier = "tagOutline"; } );
+                    transformation = "$tagOutline.filter(#dummy-message exists)";
+                  },
+                  { viewerType = "MmSeparatorView"; showWithViews = ( "dummyMessageView" ); },
+                  {
+                    identifier = "securityView";
+                    viewerType = "MmSecurityView";
+                    sources = ( { sourceIdentifier = "tagOutline"; } );
+                    transformation = "$tagOutline.filter(##security-problem exists)";
+                  },
+                  { viewerType = "MmSeparatorView"; showWithViews = ( "securityView" ); },
+                  {
+                    identifier = "messageView";
+                    viewerType = "MmWebView";
+                    sources = ( { sourceIdentifier = "tagOutline"; } );
+                    minWidth = 250;
+                  },
+                );
+
+                toggleMenuTitle = "Message View";
+                toggleKeyEquivalent = "^~@h";
+
+              },
+            );
+          },
+        );
+      },
+    );
+  };
+}

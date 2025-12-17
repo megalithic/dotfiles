@@ -1,0 +1,6 @@
+{
+    name = "Edit in Neovim";
+    keyEquivalent = "^$o";
+    saveForEditing = 1;
+    script = 'Support/bin/edit "$MM_EDIT_FILEPATH" "$MM_LINE_NUMBER"';
+}

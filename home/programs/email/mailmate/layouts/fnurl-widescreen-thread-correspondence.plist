@@ -1,0 +1,195 @@
+{
+  name = "Widescreen: Thread+Corr";
+  rootViewer =
+  {
+    viewerType = "MmSplitView";
+    orientation = "horizontal";
+    children =
+    (
+      // Leftmost panel: Mailboxes
+      {
+        viewerType = "MmBoxView";
+        orientation = "vertical";
+        defaultSize = 200;
+        minWidth = 100;
+        autoresize = 0;
+        toggleMenuTitle = "Mailboxes";
+        toggleKeyEquivalent = "^~@d";
+
+        dragRect = { width = 16.0; height = 16.0; location = "bottomRight"; };
+
+        children =
+        (
+          {
+            identifier = "mailboxesOutline";
+            viewerType = "MmMailboxesOutlineView";
+            stickyMessages = 1;
+          },
+          {
+            viewerType = "MmMailboxesStatusBar";
+          },
+        );
+      }, // End leftmost panel (mailboxes)
+
+      // Panel above middle and right panel
+      {
+        viewerType = "MmBoxView";
+        orientation = "vertical";
+        children =
+        (
+          {
+            identifier = "pathControl";
+            viewerType = "MmPathControlView";
+            sources = ( { sourceIdentifier = "mailboxesOutline"; } );
+          },
+          { viewerType = "MmSeparatorView"; showWithViews = ( "pathControl" ); },
+
+          // Middle and Right panel
+          {
+            viewerType = "MmSplitView";
+            collapsibleSubview = 2; // Incomplete support -- no way to get it back (1 = first, 2 = last)
+            children =
+            (
+              // # Middle panel container: messages outline + thread + corr
+              {
+                viewerType = "MmSplitView";
+                orientation = "vertical";
+                collapsibleSubview = 2; // Incomplete support -- no way to get it back (1 = first, 2 = last)
+                children =
+                (
+                  // ## Main message panel
+                  {
+                    identifier = "mainOutline";
+                    viewerType = "MmMessagesOutlineView";
+                    columnSettings = "outlineColumns";
+                    sources = ( { sourceIdentifier = "pathControl"; } );
+                  },
+
+                  // Panel below main message outline: Thread + Correspondance panels
+                  {
+                    viewerType = "MmSplitView";
+                    orientation = "vertical";
+                    collapsibleSubview = 2; // Incomplete support -- no way to get it back (1 = first, 2 = last)
+                    children =
+                    (
+
+                      // ## Thread panel (Need to put views with labels in a MmBoxView)
+                      {
+                        viewerType = "MmBoxView";
+                        children = 
+                        (
+                          {
+                            viewerType = "MmLabelView";
+                            label = "Thread (other messages part of the thread)";
+                          },
+                          { viewerType = "MmSeparatorView"; },
+                          {
+                            identifier = "threadOutline";
+                            viewerType = "MmMessagesOutlineView";
+                            minWidth = 100;
+                            sources = ( { sourceIdentifier = "mainOutline"; } );
+                            selectionSources = ( { sourceIdentifier = "mainOutline"; } );
+                            transformation = "$ALL_MESSAGES.filter(#thread-id =[c] $mainOutline.#thread-id)";
+                            defaultColumns = ( "relativeDate", "subject", "from", "mailbox" );
+                            outlineColumn = "relativeDate";
+                          }, // end message list
+                        );
+                      }, // end of Thread panel
+    
+                      // ## Correspondence panel (Need to put views with labels in a MmBoxView)
+                      {
+                        viewerType = "MmBoxView";
+                        children = 
+                        (
+                          {
+                            viewerType = "MmLabelView";
+                            label = "Correspondence (both sender and recipients participants)";
+                          },
+                          { viewerType = "MmSeparatorView"; },
+                          {
+                            identifier = "correspondenceOutline";
+                            viewerType = "MmMessagesOutlineView";
+                            minWidth = 100;
+
+                            sources = ( { sourceIdentifier = "mainOutline"; } );
+                            selectionSources = ( { sourceIdentifier = "threadOutline"; } );
+
+                            // Correspondence participation is when both the sender 
+                            // and the recipient of the message(s) selected in the 
+                            // in main (top) message list are either the sender or
+                            // a recipient. I.e. both can be recipients.
+                            transformation = "$ALL_MESSAGES.filter( (#any-address.address = $mainOutline.to.address or #any-address.name = $mainOutline.to.name) and (#any-address.address = $mainOutline.from.address or #any-address.name = $mainOutline.from.name) )";
+
+                            defaultColumns = ( "relativeDate", "subject", "from", "mailbox" );
+                            outlineColumn = "relativeDate";
+                          }, // end message list
+                        ); // end of MmBoxView children (label + outline)
+                      }, // end of MmBoxView (correspondance MmBoxView)
+                    ); // end of children of hideable view
+                    toggleMenuTitle = "Thread & Correspondence View";
+                    toggleKeyEquivalent = "^~@t";
+                  }, // end of hideable view (panel with thread and corr panels)
+                );
+              }, // end of midddle panel
+
+              // Rightmost panel (message view)
+              {
+                viewerType = "MmBoxView";
+                orientation = "vertical";
+                minHeight = 150;
+                children =
+                (
+                  {
+                    identifier = "headersView";
+                    viewerType = "MmHeadersView";
+                    sources = ( { sourceIdentifier = "correspondenceOutline"; } );
+                    inject = ( "headersFormatting.plist" );
+                  },
+                  { viewerType = "MmSeparatorView"; showWithViews = ( "headersView" ); },
+                  {
+                    identifier = "tagsEditor";
+                    viewerType = "MmTagsEditor";
+                    sources = ( { sourceIdentifier = "correspondenceOutline"; } );
+                  },
+                  { viewerType = "MmSeparatorView"; showWithViews = ( "tagsEditor" ); },
+                  {
+                    identifier = "blockingView";
+                    viewerType = "MmImageBlockingView";
+                    sources = ( { sourceIdentifier = "correspondenceOutline"; } );
+                    //transformation = "$mainOutline.filter(##blocked-count exists)";
+                    transformation = "$correspondenceOutline.filter(##blocked-count exists)";
+                  },
+                  { viewerType = "MmSeparatorView"; showWithViews = ( "blockingView" ); },
+                  {
+                    identifier = "dummyMessageView";
+                    viewerType = "MmDummyMessageView";
+                    sources = ( { sourceIdentifier = "correspondenceOutline"; } );
+                    transformation = "$correspondenceOutline.filter(#dummy-message exists)";
+                  },
+                  { viewerType = "MmSeparatorView"; showWithViews = ( "dummyMessageView" ); },
+                  {
+                    identifier = "securityView";
+                    viewerType = "MmSecurityView";
+                    sources = ( { sourceIdentifier = "correspondenceOutline"; } );
+                    transformation = "$correspondenceOutline.filter(##security-problem exists)";
+                  },
+                  { viewerType = "MmSeparatorView"; showWithViews = ( "securityView" ); },
+                  {
+                    identifier = "messageView";
+                    viewerType = "MmWebView";
+                    sources = ( { sourceIdentifier = "correspondenceOutline"; } );
+                    minWidth = 250;
+                  },
+                );
+
+                toggleMenuTitle = "Message View";
+                toggleKeyEquivalent = "^~@h";
+
+              }, // Rightmost panel: message view
+            );
+          },
+        );
+      },
+    );
+  };
+}
