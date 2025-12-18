@@ -356,9 +356,10 @@ in {
 
     nh = {
       enable = true;
-      package = pkgs.nh;
       clean.enable = true;
-      flake = ../../.;
+      clean.extraArgs = "--keep-since 4d --keep 3";
+      flake = "${inputs.self}";
+      # package = pkgs.nh;
     };
 
     # yazi = import ./yazi/default.nix {inherit config pkgs lib;};

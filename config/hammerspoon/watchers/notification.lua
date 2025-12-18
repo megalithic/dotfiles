@@ -199,12 +199,62 @@ local function startObserver()
   return true
 end
 
+-- Scan for existing persistent notifications on startup
+-- This catches system notifications that were already present before Hammerspoon loaded
+local function scanExistingNotifications()
+  local ncApp = hs.application.find("com.apple.notificationcenterui")
+  if not ncApp then return end
+  
+  local notificationCenter = hs.axuielement.applicationElement(ncApp)
+  if not notificationCenter then return end
+  
+  -- Navigate to scroll area containing notifications
+  local windows = notificationCenter:attributeValue("AXWindows") or {}
+  if #windows == 0 then return end
+  
+  local window = windows[1]
+  local children = window:attributeValue("AXChildren") or {}
+  if #children == 0 then return end
+  
+  local hostingView = children[1]
+  local hostingChildren = hostingView:attributeValue("AXChildren") or {}
+  if #hostingChildren == 0 then return end
+  
+  local innerGroup = hostingChildren[1]
+  local innerChildren = innerGroup:attributeValue("AXChildren") or {}
+  if #innerChildren == 0 then return end
+  
+  local scrollArea = innerChildren[1]
+  local notifications = scrollArea:attributeValue("AXChildren") or {}
+  
+  local count = 0
+  for _, notif in ipairs(notifications) do
+    if notif.AXSubrole == "AXNotificationCenterAlert" or notif.AXSubrole == "AXNotificationCenterBanner" then
+      -- Try to process it through our normal handler
+      -- Use pcall in case any notification fails to process
+      pcall(function()
+        handleNotification(notif)
+        count = count + 1
+      end)
+    end
+  end
+  
+  if count > 0 then
+    U.log.df("Scanned %d existing notification(s) on startup", count)
+  end
+end
+
 function M:start()
   -- Start the observer
   if not startObserver() then
     U.log.e("Failed to start notification observer")
     return
   end
+  
+  -- Scan for existing notifications after a short delay (let system settle)
+  hs.timer.doAfter(2, function()
+    scanExistingNotifications()
+  end)
 
   -- Monitor Notification Center process for restarts
   -- Check every 30 seconds if NC has restarted (PID changed)

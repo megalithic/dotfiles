@@ -17,8 +17,9 @@ cd $CWD
 
 # Create the session and the first window. Manually switch to root
 # directory if required to support tmux < 1.9
-tmux -2 new-session -d -s "$SESSION" -n comms
+tmux -2 new-session -d -s "$SESSION" -n dots
 tmux -2 send-keys -t "$SESSION":1 cd\ "$CWD" C-m
+tmux -2 send-keys -t "$SESSION":1 ls C-m
 
 # Window "chats"
 # if tmux has-session -t "aerc" 2>/dev/null; then
@@ -26,13 +27,12 @@ tmux -2 send-keys -t "$SESSION":1 cd\ "$CWD" C-m
 # else
 #   tmux -2 send-keys -t "$SESSION":1 aerc C-m
 # fi
-tmux -2 send-keys -t "$SESSION":1 ls C-m
 
 # focus
 
 tmux -2 select-window -t "$SESSION":1
 tmux -2 select-pane -t "$SESSION":1.1
-# tmux -2 rename-window -t "$SESSION":1 comms
+# tmux -2 rename-window -t "$SESSION":1 dots
 
 tmux setenv -t ${SESSION} 'SESSION_ICON' "${SESSION_ICON}"
 tmux setenv -t ${SESSION} 'SESSION_FG' "${SESSION_FG}"

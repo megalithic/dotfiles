@@ -1,0 +1,158 @@
+
+#!/usr/bin/env bash
+# claude-monitor - Monitor and jump to Claude Code instances across tmux sessions
+
+set -euo pipefail
+
+# Find all Claude CLI processes (exclude desktop app helper processes)
+get_claude_processes() {
+    ps aux | grep -E '\sclaude\s*$' | grep -v grep || true
+}
+
+# Get working directory for a PID
+get_cwd() {
+    local pid=$1
+    lsof -p "$pid" 2>/dev/null | grep cwd | awk '{print $NF}' | head -1
+}
+
+# Map TTY to tmux target (session:window.pane)
+get_tmux_target() {
+    local tty=$1
+    tmux list-panes -a -F "#{pane_tty} #{session_name}:#{window_index}.#{pane_index}" 2>/dev/null | grep "^$tty" | awk '{print $2}' | head -1 || true
+}
+
+# Shorten path for display
+shorten_path() {
+    local path=$1
+    echo "$path" | sed "s|^$HOME|~|"
+}
+
+# Get the Nth most recent conversation message for a project
+get_conversation_title() {
+    local project_path=$1
+    local index=${2:-1}  # Default to 1st most recent
+
+    # Convert project path to the format used by Claude Code
+    # e.g., /Users/nbr/repos/nikbrunner/dots -> -Users-nbr-repos-nikbrunner-dots
+    local project_hash=$(echo "$project_path" | sed 's|/|-|g')
+    local project_dir="$HOME/.claude/projects/$project_hash"
+
+    if [[ ! -d "$project_dir" ]]; then
+        echo ""
+        return
+    fi
+
+    # Get the Nth most recent conversation file (excluding agent files)
+    # Sort by modification time (newest first)
+    local conv_file=$(find "$project_dir" -name "*.jsonl" -not -name "agent-*" -type f -exec stat -f "%m %N" {} \; 2>/dev/null | sort -rn | sed -n "${index}p" | awk '{print $2}')
+
+    if [[ -z "$conv_file" ]]; then
+        echo ""
+        return
+    fi
+
+    # Extract last meaningful user message from the conversation
+    # Skip system messages (starting with <, Caveat:, or [)
+    local message=$(grep -E '"type":"user"' "$conv_file" 2>/dev/null | jq -r 'select(.message.content | type == "string") | .message.content' 2>/dev/null | grep -vE '^Caveat:|^<|^\[' | tail -1 | head -c 100)
+
+    if [[ -n "$message" && "$message" != "null" ]]; then
+        # Clean up the message
+        message=$(echo "$message" | tr '\n' ' ' | tr -s ' ')
+        echo "$message"
+    else
+        echo ""
+    fi
+}
+
+# Get activity indicator based on CPU usage
+# 🟡 Yellow = Busy/Active (high CPU, currently processing)
+# 🟢 Green = Ready/Idle (low CPU, waiting for input)
+get_activity_indicator() {
+    local cpu=$1
+    # Remove % sign if present and compare as float
+    cpu_value=$(echo "$cpu" | sed 's/%//')
+    if (( $(echo "$cpu_value > 1.0" | bc -l 2>/dev/null || echo 0) )); then
+        echo "🟡"  # Yellow = busy/processing
+    else
+        echo "🟢"  # Green = ready/idle
+    fi
+}
+
+main() {
+    # Check if we have required tools
+    if ! command -v fzf &> /dev/null; then
+        echo "Error: fzf is required but not installed"
+        exit 1
+    fi
+
+    # Get all claude processes
+    claude_procs=$(get_claude_processes)
+
+    if [[ -z "$claude_procs" ]]; then
+        echo "No Claude Code instances running"
+        exit 0
+    fi
+
+    # Build list for fzf
+    declare -a entries
+    declare -A target_map
+    declare -A project_counters  # Track conversation index per project
+
+    while IFS= read -r line; do
+        pid=$(echo "$line" | awk '{print $2}')
+        cpu=$(echo "$line" | awk '{print $3}')
+        tty=$(echo "$line" | awk '{print $7}')
+
+        # Convert TTY format: s034 -> /dev/ttys034
+        full_tty="/dev/tty${tty}"
+
+        # Get working directory
+        cwd=$(get_cwd "$pid")
+        [[ -z "$cwd" ]] && continue
+
+        # Get tmux target (session:window.pane)
+        target=$(get_tmux_target "$full_tty")
+        [[ -z "$target" ]] && continue
+
+        # Get activity indicator
+        indicator=$(get_activity_indicator "$cpu")
+
+        # Increment counter for this project to get unique conversation per instance
+        project_counters["$cwd"]=$((${project_counters["$cwd"]:-0} + 1))
+        index=${project_counters["$cwd"]}
+
+        # Get conversation title with index (1 = most recent, 2 = second most recent, etc.)
+        title=$(get_conversation_title "$cwd" "$index")
+
+        # Format: indicator cwd [title]
+        short_cwd=$(shorten_path "$cwd")
+        if [[ -n "$title" ]]; then
+            entry="$indicator  $(printf '%-50s' "$short_cwd")  $title"
+        else
+            entry="$indicator  $(printf '%-50s' "$short_cwd")"
+        fi
+        entries+=("$entry")
+        target_map["$entry"]="$target"
+    done <<< "$claude_procs"
+
+    if [[ ${#entries[@]} -eq 0 ]]; then
+        echo "No Claude Code instances found in tmux sessions"
+        exit 0
+    fi
+
+    # Use fzf to select
+    selected=$(printf '%s\n' "${entries[@]}" | fzf --ansi --header="Select Claude Code instance" --height=40% --reverse --border)
+
+    if [[ -n "$selected" ]]; then
+        target="${target_map[$selected]}"
+
+        # Check if we're inside tmux
+        if [[ -n "${TMUX:-}" ]]; then
+            tmux switch-client -t "$target"
+        else
+            tmux attach -t "$target"
+        fi
+    fi
+}
+
+main "$@"

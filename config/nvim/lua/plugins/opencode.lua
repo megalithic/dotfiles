@@ -26,8 +26,8 @@ return {
           }, extra_opts or {})
         end
 
-        mega.term(term_opts("opencode", { position = "right", size = 100 }))
-        -- require('snacks.terminal').toggle('opencode', { win = { position = 'right' } })
+        -- mega.term(term_opts("opencode", { position = "right", size = 100 }))
+        require("snacks.terminal").toggle("opencode", { win = { position = "right" } })
       end, { desc = "Toggle opencode" })
     end,
 
@@ -36,27 +36,13 @@ return {
     opts = {
       auto_reload = true, -- Automatically reload buffers edited by opencode
       context = { -- Context to inject in prompts
-        ["@file"] = function()
-          return require("opencode.context").file()
-        end,
-        ["@files"] = function()
-          return require("opencode.context").files()
-        end,
-        ["@cursor"] = function()
-          return require("opencode.context").cursor_position()
-        end,
-        ["@selection"] = function()
-          return require("opencode.context").visual_selection()
-        end,
-        ["@diagnostics"] = function()
-          return require("opencode.context").diagnostics()
-        end,
-        ["@quickfix"] = function()
-          return require("opencode.context").quickfix()
-        end,
-        ["@diff"] = function()
-          return require("opencode.context").git_diff()
-        end,
+        ["@file"] = function() return require("opencode.context").file() end,
+        ["@files"] = function() return require("opencode.context").files() end,
+        ["@cursor"] = function() return require("opencode.context").cursor_position() end,
+        ["@selection"] = function() return require("opencode.context").visual_selection() end,
+        ["@diagnostics"] = function() return require("opencode.context").diagnostics() end,
+        ["@quickfix"] = function() return require("opencode.context").quickfix() end,
+        ["@diff"] = function() return require("opencode.context").git_diff() end,
       },
     },
     -- stylua: ignore
@@ -78,8 +64,8 @@ return {
         end
 
 
-              mega.term(term_opts("opencode", { position = "right", size = 100 }))
-          -- require('snacks.terminal').toggle('opencode', { win = { position = 'right' } })
+              -- mega.term(term_opts("opencode", { position = "right", size = 100 }))
+          require('snacks.terminal').toggle('opencode', { win = { position = 'right' } })
         end,
         desc = "Toggle opencode",
       },

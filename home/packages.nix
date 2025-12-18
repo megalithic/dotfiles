@@ -16,9 +16,12 @@
 
   # Filter: only apps with appLocation = "home-manager" go to home.packages
   # (home-manager copies these to ~/Applications/Home Manager Apps/)
-  homeManagerApps = builtins.filter (pkg:
-    (pkg.passthru or {}).appLocation or "home-manager" == "home-manager"
-  ) customApps;
+  homeManagerApps =
+    builtins.filter (
+      pkg:
+        (pkg.passthru or {}).appLocation or "home-manager" == "home-manager"
+    )
+    customApps;
 
   # Standard GUI apps from nixpkgs (not custom mkApp derivations)
   guiPkgs = with pkgs; [
@@ -44,6 +47,7 @@
     gh
     git-lfs
     gum
+    imagemagickBig
     jwt-cli
     libvterm-neovim
     magika
@@ -52,6 +56,7 @@
     nix-update
     obsidian
     openconnect
+    openvpn
     openssl_3
     poppler
     pre-commit
@@ -137,6 +142,7 @@
     python313Packages.sqlfmt
     python313Packages.websocket-client
     python313Packages.websockets
+    python313Packages.pdf2image
     uv
 
     # nix

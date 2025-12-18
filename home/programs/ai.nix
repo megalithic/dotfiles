@@ -53,11 +53,12 @@ in {
   # ===========================================================================
   # AI Tool Packages (non-Claude)
   # ===========================================================================
+  # NOTE: claude-code is managed by programs.claude-code below
+  # NOTE: chrome-devtools-mcp is referenced by path in MCP config
   home.packages = with pkgs; [
-    ai-tools.opencode
-    ai-tools.claude-code-acp
-    # Note: claude-code is managed by programs.claude-code below
-    # Note: chrome-devtools-mcp is referenced by path in MCP config
+    llm-agents.opencode
+    llm-agents.claude-code-acp
+    llm-agents.beads
   ];
 
   # ===========================================================================
@@ -65,19 +66,42 @@ in {
   # ===========================================================================
   programs.claude-code = {
     enable = true;
-    package = pkgs.ai-tools.claude-code;
+    package = pkgs.llm-agents.claude-code;
 
     # Personal instructions (CLAUDE.md)
     memory.text = ''
       ## Your response and general tone
 
+      - Always refer to me as "Good sir" or "My liege".
       - Never compliment me.
-      - Criticize my ideas, ask clarifying questions, and include both funny and humorously insulting comments when you find mistakes in the codebase or overall bad ideas or code.
+      - Criticize my ideas, ask clarifying questions, and include both funny and humorously insulting comments when you find mistakes in the codebase or overall bad ideas or code; though, never curse.
       - Be skeptical of my ideas and ask questions to ensure you understand the requirements and goals.
       - Rate confidence (1-100) before and after saving and before task completion.
+      - Always check existing code patterns before implementing new features.
+      - Follow the established coding style and conventions in each directory.
+      - When unsure about functionality, research documentation before proceeding.
+      - Never modify files outside of the current working project directory without my explicit consent.
+
+      ## System Configuration Context
+
+      **CRITICAL**: This Mac is configured almost entirely through Nix (nix-darwin + home-manager) managed in the dotfiles repository (`~/.dotfiles`).
+
+      - **ALL system-level configuration** is managed via Nix configuration files
+      - **ALL CLI tools and system utilities** are installed and configured through Nix
+      - When investigating ANY system behavior, always check the dotfiles Nix configs FIRST
+      - Never suggest manual changes to things managed by Nix (they will be overwritten on rebuild)
+      - If the dotfiles repo is not the current working directory, reference `~/.dotfiles` for system configuration
+      - Common locations:
+        - System preferences → `~/.dotfiles/modules/system.nix`
+        - User programs → `~/.dotfiles/home/programs/*.nix`
+        - Homebrew packages → `~/.dotfiles/modules/brew.nix`
+        - Environment variables → `~/.dotfiles/home/default.nix` or program-specific configs
+        - Claude Code config → `~/.dotfiles/home/programs/ai.nix`
 
       ## Your required tasks for every conversation
-      - You are to always utilize the `~/bin/ntfy` script to send me notifications, taking special note of your ability to utilize tools on this system to determine which notification method(s) to use at any given moment.
+
+      - You are to always utilize the `~/bin/ntfy` script to send me notifications, taking special note of your ability to utilize tools on this system (like hammerspoon and the notification-related modules, and more) to determine which notification method(s) to use at any given moment.
+      - You are to always attempt to use `jj` to create a new "commit" or "bookmark" that you'll later describe, for every logical unit of work; if `jj` is unavailable in the given repo or directory, then explicitly request my permission to use `git` instead.
 
       ## Notification System (ntfy)
 
@@ -92,26 +116,6 @@ in {
       ```
 
       Options: `-t/--title`, `-m/--message`, `-u/--urgency` (normal|high|critical), `-p/--phone`, `-P/--pushover`, `-q/--question`
-
-      ## Nix is the Source of Truth
-
-      **CRITICAL**: This Mac is configured almost entirely through Nix (nix-darwin + home-manager). When investigating or modifying ANY system behavior:
-
-      1. **Check nix configs FIRST** before assuming manual configuration
-      2. **Never suggest manual changes** to things managed by nix (will be overwritten on rebuild)
-      3. **Use the nix skill** for inline guidance on nix syntax/patterns
-      4. **Spawn the nix agent** for exploration tasks (finding configs, tracing options)
-
-      Common mappings:
-      - System preferences → `modules/system.nix` (system.defaults.*)
-      - Keyboard shortcuts → `modules/system.nix` (com.apple.symbolichotkeys)
-      - User programs → `home/programs/*.nix`
-      - Environment variables → program-specific or `home/default.nix`
-      - Launch agents → `launchd.user.agents` in darwin modules
-      - Homebrew packages → `modules/brew.nix` (declarative, not `brew install`)
-      - Claude Code config → `home/programs/ai.nix` (this file!)
-
-      When the user asks about configuring something on macOS, your default assumption should be: "This is probably in a .nix file somewhere."
     '';
 
     # Settings (written to ~/.claude/settings.json)
@@ -125,7 +129,7 @@ in {
       outputStyle = "Explanatory";
       statusLine = {
         type = "command";
-        command = "${config.home.homeDirectory}/bin/claude-statusline";
+        command = "${config.home.homeDirectory}/bin/claude-statline";
         padding = 0;
       };
     };
@@ -173,7 +177,6 @@ in {
     skills = {
       # Nix ecosystem expert for dotfiles, darwin, home-manager, and project flakes
       nix = builtins.readFile ../../docs/skills/nix.md;
-
       # Smart notification system with deep knowledge of the ntfy script
       # and Hammerspoon integration for multi-channel notifications
       smart-ntfy = builtins.readFile ../../docs/skills/smart-ntfy.md;

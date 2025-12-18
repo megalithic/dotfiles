@@ -95,7 +95,7 @@ hs.loadSpoon("EmmyLua")
 -- Development/spike modules (available via Spike.* global)
 require("spike-ax-meeting")
 
-local watchers = { "audio", "dock", "app", "notification", "camera" }
+local watchers = { "audio", "dock", "app", "notification", "camera", "persistent-notification" }
 
 -- req("lib.seal")
 req("bindings")

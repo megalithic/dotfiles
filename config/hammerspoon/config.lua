@@ -621,6 +621,39 @@ M.notifier = {
   -- Database retention settings
   retentionDays = 30, -- Keep notifications for 30 days before cleanup
 
+  -- Persistent System Notification Auto-Dismissal
+  -- Monitors Notification Center for long-lived system alerts and auto-dismisses them
+  persistentNotifications = {
+    enabled = true,
+    scanInterval = 10, -- Check every 10 seconds for persistent notifications
+    
+    -- Default behavior: auto-dismiss after this many seconds
+    defaultDismissTimeout = 3,
+    
+    -- Whitelist: notifications matching these patterns will NOT be auto-dismissed
+    -- Each entry can match on title (Lua pattern) and/or message text
+    whitelist = {
+      -- Example: Keep software update notifications
+      -- { title = "Software Update" },
+      
+      -- Example: Keep security-related alerts
+      -- { message = "security" },
+      
+      -- Example: Keep specific app notifications
+      -- { title = ".*Critical.*" },
+    },
+    
+    -- Custom dismiss timeouts for specific notification patterns
+    -- If a notification matches, use this timeout instead of defaultDismissTimeout
+    customTimeouts = {
+      -- Example: Dismiss login item notifications after 5 seconds
+      { title = "Login Item", timeout = 5 },
+      
+      -- Example: Keep background permission requests for 60 seconds
+      { message = "background", timeout = 60 },
+    },
+  },
+
   -- Agent notification settings (used by N.send() API via ntfy CLI)
   agent = {
     -- Urgency → duration mapping (in seconds)
