@@ -1,0 +1,139 @@
+#!/usr/bin/env bash
+# Unified VPN dispatcher for Cisco and Azure VPN systems
+# Routes commands to vpn-cisco or vpn-azure based on type
+
+set -euo pipefail
+
+readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly VPN_CISCO="$SCRIPT_DIR/vpn-cisco"
+readonly VPN_AZURE="$SCRIPT_DIR/vpn-azure"
+
+# Default to Cisco (still actively used)
+readonly DEFAULT_TYPE="cisco"
+
+# Colors
+readonly RED='\033[0;31m'
+readonly GREEN='\033[0;32m'
+readonly YELLOW='\033[1;33m'
+readonly BLUE='\033[0;34m'
+readonly NC='\033[0m'
+
+log_error() {
+  echo -e "${RED}✗${NC} $*" >&2
+}
+
+usage() {
+  cat <<EOF
+Usage: vpn [TYPE] COMMAND [OPTIONS]
+
+Unified VPN interface for Cisco and Azure VPN systems.
+
+TYPES:
+    cisco, c        Use Cisco Secure Client VPN
+    azure, az, a    Use Azure VPN Gateway
+
+COMMANDS:
+    connect, c          Connect to VPN
+    disconnect, d       Disconnect from VPN
+    status, st          Show VPN status
+    logs, l             Show VPN logs (Azure only)
+    help, h             Show help
+
+EXAMPLES:
+    # Cisco VPN (default)
+    vpn connect                            # Connect to Cisco VPN
+    vpn cisco connect                      # Explicit Cisco
+    vpn cisco connect -m openconnect-sso   # Cisco with SSO method
+    vpn status                             # Check Cisco VPN status
+    vpn disconnect                         # Disconnect Cisco VPN
+
+    # Azure VPN
+    vpn azure connect              # Connect to Azure VPN
+    vpn az connect                 # Short form
+    vpn azure status               # Check Azure VPN status
+    vpn azure logs                 # View Azure VPN logs
+
+    # Get help for specific VPN type
+    vpn cisco help                 # Show Cisco VPN help
+    vpn azure help                 # Show Azure VPN help
+
+NOTES:
+    - Default VPN type is: $DEFAULT_TYPE
+    - Use 'vpn cisco help' or 'vpn azure help' for type-specific options
+    - Both VPN systems can coexist but only one should be active at a time
+    - Cisco VPN supports: gui, cisco-cli, openconnect, openconnect-sso methods
+    - Azure VPN connects via OpenVPN with Azure AD authentication
+    - VPN endpoints configured via agenix encrypted secrets (work-env-vars.age)
+EOF
+}
+
+main() {
+  if [[ $# -eq 0 ]]; then
+    usage
+    exit 0
+  fi
+
+  local vpn_type="$DEFAULT_TYPE"
+  local vpn_cmd=""
+
+  # Check if first arg is a VPN type
+  case "$1" in
+    cisco|c)
+      vpn_type="cisco"
+      shift
+      vpn_cmd="$VPN_CISCO"
+      ;;
+    azure|az|a)
+      vpn_type="azure"
+      shift
+      vpn_cmd="$VPN_AZURE"
+      ;;
+    help|h|-h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      # No type specified, use default
+      vpn_type="$DEFAULT_TYPE"
+      vpn_cmd="$VPN_CISCO"
+      ;;
+  esac
+
+  # Check if the VPN script exists
+  if [[ ! -x "$vpn_cmd" ]]; then
+    log_error "VPN script not found or not executable: $vpn_cmd"
+    exit 1
+  fi
+
+  # Translate command-style args to flags for vpn-cisco
+  # vpn-azure uses command-style, vpn-cisco uses flags
+  if [[ "$vpn_type" == "cisco" && $# -gt 0 ]]; then
+    case "$1" in
+      connect|c)
+        shift
+        # Just pass remaining args (like -m openconnect-sso)
+        exec "$vpn_cmd" "$@"
+        ;;
+      disconnect|d)
+        shift
+        exec "$vpn_cmd" -d "$@"
+        ;;
+      status|st)
+        shift
+        exec "$vpn_cmd" -s "$@"
+        ;;
+      help|h)
+        exec "$vpn_cmd" --help
+        ;;
+      *)
+        # Not a command, pass through as-is (might be a flag like -m)
+        exec "$vpn_cmd" "$@"
+        ;;
+    esac
+  else
+    # Azure VPN or no args - pass through as-is
+    exec "$vpn_cmd" "$@"
+  fi
+}
+
+main "$@"

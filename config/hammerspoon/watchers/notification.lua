@@ -20,6 +20,83 @@ local notificationSubroles = {
   AXNotificationCenterBanner = true,
 }
 
+-- Detect notification type based on stackingID format
+-- Returns: "system" if no bundleIdentifier, "app" otherwise
+local function detectNotificationType(stackingID)
+  if not stackingID or stackingID == "unknown" then return "unknown" end
+  
+  -- System notifications have UUID-only stackingIDs (no bundleIdentifier= prefix)
+  if not stackingID:match("bundleIdentifier=") then
+    return "system"
+  end
+  
+  return "app"
+end
+
+-- Match a single field value against a pattern or array of patterns
+-- Supports: exact string, Lua pattern, or array of patterns (OR logic)
+local function matchField(value, pattern)
+  if not pattern then return true end -- No pattern = wildcard match
+  if not value then return false end -- No value to match against
+  
+  -- Pattern is an array = OR logic (match any)
+  if type(pattern) == "table" then
+    for _, p in ipairs(pattern) do
+      if matchField(value, p) then return true end
+    end
+    return false
+  end
+  
+  -- Pattern is a string = Lua pattern match
+  return value:match(pattern) ~= nil
+end
+
+-- Match notification against new-style match criteria
+-- Returns: true if matches, false otherwise
+-- match = { title = "...", message = "...", bundleID = {...}, etc }
+-- Multiple fields = AND, array values = OR within field
+local function matchesNewRule(notifData, matchCriteria)
+  if not matchCriteria then return false end
+  
+  -- Check each field in match criteria (all must match = AND)
+  for field, pattern in pairs(matchCriteria) do
+    local value = notifData[field]
+    if not matchField(value, pattern) then
+      return false -- Field didn't match, rule fails
+    end
+  end
+  
+  return true -- All fields matched
+end
+
+-- Match notification against old-style rule (backward compatibility)
+-- Returns: true if matches, false otherwise
+local function matchesOldRule(notifData, rule)
+  -- Old rules use appBundleID + optional senders
+  if not rule.appBundleID then return false end
+  
+  -- Check if axStackingID contains appBundleID
+  local axStackingID = notifData.axStackingID or ""
+  if not axStackingID:find(rule.appBundleID, 1, true) then
+    return false
+  end
+  
+  -- Check senders if specified
+  if rule.senders then
+    local title = notifData.title or ""
+    local senderMatch = false
+    for _, sender in ipairs(rule.senders) do
+      if title == sender then
+        senderMatch = true
+        break
+      end
+    end
+    if not senderMatch then return false end
+  end
+  
+  return true
+end
+
 -- Find nested notification element in macOS Sequoia's new structure
 -- Sequoia wraps notifications in AXSystemDialog > AXHostingView > ... > AXNotificationCenterAlert
 local function findNotificationElement(element, depth)
@@ -60,18 +137,23 @@ local function handleNotification(element)
   end
 
   -- Process each notification only once
-  if not notificationSubroles[notificationElement.AXSubrole] or M.processedNotificationIDs[notificationElement.AXIdentifier] then return end
+  local notificationID = notificationElement.AXIdentifier or hs.host.uuid()
+  if not notificationSubroles[notificationElement.AXSubrole] or M.processedNotificationIDs[notificationID] then return end
 
-  M.processedNotificationIDs[notificationElement.AXIdentifier] = true
+  M.processedNotificationIDs[notificationID] = true
 
-  -- Get the stacking identifier to determine which app sent the notification
+  -- Get the AX stacking identifier to determine which app sent the notification
   -- Use notificationElement (the actual alert/banner), not the outer container
-  local stackingID = notificationElement.AXStackingIdentifier or "unknown"
-
-  -- Extract bundle ID from stackingID
   -- Format: bundleIdentifier=com.example.app,threadIdentifier=...
+  local axStackingID = notificationElement.AXStackingIdentifier or "unknown"
+  local subrole = notificationElement.AXSubrole or "unknown"
+
+  -- Extract bundle ID from AX stacking identifier
   -- Try to extract bundleIdentifier value first, fallback to simple extraction
-  local bundleID = stackingID:match("bundleIdentifier=([^,;%s]+)") or stackingID:match("^([^;%s]+)") or stackingID
+  local bundleID = axStackingID:match("bundleIdentifier=([^,;%s]+)") or axStackingID:match("^([^;%s]+)") or axStackingID
+  
+  -- Detect notification type (system vs app)
+  local notificationType = detectNotificationType(axStackingID)
 
   -- Extract notification text elements from the actual notification element
   local staticTexts = hs.fnutils.imap(
@@ -123,39 +205,48 @@ local function handleNotification(element)
     message = staticTexts[3] .. (staticTexts[4] and (" • " .. staticTexts[4]) or "")
   end
 
-  -- Process routing rules
+  -- Build notification data object for matching
+  local notifData = {
+    title = title,
+    subtitle = subtitle,
+    message = message,
+    sender = title, -- For backward compat (old rules use "sender")
+    bundleID = bundleID,
+    axStackingID = axStackingID,
+    notificationType = notificationType,
+    subrole = subrole,
+    notificationID = notificationID,
+  }
+
+  -- Process routing rules (first match wins)
   local rules = C.notifier.rules or {}
 
   for _, rule in ipairs(rules) do
-    -- Quick app match (plain string search, not pattern)
-    if stackingID:find(rule.appBundleID, 1, true) then
-      -- Check sender if specified
-      if rule.senders then
-        local senderMatch = false
-        for _, sender in ipairs(rule.senders) do
-          if title == sender then -- Exact match, case-sensitive
-            senderMatch = true
-            break
-          end
-        end
-        if not senderMatch then
-          goto continue -- Skip to next rule
-        end
-      end
+    local matched = false
+    
+    -- Try new-style match criteria first
+    if rule.match then
+      matched = matchesNewRule(notifData, rule.match)
+    -- Fall back to old-style matching for backward compatibility
+    elseif rule.appBundleID then
+      matched = matchesOldRule(notifData, rule)
+    end
 
+    if matched then
       -- Rule matched! Process via notification system
-      U.log.nf("%s: %s", rule.name, title or bundleID)
+      U.log.nf("%s: %s [ID=%s, type=%s]", rule.name, title or bundleID, 
+        tostring(notificationID or "nil"), tostring(notificationType or "nil"))
 
       -- Delegate to unified notification system via clean API
-      local ok, err = pcall(function() N.process(rule, title, subtitle, message, stackingID, bundleID) end)
+      -- Pass enhanced fields as individual parameters
+      local ok, err = pcall(N.process, rule, title, subtitle, message, axStackingID, bundleID, 
+        notificationID, notificationType, subrole)
 
       if not ok then U.log.ef("Error processing rule '%s': %s", rule.name, tostring(err)) end
 
       -- First match wins - stop processing rules
       return
     end
-
-    ::continue::
   end
 end
 

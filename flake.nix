@@ -55,6 +55,10 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     expert.url = "github:elixir-lang/expert";
+    nh = {
+      url = "github:nix-community/nh";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
     # opnix = {
     #   url = "github:brizzbuzz/opnix";

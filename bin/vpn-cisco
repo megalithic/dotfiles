@@ -10,7 +10,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 NTFY_CMD="$SCRIPT_DIR/ntfy"
 
 # Default configuration
-DEFAULT_VPN_URL="vpn.edge.launchdeck.tech"
+# VPN URL must be provided via CISCO_VPN_URL environment variable (from agenix work-env-vars.age)
+DEFAULT_VPN_URL="${CISCO_VPN_URL:?ERROR: CISCO_VPN_URL environment variable not set. Ensure work-env-vars.age is configured.}"
 DEFAULT_METHOD="gui"
 ENABLE_NOTIFICATIONS=false
 AUTO_RECONNECT=false
@@ -28,6 +29,9 @@ fi
 
 # OpenConnect CLI (available via nix)
 OPENCONNECT=$(command -v openconnect || echo "")
+
+# OpenConnect-SSO (installed via uv tool)
+OPENCONNECT_SSO=$(command -v openconnect-sso || echo "")
 
 # Color output helpers
 RED='\033[0;31m'
@@ -57,12 +61,12 @@ show_usage() {
   cat <<EOF
 Usage: vpn-connect [OPTIONS]
 
-Connect to Cisco Secure Client VPN using GUI, Cisco CLI, or OpenConnect.
+Connect to Cisco Secure Client VPN using GUI, Cisco CLI, OpenConnect, or OpenConnect-SSO.
 
 OPTIONS:
     -m, --method <METHOD>      Connection method (default: $DEFAULT_METHOD)
-                               Methods: gui, cisco-cli, openconnect
-    -u, --url <url>            VPN server URL (default: $DEFAULT_VPN_URL)
+                               Methods: gui, cisco-cli, openconnect, openconnect-sso
+    -u, --url <url>            VPN server URL (default: from CISCO_VPN_URL env var)
     -n, --notify               Enable notifications (default: disabled)
     -s, --status               Check VPN connection status
     -d, --disconnect           Disconnect from VPN
@@ -126,13 +130,15 @@ EXAMPLES:
     vpn-connect -m cli -n
 
 METHODS:
-    gui           - Launch Cisco Secure Client GUI and open connection URL
-    cisco-cli     - Use Cisco command-line interface (requires credentials)
-    openconnect   - Use OpenConnect CLI (best for automation)
+    gui              - Launch Cisco Secure Client GUI and open connection URL
+    cisco-cli        - Use Cisco command-line interface (requires credentials)
+    openconnect      - Use OpenConnect CLI (limited with Azure MFA)
+    openconnect-sso  - Use OpenConnect with SSO/Azure AD support (recommended for CLI)
 
 NOTES:
     - GUI method is recommended for interactive use with MFA/2FA
     - cisco-cli method may prompt for credentials in terminal
+    - openconnect-sso handles Azure AD/SAML authentication via browser popup
     - openconnect method supports auto-reconnect and background modes
     - VPN credentials can be stored in 1Password for future automation
     - openconnect requires sudo privileges for network changes
@@ -156,20 +162,60 @@ check_vpn_installed() {
   return 0
 }
 
-# Get VPN connection status
+# Get VPN connection status (checks openconnect, native Cisco client, and Azure VPN)
 get_vpn_status() {
+  # Check for openconnect-sso/openconnect process for Cisco VPN
+  if pgrep -f "openconnect.*$DEFAULT_VPN_URL" >/dev/null 2>&1; then
+    return 0 # Connected via openconnect-sso to Cisco
+  fi
+
+  # Check for Azure VPN (openvpn with launchdeck config)
+  if pgrep -f "openvpn.*launchdeck" >/dev/null 2>&1; then
+    return 0 # Connected via Azure VPN
+  fi
+
+  # Check native Cisco client
   if [[ ! -f "$VPNCLI" ]]; then
-    log_warn "VPN CLI not found, cannot check status"
-    return 1
+    return 1 # Not connected and no native client available
   fi
 
   local status_output
   status_output=$($VPNCLI state 2>/dev/null || echo "Disconnected")
 
   if echo "$status_output" | grep -q "state: Connected"; then
-    return 0 # Connected
+    return 0 # Connected via native client
   else
     return 1 # Not connected
+  fi
+}
+
+# Get VPN IP from utun interface
+get_vpn_ip() {
+  # Search all interfaces for LaunchDeck IP range (100.99.x.x - 100.104.x.x)
+  local ip
+  ip=$(ifconfig -a 2>/dev/null | awk '/inet (address)?/ {
+    for(i=1;i<=NF;i++) {
+      if($i ~ /^100\.(99|100|101|102|103|104)\./) {
+        print $i
+        exit
+      }
+    }
+  }')
+  echo "$ip"
+}
+
+# Detect which VPN method is active
+get_vpn_method() {
+  if pgrep -f "openconnect.*$DEFAULT_VPN_URL" >/dev/null 2>&1; then
+    echo "openconnect-sso"
+  elif pgrep -f "openvpn.*launchdeck" >/dev/null 2>&1; then
+    echo "azure-openvpn"
+  elif [[ -f "$VPNCLI" ]]; then
+    local status_output
+    status_output=$($VPNCLI state 2>/dev/null || echo "Disconnected")
+    if echo "$status_output" | grep -q "state: Connected"; then
+      echo "cisco-native"
+    fi
   fi
 }
 
@@ -178,10 +224,50 @@ check_status() {
   log_info "Checking VPN connection status..."
 
   if get_vpn_status; then
-    local status_details
-    status_details=$($VPNCLI state 2>/dev/null)
+    local method
+    local vpn_ip
+    method=$(get_vpn_method)
+    vpn_ip=$(get_vpn_ip)
+
     log_success "VPN is connected"
-    echo "$status_details"
+    echo ""
+    echo "  Method: $method"
+    
+    if [[ -n "$vpn_ip" ]]; then
+      echo "  VPN IP: $vpn_ip"
+    fi
+
+    # Show native client details if that's what's being used
+    if [[ "$method" == "cisco-native" ]] && [[ -f "$VPNCLI" ]]; then
+      echo ""
+      echo "Cisco Client Details:"
+      $VPNCLI state 2>/dev/null
+    fi
+    
+    # Show openconnect process info if that's what's being used
+    if [[ "$method" == "openconnect-sso" ]]; then
+      local pids
+      pids=$(pgrep -f "openconnect.*$DEFAULT_VPN_URL" | tr '\n' ' ')
+      echo "    PIDs: $pids"
+      echo ""
+      echo "OpenConnect Processes:"
+      pgrep -f "openconnect.*$DEFAULT_VPN_URL" | while read -r pid; do
+        echo "  PID $pid: $(ps -p "$pid" -o command= | head -c 80)..."
+      done
+    fi
+
+    # Show Azure VPN (openvpn) process info if that's what's being used
+    if [[ "$method" == "azure-openvpn" ]]; then
+      local pids
+      pids=$(pgrep -f "openvpn.*launchdeck" | tr '\n' ' ')
+      echo "    PIDs: $pids"
+      echo ""
+      echo "Azure OpenVPN Processes:"
+      pgrep -f "openvpn.*launchdeck" | while read -r pid; do
+        echo "  PID $pid: $(ps -p "$pid" -o command= | head -c 80)..."
+      done
+    fi
+
     return 0
   else
     log_info "VPN is disconnected"
@@ -514,6 +600,55 @@ connect_openconnect() {
   fi
 }
 
+# Connect using OpenConnect-SSO (with Azure AD/SAML support)
+connect_openconnect_sso() {
+  local vpn_url="$1"
+
+  if [[ -z "$OPENCONNECT_SSO" ]]; then
+    log_error "OpenConnect-SSO not found. Install via: uv tool install openconnect-sso"
+    return 1
+  fi
+
+  log_info "Connecting via OpenConnect-SSO (Azure AD/SAML)..."
+  log_info "VPN URL: $vpn_url"
+  log_info "A browser window will open for authentication"
+
+  # Check if already connected (check both cisco and openconnect)
+  if get_vpn_status 2>/dev/null; then
+    log_warn "Cisco VPN is already connected"
+    log_info "Use --disconnect to disconnect first"
+    return 0
+  fi
+
+  if is_openconnect_running; then
+    log_warn "OpenConnect is already running"
+    log_info "Use --disconnect to disconnect first"
+    return 0
+  fi
+
+  # Build openconnect-sso command
+  local sso_cmd="$OPENCONNECT_SSO --server $vpn_url"
+
+  log_info "Executing: openconnect-sso --server $vpn_url"
+  log_info "Complete authentication in the browser window that opens..."
+
+  # Connect
+  if $sso_cmd; then
+    log_success "Successfully connected to VPN"
+    if [[ "$ENABLE_NOTIFICATIONS" == true ]]; then
+      $NTFY_CMD send -t "VPN Connected" -m "OpenConnect-SSO connected to $vpn_url" -u normal
+    fi
+    return 0
+  else
+    log_error "Failed to connect to VPN"
+    log_error "Check if you completed authentication in the browser"
+    if [[ "$ENABLE_NOTIFICATIONS" == true ]]; then
+      $NTFY_CMD send -t "VPN Connection Failed" -m "OpenConnect-SSO failed to connect to $vpn_url" -u high
+    fi
+    return 1
+  fi
+}
+
 # Main function
 main() {
   local method="$DEFAULT_METHOD"
@@ -579,8 +714,8 @@ main() {
   fi
 
   # Validate method
-  if [[ "$method" != "cisco-cli" && "$method" != "gui" && "$method" != "openconnect" ]]; then
-    log_error "Invalid method: $method (must be 'gui', 'cisco-cli', or 'openconnect')"
+  if [[ "$method" != "cisco-cli" && "$method" != "gui" && "$method" != "openconnect" && "$method" != "openconnect-sso" ]]; then
+    log_error "Invalid method: $method (must be 'gui', 'cisco-cli', 'openconnect', or 'openconnect-sso')"
     exit 1
   fi
 
@@ -633,6 +768,9 @@ main() {
       ;;
     openconnect)
       connect_openconnect "$vpn_url"
+      ;;
+    openconnect-sso)
+      connect_openconnect_sso "$vpn_url"
       ;;
     *)
       log_error "Unknown method: $method"

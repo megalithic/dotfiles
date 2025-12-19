@@ -1,7 +1,7 @@
 # Hammerspoon Notification System - Deep Analysis
 
-> **Last Updated:** 2025-12-11
-> **Status:** ✅ WORKING - Fixed macOS Sequoia AX structure changes
+> **Last Updated:** 2025-12-19
+> **Status:** 🚧 REFACTORING - Schema migrated, rule engine updates in progress
 > **macOS Version:** Sequoia (Darwin 24.6.0)
 
 ## Executive Summary
@@ -215,21 +215,53 @@ end
 
 **Location:** `~/.local/share/hammerspoon/hammerspoon.db`
 
-**Table: notifications**
+### Schema Migration (2025-12-19)
+
+The notification table schema was migrated to support enhanced features:
+- Old table renamed to `legacy_notifications` (preserved for reference)
+- New clean schema with additional tracking fields
+- Backward compatible log function during transition
+
+**Table: notifications (NEW SCHEMA)**
 ```sql
 CREATE TABLE notifications (
+  -- Core identification
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  timestamp INTEGER,
-  rule_name TEXT,
-  app_id TEXT,      -- Full stackingID
-  sender TEXT,      -- Notification title
+  timestamp INTEGER NOT NULL,
+  notification_id TEXT,              -- AX element UUID or generated UUID
+  
+  -- Content
+  title TEXT,
   subtitle TEXT,
-  message TEXT,
-  action_taken TEXT, -- shown_center_dimmed, shown_bottom_left, blocked_by_focus, etc.
-  focus_mode TEXT,
-  shown INTEGER     -- 0 or 1
+  message TEXT NOT NULL,
+  sender TEXT NOT NULL,
+  
+  -- Source
+  app_id TEXT NOT NULL,              -- stackingID or bundleID
+  app_name TEXT,                     -- Human-readable app name
+  notification_type TEXT,            -- "banner" | "alert" | "system"
+  subrole TEXT,                      -- AX subrole for analytics
+  
+  -- Rule matching
+  rule_name TEXT NOT NULL,
+  match_criteria TEXT,               -- JSON of what matched
+  
+  -- Action/routing
+  action TEXT NOT NULL,              -- "redirect" | "dismiss" | "ignore" | "blocked"
+  action_detail TEXT,                -- Implementation details
+  priority TEXT,                     -- "low" | "normal" | "high"
+  
+  -- State tracking
+  shown INTEGER NOT NULL DEFAULT 1,
+  first_seen INTEGER,                -- When first detected (for dismiss timeout)
+  dismissed_at INTEGER,
+  dismiss_method TEXT,               -- "auto" | "manual" | NULL
+  focus_mode TEXT
 );
 ```
+
+**Table: legacy_notifications (OLD DATA)**
+Contains historical notifications from before 2025-12-19 schema migration.
 
 ---
 
@@ -338,7 +370,14 @@ print('Presented:', n:presented())
 
 ### Check Database
 ```bash
-sqlite3 ~/.local/share/hammerspoon/hammerspoon.db "SELECT * FROM notifications ORDER BY timestamp DESC LIMIT 10"
+# Check recent notifications (new schema)
+sqlite3 ~/.local/share/hammerspoon/hammerspoon.db "SELECT id, timestamp, title, sender, action, notification_type FROM notifications ORDER BY timestamp DESC LIMIT 10"
+
+# Verify Hammerspoon reload succeeded
+sqlite3 ~/.local/share/hammerspoon/hammerspoon.db "SELECT timestamp FROM notifications WHERE sender = 'hammerspork' AND message = 'config is loaded.' ORDER BY timestamp DESC LIMIT 1"
+
+# Check legacy data still accessible
+sqlite3 ~/.local/share/hammerspoon/hammerspoon.db "SELECT COUNT(*) FROM legacy_notifications"
 ```
 
 ### Check Notification Permissions
@@ -400,3 +439,53 @@ sqlite3 ~/.local/share/hammerspoon/hammerspoon.db "VACUUM"
 | `mxukvtzp` | Smart truncation with remaining char count |
 | `yzkuorqq` | Fix watchers, add pushover, optimize reload |
 | `okyrptkt` | Original notification routing system with sqlite tracking |
+
+---
+
+## Verification & Testing
+
+### Verify Hammerspoon Loaded Successfully
+
+After `hs.reload()`, check the database for the load notification:
+
+```bash
+# Should return a recent timestamp (within last few seconds)
+sqlite3 ~/.local/share/hammerspoon/hammerspoon.db \
+  "SELECT timestamp, sender, message FROM notifications 
+   WHERE sender = 'hammerspoon' AND message = 'config is loaded.' 
+   ORDER BY timestamp DESC LIMIT 1"
+```
+
+If empty, Hammerspoon may have failed to reload or the notification system didn't initialize.
+
+### Send Test Notification
+
+```bash
+# Via ntfy (recommended - goes through full notification pipeline)
+~/bin/ntfy send -t "Test" -m "Schema validation test" -u normal
+
+# Check it was captured (should appear within 2 seconds)
+sqlite3 ~/.local/share/hammerspoon/hammerspoon.db \
+  "SELECT id, title, message, action FROM notifications 
+   ORDER BY timestamp DESC LIMIT 1"
+```
+
+### Verify Schema Migration
+
+```bash
+# Both tables should exist
+sqlite3 ~/.local/share/hammerspoon/hammerspoon.db ".tables"
+# Should show: notifications, legacy_notifications, connection_events, user_cache, ft_notifications*
+
+# Legacy data preserved
+sqlite3 ~/.local/share/hammerspoon/hammerspoon.db \
+  "SELECT COUNT(*) as legacy_count FROM legacy_notifications"
+
+# New schema has enhanced fields
+sqlite3 ~/.local/share/hammerspoon/hammerspoon.db \
+  ".schema notifications" | grep notification_id
+# Should show: notification_id TEXT, notification_type TEXT, etc.
+```
+
+---
+

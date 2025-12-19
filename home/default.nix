@@ -359,7 +359,8 @@ in {
       clean.enable = true;
       clean.extraArgs = "--keep-since 4d --keep 3";
       flake = "${inputs.self}";
-      # package = pkgs.nh;
+      # Pull from upstream flake to get latest search fixes (issue #501)
+      package = inputs.nh.packages.${pkgs.stdenv.hostPlatform.system}.default;
     };
 
     # yazi = import ./yazi/default.nix {inherit config pkgs lib;};

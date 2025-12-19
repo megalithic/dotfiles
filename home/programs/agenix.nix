@@ -15,8 +15,8 @@
     ];
     secrets = {
       env-vars.file = "${inputs.self}/secrets/env-vars.age";
+      work-env-vars.file = "${inputs.self}/secrets/work-env-vars.age";
       s3cfg.file = "${inputs.self}/secrets/s3cfg.age";
-      launchdeck-vpn.file = "${inputs.self}/secrets/launchdeck-vpn.age";
     };
   };
 
@@ -26,8 +26,10 @@
       source "${config.age.secrets.env-vars.path}"
     fi
 
-    # LaunchDeck VPN config path
-    export AGENIX_VPN_CONFIG="${config.age.secrets.launchdeck-vpn.path}"
+    # Load work-specific environment variables
+    if [ -f "${config.age.secrets.work-env-vars.path}" ]; then
+      source "${config.age.secrets.work-env-vars.path}"
+    fi
   '';
 
   programs.fish.interactiveShellInit = lib.mkAfter ''
@@ -36,8 +38,10 @@
       source "${config.age.secrets.env-vars.path}"
     end
 
-    # LaunchDeck VPN config path
-    set -gx AGENIX_VPN_CONFIG "${config.age.secrets.launchdeck-vpn.path}"
+    # Load work-specific environment variables
+    if test -f "${config.age.secrets.work-env-vars.path}"
+      source "${config.age.secrets.work-env-vars.path}"
+    end
   '';
 
   home.packages = [

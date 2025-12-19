@@ -482,6 +482,19 @@ M.notifier = {
       appImageID = "com.tdesktop.Telegram",
     },
 
+    -- TEST RULE: Hammerspoon system notifications (using NEW match syntax)
+    {
+      name = "Hammerspoon System Notifications (TEST)",
+      match = {
+        bundleID = "org.hammerspoon.Hammerspoon",
+        title = "hammerspork",  -- Match reload notifications
+      },
+      action = "redirect",  -- Will map to old behavior for now
+      duration = 3,
+      overrideFocusModes = true,
+      appImageID = "org.hammerspoon.Hammerspoon",
+    },
+
     -- AI Agent Notifications (from ntfy via hs.notify)
     {
       name = "AI Agent Notifications",

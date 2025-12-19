@@ -10,9 +10,12 @@ local fmt = string.format
 ---@param title string Notification title
 ---@param subtitle string Notification subtitle (may be empty)
 ---@param message string Notification message body
----@param stackingID string Full stacking identifier from notification center
+---@param axStackingID string Full AX stacking identifier from notification center
 ---@param bundleID string Parsed bundle ID from stacking identifier
-function M.process(rule, title, subtitle, message, stackingID, bundleID)
+---@param notificationID string|nil UUID from AXIdentifier
+---@param notificationType string|nil "system" | "app"
+---@param subrole string|nil AXSubrole value
+function M.process(rule, title, subtitle, message, axStackingID, bundleID, notificationID, notificationType, subrole)
   local notify = require("lib.notifications.notifier")
   local db = require("lib.notifications.db")
   local menubar = require("lib.notifications.menubar")
@@ -66,13 +69,18 @@ function M.process(rule, title, subtitle, message, stackingID, bundleID)
   if not focusAllowed then
     db.log({
       timestamp = timestamp,
+      notification_id = notificationID,
       rule_name = rule.name,
-      app_id = stackingID,
+      app_id = axStackingID,
+      notification_type = notificationType,
+      subrole = subrole,
       title = title,
       sender = title,
       subtitle = subtitle,
       message = message,
-      action_taken = "blocked_by_focus",
+      action = "blocked",
+      action_detail = "blocked_by_focus",
+      priority = effectivePriority,
       focus_mode = currentFocus,
       shown = false,
     })
@@ -91,13 +99,18 @@ function M.process(rule, title, subtitle, message, stackingID, bundleID)
     if not priorityCheck.shouldShow then
       db.log({
         timestamp = timestamp,
+        notification_id = notificationID,
         rule_name = rule.name,
-        app_id = stackingID,
+        app_id = axStackingID,
+        notification_type = notificationType,
+        subrole = subrole,
         title = title,
         sender = title,
         subtitle = subtitle,
         message = message,
-        action_taken = "blocked_" .. priorityCheck.reason,
+        action = "blocked",
+        action_detail = "blocked_" .. priorityCheck.reason,
+        priority = effectivePriority,
         focus_mode = currentFocus,
         shown = false,
       })
@@ -146,13 +159,18 @@ function M.process(rule, title, subtitle, message, stackingID, bundleID)
   -- Log to database
   db.log({
     timestamp = timestamp,
+    notification_id = notificationID,
     rule_name = rule.name,
-    app_id = stackingID,
+    app_id = axStackingID,
+    notification_type = notificationType,
+    subrole = subrole,
     title = title,
     sender = title,
     subtitle = subtitle,
     message = message,
-    action_taken = effectivePriority == "high" and "shown_center_dimmed" or "shown_bottom_left",
+    action = "redirect",
+    action_detail = effectivePriority == "high" and "shown_center_dimmed" or "shown_bottom_left",
+    priority = effectivePriority,
     focus_mode = currentFocus,
     shown = true,
   })

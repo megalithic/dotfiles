@@ -34,26 +34,81 @@ function M.init()
     return false
   end
 
-  -- Create notifications table
+  -- Schema Migration: Rename old notifications table to legacy_notifications
+  -- and create new clean schema with enhanced fields
+  local needsMigration = false
+  
+  -- Check if notifications table exists and legacy doesn't
+  local hasNotifications = false
+  local hasLegacy = false
+  
+  for row in M.db:nrows("SELECT name FROM sqlite_master WHERE type='table'") do
+    if row.name == "notifications" then hasNotifications = true end
+    if row.name == "legacy_notifications" then hasLegacy = true end
+  end
+  
+  if hasNotifications and not hasLegacy then
+    -- Migration needed: rename existing table to legacy
+    needsMigration = true
+    U.log.i("Migrating notifications schema: renaming existing table to legacy_notifications")
+    
+    if not M.db:execute("ALTER TABLE notifications RENAME TO legacy_notifications") then
+      U.log.e("Failed to rename notifications table to legacy_notifications")
+      return false
+    end
+    
+    -- Also rename the old FTS table if it exists
+    M.db:execute("DROP TABLE IF EXISTS ft_notifications")
+    M.db:execute("DROP TRIGGER IF EXISTS notifications_ai")
+    
+    U.log.i("Successfully renamed notifications → legacy_notifications")
+  end
+  
+  -- Create new notifications table with clean schema
   local notificationsSchema = [[
     CREATE TABLE IF NOT EXISTS notifications (
+      -- Core identification
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       timestamp INTEGER NOT NULL,
-      rule_name TEXT NOT NULL,
-      app_id TEXT NOT NULL,
-      sender TEXT NOT NULL,
+      notification_id TEXT,
+      
+      -- Content
+      title TEXT,
       subtitle TEXT,
       message TEXT NOT NULL,
-      action_taken TEXT NOT NULL,
-      focus_mode TEXT,
+      sender TEXT NOT NULL,
+      
+      -- Source
+      app_id TEXT NOT NULL,
+      app_name TEXT,
+      notification_type TEXT,
+      subrole TEXT,
+      
+      -- Rule matching
+      rule_name TEXT NOT NULL,
+      match_criteria TEXT,
+      
+      -- Action/routing
+      action TEXT NOT NULL,
+      action_detail TEXT,
+      priority TEXT,
+      
+      -- State tracking
       shown INTEGER NOT NULL DEFAULT 1,
-      dismissed_at INTEGER
+      first_seen INTEGER,
+      dismissed_at INTEGER,
+      dismiss_method TEXT,
+      focus_mode TEXT
     )
   ]]
 
   if not M.db:execute(notificationsSchema) then
     U.log.e("Failed to create notifications table")
     return false
+  end
+  
+  if needsMigration then
+    U.log.i("Created new notifications table with enhanced schema")
   end
 
   -- Create connection_events table (for future connection watcher)
@@ -121,7 +176,17 @@ function M.init()
 
   M.db:execute([[
     CREATE INDEX IF NOT EXISTS idx_notifications_action
-    ON notifications(action_taken, shown, timestamp DESC)
+    ON notifications(action, shown, timestamp DESC)
+  ]])
+  
+  M.db:execute([[
+    CREATE INDEX IF NOT EXISTS idx_notifications_type
+    ON notifications(notification_type, timestamp DESC)
+  ]])
+  
+  M.db:execute([[
+    CREATE INDEX IF NOT EXISTS idx_notifications_priority
+    ON notifications(priority, timestamp DESC)
   ]])
 
   -- Indexes for connections
@@ -139,15 +204,15 @@ function M.init()
   -- Full-text search on notification content
   M.db:execute([[
     CREATE VIRTUAL TABLE IF NOT EXISTS ft_notifications
-    USING FTS5(sender, message, content=notifications, content_rowid=id)
+    USING FTS5(title, sender, message, content=notifications, content_rowid=id)
   ]])
 
   -- Trigger to keep FTS in sync
   M.db:execute([[
     CREATE TRIGGER IF NOT EXISTS notifications_ai
     AFTER INSERT ON notifications BEGIN
-      INSERT INTO ft_notifications(rowid, sender, message)
-      VALUES (new.id, new.sender, new.message);
+      INSERT INTO ft_notifications(rowid, title, sender, message)
+      VALUES (new.id, new.title, new.sender, new.message);
     END
   ]])
 
@@ -223,33 +288,62 @@ function M.notifications.log(data)
     return false
   end
 
+  -- Extract and escape fields (support both old and new field names for backward compat)
   local timestamp = data.timestamp or os.time()
+  local notification_id = data.notification_id and escapeSql(data.notification_id) or "NULL"
   local rule_name = escapeSql(data.rule_name or "unknown")
   local app_id = escapeSql(data.app_id or "unknown")
+  local app_name = data.app_name and escapeSql(data.app_name) or "NULL"
   local title = escapeSql(data.title or "")
   local sender = escapeSql(data.sender or "")
   local subtitle = escapeSql(data.subtitle or "")
   local message = escapeSql(data.message or "")
-  local action_taken = escapeSql(data.action_taken or "unknown")
-  local focus_mode = data.focus_mode and escapeSql(data.focus_mode) or "NULL"
+  local notification_type = data.notification_type and escapeSql(data.notification_type) or "NULL"
+  local subrole = data.subrole and escapeSql(data.subrole) or "NULL"
+  local match_criteria = data.match_criteria and escapeSql(data.match_criteria) or "NULL"
+  
+  -- Action fields (support old action_taken or new action/action_detail)
+  local action = data.action and escapeSql(data.action) or escapeSql(data.action_taken or "unknown")
+  local action_detail = data.action_detail and escapeSql(data.action_detail) or "NULL"
+  local priority = data.priority and escapeSql(data.priority) or "NULL"
+  
+  -- State fields
   local shown = data.shown and 1 or 0
+  local first_seen = data.first_seen or "NULL"
+  local dismissed_at = data.dismissed_at or "NULL"
+  local dismiss_method = data.dismiss_method and escapeSql(data.dismiss_method) or "NULL"
+  local focus_mode = data.focus_mode and escapeSql(data.focus_mode) or "NULL"
 
   local query = fmt(
     [[
     INSERT INTO notifications
-    (timestamp, rule_name, app_id, title, sender, subtitle, message, action_taken, focus_mode, shown)
-    VALUES (%d, '%s', '%s', '%s', '%s', '%s', '%s', '%s', %s, %d)
+    (timestamp, notification_id, rule_name, app_id, app_name, title, sender, subtitle, message,
+     notification_type, subrole, match_criteria, action, action_detail, priority,
+     shown, first_seen, dismissed_at, dismiss_method, focus_mode)
+    VALUES (%d, %s, '%s', '%s', %s, '%s', '%s', '%s', '%s',
+     %s, %s, %s, '%s', %s, %s,
+     %d, %s, %s, %s, %s)
   ]],
     timestamp,
+    notification_id == "NULL" and "NULL" or "'" .. notification_id .. "'",
     rule_name,
     app_id,
+    app_name == "NULL" and "NULL" or "'" .. app_name .. "'",
     title,
     sender,
     subtitle,
     message,
-    action_taken,
-    focus_mode == "NULL" and "NULL" or "'" .. focus_mode .. "'",
-    shown
+    notification_type == "NULL" and "NULL" or "'" .. notification_type .. "'",
+    subrole == "NULL" and "NULL" or "'" .. subrole .. "'",
+    match_criteria == "NULL" and "NULL" or "'" .. match_criteria .. "'",
+    action,
+    action_detail == "NULL" and "NULL" or "'" .. action_detail .. "'",
+    priority == "NULL" and "NULL" or "'" .. priority .. "'",
+    shown,
+    first_seen,
+    dismissed_at,
+    dismiss_method == "NULL" and "NULL" or "'" .. dismiss_method .. "'",
+    focus_mode == "NULL" and "NULL" or "'" .. focus_mode .. "'"
   )
 
   return M.db:execute(query) ~= nil

@@ -283,20 +283,14 @@ end
 function M.routeNotification(opts, attention)
   local channels = {}
   local cfg = getConfig()
-  local duration = cfg.durations[opts.urgency] or cfg.durations.normal
 
   -- Determine which channels to use based on attention state
   local shouldNotify = attention.shouldNotify
 
-  -- Canvas only for full notifications (no macOS NC - it triggers duplicate canvas via watcher)
-  if shouldNotify == "full" then
-    M.sendCanvas(opts.title, opts.message, duration, {
-      appImageID = "hal9000",
-      includeProgram = false, -- AI agent notifications already have [source] in title
-    })
-    table.insert(channels, "canvas")
-  elseif shouldNotify == "subtle" then
-    -- User is paying attention - just log to macOS NC (no visual interrupt)
+  -- ALWAYS send to macOS Notification Center
+  -- This ensures all notifications go through the unified watcher/rule system
+  -- The watcher will then route to canvas based on rules
+  if shouldNotify == "full" or shouldNotify == "subtle" then
     M.sendMacOS(opts.title, opts.message)
     table.insert(channels, "macos")
   end

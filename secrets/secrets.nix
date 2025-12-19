@@ -21,8 +21,8 @@ let
   allKeys = [megaenv];
 in {
   "env-vars.age".publicKeys = allKeys;
+  "work-env-vars.age".publicKeys = allKeys;
   "s3cfg.age".publicKeys = allKeys;
-  "launchdeck-vpn.age".publicKeys = allKeys;
 
   # "api-keys.age".publicKeys = allKeys;
   # "github-token.age".publicKeys = allKeys;
