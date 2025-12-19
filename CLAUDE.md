@@ -400,3 +400,45 @@ that was completely wrong.
   push to main on github. Remember that we have a github workflow that gets the
   latest flake updates, so we need to pull the latest lock file from remote
   origin/main.
+
+## Darwin Rebuild Hang Workaround
+
+**Issue**: `darwin-rebuild switch` hangs indefinitely at "Activating setupLaunchAgents" 
+when home-manager is integrated with nix-darwin.
+
+**Root Cause**: darwin-rebuild's subprocess handling causes a hang when calling 
+home-manager's setupLaunchAgents activation step. The launch agents themselves 
+work fine when loaded manually, but the way darwin-rebuild pipes/calls the 
+activation causes it to block.
+
+**Workaround**: Use `bin/darwin-switch` instead of `darwin-rebuild switch`. This 
+script separates the darwin system activation from home-manager activation:
+
+```bash
+# Use this (via justfile)
+just rebuild
+
+# Or directly
+./bin/darwin-switch
+
+# Avoid this (will hang)
+sudo darwin-rebuild switch --flake ./
+```
+
+The workaround script:
+1. Builds darwin configuration
+2. Activates darwin system (as root)
+3. Builds home-manager configuration separately  
+4. Activates home-manager (as user)
+
+This avoids the subprocess hang by running activations in sequence rather than 
+as nested calls.
+
+**Status**: This is likely a bug in nix-darwin or darwin-rebuild's activation 
+orchestration. No existing GitHub issues found as of 2025-12-19.
+
+**Related Files**:
+- `bin/darwin-switch` - Workaround script
+- `justfile` - `rebuild` target uses workaround
+- `home/programs/agenix.nix` - Agenix launch agent disabled to reduce complexity
+

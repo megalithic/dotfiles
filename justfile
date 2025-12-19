@@ -83,6 +83,11 @@ update:
 
 [macos]
 rebuild:
+  ./bin/darwin-switch
+
+[macos]
+rebuild-old:
+  @echo "WARNING: This may hang on setupLaunchAgents. Use 'just rebuild' instead."
   sudo darwin-rebuild switch --flake ./
 
 [macos]

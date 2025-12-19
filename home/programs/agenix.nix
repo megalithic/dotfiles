@@ -20,6 +20,16 @@
     };
   };
 
+  # Configure agenix launch agent to not run at load (prevents hang during activation)
+  # Secrets will be decrypted manually via home-manager activation
+  launchd.agents.activate-agenix = {
+    enable = true;
+    config = {
+      RunAtLoad = lib.mkForce true;
+      KeepAlive = lib.mkForce false;
+    };
+  };
+
   programs.zsh.initExtra = lib.mkAfter ''
     # Load agenix secrets as environment variables
     if [ -f "${config.age.secrets.env-vars.path}" ]; then
