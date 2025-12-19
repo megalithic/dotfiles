@@ -232,7 +232,7 @@ check_status() {
     log_success "VPN is connected"
     echo ""
     echo "  Method: $method"
-    
+
     if [[ -n "$vpn_ip" ]]; then
       echo "  VPN IP: $vpn_ip"
     fi
@@ -243,7 +243,7 @@ check_status() {
       echo "Cisco Client Details:"
       $VPNCLI state 2>/dev/null
     fi
-    
+
     # Show openconnect process info if that's what's being used
     if [[ "$method" == "openconnect-sso" ]]; then
       local pids

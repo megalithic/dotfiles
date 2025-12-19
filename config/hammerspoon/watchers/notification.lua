@@ -97,6 +97,64 @@ local function matchesOldRule(notifData, rule)
   return true
 end
 
+-- Dismiss a notification by finding and clicking its close button
+-- @param notificationElement: AX element of the notification
+-- @param title: Notification title (for logging)
+-- @return boolean: true if dismissed successfully, false otherwise
+local function dismissNotification(notificationElement, title)
+  if not notificationElement then
+    U.log.wf("Cannot dismiss notification - no element reference: %s", title or "unknown")
+    return false
+  end
+  
+  -- Recursively search for close button
+  local function findCloseButton(element, depth)
+    depth = depth or 0
+    if depth > 8 then return nil end -- Prevent infinite recursion
+    
+    -- Check if this element is a close button
+    if element.AXRole == "AXButton" then
+      local desc = element.AXDescription or ""
+      local buttonTitle = element.AXTitle or ""
+      
+      -- Look for "Close" in description or title (case-insensitive)
+      if desc:lower():match("close") or buttonTitle:lower():match("close") then
+        return element
+      end
+    end
+    
+    -- Recurse into children
+    local children = element:attributeValue("AXChildren") or {}
+    for _, child in ipairs(children) do
+      local found = findCloseButton(child, depth + 1)
+      if found then return found end
+    end
+    
+    return nil
+  end
+  
+  local closeButton = findCloseButton(notificationElement)
+  
+  if closeButton then
+    U.log.df("Dismissing notification via close button: %s", title or "unknown")
+    
+    -- Click the close button (NOT AXPress on notification itself!)
+    local success, err = pcall(function()
+      closeButton:performAction("AXPress")
+    end)
+    
+    if success then
+      return true
+    else
+      U.log.ef("Failed to perform AXPress on close button: %s", tostring(err))
+      return false
+    end
+  else
+    U.log.wf("Could not find close button for notification: %s", title or "unknown")
+    return false
+  end
+end
+
 -- Find nested notification element in macOS Sequoia's new structure
 -- Sequoia wraps notifications in AXSystemDialog > AXHostingView > ... > AXNotificationCenterAlert
 local function findNotificationElement(element, depth)
@@ -223,26 +281,78 @@ local function handleNotification(element)
 
   for _, rule in ipairs(rules) do
     local matched = false
+    local matchedCriteria = nil
     
     -- Try new-style match criteria first
     if rule.match then
       matched = matchesNewRule(notifData, rule.match)
+      if matched then
+        -- Serialize match criteria for logging
+        matchedCriteria = hs.json.encode(rule.match)
+      end
     -- Fall back to old-style matching for backward compatibility
     elseif rule.appBundleID then
       matched = matchesOldRule(notifData, rule)
+      if matched then
+        -- Serialize old-style criteria
+        local criteria = { appBundleID = rule.appBundleID }
+        if rule.senders then criteria.senders = rule.senders end
+        matchedCriteria = hs.json.encode(criteria)
+      end
     end
 
     if matched then
-      -- Rule matched! Process via notification system
-      U.log.nf("%s: %s [ID=%s, type=%s]", rule.name, title or bundleID, 
-        tostring(notificationID or "nil"), tostring(notificationType or "nil"))
+      -- Rule matched! Log match details
+      local action = rule.action or "redirect"
+      U.log.nf("%s: %s [ID=%s, type=%s, criteria=%s, action=%s]", 
+        rule.name, title or bundleID, 
+        tostring(notificationID or "nil"), 
+        tostring(notificationType or "nil"), 
+        matchedCriteria or "nil",
+        action)
 
-      -- Delegate to unified notification system via clean API
-      -- Pass enhanced fields as individual parameters
-      local ok, err = pcall(N.process, rule, title, subtitle, message, axStackingID, bundleID, 
-        notificationID, notificationType, subrole)
-
-      if not ok then U.log.ef("Error processing rule '%s': %s", rule.name, tostring(err)) end
+      local timestamp = os.time()
+      
+      -- Handle different actions
+      if action == "dismiss" then
+        -- DISMISS: Find and click close button
+        local success = dismissNotification(notificationElement, title)
+        
+        -- Log dismissal to database
+        local db = require("lib.notifications.db")
+        db.log({
+          timestamp = timestamp,
+          notification_id = notificationID,
+          rule_name = rule.name,
+          app_id = axStackingID,
+          notification_type = notificationType,
+          subrole = subrole,
+          match_criteria = matchedCriteria,
+          title = title,
+          sender = title,
+          subtitle = subtitle,
+          message = message,
+          action = "dismiss",
+          action_detail = success and "dismissed_via_close_button" or "dismiss_failed",
+          priority = "normal", -- dismissals don't have priority logic
+          focus_mode = nil, -- could add getCurrentFocusMode() if needed
+          shown = false,
+        })
+        
+        -- Update menubar indicator
+        require("lib.notifications.menubar").update()
+        
+      elseif action == "ignore" then
+        -- IGNORE: Silent drop (no logging, no display)
+        U.log.df("Ignoring notification per rule: %s", rule.name)
+        
+      else
+        -- REDIRECT (default): Delegate to processor for canvas display
+        local ok, err = pcall(N.process, rule, title, subtitle, message, axStackingID, bundleID, 
+          notificationID, notificationType, subrole, matchedCriteria)
+        
+        if not ok then U.log.ef("Error processing rule '%s': %s", rule.name, tostring(err)) end
+      end
 
       -- First match wins - stop processing rules
       return

@@ -78,25 +78,25 @@ main() {
 
   # Check if first arg is a VPN type
   case "$1" in
-    cisco|c)
-      vpn_type="cisco"
-      shift
-      vpn_cmd="$VPN_CISCO"
-      ;;
-    azure|az|a)
-      vpn_type="azure"
-      shift
-      vpn_cmd="$VPN_AZURE"
-      ;;
-    help|h|-h|--help)
-      usage
-      exit 0
-      ;;
-    *)
-      # No type specified, use default
-      vpn_type="$DEFAULT_TYPE"
-      vpn_cmd="$VPN_CISCO"
-      ;;
+  cisco | c)
+    vpn_type="cisco"
+    shift
+    vpn_cmd="$VPN_CISCO"
+    ;;
+  azure | az | a)
+    vpn_type="azure"
+    shift
+    vpn_cmd="$VPN_AZURE"
+    ;;
+  help | h | -h | --help)
+    usage
+    exit 0
+    ;;
+  *)
+    # No type specified, use default
+    vpn_type="$DEFAULT_TYPE"
+    vpn_cmd="$VPN_CISCO"
+    ;;
   esac
 
   # Check if the VPN script exists
@@ -109,26 +109,26 @@ main() {
   # vpn-azure uses command-style, vpn-cisco uses flags
   if [[ "$vpn_type" == "cisco" && $# -gt 0 ]]; then
     case "$1" in
-      connect|c)
-        shift
-        # Just pass remaining args (like -m openconnect-sso)
-        exec "$vpn_cmd" "$@"
-        ;;
-      disconnect|d)
-        shift
-        exec "$vpn_cmd" -d "$@"
-        ;;
-      status|st)
-        shift
-        exec "$vpn_cmd" -s "$@"
-        ;;
-      help|h)
-        exec "$vpn_cmd" --help
-        ;;
-      *)
-        # Not a command, pass through as-is (might be a flag like -m)
-        exec "$vpn_cmd" "$@"
-        ;;
+    connect | c)
+      shift
+      # Just pass remaining args (like -m openconnect-sso)
+      exec "$vpn_cmd" "$@"
+      ;;
+    disconnect | d)
+      shift
+      exec "$vpn_cmd" -d "$@"
+      ;;
+    status | st)
+      shift
+      exec "$vpn_cmd" -s "$@"
+      ;;
+    help | h)
+      exec "$vpn_cmd" --help
+      ;;
+    *)
+      # Not a command, pass through as-is (might be a flag like -m)
+      exec "$vpn_cmd" "$@"
+      ;;
     esac
   else
     # Azure VPN or no args - pass through as-is

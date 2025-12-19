@@ -15,11 +15,15 @@ local fmt = string.format
 ---@param notificationID string|nil UUID from AXIdentifier
 ---@param notificationType string|nil "system" | "app"
 ---@param subrole string|nil AXSubrole value
-function M.process(rule, title, subtitle, message, axStackingID, bundleID, notificationID, notificationType, subrole)
+---@param matchedCriteria string|nil JSON string of what matched (for logging)
+function M.process(rule, title, subtitle, message, axStackingID, bundleID, notificationID, notificationType, subrole, matchedCriteria)
   local notify = require("lib.notifications.notifier")
   local db = require("lib.notifications.db")
   local menubar = require("lib.notifications.menubar")
   local timestamp = os.time()
+  
+  -- Determine action (default: redirect for backward compat)
+  local action = rule.action or "redirect"
 
   -- Determine priority based on pattern matching
   local effectivePriority = "normal" -- default
@@ -74,6 +78,7 @@ function M.process(rule, title, subtitle, message, axStackingID, bundleID, notif
       app_id = axStackingID,
       notification_type = notificationType,
       subrole = subrole,
+      match_criteria = matchedCriteria,
       title = title,
       sender = title,
       subtitle = subtitle,
@@ -104,6 +109,7 @@ function M.process(rule, title, subtitle, message, axStackingID, bundleID, notif
         app_id = axStackingID,
         notification_type = notificationType,
         subrole = subrole,
+        match_criteria = matchedCriteria,
         title = title,
         sender = title,
         subtitle = subtitle,
@@ -153,27 +159,81 @@ function M.process(rule, title, subtitle, message, axStackingID, bundleID, notif
     }
   end
 
-  -- Show notification
-  notify.sendCanvasNotification(title, subtitle, message, duration, notifConfig)
-
-  -- Log to database
-  db.log({
-    timestamp = timestamp,
-    notification_id = notificationID,
-    rule_name = rule.name,
-    app_id = axStackingID,
-    notification_type = notificationType,
-    subrole = subrole,
-    title = title,
-    sender = title,
-    subtitle = subtitle,
-    message = message,
-    action = "redirect",
-    action_detail = effectivePriority == "high" and "shown_center_dimmed" or "shown_bottom_left",
-    priority = effectivePriority,
-    focus_mode = currentFocus,
-    shown = true,
-  })
+  -- Determine action (default: redirect for backward compat)
+  local action = rule.action or "redirect"
+  
+  -- Handle different actions
+  if action == "dismiss" then
+    -- Dismiss: log but don't show
+    db.log({
+      timestamp = timestamp,
+      notification_id = notificationID,
+      rule_name = rule.name,
+      app_id = axStackingID,
+      notification_type = notificationType,
+      subrole = subrole,
+      match_criteria = matchedCriteria,
+      title = title,
+      sender = title,
+      subtitle = subtitle,
+      message = message,
+      action = "dismiss",
+      action_detail = "dismissed_by_rule",
+      priority = effectivePriority,
+      focus_mode = currentFocus,
+      shown = false,
+    })
+    menubar.update()
+    return
+  elseif action == "ignore" then
+    -- Ignore: don't log, don't show (silent drop)
+    return
+  elseif action == "redirect" then
+    -- Redirect: show via canvas (original behavior)
+    notify.sendCanvasNotification(title, subtitle, message, duration, notifConfig)
+    
+    db.log({
+      timestamp = timestamp,
+      notification_id = notificationID,
+      rule_name = rule.name,
+      app_id = axStackingID,
+      notification_type = notificationType,
+      subrole = subrole,
+      match_criteria = matchedCriteria,
+      title = title,
+      sender = title,
+      subtitle = subtitle,
+      message = message,
+      action = "redirect",
+      action_detail = effectivePriority == "high" and "shown_center_dimmed" or "shown_bottom_left",
+      priority = effectivePriority,
+      focus_mode = currentFocus,
+      shown = true,
+    })
+  else
+    -- Unknown action, log warning and fall back to redirect
+    U.log.wf("Unknown action '%s' in rule '%s', falling back to redirect", action, rule.name)
+    notify.sendCanvasNotification(title, subtitle, message, duration, notifConfig)
+    
+    db.log({
+      timestamp = timestamp,
+      notification_id = notificationID,
+      rule_name = rule.name,
+      app_id = axStackingID,
+      notification_type = notificationType,
+      subrole = subrole,
+      match_criteria = matchedCriteria,
+      title = title,
+      sender = title,
+      subtitle = subtitle,
+      message = message,
+      action = "redirect",
+      action_detail = "unknown_action_fallback",
+      priority = effectivePriority,
+      focus_mode = currentFocus,
+      shown = true,
+    })
+  end
 end
 
 return M

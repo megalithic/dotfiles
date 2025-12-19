@@ -223,16 +223,17 @@ end
 ---@param notificationID string|nil UUID from AXIdentifier
 ---@param notificationType string|nil "system" | "app"
 ---@param subrole string|nil AXSubrole value
+---@param matchedCriteria string|nil JSON string of what matched (for logging)
 ---@return nil
 ---@usage N.process(rule, "Test", nil, "Message", "bundleIdentifier=com.app", "com.app")
-function M.process(rule, title, subtitle, message, axStackingID, bundleID, notificationID, notificationType, subrole)
+function M.process(rule, title, subtitle, message, axStackingID, bundleID, notificationID, notificationType, subrole, matchedCriteria)
   if not M.initialized then
     U.log.e("Notification system not initialized - cannot process notification")
     return
   end
 
-  -- Delegate to processor with all enhanced fields
-  M.processor.process(rule, title, subtitle, message, axStackingID, bundleID, notificationID, notificationType, subrole)
+  -- Delegate to processor with all enhanced fields including match criteria
+  M.processor.process(rule, title, subtitle, message, axStackingID, bundleID, notificationID, notificationType, subrole, matchedCriteria)
 end
 
 ---Send a canvas notification directly

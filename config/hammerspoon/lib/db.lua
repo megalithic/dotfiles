@@ -384,7 +384,8 @@ function M.notifications.getBlockedByFocus()
     FROM notifications
     WHERE dismissed_at IS NULL
       AND shown = 0
-      AND action_taken = 'blocked_by_focus'
+      AND action = 'blocked'
+      AND action_detail = 'blocked_by_focus'
     ORDER BY timestamp DESC
     LIMIT 50
   ]]
@@ -427,13 +428,12 @@ end
 -- Get notifications by sender
 function M.notifications.getBySender(sender, limit)
   limit = limit or 50
-  sender = escapeSql(sender)
 
   local query = fmt(
     [[
     SELECT
       datetime(timestamp, 'unixepoch', 'localtime') as time,
-      rule_name, message, action_taken, focus_mode, shown
+      rule_name, message, action, action_detail, focus_mode, shown
     FROM notifications
     WHERE sender = '%s'
     ORDER BY timestamp DESC
@@ -460,7 +460,7 @@ function M.notifications.search(searchTerm, limit)
     [[
     SELECT
       datetime(n.timestamp, 'unixepoch', 'localtime') as time,
-      n.rule_name, n.sender, n.message, n.action_taken, n.shown
+      n.rule_name, n.sender, n.message, n.action, n.action_detail, n.shown
     FROM notifications n
     JOIN ft_notifications ft ON n.id = ft.rowid
     WHERE ft_notifications MATCH '%s'
@@ -590,7 +590,8 @@ function M.notifications.printResults(results, title)
     if row.sender then print(fmt("   From: %s", row.sender)) end
     if row.rule_name then print(fmt("   Rule: %s", row.rule_name)) end
     if row.message then print(fmt("   Msg: %s", row.message:sub(1, 60))) end
-    if row.action_taken then print(fmt("   Action: %s", row.action_taken)) end
+    if row.action then print(fmt("   Action: %s", row.action)) end
+    if row.action_detail then print(fmt("   Action Detail: %s", row.action_detail)) end
     if row.focus_mode then print(fmt("   Focus: %s", row.focus_mode)) end
     if row.shown ~= nil then print(fmt("   Shown: %s", row.shown == 1 and "Yes" or "No")) end
     print("")
@@ -638,13 +639,14 @@ function M.connections.getEvents(hours)
   local query = fmt(
     [[
     SELECT
-      id,
-      timestamp,
+      id, timestamp,
       datetime(timestamp, 'unixepoch', 'localtime') as time,
-      event_type,
-      duration_seconds
-    FROM connection_events
-    WHERE timestamp > %d AND dismissed = 0
+      rule_name, sender, message, action, action_detail, focus_mode, shown
+    FROM notifications
+    WHERE timestamp >= %d
+      AND shown = 0
+      AND action = 'blocked'
+      AND action_detail = 'blocked_by_focus'
     ORDER BY timestamp DESC
   ]],
     cutoff

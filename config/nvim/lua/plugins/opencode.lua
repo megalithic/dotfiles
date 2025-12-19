@@ -5,31 +5,31 @@ return {
       "folke/snacks.nvim",
     },
 
-    config = function()
-      vim.g.opencode_opts = {
-        -- Your configuration, if any — see `lua/opencode/config.lua`
-      }
-
-      vim.opt.autoread = true
-
-      nmap("<leader>cc", function()
-        local term_opts = function(cmd, extra_opts)
-          return vim.tbl_extend("force", {
-            winnr = vim.fn.winnr(),
-            cmd = cmd,
-            -- notifier = vim.schedule_wrap(terminal_notifier),
-            temp = true,
-            open_startinsert = true,
-            focus_startinsert = true,
-            focus_on_open = true,
-            move_on_direction_change = false,
-          }, extra_opts or {})
-        end
-
-        -- mega.term(term_opts("opencode", { position = "right", size = 100 }))
-        require("snacks.terminal").toggle("opencode", { win = { position = "right" } })
-      end, { desc = "Toggle opencode" })
-    end,
+    -- config = function(_,)
+    --   -- vim.g.opencode_opts = {
+    --   --   -- Your configuration, if any — see `lua/opencode/config.lua`
+    --   -- }
+    --
+    --   vim.opt.autoread = true
+    --
+    --   nmap("<leader>cc", function()
+    --     local term_opts = function(cmd, extra_opts)
+    --       return vim.tbl_extend("force", {
+    --         winnr = vim.fn.winnr(),
+    --         cmd = cmd,
+    --         -- notifier = vim.schedule_wrap(terminal_notifier),
+    --         temp = true,
+    --         open_startinsert = true,
+    --         focus_startinsert = true,
+    --         focus_on_open = true,
+    --         move_on_direction_change = false,
+    --       }, extra_opts or {})
+    --     end
+    --
+    --     -- mega.term(term_opts("opencode", { position = "right", size = 100 }))
+    --     require("snacks.terminal").toggle("opencode", { win = { position = "right" } })
+    --   end, { desc = "Toggle opencode" })
+    -- end,
 
     -- Required for `opts.auto_reload`
     ---@type opencode.Config
