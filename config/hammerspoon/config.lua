@@ -6,17 +6,23 @@ BROWSER = "com.brave.Browser.nightly"
 TERMINAL = "com.mitchellh.ghostty"
 
 ---@class NotificationRule
----@field name string                   # Human-readable name for the rule
----@field match? table<string, string|string[]> # NEW SYNTAX: Field matchers (AND between fields, OR within arrays). Fields: bundleID, title, subtitle, message, sender, notificationType, subrole
----@field appBundleID? string           # OLD SYNTAX: Bundle ID or stacking ID to match (backward compat)
----@field senders? string[]             # OLD SYNTAX: Optional: list of sender names to match (exact match, backward compat)
----@field action? "redirect"|"dismiss"|"ignore" # What to do with matched notification (default: "redirect")
----@field patterns? table<"low"|"normal"|"high", string[]> # Patterns mapped to priorities (default: normal if no match)
----@field duration? number              # How long to show notification in seconds
----@field alwaysShowInTerminal? boolean # Show even when terminal is focused (high priority only)
----@field showWhenAppFocused? boolean   # Show even when source app is focused (high priority only)
----@field overrideFocusModes? string[]|true  # Focus modes this notification can bypass/override. If undefined: blocks during ANY focus mode. If true: overrides ALL focus modes. If array: shows during those specific focus modes. (always shows when no focus mode active)
----@field appImageID? string            # Custom icon identifier (e.g. "hal9000")
+---@field name string                        -- Human-readable name for the rule
+---@field priority? number                   -- Rule evaluation order (0-100, higher first; default: 50)
+---@field match table<string, string|string[]> -- Field matchers (AND between fields, OR within arrays). Fields: bundleID, title, subtitle, message, notificationType, subrole
+---@field action? "redirect"|"dismiss"|"ignore" -- What to do with matched notification (default: "redirect")
+---@field urgency string|table               -- "low"|"normal"|"high"|"critical" OR { default="...", critical={...}, high={...}, low={...} }
+---@field delay? number                      -- For dismiss action: seconds to wait before dismissing
+---@field duration? number                   -- For redirect action: how long to show notification in seconds
+---@field alwaysShowInTerminal? boolean      -- Show even when terminal is focused
+---@field showWhenAppFocused? boolean        -- Show even when source app is focused
+---@field overrideFocusModes? string[]|true  -- Focus modes this notification can bypass/override
+---@field appImageID? string                 -- Custom icon identifier (e.g. "hal9000")
+--
+-- Urgency levels control display behavior:
+--   critical = center + dim + phone notification (reserved for emergencies)
+--   high     = center + dim (important, needs attention)
+--   normal   = bottom-left corner (standard)
+--   low      = bottom-left, shorter duration (acknowledgments, info)
 
 M.displays = {
   internal = "Built-in Retina Display",
@@ -400,172 +406,120 @@ M.dock = {
 
 M.notifier = {
   -- Notification Routing Rules
-  -- Rules are evaluated in order. First match wins.
-  -- Each rule is a table defining matching criteria and behavior.
+  -- Rules are sorted by priority (higher first) at runtime. First match wins.
+  -- Each rule defines matching criteria and behavior.
   rules = {
     -- Fantastical Calendar Alerts (TIME SENSITIVE = imminent, usually 1-minute warnings)
-    -- These get highest priority to ensure you never miss imminent meetings
-    -- Note: Fantastical sends "TIME SENSITIVE" as the title for urgent alerts
     {
       name = "Fantastical Urgent Alerts",
-      appBundleID = "com.flexibits.fantastical2.mac",
-      senders = { "TIME SENSITIVE" }, -- Fantastical marks imminent alerts this way
-      duration = 15, -- Show for 15 seconds (urgent!)
-      alwaysShowInTerminal = true, -- Interrupt coding for imminent meetings!
-      showWhenAppFocused = false, -- Don't double-notify if Fantastical is open
-      overrideFocusModes = true, -- Override ALL focus modes
-      appImageID = "com.flexibits.fantastical2.mac",
-      -- Force high priority for all TIME SENSITIVE alerts
-      patterns = {
-        high = { "." }, -- Match anything (all TIME SENSITIVE alerts are high priority)
+      priority = 95,
+      match = {
+        bundleID = "com.flexibits.fantastical2.mac",
+        title = "TIME SENSITIVE",
       },
-    },
-
-    -- NOTE: Non-urgent Fantastical alerts (15/30 min warnings) are NOT intercepted.
-    -- They go through macOS Notification Center normally. Only TIME SENSITIVE alerts
-    -- (matched above by sender) are captured and shown via our custom canvas.
-
-    {
-      name = "Important Messages",
-      appBundleID = "com.apple.MobileSMS",
-      senders = { "Abby Messer" },
-      duration = 5,
-      patterns = {
-        high = {
-          "%?",
-          "👋",
-          "❓",
-          "‼️",
-          "⚠️",
-          "urgent",
-          "asap",
-          "emergency",
-          -- "!+$",
-          "%?+$",
-        },
-        -- low = {
-        --   "brb",
-        --   "ok",
-        --   "👍",
-        --   "lol",
-        -- },
-        -- Everything else defaults to "normal"
-      },
+      action = "redirect",
+      urgency = "high",
+      duration = 15,
       alwaysShowInTerminal = true,
       showWhenAppFocused = false,
-      overrideFocusModes = true, -- Override ALL focus modes
+      overrideFocusModes = true,
+      appImageID = "com.flexibits.fantastical2.mac",
     },
 
-    -- Example: All other Messages notifications (lower priority)
+    -- VIP Messages (Abby) - with content-based urgency escalation
     {
-      name = "Messages",
-      appBundleID = "com.apple.MobileSMS",
-      alwaysShowInTerminal = false,
-      -- No overrideFocusModes = blocks during any focus mode
+      name = "Important Messages (Abby)",
+      priority = 85,
+      match = {
+        bundleID = "com.apple.MobileSMS",
+        title = "Abby Messer",
+      },
+      action = "redirect",
+      urgency = {
+        default = "normal",
+        critical = { "emergency", "911" },
+        high = { "%?", "👋", "❓", "‼️", "⚠️", "urgent", "asap", "%?+$" },
+        low = { "^ok$", "👍", "brb", "lol" },
+      },
+      duration = 5,
+      alwaysShowInTerminal = true,
+      showWhenAppFocused = false,
+      overrideFocusModes = true,
     },
 
     -- Telegram Desktop notifications
     {
       name = "Telegram",
-      appBundleID = "com.tdesktop.Telegram",
-      duration = 5,
-      patterns = {
-        high = {
-          "%?",
-          "urgent",
-          "asap",
-          -- "!+$",
-          "%?+$",
-        },
+      priority = 60,
+      match = {
+        bundleID = "com.tdesktop.Telegram",
       },
+      action = "redirect",
+      urgency = {
+        default = "normal",
+        high = { "%?", "urgent", "asap", "%?+$" },
+      },
+      duration = 5,
       alwaysShowInTerminal = true,
       showWhenAppFocused = false,
-      -- No overrideFocusModes = blocks during any focus mode
       appImageID = "com.tdesktop.Telegram",
     },
 
-    -- TEST RULE: Hammerspoon system notifications (using NEW match syntax)
+    -- Messages (General) - catch-all for non-VIP contacts
     {
-      name = "Hammerspoon System Notifications (TEST)",
+      name = "Messages (General)",
+      priority = 50,
       match = {
-        bundleID = "org.hammerspoon.Hammerspoon",
-        title = "hammerspork", -- Match reload notifications
-      },
-      action = "redirect", -- Will map to old behavior for now
-      duration = 3,
-      overrideFocusModes = true,
-      appImageID = "org.hammerspoon.Hammerspoon",
-    },
-
-    -- EXAMPLE: Multi-app match with OR logic (Level 2 matching)
-    -- Dismiss all GitHub notifications from multiple bundle IDs
-    {
-      name = "GitHub Notifications (Multi-App)",
-      match = {
-        bundleID = { "com.github.GitHubClient", "com.brave.Browser.nightly", "org.mozilla.firefox" },
-        message = "GitHub.*", -- Regex pattern for GitHub-related messages
-      },
-      action = "dismiss", -- Log but don't show
-      duration = 3,
-    },
-
-    -- TEST: Dismiss action testing (will auto-dismiss test notifications)
-    {
-      name = "Test Dismiss Action",
-      match = {
-        bundleID = "org.hammerspoon.Hammerspoon",
-        title = "Test Dismiss", -- Exact match for testing
-      },
-      action = "dismiss",
-    },
-
-    -- EXAMPLE: System notifications with type filtering
-    {
-      name = "System Alerts Only",
-      match = {
-        notificationType = "system",
-        subrole = "AXNotificationCenterAlert", -- Only alerts, not banners
+        bundleID = "com.apple.MobileSMS",
       },
       action = "redirect",
-      duration = 10,
-      overrideFocusModes = true,
-      patterns = {
-        high = { "critical", "error", "failed" },
-      },
+      urgency = "normal",
+      alwaysShowInTerminal = false,
     },
 
     -- AI Agent Notifications (from ntfy via hs.notify)
     {
       name = "AI Agent Notifications",
-      appBundleID = "org.hammerspoon.Hammerspoon",
-      duration = 3,
-      patterns = {
-        high = {
-          "error",
-          "failed",
-          "critical",
-          "urgent",
-          "question",
-          "%?",
-          "!+$",
-          "‼️",
-          "⚠️",
-          "%?+$",
-        },
-        low = {
-          "info",
-          "debug",
-          "starting",
-          "completed",
-          "finished",
-        },
-        -- Everything else defaults to "normal"
+      priority = 45,
+      match = {
+        bundleID = "org.hammerspoon.Hammerspoon",
       },
+      action = "redirect",
+      urgency = {
+        default = "normal",
+        high = { "error", "failed", "critical", "urgent", "question", "%?", "!+$", "‼️", "⚠️", "%?+$" },
+        low = { "info", "debug", "starting", "completed", "finished" },
+      },
+      duration = 3,
       alwaysShowInTerminal = true,
       showWhenAppFocused = false,
       overrideFocusModes = { "Personal", "Work" },
-      appImageID = "hal9000", -- Special marker for HAL icon
+      appImageID = "hal9000",
     },
+
+    -- Persistent notification dismiss rules
+    {
+      name = "Background Items Added",
+      priority = 25,
+      match = {
+        title = "Background Items Added",
+      },
+      action = "dismiss",
+      delay = 8,
+      urgency = "low",
+    },
+  },
+
+  -- Urgency level → display behavior mapping
+  -- critical: center + dim + phone (reserved for emergencies like "911" from VIP)
+  -- high: center + dim (important, needs immediate attention)
+  -- normal: bottom-left corner (standard notifications)
+  -- low: bottom-left, shorter duration (acknowledgments, info)
+  urgencyDisplay = {
+    critical = { position = "center", dim = true, durationMultiplier = 1.5, phone = true },
+    high = { position = "center", dim = true, durationMultiplier = 1.5, phone = false },
+    normal = { position = "corner", dim = false, durationMultiplier = 1.0, phone = false },
+    low = { position = "corner", dim = false, durationMultiplier = 0.75, phone = false },
   },
 
   -- Notification positioning configuration

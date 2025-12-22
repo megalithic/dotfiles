@@ -189,9 +189,11 @@ in {
         fieldFgColor: '#d3c6aa'
   '';
 
+  xdg.configFile."karabiner/karabiner.json".text = builtins.readFile karabiner/karabiner.json;
+  xdg.configFile."karabiner/karabiner.json".force = true;
+
   xdg.configFile."surfingkeys/config.js".text = builtins.readFile surfingkeys/config.js;
   xdg.configFile."starship.toml".text = builtins.readFile starship/starship.toml;
-  xdg.configFile."karabiner/karabiner.json".text = builtins.readFile karabiner/karabiner.json;
   xdg.configFile."eza/theme.yml".text = ''
     colourful: true
 

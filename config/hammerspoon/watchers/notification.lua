@@ -38,35 +38,47 @@ local function detectNotificationType(stackingID)
   return "app"
 end
 
+-- Helper to count table keys (Hammerspoon doesn't have vim.tbl_count)
+local function tableCount(t)
+  local count = 0
+  for _ in pairs(t) do count = count + 1 end
+  return count
+end
+
 -- Match a single field value against a pattern or array of patterns
--- Supports: exact string, Lua pattern, or array of patterns (OR logic)
-local function matchField(value, pattern)
+-- bundleID uses exact matching; other fields use Lua pattern matching
+local function matchField(fieldName, value, pattern)
   if not pattern then return true end -- No pattern = wildcard match
   if not value then return false end -- No value to match against
   
   -- Pattern is an array = OR logic (match any)
   if type(pattern) == "table" then
     for _, p in ipairs(pattern) do
-      if matchField(value, p) then return true end
+      if matchField(fieldName, value, p) then return true end
     end
     return false
   end
   
-  -- Pattern is a string = Lua pattern match
+  -- bundleID uses exact string matching (not pattern matching)
+  if fieldName == "bundleID" then
+    return value == pattern
+  end
+  
+  -- Other fields use Lua pattern matching
   return value:match(pattern) ~= nil
 end
 
--- Match notification against new-style match criteria
+-- Match notification against rule's match criteria
 -- Returns: true if matches, false otherwise
 -- match = { title = "...", message = "...", bundleID = {...}, etc }
 -- Multiple fields = AND, array values = OR within field
-local function matchesNewRule(notifData, matchCriteria)
+local function matchesRule(notifData, matchCriteria)
   if not matchCriteria then return false end
   
   -- Check each field in match criteria (all must match = AND)
   for field, pattern in pairs(matchCriteria) do
     local value = notifData[field]
-    if not matchField(value, pattern) then
+    if not matchField(field, value, pattern) then
       return false -- Field didn't match, rule fails
     end
   end
@@ -74,32 +86,42 @@ local function matchesNewRule(notifData, matchCriteria)
   return true -- All fields matched
 end
 
--- Match notification against old-style rule (backward compatibility)
--- Returns: true if matches, false otherwise
-local function matchesOldRule(notifData, rule)
-  -- Old rules use appBundleID + optional senders
-  if not rule.appBundleID then return false end
+-- Resolve urgency from rule + notification content
+-- urgency can be: string ("normal") or table ({ default = "normal", high = {...}, ... })
+local function resolveUrgency(rule, notifData)
+  local urgency = rule.urgency or "normal"
   
-  -- Check if axStackingID contains appBundleID
-  local axStackingID = notifData.axStackingID or ""
-  if not axStackingID:find(rule.appBundleID, 1, true) then
-    return false
-  end
+  -- Simple string = static urgency
+  if type(urgency) == "string" then return urgency end
   
-  -- Check senders if specified
-  if rule.senders then
-    local title = notifData.title or ""
-    local senderMatch = false
-    for _, sender in ipairs(rule.senders) do
-      if title == sender then
-        senderMatch = true
-        break
+  -- Table form: check patterns in priority order (critical → high → normal → low)
+  local content = ((notifData.message or "") .. " " .. (notifData.subtitle or "")):lower()
+  
+  for _, level in ipairs({ "critical", "high", "normal", "low" }) do
+    local patterns = urgency[level]
+    if patterns then
+      for _, pattern in ipairs(patterns) do
+        if content:match(pattern:lower()) then return level end
       end
     end
-    if not senderMatch then return false end
   end
   
-  return true
+  return urgency.default or "normal"
+end
+
+-- Sort rules by priority (higher first), then by specificity (more match conditions first)
+local function sortRulesByPriority(rules)
+  table.sort(rules, function(a, b)
+    local aPriority = a.priority or 50
+    local bPriority = b.priority or 50
+    if aPriority ~= bPriority then return aPriority > bPriority end
+    
+    -- Tie-breaker: more specific rules first
+    local aConditions = a.match and tableCount(a.match) or 0
+    local bConditions = b.match and tableCount(b.match) or 0
+    return aConditions > bConditions
+  end)
+  return rules
 end
 
 -- Dismiss a notification by finding and clicking its close button
@@ -199,10 +221,50 @@ local function handleNotification(element)
     if not notificationElement then return end -- No notification found in tree
   end
 
-  -- Process each notification only once
+  -- Get notification ID
   local notificationID = notificationElement.AXIdentifier or hs.host.uuid()
-  if not notificationSubroles[notificationElement.AXSubrole] or M.processedNotificationIDs[notificationID] then return end
-
+  if not notificationSubroles[notificationElement.AXSubrole] then return end
+  
+  -- Check if this notification has a pending delayed dismissal
+  if M.pendingDismissals[notificationID] then
+    local tracked = M.pendingDismissals[notificationID]
+    local age = os.time() - tracked.firstSeen
+    local dismissDelay = tracked.rule and tracked.rule.delay or 0
+    
+    if age >= dismissDelay then
+      -- Delay elapsed, dismiss now
+      U.log.df("Delay elapsed (%ds >= %ds), dismissing: %s", age, dismissDelay, tracked.title or "untitled")
+      local success = dismissNotification(notificationElement, tracked.title)
+      M.pendingDismissals[notificationID] = nil
+      
+      -- Log dismissal to database
+      local db = require("lib.notifications.db")
+      db.log({
+        timestamp = os.time(),
+        notification_id = notificationID,
+        rule_name = tracked.rule and tracked.rule.name or "unknown",
+        app_id = notificationElement.AXStackingIdentifier or "unknown",
+        notification_type = "system",
+        subrole = notificationElement.AXSubrole or "unknown",
+        match_criteria = nil,
+        title = tracked.title,
+        sender = tracked.title,
+        subtitle = nil,
+        message = nil,
+        action = "dismiss",
+        action_detail = success and "dismissed_after_delay" or "dismiss_failed",
+        priority = "low",
+        focus_mode = nil,
+        shown = false,
+      })
+      
+      require("lib.notifications.menubar").update()
+    end
+    return -- Already being tracked, don't re-process
+  end
+  
+  -- Skip if already processed (and not pending dismissal)
+  if M.processedNotificationIDs[notificationID] then return end
   M.processedNotificationIDs[notificationID] = true
 
   -- Get the AX stacking identifier to determine which app sent the notification
@@ -273,7 +335,6 @@ local function handleNotification(element)
     title = title,
     subtitle = subtitle,
     message = message,
-    sender = title, -- For backward compat (old rules use "sender")
     bundleID = bundleID,
     axStackingID = axStackingID,
     notificationType = notificationType,
@@ -281,39 +342,32 @@ local function handleNotification(element)
     notificationID = notificationID,
   }
 
-  -- Process routing rules (first match wins)
-  local rules = C.notifier.rules or {}
+  -- Process routing rules (sorted by priority, first match wins)
+  local rules = sortRulesByPriority(C.notifier.rules or {})
 
   for _, rule in ipairs(rules) do
     local matched = false
     local matchedCriteria = nil
     
-    -- Try new-style match criteria first
+    -- Match against rule's match criteria
     if rule.match then
-      matched = matchesNewRule(notifData, rule.match)
+      matched = matchesRule(notifData, rule.match)
       if matched then
-        -- Serialize match criteria for logging
         matchedCriteria = hs.json.encode(rule.match)
-      end
-    -- Fall back to old-style matching for backward compatibility
-    elseif rule.appBundleID then
-      matched = matchesOldRule(notifData, rule)
-      if matched then
-        -- Serialize old-style criteria
-        local criteria = { appBundleID = rule.appBundleID }
-        if rule.senders then criteria.senders = rule.senders end
-        matchedCriteria = hs.json.encode(criteria)
       end
     end
 
     if matched then
+      -- Resolve urgency based on rule config and notification content
+      local resolvedUrgency = resolveUrgency(rule, notifData)
+      
       -- Rule matched! Log match details
       local action = rule.action or "redirect"
-      U.log.nf("%s: %s [ID=%s, type=%s, criteria=%s, action=%s]", 
+      U.log.nf("%s: %s [ID=%s, type=%s, urgency=%s, action=%s]", 
         rule.name, title or bundleID, 
         tostring(notificationID or "nil"), 
         tostring(notificationType or "nil"), 
-        matchedCriteria or "nil",
+        resolvedUrgency,
         action)
 
       local timestamp = os.time()
@@ -406,7 +460,7 @@ local function handleNotification(element)
       else
         -- REDIRECT (default): Delegate to processor for canvas display
         local ok, err = pcall(N.process, rule, title, subtitle, message, axStackingID, bundleID, 
-          notificationID, notificationType, subrole, matchedCriteria)
+          notificationID, notificationType, subrole, matchedCriteria, resolvedUrgency)
         
         if not ok then U.log.ef("Error processing rule '%s': %s", rule.name, tostring(err)) end
       end
@@ -457,8 +511,49 @@ local function startObserver()
   return true
 end
 
--- Scan for existing persistent notifications on startup
+-- Extract text content from notification element
+local function extractNotificationText(notificationElement)
+  local staticTexts = {}
+  local children = notificationElement:attributeValue("AXChildren") or {}
+  
+  for _, child in ipairs(children) do
+    if child.AXRole == "AXStaticText" and child.AXValue then
+      table.insert(staticTexts, child.AXValue)
+    end
+  end
+  
+  local title = staticTexts[1] or ""
+  local message = table.concat(staticTexts, " ", 2) or ""
+  
+  return title, message
+end
+
+-- Find matching dismiss rule for a notification
+local function findDismissRule(title, message, bundleID, notificationType, subrole)
+  local notifData = {
+    title = title,
+    message = message,
+    bundleID = bundleID,
+    notificationType = notificationType,
+    subrole = subrole,
+  }
+  
+  local rules = sortRulesByPriority(C.notifier.rules or {})
+  
+  for _, rule in ipairs(rules) do
+    if rule.action == "dismiss" and rule.match then
+      if matchesRule(notifData, rule.match) then
+        return rule
+      end
+    end
+  end
+  
+  return nil
+end
+
+-- Scan for existing persistent notifications and handle delayed dismissals
 -- This catches system notifications that were already present before Hammerspoon loaded
+-- and processes delayed dismissals in a self-contained loop
 local function scanExistingNotifications()
   local ncApp = hs.application.find("com.apple.notificationcenterui")
   if not ncApp then return end
@@ -466,39 +561,159 @@ local function scanExistingNotifications()
   local notificationCenter = hs.axuielement.applicationElement(ncApp)
   if not notificationCenter then return end
   
-  -- Navigate to scroll area containing notifications
   local windows = notificationCenter:attributeValue("AXWindows") or {}
   if #windows == 0 then return end
   
-  local window = windows[1]
-  local children = window:attributeValue("AXChildren") or {}
-  if #children == 0 then return end
+  local now = os.time()
+  local seenIDs = {}
+  local processedCount = 0
+  local dismissedCount = 0
   
-  local hostingView = children[1]
-  local hostingChildren = hostingView:attributeValue("AXChildren") or {}
-  if #hostingChildren == 0 then return end
-  
-  local innerGroup = hostingChildren[1]
-  local innerChildren = innerGroup:attributeValue("AXChildren") or {}
-  if #innerChildren == 0 then return end
-  
-  local scrollArea = innerChildren[1]
-  local notifications = scrollArea:attributeValue("AXChildren") or {}
-  
-  local count = 0
-  for _, notif in ipairs(notifications) do
-    if notif.AXSubrole == "AXNotificationCenterAlert" or notif.AXSubrole == "AXNotificationCenterBanner" then
-      -- Try to process it through our normal handler
-      -- Use pcall in case any notification fails to process
-      pcall(function()
-        handleNotification(notif)
-        count = count + 1
-      end)
+  -- Recursively find all notification elements
+  local function processNotificationElement(element, depth)
+    depth = depth or 0
+    if depth > 8 then return end
+    
+    local subrole = element.AXSubrole or ""
+    
+    if subrole == "AXNotificationCenterAlert" or subrole == "AXNotificationCenterBanner" then
+      local notifID = element.AXIdentifier
+      if not notifID then return end
+      
+      seenIDs[notifID] = true
+      
+      -- Extract notification content
+      local title, message = extractNotificationText(element)
+      local axStackingID = element.AXStackingIdentifier or "unknown"
+      local bundleID = axStackingID:match("bundleIdentifier=([^,;%s]+)") or axStackingID:match("^([^;%s]+)") or axStackingID
+      local notificationType = detectNotificationType(axStackingID)
+      
+      -- Check if this notification has a pending delayed dismissal
+      if M.pendingDismissals[notifID] then
+        local tracked = M.pendingDismissals[notifID]
+        local age = now - tracked.firstSeen
+        local dismissDelay = tracked.rule and tracked.rule.delay or 0
+        
+        if age >= dismissDelay then
+          -- Delay elapsed, dismiss now via close button
+          U.log.nf("Dismissing after %ds: %s", age, title)
+          
+          local success = dismissNotification(element, title)
+          
+          if success then
+            dismissedCount = dismissedCount + 1
+            
+            -- Log to database
+            local db = require("lib.notifications.db")
+            db.log({
+              timestamp = now,
+              notification_id = notifID,
+              rule_name = tracked.rule and tracked.rule.name or "unknown",
+              app_id = axStackingID,
+              notification_type = notificationType,
+              subrole = subrole,
+              match_criteria = nil,
+              title = title,
+              sender = title,
+              subtitle = nil,
+              message = message,
+              action = "dismiss",
+              action_detail = "dismissed_after_delay",
+              priority = "low",
+              focus_mode = nil,
+              shown = false,
+            })
+            
+            require("lib.notifications.menubar").update()
+          end
+          
+          M.pendingDismissals[notifID] = nil
+        end
+        return -- Already being tracked
+      end
+      
+      -- Skip if already processed for non-dismiss actions
+      if M.processedNotificationIDs[notifID] then return end
+      
+      -- Check if this matches a dismiss rule
+      local dismissRule = findDismissRule(title, message, bundleID, notificationType, subrole)
+      
+      if dismissRule then
+        local dismissDelay = dismissRule.delay or 0
+        
+        if dismissDelay > 0 then
+          -- Track for delayed dismissal
+          M.pendingDismissals[notifID] = {
+            firstSeen = now,
+            rule = dismissRule,
+            title = title,
+          }
+          U.log.df("Tracking for delayed dismiss (%ds): %s", dismissDelay, title)
+        else
+          -- Dismiss immediately via close button
+          U.log.nf("Dismissing immediately: %s", title)
+          
+          local success = dismissNotification(element, title)
+          
+          if success then
+            dismissedCount = dismissedCount + 1
+            
+            local db = require("lib.notifications.db")
+            db.log({
+              timestamp = now,
+              notification_id = notifID,
+              rule_name = dismissRule.name,
+              app_id = axStackingID,
+              notification_type = notificationType,
+              subrole = subrole,
+              match_criteria = hs.json.encode(dismissRule.match),
+              title = title,
+              sender = title,
+              subtitle = nil,
+              message = message,
+              action = "dismiss",
+              action_detail = "dismissed_via_axpress",
+              priority = "low",
+              focus_mode = nil,
+              shown = false,
+            })
+            
+            require("lib.notifications.menubar").update()
+          end
+        end
+        
+        M.processedNotificationIDs[notifID] = true
+      else
+        -- Not a dismiss rule - process normally via handleNotification
+        pcall(function()
+          handleNotification(element)
+        end)
+      end
+      
+      processedCount = processedCount + 1
+      return -- Don't recurse into notification children
+    end
+    
+    -- Recurse into children
+    for _, child in ipairs(element:attributeValue("AXChildren") or {}) do
+      processNotificationElement(child, depth + 1)
     end
   end
   
-  if count > 0 then
-    U.log.df("Scanned %d existing notification(s) on startup", count)
+  for _, window in ipairs(windows) do
+    processNotificationElement(window, 0)
+  end
+  
+  -- Cleanup stale pending dismissals (notification no longer present)
+  for notifID, tracked in pairs(M.pendingDismissals) do
+    if not seenIDs[notifID] then
+      U.log.df("Notification gone, removing from tracking: %s", tracked.title)
+      M.pendingDismissals[notifID] = nil
+    end
+  end
+  
+  if dismissedCount > 0 then
+    U.log.nf("Dismissed %d notification(s)", dismissedCount)
   end
 end
 

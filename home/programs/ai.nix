@@ -180,6 +180,9 @@ in {
       # Smart notification system with deep knowledge of the ntfy script
       # and Hammerspoon integration for multi-channel notifications
       smart-ntfy = builtins.readFile ../../docs/skills/smart-ntfy.md;
+      # Web debugging with Chrome DevTools MCP - intelligent validation,
+      # app-specific context discovery, and performance optimization
+      web-debug = builtins.readFile ../../docs/skills/web-debug.md;
     };
 
     # ===========================================================================

@@ -94,18 +94,19 @@ rebuild-old:
 mac:
   #!/usr/bin/env bash
   set -euo pipefail
-  
+
   # Fetch remote updates
   jj git fetch
-  
+
   # Check if remote main is ahead
   if [[ $(jj log -r 'main@origin' -T change_id --no-graph) != $(jj log -r main -T change_id --no-graph) ]]; then
     echo "Remote main has updates (likely flake.lock from Sunday automation)"
     jj bookmark set main -r main@origin
     ntfy send -t "Nix Darwin" -m "Synced flake.lock from remote before rebuild"
   fi
-  
-  nh darwin switch ./
+
+  # nh darwin switch ./
+  sudo darwin-rebuild switch --flake ./
 
 # initial nix-darwin build
 [macos]

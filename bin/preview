@@ -106,7 +106,8 @@ handle_text() {
   *.htm | *.html) links -dump "$input" ;;
   # *.json | *.jsonc | *.json5) jq --color-output '"$@"' <<<"$input" ;;
   *)
-    bat --style="${BAT_STYLE:-base16}" --color=always --pager=never --highlight-line="${center:-0}" -- "$file"
+    # bat --color=always --pager=never --highlight-line="${center:-0}" -- "$file"
+    bat --style="${BAT_STYLE:-numbers}" --theme="${BAT_THEME:-base16}" --color=always --pager=never --highlight-line="${center:-0}" -- "$file"
     # bat --theme=base16 --color=always --style=numbers --line-range :300 "$input"
     ;;
   esac

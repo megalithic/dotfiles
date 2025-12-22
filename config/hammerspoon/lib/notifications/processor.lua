@@ -1,11 +1,10 @@
 -- Notification Rule Processing
--- Business logic for handling notification routing, priority, and focus mode checks
+-- Business logic for handling notification routing, urgency, and focus mode checks
 --
 local M = {}
-local fmt = string.format
 
 ---Processes a notification according to rule configuration
----Handles pattern matching, focus mode checks, priority logic, and rendering
+---Handles focus mode checks, urgency-based rendering, and phone delivery
 ---@param rule NotificationRule The notification rule configuration
 ---@param title string Notification title
 ---@param subtitle string Notification subtitle (may be empty)
@@ -16,34 +15,15 @@ local fmt = string.format
 ---@param notificationType string|nil "system" | "app"
 ---@param subrole string|nil AXSubrole value
 ---@param matchedCriteria string|nil JSON string of what matched (for logging)
-function M.process(rule, title, subtitle, message, axStackingID, bundleID, notificationID, notificationType, subrole, matchedCriteria)
+---@param urgency string Resolved urgency level: "critical"|"high"|"normal"|"low"
+function M.process(rule, title, subtitle, message, axStackingID, bundleID, notificationID, notificationType, subrole, matchedCriteria, urgency)
   local notify = require("lib.notifications.notifier")
   local db = require("lib.notifications.db")
   local menubar = require("lib.notifications.menubar")
   local timestamp = os.time()
   
-  -- Determine action (default: redirect for backward compat)
-  local action = rule.action or "redirect"
-
-  -- Determine priority based on pattern matching
-  local effectivePriority = "normal" -- default
-
-  if rule.patterns and message then
-    -- Check each priority level for matching patterns
-    -- Iterate in priority order: high -> normal -> low
-    for _, priority in ipairs({ "high", "normal", "low" }) do
-      local patternList = rule.patterns[priority]
-      if patternList then
-        for _, pattern in ipairs(patternList) do
-          if message:find(pattern) then
-            effectivePriority = priority
-            goto priority_determined -- exit both loops
-          end
-        end
-      end
-    end
-    ::priority_determined::
-  end
+  -- Urgency is now passed in from the watcher (resolved via rule.urgency config)
+  urgency = urgency or "normal"
 
   -- Check focus mode
   -- When no focus mode is active → always show (default behavior)
@@ -85,17 +65,16 @@ function M.process(rule, title, subtitle, message, axStackingID, bundleID, notif
       message = message,
       action = "blocked",
       action_detail = "blocked_by_focus",
-      priority = effectivePriority,
+      priority = urgency,
       focus_mode = currentFocus,
       shown = false,
     })
-    -- Update menubar indicator
     menubar.update()
     return
   end
 
-  -- Check priority-based app focus rules (only for high priority)
-  if effectivePriority == "high" then
+  -- Check urgency-based app focus rules (only for high/critical urgency)
+  if urgency == "high" or urgency == "critical" then
     local priorityCheck = notify.shouldShowHighPriority(bundleID, {
       alwaysShowInTerminal = rule.alwaysShowInTerminal,
       showWhenAppFocused = rule.showWhenAppFocused,
@@ -116,124 +95,87 @@ function M.process(rule, title, subtitle, message, axStackingID, bundleID, notif
         message = message,
         action = "blocked",
         action_detail = "blocked_" .. priorityCheck.reason,
-        priority = effectivePriority,
+        priority = urgency,
         focus_mode = currentFocus,
         shown = false,
       })
-      -- Update menubar indicator
       menubar.update()
       return
     end
   end
 
-  -- Determine notification config based on priority
-  local duration = rule.duration or (effectivePriority == "high" and 15 or effectivePriority == "low" and 3 or 10)
-  local notifConfig = {}
-
-  -- Fallback chain for icon: appImageID → bundleID → rule.appBundleID
-  local iconBundleID = rule.appImageID or bundleID or rule.appBundleID
-
-  -- Fallback chain for launching: bundleID → rule.appBundleID
-  local launchBundleID = bundleID or rule.appBundleID
-
-  if effectivePriority == "high" then
-    notifConfig = {
-      anchor = "window",
-      position = "C",
-      dimBackground = true,
-      dimAlpha = 0.6,
-      includeProgram = false,
-      appImageID = iconBundleID,
-      appBundleID = launchBundleID,
-      priority = "high",
-    }
-  else
-    notifConfig = {
-      anchor = "screen",
-      position = "SW",
-      dimBackground = false,
-      includeProgram = false,
-      appImageID = iconBundleID,
-      appBundleID = launchBundleID,
-      priority = effectivePriority,
-    }
-  end
-
-  -- Determine action (default: redirect for backward compat)
-  local action = rule.action or "redirect"
+  -- Get urgency display settings from config
+  local urgencyConfig = C.notifier.urgencyDisplay[urgency] or C.notifier.urgencyDisplay.normal
   
-  -- Handle different actions
-  if action == "dismiss" then
-    -- Dismiss: log but don't show
-    db.log({
-      timestamp = timestamp,
-      notification_id = notificationID,
-      rule_name = rule.name,
-      app_id = axStackingID,
-      notification_type = notificationType,
-      subrole = subrole,
-      match_criteria = matchedCriteria,
-      title = title,
-      sender = title,
-      subtitle = subtitle,
-      message = message,
-      action = "dismiss",
-      action_detail = "dismissed_by_rule",
-      priority = effectivePriority,
-      focus_mode = currentFocus,
-      shown = false,
-    })
-    menubar.update()
-    return
-  elseif action == "ignore" then
-    -- Ignore: don't log, don't show (silent drop)
-    return
-  elseif action == "redirect" then
-    -- Redirect: show via canvas (original behavior)
-    notify.sendCanvasNotification(title, subtitle, message, duration, notifConfig)
-    
-    db.log({
-      timestamp = timestamp,
-      notification_id = notificationID,
-      rule_name = rule.name,
-      app_id = axStackingID,
-      notification_type = notificationType,
-      subrole = subrole,
-      match_criteria = matchedCriteria,
-      title = title,
-      sender = title,
-      subtitle = subtitle,
-      message = message,
-      action = "redirect",
-      action_detail = effectivePriority == "high" and "shown_center_dimmed" or "shown_bottom_left",
-      priority = effectivePriority,
-      focus_mode = currentFocus,
-      shown = true,
-    })
+  -- Calculate duration with urgency multiplier
+  local baseDuration = rule.duration or C.notifier.defaultDuration or 5
+  local duration = baseDuration * (urgencyConfig.durationMultiplier or 1.0)
+
+  -- Build notification config based on urgency
+  local iconBundleID = rule.appImageID or bundleID
+  local launchBundleID = bundleID
+  
+  local notifConfig = {
+    includeProgram = false,
+    appImageID = iconBundleID,
+    appBundleID = launchBundleID,
+    urgency = urgency,
+  }
+  
+  if urgencyConfig.position == "center" then
+    notifConfig.anchor = "window"
+    notifConfig.position = "C"
+    notifConfig.dimBackground = urgencyConfig.dim
+    notifConfig.dimAlpha = 0.5
   else
-    -- Unknown action, log warning and fall back to redirect
-    U.log.wf("Unknown action '%s' in rule '%s', falling back to redirect", action, rule.name)
-    notify.sendCanvasNotification(title, subtitle, message, duration, notifConfig)
-    
-    db.log({
-      timestamp = timestamp,
-      notification_id = notificationID,
-      rule_name = rule.name,
-      app_id = axStackingID,
-      notification_type = notificationType,
-      subrole = subrole,
-      match_criteria = matchedCriteria,
-      title = title,
-      sender = title,
-      subtitle = subtitle,
-      message = message,
-      action = "redirect",
-      action_detail = "unknown_action_fallback",
-      priority = effectivePriority,
-      focus_mode = currentFocus,
-      shown = true,
-    })
+    notifConfig.anchor = "screen"
+    notifConfig.position = "SW"
+    notifConfig.dimBackground = false
   end
+
+  -- Show canvas notification
+  notify.sendCanvasNotification(title, subtitle, message, duration, notifConfig)
+  
+  -- Handle phone delivery for critical urgency
+  if urgencyConfig.phone then
+    -- Send to phone via ntfy CLI
+    local phoneTitle = title or "Notification"
+    local phoneMessage = message or subtitle or ""
+    local cmd = string.format(
+      '~/bin/ntfy send -t "%s" -m "%s" -u critical -p',
+      phoneTitle:gsub('"', '\\"'),
+      phoneMessage:gsub('"', '\\"')
+    )
+    hs.execute(cmd, true)
+    U.log.nf("Critical urgency: sent to phone - %s", phoneTitle)
+  end
+  
+  -- Determine action_detail for logging
+  local actionDetail = "shown_bottom_left"
+  if urgencyConfig.position == "center" then
+    actionDetail = urgencyConfig.phone and "shown_center_dimmed_phone" or "shown_center_dimmed"
+  end
+  
+  db.log({
+    timestamp = timestamp,
+    notification_id = notificationID,
+    rule_name = rule.name,
+    app_id = axStackingID,
+    notification_type = notificationType,
+    subrole = subrole,
+    match_criteria = matchedCriteria,
+    title = title,
+    sender = title,
+    subtitle = subtitle,
+    message = message,
+    action = "redirect",
+    action_detail = actionDetail,
+    priority = urgency,
+    focus_mode = currentFocus,
+    shown = true,
+  })
+  
+  menubar.update()
 end
 
 return M
