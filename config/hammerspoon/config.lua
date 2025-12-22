@@ -7,8 +7,10 @@ TERMINAL = "com.mitchellh.ghostty"
 
 ---@class NotificationRule
 ---@field name string                   # Human-readable name for the rule
----@field appBundleID string            # Bundle ID or stacking ID to match
----@field senders? string[]             # Optional: list of sender names to match (exact match)
+---@field match? table<string, string|string[]> # NEW SYNTAX: Field matchers (AND between fields, OR within arrays). Fields: bundleID, title, subtitle, message, sender, notificationType, subrole
+---@field appBundleID? string           # OLD SYNTAX: Bundle ID or stacking ID to match (backward compat)
+---@field senders? string[]             # OLD SYNTAX: Optional: list of sender names to match (exact match, backward compat)
+---@field action? "redirect"|"dismiss"|"ignore" # What to do with matched notification (default: "redirect")
 ---@field patterns? table<"low"|"normal"|"high", string[]> # Patterns mapped to priorities (default: normal if no match)
 ---@field duration? number              # How long to show notification in seconds
 ---@field alwaysShowInTerminal? boolean # Show even when terminal is focused (high priority only)
@@ -482,6 +484,56 @@ M.notifier = {
       appImageID = "com.tdesktop.Telegram",
     },
 
+    -- TEST RULE: Hammerspoon system notifications (using NEW match syntax)
+    {
+      name = "Hammerspoon System Notifications (TEST)",
+      match = {
+        bundleID = "org.hammerspoon.Hammerspoon",
+        title = "hammerspork",  -- Match reload notifications
+      },
+      action = "redirect",  -- Will map to old behavior for now
+      duration = 3,
+      overrideFocusModes = true,
+      appImageID = "org.hammerspoon.Hammerspoon",
+    },
+
+    -- EXAMPLE: Multi-app match with OR logic (Level 2 matching)
+    -- Dismiss all GitHub notifications from multiple bundle IDs
+    {
+      name = "GitHub Notifications (Multi-App)",
+      match = {
+        bundleID = { "com.github.GitHubClient", "com.brave.Browser.nightly", "org.mozilla.firefox" },
+        message = "GitHub.*", -- Regex pattern for GitHub-related messages
+      },
+      action = "dismiss", -- Log but don't show
+      duration = 3,
+    },
+
+    -- TEST: Dismiss action testing (will auto-dismiss test notifications)
+    {
+      name = "Test Dismiss Action",
+      match = {
+        bundleID = "org.hammerspoon.Hammerspoon",
+        title = "Test Dismiss", -- Exact match for testing
+      },
+      action = "dismiss",
+    },
+
+    -- EXAMPLE: System notifications with type filtering
+    {
+      name = "System Alerts Only",
+      match = {
+        notificationType = "system",
+        subrole = "AXNotificationCenterAlert", -- Only alerts, not banners
+      },
+      action = "redirect",
+      duration = 10,
+      overrideFocusModes = true,
+      patterns = {
+        high = { "critical", "error", "failed" },
+      },
+    },
+
     -- AI Agent Notifications (from ntfy via hs.notify)
     {
       name = "AI Agent Notifications",
@@ -620,6 +672,39 @@ M.notifier = {
 
   -- Database retention settings
   retentionDays = 30, -- Keep notifications for 30 days before cleanup
+
+  -- Persistent System Notification Auto-Dismissal
+  -- Monitors Notification Center for long-lived system alerts and auto-dismisses them
+  persistentNotifications = {
+    enabled = true,
+    scanInterval = 10, -- Check every 10 seconds for persistent notifications
+    
+    -- Default behavior: auto-dismiss after this many seconds
+    defaultDismissTimeout = 3,
+    
+    -- Whitelist: notifications matching these patterns will NOT be auto-dismissed
+    -- Each entry can match on title (Lua pattern) and/or message text
+    whitelist = {
+      -- Example: Keep software update notifications
+      -- { title = "Software Update" },
+      
+      -- Example: Keep security-related alerts
+      -- { message = "security" },
+      
+      -- Example: Keep specific app notifications
+      -- { title = ".*Critical.*" },
+    },
+    
+    -- Custom dismiss timeouts for specific notification patterns
+    -- If a notification matches, use this timeout instead of defaultDismissTimeout
+    customTimeouts = {
+      -- Example: Dismiss login item notifications after 5 seconds
+      { title = "Login Item", timeout = 5 },
+      
+      -- Example: Keep background permission requests for 60 seconds
+      { message = "background", timeout = 60 },
+    },
+  },
 
   -- Agent notification settings (used by N.send() API via ntfy CLI)
   agent = {

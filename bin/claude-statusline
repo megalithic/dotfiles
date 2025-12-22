@@ -36,10 +36,12 @@ get_json() { echo "$input" | jq -r "$1 // \"$2\""; }
 # Uses same spinner as aerc email client for consistency
 get_spinner() {
   local frames=("◜" "◠" "◝" "◞" "◡" "◟")
-  local idx=$(( $(date +%s) % ${#frames[@]} ))
+  local idx=$(($(date +%s) % ${#frames[@]}))
   echo "${frames[$idx]}"
 }
 
+get_duration_ms() { get_json '.cost.total_duration_ms' '0'; }
+get_transcript_path() { get_json '.transcript_path'; }
 get_model_name() { get_json '.model.display_name' 'Unknown'; }
 get_current_dir() { get_json '.workspace.current_dir' '.'; }
 get_project_dir() { get_json '.workspace.project_dir' '.'; }
@@ -48,6 +50,29 @@ get_cost() {
   cost=$(get_json '.cost.total_cost_usd' '0')
   printf "\$%.2f" "$cost"
 }
+get_context_max() { get_json '.context_window.context_window_size' '1' }
+
+# compactions=0
+# if [ -n "$transcript" ] && [ -f "$transcript" ]; then
+#     summary_count=$(grep -c '"type":"summary"' "$transcript" 2>/dev/null || echo "0")
+#     # Subtract 1 for the title entry
+#     compactions=$((summary_count > 0 ? summary_count - 1 : 0))
+# fi
+#
+# # Format duration (ms to human readable)
+# if [ "$(get_duration_ms)" -gt 0 ] 2>/dev/null; then
+#     total_secs=$(($(get_duration_ms) / 1000))
+#     hours=$((total_secs / 3600))
+#     mins=$(((total_secs % 3600) / 60))
+#     secs=$((total_secs % 60))
+#     if [ "$hours" -gt 0 ]; then
+#         duration="${hours}h${mins}m"
+#     elif [ "$mins" -gt 0 ]; then
+#         duration="${mins}m${secs}s"
+#     else
+#         duration="${secs}s"
+#     fi
+# fi
 
 # Get VCS info: prefer jj if .jj exists, otherwise git
 get_vcs_info() {
@@ -95,14 +120,17 @@ get_vcs_info() {
 # Maps subscriptionType to account identifier
 get_account_info() {
   local creds sub_type
-  creds=$(security find-generic-password -s "Claude Code-credentials" -w 2>/dev/null) || { echo "?"; return; }
+  creds=$(security find-generic-password -s "Claude Code-credentials" -w 2>/dev/null) || {
+    echo "?"
+    return
+  }
   sub_type=$(echo "$creds" | jq -r '.claudeAiOauth.subscriptionType // "unknown"' 2>/dev/null)
 
   case "$sub_type" in
-    team)     echo "work" ;;      # smesser@cscontract
-    pro|max)  echo "personal" ;;  # seth@megalithic.io
-    free)     echo "free" ;;
-    *)        echo "?" ;;
+  team) echo "work" ;;          # smesser@cscontract
+  pro | max) echo "personal" ;; # seth@megalithic.io
+  free) echo "free" ;;
+  *) echo "?" ;;
   esac
 }
 
@@ -120,7 +148,7 @@ get_token_usage() {
 
   # Get last assistant message with usage data (tail for speed)
   local total_tokens
-  total_tokens=$(tail -n 100 "$transcript_path" 2>/dev/null | \
+  total_tokens=$(tail -n 100 "$transcript_path" 2>/dev/null |
     jq -s 'map(select(.type == "assistant" and .message.usage)) |
            last |
            .message.usage |
@@ -139,7 +167,7 @@ get_token_usage() {
   # Compaction threshold: ~80% of 200k = 160k
   # Add 3% conservative buffer since we can't see all overhead (system prompt, tools, etc.)
   local compaction_threshold=160000
-  local percentage=$(( (total_tokens * 100 / compaction_threshold) + 3 ))
+  local percentage=$(((total_tokens * 100 / compaction_threshold) + 3))
 
   # Format token count (K for thousands)
   local token_display

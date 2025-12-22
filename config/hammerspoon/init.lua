@@ -95,6 +95,9 @@ hs.loadSpoon("EmmyLua")
 -- Development/spike modules (available via Spike.* global)
 require("spike-ax-meeting")
 
+-- NOTE: persistent-notification watcher REPLACED by unified action system
+-- notification.lua watcher now handles ALL notifications (banners + persistent alerts)
+-- Dismissal is now an action in rules (action = "dismiss") instead of separate scanner
 local watchers = { "audio", "dock", "app", "notification", "camera" }
 
 -- req("lib.seal")

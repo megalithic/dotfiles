@@ -404,7 +404,16 @@ function M.getColorScheme()
 end
 
 -- Send macOS notification via hs.notify
-function M.sendMacOSNotification(title, subtitle, body) hs.notify.show(title, subtitle or "", body or "") end
+-- Uses .new().send() instead of .show() to ensure it goes through Notification Center
+-- This allows the AX watcher to intercept and route it through the unified system
+function M.sendMacOSNotification(title, subtitle, body)
+  hs.notify.new({
+    title = title,
+    subTitle = subtitle or "",
+    informativeText = body or "",
+    withdrawAfter = 10,  -- Auto-withdraw after 10 seconds
+  }):send()
+end
 
 -- Send iMessage to phone number
 function M.sendPhoneNotification(phoneNumber, message)

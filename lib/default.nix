@@ -274,6 +274,14 @@ inputs: lib: _:
     #   - script: A shell script that can be run directly
     #   - activationScript: Script content for use in system.activationScripts
     mkMas = import ./mkMas.nix;
+
+    # mkProjectClaude - Generate project-specific Claude Code configuration
+    # Creates .claude/settings.local.json for per-project MCP servers and settings
+    # Usage: lib.mega.mkProjectClaude { inherit pkgs lib; } {
+    #   mcpServers = { tidewave = { type = "http"; url = "http://localhost:4000/tidewave/mcp"; }; };
+    #   disableGlobalServers = [ "memory" ];
+    # }
+    mkProjectClaude = import ./mkProjectClaude.nix inputs;
   };
 }
 # Make sure to add lib extensions from inputs

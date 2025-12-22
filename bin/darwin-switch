@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# Workaround for darwin-rebuild hanging on setupLaunchAgents
+# Separates system and home-manager activation to avoid the hang
+
+set -euo pipefail
+
+cd ~/.dotfiles
+
+echo "━━━ Building darwin configuration..."
+nix build .#darwinConfigurations.megabookpro.system -o /tmp/darwin-result
+
+echo ""
+echo "━━━ Activating darwin system (as root)..."
+sudo /tmp/darwin-result/sw/bin/darwin-rebuild activate --flake .#megabookpro
+
+echo ""
+echo "━━━ Building home-manager configuration..."
+nix build .#darwinConfigurations.megabookpro.config.home-manager.users.seth.home.activationPackage -o /tmp/hm-result
+
+echo ""
+echo "━━━ Activating home-manager (as user)..."
+/tmp/hm-result/activate
+
+echo ""
+echo "✓ Done! System and home-manager activated successfully."
+echo ""
+echo "Note: This avoided the setupLaunchAgents hang by running activations separately."

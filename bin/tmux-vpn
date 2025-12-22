@@ -1,0 +1,104 @@
+#!/usr/bin/env bash
+# Display VPN connection status for tmux status line
+# Shows: <icon> <cisco|azure> <vpn-ip> when connected
+# Shows: <disconnected-icon> off when disconnected
+#
+# Delegates detection to the vpn wrapper script for single source of truth
+
+set -euo pipefail
+
+# Get script directory to find vpn wrapper
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+VPN_CMD="$SCRIPT_DIR/vpn"
+
+# VPN Icons (nerd fonts)
+# Connected: 󰒄  󰌾    󰖂
+# Disconnected: 󰦞  󰌿
+ICON_CONNECTED="󰒃"
+ICON_DISCONNECTED="󰦞"
+
+# Colors for tmux
+COLOR_CONNECTED="brightgreen"
+COLOR_DISCONNECTED="colour241"
+COLOR_TYPE="colour136"
+COLOR_IP="brightblue"
+
+# Parse vpn status output to extract connection details
+get_vpn_status() {
+  # Run vpn status and capture output
+  # Redirect stderr to avoid noise in tmux status line
+  local status_output
+  status_output=$("$VPN_CMD" status 2>/dev/null || echo "")
+
+  # Check if disconnected
+  if echo "$status_output" | grep -q "disconnected"; then
+    return 1
+  fi
+
+  # Check if connected
+  if echo "$status_output" | grep -q "VPN is connected"; then
+    return 0
+  fi
+
+  return 1
+}
+
+# Extract method from vpn status output
+get_vpn_method() {
+  local status_output
+  status_output=$("$VPN_CMD" status 2>/dev/null || echo "")
+  
+  # Extract method line and parse it
+  local method
+  method=$(echo "$status_output" | grep "Method:" | awk '{print $2}')
+  
+  # Normalize method names for tmux display
+  case "$method" in
+    openconnect-sso)
+      echo "cisco"
+      ;;
+    cisco-native)
+      echo "cisco"
+      ;;
+    azure-openvpn)
+      echo "azure"
+      ;;
+    *)
+      echo ""
+      ;;
+  esac
+}
+
+# Extract VPN IP from vpn status output
+get_vpn_ip() {
+  local status_output
+  status_output=$("$VPN_CMD" status 2>/dev/null || echo "")
+  
+  # Extract IP line and parse it
+  echo "$status_output" | grep "VPN IP:" | awk '{print $3}'
+}
+
+# Main logic
+main() {
+  # Call vpn wrapper to get status
+  if get_vpn_status; then
+    local vpn_type
+    local vpn_ip
+    vpn_type=$(get_vpn_method)
+    vpn_ip=$(get_vpn_ip)
+
+    # Connected - format for tmux
+    printf "#[fg=%s]%s#[fg=%s] %s" \
+      "$COLOR_CONNECTED" "$ICON_CONNECTED" \
+      "$COLOR_TYPE" "$vpn_type"
+
+    if [[ -n "$vpn_ip" ]]; then
+      printf "#[fg=%s] %s" "$COLOR_IP" "$vpn_ip"
+    fi
+  else
+    # Disconnected
+    printf "#[fg=%s]%s off" "$COLOR_DISCONNECTED" "$ICON_DISCONNECTED"
+  fi
+}
+
+main

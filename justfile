@@ -49,10 +49,10 @@ init host=`hostname`:
       git clone https://github.com/megalithic/dotfiles "$DOTFILES_DIR"
   fi
 
-  if ! command -v brew >/dev/null; then
-    echo ":: Installing homebrew.." && \
-      bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-  fi
+  # if ! command -v brew >/dev/null; then
+  #   echo ":: Installing homebrew.." && \
+  #     bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  # fi
 
   echo ":: Running nix-darwin for the first time.." && \
     sudo nix --experimental-features 'nix-command flakes' run nix-darwin/nix-darwin-25.11 -- switch --option eval-cache false --flake $DOTFILES_DIR#{{host}} --refresh
@@ -83,10 +83,28 @@ update:
 
 [macos]
 rebuild:
+  ./bin/darwin-switch
+
+[macos]
+rebuild-old:
+  @echo "WARNING: This may hang on setupLaunchAgents. Use 'just rebuild' instead."
   sudo darwin-rebuild switch --flake ./
 
 [macos]
 mac:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  
+  # Fetch remote updates
+  jj git fetch
+  
+  # Check if remote main is ahead
+  if [[ $(jj log -r 'main@origin' -T change_id --no-graph) != $(jj log -r main -T change_id --no-graph) ]]; then
+    echo "Remote main has updates (likely flake.lock from Sunday automation)"
+    jj bookmark set main -r main@origin
+    ntfy send -t "Nix Darwin" -m "Synced flake.lock from remote before rebuild"
+  fi
+  
   nh darwin switch ./
 
 # initial nix-darwin build

@@ -1,0 +1,100 @@
+#!/usr/bin/env bash
+# Claude Code statusline script
+# Displays: directory (gray) + git branch (green) + context bar
+
+# Read JSON input from Claude Code
+input=$(cat)
+
+# Extract data
+dir=$(echo "$input" | jq -r '.workspace.current_dir')
+model=$(echo "$input" | jq -r '.model.display_name // "unknown"')
+duration_ms=$(echo "$input" | jq -r '.cost.total_duration_ms // 0')
+transcript=$(echo "$input" | jq -r '.transcript_path // ""')
+context_max=$(echo "$input" | jq -r '.context_window.context_window_size // 1')
+
+# Calculate actual context from current_usage (cache = what's in context window)
+cache_read=$(echo "$input" | jq -r '.context_window.current_usage.cache_read_input_tokens // 0')
+cache_create=$(echo "$input" | jq -r '.context_window.current_usage.cache_creation_input_tokens // 0')
+context_used=$((cache_read + cache_create))
+
+# Count compactions from transcript
+# First "type":"summary" is the conversation title, so subtract 1
+compactions=0
+if [ -n "$transcript" ] && [ -f "$transcript" ]; then
+  summary_count=$(grep -c '"type":"summary"' "$transcript" 2>/dev/null || echo "0")
+  # Subtract 1 for the title entry
+  compactions=$((summary_count > 0 ? summary_count - 1 : 0))
+fi
+
+# Format duration (ms to human readable)
+if [ "$duration_ms" -gt 0 ] 2>/dev/null; then
+  total_secs=$((duration_ms / 1000))
+  hours=$((total_secs / 3600))
+  mins=$(((total_secs % 3600) / 60))
+  secs=$((total_secs % 60))
+  if [ "$hours" -gt 0 ]; then
+    duration="${hours}h${mins}m"
+  elif [ "$mins" -gt 0 ]; then
+    duration="${mins}m${secs}s"
+  else
+    duration="${secs}s"
+  fi
+fi
+
+# Git branch
+branch=$(git -C "$dir" branch --show-current 2>/dev/null)
+
+# Context progress bar
+if [ "$context_max" -gt 0 ] 2>/dev/null; then
+  percent=$((context_used * 100 / context_max))
+  bar_width=10
+  filled=$((percent * bar_width / 100))
+  # Show at least 1 block if there's any usage
+  [ "$percent" -gt 0 ] && [ "$filled" -eq 0 ] && filled=1
+  empty=$((bar_width - filled))
+
+  # Color based on usage: green < 50%, yellow 50-80%, red > 80%
+  if [ "$percent" -lt 50 ]; then
+    color="\033[32m" # green
+  elif [ "$percent" -lt 80 ]; then
+    color="\033[33m" # yellow
+  else
+    color="\033[31m" # red
+  fi
+
+  bar="${color}"
+  for ((i = 0; i < filled; i++)); do bar+="█"; done
+  bar+="\033[90m"
+  for ((i = 0; i < empty; i++)); do bar+="░"; done
+  bar+="\033[0m"
+
+  context_display=" ${bar} ${percent}%"
+fi
+
+# Separator
+sep="\033[90m │ \033[0m"
+
+# Output: directory in gray
+printf '\033[90m%s\033[0m' "$dir"
+
+# Git branch in green (with icon)
+[ -n "$branch" ] && printf '%b\033[32m\ue725 %s\033[0m' "$sep" "$branch"
+
+# Context bar
+[ -n "$context_display" ] && printf '%b%b' "$sep" "$context_display"
+
+# Model in cyan
+[ -n "$model" ] && [ "$model" != "unknown" ] && printf '%b\033[36m%s\033[0m' "$sep" "$model"
+
+# Duration in magenta
+[ -n "$duration" ] && printf '%b\033[35m%s\033[0m' "$sep" "$duration"
+
+# Compactions (only show if > 0, yellow/red warning)
+if [ "$compactions" -gt 0 ]; then
+  if [ "$compactions" -ge 3 ]; then
+    comp_color="\033[31m" # red
+  else
+    comp_color="\033[33m" # yellow
+  fi
+  printf '%b%b⚠ %sx compact\033[0m' "$sep" "$comp_color" "$compactions"
+fi

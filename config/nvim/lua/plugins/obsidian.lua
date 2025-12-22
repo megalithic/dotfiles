@@ -21,18 +21,12 @@ return {
         path = vim.env.NOTES_HOME,
       },
     },
-
     daily_notes = {
       folder = "daily",
     },
     completion = {
-      -- Enables completion using nvim_cmp
-      nvim_cmp = vim.g.completer == "cmp",
-      -- Enables completion using blink.cmp
-      blink = vim.g.completer == "blink",
-      -- Trigger completion at 2 chars.
+      blink = true,
       min_chars = 0,
-
       create_new = true,
     },
     note_id_func = function(title)
@@ -49,7 +43,6 @@ return {
       return suffix
     end,
     picker = {
-      -- REF: https://github.com/obsidian-nvim/obsidian.nvim/blob/main/lua/obsidian/config/init.lua#L36
       name = "snacks.pick",
     },
     checkbox = {},

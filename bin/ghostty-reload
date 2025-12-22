@@ -1,0 +1,38 @@
+#!/bin/bash
+
+# ghostty-reload - Utility to reload Ghostty configuration
+# Uses SIGUSR2 signal with AppleScript fallback
+
+set -euo pipefail
+
+# Reload Ghostty configuration using SIGUSR2 signal with AppleScript fallback
+reload_ghostty() {
+    if ! pgrep -x ghostty >/dev/null 2>&1; then
+        return 0
+    fi
+
+    # Try SIGUSR2 signal method (requires Ghostty 1.2.0+)
+    if pkill -SIGUSR2 ghostty 2>/dev/null; then
+        echo "Ghostty configuration reloaded"
+        return 0
+    fi
+
+    # Fallback to AppleScript on macOS
+    if [[ "$(uname)" == "Darwin" ]] && command -v osascript >/dev/null 2>&1; then
+        osascript -e 'tell application "System Events"
+            tell process "Ghostty"
+                try
+                    click menu item "Reload Configuration" of menu "Ghostty" of menu bar 1
+                    return "success"
+                on error
+                    return "failed"
+                end try
+            end tell
+        end tell' >/dev/null 2>&1 && echo "Ghostty configuration reloaded (AppleScript fallback)"
+    fi
+}
+
+# If called directly, reload Ghostty
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    reload_ghostty
+fi

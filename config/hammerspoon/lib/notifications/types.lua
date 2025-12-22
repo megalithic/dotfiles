@@ -7,8 +7,8 @@ local M = {}
 ---@field title string
 ---@field subtitle string?
 ---@field message string
----@field stackingID string
----@field bundleID string
+---@field axStackingID string AX stacking identifier from notification center
+---@field bundleID string Parsed app bundle identifier
 
 ---@class RuleEvaluation
 ---@field shouldShow boolean

@@ -9,9 +9,25 @@
     inputs.agenix.homeManagerModules.default
   ];
 
-  age.secrets = {
-    env-vars.file = "${inputs.self}/secrets/env-vars.age";
-    s3cfg.file = "${inputs.self}/secrets/s3cfg.age";
+  age = {
+    identityPaths = [
+      "${config.home.homeDirectory}/.ssh/id_ed25519"
+    ];
+    secrets = {
+      env-vars.file = "${inputs.self}/secrets/env-vars.age";
+      work-env-vars.file = "${inputs.self}/secrets/work-env-vars.age";
+      s3cfg.file = "${inputs.self}/secrets/s3cfg.age";
+    };
+  };
+
+  # Configure agenix launch agent to not run at load (prevents hang during activation)
+  # Secrets will be decrypted manually via home-manager activation
+  launchd.agents.activate-agenix = {
+    enable = true;
+    config = {
+      RunAtLoad = lib.mkForce true;
+      KeepAlive = lib.mkForce false;
+    };
   };
 
   programs.zsh.initExtra = lib.mkAfter ''
@@ -19,12 +35,22 @@
     if [ -f "${config.age.secrets.env-vars.path}" ]; then
       source "${config.age.secrets.env-vars.path}"
     fi
+
+    # Load work-specific environment variables
+    if [ -f "${config.age.secrets.work-env-vars.path}" ]; then
+      source "${config.age.secrets.work-env-vars.path}"
+    fi
   '';
 
   programs.fish.interactiveShellInit = lib.mkAfter ''
     # Load agenix secrets as environment variables
     if test -f "${config.age.secrets.env-vars.path}"
       source "${config.age.secrets.env-vars.path}"
+    end
+
+    # Load work-specific environment variables
+    if test -f "${config.age.secrets.work-env-vars.path}"
+      source "${config.age.secrets.work-env-vars.path}"
     end
   '';
 
