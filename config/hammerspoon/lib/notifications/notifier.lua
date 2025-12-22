@@ -481,8 +481,9 @@ local function calculateDynamicDimensions(title, subtitle, message, opts)
   })
   local titleSize = tempCanvas:minimumTextSize(1, styledTitle)
   -- Account for wrapping: if text is wider than available width, it will wrap
+  -- But only apply wrap estimation if there are no explicit newlines (minimumTextSize already handles those)
   local titleHeight = titleSize.h
-  if titleSize.w > textWidth then
+  if titleSize.w > textWidth and not title:match("\n") then
     -- Rough estimate: wrapped lines = ceiling(actual width / available width) * line height
     titleHeight = math.ceil(titleSize.w / textWidth) * titleSize.h
   end
@@ -498,7 +499,7 @@ local function calculateDynamicDimensions(title, subtitle, message, opts)
     })
     local subtitleSize = tempCanvas:minimumTextSize(1, styledSubtitle)
     subtitleHeight = subtitleSize.h
-    if subtitleSize.w > textWidth then
+    if subtitleSize.w > textWidth and not subtitle:match("\n") then
       subtitleHeight = math.ceil(subtitleSize.w / textWidth) * subtitleSize.h
     end
     tempCanvas:removeElement(1)
@@ -512,7 +513,7 @@ local function calculateDynamicDimensions(title, subtitle, message, opts)
   })
   local messageSize = tempCanvas:minimumTextSize(1, styledMessage)
   local messageHeight = messageSize.h
-  if messageSize.w > textWidth then
+  if messageSize.w > textWidth and not message:match("\n") then
     messageHeight = math.ceil(messageSize.w / textWidth) * messageSize.h
   end
   
