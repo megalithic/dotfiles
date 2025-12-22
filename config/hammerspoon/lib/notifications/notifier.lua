@@ -718,13 +718,24 @@ function M.sendCanvasNotification(title, subtitle, message, duration, opts)
 
   if opts.appImageID then
     local appIcon
+    local bundleID = opts.appImageID
 
     -- Handle special icon markers
-    if opts.appImageID == "hal9000" then
+    if bundleID == "hal9000" then
       local iconPath = hs.configdir .. "/assets/hal9000.png"
       appIcon = hs.image.imageFromPath(iconPath)
     else
-      appIcon = hs.image.imageFromAppBundle(opts.appImageID)
+      -- First, try to get a valid app object (works with app name or bundle ID)
+      local app = hs.application.get(bundleID)
+      
+      if app then
+        -- We have a valid running app - get its bundle ID
+        bundleID = app:bundleID()
+        appIcon = hs.image.imageFromAppBundle(bundleID)
+      else
+        -- No running app found - try as bundle ID directly (for non-running apps)
+        appIcon = hs.image.imageFromAppBundle(bundleID)
+      end
     end
 
     if appIcon then

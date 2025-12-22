@@ -47,3 +47,4 @@ home/config/weechat
 .direnv/
 _planned
 .playwright-mcp/
+result
