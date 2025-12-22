@@ -489,9 +489,9 @@ M.notifier = {
       name = "Hammerspoon System Notifications (TEST)",
       match = {
         bundleID = "org.hammerspoon.Hammerspoon",
-        title = "hammerspork",  -- Match reload notifications
+        title = "hammerspork", -- Match reload notifications
       },
-      action = "redirect",  -- Will map to old behavior for now
+      action = "redirect", -- Will map to old behavior for now
       duration = 3,
       overrideFocusModes = true,
       appImageID = "org.hammerspoon.Hammerspoon",
@@ -565,29 +565,6 @@ M.notifier = {
       showWhenAppFocused = false,
       overrideFocusModes = { "Personal", "Work" },
       appImageID = "hal9000", -- Special marker for HAL icon
-    },
-
-    -- Example: Build notifications with pattern-based priority
-    {
-      name = "Build System Notifications",
-      appBundleID = "com.example.buildapp",
-      duration = 3,
-      patterns = {
-        high = {
-          "failed",
-          "error",
-          "fatal",
-          "broke",
-        },
-        low = {
-          "started",
-          "building",
-          "compiling",
-          "running",
-        },
-        -- "succeeded", "completed" = normal (default)
-      },
-      overrideFocusModes = { "Work" },
     },
   },
 
@@ -678,29 +655,29 @@ M.notifier = {
   persistentNotifications = {
     enabled = true,
     scanInterval = 10, -- Check every 10 seconds for persistent notifications
-    
+
     -- Default behavior: auto-dismiss after this many seconds
     defaultDismissTimeout = 3,
-    
+
     -- Whitelist: notifications matching these patterns will NOT be auto-dismissed
     -- Each entry can match on title (Lua pattern) and/or message text
     whitelist = {
       -- Example: Keep software update notifications
       -- { title = "Software Update" },
-      
+
       -- Example: Keep security-related alerts
       -- { message = "security" },
-      
+
       -- Example: Keep specific app notifications
       -- { title = ".*Critical.*" },
     },
-    
+
     -- Custom dismiss timeouts for specific notification patterns
     -- If a notification matches, use this timeout instead of defaultDismissTimeout
     customTimeouts = {
       -- Example: Dismiss login item notifications after 5 seconds
       { title = "Login Item", timeout = 5 },
-      
+
       -- Example: Keep background permission requests for 60 seconds
       { message = "background", timeout = 60 },
     },
