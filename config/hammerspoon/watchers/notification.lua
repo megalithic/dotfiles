@@ -9,7 +9,12 @@ M.observer = nil
 M.processedNotificationIDs = {}
 M.cleanupTimer = nil
 M.processWatcher = nil
+M.persistentScanTimer = nil  -- Timer for periodic persistent notification scanning
 M.currentPID = nil
+
+-- Track first-seen times for notifications pending delayed dismissal
+-- { [notificationID] = { firstSeen = timestamp, rule = matchedRule } }
+M.pendingDismissals = {}
 
 -- Maximum number of stored notification IDs before cleanup
 local MAX_PROCESSED_IDS = 100
@@ -316,31 +321,83 @@ local function handleNotification(element)
       -- Handle different actions
       if action == "dismiss" then
         -- DISMISS: Find and click close button
-        local success = dismissNotification(notificationElement, title)
+        -- Check if rule specifies a delay before dismissing
+        local dismissDelay = rule.delay or 0
         
-        -- Log dismissal to database
-        local db = require("lib.notifications.db")
-        db.log({
-          timestamp = timestamp,
-          notification_id = notificationID,
-          rule_name = rule.name,
-          app_id = axStackingID,
-          notification_type = notificationType,
-          subrole = subrole,
-          match_criteria = matchedCriteria,
-          title = title,
-          sender = title,
-          subtitle = subtitle,
-          message = message,
-          action = "dismiss",
-          action_detail = success and "dismissed_via_close_button" or "dismiss_failed",
-          priority = "normal", -- dismissals don't have priority logic
-          focus_mode = nil, -- could add getCurrentFocusMode() if needed
-          shown = false,
-        })
-        
-        -- Update menubar indicator
-        require("lib.notifications.menubar").update()
+        if dismissDelay > 0 then
+          -- Track for delayed dismissal
+          if not M.pendingDismissals[notificationID] then
+            M.pendingDismissals[notificationID] = {
+              firstSeen = timestamp,
+              rule = rule,
+              title = title,
+              element = notificationElement,
+            }
+            U.log.df("Tracking notification for delayed dismiss (%ds): %s", dismissDelay, title or "untitled")
+          else
+            -- Already tracking - check if delay has elapsed
+            local tracked = M.pendingDismissals[notificationID]
+            local age = timestamp - tracked.firstSeen
+            
+            if age >= dismissDelay then
+              -- Delay elapsed, dismiss now
+              U.log.df("Delay elapsed (%ds >= %ds), dismissing: %s", age, dismissDelay, title or "untitled")
+              local success = dismissNotification(notificationElement, title)
+              M.pendingDismissals[notificationID] = nil
+              
+              -- Log dismissal to database
+              local db = require("lib.notifications.db")
+              db.log({
+                timestamp = timestamp,
+                notification_id = notificationID,
+                rule_name = rule.name,
+                app_id = axStackingID,
+                notification_type = notificationType,
+                subrole = subrole,
+                match_criteria = matchedCriteria,
+                title = title,
+                sender = title,
+                subtitle = subtitle,
+                message = message,
+                action = "dismiss",
+                action_detail = success and "dismissed_after_delay" or "dismiss_failed",
+                priority = "normal",
+                focus_mode = nil,
+                shown = false,
+              })
+              
+              require("lib.notifications.menubar").update()
+            else
+              U.log.df("Waiting to dismiss (%ds / %ds): %s", age, dismissDelay, title or "untitled")
+            end
+          end
+        else
+          -- No delay - dismiss immediately
+          local success = dismissNotification(notificationElement, title)
+          
+          -- Log dismissal to database
+          local db = require("lib.notifications.db")
+          db.log({
+            timestamp = timestamp,
+            notification_id = notificationID,
+            rule_name = rule.name,
+            app_id = axStackingID,
+            notification_type = notificationType,
+            subrole = subrole,
+            match_criteria = matchedCriteria,
+            title = title,
+            sender = title,
+            subtitle = subtitle,
+            message = message,
+            action = "dismiss",
+            action_detail = success and "dismissed_via_close_button" or "dismiss_failed",
+            priority = "normal",
+            focus_mode = nil,
+            shown = false,
+          })
+          
+          require("lib.notifications.menubar").update()
+        end
         
       elseif action == "ignore" then
         -- IGNORE: Silent drop (no logging, no display)
@@ -457,6 +514,17 @@ function M:start()
     scanExistingNotifications()
   end)
 
+  -- Optional: Periodic scanning for persistent notifications
+  -- Useful for catching system alerts that don't trigger AX events
+  local persistentConfig = C.notifier.persistentScanner or {}
+  if persistentConfig.enabled then
+    local scanInterval = persistentConfig.scanInterval or 10
+    M.persistentScanTimer = hs.timer.doEvery(scanInterval, function()
+      scanExistingNotifications()
+    end)
+    U.log.df("Periodic persistent notification scanning enabled (every %ds)", scanInterval)
+  end
+
   -- Monitor Notification Center process for restarts
   -- Check every 30 seconds if NC has restarted (PID changed)
   M.processWatcher = hs.timer.doEvery(30, function()
@@ -509,7 +577,13 @@ function M:stop()
     M.cleanupTimer = nil
   end
 
+  if M.persistentScanTimer then
+    M.persistentScanTimer:stop()
+    M.persistentScanTimer = nil
+  end
+
   M.currentPID = nil
+  M.pendingDismissals = {}
   M.processedNotificationIDs = {}
   U.log.i("stopped")
 end

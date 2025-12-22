@@ -650,38 +650,23 @@ M.notifier = {
   -- Database retention settings
   retentionDays = 30, -- Keep notifications for 30 days before cleanup
 
-  -- Persistent System Notification Auto-Dismissal
-  -- Monitors Notification Center for long-lived system alerts and auto-dismisses them
-  persistentNotifications = {
+  -- Persistent Notification Scanner Settings
+  -- Periodically scans Notification Center for persistent/system notifications
+  -- that don't trigger AX events. Dismissal is handled via rules with action = "dismiss"
+  persistentScanner = {
     enabled = true,
     scanInterval = 10, -- Check every 10 seconds for persistent notifications
-
-    -- Default behavior: auto-dismiss after this many seconds
-    defaultDismissTimeout = 3,
-
-    -- Whitelist: notifications matching these patterns will NOT be auto-dismissed
-    -- Each entry can match on title (Lua pattern) and/or message text
-    whitelist = {
-      -- Example: Keep software update notifications
-      -- { title = "Software Update" },
-
-      -- Example: Keep security-related alerts
-      -- { message = "security" },
-
-      -- Example: Keep specific app notifications
-      -- { title = ".*Critical.*" },
-    },
-
-    -- Custom dismiss timeouts for specific notification patterns
-    -- If a notification matches, use this timeout instead of defaultDismissTimeout
-    customTimeouts = {
-      -- Example: Dismiss login item notifications after 5 seconds
-      { title = "Login Item", timeout = 5 },
-
-      -- Example: Keep background permission requests for 60 seconds
-      { message = "background", timeout = 60 },
-    },
   },
+  
+  -- NOTE: Persistent notification handling is now unified with regular rules above.
+  -- To auto-dismiss persistent notifications, add rules with:
+  --   action = "dismiss"           -- Dismiss immediately when matched
+  --   action = "dismiss", delay = 5 -- Wait 5 seconds before dismissing
+  --
+  -- Examples (add to rules array above):
+  --   { name = "Login Items", match = { title = "Login Item" }, action = "dismiss", delay = 5 },
+  --   { name = "Background Permissions", match = { message = "background" }, action = "dismiss", delay = 60 },
+  --   { name = "System Alerts Catch-All", match = { notificationType = "system" }, action = "dismiss", delay = 3 },
 
   -- Agent notification settings (used by N.send() API via ntfy CLI)
   agent = {
