@@ -419,6 +419,135 @@ function M.sendAlert(message, duration)
   hs.alert.show(message, duration)
 end
 
+-- Calculate dynamic canvas dimensions based on actual text measurements
+-- Uses hs.canvas:minimumTextSize() to get accurate dimensions with wrapping
+-- @param title string: Notification title
+-- @param subtitle string: Optional subtitle (can be empty)
+-- @param message string: Notification message body
+-- @param opts table: Options including icon presence
+-- @return table: { width, height, titleHeight, subtitleHeight, messageHeight }
+local function calculateDynamicDimensions(title, subtitle, message, opts)
+  opts = opts or {}
+  
+  -- Color scheme (dark mode for measurement)
+  local isDarkMode = hs.host.interfaceStyle() == "Dark"
+  local colors = isDarkMode and config.colors.dark or config.colors.light
+  
+  -- Define text styles
+  local titleStyle = {
+    font = { name = ".AppleSystemUIFontBold", size = 16 },
+    color = colors.title,
+    paragraphStyle = { lineBreak = "wordWrap" },
+  }
+  
+  local subtitleStyle = {
+    font = { name = ".AppleSystemUIFont", size = 15 },
+    color = colors.title,
+    paragraphStyle = { lineBreak = "wordWrap" },
+  }
+  
+  local messageStyle = {
+    font = { name = ".AppleSystemUIFont", size = 14 },
+    color = colors.message,
+    paragraphStyle = { lineBreak = "wordWrap" },
+  }
+  
+  -- Create styled text objects
+  local styledTitle = hs.styledtext.new(title, titleStyle)
+  local styledSubtitle = subtitle ~= "" and hs.styledtext.new(subtitle, subtitleStyle) or nil
+  local styledMessage = hs.styledtext.new(message, messageStyle)
+  
+  -- Calculate available width for text
+  local baseWidth = 420
+  local leftPadding = 16
+  local rightPadding = 16
+  local iconSize = 48
+  local iconSpacing = 12
+  
+  local hasIcon = opts.appImageID ~= nil
+  local textWidth = baseWidth - leftPadding - rightPadding
+  if hasIcon then
+    textWidth = textWidth - iconSize - iconSpacing
+  end
+  
+  -- Create temporary canvas for text measurement
+  local tempCanvas = hs.canvas.new({ x = 0, y = 0, w = textWidth, h = 100 })
+  
+  -- Measure title - use minimumTextSize with constrained width
+  tempCanvas:appendElements({
+    type = "text",
+    text = styledTitle,
+    frame = { x = 0, y = 0, w = textWidth, h = 100 },
+  })
+  local titleSize = tempCanvas:minimumTextSize(1, styledTitle)
+  -- Account for wrapping: if text is wider than available width, it will wrap
+  local titleHeight = titleSize.h
+  if titleSize.w > textWidth then
+    -- Rough estimate: wrapped lines = ceiling(actual width / available width) * line height
+    titleHeight = math.ceil(titleSize.w / textWidth) * titleSize.h
+  end
+  tempCanvas:removeElement(1)
+  
+  -- Measure subtitle if present
+  local subtitleHeight = 0
+  if styledSubtitle then
+    tempCanvas:appendElements({
+      type = "text",
+      text = styledSubtitle,
+      frame = { x = 0, y = 0, w = textWidth, h = 100 },
+    })
+    local subtitleSize = tempCanvas:minimumTextSize(1, styledSubtitle)
+    subtitleHeight = subtitleSize.h
+    if subtitleSize.w > textWidth then
+      subtitleHeight = math.ceil(subtitleSize.w / textWidth) * subtitleSize.h
+    end
+    tempCanvas:removeElement(1)
+  end
+  
+  -- Measure message with wrapping
+  tempCanvas:appendElements({
+    type = "text",
+    text = styledMessage,
+    frame = { x = 0, y = 0, w = textWidth, h = 100 },
+  })
+  local messageSize = tempCanvas:minimumTextSize(1, styledMessage)
+  local messageHeight = messageSize.h
+  if messageSize.w > textWidth then
+    messageHeight = math.ceil(messageSize.w / textWidth) * messageSize.h
+  end
+  
+  tempCanvas:delete()
+  
+  -- Calculate total height with spacing
+  local topPadding = 16
+  local bottomPadding = 16
+  local timestampHeight = 18
+  local titleToSubtitleSpacing = subtitle ~= "" and 4 or 0
+  local subtitleToMessageSpacing = 6
+  
+  local contentHeight = titleHeight + titleToSubtitleSpacing + subtitleHeight + subtitleToMessageSpacing + messageHeight
+  local totalHeight = topPadding + contentHeight + bottomPadding + timestampHeight
+  
+  -- Apply constraints
+  local minHeight = 100
+  local maxHeight = 400
+  local finalHeight = math.max(minHeight, math.min(maxHeight, totalHeight))
+  
+  -- Debug logging
+  U.log.df("Dynamic sizing: title=%dpx, subtitle=%dpx, message=%dpx, total=%dpx (clamped to %dpx)",
+    titleHeight, subtitleHeight, messageHeight, totalHeight, finalHeight)
+  
+  return {
+    width = baseWidth,
+    height = finalHeight,
+    titleHeight = titleHeight,
+    subtitleHeight = subtitleHeight,
+    messageHeight = messageHeight,
+    textWidth = textWidth,
+    hasIcon = hasIcon,
+  }
+end
+
 -- Send custom canvas notification at bottom-left with macOS Sequoia styling
 -- Options: {
 --   positionMode = "auto" | "fixed" | "above-prompt",
@@ -460,36 +589,18 @@ function M.sendCanvasNotification(title, subtitle, message, duration, opts)
   -- Show dimming overlay if requested
   if opts.dimBackground then M.showOverlay(opts.dimAlpha or 0.6) end
 
-  -- Process message: truncate to fit visible area (~90 chars for 3 lines)
-  local maxTotalChars = 90
-  local originalLength = #message
+  -- Preserve newlines for multi-line messages (lists, etc.)
+  -- Note: Dynamic sizing will handle multi-line text properly
 
-  -- Replace newlines with spaces for consistent display
-  message = message:gsub("\n", " ")
-
-  -- Apply smart truncation if message exceeds limit
-  if originalLength > maxTotalChars then
-    message = smartTruncate(message, maxTotalChars)
-  end
-
-  -- Count lines for height calculation (let canvas wordWrap handle wrapping)
-  local estimatedLines = math.ceil(#message / 30)
-  local lineCount = math.min(estimatedLines, 3)
+  -- Calculate dynamic dimensions based on actual text measurement
+  local dimensions = calculateDynamicDimensions(title, subtitle, message, opts)
+  local width = dimensions.width
+  local height = dimensions.height
 
   local screen = hs.screen.mainScreen()
   local screenFrame = screen:frame()
 
-  -- Calculate dynamic height based on content
-  local baseHeight = 70
-  local lineHeight = 20
-  local height = baseHeight + (lineCount * lineHeight)
-
-  -- Minimum and maximum heights
-  if height < 100 then height = 100 end
-  if height > 200 then height = 200 end
-
   local padding = 20
-  local width = 420
 
   -- Get anchor and position from opts (with defaults)
   local anchor = opts.anchor or "screen"
@@ -592,11 +703,14 @@ function M.sendCanvasNotification(title, subtitle, message, duration, opts)
   local topPadding = 16
   local rightPadding = 16
   local bottomPadding = 16
-  local titleHeight = 22
-  local subtitleHeight = 20
-  local titleToSubtitleSpacing = 2
-  local subtitleToMessageSpacing = 4
-  local timestampHeight = 20
+  local titleToSubtitleSpacing = subtitle ~= "" and 4 or 0
+  local subtitleToMessageSpacing = 6
+  local timestampHeight = 18
+
+  -- Use measured heights from dimensions
+  local titleHeight = dimensions.titleHeight
+  local subtitleHeight = dimensions.subtitleHeight
+  local messageHeight = dimensions.messageHeight
 
   -- All vertical positioning uses topPadding as the base reference
   local contentY = topPadding -- Single reference point for top alignment
@@ -636,9 +750,9 @@ function M.sendCanvasNotification(title, subtitle, message, duration, opts)
     textColor = colors.title,
     textSize = 16,
     textFont = ".AppleSystemUIFontBold",
-    frame = { x = textLeftMargin, y = contentY, h = titleHeight, w = width - textLeftMargin - rightPadding - 50 },
+    frame = { x = textLeftMargin, y = contentY, h = titleHeight, w = dimensions.textWidth },
     textAlignment = "left",
-    textLineBreak = "truncateTail",
+    textLineBreak = "wordWrap",  -- Allow wrapping for long titles
     id = "title",
     trackMouseDown = true,
   })
@@ -652,9 +766,9 @@ function M.sendCanvasNotification(title, subtitle, message, duration, opts)
       textColor = colors.title, -- Same as title for emphasis
       textSize = 15,
       textFont = ".AppleSystemUIFont", -- Regular weight, not bold
-      frame = { x = textLeftMargin, y = subtitleY, h = subtitleHeight, w = width - textLeftMargin - rightPadding - 50 },
+      frame = { x = textLeftMargin, y = subtitleY, h = subtitleHeight, w = dimensions.textWidth },
       textAlignment = "left",
-      textLineBreak = "truncateTail",
+      textLineBreak = "wordWrap",  -- Allow wrapping for long subtitles
       id = "subtitle",
       trackMouseDown = true,
     })
@@ -664,7 +778,7 @@ function M.sendCanvasNotification(title, subtitle, message, duration, opts)
   local messageY = subtitle ~= ""
     and (subtitleY + subtitleHeight + subtitleToMessageSpacing)
     or (contentY + titleHeight + subtitleToMessageSpacing)
-  local messageBottomSpace = timestampHeight + bottomPadding + 4 -- Base spacing
+  
   canvas:appendElements({
     type = "text",
     text = message,
@@ -674,8 +788,8 @@ function M.sendCanvasNotification(title, subtitle, message, duration, opts)
     frame = {
       x = textLeftMargin,
       y = messageY,
-      h = height - messageY - messageBottomSpace,
-      w = width - textLeftMargin - rightPadding,
+      h = messageHeight,  -- Use measured height instead of calculating from canvas height
+      w = dimensions.textWidth,
     },
     textAlignment = "left",
     textLineBreak = "wordWrap",
