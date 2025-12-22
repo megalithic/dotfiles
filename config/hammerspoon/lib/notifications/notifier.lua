@@ -236,14 +236,13 @@ function M.hideOverlay()
 end
 
 -- Dismiss active notification (helper function)
-function M.dismissNotification(fadeTime)
+-- @param fadeTime number: Duration of fade-out animation (default: 0.3)
+-- @param animate boolean: Whether to slide left while fading (default: true)
+function M.dismissNotification(fadeTime, animate)
   fadeTime = fadeTime or 0.3
+  animate = animate ~= false -- default to true
 
-  if _G.activeNotificationCanvas then
-    _G.activeNotificationCanvas:delete(fadeTime)
-    _G.activeNotificationCanvas = nil
-  end
-
+  -- Stop any existing timers first
   if _G.activeNotificationTimer then
     _G.activeNotificationTimer:stop()
     _G.activeNotificationTimer = nil
@@ -254,7 +253,68 @@ function M.dismissNotification(fadeTime)
     _G.activeNotificationAnimTimer = nil
   end
 
-  if _G.notificationOverlay then hs.timer.doAfter(fadeTime, function() M.hideOverlay() end) end
+  -- Handle canvas dismissal with optional slide-left animation
+  if _G.activeNotificationCanvas then
+    local canvas = _G.activeNotificationCanvas
+
+    -- Check if animation is enabled in config
+    local animConfig = config.animation or {}
+    local animEnabled = animConfig.enabled ~= false and animate
+
+    if animEnabled and fadeTime > 0 then
+      -- Animate slide-left with fade-out
+      local currentPos = canvas:topLeft()
+      local startX = currentPos.x
+      local startY = currentPos.y
+      local canvasFrame = canvas:frame()
+      local slideDistance = canvasFrame.w + 50 -- slide entire width plus padding off screen
+      local targetX = startX - slideDistance
+
+      local animDuration = fadeTime
+      local fps = 60
+      local totalFrames = math.floor(animDuration * fps)
+      local currentFrame = 0
+
+      -- Create slide-left animation
+      _G.activeNotificationAnimTimer = hs.timer.doUntil(
+        function() return currentFrame >= totalFrames end,
+        function()
+          currentFrame = currentFrame + 1
+          local progress = currentFrame / totalFrames
+
+          -- Ease-in cubic for smooth acceleration (opposite of entrance)
+          local eased = math.pow(progress, 3)
+          local newX = startX - (slideDistance * eased)
+
+          -- Also fade out during slide
+          local alpha = 1 - progress
+
+          canvas:topLeft({ x = newX, y = startY })
+          canvas:alpha(alpha)
+        end,
+        1 / fps
+      )
+
+      -- Delete canvas after animation completes
+      hs.timer.doAfter(animDuration + 0.05, function()
+        if canvas then
+          canvas:delete(0) -- No additional fade since we already animated
+          if _G.activeNotificationCanvas == canvas then
+            _G.activeNotificationCanvas = nil
+          end
+        end
+      end)
+    else
+      -- No animation - just fade out
+      canvas:delete(fadeTime)
+      _G.activeNotificationCanvas = nil
+    end
+  end
+
+  -- Hide overlay after fade completes
+  if _G.notificationOverlay then
+    hs.timer.doAfter(fadeTime, function() M.hideOverlay() end)
+  end
 
   _G.activeNotificationBundleID = nil
 end
@@ -896,19 +956,11 @@ function M.sendCanvasNotification(title, subtitle, message, duration, opts)
     end, 1 / fps)
   end
 
-  -- Auto-hide after duration with fade
+  -- Auto-hide after duration with fade and slide-left animation
   _G.activeNotificationTimer = hs.timer.doAfter(duration, function()
     if canvas then
-      canvas:delete(0.5)
-      _G.activeNotificationCanvas = nil
-      _G.activeNotificationTimer = nil
-      if _G.activeNotificationAnimTimer then
-        _G.activeNotificationAnimTimer:stop()
-        _G.activeNotificationAnimTimer = nil
-      end
-
-      -- Hide overlay with slight delay for smooth fadeout
-      if opts.dimBackground then hs.timer.doAfter(0.5, function() M.hideOverlay() end) end
+      -- Use dismissNotification helper which handles animation, timers, and overlay
+      M.dismissNotification(0.5, true)
     end
   end)
 end

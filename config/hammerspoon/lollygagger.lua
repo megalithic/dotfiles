@@ -25,9 +25,7 @@ local timers = {}
 local function stopTimer(bundleID, timerType)
   if timers[bundleID] and timers[bundleID][timerType] then
     local timer = timers[bundleID][timerType]
-    if timer and timer.stop then
-      timer:stop()
-    end
+    if timer and timer.stop then timer:stop() end
     timers[bundleID][timerType] = nil
   end
 end
@@ -49,7 +47,7 @@ local function hideApp(bundleID)
   local app = hs.application.get(bundleID)
   if app and app:isRunning() then
     app:hide()
-    U.log.i(string.format("[lollygagger] Hidden %s (%s)", app:name(), bundleID))
+    U.log.i(string.format("Hidden %s (%s)", app:name(), bundleID))
   end
 end
 
@@ -58,7 +56,7 @@ local function quitApp(bundleID)
   -- Re-fetch the app by bundleID to avoid stale references
   local app = hs.application.get(bundleID)
   if app and app:isRunning() then
-    U.log.i(string.format("[lollygagger] Quitting %s (%s)", app:name(), bundleID))
+    U.log.i(string.format("Quitting %s (%s)", app:name(), bundleID))
     app:kill()
   end
 end
@@ -68,9 +66,7 @@ local function startHideTimer(bundleID, interval)
   if not interval then return end
 
   -- Initialize timer cache for this app
-  if not timers[bundleID] then
-    timers[bundleID] = {}
-  end
+  if not timers[bundleID] then timers[bundleID] = {} end
 
   -- Cancel existing hide timer
   stopTimer(bundleID, "hide")
@@ -79,7 +75,7 @@ local function startHideTimer(bundleID, interval)
   local app = hs.application.get(bundleID)
   local appName = app and app:name() or bundleID
 
-  U.log.i(string.format("[lollygagger] %s will hide in %dm", appName, interval))
+  U.log.i(string.format("%s will hide in %dm", appName, interval))
 
   -- Store bundleID in closure, not app object (which could become stale)
   timers[bundleID].hide = hs.timer.doAfter(interval * 60, function()
@@ -88,9 +84,7 @@ local function startHideTimer(bundleID, interval)
     if timers[bundleID] then
       timers[bundleID].hide = nil
       -- Clean up entry if no more timers
-      if not timers[bundleID].quit then
-        timers[bundleID] = nil
-      end
+      if not timers[bundleID].quit then timers[bundleID] = nil end
     end
   end)
 end
@@ -100,9 +94,7 @@ local function startQuitTimer(bundleID, interval)
   if not interval then return end
 
   -- Initialize timer cache for this app
-  if not timers[bundleID] then
-    timers[bundleID] = {}
-  end
+  if not timers[bundleID] then timers[bundleID] = {} end
 
   -- Cancel existing quit timer
   stopTimer(bundleID, "quit")
@@ -111,7 +103,7 @@ local function startQuitTimer(bundleID, interval)
   local app = hs.application.get(bundleID)
   local appName = app and app:name() or bundleID
 
-  U.log.i(string.format("[lollygagger] %s will quit in %dm", appName, interval))
+  U.log.i(string.format("%s will quit in %dm", appName, interval))
 
   -- Store bundleID in closure, not app object (which could become stale)
   timers[bundleID].quit = hs.timer.doAfter(interval * 60, function()
@@ -120,9 +112,7 @@ local function startQuitTimer(bundleID, interval)
     if timers[bundleID] then
       timers[bundleID].quit = nil
       -- Clean up entry if no more timers
-      if not timers[bundleID].hide then
-        timers[bundleID] = nil
-      end
+      if not timers[bundleID].hide then timers[bundleID] = nil end
     end
   end)
 end

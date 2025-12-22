@@ -230,9 +230,7 @@ function obj.showCheatsheet(isModalMode)
   })
 
   -- Border
-  local borderColor = isModalMode
-      and { red = 0.3, green = 0.7, blue = 0.4, alpha = 0.9 }
-    or colors.border
+  local borderColor = isModalMode and { red = 0.3, green = 0.7, blue = 0.4, alpha = 0.9 } or colors.border
   canvas:appendElements({
     type = "rectangle",
     action = "stroke",
@@ -352,9 +350,7 @@ function obj.showCheatsheet(isModalMode)
     local totalFrames = math.floor(animDuration * fps)
     local currentFrame = 0
 
-    obj.cheatsheetAnimTimer = hs.timer.doUntil(function()
-      return currentFrame >= totalFrames
-    end, function()
+    obj.cheatsheetAnimTimer = hs.timer.doUntil(function() return currentFrame >= totalFrames end, function()
       currentFrame = currentFrame + 1
       -- Ease-out cubic for smooth deceleration
       local progress = currentFrame / totalFrames
@@ -374,16 +370,12 @@ function obj.showCheatsheet(isModalMode)
   obj.cheatsheet = canvas
 
   -- Enable escape hotkey to dismiss
-  if obj.escapeHotkey then
-    obj.escapeHotkey:enable()
-  end
+  if obj.escapeHotkey then obj.escapeHotkey:enable() end
 
   -- Auto-dismiss timer (only for passive mode)
   if not isModalMode then
     obj.cheatsheetTimer = hs.timer.doAfter(obj.config.cheatsheetDuration, function()
-      if not obj.isModalActive then
-        obj.hideCheatsheet()
-      end
+      if not obj.isModalActive then obj.hideCheatsheet() end
     end)
   end
 end
@@ -402,18 +394,14 @@ function obj.hideCheatsheet()
     obj.cheatsheetTimer = nil
   end
   -- Disable escape hotkey when cheatsheet is hidden
-  if obj.escapeHotkey then
-    obj.escapeHotkey:disable()
-  end
+  if obj.escapeHotkey then obj.escapeHotkey:disable() end
 end
 
 function obj.updateCheatsheetStatus(status)
   obj.activeCapture.uploadStatus = status
 
   -- Refresh cheatsheet if visible
-  if obj.cheatsheet then
-    obj.showCheatsheet(obj.isModalActive)
-  end
+  if obj.cheatsheet then obj.showCheatsheet(obj.isModalActive) end
 end
 
 -- ══════════════════════════════════════════════════════════════════════════════
@@ -442,10 +430,10 @@ function obj.uploadToSpaces(imagePath, imageName)
       hs.pasteboard.setContents(imageName, "imageName")
       hs.pasteboard.setContents(url, "imageUrl")
 
-      U.log.i(fmt("[%s] uploaded: %s", obj.name, url))
+      U.log.i(fmt("uploaded: %s", url))
     else
       obj.updateCheatsheetStatus("failed")
-      U.log.e(fmt("[%s] upload failed: exit=%s stderr=%s", obj.name, exitCode, stdErr))
+      U.log.e(fmt("upload failed: exit=%s stderr=%s", exitCode, stdErr))
     end
   end, { "-c", fmt("%s %s", capperBin, imagePath) })
 
@@ -464,7 +452,7 @@ function obj.extractOcrText(callback)
   end
 
   if not obj.activeCapture.imagePath then
-    U.log.w(fmt("[%s] OCR: no image path available", obj.name))
+    U.log.w(fmt("OCR: no image path available"))
     callback(nil)
     return
   end
@@ -479,7 +467,7 @@ function obj.extractOcrText(callback)
       callback(obj.activeCapture.ocrText)
     else
       -- Fallback to tesseract
-      U.log.d(fmt("[%s] Vision OCR failed, trying tesseract", obj.name))
+      U.log.d(fmt("Vision OCR failed, trying tesseract"))
       obj.extractOcrWithTesseract(imagePath, callback)
     end
   end, { imagePath })
@@ -506,7 +494,7 @@ function obj.extractOcrWithTesseract(imagePath, callback)
         callback(nil)
       end
     else
-      U.log.e(fmt("[%s] tesseract failed: %s", obj.name, stdErr))
+      U.log.e(fmt("tesseract failed: %s", stdErr))
       callback(nil)
     end
   end, { "-c", fmt("tesseract '%s' '%s' --psm 6", imagePath, outputPath) })
@@ -520,39 +508,39 @@ end
 
 function obj.pasteRawUrl()
   if not obj.activeCapture.imageUrl then
-    U.log.w(fmt("[%s] URL not yet available (still uploading?)", obj.name))
+    U.log.w(fmt("URL not yet available (still uploading?)"))
     hs.alert.show("Still uploading...", 1)
     return false
   end
 
   hs.eventtap.keyStrokes(obj.activeCapture.imageUrl)
-  U.log.n(fmt("[%s] pasted URL: %s", obj.name, obj.activeCapture.imageUrl))
+  U.log.n(fmt("pasted URL: %s", obj.activeCapture.imageUrl))
   return true
 end
 
 function obj.pasteMarkdown()
   if not obj.activeCapture.imageUrl then
-    U.log.w(fmt("[%s] URL not yet available (still uploading?)", obj.name))
+    U.log.w(fmt("URL not yet available (still uploading?)"))
     hs.alert.show("Still uploading...", 1)
     return false
   end
 
   local md = fmt("![screenshot](%s)", obj.activeCapture.imageUrl)
   hs.eventtap.keyStrokes(md)
-  U.log.n(fmt("[%s] pasted markdown: %s", obj.name, md))
+  U.log.n(fmt("pasted markdown: %s", md))
   return true
 end
 
 function obj.pasteHtmlTag()
   if not obj.activeCapture.imageUrl then
-    U.log.w(fmt("[%s] URL not yet available (still uploading?)", obj.name))
+    U.log.w(fmt("URL not yet available (still uploading?)"))
     hs.alert.show("Still uploading...", 1)
     return false
   end
 
   local html = fmt([[<img src="%s" width="450" />]], obj.activeCapture.imageUrl)
   hs.eventtap.keyStrokes(html)
-  U.log.n(fmt("[%s] pasted HTML: %s", obj.name, html))
+  U.log.n(fmt("pasted HTML: %s", html))
   return true
 end
 
@@ -585,18 +573,18 @@ function obj.pasteOcrTextViaClipboard()
           if savedImageData and savedUTI then
             hs.pasteboard.clearContents()
             hs.pasteboard.writeDataForUTI(savedUTI, savedImageData)
-            U.log.d(fmt("[%s] restored image data to clipboard", obj.name))
+            U.log.d(fmt("restored image data to clipboard"))
           elseif obj.activeCapture.image then
             -- Fallback: restore from hs.image object
             hs.pasteboard.writeObjects({ obj.activeCapture.image })
-            U.log.d(fmt("[%s] restored image object to clipboard (fallback)", obj.name))
+            U.log.d(fmt("restored image object to clipboard (fallback)"))
           end
         end)
       end)
 
-      U.log.n(fmt("[%s] pasted OCR text (clipboard): %d chars", obj.name, #text))
+      U.log.n(fmt("pasted OCR text (clipboard): %d chars", #text))
     else
-      U.log.w(fmt("[%s] no text found in image", obj.name))
+      U.log.w(fmt("no text found in image"))
       hs.alert.show("No text found", 2)
     end
   end)
@@ -606,13 +594,13 @@ end
 function obj.editInPreview()
   if obj.activeCapture.imagePath then
     hs.execute(fmt("open -a Preview '%s'", obj.activeCapture.imagePath))
-    U.log.n(fmt("[%s] opened in Preview: %s", obj.name, obj.activeCapture.imagePath))
+    U.log.n(fmt("opened in Preview: %s", obj.activeCapture.imagePath))
   elseif obj.activeCapture.image then
     -- Save to temp file and open
     local tmpfile = os.tmpname() .. ".png"
     obj.activeCapture.image:saveToFile(tmpfile)
     hs.execute(fmt("open -a Preview '%s'", tmpfile))
-    U.log.n(fmt("[%s] opened temp file in Preview", obj.name))
+    U.log.n(fmt("opened temp file in Preview"))
   end
   return true
 end
@@ -623,7 +611,7 @@ end
 
 function obj.enterModal(timeout)
   if not obj.hasActiveCapture() then
-    U.log.w(fmt("[%s] no active capture for modal", obj.name))
+    U.log.w(fmt("no active capture for modal"))
     hs.alert.show("No recent screenshot", 1)
     return
   end
@@ -648,7 +636,7 @@ function obj.enterModal(timeout)
     end
   end)
 
-  U.log.d(fmt("[%s] entered modal mode (timeout=%ds)", obj.name, timeout))
+  U.log.d(fmt("entered modal mode (timeout=%ds)", timeout))
 end
 
 function obj.exitModal()
@@ -666,7 +654,7 @@ function obj.exitModal()
   -- Hide cheatsheet
   obj.hideCheatsheet()
 
-  U.log.d(fmt("[%s] exited modal mode", obj.name))
+  U.log.d(fmt("exited modal mode"))
 end
 
 function obj.modalAction(action)
@@ -700,7 +688,7 @@ function obj.handleNewCapture(image)
   -- Save to disk
   local saved = image:saveToFile(imagePath)
   if not saved then
-    U.log.e(fmt("[%s] failed to save image to %s", obj.name, imagePath))
+    U.log.e(fmt("failed to save image to %s", imagePath))
     return
   end
 
@@ -716,7 +704,7 @@ function obj.handleNewCapture(image)
   -- Show passive cheatsheet (not in modal mode)
   obj.showCheatsheet(false)
 
-  U.log.i(fmt("[%s] captured: %s", obj.name, imageName))
+  U.log.i(fmt("captured: %s", imageName))
 end
 
 -- ══════════════════════════════════════════════════════════════════════════════
@@ -728,41 +716,25 @@ function obj.setupBindings()
   obj.modal = hs.hotkey.modal.new()
 
   -- Modal bindings (active only when modal is entered)
-  obj.modal:bind({}, "v", function()
-    obj.modalAction(obj.pasteRawUrl)
-  end)
+  obj.modal:bind({}, "v", function() obj.modalAction(obj.pasteRawUrl) end)
 
-  obj.modal:bind({}, "m", function()
-    obj.modalAction(obj.pasteMarkdown)
-  end)
+  obj.modal:bind({}, "m", function() obj.modalAction(obj.pasteMarkdown) end)
 
-  obj.modal:bind({}, "h", function()
-    obj.modalAction(obj.pasteHtmlTag)
-  end)
+  obj.modal:bind({}, "h", function() obj.modalAction(obj.pasteHtmlTag) end)
 
-  obj.modal:bind({}, "p", function()
-    obj.modalAction(obj.pasteOcrTextViaClipboard)
-  end)
+  obj.modal:bind({}, "p", function() obj.modalAction(obj.pasteOcrTextViaClipboard) end)
 
-  obj.modal:bind({}, "e", function()
-    obj.modalAction(obj.editInPreview)
-  end)
+  obj.modal:bind({}, "e", function() obj.modalAction(obj.editInPreview) end)
 
-  obj.modal:bind({}, "escape", function()
-    obj.exitModal()
-  end)
+  obj.modal:bind({}, "escape", function() obj.exitModal() end)
 
   -- Entry bindings for paste modal
   -- ⌘⇧V: Quick paste (3s timeout) - fast action
-  hs.hotkey.bind({ "cmd", "shift" }, "v", function()
-    obj.enterModal(obj.config.modalTimeoutQuick)
-  end)
+  hs.hotkey.bind({ "cmd", "shift" }, "v", function() obj.enterModal(obj.config.modalTimeoutQuick) end)
 
   -- HYPER+⇧V: Slow paste (10s timeout) - deliberate selection
   local hyper = req("hyper", { id = "clipper" })
-  hyper:start():bind({ "shift" }, "v", function()
-    obj.enterModal(obj.config.modalTimeoutSlow)
-  end)
+  hyper:start():bind({ "shift" }, "v", function() obj.enterModal(obj.config.modalTimeoutSlow) end)
 
   -- Escape to dismiss cheatsheet (only active when cheatsheet is visible)
   obj.escapeHotkey = hs.hotkey.new({}, "escape", function()
@@ -774,7 +746,7 @@ function obj.setupBindings()
   end)
   -- Starts disabled, enabled when cheatsheet shows
 
-  U.log.d(fmt("[%s] bindings set up", obj.name))
+  U.log.d(fmt("bindings set up"))
 end
 
 -- ══════════════════════════════════════════════════════════════════════════════
@@ -792,15 +764,13 @@ function obj:init(opts)
     -- pb is nil when clipboard contains image (not text)
     if pb == nil or pb == "" then
       local image = hs.pasteboard.readImage()
-      if image then
-        obj.handleNewCapture(image)
-      end
+      if image then obj.handleNewCapture(image) end
     end
   end)
 
   obj.clipWatcher:start()
 
-  U.log.i(fmt("[%s] initialized", obj.name))
+  U.log.i(fmt("initialized"))
 
   return self
 end
