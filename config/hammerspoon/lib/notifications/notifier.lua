@@ -576,10 +576,18 @@ function M.sendCanvasNotification(title, subtitle, message, duration, opts)
   local shouldRedact = currentFocus == "Do Not Disturb" or currentFocus == "Work"
 
   if shouldRedact then
-    -- Redact message content character-by-character (preserve spaces)
-    message = message:gsub(".", function(c)
-      return c == " " and " " or "•"
-    end)
+    -- Redact message content character-by-character (preserve spaces and newlines)
+    -- Note: "." pattern doesn't match newlines, so we need to handle all characters explicitly
+    local redacted = ""
+    for i = 1, #message do
+      local c = message:sub(i, i)
+      if c == " " or c == "\n" or c == "\r" then
+        redacted = redacted .. c
+      else
+        redacted = redacted .. "•"
+      end
+    end
+    message = redacted
   end
 
   -- Close any existing notification before showing new one
