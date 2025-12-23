@@ -221,9 +221,7 @@ function M.showOverlay(alpha)
   if clickDismiss then
     _G.notificationOverlay:canvasMouseEvents(true, true)
     _G.notificationOverlay:mouseCallback(function(canvas, event, id, x, y)
-      if event == "mouseDown" and _G.activeNotificationCanvas then
-        M.dismissNotification()
-      end
+      if event == "mouseDown" and _G.activeNotificationCanvas then M.dismissNotification() end
     end)
   end
 
@@ -278,32 +276,26 @@ function M.dismissNotification(fadeTime, animate)
       local currentFrame = 0
 
       -- Create slide-down animation (reverse of slide-up entry)
-      _G.activeNotificationAnimTimer = hs.timer.doUntil(
-        function() return currentFrame >= totalFrames end,
-        function()
-          currentFrame = currentFrame + 1
-          local progress = currentFrame / totalFrames
+      _G.activeNotificationAnimTimer = hs.timer.doUntil(function() return currentFrame >= totalFrames end, function()
+        currentFrame = currentFrame + 1
+        local progress = currentFrame / totalFrames
 
-          -- Ease-in cubic for smooth acceleration (opposite of ease-out entry)
-          local eased = math.pow(progress, 3)
-          local newY = startY + (slideDistance * eased)
+        -- Ease-in cubic for smooth acceleration (opposite of ease-out entry)
+        local eased = math.pow(progress, 3)
+        local newY = startY + (slideDistance * eased)
 
-          -- Also fade out during slide
-          local alpha = 1 - progress
+        -- Also fade out during slide
+        local alpha = 1 - progress
 
-          canvas:topLeft({ x = startX, y = newY })
-          canvas:alpha(alpha)
-        end,
-        1 / fps
-      )
+        canvas:topLeft({ x = startX, y = newY })
+        canvas:alpha(alpha)
+      end, 1 / fps)
 
       -- Delete canvas after animation completes
       hs.timer.doAfter(animDuration + 0.05, function()
         if canvas then
           canvas:delete(0) -- No additional fade since we already animated
-          if _G.activeNotificationCanvas == canvas then
-            _G.activeNotificationCanvas = nil
-          end
+          if _G.activeNotificationCanvas == canvas then _G.activeNotificationCanvas = nil end
         end
       end)
     else
@@ -314,9 +306,7 @@ function M.dismissNotification(fadeTime, animate)
   end
 
   -- Hide overlay after fade completes
-  if _G.notificationOverlay then
-    hs.timer.doAfter(fadeTime, function() M.hideOverlay() end)
-  end
+  if _G.notificationOverlay then hs.timer.doAfter(fadeTime, function() M.hideOverlay() end) end
 
   _G.activeNotificationBundleID = nil
 end
@@ -469,12 +459,14 @@ end
 -- Uses .new().send() instead of .show() to ensure it goes through Notification Center
 -- This allows the AX watcher to intercept and route it through the unified system
 function M.sendMacOSNotification(title, subtitle, body)
-  hs.notify.new({
-    title = title,
-    subTitle = subtitle or "",
-    informativeText = body or "",
-    withdrawAfter = 10,  -- Auto-withdraw after 10 seconds
-  }):send()
+  hs.notify
+    .new({
+      title = title,
+      subTitle = subtitle or "",
+      informativeText = body or "",
+      withdrawAfter = 10, -- Auto-withdraw after 10 seconds
+    })
+    :send()
 end
 
 -- Send iMessage to phone number
@@ -499,51 +491,49 @@ end
 -- @return table: { width, height, titleHeight, subtitleHeight, messageHeight }
 local function calculateDynamicDimensions(title, subtitle, message, opts)
   opts = opts or {}
-  
+
   -- Color scheme (dark mode for measurement)
   local isDarkMode = hs.host.interfaceStyle() == "Dark"
   local colors = isDarkMode and config.colors.dark or config.colors.light
-  
+
   -- Define text styles
   local titleStyle = {
     font = { name = ".AppleSystemUIFontBold", size = 16 },
     color = colors.title,
     paragraphStyle = { lineBreak = "wordWrap" },
   }
-  
+
   local subtitleStyle = {
     font = { name = ".AppleSystemUIFont", size = 15 },
     color = colors.title,
     paragraphStyle = { lineBreak = "wordWrap" },
   }
-  
+
   local messageStyle = {
     font = { name = ".AppleSystemUIFont", size = 14 },
     color = colors.message,
     paragraphStyle = { lineBreak = "wordWrap" },
   }
-  
+
   -- Create styled text objects
   local styledTitle = hs.styledtext.new(title, titleStyle)
   local styledSubtitle = subtitle ~= "" and hs.styledtext.new(subtitle, subtitleStyle) or nil
   local styledMessage = hs.styledtext.new(message, messageStyle)
-  
+
   -- Calculate available width for text
   local baseWidth = 420
   local leftPadding = 16
   local rightPadding = 16
   local iconSize = 48
   local iconSpacing = 12
-  
+
   local hasIcon = opts.appImageID ~= nil
   local textWidth = baseWidth - leftPadding - rightPadding
-  if hasIcon then
-    textWidth = textWidth - iconSize - iconSpacing
-  end
-  
+  if hasIcon then textWidth = textWidth - iconSize - iconSpacing end
+
   -- Create temporary canvas for text measurement
   local tempCanvas = hs.canvas.new({ x = 0, y = 0, w = textWidth, h = 100 })
-  
+
   -- Measure title - use minimumTextSize with constrained width
   tempCanvas:appendElements({
     type = "text",
@@ -559,7 +549,7 @@ local function calculateDynamicDimensions(title, subtitle, message, opts)
     titleHeight = math.ceil(titleSize.w / textWidth) * titleSize.h
   end
   tempCanvas:removeElement(1)
-  
+
   -- Measure subtitle if present
   local subtitleHeight = 0
   if styledSubtitle then
@@ -575,7 +565,7 @@ local function calculateDynamicDimensions(title, subtitle, message, opts)
     end
     tempCanvas:removeElement(1)
   end
-  
+
   -- Measure message with wrapping
   tempCanvas:appendElements({
     type = "text",
@@ -587,28 +577,28 @@ local function calculateDynamicDimensions(title, subtitle, message, opts)
   if messageSize.w > textWidth and not message:match("\n") then
     messageHeight = math.ceil(messageSize.w / textWidth) * messageSize.h
   end
-  
+
   tempCanvas:delete()
-  
+
   -- Calculate total height with spacing
   local topPadding = 16
   local bottomPadding = 16
   local timestampHeight = 18
   local titleToSubtitleSpacing = subtitle ~= "" and 4 or 0
   local subtitleToMessageSpacing = 6
-  
+
   local contentHeight = titleHeight + titleToSubtitleSpacing + subtitleHeight + subtitleToMessageSpacing + messageHeight
   local totalHeight = topPadding + contentHeight + bottomPadding + timestampHeight
-  
+
   -- Apply constraints
   local minHeight = 100
   local maxHeight = 400
   local finalHeight = math.max(minHeight, math.min(maxHeight, totalHeight))
-  
+
   -- Debug logging
-  U.log.df("Dynamic sizing: title=%dpx, subtitle=%dpx, message=%dpx, total=%dpx (clamped to %dpx)",
-    titleHeight, subtitleHeight, messageHeight, totalHeight, finalHeight)
-  
+  -- U.log.df("Dynamic sizing: title=%dpx, subtitle=%dpx, message=%dpx, total=%dpx (clamped to %dpx)",
+  --   titleHeight, subtitleHeight, messageHeight, totalHeight, finalHeight)
+
   return {
     width = baseWidth,
     height = finalHeight,
@@ -702,9 +692,7 @@ function M.sendCanvasNotification(title, subtitle, message, duration, opts)
       end
       -- If tmuxShiftEnabled is true or nil (default), always apply offset in terminal
 
-      if shouldApplyOffset then
-        offset = M.calculateOffset(opts)
-      end
+      if shouldApplyOffset then offset = M.calculateOffset(opts) end
     end
   end
 
@@ -807,7 +795,7 @@ function M.sendCanvasNotification(title, subtitle, message, duration, opts)
     else
       -- First, try to get a valid app object (works with app name or bundle ID)
       local app = hs.application.get(bundleID)
-      
+
       if app then
         -- We have a valid running app - get its bundle ID
         bundleID = app:bundleID()
@@ -843,7 +831,7 @@ function M.sendCanvasNotification(title, subtitle, message, duration, opts)
     textFont = ".AppleSystemUIFontBold",
     frame = { x = textLeftMargin, y = contentY, h = titleHeight, w = dimensions.textWidth },
     textAlignment = "left",
-    textLineBreak = "wordWrap",  -- Allow wrapping for long titles
+    textLineBreak = "wordWrap", -- Allow wrapping for long titles
     id = "title",
     trackMouseDown = true,
   })
@@ -859,17 +847,16 @@ function M.sendCanvasNotification(title, subtitle, message, duration, opts)
       textFont = ".AppleSystemUIFont", -- Regular weight, not bold
       frame = { x = textLeftMargin, y = subtitleY, h = subtitleHeight, w = dimensions.textWidth },
       textAlignment = "left",
-      textLineBreak = "wordWrap",  -- Allow wrapping for long subtitles
+      textLineBreak = "wordWrap", -- Allow wrapping for long subtitles
       id = "subtitle",
       trackMouseDown = true,
     })
   end
 
   -- Message text (positioned below subtitle if present, otherwise below title)
-  local messageY = subtitle ~= ""
-    and (subtitleY + subtitleHeight + subtitleToMessageSpacing)
+  local messageY = subtitle ~= "" and (subtitleY + subtitleHeight + subtitleToMessageSpacing)
     or (contentY + titleHeight + subtitleToMessageSpacing)
-  
+
   canvas:appendElements({
     type = "text",
     text = message,
@@ -879,7 +866,7 @@ function M.sendCanvasNotification(title, subtitle, message, duration, opts)
     frame = {
       x = textLeftMargin,
       y = messageY,
-      h = messageHeight,  -- Use measured height instead of calculating from canvas height
+      h = messageHeight, -- Use measured height instead of calculating from canvas height
       w = dimensions.textWidth,
     },
     textAlignment = "left",

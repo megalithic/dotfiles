@@ -428,11 +428,11 @@ M.notifier = {
 
     -- VIP Messages (Abby) - with content-based urgency escalation
     {
-      name = "Important Messages (Abby)",
+      name = "Important Messages",
       priority = 85,
       match = {
         bundleID = "com.apple.MobileSMS",
-        title = "Abby Messer",
+        title = { "Abby Messer" },
       },
       action = "redirect",
       urgency = {
@@ -611,7 +611,7 @@ M.notifier = {
     enabled = true,
     scanInterval = 10, -- Check every 10 seconds for persistent notifications
   },
-  
+
   -- NOTE: Persistent notification handling is now unified with regular rules above.
   -- To auto-dismiss persistent notifications, add rules with:
   --   action = "dismiss"           -- Dismiss immediately when matched

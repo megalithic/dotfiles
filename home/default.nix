@@ -359,7 +359,7 @@ in {
     nh = {
       enable = true;
       clean.enable = true;
-      clean.extraArgs = "--keep-since 4d --keep 3";
+      # clean.extraArgs = "--keep-since 4d --keep 3";
       flake = "${inputs.self}";
       # Pull from upstream flake to get latest search fixes (issue #501)
       package = inputs.nh.packages.${pkgs.stdenv.hostPlatform.system}.default;
