@@ -124,7 +124,7 @@ local function sortRulesByPriority(rules)
   return rules
 end
 
--- Dismiss a notification by finding and clicking its close button
+-- Dismiss a notification by performing Close action or clicking close button
 -- @param notificationElement: AX element of the notification
 -- @param title: Notification title (for logging)
 -- @return boolean: true if dismissed successfully, false otherwise
@@ -134,7 +134,24 @@ local function dismissNotification(notificationElement, title)
     return false
   end
   
-  -- Recursively search for close button
+  -- First, try to find a "Close" action directly on the notification element
+  -- macOS Sequoia exposes Close as a named action on AXNotificationCenterAlert
+  local actions = notificationElement:actionNames() or {}
+  for _, action in ipairs(actions) do
+    if action:lower():match("close") then
+      U.log.df("Dismissing notification via Close action: %s", title or "unknown")
+      local success, err = pcall(function()
+        notificationElement:performAction(action)
+      end)
+      if success then
+        return true
+      else
+        U.log.wf("Close action failed: %s, trying button fallback", tostring(err))
+      end
+    end
+  end
+  
+  -- Fallback: Recursively search for close button (older macOS style)
   local function findCloseButton(element, depth)
     depth = depth or 0
     if depth > 8 then return nil end -- Prevent infinite recursion
@@ -165,7 +182,6 @@ local function dismissNotification(notificationElement, title)
   if closeButton then
     U.log.df("Dismissing notification via close button: %s", title or "unknown")
     
-    -- Click the close button (NOT AXPress on notification itself!)
     local success, err = pcall(function()
       closeButton:performAction("AXPress")
     end)
@@ -176,10 +192,10 @@ local function dismissNotification(notificationElement, title)
       U.log.ef("Failed to perform AXPress on close button: %s", tostring(err))
       return false
     end
-  else
-    U.log.wf("Could not find close button for notification: %s", title or "unknown")
-    return false
   end
+  
+  U.log.wf("Could not find close action or button for notification: %s", title or "unknown")
+  return false
 end
 
 -- Find nested notification element in macOS Sequoia's new structure
