@@ -16,6 +16,8 @@ local shortcuts = {
 
 local uv = vim.uv or vim.loop
 
+local MATCH_SEP = "󰄊󱥳󱥰"
+
 ---@param opts snacks.picker.grep.Config
 ---@param filter snacks.picker.Filter
 local function get_cmd(opts, filter)
@@ -25,12 +27,15 @@ local function get_cmd(opts, filter)
     "--no-heading",
     "--with-filename",
     "--line-number",
+    "--replace",
+    ("%s${0}%s"):format(MATCH_SEP, MATCH_SEP),
     "--column",
     "--smart-case",
     "--max-columns=500",
     "--max-columns-preview",
-    "-g",
-    "!.git",
+    "--glob=!.bare",
+    "--glob=!.git",
+    "-0",
   }
 
   args = vim.deepcopy(args)
@@ -73,17 +78,25 @@ local function get_cmd(opts, filter)
   vim.list_extend(args, opts.args or {})
 
   -- search pattern
+  local pattern, pargs = Snacks.picker.util.parse(filter.search)
+  vim.list_extend(args, pargs)
+
+  -- NOTE: start customization
+
   -- string after two spaces is treated as file glob
-  local pattern, file_pattern = unpack(vim.split(filter.search, "  "))
-  if file_pattern then
-    if shortcuts[file_pattern] then
-      vim.list_extend(args, { "--glob", shortcuts[file_pattern] })
-    elseif not file_pattern:find("[%*%?%[%{]") then
-      vim.list_extend(args, { "--glob", "*" .. file_pattern .. "*" })
+  local file_glob
+  pattern, file_glob = unpack(vim.split(filter.search, "  "))
+  if file_glob then
+    if shortcuts[file_glob] then
+      vim.list_extend(args, { "--glob", shortcuts[file_glob] })
+    elseif not file_glob:find("[%*%?%[%{]") then
+      vim.list_extend(args, { "--glob", "*" .. file_glob .. "*" })
     else
-      vim.list_extend(args, { "--glob", file_pattern })
+      vim.list_extend(args, { "--glob", file_glob })
     end
   end
+
+  -- NOTE: end customization
 
   args[#args + 1] = "--"
   table.insert(args, pattern)
@@ -117,42 +130,100 @@ local function finder(opts, ctx)
   local absolute = (opts.dirs and #opts.dirs > 0) or opts.buffers or opts.rtp
   local cwd = not absolute and svim.fs.normalize(opts and opts.cwd or uv.cwd() or ".") or nil
   local cmd, args = get_cmd(opts, ctx.filter)
-  opts.cmd = cmd
   if opts.debug.grep then Snacks.notify.info("grep: " .. cmd .. " " .. table.concat(args, " ")) end
-  return require("snacks.picker.source.proc").proc({
-    opts,
-    {
-      notify = false,
+  return require("snacks.picker.source.proc").proc(
+    ctx:opts({
+      notify = false, -- never notify on grep errors, since it's impossible to know if the error is due to the search pattern
       cmd = cmd,
       args = args,
       ---@param item snacks.picker.finder.Item
       transform = function(item)
         item.cwd = cwd
-        local file, line, col, text = item.text:match("^(.+):(%d+):(%d+):(.*)$")
-        if not file then
+        -- Split on NUL byte (which comes from rg's -0 flag)
+        local file_sep = item.text:find("\0")
+        if not file_sep then
           if not item.text:match("WARNING") then Snacks.notify.error("invalid grep output:\n" .. item.text) end
           return false
-        else
-          item.line = text
-          item.file = file
-          item.pos = { tonumber(line), tonumber(col) - 1 }
         end
+        local file = item.text:sub(1, file_sep - 1)
+        local rest = item.text:sub(file_sep + 1)
+        ---@type string?, string?, string?
+        local line, col, text = rest:match("^(%d+):(%d+):(.*)$")
+        if not (line and col and text) then
+          if not item.text:match("WARNING") then Snacks.notify.error("invalid grep output:\n" .. item.text) end
+          return false
+        end
+        item.text = file .. ":" .. rest:gsub(MATCH_SEP, "")
+
+        -- indices of matches
+        local from = tonumber(col)
+        item.pos = { tonumber(line), from - 1 }
+
+        item.resolve = function()
+          local positions = {} ---@type number[]
+          local offset = 0
+          local in_match = false
+          while from < #text do
+            local idx = text:find(MATCH_SEP, from, true)
+            if not idx then break end
+            if in_match then
+              for i = from, idx - 1 do
+                positions[#positions + 1] = i - offset
+              end
+              item.end_pos = item.end_pos or { item.pos[1], idx - offset - 1 }
+            end
+            in_match = not in_match
+            offset = offset + #MATCH_SEP
+            from = idx + #MATCH_SEP
+          end
+          item.positions = #positions > 0 and positions or nil
+          item.line = text:gsub(MATCH_SEP, "")
+        end
+
+        item.file = file
       end,
-    },
-  }, ctx)
+    }),
+    ctx
+  )
 end
 
 function M.multi_grep()
+  local picker = require("snacks.picker")
   ---@type snacks.picker.Config
-  require("snacks.picker").pick({
-    title = "multi-grep",
+  picker.pick({
+    title = "Multi Grep",
     source = "grep",
     finder = finder,
   })
 end
 
+-- return M
+
 return {
   "folke/snacks.nvim",
   -- use patched fork for https://github.com/folke/snacks.nvim/pull/2012
+  ---@module 'snacks'
+  ---@type snacks.Config
+  opts = {
+    picker = {
+      enabled = true,
+      ui_select = true,
+      formatters = {
+        file = { filename_first = true },
+      },
+      previewers = {
+        file = {
+          max_size = 10 * 1024 * 1024, -- 10MB
+        },
+      },
+      win = {
+        preview = {
+          wo = {
+            wrap = false,
+          },
+        },
+      },
+    },
+  },
   multi_grep = M.multi_grep,
 }

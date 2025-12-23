@@ -23,10 +23,14 @@ return {
     },
     daily_notes = {
       folder = "daily",
+      date_format = "%Y/%Y%m%d", -- Creates daily/2025/20251224.md
+    },
+    attachments = {
+      img_folder = "assets", -- Store images in vault's assets folder
     },
     completion = {
       blink = true,
-      min_chars = 0,
+      min_chars = 2,
       create_new = true,
     },
     note_id_func = function(title)

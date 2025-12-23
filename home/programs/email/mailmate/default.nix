@@ -135,6 +135,9 @@ in {
       layouts.fnurl-vertical-thread-tags;
 
     # Custom keybindings (vim-style navigation)
+    # REF:
+    # https://gist.github.com/driesg/7786266
+    # ,https://github.com/sheriferson/dotfiles/blob/main/MailMate/Resources/KeyBindings/sherif_mm_keys.plist
     "Library/Application Support/MailMate/Resources/KeyBindings/Mega.plist".text = ''
       {
           "j" = "selectNextMessageRow:";
@@ -152,9 +155,27 @@ in {
           "^b " = "scrollPageUp:";
           "^d" = "scrollPageDown:";
           "^u " = "scrollPageUp:";
-          "#" = "toggleReadState:";
+          "m" = "toggleReadState:";
           "u" = "undo:";
           "^r" = "redo:";
+
+          # "j" = { "markAsJunk:", , "moveToMailbox:",'/Junk' };
+          # "j" = "markAsJunk:";
+          # "J" = { "markAsNotJunk:", "moveToMailbox:",'/Inbox' };
+          # "J" = "markAsNotJunk:";
+          "^g" = "goToMailbox:";
+
+          # "g" = {
+          #   "a" = ( "goToMailbox:", "ALL_MESSAGES" );
+          #   "i" = ( "goToMailbox:", "INBOX" );
+          #   "s" = ( "goToMailbox:", "SENT" );
+          #   "f" = ( "goToMailbox:", "FLAGGED" );
+          #   # "=" = ( "goToMailbox:", "BDC80A1A-8F60-4B3C-8EF4-0ECF19B62B58" ); // Action smart mailbox
+          #   "l" = "goToMailbox:"; // Don't really use this. ⌘t still works
+          #   "1" = ( "makeFirstResponder:", "mailboxesOutline" );
+          #   "2" = ( "makeFirstResponder:", "mainOutline" );
+          #   "3" = ( "makeFirstResponder:", "messageView" );
+          # };
 
           "`" = { "`" = "markAllAsRead:"; };
 

@@ -258,15 +258,6 @@ alias kpages="et -c 'cd ~/code/pages && ls; exec /usr/bin/zsh' seth-dev; /usr/lo
 # see ~/.dotfiles/bin/et
 # alias et="nvim $DOTS/config/tmux/tmux.conf"
 
-# ZK/notes/zettelkasten
-# -----------------------------------------------------------------------------
-alias zkn="zknew"
-alias zknc='zk new --print-path --title "$*" | pbcopy'
-alias zkl="zk list $@"
-alias zke="zk edit --interactive"
-alias zkd="zk edit 202302272113"
-alias ezk='$EDITOR "$HOME/.dotfiles/config/zk/config.toml"'
-
 # FOLDERS
 # -----------------------------------------------------------------------------
 alias dot="cd $DOTS"
@@ -283,8 +274,6 @@ alias dl="cd $HOME/Downloads/"
 alias proton="cd $PROTON_HOME"
 alias icloud="cd $ICLOUD_HOME"
 alias idocs="cd $ICLOUD_DOCUMENTS_HOME"
-alias zknotes="cd $NOTES_HOME"
-alias inotes="${zknotes}"
 alias notes="cd $NOTES_HOME"
 
 # MISC
@@ -525,20 +514,6 @@ function get_workdir () { basename "$PWD" | sed -e s'/[.-]/_/g' }
 
 function mixx() {
   mix $(mix help --names | fzf --delimiter=' ' --preview 'mix help {}' --reverse)
-}
-
-function zknew() {
-  local note_title="${*:-}"
-
-  if [[ -z "$note_title" ]]; then
-    vared -p "$(tput bold)$(tput setaf 5) new note title:$(tput sgr 0) " -c note_title
-  fi
-
-  if [[ -z "$note_title" ]]; then
-    zk new
-  else
-    zk new --title "$note_title"
-  fi
 }
 
 fuzzy-xdg-open() {

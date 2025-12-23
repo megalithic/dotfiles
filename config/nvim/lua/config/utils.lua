@@ -537,6 +537,13 @@ function M.clear_ui(opts)
     end
   end
 
+  do
+    local ok, snacks = pcall(require, "snacks")
+    if ok and snacks.image and snacks.image.doc then
+      snacks.image.doc.hover_close()
+    end
+  end
+
   M.clear_commandline()
 end
 

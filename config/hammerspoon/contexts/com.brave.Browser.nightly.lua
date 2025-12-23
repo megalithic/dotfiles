@@ -1,5 +1,5 @@
 local enum = req("hs.fnutils")
-local browser = req("browser")
+local browser = req("lib.interop.browser")
 local obj = {}
 
 obj.__index = obj

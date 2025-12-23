@@ -4,7 +4,7 @@
 -- Graphical, interactive tool for choosing/searching data
 --
 -- Notes:
---  * This module was influenced heavily by Choose, by Steven Degutis (https://github.com/sdegutis/choose)
+--  * This module was influenced heavily by Choose
 ---@class hs.chooser
 local M = {}
 hs.chooser = M

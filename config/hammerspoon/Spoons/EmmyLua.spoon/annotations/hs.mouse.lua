@@ -3,7 +3,7 @@
 
 -- Inspect/manipulate the position of the mouse pointer
 --
--- This module is based primarily on code from the previous incarnation of Mjolnir by [Steven Degutis](https://github.com/sdegutis/).
+-- This module is based primarily on code from the previous incarnation of Mjolnir.
 --
 -- This module uses ManyMouse by Ryan C. Gordon.
 --
@@ -142,19 +142,20 @@ function M.scrollDirection() end
 --  * None
 function M.setRelativePosition(point, screen, ...) end
 
--- Gets/Sets the current system mouse tracking speed setting
+-- Gets/Sets the current system mouse or trackpad tracking speed setting
 --
 -- Parameters:
 --  * speed - An optional number containing the new tracking speed to set. If this is omitted, the current setting is returned
+--  * trackpad - An optional boolean, default false, indicating whether or not this function affects the mouse tracking speed (false) or the trackpad tracking speed (true)
 --
 -- Returns:
---  * A number indicating the current tracking speed setting for mice
+--  * A number indicating the current tracking speed setting for mouse or trackpad
 --
 -- Notes:
---  * This is represented in the System Preferences as the "Tracking speed" setting for mice
+--  * This is represented in the System Preferences as the "Tracking speed" setting for Mouse or Trackpad
 --  * Note that not all values will work, they should map to the steps defined in the System Preferences app, which are:
 --    * 0.0, 0.125, 0.5, 0.6875, 0.875, 1.0, 1.5, 2.0, 2.5, 3.0
 --  * Note that changes to this value will not be noticed immediately by macOS
 ---@return number
-function M.trackingSpeed(speed, ...) end
+function M.trackingSpeed(speed, trackpad, ...) end
 

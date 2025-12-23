@@ -25,6 +25,7 @@
 
   # Standard GUI apps from nixpkgs (not custom mkApp derivations)
   guiPkgs = with pkgs; [
+    neovide # Native neovim GUI - potential future use for floating notes window
     telegram-desktop
   ];
 
@@ -55,6 +56,7 @@
     mprocs
     nix-update
     obsidian
+    ollama # Local LLM for AI-powered note summarization (qwen2-vl)
     openconnect
     openvpn
     openssl_3

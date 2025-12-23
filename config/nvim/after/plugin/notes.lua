@@ -48,6 +48,139 @@ function M.get_md_link_title()
   return nil
 end
 
+--- Get image reference from current line (wiki-link or markdown image syntax)
+--- Supports: ![[image.png]], ![[image.png|200]], ![alt](path/to/image.png)
+---@return string|nil image_ref The image filename/path or nil
+function M.get_image_ref_on_line()
+  local line = vim.api.nvim_get_current_line()
+
+  -- Wiki-link image: ![[filename.png]] or ![[filename.png|size]]
+  local wiki_ref = line:match("!%[%[([^%]|]+)")
+  if wiki_ref then return wiki_ref end
+
+  -- Markdown image: ![alt](path)
+  local md_ref = line:match("!%[[^%]]*%]%(([^%)]+)%)")
+  if md_ref then return md_ref end
+
+  return nil
+end
+
+--- Resolve image reference to full filesystem path
+---@param image_ref string Image reference (filename or relative path)
+---@return string|nil full_path Full path to image or nil if not found
+function M.resolve_image_path(image_ref)
+  if not image_ref then return nil end
+
+  local notes_home = vim.env.NOTES_HOME
+  if not notes_home then return nil end
+
+  -- Check common locations
+  local search_paths = {
+    notes_home .. "/assets/" .. image_ref,
+    notes_home .. "/" .. image_ref,
+    vim.fn.expand("%:p:h") .. "/" .. image_ref, -- relative to current file
+  }
+
+  for _, path in ipairs(search_paths) do
+    if vim.fn.filereadable(path) == 1 then return path end
+  end
+
+  return nil
+end
+
+--- Run vision-ocr on an image and return the text
+---@param image_path string Full path to image
+---@return string|nil text OCR text or nil on failure
+function M.run_vision_ocr(image_path)
+  local cmd = string.format("%s/bin/vision-ocr '%s'", vim.env.HOME, image_path)
+  local result = vim.fn.system(cmd)
+
+  if vim.v.shell_error ~= 0 then
+    vim.notify("OCR failed: " .. (result or "unknown error"), vim.log.levels.ERROR)
+    return nil
+  end
+
+  -- Trim trailing newline
+  result = result:gsub("\n$", "")
+  return result
+end
+
+--- Insert OCR text into current buffer after image reference
+--- Creates or updates ## OCR Text section
+---@param ocr_text string The OCR text to insert
+function M.insert_ocr_text(ocr_text)
+  if not ocr_text or ocr_text == "" then
+    vim.notify("No text extracted from image", vim.log.levels.WARN)
+    return
+  end
+
+  local bufnr = vim.api.nvim_get_current_buf()
+  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+
+  -- Look for existing ## OCR Text section
+  local ocr_section_line = nil
+  local next_section_line = nil
+
+  for i, line in ipairs(lines) do
+    if line:match("^## OCR Text") then
+      ocr_section_line = i
+    elseif ocr_section_line and line:match("^## ") then
+      next_section_line = i
+      break
+    end
+  end
+
+  local ocr_lines = vim.split(ocr_text, "\n")
+
+  if ocr_section_line then
+    -- Replace existing OCR section content
+    local end_line = next_section_line and (next_section_line - 1) or #lines
+    -- Keep the header, replace content
+    local new_content = { "", unpack(ocr_lines), "" }
+    vim.api.nvim_buf_set_lines(bufnr, ocr_section_line, end_line, false, new_content)
+    vim.notify("OCR text updated", vim.log.levels.INFO)
+  else
+    -- Append new OCR section at end
+    local new_content = { "", "## OCR Text", "", unpack(ocr_lines), "" }
+    vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, new_content)
+    vim.notify("OCR text added", vim.log.levels.INFO)
+  end
+end
+
+--- OCR the image on current line and insert text into buffer
+function M.ocr_image_on_line()
+  local image_ref = M.get_image_ref_on_line()
+  if not image_ref then
+    vim.notify("No image reference found on current line", vim.log.levels.WARN)
+    return
+  end
+
+  local image_path = M.resolve_image_path(image_ref)
+  if not image_path then
+    vim.notify("Could not find image: " .. image_ref, vim.log.levels.ERROR)
+    return
+  end
+
+  vim.notify("Running OCR on " .. vim.fn.fnamemodify(image_path, ":t") .. "...", vim.log.levels.INFO)
+
+  -- Run async to not block UI
+  vim.schedule(function()
+    local ocr_text = M.run_vision_ocr(image_path)
+    if ocr_text then M.insert_ocr_text(ocr_text) end
+  end)
+end
+
+--- Stub for AI image summarization (Phase 6)
+function M.summarize_image_on_line()
+  local image_ref = M.get_image_ref_on_line()
+  if not image_ref then
+    vim.notify("No image reference found on current line", vim.log.levels.WARN)
+    return
+  end
+
+  vim.notify("AI summarization not yet implemented (Phase 6)", vim.log.levels.INFO)
+end
+
 function M.get_previous_daily_note()
   local notes = vim.split(
     vim.fn.glob(
@@ -572,6 +705,22 @@ require("config.autocmds").augroup("NotesLoaded", {
                 pcall(mega.searchCountIndicator, "clear")
               end)
             end, { desc = "go to main notes section" })
+
+            -- Image OCR: extract text from image on current line
+            map(
+              "n",
+              "<localleader>io",
+              function() M.ocr_image_on_line() end,
+              { buffer = bufnr, desc = "[notes] OCR image on line" }
+            )
+
+            -- Image AI summarize: generate description (stub for Phase 6)
+            map(
+              "n",
+              "<localleader>is",
+              function() M.summarize_image_on_line() end,
+              { buffer = bufnr, desc = "[notes] AI summarize image (stub)" }
+            )
           end
         end
       end

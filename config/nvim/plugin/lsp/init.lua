@@ -393,6 +393,21 @@ local function make_keymaps(client, bufnr)
   nmap("gl", diagnostics_mod.show_diagnostic_popup, "[g]o to diagnostic hover")
   nmap("K", function()
     vim.diagnostic.hide(nil, bufnr)
+    -- Try snacks image hover first (for markdown with images)
+    if vim.bo.filetype == "markdown" then
+      local snacks_ok, snacks = pcall(require, "snacks")
+      if snacks_ok and snacks.image then
+        -- Check if cursor is on an image
+        snacks.image.doc.at_cursor(function(src)
+          if src then
+            snacks.image.hover()
+          else
+            vim.lsp.buf.hover({ border = "rounded" })
+          end
+        end)
+        return
+      end
+    end
     vim.lsp.buf.hover({ border = "rounded" })
   end, "hover docs")
   -- nmap("gD", vim.lsp.buf.declaration, "[g]oto [d]eclaration")

@@ -510,8 +510,7 @@ M = {
     }
   end,
   markdown_oxide = function()
-    if vim.g.note_taker ~= "markdown_oxide" then return nil end
-
+    -- Enabled for obsidian.nvim integration (Obsidian-aware LSP for wikilinks, daily notes, tags)
     return (vim.g.started_by_firenvim or vim.env.TMUX_POPUP) and nil
       or {
         capabilities = {
@@ -523,48 +522,10 @@ M = {
         },
       }
   end,
-  marksman = function()
-    if vim.g.note_taker ~= "marksman" then return nil end
-
-    return (vim.g.started_by_firenvim or vim.env.TMUX_POPUP) and nil
-      or {
-        single_file_support = false,
-        capabilities = {
-          workspace = {
-            didChangeWatchedFiles = {
-              dynamicRegistration = true,
-            },
-          },
-        },
-        -- on_attach = function(client, bufnr)
-        --   default_on_attach(client, bufnr, function()
-        --     if string.match(vim.fn.expand("%:p:h"), "_notes") then
-        --       vim.keymap.set(
-        --         "n",
-        --         "<leader>ff",
-        --         function() mega.picker.find_files({ cwd = vim.g.notes_path }) end,
-        --         { desc = "[f]ind in [n]otes", buffer = bufnr }
-        --       )
-
-        --       vim.keymap.set("n", "gd", "<cmd>lua vim.lsp.buf.definition()<CR>", { desc = "[g]o to note [d]efinition", noremap = true, buffer = bufnr })
-
-        --       vim.keymap.set("n", "g.", function()
-        --         local note_title = require("config.utils").notes.get_md_link_dest()
-        --         if note_title == nil or note_title == "" then
-        --           vim.notify("Unable to create new note from link text", L.WARN)
-        --           return
-        --         end
-
-        --         os.execute("note -c " .. note_title)
-        --         vim.diagnostic.enable(false)
-        --         vim.cmd("LspRestart " .. client.name)
-        --         vim.defer_fn(function() vim.diagnostic.enable(true) end, 50)
-        --       end, { desc = "[g]o create note from link title", buffer = bufnr })
-        --     end
-        --   end)
-        -- end,
-      }
-  end,
+  -- marksman = function()
+  --   -- Disabled in favor of markdown_oxide for Obsidian vault workflow
+  --   return nil
+  -- end,
   nextls = function()
     if not U.lsp.is_enabled_elixir_ls("nextls") then return false end
 

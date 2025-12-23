@@ -3,7 +3,7 @@
 
 -- Create, modify and inspect events for `hs.eventtap`.
 --
--- This module is based primarily on code from the previous incarnation of Mjolnir by [Steven Degutis](https://github.com/sdegutis/).
+-- This module is based primarily on code from the previous incarnation of Mjolnir.
 --
 -- `hs.eventtap.event.newGesture` uses an external library by Calf Trail Software, LLC.
 --
@@ -281,6 +281,7 @@ function M.newEventFromData(data, ...) end
 --   * `endSwipeUp` - End a swipe up.
 --   * `beginSwipeDown` - Begin a swipe down.
 --   * `endSwipeDown` - End a swipe down.
+--   * `smartMagnify` - Performs smart mangify.
 --
 -- Examples:
 --   ```lua

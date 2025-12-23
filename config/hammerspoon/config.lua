@@ -97,6 +97,8 @@ M.layouts = {
     name = "ghostty",
     rules = {
       { "Software Update", 1, M.grid.center.small },
+      { "!daily note" },  -- Exclude floating daily note windows
+      { "!capture" },     -- Exclude floating capture windows
       { "", 1, M.grid.full },
     },
   },

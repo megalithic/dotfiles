@@ -5,7 +5,7 @@
 --
 -- The most common use of this module is to provide support for the command line tool `hs` which can be added to your terminal shell environment with [hs.ipc.cliInstall](#cliInstall).  The command line tool will not work unless the `hs.ipc` module is loaded first, so it is recommended that you add `require("hs.ipc")` to your Hammerspoon `init.lua` file (usually located at ~/.hammerspoon/init.lua) so that it is always available when Hammerspoon is running.
 --
--- This module is based heavily on code from Mjolnir by [Steven Degutis](https://github.com/sdegutis/).
+-- This module is based heavily on code from Mjolnir.
 ---@class hs.ipc
 local M = {}
 hs.ipc = M

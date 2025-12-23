@@ -191,7 +191,7 @@ case "$(uname)" in
     export PROTON_HOME "$HOME/protondrive"
     export ICLOUD_HOME "$HOME/iclouddrive"
     export ICLOUD_DOCUMENTS_HOME "$ICLOUD_HOME/Documents"
-    export NOTES_HOME "$PROTON_HOME/notes"
+    export NOTES_HOME "$ICLOUD_HOME/notes"
     export OBSIDIAN_HOME "$NOTES_HOME"
     export NVIM_DB_HOME "$PROTON_HOME/configs/sql"
     export TMUX_LAYOUTS "$HOME/.config/tmux/layouts"

@@ -7,6 +7,43 @@ obj.__index = obj
 obj.name = "wm"
 obj.debug = false
 
+--- Check if a window title matches an exclusion pattern
+--- Exclusion patterns start with "!" and match if title contains the rest
+---@param title string Window title to test
+---@param pattern string Pattern starting with "!"
+---@return boolean excluded True if window should be excluded
+local function isExcluded(title, pattern)
+  if pattern:sub(1, 1) ~= "!" then return false end
+  local excludeTerm = pattern:sub(2):lower()
+  return (title or ""):lower():find(excludeTerm, 1, true) ~= nil
+end
+
+--- Check if a window should be excluded based on all exclusion rules
+---@param title string Window title
+---@param rules table[] Layout rules array
+---@return boolean excluded True if any exclusion rule matches
+local function shouldExcludeWindow(title, rules)
+  for _, rule in ipairs(rules) do
+    local pattern = rule[1] or ""
+    -- Exclusion rule: pattern starts with "!" and has no position (or nil position)
+    if pattern:sub(1, 1) == "!" and rule[3] == nil then
+      if isExcluded(title, pattern) then
+        return true
+      end
+    end
+  end
+  return false
+end
+
+--- Check if window title matches a positive pattern (non-exclusion)
+---@param title string Window title
+---@param pattern string Pattern to match (case-insensitive contains)
+---@return boolean matched
+local function matchesPattern(title, pattern)
+  if pattern == "" or pattern == nil then return true end
+  return (title or ""):lower():find(pattern:lower(), 1, true) ~= nil
+end
+
 function obj.focusMainWindow(bundleID, opts)
   local app
   if bundleID == nil and bundleID == "" then
@@ -118,23 +155,23 @@ obj.placeApp = function(elementOrAppName, event, app)
   local appLayout = C.layouts[app:bundleID()]
   if appLayout ~= nil then
     if appLayout.rules and #appLayout.rules > 0 then
+      local rules = appLayout.rules
+
       enum.each(appLayout.rules, function(rule)
         local winTitlePattern, screenNum, position = table.unpack(rule)
 
-        winTitlePattern = (winTitlePattern ~= "") and winTitlePattern or nil
-        local win = winTitlePattern == nil and app:mainWindow() or hs.window.find(winTitlePattern)
+        -- Skip exclusion-only rules (they're checked via shouldExcludeWindow)
+        -- Exclusion rules have pattern starting with "!" and no position
+        if winTitlePattern:sub(1, 1) == "!" and position == nil then
+          return -- skip this rule, it's just an exclusion marker
+        end
 
-        if win == nil then
-          local standardWindows = enum.filter(app:allWindows(), function(w) return w:isStandard() end)
-          if standardWindows ~= nil or #standardWindows > 0 then
-            warn(
-              fmt(
-                "[RUN] %s/layouts/%s (%s): specific window not found; using all standard windows for app.",
-                obj.name,
-                app:bundleID(),
-                utils.eventString(event)
-              )
-            )
+        if winTitlePattern == "" then
+          -- Empty pattern: apply to all standard windows NOT excluded
+          local standardWindows = enum.filter(app:allWindows(), function(w)
+            return w:isStandard() and not shouldExcludeWindow(w:title(), rules)
+          end)
+          if #standardWindows > 0 then
             enum.each(standardWindows, function(w)
               U.log.n(
                 fmt([[[RUN] %s/layouts/%s/%s: "%s"]], obj.name, app:bundleID(), utils.eventString(event), w:title())
@@ -142,29 +179,21 @@ obj.placeApp = function(elementOrAppName, event, app)
               hs.grid.set(w, position, obj.targetDisplay(screenNum))
             end)
           end
-        end
-        if win ~= nil then
-          U.log.n(
-            fmt(
-              [[[RUN] %s/layouts/%s/%s: "%s"]],
-              obj.name,
-              app:bundleID(),
-              utils.eventString(event),
-              app:focusedWindow():title()
+        else
+          -- Specific pattern: find matching window (also check exclusions)
+          local win = hs.window.find(winTitlePattern)
+          if win and matchesPattern(win:title(), winTitlePattern) and not shouldExcludeWindow(win:title(), rules) then
+            U.log.n(
+              fmt(
+                [[[RUN] %s/layouts/%s/%s: "%s"]],
+                obj.name,
+                app:bundleID(),
+                utils.eventString(event),
+                win:title()
+              )
             )
-          )
-
-          -- U.log.d(
-          --   fmt(
-          --     "[wm] rules/%s (%s): %s",
-          --     type(elementOrAppName) == "string" and elementOrAppName or I(elementOrAppName),
-          --     win:title(),
-          --     I(appLayout.rules)
-          --   ),
-          --   obj.debug
-          -- )
-
-          hs.grid.set(win, position, obj.targetDisplay(screenNum))
+            hs.grid.set(win, position, obj.targetDisplay(screenNum))
+          end
         end
       end)
     end

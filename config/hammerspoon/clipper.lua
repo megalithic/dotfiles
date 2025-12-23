@@ -1,4 +1,7 @@
 local fmt = string.format
+local canvasLib = require("lib.canvas")
+local notesLib = require("lib.notes")
+local scratchpad = require("lib.interop.scratchpad")
 local obj = {}
 
 --[[
@@ -190,6 +193,8 @@ function obj.showCheatsheet(isModalMode)
       { key = "h", desc = "HTML tag" },
       { key = "p", desc = "OCR text" },
       { key = "e", desc = "Edit in Preview" },
+      { key = "n", desc = "Quick capture" },
+      { key = "N", desc = "Full capture" },
     }
   else
     keybindings = {
@@ -340,29 +345,10 @@ function obj.showCheatsheet(isModalMode)
 
   canvas:level("overlay")
 
-  -- Show with fade-in, then animate slide-up
+  -- Show with slide-up + fade-in animation
   if animEnabled then
-    canvas:alpha(0)
-    canvas:show()
-
     local animDuration = animConfig.duration or 0.25
-    local fps = 60
-    local totalFrames = math.floor(animDuration * fps)
-    local currentFrame = 0
-
-    obj.cheatsheetAnimTimer = hs.timer.doUntil(function() return currentFrame >= totalFrames end, function()
-      currentFrame = currentFrame + 1
-      -- Ease-out cubic for smooth deceleration
-      local progress = currentFrame / totalFrames
-      local eased = 1 - math.pow(1 - progress, 3)
-
-      -- Animate position (slide up)
-      local newY = startY - (slideDistance * eased)
-      canvas:topLeft({ x = x, y = newY })
-
-      -- Animate alpha (fade in)
-      canvas:alpha(eased)
-    end, 1 / fps)
+    obj.cheatsheetAnimTimer = canvasLib.slideIn(canvas, startY, finalY, { duration = animDuration })
   else
     canvas:show()
   end
@@ -381,18 +367,36 @@ function obj.showCheatsheet(isModalMode)
 end
 
 function obj.hideCheatsheet()
+  -- Stop any running animation timer
   if obj.cheatsheetAnimTimer then
     obj.cheatsheetAnimTimer:stop()
     obj.cheatsheetAnimTimer = nil
   end
-  if obj.cheatsheet then
-    obj.cheatsheet:delete(0.2) -- Quick fade out
-    obj.cheatsheet = nil
-  end
+
+  -- Stop auto-dismiss timer
   if obj.cheatsheetTimer then
     obj.cheatsheetTimer:stop()
     obj.cheatsheetTimer = nil
   end
+
+  -- Animate slide-down + fade-out, then cleanup
+  if obj.cheatsheet then
+    local canvas = obj.cheatsheet
+    obj.cheatsheet = nil -- Clear reference immediately to prevent double-dismiss
+
+    local animConfig = obj.config.animation or {}
+    local animEnabled = animConfig.enabled ~= false
+
+    if animEnabled then
+      canvasLib.slideOut(canvas, {
+        duration = 0.25,
+        deleteAfter = true,
+      })
+    else
+      canvas:delete(0.2)
+    end
+  end
+
   -- Disable escape hotkey when cheatsheet is hidden
   if obj.escapeHotkey then obj.escapeHotkey:disable() end
 end
@@ -606,6 +610,70 @@ function obj.editInPreview()
 end
 
 -- ══════════════════════════════════════════════════════════════════════════════
+-- Note Capture Actions
+-- ══════════════════════════════════════════════════════════════════════════════
+
+--- Quick capture: screenshot to note, linked in daily (fire-and-forget)
+function obj.captureQuick()
+  if not obj.activeCapture.imagePath then
+    U.log.w("captureQuick: no image path available")
+    hs.alert.show("No screenshot available", 1)
+    return false
+  end
+
+  local imagePath = obj.activeCapture.imagePath
+  local imageUrl = obj.activeCapture.imageUrl
+
+  -- Perform quick capture
+  local success, err = notesLib.captureQuick(imagePath, imageUrl)
+
+  if success then
+    hs.alert.show("Quick capture saved", 1.5)
+    U.log.i("captureQuick: completed")
+    -- Clear active capture since files are moved/deleted
+    obj.clearCapture()
+  else
+    hs.alert.show(fmt("Capture failed: %s", err or "unknown error"), 3)
+    U.log.w(fmt("captureQuick: %s", err or "unknown error"))
+  end
+
+  return success
+end
+
+--- Full capture: screenshot to note with floating editor (interactive)
+function obj.captureFull()
+  if not obj.activeCapture.imagePath then
+    U.log.w("captureFull: no image path available")
+    hs.alert.show("No screenshot available", 1)
+    return false
+  end
+
+  local imagePath = obj.activeCapture.imagePath
+  local imageUrl = obj.activeCapture.imageUrl
+
+  -- Create capture note (same as quick capture but opens editor)
+  local success, captureFilename, err = notesLib.captureFull(imagePath, imageUrl)
+
+  if success then
+    local notePath = notesLib.getCaptureNotePath(captureFilename)
+    U.log.i(fmt("captureFull: created %s", notePath))
+
+    -- Open capture note in toggle-able scratchpad window
+    -- Uses scratchpad for consistent behavior with daily notes
+    local toggleFn = scratchpad.captureNote("ghostty", notePath, "Capture: " .. captureFilename)
+    toggleFn()
+
+    -- Clear active capture since files are moved/deleted
+    obj.clearCapture()
+  else
+    hs.alert.show(fmt("Capture failed: %s", err or "unknown error"), 3)
+    U.log.w(fmt("captureFull: %s", err or "unknown error"))
+  end
+
+  return success
+end
+
+-- ══════════════════════════════════════════════════════════════════════════════
 -- Modal Mode
 -- ══════════════════════════════════════════════════════════════════════════════
 
@@ -725,6 +793,10 @@ function obj.setupBindings()
   obj.modal:bind({}, "p", function() obj.modalAction(obj.pasteOcrTextViaClipboard) end)
 
   obj.modal:bind({}, "e", function() obj.modalAction(obj.editInPreview) end)
+
+  -- Note capture bindings
+  obj.modal:bind({}, "n", function() obj.modalAction(obj.captureQuick) end)
+  obj.modal:bind({ "shift" }, "n", function() obj.modalAction(obj.captureFull) end)
 
   obj.modal:bind({}, "escape", function() obj.exitModal() end)
 

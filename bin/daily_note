@@ -17,19 +17,16 @@ __help() {
   printf -- "  -h          view this help text\n"
   printf -- "  -c          return current daily note path\n"
   printf -- "  -p          return previous daily note path\n"
-  printf -- "  -m          method used for daily note: [zk, note]\n"
   printf -- "  -r          opens raw daily note without interacting with tmux\n"
+  printf -- "  -s          silent mode: create note if missing, no editor\n"
   printf -- "  -t          displays the day's tasks: [today, yesterday]\n"
   printf -- "\n"
 
   exit 0
 }
 
-METHOD="note"
-
 # Specify below the directory in which you want to create your daily note
 notes_dir="$NOTES_HOME/daily"
-zk_notes_dir="$NOTES_HOME"
 
 # Get current date components
 current_month_abbr=$(date +"%b")
@@ -39,8 +36,9 @@ current_month_num=$(date +"%m")
 current_day=$(date +"%d")
 
 # Construct the directory structure and filename
-daily_note_dir="${notes_dir}/${current_year}/${current_month_num}"
-daily_note_date="${current_year}-${current_month_num}-${current_day}"
+# New structure: daily/YYYY/YYYYMMDD.md (year folder, no dashes in filename)
+daily_note_dir="${notes_dir}/${current_year}"
+daily_note_date="${current_year}${current_month_num}${current_day}"
 daily_note_path="${daily_note_dir}/${daily_note_date}.md"
 
 function __get_note_tasks() {
@@ -97,15 +95,18 @@ function __set_template() {
       __get_last_daily_note_path
     fi
 
+    # Human-readable date for display (YYYY-MM-DD format)
+    display_date="${current_year}-${current_month_num}-${current_day}"
+
     cat <<EOF >"$daily_note_path"
 ---
 id: daily-${daily_note_date}
 tags:
-  -  #daily
-  -  #tasks
+  - daily
+  - tasks
 ---
 
-# Daily notes for ${daily_note_date}
+# Daily notes for ${display_date}
 
 ## Notes
 
@@ -128,26 +129,16 @@ function open_note() {
   nvim +norm\ G "$daily_note_path"
 }
 
-while getopts "hct:rlm:" OPTION; do
+while getopts "hct:rls" OPTION; do
   case $OPTION in
-  m)
-    METHOD="${OPTARG:-note}"
-    ;;
-
   c)
-    if [[ "$METHOD" == "note" ]]; then
-      echo "${daily_note_path}" | tr -d '\n'
-    fi
-
+    echo "${daily_note_path}" | tr -d '\n'
     exit 0
     ;;
 
   p)
-    if [[ "$METHOD" == "note" ]]; then
-      __get_last_daily_note_path
-      echo "${last_daily_note_path}" | tr -d '\n'
-    fi
-
+    __get_last_daily_note_path
+    echo "${last_daily_note_path}" | tr -d '\n'
     exit 0
     ;;
 
@@ -158,6 +149,15 @@ while getopts "hct:rlm:" OPTION; do
 
   r)
     open_note
+    exit 0
+    ;;
+
+  s)
+    # Silent mode: create note if missing, then exit (no editor)
+    if [ ! -d "$daily_note_dir" ]; then
+      mkdir -p "$daily_note_dir"
+    fi
+    __set_template
     exit 0
     ;;
 
@@ -179,33 +179,21 @@ while getopts "hct:rlm:" OPTION; do
 done
 shift "$(($OPTIND - 1))"
 
-if [[ "$METHOD" == "note" ]]; then
-  # SESSION="daily-note-${daily_note_date}"
-  SESSION="daily-note"
+SESSION="daily-note"
 
-  # Check if the directory exists, if not, create it
-  if [ ! -d "$daily_note_dir" ]; then
-    mkdir -p "$daily_note_dir"
-  fi
-
-  # Create the daily note if it does not already exist
-  __set_template
-
-  # if ! tmux has-session -t "$SESSION" 2>/dev/null; then
-  #   tmux new-session -d -s "$SESSION" -c "$daily_note_dir" "nvim +norm\ G \"$daily_note_path\""
-  # fi
-  if tmux has-session -t "$SESSION" 2>/dev/null; then
-    tmux kill-session -t "$SESSION"
-  fi
-
-  tmux new-session -d -s "$SESSION" -c "$daily_note_dir" "nvim +norm\ G \"$daily_note_path\""
-elif [[ "$METHOD" == "zk" ]]; then
-  SESSION="daily-zk-${daily_note_date}"
-
-  if ! tmux has-session -t "$SESSION" 2>/dev/null; then
-    tmux new-session -d -s "$SESSION" -c "$zk_notes_dir" "zk daily"
-  fi
+# Check if the directory exists, if not, create it
+if [ ! -d "$daily_note_dir" ]; then
+  mkdir -p "$daily_note_dir"
 fi
+
+# Create the daily note if it does not already exist
+__set_template
+
+if tmux has-session -t "$SESSION" 2>/dev/null; then
+  tmux kill-session -t "$SESSION"
+fi
+
+tmux new-session -d -s "$SESSION" -c "$daily_note_dir" "nvim +norm\ G \"$daily_note_path\""
 
 tmux setenv -t "$SESSION" 'SESSION_ICON' "${SESSION_ICON}"
 tmux setenv -t "$SESSION" 'SESSION_FG' "${SESSION_FG}"

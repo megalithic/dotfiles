@@ -89,6 +89,21 @@ in {
     fi
   '';
 
+  # Configure Obsidian vault settings declaratively
+  # Merges our settings into existing app.json (non-destructive)
+  home.activation.configureObsidian = lib.hm.dag.entryAfter ["writeBoundary"] ''
+    OBSIDIAN_CONFIG="${config.home.homeDirectory}/iclouddrive/Documents/_notes/.obsidian/app.json"
+    if [ -d "$(dirname "$OBSIDIAN_CONFIG")" ]; then
+      # Ensure file exists with at least empty object
+      [ -f "$OBSIDIAN_CONFIG" ] || echo '{}' > "$OBSIDIAN_CONFIG"
+      # Merge attachment folder setting, preserving other config
+      ${pkgs.jq}/bin/jq -s '.[0] * .[1]' \
+        "$OBSIDIAN_CONFIG" \
+        <(echo '{"attachmentFolderPath": "assets"}') \
+        > "$OBSIDIAN_CONFIG.tmp" && mv "$OBSIDIAN_CONFIG.tmp" "$OBSIDIAN_CONFIG"
+    fi
+  '';
+
   xdg.enable = true;
 
   xdg.configFile."ghostty".source = ./ghostty;

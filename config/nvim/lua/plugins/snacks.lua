@@ -214,7 +214,28 @@ if true then
         bigfile = { enabled = true },
         dashboard = { enabled = false },
         explorer = { enabled = false },
-        image = {},
+        image = {
+          doc = {
+            enabled = true,
+            inline = false, -- Don't render inline; use float on CursorHold instead
+            float = true, -- Show image in floating window when cursor moves to image
+          },
+          -- Include common image directories + our vault's assets folder
+          img_dirs = { "img", "images", "assets", "static", "public", "media", "attachments", "_attachments" },
+          -- Resolve obsidian wikilink images (e.g., ![[image.png]])
+          -- Checks vault's assets folder when image isn't found relative to file
+          resolve = function(file, src)
+            local vault = vim.env.NOTES_HOME
+            if not vault then return nil end
+
+            -- If src is just a filename (wikilink style), check vault's assets folder
+            if not src:find("/") then
+              local asset_path = vault .. "/assets/" .. src
+              if vim.fn.filereadable(asset_path) == 1 then return asset_path end
+            end
+            return nil -- fall back to default resolution
+          end,
+        },
         picker = {
           enabled = true,
           ui_select = true,
@@ -391,6 +412,13 @@ if true then
           -- function() require("plugins.snacks-multi-grep").multi_grep() end,
           desc = "live grep",
           -- desc = "live grep (multi)",
+        },
+        {
+          "<leader>fg",
+          mode = "n",
+          -- function() require("snacks").picker.grep() end,
+          function() require("plugins.snacks-multi-grep").multi_grep() end,
+          desc = "live multi-grep",
         },
         {
           "<leader>A",

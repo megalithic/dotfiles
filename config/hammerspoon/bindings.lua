@@ -7,7 +7,7 @@ _G.Hypers = {}
 
 local fmt = string.format
 local wm = req("wm")
-local summon = req("summon")
+local summon = req("lib.summon")
 local chain = req("chain")
 local enum = req("hs.fnutils")
 local utils = require("utils")
@@ -125,8 +125,8 @@ function M.loadMeeting()
 
     -- Check browser-based meetings as fallback
     local urlPattern = table.concat(meetingUrlPatterns, "|")
-    if req("browser").hasTab(urlPattern) then
-      req("browser").jump(urlPattern)
+    if req("lib.interop.browser").hasTab(urlPattern) then
+      req("lib.interop.browser").jump(urlPattern)
     else
       -- Find first running meeting app with a valid meeting window
       for _, bundleID in ipairs(meetingApps) do
@@ -198,8 +198,8 @@ function M.loadFigma()
     local focusedApp = hs.application.frontmostApplication()
     if hs.application.find("com.figma.Desktop") then
       hs.application.launchOrFocusByBundleID("com.figma.Desktop")
-    elseif req("browser").hasTab("figma.com") then
-      req("browser").jump("figma.com")
+    elseif req("lib.interop.browser").hasTab("figma.com") then
+      req("lib.interop.browser").jump("figma.com")
     else
       print(fmt("%s: neither figma.app, nor figma web are opened", "bindings.hyper.figma"))
 
@@ -239,20 +239,32 @@ function M.loadUtils()
       hs.reload()
     end)
     :bind({ "shift", "ctrl" }, "l", nil, req("wm").placeAllApps)
-    -- focus daily notes; splitting it 30/70 with currently focused app window
-    :bind(
-      { "shift" },
-      "o",
-      nil,
-      function() utils.tmux.focusDailyNote(true) end
-    )
-    -- focus daily note; window layout untouched
-    :bind(
-      { "ctrl" },
-      "o",
-      nil,
-      function() utils.tmux.focusDailyNote() end
-    )
+    -- daily note in floating Kitty window (toggle scratchpad)
+    :bind({ "shift" }, "o", nil, require("lib.interop.scratchpad").dailyNote("kitty"))
+    -- daily note in floating Ghostty window (alternative)
+    :bind({ "alt" }, "o", nil, require("lib.interop.scratchpad").dailyNote("ghostty"))
+    -- daily note via tmux (existing terminal workflow)
+    :bind({ "ctrl" }, "o", nil, function() utils.tmux.focusDailyNote() end)
+    -- text capture: gather context from frontmost app and create capture note
+    :bind({ "shift" }, "n", nil, function()
+      local context = require("lib.interop.context")
+      local notes = require("lib.notes")
+      local scratchpad = require("lib.interop.scratchpad")
+
+      -- Gather context from frontmost app
+      local ctx = context.getContext()
+
+      -- Create capture note with context
+      local success, notePath, err = notes.createTextCaptureNote(ctx)
+
+      if success and notePath then
+        -- Open in floating Kitty scratchpad
+        local toggleFn = scratchpad.captureNote("kitty", notePath, "Capture Note")
+        toggleFn()
+      else
+        hs.alert.show("Capture failed: " .. (err or "unknown error"), 2)
+      end
+    end)
     :bind({ "ctrl" }, "d", nil, function() utils.dnd() end)
     :bind({ "ctrl" }, "b", nil, function()
       local axb = require("axbrowse")
@@ -384,11 +396,11 @@ function M.loadWm()
       wmModality:exit()
     end)
     :bind({}, "s", function()
-      req("browser"):splitTab()
+      req("lib.interop.browser"):splitTab()
       wmModality:exit()
     end)
     :bind({ "shift" }, "s", function()
-      req("browser"):splitTab(true)
+      req("lib.interop.browser"):splitTab(true)
       wmModality:exit()
     end)
     :bind({}, "m", function()
@@ -581,11 +593,11 @@ req("hyper", { id = "wm" })
     end
   )
   :bind({ "ctrl" }, "s", function()
-    req("browser"):splitTab()
+    req("lib.interop.browser"):splitTab()
     -- wmModality:exit()
   end)
   :bind({ "ctrl", "shift" }, "s", function()
-    req("browser"):splitTab(true)
+    req("lib.interop.browser"):splitTab(true)
     -- wmModality:exit()
   end)
 -- :bind({}, "m", function()

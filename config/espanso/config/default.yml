@@ -7,7 +7,7 @@
 # DOCS https://espanso.org/docs/configuration/options/
 #───────────────────────────────────────────────────────────────────────────────
 search_trigger: OFF
-search_shortcut: ''
+search_shortcut: OFF
 
 show_icon: true
 show_notifications: true

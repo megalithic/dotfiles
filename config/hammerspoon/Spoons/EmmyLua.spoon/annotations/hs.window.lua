@@ -9,6 +9,21 @@
 local M = {}
 hs.window = M
 
+-- Sets the frame of the window instantly using the three-step resize process with Enhanced UI management
+--
+-- Parameters:
+--  * frame - A table containing x, y, w, h keys for the window frame
+--
+-- Returns:
+--  * The `hs.window` object
+--
+-- Notes:
+--  * This is an internal method that implements the standard three-step size,position,size pattern
+--  * Disables AXEnhancedUserInterface during the operation for better reliability
+--  * This should be preferred over calling _setSize and _setTopLeft separately
+---@return hs.window
+function M:_setFrame(frame, ...) end
+
 -- Returns all windows
 --
 -- Parameters:

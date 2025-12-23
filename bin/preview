@@ -5,11 +5,13 @@ export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
 
 source "$HOME/bin/helpers"
-
-if [[ $# -ne 1 ]]; then
-  >&2 echo "usage: $0 FILENAME[:LINENO][:IGNORED]"
-  exit 1
-fi
+#
+# if [[ $# -ne 1 ]]; then
+#   >&2 echo "usage: $0 FILENAME[:LINENO][:IGNORED]"
+#   exit 1
+# fi
+#
+[ "$1" = "" ] && exit 1
 
 file=${1/#\~\//$HOME/}
 

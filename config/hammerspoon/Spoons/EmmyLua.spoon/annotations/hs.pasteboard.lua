@@ -3,7 +3,7 @@
 
 -- Inspect/manipulate pasteboards (more commonly called clipboards). Both the system default pasteboard and custom named pasteboards can be interacted with.
 --
--- This module is based partially on code from the previous incarnation of Mjolnir by [Steven Degutis](https://github.com/sdegutis/).
+-- This module is based partially on code from the previous incarnation of Mjolnir.
 ---@class hs.pasteboard
 local M = {}
 hs.pasteboard = M

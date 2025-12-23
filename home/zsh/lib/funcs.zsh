@@ -5,20 +5,6 @@ function mixx() {
   mix $(mix help --names | fzf --delimiter=' ' --preview 'mix help {}' --reverse)
 }
 
-function zknew() {
-  local note_title="${*:-}"
-
-  if [[ -z "$note_title" ]]; then
-    vared -p "$(tput bold)$(tput setaf 5) new note title:$(tput sgr 0) " -c note_title
-  fi
-
-  if [[ -z "$note_title" ]]; then
-    zk new
-  else
-    zk new --title "$note_title"
-  fi
-}
-
 fuzzy-xdg-open() {
   local output
   output=$(fzf --height 40% --reverse </dev/tty) && xdg-open ${(q-)output}
