@@ -377,8 +377,10 @@ local function handleNotification(element)
       -- Resolve urgency based on rule config and notification content
       local resolvedUrgency = resolveUrgency(rule, notifData)
       
-      -- Rule matched! Log match details
+      -- Rule matched! Log match details (use print for guaranteed visibility)
       local action = rule.action or "redirect"
+      print(string.format("[notification] %s: %s -> urgency=%s, action=%s", 
+        rule.name, title or bundleID, resolvedUrgency, action))
       U.log.nf("%s: %s [ID=%s, type=%s, urgency=%s, action=%s]", 
         rule.name, title or bundleID, 
         tostring(notificationID or "nil"), 
