@@ -237,7 +237,7 @@ end
 
 -- Dismiss active notification (helper function)
 -- @param fadeTime number: Duration of fade-out animation (default: 0.3)
--- @param animate boolean: Whether to slide left while fading (default: true)
+-- @param animate boolean: Whether to slide down while fading (default: true)
 function M.dismissNotification(fadeTime, animate)
   fadeTime = fadeTime or 0.3
   animate = animate ~= false -- default to true
@@ -253,7 +253,7 @@ function M.dismissNotification(fadeTime, animate)
     _G.activeNotificationAnimTimer = nil
   end
 
-  -- Handle canvas dismissal with optional slide-left animation
+  -- Handle canvas dismissal with optional slide-down animation (reverse of slide-up entry)
   if _G.activeNotificationCanvas then
     local canvas = _G.activeNotificationCanvas
 
@@ -262,34 +262,36 @@ function M.dismissNotification(fadeTime, animate)
     local animEnabled = animConfig.enabled ~= false and animate
 
     if animEnabled and fadeTime > 0 then
-      -- Animate slide-left with fade-out
+      -- Animate slide-down with fade-out (reverse of slide-up entry)
       local currentPos = canvas:topLeft()
       local startX = currentPos.x
       local startY = currentPos.y
+      local screen = hs.screen.mainScreen()
+      local screenFrame = screen:frame()
       local canvasFrame = canvas:frame()
-      local slideDistance = canvasFrame.w + 50 -- slide entire width plus padding off screen
-      local targetX = startX - slideDistance
+      -- Slide down off the bottom of the screen
+      local slideDistance = (screenFrame.y + screenFrame.h) - startY + canvasFrame.h + 50
 
       local animDuration = fadeTime
       local fps = 60
       local totalFrames = math.floor(animDuration * fps)
       local currentFrame = 0
 
-      -- Create slide-left animation
+      -- Create slide-down animation (reverse of slide-up entry)
       _G.activeNotificationAnimTimer = hs.timer.doUntil(
         function() return currentFrame >= totalFrames end,
         function()
           currentFrame = currentFrame + 1
           local progress = currentFrame / totalFrames
 
-          -- Ease-in cubic for smooth acceleration (opposite of entrance)
+          -- Ease-in cubic for smooth acceleration (opposite of ease-out entry)
           local eased = math.pow(progress, 3)
-          local newX = startX - (slideDistance * eased)
+          local newY = startY + (slideDistance * eased)
 
           -- Also fade out during slide
           local alpha = 1 - progress
 
-          canvas:topLeft({ x = newX, y = startY })
+          canvas:topLeft({ x = startX, y = newY })
           canvas:alpha(alpha)
         end,
         1 / fps
