@@ -1,0 +1,280 @@
+#!/usr/bin/env swift
+
+// get-selection: Get selected text + context via macOS Accessibility API
+// Usage: get-selection [--json]
+// Output: JSON with selection and metadata (or plain text without --json)
+//
+// This script does NOT touch the clipboard - it queries the focused UI element directly.
+// Requires accessibility permissions (System Preferences > Privacy > Accessibility)
+
+import Foundation
+import ApplicationServices
+import AppKit
+
+// MARK: - Output Structure
+
+struct SelectionResult: Codable {
+    let hasSelection: Bool
+    let selectedText: String?
+    let app: AppInfo?
+    let window: WindowInfo?
+    let url: String?
+    let timestamp: String
+
+    struct AppInfo: Codable {
+        let bundleID: String?
+        let name: String?
+    }
+
+    struct WindowInfo: Codable {
+        let title: String?
+    }
+}
+
+// MARK: - Accessibility Helpers
+
+func getSystemWideElement() -> AXUIElement {
+    return AXUIElementCreateSystemWide()
+}
+
+func getFocusedElement() -> AXUIElement? {
+    let systemWide = getSystemWideElement()
+    var focusedElement: AnyObject?
+    let result = AXUIElementCopyAttributeValue(systemWide, kAXFocusedUIElementAttribute as CFString, &focusedElement)
+
+    guard result == .success, let element = focusedElement else {
+        return nil
+    }
+
+    return (element as! AXUIElement)
+}
+
+func getSelectedText(from element: AXUIElement) -> String? {
+    var selectedText: AnyObject?
+    let result = AXUIElementCopyAttributeValue(element, kAXSelectedTextAttribute as CFString, &selectedText)
+
+    guard result == .success, let text = selectedText as? String, !text.isEmpty else {
+        return nil
+    }
+
+    return text
+}
+
+func getAttributeString(from element: AXUIElement, attribute: String) -> String? {
+    var value: AnyObject?
+    let result = AXUIElementCopyAttributeValue(element, attribute as CFString, &value)
+
+    guard result == .success, let stringValue = value as? String else {
+        return nil
+    }
+
+    return stringValue
+}
+
+func getWindowTitle(from app: NSRunningApplication) -> String? {
+    let appElement = AXUIElementCreateApplication(app.processIdentifier)
+
+    // Try to get the focused window first
+    var focusedWindow: AnyObject?
+    var result = AXUIElementCopyAttributeValue(appElement, kAXFocusedWindowAttribute as CFString, &focusedWindow)
+
+    if result == .success, let window = focusedWindow {
+        if let title = getAttributeString(from: window as! AXUIElement, attribute: kAXTitleAttribute as String) {
+            return title
+        }
+    }
+
+    // Fallback: get the main window
+    var mainWindow: AnyObject?
+    result = AXUIElementCopyAttributeValue(appElement, kAXMainWindowAttribute as CFString, &mainWindow)
+
+    if result == .success, let window = mainWindow {
+        return getAttributeString(from: window as! AXUIElement, attribute: kAXTitleAttribute as String)
+    }
+
+    return nil
+}
+
+func getBrowserURL(from app: NSRunningApplication) -> String? {
+    let bundleID = app.bundleIdentifier ?? ""
+
+    // Common browser bundle IDs
+    let browserBundleIDs = [
+        "com.apple.Safari",
+        "com.google.Chrome",
+        "com.brave.Browser",
+        "com.brave.Browser.nightly",
+        "org.mozilla.firefox",
+        "com.microsoft.edgemac",
+        "com.operasoftware.Opera",
+        "company.thebrowser.Browser", // Arc
+        "com.vivaldi.Vivaldi",
+    ]
+
+    guard browserBundleIDs.contains(where: { bundleID.hasPrefix($0.replacingOccurrences(of: ".nightly", with: "")) || bundleID == $0 }) else {
+        return nil
+    }
+
+    let appElement = AXUIElementCreateApplication(app.processIdentifier)
+
+    // Try to get URL from focused window's document attribute
+    var focusedWindow: AnyObject?
+    let result = AXUIElementCopyAttributeValue(appElement, kAXFocusedWindowAttribute as CFString, &focusedWindow)
+
+    guard result == .success, let window = focusedWindow else {
+        return nil
+    }
+
+    // Try AXDocument attribute (works for some browsers)
+    if let url = getAttributeString(from: window as! AXUIElement, attribute: kAXDocumentAttribute as String) {
+        return url
+    }
+
+    // Try to find URL in the address bar by traversing UI hierarchy
+    // This is browser-specific and may not work for all browsers
+    return getURLFromAddressBar(appElement: appElement, bundleID: bundleID)
+}
+
+func getURLFromAddressBar(appElement: AXUIElement, bundleID: String) -> String? {
+    // Try to find a text field that looks like a URL bar
+    // This is a heuristic approach and may not work for all browsers
+
+    var focusedWindow: AnyObject?
+    let result = AXUIElementCopyAttributeValue(appElement, kAXFocusedWindowAttribute as CFString, &focusedWindow)
+
+    guard result == .success, let window = focusedWindow else {
+        return nil
+    }
+
+    // For Chrome/Brave/Edge, the URL is often in the "omnibox" or address bar
+    // We'll try to find it by looking for text fields with URL-like content
+    return findURLInChildren(element: window as! AXUIElement, depth: 0, maxDepth: 10)
+}
+
+func findURLInChildren(element: AXUIElement, depth: Int, maxDepth: Int) -> String? {
+    guard depth < maxDepth else { return nil }
+
+    // Check if this element has a value that looks like a URL
+    if let value = getAttributeString(from: element, attribute: kAXValueAttribute as String) {
+        if value.hasPrefix("http://") || value.hasPrefix("https://") || value.hasPrefix("file://") {
+            return value
+        }
+    }
+
+    // Get children and recurse
+    var children: AnyObject?
+    let result = AXUIElementCopyAttributeValue(element, kAXChildrenAttribute as CFString, &children)
+
+    guard result == .success, let childArray = children as? [AXUIElement] else {
+        return nil
+    }
+
+    // Limit search to first few children at each level to avoid performance issues
+    for child in childArray.prefix(20) {
+        if let url = findURLInChildren(element: child, depth: depth + 1, maxDepth: maxDepth) {
+            return url
+        }
+    }
+
+    return nil
+}
+
+func getAppType(bundleID: String?) -> String {
+    guard let id = bundleID else { return "other" }
+
+    // Browsers
+    let browsers = ["Safari", "Chrome", "brave", "firefox", "edge", "Opera", "thebrowser", "Vivaldi"]
+    if browsers.contains(where: { id.lowercased().contains($0.lowercased()) }) {
+        return "browser"
+    }
+
+    // Terminals
+    let terminals = ["Terminal", "iTerm", "kitty", "ghostty", "wezterm", "alacritty", "Hyper"]
+    if terminals.contains(where: { id.lowercased().contains($0.lowercased()) }) {
+        return "terminal"
+    }
+
+    // Editors/IDEs
+    let editors = ["nvim", "vim", "Neovim", "VSCode", "Xcode", "Sublime", "TextEdit", "BBEdit", "Nova", "Zed"]
+    if editors.contains(where: { id.lowercased().contains($0.lowercased()) }) {
+        return "editor"
+    }
+
+    // Communication
+    let comms = ["Slack", "Teams", "Discord", "Messages", "Mail", "Telegram", "Signal"]
+    if comms.contains(where: { id.lowercased().contains($0.lowercased()) }) {
+        return "communication"
+    }
+
+    return "other"
+}
+
+// MARK: - Main
+
+let args = CommandLine.arguments
+let jsonOutput = args.contains("--json") || args.count == 1 // Default to JSON
+
+// Check accessibility permissions
+let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: false] as CFDictionary
+let trusted = AXIsProcessTrustedWithOptions(options)
+
+if !trusted {
+    fputs("Error: Accessibility permission not granted.\n", stderr)
+    fputs("Please enable in System Settings > Privacy & Security > Accessibility\n", stderr)
+    exit(1)
+}
+
+// Get frontmost app
+guard let frontmostApp = NSWorkspace.shared.frontmostApplication else {
+    fputs("Error: Could not determine frontmost application\n", stderr)
+    exit(1)
+}
+
+// Get focused element and selected text
+let focusedElement = getFocusedElement()
+var selectedText: String? = nil
+
+if let element = focusedElement {
+    selectedText = getSelectedText(from: element)
+}
+
+// Get window title
+let windowTitle = getWindowTitle(from: frontmostApp)
+
+// Get URL if it's a browser
+let url = getBrowserURL(from: frontmostApp)
+
+// Build result
+let timestamp = ISO8601DateFormatter().string(from: Date())
+let hasSelection = selectedText != nil && !(selectedText?.isEmpty ?? true)
+
+let result = SelectionResult(
+    hasSelection: hasSelection,
+    selectedText: selectedText,
+    app: SelectionResult.AppInfo(
+        bundleID: frontmostApp.bundleIdentifier,
+        name: frontmostApp.localizedName
+    ),
+    window: SelectionResult.WindowInfo(title: windowTitle),
+    url: url,
+    timestamp: timestamp
+)
+
+// Output
+if jsonOutput {
+    let encoder = JSONEncoder()
+    encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+
+    if let jsonData = try? encoder.encode(result),
+       let jsonString = String(data: jsonData, encoding: .utf8) {
+        print(jsonString)
+    } else {
+        fputs("Error: Failed to encode JSON\n", stderr)
+        exit(1)
+    }
+} else {
+    // Plain text output: just the selection (or empty)
+    if let text = selectedText {
+        print(text)
+    }
+}

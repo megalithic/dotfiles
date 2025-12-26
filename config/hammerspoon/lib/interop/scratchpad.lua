@@ -97,16 +97,12 @@ function M.toggle(name, opts)
     if app and app:isFrontmost() and win:isVisible() then
       -- Window is focused and visible -> hide app and restore previous
       app:hide()
-      if M.previousApp then
-        M.previousApp:activate()
-      end
+      if M.previousApp then M.previousApp:activate() end
       return true
     else
       -- Window exists but not focused -> store previous, show and focus
       local focusedWin = hs.window.focusedWindow()
-      if focusedWin then
-        M.previousApp = focusedWin:application()
-      end
+      if focusedWin then M.previousApp = focusedWin:application() end
       app:unhide()
       moveToCurrentSpace(win, frame)
       win:focus()
@@ -115,9 +111,7 @@ function M.toggle(name, opts)
   else
     -- No window found -> store previous app, then launch
     local focusedWin = hs.window.focusedWindow()
-    if focusedWin then
-      M.previousApp = focusedWin:application()
-    end
+    if focusedWin then M.previousApp = focusedWin:application() end
 
     if launcher then
       launcher()
@@ -158,11 +152,11 @@ function M.ghosttyEditor(name, filePath, opts)
     local task = hs.task.new(ghosttyPath, nil, {
       "--title=" .. title,
       "--class=" .. className,
-      "-e", nvimPath, filePath,
+      "-e",
+      nvimPath,
+      filePath,
     })
-    if task then
-      task:start()
-    end
+    if task then task:start() end
   end
 
   return function()
@@ -195,12 +189,13 @@ function M.kittyEditor(name, filePath, opts)
     -- --title sets window title for identification
     local task = hs.task.new(kittyPath, nil, {
       "--title=" .. title,
-      "--override", "background_opacity=0.95",
-      "-e", nvimPath, filePath,
+      "--override",
+      "background_opacity=1.00",
+      "-e",
+      nvimPath,
+      filePath,
     })
-    if task then
-      task:start()
-    end
+    if task then task:start() end
   end
 
   return function()

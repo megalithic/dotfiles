@@ -199,6 +199,9 @@ in {
   # Directory for MCP memory server storage
   home.file.".local/share/claude/.keep".text = "";
 
+  # Force overwrite settings.json - it's 100% Nix-managed, no backup needed
+  home.file.".claude/settings.json".force = true;
+
   # Symlink chrome-devtools-mcp binary to ~/.local/bin (for manual use)
   home.activation.linkAiBinaries = lib.hm.dag.entryAfter ["writeBoundary"] ''
     BIN_DIR="${config.home.homeDirectory}/.local/bin"

@@ -160,6 +160,9 @@ obj.placeApp = function(elementOrAppName, event, app)
       enum.each(appLayout.rules, function(rule)
         local winTitlePattern, screenNum, position = table.unpack(rule)
 
+        -- Treat nil pattern same as empty string (apply to all windows)
+        winTitlePattern = winTitlePattern or ""
+
         -- Skip exclusion-only rules (they're checked via shouldExcludeWindow)
         -- Exclusion rules have pattern starting with "!" and no position
         if winTitlePattern:sub(1, 1) == "!" and position == nil then
