@@ -324,6 +324,121 @@ function M.hasActiveInstances()
   return false
 end
 
+--------------------------------------------------------------------------------
+-- STANDALONE SERVER MANAGEMENT (for scratchpads, not tmux-based)
+--------------------------------------------------------------------------------
+
+-- Default socket path for notes scratchpad
+M.NOTES_SOCKET = "/tmp/hammerspoon-notes.sock"
+
+--- Check if a standalone socket file exists
+---@param socketPath string Path to the socket file
+---@return boolean exists
+function M.socketExists(socketPath)
+  return hs.fs.attributes(socketPath) ~= nil
+end
+
+--- Check if nvim server is actually responding on a standalone socket (async)
+---@param socketPath string Path to the socket file
+---@param callback fun(running: boolean) Called with result
+function M.isStandaloneServerRunning(socketPath, callback)
+  if not M.socketExists(socketPath) then
+    callback(false)
+    return
+  end
+
+  -- Try to evaluate a simple expression on the server
+  local task = hs.task.new("/usr/bin/env", function(exitCode, _, _)
+    callback(exitCode == 0)
+  end, { "nvim", "--server", socketPath, "--remote-expr", "1" })
+
+  if task then
+    task:start()
+  else
+    callback(false)
+  end
+end
+
+--- Synchronous check if standalone server is running (blocks briefly)
+---@param socketPath string Path to the socket file
+---@return boolean running
+function M.isStandaloneServerRunningSync(socketPath)
+  if not M.socketExists(socketPath) then
+    return false
+  end
+
+  -- Quick sync check
+  local _, status = hs.execute(
+    fmt("nvim --server '%s' --remote-expr '1' 2>/dev/null", socketPath)
+  )
+  return status == true
+end
+
+--- Open a file in a standalone nvim server (async, with callback)
+---@param socketPath string Path to the socket file
+---@param filePath string Path to the file to open
+---@param callback? fun(success: boolean) Optional callback
+function M.openFileAsync(socketPath, filePath, callback)
+  local task = hs.task.new("/usr/bin/env", function(exitCode, _, _)
+    if callback then callback(exitCode == 0) end
+  end, { "nvim", "--server", socketPath, "--remote", filePath })
+
+  if task then
+    task:start()
+  elseif callback then
+    callback(false)
+  end
+end
+
+--- Remove an orphan socket file
+---@param socketPath string Path to the socket file
+---@return boolean removed
+function M.cleanupSocket(socketPath)
+  if M.socketExists(socketPath) then
+    local ok, err = os.remove(socketPath)
+    if not ok then
+      U.log.w(fmt("Failed to remove socket %s: %s", socketPath, err or "unknown"))
+      return false
+    end
+    U.log.d(fmt("Cleaned up orphan socket: %s", socketPath))
+    return true
+  end
+  return true -- Nothing to clean
+end
+
+--- Ensure socket is ready for use (clean up if orphaned, async)
+---@param socketPath string Path to the socket file
+---@param callback fun(ready: boolean) Called when ready
+function M.ensureSocketReady(socketPath, callback)
+  if not M.socketExists(socketPath) then
+    callback(true) -- No socket, ready to create
+    return
+  end
+
+  -- Socket exists - check if server is actually running
+  M.isStandaloneServerRunning(socketPath, function(running)
+    if running then
+      callback(true) -- Server is running, socket is valid
+    else
+      -- Orphan socket - clean it up
+      M.cleanupSocket(socketPath)
+      callback(true)
+    end
+  end)
+end
+
+--- Get nvim arguments for starting as a server
+---@param socketPath string Path to the socket file
+---@param filePath string Initial file to open
+---@return table args Arguments for nvim
+function M.getServerArgs(socketPath, filePath)
+  return { "nvim", "--listen", socketPath, filePath }
+end
+
+--------------------------------------------------------------------------------
+-- UTILITY
+--------------------------------------------------------------------------------
+
 --- Debug: Print all registered sockets
 function M.debugSockets()
   local sockets = M.getSockets()

@@ -4,8 +4,12 @@
 -- Uses app:hide()/unhide() pattern from lib/summon.lua
 -- Tracks previousApp to restore focus when hiding
 --
+-- Supports persistent nvim sessions via --listen/--server/--remote
+-- for fast file switching without nvim restart overhead
+--
 local M = {}
 local fmt = string.format
+local nvimLib = require("lib.interop.nvim")
 
 --------------------------------------------------------------------------------
 -- CONFIGURATION
@@ -145,11 +149,12 @@ function M.ghosttyEditor(name, filePath, opts)
   local title = opts.title or name
 
   local function launcher()
-    -- Use /usr/bin/env to leverage PATH injection from overrides.lua
-    -- This finds ghostty and nvim via the Nix/Homebrew PATH
+    -- On macOS, ghostty CLI doesn't support -e properly
+    -- Must use: open -na Ghostty.app --args <ghostty-args>
     local className = "scratchpad-" .. name:gsub("%s+", "-"):lower()
-    local task = hs.task.new("/usr/bin/env", nil, {
-      "ghostty",
+    local task = hs.task.new("/usr/bin/open", nil, {
+      "-na", "Ghostty.app",
+      "--args",
       "--title=" .. title,
       "--class=" .. className,
       "-e", "nvim", filePath,
@@ -202,14 +207,140 @@ function M.kittyEditor(name, filePath, opts)
 end
 
 --------------------------------------------------------------------------------
+-- PERSISTENT NVIM SCRATCHPAD (uses --listen/--server/--remote)
+--------------------------------------------------------------------------------
+
+--- Create a persistent nvim scratchpad that reuses the same nvim instance
+--- First launch: terminal with `nvim --listen <socket> <file>`
+--- Subsequent: send `--remote <file>` to existing nvim, focus terminal
+---@param terminal "ghostty"|"kitty" Which terminal to use
+---@param name string Unique name (used in window title)
+---@param socketPath string Path to nvim socket
+---@param opts? table Additional options
+---@return function toggleFn Function to toggle and open a file
+function M.persistentNvimEditor(terminal, name, socketPath, opts)
+  opts = opts or {}
+  local title = opts.title or name
+
+  --- Launch terminal with nvim listening on socket
+  ---@param filePath string Initial file to open
+  local function launchServer(filePath)
+    local nvimArgs = nvimLib.getServerArgs(socketPath, filePath)
+    local task
+
+    if terminal == "kitty" then
+      local termArgs = {
+        "kitty",
+        "--title=" .. title,
+        "--override", "background_opacity=1.00",
+        "-e",
+      }
+      -- Combine terminal args with nvim args
+      for _, arg in ipairs(nvimArgs) do
+        table.insert(termArgs, arg)
+      end
+      task = hs.task.new("/usr/bin/env", nil, termArgs)
+    else
+      -- On macOS, ghostty CLI doesn't support -e properly
+      -- Must use: open -na Ghostty.app --args <ghostty-args>
+      local className = "scratchpad-" .. name:gsub("%s+", "-"):lower()
+      local termArgs = {
+        "-na", "Ghostty.app",
+        "--args",
+        "--title=" .. title,
+        "--class=" .. className,
+        "-e",
+      }
+      -- Combine terminal args with nvim args
+      for _, arg in ipairs(nvimArgs) do
+        table.insert(termArgs, arg)
+      end
+      task = hs.task.new("/usr/bin/open", nil, termArgs)
+    end
+
+    if task then task:start() end
+  end
+
+  --- Open a file in existing nvim and focus the window
+  ---@param filePath string File to open
+  ---@param win hs.window Existing window to focus
+  ---@param frame hs.geometry Frame to apply
+  local function openInExisting(filePath, win, frame)
+    -- Send file to nvim server
+    nvimLib.openFileAsync(socketPath, filePath, function(success)
+      if not success then
+        U.log.w(fmt("Failed to open %s in nvim server", filePath))
+      end
+    end)
+
+    -- Focus the window
+    local app = win:application()
+    if app then app:unhide() end
+    moveToCurrentSpace(win, frame)
+    win:focus()
+  end
+
+  --- Toggle the persistent scratchpad with a specific file
+  ---@param filePath string File to open
+  ---@return boolean success
+  return function(filePath)
+    local frame = opts.frame or M.getFloatFrame()
+
+    -- Try to find existing window
+    local win = findWindowByTitle(title)
+
+    if win then
+      local app = win:application()
+      if app and app:isFrontmost() and win:isVisible() then
+        -- Window is focused and visible -> hide app and restore previous
+        app:hide()
+        if M.previousApp then M.previousApp:activate() end
+        return true
+      else
+        -- Window exists but not focused -> store previous, open file, focus
+        local focusedWin = hs.window.focusedWindow()
+        if focusedWin then M.previousApp = focusedWin:application() end
+        openInExisting(filePath, win, frame)
+        return true
+      end
+    else
+      -- No window found -> check socket status and act accordingly
+      local focusedWin = hs.window.focusedWindow()
+      if focusedWin then M.previousApp = focusedWin:application() end
+
+      -- Ensure socket is clean (remove orphan if needed)
+      nvimLib.ensureSocketReady(socketPath, function(ready)
+        if ready then
+          launchServer(filePath)
+          -- Wait for window to appear and position it
+          hs.timer.doAfter(M.config.windowWaitTime, function()
+            local newWin = findWindowByTitle(title)
+            if newWin then
+              moveToCurrentSpace(newWin, frame)
+              newWin:focus()
+            end
+          end)
+        else
+          U.log.e(fmt("Failed to prepare socket %s", socketPath))
+          hs.alert.show("Failed to start nvim server", 2)
+        end
+      end)
+      return true
+    end
+  end
+end
+
+--------------------------------------------------------------------------------
 -- PRE-CONFIGURED SCRATCHPADS
 --------------------------------------------------------------------------------
 
---- Create a daily note scratchpad
+--- Create a daily note scratchpad (uses persistent nvim session)
 ---@param terminal "ghostty"|"kitty" Which terminal to use
+---@param usePersistent? boolean Use persistent nvim session (default: true)
 ---@return function toggleFn
-function M.dailyNote(terminal)
+function M.dailyNote(terminal, usePersistent)
   local notesLib = require("lib.notes")
+  usePersistent = usePersistent ~= false -- default to true
 
   -- Ensure daily note exists before creating scratchpad
   local function getOrCreateDailyNote()
@@ -219,33 +350,55 @@ function M.dailyNote(terminal)
 
   local title = "Daily Note"
 
-  if terminal == "kitty" then
+  if usePersistent then
+    -- Use persistent nvim session - same nvim instance across toggles
+    local toggleFn = M.persistentNvimEditor(terminal, "daily-note", nvimLib.NOTES_SOCKET, { title = title })
     return function()
       local filePath = getOrCreateDailyNote()
-      local toggleFn = M.kittyEditor("daily-note", filePath, { title = title })
-      return toggleFn()
+      return toggleFn(filePath)
     end
   else
-    return function()
-      local filePath = getOrCreateDailyNote()
-      local toggleFn = M.ghosttyEditor("daily-note", filePath, { title = title })
-      return toggleFn()
+    -- Legacy: spawn new nvim each time
+    if terminal == "kitty" then
+      return function()
+        local filePath = getOrCreateDailyNote()
+        local legacyToggle = M.kittyEditor("daily-note", filePath, { title = title })
+        return legacyToggle()
+      end
+    else
+      return function()
+        local filePath = getOrCreateDailyNote()
+        local legacyToggle = M.ghosttyEditor("daily-note", filePath, { title = title })
+        return legacyToggle()
+      end
     end
   end
 end
 
---- Create a capture note scratchpad
+--- Create a capture note scratchpad (uses persistent nvim session)
 ---@param terminal "ghostty"|"kitty" Which terminal to use
 ---@param filePath string Path to the capture note
 ---@param captureTitle? string Title for the capture
+---@param usePersistent? boolean Use persistent nvim session (default: true)
 ---@return function toggleFn
-function M.captureNote(terminal, filePath, captureTitle)
+function M.captureNote(terminal, filePath, captureTitle, usePersistent)
   local title = captureTitle or "Capture Note"
+  usePersistent = usePersistent ~= false -- default to true
 
-  if terminal == "kitty" then
-    return M.kittyEditor("capture-note", filePath, { title = title })
+  if usePersistent then
+    -- Use persistent nvim session - reuses daily note's nvim instance
+    local toggleFn = M.persistentNvimEditor(terminal, "daily-note", nvimLib.NOTES_SOCKET, { title = "Daily Note" })
+    -- Return a function that opens the capture file in the persistent session
+    return function()
+      return toggleFn(filePath)
+    end
   else
-    return M.ghosttyEditor("capture-note", filePath, { title = title })
+    -- Legacy: spawn new nvim each time
+    if terminal == "kitty" then
+      return M.kittyEditor("capture-note", filePath, { title = title })
+    else
+      return M.ghosttyEditor("capture-note", filePath, { title = title })
+    end
   end
 end
 
