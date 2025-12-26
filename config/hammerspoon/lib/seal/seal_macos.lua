@@ -67,27 +67,29 @@ end
 function obj.toggleWiFi() hs.wifi.setPower(not hs.wifi.interfaceDetails("en0").power, "en0") end
 
 function obj.toggleBluetooth()
-  -- Requires `brew install blueutil`.
-  local path = "/run/current-system/sw/bin/blueutil"
-  if hs.fs.displayName(path) == nil then path = "/opt/homebrew/bin/blueutil" end
-  local success, result, _ = hs.applescript([[do shell script " ]] .. path .. [["]])
-  if not success then
-    obj.__logger.e("Got an error while determining Bluetooth power state.")
-    return
-  end
+  -- Requires `brew install blueutil` or `nix-env -iA nixpkgs.blueutil`.
+  -- Uses hs.task with /usr/bin/env to leverage PATH injection from overrides.lua
 
-  local script = [[do shell script " ]] .. path .. [[ %s"]]
-  if result == "1" then
-    script = script:format("off")
-  else
-    script = script:format("on")
-  end
+  -- First, get current state
+  local getStateTask = hs.task.new("/usr/bin/env", function(exitCode, stdOut, _)
+    if exitCode ~= 0 then
+      obj.__logger.e("Got an error while determining Bluetooth power state.")
+      return
+    end
 
-  success, _, _ = hs.applescript(script)
-  if not success then
-    obj.__logger.e("Got an error while setting Bluetooth power state.")
-    return
-  end
+    local currentState = (stdOut or ""):gsub("%s+", "")
+    local newState = currentState == "1" and "off" or "on"
+
+    -- Now toggle to new state
+    local setStateTask = hs.task.new("/usr/bin/env", function(setExitCode, _, _)
+      if setExitCode ~= 0 then
+        obj.__logger.e("Got an error while setting Bluetooth power state.")
+      end
+    end, { "blueutil", newState })
+    if setStateTask then setStateTask:start() end
+  end, { "blueutil" })
+
+  if getStateTask then getStateTask:start() end
 end
 
 -- Toggle the menu bar auto-hiding.

@@ -56,8 +56,10 @@ Phone number is auto-fetched from macOS Contacts.
 
 - When working in this repo (dotfiles), always check the `justfile` to see
   available commands
-- To rebuild darwin, use `sudo darwin-rebuild switch --flake ./` - this produces
-  clean, verifiable output
+- **To rebuild darwin, use `just rebuild`** - this uses a workaround script that
+  avoids the launch agent hang (see "Darwin Rebuild Hang Workaround" below)
+- Avoid `sudo darwin-rebuild switch --flake ./` directly - it hangs at
+  "Activating setupLaunchAgents"
 - Avoid `just mac` and `nh darwin switch` as they produce excessive animated
   output that's hard to verify success/failure
 

@@ -291,8 +291,8 @@ function M.slack(status)
     slck:setEnvironment({
       TERM = "xterm-256color",
       HOMEBREW_PREFIX = "/opt/homebrew",
-      --   -- HOME = os.getenv("HOME"),
-      PATH = os.getenv("PATH") .. ":/opt/homebrew/bin",
+      HOME = os.getenv("HOME"),
+      PATH = PATH, -- Use global PATH from preflight.lua (includes Nix/Homebrew)
     })
     slck:start()
   end
@@ -318,7 +318,9 @@ function M.vidconvert(path, opts)
       .new({ title = "vidconvert", subTitle = fmt("STARTED converting %s at %s", path, os.date("%H:%M:%S")) })
       :send()
 
-    local task = hs.task.new(os.getenv("HOME") .. "/.dotfiles/bin/vidconvert", function(exitCode, stdOut, stdErr)
+    -- Uses /usr/bin/env to leverage PATH injection from overrides.lua
+    -- This finds vidconvert via the Nix/Homebrew/dotfiles PATH
+    local task = hs.task.new("/usr/bin/env", function(exitCode, stdOut, stdErr)
       -- dbg(fmt("sync func: \r\n %s \r\n %s \r\n %s", stdOut, stdErr, exitCode))
 
       local foundStreamEnd = exitCode == 0
@@ -345,14 +347,7 @@ function M.vidconvert(path, opts)
       --   end
 
       --   return not foundStreamEnd
-    end, { "-t", destFormat, path })
-
-    task:setEnvironment({
-      TERM = "xterm-256color",
-      HOMEBREW_PREFIX = "/opt/homebrew",
-      HOME = os.getenv("HOME"),
-      PATH = os.getenv("PATH") .. ":/opt/homebrew/bin",
-    })
+    end, { "vidconvert", "-t", destFormat, path })
 
     task:start()
   end

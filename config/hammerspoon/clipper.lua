@@ -413,11 +413,11 @@ end
 -- ══════════════════════════════════════════════════════════════════════════════
 
 function obj.uploadToSpaces(imagePath, imageName)
-  local capperBin = fmt("%s/.dotfiles/bin/capper", os.getenv("HOME"))
-
+  -- Uses /usr/bin/env to leverage PATH injection from overrides.lua
+  -- This finds capper via the Nix/Homebrew/dotfiles PATH
   obj.updateCheatsheetStatus("uploading")
 
-  local task = hs.task.new("/bin/zsh", function(exitCode, stdOut, stdErr)
+  local task = hs.task.new("/usr/bin/env", function(exitCode, stdOut, stdErr)
     if exitCode == 0 then
       -- Extract URL from last line of output
       local lines = {}
@@ -439,7 +439,7 @@ function obj.uploadToSpaces(imagePath, imageName)
       obj.updateCheatsheetStatus("failed")
       U.log.e(fmt("upload failed: exit=%s stderr=%s", exitCode, stdErr))
     end
-  end, { "-c", fmt("%s %s", capperBin, imagePath) })
+  end, { "capper", imagePath })
 
   task:start()
 end
@@ -462,10 +462,10 @@ function obj.extractOcrText(callback)
   end
 
   local imagePath = obj.activeCapture.imagePath
-  local visionOcrBin = fmt("%s/.dotfiles/bin/vision-ocr", os.getenv("HOME"))
 
-  -- Try Vision first
-  local task = hs.task.new(visionOcrBin, function(exitCode, stdOut, stdErr)
+  -- Uses /usr/bin/env to leverage PATH injection from overrides.lua
+  -- Try Vision OCR first (finds vision-ocr via Nix/Homebrew/dotfiles PATH)
+  local task = hs.task.new("/usr/bin/env", function(exitCode, stdOut, stdErr)
     if exitCode == 0 and stdOut and #stdOut > 0 then
       obj.activeCapture.ocrText = stdOut:gsub("^%s*(.-)%s*$", "%1") -- Trim
       callback(obj.activeCapture.ocrText)
@@ -474,7 +474,7 @@ function obj.extractOcrText(callback)
       U.log.d(fmt("Vision OCR failed, trying tesseract"))
       obj.extractOcrWithTesseract(imagePath, callback)
     end
-  end, { imagePath })
+  end, { "vision-ocr", imagePath })
 
   task:start()
 end
@@ -482,7 +482,9 @@ end
 function obj.extractOcrWithTesseract(imagePath, callback)
   local outputPath = "/tmp/clipper_ocr"
 
-  local task = hs.task.new("/bin/zsh", function(exitCode, stdOut, stdErr)
+  -- Uses /usr/bin/env to leverage PATH injection from overrides.lua
+  -- This finds tesseract via the Nix/Homebrew PATH
+  local task = hs.task.new("/usr/bin/env", function(exitCode, stdOut, stdErr)
     if exitCode == 0 then
       local file = io.open(outputPath .. ".txt", "r")
       if file then
@@ -501,7 +503,7 @@ function obj.extractOcrWithTesseract(imagePath, callback)
       U.log.e(fmt("tesseract failed: %s", stdErr))
       callback(nil)
     end
-  end, { "-c", fmt("tesseract '%s' '%s' --psm 6", imagePath, outputPath) })
+  end, { "tesseract", imagePath, outputPath, "--psm", "6" })
 
   task:start()
 end

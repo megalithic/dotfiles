@@ -143,18 +143,16 @@ end
 function M.ghosttyEditor(name, filePath, opts)
   opts = opts or {}
   local title = opts.title or name
-  local nvimPath = "/etc/profiles/per-user/seth/bin/nvim"
-  local ghosttyPath = "/Applications/Ghostty.app/Contents/MacOS/ghostty"
 
   local function launcher()
-    -- Use hs.task for non-blocking execution
+    -- Use /usr/bin/env to leverage PATH injection from overrides.lua
+    -- This finds ghostty and nvim via the Nix/Homebrew PATH
     local className = "scratchpad-" .. name:gsub("%s+", "-"):lower()
-    local task = hs.task.new(ghosttyPath, nil, {
+    local task = hs.task.new("/usr/bin/env", nil, {
+      "ghostty",
       "--title=" .. title,
       "--class=" .. className,
-      "-e",
-      nvimPath,
-      filePath,
+      "-e", "nvim", filePath,
     })
     if task then task:start() end
   end
@@ -180,20 +178,16 @@ end
 function M.kittyEditor(name, filePath, opts)
   opts = opts or {}
   local title = opts.title or name
-  local nvimPath = "/etc/profiles/per-user/seth/bin/nvim"
-  local kittyPath = "/opt/homebrew/bin/kitty"
 
   local function launcher()
-    -- Use hs.task for non-blocking execution
+    -- Use /usr/bin/env to leverage PATH injection from overrides.lua
+    -- This finds kitty and nvim via the Nix/Homebrew PATH
     -- Do NOT use -1 (single-instance) as it can cause issues with window control
-    -- --title sets window title for identification
-    local task = hs.task.new(kittyPath, nil, {
+    local task = hs.task.new("/usr/bin/env", nil, {
+      "kitty",
       "--title=" .. title,
-      "--override",
-      "background_opacity=1.00",
-      "-e",
-      nvimPath,
-      filePath,
+      "--override", "background_opacity=1.00",
+      "-e", "nvim", filePath,
     })
     if task then task:start() end
   end

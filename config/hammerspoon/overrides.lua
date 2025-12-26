@@ -1,0 +1,103 @@
+-- Hammerspoon Overrides
+-- Monkey-patches and metatable modifications for core hs.* modules
+--
+-- Loaded early by preflight.lua to ensure patches are in place before other modules load.
+-- Keep all behavioral overrides here for visibility and maintainability.
+--
+
+--------------------------------------------------------------------------------
+-- hs.task.new: Automatic PATH injection
+--------------------------------------------------------------------------------
+-- GUI apps like Hammerspoon don't inherit shell PATH. This patches hs.task.new
+-- to automatically inject the Nix/Homebrew PATH (built in preflight.lua) into
+-- all spawned processes.
+--
+-- REF: https://www.hammerspoon.org/docs/hs.task.html
+-- REF: https://github.com/Hammerspoon/hammerspoon/discussions/3730
+
+local _originalTaskNew = hs.task.new
+
+---@diagnostic disable-next-line: duplicate-set-field
+hs.task.new = function(launchPath, callbackFnOrStreamFn, streamFnOrArgs, arguments)
+  local task
+
+  -- Handle both calling conventions:
+  -- hs.task.new(path, callback, args)
+  -- hs.task.new(path, callback, streamCallback, args)
+  if type(streamFnOrArgs) == "table" then
+    -- streamFnOrArgs is actually the arguments table (no stream callback)
+    task = _originalTaskNew(launchPath, callbackFnOrStreamFn, streamFnOrArgs)
+  elseif type(streamFnOrArgs) == "function" then
+    -- Full signature with stream callback
+    task = _originalTaskNew(launchPath, callbackFnOrStreamFn, streamFnOrArgs, arguments)
+  else
+    -- Minimal: just path and callback (or nil callback)
+    task = _originalTaskNew(launchPath, callbackFnOrStreamFn)
+  end
+
+  if task then
+    -- Merge PATH into inherited environment (don't replace everything)
+    local env = task:environment() or {}
+    if PATH then
+      env.PATH = PATH
+    end
+    if not env.HOME then
+      env.HOME = os.getenv("HOME")
+    end
+    task:setEnvironment(env)
+  end
+
+  return task
+end
+
+--------------------------------------------------------------------------------
+-- hs.window metatable: AXEnhancedUserInterface hotfix
+--------------------------------------------------------------------------------
+-- Fixes window manipulation issues with apps that use AXEnhancedUserInterface.
+-- Temporarily disables the flag during window operations, then restores it.
+--
+-- REF: https://github.com/Hammerspoon/hammerspoon/issues/3224#issuecomment-2155567633
+-- REF: https://github.com/Hammerspoon/hammerspoon/issues/3277
+-- REF: https://github.com/skrypka/hammerspoon_config/blob/master/init.lua#L26C1-L51C56
+
+---@param win hs.window|nil Window to fix (defaults to frontmost)
+---@return function revert Call this to restore AXEnhancedUserInterface
+local function axHotfix(win)
+  if not win then win = hs.window.frontmostWindow() end
+  if not win then return function() end end
+
+  local app = win:application()
+  if not app then return function() end end
+
+  local axApp = hs.axuielement.applicationElement(app)
+  local wasEnhanced = axApp.AXEnhancedUserInterface
+  axApp.AXEnhancedUserInterface = false
+
+  return function()
+    hs.timer.doAfter(hs.window.animationDuration * 2, function()
+      axApp.AXEnhancedUserInterface = wasEnhanced
+    end)
+  end
+end
+
+---@param fn function Original window method
+---@param position? number Argument position of the window (default 1)
+---@return function wrapped Method with axHotfix applied
+local function withAxHotfix(fn, position)
+  position = position or 1
+  return function(...)
+    local revert = axHotfix(select(position, ...))
+    fn(...)
+    revert()
+  end
+end
+
+local windowMT = hs.getObjectMetatable("hs.window")
+windowMT.maximize = withAxHotfix(windowMT.maximize)
+windowMT.moveToUnit = withAxHotfix(windowMT.moveToUnit)
+-- Uncomment if setFrame issues resurface:
+-- windowMT.setFrame = withAxHotfix(windowMT.setFrame, 1)
+
+--------------------------------------------------------------------------------
+-- Future overrides go here
+--------------------------------------------------------------------------------
