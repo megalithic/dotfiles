@@ -157,37 +157,29 @@ local function getNeovimContext()
 end
 
 --------------------------------------------------------------------------------
--- CLIPBOARD SELECTION FALLBACK
+-- ACCESSIBILITY-BASED SELECTION (via Swift script)
 --------------------------------------------------------------------------------
 
---- Get selected text via clipboard (⌘C, read, restore)
----@return string|nil
-local function getSelectionViaClipboard()
-  -- Save current clipboard
-  local savedClipboard = hs.pasteboard.getContents()
+--- Get selected text via Accessibility APIs (clipboard-free)
+--- Uses bin/get-selection Swift script that queries kAXSelectedTextAttribute
+---@return string|nil selectedText
+---@return string|nil url (bonus: also returns URL if available)
+local function getSelectionViaAccessibility()
+  local selection = require("lib.interop.selection")
 
-  -- Send Cmd+C to copy selection
-  hs.eventtap.keyStroke({ "cmd" }, "c", 50000) -- 50ms
+  -- Use sync wrapper with 1.5s timeout (reasonable for AX queries)
+  local result, err = selection.getSync(1.5)
 
-  -- Small delay for clipboard to update
-  hs.timer.usleep(100000) -- 100ms
-
-  -- Get new clipboard content
-  local selectedText = hs.pasteboard.getContents()
-
-  -- Restore original clipboard
-  if savedClipboard then
-    hs.pasteboard.setContents(savedClipboard)
-  else
-    hs.pasteboard.clearContents()
+  if err then
+    U.log.d(fmt("selection.getSync() error: %s", err))
+    return nil, nil
   end
 
-  -- Check if we got something new
-  if selectedText and selectedText ~= savedClipboard then
-    return selectedText
+  if result and result.hasSelection then
+    return result.selectedText, result.url
   end
 
-  return nil
+  return nil, nil
 end
 
 --------------------------------------------------------------------------------
@@ -340,9 +332,15 @@ function M.getContext()
     end
   end
 
-  -- Fallback: try clipboard selection if we don't have one
+  -- Fallback: try Accessibility-based selection if we don't have one
+  -- This is clipboard-free and works well for native macOS apps
   if not context.selection or context.selection == "" then
-    context.selection = getSelectionViaClipboard()
+    local axSelection, axUrl = getSelectionViaAccessibility()
+    context.selection = axSelection
+    -- Also use URL from AX if we don't have one (useful for non-JXA browsers)
+    if axUrl and (not context.url or context.url == "") then
+      context.url = axUrl
+    end
   end
 
   -- Detect language

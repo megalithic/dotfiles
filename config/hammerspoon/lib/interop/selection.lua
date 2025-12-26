@@ -106,32 +106,38 @@ end
 --------------------------------------------------------------------------------
 
 --- Get selected text and context synchronously
---- BLOCKING - prefer M.get() for UI responsiveness
----@param timeout number|nil Timeout in seconds (default 2)
+--- Uses hs.execute() which is already synchronous (no event loop required)
+---@param timeout number|nil Timeout in seconds (unused, kept for API compat)
 ---@return SelectionResult|nil result
 ---@return string|nil error
 function M.getSync(timeout)
-  timeout = timeout or 2
+  -- Note: timeout parameter kept for API compatibility but hs.execute has its own timeout
 
-  local result, err
-  local done = false
+  -- Check script exists
+  local f = io.open(M.scriptPath, "r")
+  if not f then
+    return nil, "get-selection script not found at: " .. M.scriptPath
+  end
+  f:close()
 
-  M.get(function(r, e)
-    result = r
-    err = e
-    done = true
-  end)
+  -- Run synchronously via hs.execute (blocks but doesn't need event loop)
+  local output, success, _, _ = hs.execute(M.scriptPath .. " --json", true)
 
-  -- Spin wait with timeout (not ideal, but works for CLI-like usage)
-  local startTime = hs.timer.secondsSinceEpoch()
-  while not done do
-    if hs.timer.secondsSinceEpoch() - startTime > timeout then
-      return nil, "Timeout waiting for get-selection"
-    end
-    hs.timer.usleep(10000) -- 10ms
+  if not success then
+    return nil, "get-selection failed: " .. (output or "unknown error")
   end
 
-  return result, err
+  -- Parse JSON response
+  local ok, result = pcall(hs.json.decode, output)
+  if not ok or not result then
+    return nil, "Failed to parse JSON from get-selection: " .. (output or "(empty)")
+  end
+
+  -- Add appType categorization
+  local bundleID = result.app and result.app.bundleID
+  result.appType = categorizeApp(bundleID)
+
+  return result, nil
 end
 
 --------------------------------------------------------------------------------
