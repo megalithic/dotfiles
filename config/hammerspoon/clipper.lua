@@ -662,7 +662,7 @@ function obj.captureFull()
 
     -- Open capture note in toggle-able scratchpad window
     -- Uses scratchpad for consistent behavior with daily notes
-    local toggleFn = scratchpad.captureNote("ghostty", notePath, "Capture: " .. captureFilename)
+    local toggleFn = scratchpad.captureNote("kitty", notePath, "Capture: " .. captureFilename)
     toggleFn()
 
     -- Clear active capture since files are moved/deleted

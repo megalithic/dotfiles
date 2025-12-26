@@ -106,13 +106,12 @@ in {
 
   xdg.enable = true;
 
-  xdg.configFile."ghostty".source = ./ghostty;
-  xdg.configFile."ghostty".recursive = true;
-  xdg.configFile."ghostty".force = true;
+  # Out-of-store symlink - changes take effect immediately without rebuild
+  xdg.configFile."ghostty".source = config.lib.mega.linkConfig "ghostty";
 
+  # Out-of-store symlink - changes take effect immediately without rebuild
+  # NOTE: Do NOT use recursive=true with mkOutOfStoreSymlink, it defeats the purpose
   xdg.configFile."hammerspoon".source = config.lib.mega.linkConfig "hammerspoon";
-  xdg.configFile."hammerspoon".recursive = true;
-  xdg.configFile."hammerspoon".force = true;
 
   # Generate PATH configuration for Hammerspoon (GUI apps don't inherit shell PATH)
   # This file is loaded by preflight.lua to inject Nix/Homebrew paths into hs.task
@@ -122,13 +121,11 @@ in {
     NIX_PATH = "${config.home.profileDirectory}/bin:/run/current-system/sw/bin"
   '';
 
+  # Out-of-store symlink - changes take effect immediately without rebuild
   xdg.configFile."tmux".source = config.lib.mega.linkConfig "tmux";
-  xdg.configFile."tmux".recursive = true;
-  xdg.configFile."tmux".force = true;
 
+  # Out-of-store symlink - changes take effect immediately without rebuild
   xdg.configFile."kitty".source = config.lib.mega.linkConfig "kitty";
-  xdg.configFile."kitty".recursive = true;
-  xdg.configFile."kitty".force = true;
 
   # FIXME: remove when sure; i don't use zsh anymore, i don't need this, right?
   xdg.configFile."zsh".source = ./zsh;

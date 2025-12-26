@@ -7,6 +7,317 @@
   inputs,
   ...
 }: let
+  # ===========================================================================
+  # resize-image - Resize images for Claude/LLM API constraints
+  # ===========================================================================
+  # Claude's image restrictions:
+  #   - Max 5MB file size
+  #   - Max 8000px on any dimension (width or height)
+  #
+  # Usage:
+  #   resize-image <input> [output]     # Resize if needed
+  #   resize-image --check <input>      # Check if image needs resizing
+  #   resize-image --info <input>       # Show image dimensions and size
+  resize-image = pkgs.writeShellApplication {
+    name = "resize-image";
+    runtimeInputs = with pkgs; [imagemagickBig coreutils bc];
+    text = ''
+      set -euo pipefail
+
+      # Constants - Claude API limits
+      MAX_SIZE_BYTES=5242880  # 5MB
+      MAX_DIMENSION=8000      # 8000px max on any side
+      DEFAULT_QUALITY=85      # JPEG quality for compression
+
+      usage() {
+        cat << 'EOF'
+      Usage: resize-image [OPTIONS] <input> [output]
+
+      Resize images to fit within Claude's API constraints:
+        - Max file size: 5MB
+        - Max dimension: 8000px (width or height)
+
+      Options:
+        --check       Check if image needs resizing (exit 0 = needs resize, 1 = OK)
+        --info        Show image dimensions and file size
+        --quality N   JPEG quality 1-100 (default: 85)
+        --max-dim N   Max dimension in pixels (default: 8000)
+        --max-size N  Max file size in bytes (default: 5242880)
+        -h, --help    Show this help message
+
+      Arguments:
+        input         Input image file
+        output        Output file (default: <input>-resized.<ext>)
+
+      Examples:
+        resize-image photo.png                    # Resize if needed
+        resize-image photo.png small.png          # Resize to specific output
+        resize-image --check photo.png            # Check if resize needed
+        resize-image --info photo.png             # Show dimensions and size
+        resize-image --quality 70 huge.jpg        # Use lower quality for more compression
+      EOF
+      }
+
+      # Get image dimensions (WxH)
+      get_dimensions() {
+        magick identify -format "%wx%h" "$1" 2>/dev/null | head -1
+      }
+
+      # Get file size in bytes
+      get_size() {
+        stat -f%z "$1" 2>/dev/null || stat -c%s "$1" 2>/dev/null
+      }
+
+      # Check if image exceeds limits
+      needs_resize() {
+        local file="$1"
+        local dims size width height
+
+        dims=$(get_dimensions "$file")
+        size=$(get_size "$file")
+        width=''${dims%x*}
+        height=''${dims#*x}
+
+        # Check dimension limits
+        if [[ "$width" -gt "$MAX_DIMENSION" ]] || [[ "$height" -gt "$MAX_DIMENSION" ]]; then
+          return 0  # needs resize
+        fi
+
+        # Check file size
+        if [[ "$size" -gt "$MAX_SIZE_BYTES" ]]; then
+          return 0  # needs resize
+        fi
+
+        return 1  # OK
+      }
+
+      # Show image info
+      show_info() {
+        local file="$1"
+        local dims size width height size_mb
+
+        dims=$(get_dimensions "$file")
+        size=$(get_size "$file")
+        width=''${dims%x*}
+        height=''${dims#*x}
+        size_mb=$(echo "scale=2; $size / 1048576" | bc)
+
+        echo "File: $file"
+        echo "Dimensions: ''${width}x''${height}"
+        echo "File size: ''${size_mb}MB ($size bytes)"
+
+        # Check against limits
+        local issues=()
+        if [[ "$width" -gt "$MAX_DIMENSION" ]]; then
+          issues+=("width exceeds $MAX_DIMENSION px")
+        fi
+        if [[ "$height" -gt "$MAX_DIMENSION" ]]; then
+          issues+=("height exceeds $MAX_DIMENSION px")
+        fi
+        if [[ "$size" -gt "$MAX_SIZE_BYTES" ]]; then
+          issues+=("file size exceeds 5MB")
+        fi
+
+        if [[ ''${#issues[@]} -gt 0 ]]; then
+          echo "Status: NEEDS RESIZE"
+          echo "Issues: ''${issues[*]}"
+          return 0
+        else
+          echo "Status: OK (within Claude limits)"
+          return 1
+        fi
+      }
+
+      # Resize the image
+      resize_image() {
+        local input="$1"
+        local output="$2"
+        local quality="$3"
+
+        local dims width height
+        dims=$(get_dimensions "$input")
+        width=''${dims%x*}
+        height=''${dims#*x}
+
+        # Calculate scale factor for dimensions
+        local scale=100
+        if [[ "$width" -gt "$MAX_DIMENSION" ]] || [[ "$height" -gt "$MAX_DIMENSION" ]]; then
+          local scale_w scale_h
+          scale_w=$(echo "scale=4; $MAX_DIMENSION * 100 / $width" | bc)
+          scale_h=$(echo "scale=4; $MAX_DIMENSION * 100 / $height" | bc)
+          # Use the smaller scale to ensure both dimensions fit
+          if (( $(echo "$scale_w < $scale_h" | bc -l) )); then
+            scale="$scale_w"
+          else
+            scale="$scale_h"
+          fi
+        fi
+
+        # First pass: resize for dimensions
+        local temp_file
+        temp_file=$(mktemp --suffix=".png")
+        trap 'rm -f "$temp_file"' EXIT
+
+        if (( $(echo "$scale < 100" | bc -l) )); then
+          echo "Resizing dimensions by ''${scale}%..."
+          magick "$input" -resize "''${scale}%" "$temp_file"
+        else
+          cp "$input" "$temp_file"
+        fi
+
+        # Second pass: compress if still too large
+        local current_size
+        current_size=$(get_size "$temp_file")
+
+        if [[ "$current_size" -gt "$MAX_SIZE_BYTES" ]]; then
+          echo "Compressing (quality: $quality)..."
+          # Use JPEG for better compression on photos, PNG for graphics
+          local ext="''${output##*.}"
+          ext=$(echo "$ext" | tr '[:upper:]' '[:lower:]')
+
+          if [[ "$ext" == "jpg" ]] || [[ "$ext" == "jpeg" ]]; then
+            magick "$temp_file" -quality "$quality" "$output"
+          else
+            # For PNG, try reducing colors and compression
+            magick "$temp_file" -quality "$quality" -strip "$output"
+          fi
+
+          # If still too large, progressively reduce quality
+          current_size=$(get_size "$output")
+          local try_quality=$quality
+          while [[ "$current_size" -gt "$MAX_SIZE_BYTES" ]] && [[ "$try_quality" -gt 20 ]]; do
+            try_quality=$((try_quality - 10))
+            echo "Still too large, trying quality $try_quality..."
+            if [[ "$ext" == "jpg" ]] || [[ "$ext" == "jpeg" ]]; then
+              magick "$temp_file" -quality "$try_quality" "$output"
+            else
+              # Convert to JPEG if PNG won't compress enough
+              local jpg_output="''${output%.*}.jpg"
+              echo "Converting to JPEG for better compression..."
+              magick "$temp_file" -quality "$try_quality" "$jpg_output"
+              output="$jpg_output"
+            fi
+            current_size=$(get_size "$output")
+          done
+        else
+          cp "$temp_file" "$output"
+        fi
+
+        # Final report
+        local final_dims final_size final_mb
+        final_dims=$(get_dimensions "$output")
+        final_size=$(get_size "$output")
+        final_mb=$(echo "scale=2; $final_size / 1048576" | bc)
+
+        echo ""
+        echo "Output: $output"
+        echo "Dimensions: $final_dims"
+        echo "File size: ''${final_mb}MB ($final_size bytes)"
+
+        if [[ "$final_size" -le "$MAX_SIZE_BYTES" ]]; then
+          echo "Status: OK (within Claude limits)"
+        else
+          echo "Warning: Could not compress below 5MB limit"
+          return 1
+        fi
+      }
+
+      # Parse arguments
+      MODE="resize"
+      QUALITY="$DEFAULT_QUALITY"
+      INPUT=""
+      OUTPUT=""
+
+      while [[ $# -gt 0 ]]; do
+        case "$1" in
+          --check)
+            MODE="check"
+            shift
+            ;;
+          --info)
+            MODE="info"
+            shift
+            ;;
+          --quality)
+            QUALITY="$2"
+            shift 2
+            ;;
+          --max-dim)
+            MAX_DIMENSION="$2"
+            shift 2
+            ;;
+          --max-size)
+            MAX_SIZE_BYTES="$2"
+            shift 2
+            ;;
+          -h|--help)
+            usage
+            exit 0
+            ;;
+          -*)
+            echo "Unknown option: $1" >&2
+            usage >&2
+            exit 1
+            ;;
+          *)
+            if [[ -z "$INPUT" ]]; then
+              INPUT="$1"
+            elif [[ -z "$OUTPUT" ]]; then
+              OUTPUT="$1"
+            else
+              echo "Too many arguments" >&2
+              usage >&2
+              exit 1
+            fi
+            shift
+            ;;
+        esac
+      done
+
+      # Validate input
+      if [[ -z "$INPUT" ]]; then
+        echo "Error: No input file specified" >&2
+        usage >&2
+        exit 1
+      fi
+
+      if [[ ! -f "$INPUT" ]]; then
+        echo "Error: File not found: $INPUT" >&2
+        exit 1
+      fi
+
+      # Generate default output filename
+      if [[ -z "$OUTPUT" ]]; then
+        ext="''${INPUT##*.}"
+        base="''${INPUT%.*}"
+        OUTPUT="''${base}-resized.''${ext}"
+      fi
+
+      # Execute based on mode
+      case "$MODE" in
+        check)
+          if needs_resize "$INPUT"; then
+            echo "needs-resize"
+            exit 0
+          else
+            echo "ok"
+            exit 1
+          fi
+          ;;
+        info)
+          show_info "$INPUT"
+          ;;
+        resize)
+          if ! needs_resize "$INPUT"; then
+            echo "Image already within limits, no resize needed"
+            echo "Use --info to see dimensions and size"
+            exit 0
+          fi
+          resize_image "$INPUT" "$OUTPUT" "$QUALITY"
+          ;;
+      esac
+    '';
+  };
   # Use mcp-servers-nix evalModule to get the servers attrset directly
   # This gives us the raw config structure we can pass to programs.claude-code.mcpServers
   mcpServersConfig =
@@ -55,10 +366,11 @@ in {
   # ===========================================================================
   # NOTE: claude-code is managed by programs.claude-code below
   # NOTE: chrome-devtools-mcp is referenced by path in MCP config
-  home.packages = with pkgs; [
-    llm-agents.opencode
-    llm-agents.claude-code-acp
-    llm-agents.beads
+  home.packages = [
+    pkgs.llm-agents.opencode
+    pkgs.llm-agents.claude-code-acp
+    pkgs.llm-agents.beads
+    resize-image # Resize images for Claude/LLM API constraints (5MB, 8000px)
   ];
 
   # ===========================================================================
@@ -253,5 +565,59 @@ in {
         }
       }
     }
+  '';
+
+  # OpenCode custom tool for resizing images (wraps resize-image CLI)
+  # Uses absolute Nix store path for reliability
+  xdg.configFile."opencode/tool/resize-image.ts".text = ''
+    import { tool } from "@opencode-ai/plugin"
+
+    const RESIZE_IMAGE = "${resize-image}/bin/resize-image"
+
+    export default tool({
+      description: "Resize images to fit within Claude's API constraints (5MB max file size, 8000px max dimension). Use this when an image is too large to process.",
+      args: {
+        path: tool.schema.string().describe("Absolute path to the image file"),
+        output: tool.schema.string().optional().describe("Output path (default: <input>-resized.<ext>)"),
+        quality: tool.schema.number().optional().describe("JPEG quality 1-100 (default: 85)"),
+      },
+      async execute(args) {
+        const cmd = [RESIZE_IMAGE]
+        if (args.quality) cmd.push("--quality", String(args.quality))
+        cmd.push(args.path)
+        if (args.output) cmd.push(args.output)
+        const proc = Bun.spawn(cmd, { stdout: "pipe", stderr: "pipe" })
+        const stdout = await new Response(proc.stdout).text()
+        const stderr = await new Response(proc.stderr).text()
+        await proc.exited
+        return (stdout + stderr).trim()
+      },
+    })
+
+    export const check = tool({
+      description: "Check if an image needs resizing for Claude's API (5MB max, 8000px max dimension)",
+      args: {
+        path: tool.schema.string().describe("Absolute path to the image file"),
+      },
+      async execute(args) {
+        const proc = Bun.spawn([RESIZE_IMAGE, "--check", args.path], { stdout: "pipe", stderr: "pipe" })
+        const stdout = await new Response(proc.stdout).text()
+        await proc.exited
+        return stdout.trim()
+      },
+    })
+
+    export const info = tool({
+      description: "Show image dimensions and file size, and whether it exceeds Claude's limits",
+      args: {
+        path: tool.schema.string().describe("Absolute path to the image file"),
+      },
+      async execute(args) {
+        const proc = Bun.spawn([RESIZE_IMAGE, "--info", args.path], { stdout: "pipe", stderr: "pipe" })
+        const stdout = await new Response(proc.stdout).text()
+        await proc.exited
+        return stdout.trim()
+      },
+    })
   '';
 }

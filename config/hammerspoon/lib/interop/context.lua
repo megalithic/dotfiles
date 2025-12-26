@@ -186,80 +186,112 @@ end
 -- LANGUAGE DETECTION
 --------------------------------------------------------------------------------
 
+-- File extension to language mapping
+-- This is reliable because URLs from code hosting sites include the file extension
+local extToLang = {
+  -- Common
+  lua = "lua", py = "python", rb = "ruby", js = "javascript",
+  ts = "typescript", tsx = "tsx", jsx = "jsx", ex = "elixir",
+  exs = "elixir", rs = "rust", go = "go", sh = "bash",
+  zsh = "zsh", fish = "fish", nix = "nix", md = "markdown",
+  json = "json", yaml = "yaml", yml = "yaml", toml = "toml",
+  html = "html", css = "css", scss = "scss", sql = "sql",
+  swift = "swift", kt = "kotlin", java = "java", c = "c",
+  cpp = "cpp", h = "c", hpp = "cpp", cs = "csharp",
+  hs = "haskell", erl = "erlang", clj = "clojure",
+  vim = "vim", zig = "zig", dart = "dart", svelte = "svelte",
+  vue = "vue", heex = "heex",
+}
+
+-- Documentation domain to language mapping
+-- Most doc sites are language-specific, so domain → language is reliable
+local domainToLang = {
+  ["hexdocs.pm"] = "elixir",
+  ["elixir-lang.org"] = "elixir",
+  ["docs.python.org"] = "python",
+  ["doc.rust-lang.org"] = "rust",
+  ["docs.rs"] = "rust",
+  ["pkg.go.dev"] = "go",
+  ["go.dev"] = "go",
+  ["developer.apple.com"] = "swift",
+  ["kotlinlang.org"] = "kotlin",
+  ["ruby-doc.org"] = "ruby",
+  ["npmjs.com"] = "javascript",
+  ["nodejs.org"] = "javascript",
+  ["deno.land"] = "typescript",
+  ["typescriptlang.org"] = "typescript",
+  ["lua.org"] = "lua",
+  ["luarocks.org"] = "lua",
+  ["haskell.org"] = "haskell",
+  ["clojure.org"] = "clojure",
+  ["ziglang.org"] = "zig",
+  ["svelte.dev"] = "svelte",
+  ["vuejs.org"] = "vue",
+  ["react.dev"] = "javascript",
+}
+
 --- Detect programming language from text content and context
+--- Priority: nvim filetype > URL extension > domain hint > code fence > shebang
 ---@param text string|nil Selected text
 ---@param url string|nil Source URL (for hints)
 ---@param filetype string|nil Known filetype (from nvim)
 ---@return string|nil Language identifier
 function M.detectLanguage(text, url, filetype)
-  -- If we have filetype from nvim, use it directly
+  -- 1. nvim filetype (highest confidence - treesitter knows best)
   if filetype and filetype ~= "" then
     return filetype
   end
 
-  -- URL-based hints (highest confidence for web sources)
+  -- 2. URL-based detection (reliable for code hosting sites)
   if url then
-    -- GitHub file extensions
-    local ext = url:match("github%.com/.-/.-/blob/.-%.(%w+)")
-    if ext then
-      local extMap = {
-        lua = "lua", py = "python", rb = "ruby", js = "javascript",
-        ts = "typescript", tsx = "tsx", jsx = "jsx", ex = "elixir",
-        exs = "elixir", rs = "rust", go = "go", sh = "bash",
-        zsh = "zsh", fish = "fish", nix = "nix", md = "markdown",
-        json = "json", yaml = "yaml", yml = "yaml", toml = "toml",
-        html = "html", css = "css", scss = "scss", sql = "sql",
-        swift = "swift", kt = "kotlin", java = "java", c = "c",
-        cpp = "cpp", h = "c", hpp = "cpp", cs = "csharp",
-      }
-      if extMap[ext] then return extMap[ext] end
+    -- Git forges: extract file extension from blob/src URLs
+    local ext = url:match("github%.com/.+/blob/.+%.(%w+)$")
+      or url:match("gitlab%.com/.+/%-/blob/.+%.(%w+)$")
+      or url:match("bitbucket%.org/.+/src/.+%.(%w+)$")
+      or url:match("codeberg%.org/.+/src/.+%.(%w+)$")
+      or url:match("sr%.ht/.+/tree/.+%.(%w+)$")
+      or url:match("raw%.githubusercontent%.com/.+%.(%w+)$")
+    if ext and extToLang[ext:lower()] then
+      return extToLang[ext:lower()]
     end
 
-    -- Domain hints
-    if url:match("hexdocs%.pm") then return "elixir" end
-    if url:match("docs%.python%.org") then return "python" end
-    if url:match("doc%.rust%-lang%.org") then return "rust" end
-    if url:match("pkg%.go%.dev") then return "go" end
-    if url:match("developer%.apple%.com") then return "swift" end
-    if url:match("kotlinlang%.org") then return "kotlin" end
+    -- Domain-based hints (doc sites are language-specific)
+    local domain = url:match("https?://([^/]+)")
+    if domain then
+      domain = domain:gsub("^www%.", "")
+      if domainToLang[domain] then
+        return domainToLang[domain]
+      end
+      -- MDN: inspect path for web technology
+      if domain:match("developer%.mozilla%.org") then
+        if url:match("/JavaScript/") or url:match("/js/") then return "javascript" end
+        if url:match("/CSS/") then return "css" end
+        if url:match("/HTML/") then return "html" end
+      end
+    end
   end
 
-  -- Content-based heuristics (fallback)
+  -- 3. Content-based detection (minimal, high-confidence patterns only)
   if text and text ~= "" then
-    local firstLines = text:sub(1, 500) -- Check first 500 chars
+    -- Code fence language hint (explicit, highest confidence for content)
+    local fenceLang = text:match("^%s*```(%w+)")
+    if fenceLang and fenceLang ~= "" then
+      local aliases = { js = "javascript", ts = "typescript", py = "python", rb = "ruby", ex = "elixir", rs = "rust", sh = "bash" }
+      return aliases[fenceLang:lower()] or fenceLang:lower()
+    end
 
-    local patterns = {
-      { "^%s*defmodule%s+", "elixir" },
-      { "^%s*defp?%s+%w+", "elixir" },
-      { "|>", "elixir" }, -- pipe operator common in elixir
-      { "^%s*def%s+%w+.-:", "python" },
-      { "^%s*import%s+%w+", "python" },
-      { "^%s*from%s+%w+%s+import", "python" },
-      { "^%s*fn%s+%w+", "rust" },
-      { "^%s*let%s+mut%s+", "rust" },
-      { "^%s*func%s+%w+", "go" },
-      { "^%s*package%s+%w+", "go" },
-      { "^%s*local%s+function", "lua" },
-      { "^%s*function%s+%w+", "lua" },
-      { "^%s*const%s+%w+%s*=", "javascript" },
-      { "^%s*let%s+%w+%s*=", "javascript" },
-      { "^%s*import%s+{", "javascript" },
-      { "^%s*export%s+", "javascript" },
-      { "^%s*interface%s+%w+", "typescript" },
-      { "^%s*type%s+%w+%s*=", "typescript" },
-      { "<%w+[^>]*>", "html" },
-      { "^%s*{%s*\n", "json" },
-      { "^#!.-/bin/bash", "bash" },
-      { "^#!.-/bin/zsh", "zsh" },
-      { "^#!.-/bin/fish", "fish" },
-      { "^%s*{.-=%s*{", "nix" }, -- nix attribute set pattern
-    }
-
-    for _, p in ipairs(patterns) do
-      if firstLines:match(p[1]) then return p[2] end
+    -- Shebang (explicit, unambiguous)
+    local shebang = text:match("^#!.-/([%w]+)")
+    if shebang then
+      local shebangMap = { python = "python", python3 = "python", ruby = "ruby", bash = "bash", zsh = "zsh", sh = "bash", fish = "fish", node = "javascript", perl = "perl" }
+      if shebangMap[shebang] then return shebangMap[shebang] end
+      -- env-style: #!/usr/bin/env python
+      local envLang = text:match("^#!.-env%s+(%w+)")
+      if envLang and shebangMap[envLang] then return shebangMap[envLang] end
     end
   end
 
+  -- Unknown - and that's okay. Better to return nil than guess wrong.
   return nil
 end
 

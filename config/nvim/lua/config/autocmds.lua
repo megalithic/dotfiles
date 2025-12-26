@@ -620,6 +620,278 @@ vim.on_key(function(key, _typed)
   end
 end, vim.api.nvim_create_namespace("autoNohlAndSearchCount"))
 
+--------------------------------------------------------------------------------
+-- NOTES CAPTURE LINKING
+-- Auto-link captures to daily note on save
+--
+-- Entry types (mutually exclusive per capture):
+-- - Image capture (clipper.lua): [[filename]]
+--   → Added immediately when image is captured
+-- - Text capture (this autocmd): [[filename|description]]
+--   → Added on first save, shows descriptive text from notes or source
+--
+-- If an entry already exists (from image capture), we skip adding the
+-- text-style entry to avoid duplicates.
+--------------------------------------------------------------------------------
+
+--- Detect code fence language using treesitter
+--- Treesitter parses markdown and identifies fenced_code_block with info_string
+---@param buf number Buffer handle
+---@return string|nil Language from first code fence, or nil
+local function detect_code_fence_language(buf)
+  local ok, parser = pcall(vim.treesitter.get_parser, buf, "markdown")
+  if not ok or not parser then return nil end
+
+  local tree = parser:parse()[1]
+  if not tree then return nil end
+
+  local root = tree:root()
+
+  -- Walk tree looking for info_string (the language hint after ```)
+  local function find_info_string(node)
+    if node:type() == "info_string" then
+      local text = vim.treesitter.get_node_text(node, buf)
+      if text and text ~= "" then
+        return text:match("^%s*(%S+)") -- First word only (ignore attributes)
+      end
+    end
+    for child in node:iter_children() do
+      local result = find_info_string(child)
+      if result then return result end
+    end
+    return nil
+  end
+
+  return find_info_string(root)
+end
+
+--- Parse frontmatter from buffer lines
+---@param lines string[]
+---@return table frontmatter Key-value pairs from YAML frontmatter
+---@return number end_line Line number where frontmatter ends (0-indexed)
+local function parse_frontmatter(lines)
+  local frontmatter = {}
+  local end_line = 0
+
+  if #lines == 0 or lines[1] ~= "---" then
+    return frontmatter, 0
+  end
+
+  for i = 2, #lines do
+    if lines[i] == "---" then
+      end_line = i
+      break
+    end
+    local key, value = lines[i]:match("^(%w+):%s*(.+)$")
+    if key and value then
+      frontmatter[key] = value:gsub("^[\"']", ""):gsub("[\"']$", "")
+    end
+  end
+
+  return frontmatter, end_line
+end
+
+--- Extract first meaningful content line (after frontmatter and code blocks)
+---@param lines string[]
+---@param start_line number Line to start searching from (0-indexed)
+---@return string|nil First content line or nil
+local function extract_first_content(lines, start_line)
+  local in_code_block = false
+
+  for i = start_line + 1, #lines do
+    local line = lines[i]
+
+    -- Track code block state
+    if line:match("^```") then
+      in_code_block = not in_code_block
+    elseif not in_code_block then
+      -- Skip empty lines and headings
+      local trimmed = line:match("^%s*(.-)%s*$")
+      if trimmed and trimmed ~= "" and not trimmed:match("^#") then
+        -- Found real content - truncate if too long
+        if #trimmed > 60 then
+          trimmed = trimmed:sub(1, 57) .. "..."
+        end
+        return trimmed
+      end
+    end
+  end
+
+  return nil
+end
+
+--- Build descriptive text for wikilink
+---@param frontmatter table Parsed frontmatter
+---@param first_content string|nil First content line
+---@param detected_lang string|nil Language detected via treesitter
+---@return string description
+local function build_description(frontmatter, first_content, detected_lang)
+  -- Priority 1: User's actual notes
+  if first_content then
+    return first_content
+  end
+
+  -- Priority 2: Source context
+  local parts = {}
+
+  -- Extract domain from URL
+  if frontmatter.source_url then
+    local domain = frontmatter.source_url:match("https?://([^/]+)")
+    if domain then
+      domain = domain:gsub("^www%.", "")
+      table.insert(parts, domain)
+    end
+  elseif frontmatter.source and frontmatter.source ~= "other" then
+    table.insert(parts, frontmatter.source)
+  end
+
+  -- Add language hint (treesitter detection > frontmatter)
+  local lang = detected_lang or frontmatter.source_lang
+  if lang then
+    table.insert(parts, lang)
+  end
+
+  if #parts > 0 then
+    return "Capture from " .. table.concat(parts, " · ")
+  end
+
+  -- Priority 3: Just indicate it's a text capture
+  return "Text capture"
+end
+
+--- Get daily note path for today
+---@return string path
+local function get_daily_note_path()
+  local notes_home = vim.env.NOTES_HOME or (vim.env.HOME .. "/notes")
+  local year = os.date("%Y")
+  local date = os.date("%Y%m%d")
+  return string.format("%s/daily/%s/%s.md", notes_home, year, date)
+end
+
+--- Append capture link to daily note
+---@param capture_filename string Filename without extension
+---@param description string Descriptive text for the link
+---@return boolean success
+---@return string|nil reason If false, why (e.g., "exists", "error")
+local function append_to_daily_note(capture_filename, description)
+  local daily_path = get_daily_note_path()
+  local timestamp = os.date("%H:%M")
+
+  -- Read daily note
+  local f = io.open(daily_path, "r")
+  if not f then
+    vim.notify("Daily note not found: " .. daily_path, vim.log.levels.WARN)
+    return false, "not_found"
+  end
+  local content = f:read("*a")
+  f:close()
+
+  -- Check if entry already exists for this capture
+  -- Pattern matches [[filename or [[filename| to catch both styles
+  local existing_pattern = "%[%[" .. capture_filename:gsub("%-", "%%-") .. "[%]|]"
+  if content:match(existing_pattern) then
+    -- Entry already exists (likely from image capture), skip
+    return false, "exists"
+  end
+
+  -- Build the entry with Obsidian alias syntax: [[filename|display text]]
+  local entry = string.format("- %s [[%s|%s]]", timestamp, capture_filename, description)
+
+  -- Find ## Captures section
+  local captures_section = "## Captures"
+  local captures_pos = content:find(captures_section, 1, true)
+
+  if captures_pos then
+    -- Find end of Captures section (next ## or end of file)
+    local next_section = content:find("\n## ", captures_pos + #captures_section)
+    if next_section then
+      -- Insert before next section, ensure single newline separation
+      local before = content:sub(1, next_section - 1):gsub("%s+$", "") -- trim trailing whitespace
+      content = before .. "\n" .. entry .. "\n" .. content:sub(next_section + 1)
+    else
+      -- Append to end, ensure single newline before entry
+      content = content:gsub("%s+$", "") .. "\n" .. entry .. "\n"
+    end
+  else
+    -- Add Captures section at end
+    content = content:gsub("%s+$", "") .. "\n\n" .. captures_section .. "\n\n" .. entry .. "\n"
+  end
+
+  -- Write back
+  f = io.open(daily_path, "w")
+  if not f then
+    vim.notify("Failed to write daily note", vim.log.levels.ERROR)
+    return false
+  end
+  f:write(content)
+  f:close()
+
+  return true
+end
+
+M.augroup("NotesCaptureLink", {
+  {
+    event = { "BufWritePost" },
+    pattern = "*/captures/*.md",
+    desc = "Link text captures to daily note on save",
+    command = function(args)
+      -- Skip if already linked (check buffer variable)
+      if vim.b[args.buf].capture_linked then
+        return
+      end
+
+      local lines = vim.api.nvim_buf_get_lines(args.buf, 0, -1, false)
+
+      -- Skip empty files
+      if #lines == 0 then return end
+
+      -- Parse frontmatter
+      local frontmatter, fm_end = parse_frontmatter(lines)
+
+      -- Skip if no frontmatter (not a proper capture)
+      if fm_end == 0 then return end
+
+      -- Check for actual content (not just frontmatter)
+      local has_content = false
+      for i = fm_end + 1, #lines do
+        local line = lines[i]:match("^%s*(.-)%s*$")
+        if line and line ~= "" then
+          has_content = true
+          break
+        end
+      end
+
+      -- Skip if file is just frontmatter with no content
+      if not has_content then
+        vim.notify("Capture empty - not linking to daily note", vim.log.levels.INFO)
+        return
+      end
+
+      -- Extract first content line
+      local first_content = extract_first_content(lines, fm_end)
+
+      -- Detect language via treesitter (parses markdown code fences)
+      local detected_lang = detect_code_fence_language(args.buf)
+
+      -- Build description
+      local description = build_description(frontmatter, first_content, detected_lang)
+
+      -- Get filename without path and extension
+      local filename = vim.fn.expand("%:t:r")
+
+      -- Append to daily note
+      local success, reason = append_to_daily_note(filename, description)
+      if success then
+        vim.b[args.buf].capture_linked = true
+        vim.notify(string.format("Linked to daily: [[%s|%s]]", filename, description), vim.log.levels.INFO)
+      elseif reason == "exists" then
+        -- Entry already exists (e.g., image capture added it), mark as linked and skip silently
+        vim.b[args.buf].capture_linked = true
+      end
+    end,
+  },
+})
+
 Load_macros(M)
 
 return M

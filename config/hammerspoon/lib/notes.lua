@@ -17,22 +17,122 @@ M.dailyBaseDir = M.notesHome .. "/daily"
 -- PATH HELPERS
 --------------------------------------------------------------------------------
 
+--- Sanitize string for use in filename
+---@param str string
+---@param maxLen? number Maximum length (default 30)
+---@return string sanitized
+local function sanitize_for_filename(str, maxLen)
+  if not str or str == "" then return "" end
+  maxLen = maxLen or 30
+
+  local result = str:lower()
+    :gsub("[%.:/]", "-")        -- dots/colons/slashes to dashes (preserve structure)
+    :gsub("%s+", "-")           -- spaces to dashes
+    :gsub("[^a-z0-9%-]", "")    -- remove non-alphanumeric
+    :gsub("%-+", "-")           -- collapse multiple dashes
+    :gsub("^%-", "")            -- trim leading dash
+    :gsub("%-$", "")            -- trim trailing dash
+
+  -- Truncate at word boundary if too long
+  if #result > maxLen then
+    result = result:sub(1, maxLen):gsub("%-[^%-]*$", "")
+  end
+
+  return result
+end
+
+--- Extract meaningful snippet from window title
+--- Removes common suffixes like "- Google Chrome", app names, etc.
+---@param windowTitle string|nil
+---@return string|nil snippet 2-3 word snippet or nil
+local function extract_title_snippet(windowTitle)
+  if not windowTitle or windowTitle == "" then return nil end
+
+  -- Remove common browser/app suffixes
+  local cleaned = windowTitle
+    :gsub("%s*[%-–—|·]%s*[A-Z][%w%s]*$", "")  -- " - App Name" or " | App"
+    :gsub("%s*[%-–—]%s*[A-Z][%w]*%s*[A-Z][%w]*$", "")  -- " - Two Words"
+    :gsub("^https?://[^/]+/", "")  -- leading URLs
+    :gsub("^www%.", "")
+
+  -- Take first 2-3 meaningful words only
+  local words = {}
+  for word in cleaned:gmatch("%S+") do
+    if #words < 3 and #word > 1 then
+      table.insert(words, word)
+    end
+  end
+
+  if #words == 0 then return nil end
+
+  local snippet = table.concat(words, " ")
+  local sanitized = sanitize_for_filename(snippet, 25)
+
+  -- Only return if we got something meaningful (at least 3 chars)
+  return (#sanitized >= 3) and sanitized or nil
+end
+
+--- Extract domain from URL
+---@param url string|nil
+---@return string|nil domain without www prefix
+local function extract_domain(url)
+  if not url then return nil end
+  local domain = url:match("https?://([^/]+)")
+  if domain then
+    domain = domain:gsub("^www%.", "")
+    -- Just first part of domain (github.com -> github)
+    local short = domain:match("^([^%.]+)")
+    return short
+  end
+  return nil
+end
+
 --- Generate capture note filename
----@param title? string Optional title (defaults to "capture")
+---@param titleOrContext? string|table Optional title string or context table
 ---@return string filename Without extension
 ---@return string timestamp HH:MM format for daily note link
-function M.generateCaptureName(title)
+function M.generateCaptureName(titleOrContext)
   local now = os.date("*t")
   local dateStr = fmt("%04d%02d%02d", now.year, now.month, now.day)
   local timeStr = fmt("%02d%02d", now.hour, now.min)
   local timestamp = fmt("%02d:%02d", now.hour, now.min)
 
-  title = title or "capture"
-  -- Sanitize title for filename
-  title = title:lower():gsub("%s+", "-"):gsub("[^a-z0-9%-]", "")
-  if title == "" then title = "capture" end
+  local descriptor = "capture"
 
-  local filename = fmt("%s-%s-%s", dateStr, timeStr, title)
+  if type(titleOrContext) == "string" then
+    -- Simple string title (backward compatible)
+    descriptor = sanitize_for_filename(titleOrContext)
+  elseif type(titleOrContext) == "table" then
+    -- Full context object - build smart descriptor
+    local ctx = titleOrContext
+
+    -- Priority 1: Window title snippet
+    local snippet = extract_title_snippet(ctx.windowTitle)
+    if snippet then
+      descriptor = snippet
+    else
+      -- Priority 2: Domain + language
+      local domain = extract_domain(ctx.url)
+      local lang = ctx.detectedLanguage or ctx.filetype
+
+      if domain and lang then
+        descriptor = fmt("%s-%s", domain, sanitize_for_filename(lang))
+      elseif domain then
+        descriptor = domain
+      elseif lang then
+        descriptor = sanitize_for_filename(lang)
+      -- Priority 3: App type (if not "other")
+      elseif ctx.appType and ctx.appType ~= "other" then
+        descriptor = ctx.appType
+      else
+        descriptor = "text"
+      end
+    end
+  end
+
+  if descriptor == "" then descriptor = "capture" end
+
+  local filename = fmt("%s-%s-%s", dateStr, timeStr, descriptor)
   return filename, timestamp
 end
 
@@ -232,10 +332,9 @@ end
 
 --- Append capture link to daily note's ## Captures section
 ---@param captureFilename string Capture note filename (without .md)
----@param imageFilename string Image filename for thumbnail
 ---@param timestamp string HH:MM timestamp
 ---@return boolean success
-function M.appendToDailyNote(captureFilename, imageFilename, timestamp)
+function M.appendToDailyNote(captureFilename, timestamp)
   if not M.ensureDailyNote() then
     return false
   end
@@ -248,8 +347,9 @@ function M.appendToDailyNote(captureFilename, imageFilename, timestamp)
   local content = f:read("*a")
   f:close()
 
-  -- Build the capture entry
-  local entry = fmt("\n- %s [[%s]]\n  ![[%s|200]]\n", timestamp, captureFilename, imageFilename)
+  -- Build the capture entry (image capture: just the note link)
+  -- The image embed is handled by obsidian.nvim in the capture note itself
+  local entry = fmt("- %s [[%s]]", timestamp, captureFilename)
 
   -- Check if ## Captures section exists
   local capturesSection = "## Captures"
@@ -259,15 +359,16 @@ function M.appendToDailyNote(captureFilename, imageFilename, timestamp)
     -- Find the end of the Captures section (next ## or end of file)
     local nextSectionPos = content:find("\n## ", capturesPos + #capturesSection)
     if nextSectionPos then
-      -- Insert before next section
-      content = content:sub(1, nextSectionPos - 1) .. entry .. content:sub(nextSectionPos)
+      -- Insert before next section, ensure single newline separation
+      local before = content:sub(1, nextSectionPos - 1):gsub("%s+$", "")
+      content = before .. "\n" .. entry .. "\n" .. content:sub(nextSectionPos + 1)
     else
-      -- Append to end of file
-      content = content .. entry
+      -- Append to end, ensure single newline before entry
+      content = content:gsub("%s+$", "") .. "\n" .. entry .. "\n"
     end
   else
     -- Add Captures section at end
-    content = content .. "\n" .. capturesSection .. "\n" .. entry
+    content = content:gsub("%s+$", "") .. "\n\n" .. capturesSection .. "\n\n" .. entry .. "\n"
   end
 
   -- Write back
@@ -307,7 +408,7 @@ function M.captureQuick(imagePath, imageUrl)
   end
 
   -- 3. Append to daily note
-  if not M.appendToDailyNote(captureFilename, imageFilename, timestamp) then
+  if not M.appendToDailyNote(captureFilename, timestamp) then
     return false, "Failed to update daily note"
   end
 
@@ -351,7 +452,7 @@ function M.captureFull(imagePath, imageUrl, title)
   end
 
   -- 3. Append to daily note
-  if not M.appendToDailyNote(captureFilename, imageFilename, timestamp) then
+  if not M.appendToDailyNote(captureFilename, timestamp) then
     return false, nil, "Failed to update daily note"
   end
 
@@ -386,8 +487,8 @@ end
 ---@return string? notePath Full path if successful
 ---@return string? error Error message if failed
 function M.createTextCaptureNote(context)
-  -- Generate filename
-  local captureFilename, timestamp = M.generateCaptureName("text")
+  -- Generate filename from context (window title, url, language, etc.)
+  local captureFilename, timestamp = M.generateCaptureName(context)
   local notePath = M.getCaptureNotePath(captureFilename)
 
   if not M.ensureDir(M.capturesDir) then
@@ -402,13 +503,22 @@ function M.createTextCaptureNote(context)
   -- Start frontmatter
   local frontmatter = fmt("---\ncreated: %s\ntags: [%s]\n", now, table.concat(tags, ", "))
 
-  -- Only add source info if there's actual selected content
+  -- Add source info (always include app/window for context, other fields only with selection)
+  local source = context.appType or "other"
+  if source ~= "other" then
+    frontmatter = frontmatter .. fmt("source: %s\n", source)
+  end
+  if context.appName and context.appName ~= "" then
+    frontmatter = frontmatter .. fmt("source_app: %s\n", context.appName)
+  end
+  if context.windowTitle and context.windowTitle ~= "" then
+    -- Escape quotes in window title for YAML
+    local title = context.windowTitle:gsub('"', '\\"')
+    frontmatter = frontmatter .. fmt('source_window: "%s"\n', title)
+  end
+
+  -- Additional source info only when there's selected content
   if hasSelection then
-    local source = context.appType or "other"
-    -- Don't add source: other, it's meaningless
-    if source ~= "other" then
-      frontmatter = frontmatter .. fmt("source: %s\n", source)
-    end
     if context.url then
       frontmatter = frontmatter .. fmt("source_url: %s\n", context.url)
     end
