@@ -153,11 +153,14 @@ function M.ghosttyEditor(name, filePath, opts)
     -- Must use: open -na Ghostty.app --args <ghostty-args>
     local className = "scratchpad-" .. name:gsub("%s+", "-"):lower()
     local task = hs.task.new("/usr/bin/open", nil, {
-      "-na", "Ghostty.app",
+      "-na",
+      "Ghostty.app",
       "--args",
       "--title=" .. title,
       "--class=" .. className,
-      "-e", "nvim", filePath,
+      "-e",
+      "nvim",
+      filePath,
     })
     if task then task:start() end
   end
@@ -188,11 +191,15 @@ function M.kittyEditor(name, filePath, opts)
     -- Use /usr/bin/env to leverage PATH injection from overrides.lua
     -- This finds kitty and nvim via the Nix/Homebrew PATH
     -- Do NOT use -1 (single-instance) as it can cause issues with window control
-    local task = hs.task.new("/usr/bin/env", nil, {
-      "kitty",
+    local task = hs.task.new("kitty", nil, {
+      -- local task = hs.task.new("/usr/bin/env", nil, {
+      -- "kitty",
       "--title=" .. title,
-      "--override", "background_opacity=1.00",
-      "-e", "nvim", filePath,
+      "--override",
+      "background_opacity=1.00",
+      "-e",
+      "nvim",
+      filePath,
     })
     if task then task:start() end
   end
@@ -232,7 +239,8 @@ function M.persistentNvimEditor(terminal, name, socketPath, opts)
       local termArgs = {
         "kitty",
         "--title=" .. title,
-        "--override", "background_opacity=1.00",
+        "--override",
+        "background_opacity=1.00",
         "-e",
       }
       -- Combine terminal args with nvim args
@@ -245,7 +253,8 @@ function M.persistentNvimEditor(terminal, name, socketPath, opts)
       -- Must use: open -na Ghostty.app --args <ghostty-args>
       local className = "scratchpad-" .. name:gsub("%s+", "-"):lower()
       local termArgs = {
-        "-na", "Ghostty.app",
+        "-na",
+        "Ghostty.app",
         "--args",
         "--title=" .. title,
         "--class=" .. className,
@@ -268,9 +277,7 @@ function M.persistentNvimEditor(terminal, name, socketPath, opts)
   local function openInExisting(filePath, win, frame)
     -- Send file to nvim server
     nvimLib.openFileAsync(socketPath, filePath, function(success)
-      if not success then
-        U.log.w(fmt("Failed to open %s in nvim server", filePath))
-      end
+      if not success then U.log.w(fmt("Failed to open %s in nvim server", filePath)) end
     end)
 
     -- Focus the window
@@ -389,9 +396,7 @@ function M.captureNote(terminal, filePath, captureTitle, usePersistent)
     -- Use persistent nvim session - reuses daily note's nvim instance
     local toggleFn = M.persistentNvimEditor(terminal, "daily-note", nvimLib.NOTES_SOCKET, { title = "Daily Note" })
     -- Return a function that opens the capture file in the persistent session
-    return function()
-      return toggleFn(filePath)
-    end
+    return function() return toggleFn(filePath) end
   else
     -- Legacy: spawn new nvim each time
     if terminal == "kitty" then

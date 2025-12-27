@@ -71,7 +71,7 @@ end
 function M.resolve_image_path(image_ref)
   if not image_ref then return nil end
 
-  local notes_home = vim.env.NOTES_HOME
+  local notes_home = vim.g.notes_path
   if not notes_home then return nil end
 
   -- Check common locations
@@ -185,7 +185,7 @@ function M.get_previous_daily_note()
   local notes = vim.split(
     vim.fn.glob(
       "`find "
-        .. vim.env.NOTES_HOME
+        .. vim.g.notes_path
         .. "/daily -type f -name '*.md' -print0 | xargs -0 ls -Ur | sort -nr | head -2 | cut -f2- -d' ' | tail -n1`"
     ),
     "\n",
@@ -625,10 +625,10 @@ require("config.autocmds").augroup("NotesLoaded", {
         map("n", "gx", vim.cmd.ExecuteLine, { desc = "execute line", buffer = bufnr })
         local clients = vim.lsp.get_clients({ bufnr = bufnr })
         for _, client in ipairs(clients) do
-          if
-            vim.tbl_contains({ "markdown_oxide", "marksman", "obsidian-ls" }, client.name)
-            and string.match(vim.fn.expand("%:p:h"), vim.env.NOTES_HOME)
-          then
+          if client.name == "obsidian-ls" then
+            --   if vim.tbl_contains({ "markdown_oxide", "marksman", "obsidian-ls" }, client.name)
+            --   and string.match(vim.fn.expand("%:p:h"), vim.g.notes_path)
+            -- then
             map("n", "<leader>w", function()
               vim.schedule(function()
                 local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
@@ -705,6 +705,73 @@ require("config.autocmds").augroup("NotesLoaded", {
                 pcall(mega.searchCountIndicator, "clear")
               end)
             end, { desc = "go to main notes section" })
+
+            -- Unified gr: find references for tags, links, or fall back to LSP
+            map("n", "gr", function()
+              local api = require("obsidian.api")
+
+              -- Check if cursor is on a #tag in body text
+              local tag = api.cursor_tag()
+              if tag then
+                -- cursor_tag() returns "#tagname", strip the # for the command
+                vim.cmd("Obsidian tags " .. tag:sub(1))
+                return
+              end
+
+              -- Check if cursor is on a tag in YAML frontmatter
+              local row = vim.api.nvim_win_get_cursor(0)[1]
+              local col = vim.api.nvim_win_get_cursor(0)[2] + 1
+              local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+
+              -- Find frontmatter bounds (between --- markers)
+              local fm_start, fm_end = nil, nil
+              if lines[1] == "---" then
+                fm_start = 1
+                for i = 2, #lines do
+                  if lines[i] == "---" then
+                    fm_end = i
+                    break
+                  end
+                end
+              end
+
+              -- If we're in frontmatter, check for tags
+              if fm_start and fm_end and row > fm_start and row < fm_end then
+                local line = lines[row]
+                -- Match list-style tag: "  - tagname" or "- tagname"
+                local list_tag = line:match("^%s*-%s+([%w_/-]+)%s*$")
+                if list_tag then
+                  vim.cmd("Obsidian tags " .. list_tag)
+                  return
+                end
+                -- Match inline array: "tags: [tag1, tag2]" - find tag under cursor
+                local tags_line = line:match("^tags:%s*%[(.+)%]")
+                if tags_line then
+                  -- Find which tag the cursor is on
+                  local pos = col - (line:find("%[") or 0)
+                  local current_pos = 0
+                  for t in tags_line:gmatch("([%w_/-]+)") do
+                    local t_start = tags_line:find(t, current_pos + 1, true)
+                    local t_end = t_start + #t - 1
+                    if pos >= t_start and pos <= t_end then
+                      vim.cmd("Obsidian tags " .. t)
+                      return
+                    end
+                    current_pos = t_end
+                  end
+                end
+              end
+
+              -- Check if cursor is on a wiki/markdown link
+              local link, _ = api.cursor_link()
+              if link then
+                vim.cmd("Obsidian backlinks")
+                return
+              end
+
+              -- Fall back to LSP references
+              vim.lsp.buf.references()
+            end, { buffer = bufnr, desc = "[notes] find references (tag/link/lsp)" })
 
             -- Image OCR: extract text from image on current line
             map(

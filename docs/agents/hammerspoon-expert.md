@@ -29,10 +29,12 @@ This agent understands the specific architecture of `@megalithic/dotfiles`:
 ```
 config/hammerspoon/
 ├── init.lua           # Entry point, loads modules in order
-├── preflight.lua      # Early setup (IPC, globals, logging)
+├── preflight.lua      # Early setup (IPC, globals, logging, PATH injection)
+├── overrides.lua      # Monkey-patches for hs.* modules (PATH/env injection)
 ├── config.lua         # C.* configuration table (displays, apps, notifier rules)
 ├── lib/               # Reusable modules
 │   ├── notifications/ # Notification system (init, processor, notifier, db, menubar)
+│   ├── interop/       # Integration with external applications (see below)
 │   ├── db.lua         # SQLite database wrapper
 │   └── ...
 ├── watchers/          # Event observers
@@ -42,6 +44,27 @@ config/hammerspoon/
 │   └── ...
 └── Spoons/            # Third-party Hammerspoon plugins
 ```
+
+### The `lib/interop/` Directory
+
+**Purpose:** Modules for integrating with and interoperating with other applications directly.
+
+Unlike `watchers/` (which observe system events) or general `lib/` utilities, `interop/` modules provide **bidirectional communication** with specific external applications:
+
+```
+lib/interop/
+├── nvim.lua        # Neovim IPC via --listen/--server sockets
+├── scratchpad.lua  # Floating terminal windows (Kitty/Ghostty) with persistent nvim
+├── selection.lua   # macOS Accessibility API for clipboard-free text selection
+├── context.lua     # Gather context from frontmost app (browser URL, file path, etc.)
+└── ...
+```
+
+**Key patterns:**
+- **nvim.lua** - Send commands to nvim via socket (`nvim --server <sock> --remote <file>`)
+- **scratchpad.lua** - Toggle-able floating windows that persist across spaces
+- **selection.lua** - Swift CLI wrapper for AX-based text selection (no clipboard pollution)
+- **context.lua** - Detect app type, gather URLs, file paths, window titles for capture workflows
 
 ### Key Configuration Patterns
 

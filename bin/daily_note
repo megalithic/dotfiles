@@ -68,8 +68,8 @@ function __build_tasks() {
     # removes completed tasks, removes blank lines, subs strings "tomorrow" -> "today"
     printf -- "%s" $tasks | sed 's/- \[[x/]\].*//g' | sed '/^[[:space:]]*$/d' | sed 's/tomorrow/today/g'
   else
-    printf -- "- [ ] DAILY CHORES #life"
-    printf -- "- [ ] Read book chapter #life"
+    printf -- "- [ ] DAILY CHORES #life\n"
+    printf -- "- [ ] Read book chapter #life\n"
   fi
 }
 
@@ -104,6 +104,7 @@ id: daily-${daily_note_date}
 tags:
   - daily
   - tasks
+aliases: []
 ---
 
 # Daily notes for ${display_date}

@@ -33,11 +33,7 @@ tmux -2 select-layout -t "$SESSION":2 main-vertical
 tmux -2 select-pane -t "$SESSION":2.1
 
 tmux new-window -c "$CWD" -t "$SESSION":3 -n services
-tmux send-keys -t "$SESSION":3.1 "just overmind start" "C-m"
-
-tmux splitw -c "$CWD" -t "$SESSION":3
-tmux select-layout -t "$SESSION":3 tiled
-tmux send-keys -t "$SESSION":3.2 "m s $SESSION-dev" "C-m"
+tmux send-keys -t "$SESSION":3.1 "just dev" "C-m"
 
 tmux select-layout -t "$SESSION":3 tiled
 tmux select-layout -t "$SESSION":3 even-horizontal

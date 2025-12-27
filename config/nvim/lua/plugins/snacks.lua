@@ -173,7 +173,6 @@ if true then
         },
       },
     },
-
     {
       -- "madmaxieee/fff-snacks.nvim",
       -- "ahkohd/fff-snacks.nvim",
@@ -334,8 +333,8 @@ if true then
                 ["<c-f>"] = { "flash", mode = { "n", "i" } },
                 ["<CR>"] = { "jump_or_split", mode = { "i", "n" } },
                 ["<Esc>"] = { "close", mode = { "i" } },
-                ["<C-c>"] = { "cancel", mode = "i" },
-                ["<C-.>"] = { "toggle_hidden", mode = { "i", "n" } },
+                ["<c-c>"] = { "cancel", mode = "i" },
+                ["<c-.>"] = { "toggle_hidden", mode = { "i", "n" } },
               },
             },
             list = {

@@ -178,6 +178,7 @@ package.path = package.path .. ";" .. dataHome .. "/?.lua"
 
 pcall(require, "nix_path")
 NIX_PATH = NIX_PATH or nil
+NIX_ENV = NIX_ENV or {} -- Environment variables from Nix (NOTES_HOME, XDG_*, etc.)
 if NIX_PATH then
   PATH = table.concat({
     NIX_PATH,

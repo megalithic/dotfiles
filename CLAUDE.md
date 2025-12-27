@@ -223,8 +223,9 @@ operations in this repo. NEVER use raw git commands directly.
 
 **After completing a unit of work (when user says to push/commit):**
 
-1. **Move main to current commit**: `jj bookmark set main -r @`
-2. **Push main to GitHub**: `jj git push --bookmark main`
+1. **Never push to GitHub without my consent** -- please alert me when something
+   is ready to be pushed so that I may code review it first.
+2. **Move main to current commit**: `jj bookmark set main -r @`
 3. **Start fresh for next task**: `jj new`
 4. **If work accumulated without proper commits**: Use `jj split` with filesets
    to organize retroactively
@@ -233,8 +234,8 @@ operations in this repo. NEVER use raw git commands directly.
 
 - Feature bookmarks (e.g., `feat/cool-thing`) are for tracking work-in-progress
 - `main` bookmark should always reflect what's on GitHub origin/main
-- After pushing to main, the feature bookmark becomes historical (can delete or
-  leave)
+- After user has confirmed that agent may push to GitHub to origin/main, the
+  feature bookmark becomes historical (can delete or leave)
 - Statusline shows: `jj:bookmark-name* (change_id)` where `*` = unpushed changes
 
 ### Key Commands
@@ -405,15 +406,15 @@ that was completely wrong.
 
 ## Darwin Rebuild Hang Workaround
 
-**Issue**: `darwin-rebuild switch` hangs indefinitely at "Activating setupLaunchAgents" 
-when home-manager is integrated with nix-darwin.
+**Issue**: `darwin-rebuild switch` hangs indefinitely at "Activating
+setupLaunchAgents" when home-manager is integrated with nix-darwin.
 
-**Root Cause**: darwin-rebuild's subprocess handling causes a hang when calling 
-home-manager's setupLaunchAgents activation step. The launch agents themselves 
-work fine when loaded manually, but the way darwin-rebuild pipes/calls the 
+**Root Cause**: darwin-rebuild's subprocess handling causes a hang when calling
+home-manager's setupLaunchAgents activation step. The launch agents themselves
+work fine when loaded manually, but the way darwin-rebuild pipes/calls the
 activation causes it to block.
 
-**Workaround**: Use `bin/darwin-switch` instead of `darwin-rebuild switch`. This 
+**Workaround**: Use `bin/darwin-switch` instead of `darwin-rebuild switch`. This
 script separates the darwin system activation from home-manager activation:
 
 ```bash
@@ -428,19 +429,20 @@ sudo darwin-rebuild switch --flake ./
 ```
 
 The workaround script:
+
 1. Builds darwin configuration
 2. Activates darwin system (as root)
-3. Builds home-manager configuration separately  
+3. Builds home-manager configuration separately
 4. Activates home-manager (as user)
 
-This avoids the subprocess hang by running activations in sequence rather than 
+This avoids the subprocess hang by running activations in sequence rather than
 as nested calls.
 
-**Status**: This is likely a bug in nix-darwin or darwin-rebuild's activation 
+**Status**: This is likely a bug in nix-darwin or darwin-rebuild's activation
 orchestration. No existing GitHub issues found as of 2025-12-19.
 
 **Related Files**:
+
 - `bin/darwin-switch` - Workaround script
 - `justfile` - `rebuild` target uses workaround
 - `home/programs/agenix.nix` - Agenix launch agent disabled to reduce complexity
-
