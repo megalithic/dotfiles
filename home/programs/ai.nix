@@ -107,6 +107,7 @@ in {
 
       - You are to always utilize the `~/bin/ntfy` script to send me notifications, taking special note of your ability to utilize tools on this system (like hammerspoon and the notification-related modules, and more) to determine which notification method(s) to use at any given moment.
       - You are to always attempt to use `jj` to create a new "commit" or "bookmark" that you'll later describe, for every logical unit of work; if `jj` is unavailable in the given repo or directory, then explicitly request my permission to use `git` instead.
+      - **NEVER push to GitHub (or any remote) without explicit user consent each time.** Always ask before running `jj git push`, `git push`, or equivalent commands. Commits are cheap; pushes are permanent.
 
       ## Notification System (ntfy)
 

@@ -4,6 +4,35 @@ if not ok then
   return
 end
 
+--------------------------------------------------------------------------------
+-- RELOAD CLEANUP: Clean up leftover globals from previous config load
+-- This runs at init.lua start (before modules load) to prevent resource leaks
+-- when hs.reload() is called. hs.shutdownCallback only runs on full shutdown,
+-- not reload, so we must clean up proactively here.
+--------------------------------------------------------------------------------
+local function cleanupPreviousRun()
+  -- Clean up notification module globals (timers, canvases, watchers)
+  if _G.activeNotificationTimer then pcall(function() _G.activeNotificationTimer:stop() end) end
+  if _G.activeNotificationAnimTimer then pcall(function() _G.activeNotificationAnimTimer:stop() end) end
+  if _G.activeNotificationCleanupTimer then pcall(function() _G.activeNotificationCleanupTimer:stop() end) end
+  if _G.activeNotificationOverlayTimer then pcall(function() _G.activeNotificationOverlayTimer:stop() end) end
+  if _G.activeNotificationCanvas then pcall(function() _G.activeNotificationCanvas:delete(0) end) end
+  if _G.notificationOverlay then pcall(function() _G.notificationOverlay:delete(0) end) end
+  if _G.notificationAppWatcher then pcall(function() _G.notificationAppWatcher:stop() end) end
+
+  -- Clear all notification globals
+  _G.activeNotificationTimer = nil
+  _G.activeNotificationAnimTimer = nil
+  _G.activeNotificationCleanupTimer = nil
+  _G.activeNotificationOverlayTimer = nil
+  _G.activeNotificationCanvas = nil
+  _G.notificationOverlay = nil
+  _G.notificationAppWatcher = nil
+  _G.activeNotificationBundleID = nil
+end
+
+cleanupPreviousRun()
+
 local ok, mod_or_err = pcall(require, "config")
 if not ok then
   error("Error loading hammerspork config; unable to continue...\n" .. mod_or_err)

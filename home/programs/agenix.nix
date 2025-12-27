@@ -20,12 +20,14 @@
     };
   };
 
-  # Configure agenix launch agent to not run at load (prevents hang during activation)
-  # Secrets will be decrypted manually via home-manager activation
+  # CRITICAL: Disable RunAtLoad to prevent hang during darwin-rebuild activation.
+  # When darwin-rebuild runs as root (via sudo), it loads launch agents in a context
+  # where the user's SSH key is inaccessible, causing agenix to fail repeatedly.
+  # Secrets are already sourced via shell init (programs.zsh.initExtra / programs.fish.interactiveShellInit).
   launchd.agents.activate-agenix = {
     enable = true;
     config = {
-      RunAtLoad = lib.mkForce true;
+      RunAtLoad = lib.mkForce false;
       KeepAlive = lib.mkForce false;
     };
   };
