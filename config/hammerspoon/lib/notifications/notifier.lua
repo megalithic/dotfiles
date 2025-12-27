@@ -3,6 +3,7 @@ M.__index = M
 M.name = "notifier"
 
 local config = C.notifier
+local canvasLib = require("lib.canvas")
 
 -- Smart truncate text at word boundary with remaining character count
 -- @param text string: text to truncate
@@ -28,17 +29,9 @@ local function smartTruncate(text, maxLen)
   return truncated .. " (+" .. remaining .. ")..."
 end
 
--- Global references to active notification canvas and timer
--- NOTE: These use _G for cross-module access (e.g., bindings.lua checks _G.activeNotificationCanvas)
--- A future refactor could move to a shared state module.
-_G.activeNotificationCanvas = nil
-_G.activeNotificationTimer = nil
-_G.activeNotificationAnimTimer = nil
-_G.activeNotificationCleanupTimer = nil -- Timer for post-animation cleanup (prevents orphan)
-_G.activeNotificationOverlayTimer = nil -- Timer for overlay hide (prevents orphan)
-_G.notificationOverlay = nil -- Reusable dimming overlay
-_G.activeNotificationBundleID = nil -- Track source app for auto-dismiss
-_G.notificationAppWatcher = nil -- Application watcher for auto-dismiss
+-- State is managed via S.notification (see lib/state.lua)
+-- Provides: canvas, overlay, timers.{display, animation, overlay}, appWatcher, bundleID
+-- Cross-module access: S.notification.canvas, S.notification.timers.display, etc.
 
 -- Focus mode cache (to avoid repeated subprocess calls)
 local focusModeCache = {
@@ -198,9 +191,9 @@ function M.showOverlay(alpha)
   alpha = alpha or 0.6
 
   -- Reuse existing overlay if present
-  if _G.notificationOverlay then
-    _G.notificationOverlay:alpha(alpha)
-    _G.notificationOverlay:show()
+  if S.notification.overlay then
+    S.notification.overlay:alpha(alpha)
+    S.notification.overlay:show()
     return
   end
 
@@ -208,7 +201,7 @@ function M.showOverlay(alpha)
   local screen = hs.screen.mainScreen()
   local frame = screen:fullFrame() -- Includes menu bar
 
-  _G.notificationOverlay = hs
+  S.notification.overlay = hs
     .canvas
     .new(frame)
     :appendElements({
@@ -223,18 +216,18 @@ function M.showOverlay(alpha)
   -- Add click-to-dismiss if enabled in config
   local clickDismiss = config.clickDismiss
   if clickDismiss then
-    _G.notificationOverlay:canvasMouseEvents(true, true)
-    _G.notificationOverlay:mouseCallback(function(canvas, event, id, x, y)
-      if event == "mouseDown" and _G.activeNotificationCanvas then M.dismissNotification() end
+    S.notification.overlay:canvasMouseEvents(true, true)
+    S.notification.overlay:mouseCallback(function(canvas, event, id, x, y)
+      if event == "mouseDown" and S.notification.canvas then M.dismissNotification() end
     end)
   end
 
-  _G.notificationOverlay:show()
+  S.notification.overlay:show()
 end
 
 -- Hide dimming overlay (keeps canvas for reuse)
 function M.hideOverlay()
-  if _G.notificationOverlay then _G.notificationOverlay:hide() end
+  if S.notification.overlay then S.notification.overlay:hide() end
 end
 
 -- Dismiss active notification (helper function)
@@ -245,115 +238,75 @@ function M.dismissNotification(fadeTime, animate)
   animate = animate ~= false -- default to true
 
   -- Stop any existing timers first (prevents orphan timer accumulation)
-  if _G.activeNotificationTimer then
-    _G.activeNotificationTimer:stop()
-    _G.activeNotificationTimer = nil
+  if S.notification.timers.display then
+    S.notification.timers.display:stop()
+    S.notification.timers.display = nil
   end
 
-  if _G.activeNotificationAnimTimer then
-    _G.activeNotificationAnimTimer:stop()
-    _G.activeNotificationAnimTimer = nil
+  if S.notification.timers.animation then
+    S.notification.timers.animation:stop()
+    S.notification.timers.animation = nil
   end
 
-  if _G.activeNotificationCleanupTimer then
-    _G.activeNotificationCleanupTimer:stop()
-    _G.activeNotificationCleanupTimer = nil
+  if S.notification.timers.overlay then
+    S.notification.timers.overlay:stop()
+    S.notification.timers.overlay = nil
   end
 
-  if _G.activeNotificationOverlayTimer then
-    _G.activeNotificationOverlayTimer:stop()
-    _G.activeNotificationOverlayTimer = nil
-  end
-
-  -- Handle canvas dismissal with optional slide-down animation (reverse of slide-up entry)
-  if _G.activeNotificationCanvas then
-    local canvas = _G.activeNotificationCanvas
+  -- Handle canvas dismissal with optional slide-down animation
+  if S.notification.canvas then
+    local canvas = S.notification.canvas
+    S.notification.canvas = nil -- Clear reference immediately to prevent double-dismiss
 
     -- Check if animation is enabled in config
     local animConfig = config.animation or {}
     local animEnabled = animConfig.enabled ~= false and animate
 
     if animEnabled and fadeTime > 0 then
-      -- Animate slide-down with fade-out (reverse of slide-up entry)
-      local currentPos = canvas:topLeft()
-      local startX = currentPos.x
-      local startY = currentPos.y
-      local screen = hs.screen.mainScreen()
-      local screenFrame = screen:frame()
-      local canvasFrame = canvas:frame()
-      -- Slide down off the bottom of the screen
-      local slideDistance = (screenFrame.y + screenFrame.h) - startY + canvasFrame.h + 50
-
-      local animDuration = fadeTime
-      local fps = 60
-      local totalFrames = math.floor(animDuration * fps)
-      local currentFrame = 0
-
-      -- Create slide-down animation (reverse of slide-up entry)
-      _G.activeNotificationAnimTimer = hs.timer.doUntil(function()
-        local done = currentFrame >= totalFrames
-        if done then _G.activeNotificationAnimTimer = nil end -- Clear reference when animation completes
-        return done
-      end, function()
-        currentFrame = currentFrame + 1
-        local progress = currentFrame / totalFrames
-
-        -- Ease-in cubic for smooth acceleration (opposite of ease-out entry)
-        local eased = math.pow(progress, 3)
-        local newY = startY + (slideDistance * eased)
-
-        -- Also fade out during slide
-        local alpha = 1 - progress
-
-        canvas:topLeft({ x = startX, y = newY })
-        canvas:alpha(alpha)
-      end, 1 / fps)
-
-      -- Delete canvas after animation completes (store reference to prevent orphan)
-      _G.activeNotificationCleanupTimer = hs.timer.doAfter(animDuration + 0.05, function()
-        _G.activeNotificationCleanupTimer = nil -- Clear self-reference
-        if canvas then
-          canvas:delete(0) -- No additional fade since we already animated
-          if _G.activeNotificationCanvas == canvas then _G.activeNotificationCanvas = nil end
-        end
-      end)
+      -- Use canvasLib for consistent animation (handles timer cleanup internally)
+      S.notification.timers.animation = canvasLib.slideOut(canvas, {
+        duration = fadeTime,
+        deleteAfter = true,
+        onComplete = function()
+          S.notification.timers.animation = nil
+        end,
+      })
     else
-      -- No animation - just fade out
+      -- No animation - just delete
       canvas:delete(fadeTime)
-      _G.activeNotificationCanvas = nil
     end
   end
 
   -- Hide overlay after fade completes (store reference to prevent orphan)
-  if _G.notificationOverlay then
-    _G.activeNotificationOverlayTimer = hs.timer.doAfter(fadeTime, function()
-      _G.activeNotificationOverlayTimer = nil -- Clear self-reference
+  if S.notification.overlay then
+    S.notification.timers.overlay = hs.timer.doAfter(fadeTime, function()
+      S.notification.timers.overlay = nil -- Clear self-reference
       M.hideOverlay()
     end)
   end
 
-  _G.activeNotificationBundleID = nil
+  S.notification.bundleID = nil
 end
 
 -- Set up application watcher for auto-dismiss
 -- Called once when module is loaded
 function M.setupAppWatcher()
-  if _G.notificationAppWatcher then return end -- Already set up
+  if S.notification.appWatcher then return end -- Already set up
 
-  _G.notificationAppWatcher = hs.application.watcher.new(function(appName, eventType, app)
+  S.notification.appWatcher = hs.application.watcher.new(function(appName, eventType, app)
     -- Only care about app activation events
     if eventType ~= hs.application.watcher.activated then return end
 
     -- Check if there's an active notification
-    if not _G.activeNotificationCanvas or not _G.activeNotificationBundleID then return end
+    if not S.notification.canvas or not S.notification.bundleID then return end
 
     -- Check if the activated app matches the notification source
-    if app and app:bundleID() == _G.activeNotificationBundleID then
+    if app and app:bundleID() == S.notification.bundleID then
       M.dismissNotification(0.2) -- Quick fade
     end
   end)
 
-  _G.notificationAppWatcher:start()
+  S.notification.appWatcher:start()
 end
 
 -- Initialize app watcher on module load
@@ -680,7 +633,7 @@ function M.sendCanvasNotification(title, message, opts)
   end
 
   -- Close any existing notification before showing new one
-  if _G.activeNotificationCanvas then
+  if S.notification.canvas then
     M.dismissNotification(0) -- Instant dismiss
   end
 
@@ -943,42 +896,31 @@ function M.sendCanvasNotification(title, message, opts)
   -- Enable mouse events on entire canvas (including areas not covered by elements)
   canvas:canvasMouseEvents(true, false, false, false)
 
-  -- Show canvas with higher level
+  -- Set canvas level (will be shown by animation or directly)
   canvas:level("overlay")
-  canvas:show()
 
   -- Store canvas reference globally
-  _G.activeNotificationCanvas = canvas
+  S.notification.canvas = canvas
 
   -- Store source app bundle ID for auto-dismiss
-  _G.activeNotificationBundleID = opts.appBundleID or nil
+  S.notification.bundleID = opts.appBundleID or nil
 
-  -- Animate slide-up if enabled
+  -- Animate entry if enabled, otherwise show directly
   if animEnabled then
     local animDuration = animConfig.duration or 0.3
-    local fps = 60 -- frames per second
-    local totalFrames = math.floor(animDuration * fps)
-    local currentFrame = 0
-    local startY = y
-    local slideDistance = startY - finalY
-
-    _G.activeNotificationAnimTimer = hs.timer.doUntil(function()
-      local done = currentFrame >= totalFrames
-      if done then _G.activeNotificationAnimTimer = nil end -- Clear reference when animation completes
-      return done
-    end, function()
-      currentFrame = currentFrame + 1
-      -- Ease-out cubic for smooth deceleration
-      local progress = currentFrame / totalFrames
-      local eased = 1 - math.pow(1 - progress, 3)
-      local newY = startY - (slideDistance * eased)
-
-      canvas:topLeft({ x = x, y = newY })
-    end, 1 / fps)
+    -- Use canvasLib for consistent animation (handles timer cleanup internally)
+    S.notification.timers.animation = canvasLib.slideIn(canvas, y, finalY, {
+      duration = animDuration,
+      onComplete = function()
+        S.notification.timers.animation = nil
+      end,
+    })
+  else
+    canvas:show()
   end
 
   -- Auto-hide after duration with fade and slide-left animation
-  _G.activeNotificationTimer = hs.timer.doAfter(duration, function()
+  S.notification.timers.display = hs.timer.doAfter(duration, function()
     if canvas then
       -- Use dismissNotification helper which handles animation, timers, and overlay
       M.dismissNotification(0.5, true)
@@ -1011,51 +953,13 @@ end
 --------------------------------------------------------------------------------
 
 --- Clean up all notification resources
---- Call this before Hammerspoon reloads to prevent:
---- - Orphan timers continuing to fire after reload
---- - Canvas objects never being deleted
---- - Application watchers continuing to consume events
+--- Delegates to centralized S.resetNotification() which handles:
+--- - Stopping all timers (display, animation, overlay)
+--- - Deleting all canvases (canvas, overlay)
+--- - Stopping application watcher
+--- - Clearing bundleID
 function M.cleanup()
-  -- Stop all active timers
-  if _G.activeNotificationTimer then
-    _G.activeNotificationTimer:stop()
-    _G.activeNotificationTimer = nil
-  end
-
-  if _G.activeNotificationAnimTimer then
-    _G.activeNotificationAnimTimer:stop()
-    _G.activeNotificationAnimTimer = nil
-  end
-
-  if _G.activeNotificationCleanupTimer then
-    _G.activeNotificationCleanupTimer:stop()
-    _G.activeNotificationCleanupTimer = nil
-  end
-
-  if _G.activeNotificationOverlayTimer then
-    _G.activeNotificationOverlayTimer:stop()
-    _G.activeNotificationOverlayTimer = nil
-  end
-
-  -- Delete canvas objects
-  if _G.activeNotificationCanvas then
-    _G.activeNotificationCanvas:delete(0)
-    _G.activeNotificationCanvas = nil
-  end
-
-  if _G.notificationOverlay then
-    _G.notificationOverlay:delete(0)
-    _G.notificationOverlay = nil
-  end
-
-  -- Stop application watcher
-  if _G.notificationAppWatcher then
-    _G.notificationAppWatcher:stop()
-    _G.notificationAppWatcher = nil
-  end
-
-  -- Clear other state
-  _G.activeNotificationBundleID = nil
+  S.resetNotification()
 end
 
 return M

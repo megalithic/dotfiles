@@ -1,6 +1,9 @@
 -- Canvas Utilities Library
 -- Reusable animation and rendering helpers for hs.canvas
 --
+-- All animation functions return timer references that callers should store
+-- for cleanup. Timers self-clear their predicates when complete.
+--
 local M = {}
 
 --------------------------------------------------------------------------------
@@ -28,34 +31,35 @@ function M.slideIn(canvas, startY, finalY, opts)
   canvas:alpha(0)
   canvas:show()
 
-  local timer = hs.timer.doUntil(
-    function() return currentFrame >= totalFrames end,
-    function()
-      currentFrame = currentFrame + 1
-      local progress = currentFrame / totalFrames
-      -- Ease-out cubic for smooth deceleration
-      local eased = 1 - math.pow(1 - progress, 3)
+  -- Store timer reference for self-clearing in predicate
+  local timerRef = { timer = nil }
 
-      -- Slide up
-      local newY = startY - (slideDistance * eased)
-      canvas:topLeft({ x = x, y = newY })
+  timerRef.timer = hs.timer.doUntil(function()
+    local done = currentFrame >= totalFrames
+    if done then
+      timerRef.timer = nil -- Clear reference when animation completes
+      if opts.onComplete then opts.onComplete() end
+    end
+    return done
+  end, function()
+    currentFrame = currentFrame + 1
+    local progress = currentFrame / totalFrames
+    -- Ease-out cubic for smooth deceleration
+    local eased = 1 - math.pow(1 - progress, 3)
 
-      -- Fade in
-      canvas:alpha(eased)
+    -- Slide up
+    local newY = startY - (slideDistance * eased)
+    canvas:topLeft({ x = x, y = newY })
 
-      -- Call onComplete when done
-      if currentFrame >= totalFrames and opts.onComplete then
-        opts.onComplete()
-      end
-    end,
-    1 / fps
-  )
+    -- Fade in
+    canvas:alpha(eased)
+  end, 1 / fps)
 
-  return timer
+  return timerRef.timer
 end
 
 --- Animate a canvas sliding down with fade-out (exit animation)
---- Automatically deletes canvas after animation completes
+--- Optionally deletes canvas after animation completes
 ---@param canvas hs.canvas Canvas to animate
 ---@param opts? {duration?: number, onComplete?: function, deleteAfter?: boolean} Animation options
 ---@return hs.timer Timer reference
@@ -75,39 +79,35 @@ function M.slideOut(canvas, opts)
   -- Calculate slide distance to go off bottom of screen
   local slideDistance = (screen.y + screen.h) - startY + canvasFrame.h + 50
 
-  local timer = hs.timer.doUntil(
-    function() return currentFrame >= totalFrames end,
-    function()
-      currentFrame = currentFrame + 1
-      local progress = currentFrame / totalFrames
-      -- Ease-in cubic for smooth acceleration
-      local eased = math.pow(progress, 3)
+  -- Store timer reference for self-clearing in predicate
+  local timerRef = { timer = nil }
 
-      -- Slide down
-      local newY = startY + (slideDistance * eased)
-      canvas:topLeft({ x = startX, y = newY })
-
-      -- Fade out
-      canvas:alpha(1 - progress)
-    end,
-    1 / fps
-  )
-
-  -- Delete canvas after animation completes
-  if deleteAfter then
-    hs.timer.doAfter(duration + 0.05, function()
-      if canvas then
-        canvas:delete(0) -- No additional fade
+  timerRef.timer = hs.timer.doUntil(function()
+    local done = currentFrame >= totalFrames
+    if done then
+      timerRef.timer = nil -- Clear reference when animation completes
+      -- Handle cleanup after animation ends
+      if deleteAfter and canvas then
+        canvas:delete(0)
       end
-      if opts.onComplete then
-        opts.onComplete()
-      end
-    end)
-  elseif opts.onComplete then
-    hs.timer.doAfter(duration + 0.05, opts.onComplete)
-  end
+      if opts.onComplete then opts.onComplete() end
+    end
+    return done
+  end, function()
+    currentFrame = currentFrame + 1
+    local progress = currentFrame / totalFrames
+    -- Ease-in cubic for smooth acceleration
+    local eased = math.pow(progress, 3)
 
-  return timer
+    -- Slide down
+    local newY = startY + (slideDistance * eased)
+    canvas:topLeft({ x = startX, y = newY })
+
+    -- Fade out
+    canvas:alpha(1 - progress)
+  end, 1 / fps)
+
+  return timerRef.timer
 end
 
 --- Simple fade-in animation (no slide)
@@ -124,21 +124,23 @@ function M.fadeIn(canvas, opts)
   canvas:alpha(0)
   canvas:show()
 
-  local timer = hs.timer.doUntil(
-    function() return currentFrame >= totalFrames end,
-    function()
-      currentFrame = currentFrame + 1
-      local progress = currentFrame / totalFrames
-      canvas:alpha(progress)
+  -- Store timer reference for self-clearing in predicate
+  local timerRef = { timer = nil }
 
-      if currentFrame >= totalFrames and opts.onComplete then
-        opts.onComplete()
-      end
-    end,
-    1 / fps
-  )
+  timerRef.timer = hs.timer.doUntil(function()
+    local done = currentFrame >= totalFrames
+    if done then
+      timerRef.timer = nil -- Clear reference when animation completes
+      if opts.onComplete then opts.onComplete() end
+    end
+    return done
+  end, function()
+    currentFrame = currentFrame + 1
+    local progress = currentFrame / totalFrames
+    canvas:alpha(progress)
+  end, 1 / fps)
 
-  return timer
+  return timerRef.timer
 end
 
 --- Simple fade-out animation (no slide)
@@ -165,26 +167,29 @@ function M.fadeOut(canvas, opts)
   local totalFrames = math.floor(duration * fps)
   local currentFrame = 0
 
-  local timer = hs.timer.doUntil(
-    function() return currentFrame >= totalFrames end,
-    function()
-      currentFrame = currentFrame + 1
-      local progress = currentFrame / totalFrames
-      canvas:alpha(1 - progress)
-    end,
-    1 / fps
-  )
+  -- Store timer reference for self-clearing in predicate
+  local timerRef = { timer = nil }
 
-  hs.timer.doAfter(duration + 0.02, function()
-    if deleteAfter then
-      canvas:delete(0)
-    else
-      canvas:hide()
+  timerRef.timer = hs.timer.doUntil(function()
+    local done = currentFrame >= totalFrames
+    if done then
+      timerRef.timer = nil -- Clear reference when animation completes
+      -- Handle cleanup after animation ends
+      if deleteAfter then
+        canvas:delete(0)
+      else
+        canvas:hide()
+      end
+      if opts.onComplete then opts.onComplete() end
     end
-    if opts.onComplete then opts.onComplete() end
-  end)
+    return done
+  end, function()
+    currentFrame = currentFrame + 1
+    local progress = currentFrame / totalFrames
+    canvas:alpha(1 - progress)
+  end, 1 / fps)
 
-  return timer
+  return timerRef.timer
 end
 
 --------------------------------------------------------------------------------
@@ -233,7 +238,7 @@ end
 ---@param height number Canvas height
 ---@param opts? {screen?: hs.screen, margin?: number, offset?: number} Options
 ---@return {x: number, y: number, startY: number} Position with startY for animation
-function M.bottomRight(_, height, opts)
+function M.bottomRight(width, height, opts)
   opts = opts or {}
   local screen = opts.screen or hs.screen.mainScreen()
   local margin = opts.margin or 20

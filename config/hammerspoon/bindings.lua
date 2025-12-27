@@ -649,7 +649,7 @@ function M.loadNotifications()
     local mods, key = table.unpack(dismissBindings)
     req("hyper", { id = "notifications" }):start():bind(mods, key, nil, function()
       -- Only dismiss if notification is active
-      if _G.activeNotificationCanvas then
+      if S.notification.canvas then
         local notifier = require("lib.notifications.notifier")
         notifier.dismissNotification()
       end

@@ -5,30 +5,20 @@ if not ok then
 end
 
 --------------------------------------------------------------------------------
--- RELOAD CLEANUP: Clean up leftover globals from previous config load
+-- RELOAD CLEANUP: Clean up leftover state from previous config load
 -- This runs at init.lua start (before modules load) to prevent resource leaks
 -- when hs.reload() is called. hs.shutdownCallback only runs on full shutdown,
 -- not reload, so we must clean up proactively here.
+--
+-- NOTE: Native Hammerspoon objects (timers, canvases, watchers) persist in
+-- native code but Lua references are lost on reload. This cleanup handles
+-- state that might exist from a partial reload or error recovery.
 --------------------------------------------------------------------------------
 local function cleanupPreviousRun()
-  -- Clean up notification module globals (timers, canvases, watchers)
-  if _G.activeNotificationTimer then pcall(function() _G.activeNotificationTimer:stop() end) end
-  if _G.activeNotificationAnimTimer then pcall(function() _G.activeNotificationAnimTimer:stop() end) end
-  if _G.activeNotificationCleanupTimer then pcall(function() _G.activeNotificationCleanupTimer:stop() end) end
-  if _G.activeNotificationOverlayTimer then pcall(function() _G.activeNotificationOverlayTimer:stop() end) end
-  if _G.activeNotificationCanvas then pcall(function() _G.activeNotificationCanvas:delete(0) end) end
-  if _G.notificationOverlay then pcall(function() _G.notificationOverlay:delete(0) end) end
-  if _G.notificationAppWatcher then pcall(function() _G.notificationAppWatcher:stop() end) end
-
-  -- Clear all notification globals
-  _G.activeNotificationTimer = nil
-  _G.activeNotificationAnimTimer = nil
-  _G.activeNotificationCleanupTimer = nil
-  _G.activeNotificationOverlayTimer = nil
-  _G.activeNotificationCanvas = nil
-  _G.notificationOverlay = nil
-  _G.notificationAppWatcher = nil
-  _G.activeNotificationBundleID = nil
+  -- Clean up centralized state module (handles all notification resources)
+  if _G.S and _G.S.resetAll then
+    _G.S.resetAll()
+  end
 end
 
 cleanupPreviousRun()
@@ -39,6 +29,10 @@ if not ok then
   return
 end
 _G.C = mod_or_err
+
+-- Centralized state management (replaces scattered _G.* globals)
+-- Usage: S.notification.canvas, S.notification.timers.animation, etc.
+_G.S = require("lib.state")
 
 --- @diagnostic disable-next-line: lowercase-global
 function _G.req(mod, ...)

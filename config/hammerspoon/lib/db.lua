@@ -358,7 +358,7 @@ function M.notifications.getRecent(hours)
     [[
     SELECT
       datetime(timestamp, 'unixepoch', 'localtime') as time,
-      rule_name, sender, message, action_taken, focus_mode, shown
+      rule_name, sender, message, action, focus_mode, shown
     FROM notifications
     WHERE timestamp > %d
     ORDER BY timestamp DESC
@@ -410,7 +410,7 @@ function M.notifications.getMissed(hours)
       rule_name, sender, message, focus_mode
     FROM notifications
     WHERE timestamp > %d
-      AND action_taken = 'blocked_by_focus'
+      AND action = 'blocked_by_focus'
       AND shown = 0
     ORDER BY timestamp DESC
   ]],
@@ -518,7 +518,7 @@ function M.notifications.dismiss(notificationId)
       SET dismissed_at = %d
       WHERE dismissed_at IS NULL
         AND shown = 0
-        AND (action_taken LIKE 'blocked%%')
+        AND (action LIKE 'blocked%%')
     ]],
       dismissTime
     )

@@ -16,7 +16,7 @@ local DB = require("lib.db")
 
 -- SUBMODULES (re-exported for direct access: N.db.log(), N.menubar.update(), etc.)
 M.types = require("lib.notifications.types")
-M.db = DB.notifications  -- Direct access, no facade
+M.db = DB.notifications  -- Notification-specific queries
 M.processor = require("lib.notifications.processor")
 M.menubar = require("lib.notifications.menubar")
 M.notifier = require("lib.notifications.notifier")
@@ -150,7 +150,6 @@ function M.performCleanupIfNeeded()
   end
 
   -- Perform the cleanup
-  local DB = require("lib.db")
   local success = DB.notifications.cleanup(C.notifier.retentionDays)
 
   if success then
@@ -163,7 +162,6 @@ end
 
 function M.performHealthCheck()
   local issues = {}
-  local DB = require("lib.db")
   local isFirstCheck = M.lastHealthCheck == nil
 
   -- Check 1: Initialized flag
@@ -208,7 +206,6 @@ end
 
 -- Health check
 function M.isReady()
-  local DB = require("lib.db")
   return M.initialized and DB.db ~= nil
 end
 
@@ -218,9 +215,9 @@ end
 ---Process a notification according to rule configuration
 ---This is the main entry point called by watchers/notification.lua
 ---@param rule NotificationRule The notification rule configuration
----@param opts ProcessOpts Notification content and metadata
+---@param opts ProcessOpts Notification content and metadata { title, subtitle?, message, axStackingID?, bundleID?, notificationID?, notificationType?, subrole?, matchedCriteria?, urgency? }
 ---@return nil
----@usage N.process(rule, { title = "Test", message = "Message", bundleID = "com.app", axStackingID = "bundleIdentifier=com.app" })
+---@usage N.process(rule, { title = "Test", message = "Message", bundleID = "com.app", urgency = "normal" })
 function M.process(rule, opts)
   if not M.initialized then
     U.log.e("Notification system not initialized - cannot process notification")
@@ -234,9 +231,10 @@ end
 ---Displays a custom notification using the canvas renderer
 ---@param title string Notification title
 ---@param message string Notification message body
----@param opts table|nil Optional configuration { duration = number, urgency = string, position = string, includeProgram = boolean }
+---@param opts table|nil Optional configuration { subtitle = string, duration = number, urgency = string, position = string, includeProgram = boolean }
 ---@return nil
 ---@usage N.notify("Test Title", "Test message", { duration = 5, urgency = "high" })
+---@usage N.notify("App Name", "Details here", { subtitle = "Important Update", duration = 8 })
 ---@usage N.notify("Quick note", "This is a message") -- uses defaults
 function M.notify(title, message, opts)
   if not M.initialized then
@@ -266,7 +264,6 @@ end
 ---@return boolean ready True if initialized and database is connected
 ---@usage if N.isReady() then N.notify("Test", "Message") end
 function M.isReady()
-  local DB = require("lib.db")
   return M.initialized and DB.db ~= nil
 end
 

@@ -48,7 +48,7 @@ end
 -- Get all important events
 function M.getEvents()
   local events = {
-    focusBlocked = db.getBlockedByFocus() or {},
+    focusBlocked = DB.notifications.getBlockedByFocus() or {},
     network = DB.connections.getEvents(24) or {}, -- Last 24 hours
   }
   return events
@@ -352,7 +352,7 @@ function M.handleNotificationClick(notif)
   end
 
   -- Mark as dismissed
-  db.dismiss(notif.id)
+  DB.notifications.dismiss(notif.id)
 
   -- Update display
   hs.timer.doAfter(0.1, function()
@@ -363,7 +363,7 @@ end
 -- Clear all events (notifications and network events)
 function M.clearAll()
   -- Clear blocked notifications
-  db.dismiss("all")
+  DB.notifications.dismiss("all")
 
   -- Clear network events
   DB.connections.dismissAll()
