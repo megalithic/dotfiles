@@ -298,55 +298,55 @@ in {
 
   # OpenCode custom tool for resizing images (wraps resize-image CLI)
   # Uses absolute path to externalized script in dotfiles bin/
-  xdg.configFile."opencode/tool/resize-image.ts".text = ''
-    import { tool } from "@opencode-ai/plugin"
-
-    const RESIZE_IMAGE = "${resize-image-bin}"
-
-    export default tool({
-      description: "Resize images to fit within Claude's API constraints (5MB max file size, 8000px max dimension). Use this when an image is too large to process.",
-      args: {
-        path: tool.schema.string().describe("Absolute path to the image file"),
-        output: tool.schema.string().optional().describe("Output path (default: <input>-resized.<ext>)"),
-        quality: tool.schema.number().optional().describe("JPEG quality 1-100 (default: 85)"),
-      },
-      async execute(args) {
-        const cmd = [RESIZE_IMAGE]
-        if (args.quality) cmd.push("--quality", String(args.quality))
-        cmd.push(args.path)
-        if (args.output) cmd.push(args.output)
-        const proc = Bun.spawn(cmd, { stdout: "pipe", stderr: "pipe" })
-        const stdout = await new Response(proc.stdout).text()
-        const stderr = await new Response(proc.stderr).text()
-        await proc.exited
-        return (stdout + stderr).trim()
-      },
-    })
-
-    export const check = tool({
-      description: "Check if an image needs resizing for Claude's API (5MB max, 8000px max dimension)",
-      args: {
-        path: tool.schema.string().describe("Absolute path to the image file"),
-      },
-      async execute(args) {
-        const proc = Bun.spawn([RESIZE_IMAGE, "--check", args.path], { stdout: "pipe", stderr: "pipe" })
-        const stdout = await new Response(proc.stdout).text()
-        await proc.exited
-        return stdout.trim()
-      },
-    })
-
-    export const info = tool({
-      description: "Show image dimensions and file size, and whether it exceeds Claude's limits",
-      args: {
-        path: tool.schema.string().describe("Absolute path to the image file"),
-      },
-      async execute(args) {
-        const proc = Bun.spawn([RESIZE_IMAGE, "--info", args.path], { stdout: "pipe", stderr: "pipe" })
-        const stdout = await new Response(proc.stdout).text()
-        await proc.exited
-        return stdout.trim()
-      },
-    })
-  '';
+  # xdg.configFile."opencode/tool/resize-image.ts".text = ''
+  #   import { tool } from "@opencode-ai/plugin"
+  #
+  #   const RESIZE_IMAGE = "${resize-image-bin}"
+  #
+  #   export default tool({
+  #     description: "Resize images to fit within Claude's API constraints (5MB max file size, 8000px max dimension). Use this when an image is too large to process.",
+  #     args: {
+  #       path: tool.schema.string().describe("Absolute path to the image file"),
+  #       output: tool.schema.string().optional().describe("Output path (default: <input>-resized.<ext>)"),
+  #       quality: tool.schema.number().optional().describe("JPEG quality 1-100 (default: 85)"),
+  #     },
+  #     async execute(args) {
+  #       const cmd = [RESIZE_IMAGE]
+  #       if (args.quality) cmd.push("--quality", String(args.quality))
+  #       cmd.push(args.path)
+  #       if (args.output) cmd.push(args.output)
+  #       const proc = Bun.spawn(cmd, { stdout: "pipe", stderr: "pipe" })
+  #       const stdout = await new Response(proc.stdout).text()
+  #       const stderr = await new Response(proc.stderr).text()
+  #       await proc.exited
+  #       return (stdout + stderr).trim()
+  #     },
+  #   })
+  #
+  #   export const check = tool({
+  #     description: "Check if an image needs resizing for Claude's API (5MB max, 8000px max dimension)",
+  #     args: {
+  #       path: tool.schema.string().describe("Absolute path to the image file"),
+  #     },
+  #     async execute(args) {
+  #       const proc = Bun.spawn([RESIZE_IMAGE, "--check", args.path], { stdout: "pipe", stderr: "pipe" })
+  #       const stdout = await new Response(proc.stdout).text()
+  #       await proc.exited
+  #       return stdout.trim()
+  #     },
+  #   })
+  #
+  #   export const info = tool({
+  #     description: "Show image dimensions and file size, and whether it exceeds Claude's limits",
+  #     args: {
+  #       path: tool.schema.string().describe("Absolute path to the image file"),
+  #     },
+  #     async execute(args) {
+  #       const proc = Bun.spawn([RESIZE_IMAGE, "--info", args.path], { stdout: "pipe", stderr: "pipe" })
+  #       const stdout = await new Response(proc.stdout).text()
+  #       await proc.exited
+  #       return stdout.trim()
+  #     },
+  #   })
+  # '';
 }
