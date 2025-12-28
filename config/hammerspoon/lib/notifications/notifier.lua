@@ -634,16 +634,20 @@ local function calculateDynamicDimensions(title, subtitle, message, opts)
   }
 end
 
--- Send custom canvas notification at bottom-left with macOS Sequoia styling
--- Options: {
---   positionMode = "auto" | "fixed" | "above-prompt",
---   verticalOffset = number,  -- additional px offset
---   estimatedPromptLines = number,  -- for "above-prompt" mode
---   includeProgram = boolean,  -- whether to prepend program name to title (default: true)
--- }
-function M.sendCanvasNotification(title, subtitle, message, duration, opts)
-  duration = duration or config.defaultDuration or 5
-  opts = opts or {}
+---Send custom canvas notification at bottom-left with macOS Sequoia styling
+---@param title string Notification title
+---@param message string Notification message body
+---@param opts? {subtitle?: string, duration?: number, positionMode?: string, verticalOffset?: number, estimatedPromptLines?: number, includeProgram?: boolean, anchor?: string, position?: string, dimBackground?: boolean, dimAlpha?: number, appImageID?: string, appBundleID?: string, priority?: string, urgency?: string}
+function M.sendCanvasNotification(title, message, opts)
+  opts = U.defaults(opts, {
+    subtitle = "",
+    duration = config.defaultDuration or 5,
+    includeProgram = true,
+  })
+
+  -- Local aliases for clarity
+  local subtitle = opts.subtitle
+  local duration = opts.duration
 
   -- Guard against nil values (some notifications have empty fields)
   title = title or ""
@@ -651,7 +655,7 @@ function M.sendCanvasNotification(title, subtitle, message, duration, opts)
   message = message or ""
 
   -- Optionally prepend program name to title
-  if opts.includeProgram ~= false then -- default to true
+  if opts.includeProgram then
     local program = M.getActiveProgram()
     if program then title = "[" .. program .. "] " .. title end
   end
@@ -996,7 +1000,7 @@ function M.sendSmartAlert(message, duration)
     local body = message:match("^[^:]+:%s*(.+)")
     if not body or body == message then body = message:sub(26) end
 
-    M.sendCanvasNotification(title, body, duration)
+    M.sendCanvasNotification(title, body, { duration = duration })
   else
     M.sendAlert(message, duration)
   end

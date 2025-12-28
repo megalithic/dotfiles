@@ -254,7 +254,7 @@ local function handleNotification(element)
       M.pendingDismissals[notificationID] = nil
       
       -- Log dismissal to database
-      local db = require("lib.notifications.db")
+      local db = require("lib.db").notifications
       db.log({
         timestamp = os.time(),
         notification_id = notificationID,
@@ -418,7 +418,7 @@ local function handleNotification(element)
               M.pendingDismissals[notificationID] = nil
               
               -- Log dismissal to database
-              local db = require("lib.notifications.db")
+              local db = require("lib.db").notifications
               db.log({
                 timestamp = timestamp,
                 notification_id = notificationID,
@@ -448,7 +448,7 @@ local function handleNotification(element)
           local success = dismissNotification(notificationElement, title)
           
           -- Log dismissal to database
-          local db = require("lib.notifications.db")
+          local db = require("lib.db").notifications
           db.log({
             timestamp = timestamp,
             notification_id = notificationID,
@@ -477,9 +477,19 @@ local function handleNotification(element)
         
       else
         -- REDIRECT (default): Delegate to processor for canvas display
-        local ok, err = pcall(N.process, rule, title, subtitle, message, axStackingID, bundleID, 
-          notificationID, notificationType, subrole, matchedCriteria, resolvedUrgency)
-        
+        local ok, err = pcall(N.process, rule, {
+          title = title,
+          subtitle = subtitle,
+          message = message,
+          axStackingID = axStackingID,
+          bundleID = bundleID,
+          notificationID = notificationID,
+          notificationType = notificationType,
+          subrole = subrole,
+          matchedCriteria = matchedCriteria,
+          urgency = resolvedUrgency,
+        })
+
         if not ok then U.log.ef("Error processing rule '%s': %s", rule.name, tostring(err)) end
       end
 
@@ -622,7 +632,7 @@ local function scanExistingNotifications()
             dismissedCount = dismissedCount + 1
             
             -- Log to database
-            local db = require("lib.notifications.db")
+            local db = require("lib.db").notifications
             db.log({
               timestamp = now,
               notification_id = notifID,
@@ -676,7 +686,7 @@ local function scanExistingNotifications()
           if success then
             dismissedCount = dismissedCount + 1
             
-            local db = require("lib.notifications.db")
+            local db = require("lib.db").notifications
             db.log({
               timestamp = now,
               notification_id = notifID,

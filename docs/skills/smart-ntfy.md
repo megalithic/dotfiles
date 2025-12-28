@@ -51,9 +51,28 @@ Commands:
 | `-t`  | `--title`    | Notification title (required)               |
 | `-m`  | `--message`  | Notification message (required)             |
 | `-u`  | `--urgency`  | normal\|high\|critical (default: normal)    |
+| `-s`  | `--source`   | Source app name (auto-detected if omitted)  |
+| `-S`  | `--no-source`| Disable source prefix in title              |
 | `-p`  | `--phone`    | Send to phone via iMessage                  |
 | `-P`  | `--pushover` | Send via Pushover                           |
 | `-q`  | `--question` | Track for retry if unanswered               |
+
+## Source Detection
+
+By default, ntfy auto-detects the calling program by walking up the process tree
+and prefixes the title (e.g., `[claude] Task Done`). This helps identify which
+tool sent the notification.
+
+```bash
+# Auto-detection (default) - title becomes "[claude] Done" if called from Claude
+ntfy send -t "Done" -m "Tests passed"
+
+# Disable source prefix entirely
+ntfy send -t "Done" -m "Tests passed" -S
+
+# Override with custom source name
+ntfy send -t "Done" -m "Tests passed" -s "myapp"  # → "[myapp] Done"
+```
 
 ## Notification Channels
 
@@ -155,10 +174,60 @@ ntfy send -t "Clarification Needed" -m "Should I refactor the auth module or jus
 ntfy send -t "Task Done" -m "Deployment completed successfully" -p
 ```
 
+## Internal Architecture
+
+The ntfy script delegates all logic to Hammerspoon's notification system:
+
+```
+ntfy send → N.send(opts) → routeNotification() → sendCanvas/sendMacOS/sendPhone
+                                                      ↓
+                                              sendCanvasNotification()
+```
+
+### Key Function Signatures
+
+**N.send()** - Main entry point (lib/notifications/send.lua)
+```lua
+N.send({
+  title = "string",      -- Required
+  message = "string",    -- Required
+  urgency = "normal",    -- "normal"|"high"|"critical"
+  phone = false,         -- Send via iMessage
+  pushover = false,      -- Send via Pushover
+  question = false,      -- Track for retry
+  context = "session:window:pane",  -- tmux context for attention detection
+})
+-- Returns: { sent = bool, channels = {"macos","phone"}, reason = string, questionId = string|nil }
+```
+
+**sendCanvasNotification()** - Visual overlay (lib/notifications/notifier.lua)
+```lua
+sendCanvasNotification(title, message, opts)
+-- opts: { subtitle?, duration?, anchor?, position?, dimBackground?, appImageID?, appBundleID?, includeProgram?, ... }
+-- Uses U.defaults() for merging - subtitle defaults to "", duration to config.defaultDuration or 5
+```
+
+**M.process()** - Rule-based routing (lib/notifications/processor.lua)
+```lua
+M.process(rule, opts)
+-- opts: { title, subtitle?, message, axStackingID, bundleID, notificationID?, notificationType?, subrole?, matchedCriteria?, urgency? }
+-- Uses U.defaults() for merging - title/subtitle/message default to "", urgency to "normal"
+```
+
+### Attention Detection Flow
+
+1. Check display state (awake/asleep/locked)
+2. Check if terminal is frontmost app
+3. Query tmux for active session:window:pane
+4. Compare against calling context
+5. Route: `paying_attention` → subtle | `not_paying_attention` → full | `display_asleep` → remote_only
+
 ## Related Files
 
-- `~/bin/ntfy` - Main notification script
+- `~/bin/ntfy` - CLI wrapper (bash)
+- `~/.dotfiles/config/hammerspoon/lib/notifications/send.lua` - N.send() API
 - `~/.dotfiles/config/hammerspoon/lib/notifications/notifier.lua` - Canvas rendering
+- `~/.dotfiles/config/hammerspoon/lib/notifications/processor.lua` - Rule processing
 - `~/.dotfiles/config/hammerspoon/watchers/notification.lua` - NC capture
 - `~/.local/share/hammerspoon/hammerspoon.db` - Notification history
 

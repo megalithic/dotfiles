@@ -11,9 +11,12 @@ M.lastCleanup = nil
 M.cleanupTimer = nil
 M.initDelayTimer = nil  -- Reference to prevent GC of doAfter timer
 
+-- Database module (need parent for init/close lifecycle)
+local DB = require("lib.db")
+
 -- SUBMODULES (re-exported for direct access: N.db.log(), N.menubar.update(), etc.)
 M.types = require("lib.notifications.types")
-M.db = require("lib.notifications.db")
+M.db = DB.notifications  -- Direct access, no facade
 M.processor = require("lib.notifications.processor")
 M.menubar = require("lib.notifications.menubar")
 M.notifier = require("lib.notifications.notifier")
@@ -34,7 +37,7 @@ function M.init()
   U.log.i("Initializing notification system...")
 
   -- 1. Initialize database first
-  local dbOk, dbErr = pcall(function() return M.db.init() end)
+  local dbOk, dbErr = pcall(function() return DB.init() end)
 
   if not dbOk then
     U.log.ef("CRITICAL: Failed to initialize notification database: %s", tostring(dbErr))
@@ -100,7 +103,7 @@ function M.cleanup()
 
   if M.menubar then M.menubar.cleanup() end
 
-  if M.db then M.db.close() end
+  if DB then DB.close() end
 
   M.initialized = false
   U.log.i("Notification system cleaned up")
@@ -215,26 +218,16 @@ end
 ---Process a notification according to rule configuration
 ---This is the main entry point called by watchers/notification.lua
 ---@param rule NotificationRule The notification rule configuration
----@param title string Notification title
----@param subtitle string|nil Notification subtitle (optional)
----@param message string Notification message body
----@param axStackingID string Full AX stacking identifier from notification center
----@param bundleID string Parsed bundle ID from stacking identifier
----@param notificationID string|nil UUID from AXIdentifier
----@param notificationType string|nil "system" | "app"
----@param subrole string|nil AXSubrole value
----@param matchedCriteria string|nil JSON string of what matched (for logging)
----@param urgency string|nil Resolved urgency level: "critical"|"high"|"normal"|"low"
+---@param opts ProcessOpts Notification content and metadata
 ---@return nil
----@usage N.process(rule, "Test", nil, "Message", "bundleIdentifier=com.app", "com.app", nil, nil, nil, nil, "normal")
-function M.process(rule, title, subtitle, message, axStackingID, bundleID, notificationID, notificationType, subrole, matchedCriteria, urgency)
+---@usage N.process(rule, { title = "Test", message = "Message", bundleID = "com.app", axStackingID = "bundleIdentifier=com.app" })
+function M.process(rule, opts)
   if not M.initialized then
     U.log.e("Notification system not initialized - cannot process notification")
     return
   end
 
-  -- Delegate to processor with all enhanced fields including match criteria and urgency
-  M.processor.process(rule, title, subtitle, message, axStackingID, bundleID, notificationID, notificationType, subrole, matchedCriteria, urgency)
+  M.processor.process(rule, opts)
 end
 
 ---Send a canvas notification directly
@@ -251,11 +244,12 @@ function M.notify(title, message, opts)
     return
   end
 
-  opts = opts or {}
-  local duration = opts.duration or 3
+  opts = U.defaults(opts, {
+    duration = 3,
+    subtitle = "",
+  })
 
-  -- Delegate to notifier (it expects: title, message, duration, opts)
-  M.notifier.sendCanvasNotification(title, message, duration, opts)
+  M.notifier.sendCanvasNotification(title, message, opts)
 end
 
 ---Manually trigger a health check of the notification system

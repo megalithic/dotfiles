@@ -33,9 +33,10 @@ local function sendConnectionNotification(title, message, priority)
     anchor = "screen",
     position = "SW",
     dimBackground = false,
+    duration = 5,
   }
 
-  notifier.sendCanvasNotification(title, message, 5, config)
+  notifier.sendCanvasNotification(title, message, config)
 end
 
 -- Update menubar with new event

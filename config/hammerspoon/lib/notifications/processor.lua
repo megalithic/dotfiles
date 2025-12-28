@@ -3,27 +3,47 @@
 --
 local M = {}
 
+---@class ProcessOpts
+---@field title string Notification title
+---@field subtitle? string Notification subtitle (may be empty)
+---@field message string Notification message body
+---@field axStackingID string Full AX stacking identifier from notification center
+---@field bundleID string Parsed bundle ID from stacking identifier
+---@field notificationID? string UUID from AXIdentifier
+---@field notificationType? string "system" | "app"
+---@field subrole? string AXSubrole value
+---@field matchedCriteria? string JSON string of what matched (for logging)
+---@field urgency? string Resolved urgency level: "critical"|"high"|"normal"|"low"
+
 ---Processes a notification according to rule configuration
 ---Handles focus mode checks, urgency-based rendering, and phone delivery
 ---@param rule NotificationRule The notification rule configuration
----@param title string Notification title
----@param subtitle string Notification subtitle (may be empty)
----@param message string Notification message body
----@param axStackingID string Full AX stacking identifier from notification center
----@param bundleID string Parsed bundle ID from stacking identifier
----@param notificationID string|nil UUID from AXIdentifier
----@param notificationType string|nil "system" | "app"
----@param subrole string|nil AXSubrole value
----@param matchedCriteria string|nil JSON string of what matched (for logging)
----@param urgency string Resolved urgency level: "critical"|"high"|"normal"|"low"
-function M.process(rule, title, subtitle, message, axStackingID, bundleID, notificationID, notificationType, subrole, matchedCriteria, urgency)
+---@param opts ProcessOpts Notification content and metadata
+function M.process(rule, opts)
   local notify = require("lib.notifications.notifier")
-  local db = require("lib.notifications.db")
+  local DB = require("lib.db")
   local menubar = require("lib.notifications.menubar")
   local timestamp = os.time()
-  
-  -- Urgency is now passed in from the watcher (resolved via rule.urgency config)
-  urgency = urgency or "normal"
+
+  -- Apply defaults
+  opts = U.defaults(opts, {
+    title = "",
+    subtitle = "",
+    message = "",
+    urgency = "normal",
+  })
+
+  -- Local aliases for readability
+  local title = opts.title
+  local subtitle = opts.subtitle
+  local message = opts.message
+  local axStackingID = opts.axStackingID
+  local bundleID = opts.bundleID
+  local notificationID = opts.notificationID
+  local notificationType = opts.notificationType
+  local subrole = opts.subrole
+  local matchedCriteria = opts.matchedCriteria
+  local urgency = opts.urgency
 
   -- Check focus mode
   -- When no focus mode is active → always show (default behavior)
@@ -51,7 +71,7 @@ function M.process(rule, title, subtitle, message, axStackingID, bundleID, notif
   end
 
   if not focusAllowed then
-    db.log({
+    DB.notifications.log({
       timestamp = timestamp,
       notification_id = notificationID,
       rule_name = rule.name,
@@ -81,7 +101,7 @@ function M.process(rule, title, subtitle, message, axStackingID, bundleID, notif
     })
 
     if not priorityCheck.shouldShow then
-      db.log({
+      DB.notifications.log({
         timestamp = timestamp,
         notification_id = notificationID,
         rule_name = rule.name,
@@ -134,7 +154,9 @@ function M.process(rule, title, subtitle, message, axStackingID, bundleID, notif
   end
 
   -- Show canvas notification
-  notify.sendCanvasNotification(title, subtitle, message, duration, notifConfig)
+  notifConfig.subtitle = subtitle
+  notifConfig.duration = duration
+  notify.sendCanvasNotification(title, message, notifConfig)
   
   -- Handle phone delivery for critical urgency
   if urgencyConfig.phone then
@@ -156,7 +178,7 @@ function M.process(rule, title, subtitle, message, axStackingID, bundleID, notif
     actionDetail = urgencyConfig.phone and "shown_center_dimmed_phone" or "shown_center_dimmed"
   end
   
-  db.log({
+  DB.notifications.log({
     timestamp = timestamp,
     notification_id = notificationID,
     rule_name = rule.name,

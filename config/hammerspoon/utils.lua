@@ -26,6 +26,54 @@ end
 
 -- function M.async_run(cmd, args, cb_fn) return hs.task.new(cmd, cb_fn, args):start() end
 
+--------------------------------------------------------------------------------
+-- OPTIONS TABLE UTILITIES
+--------------------------------------------------------------------------------
+
+---Deep merge defaults into opts (opts values take precedence)
+---Handles nested tables recursively
+---@param opts table|nil The options table (may be nil)
+---@param defaults table The default values
+---@return table opts The merged table (opts is modified in place and returned)
+---@usage local opts = U.defaults(opts, { duration = 5, animation = { enabled = true } })
+function M.defaults(opts, defaults)
+  opts = opts or {}
+  for k, v in pairs(defaults) do
+    if opts[k] == nil then
+      -- Key missing in opts - use default (deep copy tables to avoid mutation)
+      if type(v) == "table" then
+        opts[k] = M.defaults({}, v)
+      else
+        opts[k] = v
+      end
+    elseif type(v) == "table" and type(opts[k]) == "table" then
+      -- Both are tables - recurse
+      M.defaults(opts[k], v)
+    end
+    -- else: opts[k] exists and is not a nested table merge - keep opts value
+  end
+  return opts
+end
+
+---Validate that required keys exist in opts
+---@param opts table The options table to validate
+---@param keys string[] Array of required key names
+---@param fnName string|nil Function name for error messages
+---@return boolean valid True if all required keys present
+---@return string|nil error Error message if validation failed
+---@usage local ok, err = U.required(opts, {"title", "message"}, "N.notify")
+function M.required(opts, keys, fnName)
+  fnName = fnName or "function"
+  for _, key in ipairs(keys) do
+    if opts[key] == nil then
+      return false, string.format("%s: missing required option '%s'", fnName, key)
+    end
+  end
+  return true, nil
+end
+
+--------------------------------------------------------------------------------
+
 function M.ts(date)
   date = date or hs.timer.secondsSinceEpoch()
   return os.date("%Y-%m-%d %H:%M:%S", math.floor(date))

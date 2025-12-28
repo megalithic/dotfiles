@@ -3,8 +3,8 @@
 
 local M = {}
 local fmt = string.format
-local db = require("lib.notifications.db")
 local DB = require("lib.db")
+local db = DB.notifications  -- Alias for convenience
 
 -- Menubar item
 M.menubar = nil

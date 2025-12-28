@@ -255,15 +255,16 @@ end
 ---Send canvas notification (visual overlay)
 ---@param title string
 ---@param message string
----@param duration number
----@param opts table|nil
+---@param opts? {duration?: number, appImageID?: string, includeProgram?: boolean, [string]: any}
 ---@return boolean success
-function M.sendCanvas(title, message, duration, opts)
-  opts = opts or {}
-  opts.appImageID = opts.appImageID or "hal9000"
-  opts.includeProgram = opts.includeProgram ~= false
+function M.sendCanvas(title, message, opts)
+  opts = U.defaults(opts, {
+    duration = 5,
+    appImageID = "hal9000",
+    includeProgram = true,
+  })
 
-  notifier.sendCanvasNotification(title, "", message, duration, opts)
+  notifier.sendCanvasNotification(title, message, opts)
   return true
 end
 
