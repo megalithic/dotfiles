@@ -406,16 +406,16 @@ that was completely wrong.
 
 ## Darwin Rebuild Hang Workaround
 
-**Issue**: `darwin-rebuild switch` hangs indefinitely at "Activating
+**Issue**: `darwin-rebuild switch` intermittently hangs at "Activating
 setupLaunchAgents" when home-manager is integrated with nix-darwin.
 
-**Root Cause**: darwin-rebuild's subprocess handling causes a hang when calling
-home-manager's setupLaunchAgents activation step. The launch agents themselves
-work fine when loaded manually, but the way darwin-rebuild pipes/calls the
-activation causes it to block.
+**Root Cause**: The hang occurs when darwin-rebuild runs home-manager activation
+via `launchctl asuser $(id -u) sudo -u $USER --set-home /nix/store/.../activation-$USER`.
+This pattern can intermittently hang during the setupLaunchAgents step, likely
+due to launchd timing/race conditions when rapidly calling launchctl
+bootout/bootstrap. The hang is intermittent and not widely reported online.
 
-**Workaround**: Use `bin/darwin-switch` instead of `darwin-rebuild switch`. This
-script separates the darwin system activation from home-manager activation:
+**Workaround**: Use `bin/darwin-switch` instead of `darwin-rebuild switch`:
 
 ```bash
 # Use this (via justfile)
@@ -424,25 +424,26 @@ just rebuild
 # Or directly
 ./bin/darwin-switch
 
-# Avoid this (will hang)
+# Avoid this (may hang)
 sudo darwin-rebuild switch --flake ./
 ```
 
 The workaround script:
 
 1. Builds darwin configuration
-2. Activates darwin system (as root)
-3. Builds home-manager configuration separately
-4. Activates home-manager (as user)
+2. Patches the darwin activate script to skip HM activation
+3. Runs patched darwin activation (as root)
+4. Runs home-manager activation directly (as user, not via launchctl asuser)
 
-This avoids the subprocess hang by running activations in sequence rather than
-as nested calls.
+The key fix is running home-manager activation **directly** rather than wrapped
+in `launchctl asuser ... sudo -u $USER`. This avoids whatever subprocess/launchd
+race condition causes the intermittent hang.
 
-**Status**: This is likely a bug in nix-darwin or darwin-rebuild's activation
-orchestration. No existing GitHub issues found as of 2025-12-19.
+**Status**: Intermittent bug, possibly in launchd or darwin-rebuild's activation
+orchestration. No existing GitHub issues found as of 2025-12-28.
 
 **Related Files**:
 
-- `bin/darwin-switch` - Workaround script
+- `bin/darwin-switch` - Workaround script that patches out HM activation
 - `justfile` - `rebuild` target uses workaround
-- `home/programs/agenix.nix` - Agenix launch agent disabled to reduce complexity
+- `home/programs/agenix.nix` - Agenix launch agent has RunAtLoad=false

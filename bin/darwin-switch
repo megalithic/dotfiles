@@ -1,27 +1,62 @@
 #!/usr/bin/env bash
 # Workaround for darwin-rebuild hanging on setupLaunchAgents
-# Separates system and home-manager activation to avoid the hang
+#
+# The hang occurs when darwin-rebuild runs home-manager activation via:
+#   launchctl asuser $(id -u) sudo -u $USER --set-home /nix/store/.../activation-$USER
+#
+# This pattern can intermittently hang during the setupLaunchAgents step,
+# likely due to launchd timing/race conditions when rapidly calling
+# launchctl bootout/bootstrap.
+#
+# This script works around the issue by:
+# 1. Building the darwin configuration
+# 2. Running the darwin activate script with HM activation patched out
+# 3. Running home-manager activation directly (not via launchctl asuser)
 
 set -euo pipefail
 
 cd ~/.dotfiles
 
-echo "━━━ Building darwin configuration..."
-nix build .#darwinConfigurations.megabookpro.system -o /tmp/darwin-result
+HOST="${1:-megabookpro}"
+USERNAME="${2:-seth}"
+
+echo "━━━ Building darwin configuration for $HOST..."
+nix build ".#darwinConfigurations.$HOST.system" -o /tmp/darwin-result
 
 echo ""
-echo "━━━ Activating darwin system (as root)..."
-sudo /tmp/darwin-result/sw/bin/darwin-rebuild activate --flake .#megabookpro
+echo "━━━ Activating darwin system (patching out home-manager activation)..."
+
+# Create a patched activate script that skips HM activation
+# The HM activation line looks like:
+#   launchctl asuser "$(id -u $USER)" sudo -u $USER --set-home /nix/store/.../activation-$USER
+ACTIVATE_SCRIPT="/tmp/darwin-result/activate"
+PATCHED_SCRIPT="/tmp/darwin-activate-patched"
+
+# Patch out the launchctl asuser line that runs home-manager activation
+sed 's|^launchctl asuser.*activation-'"$USERNAME"'$|echo "Skipping home-manager activation (will run separately)"|' \
+    "$ACTIVATE_SCRIPT" > "$PATCHED_SCRIPT"
+chmod +x "$PATCHED_SCRIPT"
+
+# Run patched darwin activation as root
+sudo "$PATCHED_SCRIPT"
+
+# Update the system profile (normally done by darwin-rebuild switch)
+# Set HOME to root's home to avoid warning about ownership
+sudo HOME=/var/root nix-env -p /nix/var/nix/profiles/system --set /tmp/darwin-result
 
 echo ""
-echo "━━━ Building home-manager configuration..."
-nix build .#darwinConfigurations.megabookpro.config.home-manager.users.seth.home.activationPackage -o /tmp/hm-result
-
-echo ""
-echo "━━━ Activating home-manager (as user)..."
-/tmp/hm-result/activate
+echo "━━━ Activating home-manager directly (as user)..."
+# Run the same activation script that darwin would run, but directly
+# This avoids the launchctl asuser wrapper that can cause hangs
+HM_ACTIVATION=$(grep -o '/nix/store/[^/]*-activation-'"$USERNAME" "$ACTIVATE_SCRIPT" | head -1)
+if [[ -n "$HM_ACTIVATION" && -x "$HM_ACTIVATION" ]]; then
+    export HOME_MANAGER_BACKUP_EXT=hm-backup
+    "$HM_ACTIVATION"
+else
+    echo "Warning: Could not find home-manager activation script, running from built package..."
+    nix build ".#darwinConfigurations.$HOST.config.home-manager.users.$USERNAME.home.activationPackage" -o /tmp/hm-result
+    /tmp/hm-result/activate
+fi
 
 echo ""
 echo "✓ Done! System and home-manager activated successfully."
-echo ""
-echo "Note: This avoided the setupLaunchAgents hang by running activations separately."
