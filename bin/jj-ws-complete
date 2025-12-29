@@ -5,10 +5,15 @@
 # Usage: jj-ws-complete [--no-merge] [--no-cleanup] [--json]
 #
 # This script is designed for AI agents to:
-# 1. Describe the current commit with work summary
-# 2. Optionally squash into parent or rebase to main
-# 3. Close the associated bead task
-# 4. Clean up workspace and tmux window
+# 1. Create a ws/<workspace-name> bookmark for the completed work
+# 2. Close the associated bead task
+# 3. Clean up workspace directory and tmux window
+# 4. Output instructions for reviewing and pushing the work
+#
+# The bookmark allows:
+# - Listing completed work: jj bookmark list -r 'bookmarks(glob:"ws/*")'
+# - Selective pushing: jj git push -b ws/<name>
+# - Review before merging to main
 #
 # Exit codes:
 #   0 - Success
@@ -18,6 +23,42 @@
 #   4 - Uncommitted changes that need description
 
 set -euo pipefail
+
+# ─────────────────────────────────────────────────────────────────
+# Concurrency safety: Acquire lock before modifying jj state
+# ─────────────────────────────────────────────────────────────────
+# Multiple agents may run simultaneously. Use mkdir-based locking
+# (atomic on POSIX) to serialize jj operations and prevent races.
+
+LOCK_DIR=""
+
+acquire_lock() {
+    local repo_root="$1"
+    LOCK_DIR="$repo_root/.jj/workspace-ops.lock"
+    local timeout=30
+    local waited=0
+
+    # mkdir is atomic - will fail if directory exists
+    while ! mkdir "$LOCK_DIR" 2>/dev/null; do
+        if [[ $waited -ge $timeout ]]; then
+            echo "Error: Timed out waiting for workspace lock" >&2
+            echo "Another agent may be performing workspace operations" >&2
+            echo "If stuck, remove: $LOCK_DIR" >&2
+            exit 1
+        fi
+        sleep 1
+        ((waited++))
+    done
+
+    # Set trap to release lock on exit (normal or error)
+    trap release_lock EXIT
+}
+
+release_lock() {
+    if [[ -n "$LOCK_DIR" && -d "$LOCK_DIR" ]]; then
+        rmdir "$LOCK_DIR" 2>/dev/null || true
+    fi
+}
 
 # ─────────────────────────────────────────────────────────────────
 # Argument parsing
@@ -91,6 +132,9 @@ fi
 
 PROJECT_NAME=$(basename "$REPO_ROOT")
 
+# Acquire lock for concurrent safety
+acquire_lock "$REPO_ROOT"
+
 if [[ "$CURRENT_WS" == "default" ]]; then
     echo "Error: In default workspace - nothing to complete" >&2
     echo "Use jj-ws-claim to start work in a dedicated workspace" >&2
@@ -103,9 +147,10 @@ WS_DIR="$REPO_ROOT/.workspaces/$CURRENT_WS"
 # Check for work to complete
 # ─────────────────────────────────────────────────────────────────
 
-# Get current commit description
+# Get current commit info
 COMMIT_DESC=$(jj log -r @ --no-graph -T 'description' 2>/dev/null || true)
 COMMIT_EMPTY=$(jj log -r @ --no-graph -T 'if(empty, "true", "false")' 2>/dev/null || echo "true")
+CHANGE_ID=$(jj log -r @ --no-graph -T 'change_id.short(12)' 2>/dev/null || true)
 
 if [[ "$COMMIT_EMPTY" == "true" && -z "$COMMIT_DESC" ]]; then
     echo "Warning: Current commit is empty with no description" >&2
@@ -113,7 +158,28 @@ if [[ "$COMMIT_EMPTY" == "true" && -z "$COMMIT_DESC" ]]; then
 fi
 
 # ─────────────────────────────────────────────────────────────────
-# Close bead task
+# Create workspace bookmark for tracking completed work
+# ─────────────────────────────────────────────────────────────────
+# Creates ws/<workspace-name> bookmark so completed work can be:
+# - Listed: jj bookmark list -r 'bookmarks(glob:"ws/*")'
+# - Selectively pushed: jj git push -b ws/<name>
+# - Reviewed before merging to main
+
+BOOKMARK_NAME="ws/$CURRENT_WS"
+BOOKMARK_CREATED=false
+
+if [[ -n "$CHANGE_ID" ]]; then
+    # Create or move bookmark to current change
+    if jj bookmark set "$BOOKMARK_NAME" -r @ 2>/dev/null; then
+        BOOKMARK_CREATED=true
+        echo "Created bookmark '$BOOKMARK_NAME' at $CHANGE_ID" >&2
+    else
+        echo "Warning: Failed to create bookmark '$BOOKMARK_NAME'" >&2
+    fi
+fi
+
+# ─────────────────────────────────────────────────────────────────
+# Close bead task (with bookmark reference)
 # ─────────────────────────────────────────────────────────────────
 
 TASK_CLOSED=false
@@ -122,33 +188,59 @@ TASK_ID=""
 if command -v bd &>/dev/null; then
     # Try to find task matching workspace name
     TASK_ID="$PROJECT_NAME-$CURRENT_WS"
-    if bd show "$TASK_ID" &>/dev/null; then
-        if [[ -n "$CLOSE_REASON" ]]; then
-            bd close "$TASK_ID" -r "$CLOSE_REASON" 2>/dev/null && TASK_CLOSED=true
+    if ! bd show "$TASK_ID" &>/dev/null; then
+        # Try without project prefix
+        if bd show "$CURRENT_WS" &>/dev/null; then
+            TASK_ID="$CURRENT_WS"
         else
-            bd close "$TASK_ID" -r "Completed in workspace $CURRENT_WS" 2>/dev/null && TASK_CLOSED=true
+            TASK_ID=""
         fi
-    elif bd show "$CURRENT_WS" &>/dev/null; then
-        TASK_ID="$CURRENT_WS"
+    fi
+
+    if [[ -n "$TASK_ID" ]]; then
+        # Add comment with bookmark reference for traceability
+        if $BOOKMARK_CREATED; then
+            bd comments add "$TASK_ID" "Completed in jj workspace. Bookmark: $BOOKMARK_NAME (change: $CHANGE_ID)" 2>/dev/null || true
+        fi
+
+        # Build close reason with bookmark info
         if [[ -n "$CLOSE_REASON" ]]; then
-            bd close "$TASK_ID" -r "$CLOSE_REASON" 2>/dev/null && TASK_CLOSED=true
+            FULL_REASON="$CLOSE_REASON"
         else
-            bd close "$TASK_ID" -r "Completed in workspace $CURRENT_WS" 2>/dev/null && TASK_CLOSED=true
+            FULL_REASON="Completed in workspace $CURRENT_WS"
+        fi
+
+        if $BOOKMARK_CREATED; then
+            FULL_REASON="$FULL_REASON [bookmark: $BOOKMARK_NAME]"
+        fi
+
+        if bd close "$TASK_ID" -r "$FULL_REASON" 2>/dev/null; then
+            TASK_CLOSED=true
         fi
     fi
 fi
 
 # ─────────────────────────────────────────────────────────────────
-# Merge work (optional)
+# Merge work to main (moves main bookmark to current commit)
 # ─────────────────────────────────────────────────────────────────
+# This makes the workspace work part of main locally.
+# Does NOT push to GitHub - that still requires explicit consent.
+# Use --no-merge to skip this and just create the bookmark.
 
 MERGED=false
+PREV_MAIN=""
 if ! $NO_MERGE; then
-    # For now, just ensure the work is described
-    # Actual merge strategy depends on project workflow
-    # Could squash, rebase to main, etc.
-    echo "Note: Merge strategy not implemented - work remains in workspace commit" >&2
-    echo "Manually squash/rebase as needed" >&2
+    # Record previous main position for output
+    PREV_MAIN=$(jj log -r main --no-graph -T 'change_id.short(8)' 2>/dev/null || echo "")
+
+    # Move main bookmark to current commit
+    if jj bookmark set main -r @ 2>/dev/null; then
+        MERGED=true
+        echo "Merged to main: $PREV_MAIN → $CHANGE_ID" >&2
+    else
+        echo "Warning: Failed to move main bookmark" >&2
+        echo "Work is saved in bookmark '$BOOKMARK_NAME' - merge manually" >&2
+    fi
 fi
 
 # ─────────────────────────────────────────────────────────────────
@@ -194,6 +286,11 @@ if $JSON_OUTPUT; then
     "name": "$CURRENT_WS",
     "removed": $WS_REMOVED
   },
+  "bookmark": {
+    "name": "$BOOKMARK_NAME",
+    "created": $BOOKMARK_CREATED,
+    "change_id": "$CHANGE_ID"
+  },
   "task": {
     "id": "$TASK_ID",
     "closed": $TASK_CLOSED
@@ -202,16 +299,37 @@ if $JSON_OUTPUT; then
     "description": $(echo "$COMMIT_DESC" | jq -Rs .),
     "empty": $COMMIT_EMPTY
   },
-  "merged": $MERGED
+  "merged": $MERGED,
+  "main": {
+    "previous": "$PREV_MAIN",
+    "current": "$(if $MERGED; then echo "$CHANGE_ID"; else echo "$PREV_MAIN"; fi)"
+  }
 }
 EOF
 else
     echo "✓ Workspace '$CURRENT_WS' work completed"
+    if $MERGED; then
+        echo "  (merged to main: $PREV_MAIN → $CHANGE_ID)"
+    fi
+    if $BOOKMARK_CREATED; then
+        echo "  (bookmark: $BOOKMARK_NAME)"
+    fi
     if $TASK_CLOSED; then
         echo "  (bead task $TASK_ID closed)"
     fi
     if $WS_REMOVED; then
         echo "  (workspace removed)"
+    fi
+    echo ""
+    if $MERGED; then
+        echo "Work is now in main. To push to GitHub:"
+        echo "  jj log -r main                         # Review what will be pushed"
+        echo "  jj git push                            # Push (requires your consent)"
+    elif $BOOKMARK_CREATED; then
+        echo "To review and merge this work:"
+        echo "  jj log -r '$BOOKMARK_NAME'              # Review changes"
+        echo "  jj bookmark set main -r '$BOOKMARK_NAME' # Merge to main"
+        echo "  jj git push                            # Push (with user consent)"
     fi
     if ! $NO_CLEANUP; then
         echo ""

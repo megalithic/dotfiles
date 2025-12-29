@@ -272,6 +272,74 @@ jj edit abc123 # Work on Feature A
 jj edit def456 # Work on Feature B
 ```
 
+### AI Agent Workspace Workflow (MANDATORY)
+
+**CRITICAL**: AI agents (Claude, OpenCode, etc.) MUST use dedicated workspaces
+for all non-trivial tasks. This enables concurrent work, clean history, and
+safe push workflows.
+
+**Starting work on a task:**
+
+```bash
+# ALWAYS claim a workspace before starting work
+jj-ws-claim <task-id>        # Creates workspace + bead task
+jj-ws-claim <task-id> --json # Machine-readable output
+
+# Example
+jj-ws-claim hs-memory-leaks
+# Creates:
+#   - jj workspace: .workspaces/hs-memory-leaks/
+#   - bead task: .dotfiles-hs-memory-leaks
+#   - tmux window (if in tmux)
+```
+
+**During work:**
+
+- Work in the claimed workspace directory
+- Use standard jj commands (`jj describe`, `jj new`, etc.)
+- Workspace isolates your changes from other agents/tasks
+
+**Completing work:**
+
+```bash
+# When task is done (from within the workspace)
+jj-ws-complete              # Creates ws/<name> bookmark, closes bead task
+jj-ws-complete --no-cleanup # Keep workspace for review
+jj-ws-complete --json       # Machine-readable output
+```
+
+This creates a `ws/<workspace-name>` bookmark for the completed work, allowing
+selective review and push. The bead task is closed with a reference to the
+bookmark for traceability.
+
+**Review and push workflow (user-initiated, NOT agent-initiated):**
+
+```bash
+# List all completed workspace work
+jj-ws-push --list
+
+# Review specific work
+jj log -r 'ws/hs-memory-leaks'
+jj diff -r 'main..ws/hs-memory-leaks'
+
+# Push specific work (with confirmation)
+jj-ws-push --push ws/hs-memory-leaks
+
+# Push all completed work (with confirmation for each)
+jj-ws-push --push-all
+```
+
+**NEVER push without explicit user consent.** The `jj-ws-push` script requires
+interactive confirmation. Agents should alert the user when work is ready for
+review, not push automatically.
+
+**Concurrent agents:**
+
+- Multiple agents can work in separate workspaces simultaneously
+- `jj-ws-claim` and `jj-ws-complete` use flock-based locking for safety
+- Each workspace has isolated working copy - no conflicts during work
+- Bookmarks are merged to main sequentially during push
+
 ### Current State
 
 This repo is already jj-initialized with git coexistence. Always check

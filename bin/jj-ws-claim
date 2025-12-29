@@ -20,6 +20,42 @@
 set -euo pipefail
 
 # ─────────────────────────────────────────────────────────────────
+# Concurrency safety: Acquire lock before modifying jj state
+# ─────────────────────────────────────────────────────────────────
+# Multiple agents may run simultaneously. Use mkdir-based locking
+# (atomic on POSIX) to serialize jj operations and prevent races.
+
+LOCK_DIR=""
+
+acquire_lock() {
+    local repo_root="$1"
+    LOCK_DIR="$repo_root/.jj/workspace-ops.lock"
+    local timeout=30
+    local waited=0
+
+    # mkdir is atomic - will fail if directory exists
+    while ! mkdir "$LOCK_DIR" 2>/dev/null; do
+        if [[ $waited -ge $timeout ]]; then
+            echo "Error: Timed out waiting for workspace lock" >&2
+            echo "Another agent may be performing workspace operations" >&2
+            echo "If stuck, remove: $LOCK_DIR" >&2
+            exit 1
+        fi
+        sleep 1
+        ((waited++))
+    done
+
+    # Set trap to release lock on exit (normal or error)
+    trap release_lock EXIT
+}
+
+release_lock() {
+    if [[ -n "$LOCK_DIR" && -d "$LOCK_DIR" ]]; then
+        rmdir "$LOCK_DIR" 2>/dev/null || true
+    fi
+}
+
+# ─────────────────────────────────────────────────────────────────
 # Argument parsing
 # ─────────────────────────────────────────────────────────────────
 
@@ -93,6 +129,9 @@ if [[ "$CURRENT_WS" != "default" && -n "$CURRENT_WS" ]]; then
     echo "Warning: Already in workspace '$CURRENT_WS'" >&2
     echo "Consider completing current work first with jj-ws-complete" >&2
 fi
+
+# Acquire lock for concurrent safety
+acquire_lock "$REPO_ROOT"
 
 # ─────────────────────────────────────────────────────────────────
 # Create or switch to workspace

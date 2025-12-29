@@ -1,0 +1,268 @@
+#!/usr/bin/env bash
+#
+# jj-ws-push - Review and push completed workspace work
+#
+# Usage: jj-ws-push [--list] [--push <bookmark>] [--push-all] [--json]
+#
+# This script helps manage completed workspace work:
+# 1. List all ws/* bookmarks (completed workspace work)
+# 2. Show diff/log for review
+# 3. Merge selected work to main and push (with explicit consent)
+#
+# Safety features:
+# - Never pushes without explicit --push or --push-all flag
+# - Shows what will be pushed before doing it
+# - Requires user confirmation for destructive operations
+#
+# Exit codes:
+#   0 - Success
+#   1 - Invalid arguments
+#   2 - Not in a jj repository
+#   3 - No workspace bookmarks found
+#   4 - Push failed
+
+set -euo pipefail
+
+# ─────────────────────────────────────────────────────────────────
+# Argument parsing
+# ─────────────────────────────────────────────────────────────────
+
+LIST_ONLY=false
+PUSH_BOOKMARK=""
+PUSH_ALL=false
+JSON_OUTPUT=false
+FORCE=false
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -l|--list)
+            LIST_ONLY=true
+            shift
+            ;;
+        -p|--push)
+            PUSH_BOOKMARK="$2"
+            shift 2
+            ;;
+        --push-all)
+            PUSH_ALL=true
+            shift
+            ;;
+        -f|--force)
+            FORCE=true
+            shift
+            ;;
+        --json)
+            JSON_OUTPUT=true
+            shift
+            ;;
+        -h|--help)
+            cat <<EOF
+Usage: jj-ws-push [--list] [--push <bookmark>] [--push-all] [--json]
+
+Review and push completed workspace work.
+
+Options:
+  -l, --list         List all workspace bookmarks (ws/*) with status
+  -p, --push <name>  Push specific bookmark to main (e.g., ws/my-feature)
+  --push-all         Push all workspace bookmarks to main
+  -f, --force        Skip confirmation prompts
+  --json             Output result as JSON
+  -h, --help         Show this help
+
+Examples:
+  jj-ws-push --list                    # See all completed workspace work
+  jj-ws-push --push ws/hs-memory-leaks # Push specific work to main
+  jj-ws-push --push-all                # Push all completed work
+
+Workflow:
+  1. AI agent completes work with jj-ws-complete (creates ws/* bookmark)
+  2. User runs jj-ws-push --list to see pending work
+  3. User reviews with jj log -r 'ws/feature-name'
+  4. User runs jj-ws-push --push ws/feature-name to merge and push
+EOF
+            exit 0
+            ;;
+        -*)
+            echo "Error: Unknown option $1" >&2
+            exit 1
+            ;;
+        *)
+            echo "Error: Unexpected argument $1" >&2
+            exit 1
+            ;;
+    esac
+done
+
+# ─────────────────────────────────────────────────────────────────
+# Repository detection
+# ─────────────────────────────────────────────────────────────────
+
+REPO_ROOT=$(jj workspace root 2>/dev/null || true)
+if [[ -z "$REPO_ROOT" ]]; then
+    echo "Error: Not in a jj repository" >&2
+    exit 2
+fi
+
+# If in a workspace, get the actual repo root
+if [[ "$REPO_ROOT" == *"/.workspaces/"* ]]; then
+    REPO_ROOT=$(dirname "$(dirname "$REPO_ROOT")")
+fi
+
+cd "$REPO_ROOT"
+
+# ─────────────────────────────────────────────────────────────────
+# Get workspace bookmarks
+# ─────────────────────────────────────────────────────────────────
+
+# Get all ws/* bookmarks
+WS_BOOKMARKS=$(jj bookmark list 2>/dev/null | grep -E '^ws/' | awk '{print $1}' | tr -d ':' || true)
+
+if [[ -z "$WS_BOOKMARKS" ]]; then
+    if $JSON_OUTPUT; then
+        echo '{"success": true, "bookmarks": [], "message": "No workspace bookmarks found"}'
+    else
+        echo "No workspace bookmarks found."
+        echo "Complete workspace work with jj-ws-complete to create bookmarks."
+    fi
+    exit 0
+fi
+
+# ─────────────────────────────────────────────────────────────────
+# List mode
+# ─────────────────────────────────────────────────────────────────
+
+if $LIST_ONLY || [[ -z "$PUSH_BOOKMARK" && "$PUSH_ALL" == "false" ]]; then
+    if $JSON_OUTPUT; then
+        echo '{"success": true, "bookmarks": ['
+        first=true
+        for bm in $WS_BOOKMARKS; do
+            change_id=$(jj log -r "$bm" --no-graph -T 'change_id.short(12)' 2>/dev/null || echo "unknown")
+            desc=$(jj log -r "$bm" --no-graph -T 'description.first_line()' 2>/dev/null | head -1 || echo "")
+            if $first; then
+                first=false
+            else
+                echo ","
+            fi
+            printf '    {"name": "%s", "change_id": "%s", "description": %s}' \
+                "$bm" "$change_id" "$(echo "$desc" | jq -Rs .)"
+        done
+        echo ''
+        echo ']}'
+    else
+        echo "Completed workspace work (ws/* bookmarks):"
+        echo ""
+        for bm in $WS_BOOKMARKS; do
+            change_id=$(jj log -r "$bm" --no-graph -T 'change_id.short(8)' 2>/dev/null || echo "???")
+            desc=$(jj log -r "$bm" --no-graph -T 'description.first_line()' 2>/dev/null | head -1 || echo "(no description)")
+            # Truncate description if too long
+            if [[ ${#desc} -gt 50 ]]; then
+                desc="${desc:0:47}..."
+            fi
+            printf "  %-25s %s  %s\n" "$bm" "$change_id" "$desc"
+        done
+        echo ""
+        echo "To review:  jj log -r 'ws/<name>'"
+        echo "To push:    jj-ws-push --push ws/<name>"
+        echo "To diff:    jj diff -r 'main..ws/<name>'"
+    fi
+    exit 0
+fi
+
+# ─────────────────────────────────────────────────────────────────
+# Push mode
+# ─────────────────────────────────────────────────────────────────
+
+push_bookmark() {
+    local bm="$1"
+
+    # Verify bookmark exists
+    if ! jj log -r "$bm" --no-graph -T 'change_id' &>/dev/null; then
+        echo "Error: Bookmark '$bm' not found" >&2
+        return 1
+    fi
+
+    local change_id=$(jj log -r "$bm" --no-graph -T 'change_id.short(12)' 2>/dev/null)
+    local desc=$(jj log -r "$bm" --no-graph -T 'description.first_line()' 2>/dev/null | head -1)
+
+    echo "Pushing: $bm ($change_id)"
+    echo "  Description: $desc"
+    echo ""
+
+    # Show what will be pushed
+    echo "Changes to be merged to main:"
+    jj log -r "main..$bm" --no-graph 2>/dev/null || true
+    echo ""
+
+    if ! $FORCE; then
+        read -p "Merge '$bm' to main and push to origin? [y/N] " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            echo "Cancelled."
+            return 1
+        fi
+    fi
+
+    # Merge to main by moving the bookmark
+    echo "Moving main bookmark to $bm..."
+    if ! jj bookmark set main -r "$bm" 2>/dev/null; then
+        echo "Error: Failed to move main bookmark" >&2
+        return 1
+    fi
+
+    # Push to origin
+    echo "Pushing to origin/main..."
+    if ! jj git push 2>/dev/null; then
+        echo "Error: Push failed" >&2
+        return 1
+    fi
+
+    # Clean up the workspace bookmark (optional - keep for history)
+    # jj bookmark delete "$bm" 2>/dev/null || true
+
+    echo "✓ Successfully pushed $bm to main"
+    return 0
+}
+
+# Push specific bookmark
+if [[ -n "$PUSH_BOOKMARK" ]]; then
+    if push_bookmark "$PUSH_BOOKMARK"; then
+        if $JSON_OUTPUT; then
+            echo "{\"success\": true, \"pushed\": [\"$PUSH_BOOKMARK\"]}"
+        fi
+        exit 0
+    else
+        exit 4
+    fi
+fi
+
+# Push all bookmarks
+if $PUSH_ALL; then
+    pushed=()
+    failed=()
+
+    for bm in $WS_BOOKMARKS; do
+        echo "─────────────────────────────────────────"
+        if push_bookmark "$bm"; then
+            pushed+=("$bm")
+        else
+            failed+=("$bm")
+        fi
+        echo ""
+    done
+
+    echo "═════════════════════════════════════════"
+    echo "Summary:"
+    echo "  Pushed: ${#pushed[@]}"
+    echo "  Failed: ${#failed[@]}"
+
+    if [[ ${#failed[@]} -gt 0 ]]; then
+        echo "  Failed bookmarks: ${failed[*]}"
+        exit 4
+    fi
+
+    if $JSON_OUTPUT; then
+        printf '{"success": true, "pushed": [%s]}' \
+            "$(printf '"%s",' "${pushed[@]}" | sed 's/,$//')"
+    fi
+    exit 0
+fi
