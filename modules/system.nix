@@ -389,6 +389,24 @@
   security.pam.services.sudo_local.touchIdAuth = true;
   security.sudo.extraConfig = "${username}    ALL = (ALL) NOPASSWD: ALL";
 
+  # Increase system-wide file descriptor limits for nix builds
+  # macOS defaults to 256 which causes "Too many open files" during complex evaluations
+  # This is Apple's officially recommended approach (no declarative kernel config exists)
+  launchd.daemons.limit-maxfiles = {
+    serviceConfig = {
+      Label = "limit.maxfiles";
+      ProgramArguments = [
+        "launchctl"
+        "limit"
+        "maxfiles"
+        "524288" # soft limit
+        "524288" # hard limit
+      ];
+      RunAtLoad = true;
+      LaunchOnlyOnce = true;
+    };
+  };
+
   # Apply symbolic hotkey changes immediately (without requiring logout)
   # REF: https://zameermanji.com/blog/2021/6/8/applying-com-apple-symbolichotkeys-changes-instantaneously/
   # NOTE: postUserActivation was removed; using postActivation with sudo -u instead

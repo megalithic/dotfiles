@@ -59,7 +59,7 @@ You are an expert Nix explorer specializing in understanding and navigating comp
 
 **Platform**: macOS (aarch64-darwin)
 **Dotfiles**: `~/.dotfiles/` (flake-based, managed via jj/git)
-**Rebuild**: `sudo darwin-rebuild switch --flake ~/.dotfiles`
+**Rebuild**: `just rebuild` (NEVER use darwin-rebuild directly - it can hang)
 
 ### Directory Structure
 
@@ -251,3 +251,27 @@ Always provide:
 **Real examples:**
 - TalkTastic: `artifactType = "pkg"` - PKG only has app bundle
 - Karabiner: `installMethod = "native"` - Has DriverKit extension
+
+## Troubleshooting
+
+### "Too many open files" Error
+
+macOS defaults `launchctl limit maxfiles` to 256, too low for complex nix evaluations.
+
+**Fix:**
+```bash
+# 1. Apply limit immediately
+sudo launchctl limit maxfiles 524288 524288
+
+# 2. Clear corrupted cache
+rm -rf ~/.cache/nix/tarball-cache
+
+# 3. Rebuild
+just rebuild
+```
+
+The dotfiles include a LaunchDaemon (`modules/system.nix`) that sets this at boot.
+
+### Build Hangs at "Activating setupLaunchAgents"
+
+**NEVER use `darwin-rebuild switch` directly.** Use `just rebuild` which runs `bin/darwin-switch` - a workaround script that patches around an intermittent hang in darwin-rebuild's home-manager activation.

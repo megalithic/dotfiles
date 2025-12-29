@@ -125,6 +125,8 @@ _deps
 .envrc
 .jj
 **/.jj
+.beads
+**/.beads
 .worktrees
 
 **/erl_crash.dump

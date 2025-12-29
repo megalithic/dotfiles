@@ -19,8 +19,22 @@ You are a Nix expert specializing in:
 
 - **Platform**: macOS (aarch64-darwin)
 - **Dotfiles**: `~/.dotfiles/` (flake-based)
-- **Rebuild command**: `sudo darwin-rebuild switch --flake ~/.dotfiles`
-- **Package search**: `nix search nixpkgs#<package>`
+- **Rebuild command**: `just rebuild` (uses workaround script, see below)
+- **Package search**: `nix search nixpkgs#<package>` or `nh search <query>`
+
+### CRITICAL: Rebuild Command
+
+**ALWAYS use `just rebuild`** instead of `darwin-rebuild switch` directly:
+
+```bash
+# CORRECT - uses workaround script that avoids HM activation hang
+just rebuild
+
+# AVOID - can hang at "Activating setupLaunchAgents"
+sudo darwin-rebuild switch --flake ./
+```
+
+The `just rebuild` command runs `bin/darwin-switch` which patches around an intermittent hang in darwin-rebuild's home-manager activation.
 
 ## Key Paths
 
@@ -62,15 +76,17 @@ nix build .#darwinConfigurations.megabookpro.system --dry-run
 ### 2. Rebuild System
 
 ```bash
-# Standard rebuild (preferred - clean output)
-sudo darwin-rebuild switch --flake .
+# Standard rebuild (ALWAYS USE THIS)
+just rebuild
 
-# With verbose output for debugging
-sudo darwin-rebuild switch --flake . --show-trace
-
-# Build without switching (test)
+# Build without switching (test only)
 darwin-rebuild build --flake .
+
+# With verbose output for debugging (if just rebuild fails)
+./bin/darwin-switch --show-trace
 ```
+
+**IMPORTANT**: Never use `sudo darwin-rebuild switch` directly - it can hang. Use `just rebuild` which runs the workaround script.
 
 ### 3. Fetch Hashes for Packages
 
@@ -474,6 +490,49 @@ lib.mega.mkApp {inherit pkgs lib;} {
 2. **Attribute not found**: Check spelling, imports, and that module is loaded
 3. **Hash mismatch**: Use `nix-prefetch-*` tools to get correct hash
 4. **Build failures**: Check `nix log /nix/store/<drv>` for build logs
+5. **"Too many open files"**: See macOS file descriptor limits section below
+
+## macOS File Descriptor Limits
+
+### Problem
+
+macOS defaults `launchctl limit maxfiles` to 256 (soft limit), which is too low for complex nix evaluations. You'll see errors like:
+
+```
+error: creating git packfile indexer: failed to create temporary file ... Too many open files
+error: cannot enqueue a work item while the thread pool is shutting down
+```
+
+### Solution
+
+The dotfiles include a LaunchDaemon that sets maxfiles to 524288 at boot (`modules/system.nix`). If you see this error:
+
+```bash
+# 1. Apply limit immediately (until next reboot)
+sudo launchctl limit maxfiles 524288 524288
+
+# 2. Clear corrupted cache
+rm -rf ~/.cache/nix/tarball-cache
+
+# 3. Rebuild
+just rebuild
+```
+
+### Why This Is Necessary
+
+Modern macOS has **no declarative kernel parameter config**. Unlike Linux with `/etc/sysctl.conf`, the only persistent way to set `kern.maxfiles` is via a LaunchDaemon that runs at boot. This is Apple's officially recommended approach.
+
+The LaunchDaemon in `modules/system.nix`:
+```nix
+launchd.daemons.limit-maxfiles = {
+  serviceConfig = {
+    Label = "limit.maxfiles";
+    ProgramArguments = ["launchctl" "limit" "maxfiles" "524288" "524288"];
+    RunAtLoad = true;
+    LaunchOnlyOnce = true;
+  };
+};
+```
 
 ## Common Gotchas
 
