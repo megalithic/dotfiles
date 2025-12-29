@@ -2,13 +2,14 @@
 #
 # jj-ws-complete - Complete work in a workspace and clean up
 #
-# Usage: jj-ws-complete [--no-merge] [--no-cleanup] [--json]
+# Usage: jj-ws-complete [<workspace-name>] [options]
+#        jj-ws-complete --all [options]
 #
 # This script is designed for AI agents to:
 # 1. Create a ws/<workspace-name> bookmark for the completed work
-# 2. Close the associated bead task
-# 3. Clean up workspace directory and tmux window
-# 4. Output instructions for reviewing and pushing the work
+# 2. Merge the work to main (locally, not pushed)
+# 3. Close the associated bead task
+# 4. Clean up workspace directory and tmux window
 #
 # The bookmark allows:
 # - Listing completed work: jj bookmark list -r 'bookmarks(glob:"ws/*")'
@@ -20,7 +21,7 @@
 #   1 - Invalid arguments
 #   2 - Not in a jj workspace
 #   3 - In default workspace (nothing to complete)
-#   4 - Uncommitted changes that need description
+#   4 - Workspace not found
 
 set -euo pipefail
 
@@ -64,13 +65,24 @@ release_lock() {
 # Argument parsing
 # ─────────────────────────────────────────────────────────────────
 
+TARGET_WS=""
+COMPLETE_ALL=false
 NO_MERGE=false
 NO_CLEANUP=false
+DO_REBASE=false
 JSON_OUTPUT=false
 CLOSE_REASON=""
 
 while [[ $# -gt 0 ]]; do
     case $1 in
+        -a|--all)
+            COMPLETE_ALL=true
+            shift
+            ;;
+        -r|--rebase)
+            DO_REBASE=true
+            shift
+            ;;
         --no-merge)
             NO_MERGE=true
             shift
@@ -88,16 +100,30 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         -h|--help)
-            echo "Usage: jj-ws-complete [--no-merge] [--no-cleanup] [--reason <text>] [--json]"
-            echo ""
-            echo "Complete work in current workspace and clean up."
-            echo ""
-            echo "Options:"
-            echo "  --no-merge     Don't attempt to merge work to main"
-            echo "  --no-cleanup   Don't remove workspace after completion"
-            echo "  --reason       Reason for closing bead task"
-            echo "  --json         Output result as JSON"
-            echo "  -h, --help     Show this help"
+            cat <<'EOF'
+Usage: jj-ws-complete [<workspace-name>] [options]
+       jj-ws-complete --all [options]
+
+Complete work in a workspace, merge to main, and clean up.
+
+Arguments:
+  <workspace-name>   Specific workspace to complete (default: current workspace)
+
+Options:
+  -a, --all        Complete ALL workspaces
+  -r, --rebase     Rebase parallel branches onto main before merging
+  --no-merge       Don't merge work to main (just create bookmark)
+  --no-cleanup     Don't remove workspace after completion
+  --reason <text>  Reason for closing bead task
+  --json           Output result as JSON
+  -h, --help       Show this help
+
+Examples:
+  jj-ws-complete                     # Complete current workspace
+  jj-ws-complete hs-memory-leaks     # Complete specific workspace
+  jj-ws-complete --all               # Complete all workspaces
+  jj-ws-complete -r hs-memory-leaks  # Complete with rebase if parallel
+EOF
             exit 0
             ;;
         -*)
@@ -105,14 +131,19 @@ while [[ $# -gt 0 ]]; do
             exit 1
             ;;
         *)
-            echo "Error: Unexpected argument $1" >&2
-            exit 1
+            if [[ -z "$TARGET_WS" ]]; then
+                TARGET_WS="$1"
+            else
+                echo "Error: Unexpected argument $1" >&2
+                exit 1
+            fi
+            shift
             ;;
     esac
 done
 
 # ─────────────────────────────────────────────────────────────────
-# Repository and workspace detection
+# Repository detection
 # ─────────────────────────────────────────────────────────────────
 
 WS_PATH=$(jj workspace root 2>/dev/null || true)
@@ -121,12 +152,10 @@ if [[ -z "$WS_PATH" ]]; then
     exit 2
 fi
 
-# Determine if we're in a workspace or default
+# Find repo root (whether in workspace or default)
 if [[ "$WS_PATH" == *"/.workspaces/"* ]]; then
-    CURRENT_WS=$(basename "$WS_PATH")
     REPO_ROOT=$(dirname "$(dirname "$WS_PATH")")
 else
-    CURRENT_WS="default"
     REPO_ROOT="$WS_PATH"
 fi
 
@@ -135,13 +164,46 @@ PROJECT_NAME=$(basename "$REPO_ROOT")
 # Acquire lock for concurrent safety
 acquire_lock "$REPO_ROOT"
 
-if [[ "$CURRENT_WS" == "default" ]]; then
-    echo "Error: In default workspace - nothing to complete" >&2
-    echo "Use jj-ws-claim to start work in a dedicated workspace" >&2
-    exit 3
-fi
+# ─────────────────────────────────────────────────────────────────
+# Determine which workspace(s) to complete
+# ─────────────────────────────────────────────────────────────────
 
-WS_DIR="$REPO_ROOT/.workspaces/$CURRENT_WS"
+get_all_workspaces() {
+    jj workspace list 2>/dev/null | grep -v '^default:' | awk -F: '{print $1}' || true
+}
+
+if $COMPLETE_ALL; then
+    # Complete all non-default workspaces
+    WORKSPACES=$(get_all_workspaces)
+    if [[ -z "$WORKSPACES" ]]; then
+        echo "No workspaces to complete (only default exists)" >&2
+        exit 0
+    fi
+    # Process each workspace - for now just do the first, TODO: loop
+    # For --all, we'll need to refactor into a function
+    echo "Error: --all not yet implemented. Complete workspaces individually." >&2
+    exit 1
+elif [[ -n "$TARGET_WS" ]]; then
+    # Specific workspace requested
+    CURRENT_WS="$TARGET_WS"
+    WS_DIR="$REPO_ROOT/.workspaces/$CURRENT_WS"
+    if [[ ! -d "$WS_DIR" ]]; then
+        echo "Error: Workspace '$TARGET_WS' not found at $WS_DIR" >&2
+        exit 4
+    fi
+    # Change to workspace directory so jj commands work on that workspace
+    cd "$WS_DIR"
+else
+    # Use current workspace
+    if [[ "$WS_PATH" == *"/.workspaces/"* ]]; then
+        CURRENT_WS=$(basename "$WS_PATH")
+    else
+        echo "Error: In default workspace - nothing to complete" >&2
+        echo "Specify a workspace name or use --all" >&2
+        exit 3
+    fi
+    WS_DIR="$REPO_ROOT/.workspaces/$CURRENT_WS"
+fi
 
 # ─────────────────────────────────────────────────────────────────
 # Check for work to complete
@@ -226,20 +288,47 @@ fi
 # This makes the workspace work part of main locally.
 # Does NOT push to GitHub - that still requires explicit consent.
 # Use --no-merge to skip this and just create the bookmark.
+# Use --rebase / -r to rebase parallel branches onto main first.
 
 MERGED=false
+REBASED=false
 PREV_MAIN=""
 if ! $NO_MERGE; then
     # Record previous main position for output
     PREV_MAIN=$(jj log -r main --no-graph -T 'change_id.short(8)' 2>/dev/null || echo "")
 
+    # Check if @ is a descendant of main (main is an ancestor of @)
+    IS_DESCENDANT=false
+    if jj log -r '@ & descendants(main)' --no-graph -T 'x' 2>/dev/null | grep -q 'x'; then
+        IS_DESCENDANT=true
+    fi
+
+    # If parallel branch and --rebase requested, rebase onto main first
+    if ! $IS_DESCENDANT && $DO_REBASE; then
+        echo "Rebasing onto main (parallel branch detected)..." >&2
+        if jj rebase -r @ -d main 2>/dev/null; then
+            REBASED=true
+            CHANGE_ID=$(jj log -r @ --no-graph -T 'change_id.short(12)' 2>/dev/null || echo "$CHANGE_ID")
+        else
+            echo "Warning: Failed to rebase onto main" >&2
+        fi
+    fi
+
     # Move main bookmark to current commit
     if jj bookmark set main -r @ 2>/dev/null; then
         MERGED=true
-        echo "Merged to main: $PREV_MAIN → $CHANGE_ID" >&2
+        if $REBASED; then
+            echo "Rebased and merged to main: $PREV_MAIN → $CHANGE_ID" >&2
+        else
+            echo "Merged to main: $PREV_MAIN → $CHANGE_ID" >&2
+        fi
     else
-        echo "Warning: Failed to move main bookmark" >&2
-        echo "Work is saved in bookmark '$BOOKMARK_NAME' - merge manually" >&2
+        if ! $IS_DESCENDANT && ! $DO_REBASE; then
+            echo "Warning: Parallel branch - use --rebase to merge, or merge manually" >&2
+        else
+            echo "Warning: Failed to move main bookmark" >&2
+        fi
+        echo "Work is saved in bookmark '$BOOKMARK_NAME'" >&2
     fi
 fi
 

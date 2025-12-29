@@ -302,15 +302,37 @@ jj-ws-claim hs-memory-leaks
 **Completing work:**
 
 ```bash
-# When task is done (from within the workspace)
-jj-ws-complete              # Creates ws/<name> bookmark, closes bead task
-jj-ws-complete --no-cleanup # Keep workspace for review
-jj-ws-complete --json       # Machine-readable output
+# Complete current workspace (from within)
+jj-ws-complete
+
+# Complete a specific workspace (from anywhere)
+jj-ws-complete <workspace-name>
+
+# Options
+jj-ws-complete --no-cleanup  # Keep workspace directory
+jj-ws-complete --no-merge    # Don't merge to main (just bookmark)
+jj-ws-complete -r            # Rebase if parallel branch (see below)
 ```
 
-This creates a `ws/<workspace-name>` bookmark for the completed work, allowing
-selective review and push. The bead task is closed with a reference to the
-bookmark for traceability.
+This creates a `ws/<workspace-name>` bookmark and merges to main locally.
+The bead task is closed with a reference to the bookmark for traceability.
+
+**Parallel branches:**
+
+If multiple workspaces complete independently, they become parallel branches:
+
+```
+ws/feature-A ──┐
+               ├── main (at origin)
+ws/feature-B ──┘
+```
+
+By default, `jj-ws-complete` will warn if it can't fast-forward merge. Use `-r`
+or `--rebase` to automatically rebase onto main first:
+
+```bash
+jj-ws-complete -r feature-B  # Rebase feature-B onto main, then merge
+```
 
 **Review and push workflow (user-initiated, NOT agent-initiated):**
 
@@ -322,11 +344,11 @@ jj-ws-push --list
 jj log -r 'ws/hs-memory-leaks'
 jj diff -r 'main..ws/hs-memory-leaks'
 
-# Push specific work (with confirmation)
-jj-ws-push --push ws/hs-memory-leaks
+# Push specific bookmark (with confirmation)
+jj-ws-push ws/hs-memory-leaks
 
-# Push all completed work (with confirmation for each)
-jj-ws-push --push-all
+# Push all workspace bookmarks (with confirmation for each)
+jj-ws-push --all
 ```
 
 **NEVER push without explicit user consent.** The `jj-ws-push` script requires
@@ -336,9 +358,9 @@ review, not push automatically.
 **Concurrent agents:**
 
 - Multiple agents can work in separate workspaces simultaneously
-- `jj-ws-claim` and `jj-ws-complete` use flock-based locking for safety
+- `jj-ws-claim` and `jj-ws-complete` use mkdir-based locking for safety
 - Each workspace has isolated working copy - no conflicts during work
-- Bookmarks are merged to main sequentially during push
+- Complete workspaces individually to maintain independent branches
 
 ### Current State
 

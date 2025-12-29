@@ -2,17 +2,19 @@
 #
 # jj-ws-push - Review and push completed workspace work
 #
-# Usage: jj-ws-push [--list] [--push <bookmark>] [--push-all] [--json]
+# Usage: jj-ws-push [<bookmark>] [options]
+#        jj-ws-push --all [options]
+#        jj-ws-push --list
 #
 # This script helps manage completed workspace work:
 # 1. List all ws/* bookmarks (completed workspace work)
 # 2. Show diff/log for review
-# 3. Merge selected work to main and push (with explicit consent)
+# 3. Push selected work to GitHub (with explicit consent)
 #
 # Safety features:
-# - Never pushes without explicit --push or --push-all flag
+# - Requires bookmark name or --all flag to push
 # - Shows what will be pushed before doing it
-# - Requires user confirmation for destructive operations
+# - Requires user confirmation (use -f to skip)
 #
 # Exit codes:
 #   0 - Success
@@ -39,11 +41,7 @@ while [[ $# -gt 0 ]]; do
             LIST_ONLY=true
             shift
             ;;
-        -p|--push)
-            PUSH_BOOKMARK="$2"
-            shift 2
-            ;;
-        --push-all)
+        -a|--all)
             PUSH_ALL=true
             shift
             ;;
@@ -56,29 +54,34 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         -h|--help)
-            cat <<EOF
-Usage: jj-ws-push [--list] [--push <bookmark>] [--push-all] [--json]
+            cat <<'EOF'
+Usage: jj-ws-push <bookmark> [options]
+       jj-ws-push --all [options]
+       jj-ws-push --list
 
-Review and push completed workspace work.
+Push completed workspace work to GitHub.
+
+Arguments:
+  <bookmark>         Specific bookmark to push (e.g., ws/my-feature)
 
 Options:
   -l, --list         List all workspace bookmarks (ws/*) with status
-  -p, --push <name>  Push specific bookmark to main (e.g., ws/my-feature)
-  --push-all         Push all workspace bookmarks to main
+  -a, --all          Push ALL workspace bookmarks
   -f, --force        Skip confirmation prompts
   --json             Output result as JSON
   -h, --help         Show this help
 
 Examples:
-  jj-ws-push --list                    # See all completed workspace work
-  jj-ws-push --push ws/hs-memory-leaks # Push specific work to main
-  jj-ws-push --push-all                # Push all completed work
+  jj-ws-push --list                # See all completed workspace work
+  jj-ws-push ws/hs-memory-leaks    # Push specific bookmark
+  jj-ws-push --all                 # Push all workspace bookmarks
+  jj-ws-push -f ws/quick-fix       # Push without confirmation
 
 Workflow:
   1. AI agent completes work with jj-ws-complete (creates ws/* bookmark)
   2. User runs jj-ws-push --list to see pending work
   3. User reviews with jj log -r 'ws/feature-name'
-  4. User runs jj-ws-push --push ws/feature-name to merge and push
+  4. User runs jj-ws-push ws/feature-name to push
 EOF
             exit 0
             ;;
@@ -87,8 +90,13 @@ EOF
             exit 1
             ;;
         *)
-            echo "Error: Unexpected argument $1" >&2
-            exit 1
+            if [[ -z "$PUSH_BOOKMARK" ]]; then
+                PUSH_BOOKMARK="$1"
+            else
+                echo "Error: Unexpected argument $1" >&2
+                exit 1
+            fi
+            shift
             ;;
     esac
 done
@@ -162,7 +170,7 @@ if $LIST_ONLY || [[ -z "$PUSH_BOOKMARK" && "$PUSH_ALL" == "false" ]]; then
         done
         echo ""
         echo "To review:  jj log -r 'ws/<name>'"
-        echo "To push:    jj-ws-push --push ws/<name>"
+        echo "To push:    jj-ws-push ws/<name>"
         echo "To diff:    jj diff -r 'main..ws/<name>'"
     fi
     exit 0
