@@ -1,0 +1,207 @@
+#!/usr/bin/env bash
+#
+# jj-ws-claim - Claim or create a workspace for an AI agent
+#
+# Usage: jj-ws-claim <task-id> [--base <revision>] [--json]
+#
+# This script is designed for AI agents (Claude, OpenCode, etc.) to:
+# 1. Create a jj workspace for isolated work
+# 2. Associate it with a bead task
+# 3. Create a tmux window if in tmux
+# 4. Output machine-readable status
+#
+# Exit codes:
+#   0 - Success
+#   1 - Invalid arguments
+#   2 - Not in a jj repository
+#   3 - Workspace creation failed
+#   4 - Already in a non-default workspace
+
+set -euo pipefail
+
+# ─────────────────────────────────────────────────────────────────
+# Argument parsing
+# ─────────────────────────────────────────────────────────────────
+
+TASK_ID=""
+BASE_REV="main"
+JSON_OUTPUT=false
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --base)
+            BASE_REV="$2"
+            shift 2
+            ;;
+        --json)
+            JSON_OUTPUT=true
+            shift
+            ;;
+        -h|--help)
+            echo "Usage: jj-ws-claim <task-id> [--base <revision>] [--json]"
+            echo ""
+            echo "Create or claim a jj workspace for a bead task."
+            echo ""
+            echo "Options:"
+            echo "  --base <rev>   Base revision for workspace (default: main)"
+            echo "  --json         Output result as JSON"
+            echo "  -h, --help     Show this help"
+            exit 0
+            ;;
+        -*)
+            echo "Error: Unknown option $1" >&2
+            exit 1
+            ;;
+        *)
+            TASK_ID="$1"
+            shift
+            ;;
+    esac
+done
+
+if [[ -z "$TASK_ID" ]]; then
+    echo "Error: task-id required" >&2
+    echo "Usage: jj-ws-claim <task-id> [--base <revision>] [--json]" >&2
+    exit 1
+fi
+
+# ─────────────────────────────────────────────────────────────────
+# Repository and workspace detection
+# ─────────────────────────────────────────────────────────────────
+
+WS_PATH=$(jj workspace root 2>/dev/null || true)
+if [[ -z "$WS_PATH" ]]; then
+    echo "Error: Not in a jj repository" >&2
+    exit 2
+fi
+
+# Determine if we're in a workspace or default
+if [[ "$WS_PATH" == *"/.workspaces/"* ]]; then
+    CURRENT_WS=$(basename "$WS_PATH")
+    REPO_ROOT=$(dirname "$(dirname "$WS_PATH")")
+else
+    CURRENT_WS="default"
+    REPO_ROOT="$WS_PATH"
+fi
+
+PROJECT_NAME=$(basename "$REPO_ROOT")
+WS_NAME="$TASK_ID"
+WS_DIR="$REPO_ROOT/.workspaces/$WS_NAME"
+
+# If already in a non-default workspace, warn
+if [[ "$CURRENT_WS" != "default" && -n "$CURRENT_WS" ]]; then
+    echo "Warning: Already in workspace '$CURRENT_WS'" >&2
+    echo "Consider completing current work first with jj-ws-complete" >&2
+fi
+
+# ─────────────────────────────────────────────────────────────────
+# Create or switch to workspace
+# ─────────────────────────────────────────────────────────────────
+
+WS_CREATED=false
+WS_EXISTED=false
+
+if jj workspace list 2>/dev/null | grep -q "^$WS_NAME:"; then
+    WS_EXISTED=true
+    # Workspace exists, just need to switch
+    echo "Workspace '$WS_NAME' already exists, switching..." >&2
+else
+    # Create new workspace
+    mkdir -p "$(dirname "$WS_DIR")"
+    if ! jj workspace add "$WS_DIR" --name "$WS_NAME" -r "$BASE_REV" 2>&1; then
+        echo "Error: Failed to create workspace" >&2
+        exit 3
+    fi
+    WS_CREATED=true
+fi
+
+# ─────────────────────────────────────────────────────────────────
+# Bead task integration
+# ─────────────────────────────────────────────────────────────────
+
+TASK_CREATED=false
+TASK_EXISTS=false
+
+if command -v bd &>/dev/null; then
+    # Check if task exists (could be full ID like .dotfiles-abc or just abc)
+    if bd show "$TASK_ID" &>/dev/null; then
+        TASK_EXISTS=true
+    elif bd show "$PROJECT_NAME-$TASK_ID" &>/dev/null; then
+        TASK_EXISTS=true
+        TASK_ID="$PROJECT_NAME-$TASK_ID"
+    else
+        # Create task
+        bd create "$WS_NAME" \
+            -t task \
+            -p P2 \
+            -l "workspace,agent" \
+            -d "AI agent workspace task for $WS_NAME" \
+            --silent 2>/dev/null || true
+        TASK_CREATED=true
+    fi
+fi
+
+# ─────────────────────────────────────────────────────────────────
+# Tmux window creation
+# ─────────────────────────────────────────────────────────────────
+
+TMUX_WINDOW=""
+if [[ -n "${TMUX:-}" ]]; then
+    WINDOW_NAME="$PROJECT_NAME:$WS_NAME"
+
+    # Check if window already exists
+    if tmux list-windows -F '#{window_name}' | grep -q "^$WINDOW_NAME$"; then
+        TMUX_WINDOW="$WINDOW_NAME"
+    else
+        # Create new window
+        tmux new-window -n "$WINDOW_NAME" -c "$WS_DIR" -d
+        TMUX_WINDOW="$WINDOW_NAME"
+    fi
+fi
+
+# ─────────────────────────────────────────────────────────────────
+# Output result
+# ─────────────────────────────────────────────────────────────────
+
+if $JSON_OUTPUT; then
+    cat <<EOF
+{
+  "success": true,
+  "workspace": {
+    "name": "$WS_NAME",
+    "path": "$WS_DIR",
+    "created": $WS_CREATED,
+    "existed": $WS_EXISTED
+  },
+  "task": {
+    "id": "$TASK_ID",
+    "created": $TASK_CREATED,
+    "existed": $TASK_EXISTS
+  },
+  "tmux": {
+    "window": "$TMUX_WINDOW"
+  },
+  "repo": {
+    "root": "$REPO_ROOT",
+    "project": "$PROJECT_NAME"
+  }
+}
+EOF
+else
+    echo "✓ Workspace '$WS_NAME' ready at $WS_DIR"
+    if $WS_CREATED; then
+        echo "  (workspace created)"
+    fi
+    if $TASK_CREATED; then
+        echo "  (bead task created)"
+    fi
+    if [[ -n "$TMUX_WINDOW" ]]; then
+        echo "  (tmux window: $TMUX_WINDOW)"
+    fi
+    echo ""
+    echo "To enter workspace:"
+    echo "  cd $WS_DIR"
+    if [[ -n "$TMUX_WINDOW" ]]; then
+        echo "  # or switch tmux window: tmux select-window -t '$TMUX_WINDOW'"
+    fi
+fi

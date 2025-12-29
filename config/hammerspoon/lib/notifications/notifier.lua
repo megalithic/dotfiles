@@ -446,11 +446,18 @@ function M.sendMacOSNotification(title, subtitle, body)
     :send()
 end
 
+-- Escape message for AppleScript (hs.messages uses AppleScript internally)
+local function escapeForAppleScript(str)
+  if not str then return "" end
+  return str:gsub("\\", "\\\\"):gsub('"', '\\"')
+end
+
 -- Send iMessage to phone number
 function M.sendPhoneNotification(phoneNumber, message)
   if not phoneNumber or phoneNumber == "" then return false end
-  hs.messages.iMessage(phoneNumber, message)
-  return true
+  local safeMessage = escapeForAppleScript(message)
+  local success = pcall(function() hs.messages.iMessage(phoneNumber, safeMessage) end)
+  return success
 end
 
 -- Send Hammerspoon alert (short overlay message)

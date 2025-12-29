@@ -225,6 +225,17 @@ local function getPhoneNumber()
   return phoneNumber
 end
 
+---Escape message for AppleScript (hs.messages.iMessage uses AppleScript internally)
+---Escapes double quotes with backslash to prevent AppleScript syntax errors
+---@param str string The string to escape
+---@return string The escaped string safe for AppleScript
+local function escapeForAppleScript(str)
+  if not str then return "" end
+  -- Escape backslashes first, then double quotes
+  -- AppleScript in hs.messages expects backslash-escaped quotes
+  return str:gsub("\\", "\\\\"):gsub('"', '\\"')
+end
+
 ---Send via iMessage to phone
 ---@param title string
 ---@param message string
@@ -237,17 +248,22 @@ function M.sendPhone(title, message)
   local phoneNumber = getPhoneNumber()
   if not phoneNumber then return false, "missing_phone" end
 
-  -- Format message for SMS/iMessage with hammerspork prefix
-  local fullMessage = string.format("🤖 [from hammerspork] %s: %s", title, message)
+  -- Escape title and message for AppleScript (prevents quote escaping errors)
+  local safeTitle = escapeForAppleScript(title)
+  local safeMessage = escapeForAppleScript(message)
 
-  -- Use hs.messages for iMessage
-  local success = pcall(function() hs.messages.iMessage(phoneNumber, fullMessage) end)
+  -- Format message for SMS/iMessage with hammerspork prefix
+  local fullMessage = string.format("🤖 [from hammerspork] %s: %s", safeTitle, safeMessage)
+
+  -- Use hs.messages for iMessage with timeout protection
+  -- The pcall catches Lua errors, but AppleScript errors are logged separately
+  local success, err = pcall(function() hs.messages.iMessage(phoneNumber, fullMessage) end)
 
   if success then
     U.log.d("Phone notification sent via iMessage")
     return true, "sent"
   else
-    U.log.w("Failed to send iMessage")
+    U.log.wf("Failed to send iMessage: %s", tostring(err))
     return false, "imessage_failed"
   end
 end

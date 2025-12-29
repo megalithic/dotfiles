@@ -1,0 +1,194 @@
+#!/usr/bin/env bash
+#
+# jj-ws-status - Get current workspace status for AI agents
+#
+# Usage: jj-ws-status [--json]
+#
+# This script provides machine-readable workspace state including:
+# - Current workspace name and path
+# - Associated bead task (if any)
+# - Commit status (empty, conflicts, description)
+# - Available workspaces
+#
+# Exit codes:
+#   0 - Success (in a workspace)
+#   1 - Invalid arguments
+#   2 - Not in a jj repository
+
+set -euo pipefail
+
+# ─────────────────────────────────────────────────────────────────
+# Argument parsing
+# ─────────────────────────────────────────────────────────────────
+
+JSON_OUTPUT=false
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --json)
+            JSON_OUTPUT=true
+            shift
+            ;;
+        -h|--help)
+            echo "Usage: jj-ws-status [--json]"
+            echo ""
+            echo "Show current jj workspace status."
+            echo ""
+            echo "Options:"
+            echo "  --json         Output result as JSON"
+            echo "  -h, --help     Show this help"
+            exit 0
+            ;;
+        -*)
+            echo "Error: Unknown option $1" >&2
+            exit 1
+            ;;
+        *)
+            echo "Error: Unexpected argument $1" >&2
+            exit 1
+            ;;
+    esac
+done
+
+# ─────────────────────────────────────────────────────────────────
+# Repository and workspace detection
+# ─────────────────────────────────────────────────────────────────
+
+WS_PATH=$(jj workspace root 2>/dev/null || true)
+if [[ -z "$WS_PATH" ]]; then
+    if $JSON_OUTPUT; then
+        echo '{"success": false, "error": "Not in a jj repository"}'
+    else
+        echo "Error: Not in a jj repository" >&2
+    fi
+    exit 2
+fi
+
+# Determine if we're in a workspace or default
+# Workspaces are in .workspaces/<name>, default is the repo root
+if [[ "$WS_PATH" == *"/.workspaces/"* ]]; then
+    CURRENT_WS=$(basename "$WS_PATH")
+    # Repository root is parent of .workspaces directory
+    REPO_ROOT=$(dirname "$(dirname "$WS_PATH")")
+    IS_DEFAULT="false"
+else
+    CURRENT_WS="default"
+    REPO_ROOT="$WS_PATH"
+    IS_DEFAULT="true"
+fi
+
+PROJECT_NAME=$(basename "$REPO_ROOT")
+
+# List all workspaces
+ALL_WORKSPACES=$(jj workspace list 2>/dev/null | awk '{print $1}' | tr -d ':' | tr '\n' ',' | sed 's/,$//')
+
+# ─────────────────────────────────────────────────────────────────
+# Commit info
+# ─────────────────────────────────────────────────────────────────
+
+COMMIT_ID=$(jj log -r @ --no-graph -T 'commit_id.short(8)' 2>/dev/null || echo "")
+CHANGE_ID=$(jj log -r @ --no-graph -T 'change_id.short(8)' 2>/dev/null || echo "")
+COMMIT_DESC=$(jj log -r @ --no-graph -T 'description' 2>/dev/null || echo "")
+COMMIT_EMPTY=$(jj log -r @ --no-graph -T 'if(empty, "true", "false")' 2>/dev/null || echo "true")
+HAS_CONFLICT=$(jj log -r @ --no-graph -T 'if(conflict, "true", "false")' 2>/dev/null || echo "false")
+
+# Count modified files
+MODIFIED_COUNT=$(jj diff --stat 2>/dev/null | tail -1 | grep -oE '[0-9]+ file' | grep -oE '[0-9]+' || echo "0")
+
+# ─────────────────────────────────────────────────────────────────
+# Bead task info
+# ─────────────────────────────────────────────────────────────────
+
+TASK_ID=""
+TASK_STATUS=""
+TASK_TITLE=""
+
+if command -v bd &>/dev/null && [[ "$CURRENT_WS" != "default" ]]; then
+    # Try to find associated task
+    if bd show "$PROJECT_NAME-$CURRENT_WS" &>/dev/null 2>&1; then
+        TASK_ID="$PROJECT_NAME-$CURRENT_WS"
+    elif bd show "$CURRENT_WS" &>/dev/null 2>&1; then
+        TASK_ID="$CURRENT_WS"
+    fi
+
+    if [[ -n "$TASK_ID" ]]; then
+        TASK_STATUS=$(bd show "$TASK_ID" 2>/dev/null | grep "^Status:" | awk '{print $2}' || echo "")
+        TASK_TITLE=$(bd show "$TASK_ID" 2>/dev/null | head -1 | sed "s/^$TASK_ID: //" || echo "")
+    fi
+fi
+
+# ─────────────────────────────────────────────────────────────────
+# Tmux info
+# ─────────────────────────────────────────────────────────────────
+
+TMUX_SESSION=""
+TMUX_WINDOW=""
+if [[ -n "${TMUX:-}" ]]; then
+    TMUX_SESSION=$(tmux display-message -p '#S' 2>/dev/null || echo "")
+    TMUX_WINDOW=$(tmux display-message -p '#W' 2>/dev/null || echo "")
+fi
+
+# ─────────────────────────────────────────────────────────────────
+# Output result
+# ─────────────────────────────────────────────────────────────────
+
+if $JSON_OUTPUT; then
+    cat <<EOF
+{
+  "success": true,
+  "workspace": {
+    "name": "$CURRENT_WS",
+    "path": "$WS_PATH",
+    "is_default": $IS_DEFAULT,
+    "all": [$(echo "$ALL_WORKSPACES" | sed 's/,/", "/g' | sed 's/^/"/' | sed 's/$/"/' )]
+  },
+  "commit": {
+    "id": "$COMMIT_ID",
+    "change_id": "$CHANGE_ID",
+    "description": $(echo "$COMMIT_DESC" | head -1 | jq -Rs . 2>/dev/null || echo '""'),
+    "empty": $COMMIT_EMPTY,
+    "conflict": $HAS_CONFLICT,
+    "modified_files": $MODIFIED_COUNT
+  },
+  "task": {
+    "id": "$TASK_ID",
+    "status": "$TASK_STATUS",
+    "title": $(echo "$TASK_TITLE" | jq -Rs . 2>/dev/null || echo '""')
+  },
+  "tmux": {
+    "session": "$TMUX_SESSION",
+    "window": "$TMUX_WINDOW"
+  },
+  "repo": {
+    "root": "$REPO_ROOT",
+    "project": "$PROJECT_NAME"
+  }
+}
+EOF
+else
+    echo "Workspace: $CURRENT_WS"
+    echo "  Path: $WS_PATH"
+    if [[ "$IS_DEFAULT" == "true" ]]; then
+        echo "  (default workspace)"
+    fi
+    echo ""
+    echo "Commit: $CHANGE_ID"
+    if [[ -n "$COMMIT_DESC" ]]; then
+        echo "  Description: $(echo "$COMMIT_DESC" | head -1)"
+    else
+        echo "  Description: (none)"
+    fi
+    echo "  Empty: $COMMIT_EMPTY"
+    echo "  Conflicts: $HAS_CONFLICT"
+    echo "  Modified files: $MODIFIED_COUNT"
+    echo ""
+    if [[ -n "$TASK_ID" ]]; then
+        echo "Task: $TASK_ID"
+        echo "  Status: $TASK_STATUS"
+        echo "  Title: $TASK_TITLE"
+    else
+        echo "Task: (none associated)"
+    fi
+    echo ""
+    echo "Available workspaces: $ALL_WORKSPACES"
+fi

@@ -86,13 +86,22 @@ when = "sudo -vn &>/dev/null"
 
 [custom.jj]
 ignore_timeout = true
-description = "The current jj status"
+description = "The current jj status with workspace indicator"
 detect_folders = [".jj"]
 symbol = ""
 # symbol = "󱗆 "
 # hidden? 👻
 command = '''
-  jj log --revisions @ --no-graph --ignore-working-copy --color always --limit 1 --template '
+  # Detect workspace from path (jj templates don't expose workspace info)
+  ws_path=$(jj workspace root 2>/dev/null)
+  ws_prefix=""
+  if [[ "$ws_path" == *"/.workspaces/"* ]]; then
+    ws_name=$(basename "$ws_path")
+    # Cyan color for workspace indicator: \x1b[36m
+    ws_prefix="\x1b[36m${ws_name}\x1b[0m "
+  fi
+
+  jj_output=$(jj log --revisions @ --no-graph --ignore-working-copy --color always --limit 1 --template '
     separate(" ",
       change_id.shortest(4),
       bookmarks,
@@ -109,7 +118,9 @@ command = '''
         "",
       ) ++ raw_escape_sequence("\x1b[0m"),
     )
-  '
+  ')
+
+  echo -e "${ws_prefix}${jj_output}"
 '''
 # "(no description set)",
 

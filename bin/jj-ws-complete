@@ -1,0 +1,220 @@
+#!/usr/bin/env bash
+#
+# jj-ws-complete - Complete work in a workspace and clean up
+#
+# Usage: jj-ws-complete [--no-merge] [--no-cleanup] [--json]
+#
+# This script is designed for AI agents to:
+# 1. Describe the current commit with work summary
+# 2. Optionally squash into parent or rebase to main
+# 3. Close the associated bead task
+# 4. Clean up workspace and tmux window
+#
+# Exit codes:
+#   0 - Success
+#   1 - Invalid arguments
+#   2 - Not in a jj workspace
+#   3 - In default workspace (nothing to complete)
+#   4 - Uncommitted changes that need description
+
+set -euo pipefail
+
+# ─────────────────────────────────────────────────────────────────
+# Argument parsing
+# ─────────────────────────────────────────────────────────────────
+
+NO_MERGE=false
+NO_CLEANUP=false
+JSON_OUTPUT=false
+CLOSE_REASON=""
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --no-merge)
+            NO_MERGE=true
+            shift
+            ;;
+        --no-cleanup)
+            NO_CLEANUP=true
+            shift
+            ;;
+        --reason)
+            CLOSE_REASON="$2"
+            shift 2
+            ;;
+        --json)
+            JSON_OUTPUT=true
+            shift
+            ;;
+        -h|--help)
+            echo "Usage: jj-ws-complete [--no-merge] [--no-cleanup] [--reason <text>] [--json]"
+            echo ""
+            echo "Complete work in current workspace and clean up."
+            echo ""
+            echo "Options:"
+            echo "  --no-merge     Don't attempt to merge work to main"
+            echo "  --no-cleanup   Don't remove workspace after completion"
+            echo "  --reason       Reason for closing bead task"
+            echo "  --json         Output result as JSON"
+            echo "  -h, --help     Show this help"
+            exit 0
+            ;;
+        -*)
+            echo "Error: Unknown option $1" >&2
+            exit 1
+            ;;
+        *)
+            echo "Error: Unexpected argument $1" >&2
+            exit 1
+            ;;
+    esac
+done
+
+# ─────────────────────────────────────────────────────────────────
+# Repository and workspace detection
+# ─────────────────────────────────────────────────────────────────
+
+WS_PATH=$(jj workspace root 2>/dev/null || true)
+if [[ -z "$WS_PATH" ]]; then
+    echo "Error: Not in a jj repository" >&2
+    exit 2
+fi
+
+# Determine if we're in a workspace or default
+if [[ "$WS_PATH" == *"/.workspaces/"* ]]; then
+    CURRENT_WS=$(basename "$WS_PATH")
+    REPO_ROOT=$(dirname "$(dirname "$WS_PATH")")
+else
+    CURRENT_WS="default"
+    REPO_ROOT="$WS_PATH"
+fi
+
+PROJECT_NAME=$(basename "$REPO_ROOT")
+
+if [[ "$CURRENT_WS" == "default" ]]; then
+    echo "Error: In default workspace - nothing to complete" >&2
+    echo "Use jj-ws-claim to start work in a dedicated workspace" >&2
+    exit 3
+fi
+
+WS_DIR="$REPO_ROOT/.workspaces/$CURRENT_WS"
+
+# ─────────────────────────────────────────────────────────────────
+# Check for work to complete
+# ─────────────────────────────────────────────────────────────────
+
+# Get current commit description
+COMMIT_DESC=$(jj log -r @ --no-graph -T 'description' 2>/dev/null || true)
+COMMIT_EMPTY=$(jj log -r @ --no-graph -T 'if(empty, "true", "false")' 2>/dev/null || echo "true")
+
+if [[ "$COMMIT_EMPTY" == "true" && -z "$COMMIT_DESC" ]]; then
+    echo "Warning: Current commit is empty with no description" >&2
+    echo "Consider using 'jj describe' to document your work first" >&2
+fi
+
+# ─────────────────────────────────────────────────────────────────
+# Close bead task
+# ─────────────────────────────────────────────────────────────────
+
+TASK_CLOSED=false
+TASK_ID=""
+
+if command -v bd &>/dev/null; then
+    # Try to find task matching workspace name
+    TASK_ID="$PROJECT_NAME-$CURRENT_WS"
+    if bd show "$TASK_ID" &>/dev/null; then
+        if [[ -n "$CLOSE_REASON" ]]; then
+            bd close "$TASK_ID" -r "$CLOSE_REASON" 2>/dev/null && TASK_CLOSED=true
+        else
+            bd close "$TASK_ID" -r "Completed in workspace $CURRENT_WS" 2>/dev/null && TASK_CLOSED=true
+        fi
+    elif bd show "$CURRENT_WS" &>/dev/null; then
+        TASK_ID="$CURRENT_WS"
+        if [[ -n "$CLOSE_REASON" ]]; then
+            bd close "$TASK_ID" -r "$CLOSE_REASON" 2>/dev/null && TASK_CLOSED=true
+        else
+            bd close "$TASK_ID" -r "Completed in workspace $CURRENT_WS" 2>/dev/null && TASK_CLOSED=true
+        fi
+    fi
+fi
+
+# ─────────────────────────────────────────────────────────────────
+# Merge work (optional)
+# ─────────────────────────────────────────────────────────────────
+
+MERGED=false
+if ! $NO_MERGE; then
+    # For now, just ensure the work is described
+    # Actual merge strategy depends on project workflow
+    # Could squash, rebase to main, etc.
+    echo "Note: Merge strategy not implemented - work remains in workspace commit" >&2
+    echo "Manually squash/rebase as needed" >&2
+fi
+
+# ─────────────────────────────────────────────────────────────────
+# Cleanup (optional)
+# ─────────────────────────────────────────────────────────────────
+
+WS_REMOVED=false
+TMUX_CLOSED=false
+
+if ! $NO_CLEANUP; then
+    # Switch to default workspace first
+    cd "$REPO_ROOT"
+
+    # Close tmux window if exists
+    if [[ -n "${TMUX:-}" ]]; then
+        WINDOW_NAME="$PROJECT_NAME:$CURRENT_WS"
+        if tmux list-windows -F '#{window_name}' | grep -q "^$WINDOW_NAME$"; then
+            # Don't kill current window, just mark for later
+            echo "Note: Close tmux window '$WINDOW_NAME' manually or switch away first" >&2
+        fi
+    fi
+
+    # Forget workspace
+    if jj workspace forget "$CURRENT_WS" 2>/dev/null; then
+        WS_REMOVED=true
+    fi
+
+    # Remove directory
+    if [[ -d "$WS_DIR" ]]; then
+        rm -rf "$WS_DIR"
+    fi
+fi
+
+# ─────────────────────────────────────────────────────────────────
+# Output result
+# ─────────────────────────────────────────────────────────────────
+
+if $JSON_OUTPUT; then
+    cat <<EOF
+{
+  "success": true,
+  "workspace": {
+    "name": "$CURRENT_WS",
+    "removed": $WS_REMOVED
+  },
+  "task": {
+    "id": "$TASK_ID",
+    "closed": $TASK_CLOSED
+  },
+  "commit": {
+    "description": $(echo "$COMMIT_DESC" | jq -Rs .),
+    "empty": $COMMIT_EMPTY
+  },
+  "merged": $MERGED
+}
+EOF
+else
+    echo "✓ Workspace '$CURRENT_WS' work completed"
+    if $TASK_CLOSED; then
+        echo "  (bead task $TASK_ID closed)"
+    fi
+    if $WS_REMOVED; then
+        echo "  (workspace removed)"
+    fi
+    if ! $NO_CLEANUP; then
+        echo ""
+        echo "Returned to default workspace at $REPO_ROOT"
+    fi
+fi
