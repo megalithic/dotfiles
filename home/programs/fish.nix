@@ -15,6 +15,15 @@ in {
       set -g fish_prompt_pwd_dir_length 20
     '';
     interactiveShellInit = ''
+      # Reset leaked mouse tracking modes on every prompt
+      # Fixes: TUI apps (Claude Code, etc.) that enable SGR mouse mode (1003+1006)
+      # but don't clean up on exit, causing trackball/mouse movements to appear
+      # as garbage like "[<35;94;34M" in the prompt
+      # Modes: 1000=basic, 1002=button-motion, 1003=any-motion, 1006=SGR encoding
+      function __reset_mouse_mode --on-event fish_prompt
+          printf '\e[?1000l\e[?1002l\e[?1003l\e[?1006l'
+      end
+
       # I like to keep the prompt at the bottom rather than the top
       # of the terminal window so that running `clear` doesn't make
       # me move my eyes from the bottom back to the top of the screen;
@@ -66,6 +75,10 @@ in {
       bind -M normal ctrl-o fzf-vim-widget
       bind -M default ctrl-o fzf-vim-widget
 
+
+      # Emergency mouse mode reset (ctrl+shift+m doesn't work in fish, use escape sequence)
+      # If garbage appears mid-command, press ctrl+g to reset mouse modes
+      bind \cg 'printf "\e[?1000l\e[?1002l\e[?1003l\e[?1006l"; commandline -f repaint'
 
       # for `!!` and `!$`-like behaviour:
       bind ! bind_bang
@@ -120,6 +133,13 @@ in {
     '';
     functions = {
       fish_greeting = "";
+
+      # Manual mouse mode reset - call when you see garbage like "[<35;94;34M"
+      # Also bound to ctrl+shift+m
+      reset-mouse = ''
+        printf '\e[?1000l\e[?1002l\e[?1003l\e[?1006l'
+        echo "Mouse tracking modes reset"
+      '';
       # _prompt_move_to_bottom = {
       #   onEvent = "fish_postexec";
       #   body = "tput cup $LINES";
