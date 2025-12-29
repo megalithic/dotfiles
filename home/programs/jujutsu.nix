@@ -31,6 +31,10 @@
         };
       };
 
+      # Auto-update stale workspaces when switching between them
+      # Critical for jj workspace workflow with multiple concurrent working copies
+      snapshot.auto-update-stale = true;
+
       # fix.tools.nixfmt = {
       #   command = [
       #     "${lib.getExe pkgs.nixfmt-rfc-style}"
