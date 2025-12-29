@@ -5,17 +5,19 @@ if not ok then
 end
 
 --------------------------------------------------------------------------------
--- RELOAD CLEANUP: Clean up leftover state from previous config load
--- This runs at init.lua start (before modules load) to prevent resource leaks
--- when hs.reload() is called. hs.shutdownCallback only runs on full shutdown,
--- not reload, so we must clean up proactively here.
+-- RELOAD CLEANUP (FALLBACK): Handle partial reload or error recovery
 --
--- NOTE: Native Hammerspoon objects (timers, canvases, watchers) persist in
--- native code but Lua references are lost on reload. This cleanup handles
--- state that might exist from a partial reload or error recovery.
+-- Primary cleanup is now handled by the hs.reload() wrapper in overrides.lua,
+-- which runs BEFORE reload while we still have references to native objects.
+--
+-- This fallback only helps when:
+-- 1. An error occurred during init and user is retrying
+-- 2. Config was partially loaded before a crash
+-- 3. hs.reload() wrapper wasn't set up yet (shouldn't happen normally)
+--
+-- In a normal reload, _G.S is nil here (fresh Lua state), so this is a no-op.
 --------------------------------------------------------------------------------
 local function cleanupPreviousRun()
-  -- Clean up centralized state module (handles all notification resources)
   if _G.S and _G.S.resetAll then
     _G.S.resetAll()
   end
@@ -128,6 +130,17 @@ req("bindings")
 req("watchers", { watchers = watchers })
 req("ptt", { push = { { "cmd", "alt" }, nil }, toggle = { { "cmd", "alt" }, "p" } }):start()
 req("quitter"):start()
+
+-- Setup hs.reload() wrapper for pre-reload cleanup (prevents resource leaks)
+-- Must be called AFTER all modules are loaded so we have references to clean up
+require("overrides").setupReloadCleanup({
+  S = S,
+  N = N,
+  stopWatchers = function()
+    require("watchers"):stop({ watchers = watchers })
+    require("quitter"):stop()
+  end,
+})
 
 hs.shutdownCallback = function()
   require("watchers"):stop({ watchers = watchers })

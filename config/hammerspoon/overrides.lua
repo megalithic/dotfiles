@@ -108,5 +108,49 @@ windowMT.moveToUnit = withAxHotfix(windowMT.moveToUnit)
 -- windowMT.setFrame = withAxHotfix(windowMT.setFrame, 1)
 
 --------------------------------------------------------------------------------
--- Future overrides go here
+-- hs.reload: Pre-reload cleanup wrapper
 --------------------------------------------------------------------------------
+-- Hammerspoon's hs.reload() destroys the Lua state without calling any cleanup.
+-- Native objects (timers, watchers, canvases) persist in C but Lua references
+-- are lost, causing resource leaks on each reload.
+--
+-- This wrapper calls cleanup BEFORE reload while we still have references.
+-- Must be called from init.lua AFTER all modules are loaded.
+--
+-- REF: hs.shutdownCallback only fires on quit, not reload
+
+local M = {}
+
+---Setup hs.reload wrapper that performs cleanup before reloading
+---@param opts {S: table, N: table, stopWatchers: function}
+function M.setupReloadCleanup(opts)
+  local originalReload = hs.reload
+
+  ---@diagnostic disable-next-line: duplicate-set-field
+  hs.reload = function()
+    -- Clean up notification system (timers, canvases, watchers)
+    if opts.S and opts.S.resetAll then
+      pcall(opts.S.resetAll)
+    end
+
+    -- Clean up unified notification module
+    if opts.N and opts.N.cleanup then
+      pcall(opts.N.cleanup)
+    end
+
+    -- Stop all watchers (app, notification, camera, etc.)
+    if opts.stopWatchers then
+      pcall(opts.stopWatchers)
+    end
+
+    -- Log cleanup (may not appear if reload is too fast)
+    if U and U.log then
+      U.log.i("Pre-reload cleanup completed")
+    end
+
+    -- Now do the actual reload
+    originalReload()
+  end
+end
+
+return M
