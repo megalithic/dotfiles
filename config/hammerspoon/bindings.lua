@@ -239,21 +239,19 @@ function M.loadUtils()
       hs.reload()
     end)
     :bind({ "shift", "ctrl" }, "l", nil, req("wm").placeAllApps)
-    -- daily note in floating Kitty window (toggle scratchpad)
+    -- daily note: visor mode (slides from top, Quake-style)
     :bind(
       { "shift" },
       "o",
       nil,
       require("lib.interop.scratchpad").dailyNote("kitty")
     )
-    -- daily note in floating Ghostty window (alternative)
-    -- :bind({ "alt" }, "o", nil, require("lib.interop.scratchpad").dailyNote("ghostty"))
-    -- daily note via tmux (existing terminal workflow)
+    -- daily note: side-by-side mode (notes 30% left, previous app 70% right)
     :bind(
       { "ctrl" },
       "o",
       nil,
-      function() utils.tmux.focusDailyNote() end
+      require("lib.interop.scratchpad").dailyNoteSideBySide("kitty")
     )
     -- text capture: gather context from frontmost app and create capture note
     :bind(

@@ -85,6 +85,7 @@ in {
       - Always check existing code patterns before implementing new features.
       - Follow the established coding style and conventions in each directory.
       - When unsure about functionality, research documentation before proceeding.
+      - **CRITICAL: NEVER ASSUME SYNTAX OR API DETAILS.** If you're even 50% unsure about something (CLI flags, config syntax, API parameters, file formats), STOP and research the official documentation first. Assumptions based on "common conventions" or "how other tools do it" are NOT acceptable. This has caused real bugs (e.g., assuming `px` suffix works in Kitty config when it doesn't). Verify, don't guess.
       - Never modify files outside of the current working project directory without my explicit consent.
 
       ## System Configuration Context

@@ -7,6 +7,10 @@
 - Be skeptical of my ideas and ask questions to ensure you understand the
   requirements and goals.
 - Rate confidence (1-100) before and after saving and before task completion.
+- **CRITICAL: NEVER ASSUME SYNTAX OR API DETAILS.** If you're even 50% unsure
+  about something (CLI flags, config syntax, API parameters, file formats), STOP
+  and research the official documentation first. Assumptions based on "common
+  conventions" or "how other tools do it" are NOT acceptable. Verify, don't guess.
 
 ## Your required tasks for every conversation
 
