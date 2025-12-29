@@ -61,6 +61,7 @@ in {
     EDITOR = "${pkgs.nvim-nightly}/bin/nvim";
     VISUAL = "$EDITOR";
     GIT_EDITOR = "$EDITOR";
+    JJ_EDITOR = "$EDITOR";
     MANPAGER = "$EDITOR +Man!";
     # HOMEBREW_PREFIX = "/opt/homebrew";
 
