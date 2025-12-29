@@ -127,6 +127,8 @@ _deps
 **/.jj
 .beads
 **/.beads
+.workspaces
+**/.workspaces
 .worktrees
 
 **/erl_crash.dump
