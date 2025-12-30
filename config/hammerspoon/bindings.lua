@@ -259,23 +259,8 @@ function M.loadUtils()
       "n",
       nil,
       function()
-        local context = require("lib.interop.context")
-        local notes = require("lib.notes")
-        local scratchpad = require("lib.interop.scratchpad")
-
-        -- Gather context from frontmost app
-        local ctx = context.getContext()
-
-        -- Create capture note with context
-        local success, notePath, err = notes.createTextCaptureNote(ctx)
-
-        if success and notePath then
-          -- Open in floating Kitty scratchpad
-          local toggleFn = scratchpad.captureNote("kitty", notePath, "Capture Note")
-          toggleFn()
-        else
-          hs.alert.show("Capture failed: " .. (err or "unknown error"), 2)
-        end
+        local meganote = require("lib.meganote")
+        meganote.captureWithContext()
       end
     )
     :bind({ "ctrl" }, "d", nil, function() utils.dnd() end)
@@ -680,6 +665,38 @@ function M.loadForceQuit()
   end)
 end
 
+function M.loadMegaNote()
+  local meganote = req("lib.meganote")
+
+  -- Configure MegaNote for quick capture workflow
+  -- Use nvim with a capture socket for remote commands (context injection)
+  local captureSocket = "/tmp/nvim-capture.sock"
+  local capturesDir = meganote.getCapturesDir()
+
+  -- Command needs shell wrapper for:
+  -- 1. Socket cleanup (stale socket from crash/kill)
+  -- 2. Multiple commands (rm + nvim)
+  -- Opens nvim in captures dir - user creates/opens capture notes there
+  local nvimCmd = string.format(
+    "/bin/zsh -c 'rm -f %s; exec nvim --listen %s'",
+    captureSocket, captureSocket
+  )
+
+  meganote.configure({
+    width = 0.4,
+    height = 0.4,
+    command = nvimCmd,
+    workingDirectory = capturesDir,
+    startHidden = true,
+  })
+
+  -- Pre-launch MegaNote in background (hidden) for faster first capture
+  -- The Hyper+Shift+N binding is in loadApps() -> hyper chain
+  meganote.launch()
+
+  U.log.d("MegaNote configured and pre-launched (binding in loadApps)")
+end
+
 function M:init()
   M.loadApps()
   M.loadMeeting()
@@ -688,6 +705,7 @@ function M:init()
   M.loadWm()
   M.loadNotifications()
   M.loadForceQuit()
+  M.loadMegaNote()
 
   -- req("snipper")
   req("clipper")
