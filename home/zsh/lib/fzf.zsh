@@ -36,8 +36,8 @@ export FZF_DEFAULT_OPTS="
 --margin=0,0
 --padding=0,0
 --prompt=' '
---pointer=' '
---marker='󰛄 '
+--pointer=''
+--marker='󰛄'
 --scrollbar='▓'
 "
 # --tiebreak=index

@@ -70,7 +70,7 @@ in {
       "--pointer='▓'" # 
       "--header=''"
       # "--marker='✓ '"
-      "--marker='󰛄 '"
+      "--marker='󰛄'"
       "--scrollbar='▌▐'"
 
       # "--color=border:#aaaaaa,label:#cccccc"

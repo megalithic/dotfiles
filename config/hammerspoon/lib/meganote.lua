@@ -1,9 +1,9 @@
---- MegaNote - Toggle the floating notes terminal
---- Uses distributed notifications to communicate with the MegaNote app
+--- meganote - Toggle the floating notes terminal
+--- Uses distributed notifications to communicate with the meganote app
 ---
 --- Binary lookup order:
---- 1. Explicit cmd if configured via M.configure({ cmd = "/path/to/MegaNote" })
---- 2. Known paths: ~/.local/bin, ~/code/MegaNote/.build/release|debug
+--- 1. Explicit cmd if configured via M.configure({ cmd = "/path/to/meganote" })
+--- 2. Known paths: ~/.local/bin, ~/code/meganote/.build/release|debug
 --- 3. PATH lookup via /usr/bin/env
 
 local M = {}
@@ -15,16 +15,16 @@ local NOTIFICATION_SHOW = "com.meganote.show"
 local NOTIFICATION_HIDE = "com.meganote.hide"
 
 -- Known binary locations (checked in order)
-local BINARY_NAME = "MegaNote"
+local BINARY_NAME = "meganote"
 local KNOWN_PATHS = {
-  os.getenv("HOME") .. "/.local/bin/MegaNote",           -- Installed via `just install`
-  os.getenv("HOME") .. "/code/MegaNote/.build/release/MegaNote",  -- Release build
-  os.getenv("HOME") .. "/code/MegaNote/.build/debug/MegaNote",    -- Debug build
+  os.getenv("HOME") .. "/.local/bin/meganote", -- Installed via `just install`
+  os.getenv("HOME") .. "/code/meganote/.build/release/meganote", -- Release build
+  os.getenv("HOME") .. "/code/meganote/.build/debug/meganote", -- Debug build
 }
 
 -- Default configuration
 local config = {
-  -- MegaNote binary (nil = auto-detect via PATH or known locations)
+  -- meganote binary (nil = auto-detect via PATH or known locations)
   cmd = nil,
 
   -- Panel size (0.0-1.0 = percentage, >1.0 = pixels)
@@ -42,7 +42,7 @@ local config = {
   startHidden = true,
 }
 
---- Configure MegaNote settings
+--- Configure meganote settings
 ---@param opts table Configuration options
 function M.configure(opts)
   for k, v in pairs(opts) do
@@ -63,7 +63,7 @@ local function isExecutable(path)
   return false
 end
 
---- Find the MegaNote binary
+--- Find the meganote binary
 --- Returns executable path and whether to use env wrapper
 ---@return string|nil path, boolean useEnv
 local function findBinary()
@@ -85,16 +85,14 @@ local function findBinary()
   end
 
   -- 3. Fall back to PATH lookup via env
-  -- This will find ~/.local/bin/MegaNote if installed
+  -- This will find ~/.local/bin/meganote if installed
   hs.printf("[meganote] Using PATH lookup for: %s", BINARY_NAME)
   return BINARY_NAME, true
 end
 
---- Post a distributed notification to the MegaNote app
+--- Post a distributed notification to the meganote app
 ---@param name string The notification name
-local function postNotification(name)
-  hs.distributednotifications.post(name, nil, nil)
-end
+local function postNotification(name) hs.distributednotifications.post(name, nil, nil) end
 
 --- Build CLI arguments from config
 ---@return table args Array of CLI arguments
@@ -121,36 +119,28 @@ local function buildArgs()
     table.insert(args, config.workingDirectory)
   end
 
-  if config.startHidden then
-    table.insert(args, "--hidden")
-  end
+  if config.startHidden then table.insert(args, "--hidden") end
 
   return args
 end
 
---- Toggle the MegaNote panel visibility
-function M.toggle()
-  postNotification(NOTIFICATION_TOGGLE)
-end
+--- Toggle the meganote panel visibility
+function M.toggle() postNotification(NOTIFICATION_TOGGLE) end
 
---- Show the MegaNote panel
-function M.show()
-  postNotification(NOTIFICATION_SHOW)
-end
+--- Show the meganote panel
+function M.show() postNotification(NOTIFICATION_SHOW) end
 
---- Hide the MegaNote panel
-function M.hide()
-  postNotification(NOTIFICATION_HIDE)
-end
+--- Hide the meganote panel
+function M.hide() postNotification(NOTIFICATION_HIDE) end
 
---- Check if MegaNote is running
+--- Check if meganote is running
 ---@return boolean
 function M.isRunning()
-  local app = hs.application.find("MegaNote")
+  local app = hs.application.find("meganote")
   return app ~= nil
 end
 
---- Launch MegaNote with configured settings
+--- Launch meganote with configured settings
 ---@param callback? fun() Optional callback when app is ready
 function M.launch(callback)
   local binaryPath, useEnv = findBinary()
@@ -175,24 +165,20 @@ function M.launch(callback)
   local task = hs.task.new(executable, nil, taskArgs)
   if not task then
     hs.printf("[meganote] ERROR: Failed to create task for %s", executable)
-    hs.alert.show("MegaNote: Failed to launch", 2)
+    hs.alert.show("meganote: Failed to launch", 2)
     return
   end
 
   task:start()
 
   -- Wait for app to start, then call callback
-  if callback then
-    hs.timer.doAfter(1, callback)
-  end
+  if callback then hs.timer.doAfter(1, callback) end
 end
 
---- Launch MegaNote if not running, then show
+--- Launch meganote if not running, then show
 function M.ensureRunning()
   if not M.isRunning() then
-    M.launch(function()
-      M.show()
-    end)
+    M.launch(function() M.show() end)
   else
     M.show()
   end
@@ -209,27 +195,21 @@ end
 
 --- Get today's daily note path (from notes lib)
 ---@return string path
-function M.getDailyNotePath()
-  return notes.getDailyNotePath()
-end
+function M.getDailyNotePath() return notes.getDailyNotePath() end
 
 --- Get captures directory path (from notes lib)
 ---@return string path
-function M.getCapturesDir()
-  return notes.capturesDir
-end
+function M.getCapturesDir() return notes.capturesDir end
 
 --- Get notes home directory (from notes lib)
 ---@return string path
-function M.getNotesHome()
-  return notes.notesHome
-end
+function M.getNotesHome() return notes.notesHome end
 
 --------------------------------------------------------------------------------
 -- CAPTURE WORKFLOW
 --------------------------------------------------------------------------------
 
---- Open a specific file in MegaNote's nvim instance
+--- Open a specific file in meganote's nvim instance
 --- Uses nvim --remote to send file to existing server
 ---@param filePath string Path to file to open
 ---@param callback? fun(success: boolean) Optional callback
@@ -244,25 +224,29 @@ function M.openFile(filePath, callback)
         if callback then callback(remoteExit == 0) end
       end, {
         "nvim",
-        "--server", captureSocket,
-        "--remote", filePath,
+        "--server",
+        captureSocket,
+        "--remote",
+        filePath,
       })
       if remoteTask then remoteTask:start() end
     else
-      -- Server not running, will be started by MegaNote with this file
-      -- Store the file path for when MegaNote launches
+      -- Server not running, will be started by meganote with this file
+      -- Store the file path for when meganote launches
       M._pendingFile = filePath
       if callback then callback(true) end
     end
   end, {
     "nvim",
-    "--server", captureSocket,
-    "--remote-expr", "1",
+    "--server",
+    captureSocket,
+    "--remote-expr",
+    "1",
   })
   if checkTask then checkTask:start() end
 end
 
---- Capture with context: create note file, open in MegaNote, show panel
+--- Capture with context: create note file, open in meganote, show panel
 --- This is the main entry point for quick capture with context
 ---@return boolean success
 function M.captureWithContext()
@@ -279,9 +263,7 @@ function M.captureWithContext()
     M.openFile(notePath, function(opened)
       if opened then
         -- Small delay to let nvim load the file
-        hs.timer.doAfter(0.1, function()
-          M.show()
-        end)
+        hs.timer.doAfter(0.1, function() M.show() end)
       else
         hs.alert.show("Failed to open capture note", 2)
       end
@@ -304,9 +286,7 @@ function M.smartCaptureToggle()
   else
     -- App not running - launch then capture
     M.launch(function()
-      hs.timer.doAfter(0.5, function()
-        M.captureWithContext()
-      end)
+      hs.timer.doAfter(0.5, function() M.captureWithContext() end)
     end)
     return true
   end

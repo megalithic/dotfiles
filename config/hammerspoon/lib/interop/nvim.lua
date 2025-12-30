@@ -1,13 +1,14 @@
 -- Neovim Integration Library
 -- Query and control nvim instances via RPC sockets
 --
--- Socket ID format: {session}_{window}_{pane}_{pid}
--- Example: dotfiles_1_0_48115
+-- Socket ID formats:
+--   - tmux: {session}_{window}_{pane}_{pid} (e.g., "dotfiles_1_0_48115")
+--   - non-tmux: global_{pid} (e.g., "global_48115")
 --
 local M = {}
 local fmt = string.format
 
--- Socket directory (matches neovim autocmd in config/nvim/lua/config/autocmds.lua)
+-- Socket directory (matches neovim autocmd in config/nvim/lua/config/interop.lua)
 M.socketDir = "/tmp/nvim-sockets"
 
 --------------------------------------------------------------------------------
@@ -15,18 +16,35 @@ M.socketDir = "/tmp/nvim-sockets"
 --------------------------------------------------------------------------------
 
 ---@class SocketInfo
----@field id string Full socket ID (e.g., "dotfiles_1_0_48115")
----@field session string Tmux session name
----@field window number Tmux window index
----@field pane number Tmux pane index
+---@field id string Full socket ID (e.g., "dotfiles_1_0_48115" or "global_48115")
+---@field session string|nil Tmux session name (nil for global)
+---@field window number|nil Tmux window index (nil for global)
+---@field pane number|nil Tmux pane index (nil for global)
 ---@field pid number Neovim PID
 ---@field socket string Path to nvim server socket
+---@field is_global boolean True if non-tmux global socket
 
 --- Parse a socket ID into its components
----@param socketId string Socket ID in format "session_window_pane_pid"
+--- Supports both tmux (session_window_pane_pid) and global (global_pid) formats
+---@param socketId string Socket ID
 ---@return SocketInfo|nil Parsed info or nil if invalid
 function M.parseSocketId(socketId)
-  -- Pattern: session_window_pane_pid (session can contain underscores, so parse from end)
+  -- Check for global format first: global_{pid}
+  local globalPid = socketId:match("^global_(%d+)$")
+  if globalPid then
+    return {
+      id = socketId,
+      session = nil,
+      window = nil,
+      pane = nil,
+      pid = tonumber(globalPid),
+      socket = nil, -- filled in by caller
+      is_global = true,
+    }
+  end
+
+  -- Parse tmux format: session_window_pane_pid
+  -- (session can contain underscores, so parse from end)
   local pid = socketId:match("_(%d+)$")
   if not pid then return nil end
 
@@ -48,6 +66,7 @@ function M.parseSocketId(socketId)
     pane = tonumber(pane),
     pid = tonumber(pid),
     socket = nil, -- filled in by caller
+    is_global = false,
   }
 end
 
@@ -61,6 +80,96 @@ function M.getActiveTmuxPrefix()
   handle:close()
 
   return (prefix and prefix ~= "") and prefix or nil
+end
+
+--- Get PID of frontmost application window
+--- Returns PID of nvim if frontmost window belongs to a terminal running nvim
+---@return number|nil PID or nil if not found/applicable
+function M.getFrontmostNvimPid()
+  local frontmost = hs.application.frontmostApplication()
+  if not frontmost then return nil end
+
+  -- Get the bundle ID to check if it's a terminal
+  local bundleId = frontmost:bundleID()
+  local terminalBundles = {
+    ["com.mitchellh.ghostty"] = true,
+    ["net.kovidgoyal.kitty"] = true,
+    ["com.apple.Terminal"] = true,
+    ["com.googlecode.iterm2"] = true,
+  }
+
+  if not terminalBundles[bundleId] then return nil end
+
+  -- Get window title - many terminals show the process name
+  local window = frontmost:focusedWindow()
+  if not window then return nil end
+
+  local title = window:title()
+  if not title or not title:match("n?vim") then return nil end
+
+  -- Try to find nvim child process of this terminal window
+  -- This is terminal-specific and may not always work perfectly
+  -- For now, we'll rely on the socket file matching by checking all global sockets
+  return nil
+end
+
+--- Find socket path by PID
+---@param pid number Process ID to find
+---@return string|nil Socket path or nil if not found
+function M.getSocketByPid(pid)
+  local socketId = fmt("global_%d", pid)
+  local socketFile = fmt("%s/%s", M.socketDir, socketId)
+
+  local f = io.open(socketFile, "r")
+  if not f then return nil end
+
+  local socketPath = f:read("*l")
+  f:close()
+
+  return (socketPath and socketPath ~= "") and socketPath or nil
+end
+
+--- Get most recently modified global socket
+---@return string|nil Socket path or nil if none found
+function M.getMostRecentGlobalSocket()
+  -- Use shell to find most recent global_* file
+  local cmd = fmt("ls -t '%s'/global_* 2>/dev/null | head -1", M.socketDir)
+  local handle = io.popen(cmd)
+  if not handle then return nil end
+
+  local socketFile = handle:read("*l")
+  handle:close()
+
+  if not socketFile or socketFile == "" then return nil end
+
+  -- Read socket path from file
+  local f = io.open(socketFile, "r")
+  if not f then return nil end
+
+  local socketPath = f:read("*l")
+  f:close()
+
+  return (socketPath and socketPath ~= "") and socketPath or nil
+end
+
+--- Read socket info from a socket ID file
+---@param socketId string The socket ID (filename)
+---@return SocketInfo|nil Parsed socket info or nil if invalid
+local function readSocketInfo(socketId)
+  local socketFile = fmt("%s/%s", M.socketDir, socketId)
+  local f = io.open(socketFile, "r")
+  if not f then return nil end
+
+  local socketPath = f:read("*l")
+  f:close()
+
+  if not socketPath or socketPath == "" then return nil end
+
+  local info = M.parseSocketId(socketId)
+  if info then
+    info.socket = socketPath
+  end
+  return info
 end
 
 --------------------------------------------------------------------------------
@@ -94,61 +203,93 @@ function M.getSockets()
   return sockets
 end
 
---- Get socket for the currently active tmux pane
---- Matches by session_window_pane prefix (ignores PID suffix)
+--- Get socket for the currently active context
+--- Detection cascade:
+---   1. Tmux context (session_window_pane prefix match)
+---   2. Frontmost application PID match (for global sockets)
+---   3. Most recent global socket (fallback)
 ---@return string|nil Socket path or nil if not found
 function M.getActiveSocket()
+  -- 1. Try tmux-based detection first (existing behavior)
   local prefix = M.getActiveTmuxPrefix()
-  if not prefix then return nil end
+  if prefix then
+    local handle = io.popen(fmt("ls '%s' 2>/dev/null | grep '^%s_'", M.socketDir, prefix))
+    if handle then
+      local socketId = handle:read("*l")
+      handle:close()
 
-  -- Find socket file that starts with our prefix
-  local handle = io.popen(fmt("ls '%s' 2>/dev/null | grep '^%s_'", M.socketDir, prefix))
-  if not handle then return nil end
+      if socketId and socketId ~= "" then
+        local socketFile = fmt("%s/%s", M.socketDir, socketId)
+        local f = io.open(socketFile, "r")
+        if f then
+          local socketPath = f:read("*l")
+          f:close()
+          if socketPath and socketPath ~= "" then
+            return socketPath
+          end
+        end
+      end
+    end
+  end
 
-  local socketId = handle:read("*l")
-  handle:close()
+  -- 2. Try frontmost application detection (requires Hammerspoon running)
+  local frontmostPid = M.getFrontmostNvimPid()
+  if frontmostPid then
+    local socket = M.getSocketByPid(frontmostPid)
+    if socket then return socket end
+  end
 
-  if not socketId or socketId == "" then return nil end
-
-  -- Read the socket path from the file
-  local socketFile = fmt("%s/%s", M.socketDir, socketId)
-  local f = io.open(socketFile, "r")
-  if not f then return nil end
-
-  local socketPath = f:read("*l")
-  f:close()
-
-  return (socketPath and socketPath ~= "") and socketPath or nil
+  -- 3. Fallback to most recent global socket
+  return M.getMostRecentGlobalSocket()
 end
 
---- Get socket info for the currently active tmux pane
+--- Get socket info for the currently active context
+--- Detection cascade (same as getActiveSocket, but returns full SocketInfo):
+---   1. Tmux context (session_window_pane prefix match)
+---   2. Frontmost application PID match (for global sockets)
+---   3. Most recent global socket (fallback)
 ---@return SocketInfo|nil Socket info or nil if not found
 function M.getActiveSocketInfo()
+  -- 1. Try tmux-based detection first
   local prefix = M.getActiveTmuxPrefix()
-  if not prefix then return nil end
+  if prefix then
+    local handle = io.popen(fmt("ls '%s' 2>/dev/null | grep '^%s_'", M.socketDir, prefix))
+    if handle then
+      local socketId = handle:read("*l")
+      handle:close()
 
-  local handle = io.popen(fmt("ls '%s' 2>/dev/null | grep '^%s_'", M.socketDir, prefix))
-  if not handle then return nil end
-
-  local socketId = handle:read("*l")
-  handle:close()
-
-  if not socketId or socketId == "" then return nil end
-
-  local socketFile = fmt("%s/%s", M.socketDir, socketId)
-  local f = io.open(socketFile, "r")
-  if not f then return nil end
-
-  local socketPath = f:read("*l")
-  f:close()
-
-  if not socketPath or socketPath == "" then return nil end
-
-  local info = M.parseSocketId(socketId)
-  if info then
-    info.socket = socketPath
+      if socketId and socketId ~= "" then
+        local info = readSocketInfo(socketId)
+        if info then return info end
+      end
+    end
   end
-  return info
+
+  -- 2. Try frontmost application detection
+  local frontmostPid = M.getFrontmostNvimPid()
+  if frontmostPid then
+    local socketId = fmt("global_%d", frontmostPid)
+    local info = readSocketInfo(socketId)
+    if info then return info end
+  end
+
+  -- 3. Fallback to most recent global socket
+  local cmd = fmt("ls -t '%s'/global_* 2>/dev/null | head -1", M.socketDir)
+  local handle = io.popen(cmd)
+  if handle then
+    local socketFile = handle:read("*l")
+    handle:close()
+
+    if socketFile and socketFile ~= "" then
+      -- Extract socket ID from full path
+      local socketId = socketFile:match("([^/]+)$")
+      if socketId then
+        return readSocketInfo(socketId)
+      end
+    end
+  end
+
+  return nil
 end
 
 --- Find sockets by tmux session name

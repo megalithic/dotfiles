@@ -119,7 +119,6 @@ in {
   # NOTE: Do NOT use recursive=true with mkOutOfStoreSymlink, it defeats the purpose
   xdg.configFile."hammerspoon".source = config.lib.mega.linkConfig "hammerspoon";
   xdg.configFile."hammerspoon".force = true;
-
   # Generate PATH and env vars configuration for Hammerspoon (GUI apps don't inherit shell env)
   # This file is loaded by preflight.lua to inject Nix/Homebrew paths into hs.task
   xdg.dataFile."hammerspoon/nix_path.lua".text = ''
@@ -384,8 +383,6 @@ in {
     direnv = {
       enable = true;
       enableZshIntegration = true;
-      # NOTE: can't set this on my setup; it's readonly?
-      # enableFishIntegration = true;
       nix-direnv.enable = true;
       mise.enable = true;
       config = {

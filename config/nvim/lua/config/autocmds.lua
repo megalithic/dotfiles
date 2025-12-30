@@ -310,59 +310,22 @@ M.augroup("Leaving", {
 })
 
 -- Socket registration for Hammerspoon interop
--- Enables external tools to query nvim state (buffer info, file path, etc.)
--- Socket ID format: {session}_{window}_{pane}_{pid}
-local socket_dir = "/tmp/nvim-sockets"
-
---- Build socket ID from tmux context: session_window_pane_pid
----@return string|nil Socket ID or nil if not in tmux
-local function build_socket_id()
-  local pane = os.getenv("TMUX_PANE")
-  if not pane then return nil end
-
-  -- Get tmux session, window, and pane info in one call
-  local handle = io.popen("tmux display-message -p '#{session_name}_#{window_index}_#{pane_index}' 2>/dev/null")
-  if not handle then return nil end
-
-  local tmux_info = handle:read("*l")
-  handle:close()
-
-  if not tmux_info or tmux_info == "" then return nil end
-
-  -- Append PID for uniqueness across nvim restarts in same pane
-  return tmux_info .. "_" .. vim.fn.getpid()
-end
+-- See config/interop.lua for implementation details
+local interop = require("config.interop")
 
 M.augroup("HammerspoonInterop", {
   {
     event = { "VimEnter" },
     desc = "Register nvim server socket for Hammerspoon discovery",
     command = function()
-      if vim.v.servername == "" then return end
-
-      local socket_id = build_socket_id()
-      if not socket_id then return end
-
-      vim.fn.mkdir(socket_dir, "p")
-      local socket_file = socket_dir .. "/" .. socket_id
-      local f = io.open(socket_file, "w")
-      if f then
-        f:write(vim.v.servername)
-        f:close()
-      end
-
-      -- Store socket_id for cleanup on exit
-      vim.g._hs_socket_id = socket_id
+      interop.register_socket()
     end,
   },
   {
     event = { "VimLeavePre" },
     desc = "Cleanup nvim server socket file",
     command = function()
-      local socket_id = vim.g._hs_socket_id
-      if socket_id then
-        os.remove(socket_dir .. "/" .. socket_id)
-      end
+      interop.cleanup_socket()
     end,
   },
 })

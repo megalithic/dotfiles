@@ -15,29 +15,18 @@ in {
       set -g fish_prompt_pwd_dir_length 20
     '';
     interactiveShellInit = ''
-      # Reset leaked mouse tracking modes on every prompt
-      # Fixes: TUI apps (Claude Code, etc.) that enable SGR mouse mode (1003+1006)
-      # but don't clean up on exit, causing trackball/mouse movements to appear
-      # as garbage like "[<35;94;34M" in the prompt
-      # Modes: 1000=basic, 1002=button-motion, 1003=any-motion, 1006=SGR encoding
-      function __reset_mouse_mode --on-event fish_prompt
-          printf '\e[?1000l\e[?1002l\e[?1003l\e[?1006l'
-      end
-
       # I like to keep the prompt at the bottom rather than the top
       # of the terminal window so that running `clear` doesn't make
       # me move my eyes from the bottom back to the top of the screen;
       # keep the prompt consistently at the bottom
-      # _prompt_move_to_bottom # call function manually to load it since event handlers don't get autoloaded
+
+      _prompt_move_to_bottom # call function manually to load it since event handlers don't get autoloaded
+      _prompt_reset_mouse
 
       set fish_cursor_default     block      blink
       set fish_cursor_insert      line       blink
       set fish_cursor_replace_one underscore blink
       set fish_cursor_visual      underscore blink
-
-      # quickly open text file
-      # bind -M insert ctrl-o '${pkgs.fzf}/bin/fzf | xargs -r $EDITOR'
-      # bind ctrl-o '${pkgs.fzf}/bin/fzf | xargs -r $EDITOR'
 
       bind -M insert ctrl-a beginning-of-line
       bind -M normal ctrl-a beginning-of-line
@@ -74,11 +63,6 @@ in {
       bind -M insert ctrl-o fzf-vim-widget
       bind -M normal ctrl-o fzf-vim-widget
       bind -M default ctrl-o fzf-vim-widget
-
-
-      # Emergency mouse mode reset (ctrl+shift+m doesn't work in fish, use escape sequence)
-      # If garbage appears mid-command, press ctrl+g to reset mouse modes
-      bind \cg 'printf "\e[?1000l\e[?1002l\e[?1003l\e[?1006l"; commandline -f repaint'
 
       # for `!!` and `!$`-like behaviour:
       bind ! bind_bang
@@ -134,16 +118,17 @@ in {
     functions = {
       fish_greeting = "";
 
-      # Manual mouse mode reset - call when you see garbage like "[<35;94;34M"
-      # Also bound to ctrl+shift+m
-      reset-mouse = ''
-        printf '\e[?1000l\e[?1002l\e[?1003l\e[?1006l'
-        echo "Mouse tracking modes reset"
-      '';
-      # _prompt_move_to_bottom = {
-      #   onEvent = "fish_postexec";
-      #   body = "tput cup $LINES";
-      # };
+      _prompt_move_to_bottom = {
+        onEvent = "fish_postexec";
+        body = "tput cup $LINES";
+      };
+
+      _prompt_reset_mouse = {
+        onEvent = "fish_postexec";
+        body = ''
+          printf "\e[?1000l\e[?1002l\e[?1003l\e[?1006l"; commandline -f repaint
+        '';
+      };
 
       nix-shell = {
         wraps = "nix-shell";
@@ -198,230 +183,6 @@ in {
             case "*"
                 commandline -i '$'
         end
-      '';
-
-      fzf-jj-bookmarks = ''
-        set -l selected_bookmark (jj bookmark list | fzf --height 40%)
-        if test -n "$selected_bookmark"
-            # parse the bookmark name out of the full bookmark info line
-            set -l bookmark_name (string split ":" "$selected_bookmark" | head -n 1 | string trim)
-            commandline -i " $bookmark_name "
-        end
-        commandline -f repaint
-      '';
-
-      # ─────────────────────────────────────────────────────────────────
-      # JJ Workspace Management (jj-ws-*)
-      # ─────────────────────────────────────────────────────────────────
-
-      # Create a new jj workspace with tmux window and optional bead task
-      # Usage: jj-ws-new <name> [--no-task] [--base <revision>]
-      jj-ws-new = ''
-        argparse 'no-task' 'base=' -- $argv
-        or return 1
-
-        set -l ws_name $argv[1]
-        if test -z "$ws_name"
-            echo "Usage: jj-ws-new <name> [--no-task] [--base <revision>]"
-            return 1
-        end
-
-        # Find repo root
-        set -l repo_root (jj workspace root 2>/dev/null)
-        if test -z "$repo_root"
-            echo "Error: Not in a jj repository"
-            return 1
-        end
-
-        set -l ws_dir "$repo_root/.workspaces/$ws_name"
-        set -l base_rev (if set -q _flag_base; echo $_flag_base; else; echo "main"; end)
-
-        # Check if workspace already exists
-        if jj workspace list 2>/dev/null | grep -q "^$ws_name:"
-            echo "Workspace '$ws_name' already exists. Use jj-ws-switch to switch to it."
-            return 1
-        end
-
-        # Create workspace directory and jj workspace
-        mkdir -p (dirname "$ws_dir")
-        echo "Creating workspace '$ws_name' at $ws_dir..."
-        jj workspace add "$ws_dir" --name "$ws_name" -r "$base_rev"
-        or return 1
-
-        # Create bead task if not --no-task and bd is available
-        if not set -q _flag_no_task; and command -q bd
-            # Check if task with this name exists
-            set -l repo_prefix (basename $repo_root)
-            if not bd show "$repo_prefix-$ws_name" 2>/dev/null
-                echo "Creating bead task for workspace..."
-                bd create "$ws_name" -t task -p P2 -l "workspace" -d "Workspace task for $ws_name" --silent
-            end
-        end
-
-        # Create tmux window if in tmux
-        if set -q TMUX
-            set -l project_name (basename $repo_root)
-            set -l window_name "$project_name:$ws_name"
-
-            # Create new window and cd to workspace
-            tmux new-window -n "$window_name" -c "$ws_dir"
-            echo "Created tmux window '$window_name'"
-        else
-            # Not in tmux, just cd
-            cd "$ws_dir"
-            echo "Switched to workspace directory. (Not in tmux, no window created)"
-        end
-
-        echo "Workspace '$ws_name' ready!"
-      '';
-
-      # Switch to an existing jj workspace
-      # Usage: jj-ws-switch <name>
-      jj-ws-switch = ''
-        set -l ws_name $argv[1]
-
-        if test -z "$ws_name"
-            # No name provided, use fzf picker
-            set ws_name (jj-ws-list --picker)
-            if test -z "$ws_name"
-                return 0  # User cancelled
-            end
-        end
-
-        # Find repo root
-        set -l repo_root (jj workspace root 2>/dev/null)
-        if test -z "$repo_root"
-            echo "Error: Not in a jj repository"
-            return 1
-        end
-
-        # Handle "default" workspace specially
-        if test "$ws_name" = "default"
-            set -l ws_dir "$repo_root"
-        else
-            set -l ws_dir "$repo_root/.workspaces/$ws_name"
-        end
-
-        # Verify workspace exists
-        if not jj workspace list 2>/dev/null | grep -q "^$ws_name:"
-            echo "Error: Workspace '$ws_name' does not exist"
-            echo "Available workspaces:"
-            jj workspace list
-            return 1
-        end
-
-        # Switch tmux window if in tmux
-        if set -q TMUX
-            set -l project_name (basename $repo_root)
-            set -l window_name "$project_name:$ws_name"
-
-            # Check if window exists
-            if tmux list-windows -F '#{window_name}' | grep -q "^$window_name\$"
-                tmux select-window -t "$window_name"
-            else
-                # Window doesn't exist, create it
-                if test "$ws_name" = "default"
-                    tmux new-window -n "$window_name" -c "$repo_root"
-                else
-                    tmux new-window -n "$window_name" -c "$repo_root/.workspaces/$ws_name"
-                end
-            end
-        else
-            # Not in tmux, just cd
-            if test "$ws_name" = "default"
-                cd "$repo_root"
-            else
-                cd "$repo_root/.workspaces/$ws_name"
-            end
-        end
-      '';
-
-      # List jj workspaces, optionally with fzf picker
-      # Usage: jj-ws-list [--picker]
-      jj-ws-list = ''
-        argparse 'picker' -- $argv
-        or return 1
-
-        # Find repo root
-        set -l repo_root (jj workspace root 2>/dev/null)
-        if test -z "$repo_root"
-            echo "Error: Not in a jj repository"
-            return 1
-        end
-
-        if set -q _flag_picker
-            # Return just the name for scripting
-            jj workspace list 2>/dev/null | fzf --height 40% --prompt="Workspace> " | string split ":" | head -n 1 | string trim
-        else
-            # Pretty print
-            echo "Workspaces in "(basename $repo_root)":"
-            jj workspace list
-        end
-      '';
-
-      # Remove a jj workspace and its tmux window
-      # Usage: jj-ws-rm <name> [--force]
-      jj-ws-rm = ''
-        argparse 'force' -- $argv
-        or return 1
-
-        set -l ws_name $argv[1]
-        if test -z "$ws_name"
-            echo "Usage: jj-ws-rm <name> [--force]"
-            return 1
-        end
-
-        if test "$ws_name" = "default"
-            echo "Error: Cannot remove the default workspace"
-            return 1
-        end
-
-        # Find repo root
-        set -l repo_root (jj workspace root 2>/dev/null)
-        if test -z "$repo_root"
-            echo "Error: Not in a jj repository"
-            return 1
-        end
-
-        set -l ws_dir "$repo_root/.workspaces/$ws_name"
-
-        # Check if we're currently in this workspace
-        if test (pwd) = "$ws_dir"; or string match -q "$ws_dir/*" (pwd)
-            echo "Error: Cannot remove workspace you're currently in"
-            echo "Switch to another workspace first: jj-ws-switch default"
-            return 1
-        end
-
-        # Confirm unless --force
-        if not set -q _flag_force
-            read -l -P "Remove workspace '$ws_name'? [y/N] " confirm
-            if test "$confirm" != "y" -a "$confirm" != "Y"
-                echo "Cancelled"
-                return 0
-            end
-        end
-
-        # Close tmux window if it exists
-        if set -q TMUX
-            set -l project_name (basename $repo_root)
-            set -l window_name "$project_name:$ws_name"
-            if tmux list-windows -F '#{window_name}' | grep -q "^$window_name\$"
-                tmux kill-window -t "$window_name"
-                echo "Closed tmux window '$window_name'"
-            end
-        end
-
-        # Forget the workspace in jj
-        jj workspace forget "$ws_name"
-        or return 1
-
-        # Remove the directory
-        if test -d "$ws_dir"
-            rm -rf "$ws_dir"
-            echo "Removed workspace directory"
-        end
-
-        echo "Workspace '$ws_name' removed"
       '';
 
       _fzf_preview_file = ''
@@ -502,6 +263,7 @@ in {
 
         commandline --function repaint
       '';
+
       fzf-vim-widget = ''
         # modified from fzf-file-widget
         set -l commandline $(__fzf_parse_commandline)

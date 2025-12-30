@@ -677,10 +677,7 @@ function M.loadMegaNote()
   -- 1. Socket cleanup (stale socket from crash/kill)
   -- 2. Multiple commands (rm + nvim)
   -- Opens nvim in captures dir - user creates/opens capture notes there
-  local nvimCmd = string.format(
-    "/bin/zsh -c 'rm -f %s; exec nvim --listen %s'",
-    captureSocket, captureSocket
-  )
+  local nvimCmd = string.format("/bin/zsh -c 'rm -f %s; exec nvim --listen %s'", captureSocket, captureSocket)
 
   meganote.configure({
     width = 0.4,

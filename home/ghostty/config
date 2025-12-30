@@ -8,6 +8,7 @@
 auto-update = off
 # tip, stable
 auto-update-channel = tip
+working-directory = "~/.dotfiles"
 
 # background-opacity = 0.95
 # background-blur-radius = 20

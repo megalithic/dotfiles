@@ -241,7 +241,7 @@ function fuzzy_find() {
   #       --preview="${preview_cmd}" \
   #       --preview-window="bottom:65%:nowrap" \
   #       --pointer=' ' \
-  #       --marker='󰛄 ' \
+  #       --marker='󰛄' \
   #       --print-query \
   #       --exit-0 \
   #       --tac
@@ -270,14 +270,14 @@ function fuzzy_find() {
         --bind="${CTRL_R_rename_session_bind}" \
         \
         --bind="enter:replace-query+print-query" \
-        --pointer=' ' \
-        --marker='󰛄 ' \
+        --marker='󰛄' \
         --print-query \
         --exit-0 \
         --tac
   )"
   # --preview="${preview_cmd}" \
   # --preview-window="bottom:65%:nowrap" \
+  # --pointer='' \
 
   echo "$selected_session"
   try_session "$selected_session"
