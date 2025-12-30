@@ -7,8 +7,7 @@
 # This script is designed for AI agents (Claude, OpenCode, etc.) to:
 # 1. Create a jj workspace for isolated work
 # 2. Associate it with a bead task
-# 3. Create a tmux window if in tmux
-# 4. Output machine-readable status
+# 3. Output machine-readable status
 #
 # Exit codes:
 #   0 - Success
@@ -181,24 +180,6 @@ if command -v bd &>/dev/null; then
 fi
 
 # ─────────────────────────────────────────────────────────────────
-# Tmux window creation
-# ─────────────────────────────────────────────────────────────────
-
-TMUX_WINDOW=""
-if [[ -n "${TMUX:-}" ]]; then
-    WINDOW_NAME="$PROJECT_NAME:$WS_NAME"
-
-    # Check if window already exists
-    if tmux list-windows -F '#{window_name}' | grep -q "^$WINDOW_NAME$"; then
-        TMUX_WINDOW="$WINDOW_NAME"
-    else
-        # Create new window
-        tmux new-window -n "$WINDOW_NAME" -c "$WS_DIR" -d
-        TMUX_WINDOW="$WINDOW_NAME"
-    fi
-fi
-
-# ─────────────────────────────────────────────────────────────────
 # Output result
 # ─────────────────────────────────────────────────────────────────
 
@@ -217,9 +198,6 @@ if $JSON_OUTPUT; then
     "created": $TASK_CREATED,
     "existed": $TASK_EXISTS
   },
-  "tmux": {
-    "window": "$TMUX_WINDOW"
-  },
   "repo": {
     "root": "$REPO_ROOT",
     "project": "$PROJECT_NAME"
@@ -234,13 +212,7 @@ else
     if $TASK_CREATED; then
         echo "  (bead task created)"
     fi
-    if [[ -n "$TMUX_WINDOW" ]]; then
-        echo "  (tmux window: $TMUX_WINDOW)"
-    fi
     echo ""
     echo "To enter workspace:"
     echo "  cd $WS_DIR"
-    if [[ -n "$TMUX_WINDOW" ]]; then
-        echo "  # or switch tmux window: tmux select-window -t '$TMUX_WINDOW'"
-    fi
 fi

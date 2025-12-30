@@ -9,7 +9,7 @@
 # 1. Create a ws/<workspace-name> bookmark for the completed work
 # 2. Merge the work to main (locally, not pushed)
 # 3. Close the associated bead task
-# 4. Clean up workspace directory and tmux window
+# 4. Clean up workspace directory
 #
 # The bookmark allows:
 # - Listing completed work: jj bookmark list -r 'bookmarks(glob:"ws/*")'
@@ -337,20 +337,9 @@ fi
 # ─────────────────────────────────────────────────────────────────
 
 WS_REMOVED=false
-TMUX_CLOSED=false
-
 if ! $NO_CLEANUP; then
     # Switch to default workspace first
     cd "$REPO_ROOT"
-
-    # Close tmux window if exists
-    if [[ -n "${TMUX:-}" ]]; then
-        WINDOW_NAME="$PROJECT_NAME:$CURRENT_WS"
-        if tmux list-windows -F '#{window_name}' | grep -q "^$WINDOW_NAME$"; then
-            # Don't kill current window, just mark for later
-            echo "Note: Close tmux window '$WINDOW_NAME' manually or switch away first" >&2
-        fi
-    fi
 
     # Forget workspace
     if jj workspace forget "$CURRENT_WS" 2>/dev/null; then

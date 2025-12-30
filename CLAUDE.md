@@ -294,7 +294,6 @@ jj-ws-claim hs-memory-leaks
 # Creates:
 #   - jj workspace: .workspaces/hs-memory-leaks/
 #   - bead task: .dotfiles-hs-memory-leaks
-#   - tmux window (if in tmux)
 ```
 
 **During work:**
