@@ -65,6 +65,7 @@ format = "$number$symbol"
 
 [custom.nix_shell]
 symbol = "󱄅"
+shell = ["bash", "--noprofile", "--norc"]
 command = '''
   echo "$(echo $name | sed 's/-shell//')/$IN_NIX_SHELL"
 '''
@@ -78,14 +79,16 @@ when = "[[ -n $IN_NIX_SHELL ]]"
 # format = '[[󱄅](#ffffff) $name$state](#aaaaaa) '
 
 [custom.sudo]
+shell = ["bash", "--noprofile", "--norc"]
 description = "valid sudo timestamp marker"
-command = "echo -n ''"
+command = "echo -n ''"
 format = "[$symbol$output]($style) "
 style = "bold fg:#614b51"
 when = "sudo -vn &>/dev/null"
 
 [custom.jj]
 ignore_timeout = true
+shell = ["bash", "--noprofile", "--norc"]
 description = "The current jj status with workspace indicator"
 detect_folders = [".jj"]
 symbol = ""
