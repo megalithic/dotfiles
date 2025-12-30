@@ -127,6 +127,10 @@ function M.getSync(timeout)
     return nil, "get-selection failed: " .. (output or "unknown error")
   end
 
+  -- Strip ANSI escape codes that may leak from terminal apps when queried via AX API
+  -- Pattern matches ESC[ followed by any parameters and a final letter (CSI sequences)
+  output = output:gsub("\27%[[%d;]*%??[%d;]*[a-zA-Z]", "")
+
   -- Parse JSON response
   local ok, result = pcall(hs.json.decode, output)
   if not ok or not result then

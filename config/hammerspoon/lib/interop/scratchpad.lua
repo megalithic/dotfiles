@@ -24,15 +24,15 @@ M.config = {
 
   -- Visor mode: slides down from top (Quake-style)
   visor = {
-    width = 0.45,  -- 45% of screen width
-    height = 0.5,  -- 50% of screen height (top half)
-    animationDuration = 0.2,  -- seconds
+    width = 0.45, -- 45% of screen width
+    height = 0.5, -- 50% of screen height (top half)
+    animationDuration = 0.2, -- seconds
   },
 
   -- Side-by-side mode: notes on left, previous app on right
   sideBySide = {
-    notesWidth = 0.3,  -- 30% for notes
-    gap = 0,           -- pixels between windows (0 = flush)
+    notesWidth = 0.3, -- 30% for notes
+    gap = 0, -- pixels between windows (0 = flush)
   },
 }
 
@@ -179,69 +179,6 @@ function M.toggle(name, opts)
         if newWin then
           moveToCurrentSpace(newWin, frame)
           newWin:focus()
-        end
-      end)
-      return true
-    else
-      hs.alert.show(fmt("Scratchpad '%s' has no launcher", name), 2)
-      return false
-    end
-  end
-end
-
---- Toggle a scratchpad with visor-style animation (slides from top)
---- Uses app:hide()/unhide() pattern with animated transitions
----@param name string Unique name for this scratchpad
----@param opts table Options
----@field opts.titlePattern string Pattern to find the window by title
----@field opts.launcher function Function to launch if not running
----@return boolean success
-function M.toggleVisor(name, opts)
-  opts = opts or {}
-  local titlePattern = opts.titlePattern or name
-  local launcher = opts.launcher
-  local visibleFrame, hiddenFrame = M.getVisorFrames()
-  local duration = M.config.visor.animationDuration
-
-  -- Try to find existing window
-  local win = findWindowByTitle(titlePattern)
-
-  if win then
-    local app = win:application()
-    if app and app:isFrontmost() and win:isVisible() then
-      -- Window is focused and visible -> animate up then hide
-      win:setFrame(hiddenFrame, duration)
-      hs.timer.doAfter(duration, function()
-        app:hide()
-        if M.previousApp then M.previousApp:activate() end
-      end)
-      return true
-    else
-      -- Window exists but not focused -> store previous, unhide, animate down
-      local focusedWin = hs.window.focusedWindow()
-      if focusedWin then M.previousApp = focusedWin:application() end
-      app:unhide()
-      moveToCurrentSpace(win)
-      win:setFrame(hiddenFrame, 0)  -- Start at hidden position (instant)
-      win:focus()
-      win:setFrame(visibleFrame, duration)  -- Animate to visible
-      return true
-    end
-  else
-    -- No window found -> store previous app, then launch
-    local focusedWin = hs.window.focusedWindow()
-    if focusedWin then M.previousApp = focusedWin:application() end
-
-    if launcher then
-      launcher()
-      -- Wait for window to appear, position hidden, then animate down
-      hs.timer.doAfter(M.config.windowWaitTime, function()
-        local newWin = findWindowByTitle(titlePattern)
-        if newWin then
-          moveToCurrentSpace(newWin)
-          newWin:setFrame(hiddenFrame, 0)  -- Start hidden (instant)
-          newWin:focus()
-          newWin:setFrame(visibleFrame, duration)  -- Animate down
         end
       end)
       return true
@@ -534,7 +471,7 @@ local DAILY_NOTE_TITLE = "nvim:daily"
 local CAPTURE_NOTE_TITLE = "nvim:capture"
 
 -- Separate sockets for daily note vs capture
-local DAILY_NOTE_SOCKET = nvimLib.NOTES_SOCKET  -- reuse existing
+local DAILY_NOTE_SOCKET = nvimLib.NOTES_SOCKET -- reuse existing
 local CAPTURE_NOTE_SOCKET = "/tmp/nvim-capture.sock"
 
 --------------------------------------------------------------------------------
@@ -546,7 +483,7 @@ local notesWindowFilter = nil
 
 --- Initialize the window filter for notes windows (called once on module load)
 local function initNotesWindowFilter()
-  if notesWindowFilter then return end  -- Already initialized
+  if notesWindowFilter then return end -- Already initialized
 
   -- Create filter that matches our notes window titles
   notesWindowFilter = hs.window.filter.new(function(win)
@@ -614,16 +551,22 @@ local function createKittyLauncher(title, socketPath, filePath, frame)
       -- This is a CLI flag, not a config option, so use direct flag not --override
       "--single-instance=no",
       "--title=" .. title,
-      "--override", "background_opacity=1.00",
-      "--override", "remember_window_size=no",
-      "--override", "placement_strategy=center",
+      "--override",
+      "background_opacity=1.00",
+      "--override",
+      "remember_window_size=no",
+      "--override",
+      "placement_strategy=center",
       -- Show native macOS window border (overrides hide_window_decorations=yes)
       -- Options: no (full decorations), titlebar-only, titlebar-and-corners
-      "--override", "hide_window_decorations=titlebar-and-corners",
+      "--override",
+      "hide_window_decorations=titlebar-and-corners",
       -- Pass explicit pixel dimensions so Kitty starts at correct size (no resize flash)
       -- Note: plain numbers are pixels in Kitty, 'c' suffix would be cells
-      "--override", fmt("initial_window_width=%d", frame.w),
-      "--override", fmt("initial_window_height=%d", frame.h),
+      "--override",
+      fmt("initial_window_width=%d", frame.w),
+      "--override",
+      fmt("initial_window_height=%d", frame.h),
       "-e",
     }
     for _, arg in ipairs(nvimArgs) do
@@ -652,9 +595,7 @@ function M.dailyNote(terminal)
     local win = findWindowByTitle(DAILY_NOTE_TITLE)
 
     -- If window exists, open file in existing server
-    if win then
-      nvimLib.openFileAsync(DAILY_NOTE_SOCKET, filePath, function() end)
-    end
+    if win then nvimLib.openFileAsync(DAILY_NOTE_SOCKET, filePath, function() end) end
 
     -- Toggle behavior (show/hide)
     return M.toggle("daily-note", {
@@ -690,9 +631,7 @@ function M.dailyNoteSideBySide(terminal)
     local notesFrame, _ = M.getSideBySideFrames()
 
     -- If window exists, open file in existing server
-    if win then
-      nvimLib.openFileAsync(DAILY_NOTE_SOCKET, filePath, function() end)
-    end
+    if win then nvimLib.openFileAsync(DAILY_NOTE_SOCKET, filePath, function() end) end
 
     return M.toggleSideBySide("daily-note", {
       titlePattern = DAILY_NOTE_TITLE,

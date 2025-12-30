@@ -10,9 +10,7 @@ local function keymap(modes, from, to, opts)
   opts = opts or {}
 
   -- Ensure modes is a table
-  if type(modes) == "string" then
-    modes = { modes }
-  end
+  if type(modes) == "string" then modes = { modes } end
 
   -- Handle function callbacks
   local callback = nil
@@ -21,27 +19,17 @@ local function keymap(modes, from, to, opts)
     callback = to
     cmd = ""
     -- Set description if not provided
-    if not opts.desc then
-      opts.desc = "generic keymap"
-    end
+    if not opts.desc then opts.desc = "generic keymap" end
   elseif type(to) ~= "string" then
     callback = to
     cmd = ""
-    if not opts.desc then
-      opts.desc = tostring(to)
-    end
+    if not opts.desc then opts.desc = tostring(to) end
   end
 
   -- Set default options
-  if opts.noremap == nil then
-    opts.noremap = true
-  end
-  if opts.expr and opts.replace_keycodes == nil then
-    opts.replace_keycodes = true
-  end
-  if opts.silent == nil then
-    opts.silent = true
-  end
+  if opts.noremap == nil then opts.noremap = true end
+  if opts.expr and opts.replace_keycodes == nil then opts.replace_keycodes = true end
+  if opts.silent == nil then opts.silent = true end
 
   -- Handle buffer-specific mappings
   local buf = nil
@@ -92,16 +80,12 @@ for _, mode in ipairs({ "n", "x", "i", "v", "o", "t", "s", "c" }) do
 
   -- recursive global mappings
   _G[mode .. "map"] = function(from, to, opts)
-    if type(opts) == "string" then
-      opts = { desc = opts }
-    end
+    if type(opts) == "string" then opts = { desc = opts } end
     return keymap(mode, from, to, vim.tbl_extend("keep", remap_opts, opts or {}))
   end
   -- non-recursive global mappings
   _G[mode .. "noremap"] = function(from, to, opts)
-    if type(opts) == "string" then
-      opts = { desc = opts }
-    end
+    if type(opts) == "string" then opts = { desc = opts } end
     return keymap(mode, from, to, vim.tbl_extend("keep", noremap_opts, opts or {}))
   end
 end
@@ -109,6 +93,7 @@ end
 local M = { keymap = keymap }
 
 -- [[ unmap ]] -----------------------------------------------------------------
+unmap("x", "gra") -- lsp default: code actions
 unmap("n", "gra") -- lsp default: code actions
 unmap("n", "grn") -- lsp default: rename
 unmap("n", "grr") -- lsp default: references
@@ -138,25 +123,19 @@ unmap("n", "gri") -- lsp default: implementation
   --]]
 
 local function leaderMapper(mode, key, rhs, opts)
-  if type(opts) == "string" then
-    opts = { desc = opts }
-  end
+  if type(opts) == "string" then opts = { desc = opts } end
   map(mode, "<leader>" .. key, rhs, opts)
 end
 
 local function localLeaderMapper(mode, key, rhs, opts)
-  if type(opts) == "string" then
-    opts = { desc = opts }
-  end
+  if type(opts) == "string" then opts = { desc = opts } end
   map(mode, "<localleader>" .. key, rhs, opts)
 end
 
 -- [[ tabs ]] ------------------------------------------------------------------
 -- jump to tab
 for i = 0, 9 do
-  if i + 1 >= 10 then
-    break
-  end
+  if i + 1 >= 10 then break end
   local key_string = tostring(i + 1)
   map(
     "n",
@@ -208,9 +187,12 @@ imap("<C-a>", "<Home>")
 imap("<C-e>", "<End>")
 
 -- [[ ui/vim behaviours ]] -----------------------------------------------------
-map("n", "<esc>", function()
-  U.deluxe_clear_ui()
-end, { noremap = false, silent = true, desc = "EscDeluxe + Clear/Reset UI" })
+map(
+  "n",
+  "<esc>",
+  function() U.deluxe_clear_ui() end,
+  { noremap = false, silent = true, desc = "EscDeluxe + Clear/Reset UI" }
+)
 
 --  See `:help wincmd` for a list of all window commands
 -- @see: smart-splits.nvim
@@ -219,9 +201,7 @@ map("n", "<C-l>", "<C-w><C-l>", { desc = "Move focus to the right window" })
 map("n", "<C-j>", "<C-w><C-j>", { desc = "Move focus to the lower window" })
 map("n", "<C-k>", "<C-w><C-k>", { desc = "Move focus to the upper window" })
 
-map("n", "<leader>w", function(_args)
-  vim.api.nvim_command("silent! write")
-end, { desc = "write buffer" })
+map("n", "<leader>w", function(_args) vim.api.nvim_command("silent! write") end, { desc = "write buffer" })
 map("n", "<leader>W", require("config.utils").sudo_write, { desc = "sudo write buffer" })
 map("n", "<leader>q", "<cmd>q<cr>", { desc = "quit" })
 map("n", "<leader>Q", "<cmd>q!<cr>", { desc = "really quit" })
@@ -282,15 +262,9 @@ map("n", "Q", ":norm @q<CR>", { desc = "macros: run `q` macro (selection)" })
 -- [[ folds ]] -----------------------------------------------------------------
 map("n", "<leader>z", "za", { desc = "Toggle current fold" })
 map("x", "<leader>z", "zf", { desc = "Create fold from selection" })
-map("n", "zf", function()
-  vim.cmd.normal("zMzv")
-end, { desc = "Fold all except current" })
-map("n", "zF", function()
-  vim.cmd.normal("zMzvzczo")
-end, { desc = "Fold all except current and children of current" })
-map("n", "zO", function()
-  vim.cmd.normal("zR")
-end, { desc = "Open all folds" })
+map("n", "zf", function() vim.cmd.normal("zMzv") end, { desc = "Fold all except current" })
+map("n", "zF", function() vim.cmd.normal("zMzvzczo") end, { desc = "Fold all except current and children of current" })
+map("n", "zO", function() vim.cmd.normal("zR") end, { desc = "Open all folds" })
 map("n", "zo", "zO", { desc = "Open all folds descending from current line" })
 
 -- [[ plugin management ]] -----------------------------------------------------
@@ -299,12 +273,8 @@ map("n", "<leader>pm", "<cmd>Lazy<cr>", { desc = "[lazy] plugins" })
 
 -- [[ indents ]] ---------------------------------------------------------------
 local indent_opts = { desc = "VSCode-style block indentation" }
-map("x", ">>", function()
-  vim.cmd.normal({ vim.v.count1 .. ">gv", bang = true })
-end, indent_opts)
-map("x", "<<", function()
-  vim.cmd.normal({ vim.v.count1 .. "<gv", bang = true })
-end, indent_opts)
+map("x", ">>", function() vim.cmd.normal({ vim.v.count1 .. ">gv", bang = true }) end, indent_opts)
+map("x", "<<", function() vim.cmd.normal({ vim.v.count1 .. "<gv", bang = true }) end, indent_opts)
 
 -- [[ opening/closing delimiters/matchup/pairs ]] ------------------------------
 map(
@@ -357,12 +327,7 @@ map("n", "<localleader>yts", function()
     return
   end
 
-  local parsedCaptures = vim
-    .iter(captures)
-    :map(function(capture)
-      return ("@%s"):format(capture)
-    end)
-    :totable()
+  local parsedCaptures = vim.iter(captures):map(function(capture) return ("@%s"):format(capture) end):totable()
   local resultString = vim.inspect(parsedCaptures)
   vim.fn.setreg("+", resultString .. "\n")
   vim.notify(resultString, L.INFO, { title = "[yank] yanked treesitter capture", render = "compact" })
@@ -370,9 +335,7 @@ end, { desc = "[yank] copy treesitter captures under cursor" })
 
 map("n", "<localleader>yn", function()
   local res = vim.fn.expand("%:t", false, false)
-  if type(res) ~= "string" then
-    return
-  end
+  if type(res) ~= "string" then return end
   if res == "" then
     vim.notify("Buffer has no filename", L.ERROR, { title = "[yank] failed to yank filename", render = "compact" })
     return
@@ -383,9 +346,7 @@ end, { desc = "[yank] yank the filename of current buffer" })
 
 map("n", "<localleader>yp", function()
   local res = vim.fn.expand("%:p", false, false)
-  if type(res) ~= "string" then
-    return
-  end
+  if type(res) ~= "string" then return end
   res = res == "" and vim.uv.cwd() or res
   if res:len() then
     vim.fn.setreg("+", res)
@@ -425,9 +386,7 @@ map("n", "<localleader>sf", function()
 end, { desc = "[spell] fix spelling of word under cursor" })
 
 -- Undo zw, remove the word from the entry in 'spellfile'.
-map("n", "<localleader>su", function()
-  vim.cmd("normal! zug")
-end, { desc = "[spell] remove word from list" })
+map("n", "<localleader>su", function() vim.cmd("normal! zug") end, { desc = "[spell] remove word from list" })
 
 map("n", "<localleader>sa", function()
   local cur_pos = vim.api.nvim_win_get_cursor(0)
@@ -519,9 +478,12 @@ end, { silent = true, desc = "[g]o [c]omment and [d]uplicate selected lines" })
 
 -- map({ "o", "x" }, "m", ":<C-U>lua require('tsht').nodes()<cr>", { desc = "ts hop range ops" })
 
-map("n", "Ss", function()
-  vim.print(vim.treesitter.get_captures_at_cursor())
-end, { desc = "Print treesitter captures under cursor" })
+map(
+  "n",
+  "Ss",
+  function() vim.print(vim.treesitter.get_captures_at_cursor()) end,
+  { desc = "Print treesitter captures under cursor" }
+)
 
 map("n", "Sy", function()
   local captures = vim.treesitter.get_captures_at_cursor()
@@ -534,12 +496,7 @@ map("n", "Sy", function()
     return
   end
 
-  local parsedCaptures = vim
-    .iter(captures)
-    :map(function(capture)
-      return ("@%s"):format(capture)
-    end)
-    :totable()
+  local parsedCaptures = vim.iter(captures):map(function(capture) return ("@%s"):format(capture) end):totable()
   local resultString = vim.inspect(parsedCaptures)
   vim.fn.setreg("+", resultString .. "\n")
   vim.notify(resultString, vim.log.levels.INFO, { title = "Yanked capture", render = "wrapped-compact" })
@@ -570,28 +527,20 @@ map("n", "<leader>tp", "<cmd>T direction=tab<cr>", { desc = "tab-persistent" })
 local editFileMappings = {
   r = { vim.cmd.restart, "[e]dit -> restart" },
   R = {
-    function()
-      require("config.utils").lsp.rename_file()
-    end,
+    function() require("config.utils").lsp.rename_file() end,
     "[e]dit file -> lsp rename as <input>",
   },
   s = {
-    function()
-      vim.cmd([[SaveAsFile]])
-    end,
+    function() vim.cmd([[SaveAsFile]]) end,
     "[e]dit file -> [s]ave as <input>",
   },
   f = {
-    function()
-      vim.ui.open(vim.fn.expand("%:p:h:~"))
-    end,
+    function() vim.ui.open(vim.fn.expand("%:p:h:~")) end,
     "[e]xplore cwd -> [f]inder",
   },
   d = {
     function()
-      if vim.fn.confirm("Duplicate file?", "&Yes\n&No", 2, "Question") == 1 then
-        vim.cmd("Duplicate")
-      end
+      if vim.fn.confirm("Duplicate file?", "&Yes\n&No", 2, "Question") == 1 then vim.cmd("Duplicate") end
     end,
     "[e]dit file -> duplicate?",
   },
@@ -614,9 +563,7 @@ local editFileMappings = {
           -- }, function(input)
           --   if input == "del" then
           -- Delete the file using trash app
-          local success, _ = pcall(function()
-            vim.fn.system({ "trash", vim.fn.fnameescape(current_file) })
-          end)
+          local success, _ = pcall(function() vim.fn.system({ "trash", vim.fn.fnameescape(current_file) }) end)
           if success then
             vim.api.nvim_echo({
               { "File deleted from disk:\n", "Normal" },
@@ -733,8 +680,6 @@ local editFileMappings = {
   },
 }
 -- <leader>e<key>
-vim.iter(editFileMappings):each(function(key, rhs)
-  leaderMapper("n", "e" .. key, rhs[1], rhs[2])
-end)
+vim.iter(editFileMappings):each(function(key, rhs) leaderMapper("n", "e" .. key, rhs[1], rhs[2]) end)
 
 return M

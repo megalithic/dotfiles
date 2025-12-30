@@ -134,10 +134,18 @@ function M.show() postNotification(NOTIFICATION_SHOW) end
 function M.hide() postNotification(NOTIFICATION_HIDE) end
 
 --- Check if meganote is running
+--- Uses process name matching to avoid false positives from window titles
 ---@return boolean
 function M.isRunning()
-  local app = hs.application.find("meganote")
-  return app ~= nil
+  -- hs.application.find() does fuzzy matching on window titles too,
+  -- which causes false positives (e.g., terminal with "meganote" in title).
+  -- Instead, look for exact process name match.
+  for _, app in ipairs(hs.application.runningApplications()) do
+    if app:name() == BINARY_NAME then
+      return true
+    end
+  end
+  return false
 end
 
 --- Launch meganote with configured settings
