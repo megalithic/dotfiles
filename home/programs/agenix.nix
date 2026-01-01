@@ -24,13 +24,13 @@
   # When darwin-rebuild runs as root (via sudo), it loads launch agents in a context
   # where the user's SSH key is inaccessible, causing agenix to fail repeatedly.
   # Secrets are already sourced via shell init (programs.zsh.initExtra / programs.fish.interactiveShellInit).
-  launchd.agents.activate-agenix = {
-    enable = true;
-    config = {
-      RunAtLoad = lib.mkForce false;
-      KeepAlive = lib.mkForce false;
-    };
-  };
+  # launchd.agents.activate-agenix = {
+  #   enable = true;
+  #   config = {
+  #     RunAtLoad = lib.mkForce false;
+  #     KeepAlive = lib.mkForce true;
+  #   };
+  # };
 
   programs.zsh.initExtra = lib.mkAfter ''
     # Load agenix secrets as environment variables

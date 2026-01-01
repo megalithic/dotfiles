@@ -141,9 +141,7 @@ function M.isRunning()
   -- which causes false positives (e.g., terminal with "meganote" in title).
   -- Instead, look for exact process name match.
   for _, app in ipairs(hs.application.runningApplications()) do
-    if app:name() == BINARY_NAME then
-      return true
-    end
+    if app:name() == BINARY_NAME then return true end
   end
   return false
 end
@@ -231,6 +229,7 @@ function M.openFile(filePath, callback)
       local remoteTask = hs.task.new("/usr/bin/env", function(remoteExit)
         if callback then callback(remoteExit == 0) end
       end, {
+        "MEGANOTE=1",
         "nvim",
         "--server",
         captureSocket,

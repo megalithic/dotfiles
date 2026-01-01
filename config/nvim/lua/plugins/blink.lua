@@ -204,9 +204,9 @@ return {
           default = function(_ctx)
             local success, node = pcall(vim.treesitter.get_node)
             if success and node and vim.tbl_contains({ "comment", "line_comment", "block_comment" }, node:type()) then
-              return { "spell", "path", "buffer", "codecompanion", "opencode" }
+              return { "spell", "path", "buffer", "codecompanion" }
             else
-              return { "lsp", "path", "snippets", "spell", "buffer", "codecompanion", "opencode" }
+              return { "lsp", "path", "snippets", "spell", "buffer", "codecompanion" }
             end
           end,
 
@@ -238,7 +238,7 @@ return {
             },
             dadbod = { name = "Dadbod", module = "vim_dadbod_completion.blink" },
             dbee = { name = "cmp-dbee", module = "blink.compat.source" },
-            opencode = { name = "opencode", module = "opencode.cmp.blink" },
+            -- opencode = { name = "opencode", module = "opencode.cmp.blink" },
             ripgrep = {
               name = "[rg]",
               module = "blink-ripgrep",

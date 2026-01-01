@@ -315,10 +315,10 @@ function M.kittyEditor(name, filePath, opts)
   local function launcher()
     -- Use /usr/bin/env to leverage PATH injection from overrides.lua
     -- This finds kitty and nvim via the Nix/Homebrew PATH
-    -- Do NOT use -1 (single-instance) as it can cause issues with window control
-    local task = hs.task.new("kitty", nil, {
-      -- local task = hs.task.new("/usr/bin/env", nil, {
-      -- "kitty",
+    -- NOTE: Do NOT use kitty -1 (single-instance) as it causes window control issues
+    local task = hs.task.new("/usr/bin/env", nil, {
+      "MEGANOTE=1",
+      "kitty",
       "--title=" .. title,
       "--override",
       "background_opacity=1.00",

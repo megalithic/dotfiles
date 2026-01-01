@@ -4,6 +4,9 @@ local U = require("config.utils")
 local command = vim.api.nvim_create_user_command
 local map = vim.keymap.set
 
+-- Expose meganote context for statusline/UI customization
+vim.g.meganote_context = vim.env.MEGANOTE == "1"
+
 local M = {}
 
 ---@param status string?
@@ -34,13 +37,10 @@ end
 function M.get_md_link_title()
   if vim.bo.filetype ~= "markdown" then return end
   local get_node = vim.treesitter.get_node
-  local _cur_pos = vim.api.nvim_win_get_cursor
-
   local current_node = get_node({ lang = "markdown_inline" })
 
   while current_node do
     local type = current_node:type()
-    -- if type == "inline_link" or type == "image" then return vim.treesitter.get_node_text(current_node:named_child(1), 0) end
     if type == "link_text" then return vim.treesitter.get_node_text(current_node, 0) end
     current_node = current_node:parent()
   end
@@ -353,14 +353,6 @@ function M.extract_links(bufnr, lines)
       end)
       :totable()
 
-    -- local raw_urls = vim
-    --   .iter(str)
-    --   :map(function(_, node)
-    --     local text = get_text(node, str):sub(2, -2)
-    --     return text, text
-    --   end)
-    --   :totable()
-
     return vim.list_extend(inline_links, autolinks)
   end
 
@@ -405,8 +397,6 @@ function M.parse_due_dates(bufnr, lines)
 
   if tasks_due and U.tlen(tasks_due) > 0 then return tasks_due end
 end
-
-function M.format_notes(bufnr, lines) end
 
 function M.execute_line()
   if vim.bo.filetype ~= "markdown" then return end
@@ -518,7 +508,6 @@ function M.execute_line()
 
   local match_data = get_match_at_cursor()
   if match_data == nil then return end
-  -- local match_lines = vim.split(get_match_text(match_data.content, 0), "\n")
   local filetype = match_data.lang
 
   local current_line_to_execute = vim.api.nvim_get_current_line()
@@ -543,7 +532,6 @@ end
 -- [[ commands ]] --------------------------------------------------------------
 
 command("ToggleTask", function(evt) M.toggle_task(evt.args) end, {})
-command("FormatNotes", function() M.format_notes() end, {})
 command("ExecuteLine", function() M.execute_line() end, {})
 
 -- [[ mappings ]] --------------------------------------------------------------
@@ -626,9 +614,6 @@ require("config.autocmds").augroup("NotesLoaded", {
         local clients = vim.lsp.get_clients({ bufnr = bufnr })
         for _, client in ipairs(clients) do
           if client.name == "obsidian-ls" then
-            --   if vim.tbl_contains({ "markdown_oxide", "marksman", "obsidian-ls" }, client.name)
-            --   and string.match(vim.fn.expand("%:p:h"), vim.g.notes_path)
-            -- then
             map("n", "<leader>w", function()
               vim.schedule(function()
                 local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
@@ -636,10 +621,6 @@ require("config.autocmds").augroup("NotesLoaded", {
                 if string.match(vim.fn.expand("%:p:h"), "daily") then
                   M.sort_tasks(bufnr, lines)
                   M.parse_due_dates(bufnr, lines)
-
-                  -- FIXME: do we need link related parsing for _only_ daily notes?
-                  M.extract_links(bufnr, lines)
-                  -- M.compile_links(bufnr, lines)
                 end
 
                 vim.cmd.write({ bang = true })
