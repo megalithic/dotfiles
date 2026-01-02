@@ -209,28 +209,6 @@ function M.loadFigma()
 end
 
 function M.loadUtils()
-  -- FIXME:
-  -- Maybe use this? REF: https://github.com/jackieaskins/dotfiles/blob/main/hammerspoon/config/hotkeyStore.lua
-  -- local utilsModality = req("modality"):start({ id = "config.utils", key = "r", mods = { "shift" } })
-  -- utilsModality
-  --   :bind({}, "r", function()
-  --     hs.notify.new({ title = "hammerspork", subTitle = "config is reloading..." }):send()
-  --     hs.reload()
-  --   end, function() utilsModality:delayedExit(0.1) end)
-  --   :bind({}, "l", req("wm").placeAllApps, function() utilsModality:delayedExit(0.1) end)
-  --   -- WIP
-  --   :bind({}, "b", function()
-  --     local currentApp = hs.axuielement.applicationElement(hs.application.frontmostApplication())
-  --     if currentApp == lastApp then
-  --       axbrowse.browse() -- try to continue from where we left off
-  --     else
-  --       lastApp = currentApp
-  --       axbrowse.browse(currentApp) -- new app, so start over
-  --     end
-  --   end, function() utilsModality:delayedExit(0.1) end)
-  --   -- WIP
-  --   :bind({}, "h", utils.showAvailableHotkeys, function() utilsModality:delayedExit(0.1) end)
-
   local lastBrowsedApp
   req("hyper", { id = "config.utils" })
     :start()
@@ -239,19 +217,13 @@ function M.loadUtils()
       hs.reload()
     end)
     :bind({ "shift", "ctrl" }, "l", nil, req("wm").placeAllApps)
-    -- daily note: visor mode (slides from top, Quake-style)
-    :bind(
-      { "shift" },
-      "o",
-      nil,
-      require("lib.interop.scratchpad").dailyNote("kitty")
-    )
+    :bind({ "shift" }, "o", nil, require("lib.interop.scratchpad").dailyNote("kitty"))
     -- daily note: side-by-side mode (notes 30% left, previous app 70% right)
     :bind(
       { "ctrl" },
       "o",
       nil,
-      require("lib.interop.scratchpad").dailyNoteSideBySide("kitty")
+      require("lib.interop.scratchpad").dailyNoteTiled("kitty")
     )
     -- text capture: gather context from frontmost app and create capture note
     :bind(
@@ -278,26 +250,11 @@ end
 
 function M.loadWm()
   -- [ MODAL C.launchers ] ---------------------------------------------------------
-
-  -- # wm/window management ---------------------------------------------------------
-
-  -- local tiler = req("hyper", { id = "apps" }):start()
-  -- tiler:bind({}, "v", function() require("wm").tile() end)
-
-  -- local wmModality = spoon.HyperModal
   local wmModality = require("hypemode")
   wmModality
     :start()
-    -- local wmModality = req("modality", { id = "wm", key = "l" }):start()
-    -- wmModality
-    :bind(
-      {},
-      "r",
-      req("wm").placeAllApps,
-      function() wmModality:exit(0.1) end
-    )
+    :bind({}, "r", req("wm").placeAllApps, function() wmModality:exit(0.1) end)
     :bind({}, "escape", function() wmModality:exit() end)
-    -- :bind({}, "space", function() wm.place(C.grid.preview) end, function() wmModality:exit(0.1) end)
     :bind(
       {},
       "space",

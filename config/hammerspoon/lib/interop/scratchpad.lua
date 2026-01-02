@@ -544,6 +544,7 @@ local function createKittyLauncher(title, socketPath, filePath, frame)
   return function()
     local nvimArgs = nvimLib.getServerArgs(socketPath, filePath)
     local termArgs = {
+      "MEGANOTE=1",
       "kitty",
       -- CRITICAL: Disable single-instance so our overrides actually work!
       -- With single-instance=yes (from config), the existing Kitty process
@@ -617,7 +618,7 @@ end
 --- Create a daily note scratchpad with side-by-side layout
 ---@param terminal "ghostty"|"kitty" Which terminal to use
 ---@return function toggleFn
-function M.dailyNoteSideBySide(terminal)
+function M.dailyNoteTiled(terminal)
   local notesLib = require("lib.notes")
 
   local function getOrCreateDailyNote()

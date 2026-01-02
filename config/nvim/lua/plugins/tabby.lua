@@ -5,9 +5,13 @@ return {
   "nanozuki/tabby.nvim",
   event = { "BufReadPost" },
   dependencies = { "rktjmp/lush.nvim" },
-  cond = not vim.g.started_by_firenvim and not vim.env.TMUX_POPUP,
+  cond = function()
+    return false
+    -- if vim.g.meganote_context then return false end
+    --
+    -- return not vim.g.started_by_firenvim and not vim.env.TMUX_POPUP
+  end,
   config = function()
-    local SETTINGS = require("config.options")
     local icons = Icons
     local fmt = string.format
 

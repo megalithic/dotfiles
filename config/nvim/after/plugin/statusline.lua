@@ -15,20 +15,13 @@ local expand = fn.expand
 local strwidth = fn.strwidth
 local fnamemodify = fn.fnamemodify
 local fmt = string.format
-local get_opt = api.nvim_get_option_value
-
--- local mini_icons = require("mini.icons")
 
 local U = require("config.utils")
-local SETTINGS = require("config.options")
 
 vim.g.is_saving = false
 vim.g.lsp_progress_messages = ""
 
-local redrawstatus = vim.schedule_wrap(function()
-  vim.cmd.redrawstatus()
-  -- api.nvim__redraw({ statusline = true })
-end)
+local redrawstatus = vim.schedule_wrap(function() vim.cmd.redrawstatus() end)
 
 local clear_messages_timer
 local clear_messages_on_end
@@ -198,29 +191,6 @@ local function seg(contents, hl, cond, opts)
   })
 end
 
---- variable sized spacer
---- @param size integer | nil
---- @param filler string | nil
-local function seg_spacer(size, filler)
-  filler = filler or " "
-  if size and size >= 1 then
-    local span = string.rep(filler, size)
-    return seg(span)
-  else
-    return seg("")
-  end
-end
-
--- insert grouping separators in numbers
--- viml regex: https://stackoverflow.com/a/42911668
--- lua pattern: stolen from Akinsho
-local function group_number(num, sep)
-  if num < 999 then return tostring(num) end
-
-  num = tostring(num)
-  return num:reverse():gsub("(%d%d%d)", "%1" .. sep):reverse():gsub("^,", "")
-end
-
 -- ( CONSTANTS ) ---------------------------------------------------------------
 
 -- Custom `^V` and `^S` symbols to make this file appropriate for copy-paste
@@ -340,18 +310,8 @@ local exception_types = {
       local parts = vim.split(fname, " ")
       return fmt("Neo-Tree(%s)", parts[2])
     end,
-    dirbuf = function(fname, buf)
-      -- local shell = fnamemodify(vim.env.SHELL, ":t")
-      -- local parts = vim.split(fname, " ")
-      -- dd(parts)
-      return seg(fmt("DirBuf %s", vim.fn.expand("%:p")))
-    end,
-    oil = function(fname, buf)
-      -- local shell = fnamemodify(vim.env.SHELL, ":t")
-      -- local parts = vim.split(fname, " ")
-      -- dd(parts)
-      return seg(fmt("%s", vim.fn.expand("%:p")))
-    end,
+    dirbuf = function(fname, buf) return seg(fmt("DirBuf %s", vim.fn.expand("%:p"))) end,
+    oil = function(fname, buf) return seg(fmt("%s", vim.fn.expand("%:p"))) end,
     toggleterm = function(_, bufnr)
       local shell = fnamemodify(vim.env.SHELL, ":t")
       return seg(fmt("Terminal(%s)[%s]", shell, api.nvim_buf_get_var(bufnr, "toggle_number")))
@@ -795,7 +755,6 @@ function mega.ui.statusline.render()
     expandtab = vim.bo[bufnr].expandtab,
   }
 
-  -- vim.o.statusline = "%#Statusline# %2{mode()} | %F %m %r %= %{&spelllang} %y %8(%l,%c%) %8p%%"
   if not is_focused() then
     return "%#StatusLineInactive# %F %m %r %{&paste?'[paste] ':''} %= %{&spelllang}  %y %8(%l,%c%) %8p%%"
   end
@@ -809,6 +768,21 @@ function mega.ui.statusline.render()
       "%=",
     }
 
+    return table.concat(parts, "")
+  end
+
+  if vim.g.meganote_context then
+    local parts = {
+      seg([[%<]]),
+      seg(" 󰠮 notes "),
+      seg_filename(),
+      seg(modified_icon, "StModifiedIcon", M.ctx.modified, { margin = { 0, 1 } }),
+      seg(Icons.misc.lock, "StModifiedIcon", M.ctx.readonly, { margin = { 0, 1 } }),
+      seg([[%=]]),
+      seg_lineinfo(75),
+    }
+
+    -- return seg(fmt("%s meganote (%s)", Icons.misc.flames, M.ctx.filetype)) end,
     return table.concat(parts, "")
   end
 

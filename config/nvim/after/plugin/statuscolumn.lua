@@ -72,7 +72,7 @@ local excluded_fts = {
 }
 
 local should_hide_numbers = function(filetype, buftype)
-  return vim.tbl_contains(excluded_fts, filetype) or vim.tbl_contains(excluded_bts, buftype)
+  return vim.tbl_contains(excluded_fts, filetype) or vim.tbl_contains(excluded_bts, buftype) or vim.g.meganote_context
 end
 
 ---@return StringComponent
