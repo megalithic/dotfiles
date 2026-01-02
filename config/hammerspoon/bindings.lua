@@ -217,13 +217,13 @@ function M.loadUtils()
       hs.reload()
     end)
     :bind({ "shift", "ctrl" }, "l", nil, req("wm").placeAllApps)
-    :bind({ "shift" }, "o", nil, require("lib.interop.scratchpad").dailyNote("kitty"))
+    :bind({ "shift" }, "o", nil, require("lib.notes.window").dailyNote())
     -- daily note: side-by-side mode (notes 30% left, previous app 70% right)
     :bind(
       { "ctrl" },
       "o",
       nil,
-      require("lib.interop.scratchpad").dailyNoteTiled("kitty")
+      require("lib.notes.window").dailyNoteTiled()
     )
     -- text capture: gather context from frontmost app and create capture note
     :bind(
@@ -231,7 +231,7 @@ function M.loadUtils()
       "n",
       nil,
       function()
-        local meganote = require("lib.meganote")
+        local meganote = require("lib.interop.meganote")
         meganote.captureWithContext()
       end
     )
@@ -623,7 +623,7 @@ function M.loadForceQuit()
 end
 
 function M.loadMegaNote()
-  local meganote = req("lib.meganote")
+  local meganote = req("lib.interop.meganote")
 
   -- Configure MegaNote for quick capture workflow
   -- Use nvim with a capture socket for remote commands (context injection)

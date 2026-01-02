@@ -1,7 +1,7 @@
 local fmt = string.format
 local canvasLib = require("lib.canvas")
 local notesLib = require("lib.notes")
-local scratchpad = require("lib.interop.scratchpad")
+local meganote = require("lib.interop.meganote")
 local obj = {}
 
 --[[
@@ -660,10 +660,15 @@ function obj.captureFull()
     local notePath = notesLib.getCaptureNotePath(captureFilename)
     U.log.i(fmt("captureFull: created %s", notePath))
 
-    -- Open capture note in toggle-able scratchpad window
-    -- Uses scratchpad for consistent behavior with daily notes
-    local toggleFn = scratchpad.captureNote("kitty", notePath, "Capture: " .. captureFilename)
-    toggleFn()
+    -- Open capture note in meganote (Swift floating panel)
+    meganote.openFile(notePath, function(opened)
+      if opened then
+        -- Small delay to let nvim load the file
+        hs.timer.doAfter(0.1, function() meganote.show() end)
+      else
+        hs.alert.show("Failed to open capture note", 2)
+      end
+    end)
 
     -- Clear active capture since files are moved/deleted
     obj.clearCapture()
