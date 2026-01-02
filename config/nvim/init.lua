@@ -22,9 +22,6 @@ require("vim._extui").enable({
 vim.deprecate = function() end -- no-op deprecation messages
 local ok, mod_or_err = pcall(require, "config.globals")
 if ok then
-  -- if not vim.g.started_by_firenvim then
-  --   mod_or_err.version()
-  -- end
   require("config.options")
   require("config.commands")
   require("config.autocmds")

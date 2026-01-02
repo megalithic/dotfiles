@@ -855,180 +855,54 @@ M = {
       end,
     }
   end,
-
-  tailwindcss = {},
-  -- tailwindcss = function()
-  --   -- bypasses my config and uses tailwind-tools instead..
-  --   if package.loaded["tailwind-tools"] ~= nil then return nil end
-
-  --   return {
-  --     manual_install = true,
-  --     cmd = { "tailwindcss-language-server", "--stdio" },
-  --     filetypes = {
-  --       "aspnetcorerazor",
-  --       "astro",
-  --       "astro-markdown",
-  --       "blade",
-  --       "clojure",
-  --       "django-html",
-  --       "htmldjango",
-  --       "edge",
-  --       "eelixir",
-  --       "elixir",
-  --       "ejs",
-  --       "erb",
-  --       "eruby",
-  --       "gohtml",
-  --       "gohtmltmpl",
-  --       "haml",
-  --       "handlebars",
-  --       "hbs",
-  --       "html",
-  --       "htmlangular",
-  --       "html-eex",
-  --       "heex",
-  --       "jade",
-  --       "leaf",
-  --       "liquid",
-  --       -- "markdown",
-  --       "mdx",
-  --       "mustache",
-  --       "njk",
-  --       "nunjucks",
-  --       "php",
-  --       "razor",
-  --       "slim",
-  --       "twig",
-  --       "phoenix-heex",
-  --       "css",
-  --       "less",
-  --       "postcss",
-  --       "sass",
-  --       "scss",
-  --       "stylus",
-  --       "sugarss",
-  --       "javascript",
-  --       "javascriptreact",
-  --       "reason",
-  --       "rescript",
-  --       "typescript",
-  --       "typescriptreact",
-  --       "vue",
-  --       "svelte",
-  --       "templ",
-  --     },
-  --     -- init_options = {
-  --     --   userLanguages = {
-  --     --     eruby = "erb",
-  --     --     eelixir = "html-eex",
-  --     --     elixir = "phoenix-heex",
-  --     --     heex = "phoenix-heex",
-  --     --     -- elixir = "html-eex",
-  --     --     -- eelixir = "html-eex",
-  --     --     -- heex = "html-eex",
-  --     --   },
-  --     -- },
-  --     filetypes_include = { "heex" },
-  --     settings = {
-  --       tailwindCSS = {
-  --         validate = true,
-  --         lint = {
-  --           cssConflict = "warning",
-  --           invalidApply = "error",
-  --           invalidScreen = "error",
-  --           invalidVariant = "error",
-  --           invalidConfigPath = "error",
-  --           invalidTailwindDirective = "error",
-  --           recommendedVariantOrder = "warning",
-  --         },
-  --         classAttributes = {
-  --           "class",
-  --           "classes",
-  --           "additional_classes",
-  --           "additional_class",
-  --           "className",
-  --           "class:list",
-  --           "classList",
-  --           "ngClass",
-  --         },
-  --         includeLanguages = {
-  --           eruby = "erb",
-  --           eelixir = "html-eex",
-  --           elixir = "phoenix-heex",
-  --           heex = "phoenix-heex",
-  --           -- elixir = "html-eex",
-  --           -- eelixir = "html-eex",
-  --           -- heex = "html-eex",
-  --         },
-  --         experimental = {
-  --           configFile = "",
-  --           classRegex = {
-  --             [[class="([^"]*)]],
-  --             [[additional_classes="([^"]*)]],
-  --             [[class:"([^"]*)]],
-
-  --             -- [[class= "([^"]*)]],
-  --             -- [[*class= "([^"]*)]],
-  --             -- [[*_class= "([^"]*)]],
-  --             -- [[class: "([^"]*)]],
-  --             -- [[classes= "([^"]*)]],
-  --             -- [[*classes= "([^"]*)]],
-  --             -- [[*_classes= "([^"]*)]],
-  --             -- [[classes: "([^"]*)]],
-
-  --             [[~H""".*class="([^"]*)".*"""]],
-  --             [[~H""".*additional_classes="([^"]*)".*"""]],
-  --             "~H\"\"\".*class=\"([^\"]*)\".*\"\"\"",
-  --             "~H\"\"\".*additional_classes=\"([^\"]*)\".*\"\"\"",
-  --           },
-  --         },
-  --       },
-  --     },
-  --     before_init = function(_, config)
-  --       if not config.settings then config.settings = {} end
-  --       if not config.settings.editor then config.settings.editor = {} end
-  --       if not config.settings.editor.tabSize then config.settings.editor.tabSize = vim.lsp.util.get_effective_tabstop() end
-  --     end,
-  --     workspace_required = true,
-  --     -- root_dir = function(bufnr, on_dir)
-  --     --   local util = require("lspconfig.util")
-  --     --   local fname = vim.api.nvim_buf_get_name(bufnr)
-
-  --     --   local root_files = {
-  --     --     -- Generic
-  --     --     "tailwind.config.js",
-  --     --     "tailwind.config.cjs",
-  --     --     "tailwind.config.mjs",
-  --     --     "tailwind.config.ts",
-  --     --     "postcss.config.js",
-  --     --     "postcss.config.cjs",
-  --     --     "postcss.config.mjs",
-  --     --     "postcss.config.ts",
-  --     --     -- Phoenix
-  --     --     "assets/tailwind.config.js",
-  --     --     "assets/tailwind.config.cjs",
-  --     --     "assets/tailwind.config.mjs",
-  --     --     "assets/tailwind.config.ts",
-  --     --     -- Django
-  --     --     "theme/static_src/tailwind.config.js",
-  --     --     "theme/static_src/tailwind.config.cjs",
-  --     --     "theme/static_src/tailwind.config.mjs",
-  --     --     "theme/static_src/tailwind.config.ts",
-  --     --     "theme/static_src/postcss.config.js",
-  --     --     -- Rails
-  --     --     "app/assets/stylesheets/application.tailwind.css",
-  --     --     "app/assets/tailwind/application.css",
-  --     --   }
-
-  --     --   local elixir_root_dir = root_pattern(bufnr, on_dir, { "mix.exs" })
-  --     --   root_files = util.insert_package_json(root_files, "tailwindcss", fname)
-  --     --   root_files = util.root_markers_with_field(root_files, { "mix.exs" }, "tailwind", fname)
-
-  --     --   -- P(vim.fs.dirname(vim.fs.find(root_matches or root_files, { path = fname, upward = true })[1]))
-  --     --   on_dir(vim.fs.dirname(vim.fs.find(root_matches or root_files, { path = fname, upward = true })[1]))
-  --     -- end,
-  --   }
-  -- end,
+  tailwindcss = {
+    settings = {
+      tailwindCSS = {
+        validate = true,
+        files = {
+          exclude = {
+            "**/.git/**",
+            "**/node_modules/**",
+            "**/.direnv/**",
+            "**/deps/**",
+            "**/_build/**",
+          },
+        },
+        includeLanguages = {
+          elixir = "phoenix-heex",
+          eruby = "erb",
+          heex = "phoenix-heex",
+          surface = "phoenix-heex",
+        },
+        lint = {
+          cssConflict = "warning",
+          invalidApply = "error",
+          invalidScreen = "error",
+          invalidVariant = "error",
+          invalidConfigPath = "error",
+          invalidTailwindDirective = "error",
+          recommendedVariantOrder = "warning",
+        },
+        classAttributes = {
+          "class",
+          "className",
+          "class:list",
+          "classList",
+          "ngClass",
+        },
+        experimental = {
+          classRegex = {
+            [[class:\s*"([^"]*)]],
+            [[class=\s*"([^"]*)]],
+            [[class="([^"]*)]],
+            [[class:"([^"]*)]],
+            [[additional_classes="([^"]*)]],
+          },
+        },
+      },
+    },
+    filetypes = { "elixir", "eelixir", "html", "liquid", "heex", "surface", "css" },
+  },
   taplo = {
     settings = {
       -- Use the defaults that the VSCode extension uses: https://github.com/tamasfe/taplo/blob/2e01e8cca235aae3d3f6d4415c06fd52e1523934/editors/vscode/package.json

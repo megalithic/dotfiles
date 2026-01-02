@@ -65,6 +65,7 @@ in {
       ".gitignore".source = git/gitignore;
       ".gitconfig".source = git/gitconfig;
       ".ssh/config".source = config.lib.mega.linkConfig "ssh/config";
+      ".ssh/allowed_signers".text = "seth@megalithic.io ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICyxphJ0fZhJP6OQeYMsGNQ6E5ZMVc/CQdoYrWYGPDrh";
       "Library/Application Support/espanso".source = config.lib.mega.linkConfig "espanso";
       "iclouddrive".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/Library/Mobile Documents/com~apple~CloudDocs";
     }
@@ -375,6 +376,7 @@ in {
       ];
 
       settings.gpg.ssh.program = "/Applications/1Password.app/Contents/MacOS/op-ssh-sign";
+      settings.gpg.ssh.allowedSignersFile = "~/.ssh/allowed_signers";
       settings.gpg.format = "ssh";
       settings.user.signingkey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICyxphJ0fZhJP6OQeYMsGNQ6E5ZMVc/CQdoYrWYGPDrh";
       settings.commit.gpgSign = true;

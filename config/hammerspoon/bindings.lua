@@ -3,7 +3,7 @@
 
 local M = {}
 
-_G.Hypers = {}
+-- NOTE: _G.Hypers is managed by hyper.lua module (not here)
 
 local fmt = string.format
 local wm = req("wm")
@@ -148,48 +148,6 @@ function M.loadMeeting()
       end
     end
 
-    -- if hs.application.find("us.zoom.xos") then
-    --   local prevWin = hs.window.focusedWindow()
-    --   -- hs.application.launchOrFocusByBundleID("us.zoom.xos")
-    --   local app = hs.application.find("us.zoom.xos")
-    --   local targetWin = app:findWindow("Zoom Meeting")
-    --   if targetWin and targetWin:isStandard() then
-    --     targetWin:focus()
-    --   else
-    --     prevWin:focus()
-    --   end
-    -- -- elseif hs.application.find("com.brave.Browser.nightly.app.kjgfgldnnfoeklkmfkjfagphfepbbdan") then
-    -- --   hs.application.launchOrFocusByBundleID("com.brave.Browser.nightly.app.kjgfgldnnfoeklkmfkjfagphfepbbdan")
-    -- elseif hs.application.find("com.microsoft.teams2") then
-    --   local prevWin = hs.window.focusedWindow()
-    --   -- hs.application.launchOrFocusByBundleID("com.microsoft.teams2")
-    --   local app = hs.application.find("com.microsoft.teams2")
-    --   local targetWin = app:findWindow("Meeting|Launch Deck Standup")
-    --   if targetWin then
-    --     targetWin:focus()
-    --   else
-    --     prevWin:focus()
-    --   end
-    -- elseif hs.application.find("com.pop.pop.app") then
-    --   -- wm.focusMainWindow("com.pop.pop.app")
-    --
-    --   -- hs.application.launchOrFocusByBundleID("com.pop.pop.app")
-    --   local app = hs.application.find("com.pop.pop.app")
-    --   local targetWin = enum.find(
-    --     app:allWindows(),
-    --     function(win)
-    --       return app:mainWindow() == win and win:isStandard() and win:frame().w > 1000 and win:frame().h > 1000
-    --     end
-    --   )
-    --
-    --   if targetWin ~= nil then targetWin:focus() end
-    -- elseif req("browser").hasTab("meet.google.com|hangouts.google.com.call|www.valant.io|telehealth.px.athena.io") then
-    --   req("browser").jump("meet.google.com|hangouts.google.com.call|www.valant.io|telehealth.px.athena.io")
-    -- else
-    --   print(fmt("%s: no meeting targets to focus", "bindings.hyper.meeting"))
-    --
-    --   hs.application.frontmostApplication():activate()
-    -- end
   end)
 end
 
@@ -386,200 +344,8 @@ function M.loadWm()
       local wip = require("wip")
       wip.bowser()
     end)
-  -- :bind({}, "b", function()
-  --   hs.timer.doAfter(5, function()
-  --     local focusedWindow = hs.window.focusedWindow()
-
-  --     if focusedWindow then
-  --       local axWindow = hs.axuielement.windowElement(focusedWindow)
-
-  --       function printAXElements(element, indent)
-  --         indent = indent or ""
-
-  --         print(indent .. "Element: " .. tostring(element))
-
-  --         local attributes = element:attributeNames()
-  --         for _, attr in ipairs(attributes) do
-  --           local value = element:attributeValue(attr)
-  --           print(indent .. "  " .. attr .. ": " .. tostring(value))
-  --         end
-
-  --         local children = element:childElements()
-  --         if children then
-  --           for _, child in ipairs(children) do
-  --             printAXElements(child, indent .. "  ")
-  --           end
-  --         end
-  --       end
-
-  --       print("AX Elements for Focused Window:")
-  --       printAXElements(axWindow)
-  --     else
-  --       print("No focused window found.")
-  --     end
-  --   end)
-  -- end)
 
   req("hyper", { id = "wm" }):bind({}, "l", function() wmModality:toggle() end)
-
-  --[[]
-req("hyper", { id = "wm" })
-  :bind({ "ctrl", "shift" }, "r", req("wm").placeAllApps)
-  -- :bind({}, "escape", function() wmModality:exit() end)
-  -- :bind({}, "space", function() wm.place(C.grid.preview) end, function() wmModality:exit(0.1) end)
-  :bind(
-    { "ctrl" },
-    "space",
-    chain(
-      {
-        C.grid.full,
-        C.grid.center.large,
-        C.grid.center.medium,
-        C.grid.center.small,
-        C.grid.center.tiny,
-        C.grid.center.mini,
-        C.grid.preview,
-      }
-      -- wmModality, 1.0
-    )
-    -- function() wm.place(C.grid.preview) end
-  )
-  -- :bind({}, "return", function() wm.place(C.grid.full) end, function() wmModality:exit(0.1) end)
-  :bind(
-    { "ctrl" },
-    "return",
-    function() wm.place(C.grid.full) end
-  )
-  :bind({ "ctrl", "shift" }, "return", function()
-    wm.toNextScreen()
-    wm.place(C.grid.full)
-    -- end, function() wmModality:exit() end)
-  end)
-  :bind(
-    { "ctrl" },
-    "l",
-    -- function() wm.place(C.grid.halves.right) end,
-    chain(
-      enum.map({ "halves", "thirds", "twoThirds", "fiveSixths", "sixths" }, function(size)
-        if type(C.grid[size]) == "string" then return C.grid[size] end
-        return C.grid[size]["right"]
-      end)
-      -- wmModality,
-      -- 1.0
-    )
-    -- function() wmModality:exit() end
-  )
-  :bind({ "ctrl", "shift" }, "l", function()
-    wm.toNextScreen()
-    -- wm.place(C.grid.halves.right)
-    chain(
-      enum.map({ "halves", "thirds", "twoThirds", "fiveSixths", "sixths" }, function(size)
-        if type(C.grid[size]) == "string" then return C.grid[size] end
-        return C.grid[size]["right"]
-      end)
-      -- wmModality,
-      -- 1.0
-    )
-    -- end, function() wmModality:exit() end)
-  end)
-  :bind(
-    { "ctrl" },
-    "h",
-    -- function() wm.place(C.grid.halves.left) end,
-    chain(
-      enum.map({ "halves", "thirds", "twoThirds", "fiveSixths", "sixths" }, function(size)
-        if type(C.grid[size]) == "string" then return C.grid[size] end
-        return C.grid[size]["left"]
-      end)
-      -- wmModality,
-      -- 1.0
-    )
-    -- function() wmModality:exit() end
-  )
-  :bind({ "shift" }, "h", function()
-    wm.toPrevScreen()
-    -- wm.place(C.grid.halves.left)
-    chain(
-      enum.map({ "halves", "thirds", "twoThirds", "fiveSixths", "sixths" }, function(size)
-        if type(C.grid[size]) == "string" then return C.grid[size] end
-        return C.grid[size]["left"]
-      end)
-      -- wmModality,
-      -- 1.0
-    )
-    -- end, function() wmModality:exit() end)
-  end)
-  -- :bind({}, "j", function() wm.toNextScreen() end, function() wmModality:delayedExit(0.1) end)
-  -- :bind(
-  --   {},
-  --   "j",
-  --   -- function() wm.place(C.grid.center.large) end,
-  --   chain(
-  --     {
-  --       C.grid.center.mini,
-  --       C.grid.center.tiny,
-  --       C.grid.center.small,
-  --       C.grid.center.medium,
-  --       C.grid.center.large,
-  --     }
-  --     -- wmModality, 1.0
-  --   )
-  --   -- function() wmModality:exit() end
-  -- )
-  -- :bind(
-  --   {},
-  --   "k",
-  --   function() wm.place(C.grid.center.large) end
-  --   -- chain({
-  --   --   C.grid.center.large,
-  --   --   C.grid.center.medium,
-  --   --   C.grid.center.small,
-  --   --   C.grid.center.tiny,
-  --   --   C.grid.center.mini,
-  --   -- }, wmModality, 1.0)
-  --   -- function() wmModality:exit() end
-  -- )
-  :bind(
-    { "ctrl" },
-    "v",
-    function()
-      wm.tile()
-      -- wmModality:exit()
-    end
-  )
-  :bind({ "ctrl" }, "s", function()
-    req("lib.interop.browser"):splitTab()
-    -- wmModality:exit()
-  end)
-  :bind({ "ctrl", "shift" }, "s", function()
-    req("lib.interop.browser"):splitTab(true)
-    -- wmModality:exit()
-  end)
--- :bind({}, "m", function()
---   local app = hs.application.frontmostApplication()
---   local menuItemTable = { "Window", "Merge All Windows" }
---   if app:findMenuItem(menuItemTable) then
---     app:selectMenuItem(menuItemTable)
---   else
---     warn("Merge All Windows is unsupported for " .. app:bundleID())
---   end
-
---   wmModality:exit()
--- end)
--- :bind({}, "f", function()
---   local focused = hs.window.focusedWindow()
---   enum.map(focused:otherWindowsAllScreens(), function(win) win:application():hide() end)
---   wmModality:exit()
--- end)
--- :bind("", "c", function()
---   local win = hs.window.focusedWindow()
---   local screenWidth = win:screen():frame().w
---   hs.window.focusedWindow():move(hs.geometry.rect(screenWidth / 2 - 300, 0, 600, 400))
-
---   wmModality:exit()
--- end)
-]]
-  --
 end
 
 function M.loadNotifications()
@@ -594,16 +360,6 @@ function M.loadNotifications()
         notifier.dismissNotification()
       end
     end)
-  end
-end
-
--- Check if a hyper key is reserved before binding
--- Used to prevent conflicts with reserved keys like HYPER+Q
-local function assertKeyAvailable(key)
-  local reservedKeys = C.reservedHyperKeys or {}
-  local lowerKey = key:lower()
-  if reservedKeys[lowerKey] then
-    error(string.format("HYPER+%s is reserved for: %s", key:upper(), reservedKeys[lowerKey]))
   end
 end
 

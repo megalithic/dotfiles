@@ -65,7 +65,7 @@ format = "$number$symbol"
 
 [custom.nix_shell]
 symbol = "󱄅"
-shell = ["bash", "--noprofile", "--norc"]
+# shell = ["bash", "--noprofile", "--norc"]
 command = '''
   echo "$(echo $name | sed 's/-shell//')/$IN_NIX_SHELL"
 '''
@@ -79,7 +79,7 @@ when = "[[ -n $IN_NIX_SHELL ]]"
 # format = '[[󱄅](#ffffff) $name$state](#aaaaaa) '
 
 [custom.sudo]
-shell = ["bash", "--noprofile", "--norc"]
+# shell = ["bash", "--noprofile", "--norc"]
 description = "valid sudo timestamp marker"
 command = "echo -n ''"
 format = "[$symbol$output]($style) "
@@ -96,13 +96,13 @@ symbol = ""
 # hidden? 👻
 command = '''
   # Detect workspace from path (jj templates don't expose workspace info)
-  ws_path=$(jj workspace root 2>/dev/null)
-  ws_prefix=""
-  if [[ "$ws_path" == *"/.workspaces/"* ]]; then
-    ws_name=$(basename "$ws_path")
-    # Cyan color for workspace indicator: \x1b[36m
-    ws_prefix="\x1b[36m${ws_name}\x1b[0m "
-  fi
+  # ws_path=$(jj workspace root 2>/dev/null)
+  # ws_prefix=""
+  # if [[ "$ws_path" == *"/.workspaces/"* ]]; then
+  #   ws_name=$(basename "$ws_path")
+  #   # Cyan color for workspace indicator: \x1b[36m
+  #   ws_prefix="\x1b[36m${ws_name}\x1b[0m "
+  # fi
 
   jj_output=$(jj log --revisions @ --no-graph --ignore-working-copy --color always --limit 1 --template '
     separate(" ",
@@ -123,9 +123,9 @@ command = '''
     )
   ')
 
-  echo -e "${ws_prefix}${jj_output}"
+  # echo -e "${ws_prefix}${jj_output}"
+  echo -e "${jj_output}"
 '''
-# "(no description set)",
 
 [git_branch]
 disabled = true

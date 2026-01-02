@@ -231,27 +231,27 @@ M.augroup("Editing", {
       vim.highlight.on_yank({ timeout = 250, on_visual = false, higroup = "VisualYank" }) -- or "Visual"
     end,
   },
-  {
-    event = { "FocusLost" },
-    -- event = { "BufWinLeave", "BufLeave", "FocusLost" },
-    desc = "Automatically update and write modified buffer on certain events",
-    command = function(ctx)
-      local saveInstantly = ctx.event == "FocusLost" or ctx.event == "BufLeave"
-      local bufnr = ctx.buf
-      local bo = vim.bo[bufnr]
-      local b = vim.b[bufnr]
-      if bo.buftype ~= "" or bo.ft == "gitcommit" or bo.readonly then return end
-      if b.saveQueued and not saveInstantly then return end
-
-      b.saveQueued = true
-      vim.defer_fn(function()
-        if not vim.api.nvim_buf_is_valid(bufnr) then return end
-        -- `noautocmd` prevents weird cursor movement
-        vim.api.nvim_buf_call(bufnr, function() vim.cmd("silent! noautocmd lockmarks update!") end)
-        b.saveQueued = false
-      end, saveInstantly and 0 or 2000)
-    end,
-  },
+  -- {
+  --   event = { "FocusLost" },
+  --   -- event = { "BufWinLeave", "BufLeave", "FocusLost" },
+  --   desc = "Automatically update and write modified buffer on certain events",
+  --   command = function(ctx)
+  --     local saveInstantly = ctx.event == "FocusLost" or ctx.event == "BufLeave"
+  --     local bufnr = ctx.buf
+  --     local bo = vim.bo[bufnr]
+  --     local b = vim.b[bufnr]
+  --     if bo.buftype ~= "" or bo.ft == "gitcommit" or bo.readonly then return end
+  --     if b.saveQueued and not saveInstantly then return end
+  --
+  --     b.saveQueued = true
+  --     vim.defer_fn(function()
+  --       if not vim.api.nvim_buf_is_valid(bufnr) then return end
+  --       -- `noautocmd` prevents weird cursor movement
+  --       vim.api.nvim_buf_call(bufnr, function() vim.cmd("silent! noautocmd lockmarks update!") end)
+  --       b.saveQueued = false
+  --     end, saveInstantly and 0 or 2000)
+  --   end,
+  -- },
 })
 
 M.augroup("Entering", {
@@ -317,16 +317,12 @@ M.augroup("HammerspoonInterop", {
   {
     event = { "VimEnter" },
     desc = "Register nvim server socket for Hammerspoon discovery",
-    command = function()
-      interop.register_socket()
-    end,
+    command = function() interop.register_socket() end,
   },
   {
     event = { "VimLeavePre" },
     desc = "Cleanup nvim server socket file",
-    command = function()
-      interop.cleanup_socket()
-    end,
+    command = function() interop.cleanup_socket() end,
   },
 })
 
@@ -636,9 +632,7 @@ local function parse_frontmatter(lines)
   local frontmatter = {}
   local end_line = 0
 
-  if #lines == 0 or lines[1] ~= "---" then
-    return frontmatter, 0
-  end
+  if #lines == 0 or lines[1] ~= "---" then return frontmatter, 0 end
 
   for i = 2, #lines do
     if lines[i] == "---" then
@@ -646,9 +640,7 @@ local function parse_frontmatter(lines)
       break
     end
     local key, value = lines[i]:match("^(%w+):%s*(.+)$")
-    if key and value then
-      frontmatter[key] = value:gsub("^[\"']", ""):gsub("[\"']$", "")
-    end
+    if key and value then frontmatter[key] = value:gsub("^[\"']", ""):gsub("[\"']$", "") end
   end
 
   return frontmatter, end_line
@@ -672,9 +664,7 @@ local function extract_first_content(lines, start_line)
       local trimmed = line:match("^%s*(.-)%s*$")
       if trimmed and trimmed ~= "" and not trimmed:match("^#") then
         -- Found real content - truncate if too long
-        if #trimmed > 60 then
-          trimmed = trimmed:sub(1, 57) .. "..."
-        end
+        if #trimmed > 60 then trimmed = trimmed:sub(1, 57) .. "..." end
         return trimmed
       end
     end
@@ -690,9 +680,7 @@ end
 ---@return string description
 local function build_description(frontmatter, first_content, detected_lang)
   -- Priority 1: User's actual notes
-  if first_content then
-    return first_content
-  end
+  if first_content then return first_content end
 
   -- Priority 2: Source context
   local parts = {}
@@ -710,13 +698,9 @@ local function build_description(frontmatter, first_content, detected_lang)
 
   -- Add language hint (treesitter detection > frontmatter)
   local lang = detected_lang or frontmatter.source_lang
-  if lang then
-    table.insert(parts, lang)
-  end
+  if lang then table.insert(parts, lang) end
 
-  if #parts > 0 then
-    return "Capture from " .. table.concat(parts, " · ")
-  end
+  if #parts > 0 then return "Capture from " .. table.concat(parts, " · ") end
 
   -- Priority 3: Just indicate it's a text capture
   return "Text capture"
@@ -799,9 +783,7 @@ M.augroup("NotesCaptureLink", {
     desc = "Link text captures to daily note on save",
     command = function(args)
       -- Skip if already linked (check buffer variable)
-      if vim.b[args.buf].capture_linked then
-        return
-      end
+      if vim.b[args.buf].capture_linked then return end
 
       local lines = vim.api.nvim_buf_get_lines(args.buf, 0, -1, false)
 

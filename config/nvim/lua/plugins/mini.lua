@@ -12,6 +12,7 @@ return {
   -- },
 
   { "nvim-mini/mini.icons", version = false, opts = {} },
+  { "nvim-mini/mini.cmdline", version = false, opts = {} },
   {
     "nvim-mini/mini.indentscope",
     config = function()

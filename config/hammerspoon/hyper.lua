@@ -51,10 +51,16 @@ end
 function M:start(opts) return self end
 
 function M:stop()
-  _G.Hypers[self] = nil
+  -- Remove from global registry using correct key (self.id, not self)
+  if self.id and _G.Hypers[self.id] then
+    _G.Hypers[self.id] = nil
+  end
 
-  self.hyper:delete()
-  self:delete()
+  -- Delete hotkey bindings
+  if self.hyper then
+    pcall(function() self.hyper:delete() end)
+  end
+  pcall(function() self:delete() end)
 
   return self
 end

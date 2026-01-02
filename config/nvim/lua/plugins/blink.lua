@@ -46,8 +46,10 @@ return {
       { "hrsh7th/cmp-emoji", lazy = true },
       { "xzbdmw/colorful-menu.nvim", lazy = true, opts = {} },
       "mikavilpas/blink-ripgrep.nvim",
+      "obsidian-nvim/obsidian.nvim",
     },
-    version = "1.*",
+    version = "*",
+    -- version = "1.*",
     event = { "InsertEnter", "CmdlineEnter" },
     build = "cargo build --release",
 
@@ -209,9 +211,9 @@ return {
               return { "lsp", "path", "snippets", "spell", "buffer", "codecompanion" }
             end
           end,
-
           per_filetype = {
             sql = { "lsp", "dadbod", "dbee", "buffer" }, -- Add any other source to include here
+            markdown = { "obsidian", "path", "buffer" },
           },
           providers = {
             path = { name = "[path]", opts = { get_cwd = vim.uv.cwd } },
@@ -324,6 +326,7 @@ return {
         },
 
         completion = {
+          keyword = { range = "full" },
           ghost_text = { enabled = true },
           list = {
             cycle = { from_top = false }, -- cycle at bottom, but not at the top
@@ -333,9 +336,9 @@ return {
             },
             -- selection = function(ctx) return ctx.mode == "cmdline" and "auto_insert" or "preselect" end,
           },
-          trigger = {
-            show_in_snippet = false, -- since we overload `<Tab>` with jumping & selection
-          },
+          -- trigger = {
+          --   show_in_snippet = false, -- since we overload `<Tab>` with jumping & selection
+          -- },
           accept = {
             create_undo_point = true,
             auto_brackets = {

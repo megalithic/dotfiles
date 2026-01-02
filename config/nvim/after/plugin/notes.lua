@@ -536,29 +536,6 @@ command("ExecuteLine", function() M.execute_line() end, {})
 
 -- [[ mappings ]] --------------------------------------------------------------
 local notesMappings = {
-  d = {
-    function()
-      local notePathObj = vim.system({ "daily_note", "-c", "| tr -d '\n'" }, { text = true }):wait()
-      local notePath = string.gsub(notePathObj.stdout, "^%s*(.-)%s*$", "%1")
-
-      -- open only if we're not presently editing that buffer/file
-      if notePath ~= vim.api.nvim_buf_get_name(0) then vim.cmd("edit " .. notePath) end
-    end,
-    "open [d]aily note",
-  },
-  D = {
-    function()
-      local notePathObj = vim.system({ "daily_note", "-c", "| tr -d '\n'" }, { text = true }):wait()
-      local notePath = string.gsub(notePathObj.stdout, "^%s*(.-)%s*$", "%1")
-
-      vim.cmd("vnew " .. notePath)
-    end,
-    "open [d]aily note (vsplit)",
-  },
-  g = {
-    function() mega.picker.grep({ cwd = vim.g.notes_path, default_text = "" }) end,
-    "[g]rep notes",
-  },
   p = {
     function()
       local note = M.get_previous_daily_note()
