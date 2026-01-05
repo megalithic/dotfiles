@@ -168,17 +168,6 @@ return {
     end,
 
     picker = { name = "snacks.pick" },
-    -- picker = {
-    --   name = "snacks.pick",
-    --   note_mappings = {
-    --     new = "<C-n>", -- Create new note from query
-    --     insert_link = "<C-l>", -- Insert [[link]] to selected note
-    --   },
-    --   tag_mappings = {
-    --     tag_note = "<C-t>", -- Add tag(s) to current note
-    --     insert_tag = "<C-l>", -- Insert #tag at cursor
-    --   },
-    -- },
 
     -- Smart keybindings for markdown files (via callbacks, not deprecated mappings)
     callbacks = {

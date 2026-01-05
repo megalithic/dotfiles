@@ -38,7 +38,22 @@
     };
 
     # Input package aliases (convenient access without inputs.foo.packages.system)
-    llm-agents = inputs.llm-agents.packages.${prev.stdenv.hostPlatform.system};
+    llm-agents = let
+      upstream = inputs.llm-agents.packages.${prev.stdenv.hostPlatform.system};
+      # Import llm-agents' custom npm fetcher for hash overrides
+      npmPackumentSupport = prev.callPackage "${inputs.llm-agents}/lib/fetch-npm-deps.nix" {};
+    in upstream // {
+      # FIXME: Override claude-code-acp npmDeps hash due to npm registry instability
+      # Remove this override when upstream hash stabilizes
+      claude-code-acp = upstream.claude-code-acp.overrideAttrs (old: {
+        npmDeps = npmPackumentSupport.fetchNpmDepsWithPackuments {
+          inherit (old) src;
+          name = "${old.pname}-${old.version}-npm-deps";
+          hash = "sha256-Pxgc5Xbh8IkHbk90WScVvvs98Nk4Svkb0r6lWMFyfwk=";
+          fetcherVersion = 2;
+        };
+      });
+    };
     mcphub = inputs.mcp-hub.packages.${prev.stdenv.hostPlatform.system}.default;
     nvim-nightly = inputs.neovim-nightly-overlay.packages.${prev.stdenv.hostPlatform.system}.default;
     expert = inputs.expert.packages.${prev.stdenv.hostPlatform.system}.default;

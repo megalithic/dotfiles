@@ -61,8 +61,7 @@ in {
   # NOTE: chrome-devtools-mcp is referenced by path in MCP config
   home.packages = [
     pkgs.llm-agents.opencode
-    # FIXME: claude-code-acp disabled due to npm hash instability upstream
-    # pkgs.llm-agents.claude-code-acp
+    pkgs.llm-agents.claude-code-acp # hash override in overlays/default.nix
     pkgs.llm-agents.beads
     # resize-image is now externalized to ~/.dotfiles/bin/resize-image
   ];
