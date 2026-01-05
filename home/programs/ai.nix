@@ -110,6 +110,13 @@ in {
       - You are to always attempt to use `jj` to create a new "commit" or "bookmark" that you'll later describe, for every logical unit of work; if `jj` is unavailable in the given repo or directory, then explicitly request my permission to use `git` instead.
       - **NEVER push to GitHub (or any remote) without explicit user consent each time.** Always ask before running `jj git push`, `git push`, or equivalent commands. Commits are cheap; pushes are permanent.
 
+      ### Beads used for tracking tasks (CRITICAL)
+
+      **CRITICAL**: You must use beads (`bd`) for tracking tasks and units of work, as well as informing yourself and other AI agents of context and progress:
+
+      - You are to check prior bead epics and tasks, keeping up with what needs to be completed, and ensuring `jj` bookmarks match up with bead tasks for consistency and end-user tracking as well.
+      - You will provide end of task updates and overviews of bead epics and tasks for that epic.
+
       ### Jujutsu (jj) Command Transparency (CRITICAL)
 
       **CRITICAL**: When using `jj` in any repository, you MUST provide full transparency about every command:

@@ -213,7 +213,7 @@ return {
           end,
           per_filetype = {
             sql = { "lsp", "dadbod", "dbee", "buffer" }, -- Add any other source to include here
-            markdown = { "obsidian", "path", "buffer" },
+            markdown = { "obsidian", "obsidian_tags", "obsidian_new", "lsp", "path", "buffer" },
           },
           providers = {
             path = { name = "[path]", opts = { get_cwd = vim.uv.cwd } },

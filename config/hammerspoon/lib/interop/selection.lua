@@ -59,9 +59,7 @@ end
 --- Uses hs.task.new() for non-blocking execution
 ---@param callback fun(result: SelectionResult|nil, error: string|nil)
 function M.get(callback)
-  if not callback then
-    error("selection.get() requires a callback function")
-  end
+  if not callback then error("selection.get() requires a callback function") end
 
   -- Check script exists
   local f = io.open(M.scriptPath, "r")
@@ -115,17 +113,13 @@ function M.getSync(timeout)
 
   -- Check script exists
   local f = io.open(M.scriptPath, "r")
-  if not f then
-    return nil, "get-selection script not found at: " .. M.scriptPath
-  end
+  if not f then return nil, "get-selection script not found at: " .. M.scriptPath end
   f:close()
 
   -- Run synchronously via hs.execute (blocks but doesn't need event loop)
   local output, success, _, _ = hs.execute(M.scriptPath .. " --json", true)
 
-  if not success then
-    return nil, "get-selection failed: " .. (output or "unknown error")
-  end
+  if not success then return nil, "get-selection failed: " .. (output or "unknown error") end
 
   -- Strip ANSI escape codes that may leak from terminal apps when queried via AX API
   -- Pattern matches ESC[ followed by any parameters and a final letter (CSI sequences)
@@ -133,9 +127,7 @@ function M.getSync(timeout)
 
   -- Parse JSON response
   local ok, result = pcall(hs.json.decode, output)
-  if not ok or not result then
-    return nil, "Failed to parse JSON from get-selection: " .. (output or "(empty)")
-  end
+  if not ok or not result then return nil, "Failed to parse JSON from get-selection: " .. (output or "(empty)") end
 
   -- Add appType categorization
   local bundleID = result.app and result.app.bundleID
@@ -151,9 +143,7 @@ end
 --- Check if there's currently selected text (async)
 ---@param callback fun(hasSelection: boolean)
 function M.hasSelection(callback)
-  M.get(function(result, _)
-    callback(result and result.hasSelection or false)
-  end)
+  M.get(function(result, _) callback(result and result.hasSelection or false) end)
 end
 
 --- Get just the selected text (async)
@@ -187,9 +177,7 @@ function M.debug()
       print(fmt("  app.bundleID: %s", result.app.bundleID or "(nil)"))
       print(fmt("  app.name: %s", result.app.name or "(nil)"))
     end
-    if result.window then
-      print(fmt("  window.title: %s", result.window.title or "(nil)"))
-    end
+    if result.window then print(fmt("  window.title: %s", result.window.title or "(nil)")) end
     print(fmt("  url: %s", result.url or "(nil)"))
     print(fmt("  appType: %s", result.appType))
     print(fmt("  timestamp: %s", result.timestamp))

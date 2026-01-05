@@ -12,6 +12,7 @@
     fantastical
     helium-browser
     talktastic
+    tidewave
   ];
 
   # Filter: only apps with appLocation = "home-manager" go to home.packages
@@ -26,7 +27,9 @@
   # Standard GUI apps from nixpkgs (not custom mkApp derivations)
   guiPkgs = with pkgs; [
     neovide # Native neovim GUI - potential future use for floating notes window
+    obsidian
     telegram-desktop
+    zoom-us
   ];
 
   # ── cli tools ──────────────────────────────────────────────────────────────────
@@ -47,6 +50,7 @@
     flyctl
     gh
     git-lfs
+    gnupg
     gum
     imagemagickBig
     jwt-cli
@@ -55,7 +59,6 @@
     mas
     mprocs
     nix-update
-    obsidian
     ollama # Local LLM for AI-powered note summarization (qwen2-vl)
     openconnect
     openvpn
@@ -75,7 +78,6 @@
     w3m
     yubikey-manager
     yubikey-personalization
-    zoom-us
   ];
 
   # ── fonts ──────────────────────────────────────────────────────────────────────

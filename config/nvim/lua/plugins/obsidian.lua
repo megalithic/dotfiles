@@ -1,72 +1,11 @@
--- REF:
--- - https://github.com/ViViDboarder/vim-settings/blob/master/neovim/lua/lazy/obsidian.lua
--- - https://github.com/joelazar/nvim-config/blob/main/lua/plugins/obsidian.lua
-
--- Pattern definitions: each entry contains a pattern and optional default time values
-local patterns = {
-  {
-    name = "ISO datetime",
-    pattern = "^(%d%d%d%d)-(%d%d)-(%d%d)[T ](%d%d):(%d%d)",
-    defaults = {},
-  },
-  {
-    name = "compact datetime",
-    pattern = "^(%d%d%d%d)(%d%d)(%d%d)(%d%d)(%d%d)$",
-    defaults = {},
-  },
-  {
-    name = "ISO date",
-    pattern = "^(%d%d%d%d)-(%d%d)-(%d%d)$",
-    defaults = { hour = 0, min = 0 },
-  },
-}
-
--- Parse date strings and convert to YYYYMMDDHHMM timestamp format
--- Supported formats:
---   - ISO datetime: "2025-01-01T00:00" or "2025-01-01 00:00"
---   - Compact datetime: "202501010000"
---   - ISO date only: "2025-01-01" (time defaults to 00:00)
-local function convert_date(date_string)
-  local year, month, day, hour, min
-
-  -- Try each pattern until one matches
-  for _, config in ipairs(patterns) do
-    local captures = { date_string:match(config.pattern) }
-    if #captures > 0 then
-      year, month, day = captures[1], captures[2], captures[3]
-      hour = captures[4] or config.defaults.hour
-      min = captures[5] or config.defaults.min
-      break
-    end
-  end
-
-  if not year then return nil end
-
-  -- Create date table for os.time
-  local date_table = {
-    year = tonumber(year),
-    month = tonumber(month),
-    day = tonumber(day),
-    hour = tonumber(hour) or 0,
-    min = tonumber(min) or 0,
-    sec = 0,
-  }
-
-  -- Convert to timestamp
-  local timestamp = os.time(date_table)
-
-  -- Format using os.date
-  return os.date("%Y%m%d%H%M", timestamp)
-end
-
 return {
   "obsidian-nvim/obsidian.nvim",
-  version = "*", -- recommended, use latest release instead of latest commit
-  -- lazy = true,
-  ft = "markdown",
+  version = "3.15.3",
+  -- lazy = false,
+  event = "VeryLazy",
+  -- ft = "markdown",
   dependencies = {
     "nvim-lua/plenary.nvim",
-    "hrsh7th/nvim-cmp",
     "nvim-treesitter/nvim-treesitter",
   },
   ---@module 'obsidian'
@@ -87,8 +26,20 @@ return {
     },
     completion = {
       blink = true,
-      min_chars = 1,
+      nvim_cmp = false,
+      min_chars = 2,
       -- create_new = false,
+    },
+    picker = { name = "snacks.pick" },
+    checkbox = {},
+    preferred_link_style = "wiki",
+    ui = {
+      enable = false,
+      -- Empty hl_groups prevents obsidian.nvim from overriding colorscheme highlights
+      -- See: https://github.com/epwalsh/obsidian.nvim/issues/755
+      hl_groups = {},
+      bullets = {},
+      external_link_icon = {},
     },
     -- Preserve custom frontmatter fields (source_app, source_url, created, etc.)
     -- Without this, obsidian.nvim strips custom fields when it manages frontmatter
@@ -167,8 +118,6 @@ return {
       return suffix
     end,
 
-    picker = { name = "snacks.pick" },
-
     -- Smart keybindings for markdown files (via callbacks, not deprecated mappings)
     callbacks = {
       enter_note = function(client, note)
@@ -193,13 +142,6 @@ return {
           end
         end, { buffer = true, desc = "Go to file (obsidian)" })
       end,
-    },
-    checkbox = {},
-    ui = {
-      -- use render-markdown instead for these
-      enable = false,
-      bullets = {},
-      external_link_icon = {},
     },
   },
 }

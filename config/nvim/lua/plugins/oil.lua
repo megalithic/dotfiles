@@ -12,13 +12,13 @@ return {
       end,
       desc = "[e]xplore cwd -> oil ([v]split)",
     },
-    {
-      "<leader>ee",
-      function()
-        require("oil").open()
-      end,
-      desc = "[e]xplore cwd -> oil ([e]dit)",
-    },
+    -- {
+    --   "<leader>ee",
+    --   function()
+    --     require("oil").open()
+    --   end,
+    --   desc = "[e]xplore cwd -> oil ([e]dit)",
+    -- },
   },
   config = function()
     local icon_file = vim.trim(Icons.kind.File)
@@ -29,9 +29,7 @@ return {
       ["w"] = "OilPermissionWrite",
       ["x"] = "OilPermissionExecute",
     }, {
-      __index = function()
-        return "OilDir"
-      end,
+      __index = function() return "OilDir" end,
     })
 
     local type_hlgroups = setmetatable({
@@ -41,9 +39,7 @@ return {
       ["l"] = "OilTypeLink",
       ["s"] = "OilTypeSocket",
     }, {
-      __index = function()
-        return "OilTypeFile"
-      end,
+      __index = function() return "OilTypeFile" end,
     })
 
     require("oil").setup({
@@ -53,9 +49,7 @@ return {
       -- trash_command = "trash-cli",
       prompt_save_on_select_new_entry = false,
       use_default_keymaps = false,
-      is_always_hidden = function(name, _bufnr)
-        return name == ".."
-      end,
+      is_always_hidden = function(name, _bufnr) return name == ".." end,
       -- columns = {
       --   "icon",
       --   -- "permissions",
@@ -73,9 +67,7 @@ return {
             link = "l",
             socket = "s",
           },
-          highlight = function(type_str)
-            return type_hlgroups[type_str]
-          end,
+          highlight = function(type_str) return type_hlgroups[type_str] end,
         },
         {
           "permissions",
@@ -106,9 +98,7 @@ return {
         ["gs"] = "actions.change_sort",
         ["gx"] = "actions.open_external",
         ["g."] = "actions.toggle_hidden",
-        ["<BS>"] = function()
-          require("oil").open()
-        end,
+        ["<BS>"] = function() require("oil").open() end,
         ["gd"] = {
           desc = "Toggle detail view",
           callback = function()

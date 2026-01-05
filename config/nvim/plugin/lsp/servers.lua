@@ -509,22 +509,18 @@ M = {
       },
     }
   end,
-  markdown_oxide = function()
-    -- Enabled for obsidian.nvim integration (Obsidian-aware LSP for wikilinks, daily notes, tags)
-    return (vim.g.started_by_firenvim or vim.env.TMUX_POPUP) and nil
-      or {
-        capabilities = {
-          workspace = {
-            didChangeWatchedFiles = {
-              dynamicRegistration = true,
-            },
-          },
-        },
-      }
-  end,
-  -- marksman = function()
-  --   -- Disabled in favor of markdown_oxide for Obsidian vault workflow
-  --   return nil
+  -- markdown_oxide = function()
+  --   -- Enabled for obsidian.nvim integration (Obsidian-aware LSP for wikilinks, daily notes, tags)
+  --   return (vim.g.started_by_firenvim or vim.env.TMUX_POPUP) and nil
+  --     or {
+  --       capabilities = {
+  --         workspace = {
+  --           didChangeWatchedFiles = {
+  --             dynamicRegistration = true,
+  --           },
+  --         },
+  --       },
+  --     }
   -- end,
   nextls = function()
     if not U.lsp.is_enabled_elixir_ls("nextls") then return false end

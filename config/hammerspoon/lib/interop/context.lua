@@ -28,9 +28,7 @@ local function detectAppType(app)
     local win = axApp:attributeValue("AXFocusedWindow")
     if win then
       local doc = win:attributeValue("AXDocument")
-      if doc and doc:match("^https?://") then
-        return "browser"
-      end
+      if doc and doc:match("^https?://") then return "browser" end
     end
   end
 
@@ -87,7 +85,8 @@ local function getBrowserContext(app)
         })();
       ]]
     else
-      script = fmt([[
+      script = fmt(
+        [[
         (function() {
           var browser = Application("%s");
           if (!browser.running()) return null;
@@ -105,13 +104,13 @@ local function getBrowserContext(app)
             selection: selection
           };
         })();
-      ]], browser.name)
+      ]],
+        browser.name
+      )
     end
 
     local ok, result = hs.osascript.javascript(script)
-    if ok and result then
-      return result
-    end
+    if ok and result then return result end
   end
 
   -- Fallback: use AXDocument for URL and AXTitle for window title
@@ -175,9 +174,7 @@ local function getSelectionViaAccessibility()
     return nil, nil
   end
 
-  if result and result.hasSelection then
-    return result.selectedText, result.url
-  end
+  if result and result.hasSelection then return result.selectedText, result.url end
 
   return nil, nil
 end
@@ -190,17 +187,47 @@ end
 -- This is reliable because URLs from code hosting sites include the file extension
 local extToLang = {
   -- Common
-  lua = "lua", py = "python", rb = "ruby", js = "javascript",
-  ts = "typescript", tsx = "tsx", jsx = "jsx", ex = "elixir",
-  exs = "elixir", rs = "rust", go = "go", sh = "bash",
-  zsh = "zsh", fish = "fish", nix = "nix", md = "markdown",
-  json = "json", yaml = "yaml", yml = "yaml", toml = "toml",
-  html = "html", css = "css", scss = "scss", sql = "sql",
-  swift = "swift", kt = "kotlin", java = "java", c = "c",
-  cpp = "cpp", h = "c", hpp = "cpp", cs = "csharp",
-  hs = "haskell", erl = "erlang", clj = "clojure",
-  vim = "vim", zig = "zig", dart = "dart", svelte = "svelte",
-  vue = "vue", heex = "heex",
+  lua = "lua",
+  py = "python",
+  rb = "ruby",
+  js = "javascript",
+  ts = "typescript",
+  tsx = "tsx",
+  jsx = "jsx",
+  ex = "elixir",
+  exs = "elixir",
+  rs = "rust",
+  go = "go",
+  sh = "bash",
+  zsh = "zsh",
+  fish = "fish",
+  nix = "nix",
+  md = "markdown",
+  json = "json",
+  yaml = "yaml",
+  yml = "yaml",
+  toml = "toml",
+  html = "html",
+  css = "css",
+  scss = "scss",
+  sql = "sql",
+  swift = "swift",
+  kt = "kotlin",
+  java = "java",
+  c = "c",
+  cpp = "cpp",
+  h = "c",
+  hpp = "cpp",
+  cs = "csharp",
+  hs = "haskell",
+  erl = "erlang",
+  clj = "clojure",
+  vim = "vim",
+  zig = "zig",
+  dart = "dart",
+  svelte = "svelte",
+  vue = "vue",
+  heex = "heex",
 }
 
 -- Documentation domain to language mapping
@@ -238,9 +265,7 @@ local domainToLang = {
 ---@return string|nil Language identifier
 function M.detectLanguage(text, url, filetype)
   -- 1. nvim filetype (highest confidence - treesitter knows best)
-  if filetype and filetype ~= "" then
-    return filetype
-  end
+  if filetype and filetype ~= "" then return filetype end
 
   -- 2. URL-based detection (reliable for code hosting sites)
   if url then
@@ -251,17 +276,13 @@ function M.detectLanguage(text, url, filetype)
       or url:match("codeberg%.org/.+/src/.+%.(%w+)$")
       or url:match("sr%.ht/.+/tree/.+%.(%w+)$")
       or url:match("raw%.githubusercontent%.com/.+%.(%w+)$")
-    if ext and extToLang[ext:lower()] then
-      return extToLang[ext:lower()]
-    end
+    if ext and extToLang[ext:lower()] then return extToLang[ext:lower()] end
 
     -- Domain-based hints (doc sites are language-specific)
     local domain = url:match("https?://([^/]+)")
     if domain then
       domain = domain:gsub("^www%.", "")
-      if domainToLang[domain] then
-        return domainToLang[domain]
-      end
+      if domainToLang[domain] then return domainToLang[domain] end
       -- MDN: inspect path for web technology
       if domain:match("developer%.mozilla%.org") then
         if url:match("/JavaScript/") or url:match("/js/") then return "javascript" end
@@ -276,14 +297,25 @@ function M.detectLanguage(text, url, filetype)
     -- Code fence language hint (explicit, highest confidence for content)
     local fenceLang = text:match("^%s*```(%w+)")
     if fenceLang and fenceLang ~= "" then
-      local aliases = { js = "javascript", ts = "typescript", py = "python", rb = "ruby", ex = "elixir", rs = "rust", sh = "bash" }
+      local aliases =
+        { js = "javascript", ts = "typescript", py = "python", rb = "ruby", ex = "elixir", rs = "rust", sh = "bash" }
       return aliases[fenceLang:lower()] or fenceLang:lower()
     end
 
     -- Shebang (explicit, unambiguous)
     local shebang = text:match("^#!.-/([%w]+)")
     if shebang then
-      local shebangMap = { python = "python", python3 = "python", ruby = "ruby", bash = "bash", zsh = "zsh", sh = "bash", fish = "fish", node = "javascript", perl = "perl" }
+      local shebangMap = {
+        python = "python",
+        python3 = "python",
+        ruby = "ruby",
+        bash = "bash",
+        zsh = "zsh",
+        sh = "bash",
+        fish = "fish",
+        node = "javascript",
+        perl = "perl",
+      }
       if shebangMap[shebang] then return shebangMap[shebang] end
       -- env-style: #!/usr/bin/env python
       local envLang = text:match("^#!.-env%s+(%w+)")
@@ -337,9 +369,7 @@ function M.getContext()
     local axApp = hs.axuielement.applicationElement(app)
     if axApp then
       local win = axApp:attributeValue("AXFocusedWindow")
-      if win then
-        context.windowTitle = win:attributeValue("AXTitle")
-      end
+      if win then context.windowTitle = win:attributeValue("AXTitle") end
     end
   end
 
@@ -370,17 +400,11 @@ function M.getContext()
     local axSelection, axUrl = getSelectionViaAccessibility()
     context.selection = axSelection
     -- Also use URL from AX if we don't have one (useful for non-JXA browsers)
-    if axUrl and (not context.url or context.url == "") then
-      context.url = axUrl
-    end
+    if axUrl and (not context.url or context.url == "") then context.url = axUrl end
   end
 
   -- Detect language
-  context.detectedLanguage = M.detectLanguage(
-    context.selection,
-    context.url,
-    context.filetype
-  )
+  context.detectedLanguage = M.detectLanguage(context.selection, context.url, context.filetype)
 
   return context
 end

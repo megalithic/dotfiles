@@ -59,17 +59,25 @@ if true then
     local picker_height = math.floor(0.45 * win_height)
     local row = win_pos[1] + win_height - picker_height - 1
 
-    if win_width >= 165 then
-      return vim.tbl_deep_extend("force", M.shared_layout_opts, {
-        layout = {
-          width = 0.5,
-          row = row,
-          height = picker_height,
-        },
-      })
-    else
-      return M.buffer_layout()
-    end
+    -- if win_width >= 165 then
+    --   return vim.tbl_deep_extend("force", M.shared_layout_opts, {
+    --     layout = {
+    --       width = 0.5,
+    --       row = row,
+    --       height = picker_height,
+    --     },
+    --   })
+    -- else
+    --   return M.buffer_layout()
+    -- end
+
+    return vim.tbl_deep_extend("force", M.shared_layout_opts, {
+      layout = {
+        width = 0.5,
+        row = row,
+        height = picker_height,
+      },
+    })
   end
 
   Snacks = require("snacks")
@@ -177,7 +185,6 @@ if true then
       -- "madmaxieee/fff-snacks.nvim",
       -- "ahkohd/fff-snacks.nvim",
       "nikbrunner/fff-snacks.nvim",
-
       dependencies = {
         "dmtrKovalenko/fff.nvim",
         "folke/snacks.nvim",
@@ -193,6 +200,8 @@ if true then
       opts = {
         layout = function() return M.smart_layout() end,
         title = "smart fffiles",
+        hidden = true,
+        ignored = true,
         git_icons = {
           added = " ",
           modified = " ",
@@ -237,6 +246,8 @@ if true then
         },
         picker = {
           enabled = true,
+          hidden = true,
+          ignored = true,
           ui_select = true,
           formatters = {
             file = {
@@ -258,8 +269,6 @@ if true then
           },
           layout = function() return M.smart_layout() end,
           matcher = {
-            -- the bonusses below, possibly require string concatenation and path normalization,
-            -- so this can have a performance impact for large lists and increase memory usage
             cwd_bonus = true, -- give bonus for matching files in the cwd
             frecency = true, -- frecency bonus
             history_bonus = true,
