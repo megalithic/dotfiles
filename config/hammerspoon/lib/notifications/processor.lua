@@ -145,8 +145,9 @@ function M.process(rule, opts)
   }
 
   if urgencyConfig.position == "center" then
-    notifConfig.anchor = "window"
+    notifConfig.anchor = "screen"
     notifConfig.position = "C"
+    notifConfig.screen = "primary" -- Always show critical notifications on primary screen
     notifConfig.dimBackground = urgencyConfig.dim
     notifConfig.dimAlpha = 0.5
   else

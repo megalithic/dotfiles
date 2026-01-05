@@ -187,23 +187,34 @@ function M.getCurrentFocusMode()
 end
 
 -- Show dimming overlay (reuses single global canvas for efficiency)
-function M.showOverlay(alpha)
+-- @param alpha number: Opacity of the overlay (0.0-1.0, default 0.6)
+-- @param targetScreen hs.screen: Screen to show overlay on (default: mainScreen)
+function M.showOverlay(alpha, targetScreen)
   alpha = alpha or 0.6
+  targetScreen = targetScreen or hs.screen.mainScreen()
 
-  -- Reuse existing overlay if present
+  local targetFrame = targetScreen:fullFrame()
+
+  -- Check if existing overlay is on a different screen - if so, recreate it
   if S.notification.overlay then
-    S.notification.overlay:alpha(alpha)
-    S.notification.overlay:show()
-    return
+    local currentFrame = S.notification.overlay:frame()
+    -- Compare screen positions (frame origin indicates which screen)
+    if currentFrame.x ~= targetFrame.x or currentFrame.y ~= targetFrame.y
+       or currentFrame.w ~= targetFrame.w or currentFrame.h ~= targetFrame.h then
+      S.notification.overlay:delete()
+      S.notification.overlay = nil
+    else
+      -- Same screen, just update alpha and show
+      S.notification.overlay:alpha(alpha)
+      S.notification.overlay:show()
+      return
+    end
   end
 
-  -- Create overlay canvas first time
-  local screen = hs.screen.mainScreen()
-  local frame = screen:fullFrame() -- Includes menu bar
-
+  -- Create overlay canvas on target screen
   S.notification.overlay = hs
     .canvas
-    .new(frame)
+    .new(targetFrame)
     :appendElements({
       type = "rectangle",
       action = "fill",
@@ -318,10 +329,11 @@ M.setupAppWatcher()
 -- @param width number: notification width in pixels
 -- @param height number: notification height in pixels
 -- @param offset number: optional additional vertical offset for fine-tuning
+-- @param targetScreen hs.screen: optional screen override (default: mainScreen)
 -- Returns: {x, y} table with pixel coordinates
-function M.calculatePosition(anchor, position, width, height, offset)
+function M.calculatePosition(anchor, position, width, height, offset, targetScreen)
   offset = offset or 0
-  local screen = hs.screen.mainScreen()
+  local screen = targetScreen or hs.screen.mainScreen()
   local screenFrame = screen:frame()
   local frame = screenFrame
 
@@ -644,8 +656,18 @@ function M.sendCanvasNotification(title, message, opts)
     M.dismissNotification(0) -- Instant dismiss
   end
 
-  -- Show dimming overlay if requested
-  if opts.dimBackground then M.showOverlay(opts.dimAlpha or 0.6) end
+  -- Determine which screen to use
+  -- "primary" = always use primaryScreen (for critical notifications on external monitor)
+  -- nil/other = use mainScreen (follows focused window)
+  local targetScreen
+  if opts.screen == "primary" then
+    targetScreen = hs.screen.primaryScreen()
+  else
+    targetScreen = hs.screen.mainScreen()
+  end
+
+  -- Show dimming overlay if requested (on target screen)
+  if opts.dimBackground then M.showOverlay(opts.dimAlpha or 0.6, targetScreen) end
 
   -- Preserve newlines for multi-line messages (lists, etc.)
   -- Note: Dynamic sizing will handle multi-line text properly
@@ -655,7 +677,7 @@ function M.sendCanvasNotification(title, message, opts)
   local width = dimensions.width
   local height = dimensions.height
 
-  local screen = hs.screen.mainScreen()
+  local screen = targetScreen
   local screenFrame = screen:frame()
 
   local padding = 20
@@ -684,8 +706,8 @@ function M.sendCanvasNotification(title, message, opts)
     end
   end
 
-  -- Calculate position using new anchor + position system
-  local pos = M.calculatePosition(anchor, position, width, height, offset)
+  -- Calculate position using new anchor + position system (on target screen)
+  local pos = M.calculatePosition(anchor, position, width, height, offset, targetScreen)
   local x = pos.x
   local y = pos.y
 
@@ -697,13 +719,20 @@ function M.sendCanvasNotification(title, message, opts)
   local animEnabled = animConfig.enabled ~= false -- default to true
 
   if animEnabled then
-    -- Start from the bottom of the focused window (or screen if no window)
-    local focusedWin = hs.window.focusedWindow()
-    if focusedWin then
-      local winFrame = focusedWin:frame()
-      y = winFrame.y + winFrame.h - height
+    -- Start from the bottom of the target screen (for slide-up animation)
+    -- For critical notifications on primary screen, use that screen's frame
+    -- For normal notifications, use focused window if available
+    if opts.screen == "primary" then
+      -- Always use target screen frame for primary screen notifications
+      y = screenFrame.y + screenFrame.h - height
     else
-      y = screenFrame.h - height
+      local focusedWin = hs.window.focusedWindow()
+      if focusedWin then
+        local winFrame = focusedWin:frame()
+        y = winFrame.y + winFrame.h - height
+      else
+        y = screenFrame.y + screenFrame.h - height
+      end
     end
   end
 

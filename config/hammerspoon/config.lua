@@ -412,11 +412,12 @@ M.notifier = {
   -- Each rule defines matching criteria and behavior.
   rules = {
     -- Fantastical Calendar Alerts (TIME SENSITIVE = imminent, usually 1-minute warnings)
+    -- NOTE: Notifications come from the helper app with team ID prefix, not main app
     {
       name = "Fantastical Urgent Alerts",
       priority = 95,
       match = {
-        bundleID = "com.flexibits.fantastical2.mac",
+        bundleID = "85C27NK92C.com.flexibits.fantastical2.mac.helper",
         title = "TIME SENSITIVE",
       },
       action = "redirect",

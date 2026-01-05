@@ -19,6 +19,7 @@ local M = {}
 ---@class NotificationConfig
 ---@field anchor "screen"|"window"|"app"
 ---@field position "NW"|"N"|"NE"|"W"|"C"|"E"|"SW"|"S"|"SE"
+---@field screen "primary"|"main"|nil -- Which screen to use: "primary" = primaryScreen, nil/"main" = mainScreen (follows focus)
 ---@field dimBackground boolean
 ---@field dimAlpha number?
 ---@field appImageID string?
