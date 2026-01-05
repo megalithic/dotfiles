@@ -110,6 +110,31 @@ in {
       - You are to always attempt to use `jj` to create a new "commit" or "bookmark" that you'll later describe, for every logical unit of work; if `jj` is unavailable in the given repo or directory, then explicitly request my permission to use `git` instead.
       - **NEVER push to GitHub (or any remote) without explicit user consent each time.** Always ask before running `jj git push`, `git push`, or equivalent commands. Commits are cheap; pushes are permanent.
 
+      ### Jujutsu (jj) Command Transparency (CRITICAL)
+
+      **CRITICAL**: When using `jj` in any repository, you MUST provide full transparency about every command:
+
+      1. **Inline explanations** - When running any jj command, explain:
+         - What the command does
+         - Why you're running it at this point
+         - What the expected outcome is
+
+      2. **End-of-session summary** - Before ending a session where jj was used, provide a summary block:
+         ```
+         ## jj Commands Used This Session
+         | Command | Purpose |
+         |---------|---------|
+         | `jj new -m "..."` | Started new unit of work |
+         | `jj git fetch` | Pulled latest from remote |
+         | ... | ... |
+         ```
+
+      This transparency helps the user:
+      - Learn jj workflows through observation
+      - Understand the version control state at any point
+      - Catch mistakes before they become problems
+      - Build confidence in the AI's version control decisions
+
       ## Notification System (ntfy)
 
       Quick reference for `~/bin/ntfy`:

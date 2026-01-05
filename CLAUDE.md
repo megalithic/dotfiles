@@ -365,6 +365,44 @@ review, not push automatically.
 - Each workspace has isolated working copy - no conflicts during work
 - Complete workspaces individually to maintain independent branches
 
+### Command Transparency (CRITICAL)
+
+**CRITICAL**: You MUST provide full transparency about every jj command used:
+
+1. **Inline explanations** - When running any jj command, explain:
+   - What the command does
+   - Why you're running it at this point
+   - What the expected outcome is
+
+   Example:
+   ```
+   Running `jj git fetch` - This pulls the latest commits from origin without
+   modifying the working copy. Needed because Sunday's flake.lock update may
+   be on origin/main.
+   ```
+
+2. **End-of-session summary** - Before completing a session where jj was used,
+   provide a summary:
+
+   ```markdown
+   ## jj Commands Used This Session
+
+   | Command | Purpose |
+   |---------|---------|
+   | `jj new -m "feat: add X"` | Started new unit of work for feature |
+   | `jj git fetch` | Pulled latest from remote |
+   | `jj rebase -r @ -d main` | Rebased work onto updated main |
+   | `jj bookmark set main -r @` | Moved main bookmark to current commit |
+   | `jj git push --bookmark main` | Pushed to origin (with user consent) |
+   ```
+
+**Why this matters:**
+- Helps user learn jj workflows through observation
+- Provides visibility into version control state
+- Catches mistakes before they become problems
+- Builds trust in AI version control decisions
+- Creates audit trail for what happened in the session
+
 ### Current State
 
 This repo is already jj-initialized with git coexistence. Always check
