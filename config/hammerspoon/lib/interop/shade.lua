@@ -171,16 +171,64 @@ local function buildArgs()
 end
 
 --- Toggle the shade panel visibility
-function M.toggle() postNotification(NOTIFICATION_TOGGLE) end
+function M.toggle()
+  postNotification(NOTIFICATION_TOGGLE)
+  -- Move to primary screen after a short delay to let it appear
+  hs.timer.doAfter(0.1, M.moveToMainScreen)
+end
 
 --- Show the shade panel
-function M.show() postNotification(NOTIFICATION_SHOW) end
+function M.show()
+  postNotification(NOTIFICATION_SHOW)
+  -- Move to primary screen after a short delay to let it appear
+  hs.timer.doAfter(0.1, M.moveToMainScreen)
+end
 
 --- Hide the shade panel
 function M.hide() postNotification(NOTIFICATION_HIDE) end
 
 --- Quit the shade app
 function M.quit() postNotification(NOTIFICATION_QUIT) end
+
+--- Get the Shade application
+---@return hs.application|nil
+function M.getApp()
+  for _, app in ipairs(hs.application.runningApplications()) do
+    if app:name() == BINARY_NAME then return app end
+  end
+  return nil
+end
+
+--- Move Shade window to the primary (main) screen, centered
+function M.moveToMainScreen()
+  local app = M.getApp()
+  if not app then return end
+
+  local win = app:mainWindow()
+  if not win then return end
+
+  local primaryScreen = hs.screen.primaryScreen()
+  if not primaryScreen then return end
+
+  -- Only move if not already on primary screen
+  local currentScreen = win:screen()
+  if currentScreen and currentScreen:id() == primaryScreen:id() then return end
+
+  -- Get window and screen dimensions
+  local winFrame = win:frame()
+  local screenFrame = primaryScreen:frame()
+
+  -- Center the window on primary screen
+  local newFrame = {
+    x = screenFrame.x + (screenFrame.w - winFrame.w) / 2,
+    y = screenFrame.y + (screenFrame.h - winFrame.h) / 2,
+    w = winFrame.w,
+    h = winFrame.h,
+  }
+
+  win:setFrame(newFrame)
+  U.log.d("Moved Shade to primary screen")
+end
 
 --- Check if shade is running
 --- Uses process name matching to avoid false positives from window titles
@@ -427,52 +475,33 @@ function M.openFile(filePath, callback)
   end
 end
 
---- Capture with context: write context.json, then use obsidian.nvim to create note
---- obsidian.nvim owns note creation (templates, frontmatter, filename generation)
---- Template substitutions read from context.json
+--- Capture with context: signal Shade to gather context and create a capture note
+--- As of 2026-01-08, Shade handles context gathering natively (shade-qji epic).
+--- Hammerspoon just sends the notification and ensures Shade is ready.
+---
+--- Flow:
+--- 1. Hammerspoon sends io.shade.note.capture notification
+--- 2. Shade gathers context via ContextGatherer.swift
+--- 3. Shade writes ~/.local/state/shade/context.json
+--- 4. Shade opens nvim with capture template
+--- 5. obsidian.nvim reads context.json for template substitution
+---
 ---@return boolean success
 function M.captureWithContext()
-  local context = require("lib.interop.context")
-
-  -- Gather context from frontmost app
-  local ctx = context.getContext()
-
-  -- Write context for obsidian.nvim templates to read
-  if not M.writeContext(ctx) then
-    hs.alert.show("Capture failed: could not write context", 2)
-    return false
+  local function triggerCapture()
+    postNotification(NOTIFICATION_CAPTURE)
+    hs.timer.doAfter(0.1, function() M.show() end)
   end
 
-  -- Command to create note from template
-  -- :Obsidian new_from_template [TITLE] [TEMPLATE]
-  -- Title is optional (obsidian.nvim's note_id_func reads from context.json)
-  -- Template name must match file without .md extension
-  local nvimCmd = ":Obsidian new_from_template capture capture-text"
-
-  local function sendCaptureCommand()
-    local success, err = M.sendNvimCommand(nvimCmd)
-    if success then
-      hs.timer.doAfter(0.1, function() M.show() end)
-    else
-      hs.alert.show("Capture failed: " .. (err or "unknown"), 2)
-    end
-  end
-
-  if M.isNvimServerRunning() then
-    -- Server running, send command directly
-    sendCaptureCommand()
-    return true
+  if M.isRunning() then
+    triggerCapture()
   else
-    -- Server not running - ensure Shade is running, then send command
-    M.ensureRunning(function()
-      M.sendNvimCommandWhenReady(nvimCmd, 5, function()
-        -- Success - panel is already shown by ensureRunning
-      end, function(err)
-        hs.alert.show("Capture failed: " .. err, 2)
-      end)
+    M.launch(function()
+      hs.timer.doAfter(0.5, triggerCapture)
     end)
-    return true
   end
+
+  return true
 end
 
 --- Open daily note in Shade
