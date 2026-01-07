@@ -77,12 +77,12 @@ in {
     MmSingleMessageWindowClosesAfterMove = true;
 
     # Font settings
-    MmHeadersViewWebKitDefaultFontSize = 13;
+    MmHeadersViewWebKitDefaultFontSize = 14;
     MmHeadersViewWebKitStandardFont = "Helvetica";
-    MmMessagesWebViewMinimumFontSize = 12;
-    MmMessagesWebViewWebKitDefaultFixedFontSize = 13;
-    MmMessagesWebViewWebKitDefaultFontSize = 13;
-    MmMessagesWebViewWebKitMinimumFontSize = 12;
+    MmMessagesWebViewMinimumFontSize = 14;
+    MmMessagesWebViewWebKitDefaultFixedFontSize = 14;
+    MmMessagesWebViewWebKitDefaultFontSize = 14;
+    MmMessagesWebViewWebKitMinimumFontSize = 14;
     MmMessagesWebViewWebKitStandardFont = "Helvetica";
 
     # Message list behavior
