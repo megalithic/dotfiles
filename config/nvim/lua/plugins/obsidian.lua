@@ -210,7 +210,7 @@ end
 
 return {
   "obsidian-nvim/obsidian.nvim",
-  version = "3.15.3",
+  version = "*",
   -- lazy = false,
   event = "VeryLazy",
   -- ft = "markdown",
@@ -344,7 +344,7 @@ return {
     completion = {
       blink = true,
       nvim_cmp = false,
-      min_chars = 2,
+      min_chars = 0,
       -- create_new = false,
     },
     picker = { name = "snacks.pick" },
