@@ -67,6 +67,29 @@ Phone number is auto-fetched from macOS Contacts.
 - Avoid `just mac` and `nh darwin switch` as they produce excessive animated
   output that's hard to verify success/failure
 
+### Nix Build Artifacts
+
+**CRITICAL**: Never run raw `nix build` commands without `-o /tmp/...` flag.
+Raw `nix build` creates a `result` symlink in the current directory, which
+pollutes the repo (even though it's gitignored).
+
+```bash
+# BAD - creates ./result symlink
+nix build .#darwinConfigurations.hostname.system
+
+# GOOD - puts result in /tmp
+nix build .#darwinConfigurations.hostname.system -o /tmp/nix-result
+
+# BEST - use the justfile
+just rebuild
+```
+
+If you accidentally create a `result` symlink, clean it up:
+
+```bash
+rm -f result
+```
+
 ## Configuration Organization
 
 **CRITICAL**: This dotfiles repo follows strict organizational patterns for
