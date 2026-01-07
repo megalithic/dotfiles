@@ -771,7 +771,7 @@ function mega.ui.statusline.render()
     return table.concat(parts, "")
   end
 
-  if vim.g.meganote_context then
+  if vim.g.shade_context then
     local parts = {
       seg([[%<]]),
       seg(" 󰠮 notes "),
@@ -782,7 +782,7 @@ function mega.ui.statusline.render()
       seg_lineinfo(75),
     }
 
-    -- return seg(fmt("%s meganote (%s)", Icons.misc.flames, M.ctx.filetype)) end,
+    -- return seg(fmt("%s shade (%s)", Icons.misc.flames, M.ctx.filetype)) end,
     return table.concat(parts, "")
   end
 

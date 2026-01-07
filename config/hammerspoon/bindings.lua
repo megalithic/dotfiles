@@ -175,22 +175,19 @@ function M.loadUtils()
       hs.reload()
     end)
     :bind({ "shift", "ctrl" }, "l", nil, req("wm").placeAllApps)
-    :bind({ "shift" }, "o", nil, require("lib.notes.window").dailyNote())
-    -- daily note: side-by-side mode (notes 30% left, previous app 70% right)
-    :bind(
-      { "ctrl" },
-      "o",
-      nil,
-      require("lib.notes.window").dailyNoteTiled()
-    )
+    -- daily note: open in Shade floating panel
+    :bind({ "shift" }, "o", nil, function()
+      local shade = require("lib.interop.shade")
+      shade.openDailyNote()
+    end)
     -- text capture: gather context from frontmost app and create capture note
     :bind(
       { "shift" },
       "n",
       nil,
       function()
-        local meganote = require("lib.interop.meganote")
-        meganote.captureWithContext()
+        local shade = require("lib.interop.shade")
+        shade.captureWithContext()
       end
     )
     :bind({ "ctrl" }, "d", nil, function() utils.dnd() end)
@@ -378,33 +375,37 @@ function M.loadForceQuit()
   end)
 end
 
-function M.loadMegaNote()
-  local meganote = req("lib.interop.meganote")
+function M.loadShade()
+  local shade = req("lib.interop.shade")
 
-  -- Configure MegaNote for quick capture workflow
-  -- Use nvim with a capture socket for remote commands (context injection)
-  local captureSocket = "/tmp/nvim-capture.sock"
-  local capturesDir = meganote.getCapturesDir()
+  -- Configure Shade for quick capture workflow
+  -- Use nvim with a socket for RPC commands (context injection, file opening)
+  -- Socket path: ~/.local/state/shade/nvim.sock (XDG compliant)
+  local socketPath = shade.getSocketPath()
+  local capturesDir = shade.getCapturesDir()
 
   -- Command needs shell wrapper for:
   -- 1. Socket cleanup (stale socket from crash/kill)
   -- 2. Multiple commands (rm + nvim)
+  -- 3. SHADE=1 env var for nvim to detect it's running in Shade
   -- Opens nvim in captures dir - user creates/opens capture notes there
-  local nvimCmd = string.format("/bin/zsh -c 'rm -f %s; exec nvim --listen %s'", captureSocket, captureSocket)
+  local nvimCmd = string.format(
+    "/bin/zsh -c 'rm -f %s; SHADE=1 exec nvim --listen %s'",
+    socketPath,
+    socketPath
+  )
 
-  meganote.configure({
+  shade.configure({
     width = 0.4,
     height = 0.4,
     command = nvimCmd,
     workingDirectory = capturesDir,
-    startHidden = true,
+    startHidden = false, -- Launch visible so nvim actually starts
   })
 
-  -- Pre-launch MegaNote in background (hidden) for faster first capture
-  -- The Hyper+Shift+N binding is in loadApps() -> hyper chain
-  meganote.launch()
-
-  U.log.d("MegaNote configured and pre-launched (binding in loadApps)")
+  -- Don't pre-launch - Shade will be launched on first use
+  -- This avoids issues with ghostty not spawning nvim when hidden
+  U.log.d("Shade configured (will launch on first use)")
 end
 
 function M:init()
@@ -415,7 +416,7 @@ function M:init()
   M.loadWm()
   M.loadNotifications()
   M.loadForceQuit()
-  M.loadMegaNote()
+  M.loadShade()
 
   -- req("snipper")
   req("clipper")

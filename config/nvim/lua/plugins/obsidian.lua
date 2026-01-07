@@ -1,3 +1,96 @@
+-- Helper functions for template substitutions
+local function get_notes_home()
+  return vim.env.NOTES_HOME or (vim.env.HOME .. "/iclouddrive/Documents/_notes")
+end
+
+--- Find the most recent daily note before today
+--- Returns the path and filename of the previous daily note
+---@return string|nil path Full path to previous daily note
+---@return string|nil filename Just the filename (e.g., "20260105")
+local function find_previous_daily_note()
+  local notes_home = get_notes_home()
+  local daily_dir = notes_home .. "/daily"
+
+  -- Get today's date info
+  local today = os.date("%Y%m%d")
+  local year = os.date("%Y")
+
+  -- Find all daily notes, sorted by name (which is date-based)
+  local handle = io.popen(string.format(
+    "find '%s' -name '*.md' -type f 2>/dev/null | sort -r",
+    daily_dir
+  ))
+  if not handle then return nil, nil end
+
+  local result = handle:read("*a")
+  handle:close()
+
+  -- Find the first note that's before today
+  for path in result:gmatch("[^\n]+") do
+    local filename = path:match("([^/]+)%.md$")
+    if filename and filename < today then
+      return path, filename
+    end
+  end
+
+  return nil, nil
+end
+
+--- Extract incomplete tasks from a daily note file
+---@param path string Path to the daily note
+---@return string tasks Formatted task list or default tasks
+local function extract_incomplete_tasks(path)
+  local f = io.open(path, "r")
+  if not f then
+    -- Default tasks if no previous note
+    return "- [ ] DAILY CHORES #life\n- [ ] Read book chapter #life"
+  end
+
+  local content = f:read("*a")
+  f:close()
+
+  -- Find ## Tasks section content (between ## Tasks and next ## or end)
+  local tasks_section = content:match("## Tasks\n(.-)\n## ") or content:match("## Tasks\n(.*)$")
+  if not tasks_section then
+    return "- [ ] DAILY CHORES #life\n- [ ] Read book chapter #life"
+  end
+
+  -- Extract incomplete tasks (- [ ] but not - [x], - [/], - [-], etc.)
+  local incomplete = {}
+  for line in tasks_section:gmatch("[^\n]+") do
+    -- Match only unchecked tasks: "- [ ]" (space inside brackets)
+    if line:match("^%s*%- %[ %]") then
+      -- Replace "tomorrow" with "today" in migrated tasks
+      local cleaned = line:gsub("tomorrow", "today")
+      table.insert(incomplete, cleaned)
+    end
+  end
+
+  if #incomplete == 0 then
+    return "- [ ] DAILY CHORES #life\n- [ ] Read book chapter #life"
+  end
+
+  return table.concat(incomplete, "\n")
+end
+
+--- Read Shade's context.json file
+---@return table|nil context The parsed context or nil
+local function read_shade_context()
+  local state_dir = vim.env.HOME .. "/.local/state/shade"
+  local context_path = state_dir .. "/context.json"
+
+  local f = io.open(context_path, "r")
+  if not f then return nil end
+
+  local content = f:read("*a")
+  f:close()
+
+  local ok, ctx = pcall(vim.json.decode, content)
+  if not ok then return nil end
+
+  return ctx
+end
+
 return {
   "obsidian-nvim/obsidian.nvim",
   version = "3.15.3",
@@ -20,6 +113,96 @@ return {
     daily_notes = {
       folder = "daily",
       date_format = "%Y/%Y%m%d", -- Creates daily/2025/20251224.md
+      template = "daily.md", -- Use our custom daily template
+    },
+    templates = {
+      folder = "templates",
+      date_format = "%Y-%m-%d",
+      time_format = "%H:%M",
+      substitutions = {
+        -- Date without dashes for IDs (YYYYMMDD format)
+        date_id = function()
+          return os.date("%Y%m%d")
+        end,
+
+        -- ISO timestamp for created field
+        timestamp = function()
+          return os.date("%Y-%m-%dT%H:%M:%S")
+        end,
+
+        -- Task migration: extract incomplete tasks from previous daily note
+        migrated_tasks = function()
+          local prev_path = find_previous_daily_note()
+          if prev_path then
+            return extract_incomplete_tasks(prev_path)
+          end
+          return "- [ ] DAILY CHORES #life\n- [ ] Read book chapter #life"
+        end,
+
+        -- Link to yesterday's daily note
+        yesterday_link = function()
+          local _, prev_filename = find_previous_daily_note()
+          if prev_filename then
+            return string.format("[Previous daily note (%s)](%s.md)", prev_filename, prev_filename)
+          end
+          return ""
+        end,
+
+        -- Build a collapsible callout with capture context (only non-empty fields)
+        -- Renders as a collapsed "> [!info]- Capture Context" block in Obsidian
+        capture_context = function()
+          local ctx = read_shade_context()
+          if not ctx then return "" end
+
+          local lines = {}
+
+          -- Add context fields only if they have values
+          if ctx.appName and ctx.appName ~= "" then
+            table.insert(lines, string.format("> - **App:** %s", ctx.appName))
+          end
+          if ctx.windowTitle and ctx.windowTitle ~= "" then
+            table.insert(lines, string.format("> - **Window:** %s", ctx.windowTitle))
+          end
+          if ctx.url and ctx.url ~= "" then
+            table.insert(lines, string.format("> - **URL:** %s", ctx.url))
+          end
+          if ctx.filePath and ctx.filePath ~= "" then
+            table.insert(lines, string.format("> - **File:** `%s`", ctx.filePath))
+          end
+          local lang = ctx.detectedLanguage or ctx.filetype
+          if lang and lang ~= "" then
+            table.insert(lines, string.format("> - **Language:** %s", lang))
+          end
+
+          -- Only return the callout if we have any context
+          if #lines == 0 then return "" end
+
+          -- Build the collapsible callout (- makes it collapsed by default)
+          return "> [!info]- Capture Context\n" .. table.concat(lines, "\n")
+        end,
+
+        -- Selection as code block (for text captures)
+        capture_selection = function()
+          local ctx = read_shade_context()
+          if not ctx or not ctx.selection or ctx.selection == "" then
+            return ""
+          end
+          local lang = ctx.detectedLanguage or ctx.filetype or ""
+          return string.format("```%s\n%s\n```", lang, ctx.selection)
+        end,
+
+        -- For image captures
+        image_filename = function()
+          -- This will be set by the caller before template insertion
+          -- For now, return a placeholder that Hammerspoon/Shade will replace
+          return "{{IMAGE_FILENAME}}"
+        end,
+
+        ocr_text = function()
+          -- OCR text will be injected after creation or left empty
+          return ""
+        end,
+      },
     },
     attachments = {
       img_folder = "assets", -- Store images in vault's assets folder

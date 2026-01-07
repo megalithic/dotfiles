@@ -7,7 +7,7 @@ return {
   dependencies = { "rktjmp/lush.nvim" },
   cond = function()
     return false
-    -- if vim.g.meganote_context then return false end
+    -- if vim.g.shade_context then return false end
     --
     -- return not vim.g.started_by_firenvim and not vim.env.TMUX_POPUP
   end,

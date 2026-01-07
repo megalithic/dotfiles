@@ -1,7 +1,7 @@
 local fmt = string.format
 local canvasLib = require("lib.canvas")
 local notesLib = require("lib.notes")
-local meganote = require("lib.interop.meganote")
+local shade = require("lib.interop.shade")
 local obj = {}
 
 --[[
@@ -660,11 +660,11 @@ function obj.captureFull()
     local notePath = notesLib.getCaptureNotePath(captureFilename)
     U.log.i(fmt("captureFull: created %s", notePath))
 
-    -- Open capture note in meganote (Swift floating panel)
-    meganote.openFile(notePath, function(opened)
+    -- Open capture note in shade (Swift floating panel)
+    shade.openFile(notePath, function(opened)
       if opened then
         -- Small delay to let nvim load the file
-        hs.timer.doAfter(0.1, function() meganote.show() end)
+        hs.timer.doAfter(0.1, function() shade.show() end)
       else
         hs.alert.show("Failed to open capture note", 2)
       end

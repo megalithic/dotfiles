@@ -4,8 +4,13 @@ local U = require("config.utils")
 local command = vim.api.nvim_create_user_command
 local map = vim.keymap.set
 
--- Expose meganote context for statusline/UI customization
-vim.g.meganote_context = vim.env.MEGANOTE == "1"
+-- Expose shade context for statusline/UI customization
+-- Primary: check if running in Shade via socket path
+-- Fallback: SHADE=1 env var
+local shade_socket = vim.fn.expand("~/.local/state/shade/nvim.sock")
+vim.g.shade_context = vim.fn.filereadable(shade_socket) == 1 or vim.env.SHADE == "1"
+-- Legacy alias for any code still using the old name
+vim.g.meganote_context = vim.g.shade_context
 
 local M = {}
 
