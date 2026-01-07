@@ -125,8 +125,8 @@ _deps
 .envrc
 .jj
 **/.jj
-.beads
-**/.beads
+# NOTE: .beads is NOT globally ignored - each repo's .beads/.gitignore
+# handles ignoring SQLite/daemon files while tracking issues.jsonl
 .workspaces
 **/.workspaces
 .worktrees

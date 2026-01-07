@@ -615,7 +615,42 @@ end
 -- Note Capture Actions
 -- ══════════════════════════════════════════════════════════════════════════════
 
+--- Generate image filename for capture
+--- Format: YYYYMMDD-HHMMSS.png (matches zettel timestamp style)
+---@return string filename
+local function generateImageFilename()
+  return fmt("%s.png", os.date("%Y%m%d-%H%M%S"))
+end
+
+--- Copy image to vault assets and prepare context for obsidian.nvim
+--- Returns the image filename (not full path) for template substitution
+---@param imagePath string Source image path
+---@param imageUrl? string DO Spaces URL (for deletion after copy)
+---@return boolean success
+---@return string? imageFilename Filename if successful
+---@return string? error Error message if failed
+local function prepareImageCapture(imagePath, imageUrl)
+  local imageFilename = generateImageFilename()
+
+  -- Copy image to assets folder
+  local assetPath = notesLib.copyImageToAssets(imagePath, imageFilename)
+  if not assetPath then
+    return false, nil, "Failed to copy image to assets"
+  end
+
+  -- Cleanup: delete from DO Spaces (async, fire-and-forget)
+  if imageUrl then
+    notesLib.deleteFromSpaces(imageUrl)
+  end
+
+  -- Cleanup: delete local screenshot
+  notesLib.deleteLocalScreenshot(imagePath)
+
+  return true, imageFilename
+end
+
 --- Quick capture: screenshot to note, linked in daily (fire-and-forget)
+--- Uses obsidian.nvim template, daily note linking via BufWritePost autocmd
 function obj.captureQuick()
   if not obj.activeCapture.imagePath then
     U.log.w("captureQuick: no image path available")
@@ -626,23 +661,56 @@ function obj.captureQuick()
   local imagePath = obj.activeCapture.imagePath
   local imageUrl = obj.activeCapture.imageUrl
 
-  -- Perform quick capture
-  local success, err = notesLib.captureQuick(imagePath, imageUrl)
-
-  if success then
-    hs.alert.show("Quick capture saved", 1.5)
-    U.log.i("captureQuick: completed")
-    -- Clear active capture since files are moved/deleted
-    obj.clearCapture()
-  else
+  -- Copy image to assets and get filename
+  local success, imageFilename, err = prepareImageCapture(imagePath, imageUrl)
+  if not success then
     hs.alert.show(fmt("Capture failed: %s", err or "unknown error"), 3)
     U.log.w(fmt("captureQuick: %s", err or "unknown error"))
+    return false
   end
 
-  return success
+  -- Write context with imageFilename for obsidian.nvim template
+  local ctx = {
+    imageFilename = imageFilename,
+    appType = "screenshot",
+    appName = "Screenshot",
+  }
+  if not shade.writeContext(ctx) then
+    hs.alert.show("Capture failed: could not write context", 2)
+    return false
+  end
+
+  -- Use obsidian.nvim to create note from template
+  local nvimCmd = ":Obsidian new_from_template capture capture-image"
+
+  if shade.isNvimServerRunning() then
+    local cmdSuccess, cmdErr = shade.sendNvimCommand(nvimCmd)
+    if cmdSuccess then
+      hs.alert.show("Quick capture saved", 1.5)
+      U.log.i("captureQuick: completed via obsidian.nvim")
+    else
+      hs.alert.show(fmt("Capture failed: %s", cmdErr or "unknown"), 2)
+      return false
+    end
+  else
+    -- Server not running - ensure Shade is running, then send command
+    shade.ensureRunning(function()
+      shade.sendNvimCommandWhenReady(nvimCmd, 5, function()
+        hs.alert.show("Quick capture saved", 1.5)
+        U.log.i("captureQuick: completed via obsidian.nvim")
+      end, function(cmdErr)
+        hs.alert.show(fmt("Capture failed: %s", cmdErr), 2)
+      end)
+    end)
+  end
+
+  -- Clear active capture since files are moved/deleted
+  obj.clearCapture()
+  return true
 end
 
 --- Full capture: screenshot to note with floating editor (interactive)
+--- Uses obsidian.nvim template, opens in Shade for editing
 function obj.captureFull()
   if not obj.activeCapture.imagePath then
     U.log.w("captureFull: no image path available")
@@ -653,31 +721,55 @@ function obj.captureFull()
   local imagePath = obj.activeCapture.imagePath
   local imageUrl = obj.activeCapture.imageUrl
 
-  -- Create capture note (same as quick capture but opens editor)
-  local success, captureFilename, err = notesLib.captureFull(imagePath, imageUrl)
-
-  if success then
-    local notePath = notesLib.getCaptureNotePath(captureFilename)
-    U.log.i(fmt("captureFull: created %s", notePath))
-
-    -- Open capture note in shade (Swift floating panel)
-    shade.openFile(notePath, function(opened)
-      if opened then
-        -- Small delay to let nvim load the file
-        hs.timer.doAfter(0.1, function() shade.show() end)
-      else
-        hs.alert.show("Failed to open capture note", 2)
-      end
-    end)
-
-    -- Clear active capture since files are moved/deleted
-    obj.clearCapture()
-  else
+  -- Copy image to assets and get filename
+  local success, imageFilename, err = prepareImageCapture(imagePath, imageUrl)
+  if not success then
     hs.alert.show(fmt("Capture failed: %s", err or "unknown error"), 3)
     U.log.w(fmt("captureFull: %s", err or "unknown error"))
+    return false
   end
 
-  return success
+  -- Write context with imageFilename for obsidian.nvim template
+  local ctx = {
+    imageFilename = imageFilename,
+    appType = "screenshot",
+    appName = "Screenshot",
+  }
+  if not shade.writeContext(ctx) then
+    hs.alert.show("Capture failed: could not write context", 2)
+    return false
+  end
+
+  -- Use obsidian.nvim to create note from template and show in Shade
+  local nvimCmd = ":Obsidian new_from_template capture capture-image"
+
+  local function sendCaptureCommand()
+    local cmdSuccess, cmdErr = shade.sendNvimCommand(nvimCmd)
+    if cmdSuccess then
+      hs.timer.doAfter(0.1, function() shade.show() end)
+      U.log.i("captureFull: created note via obsidian.nvim")
+    else
+      hs.alert.show(fmt("Capture failed: %s", cmdErr or "unknown"), 2)
+    end
+  end
+
+  if shade.isNvimServerRunning() then
+    sendCaptureCommand()
+  else
+    -- Server not running - ensure Shade is running, then send command
+    shade.ensureRunning(function()
+      shade.sendNvimCommandWhenReady(nvimCmd, 5, function()
+        -- Success - panel is already shown by ensureRunning
+        U.log.i("captureFull: created note via obsidian.nvim")
+      end, function(cmdErr)
+        hs.alert.show(fmt("Capture failed: %s", cmdErr), 2)
+      end)
+    end)
+  end
+
+  -- Clear active capture since files are moved/deleted
+  obj.clearCapture()
+  return true
 end
 
 -- ══════════════════════════════════════════════════════════════════════════════

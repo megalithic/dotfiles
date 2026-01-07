@@ -1,11 +1,11 @@
 --- shade - Toggle the floating notes terminal
 --- Uses distributed notifications to communicate with the Shade app
 ---
---- Capture workflow (Hammerspoon owns note creation):
+--- Capture workflow (obsidian.nvim owns note creation):
 --- 1. Hammerspoon gathers context from frontmost app
---- 2. Hammerspoon creates capture note file (with templates, frontmatter)
---- 3. Hammerspoon writes context.json for obsidian.nvim templates
---- 4. Hammerspoon opens file in nvim via RPC and shows panel
+--- 2. Hammerspoon writes context.json for obsidian.nvim templates
+--- 3. Hammerspoon sends :Obsidian command to nvim via RPC
+--- 4. obsidian.nvim creates note with template substitutions from context.json
 ---
 --- Binary lookup order:
 --- 1. Explicit cmd if configured via M.configure({ cmd = "/path/to/shade" })
@@ -42,6 +42,9 @@ local KNOWN_PATHS = {
 
 -- Socket path for nvim RPC (XDG compliant)
 local NVIM_SOCKET = STATE_DIR .. "/nvim.sock"
+
+-- Error log path for debugging
+local ERROR_LOG = STATE_DIR .. "/errors.log"
 
 -- Default configuration
 local config = {
@@ -118,6 +121,23 @@ local function postNotification(name) hs.distributednotifications.post(name, nil
 --- Ensure state directory exists
 local function ensureStateDir()
   os.execute("mkdir -p " .. STATE_DIR)
+end
+
+--- Log error to file for debugging
+---@param operation string What operation failed
+---@param details string Error details
+local function logError(operation, details)
+  ensureStateDir()
+  local timestamp = os.date("%Y-%m-%dT%H:%M:%S")
+  local entry = fmt("[%s] %s: %s\n", timestamp, operation, details)
+
+  local f = io.open(ERROR_LOG, "a")
+  if f then
+    f:write(entry)
+    f:close()
+  end
+
+  U.log.e(fmt("shade: %s - %s", operation, details))
 end
 
 --- Build CLI arguments from config
@@ -296,6 +316,69 @@ function M.isNvimServerRunning()
   return status == true
 end
 
+--- Send a command to nvim via RPC
+--- Uses --remote-send to send keystrokes to the nvim server
+---@param nvimCmd string Command to execute (e.g., ":ObsidianToday")
+---@return boolean success
+---@return string? error Error message if failed
+function M.sendNvimCommand(nvimCmd)
+  if not M.isNvimServerRunning() then
+    local err = "nvim server not running"
+    logError("sendNvimCommand", err)
+    return false, err
+  end
+
+  -- Escape single quotes in command for shell
+  local escapedCmd = nvimCmd:gsub("'", "'\\''")
+
+  -- Use --remote-send to send keystrokes (command + Enter)
+  local shellCmd = fmt("nvim --server '%s' --remote-send '%s<CR>' 2>&1", NVIM_SOCKET, escapedCmd)
+  local output, status = hs.execute(shellCmd, true)
+
+  if status ~= true then
+    local err = fmt("command failed: %s (output: %s)", nvimCmd, output or "nil")
+    logError("sendNvimCommand", err)
+    return false, err
+  end
+
+  U.log.d(fmt("Sent nvim command: %s", nvimCmd))
+  return true
+end
+
+--- Send command to nvim when server becomes ready
+--- Uses hs.timer.waitUntil with timeout for safe cleanup
+---@param nvimCmd string Command to execute
+---@param timeout? number Timeout in seconds (default 5)
+---@param onSuccess? fun() Callback on success
+---@param onFailure? fun(err: string) Callback on failure
+function M.sendNvimCommandWhenReady(nvimCmd, timeout, onSuccess, onFailure)
+  timeout = timeout or 5
+
+  local waitTimer = hs.timer.waitUntil(
+    M.isNvimServerRunning,
+    function()
+      local success, err = M.sendNvimCommand(nvimCmd)
+      if success then
+        if onSuccess then onSuccess() end
+      else
+        if onFailure then onFailure(err or "unknown error") end
+      end
+    end,
+    0.3 -- check every 300ms
+  )
+
+  -- Safety timeout to prevent infinite polling
+  hs.timer.doAfter(timeout, function()
+    if waitTimer:running() then
+      waitTimer:stop()
+      local err = fmt("timeout waiting for nvim server to send: %s", nvimCmd)
+      logError("sendNvimCommandWhenReady", err)
+      hs.alert.show("Nvim server not ready", 2)
+      if onFailure then onFailure(err) end
+    end
+  end)
+end
+
 --- Open file when nvim server becomes ready
 --- Uses hs.timer.waitUntil with timeout for safe cleanup
 ---@param filePath string Path to file to open
@@ -344,9 +427,9 @@ function M.openFile(filePath, callback)
   end
 end
 
---- Capture with context: create note file, write context, open in shade
---- Hammerspoon owns note creation (templates, frontmatter)
---- Shade just shows panel and opens the file via RPC
+--- Capture with context: write context.json, then use obsidian.nvim to create note
+--- obsidian.nvim owns note creation (templates, frontmatter, filename generation)
+--- Template substitutions read from context.json
 ---@return boolean success
 function M.captureWithContext()
   local context = require("lib.interop.context")
@@ -354,69 +437,68 @@ function M.captureWithContext()
   -- Gather context from frontmost app
   local ctx = context.getContext()
 
-  -- Write context for Shade to read (used by obsidian.nvim templates)
-  M.writeContext(ctx)
+  -- Write context for obsidian.nvim templates to read
+  if not M.writeContext(ctx) then
+    hs.alert.show("Capture failed: could not write context", 2)
+    return false
+  end
 
-  -- Create capture note with context (Hammerspoon owns this - handles templates)
-  local success, notePath, captureFilename = notes.createTextCaptureNote(ctx)
+  -- Command to create note from template
+  -- :Obsidian new_from_template [TITLE] [TEMPLATE]
+  -- Title is optional (obsidian.nvim's note_id_func reads from context.json)
+  -- Template name must match file without .md extension
+  local nvimCmd = ":Obsidian new_from_template capture capture-text"
 
-  if success and notePath then
-    -- Check if nvim server is already running
-    local serverRunning = M.isNvimServerRunning()
-
-    if serverRunning then
-      -- Server running, just open file and show
-      M.openFile(notePath, function(opened)
-        if opened then
-          hs.timer.doAfter(0.1, function() M.show() end)
-        else
-          hs.alert.show("Failed to open capture note", 2)
-        end
-      end)
+  local function sendCaptureCommand()
+    local success, err = M.sendNvimCommand(nvimCmd)
+    if success then
+      hs.timer.doAfter(0.1, function() M.show() end)
     else
-      -- Server not running - ensure Shade is running and shown, then open file
-      M.ensureRunning(function()
-        -- Now Shade is shown and nvim should be starting, wait for it
-        M.openFileWhenReady(notePath)
-      end)
+      hs.alert.show("Capture failed: " .. (err or "unknown"), 2)
     end
+  end
+
+  if M.isNvimServerRunning() then
+    -- Server running, send command directly
+    sendCaptureCommand()
     return true
   else
-    hs.alert.show("Capture failed: " .. (captureFilename or "unknown error"), 2)
-    return false
+    -- Server not running - ensure Shade is running, then send command
+    M.ensureRunning(function()
+      M.sendNvimCommandWhenReady(nvimCmd, 5, function()
+        -- Success - panel is already shown by ensureRunning
+      end, function(err)
+        hs.alert.show("Capture failed: " .. err, 2)
+      end)
+    end)
+    return true
   end
 end
 
 --- Open daily note in Shade
---- Hammerspoon owns note creation (uses daily_note script for task migration, templates)
---- Then opens in nvim via RPC and shows panel
+--- Uses :ObsidianToday which handles note creation with template substitutions
+--- (task migration from previous day, links section, etc.)
 function M.openDailyNote()
-  -- Ensure daily note exists (creates via daily_note script if missing)
-  -- This handles task migration from previous day, proper templating, etc.
-  if not notes.ensureDailyNote() then
-    hs.alert.show("Failed to create daily note", 2)
-    return
+  local function sendDailyCommand()
+    local success, err = M.sendNvimCommand(":ObsidianToday")
+    if success then
+      hs.timer.doAfter(0.1, function() M.show() end)
+    else
+      hs.alert.show("Failed to open daily note: " .. (err or "unknown"), 2)
+    end
   end
 
-  local dailyPath = notes.getDailyNotePath()
-
-  -- Check if nvim server is already running
-  local serverRunning = M.isNvimServerRunning()
-
-  if serverRunning then
-    -- Server running, just open file and show
-    M.openFile(dailyPath, function(opened)
-      if opened then
-        hs.timer.doAfter(0.1, function() M.show() end)
-      else
-        hs.alert.show("Failed to open daily note", 2)
-      end
-    end)
+  if M.isNvimServerRunning() then
+    -- Server running, send command directly
+    sendDailyCommand()
   else
-    -- Server not running - ensure Shade is running and shown, then open file
+    -- Server not running - ensure Shade is running, then send command
     M.ensureRunning(function()
-      -- Now Shade is shown and nvim should be starting, wait for it
-      M.openFileWhenReady(dailyPath)
+      M.sendNvimCommandWhenReady(":ObsidianToday", 5, function()
+        -- Success - panel is already shown by ensureRunning
+      end, function(err)
+        hs.alert.show("Failed to open daily note: " .. err, 2)
+      end)
     end)
   end
 end

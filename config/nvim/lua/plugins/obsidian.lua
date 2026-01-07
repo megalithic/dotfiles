@@ -91,6 +91,123 @@ local function read_shade_context()
   return ctx
 end
 
+--- Sanitize string for use in filename
+---@param str string
+---@param max_len? number Maximum length (default 30)
+---@return string sanitized
+local function sanitize_for_filename(str, max_len)
+  if not str or str == "" then return "" end
+  max_len = max_len or 30
+
+  local result = str:lower()
+    :gsub("[%.:/]", "-")       -- dots/colons/slashes to dashes
+    :gsub("%s+", "-")          -- spaces to dashes
+    :gsub("[^a-z0-9%-]", "")   -- remove non-alphanumeric
+    :gsub("%-+", "-")          -- collapse multiple dashes
+    :gsub("^%-", "")           -- trim leading dash
+    :gsub("%-$", "")           -- trim trailing dash
+
+  -- Truncate at word boundary if too long
+  if #result > max_len then
+    result = result:sub(1, max_len):gsub("%-[^%-]*$", "")
+  end
+
+  return result
+end
+
+--- Extract meaningful snippet from window title
+--- Removes common suffixes like "- Google Chrome", app names, etc.
+---@param window_title string|nil
+---@return string|nil snippet 2-3 word snippet or nil
+local function extract_title_snippet(window_title)
+  if not window_title or window_title == "" then return nil end
+
+  -- Remove common browser/app suffixes
+  local cleaned = window_title
+    :gsub("%s*[%-–—|·]%s*[A-Z][%w%s]*$", "")  -- " - App Name" or " | App"
+    :gsub("%s*[%-–—]%s*[A-Z][%w]*%s*[A-Z][%w]*$", "")  -- " - Two Words"
+    :gsub("^https?://[^/]+/", "")  -- leading URLs
+    :gsub("^www%.", "")
+
+  -- Take first 2-3 meaningful words only
+  local words = {}
+  for word in cleaned:gmatch("%S+") do
+    if #words < 3 and #word > 1 then
+      table.insert(words, word)
+    end
+  end
+
+  if #words == 0 then return nil end
+
+  local snippet = table.concat(words, " ")
+  local sanitized = sanitize_for_filename(snippet, 25)
+
+  -- Only return if we got something meaningful (at least 3 chars)
+  return (#sanitized >= 3) and sanitized or nil
+end
+
+--- Extract domain from URL
+---@param url string|nil
+---@return string|nil domain without www prefix
+local function extract_domain(url)
+  if not url then return nil end
+  local domain = url:match("https?://([^/]+)")
+  if domain then
+    domain = domain:gsub("^www%.", "")
+    -- Just first part of domain (github.com -> github)
+    local short = domain:match("^([^%.]+)")
+    return short
+  end
+  return nil
+end
+
+--- Generate a descriptor from context for capture note filenames
+--- Priority: window title snippet > domain+language > app type
+---@param ctx table|nil Context from context.json
+---@return string descriptor Sanitized descriptor or "capture"
+local function generate_descriptor_from_context(ctx)
+  if not ctx then return "capture" end
+
+  -- Priority 1: Window title snippet
+  local snippet = extract_title_snippet(ctx.windowTitle)
+  if snippet then return snippet end
+
+  -- Priority 2: Domain + language
+  local domain = extract_domain(ctx.url)
+  local lang = ctx.detectedLanguage or ctx.filetype
+
+  if domain and lang then
+    return string.format("%s-%s", domain, sanitize_for_filename(lang))
+  elseif domain then
+    return domain
+  elseif lang then
+    return sanitize_for_filename(lang)
+  end
+
+  -- Priority 3: App type (if not "other")
+  if ctx.appType and ctx.appType ~= "other" then
+    return ctx.appType
+  end
+
+  return "capture"
+end
+
+--- Generate zettel-style note ID with descriptor from context
+--- Format: YYYYMMDDHHMM-descriptor (e.g., 202601071520-github-pr)
+---@param title string|nil Optional title (ignored for captures, we use context)
+---@return string note_id
+local function generate_capture_note_id(title)
+  local zettel = os.date("%Y%m%d%H%M")
+  local ctx = read_shade_context()
+  local descriptor = generate_descriptor_from_context(ctx)
+
+  if descriptor and descriptor ~= "" then
+    return string.format("%s-%s", zettel, descriptor)
+  else
+    return zettel
+  end
+end
+
 return {
   "obsidian-nvim/obsidian.nvim",
   version = "3.15.3",
@@ -191,17 +308,34 @@ return {
           return string.format("```%s\n%s\n```", lang, ctx.selection)
         end,
 
-        -- For image captures
+        -- For image captures - reads from context.json written by Hammerspoon
         image_filename = function()
-          -- This will be set by the caller before template insertion
-          -- For now, return a placeholder that Hammerspoon/Shade will replace
-          return "{{IMAGE_FILENAME}}"
+          local ctx = read_shade_context()
+          if ctx and ctx.imageFilename and ctx.imageFilename ~= "" then
+            return ctx.imageFilename
+          end
+          -- Fallback: generate a timestamped name (shouldn't happen if workflow is correct)
+          return string.format("capture-%s.png", os.date("%Y%m%d%H%M%S"))
         end,
 
         ocr_text = function()
           -- OCR text will be injected after creation or left empty
           return ""
         end,
+      },
+      -- Per-template customizations for capture notes
+      -- Uses zettel timestamp + descriptor from context.json
+      customizations = {
+        -- Template: capture-text.md
+        ["capture-text"] = {
+          notes_subdir = "captures",
+          note_id_func = generate_capture_note_id,
+        },
+        -- Template: capture-image.md
+        ["capture-image"] = {
+          notes_subdir = "captures",
+          note_id_func = generate_capture_note_id,
+        },
       },
     },
     attachments = {
