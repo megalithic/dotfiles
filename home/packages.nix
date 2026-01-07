@@ -12,7 +12,7 @@
     fantastical
     helium-browser
     talktastic
-    tidewave
+    # tidewave
   ];
 
   # Filter: only apps with appLocation = "home-manager" go to home.packages

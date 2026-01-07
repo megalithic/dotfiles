@@ -6,10 +6,14 @@
   lib,
   inputs,
   ...
-}: let
+}:
+let
   # Path to externalized resize-image script (lives in dotfiles bin/)
   # Dependencies (imagemagick, bc, coreutils) are available via Nix profile
   resize-image-bin = "${config.home.homeDirectory}/.dotfiles/bin/resize-image";
+
+  # Brave Browser Nightly path (used by both chrome-devtools and playwright)
+  braveBrowserPath = "${pkgs.brave-browser-nightly}/Applications/Brave Browser Nightly.app/Contents/MacOS/Brave Browser Nightly";
 
   # Use mcp-servers-nix evalModule to get the servers attrset directly
   # This gives us the raw config structure we can pass to programs.claude-code.mcpServers
@@ -34,12 +38,17 @@
           ];
         };
 
+        # Playwright MCP for browser automation
+        playwright = {
+          enable = true;
+          executable = braveBrowserPath;
+        };
+
         # Disabled servers (kept for reference)
         # filesystem.enable = false;
         # fetch.enable = false;
         # git.enable = false;
         # time.enable = false;
-        # playwright.enable = false;
       };
     }).config.settings.servers;
 
@@ -49,11 +58,34 @@
       command = "${pkgs.chrome-devtools-mcp}/bin/chrome-devtools-mcp";
       args = [
         "--executablePath"
-        "${pkgs.brave-browser-nightly}/Applications/Brave Browser Nightly.app/Contents/MacOS/Brave Browser Nightly"
+        braveBrowserPath
       ];
     };
   };
-in {
+
+  # ===========================================================================
+  # OpenCode MCP Server Configuration
+  # Transform Claude Code format to OpenCode format
+  # Claude: { command, args?, env? }
+  # OpenCode: { type: "local", command: [cmd, ...args], enabled: true, environment? }
+  # ===========================================================================
+  toOpenCodeMcp =
+    name: server:
+    {
+      type = "local";
+      command =
+        if server ? args && server.args != [ ] then
+          [ server.command ] ++ server.args
+        else
+          [ server.command ];
+      enabled = true;
+    }
+    // (lib.optionalAttrs (server ? env) { environment = server.env; });
+
+  # Combine mcp-servers-nix and custom servers, transformed for OpenCode
+  opencodeMcpServers = lib.mapAttrs toOpenCodeMcp (mcpServersConfig // customMcpServers);
+in
+{
   # ===========================================================================
   # AI Tool Packages (non-Claude)
   # ===========================================================================
@@ -61,7 +93,7 @@ in {
   # NOTE: chrome-devtools-mcp is referenced by path in MCP config
   home.packages = [
     pkgs.llm-agents.opencode
-    pkgs.llm-agents.claude-code-acp # hash override in overlays/default.nix
+    pkgs.llm-agents.claude-code-acp # DEPRECATED: hash override in overlays/default.nix
     pkgs.llm-agents.beads
     # resize-image is now externalized to ~/.dotfiles/bin/resize-image
   ];
@@ -103,6 +135,43 @@ in {
         - Homebrew packages → `~/.dotfiles/modules/brew.nix`
         - Environment variables → `~/.dotfiles/home/default.nix` or program-specific configs
         - Claude Code config → `~/.dotfiles/home/programs/ai.nix`
+
+      ## CLI Tool Requirements (CRITICAL)
+
+      **CRITICAL**: Always use modern, fast CLI tools instead of legacy ones:
+
+      | Instead of... | Use...  | Why                                        |
+      |---------------|---------|-------------------------------------------|
+      | `find`        | `fd`    | Exponentially faster, respects .gitignore |
+      | `grep`        | `rg`    | Exponentially faster, respects .gitignore |
+
+      This is **ESPECIALLY** important when searching the Nix store (`/nix/store`), which contains millions of files. Using `grep` or `find` on the Nix store will timeout or take forever.
+
+      ### fd (find replacement)
+
+      ```bash
+      fd "\.lua$"              # Find all .lua files
+      fd -e lua                # Same, using extension flag
+      fd config                # Find files/dirs containing "config"
+      fd -t f config           # Files only (-t d for directories)
+      fd -e nix modules/       # Find .nix files in modules/
+      fd -H "\.env"            # Include hidden files
+      fd -I node_modules       # Include gitignored files
+      fd "ghostty.h" /nix/store  # Search nix store (fast!)
+      ```
+
+      ### rg (grep replacement)
+
+      ```bash
+      rg "TODO"                # Search for TODO in current dir
+      rg -i "error"            # Case-insensitive
+      rg -w "app"              # Whole word only
+      rg "import" -t lua       # Search only Lua files
+      rg "config" -g "*.nix"   # Search with glob pattern
+      rg "function" -A 3       # Show 3 lines after match
+      rg -l "TODO"             # List files with matches only
+      rg "pattern" /nix/store  # Search nix store (fast!)
+      ```
 
       ## Your required tasks for every conversation
 
@@ -190,6 +259,27 @@ in {
       3. If it outputs "ok", proceed with the original image
 
       This prevents API errors from oversized images and ensures smooth image processing.
+
+      ## Question Format Convention (OpenCode Only)
+
+      **NOTE**: This section applies only when running in OpenCode, not Claude Code.
+
+      When you have multiple questions that require user input before proceeding, format them with numbered prefixes:
+
+      ```
+      QUESTION 1. First question here?
+      QUESTION 2. Second question here?
+      QUESTION 3. Third question here?
+      ```
+
+      Add these to the todo list with the same format so they appear in the OpenCode sidebar. This allows the user to respond with numbered answers like:
+      ```
+      1. yes
+      2. no
+      3. maybe
+      ```
+
+      This convention makes it easy to correlate questions with answers when there are multiple blocking decisions.
     '';
 
     # Settings (written to ~/.claude/settings.json)
@@ -277,7 +367,7 @@ in {
   home.file.".claude/settings.json".force = true;
 
   # Symlink chrome-devtools-mcp binary to ~/.local/bin (for manual use)
-  home.activation.linkAiBinaries = lib.hm.dag.entryAfter ["writeBoundary"] ''
+  home.activation.linkAiBinaries = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     BIN_DIR="${config.home.homeDirectory}/.local/bin"
     mkdir -p "$BIN_DIR"
 
@@ -289,45 +379,39 @@ in {
   # ===========================================================================
   # OpenCode Configuration
   # ===========================================================================
-  xdg.configFile."opencode/opencode.json".text = ''
-    {
-      "$schema": "https://opencode.ai/config.json",
-      "instructions": [
-        "CLAUDE.md"
-      ],
-      "theme": "everforest",
-      "model": "anthropic/claude-opus-4.5",
-      "autoshare": false,
-      "autoupdate": true,
-      "keybinds": {
-        "leader": "ctrl+,",
-        "session_new": "ctrl+n",
-        "session_list": "ctrl+g",
-        "messages_half_page_up": "ctrl+b",
-        "messages_half_page_down": "ctrl+f"
-      },
-      "lsp": {
-        "php": {
-          "command": [
-            "intelephense",
-            "--stdio"
-          ],
-          "extensions": [
-            ".php"
-          ]
-        },
-        "python": {
-          "command": [
-            "basedpyright",
-            "--stdio"
-          ],
-          "extensions": [
-            ".py"
-          ]
-        }
-      }
-    }
-  '';
+  xdg.configFile."opencode/opencode.json".text = builtins.toJSON {
+    "$schema" = "https://opencode.ai/config.json";
+    instructions = [ "CLAUDE.md" ];
+    theme = "everforest";
+    model = "anthropic/claude-opus-4.5";
+    autoshare = false;
+    autoupdate = true;
+    keybinds = {
+      leader = "ctrl+,";
+      session_new = "ctrl+n";
+      session_list = "ctrl+g";
+      messages_half_page_up = "ctrl+b";
+      messages_half_page_down = "ctrl+f";
+    };
+    lsp = {
+      php = {
+        command = [
+          "intelephense"
+          "--stdio"
+        ];
+        extensions = [ ".php" ];
+      };
+      python = {
+        command = [
+          "basedpyright"
+          "--stdio"
+        ];
+        extensions = [ ".py" ];
+      };
+    };
+    # MCP servers - same as Claude Code, transformed for OpenCode format
+    mcp = opencodeMcpServers;
+  };
 
   # OpenCode custom tool for resizing images (wraps resize-image CLI)
   # Uses absolute path to externalized script in dotfiles bin/
