@@ -53,18 +53,20 @@ Unlike `watchers/` (which observe system events) or general `lib/` utilities, `i
 
 ```
 lib/interop/
+├── shade.lua       # Shade integration (floating nvim panel, IPC via DistributedNotificationCenter)
 ├── nvim.lua        # Neovim IPC via --listen/--server sockets
-├── scratchpad.lua  # Floating terminal windows (Kitty/Ghostty) with persistent nvim
-├── selection.lua   # macOS Accessibility API for clipboard-free text selection
-├── context.lua     # Gather context from frontmost app (browser URL, file path, etc.)
+├── browser.lua     # Browser automation helpers
+├── kitty.lua       # Kitty terminal integration
+├── selection.lua   # [DEPRECATED] AX-based text selection (Shade handles this now)
+├── context.lua     # [DEPRECATED] Context gathering (Shade handles this now)
 └── ...
 ```
 
 **Key patterns:**
+- **shade.lua** - Primary note capture integration via Shade.app (IPC, context, nvim RPC)
 - **nvim.lua** - Send commands to nvim via socket (`nvim --server <sock> --remote <file>`)
-- **scratchpad.lua** - Toggle-able floating windows that persist across spaces
-- **selection.lua** - Swift CLI wrapper for AX-based text selection (no clipboard pollution)
-- **context.lua** - Detect app type, gather URLs, file paths, window titles for capture workflows
+- **browser.lua** - Browser URL/tab detection and manipulation
+- **kitty.lua** - Kitty terminal-specific features
 
 ### Key Configuration Patterns
 

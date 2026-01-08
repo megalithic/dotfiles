@@ -166,14 +166,16 @@ postNotification("io.shade.note.capture")
 ```lua
 local M = require("lib.interop.shade")
 
-M.isRunning()      -- Check if Shade process exists
-M.launch(callback) -- Launch Shade.app
-M.show()           -- Post io.shade.show
-M.hide()           -- Post io.shade.hide
-M.toggle()         -- Post io.shade.toggle
-M.quit()           -- Post io.shade.quit
-M.capture()        -- Post io.shade.note.capture (Shade gathers context)
-M.openDailyNote()  -- Post io.shade.note.daily (Shade handles :ObsidianToday)
+M.isRunning()          -- Check if Shade process exists
+M.launch(callback)     -- Launch Shade.app
+M.show()               -- Post io.shade.show
+M.hide()               -- Post io.shade.hide
+M.toggle()             -- Post io.shade.toggle
+M.quit()               -- Post io.shade.quit
+M.captureWithContext() -- Post io.shade.note.capture (Shade gathers context)
+M.openDailyNote()      -- Post io.shade.note.daily (Shade handles :ObsidianToday)
+M.smartCaptureToggle() -- Toggle or capture based on state
+M.smartToggle()        -- Smart toggle with auto-launch
 ```
 
 ### CRITICAL: Hammerspoon Should NOT Send nvim Commands

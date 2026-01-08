@@ -73,7 +73,10 @@ You are an expert Nix explorer specializing in understanding and navigating comp
 │   ├── default.nix        # Entry point, imports programs/
 │   ├── lib.nix            # config.lib.mega helpers (linkConfig, linkHome, etc.)
 │   ├── packages.nix       # User packages organized by category
-│   └── programs/          # Per-program configs (ai.nix, git.nix, fish.nix, etc.)
+│   └── programs/          # Per-program configs
+│       ├── ai/            # AI tools (claude-code, opencode)
+│       ├── browsers/      # Browser configs
+│       └── *.nix          # Individual programs (fish.nix, jujutsu.nix, etc.)
 ├── modules/               # Darwin system modules
 │   ├── system.nix         # System defaults, keyboard, dock, finder
 │   ├── brew.nix           # Homebrew casks/brews

@@ -49,6 +49,9 @@ The `just rebuild` command runs `bin/darwin-switch` which patches around an inte
 │   ├── lib.nix            # config.lib.mega helpers
 │   ├── packages.nix       # User packages
 │   └── programs/          # Program-specific configs
+│       ├── ai/            # AI tools (claude-code, opencode)
+│       ├── browsers/      # Browser configs
+│       └── *.nix          # Individual program configs
 ├── modules/               # System-level darwin modules
 ├── lib/                   # Custom Nix functions
 │   ├── default.nix        # mkApp, mkMas, brew-alias, etc.
