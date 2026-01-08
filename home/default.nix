@@ -9,7 +9,8 @@
   version,
   overlays,
   ...
-}: let
+}:
+let
   inherit (pkgs.stdenv.hostPlatform) isDarwin;
   # Key paths (mirroring hosts/megabookpro.nix for Hammerspoon env injection)
   icloud_home = "/Users/${username}/iclouddrive";
@@ -17,11 +18,12 @@
   notes_home = "${icloud_home}/Documents/_notes";
   nvim_db_home = "${proton_home}/configs/sql";
   dots = "/Users/${username}/.dotfiles";
-in {
+in
+{
   imports = [
     ./lib.nix # Custom helpers (linkConfig, linkHome, etc.)
     ./packages.nix
-    ./programs/ai.nix
+    ./programs/ai
     ./programs/agenix.nix
     ./programs/email
     ./programs/browsers
@@ -43,36 +45,41 @@ in {
     "${config.home.homeDirectory}/.cargo/bin"
   ];
 
-  home.file =
-    {
-      "code/.keep".text = "";
-      "src/.keep".text = "";
-      "tmp/.keep".text = "";
-      ".hushlogin".text = "";
-      "bin".source = config.lib.mega.linkBin;
-      ".editorconfig".text = ''
-        root = true
-        [*]
-        indent_style = space
-        indent_size = 2
-        end_of_line = lf
-        insert_final_newline = true
-        trim_trailing_whitespace=true
-        # max_line_length = 80
-        charset = utf-8
-      '';
-      ".ignore".source = git/tool_ignore;
-      ".gitignore".source = git/gitignore;
-      ".gitconfig".source = git/gitconfig;
-      ".ssh/config".source = config.lib.mega.linkConfig "ssh/config";
-      ".ssh/allowed_signers".text = "seth@megalithic.io ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICyxphJ0fZhJP6OQeYMsGNQ6E5ZMVc/CQdoYrWYGPDrh";
-      "Library/Application Support/espanso".source = config.lib.mega.linkConfig "espanso";
-      "iclouddrive".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/Library/Mobile Documents/com~apple~CloudDocs";
-    }
-    // lib.optionalAttrs (builtins.pathExists "${config.home.homeDirectory}/Library/CloudStorage/ProtonDrive-seth@megalithic.io-folder") {
-      # Only create protondrive symlink if ProtonDrive folder exists
-      "protondrive".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/Library/CloudStorage/ProtonDrive-seth@megalithic.io-folder";
-    };
+  home.file = {
+    "code/.keep".text = "";
+    "src/.keep".text = "";
+    "tmp/.keep".text = "";
+    ".hushlogin".text = "";
+    "bin".source = config.lib.mega.linkBin;
+    ".editorconfig".text = ''
+      root = true
+      [*]
+      indent_style = space
+      indent_size = 2
+      end_of_line = lf
+      insert_final_newline = true
+      trim_trailing_whitespace=true
+      # max_line_length = 80
+      charset = utf-8
+    '';
+    ".ignore".source = git/tool_ignore;
+    ".gitignore".source = git/gitignore;
+    ".gitconfig".source = git/gitconfig;
+    ".ssh/config".source = config.lib.mega.linkConfig "ssh/config";
+    ".ssh/allowed_signers".text =
+      "seth@megalithic.io ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICyxphJ0fZhJP6OQeYMsGNQ6E5ZMVc/CQdoYrWYGPDrh";
+    "Library/Application Support/espanso".source = config.lib.mega.linkConfig "espanso";
+    "iclouddrive".source =
+      config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/Library/Mobile Documents/com~apple~CloudDocs";
+  }
+  //
+    lib.optionalAttrs
+      (builtins.pathExists "${config.home.homeDirectory}/Library/CloudStorage/ProtonDrive-seth@megalithic.io-folder")
+      {
+        # Only create protondrive symlink if ProtonDrive folder exists
+        "protondrive".source =
+          config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/Library/CloudStorage/ProtonDrive-seth@megalithic.io-folder";
+      };
 
   home.preferXdgDirectories = true;
 
@@ -80,7 +87,7 @@ in {
   # Uses config.mega.customApps (all mkApp-built packages) NOT home.packages
   # This avoids duplicates: home-manager handles appLocation="home-manager" apps,
   # while mkAppActivation handles appLocation="symlink"|"copy" apps
-  home.activation.linkSystemApplications = lib.hm.dag.entryAfter ["writeBoundary"] (
+  home.activation.linkSystemApplications = lib.hm.dag.entryAfter [ "writeBoundary" ] (
     lib.mega.mkAppActivation {
       inherit pkgs;
       packages = config.mega.customApps;
@@ -89,7 +96,7 @@ in {
 
   # Set desktop wallpaper declaratively using desktoppr
   # Runs on every darwin-rebuild, sets wallpaper for all screens
-  home.activation.setWallpaper = lib.hm.dag.entryAfter ["writeBoundary"] ''
+  home.activation.setWallpaper = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     WALLPAPER="${config.home.homeDirectory}/.dotfiles/assets/bokeh_dark.jpg"
     if [ -f "$WALLPAPER" ]; then
       run ${pkgs.desktoppr}/bin/desktoppr "$WALLPAPER"
@@ -98,7 +105,7 @@ in {
 
   # Configure Obsidian vault settings declaratively
   # Merges our settings into existing app.json (non-destructive)
-  home.activation.configureObsidian = lib.hm.dag.entryAfter ["writeBoundary"] ''
+  home.activation.configureObsidian = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     OBSIDIAN_CONFIG="${config.home.homeDirectory}/iclouddrive/Documents/_notes/.obsidian/app.json"
     if [ -d "$(dirname "$OBSIDIAN_CONFIG")" ]; then
       # Ensure file exists with at least empty object
@@ -366,13 +373,15 @@ in {
     # speed up rebuilds // HT: @tmiller
     man.generateCaches = false;
 
-    starship = {enable = true;};
+    starship = {
+      enable = true;
+    };
 
     git = {
       enable = true;
       package = pkgs.gitFull;
       includes = [
-        {path = "~/.gitconfig";}
+        { path = "~/.gitconfig"; }
       ];
 
       settings.gpg.ssh.program = "/Applications/1Password.app/Contents/MacOS/op-ssh-sign";
@@ -391,7 +400,7 @@ in {
         global.load_dotenv = true;
         global.warn_timeout = 0;
         global.hide_env_diff = true;
-        whitelist.prefix = [config.home.homeDirectory];
+        whitelist.prefix = [ config.home.homeDirectory ];
       };
     };
 
@@ -421,7 +430,8 @@ in {
     };
 
     ssh = {
-      matchBlocks."* \"test -z $SSH_TTY\"".identityAgent = "~/Library/Group\ Containers/2BUA8C4S2C.com.1password/t/agent.sock";
+      matchBlocks."* \"test -z $SSH_TTY\"".identityAgent =
+        "~/Library/Group\ Containers/2BUA8C4S2C.com.1password/t/agent.sock";
     };
 
     mise = {
@@ -454,12 +464,20 @@ in {
       colors = "always";
       git = true;
       icons = "always";
-      extraOptions = ["-lah" "--group-directories-first" "--color-scale"];
+      extraOptions = [
+        "-lah"
+        "--group-directories-first"
+        "--color-scale"
+      ];
     };
 
     bat = {
       enable = true;
-      extraPackages = with pkgs.bat-extras; [batman prettybat batgrep];
+      extraPackages = with pkgs.bat-extras; [
+        batman
+        prettybat
+        batgrep
+      ];
       config = {
         theme = "everforest";
       };
@@ -513,14 +531,18 @@ in {
             port = 6697;
             tls = true;
             realname = "Seth";
-            nicks = ["replicant"];
-            join = ["#nethack" "#nixos" "#neovim"];
+            nicks = [ "replicant" ];
+            join = [
+              "#nethack"
+              "#nixos"
+              "#neovim"
+            ];
           }
         ];
         defaults = {
-          nicks = ["replicant"];
+          nicks = [ "replicant" ];
           realname = "Seth";
-          join = [];
+          join = [ ];
           tls = true;
         };
       };
