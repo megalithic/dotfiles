@@ -58,11 +58,12 @@ M.notifications = {
 }
 
 -- Known binary locations (checked in order)
+-- Debug build first for development, then release, then installed
 local BINARY_NAME = "shade"
 local KNOWN_PATHS = {
-  os.getenv("HOME") .. "/.local/bin/shade", -- Installed via `just install`
+  os.getenv("HOME") .. "/code/shade/.build/debug/shade", -- Debug build (development)
   os.getenv("HOME") .. "/code/shade/.build/release/shade", -- Release build
-  os.getenv("HOME") .. "/code/shade/.build/debug/shade", -- Debug build
+  os.getenv("HOME") .. "/.local/bin/shade", -- Installed via `just install`
 }
 
 -- Socket path for nvim RPC (XDG compliant)
@@ -77,19 +78,37 @@ local config = {
   cmd = nil,
 
   -- Panel size (0.0-1.0 = percentage, >1.0 = pixels)
-  width = 0.45,
-  height = 0.5,
+  width = 0.4,
+  height = 0.4,
 
-  -- Command to run (nil = default shell)
+  -- Command to run (nil = auto-build nvim command with socket)
   -- Example: "nvim ~/notes/capture.md"
   command = nil,
 
-  -- Working directory (nil = home)
+  -- Working directory (nil = use captures dir from notes lib)
   workingDirectory = nil,
 
   -- Start hidden (wait for first toggle)
-  startHidden = true,
+  startHidden = false, -- Start visible so nvim actually launches
 }
+
+--- Build the default nvim command with socket cleanup and SHADE env var
+---@return string command Shell command to launch nvim with socket
+local function buildDefaultCommand()
+  return fmt("/bin/zsh -c 'rm -f %s; SHADE=1 exec nvim --listen %s'", NVIM_SOCKET, NVIM_SOCKET)
+end
+
+--- Get the effective command (configured or default)
+---@return string command
+local function getEffectiveCommand()
+  return config.command or buildDefaultCommand()
+end
+
+--- Get the effective working directory (configured or captures dir)
+---@return string|nil workdir
+local function getEffectiveWorkingDirectory()
+  return config.workingDirectory or notes.capturesDir
+end
 
 --- Configure shade settings
 ---@param opts table Configuration options
@@ -166,6 +185,7 @@ local function logError(operation, details)
 end
 
 --- Build CLI arguments from config
+--- Uses effective command/workdir (falls back to defaults if not configured)
 ---@return table args Array of CLI arguments
 local function buildArgs()
   local args = {}
@@ -180,14 +200,16 @@ local function buildArgs()
     table.insert(args, tostring(config.height))
   end
 
-  if config.command then
-    table.insert(args, "--command")
-    table.insert(args, config.command)
-  end
+  -- Always include command (use effective = configured or default nvim)
+  local cmd = getEffectiveCommand()
+  table.insert(args, "--command")
+  table.insert(args, cmd)
 
-  if config.workingDirectory then
+  -- Always include working directory (use effective = configured or captures dir)
+  local workdir = getEffectiveWorkingDirectory()
+  if workdir then
     table.insert(args, "--working-directory")
-    table.insert(args, config.workingDirectory)
+    table.insert(args, workdir)
   end
 
   if config.startHidden then table.insert(args, "--hidden") end

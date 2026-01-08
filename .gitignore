@@ -48,3 +48,4 @@ home/config/weechat
 _planned
 .playwright-mcp/
 result
+.handoff/

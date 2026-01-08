@@ -347,6 +347,9 @@ in
       # Web debugging with Chrome DevTools MCP - intelligent validation,
       # app-specific context discovery, and performance optimization
       web-debug = builtins.readFile ../../docs/skills/web-debug.md;
+      # Shade - native Swift note capture panel with Ghostty terminal
+      # Use for debugging Shade issues, IPC, nvim RPC, context gathering
+      shade = builtins.readFile ../../docs/skills/shade.md;
     };
 
     # ===========================================================================
