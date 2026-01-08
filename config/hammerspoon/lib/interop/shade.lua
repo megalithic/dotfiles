@@ -1,21 +1,34 @@
 --- shade - Toggle the floating notes terminal
 --- Uses distributed notifications to communicate with the Shade app
 ---
---- Capture workflow (obsidian.nvim owns note creation):
---- 1. Hammerspoon gathers context from frontmost app
---- 2. Hammerspoon writes context.json for obsidian.nvim templates
---- 3. Hammerspoon sends :Obsidian command to nvim via RPC
---- 4. obsidian.nvim creates note with template substitutions from context.json
+--- Architecture (as of 2026-01-08, shade-qji epic):
+--- Hammerspoon's role is simplified to:
+---   1. Hotkey handling (Hyper+Shift+N, Hyper+Shift+O, etc.)
+---   2. Notification dispatch (io.shade.* notifications)
+---   3. App lifecycle (launch Shade if not running)
+---
+--- Shade handles:
+---   - Context gathering (AccessibilityHelper, JXABridge, AppTypeDetector)
+---   - nvim RPC communication (native msgpack-rpc)
+---   - Writing context.json for obsidian.nvim templates
+---   - Panel visibility and window management
+---
+--- Capture workflow:
+---   1. Hammerspoon sends io.shade.note.capture notification
+---   2. Shade gathers context from frontmost app
+---   3. Shade writes ~/.local/state/shade/context.json
+---   4. Shade sends :Obsidian command to nvim via native RPC
+---   5. obsidian.nvim creates note with template substitutions
+---
+--- Image capture workflow (clipper):
+---   1. clipper.lua prepares image and writes context with imageFilename
+---   2. Hammerspoon sends io.shade.note.capture.image notification
+---   3. Shade reads context and opens capture-image template
 ---
 --- Binary lookup order:
---- 1. Explicit cmd if configured via M.configure({ cmd = "/path/to/shade" })
---- 2. Known paths: ~/.local/bin, ~/code/shade/.build/release|debug
---- 3. PATH lookup via /usr/bin/env
----
---- Socket ownership:
---- - Hammerspoon launches nvim with --listen ~/.local/state/shade/nvim.sock
---- - Shade cleans up stale sockets on launch
---- - Shade sends RPC commands to nvim
+---   1. Explicit cmd if configured via M.configure({ cmd = "/path/to/shade" })
+---   2. Known paths: ~/.local/bin, ~/code/shade/.build/release|debug
+---   3. PATH lookup via /usr/bin/env
 
 local M = {}
 local notes = require("lib.notes")
@@ -31,6 +44,18 @@ local NOTIFICATION_HIDE = "io.shade.hide"
 local NOTIFICATION_QUIT = "io.shade.quit"
 local NOTIFICATION_CAPTURE = "io.shade.note.capture"
 local NOTIFICATION_DAILY = "io.shade.note.daily"
+local NOTIFICATION_CAPTURE_IMAGE = "io.shade.note.capture.image"
+
+-- Export notification names for other modules (e.g., clipper.lua)
+M.notifications = {
+  toggle = NOTIFICATION_TOGGLE,
+  show = NOTIFICATION_SHOW,
+  hide = NOTIFICATION_HIDE,
+  quit = NOTIFICATION_QUIT,
+  capture = NOTIFICATION_CAPTURE,
+  daily = NOTIFICATION_DAILY,
+  captureImage = NOTIFICATION_CAPTURE_IMAGE,
+}
 
 -- Known binary locations (checked in order)
 local BINARY_NAME = "shade"
@@ -505,29 +530,19 @@ function M.captureWithContext()
 end
 
 --- Open daily note in Shade
---- Uses :ObsidianToday which handles note creation with template substitutions
---- (task migration from previous day, links section, etc.)
+--- As of 2026-01-08, Shade handles :ObsidianToday via native nvim RPC.
+--- Hammerspoon just sends the notification and ensures Shade is ready.
 function M.openDailyNote()
-  local function sendDailyCommand()
-    local success, err = M.sendNvimCommand(":ObsidianToday")
-    if success then
-      hs.timer.doAfter(0.1, function() M.show() end)
-    else
-      hs.alert.show("Failed to open daily note: " .. (err or "unknown"), 2)
-    end
+  local function triggerDaily()
+    postNotification(NOTIFICATION_DAILY)
+    hs.timer.doAfter(0.1, function() M.show() end)
   end
 
-  if M.isNvimServerRunning() then
-    -- Server running, send command directly
-    sendDailyCommand()
+  if M.isRunning() then
+    triggerDaily()
   else
-    -- Server not running - ensure Shade is running, then send command
-    M.ensureRunning(function()
-      M.sendNvimCommandWhenReady(":ObsidianToday", 5, function()
-        -- Success - panel is already shown by ensureRunning
-      end, function(err)
-        hs.alert.show("Failed to open daily note: " .. err, 2)
-      end)
+    M.launch(function()
+      hs.timer.doAfter(0.5, triggerDaily)
     end)
   end
 end

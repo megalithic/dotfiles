@@ -650,7 +650,8 @@ local function prepareImageCapture(imagePath, imageUrl)
 end
 
 --- Quick capture: screenshot to note, linked in daily (fire-and-forget)
---- Uses obsidian.nvim template, daily note linking via BufWritePost autocmd
+--- As of 2026-01-08, Shade handles nvim RPC natively.
+--- Hammerspoon prepares the image, writes context, and sends notification.
 function obj.captureQuick()
   if not obj.activeCapture.imagePath then
     U.log.w("captureQuick: no image path available")
@@ -669,7 +670,8 @@ function obj.captureQuick()
     return false
   end
 
-  -- Write context with imageFilename for obsidian.nvim template
+  -- Write context with imageFilename for Shade to read
+  -- Shade will pass this to obsidian.nvim template
   local ctx = {
     imageFilename = imageFilename,
     appType = "screenshot",
@@ -680,27 +682,19 @@ function obj.captureQuick()
     return false
   end
 
-  -- Use obsidian.nvim to create note from template
-  local nvimCmd = ":Obsidian new_from_template capture capture-image"
+  -- Send notification - Shade handles the rest
+  -- Shade will: read context, call :Obsidian new_from_template capture capture-image
+  local function triggerImageCapture()
+    hs.distributednotifications.post("io.shade.note.capture.image", nil, nil)
+    hs.alert.show("Quick capture saved", 1.5)
+    U.log.i("captureQuick: sent notification to Shade")
+  end
 
-  if shade.isNvimServerRunning() then
-    local cmdSuccess, cmdErr = shade.sendNvimCommand(nvimCmd)
-    if cmdSuccess then
-      hs.alert.show("Quick capture saved", 1.5)
-      U.log.i("captureQuick: completed via obsidian.nvim")
-    else
-      hs.alert.show(fmt("Capture failed: %s", cmdErr or "unknown"), 2)
-      return false
-    end
+  if shade.isRunning() then
+    triggerImageCapture()
   else
-    -- Server not running - ensure Shade is running, then send command
-    shade.ensureRunning(function()
-      shade.sendNvimCommandWhenReady(nvimCmd, 5, function()
-        hs.alert.show("Quick capture saved", 1.5)
-        U.log.i("captureQuick: completed via obsidian.nvim")
-      end, function(cmdErr)
-        hs.alert.show(fmt("Capture failed: %s", cmdErr), 2)
-      end)
+    shade.launch(function()
+      hs.timer.doAfter(0.5, triggerImageCapture)
     end)
   end
 
@@ -710,7 +704,8 @@ function obj.captureQuick()
 end
 
 --- Full capture: screenshot to note with floating editor (interactive)
---- Uses obsidian.nvim template, opens in Shade for editing
+--- As of 2026-01-08, Shade handles nvim RPC natively.
+--- Hammerspoon prepares the image, writes context, sends notification, and shows panel.
 function obj.captureFull()
   if not obj.activeCapture.imagePath then
     U.log.w("captureFull: no image path available")
@@ -729,7 +724,7 @@ function obj.captureFull()
     return false
   end
 
-  -- Write context with imageFilename for obsidian.nvim template
+  -- Write context with imageFilename for Shade to read
   local ctx = {
     imageFilename = imageFilename,
     appType = "screenshot",
@@ -740,30 +735,18 @@ function obj.captureFull()
     return false
   end
 
-  -- Use obsidian.nvim to create note from template and show in Shade
-  local nvimCmd = ":Obsidian new_from_template capture capture-image"
-
-  local function sendCaptureCommand()
-    local cmdSuccess, cmdErr = shade.sendNvimCommand(nvimCmd)
-    if cmdSuccess then
-      hs.timer.doAfter(0.1, function() shade.show() end)
-      U.log.i("captureFull: created note via obsidian.nvim")
-    else
-      hs.alert.show(fmt("Capture failed: %s", cmdErr or "unknown"), 2)
-    end
+  -- Send notification - Shade handles the rest and shows the panel
+  local function triggerImageCapture()
+    hs.distributednotifications.post("io.shade.note.capture.image", nil, nil)
+    hs.timer.doAfter(0.1, function() shade.show() end)
+    U.log.i("captureFull: sent notification to Shade")
   end
 
-  if shade.isNvimServerRunning() then
-    sendCaptureCommand()
+  if shade.isRunning() then
+    triggerImageCapture()
   else
-    -- Server not running - ensure Shade is running, then send command
-    shade.ensureRunning(function()
-      shade.sendNvimCommandWhenReady(nvimCmd, 5, function()
-        -- Success - panel is already shown by ensureRunning
-        U.log.i("captureFull: created note via obsidian.nvim")
-      end, function(cmdErr)
-        hs.alert.show(fmt("Capture failed: %s", cmdErr), 2)
-      end)
+    shade.launch(function()
+      hs.timer.doAfter(0.5, triggerImageCapture)
     end)
   end
 
