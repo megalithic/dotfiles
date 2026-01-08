@@ -12,42 +12,13 @@ vim.g.shade_context = vim.fn.filereadable(shade_socket) == 1 or vim.env.SHADE ==
 -- Legacy alias for any code still using the old name
 vim.g.meganote_context = vim.g.shade_context
 
--- When running in Shade, make nvim persistent:
--- :wq saves and clears buffer instead of quitting (keeps socket alive)
--- :q! still quits normally (escape hatch)
+-- Setup Shade integration when running inside Shade
+-- This makes :wq save and hide (via RPC) instead of quitting nvim
 if vim.g.shade_context then
-  vim.api.nvim_create_autocmd("QuitPre", {
-    group = vim.api.nvim_create_augroup("ShadePersistent", { clear = true }),
-    callback = function(ev)
-      -- Allow :q! and :wq! to actually quit (escape hatch)
-      -- Check if the quit was forced (bang)
-      local cmd = vim.v.event and vim.v.event.cmd or ""
-      if cmd:match("!$") then
-        return -- Let forced quit proceed
-      end
-
-      -- Save if modified
-      if vim.bo.modified then
-        vim.cmd("silent! write")
-      end
-
-      -- Clear to empty buffer instead of quitting
-      vim.cmd("enew")
-      vim.cmd("setlocal bufhidden=wipe")
-
-      -- Prevent the actual quit
-      return true
-    end,
-  })
-
-  -- Also intercept ZZ and ZQ (though ZQ should still quit)
-  vim.keymap.set("n", "ZZ", function()
-    if vim.bo.modified then
-      vim.cmd("silent! write")
-    end
-    vim.cmd("enew")
-    vim.cmd("setlocal bufhidden=wipe")
-  end, { desc = "Save and clear buffer (Shade persistent)" })
+  local ok, shade = pcall(require, "shade")
+  if ok then
+    shade.setup()
+  end
 end
 
 local M = {}
