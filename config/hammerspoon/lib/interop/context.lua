@@ -1,6 +1,19 @@
 -- Context Detection Module
 -- Detects frontmost app type and gathers context (URL, title, selection)
 --
+---@deprecated As of 2026-01-08, Shade gathers context natively (shade-qji epic).
+--- This module is kept for backwards compatibility, debugging, and rollback.
+--- For the capture workflow, Shade now handles context gathering via:
+---   - AccessibilityHelper.swift (selection, window title)
+---   - AppTypeDetector.swift (app categorization)
+---   - JXABridge.swift (browser context)
+---   - ShadeNvim.swift (nvim buffer context)
+---   - LanguageDetector.swift (programming language detection)
+---
+--- To rollback to Hammerspoon-based context gathering:
+---   1. In shade.lua, restore the old captureWithContext() implementation
+---   2. That function should call context.getContext() and M.writeContext()
+---
 local M = {}
 local fmt = string.format
 

@@ -2,6 +2,15 @@
 -- Wrapper for bin/get-selection Swift script (Accessibility API-based)
 -- Does NOT touch the clipboard - queries kAXSelectedTextAttribute directly
 --
+---@deprecated As of 2026-01-08, Shade captures selection natively (shade-qji.1).
+--- This module wraps bin/get-selection which is now redundant for the capture workflow.
+--- Shade uses AccessibilityHelper.swift for AX-based selection capture.
+---
+--- This module is kept for:
+---   - Backwards compatibility and rollback
+---   - Standalone CLI selection capture via bin/get-selection
+---   - Other Hammerspoon scripts that need selection outside of Shade
+---
 local M = {}
 local fmt = string.format
 
