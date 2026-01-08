@@ -5,59 +5,115 @@
   pkgs,
   lib,
   opencodeMcpServers,
+  inputs,
   ...
 }:
+let
+  # ===========================================================================
+  # Skill Files for OpenCode
+  # OpenCode expects: ~/.config/opencode/skill/<name>/SKILL.md
+  # We symlink to the same docs/skills/*.md files used by Claude Code
+  # ===========================================================================
+  skillFiles = [
+    "nix"
+    "cli-tools"
+    "jj"
+    "smart-ntfy"
+    "image-handling"
+    "web-debug"
+    "shade"
+    "hs"
+    "nvim"
+  ];
+
+  # Generate skill directory config for each skill
+  # Creates: xdg.configFile."opencode/skill/<name>/SKILL.md".source = ...
+  skillConfigs = builtins.listToAttrs (
+    map (name: {
+      name = "opencode/skill/${name}/SKILL.md";
+      value = {
+        source = ../../../docs/skills/${name}.md;
+      };
+    }) skillFiles
+  );
+
+  # ===========================================================================
+  # Command Files for OpenCode
+  # OpenCode expects: ~/.config/opencode/command/<name>.md
+  # We symlink to the same docs/commands/*.md files used by Claude Code
+  # ===========================================================================
+  commandFiles = [
+    "start"
+    "finish"
+  ];
+
+  commandConfigs = builtins.listToAttrs (
+    map (name: {
+      name = "opencode/command/${name}.md";
+      value = {
+        source = ../../../docs/commands/${name}.md;
+      };
+    }) commandFiles
+  );
+in
 {
   # ===========================================================================
-  # OpenCode Configuration File
+  # OpenCode Configuration
   # ===========================================================================
-  xdg.configFile."opencode/opencode.json".text = builtins.toJSON {
-    "$schema" = "https://opencode.ai/config.json";
+  xdg.configFile = {
+    # Main config file
+    "opencode/opencode.json".text = builtins.toJSON {
+      "$schema" = "https://opencode.ai/config.json";
 
-    # Instructions file - OpenCode reads CLAUDE.md from .claude/ directory
-    # which is symlinked from Nix store (managed by programs.claude-code.memory.text)
-    instructions = [ "CLAUDE.md" ];
+      # Instructions file - OpenCode reads CLAUDE.md from .claude/ directory
+      # which is symlinked from Nix store (managed by programs.claude-code.memory.text)
+      instructions = [ "CLAUDE.md" ];
 
-    # Appearance
-    theme = "everforest";
+      # Appearance
+      theme = "everforest";
 
-    # Model selection
-    model = "anthropic/claude-opus-4.5";
+      # Model selection
+      model = "anthropic/claude-opus-4.5";
 
-    # Behavior
-    autoshare = false;
-    autoupdate = true;
+      # Behavior
+      autoshare = false;
+      autoupdate = true;
 
-    # Keybindings
-    keybinds = {
-      leader = "ctrl+,";
-      session_new = "ctrl+n";
-      session_list = "ctrl+g";
-      messages_half_page_up = "ctrl+b";
-      messages_half_page_down = "ctrl+f";
-    };
-
-    # LSP configurations for code intelligence
-    lsp = {
-      php = {
-        command = [
-          "intelephense"
-          "--stdio"
-        ];
-        extensions = [ ".php" ];
+      # Keybindings
+      keybinds = {
+        leader = "ctrl+,";
+        session_new = "ctrl+n";
+        session_list = "ctrl+g";
+        messages_half_page_up = "ctrl+b";
+        messages_half_page_down = "ctrl+f";
       };
-      python = {
-        command = [
-          "basedpyright"
-          "--stdio"
-        ];
-        extensions = [ ".py" ];
-      };
-    };
 
-    # MCP servers - transformed from Claude Code format
-    mcp = opencodeMcpServers;
-  };
+      # LSP configurations for code intelligence
+      # NOTE: OpenCode has built-in LSP support for common languages
+      # Only add custom LSPs here for languages not covered by defaults
+      lsp = {
+        # Elixir LSP using expert (official elixir-lang LSP)
+        elixir = {
+          command = [
+            "expert"
+            "--stdio"
+          ];
+          extensions = [
+            ".ex"
+            ".exs"
+            ".heex"
+          ];
+        };
+      };
+
+      # MCP servers - transformed from Claude Code format
+      mcp = opencodeMcpServers;
+    };
+  }
+  # Merge skill symlinks: ~/.config/opencode/skill/<name>/SKILL.md
+  // skillConfigs
+  # Merge command symlinks: ~/.config/opencode/command/<name>.md
+  // commandConfigs;
 
   # ===========================================================================
   # OpenCode Custom Tools (disabled - kept for reference)

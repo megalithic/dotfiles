@@ -64,6 +64,8 @@
       - `image-handling` - resize-image script, API constraints
       - `web-debug` - Chrome DevTools MCP debugging patterns
       - `shade` - Shade app debugging, IPC, nvim RPC
+      - `hs` - Hammerspoon config patterns, reload, macOS APIs
+      - `nvim` - Neovim config structure, plugins, LSP setup
 
       ## Question Format Convention (OpenCode Only)
 
@@ -128,6 +130,12 @@
 
       # Shade app - native Swift note capture panel
       shade = builtins.readFile ../../../docs/skills/shade.md;
+
+      # Hammerspoon - macOS automation quick reference
+      hs = builtins.readFile ../../../docs/skills/hs.md;
+
+      # Neovim - config structure, plugins, LSP patterns
+      nvim = builtins.readFile ../../../docs/skills/nvim.md;
     };
 
     # =========================================================================
@@ -135,11 +143,27 @@
     # Spawned via Task tool for exploration, research, and complex operations
     # =========================================================================
     agents = {
+      # Dotfiles navigator - central guide for finding things in this repo
+      dots = builtins.readFile ../../../docs/agents/dots.md;
+
       # Nix exploration agent for autonomous investigation of nix configs
       nix = builtins.readFile ../../../docs/agents/nix.md;
 
       # Hammerspoon expert for macOS automation and debugging
       hammerspoon = builtins.readFile ../../../docs/agents/hammerspoon-expert.md;
+
+      # Neovim expert for deep debugging and tracing
+      nvim = builtins.readFile ../../../docs/agents/nvim.md;
+    };
+
+    # =========================================================================
+    # Commands - Custom slash commands
+    # Invoked with /command-name in the chat
+    # =========================================================================
+    commands = {
+      # Session management
+      start = builtins.readFile ../../../docs/commands/start.md;
+      finish = builtins.readFile ../../../docs/commands/finish.md;
     };
   };
 }
