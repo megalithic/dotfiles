@@ -42,18 +42,38 @@ let
   # OpenCode expects: ~/.config/opencode/command/<name>.md
   # We symlink to the same docs/commands/*.md files used by Claude Code
   # ===========================================================================
-  commandFiles = [
-    "start"
-    "finish"
+  # Command files and their aliases
+  # Format: { name = "command-name"; source = "source-file"; }
+  commandMappings = [
+    {
+      name = "start";
+      source = "start";
+    }
+    {
+      name = "go";
+      source = "start";
+    } # alias
+    {
+      name = "finish";
+      source = "finish";
+    }
+    {
+      name = "end";
+      source = "finish";
+    } # alias
+    {
+      name = "done";
+      source = "finish";
+    } # alias
   ];
 
   commandConfigs = builtins.listToAttrs (
-    map (name: {
-      name = "opencode/command/${name}.md";
+    map (cmd: {
+      name = "opencode/command/${cmd.name}.md";
       value = {
-        source = ../../../docs/commands/${name}.md;
+        source = ../../../docs/commands/${cmd.source}.md;
       };
-    }) commandFiles
+    }) commandMappings
   );
 in
 {

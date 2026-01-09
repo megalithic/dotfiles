@@ -163,7 +163,11 @@
     commands = {
       # Session management
       start = builtins.readFile ../../../docs/commands/start.md;
+      go = builtins.readFile ../../../docs/commands/start.md; # alias
+
       finish = builtins.readFile ../../../docs/commands/finish.md;
+      end = builtins.readFile ../../../docs/commands/finish.md; # alias
+      done = builtins.readFile ../../../docs/commands/finish.md; # alias
     };
   };
 }
