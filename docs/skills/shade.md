@@ -192,6 +192,68 @@ sendNvimCommand(":ObsidianToday")
 postNotification(NOTIFICATION_DAILY)
 ```
 
+## Decision Trees
+
+### "Shade isn't working - what's wrong?"
+
+```
+Shade not working?
+│
+├─▶ Panel doesn't appear?
+│   ├─▶ Check if running: pgrep -x Shade
+│   │   ├─▶ NOT running → Launch Shade.app or require("lib.interop.shade").launch()
+│   │   └─▶ Running → Check notification delivery (see below)
+│   │
+│   └─▶ Check notification:
+│       └─▶ hs -c "require('lib.interop.shade').toggle()"
+│           ├─▶ Works → Hammerspoon hotkey issue
+│           └─▶ Doesn't work → Check IPC (notifications)
+│
+├─▶ nvim commands not executing?
+│   ├─▶ Check socket: ls ~/.local/state/shade/nvim.sock
+│   │   ├─▶ Missing → nvim not started or wrong path
+│   │   └─▶ Exists → Test connection (see below)
+│   │
+│   └─▶ Test nvim connection:
+│       └─▶ nvim --server ~/.local/state/shade/nvim.sock --remote-expr 'v:version'
+│           ├─▶ Returns version → ShadeNvim actor issue
+│           └─▶ Error → Socket stale or nvim crashed
+│
+├─▶ Context not captured?
+│   ├─▶ Check context.json: cat ~/.local/state/shade/context.json | jq .
+│   │   ├─▶ Empty/missing → ContextGatherer not running
+│   │   └─▶ Has data → obsidian.nvim template issue
+│   │
+│   └─▶ Check Accessibility permissions:
+│       └─▶ System Preferences → Privacy → Accessibility → Shade
+│
+└─▶ Image capture not working?
+    └─▶ Check context.json has imageFilename
+        ├─▶ Missing → Hammerspoon image path not written
+        └─▶ Present → obsidian.nvim template issue
+```
+
+### "How do I debug IPC issues?"
+
+```
+IPC debugging?
+│
+├─▶ Hammerspoon → Shade direction:
+│   └─▶ 1. Check HS can post: hs -c "require('lib.interop.shade').toggle()"
+│       2. Check Shade logs: log stream --predicate 'subsystem == "io.shade"'
+│       3. Verify notification received in logs
+│
+├─▶ Shade → nvim direction:
+│   └─▶ 1. Check socket: ls ~/.local/state/shade/nvim.sock
+│       2. Test manually: nvim --server ... --remote-expr 'v:version'
+│       3. Check ShadeNvim connection state in logs
+│
+└─▶ Context flow:
+    └─▶ 1. Trigger capture
+        2. Immediately check: cat ~/.local/state/shade/context.json
+        3. Check if obsidian.nvim reads it
+```
+
 ## Debugging
 
 ### Check if Shade is running

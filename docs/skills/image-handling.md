@@ -14,6 +14,53 @@ tools: Bash
 
 Images exceeding these limits will cause API errors.
 
+## Decision Tree
+
+### "Should I resize this image?"
+
+```
+Working with an image?
+│
+├─▶ User provided image path?
+│   └─▶ resize-image --check <path>
+│       ├─▶ "ok" → Use as-is
+│       └─▶ "needs-resize" → resize-image <path>
+│
+├─▶ Taking browser screenshot?
+│   └─▶ fullPage: true?
+│       ├─▶ YES → DANGER! May exceed limits
+│       │   └─▶ Save to file, then check/resize
+│       └─▶ NO → Usually safe (viewport only)
+│
+├─▶ Multiple images?
+│   └─▶ Check each: resize-image --check
+│
+└─▶ Unsure about image?
+    └─▶ resize-image --info <path>
+        └─▶ Shows dimensions and size
+```
+
+### "Image is too large - what now?"
+
+```
+Image exceeds API limits?
+│
+├─▶ Dimension > 8000px?
+│   └─▶ resize-image <image>
+│       └─▶ Auto-scales to fit 8000px max
+│
+├─▶ File size > 5MB but dimensions OK?
+│   └─▶ resize-image --quality 70 <image>
+│       └─▶ Reduces quality for smaller file
+│
+├─▶ Both dimension AND size issues?
+│   └─▶ resize-image --quality 60 --max-dimension 4000 <image>
+│
+└─▶ Still too large after resize?
+    └─▶ Lower quality further: --quality 40
+    └─▶ Or reduce max-dimension: --max-dimension 2000
+```
+
 ## The resize-image Script
 
 Location: `~/bin/resize-image`
@@ -208,3 +255,86 @@ identify image.png
 # Resize with ImageMagick
 convert image.png -resize 8000x8000\> -quality 85 output.png
 ```
+
+## Self-Discovery Patterns
+
+### Exploring resize-image
+
+```bash
+# Show help
+resize-image --help
+
+# Show info about any image
+resize-image --info /path/to/image.png
+
+# Check if ImageMagick is available
+which convert identify
+```
+
+### Checking API Constraints
+
+```bash
+# Current known limits (may change):
+# - Max file size: 5MB (5242880 bytes)
+# - Max dimension: 8000px (either width or height)
+# - Supported formats: PNG, JPEG, WebP, GIF
+
+# Check file size
+ls -la image.png
+stat -f%z image.png  # macOS
+```
+
+## Troubleshooting
+
+### "Image not resizing"
+
+```bash
+# Check ImageMagick is installed
+which convert || echo "ImageMagick not installed!"
+
+# If missing, add to home/packages.nix:
+# pkgs.imagemagick
+```
+
+### "Resized image still too large"
+
+```bash
+# Check what happened
+resize-image --info original.png
+resize-image --info original-resized.png
+
+# Force more aggressive compression
+resize-image --quality 50 --max-dimension 2000 original.png
+```
+
+### "API still rejects image"
+
+```bash
+# Double-check file size
+ls -la image-resized.png
+
+# Try converting to JPEG (usually smaller than PNG)
+convert image.png -quality 80 image.jpg
+resize-image --check image.jpg
+```
+
+### "Can't read image"
+
+```bash
+# Check file exists and is readable
+ls -la /path/to/image.png
+
+# Check file type
+file /path/to/image.png
+
+# ImageMagick can identify format issues
+identify /path/to/image.png
+```
+
+## Known Limitations
+
+1. **Animated GIFs** - May lose animation during resize
+2. **HEIC/HEIF** - May need additional ImageMagick delegates
+3. **Very large images** - Processing may be slow (10s+ for huge files)
+4. **Transparency** - Converting PNG to JPEG loses transparency
+5. **Color profiles** - Converts to sRGB (usually fine, rare edge cases)

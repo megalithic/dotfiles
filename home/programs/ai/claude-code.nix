@@ -70,6 +70,7 @@
       | Shade app | `shade` | Before debugging IPC/RPC |
       | Image handling | `image-handling` | Before resizing images for API |
       | Browser debugging | `web-debug` | Before using Chrome DevTools MCP or Playwright MCP |
+      | tmux | `tmux` | Before interacting with tmux sessions/panes/windows |
 
       **Skills are inline reference knowledge. Load = instant access. No excuse for assumptions.**
 
@@ -203,16 +204,46 @@
 
       **See "SKILL LOADING REQUIREMENTS" above for when to load each skill.**
 
-      Available skills:
-      - `nix` - Nix ecosystem, darwin, home-manager, flakes
-      - `cli-tools` - fd/rg usage for ANY directory/script searches
-      - `jj` - Jujutsu version control workflow and commands
-      - `smart-ntfy` - Notification system with multi-channel routing
-      - `image-handling` - resize-image script, API constraints
-      - `web-debug` - Chrome DevTools MCP and Playwright MCP debugging
-      - `shade` - Shade app debugging, IPC, nvim RPC
-      - `hs` - Hammerspoon config patterns, reload, macOS APIs
-      - `nvim` - Neovim config structure, plugins, LSP setup
+      Skills are inline reference knowledge. Load via internal skill loading mechanism.
+
+      | Skill | Purpose | Trigger |
+      |-------|---------|---------|
+      | `nix` | Nix ecosystem, darwin, home-manager, flakes | <80% confidence on syntax |
+      | `cli-tools` | fd/rg for file/content search | Before directory/script searches |
+      | `jj` | Jujutsu version control workflow | Before ANY jj command |
+      | `smart-ntfy` | Multi-channel notification routing | Before sending notifications |
+      | `image-handling` | resize-image script, API constraints | Before resizing images |
+      | `web-debug` | Chrome DevTools + Playwright MCP | Before browser debugging |
+      | `shade` | Shade app IPC, nvim RPC debugging | Before debugging Shade |
+      | `hs` | Hammerspoon config, reload, macOS APIs | Before editing HS config |
+      | `nvim` | Neovim config, plugins, LSP patterns | Before editing nvim config |
+      | `tmux` | tmux sessions, panes, windows, orchestration | Before tmux interaction |
+
+      ## Available Agents
+
+      **Spawn via Task tool for autonomous exploration and research.**
+
+      Agents run as subprocesses with their own context. Use when task requires
+      multi-step exploration or would benefit from parallel investigation.
+
+      | Agent | Purpose | When to Use |
+      |-------|---------|-------------|
+      | `dots` | Navigate dotfiles repo structure | Finding where things are configured |
+      | `nix` | Autonomous Nix exploration | Tracing options, debugging eval issues |
+      | `hammerspoon` | Deep HS debugging and tracing | Memory leaks, watcher issues, macOS API problems |
+      | `nvim` | Deep nvim debugging and tracing | LSP issues, plugin behavior, keybinding problems |
+
+      **Note**: Skill `hs` and agent `hammerspoon` both cover Hammerspoon. Use the skill for
+      quick reference, spawn the agent for deep investigation.
+
+      ## Available Commands (Slash Commands)
+
+      **Invoke with /command-name in chat.**
+
+      | Command | Aliases | Purpose |
+      |---------|---------|---------|
+      | `/start` | `/go` | Start work session - sync remote, check bd ready |
+      | `/finish` | `/end`, `/done` | End session - review changes, update beads, prep push |
 
       ## Question Format Convention (OpenCode Only)
 
@@ -283,6 +314,9 @@
 
       # Neovim - config structure, plugins, LSP patterns
       nvim = builtins.readFile ../../../docs/skills/nvim.md;
+
+      # tmux - terminal multiplexer configuration and orchestration
+      tmux = builtins.readFile ../../../docs/skills/tmux.md;
     };
 
     # =========================================================================

@@ -1,14 +1,110 @@
 ---
 name: web-debug
-description: Systematic web application debugging using Chrome DevTools MCP with intelligent validation and app-specific context discovery. Use for debugging web apps, APIs, authentication flows, and UI issues.
-tools: mcp__chrome-devtools__*, mcp__fetch__fetch, Read, Grep, mcp__memory__*
+description: Systematic web application debugging using Chrome DevTools MCP and Playwright MCP with intelligent validation and app-specific context discovery. Use for debugging web apps, APIs, authentication flows, and UI issues.
+tools: mcp__chrome-devtools__*, mcp__playwright__*, mcp__fetch__fetch, Read, Grep, mcp__memory__*
 ---
 
-# Web Application Debugging with Chrome DevTools MCP
+# Web Application Debugging with Chrome DevTools MCP and Playwright MCP
 
 ## Overview
 
-This skill guides systematic, efficient web debugging using Chrome DevTools MCP. It emphasizes **validation before action** to minimize slow operations and **automatic context discovery** from project documentation.
+This skill guides systematic, efficient web debugging using Chrome DevTools MCP and
+Playwright MCP. It emphasizes **validation before action** to minimize slow operations
+and **automatic context discovery** from project documentation.
+
+## Decision Trees
+
+### "Which MCP should I use?"
+
+```
+Browser debugging needed?
+│
+├─▶ Chrome is already open with target page?
+│   └─▶ Use Chrome DevTools MCP
+│       ├─▶ Requires: --remote-debugging-port=9222 flag
+│       └─▶ Check: curl http://localhost:9222/json/version
+│
+├─▶ Need to launch fresh browser instance?
+│   └─▶ Use Playwright MCP
+│       ├─▶ Creates headless or headed browser
+│       └─▶ Cleaner state, no extension interference
+│
+├─▶ Need to test multiple browsers (Brave, Firefox, Safari)?
+│   └─▶ Playwright MCP supports multiple engines
+│
+├─▶ Need to connect to existing DevTools session?
+│   └─▶ Chrome DevTools MCP only
+│
+└─▶ Automated testing / repeatable scenarios?
+    └─▶ Playwright MCP (better API for automation)
+```
+
+### "How should I debug this issue?"
+
+```
+Web debugging task?
+│
+├─▶ Page not loading / blank screen?
+│   ├─▶ 1. Validate URL: mcp__fetch__fetch (check status)
+│   ├─▶ 2. Check console: list_console_messages({ types: ["error"] })
+│   ├─▶ 3. Check network: list_network_requests (look for 4xx/5xx)
+│   └─▶ 4. Only then: browser_snapshot (see what rendered)
+│
+├─▶ Authentication not working?
+│   ├─▶ 1. Check docs for auth method (Context Discovery)
+│   ├─▶ 2. Inspect storage: browser_evaluate localStorage/cookies
+│   ├─▶ 3. Check network: filter for auth endpoints
+│   └─▶ 4. Inspect response headers (Set-Cookie, WWW-Authenticate)
+│
+├─▶ API call failing?
+│   ├─▶ 1. list_network_requests({ resourceTypes: ["xhr", "fetch"] })
+│   ├─▶ 2. get_network_request({ reqid: N }) for details
+│   ├─▶ 3. Check: status, headers, body, CORS errors
+│   └─▶ 4. Compare with docs/expected API contract
+│
+├─▶ Element not found / can't click?
+│   ├─▶ 1. Quick check: browser_evaluate("!!document.querySelector(...)")
+│   ├─▶ 2. If false: check network for pending loads
+│   ├─▶ 3. If still false: browser_snapshot to see actual page
+│   └─▶ 4. Check: wrong selector, dynamic loading, iframe
+│
+├─▶ Page is slow?
+│   ├─▶ 1. performance_start_trace({ reload: true, autoStop: true })
+│   ├─▶ 2. Review insights from trace
+│   └─▶ 3. Check: large network payloads, long JS execution
+│
+└─▶ Visual/layout issue?
+    ├─▶ 1. browser_snapshot (accessibility tree)
+    ├─▶ 2. browser_take_screenshot (actual visual)
+    └─▶ 3. For full-page: save to file, then resize-image --check
+```
+
+### "Should I take a screenshot or snapshot?"
+
+```
+Need page content?
+│
+├─▶ Need to interact (click, fill, etc.)?
+│   └─▶ browser_snapshot (returns element refs like "e123")
+│
+├─▶ Need exact visual appearance?
+│   └─▶ browser_take_screenshot
+│       ├─▶ Viewport only: Usually safe
+│       ├─▶ fullPage: true: ⚠️ May exceed API limits
+│       │   └─▶ Save to file, then: resize-image --check
+│       └─▶ Element screenshot: Specify uid
+│
+├─▶ Just checking page structure?
+│   └─▶ browser_snapshot (faster, includes a11y tree)
+│
+├─▶ Verifying simple condition?
+│   └─▶ browser_evaluate is FASTEST
+│       └─▶ "() => document.title"
+│       └─▶ "() => !!document.querySelector('.logged-in')"
+│
+└─▶ Performance investigation?
+    └─▶ performance_start_trace / performance_stop_trace
+```
 
 ## Core Principle: Validate Before Acting
 
@@ -440,6 +536,251 @@ npm run test:e2e    # Run E2E tests (creates test data)
 - Test user: `test@example.com` (auto-created on dev startup)
 - Sample data seeded: Yes (see `db/seeds.rb`)
 ```
+
+## Playwright MCP Reference
+
+When using Playwright MCP instead of Chrome DevTools MCP, here are the equivalent operations:
+
+### Tool Mapping
+
+| Chrome DevTools MCP | Playwright MCP | Notes |
+|---------------------|----------------|-------|
+| `take_snapshot` | `browser_snapshot` | Same output format |
+| `take_screenshot` | `browser_take_screenshot` | Playwright has more options |
+| `navigate_page` | `browser_navigate` | |
+| `click` | `browser_click` | |
+| `fill` | `browser_type` | Playwright: type into element |
+| `fill_form` | `browser_fill_form` | Multi-field form filling |
+| `press_key` | `browser_press_key` | Keyboard input |
+| `hover` | `browser_hover` | |
+| `evaluate_script` | `browser_evaluate` | Run JS in page |
+| `list_console_messages` | `browser_console_messages` | |
+| `list_network_requests` | `browser_network_requests` | |
+| `list_pages` | `browser_tabs` | Tab management |
+| `select_page` | `browser_tabs` | With `action: "select"` |
+| `new_page` | `browser_tabs` | With `action: "new"` |
+| `close_page` | `browser_tabs` | With `action: "close"` |
+| `wait_for` | `browser_wait_for` | Wait for text/element |
+| `handle_dialog` | `browser_handle_dialog` | Alert/confirm/prompt |
+
+### Playwright-Specific Features
+
+```typescript
+// Navigate back/forward (Playwright only)
+browser_navigate_back()
+
+// Run arbitrary Playwright code
+browser_run_code({
+  code: `async (page) => {
+    await page.getByRole('button', { name: 'Submit' }).click();
+    return await page.title();
+  }`
+})
+
+// Select dropdown option
+browser_select_option({
+  element: "Country dropdown",
+  ref: "e123",
+  values: ["United States"]
+})
+
+// Drag and drop
+browser_drag({
+  startElement: "Item to drag",
+  startRef: "e45",
+  endElement: "Drop target",
+  endRef: "e67"
+})
+
+// File upload
+browser_file_upload({
+  paths: ["/path/to/file.pdf"]
+})
+
+// Close browser completely
+browser_close()
+```
+
+### When to Prefer Playwright MCP
+
+1. **Headless testing** - No visible browser needed
+2. **Clean state** - No cookies, storage, or extensions
+3. **Multiple browsers** - Chromium, Firefox, WebKit
+4. **Complex interactions** - Drag/drop, file upload, dialogs
+5. **Code-based automation** - `browser_run_code` for complex sequences
+
+## Screenshot Handling
+
+**CRITICAL**: Full-page screenshots can exceed Claude API limits (5MB, 8000px max dimension).
+
+### Safe Screenshot Workflow
+
+```typescript
+// ✅ SAFE - Viewport only
+browser_take_screenshot()
+
+// ✅ SAFE - Element screenshot
+browser_take_screenshot({ uid: "e123" })
+
+// ⚠️ DANGER - Full page may exceed limits
+browser_take_screenshot({ fullPage: true })
+
+// ✅ SAFE - Save to file, then check
+browser_take_screenshot({
+  fullPage: true,
+  filePath: "/tmp/screenshot.png"
+})
+```
+
+After saving to file:
+
+```bash
+# Check if resize needed
+resize-image --check /tmp/screenshot.png
+
+# If "needs-resize", resize before reading
+resize-image /tmp/screenshot.png
+
+# Then read the resized version
+# /tmp/screenshot-resized.png
+```
+
+**See the `image-handling` skill for complete resize-image documentation.**
+
+## Self-Discovery Patterns
+
+### Exploring Chrome DevTools MCP
+
+```bash
+# Check if Chrome DevTools MCP is available
+# Look for mcp__chrome-devtools__* tools in your available tools list
+
+# Verify browser connection
+curl http://localhost:9222/json/version
+
+# List available pages/tabs
+mcp__chrome-devtools__list_pages()
+
+# Check what's on current page
+mcp__chrome-devtools__take_snapshot()
+```
+
+### Exploring Playwright MCP
+
+```bash
+# Check if Playwright MCP is available
+# Look for mcp__playwright__* tools
+
+# Check browser status
+mcp__playwright__browser_snapshot()
+
+# If browser not running, may need to navigate first
+mcp__playwright__browser_navigate({ url: "http://localhost:3000" })
+
+# If browser engine not installed
+mcp__playwright__browser_install()
+```
+
+### Checking Network/Console State
+
+```typescript
+// Quick diagnostic bundle
+const [console, network, cookies] = await Promise.all([
+  list_console_messages({ types: ["error", "warn"] }),
+  list_network_requests({ resourceTypes: ["xhr", "fetch"] }),
+  browser_evaluate({ function: "() => document.cookie" })
+]);
+
+console.log("Console errors:", console.filter(m => m.type === "error").length);
+console.log("Failed requests:", network.filter(r => r.status >= 400).length);
+console.log("Has cookies:", cookies.length > 0);
+```
+
+## Troubleshooting
+
+### Chrome DevTools MCP Issues
+
+**"Cannot connect to browser"**
+```bash
+# Check if debug port is open
+curl http://localhost:9222/json/version
+
+# If nothing, browser wasn't started with debug flag
+# Restart Chrome/Brave with:
+brave --remote-debugging-port=9222
+
+# Or for Chrome:
+/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222
+```
+
+**"No pages found"**
+```bash
+# Check what pages are available
+curl http://localhost:9222/json/list
+
+# Open a page first if empty
+open http://localhost:3000  # Then MCP can see it
+```
+
+**"Element not found (ref invalid)"**
+- Refs (e.g., "e123") are only valid from the MOST RECENT snapshot
+- Take a new snapshot before interacting
+- Page may have changed since last snapshot
+
+**"Timeout waiting for element"**
+- Check if page is fully loaded: `browser_evaluate("() => document.readyState")`
+- Check for JS errors: `list_console_messages({ types: ["error"] })`
+- Element may be in iframe: can't access cross-origin iframes
+
+### Playwright MCP Issues
+
+**"Browser not found"**
+```bash
+# Install browser engine
+mcp__playwright__browser_install()
+
+# Then retry navigation
+mcp__playwright__browser_navigate({ url: "..." })
+```
+
+**"Page closed unexpectedly"**
+- Playwright may close browser on errors
+- Re-navigate to restart: `browser_navigate({ url: "..." })`
+- Check for unhandled dialogs: `browser_handle_dialog({ accept: true })`
+
+**"Cannot interact with element"**
+- Take fresh snapshot to get current refs
+- Element may be hidden/overlapped - check visibility
+- May need to scroll element into view first
+
+### General Issues
+
+**"Authentication keeps failing"**
+1. Check credentials in docs: `docs/web-debug.md`, `README.md`
+2. Inspect what's being sent: `get_network_request` for login endpoint
+3. Check for CSRF tokens in form
+4. Try clearing state: `browser_evaluate("() => localStorage.clear()")`
+5. Check cookies are being set: `browser_evaluate("() => document.cookie")`
+
+**"Page is stuck loading"**
+1. Check network: `list_network_requests` - any pending/failed?
+2. Check console: `list_console_messages` - JS errors blocking?
+3. Try reload: `navigate_page({ type: "reload" })`
+4. Increase timeout: `navigate_page({ timeout: 60000 })`
+
+**"Getting different results than expected"**
+1. Verify you're on the right page: `list_pages` or `browser_evaluate("() => location.href")`
+2. Check if logged in: `browser_evaluate` for auth indicators
+3. Compare with fresh browser session - cache/cookies may affect behavior
+
+## Known Limitations
+
+1. **Cross-origin iframes** - Cannot access content in cross-origin iframes
+2. **Browser extensions** - Chrome DevTools sees extension-injected content; Playwright doesn't
+3. **Shadow DOM** - Some elements in shadow DOM may not appear in snapshot
+4. **Canvas/WebGL** - Cannot inspect canvas content (only screenshot)
+5. **Service Workers** - Limited visibility into service worker behavior
+6. **Multiple windows** - Each MCP session typically manages one browser window
 
 ---
 
