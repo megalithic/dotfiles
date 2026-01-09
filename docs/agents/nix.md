@@ -217,6 +217,71 @@ Always provide:
 2. Check if option exists: search home-manager-options.extranix.com
 3. Look at existing program configs in `home/programs/`
 
+### "I need to use tool X" (Package Installation)
+
+**CRITICAL: NEVER suggest `brew install`. Always use Nix.**
+
+**Step 1: Verify package exists**
+```bash
+# Primary search
+nix search nixpkgs#<tool>
+nh search <tool>  # Faster alternative
+
+# If not found by name, search by description
+nix search nixpkgs "what it does"
+
+# Check NUR if not in nixpkgs
+# https://nur.nix-community.org/
+```
+
+**Step 2: Verify it works on darwin**
+```bash
+# Check platform support
+nix eval nixpkgs#<pkg>.meta.platforms --json 2>/dev/null | jq .
+
+# Test build (dry-run)
+nix build nixpkgs#<pkg> --dry-run
+
+# Test it actually works
+nix shell nixpkgs#<pkg> -c <command> --version
+```
+
+**Step 3: Determine installation scope**
+
+| Need | Solution | Location |
+|------|----------|----------|
+| One-time test | `nix run nixpkgs#<pkg> -- args` | No changes |
+| Interactive session | `nix shell nixpkgs#<pkg>` | No changes |
+| Project-specific | Add to `flake.nix` devShell | Project repo |
+| Always available | Add to `home/packages.nix` | `~/.dotfiles` |
+
+**Step 4: For project-specific (most common)**
+```bash
+# Check if project has flake.nix
+ls flake.nix
+
+# Find devShell definition
+rg "devShells|mkShell|packages\s*=" flake.nix -A 5
+
+# Add package to the packages list
+# Then: nix develop (or direnv will auto-load)
+```
+
+**Step 5: For system-wide**
+```bash
+# Check existing package organization
+cat ~/.dotfiles/home/packages.nix | head -50
+
+# Add to appropriate category, then:
+just rebuild  # In ~/.dotfiles
+```
+
+**If package isn't in nixpkgs:**
+1. Check NUR: https://nur.nix-community.org/
+2. Check if there's a flake: `github:owner/repo#package`
+3. As LAST resort, check if it's a Homebrew-only GUI app → `modules/brew.nix`
+4. Never suggest raw `brew install` for CLI tools
+
 ### "What's using X package?"
 1. `rg "pkgs\.X\b" ~/.dotfiles --type nix`
 2. Check `home/packages.nix` for direct installs

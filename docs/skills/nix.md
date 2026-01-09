@@ -61,6 +61,141 @@ The `just rebuild` command runs `bin/darwin-switch` which patches around an inte
 └── config/                # Out-of-store configs (symlinked)
 ```
 
+## Package Management Decision Tree
+
+**CRITICAL: NEVER use `brew install`. Always use Nix.**
+
+When you need a tool/package that isn't installed:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ 1. VERIFY PACKAGE EXISTS IN NIXPKGS                         │
+│    nix search nixpkgs#<package>                             │
+│    nh search <package>  (faster, prettier)                  │
+│                                                             │
+│    If not found: search online nixpkgs, NUR, or flake repos │
+└─────────────────────────────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│ 2. DETERMINE USAGE PATTERN                                  │
+│                                                             │
+│    ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐ │
+│    │ One-time use │  │ Project-only │  │ System-wide      │ │
+│    │ (test/debug) │  │ (dev env)    │  │ (always avail)   │ │
+│    └──────┬───────┘  └──────┬───────┘  └────────┬─────────┘ │
+│           │                 │                   │           │
+│           ▼                 ▼                   ▼           │
+│     nix run/shell     Add to flake      Add to dotfiles    │
+│                       devShell          home/packages.nix   │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Step 1: Check Package Availability
+
+```bash
+# Search nixpkgs (ALWAYS do this first)
+nix search nixpkgs tilt
+nix search nixpkgs <package> --json  # For scripting
+
+# Faster alternative with nh (if configured)
+nh search tilt  # May fail if channel not configured
+
+# If not found in nixpkgs, check:
+# - NUR: https://nur.nix-community.org/
+# - Flake repos (e.g., github:owner/repo#package)
+# - The package might have a different name (e.g., 'ripgrep' not 'rg')
+```
+
+### Step 2a: Temporary/One-Time Usage
+
+For testing, debugging, or one-off commands:
+
+```bash
+# Run a command directly (doesn't pollute environment)
+nix run nixpkgs#tilt -- version
+nix run nixpkgs#cowsay -- "Hello"
+nix run nixpkgs#jq -- --help
+
+# Enter a shell with the package available
+nix shell nixpkgs#tilt nixpkgs#kubectl
+# Now 'tilt' and 'kubectl' are in PATH until you exit
+
+# Run with specific nixpkgs version (pinned)
+nix run github:NixOS/nixpkgs/nixos-24.05#tilt -- version
+```
+
+### Step 2b: Project-Specific (devShell)
+
+For tools needed only in a specific project:
+
+```nix
+# In the project's flake.nix
+{
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+
+  outputs = { nixpkgs, ... }:
+    let
+      system = "aarch64-darwin";
+      pkgs = nixpkgs.legacyPackages.${system};
+    in {
+      devShells.${system}.default = pkgs.mkShell {
+        packages = with pkgs; [
+          tilt
+          kubectl
+          # Add other project-specific tools
+        ];
+      };
+    };
+}
+```
+
+Then use `nix develop` or `direnv` to automatically enter the shell.
+
+### Step 2c: System-Wide (Permanent)
+
+For tools you want always available:
+
+**Location**: `~/.dotfiles/home/packages.nix`
+
+```nix
+# In home/packages.nix, add to appropriate category:
+home.packages = with pkgs; [
+  # Development tools
+  tilt
+  kubectl
+  # ...
+];
+```
+
+Then rebuild: `just rebuild`
+
+### Package Name Discovery
+
+Sometimes package names differ from command names:
+
+```bash
+# Search by description if name doesn't match
+nix search nixpkgs "kubernetes development"
+
+# Check package metadata
+nix eval nixpkgs#tilt.meta.description --raw
+
+# List executables a package provides
+nix eval nixpkgs#tilt.meta.mainProgram --raw 2>/dev/null || \
+  ls $(nix build nixpkgs#tilt --print-out-paths --no-link)/bin/
+```
+
+### Common Package Name Mappings
+
+| Command | Package Name |
+|---------|--------------|
+| `rg` | `ripgrep` |
+| `fd` | `fd` |
+| `bat` | `bat` |
+| `code` | `vscode` |
+| `subl` | `sublime4` |
+
 ## Common Tasks
 
 ### 1. Validate Configuration
@@ -537,9 +672,120 @@ launchd.daemons.limit-maxfiles = {
 };
 ```
 
+## Flake Structure Verification
+
+Before adding packages to any flake, verify its structure:
+
+### Checking a Project Flake
+
+```bash
+# Verify flake is valid
+nix flake check
+
+# Show flake structure (inputs, outputs)
+nix flake show
+
+# Show flake metadata
+nix flake metadata
+
+# List available outputs
+nix flake show --json | jq 'keys'
+
+# Check if devShell exists
+nix flake show | grep -E "devShell|devShells"
+```
+
+### Verifying Package Can Be Added
+
+```bash
+# 1. Verify package exists in nixpkgs
+nix search nixpkgs#<package>
+
+# 2. Verify package builds on this system (aarch64-darwin)
+nix build nixpkgs#<package> --dry-run
+
+# 3. Check if package has darwin support
+nix eval nixpkgs#<package>.meta.platforms --json | jq 'map(select(contains("darwin")))'
+
+# 4. Test the package works before committing
+nix shell nixpkgs#<package> -c <command> --version
+```
+
+### Adding to Existing Flake devShell
+
+```bash
+# Find where devShell is defined
+rg "devShells|mkShell" flake.nix -A 10
+
+# Common patterns to look for:
+# - packages = [ ... ];  (add here)
+# - buildInputs = [ ... ];  (legacy, but works)
+# - nativeBuildInputs = [ ... ];  (build-time only)
+```
+
+### Creating a New Flake
+
+```bash
+# Initialize with template
+nix flake init
+
+# Or use a specific template
+nix flake init -t templates#trivial
+
+# Minimal flake.nix for a dev environment:
+```
+
+```nix
+{
+  description = "Project dev environment";
+
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    flake-utils.url = "github:numtide/flake-utils";
+  };
+
+  outputs = { self, nixpkgs, flake-utils }:
+    flake-utils.lib.eachDefaultSystem (system:
+      let
+        pkgs = nixpkgs.legacyPackages.${system};
+      in {
+        devShells.default = pkgs.mkShell {
+          packages = with pkgs; [
+            # Add packages here
+          ];
+        };
+      }
+    );
+}
+```
+
+### Troubleshooting Flake Issues
+
+```bash
+# Lock file out of sync
+nix flake update
+
+# Update specific input
+nix flake update nixpkgs
+
+# Clear evaluation cache (if weird errors)
+rm -rf ~/.cache/nix/eval-cache-v*
+
+# Show why something failed
+nix build .#<output> --show-trace
+
+# Check flake in nix repl
+nix repl
+:lf .
+# Now explore: outputs.<TAB>
+```
+
 ## Common Gotchas
 
 - `home.file` vs `xdg.configFile` - former is `$HOME/`, latter is `~/.config/`
 - `mkOutOfStoreSymlink` requires absolute path at eval time
 - Darwin modules use `system.*`, not `services.*` for most things
 - `environment.systemPackages` is system-wide, `home.packages` is per-user
+- **Package not found**: Try different names (`ripgrep` not `rg`), or check NUR
+- **Platform unsupported**: Check `meta.platforms` - some packages don't build on darwin
+- **Flake not recognized**: Ensure `flake.nix` exists and git-tracked (`git add flake.nix`)

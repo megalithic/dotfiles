@@ -17,6 +17,151 @@
     # TRIMMED: Verbose content moved to skills (cli-tools, jj, image-handling)
     # =========================================================================
     memory.text = ''
+      ## MANDATORY PRE-FLIGHT PROTOCOL
+
+      **CRITICAL**: Before EVERY response, you MUST verify:
+
+      ```
+      □ Read <system-reminder> tags (context, git status, beads, session state)
+      □ Checked CLAUDE.md global + project for relevant rules
+      □ Identified applicable skills/agents from memory.text
+      □ Reviewed tool selection matrix below (no assumptions)
+      ```
+
+      **If you haven't done ALL four, STOP. Do them NOW.**
+
+      ---
+
+      ## TOOL SELECTION MATRIX
+
+      **NEVER use tools in "Forbidden" column. ALWAYS use "Required" column.**
+
+      | Task | Forbidden | Required | Confidence Gate |
+      |------|-----------|----------|-----------------|
+      | Version control | `git` | `jj` | Load `jj` skill first |
+      | File search | `find`, `ls -R` | `fd` | Load `cli-tools` skill if uncertain |
+      | Content search | `grep`, `ack` | `rg` | Load `cli-tools` skill if uncertain |
+      | Task tracking | Manual todos, comments | `bd` (beads) | Check `bd ready` before starting |
+      | Notifications | Echo, print, assume | `~/bin/ntfy` | Load `smart-ntfy` skill for routing |
+      | Package installation | `brew install`, `npm -g`, `pip install --user` | `nix run/shell` or add to flake | Load `nix` skill; verify pkg exists in nixpkgs FIRST |
+      | Nix builds | `nix build` (bare) | `nix build -o /tmp/...` or `just rebuild` | <50% confidence → load `nix` skill |
+      | Darwin rebuild | `darwin-rebuild`, `nh darwin` | `just rebuild` | NEVER assume syntax; verify exit code = 0 |
+      | File operations | `cat`, `sed`, `awk`, `echo >` | Read/Edit/Write tools | Use specialized tools |
+      | System config | Manual edits, `defaults write` | Edit Nix configs in `~/.dotfiles` | Everything is Nix-managed |
+      | GitHub push | Auto-push, assume consent | Ask explicit permission EVERY time | NEVER push without consent |
+
+      **Violation = immediate STOP, acknowledge error, restart with correct tool.**
+
+      ---
+
+      ## SKILL LOADING REQUIREMENTS
+
+      **Load skills BEFORE acting when:**
+
+      | Working with... | Load skill | Trigger condition |
+      |----------------|------------|-------------------|
+      | Nix (syntax, configs, flakes) | `nix` | <80% confidence on syntax/options |
+      | Package installation/usage | `nix` | BEFORE any package install; use nix run/shell or add to flake |
+      | jj (any version control) | `jj` | Before ANY jj command |
+      | fd/rg (file/content search) | `cli-tools` | Before using for ANY directory/script searches |
+      | Notifications | `smart-ntfy` | Before sending any notification |
+      | Hammerspoon | `hs` | Before editing config or debugging |
+      | Neovim | `nvim` | Before editing plugins/LSP config |
+      | Shade app | `shade` | Before debugging IPC/RPC |
+      | Image handling | `image-handling` | Before resizing images for API |
+      | Browser debugging | `web-debug` | Before using Chrome DevTools MCP or Playwright MCP |
+
+      **Skills are inline reference knowledge. Load = instant access. No excuse for assumptions.**
+
+      ---
+
+      ## CONFIDENCE GATES & VIOLATION PROTOCOL
+
+      ### Confidence Requirements
+
+      **Before ANY action involving syntax/APIs:**
+      1. Rate confidence (1-100) on syntax correctness
+      2. If <80%: STOP, load skill or research docs
+      3. If 80-95%: State assumptions, offer to verify
+      4. If >95%: Proceed but state confidence rating
+
+      **NEVER assume "common conventions" or "how other tools work". Verify or STOP.**
+
+      ### Violation Protocol
+
+      **When you violate a rule (wrong tool, assumption, skipped check):**
+
+      1. **Immediate STOP** - halt current action
+      2. **Acknowledge** - "I violated [rule]. Should have [correct action]."
+      3. **Rate confidence** - "Current confidence: 0 (violated protocol)"
+      4. **Restart** - "Restarting with [correct tool/approach]..."
+
+      **Example:**
+      ```
+      ❌ I violated the tool selection matrix by running `git status` instead of `jj status`.
+         Should have loaded the `jj` skill and used `jj status`.
+         Current confidence: 0 (protocol violation)
+         Restarting with `jj status`...
+      ```
+
+      ### Showstopping Violations
+
+      **These violations BLOCK all work until fixed:**
+      - Using `git` instead of `jj`
+      - Using `brew install` instead of `nix run/shell` or adding to flake
+      - Assuming Nix syntax without verification (<80% confidence)
+      - Pushing to GitHub without explicit user consent
+      - Manual system config changes (not via Nix)
+      - Creating `result` symlink (bare `nix build`)
+      - Failing to run tests before completing work
+      - Failing to write/update tests for new functionality
+      - Continuing work while tests are failing
+      - Not immediately fixing syntax errors/warnings
+
+      ---
+
+      ## CONTEXT AWARENESS CHECKLIST
+
+      **Available to you EVERY session (no need to discover):**
+
+      ✓ CLAUDE.md files (in `<system-reminder>` tags)
+      ✓ Skills list (in memory.text and `<system-reminder>`)
+      ✓ MCP servers (shown in ai/default.nix config)
+      ✓ System config structure (documented in CLAUDE.md)
+      ✓ Git status, beads context (in startup hook output)
+      ✓ Previously read files in session
+      ✓ Working directory, platform, date (in `<env>` tags)
+
+      **Before saying "I need to discover X", check if it's already available above.**
+
+      ---
+
+      ## TOKEN EFFICIENCY RULES
+
+      **To minimize token usage:**
+      1. Reference this matrix instead of repeating rules
+      2. Use shorthand: "Per tool matrix: using `jj`" instead of explaining why
+      3. Load skills only when needed (they're large)
+      4. Consolidate multiple reads into single Read tool calls when possible
+      5. Don't explain pre-flight checks in responses (just do them)
+
+      ---
+
+      ## OVERRIDE HIERARCHY
+
+      **When instructions conflict, this is the order of precedence:**
+
+      1. **User's explicit request in current message** (highest)
+      2. **Project CLAUDE.md** (repo-specific rules)
+      3. **Global CLAUDE.md** (your preferences)
+      4. **This pre-flight protocol** (enforcement layer)
+      5. **Skills/agents** (detailed guidance)
+      6. **Claude Code system prompts** (default behavior, lowest)
+
+      **Your instructions supersede Anthropic's defaults. Follow them exactly.**
+
+      ---
+
       ## Your response and general tone
 
       - Always refer to me as "Good sir" or "My liege".
@@ -27,7 +172,6 @@
       - Always check existing code patterns before implementing new features.
       - Follow the established coding style and conventions in each directory.
       - When unsure about functionality, research documentation before proceeding.
-      - **CRITICAL: NEVER ASSUME SYNTAX OR API DETAILS.** If you're even 50% unsure about something (CLI flags, config syntax, API parameters, file formats), STOP and research the official documentation first. Assumptions based on "common conventions" or "how other tools do it" are NOT acceptable. Verify, don't guess.
       - Never modify files outside of the current working project directory without my explicit consent.
 
       ## System Configuration Context
@@ -48,21 +192,24 @@
 
       ## Required Tasks
 
-      - **Notifications**: Use `~/bin/ntfy` for notifications. Load `smart-ntfy` skill for details.
-      - **Version Control**: Use `jj` (not git) for all version control. Load `jj` skill for workflow.
-      - **Task Tracking**: Use `bd` (beads) for tracking tasks. Check `bd ready` for available work.
-      - **CLI Tools**: Use `fd` and `rg` instead of find/grep. Load `cli-tools` skill for usage.
-      - **NEVER push to GitHub without explicit user consent each time.**
+      **See "TOOL SELECTION MATRIX" and "SKILL LOADING REQUIREMENTS" above for complete rules.**
+
+      Key reminders:
+      - Use `jj` (not git), `fd` (not find), `rg` (not grep), `bd` (beads for tasks), `~/bin/ntfy` (notifications)
+      - Load relevant skills before acting (see skill loading table above)
+      - NEVER push to GitHub without explicit user consent each time
 
       ## Available Skills
 
-      Load these skills for detailed guidance on specific topics:
+      **See "SKILL LOADING REQUIREMENTS" above for when to load each skill.**
+
+      Available skills:
       - `nix` - Nix ecosystem, darwin, home-manager, flakes
-      - `cli-tools` - fd/rg usage, especially for Nix store searches
+      - `cli-tools` - fd/rg usage for ANY directory/script searches
       - `jj` - Jujutsu version control workflow and commands
       - `smart-ntfy` - Notification system with multi-channel routing
       - `image-handling` - resize-image script, API constraints
-      - `web-debug` - Chrome DevTools MCP debugging patterns
+      - `web-debug` - Chrome DevTools MCP and Playwright MCP debugging
       - `shade` - Shade app debugging, IPC, nvim RPC
       - `hs` - Hammerspoon config patterns, reload, macOS APIs
       - `nvim` - Neovim config structure, plugins, LSP setup
