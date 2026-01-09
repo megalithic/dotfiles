@@ -23,18 +23,25 @@ Finishing work session. Execute these steps but **DO NOT PUSH without explicit u
    - List any in-progress tasks that should be closed
    - Ask if any tasks should be closed or updated
 
-5. **Sync check** (read-only):
+5. **Sync beads** (if .beads/ exists):
+   - Run `bd sync --from-main` - pulls latest bead task state from main branch
+   - Run `bd repo sync` - hydrates issues from linked repos (cross-repo visibility)
+   - This ensures task tracking reflects any work merged to main by other sessions
+
+6. **Sync check** (read-only):
    - Run `jj git fetch` to check for remote changes
    - Run `jj log -r 'main' -r 'main@origin'` to compare
 
-6. **Present summary**:
+7. **Present summary**:
 
-   ## jj Commands Used This Session
+   ## Commands Used This Session
    | Command | Purpose |
    |---------|---------|
    | `jj status` | Show working copy state |
    | `jj log -r 'main..@'` | Commits ahead of main |
    | `jj diff` | View uncommitted changes |
+   | `bd sync --from-main` | Pull latest bead state from main |
+   | `bd repo sync` | Hydrate cross-repo issues |
    | `jj git fetch` | Pull latest from origin |
    | `jj log -r 'main' -r 'main@origin'` | Compare local/remote |
 
@@ -46,7 +53,7 @@ Finishing work session. Execute these steps but **DO NOT PUSH without explicit u
    - Commits ready: (list them)
    - Remote status: (ahead/behind/synced)
 
-7. **ASK FOR PERMISSION**:
+8. **ASK FOR PERMISSION**:
    
    "Ready to push to origin/main. Commands that will run:"
    ```

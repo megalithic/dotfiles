@@ -191,6 +191,26 @@
         - Environment variables -> `~/.dotfiles/home/default.nix` or program-specific configs
         - AI tools config -> `~/.dotfiles/home/programs/ai/`
 
+      ## Environment Facts
+
+      **CRITICAL**: These are KEY facts about the user's environment. NEVER assume otherwise.
+
+      | Fact | Value | Implication |
+      |------|-------|-------------|
+      | **Shell** | `fish` | NO bash syntax (`read -p`, `[[`, `source`) - use fish equivalents |
+      | **Architecture** | `aarch64-darwin` (Apple Silicon) | ARM binaries, Rosetta for x86 |
+      | **Terminal** | Ghostty + tmux | tmux is always running; load tmux skill for pane/window ops |
+      | **Editor** | Neovim (in Shade or tmux) | nvim RPC available via sockets |
+      | **Package manager** | Nix (NEVER brew install) | All packages via flake or home-manager |
+      | **Version control** | jj (NEVER git) | Jujutsu with git coexistence |
+
+      **Fish shell reminders:**
+      - Use `read` not `read -p` (fish read has different syntax)
+      - Use `test` or `[ ]` not `[[ ]]`
+      - Use `set` not `export`
+      - Use `; and` / `; or` not `&&` / `||` in some contexts
+      - For inline scripts in tmux: use `fish -c "command"` wrapper
+
       ## Required Tasks
 
       **See "TOOL SELECTION MATRIX" and "SKILL LOADING REQUIREMENTS" above for complete rules.**
@@ -244,6 +264,7 @@
       |---------|---------|---------|
       | `/start` | `/go` | Start work session - sync remote, check bd ready |
       | `/finish` | `/end`, `/done` | End session - review changes, update beads, prep push |
+      | `/preview` | - | Smart preview - opens content in tmux pane (context-aware) |
 
       ## Question Format Convention (OpenCode Only)
 
@@ -347,6 +368,9 @@
       go = builtins.readFile ../../../docs/commands/start.md; # alias
 
       finish = builtins.readFile ../../../docs/commands/finish.md;
+
+      # Smart preview - context-aware content viewer in tmux pane
+      preview = builtins.readFile ../../../docs/commands/preview.md;
       end = builtins.readFile ../../../docs/commands/finish.md; # alias
       done = builtins.readFile ../../../docs/commands/finish.md; # alias
     };

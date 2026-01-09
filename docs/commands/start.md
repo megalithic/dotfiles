@@ -9,21 +9,28 @@ Starting new work session. Execute these steps:
    - Run `jj git fetch` - pulls latest commits from origin without modifying working copy
    - Run `jj log -r 'main@origin' -r 'main'` - compare local vs remote main
 
-2. **Check version control state**:
+2. **Sync beads** (if .beads/ exists):
+   - Run `bd sync --from-main` - pulls latest bead task state from main branch
+   - Run `bd repo sync` - hydrates issues from linked repos (cross-repo visibility)
+   - This ensures task tracking is up-to-date with any work merged to main
+
+3. **Check version control state**:
    - Run `jj status` - shows uncommitted working copy changes
    - Run `jj log -r ::@ -n 5` - shows recent history leading to current change
 
-3. **Check task tracking**:
+4. **Check task tracking**:
    - Run `bd ready` - shows available tasks to work on
    - If there's a task argument ($ARGUMENTS), show details with `bd show $ARGUMENTS`
 
-4. **Present session summary**:
+5. **Present session summary**:
    
-   ## jj Commands Used
+   ## Commands Used
    | Command | Purpose |
    |---------|---------|
    | `jj git fetch` | Pull latest from origin (read-only) |
    | `jj log -r 'main@origin' -r 'main'` | Compare local/remote main |
+   | `bd sync --from-main` | Pull latest bead state from main |
+   | `bd repo sync` | Hydrate cross-repo issues |
    | `jj status` | Show working copy changes |
    | `jj log -r ::@ -n 5` | Recent commit history |
 
