@@ -8,8 +8,8 @@ readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly VPN_CISCO="$SCRIPT_DIR/vpn-cisco"
 readonly VPN_AZURE="$SCRIPT_DIR/vpn-azure"
 
-# Default to Cisco (still actively used)
-readonly DEFAULT_TYPE="cisco"
+# Default to Azure VPN (primary VPN system)
+readonly DEFAULT_TYPE="azure"
 
 # Colors
 readonly RED='\033[0;31m'
@@ -40,18 +40,18 @@ COMMANDS:
     help, h             Show help
 
 EXAMPLES:
-    # Cisco VPN (default)
-    vpn connect                            # Connect to Cisco VPN
-    vpn cisco connect                      # Explicit Cisco
-    vpn cisco connect -m openconnect-sso   # Cisco with SSO method
-    vpn status                             # Check Cisco VPN status
-    vpn disconnect                         # Disconnect Cisco VPN
+    # Azure VPN (default)
+    vpn connect                            # Connect to Azure VPN
+    vpn azure connect                      # Explicit Azure
+    vpn az connect                         # Short form
+    vpn status                             # Check Azure VPN status
+    vpn logs                               # View Azure VPN logs
+    vpn disconnect                         # Disconnect Azure VPN
 
-    # Azure VPN
-    vpn azure connect              # Connect to Azure VPN
-    vpn az connect                 # Short form
-    vpn azure status               # Check Azure VPN status
-    vpn azure logs                 # View Azure VPN logs
+    # Cisco VPN
+    vpn cisco connect                      # Connect to Cisco VPN
+    vpn cisco connect -m openconnect-sso   # Cisco with SSO method
+    vpn cisco status                       # Check Cisco VPN status
 
     # Get help for specific VPN type
     vpn cisco help                 # Show Cisco VPN help
@@ -95,7 +95,7 @@ main() {
   *)
     # No type specified, use default
     vpn_type="$DEFAULT_TYPE"
-    vpn_cmd="$VPN_CISCO"
+    vpn_cmd="$VPN_AZURE"
     ;;
   esac
 

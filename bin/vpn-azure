@@ -187,8 +187,10 @@ cmd_status() {
     fi
     echo "  Config: $CONFIG_FILE"
     echo "  Logs:   $LOG_FILE"
+    return 0
   else
     log_warn "Status: Disconnected"
+    return 1
   fi
 }
 
