@@ -31,6 +31,7 @@ in
     ./programs/fish.nix
     ./programs/fzf.nix
     ./programs/nvim.nix
+    ./programs/shade.nix
     # ./kanata
     # ./tmux
   ];
