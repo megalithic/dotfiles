@@ -165,36 +165,63 @@ function M.performCleanupIfNeeded()
   end
 end
 
+-- Reinit state tracking to prevent infinite loops
+M.lastReinitAttempt = nil
+M.reinitBackoffSeconds = 60  -- Minimum seconds between reinit attempts
+
 function M.performHealthCheck()
-  local issues = {}
+  local criticalIssues = {}  -- Issues that warrant reinit
+  local warnings = {}        -- Issues to log but not reinit for
   local isFirstCheck = M.lastHealthCheck == nil
 
-  -- Check 1: Initialized flag
-  if not M.initialized then table.insert(issues, "System not initialized") end
-
-  -- Check 2: Database connection
-  if not DB.db then table.insert(issues, "Database connection lost") end
-
-  -- Check 3: Notification watcher (skip on first check as it might not be started yet)
-  if not isFirstCheck then
-    local watcherOk, watcher = pcall(require, "watchers.notification")
-    if not watcherOk or not watcher.observer then table.insert(issues, "Notification watcher not running") end
+  -- CRITICAL: Initialized flag
+  if not M.initialized then
+    table.insert(criticalIssues, "System not initialized")
   end
 
-  -- Check 4: Menubar
-  if M.menubar and not M.menubar.menubar then table.insert(issues, "Menubar indicator lost") end
+  -- CRITICAL: Database connection (core functionality)
+  if not DB.db then
+    table.insert(criticalIssues, "Database connection lost")
+  end
+
+  -- WARNING: Notification watcher (skip on first check as it might not be started yet)
+  -- Watcher can be recovered without full reinit, so it's a warning not critical
+  if not isFirstCheck then
+    local watcherOk, watcher = pcall(require, "watchers.notification")
+    if not watcherOk or not watcher.observer then
+      table.insert(warnings, "Notification watcher not running")
+    end
+  end
+
+  -- WARNING: Menubar (only if enabled in config)
+  -- Menubar is UI-only, never critical - can be recovered independently
+  local menubarEnabled = C.notifier and C.notifier.menubarEnabled ~= false
+  if menubarEnabled and M.menubar and not M.menubar.menubar then
+    table.insert(warnings, "Menubar indicator lost")
+    -- Try to recover menubar without full reinit
+    pcall(function() M.menubar.init() end)
+  end
 
   M.lastHealthCheck = os.time()
 
-  if #issues > 0 then
-    local issueStr = table.concat(issues, ", ")
-    U.log.ef("⚠️ NOTIFICATION SYSTEM HEALTH CHECK FAILED: %s", issueStr)
+  -- Log warnings but don't reinit for them
+  if #warnings > 0 then
+    U.log.wf("Notification system warnings: %s", table.concat(warnings, ", "))
+  end
 
-    -- Only show alert if this isn't the first check
-    if not isFirstCheck then
-      hs.alert.show("⚠️ Notification System Issue\n" .. issueStr, 8)
+  -- Only attempt reinit for CRITICAL issues
+  if #criticalIssues > 0 then
+    local issueStr = table.concat(criticalIssues, ", ")
+    U.log.ef("⚠️ NOTIFICATION SYSTEM CRITICAL: %s", issueStr)
 
-      -- Try to reinitialize (but not on first check)
+    -- Check reinit cooldown to prevent infinite loops
+    local now = os.time()
+    local canReinit = not M.lastReinitAttempt or (now - M.lastReinitAttempt) >= M.reinitBackoffSeconds
+
+    if not isFirstCheck and canReinit then
+      M.lastReinitAttempt = now
+      hs.alert.show("⚠️ Notification System Critical\n" .. issueStr, 8)
+
       U.log.w("Attempting to reinitialize notification system...")
       M.initialized = false
       local success = M.init()
@@ -204,6 +231,9 @@ function M.performHealthCheck()
       else
         U.log.e("Failed to reinitialize notification system!")
       end
+    elseif not canReinit then
+      local waitTime = M.reinitBackoffSeconds - (now - M.lastReinitAttempt)
+      U.log.wf("Reinit on cooldown (%ds remaining), skipping automatic recovery", waitTime)
     end
   end
   -- No log on success - only log errors
