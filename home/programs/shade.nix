@@ -51,11 +51,27 @@
     position = "center"; # "center", "right", "left"
   };
 
+  # ===========================================================================
+  # Notes Configuration
+  # ===========================================================================
+  # Vault paths for image capture handling
+  # Shade copies images to assets dir, obsidian.nvim templates reference them
+  notesConfig = {
+    # Root of the notes vault (supports ~ expansion)
+    # Falls back to $NOTES_HOME env var, then ~/iclouddrive/Documents/_notes
+    home = "~/iclouddrive/Documents/_notes";
+    # Assets directory for images (null = {home}/assets)
+    assets_dir = null;
+    # Captures directory (null = {home}/captures)
+    captures_dir = null;
+  };
+
   # Combined config
   shadeConfig = {
     llm = llmConfig;
     capture = captureConfig;
     window = windowConfig;
+    notes = notesConfig;
   };
 in {
   # ===========================================================================

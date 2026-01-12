@@ -60,7 +60,7 @@ function obj:start(opts)
 
     hs.timer.waitUntil(function() return meet:isRunning() end, function()
       req("utils").dnd(true, "zoom")
-      hs.spotify.pause()
+      -- hs.spotify.pause() -- DISABLED: Spotify interactions disabled
       req("ptt").setState("push-to-talk")
       -- req("browser").killTabsByDomain("meet.google.com")
 

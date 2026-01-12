@@ -23,7 +23,7 @@ function obj:start(opts)
 
   if event == hs.application.watcher.launched then
     do
-      hs.spotify.pause()
+      -- hs.spotify.pause() -- DISABLED: Spotify interactions disabled
       req("keycastr"):start()
       req("config.utils").dnd(true)
       req("ptt").setState("push-to-mute")

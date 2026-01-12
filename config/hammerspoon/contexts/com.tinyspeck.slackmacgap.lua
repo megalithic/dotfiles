@@ -1,10 +1,36 @@
 local Settings = require("hs.settings")
+local fmt = string.format
 local obj = {}
 local appObj = nil
 
 obj.__index = obj
 obj.name = "context.slack"
 obj.debug = true
+obj._bindingsCreated = false -- Guard to prevent duplicate bindings
+
+-- Debug wrapper: logs keybinding invocation to HS console
+local function debugBind(modal, mods, key, name, pressFn, releaseFn, repeatFn)
+  local modsStr = type(mods) == "table" and table.concat(mods, "+") or tostring(mods)
+  local bindingStr = fmt("%s+%s", modsStr, key)
+
+  local wrappedPress = pressFn and function()
+    print(fmt("[SLACK KEY] PRESSED: %s (%s) | modal=%s", bindingStr, name, modal and "active" or "nil"))
+    pressFn()
+  end or nil
+
+  local wrappedRelease = releaseFn and function()
+    print(fmt("[SLACK KEY] RELEASED: %s (%s)", bindingStr, name))
+    releaseFn()
+  end or nil
+
+  local wrappedRepeat = repeatFn and function()
+    print(fmt("[SLACK KEY] REPEAT: %s (%s)", bindingStr, name))
+    repeatFn()
+  end or nil
+
+  print(fmt("[SLACK BIND] Creating: %s -> %s", bindingStr, name))
+  modal:bind(mods, key, wrappedPress, wrappedRelease, wrappedRepeat)
+end
 
 -- local function clickOnHistoryMenuItem(appObj)
 -- 	appObj:selectMenuItem({"History"})
@@ -39,6 +65,19 @@ function obj:start(opts)
   opts = opts or {}
   appObj = opts["appObj"]
   local event = opts["event"]
+  local eventStr = U and U.eventString and U.eventString(event) or tostring(event)
+
+  print(fmt("[SLACK] start() called | event=%s | _bindingsCreated=%s | modal=%s",
+    eventStr,
+    tostring(obj._bindingsCreated),
+    obj.modal and "exists" or "nil"))
+
+  -- Only create bindings once - prevents accumulation from repeated start() calls
+  -- (titleChanged and other activation events trigger start() repeatedly)
+  if obj._bindingsCreated then
+    print("[SLACK] start() early return - bindings already created")
+    return self
+  end
 
   local focus = req("aom", { appObj = appObj })
 
@@ -66,40 +105,46 @@ function obj:start(opts)
     end)
   end
 
-  obj.modal:bind({ "ctrl" }, "j", nil, messageDown, nil, messageDown)
-  obj.modal:bind({ "ctrl" }, "k", nil, messageUp, nil, messageUp)
+  print("[SLACK] Creating modal bindings...")
+
+  debugBind(obj.modal, { "ctrl" }, "j", "messageDown", nil, messageDown, messageDown)
+  debugBind(obj.modal, { "ctrl" }, "k", "messageUp", nil, messageUp, messageUp)
 
   -- move up and down slacks (read or unread)
-  obj.modal:bind({ "ctrl" }, "n", nil, slackDown, nil, slackDown)
-  obj.modal:bind({ "ctrl" }, "p", nil, slackUp, nil, slackUp)
+  debugBind(obj.modal, { "ctrl" }, "n", "slackDown", nil, slackDown, slackDown)
+  debugBind(obj.modal, { "ctrl" }, "p", "slackUp", nil, slackUp, slackUp)
 
   -- misc
-  obj.modal:bind({ "ctrl" }, "h", nil, focus.mainMessageBox, nil, focus.mainMessageBox)
-  obj.modal:bind({ "ctrl" }, "l", nil, focus.threadMessageBox, nil, focus.threadMessageBox)
+  debugBind(obj.modal, { "ctrl" }, "h", "mainMessageBox", nil, focus.mainMessageBox, focus.mainMessageBox)
+  debugBind(obj.modal, { "ctrl" }, "l", "threadMessageBox", nil, focus.threadMessageBox, focus.threadMessageBox)
 
   -- move up and down unread slacks
-  obj.modal:bind({ "ctrl", "shift" }, "j", function() hs.eventtap.keyStroke({ "alt", "shift" }, "down", appObj) end)
-  obj.modal:bind({ "ctrl", "shift" }, "k", function() hs.eventtap.keyStroke({ "alt", "shift" }, "up", appObj) end)
-  obj.modal:bind({ "ctrl", "cmd" }, "n", function() hs.eventtap.keyStroke({ "alt", "shift" }, "down", appObj) end)
-  obj.modal:bind({ "ctrl", "cmd" }, "p", function() hs.eventtap.keyStroke({ "alt", "shift" }, "up", appObj) end)
+  local unreadDown = function() hs.eventtap.keyStroke({ "alt", "shift" }, "down", appObj) end
+  local unreadUp = function() hs.eventtap.keyStroke({ "alt", "shift" }, "up", appObj) end
+  debugBind(obj.modal, { "ctrl", "shift" }, "j", "unreadDown", unreadDown, nil, nil)
+  debugBind(obj.modal, { "ctrl", "shift" }, "k", "unreadUp", unreadUp, nil, nil)
+  debugBind(obj.modal, { "ctrl", "cmd" }, "n", "unreadDown2", unreadDown, nil, nil)
+  debugBind(obj.modal, { "ctrl", "cmd" }, "p", "unreadUp2", unreadUp, nil, nil)
 
   -- "better" jump to a thing
-  obj.modal:bind({ "ctrl" }, "g", function() hs.eventtap.keyStroke({ "cmd" }, "k", appObj) end)
+  debugBind(obj.modal, { "ctrl" }, "g", "quickSwitch", function() hs.eventtap.keyStroke({ "cmd" }, "k", appObj) end, nil, nil)
 
   -- "better" find a thing
-  obj.modal:bind({ "ctrl" }, "/", function() hs.eventtap.keyStroke({ "cmd" }, "f", appObj) end)
+  debugBind(obj.modal, { "ctrl" }, "/", "find", function() hs.eventtap.keyStroke({ "cmd" }, "f", appObj) end, nil, nil)
 
   -- no-ops:
-  obj.modal:bind({ "cmd" }, "w", function() hs.eventtap.keyStroke({}, "escape", appObj) end)
-  obj.modal:bind({ "cmd" }, "r", function() hs.eventtap.keyStroke({}, "escape", appObj) end)
+  debugBind(obj.modal, { "cmd" }, "w", "noopCloseTab", function() hs.eventtap.keyStroke({}, "escape", appObj) end, nil, nil)
+  debugBind(obj.modal, { "cmd" }, "r", "noopRefresh", function() hs.eventtap.keyStroke({}, "escape", appObj) end, nil, nil)
 
-  obj.modal:bind({ "ctrl" }, "r", nil, startSlackReminder, nil, startSlackReminder)
-  obj.modal:bind({ "ctrl" }, "t", nil, openSlackThread, nil, openSlackThread)
-  obj.modal:bind({ "shift", "cmd" }, "delete", nil, focus.leaveChannel, nil, nil)
+  debugBind(obj.modal, { "ctrl" }, "r", "startReminder", nil, startSlackReminder, startSlackReminder)
+  debugBind(obj.modal, { "ctrl" }, "t", "openThread", nil, openSlackThread, openSlackThread)
+  debugBind(obj.modal, { "shift", "cmd" }, "delete", "leaveChannel", nil, focus.leaveChannel, nil)
 
-  if event == hs.application.watcher.activated then -- and _appObj:isRunning() then
-    if obj.modal then obj.modal:enter() end
-  end
+  print("[SLACK] Modal bindings created successfully")
+
+  obj._bindingsCreated = true
+  -- NOTE: Modal enter/exit is now handled by the context orchestrator (contexts/init.lua)
+  -- Do not manually call obj.modal:enter() here
 
   return self
 end
@@ -107,9 +152,15 @@ end
 function obj:stop(opts)
   opts = opts or {}
   local event = opts["event"]
+  local eventStr = U and U.eventString and U.eventString(event) or tostring(event)
 
-  if obj.modal then obj.modal:exit() end
+  print(fmt("[SLACK] stop() called | event=%s | _bindingsCreated=%s",
+    eventStr,
+    tostring(obj._bindingsCreated)))
 
+  -- NOTE: Modal enter/exit is now handled by the context orchestrator (contexts/init.lua)
+  -- Do not manually call obj.modal:exit() here
+  -- Bindings persist across deactivation - they'll be reused on next activation
   return self
 end
 

@@ -1,8 +1,10 @@
 local fmt = string.format
 local canvasLib = require("lib.canvas")
-local notesLib = require("lib.notes")
 local shade = require("lib.interop.shade")
 local obj = {}
+
+-- NOTE: lib.notes is no longer needed here
+-- Image processing (copy to assets, cleanup) moved to Shade (shade-cmv)
 
 --[[
   Clipper: Screenshot capture, upload, and OCR module
@@ -615,43 +617,13 @@ end
 -- Note Capture Actions
 -- ══════════════════════════════════════════════════════════════════════════════
 
---- Generate image filename for capture
---- Format: YYYYMMDD-HHMMSS.png (matches zettel timestamp style)
----@return string filename
-local function generateImageFilename()
-  return fmt("%s.png", os.date("%Y%m%d-%H%M%S"))
-end
-
---- Copy image to vault assets and prepare context for obsidian.nvim
---- Returns the image filename (not full path) for template substitution
----@param imagePath string Source image path
----@param imageUrl? string DO Spaces URL (for deletion after copy)
----@return boolean success
----@return string? imageFilename Filename if successful
----@return string? error Error message if failed
-local function prepareImageCapture(imagePath, imageUrl)
-  local imageFilename = generateImageFilename()
-
-  -- Copy image to assets folder
-  local assetPath = notesLib.copyImageToAssets(imagePath, imageFilename)
-  if not assetPath then
-    return false, nil, "Failed to copy image to assets"
-  end
-
-  -- Cleanup: delete from DO Spaces (async, fire-and-forget)
-  if imageUrl then
-    notesLib.deleteFromSpaces(imageUrl)
-  end
-
-  -- Cleanup: delete local screenshot
-  notesLib.deleteLocalScreenshot(imagePath)
-
-  return true, imageFilename
-end
+-- NOTE: Image processing (copy to assets, cleanup) is now handled by Shade
+-- Hammerspoon just passes the temp image path, Shade does the rest
+-- See: shade-cmv (Consolidate image capture handling into Shade)
 
 --- Quick capture: screenshot to note, linked in daily (fire-and-forget)
---- As of 2026-01-08, Shade handles nvim RPC natively.
---- Hammerspoon prepares the image, writes context, and sends notification.
+--- As of 2026-01-12 (shade-cmv): Shade handles image processing.
+--- Hammerspoon writes temp path to context, Shade copies to assets and creates note.
 function obj.captureQuick()
   if not obj.activeCapture.imagePath then
     U.log.w("captureQuick: no image path available")
@@ -660,20 +632,11 @@ function obj.captureQuick()
   end
 
   local imagePath = obj.activeCapture.imagePath
-  local imageUrl = obj.activeCapture.imageUrl
 
-  -- Copy image to assets and get filename
-  local success, imageFilename, err = prepareImageCapture(imagePath, imageUrl)
-  if not success then
-    hs.alert.show(fmt("Capture failed: %s", err or "unknown error"), 3)
-    U.log.w(fmt("captureQuick: %s", err or "unknown error"))
-    return false
-  end
-
-  -- Write context with imageFilename for Shade to read
-  -- Shade will pass this to obsidian.nvim template
+  -- Write context with tempImagePath for Shade to process
+  -- Shade will: copy to assets, write final context, create note
   local ctx = {
-    imageFilename = imageFilename,
+    tempImagePath = imagePath,
     appType = "screenshot",
     appName = "Screenshot",
   }
@@ -682,12 +645,11 @@ function obj.captureQuick()
     return false
   end
 
-  -- Send notification - Shade handles the rest
-  -- Shade will: read context, call :Obsidian new_from_template capture capture-image
+  -- Send notification - Shade handles image processing and note creation
   local function triggerImageCapture()
     hs.distributednotifications.post("io.shade.note.capture.image", nil, nil)
     hs.alert.show("Quick capture saved", 1.5)
-    U.log.i("captureQuick: sent notification to Shade")
+    U.log.i("captureQuick: sent notification to Shade (tempPath mode)")
   end
 
   if shade.isRunning() then
@@ -698,14 +660,15 @@ function obj.captureQuick()
     end)
   end
 
-  -- Clear active capture since files are moved/deleted
+  -- Note: Don't clear active capture yet - Shade will delete the temp file
+  -- But we can clear our reference since we've handed off responsibility
   obj.clearCapture()
   return true
 end
 
 --- Full capture: screenshot to note with floating editor (interactive)
---- As of 2026-01-08, Shade handles nvim RPC natively.
---- Hammerspoon prepares the image, writes context, sends notification, and shows panel.
+--- As of 2026-01-12 (shade-cmv): Shade handles image processing.
+--- Hammerspoon writes temp path to context, Shade copies to assets and creates note.
 function obj.captureFull()
   if not obj.activeCapture.imagePath then
     U.log.w("captureFull: no image path available")
@@ -714,19 +677,11 @@ function obj.captureFull()
   end
 
   local imagePath = obj.activeCapture.imagePath
-  local imageUrl = obj.activeCapture.imageUrl
 
-  -- Copy image to assets and get filename
-  local success, imageFilename, err = prepareImageCapture(imagePath, imageUrl)
-  if not success then
-    hs.alert.show(fmt("Capture failed: %s", err or "unknown error"), 3)
-    U.log.w(fmt("captureFull: %s", err or "unknown error"))
-    return false
-  end
-
-  -- Write context with imageFilename for Shade to read
+  -- Write context with tempImagePath for Shade to process
+  -- Shade will: copy to assets, write final context, create note, show panel
   local ctx = {
-    imageFilename = imageFilename,
+    tempImagePath = imagePath,
     appType = "screenshot",
     appName = "Screenshot",
   }
@@ -735,11 +690,11 @@ function obj.captureFull()
     return false
   end
 
-  -- Send notification - Shade handles the rest and shows the panel
+  -- Send notification - Shade handles image processing and shows panel
   local function triggerImageCapture()
     hs.distributednotifications.post("io.shade.note.capture.image", nil, nil)
     hs.timer.doAfter(0.1, function() shade.show() end)
-    U.log.i("captureFull: sent notification to Shade")
+    U.log.i("captureFull: sent notification to Shade (tempPath mode)")
   end
 
   if shade.isRunning() then
@@ -750,7 +705,7 @@ function obj.captureFull()
     end)
   end
 
-  -- Clear active capture since files are moved/deleted
+  -- Note: Shade will delete the temp file after processing
   obj.clearCapture()
   return true
 end

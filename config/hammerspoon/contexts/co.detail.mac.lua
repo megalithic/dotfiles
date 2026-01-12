@@ -24,7 +24,7 @@ function obj:start(opts)
     do
       local term = hs.application.get(TERMINAL)
 
-      hs.spotify.pause()
+      -- hs.spotify.pause() -- DISABLED: Spotify interactions disabled
       -- L.req("lib.menubar.keycastr"):start()
       -- L.req("lib.dnd").on("obs")
       require("ptt").setState("push-to-mute")

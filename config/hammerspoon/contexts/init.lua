@@ -6,6 +6,8 @@ local M = {}
 M.__index = M
 M.name = "contexts"
 M.contextModals = {}
+M.DEBUG = false -- Enable debug logging for modal events
+M.MODALS_ENABLED = false -- DISABLED: Modal keybindings for app contexts (investigating bugs)
 
 -- Events that trigger context activation
 M.activationEvents = {
@@ -52,6 +54,17 @@ function M:run(opts)
     return self
   end
 
+  local eventStr = U.eventString(event) or tostring(event)
+
+  -- DEBUG: Log all incoming events
+  if M.DEBUG then
+    print(fmt("[CTX DEBUG] EVENT: %s | app=%s | modal=%s | _modalActive=%s",
+      eventStr,
+      contextId,
+      context.modal and "yes" or "no",
+      tostring(context._modalActive)))
+  end
+
   local callOpts = {
     event = event,
     appObj = app,
@@ -60,10 +73,20 @@ function M:run(opts)
   }
 
   if isActivationEvent(event) then
-    -- Centralized modal management with guard
-    if context.modal and not context._modalActive then
+    -- DEBUG: Log activation attempt
+    if M.DEBUG then
+      print(fmt("[CTX DEBUG] ACTIVATION: %s | modalsEnabled=%s",
+        contextId,
+        tostring(M.MODALS_ENABLED)))
+    end
+
+    -- Centralized modal management (DISABLED when MODALS_ENABLED = false)
+    if M.MODALS_ENABLED and context.modal and not context._modalActive then
       context._modalActive = true
       context.modal:enter()
+      if M.DEBUG then
+        print(fmt("[CTX DEBUG] MODAL ENTERED: %s", contextId))
+      end
     end
 
     -- Call context's custom activation hook if defined
@@ -75,10 +98,20 @@ function M:run(opts)
     end
 
   elseif isDeactivationEvent(event) then
-    -- Centralized modal management with guard
-    if context.modal and context._modalActive then
+    -- DEBUG: Log deactivation attempt
+    if M.DEBUG then
+      print(fmt("[CTX DEBUG] DEACTIVATION: %s | modalsEnabled=%s",
+        contextId,
+        tostring(M.MODALS_ENABLED)))
+    end
+
+    -- Centralized modal management (DISABLED when MODALS_ENABLED = false)
+    if M.MODALS_ENABLED and context.modal and context._modalActive then
       context._modalActive = false
       context.modal:exit()
+      if M.DEBUG then
+        print(fmt("[CTX DEBUG] MODAL EXITED: %s", contextId))
+      end
     end
 
     -- Call context's custom deactivation hook if defined
