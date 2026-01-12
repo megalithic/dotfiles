@@ -641,12 +641,10 @@ function M.connections.getEvents(hours)
     SELECT
       id, timestamp,
       datetime(timestamp, 'unixepoch', 'localtime') as time,
-      rule_name, sender, message, action, action_detail, focus_mode, shown
-    FROM notifications
+      event_type
+    FROM connection_events
     WHERE timestamp >= %d
-      AND shown = 0
-      AND action = 'blocked'
-      AND action_detail = 'blocked_by_focus'
+      AND dismissed = 0
     ORDER BY timestamp DESC
   ]],
     cutoff

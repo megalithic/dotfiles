@@ -407,6 +407,9 @@ M.dock = {
 }
 
 M.notifier = {
+  -- Disable menubar indicator (temporary fix for IPC recursion bug)
+  menubarEnabled = false,
+
   -- Notification Routing Rules
   -- Rules are sorted by priority (higher first) at runtime. First match wins.
   -- Each rule defines matching criteria and behavior.

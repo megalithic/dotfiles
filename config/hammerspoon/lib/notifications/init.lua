@@ -51,14 +51,19 @@ function M.init()
     return false
   end
 
-  -- 2. Initialize menubar
-  local menubarOk, menubarErr = pcall(function() return M.menubar.init() end)
+  -- 2. Initialize menubar (if enabled in config)
+  local menubarEnabled = C.notifier and C.notifier.menubarEnabled ~= false
+  if menubarEnabled then
+    local menubarOk, menubarErr = pcall(function() return M.menubar.init() end)
 
-  if not menubarOk then
-    U.log.wf("Failed to initialize notification menubar: %s", tostring(menubarErr))
-    -- Continue even if menubar fails
-  elseif not menubarErr then
-    U.log.w("Notification menubar init returned false (non-fatal)")
+    if not menubarOk then
+      U.log.wf("Failed to initialize notification menubar: %s", tostring(menubarErr))
+      -- Continue even if menubar fails
+    elseif not menubarErr then
+      U.log.w("Notification menubar init returned false (non-fatal)")
+    end
+  else
+    U.log.i("Notification menubar disabled via config")
   end
 
   -- 3. Processor and notifier have no initialization

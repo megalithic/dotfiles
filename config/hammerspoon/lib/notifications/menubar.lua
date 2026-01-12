@@ -203,6 +203,12 @@ local function normalizeEvents(events)
 
   -- Add network events
   for _, event in ipairs(events.network) do
+    -- Skip malformed events without event_type
+    if not event.event_type or event.event_type == "" then
+      U.log.w("Skipping network event with missing event_type")
+      goto continue_network
+    end
+
     local iconChar = getNetworkIcon(event.event_type)
     local iconImage = renderIconAsImage(iconChar, true) -- Pass true to dim network icons
     local title
@@ -216,7 +222,7 @@ local function normalizeEvents(events)
     elseif event.event_type == "router_disconnected" then
       title = "Router Disconnected"
     else
-      title = event.event_type
+      title = event.event_type or "Unknown Event"
     end
 
     table.insert(normalized, {
@@ -226,13 +232,24 @@ local function normalizeEvents(events)
       timestamp = event.timestamp,
       data = event,
     })
+
+    ::continue_network::
   end
 
   -- Add focus-blocked notifications
   for _, notif in ipairs(events.focusBlocked) do
-    local sender = notif.sender or "Unknown"
-    local preview = notif.message and notif.message:sub(1, 40) or ""
-    if #preview == 40 then preview = preview .. "..." end
+    -- Robust null/empty handling for sender
+    local sender = notif.sender
+    if not sender or sender == "" or sender == "nil" then
+      sender = "Unknown"
+    end
+
+    -- Robust null/empty handling for message preview
+    local preview = ""
+    if notif.message and notif.message ~= "" and notif.message ~= "nil" then
+      preview = notif.message:sub(1, 40)
+      if #preview == 40 then preview = preview .. "..." end
+    end
 
     -- Try to get app icon, fallback to 🔴
     local appIcon = getAppIcon(notif.app_id)
