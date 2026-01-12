@@ -161,6 +161,22 @@ function M.insert_ocr_text(ocr_text)
   end
 end
 
+-- Import capture cleanup utilities from shared module
+local capture = require("notes.capture")
+
+--- Check if a capture note is "empty" (contains only template content, no user-written text)
+--- Delegates to notes.capture module
+---@param bufnr number|nil Buffer number (default: current buffer)
+---@return boolean is_empty True if the note has no user-written content
+---@return string|nil filepath Path to the file if it's a capture note, nil otherwise
+M.is_capture_note_empty = capture.is_empty
+
+--- Prompt user to delete empty capture note and perform deletion if confirmed
+--- Delegates to notes.capture module
+---@param filepath string Path to the file to delete
+---@param callback? function Optional callback after user responds (receives boolean: deleted)
+M.cleanup_empty_capture = capture.cleanup
+
 --- OCR the image on current line and insert text into buffer
 function M.ocr_image_on_line()
   local image_ref = M.get_image_ref_on_line()
@@ -766,5 +782,28 @@ require("config.autocmds").augroup("NotesLoaded", {
     end,
   },
 })
+
+-- Empty capture note cleanup autocmd
+-- Only active when NOT in Shade context (Shade handles this via QuitPre in shade.lua)
+if not vim.g.shade_context then
+  require("config.autocmds").augroup("CaptureNoteCleanup", {
+    {
+      event = "BufDelete",
+      pattern = "*/captures/*.md",
+      desc = "Prompt to delete empty capture notes on buffer close",
+      command = function(evt)
+        local bufnr = evt.buf
+        local is_empty, filepath = M.is_capture_note_empty(bufnr)
+
+        if is_empty and filepath then
+          -- Defer to allow buffer to close first, then prompt
+          vim.defer_fn(function()
+            M.cleanup_empty_capture(filepath)
+          end, 100)
+        end
+      end,
+    },
+  })
+end
 
 return M

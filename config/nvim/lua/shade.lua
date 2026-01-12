@@ -184,6 +184,35 @@ function M.setup()
   -- Create autocmd group
   local group = vim.api.nvim_create_augroup("ShadeIntegration", { clear = true })
 
+  -- Helper to complete the hide sequence
+  local function complete_hide()
+    M.hide()
+    vim.cmd("enew")
+    vim.cmd("setlocal bufhidden=wipe")
+  end
+
+  -- Helper to check for empty capture and handle cleanup
+  local function check_and_cleanup_capture(callback)
+    -- Load capture cleanup module
+    local ok, capture = pcall(require, "notes.capture")
+    if not ok then
+      -- Module not available, just proceed
+      callback()
+      return
+    end
+
+    local is_empty, filepath = capture.is_empty()
+
+    if is_empty and filepath then
+      -- Prompt for deletion before hiding
+      capture.cleanup(filepath, function(deleted)
+        callback()
+      end)
+    else
+      callback()
+    end
+  end
+
   -- Intercept quit commands
   vim.api.nvim_create_autocmd("QuitPre", {
     group = group,
@@ -200,12 +229,8 @@ function M.setup()
         vim.cmd("silent! write")
       end
 
-      -- Hide Shade panel
-      M.hide()
-
-      -- Clear to empty buffer instead of quitting
-      vim.cmd("enew")
-      vim.cmd("setlocal bufhidden=wipe")
+      -- Check for empty capture note and cleanup, then hide
+      check_and_cleanup_capture(complete_hide)
 
       -- Cancel the quit
       return true
@@ -217,9 +242,7 @@ function M.setup()
     if vim.bo.modified then
       vim.cmd("silent! write")
     end
-    M.hide()
-    vim.cmd("enew")
-    vim.cmd("setlocal bufhidden=wipe")
+    check_and_cleanup_capture(complete_hide)
   end, { desc = "Save and hide Shade panel" })
 
   vim.notify("Shade integration enabled", vim.log.levels.DEBUG)
