@@ -113,6 +113,8 @@ in
     pkgs.llm-agents.opencode
     pkgs.llm-agents.claude-code-acp # DEPRECATED: hash override in overlays/default.nix
     pkgs.llm-agents.beads
+    pkgs.tidewave # Tidewave GUI app for web app development
+    pkgs.tidewave-cli # Tidewave MCP CLI
   ];
 
   # ===========================================================================

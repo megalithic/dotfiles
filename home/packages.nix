@@ -12,7 +12,7 @@
     fantastical
     helium-browser
     talktastic
-    # tidewave
+    # tidewave GUI app moved to home/programs/ai/default.nix
   ];
 
   # Filter: only apps with appLocation = "home-manager" go to home.packages

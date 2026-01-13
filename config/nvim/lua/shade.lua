@@ -53,22 +53,18 @@ function M.request(method, params)
 
   local request = vim.mpack.encode({ MSG_REQUEST, msgid, method, params or {} })
 
-  -- Use netcat (nc) to send request and receive response
-  -- -U for Unix socket, -w 2 for 2 second timeout
-  local cmd = string.format(
-    "echo -n %s | nc -U -w 2 %s 2>/dev/null",
-    vim.fn.shellescape(request),
-    vim.fn.shellescape(SOCKET_PATH)
-  )
+  -- Use vim.system to send binary data to Unix socket
+  -- This properly handles Blobs (vim.mpack.encode returns Blob in newer nvim)
+  local result = vim.system(
+    { "nc", "-U", "-w", "2", SOCKET_PATH },
+    { stdin = request, text = false }
+  ):wait()
 
-  local handle = io.popen(cmd, "r")
-  if not handle then
+  if result.code ~= 0 then
     return nil, "Failed to connect to Shade"
   end
 
-  local response_data = handle:read("*a")
-  handle:close()
-
+  local response_data = result.stdout
   if not response_data or response_data == "" then
     return nil, "No response from Shade"
   end
@@ -109,14 +105,13 @@ function M.notify(method, params)
   -- Build msgpack-rpc notification: [type, method, params]
   local notification = vim.mpack.encode({ MSG_NOTIFICATION, method, params or {} })
 
-  -- Fire and forget via netcat
-  local cmd = string.format(
-    "echo -n %s | nc -U %s >/dev/null 2>&1 &",
-    vim.fn.shellescape(notification),
-    vim.fn.shellescape(SOCKET_PATH)
+  -- Fire and forget using vim.system (handles binary Blobs properly)
+  vim.system(
+    { "nc", "-U", SOCKET_PATH },
+    { stdin = notification, text = false }
   )
+  -- Note: not calling :wait() since this is fire-and-forget
 
-  os.execute(cmd)
   return true
 end
 
@@ -175,77 +170,11 @@ function M.get_context()
 end
 
 --- Setup Shade integration (call from nvim config when SHADE=1)
---- Makes :wq save and hide instead of quit
+--- Currently a no-op - Shade handles hide-on-exit from the Swift side
+--- by detecting when the terminal process exits
 function M.setup()
-  if not M.is_shade_context() then
-    return
-  end
-
-  -- Create autocmd group
-  local group = vim.api.nvim_create_augroup("ShadeIntegration", { clear = true })
-
-  -- Helper to complete the hide sequence
-  local function complete_hide()
-    M.hide()
-    vim.cmd("enew")
-    vim.cmd("setlocal bufhidden=wipe")
-  end
-
-  -- Helper to check for empty capture and handle cleanup
-  local function check_and_cleanup_capture(callback)
-    -- Load capture cleanup module
-    local ok, capture = pcall(require, "notes.capture")
-    if not ok then
-      -- Module not available, just proceed
-      callback()
-      return
-    end
-
-    local is_empty, filepath = capture.is_empty()
-
-    if is_empty and filepath then
-      -- Prompt for deletion before hiding
-      capture.cleanup(filepath, function(deleted)
-        callback()
-      end)
-    else
-      callback()
-    end
-  end
-
-  -- Intercept quit commands
-  vim.api.nvim_create_autocmd("QuitPre", {
-    group = group,
-    callback = function()
-      -- Check if this is a forced quit (:q!, :wq!)
-      -- vim.v.event doesn't have this info in QuitPre, so we check differently
-      local cmdline = vim.fn.getcmdline()
-      if cmdline and cmdline:match("!$") then
-        return -- Allow forced quit
-      end
-
-      -- Save if modified
-      if vim.bo.modified then
-        vim.cmd("silent! write")
-      end
-
-      -- Check for empty capture note and cleanup, then hide
-      check_and_cleanup_capture(complete_hide)
-
-      -- Cancel the quit
-      return true
-    end,
-  })
-
-  -- Also intercept ZZ
-  vim.keymap.set("n", "ZZ", function()
-    if vim.bo.modified then
-      vim.cmd("silent! write")
-    end
-    check_and_cleanup_capture(complete_hide)
-  end, { desc = "Save and hide Shade panel" })
-
-  vim.notify("Shade integration enabled", vim.log.levels.DEBUG)
+  -- No-op: Shade detects process exit and hides automatically
+  -- Keeping this function for API compatibility
 end
 
 return M
