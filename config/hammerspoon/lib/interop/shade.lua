@@ -246,12 +246,30 @@ function M.getApp()
   return nil
 end
 
+--- Get the Shade window (NSPanel)
+--- Note: Shade uses NSPanel which has isStandard()=false, so we find it
+--- via allWindows() rather than relying on mainWindow() or standard filters.
+--- This enables Hammerspoon to control position/size for sidebar mode.
+---@return hs.window|nil
+function M.getWindow()
+  local app = M.getApp()
+  if not app then return nil end
+
+  -- Find the shade window from all windows (includes panels)
+  local windows = app:allWindows()
+  for _, win in ipairs(windows) do
+    if win:title() == "shade" then
+      return win
+    end
+  end
+
+  -- Fallback: return first window if title doesn't match
+  return windows[1]
+end
+
 --- Move Shade window to the primary (main) screen, centered
 function M.moveToMainScreen()
-  local app = M.getApp()
-  if not app then return end
-
-  local win = app:mainWindow()
+  local win = M.getWindow()
   if not win then return end
 
   local primaryScreen = hs.screen.primaryScreen()
