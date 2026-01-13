@@ -605,112 +605,22 @@ function M.smartCaptureToggle()
 end
 
 -- =============================================================================
--- Sidebar Mode - Companion Window Management
+-- Sidebar Mode
 -- =============================================================================
+-- NOTE: As of 2026-01-13, Shade handles ALL sidebar window management directly
+-- using AXUIElement APIs. Hammerspoon just sends the mode notification.
+-- No companion window tracking needed here - Shade does it all.
 
--- Track companion window state for restoration
-local companionState = nil -- { bundleID = string, originalFrame = hs.geometry }
-
---- Handle sidebar enter notification from Shade
---- Resizes the companion app to make room for Shade sidebar
-local function onSidebarEnter(name, obj, userInfo)
-  if not userInfo then
-    U.log.w("sidebar.enter: no userInfo")
-    return
-  end
-
-  local edge = userInfo.edge
-  local shadeWidth = tonumber(userInfo.width) or 0
-  local bundleID = userInfo.companionBundleID
-
-  U.log.d(fmt("sidebar.enter: edge=%s width=%d companion=%s", edge or "?", shadeWidth, bundleID or "?"))
-
-  -- Find companion app
-  local app = bundleID and bundleID ~= "" and hs.application.find(bundleID)
-  if not app then
-    U.log.d("sidebar.enter: companion app not found")
-    return
-  end
-
-  local win = app:mainWindow()
-  if not win then
-    U.log.d("sidebar.enter: companion has no main window")
-    return
-  end
-
-  -- Save original state for restoration
-  companionState = {
-    bundleID = bundleID,
-    originalFrame = win:frame():copy()
-  }
-
-  -- Get screen frame (use primary for now)
-  local screen = hs.screen.primaryScreen()
-  if not screen then return end
-  local sf = screen:frame()
-
-  -- Calculate new frame based on sidebar edge
-  local newFrame
-  if edge == "sidebar-left" then
-    -- Shade is on left, companion goes to right side
-    newFrame = {
-      x = sf.x + shadeWidth,
-      y = sf.y,
-      w = sf.w - shadeWidth,
-      h = sf.h
-    }
-  elseif edge == "sidebar-right" then
-    -- Shade is on right, companion goes to left side
-    newFrame = {
-      x = sf.x,
-      y = sf.y,
-      w = sf.w - shadeWidth,
-      h = sf.h
-    }
-  else
-    U.log.w("sidebar.enter: unknown edge: " .. tostring(edge))
-    return
-  end
-
-  win:setFrame(newFrame)
-  U.log.d(fmt("sidebar.enter: resized companion to %dx%d at (%d,%d)",
-    newFrame.w, newFrame.h, newFrame.x, newFrame.y))
-end
-
---- Handle sidebar exit notification from Shade
---- Restores companion window to its original size
-local function onSidebarExit()
-  if not companionState then
-    U.log.d("sidebar.exit: no companion state to restore")
-    return
-  end
-
-  U.log.d(fmt("sidebar.exit: restoring companion %s", companionState.bundleID or "?"))
-
-  local app = hs.application.find(companionState.bundleID)
-  if app then
-    local win = app:mainWindow()
-    if win and companionState.originalFrame then
-      win:setFrame(companionState.originalFrame)
-      U.log.d("sidebar.exit: companion restored")
-    end
-  end
-
-  companionState = nil
-end
-
--- Register notification listeners
-hs.distributednotifications.new(onSidebarEnter, "io.shade.sidebar.enter"):start()
-hs.distributednotifications.new(onSidebarExit, "io.shade.sidebar.exit"):start()
-U.log.d("shade: registered sidebar notification listeners")
+-- Track sidebar state for toggle (simple boolean, not window state)
+local inSidebarMode = false
 
 --- Set panel mode (floating, sidebar-left, sidebar-right)
---- Uses separate notification names instead of userInfo (more reliable cross-process)
+--- Uses separate notification names (more reliable cross-process than userInfo)
 ---@param mode string The mode to set
 function M.setMode(mode)
-  -- Use specific notification names instead of userInfo (avoids cross-process serialization issues)
   local notificationName = "io.shade.mode." .. mode
   hs.distributednotifications.post(notificationName, nil, nil)
+  inSidebarMode = (mode ~= "floating")
   U.log.d("shade: sent notification: " .. notificationName)
 end
 
@@ -730,16 +640,10 @@ function M.floatingMode()
 end
 
 --- Toggle sidebar mode (left sidebar <-> floating)
---- If in floating mode, enter sidebar-left
---- If in sidebar mode, return to floating
 function M.sidebarToggle()
-  -- Track sidebar state locally (mirrors Shade's currentMode)
-  -- We detect state by checking if companionState exists (set by onSidebarEnter)
-  if companionState then
-    -- Currently in sidebar mode, exit to floating
+  if inSidebarMode then
     M.floatingMode()
   else
-    -- Currently floating, enter sidebar-left
     M.sidebarLeft()
   end
 end
