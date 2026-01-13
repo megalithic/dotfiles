@@ -13,12 +13,10 @@
   lib,
   inputs,
   ...
-}:
-let
+}: let
   # ===========================================================================
   # Shared Configuration
   # ===========================================================================
-
   # Brave Browser Nightly path (used by both chrome-devtools and playwright MCP)
   braveBrowserPath = "${pkgs.brave-browser-nightly}/Applications/Brave Browser Nightly.app/Contents/MacOS/Brave Browser Nightly";
 
@@ -34,7 +32,7 @@ let
           enable = true;
           env.MEMORY_FILE_PATH = "${config.home.homeDirectory}/.local/share/claude/memory.jsonl";
         };
-        context7.enable = true;
+        context7.enable = false;
         terraform.enable = false;
         nixos.enable = false;
         codex.enable = false;
@@ -50,7 +48,7 @@ let
 
         # Playwright MCP for browser automation
         playwright = {
-          enable = true;
+          enable = false;
           executable = braveBrowserPath;
         };
       };
@@ -75,23 +73,19 @@ let
   # Claude: { command, args?, env? }
   # OpenCode: { type: "local", command: [cmd, ...args], enabled: true, environment? }
   # ===========================================================================
-  toOpenCodeMcp =
-    name: server:
+  toOpenCodeMcp = name: server:
     {
       type = "local";
       command =
-        if server ? args && server.args != [ ] then
-          [ server.command ] ++ server.args
-        else
-          [ server.command ];
+        if server ? args && server.args != []
+        then [server.command] ++ server.args
+        else [server.command];
       enabled = true;
     }
-    // (lib.optionalAttrs (server ? env) { environment = server.env; });
+    // (lib.optionalAttrs (server ? env) {environment = server.env;});
 
   opencodeMcpServers = lib.mapAttrs toOpenCodeMcp allMcpServers;
-
-in
-{
+in {
   imports = [
     ./claude-code.nix
     ./opencode.nix
@@ -132,7 +126,7 @@ in
   # ===========================================================================
 
   # Symlink chrome-devtools-mcp binary to ~/.local/bin (for manual use)
-  home.activation.linkAiBinaries = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+  home.activation.linkAiBinaries = lib.hm.dag.entryAfter ["writeBoundary"] ''
     BIN_DIR="${config.home.homeDirectory}/.local/bin"
     mkdir -p "$BIN_DIR"
 

@@ -23,6 +23,10 @@ in {
       _prompt_move_to_bottom # call function manually to load it since event handlers don't get autoloaded
       # _prompt_reset_mouse
 
+      # Use ntfy for fish-done plugin notifications instead of terminal-notifier
+      # (terminal-notifier can hang blocking the prompt)
+      set -g __done_notification_command 'ntfy send -t "$title" -m "$message" &'
+
       set fish_cursor_default     block      blink
       set fish_cursor_insert      line       blink
       set fish_cursor_replace_one underscore blink

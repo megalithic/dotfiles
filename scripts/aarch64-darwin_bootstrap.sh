@@ -47,6 +47,16 @@ echo "░ :: -> Cloning $DOTFILES_NAME repo to $DOTFILES_DIR.." &&
 echo "░ :: -> Configuring git hooks.." &&
   git -C "$DOTFILES_DIR" config core.hooksPath .githooks
 
+# Validate hostname exists in flake configurations
+echo "░ :: -> Validating configuration for '$FLAKE'.."
+if ! nix --experimental-features 'nix-command flakes' flake show "$DOTFILES_DIR" 2>/dev/null | grep -q "darwinConfigurations.$FLAKE"; then
+  echo "░ [!] -> No configuration found for hostname '$FLAKE'"
+  echo "░ :: -> Available configurations:"
+  nix --experimental-features 'nix-command flakes' flake show "$DOTFILES_DIR" 2>/dev/null | grep "darwinConfigurations" | sed 's/^/░      /'
+  echo ""
+  read -rp "░ :: -> Enter hostname to use: " FLAKE
+fi
+
 echo "░ :: -> Running nix-darwin for the first time for $FLAKE.." &&
   (sudo nix --experimental-features 'nix-command flakes' run nix-darwin -- switch --option eval-cache false --flake "$DOTFILES_DIR#$FLAKE" &&
     echo "░ [✓] -> Completed installation of $DOTFILES_DIR flake..") || echo "░ [x] -> Errored while installing $DOTFILES_DIR flake.."

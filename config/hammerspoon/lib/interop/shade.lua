@@ -218,15 +218,21 @@ local function buildArgs()
 end
 
 --- Toggle the shade panel visibility
+--- Note: Shade resets to floating mode when showing from hidden state
 function M.toggle()
   postNotification(NOTIFICATION_TOGGLE)
+  -- Shade resets to floating mode on show, so sync local state
+  inSidebarMode = false
   -- Move to primary screen after a short delay to let it appear
   hs.timer.doAfter(0.1, M.moveToMainScreen)
 end
 
 --- Show the shade panel
+--- Note: Shade resets to floating mode when showing from hidden state
 function M.show()
   postNotification(NOTIFICATION_SHOW)
+  -- Shade resets to floating mode on show, so sync local state
+  inSidebarMode = false
   -- Move to primary screen after a short delay to let it appear
   hs.timer.doAfter(0.1, M.moveToMainScreen)
 end
@@ -429,11 +435,18 @@ function M.isNvimServerRunning()
   return status == true
 end
 
+--------------------------------------------------------------------------------
+-- DEPRECATED: These functions are no longer needed since Shade handles nvim RPC.
+-- Kept for manual debugging via HS console only.
+-- Example: hs -c "require('lib.interop.shade').sendNvimCommand(':messages')"
+--------------------------------------------------------------------------------
+
 --- Send a command to nvim via RPC
 --- Uses --remote-send to send keystrokes to the nvim server
 ---@param nvimCmd string Command to execute (e.g., ":ObsidianToday")
 ---@return boolean success
 ---@return string? error Error message if failed
+---@deprecated Shade handles nvim RPC internally via ShadeNvim actor
 function M.sendNvimCommand(nvimCmd)
   if not M.isNvimServerRunning() then
     local err = "nvim server not running"
@@ -464,6 +477,7 @@ end
 ---@param timeout? number Timeout in seconds (default 5)
 ---@param onSuccess? fun() Callback on success
 ---@param onFailure? fun(err: string) Callback on failure
+---@deprecated Shade handles nvim RPC internally via ShadeNvim actor
 function M.sendNvimCommandWhenReady(nvimCmd, timeout, onSuccess, onFailure)
   timeout = timeout or 5
 
@@ -496,6 +510,7 @@ end
 --- Uses hs.timer.waitUntil with timeout for safe cleanup
 ---@param filePath string Path to file to open
 ---@param timeout? number Timeout in seconds (default 5)
+---@deprecated Shade handles nvim RPC internally via ShadeNvim actor
 function M.openFileWhenReady(filePath, timeout)
   timeout = timeout or 5
 
@@ -528,6 +543,7 @@ end
 --- Uses nvim --remote to send file to existing server
 ---@param filePath string Path to file to open
 ---@param callback? fun(success: boolean) Optional callback
+---@deprecated Shade handles nvim RPC internally via ShadeNvim actor
 function M.openFile(filePath, callback)
   if M.isNvimServerRunning() then
     -- Server running, send file via --remote

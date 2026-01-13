@@ -302,34 +302,6 @@ local function handleNotification(element)
     function(value) return value.AXValue end
   )
 
-  -- DEBUG: Log what we extracted for Fantastical notifications
-  if bundleID:find("flexibits", 1, true) then
-    U.log.df("Fantastical notification: %d static texts found", #staticTexts)
-    for i, text in ipairs(staticTexts) do
-      U.log.df("  [%d]: %s", i, text or "nil")
-    end
-
-    -- Also check for other potential text attributes
-    local desc = notificationElement:attributeValue("AXDescription")
-    local value = notificationElement:attributeValue("AXValue")
-    local title_attr = notificationElement:attributeValue("AXTitle")
-    U.log.df("  AXDescription: %s", desc or "nil")
-    U.log.df("  AXValue: %s", value or "nil")
-    U.log.df("  AXTitle: %s", title_attr or "nil")
-
-    -- Check all children for potential text
-    local children = notificationElement:attributeValue("AXChildren") or {}
-    U.log.df("  Total children: %d", #children)
-    for i, child in ipairs(children) do
-      local role = child.AXRole
-      local childValue = child.AXValue
-      local childDesc = child:attributeValue("AXDescription")
-      if childValue or childDesc then
-        U.log.df("    Child %d [%s]: value=%s, desc=%s", i, role or "?", tostring(childValue), tostring(childDesc))
-      end
-    end
-  end
-
   local title, subtitle, message = nil, nil, nil
   if #staticTexts == 2 then
     title, message = table.unpack(staticTexts)

@@ -438,7 +438,7 @@ in {
       settings = {
         auto_install = true;
         experimental = true;
-        verbose = false;
+        verbose = true;
       };
 
       # globalConfig = {

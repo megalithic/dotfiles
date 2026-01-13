@@ -31,7 +31,7 @@
       "orcaslicer"
       "raycast"
       "slack"
-      "spotify"
+      # "spotify"
       "thingsmacsandboxhelper"
       "vial"
       "yubico-authenticator"

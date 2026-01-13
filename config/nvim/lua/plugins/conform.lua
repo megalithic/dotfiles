@@ -131,6 +131,13 @@ return {
           return
         end
 
+        -- Skip notes vault - obsidian.nvim handles formatting via ObsidianNoteWritePre
+        -- Prevents prettier from mangling prose and conflicting with obsidian frontmatter
+        local notes_home = vim.env.NOTES_HOME or (vim.env.HOME .. "/iclouddrive/Documents/_notes")
+        if bufname:match(vim.pesc(notes_home)) then
+          return
+        end
+
         return { timeout_ms = 500, lsp_format = "fallback" }
       end,
     },

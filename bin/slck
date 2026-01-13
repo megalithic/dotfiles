@@ -22,9 +22,10 @@ __clean_exit() {
 trap '__clean_exit $? $LINENO' EXIT
 
 TMUX_LAUNCH_SESSION="slck"
-SLACK_TOKEN="$(op read "op://Shared/megaenv/SLACK_NIBUILD_OAUTH_TOKEN")"
-SLACK_CHAN_ID="D09FLHENBMZ"
-SLACK_USER="Seth"
+SLACK_TOKEN="${SLACK_API_TOKEN}"
+SLACK_CHAN_ID=""
+# SLACK_CHAN_ID="D09FLHENBMZ"
+SLACK_USER="Seth Messer"
 
 # -- status list
 possible_statuses="away

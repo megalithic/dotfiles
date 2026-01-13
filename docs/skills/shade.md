@@ -64,6 +64,9 @@ Hammerspoon communicates with Shade via `DistributedNotificationCenter`:
 | `io.shade.note.capture` | Text capture hotkey | Gathers context, creates capture note |
 | `io.shade.note.daily` | Daily note hotkey | Opens :ObsidianToday via RPC |
 | `io.shade.note.capture.image` | Image capture (clipper) | Reads context.json (imageFilename), creates image note |
+| `io.shade.mode.sidebar-left` | Enter left sidebar mode | Resizes companion window, docks Shade left |
+| `io.shade.mode.sidebar-right` | Enter right sidebar mode | Resizes companion window, docks Shade right |
+| `io.shade.mode.floating` | Return to floating mode | Restores companion window, centers Shade |
 
 ### Notification Flow Example
 
@@ -176,6 +179,12 @@ M.captureWithContext() -- Post io.shade.note.capture (Shade gathers context)
 M.openDailyNote()      -- Post io.shade.note.daily (Shade handles :ObsidianToday)
 M.smartCaptureToggle() -- Toggle or capture based on state
 M.smartToggle()        -- Smart toggle with auto-launch
+-- Sidebar mode functions:
+M.sidebarLeft()              -- Post io.shade.mode.sidebar-left
+M.sidebarRight()             -- Post io.shade.mode.sidebar-right
+M.floatingMode()             -- Post io.shade.mode.floating
+M.sidebarToggle()            -- Toggle between sidebar-left and floating
+M.captureWithContextSidebar() -- Capture note in sidebar mode
 ```
 
 ### CRITICAL: Hammerspoon Should NOT Send nvim Commands
@@ -191,6 +200,35 @@ sendNvimCommand(":ObsidianToday")
 -- DO THIS - Shade handles nvim RPC internally
 postNotification(NOTIFICATION_DAILY)
 ```
+
+## Sidebar Mode
+
+Shade can dock to the left or right of the screen, resizing the "companion" window (the frontmost app when sidebar mode is entered) to share screen space.
+
+### Architecture
+
+- Shade uses AXUIElement APIs to resize the companion window
+- Window positions are tracked for restore on floating mode
+- All window management happens in Shade (not Hammerspoon)
+
+### Workflow
+
+1. User hits hotkey (e.g., Hyper+Shift+L for sidebar-left)
+2. Hammerspoon posts `io.shade.mode.sidebar-left`
+3. Shade:
+   - Captures companion window reference
+   - Resizes companion to right 60% of screen
+   - Docks Shade panel to left 40%
+4. On `io.shade.mode.floating`:
+   - Restores companion window to original size
+   - Returns Shade to centered floating panel
+
+### Companion Window
+
+The "companion" window is the frontmost app's active window when sidebar mode is entered. Shade:
+- Stores reference via AXUIElement
+- Tracks original frame for restore
+- Applies 60/40 split (companion on right for left sidebar)
 
 ## Decision Trees
 

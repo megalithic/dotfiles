@@ -621,18 +621,8 @@ require("config.autocmds").augroup("NotesLoaded", {
         local clients = vim.lsp.get_clients({ bufnr = bufnr })
         for _, client in ipairs(clients) do
           if client.name == "obsidian-ls" then
-            map("n", "<leader>w", function()
-              vim.schedule(function()
-                local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-
-                if string.match(vim.fn.expand("%:p:h"), "daily") then
-                  M.sort_tasks(bufnr, lines)
-                  M.parse_due_dates(bufnr, lines)
-                end
-
-                vim.cmd.write({ bang = true })
-              end)
-            end, { buffer = bufnr, desc = "[notes] format and save" })
+            -- Note: <leader>w removed - task sorting now happens via ObsidianNoteWritePre autocmd
+            -- This prevents multiple format passes and keeps all write logic in one place
             if pcall(require, "mini.clue") then
               vim.b.miniclue_config = {
                 clues = {
@@ -805,5 +795,24 @@ if not vim.g.shade_context then
     },
   })
 end
+
+-- ObsidianNoteWritePre: Consolidated pre-save formatting for notes
+-- Replaces the old <leader>w mapping to prevent multiple format passes
+-- Only conform is now excluded from notes (see conform.lua), this handles note-specific logic
+vim.api.nvim_create_autocmd("User", {
+  pattern = "ObsidianNoteWritePre",
+  desc = "Format notes before save (task sorting, due date parsing)",
+  callback = function(ev)
+    local bufnr = ev.buf
+    local filepath = vim.api.nvim_buf_get_name(bufnr)
+
+    -- Only process daily notes for task sorting/due dates
+    if filepath:match("/daily/") then
+      local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+      M.sort_tasks(bufnr, lines)
+      M.parse_due_dates(bufnr, lines)
+    end
+  end,
+})
 
 return M

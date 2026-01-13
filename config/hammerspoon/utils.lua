@@ -170,7 +170,11 @@ function M.logger(msg, level)
   level = level and level or "NOTE" --[[@as "NOTE"|"INFO"|"WARN"|"ERROR"|"OK"|"DEBUG"]]
   msg = type(msg) == "table" and hs.inspect(msg) or msg
 
-  local w = debug.getinfo(3, "S")
+  -- Get caller info, trying multiple stack levels (hotkey callbacks have shorter stacks)
+  local w = debug.getinfo(4, "Sl") or debug.getinfo(3, "Sl") or debug.getinfo(2, "Sl")
+  if not w then
+    w = { short_src = "unknown", currentline = 0 }
+  end
   local full_path = w.short_src
   local fname = full_path:gsub(".*/", "")
 
@@ -206,7 +210,7 @@ function M.logger(msg, level)
           .. " ("
           .. w.short_src:gsub(".*/", "")
           .. ":"
-          .. w.linedefined
+          .. w.currentline
           .. ") => ["
           .. fname
           .. "] "

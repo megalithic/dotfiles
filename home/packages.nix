@@ -28,6 +28,7 @@
   guiPkgs = with pkgs; [
     neovide # Native neovim GUI - potential future use for floating notes window
     obsidian
+    spotify
     telegram-desktop
     zoom-us
   ];

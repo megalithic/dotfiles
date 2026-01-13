@@ -15,17 +15,36 @@ function M.focusMainWindow(bundleID, opts)
     app = hs.application.find(bundleID)
   end
 
+  -- Guard: app might not be found
+  if not app then
+    U.log.w("focusMainWindow: app not found")
+    return nil
+  end
+
   opts = opts or { h = 800, w = 800, focus = true }
+
+  -- For apps using NSPanel (like Shade), mainWindow() returns nil
+  -- Fall back to first window from allWindows()
+  local mainWin = app:mainWindow()
   local win = hs.fnutils.find(
     app:allWindows(),
-    function(win)
-      return app:mainWindow() == win and win:isStandard() and win:frame().w >= opts.w and win:frame().h >= opts.h
+    function(w)
+      -- If app has a mainWindow, match it; otherwise accept any window meeting size criteria
+      local isMain = (mainWin == nil) or (mainWin == w)
+      return isMain and w:frame().w >= opts.w and w:frame().h >= opts.h
     end
   )
 
+  -- Fallback: if no window meets criteria, try first window
+  if not win and #app:allWindows() > 0 then
+    win = app:allWindows()[1]
+  end
+
   if win ~= nil and opts.focus then win:focus() end
 
-  U.log.n(string.format("%s (%s)", app:bundleID(), app:mainWindow():title()))
+  -- Safe logging: handle nil mainWindow (NSPanel apps like Shade)
+  local winTitle = win and win:title() or (mainWin and mainWin:title()) or "no window"
+  U.log.n(string.format("%s (%s)", app:bundleID() or "unknown", winTitle))
 
   return win
 end
