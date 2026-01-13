@@ -238,6 +238,7 @@
       | `hs` | Hammerspoon config, reload, macOS APIs | Before editing HS config |
       | `nvim` | Neovim config, plugins, LSP patterns | Before editing nvim config |
       | `tmux` | tmux sessions, panes, windows, orchestration | Before tmux interaction |
+      | `task-completion` | Summary format, insight blocks, preview-ai diff | Before completing any non-trivial task |
 
       ## Available Agents
 

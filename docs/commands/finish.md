@@ -1,9 +1,11 @@
 ---
 description: Finish work session - review changes, update tasks, prepare for push (asks before pushing)
-allowed-tools: Bash(jj:*), Bash(bd:*), Bash(git:*), Read
+allowed-tools: Bash(jj:*), Bash(bd:*), Bash(git:*), Bash(preview-ai:*), Read
 ---
 
-Finishing work session. Execute these steps but **DO NOT PUSH without explicit user approval**:
+Finishing work session. Execute these steps but **DO NOT PUSH without explicit user approval**.
+
+**REQUIRED**: Load the `task-completion` skill for summary format guidelines.
 
 1. **Check current state**:
    - Run `jj status` to see uncommitted changes
@@ -32,18 +34,37 @@ Finishing work session. Execute these steps but **DO NOT PUSH without explicit u
    - Run `jj git fetch` to check for remote changes
    - Run `jj log -r 'main' -r 'main@origin'` to compare
 
-7. **Present summary**:
+7. **Preview changes** (REQUIRED):
+   - Run `preview-ai diff` to open a split pane showing all changes
+   - This shows the diff excluding `.beads/**` noise
+   - Preview opens RIGHT next to the AI agent pane
+   - User can visually review before proceeding
+
+8. **Present summary** (follow task-completion skill format):
+
+   ```
+   `★ Insight ─────────────────────────────────────`
+   [2-3 codebase-specific insights about the work done]
+   `─────────────────────────────────────────────────`
+   ```
+
+   ## Summary
+
+   **Created/Modified:**
+   - List files with brief descriptions
+
+   **Features/Fixes:**
+   - ✅ Key accomplishments
 
    ## Commands Used This Session
    | Command | Purpose |
    |---------|---------|
    | `jj status` | Show working copy state |
    | `jj log -r 'main..@'` | Commits ahead of main |
-   | `jj diff` | View uncommitted changes |
+   | `preview-ai diff` | Visual diff review (excludes beads) |
    | `bd sync --from-main` | Pull latest bead state from main |
    | `bd repo sync` | Hydrate cross-repo issues |
    | `jj git fetch` | Pull latest from origin |
-   | `jj log -r 'main' -r 'main@origin'` | Compare local/remote |
 
    ## Beads Task Status
    - Show output from `bd show`
@@ -53,7 +74,7 @@ Finishing work session. Execute these steps but **DO NOT PUSH without explicit u
    - Commits ready: (list them)
    - Remote status: (ahead/behind/synced)
 
-8. **ASK FOR PERMISSION**:
+9. **ASK FOR PERMISSION**:
    
    "Ready to push to origin/main. Commands that will run:"
    ```

@@ -19,6 +19,8 @@ Good sir, we're about to reintroduce proper multi-host support to your dotfiles.
 - Allow host-specific and user-specific customization
 - Maintain clean, maintainable code structure
 - Keep the excellent patterns you've already established (lib.mega, mkApp, etc.)
+- **Bootstrap via `nix run github:megalithic/dotfiles` (mhanberg pattern)**
+- **Idempotent test builds on current machine (prevent breaking prod)**
 
 ---
 
@@ -208,6 +210,278 @@ in
 - Archive old `hosts/megabookpro.nix` (replaced by `hosts/megabookpro/default.nix`)
 - Update README and CLAUDE.md
 - **Validation**: Clean build, no warnings
+
+---
+
+## Bootstrap Strategy (mhanberg Pattern)
+
+### Current Bootstrap Mechanism
+
+**Your existing bootstrap** (`scripts/aarch64-darwin_bootstrap.sh`):
+1. Detects hostname via `hostname -s`
+2. Clones repo to `~/.dotfiles`
+3. Runs `sudo nix run nix-darwin -- switch --flake ~/.dotfiles#$FLAKE`
+
+**Problem**: Requires hostname to match a `darwinConfigurations` key exactly
+
+### Modernized Bootstrap with mkInit
+
+**Inspired by mhanberg's pattern**, we'll use `mkInit` to create installable apps for each architecture:
+
+**File**: `flake.nix` (apps section - UPDATED)
+
+```nix
+{
+  outputs = { ... }:
+  let
+    # Helper to create bootstrap apps (mhanberg pattern)
+    mkInit = {
+      arch,
+      script ? ''
+        echo "no default app init script set."
+      '',
+    }: let
+      pkgs = nixpkgs.legacyPackages.${arch};
+      init = pkgs.writeShellApplication {
+        name = "init";
+        text = script;
+      };
+    in {
+      type = "app";
+      program = "${init}/bin/init";
+    };
+  in {
+    # Bootstrap apps for each architecture
+    apps."aarch64-darwin".default = mkInit {
+      arch = "aarch64-darwin";
+      script = ''
+        #!/usr/bin/env bash
+        set -Eueo pipefail
+        
+        # Detect or prompt for hostname
+        HOSTNAME=$(hostname -s)
+        echo "Detected hostname: $HOSTNAME"
+        
+        # Validate hostname exists in flake
+        if ! nix flake show github:megalithic/dotfiles 2>/dev/null | grep -q "darwinConfigurations.$HOSTNAME"; then
+          echo "ERROR: No configuration found for hostname '$HOSTNAME'"
+          echo "Available configurations:"
+          nix flake show github:megalithic/dotfiles 2>/dev/null | grep "darwinConfigurations"
+          echo ""
+          read -p "Enter hostname to use: " HOSTNAME
+        fi
+        
+        # Clone dotfiles
+        if [ -d "$HOME/.dotfiles" ]; then
+          BACKUP_DIR="$HOME/.dotfiles.backup-$(date +%s)"
+          echo "Backing up existing dotfiles to $BACKUP_DIR"
+          mv "$HOME/.dotfiles" "$BACKUP_DIR"
+        fi
+        
+        echo "Cloning dotfiles..."
+        git clone https://github.com/megalithic/dotfiles "$HOME/.dotfiles"
+        cd "$HOME/.dotfiles"
+        
+        # Configure git hooks
+        git config core.hooksPath .githooks
+        
+        # Install nix-darwin
+        echo "Installing nix-darwin for $HOSTNAME..."
+        sudo nix --experimental-features 'nix-command flakes' run nix-darwin -- switch --option eval-cache false --flake .#$HOSTNAME
+        
+        echo "✅ Installation complete!"
+        echo "You can now run 'just rebuild' to rebuild your system"
+      '';
+    };
+    
+    apps."x86_64-darwin".default = mkInit {
+      arch = "x86_64-darwin";
+      script = builtins.readFile scripts/x86_64-darwin_bootstrap.sh;  # If needed
+    };
+    
+    # ... darwinConfigurations, etc.
+  };
+}
+```
+
+### Installation Process (User-Facing)
+
+**New installation instructions** (for README):
+
+```bash
+# 1. Install Determinate Nix
+curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
+
+# 2. Source nix to make it available
+source /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+
+# 3. Run the installer (auto-detects hostname)
+nix run github:megalithic/dotfiles
+
+# Or explicitly specify a host:
+# HOSTNAME=megabookpro nix run github:megalithic/dotfiles
+```
+
+**Key improvements**:
+- ✅ Auto-detects hostname
+- ✅ Validates hostname exists in flake configurations
+- ✅ Prompts for hostname if detection fails
+- ✅ Works for any architecture (ARM/Intel)
+- ✅ Single command installation
+- ✅ No manual flake.nix editing before first build
+
+---
+
+## Testing Strategy (Idempotent Test Builds)
+
+**Problem**: How do we test new host configurations on the current machine without breaking the production system?
+
+### Solution: Test Configurations in darwinConfigurations
+
+**Add test hosts** that can be built (but not activated) on your current machine:
+
+**File**: `flake.nix` (darwinConfigurations - UPDATED)
+
+```nix
+{
+  darwinConfigurations = {
+    # Production hosts
+    megabookpro = mkSystem {
+      hostname = "megabookpro";
+      system = "aarch64-darwin";
+      user = "seth";
+      version = "25.11";
+      extraModules = [
+        (brew_config { username = "seth"; })
+        (import ./modules/brew.nix)
+      ];
+    };
+    
+    # TESTING: Hypothetical new laptop config (can build but not activate)
+    testlaptop = mkSystem {
+      hostname = "testlaptop";
+      system = "aarch64-darwin";  # Match current machine arch
+      user = "testuser";
+      version = "25.11";
+      extraModules = [
+        (brew_config { username = "testuser"; })
+        (import ./modules/brew.nix)
+      ];
+    };
+  };
+}
+```
+
+### Justfile Test Recipes
+
+**File**: `justfile` (ADDITIONS)
+
+```bash
+# Test build a host configuration without activating
+test-build host:
+  @echo "Testing build for {{host}}..."
+  nix build .#darwinConfigurations.{{host}}.system -o /tmp/nix-test-{{host}} --show-trace
+  @echo "✅ Build successful for {{host}}"
+  @echo "Output: /tmp/nix-test-{{host}}"
+
+# Test build and show diff against current system
+test-diff host:
+  @echo "Building {{host}} and diffing against current system..."
+  nix build .#darwinConfigurations.{{host}}.system -o /tmp/nix-test-{{host}}
+  nix store diff-closures /run/current-system /tmp/nix-test-{{host}}
+
+# Validate flake for all hosts
+test-flake:
+  @echo "Validating flake..."
+  nix flake check
+  @echo "✅ Flake validation passed"
+
+# Test eval (faster than build, just checks syntax)
+test-eval host:
+  @echo "Evaluating {{host}} configuration..."
+  nix eval .#darwinConfigurations.{{host}}.config.system.build.toplevel --no-allow-import-from-derivation
+  @echo "✅ Evaluation successful for {{host}}"
+
+# Clean up test artifacts
+test-clean:
+  rm -f /tmp/nix-test-* /tmp/nix-result-test
+  @echo "✅ Cleaned up test artifacts"
+
+# Full test suite for a new host config
+test-host host: (test-eval host) (test-build host)
+  @echo "✅ All tests passed for {{host}}"
+```
+
+### Testing Workflow
+
+**Before committing new host config**:
+
+```bash
+# 1. Create test configuration for new laptop
+#    (in flake.nix under darwinConfigurations)
+
+# 2. Validate syntax (fast)
+just test-eval testlaptop
+
+# 3. Full build test (slower, but complete validation)
+just test-build testlaptop
+
+# 4. Check what would change vs current system
+just test-diff testlaptop
+
+# 5. Validate entire flake
+just test-flake
+
+# 6. If all pass, commit
+jj describe -m "feat: add testlaptop host configuration"
+
+# 7. Clean up test artifacts
+just test-clean
+```
+
+**Benefits**:
+- ✅ **Idempotent** - Doesn't modify current system
+- ✅ **Fast iteration** - Test without activating
+- ✅ **Diff validation** - See what would change
+- ✅ **CI-ready** - Can run in GitHub Actions
+- ✅ **Multi-arch** - Build tests work on any architecture
+- ✅ **Removable** - Clean up with `just test-clean`
+
+### CI/CD Integration (Future)
+
+**File**: `.github/workflows/test-hosts.yaml`
+
+```yaml
+name: Test Host Configurations
+
+on:
+  pull_request:
+    paths:
+      - 'flake.nix'
+      - 'flake.lock'
+      - 'hosts/**'
+      - 'users/**'
+      - 'modules/**'
+
+jobs:
+  test:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        host: [megabookpro, testlaptop]  # Add more as needed
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+      
+      - name: Validate flake
+        run: nix flake check
+      
+      - name: Test build ${{ matrix.host }}
+        run: |
+          nix build .#darwinConfigurations.${{ matrix.host }}.system \
+            -o /tmp/test-${{ matrix.host }}
+```
 
 ---
 
@@ -992,46 +1266,206 @@ _archive/
 
 #### Step 4.2: Update Documentation
 
-**File**: `README.md` - Add multi-host section
+**File**: `README.md` - COMPLETE REWRITE for multi-host
 
 ```markdown
-## Multi-Host Setup
+# 🗿 megadotfiles (nix'd)
 
-This dotfiles repo supports multiple Darwin (macOS) hosts with different users.
+<p align="center">
+![ghostty + tmux + nvim](https://raw.githubusercontent.com/megalithic/dotfiles/main/assets/megadots_ghostty_tmux_nvim.png)
+</p>
 
-### Structure
+## 🚀 Installation
 
-- `hosts/` - Per-host configuration
-  - `common.nix` - Shared across all hosts
-  - `${hostname}/` - Host-specific config
-- `users/` - Per-user configuration
-  - `common/` - Shared across all users
-  - `${username}/` - User-specific config
-- `modules/` - Reusable system modules
-  - `darwin/` - macOS-specific
-  - `shared/` - Cross-platform
-
-### Adding a New Host
-
-1. Gather info: `hostname`, `username`, `system` (arch)
-2. Create `hosts/${hostname}/default.nix`
-3. Create `users/${username}/{darwin.nix,home.nix,packages.nix}`
-4. Add to `flake.nix` in `darwinConfigurations`
-5. On new machine:
-   ```bash
-   nix build .#darwinConfigurations.${hostname}.system
-   /tmp/result/sw/bin/darwin-rebuild switch --flake .#${hostname}
-   ```
-
-### Rebuilding
+### Fresh Installation (Any Mac)
 
 ```bash
-# On any host
+# 1. Install Determinate Nix
+curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
+
+# 2. Source nix to make it available
+source /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+
+# 3. Run the installer (auto-detects hostname)
+nix run github:megalithic/dotfiles
+```
+
+The installer will:
+- Auto-detect your hostname
+- Validate it exists in available configurations
+- Prompt you if your hostname isn't configured yet
+- Clone the repo to `~/.dotfiles`
+- Run the initial nix-darwin build
+
+**Available hosts**: `megabookpro`, `${newlaptop}` (add more as needed)
+
+### Rebuilding After Changes
+
+```bash
+# Standard rebuild (uses workaround for launch agent hang)
 just rebuild
 
-# Or explicitly
-darwin-rebuild switch --flake .#${hostname}
+# Or use the justfile directly
+cd ~/.dotfiles
+just rebuild
 ```
+
+## 📁 Repository Structure
+
+This is a **multi-host, multi-user** nix-darwin + home-manager configuration.
+
+```
+.dotfiles/
+├── flake.nix              # Multi-host orchestration
+├── hosts/                 # Per-host configuration
+│   ├── common.nix         # Shared across all hosts
+│   ├── megabookpro/       # Seth's MacBook Pro
+│   └── ${newlaptop}/      # Second laptop
+├── users/                 # Per-user configuration
+│   ├── common/            # Shared user config (~95% here)
+│   │   ├── darwin.nix     # Shared darwin system config
+│   │   └── home.nix       # Shared home-manager config
+│   ├── seth/              # Seth's overrides
+│   └── ${newuser}/        # Other user's overrides
+├── modules/               # Reusable system modules
+│   ├── darwin/            # macOS-specific (system.nix, brew.nix, defaults.nix)
+│   └── shared/            # Cross-platform (nix.nix)
+└── lib/                   # Custom library functions
+    ├── mkSystem.nix       # Multi-host builder
+    └── mkApp.nix          # macOS app packager
+```
+
+## 🔧 Development & Testing
+
+### Test a Configuration Without Activating
+
+```bash
+# Test build (validates config, doesn't change system)
+just test-build megabookpro
+
+# Test build with diff against current system
+just test-diff megabookpro
+
+# Quick syntax check (fast)
+just test-eval megabookpro
+
+# Full test suite
+just test-host megabookpro
+
+# Clean up test artifacts
+just test-clean
+```
+
+### Available Just Commands
+
+```bash
+just --list              # Show all commands
+just rebuild             # Rebuild current host (uses darwin-switch workaround)
+just test-build HOST     # Test build HOST without activating
+just test-diff HOST      # Build HOST and diff vs current system
+just test-eval HOST      # Fast syntax validation
+just test-host HOST      # Full test suite for HOST
+just test-flake          # Validate entire flake
+just update-flake        # Update flake.lock
+```
+
+## ➕ Adding a New Host
+
+### Option 1: Use the Helper Script
+
+```bash
+cd ~/.dotfiles
+./bin/new-host worklaptop alice aarch64-darwin
+```
+
+This scaffolds:
+- `hosts/worklaptop/default.nix`
+- `users/alice/{darwin.nix,home.nix,packages.nix}`
+
+Then:
+1. Edit `flake.nix` to add the new `darwinConfigurations.worklaptop`
+2. Customize the generated files
+3. Test: `just test-build worklaptop`
+4. On the new machine: `nix run github:megalithic/dotfiles`
+
+### Option 2: Manual Setup
+
+1. **Gather info**: hostname, username, system arch
+2. **Create host config**: `hosts/${hostname}/default.nix`
+3. **Create user config**: `users/${username}/{darwin.nix,home.nix,packages.nix}`
+4. **Add to flake.nix**:
+   ```nix
+   darwinConfigurations.${hostname} = mkSystem {
+     hostname = "${hostname}";
+     system = "aarch64-darwin";  # or x86_64-darwin
+     user = "${username}";
+     version = "25.11";
+     extraModules = [
+       (brew_config { username = "${username}"; })
+       (import ./modules/brew.nix)
+     ];
+   };
+   ```
+5. **Test locally**: `just test-build ${hostname}`
+6. **Install on new machine**: `nix run github:megalithic/dotfiles`
+
+## 🛠️ Common Tasks
+
+### Update Dependencies
+
+```bash
+just update-flake        # Update flake.lock
+just rebuild             # Apply updates
+```
+
+### Work with Secrets (agenix)
+
+```bash
+just age env-vars.age    # Edit encrypted secrets
+```
+
+### Fix Shell Files (If Needed)
+
+```bash
+just fix-shell-files     # Fix /etc/{zshenv,zshrc,bashrc} if darwin-rebuild corrupts them
+```
+
+## ✨ Key Features
+
+- **Multi-host**: Support multiple Macs with different configs
+- **Multi-user**: Each host can have different primary users
+- **Shared config**: ~95% shared, 5% per-host/per-user customization
+- **Bootstrap**: One-command installation via `nix run github:megalithic/dotfiles`
+- **Testing**: Test builds without activating (`just test-build`)
+- **Type-safe**: Nix validates all configuration
+- **Rollback**: jj + nix generations for instant rollback
+- **Out-of-store symlinks**: Live config reload for Hammerspoon, Ghostty, tmux
+
+## 🐉 Warnings
+
+- This is my personal config, constantly evolving
+- **No stability guarantees** - review before installing
+- Read the scripts before running them on your system
+- Some configurations are specific to my hardware/workflow
+
+## 📦 Included Tools
+
+- **Terminal**: ghostty + tmux + fish
+- **Editor**: neovim (nightly) with custom config
+- **Shell**: fish with starship prompt
+- **Window management**: Hammerspoon + kanata
+- **Version control**: jj (Jujutsu) with git coexistence
+- **Package management**: nix-darwin + home-manager + homebrew
+- **Secrets**: agenix (age encryption)
+- **AI tools**: claude-code, opencode with MCP servers
+
+---
+
+<p align="center" style="margin-top: 20px;">
+  <a href="https://megalithic.io" target="_blank">
+    <img src="https://raw.githubusercontent.com/megalithic/dotfiles/main/assets/megadotfiles.png" alt="megadotfiles logo" height="150px" />
+  </a>
+</p>
 ```
 
 **File**: `CLAUDE.md` - Update configuration section
@@ -1250,11 +1684,15 @@ just rebuild
 ### Phase 4: Cleanup and Documentation
 - [ ] Archive old files to `_archive/pre-multi-host-migration/`
 - [ ] Update `.gitignore` to exclude `_archive/`
-- [ ] Update `README.md` with multi-host docs
+- [ ] **Update `README.md` with bootstrap instructions and multi-host docs**
+- [ ] **Add justfile test recipes (`test-build`, `test-diff`, `test-eval`, `test-host`, `test-clean`, `test-flake`)**
+- [ ] **Update `flake.nix` apps section with modernized mkInit for multi-host bootstrap**
 - [ ] Update `CLAUDE.md` with new structure
 - [ ] Update `AGENTS.md` with multi-host guidance
 - [ ] Create `bin/new-host` helper script
 - [ ] Run final validation on both hosts
+- [ ] **Test bootstrap process: `nix run .` from clean state**
+- [ ] **Test idempotent builds: `just test-build testlaptop`**
 - [ ] Update this document with "Completed" status
 - [ ] Commit changes: `jj describe -m "docs: complete multi-host migration"`
 
@@ -1446,8 +1884,9 @@ Once complete, you'll have:
 
 ## References
 
-- [Mitchell Hashimoto's nixos-config](https://github.com/mitchellh/nixos-config)
-- [Malo Bourgon's nixpkgs](https://github.com/malob/nixpkgs)
+- [Mitchell Hashimoto's nixos-config](https://github.com/mitchellh/nixos-config) - Original mkSystem pattern
+- [Mitchell Hanberg's dotfiles](https://github.com/mhanberg/.dotfiles) - mkInit bootstrap pattern inspiration
+- [Malo Bourgon's nixpkgs](https://github.com/malob/nixpkgs) - Advanced multi-host patterns
 - [nix-darwin documentation](https://github.com/LnL7/nix-darwin)
 - [home-manager documentation](https://nix-community.github.io/home-manager/)
 - [Nix flakes documentation](https://nixos.wiki/wiki/Flakes)

@@ -1,0 +1,216 @@
+#!/usr/bin/env bash
+# preview-ai - Safe preview pane manager for AI agents
+# CRITICAL: Never renders in caller's pane
+# CRITICAL: Only searches CURRENT session/window for existing preview panes
+
+set -euo pipefail
+
+CALLER_PANE="$TMUX_PANE"  # Pane to NEVER touch
+PREVIEW_TITLE="ai-preview"
+SPLIT_PERCENT=45
+
+# Get current session and window (for scoped pane search)
+get_current_session() {
+    tmux display-message -p '#{session_name}'
+}
+
+get_current_window() {
+    tmux display-message -p '#{window_index}'
+}
+
+# Find existing preview pane by title - SCOPED TO CURRENT SESSION/WINDOW ONLY
+# This prevents killing preview panes in other projects/sessions
+find_preview_pane() {
+    local session=$(get_current_session)
+    local window=$(get_current_window)
+
+    # List panes ONLY in current window (no -a flag!)
+    tmux list-panes -t "${session}:${window}" -F "#{pane_id} #{pane_title}" 2>/dev/null \
+        | grep "$PREVIEW_TITLE" | head -1 | cut -d' ' -f1
+}
+
+# Kill existing preview pane if found (session-scoped)
+cleanup_preview() {
+    local existing=$(find_preview_pane)
+    if [[ -n "$existing" ]]; then
+        tmux kill-pane -t "$existing" 2>/dev/null || true
+    fi
+}
+
+# Create new preview pane (split from caller, lands on RIGHT)
+create_preview_pane() {
+    local cmd="$1"
+    cleanup_preview
+
+    # Write command to temp file to avoid quoting hell
+    local tmpfile=$(mktemp)
+    cat > "$tmpfile" << EOF
+#!/bin/bash
+$cmd
+echo
+echo -e "\n[Press q to close]"
+read -n1 -r </dev/tty
+rm -f "$tmpfile"
+EOF
+    chmod +x "$tmpfile"
+
+    # Split horizontally, new pane on right
+    # Execute the temp script which handles its own cleanup
+    tmux split-window -h -p "$SPLIT_PERCENT" -t "$CALLER_PANE" "$tmpfile"
+
+    # After split-window, the NEW pane is active (not the caller)
+    # Set title on the currently active pane (the preview pane we just created)
+    tmux select-pane -T "$PREVIEW_TITLE"
+
+    # Return focus to the caller pane (where AI agent runs)
+    tmux select-pane -t "$CALLER_PANE"
+}
+
+# Auto-detect content type from first arg
+detect_type() {
+    local arg="$1"
+    case "$arg" in
+        *.json|*.jsonc)          echo "json" ;;
+        *.md)                    echo "markdown" ;;
+        .dotfiles-*|shade-*)     echo "bead" ;;
+        diff)                    echo "diff" ;;
+        log)                     echo "log" ;;
+        cmd:*)                   echo "cmd" ;;
+        *)
+            # Check if it's a file
+            if [[ -f "$arg" ]]; then
+                local mime=$(file --mime-type -b "$arg" 2>/dev/null)
+                case "$mime" in
+                    image/*) echo "image" ;;
+                    *)       echo "file" ;;
+                esac
+                return
+            fi
+            # Check if JSON-like
+            [[ "$arg" == "{"* || "$arg" == "["* ]] && echo "json" && return
+            # Check if markdown-like
+            [[ "$arg" == "#"* ]] && echo "markdown" && return
+            echo "text"
+            ;;
+    esac
+}
+
+# Build preview command for given type and content
+build_preview_cmd() {
+    local type="$1"
+    shift
+    local content="$*"
+
+    case "$type" in
+        json)
+            # Handle both inline JSON and file paths
+            if [[ -f "$content" ]]; then
+                echo "jq -C . '$content' 2>/dev/null || bat -l json '$content'"
+            else
+                echo "echo '$content' | jq -C . 2>/dev/null || echo '$content' | bat -l json"
+            fi
+            ;;
+        markdown)
+            if [[ -f "$content" ]]; then
+                echo "glow -p -s dark -w 120 '$content'"
+            else
+                echo "echo '$content' | glow -p -s dark -w 120"
+            fi
+            ;;
+        diff)
+            # Exclude noisy beads jsonl from diff output using jj fileset negation
+            # Syntax: 'all() & ~glob:".beads/**"' excludes .beads directory
+            if [[ -z "$content" || "$content" == "-r"* ]]; then
+                # If no path args or just revision args, add the exclusion fileset
+                echo "jj diff $content 'all() & ~glob:\".beads/**\"' | delta"
+            else
+                # User specified paths, use as-is
+                echo "jj diff $content | delta"
+            fi
+            ;;
+        log)      echo "jj log $content --no-pager" ;;
+        bead)     echo "bd show '$content'" ;;
+        file)     echo "bat --style=numbers --color=always '$content'" ;;
+        image)    echo "preview '$content'" ;;  # Delegate to existing preview script
+        cmd)      echo "${content#cmd:}" ;;
+        text|*)
+            if [[ -f "$content" ]]; then
+                echo "bat --style=numbers --color=always '$content'"
+            else
+                echo "echo '$content' | bat -l txt"
+            fi
+            ;;
+    esac
+}
+
+# Show usage
+usage() {
+    cat <<EOF
+preview-ai - Safe preview pane manager for AI agents
+
+Usage: preview-ai [type] [content/args...]
+
+Types:
+  json      JSON content (inline or file path)
+  markdown  Markdown content (inline or file path)
+  diff      jj diff arguments (e.g., "-r @")
+  log       jj log arguments (e.g., "-n 5")
+  bead      Bead task ID (e.g., ".dotfiles-t7f")
+  file      File path to preview with bat
+  image     Image file path
+  cmd       Shell command to execute (prefix with "cmd:")
+  auto      Auto-detect type (default)
+
+Examples:
+  preview-ai json '{"foo": "bar"}'
+  preview-ai diff -r @
+  preview-ai bead .dotfiles-t7f
+  preview-ai file /path/to/file.lua
+  preview-ai cmd:jj status
+  preview-ai markdown "# Hello World"
+  preview-ai auto .dotfiles-t7f
+
+Safety:
+  - NEVER renders in caller's pane (\$TMUX_PANE)
+  - Only searches CURRENT session/window for existing previews
+  - Reuses existing preview pane (kills and recreates)
+EOF
+}
+
+# Main
+main() {
+    # Check if we're in tmux
+    if [[ -z "${TMUX:-}" ]]; then
+        echo "ERROR: preview-ai must be run inside tmux" >&2
+        exit 1
+    fi
+
+    # Handle help
+    if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+        usage
+        exit 0
+    fi
+
+    # Handle no args
+    if [[ $# -eq 0 ]]; then
+        usage
+        exit 1
+    fi
+
+    local type="${1:-auto}"
+    shift || true
+
+    # Auto-detect if type is "auto" or looks like content
+    if [[ "$type" == "auto" ]]; then
+        type=$(detect_type "${1:-}")
+    elif [[ ! "$type" =~ ^(json|markdown|diff|log|bead|file|image|cmd|text)$ ]]; then
+        # First arg wasn't a type, treat it as content
+        set -- "$type" "$@"
+        type=$(detect_type "$type")
+    fi
+
+    local preview_cmd=$(build_preview_cmd "$type" "$@")
+    create_preview_pane "$preview_cmd"
+}
+
+main "$@"

@@ -1,11 +1,38 @@
 ---
 description: Smart preview - opens content in appropriate viewer in a tmux pane (context-aware)
-allowed-tools: Bash(tmux:*), Bash(bd:*), Bash(jj:*), Bash(nvim:*), Bash(preview:*), Read, Write
+allowed-tools: Bash(tmux:*), Bash(bd:*), Bash(jj:*), Bash(nvim:*), Bash(preview:*), Bash(preview-ai:*), Read, Write
 ---
 
 # Smart Preview Command
 
 Opens content in an appropriate viewer in a managed tmux pane. Handles pane lifecycle (reuse/cleanup) automatically.
+
+**CRITICAL SAFETY**: Use `preview-ai` script for all previews to ensure the AI agent's pane is NEVER replaced.
+
+## Primary Tool: `preview-ai`
+
+The `bin/preview-ai` script is the safe way to preview content from AI agent sessions:
+
+```bash
+# Explicit type
+preview-ai json '{"foo": "bar"}'
+preview-ai diff -r @
+preview-ai bead .dotfiles-t7f
+preview-ai file /path/to/file.lua
+preview-ai log -n 5
+preview-ai markdown "# Hello"
+
+# Auto-detect (type can be omitted)
+preview-ai .dotfiles-t7f             # → bead
+preview-ai /path/to/file.lua         # → file
+preview-ai '{"foo": "bar"}'          # → json
+```
+
+**Safety guarantees:**
+- NEVER renders in caller's pane (`$TMUX_PANE`)
+- Only searches CURRENT session/window for existing previews (no cross-session interference)
+- Automatically reuses/replaces existing preview pane
+- Returns focus to caller pane after creating preview
 
 ## Context Awareness (CRITICAL)
 
