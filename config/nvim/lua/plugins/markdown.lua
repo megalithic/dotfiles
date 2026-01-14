@@ -51,33 +51,6 @@ return {
     },
   },
   {
-    "jannis-baum/vivify.vim", -- Preview markdown files in the browser using `vivify`
-    file_types = {
-      "markdown",
-    },
-    init = function()
-      -- Refresh page contents on CursorHold and CursorHoldI
-      vim.g.vivify_instant_refresh = 1
-      -- additional filetypes to recognize as markdown
-      vim.g.vivify_filetypes = { "vimwiki" }
-    end,
-    keys = {
-      { "<localleader>mp", "<cmd>Vivify<cr>", desc = "Preview using vivify", ft = "markdown" },
-    },
-  },
-  {
-    -- this hates me; with bullets enabled markdown/elixir/heex.vim syntax errors occur
-    "dkarter/bullets.vim",
-    -- ft = { "markdown", "text", "gitcommit" },
-    event = {
-      -- "BufRead **.md,**.neorg,**.org",
-      -- "BufNewFile **.md,**.neorg,**.org",
-      "FileType gitcommit,NeogitCommitMessage,.git/COMMIT_EDITMSG",
-      -- "FileType gitcommit,NeogitCommitMessage,.git/COMMIT_EDITMSG,markdown,text,plaintext",
-    },
-    cmd = { "InsertNewBullet" },
-  },
-  {
     "gaoDean/autolist.nvim",
     event = {
       "BufRead **.md,**.neorg,**.org",

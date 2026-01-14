@@ -12,13 +12,11 @@ return {
       end,
       desc = "[e]xplore cwd -> oil ([v]split)",
     },
-    -- {
-    --   "<leader>ee",
-    --   function()
-    --     require("oil").open()
-    --   end,
-    --   desc = "[e]xplore cwd -> oil ([e]dit)",
-    -- },
+    {
+      "<leader>ee",
+      function() require("oil").open() end,
+      desc = "[e]xplore cwd -> oil ([e]dit)",
+    },
   },
   config = function()
     local icon_file = vim.trim(Icons.kind.File)

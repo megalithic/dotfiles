@@ -219,7 +219,7 @@ local MEETING_CONFIRM_DELAY = 30 -- seconds to wait before confirming uncertain 
 local function startMeetingMode(appName, reason)
   U.log.f("Starting meeting mode: %s (%s)", appName or "unknown", reason)
   U.dnd(true, "meeting")
-  -- hs.spotify.pause() -- DISABLED: Spotify interactions disabled
+  hs.spotify.pause()
   require("ptt").setState("push-to-talk")
 end
 

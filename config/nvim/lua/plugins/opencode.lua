@@ -1,5 +1,6 @@
 return {
   {
+    enabled = false,
     "NickvanDyke/opencode.nvim",
     dependencies = {
       "folke/snacks.nvim",

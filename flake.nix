@@ -32,6 +32,18 @@
       url = "github:homebrew/homebrew-cask";
       flake = false;
     };
+    homebrew-services = {
+      url = "github:homebrew/homebrew-services";
+      flake = false;
+    };
+    homebrew-bundle = {
+      url = "github:homebrew/homebrew-bundle";
+      flake = false;
+    };
+    homebrew-felixkratz = {
+      url = "github:FelixKratz/homebrew-formulae";
+      flake = false;
+    };
     agenix = {
       url = "github:ryantm/agenix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -60,6 +72,8 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    shade.url = "github:megalithic/shade";
+    shade.inputs.nixpkgs.follows = "nixpkgs";
     # opnix = {
     #   url = "github:brizzbuzz/opnix";
     #   inputs.nixpkgs.follows = "nixpkgs";
@@ -107,8 +121,11 @@
         mutableTaps = false;
         user = username;
         taps = {
-          "homebrew/core" = inputs.homebrew-core;
-          "homebrew/cask" = inputs.homebrew-cask;
+          "homebrew/homebrew-core" = inputs.homebrew-core;
+          "homebrew/homebrew-cask" = inputs.homebrew-cask;
+          "homebrew/homebrew-services" = inputs.homebrew-services;
+          "homebrew/homebrew-bundle" = inputs.homebrew-bundle;
+          "felixkratz/homebrew-formulae" = inputs.homebrew-felixkratz;
         };
       };
     };
@@ -157,6 +174,10 @@
 
         nix-homebrew.darwinModules.nix-homebrew
         (brew_config {inherit username;})
+        # Optional: Align homebrew taps config with nix-homebrew
+        ({config, ...}: {
+          homebrew.taps = map (key: builtins.replaceStrings ["homebrew-"] [""] key) (builtins.attrNames config.nix-homebrew.taps);
+        })
         (import ./modules/brew.nix)
         home-manager.darwinModules.default
         {

@@ -229,6 +229,40 @@
         "type": "github"
       }
     },
+    "flake-utils": {
+      "inputs": {
+        "systems": "systems_3"
+      },
+      "locked": {
+        "lastModified": 1731533236,
+        "narHash": "sha256-l0KFg5HjrsfsO/JpG+r7fRrqm12kzFHyUHqHCVpMMbI=",
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "rev": "11707dc2f618dd54ca8739b309ec4fc024de578b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "type": "github"
+      }
+    },
+    "ghostty": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1767111074,
+        "narHash": "sha256-P/YRADY0JZyrUL1Jp6MudrK3fMsVbw7tyPGBXaLSMJs=",
+        "owner": "ghostty-org",
+        "repo": "ghostty",
+        "rev": "6a1a4eee28d6e40357b0b5ef27007e272c637055",
+        "type": "github"
+      },
+      "original": {
+        "owner": "ghostty-org",
+        "repo": "ghostty",
+        "type": "github"
+      }
+    },
     "home-manager": {
       "inputs": {
         "nixpkgs": [
@@ -271,6 +305,22 @@
         "type": "github"
       }
     },
+    "homebrew-bundle": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1745335228,
+        "narHash": "sha256-TIKR2UgtyUmHLNZp255/vLs+1I10hXe+sciMEbAGFwE=",
+        "owner": "homebrew",
+        "repo": "homebrew-bundle",
+        "rev": "a3265c84b232e13048ecbf6fc18a2eedfadbeb08",
+        "type": "github"
+      },
+      "original": {
+        "owner": "homebrew",
+        "repo": "homebrew-bundle",
+        "type": "github"
+      }
+    },
     "homebrew-cask": {
       "flake": false,
       "locked": {
@@ -300,6 +350,38 @@
       "original": {
         "owner": "homebrew",
         "repo": "homebrew-core",
+        "type": "github"
+      }
+    },
+    "homebrew-felixkratz": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1766486515,
+        "narHash": "sha256-YbpzO4TuFD8o7oZwy0uckI14z/UDaimqkipx25GlK6w=",
+        "owner": "FelixKratz",
+        "repo": "homebrew-formulae",
+        "rev": "018a7db2946bfb54dee6be66f962929075173ac7",
+        "type": "github"
+      },
+      "original": {
+        "owner": "FelixKratz",
+        "repo": "homebrew-formulae",
+        "type": "github"
+      }
+    },
+    "homebrew-services": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1742475690,
+        "narHash": "sha256-qg3/+iHtnFe6VxGapisTatGnoH0XG4BnWWqwwzWYzk0=",
+        "owner": "homebrew",
+        "repo": "homebrew-services",
+        "rev": "2c294ab9515576d961cea28c93148c6452db2def",
+        "type": "github"
+      },
+      "original": {
+        "owner": "homebrew",
+        "repo": "homebrew-services",
         "type": "github"
       }
     },
@@ -613,8 +695,11 @@
         "fenix": "fenix",
         "flake-parts": "flake-parts_2",
         "home-manager": "home-manager_2",
+        "homebrew-bundle": "homebrew-bundle",
         "homebrew-cask": "homebrew-cask",
         "homebrew-core": "homebrew-core",
+        "homebrew-felixkratz": "homebrew-felixkratz",
+        "homebrew-services": "homebrew-services",
         "llm-agents": "llm-agents",
         "mcp-hub": "mcp-hub",
         "mcp-servers-nix": "mcp-servers-nix",
@@ -625,7 +710,8 @@
         "nixpkgs": "nixpkgs_4",
         "nixpkgs-stable": "nixpkgs-stable",
         "nixpkgs-unstable": "nixpkgs-unstable",
-        "nur": "nur"
+        "nur": "nur",
+        "shade": "shade"
       }
     },
     "rust-analyzer-src": {
@@ -645,6 +731,28 @@
         "type": "github"
       }
     },
+    "shade": {
+      "inputs": {
+        "flake-utils": "flake-utils",
+        "ghostty": "ghostty",
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1768401100,
+        "narHash": "sha256-ZGs2sUnFkRdgY9ChstftXBroQiJA2x/F5PqLikCyIH0=",
+        "owner": "megalithic",
+        "repo": "shade",
+        "rev": "2ffccf48f95880676529e5467c1b10e9a59186e4",
+        "type": "github"
+      },
+      "original": {
+        "owner": "megalithic",
+        "repo": "shade",
+        "type": "github"
+      }
+    },
     "systems": {
       "locked": {
         "lastModified": 1681028828,
@@ -661,6 +769,21 @@
       }
     },
     "systems_2": {
+      "locked": {
+        "lastModified": 1681028828,
+        "narHash": "sha256-Vy1rq5AaRuLzOxct8nz4T6wlgyUR7zLU309k9mBC768=",
+        "owner": "nix-systems",
+        "repo": "default",
+        "rev": "da67096a3b9bf56a91d16901293e51ba5b49a27e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-systems",
+        "repo": "default",
+        "type": "github"
+      }
+    },
+    "systems_3": {
       "locked": {
         "lastModified": 1681028828,
         "narHash": "sha256-Vy1rq5AaRuLzOxct8nz4T6wlgyUR7zLU309k9mBC768=",

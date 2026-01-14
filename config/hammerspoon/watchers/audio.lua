@@ -4,7 +4,7 @@ local enum = require("hs.fnutils")
 local M = {}
 
 local function output()
-  local preferred = { "megabose", "MacBook Pro Speakers", "LG UltraFine Display Audio" }
+  local preferred = { "megabose", "Seth R-Phonak hearing aid", "MacBook Pro Speakers", "LG UltraFine Display Audio" }
   local device
 
   local found = enum.find(preferred, function(d)
@@ -16,6 +16,7 @@ local function output()
     device:setDefaultOutputDevice()
     local status = hs.execute(fmt("SwitchAudioSource -t output -s '%s' &", device:name()), true)
     local icon = device:name() == "megabose" and "🎧 " or "🔈 "
+    -- icon = device:name() == "Seth R-Phonak hearing aid" and "📢 " or "🔈 "
 
     U.log.of("%s%s", icon, string.gsub(status, "^%s*(.-)%s*$", "%1"))
     device = nil
@@ -28,7 +29,7 @@ local function output()
 end
 
 local function input()
-  local preferred = { "Samson GoMic", "megabose", "MacBook Pro Microphone" }
+  local preferred = { "Samson GoMic", "megabose", "Seth R-Phonak hearing aid", "MacBook Pro Microphone" }
   local device
 
   local found = enum.find(preferred, function(d)
@@ -40,6 +41,7 @@ local function input()
     device:setDefaultInputDevice()
     local status = hs.execute(fmt("SwitchAudioSource -t input -s '%s' &", device:name()), true)
     local icon = device:name() == "Samson GoMic" and "🎙️ " or ""
+    icon = device:name() == "Seth R-Phonak hearing aid" and "📢 " or ""
 
     U.log.of("%s%s", icon, string.gsub(status, "^%s*(.-)%s*$", "%1"))
     -- U.log.of("%s", string.gsub(status, "^%s*(.-)%s*$", "%1"))
@@ -88,8 +90,11 @@ local function showCurrentlyConnected()
   local i = hs.audiodevice.current(true)
   local o = hs.audiodevice.current()
 
+  -- local oIcon = o.name == "Seth R-Phonak hearing aid" and "📢 " or "🔈 "
   local oIcon = o.name == "megabose" and "🎧 " or "🔈 "
+
   local iIcon = i.name == "Samson GoMic" and "🎙️ " or ""
+  iIcon = i.name == "Seth R-Phonak hearing aid" and "📢 " or ""
 
   U.log.of("input: %s%s (%s)", iIcon, i.name, i.muted and "muted" or "unmuted")
   U.log.of("output: %s%s", oIcon, o.name)

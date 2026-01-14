@@ -2,11 +2,9 @@
   environment.systemPath = ["/opt/homebrew/bin"];
   homebrew = {
     enable = true;
-    brews = [];
-
     # Remove quarantine attribute from casks so they don't prompt on first launch
     caskArgs.no_quarantine = true;
-    # taps = [];
+    # brews = [];
     casks = [
       "1password"
       "1password-cli"

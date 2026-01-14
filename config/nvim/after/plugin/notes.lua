@@ -16,9 +16,7 @@ vim.g.meganote_context = vim.g.shade_context
 -- This makes :wq save and hide (via RPC) instead of quitting nvim
 if vim.g.shade_context then
   local ok, shade = pcall(require, "shade")
-  if ok then
-    shade.setup()
-  end
+  if ok then shade.setup() end
 end
 
 local M = {}
@@ -353,47 +351,6 @@ function M.compile_links(bufnr, lines)
   return links
 end
 
-function M.extract_links(bufnr, lines)
-  bufnr = bufnr or vim.api.nvim_get_current_buf()
-  local inline_query = vim.treesitter.query.parse("markdown_inline", [[(inline_link) @link]])
-  local auto_query = vim.treesitter.query.parse("markdown_inline", [[(uri_autolink) @link]])
-
-  local get_root = function(str)
-    local parser = vim.treesitter.get_string_parser(str, "markdown_inline")
-    return parser:parse()[1]:root()
-  end
-
-  local get_text = vim.treesitter.get_node_text
-
-  local function markdown_links(bufnr, str)
-    local inline_links = vim
-      .iter(inline_query:iter_captures(get_root(str), str))
-      :map(function(_, node)
-        local text = get_text(node:child(1), str)
-        local link = get_text(node:child(4), str)
-        return { url = link, text = text }
-      end)
-      :totable()
-
-    local autolinks = vim
-      .iter(auto_query:iter_captures(get_root(str), str))
-      :map(function(_, node)
-        local text = get_text(node, str):sub(2, -2)
-        return { text = text }
-      end)
-      :totable()
-
-    return vim.list_extend(inline_links, autolinks)
-  end
-
-  local function raw_urls(bufnr, lines) return M.compile_links(bufnr, lines) end
-
-  local links = markdown_links(bufnr, table.concat(lines, "\n"))
-  local urls = raw_urls(bufnr, lines)
-
-  return vim.list_extend(links, urls)
-end
-
 function M.parse_due_dates(bufnr, lines)
   bufnr = bufnr or vim.api.nvim_get_current_buf()
 
@@ -565,30 +522,30 @@ command("ToggleTask", function(evt) M.toggle_task(evt.args) end, {})
 command("ExecuteLine", function() M.execute_line() end, {})
 
 -- [[ mappings ]] --------------------------------------------------------------
-local notesMappings = {
-  p = {
-    function()
-      local note = M.get_previous_daily_note()
-      if note ~= nil then vim.cmd("edit " .. note) end
-    end,
-    "open [l]ast daily note",
-  },
-  P = {
-    function()
-      local note = M.get_previous_daily_note()
-      if note ~= nil then vim.cmd("vnew " .. note) end
-    end,
-    "open [l]ast daily note (vsplit)",
-  },
-}
-
-local function leaderMapper(mode, key, rhs, opts)
-  if type(opts) == "string" then opts = { desc = opts } end
-  map(mode, "<leader>" .. key, rhs, opts)
-end
-
--- <leader>n<key>
-vim.iter(notesMappings):each(function(key, rhs) leaderMapper("n", "n" .. key, rhs[1], rhs[2]) end)
+-- local notesMappings = {
+--   p = {
+--     function()
+--       local note = M.get_previous_daily_note()
+--       if note ~= nil then vim.cmd("edit " .. note) end
+--     end,
+--     "open [l]ast daily note",
+--   },
+--   P = {
+--     function()
+--       local note = M.get_previous_daily_note()
+--       if note ~= nil then vim.cmd("vnew " .. note) end
+--     end,
+--     "open [l]ast daily note (vsplit)",
+--   },
+-- }
+--
+-- local function leaderMapper(mode, key, rhs, opts)
+--   if type(opts) == "string" then opts = { desc = opts } end
+--   map(mode, "<leader>" .. key, rhs, opts)
+-- end
+--
+-- -- <leader>n<key>
+-- vim.iter(notesMappings):each(function(key, rhs) leaderMapper("n", "n" .. key, rhs[1], rhs[2]) end)
 
 require("config.autocmds").augroup("NotesLoaded", {
   {
@@ -618,8 +575,8 @@ require("config.autocmds").augroup("NotesLoaded", {
         end)
 
         map("n", "gx", vim.cmd.ExecuteLine, { desc = "execute line", buffer = bufnr })
-        local clients = vim.lsp.get_clients({ bufnr = bufnr })
-        for _, client in ipairs(clients) do
+
+        for _, client in ipairs(vim.lsp.get_clients({ bufnr = bufnr })) do
           if client.name == "obsidian-ls" then
             -- Note: <leader>w removed - task sorting now happens via ObsidianNoteWritePre autocmd
             -- This prevents multiple format passes and keeps all write logic in one place
@@ -787,9 +744,7 @@ if not vim.g.shade_context then
 
         if is_empty and filepath then
           -- Defer to allow buffer to close first, then prompt
-          vim.defer_fn(function()
-            M.cleanup_empty_capture(filepath)
-          end, 100)
+          vim.defer_fn(function() M.cleanup_empty_capture(filepath) end, 100)
         end
       end,
     },
