@@ -3,6 +3,9 @@
 --
 local M = {}
 
+-- Import dismiss utility for native notification dismissal
+local dismiss = require("lib.notifications.dismiss")
+
 ---@class ProcessOpts
 ---@field title string Notification title
 ---@field subtitle? string Notification subtitle (default: "")
@@ -14,6 +17,7 @@ local M = {}
 ---@field subrole? string AXSubrole value
 ---@field matchedCriteria? string JSON string of what matched (for logging)
 ---@field urgency? string "critical"|"high"|"normal"|"low" (default: "normal")
+---@field notificationElement? userdata AX element reference for dismissing native notification
 
 ---Processes a notification according to rule configuration
 ---Handles focus mode checks, urgency-based rendering, and phone delivery
@@ -156,8 +160,23 @@ function M.process(rule, opts)
     notifConfig.dimBackground = false
   end
 
+  -- Determine if notification content will be redacted (same logic as notifier.lua:636-652)
+  -- Redaction occurs in DND or Work focus modes to hide sensitive content
+  local shouldRedact = currentFocus == "Do Not Disturb" or currentFocus == "Work"
+
   -- Show canvas notification
   notify.sendCanvasNotification(title, message, notifConfig)
+
+  -- If content was redacted, dismiss the native notification to prevent showing unredacted content
+  -- The native notification would still be visible in Notification Center with full content otherwise
+  if shouldRedact and opts.notificationElement then
+    local dismissSuccess = dismiss.dismiss(opts.notificationElement, title)
+    if dismissSuccess then
+      U.log.df("Dismissed native notification after redaction: %s", title or "untitled")
+    else
+      U.log.wf("Failed to dismiss native notification after redaction: %s", title or "untitled")
+    end
+  end
 
   -- Handle phone delivery for critical urgency
   if urgencyConfig.phone then
@@ -177,6 +196,10 @@ function M.process(rule, opts)
   local actionDetail = "shown_bottom_left"
   if urgencyConfig.position == "center" then
     actionDetail = urgencyConfig.phone and "shown_center_dimmed_phone" or "shown_center_dimmed"
+  end
+  -- Add redaction suffix to action_detail if content was redacted
+  if shouldRedact then
+    actionDetail = actionDetail .. "_redacted"
   end
 
   db.log({
