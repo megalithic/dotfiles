@@ -9,7 +9,6 @@ local term = hs.application.get(TERMINAL)
 
 obj.__index = obj
 obj.name = "context.obs"
-obj.debug = true
 
 obj.modal = nil
 obj.actions = {}

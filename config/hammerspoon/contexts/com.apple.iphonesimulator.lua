@@ -4,7 +4,6 @@ local browser = hs.application.get(BROWSER)
 
 obj.__index = obj
 obj.name = "context.iphonesimulator"
-obj.debug = true
 
 obj.modal = nil
 obj.actions = {}

@@ -5,7 +5,6 @@ local fmt = string.format
 local obj = {}
 obj.__index = obj
 obj.name = "browser"
-obj.debug = false
 
 local supportedBrowsers =
   { "Chromium", "Brave Browser Nightly", "Brave Browser Dev", "Brave Browser", "Brave Browser Beta", "Safari" }

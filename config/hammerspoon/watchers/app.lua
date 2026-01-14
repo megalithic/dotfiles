@@ -6,7 +6,6 @@ local M = {}
 
 M.__index = M
 M.name = "watcher.app"
-M.debug = false
 M.watchers = {
   global = nil,
   app = {},

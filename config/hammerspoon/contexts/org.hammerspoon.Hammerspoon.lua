@@ -2,7 +2,6 @@ local obj = {}
 local _appObj = nil
 obj.__index = obj
 obj.name = "context.hammerspoon"
-obj.debug = true
 
 obj.modal = true
 obj.actions = {

@@ -3,7 +3,6 @@ local appObj = nil
 
 obj.__index = obj
 obj.name = "context.apple.preview"
-obj.debug = true
 
 obj.modal = true
 obj.actions = {

@@ -3,7 +3,6 @@ local appObj = nil
 
 obj.__index = obj
 obj.name = "context.slack"
-obj.debug = true
 obj._bindingsCreated = false -- Guard to prevent duplicate bindings
 
 -- local function clickOnHistoryMenuItem(appObj)

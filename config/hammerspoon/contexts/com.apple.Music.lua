@@ -3,7 +3,6 @@ local _appObj = nil
 
 obj.__index = obj
 obj.name = "context.apple.music"
-obj.debug = true
 
 obj.modal = false
 obj.actions = nil

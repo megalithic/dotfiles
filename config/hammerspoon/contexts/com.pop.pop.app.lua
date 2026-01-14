@@ -5,7 +5,6 @@ local enum = require("hs.fnutils")
 
 obj.__index = obj
 obj.name = "context.pop"
-obj.debug = true
 obj.launched = false
 
 obj.modal = nil

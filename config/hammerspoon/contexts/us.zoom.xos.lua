@@ -3,7 +3,6 @@ local _appObj = nil
 
 obj.__index = obj
 obj.name = "context.zoom"
-obj.debug = true
 
 obj.modal = nil
 obj.actions = {}

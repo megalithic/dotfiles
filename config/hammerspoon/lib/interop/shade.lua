@@ -252,6 +252,14 @@ function M.getApp()
   return nil
 end
 
+--- Check if Shade is the frontmost (focused) application
+--- Used to prevent captures when Shade itself is focused (no useful context to capture)
+---@return boolean
+local function isShadeFocused()
+  local app = hs.application.frontmostApplication()
+  return app and app:name() == BINARY_NAME
+end
+
 --- Get the Shade window (NSPanel)
 --- Note: Shade uses NSPanel which has isStandard()=false, so we find it
 --- via allWindows() rather than relying on mainWindow() or standard filters.
@@ -569,6 +577,12 @@ end
 ---
 ---@return boolean success
 function M.captureWithContext()
+  -- Don't capture from Shade itself - there's no useful context
+  if isShadeFocused() then
+    U.log.d("captureWithContext: ignoring - Shade is focused")
+    return false
+  end
+
   local function triggerCapture()
     postNotification(NOTIFICATION_CAPTURE)
     hs.timer.doAfter(0.1, function() M.show() end)
@@ -667,7 +681,14 @@ end
 --- Capture with context in sidebar mode
 --- Opens Shade in sidebar-left with a new capture note
 --- Perfect for taking notes while referencing another app side-by-side
+---@return boolean success
 function M.captureWithContextSidebar()
+  -- Don't capture from Shade itself - there's no useful context
+  if isShadeFocused() then
+    U.log.d("captureWithContextSidebar: ignoring - Shade is focused")
+    return false
+  end
+
   local function triggerSidebarCapture()
     -- First enter sidebar mode, then trigger capture
     M.sidebarLeft()

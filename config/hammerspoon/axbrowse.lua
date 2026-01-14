@@ -202,7 +202,7 @@ end
 end
 
 local chooserCallback = function(item)
-  if module.debug then
+  if _G.debug then
     cbinspect(item)
     cbinspect(storage)
   end
@@ -321,8 +321,6 @@ end
 
 _chooser = chooser.new(chooserCallback):searchSubText(true):showCallback(showingChooser):hideCallback(hidingChooser)
 -- module._chooser = _chooser
-
-module.debug = false
 
 module.browse = function(...)
   local args = table.pack(...)

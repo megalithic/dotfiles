@@ -9,7 +9,6 @@ local obj = {}
 
 obj.__index = obj
 obj.name = "context.messages"
-obj.debug = true
 
 -- Actions define hotkey bindings - modal enter/exit handled by loader
 obj.actions = {

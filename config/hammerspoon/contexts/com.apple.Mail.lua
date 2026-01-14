@@ -7,7 +7,6 @@ local obj = {}
 
 obj.__index = obj
 obj.name = "context.mail"
-obj.debug = true
 obj.appObj = nil
 -- USAGE
 -- { ..., {"AXWindow", "AXRoleDescription", "standard window"}, ..., {"AXSplitGroup", 1}, ...}

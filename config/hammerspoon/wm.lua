@@ -5,7 +5,6 @@ local utils = req("utils")
 local obj = {}
 obj.__index = obj
 obj.name = "wm"
-obj.debug = false
 
 --- Check if a window title matches an exclusion pattern
 --- Exclusion patterns start with "!" and match if title contains the rest

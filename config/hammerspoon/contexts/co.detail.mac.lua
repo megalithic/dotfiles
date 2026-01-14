@@ -8,7 +8,6 @@ local fontSizeDelta = "+8.0"
 
 obj.__index = obj
 obj.name = "context.detail"
-obj.debug = true
 
 obj.modal = nil
 obj.actions = {}

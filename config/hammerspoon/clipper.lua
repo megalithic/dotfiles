@@ -28,7 +28,6 @@ local obj = {}
 
 obj.__index = obj
 obj.name = "clipper"
-obj.debug = false
 
 -- File paths
 obj.capsPath = fmt("%s/_screenshots", os.getenv("HOME"))

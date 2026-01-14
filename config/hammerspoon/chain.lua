@@ -15,7 +15,6 @@
 local obj = {}
 obj.__index = obj
 obj.name = "chain"
-obj.debug = false
 
 obj.lastSeenChain = nil
 obj.lastSeenWindow = nil

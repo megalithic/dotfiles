@@ -10,7 +10,6 @@ local M = {
 
 M.__index = M
 M.name = "utils"
-M.debug = true
 
 M.dndCmd = os.getenv("HOME") .. "/.dotfiles/bin/dnd"
 M.slckCmd = os.getenv("HOME") .. "/.dotfiles/bin/slck"
@@ -168,6 +167,10 @@ M.log = setmetatable({}, {
 
 function M.logger(msg, level)
   level = level and level or "NOTE" --[[@as "NOTE"|"INFO"|"WARN"|"ERROR"|"OK"|"DEBUG"]]
+
+  -- Skip DEBUG messages unless _G.debug = true (set in init.lua or HS console)
+  if level == "DEBUG" and not _G.debug then return end
+
   msg = type(msg) == "table" and hs.inspect(msg) or msg
 
   -- Get caller info, trying multiple stack levels (hotkey callbacks have shorter stacks)

@@ -2,7 +2,6 @@ local obj = {}
 
 obj.__index = obj
 obj.name = "context.teams"
-obj.debug = true
 obj.actions = {}
 
 local function hasMeetingWindow(app)

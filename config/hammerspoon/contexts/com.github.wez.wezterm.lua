@@ -4,7 +4,6 @@ local _appObj = nil
 
 obj.__index = obj
 obj.name = "context.wezterm"
-obj.debug = true
 obj.modal = false
 obj.actions = {}
 
