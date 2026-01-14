@@ -267,6 +267,7 @@
       |---------|---------|---------|
       | `/start` | `/go` | Start work session - sync remote, check bd ready |
       | `/finish` | `/end`, `/done` | End session - review changes, update beads, prep push |
+      | `/next` | - | Complete current work, find next task - ensures clean handoff |
       | `/preview` | - | Smart preview - opens content in tmux pane (context-aware) |
 
       ## Question Format Convention (OpenCode Only)
@@ -371,11 +372,14 @@
       go = builtins.readFile ../../../docs/commands/start.md; # alias
 
       finish = builtins.readFile ../../../docs/commands/finish.md;
+      end = builtins.readFile ../../../docs/commands/finish.md; # alias
+      done = builtins.readFile ../../../docs/commands/finish.md; # alias
+
+      # Task transition - complete current work, find next task
+      next = builtins.readFile ../../../docs/commands/next.md;
 
       # Smart preview - context-aware content viewer in tmux pane
       preview = builtins.readFile ../../../docs/commands/preview.md;
-      end = builtins.readFile ../../../docs/commands/finish.md; # alias
-      done = builtins.readFile ../../../docs/commands/finish.md; # alias
     };
   };
 }

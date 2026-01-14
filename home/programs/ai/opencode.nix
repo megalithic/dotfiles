@@ -66,6 +66,10 @@ let
       name = "done";
       source = "finish";
     } # alias
+    {
+      name = "next";
+      source = "next";
+    }
   ];
 
   commandConfigs = builtins.listToAttrs (
