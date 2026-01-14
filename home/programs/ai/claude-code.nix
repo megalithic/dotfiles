@@ -68,6 +68,7 @@
       | Hammerspoon | `hs` | Before editing config or debugging |
       | Neovim | `nvim` | Before editing plugins/LSP config |
       | Shade app | `shade` | Before debugging IPC/RPC |
+      | Notes/Obsidian | `notes` | Before working on notes, captures, daily notes |
       | Image handling | `image-handling` | Before resizing images for API |
       | Browser debugging | `web-debug` | Before using Chrome DevTools MCP or Playwright MCP |
       | tmux | `tmux` | Before interacting with tmux sessions/panes/windows |
@@ -235,6 +236,7 @@
       | `image-handling` | resize-image script, API constraints | Before resizing images |
       | `web-debug` | Chrome DevTools + Playwright MCP | Before browser debugging |
       | `shade` | Shade app IPC, nvim RPC debugging | Before debugging Shade |
+      | `notes` | meganote system, captures, daily notes, obsidian.nvim | Before working on notes |
       | `hs` | Hammerspoon config, reload, macOS APIs | Before editing HS config |
       | `nvim` | Neovim config, plugins, LSP patterns | Before editing nvim config |
       | `tmux` | tmux sessions, panes, windows, orchestration | Before tmux interaction |

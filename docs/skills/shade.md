@@ -1,10 +1,20 @@
 ---
 name: shade
-description: Expert help with Shade - the native Swift note capture app. Use for debugging Shade issues, understanding IPC protocols, implementing Hammerspoon integration, nvim RPC, context gathering, and MegaNote workflows.
+description: Expert help with Shade - the native Swift note capture app. Use for debugging Shade issues, understanding IPC protocols, implementing Hammerspoon integration, nvim RPC, context gathering, and meganote workflows.
 tools: Bash, Read, Grep, Glob, Edit, Write
 ---
 
 # Shade Expert
+
+## Related Skills
+
+**Load the `notes` skill** for nvim-side meganote details:
+- obsidian.nvim configuration and template substitutions
+- Daily note linking (autocmds.lua)
+- Capture filename format and same-day validation
+- Task management and sorting
+
+This skill focuses on **Shade app internals**: Swift code, IPC, context gathering, nvim RPC, and MLX inference.
 
 ## Overview
 

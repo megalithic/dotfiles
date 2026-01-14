@@ -16,7 +16,7 @@ local function output()
     device:setDefaultOutputDevice()
     local status = hs.execute(fmt("SwitchAudioSource -t output -s '%s' &", device:name()), true)
     local icon = device:name() == "megabose" and "🎧 " or "🔈 "
-    -- icon = device:name() == "Seth R-Phonak hearing aid" and "📢 " or "🔈 "
+    icon = device:name() == "Seth R-Phonak hearing aid" and "📢 " or icon
 
     U.log.of("%s%s", icon, string.gsub(status, "^%s*(.-)%s*$", "%1"))
     device = nil
@@ -41,7 +41,7 @@ local function input()
     device:setDefaultInputDevice()
     local status = hs.execute(fmt("SwitchAudioSource -t input -s '%s' &", device:name()), true)
     local icon = device:name() == "Samson GoMic" and "🎙️ " or ""
-    icon = device:name() == "Seth R-Phonak hearing aid" and "📢 " or ""
+    icon = device:name() == "Seth R-Phonak hearing aid" and "📢 " or icon
 
     U.log.of("%s%s", icon, string.gsub(status, "^%s*(.-)%s*$", "%1"))
     -- U.log.of("%s", string.gsub(status, "^%s*(.-)%s*$", "%1"))
@@ -92,9 +92,10 @@ local function showCurrentlyConnected()
 
   -- local oIcon = o.name == "Seth R-Phonak hearing aid" and "📢 " or "🔈 "
   local oIcon = o.name == "megabose" and "🎧 " or "🔈 "
+  oIcon = o.name == "Seth R-Phonak hearing aid" and "📢 " or oIcon
 
   local iIcon = i.name == "Samson GoMic" and "🎙️ " or ""
-  iIcon = i.name == "Seth R-Phonak hearing aid" and "📢 " or ""
+  iIcon = i.name == "Seth R-Phonak hearing aid" and "📢 " or iIcon
 
   U.log.of("input: %s%s (%s)", iIcon, i.name, i.muted and "muted" or "unmuted")
   U.log.of("output: %s%s", oIcon, o.name)

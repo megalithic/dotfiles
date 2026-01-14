@@ -706,28 +706,115 @@ local function build_description(frontmatter, first_content, detected_lang)
   return "Text capture"
 end
 
---- Get daily note path for today
+--- Get daily note path for a given date (defaults to today)
+---@param date_str? string Date in YYYYMMDD format (defaults to today)
 ---@return string path
-local function get_daily_note_path()
+local function get_daily_note_path(date_str)
   local notes_home = vim.env.NOTES_HOME or (vim.env.HOME .. "/notes")
-  local year = os.date("%Y")
-  local date = os.date("%Y%m%d")
-  return string.format("%s/daily/%s/%s.md", notes_home, year, date)
+  date_str = date_str or os.date("%Y%m%d")
+  local year = date_str:sub(1, 4)
+  return string.format("%s/daily/%s/%s.md", notes_home, year, date_str)
+end
+
+--- Extract the date (YYYYMMDD) from a capture filename
+--- Capture filenames follow pattern: YYYYMMDDHHMM-descriptor.md
+---@param filename string Capture filename (with or without extension)
+---@return string|nil date_str YYYYMMDD portion or nil if not a valid capture filename
+local function extract_capture_date(filename)
+  -- Remove extension if present
+  local name = filename:gsub("%.md$", "")
+  -- Extract first 8 digits (YYYYMMDD) from the zettel timestamp
+  local date_str = name:match("^(%d%d%d%d%d%d%d%d)")
+  return date_str
+end
+
+--- Ensure the daily note exists, creating it if necessary
+--- Uses :ObsidianToday which applies the daily template
+---@param date_str? string Date in YYYYMMDD format (defaults to today)
+---@return boolean success
+local function ensure_daily_note_exists(date_str)
+  local daily_path = get_daily_note_path(date_str)
+
+  -- Check if file already exists
+  local f = io.open(daily_path, "r")
+  if f then
+    f:close()
+    return true
+  end
+
+  -- For today's note, use :ObsidianToday to create with template
+  local today = os.date("%Y%m%d")
+  if not date_str or date_str == today then
+    -- Run ObsidianToday synchronously (it will create the note)
+    -- We need to suppress the buffer switch since we just want to create the file
+    local ok, err = pcall(function()
+      -- Create the daily note directory if needed
+      local notes_home = vim.env.NOTES_HOME or (vim.env.HOME .. "/notes")
+      local year = today:sub(1, 4)
+      local daily_dir = string.format("%s/daily/%s", notes_home, year)
+      vim.fn.mkdir(daily_dir, "p")
+
+      -- Use obsidian.nvim's API to create the daily note
+      local obsidian = require("obsidian")
+      local client = obsidian.get_client()
+      if client then
+        -- This creates the note with template substitutions
+        client:today()
+        -- Give it a moment to write
+        vim.wait(100, function() return vim.fn.filereadable(daily_path) == 1 end, 10)
+      end
+    end)
+
+    if not ok then
+      vim.notify("Failed to create daily note: " .. tostring(err), vim.log.levels.WARN)
+      return false
+    end
+
+    -- Verify it was created
+    f = io.open(daily_path, "r")
+    if f then
+      f:close()
+      return true
+    end
+  end
+
+  -- For past dates or if ObsidianToday failed, we can't auto-create
+  -- (linking to past daily notes that don't exist is a user error)
+  return false
 end
 
 --- Append capture link to daily note
 ---@param capture_filename string Filename without extension
 ---@param description string Descriptive text for the link
+---@param target_date? string Optional target date (YYYYMMDD), defaults to today
 ---@return boolean success
----@return string|nil reason If false, why (e.g., "exists", "error")
-local function append_to_daily_note(capture_filename, description)
-  local daily_path = get_daily_note_path()
+---@return string|nil reason If false, why (e.g., "exists", "error", "not_same_day")
+local function append_to_daily_note(capture_filename, description, target_date)
+  local today = os.date("%Y%m%d")
+  target_date = target_date or today
+
+  -- Only auto-link captures to today's daily note
+  if target_date ~= today then
+    vim.notify(
+      string.format("Capture from %s - not linking to today's daily note", target_date),
+      vim.log.levels.INFO
+    )
+    return false, "not_same_day"
+  end
+
+  local daily_path = get_daily_note_path(target_date)
   local timestamp = os.date("%H:%M")
+
+  -- Ensure daily note exists before trying to append
+  if not ensure_daily_note_exists(target_date) then
+    vim.notify("Could not create daily note: " .. daily_path, vim.log.levels.WARN)
+    return false, "create_failed"
+  end
 
   -- Read daily note
   local f = io.open(daily_path, "r")
   if not f then
-    vim.notify("Daily note not found: " .. daily_path, vim.log.levels.WARN)
+    vim.notify("Daily note not found after creation attempt: " .. daily_path, vim.log.levels.ERROR)
     return false, "not_found"
   end
   local content = f:read("*a")
@@ -824,13 +911,23 @@ M.augroup("NotesCaptureLink", {
       -- Get filename without path and extension
       local filename = vim.fn.expand("%:t:r")
 
-      -- Append to daily note
-      local success, reason = append_to_daily_note(filename, description)
+      -- Extract capture date from filename (YYYYMMDDHHMM-descriptor format)
+      local capture_date = extract_capture_date(filename)
+      if not capture_date then
+        vim.notify("Could not extract date from capture filename: " .. filename, vim.log.levels.WARN)
+        return
+      end
+
+      -- Append to daily note (only links if capture is from today)
+      local success, reason = append_to_daily_note(filename, description, capture_date)
       if success then
         vim.b[args.buf].capture_linked = true
         vim.notify(string.format("Linked to daily: [[%s|%s]]", filename, description), vim.log.levels.INFO)
       elseif reason == "exists" then
         -- Entry already exists (e.g., image capture added it), mark as linked and skip silently
+        vim.b[args.buf].capture_linked = true
+      elseif reason == "not_same_day" then
+        -- Capture from a different day - mark as "linked" to prevent repeated attempts
         vim.b[args.buf].capture_linked = true
       end
     end,

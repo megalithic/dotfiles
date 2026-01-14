@@ -22,6 +22,7 @@ let
     "image-handling"
     "web-debug"
     "shade"
+    "notes"
     "hs"
     "nvim"
   ];
