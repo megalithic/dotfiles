@@ -49,6 +49,18 @@
     width_percent = 0.4;
     height_percent = 0.6;
     position = "center"; # "center", "right", "left"
+
+    # Focus border - visual indicator when Shade panel has keyboard focus
+    # Uses NSVisualEffectView + CALayer for native macOS appearance
+    focus_border = {
+      enabled = true;
+      width = 2.0; # Border thickness in points
+      corner_radius = 8.0; # Rounded corners (0 = square)
+      color = "#83A598"; # Everforest aqua (hex: RGB, RRGGBB, or RRGGBBAA)
+      opacity = 0.8; # Border opacity (0.0 - 1.0)
+      animated = true; # Animate border appearance/disappearance
+      animation_duration = 0.15; # Animation duration in seconds
+    };
   };
 
   # ===========================================================================
