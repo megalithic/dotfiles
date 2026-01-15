@@ -73,6 +73,8 @@
   cmd = "code --wait --diff \"$LOCAL\" \"$REMOTE\""
 [difftool "nvim"]
   cmd = "nvim -d \"$LOCAL\" \"$REMOTE\""
+[difftool "codediff"]
+  cmd = 'nvim "$LOCAL" "$REMOTE" +"CodeDiff file $LOCAL $REMOTE""$LOCAL\" \"$REMOTE\"'
 
 [help]
   autocorrect = 1
@@ -256,29 +258,23 @@
 [clean]
   requireForce = true
 
-[mergetool]
-  prompt = true
 
 [merge]
-  tool = nvimdiff
+  tool = codediff
   conflictstyle = zdiff3
   ff = true
 
+[mergetool]
+  prompt = true
 [mergetool "nvimdiff"]
   keepBackup = false
 	cmd = "nvim -d \"$LOCAL\" \"$MERGED\" \"$REMOTE\""
 	trustExitCode = true
+[mergetool "codediff"]
+  keepBackup = false
+	cmd = "nvim "$MERGED" -c "CodeDiff merge \"$MERGED\""'
+	trustExitCode = true
 
-; [merge "railsschema"]
-;   name = newer Rails schema version
-;   driver = "ruby -e '\n\
-;     system %(git), %(merge-file), %(--marker-size=%L), %(%A), %(%O), %(%B)\n\
-;     b = File.read(%(%A))\n\
-;     b.sub!(/^<+ .*\\nActiveRecord::Schema\\.define.:version => (\\d+). do\\n=+\\nActiveRecord::Schema\\.define.:version => (\\d+). do\\n>+ .*/) do\n\
-;     %(ActiveRecord::Schema.define(:version => #{[$1, $2].max}) do)\n\
-;     end\n\
-;     File.open(%(%A), %(w)) {|f| f.write(b)}\n\
-;     exit 1 if b.include?(%(<)*%L)'"
 
 [color]
 	branch = auto
@@ -361,6 +357,7 @@
   colorMoved = default
   navigate = true  # use n and N to move between diff sections
   algorithm = histogram
+  tool = codediff
 
 [color "diff-highlight"]
 	oldNormal = red bold

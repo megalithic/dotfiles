@@ -17,6 +17,7 @@
         default-command = "log";
         pager = "${pkgs.delta}/bin/delta";
         diff-formatter = ":git";
+        # diff-formatter = "nvim "$LOCAL" "$REMOTE" +"CodeDiff file $LOCAL $REMOTE""$LOCAL\" \"$REMOTE\"";
         graph.style = "curved";
         should-sign-off = true;
         show-cryptographic-signatures = true;

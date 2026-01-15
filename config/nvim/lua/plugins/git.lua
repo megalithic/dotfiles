@@ -138,7 +138,7 @@ end
 
 return {
   {
-    "esmuellert/vscode-diff.nvim",
+    "esmuellert/codediff.nvim",
     dependencies = { "MunifTanjim/nui.nvim" },
     cmd = "CodeDiff",
   },
@@ -154,7 +154,7 @@ return {
             style = "sign",
 
             -- Signs used for hunks with 'sign' view
-            signs = { add = "", change = "", delete = "" },
+            signs = { add = "+", change = "~", delete = "-" },
 
             -- Priority of used visualization extmarks
             priority = 1,
@@ -166,40 +166,15 @@ return {
       local nmap_localleader = function(suffix, rhs, desc)
         vim.keymap.set("n", "<localleader>" .. suffix, rhs, { desc = desc })
       end
-      local nmap_leader = function(suffix, rhs, desc) vim.keymap.set("n", "<Leader>" .. suffix, rhs, { desc = desc }) end
-
       nmap_localleader("gd", "<Cmd>lua MiniDiff.toggle_overlay()<CR>", "git: toggle diff overlay")
-    end,
 
-    -- keys = {
-    --   {
-    --     "<localleader>gd",
-    --     function() MiniDiff.toggle_overlay() end,
-    --     "Toggle Diff Overlay",
-    --   },
-    -- },
+      -- local nmap_leader = function(suffix, rhs, desc) vim.keymap.set("n", "<Leader>" .. suffix, rhs, { desc = desc }) end
+      -- nmap_leader("gd", "<Cmd>lua MiniDiff.toggle_overlay()<CR>", "git: toggle diff overlay")
+    end,
   },
   {
-    "julienvincent/hunk.nvim",
-    cmd = { "DiffEditor" },
-    config = function() require("hunk").setup() end,
-  },
-  -- Here is a more advanced example where we pass configuration
-  -- options to `gitsigns.nvim`. This is equivalent to the following Lua:
-  --    require('gitsigns').setup({ ... })
-  --
-  -- See `:help gitsigns` to understand what the configuration keys do
-  { -- Adds git related signs to the gutter, as well as utilities for managing changes
     "lewis6991/gitsigns.nvim",
     opts = {
-      -- signs = {
-      --   add = { text = "+" },
-      --   change = { text = "~" },
-      --   delete = { text = "_" },
-      --   topdelete = { text = "‾" },
-      --   changedelete = { text = "~" },
-      -- },
-
       signs = {
         add = {
           -- hl = "GitSignsAdd",
