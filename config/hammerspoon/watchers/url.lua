@@ -264,9 +264,11 @@ function M.handleGoogleOAuthConsent(url, sourceBundle, opts)
 
       // Find and click the Continue button
       // Try multiple selectors for robustness
-      var btn = document.querySelector('#submit_approve_access button') ||
-                document.querySelector('#submit_approve_access') ||
-                document.querySelector('button[jsname="LgbsSe"]');
+      // var btn = document.querySelector('#submit_approve_access button') ||
+      //           document.querySelector('#submit_approve_access') ||
+      //           document.querySelector('button[jsname="LgbsSe"]');
+
+      var btn = document.querySelector('#submit_approve_access button');
 
       if (!btn) {
         // Fallback: find button by text content
