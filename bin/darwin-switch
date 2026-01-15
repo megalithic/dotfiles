@@ -60,3 +60,8 @@ fi
 
 echo ""
 echo "✓ Done! System and home-manager activated successfully."
+
+# Send notification via ntfy
+if command -v ntfy >/dev/null 2>&1; then
+    ntfy send -t "Nix Darwin" -m "✓ System rebuild completed successfully"
+fi

@@ -387,12 +387,12 @@ alias imix="iex -S mix"
 function mt() {
   if [ -z $1 ]; then
     mix test \
-      && terminal-notifier -title "mix test" -subtitle "Test Suite" -message "Success!" \
-      || terminal-notifier -title "mix test" -subtitle "Test Suite" -message "Failure!"
+      && ntfy send -t "mix test" -m "✓ Test Suite passed" \
+      || ntfy send -t "mix test" -m "✗ Test Suite failed" -u high
   else
     mix test "$1" \
-      && terminal-notifier -title "mix test" -subtitle "$1" -message "Success!" \
-      || terminal-notifier -title "mix test" -subtitle "$1" -message "Failure!"
+      && ntfy send -t "mix test" -m "✓ $1 passed" \
+      || ntfy send -t "mix test" -m "✗ $1 failed" -u high
   fi
 }
 

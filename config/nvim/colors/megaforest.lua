@@ -500,7 +500,7 @@ local theme = lush(function(injected_functions)
     Headline5({ fg = C.blue, bg = C.bg0, gui = "bold" }),
     Headline6({ fg = C.orange, bg = C.bg0, gui = "italic" }),
     Dash({ fg = C.bg3, gui = "bold" }),
-    CodeBlock({ bg = C.bg2 }),
+    CodeBlock({ bg = C.bg1.da(5) }),
 
     ---- :help render-markdown.txt ---------------------------------------------
 

@@ -71,7 +71,6 @@ let
     sqlite
     switchaudio-osx
     tesseract # OCR fallback for clipper (Vision is primary)
-    terminal-notifier
     tldr
     unstable.tmux
     transcrypt

@@ -20,7 +20,7 @@
   llmConfig = {
     enabled = true;
     backend = "mlx";
-    model = "mlx-community/Qwen3-8B-Instruct-4bit";
+    model = "mlx-community/Qwen2.5-7B-Instruct-1M-4bit";
     preset = "quality";
     maxTokens = 512;
     temperature = 0.7;
@@ -62,7 +62,7 @@
     focusBorder = {
       enabled = true;
       width = 2.0; # Border thickness in points
-      cornerRadius = 0.5; # Rounded corners (0 = square)
+      cornerRadius = 8.0; # Corner radius in points (0 = square, 8 = subtle, 12+ = pronounced)
       color = "#E68C59"; # Everforest aqua (hex: RGB, RRGGBB, or RRGGBBAA)
       opacity = 0.2; # Border opacity (0.0 - 1.0)
       animated = true; # Animate border appearance/disappearance
