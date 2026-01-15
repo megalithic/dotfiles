@@ -320,21 +320,21 @@ local exception_types = {
       local shell = fnamemodify(vim.env.SHELL, ":t") or vim.o.shell
       local mode = MODES[api.nvim_get_mode().mode]
       local mode_hl = mode.short == "T-I" and "StModeTermInsert" or "StModeTermNormal"
-      local term_buf_var = vim.api.nvim_buf_get_var(bufnr, "term_buf")
-      if vim.g.term_buf ~= nil or term_buf_var ~= nil then
+
+      -- Safely get buffer variables (may not exist during terminal creation)
+      local ok, term_buf_var = pcall(vim.api.nvim_buf_get_var, bufnr, "term_buf")
+      if ok and (vim.g.term_buf ~= nil or term_buf_var ~= nil) then
+        local _, term_name = pcall(vim.api.nvim_buf_get_var, bufnr, "term_name")
+        local _, term_cmd = pcall(vim.api.nvim_buf_get_var, bufnr, "term_cmd")
         return seg(
           string.format(
             "%s(%s)[%s]",
-            vim.api.nvim_buf_get_var(bufnr, "term_name"),
+            term_name or "megaterm",
             shell,
-            vim.api.nvim_buf_get_var(bufnr, "term_cmd") or bufnr
+            term_cmd or bufnr
           ),
           mode_hl
         )
-        -- return seg(
-        --   string.format("megaterm#%d(%s)[%s]", vim.api.nvim_buf_get_var(bufnr, "term_buf"), shell, vim.api.nvim_buf_get_var(bufnr, "term_cmd") or bufnr),
-        --   mode_hl
-        -- )
       end
 
       return seg(string.format("megaterm#%d(%s)", bufnr, shell), mode_hl)
