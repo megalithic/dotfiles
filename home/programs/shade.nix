@@ -50,16 +50,24 @@
     height_percent = 0.6;
     position = "center"; # "center", "right", "left"
 
+    # Sidebar width when in sidebar mode (percentage of screen)
+    sidebar_width = 0.4;
+
+    # Mode cycle for toggle - cycles through these modes in order
+    # Options: "floating", "sidebar-left", "sidebar-right"
+    mode_cycle = ["floating" "sidebar-left" "sidebar-right"];
+
     # Focus border - visual indicator when Shade panel has keyboard focus
     # Uses NSVisualEffectView + CALayer for native macOS appearance
     focus_border = {
       enabled = true;
       width = 2.0; # Border thickness in points
-      corner_radius = 8.0; # Rounded corners (0 = square)
+      corner_radius = 0.0; # Rounded corners (0 = square)
       color = "#83A598"; # Everforest aqua (hex: RGB, RRGGBB, or RRGGBBAA)
-      opacity = 0.8; # Border opacity (0.0 - 1.0)
+      opacity = 0.2; # Border opacity (0.0 - 1.0)
       animated = true; # Animate border appearance/disappearance
       animation_duration = 0.15; # Animation duration in seconds
+      menubar_stroke_color = "#E68C59"; # Menubar icon stroke when focused (Everforest orange)
     };
   };
 
