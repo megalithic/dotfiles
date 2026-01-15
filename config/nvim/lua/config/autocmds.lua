@@ -326,17 +326,19 @@ M.augroup("HammerspoonInterop", {
   },
 })
 
-M.augroup("Resizing", {
-  {
-    event = { "VimResized", "WinResized" },
-    desc = "Automatically resize windows in all tabpages when resizing Vim (and use our golden ratio resizer)",
-    command = function(args)
-      vim.cmd.tabdo("wincmd =")
-
-      vim.schedule(function() pcall(mega.resize_windows, args.buf) end)
-    end,
-  },
-})
+-- NOTE: Removed - golden.lua handles VimResized and this was causing conflicts
+-- by equalizing windows immediately after golden ratio resize
+-- M.augroup("Resizing", {
+--   {
+--     event = { "VimResized", "WinResized" },
+--     desc = "Automatically resize windows in all tabpages when resizing Vim (and use our golden ratio resizer)",
+--     command = function(args)
+--       vim.cmd.tabdo("wincmd =")
+--
+--       vim.schedule(function() pcall(mega.resize_windows, args.buf) end)
+--     end,
+--   },
+-- })
 
 M.augroup("EnterLeaveBehaviours", {
   {

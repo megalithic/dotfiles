@@ -78,8 +78,8 @@ local config = {
   cmd = nil,
 
   -- Panel size (0.0-1.0 = percentage, >1.0 = pixels)
-  width = 0.4,
-  height = 0.4,
+  width = 0.5,
+  height = 0.5,
 
   -- Command to run (nil = auto-build nvim command with socket)
   -- Example: "nvim ~/notes/capture.md"
@@ -100,15 +100,11 @@ end
 
 --- Get the effective command (configured or default)
 ---@return string command
-local function getEffectiveCommand()
-  return config.command or buildDefaultCommand()
-end
+local function getEffectiveCommand() return config.command or buildDefaultCommand() end
 
 --- Get the effective working directory (configured or captures dir)
 ---@return string|nil workdir
-local function getEffectiveWorkingDirectory()
-  return config.workingDirectory or notes.capturesDir
-end
+local function getEffectiveWorkingDirectory() return config.workingDirectory or notes.capturesDir end
 
 --- Configure shade settings
 ---@param opts table Configuration options
@@ -163,9 +159,7 @@ end
 local function postNotification(name) hs.distributednotifications.post(name, nil, nil) end
 
 --- Ensure state directory exists
-local function ensureStateDir()
-  os.execute("mkdir -p " .. STATE_DIR)
-end
+local function ensureStateDir() os.execute("mkdir -p " .. STATE_DIR) end
 
 --- Log error to file for debugging
 ---@param operation string What operation failed
@@ -272,9 +266,7 @@ function M.getWindow()
   -- Find the shade window from all windows (includes panels)
   local windows = app:allWindows()
   for _, win in ipairs(windows) do
-    if win:title() == "shade" then
-      return win
-    end
+    if win:title() == "shade" then return win end
   end
 
   -- Fallback: return first window if title doesn't match
@@ -565,15 +557,17 @@ function M.openFile(filePath, callback)
 end
 
 --- Capture with context: signal Shade to gather context and create a capture note
---- As of 2026-01-08, Shade handles context gathering natively (shade-qji epic).
---- Hammerspoon just sends the notification and ensures Shade is ready.
+--- As of 2026-01-15, Hammerspoon captures the source app's bundle ID and PID
+--- BEFORE showing Shade, then writes a "hint" file so Shade knows which app
+--- to gather context from (avoiding the race condition where Shade is frontmost).
 ---
 --- Flow:
---- 1. Hammerspoon sends io.shade.note.capture notification
---- 2. Shade gathers context via ContextGatherer.swift
---- 3. Shade writes ~/.local/state/shade/context.json
---- 4. Shade opens nvim with capture template
---- 5. obsidian.nvim reads context.json for template substitution
+--- 1. Hammerspoon captures frontmost app's bundleID + PID (before Shade is shown)
+--- 2. Hammerspoon writes ~/.local/state/shade/source_app.json with the hint
+--- 3. Hammerspoon sends io.shade.note.capture notification
+--- 4. Shade reads source_app.json to know which app to gather context from
+--- 5. Shade gathers context from that specific app (not frontmost)
+--- 6. Shade writes context.json and opens nvim with capture template
 ---
 ---@return boolean success
 function M.captureWithContext()
@@ -581,6 +575,27 @@ function M.captureWithContext()
   if isShadeFocused() then
     U.log.d("captureWithContext: ignoring - Shade is focused")
     return false
+  end
+
+  -- Capture source app info NOW, before Shade is shown
+  local app = hs.application.frontmostApplication()
+  local sourceApp = {
+    bundleID = app and app:bundleID() or nil,
+    pid = app and app:pid() or nil,
+    name = app and app:name() or nil,
+  }
+
+  -- Write source app hint for Shade
+  ensureStateDir()
+  local hintPath = STATE_DIR .. "/source_app.json"
+  local json = hs.json.encode(sourceApp)
+  if json then
+    local f = io.open(hintPath, "w")
+    if f then
+      f:write(json)
+      f:close()
+      U.log.d(fmt("captureWithContext: wrote source hint for %s (pid=%s)", sourceApp.name or "?", sourceApp.pid or "?"))
+    end
   end
 
   local function triggerCapture()
@@ -591,9 +606,7 @@ function M.captureWithContext()
   if M.isRunning() then
     triggerCapture()
   else
-    M.launch(function()
-      hs.timer.doAfter(0.5, triggerCapture)
-    end)
+    M.launch(function() hs.timer.doAfter(0.5, triggerCapture) end)
   end
 
   return true
@@ -611,9 +624,7 @@ function M.openDailyNote()
   if M.isRunning() then
     triggerDaily()
   else
-    M.launch(function()
-      hs.timer.doAfter(0.5, triggerDaily)
-    end)
+    M.launch(function() hs.timer.doAfter(0.5, triggerDaily) end)
   end
 end
 
@@ -655,19 +666,13 @@ function M.setMode(mode)
 end
 
 --- Enter sidebar mode on the left
-function M.sidebarLeft()
-  M.setMode("sidebar-left")
-end
+function M.sidebarLeft() M.setMode("sidebar-left") end
 
 --- Enter sidebar mode on the right
-function M.sidebarRight()
-  M.setMode("sidebar-right")
-end
+function M.sidebarRight() M.setMode("sidebar-right") end
 
 --- Return to floating mode
-function M.floatingMode()
-  M.setMode("floating")
-end
+function M.floatingMode() M.setMode("floating") end
 
 --- Toggle sidebar mode (left sidebar <-> floating)
 function M.sidebarToggle()
@@ -681,6 +686,7 @@ end
 --- Capture with context in sidebar mode
 --- Opens Shade in sidebar-left with a new capture note
 --- Perfect for taking notes while referencing another app side-by-side
+--- As of 2026-01-15, writes source app hint (same fix as captureWithContext)
 ---@return boolean success
 function M.captureWithContextSidebar()
   -- Don't capture from Shade itself - there's no useful context
@@ -689,20 +695,39 @@ function M.captureWithContextSidebar()
     return false
   end
 
+  -- Capture source app info NOW, before Shade is shown
+  local app = hs.application.frontmostApplication()
+  local sourceApp = {
+    bundleID = app and app:bundleID() or nil,
+    pid = app and app:pid() or nil,
+    name = app and app:name() or nil,
+  }
+
+  -- Write source app hint for Shade
+  ensureStateDir()
+  local hintPath = STATE_DIR .. "/source_app.json"
+  local json = hs.json.encode(sourceApp)
+  if json then
+    local f = io.open(hintPath, "w")
+    if f then
+      f:write(json)
+      f:close()
+      U.log.d(
+        fmt("captureWithContextSidebar: wrote source hint for %s (pid=%s)", sourceApp.name or "?", sourceApp.pid or "?")
+      )
+    end
+  end
+
   local function triggerSidebarCapture()
     -- First enter sidebar mode, then trigger capture
     M.sidebarLeft()
-    hs.timer.doAfter(0.15, function()
-      postNotification(NOTIFICATION_CAPTURE)
-    end)
+    hs.timer.doAfter(0.15, function() postNotification(NOTIFICATION_CAPTURE) end)
   end
 
   if M.isRunning() then
     triggerSidebarCapture()
   else
-    M.launch(function()
-      hs.timer.doAfter(0.5, triggerSidebarCapture)
-    end)
+    M.launch(function() hs.timer.doAfter(0.5, triggerSidebarCapture) end)
   end
 
   return true
