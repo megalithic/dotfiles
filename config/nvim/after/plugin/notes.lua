@@ -5,10 +5,9 @@ local command = vim.api.nvim_create_user_command
 local map = vim.keymap.set
 
 -- Expose shade context for statusline/UI customization
--- Primary: check if running in Shade via socket path
--- Fallback: SHADE=1 env var
-local shade_socket = vim.fn.expand("~/.local/state/shade/nvim.sock")
-vim.g.shade_context = vim.fn.filereadable(shade_socket) == 1 or vim.env.SHADE == "1"
+-- Only trust the SHADE=1 env var set explicitly by Shade when launching nvim
+-- (Socket file check removed - sockets persist on disk causing false positives)
+vim.g.shade_context = vim.env.SHADE == "1"
 -- Legacy alias for any code still using the old name
 vim.g.meganote_context = vim.g.shade_context
 

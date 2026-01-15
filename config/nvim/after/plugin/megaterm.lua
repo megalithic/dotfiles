@@ -13,6 +13,7 @@ if not Plugin_enabled("lsp") then return end
 ---@field default_height number
 ---@field default_width number
 ---@field float_config table
+---@field limits table<string, number>
 
 local config = {
   default_position = "bottom",
@@ -22,6 +23,12 @@ local config = {
     relative = "editor",
     border = "rounded",
     style = "minimal",
+  },
+  limits = {
+    bottom = 2,
+    right = 2,
+    float = 1,
+    tab = 0, -- 0 = unlimited
   },
 }
 
@@ -127,6 +134,18 @@ function Terminal:_get_size(key)
   return key == "height" and config.default_height or config.default_width
 end
 
+--- Find visible terminals with the same position
+---@return mega.term.Terminal[]
+function Terminal:_find_siblings()
+  local siblings = {}
+  for _, term in ipairs(Megaterm.list()) do
+    if term ~= self and term.position == self.position and term:is_visible() then
+      table.insert(siblings, term)
+    end
+  end
+  return siblings
+end
+
 --- Create horizontal or vertical split
 function Terminal:_create_split()
   local position = self.position
@@ -138,10 +157,27 @@ function Terminal:_create_split()
   local prev_resize_disable = vim.g.resize_disable
   vim.g.resize_disable = true
 
-  if position == "bottom" then
-    vim.cmd("botright " .. size .. "split")
-  elseif position == "right" then
-    vim.cmd("botright " .. size .. "vsplit")
+  -- Check for existing terminal in same position
+  local siblings = self:_find_siblings()
+  local sibling = siblings[1]
+
+  if sibling and sibling:get_win() then
+    -- Split within the sibling's region to sit side-by-side (bottom) or stacked (right)
+    vim.api.nvim_set_current_win(sibling:get_win())
+    if position == "bottom" then
+      -- Vertical split within horizontal band = side-by-side
+      vim.cmd("vsplit")
+    elseif position == "right" then
+      -- Horizontal split within vertical band = stacked
+      vim.cmd(size .. "split")
+    end
+  else
+    -- No sibling, create new region at edge
+    if position == "bottom" then
+      vim.cmd("botright " .. size .. "split")
+    elseif position == "right" then
+      vim.cmd("botright " .. size .. "vsplit")
+    end
   end
 
   self.win = vim.api.nvim_get_current_win()
@@ -266,6 +302,9 @@ function Terminal:_set_keymaps()
   vim.keymap.set("t", "<C-;>", function()
     Megaterm.toggle()
   end, vim.tbl_extend("force", opts, { desc = "Toggle terminal" }))
+  vim.keymap.set("t", "<C-'>", function()
+    Megaterm.cycle()
+  end, vim.tbl_extend("force", opts, { desc = "Cycle terminals" }))
   vim.keymap.set("t", "<C-x>", function()
     self:close()
   end, vim.tbl_extend("force", opts, { desc = "Close terminal" }))
@@ -374,10 +413,25 @@ function Terminal:show(opts)
       and self:_get_size("height")
       or self:_get_size("width")
 
-    if self.position == "bottom" then
-      vim.cmd("botright " .. size .. "split")
+    -- Check for existing terminal in same position
+    local siblings = self:_find_siblings()
+    local sibling = siblings[1]
+
+    if sibling and sibling:get_win() then
+      -- Split within the sibling's region
+      vim.api.nvim_set_current_win(sibling:get_win())
+      if self.position == "bottom" then
+        vim.cmd("vsplit")
+      elseif self.position == "right" then
+        vim.cmd(size .. "split")
+      end
     else
-      vim.cmd("botright " .. size .. "vsplit")
+      -- No sibling, create new region at edge
+      if self.position == "bottom" then
+        vim.cmd("botright " .. size .. "split")
+      else
+        vim.cmd("botright " .. size .. "vsplit")
+      end
     end
     vim.api.nvim_win_set_buf(0, self.buf)
     self.win = vim.api.nvim_get_current_win()
@@ -533,10 +587,12 @@ end
 ---@field terminals mega.term.Terminal[]
 ---@field history mega.term.Terminal[]
 ---@field config mega.term.Config
+---@field last_toggled_position string?
 local M = {
   terminals = {},
   history = {},
   config = config,
+  last_toggled_position = nil,
 }
 
 --- Setup configuration
@@ -546,10 +602,50 @@ function M.setup(opts)
   config = M.config
 end
 
---- Create new terminal
+--- Count terminals by position
+---@param position string
+---@return number
+function M.count_by_position(position)
+  local count = 0
+  for _, term in ipairs(M.list()) do
+    if term.position == position then
+      count = count + 1
+    end
+  end
+  return count
+end
+
+--- Get terminals by position
+---@param position string
+---@return mega.term.Terminal[]
+function M.get_by_position(position)
+  local result = {}
+  for _, term in ipairs(M.list()) do
+    if term.position == position then
+      table.insert(result, term)
+    end
+  end
+  return result
+end
+
+--- Create new terminal (respects limits)
 ---@param opts? mega.term.TermOpts
 ---@return mega.term.Terminal
 function M.create(opts)
+  opts = opts or {}
+  local position = opts.position or config.default_position
+  local limit = config.limits[position] or 0
+
+  -- Check limit (0 = unlimited)
+  if limit > 0 and M.count_by_position(position) >= limit then
+    -- Limit reached, focus an existing terminal of this position instead
+    local existing = M.get_by_position(position)
+    if #existing > 0 then
+      existing[1]:focus()
+      return existing[1]
+    end
+  end
+
   local term = Terminal.new(opts)
   table.insert(M.terminals, term)
   table.insert(M.history, 1, term)
@@ -581,30 +677,61 @@ function M.get(idx)
   return M.list()[idx]
 end
 
---- Toggle terminal (create if none exist)
+--- Toggle terminals by position (hides/shows all terminals of same position)
 ---@param opts? mega.term.TermOpts
 function M.toggle(opts)
   local terms = M.list()
 
-  -- If a terminal is focused, hide it
+  -- If a terminal is focused, hide ALL terminals of that position
   local current = M.get_current()
   if current then
-    current:hide()
+    local position = current.position
+    M.last_toggled_position = position
+    for _, term in ipairs(M.get_by_position(position)) do
+      if term:is_visible() then
+        term:hide()
+      end
+    end
     return
   end
 
-  -- If terminals exist, show the most recent one
+  -- Not focused - try to show terminals
   if #terms > 0 then
-    -- Try to find one from history that's not visible
+    -- Determine which position to show
+    local position_to_show = M.last_toggled_position
+
+    -- If no last toggled position, find from history
+    if not position_to_show then
+      for _, term in ipairs(M.history) do
+        if term:is_valid() then
+          position_to_show = term.position
+          break
+        end
+      end
+    end
+
+    -- Show all hidden terminals of that position
+    if position_to_show then
+      local shown_any = false
+      for _, term in ipairs(M.get_by_position(position_to_show)) do
+        if term:is_valid() and not term:is_visible() then
+          term:show({ start_insert = not shown_any }) -- Only start_insert on first
+          shown_any = true
+        end
+      end
+      if shown_any then
+        M.last_toggled_position = nil
+        return
+      end
+    end
+
+    -- Fallback: show first hidden terminal from history
     for _, term in ipairs(M.history) do
       if term:is_valid() and not term:is_visible() then
         term:show()
         return
       end
     end
-    -- Otherwise show the first one
-    terms[1]:show()
-    return
   end
 
   -- No terminals exist, create one
@@ -745,6 +872,11 @@ vim.api.nvim_create_autocmd("BufDelete", {
 vim.keymap.set("n", "<C-;>", function()
   Megaterm.toggle()
 end, { desc = "Toggle terminal" })
+
+-- Global cycle through terminals
+vim.keymap.set({ "n", "t" }, "<C-'>", function()
+  Megaterm.cycle()
+end, { desc = "Cycle terminals" })
 
 -- :T command to create/toggle terminal with optional args
 vim.api.nvim_create_user_command("T", function(opts)
