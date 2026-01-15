@@ -1,4 +1,5 @@
 local stext = require("hs.styledtext").new
+local fmt = string.format
 
 local M = {
   table = {},
@@ -14,7 +15,7 @@ M.name = "utils"
 M.dndCmd = os.getenv("HOME") .. "/.dotfiles/bin/dnd"
 M.slckCmd = os.getenv("HOME") .. "/.dotfiles/bin/slck"
 
-function M.bin(cmd) return string.format([[%s/.dotfiles/bin/%s]], os.getenv("HOME"), cmd) end
+function M.bin(cmd) return fmt([[%s/.dotfiles/bin/%s]], os.getenv("HOME"), cmd) end
 
 --------------------------------------------------------------------------------
 -- TABLE UTILITIES: Defaults & Validation
@@ -168,8 +169,9 @@ M.log = setmetatable({}, {
 function M.logger(msg, level)
   level = level and level or "NOTE" --[[@as "NOTE"|"INFO"|"WARN"|"ERROR"|"OK"|"DEBUG"]]
 
-  -- Skip DEBUG messages unless _G.debug = true (set in init.lua or HS console)
-  if level == "DEBUG" and not _G.debug then return end
+  -- Skip DEBUG messages unless _G.DEBUG = true (set in init.lua or HS console)
+  -- Note: _G.debug is Lua's debug library (a table), so we only check _G.DEBUG
+  if level == "DEBUG" and not _G.DEBUG then return end
 
   msg = type(msg) == "table" and hs.inspect(msg) or msg
 
@@ -221,18 +223,18 @@ function M.logger(msg, level)
         {
           color = { hex = "#dddddd", alpha = 1 },
           backgroundColor = { hex = "#222222", alpha = 1 },
-          font = DefaultFont,
+          font = _G.DefaultFont,
         }
       )
     )
   else
     hs.console.printStyledtext(stext(M.ts() .. " -> [" .. fname .. "] " .. tostring(msg), {
       color = color[level],
-      font = DefaultFont,
+      font = _G.DefaultFont,
     }))
     -- hs.console.printStyledtext(stext(M.ts() .. " -> [" .. fname .. "] " .. icon[level] .. " " .. tostring(msg), {
     --   color = color[level],
-    --   font = DefaultFont,
+    --   font = _G.DefaultFont,
     -- }))
   end
 
@@ -269,7 +271,8 @@ function M.template(template, vars) return string.gsub(template, "{(.-)}", vars)
 --- Return path of the current spoon.
 ---
 --- Parameters:
----  * n - (optional) stack level for which to get the path. Defaults to 2, which will return the path of the spoon which called `scriptPath()`
+---  * n - (optional) stack level for which to get the path. Defaults to 2, which will return
+---        the path of the spoon which called `scriptPath()`
 ---
 --- Returns:
 ---  * String with the path from where the calling code was loaded.
@@ -284,7 +287,8 @@ end
 --- Return full path of an object within a spoon directory, given its partial path.
 ---
 --- Parameters:
----  * partial - path of a file relative to the Spoon directory. For example `images/img1.png` will refer to a file within the `images` directory of the Spoon.
+---  * partial - path of a file relative to the Spoon directory. For example `images/img1.png`
+---              will refer to a file within the `images` directory of the Spoon.
 ---
 --- Returns:
 ---  * Absolute path of the file. Note: no existence or other checks are done on the path.
@@ -416,7 +420,7 @@ function M.vidconvert(path, opts)
     and string.match(path, fmt(".%s", srcFormat))
     -- and hs.fs.displayName(path) ~= nil
   then
-    info(fmt("[%s] vidconvert started for %s at %s", M.name, path, os.date("%H:%M:%S")))
+    M.log.i(fmt("[%s] vidconvert started for %s at %s", M.name, path, os.date("%H:%M:%S")))
     hs.notify
       .new({ title = "vidconvert", subTitle = fmt("STARTED converting %s at %s", path, os.date("%H:%M:%S")) })
       :send()
@@ -444,7 +448,10 @@ function M.vidconvert(path, opts)
       --   if foundStreamEnd then
       --     success(fmt("[%s] vidconvert completed for %s", obj.name, path))
 
-      --     hs.notify.new({ title = "vidconvert", subTitle = fmt("FINISHED converting at %s", os.date("%H:%M:%S")) }):send()
+      --     hs.notify.new({
+      --       title = "vidconvert",
+      --       subTitle = fmt("FINISHED converting at %s", os.date("%H:%M:%S"))
+      --     }):send()
 
       --     return foundStreamEnd
       --   end
@@ -589,7 +596,7 @@ end
 
 function M.file.moveFileToPath(file, toPath)
   -- move a given file to toPath, overwriting the destination, with logging
-  local function onFileMoveSuccess(_) info("Moved " .. file .. " to " .. toPath) end
+  local function onFileMoveSuccess(_) M.log.i("Moved " .. file .. " to " .. toPath) end
 
   local function onFileMoveFailure(stdErr) error("Error moving " .. file .. " to " .. toPath .. ": " .. stdErr) end
 
@@ -751,9 +758,10 @@ end
 ---@nodiscard
 ---@return boolean
 function M.screenIsUnlocked()
-  local _, success = hs.execute(
-    '[[ "$(/usr/libexec/PlistBuddy -c "print :IOConsoleUsers:0:CGSSessionScreenIsLocked" /dev/stdin 2>/dev/null <<< "$(ioreg -n Root -d1 -a)")" != "true" ]]'
-  )
+  local cmd = '[[ "$(/usr/libexec/PlistBuddy -c '
+    .. '"print :IOConsoleUsers:0:CGSSessionScreenIsLocked" '
+    .. '/dev/stdin 2>/dev/null <<< "$(ioreg -n Root -d1 -a)")" != "true" ]]'
+  local _, success = hs.execute(cmd)
   return success == true -- convert to Boolean
 end
 

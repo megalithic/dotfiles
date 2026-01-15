@@ -248,6 +248,87 @@ operations in this repo. NEVER use raw git commands directly.
    - Related context (e.g., "Fixes notification system regression on macOS
      Sequoia")
 
+**BEFORE committing/describing (CRITICAL - Sensitive Data Check):**
+
+1. **Scrub `.beads/issues.jsonl`** - This file often contains task descriptions
+   that may include sensitive data copied verbatim from user requests.
+
+2. **Run comprehensive sensitive data scan**:
+   ```bash
+   # Check the diff for sensitive patterns
+   jj diff | rg -i "($(echo $SENSITIVE_PATTERNS | tr ' ' '|'))" && \
+     echo "⚠️  POTENTIAL SENSITIVE DATA FOUND - Review above matches"
+   ```
+
+3. **Sensitive data categories to check** (based on gitleaks/GitGuardian):
+
+   **PII (Personally Identifiable Information):**
+   - Email addresses: `[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}`
+   - Phone numbers: `\b\d{3}[-.]?\d{3}[-.]?\d{4}\b`
+   - SSN patterns: `\b\d{3}-\d{2}-\d{4}\b`
+   - Names in contexts like "user:", "author:", "owner:"
+
+   **Credentials & Secrets:**
+   - API keys: `api[_-]?key`, `apikey`, `api_secret`
+   - Tokens: `token`, `bearer`, `auth[_-]?token`, `access[_-]?token`
+   - Passwords: `password`, `passwd`, `pwd`, `secret`
+   - Private keys: `-----BEGIN.*PRIVATE KEY-----`
+   - AWS keys: `AKIA[0-9A-Z]{16}`, `aws_secret_access_key`
+   - GitHub tokens: `gh[pousr]_[A-Za-z0-9_]{36,}`
+   - Generic secrets: `secret[_-]?key`, `client[_-]?secret`
+
+   **Infrastructure & Internal URLs:**
+   - Internal hostnames: `*.internal`, `*.local`, `*.corp`
+   - IP addresses: `\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b`
+   - Database connection strings: `mysql://`, `postgres://`, `mongodb://`
+   - Redis URLs: `redis://`
+
+   **Financial & Business:**
+   - Credit card patterns: `\b\d{4}[- ]?\d{4}[- ]?\d{4}[- ]?\d{4}\b`
+   - Bank account numbers
+   - Company-specific terms (client names, project codenames)
+
+4. **Quick check commands**:
+   ```bash
+   # Emails
+   rg -i "[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}" .beads/issues.jsonl
+
+   # API keys and tokens
+   rg -i "(api[_-]?key|secret|token|password|credential)" .beads/issues.jsonl
+
+   # AWS keys
+   rg "AKIA[0-9A-Z]{16}" .beads/issues.jsonl
+
+   # Private keys
+   rg "BEGIN.*PRIVATE KEY" .beads/issues.jsonl
+
+   # Connection strings
+   rg -i "(mysql|postgres|mongodb|redis)://" .beads/issues.jsonl
+
+   # Internal URLs
+   rg -i "\.(internal|local|corp|lan)\b" .beads/issues.jsonl
+   ```
+
+5. **Remediation actions**:
+   - Replace emails with `$WORK_EMAIL env var` or `<email>`
+   - Replace tokens with `$TOKEN_NAME env var` or `<redacted>`
+   - Replace internal URLs with `<internal-url>` or `$INTERNAL_HOST`
+   - Replace names with roles: "the user" instead of "John Smith"
+
+6. **If uncertain, alert via ntfy**:
+   ```bash
+   ntfy send -t "Potential sensitive data" -m "Found pattern X in commit - please review" -q
+   ```
+
+**Common sensitive data sources:**
+- Bead task descriptions (user creates with real data, agent copies verbatim)
+- Config files with hardcoded values
+- Log output pasted into code comments
+- URLs with query parameters containing tokens
+- Error messages containing paths or usernames
+- Screenshots or OCR text with visible credentials
+- Commit messages referencing tickets with sensitive context
+
 **After completing a unit of work (when user says to push/commit):**
 
 1. **Never push to GitHub without my consent** -- please alert me when something

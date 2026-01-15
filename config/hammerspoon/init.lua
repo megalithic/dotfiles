@@ -18,9 +18,7 @@ end
 -- In a normal reload, _G.S is nil here (fresh Lua state), so this is a no-op.
 --------------------------------------------------------------------------------
 local function cleanupPreviousRun()
-  if _G.S and _G.S.resetAll then
-    _G.S.resetAll()
-  end
+  if _G.S and _G.S.resetAll then _G.S.resetAll() end
 end
 
 cleanupPreviousRun()
@@ -123,7 +121,7 @@ require("spike-ax-meeting")
 -- NOTE: persistent-notification watcher REPLACED by unified action system
 -- notification.lua watcher now handles ALL notifications (banners + persistent alerts)
 -- Dismissal is now an action in rules (action = "dismiss") instead of separate scanner
-local watchers = { "audio", "dock", "app", "notification", "camera" }
+local watchers = { "audio", "dock", "app", "notification", "camera", "url" }
 
 -- req("lib.seal")
 req("bindings")
