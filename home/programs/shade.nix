@@ -22,10 +22,10 @@
     backend = "mlx";
     model = "mlx-community/Qwen3-8B-Instruct-4bit";
     preset = "quality";
-    max_tokens = 512;
+    maxTokens = 512;
     temperature = 0.7;
-    top_p = 0.9;
-    idle_timeout = 300; # 5 minutes before unloading model
+    topP = 0.9;
+    idleTimeout = 300; # 5 minutes before unloading model
   };
 
   # ===========================================================================
@@ -35,10 +35,10 @@
   # Placeholders are inserted and replaced when LLM completes
   captureConfig = {
     # null = use $notes_home/captures from environment
-    working_directory = null;
-    async_enrichment = true;
-    placeholder_prefix = "<!-- shade:pending:";
-    placeholder_suffix = " -->";
+    workingDirectory = null;
+    asyncEnrichment = true;
+    placeholderPrefix = "<!-- shade:pending:";
+    placeholderSuffix = " -->";
   };
 
   # ===========================================================================
@@ -46,29 +46,33 @@
   # ===========================================================================
   # Panel sizing and position
   windowConfig = {
-    width_percent = 0.4;
-    height_percent = 0.6;
+    widthPercent = 0.4;
+    heightPercent = 0.6;
     position = "center"; # "center", "right", "left"
 
     # Sidebar width when in sidebar mode (percentage of screen)
-    sidebar_width = 0.4;
+    sidebarWidth = 0.4;
 
     # Mode cycle for toggle - cycles through these modes in order
     # Options: "floating", "sidebar-left", "sidebar-right"
-    mode_cycle = ["floating" "sidebar-left" "sidebar-right"];
+    modeCycle = ["floating" "sidebar-left" "sidebar-right"];
 
     # Focus border - visual indicator when Shade panel has keyboard focus
     # Uses NSVisualEffectView + CALayer for native macOS appearance
-    focus_border = {
+    focusBorder = {
       enabled = true;
       width = 2.0; # Border thickness in points
-      corner_radius = 0.0; # Rounded corners (0 = square)
+      cornerRadius = 0.0; # Rounded corners (0 = square)
       color = "#83A598"; # Everforest aqua (hex: RGB, RRGGBB, or RRGGBBAA)
       opacity = 0.2; # Border opacity (0.0 - 1.0)
       animated = true; # Animate border appearance/disappearance
-      animation_duration = 0.15; # Animation duration in seconds
-      menubar_stroke_color = "#E68C59"; # Menubar icon stroke when focused (Everforest orange)
+      animationDuration = 0.15; # Animation duration in seconds
+      menubarStrokeColor = "#E68C59"; # Menubar icon stroke when focused (Everforest orange)
     };
+
+    # Unfocused dimming - reduce opacity when panel loses keyboard focus
+    # Set to null to disable, or a value 0.0-1.0 (1.0 = no dim, 0.7 = 30% dimmed)
+    dimUnfocused = 0.5;
   };
 
   # ===========================================================================
@@ -81,9 +85,9 @@
     # Falls back to $NOTES_HOME env var, then ~/iclouddrive/Documents/_notes
     home = "~/iclouddrive/Documents/_notes";
     # Assets directory for images (null = {home}/assets)
-    assets_dir = null;
+    assetsDir = null;
     # Captures directory (null = {home}/captures)
-    captures_dir = null;
+    capturesDir = null;
   };
 
   # Combined config
@@ -94,14 +98,8 @@
     notes = notesConfig;
   };
 in {
-  # ===========================================================================
-  # Generate config.json
-  # ===========================================================================
-  # Shade reads from ~/.config/shade/config.json (XDG compliant)
-  # CLI arguments override config file values
   home.file.".config/shade/config.json" = {
     text = builtins.toJSON shadeConfig;
-    # Force overwrite - this is 100% Nix-managed
     force = true;
   };
 

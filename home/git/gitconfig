@@ -74,7 +74,7 @@
 [difftool "nvim"]
   cmd = "nvim -d \"$LOCAL\" \"$REMOTE\""
 [difftool "codediff"]
-  cmd = 'nvim "$LOCAL" "$REMOTE" +"CodeDiff file $LOCAL $REMOTE""$LOCAL\" \"$REMOTE\"'
+  cmd = 'nvim "$LOCAL" "$REMOTE" +"CodeDiff file $LOCAL $REMOTE"'
 
 [help]
   autocorrect = 1
@@ -272,7 +272,7 @@
 	trustExitCode = true
 [mergetool "codediff"]
   keepBackup = false
-	cmd = "nvim "$MERGED" -c "CodeDiff merge \"$MERGED\""'
+	cmd = 'nvim "$MERGED" -c "CodeDiff merge \"$MERGED\""'
 	trustExitCode = true
 
 
