@@ -12,7 +12,8 @@
 {
   inputs,
   lib,
-}: [
+}:
+[
   # ===========================================================================
   # External Overlays (from flake inputs)
   # ===========================================================================
@@ -60,14 +61,17 @@
     mcphub = inputs.mcp-hub.packages.${prev.stdenv.hostPlatform.system}.default;
     nvim-nightly = inputs.neovim-nightly-overlay.packages.${prev.stdenv.hostPlatform.system}.default;
     expert = inputs.expert.packages.${prev.stdenv.hostPlatform.system}.default;
-    shade = inputs.shade.packages.${prev.stdenv.hostPlatform.system}.default;
+    # FIXME: Shade flake tries to extract GhosttyKit from Ghostty's Nix output,
+    # but Ghostty's Nix build doesn't produce a macOS app bundle with the framework.
+    # Upstream fix needed in shade repo's flake.nix
+    # shade = inputs.shade.packages.${prev.stdenv.hostPlatform.system}.default;
 
     # Package overrides
-    notmuch = prev.notmuch.override {withEmacs = false;};
+    notmuch = prev.notmuch.override { withEmacs = false; };
   })
 
   # ===========================================================================
   # Custom Packages (from pkgs/)
   # ===========================================================================
-  (import ../pkgs {inherit lib;})
+  (import ../pkgs { inherit lib; })
 ]

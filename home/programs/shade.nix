@@ -62,8 +62,8 @@
     focusBorder = {
       enabled = true;
       width = 2.0; # Border thickness in points
-      cornerRadius = 0.0; # Rounded corners (0 = square)
-      color = "#83A598"; # Everforest aqua (hex: RGB, RRGGBB, or RRGGBBAA)
+      cornerRadius = 0.5; # Rounded corners (0 = square)
+      color = "#E68C59"; # Everforest aqua (hex: RGB, RRGGBB, or RRGGBBAA)
       opacity = 0.2; # Border opacity (0.0 - 1.0)
       animated = true; # Animate border appearance/disappearance
       animationDuration = 0.15; # Animation duration in seconds

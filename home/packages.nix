@@ -3,7 +3,8 @@
   pkgs,
   lib,
   ...
-}: let
+}:
+let
   # ── gui tools ──────────────────────────────────────────────────────────────────
   # Custom apps built with mkApp - these have passthru.appLocation
   customApps = with pkgs; [
@@ -17,17 +18,15 @@
 
   # Filter: only apps with appLocation = "home-manager" go to home.packages
   # (home-manager copies these to ~/Applications/Home Manager Apps/)
-  homeManagerApps =
-    builtins.filter (
-      pkg:
-        (pkg.passthru or {}).appLocation or "home-manager" == "home-manager"
-    )
-    customApps;
+  homeManagerApps = builtins.filter (
+    pkg: (pkg.passthru or { }).appLocation or "home-manager" == "home-manager"
+  ) customApps;
 
   # Standard GUI apps from nixpkgs (not custom mkApp derivations)
   guiPkgs = with pkgs; [
     neovide # Native neovim GUI - potential future use for floating notes window
     obsidian
+    # shade  # FIXME: Disabled - GhosttyKit build failing, see overlays/default.nix
     spotify
     telegram-desktop
     zoom-us
@@ -159,7 +158,8 @@
     # markdown
     markdown-oxide
   ];
-in {
+in
+{
   # Export customApps for mkAppActivation (used in default.nix)
   # These are ALL custom apps regardless of appLocation
   options.mega.customApps = lib.mkOption {

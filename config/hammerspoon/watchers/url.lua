@@ -132,35 +132,48 @@ local function getHttpHandlers()
   return handlers
 end
 
---- Open URL with specific application (focus-preserving)
---- Captures current focus, opens URL, then restores focus after brief delay
+--- Open URL in browser without stealing focus (uses AppleScript)
+--- For Chromium-based browsers, opens URL in a new background tab
 ---@param url string URL to open
 ---@param bundleID string Application bundle ID
----@param opts table|nil Options: { preserveFocus = true (default), focusDelay = 0.3 }
+---@param opts table|nil Options: { background = true (default) }
 ---@return boolean success
 local function openUrlWithApp(url, bundleID, opts)
   opts = opts or {}
-  local preserveFocus = opts.preserveFocus ~= false
-  local focusDelay = opts.focusDelay or 0.3
+  local background = opts.background ~= false
 
-  -- Capture current focus before opening URL
-  local previousApp = preserveFocus and hs.application.frontmostApplication() or nil
-  local previousWindow = preserveFocus and (previousApp and previousApp:focusedWindow()) or nil
+  -- Get app name for AppleScript
+  local app = hs.application.get(bundleID)
+  local appName = app and app:name()
 
-  local success = hs.urlevent.openURLWithBundle(url, bundleID)
-
-  -- Restore focus after a brief delay (allows browser to open the URL)
-  if success and previousApp and preserveFocus then
-    hs.timer.doAfter(focusDelay, function()
-      if previousWindow and previousWindow:isVisible() then
-        previousWindow:focus()
-      elseif previousApp:isRunning() then
-        previousApp:activate()
-      end
-    end)
+  -- If app not running or background mode not requested, use standard method
+  if not appName or not background then
+    return hs.urlevent.openURLWithBundle(url, bundleID)
   end
 
-  return success
+  -- Use AppleScript to open URL in background tab (Chromium browsers)
+  -- This avoids stealing focus from the current app
+  local script = string.format(
+    [[
+    tell application "%s"
+      -- Create new tab in front window without activating
+      tell front window
+        set newTab to make new tab with properties {URL:"%s"}
+      end tell
+    end tell
+    return true
+    ]],
+    appName,
+    url:gsub('"', '\\"')
+  )
+
+  local ok, result = hs.osascript.applescript(script)
+  if not ok then
+    U.log.wf("[%s] Background tab open failed, falling back to standard open", M.name)
+    return hs.urlevent.openURLWithBundle(url, bundleID)
+  end
+
+  return true
 end
 
 --- Execute AppleScript and return result
@@ -203,10 +216,25 @@ end
 local function restoreFocus(focusContext)
   if not focusContext then return end
   local app, win = focusContext.app, focusContext.window
-  if win and win:isVisible() then
-    win:focus()
-  elseif app and app:isRunning() then
+
+  -- Try window first, then app
+  if win then
+    -- Window object may be stale, try to refetch by ID
+    local winId = win:id()
+    if winId then
+      local freshWin = hs.window.get(winId)
+      if freshWin and freshWin:isVisible() then
+        freshWin:focus()
+        U.log.df("[%s] Restored focus to window: %s", M.name, freshWin:title() or "untitled")
+        return
+      end
+    end
+  end
+
+  -- Fallback to app activation
+  if app and app:isRunning() then
     app:activate()
+    U.log.df("[%s] Restored focus to app: %s", M.name, app:name() or "unknown")
   end
 end
 
@@ -424,19 +452,31 @@ function M.handleGoogleOAuthConsent(url, sourceBundle, opts)
   )
 
   -- AppleScript to close a tab by URL pattern
+  -- After clicking Continue, Google redirects to the OAuth callback URL
+  -- For MailMate: https://mailmate-app.com/authorization_completed/
   local closeTabScript = fmt(
     [[
     tell application "%s"
       repeat with w in windows
+        set tabsToClose to {}
         repeat with t in tabs of w
           try
-            -- Close tabs that are on google.com post-consent (may have redirected)
-            if URL of t contains "accounts.google.com" then
-              close t
-              return "closed"
+            set u to URL of t
+            -- Close OAuth pages or callback tabs
+            if u contains "accounts.google.com/o/oauth2" or u contains "accounts.google.com/signin/oauth" or u contains "mailmate-app.com/authorization" or u starts with "http://127.0.0.1:" or u starts with "http://localhost:" then
+              set end of tabsToClose to t
             end if
           end try
         end repeat
+        -- Close tabs (in reverse to avoid index issues)
+        repeat with i from (count of tabsToClose) to 1 by -1
+          try
+            close item i of tabsToClose
+          end try
+        end repeat
+        if (count of tabsToClose) > 0 then
+          return "closed:" & (count of tabsToClose)
+        end if
       end repeat
       return "not-found"
     end tell
