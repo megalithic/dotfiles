@@ -1,6 +1,6 @@
 return {
   "carlos-algms/agentic.nvim",
-  enabled = false,
+  -- enabled = false,
   dependencies = {
     { "hakonharnes/img-clip.nvim", opts = {} },
   },
@@ -13,12 +13,29 @@ return {
         default_mode = "bypassPermissions",
       },
     },
+    -- Keybindings for the prompt buffer only
+    prompt = {
+      submit = {
+        "<CR>", -- Normal mode, just Enter
+        {
+          "<C-CR>",
+          mode = { "n", "v", "i" },
+        },
+      },
+
+      paste_image = {
+        {
+          "<localleader>p",
+          mode = { "n" }, -- I like normal and insert modes for this, but feel free to customize
+        },
+      },
+    },
   },
 
   -- these are just suggested keymaps; customize as desired
   keys = {
     {
-      "<C-\\>",
+      "<C-,>",
       function() require("agentic").toggle() end,
       mode = { "n", "v", "i" },
       desc = "Toggle Agentic Chat",
@@ -29,11 +46,11 @@ return {
       mode = { "n", "v" },
       desc = "Add file or selection to Agentic to Context",
     },
-    {
-      "<C-,>",
-      function() require("agentic").new_session() end,
-      mode = { "n", "v", "i" },
-      desc = "New Agentic Session",
-    },
+    -- {
+    --   "<C-,>",
+    --   function() require("agentic").new_session() end,
+    --   mode = { "n", "v", "i" },
+    --   desc = "New Agentic Session",
+    -- },
   },
 }

@@ -57,7 +57,23 @@
     #       };
     #     });
     #   };
-    llm-agents = inputs.llm-agents.packages.${prev.stdenv.hostPlatform.system};
+    llm-agents = let
+      upstream = inputs.llm-agents.packages.${prev.stdenv.hostPlatform.system};
+    in
+      upstream
+      // {
+        # FIXME: Override claude-code to fix undefined maintainer 'ryoppippi'
+        # Upstream bug: https://github.com/numtide/llm-agents.nix/blob/765ba8f/packages/claude-code/package.nix#L75
+        # Remove this override when upstream adds ryoppippi to lib/default.nix maintainers
+        claude-code = upstream.claude-code.overrideAttrs (old: {
+          meta = old.meta // {
+            maintainers = with prev.lib.maintainers; [
+              malo
+              omarjatoi
+            ];
+          };
+        });
+      };
     mcphub = inputs.mcp-hub.packages.${prev.stdenv.hostPlatform.system}.default;
     nvim-nightly = inputs.neovim-nightly-overlay.packages.${prev.stdenv.hostPlatform.system}.default;
     expert = inputs.expert.packages.${prev.stdenv.hostPlatform.system}.default;

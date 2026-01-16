@@ -1,6 +1,7 @@
 -- megaterm.lua - Terminal management for Neovim
 -- Single-file module following mini.nvim patterns
 -- Provides: Terminal class, Manager, Send API, keymaps/autocmds
+-- Architecture: One window per position, multiple terminals as buffers (buffer-switching model)
 
 if not Plugin_enabled("lsp") then return end
 
@@ -13,7 +14,6 @@ if not Plugin_enabled("lsp") then return end
 ---@field default_height number
 ---@field default_width number
 ---@field float_config table
----@field limits table<string, number>
 
 local config = {
   default_position = "bottom",
@@ -23,12 +23,6 @@ local config = {
     relative = "editor",
     border = "rounded",
     style = "minimal",
-  },
-  limits = {
-    bottom = 2,
-    right = 2,
-    float = 1,
-    tab = 0, -- 0 = unlimited
   },
 }
 
@@ -42,6 +36,7 @@ local config = {
 ---@field job_id number?
 ---@field position "bottom"|"right"|"tab"|"float"
 ---@field opts table
+---@field cmd_str string
 local Terminal = {}
 Terminal.__index = Terminal
 
@@ -68,25 +63,19 @@ function Terminal.new(opts)
   self.position = opts.position or config.default_position
   self.opts = opts
 
-  -- Create the terminal in appropriate window
-  if self.position == "float" then
-    self:_create_float()
-  elseif self.position == "tab" then
-    self:_create_tab()
-  else
-    self:_create_split()
-  end
+  -- Resolve command string early for tracking
+  local cmd = opts.cmd or vim.o.shell
+  self.cmd_str = type(cmd) == "table" and table.concat(cmd, " ") or cmd
+
+  -- Create buffer first (window creation is deferred to show())
+  self.buf = vim.api.nvim_create_buf(false, true)
 
   -- Start terminal process
-  local cmd = opts.cmd or vim.o.shell
-  local cmd_str = type(cmd) == "table" and table.concat(cmd, " ") or cmd
   self.job_id = vim.fn.termopen(cmd, {
     on_exit = function(job_id, exit_code, event)
-      -- Call notifier if provided (for vim-test integration)
       if opts.on_exit_notifier then
-        opts.on_exit_notifier(cmd_str, exit_code)
+        opts.on_exit_notifier(self.cmd_str, exit_code)
       end
-      -- Call on_exit with signature matching vim-test expectations
       if opts.on_exit then
         opts.on_exit(job_id, exit_code, event, self)
       end
@@ -102,20 +91,25 @@ function Terminal.new(opts)
   -- Buffer settings
   vim.bo[self.buf].buflisted = false
   vim.bo[self.buf].bufhidden = "hide"
+  vim.bo[self.buf].filetype = "megaterm"
+  vim.bo[self.buf].buftype = "terminal"
 
   -- Set buffer variables for statusline integration
   vim.api.nvim_buf_set_var(self.buf, "term_buf", self.buf)
   vim.api.nvim_buf_set_var(self.buf, "term_name", "megaterm")
-  vim.api.nvim_buf_set_var(self.buf, "term_cmd", cmd_str)
+  vim.api.nvim_buf_set_var(self.buf, "term_cmd", self.cmd_str)
 
-  -- Apply UI niceties
-  self:_apply_options()
-  self:update_padding()
-  self:update_cursorline_highlight()
+  -- Mark buffer to stay ignored by golden ratio
+  vim.b[self.buf].resize_disable = true
+
+  -- Set buffer-local keymaps
+  self:_set_keymaps()
+
+  -- Show the terminal in a window
+  self:show({ start_insert = opts.start_insert })
 
   -- Callbacks
   if opts.on_open then opts.on_open(self) end
-  if opts.start_insert ~= false then vim.cmd("startinsert") end
 
   return self
 end
@@ -124,162 +118,139 @@ end
 ---@param key "height"|"width"
 ---@return number
 function Terminal:_get_size(key)
-  -- Direct option takes precedence
   if self.opts[key] then return self.opts[key] end
-  -- Then check win_config
   if self.opts.win_config and self.opts.win_config[key] then
     return self.opts.win_config[key]
   end
-  -- Fall back to config defaults
   return key == "height" and config.default_height or config.default_width
 end
 
---- Find visible terminals with the same position
----@return mega.term.Terminal[]
-function Terminal:_find_siblings()
-  local siblings = {}
-  for _, term in ipairs(Megaterm.list()) do
-    if term ~= self and term.position == self.position and term:is_visible() then
-      table.insert(siblings, term)
+--- Get or create window for this position
+---@return number? win Window handle
+function Terminal:_get_or_create_window()
+  -- Check if a window already exists for this position
+  for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+    if vim.api.nvim_win_is_valid(win) then
+      local buf = vim.api.nvim_win_get_buf(win)
+      -- Check if this window contains a terminal of the same position
+      local ok, pos = pcall(vim.api.nvim_buf_get_var, buf, "term_position")
+      if ok and pos == self.position then
+        return win
+      end
     end
   end
-  return siblings
+
+  -- No existing window, create one
+  return self:_create_window()
 end
 
---- Create horizontal or vertical split
-function Terminal:_create_split()
-  local position = self.position
-  local size = position == "bottom"
-    and self:_get_size("height")
-    or self:_get_size("width")
+--- Create window based on position
+---@return number win Window handle
+function Terminal:_create_window()
+  local win
+  local size = self:_get_size(self.position == "bottom" and "height" or "width")
 
-  -- Temporarily disable golden ratio during split creation
+  -- Temporarily disable golden ratio during window creation
   local prev_resize_disable = vim.g.resize_disable
   vim.g.resize_disable = true
 
-  -- Check for existing terminal in same position
-  local siblings = self:_find_siblings()
-  local sibling = siblings[1]
-
-  if sibling and sibling:get_win() then
-    -- Split within the sibling's region to sit side-by-side (bottom) or stacked (right)
-    vim.api.nvim_set_current_win(sibling:get_win())
-    if position == "bottom" then
-      -- Vertical split within horizontal band = side-by-side
-      vim.cmd("vsplit")
-    elseif position == "right" then
-      -- Horizontal split within vertical band = stacked
-      vim.cmd(size .. "split")
+  if self.position == "float" then
+    local width = self:_get_size("width")
+    local height = self:_get_size("height")
+    -- For float, if using defaults, use 80% of screen
+    if width == config.default_width then
+      width = math.floor(vim.o.columns * 0.8)
     end
+    if height == config.default_height then
+      height = math.floor(vim.o.lines * 0.8)
+    end
+    local row = math.floor((vim.o.lines - height) / 2)
+    local col = math.floor((vim.o.columns - width) / 2)
+
+    win = vim.api.nvim_open_win(self.buf, true, vim.tbl_extend("force", config.float_config, {
+      width = width,
+      height = height,
+      row = row,
+      col = col,
+    }))
+  elseif self.position == "tab" then
+    vim.cmd("tabnew")
+    win = vim.api.nvim_get_current_win()
+    vim.api.nvim_win_set_buf(win, self.buf)
   else
-    -- No sibling, create new region at edge
-    if position == "bottom" then
+    -- Split at edge
+    if self.position == "bottom" then
       vim.cmd("botright " .. size .. "split")
-    elseif position == "right" then
+    elseif self.position == "right" then
       vim.cmd("botright " .. size .. "vsplit")
     end
+    win = vim.api.nvim_get_current_win()
+    vim.api.nvim_win_set_buf(win, self.buf)
   end
 
-  self.win = vim.api.nvim_get_current_win()
-  self.buf = vim.api.nvim_create_buf(false, true)
-  vim.api.nvim_win_set_buf(self.win, self.buf)
+  -- Mark terminal window to stay ignored by golden ratio
+  vim.w[win].resize_disable = true
 
-  -- Mark terminal window/buffer to stay ignored
-  vim.w[self.win].resize_disable = true
-  vim.b[self.buf].resize_disable = true
+  -- Store position in buffer for window tracking
+  vim.api.nvim_buf_set_var(self.buf, "term_position", self.position)
 
   -- Restore global state
   vim.g.resize_disable = prev_resize_disable
-end
 
---- Create floating window
-function Terminal:_create_float()
-  local width = self:_get_size("width")
-  local height = self:_get_size("height")
-  -- For float, if using defaults, use 80% of screen
-  if width == config.default_width then
-    width = math.floor(vim.o.columns * 0.8)
-  end
-  if height == config.default_height then
-    height = math.floor(vim.o.lines * 0.8)
-  end
-  local row = math.floor((vim.o.lines - height) / 2)
-  local col = math.floor((vim.o.columns - width) / 2)
-
-  self.buf = vim.api.nvim_create_buf(false, true)
-  self.win = vim.api.nvim_open_win(self.buf, true, vim.tbl_extend("force", config.float_config, {
-    width = width,
-    height = height,
-    row = row,
-    col = col,
-  }))
-end
-
---- Create in new tab
-function Terminal:_create_tab()
-  vim.cmd("tabnew")
-  self.win = vim.api.nvim_get_current_win()
-  self.buf = vim.api.nvim_create_buf(false, true)
-  vim.api.nvim_win_set_buf(self.win, self.buf)
+  return win
 end
 
 --- Apply winhighlight based on position
----@param hls? string[]
-function Terminal:_set_winhighlight(hls)
-  if not self.win or not vim.api.nvim_win_is_valid(self.win) then return end
+---@param win number
+function Terminal:_set_winhighlight(win)
+  if not vim.api.nvim_win_is_valid(win) then return end
 
-  if not hls then
-    if self.position == "float" then
-      hls = {
-        "Normal:PanelBackground",
-        "FloatBorder:PanelBorder",
-        "CursorLine:Visual",
-        "Search:None",
-      }
-    else
-      hls = {
-        "Normal:PanelBackground",
-        "CursorLine:PanelBackground",
-        "CursorLineNr:PanelBackground",
-        "CursorLineSign:PanelBackground",
-        "SignColumn:PanelBackground",
-        "FloatBorder:PanelBorder",
-      }
-    end
+  local hls
+  if self.position == "float" then
+    hls = {
+      "Normal:PanelBackground",
+      "FloatBorder:PanelBorder",
+      "CursorLine:Visual",
+      "Search:None",
+    }
+  else
+    hls = {
+      "Normal:PanelBackground",
+      "CursorLine:PanelBackground",
+      "CursorLineNr:PanelBackground",
+      "CursorLineSign:PanelBackground",
+      "SignColumn:PanelBackground",
+      "FloatBorder:PanelBorder",
+    }
   end
 
-  vim.wo[self.win].winhighlight = table.concat(hls, ",")
+  vim.wo[win].winhighlight = table.concat(hls, ",")
 end
 
 --- Apply window/buffer options
-function Terminal:_apply_options()
-  if not self.win or not vim.api.nvim_win_is_valid(self.win) then return end
-
-  -- Buffer options
-  vim.bo[self.buf].filetype = "megaterm"
-  vim.bo[self.buf].buftype = "terminal"
+---@param win number
+function Terminal:_apply_window_options(win)
+  if not vim.api.nvim_win_is_valid(win) then return end
 
   -- Window options
-  vim.wo[self.win].number = false
-  vim.wo[self.win].relativenumber = false
-  vim.wo[self.win].foldcolumn = "0"
-  vim.wo[self.win].spell = false
-  vim.wo[self.win].statuscolumn = ""
-  vim.wo[self.win].winblend = 0
+  vim.wo[win].number = false
+  vim.wo[win].relativenumber = false
+  vim.wo[win].foldcolumn = "0"
+  vim.wo[win].spell = false
+  vim.wo[win].statuscolumn = ""
+  vim.wo[win].winblend = 0
 
   -- Signcolumn: yes:1 for splits, no for float/tab
   if vim.tbl_contains({ "float", "tab" }, self.position) then
-    vim.wo[self.win].signcolumn = "no"
+    vim.wo[win].signcolumn = "no"
     vim.bo[self.buf].bufhidden = "wipe"
   else
-    vim.wo[self.win].signcolumn = "yes:1"
+    vim.wo[win].signcolumn = "yes:1"
   end
 
   -- Apply winhighlight
-  self:_set_winhighlight()
-
-  -- Set buffer-local keymaps
-  self:_set_keymaps()
+  self:_set_winhighlight(win)
+  self:update_padding(win)
 end
 
 --- Set buffer-local keymaps for terminal
@@ -366,100 +337,51 @@ end
 -- Terminal Show/Hide/Toggle
 --------------------------------------------------------------------------------
 
---- Show terminal (create window if needed)
+--- Show terminal (create/reuse window, switch buffer)
 ---@param opts? { start_insert?: boolean }
 function Terminal:show(opts)
   opts = opts or {}
   if not self:is_valid() then return end
 
-  -- Already visible - just focus
-  local existing_win = self:get_win()
-  if existing_win then
-    vim.api.nvim_set_current_win(existing_win)
-    if opts.start_insert ~= false then vim.cmd("startinsert") end
-    return
-  end
+  -- Get or create window for this position
+  local win = self:_get_or_create_window()
+  if not win then return end
 
-  -- Temporarily disable golden ratio during window creation
-  local prev_resize_disable = vim.g.resize_disable
-  vim.g.resize_disable = true
+  -- Switch buffer in window
+  vim.api.nvim_win_set_buf(win, self.buf)
+  vim.api.nvim_set_current_win(win)
 
-  -- Create window based on position
-  if self.position == "float" then
-    local width = self:_get_size("width")
-    local height = self:_get_size("height")
-    -- For float, if using defaults, use 80% of screen
-    if width == config.default_width then
-      width = math.floor(vim.o.columns * 0.8)
-    end
-    if height == config.default_height then
-      height = math.floor(vim.o.lines * 0.8)
-    end
-    local row = math.floor((vim.o.lines - height) / 2)
-    local col = math.floor((vim.o.columns - width) / 2)
+  -- Apply window options
+  self:_apply_window_options(win)
 
-    self.win = vim.api.nvim_open_win(self.buf, true, vim.tbl_extend("force", config.float_config, {
-      width = width,
-      height = height,
-      row = row,
-      col = col,
-    }))
-  elseif self.position == "tab" then
-    vim.cmd("tabnew")
-    vim.api.nvim_win_set_buf(0, self.buf)
-    self.win = vim.api.nvim_get_current_win()
-  else
-    local size = self.position == "bottom"
-      and self:_get_size("height")
-      or self:_get_size("width")
-
-    -- Check for existing terminal in same position
-    local siblings = self:_find_siblings()
-    local sibling = siblings[1]
-
-    if sibling and sibling:get_win() then
-      -- Split within the sibling's region
-      vim.api.nvim_set_current_win(sibling:get_win())
-      if self.position == "bottom" then
-        vim.cmd("vsplit")
-      elseif self.position == "right" then
-        vim.cmd(size .. "split")
-      end
-    else
-      -- No sibling, create new region at edge
-      if self.position == "bottom" then
-        vim.cmd("botright " .. size .. "split")
-      else
-        vim.cmd("botright " .. size .. "vsplit")
-      end
-    end
-    vim.api.nvim_win_set_buf(0, self.buf)
-    self.win = vim.api.nvim_get_current_win()
-  end
-
-  -- Mark terminal window to stay ignored by golden ratio
-  vim.w[self.win].resize_disable = true
-
-  -- Restore global state
-  vim.g.resize_disable = prev_resize_disable
-
-  self:_apply_options()
-  self:update_padding()
   if opts.start_insert ~= false then vim.cmd("startinsert") end
 end
 
---- Hide terminal (close window, keep buffer)
+--- Hide terminal window (only if this terminal is the only one in the position)
 function Terminal:hide()
   local win = self:get_win()
-  if win and vim.api.nvim_win_is_valid(win) then
-    -- Switch to normal mode first to avoid issues
-    local mode = vim.api.nvim_get_mode().mode
-    if mode == "t" then
-      vim.cmd("stopinsert")
-    end
-    vim.api.nvim_win_close(win, false)
-    self.win = nil
+  if not win or not vim.api.nvim_win_is_valid(win) then return end
+
+  -- Switch to normal mode first
+  local mode = vim.api.nvim_get_mode().mode
+  if mode == "t" then
+    vim.cmd("stopinsert")
   end
+
+  -- Check if there are other terminals for this position
+  local other_terms = Megaterm.get_by_position(self.position)
+  if #other_terms > 1 then
+    -- Switch to another terminal in this position
+    for _, term in ipairs(other_terms) do
+      if term ~= self and term:is_valid() then
+        vim.api.nvim_win_set_buf(win, term.buf)
+        return
+      end
+    end
+  end
+
+  -- No other terminals, close the window
+  vim.api.nvim_win_close(win, false)
 end
 
 --- Toggle terminal visibility
@@ -487,7 +409,7 @@ function Terminal:focus(opts)
   end
 end
 
---- Close terminal (destroy buffer and window)
+--- Close terminal (destroy buffer and remove from manager)
 function Terminal:close()
   self:hide()
   if self:is_valid() then
@@ -540,42 +462,37 @@ end
 --------------------------------------------------------------------------------
 
 --- Update padding (signcolumn) based on window count
-function Terminal:update_padding()
+---@param win? number
+function Terminal:update_padding(win)
+  win = win or self:get_win()
+  if not win or not vim.api.nvim_win_is_valid(win) then return end
+
   local wins = vim.api.nvim_tabpage_list_wins(0)
   local win_count = 0
-  local visible_in_wins = {}
 
-  for _, win in ipairs(wins) do
-    local buf = vim.api.nvim_win_get_buf(win)
+  for _, w in ipairs(wins) do
+    local buf = vim.api.nvim_win_get_buf(w)
     -- Exclude incline windows from count
     if vim.bo[buf].filetype ~= "incline" then
       win_count = win_count + 1
     end
-    if buf == self.buf then
-      table.insert(visible_in_wins, win)
-    end
   end
 
   local enabled = win_count > 1
-  for _, win in ipairs(visible_in_wins) do
-    if vim.api.nvim_win_is_valid(win) then
-      vim.api.nvim_set_option_value("signcolumn", enabled and "yes" or "no", { scope = "local", win = win })
-    end
-  end
+  vim.api.nvim_set_option_value("signcolumn", enabled and "yes" or "no", { scope = "local", win = win })
 end
 
 --- Update cursorline highlight for terminal mode
 function Terminal:update_cursorline_highlight()
   local mode = vim.api.nvim_get_mode().mode
   local curr_win = vim.api.nvim_get_current_win()
+  local win = self:get_win()
 
-  for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
-    if vim.api.nvim_win_is_valid(win) and vim.api.nvim_win_get_buf(win) == self.buf then
-      local winhighlight = (curr_win == win and mode ~= "nt")
-        and "CursorLineSign:Normal,CursorLineNr:Normal"
-        or ""
-      vim.api.nvim_set_option_value("winhighlight", winhighlight, { scope = "local", win = win })
-    end
+  if win and vim.api.nvim_win_is_valid(win) then
+    local winhighlight = (curr_win == win and mode ~= "nt")
+      and "CursorLineSign:Normal,CursorLineNr:Normal"
+      or ""
+    vim.api.nvim_set_option_value("winhighlight", winhighlight, { scope = "local", win = win })
   end
 end
 
@@ -628,24 +545,10 @@ function M.get_by_position(position)
   return result
 end
 
---- Create new terminal (respects limits)
+--- Create new terminal (unlimited with buffer-switching model)
 ---@param opts? mega.term.TermOpts
 ---@return mega.term.Terminal
 function M.create(opts)
-  opts = opts or {}
-  local position = opts.position or config.default_position
-  local limit = config.limits[position] or 0
-
-  -- Check limit (0 = unlimited)
-  if limit > 0 and M.count_by_position(position) >= limit then
-    -- Limit reached, focus an existing terminal of this position instead
-    local existing = M.get_by_position(position)
-    if #existing > 0 then
-      existing[1]:focus()
-      return existing[1]
-    end
-  end
-
   local term = Terminal.new(opts)
   table.insert(M.terminals, term)
   table.insert(M.history, 1, term)
@@ -677,21 +580,16 @@ function M.get(idx)
   return M.list()[idx]
 end
 
---- Toggle terminals by position (hides/shows all terminals of same position)
+--- Toggle terminals by position
 ---@param opts? mega.term.TermOpts
 function M.toggle(opts)
   local terms = M.list()
 
-  -- If a terminal is focused, hide ALL terminals of that position
+  -- If a terminal is focused, hide it (and the window if it's the last one)
   local current = M.get_current()
   if current then
-    local position = current.position
-    M.last_toggled_position = position
-    for _, term in ipairs(M.get_by_position(position)) do
-      if term:is_visible() then
-        term:hide()
-      end
-    end
+    M.last_toggled_position = current.position
+    current:hide()
     return
   end
 
@@ -710,24 +608,20 @@ function M.toggle(opts)
       end
     end
 
-    -- Show all hidden terminals of that position
+    -- Show most recent terminal of that position
     if position_to_show then
-      local shown_any = false
-      for _, term in ipairs(M.get_by_position(position_to_show)) do
-        if term:is_valid() and not term:is_visible() then
-          term:show({ start_insert = not shown_any }) -- Only start_insert on first
-          shown_any = true
+      for _, term in ipairs(M.history) do
+        if term:is_valid() and term.position == position_to_show then
+          term:show()
+          M.last_toggled_position = nil
+          return
         end
-      end
-      if shown_any then
-        M.last_toggled_position = nil
-        return
       end
     end
 
-    -- Fallback: show first hidden terminal from history
+    -- Fallback: show first terminal from history
     for _, term in ipairs(M.history) do
-      if term:is_valid() and not term:is_visible() then
+      if term:is_valid() then
         term:show()
         return
       end
@@ -738,49 +632,38 @@ function M.toggle(opts)
   M.create(opts)
 end
 
---- Cycle through terminals
+--- Cycle through terminals in current window (buffer-switching model)
 function M.cycle()
-  local terms = M.list()
-  if #terms == 0 then
-    M.create()
+  local current_win = vim.api.nvim_get_current_win()
+  local current_buf = vim.api.nvim_win_get_buf(current_win)
+
+  -- Get position of current window (if it's a terminal window)
+  local ok, position = pcall(vim.api.nvim_buf_get_var, current_buf, "term_position")
+  if not ok then
+    -- Not in a terminal window, do nothing
     return
   end
 
-  if #terms == 1 then
-    terms[1]:focus()
-    return
-  end
+  -- Get all terminals for this position
+  local terms = M.get_by_position(position)
+  if #terms == 0 then return end
+  if #terms == 1 then return end -- Only one terminal, nothing to cycle
 
-  -- Find current index and cycle
+  -- Find current terminal index
   local current_idx
   for idx, term in ipairs(terms) do
-    if term:is_focused() then
+    if term.buf == current_buf then
       current_idx = idx
       break
     end
   end
 
   if current_idx then
+    -- Cycle to next terminal
     local next_idx = (current_idx % #terms) + 1
-    terms[next_idx]:focus()
-  else
-    -- No terminal focused, focus first
-    terms[1]:focus()
-  end
-end
-
---- Focus last used terminal
-function M.focus_last()
-  for _, term in ipairs(M.history) do
-    if term:is_valid() and not term:is_visible() then
-      term:focus()
-      return
-    end
-  end
-  -- Fallback to first terminal
-  local terms = M.list()
-  if #terms > 0 then
-    terms[1]:focus()
+    local next_term = terms[next_idx]
+    vim.api.nvim_win_set_buf(current_win, next_term.buf)
+    vim.cmd("startinsert")
   end
 end
 
