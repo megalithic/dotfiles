@@ -3,9 +3,17 @@ if vim.g.treesitter_branch == "main" then
 end
 
 local function should_disable(lang, bufnr)
+  bufnr = bufnr or 0
+  local buftype = vim.bo[bufnr].buftype
+
+  -- Terminal buffers have no valid treesitter grammar
+  if buftype == "terminal" then
+    return true
+  end
+
   local fname = vim.api.nvim_buf_get_name(bufnr)
   local disable_max_size = 2000000 -- 2MB
-  local size = vim.fn.getfsize(vim.api.nvim_buf_get_name(bufnr or 0))
+  local size = vim.fn.getfsize(fname)
   -- size will be -2 if it doesn't fit into a number
   if size > disable_max_size or size == -2 then
     return true

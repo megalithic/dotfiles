@@ -70,23 +70,26 @@ function Terminal.new(opts)
   -- Create buffer first (window creation is deferred to show())
   self.buf = vim.api.nvim_create_buf(false, true)
 
-  -- Start terminal process
-  self.job_id = vim.fn.termopen(cmd, {
-    on_exit = function(job_id, exit_code, event)
-      if opts.on_exit_notifier then
-        opts.on_exit_notifier(self.cmd_str, exit_code)
-      end
-      if opts.on_exit then
-        opts.on_exit(job_id, exit_code, event, self)
-      end
-      -- Auto-cleanup invalid terminals
-      vim.schedule(function()
-        if not self:is_valid() then
-          self:_remove_from_manager()
+  -- Start terminal process in the correct buffer
+  -- termopen() operates on current buffer, so we use nvim_buf_call to run it in self.buf
+  vim.api.nvim_buf_call(self.buf, function()
+    self.job_id = vim.fn.termopen(cmd, {
+      on_exit = function(job_id, exit_code, event)
+        if opts.on_exit_notifier then
+          opts.on_exit_notifier(self.cmd_str, exit_code)
         end
-      end)
-    end,
-  })
+        if opts.on_exit then
+          opts.on_exit(job_id, exit_code, event, self)
+        end
+        -- Auto-cleanup invalid terminals
+        vim.schedule(function()
+          if not self:is_valid() then
+            self:_remove_from_manager()
+          end
+        end)
+      end,
+    })
+  end)
 
   -- Buffer settings
   vim.bo[self.buf].buflisted = false

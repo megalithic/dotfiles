@@ -1,5 +1,3 @@
-if false then return {} end
-
 -- REF: reawlllly good keymaps for markdown and image things:
 -- https://github.com/linkarzu/dotfiles-latest/blob/main/neovim/neobean/lua/config/keymaps.lua
 return {
@@ -42,6 +40,25 @@ return {
           mastodon = { pattern = "%.social/@", icon = " " },
           linkedin = { pattern = "linkedin%.com", icon = "󰌻 " },
           -- researchgate = { pattern = "researchgate%.net", icon = "󰙨 " },
+        },
+      },
+      checkbox = {
+        custom = {
+          -- todo = { raw = "[-]", rendered = " 󰥔 ", highlight = "RenderMarkdownTodo" },
+          todo = { raw = "[-]", rendered = "󱗽 ", highlight = "RenderMarkdownListTodo" },
+          event = { raw = "[|]", rendered = "󰀠 ", highlight = "RenderMarkdownListEvent" },
+          wip = { raw = "[.]", rendered = "󰡖 ", highlight = "RenderMarkdownListWip" },
+          -- trash = { raw = "[/]", rendered = " ", highlight = "RenderMarkdownListSkipped" },
+          skip = { raw = "[/]", rendered = " ", highlight = "RenderMarkdownListTrash" },
+
+          fire = { raw = "[f]", rendered = "󰈸 ", highlight = "RenderMarkdownListFire" },
+          star = { raw = "[s]", rendered = " ", highlight = "RenderMarkdownListStar" },
+          idea = { raw = "[*]", rendered = "󰌵 ", highlight = "RenderMarkdownListIdea" },
+          yes = { raw = "[y]", rendered = "󰔓 ", highlight = "RenderMarkdownListYes" },
+          no = { raw = "[n]", rendered = "󰔑 ", highlight = "RenderMarkdownListNo" },
+          question = { raw = "[?]", rendered = " ", highlight = "RenderMarkdownListQuestion" },
+          info = { raw = "[i]", rendered = " ", highlight = "RenderMarkdownListInfo" },
+          important = { raw = "[!]", rendered = "󱅶 ", highlight = "RenderMarkdownListImportant" },
         },
       },
       -- makes toggling this plugin also toggle conceallevel

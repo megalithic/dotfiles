@@ -4,6 +4,15 @@ return {
     { "nvim-treesitter/nvim-treesitter", build = ":TSUpdate" },
     { "nvim-lua/plenary.nvim" },
     { "saghen/blink.cmp" },
+    {
+      "OXY2DEV/markview.nvim",
+      opts = {
+        preview = {
+          filetypes = { "codecompanion" },
+          ignore_buftypes = {},
+        },
+      },
+    },
   },
   -- opts = {
   --   --Refer to: https://github.com/olimorris/codecompanion.nvim/blob/main/lua/codecompanion/config.lua
@@ -68,7 +77,17 @@ return {
     local ai_strategy = os.getenv("AI_STRATEGY") or "anthropic"
 
     require("codecompanion").setup({
-      strategies = {
+      -- strategies = {
+      --   chat = {
+      --     adapter = ai_strategy,
+      --     keymaps = {
+      --       close = { modes = { n = "<C-q>", i = "<C-q>" }, opts = {} },
+      --       options = { modes = { n = "<leader>h" }, opts = {} },
+      --     },
+      --   },
+      --   inline = { adapter = ai_strategy },
+      -- },
+      interactions = {
         chat = {
           adapter = ai_strategy,
           keymaps = {
@@ -85,20 +104,18 @@ return {
               env = {
                 ANTHROPIC_API_KEY = nil,
                 CLAUDE_CODE_OAUTH_TOKEN = nil,
-                -- ANTHROPIC_API_KEY = "cmd:op read op://Private/yy6goxmme5pm5jkhsmspolopme/credential --no-newline",
               },
               commands = {
                 default = {
-                  "claude-code",
+                  "claude-code-acp",
                 },
               },
             })
           end,
-          devclarity_claude_code = function()
+          work_claude_code = function()
             return require("codecompanion.adapters").extend("claude_code", {
               env = {
-                ANTHROPIC_API_KEY = "cmd:op read op://shared/megaenv/ANTHROPIC_API_KEY --no-newline",
-                -- ANTHROPIC_API_KEY = "cmd:op read op://Private/yy6goxmme5pm5jkhsmspolopme/credential --no-newline",
+                ANTHROPIC_API_KEY = "cmd:op read op://shared/megaenv/WORK_ANTHROPIC_API_KEY --no-newline",
               },
               commands = {
                 default = {
@@ -123,8 +140,7 @@ return {
           anthropic = function()
             return require("codecompanion.adapters").extend("anthropic", {
               env = {
-                api_key = "cmd:op read op://shared/megaenv/CLAUDE_CODE_OAUTH_TOKEN --no-newline",
-                -- api_key = "cmd:op read op://Private/Claude/credential --no-newline",
+                api_key = "cmd:op read op://shared/megaenv/WORK_ANTHROPIC_API_KEY --no-newline",
               },
             })
           end,
@@ -139,18 +155,7 @@ return {
           end,
         },
       },
-      -- extensions = {
-      --   history = {
-      --     enabled = true,
-      --     opts = {
-      --       title_generation_opts = nil,
-      --       -- title_generation_opts = {
-      --       --   adapter = 'copilot',
-      --       --   model = 'gpt-4.1'
-      --       -- },
-      --     },
-      --   },
-      -- },
+      extensions = {},
     })
 
     vim.keymap.set(

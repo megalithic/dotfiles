@@ -1,7 +1,5 @@
 -- Helper functions for template substitutions
-local function get_notes_home()
-  return vim.env.NOTES_HOME or (vim.env.HOME .. "/iclouddrive/Documents/_notes")
-end
+local function get_notes_home() return vim.env.NOTES_HOME or (vim.env.HOME .. "/iclouddrive/Documents/_notes") end
 
 --- Find the most recent daily note before today
 --- Returns the path and filename of the previous daily note
@@ -16,10 +14,7 @@ local function find_previous_daily_note()
   local year = os.date("%Y")
 
   -- Find all daily notes, sorted by name (which is date-based)
-  local handle = io.popen(string.format(
-    "find '%s' -name '*.md' -type f 2>/dev/null | sort -r",
-    daily_dir
-  ))
+  local handle = io.popen(string.format("find '%s' -name '*.md' -type f 2>/dev/null | sort -r", daily_dir))
   if not handle then return nil, nil end
 
   local result = handle:read("*a")
@@ -28,9 +23,7 @@ local function find_previous_daily_note()
   -- Find the first note that's before today
   for path in result:gmatch("[^\n]+") do
     local filename = path:match("([^/]+)%.md$")
-    if filename and filename < today then
-      return path, filename
-    end
+    if filename and filename < today then return path, filename end
   end
 
   return nil, nil
@@ -51,9 +44,7 @@ local function extract_incomplete_tasks(path)
 
   -- Find ## Tasks section content (between ## Tasks and next ## or end)
   local tasks_section = content:match("## Tasks\n(.-)\n## ") or content:match("## Tasks\n(.*)$")
-  if not tasks_section then
-    return "- [ ] DAILY CHORES #life\n- [ ] Read book chapter #life"
-  end
+  if not tasks_section then return "- [ ] DAILY CHORES #life\n- [ ] Read book chapter #life" end
 
   -- Extract incomplete tasks (- [ ] but not - [x], - [/], - [-], etc.)
   local incomplete = {}
@@ -66,9 +57,7 @@ local function extract_incomplete_tasks(path)
     end
   end
 
-  if #incomplete == 0 then
-    return "- [ ] DAILY CHORES #life\n- [ ] Read book chapter #life"
-  end
+  if #incomplete == 0 then return "- [ ] DAILY CHORES #life\n- [ ] Read book chapter #life" end
 
   return table.concat(incomplete, "\n")
 end
@@ -99,18 +88,17 @@ local function sanitize_for_filename(str, max_len)
   if not str or str == "" then return "" end
   max_len = max_len or 30
 
-  local result = str:lower()
-    :gsub("[%.:/]", "-")       -- dots/colons/slashes to dashes
-    :gsub("%s+", "-")          -- spaces to dashes
-    :gsub("[^a-z0-9%-]", "")   -- remove non-alphanumeric
-    :gsub("%-+", "-")          -- collapse multiple dashes
-    :gsub("^%-", "")           -- trim leading dash
-    :gsub("%-$", "")           -- trim trailing dash
+  local result = str
+    :lower()
+    :gsub("[%.:/]", "-") -- dots/colons/slashes to dashes
+    :gsub("%s+", "-") -- spaces to dashes
+    :gsub("[^a-z0-9%-]", "") -- remove non-alphanumeric
+    :gsub("%-+", "-") -- collapse multiple dashes
+    :gsub("^%-", "") -- trim leading dash
+    :gsub("%-$", "") -- trim trailing dash
 
   -- Truncate at word boundary if too long
-  if #result > max_len then
-    result = result:sub(1, max_len):gsub("%-[^%-]*$", "")
-  end
+  if #result > max_len then result = result:sub(1, max_len):gsub("%-[^%-]*$", "") end
 
   return result
 end
@@ -124,17 +112,15 @@ local function extract_title_snippet(window_title)
 
   -- Remove common browser/app suffixes
   local cleaned = window_title
-    :gsub("%s*[%-–—|·]%s*[A-Z][%w%s]*$", "")  -- " - App Name" or " | App"
-    :gsub("%s*[%-–—]%s*[A-Z][%w]*%s*[A-Z][%w]*$", "")  -- " - Two Words"
-    :gsub("^https?://[^/]+/", "")  -- leading URLs
+    :gsub("%s*[%-–—|·]%s*[A-Z][%w%s]*$", "") -- " - App Name" or " | App"
+    :gsub("%s*[%-–—]%s*[A-Z][%w]*%s*[A-Z][%w]*$", "") -- " - Two Words"
+    :gsub("^https?://[^/]+/", "") -- leading URLs
     :gsub("^www%.", "")
 
   -- Take first 2-3 meaningful words only
   local words = {}
   for word in cleaned:gmatch("%S+") do
-    if #words < 3 and #word > 1 then
-      table.insert(words, word)
-    end
+    if #words < 3 and #word > 1 then table.insert(words, word) end
   end
 
   if #words == 0 then return nil end
@@ -185,9 +171,7 @@ local function generate_descriptor_from_context(ctx)
   end
 
   -- Priority 3: App type (if not "other")
-  if ctx.appType and ctx.appType ~= "other" then
-    return ctx.appType
-  end
+  if ctx.appType and ctx.appType ~= "other" then return ctx.appType end
 
   return "capture"
 end
@@ -238,21 +222,15 @@ return {
       time_format = "%H:%M",
       substitutions = {
         -- Date without dashes for IDs (YYYYMMDD format)
-        date_id = function()
-          return os.date("%Y%m%d")
-        end,
+        date_id = function() return os.date("%Y%m%d") end,
 
         -- ISO timestamp for created field
-        timestamp = function()
-          return os.date("%Y-%m-%dT%H:%M:%S")
-        end,
+        timestamp = function() return os.date("%Y-%m-%dT%H:%M:%S") end,
 
         -- Task migration: extract incomplete tasks from previous daily note
         migrated_tasks = function()
           local prev_path = find_previous_daily_note()
-          if prev_path then
-            return extract_incomplete_tasks(prev_path)
-          end
+          if prev_path then return extract_incomplete_tasks(prev_path) end
           return "- [ ] DAILY CHORES #life\n- [ ] Read book chapter #life"
         end,
 
@@ -280,16 +258,12 @@ return {
           if ctx.windowTitle and ctx.windowTitle ~= "" then
             table.insert(lines, string.format("> - **Window:** %s", ctx.windowTitle))
           end
-          if ctx.url and ctx.url ~= "" then
-            table.insert(lines, string.format("> - **URL:** %s", ctx.url))
-          end
+          if ctx.url and ctx.url ~= "" then table.insert(lines, string.format("> - **URL:** %s", ctx.url)) end
           if ctx.filePath and ctx.filePath ~= "" then
             table.insert(lines, string.format("> - **File:** `%s`", ctx.filePath))
           end
           local lang = ctx.detectedLanguage or ctx.filetype
-          if lang and lang ~= "" then
-            table.insert(lines, string.format("> - **Language:** %s", lang))
-          end
+          if lang and lang ~= "" then table.insert(lines, string.format("> - **Language:** %s", lang)) end
 
           -- Only return the callout if we have any context
           if #lines == 0 then return "" end
@@ -301,9 +275,7 @@ return {
         -- Selection as code block (for text captures)
         capture_selection = function()
           local ctx = read_shade_context()
-          if not ctx or not ctx.selection or ctx.selection == "" then
-            return ""
-          end
+          if not ctx or not ctx.selection or ctx.selection == "" then return "" end
           local lang = ctx.detectedLanguage or ctx.filetype or ""
           return string.format("```%s\n%s\n```", lang, ctx.selection)
         end,
@@ -311,9 +283,7 @@ return {
         -- For image captures - reads from context.json written by Hammerspoon
         image_filename = function()
           local ctx = read_shade_context()
-          if ctx and ctx.imageFilename and ctx.imageFilename ~= "" then
-            return ctx.imageFilename
-          end
+          if ctx and ctx.imageFilename and ctx.imageFilename ~= "" then return ctx.imageFilename end
           -- Fallback: generate a timestamped name (shouldn't happen if workflow is correct)
           return string.format("capture-%s.png", os.date("%Y%m%d%H%M%S"))
         end,
@@ -345,10 +315,8 @@ return {
       blink = true,
       nvim_cmp = false,
       min_chars = 0,
-      -- create_new = false,
     },
     picker = { name = "snacks.pick" },
-    checkbox = {},
     preferred_link_style = "wiki",
     ui = {
       enable = false,

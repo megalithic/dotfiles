@@ -194,6 +194,41 @@ function M.multi_grep()
     title = "Multi Grep",
     source = "grep",
     finder = finder,
+    actions = {
+      -- Open all selected items in vertical splits
+      -- Use <Tab> to select multiple items, then <CR> to open them all
+      vsplit_all = function(picker_instance)
+        local items = picker_instance:selected({ fallback = true })
+        if #items == 0 then return end
+
+        picker_instance:close()
+
+        -- Open ALL selected items in vsplits (even the first one)
+        for _, item in ipairs(items) do
+          local path = Snacks.picker.util.path(item)
+          if not path then
+            Snacks.notify.error("No path found for item", { title = "Multi Grep" })
+            return
+          end
+
+          vim.cmd("vsplit " .. vim.fn.fnameescape(path))
+
+          -- Position cursor at match location
+          if item.pos and item.pos[1] > 0 then
+            vim.api.nvim_win_set_cursor(0, { item.pos[1], item.pos[2] })
+            vim.cmd("norm! zzzv") -- Center and open folds
+          end
+        end
+      end,
+    },
+    win = {
+      input = {
+        keys = {
+          -- Override default confirm to open all selections in vsplits
+          ["<CR>"] = { "vsplit_all", mode = { "i", "n" } },
+        },
+      },
+    },
   })
 end
 

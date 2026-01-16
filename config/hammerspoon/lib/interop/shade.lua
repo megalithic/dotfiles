@@ -77,10 +77,6 @@ local config = {
   -- shade binary (nil = auto-detect via PATH or known locations)
   cmd = nil,
 
-  -- Panel size (0.0-1.0 = percentage, >1.0 = pixels)
-  width = 0.5,
-  height = 0.5,
-
   -- Command to run (nil = auto-build nvim command with socket)
   -- Example: "nvim ~/notes/capture.md"
   command = nil,
