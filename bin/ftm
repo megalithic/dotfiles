@@ -126,7 +126,8 @@ function get_layouts() {
 # -- change to the given existing session
 function to_session() {
   local session
-  session="$(echo "$1" | sed '/^$/d')"
+  # Strip the running indicator (*) if present
+  session="$(echo "$1" | sed 's/ \*$//' | sed '/^$/d')"
   tmux "$change" -t "$session"\; refresh-client
 }
 
@@ -152,7 +153,8 @@ function new_session() {
 function try_session() {
   local session
   local cwd
-  session="$(echo "$1" | sed '/^$/d')"
+  # Strip the running indicator (*) if present
+  session="$(echo "$1" | sed 's/ \*$//' | sed '/^$/d')"
 
   # FIXME: zoxide doesn't cut it completely; need to fuzzy find all folders in `$CODE`
   cwd=$(zoxide query "$session" 2>/dev/null || fd -1 "$session" "$CODE")
@@ -170,8 +172,14 @@ function fuzzy_find() {
   layouts_list="$(get_layouts)"
   current_sessions_list=$(tmux list-sessions -F "#S")
 
-  # combine our pre-defined layouts AND open sessions
-  sessions_list=$(printf "%s\n%s" "$layouts_list" "$current_sessions_list" | sort -u)
+  # combine our pre-defined layouts AND open sessions, mark running ones with *
+  sessions_list=$(printf "%s\n%s" "$layouts_list" "$current_sessions_list" | sort -u | while read -r s; do
+    if echo "$current_sessions_list" | grep -q "^${s}$"; then
+      echo "$s *"
+    else
+      echo "$s"
+    fi
+  done)
   current_session="$(tmux display-message -p '#S')"
   sessions_count=$(echo "$sessions_list" | wc -l | sed -e 's/^[[:space:]]*//')
 
@@ -209,13 +217,16 @@ function fuzzy_find() {
   fi
 
   # -- get our session from fzf (grabs the the active pane from each session as preview, too!)
-  fzf_list=$(echo "$sessions_list" | sed -E "s/:.*$//" | grep -v "^default\$" | grep -v "^$current_session\$")
+  # Filter out default and current session (accounting for optional ' *' marker)
+  fzf_list=$(echo "$sessions_list" | sed -E "s/:.*$//" | grep -E -v "^(default|${current_session})( \*)?$")
   # list_sessions=$(tmux list-sessions | sed -E "s/:.*$//")
 
   # ENTER_select_session_bind="enter:replace-query+print-query"
   # CTRL_R_rename_session_bind='ctrl-r:execute(printf >&2 "New session name: ";read name; tmux rename-session -t {} ${name};)+reload(echo "$sessions_list" | grep -v "^default\$" | grep -v "^$current_session\$")'
-  CTRL_X_kill_session_bind='ctrl-x:execute(tmux kill-session -t {})+change-prompt(⚡  )+reload(tmux list-sessions | sed -E "s/:.*$//")'
-  CTRL_R_rename_session_bind='ctrl-r:execute(printf >&2 "New session name: ";read name; tmux rename-session -t {} ${name};)+reload(tmux list-sessions | sed -E "s/:.*$//")'
+  # Strip the running indicator (*) from selected session name before passing to tmux commands
+  # Reload commands mark all sessions as running (with *) since we're only showing running sessions after reload
+  CTRL_X_kill_session_bind='ctrl-x:execute(session=$(echo {} | sed "s/ \*$//"); tmux kill-session -t "${session}")+change-prompt(⚡  )+reload(tmux list-sessions -F "#S" | sed "s/$/ */")'
+  CTRL_R_rename_session_bind='ctrl-r:execute(session=$(echo {} | sed "s/ \*$//"); printf >&2 "New session name: "; read name; tmux rename-session -t "${session}" "${name}")+reload(tmux list-sessions -F "#S" | sed "s/$/ */")'
 
   # try_session "$(
   #   echo \
