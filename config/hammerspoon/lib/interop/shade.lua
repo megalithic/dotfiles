@@ -77,6 +77,10 @@ local config = {
   -- shade binary (nil = auto-detect via PATH or known locations)
   cmd = nil,
 
+  -- -- Panel size (0.0-1.0 = percentage, >1.0 = pixels)
+  -- width = 0.5,
+  -- height = 0.5,
+
   -- Command to run (nil = auto-build nvim command with socket)
   -- Example: "nvim ~/notes/capture.md"
   command = nil,
@@ -91,7 +95,7 @@ local config = {
 --- Build the default nvim command with socket cleanup and SHADE env var
 ---@return string command Shell command to launch nvim with socket
 local function buildDefaultCommand()
-  return fmt("/bin/zsh -c 'rm -f %s; SHADE=1 exec nvim --listen %s'", NVIM_SOCKET, NVIM_SOCKET)
+  return fmt("/bin/bin/env zsh -c 'rm -f %s; SHADE=1 exec nvim --listen %s'", NVIM_SOCKET, NVIM_SOCKET)
 end
 
 --- Get the effective command (configured or default)
@@ -180,15 +184,15 @@ end
 local function buildArgs()
   local args = {}
 
-  if config.width then
-    table.insert(args, "--width")
-    table.insert(args, tostring(config.width))
-  end
-
-  if config.height then
-    table.insert(args, "--height")
-    table.insert(args, tostring(config.height))
-  end
+  -- if config.width then
+  --   table.insert(args, "--width")
+  --   table.insert(args, tostring(config.width))
+  -- end
+  --
+  -- if config.height then
+  --   table.insert(args, "--height")
+  --   table.insert(args, tostring(config.height))
+  -- end
 
   -- Always include command (use effective = configured or default nvim)
   local cmd = getEffectiveCommand()
