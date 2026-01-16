@@ -516,7 +516,11 @@ function M.clear_ui(opts)
   pcall(mega.ui.blink_cursorline)
 
   vim.cmd.redraw({ bang = true })
-  vim.cmd.update({ bang = true })
+
+  -- Only save if buffer has a filename (not an unsaved scratch buffer)
+  if vim.fn.bufname("%") ~= "" then
+    vim.cmd.update({ bang = true })
+  end
 
   -- do
   --   local ok, tsc = pcall(require, "treesitter-context")
