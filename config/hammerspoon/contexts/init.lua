@@ -6,8 +6,12 @@ local M = {}
 M.__index = M
 M.name = "contexts"
 M.contextModals = {}
-M.DEBUG = false -- Enable debug logging for modal events
-M.MODALS_ENABLED = false -- DISABLED: Modal keybindings for app contexts (investigating bugs)
+
+-- Global flags for runtime control via console/CLI
+-- Disable at runtime: _G.APP_MODALS_ENABLED = false
+-- Enable debug: _G.DEBUG = true
+if _G.DEBUG == nil then _G.DEBUG = false end
+if _G.APP_MODALS_ENABLED == nil then _G.APP_MODALS_ENABLED = true end
 
 -- Events that trigger context activation
 M.activationEvents = {
@@ -42,6 +46,18 @@ local function isDeactivationEvent(event)
   return enum.contains(M.deactivationEvents, event)
 end
 
+-- Helper: exit ALL active modals (defensive cleanup)
+-- Ensures no stale modals remain active when switching apps
+local function exitAllActiveModals(exceptContextId)
+  for bundleID, ctx in pairs(M.contextModals) do
+    if bundleID ~= exceptContextId and ctx.modal and ctx._modalActive then
+      ctx._modalActive = false
+      ctx.modal:exit()
+      U.log.df("[CTX] CLEANUP: exited stale modal for %s", bundleID)
+    end
+  end
+end
+
 function M:run(opts)
   local context = opts["context"]
   local app = opts["appObj"]
@@ -57,13 +73,8 @@ function M:run(opts)
   local eventStr = U.eventString(event) or tostring(event)
 
   -- DEBUG: Log all incoming events
-  if M.DEBUG then
-    print(fmt("[CTX DEBUG] EVENT: %s | app=%s | modal=%s | _modalActive=%s",
-      eventStr,
-      contextId,
-      context.modal and "yes" or "no",
-      tostring(context._modalActive)))
-  end
+  U.log.df("[CTX] EVENT: %s | app=%s | modal=%s | _modalActive=%s",
+    eventStr, contextId, context.modal and "yes" or "no", tostring(context._modalActive))
 
   local callOpts = {
     event = event,
@@ -74,19 +85,15 @@ function M:run(opts)
 
   if isActivationEvent(event) then
     -- DEBUG: Log activation attempt
-    if M.DEBUG then
-      print(fmt("[CTX DEBUG] ACTIVATION: %s | modalsEnabled=%s",
-        contextId,
-        tostring(M.MODALS_ENABLED)))
-    end
+    U.log.df("[CTX] ACTIVATION: %s | modalsEnabled=%s", contextId, tostring(_G.APP_MODALS_ENABLED))
 
-    -- Centralized modal management (DISABLED when MODALS_ENABLED = false)
-    if M.MODALS_ENABLED and context.modal and not context._modalActive then
+    -- Centralized modal management (disable at runtime: _G.APP_MODALS_ENABLED = false)
+    if _G.APP_MODALS_ENABLED and context.modal and not context._modalActive then
+      -- Defensive cleanup: exit any other active modals first
+      exitAllActiveModals(contextId)
       context._modalActive = true
       context.modal:enter()
-      if M.DEBUG then
-        print(fmt("[CTX DEBUG] MODAL ENTERED: %s", contextId))
-      end
+      U.log.df("[CTX] MODAL ENTERED: %s", contextId)
     end
 
     -- Call context's custom activation hook if defined
@@ -99,19 +106,13 @@ function M:run(opts)
 
   elseif isDeactivationEvent(event) then
     -- DEBUG: Log deactivation attempt
-    if M.DEBUG then
-      print(fmt("[CTX DEBUG] DEACTIVATION: %s | modalsEnabled=%s",
-        contextId,
-        tostring(M.MODALS_ENABLED)))
-    end
+    U.log.df("[CTX] DEACTIVATION: %s | modalsEnabled=%s", contextId, tostring(_G.APP_MODALS_ENABLED))
 
-    -- Centralized modal management (DISABLED when MODALS_ENABLED = false)
-    if M.MODALS_ENABLED and context.modal and context._modalActive then
+    -- Centralized modal management (disable at runtime: _G.APP_MODALS_ENABLED = false)
+    if _G.APP_MODALS_ENABLED and context.modal and context._modalActive then
       context._modalActive = false
       context.modal:exit()
-      if M.DEBUG then
-        print(fmt("[CTX DEBUG] MODAL EXITED: %s", contextId))
-      end
+      U.log.df("[CTX] MODAL EXITED: %s", contextId)
     end
 
     -- Call context's custom deactivation hook if defined
