@@ -64,7 +64,7 @@
       width = 2.0; # Border thickness in points
       cornerRadius = 8.0; # Corner radius in points (0 = square, 8 = subtle, 12+ = pronounced)
       color = "#E68C59"; # Everforest aqua (hex: RGB, RRGGBB, or RRGGBBAA)
-      opacity = 0.2; # Border opacity (0.0 - 1.0)
+      opacity = 0.75; # Border opacity (0.0 - 1.0)
       animated = true; # Animate border appearance/disappearance
       animationDuration = 0.15; # Animation duration in seconds
       menubarStrokeColor = "#E68C59"; # Menubar icon stroke when focused (Everforest orange)

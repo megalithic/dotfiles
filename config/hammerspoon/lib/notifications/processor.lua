@@ -167,14 +167,27 @@ function M.process(rule, opts)
   -- Show canvas notification
   notify.sendCanvasNotification(title, message, notifConfig)
 
-  -- If content was redacted, dismiss the native notification to prevent showing unredacted content
-  -- The native notification would still be visible in Notification Center with full content otherwise
-  if shouldRedact and opts.notificationElement then
-    local dismissSuccess = dismiss.dismiss(opts.notificationElement, title)
-    if dismissSuccess then
-      U.log.df("Dismissed native notification after redaction: %s", title or "untitled")
+  -- Determine if we should dismiss the native macOS notification
+  -- Priority: rule.dismissNative > global dismissNativeOnRedirect > false
+  -- Also force dismiss when content is redacted (to prevent showing unredacted content in Notification Center)
+  local shouldDismissNative = shouldRedact -- Always dismiss when redacting
+  if not shouldDismissNative then
+    -- Check rule-level override first, then global default
+    if rule.dismissNative ~= nil then
+      shouldDismissNative = rule.dismissNative
     else
-      U.log.wf("Failed to dismiss native notification after redaction: %s", title or "untitled")
+      shouldDismissNative = C.notifier.dismissNativeOnRedirect or false
+    end
+  end
+
+  -- Dismiss native notification if configured
+  if shouldDismissNative and opts.notificationElement then
+    local dismissSuccess = dismiss.dismiss(opts.notificationElement, title)
+    local reason = shouldRedact and "redaction" or "redirect"
+    if dismissSuccess then
+      U.log.df("Dismissed native notification (%s): %s", reason, title or "untitled")
+    else
+      U.log.wf("Failed to dismiss native notification (%s): %s", reason, title or "untitled")
     end
   end
 
@@ -197,9 +210,11 @@ function M.process(rule, opts)
   if urgencyConfig.position == "center" then
     actionDetail = urgencyConfig.phone and "shown_center_dimmed_phone" or "shown_center_dimmed"
   end
-  -- Add redaction suffix to action_detail if content was redacted
+  -- Add suffix for redaction or native dismissal
   if shouldRedact then
     actionDetail = actionDetail .. "_redacted"
+  elseif shouldDismissNative then
+    actionDetail = actionDetail .. "_native_dismissed"
   end
 
   db.log({

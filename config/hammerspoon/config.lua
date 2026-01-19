@@ -17,6 +17,7 @@ TERMINAL = "com.mitchellh.ghostty"
 ---@field showWhenAppFocused? boolean        -- Show even when source app is focused
 ---@field overrideFocusModes? string[]|true  -- Focus modes this notification can bypass/override
 ---@field appImageID? string                 -- Custom icon identifier (e.g. "hal9000")
+---@field dismissNative? boolean             -- Whether to dismiss native notification after redirect (default: uses global setting)
 --
 -- Urgency levels control display behavior:
 --   critical = center + dim + phone notification (reserved for emergencies)
@@ -567,6 +568,11 @@ M.notifier = {
 
   -- Default notification duration (in seconds)
   defaultDuration = 3,
+
+  -- Whether to dismiss native macOS notification when redirect is processed (default: true)
+  -- When true, only the canvas overlay is shown; native notification is closed immediately
+  -- Per-rule dismissNative field can override this global default
+  dismissNativeOnRedirect = true,
 
   -- Animation settings
   animation = {
