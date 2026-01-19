@@ -123,7 +123,6 @@ require("spike-ax-meeting")
 -- Dismissal is now an action in rules (action = "dismiss") instead of separate scanner
 local watchers = { "audio", "dock", "app", "notification", "camera", "url" }
 
--- req("lib.seal")
 req("bindings")
 req("watchers", { watchers = watchers })
 req("ptt", { push = { { "cmd", "alt" }, nil }, toggle = { { "cmd", "alt" }, "p" } }):start()

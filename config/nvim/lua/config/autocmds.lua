@@ -152,7 +152,7 @@ M.augroup("Reading", {
           and vim.bo.filetype ~= "commit"
           and vim.fn.index({ "xxd", "gitrebase" }, vim.bo.filetype) == -1
         then
-          vim.cmd('normal! g`"')
+          pcall(vim.cmd('normal! g`"'))
         end
       end
     end,
@@ -797,10 +797,7 @@ local function append_to_daily_note(capture_filename, description, target_date)
 
   -- Only auto-link captures to today's daily note
   if target_date ~= today then
-    vim.notify(
-      string.format("Capture from %s - not linking to today's daily note", target_date),
-      vim.log.levels.INFO
-    )
+    vim.notify(string.format("Capture from %s - not linking to today's daily note", target_date), vim.log.levels.INFO)
     return false, "not_same_day"
   end
 

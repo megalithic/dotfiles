@@ -194,6 +194,7 @@ end
 
 return {
   "obsidian-nvim/obsidian.nvim",
+  cond = not vim.g.started_by_firenvim,
   version = "*",
   -- lazy = false,
   event = "VeryLazy",

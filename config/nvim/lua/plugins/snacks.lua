@@ -416,17 +416,17 @@ if true then
         {
           "<leader>a",
           mode = "n",
-          function() require("snacks").picker.grep() end,
-          -- function() require("plugins.snacks-multi-grep").multi_grep() end,
-          desc = "live grep",
+          -- function() require("snacks").picker.grep() end,
+          function() require("plugins.snacks-multi-grep").multi_grep() end,
+          desc = "live multi-grep",
           -- desc = "live grep (multi)",
         },
         {
           "<leader>fg",
           mode = "n",
-          -- function() require("snacks").picker.grep() end,
-          function() require("plugins.snacks-multi-grep").multi_grep() end,
-          desc = "live multi-grep",
+          function() require("snacks").picker.grep() end,
+          -- function() require("plugins.snacks-multi-grep").multi_grep() end,
+          desc = "live grep",
         },
         {
           "<leader>A",

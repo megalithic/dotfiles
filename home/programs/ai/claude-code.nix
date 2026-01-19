@@ -6,8 +6,7 @@
   lib,
   allMcpServers,
   ...
-}:
-{
+}: {
   programs.claude-code = {
     enable = true;
     package = pkgs.llm-agents.claude-code;
@@ -240,7 +239,6 @@
       | `hs` | Hammerspoon config, reload, macOS APIs | Before editing HS config |
       | `nvim` | Neovim config, plugins, LSP patterns | Before editing nvim config |
       | `tmux` | tmux sessions, panes, windows, orchestration | Before tmux interaction |
-      | `task-completion` | Summary format, insight blocks, preview-ai diff | Before completing any non-trivial task |
 
       ## Available Agents
 
@@ -296,6 +294,7 @@
       enableAllProjectMcpServers = true;
       feedbackSurveyState.lastShownTime = 1754089004345;
       outputStyle = "Explanatory";
+      model = "claude-opus-4-5-20251101";
       statusLine = {
         type = "command";
         command = "${config.home.homeDirectory}/bin/claude-statline";
