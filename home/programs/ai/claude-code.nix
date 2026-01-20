@@ -341,6 +341,12 @@
 
       # tmux - terminal multiplexer configuration and orchestration
       tmux = builtins.readFile ../../../docs/skills/tmux.md;
+
+      # notes - meganote system, captures, daily notes, obsidian.nvim
+      notes = builtins.readFile ../../../docs/skills/notes.md;
+
+      # task-completion - guidelines for summarizing completed work
+      task-completion = builtins.readFile ../../../docs/skills/task-completion.md;
     };
 
     # =========================================================================

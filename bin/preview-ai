@@ -8,6 +8,8 @@ set -euo pipefail
 CALLER_PANE="$TMUX_PANE"  # Pane to NEVER touch
 PREVIEW_TITLE="ai-preview"
 SPLIT_PERCENT=45
+AUTO_CLOSE_AFTER=""  # Seconds to auto-close (empty = disabled)
+USE_CODEDIFF=""      # Use codediff.nvim for diffs (empty = use delta)
 
 # Get current session and window (for scoped pane search)
 get_current_session() {
@@ -40,11 +42,36 @@ cleanup_preview() {
 # Create new preview pane (split from caller, lands on RIGHT)
 create_preview_pane() {
     local cmd="$1"
+    local interactive="${2:-false}"  # If true, don't add "press q to close"
     cleanup_preview
 
     # Write command to temp file to avoid quoting hell
     local tmpfile=$(mktemp)
-    cat > "$tmpfile" << EOF
+
+    if [[ "$interactive" == "true" ]]; then
+        # Interactive mode (e.g., nvim) - no read prompt
+        cat > "$tmpfile" << EOF
+#!/bin/bash
+$cmd
+rm -f "$tmpfile"
+EOF
+    elif [[ -n "$AUTO_CLOSE_AFTER" ]]; then
+        # Auto-close mode - show countdown then close
+        cat > "$tmpfile" << EOF
+#!/bin/bash
+$cmd
+echo
+echo -e "\n[Auto-closing in ${AUTO_CLOSE_AFTER}s... press any key to keep open]"
+# Use timeout with read for auto-close
+if read -t "$AUTO_CLOSE_AFTER" -n1 -r </dev/tty 2>/dev/null; then
+    echo -e "\n[Keeping open. Press q to close]"
+    read -n1 -r </dev/tty
+fi
+rm -f "$tmpfile"
+EOF
+    else
+        # Normal mode - wait for q to close
+        cat > "$tmpfile" << EOF
 #!/bin/bash
 $cmd
 echo
@@ -52,6 +79,7 @@ echo -e "\n[Press q to close]"
 read -n1 -r </dev/tty
 rm -f "$tmpfile"
 EOF
+    fi
     chmod +x "$tmpfile"
 
     # Split horizontally, new pane on right
@@ -96,6 +124,7 @@ detect_type() {
 }
 
 # Build preview command for given type and content
+# Returns: cmd [interactive_flag]
 build_preview_cmd() {
     local type="$1"
     shift
@@ -120,16 +149,40 @@ build_preview_cmd() {
         diff)
             # Exclude noisy beads jsonl from diff output using jj fileset negation
             # Syntax: 'all() & ~glob:".beads/**"' excludes .beads directory
-            if [[ -z "$content" || "$content" == "-r"* ]]; then
-                # If no path args or just revision args, add the exclusion fileset
-                echo "jj diff $content 'all() & ~glob:\".beads/**\"' | delta"
+            if [[ -n "$USE_CODEDIFF" ]]; then
+                # Interactive codediff.nvim mode
+                # CodeDiff expects git revisions; jj uses @ for HEAD
+                # Map jj revisions to git-compatible form
+                local rev_args=""
+                if [[ -z "$content" ]]; then
+                    rev_args=""  # Show working copy changes
+                elif [[ "$content" == "-r @" || "$content" == "-r@" ]]; then
+                    rev_args="HEAD"
+                elif [[ "$content" =~ ^-r\ *(.+)$ ]]; then
+                    rev_args="${BASH_REMATCH[1]}"
+                else
+                    rev_args="$content"
+                fi
+                echo "nvim +\"CodeDiff $rev_args\"|interactive"
             else
-                # User specified paths, use as-is
-                echo "jj diff $content | delta"
+                # Delta mode (non-interactive)
+                if [[ -z "$content" || "$content" == "-r"* ]]; then
+                    echo "jj diff $content 'all() & ~glob:\".beads/**\"' | delta"
+                else
+                    echo "jj diff $content | delta"
+                fi
             fi
             ;;
+        codediff)
+            # Explicit codediff.nvim mode (always interactive)
+            echo "nvim +\"CodeDiff $content\"|interactive"
+            ;;
         log)      echo "jj log $content --no-pager" ;;
-        bead)     echo "bd show '$content'" ;;
+        bead)
+            # Render bead as rich markdown with glow
+            # bd show outputs markdown-like format, pipe through glow for rendering
+            echo "bd show '$content' | glow -p -s dark -w 120"
+            ;;
         file)     echo "bat --style=numbers --color=always '$content'" ;;
         image)    echo "preview '$content'" ;;  # Delegate to existing preview script
         cmd)      echo "${content#cmd:}" ;;
@@ -148,14 +201,20 @@ usage() {
     cat <<EOF
 preview-ai - Safe preview pane manager for AI agents
 
-Usage: preview-ai [type] [content/args...]
+Usage: preview-ai [options] [type] [content/args...]
+
+Options:
+  --auto-close-after <secs>  Auto-close pane after N seconds (can be cancelled)
+  --codediff                 Use codediff.nvim for diff viewing (interactive)
+  -h, --help                 Show this help
 
 Types:
   json      JSON content (inline or file path)
   markdown  Markdown content (inline or file path)
-  diff      jj diff arguments (e.g., "-r @")
+  diff      jj diff arguments (e.g., "-r @") - uses delta or codediff
+  codediff  Explicit codediff.nvim mode (e.g., "HEAD~1 HEAD")
   log       jj log arguments (e.g., "-n 5")
-  bead      Bead task ID (e.g., ".dotfiles-t7f")
+  bead      Bead task ID - renders with glow (e.g., ".dotfiles-t7f")
   file      File path to preview with bat
   image     Image file path
   cmd       Shell command to execute (prefix with "cmd:")
@@ -164,11 +223,12 @@ Types:
 Examples:
   preview-ai json '{"foo": "bar"}'
   preview-ai diff -r @
-  preview-ai bead .dotfiles-t7f
+  preview-ai --codediff diff              # Interactive nvim diff
+  preview-ai codediff HEAD~2 HEAD         # Compare specific revisions
+  preview-ai bead .dotfiles-t7f           # Rich markdown bead view
   preview-ai file /path/to/file.lua
-  preview-ai cmd:jj status
+  preview-ai --auto-close-after 5 diff    # Auto-close after 5s
   preview-ai markdown "# Hello World"
-  preview-ai auto .dotfiles-t7f
 
 Safety:
   - NEVER renders in caller's pane (\$TMUX_PANE)
@@ -185,13 +245,33 @@ main() {
         exit 1
     fi
 
-    # Handle help
-    if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
-        usage
-        exit 0
-    fi
+    # Parse flags first
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            -h|--help)
+                usage
+                exit 0
+                ;;
+            --auto-close-after)
+                AUTO_CLOSE_AFTER="${2:-}"
+                shift 2
+                ;;
+            --codediff)
+                USE_CODEDIFF="true"
+                shift
+                ;;
+            -*)
+                echo "Unknown option: $1" >&2
+                usage
+                exit 1
+                ;;
+            *)
+                break  # Start of type/content args
+                ;;
+        esac
+    done
 
-    # Handle no args
+    # Handle no args after flag parsing
     if [[ $# -eq 0 ]]; then
         usage
         exit 1
@@ -203,14 +283,22 @@ main() {
     # Auto-detect if type is "auto" or looks like content
     if [[ "$type" == "auto" ]]; then
         type=$(detect_type "${1:-}")
-    elif [[ ! "$type" =~ ^(json|markdown|diff|log|bead|file|image|cmd|text)$ ]]; then
+    elif [[ ! "$type" =~ ^(json|markdown|diff|codediff|log|bead|file|image|cmd|text)$ ]]; then
         # First arg wasn't a type, treat it as content
         set -- "$type" "$@"
         type=$(detect_type "$type")
     fi
 
-    local preview_cmd=$(build_preview_cmd "$type" "$@")
-    create_preview_pane "$preview_cmd"
+    local preview_result=$(build_preview_cmd "$type" "$@")
+
+    # Check if interactive mode flag is appended
+    local preview_cmd="${preview_result%|interactive}"
+    local interactive="false"
+    if [[ "$preview_result" == *"|interactive" ]]; then
+        interactive="true"
+    fi
+
+    create_preview_pane "$preview_cmd" "$interactive"
 }
 
 main "$@"

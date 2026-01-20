@@ -12,9 +12,18 @@ Finishing work session. Execute these steps but **DO NOT PUSH without explicit u
    - Run `jj log -r 'main..@'` to see commits not yet on main
    - Run `jj diff` if there are uncommitted changes (summarize, don't dump entire diff)
 
-2. **If code was changed, consider quality gates**:
-   - Check if there's a justfile: `test -f justfile && just --list`
-   - Ask user if they want to run tests/lints before finishing
+2. **Run quality gates** (MANDATORY if tests exist):
+   - Check for test infrastructure in order of preference:
+     1. `justfile` with test/check target: `just test` or `just check`
+     2. `package.json` with test script: `npm test` or `bun test`
+     3. `Makefile` with test target: `make test`
+     4. Language-specific: `cargo test`, `go test ./...`, `pytest`, etc.
+   - **If tests exist, run them BEFORE proceeding**
+   - **If tests FAIL**: Stop here. Do NOT proceed to push consent.
+     - Show the test output clearly
+     - Ask: "Tests failed. Options: (1) Fix issues and re-run, (2) Skip tests and proceed anyway (not recommended)"
+   - **If tests PASS**: Continue to step 3
+   - If no tests found, note this in summary and proceed
 
 3. **Document the work** (if needed):
    - If current change has poor/no description, suggest running `jj describe`
@@ -56,11 +65,17 @@ Finishing work session. Execute these steps but **DO NOT PUSH without explicit u
    **Features/Fixes:**
    - ✅ Key accomplishments
 
+   ## Quality Gates
+   - **Tests**: ✅ Passed / ❌ Failed / ⚠️ No tests found
+   - Command run: `just test` (or whatever was used)
+   - Output summary if relevant
+
    ## Commands Used This Session
    | Command | Purpose |
    |---------|---------|
    | `jj status` | Show working copy state |
    | `jj log -r 'main..@'` | Commits ahead of main |
+   | `just test` | Run project tests (if applicable) |
    | `preview-ai diff` | Visual diff review (excludes beads) |
    | `bd sync --from-main` | Pull latest bead state from main |
    | `bd repo sync` | Hydrate cross-repo issues |

@@ -25,6 +25,8 @@ let
     "notes"
     "hs"
     "nvim"
+    "tmux"
+    "task-completion"
   ];
 
   # Generate skill directory config for each skill
@@ -69,6 +71,10 @@ let
     {
       name = "next";
       source = "next";
+    }
+    {
+      name = "preview";
+      source = "preview";
     }
   ];
 
