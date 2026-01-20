@@ -9,7 +9,7 @@ CALLER_PANE="$TMUX_PANE"  # Pane to NEVER touch
 PREVIEW_TITLE="ai-preview"
 SPLIT_PERCENT=45
 AUTO_CLOSE_AFTER=""  # Seconds to auto-close (empty = disabled)
-USE_CODEDIFF=""      # Use codediff.nvim for diffs (empty = use delta)
+USE_CODEDIFF="true"  # Always use codediff.nvim for diffs (interactive)
 
 # Get current session and window (for scoped pane search)
 get_current_session() {
@@ -205,7 +205,7 @@ Usage: preview-ai [options] [type] [content/args...]
 
 Options:
   --auto-close-after <secs>  Auto-close pane after N seconds (can be cancelled)
-  --codediff                 Use codediff.nvim for diff viewing (interactive)
+  --delta                    Use delta for diff viewing (non-interactive, default is codediff)
   -h, --help                 Show this help
 
 Types:
@@ -222,8 +222,8 @@ Types:
 
 Examples:
   preview-ai json '{"foo": "bar"}'
-  preview-ai diff -r @
-  preview-ai --codediff diff              # Interactive nvim diff
+  preview-ai diff -r @                    # Interactive codediff (default)
+  preview-ai --delta diff -r @            # Non-interactive delta view
   preview-ai codediff HEAD~2 HEAD         # Compare specific revisions
   preview-ai bead .dotfiles-t7f           # Rich markdown bead view
   preview-ai file /path/to/file.lua
@@ -256,8 +256,8 @@ main() {
                 AUTO_CLOSE_AFTER="${2:-}"
                 shift 2
                 ;;
-            --codediff)
-                USE_CODEDIFF="true"
+            --delta)
+                USE_CODEDIFF=""
                 shift
                 ;;
             -*)

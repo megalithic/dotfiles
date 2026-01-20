@@ -147,7 +147,6 @@ function M.loadMeeting()
         U.log.w("No active meeting window found")
       end
     end
-
   end)
 end
 
@@ -196,10 +195,15 @@ function M.loadUtils()
       shade.smartToggle()
     end)
     -- sidebar capture: capture note in sidebar mode (side-by-side with main app)
-    :bind({ "ctrl" }, "n", nil, function()
-      local shade = require("lib.interop.shade")
-      shade.captureWithContextSidebar()
-    end)
+    :bind(
+      { "ctrl" },
+      "n",
+      nil,
+      function()
+        local shade = require("lib.interop.shade")
+        shade.captureWithContextSidebar()
+      end
+    )
     -- toggle sidebar mode: switch between floating and sidebar-left
     :bind({ "ctrl" }, "o", nil, function()
       local shade = require("lib.interop.shade")
@@ -218,9 +222,65 @@ function M.loadUtils()
     end)
 end
 
+function M.loadShade()
+  local shade = require("lib.interop.shade")
+
+  -- Configure Shade for quick capture workflow
+  -- Use nvim with a socket for RPC commands (context injection, file opening)
+  -- Socket path: ~/.local/state/shade/nvim.sock (XDG compliant)
+  local socketPath = shade.getSocketPath()
+  local capturesDir = shade.getCapturesDir()
+
+  -- Command needs shell wrapper for:
+  -- 1. Socket cleanup (stale socket from crash/kill)
+  -- 2. Multiple commands (rm + nvim)
+  -- 3. SHADE=1 env var for nvim to detect it's running in Shade
+  -- Opens nvim in captures dir - user creates/opens capture notes there
+  local nvimCmd = string.format("/bin/zsh -c 'rm -f %s; SHADE=1 exec nvim --listen %s'", socketPath, socketPath)
+
+  shade.configure({
+    width = 0.4,
+    height = 0.4,
+    command = nvimCmd,
+    workingDirectory = capturesDir,
+    startHidden = false, -- Launch visible so nvim actually starts
+  })
+
+  local shadeModality = require("hypemode").new("shade", {
+    showIndicator = false,
+    showAlert = false,
+  })
+  shadeModality
+    :start()
+    -- re-sidebar shade + companion window
+    :bind({ "shift" }, "r", nil, function()
+      -- TODO: need a way to always plop the current shade window into sidebar mode with its companion
+    end)
+    -- toggle Shade visibility (focus, hide, show)
+    :bind({}, "n", nil, function() shade.smartToggle() end)
+    -- daily note: open in Shade floating panel
+    :bind({}, "o", nil, function() shade.openDailyNote() end)
+    -- text capture: gather context from frontmost app and create capture note
+    :bind(
+      { "shift" },
+      "n",
+      nil,
+      function() shade.captureWithContext() end
+    )
+    -- sidebar capture: capture note in sidebar mode (side-by-side with main app)
+    -- TODO: similar ergonomics as our window tiling?
+    :bind(
+      {},
+      "v",
+      nil,
+      function() shade.captureWithContextSidebar() end
+    )
+  req("hyper", { id = "shade" }):bind({}, "n", function() shadeModality:toggle() end)
+end
+
 function M.loadWm()
   -- [ MODAL C.launchers ] ---------------------------------------------------------
-  local wmModality = require("hypemode")
+  local wmModality = require("hypemode").new("wm")
   wmModality
     :start()
     :bind({}, "r", req("wm").placeAllApps, function() wmModality:exit(0.1) end)
@@ -390,39 +450,6 @@ function M.loadForceQuit()
   end)
 end
 
-function M.loadShade()
-  local shade = req("lib.interop.shade")
-
-  -- Configure Shade for quick capture workflow
-  -- Use nvim with a socket for RPC commands (context injection, file opening)
-  -- Socket path: ~/.local/state/shade/nvim.sock (XDG compliant)
-  local socketPath = shade.getSocketPath()
-  local capturesDir = shade.getCapturesDir()
-
-  -- Command needs shell wrapper for:
-  -- 1. Socket cleanup (stale socket from crash/kill)
-  -- 2. Multiple commands (rm + nvim)
-  -- 3. SHADE=1 env var for nvim to detect it's running in Shade
-  -- Opens nvim in captures dir - user creates/opens capture notes there
-  local nvimCmd = string.format(
-    "/bin/zsh -c 'rm -f %s; SHADE=1 exec nvim --listen %s'",
-    socketPath,
-    socketPath
-  )
-
-  shade.configure({
-    width = 0.4,
-    height = 0.4,
-    command = nvimCmd,
-    workingDirectory = capturesDir,
-    startHidden = false, -- Launch visible so nvim actually starts
-  })
-
-  -- Don't pre-launch - Shade will be launched on first use
-  -- This avoids issues with ghostty not spawning nvim when hidden
-  U.log.d("Shade configured (will launch on first use)")
-end
-
 function M:init()
   M.loadApps()
   M.loadMeeting()
@@ -433,7 +460,6 @@ function M:init()
   M.loadForceQuit()
   M.loadShade()
 
-  -- req("snipper")
   req("clipper")
   U.log.i("initialized")
 end

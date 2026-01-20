@@ -414,7 +414,7 @@ return {
           "n",
           "<cr>",
           function() return api.smart_action() or "<CR>" end,
-          { buffer = true, expr = true, desc = "Obsidian smart action" }
+          { buffer = true, expr = true, desc = "smart action" }
         )
 
         -- gf for wiki links: follow link under cursor
@@ -426,7 +426,10 @@ return {
             -- Fallback to normal gf
             return vim.cmd("normal! gf")
           end
-        end, { buffer = true, desc = "Go to file (obsidian)" })
+        end, { buffer = true, desc = "go to file" })
+
+        -- gf for wiki links: follow link under cursor
+        vim.keymap.set("n", "gn", function() vim.cmd("ObsidianRename") end, { buffer = true, desc = "rename note" })
       end,
     },
   },
