@@ -87,13 +87,21 @@ function M:run(opts)
     -- DEBUG: Log activation attempt
     U.log.df("[CTX] ACTIVATION: %s | modalsEnabled=%s", contextId, tostring(_G.APP_MODALS_ENABLED))
 
+    -- CRITICAL: Only enter modal if this app is actually frontmost
+    -- Prevents titleChanged events from background apps (e.g., Slack notifications)
+    -- from incorrectly activating their modals and stealing hotkeys
+    local frontmost = hs.application.frontmostApplication()
+    local isFrontmost = frontmost and frontmost:bundleID() == contextId
+
     -- Centralized modal management (disable at runtime: _G.APP_MODALS_ENABLED = false)
-    if _G.APP_MODALS_ENABLED and context.modal and not context._modalActive then
+    if _G.APP_MODALS_ENABLED and context.modal and not context._modalActive and isFrontmost then
       -- Defensive cleanup: exit any other active modals first
       exitAllActiveModals(contextId)
       context._modalActive = true
       context.modal:enter()
       U.log.df("[CTX] MODAL ENTERED: %s", contextId)
+    elseif not isFrontmost and context.modal and _G.APP_MODALS_ENABLED then
+      U.log.df("[CTX] MODAL SKIPPED (not frontmost): %s | frontmost=%s", contextId, frontmost and frontmost:bundleID() or "nil")
     end
 
     -- Call context's custom activation hook if defined
