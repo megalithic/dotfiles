@@ -20,6 +20,20 @@ Host github.com gh
   LogLevel QUIET
   ForwardAgent yes
 
+Host 198.199.91.123
+  Hostname 198.199.91.123
+  User replicant
+  StrictHostKeyChecking no
+  UserKnownHostsFile=/dev/null
+  # IdentityAgent "/Users/seth/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
+  IdentityFile "~/.ssh/id_ed25519"
+  StrictHostKeyChecking no
+  BatchMode yes
+  PasswordAuthentication no
+  ControlMaster auto
+  ControlPersist 120
+  LogLevel QUIET
+
 # Host megalithic.dev ocean
 #   HostName megalithic.dev
 #   User replicant
