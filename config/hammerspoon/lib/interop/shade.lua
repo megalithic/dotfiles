@@ -45,6 +45,8 @@ local NOTIFICATION_QUIT = "io.shade.quit"
 local NOTIFICATION_CAPTURE = "io.shade.note.capture"
 local NOTIFICATION_DAILY = "io.shade.note.daily"
 local NOTIFICATION_CAPTURE_IMAGE = "io.shade.note.capture.image"
+local NOTIFICATION_CAPTURE_SIDEBAR = "io.shade.note.capture.sidebar"
+local NOTIFICATION_SIDEBAR_RECALL = "io.shade.sidebar.recall"
 
 -- Export notification names for other modules (e.g., clipper.lua)
 M.notifications = {
@@ -55,16 +57,34 @@ M.notifications = {
   capture = NOTIFICATION_CAPTURE,
   daily = NOTIFICATION_DAILY,
   captureImage = NOTIFICATION_CAPTURE_IMAGE,
+  captureSidebar = NOTIFICATION_CAPTURE_SIDEBAR,
+  sidebarRecall = NOTIFICATION_SIDEBAR_RECALL,
 }
 
--- Known binary locations (checked in order)
--- Debug build first for development, then release, then installed
+-- Binary paths by version enum
+-- _G.SHADE_VER controls which binary to use: "debug" | "release" | "install" | "/custom/path"
 local BINARY_NAME = "shade"
-local KNOWN_PATHS = {
-  os.getenv("HOME") .. "/code/shade/.build/debug/shade", -- Debug build (development)
-  os.getenv("HOME") .. "/code/shade/.build/release/shade", -- Release build
-  os.getenv("HOME") .. "/.local/bin/shade", -- Installed via `just install`
+local BINARY_PATHS = {
+  install = os.getenv("HOME") .. "/.local/bin/shade",
+  release = os.getenv("HOME") .. "/code/shade/.build/release/shade",
+  debug = os.getenv("HOME") .. "/code/shade/.build/debug/shade",
 }
+
+--- Resolve binary path from _G.SHADE_VER
+--- Returns the path for the configured version, or the version string if it's a custom path
+---@return string path Binary path to use
+---@return string version The resolved version enum or "custom"
+local function resolveBinaryPath()
+  local ver = _G.SHADE_VER or "install"
+
+  -- Check if it's a known enum value
+  if BINARY_PATHS[ver] then
+    return BINARY_PATHS[ver], ver
+  end
+
+  -- Otherwise treat as custom path
+  return ver, "custom"
+end
 
 -- Socket path for nvim RPC (XDG compliant)
 local NVIM_SOCKET = STATE_DIR .. "/nvim.sock"
@@ -128,10 +148,11 @@ local function isExecutable(path)
 end
 
 --- Find the shade binary
+--- Uses _G.SHADE_VER to determine which binary to use
 --- Returns executable path and whether to use env wrapper
 ---@return string|nil path, boolean useEnv
 local function findBinary()
-  -- 1. Explicit path configured
+  -- 1. Explicit path configured via M.configure({ cmd = ... })
   if config.cmd then
     if isExecutable(config.cmd) then
       return config.cmd, false
@@ -140,17 +161,16 @@ local function findBinary()
     end
   end
 
-  -- 2. Check known paths
-  for _, path in ipairs(KNOWN_PATHS) do
-    if isExecutable(path) then
-      U.log.i(fmt("Found binary at: %s", path))
-      return path, false
-    end
+  -- 2. Resolve from _G.SHADE_VER
+  local path, ver = resolveBinaryPath()
+  if isExecutable(path) then
+    U.log.i(fmt("Using shade binary [%s]: %s", ver, path))
+    return path, false
   end
 
-  -- 3. Fall back to PATH lookup via env
-  -- This will find ~/.local/bin/shade if installed
-  U.log.d(fmt("Using PATH lookup for: %s", BINARY_NAME))
+  -- 3. Binary not found at resolved path - warn and try PATH
+  U.log.w(fmt("shade binary not found for SHADE_VER=%s at: %s", ver, path))
+  U.log.d(fmt("Falling back to PATH lookup for: %s", BINARY_NAME))
   return BINARY_NAME, true
 end
 
@@ -428,17 +448,13 @@ end
 --------------------------------------------------------------------------------
 
 --- Capture with context: signal Shade to gather context and create a capture note
---- As of 2026-01-15, Hammerspoon captures the source app's bundle ID and PID
---- BEFORE showing Shade, then writes a "hint" file so Shade knows which app
---- to gather context from (avoiding the race condition where Shade is frontmost).
+--- Shade handles all context gathering internally using its proactive app tracking.
 ---
 --- Flow:
---- 1. Hammerspoon captures frontmost app's bundleID + PID (before Shade is shown)
---- 2. Hammerspoon writes ~/.local/state/shade/source_app.json with the hint
---- 3. Hammerspoon sends io.shade.note.capture notification
---- 4. Shade reads source_app.json to know which app to gather context from
---- 5. Shade gathers context from that specific app (not frontmost)
---- 6. Shade writes context.json and opens nvim with capture template
+--- 1. Hammerspoon sends io.shade.note.capture notification
+--- 2. Shade uses its proactively-tracked lastNonShadeFrontApp for context
+--- 3. Shade gathers context (window title, URL, selection, etc.)
+--- 4. Shade writes context.json and opens nvim with capture template
 ---
 ---@return boolean success
 function M.captureWithContext()
@@ -446,27 +462,6 @@ function M.captureWithContext()
   if isShadeFocused() then
     U.log.d("captureWithContext: ignoring - Shade is focused")
     return false
-  end
-
-  -- Capture source app info NOW, before Shade is shown
-  local app = hs.application.frontmostApplication()
-  local sourceApp = {
-    bundleID = app and app:bundleID() or nil,
-    pid = app and app:pid() or nil,
-    name = app and app:name() or nil,
-  }
-
-  -- Write source app hint for Shade
-  ensureStateDir()
-  local hintPath = STATE_DIR .. "/source_app.json"
-  local json = hs.json.encode(sourceApp)
-  if json then
-    local f = io.open(hintPath, "w")
-    if f then
-      f:write(json)
-      f:close()
-      U.log.d(fmt("captureWithContext: wrote source hint for %s (pid=%s)", sourceApp.name or "?", sourceApp.pid or "?"))
-    end
   end
 
   local function triggerCapture()
@@ -537,27 +532,28 @@ function M.setMode(mode)
 end
 
 --- Enter sidebar mode on the left
-function M.sidebarLeft() M.setMode("sidebar-left") end
+function M.toSidebarLeft() M.setMode("sidebar-left") end
 
 --- Enter sidebar mode on the right
 function M.sidebarRight() M.setMode("sidebar-right") end
 
 --- Return to floating mode
-function M.floatingMode() M.setMode("floating") end
+function M.toFloating() M.setMode("floating") end
 
 --- Toggle sidebar mode (left sidebar <-> floating)
 function M.sidebarToggle()
   if inSidebarMode then
-    M.floatingMode()
+    M.toFloating()
   else
-    M.sidebarLeft()
+    M.toSidebarLeft()
   end
 end
 
 --- Capture with context in sidebar mode
 --- Opens Shade in sidebar-left with a new capture note
 --- Perfect for taking notes while referencing another app side-by-side
---- As of 2026-01-15, writes source app hint (same fix as captureWithContext)
+--- Shade captures the focused window element immediately upon receiving the notification,
+--- ensuring the correct window is resized even with multiple windows open.
 ---@return boolean success
 function M.captureWithContextSidebar()
   -- Don't capture from Shade itself - there's no useful context
@@ -566,33 +562,10 @@ function M.captureWithContextSidebar()
     return false
   end
 
-  -- Capture source app info NOW, before Shade is shown
-  local app = hs.application.frontmostApplication()
-  local sourceApp = {
-    bundleID = app and app:bundleID() or nil,
-    pid = app and app:pid() or nil,
-    name = app and app:name() or nil,
-  }
-
-  -- Write source app hint for Shade
-  ensureStateDir()
-  local hintPath = STATE_DIR .. "/source_app.json"
-  local json = hs.json.encode(sourceApp)
-  if json then
-    local f = io.open(hintPath, "w")
-    if f then
-      f:write(json)
-      f:close()
-      U.log.d(
-        fmt("captureWithContextSidebar: wrote source hint for %s (pid=%s)", sourceApp.name or "?", sourceApp.pid or "?")
-      )
-    end
-  end
-
   local function triggerSidebarCapture()
-    -- First enter sidebar mode, then trigger capture
-    M.sidebarLeft()
-    hs.timer.doAfter(0.15, function() postNotification(NOTIFICATION_CAPTURE) end)
+    -- Use dedicated sidebar capture notification - Shade handles mode + capture in one step
+    postNotification(NOTIFICATION_CAPTURE_SIDEBAR)
+    inSidebarMode = true
   end
 
   if M.isRunning() then
@@ -602,6 +575,33 @@ function M.captureWithContextSidebar()
   end
 
   return true
+end
+
+--- Recall sidebar mode with the last companion window
+--- Re-enters sidebar mode using the previously stored companion window
+--- Use this when you want to re-sidebar with the same window you used before
+---@return boolean success
+function M.recallSidebar()
+  if not M.isRunning() then
+    U.log.d("recallSidebar: Shade not running, nothing to recall")
+    return false
+  end
+
+  postNotification(NOTIFICATION_SIDEBAR_RECALL)
+  inSidebarMode = true
+  return true
+end
+
+--- Get info about current binary selection (useful for debugging)
+--- Returns table with version enum, resolved path, and whether it exists
+---@return table info { version: string, path: string, exists: boolean }
+function M.getBinaryInfo()
+  local path, ver = resolveBinaryPath()
+  return {
+    version = ver,
+    path = path,
+    exists = isExecutable(path),
+  }
 end
 
 return M

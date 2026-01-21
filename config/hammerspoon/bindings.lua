@@ -174,41 +174,6 @@ function M.loadUtils()
       hs.reload()
     end)
     :bind({ "shift", "ctrl" }, "l", nil, req("wm").placeAllApps)
-    -- daily note: open in Shade floating panel
-    :bind({ "shift" }, "o", nil, function()
-      local shade = require("lib.interop.shade")
-      shade.openDailyNote()
-    end)
-    -- text capture: gather context from frontmost app and create capture note
-    :bind(
-      { "shift" },
-      "n",
-      nil,
-      function()
-        local shade = require("lib.interop.shade")
-        shade.captureWithContext()
-      end
-    )
-    -- toggle Shade visibility (default to floating mode)
-    :bind({}, "n", nil, function()
-      local shade = require("lib.interop.shade")
-      shade.smartToggle()
-    end)
-    -- sidebar capture: capture note in sidebar mode (side-by-side with main app)
-    :bind(
-      { "ctrl" },
-      "n",
-      nil,
-      function()
-        local shade = require("lib.interop.shade")
-        shade.captureWithContextSidebar()
-      end
-    )
-    -- toggle sidebar mode: switch between floating and sidebar-left
-    :bind({ "ctrl" }, "o", nil, function()
-      local shade = require("lib.interop.shade")
-      shade.sidebarToggle()
-    end)
     :bind({ "ctrl" }, "d", nil, function() utils.dnd() end)
     :bind({ "ctrl" }, "b", nil, function()
       local axb = require("axbrowse")
@@ -272,6 +237,16 @@ function M.loadShade()
       nil,
       function() shade.captureWithContextSidebar() end
     )
+    -- recall sidebar: re-enter sidebar mode with last companion window
+    :bind({}, "r", nil, function() shade.recallSidebar() end)
+    -- mode toggles (vim-style: h=left/sidebar, l=right/float)
+    :bind(
+      {},
+      "h",
+      nil,
+      function() shade.toSidebarLeft() end
+    )
+    :bind({}, "l", nil, function() shade.toFloating() end)
 
   req("hyper", { id = "shade" }):bind({}, "n", function() shadeModality:toggle() end)
 end

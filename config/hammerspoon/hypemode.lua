@@ -55,8 +55,8 @@ function M.new(id, opts)
     isOpen = false,
     indicator = nil,
     indicatorColor = opts.indicatorColor or M.defaultIndicatorColor,
-    showIndicator = opts.showIndicator ~= false, -- default true
-    showAlert = opts.showAlert ~= false,         -- default true
+    showIndicator = opts.showIndicator ~= true, -- default false
+    showAlert = opts.showAlert ~= true, -- default false
     autoExit = opts.autoExit ~= false and (opts.autoExit or 1), -- default 1s, false to disable
     alertUuids = nil,
     delayedExitTimer = nil,
@@ -68,13 +68,9 @@ function M.new(id, opts)
   setmetatable(instance, mt)
 
   -- Wire up modal callbacks to instance methods
-  function modal:entered()
-    instance:_onEntered()
-  end
+  function modal:entered() instance:_onEntered() end
 
-  function modal:exited()
-    instance:_onExited()
-  end
+  function modal:exited() instance:_onExited() end
 
   -- Register instance
   M._registry[id] = instance
@@ -85,9 +81,7 @@ end
 --- Get an existing modality by ID
 ---@param id string
 ---@return Modality|nil
-function M.get(id)
-  return M._registry[id]
-end
+function M.get(id) return M._registry[id] end
 
 --- List all registered modality IDs
 ---@return string[]
@@ -102,9 +96,7 @@ end
 --- Exit all active modalities
 function M.exitAll()
   for _, instance in pairs(M._registry) do
-    if instance.isOpen then
-      instance:exit()
-    end
+    if instance.isOpen then instance:exit() end
   end
 end
 
@@ -130,17 +122,12 @@ function M.focusMainWindow(bundleID, opts)
   opts = opts or { h = 800, w = 800, focus = true }
 
   local mainWin = app:mainWindow()
-  local win = hs.fnutils.find(
-    app:allWindows(),
-    function(w)
-      local isMain = (mainWin == nil) or (mainWin == w)
-      return isMain and w:frame().w >= opts.w and w:frame().h >= opts.h
-    end
-  )
+  local win = hs.fnutils.find(app:allWindows(), function(w)
+    local isMain = (mainWin == nil) or (mainWin == w)
+    return isMain and w:frame().w >= opts.w and w:frame().h >= opts.h
+  end)
 
-  if not win and #app:allWindows() > 0 then
-    win = app:allWindows()[1]
-  end
+  if not win and #app:allWindows() > 0 then win = app:allWindows()[1] end
 
   if win ~= nil and opts.focus then win:focus() end
 
@@ -198,9 +185,7 @@ function M._onEntered(self)
       self.isOpen = true
 
       -- Show border indicator if enabled
-      if self.showIndicator then
-        self:_toggleIndicator(win)
-      end
+      if self.showIndicator then self:_toggleIndicator(win) end
 
       -- Show alert with app name if enabled
       if self.showAlert then
@@ -286,9 +271,7 @@ function M.start(self, opts)
   opts = opts or {}
   hs.window.animationDuration = 0
 
-  if opts.on_entered then
-    self.customOnEntered = opts.on_entered
-  end
+  if opts.on_entered then self.customOnEntered = opts.on_entered end
 
   -- Default escape binding
   self:bind("", "escape", function() self:exit() end)
