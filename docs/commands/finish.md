@@ -105,4 +105,10 @@ Finishing work session. Execute these steps but **DO NOT PUSH without explicit u
 After push (if approved):
 - Run `jj new` to start fresh for next session
 - Verify with `jj log -r main` that it shows as synced
+- **Cleanup preview pane** (REQUIRED):
+  ```bash
+  # Close the ai-preview pane in current session/window
+  tmux list-panes -F "#{pane_id} #{pane_title}" 2>/dev/null | grep "ai-preview" | head -1 | cut -d' ' -f1 | xargs -I{} tmux kill-pane -t {} 2>/dev/null || true
+  ```
+  This cleans up the preview-ai pane that was opened for diff review, keeping the workspace tidy.
 - Provide handoff summary: what was done, what's next
