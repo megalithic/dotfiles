@@ -98,8 +98,8 @@ M.layouts = {
     name = "ghostty",
     rules = {
       { "Software Update", 1, M.grid.center.small },
-      { "!daily note" },  -- Exclude floating daily note windows
-      { "!capture" },     -- Exclude floating capture windows
+      { "!daily note" }, -- Exclude floating daily note windows
+      { "!capture" }, -- Exclude floating capture windows
       { "", 1, M.grid.full },
     },
   },
@@ -355,7 +355,7 @@ M.launchers = {
   { "com.raycast.macos", "space", { "c" } },
   { "com.superultra.Homerow", nil, { ";" } },
   { "com.tinyspeck.slackmacgap", "s", nil },
-  { "com.microsoft.teams2", "t", nil },
+  { "com.tdesktop.Telegram", "t", nil },
   { "org.hammerspoon.Hammerspoon", "r", nil },
   -- { "com.kapeli.dashdoc", { { "shift" }, "d" }, { "d" } },
   { "com.electron.postbird", { { "shift" }, "p" }, nil },
