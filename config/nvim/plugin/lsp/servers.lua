@@ -203,7 +203,7 @@ M = {
     }
   end,
   expert = function()
-    if not U.lsp.is_enabled_elixir_ls("expert") then return false end
+    -- if not U.lsp.is_enabled_elixir_ls("expert") then return false end
 
     return {
       manual_install = true,

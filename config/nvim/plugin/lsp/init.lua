@@ -580,14 +580,20 @@ local function make_keymaps(client, bufnr)
     --   -- })
     -- end, "[g]oto [r]eferences", { nowait = true })
 
-    -- map("n", "gR", function()
-    --   Snacks.picker.lsp_references({
-    --     include_declaration = false,
-    --     include_current = false,
-    --     auto_confirm = true,
-    --     jump = { tagstack = true, reuse_win = true },
-    --   })
-    -- end, "[g]oto [r]eferences", { nowait = true })
+    map(
+      "n",
+      "gr",
+      function()
+        Snacks.picker.lsp_references({
+          include_declaration = false,
+          include_current = false,
+          auto_confirm = true,
+          jump = { tagstack = true, reuse_win = true },
+        })
+      end,
+      "[g]oto [r]eferences",
+      { nowait = true }
+    )
   end)
 
   lsp_method(client, "textDocument/definition")(function()

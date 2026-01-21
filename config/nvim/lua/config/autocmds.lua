@@ -761,7 +761,7 @@ local function ensure_daily_note_exists(date_str)
       local client = obsidian.get_client()
       if client then
         -- This creates the note with template substitutions
-        client:today()
+        client.today()
         -- Give it a moment to write
         vim.wait(100, function() return vim.fn.filereadable(daily_path) == 1 end, 10)
       end
