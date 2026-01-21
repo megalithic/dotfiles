@@ -111,7 +111,7 @@ return {
         vim.opt_local.statuscolumn = ""
         vim.opt_local.cursorlineopt = "screenline,number"
         vim.opt_local.cursorline = true
-        vim.api.nvim_set_option_value("guifont", "Maple Mono NF Regular:h22", {})
+        vim.o.guifont = "Maple_Mono_NF:h22"
         vim.api.nvim_set_option_value("buftype", "firenvim", {})
 
         vim.diagnostic.enable(false, { bufnr = bufnr })

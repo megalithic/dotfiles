@@ -46,7 +46,7 @@ return {
       { "hrsh7th/cmp-emoji", lazy = true },
       { "xzbdmw/colorful-menu.nvim", lazy = true, opts = {} },
       "mikavilpas/blink-ripgrep.nvim",
-      "obsidian-nvim/obsidian.nvim",
+      { "obsidian-nvim/obsidian.nvim", cond = not vim.g.started_by_firenvim },
     },
     version = "*",
     -- version = "1.*",
@@ -213,7 +213,8 @@ return {
           end,
           per_filetype = {
             sql = { "lsp", "dadbod", "dbee", "buffer" }, -- Add any other source to include here
-            markdown = { "obsidian", "obsidian_tags", "obsidian_new", "lsp", "path", "buffer" },
+            markdown = vim.g.started_by_firenvim and { "lsp", "path", "buffer" }
+              or { "obsidian", "obsidian_tags", "obsidian_new", "lsp", "path", "buffer" },
           },
           providers = {
             path = { name = "[path]", opts = { get_cwd = vim.uv.cwd } },
