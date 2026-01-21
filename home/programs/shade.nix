@@ -10,6 +10,11 @@
   ...
 }: let
   # ===========================================================================
+  # Paths
+  # ===========================================================================
+  notesHome = "~/iclouddrive/Documents/_notes";
+
+  # ===========================================================================
   # LLM Configuration
   # ===========================================================================
   # Backend options: "mlx" (native, default), "ollama" (local server)
@@ -39,6 +44,10 @@
     asyncEnrichment = true;
     placeholderPrefix = "<!-- shade:pending:";
     placeholderSuffix = " -->";
+    # Text enrichment - auto-convert URLs/emails to markdown links
+    enrichText = true;
+    fetchLinkTitles = true;
+    linkTitleTimeout = 5.0;
   };
 
   # ===========================================================================
@@ -64,7 +73,7 @@
       width = 2.0; # Border thickness in points
       cornerRadius = 8.0; # Corner radius in points (0 = square, 8 = subtle, 12+ = pronounced)
       color = "#E68C59"; # Everforest aqua (hex: RGB, RRGGBB, or RRGGBBAA)
-      opacity = 0.75; # Border opacity (0.0 - 1.0)
+      opacity = 0.5; # Border opacity (0.0 - 1.0)
       animated = true; # Animate border appearance/disappearance
       animationDuration = 0.15; # Animation duration in seconds
       menubarStrokeColor = "#E68C59"; # Menubar icon stroke when focused (Everforest orange)
@@ -72,7 +81,18 @@
 
     # Unfocused dimming - reduce opacity when panel loses keyboard focus
     # Set to null to disable, or a value 0.0-1.0 (1.0 = no dim, 0.7 = 30% dimmed)
-    dimUnfocused = 0.5;
+    dimUnfocused = 0.7;
+  };
+
+  # ===========================================================================
+  # Terminal Configuration
+  # ===========================================================================
+  # Working directory behavior when showing the panel
+  terminalConfig = {
+    # Reset nvim's cwd to this path every time Shade is shown
+    # Set to null to preserve nvim's current directory across toggles
+    # Supports ~ expansion
+    cwd = notesHome;
   };
 
   # ===========================================================================
@@ -83,7 +103,7 @@
   notesConfig = {
     # Root of the notes vault (supports ~ expansion)
     # Falls back to $NOTES_HOME env var, then ~/iclouddrive/Documents/_notes
-    home = "~/iclouddrive/Documents/_notes";
+    home = notesHome;
     # Assets directory for images (null = {home}/assets)
     assetsDir = null;
     # Captures directory (null = {home}/captures)
@@ -96,6 +116,7 @@
     capture = captureConfig;
     window = windowConfig;
     notes = notesConfig;
+    terminal = terminalConfig;
   };
 in {
   home.file.".config/shade/config.json" = {
