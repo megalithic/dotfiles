@@ -236,7 +236,7 @@ function M.loadShade()
   -- 2. Multiple commands (rm + nvim)
   -- 3. SHADE=1 env var for nvim to detect it's running in Shade
   -- Opens nvim in captures dir - user creates/opens capture notes there
-  local nvimCmd = string.format("/bin/zsh -c 'rm -f %s; SHADE=1 exec nvim --listen %s'", socketPath, socketPath)
+  local nvimCmd = string.format("/usr/bin/env zsh -c 'rm -f %s; SHADE=1 exec nvim --listen %s'", socketPath, socketPath)
 
   shade.configure({
     width = 0.4,
@@ -252,18 +252,15 @@ function M.loadShade()
   })
   shadeModality
     :start()
-    -- re-sidebar shade + companion window
-    :bind({ "shift" }, "r", nil, function()
-      -- TODO: need a way to always plop the current shade window into sidebar mode with its companion
-    end)
     -- toggle Shade visibility (focus, hide, show)
     :bind({}, "n", nil, function() shade.smartToggle() end)
     -- daily note: open in Shade floating panel
     :bind({}, "o", nil, function() shade.openDailyNote() end)
+    :bind({}, "d", nil, function() shade.openDailyNote() end)
     -- text capture: gather context from frontmost app and create capture note
     :bind(
-      { "shift" },
-      "n",
+      {},
+      "c",
       nil,
       function() shade.captureWithContext() end
     )
@@ -275,6 +272,7 @@ function M.loadShade()
       nil,
       function() shade.captureWithContextSidebar() end
     )
+
   req("hyper", { id = "shade" }):bind({}, "n", function() shadeModality:toggle() end)
 end
 
