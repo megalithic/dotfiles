@@ -15,7 +15,6 @@ if not (vim.uv or vim.loop).fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
-
 -- settings and autocmds must load before plugins,
 -- but we can manually enable caching before both
 -- of these for optimal performance
@@ -44,6 +43,13 @@ require("lazy").setup({
     version = false, -- always use the latest git commit
   },
   install = { missing = true, colorscheme = { vim.g.colorscheme, "default", "habamax" } },
+  ui = {
+    backdrop = 100,
+  },
+  checker = {
+    enabled = true, -- check for plugin updates periodically
+    notify = false, -- don't notify on update
+  },
   change_detection = { enabled = true, notify = false },
   {
     rocks = {
@@ -68,3 +74,39 @@ require("lazy").setup({
 })
 
 vim.cmd.cabbrev("L", "Lazy")
+
+-- local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
+-- if not (vim.uv or vim.loop).fs_stat(lazypath) then
+--   local lazyrepo = "https://github.com/folke/lazy.nvim.git"
+--   local out = vim.fn.system({ "git", "clone", "--filter=blob:none", "--branch=stable", lazyrepo, lazypath })
+--   if vim.v.shell_error ~= 0 then
+--     vim.api.nvim_echo({
+--       { "Failed to clone lazy.nvim:\n", "ErrorMsg" },
+--       { out, "WarningMsg" },
+--       { "\nPress any key to exit..." },
+--     }, true, {})
+--     vim.fn.getchar()
+--     os.exit(1)
+--   end
+-- end
+-- vim.opt.rtp:prepend(lazypath)
+--
+-- require("lazy").setup({
+--   spec = {
+--     { import = "plugins/" },
+--     { import = "plugins/ai/" },
+--     { import = "plugins/lsp/" },
+--     { import = "plugins/lsp/languages/" },
+--   },
+--   install = {
+--     missing = false,
+--     colorscheme = { "hyper" },
+--   },
+--   ui = {
+--     backdrop = 100,
+--   },
+--   checker = {
+--     enabled = true, -- check for plugin updates periodically
+--     notify = false, -- don't notify on update
+--   },
+-- })

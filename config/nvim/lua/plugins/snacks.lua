@@ -336,11 +336,12 @@ if true then
             },
             input = {
               keys = {
-                ["<c-t>"] = { "edit_tab", mode = { "i", "n" } },
                 ["<c-u>"] = { "preview_scroll_up", mode = { "i", "n" } },
                 ["<c-d>"] = { "preview_scroll_down", mode = { "i", "n" } },
                 ["<c-f>"] = { "flash", mode = { "n", "i" } },
                 ["<CR>"] = { "jump_or_split", mode = { "i", "n" } },
+                ["<c-t>"] = { "edit_tab", mode = { "i", "n" } },
+                ["<c-o>"] = { "edit", mode = { "i", "n" } },
                 ["<Esc>"] = { "close", mode = { "i" } },
                 ["<c-c>"] = { "cancel", mode = "i" },
                 ["<c-.>"] = { "toggle_hidden", mode = { "i", "n" } },
@@ -349,6 +350,7 @@ if true then
             list = {
               keys = {
                 ["<c-t>"] = "edit_tab",
+                ["<c-o>"] = "edit",
               },
             },
           },

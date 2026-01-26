@@ -3,6 +3,7 @@ local M = {}
 HYPER = "F19"
 -- BROWSER = "com.nix.brave-browser-nightly-debug"
 BROWSER = "com.brave.Browser.nightly"
+-- BROWSER = "net.imput.helium"
 TERMINAL = "com.mitchellh.ghostty"
 
 ---@class NotificationRule
@@ -300,10 +301,8 @@ M.layouts = {
 -- Options:
 --   nuke = true means use kill9() (SIGKILL) instead of graceful kill()
 M.quitters = {
-  -- Zoom gets instant death - one Cmd+Q = NUKE (kill9)
   ["us.zoom.xos"] = { mode = "single", nuke = true },
 
-  -- Browsers: double-tap to quit (graceful)
   ["com.brave.Browser.nightly"] = { mode = "double" },
   ["com.brave.Browser.dev"] = { mode = "double" },
   ["com.brave.Browser"] = { mode = "double" },
@@ -314,17 +313,11 @@ M.quitters = {
   ["org.mozilla.firefoxdeveloperedition"] = { mode = "double" },
   ["com.apple.SafariTechnologyPreview"] = { mode = "double" },
   ["com.apple.Safari"] = { mode = "double" },
-
-  -- Terminals: double-tap to quit (graceful)
   ["com.mitchellh.ghostty"] = { mode = "double" },
   ["net.kovidgoyal.kitty"] = { mode = "double" },
   ["com.github.wez.wezterm"] = { mode = "double" },
-
-  -- Launchers: double-tap to quit (graceful)
   ["com.raycast.macos"] = { mode = "double" },
   ["com.runningwithcrayons.Alfred"] = { mode = "double" },
-
-  -- Other apps
   ["com.pop.pop.app"] = { mode = "double" },
 }
 
@@ -344,8 +337,8 @@ M.lollygaggers = {
 }
 
 M.launchers = {
-  { "com.brave.Browser.nightly", "j", nil },
-  { "com.mitchellh.ghostty", "k", { "`" } },
+  { BROWSER, "j", nil },
+  { TERMINAL, "k", { "`" } },
   -- { "net.kovidgoyal.kitty", "k", nil },
   { "com.apple.MobileSMS", "m", nil }, -- NOOP for now.. TODO: implement a binding feature that let's us require n-presses before we execute
   { "com.apple.finder", "f", nil },

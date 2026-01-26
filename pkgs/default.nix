@@ -99,7 +99,7 @@ in {
 
   tidewave = mkApp {
     pname = "tidewave";
-    version = "0.7.4.1";
+    version = "latest";
     appName = "Tidewave.app";
     src = {
       url = "https://github.com/tidewave-ai/tidewave_app/releases/latest/download/tidewave-app-aarch64.dmg";

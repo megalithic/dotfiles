@@ -108,7 +108,7 @@
       ### Showstopping Violations
 
       **These violations BLOCK all work until fixed:**
-      - Using `git` instead of `jj`
+      - Using `git` instead of `jj` when `.jj` exists in the repo/directory.
       - Using `brew install` instead of `nix run/shell` or adding to flake
       - Assuming Nix syntax without verification (<80% confidence)
       - Pushing to GitHub without explicit user consent
@@ -118,6 +118,7 @@
       - Failing to write/update tests for new functionality
       - Continuing work while tests are failing
       - Not immediately fixing syntax errors/warnings
+      - Not communicating with the user via smart-ntfy skill or at least ~/.bin/ntfy script
 
       ---
 

@@ -1,7 +1,7 @@
 vim.loader.enable()
 vim.g.colorscheme = "megaforest"
 
-require("vim._extui").enable({ enable = true })
+-- require("vim._extui").enable({ enable = true })
 
 --- @diagnostic disable-next-line: duplicate-set-field
 vim.deprecate = function() end -- no-op deprecation messages
