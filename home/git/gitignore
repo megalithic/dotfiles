@@ -120,6 +120,8 @@ _deps
 .ignore
 .yarn
 
+**/.expert
+.expert
 .direnv
 **/.direnv
 .envrc
@@ -139,6 +141,5 @@ obsidian/.obsidian
 .claude/settings.local.json
 .claude-cspire/
 .vscode/
-
 .nix-mix
 # vim:ft=gitignore:tw=0

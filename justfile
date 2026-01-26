@@ -105,8 +105,8 @@ mac:
     ntfy send -t "Nix Darwin" -m "Synced flake.lock from remote before rebuild"
   fi
 
-  # nh darwin switch ./
-  sudo darwin-rebuild switch --flake ./
+  nh darwin switch ./
+  # sudo darwin-rebuild switch --flake ./
 
 # initial nix-darwin build
 [macos]
@@ -127,6 +127,33 @@ macbuild:
 check:
   sudo darwin-rebuild check --flake ./
   # nix flake check --no-allow-import-from-derivation
+
+# apply custom nix config for Determinate Nix (trusted-users, cachix caches, etc.)
+[macos]
+apply-nix-config:
+  #!/usr/bin/env bash
+  set -euo pipefail
+
+  SOURCE="{{justfile_directory()}}/nix.custom.conf"
+  TARGET="/etc/nix/nix.custom.conf"
+
+  if [[ ! -f "$SOURCE" ]]; then
+    echo "Error: $SOURCE not found"
+    exit 1
+  fi
+
+  echo ":: Copying nix.custom.conf to $TARGET..."
+  sudo cp "$SOURCE" "$TARGET"
+
+  echo ":: Restarting nix-daemon..."
+  sudo launchctl kickstart -k system/org.nixos.nix-daemon
+
+  echo ":: Verifying trusted-users..."
+  if nix show-config | grep -q "trusted-users.*seth"; then
+    echo "✓ You are now a trusted user"
+  else
+    echo "⚠ Warning: trusted-users may not have applied. Check 'nix show-config | grep trusted'"
+  fi
 
 # edit an agenix secret file (e.g., just age env-vars.age)
 age file:

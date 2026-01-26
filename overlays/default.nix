@@ -18,7 +18,6 @@
   # External Overlays (from flake inputs)
   # ===========================================================================
   inputs.nur.overlays.default
-  inputs.fenix.overlays.default
   inputs.mcp-servers-nix.overlays.default
 
   # ===========================================================================

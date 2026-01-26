@@ -121,21 +121,18 @@ in {
   '';
 
   environment.systemPackages = with pkgs; [
-    (fenix.complete.withComponents [
-      "cargo"
-      "clippy"
-      "rust-src"
-      "rustc"
-      "rustfmt"
-    ])
-    rust-analyzer-nightly
+    # Rust toolchain (pre-built from nixpkgs, no source compilation)
+    rustc
+    cargo
+    clippy
+    rustfmt
+    rust-analyzer
 
     bat
     curl
     coreutils
     darwin.trash
     delta
-    # devenv # TODO: cachix build failing, blocking devenv
     dust # du + rust = dust. Like du but more intuitive.
     eza
     fd

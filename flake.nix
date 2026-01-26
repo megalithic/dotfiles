@@ -62,10 +62,6 @@
       url = "github:nix-community/nur";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    fenix = {
-      url = "github:nix-community/fenix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
     expert.url = "github:elixir-lang/expert";
     nh = {
       url = "github:nix-community/nh";
@@ -102,7 +98,6 @@
     home-manager,
     agenix,
     nix-homebrew,
-    fenix,
     ...
   } @ inputs: let
     username = "seth";
@@ -154,9 +149,6 @@
       inherit arch;
       script = builtins.readFile scripts/${arch}_bootstrap.sh;
     };
-
-    # rust env setup based on the current arch
-    packages.${arch}.default = fenix.packages.${arch}.minimal.toolchain;
 
     darwinConfigurations.${hostname} = nix-darwin.lib.darwinSystem {
       inherit lib;

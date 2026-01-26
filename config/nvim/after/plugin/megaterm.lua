@@ -75,17 +75,11 @@ function Terminal.new(opts)
   vim.api.nvim_buf_call(self.buf, function()
     self.job_id = vim.fn.termopen(cmd, {
       on_exit = function(job_id, exit_code, event)
-        if opts.on_exit_notifier then
-          opts.on_exit_notifier(self.cmd_str, exit_code)
-        end
-        if opts.on_exit then
-          opts.on_exit(job_id, exit_code, event, self)
-        end
+        if opts.on_exit_notifier then opts.on_exit_notifier(self.cmd_str, exit_code) end
+        if opts.on_exit then opts.on_exit(job_id, exit_code, event, self) end
         -- Auto-cleanup invalid terminals
         vim.schedule(function()
-          if not self:is_valid() then
-            self:_remove_from_manager()
-          end
+          if not self:is_valid() then self:_remove_from_manager() end
         end)
       end,
     })
@@ -122,9 +116,7 @@ end
 ---@return number
 function Terminal:_get_size(key)
   if self.opts[key] then return self.opts[key] end
-  if self.opts.win_config and self.opts.win_config[key] then
-    return self.opts.win_config[key]
-  end
+  if self.opts.win_config and self.opts.win_config[key] then return self.opts.win_config[key] end
   return key == "height" and config.default_height or config.default_width
 end
 
@@ -137,9 +129,7 @@ function Terminal:_get_or_create_window()
       local buf = vim.api.nvim_win_get_buf(win)
       -- Check if this window contains a terminal of the same position
       local ok, pos = pcall(vim.api.nvim_buf_get_var, buf, "term_position")
-      if ok and pos == self.position then
-        return win
-      end
+      if ok and pos == self.position then return win end
     end
   end
 
@@ -161,21 +151,21 @@ function Terminal:_create_window()
     local width = self:_get_size("width")
     local height = self:_get_size("height")
     -- For float, if using defaults, use 80% of screen
-    if width == config.default_width then
-      width = math.floor(vim.o.columns * 0.8)
-    end
-    if height == config.default_height then
-      height = math.floor(vim.o.lines * 0.8)
-    end
+    if width == config.default_width then width = math.floor(vim.o.columns * 0.8) end
+    if height == config.default_height then height = math.floor(vim.o.lines * 0.8) end
     local row = math.floor((vim.o.lines - height) / 2)
     local col = math.floor((vim.o.columns - width) / 2)
 
-    win = vim.api.nvim_open_win(self.buf, true, vim.tbl_extend("force", config.float_config, {
-      width = width,
-      height = height,
-      row = row,
-      col = col,
-    }))
+    win = vim.api.nvim_open_win(
+      self.buf,
+      true,
+      vim.tbl_extend("force", config.float_config, {
+        width = width,
+        height = height,
+        row = row,
+        col = col,
+      })
+    )
   elseif self.position == "tab" then
     vim.cmd("tabnew")
     win = vim.api.nvim_get_current_win()
@@ -227,7 +217,8 @@ function Terminal:_set_winhighlight(win)
     }
   end
 
-  vim.wo[win].winhighlight = table.concat(hls, ",")
+  -- vim.wo[win].winhighlight = table.concat(hls, ",")
+  vim.api.nvim_set_option_value("winhighlight", table.concat(hls, ","), { win = win, scope = "local" })
 end
 
 --- Apply window/buffer options
@@ -262,9 +253,7 @@ function Terminal:_set_keymaps()
 
   -- Normal mode: q closes terminal (only for non-tab positions)
   if self.position ~= "tab" then
-    vim.keymap.set("n", "q", function()
-      self:close()
-    end, vim.tbl_extend("force", opts, { desc = "Close terminal" }))
+    vim.keymap.set("n", "q", function() self:close() end, vim.tbl_extend("force", opts, { desc = "Close terminal" }))
   end
 
   -- Terminal mode keymaps
@@ -273,15 +262,19 @@ function Terminal:_set_keymaps()
   vim.keymap.set("t", "<C-j>", [[<cmd>wincmd j<cr>]], vim.tbl_extend("force", opts, { desc = "Navigate down" }))
   vim.keymap.set("t", "<C-k>", [[<cmd>wincmd k<cr>]], vim.tbl_extend("force", opts, { desc = "Navigate up" }))
   vim.keymap.set("t", "<C-l>", [[<cmd>wincmd l<cr>]], vim.tbl_extend("force", opts, { desc = "Navigate right" }))
-  vim.keymap.set("t", "<C-;>", function()
-    Megaterm.toggle()
-  end, vim.tbl_extend("force", opts, { desc = "Toggle terminal" }))
-  vim.keymap.set("t", "<C-'>", function()
-    Megaterm.cycle()
-  end, vim.tbl_extend("force", opts, { desc = "Cycle terminals" }))
-  vim.keymap.set("t", "<C-x>", function()
-    self:close()
-  end, vim.tbl_extend("force", opts, { desc = "Close terminal" }))
+  vim.keymap.set(
+    "t",
+    "<C-;>",
+    function() Megaterm.toggle() end,
+    vim.tbl_extend("force", opts, { desc = "Toggle terminal" })
+  )
+  vim.keymap.set(
+    "t",
+    "<C-'>",
+    function() Megaterm.cycle() end,
+    vim.tbl_extend("force", opts, { desc = "Cycle terminals" })
+  )
+  vim.keymap.set("t", "<C-x>", function() self:close() end, vim.tbl_extend("force", opts, { desc = "Close terminal" }))
 end
 
 --- Remove self from manager tracking
@@ -300,18 +293,14 @@ end
 
 --- Check if terminal buffer is valid
 ---@return boolean
-function Terminal:is_valid()
-  return self.buf and vim.api.nvim_buf_is_valid(self.buf)
-end
+function Terminal:is_valid() return self.buf and vim.api.nvim_buf_is_valid(self.buf) end
 
 --- Check if terminal is visible in any window
 ---@return boolean
 function Terminal:is_visible()
   if not self:is_valid() then return false end
   for _, win in ipairs(vim.api.nvim_list_wins()) do
-    if vim.api.nvim_win_get_buf(win) == self.buf then
-      return true
-    end
+    if vim.api.nvim_win_get_buf(win) == self.buf then return true end
   end
   return false
 end
@@ -321,9 +310,7 @@ end
 function Terminal:get_win()
   if not self:is_valid() then return nil end
   for _, win in ipairs(vim.api.nvim_list_wins()) do
-    if vim.api.nvim_win_get_buf(win) == self.buf then
-      return win
-    end
+    if vim.api.nvim_win_get_buf(win) == self.buf then return win end
   end
   return nil
 end
@@ -367,9 +354,7 @@ function Terminal:hide()
 
   -- Switch to normal mode first
   local mode = vim.api.nvim_get_mode().mode
-  if mode == "t" then
-    vim.cmd("stopinsert")
-  end
+  if mode == "t" then vim.cmd("stopinsert") end
 
   -- Check if there are other terminals for this position
   local other_terms = Megaterm.get_by_position(self.position)
@@ -417,9 +402,7 @@ function Terminal:close()
   self:hide()
   if self:is_valid() then
     -- Kill the job if still running
-    if self.job_id then
-      pcall(vim.fn.jobstop, self.job_id)
-    end
+    if self.job_id then pcall(vim.fn.jobstop, self.job_id) end
     vim.api.nvim_buf_delete(self.buf, { force = true })
   end
   self:_remove_from_manager()
@@ -437,25 +420,19 @@ function Terminal:send(text, opts)
   if not self:is_valid() or not self.job_id then return end
 
   local to_send = text
-  if opts.newline then
-    to_send = to_send .. "\r"
-  end
+  if opts.newline then to_send = to_send .. "\r" end
 
   vim.api.nvim_chan_send(self.job_id, to_send)
 end
 
 --- Send text followed by Enter
 ---@param text string
-function Terminal:send_line(text)
-  self:send(text, { newline = true })
-end
+function Terminal:send_line(text) self:send(text, { newline = true }) end
 
 --- Send raw keycodes (for special keys)
 ---@param keys string
 function Terminal:send_keys(keys)
-  if not self:is_focused() then
-    self:focus({ start_insert = false })
-  end
+  if not self:is_focused() then self:focus({ start_insert = false }) end
   local termcodes = vim.api.nvim_replace_termcodes(keys, true, false, true)
   vim.api.nvim_feedkeys(termcodes, "t", true)
 end
@@ -476,9 +453,7 @@ function Terminal:update_padding(win)
   for _, w in ipairs(wins) do
     local buf = vim.api.nvim_win_get_buf(w)
     -- Exclude incline windows from count
-    if vim.bo[buf].filetype ~= "incline" then
-      win_count = win_count + 1
-    end
+    if vim.bo[buf].filetype ~= "incline" then win_count = win_count + 1 end
   end
 
   local enabled = win_count > 1
@@ -492,9 +467,7 @@ function Terminal:update_cursorline_highlight()
   local win = self:get_win()
 
   if win and vim.api.nvim_win_is_valid(win) then
-    local winhighlight = (curr_win == win and mode ~= "nt")
-      and "CursorLineSign:Normal,CursorLineNr:Normal"
-      or ""
+    local winhighlight = (curr_win == win and mode ~= "nt") and "CursorLineSign:Normal,CursorLineNr:Normal" or ""
     vim.api.nvim_set_option_value("winhighlight", winhighlight, { scope = "local", win = win })
   end
 end
@@ -528,9 +501,7 @@ end
 function M.count_by_position(position)
   local count = 0
   for _, term in ipairs(M.list()) do
-    if term.position == position then
-      count = count + 1
-    end
+    if term.position == position then count = count + 1 end
   end
   return count
 end
@@ -541,9 +512,7 @@ end
 function M.get_by_position(position)
   local result = {}
   for _, term in ipairs(M.list()) do
-    if term.position == position then
-      table.insert(result, term)
-    end
+    if term.position == position then table.insert(result, term) end
   end
   return result
 end
@@ -569,9 +538,7 @@ end
 ---@return mega.term.Terminal?
 function M.get_current()
   for _, term in ipairs(M.list()) do
-    if term:is_focused() then
-      return term
-    end
+    if term:is_focused() then return term end
   end
   return nil
 end
@@ -579,9 +546,7 @@ end
 --- Get terminal by index
 ---@param idx number
 ---@return mega.term.Terminal?
-function M.get(idx)
-  return M.list()[idx]
-end
+function M.get(idx) return M.list()[idx] end
 
 --- Toggle terminals by position
 ---@param opts? mega.term.TermOpts
@@ -684,9 +649,7 @@ end
 -- Expose as callable global: Megaterm(opts) creates terminal
 -- Also indexable: Megaterm.list(), Megaterm.toggle(), etc.
 _G.Megaterm = setmetatable(M, {
-  __call = function(_, opts)
-    return M.create(opts)
-  end,
+  __call = function(_, opts) return M.create(opts) end,
 })
 
 --------------------------------------------------------------------------------
@@ -711,9 +674,7 @@ vim.api.nvim_create_autocmd("BufEnter", {
         table.insert(M.history, 1, term)
 
         -- Auto-enter insert mode when focusing terminal
-        if vim.api.nvim_get_mode().mode ~= "t" then
-          vim.cmd("startinsert")
-        end
+        if vim.api.nvim_get_mode().mode ~= "t" then vim.cmd("startinsert") end
         return
       end
     end
@@ -744,9 +705,7 @@ vim.api.nvim_create_autocmd("ModeChanged", {
 vim.api.nvim_create_autocmd("BufDelete", {
   group = augroup,
   callback = function(ev)
-    M.history = vim.tbl_filter(function(t)
-      return t:is_valid() and t.buf ~= ev.buf
-    end, M.history)
+    M.history = vim.tbl_filter(function(t) return t:is_valid() and t.buf ~= ev.buf end, M.history)
   end,
 })
 
@@ -755,14 +714,10 @@ vim.api.nvim_create_autocmd("BufDelete", {
 --------------------------------------------------------------------------------
 
 -- Global toggle (normal mode only - terminal mode handled by buffer-local keymap)
-vim.keymap.set("n", "<C-;>", function()
-  Megaterm.toggle()
-end, { desc = "Toggle terminal" })
+vim.keymap.set("n", "<C-;>", function() Megaterm.toggle() end, { desc = "Toggle terminal" })
 
 -- Global cycle through terminals
-vim.keymap.set({ "n", "t" }, "<C-'>", function()
-  Megaterm.cycle()
-end, { desc = "Cycle terminals" })
+vim.keymap.set({ "n", "t" }, "<C-'>", function() Megaterm.cycle() end, { desc = "Cycle terminals" })
 
 -- :T command to create/toggle terminal with optional args
 vim.api.nvim_create_user_command("T", function(opts)

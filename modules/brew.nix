@@ -30,7 +30,7 @@
       "raycast"
       "slack"
       # "spotify"
-      "thingsmacsandboxhelper"
+      # "thingsmacsandboxhelper"
       "vial"
       "yubico-authenticator"
       "visual-studio-code"

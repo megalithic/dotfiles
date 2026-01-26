@@ -3,8 +3,7 @@
   pkgs,
   lib,
   ...
-}:
-let
+}: let
   # ── gui tools ──────────────────────────────────────────────────────────────────
   # Custom apps built with mkApp - these have passthru.appLocation
   customApps = with pkgs; [
@@ -18,9 +17,11 @@ let
 
   # Filter: only apps with appLocation = "home-manager" go to home.packages
   # (home-manager copies these to ~/Applications/Home Manager Apps/)
-  homeManagerApps = builtins.filter (
-    pkg: (pkg.passthru or { }).appLocation or "home-manager" == "home-manager"
-  ) customApps;
+  homeManagerApps =
+    builtins.filter (
+      pkg: (pkg.passthru or {}).appLocation or "home-manager" == "home-manager"
+    )
+    customApps;
 
   # Standard GUI apps from nixpkgs (not custom mkApp derivations)
   guiPkgs = with pkgs; [
@@ -44,6 +45,7 @@ let
     curlie
     delta
     devbox
+    # devenv # Declarative development environments (replaces flake-based dev shells)
     difftastic
     espanso
     ffmpeg
@@ -97,6 +99,7 @@ let
     nerd-fonts.jetbrains-mono
     nerd-fonts.symbols-only
     nerd-fonts.victor-mono
+    # nerd-fonts.berkeley-mono
     noto-fonts-color-emoji
     twemoji-color-font
     victor-mono
@@ -104,9 +107,7 @@ let
 
   # ── languages & toolchains ─────────────────────────────────────────────────────
   langPkgs = with pkgs; [
-    # rust
-    cargo
-    harper
+    harper # grammar checker
 
     # kubernetes
     k9s
@@ -157,8 +158,7 @@ let
     # markdown
     markdown-oxide
   ];
-in
-{
+in {
   # Export customApps for mkAppActivation (used in default.nix)
   # These are ALL custom apps regardless of appLocation
   options.mega.customApps = lib.mkOption {
