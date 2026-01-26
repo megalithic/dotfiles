@@ -64,9 +64,13 @@ erl_crash.dump
 .obsidian
 .jj
 .direnv
+.beads
 **/.jj
 **/.direnv
 **/.beads
+deps
+.expert
+
 
 
 # ignores, etc from ripgrep

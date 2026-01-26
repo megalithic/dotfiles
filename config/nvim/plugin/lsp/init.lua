@@ -683,20 +683,22 @@ function M.on_attach(client, bufnr, _client_id)
     end
 
     vim.api.nvim_create_autocmd("BufWritePre", {
-      pattern = "*",
-      callback = function(args)
-        require("conform").format({
-          bufnr = args.buf,
-          async = true,
-          lsp_format = "fallback",
-          timeout_ms = 5000,
-          filter = function(client, exclusions)
-            local client_name = type(client) == "table" and client.name or client
-            exclusions = exclusions or disabled_lsp_formatting
+      buffer = bufnr,
+      callback = function(_args)
+        require("conform").format({ async = false, lsp_fallback = true, id = client.id })
 
-            return not exclusions or not vim.tbl_contains(exclusions, client_name)
-          end,
-        })
+        -- require("conform").format({
+        --   bufnr = args.buf,
+        --   async = true,
+        --   lsp_format = "fallback",
+        --   timeout_ms = 5000,
+        --   filter = function(client, exclusions)
+        --     local client_name = type(client) == "table" and client.name or client
+        --     exclusions = exclusions or disabled_lsp_formatting
+        --
+        --     return not exclusions or not vim.tbl_contains(exclusions, client_name)
+        --   end,
+        -- })
       end,
     })
 
@@ -810,7 +812,8 @@ Augroup(lsp_group, {
         -- assert(client_config.on_attach, "must have an on_attach function for language server client")
 
         if client_config.on_attach and type(client_config.on_attach == "function") then
-          client_config.on_attach(client, bufnr)
+          -- client_config.on_attach(client, bufnr)
+          M.on_attach(client, bufnr)
         else
           vim.notify(string.format("No on_attach found for %s", client.name), L.WARN)
         end

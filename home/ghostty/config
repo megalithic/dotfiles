@@ -196,7 +196,9 @@ font-feature = calt
 # font-codepoint-map = U+2500-U+259F=Symbols Nerd Font Mono
 
 # megaforest color theme
-background = #2e353c
+# background = #2e353c
+# alex31mil_nvim_theme:
+background = #272b30
 # background alts: 2e353c / 323d43
 
 foreground = #d8caac

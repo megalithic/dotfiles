@@ -2,6 +2,7 @@
 return {
   {
     "rcarriga/nvim-notify",
+    enabled = false,
     lazy = false,
     cond = not vim.g.started_by_firenvim,
     config = function()

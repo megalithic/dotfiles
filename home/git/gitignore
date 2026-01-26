@@ -142,4 +142,5 @@ obsidian/.obsidian
 .claude-cspire/
 .vscode/
 .nix-mix
+deps
 # vim:ft=gitignore:tw=0

@@ -127,13 +127,14 @@
         '';
       };
       templates = {
+        # pad_end(4, format_short_change_id_with_hidden_and_divergent_info(self)),
         log = ''
           if(root,
             format_root_commit(self),
             label(if(current_working_copy, "working_copy"),
               concat(
                 separate(" ",
-                  pad_end(4, format_short_change_id_with_hidden_and_divergent_info(self)),
+                  pad_end(4, format_short_change_id(change_id)),
                   if(empty, label("empty", "(empty)")),
                   if(description,
                     description.first_line(),

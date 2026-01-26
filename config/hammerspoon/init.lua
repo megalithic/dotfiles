@@ -17,11 +17,7 @@ end
 --
 -- In a normal reload, _G.S is nil here (fresh Lua state), so this is a no-op.
 --------------------------------------------------------------------------------
-local function cleanupPreviousRun()
-  if _G.S and _G.S.resetAll then _G.S.resetAll() end
-end
-
-cleanupPreviousRun()
+pcall(function() _G.S.resetAll() end)
 
 local ok, mod_or_err = pcall(require, "config")
 if not ok then
@@ -117,12 +113,9 @@ end
 hs.loadSpoon("EmmyLua")
 
 -- Development/spike modules (available via Spike.* global)
-require("spike-ax-meeting")
+-- require("spike-ax-meeting")
 
--- NOTE: persistent-notification watcher REPLACED by unified action system
--- notification.lua watcher now handles ALL notifications (banners + persistent alerts)
--- Dismissal is now an action in rules (action = "dismiss") instead of separate scanner
-local watchers = { "audio", "dock", "app", "notification", "camera", "url" }
+local watchers = { "audio", "dock", "app", "notification", "url" }
 
 req("bindings")
 req("watchers", { watchers = watchers })
@@ -133,8 +126,6 @@ req("quitter"):start()
 -- Must be called AFTER all modules are loaded so we have references to clean up
 -- FIXME: S and N should be globals on `_G` so no need for reassigning them, right?
 require("overrides").setupReloadCleanup({
-  S = S,
-  N = N,
   stopWatchers = function()
     require("watchers"):stop({ watchers = watchers })
     require("quitter"):stop()

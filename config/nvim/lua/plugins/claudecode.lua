@@ -10,17 +10,13 @@ local CCProvider
 ---@param bufid integer
 ---@return boolean
 function fn.is_claude_buf(bufid)
-  if not vim.api.nvim_buf_is_loaded(bufid) then
-    return false
-  end
+  if not vim.api.nvim_buf_is_loaded(bufid) then return false end
   local bufname = vim.api.nvim_buf_get_name(bufid)
   return bufname:match("claude") ~= nil and vim.bo[bufid].buftype == "terminal"
 end
 
 ---@return boolean
-function fn.is_claude_visible()
-  return CCProvider and CCProvider.is_active() or false
-end
+function fn.is_claude_visible() return CCProvider and CCProvider.is_active() or false end
 
 ---@return boolean
 function fn.is_claude_active()
@@ -30,26 +26,20 @@ end
 
 ---@return boolean
 function fn.is_claude_connected()
-  if not CCProvider then
-    return false
-  end
+  if not CCProvider then return false end
   local tab_id = vim.api.nvim_get_current_tabpage()
   return CCProvider.is_connected(tab_id)
 end
 
 function fn.new_line()
   vim.api.nvim_feedkeys("\\", "t", true)
-  vim.defer_fn(function()
-    vim.api.nvim_feedkeys("\r", "t", true)
-  end, 10)
+  vim.defer_fn(function() vim.api.nvim_feedkeys("\r", "t", true) end, 10)
 end
 
 -- Close any diffview tabs that might interfere with diff accept/reject
 function fn.ensure_diffviews_hidden()
   local ok, diffview = pcall(require, "diffview")
-  if ok and diffview.close then
-    pcall(diffview.close)
-  end
+  if ok and diffview.close then pcall(diffview.close) end
 end
 
 function fn.accept_diff()
@@ -57,9 +47,7 @@ function fn.accept_diff()
     fn.ensure_diffviews_hidden()
     vim.cmd("ClaudeCodeDiffAccept")
     vim.defer_fn(function()
-      if CCProvider then
-        CCProvider.focus()
-      end
+      if CCProvider then CCProvider.focus() end
     end, 50)
   end
 end
@@ -69,9 +57,7 @@ function fn.reject_diff()
     fn.ensure_diffviews_hidden()
     vim.cmd("ClaudeCodeDiffDeny")
     vim.defer_fn(function()
-      if CCProvider then
-        CCProvider.focus()
-      end
+      if CCProvider then CCProvider.focus() end
     end, 50)
   end
 end
@@ -86,9 +72,7 @@ function fn.post_and_focus()
 
     if mode == "v" or mode == "V" then
       vim.cmd("ClaudeCodeSend")
-      vim.defer_fn(function()
-        vim.cmd("ClaudeCodeFocus")
-      end, 10)
+      vim.defer_fn(function() vim.cmd("ClaudeCodeFocus") end, 10)
     else
       vim.cmd("ClaudeCodeAdd %")
       vim.cmd("ClaudeCodeFocus")
@@ -175,9 +159,7 @@ function fn.post_and_focus()
       if saved_state.mode == "v" or saved_state.mode == "V" then
         vim.defer_fn(function()
           vim.cmd("ClaudeCodeSend")
-          vim.defer_fn(function()
-            vim.cmd("ClaudeCodeFocus")
-          end, 10)
+          vim.defer_fn(function() vim.cmd("ClaudeCodeFocus") end, 10)
         end, 10)
       else
         vim.cmd("ClaudeCodeAdd %")
@@ -190,9 +172,7 @@ end
 -- External API functions
 
 function M.focus()
-  if CCProvider then
-    CCProvider.focus()
-  end
+  if CCProvider then CCProvider.focus() end
 end
 
 ---@return boolean
@@ -217,9 +197,7 @@ function M.is_diff_tab(tabid)
   local tab_wins = vim.api.nvim_tabpage_list_wins(tabid)
   for _, win in ipairs(tab_wins) do
     local bufid = vim.api.nvim_win_get_buf(win)
-    if vim.b[bufid].claudecode_diff_tab_name ~= nil then
-      return true
-    end
+    if vim.b[bufid].claudecode_diff_tab_name ~= nil then return true end
   end
   return false
 end
@@ -227,9 +205,7 @@ end
 ---@param path string
 function M.add_file(path)
   local ok, claudecode = pcall(require, "claudecode")
-  if ok and claudecode.send_at_mention then
-    claudecode.send_at_mention(path)
-  end
+  if ok and claudecode.send_at_mention then claudecode.send_at_mention(path) end
 end
 
 -- Initialize the provider with layout configuration
@@ -255,17 +231,13 @@ CCProvider = require("config.claudecode-provider").init({
       keys = {
         claude_new_line = {
           "<S-CR>",
-          function()
-            fn.new_line()
-          end,
+          function() fn.new_line() end,
           mode = "t",
           desc = "New line",
         },
         claude_hide = {
           "<Esc>",
-          function(self)
-            self:hide()
-          end,
+          function(self) self:hide() end,
           mode = "t",
           desc = "Hide Claude",
         },
@@ -284,36 +256,28 @@ return {
       -- Side panel toggles
       {
         "<leader>cc",
-        function()
-          CCProvider.open_on_side()
-        end,
+        function() CCProvider.open_on_side() end,
         mode = { "n", "i", "t", "v" },
         desc = "Toggle Claude (side)",
       },
       -- Float window toggles
       {
-        "<leader>cg",
-        function()
-          CCProvider.open_float()
-        end,
+        "<leader>cf",
+        function() CCProvider.open_float() end,
         mode = { "n", "i", "t", "v" },
         desc = "Toggle Claude (float)",
       },
       -- Continue previous session
       {
         "<leader>cC",
-        function()
-          CCProvider.open_on_side("continue")
-        end,
+        function() CCProvider.open_on_side("continue") end,
         mode = { "n", "i", "t", "v" },
         desc = "Continue Claude session",
       },
       -- Resume session (pick from history)
       {
         "<leader>cr",
-        function()
-          CCProvider.open_on_side("resume")
-        end,
+        function() CCProvider.open_on_side("resume") end,
         mode = { "n", "i", "t", "v" },
         desc = "Resume Claude session",
       },
@@ -361,9 +325,7 @@ return {
       -- Focus Claude terminal
       {
         "<leader>cf",
-        function()
-          CCProvider.focus()
-        end,
+        function() CCProvider.focus() end,
         mode = "n",
         desc = "Focus Claude",
       },

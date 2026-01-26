@@ -204,6 +204,13 @@ M.layouts = {
       { "", 1, M.grid.center.medium },
     },
   },
+  ["com.apple.Music"] = {
+    bundleID = "com.apple.Music",
+    name = "Music",
+    rules = {
+      { "", 2, M.grid.halves.right },
+    },
+  },
   ["com.spotify.client"] = {
     bundleID = "com.spotify.client",
     name = "Spotify",
@@ -334,6 +341,7 @@ M.lollygaggers = {
   ["com.flexibits.fantastical2.mac"] = { 1, nil },
   ["com.1password.1password"] = { 1, nil },
   ["com.spotify.client"] = { 1, nil },
+  ["com.apple.Music"] = { 1, nil },
 }
 
 M.launchers = {
@@ -342,7 +350,8 @@ M.launchers = {
   -- { "net.kovidgoyal.kitty", "k", nil },
   { "com.apple.MobileSMS", "m", nil }, -- NOOP for now.. TODO: implement a binding feature that let's us require n-presses before we execute
   { "com.apple.finder", "f", nil },
-  { "com.spotify.client", "p", nil },
+  -- { "com.spotify.client", "p", nil },
+  { "com.apple.Music", "p", nil },
   { "com.freron.MailMate", "e", nil },
   { "com.flexibits.fantastical2.mac", "y", { "'" } },
   { "com.raycast.macos", "space", { "c" } },

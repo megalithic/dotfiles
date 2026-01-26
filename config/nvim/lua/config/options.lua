@@ -42,15 +42,6 @@ local border_chars = {
   rounded = { "╭", "─", "╮", "│", "╯", "─", "╰", "│" },
 }
 
-local telescope_border_chars = {
-  none = { "", "", "", "", "", "", "", "" },
-  single = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
-  double = { "═", "║", "═", "║", "╔", "╗", "╝", "╚" },
-  rounded = { "─", "│", "─", "│", "╭", "╮", "╯", "╰" },
-  solid = { " ", " ", " ", " ", " ", " ", " ", " " },
-  shadow = { "", "", "", "", "", "", "", "" },
-}
-
 local borders = {
   round = { "╭", "─", "╮", "│", "╯", "─", "╰", "│" },
   none = { "", "", "", "", "", "", "", "" },
@@ -85,6 +76,7 @@ M.g = {
   mapleader = ",",
   maplocalleader = " ",
   lsp_semantic_enabled = 1,
+  borders = borders,
   netrw_liststyle = 1,
   netrw_sort_by = "size",
   open_command = is_macos and "open" or "xdg-open",
@@ -104,7 +96,6 @@ M.g = {
   -- org_path = string.format("%s/_org", icloud_documents_path),
   -- neorg_path = string.format("%s/_org", icloud_documents_path),
   hs_emmy_path = string.format("%s/Spoons/EmmyLua.spoon", hammerspoon_path),
-
   -- python3_host_prog = vim.env.XDG_DATA_HOME .. "/mise/installs/python/latest/bin/python3",
   -- ruby_host_prog = vim.env.XDG_DATA_HOME .. "/mise/installs/ruby/latest/bin/ruby",
   -- node_host_prog = vim.env.XDG_DATA_HOME .. "/mise/installs/node/latest/bin/node",
@@ -198,11 +189,6 @@ M.g = {
   },
   enabled_inlay_hints = {},
   disabled_lsp_formatters = { "tailwindcss", "html", "ts_ls", "ls_emmet", "zk", "sumneko_lua" },
-  enabled_elixir_ls = (function()
-    local ls = "elixirls"
-    if vim.env.ELIXIR_LS ~= nil then ls = vim.env.ELIXIR_LS end
-    return { ls, "expert", "", "" } --- opts: {"expert", "elixirls", "nextls", "lexical"}
-  end)(),
   completion_exclusions = {},
   formatter_exclusions = { "emmylua_ls" },
   definition_exclusions = {},
@@ -218,8 +204,6 @@ M.g = {
   border_style = BORDER_STYLE,
   border = current_border(),
   border_chars = border_chars[BORDER_STYLE],
-  telescope_border_chars = telescope_border_chars[BORDER_STYLE],
-  borders = borders,
   colorscheme = "megaforest", -- alt: megaforest, onedark, bamboo, `vim` for default, forestbones, everforest
   default_colorcolumn = "81",
 }

@@ -200,8 +200,8 @@ if true then
       opts = {
         layout = function() return M.smart_layout() end,
         title = "smart fffiles",
-        hidden = true,
-        ignored = true,
+        hidden = false,
+        ignored = false,
         git_icons = {
           added = " ",
           modified = " ",
@@ -217,6 +217,7 @@ if true then
     {
       "folke/snacks.nvim",
       priority = 1000,
+      cmd = { "Snacks" },
       lazy = false,
       opts = {
         bigfile = { enabled = true },
@@ -395,6 +396,7 @@ if true then
         quickfile = { enabled = true },
         scroll = { enabled = false },
         statuscolumn = { enabled = false },
+        terminal = { enabled = true },
         words = { enabled = true },
         styles = {
           input = {
@@ -418,16 +420,7 @@ if true then
         {
           "<leader>a",
           mode = "n",
-          -- function() require("snacks").picker.grep() end,
-          function() require("plugins.snacks-multi-grep").multi_grep() end,
-          desc = "live multi-grep",
-          -- desc = "live grep (multi)",
-        },
-        {
-          "<leader>fg",
-          mode = "n",
-          function() require("snacks").picker.grep() end,
-          -- function() require("plugins.snacks-multi-grep").multi_grep() end,
+          function() require("snacks").picker.grep({ hidden = false, ignored = true }) end,
           desc = "live grep",
         },
         {

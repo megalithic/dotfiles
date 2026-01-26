@@ -5,9 +5,7 @@ local function first(bufnr, ...)
   local conform = require("conform")
   for i = 1, select("#", ...) do
     local formatter = select(i, ...)
-    if conform.get_formatter_info(formatter, bufnr).available then
-      return formatter
-    end
+    if conform.get_formatter_info(formatter, bufnr).available then return formatter end
   end
   return select(1, ...)
 end
@@ -46,9 +44,7 @@ return {
         },
         -- Look into dprint as my default formatter instead
         prettier = {
-          cwd = function()
-            return vim.uv.cwd()
-          end,
+          cwd = function() return vim.uv.cwd() end,
           prepend_args = function(_, ctx)
             return {
               "--config-precedence",
@@ -91,9 +87,7 @@ return {
           "prettier",
           stop_after_first = true,
         },
-        markdown = function(bufnr)
-          return { first(bufnr, "prettier", "deno_fmt"), "injected" }
-        end,
+        markdown = function(bufnr) return { first(bufnr, "prettier", "deno_fmt"), "injected" } end,
         ["markdown.mdx"] = { "prettier", "injected" },
         mdx = { "prettier", "injected" },
         html = { "prettier", "injected" },
@@ -121,26 +115,21 @@ return {
       }, js_formats),
       format_on_save = function(bufnr)
         -- Disable with a global or buffer-local variable
-        if vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then
-          return
-        end
+        if vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then return end
 
         -- Disable autoformat for files in a certain path
         local bufname = vim.api.nvim_buf_get_name(bufnr)
-        if bufname:match("/node_modules/") then
-          return
-        end
+        if bufname:match("/node_modules/") then return end
 
         -- Skip notes vault - obsidian.nvim handles formatting via ObsidianNoteWritePre
         -- Prevents prettier from mangling prose and conflicting with obsidian frontmatter
         local notes_home = vim.env.NOTES_HOME or (vim.env.HOME .. "/iclouddrive/Documents/_notes")
-        if bufname:match(vim.pesc(notes_home)) then
-          return
-        end
+        if bufname:match(vim.pesc(notes_home)) then return end
 
         return { timeout_ms = 500, lsp_format = "fallback" }
       end,
     },
+
     init = function()
       -- Use conform for gq.
       vim.bo.formatexpr = "v:lua.require'conform'.formatexpr()"
