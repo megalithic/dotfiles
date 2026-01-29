@@ -71,9 +71,13 @@ return {
           args = { "fix", "--stdin" },
           stdin = true,
         },
+        mix = {
+          cwd = function(self, ctx) (require("conform.util").root_file({ "mix.exs" }))(self, ctx) end,
+        },
       },
       formatters_by_ft = vim.tbl_extend("force", {
         ["*"] = { "trim_whitespace", "trim_newlines" },
+        elixir = { "mix" },
         json = {
           "deno_fmt",
           "biome",
@@ -90,6 +94,7 @@ return {
         markdown = function(bufnr) return { first(bufnr, "prettier", "deno_fmt"), "injected" } end,
         ["markdown.mdx"] = { "prettier", "injected" },
         mdx = { "prettier", "injected" },
+        heex = { "mix" },
         html = { "prettier", "injected" },
         -- yaml = { "prettier", "injected" },
         css = { "biome", "prettier", stop_after_first = true },

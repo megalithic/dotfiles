@@ -37,25 +37,12 @@ require("lazy").setup({
     patterns = { "megalithic" },
     fallback = true, -- Fallback to git when local plugin doesn't exist
   },
-  readme = { enabled = false },
-  defaults = {
-    lazy = false,
-    version = false, -- always use the latest git commit
-  },
+  defaults = { lazy = false, version = false },
   install = { missing = true, colorscheme = { vim.g.colorscheme, "default", "habamax" } },
-  ui = {
-    backdrop = 100,
-  },
-  checker = {
-    enabled = true, -- check for plugin updates periodically
-    notify = false, -- don't notify on update
-  },
+  ui = { backdrop = 100 },
+  checker = { enabled = true, notify = false },
   change_detection = { enabled = true, notify = false },
-  {
-    rocks = {
-      hererocks = true,
-    },
-  },
+  rocks = { hererocks = true },
   performance = {
     rtp = {
       disabled_plugins = {

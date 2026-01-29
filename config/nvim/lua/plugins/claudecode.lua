@@ -208,48 +208,48 @@ function M.add_file(path)
   if ok and claudecode.send_at_mention then claudecode.send_at_mention(path) end
 end
 
--- Initialize the provider with layout configuration
--- This must happen after fn.* functions are defined
-CCProvider = require("config.claudecode-provider").init({
-  layout = {
-    default = "side",
-    side = {
-      position = "right",
-      width = 0.3,
-    },
-    float = {
-      width = 0.6,
-      height = 0.8,
-      backdrop = false,
-      border = "rounded",
-    },
-    common = {
-      wo = {
-        winbar = "",
-        winhighlight = "Normal:SnacksTerminal,FloatBorder:SnacksTerminalFloatBorder,WinBar:SnacksTerminalHeader,WinBarNC:SnacksTerminalHeaderNC",
+if not vim.g.started_by_firenvim then
+  CCProvider = require("config.claudecode-provider").init({
+    layout = {
+      default = "side",
+      side = {
+        position = "right",
+        width = 0.3,
       },
-      keys = {
-        claude_new_line = {
-          "<S-CR>",
-          function() fn.new_line() end,
-          mode = "t",
-          desc = "New line",
+      float = {
+        width = 0.6,
+        height = 0.8,
+        backdrop = false,
+        border = "rounded",
+      },
+      common = {
+        wo = {
+          winbar = "",
+          winhighlight = "Normal:SnacksTerminal,FloatBorder:SnacksTerminalFloatBorder,WinBar:SnacksTerminalHeader,WinBarNC:SnacksTerminalHeaderNC",
         },
-        claude_hide = {
-          "<Esc>",
-          function(self) self:hide() end,
-          mode = "t",
-          desc = "Hide Claude",
+        keys = {
+          claude_new_line = {
+            "<S-CR>",
+            function() fn.new_line() end,
+            mode = "t",
+            desc = "New line",
+          },
+          claude_hide = {
+            "<Esc>",
+            function(self) self:hide() end,
+            mode = "t",
+            desc = "Hide Claude",
+          },
         },
       },
     },
-  },
-})
+  })
+end
 
--- Return lazy.nvim plugin spec
 return {
   "coder/claudecode.nvim",
   dependencies = { "folke/snacks.nvim" },
+  cond = not vim.g.started_by_firenvim,
   event = "VeryLazy",
   keys = function()
     return {

@@ -134,9 +134,14 @@ shift "$((OPTIND - 1))"
 
 STATUS="${1:-}"
 
+__pause_music() {
+  # hs -c "if hs.spotify.isRunning() then hs.spotify.pause() elseif hs.itunes.isRunning() then hs.itunes.pause() end"
+  hs -c "if hs.itunes.isRunning() then hs.itunes.pause() end"
+}
+
 __display_popup() {
   if [[ -z "$RAW_EXECUTION" ]]; then
-    terminal-notifier -title "slck status" -message "$STATUS @ $(TZ=America/New_York date +'%Y-%m-%d %H:%M')"
+    ntfy send -t "slck status" -m "$STATUS @ $(TZ=America/New_York date +'%Y-%m-%d %H:%M')" # Auto-detects source (e.g., "[claude] Done")
 
     # tmux display-popup -C &&
     #   tmux display-popup \
@@ -348,7 +353,8 @@ function away() {
   __set_status "afk" ":afk:"
   __set_channel_text "away" "bbl"
 
-  hs -c "hs.spotify.pause()"
+  # hs -c "hs.spotify.pause()"
+  __pause_music
   __display_popup
 }
 
@@ -357,7 +363,8 @@ function brb() {
   __set_status "be right back" ":bird-flapping-fast:"
   __set_channel_text "brb" "away"
 
-  hs -c "hs.spotify.pause()"
+  # hs -c "hs.spotify.pause()"
+  __pause_music
   __display_popup
 }
 
@@ -366,7 +373,8 @@ function errand() {
   __set_status "running an errand" ":car:"
   __set_channel_text "bbiab, running an errand" "away"
 
-  hs -c "hs.spotify.pause()"
+  # hs -c "hs.spotify.pause()"
+  __pause_music
   __display_popup
 }
 
@@ -375,7 +383,8 @@ function doctor() {
   __set_status "at a doctor appointment" ":female-doctor:"
   __set_channel_text "bbiab, doctor appointment" "away"
 
-  hs -c "hs.spotify.pause()"
+  # hs -c "hs.spotify.pause()"
+  __pause_music
   __display_popup
 }
 
@@ -384,7 +393,8 @@ function tern() {
   __set_status "making a tern pickup" ":tern:"
   __set_channel_text "bbiab, making a tern pickup" "away"
 
-  hs -c "hs.spotify.pause()"
+  # hs -c "hs.spotify.pause()"
+  __pause_music
   __display_popup
 }
 
@@ -393,7 +403,8 @@ function relocating() {
   __set_status "relocating to a different work spot, bbiab" ":car:"
   __set_channel_text "bbiab, relocating to a different work spot" "away"
 
-  hs -c "hs.spotify.pause()"
+  # hs -c "hs.spotify.pause()"
+  __pause_music
   __display_popup
 }
 
@@ -402,7 +413,8 @@ function coffee() {
   __set_status "brb, making covfefe" ":coffee:"
   __set_channel_text "brb, making coffee" "away"
 
-  hs -c "hs.spotify.pause()"
+  # hs -c "hs.spotify.pause()"
+  __pause_music
   __display_popup
 }
 
@@ -411,7 +423,8 @@ function tea() {
   __set_status "tea" ":tea:"
   __set_channel_text "brb, making tea" "away"
 
-  hs -c "hs.spotify.pause()"
+  # hs -c "hs.spotify.pause()"
+  __pause_music
   __display_popup
 }
 
@@ -420,7 +433,8 @@ function dog() {
   __set_status "bbiab, taking the puppers out" "🦮"
   __set_channel_text "bbiab, taking the puppers out" "away"
 
-  hs -c "hs.spotify.pause()"
+  # hs -c "hs.spotify.pause()"
+  __pause_music
   __display_popup
 }
 
@@ -429,7 +443,8 @@ function run() {
   __set_status "gone for a run" ":runner:"
   __set_channel_text "bbiab, gone for a run" "away"
 
-  hs -c "hs.spotify.pause()"
+  # hs -c "hs.spotify.pause()"
+  __pause_music
   __display_popup
 }
 
@@ -438,7 +453,8 @@ function walk() {
   __set_status "gone for a quick walk" "🚶"
   __set_channel_text "bbiab, gone for a quick walk" "away"
 
-  hs -c "hs.spotify.pause()"
+  # hs -c "hs.spotify.pause()"
+  __pause_music
   __display_popup
 }
 
@@ -458,7 +474,8 @@ function lunch() {
 
   unset lunch_emojis
 
-  hs -c "hs.spotify.pause()"
+  # hs -c "hs.spotify.pause()"
+  __pause_music
   __display_popup
 }
 
@@ -476,7 +493,8 @@ function gone() {
 
   unset gone_messages
 
-  hs -c "hs.spotify.pause()"
+  # hs -c "hs.spotify.pause()"
+  __pause_music
   __display_popup
 }
 

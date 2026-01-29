@@ -206,6 +206,7 @@ return {
   ---@module 'obsidian'
   ---@type obsidian.config.ClientOpts
   opts = {
+    legacy_commands = false,
     workspaces = {
       {
         name = "notes",
@@ -310,7 +311,7 @@ return {
       },
     },
     attachments = {
-      img_folder = "assets", -- Store images in vault's assets folder
+      folder = "assets", -- Store images in vault's assets folder
     },
     completion = {
       blink = true,

@@ -673,48 +673,48 @@ function M.on_attach(client, bufnr, _client_id)
   make_commands(client, bufnr)
   make_keymaps(client, bufnr)
 
-  lsp_method(client, methods.textDocument_formatting)(function()
-    -- Disable formatting for certain language servers
-    for i = 1, #disabled_lsp_formatting do
-      if disabled_lsp_formatting[i] == client.name then
-        client.server_capabilities.documentFormattingProvider = false
-        client.server_capabilities.documentRangeFormattingProvider = false
-      end
-    end
+  -- lsp_method(client, methods.textDocument_formatting)(function()
+  --   -- Disable formatting for certain language servers
+  --   for i = 1, #disabled_lsp_formatting do
+  --     if disabled_lsp_formatting[i] == client.name then
+  --       client.server_capabilities.documentFormattingProvider = false
+  --       client.server_capabilities.documentRangeFormattingProvider = false
+  --     end
+  --   end
 
-    vim.api.nvim_create_autocmd("BufWritePre", {
-      buffer = bufnr,
-      callback = function(_args)
-        require("conform").format({ async = false, lsp_fallback = true, id = client.id })
+  vim.api.nvim_create_autocmd("BufWritePre", {
+    buffer = bufnr,
+    callback = function(_args)
+      require("conform").format({ async = false, lsp_fallback = true, id = client.id })
 
-        -- require("conform").format({
-        --   bufnr = args.buf,
-        --   async = true,
-        --   lsp_format = "fallback",
-        --   timeout_ms = 5000,
-        --   filter = function(client, exclusions)
-        --     local client_name = type(client) == "table" and client.name or client
-        --     exclusions = exclusions or disabled_lsp_formatting
-        --
-        --     return not exclusions or not vim.tbl_contains(exclusions, client_name)
-        --   end,
-        -- })
-      end,
-    })
+      -- require("conform").format({
+      --   bufnr = args.buf,
+      --   async = true,
+      --   lsp_format = "fallback",
+      --   timeout_ms = 5000,
+      --   filter = function(client, exclusions)
+      --     local client_name = type(client) == "table" and client.name or client
+      --     exclusions = exclusions or disabled_lsp_formatting
+      --
+      --     return not exclusions or not vim.tbl_contains(exclusions, client_name)
+      --   end,
+      -- })
+    end,
+  })
 
-    -- Auto-formatting on save
-    -- if not lsp_method(client, methods.textDocument_willSaveWaitUntil) then
-    -- vim.api.nvim_create_autocmd("BufWritePre", {
-    --   group = lsp_group,
-    --   buffer = bufnr,
-    --   callback = function()
-    --     local autoformat =
-    --       vim.F.if_nil(client.settings and client.settings.autoformat, vim.b.lsp and vim.b.lsp.autoformat, vim.g.lsp and vim.g.lsp.autoformat, false)
-    --     if autoformat then vim.lsp.buf.format({ bufnr = bufnr, id = client_id or client.id }) end
-    --   end,
-    -- })
-    -- end
-  end)
+  -- Auto-formatting on save
+  -- if not lsp_method(client, methods.textDocument_willSaveWaitUntil) then
+  -- vim.api.nvim_create_autocmd("BufWritePre", {
+  --   group = lsp_group,
+  --   buffer = bufnr,
+  --   callback = function()
+  --     local autoformat =
+  --       vim.F.if_nil(client.settings and client.settings.autoformat, vim.b.lsp and vim.b.lsp.autoformat, vim.g.lsp and vim.g.lsp.autoformat, false)
+  --     if autoformat then vim.lsp.buf.format({ bufnr = bufnr, id = client_id or client.id }) end
+  --   end,
+  -- })
+  -- end
+  -- end)
 
   lsp_method(client, methods.textDocument_semanticTokens_full)(function()
     if vim.g.disabled_semantic_tokens[filetype] then client.server_capabilities.semanticTokensProvider = vim.NIL end
