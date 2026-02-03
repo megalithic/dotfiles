@@ -89,15 +89,62 @@
           jj rebase -d "''${1:-main}@origin"
         '' ""];
 
-        # jj feat "msg" - Fetch and start new feature from main@origin
+        # jj feat <bookmark-name> - Create new feature branch from main@origin
         feat = ["util" "exec" "--" "bash" "-c" ''
           set -euo pipefail
+          if [[ -z "$1" ]]; then
+            echo "Usage: jj feat <bookmark-name>" >&2
+            exit 1
+          fi
           jj git fetch
-          jj new main@origin -m "$1"
+          jj new main@origin -m "feat: $1"
+          jj bookmark create "$1" -r @
+          echo "Created feature branch: $1"
         '' ""];
 
-        # jj feat-here "msg" - Start new feature from current position (no fetch)
-        feat-here = ["new" "-m"];
+        # jj feat-here <bookmark-name> - Create feature branch from current position (no fetch)
+        feat-here = ["util" "exec" "--" "bash" "-c" ''
+          set -euo pipefail
+          if [[ -z "$1" ]]; then
+            echo "Usage: jj feat-here <bookmark-name>" >&2
+            exit 1
+          fi
+          jj new -m "feat: $1"
+          jj bookmark create "$1" -r @
+          echo "Created feature branch: $1 (from current position)"
+        '' ""];
+
+        # jj co <branch> - Smart checkout: fetch, switch to branch (or create if missing)
+        # Aliases: checkout, switch
+        # Priority: 1) origin branch, 2) local bookmark, 3) create new from main@origin
+        co = ["util" "exec" "--" "bash" "-c" ''
+          set -euo pipefail
+          if [[ -z "$1" ]]; then
+            echo "Usage: jj co <branch-name>" >&2
+            exit 1
+          fi
+
+          jj git fetch
+
+          # Check if branch exists on origin (use valid template, check for output)
+          if jj log -r "$1@origin" --no-graph -T 'commit_id.short()' 2>/dev/null | grep -q .; then
+            echo "Switching to remote branch: $1@origin"
+            jj new "$1@origin"
+            jj bookmark track "$1@origin" 2>/dev/null || true
+          # Check if local bookmark exists
+          elif jj log -r "$1" --no-graph -T 'commit_id.short()' 2>/dev/null | grep -q .; then
+            echo "Switching to local bookmark: $1"
+            jj new "$1"
+          else
+            # Create new branch from main@origin
+            echo "Branch $1 not found, creating from main@origin..."
+            jj new main@origin -m "feat: $1"
+            jj bookmark create "$1" -r @
+            echo "Created new branch: $1"
+          fi
+        '' ""];
+        checkout = ["co"];
+        switch = ["co"];
 
         # jj pr-fix ["msg"] - New commit on PR branch, describe, push with confirmation
         # (Note: "fix" is a built-in jj command for code formatters)
