@@ -277,7 +277,7 @@
                   bookmarks,
                   tags,
                   working_copies,
-                  if(self.contained_in('git_head()'), label("git_head", "HEAD")),
+                  if(self.contained_in('first_parent(@)'), label("git_head", "HEAD")),
                   if(conflict, label("conflict", "conflict")),
                   if(config("ui.show-cryptographic-signatures").as_boolean(),
                     format_short_cryptographic_signature(signature)),
