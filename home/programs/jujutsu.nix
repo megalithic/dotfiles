@@ -36,15 +36,6 @@
       # Critical for jj workspace workflow with multiple concurrent working copies
       snapshot.auto-update-stale = true;
 
-      # fix.tools.nixfmt = {
-      #   command = [
-      #     "${lib.getExe pkgs.nixfmt-rfc-style}"
-      #     "--strict"
-      #     "--filename=$path"
-      #   ];
-      #   patterns = [ "glob:'**/*.nix'" ];
-      # };
-
       colors = {
         commit_id = "magenta";
         change_id = "cyan";
@@ -72,10 +63,10 @@
       #   write-change-id-header = true;
       # };
       aliases = {
+        # Basic shortcuts
         s = ["status"];
         l = ["log"];
         ll = ["log" "-T" "builtin_log_compact_full_description"];
-        # ll = [ "log" "-r" ".." ];
         d = ["diff"];
         rb = ["rebase"];
         b = ["bookmark"];
@@ -84,9 +75,105 @@
         dv = ["desc"];
         dm = ["desc" "-m"];
         main = ["bookmark" "move" "main" "--to" "@"];
-        # tug = [ "bookmark" "move" "--from" "heads(::@- & bookmarks())" "--to" "@-" ];
         # Advances closest bookmark to parent commit
         tug = ["bookmark" "move" "--from" "closest_bookmark(@-)" "--to" "@-"];
+
+        # ─────────────────────────────────────────────────────────────
+        # Workflow aliases (using jj util exec for multi-command ops)
+        # ─────────────────────────────────────────────────────────────
+
+        # jj up [branch] - Fetch and rebase onto origin (default: main)
+        up = ["util" "exec" "--" "bash" "-c" ''
+          set -euo pipefail
+          jj git fetch
+          jj rebase -d "''${1:-main}@origin"
+        '' ""];
+
+        # jj feat "msg" - Fetch and start new feature from main@origin
+        feat = ["util" "exec" "--" "bash" "-c" ''
+          set -euo pipefail
+          jj git fetch
+          jj new main@origin -m "$1"
+        '' ""];
+
+        # jj feat-here "msg" - Start new feature from current position (no fetch)
+        feat-here = ["new" "-m"];
+
+        # jj pr-fix ["msg"] - New commit on PR branch, describe, push with confirmation
+        # (Note: "fix" is a built-in jj command for code formatters)
+        pr-fix = ["util" "exec" "--" "bash" "-c" ''
+          set -euo pipefail
+
+          # Find closest bookmark (PR branch)
+          bookmark=$(jj log -r 'closest_bookmark(@)' --no-graph \
+            -T 'self.bookmarks().map(|b| b.name()).join(",")' 2>/dev/null | head -1)
+
+          if [[ -z "$bookmark" || "$bookmark" == "main" ]]; then
+            echo "Error: No feature bookmark found. Create one first:" >&2
+            echo "  jj bookmark create <name>" >&2
+            exit 1
+          fi
+
+          echo "Working on bookmark: $bookmark"
+
+          # Create new commit and describe
+          jj new
+          if [[ -n "$1" ]]; then
+            jj describe -m "$1"
+          else
+            jj describe
+          fi
+
+          # Move bookmark to new commit
+          jj bookmark move "$bookmark" --to @
+
+          # Confirm push
+          echo ""
+          jj log -r "$bookmark"
+          echo ""
+          read -p "Push $bookmark to origin? [y/N] " -n 1 -r
+          echo
+          if [[ $REPLY =~ ^[Yy]$ ]]; then
+            jj git push --bookmark "$bookmark"
+          else
+            echo "Skipped push. Run: jj git push --bookmark $bookmark"
+          fi
+        '' ""];
+
+        # jj fixup - Squash into parent commit on PR branch, push with confirmation
+        fixup = ["util" "exec" "--" "bash" "-c" ''
+          set -euo pipefail
+
+          # Check we have changes
+          if jj log -r @ --no-graph -T 'if(empty, "true", "false")' | grep -q 'true'; then
+            echo "Error: Current change is empty, nothing to squash" >&2
+            exit 1
+          fi
+
+          # Find bookmark on parent (where we're squashing into)
+          bookmark=$(jj log -r 'closest_bookmark(@-)' --no-graph \
+            -T 'self.bookmarks().map(|b| b.name()).join(",")' 2>/dev/null | head -1)
+
+          if [[ -z "$bookmark" || "$bookmark" == "main" ]]; then
+            echo "Error: No feature bookmark on parent commit" >&2
+            exit 1
+          fi
+
+          echo "Squashing into bookmark: $bookmark"
+          jj squash
+
+          # Confirm push
+          echo ""
+          jj log -r "$bookmark"
+          echo ""
+          read -p "Push $bookmark to origin? [y/N] " -n 1 -r
+          echo
+          if [[ $REPLY =~ ^[Yy]$ ]]; then
+            jj git push --bookmark "$bookmark"
+          else
+            echo "Skipped push. Run: jj git push --bookmark $bookmark"
+          fi
+        '' ""];
       };
       revsets = {
         log = "current_work";
@@ -181,13 +268,6 @@
           )
         '';
       };
-      # fix.tools.nix-fmt = {
-      #   command = [
-      #     "nix"
-      #     "fmt"
-      #   ];
-      #   patterns = [ "glob:'**/*.nix'" ];
-      # };
     };
   };
 }

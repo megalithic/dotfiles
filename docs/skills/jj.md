@@ -162,6 +162,36 @@ These aliases are configured and available:
 | `jj s` | `jj status` | Status |
 | `jj tug` | (moves closest bookmark to parent) | Pull bookmark down |
 
+### Workflow Aliases (Multi-Command)
+
+These aliases use `jj util exec` to chain multiple commands:
+
+| Alias | Usage | Purpose |
+|-------|-------|---------|
+| `jj up` | `jj up [branch]` | Fetch + rebase onto origin (default: main) |
+| `jj feat` | `jj feat "msg"` | Fetch + new commit from main@origin |
+| `jj feat-here` | `jj feat-here "msg"` | New commit from current (no fetch) |
+| `jj pr-fix` | `jj pr-fix ["msg"]` | New commit on PR branch + confirm push |
+| `jj fixup` | `jj fixup` | Squash into parent + confirm push |
+
+**Example workflows:**
+
+```bash
+# Start a new feature
+jj up                          # Sync with origin/main first
+jj feat "feat: add user auth"  # Create new commit from main@origin
+jj bookmark create user-auth   # Create bookmark for PR
+
+# Work on existing PR
+jj up                          # Sync with origin
+# ... make changes ...
+jj pr-fix "fix: address review feedback"  # New commit, asks to push
+
+# Quick fix on existing PR
+# ... make small changes ...
+jj fixup                       # Squash into parent, asks to push
+```
+
 ### User's Custom Revsets
 
 | Revset | Meaning |

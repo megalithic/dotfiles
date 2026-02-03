@@ -65,6 +65,7 @@ in {
       ".ignore".source = git/tool_ignore;
       ".gitignore".source = git/gitignore;
       ".gitconfig".source = git/gitconfig;
+      # ".iex.exs".source = config.lib.mega.linkConfig "iex.exs";
       ".ssh/config".source = config.lib.mega.linkConfig "ssh/config";
       ".ssh/allowed_signers".text = "seth@megalithic.io ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICyxphJ0fZhJP6OQeYMsGNQ6E5ZMVc/CQdoYrWYGPDrh";
       "Library/Application Support/espanso".source = config.lib.mega.linkConfig "espanso";

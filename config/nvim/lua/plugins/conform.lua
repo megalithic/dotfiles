@@ -77,7 +77,7 @@ return {
       },
       formatters_by_ft = vim.tbl_extend("force", {
         ["*"] = { "trim_whitespace", "trim_newlines" },
-        elixir = { "mix" },
+        -- elixir = { "mix" },
         json = {
           "deno_fmt",
           "biome",
