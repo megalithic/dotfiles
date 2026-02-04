@@ -4,7 +4,8 @@
   lib,
   inputs,
   ...
-}: {
+}:
+{
   imports = [
     inputs.agenix.homeManagerModules.default
   ];
@@ -32,6 +33,36 @@
   #     KeepAlive = lib.mkForce true;
   #   };
   # };
+
+  # ===========================================================================
+  # Launchd Agent Throttling
+  # ===========================================================================
+  # The agenix home-manager module creates a launchd agent that decrypts secrets.
+  #
+  # KNOWN ISSUE: If decryption fails (e.g., stale .tmp file from interrupted run),
+  # the agent retries indefinitely. ThrottleInterval prevents runaway retries.
+  #
+  # MANUAL RECOVERY (if secrets stop updating after editing .age files):
+  #
+  #   1. Check for stuck generation:
+  #      ls -la "$(getconf DARWIN_USER_TEMP_DIR)/agenix.d/"
+  #
+  #   2. Remove the stuck generation (the newer one with .tmp files):
+  #      rm -rf "$(getconf DARWIN_USER_TEMP_DIR)/agenix.d/<stuck-generation>"
+  #
+  #   3. Restart the agent:
+  #      launchctl kickstart -k gui/$(id -u)/org.nix-community.home.activate-agenix
+  #
+  #   4. Verify symlink updated:
+  #      ls -la "$(getconf DARWIN_USER_TEMP_DIR)/agenix"
+  #
+  #   5. Start new shell to pick up secrets:
+  #      exec fish
+  #
+  # ===========================================================================
+  launchd.agents.activate-agenix.config = {
+    ThrottleInterval = 60; # Prevent runaway retries on decryption failure
+  };
 
   # Decrypt secrets on-demand, then source them as environment variables.
   # The decryption step is needed because RunAtLoad is disabled above.
