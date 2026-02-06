@@ -35,17 +35,35 @@ bd close <id>         # Complete work
 bd sync               # Sync with git
 ```
 
+## Jujutsu (jj) Aliases
+
+**Use these aliases instead of full commands:**
+
+| Alias | Command | Description |
+|-------|---------|-------------|
+| `jj dm "msg"` | describe + move bookmark | Commit with message |
+| `jj dv` | describe (interactive) + move bookmark | Edit commit message |
+| `jj push -b <name>` | git push --bookmark | Push bookmark (required -b flag) |
+| `jj pr` | push + gh pr create | Create PR from bookmark |
+| `jj feat <name>` | new + bookmark create | Start feature branch |
+| `jj done` | cleanup after merge | Delete bookmark, switch to main |
+| `jj b` | bookmark | Manage bookmarks |
+| `jj s` | status | Show status |
+| `jj d` | diff | Show diff |
+| `jj l` | log | Show log |
+
 ## Pushing (RESTRICTED)
 
 **NEVER push without explicit user permission.** This includes:
+- `jj push -b <bookmark>`
 - `jj git push`
-- `jj push` (if aliased)
-- Any git push equivalent
+- `jj pr` (includes push)
 
-**When requesting push permission:** show the exact command, e.g.:
+**When requesting push permission:** show both alias and full command:
 ```
 Ready to push. Run this?
-jj git push -b my-feature
+jj push -b my-feature        # alias
+jj git push -b my-feature    # full command
 ```
 
 Only push when the user explicitly requests it (e.g., "push it", "push to remote", "go ahead and push").

@@ -7,6 +7,7 @@ local M = {}
 local types = require("lib.notifications.types")
 local notifier = require("lib.notifications.notifier")
 local telegram = require("lib.interop.telegram")
+local pi = require("lib.interop.pi")
 
 local ATTENTION = types.ATTENTION
 local URGENCY = types.URGENCY
@@ -310,6 +311,11 @@ function M.routeNotification(opts, attention)
   -- Telegram: send if explicitly requested with -T flag, or for remote_only
   local shouldSendTelegram = opts.telegram or shouldNotify == "remote_only"
   if shouldSendTelegram and telegram.isReady() then
+    -- Track this session so replies can be routed back
+    if opts.context then
+      pi.trackLastActive(opts.context)
+    end
+    
     local ok, _ = M.sendTelegram(opts.title, opts.message, {
       urgency = opts.urgency,
       questionId = opts.question and opts.questionId or nil,

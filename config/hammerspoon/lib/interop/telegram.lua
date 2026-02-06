@@ -103,7 +103,7 @@ function M.send(text, opts)
   local payload = {
     chat_id = chatId,
     text = text,
-    parse_mode = opts.parse_mode or "Markdown",
+    parse_mode = opts.parse_mode or "MarkdownV2",
   }
 
   -- Add reply keyboard if provided (useful for quick responses)
@@ -116,7 +116,7 @@ function M.send(text, opts)
 
   hs.http.asyncPost(url, body, headers, function(status, responseBody, responseHeaders)
     if status == 200 then
-      U.log.d("Telegram: message sent successfully")
+      U.log.f("Telegram: message sent successfully")
     else
       U.log.wf("Telegram: send failed, status=%d, body=%s", status, responseBody or "")
     end

@@ -37,7 +37,7 @@ const IS_PINVIM = !!SOCKET_PATH;
 // Nerd font icons
 const NVIM_ICON = "󰢩"; // neovim icon
 
-type Payload = {
+type NvimPayload = {
   file?: string;
   range?: [number, number];
   selection?: string;
@@ -48,10 +48,22 @@ type Payload = {
   task?: string;
 };
 
+type TelegramPayload = {
+  type: "telegram";
+  text: string;
+  source?: string;
+  timestamp?: number;
+};
+
+type Payload = NvimPayload | TelegramPayload;
+
+const isTelegramPayload = (p: Payload): p is TelegramPayload =>
+  "type" in p && p.type === "telegram";
+
 let server: net.Server | null = null;
 let latestCtx: ExtensionContext | null = null;
 
-const formatMessage = (payload: Payload): string => {
+const formatMessage = (payload: NvimPayload): string => {
   const parts: string[] = [];
 
   if (payload.file) parts.push(`File: ${payload.file}`);
@@ -115,7 +127,27 @@ const startServer = (pi: ExtensionAPI, ctx: ExtensionContext): void => {
 
         try {
           const payload = JSON.parse(line) as Payload;
-          const message = formatMessage(payload);
+          
+          // Handle Telegram messages
+          if (isTelegramPayload(payload)) {
+            const telegramMessage = `📱 **Telegram message:**\n${payload.text}`;
+            const currentCtx = latestCtx;
+            
+            // Show notification in TUI
+            if (currentCtx?.hasUI) {
+              currentCtx.ui.notify("Telegram message received", "info");
+            }
+            
+            if (currentCtx?.isIdle()) {
+              void pi.sendUserMessage(telegramMessage);
+            } else {
+              void pi.sendUserMessage(telegramMessage, { deliverAs: "followUp" });
+            }
+            continue;
+          }
+          
+          // Handle nvim payloads
+          const message = formatMessage(payload as NvimPayload);
           if (!message) continue;
 
           const currentCtx = latestCtx;
