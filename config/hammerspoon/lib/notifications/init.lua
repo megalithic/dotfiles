@@ -464,8 +464,21 @@ function M.handleTelegramMessage(msg)
       return
     end
 
-    -- Default: log unhandled messages visibly
-    U.log.f("Telegram received: \"%s\"", msg.text)
+    -- Forward to active pi session if one exists
+    local pi = require("lib.interop.pi")
+    if pi.lastActiveContext then
+      local success = pi.forwardMessage(msg.text, "telegram")
+      if success then
+        U.log.f("Telegram: forwarded to pi session: %s", pi.lastActiveContext)
+        -- Acknowledge receipt
+        local telegram = require("lib.interop.telegram")
+        telegram.send("↪ Forwarded to pi")
+      else
+        U.log.wf("Telegram: failed to forward to pi session")
+      end
+    else
+      U.log.f("Telegram received (no active pi session): \"%s\"", msg.text)
+    end
   end
 end
 
