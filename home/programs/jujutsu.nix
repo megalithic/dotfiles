@@ -471,6 +471,42 @@
           ''
           ""
         ];
+        # jj done - Clean up after PR merged: delete current bookmark, switch to main, fetch & rebase
+        done = [
+          "util"
+          "exec"
+          "--"
+          "bash"
+          "-c"
+          ''
+            set -euo pipefail
+
+            # Get current bookmark
+            bookmark=$(jj log -r @ --no-graph \
+              -T 'self.bookmarks().map(|b| b.name()).join(",")' 2>/dev/null | head -1)
+
+            if [[ -z "$bookmark" || "$bookmark" == "main" ]]; then
+              echo "Error: Not on a feature bookmark (current: ''${bookmark:-none})" >&2
+              exit 1
+            fi
+
+            echo "Cleaning up after merged PR..."
+            echo "  Deleting bookmark: $bookmark"
+            jj bookmark delete "$bookmark"
+
+            echo "  Switching to main..."
+            jj edit main
+
+            echo "  Fetching latest..."
+            jj git fetch
+
+            echo "  Rebasing main onto origin..."
+            jj rebase -d main@origin -r main
+
+            echo "Done! You're now on main at the latest."
+          ''
+          ""
+        ];
       };
       revsets = {
         log = "current_work";

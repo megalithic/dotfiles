@@ -118,6 +118,9 @@ async function getAuthLabel(ctx: ExtensionContext): Promise<string | null> {
   return null;
 }
 
+// Store refresh callback to trigger from agent_end
+let refreshFooter: (() => void) | null = null;
+
 export default function (pi: ExtensionAPI) {
   pi.on("session_start", (_event, ctx) => {
     setupCustomFooter(ctx);
@@ -125,6 +128,11 @@ export default function (pi: ExtensionAPI) {
 
   pi.on("session_switch", (_event, ctx) => {
     setupCustomFooter(ctx);
+  });
+
+  // Refresh jj info after each agent turn (when jj state likely changed)
+  pi.on("agent_end", async () => {
+    refreshFooter?.();
   });
 }
 
@@ -147,8 +155,17 @@ function setupCustomFooter(ctx: ExtensionContext) {
       tui.requestRender();
     });
 
+    // Set up refresh callback for agent_end hook
+    refreshFooter = () => {
+      cachedVcs = null;
+      tui.requestRender();
+    };
+
     return {
-      dispose: unsub,
+      dispose: () => {
+        unsub();
+        refreshFooter = null;
+      },
       invalidate() {
         cachedVcs = null;
         cachedAuthLabel = undefined;

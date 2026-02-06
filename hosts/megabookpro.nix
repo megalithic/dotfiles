@@ -107,7 +107,7 @@ in {
     TMUX_PLUGIN_MANAGER_PATH = "/Users/${username}/.local/share/tmux/plugins";
     TMUX_PLUGINS_HOME = "/Users/${username}/.local/share/tmux/plugins";
 
-    NH_SEARCH_CHANNEL = "nixpkgs-unstable"; # or try "darwin"
+    NH_SEARCH_CHANNEL = "nixos-unstable";
   };
 
   environment.shellAliases = {
