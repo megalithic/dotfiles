@@ -2,40 +2,53 @@
 -- Sends code context (selection, diagnostics, hover) to pi via Unix socket
 --
 -- Usage:
---   1. Run `pinvim` (not `pi`) to start pi with nvim-bridge extension
+--   1. Run `pinvim` or `pisock` to start pi with bridge extension
 --   2. In nvim, use <localleader>ps (visual) or <localleader>pp (toggle)
 --
--- SOCKET CONTRACT (single source of truth):
---   Pattern: /tmp/pi-{session}-{window}.sock
---   Used by:
---     - pinvim wrapper (sets PI_SOCKET env var)
---     - nvim-bridge.ts extension (listens on PI_SOCKET)
---     - This file (connects to it)
---     - bin/ftm (checks for socket existence)
---   If you change this pattern, update all files.
+-- SOCKET CONFIGURATION (nix is single source of truth):
+--   Pattern: /tmp/pi-{session}.sock (one socket per tmux session)
+--   Env vars (set by pinvim/pisock wrapper):
+--     - PI_SOCKET_DIR: /tmp
+--     - PI_SOCKET_PREFIX: pi
+--     - PI_SESSION: tmux session name
+--     - PI_SOCKET: full path (e.g., /tmp/pi-mega.sock)
+--
+-- Used by:
+--   - pinvim/pisock wrapper (sets PI_SOCKET env var)
+--   - bridge.ts extension (listens on PI_SOCKET)
+--   - This file (connects to socket)
+--   - config/hammerspoon/lib/interop/pi.lua (forwards Telegram)
+--   - bin/ftm (checks for socket existence)
+--   - bin/tmux-pinvim-toggle (finds/manages agent window)
 --
 -- Socket discovery (in order):
---   1. PI_SOCKET env var (explicit override)
---   2. /tmp/pi-{session}-{window}.sock (current tmux window)
---   3. /tmp/pi.sock (fallback for non-tmux usage)
+--   1. PI_SOCKET env var (explicit, from pinvim/pisock)
+--   2. /tmp/pi-{session}.sock (computed from tmux session)
+--   3. /tmp/pi-default.sock (fallback for non-tmux)
 
----Get the socket path to use
+---Get socket path using nix-defined pattern
 ---@return string
 local function get_socket_path()
-  -- Explicit override
+  -- Explicit override (set by pinvim/pisock wrapper)
   if vim.env.PI_SOCKET then
     return vim.env.PI_SOCKET
   end
 
-  -- Try tmux window socket
+  -- Socket config from environment (with defaults matching nix)
+  local socket_dir = vim.env.PI_SOCKET_DIR or "/tmp"
+  local socket_prefix = vim.env.PI_SOCKET_PREFIX or "pi"
+
+  -- Compute from tmux session
   if vim.env.TMUX then
-    local handle = io.popen("tmux display-message -p '#{session_name}-#{window_index}' 2>/dev/null")
+    local handle = io.popen("tmux display-message -p '#{session_name}' 2>/dev/null")
     if handle then
-      local session_window = handle:read("*l")
+      local session = handle:read("*l")
       handle:close()
-      if session_window and session_window ~= "" then
-        local socket = "/tmp/pi-" .. session_window .. ".sock"
-        if vim.fn.filereadable(socket) == 1 then
+      if session and session ~= "" then
+        local socket = string.format("%s/%s-%s.sock", socket_dir, socket_prefix, session)
+        -- Check if socket exists (use test -S for socket check)
+        local exists = os.execute(string.format("test -S '%s'", socket)) == 0
+        if exists then
           return socket
         end
       end
@@ -43,7 +56,7 @@ local function get_socket_path()
   end
 
   -- Fallback
-  return "/tmp/pi.sock"
+  return string.format("%s/%s-default.sock", socket_dir, socket_prefix)
 end
 
 ---Send a JSON payload to the pi socket
@@ -58,7 +71,7 @@ local function send_payload(payload)
   local json = vim.fn.json_encode(payload) .. "\n"
   local chan = vim.fn.jobstart({ "nc", "-U", socket_path }, { stdin = "pipe" })
   if chan <= 0 then
-    vim.notify("pi socket not available (is pinvim running?)", vim.log.levels.ERROR)
+    vim.notify("pi socket not available (is pinvim/pisock running?)", vim.log.levels.ERROR)
     return
   end
 
@@ -161,7 +174,7 @@ local function send_cursor()
   })
 end
 
----Toggle pinvim pane into/out of current tmux window
+---Toggle pisock/pinvim pane into/out of current tmux window
 local function toggle()
   if not vim.env.TMUX then
     vim.notify("Not in tmux", vim.log.levels.WARN)
@@ -181,8 +194,8 @@ end, { desc = "Send cursor line to pi" })
 
 vim.api.nvim_create_user_command("PiToggle", function()
   toggle()
-end, { desc = "Toggle pinvim pane in current window" })
+end, { desc = "Toggle pisock/pinvim pane in current window" })
 
 -- Keymaps
 vim.keymap.set("v", "<localleader>ps", "<cmd>PiSelection<cr>", { silent = true, desc = "Pi: send selection" })
-vim.keymap.set("n", "<localleader>pp", "<cmd>PiToggle<cr>", { silent = true, desc = "Pi: toggle pinvim pane" })
+vim.keymap.set("n", "<localleader>pp", "<cmd>PiToggle<cr>", { silent = true, desc = "Pi: toggle pisock pane" })

@@ -1,23 +1,48 @@
 -- Pi Coding Agent Interop
 -- Allows Hammerspoon to send messages to pi sessions via Unix socket
 --
+-- SOCKET CONFIGURATION (nix is single source of truth):
+--   Pattern: /tmp/pi-{session}.sock (one socket per tmux session)
+--   Env vars (defined in ~/.dotfiles/home/programs/ai/pi-coding-agent/default.nix):
+--     - PI_SOCKET_DIR: /tmp
+--     - PI_SOCKET_PREFIX: pi
+--
+-- Used by:
+--   - pinvim/pisock wrapper (sets PI_SOCKET env var)
+--   - bridge.ts extension (listens on PI_SOCKET)
+--   - config/nvim/after/plugin/pi-bridge.lua (connects to socket)
+--   - This file (forwards Telegram messages)
+--   - bin/ftm (checks for socket existence)
+--   - bin/tmux-pinvim-toggle (finds/manages agent window)
+--
 local M = {}
 
----Last active pi context (session:window:pane:pid)
----Set when a notification is sent from pi with telegram flag
-M.lastActiveContext = nil
+-- Socket configuration (matches nix config)
+local SOCKET_DIR = "/tmp"
+local SOCKET_PREFIX = "pi"
 
----Parse tmux context to get socket path
----@param context string Format: "session:window:pane:pid"
----@return string|nil Socket path like /tmp/pi-mega-2.sock
-local function contextToSocketPath(context)
+---Last active pi session name
+---Set when a notification is sent from pi with telegram flag
+M.lastActiveSession = nil
+
+---Get socket path for a session
+---@param session string Session name (e.g., "mega")
+---@return string Socket path like /tmp/pi-mega.sock
+local function getSocketPath(session)
+  return string.format("%s/%s-%s.sock", SOCKET_DIR, SOCKET_PREFIX, session)
+end
+
+---Parse tmux context to get session name
+---@param context string Format: "session:window:pane:pid" (legacy) or just "session"
+---@return string|nil Session name
+local function contextToSession(context)
   if not context then return nil end
   
-  -- Parse context: "session:window:pane:pid"
-  local session, window = context:match("^([^:]+):(%d+)")
-  if not session or not window then return nil end
-  
-  return string.format("/tmp/pi-%s-%s.sock", session, window)
+  -- Handle both formats:
+  -- New: just session name
+  -- Legacy: "session:window:pane:pid"
+  local session = context:match("^([^:]+)")
+  return session
 end
 
 ---Check if a socket file exists
@@ -69,11 +94,14 @@ end
 
 ---Track that a notification was sent from a pi session
 ---Called by send.lua when telegram flag is set
----@param context string|nil Tmux context (session:window:pane:pid)
+---@param context string|nil Tmux context (session:window:pane:pid) or just session name
 function M.trackLastActive(context)
   if context then
-    M.lastActiveContext = context
-    U.log.df("Pi: tracked last active context: %s", context)
+    local session = contextToSession(context)
+    if session then
+      M.lastActiveSession = session
+      U.log.df("Pi: tracked last active session: %s", session)
+    end
   end
 end
 
@@ -82,12 +110,12 @@ end
 ---@param source string Source identifier (e.g., "telegram")
 ---@return boolean success
 function M.forwardMessage(text, source)
-  local socketPath = contextToSocketPath(M.lastActiveContext)
-  
-  if not socketPath then
+  if not M.lastActiveSession then
     U.log.w("Pi: no active session to forward message to")
     return false
   end
+  
+  local socketPath = getSocketPath(M.lastActiveSession)
   
   local payload = {
     type = "telegram",
@@ -100,17 +128,17 @@ function M.forwardMessage(text, source)
 end
 
 ---Send a message to a specific pi session
----@param context string Tmux context (session:window:pane:pid)
+---@param session string Session name (e.g., "mega")
 ---@param text string Message text
 ---@param source string Source identifier
 ---@return boolean success
-function M.sendToSession(context, text, source)
-  local socketPath = contextToSocketPath(context)
-  
-  if not socketPath then
-    U.log.wf("Pi: invalid context: %s", context or "nil")
+function M.sendToSession(session, text, source)
+  if not session then
+    U.log.w("Pi: no session provided")
     return false
   end
+  
+  local socketPath = getSocketPath(session)
   
   local payload = {
     type = "telegram",
@@ -123,19 +151,19 @@ function M.sendToSession(context, text, source)
 end
 
 ---Get list of available pi sockets
----@return table Array of { session, window, path }
+---@return table Array of { session, path }
 function M.getActiveSessions()
   local sessions = {}
-  local output = hs.execute("ls /tmp/pi-*.sock 2>/dev/null")
+  local pattern = string.format("%s/%s-*.sock", SOCKET_DIR, SOCKET_PREFIX)
+  local output = hs.execute(string.format("ls %s 2>/dev/null", pattern))
   
   if output then
     for line in output:gmatch("[^\n]+") do
-      -- Parse: /tmp/pi-mega-2.sock
-      local session, window = line:match("/tmp/pi%-([^-]+)%-(%d+)%.sock")
-      if session and window then
+      -- Parse: /tmp/pi-mega.sock
+      local session = line:match("/tmp/pi%-([^%.]+)%.sock")
+      if session then
         table.insert(sessions, {
           session = session,
-          window = tonumber(window),
           path = line,
         })
       end
