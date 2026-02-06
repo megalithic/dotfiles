@@ -1,26 +1,28 @@
 /**
- * Neovim Bridge Extension
+ * Pi Bridge Extension
  *
- * Creates a Unix socket that accepts JSON payloads from Neovim.
- * This allows sending code context (selection, diagnostics, hover info) to pi.
+ * Creates a Unix socket for external communication with pi.
+ * Accepts JSON payloads from nvim, Telegram (via Hammerspoon), and other sources.
  *
- * Socket naming (when run via pinvim in tmux):
- *   /tmp/pi-{session}-{window}.sock
+ * Socket Configuration (from nix - single source of truth):
+ *   - PI_SOCKET_DIR: /tmp
+ *   - PI_SOCKET_PREFIX: pi
+ *   - PI_SESSION: tmux session name (or "default")
+ *   - PI_SOCKET: full path, e.g., /tmp/pi-mega.sock
  *
- * Falls back to /tmp/pi.sock when not in tmux.
+ * Socket pattern: /tmp/pi-{session}.sock (one per tmux session)
  *
- * SOCKET CONTRACT (single source of truth):
- *   Pattern: /tmp/pi-{session}-{window}.sock
- *   Used by:
- *     - pinvim wrapper (sets PI_SOCKET env var)
- *     - This extension (listens on PI_SOCKET)
- *     - config/nvim/after/plugin/pi-bridge.lua (connects to it)
- *     - bin/ftm (checks for socket existence)
- *   If you change this pattern, update all files.
+ * Used by:
+ *   - pinvim/pisock wrapper (sets PI_SOCKET env var)
+ *   - This extension (listens on PI_SOCKET)
+ *   - config/nvim/after/plugin/pi-bridge.lua (connects to socket)
+ *   - config/hammerspoon/lib/interop/pi.lua (forwards Telegram messages)
+ *   - bin/ftm (checks for socket existence)
+ *   - bin/tmux-pinvim-toggle (finds/manages agent window)
  *
- * Status icons (shown in footer before cwd):
- *   󰢩 (green) - nvim bridge active (pinvim)
- *   󰢩 (dim)   - nvim bridge inactive (regular pi)
+ * Status display (in footer):
+ *   π session:model (green) - socket active (e.g., "π mega:opus-4")
+ *   π (dim)                 - socket inactive (regular pi)
  */
 
 import type {
@@ -30,12 +32,17 @@ import type {
 import fs from "node:fs";
 import net from "node:net";
 
-// Only start server if PI_SOCKET is set (i.e., invoked via pinvim)
+// Socket configuration from environment (set by pinvim/pisock wrapper)
 const SOCKET_PATH = process.env.PI_SOCKET;
-const IS_PINVIM = !!SOCKET_PATH;
+const PI_SESSION = process.env.PI_SESSION;
+const IS_BRIDGE_ENABLED = !!SOCKET_PATH;
 
-// Nerd font icons
-const NVIM_ICON = "󰢩"; // neovim icon
+// Status icon
+const PI_ICON = "π";
+
+// =============================================================================
+// Payload Types
+// =============================================================================
 
 type NvimPayload = {
   file?: string;
@@ -60,10 +67,18 @@ type Payload = NvimPayload | TelegramPayload;
 const isTelegramPayload = (p: Payload): p is TelegramPayload =>
   "type" in p && p.type === "telegram";
 
+// =============================================================================
+// State
+// =============================================================================
+
 let server: net.Server | null = null;
 let latestCtx: ExtensionContext | null = null;
 
-const formatMessage = (payload: NvimPayload): string => {
+// =============================================================================
+// Message Formatting
+// =============================================================================
+
+const formatNvimMessage = (payload: NvimPayload): string => {
   const parts: string[] = [];
 
   if (payload.file) parts.push(`File: ${payload.file}`);
@@ -97,6 +112,49 @@ const formatMessage = (payload: NvimPayload): string => {
 
   return parts.join("\n");
 };
+
+// =============================================================================
+// Status Display
+// =============================================================================
+
+const getModelShortName = (modelId: string | undefined): string => {
+  if (!modelId) return "?";
+  
+  // Extract model name, strip provider prefix and version suffixes
+  // e.g., "anthropic/claude-opus-4-5-20250131" → "opus-4"
+  const name = modelId.split("/").pop() || modelId;
+  
+  // Common model name shortenings
+  if (name.includes("opus")) return "opus-4";
+  if (name.includes("sonnet")) return "sonnet-4";
+  if (name.includes("haiku")) return "haiku";
+  if (name.includes("gpt-4o")) return "gpt-4o";
+  if (name.includes("gpt-4")) return "gpt-4";
+  if (name.includes("o1")) return "o1";
+  if (name.includes("o3")) return "o3";
+  
+  // Fallback: first part of name
+  return name.split("-").slice(0, 2).join("-");
+};
+
+const updateStatus = (ctx: ExtensionContext): void => {
+  if (!ctx.hasUI) return;
+
+  if (IS_BRIDGE_ENABLED && server) {
+    // Connected - show π session:model in green
+    const session = PI_SESSION || "?";
+    const model = getModelShortName(ctx.model?.id);
+    const statusText = `${PI_ICON} ${session}:${model}`;
+    ctx.ui.setStatus("bridge", ctx.ui.theme.fg("success", statusText));
+  } else {
+    // Not connected - dim π
+    ctx.ui.setStatus("bridge", ctx.ui.theme.fg("muted", PI_ICON));
+  }
+};
+
+// =============================================================================
+// Socket Server
+// =============================================================================
 
 const startServer = (pi: ExtensionAPI, ctx: ExtensionContext): void => {
   if (!SOCKET_PATH) return;
@@ -147,7 +205,7 @@ const startServer = (pi: ExtensionAPI, ctx: ExtensionContext): void => {
           }
           
           // Handle nvim payloads
-          const message = formatMessage(payload as NvimPayload);
+          const message = formatNvimMessage(payload as NvimPayload);
           if (!message) continue;
 
           const currentCtx = latestCtx;
@@ -166,22 +224,12 @@ const startServer = (pi: ExtensionAPI, ctx: ExtensionContext): void => {
   server.listen(SOCKET_PATH);
 
   // Update status to connected
-  if (ctx.hasUI) {
-    ctx.ui.setStatus("nvim", ctx.ui.theme.fg("success", NVIM_ICON));
-  }
+  updateStatus(ctx);
 };
 
-const updateStatus = (ctx: ExtensionContext): void => {
-  if (!ctx.hasUI) return;
-
-  if (IS_PINVIM && server) {
-    // Connected - green icon
-    ctx.ui.setStatus("nvim", ctx.ui.theme.fg("success", NVIM_ICON));
-  } else {
-    // Not connected - dim icon
-    ctx.ui.setStatus("nvim", ctx.ui.theme.fg("muted", NVIM_ICON));
-  }
-};
+// =============================================================================
+// Extension Entry Point
+// =============================================================================
 
 export default function (pi: ExtensionAPI): void {
   pi.on("session_start", (_event, ctx) => {
@@ -190,17 +238,23 @@ export default function (pi: ExtensionAPI): void {
     // Show initial status
     updateStatus(ctx);
 
-    // Start server if this is pinvim
-    if (IS_PINVIM) {
+    // Start server if bridge is enabled (invoked via pinvim/pisock)
+    if (IS_BRIDGE_ENABLED) {
       startServer(pi, ctx);
 
       if (ctx.hasUI) {
-        ctx.ui.notify(`nvim bridge listening at ${SOCKET_PATH}`, "info");
+        ctx.ui.notify(`Bridge listening: ${SOCKET_PATH}`, "info");
       }
     }
   });
 
   pi.on("session_switch", (_event, ctx) => {
+    latestCtx = ctx;
+    updateStatus(ctx);
+  });
+
+  // Update status when model changes
+  pi.on("model_select", (_event, ctx) => {
     latestCtx = ctx;
     updateStatus(ctx);
   });

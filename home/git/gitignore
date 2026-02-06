@@ -144,3 +144,6 @@ obsidian/.obsidian
 .nix-mix
 deps
 # vim:ft=gitignore:tw=0
+
+.pi/todos
+**/.pi/todos

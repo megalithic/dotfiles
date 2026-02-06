@@ -176,10 +176,10 @@ function fuzzy_find() {
 
   # combine our pre-defined layouts AND open sessions, mark running ones with *
   # also show π if pinvim socket exists for that session (any window)
-  # Socket pattern: /tmp/pi-{session}-{window}.sock
+  # Socket pattern: /tmp/pi-{session}.sock (one per session, defined in nix)
   sessions_list=$(printf "%s\n%s" "$layouts_list" "$current_sessions_list" | sort -u | while read -r s; do
     if echo "$current_sessions_list" | grep -q "^${s}$"; then
-      if compgen -G "/tmp/pi-${s}-*.sock" > /dev/null 2>&1; then
+      if [[ -S "/tmp/pi-${s}.sock" ]]; then
         echo "$s * π"
       else
         echo "$s *"

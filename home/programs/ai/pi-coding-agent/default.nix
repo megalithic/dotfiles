@@ -1,5 +1,5 @@
 # Pi Coding Agent Configuration
-# Manages pi settings, extensions, and skills via Nix
+# Manages pi settings, extensions, skills, and socket naming via Nix
 #
 # Structure:
 #   - default.nix (this file): Main config with auto-discovery
@@ -8,6 +8,17 @@
 #   - skills-with-deps/: Skills with npm dependencies (built with buildNpmPackage)
 #   - sources/: Source files like GLOBAL_AGENTS.md
 #
+# Socket Configuration (single source of truth):
+#   - PI_SOCKET_DIR: Directory for sockets (/tmp)
+#   - PI_SOCKET_PREFIX: Socket name prefix (pi)
+#   - PI_SESSION: Current tmux session name
+#   - PI_SOCKET: Full socket path (/tmp/pi-{session}.sock)
+#
+# Socket pattern: /tmp/pi-{session}.sock
+#   - One socket per tmux session (not per window)
+#   - Agent window can be linked to other windows in same session
+#   - Non-tmux fallback: /tmp/pi-default.sock
+#
 # Based on: https://github.com/otahontas/nix/tree/main/home/configs/pi-coding-agent
 {
   config,
@@ -15,6 +26,18 @@
   lib,
   ...
 }: let
+  # ===========================================================================
+  # Socket Configuration (single source of truth)
+  # ===========================================================================
+  # All socket-related config should reference these variables
+  # Other files (hammerspoon, nvim, tmux) should use PI_SOCKET env var
+  socketConfig = {
+    dir = "/tmp";
+    prefix = "pi";
+    # Pattern: {dir}/{prefix}-{session}.sock
+    # Example: /tmp/pi-mega.sock
+  };
+
   # ===========================================================================
   # Skills with npm dependencies (need to be built)
   # ===========================================================================
@@ -155,8 +178,9 @@ in {
   # NOTE: Base `pi` binary is installed via pkgs.llm-agents.pi in ../default.nix
   # These wrappers add environment setup (agenix secrets, tmux socket naming)
   home.packages = [
-    # Opt-in pi instance with nvim bridge extension
-    # Creates a unique socket per tmux pane with session-level symlink for nvim
+    # Pi agent wrapper with socket configuration
+    # Socket pattern: /tmp/pi-{session}.sock (one per tmux session)
+    # Alias: pisock (preferred), pinvim (legacy)
     (pkgs.writeShellScriptBin "pinvim" ''
       # Source agenix secrets for API keys (BRAVE_SEARCH_API_KEY, etc.)
       AGENIX_DIR="$(${pkgs.darwin.system_cmds}/bin/getconf DARWIN_USER_TEMP_DIR)/agenix"
@@ -167,18 +191,28 @@ in {
       # Clear conflicting AWS credentials (pi doesn't need them for Anthropic)
       unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN 2>/dev/null || true
 
-      # Set up per-window socket for tmux integration
-      # Format: /tmp/pi-{session}-{window}.sock
-      # This is directly discoverable by nvim (no symlink needed)
+      # Socket configuration (matches socketConfig in default.nix)
+      export PI_SOCKET_DIR="${socketConfig.dir}"
+      export PI_SOCKET_PREFIX="${socketConfig.prefix}"
+
+      # Set up socket for tmux integration
+      # Format: /tmp/pi-{session}.sock (one socket per tmux session)
       if [ -n "$TMUX" ]; then
         PI_SESSION=$(${pkgs.tmux}/bin/tmux display-message -p '#{session_name}')
-        PI_WINDOW=$(${pkgs.tmux}/bin/tmux display-message -p '#{window_index}')
         export PI_SESSION
-        export PI_WINDOW
-        export PI_SOCKET="/tmp/pi-''${PI_SESSION}-''${PI_WINDOW}.sock"
+        export PI_SOCKET="${socketConfig.dir}/${socketConfig.prefix}-''${PI_SESSION}.sock"
+      else
+        # Non-tmux fallback
+        export PI_SESSION="default"
+        export PI_SOCKET="${socketConfig.dir}/${socketConfig.prefix}-default.sock"
       fi
 
       exec pi "$@"
+    '')
+
+    # pisock alias (preferred name)
+    (pkgs.writeShellScriptBin "pisock" ''
+      exec pinvim "$@"
     '')
   ];
 

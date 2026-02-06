@@ -218,6 +218,15 @@
           "--to"
           "@-"
         ];
+        # Moves closest bookmark to current working copy
+        here = [
+          "bookmark"
+          "move"
+          "--from"
+          "closest_bookmark(@)"
+          "--to"
+          "@"
+        ];
 
         # ─────────────────────────────────────────────────────────────
         # Workflow aliases (using jj util exec for multi-command ops)
