@@ -91,13 +91,14 @@ M.URGENCY = {
 ---@field message string Required - notification body
 ---@field urgency? "normal"|"high"|"critical" Default: "normal"
 ---@field phone? boolean Send iMessage (default: false, auto-true if critical)
----@field pushover? boolean Send to Pushover (default: false, auto-true if critical)
+---@field telegram? boolean Send via Telegram bot (default: false, auto-true if remote_only)
 ---@field question? boolean Track for retry (default: false)
 ---@field context? string Calling context for attention detection (tmux session:window or tty)
+---@field attentionHint? boolean Caller's hint about user attention: true=focused, false=away, nil=auto-detect
 
 ---@class SendResult
 ---@field sent boolean Whether notification was sent
----@field channels string[] List of channels used (e.g., {"canvas", "macos", "pushover"})
+---@field channels string[] List of channels used (e.g., {"canvas", "macos", "telegram"})
 ---@field reason string Explanation of routing decision
 ---@field questionId? string If question=true, the tracking ID for the question
 

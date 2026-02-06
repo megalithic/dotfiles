@@ -22,12 +22,46 @@
 - **Never use git commands** - always use `jj` equivalents
 - **Never push to main** directly - use feature bookmarks
 - **Never push without explicit user permission** - no `jj git push` unless user explicitly requests (e.g., "push it", "push to remote")
+- **When requesting push permission:** show the exact command, e.g.:
+  ```
+  Ready to push. Run this?
+  jj git push -b my-feature
+  ```
 - Common mappings:
   - `git status` → `jj status`
   - `git diff` → `jj diff`
   - `git commit` → `jj describe` (changes auto-tracked)
   - `git log` → `jj log`
   - `git push` → `jj git push` (requires user permission)
+
+## Remote Server Access
+
+- **Never SSH to remote servers without explicit user permission**
+- Treat `ssh` the same as `jj git push` - requires explicit consent
+- Includes any remote execution: `ssh user@host`, `scp`, `rsync` to remote, etc.
+- **When requesting SSH permission:** show the exact command, e.g.:
+  ```
+  Need to check server logs. Run this?
+  ssh user@host "tail -100 /var/log/app.log"
+  ```
+- Always ask first and wait for approval
+- Exception: user explicitly requests (e.g., "ssh in and check logs", "check the server")
+
+## Deployments
+
+- **Never deploy without explicit user permission**
+- Includes: `just deploy`, `deploy`, `fly deploy`, `vercel`, `netlify deploy`, `kubectl apply`, `terraform apply`, `pulumi up`, `dokploy`, etc.
+- **When requesting deploy permission:** show the exact command, e.g.:
+  ```
+  Ready to deploy. Run this?
+  just deploy
+  ```
+  ```
+  Ready to deploy. Run this?
+  dokploy app deploy --app-id abc123
+  ```
+- Always ask first and wait for approval
+- Exception: user explicitly requests (e.g., "deploy it", "ship it", "push to prod")
 
 ## Coding Guidelines
 

@@ -26,8 +26,12 @@ Send Options:
   -u, --urgency <level>    normal|high|critical (default: normal)
   -s, --source <name>      Source app name (auto-detected if omitted)
   -S, --no-source          Disable source prefix in title
+  -a, --attention <state>  Caller's hint: true|false|auto (default: auto)
+                           true = user is focused, may suppress notification
+                           false = user is away, prefer to notify
+                           auto = let Hammerspoon detect
   -p, --phone              Send to phone via iMessage
-  -P, --pushover           Send via Pushover
+  -T, --telegram           Send via Telegram bot
   -q, --question           Track for retry if unanswered
 
 Answer Options:
@@ -47,12 +51,13 @@ EOF
 }
 
 # Get tmux session context (or tty) for attention detection
-# Format: session:window_index:pane_index for precise pane-level detection
+# Format: session:window_index:pane_index:pane_pid for precise pane-level detection
+# Matches the tmux set-titles-string format for Hammerspoon window title parsing
 get_context() {
   if [[ -n "${TMUX:-}" ]]; then
-    # Use #S:#I:#P (session:window_index:pane_index) for pane-level detection
-    # Hammerspoon queries tmux directly to compare against active pane
-    tmux display-message -p '#S:#I:#P' 2>/dev/null || echo ""
+    # Use #S:#I:#P:#{pane_pid} for pane-level detection with PID
+    # Hammerspoon parses Ghostty window title to compare against this context
+    tmux display-message -p '#S:#I:#P:#{pane_pid}' 2>/dev/null || echo ""
   else
     tty 2>/dev/null | sed 's|/dev/||' || echo ""
   fi
@@ -104,8 +109,8 @@ lua_escape() {
 # Send notification via N.send()
 cmd_send() {
   local title="" message="" urgency="normal" source=""
-  local phone="false" pushover="false" question="false"
-  local no_source="false"
+  local phone="false" telegram="false" question="false"
+  local no_source="false" attention="auto"
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -114,13 +119,15 @@ cmd_send() {
       -u|--urgency) urgency="$2"; shift 2 ;;
       -s|--source) source="$2"; shift 2 ;;
       -S|--no-source) no_source="true"; shift ;;
+      -a|--attention) attention="$2"; shift 2 ;;
       -p|--phone) phone="true"; shift ;;
-      -P|--pushover) pushover="true"; shift ;;
+      -T|--telegram) telegram="true"; shift ;;
       -q|--question) question="true"; shift ;;
       --title=*) title="${1#*=}"; shift ;;
       --message=*) message="${1#*=}"; shift ;;
       --urgency=*) urgency="${1#*=}"; shift ;;
       --source=*) source="${1#*=}"; shift ;;
+      --attention=*) attention="${1#*=}"; shift ;;
       *) shift ;;
     esac
   done
@@ -150,6 +157,14 @@ cmd_send() {
   lua_message=$(lua_escape "$message")
   lua_context=$(lua_escape "$context")
 
+  # Convert attention hint to Lua value
+  local lua_attention
+  case "$attention" in
+    true) lua_attention="true" ;;
+    false) lua_attention="false" ;;
+    *) lua_attention="nil" ;;  # auto = let Hammerspoon detect
+  esac
+
   # Single Hammerspoon call with all data
   local result
   result=$(hs -c "
@@ -159,9 +174,10 @@ local result = N.send({
   message = [[${lua_message}]],
   urgency = '${urgency}',
   phone = ${phone},
-  pushover = ${pushover},
+  telegram = ${telegram},
   question = ${question},
   context = [[${lua_context}]],
+  attentionHint = ${lua_attention},
 })
 local channels = table.concat(result.channels, ',')
 print(result.sent and 'sent' or 'suppressed', result.reason, channels, result.questionId or '')

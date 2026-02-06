@@ -68,6 +68,28 @@ function M.init()
 
   -- 3. Processor and notifier have no initialization
 
+  -- 4. Initialize Telegram (optional, only if configured)
+  local telegramEnabled = C.notifier and C.notifier.telegramEnabled ~= false
+  if telegramEnabled then
+    local telegram = require("lib.interop.telegram")
+    local telegramOk, telegramErr = pcall(function()
+      return telegram.init({
+        pollInterval = C.notifier and C.notifier.telegramPollInterval or 10,
+        onMessage = function(msg)
+          M.handleTelegramMessage(msg)
+        end,
+      })
+    end)
+
+    if not telegramOk then
+      U.log.wf("Failed to initialize Telegram: %s", tostring(telegramErr))
+    elseif not telegramErr then
+      U.log.i("Telegram not configured (missing env vars)")
+    else
+      U.log.i("Telegram integration initialized ✓")
+    end
+  end
+
   M.initialized = true
   U.log.i("Notification system initialized ✓")
 
@@ -107,6 +129,10 @@ function M.cleanup()
   end
 
   if M.menubar then M.menubar.cleanup() end
+
+  -- Cleanup Telegram
+  local telegramOk, telegram = pcall(require, "lib.interop.telegram")
+  if telegramOk and telegram then telegram.cleanup() end
 
   if DB then DB.close() end
 
@@ -346,7 +372,7 @@ end
 
 ---Send a notification via the unified AI agent API
 ---Routes to appropriate channels based on attention state
----@param opts SendOpts { title, message, urgency?, phone?, pushover?, question?, context? }
+---@param opts SendOpts { title, message, urgency?, phone?, telegram?, question?, context? }
 ---@return SendResult { sent, channels, reason, questionId? }
 ---@usage N.send({ title = "Done", message = "Tests passed", urgency = "normal" })
 ---@usage N.send({ title = "Question", message = "Continue?", question = true, context = "main:claude" })
@@ -371,5 +397,76 @@ function M.getPendingQuestions() return M.sender.getPendingQuestions() end
 ---@return { state: string, shouldNotify: string }
 ---@usage local attention = N.checkAttention("main:claude")
 function M.checkAttention(context) return M.sender.checkAttention(context) end
+
+-- TELEGRAM INTEGRATION
+
+---Handle incoming Telegram messages
+---Routes to question answering or other handlers
+---@param msg table Message from Telegram { type, text?, questionId?, value?, from? }
+function M.handleTelegramMessage(msg)
+  U.log.f("Telegram message received: type=%s, text=%s", msg.type, msg.text or "(none)")
+
+  -- Handle callback queries (button presses) for question responses
+  if msg.type == "callback" and msg.action == "answer" and msg.questionId then
+    local success = M.answerQuestion(msg.questionId)
+    if success then
+      U.log.f("Telegram: answered question %s with '%s'", msg.questionId, msg.value or "")
+      -- Send confirmation
+      local telegram = require("lib.interop.telegram")
+      telegram.send("✓ Response recorded: " .. (msg.value or "acknowledged"))
+    else
+      U.log.wf("Telegram: question %s not found or already answered", msg.questionId)
+    end
+    return
+  end
+
+  -- Handle text messages
+  if msg.type == "message" and msg.text then
+    local text = msg.text:lower()
+
+    -- Check for pending questions command
+    if text == "/pending" or text == "pending" then
+      local pending = M.getPendingQuestions()
+      local telegram = require("lib.interop.telegram")
+
+      if #pending == 0 then
+        telegram.send("No pending questions.")
+      else
+        local lines = { "*Pending Questions:*" }
+        for i, q in ipairs(pending) do
+          table.insert(lines, string.format("%d\\. %s \\(age: %ds\\)", i, telegram.escapeMarkdown(q.title), q.age))
+        end
+        telegram.send(table.concat(lines, "\n"))
+      end
+      return
+    end
+
+    -- Check for status command
+    if text == "/status" or text == "status" then
+      local telegram = require("lib.interop.telegram")
+      local pending = M.getPendingQuestions()
+      telegram.send(string.format("✓ Notification system ready\\.\n%d pending questions\\.", #pending))
+      return
+    end
+
+    -- If replying to a question, try to answer the most recent one
+    if msg.replyToMessage then
+      local pending = M.getPendingQuestions()
+      if #pending > 0 then
+        -- Answer the most recent pending question
+        local q = pending[1]
+        local success = M.answerQuestion(q.id)
+        if success then
+          local telegram = require("lib.interop.telegram")
+          telegram.send("✓ Answered: " .. telegram.escapeMarkdown(q.title))
+        end
+      end
+      return
+    end
+
+    -- Default: log unhandled messages visibly
+    U.log.f("Telegram received: \"%s\"", msg.text)
+  end
+end
 
 return M

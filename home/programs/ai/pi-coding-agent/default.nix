@@ -61,7 +61,7 @@
   # Extensions to exclude from auto-loading (keep source but don't install)
   # These can be loaded explicitly via the `pi` wrapper or piception
   disabledExtensions = [
-    "nvim-bridge.ts" # Opt-in: only one instance should run this (use pinvim)
+    # nvim-bridge.ts now auto-loads - shows connected/disconnected status
   ];
 
   # Skills to exclude from auto-discovery
@@ -167,18 +167,18 @@ in {
       # Clear conflicting AWS credentials (pi doesn't need them for Anthropic)
       unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN 2>/dev/null || true
 
-      # Set up per-tmux-pane socket with rich naming for debugging
-      # Format: /tmp/pi-{session}_{window}_{pane}_{pid}.sock
-      # Also exports PI_SESSION for the extension to create a session symlink
+      # Set up per-window socket for tmux integration
+      # Format: /tmp/pi-{session}-{window}.sock
+      # This is directly discoverable by nvim (no symlink needed)
       if [ -n "$TMUX" ]; then
         PI_SESSION=$(${pkgs.tmux}/bin/tmux display-message -p '#{session_name}')
         PI_WINDOW=$(${pkgs.tmux}/bin/tmux display-message -p '#{window_index}')
-        PI_PANE=$(${pkgs.tmux}/bin/tmux display-message -p '#{pane_index}')
         export PI_SESSION
-        export PI_SOCKET="/tmp/pi-''${PI_SESSION}_''${PI_WINDOW}_''${PI_PANE}_$$.sock"
+        export PI_WINDOW
+        export PI_SOCKET="/tmp/pi-''${PI_SESSION}-''${PI_WINDOW}.sock"
       fi
 
-      exec pi -e "$HOME/.pi/agent/extensions-opt/nvim-bridge.ts" "$@"
+      exec pi "$@"
     '')
   ];
 
@@ -189,9 +189,6 @@ in {
     {
       # Global AGENTS.md for pi
       ".pi/agent/AGENTS.md".source = ./sources/GLOBAL_AGENTS.md;
-
-      # Opt-in extensions (not auto-loaded by pi, loaded explicitly via pinvim)
-      ".pi/agent/extensions-opt/nvim-bridge.ts".source = ./extensions/nvim-bridge.ts;
 
       # Skills with npm dependencies (built via buildNpmPackage)
       ".pi/agent/skills/brave-search".source = brave-search-skill;

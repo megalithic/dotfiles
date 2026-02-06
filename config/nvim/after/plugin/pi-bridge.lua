@@ -6,15 +6,17 @@
 --   2. In nvim, use <localleader>ps (visual) or <localleader>pp (toggle)
 --
 -- SOCKET CONTRACT (single source of truth):
---   Session symlink pattern: /tmp/pi-{tmux_session_name}.sock
---   This pattern is used by:
---     - home/programs/ai/pi-coding-agent/extensions/nvim-bridge.ts (creates it)
+--   Pattern: /tmp/pi-{session}-{window}.sock
+--   Used by:
+--     - pinvim wrapper (sets PI_SOCKET env var)
+--     - nvim-bridge.ts extension (listens on PI_SOCKET)
 --     - This file (connects to it)
---   If you change this pattern, update both files.
+--     - bin/ftm (checks for socket existence)
+--   If you change this pattern, update all files.
 --
 -- Socket discovery (in order):
 --   1. PI_SOCKET env var (explicit override)
---   2. /tmp/pi-{tmux_session}.sock (session symlink from pinvim)
+--   2. /tmp/pi-{session}-{window}.sock (current tmux window)
 --   3. /tmp/pi.sock (fallback for non-tmux usage)
 
 ---Get the socket path to use
@@ -25,16 +27,16 @@ local function get_socket_path()
     return vim.env.PI_SOCKET
   end
 
-  -- Try tmux session symlink
+  -- Try tmux window socket
   if vim.env.TMUX then
-    local handle = io.popen("tmux display-message -p '#{session_name}' 2>/dev/null")
+    local handle = io.popen("tmux display-message -p '#{session_name}-#{window_index}' 2>/dev/null")
     if handle then
-      local session = handle:read("*l")
+      local session_window = handle:read("*l")
       handle:close()
-      if session and session ~= "" then
-        local session_socket = "/tmp/pi-" .. session .. ".sock"
-        if vim.fn.filereadable(session_socket) == 1 then
-          return session_socket
+      if session_window and session_window ~= "" then
+        local socket = "/tmp/pi-" .. session_window .. ".sock"
+        if vim.fn.filereadable(socket) == 1 then
+          return socket
         end
       end
     end

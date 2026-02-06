@@ -6,6 +6,7 @@ local M = {}
 
 local types = require("lib.notifications.types")
 local notifier = require("lib.notifications.notifier")
+local telegram = require("lib.interop.telegram")
 
 local ATTENTION = types.ATTENTION
 local URGENCY = types.URGENCY
@@ -17,7 +18,6 @@ local function getConfig()
     durations = cfg.durations or { normal = 5, high = 10, critical = 15 },
     questionRetry = cfg.questionRetry
       or { enabled = true, intervalSeconds = 300, maxRetries = 3, escalateOnRetry = true },
-    pushover = cfg.pushover or { enabled = true },
     phone = cfg.phone or { enabled = true, cacheTTL = 604800 },
   }
 end
@@ -41,27 +41,65 @@ end
 ---@return string|nil
 function M.getFocusedWindowTitle() return notifier.getFocusedWindowTitle(TERMINAL) end
 
----Get the currently active tmux session:window:pane
----Queries tmux directly for authoritative pane-level detection
----Uses list-clients to find what the attached client is viewing
----@return string|nil Format: "session:window_index:pane_index" or nil if no tmux client
+---Get the currently active tmux context by parsing the terminal window title
+---The tmux title format is: "session:window:pane:pid process"
+---This avoids PATH/socket issues with querying tmux directly from Hammerspoon
+---@return string|nil Format: "session:window:pane:pid" or nil if not parseable
 local function getActiveTmuxContext()
-  -- Query tmux for the attached client's active session:window:pane
-  -- list-clients gives us the actual context of what the user is viewing
-  -- (display-message without -t target can return stale/wrong session)
-  local cmd = "tmux list-clients -F '#{session_name}:#{window_index}:#{pane_index}' 2>/dev/null | head -1"
-  local output, status = hs.execute(cmd)
+  -- Get the terminal application (Ghostty)
+  local terminal = hs.application.get(TERMINAL)
+  if not terminal then return nil end
 
-  if status and output then
-    local trimmed = output:match("^%s*(.-)%s*$")
-    if trimmed and trimmed ~= "" then return trimmed end
+  -- Get the focused window's title
+  local win = terminal:focusedWindow()
+  if not win then return nil end
+
+  local title = win:title()
+  if not title or title == "" then return nil end
+
+  -- Parse "session:window:pane:pid process" format
+  -- Example: "mega:2:1:12345 pi" -> "mega:2:1:12345"
+  local session, winIdx, pane, pid = title:match("^([^:]+):(%d+):(%d+):(%d+)")
+  if session and winIdx and pane and pid then
+    return session .. ":" .. winIdx .. ":" .. pane .. ":" .. pid
+  end
+
+  -- Fallback: try without PID (older format compatibility)
+  local s, w, p = title:match("^([^:]+):(%d+):(%d+)")
+  if s and w and p then
+    return s .. ":" .. w .. ":" .. p
   end
 
   return nil
 end
 
+---Compare tmux contexts, handling both with and without PID
+---Format: "session:window:pane" or "session:window:pane:pid"
+---@param ctx1 string|nil First context
+---@param ctx2 string|nil Second context
+---@return boolean True if contexts match (at least session:window:pane)
+local function contextsMatch(ctx1, ctx2)
+  if not ctx1 or not ctx2 then return false end
+
+  -- Extract session:window:pane from each (ignore PID for comparison flexibility)
+  local s1, w1, p1 = ctx1:match("^([^:]+):(%d+):(%d+)")
+  local s2, w2, p2 = ctx2:match("^([^:]+):(%d+):(%d+)")
+
+  if not (s1 and w1 and p1 and s2 and w2 and p2) then return false end
+
+  -- Must match session, window, and pane
+  if s1 ~= s2 or w1 ~= w2 or p1 ~= p2 then return false end
+
+  -- If both have PIDs, they must also match (stricter check)
+  local pid1 = ctx1:match("^[^:]+:%d+:%d+:(%d+)")
+  local pid2 = ctx2:match("^[^:]+:%d+:%d+:(%d+)")
+  if pid1 and pid2 and pid1 ~= pid2 then return false end
+
+  return true
+end
+
 ---Check user attention state with context awareness
----@param context string|nil Calling context (e.g., "mega:1:0" for tmux session:window:pane)
+---@param context string|nil Calling context (e.g., "mega:1:0:12345" for tmux session:window:pane:pid)
 ---@return { state: string, shouldNotify: "full"|"subtle"|"remote_only" }
 function M.checkAttention(context)
   -- 1. Check display state first (cheapest check, short-circuits everything)
@@ -77,7 +115,7 @@ function M.checkAttention(context)
   -- 3. Terminal is focused - check if user viewing THIS exact pane
   if context then
     local activeContext = getActiveTmuxContext()
-    if activeContext and activeContext == context then
+    if contextsMatch(activeContext, context) then
       return { state = ATTENTION.PAYING_ATTENTION, shouldNotify = "subtle" }
     end
   end
@@ -121,59 +159,6 @@ local function getEnvVar(name)
   end
 
   return nil
-end
-
----Send via Pushover API
----@param title string
----@param message string
----@param urgency string
----@return boolean success, string reason
-function M.sendPushover(title, message, urgency)
-  local cfg = getConfig().pushover
-  if not cfg.enabled then return false, "disabled" end
-
-  -- Get tokens from environment variables (set by agenix)
-  local userToken = getEnvVar("PUSHOVER_USER_TOKEN")
-  local appToken = getEnvVar("PUSHOVER_APP_TOKEN")
-
-  if not userToken or not appToken then
-    U.log.w("Pushover tokens not available in environment")
-    return false, "missing_tokens"
-  end
-
-  -- Map urgency to Pushover priority
-  local priority = 0
-  if urgency == URGENCY.CRITICAL then
-    priority = 1
-  elseif urgency == URGENCY.HIGH then
-    priority = 1
-  end
-
-  -- Build request body
-  local body = string.format(
-    "token=%s&user=%s&title=%s&message=%s&priority=%d",
-    hs.http.encodeForQuery(appToken),
-    hs.http.encodeForQuery(userToken),
-    hs.http.encodeForQuery(title),
-    hs.http.encodeForQuery(message),
-    priority
-  )
-
-  -- Send async HTTP request
-  hs.http.asyncPost(
-    "https://api.pushover.net/1/messages.json",
-    body,
-    { ["Content-Type"] = "application/x-www-form-urlencoded" },
-    function(status, responseBody, headers)
-      if status == 200 then
-        U.log.d("Pushover notification sent successfully")
-      else
-        U.log.wf("Pushover notification failed: status=%d, body=%s", status, responseBody or "")
-      end
-    end
-  )
-
-  return true, "sent"
 end
 
 -- Phone number cache (fetched from Contacts app)
@@ -304,16 +289,17 @@ function M.routeNotification(opts, attention)
   -- Determine which channels to use based on attention state
   local shouldNotify = attention.shouldNotify
 
-  -- ALWAYS send to macOS Notification Center
-  -- This ensures all notifications go through the unified watcher/rule system
-  -- The watcher will then route to canvas based on rules
-  if shouldNotify == "full" or shouldNotify == "subtle" then
+  -- Only send local notifications when user is NOT paying attention
+  -- "subtle" = user is focused on the requesting terminal, skip notification
+  -- "full" = user is elsewhere, send notification
+  -- "remote_only" = display asleep/locked, only remote channels
+  if shouldNotify == "full" then
     M.sendMacOS(opts.title, opts.message)
     table.insert(channels, "macos")
   end
-  -- "remote_only" = no local notifications (display asleep/locked)
+  -- "subtle" = skip local notification, user is already looking at the terminal
 
-  -- Phone: send if critical, explicitly requested, or remote_only (replaces Pushover)
+  -- Phone: send if critical, explicitly requested, or remote_only
   local shouldSendPhone = opts.phone or opts.urgency == URGENCY.CRITICAL or shouldNotify == "remote_only"
 
   if shouldSendPhone then
@@ -321,13 +307,30 @@ function M.routeNotification(opts, attention)
     if ok then table.insert(channels, "phone") end
   end
 
-  -- Pushover: DISABLED - only send if explicitly requested with -P flag
-  if opts.pushover then
-    local ok, _ = M.sendPushover(opts.title, opts.message, opts.urgency)
-    if ok then table.insert(channels, "pushover") end
+  -- Telegram: send if explicitly requested with -T flag, or for remote_only
+  local shouldSendTelegram = opts.telegram or shouldNotify == "remote_only"
+  if shouldSendTelegram and telegram.isReady() then
+    local ok, _ = M.sendTelegram(opts.title, opts.message, {
+      urgency = opts.urgency,
+      questionId = opts.question and opts.questionId or nil,
+    })
+    if ok then table.insert(channels, "telegram") end
   end
 
   return channels
+end
+
+---Send via Telegram
+---@param title string
+---@param message string
+---@param opts? { urgency?: string, questionId?: string }
+---@return boolean success, string reason
+function M.sendTelegram(title, message, opts)
+  if not telegram.isReady() then
+    return false, "not_configured"
+  end
+
+  return telegram.sendNotification(title, message, opts)
 end
 
 --------------------------------------------------------------------------------
@@ -478,8 +481,18 @@ function M.send(opts)
     opts.urgency = URGENCY.NORMAL
   end
 
-  -- Check attention state
-  local attention = M.checkAttention(opts.context)
+  -- Check attention state (use hint if provided, otherwise auto-detect)
+  local attention
+  if opts.attentionHint == true then
+    -- Caller says user IS paying attention → subtle notifications only
+    attention = { state = ATTENTION.PAYING_ATTENTION .. "_hint", shouldNotify = "subtle" }
+  elseif opts.attentionHint == false then
+    -- Caller says user is NOT paying attention → full notifications
+    attention = { state = ATTENTION.NOT_PAYING_ATTENTION .. "_hint", shouldNotify = "full" }
+  else
+    -- Auto-detect attention state
+    attention = M.checkAttention(opts.context)
+  end
 
   -- Route notification
   local channels = M.routeNotification(opts, attention)

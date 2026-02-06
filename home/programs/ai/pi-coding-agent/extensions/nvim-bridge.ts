@@ -5,20 +5,22 @@
  * This allows sending code context (selection, diagnostics, hover info) to pi.
  *
  * Socket naming (when run via pinvim in tmux):
- *   Real socket: /tmp/pi-{session}_{window}_{pane}_{pid}.sock
- *   Session symlink: /tmp/pi-{session}.sock -> real socket
+ *   /tmp/pi-{session}-{window}.sock
  *
- * Neovim connects to the session symlink, so all panes in a session share one bridge.
  * Falls back to /tmp/pi.sock when not in tmux.
  *
  * SOCKET CONTRACT (single source of truth):
- *   Session symlink pattern: /tmp/pi-{tmux_session_name}.sock
- *   This pattern is used by:
- *     - This extension (creates the symlink)
+ *   Pattern: /tmp/pi-{session}-{window}.sock
+ *   Used by:
+ *     - pinvim wrapper (sets PI_SOCKET env var)
+ *     - This extension (listens on PI_SOCKET)
  *     - config/nvim/after/plugin/pi-bridge.lua (connects to it)
- *   If you change this pattern, update both files.
+ *     - bin/ftm (checks for socket existence)
+ *   If you change this pattern, update all files.
  *
- * Use `pinvim` instead of `pi` to enable this extension.
+ * Status icons (shown in footer before cwd):
+ *   󰢩 (green) - nvim bridge active (pinvim)
+ *   󰢩 (dim)   - nvim bridge inactive (regular pi)
  */
 
 import type {
@@ -28,9 +30,12 @@ import type {
 import fs from "node:fs";
 import net from "node:net";
 
-const SOCKET_PATH = process.env.PI_SOCKET || "/tmp/pi.sock";
-const PI_SESSION = process.env.PI_SESSION;
-const SESSION_SYMLINK = PI_SESSION ? `/tmp/pi-${PI_SESSION}.sock` : null;
+// Only start server if PI_SOCKET is set (i.e., invoked via pinvim)
+const SOCKET_PATH = process.env.PI_SOCKET;
+const IS_PINVIM = !!SOCKET_PATH;
+
+// Nerd font icons
+const NVIM_ICON = "󰢩"; // neovim icon
 
 type Payload = {
   file?: string;
@@ -81,7 +86,8 @@ const formatMessage = (payload: Payload): string => {
   return parts.join("\n");
 };
 
-const startServer = (pi: ExtensionAPI): void => {
+const startServer = (pi: ExtensionAPI, ctx: ExtensionContext): void => {
+  if (!SOCKET_PATH) return;
   if (server) return;
 
   // Clean up stale socket
@@ -90,15 +96,6 @@ const startServer = (pi: ExtensionAPI): void => {
       fs.unlinkSync(SOCKET_PATH);
     } catch {
       // Ignore stale socket errors
-    }
-  }
-
-  // Clean up stale session symlink (always try - existsSync returns false for broken symlinks)
-  if (SESSION_SYMLINK) {
-    try {
-      fs.unlinkSync(SESSION_SYMLINK);
-    } catch {
-      // Ignore - symlink may not exist
     }
   }
 
@@ -121,8 +118,8 @@ const startServer = (pi: ExtensionAPI): void => {
           const message = formatMessage(payload);
           if (!message) continue;
 
-          const ctx = latestCtx;
-          if (ctx?.isIdle()) {
+          const currentCtx = latestCtx;
+          if (currentCtx?.isIdle()) {
             void pi.sendUserMessage(message);
           } else {
             void pi.sendUserMessage(message, { deliverAs: "followUp" });
@@ -136,36 +133,44 @@ const startServer = (pi: ExtensionAPI): void => {
 
   server.listen(SOCKET_PATH);
 
-  // Create session symlink for nvim to discover
-  // Nvim uses this path: /tmp/pi-{session}.sock
-  if (SESSION_SYMLINK) {
-    try {
-      // Remove any stale symlink first (in case cleanup above missed it)
-      try {
-        fs.unlinkSync(SESSION_SYMLINK);
-      } catch {
-        // Ignore
-      }
-      fs.symlinkSync(SOCKET_PATH, SESSION_SYMLINK);
-    } catch {
-      // Symlink creation may fail if another instance raced us
-    }
+  // Update status to connected
+  if (ctx.hasUI) {
+    ctx.ui.setStatus("nvim", ctx.ui.theme.fg("success", NVIM_ICON));
+  }
+};
+
+const updateStatus = (ctx: ExtensionContext): void => {
+  if (!ctx.hasUI) return;
+
+  if (IS_PINVIM && server) {
+    // Connected - green icon
+    ctx.ui.setStatus("nvim", ctx.ui.theme.fg("success", NVIM_ICON));
+  } else {
+    // Not connected - dim icon
+    ctx.ui.setStatus("nvim", ctx.ui.theme.fg("muted", NVIM_ICON));
   }
 };
 
 export default function (pi: ExtensionAPI): void {
   pi.on("session_start", (_event, ctx) => {
     latestCtx = ctx;
-    startServer(pi);
 
-    if (ctx.hasUI) {
-      const displayPath = SESSION_SYMLINK || SOCKET_PATH;
-      ctx.ui.notify(`nvim bridge listening at ${displayPath}`, "info");
+    // Show initial status
+    updateStatus(ctx);
+
+    // Start server if this is pinvim
+    if (IS_PINVIM) {
+      startServer(pi, ctx);
+
+      if (ctx.hasUI) {
+        ctx.ui.notify(`nvim bridge listening at ${SOCKET_PATH}`, "info");
+      }
     }
   });
 
   pi.on("session_switch", (_event, ctx) => {
     latestCtx = ctx;
+    updateStatus(ctx);
   });
 
   pi.on("session_shutdown", () => {
@@ -173,18 +178,9 @@ export default function (pi: ExtensionAPI): void {
     server = null;
 
     // Clean up socket
-    if (fs.existsSync(SOCKET_PATH)) {
+    if (SOCKET_PATH && fs.existsSync(SOCKET_PATH)) {
       try {
         fs.unlinkSync(SOCKET_PATH);
-      } catch {
-        // Ignore cleanup failures
-      }
-    }
-
-    // Clean up session symlink
-    if (SESSION_SYMLINK && fs.existsSync(SESSION_SYMLINK)) {
-      try {
-        fs.unlinkSync(SESSION_SYMLINK);
       } catch {
         // Ignore cleanup failures
       }
