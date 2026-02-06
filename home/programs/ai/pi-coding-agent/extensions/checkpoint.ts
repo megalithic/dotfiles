@@ -159,24 +159,63 @@ async function getJJDiffStat(): Promise<string> {
   }
 }
 
+async function hasUncommittedChanges(): Promise<boolean> {
+  if (!piApi) return false;
+  
+  try {
+    const result = await piApi.exec("jj", ["diff", "--stat"], { timeout: 5000 });
+    const output = result.stdout?.trim() || "";
+    // If there's any output besides "0 files changed", we have changes
+    return output.length > 0 && !output.includes("0 files changed");
+  } catch {
+    return false;
+  }
+}
+
+function generateBookmarkSlug(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")  // Replace non-alphanumeric with dashes
+    .replace(/^-+|-+$/g, "")      // Trim leading/trailing dashes
+    .slice(0, 40);                 // Limit length
+}
+
+function isMainBookmark(bookmark: string | null): boolean {
+  return !bookmark || bookmark === "main" || bookmark.includes("main@");
+}
+
 async function buildNewWorkPrompt(): Promise<string> {
   const bookmark = await getCurrentBookmark();
   const todoInfo = state.claimedTodoInfo;
+  const hasChanges = await hasUncommittedChanges();
+  const suggestedSlug = generateBookmarkSlug(todoInfo?.title || "new-work");
+  const onMain = isMainBookmark(bookmark);
   
   let prompt = `## 🚀 Starting new work\n\n`;
   prompt += `**Todo claimed:** ${todoInfo?.title || "unknown"}\n\n`;
   
-  if (bookmark) {
-    prompt += `**Current bookmark:** \`${bookmark}\`\n\n`;
-    prompt += `Consider if you need a new bookmark for this work, or if it fits with the current one.\n`;
-  } else {
-    prompt += `**⚠️ No bookmark!** Create one for this work:\n`;
-    prompt += `\`jj feat <name>\` (new commit + bookmark)\n\n`;
+  // Safeguard 1: Uncommitted changes
+  if (hasChanges) {
+    prompt += `**⚠️ Uncommitted changes detected!**\n`;
+    prompt += `Commit current work first, or changes may be orphaned.\n\n`;
   }
   
-  prompt += `\n**Options:**\n`;
-  prompt += `1. New bookmark: \`jj feat <name>\`\n`;
-  prompt += `2. Continue with current: say "continue" or "skip"\n`;
+  // Safeguard 2: Already on a feature bookmark
+  if (bookmark && !onMain) {
+    prompt += `**Current bookmark:** \`${bookmark}\`\n\n`;
+    prompt += `You're already on a feature bookmark. Options:\n`;
+    prompt += `1. Continue on this bookmark (if related work)\n`;
+    prompt += `2. Create new: \`jj feat ${suggestedSlug}\`\n\n`;
+  } else {
+    // On main or no bookmark - suggest auto-create
+    prompt += `**Suggested bookmark:** \`${suggestedSlug}\`\n\n`;
+    prompt += `Create with: \`jj feat ${suggestedSlug}\`\n\n`;
+  }
+  
+  prompt += `**Options:**\n`;
+  prompt += `1. Create suggested: \`jj feat ${suggestedSlug}\`\n`;
+  prompt += `2. Custom name: \`jj feat <your-name>\`\n`;
+  prompt += `3. Continue without: say "continue" or "skip"\n`;
   
   return prompt;
 }

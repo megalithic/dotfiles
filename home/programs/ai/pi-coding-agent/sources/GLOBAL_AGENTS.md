@@ -123,3 +123,25 @@ When receiving a message via Telegram (prefixed with `📱 **Telegram message:**
    ```
 2. Send acknowledgment via: `~/bin/ntfy send -t "pi agent" -m "..." --telegram`
 3. Then proceed with the requested task
+
+## Nix/Dotfiles Relationship (seth's system)
+
+**`~/.dotfiles/` is ALWAYS the source of truth** - version controlled in git/jj.
+
+### NEVER do:
+- Symlink FROM nix store TO dotfiles
+- Write to `/nix/store/` (read-only)
+- Write to `~/bin/`, `~/.config/`, `~/.hammerspoon/` directly
+
+### ALWAYS do:
+- Edit files in `~/.dotfiles/` directly
+- Check `ls -la <file>` before editing to see if it's a symlink
+- Run `just rebuild` after nix changes if needed
+
+### Path mappings:
+| Managed path | Edit this instead |
+|--------------|-------------------|
+| `~/bin/*` | `~/.dotfiles/bin/*` |
+| `~/.config/*` | `~/.dotfiles/config/*` |
+| `~/.hammerspoon/*` | `~/.dotfiles/config/hammerspoon/*` |
+| `~/.pi/agent/*` | `~/.dotfiles/home/programs/ai/pi-coding-agent/` |

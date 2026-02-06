@@ -206,3 +206,48 @@ Use `ntfy telegram` for rich MarkdownV2 formatting:
 ```
 
 For simple notifications, use `ntfy send -T` (auto-escapes).
+
+
+## Nix/Dotfiles Relationship (CRITICAL)
+
+### Source of Truth
+
+**`~/.dotfiles/` is ALWAYS the source of truth.** It's version controlled in git/jj.
+
+```
+~/.dotfiles/bin/script.sh  ← SOURCE (edit here)
+        ↓ (nix builds)
+/nix/store/.../bin/script.sh  ← DERIVED (read-only)
+        ↓ (home-manager symlinks)
+~/bin/script.sh  ← SYMLINK (may point to dotfiles or nix store)
+```
+
+### Rules
+
+1. **ALWAYS edit files in `~/.dotfiles/`** - never in `~/bin`, `~/.config`, etc.
+2. **NEVER symlink FROM nix store TO dotfiles** - flow is always dotfiles → nix → home
+3. **NEVER write to `/nix/store/`** - it's read-only
+4. **Check before editing:** `ls -la <file>` to see if it's a symlink
+
+### Common Paths
+
+| You want to edit... | Edit this instead |
+|---------------------|-------------------|
+| `~/bin/*` | `~/.dotfiles/bin/*` |
+| `~/.config/fish/*` | `~/.dotfiles/config/fish/*` |
+| `~/.config/nvim/*` | `~/.dotfiles/config/nvim/*` |
+| `~/.hammerspoon/*` | `~/.dotfiles/config/hammerspoon/*` |
+| `~/.pi/agent/*` | `~/.dotfiles/home/programs/ai/pi-coding-agent/` |
+
+### After Editing
+
+Some files are live-linked (same inode), others require rebuild:
+
+```bash
+# Check if rebuild needed:
+ls -la ~/bin/script.sh  # Same inode as dotfiles? → Live
+                        # Points to /nix/store? → Needs rebuild
+
+# Rebuild if needed:
+just rebuild
+```
