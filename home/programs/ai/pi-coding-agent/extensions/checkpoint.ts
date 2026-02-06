@@ -12,6 +12,7 @@
  * Triggers checkpoint prompt when:
  * - 5+ files modified
  * - 20+ minutes elapsed
+ * - Todo claimed (prompts to create bookmark)
  * - Todo marked as done/closed
  * - Delegated task received from another agent
  * - Manual /checkpoint command
@@ -51,6 +52,8 @@ interface CheckpointState {
   lastCheckpointTime: number;
   currentGoal: string | null;
   checkpointCount: number;
+  todoJustClaimed: boolean; // Flag when a todo was just claimed
+  claimedTodoInfo: { id: string; title: string } | null;
   todoJustCompleted: boolean; // Flag when a todo was just closed
   lastCompletedTodo: string | null;
   delegatedTaskReceived: boolean; // Flag when a task is delegated from another agent
@@ -62,6 +65,8 @@ const state: CheckpointState = {
   lastCheckpointTime: Date.now(),
   currentGoal: null,
   checkpointCount: 0,
+  todoJustClaimed: false,
+  claimedTodoInfo: null,
   todoJustCompleted: false,
   lastCompletedTodo: null,
   delegatedTaskReceived: false,
@@ -77,6 +82,8 @@ function resetCheckpoint() {
   state.filesModified.clear();
   state.lastCheckpointTime = Date.now();
   state.checkpointCount++;
+  state.todoJustClaimed = false;
+  state.claimedTodoInfo = null;
   state.todoJustCompleted = false;
   state.lastCompletedTodo = null;
   state.delegatedTaskReceived = false;
@@ -107,6 +114,9 @@ function shouldPromptCheckpoint(): boolean {
 
 // Get the trigger reason for the checkpoint prompt
 function getCheckpointTrigger(): string {
+  if (state.todoJustClaimed && state.claimedTodoInfo) {
+    return `todo-claimed:${state.claimedTodoInfo.id}`;
+  }
   if (state.todoJustCompleted && state.lastCompletedTodo) {
     return `todo-completed:${state.lastCompletedTodo}`;
   }
@@ -146,6 +156,28 @@ async function getJJDiffStat(): Promise<string> {
   } catch {
     return "(unable to get diff)";
   }
+}
+
+async function buildNewWorkPrompt(): Promise<string> {
+  const bookmark = await getCurrentBookmark();
+  const todoInfo = state.claimedTodoInfo;
+  
+  let prompt = `## 🚀 Starting new work\n\n`;
+  prompt += `**Todo claimed:** ${todoInfo?.title || "unknown"}\n\n`;
+  
+  if (bookmark) {
+    prompt += `**Current bookmark:** \`${bookmark}\`\n\n`;
+    prompt += `Consider if you need a new bookmark for this work, or if it fits with the current one.\n`;
+  } else {
+    prompt += `**⚠️ No bookmark!** Create one for this work:\n`;
+    prompt += `\`jj feat <name>\` (new commit + bookmark)\n\n`;
+  }
+  
+  prompt += `\n**Options:**\n`;
+  prompt += `1. New bookmark: \`jj feat <name>\`\n`;
+  prompt += `2. Continue with current: say "continue" or "skip"\n`;
+  
+  return prompt;
 }
 
 async function buildCheckpointPrompt(): Promise<string> {
@@ -225,15 +257,24 @@ export default function (pi: ExtensionAPI) {
   // Store API reference for exec calls
   piApi = pi;
 
-  // Track file modifications and todo completions
+  // Track file modifications and todo operations
   pi.on("tool_call", async (event, ctx) => {
     trackFileChange(event);
 
-    // Track todo completions
+    // Track todo claims and completions
     if (event.toolName === "todo") {
       const input = event.input as Record<string, unknown>;
       const action = input.action as string;
       const status = input.status as string;
+      
+      // Detect claiming a todo (starting work)
+      if (action === "claim") {
+        state.todoJustClaimed = true;
+        state.claimedTodoInfo = {
+          id: (input.id as string) || "unknown",
+          title: (input.title as string) || (input.id as string) || "unknown",
+        };
+      }
       
       // Detect closing/completing a todo
       if (action === "update" && (status === "done" || status === "closed")) {
@@ -255,16 +296,30 @@ export default function (pi: ExtensionAPI) {
     }
   });
 
-  // Also check for checkpoint after todo operations
+  // Handle todo operations - show prompts via notification (more reliable than blocking)
   pi.on("tool_result", async (event, ctx) => {
-    if (event.toolName === "todo" && state.todoJustCompleted) {
-      if (shouldPromptCheckpoint()) {
-        const prompt = await buildCheckpointPrompt();
-        return {
-          block: true,
-          reason: prompt,
-        };
-      }
+    if (event.toolName !== "todo") return;
+    
+    // Handle todo claim - prompt to create bookmark
+    if (state.todoJustClaimed && state.claimedTodoInfo) {
+      const prompt = await buildNewWorkPrompt();
+      // Use block for claim - this is a natural stopping point
+      state.todoJustClaimed = false; // Clear flag to avoid repeat
+      return {
+        block: true,
+        reason: prompt,
+      };
+    }
+    
+    // Handle todo completion - checkpoint prompt
+    if (state.todoJustCompleted) {
+      const prompt = await buildCheckpointPrompt();
+      // Use block for completion - this is a natural stopping point
+      state.todoJustCompleted = false; // Clear flag to avoid repeat
+      return {
+        block: true,
+        reason: prompt,
+      };
     }
   });
 
