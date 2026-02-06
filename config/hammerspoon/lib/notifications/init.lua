@@ -466,10 +466,10 @@ function M.handleTelegramMessage(msg)
 
     -- Forward to active pi session if one exists
     local pi = require("lib.interop.pi")
-    if pi.lastActiveContext then
+    if pi.lastActiveSession then
       local success = pi.forwardMessage(msg.text, "telegram")
       if success then
-        U.log.f("Telegram: forwarded to pi session: %s", pi.lastActiveContext)
+        U.log.f("Telegram: forwarded to pi session: %s", pi.lastActiveSession)
         -- Acknowledge receipt
         local telegram = require("lib.interop.telegram")
         telegram.send("↪ Forwarded to pi")

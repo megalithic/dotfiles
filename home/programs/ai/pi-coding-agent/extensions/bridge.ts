@@ -137,20 +137,6 @@ const getModelShortName = (modelId: string | undefined): string => {
   return name.split("-").slice(0, 2).join("-");
 };
 
-const updateStatus = (ctx: ExtensionContext): void => {
-  if (!ctx.hasUI) return;
-
-  if (IS_BRIDGE_ENABLED && server) {
-    // Connected - show π session:model in green
-    const session = PI_SESSION || "?";
-    const model = getModelShortName(ctx.model?.id);
-    const statusText = `${PI_ICON} ${session}:${model}`;
-    ctx.ui.setStatus("bridge", ctx.ui.theme.fg("success", statusText));
-  } else {
-    // Not connected - dim π
-    ctx.ui.setStatus("bridge", ctx.ui.theme.fg("muted", PI_ICON));
-  }
-};
 
 // =============================================================================
 // Socket Server
@@ -224,7 +210,6 @@ const startServer = (pi: ExtensionAPI, ctx: ExtensionContext): void => {
   server.listen(SOCKET_PATH);
 
   // Update status to connected
-  updateStatus(ctx);
 };
 
 // =============================================================================
@@ -236,7 +221,6 @@ export default function (pi: ExtensionAPI): void {
     latestCtx = ctx;
 
     // Show initial status
-    updateStatus(ctx);
 
     // Start server if bridge is enabled (invoked via pinvim/pisock)
     if (IS_BRIDGE_ENABLED) {
@@ -250,13 +234,11 @@ export default function (pi: ExtensionAPI): void {
 
   pi.on("session_switch", (_event, ctx) => {
     latestCtx = ctx;
-    updateStatus(ctx);
   });
 
   // Update status when model changes
   pi.on("model_select", (_event, ctx) => {
     latestCtx = ctx;
-    updateStatus(ctx);
   });
 
   pi.on("session_shutdown", () => {

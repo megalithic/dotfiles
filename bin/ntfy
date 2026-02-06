@@ -3,7 +3,7 @@
 # Delegates all logic to Hammerspoon's N.send() API
 #
 # Usage:
-#   ntfy send -t "Title" -m "Message" [-u urgency] [-p] [-P] [-q]
+#   ntfy send -t "Title" -m "Message" [-u urgency] [-p] [-T] [-q]
 #   ntfy answer [-t "Title"] [-m "Message"]
 #   ntfy pending
 #   ntfy help
