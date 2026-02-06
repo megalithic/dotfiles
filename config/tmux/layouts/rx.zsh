@@ -1,11 +1,11 @@
 #!/usr/local/bin/zsh
 
-SESSION="canonize"
+SESSION="rx"
 CWD="$(zoxide query "$SESSION")"
 
-export SESSION_ICON="" # alts:  󰴓 󰃀   
-export SESSION_FG="#e39b7b"
-# export SESSION_BG="#626262"
+export SESSION_ICON="󰐂" # alts:  󰴓 󰃀   
+export SESSION_FG="#1e64f1"
+export SESSION_BG="#ffffff"
 
 echo "$CWD"
 cd "$CWD"
@@ -33,7 +33,7 @@ tmux -2 select-layout -t "$SESSION":2 main-vertical
 tmux -2 select-pane -t "$SESSION":2.1
 
 tmux new-window -c "$CWD" -t "$SESSION":3 -n services
-tmux send-keys -t "$SESSION":3.1 "m s canonize-dev" "C-m"
+tmux send-keys -t "$SESSION":3.1 "m s rx-dev" "C-m"
 
 tmux select-layout -t "$SESSION":3 tiled
 tmux select-layout -t "$SESSION":3 even-horizontal

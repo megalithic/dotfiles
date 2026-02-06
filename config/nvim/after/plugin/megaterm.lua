@@ -3,7 +3,7 @@
 -- Provides: Terminal class, Manager, Send API, keymaps/autocmds
 -- Architecture: One window per position, multiple terminals as buffers (buffer-switching model)
 
-if not Plugin_enabled("lsp") then return end
+if not Plugin_enabled() then return end  -- auto-detects "megaterm" from filename
 
 --------------------------------------------------------------------------------
 -- Configuration

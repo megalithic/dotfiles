@@ -126,8 +126,8 @@ function get_layouts() {
 # -- change to the given existing session
 function to_session() {
   local session
-  # Strip the running indicator (*) if present
-  session="$(echo "$1" | sed 's/ \*$//' | sed '/^$/d')"
+  # Strip the running indicator (* π) if present
+  session="$(echo "$1" | sed 's/ \* π$//' | sed 's/ \*$//' | sed '/^$/d')"
   tmux "$change" -t "$session"\; refresh-client
 }
 
@@ -137,11 +137,13 @@ function new_session() {
   local cwd="$2"
 
   if [[ -f "$layouts_dir/$session.zsh" ]]; then
+    # Custom layout handles pinvim
     (sh "$layouts_dir/$session.zsh" &&
       to_session "$session" ||
-      tmux new-session -d -s "$session" &&
+      tmux new-session -d -s "$session" -c "${cwd}" &&
       to_session "$session") && exit
   else
+    # Default layout includes pinvim
     (sh "$layouts_dir/default.zsh" "$session" "${cwd}" &&
       to_session "$session" ||
       tmux new-session -d -s "$session" -c "${cwd}" &&
@@ -153,8 +155,8 @@ function new_session() {
 function try_session() {
   local session
   local cwd
-  # Strip the running indicator (*) if present
-  session="$(echo "$1" | sed 's/ \*$//' | sed '/^$/d')"
+  # Strip the running indicator (* π) if present
+  session="$(echo "$1" | sed 's/ \* π$//' | sed 's/ \*$//' | sed '/^$/d')"
 
   # FIXME: zoxide doesn't cut it completely; need to fuzzy find all folders in `$CODE`
   cwd=$(zoxide query "$session" 2>/dev/null || fd -1 "$session" "$CODE")
@@ -173,9 +175,14 @@ function fuzzy_find() {
   current_sessions_list=$(tmux list-sessions -F "#S")
 
   # combine our pre-defined layouts AND open sessions, mark running ones with *
+  # also show π if pinvim socket exists for that session
   sessions_list=$(printf "%s\n%s" "$layouts_list" "$current_sessions_list" | sort -u | while read -r s; do
     if echo "$current_sessions_list" | grep -q "^${s}$"; then
-      echo "$s *"
+      if [[ -S "/tmp/pi-${s}.sock" ]]; then
+        echo "$s * π"
+      else
+        echo "$s *"
+      fi
     else
       echo "$s"
     fi
@@ -213,20 +220,22 @@ function fuzzy_find() {
     [[ $layouts_sessions_count -gt 0 ]] && preview_cmd="fd {} $layouts_dir | xargs bat"
   else
     fzf_prompt_text=" new or existing session  "
-    fzf_header_text="${header_icon} $(tput sitm)$(tput setaf 5)$current_session$(tput sgr 0) [$(tput setaf 255)ctrl-x$(tput sgr 0): $(tput setaf 245)kill-session / $(tput setaf 255)ctrl-r$(tput sgr 0): $(tput setaf 245)rename-session$(tput sgr 0)]"
+    fzf_header_text="${header_icon} $(tput sitm)$(tput setaf 5)$current_session$(tput sgr 0) [$(tput setaf 255)ctrl-p$(tput sgr 0): $(tput setaf 245)pinvim / $(tput setaf 255)ctrl-x$(tput sgr 0): $(tput setaf 245)kill / $(tput setaf 255)ctrl-r$(tput sgr 0): $(tput setaf 245)rename$(tput sgr 0)]"
   fi
 
   # -- get our session from fzf (grabs the the active pane from each session as preview, too!)
   # Filter out default and current session (accounting for optional ' *' marker)
-  fzf_list=$(echo "$sessions_list" | sed -E "s/:.*$//" | grep -E -v "^(default|${current_session})( \*)?$")
+  fzf_list=$(echo "$sessions_list" | sed -E "s/:.*$//" | grep -E -v "^(default|${current_session})( \* π| \*)?$")
   # list_sessions=$(tmux list-sessions | sed -E "s/:.*$//")
 
   # ENTER_select_session_bind="enter:replace-query+print-query"
   # CTRL_R_rename_session_bind='ctrl-r:execute(printf >&2 "New session name: ";read name; tmux rename-session -t {} ${name};)+reload(echo "$sessions_list" | grep -v "^default\$" | grep -v "^$current_session\$")'
   # Strip the running indicator (*) from selected session name before passing to tmux commands
   # Reload commands mark all sessions as running (with *) since we're only showing running sessions after reload
-  CTRL_X_kill_session_bind='ctrl-x:execute(session=$(echo {} | sed "s/ \*$//"); tmux kill-session -t "${session}")+change-prompt(⚡  )+reload(tmux list-sessions -F "#S" | sed "s/$/ */")'
-  CTRL_R_rename_session_bind='ctrl-r:execute(session=$(echo {} | sed "s/ \*$//"); printf >&2 "New session name: "; read name; tmux rename-session -t "${session}" "${name}")+reload(tmux list-sessions -F "#S" | sed "s/$/ */")'
+  CTRL_X_kill_session_bind='ctrl-x:execute(session=$(echo {} | sed "s/ \* π$//" | sed "s/ \*$//"); tmux kill-session -t "${session}")+change-prompt(⚡  )+reload(tmux list-sessions -F "#S" | sed "s/$/ */")'
+  CTRL_R_rename_session_bind='ctrl-r:execute(session=$(echo {} | sed "s/ \* π$//" | sed "s/ \*$//"); printf >&2 "New session name: "; read name; tmux rename-session -t "${session}" "${name}")+reload(tmux list-sessions -F "#S" | sed "s/$/ */")'
+  # Switch to session and open pinvim pane
+  CTRL_P_pinvim_bind='ctrl-p:execute-silent(session=$(echo {} | sed "s/ \* π$//" | sed "s/ \*$//"); tmux switch-client -t "${session}" && tmux-pinvim-toggle)+accept'
 
   # try_session "$(
   #   echo \
@@ -279,6 +288,7 @@ function fuzzy_find() {
         \
         --bind="${CTRL_X_kill_session_bind}" \
         --bind="${CTRL_R_rename_session_bind}" \
+        --bind="${CTRL_P_pinvim_bind}" \
         \
         --bind="enter:replace-query+print-query" \
         --marker='󰛄' \

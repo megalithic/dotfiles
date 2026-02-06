@@ -339,9 +339,9 @@ return {
     }
   end,
   opts = {
-    terminal = {
-      provider = CCProvider,
-    },
+    -- terminal = {
+    --   provider = CCProvider,
+    -- },
     diff_opts = {
       layout = "vertical",
       open_in_new_tab = true,

@@ -1,0 +1,99 @@
+#!/usr/bin/env bash
+# Toggle pinvim pane into/out of current tmux window
+#
+# Behavior:
+# - If in "ai" window: switch back to last window
+# - If pinvim is a split in current window: break it out to "ai" window
+# - If "ai" window exists elsewhere: join that pane into current window
+# - If pinvim running in another window: join from there
+# - If no pinvim anywhere: start it in a new right split
+
+set -euo pipefail
+
+# Capture pinvim path now (script runs with proper PATH, but tmux split-window uses /bin/sh)
+PINVIM_PATH=$(which pinvim)
+
+CURRENT_WINDOW=$(tmux display-message -p '#{window_name}')
+
+# If we're already in the ai window, just switch back to last window
+if [[ "$CURRENT_WINDOW" == "ai" ]]; then
+  tmux last-window
+  exit 0
+fi
+
+# Check if a pane has pinvim running (using ps, since pgrep -f is broken on macOS)
+pane_has_pinvim() {
+  local pane_pid="$1"
+  ps -o ppid=,command= -ax 2>/dev/null | rg -q "^\s*${pane_pid}\s.*pi-coding-agent"
+}
+
+# Check if pinvim is in current window (meaning we have multiple panes, one is pinvim)
+find_pinvim_in_current_window() {
+  local pane_count
+  pane_count=$(tmux list-panes | wc -l | tr -d ' ')
+  
+  # Only check if there's more than one pane
+  if [[ "$pane_count" -lt 2 ]]; then
+    return 1
+  fi
+  
+  local pane_info pane_id pane_pid
+  for pane_info in $(tmux list-panes -F '#{pane_id}:#{pane_pid}'); do
+    pane_id="${pane_info%%:*}"
+    pane_pid="${pane_info##*:}"
+    
+    if pane_has_pinvim "$pane_pid"; then
+      echo "$pane_id"
+      return 0
+    fi
+  done
+  return 1
+}
+
+# Find pinvim pane anywhere in session, return window.pane if found
+find_pinvim_in_session() {
+  local pane_info win_pane pane_pid
+  for pane_info in $(tmux list-panes -s -F '#{window_index}.#{pane_index}:#{pane_pid}'); do
+    win_pane="${pane_info%%:*}"
+    pane_pid="${pane_info##*:}"
+    
+    if pane_has_pinvim "$pane_pid"; then
+      echo "$win_pane"
+      return 0
+    fi
+  done
+  return 1
+}
+
+# Get window index for "ai" window (returns empty if not found)
+get_ai_window_index() {
+  tmux list-windows -F '#{window_index}:#{window_name}' | rg ':ai$' | cut -d: -f1
+}
+
+# Main logic
+main() {
+  # Case 1: Pinvim is a split in current window → break it out to "ai" window
+  if pinvim_pane=$(find_pinvim_in_current_window); then
+    tmux break-pane -d -s "$pinvim_pane" -n ai
+    exit 0
+  fi
+  
+  # Case 2: "ai" window exists → join from there (use window index, not name)
+  ai_idx=$(get_ai_window_index || true)
+  if [[ -n "$ai_idx" ]]; then
+    tmux join-pane -h -s "${ai_idx}.1" -l 40%
+    exit 0
+  fi
+  
+  # Case 3: Pinvim running elsewhere in session → join from there
+  if pinvim_loc=$(find_pinvim_in_session); then
+    tmux join-pane -h -s "$pinvim_loc" -l 40%
+    exit 0
+  fi
+  
+  # Case 4: No pinvim running → start it in a new right split
+  # Use full path because tmux split-window uses /bin/sh which doesn't have nix paths
+  tmux split-window -h -l 40% "$PINVIM_PATH"
+}
+
+main "$@"

@@ -104,6 +104,12 @@ command = '''
   #   ws_prefix="\x1b[36m${ws_name}\x1b[0m "
   # fi
 
+  # Get parent bookmark (with color) if @ is empty and has no bookmarks (typical working state)
+  parent_bookmark=""
+  if jj log -r @ --no-graph -T 'if(empty && bookmarks.len() == 0, "yes", "")' 2>/dev/null | grep -q yes; then
+    parent_bookmark=$(jj log -r '@-' --no-graph --color always -T 'bookmarks' 2>/dev/null)
+  fi
+
   jj_output=$(jj log --revisions @ --no-graph --ignore-working-copy --color always --limit 1 --template '
     separate(" ",
       change_id.shortest(4),
@@ -113,7 +119,7 @@ command = '''
         if(conflict, "󰔷"),
         if(divergent, "󰧈"),
         if(hidden, "󰘓"),
-        if(immutable, ""),
+        if(immutable, ""),
       ),
       raw_escape_sequence("\x1b[1;32m") ++ if(empty, "(empty)"),
       raw_escape_sequence("\x1b[1;32m") ++ coalesce(
@@ -122,6 +128,12 @@ command = '''
       ) ++ raw_escape_sequence("\x1b[0m"),
     )
   ')
+
+  # Inject parent bookmark after change_id if we found one (preserves jj color codes)
+  if [[ -n "$parent_bookmark" ]]; then
+    # Insert parent bookmark right after change_id, before the ⋮
+    jj_output=$(echo "$jj_output" | sed "s/⋮/${parent_bookmark} ⋮/")
+  fi
 
   # echo -e "${ws_prefix}${jj_output}"
   echo -e "${jj_output}"

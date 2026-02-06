@@ -35,20 +35,15 @@ tmux -2 new-session -d -s "$SESSION" -n dots
   # tmux send-keys -t "$SESSION":1 C-z "tmux link-window -s mega:chats -t 0 && exit" "C-m"
 tmux -2 send-keys -t "$SESSION":1 C-z "tmux link-window -s mega:dots -t 0 && exit" "C-m"
 
-  # Window "code"
+  # Window "code" - main workspace
   tmux new-window -c "$CWD" -t "$SESSION":2 -n code
   tmux send-keys -t "$SESSION":2.1 "cd $CWD" "C-m"
-  tmux send-keys -t "$SESSION":2.1 ls "C-m"
 
-  tmux select-layout -t "$SESSION":2 tiled
+  # Window "agent" - pinvim (hidden by default, toggle into view with prefix+p)
+  tmux new-window -c "$CWD" -t "$SESSION":3 -n agent
+  tmux send-keys -t "$SESSION":3.1 "pinvim" "C-m"
 
-  tmux select-layout -t "$SESSION":2 main-vertical
-  tmux select-pane -t "$SESSION":2.1
-  #
-  # tmux new-window -c "$CWD" -t "$SESSION":3 -n services
-  # tmux send-keys -t "$SESSION":3.1 "cd $CODE" "C-m"
-
-  # focus
+  # Focus on code window
   tmux select-window -t "$SESSION":2
   tmux select-pane -t "$SESSION":2.1
 

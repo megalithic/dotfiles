@@ -28,11 +28,13 @@ tmux -2 send-keys -t "$SESSION":1 ls C-m
 #   tmux -2 send-keys -t "$SESSION":1 aerc C-m
 # fi
 
-# focus
+# Window "agent" - pinvim
+tmux new-window -c "$CWD" -t "$SESSION":2 -n agent
+tmux send-keys -t "$SESSION":2.1 "pinvim" "C-m"
 
+# focus
 tmux -2 select-window -t "$SESSION":1
 tmux -2 select-pane -t "$SESSION":1.1
-# tmux -2 rename-window -t "$SESSION":1 dots
 
 tmux setenv -t ${SESSION} 'SESSION_ICON' "${SESSION_ICON}"
 tmux setenv -t ${SESSION} 'SESSION_FG' "${SESSION_FG}"
