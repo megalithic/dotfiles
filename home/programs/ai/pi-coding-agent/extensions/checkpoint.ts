@@ -78,12 +78,13 @@ const state: CheckpointState = {
 // Helpers
 // =============================================================================
 
-function resetCheckpoint() {
+function resetCheckpoint(ctx?: ExtensionContext) {
   state.filesModified.clear();
   state.lastCheckpointTime = Date.now();
   state.checkpointCount++;
   state.todoJustClaimed = false;
   state.claimedTodoInfo = null;
+  if (ctx) updateTodoSegment(ctx);
   state.todoJustCompleted = false;
   state.lastCompletedTodo = null;
   state.delegatedTaskReceived = false;
@@ -234,6 +235,33 @@ async function buildCheckpointPrompt(): Promise<string> {
 }
 
 // =============================================================================
+// Statusline Segment
+// =============================================================================
+
+function truncateTitle(title: string, maxLen: number = 30): string {
+  if (title.length <= maxLen) return title;
+  return title.slice(0, maxLen - 1) + "…";
+}
+
+function updateTodoSegment(ctx: ExtensionContext | null): void {
+  if (!ctx?.hasUI) return;
+  
+  if (state.claimedTodoInfo) {
+    const shortId = state.claimedTodoInfo.id.replace("TODO-", "").slice(0, 6);
+    const title = truncateTitle(state.claimedTodoInfo.title);
+    const segment = JSON.stringify({
+      text: `📋 ${shortId}: ${title}`,
+      line: 1,
+      align: "left",
+      priority: 3,
+    });
+    ctx.ui.setStatus("checkpoint-todo", segment);
+  } else {
+    ctx.ui.setStatus("checkpoint-todo", "");
+  }
+}
+
+// =============================================================================
 // Tool tracking
 // =============================================================================
 
@@ -274,12 +302,16 @@ export default function (pi: ExtensionAPI) {
           id: (input.id as string) || "unknown",
           title: (input.title as string) || (input.id as string) || "unknown",
         };
+        updateTodoSegment(ctx);
       }
       
       // Detect closing/completing a todo
       if (action === "update" && (status === "done" || status === "closed")) {
         state.todoJustCompleted = true;
         state.lastCompletedTodo = (input.title as string) || (input.id as string) || "unknown";
+        // Clear the todo segment since work is complete
+        state.claimedTodoInfo = null;
+        updateTodoSegment(ctx);
       }
     }
 
@@ -296,30 +328,62 @@ export default function (pi: ExtensionAPI) {
     }
   });
 
-  // Handle todo operations - show prompts via notification (more reliable than blocking)
+  // Handle todo operations - inject steering messages after tool completes
+  // Note: tool_result can only modify results, not block. Use sendMessage for prompts.
   pi.on("tool_result", async (event, ctx) => {
     if (event.toolName !== "todo") return;
     
-    // Handle todo claim - prompt to create bookmark
+    // Try to extract title from tool result (more reliable than input)
     if (state.todoJustClaimed && state.claimedTodoInfo) {
+      // Parse result to get actual title
+      const resultText = event.content
+        ?.filter((c): c is { type: "text"; text: string } => c.type === "text")
+        .map((c) => c.text)
+        .join("") || "";
+      
+      // Look for title in JSON result
+      try {
+        const todoData = JSON.parse(resultText);
+        if (todoData.title) {
+          state.claimedTodoInfo.title = todoData.title;
+          updateTodoSegment(ctx);
+        }
+      } catch {
+        // Not JSON, try regex for "title": "..."
+        const titleMatch = resultText.match(/"title":\s*"([^"]+)"/);
+        if (titleMatch) {
+          state.claimedTodoInfo.title = titleMatch[1];
+          updateTodoSegment(ctx);
+        }
+      }
+      
       const prompt = await buildNewWorkPrompt();
-      // Use block for claim - this is a natural stopping point
       state.todoJustClaimed = false; // Clear flag to avoid repeat
-      return {
-        block: true,
-        reason: prompt,
-      };
+      
+      // Inject as steering message - will be delivered after current turn
+      pi.sendMessage({
+        customType: "checkpoint-prompt",
+        content: prompt,
+        display: true,
+      }, {
+        deliverAs: "steer",
+        triggerTurn: false, // Don't trigger immediately, let agent process it naturally
+      });
     }
     
     // Handle todo completion - checkpoint prompt
     if (state.todoJustCompleted) {
       const prompt = await buildCheckpointPrompt();
-      // Use block for completion - this is a natural stopping point
       state.todoJustCompleted = false; // Clear flag to avoid repeat
-      return {
-        block: true,
-        reason: prompt,
-      };
+      
+      pi.sendMessage({
+        customType: "checkpoint-prompt",
+        content: prompt,
+        display: true,
+      }, {
+        deliverAs: "steer",
+        triggerTurn: false,
+      });
     }
   });
 
