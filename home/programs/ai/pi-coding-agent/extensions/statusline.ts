@@ -3,7 +3,7 @@
  *
  * Layout:
  *   Line 1 LEFT:  π {session} {cwd} {jj_status} │ n/total
- *   Line 1 RIGHT: 󱎫 reset │ ░░░░░░ ctx% │ ↑in ↓out │ model
+ *   Line 1 RIGHT: 󱎫 reset │ ctx% │ ↑in ↓out │ model
  *
  *   Line 2 LEFT:  [status │ tool] │ {segments}
  *   Line 2 RIGHT: {segments}
@@ -207,16 +207,10 @@ function getProviderName(modelId: string | undefined): string {
 
 
 // =============================================================================
-// Context Progress Bar
+// Context Percentage
 // =============================================================================
 
-function renderContextBar(percent: number, theme: Theme, width: number = 10): string {
-  const filled = Math.round((percent / 100) * width);
-  const empty = width - filled;
-  
-  const filledChar = "░";
-  const emptyChar = "░";
-  
+function renderContextPercent(percent: number, theme: Theme): string {
   let color = "dim";
   if (percent >= CONFIG.contextDanger) {
     color = "error";
@@ -224,8 +218,7 @@ function renderContextBar(percent: number, theme: Theme, width: number = 10): st
     color = "warning";
   }
   
-  const bar = filledChar.repeat(filled) + theme.fg("dim", emptyChar.repeat(empty));
-  return theme.fg(color, bar) + ` ${percent}%`;
+  return theme.fg(color, `${percent}%`);
 }
 
 // =============================================================================
@@ -278,7 +271,8 @@ function buildLine1(
   theme: Theme,
   width: number,
   vcsInfo: string | null,
-  tokenStats: { input: number; output: number; cost: number }
+  tokenStats: { input: number; output: number; cost: number },
+  extensionStatuses: Map<string, string>
 ): string {
   const sep = theme.fg("dim", ` ${CONFIG.separator} `);
   
@@ -307,6 +301,19 @@ function buildLine1(
     leftParts.push(vcsInfo);
   }
   
+  // Extension segments for line 1 (e.g., current todo)
+  for (const [name, value] of extensionStatuses) {
+    try {
+      const segment = JSON.parse(value) as Segment;
+      if (segment.line === 1 && segment.align === "left") {
+        leftParts.push(theme.fg("dim", CONFIG.separator));
+        leftParts.push(segment.text);
+      }
+    } catch {
+      // Not a JSON segment, skip
+    }
+  }
+  
   const leftStr = leftParts.join(" ");
   
   // RIGHT side
@@ -323,7 +330,7 @@ function buildLine1(
   const maxContext = 200000; // Assume 200k context
   const usedContext = tokenStats.input + tokenStats.output;
   const contextPercent = Math.min(100, Math.round((usedContext / maxContext) * 100));
-  rightParts.push(renderContextBar(contextPercent, theme, 8));
+  rightParts.push(renderContextPercent(contextPercent, theme));
   
   // Token stats
   rightParts.push(theme.fg("dim", `↑${formatNumber(tokenStats.input)} ↓${formatNumber(tokenStats.output)}`));
@@ -509,7 +516,7 @@ function setupStatusline(ctx: ExtensionContext) {
         const statuses = footerData.getExtensionStatuses();
 
         // Build lines
-        const line1 = buildLine1(ctx, theme, width, cachedVcs, tokenStats);
+        const line1 = buildLine1(ctx, theme, width, cachedVcs, tokenStats, statuses);
         const line2 = buildLine2(ctx, theme, width, statuses, currentAgentStatus);
 
         return [line1, line2];
