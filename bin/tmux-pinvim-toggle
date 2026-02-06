@@ -1,81 +1,59 @@
 #!/usr/bin/env bash
-# Toggle pisock/pinvim pane into/out of current tmux window
+# Toggle pi agent pane into/out of current tmux window
 #
-# SOCKET CONFIGURATION (nix is single source of truth):
-#   Pattern: /tmp/pi-{session}.sock (one socket per tmux session)
-#   Defined in: ~/.dotfiles/home/programs/ai/pi-coding-agent/default.nix
+# Model:
+#   - Agent window ("agent") is the canonical home for pinvim
+#   - Toggle IN: join-pane from agent into current window (40% split)
+#   - Toggle OUT: break-pane back to agent window
+#   - Agent window stays at last position, pinvim keeps running
 #
-# Behavior:
-# - If in agent window: switch back to last window
-# - If pinvim pane exists in current window: break it out to "agent" window
-# - If agent window exists: join pane from there (40% split)
-# - If no agent anywhere: start pinvim in a new right split
+# Socket: /tmp/pi-{session}.sock (defined in nix)
 
 set -euo pipefail
 
-# Socket configuration (matches nix config)
-SOCKET_DIR="/tmp"
-SOCKET_PREFIX="pi"
-
-# Capture pinvim path now (script runs with proper PATH, but tmux split-window uses /bin/sh)
-PINVIM_PATH=$(which pinvim)
-
 SESSION=$(tmux display-message -p '#{session_name}')
-WINDOW_IDX=$(tmux display-message -p '#{window_index}')
 CURRENT_WINDOW=$(tmux display-message -p '#{window_name}')
+CURRENT_WINDOW_IDX=$(tmux display-message -p '#{window_index}')
+PANE_COUNT=$(tmux list-panes | wc -l | tr -d ' ')
 
-# Agent window name (where pinvim goes when broken out)
 AGENT_WINDOW="agent"
+SOCKET_PATH="/tmp/pi-${SESSION}.sock"
+PINVIM_PATH=$(which pinvim 2>/dev/null || echo "pinvim")
 
-# Socket for this session
-SESSION_SOCKET="${SOCKET_DIR}/${SOCKET_PREFIX}-${SESSION}.sock"
+# =============================================================================
+# Helpers
+# =============================================================================
 
-# If we're in the agent window, switch back to last window
-if [[ "$CURRENT_WINDOW" == "$AGENT_WINDOW" ]]; then
-  tmux last-window
-  exit 0
-fi
+# Check if agent window exists
+agent_window_exists() {
+  tmux list-windows -F '#{window_name}' | grep -qx "$AGENT_WINDOW"
+}
 
-# Find pinvim pane in current window (check all panes for pi process)
-find_pinvim_pane_in_current_window() {
-  local pane_count
-  pane_count=$(tmux list-panes | wc -l | tr -d ' ')
+# Get agent window index
+get_agent_window_idx() {
+  tmux list-windows -F '#{window_index}:#{window_name}' | grep ":${AGENT_WINDOW}$" | cut -d: -f1
+}
+
+# Check if a pane in current window is linked from agent (has pi process)
+locate_agent_pane_in_current() {
+  [[ "$PANE_COUNT" -lt 2 ]] && return 1
   
-  # Only check if there's more than one pane
-  if [[ "$pane_count" -lt 2 ]]; then
-    return 1
-  fi
-  
-  local pane_info pane_id pane_pid
-  for pane_info in $(tmux list-panes -F '#{pane_id}:#{pane_pid}'); do
-    pane_id="${pane_info%%:*}"
-    pane_pid="${pane_info##*:}"
-    
-    # Check if this pane's shell has a pi child process
-    if ps -o ppid=,comm= -ax 2>/dev/null | rg -q "^\s*${pane_pid}\s+pi$"; then
+  local pane_id pane_pid
+  while IFS=: read -r pane_id pane_pid; do
+    if pgrep -P "$pane_pid" -x pi >/dev/null 2>&1; then
       echo "$pane_id"
       return 0
     fi
-  done
+  done < <(tmux list-panes -F '#{pane_id}:#{pane_pid}')
   return 1
 }
 
-# Get window index for agent window (returns empty if not found)
-get_agent_window_index() {
-  tmux list-windows -F '#{window_index}:#{window_name}' | rg ":${AGENT_WINDOW}\$" | cut -d: -f1
-}
-
-# Find any window with a pi process (for fallback)
-find_any_pinvim_window() {
-  local win_idx
+# Locate any window with pinvim running (by checking for pi process)
+locate_pinvim_window() {
+  local win_idx pane_pid
   for win_idx in $(tmux list-windows -F '#{window_index}'); do
-    if [[ "$win_idx" == "$WINDOW_IDX" ]]; then
-      continue
-    fi
-    
-    local pane_info pane_pid
-    for pane_info in $(tmux list-panes -t "$win_idx" -F '#{pane_pid}'); do
-      if ps -o ppid=,comm= -ax 2>/dev/null | rg -q "^\s*${pane_info}\s+pi$"; then
+    for pane_pid in $(tmux list-panes -t "$win_idx" -F '#{pane_pid}'); do
+      if pgrep -P "$pane_pid" -x pi >/dev/null 2>&1; then
         echo "$win_idx"
         return 0
       fi
@@ -84,41 +62,81 @@ find_any_pinvim_window() {
   return 1
 }
 
-# Main logic
+# Move window to last position and rename to "agent"
+move_to_agent_window() {
+  local src_win="$1"
+  local last_idx
+  last_idx=$(tmux list-windows -F '#{window_index}' | sort -n | tail -1)
+  
+  # Move to end and rename
+  tmux move-window -s "$src_win" -t "$((last_idx + 1))"
+  tmux rename-window -t "$((last_idx + 1))" "$AGENT_WINDOW"
+}
+
+# Create new agent window with pinvim at last position
+create_agent_window() {
+  local last_idx
+  last_idx=$(tmux list-windows -F '#{window_index}' | sort -n | tail -1)
+  
+  tmux new-window -d -t "$((last_idx + 1))" -n "$AGENT_WINDOW" "$PINVIM_PATH"
+}
+
+# =============================================================================
+# Main
+# =============================================================================
+
 main() {
-  # Case 1: Pinvim is a split in current window → break it out to agent window
-  if pinvim_pane=$(find_pinvim_pane_in_current_window); then
-    tmux break-pane -d -s "$pinvim_pane" -n "$AGENT_WINDOW"
+  # If we're IN the agent window, just switch to last window
+  if [[ "$CURRENT_WINDOW" == "$AGENT_WINDOW" ]]; then
+    tmux last-window
     exit 0
   fi
   
-  # Case 2: Agent window exists → join pane from there
-  agent_idx=$(get_agent_window_index || true)
-  if [[ -n "$agent_idx" ]]; then
-    tmux join-pane -h -s "${agent_idx}.1" -l 40%
+  # If agent pane is already split into current window → TOGGLE OUT (break back to agent)
+  if agent_pane=$(locate_agent_pane_in_current); then
+    # Figure out which pane to stay on after breaking
+    local current_pane stay_pane
+    current_pane=$(tmux display-message -p '#{pane_id}')
+    if [[ "$current_pane" == "$agent_pane" ]]; then
+      # We are in agent pane - focus the other pane (nvim) instead
+      stay_pane=$(tmux list-panes -F '#{pane_id}' | while read p; do [[ "$p" != "$agent_pane" ]] && echo "$p" && break; done)
+    else
+      # We are in nvim pane - stay here
+      stay_pane="$current_pane"
+    fi
+    # Agent window was destroyed when we joined, so create new one
+    # -d: don't switch to it, -n: name it "agent"
+    tmux break-pane -d -s "$agent_pane" -n "$AGENT_WINDOW"
+    # Move to last position
+    move_to_agent_window "$(get_agent_window_idx)"
+    tmux move-window -r  # Renumber windows to close gaps
+    # Refocus original pane
+    tmux select-pane -t "$stay_pane"
+
     exit 0
   fi
   
-  # Case 3: Pinvim running in another window → join from there
-  if other_win=$(find_any_pinvim_window); then
-    # Find the pane with pinvim in that window
-    local pane_info pane_id pane_pid
-    for pane_info in $(tmux list-panes -t "$other_win" -F '#{pane_id}:#{pane_pid}'); do
-      pane_id="${pane_info%%:*}"
-      pane_pid="${pane_info##*:}"
-      
-      if ps -o ppid=,comm= -ax 2>/dev/null | rg -q "^\s*${pane_pid}\s+pi$"; then
-        tmux join-pane -h -s "$pane_id" -l 40%
-        exit 0
-      fi
-    done
-    # Fallback: just join first pane from that window
-    tmux join-pane -h -s "${other_win}.1" -l 40%
-    exit 0
+  # TOGGLE IN: Need to join agent pane into current window
+  
+  # Ensure agent window exists
+  if ! agent_window_exists; then
+    # Check if pinvim is running somewhere else
+    if pinvim_win=$(locate_pinvim_window); then
+      # Move that window to become the agent window
+      move_to_agent_window "$pinvim_win"
+    elif [[ -S "$SOCKET_PATH" ]]; then
+      # Socket exists but can't find window - weird state, start fresh
+      create_agent_window
+    else
+      # No pinvim anywhere - start it
+      create_agent_window
+    fi
   fi
   
-  # Case 4: No pinvim running → start it in a new right split
-  tmux split-window -h -l 40% "$PINVIM_PATH"
+  # Now join pane from agent window into current window (40% right split)
+  local agent_idx
+  agent_idx=$(get_agent_window_idx)
+  tmux join-pane -h -s "${agent_idx}.1" -l 40%
 }
 
 main "$@"
