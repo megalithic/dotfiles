@@ -16,7 +16,7 @@ return {
           alt = "all",
           ignoreKeys = {
             all = { "<C-->" },
-            insert = { "<C-r>" },
+            -- insert = { "<C-r>" },
             normal = {
               "<D-1>",
               "<D-2>",
@@ -38,13 +38,14 @@ return {
             cmdline = "neovim", -- or firenvim
             content = "text",
             priority = 0,
-            selector = "textarea:not([id='read-only-cursor-text-area'], [id='pull_request_review_body'])",
+            -- selector = "textarea:not([id='read-only-cursor-text-area'], [id='pull_request_review_body'])",
+            selector = "textarea:not([id='read-only-cursor-text-area'], [id='pull_request_review_body'], *:not([data-component='AnchoredOverlay'] textarea)",
             takeover = "never",
             -- filename = "/tmp/{hostname}_{pathname%10}.{extension}",
           },
           ["^https?://github\\.com/"] = {
             takeover = "always",
-            selector = "textarea:not([id='read-only-cursor-text-area'], [id='pull_request_review_body'])",
+            selector = "textarea:not([id='read-only-cursor-text-area'], [id='pull_request_review_body'], *:not([data-component='AnchoredOverlay'] textarea)",
             priority = 1,
           },
           ["^https?://github\\.com/users/megalithic/projects"] = {
