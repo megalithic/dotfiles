@@ -6,7 +6,7 @@
 - Always use `jj` instead of `git` for version control (this repo uses Jujutsu)
 - Always use `fd` instead of `find` for file discovery
 - Always use `rg` instead of `grep` for content search
-- Always use `brave-search` skill for web searches (not browser)
+- Always use `web-search` skill first (ddg), fall back to `brave-search` if needed
 - Always read `AGENTS.md` file in project roots
 
 ## Writing
@@ -33,6 +33,18 @@
   - `git commit` → `jj describe` (changes auto-tracked)
   - `git log` → `jj log`
   - `git push` → `jj git push` (requires user permission)
+
+## Interactive Commands (AVOID)
+
+**These commands open an editor/prompt - use flags to skip:**
+
+| Command | Non-interactive alternative |
+|---------|----------------------------|
+| `jj squash` | `jj squash -m "message"` |
+| `jj describe` | `jj describe -m "message"` |
+| `jj split` | Avoid - inherently interactive |
+
+**Don't guess flags** - run `<cmd> --help` to find the right option.
 
 ## Remote Server Access
 
