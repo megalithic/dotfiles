@@ -3,7 +3,7 @@
  *
  * Layout:
  *   Line 1 LEFT:  π {session} {cwd} {jj_status} │ n/total
- *   Line 1 RIGHT: 󱎫 reset │ ░░░░░░ ctx% │ ↑in ↓out │ model
+ *   Line 1 RIGHT: 󱎫 reset │ ctx% │ ↑in ↓out │ model
  *
  *   Line 2 LEFT:  [status │ tool] │ {segments}
  *   Line 2 RIGHT: {segments}
@@ -207,16 +207,10 @@ function getProviderName(modelId: string | undefined): string {
 
 
 // =============================================================================
-// Context Progress Bar
+// Context Percentage
 // =============================================================================
 
-function renderContextBar(percent: number, theme: Theme, width: number = 10): string {
-  const filled = Math.round((percent / 100) * width);
-  const empty = width - filled;
-  
-  const filledChar = "░";
-  const emptyChar = "░";
-  
+function renderContextPercent(percent: number, theme: Theme): string {
   let color = "dim";
   if (percent >= CONFIG.contextDanger) {
     color = "error";
@@ -224,8 +218,7 @@ function renderContextBar(percent: number, theme: Theme, width: number = 10): st
     color = "warning";
   }
   
-  const bar = filledChar.repeat(filled) + theme.fg("dim", emptyChar.repeat(empty));
-  return theme.fg(color, bar) + ` ${percent}%`;
+  return theme.fg(color, `${percent}%`);
 }
 
 // =============================================================================
@@ -323,7 +316,7 @@ function buildLine1(
   const maxContext = 200000; // Assume 200k context
   const usedContext = tokenStats.input + tokenStats.output;
   const contextPercent = Math.min(100, Math.round((usedContext / maxContext) * 100));
-  rightParts.push(renderContextBar(contextPercent, theme, 8));
+  rightParts.push(renderContextPercent(contextPercent, theme));
   
   // Token stats
   rightParts.push(theme.fg("dim", `↑${formatNumber(tokenStats.input)} ↓${formatNumber(tokenStats.output)}`));
