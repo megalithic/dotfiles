@@ -8,11 +8,12 @@
  * - Question tracking with reminders
  * - User activity tracking to hint at attention state
  * - Shows last assistant message as notification body
+ * - Suppresses notifications during active telegram conversations
  *
  * Much more sophisticated than OSC 777 escape sequences.
  */
 
-import type { AgentMessage } from "@mariozechner/pi-agent-core";
+import type { AgentMessage, UserMessage } from "@mariozechner/pi-agent-core";
 import type { AssistantMessage, TextContent } from "@mariozechner/pi-ai";
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
 import { spawn, execSync } from "node:child_process";
@@ -20,8 +21,17 @@ import path from "node:path";
 
 const NTFY_PATH = path.join(process.env.HOME || "", "bin", "ntfy");
 
+// Telegram message prefix (set by bridge.ts when forwarding from Hammerspoon)
+const TELEGRAM_PREFIX = "📱 **Telegram message:**";
+
 // Track when user last interacted (sent input)
 let lastInputTime = Date.now();
+
+// Track when last telegram message was received
+let lastTelegramTime = 0;
+
+// How recently a telegram message must be to suppress notifications (ms)
+const TELEGRAM_SUPPRESS_WINDOW_MS = 60_000; // 1 minute
 
 // Cache tmux session name (doesnt change during session)
 let tmuxSessionName: string | null = null;
@@ -61,7 +71,19 @@ function isAssistantMessage(m: AgentMessage): m is AssistantMessage {
   return m.role === "assistant" && Array.isArray(m.content);
 }
 
+function isUserMessage(m: AgentMessage): m is UserMessage {
+  return m.role === "user";
+}
+
 function getTextContent(message: AssistantMessage): string {
+  return message.content
+    .filter((block): block is TextContent => block.type === "text")
+    .map((block) => block.text)
+    .join("\n");
+}
+
+function getUserMessageText(message: UserMessage): string {
+  if (typeof message.content === "string") return message.content;
   return message.content
     .filter((block): block is TextContent => block.type === "text")
     .map((block) => block.text)
@@ -91,6 +113,14 @@ function extractNotificationBody(messages: AgentMessage[]): string {
   return "Pi is waiting for your next instruction";
 }
 
+/**
+ * Check if telegram conversation is currently active.
+ * Returns true if a telegram message was received within the suppress window.
+ */
+function isTelegramActive(): boolean {
+  return Date.now() - lastTelegramTime < TELEGRAM_SUPPRESS_WINDOW_MS;
+}
+
 function notify(
   title: string,
   message: string,
@@ -117,8 +147,14 @@ let pendingNotifyTimeout: ReturnType<typeof setTimeout> | null = null;
 const NOTIFY_DELAY_MS = 3000;
 
 export default function (pi: ExtensionAPI) {
-  pi.on("input", async () => {
+  pi.on("input", async (_event, _ctx, message) => {
     lastInputTime = Date.now();
+    
+    // Track telegram messages to suppress duplicate notifications
+    if (message && message.startsWith(TELEGRAM_PREFIX)) {
+      lastTelegramTime = Date.now();
+    }
+    
     // Cancel pending notification if user starts typing
     if (pendingNotifyTimeout) {
       clearTimeout(pendingNotifyTimeout);
@@ -128,6 +164,13 @@ export default function (pi: ExtensionAPI) {
 
   pi.on("agent_end", async (event, ctx) => {
     if (!ctx.hasUI) return;
+    
+    // Skip notification if in active telegram conversation
+    // User is already getting responses via telegram, no need for local notification
+    if (isTelegramActive()) {
+      return;
+    }
+    
     const body = extractNotificationBody(event.messages);
     
     // Delay notification to avoid spam when switching focus
