@@ -52,6 +52,19 @@ bd sync               # Sync with git
 | `jj d` | diff | Show diff |
 | `jj l` | log | Show log |
 
+## Jujutsu Interactive Commands (AVOID)
+
+**These commands open an editor by default - use flags to skip:**
+
+| Command | Problem | Non-interactive alternative |
+|---------|---------|----------------------------|
+| `jj squash` | Opens editor for combined message | `jj squash -m "message"` |
+| `jj describe` | Opens editor | `jj describe -m "message"` |
+| `jj dv` | Opens editor (intentionally) | Use `jj dm "msg"` instead |
+| `jj split` | Interactive by design | Avoid, or use `--tool` |
+
+**Always check `--help`** before assuming flags - don't guess.
+
 ## Pushing (RESTRICTED)
 
 **NEVER push without explicit user permission.** This includes:

@@ -271,7 +271,8 @@ function buildLine1(
   theme: Theme,
   width: number,
   vcsInfo: string | null,
-  tokenStats: { input: number; output: number; cost: number }
+  tokenStats: { input: number; output: number; cost: number },
+  extensionStatuses: Map<string, string>
 ): string {
   const sep = theme.fg("dim", ` ${CONFIG.separator} `);
   
@@ -298,6 +299,19 @@ function buildLine1(
   if (vcsInfo) {
     leftParts.push(theme.fg("dim", CONFIG.separator));
     leftParts.push(vcsInfo);
+  }
+  
+  // Extension segments for line 1 (e.g., current todo)
+  for (const [name, value] of extensionStatuses) {
+    try {
+      const segment = JSON.parse(value) as Segment;
+      if (segment.line === 1 && segment.align === "left") {
+        leftParts.push(theme.fg("dim", CONFIG.separator));
+        leftParts.push(segment.text);
+      }
+    } catch {
+      // Not a JSON segment, skip
+    }
   }
   
   const leftStr = leftParts.join(" ");
@@ -502,7 +516,7 @@ function setupStatusline(ctx: ExtensionContext) {
         const statuses = footerData.getExtensionStatuses();
 
         // Build lines
-        const line1 = buildLine1(ctx, theme, width, cachedVcs, tokenStats);
+        const line1 = buildLine1(ctx, theme, width, cachedVcs, tokenStats, statuses);
         const line2 = buildLine2(ctx, theme, width, statuses, currentAgentStatus);
 
         return [line1, line2];

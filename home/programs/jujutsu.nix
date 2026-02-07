@@ -80,7 +80,11 @@
         rb = [ "rebase" ];
         b = [ "bookmark" ];
         g = [ "git" ];
-        # jj push -b <bookmark> [other flags] - Smart push with guardrails
+        # jj push -b <bookmark> [--pr] [other flags] - Smart push with guardrails
+        # Features:
+        #   - Checks bookmark (not @) for empty
+        #   - Auto-adds --allow-new for new bookmarks
+        #   - --pr flag: push then create PR
         push = [
           "util"
           "exec"
@@ -90,28 +94,68 @@
           ''
             set -euo pipefail
 
-            # Check if current commit is empty
-            if jj log -r @ --no-graph -T 'if(empty, "true", "false")' | grep -q 'true'; then
-              echo "Error: Current commit is empty. Nothing to push." >&2
-              echo "Make changes and run 'jj dm \"message\"' first." >&2
-              exit 1
-            fi
+            # Parse args: extract bookmark and --pr flag
+            bookmark=""
+            create_pr=false
+            pass_args=()
+            
+            while [[ $# -gt 0 ]]; do
+              case "$1" in
+                -b|--bookmark)
+                  bookmark="$2"
+                  pass_args+=("$1" "$2")
+                  shift 2
+                  ;;
+                --pr)
+                  create_pr=true
+                  shift
+                  ;;
+                *)
+                  pass_args+=("$1")
+                  shift
+                  ;;
+              esac
+            done
 
-            # Check if -b or --bookmark flag was provided
-            if [[ ! " $* " =~ " -b " ]] && [[ ! " $* " =~ " --bookmark " ]]; then
-              # Find closest bookmark to suggest
-              bookmark=$(jj log -r 'closest_bookmark(@)' --no-graph \
+            # Require -b flag
+            if [[ -z "$bookmark" ]]; then
+              closest=$(jj log -r 'closest_bookmark(@)' --no-graph \
                 -T 'self.bookmarks().map(|b| b.name()).join(",")' 2>/dev/null | head -1)
               
               echo "Error: Must specify bookmark with -b <bookmark>" >&2
-              if [[ -n "$bookmark" && "$bookmark" != "main" ]]; then
-                echo "Did you mean: jj push -b $bookmark" >&2
+              if [[ -n "$closest" && "$closest" != "main" ]]; then
+                echo "Did you mean: jj push -b $closest" >&2
               fi
               exit 1
             fi
 
-            # Pass through to jj git push with all args
-            jj git push "$@"
+            # Check if bookmark exists and is not empty
+            if ! jj log -r "$bookmark" --no-graph -T 'change_id.short()' 2>/dev/null | grep -q .; then
+              echo "Error: Bookmark '$bookmark' not found." >&2
+              exit 1
+            fi
+
+            if jj log -r "$bookmark" --no-graph -T 'if(empty, "true", "false")' | grep -q 'true'; then
+              echo "Error: Bookmark '$bookmark' points to an empty commit." >&2
+              echo "Make changes and run 'jj dm \"message\"' first." >&2
+              exit 1
+            fi
+
+            # Check if bookmark needs --allow-new (doesn't exist on remote)
+            if ! jj bookmark list --remote origin 2>/dev/null | grep -q "^$bookmark@origin:"; then
+              echo "Bookmark '$bookmark' is new, adding --allow-new"
+              pass_args+=("--allow-new")
+            fi
+
+            # Push
+            jj git push "''${pass_args[@]}"
+
+            # Create PR if requested
+            if $create_pr; then
+              echo ""
+              echo "Creating PR..."
+              gh pr create --head "$bookmark" --base main --fill
+            fi
           ''
           ""
         ];
@@ -298,31 +342,42 @@
           "bash"
           "-c"
           ''
-                set -euo pipefail
-                if [[ -z "$1" ]]; then
-                  echo "Usage: jj co <branch-name>" >&2
-                  exit 1
-                fi
+            set -euo pipefail
+            if [[ -z "$1" ]]; then
+              echo "Usage: jj co <branch-name>" >&2
+              exit 1
+            fi
 
-                jj git fetch
+            # Capture previous position before switching
+            prev_bookmark=$(jj log -r @ --no-graph -T 'local_bookmarks.join(", ")' 2>/dev/null)
+            prev_change=$(jj log -r @ --no-graph -T 'change_id.shortest()' 2>/dev/null)
 
-                # Check if branch exists on origin (use valid template, check for output)
-                if jj log -r "$1@origin" --no-graph -T 'commit_id.short()' 2>/dev/null | grep -q .; then
-                  echo "Switching to remote branch: $1@origin"
-                  jj new "$1@origin"
-                  jj bookmark track "$1@origin" 2>/dev/null || true
+            jj git fetch
+
+            # Check if branch exists on origin (use valid template, check for output)
+            if jj log -r "$1@origin" --no-graph -T 'commit_id.short()' 2>/dev/null | grep -q .; then
+              echo "Switching to remote branch: $1@origin"
+              jj new "$1@origin"
+              jj bookmark track "$1@origin" 2>/dev/null || true
             # Check if local bookmark exists
             elif jj log -r "$1" --no-graph -T 'commit_id.short()' 2>/dev/null | grep -q .; then
               echo "Switching to local bookmark: $1"
               jj new "$1"
               echo "Ready to work on top of $1"
-                else
-                  # Create new branch from main@origin
-                  echo "Branch $1 not found, creating from main@origin..."
-                  jj new main@origin -m "feat: $1"
-                  jj bookmark create "$1" -r @
-                  echo "Created new branch: $1"
-                fi
+            else
+              # Create new branch from main@origin
+              echo "Branch $1 not found, creating from main@origin..."
+              jj new main@origin -m "feat: $1"
+              jj bookmark create "$1" -r @
+              echo "Created new branch: $1"
+            fi
+
+            # Show previous position for easy return
+            if [[ -n "$prev_bookmark" ]]; then
+              echo "Previous position: $prev_bookmark ($prev_change)"
+            else
+              echo "Previous position: $prev_change (no bookmark)"
+            fi
           ''
           ""
         ];
