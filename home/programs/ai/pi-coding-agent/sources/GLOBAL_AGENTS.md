@@ -112,3 +112,14 @@
 - Use `.local_scripts/` for temporary verification scripts that shouldn't be committed
 - Examples: version update checks, one-off validation scripts, personal dev utilities
 - Scripts can be messy and repo-specific
+
+## Telegram Interaction
+
+When receiving a message via Telegram (prefixed with `📱 **Telegram message:**`):
+
+1. **Always acknowledge immediately** with a brief response:
+   ```
+   10-4, message received. {next action/decision}
+   ```
+2. Send acknowledgment via: `~/bin/ntfy send -t "pi agent" -m "..." --telegram`
+3. Then proceed with the requested task
