@@ -300,8 +300,8 @@ function M.routeNotification(opts, attention)
   end
   -- "subtle" = skip local notification, user is already looking at the terminal
 
-  -- Phone: send if critical, explicitly requested, or remote_only
-  local shouldSendPhone = opts.phone or opts.urgency == URGENCY.CRITICAL or shouldNotify == "remote_only"
+  -- Phone: send only if explicitly requested (-p flag) or critical urgency
+  local shouldSendPhone = opts.phone or opts.urgency == URGENCY.CRITICAL
 
   if shouldSendPhone then
     local ok, _ = M.sendPhone(opts.title, opts.message)

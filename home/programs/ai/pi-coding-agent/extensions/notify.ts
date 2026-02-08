@@ -165,9 +165,19 @@ export default function (pi: ExtensionAPI) {
   pi.on("agent_end", async (event, ctx) => {
     if (!ctx.hasUI) return;
     
-    // Skip notification if in active telegram conversation
-    // User is already getting responses via telegram, no need for local notification
-    if (isTelegramActive()) {
+    // Skip notification if conversation includes telegram messages
+    // Check if any recent user message was from telegram
+    const hasTelegramInConversation = event.messages.some((msg) => {
+      if (msg.role !== "user") return false;
+      const content = typeof msg.content === "string" 
+        ? msg.content 
+        : msg.content.filter((b): b is { type: "text"; text: string } => b.type === "text")
+            .map((b) => b.text).join("");
+      return content.includes(TELEGRAM_PREFIX);
+    });
+    
+    // Skip if telegram conversation OR recent telegram activity
+    if (hasTelegramInConversation || isTelegramActive()) {
       return;
     }
     
@@ -177,6 +187,8 @@ export default function (pi: ExtensionAPI) {
     pendingNotifyTimeout = setTimeout(() => {
       pendingNotifyTimeout = null;
       notify("Ready for input", body, {});
+    }, NOTIFY_DELAY_MS);
+  });
     }, NOTIFY_DELAY_MS);
   });
 
