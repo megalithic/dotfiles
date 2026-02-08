@@ -189,8 +189,6 @@ export default function (pi: ExtensionAPI) {
       notify("Ready for input", body, {});
     }, NOTIFY_DELAY_MS);
   });
-    }, NOTIFY_DELAY_MS);
-  });
 
   pi.on("error", async (event) => {
     notify("Error", event.error?.message || "An error occurred", {

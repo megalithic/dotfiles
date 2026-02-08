@@ -83,6 +83,17 @@
 
     # Package overrides
     notmuch = prev.notmuch.override { withEmacs = false; };
+
+    # FIXME: inetutils 2.7 fails to build with clang due to -Wformat-security
+    # being treated as error in openat-die.c, and tests fail in sandbox.
+    # Disable warnings and skip tests until upstream fixes.
+    # https://savannah.gnu.org/bugs/?group=inetutils
+    inetutils = prev.inetutils.overrideAttrs (old: {
+      doCheck = false;
+      env = (old.env or {}) // {
+        NIX_CFLAGS_COMPILE = (old.env.NIX_CFLAGS_COMPILE or "") + " -Wno-format-security";
+      };
+    });
   })
 
   # ===========================================================================
