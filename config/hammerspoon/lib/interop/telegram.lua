@@ -163,6 +163,15 @@ function M.escapeMarkdown(text)
   return text:gsub("([_%*%[%]%(%)~`>#+%-=|{}%.!])", "\\%1")
 end
 
+---Send a pre-formatted MarkdownV2 message (no escaping)
+---Use this for rich formatting - caller is responsible for proper escaping
+---@param text string Pre-formatted MarkdownV2 text
+---@param opts? { reply_markup?: table }
+---@return boolean success, string reason
+function M.sendFormatted(text, opts)
+  return M.send(text, opts)
+end
+
 --------------------------------------------------------------------------------
 -- RECEIVE MESSAGES (Long Polling)
 --------------------------------------------------------------------------------

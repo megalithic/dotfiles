@@ -339,6 +339,18 @@ function M.sendTelegram(title, message, opts)
   return telegram.sendNotification(title, message, opts)
 end
 
+---Send a pre-formatted markdown message to Telegram
+---Caller is responsible for proper MarkdownV2 escaping
+---@param text string Pre-formatted MarkdownV2 text
+---@return boolean success, string reason
+function M.sendTelegramFormatted(text)
+  if not telegram.isReady() then
+    return false, "not_configured"
+  end
+
+  return telegram.sendFormatted(text)
+end
+
 --------------------------------------------------------------------------------
 -- QUESTION RETRY SYSTEM
 --------------------------------------------------------------------------------

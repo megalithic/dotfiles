@@ -190,3 +190,19 @@ Set by `pinvim`/`pisock` wrapper:
 5. **Ask user if they want to push** - Do NOT push automatically
 6. **Hand off** - Provide context for next session
 
+
+### Sending Formatted Messages to Telegram
+
+Use `ntfy telegram` for rich MarkdownV2 formatting:
+
+```bash
+# Must escape special chars: _ * [ ] ( ) ~ ` > # + - = | { } . !
+~/bin/ntfy telegram '*Bold title*
+
+• Item one
+• Item two
+
+\`code here\`'
+```
+
+For simple notifications, use `ntfy send -T` (auto-escapes).

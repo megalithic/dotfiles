@@ -241,11 +241,32 @@ end
 "
 }
 
+# Send pre-formatted MarkdownV2 to Telegram
+# Usage: ntfy telegram "formatted message"
+# Note: Caller must escape MarkdownV2 special chars: _ * [ ] ( ) ~ ` > # + - = | { } . !
+cmd_telegram() {
+  local message="$1"
+  
+  if [[ -z "$message" ]]; then
+    echo "Error: message required" >&2
+    echo "Usage: ntfy telegram 'formatted *markdown* message'" >&2
+    return 1
+  fi
+
+  # Use heredoc to handle complex markdown without shell escaping issues
+  hs -c "
+local N = require('lib.notifications')
+local ok, err = N.sendTelegramFormatted([==[${message}]==])
+print(ok and 'sent' or ('failed: ' .. (err or 'unknown')))
+"
+}
+
 # Main command dispatcher
 case "${1:-help}" in
   send) shift; cmd_send "$@" ;;
   answer) shift; cmd_answer "$@" ;;
   pending) cmd_pending ;;
+  telegram) shift; cmd_telegram "$@" ;;
   help|--help|-h) show_help ;;
   *) echo "Unknown command: $1. Use 'ntfy help'" >&2; exit 1 ;;
 esac

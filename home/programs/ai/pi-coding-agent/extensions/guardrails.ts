@@ -36,7 +36,7 @@ function getResponseText(event: AgentResponseEvent): string {
 /**
  * Block corporate buzzwords and AI phrases
  */
-const blockCorporateBuzzwords: Guard = (event) => {
+const blockCorporateBuzzwords: GuardFn = (event) => {
   if (event.toolName !== "agent_response") return;
 
   const text = getResponseText(event as AgentResponseEvent);
@@ -61,7 +61,7 @@ const blockCorporateBuzzwords: Guard = (event) => {
  * Block git commands (should use jj)
  * Allows jj git subcommands except push
  */
-const blockGitCommands: Guard = (event) => {
+const blockGitCommands: GuardFn = (event) => {
   if (event.toolName !== "bash") return;
 
   const cmd = (event as ToolCallEvent).input.command;
@@ -89,7 +89,7 @@ const blockGitCommands: Guard = (event) => {
 /**
  * Block pushing (both git push and jj git push)
  */
-const blockPush: Guard = (event) => {
+const blockPush: GuardFn = (event) => {
   if (event.toolName !== "bash") return;
 
   const cmd = (event as ToolCallEvent).input.command;
@@ -109,7 +109,7 @@ const blockPush: Guard = (event) => {
 /**
  * Block find command (should use fd)
  */
-const blockFindCommand: Guard = (event) => {
+const blockFindCommand: GuardFn = (event) => {
   if (event.toolName !== "bash") return;
 
   const cmd = (event as ToolCallEvent).input.command;
@@ -134,7 +134,7 @@ const blockFindCommand: Guard = (event) => {
 /**
  * Block grep command (should use rg)
  */
-const blockGrepCommand: Guard = (event) => {
+const blockGrepCommand: GuardFn = (event) => {
   if (event.toolName !== "bash") return;
 
   const cmd = (event as ToolCallEvent).input.command;
@@ -159,7 +159,7 @@ const blockGrepCommand: Guard = (event) => {
 /**
  * Block brew install (should use nix)
  */
-const blockBrewInstall: Guard = (event) => {
+const blockBrewInstall: GuardFn = (event) => {
   if (event.toolName !== "bash") return;
 
   const cmd = (event as ToolCallEvent).input.command;
@@ -183,7 +183,7 @@ const blockBrewInstall: Guard = (event) => {
 /**
  * Block rm command (should use trash)
  */
-const blockRmCommand: Guard = (event) => {
+const blockRmCommand: GuardFn = (event) => {
   if (event.toolName !== "bash") return;
 
   const cmd = (event as ToolCallEvent).input.command;
@@ -208,7 +208,7 @@ const blockRmCommand: Guard = (event) => {
 /**
  * Block npx/bunx usage
  */
-const blockNpxBunx: Guard = (event) => {
+const blockNpxBunx: GuardFn = (event) => {
   if (event.toolName !== "bash") return;
 
   const cmd = (event as ToolCallEvent).input.command;
@@ -230,7 +230,7 @@ const blockNpxBunx: Guard = (event) => {
 /**
  * Block secret tools (pass, gpg exposure)
  */
-const blockSecretTools: Guard = (event) => {
+const blockSecretTools: GuardFn = (event) => {
   if (event.toolName !== "bash") return;
 
   const cmd = (event as ToolCallEvent).input.command;
@@ -257,7 +257,7 @@ const blockSecretTools: Guard = (event) => {
 /**
  * Block title case headers in markdown
  */
-const blockTitleCaseHeaders: Guard = (event) => {
+const blockTitleCaseHeaders: GuardFn = (event) => {
   if (event.toolName !== "agent_response") return;
 
   const text = getResponseText(event as AgentResponseEvent);

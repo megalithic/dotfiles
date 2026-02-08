@@ -378,6 +378,12 @@ end
 ---@usage N.send({ title = "Question", message = "Continue?", question = true, context = "main:claude" })
 function M.send(opts) return M.sender.send(opts) end
 
+---Send a pre-formatted MarkdownV2 message directly to Telegram
+---Use for rich formatting (code blocks, lists, etc.)
+---@param text string Pre-formatted MarkdownV2 text
+---@return boolean success, string reason
+function M.sendTelegramFormatted(text) return M.sender.sendTelegramFormatted(text) end
+
 ---Mark a question as answered (stops retry reminders)
 ---@param questionId string|nil Question ID returned by send()
 ---@param title string|nil Title to look up if no questionId
