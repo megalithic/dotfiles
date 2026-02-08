@@ -21,9 +21,12 @@ local M = {}
 local SOCKET_DIR = "/tmp"
 local SOCKET_PREFIX = "pi"
 
+---Default pi session for Telegram forwarding
+local DEFAULT_SESSION = "mega"
+
 ---Last active pi session name
----Set when a notification is sent from pi with telegram flag
-M.lastActiveSession = nil
+---Defaults to "mega" - can be overridden by trackLastActive()
+M.lastActiveSession = DEFAULT_SESSION
 
 ---Get socket path for a session
 ---@param session string Session name (e.g., "mega")

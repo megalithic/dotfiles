@@ -114,6 +114,71 @@ dokploy app deploy --app-id abc123
 
 Only deploy when the user explicitly requests it (e.g., "deploy it", "ship it", "push to prod").
 
+## Telegram / Pi Bridge Integration
+
+Pi can receive messages from Telegram via Hammerspoon. This requires running pi through `pinvim` or `pisock` wrapper.
+
+### Architecture
+
+```
+Telegram → Hammerspoon → Unix Socket → pi (bridge.ts) → notify.ts
+```
+
+**Key files (nix-managed in `home/programs/ai/pi-coding-agent/`):**
+- `extensions/bridge.ts` - Creates socket, receives messages, forwards to pi
+- `extensions/notify.ts` - Suppresses notifications during Telegram conversations
+- `config/hammerspoon/lib/interop/pi.lua` - Forwards Telegram to socket
+
+### Debugging Telegram Issues
+
+**1. Check if running via pinvim/pisock:**
+```bash
+echo $PI_SOCKET      # Should show /tmp/pi-{session}.sock
+echo $PI_SESSION     # Should show tmux session name
+```
+
+**2. Check if socket exists:**
+```bash
+ls -la /tmp/pi-*.sock
+```
+
+**3. Test socket manually:**
+```bash
+echo '{"type":"telegram","text":"test message"}' | nc -U /tmp/pi-{session}.sock
+```
+
+**4. Check Hammerspoon logs:**
+```bash
+tail -f ~/.hammerspoon/logs/hammerspoon.log | grep -i telegram
+# Or open Hammerspoon console: Cmd+Alt+Ctrl+H
+```
+
+**5. Verify extensions are loaded:**
+- Check pi startup output for "Bridge listening: /tmp/pi-*.sock"
+- Look for errors in pi output
+
+### Default Session
+
+Telegram messages are forwarded to the `mega` session by default (configured in `lib/interop/pi.lua`).
+
+### Common Issues
+
+| Symptom | Likely Cause | Fix |
+|---------|--------------|-----|
+| No socket file | Not running via pinvim/pisock | Use `pinvim` or `pisock pi` |
+| Socket exists but no messages | Hammerspoon not forwarding | Check HS console/logs |
+| Messages received but no notification suppression | `notify.ts` issue | Check TELEGRAM_PREFIX matches |
+| "Bridge listening" not shown | Extension not loaded | Check `~/.pi/agent/extensions/` |
+| Telegram not forwarding | Check `pi.lastActiveSession` | `hs -c "print(require('lib.interop.pi').lastActiveSession)"` |
+
+### Environment Variables
+
+Set by `pinvim`/`pisock` wrapper:
+- `PI_SOCKET` - Full socket path (e.g., `/tmp/pi-mega.sock`)
+- `PI_SESSION` - Tmux session name
+- `PI_SOCKET_DIR` - Socket directory (`/tmp`)
+- `PI_SOCKET_PREFIX` - Socket prefix (`pi`)
+
 ## Landing the Plane (Session Completion)
 
 **When ending a work session:**
