@@ -3,7 +3,8 @@
 #
 # Usage:
 #   tell.sh SESSION "task description"           # Tell a pi agent
-#   tell.sh --agent claude "task description"    # Delegate to external agent
+#   tell.sh --agent claude "task description"    # Delegate to external agent (background)
+#   tell.sh --agent claude -v "task"              # Run in visible tmux window
 #   tell.sh --agent opencode "task description"
 #   tell.sh --agent aider "task description"
 #   tell.sh --status TASK_ID
@@ -463,11 +464,94 @@ cmd_list() {
   done
 }
 
+# Delegate to external agent in VISIBLE mode (current tmux session)
+cmd_agent_visible() {
+  local agent="$1"
+  shift
+  local message="$*"
+  
+  if [[ -z "$agent" ]] || [[ -z "$message" ]]; then
+    echo "Usage: tell.sh --agent AGENT --visible \"task description\"" >&2
+    echo "Supported agents: ${!AGENT_COMMANDS[*]}" >&2
+    exit 1
+  fi
+  
+  # Must be in a tmux session
+  if [[ -z "${TMUX:-}" ]]; then
+    echo "Error: --visible requires running inside tmux" >&2
+    echo "Use without --visible to run in background socket" >&2
+    exit 1
+  fi
+  
+  # Check if agent is supported
+  if [[ -z "${AGENT_COMMANDS[$agent]:-}" ]]; then
+    echo "Error: unknown agent '$agent'" >&2
+    echo "Supported agents: ${!AGENT_COMMANDS[*]}" >&2
+    exit 1
+  fi
+  
+  # Check if agent binary exists
+  local agent_bin="${AGENT_COMMANDS[$agent]%% *}"
+  if ! command -v "$agent_bin" &>/dev/null; then
+    echo "Error: '$agent_bin' not found in PATH" >&2
+    exit 1
+  fi
+  
+  local task_id
+  task_id=$(gen_id)
+  local from_ctx
+  from_ctx=$(get_context)
+  local created
+  created=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+  local window_name="${agent}-${task_id}"
+  
+  # Create task file
+  cat > "${TASKS_DIR}/${task_id}.json" << TASKEOF
+{
+  "id": "${task_id}",
+  "from": "${from_ctx}",
+  "to": "${agent}",
+  "type": "external-visible",
+  "window": "${window_name}",
+  "status": "running",
+  "task": $(jq -n --arg t "$message" '$t'),
+  "created": "${created}",
+  "updates": []
+}
+TASKEOF
+
+  # Build the command - run agent, then wait for user input
+  local agent_cmd="${AGENT_COMMANDS[$agent]}"
+  local full_cmd
+  if command -v script &>/dev/null; then
+    # macOS script syntax: script -q /dev/null command (for proper TTY)
+    full_cmd="script -q /dev/null $agent_cmd -p $(printf '%q' "$message"); echo ''; echo '=== Task complete. Press Enter to close ==='; read"
+  else
+    full_cmd="$agent_cmd -p $(printf '%q' "$message"); echo ''; echo '=== Task complete. Press Enter to close ==='; read"
+  fi
+  
+  # Create new window in current session
+  tmux new-window -n "$window_name" "bash -c $(printf '%q' "$full_cmd")"
+  
+  echo "Task ${task_id} started in window '${window_name}'"
+  echo ""
+  echo "Switch to it with: Ctrl-b n (next) or Ctrl-b w (list)"
+  echo "Status: tell.sh --status ${task_id}"
+}
+
 # Main
 case "${1:-}" in
   --agent|-a)
     shift
-    cmd_agent "$@"
+    agent="$1"
+    shift
+    # Check for --visible flag
+    if [[ "${1:-}" == "--visible" ]] || [[ "${1:-}" == "-v" ]]; then
+      shift
+      cmd_agent_visible "$agent" "$@"
+    else
+      cmd_agent "$agent" "$@"
+    fi
     ;;
   --status|-s)
     shift
@@ -495,7 +579,8 @@ case "${1:-}" in
   --help|-h)
     echo "Usage:"
     echo "  tell.sh SESSION \"task\"           - Send task to a pi agent session"
-    echo "  tell.sh --agent AGENT \"task\"     - Delegate to external agent (yolo mode)"
+    echo "  tell.sh --agent AGENT \"task\"          - Delegate to external agent (background)"
+    echo "  tell.sh --agent AGENT -v \"task\"       - Run in visible tmux window"
     echo ""
     echo "Supported agents: ${!AGENT_COMMANDS[*]}"
     echo ""
