@@ -13,6 +13,16 @@ in {
     shellInit = ''
       export PATH="/etc/profiles/per-user/${username}/bin:$PATH"
       set -g fish_prompt_pwd_dir_length 20
+
+      # jj bookmark completion helper
+      function __fish_jj_bookmarks
+        jj bookmark list --template 'if(!remote, name ++ "\n")' 2>/dev/null
+      end
+
+      # jj bookmark completions
+      complete -c jj -n "__fish_seen_subcommand_from push" -s b -l bookmark -xa "(__fish_jj_bookmarks)" -d "Bookmark"
+      complete -c jj -n "__fish_seen_subcommand_from git; and __fish_seen_subcommand_from push" -s b -l bookmark -xa "(__fish_jj_bookmarks)" -d "Bookmark"
+      complete -c jj -n "__fish_seen_subcommand_from bookmark; and __fish_seen_subcommand_from delete d forget f set s move m rename r" -xa "(__fish_jj_bookmarks)" -d "Bookmark name"
     '';
     interactiveShellInit = ''
       # I like to keep the prompt at the bottom rather than the top
@@ -118,9 +128,11 @@ in {
       # Set darker background for prompt
       set -g fish_color_cwd_root e67e80
       set -g fish_color_user 7fbbb3
+
     '';
     functions = {
       fish_greeting = "";
+
 
       _prompt_move_to_bottom = {
         onEvent = "fish_postexec";
@@ -268,39 +280,13 @@ in {
         commandline --function repaint
       '';
 
-      fzf-vim-widget = ''
-        # modified from fzf-file-widget
-        set -l commandline $(__fzf_parse_commandline)
-        set -l dir $commandline[1]
-        set -l fzf_query $commandline[2]
-        set -l prefix $commandline[3]
-
-        # fd: -L = follow symlinks, --min-depth 1 = skip root dir, -tf -td -tl = files, dirs, symlinks
-        # fd excludes hidden files by default (use -H to include them)
-        test -n "$FZF_CTRL_T_COMMAND"; or set -l FZF_CTRL_T_COMMAND "
-        fd -L --min-depth 1 -tf -td -tl . \$dir 2>/dev/null"
-
-        test -n "$FZF_TMUX_HEIGHT"; or set FZF_TMUX_HEIGHT 40%
-        begin
-            set -lx FZF_DEFAULT_OPTS "--height $FZF_TMUX_HEIGHT --reverse --bind=ctrl-z:ignore $FZF_DEFAULT_OPTS $FZF_CTRL_T_OPTS"
-            eval "$FZF_CTRL_T_COMMAND | "(__fzfcmd)' -m --query "'$fzf_query'"' | while read -l r
-                set result $result $r
-            end
+      fzf-jj-bookmarks = ''
+        # List jj bookmarks with fzf and insert selection
+        set -l bookmark (jj bookmark list --template 'if(!remote, name ++ "\n")' 2>/dev/null | fzf --height 40% --reverse --prompt="Bookmark> ")
+        if test -n "$bookmark"
+          commandline -i "$bookmark"
         end
-        if [ -z "$result" ]
-            # _prompt_move_to_bottom
-            commandline -f repaint
-            return
-        end
-        set -l filepath_result
-        for i in $result
-            set filepath_result "$filepath_result$prefix"
-            set filepath_result "$filepath_result$(string escape $i)"
-            set filepath_result "$filepath_result "
-        end
-        # _prompt_move_to_bottom
         commandline -f repaint
-        $EDITOR $result
       '';
     };
 
