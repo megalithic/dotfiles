@@ -114,6 +114,37 @@ dokploy app deploy --app-id abc123
 
 Only deploy when the user explicitly requests it (e.g., "deploy it", "ship it", "push to prod").
 
+## Guardrail Override Protocol
+
+When a command is blocked by guardrails, the user can grant single-use bypass permission:
+
+### `override`
+User says "override" after a block. Agent MUST:
+1. Confirm before executing: "Override requested. Execute `<exact blocked command>`? (yes to confirm)"
+2. Wait for user confirmation (yes/y/confirm)
+3. Execute the command
+4. Log: "✓ Override authorized for `<command>` at <ISO timestamp>"
+
+### `!override`
+User says "!override" after a block. Agent MUST:
+1. Execute immediately (no confirmation prompt)
+2. Log: "✓ Override authorized (no-confirm) for `<command>` at <ISO timestamp>"
+
+### Rules
+- **Single-use**: permission applies ONLY to the most recently blocked command
+- **Always echo**: repeat the exact command being authorized so user knows what they're permitting
+- **Timestamp**: use ISO format (e.g., 2026-02-09T16:45:00Z) for audit trail
+- **No persistence**: after execution, guardrails return to normal
+
+### Example flow
+```
+Agent: <tries to push>
+System: **push blocked** - Agent cannot push to remote.
+User: !override
+Agent: ✓ Override authorized (no-confirm) for `jj git push -b my-feature` at 2026-02-09T16:45:00Z
+Agent: <executes push>
+```
+
 ## Telegram / Pi Bridge Integration
 
 Pi can receive messages from Telegram via Hammerspoon. This requires running pi through `pinvim` or `pisock` wrapper.
