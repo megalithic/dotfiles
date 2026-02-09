@@ -120,6 +120,7 @@ local watchers = { "audio", "dock", "app", "notification", "url" }
 req("bindings")
 req("watchers", { watchers = watchers })
 req("ptt", { push = { { "cmd", "alt" }, nil }, toggle = { { "cmd", "alt" }, "p" } }):start()
+req("ptd", { model = "large-v3", languages = { "en" } }):start()
 req("quitter"):start()
 
 -- Setup hs.reload() wrapper for pre-reload cleanup (prevents resource leaks)
