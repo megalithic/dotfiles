@@ -12,12 +12,22 @@
  */
 
 import { connect } from "./cdp.js";
+import { resolveTarget, targetHelpText } from "./target.js";
 
 const DEBUG = process.env.DEBUG === "1";
 const log = DEBUG ? (...args) => console.error("[debug]", ...args) : () => {};
 
 const reject = process.argv.includes("--reject");
 const mode = reject ? "reject" : "accept";
+
+if (process.argv.includes("--help")) {
+  console.log("Usage: dismiss-cookies.js [--reject] [--target <id>] [--url-match <str>]");
+  console.log("\nDismisses cookie consent dialogs on the current page.");
+  console.log("\nOptions:");
+  console.log("  --reject  Reject cookies instead of accepting");
+  console.log(targetHelpText());
+  process.exit(0);
+}
 
 const COOKIE_DISMISS_SCRIPT = `(acceptCookies) => {
   const clicked = [];
@@ -300,14 +310,14 @@ try {
 
   log("getting pages...");
   const pages = await cdp.getPages();
-  const page = pages.at(-1);
+  const page = resolveTarget(pages);
 
   if (!page) {
     console.error("✗ No active tab found");
     process.exit(1);
   }
 
-  log("attaching to page...");
+  log("attaching to page:", page.targetId);
   const sessionId = await cdp.attachToPage(page.targetId);
 
   // Wait a bit for consent dialogs to appear
