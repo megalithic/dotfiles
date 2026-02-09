@@ -10,6 +10,7 @@
  * - Current goal/todo being worked on
  *
  * Triggers checkpoint prompt when:
+ *   - First write on main (prompts for bookmark)
  * - 5+ files modified
  * - 20+ minutes elapsed
  * - Todo claimed (prompts to create bookmark)
@@ -58,6 +59,8 @@ interface CheckpointState {
   lastCompletedTodo: string | null;
   delegatedTaskReceived: boolean; // Flag when a task is delegated from another agent
   delegatedTaskInfo: { id: string; from: string; task: string } | null;
+  sessionBookmarkVerified: boolean; // True once we've verified/acknowledged bookmark status
+  allowMainWork: boolean; // User explicitly allowed working on main
 }
 
 const state: CheckpointState = {
@@ -71,6 +74,8 @@ const state: CheckpointState = {
   lastCompletedTodo: null,
   delegatedTaskReceived: false,
   delegatedTaskInfo: null,
+  sessionBookmarkVerified: false,
+  allowMainWork: false,
 };
 
 
@@ -184,6 +189,27 @@ function isMainBookmark(bookmark: string | null): boolean {
   return !bookmark || bookmark === "main" || bookmark.includes("main@");
 }
 
+
+async function buildBookmarkWarningPrompt(): Promise<string> {
+  const bookmark = await getCurrentBookmark();
+  const onMain = isMainBookmark(bookmark);
+  
+  if (!onMain) {
+    // Already on a feature bookmark, all good
+    return "";
+  }
+  
+  let prompt = `## ⚠️ Working on main\n\n`;
+  prompt += `You're about to modify files while on \`main\`.\n\n`;
+  prompt += `**Recommended:** Create a feature bookmark first:\n`;
+  prompt += `\`\`\`\njj feat <descriptive-name>\n\`\`\`\n\n`;
+  prompt += `**Options:**\n`;
+  prompt += `1. Create bookmark: \`jj feat <name>\`\n`;
+  prompt += `2. Work on main anyway: say "work on main" or "use main"\n`;
+  prompt += `3. Check status: \`jj log --limit 3\`\n`;
+  
+  return prompt;
+}
 async function buildNewWorkPrompt(): Promise<string> {
   const bookmark = await getCurrentBookmark();
   const todoInfo = state.claimedTodoInfo;
@@ -357,6 +383,20 @@ export default function (pi: ExtensionAPI) {
     // Check if we should prompt for checkpoint
     // Only check on write/edit to avoid spamming
     if (event.toolName === "write" || event.toolName === "edit") {
+      // First write: verify we're on a bookmark (not main) unless allowed
+      if (!state.sessionBookmarkVerified && !state.allowMainWork) {
+        const warningPrompt = await buildBookmarkWarningPrompt();
+        if (warningPrompt) {
+          // On main without permission - block and warn
+          return {
+            block: true,
+            reason: warningPrompt,
+          };
+        }
+        // Not on main, or got permission - mark as verified
+        state.sessionBookmarkVerified = true;
+      }
+
       if (shouldPromptCheckpoint()) {
         const prompt = await buildCheckpointPrompt();
         return {
@@ -492,6 +532,18 @@ export default function (pi: ExtensionAPI) {
       
       ctx.ui.notify(msg, "info");
       return { action: "handled" as const };
+    }
+
+    // Allow working on main when explicitly requested
+    if (
+      textLower.includes("work on main") ||
+      textLower.includes("use main") ||
+      textLower.includes("continue on main")
+    ) {
+      state.allowMainWork = true;
+      state.sessionBookmarkVerified = true;
+      ctx.ui.notify("✓ Working on main branch allowed", "info");
+      // Don't handle - let the message pass through
     }
 
     // Reset on continue/skip
