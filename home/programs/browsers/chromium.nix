@@ -175,6 +175,7 @@ in {
     enable = true;
     package = pkgs.brave-browser-nightly;
     bundleId = "com.brave.Browser.nightly"; # For Application Support path
+    customActivation = true; # Skip adding base package - wrapper replaces it
     appName = "Brave Browser Nightly.app";
     executableName = "Brave Browser Nightly";
     iconFile = "app.icns";
@@ -191,11 +192,12 @@ in {
     # Use shared keyboard shortcuts
     keyEquivalents = sharedKeyEquivalents;
 
-    # Create a wrapper .app that can be launched from Dock/Spotlight with debug args
+    # Create a wrapper .app that launches with commandLineArgs (including remote debugging)
+    # Named same as original so it effectively replaces it in ~/Applications/Home Manager Apps/
     darwinWrapperApp = {
       enable = true;
-      name = "Brave Browser Nightly (Debug)";
-      bundleId = "com.nix.brave-browser-nightly-debug";
+      name = "Brave Browser Nightly";
+      bundleId = "com.nix.brave-browser-nightly";
     };
   };
 
