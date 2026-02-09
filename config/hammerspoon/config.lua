@@ -1,8 +1,9 @@
 local M = {}
 
 HYPER = "F19"
--- BROWSER = "com.nix.brave-browser-nightly-debug"
-BROWSER = "com.brave.Browser.nightly"
+-- Use the nix wrapper which has --remote-debugging-port=9222 enabled
+BROWSER = "com.nix.brave-browser-nightly"
+-- BROWSER = "com.brave.Browser.nightly"  -- Plain app without args
 -- BROWSER = "net.imput.helium"
 TERMINAL = "com.mitchellh.ghostty"
 

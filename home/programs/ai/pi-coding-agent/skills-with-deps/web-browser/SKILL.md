@@ -1,6 +1,6 @@
 ---
 name: web-browser
-description: "Allows to interact with web pages by performing actions such as clicking buttons, filling out forms, and navigating links. It works by remote controlling Google Chrome or Chromium browsers using the Chrome DevTools Protocol (CDP). When Claude needs to browse the web, it can use this skill to do so."
+description: "Allows to interact with web pages by performing actions such as clicking buttons, filling out forms, and navigating links. It works by remote controlling Chromium-based browsers using the Chrome DevTools Protocol (CDP). When Claude needs to browse the web, it can use this skill to do so."
 license: Stolen from Mario
 ---
 
@@ -8,14 +8,27 @@ license: Stolen from Mario
 
 Minimal CDP tools for collaborative site exploration.
 
-## Start Chrome
+## Browser detection
 
+The skill auto-detects which browser to use:
+
+1. **Port 9222 already listening** → Use existing browser (no restart needed)
+2. **Hammerspoon BROWSER** → Use configured browser from HS config
+3. **Fallback** → Google Chrome
+
+Check if a browser is listening:
 ```bash
-./scripts/start.js              # Fresh profile
-./scripts/start.js --profile    # Copy your profile (cookies, logins)
+lsof -i :9222 -sTCP:LISTEN
 ```
 
-Start Chrome on `:9222` with remote debugging.
+## Start browser (if needed)
+
+```bash
+./scripts/start.js              # Auto-detect or start browser
+./scripts/start.js --profile    # Copy your browser profile (cookies, logins)
+```
+
+**Note:** If your main browser is already running with `--remote-debugging-port=9222`, the script detects and uses it automatically.
 
 ## Navigate
 
@@ -34,7 +47,7 @@ Navigate current tab or open new tab.
 ./scripts/eval.js 'JSON.stringify(Array.from(document.querySelectorAll("a")).map(a => ({ text: a.textContent.trim(), href: a.href })).filter(link => !link.href.startsWith("https://")))'
 ```
 
-Execute JavaScript in active tab (async context).  Be careful with string escaping, best to use single quotes.
+Execute JavaScript in active tab (async context). Be careful with string escaping, best to use single quotes.
 
 ## Screenshot
 

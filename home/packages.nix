@@ -8,7 +8,7 @@
   # Custom apps built with mkApp - these have passthru.appLocation
   customApps = with pkgs; [
     bloom
-    brave-browser-nightly
+    # brave-browser-nightly - managed by mkChromiumBrowser wrapper (has --remote-debugging-port)
     fantastical
     helium-browser
     talktastic
