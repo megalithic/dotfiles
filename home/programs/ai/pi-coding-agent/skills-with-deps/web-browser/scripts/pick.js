@@ -1,15 +1,29 @@
 #!/usr/bin/env node
 
 import { connect } from "./cdp.js";
+import { resolveTarget, targetHelpText } from "./target.js";
 
 const DEBUG = process.env.DEBUG === "1";
 const log = DEBUG ? (...args) => console.error("[debug]", ...args) : () => {};
 
-const message = process.argv.slice(2).join(" ");
+// Filter out target flags from message
+const args = process.argv.slice(2);
+const messageArgs = [];
+for (let i = 0; i < args.length; i++) {
+  if (args[i] === "--target" || args[i] === "--url-match") {
+    i++; // Skip flag and its value
+  } else if (!args[i].startsWith("--")) {
+    messageArgs.push(args[i]);
+  }
+}
+const message = messageArgs.join(" ");
+
 if (!message) {
-  console.log("Usage: pick.js 'message'");
+  console.log("Usage: pick.js 'message' [--target <id>] [--url-match <str>]");
   console.log("\nExample:");
   console.log('  pick.js "Click the submit button"');
+  console.log('  pick.js "Select the login form" --url-match github');
+  console.log(targetHelpText());
   process.exit(1);
 }
 
@@ -123,14 +137,14 @@ try {
 
   log("getting pages...");
   const pages = await cdp.getPages();
-  const page = pages.at(-1);
+  const page = resolveTarget(pages);
 
   if (!page) {
     console.error("✗ No active tab found");
     process.exit(1);
   }
 
-  log("attaching to page...");
+  log("attaching to page:", page.targetId);
   const sessionId = await cdp.attachToPage(page.targetId);
 
   log("waiting for user pick...");

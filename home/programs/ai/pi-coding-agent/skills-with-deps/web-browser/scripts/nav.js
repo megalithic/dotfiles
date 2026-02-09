@@ -1,18 +1,22 @@
 #!/usr/bin/env node
 
 import { connect } from "./cdp.js";
+import { resolveTarget, saveCurrentTarget, targetHelpText } from "./target.js";
 
 const DEBUG = process.env.DEBUG === "1";
 const log = DEBUG ? (...args) => console.error("[debug]", ...args) : () => {};
 
-const url = process.argv[2];
-const newTab = process.argv[3] === "--new";
+const args = process.argv.slice(2).filter(a => !a.startsWith("--"));
+const url = args[0];
+const newTab = process.argv.includes("--new");
 
 if (!url) {
-  console.log("Usage: nav.js <url> [--new]");
+  console.log("Usage: nav.js <url> [--new] [--target <id>] [--url-match <str>]");
   console.log("\nExamples:");
-  console.log("  nav.js https://example.com       # Navigate current tab");
-  console.log("  nav.js https://example.com --new # Open in new tab");
+  console.log("  nav.js https://example.com            # Navigate current tab");
+  console.log("  nav.js https://example.com --new      # Open in new tab");
+  console.log("  nav.js https://example.com --url-match github  # Navigate tab with 'github' in URL");
+  console.log(targetHelpText());
   process.exit(1);
 }
 
@@ -29,6 +33,8 @@ try {
   log("getting pages...");
   let targetId;
 
+  const pages = await cdp.getPages();
+  
   if (newTab) {
     log("creating new tab...");
     const { targetId: newTargetId } = await cdp.send("Target.createTarget", {
@@ -36,8 +42,7 @@ try {
     });
     targetId = newTargetId;
   } else {
-    const pages = await cdp.getPages();
-    const page = pages.at(-1);
+    const page = resolveTarget(pages);
     if (!page) {
       console.error("✗ No active tab found");
       process.exit(1);
@@ -50,6 +55,10 @@ try {
 
   log("navigating...");
   await cdp.navigate(sessionId, url);
+
+  // Save targetId for other scripts to use
+  saveCurrentTarget(targetId);
+  log("saved target:", targetId);
 
   console.log(newTab ? "✓ Opened:" : "✓ Navigated to:", url);
 

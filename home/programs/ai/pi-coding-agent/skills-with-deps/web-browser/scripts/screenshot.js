@@ -4,9 +4,17 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { writeFileSync } from "node:fs";
 import { connect } from "./cdp.js";
+import { resolveTarget, targetHelpText } from "./target.js";
 
 const DEBUG = process.env.DEBUG === "1";
 const log = DEBUG ? (...args) => console.error("[debug]", ...args) : () => {};
+
+if (process.argv.includes("--help")) {
+  console.log("Usage: screenshot.js [--target <id>] [--url-match <str>]");
+  console.log("\nCaptures a screenshot of the current tab.");
+  console.log(targetHelpText());
+  process.exit(0);
+}
 
 // Global timeout
 const globalTimeout = setTimeout(() => {
@@ -20,14 +28,14 @@ try {
 
   log("getting pages...");
   const pages = await cdp.getPages();
-  const page = pages.at(-1);
+  const page = resolveTarget(pages);
 
   if (!page) {
     console.error("✗ No active tab found");
     process.exit(1);
   }
 
-  log("attaching to page...");
+  log("attaching to page:", page.targetId);
   const sessionId = await cdp.attachToPage(page.targetId);
 
   log("taking screenshot...");

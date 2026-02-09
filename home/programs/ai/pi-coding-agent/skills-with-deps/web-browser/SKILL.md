@@ -30,14 +30,35 @@ lsof -i :9222 -sTCP:LISTEN
 
 **Note:** If your main browser is already running with `--remote-debugging-port=9222`, the script detects and uses it automatically.
 
+## Tab targeting
+
+All scripts support targeting specific tabs:
+
+```bash
+# Use cached target from last nav.js call (default)
+./scripts/screenshot.js
+
+# Explicit target by ID
+./scripts/screenshot.js --target ABC123
+
+# Find tab by URL substring
+./scripts/screenshot.js --url-match github
+```
+
+**How it works:**
+1. `nav.js` saves the targetId to `~/.cache/agent-web/current-target`
+2. Other scripts read this cache by default
+3. Use `--target` or `--url-match` to override
+
 ## Navigate
 
 ```bash
 ./scripts/nav.js https://example.com
 ./scripts/nav.js https://example.com --new
+./scripts/nav.js https://example.com --url-match github  # Navigate existing tab
 ```
 
-Navigate current tab or open new tab.
+Navigate current tab or open new tab. Saves targetId for other scripts.
 
 ## Evaluate JavaScript
 
