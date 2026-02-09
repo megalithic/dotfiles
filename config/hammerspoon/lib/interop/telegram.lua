@@ -165,11 +165,58 @@ end
 
 ---Send a pre-formatted MarkdownV2 message (no escaping)
 ---Use this for rich formatting - caller is responsible for proper escaping
+---Falls back to plain text if MarkdownV2 parsing fails
 ---@param text string Pre-formatted MarkdownV2 text
 ---@param opts? { reply_markup?: table }
 ---@return boolean success, string reason
 function M.sendFormatted(text, opts)
-  return M.send(text, opts)
+  opts = opts or {}
+
+  local url, err = apiUrl("sendMessage")
+  if not url then
+    U.log.w("Telegram: " .. (err or "unknown error"))
+    return false, err or "api_error"
+  end
+
+  local chatId = getChatId()
+  if not chatId then
+    U.log.w("Telegram: missing chat_id")
+    return false, "missing_chat_id"
+  end
+
+  local headers = { ["Content-Type"] = "application/json" }
+
+  -- Try MarkdownV2 first (synchronous so we can retry)
+  local payload = {
+    chat_id = chatId,
+    text = text,
+    parse_mode = "MarkdownV2",
+  }
+  if opts.reply_markup then
+    payload.reply_markup = opts.reply_markup
+  end
+
+  local status, body = hs.http.post(url, hs.json.encode(payload), headers)
+
+  if status == 200 then
+    U.log.f("Telegram: formatted message sent successfully")
+    return true, "sent"
+  end
+
+  -- If MarkdownV2 failed (likely parse error), retry as plain text
+  if status == 400 and body and body:match("can't parse entities") then
+    U.log.wf("Telegram: MarkdownV2 parse failed, retrying as plain text")
+    payload.parse_mode = nil
+    status, body = hs.http.post(url, hs.json.encode(payload), headers)
+
+    if status == 200 then
+      U.log.f("Telegram: plain text fallback sent successfully")
+      return true, "sent_plain"
+    end
+  end
+
+  U.log.wf("Telegram: sendFormatted failed, status=%d, body=%s", status, body or "")
+  return false, "send_failed"
 end
 
 --------------------------------------------------------------------------------
