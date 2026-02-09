@@ -257,6 +257,79 @@ const blockSecretTools: GuardFn = (event) => {
 /**
  * Block title case headers in markdown
  */
+/**
+ * Block writes to nix-managed paths (should edit dotfiles source)
+ */
+const blockNixManagedWrites: GuardFn = (event) => {
+  if (event.toolName !== "bash" && event.toolName !== "write" && event.toolName !== "edit") return;
+
+  let targetPath = "";
+  
+  if (event.toolName === "bash") {
+    const cmd = (event as ToolCallEvent).input.command;
+    // Check for redirects or writes to managed paths
+    const writePatterns = [
+      />s*~\/bin\//,
+      />s*\$HOME\/bin\//,
+      />s*~\/\.config\//,
+      />s*\$HOME\/\.config\//,
+      />s*~\/\.hammerspoon\//,
+      />s*\$HOME\/\.hammerspoon\//,
+      />s*\/nix\/store\//,
+    ];
+    for (const pattern of writePatterns) {
+      if (pattern.test(cmd)) {
+        targetPath = cmd;
+        break;
+      }
+    }
+  } else {
+    // write or edit tool
+    targetPath = (event as ToolCallEvent).input.path || "";
+  }
+
+  if (!targetPath) return;
+
+  // Expand ~ and $HOME for checking
+  const expandedPath = targetPath
+    .replace(/^~\//, process.env.HOME + "/")
+    .replace(/^\$HOME\//, process.env.HOME + "/");
+
+  // Map of managed paths to their dotfiles sources
+  const managedPaths: Record<string, string> = {
+    [process.env.HOME + "/bin/"]: "~/.dotfiles/bin/",
+    [process.env.HOME + "/.config/"]: "~/.dotfiles/config/",
+    [process.env.HOME + "/.hammerspoon/"]: "~/.dotfiles/config/hammerspoon/",
+    [process.env.HOME + "/.pi/agent/"]: "~/.dotfiles/home/programs/ai/pi-coding-agent/",
+  };
+
+  for (const [managed, source] of Object.entries(managedPaths)) {
+    if (expandedPath.includes(managed)) {
+      const relativePath = expandedPath.split(managed)[1] || "";
+      return {
+        block: true,
+        reason:
+          `**Write to nix-managed path blocked**\n\n` +
+          `\`${managed}\` is managed by nix/home-manager.\n\n` +
+          `**Edit the source instead:**\n` +
+          `\`${source}${relativePath}\`\n\n` +
+          `Then run \`just rebuild\` if needed.`,
+      };
+    }
+  }
+
+  // Block writes to /nix/store
+  if (expandedPath.includes("/nix/store/")) {
+    return {
+      block: true,
+      reason:
+        "**Write to /nix/store blocked** - Nix store is read-only.\n\n" +
+        "Find the source file in `~/.dotfiles/` and edit there instead.",
+    };
+  }
+};
+
+
 const blockTitleCaseHeaders: GuardFn = (event) => {
   if (event.toolName !== "agent_response") return;
 
@@ -292,6 +365,7 @@ const guards: Guard[] = [
   blockRmCommand,
   blockNpxBunx,
   blockSecretTools,
+  blockNixManagedWrites,
   blockTitleCaseHeaders,
 ];
 
