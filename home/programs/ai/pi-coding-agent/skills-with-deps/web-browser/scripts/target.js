@@ -97,6 +97,44 @@ export function resolveTarget(pages, options = {}) {
 }
 
 /**
+ * Resolve target ONLY if there's explicit context (flags or cache).
+ * Returns null if no intentional target exists - caller should open new tab.
+ * 
+ * Use this for navigation to avoid hijacking existing tabs.
+ * 
+ * @param {Array} pages - Array of page objects from cdp.getPages()
+ * @param {Object} options - Optional overrides { targetId, urlMatch }
+ * @returns {Object|null} - The page object or null if no context
+ */
+export function resolveTargetStrict(pages, options = {}) {
+  const flags = parseTargetFlags();
+  const targetId = options.targetId || flags.targetId;
+  const urlMatch = options.urlMatch || flags.urlMatch;
+  
+  // 1. Explicit targetId
+  if (targetId) {
+    const page = pages.find(p => p.targetId === targetId);
+    if (page) return page;
+  }
+  
+  // 2. URL pattern match
+  if (urlMatch) {
+    const page = pages.find(p => p.url && p.url.includes(urlMatch));
+    if (page) return page;
+  }
+  
+  // 3. Cached target (only if still exists)
+  const cached = getCachedTarget();
+  if (cached) {
+    const page = pages.find(p => p.targetId === cached);
+    if (page) return page;
+  }
+  
+  // NO fallback - return null to signal "open new tab"
+  return null;
+}
+
+/**
  * Get target help text for usage messages
  */
 export function targetHelpText() {

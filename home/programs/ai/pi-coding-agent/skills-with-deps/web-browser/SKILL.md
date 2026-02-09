@@ -58,7 +58,7 @@ All scripts support targeting specific tabs:
 ./scripts/nav.js https://example.com --url-match github  # Navigate existing tab
 ```
 
-Navigate current tab or open new tab. Saves targetId for other scripts.
+Opens new tab by default (safe). Only reuses existing tabs with explicit targeting.
 
 ## Evaluate JavaScript
 
