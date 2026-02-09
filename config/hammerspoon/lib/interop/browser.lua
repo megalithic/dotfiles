@@ -6,8 +6,21 @@ local obj = {}
 obj.__index = obj
 obj.name = "browser"
 
+-- App names for browsers that support JavaScript automation
+-- The nix-wrapped version has the same app name as the original
 local supportedBrowsers =
   { "Chromium", "Brave Browser Nightly", "Brave Browser Dev", "Brave Browser", "Brave Browser Beta", "Safari" }
+
+-- Bundle IDs to try when BROWSER global doesn't match a running app
+-- Nix wrappers launch the real app, so we need original bundle IDs
+local browserBundleIDs = {
+  "com.brave.Browser.nightly",
+  "com.brave.Browser.dev",
+  "com.brave.Browser",
+  "com.brave.Browser.beta",
+  "org.chromium.Chromium",
+  "com.apple.Safari",
+}
 
 local dbg = function(str, ...)
   str = string.format(":: [%s] %s", "browser", str)
@@ -16,10 +29,35 @@ local dbg = function(str, ...)
   end
 end
 
-function obj.tabCount()
-  local app = hs.application.get(BROWSER) or hs.application.frontmostApplication()
-
+-- Find a running browser app, trying BROWSER global first, then fallbacks
+local function findBrowser()
+  -- Try BROWSER global first
+  local app = hs.application.get(BROWSER)
   if app and enum.contains(supportedBrowsers, app:name()) then
+    return app
+  end
+
+  -- Try fallback bundle IDs
+  for _, bundleID in ipairs(browserBundleIDs) do
+    app = hs.application.get(bundleID)
+    if app and enum.contains(supportedBrowsers, app:name()) then
+      return app
+    end
+  end
+
+  -- Last resort: frontmost app if it's a browser
+  app = hs.application.frontmostApplication()
+  if app and enum.contains(supportedBrowsers, app:name()) then
+    return app
+  end
+
+  return nil
+end
+
+function obj.tabCount()
+  local app = findBrowser()
+
+  if app then
     local _bool, count, _desc = hs.osascript.javascript([[
       const browser = new Application("/Applications/]] .. app:name() .. [[.app")
       let count = 0;
@@ -36,9 +74,9 @@ function obj.tabCount()
 end
 
 function obj.hasTab(url)
-  local app = hs.application.get(BROWSER) or hs.application.frontmostApplication()
+  local app = findBrowser()
 
-  if app and enum.contains(supportedBrowsers, app:name()) then
+  if app then
     url = string.gsub(url, "/", "\\/")
     local _status, hasTab, _descriptor = hs.osascript.javascript([[
     (function() {
@@ -81,9 +119,9 @@ end
 -- end
 
 function obj.jump(url)
-  local app = hs.application.get(BROWSER) or hs.application.frontmostApplication()
+  local app = findBrowser()
 
-  if app and enum.contains(supportedBrowsers, app:name()) then
+  if app then
     -- win.tabs().findIndex(tab => tab.url().match(/]] .. string.gsub(url, "/", "\\/") .. [[/));
     -- win.tabs().findIndex(tab => tab.url().match(/]] .. url .. [[/));
     local success, jumpedTab, output = hs.osascript.javascript([[
@@ -120,9 +158,9 @@ function obj:splitTab(to_next_screen)
   end
 
   hs.timer.doAfter(0.25, function()
-    local app = hs.application.get(BROWSER) or hs.application.frontmostApplication()
+    local app = findBrowser()
 
-    if app and enum.contains(supportedBrowsers, app:name()) then
+    if app then
       local moveTab = { "Tab", "Move Tab to New Window" }
       if string.match(app:name() or "", "Safari") then
         moveTab = { "Window", "Move Tab to New Window" }
@@ -145,8 +183,8 @@ function obj:splitTab(to_next_screen)
 end
 
 function obj.killTabsByDomain(domain)
-  local app = hs.application.get(BROWSER) or hs.application.frontmostApplication()
-  if app and enum.contains(supportedBrowsers, app:name()) then
+  local app = findBrowser()
+  if app then
     -- if (tab.url().match(/]] .. string.gsub(domain, "/", "\\/") .. [[/)) {
     -- if (tab.url().match(/]] .. domain .. [[/)) {
     hs.osascript.javascript([[

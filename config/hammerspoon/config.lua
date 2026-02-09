@@ -1,9 +1,9 @@
 local M = {}
 
 HYPER = "F19"
--- Use the nix wrapper which has --remote-debugging-port=9222 enabled
-BROWSER = "com.nix.brave-browser-nightly"
--- BROWSER = "com.brave.Browser.nightly"  -- Plain app without args
+-- The nix wrapper (com.nix.brave-browser-nightly) launches the real app,
+-- so the running process has the original bundle ID
+BROWSER = "com.brave.Browser.nightly"
 -- BROWSER = "net.imput.helium"
 TERMINAL = "com.mitchellh.ghostty"
 
