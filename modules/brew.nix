@@ -4,7 +4,9 @@
     enable = true;
     # Remove quarantine attribute from casks so they don't prompt on first launch
     caskArgs.no_quarantine = true;
-    # brews = [];
+    brews = [
+      "whisperkit-cli"  # Apple Silicon native speech recognition
+    ];
     casks = [
       "1password"
       "1password-cli"

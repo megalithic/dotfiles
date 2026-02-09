@@ -71,6 +71,7 @@
     ripgrep
     s3cmd
     sqlite
+    sox  # Audio recording/processing for whisper dictation
     switchaudio-osx
     tesseract # OCR fallback for clipper (Vision is primary)
     tldr
