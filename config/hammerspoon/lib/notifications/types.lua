@@ -77,6 +77,7 @@ M.ATTENTION = {
   DISPLAY_ASLEEP = "display_asleep", -- Screen is off
   SCREEN_LOCKED = "screen_locked", -- Lock screen is active
   LOGGED_OUT = "logged_out", -- User logged out of console
+  USER_IDLE = "user_idle", -- HID idle > threshold (walked away)
 }
 
 -- Urgency levels for AI agent notifications

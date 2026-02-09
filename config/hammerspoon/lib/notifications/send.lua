@@ -12,6 +12,9 @@ local pi = require("lib.interop.pi")
 local ATTENTION = types.ATTENTION
 local URGENCY = types.URGENCY
 
+-- Idle threshold for "user walked away" detection (seconds)
+local IDLE_THRESHOLD = 300  -- 5 minutes
+
 -- Get config with fallback defaults
 local function getConfig()
   local cfg = C.notifier.agent or {}
@@ -107,13 +110,18 @@ function M.checkAttention(context)
   local displayState = M.checkDisplayState()
   if displayState ~= "awake" then return { state = displayState, shouldNotify = "remote_only" } end
 
-  -- 2. Check if terminal is frontmost
+  -- 2. Check HID idle time (user walked away but display still on)
+  if hs.host.idleTime() > IDLE_THRESHOLD then
+    return { state = ATTENTION.USER_IDLE, shouldNotify = "remote_only" }
+  end
+
+  -- 3. Check if terminal is frontmost
   local frontmost = hs.application.frontmostApplication()
   if not frontmost or frontmost:bundleID() ~= TERMINAL then
     return { state = ATTENTION.TERMINAL_NOT_FOCUSED, shouldNotify = "full" }
   end
 
-  -- 3. Terminal is focused - check if user viewing THIS exact pane
+  -- 4. Terminal is focused - check if user viewing THIS exact pane
   if context then
     local activeContext = getActiveTmuxContext()
     if contextsMatch(activeContext, context) then
