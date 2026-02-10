@@ -333,8 +333,9 @@ local function poll()
       if ok and result and result.ok and result.result then
         processUpdates(result.result)
       end
-    elseif status ~= 0 and status ~= 409 then
+    elseif status ~= 0 and status ~= -1 and status ~= 409 then
       -- Status 0 = timeout (normal for long polling)
+      -- Status -1 = network error/cancelled (transient, will retry)
       -- Status 409 = conflict (another request in flight, shouldn't happen now)
       U.log.wf("Telegram: poll failed, status=%d", status)
     end
