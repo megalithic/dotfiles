@@ -30,9 +30,7 @@
 ---@return string
 local function get_socket_path()
   -- Explicit override (set by pinvim/pisock wrapper)
-  if vim.env.PI_SOCKET then
-    return vim.env.PI_SOCKET
-  end
+  if vim.env.PI_SOCKET then return vim.env.PI_SOCKET end
 
   -- Socket config from environment (with defaults matching nix)
   local socket_dir = vim.env.PI_SOCKET_DIR or "/tmp"
@@ -48,9 +46,7 @@ local function get_socket_path()
         local socket = string.format("%s/%s-%s.sock", socket_dir, socket_prefix, session)
         -- Check if socket exists (use test -S for socket check)
         local exists = os.execute(string.format("test -S '%s'", socket)) == 0
-        if exists then
-          return socket
-        end
+        if exists then return socket end
       end
     end
   end
@@ -94,16 +90,12 @@ local function get_visual_selection()
   local start_row, start_col = unpack(vim.api.nvim_buf_get_mark(bufnr, "<"))
   local end_row, end_col = unpack(vim.api.nvim_buf_get_mark(bufnr, ">"))
 
-  if start_row == 0 or end_row == 0 then
-    return nil
-  end
+  if start_row == 0 or end_row == 0 then return nil end
 
   start_row, start_col, end_row, end_col = normalize_range(start_row, start_col, end_row, end_col)
 
   local lines = vim.api.nvim_buf_get_lines(bufnr, start_row - 1, end_row, false)
-  if #lines == 0 then
-    return nil
-  end
+  if #lines == 0 then return nil end
 
   lines[1] = string.sub(lines[1], start_col + 1)
   lines[#lines] = string.sub(lines[#lines], 1, end_col + 1)
@@ -184,18 +176,20 @@ local function toggle()
 end
 
 -- Commands
-vim.api.nvim_create_user_command("PiSelection", function(opts)
-  send_selection(opts)
-end, { desc = "Send selection to pi", range = true })
+vim.api.nvim_create_user_command(
+  "PiSelection",
+  function(opts) send_selection(opts) end,
+  { desc = "Send selection to pi", range = true }
+)
 
-vim.api.nvim_create_user_command("PiCursor", function()
-  send_cursor()
-end, { desc = "Send cursor line to pi" })
+vim.api.nvim_create_user_command("PiCursor", function() send_cursor() end, { desc = "Send cursor line to pi" })
 
-vim.api.nvim_create_user_command("PiToggle", function()
-  toggle()
-end, { desc = "Toggle pisock/pinvim pane in current window" })
+vim.api.nvim_create_user_command(
+  "PiToggle",
+  function() toggle() end,
+  { desc = "Toggle pisock/pinvim pane in current window" }
+)
 
 -- Keymaps
-vim.keymap.set("v", "<localleader>ps", "<cmd>PiSelection<cr>", { silent = true, desc = "Pi: send selection" })
 vim.keymap.set("n", "<localleader>pp", "<cmd>PiToggle<cr>", { silent = true, desc = "Pi: toggle pisock pane" })
+vim.keymap.set("v", "<localleader>ps", "<cmd>PiSelection<cr>", { silent = true, desc = "Pi: send selection" })

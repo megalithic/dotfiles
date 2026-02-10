@@ -578,14 +578,14 @@ return {
       file_log = true,
     },
   },
-  {
-    "yannvanhalewyn/jujutsu.nvim",
-    config = function()
-      require("jujutsu-nvim").setup({
-        diff_preset = "diffview",
-      })
-    end,
-  },
+  -- {
+  --   "yannvanhalewyn/jujutsu.nvim",
+  --   config = function()
+  --     require("jujutsu-nvim").setup({
+  --       diff_preset = "diffview",
+  --     })
+  --   end,
+  -- },
   -- {
   --   cond = false,
   --   "Juksuu/worktrees.nvim",
