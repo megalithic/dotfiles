@@ -141,6 +141,41 @@
   );
 
   # ===========================================================================
+  # Multi-Profile Configuration
+  # ===========================================================================
+  # Profiles that link to master ~/.pi/agent/ (except auth.json and sessions/)
+  # User sets PI_CODING_AGENT_DIR in their tmux session .envrc
+  # Master (~/.pi/agent/) serves as both config source AND personal profile
+  profiles = ["evirts" "cspire"];
+
+  # Config items to symlink from master to each profile
+  # Excludes: auth.json (per-profile auth), sessions/ (per-profile history)
+  sharedConfigItems = [
+    "AGENTS.md"
+    "settings.json"
+    "keybindings.json"
+    "extensions"
+    "skills"
+  ];
+
+  # Generate symlinks for each profile pointing to master
+  profileSymlinks = builtins.listToAttrs (
+    lib.flatten (
+      map (
+        profile:
+          map (item: {
+            name = ".pi/agent-${profile}/${item}";
+            value.source =
+              config.lib.file.mkOutOfStoreSymlink
+              "${config.home.homeDirectory}/.pi/agent/${item}";
+          })
+          sharedConfigItems
+      )
+      profiles
+    )
+  );
+
+  # ===========================================================================
   # Keybindings
   # ===========================================================================
   managedKeybindings = {
@@ -209,11 +244,6 @@ in {
 
       exec pi "$@"
     '')
-
-    # pisock alias (preferred name)
-    (pkgs.writeShellScriptBin "pisock" ''
-      exec pinvim "$@"
-    '')
   ];
 
   # ===========================================================================
@@ -281,10 +311,42 @@ in {
   '';
 
   # ===========================================================================
+  # Profile Symlinks Activation
+  # ===========================================================================
+  # Creates symlinks in profile directories pointing to master ~/.pi/agent/
+  # This is done via activation script because mkOutOfStoreSymlink doesn't work
+  # reliably for symlinks-to-symlinks
+  home.activation.createPiProfiles = lib.hm.dag.entryAfter ["linkGeneration"] ''
+    MASTER_DIR="${config.home.homeDirectory}/.pi/agent"
+    PROFILES="${lib.concatStringsSep " " profiles}"
+    SHARED_ITEMS="${lib.concatStringsSep " " sharedConfigItems}"
+
+    for profile in $PROFILES; do
+      PROFILE_DIR="${config.home.homeDirectory}/.pi/agent-''${profile}"
+      
+      # Create profile directory if it doesn't exist
+      mkdir -p "$PROFILE_DIR"
+      
+      for item in $SHARED_ITEMS; do
+        TARGET="$MASTER_DIR/$item"
+        LINK="$PROFILE_DIR/$item"
+        
+        # Only create/update symlink if target exists
+        if [[ -e "$TARGET" || -L "$TARGET" ]]; then
+          # ln -sf handles both creating new and replacing existing
+          ln -sf "$TARGET" "$LINK"
+        fi
+      done
+    done
+  '';
+
+  # ===========================================================================
   # Fish Shell Aliases
   # ===========================================================================
   programs.fish.shellAliases = {
     pic = "pi -c"; # Continue last session
     pir = "pi -r"; # Resume mode
+    pisock = "pinvim"; # pi with socket connection
+    pis = "pinvim"; # pi with socket connection
   };
 }
