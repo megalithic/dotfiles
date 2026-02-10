@@ -167,10 +167,7 @@ function getModelShortName(modelId: string | undefined): string {
   if (!modelId) return "?";
   const name = modelId.split("/").pop() || modelId;
   
-  // Extract model name with version (e.g., "claude-opus-4-5-20250131" -> "opus-4-5")
-  // Or "gpt-4o-2024-08-06" -> "gpt-4o"
-  
-  // Anthropic models: claude-{type}-{version}-{date}
+  // Anthropic models: claude-{type}-{version}-{date} -> {type}-{version}
   const claudeMatch = name.match(/claude-(\w+)-(\d+-\d+)/);
   if (claudeMatch) {
     return `${claudeMatch[1]}-${claudeMatch[2]}`;  // e.g., "opus-4-5"
@@ -179,12 +176,27 @@ function getModelShortName(modelId: string | undefined): string {
   // OpenAI models
   if (name.includes("gpt-4o")) return "gpt-4o";
   if (name.includes("gpt-4")) return "gpt-4";
-  if (name.startsWith("o1")) return name.split("-")[0];  // o1, o1-mini, etc.
+  if (name.startsWith("o1")) return name.split("-")[0];
   if (name.startsWith("o3")) return name.split("-")[0];
   
-  // Fallback: first two parts
+  // Google Gemini models: gemini-{version}-{variant}(-preview)?(-date)?
+  // e.g., "gemini-2.5-flash-preview-04-17" -> "gemini-2.5-flash"
+  // e.g., "gemini-2.5-pro-preview-05-06" -> "gemini-2.5-pro"
+  // e.g., "gemini-1.5-pro" -> "gemini-1.5-pro"
+  const geminiMatch = name.match(/^(gemini-[\d.]+)-(flash|pro|ultra)/);
+  if (geminiMatch) {
+    return `${geminiMatch[1]}-${geminiMatch[2]}`;  // e.g., "gemini-2.5-pro"
+  }
+  
+  // DeepSeek models
+  if (name.includes("deepseek")) {
+    const dsMatch = name.match(/deepseek-(\w+)/);
+    if (dsMatch) return `deepseek-${dsMatch[1]}`;
+  }
+  
+  // Fallback: first three parts (more context than two)
   const parts = name.split("-");
-  return parts.slice(0, 2).join("-");
+  return parts.slice(0, 3).join("-");
 }
 
 
@@ -272,7 +284,8 @@ function buildLine1(
   width: number,
   vcsInfo: string | null,
   tokenStats: { input: number; output: number; cost: number },
-  extensionStatuses: Map<string, string>
+  extensionStatuses: Map<string, string>,
+  thinkingLevel: string
 ): string {
   const sep = theme.fg("dim", ` ${CONFIG.separator} `);
   
@@ -335,10 +348,12 @@ function buildLine1(
   // Token stats
   rightParts.push(theme.fg("dim", `↑${formatNumber(tokenStats.input)} ↓${formatNumber(tokenStats.output)}`));
   
-  // Model (provider)
+  // Model with thinking level (e.g., "gemini-2.5-pro (high)")
   const model = getModelShortName(ctx.model?.id);
-  const provider = getProviderName(ctx.model?.id);
-  rightParts.push(theme.fg("dim", model));
+  const thinkingSuffix = thinkingLevel && thinkingLevel !== "off" 
+    ? ` (${thinkingLevel})` 
+    : "";
+  rightParts.push(theme.fg("dim", model + thinkingSuffix));
   
   const rightStr = rightParts.join(sep);
   
@@ -419,11 +434,11 @@ let currentToolName = "";
 
 export default function (pi: ExtensionAPI) {
   pi.on("session_start", (_event, ctx) => {
-    setupStatusline(ctx);
+    setupStatusline(pi, ctx);
   });
 
   pi.on("session_switch", (_event, ctx) => {
-    setupStatusline(ctx);
+    setupStatusline(pi, ctx);
   });
 
   // Track agent status
@@ -466,7 +481,7 @@ export default function (pi: ExtensionAPI) {
   });
 }
 
-function setupStatusline(ctx: ExtensionContext) {
+function setupStatusline(pi: ExtensionAPI, ctx: ExtensionContext) {
   if (!ctx.hasUI) return;
 
   ctx.ui.setFooter((tui, theme, footerData) => {
@@ -515,8 +530,11 @@ function setupStatusline(ctx: ExtensionContext) {
         // Get extension statuses
         const statuses = footerData.getExtensionStatuses();
 
+        // Get thinking level
+        const thinkingLevel = pi.getThinkingLevel();
+
         // Build lines
-        const line1 = buildLine1(ctx, theme, width, cachedVcs, tokenStats, statuses);
+        const line1 = buildLine1(ctx, theme, width, cachedVcs, tokenStats, statuses, thinkingLevel);
         const line2 = buildLine2(ctx, theme, width, statuses, currentAgentStatus);
 
         return [line1, line2];
