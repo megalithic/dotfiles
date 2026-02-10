@@ -317,13 +317,33 @@ in {
   # Creates symlinks in profile directories pointing to master ~/.pi/agent/
   # This is done via activation script because mkOutOfStoreSymlink doesn't work
   # reliably for symlinks-to-symlinks
-  home.activation.createPiProfiles = lib.hm.dag.entryAfter ["linkGeneration"] ''
+  # Run after ALL other activations to ensure the symlink cleanup happens last
+  home.activation.createPiProfiles = lib.hm.dag.entryAfter ["linkGeneration" "onFilesChange" "setupLaunchAgents"] ''
     MASTER_DIR="${config.home.homeDirectory}/.pi/agent"
     PROFILES="${lib.concatStringsSep " " profiles}"
     SHARED_ITEMS="${lib.concatStringsSep " " sharedConfigItems}"
 
+    # WORKAROUND: home-manager linkGeneration creates a recursive symlink
+    # ~/.pi/agent/skills/skills -> ~/.pi/agent/skills
+    # Remove it to prevent infinite recursion in skill discovery
+    echo "[createPiProfiles] Checking for recursive symlink at $MASTER_DIR/skills/skills"
+    ls -la "$MASTER_DIR/skills/" | head -3
+    if [[ -L "$MASTER_DIR/skills/skills" ]]; then
+      echo "[createPiProfiles] FOUND recursive symlink, removing..."
+      rm -f "$MASTER_DIR/skills/skills"
+      echo "[createPiProfiles] After removal:"
+      ls -la "$MASTER_DIR/skills/" | head -3
+    else
+      echo "[createPiProfiles] No recursive symlink found at this point"
+    fi
+
+    echo "[createPiProfiles] MASTER_DIR=$MASTER_DIR"
+    echo "[createPiProfiles] PROFILES=[$PROFILES]"
+    echo "[createPiProfiles] SHARED_ITEMS=[$SHARED_ITEMS]"
+
     for profile in $PROFILES; do
       PROFILE_DIR="${config.home.homeDirectory}/.pi/agent-''${profile}"
+      echo "[createPiProfiles] profile=[$profile] PROFILE_DIR=[$PROFILE_DIR]"
 
       # Create profile directory if it doesn't exist
       mkdir -p "$PROFILE_DIR"
@@ -331,11 +351,26 @@ in {
       for item in $SHARED_ITEMS; do
         TARGET="$MASTER_DIR/$item"
         LINK="$PROFILE_DIR/$item"
+        
+        # Resolve actual paths to check for recursion
+        RESOLVED_TARGET=$(cd "$MASTER_DIR" && pwd -P)/$item
+        RESOLVED_LINK_DIR=$(cd "$PROFILE_DIR" && pwd -P)
+        
+        echo "[createPiProfiles]   item=[$item]"
+        echo "[createPiProfiles]     TARGET=[$TARGET] -> resolved=[$RESOLVED_TARGET]"
+        echo "[createPiProfiles]     LINK=[$LINK] -> resolved_dir=[$RESOLVED_LINK_DIR]"
+
+        # Skip if this would create recursion (link inside target)
+        if [[ "$RESOLVED_LINK_DIR" == "$RESOLVED_TARGET"* ]]; then
+          echo "[createPiProfiles]     SKIP: Would create recursion!"
+          continue
+        fi
 
         # Only create/update symlink if target exists
         if [[ -e "$TARGET" || -L "$TARGET" ]]; then
-          # ln -sf handles both creating new and replacing existing
-          ln -sf "$TARGET" "$LINK"
+          # ln -sfn: -n treats LINK as normal file if it's a symlink (doesn't follow it)
+          # Without -n, ln follows existing symlinks and creates inside the target dir
+          ln -sfn "$TARGET" "$LINK"
         fi
       done
     done
