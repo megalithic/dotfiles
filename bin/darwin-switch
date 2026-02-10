@@ -59,6 +59,56 @@ else
 fi
 
 echo ""
+echo "━━━ Post-activation health checks..."
+
+# Check for stuck launchd services (agenix, home-manager related)
+# A stuck service has "-" for PID and non-zero exit code, or "spawn scheduled" state
+STUCK_SERVICES=()
+while IFS= read -r line; do
+    pid=$(echo "$line" | awk '{print $1}')
+    exit_code=$(echo "$line" | awk '{print $2}')
+    name=$(echo "$line" | awk '{print $3}')
+    
+    # Skip if running (has PID) or exited successfully
+    if [[ "$pid" == "-" && "$exit_code" != "0" ]]; then
+        STUCK_SERVICES+=("$name (exit: $exit_code)")
+    fi
+done < <(launchctl list 2>/dev/null | grep -E "(agenix|nix-community|home\.|nh-clean)" || true)
+
+if [[ ${#STUCK_SERVICES[@]} -gt 0 ]]; then
+    echo "⚠ Found potentially stuck services:"
+    for svc in "${STUCK_SERVICES[@]}"; do
+        echo "  - $svc"
+    done
+    echo ""
+    echo "Attempting to restart stuck services..."
+    for svc in "${STUCK_SERVICES[@]}"; do
+        svc_name=$(echo "$svc" | cut -d' ' -f1)
+        echo "  Kickstarting $svc_name..."
+        launchctl kickstart -k "gui/$(id -u)/$svc_name" 2>/dev/null || true
+    done
+    sleep 2
+    echo "  Done."
+else
+    echo "✓ All launchd services healthy"
+fi
+
+# Verify agenix secrets are accessible
+AGENIX_DIR="$(getconf DARWIN_USER_TEMP_DIR 2>/dev/null)/agenix"
+if [[ -d "$AGENIX_DIR" && -f "$AGENIX_DIR/env-vars" ]]; then
+    echo "✓ Agenix secrets accessible"
+else
+    echo "⚠ Agenix secrets not found, kickstarting service..."
+    launchctl kickstart -k "gui/$(id -u)/org.nix-community.home.activate-agenix" 2>/dev/null || true
+    sleep 2
+    if [[ -f "$AGENIX_DIR/env-vars" ]]; then
+        echo "  ✓ Agenix secrets now accessible"
+    else
+        echo "  ✗ Agenix secrets still not accessible - check manually"
+    fi
+fi
+
+echo ""
 echo "✓ Done! System and home-manager activated successfully."
 
 # Send notification via ntfy

@@ -160,13 +160,7 @@ M = {
       --   on_dir(root_dir)
       -- end,
       single_file_support = true,
-      settings = {
-        elixir = {
-          formatting = {
-            command = { "mix", "format" },
-          },
-        },
-      },
+      settings = {}, -- Expert reads .formatter.exs directly, no settings needed
     }
   end,
   elmls = {},
