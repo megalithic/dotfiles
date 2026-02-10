@@ -181,6 +181,41 @@ const blockTitleCaseHeaders: GuardFn = (event) => {
   }
 };
 
+const blockInteractiveCommands: GuardFn = (event) => {
+  if (event.toolName !== "bash") return;
+  const cmd = (event as ToolCallEvent).input.command;
+  
+  // jj describe without -m flag
+  if (/(^|[\s;&|])jj\s+describe\b/.test(cmd) && !/-m\s/.test(cmd)) {
+    return { block: true, immutable: true, reason: "**jj describe blocked** ⛔ IMMUTABLE - Opens editor. Use `jj describe -m \"message\"`" };
+  }
+  
+  // jj commit without -m flag
+  if (/(^|[\s;&|])jj\s+commit\b/.test(cmd) && !/-m\s/.test(cmd)) {
+    return { block: true, immutable: true, reason: "**jj commit blocked** ⛔ IMMUTABLE - Opens editor. Use `jj commit -m \"message\"`" };
+  }
+  
+  // jj squash without -m or -u flag (opens editor when merging descriptions)
+  if (/(^|[\s;&|])jj\s+squash\b/.test(cmd) && !/-m\s/.test(cmd) && !/-u\b/.test(cmd) && !/--use-destination-message/.test(cmd)) {
+    return { block: true, immutable: true, reason: "**jj squash blocked** ⛔ IMMUTABLE - May open editor. Use `-m \"message\"` or `-u` (use destination message)" };
+  }
+  
+  // jj split (always interactive)
+  if (/(^|[\s;&|])jj\s+split\b/.test(cmd)) {
+    return { block: true, immutable: true, reason: "**jj split blocked** ⛔ IMMUTABLE - Inherently interactive. Use separate commits instead." };
+  }
+  
+  // Any -i/--interactive flag
+  if (/(^|[\s;&|])jj\s+\w+.*\s+(-i|--interactive)\b/.test(cmd)) {
+    return { block: true, immutable: true, reason: "**Interactive flag blocked** ⛔ IMMUTABLE - Use file paths instead of -i/--interactive" };
+  }
+  
+  // Direct editor invocations
+  if (/(^|[\s;&|])(vim|nvim|nano|emacs|vi)\s/.test(cmd)) {
+    return { block: true, immutable: true, reason: "**Editor blocked** ⛔ IMMUTABLE - Use Write tool or heredoc instead" };
+  }
+};
+
 const guards: GuardFn[] = [
   blockCorporateBuzzwords,
   blockGitCommands,
@@ -193,6 +228,7 @@ const guards: GuardFn[] = [
   blockSecretTools,
   blockNixManagedWrites,
   blockTitleCaseHeaders,
+  blockInteractiveCommands,
 ];
 
 // ============================================================================
@@ -244,6 +280,7 @@ export default function (pi: ExtensionAPI) {
             if (event.toolName === "bash" && isOverrideValid()) {
               const allowed = consumeOverride();
               if (allowed) {
+                log(`Override consumed, allowing: ${(event as ToolCallEvent).input.command.slice(0, 50)}...`);
                 return undefined; // Allow the command
               }
             }
@@ -253,7 +290,21 @@ export default function (pi: ExtensionAPI) {
               const cmd = (event as ToolCallEvent).input.command;
               state.lastBlockedCommand = cmd;
               state.lastBlockedAt = Date.now();
-              log(`Blocked: ${cmd.slice(0, 80)}...`);
+              log(`Blocked (overridable): ${cmd.slice(0, 80)}...`);
+            }
+            
+            // If UI available, prompt for confirmation inline (aos pattern)
+            if (event.toolName === "bash" && ctx.hasUI) {
+              const cmd = (event as ToolCallEvent).input.command;
+              const choice = await ctx.ui.select(
+                `⚠️  ${result.reason}\n\n  ${cmd.slice(0, 100)}${cmd.length > 100 ? '...' : ''}\n\nAllow?`,
+                ["Yes", "No"]
+              );
+              if (choice === "Yes") {
+                log(`UI override granted for: ${cmd.slice(0, 50)}...`);
+                resetBlocked();
+                return undefined; // Allow
+              }
             }
             
             return result;

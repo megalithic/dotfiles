@@ -36,13 +36,33 @@
 
 ## Interactive Commands (AVOID)
 
-**These commands open an editor/prompt - use flags to skip:**
+**These commands open an editor/prompt and will hang forever. Never use without flags:**
 
-| Command | Non-interactive alternative |
-|---------|----------------------------|
-| `jj squash` | `jj squash -m "message"` |
-| `jj describe` | `jj describe -m "message"` |
-| `jj split` | Avoid - inherently interactive |
+| Command | Problem | Non-interactive alternative |
+|---------|---------|----------------------------|
+| `jj squash` | Opens editor for message | `jj squash -m "message"` or `-u` (use destination message) |
+| `jj squash --from X --into Y` | Opens editor if both have descriptions | Add `-u` or `-m "message"` |
+| `jj describe` | Opens editor | `jj describe -m "message"` |
+| `jj commit` | Opens editor | `jj commit -m "message"` |
+| `jj split` | Inherently interactive | Avoid entirely - use separate commits instead |
+| `jj split -i` / `jj squash -i` | Interactive selection | Avoid - use file paths instead |
+| `git commit` | Opens editor | Don't use git, use `jj describe -m` |
+| `vim`, `nano`, `emacs` | Editor | Use `Write` tool or `cat <<EOF` |
+
+**When moving changes between commits:**
+```bash
+# WRONG - will hang if both commits have descriptions
+jj squash --from @- --into @
+
+# CORRECT - use -u to keep destination message
+jj squash --from @- --into @ -u
+
+# CORRECT - use -m to specify message
+jj squash --from @- --into @ -m "combined message"
+
+# CORRECT - specify files to avoid emptying source (no editor needed)
+jj squash --from @- --into @ -u path/to/file.ex
+```
 
 **Don't guess flags** - run `<cmd> --help` to find the right option.
 
