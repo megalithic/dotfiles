@@ -119,8 +119,8 @@ in {
 
   xdg.enable = true;
 
-  # Out-of-store symlink - changes take effect immediately without rebuild
-  xdg.configFile."ghostty".source = ./ghostty;
+  xdg.configFile."ghostty".source = config.lib.mega.linkConfig "ghostty";
+  xdg.configFile."ghostty".force = true;
 
   # Out-of-store symlink - changes take effect immediately without rebuild
   # NOTE: Do NOT use recursive=true with mkOutOfStoreSymlink, it defeats the purpose

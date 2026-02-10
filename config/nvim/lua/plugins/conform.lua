@@ -77,6 +77,8 @@ return {
       },
       formatters_by_ft = vim.tbl_extend("force", {
         ["*"] = { "trim_whitespace", "trim_newlines" },
+        elixir = { lsp_format = "prefer" },
+        eelixir = { lsp_format = "prefer" },
         -- elixir = { "mix" },
         json = {
           "deno_fmt",
@@ -131,7 +133,7 @@ return {
         local notes_home = vim.env.NOTES_HOME or (vim.env.HOME .. "/iclouddrive/Documents/_notes")
         if bufname:match(vim.pesc(notes_home)) then return end
 
-        return { timeout_ms = 500, lsp_format = "fallback" }
+        return { timeout_ms = 500 }
       end,
     },
 

@@ -253,8 +253,8 @@ keybind = global:cmd+ctrl+shift+opt+`=toggle_quick_terminal
 # keybind = shift+enter=text:\x05
 
 # allow shift+enter to create new line in text areas (CSI u sequence for Claude Code/opencode)
+# CSI u format: \x1b[13;2u = ESC [ 13 (enter keycode) ; 2 (shift modifier) u
 keybind = shift+enter=text:\x1b[13;2u
-keybind = shift+enter=text:\n
 # Reset leaked mouse tracking modes (fixes garbage like "[<35;94;34M" from trackball)
 # Works even inside TUI apps like Claude Code that don't clean up mouse state
 # Modes disabled: 1000=basic, 1002=button-motion, 1003=any-motion, 1006=SGR encoding
