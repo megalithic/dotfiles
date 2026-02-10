@@ -205,9 +205,9 @@ const blockInteractiveCommands: GuardFn = (event) => {
     return { block: true, immutable: true, reason: "**jj split blocked** ⛔ IMMUTABLE - Inherently interactive. Use separate commits instead." };
   }
   
-  // Any -i/--interactive flag
-  if (/(^|[\s;&|])jj\s+\w+.*\s+(-i|--interactive)\b/.test(cmd)) {
-    return { block: true, immutable: true, reason: "**Interactive flag blocked** ⛔ IMMUTABLE - Use file paths instead of -i/--interactive" };
+  // jj commands with -i/--interactive flag (squash -i, split -i, etc.)
+  if (/(^|[\s;&|])jj\s+(squash|split|restore|diff)\s+.*(-i|--interactive)\b/.test(cmd)) {
+    return { block: true, immutable: true, reason: "**jj interactive flag blocked** ⛔ IMMUTABLE - Use file paths instead of -i/--interactive" };
   }
   
   // Direct editor invocations
@@ -237,7 +237,7 @@ const guards: GuardFn[] = [
 
 export default function (pi: ExtensionAPI) {
   // Handle override commands from user
-  pi.on("user_message", async (event) => {
+  pi.on("user_message", async (event, ctx) => {
     const text = event.message?.trim().toLowerCase() || "";
     
     // !override = immediate execution, no confirmation
@@ -251,13 +251,42 @@ export default function (pi: ExtensionAPI) {
       return;
     }
     
-    // override or yes/y = grant permission (agent handles confirmation flow)
-    if (text === "override" || text === "yes" || text === "y") {
-      if (state.lastBlockedCommand || state.overrideGranted) {
-        grantOverride(state.noConfirm);
-        log(`override/yes: Permission granted`);
+    // override = show UI confirmation prompt
+    if (text === "override") {
+      if (!state.lastBlockedCommand) {
+        log(`override: No blocked command to override`);
+        return;
+      }
+      
+      // Show UI prompt if available
+      if (ctx.hasUI) {
+        const cmd = state.lastBlockedCommand;
+        const choice = await ctx.ui.select(
+          `⚠️  Override requested for:\n\n  ${cmd.slice(0, 100)}${cmd.length > 100 ? '...' : ''}\n\nAllow this command?`,
+          ["Yes", "No"]
+        );
+        if (choice === "Yes") {
+          grantOverride(false);
+          log(`override: UI confirmed, permission granted`);
+        } else {
+          log(`override: UI rejected`);
+          resetBlocked();
+        }
       } else {
-        log(`override/yes: No blocked command to override`);
+        // No UI, grant directly (fallback)
+        grantOverride(false);
+        log(`override: No UI, permission granted`);
+      }
+      return;
+    }
+    
+    // yes/y = confirm after override prompt (legacy flow)
+    if (text === "yes" || text === "y") {
+      if (state.overrideGranted) {
+        log(`yes: Override already granted`);
+      } else if (state.lastBlockedCommand) {
+        grantOverride(false);
+        log(`yes: Permission granted`);
       }
       return;
     }
@@ -285,26 +314,12 @@ export default function (pi: ExtensionAPI) {
               }
             }
             
-            // Store blocked command for override tracking
+            // Store blocked command for override tracking (user can say `override` or `!override`)
             if (event.toolName === "bash") {
               const cmd = (event as ToolCallEvent).input.command;
               state.lastBlockedCommand = cmd;
               state.lastBlockedAt = Date.now();
               log(`Blocked (overridable): ${cmd.slice(0, 80)}...`);
-            }
-            
-            // If UI available, prompt for confirmation inline (aos pattern)
-            if (event.toolName === "bash" && ctx.hasUI) {
-              const cmd = (event as ToolCallEvent).input.command;
-              const choice = await ctx.ui.select(
-                `⚠️  ${result.reason}\n\n  ${cmd.slice(0, 100)}${cmd.length > 100 ? '...' : ''}\n\nAllow?`,
-                ["Yes", "No"]
-              );
-              if (choice === "Yes") {
-                log(`UI override granted for: ${cmd.slice(0, 50)}...`);
-                resetBlocked();
-                return undefined; // Allow
-              }
             }
             
             return result;
