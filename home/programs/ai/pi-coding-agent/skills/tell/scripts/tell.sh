@@ -30,6 +30,30 @@ declare -A AGENT_COMMANDS=(
   [codex]="codex --full-auto"
 )
 
+# Get the pane running pi in a tmux session
+# Returns pane_id or empty string if not found
+get_pi_pane() {
+  local session="$1"
+  local pane_id
+  
+  # Look for pane running 'pi' command (pi runs as node)
+  pane_id=$(tmux list-panes -t "$session" -F '#{pane_id} #{pane_current_command}' 2>/dev/null \
+    | awk '/ (pi|node)$/ {print $1; exit}')
+  
+  # If not found by command, try window name 'pi'
+  if [[ -z "$pane_id" ]]; then
+    pane_id=$(tmux list-panes -t "${session}:pi" -F '#{pane_id}' 2>/dev/null | head -1)
+  fi
+  
+  # If still not found, try window named 'agent'
+  if [[ -z "$pane_id" ]]; then
+    pane_id=$(tmux list-panes -t "${session}:agent" -F '#{pane_id}' 2>/dev/null | head -1)
+  fi
+  
+  echo "$pane_id"
+}
+
+
 # Notify the delegator that a task is complete
 notify_delegator() {
   local task_id="$1"
@@ -221,10 +245,19 @@ IMPORTANT: This is a delegated task. You must:
 2. Send updates periodically: \`tell.sh --update ${task_id} \"your progress\"\`
 3. When done: \`tell.sh --done ${task_id} \"summary\"\`"
 
-  # Send to target session
-  tmux send-keys -t "${target}" "$prompt" Enter
+  # Send to target session - target the pi pane specifically
+  local pi_pane
+  pi_pane=$(get_pi_pane "$target")
   
-  echo "Task ${task_id} sent to ${target}"
+  if [[ -n "$pi_pane" ]]; then
+    tmux send-keys -t "$pi_pane" "$prompt" Enter
+    echo "Task ${task_id} sent to ${target} (pane ${pi_pane})"
+  else
+    # Fallback to session (may go to wrong pane)
+    echo "Warning: Could not locate pi pane in ${target}, sending to active pane" >&2
+    tmux send-keys -t "${target}" "$prompt" Enter
+    echo "Task ${task_id} sent to ${target} (active pane)"
+  fi
   echo "Check status: tell.sh --status ${task_id}"
 }
 

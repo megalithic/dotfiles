@@ -192,7 +192,7 @@
   managedSettings = {
     defaultProvider = "anthropic";
     defaultModel = "claude-opus-4-5";
-    defaultThinkingLevel = "high";
+    defaultThinkingLevel = "medium";
     doubleEscapeAction = "tree";
     enableSkillCommands = true;
     hideThinkingBlock = true;
@@ -200,8 +200,9 @@
     # Only include models you have API access to
     # Pi will warn about patterns that don't match any available models
     enabledModels = [
-      "claude-opus-4-5"
+      "claude-opus-4-*"
       "claude-sonnet-4-5"
+      "gemini-3*"
     ];
   };
 
@@ -323,14 +324,14 @@ in {
 
     for profile in $PROFILES; do
       PROFILE_DIR="${config.home.homeDirectory}/.pi/agent-''${profile}"
-      
+
       # Create profile directory if it doesn't exist
       mkdir -p "$PROFILE_DIR"
-      
+
       for item in $SHARED_ITEMS; do
         TARGET="$MASTER_DIR/$item"
         LINK="$PROFILE_DIR/$item"
-        
+
         # Only create/update symlink if target exists
         if [[ -e "$TARGET" || -L "$TARGET" ]]; then
           # ln -sf handles both creating new and replacing existing
