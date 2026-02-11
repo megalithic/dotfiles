@@ -1,0 +1,51 @@
+;; vim:ft=lisp
+
+;; Key reference
+;; https://github.com/jtroo/kanata/blob/main/parser/src/keys/mod.rs
+;; minimal home row-mods and hyper key
+
+;; un-mapped keys behave as normally
+(defcfg
+  concurrent-tap-hold yes
+  process-unmapped-keys yes
+  macos-dev-names-include (
+    "Apple Internal Keyboard / Trackpad"
+  )
+)
+
+;; define the keys to remap
+(defsrc
+  lctrl caps
+  ;; lctrl caps a s d f j k l ;
+)
+
+;; define values for tap time and hold time
+(defvar
+  tap-time 150
+  hold-time 200
+)
+
+;; alias definitions
+(defalias
+  escctrl (tap-hold $tap-time $hold-time esc lctl)
+  f19 (key lctl)
+
+  ;;a (tap-hold $tap-time $hold-time a lmet)
+  ;;s (tap-hold $tap-time $hold-time s lalt)
+  ;;d (tap-hold $tap-time $hold-time d lctrl)
+  ;;f (tap-hold $tap-time $hold-time f lsft)
+  ;;j (tap-hold $tap-time $hold-time j rsft)
+  ;;k (tap-hold $tap-time $hold-time k rctrl)
+  ;;l (tap-hold $tap-time $hold-time l ralt)
+  ;;; (tap-hold $tap-time $hold-time ; rmet)
+)
+
+;; define global input chord combinations
+;; (defchordsv2
+;;   (a ;) (one-shot 100 f19) 100 all-released ()
+;; )
+
+(deflayer base
+  ;; f19 @escctrl @a @s @d @f @j @k @l @;
+  f19 @escctrl lctl
+)

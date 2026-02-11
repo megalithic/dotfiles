@@ -1,0 +1,104 @@
+.yarn
+.git
+.jj
+.elixir_ls
+**/.elixir_ls
+.lexical
+**/.lexical
+.elixir-tools
+**/.elixir-tools
+node_modules
+_build
+tags
+bower_components
+storage
+tmp
+coverage
+deps
+.hg
+.svn
+.sass-cache
+public
+.cache
+.Trash
+.licenses
+**/dotbot
+**/dotbot-plugins
+**/config/zsh/plugins
+!**/Spoons
+**/Spoons/URLDispatcher.spoon
+**/Spoons/EmmyLua.spoon
+**/Spoons/SpoonInstall.spoon
+**/Spoons/Seal.spoon
+**/Spoons/VimMode.spoon
+**/config/tmux/plugins
+**/config/karabiner/automatic_backups
+.DS_Store
+localrc
+.localrc
+**/*.swp
+**/*.log
+**/logs
+**/*.weechatlog
+**/*.zwc
+**/.zcomp*
+**/.zsh_sessions
+.chpwd-recent-dirs
+cache
+yarn.lock
+package-lock.json
+*~
+app/assets/builds
+erl_crash.dump
+.nix-mix
+.nix-hex
+**/*.zwc
+**/ios
+**/android
+**/priv/static/assets/*.js
+**/priv/static/assets/*.css
+**/priv/**/*.sql
+**/priv/**/*.bak
+**/*.bak
+**/.obsidian
+.obsidian
+.jj
+.direnv
+.beads
+**/.jj
+**/.direnv
+**/.beads
+deps
+.expert
+**/.pi/todos
+
+
+
+# ignores, etc from ripgrep
+# --glob=!config/hammerspoon/Spoons/*
+# --glob=!.git
+# --glob=!.elixir_ls
+# --glob=!.lexical
+# --glob=!.elixir-tools
+# --glob=!node_modules
+# --glob=!yarn.lock
+# --glob=!package-lock.json
+# --glob=!.yarn
+# --glob=!_build
+# --glob=!tags
+# --glob=!bower_components
+# --glob=!storage
+# --glob=!tmp
+# --glob=!coverage
+# --glob=!deps
+# --glob=!.hg
+# --glob=!.svn
+# --glob=!.sass-cache
+# --glob=!public
+# --glob=!*.cache
+# --glob=!.Trash
+# --glob=!.licenses
+# --glob=!config/zsh/plugins/*
+# --glob=!dotbot/*
+
+# vim:ft=gitignore:tw=0

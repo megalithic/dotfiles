@@ -102,7 +102,6 @@
   } @ inputs: let
     username = "seth";
     arch = "aarch64-darwin";
-    hostname = "megabookpro";
     version = "25.11";
 
     lib = nixpkgs.lib.extend (import ./lib/default.nix inputs);
@@ -125,62 +124,44 @@
       };
     };
 
-    mkInit = {
-      arch,
-      script ? ''
-        echo "no default app init script set."
-      '',
-    }: let
-      pkgs = nixpkgs.legacyPackages.${arch};
-      # REF: https://gist.github.com/monadplus/3a4eb505633f5b03ef093514cf8356a1
-      init = pkgs.writeShellApplication {
-        name = "init";
-        text = script;
-      };
-    in {
-      type = "app";
-      program = "${init}/bin/init";
+    mkInit = import ./lib/mkInit.nix { inherit nixpkgs; };
+
+    mkDarwinHost = import ./lib/mkDarwinHost.nix {
+      inherit inputs lib overlays brew_config version;
+    };
+
+    mkHome = import ./lib/mkHome.nix {
+      inherit inputs lib overlays version;
     };
   in {
     inherit (self) outputs;
 
-    # bootstrap the nix install based on the current arch
+    # Bootstrap nix install per arch
     apps."${arch}".default = mkInit {
       inherit arch;
       script = builtins.readFile scripts/${arch}_bootstrap.sh;
     };
 
-    darwinConfigurations.${hostname} = nix-darwin.lib.darwinSystem {
-      inherit lib;
+    # Darwin system configurations (includes home-manager)
+    darwinConfigurations.megabookpro = mkDarwinHost {
+      hostname = "megabookpro";
+      username = "seth";
+    };
 
-      specialArgs = {inherit self inputs username arch hostname version overlays lib;};
-      modules = [
-        {system.configurationRevision = self.rev or self.dirtyRev or null;}
-        {nixpkgs.overlays = overlays;}
-        {nixpkgs.config.allowUnfree = true;}
-        {nixpkgs.config.allowUnfreePredicate = _: true;}
-        ./hosts/${hostname}.nix
-        ./modules/system.nix
-        ./modules/native-pkg-installer.nix
-        agenix.darwinModules.default
+    darwinConfigurations.rxbookpro = mkDarwinHost {
+      hostname = "rxbookpro";
+      username = "seth";
+    };
 
-        nix-homebrew.darwinModules.nix-homebrew
-        (brew_config {inherit username;})
-        # Optional: Align homebrew taps config with nix-homebrew
-        ({config, ...}: {
-          homebrew.taps = map (key: builtins.replaceStrings ["homebrew-"] [""] key) (builtins.attrNames config.nix-homebrew.taps);
-        })
-        (import ./modules/brew.nix)
-        home-manager.darwinModules.default
-        {
-          home-manager = {
-            useGlobalPkgs = true;
-            useUserPackages = true;
-            users.${username} = import ./home;
-            extraSpecialArgs = {inherit inputs username arch hostname version overlays lib;};
-          };
-        }
-      ];
+    # Standalone home-manager configurations
+    homeConfigurations."seth@megabookpro" = mkHome {
+      hostname = "megabookpro";
+      username = "seth";
+    };
+
+    homeConfigurations."seth@rxbookpro" = mkHome {
+      hostname = "rxbookpro";
+      username = "seth";
     };
   };
 }

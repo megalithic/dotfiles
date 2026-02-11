@@ -1,0 +1,33 @@
+# vim:foldenable:foldmethod=marker:ft=gitconfig
+
+[user]
+; signingkey = seth@megalithic.io
+
+[commit]
+  template = ~/.gitmessage
+; gpgsign = true
+
+[tag]
+; gpgSign = true
+
+[gpg]
+  format = ssh
+
+[gpg "ssh"]
+  ; program = "/Applications/1Password.app/Contents/MacOS/op-ssh-sign"
+; allowedSignersFile = /Users/seth/.ssh/allowed_signers
+
+[credential]
+helper = osxkeychain
+
+[credential "https://github.com"]
+helper =
+helper = !$(brew --prefix)/bin/gh auth git-credential
+
+[credential "https://github.com"]
+helper =
+helper = !$(brew --prefix)/bin/gh auth git-credential
+
+[credential "https://gist.github.com"]
+helper =
+helper = !$(brew --prefix)/bin/gh auth git-credential
