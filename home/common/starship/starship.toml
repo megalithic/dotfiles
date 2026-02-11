@@ -1,0 +1,204 @@
+"$schema" = 'https://starship.rs/config-schema.json'
+
+add_newline = true
+
+format = """
+$directory\
+(${custom.jj}${custom.git_branch})\
+${custom.git_status}\
+$cmd_duration\
+$line_break\
+${custom.nix_shell}\
+${custom.sudo}\
+$jobs\
+$status\
+$character"""
+
+command_timeout = 500
+
+# move the rest of the prompt to the right
+right_format = """$time"""
+
+[fill]
+symbol = ' '
+
+[time]
+disabled = false
+style = "yellow dimmed"
+format = '[$time]($style) '
+time_format = "%T"
+# utc_time_offset = "-5"
+# time_range = "10:00:00-14:00:00 no this nix_shell"
+
+[username]
+style_root = "red"
+style_user = "purple"
+format = "[$user]($style)@"
+
+[hostname]
+style = "yellow"
+format = "[$hostname]($style) "
+
+[cmd_duration]
+format = "[ $duration]($style) "
+style = "bold fg:yellow"
+min_time = 500
+
+[character]
+# alts:  ›󰅂 
+format = "$symbol "
+success_symbol = "[›](bold green)"
+error_symbol = "[›](bold red)"
+# vicmd_symbol = "[](bold fg:white,bg:#614b51)"
+
+[jobs]
+symbol = "󰄉(white dimmed)" # 
+number_threshold = 1
+symbol_threshold = 1
+format = "$number$symbol"
+
+# [custom.desk]
+# description = "indicates whether you're in a desk-spawned shell"
+# command = "(command desk -v &>/dev/null && (desk | grep -q 'No desk activated.' && echo '' || echo '🚀')) || echo ''"
+# when = "true"
+
+
+[custom.nix_shell]
+symbol = "󱄅"
+# shell = ["bash", "--noprofile", "--norc"]
+command = '''
+  echo "$(echo $name | sed 's/-shell//')/$IN_NIX_SHELL"
+'''
+format = '\[[[$symbol](#ffffff) $output](#aaaaaa)\] '
+when = "[[ -n $IN_NIX_SHELL ]]"
+
+# [nix_shell]
+# impure_msg = '[-impure](#614b51)'
+# pure_msg = '[-pure](#888888)'
+# unknown_msg = '[-unknown](yellow)'
+# format = '[[󱄅](#ffffff) $name$state](#aaaaaa) '
+
+[custom.sudo]
+# shell = ["bash", "--noprofile", "--norc"]
+description = "valid sudo timestamp marker"
+command = "echo -n ''"
+format = "[$symbol$output]($style) "
+style = "bold fg:#614b51"
+when = "sudo -vn &>/dev/null"
+
+[custom.jj]
+ignore_timeout = true
+shell = ["bash", "--noprofile", "--norc"]
+description = "The current jj status with workspace indicator"
+detect_folders = [".jj"]
+symbol = ""
+# symbol = "󱗆 "
+# hidden? 👻
+command = '''
+  # Detect workspace from path (jj templates don't expose workspace info)
+  # ws_path=$(jj workspace root 2>/dev/null)
+  # ws_prefix=""
+  # if [[ "$ws_path" == *"/.workspaces/"* ]]; then
+  #   ws_name=$(basename "$ws_path")
+  #   # Cyan color for workspace indicator: \x1b[36m
+  #   ws_prefix="\x1b[36m${ws_name}\x1b[0m "
+  # fi
+
+  # Get parent bookmark (with color) if @ is empty and has no bookmarks (typical working state)
+  parent_bookmark=""
+  if jj log -r @ --no-graph -T 'if(empty && bookmarks.len() == 0, "yes", "")' 2>/dev/null | grep -q yes; then
+    parent_bookmark=$(jj log -r '@-' --no-graph --color always -T 'bookmarks' 2>/dev/null)
+  fi
+
+  jj_output=$(jj log --revisions @ --no-graph --ignore-working-copy --color always --limit 1 --template '
+    separate(" ",
+      change_id.shortest(4),
+      bookmarks,
+      "⋮",
+      concat(
+        if(conflict, "󰔷"),
+        if(divergent, "󰧈"),
+        if(hidden, "󰘓"),
+        if(immutable, ""),
+      ),
+      raw_escape_sequence("\x1b[1;32m") ++ if(empty, "(empty)"),
+      raw_escape_sequence("\x1b[1;32m") ++ coalesce(
+        truncate_end(29, description.first_line(), "…"),
+        "",
+      ) ++ raw_escape_sequence("\x1b[0m"),
+    )
+  ')
+
+  # Inject parent bookmark after change_id if we found one (preserves jj color codes)
+  if [[ -n "$parent_bookmark" ]]; then
+    # Insert parent bookmark right after change_id, before the ⋮
+    jj_output=$(echo "$jj_output" | sed "s/⋮/${parent_bookmark} ⋮/")
+  fi
+
+  # echo -e "${ws_prefix}${jj_output}"
+  echo -e "${jj_output}"
+'''
+
+[git_branch]
+disabled = true
+truncation_symbol = "…"
+truncation_length = 20
+symbol = "[](bold fg:#626262)" # 
+format = "[$branch]($style)"
+style = "italic fg:#7c8377"     # 245
+
+[custom.git_branch]
+detect_folders = [".git", "!.jj"]
+command = "starship module git_branch"
+style = "italic fg:#7c8377"            # 245
+format = "[$output]($style)"
+
+[git_status]
+disabled = true
+style = "#7c8377"
+format = '([$conflicted$staged$modified$renamed$deleted$untracked$stashed$ahead_behind](fg:$style) )'
+ahead = " [](fg:white)"                                                                              # ⇡
+behind = " [](fg:white)"                                                                             # ⇣
+diverged = " 󰧈${ahead_count}${behind_count}"
+modified = " [󰛄](fg:purple)"                                                                          #•﯂
+# modified = "[~${count}](fg:red)"
+staged = " [](fg:green)"
+# staged = "[$count](fg:green)"
+conflicted = " [󰔷](bold fg:#FAB005)[${count}](fg:#d9bb80)"
+stashed = " [${count}](fg:white)"
+deleted = " [](fg:red)"
+# deleted = "[$count](fg:red)"
+renamed = " [](fg:white)"
+# renamed = "[${count}](fg:white)"
+untracked = " [󱏘](fg:#eeeeee)"
+# untracked = "[󱏘${count}](fg:#7c8377)"
+
+[custom.git_status]
+detect_folders = [".git", "!.jj"]
+command = "starship module git_status"
+style = "#7c8377"
+format = '[$output](fg:$style)'
+
+[directory]
+truncation_length = 2
+truncation_symbol = "…/"
+truncate_to_repo = true
+fish_style_pwd_dir_length = 1
+style = "bold blue"
+
+# [directory]
+# format = "[$path](bold $style)[$read_only]($read_only_style) "
+# truncation_length = 2
+# style = "fg:blue"
+# read_only_style = "fg:red"
+# fish_style_pwd_dir_length = 1
+# before_repo_root_style = "fg:#555555"
+# truncation_symbol = "…/"
+# truncate_to_repo = true
+# read_only = "  "
+
+[directory.substitutions]
+"Documents" = "󰈙 "
+"Downloads" = " "
+"Music" = " "
+"Pictures" = " "

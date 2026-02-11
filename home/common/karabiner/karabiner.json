@@ -1,0 +1,450 @@
+{
+  "global": { "show_profile_name_in_menu_bar": true },
+  "profiles": [
+    {
+      "complex_modifications": {
+        "rules": [
+          {
+            "description": "Change ctrl+delete to forward delete",
+            "manipulators": [
+              {
+                "from": {
+                  "key_code": "delete_or_backspace",
+                  "modifiers": {
+                    "mandatory": ["control"],
+                    "optional": ["caps_lock", "option"]
+                  }
+                },
+                "to": [{ "key_code": "delete_forward" }],
+                "type": "basic"
+              }
+            ]
+          },
+          {
+            "description": "Change Fn + h/j/k/l to Arrows",
+            "manipulators": [
+              {
+                "from": {
+                  "key_code": "h",
+                  "modifiers": {
+                    "mandatory": ["fn"],
+                    "optional": ["caps_lock"]
+                  }
+                },
+                "to": [{ "key_code": "left_arrow" }],
+                "type": "basic"
+              },
+              {
+                "from": {
+                  "key_code": "j",
+                  "modifiers": {
+                    "mandatory": ["fn"],
+                    "optional": ["caps_lock"]
+                  }
+                },
+                "to": [{ "key_code": "down_arrow" }],
+                "type": "basic"
+              },
+              {
+                "from": {
+                  "key_code": "k",
+                  "modifiers": {
+                    "mandatory": ["fn"],
+                    "optional": ["caps_lock"]
+                  }
+                },
+                "to": [{ "key_code": "up_arrow" }],
+                "type": "basic"
+              },
+              {
+                "from": {
+                  "key_code": "l",
+                  "modifiers": {
+                    "mandatory": ["fn"],
+                    "optional": ["caps_lock"]
+                  }
+                },
+                "to": [{ "key_code": "right_arrow" }],
+                "type": "basic"
+              }
+            ]
+          },
+          {
+            "description": "Change caps_lock to control when used as modifier, escape when used alone",
+            "manipulators": [
+              {
+                "from": {
+                  "key_code": "caps_lock",
+                  "modifiers": { "optional": ["any"] }
+                },
+                "to": [{ "key_code": "left_control" }],
+                "to_if_alone": [{ "key_code": "escape" }],
+                "type": "basic"
+              }
+            ]
+          },
+          {
+            "description": "SpaceFN: Space+[hjkl] to Left, Down, Up, Right",
+            "manipulators": [
+              {
+                "conditions": [
+                  {
+                    "name": "spacefn_mode",
+                    "type": "variable_if",
+                    "value": 1
+                  }
+                ],
+                "from": {
+                  "key_code": "h",
+                  "modifiers": { "optional": ["any"] }
+                },
+                "to": [{ "key_code": "left_arrow" }],
+                "type": "basic"
+              },
+              {
+                "conditions": [
+                  {
+                    "name": "spacefn_mode",
+                    "type": "variable_if",
+                    "value": 1
+                  }
+                ],
+                "from": {
+                  "key_code": "j",
+                  "modifiers": { "optional": ["any"] }
+                },
+                "to": [{ "key_code": "down_arrow" }],
+                "type": "basic"
+              },
+              {
+                "conditions": [
+                  {
+                    "name": "spacefn_mode",
+                    "type": "variable_if",
+                    "value": 1
+                  }
+                ],
+                "from": {
+                  "key_code": "k",
+                  "modifiers": { "optional": ["any"] }
+                },
+                "to": [{ "key_code": "up_arrow" }],
+                "type": "basic"
+              },
+              {
+                "conditions": [
+                  {
+                    "name": "spacefn_mode",
+                    "type": "variable_if",
+                    "value": 1
+                  }
+                ],
+                "from": {
+                  "key_code": "l",
+                  "modifiers": { "optional": ["any"] }
+                },
+                "to": [{ "key_code": "right_arrow" }],
+                "type": "basic"
+              }
+            ]
+          }
+        ]
+      },
+      "devices": [
+        {
+          "identifiers": {
+            "is_keyboard": true,
+            "product_id": 636,
+            "vendor_id": 1452
+          },
+          "simple_modifications": [
+            {
+              "from": { "key_code": "left_control" },
+              "to": [{ "key_code": "f19" }]
+            }
+          ]
+        },
+        {
+          "identifiers": {
+            "is_keyboard": true,
+            "product_id": 321,
+            "vendor_id": 1241
+          },
+          "manipulate_caps_lock_led": false,
+          "simple_modifications": [
+            {
+              "from": { "key_code": "right_gui" },
+              "to": [{ "key_code": "f19" }]
+            }
+          ]
+        },
+        {
+          "identifiers": {
+            "is_keyboard": true,
+            "product_id": 8800,
+            "vendor_id": 17498
+          },
+          "manipulate_caps_lock_led": false
+        },
+        {
+          "disable_built_in_keyboard_if_exists": true,
+          "identifiers": {
+            "is_keyboard": true,
+            "product_id": 24674,
+            "vendor_id": 65261
+          },
+          "manipulate_caps_lock_led": false
+        },
+        {
+          "disable_built_in_keyboard_if_exists": true,
+          "identifiers": {
+            "is_pointing_device": true,
+            "product_id": 24674,
+            "vendor_id": 65261
+          }
+        },
+        {
+          "identifiers": { "is_keyboard": true },
+          "simple_modifications": [
+            {
+              "from": { "key_code": "left_control" },
+              "to": [{ "key_code": "f19" }]
+            }
+          ]
+        }
+      ],
+      "fn_function_keys": [
+        {
+          "from": { "key_code": "f3" },
+          "to": [{ "key_code": "mission_control" }]
+        },
+        {
+          "from": { "key_code": "f4" },
+          "to": [{ "key_code": "launchpad" }]
+        },
+        {
+          "from": { "key_code": "f5" },
+          "to": [{ "key_code": "illumination_decrement" }]
+        },
+        {
+          "from": { "key_code": "f6" },
+          "to": [{ "key_code": "illumination_increment" }]
+        },
+        {
+          "from": { "key_code": "f9" },
+          "to": [{ "consumer_key_code": "fastforward" }]
+        }
+      ],
+      "name": "internal",
+      "virtual_hid_keyboard": {
+        "caps_lock_delay_milliseconds": 0,
+        "keyboard_type": "ansi",
+        "keyboard_type_v2": "ansi"
+      }
+    },
+    {
+      "complex_modifications": {
+        "rules": [
+          {
+            "description": "Post left_ctrl when return_or_enter is hold.",
+            "manipulators": [
+              {
+                "from": {
+                  "key_code": "return_or_enter",
+                  "modifiers": { "optional": ["any"] }
+                },
+                "to": [{ "key_code": "right_control" }],
+                "to_if_alone": [{ "key_code": "return_or_enter" }],
+                "type": "basic"
+              }
+            ]
+          },
+          {
+            "description": "Change ctrl+delete to forward delete",
+            "manipulators": [
+              {
+                "from": {
+                  "key_code": "delete_or_backspace",
+                  "modifiers": {
+                    "mandatory": ["control"],
+                    "optional": ["caps_lock", "option"]
+                  }
+                },
+                "to": [{ "key_code": "delete_forward" }],
+                "type": "basic"
+              }
+            ]
+          },
+          {
+            "description": "Change shift + delete to forward delete (rev 2)",
+            "manipulators": [
+              {
+                "from": {
+                  "key_code": "delete_or_backspace",
+                  "modifiers": {
+                    "mandatory": ["shift"],
+                    "optional": ["option"]
+                  }
+                },
+                "to": [{ "key_code": "delete_forward" }],
+                "type": "basic"
+              }
+            ]
+          },
+          {
+            "description": "Change Fn + h/j/k/l to Arrows",
+            "manipulators": [
+              {
+                "from": {
+                  "key_code": "h",
+                  "modifiers": {
+                    "mandatory": ["fn"],
+                    "optional": []
+                  }
+                },
+                "to": [{ "key_code": "left_arrow" }],
+                "type": "basic"
+              },
+              {
+                "from": {
+                  "key_code": "j",
+                  "modifiers": {
+                    "mandatory": ["fn"],
+                    "optional": []
+                  }
+                },
+                "to": [{ "key_code": "down_arrow" }],
+                "type": "basic"
+              },
+              {
+                "from": {
+                  "key_code": "k",
+                  "modifiers": {
+                    "mandatory": ["fn"],
+                    "optional": []
+                  }
+                },
+                "to": [{ "key_code": "up_arrow" }],
+                "type": "basic"
+              },
+              {
+                "from": {
+                  "key_code": "l",
+                  "modifiers": {
+                    "mandatory": ["fn"],
+                    "optional": []
+                  }
+                },
+                "to": [{ "key_code": "right_arrow" }],
+                "type": "basic"
+              }
+            ]
+          },
+          {
+            "description": "Post escape if caps is pressed alone, left_ctrl otherwise",
+            "manipulators": [
+              {
+                "from": {
+                  "key_code": "caps_lock",
+                  "modifiers": { "optional": ["any"] }
+                },
+                "to": [{ "key_code": "left_control" }],
+                "to_if_alone": [{ "key_code": "escape" }],
+                "type": "basic"
+              }
+            ]
+          }
+        ]
+      },
+      "devices": [
+        {
+          "identifiers": {
+            "is_keyboard": true,
+            "product_id": 636,
+            "vendor_id": 1452
+          },
+          "manipulate_caps_lock_led": false,
+          "simple_modifications": [
+            {
+              "from": { "key_code": "left_control" },
+              "to": [{ "key_code": "f19" }]
+            }
+          ]
+        },
+        {
+          "disable_built_in_keyboard_if_exists": true,
+          "identifiers": {
+            "is_keyboard": true,
+            "product_id": 24926,
+            "vendor_id": 7504
+          }
+        },
+        {
+          "identifiers": {
+            "is_keyboard": true,
+            "product_id": 34304,
+            "vendor_id": 1452
+          },
+          "ignore": true,
+          "manipulate_caps_lock_led": false
+        },
+        {
+          "identifiers": {
+            "is_keyboard": true,
+            "product_id": 50495,
+            "vendor_id": 1133
+          },
+          "ignore": true,
+          "manipulate_caps_lock_led": false
+        },
+        {
+          "disable_built_in_keyboard_if_exists": true,
+          "identifiers": { "is_keyboard": true },
+          "manipulate_caps_lock_led": false
+        },
+        {
+          "identifiers": {
+            "is_keyboard": true,
+            "product_id": 6216,
+            "vendor_id": 4152
+          },
+          "manipulate_caps_lock_led": false
+        },
+        {
+          "identifiers": {
+            "is_keyboard": true,
+            "product_id": 6218,
+            "vendor_id": 4152
+          },
+          "manipulate_caps_lock_led": false
+        },
+        {
+          "identifiers": {
+            "is_pointing_device": true,
+            "product_id": 6218,
+            "vendor_id": 4152
+          },
+          "ignore": false
+        },
+        {
+          "identifiers": {
+            "is_pointing_device": true,
+            "product_id": 6216,
+            "vendor_id": 4152
+          },
+          "ignore": false
+        },
+        {
+          "disable_built_in_keyboard_if_exists": true,
+          "identifiers": {
+            "device_address": "f3-d9-8d-01-16-54",
+            "is_keyboard": true
+          }
+        }
+      ],
+      "name": "leeloo",
+      "selected": true,
+      "virtual_hid_keyboard": { "keyboard_type_v2": "ansi" }
+    }
+  ]
+}

@@ -282,3 +282,43 @@ ls -la ~/bin/script.sh  # Same inode as dotfiles? → Live
 # Rebuild if needed:
 just rebuild
 ```
+
+## Pi Agent Directory Detection
+
+**Environment variables:**
+- `PI_CODING_AGENT_DIR` — Current pi agent config directory (e.g., `~/.pi/agent-evirts`)
+- `PI_SESSION` — Current pi session name (e.g., `rx`, `mega`)
+
+**Available agent directories:**
+```
+~/.pi/
+├── agent/           # Base/shared config (symlink target)
+├── agent-evirts/    # Work: Evirts/Strive
+├── agent-cspire/    # Work: C Spire
+├── agent-rx/        # Project-specific
+└── tasks/           # Cross-agent task tracking
+```
+
+**To determine current pi agent directory:**
+```bash
+# From environment
+echo "$PI_CODING_AGENT_DIR"
+
+# Or detect from available directories
+ls -d ~/.pi/agent-* 2>/dev/null
+```
+
+**Skills and extensions location:**
+```bash
+# Skills are in the agent directory
+ls "$PI_CODING_AGENT_DIR/skills/"
+
+# Or if env not set, check common locations
+ls ~/.pi/agent/skills/
+ls ~/.pi/agent-evirts/skills/
+```
+
+**When referencing pi skills in documentation:**
+- Use `$PI_CODING_AGENT_DIR/skills/<skill>/` for portable references
+- Or `~/.pi/agent/skills/<skill>/` for the shared base
+- Never hardcode a specific agent directory like `agent-evirts`

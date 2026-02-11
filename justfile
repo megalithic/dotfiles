@@ -22,12 +22,12 @@ upgrade-nix:
      --experimental-features "nix-command flakes" \
      upgrade-nix \
 
-# run home-manager switch
+# run nix run home-manager -- switch
 hm:
-  nh home switch . -b backup
+  nix run home-manager -- switch --flake ".#seth@$(hostname -s)" -b backup
 
 news:
-  home-manager news --flake .
+  nix run home-manager -- news --flake .
 
 
 init host=`hostname`:
@@ -81,9 +81,114 @@ fix-shell-files:
 update:
   update-brew update-flake hm
 
+# ===========================================================================
+# Primary rebuild commands
+# ===========================================================================
+
+# Full rebuild: sync from remote, darwin-rebuild, nix run home-manager -- switch
+# Full rebuild: darwin-rebuild (which includes home-manager as submodule)
+# Usage: just rebuild [--dry-run]
 [macos]
-rebuild:
-  ./bin/darwin-switch
+rebuild dry="":
+  just darwin {{dry}}
+  just home {{dry}}
+
+# Darwin-only rebuild (system settings, brew, etc.)
+# Usage: just darwin [--dry-run]
+[macos]
+darwin dry="":
+  #!/usr/bin/env bash
+  set -euo pipefail
+  
+  DRY="{{dry}}"
+  HOST=$(hostname -s)
+  
+  echo ":: Syncing from remote..."
+  just _sync-main
+  
+  if [[ "$DRY" == "--dry-run" ]]; then
+    echo ":: [DRY RUN] Building darwin configuration..."
+    darwin-rebuild build --flake ".#$HOST"
+    echo ":: Dry run complete. No changes applied."
+  else
+    echo ":: Running darwin-rebuild switch..."
+    sudo darwin-rebuild switch --flake ".#$HOST"
+  fi
+
+# Home-manager only rebuild (user packages, dotfiles, no sudo needed)
+# Usage: just home [--dry-run]
+[macos]
+home dry="":
+  #!/usr/bin/env bash
+  set -euo pipefail
+  
+  DRY="{{dry}}"
+  HOST=$(hostname -s)
+  
+  echo ":: Syncing from remote..."
+  just _sync-main
+  
+  if [[ "$DRY" == "--dry-run" ]]; then
+    echo ":: [DRY RUN] Building home-manager configuration..."
+    nix run home-manager -- build --flake ".#seth@$HOST"
+    echo ":: Dry run complete. No changes applied."
+  else
+    echo ":: Running home-manager switch..."
+    nix run home-manager -- switch --flake ".#seth@$HOST"
+  fi
+
+# ===========================================================================
+# Helper recipes (private)
+# ===========================================================================
+
+# Sync main bookmark with remote (fetches latest flake.lock from Sunday automation)
+[private]
+_sync-main:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  
+  # Fetch remote updates
+  jj git fetch 2>/dev/null || true
+  
+  # Check if remote main is ahead
+  LOCAL_MAIN=$(jj log -r main -T change_id --no-graph 2>/dev/null || echo "")
+  REMOTE_MAIN=$(jj log -r 'main@origin' -T change_id --no-graph 2>/dev/null || echo "")
+  
+  if [[ -n "$REMOTE_MAIN" && "$LOCAL_MAIN" != "$REMOTE_MAIN" ]]; then
+    echo ":: Remote main has updates (likely flake.lock from Sunday automation)"
+    jj bookmark set main -r main@origin
+    
+    # Rebase current work onto updated main if we're not on main
+    CURRENT=$(jj log -r @ -T 'if(bookmarks, bookmarks, change_id)' --no-graph)
+    if [[ "$CURRENT" != "main" ]]; then
+      echo ":: Rebasing current work onto updated main..."
+      jj rebase -d main 2>/dev/null || echo ":: (already up to date or rebase not needed)"
+    fi
+    
+    ntfy send -t "Nix" -m "Synced flake.lock from remote" 2>/dev/null || true
+  else
+    echo ":: Already up to date with remote"
+  fi
+
+# ===========================================================================
+# Legacy recipes (kept for compatibility, use above instead)
+# ===========================================================================
+
+[macos]
+rebuild-user host=`hostname`:
+  just home
+
+[macos]
+rebuild-home host=`hostname`:
+  just home
+
+[macos]
+rebuild-system host=`hostname`:
+  just darwin
+
+[macos]
+rebuild-fast host=`hostname`:
+  just home
 
 [macos]
 rebuild-old:
@@ -92,21 +197,8 @@ rebuild-old:
 
 [macos]
 mac:
-  #!/usr/bin/env bash
-  set -euo pipefail
-
-  # Fetch remote updates
-  jj git fetch
-
-  # Check if remote main is ahead
-  if [[ $(jj log -r 'main@origin' -T change_id --no-graph) != $(jj log -r main -T change_id --no-graph) ]]; then
-    echo "Remote main has updates (likely flake.lock from Sunday automation)"
-    jj bookmark set main -r main@origin
-    ntfy send -t "Nix Darwin" -m "Synced flake.lock from remote before rebuild"
-  fi
-
-  nh darwin switch ./
-  # sudo darwin-rebuild switch --flake ./
+  @echo "Deprecated: use 'just darwin' instead"
+  just darwin
 
 # initial nix-darwin build
 [macos]
