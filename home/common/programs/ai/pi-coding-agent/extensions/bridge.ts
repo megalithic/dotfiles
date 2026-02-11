@@ -62,10 +62,20 @@ type TelegramPayload = {
   timestamp?: number;
 };
 
-type Payload = NvimPayload | TelegramPayload;
+type TellPayload = {
+  type: "tell";
+  text: string;
+  from?: string;
+  timestamp?: number;
+};
+
+type Payload = NvimPayload | TelegramPayload | TellPayload;
 
 const isTelegramPayload = (p: Payload): p is TelegramPayload =>
   "type" in p && p.type === "telegram";
+
+const isTellPayload = (p: Payload): p is TellPayload =>
+  "type" in p && p.type === "tell";
 
 // =============================================================================
 // State
@@ -186,6 +196,24 @@ const startServer = (pi: ExtensionAPI, ctx: ExtensionContext): void => {
               void pi.sendUserMessage(telegramMessage);
             } else {
               void pi.sendUserMessage(telegramMessage, { deliverAs: "followUp" });
+            }
+            continue;
+          }
+          
+          // Handle tell/delegate messages from other pi agents
+          if (isTellPayload(payload)) {
+            const fromSession = payload.from || "unknown";
+            const currentCtx = latestCtx;
+            
+            // Show notification in TUI
+            if (currentCtx?.hasUI) {
+              currentCtx.ui.notify(`Task from ${fromSession}`, "info");
+            }
+            
+            if (currentCtx?.isIdle()) {
+              void pi.sendUserMessage(payload.text);
+            } else {
+              void pi.sendUserMessage(payload.text, { deliverAs: "followUp" });
             }
             continue;
           }

@@ -12,12 +12,13 @@
 #   - PI_SOCKET_DIR: Directory for sockets (/tmp)
 #   - PI_SOCKET_PREFIX: Socket name prefix (pi)
 #   - PI_SESSION: Current tmux session name
-#   - PI_SOCKET: Full socket path (/tmp/pi-{session}.sock)
+#   - PI_WINDOW: Current tmux window index
+#   - PI_SOCKET: Full socket path (/tmp/pi-{session}-{window}.sock)
 #
-# Socket pattern: /tmp/pi-{session}.sock
-#   - One socket per tmux session (not per window)
-#   - Agent window can be linked to other windows in same session
-#   - Non-tmux fallback: /tmp/pi-default.sock
+# Socket pattern: /tmp/pi-{session}-{window}.sock
+#   - One socket per tmux window (allows multiple pi instances)
+#   - Enables multi-instance workflows (e.g., mega:0 and mega:agent)
+#   - Non-tmux fallback: /tmp/pi-default-0.sock
 #
 # Based on: https://github.com/otahontas/nix/tree/main/home/configs/pi-coding-agent
 {
@@ -34,8 +35,8 @@
   socketConfig = {
     dir = "/tmp";
     prefix = "pi";
-    # Pattern: {dir}/{prefix}-{session}.sock
-    # Example: /tmp/pi-mega.sock
+    # Pattern: {dir}/{prefix}-{session}-{window}.sock
+    # Example: /tmp/pi-mega-0.sock
   };
 
   # ===========================================================================
@@ -84,6 +85,7 @@
   # Extensions to exclude from auto-loading (keep source but don't install)
   # These can be loaded explicitly via the `pi` wrapper or piception
   disabledExtensions = [
+    "checkpoint.ts" # Too intrusive - disable for now
     # nvim-bridge.ts now auto-loads - shows connected/disconnected status
   ];
 
@@ -146,7 +148,7 @@
   # Profiles that link to master ~/.pi/agent/ (except auth.json and sessions/)
   # User sets PI_CODING_AGENT_DIR in their tmux session .envrc
   # Master (~/.pi/agent/) serves as both config source AND personal profile
-  profiles = ["evirts" "cspire"];
+  profiles = ["rx" "cspire"];
 
   # Config items to symlink from master to each profile
   # Excludes: auth.json (per-profile auth), sessions/ (per-profile history)
@@ -207,47 +209,136 @@
   };
 
   managedSettingsJson = pkgs.writeText "pi-managed-settings.json" (builtins.toJSON managedSettings);
-in {
+
   # ===========================================================================
   # Pi Wrapper Scripts
   # ===========================================================================
   # NOTE: Base `pi` binary is installed via pkgs.llm-agents.pi in ../default.nix
   # These wrappers add environment setup (agenix secrets, tmux socket naming)
-  home.packages = [
-    # Pi agent wrapper with socket configuration
-    # Socket pattern: /tmp/pi-{session}.sock (one per tmux session)
-    # Alias: pisock (preferred), pinvim (legacy)
-    (pkgs.writeShellScriptBin "pinvim" ''
-      # Source agenix secrets for API keys (BRAVE_SEARCH_API_KEY, etc.)
-      AGENIX_DIR="$(${pkgs.darwin.system_cmds}/bin/getconf DARWIN_USER_TEMP_DIR)/agenix"
-      if [ -f "$AGENIX_DIR/env-vars" ]; then
-        . "$AGENIX_DIR/env-vars"
-      fi
+  
+  # Main pi wrapper with socket configuration and optional profile auth borrowing
+  # Socket pattern: /tmp/pi-{session}-{window}.sock (one per tmux window)
+  # Usage: pinvim [--profile NAME] [pi args...]
+  #
+  # Profile borrowing creates a hybrid config that:
+  # - Borrows auth.json from the specified profile
+  # - Keeps sessions in master (~/.pi/agent/sessions/) to avoid pollution
+  # - Symlinks all other config from master
+  pinvim = pkgs.writeShellScriptBin "pinvim" ''
+    # Source agenix secrets for API keys (BRAVE_SEARCH_API_KEY, etc.)
+    AGENIX_DIR="$(${pkgs.darwin.system_cmds}/bin/getconf DARWIN_USER_TEMP_DIR)/agenix"
+    if [ -f "$AGENIX_DIR/env-vars" ]; then
+      . "$AGENIX_DIR/env-vars"
+    fi
 
-      # Clear conflicting AWS credentials (pi doesn't need them for Anthropic)
-      unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN 2>/dev/null || true
+    # Clear conflicting AWS credentials (pi doesn't need them for Anthropic)
+    unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN 2>/dev/null || true
 
-      # Socket configuration (matches socketConfig in default.nix)
-      export PI_SOCKET_DIR="${socketConfig.dir}"
-      export PI_SOCKET_PREFIX="${socketConfig.prefix}"
+    # Parse --profile flag (before passing remaining args to pi)
+    # Note: -p is reserved by pi (--print), so only --profile long form
+    PROFILE=""
+    PI_ARGS=()
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        --profile)
+          if [[ -z "''${2:-}" || "$2" == --* ]]; then
+            echo "Warning: --profile requires a profile name, using default" >&2
+            shift
+          else
+            PROFILE="$2"
+            shift 2
+          fi
+          ;;
+        *)
+          PI_ARGS+=("$1")
+          shift
+          ;;
+      esac
+    done
 
-      # Set up socket for tmux integration
-      # Format: /tmp/pi-{session}.sock (one socket per tmux session)
-      if [ -n "$TMUX" ]; then
-        PI_SESSION=$(${pkgs.tmux}/bin/tmux display-message -p '#{session_name}')
-        export PI_SESSION
-        export PI_SOCKET="${socketConfig.dir}/${socketConfig.prefix}-''${PI_SESSION}.sock"
+    # Socket configuration (matches socketConfig in default.nix)
+    export PI_SOCKET_DIR="${socketConfig.dir}"
+    export PI_SOCKET_PREFIX="${socketConfig.prefix}"
+
+    # Set up socket for tmux integration
+    # Format: /tmp/pi-{session}-{window}.sock
+    # Uses window NAME if clean, falls back to index
+    if [ -n "$TMUX" ]; then
+      PI_SESSION=$(${pkgs.tmux}/bin/tmux display-message -p '#{session_name}')
+      WIN_NAME=$(${pkgs.tmux}/bin/tmux display-message -p '#{window_name}' | tr -d ' ')
+      WIN_INDEX=$(${pkgs.tmux}/bin/tmux display-message -p '#{window_index}')
+      # Use window name if clean (alphanumeric, dash, underscore), else index
+      if [[ -n "$WIN_NAME" && "$WIN_NAME" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+        PI_WINDOW="$WIN_NAME"
       else
-        # Non-tmux fallback
-        export PI_SESSION="default"
-        export PI_SOCKET="${socketConfig.dir}/${socketConfig.prefix}-default.sock"
+        PI_WINDOW="$WIN_INDEX"
       fi
+      export PI_SESSION PI_WINDOW
+      export PI_SOCKET="${socketConfig.dir}/${socketConfig.prefix}-''${PI_SESSION}-''${PI_WINDOW}.sock"
+    else
+      # Non-tmux fallback
+      export PI_SESSION="default"
+      export PI_WINDOW="0"
+      export PI_SOCKET="${socketConfig.dir}/${socketConfig.prefix}-default-0.sock"
+    fi
 
-      exec pi "$@"
-    '')
+    # Handle profile auth borrowing
+    # Creates hybrid config: auth from profile, everything else from master
+    if [[ -n "$PROFILE" ]]; then
+      MASTER_DIR="$HOME/.pi/agent"
+      PROFILE_DIR="$HOME/.pi/agent-''${PROFILE}"
+      PROFILE_AUTH="$PROFILE_DIR/auth.json"
+
+      # Validate profile exists and has auth.json
+      if [[ ! -f "$PROFILE_AUTH" ]]; then
+        echo "Warning: Profile auth not found: $PROFILE_AUTH" >&2
+        echo "Available profiles:" >&2
+        for d in "$HOME"/.pi/agent-*/; do
+          [[ -f "$d/auth.json" ]] && echo "  --profile $(basename "$d" | sed 's/^agent-//')" >&2
+        done
+        echo "" >&2
+        echo "Using default auth instead." >&2
+      else
+        # Create hybrid config directory: /tmp/pi-config-{session}-{profile}/
+        HYBRID_DIR="/tmp/pi-config-''${PI_SESSION}-''${PROFILE}"
+        mkdir -p "$HYBRID_DIR"
+
+        # Symlink shared config from master
+        for item in AGENTS.md settings.json keybindings.json extensions skills; do
+          [[ -e "$MASTER_DIR/$item" || -L "$MASTER_DIR/$item" ]] && \
+            ln -sfn "$MASTER_DIR/$item" "$HYBRID_DIR/$item"
+        done
+
+        # Symlink sessions from master (prevents pollution)
+        mkdir -p "$MASTER_DIR/sessions"
+        ln -sfn "$MASTER_DIR/sessions" "$HYBRID_DIR/sessions"
+
+        # Symlink auth from the borrowed profile
+        ln -sfn "$PROFILE_AUTH" "$HYBRID_DIR/auth.json"
+
+        export PI_CODING_AGENT_DIR="$HYBRID_DIR"
+
+        # Cleanup hybrid dir on exit (it's just symlinks)
+        # Can't use exec here - need shell to stay for trap
+        cleanup() { rm -rf "$HYBRID_DIR" 2>/dev/null; }
+        trap cleanup EXIT INT TERM
+        pi "''${PI_ARGS[@]}"
+        exit $?
+      fi
+    fi
+
+    exec pi "''${PI_ARGS[@]}"
+  '';
+  
+  # Short alias for pinvim
+  p = pkgs.writeShellScriptBin "p" ''exec ${pinvim}/bin/pinvim "$@"'';
+
+in {
+  home.packages = [
+    pinvim
+    p
   ];
 
-  # ===========================================================================
   # File Symlinks
   # ===========================================================================
   home.file =

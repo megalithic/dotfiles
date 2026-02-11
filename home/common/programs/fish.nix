@@ -334,6 +334,8 @@ in {
       nvim = "nvim -O";
       # "nh\ mac" = "nh darwin switch ./";
       vim = "nvim -O";
+      pp = "p --profile";
+      sz = "exec fish";
       j = "just";
       z = "zoxide";
       ju = "just";

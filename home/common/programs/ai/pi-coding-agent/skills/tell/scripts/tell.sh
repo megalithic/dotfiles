@@ -30,8 +30,157 @@ declare -A AGENT_COMMANDS=(
   [codex]="codex --full-auto"
 )
 
+# ===========================================================================
+# Pi Socket Functions (for window-aware multi-instance support)
+# ===========================================================================
+# Socket pattern: /tmp/pi-{session}-{window}.sock
+# One socket per tmux window, allows multiple pi instances per session
+
+# Get all pi sockets for a session
+# Returns newline-separated list of socket paths
+get_pi_sockets() {
+  local session="$1"
+  ls /tmp/pi-${session}-*.sock 2>/dev/null || true
+}
+
+# Get the "best" pi socket for a session
+# Priority: 1. agent window, 2. window 0, 3. first available
+get_best_pi_socket() {
+  local session="$1"
+  local sockets
+  sockets=$(get_pi_sockets "$session")
+  
+  [[ -z "$sockets" ]] && return 1
+  
+  # Prefer agent window
+  local agent_socket="/tmp/pi-${session}-agent.sock"
+  if [[ -S "$agent_socket" ]]; then
+    echo "$agent_socket"
+    return 0
+  fi
+  
+  # Then window 0
+  local win0_socket="/tmp/pi-${session}-0.sock"
+  if [[ -S "$win0_socket" ]]; then
+    echo "$win0_socket"
+    return 0
+  fi
+  
+  # Otherwise first available
+  echo "$sockets" | head -1
+}
+
+# Send message to pi via socket
+# Returns 0 on success, 1 on failure
+#
+# Uses jq -cn for compact single-line JSON output.
+# The --arg flag handles all JSON escaping (newlines → \n, quotes escaped, etc.)
+# Pipes directly to nc -N (close on EOF) for reliable delivery.
+send_to_pi_socket() {
+  local socket_path="$1"
+  local message="$2"
+  local msg_type="${3:-tell}"
+  
+  [[ ! -S "$socket_path" ]] && return 1
+  
+  # Get session name for 'from' field (fallback to tmux query or 'unknown')
+  local from_session="${PI_SESSION:-}"
+  if [[ -z "$from_session" ]]; then
+    from_session=$(tmux display-message -p '#S' 2>/dev/null || echo "unknown")
+  fi
+  
+  # Build and send compact JSON in one pipeline
+  jq -cn \
+    --arg type "$msg_type" \
+    --arg text "$message" \
+    --arg from "$from_session" \
+    --argjson ts "$(date +%s)" \
+    '{type: $type, text: $text, from: $from, timestamp: $ts}' \
+  | nc -N -U "$socket_path" 2>/dev/null
+  
+  # Return nc's exit status (PIPESTATUS[1] is nc in the pipeline)
+  return "${PIPESTATUS[1]:-$?}"
+}
+
+# Select pi socket interactively if multiple exist
+# Uses fzf if available, otherwise prints list
+select_pi_socket() {
+  local session="$1"
+  local sockets
+  sockets=$(get_pi_sockets "$session")
+  
+  local count
+  count=$(echo "$sockets" | wc -l | tr -d ' ')
+  
+  if [[ "$count" -eq 0 ]]; then
+    return 1
+  elif [[ "$count" -eq 1 ]]; then
+    echo "$sockets"
+    return 0
+  fi
+  
+  # Multiple sockets - need to select
+  if command -v fzf &>/dev/null; then
+    echo "$sockets" | fzf --prompt="Select pi instance: " --height=10
+  else
+    echo "Multiple pi instances in session ${session}:" >&2
+    echo "$sockets" | nl >&2
+    echo "Using first available (or specify with --window)" >&2
+    echo "$sockets" | head -1
+  fi
+}
+
+
 # Get the pane running pi in a tmux session
 # Returns pane_id or empty string if not found
+
+# Resolve a window identifier (name or index) to a socket path
+# Tries in order:
+#   1. Direct match: /tmp/pi-{session}-{window}.sock
+#   2. If window is numeric, look up window name and try that
+#   3. If window is a name, look up window index and try that
+# Returns socket path or empty string
+resolve_pi_socket() {
+  local session="$1"
+  local window="$2"
+  
+  # 1. Try direct match first
+  local direct_socket="/tmp/pi-${session}-${window}.sock"
+  if [[ -S "$direct_socket" ]]; then
+    echo "$direct_socket"
+    return 0
+  fi
+  
+  # 2. If window looks like a number, look up the window name
+  if [[ "$window" =~ ^[0-9]+$ ]]; then
+    local win_name
+    win_name=$(tmux list-windows -t "$session" -F '#{window_index}:#{window_name}' 2>/dev/null | \
+      rg "^${window}:" | cut -d: -f2 | tr -d ' ')
+    if [[ -n "$win_name" ]]; then
+      local name_socket="/tmp/pi-${session}-${win_name}.sock"
+      if [[ -S "$name_socket" ]]; then
+        echo "$name_socket"
+        return 0
+      fi
+    fi
+  else
+    # 3. Window is a name, look up the index
+    local win_index
+    win_index=$(tmux list-windows -t "$session" -F '#{window_index}:#{window_name}' 2>/dev/null | \
+      rg ":${window}$" | cut -d: -f1)
+    if [[ -n "$win_index" ]]; then
+      local index_socket="/tmp/pi-${session}-${win_index}.sock"
+      if [[ -S "$index_socket" ]]; then
+        echo "$index_socket"
+        return 0
+      fi
+    fi
+  fi
+  
+  # Not found
+  return 1
+}
+
 get_pi_pane() {
   local session="$1"
   local pane_id
@@ -54,6 +203,28 @@ get_pi_pane() {
 }
 
 
+# Send bell to a tmux window (triggers bell flag in status line)
+# Usage: notify_tmux_bell "session:window" or "session:window:pane"
+notify_tmux_bell() {
+  local target="$1"
+  [[ -z "$target" ]] && return 1
+  
+  # Extract session:window from target (ignore pane if present)
+  local session_window="${target%:*}"  # strip last :component if 3 parts
+  if [[ "$target" == *:*:* ]]; then
+    # Format is session:window:pane - extract session:window
+    session_window="${target%:*}"
+  else
+    # Format is session:window or just session
+    session_window="$target"
+  fi
+  
+  # Get the pane's tty and write BEL character
+  local tty
+  tty=$(tmux display -p -t "$session_window" '#{pane_tty}' 2>/dev/null) || return 1
+  printf '\a' > "$tty" 2>/dev/null
+}
+
 # Notify the delegator that a task is complete
 notify_delegator() {
   local task_id="$1"
@@ -75,12 +246,40 @@ notify_delegator() {
     ~/bin/ntfy send -t "Task ${task_id} complete" -m "${to_agent}: ${message}" 2>/dev/null || true
   fi
   
-  # Also tell the originating pi session if it exists
-  if [[ -n "$from_session" ]] && [[ "$from_session" != "unknown" ]] && tmux has-session -t "$from_session" 2>/dev/null; then
+  # Ring tmux bell on originator's window (shows bell icon in status line)
+  if [[ -n "$from_ctx" ]] && [[ "$from_ctx" != "unknown" ]]; then
+    notify_tmux_bell "$from_ctx"
+  fi
+  
+  # Send result to originating pi instance
+  # Try socket first (cleaner), fall back to tmux send-keys
+  if [[ -n "$from_ctx" ]] && [[ "$from_ctx" != "unknown" ]]; then
     local completion_msg="[TASK_RESULT:${task_id}] ${to_agent} completed: ${message}
 
 Original task: ${task_desc}..."
-    tmux send-keys -t "$from_session" "$completion_msg" Enter
+    
+    # Extract session:window from from_ctx (format: session:window:pane)
+    local from_session_window
+    if [[ "$from_ctx" == *:*:* ]]; then
+      # Strip pane, keep session:window
+      from_session_window="${from_ctx%:*}"
+    else
+      from_session_window="$from_ctx"
+    fi
+    local from_session="${from_ctx%%:*}"
+    
+    # Try to find and use pi socket for this window
+    local from_socket
+    from_socket=$(resolve_pi_socket "${from_session}" "${from_session_window#*:}" 2>/dev/null) || from_socket=""
+    
+    if [[ -n "$from_socket" ]] && [[ -S "$from_socket" ]]; then
+      # Send via socket (delivers as message to pi, not raw shell)
+      send_to_pi_socket "$from_socket" "$completion_msg" "tell"
+    elif tmux has-session -t "$from_session" 2>/dev/null; then
+      # Fallback: send-keys to specific window (not just session)
+      tmux send-keys -t "$from_session_window" "$completion_msg" Enter 2>/dev/null || \
+        tmux send-keys -t "$from_session" "$completion_msg" Enter 2>/dev/null || true
+    fi
   fi
 }
 
@@ -198,19 +397,35 @@ EOF
 }
 
 # Send task to another pi session
+# Send task to another pi session
+# Tries socket first (cleaner), falls back to tmux send-keys
 cmd_tell() {
   local target="$1"
   shift
   local message="$*"
   
   if [[ -z "$target" ]] || [[ -z "$message" ]]; then
-    echo "Usage: tell.sh SESSION \"task description\"" >&2
+    echo "Usage: tell.sh SESSION[:WINDOW] \"task description\"" >&2
+    echo "Examples:" >&2
+    echo "  tell.sh mega \"do something\"        # Auto-select best window" >&2
+    echo "  tell.sh rx:agent \"do something\"    # Target specific window" >&2
+    echo "  tell.sh rx:0 \"do something\"        # Target window 0" >&2
     exit 1
   fi
   
+  # Parse session:window format
+  local session window
+  if [[ "$target" == *:* ]]; then
+    session="${target%%:*}"
+    window="${target#*:}"
+  else
+    session="$target"
+    window=""
+  fi
+  
   # Check target session exists
-  if ! tmux has-session -t "$target" 2>/dev/null; then
-    echo "Error: session '$target' not found" >&2
+  if ! tmux has-session -t "$session" 2>/dev/null; then
+    echo "Error: session '$session' not found" >&2
     echo "Available sessions:" >&2
     tmux list-sessions -F '  #{session_name}' 2>/dev/null || echo "  (none)"
     exit 1
@@ -245,21 +460,48 @@ IMPORTANT: This is a delegated task. You must:
 2. Send updates periodically: \`tell.sh --update ${task_id} \"your progress\"\`
 3. When done: \`tell.sh --done ${task_id} \"summary\"\`"
 
-  # Send to target session - target the pi pane specifically
+  # Try socket first (cleaner, doesn't pollute shell)
+  local socket_path
+  if [[ -n "$window" ]]; then
+    # Explicit window specified - resolve it (tries name/index lookup)
+    socket_path=$(resolve_pi_socket "$session" "$window")
+    if [[ -z "$socket_path" ]]; then
+      echo "Warning: No socket found for ${session}:${window}" >&2
+      echo "Available sockets:" >&2
+      get_pi_sockets "$session" | sed 's/^/  /' >&2
+    fi
+  else
+    # Auto-select best socket for session
+    socket_path=$(get_best_pi_socket "$session")
+  fi
+  
+  if [[ -n "$socket_path" ]] && [[ -S "$socket_path" ]]; then
+    if send_to_pi_socket "$socket_path" "$prompt" "tell"; then
+      local win_display
+      win_display=$(basename "$socket_path" .sock | sed "s/^pi-${session}-//")
+      echo "Task ${task_id} sent to ${session}:${win_display} via socket"
+      echo "Check status: tell.sh --status ${task_id}"
+      return 0
+    fi
+    echo "Warning: Socket send failed, falling back to tmux" >&2
+  fi
+  
+  # Fallback to tmux send-keys
   local pi_pane
-  pi_pane=$(get_pi_pane "$target")
+  pi_pane=$(get_pi_pane "$session")
   
   if [[ -n "$pi_pane" ]]; then
     tmux send-keys -t "$pi_pane" "$prompt" Enter
-    echo "Task ${task_id} sent to ${target} (pane ${pi_pane})"
+    echo "Task ${task_id} sent to ${session} (pane ${pi_pane})"
   else
     # Fallback to session (may go to wrong pane)
-    echo "Warning: Could not locate pi pane in ${target}, sending to active pane" >&2
-    tmux send-keys -t "${target}" "$prompt" Enter
-    echo "Task ${task_id} sent to ${target} (active pane)"
+    echo "Warning: Could not locate pi pane in ${session}, sending to active pane" >&2
+    tmux send-keys -t "${session}" "$prompt" Enter
+    echo "Task ${task_id} sent to ${session} (active pane)"
   fi
   echo "Check status: tell.sh --status ${task_id}"
 }
+
 
 # Watch task output live
 cmd_watch() {

@@ -11,6 +11,30 @@ Delegate tasks to other agents. Works with both pi agent sessions and external a
 1. **ntfy** - Push notification to your devices
 2. **Session message** - `[TASK_RESULT:id]` sent to your pi session
 
+## Tell a pi agent
+
+Send a task to another pi agent running in a tmux session:
+
+```bash
+./scripts/tell.sh mega "fix the failing tests in src/auth"
+./scripts/tell.sh rx "review PR #42 and leave comments"
+```
+
+**Explicit window targeting** with `session:window` syntax:
+
+```bash
+./scripts/tell.sh rx:agent "do something"    # Target rx session, agent window
+./scripts/tell.sh mega:0 "do something"      # Target mega session, window 0
+```
+
+**Multi-instance support:** If a session has multiple pi instances (e.g., `mega:0` and `mega:agent`), the tell skill will:
+1. If `session:window` specified → use that socket directly
+2. Otherwise try socket first (cleaner, no shell pollution)
+3. Prefer the `agent` window socket, then window `0`, then any available
+4. Fall back to tmux `send-keys` if no socket available
+
+Socket pattern: `/tmp/pi-{session}-{window}.sock`
+
 ## Delegate to external agents (yolo mode)
 
 Spawn an external agent in a tmux session to handle a task:
@@ -28,15 +52,6 @@ Spawn an external agent in a tmux session to handle a task:
 - `codex` - Codex CLI (runs with `--full-auto`)
 
 Returns immediately. The agent runs in a background tmux session.
-
-## Tell a pi agent
-
-Send a task to another pi agent running in a tmux session:
-
-```bash
-./scripts/tell.sh mega "fix the failing tests in src/auth"
-./scripts/tell.sh rx "review PR #42 and leave comments"
-```
 
 ## Task management
 
@@ -83,16 +98,16 @@ This lets you fire-and-forget tasks and get notified when they're done.
 ## Examples
 
 ```bash
-# Delegate user story sync to Claude Code
-./scripts/tell.sh --agent claude "run the user-story-sync skill to sync test files with Notion"
+# Tell specific window in a session
+./scripts/tell.sh rx:agent "review the changes and suggest improvements"
 
-# Have opencode fix tests
-./scripts/tell.sh --agent opencode "the auth tests are failing, please investigate and fix"
+# Auto-select best window (prefers 'agent', then '0')
+./scripts/tell.sh mega "run the test suite"
 
-# Tell another pi instance to review code
-./scripts/tell.sh mega "review the changes in lib/rx_web and suggest improvements"
+# Delegate to Claude Code
+./scripts/tell.sh --agent claude "run the user-story-sync skill"
 
 # Check what's happening
 ./scripts/tell.sh --list
-./scripts/tell.sh --watch abc123
+./scripts/tell.sh --status abc123
 ```
