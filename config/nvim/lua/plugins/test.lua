@@ -4,66 +4,23 @@
 
 local SETTINGS = require("config.options")
 local icons = Icons
-local keys = {}
 local fmt = string.format
-if vim.g.tester == "neotest" then
-  keys = {
-    {
-      "<localleader>tn",
-      function() require("neotest").run.run({}) end,
-      mode = "n",
-    },
-    {
-      "<localleader>tt",
-      function() require("neotest").run.run({ vim.api.nvim_buf_get_name(0) }) end,
-      mode = "n",
-    },
-    {
-      "<localleader>ta",
-      function()
-        for _, adapter_id in ipairs(require("neotest").run.adapters()) do
-          require("neotest").run.run({ suite = true, adapter = adapter_id })
-        end
-      end,
-      mode = "n",
-    },
-    {
-      "<localleader>tl",
-      function() require("neotest").run.run_last() end,
-      mode = "n",
-    },
-    {
-      "<localleader>td",
-      function() require("neotest").run.run({ strategy = "dap" }) end,
-      mode = "n",
-    },
-    {
-      "<localleader>to",
-      function() require("neotest").output.open() end,
-      mode = "n",
-    },
-    { "<localleader>tp", "<cmd>A<cr>", desc = "open alt (edit)" },
-    { "<localleader>tP", "<cmd>AV<cr>", desc = "open alt (vsplit)" },
-  }
-elseif vim.g.tester == "vim-test" then
-  keys = {
-    { "<localleader>tn", "<cmd>TestNearest<cr>", desc = "run [n]earest test" },
-    { "<localleader>ta", "<cmd>TestFile<cr>", desc = "run [a]ll tests in file" },
-    { "<localleader>tf", "<cmd>TestFile<cr>", desc = "run [a]ll tests in [f]ile" },
-    { "<localleader>tl", "<cmd>TestLast<cr>", desc = "run [l]ast test" },
-    { "<localleader>ts", "<cmd>TestSuite<cr>", desc = "run test [s]uite" },
-    -- { "<localleader>tT", "<cmd>TestLast<cr>", desc = "run _last test" },
-    { "<localleader>tv", "<cmd>TestVisit<cr>", desc = "[v]isit last test" },
-    { "<localleader>tp", "<cmd>A<cr>", desc = "open alt (edit)" },
-    -- { "<localleader><localleader>", "<cmd>A<cr>", desc = "open alt (edit)" },
-    { "<localleader>tP", "<cmd>AV<cr>", desc = "open alt (vsplit)" },
-  }
-end
+local keys = {
+  { "<localleader>tn", "<cmd>TestNearest<cr>", desc = "run [n]earest test" },
+  { "<localleader>ta", "<cmd>TestFile<cr>", desc = "run [a]ll tests in file" },
+  { "<localleader>tf", "<cmd>TestFile<cr>", desc = "run [a]ll tests in [f]ile" },
+  { "<localleader>tl", "<cmd>TestLast<cr>", desc = "run [l]ast test" },
+  { "<localleader>ts", "<cmd>TestSuite<cr>", desc = "run test [s]uite" },
+  -- { "<localleader>tT", "<cmd>TestLast<cr>", desc = "run _last test" },
+  { "<localleader>tv", "<cmd>TestVisit<cr>", desc = "[v]isit last test" },
+  { "<localleader>tp", "<cmd>A<cr>", desc = "open alt (edit)" },
+  -- { "<localleader><localleader>", "<cmd>A<cr>", desc = "open alt (edit)" },
+  { "<localleader>tP", "<cmd>AV<cr>", desc = "open alt (vsplit)" },
+}
 
 return {
   {
     "vim-test/vim-test",
-    cond = vim.g.tester == "vim-test",
     cmd = {
       "TestNearest",
       "TestFile",
