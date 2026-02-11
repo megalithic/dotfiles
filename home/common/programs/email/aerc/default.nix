@@ -20,8 +20,8 @@ in {
     enable = true;
 
     # Stylesets (themes)
-    stylesets.everforest = builtins.readFile "${inputs.self}/home/programs/email/aerc/stylesets/everforest";
-    stylesets.megaforest = builtins.readFile "${inputs.self}/home/programs/email/aerc/stylesets/megaforest";
+    stylesets.everforest = builtins.readFile "${inputs.self}/home/common/programs/email/aerc/stylesets/everforest";
+    stylesets.megaforest = builtins.readFile "${inputs.self}/home/common/programs/email/aerc/stylesets/megaforest";
 
     # Extra accounts configuration
     extraAccounts = {
