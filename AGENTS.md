@@ -164,7 +164,7 @@ Telegram → Hammerspoon → Unix Socket → pi (bridge.ts) → notify.ts
 
 **1. Check if running via pinvim/pisock:**
 ```bash
-echo $PI_SOCKET      # Should show /tmp/pi-{session}.sock
+echo $PI_SOCKET      # Should show /tmp/pi-{session}-{window}.sock
 echo $PI_SESSION     # Should show tmux session name
 ```
 
@@ -205,7 +205,8 @@ Telegram messages are forwarded to the `mega` session by default (configured in 
 ### Environment Variables
 
 Set by `pinvim`/`pisock` wrapper:
-- `PI_SOCKET` - Full socket path (e.g., `/tmp/pi-mega.sock`)
+- `PI_SOCKET` - Full socket path (e.g., `/tmp/pi-mega-0.sock`)
+- `PI_WINDOW` - Tmux window index
 - `PI_SESSION` - Tmux session name
 - `PI_SOCKET_DIR` - Socket directory (`/tmp`)
 - `PI_SOCKET_PREFIX` - Socket prefix (`pi`)

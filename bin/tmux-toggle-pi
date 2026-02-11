@@ -7,7 +7,7 @@
 #   - FROM shell: just switch to agent window (no split)
 #   - Toggle back reverses the action (close split OR switch to prev window)
 #
-# Socket: /tmp/pi-{session}.sock (defined in nix)
+# Socket: /tmp/pi-{session}-{window}.sock (one per tmux window)
 
 set -euo pipefail
 
@@ -17,11 +17,16 @@ CURRENT_WINDOW_IDX=$(tmux display-message -p '#{window_index}')
 PANE_COUNT=$(tmux list-panes | wc -l | tr -d ' ')
 
 AGENT_WINDOW="agent"
-SOCKET_PATH="/tmp/pi-${SESSION}.sock"
 PINVIM_PATH="pinvim"
 
 # State file to track how we got to agent (split vs direct)
 STATE_FILE="/tmp/tmux-agent-toggle-${SESSION}"
+
+# Get socket path for a specific window
+get_socket_path() {
+  local win_idx="${1:-$CURRENT_WINDOW_IDX}"
+  echo "/tmp/pi-${SESSION}-${win_idx}.sock"
+}
 
 # Check if agent window exists
 agent_window_exists() {
@@ -133,8 +138,6 @@ main() {
   if ! agent_window_exists; then
     if pinvim_win=$(locate_pinvim_window); then
       move_to_agent_window "$pinvim_win"
-    elif [[ -S "$SOCKET_PATH" ]]; then
-      create_agent_window
     else
       create_agent_window
     fi
