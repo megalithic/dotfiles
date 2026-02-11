@@ -417,12 +417,12 @@ if true then
         },
       },
       keys = {
-        {
-          "<leader>a",
-          mode = "n",
-          function() require("snacks").picker.grep({ hidden = false, ignored = true }) end,
-          desc = "live grep",
-        },
+        -- {
+        --   "<leader>a",
+        --   mode = "n",
+        --   function() require("snacks").picker.grep({ hidden = false, ignored = true }) end,
+        --   desc = "live grep",
+        -- },
         {
           "<leader>A",
           mode = { "n", "x", "v" },

@@ -85,26 +85,39 @@ update:
 # Primary rebuild commands
 # ===========================================================================
 
-# Full rebuild: sync from remote, darwin-rebuild, nix run home-manager -- switch
-# Full rebuild: darwin-rebuild (which includes home-manager as submodule)
+# Full rebuild: sync from remote, darwin-rebuild, home-manager switch
 # Usage: just rebuild [--dry-run]
 [macos]
 rebuild dry="":
-  just darwin {{dry}}
-  just home {{dry}}
+  #!/usr/bin/env bash
+  set -euo pipefail
+  echo ":: Syncing from remote..."
+  just _sync-main
+  just darwin {{dry}} --skip-sync
+  just home {{dry}} --skip-sync
 
 # Darwin-only rebuild (system settings, brew, etc.)
-# Usage: just darwin [--dry-run]
+# Usage: just darwin [--dry-run] [--skip-sync]
 [macos]
-darwin dry="":
+darwin *args="":
   #!/usr/bin/env bash
   set -euo pipefail
   
-  DRY="{{dry}}"
+  DRY=""
+  SKIP_SYNC=""
+  for arg in {{args}}; do
+    case "$arg" in
+      --dry-run) DRY="--dry-run" ;;
+      --skip-sync) SKIP_SYNC="1" ;;
+    esac
+  done
+  
   HOST=$(hostname -s)
   
-  echo ":: Syncing from remote..."
-  just _sync-main
+  if [[ -z "$SKIP_SYNC" ]]; then
+    echo ":: Syncing from remote..."
+    just _sync-main
+  fi
   
   if [[ "$DRY" == "--dry-run" ]]; then
     echo ":: [DRY RUN] Building darwin configuration..."
@@ -116,17 +129,27 @@ darwin dry="":
   fi
 
 # Home-manager only rebuild (user packages, dotfiles, no sudo needed)
-# Usage: just home [--dry-run]
+# Usage: just home [--dry-run] [--skip-sync]
 [macos]
-home dry="":
+home *args="":
   #!/usr/bin/env bash
   set -euo pipefail
   
-  DRY="{{dry}}"
+  DRY=""
+  SKIP_SYNC=""
+  for arg in {{args}}; do
+    case "$arg" in
+      --dry-run) DRY="--dry-run" ;;
+      --skip-sync) SKIP_SYNC="1" ;;
+    esac
+  done
+  
   HOST=$(hostname -s)
   
-  echo ":: Syncing from remote..."
-  just _sync-main
+  if [[ -z "$SKIP_SYNC" ]]; then
+    echo ":: Syncing from remote..."
+    just _sync-main
+  fi
   
   if [[ "$DRY" == "--dry-run" ]]; then
     echo ":: [DRY RUN] Building home-manager configuration..."
