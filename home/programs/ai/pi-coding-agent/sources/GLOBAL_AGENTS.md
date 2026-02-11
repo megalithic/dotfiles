@@ -160,9 +160,9 @@ Agent: <executes push>
 
 ## Local Development Scripts
 
-- Use `.local_scripts/` for temporary verification scripts that shouldn't be committed
+- Use `/tmp/` for temporary verification scripts that shouldn't be committed
 - Examples: version update checks, one-off validation scripts, personal dev utilities
-- Scripts can be messy and repo-specific
+- Scripts are automatically cleaned up by the system
 
 ## Telegram Interaction
 
