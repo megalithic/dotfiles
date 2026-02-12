@@ -71,6 +71,13 @@ M.activityTimeoutSeconds = 60 -- No activity for 60s = potentially stuck
 M.pendingHealthCheck = false -- Awaiting health check response
 M.healthCheckResponseTimer = nil -- Timeout for health check response
 
+-- Provider/profile tracking (Phase 4)
+M.initialProvider = nil -- Provider at startup (e.g., "anthropic")
+M.initialModel = nil -- Model at startup (e.g., "claude-sonnet-4-20250514")
+M.currentProvider = nil -- Current provider (may differ if fallback occurred)
+M.currentModel = nil -- Current model
+M.isUsingFallback = false -- True if we've switched from initial provider/model
+
 -- Config (loaded from C.piGateway)
 local cfg = nil
 
@@ -120,6 +127,76 @@ local function isTaskStuck()
   local activityTimeout = cfg and cfg.activityTimeoutSeconds or 60
   local elapsed = os.time() - M.lastActivityTime
   return elapsed > activityTimeout
+end
+
+--------------------------------------------------------------------------------
+-- PROVIDER/PROFILE TRACKING (Phase 4)
+-- Tracks auth fallback and includes indicator in responses
+--------------------------------------------------------------------------------
+
+---Update current provider/model from get_state response
+---@param stateData table The data field from get_state response
+local function updateProviderState(stateData)
+  local ok, err = pcall(function()
+    if not stateData or type(stateData) ~= "table" then return end
+    
+    local model = stateData.model
+    if not model or type(model) ~= "table" then return end
+    
+    local provider = model.provider or model.providerId
+    local modelId = model.id or model.modelId
+    
+    if not provider or not modelId then return end
+    
+    -- Store initial values on first update
+    if not M.initialProvider then
+      M.initialProvider = provider
+      M.initialModel = modelId
+      U.log.df("PiGateway: initial provider=%s, model=%s", provider, modelId)
+    end
+    
+    -- Update current values
+    M.currentProvider = provider
+    M.currentModel = modelId
+    
+    -- Detect fallback
+    local wasFallback = M.isUsingFallback
+    M.isUsingFallback = (provider ~= M.initialProvider) or (modelId ~= M.initialModel)
+    
+    -- Log when fallback state changes
+    if M.isUsingFallback and not wasFallback then
+      U.log.wf("PiGateway: FALLBACK DETECTED - now using %s/%s (was %s/%s)",
+        provider, modelId, M.initialProvider, M.initialModel)
+      safeTelegramSend(string.format("⚠️ Auth fallback: now using %s", provider))
+    elseif wasFallback and not M.isUsingFallback then
+      U.log.i("PiGateway: returned to preferred provider")
+      safeTelegramSend("✅ Returned to preferred auth")
+    end
+  end)
+  
+  if not ok then
+    U.log.wf("PiGateway: error in updateProviderState: %s", tostring(err))
+  end
+end
+
+---Get provider indicator for Telegram messages
+---@return string Indicator string (e.g., "[mega→openai]" on fallback, empty if default)
+local function getProviderIndicator()
+  if not M.isUsingFallback then return "" end
+  
+  local profile = cfg and cfg.defaultProfile or "gateway"
+  local provider = M.currentProvider or "?"
+  
+  -- Short provider names for display
+  local shortNames = {
+    anthropic = "claude",
+    openai = "openai", 
+    google = "gemini",
+    ["openai-codex"] = "codex",
+  }
+  local short = shortNames[provider] or provider
+  
+  return string.format("[%s→%s]", profile, short)
 end
 
 ---Abort the current task
@@ -218,6 +295,79 @@ local function isAbortCommand(text)
   return false
 end
 
+---Check if text is a status query
+---@param text string
+---@return boolean
+local function isStatusQuery(text)
+  if not text then return false end
+  local lower = text:lower():match("^%s*(.-)%s*$")
+  return lower == "status?" or lower == "status" or lower == "queue?" or lower == "q?"
+end
+
+---Check if text is a clear queue command
+---@param text string
+---@return boolean
+local function isClearQueueCommand(text)
+  if not text then return false end
+  local lower = text:lower():match("^%s*(.-)%s*$")
+  return lower == "clear!" or lower == "clear queue!" or lower == "flush!"
+end
+
+---Get human-readable queue status
+---@return string
+local function getQueueStatusText()
+  M.queue = M.queue or { normal = {}, priority = {} }
+  M.queue.priority = M.queue.priority or {}
+  M.queue.normal = M.queue.normal or {}
+  
+  local priorityCount = #M.queue.priority
+  local normalCount = #M.queue.normal
+  local total = priorityCount + normalCount
+  
+  local lines = {}
+  
+  -- Current state
+  if M.busy then
+    table.insert(lines, "🔄 Currently processing a task")
+  elseif M.inCooldown then
+    table.insert(lines, "⏸️ In cooldown (circuit breaker)")
+  else
+    table.insert(lines, "✅ Idle, ready for tasks")
+  end
+  
+  -- Queue info
+  if total == 0 then
+    table.insert(lines, "📭 Queue empty")
+  else
+    table.insert(lines, string.format("📬 Queue: %d total", total))
+    if priorityCount > 0 then
+      table.insert(lines, string.format("  ⚡ %d priority", priorityCount))
+    end
+    if normalCount > 0 then
+      table.insert(lines, string.format("  📥 %d normal", normalCount))
+    end
+  end
+  
+  -- Health
+  local isRunning = M.process and pcall(function() return M.process:isRunning() end)
+  if isRunning then
+    table.insert(lines, "💚 Process healthy")
+  else
+    table.insert(lines, "💔 Process not running")
+  end
+  
+  return table.concat(lines, "\n")
+end
+
+---Clear the message queue
+---@return number Number of messages cleared
+local function clearQueue()
+  M.queue = M.queue or { normal = {}, priority = {} }
+  local count = #(M.queue.priority or {}) + #(M.queue.normal or {})
+  M.queue = { normal = {}, priority = {} }
+  return count
+end
+
 ---Check if text is a priority message
 ---@param text string
 ---@return boolean, string -- isPriority, cleanedText
@@ -288,9 +438,12 @@ local function handleEvent(event)
       if event.success then
         U.log.df("PiGateway: command '%s' succeeded", event.command or "?")
         
-        -- If this is a get_state response, acknowledge health check
+        -- If this is a get_state response, acknowledge health check and update provider state
         if event.command == "get_state" then
           pcall(M.onHealthCheckResponse)
+          if event.data then
+            pcall(updateProviderState, event.data)
+          end
         end
       else
         U.log.wf("PiGateway: command '%s' failed: %s", event.command or "?", event.error or "unknown")
@@ -312,6 +465,11 @@ local function handleEvent(event)
       if event.messages and type(event.messages) == "table" then
         local responseText = extractAssistantResponse(event.messages)
         if responseText and type(responseText) == "string" and #responseText > 0 then
+          -- Add provider indicator if using fallback auth
+          local indicator = getProviderIndicator()
+          if indicator and #indicator > 0 then
+            responseText = responseText .. "\n\n—" .. indicator
+          end
           safeTelegramSend(responseText)
         end
       end
@@ -530,12 +688,28 @@ local function processNextInQueue()
     M.queue.normal = M.queue.normal or {}
     
     -- Priority queue first
+    local isPriority = #M.queue.priority > 0
     local msg = table.remove(M.queue.priority, 1)
     if not msg then
       msg = table.remove(M.queue.normal, 1)
     end
     
     if msg and type(msg) == "table" and msg.text then
+      -- Calculate how long it was queued
+      local waitTime = msg.timestamp and (os.time() - msg.timestamp) or 0
+      local remaining = #M.queue.priority + #M.queue.normal
+      
+      -- Notify user that queued task is starting
+      local emoji = isPriority and "⚡" or "🔄"
+      local statusParts = { emoji .. " Processing" }
+      if waitTime > 5 then
+        statusParts[#statusParts + 1] = string.format("(waited %ds)", waitTime)
+      end
+      if remaining > 0 then
+        statusParts[#statusParts + 1] = string.format("• %d more in queue", remaining)
+      end
+      safeTelegramSend(table.concat(statusParts, " "))
+      
       M.busy = true
       sendCommand({
         type = "prompt",
@@ -619,11 +793,27 @@ function M.handleTelegramMessage(text)
       return false
     end
     
+    -- Check for status query
+    if isStatusQuery(text) then
+      U.log.d("PiGateway: status query received")
+      safeTelegramSend(getQueueStatusText())
+      return true
+    end
+    
+    -- Check for clear queue command
+    if isClearQueueCommand(text) then
+      local cleared = clearQueue()
+      U.log.i("PiGateway: cleared queue, removed " .. cleared .. " messages")
+      safeTelegramSend(string.format("🗑️ Cleared %d queued message%s", cleared, cleared == 1 and "" or "s"))
+      return true
+    end
+    
     -- Check for abort command
     if isAbortCommand(text) then
       U.log.i("PiGateway: abort command received")
       sendCommand({ type = "abort" })
       M.busy = false
+      M.clearTaskTimer()
       safeTelegramSend("🛑 Aborted current task")
       -- Don't clear queue - just abort current
       pcall(processNextInQueue)
@@ -634,19 +824,24 @@ function M.handleTelegramMessage(text)
     local isPriority, cleanText = checkPriority(text)
     cleanText = cleanText or text
     
+    -- If priority and we're busy, steer the current task
+    if isPriority and M.busy then
+      U.log.i("PiGateway: priority message received while busy, steering")
+      sendCommand({
+        type = "steer",
+        message = tostring(cleanText),
+      })
+      safeTelegramSend("⚡ Steering current task with priority message")
+      -- Also queue in case steer doesn't fully handle it
+      queueMessage(cleanText, true)
+      return true
+    end
+    
     -- Queue the message
     local position = queueMessage(cleanText, isPriority)
     
     -- Send immediate ack
     sendAck(isPriority, position)
-    
-    -- If priority and we're busy, steer the current task
-    if isPriority and M.busy then
-      sendCommand({
-        type = "steer",
-        message = tostring(cleanText),
-      })
-    end
     
     return true
   end)

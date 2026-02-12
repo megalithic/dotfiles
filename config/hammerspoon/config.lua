@@ -682,8 +682,11 @@ M.piGateway = {
   authProfiles = { "mega", "rx" },
 
   -- Queue behavior
-  prioritySignal = "!!", -- Messages starting with this jump queue
+  prioritySignal = "!!", -- Messages starting with this jump queue + steer if busy
   abortPhrases = { "abort!", "stop!", "kill!", "cancel!" }, -- Emergency abort triggers
+  -- Additional commands (hardcoded, not configurable):
+  --   status? / queue? / q? = Show queue status
+  --   clear! / flush!       = Clear all queued messages
 
   -- Reliability
   taskTimeoutMinutes = 15, -- Hard timeout (extends if activity detected)

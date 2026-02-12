@@ -356,7 +356,7 @@ end
 
 ## Message Queues
 
-### Pattern: Priority queue with FIFO
+### Pattern: Priority queue with FIFO and steering
 
 ```lua
 local M = {
@@ -396,13 +396,39 @@ function M.processNext()
   local msg = M.dequeue()
   if not msg then return end
   
+  -- Notify user when starting queued task
+  local waitTime = msg.timestamp and (os.time() - msg.timestamp) or 0
+  local remaining = #M.queue.priority + #M.queue.normal
+  if waitTime > 5 or remaining > 0 then
+    notifyUser(string.format("Processing (waited %ds) • %d more in queue", waitTime, remaining))
+  end
+  
   M.processing = true
   M.processMessage(msg, function(success)
     M.processing = false
     M.processNext()  -- Process next in queue
   end)
 end
+
+-- Steer: interrupt current task with priority message
+function M.handlePriorityWhileBusy(message)
+  sendCommand({ type = "steer", message = message })
+  notifyUser("⚡ Steering current task with priority message")
+  -- Also queue in case steer doesn't fully handle it
+  M.enqueue(message, true)
+end
 ```
+
+### Queue control commands
+
+User-facing commands for queue management:
+
+| Command | Effect |
+|---------|--------|
+| `status?` / `queue?` / `q?` | Show queue status (busy/idle, counts) |
+| `clear!` / `flush!` | Clear all queued messages |
+| `abort!` / `stop!` | Abort current task, process next |
+| `!!message` | Priority: steer if busy, jump queue if idle |
 
 ### Best practices
 
@@ -410,6 +436,9 @@ end
 - **Timestamps**: For ordering and age tracking
 - **IDs**: For tracking and cancellation
 - **Non-blocking**: Always return immediately, process async
+- **Steer on priority**: Interrupt current task when priority arrives
+- **Feedback**: Tell user queue position and wait time
+- **Control commands**: Let users inspect and manage queue
 
 ---
 
