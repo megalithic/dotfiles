@@ -95,8 +95,9 @@ function M.init()
   if gatewayEnabled then
     local gatewayOk, piGateway = pcall(require, "lib.interop.pi-gateway")
     if gatewayOk and piGateway then
-      local initOk, initErr = pcall(function() piGateway.init() end)
+      local initOk, initErr = pcall(piGateway.init)
       if initOk then
+        -- Log outside pcall so module name resolves correctly
         U.log.i("Pi Gateway initialized ✓")
       else
         U.log.wf("Failed to initialize Pi Gateway: %s", tostring(initErr))

@@ -86,6 +86,7 @@
   # These can be loaded explicitly via the `pi` wrapper or piception
   disabledExtensions = [
     "checkpoint.ts" # Too intrusive - disable for now
+    "subscription-fallback.ts" # doesn't support everything we need
     # nvim-bridge.ts now auto-loads - shows connected/disconnected status
   ];
 
@@ -160,23 +161,6 @@
     "skills"
   ];
 
-  # Generate symlinks for each profile pointing to master
-  profileSymlinks = builtins.listToAttrs (
-    lib.flatten (
-      map (
-        profile:
-          map (item: {
-            name = ".pi/agent-${profile}/${item}";
-            value.source =
-              config.lib.file.mkOutOfStoreSymlink
-              "${config.home.homeDirectory}/.pi/agent/${item}";
-          })
-          sharedConfigItems
-      )
-      profiles
-    )
-  );
-
   # ===========================================================================
   # Keybindings
   # ===========================================================================
@@ -202,9 +186,9 @@
     # Only include models you have API access to
     # Pi will warn about patterns that don't match any available models
     enabledModels = [
-      "claude-opus-4-*"
+      "claude-opus-4-5"
+      "claude-opus-4-6"
       "claude-sonnet-4-5"
-      "gemini-3*"
     ];
   };
 
@@ -215,7 +199,7 @@
   # ===========================================================================
   # NOTE: Base `pi` binary is installed via pkgs.llm-agents.pi in ../default.nix
   # These wrappers add environment setup (agenix secrets, tmux socket naming)
-  
+
   # Main pi wrapper with socket configuration and optional profile auth borrowing
   # Socket pattern: /tmp/pi-{session}-{window}.sock (one per tmux window)
   # Usage: pinvim [--profile NAME] [pi args...]
@@ -329,10 +313,9 @@
 
     exec pi "''${PI_ARGS[@]}"
   '';
-  
+
   # Short alias for pinvim
   p = pkgs.writeShellScriptBin "p" ''exec ${pinvim}/bin/pinvim "$@"'';
-
 in {
   home.packages = [
     pinvim

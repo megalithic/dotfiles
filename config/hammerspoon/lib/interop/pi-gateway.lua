@@ -46,7 +46,8 @@ local function safeTelegramSend(text)
     U.log.w("PiGateway: telegram module not available")
     return false
   end
-  local ok, err = pcall(function() telegram.send(text) end)
+  -- Disable MarkdownV2 parsing - LLM responses have unescaped special chars
+  local ok, err = pcall(function() telegram.send(text, { parse_mode = "" }) end)
   if not ok then
     U.log.wf("PiGateway: failed to send telegram: %s", tostring(err))
     return false
@@ -106,6 +107,91 @@ local function ensureDirectories()
   os.execute("mkdir -p " .. cfg.historyPath)
   os.execute("mkdir -p " .. cfg.archivePath)
   os.execute("mkdir -p " .. (cfg.logPath:match("(.*/)")))
+end
+
+--------------------------------------------------------------------------------
+-- HISTORY PERSISTENCE (Phase 4)
+-- Saves conversation history to disk with configurable rotation
+--------------------------------------------------------------------------------
+
+---Get current history filename based on rotation setting
+---@return string filename (e.g., "2026-02.jsonl" for monthly)
+local function getHistoryFilename()
+  local rotation = cfg and cfg.historyRotation or "monthly"
+  local now = os.date("*t")
+  
+  if rotation == "daily" then
+    return string.format("%04d-%02d-%02d.jsonl", now.year, now.month, now.day)
+  elseif rotation == "weekly" then
+    -- ISO week number
+    local week = os.date("%W")
+    return string.format("%04d-W%s.jsonl", now.year, week)
+  elseif rotation == "yearly" then
+    return string.format("%04d.jsonl", now.year)
+  else -- monthly (default)
+    return string.format("%04d-%02d.jsonl", now.year, now.month)
+  end
+end
+
+---Append entry to history file (safe)
+---@param entry table { type = "user"|"assistant", text = string, timestamp = number }
+local function appendToHistory(entry)
+  local ok, err = pcall(function()
+    if not cfg or not cfg.historyPath then return end
+    
+    local filename = getHistoryFilename()
+    local filepath = cfg.historyPath .. "/" .. filename
+    
+    -- Add metadata
+    entry.timestamp = entry.timestamp or os.time()
+    entry.provider = M.currentProvider
+    entry.model = M.currentModel
+    entry.fallback = M.isUsingFallback or false
+    
+    local json = safeEncode(entry)
+    if not json then return end
+    
+    -- Append to file
+    local file = io.open(filepath, "a")
+    if file then
+      file:write(json .. "\n")
+      file:close()
+    end
+  end)
+  
+  if not ok then
+    U.log.wf("PiGateway: error appending to history: %s", tostring(err))
+  end
+end
+
+---Archive old history files (safe)
+---Call periodically (e.g., on startup) to move old files to archive
+local function archiveOldHistory()
+  local ok, err = pcall(function()
+    if not cfg or not cfg.historyPath or not cfg.archivePath then return end
+    
+    local currentFile = getHistoryFilename()
+    
+    -- List files in history directory
+    local handle = io.popen('ls -1 "' .. cfg.historyPath .. '"/*.jsonl 2>/dev/null')
+    if not handle then return end
+    
+    local files = handle:read("*a")
+    handle:close()
+    
+    for file in files:gmatch("[^\n]+") do
+      local basename = file:match("([^/]+)$")
+      if basename and basename ~= currentFile then
+        -- Move to archive
+        os.execute(string.format('mv "%s" "%s/" 2>/dev/null', file, cfg.archivePath))
+        U.log.df("PiGateway: archived %s", basename)
+      end
+    end
+  end)
+  
+  if not ok then
+    U.log.wf("PiGateway: error archiving history: %s", tostring(err))
+  end
 end
 
 --------------------------------------------------------------------------------
@@ -465,6 +551,9 @@ local function handleEvent(event)
       if event.messages and type(event.messages) == "table" then
         local responseText = extractAssistantResponse(event.messages)
         if responseText and type(responseText) == "string" and #responseText > 0 then
+          -- Save to history (before adding indicator)
+          appendToHistory({ type = "assistant", text = responseText })
+          
           -- Add provider indicator if using fallback auth
           local indicator = getProviderIndicator()
           if indicator and #indicator > 0 then
@@ -840,6 +929,13 @@ function M.handleTelegramMessage(text)
     -- Queue the message
     local position = queueMessage(cleanText, isPriority)
     
+    -- Log receipt
+    local preview = #cleanText > 40 and (cleanText:sub(1, 40) .. "...") or cleanText
+    U.log.f("Message received: \"%s\" (priority=%s, pos=%d)", preview, tostring(isPriority), position)
+    
+    -- Save to history
+    appendToHistory({ type = "user", text = cleanText, priority = isPriority })
+    
     -- Send immediate ack
     sendAck(isPriority, position)
     
@@ -936,13 +1032,16 @@ end
 ---Start the pi RPC process (safe)
 ---@return boolean success
 function M.start()
+  loadConfig()
+  
+  if not cfg or not cfg.enabled then
+    U.log.i("PiGateway: disabled in config")
+    return false
+  end
+  
+  U.log.f("Starting (profile=%s)", cfg.defaultProfile or "default")
+  
   local ok, result = pcall(function()
-    loadConfig()
-    
-    if not cfg or not cfg.enabled then
-      U.log.i("PiGateway: disabled in config")
-      return false
-    end
     
     -- Check if already running (safely)
     local isRunning = false
@@ -962,8 +1061,6 @@ function M.start()
     
     -- Ensure directories exist (don't fail if this errors)
     pcall(ensureDirectories)
-    
-    U.log.i("PiGateway: starting pi RPC process")
     
     -- Build command - find pi binary
     local piPath = "/run/current-system/sw/bin/pi"
@@ -1000,8 +1097,6 @@ function M.start()
     if M.process then
       local startOk = pcall(function() M.process:start() end)
       if startOk then
-        U.log.i("PiGateway: process started with profile: " .. (cfg.defaultProfile or "mega"))
-        
         -- Start health check timer
         if M.healthCheckTimer then
           pcall(function() M.healthCheckTimer:stop() end)
@@ -1024,6 +1119,10 @@ function M.start()
   if not ok then
     U.log.wf("PiGateway: error in start: %s", tostring(result))
     return false
+  end
+  
+  if result then
+    U.log.f("Started ✓ (health check every %ds)", cfg.healthCheckIntervalSeconds or 30)
   end
   
   return result or false
@@ -1119,6 +1218,8 @@ function M.init()
   local ok, err = pcall(function()
     loadConfig()
     if cfg and cfg.enabled then
+      ensureDirectories()
+      archiveOldHistory() -- Move old history files to archive
       M.start()
     else
       U.log.i("PiGateway: not enabled, skipping init")
