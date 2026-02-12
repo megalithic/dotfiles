@@ -37,6 +37,55 @@
   - `git log` → `jj log`
   - `git push` → `jj git push` (requires user permission)
 
+## Multi-Phase Work (IMPORTANT)
+
+When working on a feature with multiple phases on the same bookmark:
+
+**Always create a new commit BEFORE starting each new phase:**
+
+```bash
+# Phase 1: Make changes, then commit
+jj desc -m "feat(x): phase 1 - core functionality"
+
+# Phase 2: Create new commit FIRST, then make changes
+jj new                                              # <- CRITICAL!
+# ... make phase 2 changes ...
+jj desc -m "feat(x): phase 2 - reliability"
+
+# Phase 3: Create new commit FIRST, then make changes
+jj new                                              # <- CRITICAL!
+# ... make phase 3 changes ...
+jj desc -m "feat(x): phase 3 - polish"
+```
+
+**Result:** Multiple commits on one bookmark, clean history:
+```
+@  c3  feat(x): phase 3 - polish           my-feature
+·  c2  feat(x): phase 2 - reliability
+·  c1  feat(x): phase 1 - core functionality
+*  m   main
+```
+
+**Common mistake (DON'T DO THIS):**
+```bash
+jj desc -m "phase 1"
+# make phase 2 changes WITHOUT jj new
+jj desc -m "phase 2"  # WRONG: overwrites phase 1, all changes in one commit
+```
+
+## Shared Codebase Etiquette
+
+Best practices for collaborative work:
+
+- **Small, focused commits** - One logical change per commit
+- **Descriptive messages** - Future you (and teammates) will thank you
+- **Don't rewrite shared history** - Only rebase/amend unpushed commits
+- **Review before push** - `jj diff` and `jj log` before pushing
+- **Keep bookmarks short-lived** - Merge and delete, don't let them drift
+- **Sync often** - `jj git fetch` regularly to stay current with main
+- **Rebase onto main** - Before pushing, ensure your work is on latest main
+- **Atomic PRs** - Each PR should be reviewable and mergeable independently
+
 ## Interactive Commands (AVOID)
 
 **These commands open an editor/prompt and will hang forever. Never use without

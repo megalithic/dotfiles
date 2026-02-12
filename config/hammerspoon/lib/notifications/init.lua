@@ -90,6 +90,22 @@ function M.init()
     end
   end
 
+  -- 5. Initialize Pi Gateway (dedicated RPC orchestrator for Telegram)
+  local gatewayEnabled = C.piGateway and C.piGateway.enabled ~= false
+  if gatewayEnabled then
+    local gatewayOk, piGateway = pcall(require, "lib.interop.pi-gateway")
+    if gatewayOk and piGateway then
+      local initOk, initErr = pcall(function() piGateway.init() end)
+      if initOk then
+        U.log.i("Pi Gateway initialized ✓")
+      else
+        U.log.wf("Failed to initialize Pi Gateway: %s", tostring(initErr))
+      end
+    else
+      U.log.wf("Failed to load Pi Gateway: %s", tostring(piGateway))
+    end
+  end
+
   M.initialized = true
   U.log.i("Notification system initialized ✓")
 
@@ -129,6 +145,10 @@ function M.cleanup()
   end
 
   if M.menubar then M.menubar.cleanup() end
+
+  -- Cleanup Pi Gateway
+  local gatewayOk, piGateway = pcall(require, "lib.interop.pi-gateway")
+  if gatewayOk and piGateway then piGateway.cleanup() end
 
   -- Cleanup Telegram
   local telegramOk, telegram = pcall(require, "lib.interop.telegram")
@@ -470,7 +490,17 @@ function M.handleTelegramMessage(msg)
       return
     end
 
-    -- Forward to active pi session if one exists
+    -- Try pi-gateway first (dedicated RPC orchestrator)
+    local gatewayOk, piGateway = pcall(require, "lib.interop.pi-gateway")
+    if gatewayOk and piGateway and piGateway.isAvailable() then
+      local handled = piGateway.handleTelegramMessage(msg.text)
+      if handled then
+        U.log.f("Telegram: routed to pi-gateway")
+        return
+      end
+    end
+
+    -- Fallback: Forward to active pi session via socket (pi.lua)
     local pi = require("lib.interop.pi")
     if pi.lastActiveSession then
       local success = pi.forwardMessage(msg.text, "telegram")
@@ -483,7 +513,7 @@ function M.handleTelegramMessage(msg)
         U.log.wf("Telegram: failed to forward to pi session")
       end
     else
-      U.log.f("Telegram received (no active pi session): \"%s\"", msg.text)
+      U.log.f("Telegram received (no active pi session, no gateway): \"%s\"", msg.text)
     end
   end
 end
