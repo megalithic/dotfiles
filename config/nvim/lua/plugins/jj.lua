@@ -12,7 +12,7 @@ return {
   {
     "yannvanhalewyn/jujutsu.nvim",
     opts = {
-      diff_preset = "codediff",
+      diff_preset = "diffview",
     },
     config = function(_, opts) require("jujutsu-nvim").setup(opts) end,
   },
