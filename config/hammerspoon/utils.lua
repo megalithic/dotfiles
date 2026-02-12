@@ -166,7 +166,69 @@ M.log = setmetatable({}, {
   end,
 })
 
-function M.logger(msg, level)
+---Create a logger bound to a specific module name
+---Use when logging from inside pcall or when auto-detection fails
+---@param moduleName string The module name to show in logs (e.g., "pi-gateway")
+---@return table A log object with the same API as U.log (i, w, e, f, if, wf, etc.)
+---@usage local log = U.logFor("pi-gateway"); log.i("Started"); log.wf("Error: %s", err)
+function M.logFor(moduleName)
+  return setmetatable({}, {
+    __index = function(_, key)
+      local is_formatted = key:sub(-1) == "f"
+      local level_key = is_formatted and key:sub(1, -2) or key
+      
+      if key == "f" then
+        return function(...) M.logger(string.format(...), "INFO", moduleName) end
+      end
+      
+      local level = log_level_map[level_key]
+      if not level then error(string.format("Unknown log level: %s", key)) end
+      
+      if is_formatted then
+        return function(...) M.logger(string.format(...), level, moduleName) end
+      else
+        return function(m) M.logger(m, level, moduleName) end
+      end
+    end,
+  })
+end
+
+---Find the actual caller module by walking the stack
+---Skips utils.lua, [C], [string "..."], and pcall internals
+---@return string short_src, number currentline
+local function findCallerInfo()
+  for level = 2, 15 do
+    local info = debug.getinfo(level, "Sl")
+    if not info then break end
+    
+    local src = info.short_src or ""
+    -- Skip: C code, string eval, utils.lua itself, and anonymous pcall wrappers
+    local dominated_by_anon = src:match("^%[") or src:match("utils%.lua$")
+    if not dominated_by_anon and src:match("%.lua$") then
+      return src, info.currentline or 0
+    end
+  end
+  return "unknown", 0
+end
+
+---Extract module name from a file path
+---@param full_path string
+---@return string module_name
+local function extractModuleName(full_path)
+  local fname = full_path:gsub(".*/", "")
+  
+  -- Remove .lua extension
+  fname = fname:sub(1, #fname - 4)
+  
+  -- If filename is 'init', use the parent directory name instead
+  if fname == "init" then
+    fname = full_path:match(".*/(.+)/init%.lua$") or fname
+  end
+  
+  return fname
+end
+
+function M.logger(msg, level, moduleName)
   level = level and level or "NOTE" --[[@as "NOTE"|"INFO"|"WARN"|"ERROR"|"OK"|"DEBUG"]]
 
   -- Skip DEBUG messages unless _G.DEBUG = true (set in init.lua or HS console)
@@ -175,21 +237,15 @@ function M.logger(msg, level)
 
   msg = type(msg) == "table" and hs.inspect(msg) or msg
 
-  -- Get caller info, trying multiple stack levels (hotkey callbacks have shorter stacks)
-  local w = debug.getinfo(4, "Sl") or debug.getinfo(3, "Sl") or debug.getinfo(2, "Sl")
-  if not w then
-    w = { short_src = "unknown", currentline = 0 }
-  end
-  local full_path = w.short_src
-  local fname = full_path:gsub(".*/", "")
-
-  -- Remove .lua extension
-  fname = fname:sub(0, #fname - 4)
-
-  -- If filename is 'init', use the parent directory name instead
-  if fname == "init" then
-    -- Extract parent directory from full path: /path/to/dir/init.lua -> dir
-    fname = full_path:match(".*/(.+)/init%.lua$") or fname
+  -- Use provided module name or auto-detect from stack
+  local fname, full_path, currentline
+  if moduleName then
+    fname = moduleName
+    full_path = moduleName
+    currentline = 0
+  else
+    full_path, currentline = findCallerInfo()
+    fname = extractModuleName(full_path)
   end
 
   local color = {

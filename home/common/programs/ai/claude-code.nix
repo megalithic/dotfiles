@@ -212,6 +212,14 @@
       - Use `; and` / `; or` not `&&` / `||` in some contexts
       - For inline scripts in tmux: use `fish -c "command"` wrapper
 
+      **direnv / Bash tool environment:**
+      - Projects use `.envrc` (direnv) which sources `.env` for secrets and environment variables
+      - The Bash tool spawns a **non-interactive zsh** subprocess, NOT the user's fish shell
+      - This zsh subprocess does NOT have the direnv shell hook, so `.envrc` is never auto-loaded
+      - **Fix**: Before any command needing project env vars, prefix with `eval "$(direnv export zsh 2>/dev/null)"`
+      - Example: `eval "$(direnv export zsh 2>/dev/null)" && mix rx.user_stories --status`
+      - NEVER assume env vars from `.env`/`.envrc` are available — always load direnv first
+
       ## Required Tasks
 
       **See "TOOL SELECTION MATRIX" and "SKILL LOADING REQUIREMENTS" above for complete rules.**

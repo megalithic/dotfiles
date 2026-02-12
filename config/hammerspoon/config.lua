@@ -669,6 +669,42 @@ M.notifier = {
   },
 }
 
+-- Pi Gateway Configuration
+-- Manages a dedicated pi agent via RPC for Telegram orchestration
+M.piGateway = {
+  -- Enable/disable the gateway
+  enabled = true,
+
+  -- Default pi profile (auth cascade: tries this first, then fallbacks)
+  defaultProfile = "mega",
+
+  -- Auth profiles in order of preference
+  authProfiles = { "mega", "rx" },
+
+  -- Queue behavior
+  prioritySignal = "!!", -- Messages starting with this jump queue + steer if busy
+  abortPhrases = { "abort!", "stop!", "kill!", "cancel!" }, -- Emergency abort triggers
+  -- Additional commands (hardcoded, not configurable):
+  --   status? / queue? / q? = Show queue status
+  --   clear! / flush!       = Clear all queued messages
+
+  -- Reliability
+  taskTimeoutMinutes = 15, -- Hard timeout (extends if activity detected)
+  activityTimeoutSeconds = 60, -- No activity for this long = stuck
+  circuitBreakerThreshold = 5, -- Consecutive failures before cooldown
+  circuitBreakerCooldownSeconds = 60, -- Cooldown duration
+  healthCheckIntervalSeconds = 30, -- Health check frequency
+  healthCheckTimeoutSeconds = 10, -- Response timeout for health ping
+
+  -- History (XDG_DATA_HOME)
+  historyRotation = "monthly", -- "daily" | "weekly" | "monthly" | "yearly"
+  historyPath = os.getenv("HOME") .. "/.local/share/pi/telegram/history",
+  archivePath = os.getenv("HOME") .. "/.local/share/pi/telegram/archives",
+
+  -- Logs (XDG_STATE_HOME)
+  logPath = os.getenv("HOME") .. "/.local/state/pi/telegram/orchestrator.log",
+}
+
 local extra_config = {}
 
 local success, _ = pcall(function() extra_config = require("extra_config") end)
