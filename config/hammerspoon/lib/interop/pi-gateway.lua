@@ -43,13 +43,13 @@ end
 -- Safe telegram send wrapper
 local function safeTelegramSend(text)
   if not telegram or not telegram.send then
-    U.log.w("PiGateway: telegram module not available")
+    U.log.w("telegram module not available")
     return false
   end
   -- Disable MarkdownV2 parsing - LLM responses have unescaped special chars
   local ok, err = pcall(function() telegram.send(text, { parse_mode = "" }) end)
   if not ok then
-    U.log.wf("PiGateway: failed to send telegram: %s", tostring(err))
+    U.log.wf("failed to send telegram: %s", tostring(err))
     return false
   end
   return true
@@ -79,6 +79,14 @@ M.currentProvider = nil -- Current provider (may differ if fallback occurred)
 M.currentModel = nil -- Current model
 M.isUsingFallback = false -- True if we've switched from initial provider/model
 
+-- Timers that need cleanup (prevents memory leaks from anonymous timers)
+M.restartTimer = nil -- Auto-restart delay timer
+M.cooldownTimer = nil -- Circuit breaker cooldown timer
+
+-- Constants (avoid magic numbers)
+local MAX_BUFFER_SIZE = 1024 * 1024 -- 1MB buffer limit
+local RESTART_DELAY_SECONDS = 2 -- Delay before auto-restart
+
 -- Config (loaded from C.piGateway)
 local cfg = nil
 
@@ -102,11 +110,32 @@ local function loadConfig()
   cfg.logPath = cfg.logPath or (os.getenv("HOME") .. "/.local/state/pi/telegram/orchestrator.log")
 end
 
----Ensure directories exist
+---Ensure directories exist (using hs.fs instead of shell)
 local function ensureDirectories()
-  os.execute("mkdir -p " .. cfg.historyPath)
-  os.execute("mkdir -p " .. cfg.archivePath)
-  os.execute("mkdir -p " .. (cfg.logPath:match("(.*/)")))
+  local function mkdirp(path)
+    if not path or path == "" then return end
+    -- hs.fs.mkdir returns true if created, nil if exists, false on error
+    local ok, err = hs.fs.mkdir(path)
+    if ok == false and err then
+      -- Try creating parent first
+      local parent = path:match("(.+)/[^/]+$")
+      if parent then
+        mkdirp(parent)
+        hs.fs.mkdir(path)
+      end
+    end
+  end
+  
+  pcall(mkdirp, cfg.historyPath)
+  pcall(mkdirp, cfg.archivePath)
+  pcall(mkdirp, cfg.logPath and cfg.logPath:match("(.*)/"))
+end
+
+---Ensure queue tables exist (DRY helper)
+local function ensureQueues()
+  M.queue = M.queue or { normal = {}, priority = {} }
+  M.queue.priority = M.queue.priority or {}
+  M.queue.normal = M.queue.normal or {}
 end
 
 --------------------------------------------------------------------------------
@@ -160,7 +189,7 @@ local function appendToHistory(entry)
   end)
   
   if not ok then
-    U.log.wf("PiGateway: error appending to history: %s", tostring(err))
+    U.log.wf("error appending to history: %s", tostring(err))
   end
 end
 
@@ -172,26 +201,72 @@ local function archiveOldHistory()
     
     local currentFile = getHistoryFilename()
     
-    -- List files in history directory
-    local handle = io.popen('ls -1 "' .. cfg.historyPath .. '"/*.jsonl 2>/dev/null')
-    if not handle then return end
+    -- Use hs.fs.dir instead of shell ls
+    local iter, dir = hs.fs.dir(cfg.historyPath)
+    if not iter then return end
     
-    local files = handle:read("*a")
-    handle:close()
-    
-    for file in files:gmatch("[^\n]+") do
-      local basename = file:match("([^/]+)$")
-      if basename and basename ~= currentFile then
-        -- Move to archive
-        os.execute(string.format('mv "%s" "%s/" 2>/dev/null', file, cfg.archivePath))
-        U.log.df("PiGateway: archived %s", basename)
+    for file in iter, dir do
+      if file:match("%.jsonl$") and file ~= currentFile then
+        local src = cfg.historyPath .. "/" .. file
+        local dst = cfg.archivePath .. "/" .. file
+        local success, err = os.rename(src, dst)
+        if success then
+          U.log.df("archived %s", file)
+        end
       end
     end
   end)
   
   if not ok then
-    U.log.wf("PiGateway: error archiving history: %s", tostring(err))
+    U.log.wf("error archiving history: %s", tostring(err))
   end
+end
+
+--------------------------------------------------------------------------------
+-- RPC COMMAND SENDING
+--------------------------------------------------------------------------------
+
+---Send a command to pi via stdin
+---@param command table JSON-serializable command
+---@return boolean success
+local function sendCommand(command)
+  -- Validate inputs
+  if not command or type(command) ~= "table" then
+    U.log.w("invalid command (nil or not table)")
+    return false
+  end
+  
+  if not M.process then
+    U.log.w("process is nil, cannot send command")
+    return false
+  end
+  
+  -- Check if process is running (with pcall for safety)
+  local isRunning = false
+  pcall(function() isRunning = M.process:isRunning() end)
+  if not isRunning then
+    U.log.w("process not running, cannot send command")
+    return false
+  end
+  
+  local jsonStr = safeEncode(command)
+  if not jsonStr then
+    U.log.w("failed to encode command")
+    return false
+  end
+  
+  -- Write to stdin with error handling
+  local ok, err = pcall(function()
+    M.process:setInput(jsonStr .. "\n")
+  end)
+  
+  if ok then
+    U.log.df("sent command: %s", command.type or "unknown")
+  else
+    U.log.wf("failed to send command: %s (error: %s)", command.type or "unknown", tostring(err))
+  end
+  
+  return ok
 end
 
 --------------------------------------------------------------------------------
@@ -238,7 +313,7 @@ local function updateProviderState(stateData)
     if not M.initialProvider then
       M.initialProvider = provider
       M.initialModel = modelId
-      U.log.df("PiGateway: initial provider=%s, model=%s", provider, modelId)
+      U.log.df("initial provider=%s, model=%s", provider, modelId)
     end
     
     -- Update current values
@@ -251,17 +326,17 @@ local function updateProviderState(stateData)
     
     -- Log when fallback state changes
     if M.isUsingFallback and not wasFallback then
-      U.log.wf("PiGateway: FALLBACK DETECTED - now using %s/%s (was %s/%s)",
+      U.log.wf("FALLBACK DETECTED - now using %s/%s (was %s/%s)",
         provider, modelId, M.initialProvider, M.initialModel)
       safeTelegramSend(string.format("⚠️ Auth fallback: now using %s", provider))
     elseif wasFallback and not M.isUsingFallback then
-      U.log.i("PiGateway: returned to preferred provider")
+      U.log.i("returned to preferred provider")
       safeTelegramSend("✅ Returned to preferred auth")
     end
   end)
   
   if not ok then
-    U.log.wf("PiGateway: error in updateProviderState: %s", tostring(err))
+    U.log.wf("error in updateProviderState: %s", tostring(err))
   end
 end
 
@@ -289,7 +364,7 @@ end
 ---@param reason string Reason for abort (timeout_hard, timeout_stuck, user)
 local function abortTask(reason)
   local ok, err = pcall(function()
-    U.log.wf("PiGateway: aborting task, reason=%s", reason or "unknown")
+    U.log.wf("aborting task, reason=%s", reason or "unknown")
     
     sendCommand({ type = "abort" })
     M.busy = false
@@ -315,7 +390,7 @@ local function abortTask(reason)
   end)
   
   if not ok then
-    U.log.wf("PiGateway: error in abortTask: %s", tostring(err))
+    U.log.wf("error in abortTask: %s", tostring(err))
   end
 end
 
@@ -340,19 +415,19 @@ local function startTaskTimer()
           abortTask("timeout_stuck")
         else
           -- Still has activity - extend the timeout
-          U.log.i("PiGateway: task still active, extending timeout")
+          U.log.i("task still active, extending timeout")
           startTaskTimer()
         end
       end)
       
       if not checkOk then
-        U.log.wf("PiGateway: error in task timer callback: %s", tostring(checkErr))
+        U.log.wf("error in task timer callback: %s", tostring(checkErr))
       end
     end)
   end)
   
   if not ok then
-    U.log.wf("PiGateway: error starting task timer: %s", tostring(err))
+    U.log.wf("error starting task timer: %s", tostring(err))
   end
 end
 
@@ -402,9 +477,7 @@ end
 ---Get human-readable queue status
 ---@return string
 local function getQueueStatusText()
-  M.queue = M.queue or { normal = {}, priority = {} }
-  M.queue.priority = M.queue.priority or {}
-  M.queue.normal = M.queue.normal or {}
+  ensureQueues()
   
   local priorityCount = #M.queue.priority
   local normalCount = #M.queue.normal
@@ -448,8 +521,8 @@ end
 ---Clear the message queue
 ---@return number Number of messages cleared
 local function clearQueue()
-  M.queue = M.queue or { normal = {}, priority = {} }
-  local count = #(M.queue.priority or {}) + #(M.queue.normal or {})
+  ensureQueues()
+  local count = #M.queue.priority + #M.queue.normal
   M.queue = { normal = {}, priority = {} }
   return count
 end
@@ -466,49 +539,6 @@ local function checkPriority(text)
   return false, text
 end
 
----Send a command to pi via stdin
----@param command table JSON-serializable command
----@return boolean success
-local function sendCommand(command)
-  -- Validate inputs
-  if not command or type(command) ~= "table" then
-    U.log.w("PiGateway: invalid command (nil or not table)")
-    return false
-  end
-  
-  if not M.process then
-    U.log.w("PiGateway: process is nil, cannot send command")
-    return false
-  end
-  
-  -- Check if process is running (with pcall for safety)
-  local isRunning = false
-  pcall(function() isRunning = M.process:isRunning() end)
-  if not isRunning then
-    U.log.w("PiGateway: process not running, cannot send command")
-    return false
-  end
-  
-  local jsonStr = safeEncode(command)
-  if not jsonStr then
-    U.log.w("PiGateway: failed to encode command")
-    return false
-  end
-  
-  -- Write to stdin with error handling
-  local ok, err = pcall(function()
-    M.process:setInput(jsonStr .. "\n")
-  end)
-  
-  if ok then
-    U.log.df("PiGateway: sent command: %s", command.type or "unknown")
-  else
-    U.log.wf("PiGateway: failed to send command: %s (error: %s)", command.type or "unknown", tostring(err))
-  end
-  
-  return ok
-end
-
 ---Handle an event from pi stdout (wrapped in pcall for safety)
 ---@param event table Parsed JSON event
 local function handleEvent(event)
@@ -517,12 +547,12 @@ local function handleEvent(event)
     if not event or type(event) ~= "table" then return end
     if not event.type then return end
     
-    U.log.df("PiGateway: received event: %s", tostring(event.type))
+    U.log.df("received event: %s", tostring(event.type))
     
     if event.type == "response" then
       -- Command response (prompt accepted, etc.)
       if event.success then
-        U.log.df("PiGateway: command '%s' succeeded", event.command or "?")
+        U.log.df("command '%s' succeeded", event.command or "?")
         
         -- If this is a get_state response, acknowledge health check and update provider state
         if event.command == "get_state" then
@@ -532,7 +562,7 @@ local function handleEvent(event)
           end
         end
       else
-        U.log.wf("PiGateway: command '%s' failed: %s", event.command or "?", event.error or "unknown")
+        U.log.wf("command '%s' failed: %s", event.command or "?", event.error or "unknown")
         M.consecutiveFailures = (M.consecutiveFailures or 0) + 1
         pcall(checkCircuitBreaker)
       end
@@ -576,34 +606,34 @@ local function handleEvent(event)
       
     elseif event.type == "tool_execution_start" then
       recordActivity() -- Tool starting = legitimate work
-      U.log.df("PiGateway: tool started: %s", event.toolName or "?")
+      U.log.df("tool started: %s", event.toolName or "?")
       
     elseif event.type == "tool_execution_end" then
       recordActivity() -- Tool completed = legitimate work
-      U.log.df("PiGateway: tool ended: %s", event.toolName or "?")
+      U.log.df("tool ended: %s", event.toolName or "?")
       
     elseif event.type == "tool_execution_update" then
       recordActivity() -- Tool progress = legitimate work
       
     elseif event.type == "extension_error" then
-      U.log.wf("PiGateway: extension error in %s: %s", event.extensionPath or "?", event.error or "?")
+      U.log.wf("extension error in %s: %s", event.extensionPath or "?", event.error or "?")
       
     elseif event.type == "auto_retry_start" then
       recordActivity() -- Retry = legitimate work
-      U.log.wf("PiGateway: auto-retry started (attempt %d)", event.attempt or 0)
+      U.log.wf("auto-retry started (attempt %d)", event.attempt or 0)
       
     elseif event.type == "auto_retry_end" then
       recordActivity()
       if event.success then
-        U.log.i("PiGateway: auto-retry succeeded")
+        U.log.i("auto-retry succeeded")
       else
-        U.log.wf("PiGateway: auto-retry failed: %s", event.finalError or "?")
+        U.log.wf("auto-retry failed: %s", event.finalError or "?")
       end
     end
   end)
   
   if not ok then
-    U.log.wf("PiGateway: error handling event: %s", tostring(err))
+    U.log.wf("error handling event: %s", tostring(err))
   end
 end
 
@@ -634,7 +664,7 @@ function extractAssistantResponse(messages)
   end)
   
   if ok then return result end
-  U.log.wf("PiGateway: error extracting response: %s", tostring(result))
+  U.log.wf("error extracting response: %s", tostring(result))
   return nil
 end
 
@@ -660,10 +690,9 @@ local function onOutput(task, stdout, stderr)
     M.buffer = M.buffer .. stdout
     
     -- Limit buffer size to prevent memory issues
-    local maxBufferSize = 1024 * 1024 -- 1MB
-    if #M.buffer > maxBufferSize then
-      U.log.w("PiGateway: buffer overflow, truncating")
-      M.buffer = M.buffer:sub(-maxBufferSize)
+    if #M.buffer > MAX_BUFFER_SIZE then
+      U.log.w("buffer overflow, truncating")
+      M.buffer = M.buffer:sub(-MAX_BUFFER_SIZE)
     end
     
     -- Process complete JSON lines
@@ -685,18 +714,18 @@ local function onOutput(task, stdout, stderr)
           handleEvent(event)
         else
           -- Only log first 100 chars to avoid spam
-          U.log.df("PiGateway: non-JSON line: %s", line:sub(1, 100))
+          U.log.df("non-JSON line: %s", line:sub(1, 100))
         end
       end
     end
     
     if iterations >= maxIterations then
-      U.log.w("PiGateway: hit max iterations processing output")
+      U.log.w("hit max iterations processing output")
     end
   end)
   
   if not ok then
-    U.log.wf("PiGateway: error in onOutput: %s", tostring(err))
+    U.log.wf("error in onOutput: %s", tostring(err))
   end
   
   return true -- Always keep streaming
@@ -707,25 +736,28 @@ end
 ---@param signal number
 local function onExit(exitCode, signal)
   local ok, err = pcall(function()
-    U.log.wf("PiGateway: process exited (code=%s, signal=%s)", tostring(exitCode or -1), tostring(signal or -1))
+    U.log.wf("process exited (code=%s, signal=%s)", tostring(exitCode or -1), tostring(signal or -1))
     M.process = nil
     M.busy = false
     M.buffer = ""
     
     -- Auto-restart unless in cooldown (with delay to prevent rapid restarts)
     if not M.inCooldown then
-      U.log.i("PiGateway: scheduling auto-restart in 2s...")
-      hs.timer.doAfter(2, function()
+      U.log.i("scheduling auto-restart in " .. RESTART_DELAY_SECONDS .. "s...")
+      -- Cancel any existing restart timer
+      if M.restartTimer then pcall(function() M.restartTimer:stop() end) end
+      M.restartTimer = hs.timer.doAfter(RESTART_DELAY_SECONDS, function()
+        M.restartTimer = nil
         local startOk, startErr = pcall(function() M.start() end)
         if not startOk then
-          U.log.wf("PiGateway: auto-restart failed: %s", tostring(startErr))
+          U.log.wf("auto-restart failed: %s", tostring(startErr))
         end
       end)
     end
   end)
   
   if not ok then
-    U.log.wf("PiGateway: error in onExit: %s", tostring(err))
+    U.log.wf("error in onExit: %s", tostring(err))
   end
 end
 
@@ -736,19 +768,22 @@ local function checkCircuitBreaker()
     local cooldownSecs = cfg and cfg.circuitBreakerCooldownSeconds or 60
     
     if (M.consecutiveFailures or 0) >= threshold then
-      U.log.wf("PiGateway: circuit breaker triggered after %d failures", M.consecutiveFailures or 0)
+      U.log.wf("circuit breaker triggered after %d failures", M.consecutiveFailures or 0)
       M.inCooldown = true
       safeTelegramSend("⚠️ Pi gateway entering cooldown after " .. (M.consecutiveFailures or 0) .. " failures")
       
-      hs.timer.doAfter(cooldownSecs, function()
+      -- Cancel any existing cooldown timer
+      if M.cooldownTimer then pcall(function() M.cooldownTimer:stop() end) end
+      M.cooldownTimer = hs.timer.doAfter(cooldownSecs, function()
+        M.cooldownTimer = nil
         local resetOk, resetErr = pcall(function()
-          U.log.i("PiGateway: cooldown ended, resetting")
+          U.log.i("cooldown ended, resetting")
           M.inCooldown = false
           M.consecutiveFailures = 0
           M.start()
         end)
         if not resetOk then
-          U.log.wf("PiGateway: error resetting after cooldown: %s", tostring(resetErr))
+          U.log.wf("error resetting after cooldown: %s", tostring(resetErr))
         end
       end)
       
@@ -762,7 +797,7 @@ local function checkCircuitBreaker()
   end)
   
   if not ok then
-    U.log.wf("PiGateway: error in checkCircuitBreaker: %s", tostring(err))
+    U.log.wf("error in checkCircuitBreaker: %s", tostring(err))
   end
 end
 
@@ -771,10 +806,7 @@ local function processNextInQueue()
   local ok, err = pcall(function()
     if M.busy then return end
     
-    -- Ensure queues exist
-    M.queue = M.queue or { normal = {}, priority = {} }
-    M.queue.priority = M.queue.priority or {}
-    M.queue.normal = M.queue.normal or {}
+    ensureQueues()
     
     -- Priority queue first
     local isPriority = #M.queue.priority > 0
@@ -808,7 +840,7 @@ local function processNextInQueue()
   end)
   
   if not ok then
-    U.log.wf("PiGateway: error in processNextInQueue: %s", tostring(err))
+    U.log.wf("error in processNextInQueue: %s", tostring(err))
     M.busy = false -- Reset busy state on error
   end
 end
@@ -819,16 +851,13 @@ end
 ---@return number position
 local function queueMessage(text, isPriority)
   local ok, result = pcall(function()
-    -- Ensure queues exist
-    M.queue = M.queue or { normal = {}, priority = {} }
-    M.queue.priority = M.queue.priority or {}
-    M.queue.normal = M.queue.normal or {}
+    ensureQueues()
     
     local queueName = isPriority and "priority" or "normal"
     table.insert(M.queue[queueName], { text = tostring(text or ""), timestamp = os.time() })
     
     local position = #M.queue.priority + #M.queue.normal
-    U.log.df("PiGateway: queued message (priority=%s, position=%d)", tostring(isPriority), position)
+    U.log.df("queued message (priority=%s, position=%d)", tostring(isPriority), position)
     
     -- Try to process immediately if idle
     if not M.busy then
@@ -839,7 +868,7 @@ local function queueMessage(text, isPriority)
   end)
   
   if ok then return result or 1 end
-  U.log.wf("PiGateway: error queueing message: %s", tostring(result))
+  U.log.wf("error queueing message: %s", tostring(result))
   return 1
 end
 
@@ -862,7 +891,7 @@ local function sendAck(isPriority, position)
   end)
   
   if not ok then
-    U.log.wf("PiGateway: error sending ack: %s", tostring(err))
+    U.log.wf("error sending ack: %s", tostring(err))
   end
 end
 
@@ -878,13 +907,13 @@ function M.handleTelegramMessage(text)
     
     -- Validate input
     if not text or type(text) ~= "string" or #text == 0 then
-      U.log.w("PiGateway: received empty or invalid message")
+      U.log.w("received empty or invalid message")
       return false
     end
     
     -- Check for status query
     if isStatusQuery(text) then
-      U.log.d("PiGateway: status query received")
+      U.log.d("status query received")
       safeTelegramSend(getQueueStatusText())
       return true
     end
@@ -892,14 +921,14 @@ function M.handleTelegramMessage(text)
     -- Check for clear queue command
     if isClearQueueCommand(text) then
       local cleared = clearQueue()
-      U.log.i("PiGateway: cleared queue, removed " .. cleared .. " messages")
+      U.log.i("cleared queue, removed " .. cleared .. " messages")
       safeTelegramSend(string.format("🗑️ Cleared %d queued message%s", cleared, cleared == 1 and "" or "s"))
       return true
     end
     
     -- Check for abort command
     if isAbortCommand(text) then
-      U.log.i("PiGateway: abort command received")
+      U.log.i("abort command received")
       sendCommand({ type = "abort" })
       M.busy = false
       M.clearTaskTimer()
@@ -915,7 +944,7 @@ function M.handleTelegramMessage(text)
     
     -- If priority and we're busy, steer the current task
     if isPriority and M.busy then
-      U.log.i("PiGateway: priority message received while busy, steering")
+      U.log.i("priority message received while busy, steering")
       sendCommand({
         type = "steer",
         message = tostring(cleanText),
@@ -943,7 +972,7 @@ function M.handleTelegramMessage(text)
   end)
   
   if not ok then
-    U.log.wf("PiGateway: error handling message: %s", tostring(handled))
+    U.log.wf("error handling message: %s", tostring(handled))
     return false
   end
   
@@ -955,14 +984,14 @@ local function handleUnhealthy()
   local ok, err = pcall(function()
     M.recordFailure()
     if not M.inCooldown then
-      U.log.i("PiGateway: restarting unhealthy process")
+      U.log.i("restarting unhealthy process")
       M.stop()
       M.start()
     end
   end)
   
   if not ok then
-    U.log.wf("PiGateway: error in handleUnhealthy: %s", tostring(err))
+    U.log.wf("error in handleUnhealthy: %s", tostring(err))
   end
 end
 
@@ -987,7 +1016,7 @@ local function healthCheck()
   local ok, err = pcall(function()
     -- Check if previous health check timed out
     if M.pendingHealthCheck then
-      U.log.w("PiGateway: health check timeout - no response from previous ping")
+      U.log.w("health check timeout - no response from previous ping")
       M.pendingHealthCheck = false
       handleUnhealthy()
       return
@@ -1000,7 +1029,7 @@ local function healthCheck()
     end
     
     if not isRunning then
-      U.log.w("PiGateway: health check failed - process not running")
+      U.log.w("health check failed - process not running")
       -- Only restart if not in cooldown
       if not M.inCooldown then
         M.start()
@@ -1014,7 +1043,7 @@ local function healthCheck()
     
     M.healthCheckResponseTimer = hs.timer.doAfter(responseTimeout, function()
       if M.pendingHealthCheck then
-        U.log.w("PiGateway: health check response timeout")
+        U.log.w("health check response timeout")
         M.pendingHealthCheck = false
         handleUnhealthy()
       end
@@ -1025,7 +1054,7 @@ local function healthCheck()
   end)
   
   if not ok then
-    U.log.wf("PiGateway: error in healthCheck: %s", tostring(err))
+    U.log.wf("error in healthCheck: %s", tostring(err))
   end
 end
 
@@ -1035,7 +1064,7 @@ function M.start()
   loadConfig()
   
   if not cfg or not cfg.enabled then
-    U.log.i("PiGateway: disabled in config")
+    U.log.i("disabled in config")
     return false
   end
   
@@ -1050,12 +1079,12 @@ function M.start()
     end
     
     if isRunning then
-      U.log.i("PiGateway: already running")
+      U.log.i("already running")
       return true
     end
     
     if M.inCooldown then
-      U.log.w("PiGateway: in cooldown, not starting")
+      U.log.w("in cooldown, not starting")
       return false
     end
     
@@ -1106,18 +1135,18 @@ function M.start()
         
         return true
       else
-        U.log.e("PiGateway: failed to start process")
+        U.log.e("failed to start process")
         M.process = nil
         return false
       end
     else
-      U.log.e("PiGateway: failed to create process")
+      U.log.e("failed to create process")
       return false
     end
   end)
   
   if not ok then
-    U.log.wf("PiGateway: error in start: %s", tostring(result))
+    U.log.wf("error in start: %s", tostring(result))
     return false
   end
   
@@ -1131,16 +1160,13 @@ end
 ---Stop the pi RPC process (safe)
 function M.stop()
   local ok, err = pcall(function()
-    -- Stop health check timer
-    if M.healthCheckTimer then
-      pcall(function() M.healthCheckTimer:stop() end)
-      M.healthCheckTimer = nil
-    end
-    
-    -- Stop health check response timer
-    if M.healthCheckResponseTimer then
-      pcall(function() M.healthCheckResponseTimer:stop() end)
-      M.healthCheckResponseTimer = nil
+    -- Stop all timers
+    local timers = { "healthCheckTimer", "healthCheckResponseTimer", "restartTimer", "cooldownTimer" }
+    for _, name in ipairs(timers) do
+      if M[name] then
+        pcall(function() M[name]:stop() end)
+        M[name] = nil
+      end
     end
     
     -- Stop task timeout timer
@@ -1150,7 +1176,7 @@ function M.stop()
     if M.process then
       pcall(function()
         if M.process:isRunning() then
-          U.log.i("PiGateway: stopping process")
+          U.log.i("stopping process")
           M.process:terminate()
         end
       end)
@@ -1167,7 +1193,7 @@ function M.stop()
   end)
   
   if not ok then
-    U.log.wf("PiGateway: error in stop: %s", tostring(err))
+    U.log.wf("error in stop: %s", tostring(err))
   end
 end
 
@@ -1198,9 +1224,7 @@ end
 ---@return table { priority = number, normal = number, total = number }
 function M.getQueueStatus()
   local ok, result = pcall(function()
-    M.queue = M.queue or { normal = {}, priority = {} }
-    M.queue.priority = M.queue.priority or {}
-    M.queue.normal = M.queue.normal or {}
+    ensureQueues()
     
     return {
       priority = #M.queue.priority,
@@ -1222,12 +1246,12 @@ function M.init()
       archiveOldHistory() -- Move old history files to archive
       M.start()
     else
-      U.log.i("PiGateway: not enabled, skipping init")
+      U.log.i("not enabled, skipping init")
     end
   end)
   
   if not ok then
-    U.log.wf("PiGateway: error in init: %s", tostring(err))
+    U.log.wf("error in init: %s", tostring(err))
   end
 end
 
@@ -1238,7 +1262,7 @@ function M.cleanup()
   end)
   
   if not ok then
-    U.log.wf("PiGateway: error in cleanup: %s", tostring(err))
+    U.log.wf("error in cleanup: %s", tostring(err))
   end
 end
 
