@@ -152,7 +152,7 @@ M.augroup("Reading", {
           and vim.bo.filetype ~= "commit"
           and vim.fn.index({ "xxd", "gitrebase" }, vim.bo.filetype) == -1
         then
-          pcall(vim.cmd('normal! g`"'))
+          pcall(function() vim.cmd('normal! g`"') end)
         end
       end
     end,

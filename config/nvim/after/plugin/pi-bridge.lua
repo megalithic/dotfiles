@@ -19,7 +19,7 @@
 --   - This file (connects to socket)
 --   - config/hammerspoon/lib/interop/pi.lua (forwards Telegram)
 --   - bin/ftm (checks for socket existence)
---   - bin/tmux-pinvim-toggle (finds/manages agent window)
+--   - bin/tmux-toggle-pi (finds/manages agent window)
 --
 -- Socket discovery (in order):
 --   1. PI_SOCKET env var (explicit, from pinvim/pisock)
@@ -172,7 +172,7 @@ local function toggle()
     vim.notify("Not in tmux", vim.log.levels.WARN)
     return
   end
-  vim.fn.system("tmux-pinvim-toggle")
+  vim.fn.system("tmux-toggle-pi")
 end
 
 -- Commands

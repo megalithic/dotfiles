@@ -236,7 +236,7 @@ function fuzzy_find() {
   CTRL_X_kill_session_bind='ctrl-x:execute(session=$(echo {} | sed "s/ \* π$//" | sed "s/ \*$//"); tmux kill-session -t "${session}")+change-prompt(⚡  )+reload(tmux list-sessions -F "#S" | sed "s/$/ */")'
   CTRL_R_rename_session_bind='ctrl-r:execute(session=$(echo {} | sed "s/ \* π$//" | sed "s/ \*$//"); printf >&2 "New session name: "; read name; tmux rename-session -t "${session}" "${name}")+reload(tmux list-sessions -F "#S" | sed "s/$/ */")'
   # Switch to session and open pinvim pane
-  CTRL_P_pinvim_bind='ctrl-p:execute-silent(session=$(echo {} | sed "s/ \* π$//" | sed "s/ \*$//"); tmux switch-client -t "${session}" && tmux-pinvim-toggle)+accept'
+  CTRL_P_pinvim_bind='ctrl-p:execute-silent(session=$(echo {} | sed "s/ \* π$//" | sed "s/ \*$//"); tmux switch-client -t "${session}" && tmux-toggle-pi)+accept'
 
   # try_session "$(
   #   echo \

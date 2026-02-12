@@ -18,7 +18,7 @@
  *   - config/nvim/after/plugin/pi-bridge.lua (connects to socket)
  *   - config/hammerspoon/lib/interop/pi.lua (forwards Telegram messages)
  *   - bin/ftm (checks for socket existence)
- *   - bin/tmux-pinvim-toggle (finds/manages agent window)
+ *   - bin/tmux-toggle-pi (finds/manages agent window)
  *
  * Status display (in footer):
  *   π session:model (green) - socket active (e.g., "π mega:opus-4")
