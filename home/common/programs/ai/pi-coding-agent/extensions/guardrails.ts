@@ -181,6 +181,56 @@ const blockTitleCaseHeaders: GuardFn = (event) => {
   }
 };
 
+/**
+ * CRITICAL: Block destructive jj commands that can discard uncommitted changes.
+ * These are IMMUTABLE - user safety override is NOT allowed.
+ * 
+ * The agent MUST check `jj status` and `jj diff` BEFORE any VCS operations.
+ * This guard exists because agents repeatedly assume "(no description set)"
+ * commits are empty/disposable when they may contain user's uncommitted work.
+ */
+const blockDestructiveJjCommands: GuardFn = (event) => {
+  if (event.toolName !== "bash") return;
+  const cmd = (event as ToolCallEvent).input.command;
+  
+  // These commands can discard uncommitted changes
+  // jj rebase - can orphan working copy changes
+  if (/(^|[\s;&|])jj\s+rebase\b/.test(cmd)) {
+    return { 
+      block: true, 
+      immutable: true, 
+      reason: "**jj rebase blocked** ⛔ IMMUTABLE - Can discard uncommitted changes. First run `jj status` and `jj diff` to check for uncommitted work. If changes exist, commit them first with `jj describe -m \"wip: ...\"` or ask user what to do." 
+    };
+  }
+  
+  // jj abandon - directly discards changes
+  if (/(^|[\s;&|])jj\s+abandon\b/.test(cmd)) {
+    return { 
+      block: true, 
+      immutable: true, 
+      reason: "**jj abandon blocked** ⛔ IMMUTABLE - Discards changes permanently. First run `jj status` and `jj diff -r <rev>` to see what would be lost. Ask user for explicit confirmation." 
+    };
+  }
+  
+  // jj restore - can overwrite working copy
+  if (/(^|[\s;&|])jj\s+restore\b/.test(cmd)) {
+    return { 
+      block: true, 
+      immutable: true, 
+      reason: "**jj restore blocked** ⛔ IMMUTABLE - Can overwrite uncommitted changes. First run `jj status` and `jj diff` to check current state. Ask user for explicit confirmation." 
+    };
+  }
+  
+  // jj undo - can restore discarded changes but also undo wanted changes
+  if (/(^|[\s;&|])jj\s+undo\b/.test(cmd)) {
+    return { 
+      block: true, 
+      immutable: true, 
+      reason: "**jj undo blocked** ⛔ IMMUTABLE - Can affect uncommitted work. First run `jj status` and explain what undo will do. Ask user for explicit confirmation." 
+    };
+  }
+};
+
 const blockInteractiveCommands: GuardFn = (event) => {
   if (event.toolName !== "bash") return;
   const cmd = (event as ToolCallEvent).input.command;
@@ -229,6 +279,7 @@ const guards: GuardFn[] = [
   blockNixManagedWrites,
   blockTitleCaseHeaders,
   blockInteractiveCommands,
+  blockDestructiveJjCommands, // CRITICAL: Protects uncommitted changes
 ];
 
 // ============================================================================
