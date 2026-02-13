@@ -21,8 +21,8 @@ in {
     ./programs/agenix.nix
     ./programs/email
     ./programs/browsers
-    ./programs/jujutsu.nix
-    ./programs/fish.nix
+    ./programs/jj
+    ./programs/fish
     ./programs/fzf.nix
     ./programs/nvim.nix
     ./programs/shade.nix
