@@ -10,7 +10,7 @@ if [[ -f "$ENV_VARS_PATH" ]]; then
 fi
 
 # Ensure nix binaries are in PATH (required for Hammerspoon context)
-export PATH="/etc/profiles/per-user/$USER/bin:/run/current-system/sw/bin:$PATH"
+export PATH="$HOME/.nix-profile/bin:/run/current-system/sw/bin:$PATH"
 
 if [ ! -n "$1" ]; then
   echo "Usage: $0 [file]"

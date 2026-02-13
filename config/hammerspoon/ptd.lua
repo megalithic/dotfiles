@@ -256,9 +256,8 @@ function M:init(config)
   -- Configure paths
   -- Sox: try nix paths first, then homebrew
   local soxPaths = {
-    "/etc/profiles/per-user/" .. os.getenv("USER") .. "/bin/sox",
-    "/run/current-system/sw/bin/sox",
     os.getenv("HOME") .. "/.nix-profile/bin/sox",
+    "/run/current-system/sw/bin/sox",
     "/opt/homebrew/bin/sox",
     "/usr/local/bin/sox",
   }

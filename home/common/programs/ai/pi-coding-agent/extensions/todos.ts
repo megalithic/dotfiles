@@ -2210,48 +2210,11 @@ export default function todosExtension(pi: ExtensionAPI) {
 
 					const closedTodo = closeResult as TodoRecord;
 					
-					// VCS push prompt
+					// VCS push prompt (text-based only - interactive UI doesn't work during tool execution)
 					let closeVcsMessage = "";
-					let copiedCommand = "";
 					const closeVcs = detectVcs(ctx.cwd);
 					
-					if (closeVcs.type && ctx.hasUI) {
-						// Interactive UI prompt
-						const closeBookmarkName = generateBookmarkName(closedTodo);
-						const closeCurrentBookmark = getCurrentBookmark(closeVcs);
-						const closeTargetBookmark = closeCurrentBookmark || closeBookmarkName;
-						
-						const pushOptions: VcsPushOption[] = closeVcs.type === "jj" 
-							? [
-								{ key: "a", command: `jj push -b ${closeTargetBookmark}`, description: "push bookmark" },
-								{ key: "b", command: `jj push -b ${closeTargetBookmark} --pr`, description: "push + create PR" },
-								{ key: "c", command: `jj push -b ${closeTargetBookmark} --prd`, description: "push + create draft PR" },
-							]
-							: [
-								{ key: "a", command: `git push -u origin ${closeTargetBookmark}`, description: "push branch" },
-								{ key: "b", command: `git push -u origin ${closeTargetBookmark} && gh pr create --fill`, description: "push + create PR" },
-								{ key: "c", command: `git push -u origin ${closeTargetBookmark} && gh pr create --draft --fill`, description: "push + draft PR" },
-							];
-						
-						const promptResult = await ctx.ui.custom<VcsPushPromptResult>(
-							(_tui, theme, _kb, done) => 
-								new VcsPushPromptComponent(
-									theme,
-									`✅ Todo closed. Push bookmark \`${closeTargetBookmark}\`?`,
-									pushOptions,
-									done,
-								),
-							{ overlay: true, overlayOptions: { width: "80%", maxHeight: "50%", anchor: "center" } },
-						);
-						
-						if (promptResult?.action === "copy" || promptResult?.action === "custom") {
-							copiedCommand = promptResult.command || "";
-							closeVcsMessage = `\n\n✅ **Todo closed.** Command copied to clipboard:\n\`${copiedCommand}\`\n\nPaste and run when ready.`;
-						} else {
-							closeVcsMessage = `\n\n✅ **Todo closed.** Push skipped.`;
-						}
-					} else if (closeVcs.type) {
-						// Fallback: text-based prompt (no UI)
+					if (closeVcs.type) {
 						const closeBookmarkName = generateBookmarkName(closedTodo);
 						const closeCurrentBookmark = getCurrentBookmark(closeVcs);
 						const closeTargetBookmark = closeCurrentBookmark || closeBookmarkName;
@@ -2262,14 +2225,13 @@ export default function todosExtension(pi: ExtensionAPI) {
 							closeVcsMessage += `  a) \`jj push -b ${closeTargetBookmark}\` — push bookmark\n`;
 							closeVcsMessage += `  b) \`jj push -b ${closeTargetBookmark} --pr\` — push + create PR\n`;
 							closeVcsMessage += `  c) \`jj push -b ${closeTargetBookmark} --prd\` — push + create draft PR\n`;
-							closeVcsMessage += `  d) [type your own command]\n`;
+							closeVcsMessage += `  d) [skip push]\n`;
 						} else {
 							closeVcsMessage += `  a) \`git push -u origin ${closeTargetBookmark}\` — push branch\n`;
 							closeVcsMessage += `  b) \`git push -u origin ${closeTargetBookmark} && gh pr create --fill\` — push + create PR\n`;
 							closeVcsMessage += `  c) \`git push -u origin ${closeTargetBookmark} && gh pr create --draft --fill\` — push + draft PR\n`;
-							closeVcsMessage += `  d) [type your own command]\n`;
+							closeVcsMessage += `  d) [skip push]\n`;
 						}
-						closeVcsMessage += `\n**Reply with a, b, c, or d:**`;
 					}
 					
 					return {

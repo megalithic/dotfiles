@@ -14,12 +14,12 @@ fi
 
 # === Nix Environment Setup ===
 # Source nix profile for GUI apps that don't inherit shell environment
-if [[ -f /etc/profiles/per-user/$USER/etc/profile.d/hm-session-vars.sh ]]; then
-    source /etc/profiles/per-user/$USER/etc/profile.d/hm-session-vars.sh
+if [[ -f $HOME/.nix-profile/etc/profile.d/hm-session-vars.sh ]]; then
+    source $HOME/.nix-profile/etc/profile.d/hm-session-vars.sh
 fi
 
 # Ensure nix-darwin and home-manager paths are available
-export PATH="/etc/profiles/per-user/$USER/bin:/run/current-system/sw/bin:$HOME/.nix-profile/bin:$PATH"
+export PATH="$HOME/.nix-profile/bin:/run/current-system/sw/bin:$PATH"
 
 # Also add common non-nix locations as fallback
 export PATH="$PATH:/opt/homebrew/bin:/usr/local/bin"

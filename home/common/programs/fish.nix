@@ -11,7 +11,7 @@ in {
     # REF: https://github.com/agdral/home-default/blob/main/shell/fish/functions/develop.nix
     enable = true;
     shellInit = ''
-      export PATH="/etc/profiles/per-user/${username}/bin:$PATH"
+      export PATH="$HOME/.nix-profile/bin:$PATH"
       set -g fish_prompt_pwd_dir_length 20
 
       # jj bookmark completion helper
