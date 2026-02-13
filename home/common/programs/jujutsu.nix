@@ -300,14 +300,49 @@
           "-c"
           ''
             set -euo pipefail
-            if [[ -z "$1" ]]; then
-              echo "Usage: jj feat <bookmark-name>" >&2
-              exit 1
+            
+            bookmark=""
+            message=""
+            args=()
+            
+            while [[ $# -gt 0 ]]; do
+              case "$1" in
+                -b|--bookmark)
+                  [[ -z "''${2:-}" ]] && echo "Error: -b requires a bookmark name" >&2 && exit 1
+                  bookmark="$2"
+                  shift 2
+                  ;;
+                *)
+                  args+=("$1")
+                  shift
+                  ;;
+              esac
+            done
+            
+            if [[ ''${#args[@]} -gt 0 ]]; then
+              message="''${args[*]}"
             fi
+            
+            if [[ -z "$bookmark" && -z "$message" ]]; then
+              echo "Usage: jj feat [-b <bookmark>] [message]"
+              echo "Examples:"
+              echo "  jj feat -b my-feat             # Start 'my-feat' from main@origin"
+              echo "  jj feat -b my-feat \"wip\"     # Start 'my-feat' with message"
+              echo "  jj feat \"wip\"                  # Start on main@origin with message (no bookmark)"
+              exit 0
+            fi
+            
             jj git fetch
-            jj new main@origin -m "feat: $1"
-            jj bookmark create "$1" -r @
-            echo "Created feature branch: $1"
+            jj new main@origin
+            
+            if [[ -n "$message" ]]; then
+              jj describe -m "$message"
+            fi
+            
+            if [[ -n "$bookmark" ]]; then
+              jj bookmark create "$bookmark" -r @
+              echo "Created feature bookmark: $bookmark"
+            fi
           ''
           ""
         ];
@@ -321,13 +356,47 @@
           "-c"
           ''
             set -euo pipefail
-            if [[ -z "$1" ]]; then
-              echo "Usage: jj feat-here <bookmark-name>" >&2
-              exit 1
+            
+            bookmark=""
+            message=""
+            args=()
+            
+            while [[ $# -gt 0 ]]; do
+              case "$1" in
+                -b|--bookmark)
+                  [[ -z "''${2:-}" ]] && echo "Error: -b requires a bookmark name" >&2 && exit 1
+                  bookmark="$2"
+                  shift 2
+                  ;;
+                *)
+                  args+=("$1")
+                  shift
+                  ;;
+              esac
+            done
+            
+            if [[ ''${#args[@]} -gt 0 ]]; then
+              message="''${args[*]}"
             fi
-            jj new -m "feat: $1"
-            jj bookmark create "$1" -r @
-            echo "Created feature branch: $1 (from current position)"
+            
+            if [[ -z "$bookmark" && -z "$message" ]]; then
+              echo "Usage: jj feat-here [-b <bookmark>] [message]"
+              echo "Examples:"
+              echo "  jj feat-here -b my-feat         # Start 'my-feat' from current"
+              echo "  jj feat-here \"wip\"              # Continue with message (no bookmark)"
+              exit 0
+            fi
+            
+            jj new
+            
+            if [[ -n "$message" ]]; then
+              jj describe -m "$message"
+            fi
+            
+            if [[ -n "$bookmark" ]]; then
+              jj bookmark create "$bookmark" -r @
+              echo "Created feature bookmark: $bookmark (from current position)"
+            fi
           ''
           ""
         ];
@@ -343,7 +412,7 @@
           "-c"
           ''
             set -euo pipefail
-            if [[ -z "$1" ]]; then
+            if [[ -z "''${1:-}" ]]; then
               echo "Usage: jj co <branch-name>" >&2
               exit 1
             fi
@@ -409,7 +478,7 @@
 
             # Create new commit and describe
             jj new
-            if [[ -n "$1" ]]; then
+            if [[ -n "''${1:-}" ]]; then
               jj describe -m "$1"
             else
               jj describe

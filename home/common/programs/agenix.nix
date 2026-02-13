@@ -1,3 +1,17 @@
+# Agenix secrets for home-manager (standalone)
+#
+# Secrets are decrypted by a launchd agent on login and stored in:
+#   $(getconf DARWIN_USER_TEMP_DIR)/agenix/
+#
+# To encrypt a new secret:
+#   cd ~/.dotfiles/secrets && agenix -e <name>.age
+#
+# To rekey after adding/removing keys:
+#   cd ~/.dotfiles/secrets && agenix -r
+#
+# Logs: ~/Library/Logs/agenix/{stdout,stderr}
+#
+# Ref: https://github.com/ryantm/agenix
 {
   config,
   pkgs,
@@ -9,10 +23,12 @@
 let
   # Per-host secret file, falls back to shared if host-specific doesn't exist
   workEnvVarsFile =
-    let hostSpecific = "${inputs.self}/secrets/work-env-vars-${hostname}.age";
-    in if builtins.pathExists hostSpecific
-       then hostSpecific
-       else "${inputs.self}/secrets/work-env-vars.age";
+    let
+      hostSpecific = "${inputs.self}/secrets/work-env-vars-${hostname}.age";
+    in
+    if builtins.pathExists hostSpecific
+    then hostSpecific
+    else "${inputs.self}/secrets/work-env-vars.age";
 in
 {
   imports = [
@@ -30,74 +46,18 @@ in
     };
   };
 
-  # CRITICAL: Disable RunAtLoad to prevent hang during darwin-rebuild activation.
-  # When darwin-rebuild runs as root (via sudo), it loads launch agents in a context
-  # where the user's SSH key is inaccessible, causing agenix to fail repeatedly.
-  #
-  # Secrets are decrypted on-demand at shell login instead (see shell init below).
-  # launchd.agents.activate-agenix = {
-  #   enable = true;
-  #   config = {
-  #     RunAtLoad = lib.mkForce true;
-  #     KeepAlive = lib.mkForce true;
-  #   };
-  # };
-
-  # ===========================================================================
-  # Launchd Agent Throttling
-  # ===========================================================================
-  # The agenix home-manager module creates a launchd agent that decrypts secrets.
-  #
-  # KNOWN ISSUE: If decryption fails (e.g., stale .tmp file from interrupted run),
-  # the agent retries indefinitely. ThrottleInterval prevents runaway retries.
-  #
-  # MANUAL RECOVERY (if secrets stop updating after editing .age files):
-  #
-  #   1. Check for stuck generation:
-  #      ls -la "$(getconf DARWIN_USER_TEMP_DIR)/agenix.d/"
-  #
-  #   2. Remove the stuck generation (the newer one with .tmp files):
-  #      rm -rf "$(getconf DARWIN_USER_TEMP_DIR)/agenix.d/<stuck-generation>"
-  #
-  #   3. Restart the agent:
-  #      launchctl kickstart -k gui/$(id -u)/org.nix-community.home.activate-agenix
-  #
-  #   4. Verify symlink updated:
-  #      ls -la "$(getconf DARWIN_USER_TEMP_DIR)/agenix"
-  #
-  #   5. Start new shell to pick up secrets:
-  #      exec fish
-  #
-  # ===========================================================================
-  launchd.agents.activate-agenix.config = {
-    ThrottleInterval = 60; # Prevent runaway retries on decryption failure
-  };
-
-  # Decrypt secrets on-demand, then source them as environment variables.
-  # The decryption step is needed because RunAtLoad is disabled above.
+  # Source secrets as environment variables in shells
+  # (secrets are files - this makes them available as env vars)
   programs.zsh.initExtra = lib.mkAfter ''
     # Load agenix secrets as environment variables
-    if [ -f "${config.age.secrets.env-vars.path}" ]; then
-      source "${config.age.secrets.env-vars.path}"
-    fi
-
-    # Load work-specific environment variables
-    if [ -f "${config.age.secrets.work-env-vars.path}" ]; then
-      source "${config.age.secrets.work-env-vars.path}"
-    fi
+    [ -f "${config.age.secrets.env-vars.path}" ] && source "${config.age.secrets.env-vars.path}"
+    [ -f "${config.age.secrets.work-env-vars.path}" ] && source "${config.age.secrets.work-env-vars.path}"
   '';
 
-  # Use shellInit (not interactiveShellInit) so scripts also get secrets
   programs.fish.interactiveShellInit = lib.mkAfter ''
     # Load agenix secrets as environment variables
-    if test -f "${config.age.secrets.env-vars.path}"
-      source "${config.age.secrets.env-vars.path}"
-    end
-
-    # Load work-specific environment variables
-    if test -f "${config.age.secrets.work-env-vars.path}"
-      source "${config.age.secrets.work-env-vars.path}"
-    end
+    test -f "${config.age.secrets.env-vars.path}" && source "${config.age.secrets.env-vars.path}"
+    test -f "${config.age.secrets.work-env-vars.path}" && source "${config.age.secrets.work-env-vars.path}"
   '';
 
   home.packages = [
