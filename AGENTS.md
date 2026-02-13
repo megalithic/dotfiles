@@ -70,6 +70,42 @@ bd sync               # Sync with git
 
 **Always check `--help`** before assuming flags - don't guess.
 
+## Uncommitted Changes (CRITICAL - NEVER DISCARD)
+
+**User's uncommitted changes are SACRED. Never assume they can be discarded.**
+
+### Before ANY VCS operation, ALWAYS:
+1. Run `jj status` to see working copy state
+2. Run `jj diff` to see actual changes
+3. If changes exist, ask user what to do - do NOT assume
+
+### NEVER assume:
+- "(no description set)" means empty - it likely has uncommitted work
+- You can rebase/abandon/restore without checking first
+- The working copy is clean
+
+### Blocked commands (guardrails - immutable, non-overrideable):
+| Command | Why blocked | What to do instead |
+|---------|-------------|-------------------|
+| `jj rebase` | Can orphan uncommitted changes | Check `jj status` first, commit WIP, ask user |
+| `jj abandon` | Permanently discards changes | Check `jj diff -r <rev>`, ask user |
+| `jj restore` | Overwrites working copy | Check `jj status`, ask user |
+| `jj undo` | Can affect uncommitted work | Explain what it does, ask user |
+
+### Example safe workflow:
+```bash
+# ALWAYS check state first
+jj status
+jj diff
+
+# If uncommitted changes exist, commit them first
+jj describe -m "wip: user's changes before rebase"
+
+# Now safe to proceed, but STILL ask user first
+```
+
+**This is not overrideable.** Losing user's work is unacceptable.
+
 ## Pushing (RESTRICTED)
 
 **NEVER push without explicit user permission.** This includes:
