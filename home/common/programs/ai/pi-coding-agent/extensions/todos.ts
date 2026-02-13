@@ -2065,11 +2065,14 @@ export default function todosExtension(pi: ExtensionAPI) {
 						const bookmarkName = generateBookmarkName(claimedTodo);
 						const hasChanges = hasUncommittedChanges(vcs);
 						const currentBookmark = getCurrentBookmark(vcs);
+						const alreadyOnBookmark = currentBookmark === bookmarkName;
+						const existingBookmark = bookmarkExists(vcs, bookmarkName);
 						
 						// Build VCS status message
 						vcsMessage = `\n\n**VCS (${vcs.type}):**\n`;
 						
 						if (hasChanges) {
+							// Uncommitted changes - prompt user for decision (not safe to auto-execute)
 							vcsMessage += `\n⚠️ **Uncommitted changes detected.** What to do?\n`;
 							if (vcs.type === "jj") {
 								vcsMessage += `  a) \`jj new\` — Start fresh commit, keep changes staged\n`;
@@ -2085,12 +2088,64 @@ export default function todosExtension(pi: ExtensionAPI) {
 						}
 						
 						if (isSubtask) {
-							// For subtasks, suggest using parent's bookmark
+							// For subtasks, suggest using parent's bookmark (don't auto-create)
 							const parentId = normalizeTodoId(claimedTodo.parent_id!);
 							vcsMessage += `\n📎 This is a subtask of ${formatTodoId(parentId)}.\n`;
 							vcsMessage += `Consider working on the parent's bookmark if one exists.\n`;
+						} else if (alreadyOnBookmark) {
+							// Already on the correct bookmark
+							vcsMessage += `\n✓ Already on bookmark \`${bookmarkName}\`\n`;
+						} else if (existingBookmark) {
+							// Bookmark exists but we're not on it - don't auto-switch, prompt
+							vcsMessage += `\n⚠️ Bookmark \`${bookmarkName}\` already exists.\n`;
+							if (vcs.type === "jj") {
+								vcsMessage += `  a) \`jj edit ${bookmarkName}\` — Switch to existing bookmark\n`;
+								vcsMessage += `  b) [type your own approach]\n`;
+							} else {
+								vcsMessage += `  a) \`git checkout ${bookmarkName}\` — Switch to existing branch\n`;
+								vcsMessage += `  b) [type your own approach]\n`;
+							}
+						} else if (!hasChanges) {
+							// No changes, no existing bookmark, not a subtask - AUTO-EXECUTE safe commands
+							const commitMessage = `${formatTodoId(claimedTodo.id)}: ${claimedTodo.title}`;
+							const executedCommands: string[] = [];
+							const errors: string[] = [];
+							
+							// Auto-create bookmark
+							if (createBookmark(vcs, bookmarkName)) {
+								if (vcs.type === "jj") {
+									executedCommands.push(`jj bookmark create ${bookmarkName}`);
+								} else {
+									executedCommands.push(`git checkout -b ${bookmarkName}`);
+								}
+							} else {
+								errors.push(`Failed to create bookmark \`${bookmarkName}\``);
+							}
+							
+							// Auto-create new commit (jj only - git checkout -b already creates working state)
+							if (vcs.type === "jj" && errors.length === 0) {
+								if (createCommit(vcs, commitMessage)) {
+									executedCommands.push(`jj new -m "${commitMessage}"`);
+								} else {
+									errors.push(`Failed to create commit with message`);
+								}
+							}
+							
+							// Report results
+							if (executedCommands.length > 0) {
+								vcsMessage += `\n✓ **Auto-executed:**\n`;
+								for (const cmd of executedCommands) {
+									vcsMessage += `  \`${cmd}\`\n`;
+								}
+							}
+							if (errors.length > 0) {
+								vcsMessage += `\n⚠️ **Errors:**\n`;
+								for (const err of errors) {
+									vcsMessage += `  ${err}\n`;
+								}
+							}
 						} else {
-							// For standalone todos, suggest creating a new bookmark
+							// Has changes but not a subtask - show manual commands
 							vcsMessage += `\n**Suggested bookmark:** \`${bookmarkName}\`\n`;
 							if (currentBookmark && currentBookmark !== "main") {
 								vcsMessage += `**Current bookmark:** \`${currentBookmark}\`\n`;

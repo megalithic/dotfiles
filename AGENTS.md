@@ -13,9 +13,9 @@ This is a **nix-darwin + home-manager** managed dotfiles repo.
 
 **Common nix-managed paths:**
 
-- `~/.pi/agent/*` → `home/programs/ai/pi-coding-agent/`
-- `~/.config/fish/*` → `home/programs/fish/` or `config/fish/`
-- Most `~/.config/<app>/*` → check `home/programs/<app>/` first
+- `~/.pi/agent/*` → `home/common/programs/ai/pi-coding-agent/`
+- `~/.config/fish/*` → `home/common/programs/fish/` or `config/fish/`
+- Most `~/.config/<app>/*` → check `home/common/programs/<app>/` first
 
 **Never:**
 
@@ -179,7 +179,7 @@ through `pinvim` or `pisock` wrapper.
 Telegram → Hammerspoon → Unix Socket → pi (bridge.ts) → notify.ts
 ```
 
-**Key files (nix-managed in `home/programs/ai/pi-coding-agent/`):**
+**Key files (nix-managed in `home/common/programs/ai/pi-coding-agent/`):**
 
 - `extensions/bridge.ts` - Creates socket, receives messages, forwards to pi
 - `extensions/notify.ts` - Suppresses notifications during Telegram
@@ -303,7 +303,7 @@ git/jj.
 | `~/.config/fish/*`  | `~/.dotfiles/config/fish/*`                     |
 | `~/.config/nvim/*`  | `~/.dotfiles/config/nvim/*`                     |
 | `~/.hammerspoon/*`  | `~/.dotfiles/config/hammerspoon/*`              |
-| `~/.pi/agent/*`     | `~/.dotfiles/home/programs/ai/pi-coding-agent/` |
+| `~/.pi/agent/*`     | `~/.dotfiles/home/common/programs/ai/pi-coding-agent/` |
 
 ### After Editing
 

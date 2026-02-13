@@ -314,4 +314,4 @@ When receiving a message via Telegram (prefixed with
 | `~/bin/*`          | `~/.dotfiles/bin/*`                             |
 | `~/.config/*`      | `~/.dotfiles/config/*`                          |
 | `~/.hammerspoon/*` | `~/.dotfiles/config/hammerspoon/*`              |
-| `~/.pi/agent/*`    | `~/.dotfiles/home/programs/ai/pi-coding-agent/` |
+| `~/.pi/agent/*`    | `~/.dotfiles/home/common/programs/ai/pi-coding-agent/` |
