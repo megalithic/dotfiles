@@ -86,6 +86,10 @@ in {
     EZA_ICON_SPACING = "2";
 
     NH_SEARCH_CHANNEL = "nixos-unstable";
+
+    # Google Cloud / Vertex AI (for pi-coding-agent Gemini access)
+    GOOGLE_CLOUD_PROJECT = "gemini-cli-workspace-486317";
+    GOOGLE_CLOUD_LOCATION = "global";
   };
 
   environment.shellAliases = {

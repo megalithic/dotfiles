@@ -21,7 +21,9 @@ let
   allKeys = [megaenv];
 in {
   "env-vars.age".publicKeys = allKeys;
-  "work-env-vars.age".publicKeys = allKeys;
+  "work-env-vars.age".publicKeys = allKeys;  # shared fallback
+  "work-env-vars-megabookpro.age".publicKeys = allKeys;
+  "work-env-vars-rxbookpro.age".publicKeys = allKeys;
   "s3cfg.age".publicKeys = allKeys;
 
   # "api-keys.age".publicKeys = allKeys;

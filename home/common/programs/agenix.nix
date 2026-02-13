@@ -3,8 +3,17 @@
   pkgs,
   lib,
   inputs,
+  hostname,
   ...
 }:
+let
+  # Per-host secret file, falls back to shared if host-specific doesn't exist
+  workEnvVarsFile =
+    let hostSpecific = "${inputs.self}/secrets/work-env-vars-${hostname}.age";
+    in if builtins.pathExists hostSpecific
+       then hostSpecific
+       else "${inputs.self}/secrets/work-env-vars.age";
+in
 {
   imports = [
     inputs.agenix.homeManagerModules.default
@@ -16,7 +25,7 @@
     ];
     secrets = {
       env-vars.file = "${inputs.self}/secrets/env-vars.age";
-      work-env-vars.file = "${inputs.self}/secrets/work-env-vars.age";
+      work-env-vars.file = workEnvVarsFile;
       s3cfg.file = "${inputs.self}/secrets/s3cfg.age";
     };
   };
