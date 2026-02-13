@@ -48,7 +48,7 @@ in
 
         # System modules
         ../modules/system.nix
-        ../modules/native-pkg-installer.nix
+        ../modules/darwin/services.nix
 
         # Secrets (system-level)
         inputs.agenix.darwinModules.default

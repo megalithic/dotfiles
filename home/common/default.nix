@@ -17,10 +17,13 @@ in {
   imports = [
     ./lib.nix
     ./packages.nix
+    ./services.nix
     ./programs/ai
     ./programs/agenix.nix
     ./programs/email
     ./programs/browsers
+    ./programs/discord.nix
+    ./programs/ghostty.nix
     ./programs/jj
     ./programs/fish
     ./programs/fzf.nix

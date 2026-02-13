@@ -168,6 +168,8 @@
     # shift+enter should work via CSI u (ghostty + tmux extended-keys)
     # ctrl+j as fallback for terminals that don't support shift+enter
     newLine = ["shift+enter" "ctrl+j"];
+    pageUp = ["ctrl+u"];
+    pageDown = ["ctrl+d"];
   };
 
   managedKeybindingsJson = pkgs.writeText "pi-managed-keybindings.json" (builtins.toJSON managedKeybindings);

@@ -25,9 +25,12 @@
 
   # Standard GUI apps from nixpkgs (not custom mkApp derivations)
   guiPkgs = with pkgs; [
+    iina # migrated from homebrew 2026-02-13
+    inkscape # migrated from homebrew 2026-02-13
     neovide # Native neovim GUI - potential future use for floating notes window
     obsidian
     # shade  # FIXME: Disabled - GhosttyKit build failing, see overlays/default.nix
+    slack # migrated from homebrew 2026-02-13
     spotify
     telegram-desktop
     zoom-us
