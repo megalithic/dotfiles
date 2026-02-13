@@ -72,6 +72,7 @@ interface TodoFrontMatter {
 	status: string;
 	created_at: string;
 	assigned_to_session?: string;
+	parent_id?: string; // For subtasks - references parent TODO-<hex>
 }
 
 interface TodoRecord extends TodoFrontMatter {
@@ -101,6 +102,7 @@ const TodoParams = Type.Object({
 		"delete",
 		"claim",
 		"release",
+		"close",
 	] as const),
 	id: Type.Optional(
 		Type.String({ description: "Todo id (TODO-<hex> or raw hex filename)" }),
@@ -112,6 +114,9 @@ const TodoParams = Type.Object({
 		Type.String({ description: "Long-form details (markdown). Update replaces; append adds." }),
 	),
 	force: Type.Optional(Type.Boolean({ description: "Override another session's assignment" })),
+	parent_id: Type.Optional(
+		Type.String({ description: "Parent todo id for subtasks (TODO-<hex> or raw hex). Auto-adds subtask:TODO-<parent> tag." }),
+	),
 });
 
 type TodoAction =
@@ -123,7 +128,8 @@ type TodoAction =
 	| "append"
 	| "delete"
 	| "claim"
-	| "release";
+	| "release"
+	| "close";
 
 type TodoOverlayAction = "back" | "work";
 
@@ -141,7 +147,7 @@ type TodoMenuAction =
 type TodoToolDetails =
 	| { action: "list" | "list-all"; todos: TodoFrontMatter[]; currentSessionId?: string; error?: string }
 	| {
-			action: "get" | "create" | "update" | "append" | "delete" | "claim" | "release";
+			action: "get" | "create" | "update" | "append" | "delete" | "claim" | "release" | "close";
 			todo: TodoRecord;
 			error?: string;
 		};
@@ -181,6 +187,230 @@ function clearAssignmentIfClosed(todo: TodoFrontMatter): void {
 	if (isTodoClosed(getTodoStatus(todo))) {
 		todo.assigned_to_session = undefined;
 	}
+}
+
+/**
+ * Ensure subtask tag is present when parent_id is set.
+ * Adds `subtask:TODO-<parent-id>` tag if not already present.
+ */
+function ensureSubtaskTag(todo: TodoFrontMatter): void {
+	if (!todo.parent_id) return;
+	const normalizedParentId = normalizeTodoId(todo.parent_id);
+	const subtaskTag = `subtask:${formatTodoId(normalizedParentId)}`;
+	if (!todo.tags.includes(subtaskTag)) {
+		todo.tags = [...todo.tags, subtaskTag];
+	}
+}
+
+/**
+ * Slugify a string for use in bookmark names.
+ * Converts to lowercase, replaces spaces/special chars with hyphens.
+ */
+function slugify(text: string): string {
+	return text
+		.toLowerCase()
+		.trim()
+		.replace(/[^\w\s-]/g, "")
+		.replace(/[\s_]+/g, "-")
+		.replace(/-+/g, "-")
+		.replace(/^-|-$/g, "")
+		.slice(0, 50); // Limit length
+}
+
+/**
+ * Generate bookmark name from todo.
+ * Format: <slugified-title>-<short-id>
+ */
+function generateBookmarkName(todo: TodoFrontMatter): string {
+	const slug = slugify(todo.title || "todo");
+	return `${slug}-${todo.id}`;
+}
+
+// ============================================================================
+// VCS HELPERS
+// ============================================================================
+
+import { execSync, spawnSync } from "node:child_process";
+
+interface VcsInfo {
+	type: "jj" | "git" | null;
+	cwd: string;
+}
+
+/**
+ * Detect which VCS is available in the current directory.
+ */
+function detectVcs(cwd: string): VcsInfo {
+	// Check for jj first
+	try {
+		execSync("jj root", { cwd, stdio: "pipe" });
+		return { type: "jj", cwd };
+	} catch {
+		// Not a jj repo
+	}
+
+	// Check for git
+	try {
+		execSync("git rev-parse --git-dir", { cwd, stdio: "pipe" });
+		return { type: "git", cwd };
+	} catch {
+		// Not a git repo
+	}
+
+	return { type: null, cwd };
+}
+
+/**
+ * Check if there are uncommitted changes.
+ */
+function hasUncommittedChanges(vcs: VcsInfo): boolean {
+	if (!vcs.type) return false;
+
+	try {
+		if (vcs.type === "jj") {
+			// In jj, check if working copy has changes
+			const result = execSync("jj status --no-pager", { cwd: vcs.cwd, stdio: "pipe" }).toString();
+			// If there are changes, jj status will show them
+			return result.includes("Working copy changes:");
+		} else {
+			// git status --porcelain returns empty if clean
+			const result = execSync("git status --porcelain", { cwd: vcs.cwd, stdio: "pipe" }).toString();
+			return result.trim().length > 0;
+		}
+	} catch {
+		return false;
+	}
+}
+
+/**
+ * Get current bookmark/branch name.
+ */
+function getCurrentBookmark(vcs: VcsInfo): string | null {
+	if (!vcs.type) return null;
+
+	try {
+		if (vcs.type === "jj") {
+			// Get bookmarks pointing to current commit
+			const result = execSync("jj log -r @ --no-graph -T 'bookmarks'", { cwd: vcs.cwd, stdio: "pipe" }).toString().trim();
+			// Parse first bookmark if any
+			const match = result.match(/^(\S+)/);
+			return match ? match[1] : null;
+		} else {
+			const result = execSync("git branch --show-current", { cwd: vcs.cwd, stdio: "pipe" }).toString().trim();
+			return result || null;
+		}
+	} catch {
+		return null;
+	}
+}
+
+/**
+ * Check if a bookmark/branch exists.
+ */
+function bookmarkExists(vcs: VcsInfo, name: string): boolean {
+	if (!vcs.type) return false;
+
+	try {
+		if (vcs.type === "jj") {
+			execSync(`jj bookmark list "${name}"`, { cwd: vcs.cwd, stdio: "pipe" });
+			return true;
+		} else {
+			execSync(`git show-ref --verify refs/heads/${name}`, { cwd: vcs.cwd, stdio: "pipe" });
+			return true;
+		}
+	} catch {
+		return false;
+	}
+}
+
+/**
+ * Create a new bookmark/branch.
+ */
+function createBookmark(vcs: VcsInfo, name: string): boolean {
+	if (!vcs.type) return false;
+
+	try {
+		if (vcs.type === "jj") {
+			execSync(`jj bookmark create "${name}"`, { cwd: vcs.cwd, stdio: "pipe" });
+		} else {
+			execSync(`git checkout -b "${name}"`, { cwd: vcs.cwd, stdio: "pipe" });
+		}
+		return true;
+	} catch {
+		return false;
+	}
+}
+
+/**
+ * Create a new commit with a message.
+ */
+function createCommit(vcs: VcsInfo, message: string): boolean {
+	if (!vcs.type) return false;
+
+	try {
+		if (vcs.type === "jj") {
+			execSync(`jj new -m "${message.replace(/"/g, '\\"')}"`, { cwd: vcs.cwd, stdio: "pipe" });
+		} else {
+			// For git, stage all and commit
+			execSync("git add -A", { cwd: vcs.cwd, stdio: "pipe" });
+			execSync(`git commit -m "${message.replace(/"/g, '\\"')}"`, { cwd: vcs.cwd, stdio: "pipe" });
+		}
+		return true;
+	} catch {
+		return false;
+	}
+}
+
+/**
+ * Move bookmark to current commit.
+ */
+function moveBookmarkToCurrent(vcs: VcsInfo, name: string): boolean {
+	if (!vcs.type) return false;
+
+	try {
+		if (vcs.type === "jj") {
+			execSync(`jj bookmark set "${name}" -r @`, { cwd: vcs.cwd, stdio: "pipe" });
+		} else {
+			// In git, reset the branch to current HEAD
+			execSync(`git branch -f "${name}" HEAD`, { cwd: vcs.cwd, stdio: "pipe" });
+		}
+		return true;
+	} catch {
+		return false;
+	}
+}
+
+/**
+ * Describe/amend current commit message.
+ */
+function setCommitMessage(vcs: VcsInfo, message: string): boolean {
+	if (!vcs.type) return false;
+
+	try {
+		if (vcs.type === "jj") {
+			execSync(`jj describe -m "${message.replace(/"/g, '\\"')}"`, { cwd: vcs.cwd, stdio: "pipe" });
+		} else {
+			execSync(`git commit --amend -m "${message.replace(/"/g, '\\"')}"`, { cwd: vcs.cwd, stdio: "pipe" });
+		}
+		return true;
+	} catch {
+		return false;
+	}
+}
+
+interface VcsClaimOptions {
+	todo: TodoRecord;
+	vcs: VcsInfo;
+	parentBookmark?: string | null;
+	createNewBookmark: boolean;
+	bookmarkName?: string;
+}
+
+interface VcsDoneOptions {
+	todo: TodoRecord;
+	vcs: VcsInfo;
+	bookmarkName: string;
+	commitMessage: string;
 }
 
 function sortTodos(todos: TodoFrontMatter[]): TodoFrontMatter[] {
@@ -549,6 +779,122 @@ class TodoDeleteConfirmComponent extends Container {
 	}
 }
 
+interface VcsPushOption {
+	key: string;
+	command: string;
+	description: string;
+}
+
+interface VcsPushPromptResult {
+	action: "copy" | "custom" | "cancel";
+	command?: string;
+}
+
+class VcsPushPromptComponent extends Container {
+	private selectList: SelectList;
+	private customInput: Input;
+	private showCustomInput = false;
+	private theme: Theme;
+	private options: VcsPushOption[];
+	private onComplete: (result: VcsPushPromptResult) => void;
+
+	constructor(
+		theme: Theme,
+		title: string,
+		options: VcsPushOption[],
+		onComplete: (result: VcsPushPromptResult) => void,
+	) {
+		super();
+		this.theme = theme;
+		this.options = options;
+		this.onComplete = onComplete;
+
+		const selectItems: SelectItem[] = [
+			...options.map((opt) => ({
+				value: opt.key,
+				label: `${opt.key}) ${opt.command}`,
+				description: opt.description,
+			})),
+			{ value: "d", label: "d) Custom command...", description: "Type your own command" },
+		];
+
+		this.addChild(new DynamicBorder((s: string) => theme.fg("accent", s)));
+		this.addChild(new Text(theme.fg("accent", theme.bold(title))));
+		this.addChild(new Spacer(1));
+
+		this.selectList = new SelectList(selectItems, selectItems.length, {
+			selectedPrefix: (text) => theme.fg("accent", text),
+			selectedText: (text) => theme.fg("accent", text),
+			description: (text) => theme.fg("muted", text),
+			scrollInfo: (text) => theme.fg("dim", text),
+			noMatch: (text) => theme.fg("warning", text),
+		});
+
+		this.selectList.onSelect = (item) => {
+			if (item.value === "d") {
+				this.showCustomInput = true;
+				this.customInput.focused = true;
+			} else {
+				const opt = this.options.find((o) => o.key === item.value);
+				if (opt) {
+					copyToClipboard(opt.command);
+					this.onComplete({ action: "copy", command: opt.command });
+				}
+			}
+		};
+		this.selectList.onCancel = () => this.onComplete({ action: "cancel" });
+
+		this.addChild(this.selectList);
+
+		this.customInput = new Input();
+		this.customInput.onSubmit = () => {
+			const cmd = this.customInput.getValue().trim();
+			if (cmd) {
+				copyToClipboard(cmd);
+				this.onComplete({ action: "custom", command: cmd });
+			}
+		};
+
+		this.addChild(new Spacer(1));
+		this.addChild(new Text(theme.fg("dim", "Enter to select • Esc cancel • Selection copies to clipboard")));
+		this.addChild(new DynamicBorder((s: string) => theme.fg("accent", s)));
+	}
+
+	handleInput(keyData: string): void {
+		if (this.showCustomInput) {
+			const kb = getEditorKeybindings();
+			if (kb.matches(keyData, "selectCancel")) {
+				this.showCustomInput = false;
+				return;
+			}
+			this.customInput.handleInput(keyData);
+		} else {
+			this.selectList.handleInput(keyData);
+		}
+	}
+
+	override render(width: number): string[] {
+		if (this.showCustomInput) {
+			const lines: string[] = [];
+			const border = (s: string) => this.theme.fg("accent", s);
+			lines.push(border(`┌${"─".repeat(width - 2)}┐`));
+			lines.push(border("│") + this.theme.fg("accent", " Custom command:") + " ".repeat(Math.max(0, width - 19)) + border("│"));
+			const inputLines = this.customInput.render(width - 4);
+			for (const line of inputLines) {
+				lines.push(border("│ ") + line + " ".repeat(Math.max(0, width - 4 - line.length)) + border(" │"));
+			}
+			lines.push(border("│") + this.theme.fg("dim", " Enter to copy • Esc back") + " ".repeat(Math.max(0, width - 28)) + border("│"));
+			lines.push(border(`└${"─".repeat(width - 2)}┘`));
+			return lines;
+		}
+		return super.render(width);
+	}
+
+	override invalidate(): void {
+		super.invalidate();
+	}
+}
+
 class TodoDetailOverlayComponent {
 	private todo: TodoRecord;
 	private theme: Theme;
@@ -797,6 +1143,7 @@ function parseFrontMatter(text: string, idFallback: string): TodoFrontMatter {
 		status: "open",
 		created_at: "",
 		assigned_to_session: undefined,
+		parent_id: undefined,
 	};
 
 	const trimmed = text.trim();
@@ -811,6 +1158,9 @@ function parseFrontMatter(text: string, idFallback: string): TodoFrontMatter {
 		if (typeof parsed.created_at === "string") data.created_at = parsed.created_at;
 		if (typeof parsed.assigned_to_session === "string" && parsed.assigned_to_session.trim()) {
 			data.assigned_to_session = parsed.assigned_to_session;
+		}
+		if (typeof parsed.parent_id === "string" && parsed.parent_id.trim()) {
+			data.parent_id = parsed.parent_id;
 		}
 		if (Array.isArray(parsed.tags)) {
 			data.tags = parsed.tags.filter((tag): tag is string => typeof tag === "string");
@@ -902,6 +1252,7 @@ function serializeTodo(todo: TodoRecord): string {
 			status: todo.status,
 			created_at: todo.created_at,
 			assigned_to_session: todo.assigned_to_session || undefined,
+			parent_id: todo.parent_id || undefined,
 		},
 		null,
 		2,
@@ -1428,10 +1779,12 @@ export default function todosExtension(pi: ExtensionAPI) {
 		name: "todo",
 		label: "Todo",
 		description:
-			`Manage file-based todos in ${todosDirLabel} (list, list-all, get, create, update, append, delete, claim, release). ` +
+			`Manage file-based todos in ${todosDirLabel} (list, list-all, get, create, update, append, delete, claim, release, close). ` +
 			"Title is the short summary; body is long-form markdown notes (update replaces, append adds). " +
 			"Todo ids are shown as TODO-<hex>; id parameters accept TODO-<hex> or the raw hex filename. " +
-			"Claim tasks before working on them to avoid conflicts, and close them when complete.", 
+			"Claim tasks before working on them to avoid conflicts, and close them when complete. " +
+			"VCS integration: claim shows bookmark setup commands, close shows push options. " +
+			"Subtasks: use parent_id to link to parent todo (auto-adds subtask:TODO-<parent> tag).", 
 		parameters: TodoParams,
 
 		async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
@@ -1499,6 +1852,28 @@ export default function todosExtension(pi: ExtensionAPI) {
 					await ensureTodosDir(todosDir);
 					const id = await generateTodoId(todosDir);
 					const filePath = getTodoPath(todosDir, id);
+					
+					// Validate parent_id if provided
+					let normalizedParentId: string | undefined;
+					if (params.parent_id) {
+						const parentValidation = validateTodoId(params.parent_id);
+						if ("error" in parentValidation) {
+							return {
+								content: [{ type: "text", text: `Invalid parent_id: ${parentValidation.error}` }],
+								details: { action: "create", error: `Invalid parent_id: ${parentValidation.error}` },
+							};
+						}
+						normalizedParentId = parentValidation.id;
+						// Verify parent exists
+						const parentPath = getTodoPath(todosDir, normalizedParentId);
+						if (!existsSync(parentPath)) {
+							return {
+								content: [{ type: "text", text: `Parent todo ${formatTodoId(normalizedParentId)} not found` }],
+								details: { action: "create", error: "Parent todo not found" },
+							};
+						}
+					}
+					
 					const todo: TodoRecord = {
 						id,
 						title: params.title,
@@ -1506,7 +1881,11 @@ export default function todosExtension(pi: ExtensionAPI) {
 						status: params.status ?? "open",
 						created_at: new Date().toISOString(),
 						body: params.body ?? "",
+						parent_id: normalizedParentId,
 					};
+					
+					// Auto-add subtask tag if parent_id is set
+					ensureSubtaskTag(todo);
 
 					const result = await withTodoLock(todosDir, id, ctx, async () => {
 						await writeTodoFile(filePath, todo);
@@ -1573,8 +1952,38 @@ export default function todosExtension(pi: ExtensionAPI) {
 					}
 
 					const updatedTodo = result as TodoRecord;
+					
+					// Check if todo was just closed - add VCS push prompt
+					let vcsMessage = "";
+					if (params.status && isTodoClosed(params.status)) {
+						const vcs = detectVcs(ctx.cwd);
+						if (vcs.type) {
+							const bookmarkName = generateBookmarkName(updatedTodo);
+							const currentBookmark = getCurrentBookmark(vcs);
+							const targetBookmark = currentBookmark || bookmarkName;
+							
+							vcsMessage = `\n\n✅ **Todo closed.** Ready to push?\n\n`;
+							vcsMessage += `**Push bookmark \`${targetBookmark}\`:**\n`;
+							if (vcs.type === "jj") {
+								// Primary: custom aliases
+								vcsMessage += `  a) \`jj push -b ${targetBookmark}\` — push bookmark\n`;
+								vcsMessage += `  b) \`jj push -b ${targetBookmark} --pr\` — push + create PR\n`;
+								vcsMessage += `  c) \`jj push -b ${targetBookmark} --prd\` — push + create draft PR\n`;
+								vcsMessage += `  d) [type your own command]\n`;
+								// Manual alternatives (collapsed)
+								vcsMessage += `\n_(manual: \`jj git push -b ${targetBookmark}\`, then \`gh pr create --head ${targetBookmark}\`)_\n`;
+							} else {
+								vcsMessage += `  a) \`git push -u origin ${targetBookmark}\` — push branch\n`;
+								vcsMessage += `  b) \`git push -u origin ${targetBookmark} && gh pr create --fill\` — push + create PR\n`;
+								vcsMessage += `  c) \`git push -u origin ${targetBookmark} && gh pr create --draft --fill\` — push + draft PR\n`;
+								vcsMessage += `  d) [type your own command]\n`;
+							}
+							vcsMessage += `\n**Reply with a, b, c, or d:**`;
+						}
+					}
+					
 					return {
-						content: [{ type: "text", text: serializeTodoForAgent(updatedTodo) }],
+						content: [{ type: "text", text: serializeTodoForAgent(updatedTodo) + vcsMessage }],
 						details: { action: "update", todo: updatedTodo },
 					};
 				}
@@ -1633,22 +2042,74 @@ export default function todosExtension(pi: ExtensionAPI) {
 							details: { action: "claim", error: "id required" },
 						};
 					}
-					const result = await claimTodoAssignment(
+					const claimResult = await claimTodoAssignment(
 						todosDir,
 						params.id,
 						ctx,
 						Boolean(params.force),
 					);
-					if (typeof result === "object" && "error" in result) {
+					if (typeof claimResult === "object" && "error" in claimResult) {
 						return {
-							content: [{ type: "text", text: result.error }],
-							details: { action: "claim", error: result.error },
+							content: [{ type: "text", text: claimResult.error }],
+							details: { action: "claim", error: claimResult.error },
 						};
 					}
-					const updatedTodo = result as TodoRecord;
+					const claimedTodo = claimResult as TodoRecord;
+					
+					// VCS Operations
+					const vcs = detectVcs(ctx.cwd);
+					let vcsMessage = "";
+					
+					if (vcs.type) {
+						const isSubtask = Boolean(claimedTodo.parent_id);
+						const bookmarkName = generateBookmarkName(claimedTodo);
+						const hasChanges = hasUncommittedChanges(vcs);
+						const currentBookmark = getCurrentBookmark(vcs);
+						
+						// Build VCS status message
+						vcsMessage = `\n\n**VCS (${vcs.type}):**\n`;
+						
+						if (hasChanges) {
+							vcsMessage += `\n⚠️ **Uncommitted changes detected.** What to do?\n`;
+							if (vcs.type === "jj") {
+								vcsMessage += `  a) \`jj new\` — Start fresh commit, keep changes staged\n`;
+								vcsMessage += `  b) Include changes in this todo's work\n`;
+								vcsMessage += `  c) \`jj abandon\` — Discard changes\n`;
+							} else {
+								vcsMessage += `  a) \`git stash\` — Stash changes\n`;
+								vcsMessage += `  b) Include changes in this todo's work\n`;
+								vcsMessage += `  c) \`git checkout -- .\` — Discard changes\n`;
+							}
+							vcsMessage += `  d) [type your own approach]\n`;
+							vcsMessage += `\n**Reply with a, b, c, or d:**\n`;
+						}
+						
+						if (isSubtask) {
+							// For subtasks, suggest using parent's bookmark
+							const parentId = normalizeTodoId(claimedTodo.parent_id!);
+							vcsMessage += `\n📎 This is a subtask of ${formatTodoId(parentId)}.\n`;
+							vcsMessage += `Consider working on the parent's bookmark if one exists.\n`;
+						} else {
+							// For standalone todos, suggest creating a new bookmark
+							vcsMessage += `\n**Suggested bookmark:** \`${bookmarkName}\`\n`;
+							if (currentBookmark && currentBookmark !== "main") {
+								vcsMessage += `**Current bookmark:** \`${currentBookmark}\`\n`;
+							}
+							vcsMessage += `\n**Create bookmark and start work:**\n`;
+							if (vcs.type === "jj") {
+								// Primary: custom alias
+								vcsMessage += `  \`jj feat-here ${bookmarkName}\`\n`;
+								// Alternative: manual commands
+								vcsMessage += `  _(or manually: \`jj bookmark create ${bookmarkName} && jj new -m "${formatTodoId(claimedTodo.id)}: ${claimedTodo.title}"\`)_\n`;
+							} else {
+								vcsMessage += `  \`git checkout -b ${bookmarkName}\`\n`;
+							}
+						}
+					}
+					
 					return {
-						content: [{ type: "text", text: serializeTodoForAgent(updatedTodo) }],
-						details: { action: "claim", todo: updatedTodo },
+						content: [{ type: "text", text: serializeTodoForAgent(claimedTodo) + vcsMessage }],
+						details: { action: "claim", todo: claimedTodo },
 					};
 				}
 
@@ -1704,6 +2165,116 @@ export default function todosExtension(pi: ExtensionAPI) {
 					return {
 						content: [{ type: "text", text: serializeTodoForAgent(result as TodoRecord) }],
 						details: { action: "delete", todo: result as TodoRecord },
+					};
+				}
+
+				case "close": {
+					if (!params.id) {
+						return {
+							content: [{ type: "text", text: "Error: id required" }],
+							details: { action: "close", error: "id required" },
+						};
+					}
+					const closeValidated = validateTodoId(params.id);
+					if ("error" in closeValidated) {
+						return {
+							content: [{ type: "text", text: closeValidated.error }],
+							details: { action: "close", error: closeValidated.error },
+						};
+					}
+					const closeId = closeValidated.id;
+					const closeDisplayId = formatTodoId(closeId);
+					const closeFilePath = getTodoPath(todosDir, closeId);
+					if (!existsSync(closeFilePath)) {
+						return {
+							content: [{ type: "text", text: `Todo ${closeDisplayId} not found` }],
+							details: { action: "close", error: "not found" },
+						};
+					}
+					
+					const closeResult = await withTodoLock(todosDir, closeId, ctx, async () => {
+						const existing = await ensureTodoExists(closeFilePath, closeId);
+						if (!existing) return { error: `Todo ${closeDisplayId} not found` } as const;
+						existing.status = "closed";
+						clearAssignmentIfClosed(existing);
+						await writeTodoFile(closeFilePath, existing);
+						return existing;
+					});
+
+					if (typeof closeResult === "object" && "error" in closeResult) {
+						return {
+							content: [{ type: "text", text: closeResult.error }],
+							details: { action: "close", error: closeResult.error },
+						};
+					}
+
+					const closedTodo = closeResult as TodoRecord;
+					
+					// VCS push prompt
+					let closeVcsMessage = "";
+					let copiedCommand = "";
+					const closeVcs = detectVcs(ctx.cwd);
+					
+					if (closeVcs.type && ctx.hasUI) {
+						// Interactive UI prompt
+						const closeBookmarkName = generateBookmarkName(closedTodo);
+						const closeCurrentBookmark = getCurrentBookmark(closeVcs);
+						const closeTargetBookmark = closeCurrentBookmark || closeBookmarkName;
+						
+						const pushOptions: VcsPushOption[] = closeVcs.type === "jj" 
+							? [
+								{ key: "a", command: `jj push -b ${closeTargetBookmark}`, description: "push bookmark" },
+								{ key: "b", command: `jj push -b ${closeTargetBookmark} --pr`, description: "push + create PR" },
+								{ key: "c", command: `jj push -b ${closeTargetBookmark} --prd`, description: "push + create draft PR" },
+							]
+							: [
+								{ key: "a", command: `git push -u origin ${closeTargetBookmark}`, description: "push branch" },
+								{ key: "b", command: `git push -u origin ${closeTargetBookmark} && gh pr create --fill`, description: "push + create PR" },
+								{ key: "c", command: `git push -u origin ${closeTargetBookmark} && gh pr create --draft --fill`, description: "push + draft PR" },
+							];
+						
+						const promptResult = await ctx.ui.custom<VcsPushPromptResult>(
+							(_tui, theme, _kb, done) => 
+								new VcsPushPromptComponent(
+									theme,
+									`✅ Todo closed. Push bookmark \`${closeTargetBookmark}\`?`,
+									pushOptions,
+									done,
+								),
+							{ overlay: true, overlayOptions: { width: "80%", maxHeight: "50%", anchor: "center" } },
+						);
+						
+						if (promptResult?.action === "copy" || promptResult?.action === "custom") {
+							copiedCommand = promptResult.command || "";
+							closeVcsMessage = `\n\n✅ **Todo closed.** Command copied to clipboard:\n\`${copiedCommand}\`\n\nPaste and run when ready.`;
+						} else {
+							closeVcsMessage = `\n\n✅ **Todo closed.** Push skipped.`;
+						}
+					} else if (closeVcs.type) {
+						// Fallback: text-based prompt (no UI)
+						const closeBookmarkName = generateBookmarkName(closedTodo);
+						const closeCurrentBookmark = getCurrentBookmark(closeVcs);
+						const closeTargetBookmark = closeCurrentBookmark || closeBookmarkName;
+						
+						closeVcsMessage = `\n\n✅ **Todo closed.** Ready to push?\n\n`;
+						closeVcsMessage += `**Push bookmark \`${closeTargetBookmark}\`:**\n`;
+						if (closeVcs.type === "jj") {
+							closeVcsMessage += `  a) \`jj push -b ${closeTargetBookmark}\` — push bookmark\n`;
+							closeVcsMessage += `  b) \`jj push -b ${closeTargetBookmark} --pr\` — push + create PR\n`;
+							closeVcsMessage += `  c) \`jj push -b ${closeTargetBookmark} --prd\` — push + create draft PR\n`;
+							closeVcsMessage += `  d) [type your own command]\n`;
+						} else {
+							closeVcsMessage += `  a) \`git push -u origin ${closeTargetBookmark}\` — push branch\n`;
+							closeVcsMessage += `  b) \`git push -u origin ${closeTargetBookmark} && gh pr create --fill\` — push + create PR\n`;
+							closeVcsMessage += `  c) \`git push -u origin ${closeTargetBookmark} && gh pr create --draft --fill\` — push + draft PR\n`;
+							closeVcsMessage += `  d) [type your own command]\n`;
+						}
+						closeVcsMessage += `\n**Reply with a, b, c, or d:**`;
+					}
+					
+					return {
+						content: [{ type: "text", text: serializeTodoForAgent(closedTodo) + closeVcsMessage }],
+						details: { action: "close", todo: closedTodo },
 					};
 				}
 			}
@@ -1769,7 +2340,9 @@ export default function todosExtension(pi: ExtensionAPI) {
 									? "Claimed"
 									: details.action === "release"
 										? "Released"
-										: null;
+										: details.action === "close"
+											? "Closed"
+											: null;
 			if (actionLabel) {
 				const lines = text.split("\n");
 				lines[0] = theme.fg("success", "✓ ") + theme.fg("muted", `${actionLabel} `) + lines[0];

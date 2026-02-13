@@ -233,6 +233,31 @@ Create the directory if it doesn't exist:
 mkdir -p ~/.local/share/pi/plans/${PI_SESSION:-$(basename $PWD)}
 ```
 
+## IEx Scripts
+
+When preparing Elixir scripts for the user to paste into IEx:
+
+**IEx evaluates line-by-line**, unlike `mix run --eval` which parses everything
+first. This means multiline pipelines with pattern matching need parentheses:
+
+```elixir
+# WRONG - IEx sees `{:ok, result} = %Struct{}` as complete, then fails on `|>`
+{:ok, result} =
+  %Struct{}
+  |> do_something()
+  |> Repo.insert()
+
+# CORRECT - parentheses tell IEx the expression continues
+{:ok, result} = (
+  %Struct{}
+  |> do_something()
+  |> Repo.insert()
+)
+```
+
+**Validation:** `mix run --eval` won't catch IEx parsing issues. Always wrap
+pipelines starting with pattern matching in parentheses for IEx compatibility.
+
 ## Nix Environment
 
 - This Mac uses nix-darwin + home-manager
