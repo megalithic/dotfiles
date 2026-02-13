@@ -42,7 +42,11 @@ in
     secrets = {
       env-vars.file = "${inputs.self}/secrets/env-vars.age";
       work-env-vars.file = workEnvVarsFile;
-      s3cfg.file = "${inputs.self}/secrets/s3cfg.age";
+      # Decrypt s3cfg directly to ~/.s3cfg where s3cmd expects it
+      s3cfg = {
+        file = "${inputs.self}/secrets/s3cfg.age";
+        path = "${config.home.homeDirectory}/.s3cfg";
+      };
     };
   };
 
