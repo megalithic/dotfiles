@@ -34,19 +34,21 @@
   ];
 
   # ── cli tools ──────────────────────────────────────────────────────────────────
+  # NOTE: Some tools are enabled via programs.* (auto-installs package):
+  #   bat, eza, fd, ripgrep, starship, zoxide, mise, k9s
   cliPkgs = with pkgs; [
     amber
     argc
-    desktoppr # declarative wallpaper setter
     awscli2
     bash # macOS ships with ancient bash
     blueutil
     chafa
     curlie
     delta
+    desktoppr # declarative wallpaper setter
     devbox
-    # devenv # Declarative development environments (replaces flake-based dev shells)
     difftastic
+    dust # disk usage analyzer (du replacement)
     espanso
     ffmpeg
     flyctl
@@ -55,29 +57,35 @@
     gnupg
     gum
     imagemagickBig
+    inetutils # telnet, ftp, etc.
+    jq # JSON processor
+    just # command runner
     jwt-cli
+    ldns # DNS tools (drill)
     libvterm-neovim
+    libwebp # WebP image tools
     magika
     mas
     mprocs
+    netcat # nc networking utility
     nix-update
-    ollama # Local LLM for AI-powered note summarization (qwen2-vl)
+    ollama # local LLM for AI-powered note summarization
     openconnect
-    openvpn
     openssl_3
+    openvpn
     poppler
     pre-commit
     procs
-    ripgrep
     s3cmd
+    sox # audio recording/processing for whisper dictation
     sqlite
-    sox  # Audio recording/processing for whisper dictation
     switchaudio-osx
     tesseract # OCR fallback for clipper (Vision is primary)
     tldr
-    unstable.tmux
     transcrypt
+    unstable.tmux
     w3m
+    yq # YAML processor (jq for YAML)
     yubikey-manager
     yubikey-personalization
   ];
