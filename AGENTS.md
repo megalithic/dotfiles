@@ -14,7 +14,11 @@ This is a **nix-darwin + home-manager** managed dotfiles repo.
 **Common nix-managed paths:**
 
 - `~/.pi/agent/*` → `home/common/programs/ai/pi-coding-agent/`
-- `~/.config/fish/*` → `home/common/programs/fish/` or `config/fish/`
+- `~/.config/fish/*` → `home/common/programs/fish/`
+- `~/.config/ghostty/*` → `config/ghostty/` (out-of-store symlink)
+- `~/.config/tmux/*` → `config/tmux/` (out-of-store symlink)
+- `~/.config/nvim/*` → `config/nvim/` (out-of-store symlink)
+- `~/Applications/Nix/*` → Finder aliases created by `home/common/mac-aliases.nix`
 - Most `~/.config/<app>/*` → check `home/common/programs/<app>/` first
 
 **Never:**
@@ -24,6 +28,64 @@ This is a **nix-darwin + home-manager** managed dotfiles repo.
 - Edit files in `/nix/store/` (read-only)
 - Write to a `result` directory or file in this repo, always use `/tmp/` for
   ephemeral builds or runs
+
+## Repository Structure
+
+```
+~/.dotfiles/
+├── flake.nix              # Nix flake: inputs, outputs, host definitions
+├── flake.lock             # Pinned dependency versions
+├── hosts/                 # Per-host nix-darwin config
+│   ├── common.nix         # Shared system settings (minimal packages)
+│   ├── megabookpro.nix    # Personal laptop
+│   └── rxbookpro.nix      # Work laptop
+├── home/                  # Home-manager config
+│   ├── common/            # Shared across all hosts
+│   │   ├── packages.nix   # CLI + GUI packages (nixpkgs + custom)
+│   │   ├── mac-aliases.nix # Finder aliases for Spotlight/Launchpad
+│   │   ├── services.nix   # User launchd services (ollama)
+│   │   ├── mas.nix        # Mac App Store apps
+│   │   └── programs/      # Per-tool config (fish/, jj/, browsers/, ai/)
+│   ├── megabookpro.nix    # Personal overrides
+│   └── rxbookpro.nix      # Work overrides
+├── modules/               # nix-darwin modules
+│   ├── system.nix         # Core system settings
+│   ├── brew.nix           # Homebrew casks (last resort)
+│   └── darwin/
+│       └── services.nix   # System launchd services
+├── lib/                   # Nix helpers (lib.mega.*)
+│   ├── mkDarwinHost.nix   # Darwin system builder
+│   ├── mkHome.nix         # Standalone HM builder
+│   ├── mkApp.nix          # macOS app builder (DMG/ZIP)
+│   └── builders/          # Reusable build utilities
+│       ├── mkWrapperApp.nix         # .app wrapper (custom CLI args)
+│       └── mkMacOSAlias.nix         # Finder alias module
+├── pkgs/                  # Custom package overlay
+│   └── default.nix        # Brave Nightly, Fantastical, Bloom, etc.
+├── overlays/              # Nixpkgs overlays
+├── config/                # Out-of-store app configs (live symlinks)
+│   ├── hammerspoon/       # macOS automation (Lua)
+│   ├── nvim/              # Neovim config (Lua)
+│   ├── tmux/              # Terminal multiplexer
+│   └── ghostty/           # Terminal emulator
+├── bin/                   # User scripts (symlinked to ~/bin/)
+└── docs/                  # Architecture docs and research
+```
+
+**Each directory has its own `AGENTS.md`** — read it before making changes there.
+
+## Package Placement (Where to Add Things)
+
+| What | Where |
+|------|-------|
+| CLI tool from nixpkgs | `home/common/packages.nix` |
+| GUI app from nixpkgs | `home/common/packages.nix` (guiPkgs) |
+| Custom .app not in nixpkgs | `pkgs/default.nix` (mkApp) |
+| Tool with HM config (`programs.*`) | `home/common/programs/<tool>.nix` |
+| Homebrew-only (accessibility, kext) | `modules/brew.nix` |
+| Mac App Store | `home/common/mas.nix` |
+| System service (all hosts) | `modules/darwin/services.nix` |
+| User service (all hosts) | `home/common/services.nix` |
 
 ## Bead Issue Tracking
 

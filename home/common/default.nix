@@ -16,6 +16,7 @@
 in {
   imports = [
     ./lib.nix
+    ./mac-aliases.nix
     ./packages.nix
     ./services.nix
     ./programs/ai
