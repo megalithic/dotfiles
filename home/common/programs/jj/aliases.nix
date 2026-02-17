@@ -247,7 +247,7 @@
       
       if [[ -n "$bookmark" ]]; then
         if jj bookmark list | rg -q "^$bookmark:"; then
-          jj bookmark set "$bookmark" -r @
+          jj bookmark set "$bookmark" -r @ -B
           echo "Moved existing bookmark '$bookmark' to @"
         else
           jj bookmark create "$bookmark" -r @
@@ -302,7 +302,7 @@
       
       if [[ -n "$bookmark" ]]; then
         if jj bookmark list | rg -q "^$bookmark:"; then
-          jj bookmark set "$bookmark" -r @
+          jj bookmark set "$bookmark" -r @ -B
           echo "Moved existing bookmark '$bookmark' to @ (from current position)"
         else
           jj bookmark create "$bookmark" -r @
