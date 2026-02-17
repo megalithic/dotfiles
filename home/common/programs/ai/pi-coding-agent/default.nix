@@ -109,6 +109,15 @@
       )
     else [];
 
+  # Data files co-located with extensions (JSON configs, etc.)
+  extensionDataFiles =
+    if extensionDirExists
+    then
+      builtins.filter (name: lib.hasSuffix ".json" name && name != "package.json") (
+        builtins.attrNames (builtins.readDir extensionDir)
+      )
+    else [];
+
   extensionSymlinks = builtins.listToAttrs (
     map (name: {
       name = ".pi/agent/extensions/${name}";
@@ -116,7 +125,7 @@
         source = ./extensions/${name};
       };
     })
-    extensionFiles
+    (extensionFiles ++ extensionDataFiles)
   );
 
   # ===========================================================================

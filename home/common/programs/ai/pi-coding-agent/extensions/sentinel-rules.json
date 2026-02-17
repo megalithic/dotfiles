@@ -1,0 +1,101 @@
+{
+  "$schema": "./sentinel-rules.schema.json",
+
+  "_comment": [
+    "Sentinel config — loaded at startup, /reload to pick up changes.",
+    "interactive_commands: tools where specific flags/subcommands open an interactive UI.",
+    "tool_corrections: preferred tool replacements (blocked with suggestion).",
+    "always_interactive: commands that are always interactive (no flags needed)."
+  ],
+
+  "interactive_commands": {
+    "jj": {
+      "_doc": "Jujutsu VCS — verified via jj 0.35 --help",
+      "subcommands": {
+        "squash":  { "flags": ["-i", "--interactive"], "reason": "Interactive diff selection. Use file paths instead." },
+        "split":   { "flags": ["-i", "--interactive"], "reason": "Interactive diff selection. Use separate commits." },
+        "commit":  { "flags": ["-i", "--interactive"], "reason": "Interactive diff selection. Use file paths instead." },
+        "restore": { "flags": ["-i", "--interactive"], "reason": "Interactive diff selection. Use file paths instead." }
+      }
+    },
+    "docker": {
+      "_doc": "Docker — -it allocates a pseudo-TTY",
+      "subcommands": {
+        "exec": { "flags": ["-it", "-i", "--interactive"], "reason": "Allocates interactive TTY. Use non-interactive: `docker exec <container> <cmd>`." },
+        "run":  { "flags": ["-it", "-i", "--interactive"], "reason": "Allocates interactive TTY. Use non-interactive: `docker run <image> <cmd>`." }
+      }
+    },
+    "kubectl": {
+      "_doc": "Kubernetes CLI",
+      "subcommands": {
+        "exec":   { "flags": ["-it", "-i", "--stdin"], "reason": "Opens interactive shell in pod. Use: `kubectl exec <pod> -- <cmd>`." },
+        "run":    { "flags": ["-it", "-i", "--stdin"], "reason": "Opens interactive shell. Use: `kubectl run --rm --restart=Never <name> --image=<img> -- <cmd>`." },
+        "attach": { "flags": ["-it", "-i", "--stdin"], "reason": "Attaches to running process. Use `kubectl logs` instead." }
+      }
+    },
+    "nix": {
+      "_doc": "Nix package manager",
+      "subcommands": {
+        "repl": { "flags": [], "reason": "Opens interactive REPL. Use `nix eval` instead." }
+      }
+    },
+    "mysql": {
+      "_doc": "MySQL client — bare invocation is interactive",
+      "subcommands": {
+        "__base__": { "flags": [], "reason": "Opens interactive shell. Use: `mysql -e \"<query>\"`." }
+      }
+    },
+    "psql": {
+      "_doc": "PostgreSQL client — bare invocation is interactive",
+      "subcommands": {
+        "__base__": { "flags": [], "reason": "Opens interactive shell. Use: `psql -c \"<query>\"`." }
+      }
+    },
+    "sqlite3": {
+      "_doc": "SQLite client — bare invocation without SQL is interactive",
+      "subcommands": {
+        "__base__": { "flags": [], "reason": "Opens interactive shell. Pass SQL directly or use `.read`." }
+      }
+    },
+    "iex": {
+      "_doc": "Elixir interactive shell",
+      "subcommands": {
+        "__base__": { "flags": [], "reason": "Opens interactive REPL. Use `elixir -e` or `mix run --eval`." }
+      }
+    },
+    "irb": {
+      "_doc": "Ruby interactive shell",
+      "subcommands": {
+        "__base__": { "flags": [], "reason": "Opens interactive REPL. Use `ruby -e`." }
+      }
+    }
+  },
+
+  "always_interactive": {
+    "_doc": "Commands that are always interactive when invoked directly (no subcommand/flag needed).",
+    "commands": {
+      "vim":    { "reason": "Use Write/Edit tool or heredoc." },
+      "nvim":   { "reason": "Use Write/Edit tool or heredoc." },
+      "nano":   { "reason": "Use Write/Edit tool or heredoc." },
+      "emacs":  { "reason": "Use Write/Edit tool or heredoc." },
+      "vi":     { "reason": "Use Write/Edit tool or heredoc." },
+      "less":   { "reason": "Use Read tool or `head`/`tail`." },
+      "more":   { "reason": "Use Read tool or `head`/`tail`." },
+      "top":    { "reason": "Use `ps aux` or `ps aux --sort=-%mem`." },
+      "htop":   { "reason": "Use `ps aux` or `ps aux --sort=-%mem`." },
+      "python":  { "reason": "Opens REPL. Use `python -c` or `python script.py`.", "unless_args": true },
+      "python3": { "reason": "Opens REPL. Use `python3 -c` or `python3 script.py`.", "unless_args": true },
+      "node":    { "reason": "Opens REPL. Use `node -e` or `node script.js`.", "unless_args": true },
+      "lua":     { "reason": "Opens REPL. Use `lua -e` or `lua script.lua`.", "unless_args": true }
+    }
+  },
+
+  "tool_corrections": {
+    "_doc": "Preferred tool replacements. Key = blocked command, value = preferred alternative.",
+    "find":   { "use": "fd",    "reason": "Use `fd` instead of `find`." },
+    "grep":   { "use": "rg",    "reason": "Use `rg` instead of `grep`." },
+    "rm":     { "use": "trash", "reason": "Use `trash` instead of `rm`." },
+    "rmdir":  { "use": "trash", "reason": "Use `trash` instead of `rmdir`." },
+    "git":    { "use": "jj",    "reason": "Use `jj` instead of `git`.", "except_prefix": ["jj", "git"] }
+  }
+}
