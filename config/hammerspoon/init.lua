@@ -119,8 +119,7 @@ local watchers = { "audio", "dock", "app", "notification", "url" }
 
 req("bindings")
 req("watchers", { watchers = watchers })
-req("ptt", { push = { { "cmd", "alt" }, nil }, toggle = { { "cmd", "alt" }, "p" } }):start()
-req("ptd", { model = "large-v3", languages = { "en" } }):start()
+req("micchecka", { model = "large-v3", languages = { "en" } }):start()
 req("quitter"):start()
 
 -- Setup hs.reload() wrapper for pre-reload cleanup (prevents resource leaks)
@@ -129,12 +128,14 @@ req("quitter"):start()
 require("overrides").setupReloadCleanup({
   stopWatchers = function()
     require("watchers"):stop({ watchers = watchers })
+    require("micchecka"):stop()
     require("quitter"):stop()
   end,
 })
 
 hs.shutdownCallback = function()
   require("watchers"):stop({ watchers = watchers })
+  require("micchecka"):stop()
   require("quitter"):stop()
   if N and N.cleanup then N.cleanup() end
 end

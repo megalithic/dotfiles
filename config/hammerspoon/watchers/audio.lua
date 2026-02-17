@@ -3,6 +3,30 @@ local enum = require("hs.fnutils")
 
 local M = {}
 
+-- Hook system for device change notifications
+M.hooks = {
+  onInputDeviceChange = {},
+  onOutputDeviceChange = {},
+}
+
+--- Register a hook for input device changes
+--- @param callback function Called when input device changes
+function M.onInputDeviceChange(callback)
+  table.insert(M.hooks.onInputDeviceChange, callback)
+end
+
+--- Register a hook for output device changes
+--- @param callback function Called when output device changes
+function M.onOutputDeviceChange(callback)
+  table.insert(M.hooks.onOutputDeviceChange, callback)
+end
+
+local function fireHooks(hookList)
+  for _, hook in ipairs(hookList) do
+    pcall(hook)
+  end
+end
+
 local function output()
   local preferred = { "megabose", "Seth R-Phonak hearing aid", "MacBook Pro Speakers", "LG UltraFine Display Audio" }
   local device
@@ -79,6 +103,14 @@ local function audioDeviceChanged(arg)
 
       if oRetval == 1 and iRetval == 1 then
         U.log.w("unable to set input or output devices. input: " .. iRetval .. ", output: " .. oRetval)
+      end
+
+      -- Fire hooks for device changes
+      if iRetval == 0 then
+        fireHooks(M.hooks.onInputDeviceChange)
+      end
+      if oRetval == 0 then
+        fireHooks(M.hooks.onOutputDeviceChange)
       end
     end)
 

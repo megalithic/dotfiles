@@ -41,6 +41,39 @@ M.notification = {
 M.hypers = {}
 
 --------------------------------------------------------------------------------
+-- MICCHECKA STATE (unified PTT + PTD voice control)
+--------------------------------------------------------------------------------
+
+M.micchecka = {
+  -- Mode states
+  pttMode = "push-to-talk",  -- "push-to-talk", "push-to-mute", "disabled"
+  ptdMode = "push-to-dictate",  -- "push-to-dictate", "always-on", "disabled"
+
+  -- Current activity state (for icon priority)
+  isRecording = false,   -- Currently recording audio (PTD)
+  isProcessing = false,  -- Transcribing audio (Whisper)
+  isUnmuted = false,     -- PTT key held / mic unmuted
+
+  -- UI elements
+  menubar = nil,         -- Menubar item
+
+  -- Hotkeys (stored for cleanup)
+  hotkeys = {
+    modifierTap = nil,   -- eventtap for cmd+opt (PTT) and cmd+opt+shift (PTD)
+    pttToggle = nil,     -- cmd+opt+p
+    ptdToggle = nil,     -- cmd+opt+shift+p
+  },
+
+  -- Watcher hooks (callbacks registered by other modules)
+  hooks = {
+    onMuteChange = {},   -- Called when mute state changes
+    onRecordStart = {},  -- Called when recording starts
+    onRecordEnd = {},    -- Called when recording ends
+    onTranscribe = {},   -- Called when transcription completes
+  },
+}
+
+--------------------------------------------------------------------------------
 -- HELPER FUNCTIONS
 --------------------------------------------------------------------------------
 
@@ -106,14 +139,47 @@ function M.resetHypers()
   M.hypers = {}
 end
 
+--- Reset micchecka state (stop hotkeys, delete menubar, clear hooks)
+function M.resetMicchecka()
+  -- Stop all hotkeys
+  for name, hotkey in pairs(M.micchecka.hotkeys) do
+    if hotkey then
+      pcall(function() hotkey:delete() end)
+      M.micchecka.hotkeys[name] = nil
+    end
+  end
+
+  -- Delete menubar
+  if M.micchecka.menubar then
+    pcall(function() M.micchecka.menubar:delete() end)
+    M.micchecka.menubar = nil
+  end
+
+  -- Reset activity state (keep mode preferences)
+  M.micchecka.isRecording = false
+  M.micchecka.isProcessing = false
+  M.micchecka.isUnmuted = false
+
+  -- Clear hooks
+  M.micchecka.hooks = {
+    onMuteChange = {},
+    onRecordStart = {},
+    onRecordEnd = {},
+    onTranscribe = {},
+  }
+end
+
 --- Reset a specific namespace by name
----@param namespace "notification"|"hypers"|"all" Namespace to reset
+---@param namespace "notification"|"hypers"|"micchecka"|"all" Namespace to reset
 function M.reset(namespace)
   if namespace == "notification" or namespace == "all" then
     M.resetNotification()
   end
   if namespace == "hypers" or namespace == "all" then
     M.resetHypers()
+  end
+  if namespace == "micchecka" or namespace == "all" then
+    M.resetMicchecka()
   end
 end
 
