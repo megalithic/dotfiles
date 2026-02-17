@@ -350,10 +350,13 @@
         }
       );
 
-      # Set macOS keyboard shortcuts via targets.darwin.defaults
-      # Uses bundleId to target the correct application preferences
-      targets.darwin.defaults = lib.mkIf (pkgs.stdenv.isDarwin && cfg.keyEquivalents != {}) {
-        "${darwinDir}".NSUserKeyEquivalents = cfg.keyEquivalents;
+      targets.darwin.defaults = lib.mkIf pkgs.stdenv.isDarwin {
+        "${darwinDir}" = {
+          SUAutomaticallyUpdate = false;
+          SUEnableAutomaticChecks = false;
+        } // lib.optionalAttrs (cfg.keyEquivalents != {}) {
+          NSUserKeyEquivalents = cfg.keyEquivalents;
+        };
       };
     };
 in {
