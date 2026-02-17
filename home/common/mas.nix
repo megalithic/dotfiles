@@ -1,19 +1,28 @@
 {
-  inputs,
   config,
   pkgs,
   lib,
   ...
-}: let
-  masApps = {
-    "Xcode" = 497799835;
-    # "Keynote" = 409183694;
-    # "Fantastical" = 435003921;  # Not available via mas CLI (subscription app with restricted API access)
-    # "Pages" = 409201541;
-    # "Numbers" = 409203825;
-  };
+}: {
+  # Mac App Store apps - installed via `mas` CLI during activation
+  # To add apps: mas search "App Name" → get ID → add below
+  home.activation.installMasApps = lib.hm.dag.entryAfter ["writeBoundary"] ''
+    echo "Checking Mac App Store apps..."
+    INSTALLED=$(${pkgs.mas}/bin/mas list 2>/dev/null || true)
 
-  masInstaller = lib.mega.mkMas {inherit pkgs lib;} masApps;
-in {
-  home.activation.installMasApps = lib.hm.dag.entryAfter ["writeBoundary"] masInstaller.activationScript;
+    # Xcode (497799835)
+    if echo "$INSTALLED" | ${pkgs.ripgrep}/bin/rg -q "^497799835 "; then
+      echo "✓ Xcode already installed"
+    else
+      echo "→ Installing Xcode..."
+      ${pkgs.mas}/bin/mas install 497799835 || echo "⚠ Failed - install manually from App Store"
+    fi
+
+    # Add more apps here:
+    # if echo "$INSTALLED" | ${pkgs.ripgrep}/bin/rg -q "^409183694 "; then
+    #   echo "✓ Keynote already installed"
+    # else
+    #   ${pkgs.mas}/bin/mas install 409183694
+    # fi
+  '';
 }

@@ -113,6 +113,8 @@ in {
     wget
     gnumake
 
+    just
+
     # Nix tools
     nix-index
     nurl

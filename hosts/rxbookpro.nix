@@ -6,31 +6,16 @@
   paths,
   ...
 }: {
-  # Work laptop specific packages
+  # Host-specific system packages
+  # Most tools should go to home-manager (home/common/packages.nix)
+  # Only keep here what needs system-wide access or is needed before HM runs
   environment.systemPackages = with pkgs; [
-    # Rust toolchain
+    # Rust toolchain - keep system-wide for cargo install workflows
     rustc
     cargo
     clippy
     rustfmt
     rust-analyzer
-
-    # CLI tools
-    bat
-    delta
-    dust
-    eza
-    fd
-    jq
-    just
-    jujutsu
-    mise
-    nvim-nightly
-    openssl
-    ripgrep
-    starship
-    yazi
-    zoxide
   ];
 
   # Work-specific system settings can go here

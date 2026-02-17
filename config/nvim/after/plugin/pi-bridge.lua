@@ -94,6 +94,17 @@ local function send_payload(payload)
   vim.fn.chansend(chan, json)
   vim.fn.chanclose(chan, "stdin")
   vim.notify("Sent to pi (" .. socket_path .. ")", vim.log.levels.INFO)
+
+  -- Ring tmux bell on the agent's pane (shows bell flag in status line)
+  local fname = vim.fn.fnamemodify(socket_path, ":t:r")
+  local session, win = fname:match("^pi%-(.+)%-(%w+)$")
+  if session and win then
+    local tty = vim.fn.system(string.format("tmux display -p -t '%s:%s' '#{pane_tty}' 2>/dev/null", session, win))
+    tty = vim.trim(tty)
+    if tty ~= "" then
+      vim.fn.system(string.format("printf '\\a' > %s 2>/dev/null", vim.fn.shellescape(tty)))
+    end
+  end
 end
 
 ---Normalize visual selection range

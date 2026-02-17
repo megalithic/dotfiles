@@ -6,47 +6,23 @@
   paths,
   ...
 }: {
-  # Host-specific packages (in addition to common.nix system packages)
-  # These are packages that shouldn't go to home-manager because:
-  # - They need system-wide access
-  # - They're needed before HM runs
-  # - They're darwin-specific CLI tools
+  # Host-specific system packages
+  # Most tools should go to home-manager (home/common/packages.nix)
+  # Only keep here what needs system-wide access or is needed before HM runs
   environment.systemPackages = with pkgs; [
-    # Rust toolchain
+    # Rust toolchain - keep system-wide for cargo install workflows
     rustc
     cargo
     clippy
     rustfmt
     rust-analyzer
 
-    # CLI tools that work better system-wide
-    bat
-    delta
-    dust
-    eza
-    fd
-    jq
-    just
-    jujutsu
-    ldns
-    libwebp
-    mise
-    netcat
-    nmap
-    nvim-nightly
-    openssl
-    ripgrep
-    starship
-    yazi
-    yq
-    zoxide
-    inetutils
-    kanata
-
     # Google Cloud SDK for Vertex AI / Gemini access
     google-cloud-sdk
+
+    # kanata - keyboard remapping daemon (needs system access)
+    kanata
   ];
 
   # Personal laptop specific settings can go here
-  # Example: different power settings, personal services, etc.
 }

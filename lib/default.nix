@@ -54,22 +54,18 @@ inputs: lib: _:
     capitalize = str: lib.toUpper (lib.substring 0 1 str) + lib.substring 1 (-1) str;
     compactAttrs = lib.filterAttrs (_: value: value != null);
 
-    # mkApp - Unified macOS application builder
-    # Supports three installation methods:
-    #   - "extract" (default): Extract DMG/ZIP/PKG to nix store
-    #   - "native": Run native PKG installer during activation
-    #   - "mas": Install from Mac App Store
+    # mkApp - macOS application builder
+    # Extracts DMG/ZIP/PKG to nix store, symlinks to /Applications
+    # For apps needing DriverKit/system extensions, use Homebrew instead.
+    # For Mac App Store apps, see home/common/mas.nix
     #
     # Usage:
     #   lib.mega.mkApp { pname = "mailmate"; version = "5673"; src = { url = "..."; sha256 = "..."; }; }
-    #   lib.mega.mkApp { pname = "karabiner"; installMethod = "native"; src = { ... }; pkgName = "Karabiner.pkg"; }
-    #   lib.mega.mkApp { pname = "xcode"; installMethod = "mas"; appStoreId = 497799835; }
     mkApp = import ./mkApp.nix;
 
     # mkApps - Build multiple apps from a list
     # Usage: lib.mega.mkApps { inherit pkgs lib; } [
     #   { pname = "mailmate"; version = "5673"; src = { url = "..."; sha256 = "..."; }; }
-    #   { pname = "karabiner"; installMethod = "native"; src = { ... }; pkgName = "..."; }
     # ]
     mkApps = {
       pkgs,
@@ -268,20 +264,6 @@ inputs: lib: _:
     in
       lib.strings.concatStringsSep "\n\n" allScripts;
 
-    # mkMas - Install Mac App Store applications
-    # Usage: lib.mega.mkMas { "Xcode" = 497799835; "Keynote" = 409183694; }
-    # Returns an attrset with:
-    #   - script: A shell script that can be run directly
-    #   - activationScript: Script content for use in system.activationScripts
-    mkMas = import ./mkMas.nix;
-
-    # mkProjectClaude - Generate project-specific Claude Code configuration
-    # Creates .claude/settings.local.json for per-project MCP servers and settings
-    # Usage: lib.mega.mkProjectClaude { inherit pkgs lib; } {
-    #   mcpServers = { tidewave = { type = "http"; url = "http://localhost:4000/tidewave/mcp"; }; };
-    #   disableGlobalServers = [ "memory" ];
-    # }
-    mkProjectClaude = import ./mkProjectClaude.nix inputs;
   };
 }
 # Make sure to add lib extensions from inputs

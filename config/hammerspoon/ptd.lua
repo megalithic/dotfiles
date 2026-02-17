@@ -253,28 +253,22 @@ function M:init(config)
   whisper.model = config.model or "large-v3"
   whisper.languages = config.languages or { "en" }
   
-  -- Configure paths
-  -- Sox: try nix paths first, then homebrew
-  local soxPaths = {
-    os.getenv("HOME") .. "/.nix-profile/bin/sox",
-    "/run/current-system/sw/bin/sox",
-    "/opt/homebrew/bin/sox",
-    "/usr/local/bin/sox",
-  }
-  for _, path in ipairs(soxPaths) do
-    if hs.fs.attributes(path) then
-      whisper.recordCmd = path
-      U.log.i("ptd: using sox at " .. path)
-      break
+  local function resolveCmd(name)
+    local h = io.popen("PATH='" .. (PATH or os.getenv("PATH")) .. "' which " .. name .. " 2>/dev/null")
+    if not h then return nil end
+    local result = h:read("*l")
+    h:close()
+    if result and #result > 0 then
+      U.log.i("ptd: using " .. name .. " at " .. result)
+      return result
     end
+    U.log.e("ptd: " .. name .. " not found in PATH")
+    return nil
   end
-  if not whisper.recordCmd or whisper.recordCmd == "" then
-    U.log.e("ptd: sox not found")
-  end
-  
-  -- WhisperKit CLI (homebrew)
-  whisper.transcriptionMethods.whisperkitcli.config.cmd = "/opt/homebrew/bin/whisperkit-cli"
-  U.log.i("ptd: initialized with whisperkit-cli")
+
+  whisper.recordCmd = resolveCmd("sox") or whisper.recordCmd
+  whisper.transcriptionMethods.whisperkitcli.config.cmd = resolveCmd("whisperkit-cli")
+    or whisper.transcriptionMethods.whisperkitcli.config.cmd
   
   return self
 end

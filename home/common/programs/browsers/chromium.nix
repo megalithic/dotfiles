@@ -175,7 +175,6 @@ in {
     enable = true;
     package = pkgs.brave-browser-nightly;
     bundleId = "com.brave.Browser.nightly"; # For Application Support path
-    customActivation = true; # Skip adding base package - wrapper replaces it
     appName = "Brave Browser Nightly.app";
     executableName = "Brave Browser Nightly";
     iconFile = "app.icns";
