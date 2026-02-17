@@ -74,11 +74,11 @@
   "always_interactive": {
     "_doc": "Commands that are always interactive when invoked directly (no subcommand/flag needed).",
     "commands": {
-      "vim":    { "reason": "Use Write/Edit tool or heredoc." },
-      "nvim":   { "reason": "Use Write/Edit tool or heredoc." },
-      "nano":   { "reason": "Use Write/Edit tool or heredoc." },
-      "emacs":  { "reason": "Use Write/Edit tool or heredoc." },
-      "vi":     { "reason": "Use Write/Edit tool or heredoc." },
+      "vim":    { "reason": "Use Write/Edit tool or heredoc.", "unless_args": true },
+      "nvim":   { "reason": "Use Write/Edit tool or heredoc.", "unless_args": true },
+      "nano":   { "reason": "Use Write/Edit tool or heredoc.", "unless_args": true },
+      "emacs":  { "reason": "Use Write/Edit tool or heredoc.", "unless_args": true },
+      "vi":     { "reason": "Use Write/Edit tool or heredoc.", "unless_args": true },
       "less":   { "reason": "Use Read tool or `head`/`tail`." },
       "more":   { "reason": "Use Read tool or `head`/`tail`." },
       "top":    { "reason": "Use `ps aux` or `ps aux --sort=-%mem`." },
