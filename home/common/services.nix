@@ -44,8 +44,26 @@
     };
   };
 
-  # Ensure log directory exists
+  launchd.agents.espanso = {
+    enable = true;
+    config = {
+      Label = "com.federicoterzi.espanso";
+      ProgramArguments = [
+        "${config.home.profileDirectory}/bin/espanso"
+        "launcher"
+      ];
+      RunAtLoad = true;
+      StandardOutPath = "${config.home.homeDirectory}/Library/Logs/espanso/stdout.log";
+      StandardErrorPath = "${config.home.homeDirectory}/Library/Logs/espanso/stderr.log";
+    };
+  };
+
+  # Ensure log directories exist
   home.activation.ollamaLogDir = lib.hm.dag.entryAfter ["writeBoundary"] ''
     mkdir -p ${config.home.homeDirectory}/Library/Logs/ollama
+  '';
+
+  home.activation.espansoLogDir = lib.hm.dag.entryAfter ["writeBoundary"] ''
+    mkdir -p ${config.home.homeDirectory}/Library/Logs/espanso
   '';
 }

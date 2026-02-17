@@ -246,8 +246,13 @@
       fi
       
       if [[ -n "$bookmark" ]]; then
-        jj bookmark create "$bookmark" -r @
-        echo "Created feature bookmark: $bookmark"
+        if jj bookmark list | rg -q "^$bookmark:"; then
+          jj bookmark set "$bookmark" -r @
+          echo "Moved existing bookmark '$bookmark' to @"
+        else
+          jj bookmark create "$bookmark" -r @
+          echo "Created feature bookmark: $bookmark"
+        fi
       fi
     ''
     ""
@@ -296,8 +301,13 @@
       fi
       
       if [[ -n "$bookmark" ]]; then
-        jj bookmark create "$bookmark" -r @
-        echo "Created feature bookmark: $bookmark (from current position)"
+        if jj bookmark list | rg -q "^$bookmark:"; then
+          jj bookmark set "$bookmark" -r @
+          echo "Moved existing bookmark '$bookmark' to @ (from current position)"
+        else
+          jj bookmark create "$bookmark" -r @
+          echo "Created feature bookmark: $bookmark (from current position)"
+        fi
       fi
     ''
     ""
