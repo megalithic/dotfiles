@@ -315,42 +315,47 @@ Only deploy when the user explicitly requests it (e.g., "deploy it", "ship it",
 
 ## Guardrail Override Protocol
 
-When a command is blocked by guardrails, the user can grant single-use bypass
-permission:
+When a command is blocked by sentinel (the guardrails extension), the user can
+grant single-use bypass permission.
 
-### `override`
+### Keywords
 
-User says "override" after a block. Agent MUST:
+- `override`, `bypass`, `force` — show confirmation prompt, then grant
+- `!override`, `!bypass`, `!force` — grant immediately (no prompt)
 
-1. Confirm before executing: "Override requested. Execute
-   `<exact blocked command>`? (yes to confirm)"
-2. Wait for user confirmation (yes/y/confirm)
-3. Execute the command
-4. Log: "✓ Override authorized for `<command>` at <ISO timestamp>"
+### Flow (handled by sentinel extension)
 
-### `!override`
+1. Agent tries command → sentinel blocks it
+2. User says `override` (or `!override`)
+3. Sentinel intercepts input, grants override, sends message: "✓ Override
+   granted for **rule**. Retry the command now."
+4. **Agent MUST immediately retry the exact blocked command**
+5. Sentinel allows it (override consumed), command executes
 
-User says "!override" after a block. Agent MUST:
+### Agent behavior on override
 
-1. Execute immediately (no confirmation prompt)
-2. Log: "✓ Override authorized (no-confirm) for `<command>` at <ISO timestamp>"
+**When you see "Override granted... Retry the command now":**
+
+- **Immediately retry** the blocked command — don't ask again, don't explain,
+  just execute it
+- The override is single-use and time-limited (2 minutes)
+- If you don't retry promptly, the override expires
 
 ### Rules
 
 - **Single-use**: permission applies ONLY to the most recently blocked command
-- **Always echo**: repeat the exact command being authorized so user knows what
-  they're permitting
-- **Timestamp**: use ISO format (e.g., 2026-02-09T16:45:00Z) for audit trail
+- **Time-limited**: override expires after 2 minutes if not used
 - **No persistence**: after execution, guardrails return to normal
 
 ### Example flow
 
 ```
-Agent: <tries to push>
-System: **push blocked** - Agent cannot push to remote.
-User: !override
-Agent: ✓ Override authorized (no-confirm) for `jj git push -b my-feature` at 2026-02-09T16:45:00Z
-Agent: <executes push>
+Agent: <tries jj git push -b feature>
+Sentinel: 🔒 **push** — Push to remote. Say `override` to allow.
+User: override
+Sentinel: ✓ Override granted for **push**. Retry the command now.
+Agent: <immediately retries jj git push -b feature>
+<command executes successfully>
 ```
 
 ## Telegram / Pi Bridge Integration

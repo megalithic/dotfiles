@@ -532,22 +532,36 @@ export default function (pi: ExtensionAPI) {
       return;
     }
 
+    const blockedCmd = blocked.command;
+    const blockedRule = blocked.rule;
+
     if (isForceOverride) {
       grantOverride();
       log(`${text}: immediate grant`);
-      if (ctx.hasUI) ctx.ui.notify(`✓ Override granted for: ${blocked.rule}`, "info");
+      if (ctx.hasUI) ctx.ui.notify(`✓ Override granted for: ${blockedRule}`, "info");
+      // Signal agent to retry the blocked command
+      pi.sendMessage({
+        customType: "sentinel_override",
+        content: `✓ Override granted for **${blockedRule}**. Retry the command now.`,
+        display: "user",
+      }, { triggerTurn: true });
       return { action: "handled" };
     }
 
     if (ctx.hasUI) {
-      const cmd = blocked.command;
       const choice = await ctx.ui.select(
-        `⚠️  Override: ${blocked.rule}\n\n  ${cmd.slice(0, 120)}${cmd.length > 120 ? "..." : ""}\n\n${blocked.reason}\n\nAllow?`,
+        `⚠️  Override: ${blockedRule}\n\n  ${blockedCmd.slice(0, 120)}${blockedCmd.length > 120 ? "..." : ""}\n\n${blocked.reason}\n\nAllow?`,
         ["Yes", "No"],
       );
       if (choice === "Yes") {
         grantOverride();
-        ctx.ui.notify(`✓ Override granted for: ${blocked.rule}`, "info");
+        ctx.ui.notify(`✓ Override granted for: ${blockedRule}`, "info");
+        // Signal agent to retry the blocked command
+        pi.sendMessage({
+          customType: "sentinel_override",
+          content: `✓ Override granted for **${blockedRule}**. Retry the command now.`,
+          display: "user",
+        }, { triggerTurn: true });
       } else {
         log("override rejected");
         resetBlocked();
@@ -555,6 +569,12 @@ export default function (pi: ExtensionAPI) {
     } else {
       grantOverride();
       log("override: no UI, granted directly");
+      // Signal agent to retry
+      pi.sendMessage({
+        customType: "sentinel_override",
+        content: `✓ Override granted for **${blockedRule}**. Retry the command now.`,
+        display: "user",
+      }, { triggerTurn: true });
     }
 
     return { action: "handled" };

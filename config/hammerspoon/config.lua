@@ -1,9 +1,8 @@
 local M = {}
 
 HYPER = "F19"
--- The nix wrapper (com.nix.brave-browser-nightly) launches the real app,
--- so the running process has the original bundle ID
-BROWSER = "com.brave.Browser.nightly"
+BROWSER = "com.nix.brave-browser-nightly"
+-- BROWSER = "com.brave.Browser.nightly"
 -- BROWSER = "net.imput.helium"
 TERMINAL = "com.mitchellh.ghostty"
 
