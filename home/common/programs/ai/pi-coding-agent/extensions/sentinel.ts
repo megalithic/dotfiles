@@ -5,8 +5,14 @@
  *   HARD    — always blocked, no override
  *   CONFIRM — blocked, user says "override"/"bypass"/"force" → UI select prompt
  *   REWRITE — blocked with clear message to use preferred tool
+ *
+ * Rules loaded from sentinel-rules.json (interactive commands, tool corrections).
+ * Hardcoded rules remain for jj editor/message checks, secrets, nix-managed paths,
+ * push/deploy/ssh, and package install guards.
  */
 import type { ExtensionAPI, ToolCallEvent, ToolCallEventResult, InputEventResult } from "@mariozechner/pi-coding-agent";
+import { readFileSync } from "fs";
+import { join, dirname } from "path";
 
 type Tier = "hard" | "confirm" | "rewrite";
 
@@ -24,6 +30,20 @@ interface BlockedState {
   reason: string;
   timestamp: number;
 }
+
+// ── Config types ─────────────────────────────────────────────────────────────
+
+interface SubcommandEntry { flags: string[]; reason: string; }
+interface InteractiveCommand { _doc?: string; subcommands: Record<string, SubcommandEntry>; }
+interface AlwaysInteractiveEntry { reason: string; unless_args?: boolean; }
+interface ToolCorrection { use: string; reason: string; except_prefix?: string[]; }
+interface SentinelConfig {
+  interactive_commands: Record<string, InteractiveCommand>;
+  always_interactive: { commands: Record<string, AlwaysInteractiveEntry> };
+  tool_corrections: Record<string, ToolCorrection>;
+}
+
+// ── State ────────────────────────────────────────────────────────────────────
 
 const OVERRIDE_TTL_MS = 120_000;
 let blocked: BlockedState | null = null;
@@ -63,17 +83,12 @@ function normalizePath(p: string): string {
 
 /**
  * Strip quoted strings and heredoc bodies so regex only matches shell commands,
- * not string literals. Replaces content with empty placeholders to preserve
- * structure (separators, positions).
- *
- * Handles: "...", '...', $'...', <<EOF...EOF, <<'EOF'...EOF, <<"EOF"...EOF
- * Also handles escaped quotes (\", \') inside double-quoted strings.
+ * not string literals.
  */
 function stripQuoted(cmd: string): string {
   let result = "";
   let i = 0;
   while (i < cmd.length) {
-    // Heredoc: <<EOF, <<'EOF', <<"EOF", <<-EOF
     if (cmd[i] === "<" && cmd[i + 1] === "<" && cmd[i + 2] !== "<") {
       let j = i + 2;
       if (cmd[j] === "-") j++;
@@ -81,16 +96,13 @@ function stripQuoted(cmd: string): string {
       if (quoteChar) j++;
       let delim = "";
       while (j < cmd.length && /\w/.test(cmd[j])) delim += cmd[j++];
-      if (quoteChar) j++; // closing quote around delimiter
+      if (quoteChar) j++;
       result += '<<""';
-      // Skip to line matching delimiter
       const endPattern = "\n" + delim;
       const endIdx = cmd.indexOf(endPattern, j);
       i = endIdx === -1 ? cmd.length : endIdx + endPattern.length;
       continue;
     }
-
-    // $'...' (ANSI-C quoting)
     if (cmd[i] === "$" && cmd[i + 1] === "'") {
       result += '""';
       i += 2;
@@ -98,20 +110,16 @@ function stripQuoted(cmd: string): string {
         if (cmd[i] === "\\" && i + 1 < cmd.length) i++;
         i++;
       }
-      i++; // closing '
+      i++;
       continue;
     }
-
-    // Single-quoted string (no escapes inside)
     if (cmd[i] === "'") {
       result += '""';
       i++;
       while (i < cmd.length && cmd[i] !== "'") i++;
-      i++; // closing '
+      i++;
       continue;
     }
-
-    // Double-quoted string (backslash escapes)
     if (cmd[i] === '"') {
       result += '""';
       i++;
@@ -119,34 +127,28 @@ function stripQuoted(cmd: string): string {
         if (cmd[i] === "\\" && i + 1 < cmd.length) i++;
         i++;
       }
-      i++; // closing "
+      i++;
       continue;
     }
-
     result += cmd[i];
     i++;
   }
   return result;
 }
 
-/**
- * Extract command names at "command position" — the first word of each
- * pipeline segment. Splits on |, &&, ||, ;, and $( then returns the
- * first non-flag token of each segment.
- *
- * Example: `echo foo | grep bar && npm install` → ["echo", "grep", "npm"]
- */
+/** Split stripped command into pipeline segments. */
+function splitSegments(stripped: string): string[] {
+  return stripped.split(/\s*(?:\|\||&&|[|;]|\$\()\s*/);
+}
+
+/** Extract command name (first non-env, non-sudo token) from each segment. */
 function commandNames(stripped: string): string[] {
-  // Split into segments at shell separators
-  const segments = stripped.split(/\s*(?:\|\||&&|[|;]|\$\()\s*/);
   const names: string[] = [];
-  for (const seg of segments) {
+  for (const seg of splitSegments(stripped)) {
     const trimmed = seg.trim();
     if (!trimmed) continue;
-    // Skip leading env assignments (FOO=bar) and sudo
-    const tokens = trimmed.split(/\s+/);
-    for (const tok of tokens) {
-      if (/^\w+=/.test(tok)) continue; // env assignment
+    for (const tok of trimmed.split(/\s+/)) {
+      if (/^\w+=/.test(tok)) continue;
       if (tok === "sudo") continue;
       names.push(tok);
       break;
@@ -155,36 +157,22 @@ function commandNames(stripped: string): string[] {
   return names;
 }
 
-/**
- * Test if a pattern matches at command position in a shell command.
- * First strips quoted strings, then checks command names + surrounding context.
- */
+/** Test if a pattern matches in stripped (non-quoted) command text. */
 function cmdMatch(cmd: string, pattern: RegExp): boolean {
   return pattern.test(stripQuoted(cmd));
 }
 
-/**
- * Test if a word appears as a command (first token of a pipeline segment).
- * More precise than regex — won't match arguments or string contents.
- */
+/** Test if any of the given names appear as a command (first token of a segment). */
 function isCommand(cmd: string, ...names: string[]): boolean {
-  const cmds = commandNames(stripQuoted(cmd));
-  return cmds.some(c => names.includes(c));
+  return commandNames(stripQuoted(cmd)).some(c => names.includes(c));
 }
 
-/**
- * Test if a multi-word command prefix appears at command position.
- * E.g., isCommandPrefix(cmd, "jj", "describe") matches `jj describe -m "foo"`
- * but not `echo "jj describe"`.
- */
+/** Test if a multi-word prefix appears at command position in any segment. */
 function isCommandPrefix(cmd: string, ...prefix: string[]): boolean {
-  const stripped = stripQuoted(cmd);
-  const segments = stripped.split(/\s*(?:\|\||&&|[|;]|\$\()\s*/);
-  for (const seg of segments) {
+  for (const seg of splitSegments(stripQuoted(cmd))) {
     const trimmed = seg.trim();
     if (!trimmed) continue;
     const tokens = trimmed.split(/\s+/).filter(t => !/^\w+=/.test(t));
-    // Strip leading sudo
     const start = tokens[0] === "sudo" ? 1 : 0;
     let match = true;
     for (let i = 0; i < prefix.length; i++) {
@@ -195,14 +183,9 @@ function isCommandPrefix(cmd: string, ...prefix: string[]): boolean {
   return false;
 }
 
-/**
- * Get all tokens (non-quoted) for a segment starting with a given command prefix.
- * Useful for checking flags like -m, -u after the command.
- */
+/** Get all tokens for a segment matching a command prefix. */
 function segmentTokens(cmd: string, ...prefix: string[]): string[] | null {
-  const stripped = stripQuoted(cmd);
-  const segments = stripped.split(/\s*(?:\|\||&&|[|;]|\$\()\s*/);
-  for (const seg of segments) {
+  for (const seg of splitSegments(stripQuoted(cmd))) {
     const trimmed = seg.trim();
     if (!trimmed) continue;
     const tokens = trimmed.split(/\s+/).filter(t => !/^\w+=/.test(t));
@@ -216,11 +199,118 @@ function segmentTokens(cmd: string, ...prefix: string[]): string[] | null {
   return null;
 }
 
-// ── Rules ────────────────────────────────────────────────────────────────────
+/**
+ * Check if a command has arguments beyond the command name itself.
+ * Used for "unless_args" commands like python/node that are only
+ * interactive when invoked bare (no script/flags).
+ */
+function hasArgs(cmd: string, cmdName: string): boolean {
+  const tokens = segmentTokens(cmd, cmdName);
+  // tokens[0] is the command itself, anything after is an argument
+  return tokens !== null && tokens.length > 1;
+}
 
-const rules: Rule[] = [
-  // ── HARD: interactive commands (would hang) ──
-  {
+// ── Load config ──────────────────────────────────────────────────────────────
+
+function loadConfig(): SentinelConfig {
+  const configPath = join(dirname(new URL(import.meta.url).pathname), "sentinel-rules.json");
+  try {
+    const raw = readFileSync(configPath, "utf-8");
+    const config = JSON.parse(raw) as SentinelConfig;
+    log(`loaded config from ${configPath}`);
+    return config;
+  } catch (e) {
+    log(`failed to load config: ${e}`);
+    return {
+      interactive_commands: {},
+      always_interactive: { commands: {} },
+      tool_corrections: {},
+    };
+  }
+}
+
+// ── Build rules from config ──────────────────────────────────────────────────
+
+function buildRules(config: SentinelConfig): Rule[] {
+  const rules: Rule[] = [];
+
+  // ── HARD: interactive commands from config ──
+
+  // Subcommand + flag based (jj squash -i, docker exec -it, etc.)
+  for (const [tool, entry] of Object.entries(config.interactive_commands)) {
+    for (const [sub, subEntry] of Object.entries(entry.subcommands || {})) {
+      if (sub === "_doc") continue;
+
+      if (sub === "__base__") {
+        // Bare command is interactive (mysql, psql, iex, etc.)
+        // flags array empty = always interactive; non-empty = only with those flags
+        if (subEntry.flags.length === 0) {
+          rules.push({
+            name: `${tool}-interactive`,
+            tier: "hard",
+            tools: ["bash"],
+            test: (cmd) => isCommand(cmd, tool),
+            reason: `⛔ ${subEntry.reason}`,
+          });
+        } else {
+          rules.push({
+            name: `${tool}-interactive-flag`,
+            tier: "hard",
+            tools: ["bash"],
+            test: (cmd) => {
+              const tokens = segmentTokens(cmd, tool);
+              return tokens !== null && subEntry.flags.some(f => tokens.includes(f));
+            },
+            reason: `⛔ ${subEntry.reason}`,
+          });
+        }
+      } else {
+        // Subcommand-specific flags
+        if (subEntry.flags.length === 0) {
+          // Subcommand is always interactive (e.g., nix repl)
+          rules.push({
+            name: `${tool}-${sub}-interactive`,
+            tier: "hard",
+            tools: ["bash"],
+            test: (cmd) => isCommandPrefix(cmd, tool, sub),
+            reason: `⛔ ${subEntry.reason}`,
+          });
+        } else {
+          rules.push({
+            name: `${tool}-${sub}-interactive-flag`,
+            tier: "hard",
+            tools: ["bash"],
+            test: (cmd) => {
+              const tokens = segmentTokens(cmd, tool, sub);
+              return tokens !== null && subEntry.flags.some(f => tokens.includes(f));
+            },
+            reason: `⛔ ${subEntry.reason}`,
+          });
+        }
+      }
+    }
+  }
+
+  // Always-interactive commands (editors, REPLs, pagers)
+  for (const [cmd, entry] of Object.entries(config.always_interactive.commands)) {
+    if (cmd === "_doc") continue;
+    rules.push({
+      name: `${cmd}-interactive`,
+      tier: "hard",
+      tools: ["bash"],
+      test: (c) => {
+        if (!isCommand(c, cmd)) return false;
+        // If unless_args is set, only block when invoked bare (no arguments)
+        if (entry.unless_args) return !hasArgs(c, cmd);
+        return true;
+      },
+      reason: `⛔ ${entry.reason}`,
+    });
+  }
+
+  // ── HARD: jj editor rules (not in config — logic too specific) ──
+
+  rules.push({
     name: "jj-describe-no-msg",
     tier: "hard",
     tools: ["bash"],
@@ -228,9 +318,10 @@ const rules: Rule[] = [
       const tokens = segmentTokens(cmd, "jj", "describe") || segmentTokens(cmd, "jj", "dm");
       return tokens !== null && !tokens.includes("-m");
     },
-    reason: "Opens editor. Use `jj describe -m \"message\"`",
-  },
-  {
+    reason: "⛔ Opens editor. Use `jj describe -m \"message\"`",
+  });
+
+  rules.push({
     name: "jj-commit-no-msg",
     tier: "hard",
     tools: ["bash"],
@@ -238,9 +329,10 @@ const rules: Rule[] = [
       const tokens = segmentTokens(cmd, "jj", "commit");
       return tokens !== null && !tokens.includes("-m");
     },
-    reason: "Opens editor. Use `jj commit -m \"message\"`",
-  },
-  {
+    reason: "⛔ Opens editor. Use `jj commit -m \"message\"`",
+  });
+
+  rules.push({
     name: "jj-squash-no-msg",
     tier: "hard",
     tools: ["bash"],
@@ -249,42 +341,30 @@ const rules: Rule[] = [
       if (!tokens) return false;
       return !tokens.includes("-m") && !tokens.includes("-u") && !tokens.includes("--use-destination-message");
     },
-    reason: "May open editor. Use `-m \"message\"` or `-u`",
-  },
-  {
+    reason: "⛔ May open editor. Use `-m \"message\"` or `-u`",
+  });
+
+  rules.push({
     name: "jj-split",
     tier: "hard",
     tools: ["bash"],
     test: (cmd) => isCommandPrefix(cmd, "jj", "split"),
-    reason: "Inherently interactive. Use separate commits.",
-  },
-  {
-    name: "jj-interactive-flag",
-    tier: "hard",
-    tools: ["bash"],
-    test: (cmd) => {
-      const stripped = stripQuoted(cmd);
-      // Match jj <subcommand> ... -i or --interactive
-      return /(?:^|\s)jj\s+\w+/.test(stripped) &&
-        (/\s-i\b/.test(stripped) || /\s--interactive\b/.test(stripped));
-    },
-    reason: "Interactive flag. Use file paths instead.",
-  },
-  {
-    name: "editor-invocation",
-    tier: "hard",
-    tools: ["bash"],
-    test: (cmd) => isCommand(cmd, "vim", "nvim", "nano", "emacs", "vi"),
-    reason: "Use Write/Edit tool or heredoc.",
-  },
-  {
+    reason: "⛔ Inherently interactive. Use separate commits.",
+  });
+
+  // ── HARD: secrets ──
+
+  rules.push({
     name: "secret-tools",
     tier: "hard",
     tools: ["bash"],
     test: (cmd) => isCommand(cmd, "pass", "gpg"),
-    reason: "Secret tool access blocked.",
-  },
-  {
+    reason: "⛔ Secret tool access blocked.",
+  });
+
+  // ── HARD: nix-managed path writes ──
+
+  rules.push({
     name: "nix-managed-write",
     tier: "hard",
     tools: ["write", "edit"],
@@ -294,39 +374,27 @@ const rules: Rule[] = [
       return [HOME + "/bin/", HOME + "/.config/", HOME + "/.hammerspoon/", HOME + "/.pi/agent/"]
         .some(m => p.startsWith(m));
     },
-    reason: "Nix-managed path. Edit ~/.dotfiles/ source instead.",
-  },
+    reason: "⛔ Nix-managed path. Edit ~/.dotfiles/ source instead.",
+  });
 
-  // ── CONFIRM: destructive jj (can lose work or flatten history) ──
-  {
-    name: "jj-rebase",
-    tier: "confirm",
-    tools: ["bash"],
-    test: (cmd) => isCommandPrefix(cmd, "jj", "rebase"),
-    reason: "Can discard uncommitted changes or flatten commit history.",
-  },
-  {
-    name: "jj-abandon",
-    tier: "confirm",
-    tools: ["bash"],
-    test: (cmd) => isCommandPrefix(cmd, "jj", "abandon"),
-    reason: "Permanently discards changes.",
-  },
-  {
-    name: "jj-restore",
-    tier: "confirm",
-    tools: ["bash"],
-    test: (cmd) => isCommandPrefix(cmd, "jj", "restore"),
-    reason: "Can overwrite uncommitted changes.",
-  },
-  {
-    name: "jj-undo",
-    tier: "confirm",
-    tools: ["bash"],
-    test: (cmd) => isCommandPrefix(cmd, "jj", "undo"),
-    reason: "Can affect uncommitted work.",
-  },
-  {
+  // ── CONFIRM: destructive jj ──
+
+  for (const [sub, reason] of Object.entries({
+    "rebase": "Can discard uncommitted changes or flatten commit history.",
+    "abandon": "Permanently discards changes.",
+    "restore": "Can overwrite uncommitted changes.",
+    "undo": "Can affect uncommitted work.",
+  } as Record<string, string>)) {
+    rules.push({
+      name: `jj-${sub}`,
+      tier: "confirm",
+      tools: ["bash"],
+      test: (cmd) => isCommandPrefix(cmd, "jj", sub),
+      reason,
+    });
+  }
+
+  rules.push({
     name: "jj-squash-history",
     tier: "confirm",
     tools: ["bash"],
@@ -336,17 +404,19 @@ const rules: Rule[] = [
       return tokens.includes("-m") || tokens.includes("-u") || tokens.includes("--use-destination-message");
     },
     reason: "Squash flattens commit history.",
-  },
+  });
 
   // ── CONFIRM: push / deploy / ssh ──
-  {
+
+  rules.push({
     name: "push",
     tier: "confirm",
     tools: ["bash"],
     test: (cmd) => isCommandPrefix(cmd, "jj", "push") || isCommandPrefix(cmd, "jj", "git", "push") || isCommandPrefix(cmd, "git", "push"),
     reason: "Push to remote.",
-  },
-  {
+  });
+
+  rules.push({
     name: "deploy",
     tier: "confirm",
     tools: ["bash"],
@@ -357,24 +427,27 @@ const rules: Rule[] = [
       isCommandPrefix(cmd, "terraform", "apply") ||
       isCommandPrefix(cmd, "pulumi", "up"),
     reason: "Deployment command.",
-  },
-  {
+  });
+
+  rules.push({
     name: "ssh",
     tier: "confirm",
     tools: ["bash"],
-    test: (cmd) => isCommand(cmd, "ssh", "scp") || isCommandPrefix(cmd, "rsync") && cmdMatch(cmd, /rsync\s+.*:/),
+    test: (cmd) => isCommand(cmd, "ssh", "scp") || (isCommandPrefix(cmd, "rsync") && cmdMatch(cmd, /rsync\s+.*:/)),
     reason: "Remote server access.",
-  },
+  });
 
   // ── CONFIRM: non-nix package installs ──
-  {
+
+  rules.push({
     name: "brew-install",
     tier: "confirm",
     tools: ["bash"],
     test: (cmd) => isCommandPrefix(cmd, "brew", "install") || isCommandPrefix(cmd, "brew", "cask") || isCommandPrefix(cmd, "brew", "tap"),
     reason: "Non-nix install. Nix is the source of truth.",
-  },
-  {
+  });
+
+  rules.push({
     name: "global-pkg-install",
     tier: "confirm",
     tools: ["bash"],
@@ -386,8 +459,9 @@ const rules: Rule[] = [
         isCommandPrefix(cmd, "go", "install");
     },
     reason: "Global package install. Check Nix first.",
-  },
-  {
+  });
+
+  rules.push({
     name: "project-pkg-install",
     tier: "confirm",
     tools: ["bash"],
@@ -404,61 +478,54 @@ const rules: Rule[] = [
         isCommandPrefix(cmd, "bun", "install");
     },
     reason: "Project dependency install. Verify not already available via Nix.",
-  },
-  {
+  });
+
+  rules.push({
     name: "npx-bunx",
     tier: "confirm",
     tools: ["bash"],
     test: (cmd) => isCommand(cmd, "npx", "bunx"),
     reason: "Package runner. Prefer package.json scripts or Nix.",
-  },
+  });
 
-  // ── REWRITE: tool preferences (block with clear alternative) ──
-  {
-    name: "find→fd",
-    tier: "rewrite",
-    tools: ["bash"],
-    test: (cmd) => isCommand(cmd, "find"),
-    reason: "Use `fd` instead of `find`.",
-  },
-  {
-    name: "grep→rg",
-    tier: "rewrite",
-    tools: ["bash"],
-    test: (cmd) => isCommand(cmd, "grep"),
-    reason: "Use `rg` instead of `grep`.",
-  },
-  {
-    name: "rm→trash",
-    tier: "rewrite",
-    tools: ["bash"],
-    test: (cmd) => isCommand(cmd, "rm", "rmdir"),
-    reason: "Use `trash` instead of `rm`.",
-  },
-  {
-    name: "git→jj",
-    tier: "rewrite",
-    tools: ["bash"],
-    test: (cmd) => {
-      // git as command, but not `jj git ...`
-      if (!isCommand(cmd, "git")) return false;
-      return !isCommandPrefix(cmd, "jj", "git");
-    },
-    reason: "Use `jj` instead of `git`.",
-  },
-];
+  // ── REWRITE: tool corrections from config ──
+
+  for (const [blocked, correction] of Object.entries(config.tool_corrections)) {
+    if (blocked === "_doc") continue;
+    rules.push({
+      name: `${blocked}→${correction.use}`,
+      tier: "rewrite",
+      tools: ["bash"],
+      test: (cmd) => {
+        if (!isCommand(cmd, blocked)) return false;
+        // Exception: don't flag `git` when it's part of `jj git ...`
+        if (correction.except_prefix) {
+          if (isCommandPrefix(cmd, ...correction.except_prefix)) return false;
+        }
+        return true;
+      },
+      reason: correction.reason,
+    });
+  }
+
+  return rules;
+}
 
 // ── Extension ────────────────────────────────────────────────────────────────
 
 export default function (pi: ExtensionAPI) {
+  const config = loadConfig();
+  const rules = buildRules(config);
+  log(`${rules.length} rules loaded`);
+
   // Intercept user input for override keywords
   pi.on("input", async (event, ctx): Promise<InputEventResult | void> => {
     const text = event.text?.trim().toLowerCase() || "";
 
-    const isOverride = ["override", "bypass", "force"].includes(text);
+    const isOverrideCmd = ["override", "bypass", "force"].includes(text);
     const isForceOverride = ["!override", "!bypass", "!force"].includes(text);
 
-    if (!isOverride && !isForceOverride) return;
+    if (!isOverrideCmd && !isForceOverride) return;
 
     if (!blocked) {
       log(`${text}: nothing blocked`);
@@ -472,7 +539,6 @@ export default function (pi: ExtensionAPI) {
       return { action: "handled" };
     }
 
-    // Regular override — show UI prompt
     if (ctx.hasUI) {
       const cmd = blocked.command;
       const choice = await ctx.ui.select(
@@ -507,7 +573,7 @@ export default function (pi: ExtensionAPI) {
 
       if (rule.tier === "hard") {
         log(`HARD [${rule.name}]: ${(cmd || path).slice(0, 60)}`);
-        return { block: true, reason: `⛔ ${rule.reason}` };
+        return { block: true, reason: rule.reason };
       }
 
       if (rule.tier === "rewrite") {
@@ -519,7 +585,6 @@ export default function (pi: ExtensionAPI) {
         if (overrideGranted && blocked?.command === cmd) {
           if (consumeOverride()) return undefined;
         }
-
         blocked = { command: cmd, rule: rule.name, reason: rule.reason, timestamp: Date.now() };
         log(`CONFIRM [${rule.name}]: ${cmd.slice(0, 60)}`);
         return { block: true, reason: `🔒 **${rule.name}** — ${rule.reason}\n\nSay \`override\` to allow.` };
@@ -532,6 +597,7 @@ export default function (pi: ExtensionAPI) {
   (globalThis as Record<string, unknown>).__sentinel = {
     get blocked() { return blocked; },
     get overrideGranted() { return overrideGranted; },
+    rules: rules.map(r => r.name),
     reset: () => { resetOverride(); resetBlocked(); },
     grant: grantOverride,
   };
