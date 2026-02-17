@@ -4,6 +4,7 @@
   config,
   pkgs,
   lib,
+  self,
   opencodeMcpServers,
   inputs,
   ...
@@ -35,7 +36,7 @@ let
     map (name: {
       name = "opencode/skill/${name}/SKILL.md";
       value = {
-        source = ../../../../docs/skills/${name}.md;
+        source = "${self}/docs/skills/${name}.md";
       };
     }) skillFiles
   );
@@ -82,7 +83,7 @@ let
     map (cmd: {
       name = "opencode/command/${cmd.name}.md";
       value = {
-        source = ../../../../docs/commands/${cmd.source}.md;
+        source = "${self}/docs/commands/${cmd.source}.md";
       };
     }) commandMappings
   );

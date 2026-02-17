@@ -40,5 +40,6 @@ in
     extraSpecialArgs = {
       inherit inputs username hostname version overlays lib paths;
       arch = system;
+      self = inputs.self;
     };
   }

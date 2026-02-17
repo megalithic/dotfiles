@@ -116,3 +116,43 @@ Home-manager counterpart: `home/common/mac-aliases.nix`
 - Prefer `paths` over computing paths inline
 - Darwin-only (no NixOS abstractions)
 - Keep builders simple — follow nixpkgs patterns where possible
+
+## Rules
+
+### mkDarwinHost / mkHome parity
+
+Both builders must pass identical `specialArgs`/`extraSpecialArgs`:
+`inputs`, `username`, `hostname`, `version`, `overlays`, `lib`, `paths`, `arch`,
+`self`
+
+If you add an arg to one, add it to the other.
+
+### File references
+
+Always use `self` (flake root) for cross-directory references in nix modules:
+
+```nix
+# WRONG
+src = ../../lib/builders/my-script.swift;
+
+# CORRECT
+src = "${self}/lib/builders/my-script.swift";
+```
+
+### Shebangs in scripts installed via nix
+
+Use absolute paths, not `env`:
+
+```bash
+# WRONG — activation scripts have minimal PATH, env can't find swift
+#!/usr/bin/env swift
+
+# CORRECT
+#!/usr/bin/swift
+```
+
+### pkgs/default.nix — appLocation
+
+Custom `mkApp` packages managed by a wrapper module (e.g., `mkChromiumBrowser`)
+must set `appLocation = "wrapper"` to avoid duplicate app bundles in
+`home.packages`.

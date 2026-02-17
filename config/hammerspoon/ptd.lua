@@ -254,27 +254,31 @@ function M:init(config)
   whisper.languages = config.languages or { "en" }
   
   -- Configure paths
-  -- Sox: try nix paths first, then homebrew
-  local soxPaths = {
-    os.getenv("HOME") .. "/.nix-profile/bin/sox",
-    "/run/current-system/sw/bin/sox",
-    "/opt/homebrew/bin/sox",
-    "/usr/local/bin/sox",
-  }
-  for _, path in ipairs(soxPaths) do
-    if hs.fs.attributes(path) then
-      whisper.recordCmd = path
-      U.log.i("ptd: using sox at " .. path)
-      break
+  -- Resolve sox via global PATH (includes Nix/Homebrew paths from preflight.lua)
+  local handle = io.popen("PATH='" .. (PATH or os.getenv("PATH")) .. "' which sox 2>/dev/null")
+  if handle then
+    local resolved = handle:read("*l")
+    handle:close()
+    if resolved and #resolved > 0 then
+      whisper.recordCmd = resolved
+      U.log.i("ptd: using sox at " .. resolved)
+    else
+      U.log.e("ptd: sox not found in PATH")
     end
   end
-  if not whisper.recordCmd or whisper.recordCmd == "" then
-    U.log.e("ptd: sox not found")
-  end
   
-  -- WhisperKit CLI (homebrew)
-  whisper.transcriptionMethods.whisperkitcli.config.cmd = "/opt/homebrew/bin/whisperkit-cli"
-  U.log.i("ptd: initialized with whisperkit-cli")
+  -- WhisperKit CLI - resolve via global PATH (includes Nix/Homebrew from preflight.lua)
+  local wk_handle = io.popen("PATH='" .. (PATH or os.getenv("PATH")) .. "' which whisperkit-cli 2>/dev/null")
+  if wk_handle then
+    local wk_resolved = wk_handle:read("*l")
+    wk_handle:close()
+    if wk_resolved and #wk_resolved > 0 then
+      whisper.transcriptionMethods.whisperkitcli.config.cmd = wk_resolved
+      U.log.i("ptd: using whisperkit-cli at " .. wk_resolved)
+    else
+      U.log.e("ptd: whisperkit-cli not found in PATH")
+    end
+  end
   
   return self
 end

@@ -1,4 +1,4 @@
-#!/usr/bin/env swift
+#!/usr/bin/swift
 
 // Create a macOS Finder alias file ("bookmark" format).
 // Unlike symlinks, Finder aliases are indexed by Spotlight and work with Launchpad.

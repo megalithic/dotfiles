@@ -333,17 +333,37 @@ When receiving a message via Telegram (prefixed with
 
 **`~/.dotfiles/` is ALWAYS the source of truth** - version controlled in git/jj.
 
+Architecture: **nix-darwin** (system) + **home-manager** (user) running
+independently. Darwin handles system packages, brew, services. HM handles user
+packages, dotfiles, app configs.
+
 ### NEVER do:
 
 - Symlink FROM nix store TO dotfiles
 - Write to `/nix/store/` (read-only)
 - Write to `~/bin/`, `~/.config/`, `~/.hammerspoon/` directly
+- Hard-code nix store paths (`/nix/store/...`) or
+  `/run/current-system/sw/bin/...` in scripts/configs — use PATH resolution
+- Use relative paths (`../../lib/`) in nix modules — use `self` (flake root)
 
 ### ALWAYS do:
 
 - Edit files in `~/.dotfiles/` directly
 - Check `ls -la <file>` before editing to see if it's a symlink
-- Run `just rebuild` after nix changes if needed
+- Run `just rebuild` after nix changes (or `just validate` to check first)
+- Read `AGENTS.md` in `~/.dotfiles/` for nix module rules before editing `.nix`
+  files
+- Use `self` for cross-directory file references in nix modules
+
+### Rebuilding:
+
+```bash
+just rebuild          # full: darwin + home
+just darwin           # darwin-only
+just home             # home-manager only
+just validate         # build both without switching (catches errors)
+just bootstrap        # emergency: when just isn't in PATH
+```
 
 ### Path mappings:
 

@@ -58,7 +58,11 @@ programs.bat.enable = true;
 Apps in `packages.nix` that come from `pkgs/default.nix` (via mkApp) are
 filtered by `appLocation`:
 - `"home-manager"` (default) → added to `home.packages`, copied to `~/Applications/Home Manager Apps/`
+- `"wrapper"` → managed by a wrapper module (e.g., `mkChromiumBrowser`), NOT added to `home.packages`
 - `"symlink"` or `"copy"` → handled by `mkAppActivation`, NOT in `home.packages`
+
+**If a wrapper module manages the app, you MUST set `appLocation = "wrapper"` in
+pkgs/default.nix** to avoid duplicate app bundle conflicts.
 
 ### Finder aliases (mac-aliases.nix)
 
@@ -83,8 +87,29 @@ Host-specific services → `home/<hostname>.nix` or `hosts/<hostname>.nix`
 }
 ```
 
+## File references in nix modules
+
+Always use `self` (flake root) — never relative paths like `../../../../`:
+
+```nix
+# WRONG
+source = ../../../../docs/skills/nix.md;
+
+# CORRECT
+source = "${self}/docs/skills/nix.md";
+```
+
+`self` is available in all modules via `extraSpecialArgs`. Add it to your module
+args if needed: `{ self, ... }:`
+
 ## Rebuilding
 
-- Full: `just rebuild`
-- HM only: `just home` or `just rebuild-user` (no sudo)
-- Darwin only: `just rebuild-system`
+```bash
+just rebuild          # full: darwin + home
+just home             # HM only (no sudo)
+just darwin           # darwin only
+just validate         # build both without switching (catches errors)
+just bootstrap        # emergency: when just isn't in PATH
+```
+
+Always run `just validate` after nix refactors before pushing.

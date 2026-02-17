@@ -4,6 +4,7 @@
   config,
   pkgs,
   lib,
+  self,
   allMcpServers,
   ...
 }: {
@@ -322,40 +323,40 @@
     # =========================================================================
     skills = {
       # Nix ecosystem expert for dotfiles, darwin, home-manager, and project flakes
-      nix = builtins.readFile ../../../../docs/skills/nix.md;
+      nix = builtins.readFile "${self}/docs/skills/nix.md";
 
       # Modern CLI tools (fd, rg) - critical for Nix store searches
-      cli-tools = builtins.readFile ../../../../docs/skills/cli-tools.md;
+      cli-tools = builtins.readFile "${self}/docs/skills/cli-tools.md";
 
       # Jujutsu version control workflow and commands
-      jj = builtins.readFile ../../../../docs/skills/jj.md;
+      jj = builtins.readFile "${self}/docs/skills/jj.md";
 
       # Smart notification system with multi-channel routing
-      smart-ntfy = builtins.readFile ../../../../docs/skills/smart-ntfy.md;
+      smart-ntfy = builtins.readFile "${self}/docs/skills/smart-ntfy.md";
 
       # Image handling for Claude API constraints
-      image-handling = builtins.readFile ../../../../docs/skills/image-handling.md;
+      image-handling = builtins.readFile "${self}/docs/skills/image-handling.md";
 
       # Web debugging with Chrome DevTools MCP
-      web-debug = builtins.readFile ../../../../docs/skills/web-debug.md;
+      web-debug = builtins.readFile "${self}/docs/skills/web-debug.md";
 
       # Shade app - native Swift note capture panel
-      shade = builtins.readFile ../../../../docs/skills/shade.md;
+      shade = builtins.readFile "${self}/docs/skills/shade.md";
 
       # Hammerspoon - macOS automation quick reference
-      hs = builtins.readFile ../../../../docs/skills/hs.md;
+      hs = builtins.readFile "${self}/docs/skills/hs.md";
 
       # Neovim - config structure, plugins, LSP patterns
-      nvim = builtins.readFile ../../../../docs/skills/nvim.md;
+      nvim = builtins.readFile "${self}/docs/skills/nvim.md";
 
       # tmux - terminal multiplexer configuration and orchestration
-      tmux = builtins.readFile ../../../../docs/skills/tmux.md;
+      tmux = builtins.readFile "${self}/docs/skills/tmux.md";
 
       # notes - meganote system, captures, daily notes, obsidian.nvim
-      notes = builtins.readFile ../../../../docs/skills/notes.md;
+      notes = builtins.readFile "${self}/docs/skills/notes.md";
 
       # task-completion - guidelines for summarizing completed work
-      task-completion = builtins.readFile ../../../../docs/skills/task-completion.md;
+      task-completion = builtins.readFile "${self}/docs/skills/task-completion.md";
     };
 
     # =========================================================================
@@ -364,16 +365,16 @@
     # =========================================================================
     agents = {
       # Dotfiles navigator - central guide for finding things in this repo
-      dots = builtins.readFile ../../../../docs/agents/dots.md;
+      dots = builtins.readFile "${self}/docs/agents/dots.md";
 
       # Nix exploration agent for autonomous investigation of nix configs
-      nix = builtins.readFile ../../../../docs/agents/nix.md;
+      nix = builtins.readFile "${self}/docs/agents/nix.md";
 
       # Hammerspoon expert for macOS automation and debugging
-      hammerspoon = builtins.readFile ../../../../docs/agents/hammerspoon-expert.md;
+      hammerspoon = builtins.readFile "${self}/docs/agents/hammerspoon-expert.md";
 
       # Neovim expert for deep debugging and tracing
-      nvim = builtins.readFile ../../../../docs/agents/nvim.md;
+      nvim = builtins.readFile "${self}/docs/agents/nvim.md";
     };
 
     # =========================================================================
@@ -382,18 +383,18 @@
     # =========================================================================
     commands = {
       # Session management
-      start = builtins.readFile ../../../../docs/commands/start.md;
-      go = builtins.readFile ../../../../docs/commands/start.md; # alias
+      start = builtins.readFile "${self}/docs/commands/start.md";
+      go = builtins.readFile "${self}/docs/commands/start.md"; # alias
 
-      finish = builtins.readFile ../../../../docs/commands/finish.md;
-      end = builtins.readFile ../../../../docs/commands/finish.md; # alias
-      done = builtins.readFile ../../../../docs/commands/finish.md; # alias
+      finish = builtins.readFile "${self}/docs/commands/finish.md";
+      end = builtins.readFile "${self}/docs/commands/finish.md"; # alias
+      done = builtins.readFile "${self}/docs/commands/finish.md"; # alias
 
       # Task transition - complete current work, find next task
-      next = builtins.readFile ../../../../docs/commands/next.md;
+      next = builtins.readFile "${self}/docs/commands/next.md";
 
       # Smart preview - context-aware content viewer in tmux pane
-      preview = builtins.readFile ../../../../docs/commands/preview.md;
+      preview = builtins.readFile "${self}/docs/commands/preview.md";
     };
   };
 }

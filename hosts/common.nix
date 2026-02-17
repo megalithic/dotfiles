@@ -113,6 +113,9 @@ in {
     wget
     gnumake
 
+    # Bootstrap-critical (needed to run `just rebuild` before HM is activated)
+    just
+
     # Nix tools
     nix-index
     nurl

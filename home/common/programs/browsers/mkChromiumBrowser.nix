@@ -3,6 +3,7 @@
   lib,
   pkgs,
   inputs,
+  self,
   ...
 }: let
   inherit (lib) literalExpression mkOption types mkEnableOption;
@@ -13,7 +14,7 @@
   };
 
   # Wrapper .app builder - extracted to lib/builders/mkWrapperApp.nix
-  mkWrapperApp = import ../../../../lib/builders/mkWrapperApp.nix { inherit pkgs lib; };
+  mkWrapperApp = import "${self}/lib/builders/mkWrapperApp.nix" { inherit pkgs lib; };
 
   browserModule = browser: name: visible: let
     isProprietaryChrome = lib.hasPrefix "Google Chrome" name;

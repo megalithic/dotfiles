@@ -13,13 +13,14 @@
   config,
   lib,
   pkgs,
+  self,
   ...
 }: let
   createMacOSAlias = "${pkgs.callPackage (
     { stdenv }:
     stdenv.mkDerivation {
       name = "create-macos-alias";
-      src = ../lib/builders/create-macos-alias.swift;
+      src = "${self}/lib/builders/create-macos-alias.swift";
       unpackPhase = "true";
       dontConfigure = true;
       dontBuild = true;

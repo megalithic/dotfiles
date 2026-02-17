@@ -85,6 +85,42 @@ update:
 # Primary rebuild commands
 # ===========================================================================
 
+# Bootstrap: rebuild without requiring `just` in PATH (use when system is broken)
+# Usage: nix run nixpkgs#just -- bootstrap
+[macos]
+bootstrap:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  export PATH="/run/current-system/sw/bin:/nix/var/nix/profiles/system/sw/bin:$HOME/.nix-profile/bin:/nix/var/nix/profiles/default/bin:$PATH"
+  HOST=$(hostname -s)
+
+  # Restore /run/current-system if missing
+  if [ ! -e /run/current-system ]; then
+    echo ":: Restoring /run/current-system symlink..."
+    sudo ln -sfn /nix/var/nix/profiles/system /run/current-system
+  fi
+
+  echo ":: Building darwin configuration..."
+  sudo darwin-rebuild switch --flake ".#$HOST"
+
+  echo ":: Building home-manager configuration..."
+  nix run home-manager -- switch -b backup --flake ".#seth@$HOST"
+
+  echo ":: Bootstrap complete."
+
+# Validate: build both configs without switching (catches errors before they break things)
+# Usage: just validate
+[macos]
+validate:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  HOST=$(hostname -s)
+  echo ":: Building darwin configuration (no switch)..."
+  darwin-rebuild build --flake ".#$HOST"
+  echo ":: Building home-manager configuration (no switch)..."
+  nix run home-manager -- build --flake ".#seth@$HOST"
+  echo ":: ✓ Both configurations build successfully."
+
 # Full rebuild: sync from remote, darwin-rebuild, home-manager switch
 # Usage: just rebuild [--dry-run]
 [macos]
