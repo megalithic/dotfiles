@@ -481,7 +481,9 @@ local function getQueueStatusText()
   end
 
   -- Health
-  local isRunning = M.process and pcall(function() return M.process:isRunning() end)
+  local runOk, isRunning = false, false
+  if M.process then runOk, isRunning = pcall(function() return M.process:isRunning() end) end
+  isRunning = runOk and isRunning
   if isRunning then
     table.insert(lines, "💚 Process healthy")
   else
@@ -1012,10 +1014,6 @@ function M.start()
     -- Ensure directories exist (don't fail if this errors)
     pcall(ensureDirectories)
 
-    -- Build command - find pi binary
-
-    -- Uses /usr/bin/env to leverage PATH injection from overrides.lua
-    -- (PATH includes Nix binaries via nix_path.lua loaded in preflight.lua)
     local args = {
       "pi",
       "--mode",
@@ -1033,7 +1031,7 @@ function M.start()
     )
 
     if M.process then
-      local startOk = pcall(function() M.process:start() end)
+      local startOk, startErr = pcall(function() M.process:start() end)
       if startOk then
         -- Start health check timer
         if M.healthCheckTimer then pcall(function() M.healthCheckTimer:stop() end) end
@@ -1042,7 +1040,7 @@ function M.start()
 
         return true
       else
-        U.log.e("failed to start process")
+        U.log.ef("failed to start process: %s", tostring(startErr))
         M.process = nil
         return false
       end

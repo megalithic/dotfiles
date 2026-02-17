@@ -95,10 +95,8 @@ local function send_payload(payload)
   vim.fn.chanclose(chan, "stdin")
   vim.notify("Sent to pi (" .. socket_path .. ")", vim.log.levels.INFO)
 
-  -- Ring tmux bell on the agent's pane so it shows the bell flag in status line.
-  -- Socket format: /tmp/pi-{session}-{window}.sock
-  -- Extract session and window from the socket filename.
-  local fname = vim.fn.fnamemodify(socket_path, ":t:r") -- e.g. "pi-mega-agent" or "pi-mega-0"
+  -- Ring tmux bell on the agent's pane (shows bell flag in status line)
+  local fname = vim.fn.fnamemodify(socket_path, ":t:r")
   local session, win = fname:match("^pi%-(.+)%-(%w+)$")
   if session and win then
     local tty = vim.fn.system(string.format("tmux display -p -t '%s:%s' '#{pane_tty}' 2>/dev/null", session, win))

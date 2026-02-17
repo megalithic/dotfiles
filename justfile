@@ -24,7 +24,7 @@ upgrade-nix:
 
 # run nix run home-manager -- switch
 hm:
-  nix run home-manager -- switch --flake ".#seth@$(hostname -s)" -b backup
+  nix run home-manager -- switch --flake ".#$(whoami)@$(hostname -s)" -b backup
 
 news:
   nix run home-manager -- news --flake .
@@ -104,7 +104,7 @@ bootstrap:
   sudo darwin-rebuild switch --flake ".#$HOST"
 
   echo ":: Building home-manager configuration..."
-  nix run home-manager -- switch -b backup --flake ".#seth@$HOST"
+  nix run home-manager -- switch -b backup --flake ".#$(whoami)@$HOST"
 
   echo ":: Bootstrap complete."
 
@@ -118,7 +118,7 @@ validate:
   echo ":: Building darwin configuration (no switch)..."
   darwin-rebuild build --flake ".#$HOST"
   echo ":: Building home-manager configuration (no switch)..."
-  nix run home-manager -- build --flake ".#seth@$HOST"
+  nix run home-manager -- build --flake ".#$(whoami)@$HOST"
   echo ":: ✓ Both configurations build successfully."
 
 # Full rebuild: sync from remote, darwin-rebuild, home-manager switch
@@ -189,11 +189,11 @@ home *args="":
   
   if [[ "$DRY" == "--dry-run" ]]; then
     echo ":: [DRY RUN] Building home-manager configuration..."
-    nix run home-manager -- build --flake ".#seth@$HOST"
+    nix run home-manager -- build --flake ".#$(whoami)@$HOST"
     echo ":: Dry run complete. No changes applied."
   else
     echo ":: Running home-manager switch..."
-    nix run home-manager -- switch --flake ".#seth@$HOST"
+    nix run home-manager -- switch --flake ".#$(whoami)@$HOST"
   fi
 
 # ===========================================================================
@@ -300,7 +300,7 @@ apply-nix-config:
   sudo launchctl kickstart -k system/org.nixos.nix-daemon
 
   echo ":: Verifying trusted-users..."
-  if nix show-config | grep -q "trusted-users.*seth"; then
+  if nix show-config | grep -q "trusted-users.*$(whoami)"; then
     echo "✓ You are now a trusted user"
   else
     echo "⚠ Warning: trusted-users may not have applied. Check 'nix show-config | grep trusted'"

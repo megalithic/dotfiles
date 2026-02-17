@@ -157,7 +157,7 @@ package from also being added to `home.packages`:
 ```nix
 brave-browser-nightly = mkApp {
   pname = "brave-browser-nightly";
-  appLocation = "wrapper";  # REQUIRED — mkChromiumBrowser handles installation
+  appLocation = "wrapper";
   # ...
 };
 ```

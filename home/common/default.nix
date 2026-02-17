@@ -132,7 +132,6 @@ in {
     set -g default-shell "${config.home.profileDirectory}/bin/fish"
   '';
 
-
   xdg.configFile."kitty".source = config.lib.mega.linkConfig "kitty";
   xdg.configFile."kitty".force = true;
 

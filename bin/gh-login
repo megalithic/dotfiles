@@ -1,7 +1,0 @@
-#!/bin/bash
-
-set -euo pipefail
-
-if ! gh auth status; then
-  gh auth login
-fi

@@ -253,32 +253,22 @@ function M:init(config)
   whisper.model = config.model or "large-v3"
   whisper.languages = config.languages or { "en" }
   
-  -- Configure paths
-  -- Resolve sox via global PATH (includes Nix/Homebrew paths from preflight.lua)
-  local handle = io.popen("PATH='" .. (PATH or os.getenv("PATH")) .. "' which sox 2>/dev/null")
-  if handle then
-    local resolved = handle:read("*l")
-    handle:close()
-    if resolved and #resolved > 0 then
-      whisper.recordCmd = resolved
-      U.log.i("ptd: using sox at " .. resolved)
-    else
-      U.log.e("ptd: sox not found in PATH")
+  local function resolveCmd(name)
+    local h = io.popen("PATH='" .. (PATH or os.getenv("PATH")) .. "' which " .. name .. " 2>/dev/null")
+    if not h then return nil end
+    local result = h:read("*l")
+    h:close()
+    if result and #result > 0 then
+      U.log.i("ptd: using " .. name .. " at " .. result)
+      return result
     end
+    U.log.e("ptd: " .. name .. " not found in PATH")
+    return nil
   end
-  
-  -- WhisperKit CLI - resolve via global PATH (includes Nix/Homebrew from preflight.lua)
-  local wk_handle = io.popen("PATH='" .. (PATH or os.getenv("PATH")) .. "' which whisperkit-cli 2>/dev/null")
-  if wk_handle then
-    local wk_resolved = wk_handle:read("*l")
-    wk_handle:close()
-    if wk_resolved and #wk_resolved > 0 then
-      whisper.transcriptionMethods.whisperkitcli.config.cmd = wk_resolved
-      U.log.i("ptd: using whisperkit-cli at " .. wk_resolved)
-    else
-      U.log.e("ptd: whisperkit-cli not found in PATH")
-    end
-  end
+
+  whisper.recordCmd = resolveCmd("sox") or whisper.recordCmd
+  whisper.transcriptionMethods.whisperkitcli.config.cmd = resolveCmd("whisperkit-cli")
+    or whisper.transcriptionMethods.whisperkitcli.config.cmd
   
   return self
 end
