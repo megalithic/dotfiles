@@ -59,7 +59,7 @@ in {
         trim_trailing_whitespace=true
         charset = utf-8
       '';
-      ".ignore".source = ./git/tool_ignore;
+      ".ignore".source = ./git/tool-ignore;
       ".gitignore".source = ./git/gitignore;
       ".gitconfig".source = ./git/gitconfig;
       ".ssh/config".source = config.lib.mega.linkConfig "ssh/config";

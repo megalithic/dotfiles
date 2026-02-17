@@ -71,6 +71,8 @@ erl_crash.dump
 deps
 .expert
 **/.pi/todos
+.pi/todos
+result
 
 
 

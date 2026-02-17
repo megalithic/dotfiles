@@ -26,8 +26,27 @@ This is a **nix-darwin + home-manager** managed dotfiles repo.
 - Write directly to symlinked files (will fail or be overwritten)
 - Use `brew install` - all packages via Nix
 - Edit files in `/nix/store/` (read-only)
-- Write to a `result` directory or file in this repo, always use `/tmp/` for
-  ephemeral builds or runs
+- Create `result` symlinks in this repo (default `nix build` behavior)
+- Run `nix build` without `--out-link /tmp/<name>` or `-o /tmp/<name>`
+
+### Nix Build Output (CRITICAL)
+
+**`nix build` creates a `result` symlink by default — NEVER in this repo.**
+
+```bash
+# WRONG — creates ./result symlink in repo
+nix build .#somePackage
+
+# CORRECT — output to /tmp, clean up after
+nix build .#somePackage -o /tmp/nix-build-result
+# ... use the result ...
+rm /tmp/nix-build-result
+
+# CORRECT — no output link at all
+nix build .#somePackage --no-link
+```
+
+**After ANY nix build:** verify no `result` in repo, clean up `/tmp/nix-build-*`
 
 ## Repository Structure
 

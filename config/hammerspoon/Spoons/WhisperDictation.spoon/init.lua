@@ -55,8 +55,19 @@ obj.tempDir = "/tmp/whisper_dict"
 obj.recordCmd = "/opt/homebrew/bin/sox"
 obj.languages = {"en"}
 obj.langIndex = 1
+obj.showMenubar = true  -- Set to false to disable menubar (for external control via callbacks)
 obj.showRecordingIndicator = true
 obj.timeoutSeconds = 1800  -- Auto-stop recording after 1800 seconds (30 minutes). Set to nil to disable.
+
+-- === State Change Callbacks ===
+-- Set these to receive notifications when state changes (for external UI control)
+obj.onRecordingStart = nil   -- function() called when recording starts
+obj.onRecordingEnd = nil     -- function() called when recording ends (before transcription)
+obj.onTranscribeStart = nil  -- function() called when transcription starts
+obj.onTranscribeEnd = nil    -- function(success, text) called when transcription completes
+
+-- === Cleanup Settings ===
+obj.deleteAfterTranscription = true  -- Delete audio file after successful transcription
 obj.retranscribeMethod = "whisperkitcli"  -- Backend used by transcribeLatestAgain()
 obj.retranscribeCount = 10                -- Number of recent recordings to show in chooser
 obj.defaultHotkeys = {
@@ -711,6 +722,11 @@ end
 local function handleTranscriptionResult(success, textOrError, audioFile)
   local method = obj.transcriptionMethods[obj.transcriptionMethod]
 
+  -- Fire callback (before any early returns)
+  if obj.onTranscribeEnd then
+    pcall(obj.onTranscribeEnd, success, textOrError)
+  end
+
   if not success then
     obj.logger:error(method.displayName .. ": " .. textOrError, true)
     resetMenuToIdle()
@@ -746,6 +762,18 @@ local function handleTranscriptionResult(success, textOrError, audioFile)
       return
     end
     obj.logger:info(obj.icons.clipboard .. " Copied to clipboard (" .. #text .. " chars)")
+  end
+
+  -- Cleanup audio file after successful transcription
+  if obj.deleteAfterTranscription and audioFile then
+    local ok, err = os.remove(audioFile)
+    if ok then
+      obj.logger:debug("Deleted audio file: " .. audioFile)
+      -- Also delete the transcript file (text is in clipboard/callback)
+      os.remove(outputFile)
+    else
+      obj.logger:warn("Could not delete audio file: " .. tostring(err))
+    end
   end
 
   resetMenuToIdle()
@@ -895,6 +923,12 @@ function obj:beginTranscribe(callback)
   self.currentAudioFile = audioFile
   self.transcriptionCallback = callback
   startRecordingSession()
+
+  -- Fire callback
+  if obj.onRecordingStart then
+    pcall(obj.onRecordingStart)
+  end
+
   return self
 end
 
@@ -905,6 +939,12 @@ function obj:endTranscribe()
   end
 
   stopRecordingSession()
+
+  -- Fire callback
+  if obj.onRecordingEnd then
+    pcall(obj.onRecordingEnd)
+  end
+
   if self.currentAudioFile then
     if not hs.fs.attributes(self.currentAudioFile) then
       self.logger:error("Recording file was not created: " .. self.currentAudioFile, true)
@@ -912,6 +952,12 @@ function obj:endTranscribe()
       return self
     end
     self.logger:info("Processing audio file: " .. self.currentAudioFile)
+
+    -- Fire callback
+    if obj.onTranscribeStart then
+      pcall(obj.onTranscribeStart)
+    end
+
     transcribe(self.currentAudioFile)
     self.currentAudioFile = nil
   end
@@ -961,7 +1007,7 @@ function obj:start()
 
   ensureDir(obj.tempDir)
 
-  if not obj.menubar then
+  if obj.showMenubar and not obj.menubar then
     obj.menubar = hs.menubar.new()
     obj.menubar:setClickCallback(function() obj:toggleTranscribe() end)
   end

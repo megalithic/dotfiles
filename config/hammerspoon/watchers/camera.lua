@@ -220,7 +220,7 @@ local function startMeetingMode(appName, reason)
   U.log.f("Starting meeting mode: %s (%s)", appName or "unknown", reason)
   U.dnd(true, "meeting")
   hs.spotify.pause()
-  require("ptt").setState("push-to-talk")
+  require("micchecka").setPTTMode("push-to-talk")
 end
 
 local function cameraActive(camera, property)
@@ -280,7 +280,7 @@ end
 local function stopMeetingMode()
   U.log.f("Stopping meeting mode")
   U.dnd(false)
-  require("ptt").setState("push-to-talk")
+  require("micchecka").setPTTMode("push-to-talk")
 end
 
 local function cameraInactive(camera, property)

@@ -96,7 +96,7 @@ return {
         markdown = function(bufnr) return { first(bufnr, "prettier", "deno_fmt"), "injected" } end,
         ["markdown.mdx"] = { "prettier", "injected" },
         mdx = { "prettier", "injected" },
-        heex = { "mix" },
+        heex = { lsp_format = "prefer" },
         html = { "prettier", "injected" },
         -- yaml = { "prettier", "injected" },
         css = { "biome", "prettier", stop_after_first = true },
