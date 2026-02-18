@@ -20,23 +20,15 @@ local function logConnectionEvent(eventType)
   })
 end
 
--- Send notification via notification system
+-- Send notification via HUD system
 local function sendConnectionNotification(title, message, priority)
-  -- Use the notifier module directly to avoid going through the watcher
-  local notifier = require("lib.notifications.notifier")
-
-  local config = {
-    appImageID = "com.apple.Network-Settings",
-    appBundleID = "com.apple.systempreferences",
-    includeProgram = false,
-    priority = priority or "normal",
-    anchor = "screen",
-    position = "SW",
-    dimBackground = false,
+  HUD.toast({
+    title = title,
+    message = message,
+    appBundleID = "com.apple.Network-Settings",
     duration = 5,
-  }
-
-  notifier.sendCanvasNotification(title, message, config)
+    position = "bottom-left",
+  })
 end
 
 -- Update menubar with new event

@@ -244,6 +244,20 @@ function M.sfSymbol(name, opts)
 end
 
 --------------------------------------------------------------------------------
+-- ICON RESOLUTION
+--------------------------------------------------------------------------------
+
+--- Resolve an app icon from identifier
+--- Handles special cases like "hal9000" and bundle IDs
+---@param identifier string Bundle ID or special identifier
+---@return hs.image|nil
+---@usage local icon = hud.resolveIcon("hal9000")
+---@usage local icon = hud.resolveIcon("com.apple.Finder")
+function M.resolveIcon(identifier)
+  return M.renderer.getAppIcon(identifier)
+end
+
+--------------------------------------------------------------------------------
 -- CLEANUP
 --------------------------------------------------------------------------------
 

@@ -45,20 +45,20 @@ local M = {}
 
 M.colors = {
   dark = {
-    -- Backgrounds
-    background = { red = 0.12, green = 0.12, blue = 0.13, alpha = 0.95 },
+    -- Backgrounds (match notifier.lua #2c2c2e)
+    background = { red = 0.17, green = 0.17, blue = 0.18, alpha = 0.95 },
     backgroundSubtle = { red = 0.15, green = 0.15, blue = 0.16, alpha = 0.9 },
-    shadow = { red = 0, green = 0, blue = 0, alpha = 0.0 },
+    shadow = { red = 0, green = 0, blue = 0, alpha = 0.5 },
 
     -- Borders
     border = { red = 0.30, green = 0.30, blue = 0.31, alpha = 0.85 },
     borderActive = { red = 0.3, green = 0.7, blue = 0.4, alpha = 0.9 },
 
-    -- Text
+    -- Text (match notifier.lua)
     title = { red = 0.92, green = 0.92, blue = 0.92, alpha = 1.0 },
-    subtitle = { red = 0.70, green = 0.70, blue = 0.70, alpha = 1.0 },
-    message = { red = 0.85, green = 0.85, blue = 0.85, alpha = 1.0 },
-    timestamp = { red = 0.5, green = 0.5, blue = 0.5, alpha = 0.8 },
+    subtitle = { red = 0.92, green = 0.92, blue = 0.92, alpha = 1.0 },  -- Same as title per notifier
+    message = { red = 0.96, green = 0.96, blue = 0.97, alpha = 1.0 },  -- #f5f5f7
+    timestamp = { red = 0.56, green = 0.56, blue = 0.58, alpha = 0.85 },  -- #8e8e93
     muted = { red = 0.5, green = 0.5, blue = 0.5, alpha = 0.7 },
 
     -- Semantic colors
@@ -77,20 +77,20 @@ M.colors = {
   },
 
   light = {
-    -- Backgrounds
-    background = { red = 0.98, green = 0.98, blue = 0.98, alpha = 0.95 },
+    -- Backgrounds (match notifier.lua)
+    background = { red = 0.98, green = 0.98, blue = 0.98, alpha = 0.92 },
     backgroundSubtle = { red = 0.95, green = 0.95, blue = 0.95, alpha = 0.9 },
-    shadow = { red = 0, green = 0, blue = 0, alpha = 0.0 },
+    shadow = { red = 0, green = 0, blue = 0, alpha = 0.3 },
 
     -- Borders
     border = { red = 0.85, green = 0.85, blue = 0.85, alpha = 0.6 },
     borderActive = { red = 0.1, green = 0.6, blue = 0.3, alpha = 0.9 },
 
-    -- Text
+    -- Text (match notifier.lua)
     title = { red = 0.1, green = 0.1, blue = 0.1, alpha = 1.0 },
-    subtitle = { red = 0.4, green = 0.4, blue = 0.4, alpha = 1.0 },
-    message = { red = 0.2, green = 0.2, blue = 0.2, alpha = 1.0 },
-    timestamp = { red = 0.5, green = 0.5, blue = 0.5, alpha = 0.8 },
+    subtitle = { red = 0.1, green = 0.1, blue = 0.1, alpha = 1.0 },  -- Same as title per notifier
+    message = { red = 0.3, green = 0.3, blue = 0.3, alpha = 1.0 },
+    timestamp = { red = 0.5, green = 0.5, blue = 0.5, alpha = 0.85 },
     muted = { red = 0.6, green = 0.6, blue = 0.6, alpha = 0.7 },
 
     -- Semantic colors

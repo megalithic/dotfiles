@@ -193,6 +193,82 @@ function M.restoreAlertOverride()
 end
 
 --------------------------------------------------------------------------------
+-- hs.notify: Custom HUD replacement
+--------------------------------------------------------------------------------
+-- Replaces hs.notify with our custom HUD module for consistent styling.
+-- Intercepts .new():send() and .show() patterns.
+
+local originalNotify = {
+  new = hs.notify.new,
+  show = hs.notify.show,
+  withdrawAll = hs.notify.withdrawAll,
+}
+
+---Setup hs.notify override using custom HUD module
+---@param hud table The HUD module
+function M.setupNotifyOverride(hud)
+  -- Override hs.notify.new() to return a mock object that shows HUD on :send()
+  hs.notify.new = function(opts, fn)
+    opts = opts or {}
+    -- Return a mock notification object with :send() method
+    return {
+      _opts = opts,
+      _fn = fn,
+      send = function(self)
+        hud.toast({
+          title = self._opts.title or "",
+          subtitle = self._opts.subTitle or "",
+          message = self._opts.informativeText or "",
+          -- Use Hammerspoon app icon unless specific icon provided
+          appBundleID = self._opts.appBundleID or "org.hammerspoon.Hammerspoon",
+          duration = self._opts.withdrawAfter or 5,
+          position = "bottom-left",
+        })
+        return self
+      end,
+      -- No-op methods for API compatibility
+      withdraw = function(self) return self end,
+      withdrawAfter = function(self, secs) self._opts.withdrawAfter = secs; return self end,
+      title = function(self, t) self._opts.title = t; return self end,
+      subTitle = function(self, s) self._opts.subTitle = s; return self end,
+      informativeText = function(self, m) self._opts.informativeText = m; return self end,
+      alwaysPresent = function(self, v) return self end,
+      autoWithdraw = function(self, v) return self end,
+      hasActionButton = function(self) return false end,
+      actionButtonTitle = function(self, t) return self end,
+      otherButtonTitle = function(self, t) return self end,
+      contentImage = function(self, img) return self end,
+      setIdImage = function(self, img) return self end,
+      soundName = function(self, s) return self end,
+    }
+  end
+
+  -- Override hs.notify.show() convenience function
+  hs.notify.show = function(title, subTitle, message, tag)
+    hud.toast({
+      title = title or "",
+      subtitle = subTitle or "",
+      message = message or "",
+      appBundleID = "org.hammerspoon.Hammerspoon",
+      duration = 5,
+      position = "bottom-left",
+    })
+  end
+
+  -- Keep withdrawAll as no-op (HUD manages its own lifecycle)
+  hs.notify.withdrawAll = function()
+    -- No-op - HUD toasts auto-dismiss
+  end
+end
+
+---Restore original hs.notify functions
+function M.restoreNotifyOverride()
+  hs.notify.new = originalNotify.new
+  hs.notify.show = originalNotify.show
+  hs.notify.withdrawAll = originalNotify.withdrawAll
+end
+
+--------------------------------------------------------------------------------
 -- hs.reload: Pre-reload cleanup wrapper
 --------------------------------------------------------------------------------
 -- Hammerspoon's hs.reload() destroys the Lua state without calling any cleanup.

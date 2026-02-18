@@ -129,7 +129,8 @@ req("clipper")  -- Auto-inits via req(), starts pasteboard watcher
 -- Setup overrides for hs.* APIs
 -- Must be called AFTER all modules are loaded so we have references
 local overrides = require("overrides")
-overrides.setupAlertOverride(HUD)  -- Replace hs.alert with custom HUD
+overrides.setupAlertOverride(HUD)   -- Replace hs.alert with custom HUD
+overrides.setupNotifyOverride(HUD)  -- Replace hs.notify with custom HUD
 overrides.setupReloadCleanup({
   stopWatchers = function()
     require("watchers"):stop({ watchers = watchers })

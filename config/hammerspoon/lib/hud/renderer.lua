@@ -255,6 +255,7 @@ end
 function M.calculateContentHeight(content, textWidth, opts)
   opts = opts or {}
   local titleSize = opts.titleSize or theme.sizes.title
+  local subtitleSize = opts.subtitleSize or theme.sizes.subtitle
   local bodySize = opts.bodySize or theme.sizes.body
 
   local heights = {
@@ -269,7 +270,7 @@ function M.calculateContentHeight(content, textWidth, opts)
   end
 
   if content.subtitle and content.subtitle ~= "" then
-    local measured = M.measureText(content.subtitle, textWidth, { size = bodySize })
+    local measured = M.measureText(content.subtitle, textWidth, { size = subtitleSize })
     heights.subtitle = measured.h
   end
 
