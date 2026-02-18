@@ -63,6 +63,9 @@ _G.I = hs.inspect -- `i()` to easier inspect in the console
 _G.N = req("lib.notifications")
 N.init()
 
+-- Initialize HUD module (replaces hs.alert, will replace notifier)
+_G.HUD = req("lib.hud")
+
 -- FIXME: deprecate/remove
 -- Backward compatibility (temporary during transition)
 _G.NotifyDB = N.db
@@ -122,10 +125,11 @@ req("watchers", { watchers = watchers })
 req("micchecka", { model = "large-v3", languages = { "en" } }):start()
 req("quitter"):start()
 
--- Setup hs.reload() wrapper for pre-reload cleanup (prevents resource leaks)
--- Must be called AFTER all modules are loaded so we have references to clean up
--- FIXME: S and N should be globals on `_G` so no need for reassigning them, right?
-require("overrides").setupReloadCleanup({
+-- Setup overrides for hs.* APIs
+-- Must be called AFTER all modules are loaded so we have references
+local overrides = require("overrides")
+overrides.setupAlertOverride(HUD)  -- Replace hs.alert with custom HUD
+overrides.setupReloadCleanup({
   stopWatchers = function()
     require("watchers"):stop({ watchers = watchers })
     require("micchecka"):stop()
@@ -138,6 +142,7 @@ hs.shutdownCallback = function()
   require("micchecka"):stop()
   require("quitter"):stop()
   if N and N.cleanup then N.cleanup() end
+  if HUD and HUD.cleanup then HUD.cleanup() end
 end
 
 hs.notify.withdrawAll()

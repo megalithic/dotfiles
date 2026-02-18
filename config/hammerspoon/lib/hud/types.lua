@@ -1,0 +1,954 @@
+-- HUD Types Module
+-- Defines HUD type classes: alert, toast, panel, persistent
+--
+-- Each type is a factory function that returns a HUD instance.
+-- HUD instances have common methods: show(), dismiss(), update()
+--
+
+--------------------------------------------------------------------------------
+-- TYPE DEFINITIONS
+--------------------------------------------------------------------------------
+
+---@class BaseHUD
+---@field id string Unique identifier
+---@field anchor string Position anchor (e.g., "bottom-center")
+---@field ephemeral boolean Whether HUD auto-dismisses
+---@field visible boolean Current visibility state
+---@field createdAt number Creation timestamp
+---@field width number HUD width in points
+---@field height number HUD height in points
+---@field scaledHeight number Scaled height for stacking
+---@field animationIn number Show animation duration (ms)
+---@field animationOut number Hide animation duration (ms)
+---@field verticalOffset number Offset from anchor position
+---@field canvas hs.canvas|nil Canvas object when visible
+---@field basePosition table|nil Base position for stacking
+---@field timers table Timer references for cleanup
+---@field onClick function|nil Click callback
+---@field onDismiss function|nil Dismiss callback
+
+---@class Alert : BaseHUD
+---@field message string Alert message text
+---@field icon hs.image|nil Icon image
+---@field iconType string|nil Icon type name
+---@field duration number Auto-dismiss delay (seconds)
+---@field sizePreset table Size preset values
+---@field fontSize number Font size
+---@field fontColor table Font color
+
+---@class Toast : BaseHUD
+---@field title string Toast title
+---@field message string|nil Toast message
+---@field subtitle string|nil Toast subtitle
+---@field icon hs.image|nil Icon image
+---@field appBundleID string|nil App bundle ID for icon
+---@field duration number Auto-dismiss delay (seconds)
+---@field onIconClick function|nil Icon click callback
+
+---@class Panel : BaseHUD
+---@field timeout number Auto-dismiss delay (seconds)
+---@field thumbnail hs.image|nil Thumbnail image
+---@field status string|nil Status text
+---@field statusColor string|table|nil Status color
+---@field content table|nil Additional content (e.g., keybindings, metadata)
+---@field hoverScale number|nil Scale factor on hover
+---@field onThumbnailClick function|nil Thumbnail click callback
+
+---@class Persistent : BaseHUD
+---@field content table Content options
+---@field icon hs.image|nil Icon image
+---@field text string|nil Text content
+---@field color string|table|nil Color
+
+local M = {}
+
+local theme = require("lib.hud.theme")
+local position = require("lib.hud.position")
+local animator = require("lib.hud.animator")
+local renderer = require("lib.hud.renderer")
+local stack = require("lib.hud.stack")
+local persistence = require("lib.hud.persistence")
+
+--------------------------------------------------------------------------------
+-- BASE HUD CLASS
+--------------------------------------------------------------------------------
+
+local BaseHUD = {}
+BaseHUD.__index = BaseHUD
+
+function BaseHUD:new(opts)
+  local hud = setmetatable({}, self)
+
+  hud.id = opts.id or tostring(os.time()) .. math.random(1000)
+  hud.anchor = opts.position or "bottom-center"
+  hud.ephemeral = opts.ephemeral ~= false  -- Default true
+  hud.visible = false
+  hud.createdAt = os.time()
+
+  -- Store dimensions
+  hud.width = opts.width or 300
+  hud.height = opts.height or 100
+
+  -- Animation settings (milliseconds)
+  hud.animationIn = opts.animationIn or opts.animation or 250
+  hud.animationOut = opts.animationOut or opts.animation or 200
+
+  -- Timers for cleanup (all must be stopped on dismiss)
+  hud.timers = {
+    dismiss = nil,
+    animation = nil,
+    hover = nil,
+  }
+
+  -- Callbacks
+  hud.onClick = opts.onClick
+  hud.onDismiss = opts.onDismiss
+
+  -- Vertical offset from anchor position
+  -- Default to BOTTOM_OFFSET for bottom anchors
+  if opts.offset then
+    hud.verticalOffset = opts.offset
+  elseif hud.anchor and hud.anchor:match("^bottom") then
+    hud.verticalOffset = position.BOTTOM_OFFSET
+  else
+    hud.verticalOffset = 0
+  end
+
+  return hud
+end
+
+function BaseHUD:show()
+  if self.visible then return self end
+
+  -- Load saved position preference
+  local savedPosition = persistence.getPosition(self.id)
+  if savedPosition then
+    self.anchor = savedPosition
+  end
+
+  -- Calculate position (use mouse screen, not main screen)
+  local screen = hs.mouse.getCurrentScreen() or hs.screen.mainScreen()
+
+  local pos = position.calculate(self.anchor, self.width, self.height, {
+    screen = screen,
+    offset = self.verticalOffset or 0,
+  })
+
+  -- Store base position and dimensions for stacking
+  self.basePosition = pos
+  self.scaledHeight = self.height  -- No scaling - work in points
+
+  -- Make room for this HUD before creating it
+  stack.makeRoom(self.anchor, self.height)
+
+  -- Create canvas (subclasses override _createCanvas)
+  -- Canvas works in points - system handles retina automatically
+  self.canvas = self:_createCanvas({
+    x = pos.x,
+    y = pos.startY,  -- Start at animation start position
+    w = self.width,
+    h = self.height,
+  }, 1)  -- scale=1, we work in points
+
+  -- Register with stack manager
+  stack.register(self)
+
+  -- Animate in
+  self.timers.animation = animator.slideIn(
+    self.canvas,
+    pos.startY,
+    pos.y,
+    {
+      duration = self.animationIn,
+      onComplete = function()
+        self.timers.animation = nil
+      end,
+    }
+  )
+
+  self.visible = true
+
+  -- Set up auto-dismiss if duration specified
+  if self.duration and self.duration > 0 then
+    self.timers.dismiss = hs.timer.doAfter(self.duration, function()
+      self.timers.dismiss = nil
+      self:dismiss()
+    end)
+  end
+
+  return self
+end
+
+function BaseHUD:dismiss(opts)
+  opts = opts or {}
+  local animate = opts.animate ~= false
+
+  -- Stop ALL pending timers
+  for name, timer in pairs(self.timers) do
+    if timer then
+      animator.stop(timer)
+      self.timers[name] = nil
+    end
+  end
+
+  -- Unregister from stack
+  stack.unregister(self.id)
+
+  -- Animate out or instant delete
+  if self.canvas then
+    local canvas = self.canvas
+    self.canvas = nil
+
+    if animate and self.visible then
+      animator.slideOut(canvas, {
+        duration = self.animationOut,
+        deleteAfter = true,
+        onComplete = function()
+          if self.onDismiss then self.onDismiss() end
+        end,
+      })
+    else
+      canvas:delete(0)
+      if self.onDismiss then self.onDismiss() end
+    end
+  end
+
+  self.visible = false
+
+  -- Restack remaining HUDs at this anchor
+  stack.restack(self.anchor)
+
+  return self
+end
+
+function BaseHUD:_createCanvas(frame, scale)
+  -- Subclasses override this
+  return renderer.createCanvas(frame)
+end
+
+function BaseHUD:_cleanup()
+  self:dismiss({ animate = false })
+end
+
+--------------------------------------------------------------------------------
+-- ALERT TYPE
+-- Simple text + optional icon, auto-dismiss
+--------------------------------------------------------------------------------
+
+local Alert = setmetatable({}, { __index = BaseHUD })
+Alert.__index = Alert
+
+-- Size presets: small, medium (default), large
+-- Base values - scaled by DPI multiplier at runtime
+Alert.SIZES = {
+  small = {
+    padding = 12,
+    iconSize = 14,
+    iconSpacing = 8,
+    fontSize = 14,
+    cornerRadius = 10,
+  },
+  medium = {
+    padding = 16,
+    iconSize = 18,
+    iconSpacing = 10,
+    fontSize = 18,
+    cornerRadius = 12,
+  },
+  large = {
+    padding = 20,
+    iconSize = 24,
+    iconSpacing = 12,
+    fontSize = 20,
+    cornerRadius = 14,
+  },
+}
+
+--- Get DPI multiplier for current screen
+--- External displays (viewed from further away) get larger sizes
+---@param screen hs.screen|nil
+---@return number multiplier (1.0 for laptop, 1.25 for external)
+function Alert.getDpiMultiplier(screen)
+  screen = screen or hs.mouse.getCurrentScreen() or hs.screen.mainScreen()
+  return position.isExternalDisplay(screen) and 1.25 or 1.0
+end
+
+--- Get scaled size preset for current screen
+---@param name string Preset name ("small", "medium", "large")
+---@param screen hs.screen|nil
+---@return table Scaled preset values
+function Alert.getScaledPreset(name, screen)
+  local base = Alert.SIZES[name] or Alert.SIZES.medium
+  local mult = Alert.getDpiMultiplier(screen)
+  
+  return {
+    padding = math.floor(base.padding * mult),
+    iconSize = math.floor(base.iconSize * mult),
+    iconSpacing = math.floor(base.iconSpacing * mult),
+    fontSize = math.floor(base.fontSize * mult),
+    cornerRadius = math.floor(base.cornerRadius * mult),
+  }
+end
+
+function Alert:new(message, opts)
+  opts = opts or {}
+  opts.ephemeral = true
+
+  local hud = BaseHUD.new(self, opts)
+
+  hud.message = message
+  hud.icon = opts.icon           -- hs.image (legacy)
+  hud.iconType = opts.iconType   -- "checkmark", "warning", "error", "info"
+  hud.duration = opts.duration or 3  -- seconds
+
+  -- Size preset (default: medium) - scaled for DPI
+  local screen = hs.mouse.getCurrentScreen() or hs.screen.mainScreen()
+  hud.sizePreset = Alert.getScaledPreset(opts.size or "medium", screen)
+
+  -- Style options (can override preset)
+  hud.style = opts.style or {}
+  hud.fontSize = hud.style.fontSize or hud.sizePreset.fontSize
+  hud.fontColor = hud.style.color or theme.getColor("title")
+
+  -- Calculate dimensions based on content
+  local hasIcon = hud.icon ~= nil or hud.iconType ~= nil
+  local textWidth = 300
+  local measured = renderer.measureText(message, textWidth, { size = hud.fontSize })
+
+  local padding = hud.sizePreset.padding
+  local iconSize = hasIcon and hud.sizePreset.iconSize or 0
+  local iconSpacing = hasIcon and hud.sizePreset.iconSpacing or 0
+
+  hud.width = padding + iconSize + iconSpacing + measured.w + padding
+  hud.height = padding + math.max(iconSize, measured.h) + padding
+
+  -- Cap dimensions
+  hud.width = math.min(hud.width, 400)
+  hud.height = math.min(hud.height, 100)
+
+  return hud
+end
+
+function Alert:_createCanvas(frame, scale)
+  -- NOTE: We ignore 'scale' - canvas works in points, system handles retina
+  local canvas = renderer.createCanvas(frame, {
+    cornerRadius = self.sizePreset.cornerRadius,
+  })
+
+  local padding = self.sizePreset.padding
+  local hasIcon = self.icon ~= nil or self.iconType ~= nil
+  local iconSize = hasIcon and self.sizePreset.iconSize or 0
+  local iconSpacing = hasIcon and self.sizePreset.iconSpacing or 0
+  local centerY = frame.h / 2
+
+  -- Create styled text to measure actual dimensions
+  local textStyle = {
+    font = { name = theme.fonts.system, size = self.fontSize },
+    color = self.fontColor,
+  }
+  -- Add center alignment if no icon
+  if not hasIcon then
+    textStyle.paragraphStyle = { alignment = "center" }
+  end
+  local styledText = hs.styledtext.new(self.message, textStyle)
+
+  -- Add temporary text element to measure
+  canvas:appendElements({
+    type = "text",
+    text = styledText,
+    frame = { x = 0, y = 0, w = frame.w, h = frame.h }
+  })
+  local textSize = canvas:minimumTextSize(canvas:elementCount(), styledText)
+  canvas:removeElement(canvas:elementCount())
+
+  -- Calculate horizontal centering for icon + text as a unit
+  local contentWidth = iconSize + iconSpacing + textSize.w
+  local startX = (frame.w - contentWidth) / 2
+
+  -- Add icon (custom-drawn or image)
+  if self.iconType then
+    -- Draw colored icon using canvas primitives
+    local iconColor = self.fontColor
+    local iconX = startX
+    local iconY = centerY - iconSize / 2
+
+    if self.iconType == "checkmark" then
+      renderer.drawCheckmark(canvas, iconX, iconY, iconSize, iconColor)
+    elseif self.iconType == "warning" then
+      renderer.drawWarning(canvas, iconX, iconY, iconSize, iconColor)
+    elseif self.iconType == "error" then
+      renderer.drawError(canvas, iconX, iconY, iconSize, iconColor)
+    elseif self.iconType == "info" then
+      renderer.drawInfo(canvas, iconX, iconY, iconSize, iconColor)
+    elseif self.iconType == "gear" then
+      renderer.drawGear(canvas, iconX, iconY, iconSize, iconColor)
+    end
+  elseif self.icon then
+    -- Use provided image
+    renderer.addImage(canvas, self.icon, {
+      x = startX, y = centerY - iconSize / 2,
+      w = iconSize, h = iconSize,
+    })
+  end
+
+  -- Add message text, vertically centered using measured height
+  local textX = hasIcon and (startX + iconSize + iconSpacing) or padding
+  local textW = hasIcon and textSize.w or (frame.w - padding * 2)
+
+  canvas:appendElements({
+    type = "text",
+    text = styledText,
+    frame = { x = textX, y = centerY - textSize.h / 2, w = textW, h = textSize.h },
+  })
+
+  -- Set up click to dismiss
+  renderer.setupMouseCallbacks(canvas, {
+    onClick = function()
+      self:dismiss()
+      return true
+    end,
+  })
+
+  return canvas
+end
+
+--------------------------------------------------------------------------------
+-- TOAST TYPE
+-- Notification replacement with title, subtitle, message, icon
+--------------------------------------------------------------------------------
+
+local Toast = setmetatable({}, { __index = BaseHUD })
+Toast.__index = Toast
+
+function Toast:new(opts)
+  opts = opts or {}
+  opts.ephemeral = true
+  opts.position = opts.position or "bottom-left"
+
+  local hud = BaseHUD.new(self, opts)
+
+  hud.title = opts.title or ""
+  hud.subtitle = opts.subtitle or ""
+  hud.message = opts.message or ""
+  hud.icon = opts.icon
+  hud.appBundleID = opts.appBundleID
+  hud.duration = opts.duration or 5  -- seconds
+
+  -- Click callback for icon
+  hud.onIconClick = opts.onIconClick
+
+  -- Calculate dimensions
+  local hasIcon = hud.icon ~= nil or hud.appBundleID ~= nil
+  local padding = renderer.DEFAULTS.padding
+  local iconSize = renderer.DEFAULTS.iconSize
+  local iconSpacing = renderer.DEFAULTS.iconSpacing
+
+  local baseWidth = 420
+  local textWidth = baseWidth - padding * 2
+  if hasIcon then textWidth = textWidth - iconSize - iconSpacing end
+
+  local heights = renderer.calculateContentHeight({
+    title = hud.title,
+    subtitle = hud.subtitle,
+    message = hud.message,
+  }, textWidth)
+
+  hud.width = baseWidth
+  hud.height = padding + math.max(iconSize, heights.total) + padding + 18  -- +18 for timestamp
+
+  -- Clamp height
+  hud.height = math.max(100, math.min(400, hud.height))
+
+  -- Store for rendering
+  hud._hasIcon = hasIcon
+  hud._textWidth = textWidth
+  hud._heights = heights
+
+  return hud
+end
+
+function Toast:_createCanvas(frame, scale)
+  local canvas = renderer.createCanvas(frame)
+  local colors = theme.getColors()
+
+  local padding = renderer.DEFAULTS.padding * scale
+  local iconSize = renderer.DEFAULTS.iconSize * scale
+  local iconSpacing = renderer.DEFAULTS.iconSpacing * scale
+
+  local x = padding
+  local y = padding
+  local textX = x
+
+  -- Add icon if present
+  if self._hasIcon then
+    local icon = self.icon
+    if not icon and self.appBundleID then
+      icon = renderer.getAppIcon(self.appBundleID)
+    end
+
+    if icon then
+      renderer.addImage(canvas, icon, {
+        x = x, y = y,
+        w = iconSize, h = iconSize,
+      }, {
+        id = "icon",
+        trackMouse = true,
+      })
+      textX = x + iconSize + iconSpacing
+    end
+  end
+
+  local textWidth = frame.w - textX - padding
+  local textY = y
+
+  -- Title
+  if self.title and self.title ~= "" then
+    renderer.addText(canvas, self.title, {
+      x = textX, y = textY,
+      w = textWidth, h = self._heights.title * scale,
+    }, {
+      size = theme.sizes.title * scale,
+      font = theme.fonts.systemBold,
+      color = colors.title,
+      wrap = true,
+      id = "title",
+      trackMouse = true,
+    })
+    textY = textY + self._heights.title * scale + 4 * scale
+  end
+
+  -- Subtitle
+  if self.subtitle and self.subtitle ~= "" then
+    renderer.addText(canvas, self.subtitle, {
+      x = textX, y = textY,
+      w = textWidth, h = self._heights.subtitle * scale,
+    }, {
+      size = theme.sizes.subtitle * scale,
+      color = colors.subtitle,
+      wrap = true,
+      id = "subtitle",
+      trackMouse = true,
+    })
+    textY = textY + self._heights.subtitle * scale + 6 * scale
+  end
+
+  -- Message
+  if self.message and self.message ~= "" then
+    renderer.addText(canvas, self.message, {
+      x = textX, y = textY,
+      w = textWidth, h = self._heights.message * scale,
+    }, {
+      size = theme.sizes.body * scale,
+      color = colors.message,
+      wrap = true,
+      id = "message",
+      trackMouse = true,
+    })
+  end
+
+  -- Timestamp (bottom-right)
+  local timestamp = os.date("%b %d, %I:%M %p")
+  local timestampWidth = 120 * scale
+  renderer.addText(canvas, timestamp, {
+    x = frame.w - timestampWidth - padding,
+    y = frame.h - 18 * scale - padding / 2,
+    w = timestampWidth, h = 18 * scale,
+  }, {
+    size = theme.sizes.tiny * scale,
+    color = colors.timestamp,
+    align = "right",
+    id = "timestamp",
+  })
+
+  -- Click handling
+  renderer.setupMouseCallbacks(canvas, {
+    onElementClick = function(id, x, y)
+      if id == "icon" then
+        if self.onIconClick then
+          self.onIconClick()
+          return true
+        elseif self.appBundleID then
+          hs.application.launchOrFocusByBundleID(self.appBundleID)
+          self:dismiss()
+          return true
+        end
+      end
+      return false
+    end,
+    onClick = function()
+      self:dismiss()
+      return true
+    end,
+  })
+
+  return canvas
+end
+
+--------------------------------------------------------------------------------
+-- PANEL TYPE
+-- Rich multi-element HUD (for clipper, etc.)
+--------------------------------------------------------------------------------
+
+local Panel = setmetatable({}, { __index = BaseHUD })
+Panel.__index = Panel
+
+function Panel:new(opts)
+  opts = opts or {}
+  opts.ephemeral = opts.ephemeral ~= false  -- Default true
+
+  local hud = BaseHUD.new(self, opts)
+
+  hud.duration = opts.timeout or opts.duration  -- seconds (nil = manual dismiss)
+
+  -- Panel content (set via methods)
+  hud.thumbnail = nil
+  hud.thumbnailClickHandler = nil
+  hud.status = nil
+  hud.statusColor = nil
+  hud.content = nil  -- Additional content (e.g., array of { key, desc } for keybindings)
+
+  -- Hover-to-zoom
+  hud.hoverScale = opts.onHover and opts.onHover.scale or nil
+  hud._originalFrame = nil
+  hud._isHovered = false
+
+  -- Default dimensions (will be recalculated)
+  hud.width = 320
+  hud.height = 200
+
+  return hud
+end
+
+function Panel:setThumbnail(image, opts)
+  opts = opts or {}
+  self.thumbnail = image
+  self.thumbnailClickHandler = opts.onClick
+  return self
+end
+
+function Panel:setStatus(text, opts)
+  opts = opts or {}
+  self.status = text
+  self.statusColor = opts.color  -- "success", "warning", "error", or color table
+  self:_updateCanvas()
+  return self
+end
+
+function Panel:setContent(content)
+  self.content = content
+  return self
+end
+
+function Panel:_calculateDimensions(scale)
+  local margin = 16 * scale
+  local width = self.width * scale
+
+  -- Thumbnail section
+  local thumbWidth = width - margin * 2
+  local thumbHeight = self.thumbnail and math.floor(thumbWidth * 0.6) or 0
+
+  -- Status section
+  local statusHeight = self.status and 24 * scale or 0
+
+  -- Cheat sheet section
+  local keyRowHeight = 20 * scale
+  local keysHeight = self.content and #self.content * keyRowHeight or 0
+
+  local totalHeight = margin
+    + (thumbHeight > 0 and (thumbHeight + margin / 2) or 0)
+    + (statusHeight > 0 and (statusHeight + margin / 2) or 0)
+    + keysHeight
+    + margin
+
+  return {
+    width = width,
+    height = totalHeight,
+    margin = margin,
+    thumbWidth = thumbWidth,
+    thumbHeight = thumbHeight,
+    statusHeight = statusHeight,
+    keyRowHeight = keyRowHeight,
+    keysHeight = keysHeight,
+  }
+end
+
+function Panel:_createCanvas(frame, scale)
+  local canvas = renderer.createCanvas(frame)
+  local colors = theme.getColors()
+
+  local dims = self:_calculateDimensions(scale)
+  local margin = dims.margin
+  local y = margin
+
+  -- Thumbnail
+  if self.thumbnail then
+    -- Scale thumbnail to fit
+    local sourceSize = self.thumbnail:size()
+    local scaleFactor = 4  -- Retina scaling
+    local scaledWidth = math.floor(sourceSize.w / scaleFactor)
+    local scaledHeight = math.floor(sourceSize.h / scaleFactor)
+    local scaledImage = self.thumbnail:copy():size({ w = scaledWidth, h = scaledHeight }, true)
+
+    renderer.addImage(canvas, scaledImage, {
+      x = margin, y = y,
+      w = dims.thumbWidth, h = dims.thumbHeight,
+    }, {
+      id = "thumbnail",
+      trackMouse = true,
+    })
+    y = y + dims.thumbHeight + margin / 2
+  end
+
+  -- Status
+  if self.status then
+    local statusColor = colors.subtitle
+    if self.statusColor then
+      if type(self.statusColor) == "string" then
+        statusColor = colors[self.statusColor] or colors.subtitle
+      else
+        statusColor = self.statusColor
+      end
+    end
+
+    renderer.addText(canvas, self.status, {
+      x = margin, y = y,
+      w = dims.thumbWidth, h = dims.statusHeight,
+    }, {
+      size = theme.sizes.small * scale,
+      color = statusColor,
+      align = "center",
+      id = "status",
+    })
+    y = y + dims.statusHeight + margin / 2
+  end
+
+  -- Cheat sheet
+  if self.content then
+    local keyColWidth = 24 * scale
+
+    for i, kb in ipairs(self.content) do
+      -- Key
+      renderer.addText(canvas, kb.key, {
+        x = margin, y = y,
+        w = keyColWidth, h = dims.keyRowHeight,
+      }, {
+        size = theme.sizes.tiny * scale,
+        font = theme.fonts.mono,
+        color = colors.accent,
+      })
+
+      -- Description
+      renderer.addText(canvas, kb.desc, {
+        x = margin + keyColWidth + 8 * scale, y = y,
+        w = dims.thumbWidth - keyColWidth - 8 * scale,
+        h = dims.keyRowHeight,
+      }, {
+        size = theme.sizes.tiny * scale,
+        color = colors.subtitle,
+      })
+
+      y = y + dims.keyRowHeight
+    end
+  end
+
+  -- Click handling
+  renderer.setupMouseCallbacks(canvas, {
+    onElementClick = function(id, x, y)
+      if id == "thumbnail" and self.thumbnailClickHandler then
+        self.thumbnailClickHandler()
+        return true
+      end
+      return false
+    end,
+    onClick = function()
+      self:dismiss()
+      return true
+    end,
+    onHover = self.hoverScale and function(id, isEnter)
+      if id == "thumbnail" then
+        self:_handleHover(isEnter)
+      end
+    end or nil,
+  })
+
+  return canvas
+end
+
+function Panel:_handleHover(isEnter)
+  if not self.hoverScale or not self.canvas then return end
+
+  -- Stop any existing hover animation first
+  if self.timers.hover then
+    animator.stop(self.timers.hover)
+    self.timers.hover = nil
+  end
+
+  if isEnter and not self._isHovered then
+    self._isHovered = true
+    self._originalFrame = self.canvas:frame()
+    self.timers.hover = animator.scaleUp(self.canvas, self.hoverScale, {
+      duration = 150,
+      onComplete = function() self.timers.hover = nil end,
+    })
+  elseif not isEnter and self._isHovered then
+    self._isHovered = false
+    if self._originalFrame then
+      self.timers.hover = animator.scaleDown(self.canvas, self._originalFrame, {
+        duration = 150,
+        onComplete = function() self.timers.hover = nil end,
+      })
+    end
+  end
+end
+
+function Panel:_updateCanvas()
+  if self.visible and self.canvas then
+    -- Stop any running hover animation
+    if self.timers.hover then
+      animator.stop(self.timers.hover)
+      self.timers.hover = nil
+    end
+
+    local pos = self.canvas:topLeft()
+    local frame = self.canvas:frame()
+    self.canvas:delete(0)
+
+    local scale = position.getScaleFactor()
+    self.canvas = self:_createCanvas({
+      x = pos.x, y = pos.y,
+      w = frame.w, h = frame.h,
+    }, scale)
+    self.canvas:show()
+  end
+end
+
+--------------------------------------------------------------------------------
+-- PERSISTENT TYPE
+-- Stays visible until explicitly dismissed (indicators, etc.)
+--------------------------------------------------------------------------------
+
+local Persistent = setmetatable({}, { __index = BaseHUD })
+Persistent.__index = Persistent
+
+function Persistent:new(opts)
+  opts = opts or {}
+  opts.ephemeral = false
+  opts.position = opts.position or "top-right"
+
+  local hud = BaseHUD.new(self, opts)
+
+  hud.content = opts.content or {}  -- { icon?, text?, color? }
+
+  -- Calculate dimensions
+  local hasIcon = hud.content.icon ~= nil
+  local hasText = hud.content.text and hud.content.text ~= ""
+
+  local iconSize = hasIcon and 24 or 0
+  local textWidth = hasText and 100 or 0
+  local padding = 12
+  local spacing = (hasIcon and hasText) and 8 or 0
+
+  hud.width = padding + iconSize + spacing + textWidth + padding
+  hud.height = padding + math.max(iconSize, 20) + padding
+
+  return hud
+end
+
+function Persistent:_createCanvas(frame, scale)
+  local canvas = renderer.createCanvas(frame, {
+    cornerRadius = 8,
+  })
+  local colors = theme.getColors()
+
+  local padding = 12 * scale
+  local x = padding
+  local centerY = frame.h / 2
+
+  -- Icon
+  if self.content.icon then
+    local iconSize = 24 * scale
+    local iconColor = self.content.color
+    if type(iconColor) == "string" then
+      iconColor = colors[iconColor] or colors.accent
+    end
+
+    renderer.addImage(canvas, self.content.icon, {
+      x = x, y = centerY - iconSize / 2,
+      w = iconSize, h = iconSize,
+    }, {
+      id = "icon",
+      trackMouse = true,
+    })
+    x = x + iconSize + 8 * scale
+  end
+
+  -- Text
+  if self.content.text and self.content.text ~= "" then
+    local textColor = self.content.textColor
+    if type(textColor) == "string" then
+      textColor = colors[textColor] or colors.title
+    end
+
+    renderer.addText(canvas, self.content.text, {
+      x = x, y = centerY - 10 * scale,
+      w = frame.w - x - padding, h = 20 * scale,
+    }, {
+      size = theme.sizes.small * scale,
+      color = textColor or colors.title,
+      id = "text",
+      trackMouse = true,
+    })
+  end
+
+  -- Click handling
+  renderer.setupMouseCallbacks(canvas, {
+    onClick = function()
+      if self.onClick then
+        self.onClick()
+      else
+        self:dismiss()
+      end
+      return true
+    end,
+  })
+
+  return canvas
+end
+
+function Persistent:update(content)
+  for k, v in pairs(content) do
+    self.content[k] = v
+  end
+
+  if self.visible and self.canvas then
+    -- Stop any running animation before rebuilding
+    if self.timers.animation then
+      animator.stop(self.timers.animation)
+      self.timers.animation = nil
+    end
+
+    local pos = self.canvas:topLeft()
+    local frame = self.canvas:frame()
+    self.canvas:delete(0)
+
+    local scale = position.getScaleFactor()
+    self.canvas = self:_createCanvas({
+      x = pos.x, y = pos.y,
+      w = frame.w, h = frame.h,
+    }, scale)
+    self.canvas:show()
+  end
+
+  return self
+end
+
+--------------------------------------------------------------------------------
+-- EXPORTS
+--------------------------------------------------------------------------------
+
+M.Alert = Alert
+M.Toast = Toast
+M.Panel = Panel
+M.Persistent = Persistent
+
+return M

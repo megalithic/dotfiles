@@ -1,0 +1,363 @@
+-- HUD Animator Module
+-- Animation primitives for slide, fade, and combined effects
+--
+-- Time units:
+--   - Duration parameters are in MILLISECONDS for precision
+--   - Convert to seconds internally for hs.timer
+--
+-- All animation functions return timer references for cleanup.
+-- Timers self-clear their predicates when complete.
+--
+
+---@alias EasingFunction fun(t: number): number
+
+---@class AnimationOpts
+---@field duration? number Duration in milliseconds
+---@field easing? EasingFunction Easing function
+---@field onComplete? function Callback when animation completes
+
+---@class HudAnimatorModule
+---@field DEFAULTS table Default animation durations
+---@field easeOutCubic EasingFunction Ease out cubic
+---@field easeInOutCubic EasingFunction Ease in/out cubic
+---@field easeOutBack EasingFunction Ease out with overshoot
+---@field easeOutBounce EasingFunction Ease out bounce
+---@field animate fun(duration: number, callback: fun(progress: number), opts?: AnimationOpts): hs.timer
+---@field slideIn fun(canvas: hs.canvas, fromY: number, toY: number, opts?: AnimationOpts): hs.timer
+---@field slideOut fun(canvas: hs.canvas, fromY: number, toY: number, opts?: AnimationOpts): hs.timer
+---@field fadeIn fun(canvas: hs.canvas, opts?: AnimationOpts): hs.timer
+---@field fadeOut fun(canvas: hs.canvas, opts?: AnimationOpts): hs.timer
+---@field stop fun(timer: hs.timer|nil) Safely stop a timer
+
+local M = {}
+
+--------------------------------------------------------------------------------
+-- CONSTANTS
+--------------------------------------------------------------------------------
+
+-- Default animation durations (milliseconds)
+M.DEFAULTS = {
+  slideIn = 250,
+  slideOut = 300,
+  fadeIn = 200,
+  fadeOut = 200,
+  bounce = 300,  -- For bouncy slide effect
+}
+
+-- Animation frame rate
+M.FPS = 60
+
+--------------------------------------------------------------------------------
+-- EASING FUNCTIONS
+--------------------------------------------------------------------------------
+
+--- Ease-out cubic (smooth deceleration)
+---@param t number Progress 0-1
+---@return number Eased value 0-1
+function M.easeOutCubic(t)
+  return 1 - math.pow(1 - t, 3)
+end
+
+--- Ease-in cubic (smooth acceleration)
+---@param t number Progress 0-1
+---@return number Eased value 0-1
+function M.easeInCubic(t)
+  return math.pow(t, 3)
+end
+
+--- Ease-out back (slight overshoot/bounce)
+---@param t number Progress 0-1
+---@return number Eased value 0-1
+function M.easeOutBack(t)
+  local c1 = 1.70158
+  local c3 = c1 + 1
+  return 1 + c3 * math.pow(t - 1, 3) + c1 * math.pow(t - 1, 2)
+end
+
+--- Ease-in-out cubic
+---@param t number Progress 0-1
+---@return number Eased value 0-1
+function M.easeInOutCubic(t)
+  if t < 0.5 then
+    return 4 * t * t * t
+  else
+    return 1 - math.pow(-2 * t + 2, 3) / 2
+  end
+end
+
+--- Linear (no easing)
+---@param t number Progress 0-1
+---@return number Same value
+function M.linear(t)
+  return t
+end
+
+--------------------------------------------------------------------------------
+-- CORE ANIMATION
+--------------------------------------------------------------------------------
+
+--- Create an animation timer
+---@param durationMs number Duration in milliseconds
+---@param onFrame function(progress: number) Called each frame with progress 0-1
+---@param opts? table { easing?, onComplete? }
+---@return hs.timer Timer reference (caller should store for cleanup)
+function M.animate(durationMs, onFrame, opts)
+  opts = opts or {}
+  local easing = opts.easing or M.easeOutCubic
+  local onComplete = opts.onComplete
+
+  local durationSec = durationMs / 1000
+  local totalFrames = math.max(1, math.floor(durationSec * M.FPS))
+  local currentFrame = 0
+
+  -- Store timer reference for self-clearing
+  local timerRef = { timer = nil }
+
+  timerRef.timer = hs.timer.doUntil(function()
+    local done = currentFrame >= totalFrames
+    if done then
+      timerRef.timer = nil
+      if onComplete then onComplete() end
+    end
+    return done
+  end, function()
+    currentFrame = currentFrame + 1
+    local progress = currentFrame / totalFrames
+    local eased = easing(progress)
+    onFrame(eased)
+  end, 1 / M.FPS)
+
+  return timerRef.timer
+end
+
+--------------------------------------------------------------------------------
+-- SLIDE ANIMATIONS
+--------------------------------------------------------------------------------
+
+--- Animate a canvas sliding in with fade
+---@param canvas hs.canvas Canvas to animate
+---@param startY number Starting Y position
+---@param finalY number Final Y position
+---@param opts? table { duration?, easing?, onComplete? }
+---@return hs.timer Timer reference
+function M.slideIn(canvas, startY, finalY, opts)
+  opts = opts or {}
+  local durationMs = opts.duration or M.DEFAULTS.slideIn
+  local easing = opts.easing or M.easeOutBack  -- Bouncy by default
+  local x = canvas:topLeft().x
+  local slideDistance = startY - finalY
+
+  -- Start invisible at bottom position
+  canvas:topLeft({ x = x, y = startY })
+  canvas:alpha(0)
+  canvas:show()
+
+  return M.animate(durationMs, function(progress)
+    -- Slide up
+    local newY = startY - (slideDistance * progress)
+    canvas:topLeft({ x = x, y = newY })
+    -- Fade in
+    canvas:alpha(progress)
+  end, {
+    easing = easing,
+    onComplete = opts.onComplete,
+  })
+end
+
+--- Animate a canvas sliding out with fade
+---@param canvas hs.canvas Canvas to animate
+---@param opts? table { duration?, easing?, deleteAfter?, onComplete? }
+---@return hs.timer Timer reference
+function M.slideOut(canvas, opts)
+  opts = opts or {}
+  local durationMs = opts.duration or M.DEFAULTS.slideOut
+  local easing = opts.easing or M.easeInCubic
+  local deleteAfter = opts.deleteAfter ~= false  -- Default true
+  local onComplete = opts.onComplete
+
+  local currentPos = canvas:topLeft()
+  local startX, startY = currentPos.x, currentPos.y
+  local screen = hs.screen.mainScreen():frame()
+  local canvasFrame = canvas:frame()
+
+  -- Calculate slide distance to go off bottom of screen
+  local slideDistance = (screen.y + screen.h) - startY + canvasFrame.h + 50
+
+  return M.animate(durationMs, function(progress)
+    -- Slide down
+    local newY = startY + (slideDistance * progress)
+    canvas:topLeft({ x = startX, y = newY })
+    -- Fade out
+    canvas:alpha(1 - progress)
+  end, {
+    easing = easing,
+    onComplete = function()
+      if deleteAfter and canvas then
+        canvas:delete(0)
+      end
+      if onComplete then onComplete() end
+    end,
+  })
+end
+
+--- Animate a canvas sliding down (for top-anchored HUDs)
+---@param canvas hs.canvas Canvas to animate
+---@param startY number Starting Y position (above final)
+---@param finalY number Final Y position
+---@param opts? table { duration?, easing?, onComplete? }
+---@return hs.timer Timer reference
+function M.slideDown(canvas, startY, finalY, opts)
+  opts = opts or {}
+  local durationMs = opts.duration or M.DEFAULTS.slideIn
+  local easing = opts.easing or M.easeOutBack
+  local x = canvas:topLeft().x
+  local slideDistance = finalY - startY
+
+  canvas:topLeft({ x = x, y = startY })
+  canvas:alpha(0)
+  canvas:show()
+
+  return M.animate(durationMs, function(progress)
+    local newY = startY + (slideDistance * progress)
+    canvas:topLeft({ x = x, y = newY })
+    canvas:alpha(progress)
+  end, {
+    easing = easing,
+    onComplete = opts.onComplete,
+  })
+end
+
+--------------------------------------------------------------------------------
+-- FADE ANIMATIONS
+--------------------------------------------------------------------------------
+
+--- Fade in a canvas (no slide)
+---@param canvas hs.canvas Canvas to animate
+---@param opts? table { duration?, onComplete? }
+---@return hs.timer Timer reference
+function M.fadeIn(canvas, opts)
+  opts = opts or {}
+  local durationMs = opts.duration or M.DEFAULTS.fadeIn
+
+  canvas:alpha(0)
+  canvas:show()
+
+  return M.animate(durationMs, function(progress)
+    canvas:alpha(progress)
+  end, {
+    easing = M.linear,
+    onComplete = opts.onComplete,
+  })
+end
+
+--- Fade out a canvas
+---@param canvas hs.canvas Canvas to animate
+---@param opts? table { duration?, deleteAfter?, onComplete? }
+---@return hs.timer|nil Timer reference (nil if instant)
+function M.fadeOut(canvas, opts)
+  opts = opts or {}
+  local durationMs = opts.duration or M.DEFAULTS.fadeOut
+  local deleteAfter = opts.deleteAfter ~= false
+  local onComplete = opts.onComplete
+
+  if durationMs <= 0 then
+    if deleteAfter then
+      canvas:delete(0)
+    else
+      canvas:hide()
+    end
+    if onComplete then onComplete() end
+    return nil
+  end
+
+  return M.animate(durationMs, function(progress)
+    canvas:alpha(1 - progress)
+  end, {
+    easing = M.linear,
+    onComplete = function()
+      if deleteAfter then
+        canvas:delete(0)
+      else
+        canvas:hide()
+      end
+      if onComplete then onComplete() end
+    end,
+  })
+end
+
+--------------------------------------------------------------------------------
+-- SCALE ANIMATIONS (for hover-to-zoom)
+--------------------------------------------------------------------------------
+
+--- Animate a canvas scaling up
+---@param canvas hs.canvas Canvas to scale
+---@param targetScale number Target scale (e.g., 2.0 for 2x)
+---@param opts? table { duration?, onComplete? }
+---@return hs.timer Timer reference
+function M.scaleUp(canvas, targetScale, opts)
+  opts = opts or {}
+  local durationMs = opts.duration or 200
+
+  local startFrame = canvas:frame()
+  local startW, startH = startFrame.w, startFrame.h
+  local startX, startY = startFrame.x, startFrame.y
+
+  local endW = startW * targetScale
+  local endH = startH * targetScale
+  -- Keep centered
+  local endX = startX - (endW - startW) / 2
+  local endY = startY - (endH - startH) / 2
+
+  return M.animate(durationMs, function(progress)
+    local w = startW + (endW - startW) * progress
+    local h = startH + (endH - startH) * progress
+    local x = startX - (w - startW) / 2
+    local y = startY - (h - startH) / 2
+    canvas:frame({ x = x, y = y, w = w, h = h })
+  end, {
+    easing = M.easeOutCubic,
+    onComplete = opts.onComplete,
+  })
+end
+
+--- Animate a canvas scaling down (reverse of scaleUp)
+---@param canvas hs.canvas Canvas to scale
+---@param originalFrame table Original frame {x, y, w, h}
+---@param opts? table { duration?, onComplete? }
+---@return hs.timer Timer reference
+function M.scaleDown(canvas, originalFrame, opts)
+  opts = opts or {}
+  local durationMs = opts.duration or 200
+
+  local currentFrame = canvas:frame()
+  local startW, startH = currentFrame.w, currentFrame.h
+  local startX, startY = currentFrame.x, currentFrame.y
+
+  local endW, endH = originalFrame.w, originalFrame.h
+  local endX, endY = originalFrame.x, originalFrame.y
+
+  return M.animate(durationMs, function(progress)
+    local w = startW + (endW - startW) * progress
+    local h = startH + (endH - startH) * progress
+    local x = startX + (endX - startX) * progress
+    local y = startY + (endY - startY) * progress
+    canvas:frame({ x = x, y = y, w = w, h = h })
+  end, {
+    easing = M.easeOutCubic,
+    onComplete = opts.onComplete,
+  })
+end
+
+--------------------------------------------------------------------------------
+-- UTILITY
+--------------------------------------------------------------------------------
+
+--- Stop a timer safely
+---@param timer hs.timer|nil Timer to stop
+function M.stop(timer)
+  if timer then
+    pcall(function() timer:stop() end)
+  end
+end
+
+return M
