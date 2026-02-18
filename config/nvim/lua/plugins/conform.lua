@@ -20,8 +20,8 @@ for _, ft in ipairs({
   "typescriptreact",
 }) do
   js_formats[ft] = {
-    "deno_fmt",
     "biome",
+    "deno_fmt",
     "prettier",
     stop_after_first = true,
   }
@@ -76,20 +76,19 @@ return {
         },
       },
       formatters_by_ft = vim.tbl_extend("force", {
-        ["*"] = { "trim_whitespace", "trim_newlines" },
+        -- ["*"] = { "trim_whitespace", "trim_newlines" },
         elixir = { lsp_format = "prefer" },
         eelixir = { lsp_format = "prefer" },
-        -- elixir = { "mix" },
         json = {
-          "deno_fmt",
           "biome",
+          "deno_fmt",
           "prettier",
           "jq",
           stop_after_first = true,
         },
         jsonc = {
-          "deno_fmt",
           "biome",
+          "deno_fmt",
           "prettier",
           stop_after_first = true,
         },

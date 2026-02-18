@@ -55,8 +55,8 @@ function M.new(id, opts)
     isOpen = false,
     indicator = nil,
     indicatorColor = opts.indicatorColor or M.defaultIndicatorColor,
-    showIndicator = opts.showIndicator ~= true, -- default false
-    showAlert = opts.showAlert ~= true, -- default false
+    showIndicator = opts.showIndicator == true, -- default false (explicit true to enable)
+    showAlert = opts.showAlert == true, -- default false (explicit true to enable)
     autoExit = opts.autoExit ~= false and (opts.autoExit or 1), -- default 1s, false to disable
     alertUuids = nil,
     delayedExitTimer = nil,

@@ -14,7 +14,10 @@ function M:bindPassThrough(mods, key, app)
     else
       hs.application.launchOrFocusByBundleID(app)
       hs.timer.waitWhile(
-        function() return not hs.application.get(app) and not hs.application.get(app):isFrontmost() end,
+        function()
+          local appObj = hs.application.get(app)
+          return not appObj or not appObj:isFrontmost()
+        end,
         function() hs.eventtap.keyStroke({ "cmd", "alt", "shift", "ctrl" }, key) end
       )
     end
