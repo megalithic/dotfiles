@@ -90,13 +90,13 @@ function M.send(text, opts)
 
   local url, err = apiUrl("sendMessage")
   if not url then
-    U.log.w("Telegram: " .. (err or "unknown error"))
+    U.log.w("" .. (err or "unknown error"))
     return false, err or "api_error"
   end
 
   local chatId = getChatId()
   if not chatId then
-    U.log.w("Telegram: missing chat_id")
+    U.log.w("missing chat_id")
     return false, "missing_chat_id"
   end
 
@@ -116,9 +116,9 @@ function M.send(text, opts)
 
   hs.http.asyncPost(url, body, headers, function(status, responseBody, responseHeaders)
     if status == 200 then
-      U.log.f("Telegram: message sent successfully")
+      U.log.f("message sent successfully")
     else
-      U.log.wf("Telegram: send failed, status=%d, body=%s", status, responseBody or "")
+      U.log.wf("send failed, status=%d, body=%s", status, responseBody or "")
     end
   end)
 
@@ -174,13 +174,13 @@ function M.sendFormatted(text, opts)
 
   local url, err = apiUrl("sendMessage")
   if not url then
-    U.log.w("Telegram: " .. (err or "unknown error"))
+    U.log.w("" .. (err or "unknown error"))
     return false, err or "api_error"
   end
 
   local chatId = getChatId()
   if not chatId then
-    U.log.w("Telegram: missing chat_id")
+    U.log.w("missing chat_id")
     return false, "missing_chat_id"
   end
 
@@ -199,23 +199,23 @@ function M.sendFormatted(text, opts)
   local status, body = hs.http.post(url, hs.json.encode(payload), headers)
 
   if status == 200 then
-    U.log.f("Telegram: formatted message sent successfully")
+    U.log.f("formatted message sent successfully")
     return true, "sent"
   end
 
   -- If MarkdownV2 failed (likely parse error), retry as plain text
   if status == 400 and body and body:match("can't parse entities") then
-    U.log.wf("Telegram: MarkdownV2 parse failed, retrying as plain text")
+    U.log.wf("MarkdownV2 parse failed, retrying as plain text")
     payload.parse_mode = nil
     status, body = hs.http.post(url, hs.json.encode(payload), headers)
 
     if status == 200 then
-      U.log.f("Telegram: plain text fallback sent successfully")
+      U.log.f("plain text fallback sent successfully")
       return true, "sent_plain"
     end
   end
 
-  U.log.wf("Telegram: sendFormatted failed, status=%d, body=%s", status, body or "")
+  U.log.wf("sendFormatted failed, status=%d, body=%s", status, body or "")
   return false, "send_failed"
 end
 
@@ -243,14 +243,14 @@ local function processUpdates(updates)
     end
     
     if msgChatId and msgChatId ~= allowedChatId then
-      U.log.wf("Telegram: ignoring message from unauthorized chat_id: %s", msgChatId)
+      U.log.wf("ignoring message from unauthorized chat_id: %s", msgChatId)
       goto continue
     end
 
     -- Handle regular messages
     if update.message and update.message.text then
       local msg = update.message
-      U.log.df("Telegram: received message from %s: %s", msg.from and msg.from.username or "unknown", msg.text)
+      U.log.df("received message from %s: %s", msg.from and msg.from.username or "unknown", msg.text)
 
       if M.messageCallback then
         M.messageCallback({
@@ -267,7 +267,7 @@ local function processUpdates(updates)
     -- Handle callback queries (inline button presses)
     if update.callback_query then
       local query = update.callback_query
-      U.log.df("Telegram: received callback query: %s", query.data or "")
+      U.log.df("received callback query: %s", query.data or "")
 
       -- Parse callback data (format: "action:questionId:value")
       local action, questionId, value = (query.data or ""):match("^(%w+):([^:]+):(.+)$")
@@ -337,7 +337,7 @@ local function poll()
       -- Status 0 = timeout (normal for long polling)
       -- Status -1 = network error/cancelled (transient, will retry)
       -- Status 409 = conflict (another request in flight, shouldn't happen now)
-      U.log.wf("Telegram: poll failed, status=%d", status)
+      U.log.wf("poll failed, status=%d", status)
     end
   end)
 end
@@ -353,7 +353,7 @@ function M.init(opts)
   opts = opts or {}
 
   if M.initialized then
-    U.log.w("Telegram: already initialized")
+    U.log.w("already initialized")
     return true
   end
 
@@ -362,7 +362,7 @@ function M.init(opts)
   local chatId = getChatId()
 
   if not token or not chatId then
-    U.log.w("Telegram: missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID")
+    U.log.w("missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID")
     return false
   end
 
@@ -377,7 +377,7 @@ function M.init(opts)
   poll()
 
   M.initialized = true
-  U.log.i("Telegram: initialized with " .. interval .. "s poll interval")
+  U.log.i("initialized with " .. interval .. "s poll interval")
 
   return true
 end
@@ -391,7 +391,7 @@ function M.cleanup()
 
   M.initialized = false
   M.messageCallback = nil
-  U.log.i("Telegram: cleaned up")
+  U.log.i("cleaned up")
 end
 
 ---Check if Telegram is configured and ready

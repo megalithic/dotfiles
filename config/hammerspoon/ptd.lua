@@ -26,7 +26,7 @@ local function loadSpoon()
   if ok and spoon then
     return spoon
   else
-    U.log.e("ptd: Failed to load WhisperDictation spoon")
+    U.log.e("Failed to load WhisperDictation spoon")
     return nil
   end
 end
@@ -39,7 +39,7 @@ local function preflightModelCheck(callback)
   local whisperCmd = whisper.transcriptionMethods.whisperkitcli.config.cmd
   
   if not hs.fs.attributes(whisperCmd) then
-    U.log.e("ptd: whisperkit-cli not found at " .. whisperCmd)
+    U.log.e("whisperkit-cli not found at " .. whisperCmd)
     if callback then callback(false) end
     return
   end
@@ -51,13 +51,13 @@ local function preflightModelCheck(callback)
   -- Quick check - if huggingface cache exists and has content, likely good
   local cacheExists = hs.fs.attributes(cacheDir)
   if cacheExists then
-    U.log.i("ptd: model cache directory exists, assuming model ready")
+    U.log.i("model cache directory exists, assuming model ready")
     if callback then callback(true) end
     return
   end
   
   -- Need to download - create silent audio and trigger download
-  U.log.i("ptd: model not cached, triggering download...")
+  U.log.i("model not cached, triggering download...")
   
   -- Create a short silent WAV file for test
   local testAudio = "/tmp/whisper-preflight-test.wav"
@@ -66,13 +66,13 @@ local function preflightModelCheck(callback)
   -- Generate 0.5s of silence
   local silenceTask = hs.task.new(soxCmd, function(exitCode, _, _)
     if exitCode ~= 0 then
-      U.log.e("ptd: failed to create test audio")
+      U.log.e("failed to create test audio")
       if callback then callback(false) end
       return
     end
     
     -- Now run whisperkit-cli which will download the model
-    U.log.i("ptd: running whisperkit-cli to trigger model download...")
+    U.log.i("running whisperkit-cli to trigger model download...")
     local args = {
       "transcribe",
       "--model=" .. model,
@@ -85,20 +85,20 @@ local function preflightModelCheck(callback)
       os.remove(testAudio)
       
       if dlExitCode ~= 0 then
-        U.log.e("ptd: model download/test failed: " .. (stdErr or "unknown error"))
+        U.log.e("model download/test failed: " .. (stdErr or "unknown error"))
         if callback then callback(false) end
         return
       end
       
-      U.log.i("ptd: model ready!")
+      U.log.i("model ready!")
       if callback then callback(true) end
     end, function(task, stdOut, stdErr)
       -- Streaming callback - log progress
       if stdOut and stdOut ~= "" then
-        U.log.i("ptd: " .. stdOut)
+        U.log.i(stdOut)
       end
       if stdErr and stdErr ~= "" then
-        U.log.i("ptd: " .. stdErr)
+        U.log.i(stdErr)
       end
       return true
     end, args)
@@ -106,7 +106,7 @@ local function preflightModelCheck(callback)
     if downloadTask then
       downloadTask:start()
     else
-      U.log.e("ptd: failed to create download task")
+      U.log.e("failed to create download task")
       if callback then callback(false) end
     end
   end, {"-n", "-r", "16000", "-c", "1", testAudio, "trim", "0", "0.5"})
@@ -114,7 +114,7 @@ local function preflightModelCheck(callback)
   if silenceTask then
     silenceTask:start()
   else
-    U.log.e("ptd: failed to create silence generation task")
+    U.log.e("failed to create silence generation task")
     if callback then callback(false) end
   end
 end
@@ -151,7 +151,7 @@ local function onSpacePressed()
     if device then
       M.previousMicMuted = device:inputMuted()
       device:setInputMuted(false)
-      U.log.i("ptd: mic unmuted for recording")
+      U.log.i("mic unmuted for recording")
     end
     M.recording = true
     whisper:beginTranscribe()
@@ -180,7 +180,7 @@ local function onSpacePressed()
       if device then
         M.previousMicMuted = device:inputMuted()
         device:setInputMuted(false)
-        U.log.i("ptd: mic unmuted for always-on recording")
+        U.log.i("mic unmuted for always-on recording")
       end
     else
       -- Restore mic when stopping
@@ -188,7 +188,7 @@ local function onSpacePressed()
         local device = hs.audiodevice.defaultInputDevice()
         if device then
           device:setInputMuted(M.previousMicMuted)
-          U.log.i("ptd: mic restored")
+          U.log.i("mic restored")
         end
         M.previousMicMuted = nil
       end
@@ -229,7 +229,7 @@ local function onSpaceReleased()
       local device = hs.audiodevice.defaultInputDevice()
       if device then
         device:setInputMuted(M.previousMicMuted)
-        U.log.i("ptd: mic restored to " .. (M.previousMicMuted and "muted" or "unmuted"))
+        U.log.i("mic restored to " .. (M.previousMicMuted and "muted" or "unmuted"))
       end
       M.previousMicMuted = nil
     end
@@ -244,7 +244,7 @@ function M:init(config)
   
   whisper = loadSpoon()
   if not whisper then
-    U.log.e("ptd: Cannot initialize without WhisperDictation spoon")
+    U.log.e("Cannot initialize without WhisperDictation spoon")
     return self
   end
   
@@ -259,10 +259,10 @@ function M:init(config)
     local result = h:read("*l")
     h:close()
     if result and #result > 0 then
-      U.log.i("ptd: using " .. name .. " at " .. result)
+      U.log.i("using " .. name .. " at " .. result)
       return result
     end
-    U.log.e("ptd: " .. name .. " not found in PATH")
+    U.log.e("" .. name .. " not found in PATH")
     return nil
   end
 
@@ -276,7 +276,7 @@ end
 --- Start the dictation module (binds hotkeys)
 function M:start()
   if not whisper then
-    U.log.e("ptd: Cannot start - spoon not loaded")
+    U.log.e("Cannot start - spoon not loaded")
     return self
   end
   
@@ -286,9 +286,9 @@ function M:start()
   -- Preflight: check/download model
   preflightModelCheck(function(success)
     if success then
-      U.log.i("ptd: model preflight passed")
+      U.log.i("model preflight passed")
     else
-      U.log.w("ptd: model preflight failed, transcription may not work")
+      U.log.w("model preflight failed, transcription may not work")
     end
   end)  
   -- Bind cmd+opt+space with press/release handlers
@@ -300,7 +300,7 @@ function M:start()
     onSpaceReleased   -- releasedfn
   )
   
-  U.log.i("ptd: started, bound cmd+opt+space")
+  U.log.i("started, bound cmd+opt+space")
   
   return self
 end
@@ -321,7 +321,7 @@ function M:stop()
     whisper:stop()
   end
   
-  U.log.i("ptd: stopped")
+  U.log.i("stopped")
   
   return self
 end

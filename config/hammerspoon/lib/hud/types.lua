@@ -47,12 +47,15 @@
 
 ---@class Panel : BaseHUD
 ---@field timeout number Auto-dismiss delay (seconds)
----@field thumbnail hs.image|nil Thumbnail image
+---@field media hs.image|nil Media content (image, future: video/animation)
+---@field mediaOpts table|nil Media options (maxWidth, maxHeight, onClick)
+---@field mediaClickHandler function|nil Media click callback
 ---@field status string|nil Status text
 ---@field statusColor string|table|nil Status color
+---@field preview string|nil Preview text (monospace)
+---@field previewOpts table|nil Preview options (font, maxLines)
 ---@field content table|nil Additional content (e.g., keybindings, metadata)
 ---@field hoverScale number|nil Scale factor on hover
----@field onThumbnailClick function|nil Thumbnail click callback
 
 ---@class Persistent : BaseHUD
 ---@field content table Content options
@@ -68,6 +71,7 @@ local animator = require("lib.hud.animator")
 local renderer = require("lib.hud.renderer")
 local stack = require("lib.hud.stack")
 local persistence = require("lib.hud.persistence")
+local sfsymbol = require("lib.hud.sfsymbol")
 
 --------------------------------------------------------------------------------
 -- BASE HUD CLASS
@@ -84,6 +88,9 @@ function BaseHUD:new(opts)
   hud.ephemeral = opts.ephemeral ~= false  -- Default true
   hud.visible = false
   hud.createdAt = os.time()
+
+  -- Window-relative positioning (optional)
+  hud.targetWindow = opts.window
 
   -- Store dimensions
   hud.width = opts.width or 300
@@ -131,6 +138,7 @@ function BaseHUD:show()
 
   local pos = position.calculate(self.anchor, self.width, self.height, {
     screen = screen,
+    window = self.targetWindow,
     offset = self.verticalOffset or 0,
   })
 
@@ -297,8 +305,9 @@ function Alert:new(message, opts)
   local hud = BaseHUD.new(self, opts)
 
   hud.message = message
-  hud.icon = opts.icon           -- hs.image (legacy)
+  hud.icon = opts.icon           -- SF Symbol name (string) or hs.image
   hud.iconType = opts.iconType   -- "checkmark", "warning", "error", "info"
+  hud.iconColor = opts.iconColor -- Hex color (e.g., "4CD964") or color table
   hud.duration = opts.duration or 3  -- seconds
 
   -- Size preset (default: medium) - scaled for DPI
@@ -384,11 +393,20 @@ function Alert:_createCanvas(frame, scale)
       renderer.drawGear(canvas, iconX, iconY, iconSize, iconColor)
     end
   elseif self.icon then
-    -- Use provided image
-    renderer.addImage(canvas, self.icon, {
-      x = startX, y = centerY - iconSize / 2,
-      w = iconSize, h = iconSize,
-    })
+    -- Use SF Symbol name (string) or provided image
+    local iconImage = self.icon
+    if type(self.icon) == "string" then
+      -- Load SF Symbol with optional color (hex string)
+      local color = self.iconColor  -- Already hex string or nil
+      iconImage = sfsymbol.image(self.icon, { size = iconSize, color = color })
+    end
+
+    if iconImage then
+      renderer.addImage(canvas, iconImage, {
+        x = startX, y = centerY - iconSize / 2,
+        w = iconSize, h = iconSize,
+      })
+    end
   end
 
   -- Add message text, vertically centered using measured height
@@ -601,8 +619,9 @@ function Panel:new(opts)
   hud.duration = opts.timeout or opts.duration  -- seconds (nil = manual dismiss)
 
   -- Panel content (set via methods)
-  hud.thumbnail = nil
-  hud.thumbnailClickHandler = nil
+  hud.media = nil
+  hud.mediaOpts = nil
+  hud.mediaClickHandler = nil
   hud.status = nil
   hud.statusColor = nil
   hud.content = nil  -- Additional content (e.g., array of { key, desc } for keybindings)
@@ -619,10 +638,20 @@ function Panel:new(opts)
   return hud
 end
 
-function Panel:setThumbnail(image, opts)
+---Set media content (image, future: video/animation)
+---
+---Currently supports: hs.image (static images, GIFs show first frame only)
+---Future: For video/animated GIF, embed hs.webview as fallback
+---Research: hs.canvas has no native video support; webview can render HTML5 video
+---
+---@param image hs.image Media image
+---@param opts? { maxWidth?: number, maxHeight?: number, onClick?: function }
+---@return Panel self
+function Panel:setMedia(image, opts)
   opts = opts or {}
-  self.thumbnail = image
-  self.thumbnailClickHandler = opts.onClick
+  self.media = image
+  self.mediaOpts = opts  -- Store for rendering (maxWidth, maxHeight)
+  self.mediaClickHandler = opts.onClick
   return self
 end
 
@@ -636,37 +665,126 @@ end
 
 function Panel:setContent(content)
   self.content = content
+  self:_updateCanvas()
   return self
+end
+
+---Set preview text (monospace, below status, above cheatsheet)
+---@param text string|nil Preview text (nil to clear)
+---@param opts? { font?: string, maxLines?: number }
+function Panel:setPreview(text, opts)
+  opts = opts or {}
+  self.preview = text
+  self.previewOpts = {
+    font = opts.font or "JetBrainsMono Nerd Font Mono",
+    maxLines = opts.maxLines or 5,
+  }
+  self:_updateCanvas()
+  return self
+end
+
+---Recalculate panel dimensions based on content
+function Panel:_recalculateDimensions()
+  local dims = self:_calculateDimensions(1)  -- scale=1 for points
+  self.width = dims.width
+  self.height = dims.height
+end
+
+---Override show to recalculate dimensions first
+function Panel:show()
+  self:_recalculateDimensions()
+  return BaseHUD.show(self)
 end
 
 function Panel:_calculateDimensions(scale)
   local margin = 16 * scale
-  local width = self.width * scale
 
-  -- Thumbnail section
-  local thumbWidth = width - margin * 2
-  local thumbHeight = self.thumbnail and math.floor(thumbWidth * 0.6) or 0
+  -- Media section - calculate based on actual image size and constraints
+  local mediaWidth = 0
+  local mediaHeight = 0
+
+  if self.media then
+    local sourceSize = self.media:size()
+    local minW = (self.mediaOpts and self.mediaOpts.minWidth) or 280
+    local maxW = (self.mediaOpts and self.mediaOpts.maxWidth) or 320
+    local maxH = (self.mediaOpts and self.mediaOpts.maxHeight) or 180
+
+    -- Scale down for retina (source is 2x or more)
+    local scaleFactor = 4
+    local scaledW = sourceSize.w / scaleFactor
+    local scaledH = sourceSize.h / scaleFactor
+
+    -- Guard against zero dimensions
+    if scaledW < 1 then scaledW = 1 end
+    if scaledH < 1 then scaledH = 1 end
+
+    local aspectRatio = scaledW / scaledH
+
+    -- Scale UP to minimum width if too small
+    if scaledW < minW then
+      scaledW = minW
+      scaledH = scaledW / aspectRatio
+    end
+
+    -- Scale DOWN to fit max constraints
+    if scaledW > maxW then
+      scaledW = maxW
+      scaledH = scaledW / aspectRatio
+    end
+    if scaledH > maxH then
+      scaledH = maxH
+      scaledW = scaledH * aspectRatio
+    end
+
+    mediaWidth = math.floor(scaledW * scale)
+    mediaHeight = math.floor(scaledH * scale)
+  end
+
+  -- Panel width based on media or minimum (320pt)
+  local width = math.max(mediaWidth + margin * 2, 320)
 
   -- Status section
   local statusHeight = self.status and 24 * scale or 0
+
+  -- Preview section (monospace text, max 5 lines, 5px padding)
+  local previewLineHeight = 16 * scale
+  local previewPadding = 5 * scale
+  local previewMaxLines = (self.previewOpts and self.previewOpts.maxLines) or 5
+  local previewHeight = 0
+  if self.preview and #self.preview > 0 then
+    -- Count actual lines (up to max)
+    local lines = 0
+    for _ in self.preview:gmatch("[^\n]*") do
+      lines = lines + 1
+      if lines >= previewMaxLines then break end
+    end
+    previewHeight = math.min(lines, previewMaxLines) * previewLineHeight + previewPadding * 2
+  end
 
   -- Cheat sheet section
   local keyRowHeight = 20 * scale
   local keysHeight = self.content and #self.content * keyRowHeight or 0
 
   local totalHeight = margin
-    + (thumbHeight > 0 and (thumbHeight + margin / 2) or 0)
+    + (mediaHeight > 0 and (mediaHeight + margin / 2) or 0)
     + (statusHeight > 0 and (statusHeight + margin / 2) or 0)
+    + (previewHeight > 0 and (previewHeight + margin / 2) or 0)
     + keysHeight
     + margin
+
+  local contentWidth = width - margin * 2
 
   return {
     width = width,
     height = totalHeight,
     margin = margin,
-    thumbWidth = thumbWidth,
-    thumbHeight = thumbHeight,
+    contentWidth = contentWidth,
+    mediaWidth = mediaWidth,
+    mediaHeight = mediaHeight,
     statusHeight = statusHeight,
+    previewHeight = previewHeight,
+    previewLineHeight = previewLineHeight,
+    previewMaxLines = previewMaxLines,
     keyRowHeight = keyRowHeight,
     keysHeight = keysHeight,
   }
@@ -680,23 +798,19 @@ function Panel:_createCanvas(frame, scale)
   local margin = dims.margin
   local y = margin
 
-  -- Thumbnail
-  if self.thumbnail then
-    -- Scale thumbnail to fit
-    local sourceSize = self.thumbnail:size()
-    local scaleFactor = 4  -- Retina scaling
-    local scaledWidth = math.floor(sourceSize.w / scaleFactor)
-    local scaledHeight = math.floor(sourceSize.h / scaleFactor)
-    local scaledImage = self.thumbnail:copy():size({ w = scaledWidth, h = scaledHeight }, true)
+  -- Media (image, future: video/animation)
+  if self.media and dims.mediaWidth > 0 and dims.mediaHeight > 0 then
+    -- Center media if panel is wider than media
+    local mediaX = margin + (dims.contentWidth - dims.mediaWidth) / 2
 
-    renderer.addImage(canvas, scaledImage, {
-      x = margin, y = y,
-      w = dims.thumbWidth, h = dims.thumbHeight,
+    renderer.addImage(canvas, self.media, {
+      x = mediaX, y = y,
+      w = dims.mediaWidth, h = dims.mediaHeight,
     }, {
-      id = "thumbnail",
+      id = "media",
       trackMouse = true,
     })
-    y = y + dims.thumbHeight + margin / 2
+    y = y + dims.mediaHeight + margin / 2
   end
 
   -- Status
@@ -704,7 +818,12 @@ function Panel:_createCanvas(frame, scale)
     local statusColor = colors.subtitle
     if self.statusColor then
       if type(self.statusColor) == "string" then
-        statusColor = colors[self.statusColor] or colors.subtitle
+        -- Check if it's a hex color (6 chars, no spaces)
+        if self.statusColor:match("^%x%x%x%x%x%x$") then
+          statusColor = theme.hexToColor(self.statusColor)
+        else
+          statusColor = colors[self.statusColor] or colors.subtitle
+        end
       else
         statusColor = self.statusColor
       end
@@ -712,7 +831,7 @@ function Panel:_createCanvas(frame, scale)
 
     renderer.addText(canvas, self.status, {
       x = margin, y = y,
-      w = dims.thumbWidth, h = dims.statusHeight,
+      w = dims.contentWidth, h = dims.statusHeight,
     }, {
       size = theme.sizes.small * scale,
       color = statusColor,
@@ -722,11 +841,54 @@ function Panel:_createCanvas(frame, scale)
     y = y + dims.statusHeight + margin / 2
   end
 
+  -- Preview (monospace text section with 5px padding)
+  if self.preview and #self.preview > 0 and dims.previewHeight > 0 then
+    local previewPadding = 5 * scale
+
+    -- Truncate to max lines
+    local lines = {}
+    local count = 0
+    for line in self.preview:gmatch("([^\n]*)") do
+      count = count + 1
+      if count > dims.previewMaxLines then
+        -- Add ellipsis to last line
+        if #lines > 0 then
+          lines[#lines] = lines[#lines] .. "..."
+        end
+        break
+      end
+      table.insert(lines, line)
+    end
+    local truncatedText = table.concat(lines, "\n")
+
+    local previewFont = (self.previewOpts and self.previewOpts.font) or "JetBrainsMono Nerd Font Mono"
+
+    renderer.addText(canvas, truncatedText, {
+      x = margin + previewPadding, y = y + previewPadding,
+      w = dims.contentWidth - previewPadding * 2, h = dims.previewHeight,
+    }, {
+      size = theme.sizes.tiny * scale,
+      font = previewFont,
+      color = colors.subtitle,
+      id = "preview",
+    })
+    y = y + dims.previewHeight + previewPadding * 2 + margin / 2
+  end
+
   -- Cheat sheet
   if self.content then
     local keyColWidth = 24 * scale
 
     for i, kb in ipairs(self.content) do
+      -- Dim unavailable bindings (50% opacity)
+      local available = kb.available ~= false
+      local keyColor = colors.accent
+      local descColor = colors.subtitle
+      if not available then
+        keyColor = { red = keyColor.red, green = keyColor.green, blue = keyColor.blue, alpha = 0.5 }
+        descColor = { red = descColor.red, green = descColor.green, blue = descColor.blue, alpha = 0.5 }
+      end
+
       -- Key
       renderer.addText(canvas, kb.key, {
         x = margin, y = y,
@@ -734,17 +896,17 @@ function Panel:_createCanvas(frame, scale)
       }, {
         size = theme.sizes.tiny * scale,
         font = theme.fonts.mono,
-        color = colors.accent,
+        color = keyColor,
       })
 
       -- Description
       renderer.addText(canvas, kb.desc, {
         x = margin + keyColWidth + 8 * scale, y = y,
-        w = dims.thumbWidth - keyColWidth - 8 * scale,
+        w = dims.contentWidth - keyColWidth - 8 * scale,
         h = dims.keyRowHeight,
       }, {
         size = theme.sizes.tiny * scale,
-        color = colors.subtitle,
+        color = descColor,
       })
 
       y = y + dims.keyRowHeight
@@ -754,8 +916,8 @@ function Panel:_createCanvas(frame, scale)
   -- Click handling
   renderer.setupMouseCallbacks(canvas, {
     onElementClick = function(id, x, y)
-      if id == "thumbnail" and self.thumbnailClickHandler then
-        self.thumbnailClickHandler()
+      if id == "media" and self.mediaClickHandler then
+        self.mediaClickHandler()
         return true
       end
       return false
@@ -765,7 +927,7 @@ function Panel:_createCanvas(frame, scale)
       return true
     end,
     onHover = self.hoverScale and function(id, isEnter)
-      if id == "thumbnail" then
+      if id == "media" then
         self:_handleHover(isEnter)
       end
     end or nil,
@@ -803,22 +965,49 @@ end
 
 function Panel:_updateCanvas()
   if self.visible and self.canvas then
-    -- Stop any running hover animation
+    -- Stop any running animations
     if self.timers.hover then
       animator.stop(self.timers.hover)
       self.timers.hover = nil
     end
+    if self.timers.resize then
+      animator.stop(self.timers.resize)
+      self.timers.resize = nil
+    end
 
-    local pos = self.canvas:topLeft()
-    local frame = self.canvas:frame()
-    self.canvas:delete(0)
+    local oldFrame = self.canvas:frame()
 
-    local scale = position.getScaleFactor()
-    self.canvas = self:_createCanvas({
-      x = pos.x, y = pos.y,
-      w = frame.w, h = frame.h,
-    }, scale)
-    self.canvas:show()
+    -- Recalculate dimensions (content may have changed)
+    self:_recalculateDimensions()
+
+    -- Animate resize if size changed significantly
+    self.timers.resize = animator.resizeFromEdge(self.canvas, self.width, self.height, {
+      edge = "bottom",
+      duration = 150,
+      onComplete = function()
+        self.timers.resize = nil
+        -- Recreate canvas at final size for proper content rendering
+        local finalFrame = self.canvas:frame()
+        self.canvas:delete(0)
+        self.canvas = self:_createCanvas({
+          x = finalFrame.x, y = finalFrame.y,
+          w = self.width, h = self.height,
+        }, 1)
+        self.canvas:show()
+      end,
+    })
+
+    -- If no animation started (size unchanged), just recreate immediately
+    if not self.timers.resize then
+      local oldBottom = oldFrame.y + oldFrame.h
+      local targetY = oldBottom - self.height
+      self.canvas:delete(0)
+      self.canvas = self:_createCanvas({
+        x = oldFrame.x, y = targetY,
+        w = self.width, h = self.height,
+      }, 1)
+      self.canvas:show()
+    end
   end
 end
 

@@ -132,6 +132,20 @@ M.sizes = {
 -- API
 --------------------------------------------------------------------------------
 
+--- Convert hex color string to color table
+---@param hex string Hex color (e.g., "4CD964" or "#4CD964")
+---@param alpha? number Alpha value (default 1.0)
+---@return table Color table { red, green, blue, alpha }
+function M.hexToColor(hex, alpha)
+  hex = hex:gsub("#", "")
+  return {
+    red = tonumber(hex:sub(1, 2), 16) / 255,
+    green = tonumber(hex:sub(3, 4), 16) / 255,
+    blue = tonumber(hex:sub(5, 6), 16) / 255,
+    alpha = alpha or 1.0,
+  }
+end
+
 --- Get current system appearance
 ---@return "dark"|"light"
 function M.getAppearance()

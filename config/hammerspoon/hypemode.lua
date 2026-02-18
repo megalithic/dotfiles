@@ -25,7 +25,7 @@ M.defaultIndicatorColor = "#e39b7b"
 ---@field showIndicator boolean Whether to show border indicator on enter
 ---@field showAlert boolean Whether to show alert with app name on enter
 ---@field autoExit boolean|number Whether to auto-exit (true=1s, number=custom delay, false=manual)
----@field alertUuids table|nil Alert UUIDs for cleanup
+---@field hudAlert table|nil HUD alert instance for cleanup
 ---@field delayedExitTimer table|nil Timer for auto-exit
 ---@field customOnEntered function|nil Custom enter callback
 
@@ -38,7 +38,7 @@ function M.new(id, opts)
 
   -- Check for duplicate ID
   if M._registry[id] then
-    U.log.w(fmt("hypemode: modality '%s' already exists, returning existing instance", id))
+    U.log.w(fmt("modality '%s' already exists, returning existing instance", id))
     return M._registry[id]
   end
 
@@ -58,7 +58,7 @@ function M.new(id, opts)
     showIndicator = opts.showIndicator == true, -- default false (explicit true to enable)
     showAlert = opts.showAlert == true, -- default false (explicit true to enable)
     autoExit = opts.autoExit ~= false and (opts.autoExit or 1), -- default 1s, false to disable
-    alertUuids = nil,
+    hudAlert = nil,
     delayedExitTimer = nil,
     customOnEntered = opts.on_entered,
   }
@@ -115,7 +115,7 @@ function M.focusMainWindow(bundleID, opts)
   end
 
   if not app then
-    U.log.w("focusMainWindow: app not found")
+    U.log.w("focusMainWindow - app not found")
     return nil
   end
 
@@ -187,22 +187,17 @@ function M._onEntered(self)
       -- Show border indicator if enabled
       if self.showIndicator then self:_toggleIndicator(win) end
 
-      -- Show alert with app name if enabled
+      -- Show alert with app name if enabled (window-relative)
       if self.showAlert then
-        self.alertUuids = hs.fnutils.map(hs.screen.allScreens(), function(screen)
-          if screen == hs.screen.mainScreen() then
-            local appTitle = win:application():title()
-            local appImage = hs.image.imageFromAppBundle(win:application():bundleID())
-            local text = fmt("◱ %s: %s", self.id, appTitle)
+        local appTitle = win:application():title()
+        local text = fmt("%s: %s", self.id, appTitle)
 
-            if appImage ~= nil then
-              text = fmt("%s: %s", self.id, appTitle)
-              return hs.alert.showWithImage(text, appImage, nil, screen)
-            end
-
-            return hs.alert.show(text, hs.alert.defaultStyle, screen, true)
-          end
-        end)
+        -- Use HUD alert with window-relative positioning
+        self.hudAlert = HUD.alert(text, {
+          position = "top-center",
+          window = win,
+          duration = 0, -- Don't auto-dismiss (we handle it)
+        })
       end
 
       -- Auto-exit after delay if enabled (independent of alerts)
@@ -220,12 +215,13 @@ end
 ---@param self Modality
 function M._onExited(self)
   self.isOpen = false
-  if self.alertUuids ~= nil then
-    hs.fnutils.ieach(self.alertUuids, function(uuid)
-      if uuid ~= nil then hs.alert.closeSpecific(uuid) end
-    end)
-    self.alertUuids = nil
+
+  -- Dismiss HUD alert
+  if self.hudAlert then
+    self.hudAlert:dismiss()
+    self.hudAlert = nil
   end
+
   self:_toggleIndicator(nil, true)
 
   if self.delayedExitTimer ~= nil then

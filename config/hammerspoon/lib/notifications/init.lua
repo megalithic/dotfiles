@@ -437,12 +437,12 @@ function M.handleTelegramMessage(msg)
   if msg.type == "callback" and msg.action == "answer" and msg.questionId then
     local success = M.answerQuestion(msg.questionId)
     if success then
-      U.log.f("Telegram: answered question %s with '%s'", msg.questionId, msg.value or "")
+      U.log.f("telegram - answered question %s with '%s'", msg.questionId, msg.value or "")
       -- Send confirmation
       local telegram = require("lib.interop.telegram")
       telegram.send("✓ Response recorded: " .. (msg.value or "acknowledged"))
     else
-      U.log.wf("Telegram: question %s not found or already answered", msg.questionId)
+      U.log.wf("telegram - question %s not found or already answered", msg.questionId)
     end
     return
   end
@@ -496,7 +496,7 @@ function M.handleTelegramMessage(msg)
     if gatewayOk and piGateway and piGateway.isAvailable() then
       local handled = piGateway.handleTelegramMessage(msg.text)
       if handled then
-        U.log.f("Telegram: routed to pi-gateway")
+        U.log.f("telegram - routed to pi-gateway")
         return
       end
     end
@@ -506,12 +506,12 @@ function M.handleTelegramMessage(msg)
     if pi.lastActiveSession then
       local success = pi.forwardMessage(msg.text, "telegram")
       if success then
-        U.log.f("Telegram: forwarded to pi session: %s", pi.lastActiveSession)
+        U.log.f("telegram - forwarded to pi session: %s", pi.lastActiveSession)
         -- Acknowledge receipt
         local telegram = require("lib.interop.telegram")
         telegram.send("↪ Forwarded to pi")
       else
-        U.log.wf("Telegram: failed to forward to pi session")
+        U.log.wf("telegram - failed to forward to pi session")
       end
     else
       U.log.f("Telegram received (no active pi session, no gateway): \"%s\"", msg.text)

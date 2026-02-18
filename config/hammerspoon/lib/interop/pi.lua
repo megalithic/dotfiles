@@ -85,18 +85,18 @@ end
 ---@return boolean success
 local function sendToSocket(socketPath, payload)
   if not socketPath then
-    U.log.w("Pi: no socket path provided")
+    U.log.w("no socket path provided")
     return false
   end
   
   if not socketExists(socketPath) then
-    U.log.wf("Pi: socket not found: %s", socketPath)
+    U.log.wf("socket not found: %s", socketPath)
     return false
   end
   
   local json = hs.json.encode(payload)
   if not json then
-    U.log.w("Pi: failed to encode payload")
+    U.log.w("failed to encode payload")
     return false
   end
   
@@ -109,10 +109,10 @@ local function sendToSocket(socketPath, payload)
   local output, status = hs.execute(cmd)
   
   if status then
-    U.log.f("Pi: sent message to %s", socketPath)
+    U.log.f("sent message to %s", socketPath)
     return true
   else
-    U.log.wf("Pi: failed to send to %s: %s", socketPath, output or "unknown error")
+    U.log.wf("failed to send to %s: %s", socketPath, output or "unknown error")
     return false
   end
 end
@@ -126,7 +126,7 @@ function M.trackLastActive(context)
     if session then
       M.lastActiveSession = session
       M.lastActiveWindow = window
-      U.log.df("Pi: tracked last active session: %s, window: %s", session, window or "any")
+      U.log.df("tracked last active session: %s, window: %s", session, window or "any")
     end
   end
 end
@@ -137,14 +137,14 @@ end
 ---@return boolean success
 function M.forwardMessage(text, source)
   if not M.lastActiveSession then
-    U.log.w("Pi: no active session to forward message to")
+    U.log.w("no active session to forward message to")
     return false
   end
   
   local socketPath = getSocketPath(M.lastActiveSession, M.lastActiveWindow)
   
   if not socketPath then
-    U.log.wf("Pi: no socket found for session %s", M.lastActiveSession)
+    U.log.wf("no socket found for session %s", M.lastActiveSession)
     return false
   end
   
@@ -166,14 +166,14 @@ end
 ---@return boolean success
 function M.sendToSession(session, text, source, window)
   if not session then
-    U.log.w("Pi: no session provided")
+    U.log.w("no session provided")
     return false
   end
   
   local socketPath = getSocketPath(session, window)
   
   if not socketPath then
-    U.log.wf("Pi: no socket found for session %s", session)
+    U.log.wf("no socket found for session %s", session)
     return false
   end
   

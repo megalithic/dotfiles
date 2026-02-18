@@ -144,6 +144,27 @@ NIX_ENV = {
 
 Loaded in `preflight.lua` and injected into `hs.task` via `overrides.lua`.
 
+## Logging
+
+Use `U.log.*` for all logging. **Never prefix with module name** — it's auto-captured:
+
+```lua
+-- WRONG
+U.log.i("clipper: initialized")
+U.log.e(fmt("clipper: upload failed: %s", err))
+
+-- CORRECT
+U.log.i("initialized")
+U.log.e(fmt("upload failed: %s", err))
+```
+
+Log levels:
+- `U.log.d()` — Debug (verbose, development)
+- `U.log.i()` — Info (normal operations)
+- `U.log.w()` — Warning (recoverable issues)
+- `U.log.e()` — Error (failures)
+- `U.log.n()` — Notify (user-facing, shows alert)
+
 ## Common tasks
 
 ### Add a new hotkey
@@ -170,6 +191,47 @@ hs.inspect(_G.S.notification)  -- View specific namespace
 ```lua
 hs.reload()  -- or Cmd+Ctrl+R if bound
 ```
+
+### Check for errors after reload
+
+After reloading Hammerspoon, check the console for errors:
+
+```bash
+# View recent console output (last 50 lines)
+hs -c "hs.console.getConsole()" | tail -50
+
+# Search for errors specifically
+hs -c "hs.console.getConsole()" | rg -i "ERROR:|attempt to|not found|stack traceback"
+
+# Check if a specific module loaded
+hs -c "hs.console.getConsole()" | rg "\[clipper\]"
+
+# Open the console GUI
+hs -c "hs.openConsole()"
+```
+
+**Error patterns to look for:**
+- `ERROR:` — Lua errors, module load failures, LuaSkin errors
+- `attempt to` — Nil access, type errors (e.g., "attempt to index a nil value")
+- `module .* not found` — Missing require
+- `stack traceback` — Full error with line numbers
+
+**Success patterns to verify:**
+- `[modulename] initialized` — Module loaded successfully
+- `[watchers] initializing ...` — Lists active watchers
+- `hammerspork config is loaded` — Full config loaded
+
+**Enable debug logging:**
+```lua
+-- In Hammerspoon console, or add to config temporarily
+_G.DEBUG = true
+```
+This enables `U.log.d()` and `U.log.df()` output. By default, debug logs are suppressed.
+
+**From the Hammerspoon console GUI:**
+- Cmd+Ctrl+H opens console (if bound)
+- Errors appear in red
+- Filter with the search box
 
 ## Key files to understand
 
