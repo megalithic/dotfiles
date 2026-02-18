@@ -20,7 +20,7 @@
 --   })
 --
 --   local panel = hud.panel({ id = "clipper", timeout = 5 })
---   panel:setThumbnail(image)
+--   panel:setMedia(image)
 --   panel:setStatus("Uploading...")
 --   panel:show()
 --
@@ -127,7 +127,7 @@ end
 ---@param opts table { id?, position?, timeout?, onHover? }
 ---@return table Panel HUD instance (call :show() to display)
 ---@usage local p = hud.panel({ id = "clipper", timeout = 10 })
----@usage p:setThumbnail(img):setStatus("Ready"):show()
+---@usage p:setMedia(img):setStatus("Ready"):show()
 function M.panel(opts)
   opts = opts or {}
   return M.types.Panel:new(opts)

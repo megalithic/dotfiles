@@ -28,6 +28,7 @@
 
 ---@class HudPositionOpts
 ---@field screen? hs.screen Target screen
+---@field window? hs.window Target window (for window-relative positioning)
 ---@field margin? number Edge margin in points
 ---@field offset? number Vertical offset in points
 
@@ -129,9 +130,19 @@ function M.calculate(anchor, width, height, opts)
   opts = opts or {}
   -- Default to screen with mouse cursor (more intuitive than mainScreen)
   local screen = opts.screen or hs.mouse.getCurrentScreen() or hs.screen.mainScreen()
+  local window = opts.window
   local margin = opts.margin or M.MARGIN
   local offset = opts.offset or 0  -- Additional offset (e.g., for terminal prompts)
-  local frame = screen:frame()
+
+  -- Use window frame if provided, otherwise screen frame
+  local frame
+  if window then
+    frame = window:frame()
+    -- Smaller margin for window-relative positioning
+    margin = opts.margin or 12
+  else
+    frame = screen:frame()
+  end
 
   local x, y
 

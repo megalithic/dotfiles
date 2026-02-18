@@ -348,6 +348,40 @@ function M.scaleDown(canvas, originalFrame, opts)
   })
 end
 
+--- Animate canvas resize while keeping a specified edge fixed
+---@param canvas hs.canvas Canvas to resize
+---@param targetWidth number Target width
+---@param targetHeight number Target height
+---@param opts? { edge?: "bottom", duration?: number, onComplete?: function }
+---@return hs.timer|nil Timer reference
+function M.resizeFromEdge(canvas, targetWidth, targetHeight, opts)
+  opts = opts or {}
+  local edge = opts.edge or "bottom"
+  local durationMs = opts.duration or 150
+
+  local oldFrame = canvas:frame()
+
+  -- No animation needed if size hasn't changed
+  if math.abs(oldFrame.h - targetHeight) < 1 and math.abs(oldFrame.w - targetWidth) < 1 then
+    return nil
+  end
+
+  -- Currently only "bottom" edge is supported
+  -- TODO: Add top, left, right when needed
+  local anchorBottom = oldFrame.y + oldFrame.h
+
+  return M.animate(durationMs, function(progress)
+    local currentW = oldFrame.w + (targetWidth - oldFrame.w) * progress
+    local currentH = oldFrame.h + (targetHeight - oldFrame.h) * progress
+    local currentY = anchorBottom - currentH
+
+    canvas:frame({ x = oldFrame.x, y = currentY, w = currentW, h = currentH })
+  end, {
+    easing = M.easeOutCubic,
+    onComplete = opts.onComplete,
+  })
+end
+
 --------------------------------------------------------------------------------
 -- UTILITY
 --------------------------------------------------------------------------------

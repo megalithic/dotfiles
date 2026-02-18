@@ -118,12 +118,13 @@ hs.loadSpoon("EmmyLua")
 -- Development/spike modules (available via Spike.* global)
 -- require("spike-ax-meeting")
 
-local watchers = { "audio", "dock", "app", "notification", "url" }
+local watchers = { "audio", "dock", "app", "notification", "url", "pasteboard" }
 
 req("bindings")
 req("watchers", { watchers = watchers })
 req("micchecka", { model = "large-v3", languages = { "en" } }):start()
 req("quitter"):start()
+req("clipper")  -- Auto-inits via req(), starts pasteboard watcher
 
 -- Setup overrides for hs.* APIs
 -- Must be called AFTER all modules are loaded so we have references
@@ -134,6 +135,7 @@ overrides.setupReloadCleanup({
     require("watchers"):stop({ watchers = watchers })
     require("micchecka"):stop()
     require("quitter"):stop()
+    require("clipper"):stop()
   end,
 })
 
@@ -141,6 +143,7 @@ hs.shutdownCallback = function()
   require("watchers"):stop({ watchers = watchers })
   require("micchecka"):stop()
   require("quitter"):stop()
+  require("clipper"):stop()
   if N and N.cleanup then N.cleanup() end
   if HUD and HUD.cleanup then HUD.cleanup() end
 end

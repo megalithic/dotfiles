@@ -195,7 +195,7 @@ local function logError(operation, details)
     f:close()
   end
 
-  U.log.e(fmt("shade: %s - %s", operation, details))
+  U.log.e(fmt("%s - %s", operation, details))
 end
 
 --- Build CLI arguments from config
@@ -460,7 +460,7 @@ end
 function M.captureWithContext()
   -- Don't capture from Shade itself - there's no useful context
   if isShadeFocused() then
-    U.log.d("captureWithContext: ignoring - Shade is focused")
+    U.log.d("ignoring - Shade is focused")
     return false
   end
 
@@ -528,7 +528,7 @@ function M.setMode(mode)
   local notificationName = "io.shade.mode." .. mode
   hs.distributednotifications.post(notificationName, nil, nil)
   inSidebarMode = (mode ~= "floating")
-  U.log.d("shade: sent notification: " .. notificationName)
+  U.log.d("sent notification: " .. notificationName)
 end
 
 --- Enter sidebar mode on the left
@@ -558,7 +558,7 @@ end
 function M.captureWithContextSidebar()
   -- Don't capture from Shade itself - there's no useful context
   if isShadeFocused() then
-    U.log.d("captureWithContextSidebar: ignoring - Shade is focused")
+    U.log.d("sidebar capture - ignoring - Shade is focused")
     return false
   end
 
@@ -583,7 +583,7 @@ end
 ---@return boolean success
 function M.recallSidebar()
   if not M.isRunning() then
-    U.log.d("recallSidebar: Shade not running, nothing to recall")
+    U.log.d("recall sidebar - Shade not running, nothing to recall")
     return false
   end
 

@@ -433,7 +433,6 @@ function M:init()
   M.loadForceQuit()
   M.loadShade()
 
-  req("clipper")
   U.log.i("initialized")
 end
 
