@@ -5,6 +5,8 @@
 -- Keep all behavioral overrides here for visibility and maintainability.
 --
 
+local M = {}
+
 --------------------------------------------------------------------------------
 -- hs.task.new: Automatic PATH injection
 --------------------------------------------------------------------------------
@@ -104,6 +106,93 @@ windowMT.moveToUnit = withAxHotfix(windowMT.moveToUnit)
 -- windowMT.setFrame = withAxHotfix(windowMT.setFrame, 1)
 
 --------------------------------------------------------------------------------
+-- hs.alert: Custom HUD replacement
+--------------------------------------------------------------------------------
+-- Replaces hs.alert with our custom HUD module for consistent styling.
+-- Called from init.lua after HUD module is loaded.
+
+local originalAlert = {
+  show = hs.alert.show,
+  showWithImage = hs.alert.showWithImage,
+  closeAll = hs.alert.closeAll,
+  closeSpecific = hs.alert.closeSpecific,
+}
+
+---Setup hs.alert override using custom HUD module
+---@param hud table The HUD module
+function M.setupAlertOverride(hud)
+  hs.alert.show = function(str, style, screen, seconds)
+    -- Handle argument variations
+    if type(style) == "userdata" then
+      seconds = screen
+      screen = style
+      style = nil
+    elseif type(style) == "number" then
+      seconds = style
+      style = nil
+      screen = nil
+    end
+
+    local opts = {
+      duration = seconds or 2,
+      size = "medium",
+    }
+
+    if style then
+      if style.textSize then
+        opts.style = opts.style or {}
+        opts.style.fontSize = style.textSize
+      end
+      if style.textColor then
+        opts.style = opts.style or {}
+        opts.style.color = style.textColor
+      end
+    end
+
+    local alert = hud.alert(str, opts)
+    return alert.id
+  end
+
+  hs.alert.showWithImage = function(str, image, style, screen, seconds)
+    if type(style) == "userdata" then
+      seconds = screen
+      screen = style
+      style = nil
+    elseif type(style) == "number" then
+      seconds = style
+      style = nil
+      screen = nil
+    end
+
+    local opts = {
+      duration = seconds or 2,
+      size = "medium",
+      icon = image,
+    }
+
+    local alert = hud.alert(str, opts)
+    return alert.id
+  end
+
+  hs.alert.closeAll = function()
+    hud.dismissAll({ animate = false })
+  end
+
+  hs.alert.closeSpecific = function(uuid)
+    -- TODO: implement specific HUD dismissal by id
+    hud.dismissAll({ animate = false })
+  end
+end
+
+---Restore original hs.alert functions
+function M.restoreAlertOverride()
+  hs.alert.show = originalAlert.show
+  hs.alert.showWithImage = originalAlert.showWithImage
+  hs.alert.closeAll = originalAlert.closeAll
+  hs.alert.closeSpecific = originalAlert.closeSpecific
+end
+
+--------------------------------------------------------------------------------
 -- hs.reload: Pre-reload cleanup wrapper
 --------------------------------------------------------------------------------
 -- Hammerspoon's hs.reload() destroys the Lua state without calling any cleanup.
@@ -114,8 +203,6 @@ windowMT.moveToUnit = withAxHotfix(windowMT.moveToUnit)
 -- Must be called from init.lua AFTER all modules are loaded.
 --
 -- REF: hs.shutdownCallback only fires on quit, not reload
-
-local M = {}
 
 ---Setup hs.reload wrapper that performs cleanup before reloading
 ---@param opts {S: table, N: table, stopWatchers: function}
@@ -129,6 +216,9 @@ function M.setupReloadCleanup(opts)
 
     -- Clean up unified notification module
     if _G.N and _G.N.cleanup then pcall(_G.N.cleanup) end
+
+    -- Clean up HUD module
+    if _G.HUD and _G.HUD.cleanup then pcall(_G.HUD.cleanup) end
 
     -- Stop all watchers (app, notification, camera, etc.)
     if opts.stopWatchers then pcall(opts.stopWatchers) end
