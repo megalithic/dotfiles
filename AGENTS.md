@@ -274,6 +274,36 @@ jj describe -m "wip: user's changes before rebase"
 
 **This is not overrideable.** Losing user's work is unacceptable.
 
+## Image File Size Limit (CRITICAL - ENFORCED BY EXTENSION)
+
+**Claude API has a 5MB limit for base64-encoded images.** The `file-size-guard`
+extension automatically blocks reading images over this limit.
+
+### Blocked automatically:
+- Any image file (jpg, png, gif, webp, etc.) over 5MB
+- Extension shows helpful resize commands when blocking
+
+### If you need to view a large image:
+```bash
+# Check size first
+ls -lh /path/to/image.png
+
+# Resize to preview (25% usually sufficient)
+magick /path/to/image.png -resize 25% /tmp/preview.png
+
+# Or reduce quality for JPEG
+magick /path/to/image.png -quality 60 /tmp/preview.jpg
+
+# Then read the preview
+```
+
+### Best practices:
+- Screenshots of full screens are often 5-20MB — always resize first
+- Use `-resize 25%` for quick previews
+- Clean up preview files after viewing: `rm /tmp/*-preview.*`
+
+**This is enforced by extension** — you cannot override it.
+
 ## Pushing (RESTRICTED)
 
 **NEVER push without explicit user permission.** This includes:
