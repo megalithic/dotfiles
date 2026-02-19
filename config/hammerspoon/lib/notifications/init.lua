@@ -19,7 +19,6 @@ M.types = require("lib.notifications.types")
 M.db = DB.notifications  -- Notification-specific queries
 M.processor = require("lib.notifications.processor")
 M.menubar = require("lib.notifications.menubar")
-M.notifier = require("lib.notifications.notifier")
 M.sender = require("lib.notifications.send")
 
 -- LIFECYCLE

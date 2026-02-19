@@ -5,7 +5,6 @@
 local M = {}
 
 local types = require("lib.notifications.types")
-local notifier = require("lib.notifications.notifier")
 local telegram = require("lib.interop.telegram")
 local pi = require("lib.interop.pi")
 
@@ -37,13 +36,33 @@ local questionRetryTimer = nil
 ---Check display state (cheapest check, short-circuits everything)
 ---@return "awake"|"display_asleep"|"screen_locked"|"logged_out"
 function M.checkDisplayState()
-  -- Delegate to existing notifier function
-  return notifier.checkDisplayState()
+  local displayIdle = hs.caffeinate.get("displayIdle")
+  local sessionInfo = hs.caffeinate.sessionProperties()
+  local screenLocked = sessionInfo and sessionInfo["CGSSessionScreenIsLocked"] or false
+  local onConsole = sessionInfo and sessionInfo["kCGSSessionOnConsoleKey"] or false
+
+  if displayIdle then
+    return "display_asleep"
+  elseif screenLocked then
+    return "screen_locked"
+  elseif not onConsole then
+    return "logged_out"
+  else
+    return "awake"
+  end
 end
 
 ---Get the focused window title for terminal
 ---@return string|nil
-function M.getFocusedWindowTitle() return notifier.getFocusedWindowTitle(TERMINAL) end
+function M.getFocusedWindowTitle()
+  local app = hs.application.get(TERMINAL)
+  if not app then return nil end
+
+  local window = app:focusedWindow()
+  if not window then return nil end
+
+  return window:title()
+end
 
 ---Get the currently active tmux context by parsing the terminal window title
 ---The tmux title format is: "session:window:pane:pid process"
@@ -290,7 +309,14 @@ end
 ---@param message string
 ---@return boolean success
 function M.sendMacOS(title, message)
-  notifier.sendMacOSNotification(title, "", message)
+  hs.notify
+    .new({
+      title = title,
+      subTitle = "",
+      informativeText = message or "",
+      withdrawAfter = 10,
+    })
+    :send()
   return true
 end
 
