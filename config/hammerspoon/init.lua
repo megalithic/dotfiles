@@ -66,11 +66,6 @@ N.init()
 -- Initialize HUD module (replaces hs.alert, will replace notifier)
 _G.HUD = req("lib.hud")
 
--- FIXME: deprecate/remove
--- Backward compatibility (temporary during transition)
-_G.NotifyDB = N.db
-_G.NotifyMenubar = N.menubar
-
 function _G.P(...)
   -- local function getFnLocation()
   --   local w = debug.getinfo(3, "S")

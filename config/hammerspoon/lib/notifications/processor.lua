@@ -6,6 +6,88 @@ local M = {}
 -- Import dismiss utility for native notification dismissal
 local dismiss = require("lib.notifications.dismiss")
 
+--------------------------------------------------------------------------------
+-- UTILITY FUNCTIONS (inlined from former notifier module)
+--------------------------------------------------------------------------------
+
+-- Focus mode cache (to avoid repeated subprocess calls)
+local focusModeCache = {
+  mode = nil,
+  timestamp = 0,
+  ttl = 5, -- Cache for 5 seconds
+}
+
+--- Check if source app is currently focused
+---@param bundleID string|nil Bundle identifier
+---@return boolean
+local function isAppFocused(bundleID)
+  if not bundleID then return false end
+  local frontmost = hs.application.frontmostApplication()
+  if not frontmost then return false end
+  return frontmost:bundleID() == bundleID
+end
+
+--- Check if user is in terminal (Ghostty)
+---@return boolean
+local function isInTerminal()
+  local frontmost = hs.application.frontmostApplication()
+  if not frontmost then return false end
+  return frontmost:bundleID() == TERMINAL or frontmost:name() == "Ghostty"
+end
+
+--- Determine if high priority notification should be shown
+---@param bundleID string|nil Source app bundle ID
+---@param opts {alwaysShowInTerminal?: boolean, showWhenAppFocused?: boolean}
+---@return {shouldShow: boolean, reason: string}
+local function shouldShowHighPriority(bundleID, opts)
+  opts = opts or {}
+  local alwaysShowInTerminal = opts.alwaysShowInTerminal ~= false
+  local showWhenAppFocused = opts.showWhenAppFocused or false
+
+  if alwaysShowInTerminal and isInTerminal() then
+    return { shouldShow = true, reason = "in_terminal" }
+  end
+
+  local appIsFocused = isAppFocused(bundleID)
+  if appIsFocused and not showWhenAppFocused then
+    return { shouldShow = false, reason = "app_already_focused" }
+  end
+
+  return { shouldShow = true, reason = "app_not_focused" }
+end
+
+--- Get current Focus Mode (with 5-second cache)
+---@return string|nil Focus mode name or nil if no focus active
+local function getCurrentFocusMode()
+  local now = os.time()
+
+  -- Return cached value if still valid
+  if focusModeCache.timestamp + focusModeCache.ttl > now then
+    return focusModeCache.mode
+  end
+
+  -- Fetch fresh focus mode status via JXA script
+  local output, status = hs.execute(os.getenv("HOME") .. "/.dotfiles/bin/get-focus-mode 2>/dev/null")
+
+  if status then
+    local mode = output and output:match("^%s*(.-)%s*$") or nil
+    if mode == "" or mode == "No focus" then
+      focusModeCache.mode = nil
+    else
+      focusModeCache.mode = mode
+    end
+  else
+    focusModeCache.mode = nil
+  end
+
+  focusModeCache.timestamp = now
+  return focusModeCache.mode
+end
+
+--------------------------------------------------------------------------------
+-- NOTIFICATION PROCESSING
+--------------------------------------------------------------------------------
+
 ---@class ProcessOpts
 ---@field title string Notification title
 ---@field subtitle? string Notification subtitle (default: "")
@@ -24,7 +106,6 @@ local dismiss = require("lib.notifications.dismiss")
 ---@param rule NotificationRule The notification rule configuration
 ---@param opts ProcessOpts Notification content and metadata
 function M.process(rule, opts)
-  local notify = require("lib.notifications.notifier")
   local db = require("lib.db").notifications
   local menubar = require("lib.notifications.menubar")
   local timestamp = os.time()
@@ -52,7 +133,7 @@ function M.process(rule, opts)
   -- Check focus mode
   -- When no focus mode is active → always show (default behavior)
   -- When focus mode IS active → only show if overrideFocusModes allows it
-  local currentFocus = notify.getCurrentFocusMode and notify.getCurrentFocusMode() or nil
+  local currentFocus = getCurrentFocusMode()
   local focusAllowed = false
 
   if currentFocus == nil then
@@ -99,7 +180,7 @@ function M.process(rule, opts)
 
   -- Check urgency-based app focus rules (only for high/critical urgency)
   if urgency == "high" or urgency == "critical" then
-    local priorityCheck = notify.shouldShowHighPriority(bundleID, {
+    local priorityCheck = shouldShowHighPriority(bundleID, {
       alwaysShowInTerminal = rule.alwaysShowInTerminal,
       showWhenAppFocused = rule.showWhenAppFocused,
     })
@@ -138,7 +219,7 @@ function M.process(rule, opts)
   -- Build notification config based on urgency
   local iconBundleID = rule.appImageID or bundleID
 
-  -- Determine if notification content will be redacted (same logic as notifier.lua:636-652)
+  -- Determine if notification content will be redacted (redaction logic)
   -- Redaction occurs in DND or Work focus modes to hide sensitive content
   local shouldRedact = currentFocus == "Do Not Disturb" or currentFocus == "Work"
 
