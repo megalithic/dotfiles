@@ -104,16 +104,6 @@ function M.easeOutElastic(t)
   return a * math.pow(2, -10 * t) * math.sin((t - s) * (2 * math.pi) / p) + 1
 end
 
---- Spring easing (subtle bounce at end)
----@param t number Progress 0-1
----@return number Eased value with slight overshoot and settle
-function M.easeOutSpring(t)
-  -- Custom spring: overshoots slightly then settles
-  local damping = 0.6
-  local frequency = 4.5
-  return 1 - math.exp(-damping * t * 10) * math.cos(frequency * t * math.pi)
-end
-
 --------------------------------------------------------------------------------
 -- CORE ANIMATION
 --------------------------------------------------------------------------------
@@ -231,7 +221,7 @@ end
 function M.slideDown(canvas, startY, finalY, opts)
   opts = opts or {}
   local durationMs = opts.duration or M.DEFAULTS.slideIn
-  local easing = opts.easing or M.easeOutSpring  -- Springy bounce at end
+  local easing = opts.easing or M.easeOutCubic  -- Smooth deceleration, no bounce
   local x = canvas:topLeft().x
   local slideDistance = finalY - startY
 
@@ -242,8 +232,8 @@ function M.slideDown(canvas, startY, finalY, opts)
   return M.animate(durationMs, function(progress)
     local newY = startY + (slideDistance * progress)
     canvas:topLeft({ x = x, y = newY })
-    -- Quick fade in (complete by 30% of animation)
-    canvas:alpha(math.min(1, progress * 3.3))
+    -- Fade in synced with slide (slightly faster)
+    canvas:alpha(math.min(1, progress * 1.5))
   end, {
     easing = easing,
     onComplete = opts.onComplete,
