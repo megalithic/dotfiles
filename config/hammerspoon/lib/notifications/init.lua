@@ -329,7 +329,15 @@ function M.notify(title, message, opts)
     subtitle = "",
   })
 
-  M.notifier.sendCanvasNotification(title, message, opts)
+  -- Use HUD.toast() for display
+  HUD.toast({
+    title = title,
+    message = message,
+    subtitle = opts.subtitle,
+    duration = opts.duration,
+    appBundleID = opts.appBundleID or opts.appImageID,
+    position = "bottom-left",
+  })
 end
 
 ---Manually trigger a health check of the notification system

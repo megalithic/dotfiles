@@ -100,6 +100,11 @@ function BaseHUD:new(opts)
   hud.animationIn = opts.animationIn or opts.animation or 250
   hud.animationOut = opts.animationOut or opts.animation or 200
 
+  -- Dim overlay settings
+  hud.dim = opts.dim or false
+  hud.dimAlpha = opts.dimAlpha or 0.5
+  hud.overlay = nil  -- Canvas for dim overlay
+
   -- Timers for cleanup (all must be stopped on dismiss)
   hud.timers = {
     dismiss = nil,
@@ -135,6 +140,20 @@ function BaseHUD:show()
 
   -- Calculate position (use mouse screen, not main screen)
   local screen = hs.mouse.getCurrentScreen() or hs.screen.mainScreen()
+
+  -- Create dim overlay if requested
+  if self.dim then
+    local screenFrame = screen:fullFrame()
+    self.overlay = hs.canvas.new(screenFrame)
+    self.overlay:appendElements({
+      type = "rectangle",
+      action = "fill",
+      fillColor = { red = 0, green = 0, blue = 0, alpha = self.dimAlpha },
+      frame = { x = 0, y = 0, w = "100%", h = "100%" },
+    })
+    self.overlay:level("overlay")
+    self.overlay:show()
+  end
 
   local pos = position.calculate(self.anchor, self.width, self.height, {
     screen = screen,
@@ -197,6 +216,12 @@ function BaseHUD:dismiss(opts)
       animator.stop(timer)
       self.timers[name] = nil
     end
+  end
+
+  -- Clean up dim overlay
+  if self.overlay then
+    self.overlay:delete()
+    self.overlay = nil
   end
 
   -- Unregister from stack
@@ -448,15 +473,24 @@ function Toast:new(opts)
   hud.title = opts.title or ""
   hud.subtitle = opts.subtitle or ""
   hud.message = opts.message or ""
-  hud.icon = opts.icon
   hud.appBundleID = opts.appBundleID
   hud.duration = opts.duration or 5  -- seconds
+
+  -- Resolve icon upfront (separation of concerns - not in renderer)
+  -- Priority: explicit icon > appBundleID lookup
+  if opts.icon then
+    hud.icon = opts.icon
+  elseif opts.appBundleID then
+    hud.icon = renderer.getAppIcon(opts.appBundleID)
+  else
+    hud.icon = nil
+  end
 
   -- Click callback for icon
   hud.onIconClick = opts.onIconClick
 
   -- Calculate dimensions
-  local hasIcon = hud.icon ~= nil or hud.appBundleID ~= nil
+  local hasIcon = hud.icon ~= nil
   local padding = renderer.DEFAULTS.padding
   local iconSize = renderer.DEFAULTS.iconSize
   local iconSpacing = renderer.DEFAULTS.iconSpacing
@@ -497,23 +531,18 @@ function Toast:_createCanvas(frame, scale)
   local y = padding
   local textX = x
 
-  -- Add icon if present
-  if self._hasIcon then
-    local icon = self.icon
-    if not icon and self.appBundleID then
-      icon = renderer.getAppIcon(self.appBundleID)
-    end
-
-    if icon then
-      renderer.addImage(canvas, icon, {
-        x = x, y = y,
-        w = iconSize, h = iconSize,
-      }, {
-        id = "icon",
-        trackMouse = true,
-      })
-      textX = x + iconSize + iconSpacing
-    end
+  -- Add icon if present (already resolved in Toast:new)
+  if self.icon then
+    -- Offset icon up slightly to align with text top (text has internal leading)
+    local iconY = y - 2 * scale
+    renderer.addImage(canvas, self.icon, {
+      x = x, y = iconY,
+      w = iconSize, h = iconSize,
+    }, {
+      id = "icon",
+      trackMouse = true,
+    })
+    textX = x + iconSize + iconSpacing
   end
 
   local textWidth = frame.w - textX - padding

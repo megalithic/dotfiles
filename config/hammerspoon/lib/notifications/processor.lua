@@ -137,35 +137,40 @@ function M.process(rule, opts)
 
   -- Build notification config based on urgency
   local iconBundleID = rule.appImageID or bundleID
-  local launchBundleID = bundleID
-
-  local notifConfig = {
-    includeProgram = false,
-    appImageID = iconBundleID,
-    appBundleID = launchBundleID,
-    urgency = urgency,
-    subtitle = subtitle,
-    duration = duration,
-  }
-
-  if urgencyConfig.position == "center" then
-    notifConfig.anchor = "screen"
-    notifConfig.position = "C"
-    notifConfig.screen = "primary" -- Always show critical notifications on primary screen
-    notifConfig.dimBackground = urgencyConfig.dim
-    notifConfig.dimAlpha = 0.5
-  else
-    notifConfig.anchor = "screen"
-    notifConfig.position = "SW"
-    notifConfig.dimBackground = false
-  end
 
   -- Determine if notification content will be redacted (same logic as notifier.lua:636-652)
   -- Redaction occurs in DND or Work focus modes to hide sensitive content
   local shouldRedact = currentFocus == "Do Not Disturb" or currentFocus == "Work"
 
-  -- Show canvas notification
-  notify.sendCanvasNotification(title, message, notifConfig)
+  -- Redact message content if in focus mode
+  local displayMessage = message
+  if shouldRedact and message then
+    local redacted = ""
+    for i = 1, #message do
+      local c = message:sub(i, i)
+      if c == " " or c == "\n" or c == "\r" then
+        redacted = redacted .. c
+      else
+        redacted = redacted .. "•"
+      end
+    end
+    displayMessage = redacted
+  end
+
+  -- Map position: center for critical/high, bottom-left for normal/low
+  local hudPosition = urgencyConfig.position == "center" and "center" or "bottom-left"
+
+  -- Show HUD toast notification
+  HUD.toast({
+    title = title,
+    subtitle = subtitle,
+    message = displayMessage,
+    appBundleID = iconBundleID,
+    duration = duration,
+    position = hudPosition,
+    dim = urgencyConfig.dim or false,
+    dimAlpha = 0.5,
+  })
 
   -- Determine if we should dismiss the native macOS notification
   -- Priority: rule.dismissNative > global dismissNativeOnRedirect > false

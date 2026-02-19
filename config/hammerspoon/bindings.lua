@@ -394,15 +394,14 @@ function M.loadWm()
 end
 
 function M.loadNotifications()
-  -- Dismiss active canvas notification with F19+escape
+  -- Dismiss active HUD notification with F19+escape
   local dismissBindings = C.notifier.dismissBindings
   if dismissBindings then
     local mods, key = table.unpack(dismissBindings)
     req("hyper", { id = "notifications" }):start():bind(mods, key, nil, function()
-      -- Only dismiss if notification is active
-      if S.notification.canvas then
-        local notifier = require("lib.notifications.notifier")
-        notifier.dismissNotification()
+      -- Dismiss all active HUDs
+      if HUD and #HUD.getActive() > 0 then
+        HUD.dismissAll()
       end
     end)
   end

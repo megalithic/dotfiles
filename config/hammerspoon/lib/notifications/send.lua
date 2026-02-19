@@ -274,7 +274,14 @@ function M.sendCanvas(title, message, opts)
     includeProgram = true,
   })
 
-  notifier.sendCanvasNotification(title, message, opts)
+  -- Use HUD.toast() for display
+  HUD.toast({
+    title = title,
+    message = message,
+    appBundleID = opts.appImageID,  -- HUD renderer handles "hal9000" special case
+    duration = opts.duration,
+    position = "bottom-left",
+  })
   return true
 end
 
@@ -303,8 +310,12 @@ function M.routeNotification(opts, attention)
   -- "full" = user is elsewhere, send notification
   -- "remote_only" = display asleep/locked, only remote channels
   if shouldNotify == "full" then
-    M.sendMacOS(opts.title, opts.message)
-    table.insert(channels, "macos")
+    -- Use HUD toast directly (with HAL9000 icon for AI agents)
+    M.sendCanvas(opts.title, opts.message, {
+      duration = cfg.durations[opts.urgency] or 5,
+      appImageID = "hal9000",
+    })
+    table.insert(channels, "hud")
   end
   -- "subtle" = skip local notification, user is already looking at the terminal
 
