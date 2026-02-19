@@ -509,6 +509,79 @@ function M.pulse(canvas, opts)
 end
 
 --------------------------------------------------------------------------------
+-- LEVEL-DRIVEN VISUALIZATION
+--------------------------------------------------------------------------------
+
+---@class LevelBarOpts
+---@field barCount number Number of bars
+---@field maxHeight number Maximum bar height
+---@field baseY number Center Y for bars
+---@field barWidth? number Width of each bar (default: 4)
+---@field idPrefix? string ID prefix for bars (default: "waveform_bar_")
+
+---Update waveform bars based on audio level
+---Distributes the level across bars with slight variation for visual interest
+---@param canvas hs.canvas Canvas containing waveform bars
+---@param opts LevelBarOpts
+---@param level number Audio level 0.0-1.0
+function M.setWaveformLevel(canvas, opts, level)
+  local barCount = opts.barCount
+  local maxHeight = opts.maxHeight
+  local baseY = opts.baseY
+  local barWidth = opts.barWidth or 4
+  local idPrefix = opts.idPrefix or "waveform_bar_"
+  
+  -- Create variation pattern (center bars taller)
+  local patterns = {
+    [3] = { 0.7, 1.0, 0.7 },
+    [5] = { 0.5, 0.8, 1.0, 0.8, 0.5 },
+    [7] = { 0.4, 0.6, 0.85, 1.0, 0.85, 0.6, 0.4 },
+  }
+  local pattern = patterns[barCount] or {}
+  
+  for i = 1, barCount do
+    local elementId = idPrefix .. i
+    -- Apply pattern and add slight random variation for liveliness
+    local multiplier = pattern[i] or 1.0
+    local variation = 0.9 + math.random() * 0.2  -- 0.9-1.1
+    local barLevel = level * multiplier * variation
+    -- Minimum height so bars are always visible
+    local newHeight = math.max(maxHeight * 0.15, maxHeight * barLevel)
+    
+    local element = canvas[elementId]
+    if element then
+      canvas[elementId].frame = {
+        x = element.frame.x,
+        y = baseY - newHeight / 2,
+        w = barWidth,
+        h = newHeight,
+      }
+    end
+  end
+end
+
+---@class LevelPulseOpts
+---@field elementId string Canvas element ID to pulse
+---@field baseRadius number Base radius of the circle
+---@field maxGrowth? number Maximum growth at level 1.0 (default: 10)
+
+---Update circle radius based on audio level
+---@param canvas hs.canvas Canvas containing the circle
+---@param opts LevelPulseOpts
+---@param level number Audio level 0.0-1.0
+function M.setCircleLevel(canvas, opts, level)
+  local baseRadius = opts.baseRadius
+  local maxGrowth = opts.maxGrowth or 10
+  
+  -- Add subtle pulse based on level
+  local newRadius = baseRadius + (level * maxGrowth)
+  
+  if canvas[opts.elementId] then
+    canvas[opts.elementId].radius = newRadius
+  end
+end
+
+--------------------------------------------------------------------------------
 -- UTILITY
 --------------------------------------------------------------------------------
 

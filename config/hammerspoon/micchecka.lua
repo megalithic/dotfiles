@@ -29,6 +29,11 @@ local notchHUD = nil
 -- Local state (transient, reset on reload)
 -- (previousMicMuted removed - mic state now restored via applyPTTState)
 
+-- Audio level monitoring
+local levelMonitor = nil  -- Lazy loaded
+local currentLevel = 0    -- Current audio level 0.0-1.0
+local recordingWaveInfo = nil  -- Waveform info for level-driven updates
+
 --------------------------------------------------------------------------------
 -- HUD State Machine
 --------------------------------------------------------------------------------
@@ -120,6 +125,81 @@ local function loadHUDModules()
   end
 end
 
+local function loadLevelMonitor()
+  if not levelMonitor then
+    levelMonitor = require("lib.audio.levels")
+  end
+end
+
+--- Start monitoring audio levels and updating the HUD
+---@param canvas hs.canvas Canvas to update
+local function startLevelMonitoring(canvas)
+  loadLevelMonitor()
+  loadHUDModules()
+  
+  levelMonitor.start(function(level)
+    currentLevel = level
+    -- Update waveform bars based on actual level
+    if recordingWaveInfo and canvas then
+      animator.setWaveformLevel(canvas, recordingWaveInfo, level)
+    end
+    -- Optionally update circle size based on level too
+    if canvas and canvas["indicator"] then
+      animator.setCircleLevel(canvas, {
+        elementId = "indicator",
+        baseRadius = 24,
+        maxGrowth = 6,
+      }, level)
+    end
+  end)
+end
+
+--- Stop level monitoring
+local function stopLevelMonitoring()
+  if levelMonitor then
+    levelMonitor.stop()
+  end
+  currentLevel = 0
+  recordingWaveInfo = nil
+end
+
+-- Pulse animation state
+local pulseTimer = nil
+local pulsePhase = 0
+
+--- Stop pulse animation
+local function stopPulseAnimation()
+  if pulseTimer then
+    pulseTimer:stop()
+    pulseTimer = nil
+  end
+  pulsePhase = 0
+end
+
+--- Start breathing/pulsing animation for PTT indicator
+---@param canvas hs.canvas Canvas to update
+local function startPulseAnimation(canvas)
+  stopPulseAnimation()  -- Clean up any existing animation
+  loadHUDModules()
+  
+  pulsePhase = 0
+  pulseTimer = hs.timer.doEvery(0.05, function()
+    pulsePhase = pulsePhase + 0.15
+    -- Breathing pattern: smooth sine wave
+    local level = (math.sin(pulsePhase) + 1) / 2  -- 0.0 to 1.0
+    -- Add some subtle variation for liveliness
+    level = level * 0.6 + 0.4  -- Range: 0.4 to 1.0
+    
+    if canvas and canvas["indicator"] then
+      animator.setCircleLevel(canvas, {
+        elementId = "indicator",
+        baseRadius = 16,
+        maxGrowth = 8,
+      }, level)
+    end
+  end)
+end
+
 local function ensureHUD()
   loadHUDModules()
   if not notchHUD then
@@ -149,7 +229,8 @@ local function isMicActive()
   end
 end
 
---- Render HUD for recording state: red pulsing circle with waveform
+--- Render HUD for recording state: red pulsing circle with animated waveform
+--- Note: Uses simulated animation during recording because WhisperDictation owns the mic
 local function renderRecordingHUD(hud)
   local waveInfo
   hud:setContent(function(canvas, cx, cy)
@@ -172,12 +253,15 @@ local function renderRecordingHUD(hud)
   end)
   
   local canvas = hud:getCanvas()
+  
+  -- Use simulated animation during recording (WhisperDictation owns the mic)
   hud:addTimer("pulse", animator.pulse(canvas, {
     elementId = "indicator",
     baseRadius = 24,
     pulseAmount = 4,
   }))
   hud:addTimer("waveform", animator.waveform(canvas, waveInfo))
+  
   hud:show()
 end
 
@@ -236,7 +320,10 @@ local function renderCompleteHUD(hud)
   hud:show({ animate = false })
 end
 
---- Render HUD for PTT active state: smaller red pulsing indicator
+--- Render HUD for PTT active state: pulsing indicator
+--- Shows a breathing/pulsing circle to indicate mic is open
+--- Note: We don't use actual audio levels here because capturing audio
+--- via sox/AVFoundation conflicts with mic muting operations
 local function renderPTTActiveHUD(hud)
   hud:setContent(function(canvas, cx, cy)
     elements.circle(canvas, {
@@ -249,11 +336,12 @@ local function renderPTTActiveHUD(hud)
   end)
   
   local canvas = hud:getCanvas()
-  hud:addTimer("pulse", animator.pulse(canvas, {
-    elementId = "indicator",
-    baseRadius = 16,
-    pulseAmount = 3,
-  }))
+  recordingWaveInfo = nil  -- No waveform bars in PTT mode
+  
+  -- Start breathing/pulsing animation instead of real audio levels
+  -- This avoids conflicts with mic state changes
+  startPulseAnimation(canvas)
+  
   hud:show()
 end
 
@@ -272,10 +360,14 @@ local function setHUDState(newState)
   local oldState = currentHUDState
   currentHUDState = newState
   
-  -- Cancel complete timer when leaving complete state
+  -- Cleanup when leaving states
   if oldState == HUDState.COMPLETE then
     cancelCompleteTimer()
   end
+  if oldState == HUDState.PTT_ACTIVE then
+    stopPulseAnimation()
+  end
+  -- Note: RECORDING state cleanup is handled by notch.lua (stops timers on hide)
   
   -- Render new state
   if newState == HUDState.HIDDEN then
@@ -721,6 +813,8 @@ function M:stop()
   if whisper then whisper:stop() end
   
   -- Clean up HUD state
+  stopLevelMonitoring()
+  stopPulseAnimation()
   cancelCompleteTimer()
   currentHUDState = HUDState.HIDDEN
   destroyHUD()
