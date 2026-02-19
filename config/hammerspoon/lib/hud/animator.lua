@@ -383,6 +383,80 @@ function M.resizeFromEdge(canvas, targetWidth, targetHeight, opts)
 end
 
 --------------------------------------------------------------------------------
+-- ELEMENT ANIMATIONS
+--------------------------------------------------------------------------------
+
+---@class WaveformAnimOpts
+---@field barCount number Number of bars
+---@field maxHeight number Maximum bar height
+---@field baseY number Center Y coordinate for bars
+---@field barWidth? number Width of each bar (default: 4)
+---@field interval? number Animation interval in seconds (default: 0.05)
+---@field idPrefix? string ID prefix for bars (default: "waveform_bar_")
+
+---Animate waveform bars with random heights
+---@param canvas hs.canvas Canvas containing waveform bars
+---@param opts WaveformAnimOpts
+---@return hs.timer timer Timer for the animation (caller must stop)
+function M.waveform(canvas, opts)
+  assert(opts.barCount, "waveform requires opts.barCount")
+  assert(opts.maxHeight, "waveform requires opts.maxHeight")
+  assert(opts.baseY, "waveform requires opts.baseY")
+  
+  local barCount = opts.barCount
+  local maxHeight = opts.maxHeight
+  local baseY = opts.baseY
+  local barWidth = opts.barWidth or 4
+  local idPrefix = opts.idPrefix or "waveform_bar_"
+  
+  return hs.timer.doEvery(opts.interval or 0.05, function()
+    for i = 1, barCount do
+      local elementId = idPrefix .. i
+      local newHeight = maxHeight * (0.3 + math.random() * 0.7)
+      
+      local element = canvas[elementId]
+      if element then
+        canvas[elementId].frame = {
+          x = element.frame.x,
+          y = baseY - newHeight / 2,
+          w = barWidth,
+          h = newHeight,
+        }
+      end
+    end
+  end)
+end
+
+---@class PulseAnimOpts
+---@field elementId string Canvas element ID to pulse
+---@field baseRadius number Base radius of the circle
+---@field pulseAmount? number How much to grow/shrink (default: 5)
+---@field interval? number Animation interval in seconds (default: 0.033 ~30fps)
+
+---Pulse a circle element (grow/shrink)
+---@param canvas hs.canvas Canvas containing the circle
+---@param opts PulseAnimOpts
+---@return hs.timer timer Timer for the animation (caller must stop)
+function M.pulse(canvas, opts)
+  assert(opts.elementId, "pulse requires opts.elementId")
+  assert(opts.baseRadius, "pulse requires opts.baseRadius")
+  
+  local baseRadius = opts.baseRadius
+  local pulseAmount = opts.pulseAmount or 5
+  local phase = 0
+  
+  return hs.timer.doEvery(opts.interval or 0.033, function()  -- ~30fps
+    phase = phase + 0.15
+    local pulse = math.sin(phase) * pulseAmount
+    local newRadius = baseRadius + pulse
+    
+    if canvas[opts.elementId] then
+      canvas[opts.elementId].radius = newRadius
+    end
+  end)
+end
+
+--------------------------------------------------------------------------------
 -- UTILITY
 --------------------------------------------------------------------------------
 
