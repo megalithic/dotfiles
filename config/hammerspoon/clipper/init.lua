@@ -137,6 +137,49 @@ end
 -- HUD PANEL
 --------------------------------------------------------------------------------
 
+---Check if a point is inside a frame
+---@param point {x: number, y: number}
+---@param frame {x: number, y: number, w: number, h: number}
+---@return boolean
+local function pointInFrame(point, frame)
+  return point.x >= frame.x
+    and point.x <= frame.x + frame.w
+    and point.y >= frame.y
+    and point.y <= frame.y + frame.h
+end
+
+---Stop the click-outside watcher
+function M.stopClickOutsideWatcher()
+  if M.clickOutsideWatcher then
+    M.clickOutsideWatcher:stop()
+    M.clickOutsideWatcher = nil
+  end
+end
+
+---Start watching for clicks outside the panel
+function M.startClickOutsideWatcher()
+  M.stopClickOutsideWatcher()
+  
+  M.clickOutsideWatcher = hs.eventtap.new(
+    { hs.eventtap.event.types.leftMouseDown },
+    function(event)
+      if not M.panel or not M.panel.canvas then return false end
+      
+      local clickPoint = hs.mouse.absolutePosition()
+      local panelFrame = M.panel.canvas:frame()
+      
+      if not pointInFrame(clickPoint, panelFrame) then
+        -- Click was outside panel - dismiss
+        M.exitModal()
+        return true  -- Consume the click
+      end
+      
+      return false  -- Let click through to panel
+    end
+  )
+  M.clickOutsideWatcher:start()
+end
+
 ---Show the clipper HUD panel and enter modal mode
 function M.showPanel()
   if not M.hasCapture() then return end
@@ -177,6 +220,9 @@ function M.showPanel()
   -- Enter modal mode
   M.modal:enter()
   M.isModalActive = true
+  
+  -- Start watching for clicks outside panel
+  M.startClickOutsideWatcher()
 end
 
 ---Generate and update cheatsheet based on current state
@@ -619,6 +665,7 @@ end
 function M.exitModal()
   M.isModalActive = false
   M.stopOcrPasteWatcher()
+  M.stopClickOutsideWatcher()
   M.modal:exit()
   M.hidePanel()
   U.log.d("exited modal")
@@ -755,8 +802,9 @@ function M:stop()
   -- Reset state
   M.isModalActive = false
 
-  -- Stop OCR paste watcher
+  -- Stop watchers
   M.stopOcrPasteWatcher()
+  M.stopClickOutsideWatcher()
 
   -- Terminate any running tasks
   for name, task in pairs(M.activeTasks) do
