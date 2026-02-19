@@ -55,11 +55,18 @@ local function safeTelegramSend(text)
   return true
 end
 
+-- Truncate text to a max length, adding ellipsis if needed
+local function truncateText(text, maxLen)
+  if not text or #text <= maxLen then return text or "" end
+  return text:sub(1, maxLen) .. "..."
+end
+
 -- State
 M.process = nil -- hs.task handle
 M.buffer = "" -- Partial JSON line buffer
 M.busy = false -- Is pi currently processing?
 M.currentTaskId = nil -- For abort tracking
+M.currentTaskText = nil -- Text of current task (for status display)
 M.queue = { normal = {}, priority = {} } -- Message queues
 M.consecutiveFailures = 0
 M.inCooldown = false
@@ -82,6 +89,12 @@ M.isUsingFallback = false -- True if we've switched from initial provider/model
 -- Timers that need cleanup (prevents memory leaks from anonymous timers)
 M.restartTimer = nil -- Auto-restart delay timer
 M.cooldownTimer = nil -- Circuit breaker cooldown timer
+
+-- Reset task state (call when task completes, aborts, or fails)
+local function resetTaskState()
+  M.busy = false
+  M.currentTaskText = nil
+end
 
 -- Constants (avoid magic numbers)
 local MAX_BUFFER_SIZE = 1024 * 1024 -- 1MB buffer limit
@@ -354,7 +367,7 @@ local function abortTask(reason)
     U.log.wf("aborting task, reason=%s", reason or "unknown")
 
     sendCommand({ type = "abort" })
-    M.busy = false
+    resetTaskState()
 
     -- Notify user
     local emoji = "⏰"
@@ -544,7 +557,7 @@ local function handleEvent(event)
       startTaskTimer() -- Start timeout tracking
       recordActivity()
     elseif event.type == "agent_end" then
-      M.busy = false
+      resetTaskState()
       M.consecutiveFailures = 0 -- Reset on success
       M.clearTaskTimer() -- Clear timeout tracking
 
@@ -692,7 +705,7 @@ local function onExit(exitCode, signal)
   local ok, err = pcall(function()
     U.log.wf("process exited (code=%s, signal=%s)", tostring(exitCode or -1), tostring(signal or -1))
     M.process = nil
-    M.busy = false
+    resetTaskState()
     M.buffer = ""
 
     -- Auto-restart unless in cooldown (with delay to prevent rapid restarts)
@@ -762,9 +775,13 @@ local function processNextInQueue()
       local waitTime = msg.timestamp and (os.time() - msg.timestamp) or 0
       local remaining = #M.queue.priority + #M.queue.normal
 
+      -- Store current task info
+      M.currentTaskText = msg.text
+
       -- Notify user that queued task is starting
       local emoji = isPriority and "⚡" or "🔄"
-      local statusParts = { emoji .. " Processing" }
+      local preview = truncateText(msg.text, 40)
+      local statusParts = { emoji .. " Processing: " .. preview }
       if waitTime > 5 then statusParts[#statusParts + 1] = string.format("(waited %ds)", waitTime) end
       if remaining > 0 then statusParts[#statusParts + 1] = string.format("• %d more in queue", remaining) end
       safeTelegramSend(table.concat(statusParts, " "))
@@ -779,7 +796,7 @@ local function processNextInQueue()
 
   if not ok then
     U.log.wf("error in processNextInQueue: %s", tostring(err))
-    M.busy = false -- Reset busy state on error
+    resetTaskState() -- Reset task state on error
   end
 end
 
@@ -811,19 +828,30 @@ end
 ---Send immediate ack to Telegram (safe)
 ---@param isPriority boolean
 ---@param position number Queue position
-local function sendAck(isPriority, position)
+---@param messageText string The queued message text
+local function sendAck(isPriority, position, messageText)
   local ok, err = pcall(function()
     local emoji = isPriority and "⚡" or "📥"
-    local status = isPriority and "Priority queued" or "Queued"
+    local preview = truncateText(messageText, 35)
+    local parts = {}
 
     if (position or 1) == 1 and not M.busy then
-      status = "Processing"
-      emoji = "🔄"
-    elseif (position or 0) > 1 then
-      status = status .. string.format(" (position %d)", position)
+      -- Processing immediately
+      parts[#parts + 1] = "🔄 Processing: " .. preview
+    else
+      -- Queued behind other tasks
+      parts[#parts + 1] = emoji .. " " .. (isPriority and "Priority" or "Queued") .. ": " .. preview
+      if (position or 0) > 1 then
+        parts[#parts + 1] = string.format("(#%d in queue)", position)
+      end
+      -- Show what's currently running
+      if M.busy and M.currentTaskText then
+        local currentPreview = truncateText(M.currentTaskText, 30)
+        parts[#parts + 1] = "• Working on: " .. currentPreview
+      end
     end
 
-    safeTelegramSend(emoji .. " " .. status)
+    safeTelegramSend(table.concat(parts, " "))
   end)
 
   if not ok then U.log.wf("error sending ack: %s", tostring(err)) end
@@ -864,7 +892,7 @@ function M.handleTelegramMessage(text)
     if isAbortCommand(text) then
       U.log.i("abort command received")
       sendCommand({ type = "abort" })
-      M.busy = false
+      resetTaskState()
       M.clearTaskTimer()
       safeTelegramSend("🛑 Aborted current task")
       -- Don't clear queue - just abort current
@@ -900,7 +928,7 @@ function M.handleTelegramMessage(text)
     appendToHistory({ type = "user", text = cleanText, priority = isPriority })
 
     -- Send immediate ack
-    sendAck(isPriority, position)
+    sendAck(isPriority, position, cleanText)
 
     return true
   end)
@@ -1090,7 +1118,7 @@ function M.stop()
     end
 
     -- Reset state
-    M.busy = false
+    resetTaskState()
     M.buffer = ""
     M.queue = { normal = {}, priority = {} }
     M.consecutiveFailures = 0

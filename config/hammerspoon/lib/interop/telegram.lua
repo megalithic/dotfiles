@@ -83,7 +83,7 @@ end
 
 ---Send a message to Telegram
 ---@param text string Message text (supports Markdown)
----@param opts? { parse_mode?: string, reply_markup?: table }
+---@param opts? { parse_mode?: string|false, reply_markup?: table }
 ---@return boolean success, string reason
 function M.send(text, opts)
   opts = opts or {}
@@ -103,8 +103,12 @@ function M.send(text, opts)
   local payload = {
     chat_id = chatId,
     text = text,
-    parse_mode = opts.parse_mode or "MarkdownV2",
   }
+
+  -- parse_mode: false = disable, nil = default to MarkdownV2, string = use that mode
+  if opts.parse_mode ~= false then
+    payload.parse_mode = opts.parse_mode or "MarkdownV2"
+  end
 
   -- Add reply keyboard if provided (useful for quick responses)
   if opts.reply_markup then
@@ -220,6 +224,76 @@ function M.sendFormatted(text, opts)
 end
 
 --------------------------------------------------------------------------------
+-- FILE DOWNLOADS
+--------------------------------------------------------------------------------
+
+---Download a file from Telegram by file_id
+---@param fileId string The file_id from voice/audio/document message
+---@param callback function Called with (success, localPath, error)
+local function downloadFile(fileId, callback)
+  local url, err = apiUrl("getFile")
+  if not url then
+    callback(false, nil, err or "missing_token")
+    return
+  end
+
+  url = url .. "?file_id=" .. fileId
+
+  hs.http.asyncGet(url, nil, function(status, body, headers)
+    if status ~= 200 or not body then
+      U.log.wf("getFile failed, status=%d", status)
+      callback(false, nil, "getFile_failed")
+      return
+    end
+
+    local ok, result = pcall(hs.json.decode, body)
+    if not ok or not result or not result.ok or not result.result then
+      U.log.w("getFile response parse failed")
+      callback(false, nil, "parse_failed")
+      return
+    end
+
+    local filePath = result.result.file_path
+    if not filePath then
+      U.log.w("no file_path in getFile response")
+      callback(false, nil, "no_file_path")
+      return
+    end
+
+    -- Build download URL
+    local token = getToken()
+    local downloadUrl = string.format("https://api.telegram.org/file/bot%s/%s", token, filePath)
+
+    -- Extract filename and extension
+    local filename = filePath:match("([^/]+)$") or ("telegram_" .. os.time())
+    local localPath = "/tmp/" .. filename
+
+    -- Download the file
+    hs.http.asyncGet(downloadUrl, nil, function(dlStatus, dlBody, dlHeaders)
+      if dlStatus ~= 200 or not dlBody then
+        U.log.wf("file download failed, status=%d", dlStatus)
+        callback(false, nil, "download_failed")
+        return
+      end
+
+      -- Write to local file
+      local file = io.open(localPath, "wb")
+      if not file then
+        U.log.wf("failed to open %s for writing", localPath)
+        callback(false, nil, "write_failed")
+        return
+      end
+
+      file:write(dlBody)
+      file:close()
+
+      U.log.f("downloaded file to %s", localPath)
+      callback(true, localPath, nil)
+    end)
+  end)
+end
+
+--------------------------------------------------------------------------------
 -- RECEIVE MESSAGES (Long Polling)
 --------------------------------------------------------------------------------
 
@@ -262,6 +336,121 @@ local function processUpdates(updates)
           replyToMessage = msg.reply_to_message,
         })
       end
+    end
+
+    -- Handle voice messages
+    if update.message and update.message.voice then
+      local msg = update.message
+      local voice = msg.voice
+      U.log.f("received voice message from %s (duration=%ds, size=%d)", 
+        msg.from and msg.from.username or "unknown",
+        voice.duration or 0,
+        voice.file_size or 0)
+
+      downloadFile(voice.file_id, function(success, localPath, err)
+        if success and M.messageCallback then
+          M.messageCallback({
+            type = "voice",
+            filePath = localPath,
+            duration = voice.duration,
+            mimeType = voice.mime_type,
+            from = msg.from,
+            chat = msg.chat,
+            messageId = msg.message_id,
+          })
+        elseif not success then
+          U.log.wf("failed to download voice: %s", err or "unknown")
+        end
+      end)
+    end
+
+    -- Handle audio files
+    if update.message and update.message.audio then
+      local msg = update.message
+      local audio = msg.audio
+      U.log.f("received audio from %s: %s (duration=%ds)", 
+        msg.from and msg.from.username or "unknown",
+        audio.title or audio.file_name or "untitled",
+        audio.duration or 0)
+
+      downloadFile(audio.file_id, function(success, localPath, err)
+        if success and M.messageCallback then
+          M.messageCallback({
+            type = "audio",
+            filePath = localPath,
+            duration = audio.duration,
+            title = audio.title,
+            performer = audio.performer,
+            mimeType = audio.mime_type,
+            from = msg.from,
+            chat = msg.chat,
+            messageId = msg.message_id,
+          })
+        elseif not success then
+          U.log.wf("failed to download audio: %s", err or "unknown")
+        end
+      end)
+    end
+
+    -- Handle photos (Telegram sends array of sizes, we want the largest)
+    if update.message and update.message.photo then
+      local msg = update.message
+      local photos = msg.photo
+      -- Photos are sorted by size, last one is largest
+      local photo = photos[#photos]
+      U.log.f("received photo from %s (%dx%d, %d bytes)", 
+        msg.from and msg.from.username or "unknown",
+        photo.width or 0,
+        photo.height or 0,
+        photo.file_size or 0)
+
+      downloadFile(photo.file_id, function(success, localPath, err)
+        if success and M.messageCallback then
+          M.messageCallback({
+            type = "photo",
+            filePath = localPath,
+            width = photo.width,
+            height = photo.height,
+            caption = msg.caption,
+            from = msg.from,
+            chat = msg.chat,
+            messageId = msg.message_id,
+          })
+        elseif not success then
+          U.log.wf("failed to download photo: %s", err or "unknown")
+        end
+      end)
+    end
+
+    -- Handle documents (including images sent as files for original quality)
+    if update.message and update.message.document then
+      local msg = update.message
+      local doc = msg.document
+      local mimeType = doc.mime_type or ""
+      local isImage = mimeType:match("^image/")
+
+      U.log.f("received document from %s: %s (%s, %d bytes)", 
+        msg.from and msg.from.username or "unknown",
+        doc.file_name or "unnamed",
+        mimeType,
+        doc.file_size or 0)
+
+      downloadFile(doc.file_id, function(success, localPath, err)
+        if success and M.messageCallback then
+          M.messageCallback({
+            type = isImage and "photo" or "document",
+            filePath = localPath,
+            fileName = doc.file_name,
+            mimeType = mimeType,
+            caption = msg.caption,
+            from = msg.from,
+            chat = msg.chat,
+            messageId = msg.message_id,
+          })
+        elseif not success then
+          U.log.wf("failed to download document: %s", err or "unknown")
+        end
+      end)
     end
 
     -- Handle callback queries (inline button presses)

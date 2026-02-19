@@ -455,6 +455,80 @@ function M.handleTelegramMessage(msg)
     return
   end
 
+  -- Handle voice/audio messages (transcribe and forward)
+  if msg.type == "voice" or msg.type == "audio" then
+    local telegram = require("lib.interop.telegram")
+    local filePath = msg.filePath
+
+    if not filePath then
+      U.log.w("telegram - voice/audio message has no filePath")
+      telegram.send("⚠️ Failed to process audio: no file path", { parse_mode = false })
+      return
+    end
+
+    U.log.f("telegram - transcribing %s: %s", msg.type, filePath)
+    telegram.send("🎤 Transcribing audio...", { parse_mode = false })
+
+    -- Run whisperkit-cli to transcribe
+    local task = hs.task.new(
+      "/usr/bin/env",
+      function(exitCode, stdout, stderr)
+        if exitCode ~= 0 then
+          U.log.wf("whisperkit-cli failed (exit=%d): %s", exitCode, stderr or "")
+          telegram.send("⚠️ Transcription failed", { parse_mode = false })
+          return
+        end
+
+        local transcription = stdout and stdout:match("^%s*(.-)%s*$") -- trim
+        if not transcription or #transcription == 0 then
+          U.log.w("telegram - empty transcription")
+          telegram.send("⚠️ Transcription was empty", { parse_mode = false })
+          return
+        end
+
+        U.log.f("telegram - transcribed: %s", transcription:sub(1, 100))
+
+        -- Forward transcription as if it were a text message
+        local gatewayOk, piGateway = pcall(require, "lib.interop.pi-gateway")
+        if gatewayOk and piGateway and piGateway.isAvailable() then
+          local handled = piGateway.handleTelegramMessage(transcription)
+          if handled then
+            U.log.f("telegram - transcription routed to pi-gateway")
+            return
+          end
+        end
+
+        -- Fallback: Forward to active pi session
+        local pi = require("lib.interop.pi")
+        if pi.lastActiveSession then
+          local success = pi.forwardMessage(transcription, "telegram-voice")
+          if success then
+            U.log.f("telegram - transcription forwarded to pi: %s", pi.lastActiveSession)
+          else
+            U.log.wf("telegram - failed to forward transcription")
+            telegram.send("⚠️ Failed to forward transcription to pi", { parse_mode = false })
+          end
+        else
+          U.log.f("telegram - transcription received but no pi session: %s", transcription)
+          telegram.send("📝 Transcription (no active pi):\n" .. transcription, { parse_mode = false })
+        end
+
+        -- Clean up temp file
+        os.remove(filePath)
+      end,
+      { "whisperkit-cli", "transcribe", "--audio-path", filePath }
+    )
+
+    if task then
+      task:start()
+    else
+      U.log.e("telegram - failed to create whisperkit-cli task")
+      telegram.send("⚠️ Failed to start transcription", { parse_mode = false })
+    end
+
+    return
+  end
+
   -- Handle text messages
   if msg.type == "message" and msg.text then
     local text = msg.text:lower()
