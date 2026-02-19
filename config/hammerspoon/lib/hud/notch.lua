@@ -6,6 +6,8 @@
 --
 local M = {}
 
+local animator = require("lib.hud.animator")
+
 --------------------------------------------------------------------------------
 -- CONSTANTS
 --------------------------------------------------------------------------------
@@ -243,23 +245,66 @@ function M.new(opts)
   return self
 end
 
----Show the HUD
-function NotchHUD:show()
-  if self.canvas then
+---Show the HUD with slide-down animation
+---@param opts? {animate?: boolean, duration?: number}
+function NotchHUD:show(opts)
+  opts = opts or {}
+  local animate = opts.animate ~= false  -- Default true
+  
+  if not self.canvas then return end
+  
+  -- Stop any existing show/hide animation
+  if self.timers.showHide then
+    animator.stop(self.timers.showHide)
+    self.timers.showHide = nil
+  end
+  
+  if animate then
+    -- Start hidden above the frame (behind menubar)
+    local finalY = self.frame.y
+    local startY = finalY - self.frame.h - 10
+    
+    self.timers.showHide = animator.slideDown(self.canvas, startY, finalY, {
+      duration = opts.duration or 350,
+      onComplete = function()
+        self.timers.showHide = nil
+      end,
+    })
+  else
     self.canvas:show()
   end
 end
 
----Hide the HUD
-function NotchHUD:hide()
+---Hide the HUD with slide-up animation
+---@param opts? {animate?: boolean, duration?: number}
+function NotchHUD:hide(opts)
+  opts = opts or {}
+  local animate = opts.animate ~= false  -- Default true
+  
   self:stopAnimations()
-  if self.canvas then
+  
+  if not self.canvas then return end
+  
+  if animate then
+    self.timers.showHide = animator.slideUp(self.canvas, {
+      duration = opts.duration or 250,
+      hideAfter = true,
+      onComplete = function()
+        self.timers.showHide = nil
+      end,
+    })
+  else
     self.canvas:hide()
   end
 end
 
----Destroy the HUD
+---Destroy the HUD (immediate, no animation)
 function NotchHUD:destroy()
+  -- Stop all timers including show/hide
+  if self.timers.showHide then
+    animator.stop(self.timers.showHide)
+    self.timers.showHide = nil
+  end
   self:stopAnimations()
   if self.canvas then
     self.canvas:delete()
