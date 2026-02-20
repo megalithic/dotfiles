@@ -27,25 +27,18 @@ local function svgToImage(svg)
   return hs.image.imageFromURL("data:image/svg+xml," .. hs.http.encodeForQuery(svg))
 end
 local SVG = {
-  -- Microphone with slash (muted)
   muted = [[<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
     <path fill="{{COLOR}}" d="M8 1a2 2 0 0 0-2 2v4a2 2 0 1 0 4 0V3a2 2 0 0 0-2-2z"/>
     <path fill="{{COLOR}}" d="M4.5 7a.5.5 0 0 0-1 0 4.5 4.5 0 0 0 4 4.473V13H6a.5.5 0 0 0 0 1h4a.5.5 0 0 0 0-1H8.5v-1.527A4.5 4.5 0 0 0 12.5 7a.5.5 0 0 0-1 0 3.5 3.5 0 1 1-7 0z"/>
     <line x1="2" y1="14" x2="14" y2="2" stroke="{{COLOR}}" stroke-width="1.5" stroke-linecap="round"/>
   </svg>]],
-
-  -- Microphone (unmuted/speaking)
   speak = [[<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
     <path fill="{{COLOR}}" d="M8 1a2 2 0 0 0-2 2v4a2 2 0 1 0 4 0V3a2 2 0 0 0-2-2z"/>
     <path fill="{{COLOR}}" d="M4.5 7a.5.5 0 0 0-1 0 4.5 4.5 0 0 0 4 4.473V13H6a.5.5 0 0 0 0 1h4a.5.5 0 0 0 0-1H8.5v-1.527A4.5 4.5 0 0 0 12.5 7a.5.5 0 0 0-1 0 3.5 3.5 0 1 1-7 0z"/>
   </svg>]],
-
-  -- Solid circle (recording)
   record = [[<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
     <circle cx="8" cy="8" r="6" fill="{{COLOR}}"/>
   </svg>]],
-
-  -- Waveform (processing/transcribing)
   waveform = [[<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
     <g fill="none" stroke="{{COLOR}}" stroke-width="1.5" stroke-linecap="round">
       <line x1="2" y1="6" x2="2" y2="10"/>
@@ -152,9 +145,8 @@ local function isMicActive()
     return S.isUnmuted
   elseif S.pttMode == "push-to-mute" then
     return not S.isUnmuted
-  else
-    return false  -- disabled mode
   end
+  return false
 end
 
 local function renderRecordingHUD(hud)
@@ -397,11 +389,6 @@ local function setMicMuted(muted)
       pcall(hook, muted)
     end
   end
-end
-
-local function getMicMuted()
-  local device = hs.audiodevice.defaultInputDevice()
-  return device and device:inputMuted()
 end
 
 local function applyPTTState()

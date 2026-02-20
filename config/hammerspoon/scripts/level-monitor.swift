@@ -116,6 +116,10 @@ class AudioLevelMonitor {
         RunLoop.current.run()
     }
     
+    deinit {
+        stopMonitoring()
+    }
+    
     func runInteractive() {
         prepare()
         print("ready")
