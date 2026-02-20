@@ -338,12 +338,14 @@ function buildLine1(
     rightParts.push(resetStr);
   }
   
-  // Context percentage (get from footerData if available)
-  // For now, calculate roughly based on tokens
-  const maxContext = 200000; // Assume 200k context
+  // Context percentage - use model's actual context window
+  const maxContext = ctx.model?.contextWindow || 200000;
   const usedContext = tokenStats.input + tokenStats.output;
   const contextPercent = Math.min(100, Math.round((usedContext / maxContext) * 100));
   rightParts.push(renderContextPercent(contextPercent, theme));
+  
+  // Show actual token count for reference (e.g., "45% 90k/200k")
+  rightParts.push(theme.fg("dim", `${formatNumber(usedContext)}/${formatNumber(maxContext)}`));
   
   // Token stats
   rightParts.push(theme.fg("dim", `↑${formatNumber(tokenStats.input)} ↓${formatNumber(tokenStats.output)}`));
