@@ -542,7 +542,9 @@ function M:init(config)
 
     whisper.onTranscribeEnd = function(success, text)
       S.isProcessing = false
-      applyPTTState()
+      S.isUnmuted = false
+      setMicMuted(true)
+      updateMenubar()
       if success then
         showComplete()
       else
