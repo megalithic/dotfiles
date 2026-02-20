@@ -1,73 +1,57 @@
--- HUD Elements Module
--- Drawing primitives for HUD content
---
--- These are stateless helper functions that add elements to a canvas.
--- The canvas and positioning are provided by the caller.
---
-
 local M = {}
 
---------------------------------------------------------------------------------
--- TYPE DEFINITIONS
---------------------------------------------------------------------------------
-
 ---@class CircleOpts
----@field x number Center X coordinate (required)
----@field y number Center Y coordinate (required)
----@field radius? number Circle radius (default: 20)
----@field color? table Fill color table (default: red)
----@field id? string Element ID (default: "circle")
+---@field x number
+---@field y number
+---@field radius? number
+---@field color? table
+---@field id? string
 
 ---@class RectangleOpts
----@field x number Top-left X coordinate (required)
----@field y number Top-left Y coordinate (required)
----@field w number Width (required)
----@field h number Height (required)
----@field color? table Fill color table (default: white)
----@field radius? number Corner radius for rounded rect (default: none)
----@field id? string Element ID (default: "rectangle")
+---@field x number
+---@field y number
+---@field w number
+---@field h number
+---@field color? table
+---@field radius? number
+---@field id? string
 
 ---@class TextOpts
----@field y number Y position (required)
----@field text string Text content (required)
----@field x? number X position (default: 0)
----@field width? number|string Frame width (default: "100%")
----@field color? table Text color (default: white 80% alpha)
----@field fontSize? number Font size (default: 12)
----@field alignment? string Text alignment (default: "center")
----@field id? string Element ID (default: "text")
+---@field y number
+---@field text string
+---@field x? number
+---@field width? number|string
+---@field color? table
+---@field fontSize? number
+---@field alignment? string
+---@field id? string
 
 ---@class SFSymbolOpts
----@field x number Center X coordinate (required)
----@field y number Center Y coordinate (required)
----@field symbol string SF Symbol name (required)
----@field size? number Symbol size (default: 32)
----@field color? string Hex color without # (default: "FFFFFF")
----@field id? string Element ID (default: "symbol")
+---@field x number
+---@field y number
+---@field symbol string
+---@field size? number
+---@field color? string
+---@field id? string
 
 ---@class WaveformOpts
----@field x number Center X coordinate (required)
----@field y number Center Y coordinate (required)
----@field barCount? number Number of bars (default: 5)
----@field barWidth? number Width of each bar (default: 4)
----@field maxHeight? number Maximum bar height (default: 20)
----@field spacing? number Space between bars (default: 3)
----@field color? table Fill color table (default: white)
----@field idPrefix? string ID prefix for bars (default: "waveform_bar_")
+---@field x number
+---@field y number
+---@field barCount? number
+---@field barWidth? number
+---@field maxHeight? number
+---@field spacing? number
+---@field color? table
+---@field idPrefix? string
 
 ---@class WaveformInfo
----@field barCount number Number of bars
----@field barWidth number Width of each bar
----@field maxHeight number Maximum bar height
----@field baseY number Center Y for animation
----@field idPrefix string ID prefix for bars
+---@field barCount number
+---@field barWidth number
+---@field maxHeight number
+---@field baseY number
+---@field idPrefix string
 
---------------------------------------------------------------------------------
--- BASIC SHAPES
---------------------------------------------------------------------------------
-
----Add a filled circle
----@param canvas hs.canvas Canvas to add to
+---@param canvas hs.canvas
 ---@param opts CircleOpts
 function M.circle(canvas, opts)
   assert(opts.x, "circle requires opts.x")
@@ -83,8 +67,7 @@ function M.circle(canvas, opts)
   })
 end
 
----Add a rectangle
----@param canvas hs.canvas Canvas to add to
+---@param canvas hs.canvas
 ---@param opts RectangleOpts
 function M.rectangle(canvas, opts)
   assert(opts.x, "rectangle requires opts.x")
@@ -105,12 +88,7 @@ function M.rectangle(canvas, opts)
   canvas:appendElements(element)
 end
 
---------------------------------------------------------------------------------
--- TEXT
---------------------------------------------------------------------------------
-
----Add text label
----@param canvas hs.canvas Canvas to add to
+---@param canvas hs.canvas
 ---@param opts TextOpts
 function M.text(canvas, opts)
   assert(opts.y, "text requires opts.y")
@@ -134,12 +112,7 @@ function M.text(canvas, opts)
   })
 end
 
---------------------------------------------------------------------------------
--- SF SYMBOLS
---------------------------------------------------------------------------------
-
----Add SF Symbol icon
----@param canvas hs.canvas Canvas to add to
+---@param canvas hs.canvas
 ---@param opts SFSymbolOpts
 function M.sfSymbol(canvas, opts)
   assert(opts.x, "sfSymbol requires opts.x")
@@ -173,14 +146,9 @@ function M.sfSymbol(canvas, opts)
   })
 end
 
---------------------------------------------------------------------------------
--- WAVEFORM
---------------------------------------------------------------------------------
-
----Add waveform bars (for audio visualization)
----@param canvas hs.canvas Canvas to add to
+---@param canvas hs.canvas
 ---@param opts WaveformOpts
----@return WaveformInfo info Info needed for animator.waveform()
+---@return WaveformInfo
 function M.waveformBars(canvas, opts)
   assert(opts.x, "waveformBars requires opts.x")
   assert(opts.y, "waveformBars requires opts.y")
@@ -212,7 +180,6 @@ function M.waveformBars(canvas, opts)
     })
   end
   
-  -- Return info needed for animator.waveform()
   return {
     barCount = barCount,
     barWidth = barWidth,

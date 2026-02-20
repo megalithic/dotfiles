@@ -131,6 +131,7 @@
     (lib.lowPrio lua5_1)
     lua5_4
     lua-language-server
+    lua54Packages.luacheck
     stylua
 
     # shell

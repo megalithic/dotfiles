@@ -14,9 +14,10 @@ lib/
 ├── mkApp/
 │   └── extract.nix  # App extraction logic (unzip, undmg, etc.)
 └── builders/
-    ├── create-macos-alias.swift  # Swift script for Finder aliases
     ├── mkMacOSAlias.nix          # nix-darwin module: Finder aliases for system apps
     └── mkWrapperApp.nix          # Reusable .app wrapper (launch with custom args)
+
+# Note: create-macos-alias.swift moved to ~/.dotfiles/scripts/
 ```
 
 ## lib.mega.* namespace

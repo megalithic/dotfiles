@@ -41,11 +41,15 @@ local function cancelTimers(bundleID)
   timers[bundleID] = nil
 end
 
--- Hide an app (with safety checks)
 local function hideApp(bundleID)
-  -- Re-fetch the app by bundleID to avoid stale references
   local app = hs.application.get(bundleID)
-  if app and app:isRunning() then
+  if not app or not app:isRunning() then return end
+  
+  if bundleID == "org.hammerspoon.Hammerspoon" then
+    local win = hs.console.hswindow()
+    if win then win:close() end
+    U.log.i("Hidden Hammerspoon console")
+  else
     app:hide()
     U.log.i(string.format("Hidden %s (%s)", app:name(), bundleID))
   end
