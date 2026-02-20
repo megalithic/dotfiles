@@ -518,6 +518,7 @@ end
 ---@field baseY number Center Y for bars
 ---@field barWidth? number Width of each bar (default: 4)
 ---@field idPrefix? string ID prefix for bars (default: "waveform_bar_")
+---@field curve? number Power curve exponent (default: 0.4 for dramatic response)
 
 ---Update waveform bars based on audio level
 ---Distributes the level across bars with slight variation for visual interest
@@ -530,6 +531,11 @@ function M.setWaveformLevel(canvas, opts, level)
   local baseY = opts.baseY
   local barWidth = opts.barWidth or 4
   local idPrefix = opts.idPrefix or "waveform_bar_"
+  local curve = opts.curve or 0.4  -- Aggressive curve for dramatic low-level response
+  
+  -- Apply power curve for dramatic response (same as PTT circle)
+  -- curve < 1 makes low levels more visible
+  local adjustedLevel = math.pow(level, curve)
   
   -- Create variation pattern (center bars taller)
   local patterns = {
@@ -544,7 +550,7 @@ function M.setWaveformLevel(canvas, opts, level)
     -- Apply pattern and add slight random variation for liveliness
     local multiplier = pattern[i] or 1.0
     local variation = 0.9 + math.random() * 0.2  -- 0.9-1.1
-    local barLevel = level * multiplier * variation
+    local barLevel = adjustedLevel * multiplier * variation
     -- Minimum height so bars are always visible
     local newHeight = math.max(maxHeight * 0.15, maxHeight * barLevel)
     

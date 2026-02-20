@@ -233,16 +233,17 @@ local function isMicActive()
   end
 end
 
---- Render HUD for recording state: red pulsing circle with animated waveform
---- Note: Uses simulated animation during recording because WhisperDictation owns the mic
+--- Render HUD for recording state: orange circle with animated waveform
+--- Circle is static (no pulse), waveform responds to audio levels
 local function renderRecordingHUD(hud)
   hud:setContent(function(canvas, cx, cy)
+    -- Orange circle (static, no pulse)
     elements.circle(canvas, {
       id = "indicator",
       x = cx,
       y = cy,
       radius = 24,
-      color = { red = 1, green = 0.23, blue = 0.19, alpha = 1 },
+      color = { red = 1, green = 0.58, blue = 0, alpha = 1 },  -- Orange #FF9500
     })
     -- Store waveInfo in module scope for level monitoring
     recordingWaveInfo = elements.waveformBars(canvas, {
@@ -258,14 +259,8 @@ local function renderRecordingHUD(hud)
   
   local canvas = hud:getCanvas()
   
-  -- Pulse animation for the circle (subtle breathing)
-  hud:addTimer("pulse", animator.pulse(canvas, {
-    elementId = "indicator",
-    baseRadius = 24,
-    pulseAmount = 4,
-  }))
-  
-  -- Use real audio levels for waveform (AVAudioEngine is cooperative)
+  -- No pulse animation - circle is static
+  -- Waveform responds to real audio levels
   startLevelMonitoring(canvas, { mode = "recording" })
   
   hud:show()
