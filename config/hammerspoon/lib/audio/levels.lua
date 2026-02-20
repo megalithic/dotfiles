@@ -1,64 +1,56 @@
---- Audio Level Monitor
---- Monitors microphone input levels via Swift/AVAudioEngine
----
---- Usage:
----   local levels = require("lib.audio.levels")
----   levels.start(function(level) print("Level:", level) end)
----   levels.stop()
-
 local M = {}
 
 local task = nil
 local callback = nil
 local buffer = ""
-
---- Path to the level monitor script (Swift-based, uses AVAudioEngine)
 local SCRIPT_PATH = hs.configdir .. "/scripts/level-monitor.swift"
+local MAX_BUFFER = 1024
 
---- Start monitoring audio levels
----@param onLevel function(level: number) Called with level 0.0-1.0 on each update
+---@param onLevel fun(level: number)
 function M.start(onLevel)
-  if task then
-    M.stop()
-  end
+  if task then M.stop() end
   
   callback = onLevel
   buffer = ""
   
-  -- Create streaming callback that processes stdout line by line
-  local function streamCallback(task, stdout, stderr)
-    if stdout then
-      buffer = buffer .. stdout
-      -- Process complete lines
-      while true do
-        local newline = buffer:find("\n")
-        if not newline then break end
-        local line = buffer:sub(1, newline - 1)
-        buffer = buffer:sub(newline + 1)
-        
-        local level = tonumber(line)
-        if level and callback then
-          callback(level)
-        end
+  local function onTerminate(exitCode, stdout, stderr)
+    task = nil
+    callback = nil
+    buffer = ""
+  end
+  
+  local function onStream(_, stdout, _)
+    if not stdout then return true end
+    
+    buffer = buffer .. stdout
+    if #buffer > MAX_BUFFER then
+      buffer = buffer:sub(-MAX_BUFFER)
+    end
+    
+    while true do
+      local nl = buffer:find("\n")
+      if not nl then break end
+      
+      local line = buffer:sub(1, nl - 1)
+      buffer = buffer:sub(nl + 1)
+      
+      local level = tonumber(line)
+      if level and callback then
+        callback(level)
       end
     end
-    return true  -- Keep streaming
+    return true
   end
   
-  -- hs.task.new(launchPath, terminationCallback, streamCallback, arguments)
-  -- arguments is required when using streamCallback
-  task = hs.task.new(SCRIPT_PATH, nil, streamCallback, {})
-  
+  task = hs.task.new(SCRIPT_PATH, onTerminate, onStream, {})
   if task then
-    task:setStreamingCallback(streamCallback)
+    task:setStreamingCallback(onStream)
     task:start()
     return true
-  else
-    return false
   end
+  return false
 end
 
---- Stop monitoring audio levels
 function M.stop()
   if task then
     task:terminate()
@@ -68,7 +60,6 @@ function M.stop()
   buffer = ""
 end
 
---- Check if currently monitoring
 ---@return boolean
 function M.isRunning()
   return task ~= nil and task:isRunning()
