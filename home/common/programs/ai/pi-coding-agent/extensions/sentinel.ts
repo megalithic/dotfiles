@@ -401,9 +401,26 @@ function buildRules(config: SentinelConfig): Rule[] {
     test: (cmd) => {
       const tokens = segmentTokens(cmd, "jj", "squash");
       if (!tokens) return false;
-      return tokens.includes("-m") || tokens.includes("-u") || tokens.includes("--use-destination-message");
+      
+      // Safe: simple squash (@ into @-) with any message options
+      // Only block when --from, --into, or -r is used with potentially broad revsets
+      const hasFrom = tokens.includes("--from") || tokens.includes("-f");
+      const hasInto = tokens.includes("--into") || tokens.includes("--to") || tokens.includes("-t");
+      const hasRevision = tokens.includes("-r") || tokens.includes("--revision");
+      const hasDestination = tokens.includes("-d") || tokens.includes("--destination");
+      const hasInsertAfter = tokens.includes("-A") || tokens.includes("--insert-after");
+      const hasInsertBefore = tokens.includes("-B") || tokens.includes("--insert-before");
+      
+      // If none of these multi-commit options are present, it's a simple squash (safe)
+      if (!hasFrom && !hasInto && !hasRevision && !hasDestination && !hasInsertAfter && !hasInsertBefore) {
+        return false;
+      }
+      
+      // Block if any of these potentially dangerous options are used
+      // User can override if they know what they're doing
+      return true;
     },
-    reason: "Squash flattens commit history.",
+    reason: "Squash with --from/--into/-r can flatten history. Simple `jj squash` is safe.",
   });
 
   // ── CONFIRM: push / deploy / ssh ──
