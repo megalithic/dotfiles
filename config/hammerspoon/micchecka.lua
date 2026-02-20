@@ -75,10 +75,18 @@ local function loadHUDModules()
   end
 end
 
+local levelCanvas = nil
+local levelMode = nil
+
 local function loadLevelMonitor()
   if not levelMonitor then
     levelMonitor = require("lib.audio.levels")
   end
+end
+
+local function preloadLevelMonitor()
+  loadLevelMonitor()
+  levelMonitor.preload()
 end
 
 ---@param canvas hs.canvas
@@ -87,15 +95,17 @@ local function startLevelMonitoring(canvas, opts)
   loadLevelMonitor()
   loadHUDModules()
   opts = opts or {}
-  local mode = opts.mode or "ptt"
+  levelCanvas = canvas
+  levelMode = opts.mode or "ptt"
   
   levelMonitor.start(function(level)
     currentLevel = level
-    if recordingWaveInfo and canvas then
-      animator.setWaveformLevel(canvas, recordingWaveInfo, level)
+    if not levelCanvas then return end
+    if recordingWaveInfo then
+      animator.setWaveformLevel(levelCanvas, recordingWaveInfo, level)
     end
-    if canvas and canvas["indicator"] and mode == "ptt" then
-      animator.setCircleLevel(canvas, {
+    if levelCanvas["indicator"] and levelMode == "ptt" then
+      animator.setCircleLevel(levelCanvas, {
         elementId = "indicator",
         baseRadius = 6,
         maxGrowth = 26,
@@ -109,8 +119,17 @@ local function stopLevelMonitoring()
   if levelMonitor then
     levelMonitor.stop()
   end
+  levelCanvas = nil
+  levelMode = nil
   currentLevel = 0
   recordingWaveInfo = nil
+end
+
+local function shutdownLevelMonitor()
+  stopLevelMonitoring()
+  if levelMonitor then
+    levelMonitor.shutdown()
+  end
 end
 
 local function ensureHUD()
@@ -613,6 +632,7 @@ function M:start()
   S.hotkeys.ptdToggle = hs.hotkey.bind({ "cmd", "alt", "shift" }, "p", togglePTDMode)
 
   if whisper then whisper:start() end
+  preloadLevelMonitor()
   applyPTTState()
   updateHUD()
 
@@ -625,7 +645,7 @@ function M:stop()
 
   if whisper then whisper:stop() end
   
-  stopLevelMonitoring()
+  shutdownLevelMonitor()
   cancelCompleteTimer()
   currentHUDState = HUDState.HIDDEN
   destroyHUD()
