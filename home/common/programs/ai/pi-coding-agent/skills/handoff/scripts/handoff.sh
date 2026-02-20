@@ -50,6 +50,17 @@ if command -v jj &>/dev/null && jj root &>/dev/null 2>&1; then
   JJ_STATUS=$(jj status 2>/dev/null || true)
 fi
 
+# Get current bookmark (if any)
+# Check @ first, then @- (common case: made changes after creating bookmark)
+JJ_BOOKMARK=""
+if command -v jj &>/dev/null && jj root &>/dev/null 2>&1; then
+  JJ_BOOKMARK=$(jj log -r @ -T 'bookmarks' --no-graph 2>/dev/null | tr ' ' '\n' | head -1 || true)
+  if [[ -z "$JJ_BOOKMARK" ]]; then
+    # Check parent - bookmark may be there if working on uncommitted changes
+    JJ_BOOKMARK=$(jj log -r @- -T 'bookmarks' --no-graph 2>/dev/null | tr ' ' '\n' | head -1 || true)
+  fi
+fi
+
 # Get recent jj log if available
 JJ_LOG=""
 if command -v jj &>/dev/null && jj root &>/dev/null 2>&1; then
@@ -137,6 +148,7 @@ cat > "$OUTPUT_FILE" << EOF
 **Session:** ${SESSION}
 **Time:** ${DATETIME}
 **Working Directory:** ${WORKING_DIR}
+**Bookmark:** ${JJ_BOOKMARK:-"(none)"}
 
 ${CONTENT}
 

@@ -1,5 +1,5 @@
 --- Audio Level Monitor
---- Monitors microphone input levels via external script
+--- Monitors microphone input levels via Swift/AVAudioEngine
 ---
 --- Usage:
 ---   local levels = require("lib.audio.levels")
@@ -12,8 +12,8 @@ local task = nil
 local callback = nil
 local buffer = ""
 
---- Path to the level monitor script
-local SCRIPT_PATH = hs.configdir .. "/lib/audio/level-monitor.sh"
+--- Path to the level monitor script (Swift-based, uses AVAudioEngine)
+local SCRIPT_PATH = hs.configdir .. "/scripts/level-monitor.swift"
 
 --- Start monitoring audio levels
 ---@param onLevel function(level: number) Called with level 0.0-1.0 on each update

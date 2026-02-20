@@ -60,6 +60,7 @@ rm /tmp/handoff-content.md
 ```
 
 The script auto-captures:
+- Current bookmark (for pickup verification)
 - jj status (working copy state)
 - Recent commits
 - Uncommitted changes (diff stat)
@@ -78,11 +79,34 @@ When the user says `/pickup`:
 ```
 
 After retrieving the handoff:
-1. Read and understand the document
-2. Verify current state matches (check jj status, key files exist)
-3. Summarize back to user: "Picking up where we left off: {brief summary}"
-4. Confirm before continuing: "Ready to continue with {next step}?"
-5. Start from the "Next steps" section
+
+1. **Check bookmark verification section** (at end of output)
+   - If "Bookmarks match" → Proceed, but still confirm with user
+   - If "Bookmark mismatch" → Present options to user, wait for response
+   - If "No bookmark was set" → Ask user what bookmark to use
+
+2. **Handle bookmark mismatch before doing anything else:**
+   ```
+   ⚠️ Bookmark mismatch detected:
+   - Handoff was on: `feature-branch`
+   - Currently on: `main`
+   
+   Options:
+   1. Switch to `feature-branch` to continue where we left off
+   2. Stay on `main` and start fresh
+   3. Create a new bookmark for this work
+   
+   Which would you like?
+   ```
+
+3. **Once bookmark is confirmed:**
+   - Read and understand the document
+   - Verify current state matches (check jj status, key files exist)
+   - Summarize back to user: "Picking up where we left off: {brief summary}"
+   - Confirm before continuing: "Ready to continue with {next step}?"
+   - Start from the "Next steps" section
+
+**IMPORTANT:** Never proceed with work until bookmark situation is resolved. The user must explicitly confirm which bookmark to use.
 
 List available handoffs:
 
@@ -112,6 +136,7 @@ List available handoffs:
 **Session:** mega
 **Time:** 2026-02-19 14:30:00 EST
 **Working Directory:** /Users/seth/projects/myapp
+**Bookmark:** feature-auth-refactor
 
 ## What I was working on
 

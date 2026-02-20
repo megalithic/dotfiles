@@ -564,6 +564,7 @@ end
 ---@field elementId string Canvas element ID to pulse
 ---@field baseRadius number Base radius of the circle
 ---@field maxGrowth? number Maximum growth at level 1.0 (default: 10)
+---@field curve? number Power curve exponent (default: 0.5 for square root, more dramatic)
 
 ---Update circle radius based on audio level
 ---@param canvas hs.canvas Canvas containing the circle
@@ -572,9 +573,14 @@ end
 function M.setCircleLevel(canvas, opts, level)
   local baseRadius = opts.baseRadius
   local maxGrowth = opts.maxGrowth or 10
+  local curve = opts.curve or 0.5  -- Square root curve for more dramatic low-level response
   
-  -- Add subtle pulse based on level
-  local newRadius = baseRadius + (level * maxGrowth)
+  -- Apply power curve for more dramatic response
+  -- curve < 1 makes low levels more visible (square root)
+  -- curve > 1 makes high levels more visible (quadratic)
+  local adjustedLevel = math.pow(level, curve)
+  
+  local newRadius = baseRadius + (adjustedLevel * maxGrowth)
   
   if canvas[opts.elementId] then
     canvas[opts.elementId].radius = newRadius

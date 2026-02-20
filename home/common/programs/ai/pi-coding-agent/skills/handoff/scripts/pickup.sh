@@ -117,6 +117,56 @@ get_latest_handoff() {
   
   # Show current todos if .pi/todos exists in current dir
   show_current_todos
+  
+  # Show bookmark validation
+  show_bookmark_validation "$latest"
+}
+
+show_bookmark_validation() {
+  local handoff_file="$1"
+  
+  # Only run if in a jj repo
+  if ! command -v jj &>/dev/null || ! jj root &>/dev/null 2>&1; then
+    return
+  fi
+  
+  # Extract bookmark from handoff
+  local handoff_bookmark=$(rg -m1 "^\*\*Bookmark:\*\*" "$handoff_file" 2>/dev/null | sed 's/\*\*Bookmark:\*\* //' || echo "")
+  
+  # Get current bookmark (check @ first, then @- for uncommitted changes case)
+  local current_bookmark=$(jj log -r @ -T 'bookmarks' --no-graph 2>/dev/null | tr ' ' '\n' | head -1 || echo "")
+  if [[ -z "$current_bookmark" ]]; then
+    current_bookmark=$(jj log -r @- -T 'bookmarks' --no-graph 2>/dev/null | tr ' ' '\n' | head -1 || echo "")
+  fi
+  
+  echo ""
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "🔖 Bookmark verification"
+  echo ""
+  echo "  Handoff bookmark: ${handoff_bookmark:-"(none)"}"
+  echo "  Current bookmark: ${current_bookmark:-"(none)"}"
+  echo ""
+  
+  if [[ -z "$handoff_bookmark" || "$handoff_bookmark" == "(none)" ]]; then
+    echo "  ⚠️  No bookmark was set during handoff"
+    echo ""
+    echo "  PROMPT: Ask user if they want to:"
+    echo "    1. Continue on current bookmark (${current_bookmark:-"none"})"
+    echo "    2. Create a new bookmark for this work"
+    echo "    3. Switch to a different bookmark"
+  elif [[ "$handoff_bookmark" == "$current_bookmark" ]]; then
+    echo "  ✓ Bookmarks match - ready to continue"
+    echo ""
+    echo "  PROMPT: Confirm with user before continuing on '$handoff_bookmark'"
+  else
+    echo "  ⚠️  Bookmark mismatch!"
+    echo ""
+    echo "  PROMPT: Ask user if they want to:"
+    echo "    1. Switch to handoff bookmark: jj edit $handoff_bookmark"
+    echo "    2. Continue on current bookmark: $current_bookmark"
+    echo "    3. Start fresh on a new bookmark"
+  fi
+  echo ""
 }
 
 show_current_todos() {

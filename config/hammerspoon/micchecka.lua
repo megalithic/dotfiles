@@ -133,22 +133,26 @@ end
 
 --- Start monitoring audio levels and updating the HUD
 ---@param canvas hs.canvas Canvas to update
-local function startLevelMonitoring(canvas)
+---@param opts? table Options: { mode = "ptt" | "recording" }
+local function startLevelMonitoring(canvas, opts)
   loadLevelMonitor()
   loadHUDModules()
+  opts = opts or {}
+  local mode = opts.mode or "ptt"
   
   levelMonitor.start(function(level)
     currentLevel = level
-    -- Update waveform bars based on actual level
+    -- Update waveform bars based on actual level (recording mode)
     if recordingWaveInfo and canvas then
       animator.setWaveformLevel(canvas, recordingWaveInfo, level)
     end
-    -- Optionally update circle size based on level too
-    if canvas and canvas["indicator"] then
+    -- Update circle size based on level (PTT mode)
+    if canvas and canvas["indicator"] and mode == "ptt" then
       animator.setCircleLevel(canvas, {
         elementId = "indicator",
-        baseRadius = 24,
-        maxGrowth = 6,
+        baseRadius = 6,     -- Small when silent
+        maxGrowth = 26,     -- Large when speaking (max radius = 32)
+        curve = 0.4,        -- Aggressive curve for dramatic low-level response
       }, level)
     end
   end)
@@ -232,7 +236,6 @@ end
 --- Render HUD for recording state: red pulsing circle with animated waveform
 --- Note: Uses simulated animation during recording because WhisperDictation owns the mic
 local function renderRecordingHUD(hud)
-  local waveInfo
   hud:setContent(function(canvas, cx, cy)
     elements.circle(canvas, {
       id = "indicator",
@@ -241,7 +244,8 @@ local function renderRecordingHUD(hud)
       radius = 24,
       color = { red = 1, green = 0.23, blue = 0.19, alpha = 1 },
     })
-    waveInfo = elements.waveformBars(canvas, {
+    -- Store waveInfo in module scope for level monitoring
+    recordingWaveInfo = elements.waveformBars(canvas, {
       x = cx,
       y = cy,
       barCount = 5,
@@ -254,48 +258,92 @@ local function renderRecordingHUD(hud)
   
   local canvas = hud:getCanvas()
   
-  -- Use simulated animation during recording (WhisperDictation owns the mic)
+  -- Pulse animation for the circle (subtle breathing)
   hud:addTimer("pulse", animator.pulse(canvas, {
     elementId = "indicator",
     baseRadius = 24,
     pulseAmount = 4,
   }))
-  hud:addTimer("waveform", animator.waveform(canvas, waveInfo))
+  
+  -- Use real audio levels for waveform (AVAudioEngine is cooperative)
+  startLevelMonitoring(canvas, { mode = "recording" })
   
   hud:show()
 end
 
 --- Render HUD for processing state: dark circle with orange waveform
+-- SF Symbol module for processing animation
+local sfsymbol = nil
+local function loadSFSymbol()
+  if not sfsymbol then
+    sfsymbol = require("lib.hud.sfsymbol")
+  end
+end
+
+-- Processing animation symbols (orange color)
+local PROCESSING_SYMBOLS = { "rays", "slowmo", "timelapse" }
+local PROCESSING_COLOR = "FF9500"  -- Orange
+
 local function renderProcessingHUD(hud)
-  local waveInfo
+  loadSFSymbol()
+  
+  -- Preload all processing symbols
+  for _, name in ipairs(PROCESSING_SYMBOLS) do
+    sfsymbol.image(name, { color = PROCESSING_COLOR, size = 32 })
+  end
+  
+  local currentSymbolIndex = 1
+  local currentImage = sfsymbol.image(PROCESSING_SYMBOLS[1], { color = PROCESSING_COLOR, size = 32 })
+  
   hud:setContent(function(canvas, cx, cy)
+    -- Dark background circle
     elements.circle(canvas, {
-      id = "indicator",
+      id = "bg",
       x = cx,
       y = cy,
       radius = 24,
       color = { red = 0.1, green = 0.1, blue = 0.12, alpha = 1 },
     })
-    waveInfo = elements.waveformBars(canvas, {
-      x = cx,
-      y = cy,
-      barCount = 5,
-      barWidth = 3,
-      maxHeight = 16,
-      spacing = 2,
-      color = { red = 1, green = 0.58, blue = 0, alpha = 1 },
-    })
+    -- SF Symbol image
+    if currentImage then
+      local imgSize = currentImage:size()
+      canvas:insertElement({
+        id = "symbol",
+        type = "image",
+        image = currentImage,
+        frame = {
+          x = cx - imgSize.w / 2,
+          y = cy - imgSize.h / 2,
+          w = imgSize.w,
+          h = imgSize.h,
+        },
+        imageAlignment = "center",
+        imageScaling = "none",
+      })
+    end
   end)
   
   local canvas = hud:getCanvas()
-  hud:addTimer("waveform", animator.waveform(canvas, {
-    barCount = waveInfo.barCount,
-    maxHeight = waveInfo.maxHeight,
-    baseY = waveInfo.baseY,
-    barWidth = waveInfo.barWidth,
-    idPrefix = waveInfo.idPrefix,
-    interval = 0.08,
-  }))
+  
+  -- Timer to cycle through symbols randomly
+  hud:addTimer("symbolMorph", hs.timer.doEvery(0.4, function()
+    -- Pick a random different symbol
+    local newIndex
+    repeat
+      newIndex = math.random(1, #PROCESSING_SYMBOLS)
+    until newIndex ~= currentSymbolIndex or #PROCESSING_SYMBOLS == 1
+    currentSymbolIndex = newIndex
+    
+    local newImage = sfsymbol.image(PROCESSING_SYMBOLS[currentSymbolIndex], { 
+      color = PROCESSING_COLOR, 
+      size = 32 
+    })
+    
+    if newImage and canvas and canvas["symbol"] then
+      canvas["symbol"].image = newImage
+    end
+  end))
+  
   hud:show()
 end
 
@@ -320,17 +368,15 @@ local function renderCompleteHUD(hud)
   hud:show({ animate = false })
 end
 
---- Render HUD for PTT active state: pulsing indicator
---- Shows a breathing/pulsing circle to indicate mic is open
---- Note: We don't use actual audio levels here because capturing audio
---- via sox/AVFoundation conflicts with mic muting operations
+--- Render HUD for PTT active state: level-driven indicator
+--- Uses real audio levels via Swift/AVAudioEngine (doesn't conflict with muting)
 local function renderPTTActiveHUD(hud)
   hud:setContent(function(canvas, cx, cy)
     elements.circle(canvas, {
       id = "indicator",
       x = cx,
       y = cy,
-      radius = 16,
+      radius = 6,  -- Start small, grows with audio level
       color = { red = 1, green = 0.23, blue = 0.19, alpha = 1 },
     })
   end)
@@ -338,9 +384,8 @@ local function renderPTTActiveHUD(hud)
   local canvas = hud:getCanvas()
   recordingWaveInfo = nil  -- No waveform bars in PTT mode
   
-  -- Start breathing/pulsing animation instead of real audio levels
-  -- This avoids conflicts with mic state changes
-  startPulseAnimation(canvas)
+  -- Use real audio levels via Swift-based monitor
+  startLevelMonitoring(canvas, { mode = "ptt" })
   
   hud:show()
 end
@@ -365,9 +410,12 @@ local function setHUDState(newState)
     cancelCompleteTimer()
   end
   if oldState == HUDState.PTT_ACTIVE then
-    stopPulseAnimation()
+    stopLevelMonitoring()
   end
-  -- Note: RECORDING state cleanup is handled by notch.lua (stops timers on hide)
+  if oldState == HUDState.RECORDING then
+    stopLevelMonitoring()
+    -- Note: notch.lua also stops timers on hide (for pulse animation)
+  end
   
   -- Render new state
   if newState == HUDState.HIDDEN then
