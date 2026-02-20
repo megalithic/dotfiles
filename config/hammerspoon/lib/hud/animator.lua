@@ -92,6 +92,18 @@ function M.linear(t)
   return t
 end
 
+--- Ease-out elastic (springy bounce)
+---@param t number Progress 0-1
+---@return number Eased value with overshoot
+function M.easeOutElastic(t)
+  if t == 0 then return 0 end
+  if t == 1 then return 1 end
+  local p = 0.4  -- Period
+  local a = 1    -- Amplitude
+  local s = p / 4
+  return a * math.pow(2, -10 * t) * math.sin((t - s) * (2 * math.pi) / p) + 1
+end
+
 --------------------------------------------------------------------------------
 -- CORE ANIMATION
 --------------------------------------------------------------------------------
@@ -200,16 +212,16 @@ function M.slideOut(canvas, opts)
   })
 end
 
---- Animate a canvas sliding down (for top-anchored HUDs)
+--- Animate a canvas sliding down (for top-anchored HUDs like notch)
 ---@param canvas hs.canvas Canvas to animate
----@param startY number Starting Y position (above final)
----@param finalY number Final Y position
+---@param startY number Starting Y position (above final, hidden behind menubar)
+---@param finalY number Final Y position (visible)
 ---@param opts? table { duration?, easing?, onComplete? }
 ---@return hs.timer Timer reference
 function M.slideDown(canvas, startY, finalY, opts)
   opts = opts or {}
   local durationMs = opts.duration or M.DEFAULTS.slideIn
-  local easing = opts.easing or M.easeOutBack
+  local easing = opts.easing or M.easeOutCubic  -- Smooth deceleration, no bounce
   local x = canvas:topLeft().x
   local slideDistance = finalY - startY
 
@@ -220,10 +232,50 @@ function M.slideDown(canvas, startY, finalY, opts)
   return M.animate(durationMs, function(progress)
     local newY = startY + (slideDistance * progress)
     canvas:topLeft({ x = x, y = newY })
-    canvas:alpha(progress)
+    -- Fade in synced with slide (slightly faster)
+    canvas:alpha(math.min(1, progress * 1.5))
   end, {
     easing = easing,
     onComplete = opts.onComplete,
+  })
+end
+
+--- Animate a canvas sliding up (for top-anchored HUDs like notch)
+---@param canvas hs.canvas Canvas to animate
+---@param opts? table { duration?, easing?, hideAfter?, onComplete? }
+---@return hs.timer Timer reference
+function M.slideUp(canvas, opts)
+  opts = opts or {}
+  local durationMs = opts.duration or M.DEFAULTS.slideOut
+  local easing = opts.easing or M.easeInCubic
+  local hideAfter = opts.hideAfter ~= false  -- Default true
+  local onComplete = opts.onComplete
+
+  local currentPos = canvas:topLeft()
+  local startX, startY = currentPos.x, currentPos.y
+  local canvasFrame = canvas:frame()
+
+  -- Slide up behind menubar (negative Y to hide above screen)
+  local targetY = startY - canvasFrame.h - 20
+
+  return M.animate(durationMs, function(progress)
+    local newY = startY + (targetY - startY) * progress
+    canvas:topLeft({ x = startX, y = newY })
+    -- Fade out in last 50% of animation
+    if progress > 0.5 then
+      canvas:alpha(1 - (progress - 0.5) * 2)
+    end
+  end, {
+    easing = easing,
+    onComplete = function()
+      if hideAfter and canvas then
+        canvas:hide()
+        -- Reset position for next show
+        canvas:topLeft({ x = startX, y = startY })
+        canvas:alpha(1)
+      end
+      if onComplete then onComplete() end
+    end,
   })
 end
 

@@ -23,8 +23,39 @@ local S = nil -- Will be set to _G.S.micchecka in init
 -- WhisperDictation spoon reference
 local whisper = nil
 
+-- Notch HUD integration
+local notchHUD = nil
+
 -- Local state (transient, reset on reload)
-local previousMicMuted = nil -- Store mic state to restore after PTD
+-- (previousMicMuted removed - mic state now restored via applyPTTState)
+
+--------------------------------------------------------------------------------
+-- HUD State Machine
+--------------------------------------------------------------------------------
+-- States: hidden, ptt_active, recording, processing, complete
+-- 
+-- Transitions:
+--   hidden → ptt_active    : mic becomes active
+--   hidden → recording     : PTD starts
+--   ptt_active → hidden    : mic becomes inactive  
+--   ptt_active → recording : PTD starts
+--   recording → processing : recording ends, transcription starts
+--   processing → complete  : transcription succeeds
+--   processing → hidden    : transcription fails (or ptt_active if mic hot)
+--   complete → hidden      : after 1.5s delay (or ptt_active if mic hot)
+--
+-- Priority for derived state: recording > processing > complete > ptt_active > hidden
+
+local HUDState = {
+  HIDDEN = "hidden",
+  PTT_ACTIVE = "ptt_active",
+  RECORDING = "recording",
+  PROCESSING = "processing",
+  COMPLETE = "complete",
+}
+
+local currentHUDState = HUDState.HIDDEN
+local completeTimer = nil  -- Timer for auto-hiding after complete
 
 --------------------------------------------------------------------------------
 -- Icon/Menubar Management
@@ -72,6 +103,250 @@ local COLORS = {
   orange = "#f5a623",
   white = "#ffffff",
 }
+
+--------------------------------------------------------------------------------
+-- Notch HUD Visual States
+--------------------------------------------------------------------------------
+
+local notch = nil     -- Lazy loaded
+local elements = nil  -- Lazy loaded
+local animator = nil  -- Lazy loaded
+
+local function loadHUDModules()
+  if not notch then
+    notch = require("lib.hud.notch")
+    elements = require("lib.hud.elements")
+    animator = require("lib.hud.animator")
+  end
+end
+
+local function ensureHUD()
+  loadHUDModules()
+  if not notchHUD then
+    notchHUD = notch.new()
+  end
+  return notchHUD
+end
+
+local function destroyHUD()
+  if notchHUD then
+    notchHUD:destroy()
+    notchHUD = nil
+  end
+end
+
+--- Is the mic currently active (unmuted)?
+--- In push-to-talk: active when key held
+--- In push-to-mute: active when key NOT held
+--- In disabled: never active (no HUD feedback)
+local function isMicActive()
+  if S.pttMode == "push-to-talk" then
+    return S.isUnmuted
+  elseif S.pttMode == "push-to-mute" then
+    return not S.isUnmuted
+  else
+    return false  -- disabled mode
+  end
+end
+
+--- Render HUD for recording state: red pulsing circle with waveform
+local function renderRecordingHUD(hud)
+  local waveInfo
+  hud:setContent(function(canvas, cx, cy)
+    elements.circle(canvas, {
+      id = "indicator",
+      x = cx,
+      y = cy,
+      radius = 24,
+      color = { red = 1, green = 0.23, blue = 0.19, alpha = 1 },
+    })
+    waveInfo = elements.waveformBars(canvas, {
+      x = cx,
+      y = cy,
+      barCount = 5,
+      barWidth = 3,
+      maxHeight = 16,
+      spacing = 2,
+      color = { white = 1, alpha = 1 },
+    })
+  end)
+  
+  local canvas = hud:getCanvas()
+  hud:addTimer("pulse", animator.pulse(canvas, {
+    elementId = "indicator",
+    baseRadius = 24,
+    pulseAmount = 4,
+  }))
+  hud:addTimer("waveform", animator.waveform(canvas, waveInfo))
+  hud:show()
+end
+
+--- Render HUD for processing state: dark circle with orange waveform
+local function renderProcessingHUD(hud)
+  local waveInfo
+  hud:setContent(function(canvas, cx, cy)
+    elements.circle(canvas, {
+      id = "indicator",
+      x = cx,
+      y = cy,
+      radius = 24,
+      color = { red = 0.1, green = 0.1, blue = 0.12, alpha = 1 },
+    })
+    waveInfo = elements.waveformBars(canvas, {
+      x = cx,
+      y = cy,
+      barCount = 5,
+      barWidth = 3,
+      maxHeight = 16,
+      spacing = 2,
+      color = { red = 1, green = 0.58, blue = 0, alpha = 1 },
+    })
+  end)
+  
+  local canvas = hud:getCanvas()
+  hud:addTimer("waveform", animator.waveform(canvas, {
+    barCount = waveInfo.barCount,
+    maxHeight = waveInfo.maxHeight,
+    baseY = waveInfo.baseY,
+    barWidth = waveInfo.barWidth,
+    idPrefix = waveInfo.idPrefix,
+    interval = 0.08,
+  }))
+  hud:show()
+end
+
+--- Render HUD for complete state: green checkmark
+local function renderCompleteHUD(hud)
+  hud:setContent(function(canvas, cx, cy)
+    elements.circle(canvas, {
+      id = "bg",
+      x = cx,
+      y = cy,
+      radius = 24,
+      color = { red = 0.2, green = 0.78, blue = 0.35, alpha = 1 },
+    })
+    elements.sfSymbol(canvas, {
+      x = cx,
+      y = cy,
+      size = 28,
+      symbol = "checkmark",
+      color = "FFFFFF",
+    })
+  end)
+  hud:show({ animate = false })
+end
+
+--- Render HUD for PTT active state: smaller red pulsing indicator
+local function renderPTTActiveHUD(hud)
+  hud:setContent(function(canvas, cx, cy)
+    elements.circle(canvas, {
+      id = "indicator",
+      x = cx,
+      y = cy,
+      radius = 16,
+      color = { red = 1, green = 0.23, blue = 0.19, alpha = 1 },
+    })
+  end)
+  
+  local canvas = hud:getCanvas()
+  hud:addTimer("pulse", animator.pulse(canvas, {
+    elementId = "indicator",
+    baseRadius = 16,
+    pulseAmount = 3,
+  }))
+  hud:show()
+end
+
+--- Cancel the complete timer if running
+local function cancelCompleteTimer()
+  if completeTimer then
+    completeTimer:stop()
+    completeTimer = nil
+  end
+end
+
+--- Transition to a new HUD state
+local function setHUDState(newState)
+  if currentHUDState == newState then return end
+  
+  local oldState = currentHUDState
+  currentHUDState = newState
+  
+  -- Cancel complete timer when leaving complete state
+  if oldState == HUDState.COMPLETE then
+    cancelCompleteTimer()
+  end
+  
+  -- Render new state
+  if newState == HUDState.HIDDEN then
+    if notchHUD then notchHUD:hide() end
+  else
+    local hud = ensureHUD()
+    if newState == HUDState.RECORDING then
+      renderRecordingHUD(hud)
+    elseif newState == HUDState.PROCESSING then
+      renderProcessingHUD(hud)
+    elseif newState == HUDState.COMPLETE then
+      renderCompleteHUD(hud)
+      -- Start timer to auto-transition out of complete
+      completeTimer = hs.timer.doAfter(1.5, function()
+        completeTimer = nil
+        -- Guard against module being stopped during timer
+        if not S then
+          setHUDState(HUDState.HIDDEN)
+          return
+        end
+        -- Transition to appropriate state after complete
+        if S.isRecording then
+          setHUDState(HUDState.RECORDING)
+        elseif S.isProcessing then
+          setHUDState(HUDState.PROCESSING)
+        elseif isMicActive() then
+          setHUDState(HUDState.PTT_ACTIVE)
+        else
+          setHUDState(HUDState.HIDDEN)
+        end
+      end)
+    elseif newState == HUDState.PTT_ACTIVE then
+      renderPTTActiveHUD(hud)
+    end
+  end
+end
+
+--- Compute desired HUD state from current conditions
+local function computeHUDState()
+  -- Recording and processing always take priority (active operations)
+  if S.isRecording then
+    return HUDState.RECORDING
+  end
+  
+  if S.isProcessing then
+    return HUDState.PROCESSING
+  end
+  
+  -- Complete state is sticky until timer expires
+  -- (but recording/processing can interrupt it - handled above)
+  if currentHUDState == HUDState.COMPLETE then
+    return HUDState.COMPLETE
+  end
+  
+  -- PTT/PTM mic state
+  if isMicActive() then
+    return HUDState.PTT_ACTIVE
+  end
+  
+  return HUDState.HIDDEN
+end
+
+--- Update HUD based on current state
+local function updateHUD()
+  setHUDState(computeHUDState())
+end
+
+--- Enter complete state (called on successful transcription)
+local function showComplete()
+  setHUDState(HUDState.COMPLETE)
+end
 
 --- Generate an icon image from SVG template with color
 --- @param template string SVG template with {{COLOR}} placeholder
@@ -151,14 +426,20 @@ local function applyPTTState()
   updateMenubar()
 end
 
+--------------------------------------------------------------------------------
+-- PTT Event Handlers
+--------------------------------------------------------------------------------
+
 local function onPTTKeyDown()
   S.isUnmuted = true
   applyPTTState()
+  updateHUD()
 end
 
 local function onPTTKeyUp()
   S.isUnmuted = false
   applyPTTState()
+  updateHUD()
 end
 
 local function togglePTTMode()
@@ -168,9 +449,17 @@ local function togglePTTMode()
     S.pttMode = "push-to-talk"
   end
 
-  hs.alert.closeAll()
-  hs.alert.show("PTT: " .. S.pttMode)
+  -- Reset key state on mode toggle
+  -- The modifier keys are still held (to press +p), but their "meaning" changes
+  -- In PTT: held = unmuting. In PTM: held = muting.
+  -- We reset to false so the next key release doesn't cause unexpected state
+  S.isUnmuted = false
+
   applyPTTState()
+  updateHUD()
+  
+  -- In push-to-mute: mic active (unmuted) when key NOT held → HUD shows
+  -- In push-to-talk: mic inactive (muted) when key NOT held → HUD hides
 end
 
 --------------------------------------------------------------------------------
@@ -190,8 +479,7 @@ end
 local function startRecording()
   if not whisper then return end
 
-  -- Store current mic state and unmute for recording
-  previousMicMuted = getMicMuted()
+  -- Unmute for recording (will be restored via applyPTTState after transcription)
   setMicMuted(false)
 
   -- Spoon callbacks handle state updates
@@ -202,17 +490,8 @@ local function stopRecording()
   if not whisper or not S.isRecording then return end
 
   -- Spoon callbacks handle state updates
+  -- Mic state will be restored via applyPTTState in onTranscribeEnd
   whisper:endTranscribe()
-
-  -- Restore previous mic state after transcription completes
-  if previousMicMuted ~= nil then
-    hs.timer.doAfter(0.1, function()
-      if not S.isRecording then
-        setMicMuted(previousMicMuted)
-        previousMicMuted = nil
-      end
-    end)
-  end
 end
 
 local function onPTDKeyDown()
@@ -241,9 +520,6 @@ local function togglePTDMode()
     -- If switching from always-on while recording, stop
     if S.isRecording then stopRecording() end
   end
-
-  hs.alert.closeAll()
-  hs.alert.show("PTD: " .. S.ptdMode)
 end
 
 --------------------------------------------------------------------------------
@@ -324,6 +600,7 @@ function M:init(config)
     whisper.onRecordingStart = function()
       S.isRecording = true
       updateMenubar()
+      updateHUD()
       for _, hook in ipairs(S.hooks.onRecordStart) do
         pcall(hook)
       end
@@ -332,6 +609,8 @@ function M:init(config)
     whisper.onRecordingEnd = function()
       S.isRecording = false
       updateMenubar()
+      -- HUD will transition to processing (onTranscribeStart) or back to PTT state
+      updateHUD()
       for _, hook in ipairs(S.hooks.onRecordEnd) do
         pcall(hook)
       end
@@ -340,11 +619,17 @@ function M:init(config)
     whisper.onTranscribeStart = function()
       S.isProcessing = true
       updateMenubar()
+      updateHUD()
     end
 
     whisper.onTranscribeEnd = function(success, text)
       S.isProcessing = false
-      updateMenubar()
+      applyPTTState()  -- Restore mic to correct state based on mode/key
+      if success then
+        showComplete()  -- Show checkmark, then auto-transition after delay
+      else
+        updateHUD()  -- Back to appropriate state
+      end
       for _, hook in ipairs(S.hooks.onTranscribe) do
         pcall(hook, success, text)
       end
@@ -423,6 +708,7 @@ function M:start()
 
   -- Apply initial state
   applyPTTState()
+  updateHUD()
 
   U.log.i("started")
   return self
@@ -433,6 +719,11 @@ function M:stop()
   _G.S.resetMicchecka()
 
   if whisper then whisper:stop() end
+  
+  -- Clean up HUD state
+  cancelCompleteTimer()
+  currentHUDState = HUDState.HIDDEN
+  destroyHUD()
 
   U.log.i("stopped")
   return self
