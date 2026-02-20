@@ -155,32 +155,55 @@ config/hammerspoon/
 
 ## Reloading Hammerspoon
 
-**CRITICAL**: Use this exact pattern to avoid hangs:
+**CRITICAL**: Never use `hs -c "hs.reload()"` directly — it destroys the Lua
+interpreter and hangs/crashes the CLI.
+
+### Safe reload pattern
 
 ```bash
-RELOAD_TIME=$(date +%s)
-timeout 2 hs -c "hs.reload()" 2>&1 || true
-sqlite3 ~/.local/share/hammerspoon/hammerspoon.db \
-  "SELECT timestamp FROM notifications WHERE sender = 'hammerspork' AND message = 'config is loaded.' AND timestamp >= $RELOAD_TIME LIMIT 1" \
-  && echo "✓ Reloaded successfully"
+# Trigger reload via URL scheme and wait for IPC to respond
+open "hammerspoon://hs-reload"
+timeout 5 sh -c 'until hs -c "print(\"ok\")" 2>/dev/null; do :; done' && echo "✓ Reloaded"
 ```
 
-**Why timeout?** `hs.reload()` destroys the Lua interpreter, causing the CLI to hang. The timeout is expected and normal.
+**Why URL scheme?** The `hammerspoon://hs-reload` handler (defined in
+`config/hammerspoon/utils.lua`) defers the reload by 0.1s and returns
+immediately, so `open` exits cleanly.
 
-**Verification**: The reload success notification is logged to SQLite. Query it to confirm.
+**Why timeout loop?** The reload is async; we poll until IPC responds. Timeout
+prevents infinite loop if Hammerspoon crashed.
 
-### Quick reload verification alternatives
+### Full reload with error check
 
 ```bash
-# Method 1: Check notification database (most reliable)
-sqlite3 ~/.local/share/hammerspoon/hammerspoon.db \
-  "SELECT datetime(timestamp, 'unixepoch', 'localtime'), message FROM notifications WHERE sender = 'hammerspork' ORDER BY timestamp DESC LIMIT 1"
+open "hammerspoon://hs-reload"
+timeout 5 sh -c 'until hs -c "print(\"ok\")" 2>/dev/null; do :; done'
+hs -c '
+  local c = hs.console.getConsole()
+  for line in c:gmatch("[^\n]+") do
+    if line:match("ERROR") or line:match("attempt to") then print(line) end
+  end
+'
+```
 
-# Method 2: Test a simple command works
-hs -c "print('alive')"
+### If Hammerspoon is crashed/not running
 
-# Method 3: Check IPC is responding
+```bash
+open -a Hammerspoon
+timeout 5 sh -c 'until hs -c "print(\"ok\")" 2>/dev/null; do :; done' && echo "✓ Started"
+```
+
+### Quick verification commands
+
+```bash
+# Test if alive
+timeout 2 hs -c "print('ok')"
+
+# Check IPC is responding
 hs -c "return hs.processInfo.processID"
+
+# Check specific module loaded
+hs -c 'print(HUD ~= nil and "HUD loaded" or "HUD missing")'
 ```
 
 ## Common API Patterns

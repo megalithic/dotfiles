@@ -16,7 +16,7 @@
 #     userHome = "/Users/seth";
 #   };
 #
-{ config, lib, pkgs, ... }:
+{ config, lib, pkgs, self, ... }:
 
 with lib;
 let

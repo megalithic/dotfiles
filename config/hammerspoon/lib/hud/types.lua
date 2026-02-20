@@ -138,8 +138,8 @@ function BaseHUD:show()
     self.anchor = savedPosition
   end
 
-  -- Calculate position (use mouse screen, not main screen)
-  local screen = hs.mouse.getCurrentScreen() or hs.screen.mainScreen()
+  -- Calculate position (use focused window's screen, not mouse position)
+  local screen = hs.screen.mainScreen() or hs.mouse.getCurrentScreen()
 
   -- Create dim overlay if requested
   if self.dim then
@@ -302,7 +302,7 @@ Alert.SIZES = {
 ---@param screen hs.screen|nil
 ---@return number multiplier (1.0 for laptop, 1.25 for external)
 function Alert.getDpiMultiplier(screen)
-  screen = screen or hs.mouse.getCurrentScreen() or hs.screen.mainScreen()
+  screen = screen or hs.screen.mainScreen() or hs.mouse.getCurrentScreen()
   return position.isExternalDisplay(screen) and 1.25 or 1.0
 end
 
@@ -336,7 +336,7 @@ function Alert:new(message, opts)
   hud.duration = opts.duration or 3  -- seconds
 
   -- Size preset (default: medium) - scaled for DPI
-  local screen = hs.mouse.getCurrentScreen() or hs.screen.mainScreen()
+  local screen = hs.screen.mainScreen() or hs.mouse.getCurrentScreen()
   hud.sizePreset = Alert.getScaledPreset(opts.size or "medium", screen)
 
   -- Style options (can override preset)

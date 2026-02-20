@@ -128,8 +128,9 @@ end
 ---@return table { x, y, startY, screen } Position with animation start position
 function M.calculate(anchor, width, height, opts)
   opts = opts or {}
-  -- Default to screen with mouse cursor (more intuitive than mainScreen)
-  local screen = opts.screen or hs.mouse.getCurrentScreen() or hs.screen.mainScreen()
+  -- Default to screen with focused window (mainScreen), not mouse position
+  -- This ensures notifications appear where the user is working
+  local screen = opts.screen or hs.screen.mainScreen() or hs.mouse.getCurrentScreen()
   local window = opts.window
   local margin = opts.margin or M.MARGIN
   local offset = opts.offset or 0  -- Additional offset (e.g., for terminal prompts)

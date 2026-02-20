@@ -31,7 +31,12 @@ in {
   ids.gids.nixbld = 30000;
 
   # System paths and shells
-  environment.systemPath = ["/opt/homebrew/bin"];
+  # Note: Determinate Nix doesn't create /run/current-system symlink,
+  # so we explicitly add the nix profiles system path for coreutils etc.
+  environment.systemPath = [
+    "/nix/var/nix/profiles/system/sw/bin"
+    "/opt/homebrew/bin"
+  ];
   environment.pathsToLink = ["/Applications"];
   environment.shells = [pkgs.fish pkgs.zsh];
 

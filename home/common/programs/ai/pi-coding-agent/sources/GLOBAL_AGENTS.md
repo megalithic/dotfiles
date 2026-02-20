@@ -334,6 +334,61 @@ When receiving a message via Telegram (prefixed with
 2. Send acknowledgment via: `~/bin/ntfy send -t "pi agent" -m "..." --telegram`
 3. Then proceed with the requested task
 
+## Hammerspoon (CRITICAL - DO NOT CRASH)
+
+**Never use `hs -c "hs.reload()"` directly** — it destroys the Lua interpreter
+and hangs/crashes the CLI.
+
+### Safe reload pattern
+
+```bash
+# Trigger reload and verify (timeout handles both the wait and hang protection)
+open "hammerspoon://hs-reload"
+timeout 5 sh -c 'until hs -c "print(\"ok\")" 2>/dev/null; do :; done' && echo "✓ Reloaded"
+```
+
+### Full reload with error check
+
+```bash
+open "hammerspoon://hs-reload"
+timeout 5 sh -c 'until hs -c "print(\"ok\")" 2>/dev/null; do :; done'
+hs -c '
+  local c = hs.console.getConsole()
+  for line in c:gmatch("[^\n]+") do
+    if line:match("ERROR") or line:match("attempt to") then print(line) end
+  end
+'
+```
+
+### If Hammerspoon is crashed/not running
+
+```bash
+open -a Hammerspoon
+timeout 5 sh -c 'until hs -c "print(\"ok\")" 2>/dev/null; do :; done' && echo "✓ Started"
+```
+
+### Quick commands
+
+```bash
+# Test if alive
+timeout 2 hs -c "print('ok')"
+
+# Get last 20 console lines
+hs -c 'local c = hs.console.getConsole(); local lines = {}; for line in c:gmatch("[^\n]+") do lines[#lines+1] = line end; for i = math.max(1, #lines-20), #lines do print(lines[i]) end'
+
+# Check specific module loaded
+hs -c 'print(HUD ~= nil and "HUD loaded" or "HUD missing")'
+```
+
+### Why URL scheme works
+
+The `hammerspoon://hs-reload` URL is handled by `hs.urlevent` which:
+1. Receives the URL asynchronously (doesn't block caller)
+2. Defers the actual `hs.reload()` by 0.1s
+3. Returns immediately, so `open` exits cleanly
+
+Defined in `config/hammerspoon/utils.lua`.
+
 ## Nix/Dotfiles Relationship (seth's system)
 
 **`~/.dotfiles/` is ALWAYS the source of truth** - version controlled in git/jj.
