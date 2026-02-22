@@ -246,7 +246,9 @@
       fi
       
       if [[ -n "$bookmark" ]]; then
-        if jj bookmark list | rg -q "^$bookmark:"; then
+        # Capture bookmark list to avoid pipefail issues with jj util exec
+        bookmark_list=$(jj bookmark list 2>/dev/null || true)
+        if echo "$bookmark_list" | rg -q "^$bookmark:"; then
           jj bookmark set "$bookmark" -r @ -B
           echo "Moved existing bookmark '$bookmark' to @"
         else
@@ -301,7 +303,9 @@
       fi
       
       if [[ -n "$bookmark" ]]; then
-        if jj bookmark list | rg -q "^$bookmark:"; then
+        # Capture bookmark list to avoid pipefail issues with jj util exec
+        bookmark_list=$(jj bookmark list 2>/dev/null || true)
+        if echo "$bookmark_list" | rg -q "^$bookmark:"; then
           jj bookmark set "$bookmark" -r @ -B
           echo "Moved existing bookmark '$bookmark' to @ (from current position)"
         else
