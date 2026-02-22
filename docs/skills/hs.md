@@ -156,28 +156,23 @@ config/hammerspoon/
 ## Reloading Hammerspoon
 
 **CRITICAL**: Never use `hs -c "hs.reload()"` directly — it destroys the Lua
-interpreter and hangs/crashes the CLI.
+interpreter and crashes the IPC connection. Also avoid calling `hs.reload()`
+from timers or callbacks inside `hs -c` commands.
 
 ### Safe reload pattern
 
 ```bash
-# Trigger reload via URL scheme and wait for IPC to respond
-open "hammerspoon://hs-reload"
-timeout 5 sh -c 'until hs -c "print(\"ok\")" 2>/dev/null; do :; done' && echo "✓ Reloaded"
+# Use the hs-reload script (clicks menu, waits for "hammerspork loaded")
+hs-reload
 ```
 
-**Why URL scheme?** The `hammerspoon://hs-reload` handler (defined in
-`config/hammerspoon/utils.lua`) defers the reload by 0.1s and returns
-immediately, so `open` exits cleanly.
+**How it works**: The `hs-reload` script uses AppleScript to click "Reload Config"
+in the Hammerspoon menu bar, then watches the console for "hammerspork loaded"
+to confirm completion. This avoids the IPC crash.
 
-**Why timeout loop?** The reload is async; we poll until IPC responds. Timeout
-prevents infinite loop if Hammerspoon crashed.
-
-### Full reload with error check
+### Check for errors after reload
 
 ```bash
-open "hammerspoon://hs-reload"
-timeout 5 sh -c 'until hs -c "print(\"ok\")" 2>/dev/null; do :; done'
 hs -c '
   local c = hs.console.getConsole()
   for line in c:gmatch("[^\n]+") do
@@ -190,14 +185,15 @@ hs -c '
 
 ```bash
 open -a Hammerspoon
-timeout 5 sh -c 'until hs -c "print(\"ok\")" 2>/dev/null; do :; done' && echo "✓ Started"
+sleep 3  # Wait for init
+hs -c 'print("ok")' && echo "✓ Started"
 ```
 
 ### Quick verification commands
 
 ```bash
 # Test if alive
-timeout 2 hs -c "print('ok')"
+hs -c 'print("ok")'
 
 # Check IPC is responding
 hs -c "return hs.processInfo.processID"

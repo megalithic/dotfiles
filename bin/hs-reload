@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# Safe Hammerspoon reload - uses menu click, waits for "hammerspork loaded"
+# Avoids hs.reload() via IPC which crashes the Lua interpreter
+
+set -euo pipefail
+
+# Get last load timestamp before reload
+get_last_load() {
+  hs -c '
+    local c = hs.console.getConsole()
+    local last
+    for line in c:gmatch("[^\n]+") do
+      if line:match("hammerspork loaded") then last = line end
+    end
+    print(last or "")
+  ' 2>/dev/null || echo ""
+}
+
+before=$(get_last_load)
+
+# Trigger reload via menu (safe, doesn't crash IPC)
+osascript -e '
+tell application "System Events"
+    tell process "Hammerspoon"
+        click menu item "Reload Config" of menu 1 of menu bar item 1 of menu bar 2
+    end tell
+end tell
+' >/dev/null 2>&1
+
+# Wait for new "hammerspork loaded" message (up to 10 seconds)
+for i in {1..20}; do
+  sleep 0.5
+  after=$(get_last_load)
+  if [[ -n "$after" && "$after" != "$before" ]]; then
+    echo "✓ Reloaded"
+    exit 0
+  fi
+done
+
+echo "✗ Reload timeout"
+exit 1

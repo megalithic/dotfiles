@@ -183,21 +183,16 @@ should be: "This is probably in a .nix file somewhere."
   - Paths to resources (`C.paths`)
   - Notification settings
   - Any hardcoded values - prefer using config over hardcoding
-- **Reloading Hammerspoon**: Use `timeout` to prevent hanging, then verify via
-  notification database:
+- **Reloading Hammerspoon**: Use the `hs-reload` script:
 
   ```bash
-  RELOAD_TIME=$(date +%s)
-  timeout 2 hs -c "hs.reload()" 2>&1 || true
-  sqlite3 ~/.local/share/hammerspoon/hammerspoon.db "SELECT timestamp FROM notifications WHERE sender = 'hammerspork' AND message = 'config is loaded.' AND timestamp >= $RELOAD_TIME LIMIT 1" && echo "✓ Reloaded"
+  hs-reload
   ```
 
-  - `timeout` is required because hs.reload() destroys the Lua interpreter,
-    causing the CLI command to hang
-  - The timeout is expected and normal - reload succeeds even though the command
-    times out
-  - Notification database path: `~/.local/share/hammerspoon/hammerspoon.db`
-  - Do NOT use sleep - check the database immediately after the timeout
+  - **NEVER** use `hs -c "hs.reload()"` - it crashes the IPC connection
+  - **NEVER** call `hs.reload()` from timers inside `hs -c` commands
+  - The `hs-reload` script clicks the menu bar item and waits for "hammerspork loaded"
+  - If Hammerspoon crashed: `open -a Hammerspoon && sleep 3`
 
 - for any and all changes to hammerspoon, you must verify that there are NO
   workspace or document diagnostic errors before attempting to reload

@@ -337,21 +337,19 @@ When receiving a message via Telegram (prefixed with
 ## Hammerspoon (CRITICAL - DO NOT CRASH)
 
 **Never use `hs -c "hs.reload()"` directly** — it destroys the Lua interpreter
-and hangs/crashes the CLI.
+and crashes the IPC connection. Also avoid calling `hs.reload()` from timers
+inside `hs -c` commands.
 
 ### Safe reload pattern
 
 ```bash
-# Trigger reload and verify (timeout handles both the wait and hang protection)
-open "hammerspoon://hs-reload"
-timeout 5 sh -c 'until hs -c "print(\"ok\")" 2>/dev/null; do :; done' && echo "✓ Reloaded"
+# Use the hs-reload script (clicks menu, waits for "hammerspork loaded")
+hs-reload
 ```
 
-### Full reload with error check
+### Check for errors after reload
 
 ```bash
-open "hammerspoon://hs-reload"
-timeout 5 sh -c 'until hs -c "print(\"ok\")" 2>/dev/null; do :; done'
 hs -c '
   local c = hs.console.getConsole()
   for line in c:gmatch("[^\n]+") do
@@ -364,14 +362,15 @@ hs -c '
 
 ```bash
 open -a Hammerspoon
-timeout 5 sh -c 'until hs -c "print(\"ok\")" 2>/dev/null; do :; done' && echo "✓ Started"
+sleep 3  # Wait for init
+hs -c 'print("ok")' && echo "✓ Started"
 ```
 
 ### Quick commands
 
 ```bash
 # Test if alive
-timeout 2 hs -c "print('ok')"
+hs -c 'print("ok")'
 
 # Get last 20 console lines
 hs -c 'local c = hs.console.getConsole(); local lines = {}; for line in c:gmatch("[^\n]+") do lines[#lines+1] = line end; for i = math.max(1, #lines-20), #lines do print(lines[i]) end'
@@ -380,10 +379,11 @@ hs -c 'local c = hs.console.getConsole(); local lines = {}; for line in c:gmatch
 hs -c 'print(HUD ~= nil and "HUD loaded" or "HUD missing")'
 ```
 
-### Why URL scheme works
+### How hs-reload works
 
-The `hammerspoon://hs-reload` URL is handled by `hs.urlevent` which:
-1. Receives the URL asynchronously (doesn't block caller)
+The `hs-reload` script uses AppleScript to click "Reload Config" in the menu bar,
+then watches the console for "hammerspork loaded" to confirm completion. This
+avoids the IPC crash that happens with `hs -c 'hs.reload()'`.
 2. Defers the actual `hs.reload()` by 0.1s
 3. Returns immediately, so `open` exits cleanly
 

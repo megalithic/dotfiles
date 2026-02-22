@@ -36,19 +36,25 @@ M.defaultIndicatorColor = "#e39b7b"
 function M.new(id, opts)
   assert(id and type(id) == "string", "modality id must be a string")
 
-  -- Check for duplicate ID
-  if M._registry[id] then
-    U.log.w(fmt("modality '%s' already exists, returning existing instance", id))
-    return M._registry[id]
-  end
-
   opts = opts or {}
+
+  -- Update existing instance if it exists (handles reload)
+  if M._registry[id] then
+    local existing = M._registry[id]
+    existing.indicatorColor = opts.indicatorColor or M.defaultIndicatorColor
+    existing.showIndicator = opts.showIndicator == true
+    existing.showAlert = opts.showAlert == true
+    existing.alertPosition = opts.alertPosition or "center"
+    existing.autoExit = opts.autoExit ~= false and (opts.autoExit or 1)
+    existing.dimWindow = opts.dimWindow
+    existing.customOnEntered = opts.on_entered
+    return existing
+  end
 
   -- Create new modal instance
   local modal = hs.hotkey.modal.new({}, nil)
 
   -- Instance state (isolated per modality)
-  -- Indicators default to true (original behavior), but can be disabled
   local instance = {
     id = id,
     modal = modal,
@@ -57,8 +63,12 @@ function M.new(id, opts)
     indicatorColor = opts.indicatorColor or M.defaultIndicatorColor,
     showIndicator = opts.showIndicator == true, -- default false (explicit true to enable)
     showAlert = opts.showAlert == true, -- default false (explicit true to enable)
+    alertPosition = opts.alertPosition or "center", -- default center of window
     autoExit = opts.autoExit ~= false and (opts.autoExit or 1), -- default 1s, false to disable
+    -- Dim window: false=off, true=0.5 opacity, number=custom opacity (0-1)
+    dimWindow = opts.dimWindow,
     hudAlert = nil,
+    dimOverlay = nil,
     delayedExitTimer = nil,
     customOnEntered = opts.on_entered,
   }
@@ -184,17 +194,32 @@ function M._onEntered(self)
     if win ~= nil then
       self.isOpen = true
 
+      -- Dim window if enabled (boolean=0.5, number=custom opacity 0-1)
+      if self.dimWindow then
+        local alpha = type(self.dimWindow) == "number" and self.dimWindow or 0.5
+        local frame = win:frame()
+        self.dimOverlay = hs.canvas.new(frame)
+        self.dimOverlay:appendElements({
+          type = "rectangle",
+          action = "fill",
+          fillColor = { red = 0, green = 0, blue = 0, alpha = alpha },
+          roundedRectRadii = { xRadius = 12.0, yRadius = 12.0 },
+        })
+        self.dimOverlay:level(hs.canvas.windowLevels.overlay)
+        self.dimOverlay:show()
+      end
+
       -- Show border indicator if enabled
       if self.showIndicator then self:_toggleIndicator(win) end
 
-      -- Show alert with app name if enabled (window-relative)
+      -- Show alert with app name/icon if enabled (window-relative)
       if self.showAlert then
-        local appTitle = win:application():title()
-        local text = fmt("%s: %s", self.id, appTitle)
+        local app = win:application()
+        local appIcon = hs.image.imageFromAppBundle(app:bundleID())
 
-        -- Use HUD alert with window-relative positioning
-        self.hudAlert = HUD.alert(text, {
-          position = "top-center",
+        self.hudAlert = HUD.alert(app:title(), {
+          icon = appIcon,
+          position = self.alertPosition,
           window = win,
           duration = 0, -- Don't auto-dismiss (we handle it)
         })
@@ -220,6 +245,12 @@ function M._onExited(self)
   if self.hudAlert then
     self.hudAlert:dismiss()
     self.hudAlert = nil
+  end
+
+  -- Remove dim overlay
+  if self.dimOverlay then
+    self.dimOverlay:delete()
+    self.dimOverlay = nil
   end
 
   self:_toggleIndicator(nil, true)

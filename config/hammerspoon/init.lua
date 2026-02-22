@@ -119,13 +119,13 @@ req("bindings")
 req("watchers", { watchers = watchers })
 req("micchecka", { model = "large-v3", languages = { "en" } }):start()
 req("quitter"):start()
-req("clipper")  -- Auto-inits via req(), starts pasteboard watcher
+req("clipper") -- Auto-inits via req(), starts pasteboard watcher
 
 -- Setup overrides for hs.* APIs
 -- Must be called AFTER all modules are loaded so we have references
 local overrides = require("overrides")
-overrides.setupAlertOverride(HUD)   -- Replace hs.alert with custom HUD
-overrides.setupNotifyOverride(HUD)  -- Replace hs.notify with custom HUD
+overrides.setupAlertOverride(HUD) -- Replace hs.alert with custom HUD
+overrides.setupNotifyOverride(HUD) -- Replace hs.notify with custom HUD
 overrides.setupReloadCleanup({
   stopWatchers = function()
     require("watchers"):stop({ watchers = watchers })
@@ -146,4 +146,4 @@ end
 
 hs.notify.withdrawAll()
 hs.notify.new({ title = "hammerspork", subTitle = "config is loaded.", alwaysPresent = true }):send()
-U.log.o("hammerspork config is loaded")
+U.log.o("hammerspork loaded")

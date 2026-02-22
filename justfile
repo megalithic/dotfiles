@@ -215,7 +215,7 @@ _sync-main:
   
   if [[ -n "$REMOTE_MAIN" && "$LOCAL_MAIN" != "$REMOTE_MAIN" ]]; then
     echo ":: Remote main has updates (likely flake.lock from Sunday automation)"
-    jj bookmark set main -r main@origin
+    jj bookmark set main -r main@origin --allow-backwards
     
     # Rebase current work onto updated main if we're not on main
     CURRENT=$(jj log -r @ -T 'if(bookmarks, bookmarks, change_id)' --no-graph)

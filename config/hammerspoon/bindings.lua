@@ -253,7 +253,11 @@ end
 
 function M.loadWm()
   -- [ MODAL C.launchers ] ---------------------------------------------------------
-  local wmModality = require("hypemode").new("wm")
+  local wmModality = require("hypemode").new("wm", {
+    showAlert = true,
+    alertPosition = "center",
+    dimWindow = 0.5, -- 50% dim overlay on focused window
+  })
   wmModality
     :start()
     :bind({}, "r", req("wm").placeAllApps, function() wmModality:exit(0.1) end)
