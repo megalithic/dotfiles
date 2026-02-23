@@ -171,13 +171,14 @@ function M.new(opts)
   local self = setmetatable({}, NotchHUD)
   self.timers = {}
   
-  -- Create the drop canvas
-  local width = opts.width or 160
-  local height = opts.height or 65
+  -- Store requested dimensions for repositioning
+  self.requestedWidth = opts.width or 160
+  self.requestedHeight = opts.height or 65
   
+  -- Create the drop canvas
   local canvas, frame, useNotchStyle, canvasW, canvasH = M.createDrop({
-    width = width,
-    height = height,
+    width = self.requestedWidth,
+    height = self.requestedHeight,
   })
   
   if not canvas then
@@ -286,6 +287,49 @@ end
 ---@return hs.canvas
 function NotchHUD:getCanvas()
   return self.canvas
+end
+
+---Reposition the notch when screen configuration changes
+function NotchHUD:reposition()
+  if not self.canvas then return end
+  
+  -- Get current visibility state
+  local wasVisible = self.canvas:isShowing()
+  
+  -- Store current content elements (skip background at index 1)
+  local contentElements = {}
+  local elementCount = self.canvas:elementCount()
+  for i = 2, elementCount do
+    table.insert(contentElements, self.canvas:elementAttribute(i))
+  end
+  
+  -- Recreate canvas for new screen configuration
+  local canvas, frame, useNotchStyle, canvasW, canvasH = M.createDrop({
+    width = self.requestedWidth,
+    height = self.requestedHeight,
+  })
+  
+  if not canvas then return end
+  
+  -- Destroy old canvas
+  self.canvas:delete()
+  
+  -- Update with new canvas
+  self.canvas = canvas
+  self.frame = frame
+  self.useNotchStyle = useNotchStyle
+  self.contentCenterX = canvasW / 2
+  self.contentCenterY = canvasH / 2
+  
+  -- Restore content elements
+  for _, element in ipairs(contentElements) do
+    self.canvas:insertElement(element)
+  end
+  
+  -- Restore visibility
+  if wasVisible then
+    self.canvas:show()
+  end
 end
 
 return M

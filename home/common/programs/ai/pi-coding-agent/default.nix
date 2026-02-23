@@ -197,6 +197,7 @@
     # Only include models you have API access to
     # Pi will warn about patterns that don't match any available models
     enabledModels = [
+      # "gemini-3.1-pro-preview" # through google-vertex
       "claude-opus-4-5"
       "claude-opus-4-6"
       "claude-sonnet-4-5"

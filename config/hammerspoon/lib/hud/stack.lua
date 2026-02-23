@@ -188,6 +188,7 @@ function M.makeRoom(anchor, height)
       local offset = -(height + position.STACK_SPACING)
 
       animator.animate(200, function(progress)
+        if not hud.canvas then return end
         local y = currentPos.y + (offset * progress)
         hud.canvas:topLeft({ x = currentPos.x, y = y })
       end, { easing = animator.easeOutCubic })

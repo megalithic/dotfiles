@@ -113,7 +113,7 @@ hs.loadSpoon("EmmyLua")
 -- Development/spike modules (available via Spike.* global)
 -- require("spike-ax-meeting")
 
-local watchers = { "audio", "dock", "app", "notification", "url", "pasteboard" }
+local watchers = { "audio", "dock", "app", "notification", "url", "pasteboard", "screen" }
 
 req("bindings")
 req("watchers", { watchers = watchers })

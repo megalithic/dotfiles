@@ -623,6 +623,14 @@ function M:start()
   applyPTTState()
   updateHUD()
 
+  -- Register for screen changes to reposition notch
+  local screenWatcher = require("watchers.screen")
+  screenWatcher.onChange("micchecka", function()
+    if notchHUD then
+      notchHUD:reposition()
+    end
+  end)
+
   U.log.i("started")
   return self
 end
@@ -631,6 +639,12 @@ function M:stop()
   _G.S.resetMicchecka()
 
   if whisper then whisper:stop() end
+  
+  -- Unregister screen change callback
+  local ok, screenWatcher = pcall(require, "watchers.screen")
+  if ok then
+    screenWatcher.removeCallback("micchecka")
+  end
   
   shutdownLevelMonitor()
   cancelCompleteTimer()
