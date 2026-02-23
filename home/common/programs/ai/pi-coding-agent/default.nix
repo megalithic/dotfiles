@@ -186,6 +186,11 @@
   # ===========================================================================
   # Settings to merge (not overwrite)
   # ===========================================================================
+  # Pi packages (auto-installed on startup)
+  managedPackages = [
+    "npm:pi-agent-browser"
+  ];
+
   managedSettings = {
     defaultProvider = "anthropic";
     defaultModel = "claude-opus-4-5";
@@ -197,7 +202,9 @@
     # Only include models you have API access to
     # Pi will warn about patterns that don't match any available models
     enabledModels = [
-      # "gemini-3.1-pro-preview" # through google-vertex
+      "google-vertex/gemini-3.1-pro-preview"
+      "google-vertex/gemini-3-pro-preview"
+      "google-vertex/gemini-3-flash-preview"
       "claude-opus-4-5"
       "claude-opus-4-6"
       "claude-sonnet-4-5"
@@ -205,6 +212,7 @@
   };
 
   managedSettingsJson = pkgs.writeText "pi-managed-settings.json" (builtins.toJSON managedSettings);
+  managedPackagesJson = pkgs.writeText "pi-managed-packages.json" (builtins.toJSON managedPackages);
 
   # ===========================================================================
   # Pi Wrapper Scripts
@@ -329,9 +337,19 @@
   # Short alias for pinvim
   p = pkgs.writeShellScriptBin "p" ''exec ${pinvim}/bin/pinvim "$@"'';
 in {
+  # ===========================================================================
+  # NPM Global Packages Configuration
+  # npm global prefix (nix store is read-only)
+  home.sessionVariables = {
+    NPM_CONFIG_PREFIX = "${config.home.homeDirectory}/.npm-global";
+  };
+
+  home.sessionPath = ["${config.home.homeDirectory}/.npm-global/bin"];
+
   home.packages = [
     pinvim
     p
+    pkgs.llm-agents.agent-browser # Browser automation CLI for pi's browser tool
   ];
 
   # File Symlinks
@@ -353,9 +371,11 @@ in {
   # ===========================================================================
   # Merges our managed settings into ~/.pi/agent/settings.json
   # Preserves user settings managed by pi itself
+  # Special handling for packages array: union (add new, keep existing)
   home.activation.mergePiSettings = lib.hm.dag.entryAfter ["writeBoundary"] ''
     SETTINGS_FILE="${config.home.homeDirectory}/.pi/agent/settings.json"
     MERGE_JSON="${managedSettingsJson}"
+    PACKAGES_JSON="${managedPackagesJson}"
 
     # Create settings directory if it doesn't exist
     mkdir -p "$(dirname "$SETTINGS_FILE")"
@@ -366,9 +386,13 @@ in {
     fi
 
     # Merge settings, preserving existing keys unless overridden
-    ${pkgs.jq}/bin/jq -s '.[0] * .[1]' \
-      "$SETTINGS_FILE" \
-      "$MERGE_JSON" > "''${SETTINGS_FILE}.tmp"
+    # Then merge packages array (union: keep existing + add managed, deduplicate)
+    ${pkgs.jq}/bin/jq -s --argjson managed_pkgs "$(cat "$PACKAGES_JSON")" '
+      # First merge settings objects
+      (.[0] * .[1]) |
+      # Then union packages arrays (existing + managed, deduplicated)
+      .packages = ((.packages // []) + $managed_pkgs | unique)
+    ' "$SETTINGS_FILE" "$MERGE_JSON" > "''${SETTINGS_FILE}.tmp"
 
     mv "''${SETTINGS_FILE}.tmp" "$SETTINGS_FILE"
   '';

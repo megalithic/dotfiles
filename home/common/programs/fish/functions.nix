@@ -1,7 +1,16 @@
 # Fish shell functions
-{ isDarwin }:
+{ config, isDarwin }:
 {
   fish_greeting = "";
+
+  # Reload shell with fresh session variables
+  # Extracts hm-session-vars.fish path from config.fish (it's a nix store path)
+  sz = ''
+    set -e __HM_SESS_VARS_SOURCED
+    set -l vars_file (string match -r '/nix/store/[^ ]+hm-session-vars\.fish' < ~/.config/fish/config.fish)
+    test -n "$vars_file"; and source $vars_file
+    exec fish
+  '';
 
   _prompt_move_to_bottom = {
     onEvent = "fish_postexec";

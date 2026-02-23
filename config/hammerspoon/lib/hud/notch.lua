@@ -59,7 +59,9 @@ function M.getTargetScreen()
     return builtIn, true
   end
   
-  return hs.screen.mainScreen(), false
+  -- Fallback - mainScreen() can return nil during screen transitions
+  local main = hs.screen.mainScreen()
+  return main, false
 end
 
 ---@param screen hs.screen
@@ -79,6 +81,10 @@ function M.createDrop(opts)
   opts = opts or {}
   
   local screen, useNotchStyle = M.getTargetScreen()
+  if not screen then
+    -- Screen not available (can happen during screen transitions)
+    return nil
+  end
   local fullFrame = screen:fullFrame()
   local frame = screen:frame()
   
@@ -300,7 +306,7 @@ function NotchHUD:reposition()
   local contentElements = {}
   local elementCount = self.canvas:elementCount()
   for i = 2, elementCount do
-    table.insert(contentElements, self.canvas:elementAttribute(i))
+    table.insert(contentElements, self.canvas[i])
   end
   
   -- Recreate canvas for new screen configuration

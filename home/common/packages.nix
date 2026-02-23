@@ -72,6 +72,7 @@
     mprocs
     netcat # nc networking utility
     nix-update
+    nix-search-cli
     ollama # local LLM for AI-powered note summarization
     openconnect
     openssl_3
@@ -132,6 +133,7 @@
     lua5_4
     lua-language-server
     lua54Packages.luacheck
+    lua54Packages.luarocks
     stylua
 
     # shell

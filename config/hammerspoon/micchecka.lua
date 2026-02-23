@@ -626,8 +626,11 @@ function M:start()
   -- Register for screen changes to reposition notch
   local screenWatcher = require("watchers.screen")
   screenWatcher.onChange("micchecka", function()
-    if notchHUD then
-      notchHUD:reposition()
+    if notchHUD and notchHUD.reposition then
+      local ok, err = pcall(function() notchHUD:reposition() end)
+      if not ok then
+        U.log.w("notchHUD reposition failed:", tostring(err))
+      end
     end
   end)
 

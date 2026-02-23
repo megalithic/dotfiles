@@ -672,7 +672,7 @@ M.notifier = {
 -- Manages a dedicated pi agent via RPC for Telegram orchestration
 M.piGateway = {
   -- Enable/disable the gateway
-  enabled = true,
+  enabled = false,
 
   -- Default pi profile (auth cascade: tries this first, then fallbacks)
   defaultProfile = "mega",

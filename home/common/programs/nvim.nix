@@ -14,29 +14,27 @@
     mkdir -p $HOME/.config/nvim/backups $HOME/.config/nvim/swaps $HOME/.config/nvim/undo
   '';
 
-  xdg.configFile."nvim".source = config.lib.mega.linkConfig "nvim";
-  # xdg.configFile."nvim/lua/nix_provided.lua" = with pkgs; {
-  #   text = ''
-  #     return {
-  #       -- bashls = { "${unstable.nodePackages.bash-language-server}/bin/bash-language-server", "start" },
-  #       -- dockerls = { "${unstable.dockerfile-language-server}/bin/docker-langserver", "--stdio" },
-  #       -- elixirls = { "${unstable.elixir-ls}/bin/elixir-ls" },
-  #       -- eslint = { "${unstable.vscode-langservers-extracted}/bin/vscode-eslint-language-server", "--stdio" },
-  #       -- html = { "${unstable.vscode-langservers-extracted}/bin/vscode-html-language-server", "--stdio" },
-  #       -- jsonls = { "${unstable.vscode-langservers-extracted}/bin/vscode-json-language-server", "--stdio" },
-  #       -- cssls = { "${unstable.vscode-langservers-extracted}/bin/vscode-css-language-server", "--stdio" },
-  #       -- ts_ls = { "${unstable.nodePackages.typescript-language-server}/bin/typescript-language-server", "--stdio" },
-  #       -- vue_ls = { "${unstable.vue-language-server}/bin/vue-language-server", "--stdio" },
-  #       -- nil_ls = { "${unstable.nil}/bin/nil" },
-  #       -- lua_ls = { "${unstable.lua-language-server}/bin/lua-language-server" },
-  #       -- vue_ts_plugin = "${unstable.vue-language-server}/lib/node_modules/@vue/language-server",
-  #       -- vtsls = { "${unstable.vtsls}/bin/vtsls", "--stdio" },
-  #       -- awesomewm_lib = "${pkgs.awesome-git}/share/awesome/lib",
-  #       -- expert = { "${pkgs.expert-lsp}/bin/expert-lsp", "--stdio" }
-  #     }
-  #   '';
-  # };
-  #
+  xdg.configFile = {
+    ripgrep_ignore.text = ''
+      .git/
+      yarn.lock
+      package-lock.json
+      packer_compiled.lua
+      .DS_Store
+      .netrwhist
+      dist/
+      node_modules/
+      **/node_modules/
+      wget-log
+      wget-log.*
+      /vendor
+    '';
+    nvim = {
+      source = config.lib.mega.linkConfig "nvim";
+      recursive = true;
+    };
+  };
+
   programs.neovim = {
     enable = true;
     defaultEditor = true;
@@ -46,45 +44,125 @@
     withRuby = true;
     vimdiffAlias = true;
     vimAlias = true;
+    extraWrapperArgs =
+      [
+        # "--set"
+        # "NVIM_RUST_ANALYZER"
+        # "${pkgs.rust-analyzer}/bin/rust-analyzer"
+        "--set"
+        "LIBSQLITE"
+      ]
+      ++ ["${pkgs.sqlite.out}/lib/libsqlite3.dylib"];
     extraPackages = with pkgs; [
-      actionlint
-      bash-language-server
+      # actionlint
+      # bash-language-server
+      # biome
+      # black
+      # bun
+      # cmake
+      # copilot-language-server
+      # deno
+      # dotenv-linter
+      # expert
+      # gcc # For treesitter compilation
+      # git
+      # gnumake # For various build processes
+      # golangci-lint
+      # gopls
+      # gotools
+      # hadolint # Docker linter
+      # isort
+      # lua51Packages.luarocks
+      # nixd # nix lsp
+      # nixfmt-rfc-style # cannot be installed via Mason on macOS, so installed here instead
+      # nodePackages.prettier
+      # par
+      # pngpaste # For Obsidian paste_img command
+      # ruff
+      # shfmt # Doesn't work with zsh, only sh & bash
+      # statix
+      # stylelint-lsp
+      # # (tailwindcss-language-server.override {nodejs_latest = nodejs_22;})
+      # taplo # TOML linter and formatter
+      # tree-sitter # required for treesitter "auto-install" option to work
+      # typos
+      # typos-lsp
+      # typst
+      # uv
+      # vscode-langservers-extracted # HTML, CSS, JSON & ESLint LSPs
+      # vtsls # js/ts LSP
+      # yaml-language-server
+
+      # for compiling Treesitter parsers
+      gcc
+      tree-sitter
+
+      # debuggers
+      lldb # comes with lldb-vscode
+
+      # formatters and linters
+      alejandra
       biome
-      black
-      bun
-      cmake
-      copilot-language-server
-      deno
-      dotenv-linter
-      expert
-      gcc # For treesitter compilation
-      git
-      gnumake # For various build processes
-      golangci-lint
-      gopls
-      gotools
-      hadolint # Docker linter
-      isort
-      lua51Packages.luarocks
-      nixd # nix lsp
-      nixfmt-rfc-style # cannot be installed via Mason on macOS, so installed here instead
-      nodePackages.prettier
-      par
-      pngpaste # For Obsidian paste_img command
-      ruff
-      shfmt # Doesn't work with zsh, only sh & bash
+      eslint_d
+      nixfmt
+      nixfmt-rfc-style
+      prettierd
+      rustfmt
+      selene
+      shfmt
       statix
-      stylelint-lsp
-      # (tailwindcss-language-server.override {nodejs_latest = nodejs_22;})
-      taplo # TOML linter and formatter
-      tree-sitter # required for treesitter "auto-install" option to work
+      stylua
+      yamlfmt
+
+      # LSP servers
+      bash-language-server
+      basedpyright
+      # cargo # sometimes required for rust-analyzer to work
+      copilot-language-server
+      gopls
+      graphql-language-service-cli
+      harper
+      just-lsp
+      llvmPackages.clang-tools
+      # lua (use lowPrio on 5.1 to avoid fish completion collision with 5.4)
+      (lib.lowPrio lua5_1)
+      lua5_4
+      lua-language-server
+      markdown-oxide
+      nil
+      nixd
+      nodePackages_latest.typescript-language-server
+      nodejs
+      ruff
+      rust-analyzer
+      shellcheck
+      taplo
       typos
       typos-lsp
       typst
-      uv
-      vscode-langservers-extracted # HTML, CSS, JSON & ESLint LSPs
-      vtsls # js/ts LSP
+      vscode-langservers-extracted # this includes css-lsp, html-lsp, json-lsp, eslint-lsp
       yaml-language-server
+
+      # other utils and plugin dependencies
+      cargo
+      cargo-nextest
+      clippy
+      curl
+      fd
+      fzf
+      gh
+      glow
+      gnumake
+      imagemagick
+      jq
+      lemmy-help
+      mariadb
+      openssl
+      pngpaste
+      ripgrep
+      sqlite
+      uv
+      yq-go
     ];
   };
 }

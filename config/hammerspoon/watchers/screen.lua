@@ -34,7 +34,7 @@ function M.start(watchers)
     for id, fn in pairs(callbacks) do
       local ok, err = pcall(fn)
       if not ok then
-        U.log.e("screen callback error (" .. id .. "):", err)
+        U.log.e("screen callback error (" .. id .. "):", tostring(err or "unknown error"))
       end
     end
   end)

@@ -804,8 +804,6 @@ return {
   -- },
   { "saghen/filler-begone.nvim" },
 
-
-
   -- forces plugins to use CursorLineSign
   { "jake-stewart/force-cul.nvim", opts = {} },
   {

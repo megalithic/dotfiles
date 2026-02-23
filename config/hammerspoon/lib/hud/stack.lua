@@ -164,6 +164,7 @@ function M.restack(anchor)
         if math.abs(currentPos.y - newY) > 1 then
           -- Quick slide to new position
           animator.animate(150, function(progress)
+            if not hud.canvas then return end
             local y = currentPos.y + (newY - currentPos.y) * progress
             hud.canvas:topLeft({ x = currentPos.x, y = y })
           end, { easing = animator.easeOutCubic })
