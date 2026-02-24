@@ -483,13 +483,14 @@ function buildRules(config: SentinelConfig): Rule[] {
     tier: "confirm",
     tools: ["bash"],
     test: (cmd) => {
+      // mix deps.get is always allowed - standard Elixir workflow
+      if (isCommandPrefix(cmd, "mix", "deps.get")) return false;
       return isCommandPrefix(cmd, "npm", "install") ||
         isCommandPrefix(cmd, "npm", "i") ||
         isCommandPrefix(cmd, "npm", "add") ||
         isCommandPrefix(cmd, "yarn", "add") ||
         isCommandPrefix(cmd, "pnpm", "add") ||
         isCommandPrefix(cmd, "pnpm", "install") ||
-        isCommandPrefix(cmd, "mix", "deps.get") ||
         isCommandPrefix(cmd, "cargo", "add") ||
         isCommandPrefix(cmd, "bun", "add") ||
         isCommandPrefix(cmd, "bun", "install");
@@ -624,7 +625,20 @@ export default function (pi: ExtensionAPI) {
         }
         blocked = { command: cmd, rule: rule.name, reason: rule.reason, timestamp: Date.now() };
         log(`CONFIRM [${rule.name}]: ${cmd.slice(0, 60)}`);
-        return { block: true, reason: `🔒 **${rule.name}** — ${rule.reason}\n\nSay \`override\` to allow.` };
+        const cmdPreview = cmd.length > 200 ? cmd.slice(0, 200) + "..." : cmd;
+        return {
+          block: true,
+          reason: `🔒 **${rule.name}** — ${rule.reason}
+
+**Command:** \`${cmdPreview}\`
+
+**Agent:** Before asking for override, explain to the user:
+1. What this command does
+2. Why it was blocked (${rule.reason})
+3. Whether it's safe to override in this context
+
+Say \`override\` to allow.`
+        };
       }
     }
 

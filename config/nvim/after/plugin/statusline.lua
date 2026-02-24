@@ -326,15 +326,7 @@ local exception_types = {
       if ok and (vim.g.term_buf ~= nil or term_buf_var ~= nil) then
         local _, term_name = pcall(vim.api.nvim_buf_get_var, bufnr, "term_name")
         local _, term_cmd = pcall(vim.api.nvim_buf_get_var, bufnr, "term_cmd")
-        return seg(
-          string.format(
-            "%s(%s)[%s]",
-            term_name or "megaterm",
-            shell,
-            term_cmd or bufnr
-          ),
-          mode_hl
-        )
+        return seg(string.format("%s(%s)[%s]", term_name or "megaterm", shell, term_cmd or bufnr), mode_hl)
       end
 
       return seg(string.format("megaterm#%d(%s)", bufnr, shell), mode_hl)
@@ -635,7 +627,7 @@ local function seg_selection_info()
     wrap(
       "VisualYank",
       table.concat({
-        wrap("StModifiedIcon", "" .. " "),
+        wrap("StModifiedIcon", Icons.misc.ln_sel .. " "),
         wrap("StLineNumber", tostring(chars) .. "ꮯ"),
         wrap(sep_hl, "/"),
         wrap("StLineTotal", tostring(words) .. "w"),

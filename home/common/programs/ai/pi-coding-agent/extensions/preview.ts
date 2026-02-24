@@ -18,14 +18,30 @@
 import type { ExtensionAPI, ExtensionContext } from "@mariozechner/pi-coding-agent";
 
 const VALID_TYPES = ["json", "markdown", "diff", "codediff", "log", "bead", "file", "image", "cmd", "text", "auto"];
+const VALID_MODES = ["tmux-split", "tmux-float", "auto"];
 
 type PreviewType = "json" | "markdown" | "diff" | "codediff" | "log" | "bead" | "file" | "image" | "cmd" | "text" | "auto";
+type PreviewMode = "tmux-split" | "tmux-float" | "auto";
 
 interface PreviewOptions {
 	type?: PreviewType;
+	mode?: PreviewMode;
 	autoClose?: number;
 	useDelta?: boolean;
 }
+
+/**
+ * Detect the best preview mode based on environment
+ * - Inside nvim (megaterm): use tmux-float (large popup)
+ * - Regular tmux: use tmux-split (side pane)
+ */
+const detectPreviewMode = (): "tmux-split" | "tmux-float" => {
+	// $NVIM is set when running inside neovim's terminal
+	if (process.env.NVIM) {
+		return "tmux-float";
+	}
+	return "tmux-split";
+};
 
 /**
  * Check if we're running in a tmux session
@@ -40,12 +56,22 @@ const isInTmux = (): boolean => {
 const parseArgs = (args: string[]): { options: PreviewOptions; content: string[] } => {
 	const options: PreviewOptions = {
 		type: "auto",
+		mode: "auto",
 	};
 	const content: string[] = [];
 	let i = 0;
 
 	while (i < args.length) {
 		const arg = args[i];
+
+		if ((arg === "--mode" || arg === "-m") && i + 1 < args.length) {
+			const maybeMode = args[i + 1].toLowerCase();
+			if (VALID_MODES.includes(maybeMode)) {
+				options.mode = maybeMode as PreviewMode;
+			}
+			i += 2;
+			continue;
+		}
 
 		if (arg === "--auto-close-after" && i + 1 < args.length) {
 			const seconds = parseInt(args[i + 1], 10);
@@ -91,6 +117,14 @@ const parseArgs = (args: string[]): { options: PreviewOptions; content: string[]
 const buildPreviewCommand = (options: PreviewOptions, content: string[]): string[] => {
 	const cmd: string[] = ["preview-ai"];
 
+	// Resolve mode: auto -> detect based on environment
+	const resolvedMode = options.mode === "auto" ? detectPreviewMode() : options.mode;
+
+	// Add --float for tmux-float mode
+	if (resolvedMode === "tmux-float") {
+		cmd.push("--float");
+	}
+
 	if (options.autoClose !== undefined) {
 		cmd.push("--auto-close-after", options.autoClose.toString());
 	}
@@ -115,15 +149,21 @@ const showHelp = (ctx: ExtensionContext): void => {
 	const helpText = `
 **Preview Extension**
 
-Display code, diffs, images, and other content in a tmux pane.
+Display code, diffs, images, and other content in a tmux pane or popup.
 
 **Usage:**
   /preview [options] [type] <content>
 
 **Options:**
+  -m, --mode <mode>          Preview mode (see below)
   --auto-close-after <secs>  Auto-close pane after N seconds
   --delta                    Use delta for diff viewing (non-interactive)
   -h, --help                 Show this help
+
+**Modes:**
+  tmux-split   Split pane (default outside nvim)
+  tmux-float   Large popup window (default inside nvim/megaterm)
+  auto         Auto-detect based on environment (default)
 
 **Types:**
   json       JSON content (inline or file path)
@@ -140,12 +180,17 @@ Display code, diffs, images, and other content in a tmux pane.
 **Examples:**
   /preview json '{"foo": "bar"}'
   /preview diff -r @
+  /preview --mode tmux-float diff -r @
   /preview --delta diff -r @
   /preview codediff HEAD~2 HEAD
   /preview file ~/.config/nvim/init.lua
   /preview markdown "# Hello World"
   /preview image /path/to/screenshot.png
   /preview --auto-close-after 5 diff
+
+**Auto-detection:**
+  Inside nvim (megaterm) → tmux-float (large popup)
+  Regular tmux           → tmux-split (side pane)
 
 **Safety:**
   - Never renders in caller's pane
@@ -193,7 +238,9 @@ const runPreview = async (pi: ExtensionAPI, ctx: ExtensionContext, options: Prev
 
 	// Success - preview pane should now be showing
 	const typeLabel = options.type && options.type !== "auto" ? options.type : "content";
-	ctx.ui.notify(`Preview opened: ${typeLabel}`, "info");
+	const resolvedMode = options.mode === "auto" ? detectPreviewMode() : options.mode;
+	const modeLabel = resolvedMode === "tmux-float" ? "popup" : "pane";
+	ctx.ui.notify(`Preview opened: ${typeLabel} (${modeLabel})`, "info");
 };
 
 export default function (pi: ExtensionAPI): void {

@@ -1,12 +1,12 @@
 ---
 name: preview
-description: Display code, diffs, images, and other content in a tmux pane next to the agent. Wraps the preview-ai script for safe pane management.
+description: Display code, diffs, images, and other content in a tmux pane or popup. Auto-detects nvim/megaterm for floating popups.
 tools: Bash
 ---
 
 # Preview Skill
 
-Display content in a tmux pane next to the pi agent. Supports code files, JSON, markdown, diffs, images, logs, and more.
+Display content in a tmux pane or popup next to the pi agent. Supports code files, JSON, markdown, diffs, images, logs, and more.
 
 ## Requirements
 
@@ -17,16 +17,22 @@ Display content in a tmux pane next to the pi agent. Supports code files, JSON, 
 
 ### /preview
 
-Display content in a preview pane.
+Display content in a preview pane or popup.
 
 ```
 /preview [options] [type] <content>
 ```
 
 **Options:**
+- `-m, --mode <mode>` - Preview mode: `tmux-split`, `tmux-float`, `auto` (default)
 - `--auto-close-after <seconds>` - Auto-close pane after N seconds
 - `--delta` - Use delta for diff viewing (non-interactive, default is codediff.nvim)
 - `-h, --help` - Show help
+
+**Modes:**
+- `tmux-split` - Side pane (default outside nvim)
+- `tmux-float` - Large popup window (default inside nvim/megaterm)
+- `auto` - Auto-detect: popup if inside nvim, split otherwise
 
 **Content Types:**
 - `json` - JSON content (inline or file path)
@@ -69,6 +75,10 @@ Display content in a preview pane.
 # Preview jj log
 /preview log -n 10
 /preview log -r 'main..'
+
+# Explicit mode selection
+/preview --mode tmux-float diff       # Force popup mode
+/preview -m tmux-split file foo.lua   # Force split pane mode
 ```
 
 ## Keyboard Shortcuts
@@ -79,7 +89,11 @@ Display content in a preview pane.
 
 The preview extension wraps the existing `preview-ai` bash script which:
 
-1. **Safe pane management:**
+1. **Auto-detection:**
+   - Inside nvim/megaterm (`$NVIM` set): Uses `tmux display-popup` (large floating window)
+   - Regular tmux: Uses `tmux split-window` (side pane)
+
+2. **Safe pane management:**
    - Never renders in the caller's pane
    - Only searches current session/window for existing previews
    - Reuses existing preview pane (kills and recreates)

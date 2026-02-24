@@ -10,6 +10,9 @@ PREVIEW_TITLE="ai-preview"
 SPLIT_PERCENT=45
 AUTO_CLOSE_AFTER=""  # Seconds to auto-close (empty = disabled)
 USE_CODEDIFF="true"  # Always use codediff.nvim for diffs (interactive)
+USE_FLOAT=""         # Use tmux display-popup instead of split
+FLOAT_WIDTH="80%"    # Popup width
+FLOAT_HEIGHT="80%"   # Popup height
 
 # Get current session and window (for scoped pane search)
 get_current_session() {
@@ -37,6 +40,50 @@ cleanup_preview() {
     if [[ -n "$existing" ]]; then
         tmux kill-pane -t "$existing" 2>/dev/null || true
     fi
+}
+
+# Create preview in tmux display-popup (floating window)
+create_preview_popup() {
+    local cmd="$1"
+    local interactive="${2:-false}"
+
+    # Write command to temp file
+    local tmpfile=$(mktemp)
+
+    if [[ "$interactive" == "true" ]]; then
+        cat > "$tmpfile" << EOF
+#!/bin/bash
+$cmd
+rm -f "$tmpfile"
+EOF
+    elif [[ -n "$AUTO_CLOSE_AFTER" ]]; then
+        cat > "$tmpfile" << EOF
+#!/bin/bash
+$cmd
+echo
+echo -e "\n[Auto-closing in ${AUTO_CLOSE_AFTER}s... press any key to keep open]"
+if read -t "$AUTO_CLOSE_AFTER" -n1 -r </dev/tty 2>/dev/null; then
+    echo -e "\n[Keeping open. Press q to close]"
+    read -n1 -r </dev/tty
+fi
+rm -f "$tmpfile"
+EOF
+    else
+        cat > "$tmpfile" << EOF
+#!/bin/bash
+$cmd
+echo
+echo -e "\n[Press q or Escape to close]"
+read -n1 -r </dev/tty
+rm -f "$tmpfile"
+EOF
+    fi
+    chmod +x "$tmpfile"
+
+    # Use display-popup for floating window
+    # -E closes popup when command exits
+    # -w/-h set width/height (can be % or absolute)
+    tmux display-popup -E -w "$FLOAT_WIDTH" -h "$FLOAT_HEIGHT" -T "$PREVIEW_TITLE" "$tmpfile"
 }
 
 # Create new preview pane (split from caller, lands on RIGHT)
@@ -204,6 +251,7 @@ preview-ai - Safe preview pane manager for AI agents
 Usage: preview-ai [options] [type] [content/args...]
 
 Options:
+  --float                    Use tmux popup instead of split pane
   --auto-close-after <secs>  Auto-close pane after N seconds (can be cancelled)
   --delta                    Use delta for diff viewing (non-interactive, default is codediff)
   -h, --help                 Show this help
@@ -252,6 +300,10 @@ main() {
                 usage
                 exit 0
                 ;;
+            --float)
+                USE_FLOAT="true"
+                shift
+                ;;
             --auto-close-after)
                 AUTO_CLOSE_AFTER="${2:-}"
                 shift 2
@@ -298,7 +350,12 @@ main() {
         interactive="true"
     fi
 
-    create_preview_pane "$preview_cmd" "$interactive"
+    # Use popup or split based on --float flag
+    if [[ -n "$USE_FLOAT" ]]; then
+        create_preview_popup "$preview_cmd" "$interactive"
+    else
+        create_preview_pane "$preview_cmd" "$interactive"
+    fi
 }
 
 main "$@"
