@@ -11,8 +11,9 @@
  * push/deploy/ssh, and package install guards.
  */
 import type { ExtensionAPI, ToolCallEvent, ToolCallEventResult, InputEventResult } from "@mariozechner/pi-coding-agent";
-import { readFileSync } from "fs";
+import { readFileSync, existsSync } from "fs";
 import { join, dirname } from "path";
+import { execSync, spawnSync } from "child_process";
 
 type Tier = "hard" | "confirm" | "rewrite";
 
@@ -423,13 +424,88 @@ function buildRules(config: SentinelConfig): Rule[] {
     reason: "Squash with --from/--into/-r can flatten history. Simple `jj squash` is safe.",
   });
 
+  // ── HARD: gatekeeper (secrets in diff) ──
+  
+  // Store gatekeeper findings for error message
+  let gatekeeperFindings = "";
+  
+  function isPushCommand(cmd: string): boolean {
+    return isCommandPrefix(cmd, "jj", "push") || 
+           isCommandPrefix(cmd, "jj", "git", "push") || 
+           isCommandPrefix(cmd, "git", "push");
+  }
+  
+  function checkDiffForSecrets(): { blocked: boolean; findings: string } {
+    // Check if gatekeeper is available
+    try {
+      execSync("which gatekeeper", { encoding: "utf-8", stdio: "pipe" });
+    } catch {
+      log("gatekeeper not found, skipping secrets check");
+      return { blocked: false, findings: "" };
+    }
+    
+    // Get the diff
+    let diff = "";
+    try {
+      diff = execSync("jj diff --git 2>/dev/null || git diff HEAD 2>/dev/null || echo ''", {
+        encoding: "utf-8",
+        timeout: 10000,
+        stdio: ["pipe", "pipe", "pipe"],
+      });
+    } catch (e) {
+      log("failed to get diff for gatekeeper check");
+      return { blocked: false, findings: "" };
+    }
+    
+    if (!diff.trim()) {
+      return { blocked: false, findings: "" };
+    }
+    
+    // Run gatekeeper on the diff
+    try {
+      const result = spawnSync("gatekeeper", ["--stdin", "--severity=high"], {
+        input: diff,
+        encoding: "utf-8",
+        timeout: 30000,
+      });
+      
+      if (result.status === 2) {
+        // Blocked - secrets found
+        return { blocked: true, findings: result.stdout || "Secrets detected" };
+      }
+      return { blocked: false, findings: "" };
+    } catch (e) {
+      log(`gatekeeper error: ${e}`);
+      return { blocked: false, findings: "" };
+    }
+  }
+  
+  rules.push({
+    name: "gatekeeper-secrets",
+    tier: "hard",
+    tools: ["bash"],
+    test: (cmd) => {
+      if (!isPushCommand(cmd)) return false;
+      
+      const check = checkDiffForSecrets();
+      if (check.blocked) {
+        gatekeeperFindings = check.findings;
+        return true;
+      }
+      return false;
+    },
+    get reason() {
+      return `⛔ **Secrets detected in diff!**\n\n\`\`\`\n${gatekeeperFindings}\`\`\`\n\n**Remove the secrets before pushing.** This cannot be overridden.`;
+    },
+  });
+
   // ── CONFIRM: push / deploy / ssh ──
 
   rules.push({
     name: "push",
     tier: "confirm",
     tools: ["bash"],
-    test: (cmd) => isCommandPrefix(cmd, "jj", "push") || isCommandPrefix(cmd, "jj", "git", "push") || isCommandPrefix(cmd, "git", "push"),
+    test: (cmd) => isPushCommand(cmd),
     reason: "Push to remote.",
   });
 

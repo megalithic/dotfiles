@@ -1,0 +1,572 @@
+#!/usr/bin/swift
+//
+// gatekeeper - Detect PII and secrets in images/text using Apple Vision OCR
+//
+// Usage:
+//   gatekeeper <image_path> [options]
+//   gatekeeper --text "string to check"
+//   gatekeeper --stdin < file.txt
+//
+// Options:
+//   --json           Output as JSON
+//   --severity=LEVEL Minimum severity to report (low, medium, high)
+//   --quiet          Only output if PII found
+//   --text "..."     Check a text string directly (no OCR)
+//   --stdin          Read text from stdin (no OCR)
+//   --list-patterns  Show all detection patterns
+//
+// Exit codes:
+//   0 = clean (no PII at or above threshold)
+//   1 = warning (medium severity PII)
+//   2 = blocked (high severity PII)
+//   3 = error
+//
+
+import Vision
+import AppKit
+import Foundation
+
+// MARK: - Pattern Definitions
+
+struct PIIPattern {
+    let name: String
+    let pattern: String
+    let severity: Severity
+    let description: String
+    
+    enum Severity: String, Comparable {
+        case low = "LOW"
+        case medium = "MEDIUM"
+        case high = "HIGH"
+        
+        static func < (lhs: Severity, rhs: Severity) -> Bool {
+            let order: [Severity] = [.low, .medium, .high]
+            return order.firstIndex(of: lhs)! < order.firstIndex(of: rhs)!
+        }
+    }
+}
+
+let piiPatterns: [PIIPattern] = [
+    // ========== HIGH SEVERITY - Definite Secrets ==========
+    
+    // AWS
+    PIIPattern(name: "AWS Access Key ID", pattern: "AKIA[0-9A-Z]{16}", severity: .high,
+               description: "AWS access key identifier"),
+    PIIPattern(name: "AWS Secret Key", pattern: "(?i)aws.{0,20}secret.{0,20}['\"][0-9a-zA-Z/+]{40}['\"]", severity: .high,
+               description: "AWS secret access key"),
+    PIIPattern(name: "AWS Session Token", pattern: "(?i)aws.{0,20}session.{0,20}token.{0,20}['\"][0-9a-zA-Z/+=]{100,}['\"]", severity: .high,
+               description: "AWS temporary session token"),
+    
+    // GitHub
+    PIIPattern(name: "GitHub PAT (classic)", pattern: "ghp_[a-zA-Z0-9]{36}", severity: .high,
+               description: "GitHub personal access token (classic)"),
+    PIIPattern(name: "GitHub PAT (fine-grained)", pattern: "github_pat_[a-zA-Z0-9]{22}_[a-zA-Z0-9]{59}", severity: .high,
+               description: "GitHub fine-grained personal access token"),
+    PIIPattern(name: "GitHub OAuth", pattern: "gho_[a-zA-Z0-9]{36}", severity: .high,
+               description: "GitHub OAuth access token"),
+    PIIPattern(name: "GitHub App Token", pattern: "ghu_[a-zA-Z0-9]{36}", severity: .high,
+               description: "GitHub user-to-server token"),
+    PIIPattern(name: "GitHub Server Token", pattern: "ghs_[a-zA-Z0-9]{36}", severity: .high,
+               description: "GitHub server-to-server token"),
+    PIIPattern(name: "GitHub Refresh Token", pattern: "ghr_[a-zA-Z0-9]{36}", severity: .high,
+               description: "GitHub refresh token"),
+    
+    // AI Services
+    PIIPattern(name: "OpenAI API Key", pattern: "sk-[a-zA-Z0-9]{20}T3BlbkFJ[a-zA-Z0-9]{20}", severity: .high,
+               description: "OpenAI API key"),
+    PIIPattern(name: "OpenAI API Key (proj)", pattern: "sk-proj-[a-zA-Z0-9_-]{80,}", severity: .high,
+               description: "OpenAI project API key"),
+    PIIPattern(name: "Anthropic API Key", pattern: "sk-ant-api[a-zA-Z0-9_-]{80,}", severity: .high,
+               description: "Anthropic Claude API key"),
+    PIIPattern(name: "Cohere API Key", pattern: "(?i)cohere.{0,20}['\"][a-zA-Z0-9]{40}['\"]", severity: .high,
+               description: "Cohere API key"),
+    PIIPattern(name: "HuggingFace Token", pattern: "hf_[a-zA-Z0-9]{34}", severity: .high,
+               description: "HuggingFace API token"),
+    
+    // Payment/Financial
+    PIIPattern(name: "Stripe Secret Key", pattern: "sk_live_[a-zA-Z0-9]{24,}", severity: .high,
+               description: "Stripe live secret key"),
+    PIIPattern(name: "Stripe Restricted Key", pattern: "rk_live_[a-zA-Z0-9]{24,}", severity: .high,
+               description: "Stripe restricted API key"),
+    PIIPattern(name: "Square Access Token", pattern: "sq0atp-[a-zA-Z0-9_-]{22}", severity: .high,
+               description: "Square access token"),
+    PIIPattern(name: "Square OAuth Secret", pattern: "sq0csp-[a-zA-Z0-9_-]{43}", severity: .high,
+               description: "Square OAuth secret"),
+    PIIPattern(name: "PayPal Client Secret", pattern: "(?i)paypal.{0,20}secret.{0,20}['\"][a-zA-Z0-9]{32,}['\"]", severity: .high,
+               description: "PayPal client secret"),
+    
+    // Communication
+    PIIPattern(name: "Slack Bot Token", pattern: "xoxb-[0-9]{10,}-[0-9]{10,}-[a-zA-Z0-9]{24}", severity: .high,
+               description: "Slack bot token"),
+    PIIPattern(name: "Slack User Token", pattern: "xoxp-[0-9]{10,}-[0-9]{10,}-[a-zA-Z0-9]{24,}", severity: .high,
+               description: "Slack user token"),
+    PIIPattern(name: "Slack Webhook", pattern: "https://hooks\\.slack\\.com/services/T[a-zA-Z0-9_]+/B[a-zA-Z0-9_]+/[a-zA-Z0-9_]+", severity: .high,
+               description: "Slack webhook URL"),
+    PIIPattern(name: "Discord Bot Token", pattern: "[MN][a-zA-Z0-9]{23,}\\.[a-zA-Z0-9_-]{6}\\.[a-zA-Z0-9_-]{27}", severity: .high,
+               description: "Discord bot token"),
+    PIIPattern(name: "Discord Webhook", pattern: "https://discord(?:app)?\\.com/api/webhooks/[0-9]+/[a-zA-Z0-9_-]+", severity: .high,
+               description: "Discord webhook URL"),
+    PIIPattern(name: "Telegram Bot Token", pattern: "[0-9]{8,10}:[a-zA-Z0-9_-]{35}", severity: .high,
+               description: "Telegram bot token"),
+    PIIPattern(name: "Twilio API Key", pattern: "SK[a-f0-9]{32}", severity: .high,
+               description: "Twilio API key"),
+    PIIPattern(name: "SendGrid API Key", pattern: "SG\\.[a-zA-Z0-9_-]{22}\\.[a-zA-Z0-9_-]{43}", severity: .high,
+               description: "SendGrid API key"),
+    PIIPattern(name: "Mailchimp API Key", pattern: "[a-f0-9]{32}-us[0-9]{1,2}", severity: .high,
+               description: "Mailchimp API key"),
+    PIIPattern(name: "Mailgun API Key", pattern: "key-[a-zA-Z0-9]{32}", severity: .high,
+               description: "Mailgun API key"),
+    
+    // Cloud Providers
+    PIIPattern(name: "Google API Key", pattern: "AIza[a-zA-Z0-9_-]{35}", severity: .high,
+               description: "Google API key"),
+    PIIPattern(name: "Google OAuth Client Secret", pattern: "GOCSPX-[a-zA-Z0-9_-]{28}", severity: .high,
+               description: "Google OAuth client secret"),
+    PIIPattern(name: "Firebase Cloud Messaging", pattern: "AAAA[a-zA-Z0-9_-]{7}:[a-zA-Z0-9_-]{140}", severity: .high,
+               description: "Firebase Cloud Messaging token"),
+    PIIPattern(name: "Azure Storage Key", pattern: "DefaultEndpointsProtocol=https;AccountName=[^;]+;AccountKey=[a-zA-Z0-9+/=]{88}", severity: .high,
+               description: "Azure storage connection string"),
+    PIIPattern(name: "DigitalOcean Token", pattern: "dop_v1_[a-f0-9]{64}", severity: .high,
+               description: "DigitalOcean personal access token"),
+    PIIPattern(name: "DigitalOcean OAuth", pattern: "doo_v1_[a-f0-9]{64}", severity: .high,
+               description: "DigitalOcean OAuth token"),
+    PIIPattern(name: "Heroku API Key", pattern: "(?i)heroku.{0,20}(api[_-]?key|token).{0,10}['\"]?[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}['\"]?", severity: .high,
+               description: "Heroku API key (UUID format with context)"),
+    PIIPattern(name: "Vercel Token", pattern: "(?i)vercel.{0,20}token.{0,20}['\"][a-zA-Z0-9]{24}['\"]", severity: .high,
+               description: "Vercel deployment token"),
+    PIIPattern(name: "Netlify Token", pattern: "(?i)netlify.{0,20}['\"][a-zA-Z0-9_-]{40,}['\"]", severity: .high,
+               description: "Netlify access token"),
+    PIIPattern(name: "Fly.io Token", pattern: "FlyV1 [a-zA-Z0-9_-]+", severity: .high,
+               description: "Fly.io API token"),
+    
+    // Database
+    PIIPattern(name: "MongoDB Connection String", pattern: "mongodb(?:\\+srv)?://[^\\s]+:[^\\s]+@[^\\s]+", severity: .high,
+               description: "MongoDB connection string with credentials"),
+    PIIPattern(name: "PostgreSQL Connection String", pattern: "postgres(?:ql)?://[^\\s]+:[^\\s]+@[^\\s]+", severity: .high,
+               description: "PostgreSQL connection string with credentials"),
+    PIIPattern(name: "MySQL Connection String", pattern: "mysql://[^\\s]+:[^\\s]+@[^\\s]+", severity: .high,
+               description: "MySQL connection string with credentials"),
+    PIIPattern(name: "Redis Connection String", pattern: "redis://[^\\s]+:[^\\s]+@[^\\s]+", severity: .high,
+               description: "Redis connection string with credentials"),
+    
+    // Crypto
+    PIIPattern(name: "Private Key (PEM)", pattern: "-----BEGIN (RSA |EC |DSA |OPENSSH |PGP )?PRIVATE KEY( BLOCK)?-----", severity: .high,
+               description: "Private key in PEM format"),
+    PIIPattern(name: "SSH Private Key", pattern: "-----BEGIN OPENSSH PRIVATE KEY-----", severity: .high,
+               description: "OpenSSH private key"),
+    
+    // Generic Secrets
+    PIIPattern(name: "Password Assignment", pattern: "(?i)(password|passwd|pwd)\\s*[:=]\\s*['\"]?[^\\s'\"]{8,}['\"]?", severity: .high,
+               description: "Password in plaintext"),
+    PIIPattern(name: "Secret Assignment", pattern: "(?i)(secret|token|api[_-]?key)\\s*[:=]\\s*['\"]?[a-zA-Z0-9_-]{16,}['\"]?", severity: .high,
+               description: "Secret/token assignment"),
+    PIIPattern(name: "Bearer Token", pattern: "(?i)bearer\\s+[a-zA-Z0-9._-]{20,}", severity: .high,
+               description: "Bearer authentication token"),
+    PIIPattern(name: "Basic Auth Header", pattern: "(?i)basic\\s+[a-zA-Z0-9+/=]{20,}", severity: .high,
+               description: "Basic authentication header"),
+    PIIPattern(name: "JWT Token", pattern: "eyJ[a-zA-Z0-9_-]*\\.eyJ[a-zA-Z0-9_-]*\\.[a-zA-Z0-9_-]*", severity: .high,
+               description: "JSON Web Token"),
+    
+    // npm/Package Managers
+    PIIPattern(name: "npm Token", pattern: "npm_[a-zA-Z0-9]{36}", severity: .high,
+               description: "npm access token"),
+    PIIPattern(name: "PyPI Token", pattern: "pypi-[a-zA-Z0-9_-]{50,}", severity: .high,
+               description: "PyPI API token"),
+    PIIPattern(name: "RubyGems API Key", pattern: "rubygems_[a-f0-9]{48}", severity: .high,
+               description: "RubyGems API key"),
+    PIIPattern(name: "NuGet API Key", pattern: "oy2[a-z0-9]{43}", severity: .high,
+               description: "NuGet API key"),
+    
+    // CI/CD
+    PIIPattern(name: "Travis CI Token", pattern: "(?i)travis.{0,20}['\"][a-zA-Z0-9]{20,}['\"]", severity: .high,
+               description: "Travis CI token"),
+    PIIPattern(name: "CircleCI Token", pattern: "(?i)circle.{0,20}token.{0,20}['\"][a-f0-9]{40}['\"]", severity: .high,
+               description: "CircleCI API token"),
+    
+    // ========== MEDIUM SEVERITY - Likely Sensitive ==========
+    
+    PIIPattern(name: "Credit Card Number", pattern: "\\b[0-9]{4}[- ]?[0-9]{4}[- ]?[0-9]{4}[- ]?[0-9]{4}\\b", severity: .medium,
+               description: "Credit card number (16 digits)"),
+    PIIPattern(name: "Social Security Number", pattern: "\\b[0-9]{3}-[0-9]{2}-[0-9]{4}\\b", severity: .medium,
+               description: "US Social Security Number"),
+    PIIPattern(name: "Stripe Test Key", pattern: "sk_test_[a-zA-Z0-9]{24,}", severity: .medium,
+               description: "Stripe test secret key"),
+    PIIPattern(name: "Generic API Key", pattern: "(?i)api[_-]?key['\"]?\\s*[:=]\\s*['\"]?[a-zA-Z0-9_-]{20,}['\"]?", severity: .medium,
+               description: "Generic API key pattern"),
+    PIIPattern(name: "Generic Secret", pattern: "(?i)client[_-]?secret['\"]?\\s*[:=]\\s*['\"]?[a-zA-Z0-9_-]{20,}['\"]?", severity: .medium,
+               description: "Client secret pattern"),
+    
+    // ========== LOW SEVERITY - Potentially Sensitive ==========
+    
+    PIIPattern(name: "Email Address", pattern: "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}", severity: .low,
+               description: "Email address"),
+    PIIPattern(name: "Phone Number (US)", pattern: "\\b(?:\\+1[- ]?)?\\(?[0-9]{3}\\)?[- ]?[0-9]{3}[- ]?[0-9]{4}\\b", severity: .low,
+               description: "US phone number"),
+    PIIPattern(name: "IPv4 Address", pattern: "\\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\b", severity: .low,
+               description: "IPv4 address"),
+    PIIPattern(name: "IPv6 Address", pattern: "(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}", severity: .low,
+               description: "IPv6 address"),
+]
+
+// MARK: - Checker
+
+struct PIIFinding: Codable {
+    let type: String
+    let match: String
+    let severity: String
+    let description: String
+}
+
+struct CheckResult: Codable {
+    let status: String
+    let highSeverityCount: Int
+    let mediumSeverityCount: Int
+    let lowSeverityCount: Int
+    let totalCount: Int
+    let findings: [PIIFinding]
+    
+    enum CodingKeys: String, CodingKey {
+        case status
+        case highSeverityCount = "high_severity_count"
+        case mediumSeverityCount = "medium_severity_count"
+        case lowSeverityCount = "low_severity_count"
+        case totalCount = "total_count"
+        case findings
+    }
+}
+
+class PIIChecker {
+    let minSeverity: PIIPattern.Severity
+    
+    init(minSeverity: PIIPattern.Severity = .low) {
+        self.minSeverity = minSeverity
+    }
+    
+    func checkForPII(_ text: String) -> [PIIFinding] {
+        var findings: [PIIFinding] = []
+        
+        for pattern in piiPatterns where pattern.severity >= minSeverity {
+            if let regex = try? NSRegularExpression(pattern: pattern.pattern, options: []) {
+                let range = NSRange(text.startIndex..., in: text)
+                let matches = regex.matches(in: text, options: [], range: range)
+                for match in matches {
+                    if let matchRange = Range(match.range, in: text) {
+                        let matchText = String(text[matchRange])
+                        let masked = maskSensitive(matchText)
+                        findings.append(PIIFinding(
+                            type: pattern.name,
+                            match: masked,
+                            severity: pattern.severity.rawValue,
+                            description: pattern.description
+                        ))
+                    }
+                }
+            }
+        }
+        
+        return findings
+    }
+    
+    func maskSensitive(_ text: String) -> String {
+        if text.count <= 8 { return String(repeating: "*", count: text.count) }
+        let showChars = min(4, text.count / 4)
+        let prefix = String(text.prefix(showChars))
+        let suffix = String(text.suffix(showChars))
+        let middle = String(repeating: "*", count: min(text.count - showChars * 2, 12))
+        return prefix + middle + suffix
+    }
+    
+    func analyze(imagePath: String) -> CheckResult {
+        guard let image = NSImage(contentsOfFile: imagePath) else {
+            fputs("Error: Could not load image from \(imagePath)\n", stderr)
+            return CheckResult(status: "error", highSeverityCount: 0, mediumSeverityCount: 0, lowSeverityCount: 0, totalCount: 0, findings: [])
+        }
+        
+        guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
+            fputs("Error: Could not convert to CGImage\n", stderr)
+            return CheckResult(status: "error", highSeverityCount: 0, mediumSeverityCount: 0, lowSeverityCount: 0, totalCount: 0, findings: [])
+        }
+        
+        var allFindings: [PIIFinding] = []
+        let semaphore = DispatchSemaphore(value: 0)
+        
+        let request = VNRecognizeTextRequest { request, error in
+            defer { semaphore.signal() }
+            
+            guard let observations = request.results as? [VNRecognizedTextObservation] else { return }
+            
+            for observation in observations {
+                guard let candidate = observation.topCandidates(1).first else { continue }
+                let findings = self.checkForPII(candidate.string)
+                allFindings.append(contentsOf: findings)
+            }
+        }
+        
+        request.recognitionLevel = .accurate
+        request.usesLanguageCorrection = true
+        
+        let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+        do {
+            try handler.perform([request])
+            semaphore.wait()
+        } catch {
+            fputs("Error performing OCR: \(error)\n", stderr)
+            return CheckResult(status: "error", highSeverityCount: 0, mediumSeverityCount: 0, lowSeverityCount: 0, totalCount: 0, findings: [])
+        }
+        
+        // Deduplicate
+        var seen = Set<String>()
+        allFindings = allFindings.filter { finding in
+            let key = "\(finding.type):\(finding.match)"
+            if seen.contains(key) { return false }
+            seen.insert(key)
+            return true
+        }
+        
+        let high = allFindings.filter { $0.severity == "HIGH" }.count
+        let medium = allFindings.filter { $0.severity == "MEDIUM" }.count
+        let low = allFindings.filter { $0.severity == "LOW" }.count
+        
+        let status: String
+        if allFindings.isEmpty {
+            status = "ok"
+        } else if high > 0 {
+            status = "blocked"
+        } else if medium > 0 {
+            status = "warning"
+        } else {
+            status = "info"
+        }
+        
+        return CheckResult(
+            status: status,
+            highSeverityCount: high,
+            mediumSeverityCount: medium,
+            lowSeverityCount: low,
+            totalCount: allFindings.count,
+            findings: allFindings
+        )
+    }
+    
+    func analyzeText(_ text: String) -> CheckResult {
+        var allFindings = checkForPII(text)
+        
+        // Deduplicate
+        var seen = Set<String>()
+        allFindings = allFindings.filter { finding in
+            let key = "\(finding.type):\(finding.match)"
+            if seen.contains(key) { return false }
+            seen.insert(key)
+            return true
+        }
+        
+        let high = allFindings.filter { $0.severity == "HIGH" }.count
+        let medium = allFindings.filter { $0.severity == "MEDIUM" }.count
+        let low = allFindings.filter { $0.severity == "LOW" }.count
+        
+        let status: String
+        if allFindings.isEmpty {
+            status = "ok"
+        } else if high > 0 {
+            status = "blocked"
+        } else if medium > 0 {
+            status = "warning"
+        } else {
+            status = "info"
+        }
+        
+        return CheckResult(
+            status: status,
+            highSeverityCount: high,
+            mediumSeverityCount: medium,
+            lowSeverityCount: low,
+            totalCount: allFindings.count,
+            findings: allFindings
+        )
+    }
+}
+
+// MARK: - CLI
+
+func printUsage() {
+    print("""
+    gatekeeper - Detect PII and secrets in images/text
+    
+    Usage:
+      gatekeeper <image_path> [options]    # Check image (uses Vision OCR)
+      gatekeeper --text "string" [options] # Check text directly
+      gatekeeper --stdin [options]         # Check text from stdin
+    
+    Options:
+      --json             Output as JSON
+      --severity=LEVEL   Minimum severity to report (low, medium, high)
+      --quiet            Only output if PII found
+      --text "..."       Check text string directly (no OCR)
+      --stdin            Read text from stdin (no OCR)
+      --list-patterns    Show all detection patterns
+      --help             Show this help
+    
+    Exit codes:
+      0 = clean (no PII at or above threshold)
+      1 = warning (medium severity PII found)
+      2 = blocked (high severity PII found)
+      3 = error
+    
+    Examples:
+      pii-check screenshot.png
+      pii-check screenshot.png --json
+      pii-check screenshot.png --severity=high --quiet
+    """)
+}
+
+func listPatterns() {
+    print("PII Detection Patterns (\(piiPatterns.count) total)\n")
+    
+    let grouped = Dictionary(grouping: piiPatterns) { $0.severity }
+    
+    for severity in [PIIPattern.Severity.high, .medium, .low] {
+        let emoji = severity == .high ? "🔴" : (severity == .medium ? "🟠" : "🟡")
+        print("\(emoji) \(severity.rawValue) SEVERITY:")
+        if let patterns = grouped[severity] {
+            for p in patterns {
+                print("   • \(p.name)")
+                print("     \(p.description)")
+            }
+        }
+        print()
+    }
+}
+
+// Parse arguments
+var imagePath: String? = nil
+var textInput: String? = nil
+var useStdin = false
+var jsonOutput = false
+var quiet = false
+var minSeverity: PIIPattern.Severity = .low
+
+var args = Array(CommandLine.arguments.dropFirst())
+var i = 0
+while i < args.count {
+    let arg = args[i]
+    if arg == "--json" {
+        jsonOutput = true
+    } else if arg == "--quiet" {
+        quiet = true
+    } else if arg == "--stdin" {
+        useStdin = true
+    } else if arg == "--text" {
+        i += 1
+        if i < args.count {
+            textInput = args[i]
+        } else {
+            fputs("Error: --text requires an argument\n", stderr)
+            exit(3)
+        }
+    } else if arg == "--list-patterns" {
+        listPatterns()
+        exit(0)
+    } else if arg == "--help" || arg == "-h" {
+        printUsage()
+        exit(0)
+    } else if arg.hasPrefix("--severity=") {
+        let level = String(arg.dropFirst("--severity=".count)).lowercased()
+        switch level {
+        case "low": minSeverity = .low
+        case "medium": minSeverity = .medium
+        case "high": minSeverity = .high
+        default:
+            fputs("Error: Invalid severity level '\(level)'. Use: low, medium, high\n", stderr)
+            exit(3)
+        }
+    } else if !arg.hasPrefix("-") {
+        imagePath = arg
+    }
+    i += 1
+}
+
+// Read from stdin if requested
+if useStdin {
+    var lines: [String] = []
+    while let line = readLine() {
+        lines.append(line)
+    }
+    textInput = lines.joined(separator: "\n")
+}
+
+// Must have either image path or text input
+guard imagePath != nil || textInput != nil else {
+    printUsage()
+    exit(3)
+}
+
+// Run check
+let checker = PIIChecker(minSeverity: minSeverity)
+let result: CheckResult
+if let text = textInput {
+    result = checker.analyzeText(text)
+} else if let path = imagePath {
+    result = checker.analyze(imagePath: path)
+} else {
+    printUsage()
+    exit(3)
+}
+
+// Output
+if jsonOutput {
+    let encoder = JSONEncoder()
+    encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+    if let data = try? encoder.encode(result), let json = String(data: data, encoding: .utf8) {
+        print(json)
+    }
+} else {
+    if result.status == "error" {
+        exit(3)
+    } else if result.findings.isEmpty {
+        if !quiet {
+            print("✅ No PII detected")
+        }
+    } else {
+        let highFindings = result.findings.filter { $0.severity == "HIGH" }
+        let mediumFindings = result.findings.filter { $0.severity == "MEDIUM" }
+        let lowFindings = result.findings.filter { $0.severity == "LOW" }
+        
+        print("⚠️  PII DETECTED\n")
+        
+        if !highFindings.isEmpty {
+            print("🔴 HIGH SEVERITY:")
+            for f in highFindings {
+                print("   • \(f.type): \(f.match)")
+            }
+        }
+        if !mediumFindings.isEmpty {
+            print("🟠 MEDIUM SEVERITY:")
+            for f in mediumFindings {
+                print("   • \(f.type): \(f.match)")
+            }
+        }
+        if !lowFindings.isEmpty {
+            print("🟡 LOW SEVERITY:")
+            for f in lowFindings {
+                print("   • \(f.type): \(f.match)")
+            }
+        }
+        
+        print()
+        if !highFindings.isEmpty {
+            print("❌ BLOCKED: High severity secrets detected")
+        } else if !mediumFindings.isEmpty {
+            print("⚠️  WARNING: Medium severity PII detected")
+        } else {
+            print("ℹ️  INFO: Low severity PII detected")
+        }
+    }
+}
+
+// Exit code
+switch result.status {
+case "blocked": exit(2)
+case "warning": exit(1)
+case "error": exit(3)
+default: exit(0)
+}
