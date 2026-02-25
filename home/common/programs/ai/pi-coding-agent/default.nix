@@ -60,20 +60,32 @@
     '';
   };
 
-  web-browser-skill = pkgs.buildNpmPackage {
-    pname = "web-browser-skill";
-    version = "1.0.0";
+  # ===========================================================================
+  # Pi extensions from npm (fetched and symlinked, no runtime npm install)
+  # ===========================================================================
+  # pi-agent-browser: Browser automation tool
+  # Instead of using npm global install, we fetch the package and symlink
+  # the extension directly to ~/.pi/agent/extensions/
+  pi-agent-browser = pkgs.stdenv.mkDerivation {
+    pname = "pi-agent-browser";
+    version = "0.1.0";
 
-    src = ./skills-with-deps/web-browser;
+    src = pkgs.fetchurl {
+      url = "https://registry.npmjs.org/pi-agent-browser/-/pi-agent-browser-0.1.0.tgz";
+      hash = "sha256-goSz4QmUOWC6+6bd1gNXAAgAgjjyXSFTluQbhG+lwHw=";
+    };
 
-    npmDepsHash = "sha256-vQxKChe57on93GAA180X/W36YNeumg7zPlcPhrT+yXQ=";
+    # No build needed - just extract
+    dontBuild = true;
 
-    dontNpmBuild = true;
+    unpackPhase = ''
+      mkdir -p $out
+      tar -xzf $src --strip-components=1 -C $out
+    '';
 
     installPhase = ''
-      runHook preInstall
-      mkdir -p $out
-      cp -r . $out/
+      # Extension file is at extensions/agent-browser.ts
+      # We keep the whole package structure for reference
       runHook postInstall
     '';
   };
@@ -186,11 +198,6 @@
   # ===========================================================================
   # Settings to merge (not overwrite)
   # ===========================================================================
-  # Pi packages (auto-installed on startup)
-  managedPackages = [
-    "npm:pi-agent-browser"
-  ];
-
   managedSettings = {
     defaultProvider = "anthropic";
     defaultModel = "claude-opus-4-5";
@@ -212,7 +219,6 @@
   };
 
   managedSettingsJson = pkgs.writeText "pi-managed-settings.json" (builtins.toJSON managedSettings);
-  managedPackagesJson = pkgs.writeText "pi-managed-packages.json" (builtins.toJSON managedPackages);
 
   # ===========================================================================
   # Pi Wrapper Scripts
@@ -337,15 +343,6 @@
   # Short alias for pinvim
   p = pkgs.writeShellScriptBin "p" ''exec ${pinvim}/bin/pinvim "$@"'';
 in {
-  # ===========================================================================
-  # NPM Global Packages Configuration
-  # npm global prefix (nix store is read-only)
-  home.sessionVariables = {
-    NPM_CONFIG_PREFIX = "${config.home.homeDirectory}/.npm-global";
-  };
-
-  home.sessionPath = ["${config.home.homeDirectory}/.npm-global/bin"];
-
   home.packages = [
     pinvim
     p
@@ -361,7 +358,10 @@ in {
 
       # Skills with npm dependencies (built via buildNpmPackage)
       ".pi/agent/skills/brave-search".source = brave-search-skill;
-      ".pi/agent/skills/web-browser".source = web-browser-skill;
+
+      # Pi extensions from npm (nix-managed, no runtime npm install)
+      # Symlink the .ts extension file directly to pi's extensions directory
+      ".pi/agent/extensions/agent-browser.ts".source = "${pi-agent-browser}/extensions/agent-browser.ts";
     }
     // extensionSymlinks
     // skillSymlinks;
@@ -371,11 +371,9 @@ in {
   # ===========================================================================
   # Merges our managed settings into ~/.pi/agent/settings.json
   # Preserves user settings managed by pi itself
-  # Special handling for packages array: union (add new, keep existing)
   home.activation.mergePiSettings = lib.hm.dag.entryAfter ["writeBoundary"] ''
     SETTINGS_FILE="${config.home.homeDirectory}/.pi/agent/settings.json"
     MERGE_JSON="${managedSettingsJson}"
-    PACKAGES_JSON="${managedPackagesJson}"
 
     # Create settings directory if it doesn't exist
     mkdir -p "$(dirname "$SETTINGS_FILE")"
@@ -386,13 +384,7 @@ in {
     fi
 
     # Merge settings, preserving existing keys unless overridden
-    # Then merge packages array (union: keep existing + add managed, deduplicate)
-    ${pkgs.jq}/bin/jq -s --argjson managed_pkgs "$(cat "$PACKAGES_JSON")" '
-      # First merge settings objects
-      (.[0] * .[1]) |
-      # Then union packages arrays (existing + managed, deduplicated)
-      .packages = ((.packages // []) + $managed_pkgs | unique)
-    ' "$SETTINGS_FILE" "$MERGE_JSON" > "''${SETTINGS_FILE}.tmp"
+    ${pkgs.jq}/bin/jq -s '.[0] * .[1]' "$SETTINGS_FILE" "$MERGE_JSON" > "''${SETTINGS_FILE}.tmp"
 
     mv "''${SETTINGS_FILE}.tmp" "$SETTINGS_FILE"
   '';
