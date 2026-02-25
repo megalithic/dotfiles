@@ -90,6 +90,47 @@
     '';
   };
 
+  # pi-mcp-adapter: MCP (Model Context Protocol) adapter for pi
+  # Enables connection to MCP servers like Tidewave (Elixir/Phoenix)
+  # Token-efficient: One proxy tool (~200 tokens) instead of exposing all MCP tools
+  # Config: ~/.pi/agent/mcp.json (global) or .pi/mcp.json (project)
+  # Usage: mcp({ search: "..." }), mcp({ tool: "...", args: '...' }), /mcp
+  # Has npm dependencies: @modelcontextprotocol/sdk, @sinclair/typebox
+  #
+  # Patched: Added Claude Code settings.json support
+  # - Reads from ~/.claude.json (fixes wrong path)
+  # - Auto-reads ~/.claude/settings.json and settings.local.json
+  # - Auto-reads .claude/settings.json and settings.local.json in projects
+  pi-mcp-adapter = pkgs.buildNpmPackage {
+    pname = "pi-mcp-adapter";
+    version = "2.1.1";
+
+    src = pkgs.fetchFromGitHub {
+      owner = "nicobailon";
+      repo = "pi-mcp-adapter";
+      rev = "v2.1.1";
+      hash = "sha256-E9C7hn351bPw1Pkm3p2u7QobYlUaCAtq8odZWek6sJg=";
+    };
+
+    npmDepsHash = "sha256-Eo8c9quiKXU5zKnb0m+IePwoDL2C/JHXfYoulNuy1DE=";
+
+    dontNpmBuild = true;
+
+    # Apply Claude settings.json support patch
+    patchPhase = ''
+      runHook prePatch
+      patch -p1 < ${./patches/claude-settings-support.patch}
+      runHook postPatch
+    '';
+
+    installPhase = ''
+      runHook preInstall
+      mkdir -p $out
+      cp -r . $out/
+      runHook postInstall
+    '';
+  };
+
   # ===========================================================================
   # Auto-discovery Configuration
   # ===========================================================================
@@ -362,6 +403,10 @@ in {
       # Pi extensions from npm (nix-managed, no runtime npm install)
       # Symlink the .ts extension file directly to pi's extensions directory
       ".pi/agent/extensions/agent-browser.ts".source = "${pi-agent-browser}/extensions/agent-browser.ts";
+
+      # pi-mcp-adapter: Multi-file extension (index.ts imports other .ts files)
+      # Symlink entire package as extension directory
+      ".pi/agent/extensions/pi-mcp-adapter".source = pi-mcp-adapter;
     }
     // extensionSymlinks
     // skillSymlinks;
