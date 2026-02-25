@@ -6,7 +6,7 @@
 --   Add handlers to M.handlers table with pattern and action
 --   Actions can be:
 --     - string: bundle ID to open URL with
---     - function(url, sourceBundle): custom handler function
+--     - function(url, sourceBundle, focusContext): custom handler function
 --
 -- REF: https://www.hammerspoon.org/docs/hs.urlevent.html
 -- REF: Legacy implementation patterns from megalithic/dotfiles (legacy_dotbot branch)
@@ -15,46 +15,6 @@ local fmt = string.format
 local fnutils = require("hs.fnutils")
 
 local M = {}
-
---------------------------------------------------------------------------------
--- Environment Variable Helpers (currently unused - kept for future use)
---------------------------------------------------------------------------------
-
--- NOTE: getEnvVar() is commented out because email validation is disabled.
--- Uncomment when re-enabling WORK_EMAIL validation in the OAuth handler.
---
--- --- Read an environment variable, falling back to agenix secrets file if not found
--- --- Hammerspoon (launched as GUI app) doesn't inherit shell env vars, but we can
--- --- read the decrypted agenix secrets file directly.
--- ---@param name string Environment variable name
--- ---@return string|nil value
--- local function getEnvVar(name)
---   -- First try os.getenv (works for darwin environment.variables)
---   local value = os.getenv(name)
---   if value then return value end
---
---   -- Fallback: read from agenix work-env-vars secrets file
---   -- Path follows home-manager agenix convention: $XDG_RUNTIME_DIR/agenix/work-env-vars
---   local home = os.getenv("HOME")
---   local secretsPath = home and (home .. "/.local/state/agenix/work-env-vars")
---
---   if secretsPath then
---     local f = io.open(secretsPath, "r")
---     if f then
---       local content = f:read("*a")
---       f:close()
---       -- Parse shell export format: export VAR="value" or VAR="value" or VAR=value
---       local pattern = "^%s*export%s+" .. name .. '%s*=%s*["\']?([^"\'%s]+)["\']?%s*$'
---       local altPattern = "^%s*" .. name .. '%s*=%s*["\']?([^"\'%s]+)["\']?%s*$'
---       for line in content:gmatch("[^\r\n]+") do
---         local match = line:match(pattern) or line:match(altPattern)
---         if match then return match end
---       end
---     end
---   end
---
---   return nil
--- end
 
 M.__index = M
 M.name = "watcher.url"
@@ -69,7 +29,7 @@ M.currentHandler = nil
 --   name: string - Human-readable name for logging
 --   pattern: string - Lua pattern to match against URL
 --   sourceApp: string|nil - Optional bundle ID to restrict matches (nil = any source)
---   action: string|function - Bundle ID to open with, or function(url, sourceBundle)
+--   action: string|function - Bundle ID to open with, or function(url, sourceBundle, focusContext)
 M.handlers = {
   --[[
     Google OAuth Consent Auto-Clicker (MailMate)
@@ -95,7 +55,7 @@ M.handlers = {
       -- The OAuth URL already contains login_hint from MailMate, so the correct
       -- account should be pre-selected. Re-enable WORK_EMAIL validation later
       -- if we need to verify the account matches before clicking Continue.
-      M.handleGoogleOAuthConsent(url, sourceBundle, {
+      M.handleGoogleOAuthConsent(url, {
         targetEmail = nil, -- Not used when skipEmailValidation = true
         closeAfterSuccess = true,
         timeoutSeconds = 10,
@@ -104,33 +64,142 @@ M.handlers = {
     end,
   },
 
-  -- Example: Spotify links -> Spotify app
-  -- {
-  --   name = "Spotify",
-  --   pattern = "open%.spotify%.com/",
-  --   action = "com.spotify.client",
-  -- },
+  ------------------------------------------------------------------------------
+  -- App-specific URL handlers
+  -- Route web URLs to their native apps when installed
+  ------------------------------------------------------------------------------
 
-  -- Example: Google Meet -> custom handling
-  -- {
-  --   name = "Google Meet",
-  --   pattern = "meet%.google%.com/",
-  --   action = function(url, sourceBundle)
-  --     -- Pause music, enable DND, open in browser, etc.
-  --   end,
-  -- },
+  -- 1Password: open in app instead of browser
+  {
+    name = "1Password",
+    pattern = "start%.1password%.com/open/",
+    action = function(url, sourceBundle, focusContext)
+      -- Extract the 1Password URI from the redirect URL
+      -- Format: https://start.1password.com/open/i?a=...&v=...&i=...&h=...
+      -- Convert to: onepassword://open/i?a=...&v=...&i=...&h=...
+      local uri = url:gsub("https?://start%.1password%.com/", "onepassword://")
+      U.log.f("[%s] 1Password: redirecting to %s", M.name, uri)
+      hs.urlevent.openURL(uri)
+    end,
+  },
+
+  -- Figma: open in desktop app (handles /file/, /design/, /proto/, /board/, etc.)
+  {
+    name = "Figma",
+    pattern = "figma%.com/",
+    action = function(url, sourceBundle, focusContext)
+      -- Convert web URL to figma:// protocol
+      -- Format: https://www.figma.com/file/... -> figma://file/...
+      local uri = url:gsub("https?://[^/]*figma%.com/", "figma://")
+      U.log.f("[%s] Figma: redirecting to %s", M.name, uri)
+      hs.urlevent.openURL(uri)
+    end,
+  },
+
+  -- Zoom: open meetings in app
+  {
+    name = "Zoom",
+    pattern = "zoom%.us/j/",
+    action = function(url, sourceBundle, focusContext)
+      -- Convert https://zoom.us/j/123456 to zoommtg://zoom.us/join?confno=123456
+      local confno = url:match("zoom%.us/j/(%d+)")
+      if confno then
+        local uri = fmt("zoommtg://zoom.us/join?confno=%s", confno)
+        -- Also extract password if present
+        local pwd = url:match("[?&]pwd=([^&]+)")
+        if pwd then uri = uri .. "&pwd=" .. pwd end
+        U.log.f("[%s] Zoom: redirecting to %s", M.name, uri)
+        hs.urlevent.openURL(uri)
+      else
+        -- Fallback to browser
+        openUrlWithApp(url, BROWSER)
+      end
+    end,
+  },
+
+  -- Spotify: open in app
+  {
+    name = "Spotify",
+    pattern = "open%.spotify%.com/",
+    action = function(url, sourceBundle, focusContext)
+      -- Convert https://open.spotify.com/track/... to spotify:track:...
+      local uri = url:gsub("https?://open%.spotify%.com/", "spotify:")
+      uri = uri:gsub("/", ":")
+      uri = uri:gsub("%?.*", "") -- Remove query params
+      U.log.f("[%s] Spotify: redirecting to %s", M.name, uri)
+      hs.urlevent.openURL(uri)
+    end,
+  },
+
+  -- Spotify short links
+  {
+    name = "Spotify Link",
+    pattern = "spotify%.link/",
+    action = "com.spotify.client",
+  },
+
+  -- Slack: open in app
+  {
+    name = "Slack",
+    pattern = "slack%.com/archives/",
+    action = function(url, sourceBundle, focusContext)
+      -- Slack deep links: https://xxx.slack.com/archives/C123/p456
+      -- Convert to: slack://channel?team=T123&id=C123&message=456
+      -- For simplicity, just use the app's URL handler
+      local uri = url:gsub("https?://", "slack://open?url=https://")
+      U.log.f("[%s] Slack: redirecting to %s", M.name, uri)
+      hs.urlevent.openURL(uri)
+    end,
+  },
+
+  -- Linear: open in app
+  {
+    name = "Linear",
+    pattern = "linear%.app/",
+    action = function(url, sourceBundle, focusContext)
+      local uri = url:gsub("https?://", "linear://")
+      U.log.f("[%s] Linear: redirecting to %s", M.name, uri)
+      hs.urlevent.openURL(uri)
+    end,
+  },
+
+  -- Notion: open in app
+  {
+    name = "Notion",
+    pattern = "notion%.so/",
+    action = function(url, sourceBundle, focusContext)
+      local uri = url:gsub("https?://", "notion://")
+      U.log.f("[%s] Notion: redirecting to %s", M.name, uri)
+      hs.urlevent.openURL(uri)
+    end,
+  },
+
+  -- Discord: open in app
+  {
+    name = "Discord",
+    pattern = "discord%.com/channels/",
+    action = function(url, sourceBundle, focusContext)
+      local uri = url:gsub("https?://", "discord://")
+      U.log.f("[%s] Discord: redirecting to %s", M.name, uri)
+      hs.urlevent.openURL(uri)
+    end,
+  },
+
+  -- VS Code: open in app (vscode.dev links)
+  {
+    name = "VS Code",
+    pattern = "vscode%.dev/",
+    action = function(url, sourceBundle, focusContext)
+      local uri = url:gsub("https?://vscode%.dev/", "vscode://vscode.dev/")
+      U.log.f("[%s] VS Code: redirecting to %s", M.name, uri)
+      hs.urlevent.openURL(uri)
+    end,
+  },
 }
 
 --------------------------------------------------------------------------------
 -- Helper Functions
 --------------------------------------------------------------------------------
-
---- Get all handlers for HTTP/HTTPS schemes
----@return table<string> List of bundle IDs that can handle HTTP
-local function getHttpHandlers()
-  local handlers = hs.urlevent.getAllHandlersForScheme("https") or {}
-  return handlers
-end
 
 --- Open URL in browser without stealing focus (uses AppleScript)
 --- For Chromium-based browsers, opens URL in a new background tab
@@ -207,10 +276,6 @@ end
 -- Google OAuth Consent Handler
 --------------------------------------------------------------------------------
 
---- Handle Google OAuth consent page automation
----@param url string The OAuth URL
----@param sourceBundle string|nil Source app bundle ID
----@param opts table Options: targetEmail, closeAfterSuccess, timeoutSeconds
 --- Restore focus to the previously focused app/window
 ---@param focusContext table|nil { app = hs.application, window = hs.window }
 local function restoreFocus(focusContext)
@@ -238,7 +303,10 @@ local function restoreFocus(focusContext)
   end
 end
 
-function M.handleGoogleOAuthConsent(url, sourceBundle, opts)
+--- Handle Google OAuth consent page automation
+---@param url string The OAuth URL
+---@param opts table Options: targetEmail, closeAfterSuccess, timeoutSeconds, focusContext
+function M.handleGoogleOAuthConsent(url, opts)
   opts = opts or {}
   local targetEmail = opts.targetEmail
   local closeAfterSuccess = opts.closeAfterSuccess ~= false
@@ -256,8 +324,8 @@ function M.handleGoogleOAuthConsent(url, sourceBundle, opts)
 
   U.log.f("[%s] Opening OAuth URL in %s (will automate consent for %s)", M.name, browserName, targetEmail)
 
-  -- Open the URL in the browser (don't auto-restore focus; we'll do it after automation)
-  if not openUrlWithApp(url, browserBundle, { preserveFocus = false }) then
+  -- Open the URL in the browser
+  if not openUrlWithApp(url, browserBundle) then
     U.log.ef("[%s] Failed to open URL in %s", M.name, browserName)
     restoreFocus(focusContext)
     return
@@ -329,7 +397,6 @@ function M.handleGoogleOAuthConsent(url, sourceBundle, opts)
   local findAndAutomateScript = fmt(
     [[
     tell application "%s"
-      set targetUrl to "%s"
       set foundTab to missing value
       set foundWindow to missing value
 
@@ -356,7 +423,6 @@ function M.handleGoogleOAuthConsent(url, sourceBundle, opts)
     end tell
   ]],
     browserName,
-    url,
     escapedJS
   )
 
@@ -365,7 +431,6 @@ function M.handleGoogleOAuthConsent(url, sourceBundle, opts)
     (function() {
       var errors = [];
       var pageText = document.body ? document.body.innerText.toLowerCase() : '';
-      var pageHtml = document.body ? document.body.innerHTML.toLowerCase() : '';
 
       // Common error patterns in text content
       var errorPatterns = [
@@ -507,6 +572,7 @@ function M.handleGoogleOAuthConsent(url, sourceBundle, opts)
     local parsed = hs.json.decode(result)
     if not parsed then
       U.log.wf("[%s] Could not parse automation result: %s", M.name, tostring(result))
+      restoreFocus(focusContext)
       return
     end
 
@@ -601,11 +667,10 @@ local function handleHttpCallback(scheme, host, params, fullURL, senderPID)
   local previousApp = hs.application.frontmostApplication()
   local previousWindow = previousApp and previousApp:focusedWindow()
 
-  -- Determine the source application
-  local sourceApp = nil
+  -- Determine the source application bundle ID
   local sourceBundle = nil
   if senderPID and senderPID > 0 then
-    sourceApp = hs.application.applicationForPID(senderPID)
+    local sourceApp = hs.application.applicationForPID(senderPID)
     if sourceApp then sourceBundle = sourceApp:bundleID() end
   end
 
@@ -650,6 +715,87 @@ local function handleHttpCallback(scheme, host, params, fullURL, senderPID)
 end
 
 --------------------------------------------------------------------------------
+-- Nvim Open URL Handler (for PLUG_EDITOR / Phoenix clickable stacktraces)
+--------------------------------------------------------------------------------
+
+--- Register the hammerspoon://nvim-open URL handler
+--- URL format: hammerspoon://nvim-open?file=/path/to/file&line=42&session=rx
+--- Opens files in neovim running in a tmux session
+function M.registerNvimOpenHandler()
+  local nvim = require("lib.interop.nvim")
+
+  hs.urlevent.bind("nvim-open", function(eventName, params, senderPID, fullURL)
+    local file = params.file
+    local line = params.line or "1"
+    local session = params.session
+
+    if not file then
+      U.log.ef("[nvim-open] Missing file param: %s", fullURL)
+      return
+    end
+
+    if not session then
+      U.log.ef("[nvim-open] Missing session param: %s", fullURL)
+      return
+    end
+
+    U.log.f("[nvim-open] Opening %s:%s in session %s", file, line, session)
+
+    -- PATH prefix for shell commands (Hammerspoon doesn't inherit nix PATH)
+    local pathPrefix = PATH and ("PATH='" .. PATH .. "' ") or ""
+
+    -- Find nvim instances in the target session
+    local sockets = nvim.getSocketsBySession(session)
+    local targetSocket = nil
+    local targetInfo = nil
+
+    -- Find most recently active (by socket file mtime)
+    local mostRecentMtime = 0
+    for id, info in pairs(sockets) do
+      local socketFile = nvim.socketDir .. "/" .. id
+      local attrs = hs.fs.attributes(socketFile)
+      if attrs and attrs.modification > mostRecentMtime then
+        mostRecentMtime = attrs.modification
+        targetSocket = info.socket
+        targetInfo = info
+      end
+    end
+
+    if targetSocket then
+      -- Open in vertical split (escape spaces in file path)
+      local escapedFile = file:gsub(" ", "\\ ")
+      local cmd = fmt('<Esc>:vsplit +%s %s<CR>', line, escapedFile)
+      nvim.sendKeys(targetSocket, cmd)
+      U.log.f("[nvim-open] Sent to nvim: %s:%s", file, line)
+
+      -- Ring tmux bell on the window (writes BEL to pane tty)
+      if targetInfo.window then
+        hs.execute(fmt(
+          "%stty=$(tmux display -p -t %s:%d '#{pane_tty}' 2>/dev/null) && printf '\\a' > \"$tty\" 2>/dev/null",
+          pathPrefix, session, targetInfo.window
+        ))
+      end
+    else
+      -- No nvim in session: create new window with nvim
+      hs.execute(fmt(
+        "%stmux new-window -t %s -n 'nvim' 'nvim +%s \"%s\"'",
+        pathPrefix, session, line, file
+      ))
+      U.log.f("[nvim-open] Created new tmux window with nvim: %s:%s", file, line)
+    end
+
+    -- Raise Ghostty and switch to the tmux session
+    local ghostty = hs.application.get("Ghostty")
+    if ghostty then
+      ghostty:activate()
+    end
+    hs.execute(fmt("%stmux switch-client -t %s", pathPrefix, session))
+  end)
+
+  U.log.f("[%s] nvim-open URL handler registered", M.name)
+end
+
+--------------------------------------------------------------------------------
 -- Module Lifecycle
 --------------------------------------------------------------------------------
 
@@ -666,6 +812,10 @@ function M:start()
   -- Register as HTTP/HTTPS handler
   hs.urlevent.httpCallback = handleHttpCallback
   M.currentHandler = BROWSER
+
+  -- Register hammerspoon://nvim-open handler for PLUG_EDITOR
+  -- Opens files in neovim running in a tmux session (for Phoenix clickable stacktraces)
+  M.registerNvimOpenHandler()
 
   U.log.f("[%s] started (HTTP callback registered)", M.name)
   return self

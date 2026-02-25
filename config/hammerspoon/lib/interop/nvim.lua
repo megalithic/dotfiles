@@ -82,53 +82,6 @@ function M.getActiveTmuxPrefix()
   return (prefix and prefix ~= "") and prefix or nil
 end
 
---- Get PID of frontmost application window
---- Returns PID of nvim if frontmost window belongs to a terminal running nvim
----@return number|nil PID or nil if not found/applicable
-function M.getFrontmostNvimPid()
-  local frontmost = hs.application.frontmostApplication()
-  if not frontmost then return nil end
-
-  -- Get the bundle ID to check if it's a terminal
-  local bundleId = frontmost:bundleID()
-  local terminalBundles = {
-    ["com.mitchellh.ghostty"] = true,
-    ["net.kovidgoyal.kitty"] = true,
-    ["com.apple.Terminal"] = true,
-    ["com.googlecode.iterm2"] = true,
-  }
-
-  if not terminalBundles[bundleId] then return nil end
-
-  -- Get window title - many terminals show the process name
-  local window = frontmost:focusedWindow()
-  if not window then return nil end
-
-  local title = window:title()
-  if not title or not title:match("n?vim") then return nil end
-
-  -- Try to find nvim child process of this terminal window
-  -- This is terminal-specific and may not always work perfectly
-  -- For now, we'll rely on the socket file matching by checking all global sockets
-  return nil
-end
-
---- Find socket path by PID
----@param pid number Process ID to find
----@return string|nil Socket path or nil if not found
-function M.getSocketByPid(pid)
-  local socketId = fmt("global_%d", pid)
-  local socketFile = fmt("%s/%s", M.socketDir, socketId)
-
-  local f = io.open(socketFile, "r")
-  if not f then return nil end
-
-  local socketPath = f:read("*l")
-  f:close()
-
-  return (socketPath and socketPath ~= "") and socketPath or nil
-end
-
 --- Get most recently modified global socket
 ---@return string|nil Socket path or nil if none found
 function M.getMostRecentGlobalSocket()
@@ -206,11 +159,10 @@ end
 --- Get socket for the currently active context
 --- Detection cascade:
 ---   1. Tmux context (session_window_pane prefix match)
----   2. Frontmost application PID match (for global sockets)
----   3. Most recent global socket (fallback)
+---   2. Most recent global socket (fallback)
 ---@return string|nil Socket path or nil if not found
 function M.getActiveSocket()
-  -- 1. Try tmux-based detection first (existing behavior)
+  -- 1. Try tmux-based detection first
   local prefix = M.getActiveTmuxPrefix()
   if prefix then
     local handle = io.popen(fmt("ls '%s' 2>/dev/null | grep '^%s_'", M.socketDir, prefix))
@@ -232,22 +184,14 @@ function M.getActiveSocket()
     end
   end
 
-  -- 2. Try frontmost application detection (requires Hammerspoon running)
-  local frontmostPid = M.getFrontmostNvimPid()
-  if frontmostPid then
-    local socket = M.getSocketByPid(frontmostPid)
-    if socket then return socket end
-  end
-
-  -- 3. Fallback to most recent global socket
+  -- 2. Fallback to most recent global socket
   return M.getMostRecentGlobalSocket()
 end
 
 --- Get socket info for the currently active context
 --- Detection cascade (same as getActiveSocket, but returns full SocketInfo):
 ---   1. Tmux context (session_window_pane prefix match)
----   2. Frontmost application PID match (for global sockets)
----   3. Most recent global socket (fallback)
+---   2. Most recent global socket (fallback)
 ---@return SocketInfo|nil Socket info or nil if not found
 function M.getActiveSocketInfo()
   -- 1. Try tmux-based detection first
@@ -265,15 +209,7 @@ function M.getActiveSocketInfo()
     end
   end
 
-  -- 2. Try frontmost application detection
-  local frontmostPid = M.getFrontmostNvimPid()
-  if frontmostPid then
-    local socketId = fmt("global_%d", frontmostPid)
-    local info = readSocketInfo(socketId)
-    if info then return info end
-  end
-
-  -- 3. Fallback to most recent global socket
+  -- 2. Fallback to most recent global socket
   local cmd = fmt("ls -t '%s'/global_* 2>/dev/null | head -1", M.socketDir)
   local handle = io.popen(cmd)
   if handle then
@@ -319,7 +255,9 @@ function M.eval(socket, expr)
 
   -- Escape the expression for shell
   local escaped = expr:gsub("'", "'\\''")
-  local cmd = fmt("nvim --server '%s' --remote-expr '%s' 2>/dev/null", socket, escaped)
+  -- Prepend PATH to ensure nvim is found (Hammerspoon doesn't inherit shell PATH)
+  local pathPrefix = PATH and ("PATH='" .. PATH .. "' ") or ""
+  local cmd = fmt("%snvim --server '%s' --remote-expr '%s' 2>/dev/null", pathPrefix, socket, escaped)
 
   local handle = io.popen(cmd)
   if not handle then return nil end
@@ -352,7 +290,9 @@ function M.sendKeys(socket, keys)
   if not socket then return false end
 
   local escaped = keys:gsub("'", "'\\''")
-  local cmd = fmt("nvim --server '%s' --remote-send '%s' 2>/dev/null", socket, escaped)
+  -- Prepend PATH to ensure nvim is found (Hammerspoon doesn't inherit shell PATH)
+  local pathPrefix = PATH and ("PATH='" .. PATH .. "' ") or ""
+  local cmd = fmt("%snvim --server '%s' --remote-send '%s' 2>/dev/null", pathPrefix, socket, escaped)
 
   local result = os.execute(cmd)
   return result == 0 or result == true
@@ -366,7 +306,9 @@ function M.openFile(socket, filePath)
   if not socket then return false end
 
   local escaped = filePath:gsub("'", "'\\''")
-  local cmd = fmt("nvim --server '%s' --remote '%s' 2>/dev/null", socket, escaped)
+  -- Prepend PATH to ensure nvim is found (Hammerspoon doesn't inherit shell PATH)
+  local pathPrefix = PATH and ("PATH='" .. PATH .. "' ") or ""
+  local cmd = fmt("%snvim --server '%s' --remote '%s' 2>/dev/null", pathPrefix, socket, escaped)
 
   local result = os.execute(cmd)
   return result == 0 or result == true
@@ -489,9 +431,12 @@ function M.isStandaloneServerRunning(socketPath, callback)
   end
 
   -- Try to evaluate a simple expression on the server
-  local task = hs.task.new("/usr/bin/env", function(exitCode, _, _)
+  -- Use shell with PATH to find nix nvim
+  local pathPrefix = PATH and ("PATH='" .. PATH .. "' ") or ""
+  local cmd = fmt("%snvim --server '%s' --remote-expr '1' 2>/dev/null", pathPrefix, socketPath)
+  local task = hs.task.new("/bin/sh", function(exitCode, _, _)
     callback(exitCode == 0)
-  end, { "nvim", "--server", socketPath, "--remote-expr", "1" })
+  end, { "-c", cmd })
 
   if task then
     task:start()
@@ -508,9 +453,10 @@ function M.isStandaloneServerRunningSync(socketPath)
     return false
   end
 
-  -- Quick sync check
+  -- Quick sync check (prepend PATH for nix nvim)
+  local pathPrefix = PATH and ("PATH='" .. PATH .. "' ") or ""
   local _, status = hs.execute(
-    fmt("nvim --server '%s' --remote-expr '1' 2>/dev/null", socketPath)
+    fmt("%snvim --server '%s' --remote-expr '1' 2>/dev/null", pathPrefix, socketPath)
   )
   return status == true
 end
@@ -520,9 +466,13 @@ end
 ---@param filePath string Path to the file to open
 ---@param callback? fun(success: boolean) Optional callback
 function M.openFileAsync(socketPath, filePath, callback)
-  local task = hs.task.new("/usr/bin/env", function(exitCode, _, _)
+  -- Use shell with PATH to find nix nvim
+  local pathPrefix = PATH and ("PATH='" .. PATH .. "' ") or ""
+  local escaped = filePath:gsub("'", "'\\''")
+  local cmd = fmt("%snvim --server '%s' --remote '%s' 2>/dev/null", pathPrefix, socketPath, escaped)
+  local task = hs.task.new("/bin/sh", function(exitCode, _, _)
     if callback then callback(exitCode == 0) end
-  end, { "nvim", "--server", socketPath, "--remote", filePath })
+  end, { "-c", cmd })
 
   if task then
     task:start()
@@ -577,7 +527,7 @@ function M.getServerArgs(socketPath, filePath)
 end
 
 --------------------------------------------------------------------------------
--- UTILITY
+-- DEBUG
 --------------------------------------------------------------------------------
 
 --- Debug: Print all registered sockets
@@ -590,8 +540,12 @@ function M.debugSockets()
   for socketId, info in pairs(sockets) do
     count = count + 1
     print(fmt("  %s", socketId))
-    print(fmt("    Session: %s | Window: %d | Pane: %d | PID: %d",
-      info.session, info.window, info.pane, info.pid))
+    if info.is_global then
+      print(fmt("    Global socket | PID: %d", info.pid))
+    else
+      print(fmt("    Session: %s | Window: %d | Pane: %d | PID: %d",
+        info.session, info.window, info.pane, info.pid))
+    end
     print(fmt("    Socket: %s", info.socket))
 
     -- Try to get buffer info
