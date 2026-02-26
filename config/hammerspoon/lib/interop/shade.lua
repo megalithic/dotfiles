@@ -447,14 +447,38 @@ end
 -- CAPTURE WORKFLOW
 --------------------------------------------------------------------------------
 
+--- Capture the current frontmost app info for context bootstrap
+--- Called BEFORE launching Shade on cold start to solve the timing race condition
+--- where Shade becomes frontmost before its workspace observer initializes.
+---@return table|nil bootstrapContext Minimal context with bundleID/appName
+local function captureBootstrapContext()
+  local app = hs.application.frontmostApplication()
+  if not app then return nil end
+
+  -- Don't capture if Shade is somehow already frontmost
+  if app:name() == BINARY_NAME then return nil end
+
+  return {
+    bundleID = app:bundleID(),
+    appName = app:name(),
+    -- Mark this as bootstrap context so Shade knows to use it as a hint
+    _bootstrap = true,
+  }
+end
+
 --- Capture with context: signal Shade to gather context and create a capture note
---- Shade handles all context gathering internally using its proactive app tracking.
 ---
---- Flow:
+--- Flow (when Shade is NOT running - cold start):
+--- 1. Hammerspoon captures frontmost app info BEFORE launching Shade
+--- 2. Hammerspoon writes bootstrap context to context.json
+--- 3. Hammerspoon launches Shade, waits for startup
+--- 4. Hammerspoon sends io.shade.note.capture notification
+--- 5. Shade reads bootstrap context and uses bundleID to find the target app
+--- 6. Shade gathers full context from that app and opens capture note
+---
+--- Flow (when Shade IS running - warm start):
 --- 1. Hammerspoon sends io.shade.note.capture notification
 --- 2. Shade uses its proactively-tracked lastNonShadeFrontApp for context
---- 3. Shade gathers context (window title, URL, selection, etc.)
---- 4. Shade writes context.json and opens nvim with capture template
 ---
 ---@return boolean success
 function M.captureWithContext()
@@ -472,6 +496,15 @@ function M.captureWithContext()
   if M.isRunning() then
     triggerCapture()
   else
+    -- CRITICAL: Capture frontmost app info BEFORE launching Shade
+    -- This solves the race condition where Shade becomes frontmost
+    -- before its workspace observer can track the previous app
+    local bootstrapCtx = captureBootstrapContext()
+    if bootstrapCtx then
+      M.writeContext(bootstrapCtx)
+      U.log.d(fmt("wrote bootstrap context: %s (%s)", bootstrapCtx.appName or "?", bootstrapCtx.bundleID or "?"))
+    end
+
     M.launch(function() hs.timer.doAfter(0.5, triggerCapture) end)
   end
 
@@ -571,6 +604,13 @@ function M.captureWithContextSidebar()
   if M.isRunning() then
     triggerSidebarCapture()
   else
+    -- CRITICAL: Capture frontmost app info BEFORE launching Shade (same as captureWithContext)
+    local bootstrapCtx = captureBootstrapContext()
+    if bootstrapCtx then
+      M.writeContext(bootstrapCtx)
+      U.log.d(fmt("wrote bootstrap context for sidebar: %s (%s)", bootstrapCtx.appName or "?", bootstrapCtx.bundleID or "?"))
+    end
+
     M.launch(function() hs.timer.doAfter(0.5, triggerSidebarCapture) end)
   end
 

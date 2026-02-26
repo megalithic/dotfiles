@@ -756,15 +756,13 @@ local function ensure_daily_note_exists(date_str)
       local daily_dir = string.format("%s/daily/%s", notes_home, year)
       vim.fn.mkdir(daily_dir, "p")
 
-      -- Use obsidian.nvim's API to create the daily note
-      local obsidian = require("obsidian")
-      local client = obsidian.get_client()
-      if client then
-        -- This creates the note with template substitutions
-        client.today()
-        -- Give it a moment to write
-        vim.wait(100, function() return vim.fn.filereadable(daily_path) == 1 end, 10)
-      end
+      -- Use obsidian.nvim's daily module API to create the daily note
+      -- Note: obsidian-nvim/obsidian.nvim restructured API - client.today() no longer exists
+      local daily = require("obsidian.daily")
+      -- This creates the note with template substitutions
+      daily.today()
+      -- Give it a moment to write
+      vim.wait(100, function() return vim.fn.filereadable(daily_path) == 1 end, 10)
     end)
 
     if not ok then
