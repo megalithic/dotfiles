@@ -617,7 +617,7 @@ export default function (pi: ExtensionAPI) {
     const text = event.text?.trim().toLowerCase() || "";
 
     const isOverrideCmd = ["override", "bypass", "force"].includes(text);
-    const isForceOverride = ["!override", "!bypass", "!force"].includes(text);
+    const isForceOverride = ["!override", "!bypass", "!force", "!!"].includes(text);
 
     if (!isOverrideCmd && !isForceOverride) return;
 
