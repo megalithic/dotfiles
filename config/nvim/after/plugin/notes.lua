@@ -515,10 +515,178 @@ function M.execute_line()
   end
 end
 
--- [[ commands ]] --------------------------------------------------------------
+--- Reindex captures for a given date into the daily note
+--- Scans captures directory for files from the specified date and adds
+--- any missing links to the daily note's ## Captures section
+---@param date_str? string Date in YYYYMMDD format (defaults to today)
+---@return number added Count of captures added
+---@return number skipped Count of captures already linked
+function M.reindex_captures(date_str)
+  date_str = date_str or os.date("%Y%m%d")
+  local notes_home = vim.g.notes_path or vim.env.NOTES_HOME or (vim.env.HOME .. "/notes")
+  local captures_dir = notes_home .. "/captures"
+  local year = date_str:sub(1, 4)
+  local daily_path = string.format("%s/daily/%s/%s.md", notes_home, year, date_str)
 
-command("ToggleTask", function(evt) M.toggle_task(evt.args) end, {})
-command("ExecuteLine", function() M.execute_line() end, {})
+  -- Find all captures for this date (files starting with YYYYMMDD)
+  local pattern = date_str .. "*.md"
+  local handle = io.popen(string.format("find '%s' -maxdepth 1 -name '%s' -type f 2>/dev/null | sort", captures_dir, pattern))
+  if not handle then
+    vim.notify("Failed to scan captures directory", vim.log.levels.ERROR)
+    return 0, 0
+  end
+
+  local captures = {}
+  for path in handle:lines() do
+    local filename = path:match("([^/]+)%.md$")
+    if filename then
+      table.insert(captures, { path = path, filename = filename })
+    end
+  end
+  handle:close()
+
+  if #captures == 0 then
+    vim.notify(string.format("No captures found for %s", date_str), vim.log.levels.INFO)
+    return 0, 0
+  end
+
+  -- Read daily note (create if needed)
+  local daily_content = ""
+  local f = io.open(daily_path, "r")
+  if f then
+    daily_content = f:read("*a")
+    f:close()
+  else
+    -- Daily note doesn't exist - try to create it
+    local daily = require("obsidian.daily")
+    daily.today()
+    vim.wait(200, function()
+      f = io.open(daily_path, "r")
+      return f ~= nil
+    end, 50)
+    if f then
+      daily_content = f:read("*a")
+      f:close()
+    else
+      vim.notify("Could not create daily note: " .. daily_path, vim.log.levels.ERROR)
+      return 0, 0
+    end
+  end
+
+  -- Check which captures are already linked
+  local added, skipped = 0, 0
+  local entries_to_add = {}
+
+  for _, capture in ipairs(captures) do
+    local existing_pattern = "%[%[" .. capture.filename:gsub("%-", "%%-") .. "[%]|]"
+    if daily_content:match(existing_pattern) then
+      skipped = skipped + 1
+    else
+      -- Read capture to build description
+      local cf = io.open(capture.path, "r")
+      local description = "Capture"
+      if cf then
+        local content = cf:read("*a")
+        cf:close()
+
+        -- Try to extract title from frontmatter
+        local title = content:match("title:%s*[\"']?([^\n\"']+)")
+        if title then
+          description = title
+        else
+          -- Try first non-frontmatter, non-heading content line
+          local in_frontmatter = false
+          for line in content:gmatch("[^\n]+") do
+            if line == "---" then
+              in_frontmatter = not in_frontmatter
+            elseif not in_frontmatter then
+              local trimmed = line:match("^%s*(.-)%s*$")
+              if trimmed and trimmed ~= "" and not trimmed:match("^#") and not trimmed:match("^>") then
+                if #trimmed > 50 then trimmed = trimmed:sub(1, 47) .. "..." end
+                description = trimmed
+                break
+              end
+            end
+          end
+        end
+      end
+
+      -- Extract time from filename (YYYYMMDDHHMM -> HH:MM)
+      local time_str = capture.filename:match("^%d%d%d%d%d%d%d%d(%d%d)(%d%d)")
+      local hour, min = capture.filename:match("^%d%d%d%d%d%d%d%d(%d%d)(%d%d)")
+      local timestamp = (hour and min) and string.format("%s:%s", hour, min) or "??:??"
+
+      table.insert(entries_to_add, {
+        timestamp = timestamp,
+        filename = capture.filename,
+        description = description,
+      })
+      added = added + 1
+    end
+  end
+
+  -- Add missing entries to daily note
+  if #entries_to_add > 0 then
+    -- Sort by timestamp
+    table.sort(entries_to_add, function(a, b) return a.timestamp < b.timestamp end)
+
+    -- Find or create ## Captures section
+    local captures_section = "## Captures"
+    local captures_pos = daily_content:find(captures_section, 1, true)
+
+    local new_entries = {}
+    for _, entry in ipairs(entries_to_add) do
+      table.insert(new_entries, string.format("- %s [[%s|%s]]", entry.timestamp, entry.filename, entry.description))
+    end
+    local entries_text = table.concat(new_entries, "\n")
+
+    if captures_pos then
+      -- Find end of Captures section (next ## or end of file)
+      local next_section = daily_content:find("\n## ", captures_pos + #captures_section)
+      if next_section then
+        local before = daily_content:sub(1, next_section - 1):gsub("%s+$", "")
+        daily_content = before .. "\n" .. entries_text .. "\n" .. daily_content:sub(next_section + 1)
+      else
+        daily_content = daily_content:gsub("%s+$", "") .. "\n" .. entries_text .. "\n"
+      end
+    else
+      -- Add Captures section at end
+      daily_content = daily_content:gsub("%s+$", "") .. "\n\n" .. captures_section .. "\n\n" .. entries_text .. "\n"
+    end
+
+    -- Write back
+    f = io.open(daily_path, "w")
+    if f then
+      f:write(daily_content)
+      f:close()
+    else
+      vim.notify("Failed to write daily note", vim.log.levels.ERROR)
+      return 0, skipped
+    end
+  end
+
+  return added, skipped
+end
+
+-- [[ commands ]] --------------------------------------------------------------
+-- All notes commands use :Notes prefix for discoverability
+
+command("NotesToggleTask", function(evt) M.toggle_task(evt.args) end, {
+  nargs = "?",
+  desc = "Toggle task checkbox status",
+})
+command("NotesExecuteLine", function() M.execute_line() end, {
+  desc = "Execute code block line under cursor",
+})
+command("NotesIndexCaptures", function(opts)
+  local date_str = opts.args ~= "" and opts.args or nil
+  local added, skipped = M.reindex_captures(date_str)
+  local date_display = date_str or os.date("%Y%m%d")
+  vim.notify(string.format("Indexed %s: %d added, %d already linked", date_display, added, skipped), vim.log.levels.INFO)
+end, {
+  nargs = "?",
+  desc = "Index captures into daily note (optional: YYYYMMDD date)",
+})
 
 -- [[ mappings ]] --------------------------------------------------------------
 -- local notesMappings = {
@@ -573,7 +741,7 @@ require("config.autocmds").augroup("NotesLoaded", {
           end
         end)
 
-        map("n", "gx", vim.cmd.ExecuteLine, { desc = "execute line", buffer = bufnr })
+        map("n", "gx", vim.cmd.NotesExecuteLine, { desc = "execute line", buffer = bufnr })
 
         for _, client in ipairs(vim.lsp.get_clients({ bufnr = bufnr })) do
           if client.name == "obsidian-ls" then
