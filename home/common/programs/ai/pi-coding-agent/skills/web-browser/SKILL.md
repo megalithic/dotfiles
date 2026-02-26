@@ -7,19 +7,45 @@ description: "Interact with web pages using agent-browser CLI. Connects to exist
 
 Browser automation using `agent-browser` CLI connected to your running browser.
 
-## IMPORTANT: Always connect first
+## ⚠️ CRITICAL REQUIREMENTS
 
-Your Brave Browser Nightly runs with `--remote-debugging-port=9222`. This gives agent-browser access to your logged-in sessions (Asana, GitHub, etc.).
+### 1. ALWAYS connect to port 9222 FIRST
 
-**Always run this first in each session:**
+Before ANY browser operation, you MUST connect to the remote debugging port:
 
 ```bash
-agent-browser connect 9222
+browser connect 9222
 ```
 
-Or use the `browser` tool:
-```
+This is REQUIRED for accessing authenticated sessions (Asana, Figma, GitHub, etc.). Without this step, commands will fail or create isolated sessions without your logins.
+
+### 2. NEVER take over existing tabs
+
+When navigating to a URL:
+- First check if tab already exists: `browser tab list`
+- If found, switch to it: `browser tab <index>`
+- If NOT found, open a NEW tab: `browser open <url>`
+
+**NEVER navigate an existing tab to a different URL** - this destroys the user's work/context.
+
+## Correct workflow
+
+```bash
+# 1. ALWAYS connect first (required every session)
 browser connect 9222
+
+# 2. Check for existing tab
+browser tab list
+
+# 3a. If tab exists for your URL, switch to it
+browser tab 14
+
+# 3b. If tab doesn't exist, open NEW tab
+browser open https://app.asana.com/...
+
+# 4. Interact
+browser snapshot -i
+browser click @e5
 ```
 
 ## Check if browser is listening
@@ -36,7 +62,7 @@ After connecting, use standard agent-browser commands:
 ```bash
 browser tab list                    # List all tabs
 browser tab 14                      # Switch to tab by index
-browser open https://example.com    # Open URL (new tab)
+browser open https://example.com    # Open URL (NEW tab)
 browser back                        # Go back
 browser reload                      # Reload page
 ```
@@ -66,28 +92,13 @@ browser wait @e1                    # Wait for element
 browser wait 2000                   # Wait milliseconds
 ```
 
-## Workflow example
-
-```bash
-# 1. Connect to your logged-in browser
-browser connect 9222
-
-# 2. Find and switch to Asana tab
-browser tab list | grep -i asana
-browser tab 14
-
-# 3. Interact with authenticated page
-browser snapshot -i
-browser click @e5
-```
-
 ## Tab targeting by URL
 
 Instead of remembering tab numbers, find tabs by URL:
 
 ```bash
-browser tab list | grep -i github
-browser tab list | grep -i localhost:4000
+browser tab list | rg -i asana
+browser tab list | rg -i localhost:4000
 ```
 
 ## Notes
