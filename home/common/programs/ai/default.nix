@@ -1,4 +1,4 @@
-# AI Tools Configuration
+# AI Tools Con
 # Manages Claude Code, OpenCode, and related AI tooling via Nix
 #
 # Structure:
@@ -13,8 +13,7 @@
   lib,
   inputs,
   ...
-}:
-let
+}: let
   # ===========================================================================
   # Shared Configuration
   # ===========================================================================
@@ -74,22 +73,19 @@ let
   # Claude: { command, args?, env? }
   # OpenCode: { type: "local", command: [cmd, ...args], enabled: true, environment? }
   # ===========================================================================
-  toOpenCodeMcp =
-    name: server:
+  toOpenCodeMcp = name: server:
     {
       type = "local";
       command =
-        if server ? args && server.args != [ ] then
-          [ server.command ] ++ server.args
-        else
-          [ server.command ];
+        if server ? args && server.args != []
+        then [server.command] ++ server.args
+        else [server.command];
       enabled = true;
     }
-    // (lib.optionalAttrs (server ? env) { environment = server.env; });
+    // (lib.optionalAttrs (server ? env) {environment = server.env;});
 
   opencodeMcpServers = lib.mapAttrs toOpenCodeMcp allMcpServers;
-in
-{
+in {
   imports = [
     ./claude-code.nix
     ./opencode.nix
@@ -113,8 +109,8 @@ in
     pkgs.llm-agents.claude-code-acp # DEPRECATED: hash override in overlays/default.nix
     pkgs.llm-agents.beads
     pkgs.llm-agents.pi # pi-coding-agent (wrappers in ./pi-coding-agent add env/extensions)
-    pkgs.tidewave # Tidewave GUI app for web app development
-    pkgs.tidewave-cli # Tidewave MCP CLI
+    pkgs.tidewave # Tidewave GUI app for web app development (custom)
+    pkgs.tidewave-cli # Tidewave MCP CLI (custom)
     pkgs.ddgr # DuckDuckGo CLI for web-search skill (free, no API limits)
   ];
 
@@ -133,7 +129,7 @@ in
   # ===========================================================================
 
   # Symlink chrome-devtools-mcp binary to ~/.local/bin (for manual use)
-  home.activation.linkAiBinaries = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+  home.activation.linkAiBinaries = lib.hm.dag.entryAfter ["writeBoundary"] ''
     BIN_DIR="${config.home.homeDirectory}/.local/bin"
     mkdir -p "$BIN_DIR"
 

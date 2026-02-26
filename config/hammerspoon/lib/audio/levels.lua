@@ -92,10 +92,12 @@ function M.start(onLevel)
 end
 
 function M.stop()
-  if isMonitoring then
-    sendCommand("stop")
-  end
+  -- Always send stop command regardless of isMonitoring state
+  -- This handles the race condition where stop() is called before
+  -- the "started" response is received and processed
+  sendCommand("stop")
   callback = nil
+  isMonitoring = false
 end
 
 function M.shutdown()

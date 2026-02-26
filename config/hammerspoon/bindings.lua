@@ -251,152 +251,6 @@ function M.loadShade()
   req("hyper", { id = "shade" }):bind({}, "n", function() shadeModality:toggle() end)
 end
 
-function M.loadWm()
-  -- [ MODAL C.launchers ] ---------------------------------------------------------
-  local wmModality = require("hypemode").new("wm", {
-    showAlert = true,
-    alertPosition = "center",
-    dimWindow = 0.5, -- 50% dim overlay on focused window
-  })
-  wmModality
-    :start()
-    :bind({}, "r", req("wm").placeAllApps, function() wmModality:exit(0.1) end)
-    :bind({}, "escape", function() wmModality:exit() end)
-    :bind(
-      {},
-      "space",
-      chain({
-        C.grid.full,
-        C.grid.center.large,
-        C.grid.center.medium,
-        C.grid.center.small,
-        C.grid.center.tiny,
-        C.grid.center.mini,
-        C.grid.preview,
-      }, wmModality, 1.0)
-    )
-    :bind({}, "return", function() wm.place(C.grid.full) end, function() wmModality:exit(0.1) end)
-    :bind({ "shift" }, "return", function()
-      wm.toNextScreen()
-      wm.place(C.grid.full)
-    end, function() wmModality:exit() end)
-    :bind(
-      {},
-      "h",
-      chain(
-        enum.map({ "halves", "thirds", "twoThirds", "fiveSixths", "sixths" }, function(size)
-          if type(C.grid[size]) == "string" then return C.grid[size] end
-          return C.grid[size]["left"]
-        end),
-        wmModality,
-        1.0
-      )
-    )
-    :bind(
-      {},
-      "l",
-      chain(
-        enum.map({ "halves", "thirds", "twoThirds", "fiveSixths", "sixths" }, function(size)
-          if type(C.grid[size]) == "string" then return C.grid[size] end
-          return C.grid[size]["right"]
-        end),
-        wmModality,
-        1.0
-      )
-    )
-    :bind({ "shift" }, "h", function()
-      wm.toPrevScreen()
-      chain(
-        enum.map({ "halves", "thirds", "twoThirds", "fiveSixths", "sixths" }, function(size)
-          if type(C.grid[size]) == "string" then return C.grid[size] end
-          return C.grid[size]["left"]
-        end),
-        wmModality,
-        1.0
-      )
-    end)
-    :bind({ "shift" }, "l", function()
-      wm.toNextScreen()
-      chain(
-        enum.map({ "halves", "thirds", "twoThirds", "fiveSixths", "sixths" }, function(size)
-          if type(C.grid[size]) == "string" then return C.grid[size] end
-          return C.grid[size]["right"]
-        end),
-        wmModality,
-        1.0
-      )
-    end)
-    -- :bind({}, "j", function() wm.toNextScreen() end, function() wmModality:delayedExit(0.1) end)
-    :bind(
-      {},
-      "j",
-      function() wm.place(C.grid.center.large) end,
-      -- chain({
-      --   C.grid.center.mini,
-      --   C.grid.center.tiny,
-      --   C.grid.center.small,
-      --   C.grid.center.medium,
-      --   C.grid.center.large,
-      -- }, wmModality, 1.0)
-      function() wmModality:exit() end
-    )
-    :bind(
-      {},
-      "k",
-      function() wm.place(C.grid.center.medium) end,
-      -- chain({
-      --   C.grid.center.large,
-      --   C.grid.center.medium,
-      --   C.grid.center.small,
-      --   C.grid.center.tiny,
-      --   C.grid.center.mini,
-      -- }, wmModality, 1.0)
-      function() wmModality:exit() end
-    )
-    :bind({}, "v", function()
-      require("wm").tile()
-      wmModality:exit()
-    end)
-    :bind({}, "s", function()
-      req("lib.interop.browser"):splitTab()
-      wmModality:exit()
-    end)
-    :bind({ "shift" }, "s", function()
-      req("lib.interop.browser"):splitTab(true)
-      wmModality:exit()
-    end)
-    :bind({}, "m", function()
-      local app = hs.application.frontmostApplication()
-      local menuItemTable = { "Window", "Merge All Windows" }
-      if app:findMenuItem(menuItemTable) then
-        app:selectMenuItem(menuItemTable)
-      else
-        warn("Merge All Windows is unsupported for " .. app:bundleID())
-      end
-
-      wmModality:exit()
-    end)
-    :bind({}, "f", function()
-      local focused = hs.window.focusedWindow()
-      enum.map(focused:otherWindowsAllScreens(), function(win) win:application():hide() end)
-      wmModality:exit()
-    end)
-    :bind({}, "c", function()
-      local win = hs.window.focusedWindow()
-      local screenWidth = win:screen():frame().w
-      hs.window.focusedWindow():move(hs.geometry.rect(screenWidth / 2 - 300, 0, 600, 400))
-      -- resizes to a small console window at the top middle
-
-      wmModality:exit()
-    end)
-    :bind({}, "b", function()
-      local wip = require("wip")
-      wip.bowser()
-    end)
-
-  req("hyper", { id = "wm" }):bind({}, "l", function() wmModality:toggle() end)
-end
-
 function M.loadNotifications()
   -- Dismiss active HUD notification with F19+escape
   local dismissBindings = C.notifier.dismissBindings
@@ -424,6 +278,12 @@ function M.loadForceQuit()
       app:kill9()
     end
   end)
+end
+
+-- WM: Window management with real-time visual tracking
+function M.loadWm()
+  local wm = require("wm")
+  wm.init()
 end
 
 function M:init()

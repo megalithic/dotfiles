@@ -281,29 +281,29 @@ end
 -- REF: hs.shutdownCallback only fires on quit, not reload
 
 ---Setup hs.reload wrapper that performs cleanup before reloading
----@param opts {S: table, N: table, stopWatchers: function}
+---Uses globals _G.S, _G.N, _G.HUD directly (set by init.lua before this is called)
+---@param opts {stopWatchers: function}
 function M.setupReloadCleanup(opts)
-  local originalReload = hs.reload
-
   ---@diagnostic disable-next-line: duplicate-set-field
   hs.reload = function()
-    -- Clean up notification system (timers, canvases, watchers)
+    -- Clean up state manager
     if _G.S and _G.S.resetAll then pcall(_G.S.resetAll) end
-
-    -- Clean up unified notification module
+    
+    -- Clean up notification module
     if _G.N and _G.N.cleanup then pcall(_G.N.cleanup) end
 
     -- Clean up HUD module
     if _G.HUD and _G.HUD.cleanup then pcall(_G.HUD.cleanup) end
 
-    -- Stop all watchers (app, notification, camera, etc.)
+    -- Stop watchers (micchecka, clipper, etc.)
     if opts.stopWatchers then pcall(opts.stopWatchers) end
 
-    -- Log cleanup (may not appear if reload is too fast)
     if U and U.log then U.log.i("Pre-reload cleanup completed") end
 
-    -- Now do the actual reload
-    originalReload()
+    -- Use menu click instead of native hs.reload()
+    -- Native hs.reload() and hs.timer.doAfter() both crash when called from hotkey callbacks
+    -- Menu click triggers reload safely through Hammerspoon's native event handling
+    hs.application.get("Hammerspoon"):selectMenuItem({"File", "Reload Config"})
   end
 end
 

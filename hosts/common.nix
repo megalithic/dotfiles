@@ -19,7 +19,7 @@ in {
 
   users.users.${username} = {
     name = username;
-    home = paths.home;
+    inherit (paths) home;
     isHidden = false;
     shell = pkgs.fish;
   };
@@ -91,10 +91,6 @@ in {
     EZA_ICON_SPACING = "2";
 
     NH_SEARCH_CHANNEL = "nixos-unstable";
-
-  
-     
-    
   };
 
   environment.shellAliases = {

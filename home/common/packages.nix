@@ -8,11 +8,10 @@
   # Custom apps built with mkApp - these have passthru.appLocation
   customApps = with pkgs; [
     bloom
-    # brave-browser-nightly - managed by mkChromiumBrowser wrapper (has --remote-debugging-port)
     fantastical
     helium-browser
-    talktastic
     # tidewave GUI app moved to home/programs/ai/default.nix
+    tuna # Menu bar app that fixes audio in video calls
   ];
 
   # Filter: only apps with appLocation = "home-manager" go to home.packages

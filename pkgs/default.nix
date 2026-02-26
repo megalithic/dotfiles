@@ -84,20 +84,6 @@ in {
     homepage = "https://github.com/imputnet/helium-chromium";
   };
 
-  talktastic = mkApp {
-    pname = "talktastic";
-    version = "beta"; # No version in URL, using beta marker
-    appName = "TalkTastic.app";
-    src = {
-      url = "https://storage.googleapis.com/oasis-desktop/installer/Install%20TalkTastic.pkg";
-      sha256 = "0q2vflgd9ypbmhgq4a0jiw41l4qvxhckhi4vh0rm3lia3yvygmva";
-    };
-    artifactType = "pkg"; # Extract .app from PKG (no system extensions needed)
-    binaries = []; # PKG apps don't have CLI wrappers
-    desc = "AI voice dictation for macOS - write with your voice in any app";
-    homepage = "https://talktastic.com";
-  };
-
   tidewave = mkApp {
     pname = "tidewave";
     version = "latest";
@@ -122,5 +108,27 @@ in {
     binaries = ["tidewave"];
     desc = "Tidewave MCP CLI for web app development";
     homepage = "https://tidewave.ai";
+  };
+
+  tuna = mkApp {
+    pname = "tuna";
+    version = "0.34-796";
+    appName = "Tuna.app";
+    src = {
+      # Rails active_storage URL - stable for this version, redirects to signed R2 URL
+      #
+      # To update in future:
+      #  # Get new URL and version from redirect
+      #  curl -sI "https://tunaformac.com/download/latest" | rg location
+      #  # Download and hash
+      #  curl -L -o /tmp/Tuna.zip "<new-rails-url>"
+      #  nix hash file --sri /tmp/Tuna.zip
+
+      url = "https://tunaformac.com/rails/active_storage/blobs/redirect/eyJfcmFpbHMiOnsiZGF0YSI6NjUsInB1ciI6ImJsb2JfaWQifX0=--51a6b05b563cda922ce3451b3ec6d438d3d7d60e/Tuna-0.34-796.zip";
+      sha256 = "sha256-hnzkc8JUG9Ho6JjYcPi70s+aH50DwPXYlh8R78BfTHU=";
+    };
+    binaries = [];
+    desc = "New, modern launcher for macOS, in the spirit of Quicksilver.";
+    homepage = "https://tunaformac.com";
   };
 }

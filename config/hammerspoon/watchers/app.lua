@@ -59,7 +59,7 @@ function M.runLayoutRulesForAppBundleID(elementOrAppName, event, app)
   if app and enum.contains(layoutableEvents, event) then
     hs.timer.waitUntil(
       function() return #app:allWindows() > 0 and app:mainWindow() ~= nil end,
-      function() req("wm").placeApp(elementOrAppName, event, app) end
+      function() req("wm").placeApp(event, app) end
     )
   end
 end

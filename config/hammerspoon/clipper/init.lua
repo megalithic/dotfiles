@@ -35,8 +35,10 @@ local shade = require("lib.interop.shade")
 ---@field imageUrl string|nil DO Spaces URL (set after upload)
 ---@field ocrText string|nil OCR extracted text (lazy loaded)
 ---@field timestamp number When capture occurred
----@field uploadStatus "idle"|"uploading"|"complete"|"failed" Upload state
+---@field uploadStatus "idle"|"uploading"|"complete"|"failed"|"gatekeeper" Upload state
 ---@field ocrStatus "idle"|"processing"|"complete"|"failed" OCR state
+---@field gatekeeperReason string|nil Gatekeeper violation reason
+---@field fileSizeBytes number|nil Image file size in bytes
 
 ---@class ClipperModule
 ---@field capture ClipperCapture|nil Current capture state
@@ -72,11 +74,19 @@ M.panel = nil
 M.modal = nil
 M.hyper = nil
 M.activeTasks = {}  -- Track running hs.task for cleanup
+M.isModalActive = false
+M.ocrPasteWatcher = nil
+M.clickOutsideWatcher = nil
+M.fullScreenHotkey = nil
 
 -- Configuration
 M.config = {
   captureTimeout = 300, -- 5 minutes
   capsPath = os.getenv("HOME") .. "/_screenshots",
+
+  -- Gatekeeper: max image size for Claude API (5MB limit for base64 images)
+  maxImageSizeBytes = 5 * 1024 * 1024, -- 5MB
+  maxImageSizeMB = 5,
 
   -- Modal keybindings: { key, mods, action, description, requiresUrl? }
   -- Cheatsheet is auto-generated from this
@@ -109,17 +119,13 @@ function M.hasCapture()
   return elapsed < M.config.captureTimeout
 end
 
----Clear capture state
-function M.clearCapture()
-  M.capture = nil
-end
-
 ---Set new capture state
 ---@param image hs.image
 ---@param imageData string Raw PNG data
 ---@param imagePath string
 ---@param imageName string
-function M.setCapture(image, imageData, imagePath, imageName)
+---@param fileSizeBytes number|nil
+function M.setCapture(image, imageData, imagePath, imageName, fileSizeBytes)
   M.capture = {
     image = image,
     imageData = imageData,
@@ -130,6 +136,8 @@ function M.setCapture(image, imageData, imagePath, imageName)
     timestamp = os.time(),
     uploadStatus = "uploading",
     ocrStatus = "idle",
+    gatekeeperReason = nil,
+    fileSizeBytes = fileSizeBytes,
   }
 end
 
@@ -284,6 +292,10 @@ local uploadStatusHandlers = {
   failed = function()
     return "✗ Upload failed", "FF3B30" -- Red
   end,
+  gatekeeper = function(capture)
+    local reason = capture.gatekeeperReason or "image too large"
+    return "⚠ gatekeeper: " .. reason, "FF9500" -- Orange/amber
+  end,
 }
 
 function M.updatePanelStatus()
@@ -329,6 +341,51 @@ function M.hidePanel()
 end
 
 --------------------------------------------------------------------------------
+-- GATEKEEPER (FILE SIZE CHECK)
+--------------------------------------------------------------------------------
+
+---Get file size in bytes
+---@param path string
+---@return number|nil size in bytes, or nil if file doesn't exist
+local function getFileSizeBytes(path)
+  local attrs = hs.fs.attributes(path)
+  if attrs then
+    return attrs.size
+  end
+  return nil
+end
+
+---Format bytes as human-readable string
+---@param bytes number
+---@return string
+local function formatSize(bytes)
+  if bytes < 1024 then
+    return fmt("%d bytes", bytes)
+  elseif bytes < 1024 * 1024 then
+    return fmt("%.1f KB", bytes / 1024)
+  else
+    return fmt("%.1f MB", bytes / (1024 * 1024))
+  end
+end
+
+---Check if image passes gatekeeper (file size limit)
+---@param imagePath string
+---@return boolean passes, string|nil reason
+function M.checkGatekeeper(imagePath)
+  local sizeBytes = getFileSizeBytes(imagePath)
+  if not sizeBytes then
+    return true, nil -- Can't check, let it through
+  end
+
+  if sizeBytes > M.config.maxImageSizeBytes then
+    local reason = fmt("%s > %dMB limit", formatSize(sizeBytes), M.config.maxImageSizeMB)
+    return false, reason
+  end
+
+  return true, nil
+end
+
+--------------------------------------------------------------------------------
 -- UPLOAD (ASYNC)
 --------------------------------------------------------------------------------
 
@@ -337,6 +394,16 @@ end
 ---@param imageName string
 function M.uploadToSpaces(imagePath, imageName)
   if not M.capture then return end
+
+  -- Gatekeeper check: verify file size before upload
+  local passes, reason = M.checkGatekeeper(imagePath)
+  if not passes then
+    M.capture.uploadStatus = "gatekeeper"
+    M.capture.gatekeeperReason = reason
+    M.updatePanelStatus()
+    U.log.w(fmt("gatekeeper blocked upload: %s", reason))
+    return
+  end
 
   M.capture.uploadStatus = "uploading"
   M.updatePanelStatus()
@@ -522,10 +589,12 @@ function M.ocrToClipboard()
   M.extractOcr(function(text)
     if text and #text > 0 then
       hs.pasteboard.setContents(text)
-      -- Update panel to show result
-      M.capture.ocrStatus = "complete"
-      M.capture.ocrText = text
-      M.updatePanelStatus()
+      -- Update panel to show result (guard against cleared capture)
+      if M.capture then
+        M.capture.ocrStatus = "complete"
+        M.capture.ocrText = text
+        M.updatePanelStatus()
+      end
       U.log.n(fmt("OCR copied %d chars", #text))
 
       -- Watch for Cmd+V to exit modal and allow paste
@@ -544,8 +613,10 @@ function M.ocrToClipboard()
       M.ocrPasteWatcher:start()
     else
       HUD.alert("No text found", { iconType = "warning" })
-      M.capture.ocrStatus = "idle"
-      M.updatePanelStatus()
+      if M.capture then
+        M.capture.ocrStatus = "idle"
+        M.updatePanelStatus()
+      end
     end
   end)
   return true
@@ -560,6 +631,73 @@ function M.editInPreview()
     return true
   end
   return false
+end
+
+--------------------------------------------------------------------------------
+-- FULL SCREEN CAPTURE (WITH AUTO-RESIZE)
+--------------------------------------------------------------------------------
+
+---Capture full screen and resize if needed to stay under gatekeeper limit
+---Uses ImageMagick for resize if image exceeds limit
+function M.captureFullScreen()
+  local screen = hs.screen.mainScreen()
+  local image = screen:snapshot()
+
+  if not image then
+    HUD.alert("Screenshot failed", { iconType = "error" })
+    U.log.e("failed to capture screen")
+    return
+  end
+
+  -- Generate temp path to check size
+  local tmpPath = "/tmp/clipper_fullscreen.png"
+  image:saveToFile(tmpPath)
+
+  -- Check size
+  local sizeBytes = getFileSizeBytes(tmpPath)
+  local needsResize = sizeBytes and sizeBytes > M.config.maxImageSizeBytes
+
+  if needsResize then
+    U.log.i(fmt("full screen capture %s exceeds limit, resizing...", formatSize(sizeBytes)))
+
+    -- Resize using ImageMagick (25% like file-size-guard recommends)
+    local resizedPath = "/tmp/clipper_fullscreen_resized.png"
+    local task = hs.task.new("/usr/bin/env", function(exitCode, stdOut, stdErr)
+      M.activeTasks.resize = nil  -- Clear task reference
+      if exitCode == 0 then
+        -- Load resized image
+        local resizedImage = hs.image.imageFromPath(resizedPath)
+        if resizedImage then
+          -- Put on clipboard and trigger normal flow
+          hs.pasteboard.clearContents()
+          hs.pasteboard.writeObjects({ resizedImage })
+          -- handleCapture will be called by pasteboard watcher
+          U.log.i(fmt("resized full screen capture from %s", formatSize(sizeBytes)))
+        else
+          HUD.alert("Resize failed", { iconType = "error" })
+          U.log.e("failed to load resized image")
+        end
+
+        -- Cleanup temp files
+        os.remove(tmpPath)
+        os.remove(resizedPath)
+      else
+        HUD.alert("Resize failed", { iconType = "error" })
+        U.log.e(fmt("magick resize failed: %s", stdErr))
+        os.remove(tmpPath)
+      end
+    end, { "magick", tmpPath, "-resize", "25%", resizedPath })
+
+    M.activeTasks.resize = task
+    task:start()
+  else
+    -- Image is small enough, put on clipboard directly
+    hs.pasteboard.clearContents()
+    hs.pasteboard.writeObjects({ image })
+    -- handleCapture will be called by pasteboard watcher
+    U.log.i(fmt("full screen capture %s (no resize needed)", formatSize(sizeBytes or 0)))
+    os.remove(tmpPath)
+  end
 end
 
 --------------------------------------------------------------------------------
@@ -712,6 +850,7 @@ function M.handleCapture(image)
       imageData = f:read("*all")
       f:close()
     end
+    os.remove(tmpPath)  -- Clean up temp file
   end
 
   -- Save to permanent location
@@ -721,8 +860,11 @@ function M.handleCapture(image)
     return
   end
 
+  -- Get file size for gatekeeper check
+  local fileSizeBytes = getFileSizeBytes(imagePath)
+
   -- Update state
-  M.setCapture(image, imageData, imagePath, imageName)
+  M.setCapture(image, imageData, imagePath, imageName, fileSizeBytes)
 
   -- Keep image on system clipboard (don't interfere with cmd+v)
   -- The image is already there from the screenshot
@@ -789,6 +931,12 @@ function M:init()
   local entry = M.config.entryBinding
   M.hyper:start():bind(entry.mods or {}, entry.key, function() M.enterModal() end)
 
+  -- Full screen capture with auto-resize: cmd+shift+5
+  -- Captures full screen and auto-resizes if > 5MB (gatekeeper limit)
+  M.fullScreenHotkey = hs.hotkey.bind({ "cmd", "shift" }, "5", function()
+    M.captureFullScreen()
+  end)
+
   -- Register pasteboard hook (watcher started via watchers system)
   M.registerHook()
 
@@ -826,6 +974,12 @@ function M:stop()
   if M.hyper then
     M.hyper:stop()
     M.hyper = nil
+  end
+
+  -- Clean up full screen hotkey
+  if M.fullScreenHotkey then
+    M.fullScreenHotkey:delete()
+    M.fullScreenHotkey = nil
   end
 
   -- Dismiss panel
