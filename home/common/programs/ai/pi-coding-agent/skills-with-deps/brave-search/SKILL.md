@@ -1,11 +1,14 @@
 ---
 name: brave-search
 description: Web search and content extraction via Brave Search API. Use for searching documentation, facts, or any web content. Lightweight, no browser required.
+script: search.js
 ---
 
 # Brave Search
 
 Web search and content extraction using the official Brave Search API. No browser required.
+
+**Script location:** `$PI_CODING_AGENT_DIR/skills/brave-search/`
 
 ## Setup
 
@@ -23,13 +26,13 @@ Requires a Brave Search API account with a free subscription. A credit card is r
 ## Search
 
 ```bash
-{baseDir}/search.js "query"                         # Basic search (5 results)
-{baseDir}/search.js "query" -n 10                   # More results (max 20)
-{baseDir}/search.js "query" --content               # Include page content as markdown
-{baseDir}/search.js "query" --freshness pw          # Results from last week
-{baseDir}/search.js "query" --freshness 2024-01-01to2024-06-30  # Date range
-{baseDir}/search.js "query" --country DE            # Results from Germany
-{baseDir}/search.js "query" -n 3 --content          # Combined options
+$PI_CODING_AGENT_DIR/skills/brave-search/search.js "query"                         # Basic search (5 results)
+$PI_CODING_AGENT_DIR/skills/brave-search/search.js "query" -n 10                   # More results (max 20)
+$PI_CODING_AGENT_DIR/skills/brave-search/search.js "query" --content               # Include page content as markdown
+$PI_CODING_AGENT_DIR/skills/brave-search/search.js "query" --freshness pw          # Results from last week
+$PI_CODING_AGENT_DIR/skills/brave-search/search.js "query" --freshness 2024-01-01to2024-06-30  # Date range
+$PI_CODING_AGENT_DIR/skills/brave-search/search.js "query" --country DE            # Results from Germany
+$PI_CODING_AGENT_DIR/skills/brave-search/search.js "query" -n 3 --content          # Combined options
 ```
 
 ### Options
@@ -47,7 +50,7 @@ Requires a Brave Search API account with a free subscription. A credit card is r
 ## Extract page content
 
 ```bash
-{baseDir}/content.js https://example.com/article
+$PI_CODING_AGENT_DIR/skills/brave-search/content.js https://example.com/article
 ```
 
 Fetches a URL and extracts readable content as markdown.

@@ -214,11 +214,13 @@ return {
       },
     },
     daily_notes = {
+      enabled = true,
       folder = "daily",
       date_format = "%Y/%Y%m%d", -- Creates daily/2025/20251224.md
       template = "daily.md", -- Use our custom daily template
     },
     templates = {
+      enabled = true,
       folder = "templates",
       date_format = "%Y-%m-%d",
       time_format = "%H:%M",

@@ -2,11 +2,14 @@
 name: tmux
 description: "Remote control tmux sessions for interactive CLIs (python, gdb, etc.) by sending keystrokes and scraping pane output."
 license: Vibecoded
+script: scripts/wait-for-text.sh
 ---
 
 # tmux Skill
 
 Use tmux as a programmable terminal multiplexer for interactive work. Works on Linux and macOS with stock tmux; avoid custom config by using a private socket.
+
+**Script location:** `$PI_CODING_AGENT_DIR/skills/tmux/scripts/`
 
 ## Quickstart (isolated socket)
 
@@ -46,8 +49,8 @@ This must ALWAYS be printed right after a session was started and once again at 
 
 ## Finding sessions
 
-- List sessions on your active socket with metadata: `./scripts/find-sessions.sh -S "$SOCKET"`; add `-q partial-name` to filter.
-- Scan all sockets under the shared directory: `./scripts/find-sessions.sh --all` (uses `CLAUDE_TMUX_SOCKET_DIR` or `${TMPDIR:-/tmp}/claude-tmux-sockets`).
+- List sessions on your active socket with metadata: `$PI_CODING_AGENT_DIR/skills/tmux/scripts/find-sessions.sh -S "$SOCKET"`; add `-q partial-name` to filter.
+- Scan all sockets under the shared directory: `$PI_CODING_AGENT_DIR/skills/tmux/scripts/find-sessions.sh --all` (uses `CLAUDE_TMUX_SOCKET_DIR` or `${TMPDIR:-/tmp}/claude-tmux-sockets`).
 
 ## Sending input safely
 
@@ -73,7 +76,7 @@ Some special rules for processes:
 
 - Use timed polling to avoid races with interactive tools. Example: wait for a Python prompt before sending code:
   ```bash
-  ./scripts/wait-for-text.sh -t "$SESSION":0.0 -p '^>>>' -T 15 -l 4000
+  $PI_CODING_AGENT_DIR/skills/tmux/scripts/wait-for-text.sh -t "$SESSION":0.0 -p '^>>>' -T 15 -l 4000
   ```
 - For long-running commands, poll for completion text (`"Type quit to exit"`, `"Program exited"`, etc.) before proceeding.
 
@@ -91,10 +94,10 @@ Some special rules for processes:
 
 ## Helper: wait-for-text.sh
 
-`./scripts/wait-for-text.sh` polls a pane for a regex (or fixed string) with a timeout. Works on Linux/macOS with bash + tmux + grep.
+`$PI_CODING_AGENT_DIR/skills/tmux/scripts/wait-for-text.sh` polls a pane for a regex (or fixed string) with a timeout. Works on Linux/macOS with bash + tmux + grep.
 
 ```bash
-./scripts/wait-for-text.sh -t session:0.0 -p 'pattern' [-F] [-T 20] [-i 0.5] [-l 2000]
+$PI_CODING_AGENT_DIR/skills/tmux/scripts/wait-for-text.sh -t session:0.0 -p 'pattern' [-F] [-T 20] [-i 0.5] [-l 2000]
 ```
 
 - `-t`/`--target` pane target (required)

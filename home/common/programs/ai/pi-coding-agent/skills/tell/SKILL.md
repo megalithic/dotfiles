@@ -1,11 +1,16 @@
 ---
 name: tell
 description: "Delegate tasks to other agents - pi sessions or external agents (claude, opencode, aider). Non-blocking with task tracking and completion notifications."
+script: scripts/tell.sh
 ---
 
 # Tell / Delegate
 
 Delegate tasks to other agents. Works with both pi agent sessions and external agents (Claude Code, opencode, aider).
+
+**Script location:** `$PI_CODING_AGENT_DIR/skills/tell/scripts/tell.sh`
+
+> **Note:** All commands below use `tell.sh` for brevity. Always use the full path above when executing.
 
 **Auto-notification:** When a delegated task completes, you'll be notified via:
 1. **ntfy** - Push notification to your devices
@@ -16,15 +21,16 @@ Delegate tasks to other agents. Works with both pi agent sessions and external a
 Send a task to another pi agent running in a tmux session:
 
 ```bash
-./scripts/tell.sh mega "fix the failing tests in src/auth"
-./scripts/tell.sh rx "review PR #42 and leave comments"
+# Use full path (recommended)
+$PI_CODING_AGENT_DIR/skills/tell/scripts/tell.sh mega "fix the failing tests in src/auth"
+$PI_CODING_AGENT_DIR/skills/tell/scripts/tell.sh rx "review PR #42 and leave comments"
 ```
 
 **Explicit window targeting** with `session:window` syntax:
 
 ```bash
-./scripts/tell.sh rx:agent "do something"    # Target rx session, agent window
-./scripts/tell.sh mega:0 "do something"      # Target mega session, window 0
+$PI_CODING_AGENT_DIR/skills/tell/scripts/tell.sh rx:agent "do something"    # Target rx session, agent window
+$PI_CODING_AGENT_DIR/skills/tell/scripts/tell.sh mega:0 "do something"      # Target mega session, window 0
 ```
 
 **Multi-instance support:** If a session has multiple pi instances (e.g., `mega:0` and `mega:agent`), the tell skill will:
@@ -40,9 +46,9 @@ Socket pattern: `/tmp/pi-{session}-{window}.sock`
 Spawn an external agent in a tmux session to handle a task:
 
 ```bash
-./scripts/tell.sh --agent claude "run the user-story-sync skill"
-./scripts/tell.sh --agent opencode "fix the failing tests in src/auth"
-./scripts/tell.sh --agent aider "refactor the database module"
+$PI_CODING_AGENT_DIR/skills/tell/scripts/tell.sh --agent claude "run the user-story-sync skill"
+$PI_CODING_AGENT_DIR/skills/tell/scripts/tell.sh --agent opencode "fix the failing tests in src/auth"
+$PI_CODING_AGENT_DIR/skills/tell/scripts/tell.sh --agent aider "refactor the database module"
 ```
 
 **Supported agents:**
@@ -56,10 +62,10 @@ Returns immediately. The agent runs in a background tmux session.
 ## Task management
 
 ```bash
-./scripts/tell.sh --list                    # List all tasks
-./scripts/tell.sh --status TASK_ID          # Check task status & output
-./scripts/tell.sh --watch TASK_ID           # Watch external task live
-./scripts/tell.sh --kill TASK_ID            # Kill a running external task
+$PI_CODING_AGENT_DIR/skills/tell/scripts/tell.sh --list                    # List all tasks
+$PI_CODING_AGENT_DIR/skills/tell/scripts/tell.sh --status TASK_ID          # Check task status & output
+$PI_CODING_AGENT_DIR/skills/tell/scripts/tell.sh --watch TASK_ID           # Watch external task live
+$PI_CODING_AGENT_DIR/skills/tell/scripts/tell.sh --kill TASK_ID            # Kill a running external task
 ```
 
 ## When you receive a task (pi agents)
@@ -68,8 +74,8 @@ You'll see: `[TASK:abc123 from mega] do the thing`
 
 Send updates:
 ```bash
-./scripts/tell.sh --update abc123 "halfway done"
-./scripts/tell.sh --done abc123 "finished, all tests pass"
+$PI_CODING_AGENT_DIR/skills/tell/scripts/tell.sh --update abc123 "halfway done"
+$PI_CODING_AGENT_DIR/skills/tell/scripts/tell.sh --done abc123 "finished, all tests pass"
 ```
 
 ## Attach to external agent session
@@ -98,16 +104,19 @@ This lets you fire-and-forget tasks and get notified when they're done.
 ## Examples
 
 ```bash
+# Define shorthand for readability
+TELL="$PI_CODING_AGENT_DIR/skills/tell/scripts/tell.sh"
+
 # Tell specific window in a session
-./scripts/tell.sh rx:agent "review the changes and suggest improvements"
+$TELL rx:agent "review the changes and suggest improvements"
 
 # Auto-select best window (prefers 'agent', then '0')
-./scripts/tell.sh mega "run the test suite"
+$TELL mega "run the test suite"
 
 # Delegate to Claude Code
-./scripts/tell.sh --agent claude "run the user-story-sync skill"
+$TELL --agent claude "run the user-story-sync skill"
 
 # Check what's happening
-./scripts/tell.sh --list
-./scripts/tell.sh --status abc123
+$TELL --list
+$TELL --status abc123
 ```

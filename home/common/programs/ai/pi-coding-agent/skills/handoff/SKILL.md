@@ -4,11 +4,14 @@ description: "Save session state for later pickup. Use /handoff when context is 
 commands:
   - handoff
   - pickup
+script: scripts/handoff.sh
 ---
 
 # Handoff / Pickup
 
 Save and restore session context across pi sessions. Use when context window is full and model quality is degrading.
+
+**Script location:** `$PI_CODING_AGENT_DIR/skills/handoff/scripts/`
 
 ## Commands
 
@@ -55,7 +58,7 @@ cat > /tmp/handoff-content.md << 'HANDOFF'
 {Any additional context that would help understand the situation}
 HANDOFF
 
-{baseDir}/scripts/handoff.sh --file /tmp/handoff-content.md --title "Brief title"
+$PI_CODING_AGENT_DIR/skills/handoff/scripts/handoff.sh --file /tmp/handoff-content.md --title "Brief title"
 rm /tmp/handoff-content.md
 ```
 
@@ -71,11 +74,11 @@ When the user says `/pickup`:
 
 ```bash
 # Get the latest handoff for current session
-{baseDir}/scripts/pickup.sh
+$PI_CODING_AGENT_DIR/skills/handoff/scripts/pickup.sh
 
 # Or specify a session
-{baseDir}/scripts/pickup.sh mega
-{baseDir}/scripts/pickup.sh rx
+$PI_CODING_AGENT_DIR/skills/handoff/scripts/pickup.sh mega
+$PI_CODING_AGENT_DIR/skills/handoff/scripts/pickup.sh rx
 ```
 
 After retrieving the handoff:
@@ -111,8 +114,8 @@ After retrieving the handoff:
 List available handoffs:
 
 ```bash
-{baseDir}/scripts/pickup.sh --list
-{baseDir}/scripts/pickup.sh --list mega
+$PI_CODING_AGENT_DIR/skills/handoff/scripts/pickup.sh --list
+$PI_CODING_AGENT_DIR/skills/handoff/scripts/pickup.sh --list mega
 ```
 
 ## Storage Location
