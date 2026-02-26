@@ -242,6 +242,18 @@ class PIIChecker {
         self.minSeverity = minSeverity
     }
     
+    // Check if a value looks like an environment variable name (not an actual secret)
+    // Examples: SYNTHETIC_API_KEY, MY_SECRET_TOKEN, DATABASE_PASSWORD
+    func looksLikeEnvVarName(_ value: String) -> Bool {
+        // All uppercase letters, digits, and underscores, 5+ chars total
+        // Trim whitespace first, then quotes
+        let trimmed = value
+            .trimmingCharacters(in: .whitespaces)
+            .trimmingCharacters(in: CharacterSet(charactersIn: "\"'"))
+        let envVarPattern = "^[A-Z][A-Z0-9_]{4,}$"
+        return trimmed.range(of: envVarPattern, options: .regularExpression) != nil
+    }
+    
     func checkForPII(_ text: String) -> [PIIFinding] {
         var findings: [PIIFinding] = []
         
@@ -252,6 +264,15 @@ class PIIChecker {
                 for match in matches {
                     if let matchRange = Range(match.range, in: text) {
                         let matchText = String(text[matchRange])
+                        
+                        // Skip false positives: env var name references in secret/apiKey assignments
+                        // e.g., apiKey: "SYNTHETIC_API_KEY" is a config pointing to an env var, not a leaked secret
+                        if pattern.name == "Secret Assignment" || pattern.name == "Password Assignment" {
+                            if looksLikeEnvVarName(matchText.components(separatedBy: CharacterSet(charactersIn: ":=")).last ?? "") {
+                                continue
+                            }
+                        }
+                        
                         let masked = maskSensitive(matchText)
                         findings.append(PIIFinding(
                             type: pattern.name,
