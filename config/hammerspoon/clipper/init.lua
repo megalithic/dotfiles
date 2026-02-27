@@ -29,13 +29,13 @@ local shade = require("lib.interop.shade")
 
 ---@class ClipperCapture
 ---@field image hs.image Original captured image
----@field imageData string Raw PNG data for pasting
+---@field imageData string|nil Raw PNG data for pasting (nil until async load completes)
 ---@field imagePath string Local file path
 ---@field imageName string Filename
 ---@field imageUrl string|nil DO Spaces URL (set after upload)
 ---@field ocrText string|nil OCR extracted text (lazy loaded)
 ---@field timestamp number When capture occurred
----@field uploadStatus "idle"|"uploading"|"complete"|"failed"|"gatekeeper" Upload state
+---@field uploadStatus "idle"|"verifying"|"uploading"|"complete"|"failed"|"gatekeeper" Upload state
 ---@field ocrStatus "idle"|"processing"|"complete"|"failed" OCR state
 ---@field gatekeeperReason string|nil Gatekeeper violation reason
 ---@field fileSizeBytes number|nil Image file size in bytes
@@ -119,28 +119,6 @@ function M.hasCapture()
   return elapsed < M.config.captureTimeout
 end
 
----Set new capture state
----@param image hs.image
----@param imageData string Raw PNG data
----@param imagePath string
----@param imageName string
----@param fileSizeBytes number|nil
-function M.setCapture(image, imageData, imagePath, imageName, fileSizeBytes)
-  M.capture = {
-    image = image,
-    imageData = imageData,
-    imagePath = imagePath,
-    imageName = imageName,
-    imageUrl = nil,
-    ocrText = nil,
-    timestamp = os.time(),
-    uploadStatus = "uploading",
-    ocrStatus = "idle",
-    gatekeeperReason = nil,
-    fileSizeBytes = fileSizeBytes,
-  }
-end
-
 --------------------------------------------------------------------------------
 -- HUD PANEL
 --------------------------------------------------------------------------------
@@ -212,7 +190,7 @@ function M.showPanel()
       maxWidth = 320,
       maxHeight = 180,
       onClick = function()
-        if M.capture.imagePath then
+        if M.capture and M.capture.imagePath then
           hs.execute(fmt("open '%s'", M.capture.imagePath))
         end
       end,
@@ -283,6 +261,9 @@ local ocrStatusHandlers = {
 }
 
 local uploadStatusHandlers = {
+  verifying = function()
+    return "Gatekeeper verifying...", "5AC8FA" -- Blue
+  end,
   uploading = function()
     return "Uploading...", "FFA500" -- Orange
   end,
@@ -389,11 +370,12 @@ end
 -- UPLOAD (ASYNC)
 --------------------------------------------------------------------------------
 
----Upload image to DO Spaces asynchronously
+---Run gatekeeper verification and upload if passed
+---Called from async context after file is saved
 ---@param imagePath string
----@param imageName string
-function M.uploadToSpaces(imagePath, imageName)
-  if not M.capture then return end
+function M.verifyAndUpload(imagePath)
+  -- Verify this is still the same capture
+  if not M.capture or M.capture.imagePath ~= imagePath then return end
 
   -- Gatekeeper check: verify file size before upload
   local passes, reason = M.checkGatekeeper(imagePath)
@@ -405,15 +387,16 @@ function M.uploadToSpaces(imagePath, imageName)
     return
   end
 
+  -- Gatekeeper passed - start upload
   M.capture.uploadStatus = "uploading"
   M.updatePanelStatus()
 
   local task = hs.task.new("/usr/bin/env", function(exitCode, stdOut, stdErr)
-    M.activeTasks.upload = nil  -- Clear task reference
-    if not M.capture then return end -- Capture may have been cleared
+    M.activeTasks.upload = nil
+    -- Verify this is still the same capture
+    if not M.capture or M.capture.imagePath ~= imagePath then return end
 
     if exitCode == 0 then
-      -- Extract URL from last line
       local url = stdOut:match("([^\r\n]+)%s*$")
       M.capture.imageUrl = url
       M.capture.uploadStatus = "complete"
@@ -449,7 +432,8 @@ function M.extractOcr(callback)
   end
 
   local imagePath = M.capture.imagePath
-  if not imagePath then
+  if not imagePath or not hs.fs.attributes(imagePath) then
+    HUD.alert("Still processing...", { iconType = "info" })
     callback(nil)
     return
   end
@@ -460,8 +444,9 @@ function M.extractOcr(callback)
 
   -- Try Vision OCR first
   local task = hs.task.new("/usr/bin/env", function(exitCode, stdOut, stdErr)
-    M.activeTasks.ocr = nil  -- Clear task reference
-    if not M.capture then
+    M.activeTasks.ocr = nil
+    -- Verify this is still the same capture
+    if not M.capture or M.capture.imagePath ~= imagePath then
       callback(nil)
       return
     end
@@ -488,8 +473,9 @@ function M.extractOcrTesseract(imagePath, callback)
   local outputPath = "/tmp/clipper_ocr"
 
   local task = hs.task.new("/usr/bin/env", function(exitCode, stdOut, stdErr)
-    M.activeTasks.ocr = nil  -- Clear task reference
-    if not M.capture then
+    M.activeTasks.ocr = nil
+    -- Verify this is still the same capture
+    if not M.capture or M.capture.imagePath ~= imagePath then
       callback(nil)
       return
     end
@@ -526,16 +512,24 @@ end
 ---Paste original image binary (native behavior)
 ---@return boolean success
 function M.pasteImage()
-  if not M.capture or not M.capture.imageData then
+  if not M.capture then
+    U.log.w("no capture available")
+    return false
+  end
+
+  -- If imageData not ready yet (async still processing), use the image object directly
+  if M.capture.imageData then
+    hs.pasteboard.clearContents()
+    hs.pasteboard.writeDataForUTI("public.png", M.capture.imageData)
+  elseif M.capture.image then
+    hs.pasteboard.clearContents()
+    hs.pasteboard.writeObjects({ M.capture.image })
+  else
     U.log.w("no image data available")
     return false
   end
 
-  -- Put image back on clipboard and simulate paste
-  hs.pasteboard.clearContents()
-  hs.pasteboard.writeDataForUTI("public.png", M.capture.imageData)
   hs.eventtap.keyStroke({ "cmd" }, "v")
-
   U.log.n("pasted image")
   return true
 end
@@ -597,6 +591,9 @@ function M.ocrToClipboard()
       end
       U.log.n(fmt("OCR copied %d chars", #text))
 
+      -- Stop any existing watcher before creating new one
+      M.stopOcrPasteWatcher()
+
       -- Watch for Cmd+V to exit modal and allow paste
       M.ocrPasteWatcher = hs.eventtap.new({ hs.eventtap.event.types.keyDown }, function(event)
         local mods = event:getFlags()
@@ -625,12 +622,19 @@ end
 ---Open image in Preview
 ---@return boolean success
 function M.editInPreview()
-  if M.capture and M.capture.imagePath then
-    hs.execute(fmt("open -a Preview '%s'", M.capture.imagePath))
-    U.log.n("opened in Preview")
-    return true
+  if not M.capture or not M.capture.imagePath then
+    return false
   end
-  return false
+
+  -- Check if file exists (async save might not be complete)
+  if not hs.fs.attributes(M.capture.imagePath) then
+    HUD.alert("Still processing...", { iconType = "info" })
+    return false
+  end
+
+  hs.execute(fmt("open -a Preview '%s'", M.capture.imagePath))
+  U.log.n("opened in Preview")
+  return true
 end
 
 --------------------------------------------------------------------------------
@@ -712,6 +716,12 @@ function M.captureQuick()
     return false
   end
 
+  -- Check if file exists (async save might not be complete)
+  if not hs.fs.attributes(M.capture.imagePath) then
+    HUD.alert("Still processing...", { iconType = "info" })
+    return false
+  end
+
   local ctx = {
     tempImagePath = M.capture.imagePath,
     appType = "screenshot",
@@ -745,6 +755,12 @@ end
 function M.captureFull()
   if not M.capture or not M.capture.imagePath then
     HUD.alert("No screenshot available", { iconType = "warning" })
+    return false
+  end
+
+  -- Check if file exists (async save might not be complete)
+  if not hs.fs.attributes(M.capture.imagePath) then
+    HUD.alert("Still processing...", { iconType = "info" })
     return false
   end
 
@@ -804,7 +820,7 @@ function M.exitModal()
   M.isModalActive = false
   M.stopOcrPasteWatcher()
   M.stopClickOutsideWatcher()
-  M.modal:exit()
+  if M.modal then M.modal:exit() end
   M.hidePanel()
   U.log.d("exited modal")
 end
@@ -830,52 +846,74 @@ function M.handleCapture(image)
   local imageName = fmt("cap_%s.png", date)
   local imagePath = fmt("%s/%s", M.config.capsPath, imageName)
 
-  -- Save raw PNG data for later pasting
-  local imageData = image:encodeAsURLString()
-  if imageData then
-    -- Convert data URL to raw data
-    imageData = imageData:match("base64,(.+)$")
-    if imageData then
-      imageData = hs.base64.decode(imageData)
-    end
-  end
+  -- Set initial capture state immediately (with image for HUD preview)
+  -- File operations happen async below
+  M.capture = {
+    image = image,
+    imageData = nil, -- Set async
+    imagePath = imagePath,
+    imageName = imageName,
+    imageUrl = nil,
+    ocrText = nil,
+    timestamp = os.time(),
+    uploadStatus = "verifying",
+    ocrStatus = "idle",
+    gatekeeperReason = nil,
+    fileSizeBytes = nil, -- Set async
+  }
 
-  -- Fallback: read from UTI if encodeAsURLString failed
-  if not imageData then
-    -- Save to temp, read back as data
-    local tmpPath = "/tmp/clipper_capture.png"
-    image:saveToFile(tmpPath)
-    local f = io.open(tmpPath, "rb")
-    if f then
-      imageData = f:read("*all")
-      f:close()
-    end
-    os.remove(tmpPath)  -- Clean up temp file
-  end
-
-  -- Save to permanent location
-  local saved = image:saveToFile(imagePath)
-  if not saved then
-    U.log.e(fmt("failed to save %s", imagePath))
-    return
-  end
-
-  -- Get file size for gatekeeper check
-  local fileSizeBytes = getFileSizeBytes(imagePath)
-
-  -- Update state
-  M.setCapture(image, imageData, imagePath, imageName, fileSizeBytes)
-
-  -- Keep image on system clipboard (don't interfere with cmd+v)
-  -- The image is already there from the screenshot
-
-  -- Start upload
-  M.uploadToSpaces(imagePath, imageName)
-
-  -- Show passive panel
+  -- Show panel IMMEDIATELY with image preview and "Gatekeeper verifying..." status
   M.showPanel()
+  U.log.i(fmt("captured %s (processing async)", imageName))
 
-  U.log.i(fmt("captured %s", imageName))
+  -- All file I/O happens async - doesn't block anything
+  hs.timer.doAfter(0, function()
+    -- Verify this is still the same capture (another screenshot may have arrived)
+    if not M.capture or M.capture.imagePath ~= imagePath then return end
+
+    -- Save raw PNG data for later pasting
+    local imageData = image:encodeAsURLString()
+    if imageData then
+      imageData = imageData:match("base64,(.+)$")
+      if imageData then
+        imageData = hs.base64.decode(imageData)
+      end
+    end
+
+    -- Fallback: read from UTI if encodeAsURLString failed
+    if not imageData then
+      local tmpPath = "/tmp/clipper_capture.png"
+      image:saveToFile(tmpPath)
+      local f = io.open(tmpPath, "rb")
+      if f then
+        imageData = f:read("*all")
+        f:close()
+      end
+      os.remove(tmpPath)
+    end
+
+    -- Save to permanent location
+    local saved = image:saveToFile(imagePath)
+    if not saved then
+      U.log.e(fmt("failed to save %s", imagePath))
+      -- Verify still same capture before updating state
+      if M.capture and M.capture.imagePath == imagePath then
+        M.capture.uploadStatus = "failed"
+        M.capture.gatekeeperReason = "failed to save file"
+        M.updatePanelStatus()
+      end
+      return
+    end
+
+    -- Verify still same capture before updating state
+    if not M.capture or M.capture.imagePath ~= imagePath then return end
+
+    M.capture.imageData = imageData
+    M.capture.fileSizeBytes = getFileSizeBytes(imagePath)
+
+    -- Start gatekeeper verification and upload
+    M.verifyAndUpload(imagePath)
+  end)
 end
 
 --------------------------------------------------------------------------------
@@ -886,9 +924,7 @@ local pasteboard = require("watchers.pasteboard")
 
 ---Register pasteboard hook for images
 function M.registerHook()
-  pasteboard.addHook("image", function(image, metadata)
-    -- Only handle images that look like screenshots
-    -- (could add more filtering here if needed)
+  pasteboard.addHook("image", function(image)
     M.handleCapture(image)
   end, { id = "clipper", priority = 10 })
 end
