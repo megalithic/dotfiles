@@ -131,6 +131,38 @@
     '';
   };
 
+  # pi-acp: ACP (Agent Client Protocol) adapter for pi
+  # Exposes pi as an ACP-compatible agent for editors like Zed
+  # Usage: pi-acp (runs as ACP server over stdio)
+  pi-acp = pkgs.buildNpmPackage {
+    pname = "pi-acp";
+    version = "0.0.21";
+
+    src = pkgs.fetchFromGitHub {
+      owner = "svkozak";
+      repo = "pi-acp";
+      rev = "v0.0.21";
+      hash = "sha256-QlxFYS9As2EPL6Agq0b4wMbz9hJdJLC3s+/4j4IJKeE=";
+    };
+
+    npmDepsHash = "sha256-kjgpycJaCCAu5agB+/qeVv5ZyctJkNwPrnw2hb6pxsc=";
+
+    npmBuildScript = "build";
+
+    installPhase = ''
+      runHook preInstall
+      mkdir -p $out/bin $out/lib
+      cp -r dist $out/lib/
+      cp -r node_modules $out/lib/
+      cat > $out/bin/pi-acp << 'EOF'
+#!/bin/sh
+exec node "$( dirname "$0" )/../lib/dist/index.js" "$@"
+EOF
+      chmod +x $out/bin/pi-acp
+      runHook postInstall
+    '';
+  };
+
   # ===========================================================================
   # Auto-discovery Configuration
   # ===========================================================================
@@ -247,6 +279,8 @@
     enableSkillCommands = true;
     hideThinkingBlock = true;
     editorPaddingX = 1;
+    packages = []; # Managed via nix, not pi's runtime npm install
+
     # Only include models you have API access to
     # Pi will warn about patterns that don't match any available models
     enabledModels = [
@@ -388,6 +422,7 @@ in {
     pinvim
     p
     pkgs.llm-agents.agent-browser # Browser automation CLI for pi's browser tool
+    pi-acp # ACP adapter for pi (used by Zed, etc.)
   ];
 
   # File Symlinks

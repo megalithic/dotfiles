@@ -76,7 +76,7 @@ in {
         if [ -f "$dest" ]; then
           rm -f "$dest"
         fi
-        ${createMacOSAlias} "$src" "$dest"
+        DEVELOPER_DIR= SDKROOT= ${createMacOSAlias} "$src" "$dest"
       done
 
       echo "Finder aliases updated in $aliasDir"

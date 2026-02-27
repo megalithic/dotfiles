@@ -238,7 +238,12 @@ function M.loadShade()
       function() shade.captureWithContextSidebar() end
     )
     -- recall sidebar: re-enter sidebar mode with last companion window
-    :bind({}, "r", nil, function() shade.recallSidebar() end)
+    :bind(
+      {},
+      "r",
+      nil,
+      function() shade.recallSidebar() end
+    )
     -- mode toggles (vim-style: h=left/sidebar, l=right/float)
     :bind(
       {},
@@ -258,9 +263,7 @@ function M.loadNotifications()
     local mods, key = table.unpack(dismissBindings)
     req("hyper", { id = "notifications" }):start():bind(mods, key, nil, function()
       -- Dismiss all active HUDs
-      if HUD and #HUD.getActive() > 0 then
-        HUD.dismissAll()
-      end
+      if HUD and #HUD.getActive() > 0 then HUD.dismissAll() end
     end)
   end
 end
