@@ -175,11 +175,14 @@
 in {
   # Export customApps for mkAppActivation (used in default.nix)
   # These are ALL custom apps regardless of appLocation
+  # Other modules can extend this with: mega.customApps = [ pkgs.myApp ];
   options.mega.customApps = lib.mkOption {
     type = lib.types.listOf lib.types.package;
-    default = customApps;
+    default = [];
     description = "Custom apps built with mkApp for activation script processing";
   };
+
+  config.mega.customApps = customApps;
 
   config.home.packages = cliPkgs ++ fontPkgs ++ langPkgs ++ guiPkgs ++ homeManagerApps;
 }

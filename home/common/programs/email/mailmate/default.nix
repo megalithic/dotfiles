@@ -6,9 +6,27 @@
   config,
   pkgs,
   lib,
-  inputs,
   ...
 }: let
+  # MailMate package - IMAP email client
+  # Built with mkApp, copied to /Applications for licensing
+  mailmate = lib.mega.mkApp {
+    inherit pkgs lib;
+    stdenvNoCC = pkgs.stdenvNoCC;
+  } {
+    pname = "mailmate";
+    version = "5673";
+    appName = "MailMate.app";
+    src = {
+      url = "https://updates.mailmate-app.com/archives/MailMate_r5673.tbz";
+      sha256 = "2dc1069207d85a92c3a7000f019f8e4df88f123d2ffce4fdce17256d43c99cba";
+    };
+    binaries = []; # emate is inside app bundle, symlinked separately below
+    appLocation = "copy"; # Needs /Applications for licensing
+    desc = "IMAP email client";
+    homepage = "https://freron.com/";
+  };
+
   # Fetch custom layouts from upstream sources with hash verification
   # These will be cached in the Nix store and only re-fetched if hashes change
   layouts = {
@@ -58,6 +76,10 @@
     };
   };
 in {
+  # emate CLI - symlink from app bundle in /Applications
+  home.file.".local/bin/emate".source =
+    config.lib.file.mkOutOfStoreSymlink "/Applications/MailMate.app/Contents/Resources/emate";
+
   # macOS defaults for MailMate
   # These were previously in modules/system.nix under system.defaults.CustomUserPreferences
   targets.darwin.defaults."com.freron.MailMate" = {
@@ -179,4 +201,7 @@ in {
       }
     '';
   };
+
+  # Register with mkAppActivation for /Applications copy
+  mega.customApps = [ mailmate ];
 }

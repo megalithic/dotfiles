@@ -13,7 +13,6 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixpkgs-unstable";
-    nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-25.11";
 
     home-manager = {
       url = "github:nix-community/home-manager/release-25.11";
@@ -52,26 +51,26 @@
     # FIXME: Latest nightly crashes on snacks picker - pinned to Feb 16 version
     # neovim-nightly-overlay.url = "github:nix-community/neovim-nightly-overlay";
     neovim-nightly-overlay.url = "github:nix-community/neovim-nightly-overlay/c3e52f66";
-    mcp-hub.url = "github:ravitemer/mcp-hub";
-    flake-parts.url = "github:hercules-ci/flake-parts";
+    # NOTE: Don't follow nixpkgs - let llm-agents use its own pinned version
+    # Our nixpkgs has nodejs_24 test failures that our overlay can't fix for llm-agents
     llm-agents.url = "github:numtide/llm-agents.nix";
-    llm-agents.inputs.nixpkgs.follows = "nixpkgs";
     mcp-servers-nix = {
       url = "github:natsukium/mcp-servers-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    expert.url = "github:elixir-lang/expert";
     nur = {
       url = "github:nix-community/nur";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    expert.url = "github:elixir-lang/expert";
     nh = {
       url = "github:nix-community/nh";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    shade.url = "github:megalithic/shade";
-    shade.inputs.nixpkgs.follows = "nixpkgs";
+    # FIXME: Shade build broken - GhosttyKit extraction issue (see overlays/default.nix)
+    # shade.url = "github:megalithic/shade";
+    # shade.inputs.nixpkgs.follows = "nixpkgs";
     # opnix = {
     #   url = "github:brizzbuzz/opnix";
     #   inputs.nixpkgs.follows = "nixpkgs";
@@ -102,7 +101,6 @@
     nix-homebrew,
     ...
   } @ inputs: let
-    username = "seth";
     arch = "aarch64-darwin";
     version = "25.11";
 
@@ -136,8 +134,6 @@
       inherit inputs lib overlays version;
     };
   in {
-    inherit (self) outputs;
-
     # Bootstrap nix install per arch
     apps."${arch}".default = mkInit {
       inherit arch;

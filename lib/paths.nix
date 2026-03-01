@@ -1,9 +1,8 @@
 # Centralized path definitions
 # Single source of truth for all paths used across the configuration
 #
-# Usage in modules:
-#   let paths = lib.mega.paths username; in
-#   paths.icloud, paths.proton, etc.
+# Imported by mkDarwinHost.nix and mkHome.nix, then passed via specialArgs.
+# Usage in modules: paths.icloud, paths.proton, etc.
 username: {
   home = "/Users/${username}";
   icloud = "/Users/${username}/iclouddrive";

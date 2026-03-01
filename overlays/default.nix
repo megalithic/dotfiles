@@ -2,7 +2,7 @@
 #
 # This file composes all overlays that get applied to nixpkgs:
 #   - External overlays from flake inputs (nur, fenix, mcp-servers, etc.)
-#   - Package set aliases (stable, unstable)
+#   - Package set aliases (unstable)
 #   - Input package aliases (ai-tools, nvim-nightly, etc.)
 #   - Custom packages from pkgs/ directory
 #
@@ -23,14 +23,9 @@
   # ===========================================================================
   # Package Sets & Input Aliases
   # ===========================================================================
-  # Provides: pkgs.stable.*, pkgs.unstable.*, pkgs.ai-tools.*, etc.
+  # Provides: pkgs.unstable.*, pkgs.llm-agents.*, etc.
   (final: prev: {
-    # Pinned package sets for stability
-    stable = import inputs.nixpkgs-stable {
-      inherit (prev.stdenv.hostPlatform) system;
-      config.allowUnfree = true;
-      config.allowUnfreePredicate = _: true;
-    };
+    # Unstable nixpkgs for cutting-edge packages (e.g., pkgs.unstable.tmux)
     unstable = import inputs.nixpkgs-unstable {
       inherit (prev.stdenv.hostPlatform) system;
       config.allowUnfree = true;
@@ -73,7 +68,6 @@
           };
         });
       };
-    mcphub = inputs.mcp-hub.packages.${prev.stdenv.hostPlatform.system}.default;
     nvim-nightly = inputs.neovim-nightly-overlay.packages.${prev.stdenv.hostPlatform.system}.default;
     expert = inputs.expert.packages.${prev.stdenv.hostPlatform.system}.default;
     # FIXME: Shade flake tries to extract GhosttyKit from Ghostty's Nix output,
@@ -83,17 +77,6 @@
 
     # Package overrides
     notmuch = prev.notmuch.override { withEmacs = false; };
-
-    # FIXME: inetutils 2.7 fails to build with clang due to -Wformat-security
-    # being treated as error in openat-die.c, and tests fail in sandbox.
-    # Disable warnings and skip tests until upstream fixes.
-    # https://savannah.gnu.org/bugs/?group=inetutils
-    inetutils = prev.inetutils.overrideAttrs (old: {
-      doCheck = false;
-      env = (old.env or {}) // {
-        NIX_CFLAGS_COMPILE = (old.env.NIX_CFLAGS_COMPILE or "") + " -Wno-format-security";
-      };
-    });
   })
 
   # ===========================================================================

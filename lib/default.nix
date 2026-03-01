@@ -6,75 +6,14 @@ inputs: lib: _:
   # lib.mega - Custom helper functions namespace
   # ===========================================================================
   mega = {
-    # Helper to easily import modules in home/system configs
-    imports = let
-      modulePath = path:
-        if builtins.isPath path
-        then
-          # Handle explicit paths
-          path
-        else if (! builtins.isString path)
-        then
-          # If the path is not a string nor an explicit path try to import it directly
-          path
-        else if builtins.substring 0 1 (toString path) == "/"
-        then
-          # Handle absolute paths, including concatenated ones
-          path
-        else if builtins.pathExists ./modules/${path}
-        then
-          # Handle directory modules
-          ./modules/${path}
-        else
-          # Otherwise assume it's a nix file
-          ./modules/${path}.nix;
-    in
-      builtins.map modulePath;
-
-    # On macOS creates a simple package that symlinks to a package installed by homebrew
-    # REF: https://github.com/KubqoA/dotfiles/blob/main/lib.nix#L36
-    brewAlias = pkgs: name:
-      lib.mkIf pkgs.stdenv.isDarwin
-      (pkgs.stdenv.mkDerivation {
-        name = "${name}-brew";
-        version = "1.0.0";
-        dontUnpack = true;
-        installPhase = ''
-          mkdir -p $out/bin
-          ln -s /opt/homebrew/bin/${name} $out/bin/${name}
-        '';
-        meta = with pkgs.lib; {
-          mainProgram = "${name}";
-          description = "Wrapper for Homebrew-installed ${name}";
-          platforms = platforms.darwin;
-        };
-      });
-
-    # String utilities
-    capitalize = str: lib.toUpper (lib.substring 0 1 str) + lib.substring 1 (-1) str;
-    compactAttrs = lib.filterAttrs (_: value: value != null);
-
     # mkApp - macOS application builder
     # Extracts DMG/ZIP/PKG to nix store, symlinks to /Applications
     # For apps needing DriverKit/system extensions, use Homebrew instead.
-    # For Mac App Store apps, see home/common/mas.nix
+    # For Mac App Store apps, use homebrew.masApps in modules/brew.nix
     #
     # Usage:
     #   lib.mega.mkApp { pname = "mailmate"; version = "5673"; src = { url = "..."; sha256 = "..."; }; }
     mkApp = import ./mkApp.nix;
-
-    # mkApps - Build multiple apps from a list
-    # Usage: lib.mega.mkApps { inherit pkgs lib; } [
-    #   { pname = "mailmate"; version = "5673"; src = { url = "..."; sha256 = "..."; }; }
-    # ]
-    mkApps = {
-      pkgs,
-      lib ? pkgs.lib,
-      stdenvNoCC ? pkgs.stdenvNoCC,
-    }: appDefinitions:
-      builtins.map (
-        appDef: (import ./mkApp.nix) {inherit pkgs lib stdenvNoCC;} appDef
-      ) appDefinitions;
 
     # mkAppActivation - Generate home-manager activation scripts for apps requiring /Applications
     # Also handles CLI binary symlinks in ~/.local/bin/

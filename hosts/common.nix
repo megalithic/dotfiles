@@ -133,77 +133,10 @@ in {
     zsh-syntax-highlighting
   ];
 
-  # Determinate nix installer handles nix itself
-  nix = {
-    enable = false;
-    package = pkgs.nixVersions.latest;
-    linux-builder = {
-      enable = false;
-      maxJobs = 4;
-      ephemeral = true;
-      config = {
-        virtualisation = {
-          darwin-builder = {
-            diskSize = 40 * 1024;
-            memorySize = 8 * 1024;
-          };
-          cores = 6;
-        };
-      };
-    };
-    settings = {
-      trusted-users = [
-        "@admin"
-        "root"
-        username
-      ];
-      experimental-features = [
-        "nix-command"
-        "flakes"
-        "extra-platforms = aarch64-darwin x86_64-darwin"
-        "external-builders"
-      ];
-      external-builders = [
-        {
-          systems = ["aarch64-linux" "x86_64-linux"];
-          program = "/usr/local/bin/determinate-nixd";
-          args = ["builder"];
-        }
-      ];
-      download-buffer-size = 5368709120;
-      warn-dirty = false;
-      substituters = [
-        "https://cache.nixos.org"
-        "https://nix-community.cachix.org"
-        "https://nixpkgs.cachix.org"
-        "https://yazi.cachix.org"
-      ];
-      trusted-public-keys = [
-        "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
-        "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
-        "nixpkgs.cachix.org-1:q91R6hxbwFvDqTSDKwDAV4T5PxqXGxswD8vhONFMeOE="
-        "yazi.cachix.org-1:Dcdz63NZKfvUCbDGngQDAZq6kOroIrFoyO064uvLh8k="
-      ];
-      keep-derivations = true;
-      keep-outputs = true;
-    };
-    nixPath = {
-      inherit (inputs) nixpkgs nixpkgs-stable nixpkgs-unstable;
-      inherit (inputs) darwin;
-      inherit (inputs) home-manager;
-    };
-  };
-
-  nix.registry = {
-    n.to = {
-      type = "path";
-      path = inputs.nixpkgs;
-    };
-    u.to = {
-      type = "path";
-      path = inputs.nixpkgs;
-    };
-  };
+  # Determinate Nix handles nix daemon configuration via /etc/nix/nix.conf
+  # Custom settings go in /etc/nix/nix.custom.conf (managed by `just apply-nix-config`)
+  # See: ~/.dotfiles/nix.custom.conf
+  nix.enable = false;
 
   programs = {
     zsh.enable = true;

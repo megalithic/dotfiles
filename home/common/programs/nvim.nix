@@ -119,6 +119,7 @@
       basedpyright
       # cargo # sometimes required for rust-analyzer to work
       copilot-language-server
+      expert
       gopls
       graphql-language-service-cli
       harper

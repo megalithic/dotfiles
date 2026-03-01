@@ -8,12 +8,9 @@
   username,
   hostname,
   version,
-  overlays,
   paths,
   ...
-}: let
-  inherit (pkgs.stdenv.hostPlatform) isDarwin;
-in {
+}: {
   imports = [
     ./lib.nix
     ./mac-aliases.nix
