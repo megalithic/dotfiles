@@ -20,7 +20,7 @@ EOF
 
 # gather sudo privileges:
 echo "░ :: -> sudo required:"
-sudo -u $SUDO_USER -v || exit 1
+sudo -u "$SUDO_USER" -v || exit 1
 
 # Keep-alive: update existing `sudo` time stamp until setup has finished
 while true; do
@@ -42,7 +42,7 @@ if [ -d "$DOTFILES_DIR" ]; then
 fi
 
 echo "░ :: -> Cloning $DOTFILES_NAME repo to $DOTFILES_DIR.." &&
-  git clone $DOTFILES_REPO "$DOTFILES_DIR"
+  git clone "$DOTFILES_REPO" "$DOTFILES_DIR"
 
 echo "░ :: -> Configuring git hooks.." &&
   git -C "$DOTFILES_DIR" config core.hooksPath .githooks
