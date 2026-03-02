@@ -627,9 +627,14 @@ function M:start()
   local screenWatcher = require("watchers.screen")
   screenWatcher.onChange("micchecka", function()
     if notchHUD and notchHUD.reposition then
+      -- Skip reposition if HUD is actively showing (avoid interrupting PTT/recording)
+      if currentHUDState ~= HUDState.HIDDEN then
+        U.log.d("notchHUD: skipping reposition during active state:", currentHUDState)
+        return
+      end
       local ok, err = pcall(function() notchHUD:reposition() end)
       if not ok then
-        U.log.w("notchHUD reposition failed:", tostring(err))
+        U.log.w("notchHUD reposition failed:", tostring(err or "unknown error"))
       end
     end
   end)

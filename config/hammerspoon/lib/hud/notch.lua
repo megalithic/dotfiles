@@ -291,14 +291,21 @@ end
 function NotchHUD:reposition()
   if not self.canvas then return end
   
-  -- Get current visibility state
-  local wasVisible = self.canvas:isShowing()
+  -- Get current visibility state (guard against deleted canvas)
+  local ok, wasVisible = pcall(function() return self.canvas:isShowing() end)
+  if not ok then return end
   
   -- Store current content elements (skip background at index 1)
+  -- Guard against canvas access failures during screen transitions
   local contentElements = {}
-  local elementCount = self.canvas:elementCount()
+  local ok2, elementCount = pcall(function() return self.canvas:elementCount() end)
+  if not ok2 or not elementCount then return end
+  
   for i = 2, elementCount do
-    table.insert(contentElements, self.canvas[i])
+    local ok3, elem = pcall(function() return self.canvas[i] end)
+    if ok3 and elem then
+      table.insert(contentElements, elem)
+    end
   end
   
   -- Recreate canvas for new screen configuration
