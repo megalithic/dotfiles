@@ -1,22 +1,21 @@
+--- Notch HUD - displays a drop-down indicator below the menu bar / notch
+---
+--- Positioning strategy (deterministic, not heuristic):
+--- - Always uses screen:frame().y which is the TOP of usable screen area
+--- - This automatically accounts for menu bar height AND notch on notch displays
+--- - External monitors: frame.y ≈ 25 (menu bar only)
+--- - MacBook notch displays: frame.y ≈ 44 (menu bar + notch)
+---
+--- No hardcoded pixel values for positioning - uses macOS-provided geometry.
+
 local M = {}
 local animator = require("lib.hud.animator")
 
----@class NotchGeometry
----@field width number
----@field menuBarHeight number
----@field notchDepth number
-
 ---@class DropGeometry
----@field topOverlap number
+---@field topOverlap number  -- How much canvas extends above visible content (for animation)
 ---@field cornerRadius number
 ---@field taper number
 ---@field widthReduction number
-
-M.NOTCH = {
-  width = 200,
-  menuBarHeight = 24,
-  notchDepth = 38,
-}
 
 M.DROP = {
   topOverlap = 10,
@@ -99,17 +98,10 @@ function M.createDrop(opts)
   local w = requestedWidth - M.DROP.widthReduction
   local h = contentHeight + M.DROP.topOverlap
   
-  -- Position: centered below notch (or top-center for non-notch)
+  -- Position: centered horizontally, starting below menu bar / notch
+  -- Always use frame.y (usable area) - never fullFrame.y which would be behind the notch
   local centerX = fullFrame.x + fullFrame.w / 2
-  local topY
-  
-  if useNotchStyle then
-    -- Start from top of screen, overlapping with notch area
-    topY = fullFrame.y
-  else
-    -- Non-notch: start below menu bar
-    topY = frame.y
-  end
+  local topY = frame.y
   
   local canvasFrame = {
     x = centerX - w / 2,
