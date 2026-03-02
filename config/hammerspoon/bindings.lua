@@ -253,7 +253,15 @@ function M.loadShade()
     )
     :bind({}, "l", nil, function() shade.toFloating() end)
 
-  req("hyper", { id = "shade" }):bind({}, "n", function() shadeModality:toggle() end)
+  -- Direct shade bindings (no modal required)
+  req("hyper", { id = "shade" })
+    :start()
+    -- hyper+return: toggle Shade visibility (quick access)
+    :bind({}, "return", function() shade.smartToggle() end)
+    -- hyper+shift+return: quick capture with context (floating)
+    :bind({ "shift" }, "return", function() shade.captureWithContext() end)
+    -- hyper+n: enter shade modal for advanced operations
+    :bind({}, "n", function() shadeModality:toggle() end)
 end
 
 function M.loadNotifications()

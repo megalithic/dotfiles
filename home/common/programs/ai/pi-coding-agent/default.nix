@@ -150,16 +150,16 @@
     npmBuildScript = "build";
 
     installPhase = ''
-      runHook preInstall
-      mkdir -p $out/bin $out/lib
-      cp -r dist $out/lib/
-      cp -r node_modules $out/lib/
-      cat > $out/bin/pi-acp << 'EOF'
-#!/bin/sh
-exec node "$( dirname "$0" )/../lib/dist/index.js" "$@"
-EOF
-      chmod +x $out/bin/pi-acp
-      runHook postInstall
+            runHook preInstall
+            mkdir -p $out/bin $out/lib
+            cp -r dist $out/lib/
+            cp -r node_modules $out/lib/
+            cat > $out/bin/pi-acp << 'EOF'
+      #!/bin/sh
+      exec node "$( dirname "$0" )/../lib/dist/index.js" "$@"
+      EOF
+            chmod +x $out/bin/pi-acp
+            runHook postInstall
     '';
   };
 
@@ -280,6 +280,10 @@ EOF
     hideThinkingBlock = true;
     editorPaddingX = 1;
     packages = []; # Managed via nix, not pi's runtime npm install
+    skills = [
+      ".claude/skills"
+      "~/.claude/skills"
+    ];
 
     # Only include models you have API access to
     # Pi will warn about patterns that don't match any available models

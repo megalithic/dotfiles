@@ -48,9 +48,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.darwin.follows = "nix-darwin";
     };
+
+    neovim-nightly-overlay.url = "github:nix-community/neovim-nightly-overlay";
     # FIXME: Latest nightly crashes on snacks picker - pinned to Feb 16 version
-    # neovim-nightly-overlay.url = "github:nix-community/neovim-nightly-overlay";
-    neovim-nightly-overlay.url = "github:nix-community/neovim-nightly-overlay/c3e52f66";
+    # neovim-nightly-overlay.url = "github:nix-community/neovim-nightly-overlay/c3e52f66";
+
     # NOTE: Don't follow nixpkgs - let llm-agents use its own pinned version
     # Our nixpkgs has nodejs_24 test failures that our overlay can't fix for llm-agents
     llm-agents.url = "github:numtide/llm-agents.nix";
@@ -79,11 +81,6 @@
     #   url = "github:1password/shell-plugins";
     #   inputs.nixpkgs.follows = "nixpkgs";
     # };
-    # firefox-addons.url = "gitlab:rycee/nur-expressions?dir=pkgs/firefox-addons";
-    # firefox-addons.inputs.nixpkgs.follows = "nixpkgs";
-    # zen-browser.url = "github:0xc000022070/zen-browser-flake";
-    # zen-browser.inputs.nixpkgs.follows = "nixpkgs";
-    # zen-browser.inputs.home-manager.follows = "home-manager";
     # yazi.url = "github:sxyazi/yazi";
     # yazi-plugins = {
     #   url = "github:yazi-rs/plugins";
@@ -124,7 +121,7 @@
       };
     };
 
-    mkInit = import ./lib/mkInit.nix { inherit nixpkgs; };
+    mkInit = import ./lib/mkInit.nix {inherit nixpkgs;};
 
     mkDarwinHost = import ./lib/mkDarwinHost.nix {
       inherit inputs lib overlays brew_config version;
@@ -140,7 +137,7 @@
       script = builtins.readFile scripts/${arch}_bootstrap.sh;
     };
 
-    # Darwin system configurations (includes home-manager)
+    # Darwin system configurations
     darwinConfigurations.megabookpro = mkDarwinHost {
       hostname = "megabookpro";
       username = "seth";
