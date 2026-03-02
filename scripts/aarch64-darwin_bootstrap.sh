@@ -29,11 +29,29 @@ while true; do
   kill -0 "$$" || exit
 done 2>/dev/null &
 
-if ! command -v xcode-select >/dev/null 2>&1; then
+# uninstall xcode command-line developer tools:
+# sudo rm -rf /Library/Developer/CommandLineTools
+
+# verify commandlinetools not installed:
+xcode-select -p &>/dev/null
+if [ $? -ne 0 ]; then
+  # echo "Command Line Tools for Xcode not found. Installing from softwareupdate…"
+  # This temporary file prompts the 'softwareupdate' utility to list the Command Line Tools
   echo "░ :: -> Installing Xcode for $SUDO_USER.." &&
-    xcode-select --install &&
-    sudo softwareupdate --install-rosetta --agree-to-license
+    (
+      # touch /tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress
+      # PROD=$(softwareupdate -l | grep "\*.*Command Line" | tail -n 1 | sed 's/^[^C]* //')
+      # softwareupdate -i "$PROD" --install-rosetta --agree-to-license --verbose
+      xcode-select --install && softwareupdate --install-rosetta --agree-to-license
+    )
 fi
+
+# if ! command -v xcode-select >/dev/null 2>&1; then
+#   # xcode-select: note: No developer tools were found, requesting install. If developer tools are located at a non-default location on disk, use `sudo xcode-select --switch path/to/Xcode.app` to specify the Xcode that you wish to use for command line developer tools, and cancel the installation dialog. See `man xcode-select` for more details."
+#   echo "░ :: -> Installing Xcode for $SUDO_USER.." &&
+#     xcode-select --install &&
+#     sudo softwareupdate --install-rosetta --agree-to-license
+# fi
 
 if [ -d "$DOTFILES_DIR" ]; then
   BACKUP_DIR="$DOTFILES_DIR$(date +%s)"
