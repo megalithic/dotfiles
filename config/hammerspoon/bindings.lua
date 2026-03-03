@@ -532,7 +532,7 @@ function M.loadNativeTiling()
         end
       end)
     end, nil)
-    -- Shift+B: Undo browser split - merge tab back and restore window
+    -- Shift+S: Undo browser split - merge tab back and restore window
     :bind({ "shift" }, "s", function()
       nativeWmMode:exit()
 
@@ -544,41 +544,62 @@ function M.loadNativeTiling()
 
       local mainWin = state.mainWin
       local splitWin = state.splitWin
+      local originalFrame = state.originalFrame
 
-      -- Check windows still exist
-      if not mainWin or not mainWin:application() then
+      -- Check main window still exists
+      if not mainWin or not pcall(function() return mainWin:id() end) then
         hs.alert.show("Main window no longer exists")
         _G._browserSplitState = nil
         return
       end
 
-      if splitWin and splitWin:application() then
-        -- Focus split window and close it (merges tab back in most browsers)
-        -- Or use Cmd+Shift+M to merge windows
-        splitWin:focus()
+      -- Check split window still exists
+      if not splitWin or not pcall(function() return splitWin:id() end) then
+        hs.alert.show("Split window no longer exists")
+        -- Still restore main window position
+        if mainWin and originalFrame then
+          mainWin:focus()
+          mainWin:setFrame(originalFrame)
+        end
+        _G._browserSplitState = nil
+        return
+      end
+
+      -- Focus split window and use keyboard shortcut to move tab back
+      splitWin:focus()
+      hs.timer.doAfter(0.1, function()
+        -- Cmd+Shift+M merges all windows in Chrome/Brave
+        -- Or we can close window (tab goes back to previous window in some browsers)
         local app = splitWin:application()
-        hs.timer.doAfter(0.1, function()
-          -- Try to merge windows
+        if app then
+          -- Try merge first
           local merged = app:selectMenuItem({ "Window", "Merge All Windows" })
           if not merged then
-            -- Just close the split window
-            splitWin:close()
+            -- Close the split window - tab should return to main window
+            hs.eventtap.keyStroke({ "cmd" }, "w")
           end
+        end
 
-          -- Restore main window to original position
-          hs.timer.doAfter(0.2, function()
-            if mainWin and mainWin:application() then
-              mainWin:focus()
-              mainWin:setFrame(state.originalFrame)
+        -- Restore main window to original position after a delay
+        hs.timer.doAfter(0.3, function()
+          if mainWin and pcall(function() return mainWin:id() end) then
+            mainWin:focus()
+            if originalFrame then
+              mainWin:setFrame(originalFrame)
             end
-          end)
+            -- Also restore from native tiling
+            local mainApp = mainWin:application()
+            if mainApp then
+              mainApp:selectMenuItem({ "Window", "Move & Resize", "Return to Previous Size" })
+            end
+          end
         end)
-      end
+      end)
 
       _G._browserSplitState = nil
     end, nil)
 
-  -- Bind hyper+w to enter native tiling mode
+  -- Bind hyper+l to enter native tiling mode
   req("hyper", { id = "nativeWm" }):bind({}, "l", function() nativeWmMode:toggle() end)
 
   U.log.i("nativeTiling: initialized (hyper+w for native macOS tiling via menu)")
