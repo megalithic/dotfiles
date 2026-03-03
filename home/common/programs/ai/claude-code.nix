@@ -71,7 +71,7 @@
       | Notes/Obsidian | `notes` | Before working on notes, captures, daily notes |
       | Image handling | `image-handling` | Before resizing images for API |
       | Browser debugging | `web-debug` | Before using Chrome DevTools MCP or Playwright MCP |
-      | tmux | `tmux` | Before interacting with tmux sessions/panes/windows |
+      | tmux | `tmux-claude` | Before interacting with tmux sessions/panes/windows |
 
       **Skills are inline reference knowledge. Load = instant access. No excuse for assumptions.**
 
@@ -350,7 +350,7 @@
       nvim = builtins.readFile "${self}/docs/skills/nvim.md";
 
       # tmux - terminal multiplexer configuration and orchestration
-      tmux = builtins.readFile "${self}/docs/skills/tmux.md";
+      tmux-claude = builtins.readFile "${self}/docs/skills/tmux-claude.md";
 
       # notes - meganote system, captures, daily notes, obsidian.nvim
       notes = builtins.readFile "${self}/docs/skills/notes.md";

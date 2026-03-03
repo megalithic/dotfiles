@@ -280,10 +280,10 @@
     hideThinkingBlock = true;
     editorPaddingX = 1;
     packages = []; # Managed via nix, not pi's runtime npm install
-    skills = [
-      ".claude/skills"
-      "~/.claude/skills"
-    ];
+    # skills = [
+    #   ".claude/skills"
+    #   "~/.claude/skills"
+    # ];
 
     # Only include models you have API access to
     # Pi will warn about patterns that don't match any available models
