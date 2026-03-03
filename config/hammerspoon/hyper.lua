@@ -8,9 +8,24 @@ M.hyper = nil
 M.key = HYPER
 
 function M:bindPassThrough(mods, key, app)
+  -- Build the passthrough modifiers: hyper + any additional mods
+  local passthroughMods = { "cmd", "alt", "shift", "ctrl" }
+  if mods and #mods > 0 then
+    -- Add any extra mods that aren't already in hyper
+    for _, mod in ipairs(mods) do
+      local found = false
+      for _, hyperMod in ipairs(passthroughMods) do
+        if mod == hyperMod then found = true; break end
+      end
+      if not found then
+        table.insert(passthroughMods, mod)
+      end
+    end
+  end
+
   self:bind(mods, key, nil, function()
     if hs.application.get(app) then
-      hs.eventtap.keyStroke({ "cmd", "alt", "shift", "ctrl" }, key)
+      hs.eventtap.keyStroke(passthroughMods, key)
     else
       hs.application.launchOrFocusByBundleID(app)
       hs.timer.waitWhile(
@@ -18,7 +33,7 @@ function M:bindPassThrough(mods, key, app)
           local appObj = hs.application.get(app)
           return not appObj or not appObj:isFrontmost()
         end,
-        function() hs.eventtap.keyStroke({ "cmd", "alt", "shift", "ctrl" }, key) end
+        function() hs.eventtap.keyStroke(passthroughMods, key) end
       )
     end
   end)
