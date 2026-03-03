@@ -1,11 +1,26 @@
 ---
 name: web-browser
-description: "Interact with web pages using agent-browser CLI. Connects to existing browser on port 9222 for authenticated sessions."
+description: "Interact with web pages using agent-browser CLI. MUST run 'browser connect 9222' FIRST to use existing browser with authenticated sessions."
 ---
 
 # Web Browser Skill
 
 Browser automation using `agent-browser` CLI connected to your running browser.
+
+## 🚨 MANDATORY FIRST STEP
+
+**EVERY browser session MUST start with:**
+
+```bash
+browser connect 9222
+```
+
+This connects to your running browser with all authenticated sessions (Asana, Figma, GitHub, etc.).
+
+**WITHOUT THIS STEP:**
+- Commands will fail or timeout
+- You'll get isolated sessions without logins
+- User will have to re-authenticate everything
 
 ## ⚠️ CRITICAL REQUIREMENTS
 
@@ -17,7 +32,7 @@ Before ANY browser operation, you MUST connect to the remote debugging port:
 browser connect 9222
 ```
 
-This is REQUIRED for accessing authenticated sessions (Asana, Figma, GitHub, etc.). Without this step, commands will fail or create isolated sessions without your logins.
+This is REQUIRED for accessing authenticated sessions. Without this step, commands will fail or create isolated sessions without your logins.
 
 ### 2. NEVER take over existing tabs
 
