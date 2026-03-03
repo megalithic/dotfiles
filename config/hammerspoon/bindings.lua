@@ -259,7 +259,11 @@ function M.loadShade()
     -- hyper+return: toggle Shade visibility (quick access)
     :bind({}, "return", function() shade.smartToggle() end)
     -- hyper+shift+return: quick capture with context (floating)
-    :bind({ "shift" }, "return", function() shade.captureWithContext() end)
+    :bind(
+      { "shift" },
+      "return",
+      function() shade.captureWithContext() end
+    )
     -- hyper+n: enter shade modal for advanced operations
     :bind({}, "n", function() shadeModality:toggle() end)
 end
@@ -307,10 +311,8 @@ function M.loadNativeTiling()
   local function menuTile(position)
     local app = hs.application.frontmostApplication()
     if app then
-      local ok = app:selectMenuItem({"Window", "Move & Resize", position})
-      if not ok then
-        U.log.w("menuTile: failed to select menu item:", position)
-      end
+      local ok = app:selectMenuItem({ "Window", "Move & Resize", position })
+      if not ok then U.log.w("menuTile: failed to select menu item:", position) end
     end
   end
 
@@ -320,17 +322,15 @@ function M.loadNativeTiling()
     if not win then return end
     win:moveToScreen(win:screen():next())
     -- Small delay to let the move complete, then tile
-    hs.timer.doAfter(0.1, function()
-      menuTile(position)
-    end)
+    hs.timer.doAfter(0.1, function() menuTile(position) end)
   end
 
   -- Create hypemode for native tiling (hyper+w)
   local nativeWmMode = hypemode.new("nativeWm", { showIndicator = true })
-  
+
   -- Chain state for native tiling mode
   local chainState = { key = nil, index = 0, timer = nil }
-  
+
   local function resetChain()
     chainState.key = nil
     chainState.index = 0
@@ -339,47 +339,43 @@ function M.loadNativeTiling()
       chainState.timer = nil
     end
   end
-  
+
   -- Hybrid chain: native half first, then grid for thirds/other sizes
   local function chainTile(key, nativePosition, gridPositions)
     return function()
       -- If same key pressed again within timeout, advance chain
       if chainState.key == key then
         chainState.index = chainState.index + 1
-        if chainState.index > #gridPositions then
-          chainState.index = 1
-        end
+        if chainState.index > #gridPositions then chainState.index = 1 end
       else
         -- New key, start fresh
         chainState.key = key
         chainState.index = 1
       end
-      
+
       -- Reset timer
       if chainState.timer then chainState.timer:stop() end
       chainState.timer = hs.timer.doAfter(2.0, resetChain)
-      
+
       local idx = chainState.index
-      
+
       if idx == 1 then
         -- First press: use native macOS tiling (half)
         menuTile(nativePosition)
       else
         -- Subsequent presses: use grid for thirds, etc.
         local win = hs.window.frontmostWindow()
-        if win then
-          hs.grid.set(win, gridPositions[idx])
-        end
+        if win then hs.grid.set(win, gridPositions[idx]) end
       end
     end
   end
-  
+
   -- Grid positions for chaining (after native half)
   local leftChain = {
-    C.grid.halves.left,       -- 1: half (native)
-    C.grid.thirds.left,       -- 2: third
-    C.grid.twoThirds.left,    -- 3: two-thirds
-    C.grid.sixths.left,       -- 4: sixth
+    C.grid.halves.left, -- 1: half (native)
+    C.grid.thirds.left, -- 2: third
+    C.grid.twoThirds.left, -- 3: two-thirds
+    C.grid.sixths.left, -- 4: sixth
   }
   local rightChain = {
     C.grid.halves.right,
@@ -387,62 +383,78 @@ function M.loadNativeTiling()
     C.grid.twoThirds.right,
     C.grid.sixths.right,
   }
-  
+
   nativeWmMode
     -- H: tile left - chains through half → third → two-thirds → sixth
-    :bind({}, "h", chainTile("h", "Left", leftChain))
-    :bind({"shift"}, "h", function() tileOnOtherScreen("Left") end, function() nativeWmMode:exit(0.3) end)
-    
+    :bind(
+      {},
+      "h",
+      chainTile("h", "Left", leftChain)
+    )
+    :bind({ "shift" }, "h", function() tileOnOtherScreen("Left") end, function() nativeWmMode:exit(0.3) end)
     -- L: tile right - chains through half → third → two-thirds → sixth
-    :bind({}, "l", chainTile("l", "Right", rightChain))
-    :bind({"shift"}, "l", function() tileOnOtherScreen("Right") end, function() nativeWmMode:exit(0.3) end)
-    
+    :bind(
+      {},
+      "l",
+      chainTile("l", "Right", rightChain)
+    )
+    :bind({ "shift" }, "l", function() tileOnOtherScreen("Right") end, function() nativeWmMode:exit(0.3) end)
     -- K: tile top half (no chaining for vertical, just native)
-    :bind({}, "k", function() menuTile("Top") end, function() nativeWmMode:exit(0.3) end)
-    :bind({"shift"}, "k", function() tileOnOtherScreen("Top") end, function() nativeWmMode:exit(0.3) end)
-    
+    :bind(
+      {},
+      "k",
+      function() menuTile("Top") end,
+      function() nativeWmMode:exit(0.3) end
+    )
+    :bind({ "shift" }, "k", function() tileOnOtherScreen("Top") end, function() nativeWmMode:exit(0.3) end)
     -- J: tile bottom half (no chaining for vertical, just native)
-    :bind({}, "j", function() menuTile("Bottom") end, function() nativeWmMode:exit(0.3) end)
-    :bind({"shift"}, "j", function() tileOnOtherScreen("Bottom") end, function() nativeWmMode:exit(0.3) end)
-    
+    :bind(
+      {},
+      "j",
+      function() menuTile("Bottom") end,
+      function() nativeWmMode:exit(0.3) end
+    )
+    :bind({ "shift" }, "j", function() tileOnOtherScreen("Bottom") end, function() nativeWmMode:exit(0.3) end)
     -- Space: center window
     :bind({}, "space", function()
       local app = hs.application.frontmostApplication()
-      if app then app:selectMenuItem({"Window", "Center"}) end
+      if app then app:selectMenuItem({ "Window", "Center" }) end
     end, function() nativeWmMode:exit(0.3) end)
-    :bind({"shift"}, "space", function()
+    :bind({ "shift" }, "space", function()
       local win = hs.window.frontmostWindow()
       if win then win:moveToScreen(win:screen():next()) end
       hs.timer.doAfter(0.1, function()
         local app = hs.application.frontmostApplication()
-        if app then app:selectMenuItem({"Window", "Center"}) end
+        if app then app:selectMenuItem({ "Window", "Center" }) end
       end)
     end, function() nativeWmMode:exit(0.3) end)
-    
     -- Return: fill screen
     :bind({}, "return", function()
       local app = hs.application.frontmostApplication()
-      if app then app:selectMenuItem({"Window", "Fill"}) end
+      if app then app:selectMenuItem({ "Window", "Fill" }) end
     end, function() nativeWmMode:exit(0.3) end)
-    :bind({"shift"}, "return", function()
+    :bind({ "shift" }, "return", function()
       local win = hs.window.frontmostWindow()
       if win then win:moveToScreen(win:screen():next()) end
       hs.timer.doAfter(0.1, function()
         local app = hs.application.frontmostApplication()
-        if app then app:selectMenuItem({"Window", "Fill"}) end
+        if app then app:selectMenuItem({ "Window", "Fill" }) end
       end)
     end, function() nativeWmMode:exit(0.3) end)
-    
     -- Backspace: return to previous size
-    :bind({}, "delete", function() menuTile("Return to Previous Size") end, function() nativeWmMode:exit(0.3) end)
-    
+    :bind(
+      {},
+      "delete",
+      function() menuTile("Return to Previous Size") end,
+      function() nativeWmMode:exit(0.3) end
+    )
     -- V: tile with another window (hybrid: chooser + native tiling)
     :bind({}, "v", function()
       nativeWmMode:exit()
-      
+
       local focused = hs.window.frontmostWindow()
       if not focused then return end
-      
+
       -- Build window list for chooser
       local windows = {}
       for _, win in ipairs(hs.window.orderedWindows()) do
@@ -456,106 +468,109 @@ function M.loadNativeTiling()
           })
         end
       end
-      
+
       local chooser = hs.chooser.new(function(choice)
         if not choice then return end
-        
+
         local other = hs.window.find(choice.id)
         if not focused or not other then return end
-        
+
         -- Move both windows to same screen as focused
         local screen = focused:screen()
         other:moveToScreen(screen)
-        
+
         -- Use native macOS tiling
         -- First, tile the focused window left
         focused:focus()
         hs.timer.doAfter(0.05, function()
           local app1 = focused:application()
-          if app1 then app1:selectMenuItem({"Window", "Move & Resize", "Left"}) end
-          
+          if app1 then app1:selectMenuItem({ "Window", "Move & Resize", "Left" }) end
+
           -- Then tile the other window right
           hs.timer.doAfter(0.15, function()
             other:focus()
             hs.timer.doAfter(0.05, function()
               local app2 = other:application()
-              if app2 then app2:selectMenuItem({"Window", "Move & Resize", "Right"}) end
-              
+              if app2 then app2:selectMenuItem({ "Window", "Move & Resize", "Right" }) end
+
               -- Return focus to original window
-              hs.timer.doAfter(0.1, function()
-                focused:focus()
-              end)
+              hs.timer.doAfter(0.1, function() focused:focus() end)
             end)
           end)
         end)
       end)
-      
+
       chooser
         :placeholderText("Choose window to tile right (native macOS tiling)")
         :searchSubText(true)
         :choices(windows)
         :show()
     end)
-    
     -- Quarters: u/i/n/m for corners
-    :bind({}, "u", function() menuTile("Top Left") end, function() nativeWmMode:exit(0.3) end)
-    :bind({"shift"}, "u", function() tileOnOtherScreen("Top Left") end, function() nativeWmMode:exit(0.3) end)
-    
+    :bind(
+      {},
+      "u",
+      function() menuTile("Top Left") end,
+      function() nativeWmMode:exit(0.3) end
+    )
+    :bind({ "shift" }, "u", function() tileOnOtherScreen("Top Left") end, function() nativeWmMode:exit(0.3) end)
     :bind({}, "i", function() menuTile("Top Right") end, function() nativeWmMode:exit(0.3) end)
-    :bind({"shift"}, "i", function() tileOnOtherScreen("Top Right") end, function() nativeWmMode:exit(0.3) end)
-    
+    :bind({ "shift" }, "i", function() tileOnOtherScreen("Top Right") end, function() nativeWmMode:exit(0.3) end)
     :bind({}, "n", function() menuTile("Bottom Left") end, function() nativeWmMode:exit(0.3) end)
-    :bind({"shift"}, "n", function() tileOnOtherScreen("Bottom Left") end, function() nativeWmMode:exit(0.3) end)
-    
+    :bind({ "shift" }, "n", function() tileOnOtherScreen("Bottom Left") end, function() nativeWmMode:exit(0.3) end)
     :bind({}, "m", function() menuTile("Bottom Right") end, function() nativeWmMode:exit(0.3) end)
-    :bind({"shift"}, "m", function() tileOnOtherScreen("Bottom Right") end, function() nativeWmMode:exit(0.3) end)
-    
+    :bind({ "shift" }, "m", function() tileOnOtherScreen("Bottom Right") end, function() nativeWmMode:exit(0.3) end)
     -- Arrange (two-window layouts) - use number keys
     -- These arrange the CURRENT window with another window
-    :bind({}, "1", function() menuTile("Left & Right") end, function() nativeWmMode:exit(0.3) end)
+    :bind(
+      {},
+      "1",
+      function() menuTile("Left & Right") end,
+      function() nativeWmMode:exit(0.3) end
+    )
     :bind({}, "2", function() menuTile("Right & Left") end, function() nativeWmMode:exit(0.3) end)
     :bind({}, "3", function() menuTile("Top & Bottom") end, function() nativeWmMode:exit(0.3) end)
     :bind({}, "4", function() menuTile("Bottom & Top") end, function() nativeWmMode:exit(0.3) end)
     :bind({}, "5", function() menuTile("Quarters") end, function() nativeWmMode:exit(0.3) end)
-    
     -- B: Browser tab split - split active tab to new window, tile right
-    :bind({}, "b", function()
+    :bind({}, "s", function()
       nativeWmMode:exit()
-      
+
       local app = hs.application.frontmostApplication()
       if not app then return end
-      
+
       local bundleID = app:bundleID()
-      local isBrowser = bundleID and (
-        bundleID:match("brave") or 
-        bundleID:match("chrome") or 
-        bundleID:match("firefox") or
-        bundleID:match("safari") or
-        bundleID:match("arc")
-      )
-      
+      local isBrowser = bundleID
+        and (
+          bundleID:match("brave")
+          or bundleID:match("chrome")
+          or bundleID:match("firefox")
+          or bundleID:match("safari")
+          or bundleID:match("arc")
+        )
+
       if not isBrowser then
         hs.alert.show("Not a browser")
         return
       end
-      
+
       local mainWin = hs.window.frontmostWindow()
       if not mainWin then return end
-      
+
       -- Store original window state for potential restore
       local originalFrame = mainWin:frame()
       local originalScreen = mainWin:screen()
-      
+
       -- Move tab to new window (Cmd+Shift+N for most browsers, or use menu)
       -- Try menu first (more reliable across browsers)
-      local moved = app:selectMenuItem({"Tab", "Move Tab to New Window"}) or
-                    app:selectMenuItem({"Window", "Move Tab to New Window"})
-      
+      local moved = app:selectMenuItem({ "Tab", "Move Tab to New Window" })
+        or app:selectMenuItem({ "Window", "Move Tab to New Window" })
+
       if not moved then
         -- Fallback: try keyboard shortcut
-        hs.eventtap.keyStroke({"cmd", "shift"}, "n")
+        hs.eventtap.keyStroke({ "cmd", "shift" }, "n")
       end
-      
+
       -- Wait for new window, then tile
       hs.timer.doAfter(0.3, function()
         local newWin = hs.window.frontmostWindow()
@@ -568,42 +583,39 @@ function M.loadNativeTiling()
             originalScreen = originalScreen,
             bundleID = bundleID,
           }
-          
+
           -- Tile: main window left, new window right
           mainWin:focus()
           hs.timer.doAfter(0.05, function()
-            app:selectMenuItem({"Window", "Move & Resize", "Left"})
+            app:selectMenuItem({ "Window", "Move & Resize", "Left" })
             hs.timer.doAfter(0.15, function()
               newWin:focus()
-              hs.timer.doAfter(0.05, function()
-                app:selectMenuItem({"Window", "Move & Resize", "Right"})
-              end)
+              hs.timer.doAfter(0.05, function() app:selectMenuItem({ "Window", "Move & Resize", "Right" }) end)
             end)
           end)
         end
       end)
     end, nil)
-    
     -- Shift+B: Undo browser split - merge tab back and restore window
-    :bind({"shift"}, "b", function()
+    :bind({ "shift" }, "s", function()
       nativeWmMode:exit()
-      
+
       local state = _G._browserSplitState
       if not state then
         hs.alert.show("No browser split to undo")
         return
       end
-      
+
       local mainWin = state.mainWin
       local splitWin = state.splitWin
-      
+
       -- Check windows still exist
       if not mainWin or not mainWin:application() then
         hs.alert.show("Main window no longer exists")
         _G._browserSplitState = nil
         return
       end
-      
+
       if splitWin and splitWin:application() then
         -- Focus split window and close it (merges tab back in most browsers)
         -- Or use Cmd+Shift+M to merge windows
@@ -611,12 +623,12 @@ function M.loadNativeTiling()
         local app = splitWin:application()
         hs.timer.doAfter(0.1, function()
           -- Try to merge windows
-          local merged = app:selectMenuItem({"Window", "Merge All Windows"})
+          local merged = app:selectMenuItem({ "Window", "Merge All Windows" })
           if not merged then
             -- Just close the split window
             splitWin:close()
           end
-          
+
           -- Restore main window to original position
           hs.timer.doAfter(0.2, function()
             if mainWin and mainWin:application() then
@@ -626,14 +638,12 @@ function M.loadNativeTiling()
           end)
         end)
       end
-      
+
       _G._browserSplitState = nil
     end, nil)
 
   -- Bind hyper+w to enter native tiling mode
-  req("hyper", { id = "nativeWm" }):bind({}, "w", function()
-    nativeWmMode:toggle()
-  end)
+  req("hyper", { id = "nativeWm" }):bind({}, "l", function() nativeWmMode:toggle() end)
 
   U.log.i("nativeTiling: initialized (hyper+w for native macOS tiling via menu)")
 end
@@ -644,7 +654,7 @@ function M:init()
   M.loadFigma()
   M.loadUtils()
   M.loadWm()
-  M.loadNativeTiling()  -- Experimental: hyper+w for native macOS tiling
+  M.loadNativeTiling() -- Experimental: hyper+w for native macOS tiling
   M.loadNotifications()
   M.loadForceQuit()
   M.loadShade()
