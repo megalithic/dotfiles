@@ -321,42 +321,22 @@
     # Skills - Inline reference knowledge
     # Invoked synchronously for guidance during conversation
     # =========================================================================
+    # Skills as directories (creates .claude/skills/<name>/ with all files)
+    # Each skill directory contains SKILL.md with frontmatter (name, description, tools)
+    # NOTE: Using /${path} syntax for nix paths so lib.isPath and lib.pathIsDirectory work
     skills = {
-      # Nix ecosystem expert for dotfiles, darwin, home-manager, and project flakes
-      nix = builtins.readFile "${self}/docs/skills/nix.md";
-
-      # Modern CLI tools (fd, rg) - critical for Nix store searches
-      cli-tools = builtins.readFile "${self}/docs/skills/cli-tools.md";
-
-      # Jujutsu version control workflow and commands
-      jj = builtins.readFile "${self}/docs/skills/jj.md";
-
-      # Smart notification system with multi-channel routing
-      smart-ntfy = builtins.readFile "${self}/docs/skills/smart-ntfy.md";
-
-      # Image handling for Claude API constraints
-      image-handling = builtins.readFile "${self}/docs/skills/image-handling.md";
-
-      # Web debugging with Chrome DevTools MCP
-      web-debug = builtins.readFile "${self}/docs/skills/web-debug.md";
-
-      # Shade app - native Swift note capture panel
-      shade = builtins.readFile "${self}/docs/skills/shade.md";
-
-      # Hammerspoon - macOS automation quick reference
-      hs = builtins.readFile "${self}/docs/skills/hs.md";
-
-      # Neovim - config structure, plugins, LSP patterns
-      nvim = builtins.readFile "${self}/docs/skills/nvim.md";
-
-      # tmux - terminal multiplexer configuration and orchestration
-      tmux-claude = builtins.readFile "${self}/docs/skills/tmux-claude.md";
-
-      # notes - meganote system, captures, daily notes, obsidian.nvim
-      notes = builtins.readFile "${self}/docs/skills/notes.md";
-
-      # task-completion - guidelines for summarizing completed work
-      task-completion = builtins.readFile "${self}/docs/skills/task-completion.md";
+      nix = self + /docs/skills/nix;
+      cli-tools = self + /docs/skills/cli-tools;
+      jj = self + /docs/skills/jj;
+      smart-ntfy = self + /docs/skills/smart-ntfy;
+      image-handling = self + /docs/skills/image-handling;
+      web-debug = self + /docs/skills/web-debug;
+      shade = self + /docs/skills/shade;
+      hs = self + /docs/skills/hs;
+      nvim = self + /docs/skills/nvim;
+      tmux-claude = self + /docs/skills/tmux-claude;
+      notes = self + /docs/skills/notes;
+      task-completion = self + /docs/skills/task-completion;
     };
 
     # =========================================================================
