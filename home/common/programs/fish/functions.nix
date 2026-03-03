@@ -1,6 +1,8 @@
 # Fish shell functions
-{ config, isDarwin }:
 {
+  config,
+  isDarwin,
+}: {
   fish_greeting = "";
 
   # Reload shell with fresh session variables
@@ -37,6 +39,22 @@
     '';
   };
 
+  ask = ''
+    if test (count $argv) -eq 0
+        echo "Usage: ask <question>"
+        return 1
+    end
+
+    set -l question (string join " " $argv)
+
+    # Use pi with minimal noise, pipe through glow for markdown rendering if available
+    if command -q glow
+        pi -p --no-session --no-tools "$question" 2>/dev/null | glow -
+    else
+        pi -p --no-session --no-tools "$question" 2>/dev/null
+    end
+  '';
+
   pr = ''
     set -l PROJECT_PATH (git config --get remote.origin.url)
     set -l PROJECT_PATH (string replace "git@github.com:" "" "$PROJECT_PATH")
@@ -53,7 +71,11 @@
         echo "Error: not a git repository"
         return 1
     end
-    ${if isDarwin then "open" else "xdg-open"} "https://github.com/$PROJECT_PATH/compare/$MASTER_BRANCH...$GIT_BRANCH"
+    ${
+      if isDarwin
+      then "open"
+      else "xdg-open"
+    } "https://github.com/$PROJECT_PATH/compare/$MASTER_BRANCH...$GIT_BRANCH"
   '';
 
   bind_bang = ''

@@ -6,26 +6,6 @@ BROWSER = "com.nix.brave-browser-nightly"
 -- BROWSER = "net.imput.helium"
 TERMINAL = "com.mitchellh.ghostty"
 
----@class NotificationRule
----@field name string                        -- Human-readable name for the rule
----@field priority? number                   -- Rule evaluation order (0-100, higher first; default: 50)
----@field match table<string, string|string[]> -- Field matchers (AND between fields, OR within arrays). Fields: bundleID, title, subtitle, message, notificationType, subrole
----@field action? "redirect"|"dismiss"|"ignore" -- What to do with matched notification (default: "redirect")
----@field urgency string|table               -- "low"|"normal"|"high"|"critical" OR { default="...", critical={...}, high={...}, low={...} }
----@field delay? number                      -- For dismiss action: seconds to wait before dismissing
----@field duration? number                   -- For redirect action: how long to show notification in seconds
----@field alwaysShowInTerminal? boolean      -- Show even when terminal is focused
----@field showWhenAppFocused? boolean        -- Show even when source app is focused
----@field overrideFocusModes? string[]|true  -- Focus modes this notification can bypass/override
----@field appImageID? string                 -- Custom icon identifier (e.g. "hal9000")
----@field dismissNative? boolean             -- Whether to dismiss native notification after redirect (default: uses global setting)
---
--- Urgency levels control display behavior:
---   critical = center + dim + phone notification (reserved for emergencies)
---   high     = center + dim (important, needs attention)
---   normal   = bottom-left corner (standard)
---   low      = bottom-left, shorter duration (acknowledgments, info)
-
 M.displays = {
   internal = "Built-in Retina Display",
   laptop = "Built-in Retina Display",
@@ -356,7 +336,7 @@ M.launchers = {
   { "com.flexibits.fantastical2.mac", "y", { "'" } },
   { "com.raycast.macos", "space", { "c" } },
   -- { "com.brnbw.Tuna", "space", nil },
-  -- { "com.brnbw.Tuna", { { "shift", "cmd" }, "space" }, { { { "shift", "cmd" }, "space" } } },
+  -- { "Tuna", nil, { { { "shift", "cmd" }, "space" } } },
   { "com.superultra.Homerow", nil, { ";" } },
   { "com.tinyspeck.slackmacgap", "s", nil },
   { "com.tdesktop.Telegram", "t", nil },
@@ -419,6 +399,25 @@ M.notifier = {
   -- Rules are sorted by priority (higher first) at runtime. First match wins.
   -- Each rule defines matching criteria and behavior.
   rules = {
+    ---@class NotificationRule
+    ---@field name string                        -- Human-readable name for the rule
+    ---@field priority? number                   -- Rule evaluation order (0-100, higher first; default: 50)
+    ---@field match table<string, string|string[]> -- Field matchers (AND between fields, OR within arrays). Fields: bundleID, title, subtitle, message, notificationType, subrole
+    ---@field action? "redirect"|"dismiss"|"ignore" -- What to do with matched notification (default: "redirect")
+    ---@field urgency string|table               -- "low"|"normal"|"high"|"critical" OR { default="...", critical={...}, high={...}, low={...} }
+    ---@field delay? number                      -- For dismiss action: seconds to wait before dismissing
+    ---@field duration? number                   -- For redirect action: how long to show notification in seconds
+    ---@field alwaysShowInTerminal? boolean      -- Show even when terminal is focused
+    ---@field showWhenAppFocused? boolean        -- Show even when source app is focused
+    ---@field overrideFocusModes? string[]|true  -- Focus modes this notification can bypass/override
+    ---@field appImageID? string                 -- Custom icon identifier (e.g. "hal9000")
+    ---@field dismissNative? boolean             -- Whether to dismiss native notification after redirect (default: uses global setting)
+    --
+    -- Urgency levels control display behavior:
+    --   critical = center + dim + phone notification (reserved for emergencies)
+    --   high     = center + dim (important, needs attention)
+    --   normal   = bottom-left corner (standard)
+    --   low      = bottom-left, shorter duration (acknowledgments, info)
     -- Fantastical Calendar Alerts (TIME SENSITIVE = imminent, usually 1-minute warnings)
     -- NOTE: Notifications come from the helper app with team ID prefix, not main app
     {

@@ -602,7 +602,106 @@ function buildRules(config: SentinelConfig): Rule[] {
     });
   }
 
+  // ── HARD: pipe/redirect without timeout (hang prevention) ──
+  // Note: This rule is handled specially in the tool_call handler to check
+  // the timeout parameter from the tool input.
+
   return rules;
+}
+
+// ── Pipe/redirect hang detection ─────────────────────────────────────────────
+
+const MAX_PIPE_TIMEOUT_SECONDS = 300; // 5 minutes max
+
+const PIPE_TARGETS = ["tail", "head", "tee", "less", "more", "cat", "wc", "sort", "uniq", "awk", "sed", "grep", "rg"];
+
+// Commands that are safe to pipe without timeout (they always terminate quickly)
+const SAFE_UPSTREAM = [
+  /^echo\s/,                    // echo always terminates
+  /^printf\s/,                  // printf always terminates
+  /^ls\b/,                      // ls always terminates
+  /^cat\s+\S/,                  // cat with file argument (not stdin)
+  /^fd\b/,                      // fd file finder
+  /^rg\b/,                      // ripgrep
+  /^jj\s/,                      // jj commands
+  /^git\s/,                     // git commands
+  /^date\b/,                    // date command
+  /^pwd\b/,                     // pwd command
+  /^env\b/,                     // env command
+  /^which\b/,                   // which command
+  /^whoami\b/,                  // whoami command
+  /^hostname\b/,                // hostname command
+  /^uname\b/,                   // uname command
+  /^id\b/,                      // id command
+  /^ps\b/,                      // ps command (snapshot, not continuous)
+  /^df\b/,                      // df command
+  /^du\b/,                      // du command
+  /^stat\b/,                    // stat command
+  /^file\b/,                    // file command
+  /^timeout\s/,                 // explicit timeout wrapper
+  /^gtimeout\s/,                // GNU timeout on macOS
+];
+
+// Commands known to potentially hang when piped (wait for stdin, event loops, etc.)
+const RISKY_UPSTREAM = [
+  /\bnvim\s+--headless\b/,      // nvim headless with vim.defer_fn hangs
+  /\bnvim\s+-c\b/,              // nvim with -c may not exit
+  /\bvim\s+--headless\b/,
+  /\bvim\s+-c\b/,
+  /\bwatch\b/,                  // watch is continuous
+  /\btail\s+-f\b/,              // tail -f is continuous
+  /\bjournalctl\s+-f\b/,        // journalctl follow
+  /\blog\s+tail\b/,             // heroku/fly log tail
+  /\bdocker\s+logs\s+-f\b/,     // docker logs follow
+  /\bkubectl\s+logs\s+-f\b/,    // kubectl logs follow
+];
+
+/**
+ * Check if command pipes to tail/head/etc or redirects output.
+ * Returns details for the block message.
+ */
+function detectPipeOrRedirect(cmd: string): { hasPipe: boolean; hasRedirect: boolean; pipeTarget?: string; riskyUpstream?: string; isSafeUpstream: boolean } {
+  const stripped = stripQuoted(cmd);
+  
+  // Check for pipes to common targets
+  let hasPipe = false;
+  let pipeTarget: string | undefined;
+  for (const target of PIPE_TARGETS) {
+    // Match pipe followed by target command
+    const pipePattern = new RegExp(`\\|\\s*${target}(?:\\s|$)`);
+    if (pipePattern.test(stripped)) {
+      hasPipe = true;
+      pipeTarget = target;
+      break;
+    }
+  }
+  
+  // Check for redirects (but not heredocs which use <<)
+  // Matches: >, >>, 2>, 2>>, 2>&1, &>, &>>
+  const redirectPattern = /(?:^|[^<])(?:>>?|2>>?|2>&1|&>>?)/;
+  const hasRedirect = redirectPattern.test(stripped);
+  
+  // Check if upstream command is known to be safe (always terminates)
+  let isSafeUpstream = false;
+  const trimmed = stripped.trim();
+  for (const pattern of SAFE_UPSTREAM) {
+    if (pattern.test(trimmed)) {
+      isSafeUpstream = true;
+      break;
+    }
+  }
+  
+  // Check for known risky upstream patterns (overrides safe check)
+  let riskyUpstream: string | undefined;
+  for (const pattern of RISKY_UPSTREAM) {
+    if (pattern.test(stripped)) {
+      riskyUpstream = pattern.toString().replace(/^\/|\/$/g, "").replace(/\\b/g, "");
+      isSafeUpstream = false; // Risky overrides safe
+      break;
+    }
+  }
+  
+  return { hasPipe, hasRedirect, pipeTarget, riskyUpstream, isSafeUpstream };
 }
 
 // ── Extension ────────────────────────────────────────────────────────────────
@@ -680,6 +779,55 @@ export default function (pi: ExtensionAPI) {
     const input = (event as ToolCallEvent).input;
     const cmd = (input as any).command as string || "";
     const path = (input as any).path as string || "";
+    const timeout = (input as any).timeout as number | undefined;
+
+    // ── Special check: pipe/redirect hang prevention ──
+    if (toolName === "bash" && cmd) {
+      const pipeCheck = detectPipeOrRedirect(cmd);
+      
+      if ((pipeCheck.hasPipe || pipeCheck.hasRedirect) && !pipeCheck.isSafeUpstream) {
+        // Check if timeout is missing or too long
+        const hasValidTimeout = timeout !== undefined && timeout > 0 && timeout <= MAX_PIPE_TIMEOUT_SECONDS;
+        
+        if (!hasValidTimeout) {
+          const issues: string[] = [];
+          
+          if (pipeCheck.riskyUpstream) {
+            issues.push(`- **Risky upstream**: \`${pipeCheck.riskyUpstream}\` may hang or never produce output`);
+          }
+          if (pipeCheck.hasPipe) {
+            issues.push(`- **Pipes to**: \`${pipeCheck.pipeTarget}\` — upstream must terminate to produce output`);
+          }
+          if (pipeCheck.hasRedirect) {
+            issues.push(`- **Redirects output** — if upstream hangs, no error will be visible`);
+          }
+          if (!timeout) {
+            issues.push(`- **No timeout specified** — command could hang indefinitely`);
+          } else if (timeout > MAX_PIPE_TIMEOUT_SECONDS) {
+            issues.push(`- **Timeout too long**: ${timeout}s > ${MAX_PIPE_TIMEOUT_SECONDS}s max`);
+          }
+
+          log(`PIPE-HANG: ${cmd.slice(0, 80)}`);
+          return {
+            block: true,
+            reason: `⚠️ **Potential hang detected** — command pipes/redirects output without safeguards.
+
+${issues.join("\n")}
+
+**Before retrying, verify:**
+1. The upstream command will **actually terminate** (not an event loop, not waiting for stdin)
+2. Add a **timeout ≤ ${MAX_PIPE_TIMEOUT_SECONDS}s** to the bash call
+
+**Common failure patterns:**
+- \`nvim --headless\` with \`vim.defer_fn\` — event loop doesn't pump, hangs forever
+- \`tail -f\` or \`journalctl -f\` — continuous streams never terminate
+- Interactive processes — wait for stdin that will never come
+
+**Fix:** Add \`timeout: <seconds>\` parameter to the bash tool call.`
+          };
+        }
+      }
+    }
 
     for (const rule of rules) {
       if (!rule.tools.includes(toolName)) continue;

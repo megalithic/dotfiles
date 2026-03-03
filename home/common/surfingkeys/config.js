@@ -51,8 +51,8 @@ settings.scrollStepSize = 100;
 settings.tabsThreshold = 0;
 settings.modeAfterYank = "Normal";
 settings.useNeovim = false;
-// blocklist
-settings.blocklistPattern = /mail.google.com/;
+// blocklist (regex pattern - use | for multiple sites)
+settings.blocklistPattern = /mail\.google\.com|localhost:9832/i;
 // order
 settings.historyMUOrder = false;
 settings.tabsMRUOrder = false;
