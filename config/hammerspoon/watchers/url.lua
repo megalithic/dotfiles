@@ -117,26 +117,26 @@ M.handlers = {
     end,
   },
 
-  -- Spotify: open in app
-  {
-    name = "Spotify",
-    pattern = "open%.spotify%.com/",
-    action = function(url, sourceBundle, focusContext)
-      -- Convert https://open.spotify.com/track/... to spotify:track:...
-      local uri = url:gsub("https?://open%.spotify%.com/", "spotify:")
-      uri = uri:gsub("/", ":")
-      uri = uri:gsub("%?.*", "") -- Remove query params
-      U.log.f("[%s] Spotify: redirecting to %s", M.name, uri)
-      hs.urlevent.openURL(uri)
-    end,
-  },
+  -- Spotify: open in app (disabled - using Apple Music)
+  -- {
+  --   name = "Spotify",
+  --   pattern = "open%.spotify%.com/",
+  --   action = function(url, sourceBundle, focusContext)
+  --     -- Convert https://open.spotify.com/track/... to spotify:track:...
+  --     local uri = url:gsub("https?://open%.spotify%.com/", "spotify:")
+  --     uri = uri:gsub("/", ":")
+  --     uri = uri:gsub("%?.*", "") -- Remove query params
+  --     U.log.f("[%s] Spotify: redirecting to %s", M.name, uri)
+  --     hs.urlevent.openURL(uri)
+  --   end,
+  -- },
 
-  -- Spotify short links
-  {
-    name = "Spotify Link",
-    pattern = "spotify%.link/",
-    action = "com.spotify.client",
-  },
+  -- Spotify short links (disabled - using Apple Music)
+  -- {
+  --   name = "Spotify Link",
+  --   pattern = "spotify%.link/",
+  --   action = "com.spotify.client",
+  -- },
 
   -- Slack: open in app
   {

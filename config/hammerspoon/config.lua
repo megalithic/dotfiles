@@ -211,13 +211,13 @@ M.layouts = {
       { "", 2, M.grid.halves.right },
     },
   },
-  ["com.spotify.client"] = {
-    bundleID = "com.spotify.client",
-    name = "Spotify",
-    rules = {
-      { "", 2, M.grid.halves.right },
-    },
-  },
+  -- ["com.spotify.client"] = {
+  --   bundleID = "com.spotify.client",
+  --   name = "Spotify",
+  --   rules = {
+  --     { "", 2, M.grid.halves.right },
+  --   },
+  -- },
   ["com.electron.postbird"] = {
     bundleID = "com.electron.postbird",
     name = "Postbird",
@@ -340,7 +340,7 @@ M.lollygaggers = {
   ["org.hammerspoon.Hammerspoon"] = { 1, nil },
   ["com.flexibits.fantastical2.mac"] = { 1, nil },
   ["com.1password.1password"] = { 1, nil },
-  ["com.spotify.client"] = { 1, nil },
+  -- ["com.spotify.client"] = { 1, nil },
   ["com.apple.Music"] = { 1, nil },
 }
 
@@ -354,8 +354,9 @@ M.launchers = {
   { "com.apple.Music", "p", nil },
   { "com.freron.MailMate", "e", nil },
   { "com.flexibits.fantastical2.mac", "y", { "'" } },
-  { "com.raycast.macos", nil, { "c" } },
-  { "com.brnbw.Tuna", { { "shift", "cmd" }, "space" } },
+  { "com.raycast.macos", "space", { "c" } },
+  -- { "com.brnbw.Tuna", "space", nil },
+  -- { "com.brnbw.Tuna", { { "shift", "cmd" }, "space" }, { { { "shift", "cmd" }, "space" } } },
   { "com.superultra.Homerow", nil, { ";" } },
   { "com.tinyspeck.slackmacgap", "s", nil },
   { "com.tdesktop.Telegram", "t", nil },

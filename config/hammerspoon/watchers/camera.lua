@@ -219,7 +219,8 @@ local MEETING_CONFIRM_DELAY = 30 -- seconds to wait before confirming uncertain 
 local function startMeetingMode(appName, reason)
   U.log.f("Starting meeting mode: %s (%s)", appName or "unknown", reason)
   U.dnd(true, "meeting")
-  hs.spotify.pause()
+  -- Pause music (Apple Music) when entering meeting
+  pcall(function() hs.osascript.applescript('tell application "Music" to pause') end)
   require("micchecka").setPTTMode("push-to-talk")
 end
 
