@@ -1,5 +1,5 @@
 ---
-name: tmux
+name: tmux-claude
 description: tmux terminal multiplexer configuration, key bindings, session management, and custom scripts. Use when interacting with tmux sessions, panes, windows, or debugging tmux issues.
 tools: Bash, Read, Grep, Glob
 ---

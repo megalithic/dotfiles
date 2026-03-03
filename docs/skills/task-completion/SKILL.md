@@ -1,3 +1,9 @@
+---
+name: task-completion
+description: Guidelines for summarizing completed work with proper format, context, and follow-up items. Use when finishing tasks to ensure clear handoff.
+tools: Bash
+---
+
 # Task Completion Summary Skill
 
 Defines the format and requirements for task completion summaries in AI agent sessions.
