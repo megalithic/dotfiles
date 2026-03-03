@@ -3,11 +3,62 @@ local obj = {}
 obj.__index = obj
 obj.name = "summon"
 
+-- Indicator canvas and timer for showing brief focus feedback
+local indicatorCanvas = nil
+local indicatorTimer = nil
+local INDICATOR_COLOR = "#e39b7b"  -- Match hypemode default
+local INDICATOR_DURATION = 0.75
+
+-- Show a brief indicator border around the focused window
+local function showIndicator(win)
+  if not win then return end
+  
+  -- Clean up existing indicator
+  if indicatorTimer then
+    indicatorTimer:stop()
+    indicatorTimer = nil
+  end
+  if indicatorCanvas then
+    indicatorCanvas:delete()
+    indicatorCanvas = nil
+  end
+  
+  local frame = win:frame()
+  
+  indicatorCanvas = hs.canvas.new(frame)
+  indicatorCanvas:appendElements({
+    type = "rectangle",
+    action = "stroke",
+    strokeWidth = 3.0,
+    strokeColor = { hex = INDICATOR_COLOR, alpha = 0.9 },
+    roundedRectRadii = { xRadius = 12.0, yRadius = 12.0 },
+  })
+  indicatorCanvas:level(hs.canvas.windowLevels.floating + 1)
+  indicatorCanvas:behavior(hs.canvas.windowBehaviors.transient)
+  indicatorCanvas:show()
+  
+  -- Auto-hide after duration
+  indicatorTimer = hs.timer.doAfter(INDICATOR_DURATION, function()
+    if indicatorCanvas then
+      indicatorCanvas:delete()
+      indicatorCanvas = nil
+    end
+    indicatorTimer = nil
+  end)
+end
+
 function obj.focus(appIdentifier)
   local app = hs.application.find(appIdentifier)
   local appBundleID = app and (app:bundleID() or appIdentifier)
 
-  if app and appIdentifier and appBundleID then app:activate() end
+  if app and appIdentifier and appBundleID then
+    app:activate()
+    -- Show indicator after brief delay for window to focus
+    hs.timer.doAfter(0.05, function()
+      local win = app:focusedWindow() or app:mainWindow()
+      showIndicator(win)
+    end)
+  end
 end
 
 -- Quickly move to and from a specific app
@@ -41,7 +92,17 @@ function obj.toggle(appId, shouldHide)
   local appBundleID = app and app:bundleID() or appId
 
   if not app then
-    if appId ~= nil then hs.application.launchOrFocusByBundleID(appBundleID) end
+    if appId ~= nil then
+      hs.application.launchOrFocusByBundleID(appBundleID)
+      -- Show indicator after app launches
+      hs.timer.doAfter(0.3, function()
+        local launchedApp = hs.application.find(appBundleID)
+        if launchedApp then
+          local win = launchedApp:focusedWindow() or launchedApp:mainWindow()
+          showIndicator(win)
+        end
+      end)
+    end
   else
     local mainWin = app:mainWindow()
 
@@ -54,6 +115,10 @@ function obj.toggle(appId, shouldHide)
           mainWin:application():activate(true)
           pcall(mainWin:application():unhide())
           pcall(mainWin:focus())
+          -- Show indicator
+          hs.timer.doAfter(0.05, function()
+            showIndicator(mainWin)
+          end)
         end
       end
     else
@@ -63,6 +128,11 @@ function obj.toggle(appId, shouldHide)
       else
         app:unhide()
         hs.application.launchOrFocusByBundleID(appBundleID)
+        -- Show indicator
+        hs.timer.doAfter(0.1, function()
+          local win = app:focusedWindow()
+          showIndicator(win)
+        end)
       end
     end
   end
