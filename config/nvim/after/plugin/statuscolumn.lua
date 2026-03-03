@@ -365,7 +365,7 @@ local function extmark_signs(curbuf, lnum)
 
     local txt, hl = item.sign_text, item.sign_hl_group
     -- if txt ~= "" and txt ~= " " then print(txt) end
-    local is_git = hl ~= nil and hl:match("^Git")
+    local is_git = hl ~= nil and (hl:match("^Git") or hl:match("^MiniDiff"))
 
     -- NOTE: use this so we can check if it's an nvim-lint sign; we'll use our own signs
     -- FIXME: do this in nvim-lint config instead with their vim.diagnostic.config settings
