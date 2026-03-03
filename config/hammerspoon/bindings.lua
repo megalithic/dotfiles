@@ -328,76 +328,12 @@ function M.loadNativeTiling()
   -- Create hypemode for native tiling (hyper+w)
   local nativeWmMode = hypemode.new("nativeWm", { showIndicator = true })
 
-  -- Chain state for native tiling mode
-  local chainState = { key = nil, index = 0, timer = nil }
-
-  local function resetChain()
-    chainState.key = nil
-    chainState.index = 0
-    if chainState.timer then
-      chainState.timer:stop()
-      chainState.timer = nil
-    end
-  end
-
-  -- Hybrid chain: native half first, then grid for thirds/other sizes
-  local function chainTile(key, nativePosition, gridPositions)
-    return function()
-      -- If same key pressed again within timeout, advance chain
-      if chainState.key == key then
-        chainState.index = chainState.index + 1
-        if chainState.index > #gridPositions then chainState.index = 1 end
-      else
-        -- New key, start fresh
-        chainState.key = key
-        chainState.index = 1
-      end
-
-      -- Reset timer
-      if chainState.timer then chainState.timer:stop() end
-      chainState.timer = hs.timer.doAfter(2.0, resetChain)
-
-      local idx = chainState.index
-
-      if idx == 1 then
-        -- First press: use native macOS tiling (half)
-        menuTile(nativePosition)
-      else
-        -- Subsequent presses: use grid for thirds, etc.
-        local win = hs.window.frontmostWindow()
-        if win then hs.grid.set(win, gridPositions[idx]) end
-      end
-    end
-  end
-
-  -- Grid positions for chaining (after native half)
-  local leftChain = {
-    C.grid.halves.left, -- 1: half (native)
-    C.grid.thirds.left, -- 2: third
-    C.grid.twoThirds.left, -- 3: two-thirds
-    C.grid.sixths.left, -- 4: sixth
-  }
-  local rightChain = {
-    C.grid.halves.right,
-    C.grid.thirds.right,
-    C.grid.twoThirds.right,
-    C.grid.sixths.right,
-  }
-
   nativeWmMode
-    -- H: tile left - chains through half → third → two-thirds → sixth
-    :bind(
-      {},
-      "h",
-      chainTile("h", "Left", leftChain)
-    )
+    -- H: tile left half
+    :bind({}, "h", function() menuTile("Left") end, function() nativeWmMode:exit(0.3) end)
     :bind({ "shift" }, "h", function() tileOnOtherScreen("Left") end, function() nativeWmMode:exit(0.3) end)
-    -- L: tile right - chains through half → third → two-thirds → sixth
-    :bind(
-      {},
-      "l",
-      chainTile("l", "Right", rightChain)
-    )
+    -- L: tile right half
+    :bind({}, "l", function() menuTile("Right") end, function() nativeWmMode:exit(0.3) end)
     :bind({ "shift" }, "l", function() tileOnOtherScreen("Right") end, function() nativeWmMode:exit(0.3) end)
     -- K: tile top half (no chaining for vertical, just native)
     :bind(
