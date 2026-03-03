@@ -14,6 +14,7 @@
   imports = [
     ./lib.nix
     ./mac-aliases.nix
+    ./rust.nix
     ./packages.nix
     ./services.nix
     ./programs/ai
