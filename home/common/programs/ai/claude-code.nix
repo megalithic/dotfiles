@@ -321,23 +321,9 @@
     # Skills - Inline reference knowledge
     # Invoked synchronously for guidance during conversation
     # =========================================================================
-    # Skills as directories (creates .claude/skills/<name>/ with all files)
-    # Each skill directory contains SKILL.md with frontmatter (name, description, tools)
-    # NOTE: Using /${path} syntax for nix paths so lib.isPath and lib.pathIsDirectory work
-    skills = {
-      nix = self + /docs/skills/nix;
-      cli-tools = self + /docs/skills/cli-tools;
-      jj = self + /docs/skills/jj;
-      smart-ntfy = self + /docs/skills/smart-ntfy;
-      image-handling = self + /docs/skills/image-handling;
-      web-debug = self + /docs/skills/web-debug;
-      shade = self + /docs/skills/shade;
-      hs = self + /docs/skills/hs;
-      nvim = self + /docs/skills/nvim;
-      tmux-claude = self + /docs/skills/tmux-claude;
-      notes = self + /docs/skills/notes;
-      task-completion = self + /docs/skills/task-completion;
-    };
+    # Skills directory - recursively copies all skill directories
+    # Each skill is at docs/skills/<name>/SKILL.md with frontmatter
+    skillsDir = self + /docs/skills;
 
     # =========================================================================
     # Agents - Autonomous subprocesses for delegated tasks
