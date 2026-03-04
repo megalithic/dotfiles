@@ -35,15 +35,15 @@ done 2>/dev/null &
 # verify commandlinetools not installed:
 
 echo "░ :: -> Checking for Xcode CommandLineTools.."
-if ! xcode-select -p &>/dev/null; then
+if ! sudo xcode-select -p &>/dev/null; then
   # echo "Command Line Tools for Xcode not found. Installing from softwareupdate…"
   # This temporary file prompts the 'softwareupdate' utility to list the Command Line Tools
-  echo "░ :: -> Installing Xcode for $SUDO_USER.." &&
+  echo "░ :: -> Installing Xcode CommandLineTools for $SUDO_USER.." &&
     (
       # touch /tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress
       # PROD=$(softwareupdate -l | grep "\*.*Command Line" | tail -n 1 | sed 's/^[^C]* //')
       # softwareupdate -i "$PROD" --install-rosetta --agree-to-license --verbose
-      xcode-select --install && sudo softwareupdate --install-rosetta --agree-to-license
+      sudo xcode-select --install && sudo softwareupdate --install-rosetta --agree-to-license
     )
 fi
 
