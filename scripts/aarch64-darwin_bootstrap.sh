@@ -29,30 +29,48 @@ while true; do
   kill -0 "$$" || exit
 done 2>/dev/null &
 
-# uninstall xcode command-line developer tools:
-# sudo rm -rf /Library/Developer/CommandLineTools
+# Force non-interactive CLT installation via softwareupdate
+install_clt() {
+  # Create trigger file that makes softwareupdate list CLT
+  touch /tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress
 
-# verify commandlinetools not installed:
+  # Find the CLT package label (try newer format first)
+  CLT_LABEL=$(softwareupdate -l 2>&1 |
+    grep -E '^\s*\* (Label:|Command Line Tools)' |
+    grep -i "command line" |
+    sed 's/^[^:]*: //' |
+    head -1)
+
+  # Fallback: try older format
+  if [[ -z "$CLT_LABEL" ]]; then
+    CLT_LABEL=$(softwareupdate -l 2>&1 |
+      grep '\* Command Line' |
+      sed 's/^.*\* //' |
+      head -1)
+  fi
+
+  if [[ -n "$CLT_LABEL" ]]; then
+    echo "░ :: -> Installing: $CLT_LABEL"
+    softwareupdate -i "$CLT_LABEL" --verbose
+  else
+    echo "░ [!] -> CLT not found in softwareupdate, falling back to xcode-select"
+    xcode-select --install
+    # Wait for GUI install to complete
+    until xcode-select -p &>/dev/null; do
+      sleep 5
+    done
+  fi
+
+  rm -f /tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress
+}
 
 echo "░ :: -> Checking for Xcode CommandLineTools.."
-if ! sudo xcode-select -p &>/dev/null; then
-  # echo "Command Line Tools for Xcode not found. Installing from softwareupdate…"
-  # This temporary file prompts the 'softwareupdate' utility to list the Command Line Tools
-  echo "░ :: -> Installing Xcode CommandLineTools for $SUDO_USER.." &&
-    (
-      # touch /tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress
-      # PROD=$(softwareupdate -l | grep "\*.*Command Line" | tail -n 1 | sed 's/^[^C]* //')
-      # softwareupdate -i "$PROD" --install-rosetta --agree-to-license --verbose
-      sudo xcode-select --install && sudo softwareupdate --install-rosetta --agree-to-license
-    )
+if ! xcode-select -p &>/dev/null; then
+  echo "░ :: -> Installing Xcode CommandLineTools for $SUDO_USER.."
+  install_clt
+  echo "░ :: -> Installing Rosetta 2.."
+  softwareupdate --install-rosetta --agree-to-license
 fi
-
-# if ! command -v xcode-select >/dev/null 2>&1; then
-#   # xcode-select: note: No developer tools were found, requesting install. If developer tools are located at a non-default location on disk, use `sudo xcode-select --switch path/to/Xcode.app` to specify the Xcode that you wish to use for command line developer tools, and cancel the installation dialog. See `man xcode-select` for more details."
-#   echo "░ :: -> Installing Xcode for $SUDO_USER.." &&
-#     xcode-select --install &&
-#     sudo softwareupdate --install-rosetta --agree-to-license
-# fi
 
 if [ -d "$DOTFILES_DIR" ]; then
   BACKUP_DIR="$DOTFILES_DIR$(date +%s)"
