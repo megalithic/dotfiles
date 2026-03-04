@@ -10,22 +10,23 @@
 }: let
   # MailMate package - IMAP email client
   # Built with mkApp, copied to /Applications for licensing
-  mailmate = lib.mega.mkApp {
-    inherit pkgs lib;
-    stdenvNoCC = pkgs.stdenvNoCC;
-  } {
-    pname = "mailmate";
-    version = "5673";
-    appName = "MailMate.app";
-    src = {
-      url = "https://updates.mailmate-app.com/archives/MailMate_r5673.tbz";
-      sha256 = "2dc1069207d85a92c3a7000f019f8e4df88f123d2ffce4fdce17256d43c99cba";
+  mailmate =
+    lib.mega.mkApp {
+      inherit pkgs lib;
+      inherit (pkgs) stdenvNoCC;
+    } {
+      pname = "mailmate";
+      version = "5673";
+      appName = "MailMate.app";
+      src = {
+        url = "https://updates.mailmate-app.com/archives/MailMate_r5673.tbz";
+        sha256 = "2dc1069207d85a92c3a7000f019f8e4df88f123d2ffce4fdce17256d43c99cba";
+      };
+      binaries = []; # emate is inside app bundle, symlinked separately below
+      appLocation = "copy"; # Needs /Applications for licensing
+      desc = "IMAP email client";
+      homepage = "https://freron.com/";
     };
-    binaries = []; # emate is inside app bundle, symlinked separately below
-    appLocation = "copy"; # Needs /Applications for licensing
-    desc = "IMAP email client";
-    homepage = "https://freron.com/";
-  };
 
   # Fetch custom layouts from upstream sources with hash verification
   # These will be cached in the Nix store and only re-fetched if hashes change
@@ -162,7 +163,7 @@ in {
     # ,https://github.com/sheriferson/dotfiles/blob/main/MailMate/Resources/KeyBindings/sherif_mm_keys.plist
     "Library/Application Support/MailMate/Resources/KeyBindings/Mega.plist".text = ''
       {
-          "^r" = "refreshMailbox:";
+          "^R" = "refreshMailbox:";
           "j" = "selectNextMessageRow:";
           "k" = "selectPreviousMessageRow:";
           "^j" = "selectNextMailboxRow:";
@@ -203,5 +204,5 @@ in {
   };
 
   # Register with mkAppActivation for /Applications copy
-  mega.customApps = [ mailmate ];
+  mega.customApps = [mailmate];
 }

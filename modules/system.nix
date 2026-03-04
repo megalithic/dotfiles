@@ -62,7 +62,7 @@
 
       # Reduce motion.
       CustomSystemPreferences."com.apple.Accessibility".ReduceMotionEnabled = 1;
-      # universalaccess.reduceMotion = true;
+      universalaccess.reduceMotion = true;
 
       controlcenter = {
         BatteryShowPercentage = true;

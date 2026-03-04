@@ -33,8 +33,7 @@ done 2>/dev/null &
 # sudo rm -rf /Library/Developer/CommandLineTools
 
 # verify commandlinetools not installed:
-xcode-select -p &>/dev/null
-if [ $? -ne 0 ]; then
+if ! xcode-select -p &>/dev/null; then
   # echo "Command Line Tools for Xcode not found. Installing from softwareupdate…"
   # This temporary file prompts the 'softwareupdate' utility to list the Command Line Tools
   echo "░ :: -> Installing Xcode for $SUDO_USER.." &&
