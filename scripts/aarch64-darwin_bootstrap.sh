@@ -94,10 +94,15 @@ echo "░ :: -> Running nix-darwin for the first time for $FLAKE.." &&
   (sudo nix --experimental-features 'nix-command flakes' run nix-darwin -- switch --option eval-cache false --flake "$DOTFILES_DIR" &&
     echo "░ [✓] -> Completed installation of $DOTFILES_DIR nix-darwin flake..") || echo "░ [x] -> Errored while installing $DOTFILES_DIR nix-darwin flake.."
 
-# Ensure ~/Applications exists with proper permissions for home-manager
+# Ensure ~/Applications exists with proper ownership/permissions for home-manager
 if [[ ! -d "$HOME/Applications" ]]; then
   echo "░ :: -> Creating ~/Applications directory.."
   mkdir -p "$HOME/Applications"
+fi
+# Fix ownership if root owns it (can happen during bootstrap)
+if [[ "$(stat -f '%Su' "$HOME/Applications")" != "$SUDO_USER" ]]; then
+  echo "░ :: -> Fixing ~/Applications ownership.."
+  sudo chown "$SUDO_USER:staff" "$HOME/Applications"
 fi
 chmod 755 "$HOME/Applications"
 
