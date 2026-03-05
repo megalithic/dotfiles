@@ -94,6 +94,13 @@ echo "░ :: -> Running nix-darwin for the first time for $FLAKE.." &&
   (sudo nix --experimental-features 'nix-command flakes' run nix-darwin -- switch --option eval-cache false --flake "$DOTFILES_DIR" &&
     echo "░ [✓] -> Completed installation of $DOTFILES_DIR nix-darwin flake..") || echo "░ [x] -> Errored while installing $DOTFILES_DIR nix-darwin flake.."
 
+# Ensure ~/Applications exists with proper permissions for home-manager
+if [[ ! -d "$HOME/Applications" ]]; then
+  echo "░ :: -> Creating ~/Applications directory.."
+  mkdir -p "$HOME/Applications"
+fi
+chmod 755 "$HOME/Applications"
+
 echo "░ :: -> Running home-manager for the first time for $FLAKE.." &&
   (nix run home-manager/master -- switch --flake "$DOTFILES_DIR" &&
     echo "░ [✓] -> Completed installation of $DOTFILES_DIR home-manager flake..") || echo "░ [x] -> Errored while installing $DOTFILES_DIR home-manager flake.."

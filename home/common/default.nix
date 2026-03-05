@@ -42,7 +42,7 @@
 
   home.file =
     {
-      "Applications/.keep".text = "";
+      # Note: ~/Applications is managed by macOS with special permissions - don't use home.file for it
       "code/.keep".text = "";
       "src/.keep".text = "";
       "tmp/.keep".text = "";
