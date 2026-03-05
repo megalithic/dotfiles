@@ -42,6 +42,7 @@
 
   home.file =
     {
+      "Applications/.keep".text = "";
       "code/.keep".text = "";
       "src/.keep".text = "";
       "tmp/.keep".text = "";
