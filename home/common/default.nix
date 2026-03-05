@@ -460,8 +460,8 @@
             pkgs.fetchFromGitHub {
               owner = "neuromaancer";
               repo = "everforest_collection";
-              rev = "main";
-              sha256 = "9XPriKTmFapURY66f7wu76aojtBXFsp//Anug8e5BTk=";
+              rev = "ec3936e65699f38f8a9b1468d6ac20a25423d5af"; # pinned
+              sha256 = "HQQzmSYcQY4jYyk7zyxdOSJylqJl4aBobT37pST6AXE=";
             }
             + "/bat";
 

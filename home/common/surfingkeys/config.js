@@ -52,7 +52,9 @@ settings.tabsThreshold = 0;
 settings.modeAfterYank = "Normal";
 settings.useNeovim = false;
 // blocklist (regex pattern - use | for multiple sites)
-settings.blocklistPattern = /mail\.google\.com|localhost:9832/i;
+// settings.blocklistPattern = /mail\.google\.com|localhost:9832/i;
+settings.blocklistPattern =
+  /(((calendar|mail).google|trello|duolingo|youtube|udemy).com|localhost:9832)/i;
 // order
 settings.historyMUOrder = false;
 settings.tabsMRUOrder = false;
@@ -302,8 +304,7 @@ mapkey(";s", "-> Open Squirt", actions.showSquirt);
 
 actions.sendToInstapaper = () => {
   const script = document.createElement("script");
-  script.innerHTML =
-    `(() => { var d=document;try{if(!d.body)throw(0);window.location='http://www.instapaper.com/text?u='+encodeURIComponent(d.location.href);}catch(e){alert('Please wait until the page has loaded.');} })()`;
+  script.innerHTML = `(() => { var d=document;try{if(!d.body)throw(0);window.location='http://www.instapaper.com/text?u='+encodeURIComponent(d.location.href);}catch(e){alert('Please wait until the page has loaded.');} })()`;
   document.body.appendChild(script);
 };
 unmap(";i");
