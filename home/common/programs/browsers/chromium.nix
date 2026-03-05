@@ -122,7 +122,7 @@ in {
   # Requires Widevine from Brave Browser Nightly for DRM content
   # - REF: https://github.com/scuggo/pkgs/blob/main/pkgs/by-name/he/helium-browser/helium-patcher.nix
   programs.helium-browser = {
-    enable = true;
+    enable = false;
     package = pkgs.helium-browser;
     bundleId = "net.imput.helium"; # macOS bundle identifier for Application Support path
     dictionaries = [pkgs.hunspellDictsChromium.en_US];
@@ -179,7 +179,7 @@ in {
     executableName = "Brave Browser Nightly";
     iconFile = "app.icns";
     dictionaries = [pkgs.hunspellDictsChromium.en_US];
-    inherit extensions;
+    # inherit extensions;
 
     commandLineArgs =
       sharedCommandLineArgs
