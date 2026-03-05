@@ -90,7 +90,7 @@ in {
     appName = "Tidewave.app";
     src = {
       url = "https://github.com/tidewave-ai/tidewave_app/releases/latest/download/tidewave-app-aarch64.dmg";
-      sha256 = "sha256-iVOlSIJICg6qY26a28+tTJsPDxJuq5ggXPDw4VAEgJM=";
+      sha256 = "sha256-6gPXUahSRmrs3DF0YWqFEWuP2tZdB9A1CIRQDd4EtDE=";
     };
     binaries = []; # No CLI in app bundle; use tidewave-cli for CLI
     desc = "Tidewave is the coding agent for full-stack web app development. Integrate Claude Code, OpenAI Codex, and other agents with your web app and web framework at every layer, from UI to database.";
@@ -102,7 +102,7 @@ in {
     version = "latest";
     src = {
       url = "https://github.com/tidewave-ai/tidewave_app/releases/latest/download/tidewave-cli-aarch64-apple-darwin";
-      sha256 = "0mwzrdgjppwm7899i9zcr7f44h9bpm2dq0qlq7qj62d9kicj8cba";
+      sha256 = "sha256-WSNcptqqM5jpMiQ65mQ3y5f+YImfNn8kriqcxL8Nu4I=";
     };
     artifactType = "binary";
     binaries = ["tidewave"];
