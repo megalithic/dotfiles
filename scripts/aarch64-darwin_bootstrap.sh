@@ -85,7 +85,7 @@ if [ -d "$DOTFILES_DIR" ]; then
 fi
 
 echo "░ :: -> Cloning $DOTFILES_NAME repo to $DOTFILES_DIR.." &&
-  git clone "$DOTFILES_REPO" "$DOTFILES_DIR"
+  GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null git clone "$DOTFILES_REPO" "$DOTFILES_DIR"
 
 echo "░ :: -> Configuring git hooks.." &&
   git -C "$DOTFILES_DIR" config core.hooksPath .githooks
