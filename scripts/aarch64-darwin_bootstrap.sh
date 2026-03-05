@@ -84,6 +84,11 @@ echo "░ :: -> Cloning $DOTFILES_NAME repo to $DOTFILES_DIR.." &&
 echo "░ :: -> Configuring git hooks.." &&
   git -C "$DOTFILES_DIR" config core.hooksPath .githooks
 
+echo "░ :: -> Running nix-darwin for the first time for $FLAKE.." &&
+  nix run nix-darwin -- switch --flake "$DOTFILES_DIR"
+echo "░ :: -> Running home-manager for the first time for $FLAKE.." &&
+  nix run home-manager/master -- switch --flake "$DOTFILES_DIR"
+
 # Validate hostname exists in flake configurations
 echo "░ :: -> Validating configuration for '$FLAKE'.."
 if ! nix --experimental-features 'nix-command flakes' flake show "$DOTFILES_DIR" 2>/dev/null | grep -q "darwinConfigurations.$FLAKE"; then
