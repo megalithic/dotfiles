@@ -7,9 +7,9 @@
   # ── gui tools ──────────────────────────────────────────────────────────────────
   # Custom apps built with mkApp - these have passthru.appLocation
   customApps = with pkgs; [
-    bloom
+    # bloom
     fantastical
-    helium-browser
+    # helium-browser
     # tidewave GUI app moved to home/programs/ai/default.nix
     tuna # Menu bar app that fixes audio in video calls
   ];
