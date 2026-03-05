@@ -94,6 +94,7 @@ return {
         ["<C-y>"] = "actions.yank_entry",
         ["g?"] = "actions.show_help",
         ["gs"] = "actions.change_sort",
+        ["gp"] = "actions.preview",
         ["gx"] = "actions.open_external",
         ["g."] = "actions.toggle_hidden",
         ["<BS>"] = function() require("oil").open() end,

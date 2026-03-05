@@ -35,6 +35,18 @@
     applicationFirewall.allowSignedApp = true;
     applicationFirewall.allowSigned = true;
     applicationFirewall.enable = true;
+
+    # DNS servers (Cloudflare and Google)
+    dns = [
+      "1.1.1.1"
+      "8.8.8.8"
+    ];
+
+    # Network service names that should be in the list of known network services
+    knownNetworkServices = [
+      "Wi-Fi"
+      "Thunderbolt Ethernet Slot 0"
+    ];
   };
 
   system = {
@@ -185,7 +197,7 @@
         # universalaccess.closeViewScrollWheelToggle = true;
         "com.apple.trackpad.scaling" = 3.0;
         AppleInterfaceStyleSwitchesAutomatically = false;
-        AppleShowScrollBars = "Automatic";
+        AppleShowScrollBars = "WhenScrolling";
         InitialKeyRepeat = 12;
         KeyRepeat = 1;
         # _HIHideMenuBar = false;
@@ -277,6 +289,7 @@
           # };
           # useHyperKeyIcon = 1;
         };
+
         # REF: https://medium.com/@zmre/nix-darwin-quick-tip-activate-your-preferences-f69942a93236
         "com.apple.messages.text" = {
           Autocapitalization = 1;
@@ -386,7 +399,43 @@
   # Mute a startup sound
   # nvram.variables."StartupMute" = "%01";
 
-  security.pam.services.sudo_local.touchIdAuth = true;
+  # =============================================================================
+  # Text Replacements
+  # =============================================================================
+  # Use CustomUserPreferences since NSUserDictionaryReplacementItems isn't
+  # exposed as a typed option in nix-darwin
+  system.defaults.CustomUserPreferences."NSGlobalDomain".NSUserDictionaryReplacementItems = [
+    {
+      on = 1;
+      replace = "@@1";
+      "with" = "seth.messer@gmail.com";
+    }
+    {
+      on = 1;
+      replace = "@@2";
+      "with" = "seth@megalithic.io";
+    }
+    {
+      on = 1;
+      replace = "@@3";
+      "with" = "seth.messer@strivepharmacy.com";
+    }
+    {
+      on = 1;
+      replace = "omw";
+      "with" = "On my way!";
+    }
+  ];
+
+  # =============================================================================
+  # Security
+  # =============================================================================
+  security.pam.services.sudo_local = {
+    enable = true;
+    touchIdAuth = true;
+    reattach = true;
+    # Extend here with additional services (e.g., `login`) if we want biometric auth elsewhere.
+  };
   security.sudo.extraConfig = "${username}    ALL = (ALL) NOPASSWD: ALL";
 
   # NOTE: System launchd daemons moved to modules/darwin/services.nix

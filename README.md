@@ -13,13 +13,19 @@
 
 </p>
 
-## 🚀 Installation
+## 🚀 Installation (automagic)
+
+```bash
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/megalithic/dotfiles/HEAD/scripts/install.sh)"
+```
+
+## 🚀 Installation (manual)
 
 1. Install
    [Determinate `nix`](https://github.com/DeterminateSystems/nix-installer).
 
 ```bash
-curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
+curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install --determinate
 ```
 
 2. Source nix to run nix things

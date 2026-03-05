@@ -49,36 +49,23 @@
       inputs.darwin.follows = "nix-darwin";
     };
 
+    # NOTE: you can pin to a specific show with neovim-nightly-overlay/<sha>
     neovim-nightly-overlay.url = "github:nix-community/neovim-nightly-overlay";
-    # FIXME: Latest nightly crashes on snacks picker - pinned to Feb 16 version
-    # neovim-nightly-overlay.url = "github:nix-community/neovim-nightly-overlay/c3e52f66";
 
-    # NOTE: Don't follow nixpkgs - let llm-agents use its own pinned version
-    # Our nixpkgs has nodejs_24 test failures that our overlay can't fix for llm-agents
     llm-agents.url = "github:numtide/llm-agents.nix";
-    mcp-servers-nix = {
-      url = "github:natsukium/mcp-servers-nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    mcp-servers-nix.url = "github:natsukium/mcp-servers-nix";
     expert.url = "github:elixir-lang/expert";
-    nur = {
-      url = "github:nix-community/nur";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-    nh = {
-      url = "github:nix-community/nh";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    nur.url = "github:nix-community/nur";
+    op-shell-plugins.url = "github:1Password/shell-plugins";
+    jujutsu.url = "github:jj-vcs/jj?tag=v0.39.0";
+    devenv.url = "github:cachix/devenv";
+    nh.url = "github:nix-community/nh";
 
     # FIXME: Shade build broken - GhosttyKit extraction issue (see overlays/default.nix)
     # shade.url = "github:megalithic/shade";
     # shade.inputs.nixpkgs.follows = "nixpkgs";
     # opnix = {
     #   url = "github:brizzbuzz/opnix";
-    #   inputs.nixpkgs.follows = "nixpkgs";
-    # };
-    # op-shell-plugins = {
-    #   url = "github:1password/shell-plugins";
     #   inputs.nixpkgs.follows = "nixpkgs";
     # };
     # yazi.url = "github:sxyazi/yazi";
@@ -100,10 +87,9 @@
   } @ inputs: let
     arch = "aarch64-darwin";
     version = "25.11";
-
+    username = "seth";
     lib = nixpkgs.lib.extend (import ./lib/default.nix inputs);
     overlays = import ./overlays {inherit inputs lib;};
-
     brew_config = {username}: {
       nix-homebrew = {
         enable = true;
@@ -123,7 +109,7 @@
 
     mkInit = import ./lib/mkInit.nix {inherit nixpkgs;};
 
-    mkDarwinHost = import ./lib/mkDarwinHost.nix {
+    mkDarwin = import ./lib/mkDarwin.nix {
       inherit inputs lib overlays brew_config version;
     };
 
@@ -131,32 +117,25 @@
       inherit inputs lib overlays version;
     };
   in {
-    # Bootstrap nix install per arch
     apps."${arch}".default = mkInit {
       inherit arch;
       script = builtins.readFile scripts/${arch}_bootstrap.sh;
     };
-
-    # Darwin system configurations
-    darwinConfigurations.megabookpro = mkDarwinHost {
+    darwinConfigurations.megabookpro = mkDarwin {
       hostname = "megabookpro";
-      username = "seth";
+      inherit username;
     };
-
-    darwinConfigurations.rxbookpro = mkDarwinHost {
+    darwinConfigurations.rxbookpro = mkDarwin {
       hostname = "rxbookpro";
-      username = "seth";
+      inherit username;
     };
-
-    # Standalone home-manager configurations
-    homeConfigurations."seth@megabookpro" = mkHome {
+    homeConfigurations."${username}@megabookpro" = mkHome {
       hostname = "megabookpro";
-      username = "seth";
+      inherit username;
     };
-
-    homeConfigurations."seth@rxbookpro" = mkHome {
+    homeConfigurations."${username}@rxbookpro" = mkHome {
       hostname = "rxbookpro";
-      username = "seth";
+      inherit username;
     };
   };
 }

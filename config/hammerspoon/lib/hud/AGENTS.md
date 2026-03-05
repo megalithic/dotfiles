@@ -117,8 +117,7 @@ lib/hud/
 ├── theme.lua         -- Dark/light mode colors
 ├── persistence.lua   -- hs.settings wrapper
 ├── stack.lua         -- Multi-HUD z-ordering
-├── sfsymbol.lua      -- SF Symbol loading (via Swift)
-└── sfsymbol.swift    -- Swift helper for SF Symbols
+└── sfsymbol.lua      -- SF Symbol loading (via ~/bin/sfsymbol.swift)
 ```
 
 ## Common mistakes

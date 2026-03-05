@@ -50,16 +50,6 @@ in
         ../modules/system.nix
         ../modules/darwin/services.nix
 
-        # macOS Finder aliases for nix-managed apps (Spotlight/Launchpad support)
-        ../lib/builders/mkMacOSAlias.nix
-        {
-          services.mac-aliases = {
-            enable = true;
-            userName = username;
-            userHome = paths.home;
-          };
-        }
-
         # Secrets (system-level)
         inputs.agenix.darwinModules.default
 

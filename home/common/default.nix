@@ -28,6 +28,7 @@
     ./programs/fzf.nix
     ./programs/nvim.nix
     ./programs/shade.nix
+    inputs.op-shell-plugins.hmModules.default
   ];
 
   home.username = username;
@@ -39,6 +40,13 @@
     "${paths.dotfiles}/bin"
     "${paths.cargoHome}/bin"
   ];
+
+  home.sessionVariables = {
+    XDG_DATA_DIRS = "${config.home.profileDirectory}/share:${"\${GHOSTTY_SHELL_INTEGRATION_XDG_DIR:+\$GHOSTTY_SHELL_INTEGRATION_XDG_DIR:}"}$XDG_DATA_DIRS";
+
+    # Make Nix-provided pkg-config files visible to builds
+    PKG_CONFIG_PATH = "${config.home.profileDirectory}/lib/pkgconfig:${config.home.profileDirectory}/share/pkgconfig";
+  };
 
   home.file =
     {
@@ -341,6 +349,10 @@
     broken_symlink: { foreground: "#e67e80" }
     broken_path_overlay: { foreground: "#859289" }
   '';
+
+  fonts = {
+    fontconfig.enable = true;
+  };
 
   programs = {
     home-manager.enable = true;

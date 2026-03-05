@@ -17,7 +17,7 @@ local M = {}
 local cache = {}
 
 -- Path to Swift script
-local scriptPath = hs.configdir .. "/scripts/sfsymbol.swift"
+local scriptPath = os.getenv("HOME") .. "/bin/sfsymbol.swift"
 
 -- Cache directory for generated images
 local cacheDir = os.getenv("TMPDIR") .. "hammerspoon-sfsymbols/"

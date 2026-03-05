@@ -14,7 +14,7 @@
 
 SESSION="${1:-}"
 # SESSION_PATH="${2:$CODE}"
-CODE="${1:~/code}"
+CODE="${SESSION:~/code}"
 CWD="$(zoxide query "$SESSION")"
 
 if [[ -n $SESSION ]]; then

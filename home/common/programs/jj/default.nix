@@ -6,25 +6,26 @@
   ...
 }: let
   aliases = import ./aliases.nix;
-  templates = import ./templates.nix;
+  # templates = import ./templates.nix;
 in {
   programs.jujutsu = {
     enable = true;
+    package = pkgs.jujutsu;
     settings = {
       user = {
         name = "Seth Messer";
         email = "seth@megalithic.io";
       };
-      
+
       ui = {
         default-command = "log";
         pager = "${pkgs.delta}/bin/delta";
         diff-formatter = ":git";
-        graph.style = "curved";
-        should-sign-off = true;
+        # graph.style = "curved";
+        # should-sign-off = true;
         show-cryptographic-signatures = true;
       };
-      
+
       signing = {
         behavior = "own";
         backend = "ssh";
@@ -57,12 +58,16 @@ in {
         "node working_copy" = "green";
         "node conflict" = "red";
         "node immutable" = "red";
-        "node normal" = { bold = false; };
-        "node" = { bold = false; };
+        "node normal" = {bold = false;};
+        "node" = {bold = false;};
       };
 
+      # templates = {
+      #   draft_commit_description = "builtin_draft_commit_description_with_diff";
+      # };
+
       inherit aliases;
-      inherit (templates) revsets revset-aliases template-aliases templates;
+      # inherit (templates) revsets revset-aliases template-aliases templates;
     };
   };
 }

@@ -47,6 +47,7 @@
     chafa
     curlie
     delta
+    difftastic
     desktoppr # declarative wallpaper setter
     devbox
     difftastic

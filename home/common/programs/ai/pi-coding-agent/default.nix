@@ -238,6 +238,30 @@
   );
 
   # ===========================================================================
+  # Auto-discover prompts (.md files in prompts/)
+  # ===========================================================================
+  promptsDir = ./prompts;
+  promptsDirExists = builtins.pathExists promptsDir;
+
+  promptFiles =
+    if promptsDirExists
+    then
+      builtins.filter (name: lib.hasSuffix ".md" name) (
+        builtins.attrNames (builtins.readDir promptsDir)
+      )
+    else [];
+
+  promptSymlinks = builtins.listToAttrs (
+    map (name: {
+      name = ".pi/agent/prompts/${name}";
+      value = {
+        source = ./prompts/${name};
+      };
+    })
+    promptFiles
+  );
+
+  # ===========================================================================
   # Multi-Profile Configuration
   # ===========================================================================
   # Profiles that link to master ~/.pi/agent/ (except auth.json and sessions/)
@@ -253,6 +277,7 @@
     "keybindings.json"
     "extensions"
     "skills"
+    "prompts"
   ];
 
   # ===========================================================================
@@ -448,7 +473,8 @@ in {
       ".pi/agent/extensions/pi-mcp-adapter".source = pi-mcp-adapter;
     }
     // extensionSymlinks
-    // skillSymlinks;
+    // skillSymlinks
+    // promptSymlinks;
 
   # ===========================================================================
   # Settings Merge Activation

@@ -5,7 +5,7 @@ local callback = nil
 local buffer = ""
 local isMonitoring = false
 local isReady = false
-local SCRIPT_PATH = hs.configdir .. "/scripts/level-monitor.swift"
+local SCRIPT_PATH = os.getenv("HOME") .. "/bin/level-monitor.swift"
 local MAX_BUFFER = 1024
 
 local function sendCommand(cmd)

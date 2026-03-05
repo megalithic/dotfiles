@@ -20,7 +20,7 @@
     { stdenv }:
     stdenv.mkDerivation {
       name = "create-macos-alias";
-      src = "${self}/scripts/create-macos-alias.swift";
+      src = "${self}/bin/create-macos-alias.swift";
       unpackPhase = "true";
       dontConfigure = true;
       dontBuild = true;

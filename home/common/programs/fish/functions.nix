@@ -26,6 +26,18 @@
     '';
   };
 
+  opl = ''
+    eval (op signin --account my) and eval (op signin --account evirts)
+
+    mkdir -p ~/.local/cache/op/
+
+    if test -r ~/.local/cache/op/session
+        mv ~/.local/cache/op/session ~/.local/cache/op/session.bak
+    end
+
+    env | rg OP_SESSION_ | cut -d= -f2 > ~/.local/cache/op/session
+  '';
+
   nix-shell = {
     wraps = "nix-shell";
     body = ''

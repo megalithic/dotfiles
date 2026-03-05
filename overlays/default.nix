@@ -1,38 +1,19 @@
-# Overlay composition
-#
-# This file composes all overlays that get applied to nixpkgs:
-#   - External overlays from flake inputs (nur, fenix, mcp-servers, etc.)
-#   - Package set aliases (unstable)
-#   - Input package aliases (ai-tools, nvim-nightly, etc.)
-#   - Custom packages from pkgs/ directory
-#
-# For YOUR custom package definitions (mkApp, callPackage derivations),
-# see pkgs/default.nix instead.
-#
 {
   inputs,
   lib,
-}:
-[
-  # ===========================================================================
-  # External Overlays (from flake inputs)
-  # ===========================================================================
+}: [
+  inputs.jujutsu.overlays.default
   inputs.nur.overlays.default
   inputs.mcp-servers-nix.overlays.default
 
-  # ===========================================================================
-  # Package Sets & Input Aliases
-  # ===========================================================================
-  # Provides: pkgs.unstable.*, pkgs.llm-agents.*, etc.
   (final: prev: {
-    # Unstable nixpkgs for cutting-edge packages (e.g., pkgs.unstable.tmux)
     unstable = import inputs.nixpkgs-unstable {
       inherit (prev.stdenv.hostPlatform) system;
       config.allowUnfree = true;
       config.allowUnfreePredicate = _: true;
     };
 
-    # Input package aliases (convenient access without inputs.foo.packages.system)
+    # NOTE: keeping these around for posterity and quicker reference
     # llm-agents = let
     #   upstream = inputs.llm-agents.packages.${prev.stdenv.hostPlatform.system};
     #   # Import llm-agents' custom npm fetcher for hash overrides
@@ -51,36 +32,37 @@
     #       };
     #     });
     #   };
-    llm-agents = let
-      upstream = inputs.llm-agents.packages.${prev.stdenv.hostPlatform.system};
-    in
-      upstream
-      // {
-        # FIXME: Override claude-code to fix undefined maintainer 'ryoppippi'
-        # Upstream bug: https://github.com/numtide/llm-agents.nix/blob/765ba8f/packages/claude-code/package.nix#L75
-        # Remove this override when upstream adds ryoppippi to lib/default.nix maintainers
-        claude-code = upstream.claude-code.overrideAttrs (old: {
-          meta = old.meta // {
-            maintainers = with prev.lib.maintainers; [
-              malo
-              omarjatoi
-            ];
-          };
-        });
-      };
+
+    # llm-agents = let
+    #   upstream = inputs.llm-agents.packages.${prev.stdenv.hostPlatform.system};
+    # in
+    #   upstream
+    #   // {
+    #     # FIXME: Override claude-code to fix undefined maintainer 'ryoppippi'
+    #     # Upstream bug: https://github.com/numtide/llm-agents.nix/blob/765ba8f/packages/claude-code/package.nix#L75
+    #     # Remove this override when upstream adds ryoppippi to lib/default.nix maintainers
+    #     claude-code = upstream.claude-code.overrideAttrs (old: {
+    #       meta =
+    #         old.meta
+    #         // {
+    #           maintainers = with prev.lib.maintainers; [
+    #             malo
+    #             omarjatoi
+    #           ];
+    #         };
+    #     });
+    #   };
+
+    llm-agents = inputs.llm-agents.packages.${prev.stdenv.hostPlatform.system};
     nvim-nightly = inputs.neovim-nightly-overlay.packages.${prev.stdenv.hostPlatform.system}.default;
     expert = inputs.expert.packages.${prev.stdenv.hostPlatform.system}.default;
+    notmuch = prev.notmuch.override {withEmacs = false;};
     # FIXME: Shade flake tries to extract GhosttyKit from Ghostty's Nix output,
     # but Ghostty's Nix build doesn't produce a macOS app bundle with the framework.
     # Upstream fix needed in shade repo's flake.nix
     # shade = inputs.shade.packages.${prev.stdenv.hostPlatform.system}.default;
-
-    # Package overrides
-    notmuch = prev.notmuch.override { withEmacs = false; };
   })
 
-  # ===========================================================================
-  # Custom Packages (from pkgs/)
-  # ===========================================================================
-  (import ../pkgs { inherit lib; })
+  # my custom packages (pkgsf)
+  (import ../pkgs {inherit lib;})
 ]
