@@ -72,6 +72,12 @@ if ! xcode-select -p &>/dev/null; then
   softwareupdate --install-rosetta --agree-to-license
 fi
 
+# Accept Xcode license if not already accepted (required for git, etc.)
+if ! xcodebuild -license check &>/dev/null 2>&1; then
+  echo "░ :: -> Accepting Xcode license.."
+  sudo xcodebuild -license accept
+fi
+
 if [ -d "$DOTFILES_DIR" ]; then
   BACKUP_DIR="$DOTFILES_DIR$(date +%s)"
   echo "░ :: -> Backing up existing $DOTFILES_NAME to $BACKUP_DIR.." &&
