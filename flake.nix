@@ -60,6 +60,10 @@
     jujutsu.url = "github:jj-vcs/jj?tag=v0.39.0";
     devenv.url = "github:cachix/devenv";
     nh.url = "github:nix-community/nh";
+    kanata-darwin = {
+      url = "github:not-in-stock/kanata-darwin";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
     # FIXME: Shade build broken - GhosttyKit extraction issue (see overlays/default.nix)
     # shade.url = "github:megalithic/shade";

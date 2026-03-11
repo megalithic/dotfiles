@@ -392,7 +392,7 @@
     };
     keyboard = {
       enableKeyMapping = true;
-      remapCapsLockToControl = true;
+      remapCapsLockToControl = false; # kanata handles caps → esc/ctrl tap-hold
     };
   };
 

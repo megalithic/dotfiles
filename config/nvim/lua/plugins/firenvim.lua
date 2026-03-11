@@ -1,229 +1,226 @@
--- TODO:
--- https://github.com/jfpedroza/dotfiles/blob/master/nvim/after/plugin/firenvim.lua
--- https://github.com/stevearc/dotfiles/blob/master/.config/nvim/lua/plugins/firenvim.lua
--- https://github.com/letientai299/dotfiles/blob/master/vim/lua/firenvim_config.lua
+-- lua/plugins/firenvim.lua
+-- Firenvim: embed neovim in browser textareas
+-- Ref: https://github.com/glacambre/firenvim
+
+-- Only define the plugin spec if we're in firenvim OR in terminal (for build/install)
+-- The `cond` field handles conditional loading
+
+local is_firenvim = vim.g.started_by_firenvim == true
 
 return {
-  "glacambre/firenvim",
-  lazy = false,
-  build = ":call firenvim#install(0)",
-  config = function()
-    if vim.g.started_by_firenvim then
-      local map = vim.keymap.set
-
+  {
+    "glacambre/firenvim",
+    lazy = false,
+    cond = is_firenvim,
+    build = function()
+      require("lazy").load({ plugins = "firenvim", wait = true })
+      vim.fn["firenvim#install"](0)
+    end,
+    init = function()
+      -- firenvim_config must be set before the plugin loads
       vim.g.firenvim_config = {
         globalSettings = {
           alt = "all",
+          cmdlineTimeout = 3000,
+          -- Keys to pass through to browser (firenvim won't capture these)
           ignoreKeys = {
-            all = { "<C-->" },
-            -- insert = { "<C-r>" },
-            normal = {
-              "<D-1>",
-              "<D-2>",
-              "<D-3>",
-              "<D-4>",
-              "<D-5>",
-              "<D-6>",
-              "<D-7>",
-              "<D-8>",
-              "<D-9>",
-              "<D-0>",
-              "<D-t>",
-              "<D-r>",
+            all = {
+              "<C-t>", -- new tab
+              "<C-z>", -- hide frame / background
+              "<C-c>", -- focus page
+            },
+            insert = {
+              "<C-r>", -- browser refresh
             },
           },
         },
         localSettings = {
+          -- Default: take over textareas on all sites
           [".*"] = {
-            cmdline = "neovim", -- or firenvim
+            cmdline = "neovim",
             content = "text",
             priority = 0,
-            -- selector = "textarea:not([id='read-only-cursor-text-area'], [id='pull_request_review_body'])",
-            selector = "textarea:not([id='read-only-cursor-text-area'], [id='pull_request_review_body'], *:not([data-component='AnchoredOverlay'] textarea)",
-            takeover = "never",
-            -- filename = "/tmp/{hostname}_{pathname%10}.{extension}",
-          },
-          ["^https?://github\\.com/"] = {
+            selector = 'textarea:not([readonly], [aria-readonly]), div[role="textbox"]',
             takeover = "always",
-            selector = "textarea:not([id='read-only-cursor-text-area'], [id='pull_request_review_body'], *:not([data-component='AnchoredOverlay'] textarea)",
-            priority = 1,
           },
-          ["^https?://github\\.com/users/megalithic/projects"] = {
-            takeover = "never",
+          -- Never take over on these sites (too complex / not useful)
+          ["https?://docs\\.google\\.com/.*"] = { takeover = "never", priority = 1 },
+          ["https?://mail\\.google\\.com/.*"] = { takeover = "never", priority = 1 },
+          ["https?://.*\\.slack\\.com/.*"] = { takeover = "never", priority = 1 },
+          ["https?://discord\\.com/.*"] = { takeover = "never", priority = 1 },
+          ["https?://.*\\.notion\\.so/.*"] = { takeover = "never", priority = 1 },
+          ["https?://.*\\.figma\\.com/.*"] = { takeover = "never", priority = 1 },
+          -- GitHub: use markdown filetype
+          ["https?://github\\.com/.*"] = {
             priority = 1,
-          },
-          ["^https?://stackoverflow\\.com/"] = {
             takeover = "always",
-            priority = 1,
-          },
-          ["^https?://docs\\.google\\.com/"] = {
-            takeover = "never",
-            priority = 1,
-          },
-          ["^https?://meet\\.google\\.com/"] = {
-            takeover = "never",
-            priority = 1,
           },
         },
       }
+    end,
+    config = function()
+      if not is_firenvim then return end
 
-      local function set_options(bufnr)
-        bufnr = bufnr or 0
+      local group = vim.api.nvim_create_augroup("mega.firenvim", { clear = true })
 
-        vim.opt.shadafile = vim.fn.stdpath("state") .. "/shada/firenvim.shada"
-        vim.opt.ruler = false
-        vim.opt.wrap = true
-        vim.opt.linebreak = true
-        vim.opt.laststatus = 2
-        vim.opt.cmdheight = 0
-        vim.opt.showtabline = 0
-        vim.opt.smoothscroll = false
-        vim.opt_local.relativenumber = false
-        vim.opt_local.signcolumn = "no"
-        vim.opt_local.statuscolumn = ""
-        vim.opt_local.cursorlineopt = "screenline,number"
-        vim.opt_local.cursorline = true
-        vim.api.nvim_set_option_value("guifont", "JetBrainsMono Nerd Font:h22", {})
-        vim.diagnostic.enable(false, { bufnr = bufnr })
-        vim.lsp.stop_client(vim.lsp.get_clients({ bufnr = bufnr }))
-      end
-
-      local timer = nil
-      local function throttle_write(delay, bufnr)
-        if timer then timer:close() end
-        timer = vim.uv.new_timer()
-        timer:start(
-          delay or 10, -- or 1000?
-          0,
-          vim.schedule_wrap(function()
-            timer:close()
-            timer = nil
-            -- if vim.api.nvim_buf_get_option(bufnr, "modified") then
-            if vim.api.nvim_get_option_value("modified", { buf = bufnr }) then
-              vim.api.nvim_buf_call(bufnr, function() vim.cmd("silent! write") end)
-            end
-          end)
-        )
-      end
-
-      local function write(bufnr, params)
-        local delay = vim.tbl_contains({ "FocusLost", "InsertLeave" }, params.event) and 10 or 1000
-        throttle_write(delay, bufnr)
-      end
-
-      local function setup_write_autocmd(bufnr)
-        local buf_group = vim.api.nvim_create_augroup("FireNvimWrite", {})
-        vim.api.nvim_create_autocmd({ "FocusLost", "TextChanged", "TextChangedI", "InsertLeave" }, {
-          buffer = bufnr,
-          group = buf_group,
-          nested = true,
-          callback = function(params) write(bufnr, params) end,
-        })
-      end
-
-      local function on_bufenter(params)
-        if params.file == "" then
-          set_options()
-        else
-          local bufnr = params.buf or vim.api.nvim_get_current_buf() or 0
-          local buflines = vim.api.nvim_buf_line_count(bufnr)
-
-          if buflines == 1 then
-            local function first_empty_line()
-              local t = vim.api.nvim_buf_get_lines(0, 0, -1, true)
-              for num, line in ipairs(t) do
-                if line:match("^%s*$") then
-                  if num == 1 then vim.cmd([[startinsert!]]) end
-                  break
-                end
-              end
-            end
-
-            if true then first_empty_line() end
-          end
-
-          -- We wait to call this function until the firenvim buffer is loaded
-          setup_write_autocmd(bufnr)
-          set_options(bufnr)
-        end
-      end
-
-      local function on_uienter(params)
-        local client = vim.api.nvim_get_chan_info(vim.v.event.chan).client
-        if client ~= nil and client.name == "Firenvim" then
-          local bufnr = params.buf or vim.api.nvim_get_current_buf() or 0
-          set_options(bufnr)
-
-          vim.cmd([[
-          tmap <D-v> <C-w>"+
-          nnoremap <D-v> "+p
-          vnoremap <D-v> "+p
-          inoremap <D-v> <C-R><C-O>+
-          cnoremap <D-v> <C-R><C-O>+
-          inoremap <D-r> <nop>
-        ]])
-
-          vim.api.nvim_set_keymap("", "<D-c>", '"+y', { noremap = true, silent = true }) -- Copy
-          vim.api.nvim_set_keymap("", "<D-v>", "+p<CR>", { noremap = true, silent = true })
-          vim.api.nvim_set_keymap("!", "<D-v>", "<C-R>+", { noremap = true, silent = true })
-          vim.api.nvim_set_keymap("t", "<D-v>", "<C-R>+", { noremap = true, silent = true })
-          vim.api.nvim_set_keymap("v", "<D-v>", "<C-R>+", { noremap = true, silent = true })
-
-          -- Make navigating long lines easier in the tight view
-          vim.api.nvim_set_keymap("n", "j", "gj", { noremap = true, silent = true })
-          vim.api.nvim_set_keymap("n", "k", "gk", { noremap = true, silent = true })
-
-          -- disable various UI elements to have more text lines.
-          vim.o.showtabline = 0
-          vim.o.showmode = false
-          vim.o.signcolumn = "no"
-          vim.o.showcmd = false
-          vim.o.linespace = -2
-          vim.o.laststatus = 0
-          vim.o.cmdheight = 0
-          -- vim.cmd("colo carbonfox")
-
-          vim.fn.timer_start(100, function()
-            if vim.o.lines < 20 then vim.o.lines = 20 end
-            -- if vim.o.columns < 120 then vim.o.columns = 120 end
-          end)
-
-          map(
-            "n",
-            "<Esc>",
-            "<cmd>wall | call firenvim#hide_frame() | call firenvim#press_keys('<LT>Esc>') | call firenvim#focus_page()<CR>"
-          )
-          map("n", "<C-z>", "<cmd>wall | call firenvim#hide_frame() | call firenvim#focus_input()<CR>")
-          map("n", "<C-c>", "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR><Esc>norm! ggdGa<CR>")
-          map("n", "<C-c>", "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR><Esc>norm! ggdGa<CR>")
-          map("n", "q", "<cmd>call firenvim#hide_frame() | call firenvim#focus_page()<CR><Esc>norm! ggdGa<CR>")
-
-          bufnr = params.buf or vim.api.nvim_get_current_buf() or 0
-
-          setup_write_autocmd(bufnr)
-        end
-      end
-
-      local augroup = vim.api.nvim_create_augroup("Firenvim", { clear = true })
+      -- ── UI setup on firenvim connect ──────────────────────────────
       vim.api.nvim_create_autocmd("UIEnter", {
-        group = augroup,
-        callback = on_uienter,
+        group = group,
+        callback = function()
+          local client = vim.api.nvim_get_chan_info(vim.v.event.chan).client
+          if not client or client.name ~= "Firenvim" then return end
+
+          -- Font: JetBrainsMono Nerd Font Mono at size 22
+          vim.o.guifont = "JetBrainsMono Nerd Font Mono:h22"
+
+          -- Minimal UI
+          vim.o.laststatus = 0
+          vim.o.showtabline = 0
+          vim.o.number = true
+          vim.o.relativenumber = true
+          vim.o.signcolumn = "no"
+          vim.o.cmdheight = 1
+
+          -- Minimal statuscolumn: just line numbers
+          vim.o.statuscolumn = "%l "
+
+          -- Disable autoformat in firenvim
+          vim.g.disable_autoformat = true
+
+          -- Initial resize
+          vim.defer_fn(function()
+            local lines = vim.api.nvim_buf_line_count(0)
+            vim.o.lines = math.max(lines + 5, 10)
+          end, 100)
+        end,
       })
-      vim.api.nvim_create_autocmd({ "BufEnter", "WinResized" }, {
-        group = augroup,
-        pattern = "*",
-        callback = on_bufenter,
-      })
+
+      -- ── Filetype detection from buffer name ──────────────────────
       vim.api.nvim_create_autocmd("BufEnter", {
-        group = augroup,
+        group = group,
         pattern = "github.com_*.txt",
         callback = function() vim.bo.filetype = "markdown" end,
       })
-      vim.api.nvim_create_autocmd("BufEnter", {
-        group = augroup,
-        pattern = "leetcode.com_*.js",
-        callback = function() vim.bo.filetype = "typescript" end,
+
+      -- ── Auto-sync buffer to page on InsertLeave ──────────────────
+      vim.api.nvim_create_autocmd("InsertLeave", {
+        group = group,
+        callback = function()
+          if vim.bo.buftype ~= "" then return end
+          vim.cmd("silent! write")
+        end,
       })
-    end
-  end,
+
+      -- ── Auto-resize to fit content ───────────────────────────────
+      vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, {
+        group = group,
+        callback = function()
+          local lines = vim.api.nvim_buf_line_count(0)
+          local target = math.max(lines + 5, 10)
+          if vim.o.lines ~= target then vim.o.lines = target end
+        end,
+      })
+
+      -- ── Insert mode if buffer is empty ───────────────────────────
+      vim.api.nvim_create_autocmd("BufEnter", {
+        group = group,
+        callback = function()
+          vim.defer_fn(function()
+            local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+            if #lines <= 1 and (lines[1] or "") == "" then vim.cmd("startinsert") end
+          end, 50)
+        end,
+      })
+
+      -- ── Keymaps ──────────────────────────────────────────────────
+      -- Ctrl-z: hide firenvim frame, focus the html element
+      vim.keymap.set(
+        { "n", "i", "v" },
+        "<C-z>",
+        function() vim.fn["firenvim#hide_frame"]() end,
+        { desc = "Hide firenvim, focus input" }
+      )
+
+      -- Ctrl-c: focus the page (not the input)
+      vim.keymap.set(
+        { "n", "i", "v" },
+        "<C-c>",
+        function() vim.fn["firenvim#focus_page"]() end,
+        { desc = "Focus page" }
+      )
+    end,
+  },
+
+  -- ── Grammar/spelling: harper-ls ────────────────────────────────────
+  -- Only enable harper-ls in firenvim for prose-heavy contexts
+  {
+    "neovim/nvim-lspconfig",
+    optional = true,
+    opts = function(_, opts)
+      if not is_firenvim then return end
+      opts.servers = opts.servers or {}
+      opts.servers.harper_ls = {
+        filetypes = { "markdown", "text", "gitcommit" },
+        settings = {
+          ["harper-ls"] = {
+            linters = {
+              spell_check = true,
+              sentence_capitalization = false,
+              long_sentences = true,
+              repeated_words = true,
+              unclosed_quotes = true,
+              wrong_quotes = false,
+              linking_verbs = false,
+              avoid_curses = false,
+            },
+          },
+        },
+      }
+    end,
+  },
+
+  -- ── GitHub completion via blink-cmp-git ────────────────────────────
+  -- Issues (#), PRs (#), users (@), commits (:) when on GitHub
+  {
+    "Kaiser-Yang/blink-cmp-git",
+    cond = is_firenvim,
+    dependencies = { "saghen/blink.cmp" },
+    opts = {
+      before_reload_cache = function() end, -- silence cache-reload notification
+      commit = { enable = false },
+      git_centers = {
+        github = {
+          pull_request = { enable = true },
+          mention = { enable = true },
+          issue = { get_documentation = function() return "" end }, -- disable doc window
+        },
+      },
+    },
+  },
+
+  -- Wire blink-cmp-git into blink.cmp sources
+  {
+    "saghen/blink.cmp",
+    optional = true,
+    opts = function(_, opts)
+      if not is_firenvim then return end
+      opts.sources = opts.sources or {}
+      opts.sources.default = opts.sources.default or {}
+
+      -- Add git source
+      if not vim.list_contains(opts.sources.default, "git") then table.insert(opts.sources.default, "git") end
+
+      opts.sources.providers = opts.sources.providers or {}
+      opts.sources.providers.git = {
+        module = "blink-cmp-git",
+        name = "Git",
+        enabled = function()
+          -- Only on github-related buffers
+          local bufname = vim.api.nvim_buf_get_name(0)
+          return bufname:match("github%.com") ~= nil or vim.bo.filetype == "gitcommit" or vim.bo.filetype == "markdown"
+        end,
+        opts = {},
+      }
+    end,
+  },
 }

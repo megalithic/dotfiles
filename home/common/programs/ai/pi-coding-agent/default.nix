@@ -40,27 +40,6 @@
   };
 
   # ===========================================================================
-  # Skills with npm dependencies (need to be built)
-  # ===========================================================================
-  brave-search-skill = pkgs.buildNpmPackage {
-    pname = "brave-search-skill";
-    version = "1.0.0";
-
-    src = ./skills-with-deps/brave-search;
-
-    npmDepsHash = "sha256-BhgSY+lpkNb125ctAoIOzudqREgWSNpmU/r6pQdTlXE=";
-
-    dontNpmBuild = true;
-
-    installPhase = ''
-      runHook preInstall
-      mkdir -p $out
-      cp -r . $out/
-      runHook postInstall
-    '';
-  };
-
-  # ===========================================================================
   # Pi extensions from npm (fetched and symlinked, no runtime npm install)
   # ===========================================================================
   # pi-agent-browser: Browser automation tool
@@ -460,9 +439,6 @@ in {
     {
       # Global AGENTS.md for pi
       ".pi/agent/AGENTS.md".source = ./sources/GLOBAL_AGENTS.md;
-
-      # Skills with npm dependencies (built via buildNpmPackage)
-      ".pi/agent/skills/brave-search".source = brave-search-skill;
 
       # Pi extensions from npm (nix-managed, no runtime npm install)
       # Symlink the .ts extension file directly to pi's extensions directory

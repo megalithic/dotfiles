@@ -7,7 +7,7 @@ mega.ui.statusline = {}
 
 -- HT: @akinsho, @echasnovski, @lukas-reineke, @kristijanhusak, @mfussenegger
 
-local M = {}
+local ctx -- Module-level context, set in render()
 
 local fn = vim.fn
 local api = vim.api
@@ -16,30 +16,48 @@ local strwidth = fn.strwidth
 local fnamemodify = fn.fnamemodify
 local fmt = string.format
 
-local U = require("config.utils")
+local U = mega.u or {} -- Use the global utils with fallback
 
 vim.g.is_saving = false
 vim.g.lsp_progress_messages = ""
 
 local redrawstatus = vim.schedule_wrap(function() vim.cmd.redrawstatus() end)
 
+-- Diagnostics scope: "buffer_lsps" or "workspace_lsps"
+local diagnostics_scope = "buffer_lsps"
+
+-- Jujutsu (jj) cache - updated async on events, read during render
+local jj_cache = { is_repo = false, change_id = nil, bookmarks = {}, conflict = false }
+
+local function update_jj_cache()
+  -- Check if in jj repo (cached, only runs on events not every render)
+  jj_cache.is_repo = vim.fn.finddir(".jj", ".;") ~= ""
+  if not jj_cache.is_repo then
+    jj_cache.change_id = nil
+    jj_cache.bookmarks = {}
+    jj_cache.conflict = false
+    return
+  end
+
+  vim.system(
+    { "jj", "log", "-r", "@", "--no-graph", "-T", 'change_id.shortest(8) ++ "|" ++ bookmarks ++ "|" ++ conflict' },
+    { text = true },
+    function(result)
+      if result.code ~= 0 then return end
+      local output = vim.trim(result.stdout)
+      local parts = vim.split(output, "|")
+      if #parts >= 3 then
+        jj_cache.change_id = parts[1] ~= "" and parts[1] or nil
+        jj_cache.bookmarks = parts[2] ~= "" and vim.split(parts[2], " ") or {}
+        jj_cache.conflict = parts[3] == "true"
+      end
+      vim.schedule(redrawstatus)
+    end
+  )
+end
+
 local clear_messages_timer
 local clear_messages_on_end
-
--- local function setup_highlights()
---   vim.api.nvim_set_hl(0, "BuffersActive", state.config.colors.active)
---   vim.api.nvim_set_hl(0, "BuffersPrevious", state.config.colors.previous)
---   vim.api.nvim_set_hl(0, "BuffersInactive", state.config.colors.inactive)
---   vim.api.nvim_set_hl(0, "BuffersError", state.config.colors.error)
---   vim.api.nvim_set_hl(0, "BuffersModified", state.config.colors.modified)
--- end
-
---
----- Include parent directory for index files or duplicates
--- if name:match("^index%.") or has_duplicate then
---   local parent = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(bufnr), ":h:t")
---   return parent .. "/" .. name
--- end
 
 Augroup("mega.ui.statusline", {
   {
@@ -65,9 +83,17 @@ Augroup("mega.ui.statusline", {
     command = redrawstatus,
   },
   {
+    -- Redraw on mode change (for pi terminal exit hint)
+    event = { "ModeChanged" },
+    pattern = { "*:t", "t:*" },
+    command = redrawstatus,
+  },
+  {
     event = { "LspProgress" },
     command = function(ctx)
-      local clientName = vim.lsp.get_client_by_id(ctx.data.client_id).name
+      local client = vim.lsp.get_client_by_id(ctx.data.client_id)
+      if not client then return end
+      local clientName = client.name
 
       ---@type {percentage: number, title?: string, kind: string, message?: string}
       local progress = ctx.data.params.value
@@ -82,7 +108,7 @@ Augroup("mega.ui.statusline", {
 
       if clear_messages_timer then
         clear_messages_timer:close()
-        clear_messages_on_end()
+        if clear_messages_on_end then clear_messages_on_end() end
       end
 
       clear_messages_on_end = function()
@@ -93,7 +119,7 @@ Augroup("mega.ui.statusline", {
       end
 
       if progress.kind == "end" then
-        vim.g.lsp_progress_messages = fmt("%s %s loaded.", Icons.lsp.ok, clientName)
+        vim.g.lsp_progress_messages = fmt("%s %s loaded.", mega.ui.icons.lsp.ok, clientName)
 
         clear_messages_timer = vim.defer_fn(clear_messages_on_end, 1000)
       else
@@ -107,8 +133,6 @@ Augroup("mega.ui.statusline", {
             percentage = ""
           end
 
-          local firstWord = vim.split(progress.title, " ")[1]:lower()
-
           text = table.concat({ progress_icons[idx], percentage, clientName, firstWord }, " ")
 
           vim.g.lsp_progress_messages = text
@@ -120,6 +144,20 @@ Augroup("mega.ui.statusline", {
       end
 
       pcall(vim.cmd.redrawstatus)
+    end,
+  },
+})
+
+-- Jujutsu status updates (async)
+Augroup("mega.ui.statusline.jj", {
+  {
+    event = { "VimEnter", "DirChanged" },
+    command = update_jj_cache,
+  },
+  {
+    event = { "BufWritePost", "FocusGained" },
+    command = function()
+      vim.defer_fn(update_jj_cache, 100) -- slight delay to let jj update
     end,
   },
 })
@@ -150,22 +188,6 @@ local function seg(contents, hl, cond, opts)
 
   if cond ~= nil and not cond then return "" end
 
-  --[[
-
-  -- |  -- --- --  | --
-  |  |  |   |   |  |  |
-  M  F  P   C   P  S  M
-
-  M - margin
-  F - prefix characters
-  P - padding
-  C - content
-  P - padding
-  S - suffix characters
-  M - margin
-
-  --]]
-
   opts = vim.tbl_extend("force", {
     margin = { 0, 0 },
     prefix = "",
@@ -174,8 +196,6 @@ local function seg(contents, hl, cond, opts)
     suffix = "",
     suffix_hl = hl,
   }, opts or {})
-
-  -- local segment = "%#" .. hl .. "#" .. contents
 
   return table.concat({
     string.rep(" ", opts.margin[1]),
@@ -193,8 +213,6 @@ end
 
 -- ( CONSTANTS ) ---------------------------------------------------------------
 
--- Custom `^V` and `^S` symbols to make this file appropriate for copy-paste
--- (otherwise those symbols are not displayed).
 local CTRL_S = vim.keycode("<C-S>", true, true, true)
 local CTRL_V = vim.keycode("<C-V>", true, true, true)
 local MODES = setmetatable({
@@ -217,7 +235,6 @@ local MODES = setmetatable({
   ["nt"] = { long = "N-Terminal", short = "T-N", hl = "StModeNormal", separator_hl = "StSeparator" },
   ["r?"] = { long = "Confirm", short = "?", hl = "StModeOther", separator_hl = "StSeparator" },
 }, {
-  -- By default return 'Unknown' but this shouldn't be needed
   __index = function() return { long = "Unknown", short = "U", hl = "StModeOther", separator_hl = "StSeparator" } end,
 })
 
@@ -252,8 +269,8 @@ local plain_types = {
 
 local exception_types = {
   buftypes = {
-    terminal = fmt("%s ", Icons.misc.terminal),
-    quickfix = fmt("%s ", Icons.misc.terminal),
+    terminal = fmt("%s ", mega.ui.icons.misc.terminal),
+    quickfix = fmt("%s ", mega.ui.icons.misc.terminal),
   },
   filenames = {
     __committia_diff__ = "git commit (diff)",
@@ -261,31 +278,31 @@ local exception_types = {
     COMMIT_EDITMSG = "git commit (message)",
   },
   filetypes = {
-    alpha = "",
-    org = "",
-    orgagenda = "",
+    alpha = "",
+    org = "",
+    orgagenda = "",
     dbui = "",
     tsplayground = "󰺔",
-    fugitive = Icons.vcs,
-    fugitiveblame = Icons.vcs,
-    gitcommit = Icons.vcs,
-    NeogitCommitMessage = Icons.vcs,
-    Trouble = "",
-    NeogitStatus = Icons.git.symbol,
+    fugitive = mega.ui.icons.git.symbol,
+    fugitiveblame = mega.ui.icons.git.symbol,
+    gitcommit = mega.ui.icons.git.symbol,
+    NeogitCommitMessage = mega.ui.icons.git.symbol,
+    Trouble = "",
+    NeogitStatus = mega.ui.icons.git.symbol,
     vimwiki = "󰖬",
-    help = Icons.misc.help,
-    undotree = fmt("%s", Icons.misc.file_tree),
-    NvimTree = fmt("%s", Icons.misc.file_tree),
-    dirbuf = "",
-    oil = "",
-    ["neo-tree"] = fmt("%s", Icons.misc.file_tree),
-    toggleterm = fmt("%s ", Icons.misc.terminal),
-    megaterm = fmt("%s ", Icons.misc.terminal),
-    terminal = fmt("%s ", Icons.misc.terminal),
-    calendar = "",
+    help = mega.ui.icons.misc.help,
+    undotree = fmt("%s", mega.ui.icons.misc.file_tree),
+    NvimTree = fmt("%s", mega.ui.icons.misc.file_tree),
+    dirbuf = "",
+    oil = "",
+    ["neo-tree"] = fmt("%s", mega.ui.icons.misc.file_tree),
+    toggleterm = fmt("%s ", mega.ui.icons.misc.terminal),
+    megaterm = fmt("%s ", mega.ui.icons.misc.terminal),
+    terminal = fmt("%s ", mega.ui.icons.misc.terminal),
+    calendar = "",
     minimap = "",
-    octo = "",
-    ["dap-repl"] = "",
+    octo = "",
+    ["dap-repl"] = "",
   },
   names = {
     alpha = "Alpha",
@@ -321,7 +338,6 @@ local exception_types = {
       local mode = MODES[api.nvim_get_mode().mode]
       local mode_hl = mode.short == "T-I" and "StModeTermInsert" or "StModeTermNormal"
 
-      -- Safely get buffer variables (may not exist during terminal creation)
       local ok, term_buf_var = pcall(vim.api.nvim_buf_get_var, bufnr, "term_buf")
       if ok and (vim.g.term_buf ~= nil or term_buf_var ~= nil) then
         local _, term_name = pcall(vim.api.nvim_buf_get_var, bufnr, "term_name")
@@ -332,7 +348,7 @@ local exception_types = {
       return seg(string.format("megaterm#%d(%s)", bufnr, shell), mode_hl)
     end,
     ["dap-repl"] = "Debugger REPL",
-    firenvim = function(fname, buf) return seg(fmt("%s firenvim (%s)", Icons.misc.flames, M.ctx.filetype)) end,
+    firenvim = function(fname, buf) return seg(fmt("%s firenvim (%s)", mega.ui.icons.misc.flames, ctx.filetype)) end,
   },
 }
 
@@ -349,116 +365,124 @@ local function current_file()
   return f
 end
 
---- Decide whether to truncate
----
---- This basically computes window width and compares it to `trunc_width`: if
---- window is smaller then truncate; otherwise don't. Don't truncate by
---- default.
----
---- Use this to manually decide if section needs truncation or not.
----
----@param trunc number: Truncation width. If `nil`, output is `false`.
----@return boolean: Whether to truncate.
 local function is_truncated(trunc)
-  -- Use -1 to default to 'not truncated'
-  -- get's just the current split window
   local check = vim.api.nvim_win_get_width(0) < (trunc or -1)
 
-  -- gets the whole nvim window
-  if vim.api.nvim_get_option("laststatus") == 3 then check = vim.o.columns < (trunc or -1) end
+  if vim.o.laststatus == 3 then check = vim.o.columns < (trunc or -1) end
 
   return check
 end
 
---- truncate with an ellipsis or if surrounded by quotes, replace contents of quotes with ellipsis
---- @param str string
---- @param max_size integer
---- @return string
 local function truncate_str(str, max_size)
   if not max_size or strwidth(str) < max_size then return str end
-  local match, count = str:gsub("(['\"]).*%1", "%1" .. Icons.misc.ellipsis .. "%1")
-  return count > 0 and match or str:sub(1, max_size - 1) .. Icons.misc.ellipsis
+  local match, count = str:gsub("(['\"]).*%1", "%1" .. mega.ui.icons.misc.ellipsis .. "%1")
+  return count > 0 and match or str:sub(1, max_size - 1) .. mega.ui.icons.misc.ellipsis
 end
 
 local function matches(str, list)
   return #vim.tbl_filter(function(item) return item == str or string.match(str, item) end, list) > 0
 end
 
---- This function allow me to specify titles for special case buffers
---- like the preview window or a quickfix window
---- CREDIT: https://vi.stackexchange.com/a/18090
 local function special_buffers()
   local location_list = fn.getloclist(0, { filewinid = 0 })
   local is_loc_list = location_list.filewinid > 0
-  local normal_term = M.ctx.buftype == "terminal" and M.ctx.filetype == ""
+  local normal_term = ctx.buftype == "terminal" and ctx.filetype == ""
 
   if is_loc_list then return "Location List" end
   if vim.g.started_by_firenvim then return exception_types.names.firenvim() end
-  if M.ctx.buftype == "quickfix" then return "Quickfix List" end
+  if ctx.buftype == "quickfix" then return "Quickfix List" end
   if normal_term then return "Terminal(" .. fnamemodify(vim.env.SHELL, ":t") .. ")" end
-  if M.ctx.preview then return "preview" end
+  if ctx.preview then return "preview" end
 
   return nil
 end
 
 local function is_plain()
-  return matches(M.ctx.filetype, plain_types.filetypes) or matches(M.ctx.buftype, plain_types.buftypes) or M.ctx.preview
+  return matches(ctx.filetype, plain_types.filetypes) or matches(ctx.buftype, plain_types.buftypes) or ctx.preview
 end
 
-local function is_abnormal_buffer()
-  -- For more information see ":h buftype"
-  return vim.bo.buftype ~= ""
-end
+local function is_abnormal_buffer() return vim.bo.buftype ~= "" end
 
 local function is_valid_git()
-  local status = vim.b[M.ctx.bufnr].gitsigns_status_dict or {}
+  local status = vim.b[ctx.bufnr].gitsigns_status_dict or {}
   local is_valid = status and status.head ~= nil
   return is_valid and status or is_valid
 end
 
 -- ( GETTERS ) -----------------------------------------------------------------
 
-local function get_diagnostics(seg_formatters_status)
-  seg_formatters_status = seg_formatters_status or ""
-  local function count(lvl) return #vim.diagnostic.get(M.ctx.bufnr, { severity = lvl }) end
-  if vim.tbl_isempty(vim.lsp.get_clients({ bufnr = M.ctx.bufnr })) then return "" end
+-- Count diagnostics by context (buffer or workspace) and severity
+-- When diagnostics_scope == "buffer_lsps", workspace counts only include LSPs attached to current buffer
+local function count_diagnostics(ctx, severity)
+  local bufnr = ctx == "buffer" and 0 or nil
+  local namespaces = nil
 
-  local diags = {
-    { num = count(vim.diagnostic.severity.ERROR), sign = Icons.lsp.error, hl = "StError" },
-    { num = count(vim.diagnostic.severity.WARN), sign = Icons.lsp.warn, hl = "StWarn" },
-    { num = count(vim.diagnostic.severity.INFO), sign = Icons.lsp.info, hl = "StInfo" },
-    { num = count(vim.diagnostic.severity.HINT), sign = Icons.lsp.hint, hl = "StHint" },
-  }
-
-  local segments = ""
-  for _, d in ipairs(diags) do
-    if d.num > 0 then
-      segments = fmt("%s%s", segments, seg(fmt("%s%s", d.num, d.sign), d.hl, { padding = { 1, 1 } }))
+  if ctx == "workspace" and diagnostics_scope == "buffer_lsps" then
+    -- Only count from LSPs attached to current buffer
+    -- Get client names for filtering
+    local client_names = {}
+    for _, client in ipairs(vim.lsp.get_clients({ bufnr = 0 })) do
+      client_names[client.name] = true
     end
+
+    -- Filter diagnostics by LSP client source
+    local all_diags = vim.diagnostic.get(bufnr, { severity = severity })
+    local filtered_count = 0
+    for _, diag in ipairs(all_diags) do
+      if diag.source and client_names[diag.source] then filtered_count = filtered_count + 1 end
+    end
+    return filtered_count
+  else
+    return #vim.diagnostic.get(bufnr, { severity = severity })
+  end
+end
+
+-- Buffer/workspace diagnostics display (replaces old get_diagnostics)
+-- Shows: " 2/15  3/8" (buffer_count/workspace_count)
+local function seg_diagnostics()
+  if vim.tbl_isempty(vim.lsp.get_clients({ bufnr = 0 })) then return "" end
+
+  local severity = vim.diagnostic.severity
+  local parts = {}
+
+  local eb = count_diagnostics("buffer", severity.ERROR)
+  local ew = count_diagnostics("workspace", severity.ERROR)
+  local wb = count_diagnostics("buffer", severity.WARN)
+  local ww = count_diagnostics("workspace", severity.WARN)
+
+  if eb > 0 or ew > 0 then
+    local buf_str = eb > 0 and tostring(eb) or "-"
+    table.insert(parts, wrap("StError", mega.ui.icons.lsp.error .. " " .. buf_str .. "/" .. ew))
   end
 
-  return seg(segments .. "" .. seg_formatters_status, { margin = { 1, 1 } })
+  if wb > 0 or ww > 0 then
+    local buf_str = wb > 0 and tostring(wb) or "-"
+    table.insert(parts, wrap("StWarn", mega.ui.icons.lsp.warn .. " " .. buf_str .. "/" .. ww))
+  end
+
+  if #parts == 0 then
+    return seg("󰓏", "StComment", { margin = { 1, 0 } }) -- all clear
+  end
+
+  return seg(table.concat(parts, " "), { margin = { 1, 0 } })
 end
 
 local function get_lsp_status(messages)
-  --TODO: do some gsub replacements on the messages
   if string.match(messages, "loaded.") then
     return seg(string.gsub(messages, "loaded.", ""), "StModeInsert", { margin = { 1, 1 } })
   else
     return seg(messages, "StLspMessages", { margin = { 1, 1 } })
   end
-  -- return seg(messages, "StBrightItalic", { margin = { 1, 1 } })
 end
 
 local function parse_filename(truncate_at)
   local function buf_expand(bufnr, mod) return expand("#" .. bufnr .. mod) end
 
   local modifier = ":t"
-  local special_file_names = special_buffers()
   local special_buf = special_buffers()
   if special_buf then return "", "", special_buf end
 
-  local fname = buf_expand(M.ctx.bufnr, modifier)
+  local fname = buf_expand(ctx.bufnr, modifier)
 
   local ok_devicons = pcall(require, "nvim-web-devicons")
   local icon, icon_hl = nil, nil
@@ -466,23 +490,21 @@ local function parse_filename(truncate_at)
     icon, icon_hl = require("nvim-web-devicons").get_icon_color(fname)
   end
 
-  local name = exception_types.names[M.ctx.filetype]
+  local name = exception_types.names[ctx.filetype]
   if exception_types.filenames[current_file().name] ~= nil then
     name = exception_types.filenames[current_file().name]
   end
-  local exception_icon = exception_types.filetypes[M.ctx.filetype] or ""
-  if type(name) == "function" then return "", "", fmt("%s %s", exception_icon, name(fname, M.ctx.bufnr)) end
+  local exception_icon = exception_types.filetypes[ctx.filetype] or ""
+  if type(name) == "function" then return "", "", fmt("%s %s", exception_icon, name(fname, ctx.bufnr)) end
 
   if name then return "", "", name end
 
   if not fname or U.empty(fname) then return "", "", "No Name" end
 
-  local path = (M.ctx.buftype == "" and not M.ctx.preview) and buf_expand(M.ctx.bufnr, ":~:.:h") or nil
-  local is_root = path and #path == 1 -- "~" or "."
-  -- local dir = path and not is_root and fn.pathshorten(fnamemodify(path, ":h")) .. "/" or ""
+  local path = (ctx.buftype == "" and not ctx.preview) and buf_expand(ctx.bufnr, ":~:.:h") or nil
+  local is_root = path and #path == 1
   local dir = path and not is_root and fn.pathshorten(fnamemodify(path, ":h")) .. "" or ""
   local parent = path and (is_root and path or fnamemodify(path, ":t")) or ""
-  -- parent = parent ~= "" and parent .. "/" or ""
   parent = parent ~= "" and parent .. "" or ""
 
   return dir, parent, fname, icon, icon_hl
@@ -492,12 +514,6 @@ local function get_filename_parts(truncate_at)
   local directory_hl = "StDirectory"
   local parent_hl = "StParentDirectory"
   local filename_hl = "StFilename"
-
-  -- if H.winhighlight_exists(M.ctx.winid, "Normal", "StatusLine") then
-  --   directory_hl = H.adopt_winhighlight(M.ctx.winid, "StatusLine", "StCustomDirectory", "StTitle")
-  --   parent_hl = H.adopt_winhighlight(M.ctx.winid, "StatusLine", "StCustomParentDir", "StTitle")
-  --   filename_hl = H.adopt_winhighlight(M.ctx.winid, "StatusLine", "StCustomFilename", "StTitle")
-  -- end
 
   local directory, parent, file, icon, icon_hl = parse_filename(truncate_at)
 
@@ -517,22 +533,15 @@ local function seg_filename(truncate_at)
   local dir, parent, file, icon = segments.dir, segments.parent, segments.file, segments.icon
 
   local filename = file.item
-  -- if icon.item ~= nil then filename = fmt(" %s %s", icon.item, file.item) end
 
-  local file_hl = M.ctx.modified and "StModified" or file.hl
+  local file_hl = ctx.modified and "StModified" or file.hl
 
-  -- usually our custom titles, like for megaterm, neo-tree, etc
   if dir.item == "" and parent.item == "" then
     return seg(
       fmt("%s%s%s", seg(dir.item, dir.hl), seg(parent.item, parent.hl), seg(filename, file_hl)),
       { margin = { 1, 1 } }
     )
   end
-
-  -- if icon.item == nil or icon.item == "" then
-  --   return seg(fmt("%s/%s/%s", seg(dir.item, dir.hl), seg(parent.item, parent.hl), seg(file.item, file_hl)), { margin = { 1, 1 } })
-  -- end
-  -- return seg(fmt("%s/%s/ %s %s", seg(dir.item, dir.hl), seg(parent.item, parent.hl), seg(icon.item, file_hl), seg(file.item, file_hl)), { margin = { 1, 1 } })
 
   if dir.item == "/" then
     return seg(fmt("/%s/%s", seg(parent.item, parent.hl), seg(filename, file_hl)), { margin = { 1, 1 } })
@@ -548,69 +557,27 @@ local function seg_buffer_count(truncate_at)
   local buffer_count = U.get_bufnrs()
 
   local msg = (is_truncated(truncate_at) or vim.g.started_by_firenvim) and ""
-    or fmt("%s%s", Icons.misc.buffers, buffer_count)
+    or fmt("%s%s", mega.ui.icons.misc.buffers, buffer_count)
 
   if buffer_count <= 1 then return "" end
   return seg(msg, "StBufferCount", { padding = { 0, 0 } })
 end
 
 local function seg_mode(truncate_at)
-  -- Some useful glyphs:
-  -- https://www.nerdfonts.com/cheat-sheet
-  --           
   local mode_info = MODES[api.nvim_get_mode().mode]
   local mode = is_truncated(truncate_at) and mode_info.short or mode_info.long
   return seg(string.upper(mode), mode_info.hl, { padding = { 1, 1 } })
-  -- return seg(string.upper(mode), mode_info.hl, { padding = { 1, 1 }, suffix = "░", suffix_hl = mode_info.separator_hl })
 end
 
-local function seg_lsp_clients(truncate_at)
-  local bufnr = vim.api.nvim_get_current_buf()
-  local clients = vim.lsp.get_clients({ bufnr = bufnr })
-
-  if next(clients) == nil then return "" end
-
-  local client_names = {}
-
-  local function lsp_lookup(name)
-    if U.tlen(clients) <= 2 then return name end
-    local ls = vim.g.lsp_lookup[name]
-    if ls == nil then ls = name end
-
-    return ls
-  end
-
-  for _, client in pairs(clients) do
-    table.insert(client_names, lsp_lookup(client.name))
-  end
-
-  local clients_str = U.strim(table.concat(client_names, "/"))
-  if is_truncated(truncate_at) then
-    return seg(#client_names, { prefix = fmt("%s ", Icons.lsp.clients), margin = { 0, 0 } })
-  end
-  return seg(clients_str, { prefix = fmt("%s ", Icons.lsp.clients), margin = { 0, 0 } })
-end
-
-local function seg_lsp_status(truncate_at)
+-- LSP progress messages only (diagnostics now in seg_diagnostics)
+local function seg_lsp_progress(truncate_at)
   if is_truncated(truncate_at) then return "" end
 
-  -- local enabled = not vim.g.disable_autoformat
-  -- return get_diagnostics(seg(icons.kind.Null, "StModeInsert", enabled))
+  local messages = vim.g.lsp_progress_messages or ""
+  if messages == "" then return "" end
 
-  -- -- Disable once we get fidget doing all the right things:
-  local ok_messages, messages = pcall(vim.lsp.status)
-
-  if ok_messages then
-    if messages == "" and vim.g.lsp_progress_messages == "" then
-      local enabled = not vim.g.disable_autoformat
-      return get_diagnostics(seg(Icons.kind.Null, "StModeInsert", enabled, { margin = { 1, 0 } }))
-    end
-  end
-
-  return get_lsp_status(vim.g.lsp_progress_messages)
+  return get_lsp_status(messages)
 end
-
--- file/selection info -------------------------------------
 
 local function seg_selection_info()
   local sep_hl = "StLineSep"
@@ -627,12 +594,12 @@ local function seg_selection_info()
     wrap(
       "VisualYank",
       table.concat({
-        wrap("StModifiedIcon", Icons.misc.ln_sel .. " "),
+        wrap("StModifiedIcon", mega.ui.icons.misc.ln_sel .. " "),
         wrap("StLineNumber", tostring(chars) .. "ꮯ"),
         wrap(sep_hl, "/"),
         wrap("StLineTotal", tostring(words) .. "w"),
         wrap(sep_hl, ":"),
-        wrap("StLineColumn", tostring(lines) .. "ꮮ"), -- alts: "%-3c" (for padding of 3)
+        wrap("StLineColumn", tostring(lines) .. "ꮮ"),
       })
     ),
     { margin = { 1, 1 } }
@@ -642,7 +609,6 @@ end
 local function seg_lineinfo(truncate_at)
   local sep_hl = "StLineSep"
 
-  -- Use virtual column number to allow update when paste last column
   if vim.fn.mode():find("[Vv]") then
     return seg_selection_info()
   else
@@ -650,12 +616,12 @@ local function seg_lineinfo(truncate_at)
 
     return seg(
       table.concat({
-        wrap("StMetadataPrefix", Icons.misc.ln_sep .. " "),
+        wrap("StMetadataPrefix", mega.ui.icons.misc.ln_sep .. " "),
         wrap("StLineNumber", "%l"),
         wrap(sep_hl, "/"),
         wrap("StLineTotal", "%L"),
         wrap(sep_hl, ":"),
-        wrap("StLineColumn", "%-c"), -- alts: "%-3c" (for padding of 3)
+        wrap("StLineColumn", "%-c"),
       }),
       { margin = { 1, 1 } }
     )
@@ -663,9 +629,9 @@ local function seg_lineinfo(truncate_at)
 end
 
 local function get_git_hunks()
-  local status = vim.b[M.ctx.bufnr].gitsigns_status
-  local head = vim.b[M.ctx.bufnr].gitsigns_head
-  local status_dict = vim.b[M.ctx.bufnr].gitsigns_status_dict
+  local status = vim.b[ctx.bufnr].gitsigns_status
+  local head = vim.b[ctx.bufnr].gitsigns_head
+  local status_dict = vim.b[ctx.bufnr].gitsigns_status_dict
 
   if status then
     if not U.falsy(status) then return head, status_dict, status end
@@ -679,6 +645,8 @@ end
 
 local function seg_git_status(truncate_at)
   if is_abnormal_buffer() then return "" end
+  -- Skip git status if in a jj repo (jj handles VCS display)
+  if jj_cache.is_repo then return "" end
 
   local truncate_branch_at, truncate_symbol_at = unpack(truncate_at)
   local git_branch, git_status_dict, git_status = get_git_hunks()
@@ -686,14 +654,13 @@ local function seg_git_status(truncate_at)
 
   local branch = is_truncated(truncate_branch_at) and truncate_str(git_branch or "", 14) or git_branch
 
-  local added = string.format("+%s ", git_status_dict.added)
-  local removed = string.format("-%s ", git_status_dict.removed)
-  local changed = string.format("~%s ", git_status_dict.changed)
+  local added = string.format("+%s ", git_status_dict.added or 0)
+  local removed = string.format("-%s ", git_status_dict.removed or 0)
+  local changed = string.format("~%s ", git_status_dict.changed or 0)
 
   return seg(
     table.concat({
       wrap("StGitBranch", branch),
-      -- seg(git_status, "StBright", not U.falsy(git_status), { margin = { 1, 0 } }),
       seg(
         table.concat({
           wrap("StGitSignsAdd", added),
@@ -709,18 +676,75 @@ local function seg_git_status(truncate_at)
   )
 end
 
+local function seg_jj_status(truncate_at)
+  if not jj_cache.change_id then return "" end
+
+  local parts = {}
+
+  -- Change ID (always show)
+  table.insert(parts, wrap("StJjChangeId", jj_cache.change_id))
+
+  -- Bookmark (if any, show first one, truncate if needed)
+  if #jj_cache.bookmarks > 0 then
+    local bm = jj_cache.bookmarks[1]
+    if truncate_at and is_truncated(truncate_at) then bm = bm:sub(1, 10) end
+    table.insert(parts, wrap("StJjBookmark", " " .. bm))
+  end
+
+  -- Conflict indicator
+  if jj_cache.conflict then table.insert(parts, wrap("StJjConflict", " " .. mega.ui.icons.jj.conflict)) end
+
+  return seg(
+    table.concat({
+      wrap("StJjIcon", mega.ui.icons.jj.symbol .. " "),
+      table.concat(parts),
+    }),
+    { margin = { 1, 0 } }
+  )
+end
+
 local function seg_megaterms()
-  if Megaterm == nil then return "" end
-  local megaterms = Megaterm.list()
-  --        or icons.misc.terminal
-  if #megaterms > 0 then return seg(fmt("%s %s", "", #megaterms)) end
+  if mega.term == nil then return "" end
+  local megaterms = mega.term.list()
+  if #megaterms > 0 then
+    local content = seg(fmt("%s %s", mega.ui.icons.misc.terminal, #megaterms))
+    -- Make clickable to toggle terminal
+    return "%@v:lua.mega.term.toggle@" .. content .. "%X"
+  end
   return ""
+end
+
+local function seg_pi()
+  if mega.p.pi == nil then return "" end
+
+  local data = mega.p.pi.statusline_data()
+  local icon = mega.ui.icons.pi.symbol
+
+  -- Add panel indicator
+  if mega.p.pi.is_panel_open and mega.p.pi.is_panel_open() then icon = icon .. "•" end
+
+  if not data.connected then return seg(icon, "StComment", { margin = { 1, 0 } }) end
+
+  local session = data.session or "pi"
+  local ctx_str = data.context_count > 0 and fmt(" %d", data.context_count) or ""
+
+  local content = seg(
+    table.concat({
+      wrap("StIdentifier", icon .. " "),
+      wrap("StComment", session),
+      wrap("StBufferCount", ctx_str),
+    }),
+    { margin = { 1, 0 } }
+  )
+
+  -- Make clickable to select session
+  return "%@v:lua.mega.p.pi.select_session@" .. content .. "%X"
 end
 
 local function seg_rec_macro()
   local recording_register = vim.fn.reg_recording()
   local str = ""
-  if recording_register ~= "" then str = " " .. recording_register end
+  if recording_register ~= "" then str = " " .. recording_register end
   return seg(str, "StGitBranch", { margin = { 1, 1 }, padding = { 1, 0 } })
 end
 
@@ -731,9 +755,9 @@ local function is_focused() return tonumber(vim.g.actual_curwin) == vim.api.nvim
 function mega.ui.statusline.render()
   local winnr = vim.g.statusline_winid or 0
   local bufnr = api.nvim_win_get_buf(winnr)
-  local modified_icon = vim.g.started_by_firenvim and "?" or fmt("%s", Icons.misc.modified)
+  local modified_icon = vim.g.started_by_firenvim and "?" or fmt("%s", mega.ui.icons.misc.modified)
 
-  M.ctx = {
+  ctx = {
     bufnr = bufnr,
     winid = winnr,
     bufname = api.nvim_buf_get_name(bufnr),
@@ -751,12 +775,17 @@ function mega.ui.statusline.render()
     return "%#StatusLineInactive# %F %m %r %{&paste?'[paste] ':''} %= %{&spelllang}  %y %8(%l,%c%) %8p%%"
   end
 
+  -- Pi terminal gets a custom statusline
+  if mega.p.pi and mega.p.pi.is_pi_terminal and mega.p.pi.is_pi_terminal(bufnr) then
+    return mega.p.pi.render_term_statusline(bufnr)
+  end
+
   if is_plain() then
     local parts = {
       seg([[%<]]),
       seg_filename(),
-      seg(modified_icon, "StModifiedIcon", M.ctx.modified, { margin = { 0, 1 } }),
-      seg(Icons.misc.lock, "StModifiedIcon", M.ctx.readonly, { margin = { 0, 1 } }),
+      seg(modified_icon, "StModifiedIcon", ctx.modified, { margin = { 0, 1 } }),
+      seg(mega.ui.icons.misc.lock, "StModifiedIcon", ctx.readonly, { margin = { 0, 1 } }),
       "%=",
     }
 
@@ -768,49 +797,46 @@ function mega.ui.statusline.render()
       seg([[%<]]),
       seg(" 󰠮 notes "),
       seg_filename(),
-      seg(modified_icon, "StModifiedIcon", M.ctx.modified, { margin = { 0, 1 } }),
-      seg(Icons.misc.lock, "StModifiedIcon", M.ctx.readonly, { margin = { 0, 1 } }),
+      seg(modified_icon, "StModifiedIcon", ctx.modified, { margin = { 0, 1 } }),
+      seg(mega.ui.icons.misc.lock, "StModifiedIcon", ctx.readonly, { margin = { 0, 1 } }),
       seg([[%=]]),
       seg_lineinfo(75),
     }
 
-    -- return seg(fmt("%s shade (%s)", Icons.misc.flames, M.ctx.filetype)) end,
     return table.concat(parts, "")
   end
 
   return table.concat({
-    -- LEFT --------------------------------------------------------------------
     seg([[%<]]),
-    -- seg_prefix(100),
     seg_mode(120),
     seg_buffer_count(100),
     seg_filename(120),
-    seg(modified_icon, "StModifiedIcon", M.ctx.modified, { margin = { 0, 1 } }),
-    seg(Icons.misc.lock, "StModifiedIcon", M.ctx.readonly, { margin = { 0, 1 } }),
-    -- seg("%{&paste?'[paste] ':''}", "warningmsg", { margin = { 1, 1 } }),
+    seg(modified_icon, "StModifiedIcon", ctx.modified, { margin = { 0, 1 } }),
+    seg(mega.ui.icons.misc.lock, "StModifiedIcon", ctx.readonly, { margin = { 0, 1 } }),
     seg("Saving…", "StComment", vim.g.is_saving, { margin = { 0, 1 } }),
-    -- seg_search_results(120),
     seg([[%=]]),
-    -- CENTER ------------------------------------------------------------------
     seg_rec_macro(),
+    seg_pi(),
     seg_megaterms(),
-    -- seg(get_substitution_status()),
-    -- seg_hydra(120),
     seg([[%=]]),
-    -- RIGHT -------------------------------------------------------------------
     seg("%*"),
     seg("%{&ff!='unix'?'['.&ff.'] ':''}", "warningmsg"),
     seg("%*"),
     seg("%{(&fenc!='utf-8'&&&fenc!='')?'['.&fenc.'] ':''}", "warningmsg"),
     seg("%*"),
-    seg_lsp_clients(150),
-    seg_lsp_status(100),
+    seg_diagnostics(),
+    seg_lsp_progress(100),
     seg_git_status({ 175, 80 }),
-    -- seg(get_dap_status()),
+    seg_jj_status(120),
     seg_lineinfo(75),
-    -- seg_startuptime(),
-    -- seg_suffix(100),
   })
 end
 
 vim.o.statusline = "%{%v:lua.mega.ui.statusline.render()%}"
+
+-- Toggle diagnostics scope: buffer_lsps (only attached LSPs) vs workspace_lsps (all)
+vim.keymap.set("n", "<leader>td", function()
+  diagnostics_scope = diagnostics_scope == "buffer_lsps" and "workspace_lsps" or "buffer_lsps"
+  vim.cmd.redrawstatus()
+  vim.notify("Diagnostics scope: " .. diagnostics_scope)
+end, { desc = "Toggle diagnostics scope" })

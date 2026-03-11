@@ -97,34 +97,163 @@ obj.transcriptionMethods = {
     config = {
       cmd = "/opt/homebrew/bin/whisperkit-cli",
       model = "large-v3",
+      -- Model cache location (where whisperkit downloads models)
+      modelCacheBase = os.getenv("HOME") .. "/Documents/huggingface/models/argmaxinc/whisperkit-coreml",
     },
+    -- Track if we're currently downloading a model
+    isDownloading = false,
+    downloadAlertShown = false,
+
     validate = function(self)
       return hs.fs.attributes(self.config.cmd) ~= nil
     end,
+
+    --- Check if the model appears to be fully downloaded.
+    -- @return (boolean, string): (isReady, status_message)
+    checkModelStatus = function(self)
+      local modelDir = self.config.modelCacheBase .. "/openai_whisper-" .. self.config.model
+      local attrs = hs.fs.attributes(modelDir)
+      if not attrs then
+        return false, "not_downloaded"
+      end
+
+      -- Check for key model components
+      local components = {"AudioEncoder.mlmodelc", "TextDecoder.mlmodelc", "MelSpectrogram.mlmodelc"}
+      for _, comp in ipairs(components) do
+        local compPath = modelDir .. "/" .. comp
+        if not hs.fs.attributes(compPath) then
+          return false, "incomplete"
+        end
+      end
+
+      -- Check for any .incomplete files (active downloads)
+      local cacheDir = self.config.modelCacheBase .. "/.cache/huggingface/download"
+      if hs.fs.attributes(cacheDir) then
+        local iter, dirObj = hs.fs.dir(cacheDir)
+        if iter then
+          for filename in iter, dirObj do
+            if filename:match("%.incomplete$") then
+              return false, "downloading"
+            end
+          end
+        end
+      end
+
+      return true, "ready"
+    end,
+
     --- Transcribe audio file using WhisperKit CLI.
     -- @param audioFile (string): Path to the WAV file
     -- @param lang (string): Language code (e.g., "en", "ja")
     -- @param callback (function): Called with (success, text_or_error)
     transcribe = function(self, audioFile, lang, callback)
+      -- Check model status before starting
+      local modelReady, modelStatus = self:checkModelStatus()
+      if not modelReady then
+        if modelStatus == "not_downloaded" then
+          obj.logger:info("📥 Model '" .. self.config.model .. "' not found, will download (~3GB)...")
+          hs.alert.show("📥 Downloading whisper model (~3GB)...\nThis may take several minutes", 10)
+          self.isDownloading = true
+          self.downloadAlertShown = true
+        elseif modelStatus == "downloading" then
+          obj.logger:info("📥 Model download in progress...")
+          if not self.downloadAlertShown then
+            hs.alert.show("📥 Model download in progress...", 5)
+            self.downloadAlertShown = true
+          end
+          self.isDownloading = true
+        elseif modelStatus == "incomplete" then
+          obj.logger:info("📥 Model incomplete, resuming download...")
+          hs.alert.show("📥 Resuming model download...", 5)
+          self.isDownloading = true
+        end
+      end
+
       local args = {
         "transcribe",
         "--model=" .. self.config.model,
         "--audio-path=" .. audioFile,
         "--language=" .. lang,
+        "--verbose",  -- Enable verbose output to capture progress
       }
       obj.logger:info("Running: " .. self.config.cmd .. " " .. table.concat(args, " "))
+
+      -- Use streaming callback to capture download progress
+      local stdoutBuffer = ""
+      local downloadProgressShown = false
+
       local task = hs.task.new(self.config.cmd, function(exitCode, stdOut, stdErr)
+        -- Completion callback
+        self.isDownloading = false
+        self.downloadAlertShown = false
+
         if exitCode ~= 0 then
           callback(false, stdErr or "whisperkit-cli failed")
           return
         end
-        local text = stdOut or ""
+
+        -- Extract actual transcription from verbose output
+        -- The transcript is typically the last meaningful line
+        local text = stdoutBuffer
+        if text == "" then
+          text = stdOut or ""
+        end
+
+        -- Clean up verbose output - extract just the transcription
+        -- WhisperKit outputs the transcript after all the loading messages
+        local lines = {}
+        for line in text:gmatch("[^\n]+") do
+          -- Skip verbose loading/progress lines
+          if not line:match("^%[") and
+             not line:match("Loading") and
+             not line:match("Downloading") and
+             not line:match("%%") and
+             not line:match("^Running") and
+             line:match("%S") then
+            table.insert(lines, line)
+          end
+        end
+        text = table.concat(lines, "\n")
+
         if text == "" then
           callback(false, "Empty transcript output")
           return
         end
         callback(true, text)
+      end, function(task, stdOut, stdErr)
+        -- Streaming callback - capture progress during execution
+        if stdOut and stdOut ~= "" then
+          stdoutBuffer = stdoutBuffer .. stdOut
+
+          -- Detect download progress
+          if stdOut:match("Downloading") or stdOut:match("%%") then
+            if not downloadProgressShown then
+              obj.logger:info("📥 Model download started...")
+              downloadProgressShown = true
+              self.isDownloading = true
+            end
+            -- Log download progress periodically
+            local progress = stdOut:match("(%d+%.?%d*)%%")
+            if progress then
+              obj.logger:info("📥 Download progress: " .. progress .. "%")
+            end
+          end
+
+          -- Detect when download completes and loading starts
+          if stdOut:match("Loading") and self.isDownloading then
+            obj.logger:info("✅ Model download complete, loading...")
+            hs.alert.show("✅ Model downloaded, loading...", 3)
+            self.isDownloading = false
+          end
+        end
+
+        if stdErr and stdErr ~= "" then
+          obj.logger:info("whisperkit stderr: " .. stdErr)
+        end
+
+        return true  -- Continue receiving callbacks
       end, args)
+
       if not task then
         callback(false, "Failed to create hs.task for WhisperKit CLI")
         return
@@ -789,7 +918,7 @@ local function transcribe(audioFile)
     return
   end
 
-  obj.logger:info(obj.icons.transcribing .. " Transcribing (" .. currentLang() .. ")...", true)
+  obj.logger:info(obj.icons.transcribing .. " Transcribing (" .. currentLang() .. ")...")
   updateMenu(obj.icons.idle .. " (" .. currentLang() .. " T)", "Transcribing...")
 
   -- Call the method's transcribe function with callback
@@ -840,7 +969,7 @@ local function retranscribe(audioFile, lang, callback)
   local savedMethod = obj.transcriptionMethod
   obj.transcriptionMethod = obj.retranscribeMethod
 
-  obj.logger:info(obj.icons.transcribing .. " Re-transcribing with " .. method.displayName .. " (" .. lang .. ")...", true)
+  obj.logger:info(obj.icons.transcribing .. " Re-transcribing with " .. method.displayName .. " (" .. lang .. ")...")
   updateMenu(obj.icons.idle .. " (" .. lang .. " T)", "Re-transcribing...")
 
   method:transcribe(audioFile, lang, function(success, textOrError)
@@ -902,7 +1031,7 @@ function obj:beginTranscribe(callback)
 
   ensureDir(self.tempDir)
   local audioFile = timestampedFile(self.tempDir, currentLang(), "wav")
-  self.logger:info(self.icons.recording .. " Recording started (" .. currentLang() .. ") - " .. audioFile, true)
+  self.logger:info(self.icons.recording .. " Recording started (" .. currentLang() .. ") - " .. audioFile)
   self.logger:info("Running: " .. self.recordCmd .. "-q -d " .. audioFile)
   self.recTask = hs.task.new(self.recordCmd, nil, {"-q", "-d", audioFile})
 
@@ -1038,7 +1167,7 @@ function obj:stop()
   for _, hk in pairs(obj.hotkeys) do hk:delete() end
   obj.hotkeys = {}
   stopRecordingSession()
-  obj.logger:info("WhisperDictation stopped", true)
+  obj.logger:info("WhisperDictation stopped")
 end
 
 function obj:bindHotKeys(mapping)

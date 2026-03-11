@@ -133,6 +133,7 @@ function M.process(rule, opts)
   -- Check focus mode
   -- When no focus mode is active → always show (default behavior)
   -- When focus mode IS active → only show if overrideFocusModes allows it
+  -- excludeFocusModes takes precedence (block even if overrideFocusModes would allow)
   local currentFocus = getCurrentFocusMode()
   local focusAllowed = false
 
@@ -155,7 +156,31 @@ function M.process(rule, opts)
     focusAllowed = false
   end
 
+  -- Check exclusion list (takes precedence over overrideFocusModes)
+  if focusAllowed and currentFocus and type(rule.excludeFocusModes) == "table" then
+    for _, mode in ipairs(rule.excludeFocusModes) do
+      if mode == currentFocus then
+        focusAllowed = false
+        break
+      end
+    end
+  end
+
   if not focusAllowed then
+    -- Dismiss native notification if configured (rule-level or global default)
+    local shouldDismissInFocus = rule.dismissInFocusModes
+    if shouldDismissInFocus == nil then
+      shouldDismissInFocus = C.notifier.dismissInFocusModes or false
+    end
+
+    local dismissedNative = false
+    if shouldDismissInFocus and opts.notificationElement then
+      dismissedNative = dismiss.dismiss(opts.notificationElement, title)
+      if dismissedNative then
+        U.log.df("Dismissed native notification (focus mode %s): %s", currentFocus, title or "untitled")
+      end
+    end
+
     db.log({
       timestamp = timestamp,
       notification_id = notificationID,
@@ -169,7 +194,7 @@ function M.process(rule, opts)
       subtitle = subtitle,
       message = message,
       action = "blocked",
-      action_detail = "blocked_by_focus",
+      action_detail = dismissedNative and "blocked_by_focus_dismissed" or "blocked_by_focus",
       priority = urgency,
       focus_mode = currentFocus,
       shown = false,

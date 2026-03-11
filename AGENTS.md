@@ -29,24 +29,33 @@ This is a **nix-darwin + home-manager** managed dotfiles repo.
 - Create `result` symlinks in this repo (default `nix build` behavior)
 - Run `nix build` without `--out-link /tmp/<name>` or `-o /tmp/<name>`
 
-### Nix Build Output (CRITICAL)
+### Nix Build Output (CRITICAL — ENFORCED)
 
-**`nix build` creates a `result` symlink by default — NEVER in this repo.**
+**NEVER create `result` symlinks or any nix output directories in this repo.**
+
+The `nix build` command creates a `result` symlink by default. This is
+**strictly forbidden** in `~/.dotfiles/`. Always use `/tmp/` for build output
+and **clean up immediately** when done.
 
 ```bash
-# WRONG — creates ./result symlink in repo
+# WRONG — creates ./result symlink in repo (NEVER DO THIS)
 nix build .#somePackage
 
-# CORRECT — output to /tmp, clean up after
+# CORRECT — output to /tmp, clean up immediately after use
 nix build .#somePackage -o /tmp/nix-build-result
 # ... use the result ...
-rm /tmp/nix-build-result
+rm -f /tmp/nix-build-result
 
-# CORRECT — no output link at all
+# CORRECT — no output link at all (preferred for validation)
 nix build .#somePackage --no-link
 ```
 
-**After ANY nix build:** verify no `result` in repo, clean up `/tmp/nix-build-*`
+**Mandatory cleanup:** After ANY `nix build`:
+1. Verify no `result` or `result-*` in repo: `ls -la ~/.dotfiles/result* 2>/dev/null || echo "clean"`
+2. Remove any `/tmp/nix-build-*` files you created: `rm -f /tmp/nix-build-*`
+
+**If you accidentally create `result` in repo:** Delete it immediately with
+`rm -f ~/.dotfiles/result*` before proceeding.
 
 ## Repository Structure
 

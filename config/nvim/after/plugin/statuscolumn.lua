@@ -1,8 +1,6 @@
 if not Plugin_enabled() then
-  -- vim.o.statuscolumn = "%C%=%4{&nu && v:virtnum <= 0 ? (&rnu ? (v:lnum == line('.') ? v:lnum . ' ' : v:relnum) : v:lnum) : ''}%=%s"
   vim.o.statuscolumn =
-    [[%C%=%4{&nu && v:virtnum <= 0 ? (&rnu ? (v:lnum == line('.') ? v:lnum . ' ' : v:relnum) : v:lnum) : ''}%{foldlevel(v:lnum) > foldlevel(v:lnum - 1) ? (foldclosed(v:lnum) == -1 ? "" : "") : " " }%=%s]]
-  -- vim.o.statuscolumn = '%{foldlevel(v:lnum) > foldlevel(v:lnum - 1) ? (foldclosed(v:lnum) == -1 ? "" : "") : " " }%l%s'
+    [[%C%=%4{&nu && v:virtnum <= 0 ? (&rnu ? (v:lnum == line('.') ? v:lnum . ' ' : v:relnum) : v:lnum) : ''}%{foldlevel(v:lnum) > foldlevel(v:lnum - 1) ? (foldclosed(v:lnum) == -1 ? "" : "") : " " }%=%s]]
   return
 end
 
@@ -12,17 +10,44 @@ mega.ui.statuscolumn = {}
 ---@alias ExtmarkSign {[1]: number, [2]: number, [3]: number, [4]: {sign_text: string, sign_hl_group: string}}
 
 local fn, v, api, opt = vim.fn, vim.v, vim.api, vim.opt
-local U = require("config.utils")
-local sep = Icons.separators
+local U = mega.u or {} -- Use the global utils with fallback
 local strwidth = vim.api.nvim_strwidth
 local fmt = string.format
 
 local MIN_SIGN_WIDTH, space = 1, " "
 local fcs = opt.fillchars:get()
-local shade = sep.light_shade_block
+local fold_open = mega.ui.icons.misc.fold_open or fcs.foldopen or ""
+local fold_close = mega.ui.icons.misc.fold_close or fcs.foldclose or ""
+
+-- Diagnostic severity constants
+local severity = vim.diagnostic.severity
+
+-- Cache for expensive calls (cleared on relevant events)
+local cache = {
+  line_count = {}, -- bufnr -> line_count
+}
 
 local CLICK_END = "%X"
 local padding = " "
+
+-- Get line count with caching (expensive to call per-line)
+local function get_line_count(bufnr)
+  local count = cache.line_count[bufnr]
+  if not count then
+    count = api.nvim_buf_line_count(bufnr)
+    cache.line_count[bufnr] = count
+  end
+  return count
+end
+
+-- Clear cache on buffer changes
+vim.api.nvim_create_autocmd({ "BufWritePost", "TextChanged", "TextChangedI" }, {
+  group = vim.api.nvim_create_augroup("mega.statuscolumn.cache", { clear = true }),
+  callback = function(args) cache.line_count[args.buf] = nil end,
+})
+
+-- Set up highlight for wrap symbols (dimmed)
+vim.api.nvim_set_hl(0, "StatusColumnWrap", { link = "NonText" })
 
 local excluded_bts = { "terminal", "nofile", "input", "prompt" }
 local excluded_fts = {
@@ -72,7 +97,7 @@ local excluded_fts = {
 }
 
 local should_hide_numbers = function(filetype, buftype)
-  return vim.tbl_contains(excluded_fts, filetype) or vim.tbl_contains(excluded_bts, buftype) or vim.g.shade_context
+  return vim.list_contains(excluded_fts, filetype) or vim.list_contains(excluded_bts, buftype) or vim.g.shade_context
 end
 
 ---@return StringComponent
@@ -85,7 +110,7 @@ local function get_click_start(func_name, id)
   if not id then
     vim.schedule(function()
       local msg = fmt("An ID is needed to enable click handler %s to work", func_name)
-      vim.notify_once(msg, L.ERROR, { title = "Statusline" })
+      vim.notify_once(msg, vim.log.levels.ERROR, { title = "Statusline" })
     end)
     return ""
   end
@@ -256,7 +281,7 @@ end
 
 local function fdm(lnum)
   if fn.foldlevel(lnum) <= fn.foldlevel(lnum - 1) then return space end
-  return fn.foldclosed(lnum) == -1 and fcs.foldopen or fcs.foldclose
+  return fn.foldclosed(lnum) == -1 and fold_open or fold_close
 end
 
 local function get_num_wraps(winnr)
@@ -300,45 +325,47 @@ local function draw_wrap_symbols(winnr, virtnum, col_width)
     line = "│"
   end
 
+  -- Visual mode: highlight if in selection
   if normalized_mode == "v" then
-    local pos_list = vim.fn.getregionpos(vim.fn.getpos("v"), vim.fn.getpos("."), { type = mode, eol = true })
-    local s_row, e_row = pos_list[1][1][2], pos_list[#pos_list][2][2]
-    if vim.v.lnum >= s_row and vim.v.lnum <= e_row then return line, "CursorLineNr" end
+    local ok, pos_list = pcall(vim.fn.getregionpos, vim.fn.getpos("v"), vim.fn.getpos("."), { type = mode, eol = true })
+    if ok and pos_list and #pos_list > 0 then
+      local s_row, e_row = pos_list[1][1][2], pos_list[#pos_list][2][2]
+      if vim.v.lnum >= s_row and vim.v.lnum <= e_row then return line, "CursorLineNr" end
+    end
   end
 
+  -- Current line: use CursorLineNr, otherwise dimmed wrap highlight
   if vim.fn.line(".") == vim.v.lnum then
     return line, "CursorLineNr"
   else
-    return line, "LineNr"
+    return line, "StatusColumnWrap"
   end
 end
 
 ---@param win integer
----@param line_count integer
 ---@param lnum integer
 ---@param relnum integer
 ---@param virtnum integer
----@return string
-local function nr(win, lnum, relnum, virtnum, line_count)
+---@param line_count integer
+---@param is_active boolean
+---@return string, string? -- text, highlight group
+local function nr(win, lnum, relnum, virtnum, line_count, is_active)
   local col_width = api.nvim_strwidth(tostring(line_count))
-  -- local num_wraps = get_num_wraps()
-  -- dbg(num_wraps)
 
-  -- if virtnum and virtnum ~= 0 then
-  --   return space:rep(col_width - 1) .. (virtnum < 0 and shade or space)
-  -- end -- virtual line
-
+  -- Handle wrapped lines
   if virtnum and virtnum ~= 0 then
     local line, hl = draw_wrap_symbols(win, virtnum, col_width)
-
-    return line -- virtual line
+    return line, hl
   end
 
-  local num = vim.wo[win].relativenumber and not U.falsy(relnum) and relnum or lnum
+  -- When unfocused, always use absolute line numbers (ignore relativenumber)
+  local use_relative = is_active and vim.wo[win].relativenumber and not U.falsy(relnum)
+  local num = use_relative and relnum or lnum
+
   if line_count > 999 then col_width = col_width + 1 end
   local ln = tostring(num):reverse():gsub("(%d%d%d)", "%1,"):reverse():gsub("^,", "")
   local num_width = col_width - api.nvim_strwidth(ln)
-  return string.rep(space, num_width) .. ln
+  return string.rep(space, num_width) .. ln, nil
 end
 
 ---@generic T:table<string, any>
@@ -356,27 +383,57 @@ end
 ---@param curbuf integer
 ---@return StringComponent[], StringComponent[]
 local function extmark_signs(curbuf, lnum)
+  -- Guard against invalid buffer
+  if not curbuf or not api.nvim_buf_is_valid(curbuf) then return {}, {} end
+
   lnum = lnum - 1
   ---@type ExtmarkSign[]
-  local signs = api.nvim_buf_get_extmarks(curbuf, -1, { lnum, 0 }, { lnum, -1 }, { details = true, type = "sign" })
+  local ok, signs = pcall(
+    api.nvim_buf_get_extmarks,
+    curbuf,
+    -1,
+    { lnum, 0 },
+    { lnum, -1 },
+    { details = true, type = "sign" }
+  )
+  if not ok or not signs then return {}, {} end
+
   local sns = U.fold(function(acc, item)
     item = format_text(item[4], "sign_text")
     if not item then return acc end
 
     local txt, hl = item.sign_text, item.sign_hl_group
-    -- if txt ~= "" and txt ~= " " then print(txt) end
+    -- local is_git = hl ~= nil and hl:match("^Git")
     local is_git = hl ~= nil and (hl:match("^Git") or hl:match("^MiniDiff"))
 
-    -- NOTE: use this so we can check if it's an nvim-lint sign; we'll use our own signs
-    -- FIXME: do this in nvim-lint config instead with their vim.diagnostic.config settings
-    local is_lint = string.find(txt, "[EWHI]+", 1) ~= nil
+    -- Check if it's a diagnostic sign by highlight group
+    local is_diagnostic = hl
+      and (hl:match("^Diagnostic") or hl:match("Error$") or hl:match("Warn$") or hl:match("Info$") or hl:match("Hint$"))
+
+    -- For diagnostics: show icons for ERROR/WARN, skip HINT/INFO (use colored line numbers instead)
+    -- DiagnosticSignError, DiagnosticSignWarn get through; DiagnosticSignInfo, DiagnosticSignHint filtered
+    local is_hint_or_info = hl and (hl:match("Info") or hl:match("Hint"))
+
+    -- Skip nvim-lint text signs (single letters like E, W, H, I) but allow icon signs
+    local is_lint_text = txt and txt:match("^[EWHI]$")
 
     local target = is_git and acc.git or acc.other
-    -- table.insert(target, { { { txt, hl } }, after = "" })
-    if not is_lint then table.insert(target, { { { txt, hl } }, after = "" }) end
+
+    -- Include sign if:
+    -- - It's a git sign, OR
+    -- - It's NOT a diagnostic, OR
+    -- - It's a diagnostic ERROR/WARN (not hint/info) AND not a lint text sign
+    if is_git then
+      table.insert(target, { { { txt, hl } }, after = "" })
+    elseif not is_diagnostic then
+      table.insert(target, { { { txt, hl } }, after = "" })
+    elseif is_diagnostic and not is_hint_or_info and not is_lint_text then
+      table.insert(target, { { { txt, hl } }, after = "" })
+    end
 
     return acc
   end, signs, { git = {}, other = {} })
+
   if #sns.git == 0 then sns.git = { spacer(1) } end
   return sns.git, sns.other
 end
@@ -385,8 +442,7 @@ function mega.ui.statuscolumn.render(is_active)
   local lnum, relnum, virtnum = v.lnum, v.relnum, v.virtnum
   local winnr = api.nvim_get_current_win()
   local bufnr = api.nvim_win_get_buf(winnr)
-  local line_count = api.nvim_buf_line_count(bufnr)
-  local is_actively_folding = is_active and vim.o.foldlevel > 0
+  local line_count = get_line_count(bufnr)
 
   local git_signs, other_signs = extmark_signs(bufnr, lnum)
 
@@ -394,14 +450,20 @@ function mega.ui.statuscolumn.render(is_active)
     table.insert(other_signs, spacer(1))
   end
 
-  local r1_hl = is_active and "" or "StatusColumnInactiveLineNr"
+  -- Get line number text and optional highlight (for wrap symbols)
+  local ln_text, ln_hl = nr(winnr, lnum, relnum, virtnum, line_count, is_active)
 
-  local ln_col = { nr(winnr, lnum, relnum, virtnum, line_count), r1_hl }
-  local fold_col = {
-    {
-      { fdm(lnum), "FoldColumn" },
-    },
-  }
+  -- Determine highlight: wrap symbols have their own hl, otherwise use inactive/active
+  if not ln_hl then ln_hl = is_active and "" or "StatusColumnInactiveLineNr" end
+
+  local ln_col = { ln_text, ln_hl }
+
+  -- Fold column (only for active buffers, only on real lines not virtual)
+  local fold_col = nil
+  if is_active and (not virtnum or virtnum == 0) then
+    local fold_char = fdm(lnum)
+    if fold_char ~= space then fold_col = { { { fold_char, "FoldColumn" } }, after = "" } end
+  end
 
   local r1 = is_active and section:new(spacer(1), {
     {
@@ -413,13 +475,18 @@ function mega.ui.statuscolumn.render(is_active)
     },
   }, spacer(2))
 
-  local r2 = section:new({
-    {
-      { "", "LineNr" },
-    },
-    after = "",
-  }, spacer(2))
-  -- }, is_actively_folding and fold_col or spacer(2))
+  -- Fold indicator or separator
+  local r2
+  if fold_col then
+    r2 = section:new(fold_col, spacer(1))
+  else
+    r2 = section:new({
+      {
+        { "", "LineNr" },
+      },
+      after = "",
+    }, spacer(2))
+  end
 
   if is_active then
     return display({
@@ -449,16 +516,13 @@ function mega.ui.statuscolumn.set(bufnr, is_active)
 
   if should_hide_numbers(filetype, buftype) then
     vim.opt_local.statuscolumn = ""
-    -- vim.api.nvim_buf_call(bufnr, function() vim.opt.statuscolumn = "" end)
   else
     vim.opt_local.statuscolumn = statuscolumn
-    -- vim.api.nvim_buf_call(bufnr, function() vim.opt.statuscolumn = statuscolumn end)
   end
 end
 
-Augroup("mega_mvim.ui.statuscolumn", {
+Augroup("mega.ui.statuscolumn", {
   {
-    -- event = { "BufEnter", "BufReadPost", "FileType", "FocusGained", "BufWinEnter", "TermLeave", "WinNew", "TermOpen" },
     event = { "BufEnter", "BufReadPost", "FileType", "FocusGained", "WinEnter", "TermLeave" },
     command = function(args) mega.ui.statuscolumn.set(args.buf, true) end,
   },

@@ -307,6 +307,8 @@ pipelines starting with pattern matching in parentheses for IEx compatibility.
 - All packages are managed via Nix (never `brew install`)
 - Configuration lives in `~/.dotfiles`
 - Use `just rebuild` to apply darwin changes
+- **Never create `result` symlinks in repos** — use `nix build --no-link` or
+  `-o /tmp/nix-build-result` and clean up `/tmp/nix-build-*` immediately after
 
 ## Notifications
 

@@ -50,6 +50,10 @@ in
         ../modules/system.nix
         ../modules/darwin/services.nix
 
+        # Kanata keyboard remapper
+        inputs.kanata-darwin.darwinModules.default
+        ../modules/darwin/kanata.nix
+
         # Secrets (system-level)
         inputs.agenix.darwinModules.default
 

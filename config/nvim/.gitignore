@@ -1,0 +1,58 @@
+Untitled
+local.nix
+
+# Plans (local only)
+_plans/
+
+# Auto-generated documentation
+_docs/
+
+# Devenv
+.devenv*
+devenv.local.nix
+
+# pre-commit
+.pre-commit-config.yaml
+
+# Devenv
+.devenv*
+devenv.local.nix
+
+# direnv
+.direnv
+
+# *~
+.DS_Store
+.vim-test
+./tags
+.elixir_ls
+.envrc
+.projections.json
+.init.local.lua
+.direnv
+.mise.local.toml
+
+todo.txt
+
+.elixir-tools/
+.elixir-tools
+.lexical
+.node_modules
+.opencode
+.claude
+!.ignore
+.jj
+.pi
+.direnv
+**/.direnv
+**/.jj
+**/.pi
+
+weechat
+home/config/weechat
+.direnv/
+_planned
+.playwright-mcp/
+result
+.handoff/
+_plans/

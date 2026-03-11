@@ -33,7 +33,7 @@ end
 
 
 -- Model preflight check
--- Downloads the model if not present (first run ~3GB download)
+-- Checks if model is downloaded, warns user if not (first run ~3GB download)
 local function preflightModelCheck(callback)
   local model = whisper.model or "large-v3"
   local whisperCmd = whisper.transcriptionMethods.whisperkitcli.config.cmd
@@ -44,79 +44,54 @@ local function preflightModelCheck(callback)
     return
   end
   
-  -- Check if model is cached by doing a quick test transcribe
-  -- WhisperKit caches models in ~/Library/Caches/huggingface/
-  local cacheDir = os.getenv("HOME") .. "/Library/Caches/huggingface/hub"
+  -- Check WhisperKit model cache location
+  -- WhisperKit downloads to ~/Documents/huggingface/models/argmaxinc/whisperkit-coreml/
+  local modelCacheBase = os.getenv("HOME") .. "/Documents/huggingface/models/argmaxinc/whisperkit-coreml"
+  local modelDir = modelCacheBase .. "/openai_whisper-" .. model
   
-  -- Quick check - if huggingface cache exists and has content, likely good
-  local cacheExists = hs.fs.attributes(cacheDir)
-  if cacheExists then
-    U.log.i("model cache directory exists, assuming model ready")
-    if callback then callback(true) end
+  -- Check if model directory exists with required components
+  local modelAttrs = hs.fs.attributes(modelDir)
+  if not modelAttrs then
+    U.log.w("📥 Whisper model '" .. model .. "' not downloaded yet")
+    U.log.w("📥 First transcription will download ~3GB - this may take several minutes")
+    hs.alert.show("📥 Whisper model not cached\nFirst use will download ~3GB", 5)
+    if callback then callback(false) end
     return
   end
   
-  -- Need to download - create silent audio and trigger download
-  U.log.i("model not cached, triggering download...")
-  
-  -- Create a short silent WAV file for test
-  local testAudio = "/tmp/whisper-preflight-test.wav"
-  local soxCmd = whisper.recordCmd or "sox"
-  
-  -- Generate 0.5s of silence
-  local silenceTask = hs.task.new(soxCmd, function(exitCode, _, _)
-    if exitCode ~= 0 then
-      U.log.e("failed to create test audio")
-      if callback then callback(false) end
-      return
+  -- Check for required model components
+  local components = {"AudioEncoder.mlmodelc", "TextDecoder.mlmodelc", "MelSpectrogram.mlmodelc"}
+  local missing = {}
+  for _, comp in ipairs(components) do
+    if not hs.fs.attributes(modelDir .. "/" .. comp) then
+      table.insert(missing, comp)
     end
-    
-    -- Now run whisperkit-cli which will download the model
-    U.log.i("running whisperkit-cli to trigger model download...")
-    local args = {
-      "transcribe",
-      "--model=" .. model,
-      "--audio-path=" .. testAudio,
-      "--language=en",
-    }
-    
-    local downloadTask = hs.task.new(whisperCmd, function(dlExitCode, stdOut, stdErr)
-      -- Clean up test file
-      os.remove(testAudio)
-      
-      if dlExitCode ~= 0 then
-        U.log.e("model download/test failed: " .. (stdErr or "unknown error"))
-        if callback then callback(false) end
-        return
-      end
-      
-      U.log.i("model ready!")
-      if callback then callback(true) end
-    end, function(task, stdOut, stdErr)
-      -- Streaming callback - log progress
-      if stdOut and stdOut ~= "" then
-        U.log.i(stdOut)
-      end
-      if stdErr and stdErr ~= "" then
-        U.log.i(stdErr)
-      end
-      return true
-    end, args)
-    
-    if downloadTask then
-      downloadTask:start()
-    else
-      U.log.e("failed to create download task")
-      if callback then callback(false) end
-    end
-  end, {"-n", "-r", "16000", "-c", "1", testAudio, "trim", "0", "0.5"})
-  
-  if silenceTask then
-    silenceTask:start()
-  else
-    U.log.e("failed to create silence generation task")
-    if callback then callback(false) end
   end
+  
+  if #missing > 0 then
+    U.log.w("📥 Model incomplete, missing: " .. table.concat(missing, ", "))
+    U.log.w("📥 Will resume download on first transcription")
+    if callback then callback(false) end
+    return
+  end
+  
+  -- Check for active downloads (.incomplete files)
+  local downloadCacheDir = modelCacheBase .. "/.cache/huggingface/download"
+  if hs.fs.attributes(downloadCacheDir) then
+    local iter, dirObj = hs.fs.dir(downloadCacheDir)
+    if iter then
+      for filename in iter, dirObj do
+        if filename:match("%.incomplete$") then
+          U.log.w("📥 Model download in progress...")
+          if callback then callback(false) end
+          return
+        end
+      end
+    end
+  end
+  
+  U.log.i("✅ Model '" .. model .. "' ready")
+  if callback then callback(true) end
 end
 local function showMode()
   hs.alert.closeAll()

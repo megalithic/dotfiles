@@ -5,28 +5,28 @@
     # Remove quarantine attribute from casks so they don't prompt on first launch
     caskArgs.no_quarantine = true;
     brews = [
-      "whisperkit-cli"  # Apple Silicon native speech recognition
+      "whisperkit-cli" # Apple Silicon native speech recognition
     ];
     casks = [
       "1password"
       "1password-cli"
       "colorsnapper"
       "contexts"
-      "figma"
+      # "figma"
       "hammerspoon"
       "homerow"
-      "karabiner-elements"
+      # "karabiner-elements"
       "kitty"
-      "microsoft-teams"
+      # "microsoft-teams"
       "mouseless"
       "protonvpn"
       "proton-drive"
       "obs@beta"
       "orcaslicer"
-      "raycast"
+      # "raycast"
       # "spotify"
       # "thingsmacsandboxhelper"
-      "vial"
+      # "vial"
       "yubico-authenticator"
       "visual-studio-code"
       "zed"

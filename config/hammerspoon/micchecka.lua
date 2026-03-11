@@ -618,7 +618,28 @@ function M:start()
   S.hotkeys.pttToggle = hs.hotkey.bind({ "cmd", "alt" }, "p", togglePTTMode)
   S.hotkeys.ptdToggle = hs.hotkey.bind({ "cmd", "alt", "shift" }, "p", togglePTDMode)
 
-  if whisper then whisper:start() end
+  if whisper then
+    whisper:start()
+    
+    -- Check model status at startup and log
+    local method = whisper.transcriptionMethods.whisperkitcli
+    if method and method.checkModelStatus then
+      local ready, status = method:checkModelStatus()
+      if ready then
+        U.log.i("✅ Whisper model ready")
+      else
+        if status == "not_downloaded" then
+          U.log.w("📥 Whisper model not downloaded - first use will download ~3GB")
+        elseif status == "downloading" then
+          U.log.w("📥 Whisper model download in progress...")
+        elseif status == "incomplete" then
+          U.log.w("📥 Whisper model incomplete - will resume download")
+        else
+          U.log.w("📥 Whisper model status: " .. tostring(status))
+        end
+      end
+    end
+  end
   preloadLevelMonitor()
   applyPTTState()
   updateHUD()

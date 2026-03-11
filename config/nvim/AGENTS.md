@@ -1,293 +1,700 @@
-# config/nvim/ — Neovim configuration
+# nvim_next Agent Instructions
 
-## Overview
+Modern Neovim configuration targeting nvim 0.12+ with native LSP (no nvim-lspconfig).
 
-Lua-based Neovim config using **lazy.nvim** for plugin management. This config is **out-of-store** (symlinked via `linkConfig`), so changes take effect immediately without nix rebuild.
-
-Nix provides: the neovim package, LSP servers, treesitter parsers, and runtime dependencies.
-Lua provides: all configuration, keymaps, and plugin specs.
-
-## Structure
+## Architecture Overview
 
 ```
-init.lua              # Entry point: loads config modules
-lazy-lock.json        # Plugin version lockfile
+init.lua                 # Entry point: sets up mega global, loads modules
 
 lua/
-  config/
-    globals.lua       # Global variables, leader key, providers
-    options.lua       # vim.opt settings
-    keymaps.lua       # Global key mappings
-    autocmds.lua      # Autocommands
-    commands.lua      # User commands
-    lazy.lua          # lazy.nvim bootstrap and setup
-    utils.lua         # Utility functions
-    icons.lua         # Icon definitions
-    
-  plugins/
-    init.lua          # Plugin index (loads all plugin specs)
-    lsp.lua           # LSP configuration
-    blink.lua         # Completion (blink.cmp)
-    fzf-lua.lua       # Fuzzy finder
-    git.lua           # Jujutsu/git integration (fugitive, gitsigns)
-    ai.lua            # AI tools (copilot, etc.)
-    claudecode.lua    # Claude Code integration
-    ...               # One file per plugin or plugin group
+├── settings.lua         # Global vim.g settings, theme selection
+├── options.lua          # Core vim.opt settings, filetype detection
+├── keymaps.lua          # Global keymaps (escape deluxe, navigation)
+├── icons.lua            # Centralized icon definitions
+├── bootstrap.lua        # Lazy.nvim setup, plugin imports
+│
+├── langs/               # Language configurations (LSP, formatters, ftplugin)
+│   ├── init.lua         # Lang system: loading, merging, caching
+│   ├── _example.lua     # Documented example (not loaded)
+│   └── *.lua            # Per-language configs (elixir, lua, typescript, etc.)
+│
+├── lsp/                 # Native LSP setup (no nvim-lspconfig)
+│   ├── init.lua         # LSP enable, capabilities, attach handler
+│   ├── diagnostics.lua  # Diagnostic config, sign handler, navigation
+│   ├── keymaps.lua      # Shared LSP keymaps (gd, gr, K, etc.)
+│   └── progress.lua     # LSP progress floating window
+│
+├── plugins/             # Lazy.nvim plugin specs
+│   ├── init.lua         # Core plugins (smart-splits)
+│   ├── ai/              # AI integrations (claudecode, copilot)
+│   ├── snacks/          # Snacks.nvim (picker, notifier, terminal)
+│   ├── lsp/             # LSP plugins (conform, trouble, schemastore)
+│   ├── mini/            # Mini.nvim modules
+│   └── *.lua            # Other plugins (blink, oil, git, etc.)
+│
+├── themes/              # Color schemes
+│   ├── init.lua         # Theme loader
+│   ├── hyper.lua        # Hyper theme
+│   └── megaforest.lua   # Megaforest theme
+│
+└── utils/               # Utility modules (mounted on mega.u)
+    ├── init.lua         # Loads all utils
+    ├── clipboard.lua    # Clipboard helpers
+    ├── fs.lua           # Filesystem helpers
+    ├── log.lua          # Logging (global `log` table)
+    └── acp/             # ACP (Agent Client Protocol) for pi
+        ├── init.lua     # Module entry point
+        ├── client.lua   # JSON-RPC client for pi-acp
+        ├── integration.lua  # High-level send functions
+        └── response.lua # Response display (notifications, virtual text)
 
-  colors/             # Colorscheme definitions
+after/
+├── ftplugin/            # Traditional ftplugin overrides
+│   ├── bigfile.lua      # Big file handling
+│   ├── elixir.lua       # Elixir-specific overrides
+│   └── lua.lua          # Lua-specific overrides
+│
+└── plugin/              # Auto-loaded after init
+    ├── commands.lua     # Global user commands
+    ├── cursorline.lua   # Cursorline blink effects (mega.ui.blink_cursorline)
+    ├── fastscroll.lua   # Fast scroll mode detection
+    ├── megaterm.lua     # Terminal management system (mega.term)
+    ├── pi.lua           # Pi coding agent integration (mega.p.pi)
+    ├── statuscolumn.lua # Custom statuscolumn
+    ├── statusline.lua   # Custom statusline (mega.ui.statusline)
+    ├── winbar.lua       # Window bar
+    └── windows.lua      # Window management
 ```
 
-## Plugin pattern
+## Load Order
 
-Each file in `lua/plugins/` returns a lazy.nvim spec:
+1. `init.lua` - Creates `_G.mega` global namespace
+2. `settings.lua` - Theme, disabled plugins, global helpers
+3. `utils/` - Utility functions (`mega.u`, `mega.ui`, `log`)
+4. `keymaps.lua` - Global keymaps
+5. `options.lua` - vim.opt settings
+6. `bootstrap.lua` - Lazy.nvim setup, plugin loading
+7. `langs.setup()` - ftplugin autocmds
+8. `lsp.setup()` - Deferred to VeryLazy event
+9. `after/plugin/*.lua` - Loaded after plugins (megaterm, pi, statusline, etc.)
+
+## Global Namespace (`mega`)
 
 ```lua
--- lua/plugins/example.lua
-return {
-  "author/plugin-name",
-  event = "VeryLazy",  -- or "BufRead", "InsertEnter", etc.
-  dependencies = { "other/plugin" },
-  opts = {
-    -- Plugin options
+_G.mega = {
+  p = {},           -- Plugin-specific tables
+  t = {},           -- Theme
+  u = {},           -- Utilities (mega.u.falsy, mega.u.empty, etc.)
+  ui = {
+    icons = {...},           -- From lua/icons.lua
+    blink_cursorline = fn,   -- Visual feedback function
+    statusline = {...},      -- Statusline module
   },
-  config = function(_, opts)
-    require("plugin-name").setup(opts)
-    -- Additional setup
-  end,
-  keys = {
-    { "<leader>x", "<cmd>PluginCommand<cr>", desc = "Do thing" },
-  },
+  term = {...},     -- Terminal manager (mega.term) - from after/plugin/megaterm.lua
+}
+
+-- Plugin-specific namespaces (populated by after/plugin/*.lua):
+mega.p.pi           -- Pi coding agent integration
+mega.p.lazy         -- Lazy.nvim helpers
+mega.p.oil          -- Oil file manager
+mega.p.snacks       -- Snacks.nvim
+mega.p.claudecode   -- Claude Code integration (placeholder)
+```
+
+---
+
+## Megaterm System (`after/plugin/megaterm.lua`)
+
+Custom terminal manager with buffer-switching model. One window per position, multiple terminals as switchable buffers.
+
+### Core Concepts
+
+- **Position**: Where terminals appear (`bottom`, `right`, `tab`, `float`)
+- **Buffer-switching**: Multiple terminals share one window per position
+- **History tracking**: Most recently used terminal is tracked
+
+### Terminal Class
+
+```lua
+---@class mega.term.Terminal
+---@field buf number          -- Buffer number
+---@field win number?         -- Window number (when visible)
+---@field job_id number?      -- Job ID for the terminal process
+---@field position string     -- "bottom"|"right"|"tab"|"float"
+---@field cmd_str string      -- Command string (e.g., "pi", "iex -S mix")
+```
+
+### API
+
+```lua
+-- Create terminal
+mega.term({ cmd = "pi", position = "right", width = 0.30 })
+mega.term("htop")  -- Shorthand, uses default position
+
+-- List/get terminals
+mega.term.list()              -- All valid terminals
+mega.term.get_current()       -- Currently focused terminal
+mega.term.get_by_position("right")  -- All terminals in position
+
+-- Control
+mega.term.toggle()            -- Toggle most recent terminal
+mega.term.cycle()             -- Cycle through terminals in current window
+
+-- Send to terminal
+mega.term.send("text")        -- Send to most recent terminal
+term:send_line("command")     -- Send with newline
+term:send_keys("<C-c>")       -- Send raw keycodes
+
+-- Terminal instance methods
+term:show()                   -- Show terminal
+term:hide()                   -- Hide terminal
+term:toggle()                 -- Toggle visibility
+term:close()                  -- Close and cleanup
+term:is_valid()               -- Check if buffer valid
+term:is_visible()             -- Check if in a window
+term:focus()                  -- Focus and enter insert mode
+```
+
+### Keymaps
+
+| Key | Mode | Description |
+|-----|------|-------------|
+| `<C-;>` | n, t | Toggle terminal |
+| `<C-'>` | n, t | Cycle terminals in window |
+| `<Esc>` | t | Exit terminal mode (shell only, not pi) |
+| `<C-q>` | t | Exit terminal mode (pi terminals) |
+| `<C-h/j/k/l>` | t | Navigate to adjacent window |
+| `<C-x>` | t | Close terminal |
+| `q` | n | Close terminal (non-tab) |
+
+### Configuration
+
+```lua
+mega.term.setup({
+  default_position = "bottom",
+  default_height = 15,
+  default_width = 80,
+  float_config = { ... },
+})
+```
+
+---
+
+## Pi Integration (`after/plugin/pi.lua`)
+
+Comprehensive integration with pi-coding-agent for sending context, code, and files
+from nvim to a running pi agent.
+
+### Usage Scenarios
+
+#### 1. Quick question about code (most common)
+
+Select code visually, then `<localleader>ps` to send with a task prompt:
+
+```
+1. Select problematic code in visual mode
+2. Press <localleader>ps (space p s)
+3. Type task: "why does this throw nil error?"
+4. Pi receives: file path, line range, code, and your question
+```
+
+#### 2. Send code without prompt (fast iteration)
+
+When iterating quickly and pi already has context:
+
+```
+1. Select code
+2. Press <localleader>pS (capital S = skip prompt)
+3. Code sent immediately with file/line info, no task
+```
+
+#### 3. Add file to context before asking
+
+Build up context, then ask:
+
+```
+1. Open relevant file
+2. Press <localleader>pf to add to context
+3. Repeat for other files
+4. Select code and <localleader>ps with question
+5. Pi sees: tracked files + current selection
+```
+
+#### 4. Send to tmux agent (bypass nvim terminal)
+
+When pi is running in a tmux pane, not nvim:
+
+```
+1. Select code
+2. Press <localleader>pa (a = agent)
+3. Sends via socket to tmux pi, skipping nvim terminals
+```
+
+#### 5. Include LSP hover info
+
+When type information helps:
+
+```
+1. Position cursor on symbol
+2. Press <localleader>ph (h = hover)
+3. Pi receives: line + LSP hover info (types, docs)
+```
+
+#### 6. Multiple pi sessions
+
+Working with multiple pi instances:
+
+```
+1. Press <localleader>pn to open session picker
+2. Select target (socket or nvim terminal)
+3. Future sends go to selected target
+4. Or set buffer-local: :PiTarget /tmp/pi-myproject-agent.sock
+```
+
+### Architecture
+
+Pi integration operates via multiple transports (in priority order):
+
+1. **ACP mode** - JSON-RPC to `pi-acp` process (structured, supports images)
+2. **Socket mode** - JSON to pi's Unix socket (fast, non-blocking)
+3. **Panel mode** - Text to megaterm running pi (fallback)
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     after/plugin/pi.lua                     │
+│                        (mega.p.pi)                          │
+├─────────────────────────────────────────────────────────────┤
+│  send_selection() / send_cursor() / add_file()              │
+│                          │                                  │
+│                          ▼                                  │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │              Transport Selection                     │   │
+│  │  1. ACP connected? → utils/acp/integration.lua      │   │
+│  │  2. Pi terminal in nvim? → megaterm send            │   │
+│  │  3. Socket available? → nc -U socket                │   │
+│  │  4. None? → create new pi panel                     │   │
+│  └─────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Socket Discovery
+
+Priority order for finding pi socket:
+
+1. `vim.b.pi_target_socket` - Buffer-local explicit target
+2. `PI_SOCKET` env var - Explicit override
+3. Tmux session: `/tmp/pi-{session}-agent.sock`
+4. Tmux session: `/tmp/pi-{session}-*.sock` (first match)
+5. Default: `/tmp/pi-default.sock`
+
+### Payload Format
+
+When sending via socket, pi.lua sends JSON:
+
+```json
+{
+  "type": "selection",
+  "file": "/path/to/file.lua",
+  "range": [10, 25],
+  "selection": "function foo()...",
+  "language": "lua",
+  "task": "explain this function",
+  "lsp": {
+    "diagnostics": ["[ERROR] 12:5 undefined variable"],
+    "hover": "function foo(): string"
+  }
 }
 ```
 
-## LSP setup
+### Commands
 
-LSP servers are configured in `lua/plugins/lsp.lua`:
+| Command | Description |
+|---------|-------------|
+| `:PiPanel` | Toggle pi terminal panel |
+| `:PiSelection` | Send visual selection to pi |
+| `:PiCursor` | Send cursor line to pi |
+| `:PiFile [path]` | Add file to pi context |
+| `:PiToggle` | Toggle pi pane in tmux |
+| `:PiStatus` | Show pi connection status |
+| `:PiContext` | Show tracked context files |
+| `:PiClearContext` | Clear tracked context |
+| `:PiSessions` | Select pi session (picker) |
+| `:PiTarget [socket]` | Get/set target socket |
+| `:PiLspStart` | Start in-process pi LSP |
+| `:PiLspStop` | Stop pi LSP |
+| `:PiLspAttach` | Attach pi LSP to buffer |
 
-- **mason.nvim** installs LSP servers to `$XDG_DATA_HOME/lsp/mason`
-- **mason-lspconfig** bridges mason and nvim-lspconfig
-- **nvim-lspconfig** configures individual servers
+### Keymaps
 
-### Adding a new LSP
+| Key | Mode | Description |
+|-----|------|-------------|
+| `<localleader>pp` | n | Toggle pi panel |
+| `<localleader>ps` | v | Send selection (with prompt) |
+| `<localleader>pS` | v | Quick send selection (no prompt) |
+| `<localleader>pa` | n,v | Send to agent (force tmux socket) |
+| `<localleader>pc` | n | Send cursor line |
+| `<localleader>ph` | n | Send cursor with hover info |
+| `<localleader>pf` | n | Add file to context |
+| `<localleader>pt` | n | Toggle tmux pane |
+| `<localleader>pi` | n | Show pi status |
+| `<localleader>px` | n | Show context files |
+| `<localleader>pn` | n | Select pi session |
 
-1. Add to `ensure_installed` list in `lua/plugins/lsp.lua`
-2. Add server config if needed (most use defaults)
+### ACP Keymaps (under `<localleader>pA`)
 
-```lua
--- In lua/plugins/lsp.lua ensure_installed table:
-"new-language-server",
+| Key | Mode | Description |
+|-----|------|-------------|
+| `<localleader>pAc` | n | ACP: connect to pi-acp |
+| `<localleader>pAs` | n | ACP: new session |
+| `<localleader>pAl` | n | ACP: list/load sessions |
+| `<localleader>pAi` | n | ACP: send clipboard image |
+| `<localleader>pA?` | n | ACP: show status |
 
--- If custom config needed, add to server_configs:
-new_server = {
-  settings = { ... }
-}
-```
+### Statusline Integration
 
-### LSP from Nix
+The statusline (`after/plugin/statusline.lua`) includes a pi segment:
 
-Some LSPs come from Nix (e.g., elixir-ls, nil). These are in PATH via nix shell/profile.
-Mason handles the rest.
+- Shows π icon with session name
+- Shows context file count
+- Clickable to open session picker
 
-## Completion
+---
 
-Using **blink.cmp** (`lua/plugins/blink.lua`):
+## ACP Integration (`lua/utils/acp/`)
 
-- Sources: LSP, snippets, buffer, path
-- Configured for fast, non-blocking completion
+ACP (Agent Client Protocol) provides structured communication with pi via JSON-RPC,
+enabling features not possible with plain socket/terminal:
 
-## Keymaps
-
-Global keymaps in `lua/config/keymaps.lua`.
-Plugin-specific keymaps in each plugin spec's `keys` table.
-
-**Leader key:** `<Space>` (set in globals.lua)
-
-**Common patterns:**
-- `<leader>f*` — Find/fuzzy (fzf-lua)
-- `<leader>g*` — Jujutsu/git operations
-- `<leader>l*` — LSP
-- `<leader>c*` — Code actions
-
-## Treesitter
-
-Parsers are mostly provided by Nix (`pkgs.vimPlugins.nvim-treesitter.withAllGrammars`).
-Config in `lua/plugins/treesitter.lua`.
-
-## AI integration
-
-Multiple AI plugins available:
-- `claudecode.lua` — Claude Code integration
-- `codecompanion.lua` — Multi-model chat
-- `ai.lua` — Copilot and other AI tools
-
-## Common tasks
-
-### Add a new plugin
-
-1. Create `lua/plugins/myplugin.lua`
-2. Return a lazy.nvim spec
-3. Restart editor or run `:Lazy sync`
-
-### Add a new language
-
-1. LSP: Add server to `ensure_installed` in `lua/plugins/lsp.lua`
-2. Treesitter: Usually automatic (Nix provides parsers)
-3. Formatting: Add to `lua/plugins/conform.lua`
-4. Linting: Add to `lua/plugins/lint.lua`
-
-### Debug plugin loading
-
-```vim
-:Lazy profile         " See load times
-:Lazy health          " Check plugin status
-:checkhealth          " Full health check
-```
-
-### Update plugins
-
-```vim
-:Lazy update          " Update all plugins
-:Lazy sync            " Sync with lockfile
-```
-
-## Nix integration
-
-Nix handles:
-- Editor package (`pkgs.nvim-nightly` or `pkgs.neovim`)
-- Python/Node/Ruby providers for plugins
-- Some LSP servers (elixir-ls, nil, etc.)
-- Treesitter parsers
-
-Config in `home/common/programs/nvim.nix`:
-```nix
-programs.neovim = {
-  enable = true;
-  package = pkgs.nvim-nightly;
-  extraPackages = with pkgs; [ ... ];
-};
-```
-
-The config directory is symlinked:
-```nix
-xdg.configFile."nvim".source = config.lib.mega.linkConfig "nvim";
-```
-
-## Key files to understand
-
-| File | Why it matters |
-|------|---------------|
-| `init.lua` | Entry point, load order |
-| `lua/config/lazy.lua` | Plugin manager bootstrap |
-| `lua/config/keymaps.lua` | All global keybindings |
-| `lua/plugins/lsp.lua` | LSP server configuration |
-| `lua/config/utils.lua` | Helper functions used everywhere |
-
-## Obsidian.nvim + Shade integration
-
-This nvim config integrates with **Shade** (a floating terminal for notes) and **obsidian.nvim**
-for a quick-capture workflow. The integration involves multiple components:
+- **Streaming responses** - Real-time message chunks
+- **Image support** - Send screenshots/images to pi
+- **Session management** - Create, list, resume sessions
+- **Model/mode switching** - Change models mid-conversation
 
 ### Architecture
 
 ```
-Hammerspoon (hotkeys) → Shade (Swift app) → Neovim (nvim RPC) → obsidian.nvim
-     ↓                       ↓                    ↓
- context.json          context gathering     template substitution
+┌────────────────────────────────────────────────────────────────┐
+│                    utils/acp/                                  │
+├────────────────────────────────────────────────────────────────┤
+│  init.lua          - Module entry, convenience shortcuts       │
+│  client.lua        - Low-level JSON-RPC client                 │
+│  integration.lua   - High-level send functions                 │
+│  response.lua      - Response display (notify, virtual text)   │
+└────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+                     ┌─────────────────┐
+                     │    pi-acp       │  (external process)
+                     │  JSON-RPC over  │
+                     │     stdio       │
+                     └─────────────────┘
 ```
 
-### Key files
+### How It Works
 
-| File | Purpose |
-|------|---------|
-| `lua/plugins/obsidian.lua` | obsidian.nvim config, templates, substitutions |
-| `lua/config/autocmds.lua` | Auto-link captures to daily note on save |
-| `~/.local/state/shade/context.json` | Capture context (app, URL, selection) |
-| `$NOTES_HOME/templates/*.md` | Note templates with substitution variables |
+1. **Connection**: `pi-acp` process spawned, communicates via stdin/stdout JSON-RPC
+2. **Initialize**: Client sends capabilities, receives agent info
+3. **Session**: Create or load a session (persisted conversation)
+4. **Prompts**: Send structured content blocks (text, resources, images)
+5. **Responses**: Receive streaming chunks via notifications
 
-### obsidian.nvim fork
+### Content Blocks
 
-This config uses **obsidian-nvim/obsidian.nvim** (community fork), NOT the original
-epwalsh/obsidian.nvim. The API has significant differences:
+ACP uses typed content blocks instead of plain text:
 
 ```lua
--- OLD API (epwalsh, deprecated)
-local client = require("obsidian").get_client()
-client:today()  -- DOES NOT WORK
+-- Text
+{ type = "text", text = "explain this code" }
 
--- NEW API (obsidian-nvim)
-local daily = require("obsidian.daily")
-daily.today()  -- Creates today's daily note with template
+-- File reference (pi reads it)
+{ type = "resource_link", uri = "file:///path/to/file.lua", name = "file.lua" }
+
+-- Embedded content (pi receives content directly)
+{ type = "resource", resource = { uri = "file:///...", text = "content..." } }
+
+-- Image (base64)
+{ type = "image", data = "iVBORw0KGgo...", mimeType = "image/png" }
 ```
 
-### Template substitutions
+### Usage from pi.lua
 
-Custom substitutions defined in `lua/plugins/obsidian.lua`:
+pi.lua automatically tries ACP first when connected:
 
-| Variable | Description |
-|----------|-------------|
-| `{{date_id}}` | YYYYMMDD format for IDs |
-| `{{timestamp}}` | ISO8601 timestamp |
-| `{{migrated_tasks}}` | Incomplete tasks from previous daily note |
-| `{{yesterday_link}}` | Wiki link to previous daily note |
-| `{{capture_context}}` | Callout with app/URL/file info |
-| `{{capture_selection}}` | Selected text as code block |
-| `{{image_filename}}` | For image captures |
+```lua
+-- In pi.lua send_payload():
+local acp = lazy_acp()
+if acp then
+  -- Converts payload to ACP content blocks
+  local sent = acp.send_selection(text, file, range, language, opts)
+  if sent then return true end
+end
+-- Falls back to socket/panel...
+```
 
-### Context file schema
+### Direct ACP Usage
 
-Shade writes context to `~/.local/state/shade/context.json`:
+```lua
+local acp = require("utils.acp")
 
-```json
-{
-  "appType": "browser|terminal|editor|communication|other",
-  "appName": "Brave Browser Nightly",
-  "bundleID": "com.brave.Browser.nightly",
-  "windowTitle": "GitHub - user/repo",
-  "url": "https://github.com/user/repo",
-  "selection": "selected text here",
-  "detectedLanguage": "lua",
-  "timestamp": "2026-02-26T09:30:00"
+-- Connect
+acp.connect(function(success, err)
+  if success then
+    print("Connected!")
+  end
+end)
+
+-- Send prompt
+acp.prompt({
+  { type = "text", text = "Hello, what can you help with?" }
+}, function(stop_reason, err)
+  print("Done:", stop_reason)
+end)
+
+-- Send image from clipboard
+acp.send_clipboard_image("What's in this screenshot?", function(success, err)
+  -- ...
+end)
+
+-- Subscribe to streaming responses
+local unsub = acp.subscribe("message", function(data)
+  print("Chunk:", data.text)
+end)
+
+-- Later: unsub() to stop listening
+```
+
+### ACP Commands
+
+| Command | Description |
+|---------|-------------|
+| `:PiAcpConnect` | Connect to pi-acp process |
+| `:PiAcpDisconnect` | Disconnect from pi-acp |
+| `:PiAcpSession` | Create new ACP session |
+| `:PiAcpSessions` | List/load existing sessions |
+| `:PiAcpImage` | Send clipboard image |
+| `:PiAcpStatus` | Show ACP connection status |
+
+### Event Types
+
+Subscribe to these events via `acp.subscribe(event, callback)`:
+
+| Event | Data | Description |
+|-------|------|-------------|
+| `connected` | `{ agentInfo }` | Connected to pi-acp |
+| `disconnected` | `{ code }` | Disconnected |
+| `session_created` | `{ sessionId }` | New session created |
+| `message` | `{ session_id, text }` | Agent message chunk |
+| `thought` | `{ session_id, text }` | Agent thinking chunk |
+| `tool_call` | `{ session_id, tool_call }` | Tool execution started |
+| `tool_call_update` | `{ session_id, update }` | Tool status changed |
+| `session_info` | `{ session_id, title }` | Session metadata updated |
+
+### Response Display
+
+`utils/acp/response.lua` automatically subscribes to ACP events and displays:
+
+- **Notifications** - Tool calls, session info, errors
+- **Virtual text** - Streaming message chunks at cursor
+
+Configure via:
+
+```lua
+require("utils.acp.response").setup({
+  notify = { enabled = true, max_lines = 20 },
+  virtual_text = { enabled = true, clear_on_cursor_move = true },
+  show = { messages = true, thoughts = false, tool_calls = true },
+})
+```
+
+---
+
+## Lang System (`lua/langs/`)
+
+Unified language config - all lang-specific settings in one place per language.
+
+### Lang Config Structure
+
+```lua
+-- lua/langs/<lang>.lua
+return {
+  filetypes = { "elixir", "heex" },       -- Metadata (required for servers)
+  
+  servers = {                              -- LSP servers (native vim.lsp.config)
+    expert = {
+      cmd = { "expert", "--stdio" },
+      root_markers = { "mix.exs" },        -- Converted to root_dir function
+      settings = {...},
+      keys = {...},                        -- Per-server keymaps
+    },
+  },
+  
+  formatters = { elixir = { "mix" } },    -- conform.nvim formatters
+  
+  ftplugin = {                             -- Applied on FileType
+    elixir = {
+      opt = { shiftwidth = 2 },
+      keys = {...},
+      abbr = {...},
+      callback = function(bufnr) end,
+    },
+  },
+  
+  repl = {                                 -- REPL config (auto-creates keymaps)
+    cmd = "iex -S mix",
+    position = "right",
+    reload_cmd = "recompile()",
+  },
+  
+  plugins = { { "some/plugin.nvim" } },   -- Lazy specs (auto-collected)
 }
 ```
 
-### Capture workflow
+### Key APIs
 
-1. User triggers capture (Hyper+Shift+N via Hammerspoon)
-2. If Shade not running: Hammerspoon writes bootstrap context, launches Shade
-3. Shade gathers full context from target app (selection, URL, etc.)
-4. Shade writes context.json
-5. Shade sends nvim RPC to open capture template
-6. obsidian.nvim creates note with template substitutions reading context.json
-7. On save, autocmd appends link to today's daily note
+```lua
+local langs = require("langs")
+langs.servers()          -- Returns all LSP configs + server_keys
+langs.formatters()       -- Returns formatter configs for conform
+langs.ftplugin_configs() -- Returns ftplugin configs
+langs.repl_configs()     -- Returns REPL configs by filetype
+langs.lazy_specs()       -- Returns plugin specs (used in bootstrap.lua)
+langs.inspect("elixir")  -- Debug: show resolved config
+langs.list()             -- List all discovered langs
+langs.clear_cache()      -- Clear cache (for reloading)
+```
 
-### Daily note auto-linking (autocmds.lua)
+### Commands
 
-When saving a capture note, the autocmd:
-1. Extracts the date from capture filename (YYYYMMDDHHMM-descriptor.md)
-2. Ensures daily note exists (calls `require("obsidian.daily").today()` if needed)
-3. Appends a timestamped wiki link to the daily note's "## Captures" section
+```vim
+:LangInspect <name>     " Show resolved lang config
+:LangList               " List all langs
+:LangServers            " List all LSP servers
+:LangReload             " Reload all lang configs
+```
+
+---
+
+## LSP System (`lua/lsp/`)
+
+Native `vim.lsp.config()` and `vim.lsp.enable()` - no nvim-lspconfig.
+
+### Flow
+
+1. `lsp.setup()` registers VeryLazy autocmd
+2. On VeryLazy: calls `langs.servers()` to get configs
+3. Applies `vim.lsp.config(server, config)` for each
+4. Calls `vim.lsp.enable(server_names)`
+5. LspAttach autocmd applies shared keymaps + per-server keymaps
+
+### root_markers
+
+Lang configs use `root_markers` for convenience. The lang system converts these
+to proper `root_dir` functions for vim.lsp.config.
+
+---
+
+## Plugin System
+
+Uses lazy.nvim with spec imports:
+
+```lua
+-- bootstrap.lua
+spec = {
+  { import = "plugins" },
+  { import = "plugins.ai" },
+  { import = "plugins.lsp" },
+  { import = "plugins.snacks" },
+  { import = "plugins.mini" },
+  { require("langs").lazy_specs() },  -- Lang-specific plugins
+}
+```
+
+---
+
+## Key Patterns
+
+### Leaders
+
+- `<leader>` = `,` (comma)
+- `<localleader>` = ` ` (space)
+
+### Keymap Conventions
+
+- `<leader>f*` - Find/picker keymaps
+- `<leader>g*` - Git keymaps
+- `<localleader>p*` - Pi agent keymaps
+- `<localleader>r*` - REPL keymaps (from lang configs)
+- `<localleader>e*` - Elixir-specific keymaps
+- `<localleader>t*` - Test keymaps
+- `gd`, `gr`, `K` - LSP keymaps
+
+### Autocmd Groups
+
+- `mega.langs` - ftplugin application
+- `mega.lsp.attach` - LSP attach handler
+- `mega.lsp.diagnostics` - Diagnostic features
+- `mega.lsp.progress` - Progress indicator
+- `mega.treesitter` - Treesitter highlighting
+- `mega.term` - Megaterm autocmds
+- `mega.ui.statusline` - Statusline updates
+- `mega.ui.statusline.jj` - Jujutsu status updates
+
+---
+
+## Testing Changes
+
+```bash
+NVIM_APPNAME=next nvim [file]
+```
+
+This uses separate config/data/state directories:
+- `~/.config/next/`
+- `~/.local/share/next/`
+- `~/.local/state/next/`
+
+---
+
+## Common Tasks
+
+### Adding a new language
+
+1. Create `lua/langs/<lang>.lua` (copy from `_example.lua`)
+2. Define servers, formatters, ftplugin as needed
+3. Run `:LangReload` to test
+
+### Adding an LSP server
+
+In the relevant `lua/langs/<lang>.lua`:
+
+```lua
+servers = {
+  myserver = {
+    cmd = { "my-server", "--stdio" },
+    root_markers = { "config.json", ".git" },
+    settings = {...},
+  },
+}
+```
 
 ### Debugging
 
-```lua
--- Check if obsidian.nvim is loaded
-:lua print(vim.inspect(package.loaded["obsidian"]))
-
--- Test daily note creation
-:lua require("obsidian.daily").today()
-
--- Check context file
-:!cat ~/.local/state/shade/context.json
-
--- Check template substitutions
-:ObsidianTemplate capture-text
+```vim
+:LangInspect <name>     " Show resolved lang config
+:LangList               " List all langs
+:LangServers            " List all LSP servers
+:checkhealth            " Run health checks
+:Lazy profile           " Plugin load times
+:PiStatus               " Pi connection status
 ```
 
-### Common issues
+---
 
-| Issue | Cause | Fix |
-|-------|-------|-----|
-| `attempt to call field 'today' (a nil value)` | Using old client API | Use `require("obsidian.daily").today()` |
-| Context shows Shade as appName | Cold start timing race | Ensure Hammerspoon writes bootstrap context |
-| Template variables not substituted | Context file missing/malformed | Check `~/.local/state/shade/context.json` |
-| Daily note not created | NOTES_HOME not set | Set `NOTES_HOME` env var |
+## Don't
+
+- Don't use nvim-lspconfig - we use native vim.lsp.config
+- Don't put treesitter config in langs/ - it's in `lua/plugins/treesitter.lua`
+- Don't use `vim.tbl_contains` - use `vim.list_contains` (deprecated)
+- Don't create CursorMoved autocmds without debouncing
+- Don't assume plugins are loaded - use `pcall(require, "plugin")`
+- Don't use `opts = {}` for plugins without setup() functions (e.g., treesitter-endwise)

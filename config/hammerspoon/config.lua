@@ -373,9 +373,9 @@ M.dock = {
     vendorName = "ZMK Project",
   },
   kanata = {
-    enabled = false, -- Set to true to enable Kanata profile switching
-    connected = "leeloo.kbd",
-    disconnected = "internal.kbd",
+    enabled = true,
+    connected = "macbook-disabled.kbd",  -- Disable internal when Leeloo connected
+    disconnected = "macbook.kbd",        -- Normal config when Leeloo disconnected
     configPath = os.getenv("HOME") .. "/.config/kanata",
     daemonLabel = "org.nixos.kanata",
   },
@@ -410,6 +410,8 @@ M.notifier = {
     ---@field alwaysShowInTerminal? boolean      -- Show even when terminal is focused
     ---@field showWhenAppFocused? boolean        -- Show even when source app is focused
     ---@field overrideFocusModes? string[]|true  -- Focus modes this notification can bypass/override
+    ---@field excludeFocusModes? string[]        -- Focus modes where notification is always blocked (takes precedence over override)
+    ---@field dismissInFocusModes? boolean       -- Dismiss native notification when blocked by focus mode (default: global setting)
     ---@field appImageID? string                 -- Custom icon identifier (e.g. "hal9000")
     ---@field dismissNative? boolean             -- Whether to dismiss native notification after redirect (default: uses global setting)
     --
@@ -455,6 +457,7 @@ M.notifier = {
       alwaysShowInTerminal = true,
       showWhenAppFocused = false,
       overrideFocusModes = true,
+      excludeFocusModes = { "Do Not Disturb" },
     },
 
     -- Telegram Desktop notifications
@@ -576,6 +579,11 @@ M.notifier = {
   -- When true, only the canvas overlay is shown; native notification is closed immediately
   -- Per-rule dismissNative field can override this global default
   dismissNativeOnRedirect = true,
+
+  -- When true, dismiss native notifications when blocked by focus mode
+  -- Prevents notifications from piling up in Notification Center during focus
+  -- Per-rule dismissInFocusModes field can override this global default
+  dismissInFocusModes = true,
 
   -- Animation settings
   animation = {

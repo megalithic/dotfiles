@@ -1,0 +1,121 @@
+;; Kanata configuration for MacBook internal keyboard
+;; vim:ft=lisp
+;;
+;; Features:
+;; - Home row mods (left hand): a=cmd, s=shift, d=opt
+;; - Vim navigation layer: hold f, tap hjkl for arrows
+;; - Extended vim motions: w/b (word), 0/$ (line), u/d (page)
+;; - Caps lock → Escape (tap) / Control (hold)
+;; - Left Control → F19 (for Hammerspoon hyper key)
+;; - Ctrl+Backspace → Forward Delete (via defoverrides)
+
+(defcfg
+  concurrent-tap-hold yes
+  process-unmapped-keys yes
+  override-release-on-activation yes
+  macos-dev-names-include (
+    "Apple Internal Keyboard / Trackpad"
+  )
+)
+
+;; ────────────────────────────────────────────────────────────────────────────
+;; Key combination overrides
+;; ────────────────────────────────────────────────────────────────────────────
+(defoverrides
+  ;; Ctrl+Backspace → Forward Delete
+  ;; Since caps-hold outputs lctl, this makes caps+bspc = del
+  (lctl bspc) (del)
+)
+
+;; ────────────────────────────────────────────────────────────────────────────
+;; Source keys - what we're remapping
+;; ────────────────────────────────────────────────────────────────────────────
+(defsrc
+  caps lctl spc bspc
+  a    s    d    f    g    h    j    k    l    ;
+  u    i    o    w    b    0    4
+)
+
+;; ────────────────────────────────────────────────────────────────────────────
+;; Timing configuration
+;; ────────────────────────────────────────────────────────────────────────────
+(defvar
+  tap-time 200
+  hold-time 175
+
+  ;; Keys that trigger early tap for same-hand rolls
+  left-hand-keys (
+    q w e r t
+    a s d f g
+    z x c v b
+  )
+  right-hand-keys (
+    y u i o p
+    h j k l ;
+    n m , . /
+  )
+)
+
+;; ────────────────────────────────────────────────────────────────────────────
+;; Aliases
+;; ────────────────────────────────────────────────────────────────────────────
+(defalias
+  ;; Caps lock: tap = escape, hold = control
+  escctrl (tap-hold $tap-time $hold-time esc lctl)
+
+  ;; ── Left hand home row mods ───────────────────────────────────────────────
+  ;; a = cmd, s = shift, d = opt (when held)
+  a (tap-hold-release-keys $tap-time $hold-time a lmet $left-hand-keys)
+  s (tap-hold-release-keys $tap-time $hold-time s lsft $left-hand-keys)
+  d (tap-hold-release-keys $tap-time $hold-time d lalt $left-hand-keys)
+
+  ;; ── Right hand home row mods (commented out for now) ──────────────────────
+  ;; j = shift, k = ctrl, l = alt, ; = cmd (when held)
+  ;; j (tap-hold-release-keys $tap-time $hold-time j rsft $right-hand-keys)
+  ;; k (tap-hold-release-keys $tap-time $hold-time k rctl $right-hand-keys)
+  ;; l (tap-hold-release-keys $tap-time $hold-time l ralt $right-hand-keys)
+  ;; ; (tap-hold-release-keys $tap-time $hold-time ; rmet $right-hand-keys)
+
+  ;; ── Vim navigation layer ──────────────────────────────────────────────────
+  ;; f = 'f' on tap, activates nav layer on hold
+  nav (tap-hold $tap-time $hold-time f (layer-while-held nav))
+
+  ;; ── Space as hyper (DISABLED - too buggy) ──────────────────────────────────
+  ;; spcf19 (tap-hold $tap-time $hold-time spc f19)
+)
+
+;; ────────────────────────────────────────────────────────────────────────────
+;; Base layer
+;; ────────────────────────────────────────────────────────────────────────────
+(deflayer base
+  @escctrl f19 spc bspc
+  @a   @s   @d   @nav g    h    j    k    l    ;
+  u    i    o    w    b    0    4
+)
+
+;; ────────────────────────────────────────────────────────────────────────────
+;; Navigation layer (activated by holding f)
+;; ────────────────────────────────────────────────────────────────────────────
+;; Basic vim movements:
+;;   h/j/k/l = left/down/up/right
+;;
+;; With d (opt) held while in nav layer:
+;;   d+h = opt+left (back one word)
+;;   d+l = opt+right (forward one word)
+;;
+;; Extended vim motions:
+;;   w = opt+right (forward word) - like vim 'w'
+;;   b = opt+left (back word) - like vim 'b'
+;;   0 = cmd+left (start of line) - like vim '0'
+;;   4 (shift+4=$) = cmd+right (end of line) - like vim '$'
+;;   u = page up - like vim ctrl+u
+;;   i/o = unused, pass through
+;;
+;; Note: d+h/d+l work because d is a tap-hold for opt in base layer.
+;; When you hold f (entering nav), then hold d (activating opt), then tap h,
+;; kanata sends opt+left (back word).
+(deflayer nav
+  _    _    _    _
+  _    _    _    _    _    left down up   rght _
+  pgup _    _    A-rght A-left M-left M-rght
+)

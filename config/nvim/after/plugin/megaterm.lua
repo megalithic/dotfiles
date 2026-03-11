@@ -1,9 +1,10 @@
--- megaterm.lua - Terminal management for Neovim
+-- after/plugin/megaterm.lua
+-- Terminal management for Neovim (Megaterm)
 -- Single-file module following mini.nvim patterns
 -- Provides: Terminal class, Manager, Send API, keymaps/autocmds
 -- Architecture: One window per position, multiple terminals as buffers (buffer-switching model)
-
-if not Plugin_enabled() then return end  -- auto-detects "megaterm" from filename
+--
+-- Namespace: mega.term (all public functions available via mega.term.*)
 
 --------------------------------------------------------------------------------
 -- Configuration
@@ -52,6 +53,7 @@ Terminal.__index = Terminal
 ---@field focus? boolean
 ---@field start_insert? boolean
 ---@field temp? boolean
+---@field auto_close? boolean Close terminal when process exits
 
 --- Create new terminal instance
 ---@param opts? mega.term.TermOpts
@@ -77,6 +79,13 @@ function Terminal.new(opts)
       on_exit = function(job_id, exit_code, event)
         if opts.on_exit_notifier then opts.on_exit_notifier(self.cmd_str, exit_code) end
         if opts.on_exit then opts.on_exit(job_id, exit_code, event, self) end
+        -- Auto-close if requested (e.g., pi terminals)
+        if opts.auto_close then
+          vim.schedule(function()
+            if self:is_valid() then self:close() end
+          end)
+          return
+        end
         -- Auto-cleanup invalid terminals
         vim.schedule(function()
           if not self:is_valid() then self:_remove_from_manager() end
@@ -98,6 +107,9 @@ function Terminal.new(opts)
 
   -- Mark buffer to stay ignored by golden ratio
   vim.b[self.buf].resize_disable = true
+
+  -- Auto-scroll unfocused terminal windows when output is received
+  self:_setup_auto_scroll()
 
   -- Set buffer-local keymaps
   self:_set_keymaps()
@@ -217,7 +229,6 @@ function Terminal:_set_winhighlight(win)
     }
   end
 
-  -- vim.wo[win].winhighlight = table.concat(hls, ",")
   vim.api.nvim_set_option_value("winhighlight", table.concat(hls, ","), { win = win, scope = "local" })
 end
 
@@ -233,13 +244,12 @@ function Terminal:_apply_window_options(win)
   vim.wo[win].spell = false
   vim.wo[win].statuscolumn = ""
   vim.wo[win].winblend = 0
+  vim.wo[win].list = false -- Hide listchars (trailing dots, etc.)
 
-  -- Signcolumn: yes:1 for splits, no for float/tab
-  if vim.tbl_contains({ "float", "tab" }, self.position) then
-    vim.wo[win].signcolumn = "no"
+  -- Signcolumn: always no for terminals (prevents TUI rendering issues)
+  vim.wo[win].signcolumn = "no"
+  if vim.list_contains({ "float", "tab" }, self.position) then
     vim.bo[self.buf].bufhidden = "wipe"
-  else
-    vim.wo[win].signcolumn = "yes:1"
   end
 
   -- Apply winhighlight
@@ -247,7 +257,60 @@ function Terminal:_apply_window_options(win)
   self:update_padding(win)
 end
 
+--- Setup auto-scroll for unfocused terminal windows
+--- When terminal output is received, scroll visible but unfocused windows to bottom
+function Terminal:_setup_auto_scroll()
+  local buf = self.buf
+  local scroll_pending = false
+
+  vim.api.nvim_buf_attach(buf, false, {
+    on_lines = function(_, _, _, _, _, _)
+      -- Throttle: only schedule one scroll per event loop cycle
+      if scroll_pending then return end
+      scroll_pending = true
+
+      vim.schedule(function()
+        scroll_pending = false
+        if not vim.api.nvim_buf_is_valid(buf) then return true end -- detach
+
+        local last_line = vim.api.nvim_buf_line_count(buf)
+        local current_win = vim.api.nvim_get_current_win()
+
+        for _, win in ipairs(vim.api.nvim_list_wins()) do
+          if vim.api.nvim_win_is_valid(win) and vim.api.nvim_win_get_buf(win) == buf then
+            -- Only auto-scroll unfocused windows
+            if win ~= current_win then
+              pcall(vim.api.nvim_win_set_cursor, win, { last_line, 0 })
+            end
+          end
+        end
+      end)
+    end,
+  })
+end
+
 --- Set buffer-local keymaps for terminal
+--- Check if this terminal is running pi (not just a shell)
+---@return boolean
+function Terminal:_is_pi_terminal()
+  -- Check if command contains "pi" (not just shell)
+  local cmd = self.cmd_str:lower()
+  
+  -- Match variations: "pi", "pi --args", "/path/to/pi"
+  -- But NOT just shell commands like "bash" or "fish"
+  if cmd:match("%spi%s") or cmd:match("%spi$") or cmd:match("^pi%s") or cmd:match("^pi$") then
+    return true
+  end
+  
+  -- Also check if buffer is marked as pi
+  local ok, is_pi = pcall(vim.api.nvim_buf_get_var, self.buf, "pi_panel")
+  if ok and is_pi then
+    return true
+  end
+  
+  return false
+end
+
 function Terminal:_set_keymaps()
   local opts = { buffer = self.buf, silent = true }
 
@@ -257,7 +320,14 @@ function Terminal:_set_keymaps()
   end
 
   -- Terminal mode keymaps
-  vim.keymap.set("t", "<esc>", [[<C-\><C-n>]], vim.tbl_extend("force", opts, { desc = "Exit terminal mode" }))
+  -- Escape behavior: only exit terminal mode for shell prompts, not pi
+  if not self:_is_pi_terminal() then
+    vim.keymap.set("t", "<esc>", [[<C-\><C-n>]], vim.tbl_extend("force", opts, { desc = "Exit terminal mode" }))
+  else
+    -- Pi terminals: use Ctrl-Q to exit (pi uses single and double escape internally)
+    vim.keymap.set("t", "<C-q>", [[<C-\><C-n>]], vim.tbl_extend("force", opts, { desc = "Exit terminal mode" }))
+  end
+  
   vim.keymap.set("t", "<C-h>", [[<cmd>wincmd h<cr>]], vim.tbl_extend("force", opts, { desc = "Navigate left" }))
   vim.keymap.set("t", "<C-j>", [[<cmd>wincmd j<cr>]], vim.tbl_extend("force", opts, { desc = "Navigate down" }))
   vim.keymap.set("t", "<C-k>", [[<cmd>wincmd k<cr>]], vim.tbl_extend("force", opts, { desc = "Navigate up" }))
@@ -265,13 +335,13 @@ function Terminal:_set_keymaps()
   vim.keymap.set(
     "t",
     "<C-;>",
-    function() Megaterm.toggle() end,
+    function() mega.term.toggle() end,
     vim.tbl_extend("force", opts, { desc = "Toggle terminal" })
   )
   vim.keymap.set(
     "t",
     "<C-'>",
-    function() Megaterm.cycle() end,
+    function() mega.term.cycle() end,
     vim.tbl_extend("force", opts, { desc = "Cycle terminals" })
   )
   vim.keymap.set("t", "<C-x>", function() self:close() end, vim.tbl_extend("force", opts, { desc = "Close terminal" }))
@@ -279,9 +349,9 @@ end
 
 --- Remove self from manager tracking
 function Terminal:_remove_from_manager()
-  for i, term in ipairs(Megaterm.terminals) do
+  for i, term in ipairs(mega.term.terminals) do
     if term == self then
-      table.remove(Megaterm.terminals, i)
+      table.remove(mega.term.terminals, i)
       break
     end
   end
@@ -357,7 +427,7 @@ function Terminal:hide()
   if mode == "t" then vim.cmd("stopinsert") end
 
   -- Check if there are other terminals for this position
-  local other_terms = Megaterm.get_by_position(self.position)
+  local other_terms = mega.term.get_by_position(self.position)
   if #other_terms > 1 then
     -- Switch to another terminal in this position
     for _, term in ipairs(other_terms) do
@@ -368,8 +438,13 @@ function Terminal:hide()
     end
   end
 
-  -- No other terminals, close the window
-  vim.api.nvim_win_close(win, false)
+  -- No other terminals, close the window via guardian (handles E444, etc.)
+  if mega.windows then
+    mega.windows.safe_close(win)
+  else
+    -- Fallback if windows module not loaded yet
+    pcall(vim.api.nvim_win_close, win, false)
+  end
 end
 
 --- Toggle terminal visibility
@@ -441,23 +516,11 @@ end
 -- UI Niceties
 --------------------------------------------------------------------------------
 
---- Update padding (signcolumn) based on window count
+--- Update padding - kept as no-op for API compatibility
+--- Signcolumn is always disabled for terminals to prevent TUI rendering issues
 ---@param win? number
 function Terminal:update_padding(win)
-  win = win or self:get_win()
-  if not win or not vim.api.nvim_win_is_valid(win) then return end
-
-  local wins = vim.api.nvim_tabpage_list_wins(0)
-  local win_count = 0
-
-  for _, w in ipairs(wins) do
-    local buf = vim.api.nvim_win_get_buf(w)
-    -- Exclude incline windows from count
-    if vim.bo[buf].filetype ~= "incline" then win_count = win_count + 1 end
-  end
-
-  local enabled = win_count > 1
-  vim.api.nvim_set_option_value("signcolumn", enabled and "yes" or "no", { scope = "local", win = win })
+  -- No-op: signcolumn must stay off for terminals or TUI apps render incorrectly
 end
 
 --- Update cursorline highlight for terminal mode
@@ -642,13 +705,27 @@ function M.close_all()
   end
 end
 
+--- Send text to the most recent terminal
+--- Used by lang configs (e.g., elixir REPL integration)
+---@param text string Text to send
+function M.send(text)
+  -- Try current terminal first, then most recent from history
+  local term = M.get_current() or M.history[1]
+  if not term or not term:is_valid() then
+    vim.notify("No active terminal to send to", vim.log.levels.WARN)
+    return
+  end
+  term:send(text)
+end
+
 --------------------------------------------------------------------------------
 -- Global Exposure
 --------------------------------------------------------------------------------
 
--- Expose as callable global: Megaterm(opts) creates terminal
--- Also indexable: Megaterm.list(), Megaterm.toggle(), etc.
-_G.Megaterm = setmetatable(M, {
+-- Expose as mega.term namespace
+-- Also callable: mega.term(opts) creates terminal
+-- And indexable: mega.term.list(), mega.term.toggle(), etc.
+mega.term = setmetatable(M, {
   __call = function(_, opts) return M.create(opts) end,
 })
 
@@ -656,7 +733,7 @@ _G.Megaterm = setmetatable(M, {
 -- Autocmds
 --------------------------------------------------------------------------------
 
-local augroup = vim.api.nvim_create_augroup("megaterm", { clear = true })
+local augroup = vim.api.nvim_create_augroup("mega.term", { clear = true })
 
 -- Track terminal focus history and auto-enter insert mode
 vim.api.nvim_create_autocmd("BufEnter", {
@@ -713,18 +790,18 @@ vim.api.nvim_create_autocmd("BufDelete", {
 -- Keymaps & Commands
 --------------------------------------------------------------------------------
 
--- Global toggle (normal mode only - terminal mode handled by buffer-local keymap)
-vim.keymap.set("n", "<C-;>", function() Megaterm.toggle() end, { desc = "Toggle terminal" })
+-- Global toggle (normal and terminal mode)
+vim.keymap.set({ "n", "t" }, "<C-;>", function() mega.term.toggle() end, { desc = "Toggle terminal" })
 
 -- Global cycle through terminals
-vim.keymap.set({ "n", "t" }, "<C-'>", function() Megaterm.cycle() end, { desc = "Cycle terminals" })
+vim.keymap.set({ "n", "t" }, "<C-'>", function() mega.term.cycle() end, { desc = "Cycle terminals" })
 
 -- :T command to create/toggle terminal with optional args
 vim.api.nvim_create_user_command("T", function(opts)
   local args = opts.args
   if args and #args > 0 then
-    Megaterm({ cmd = args })
+    mega.term({ cmd = args })
   else
-    Megaterm.toggle()
+    mega.term.toggle()
   end
 end, { nargs = "*", desc = "Toggle or create megaterm" })

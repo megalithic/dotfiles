@@ -1,246 +1,181 @@
-if not Plugin_enabled() then
-  function mega.ui.blink_cursorline() end
+-- after/plugin/cursorline.lua
+-- Cursorline management: auto-toggle on focus, blink effect for navigation feedback
 
-  return
-end
+if not mega then mega = {} end
+if not mega.ui then mega.ui = {} end
 
-local U = require("config.utils")
-local C = mega.ui.colors
-local M = {
+local M = {}
+
+-- Configuration
+local config = {
   blink_delay = 150,
-  minimal_jump = 20,
-  cursorline_delay = 100,
-  filetype_exclusions = {
-    "alpha",
-    "prompt",
-    "fzf",
-    "fzflua",
-    "fzf-lua",
-    "netrw",
-    "undotree",
-    "log",
-    "man",
-    "fidget",
-    "dap-repl",
-    "markdown",
-    "vimwiki",
-    "vim-plug",
-    "gitcommit",
-    "NeogitCommitMessage",
-    "toggleterm",
-    "megaterm",
-    "fugitive",
-    "list",
-    "NvimTree",
-    "startify",
-    "help",
-    "orgagenda",
-    -- "oil",
-    "org",
-    "Trouble",
-    "Telescope",
-    "TelescopePrompt",
-    "NvimTree",
-    "dashboard",
-    "qf",
-    "kittybuf",
-  },
-  buftype_exclusions = {
-    "acwrite",
-    "quickfix",
-    "terminal",
-    "help",
-    ".git/COMMIT_EDITMSG",
-    "startify",
-    "prompt",
-    "neorg://Quick Actions",
-  },
-  prev_col = 0,
-  prev_row = 0,
 }
 
-local blink_active = false
-local timer = vim.uv.new_timer()
+-- Filetypes/buftypes to ignore
+local ignored_fts = {
+  "alpha", "dashboard", "starter",
+  "fzf", "TelescopePrompt", "snacks_picker",
+  "oil", "netrw", "NvimTree", "neo-tree",
+  "qf", "help", "man",
+  "toggleterm", "terminal", "megaterm",
+  "Trouble", "trouble",
+  "lazy", "mason",
+  "notify", "noice",
+  "gitcommit", "fugitive",
+  "dap-repl", "undotree",
+}
 
-local function is_floating_win()
-  return vim.fn.win_gettype() == "popup"
-end
+local ignored_bts = {
+  "quickfix", "terminal", "prompt", "nofile", "acwrite",
+}
 
----Determines whether or not a buffer/window should be ignored by this plugin
+---@type uv_timer_t|nil
+local timer = nil
+
 ---@return boolean
 local function is_ignored()
-  local should_ignore = vim.bo.filetype == ""
-    or vim.tbl_contains(M.buftype_exclusions, vim.bo.buftype)
-    or vim.tbl_contains(M.filetype_exclusions, vim.bo.filetype)
-    or is_floating_win()
-    or U.is_chonky()
+  local ft = vim.bo.filetype
+  local bt = vim.bo.buftype
 
-  return should_ignore
+  if ft == "" then return true end
+  if vim.fn.win_gettype() == "popup" then return true end
+  if vim.list_contains(ignored_fts, ft) then return true end
+  if vim.list_contains(ignored_bts, bt) then return true end
+
+  return false
 end
 
-local normal_bg = type(C) ~= "table" and "NONE" or C.bg0
-local cursorline_bg = type(C) ~= "table" and "NONE" or C.bg1
-local blink_bg = type(C) ~= "table" and "NONE" or C.bg_blue
+-- Get colors from current colorscheme (cached per colorscheme change)
+local cached_colors = nil
+local cached_colorscheme = nil
 
-local function highlight_cursorline()
-  if blink_active then
-    vim.cmd("highlight! CursorLine guibg=" .. blink_bg)
-  else
-    vim.cmd("highlight! CursorLine guibg=" .. cursorline_bg)
-  end
-  vim.cmd("highlight! CursorLineNr guibg=" .. cursorline_bg)
-end
-
-local function unhighlight_cursorline()
-  vim.cmd("highlight! CursorLine guibg=" .. normal_bg)
-  vim.cmd("highlight! CursorLineNr guibg=" .. normal_bg)
-end
-
-local function set_cursorline()
-  if not is_ignored() then
-    vim.wo.cursorline = true
-    highlight_cursorline()
-  end
-end
-
--- REF:
--- https://neovim.discourse.group/t/how-to-use-repeat-on-timer-start-in-a-lua-function/1645
--- https://vi.stackexchange.com/questions/33056/how-to-use-vim-loop-interactively-in-neovim
-function mega.ui.blink_cursorline(delay, should_center)
-  if is_ignored() then
-    return
+local function get_colors()
+  local current = vim.g.colors_name
+  if cached_colors and cached_colorscheme == current then
+    return cached_colors
   end
 
-  timer = vim.uv.new_timer()
-  blink_active = true
+  local cursorline = vim.api.nvim_get_hl(0, { name = "CursorLine" })
+  local visual = vim.api.nvim_get_hl(0, { name = "Visual" })
 
-  if should_center ~= nil and should_center then
-    vim.cmd.normal("zz")
+  cached_colors = {
+    cursorline_bg = cursorline.bg and string.format("#%06x", cursorline.bg) or "NONE",
+    blink_bg = visual.bg and string.format("#%06x", visual.bg) or "#3d59a1",
+  }
+  cached_colorscheme = current
+
+  return cached_colors
+end
+
+local function set_cursorline_hl(is_blink)
+  local colors = get_colors()
+  local bg = is_blink and colors.blink_bg or colors.cursorline_bg
+  vim.cmd("highlight! CursorLine guibg=" .. bg)
+  vim.cmd("highlight! CursorLineNr guibg=" .. colors.cursorline_bg)
+end
+
+--- Blink the cursorline to provide visual feedback
+---@param delay? number Milliseconds to show blink (default: 150)
+---@param center? boolean Center screen before blinking
+function M.blink(delay, center)
+  if is_ignored() then return end
+
+  -- Clean up any existing timer
+  if timer then
+    timer:stop()
+    timer:close()
+    timer = nil
+  end
+
+  if center then
+    vim.cmd.normal({ "zz", bang = true })
   end
 
   vim.wo.cursorlineopt = "both"
-  highlight_cursorline()
+  vim.wo.cursorline = true
+  set_cursorline_hl(true)
 
-  timer:start(
-    delay or M.blink_delay,
-    0,
-    vim.schedule_wrap(function()
-      unhighlight_cursorline()
-      set_cursorline()
-      if timer then
-        timer:stop()
-        timer:close()
-        timer = nil
-      end
-      blink_active = false
-      highlight_cursorline()
+  timer = vim.uv.new_timer()
+  timer:start(delay or config.blink_delay, 0, vim.schedule_wrap(function()
+    set_cursorline_hl(false)
 
-      -- if tint_ok then tint.enable() end
-    end)
-  )
-end
-
-local function disable_cursorline()
-  if is_ignored() then
-    return
-  end
-
-  vim.wo.cursorlineopt = "number" -- optionally -> "screenline,number"
-  vim.wo.cursorline = false
-  blink_active = false
+    if timer then
+      timer:stop()
+      timer:close()
+      timer = nil
+    end
+  end))
 end
 
 local function enable_cursorline(should_blink)
-  if is_ignored() then
-    return
-  end
+  if is_ignored() then return end
 
   vim.wo.cursorlineopt = "both"
+  vim.wo.cursorline = true
 
   if should_blink then
-    mega.ui.blink_cursorline()
+    M.blink()
+  else
+    set_cursorline_hl(false)
   end
-
-  set_cursorline()
-  highlight_cursorline()
 end
 
--- local function should_change_cursorline()
---   local should_blink = false
---   local should_change = false
---
---   local cursor = vim.api.nvim_win_get_cursor(0)
---   local current_row = cursor[1]
---   local current_col = cursor[2]
---
---   local col_diff = math.abs(current_col - M.prev_col)
---   local row_diff = math.abs(current_row - M.prev_row)
---
---   should_blink = row_diff >= M.minimal_jump
---   should_change = current_row ~= M.prev_row
---
---   M.prev_col = current_col
---   M.prev_row = current_row
---
---   return should_change, should_blink
--- end
---
--- local function cursor_moved()
---   local should_change, should_blink = should_change_cursorline()
---
---   if is_ignored() or not should_change then return end
---
---   vim.opt_local.cursorlineopt = "screenline,number"
---
---   timer = vim.loop.new_timer()
---   timer:start(
---     M.cursorline_delay,
---     0,
---     vim.schedule_wrap(function()
---       if timer then
---         timer:stop()
---         timer:close()
---         timer = nil
---       end
---
---       blink_active = false
---       highlight_cursorline()
---     end)
---   )
---
---   if should_blink then mega.ui.blink_cursorline() end
---
---   if M.cursorline_delay ~= 0 then unhighlight_cursorline() end
--- end
+local function disable_cursorline()
+  if is_ignored() then return end
+  vim.wo.cursorline = false
+end
 
-Augroup("ToggleCursorLine", {
-  {
-    event = { "BufEnter", "WinEnter", "FocusGained" },
-    command = function()
-      enable_cursorline(true)
-    end,
-  },
-  {
-    event = { "InsertLeave", "FocusLost" },
-    command = function()
-      enable_cursorline(false)
-    end,
-  },
-  {
-    event = { "BufLeave", "WinLeave" },
-    command = function()
-      disable_cursorline()
-    end,
-  },
-  {
-    event = { "InsertEnter", "CursorMovedI" },
-    command = function()
-      vim.wo.cursorlineopt = "number"
-      vim.wo.cursorline = true
-    end,
-  },
-  -- {
-  --   event = { "CursorMoved" },
-  --   command = function() cursor_moved() end,
-  -- },
+-- Autocmds for auto-toggle behavior
+local augroup = vim.api.nvim_create_augroup("mega.cursorline", { clear = true })
+
+-- Enable cursorline (with blink) on window/buffer enter
+vim.api.nvim_create_autocmd({ "BufEnter", "WinEnter", "FocusGained" }, {
+  group = augroup,
+  callback = function() enable_cursorline(true) end,
 })
+
+-- Enable cursorline (without blink) after leaving insert mode
+vim.api.nvim_create_autocmd("InsertLeave", {
+  group = augroup,
+  callback = function() enable_cursorline(false) end,
+})
+
+-- Disable cursorline on window/buffer leave
+vim.api.nvim_create_autocmd({ "BufLeave", "WinLeave", "FocusLost" }, {
+  group = augroup,
+  callback = disable_cursorline,
+})
+
+-- In insert mode: show only line number, not full line highlight
+vim.api.nvim_create_autocmd({ "InsertEnter", "CursorMovedI" }, {
+  group = augroup,
+  callback = function()
+    if is_ignored() then return end
+    vim.wo.cursorlineopt = "number"
+    vim.wo.cursorline = true
+  end,
+})
+
+-- Clear color cache on colorscheme change
+vim.api.nvim_create_autocmd("ColorScheme", {
+  group = augroup,
+  callback = function()
+    cached_colors = nil
+    cached_colorscheme = nil
+  end,
+})
+
+-- Clean up timer on exit
+vim.api.nvim_create_autocmd("VimLeave", {
+  group = augroup,
+  callback = function()
+    if timer then
+      timer:stop()
+      timer:close()
+      timer = nil
+    end
+  end,
+})
+
+-- Export
+mega.ui.blink_cursorline = M.blink

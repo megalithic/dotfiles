@@ -1,327 +1,368 @@
-if vim.g.treesitter_branch == "master" then
-  return {}
-end
+-- lua/plugins/treesitter.lua
+-- Treesitter configuration (main branch)
+-- Main branch: plugin handles parser installation, nvim handles highlighting via vim.treesitter.start()
 
--- REF: https://github.com/madmaxieee/nvim-config/blob/2eb05a43d0e9bb8875d2301e03a4ed352d1ac2a4/lua/plugins/nvim-treesitter.lua
+-- Parsers to install
+local parsers = {
+  -- Core
+  "c",
+  "lua",
+  "luadoc",
+  "luap",
+  "vim",
+  "vimdoc",
+  "query",
+  "regex",
+  "printf",
 
-local include_surrounding_whitespace = {
-  ["@function.outer"] = true,
-  ["@class.outer"] = true,
-  ["@parameter.outer"] = true,
+  -- Elixir
+  "elixir",
+  "heex",
+  "eex",
+  "surface",
+  "erlang",
+
+  -- Web
+  "html",
+  "css",
+  "scss",
+  "javascript",
+  "typescript",
+  "tsx",
+  "jsdoc",
+  "json",
+  "json5",
+  "svelte",
+  "graphql",
+
+  -- Config/Data
+  "yaml",
+  "toml",
+  "xml",
+  "bibtex",
+  "markdown",
+  "markdown_inline",
+  "editorconfig",
+
+  -- Shell
+  "bash",
+  "zsh",
+  "fish",
+
+  -- Other langs
+  "nix",
+  "python",
+  "rust",
+  "go",
+  "ruby",
+  "swift",
+  "sql",
+
+  -- Git
+  "gitcommit",
+  "git_rebase",
+  "git_config",
+  "gitignore",
+  "gitattributes",
+  "diff",
+
+  -- Misc
+  "dockerfile",
+  "make",
+  "comment",
+  "just",
+  "requirements",
 }
 
-local function should_disable(lang, bufnr)
-  local disable_max_size = 2000000 -- 2MB
-  local size = vim.fn.getfsize(vim.api.nvim_buf_get_name(bufnr or 0))
-  -- size will be -2 if it doesn't fit into a number
-  if size > disable_max_size or size == -2 then
-    return true
-  end
+-- Filetypes where treesitter indentation is broken/worse than default
+vim.g.ts_ignore_indent = { "zsh", "bash", "markdown", "javascript" }
 
-  if vim.tbl_contains({ "ruby" }, lang) then
-    return true
-  end
+local syntax_on = {}
+local lsp_semantic_token_on = {}
 
-  return false
+-- Filetypes to enable treesitter highlighting for
+local function get_ts_filetypes()
+  local filetypes = {}
+  for _, parser in ipairs(parsers) do
+    for _, ft in ipairs(vim.treesitter.language.get_filetypes(parser)) do
+      filetypes[ft] = true
+    end
+  end
+  return vim.tbl_keys(filetypes)
 end
 
 return {
-  { "brianhuster/treesitter-endwise.nvim" },
+  -- Endwise: auto-insert `end` after `do`, `def`, `if`, etc.
+  -- Note: No setup() function - plugin auto-attaches via vim.on_key
   {
-    "fei6409/log-highlight.nvim",
-    event = "BufRead *.log",
-    opts = {},
+    "brianhuster/treesitter-endwise.nvim",
+    lazy = false, -- Must not be lazy loaded per README
   },
-  { "IndianBoy42/tree-sitter-just" },
+
+  -- Core treesitter (main branch)
   {
     "nvim-treesitter/nvim-treesitter",
     branch = "main",
-    lazy = true,
-    event = { "LazyFile", "VeryLazy" },
-    build = {
-      function()
-        require("nvim-treesitter").install(vim.g.treesitter_ensure_installed)
-      end,
-      ":TSUpdate",
-    },
-    config = function(_, opts)
-      require("nvim-treesitter").setup()
+    lazy = false,
+    build = ":TSUpdate",
+    init = function()
+      -- Enable highlighting on FileType
+      vim.api.nvim_create_autocmd("FileType", {
+        pattern = get_ts_filetypes(),
+        group = vim.api.nvim_create_augroup("mega.treesitter", { clear = true }),
+        callback = function(args)
+          local bufnr = args.buf
+          local filetype = args.match
 
-      local installed = require("nvim-treesitter.config").get_installed("parsers")
-      local not_installed = vim.tbl_filter(function(parser)
-        return not vim.tbl_contains(installed, parser)
-      end, vim.g.treesitter_ensure_installed)
-      if #not_installed > 0 then
-        require("nvim-treesitter").install(not_installed)
-      end
+          local language = vim.treesitter.language.get_lang(filetype) or filetype
+          if not vim.treesitter.language.add(language) then return end
 
-      local syntax_on = {
-        asciidoc = true,
-        elixir = true,
-        php = true,
-      }
+          -- Skip special buffers
+          if vim.bo[bufnr].buftype ~= "" then return end
 
-      local group = vim.api.nvim_create_augroup("mega_nvim.treesitter", { clear = true })
-      -- Augroup("mega_treesitter", {
-      --   {
-      --     -- Update the cursor column to match current window size
-      --     event = { "FileType" }, -- BufWinEnter instead of WinEnter?
-      --     command = function(args)
-      --       local bufnr = args.buf
-      --       local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr })
-      --       if filetype == "" then return end -- Stops if no filetype is detected.
+          -- Skip large files (> 1MB)
+          local size = vim.fn.getfsize(vim.api.nvim_buf_get_name(bufnr))
+          if size > 1000000 or size == -2 then return end
 
-      --       local ok, parser = pcall(vim.treesitter.get_parser, bufnr)
-      --       if not ok or not parser then
-      --         vim.notify(string.format("Missing ts parser %s for bufnr %d", parser, bufnr), L.WARN)
-      --         return
-      --       end
+          -- Enable treesitter highlighting
+          -- pcall(vim.treesitter.start, bufnr)
 
-      --       if vim.treesitter.language.add(filetype) then
-      --         vim.treesitter.start(bufnr, filetype)
-      --       else
-      --         vim.notify(string.format("Missing ts parser for %s", filetype), L.WARN)
-      --       end
+          -- vim.wo.foldmethod = "expr"
+          -- vim.wo.foldexpr = "v:lua.vim.treesitter.foldexpr()"
 
-      --       local ft = vim.bo[bufnr].filetype
-      --       if syntax_on[ft] then vim.bo[bufnr].syntax = "on" end
+          -- Use treesitter for indentation (unless in ignore list)
+          if not vim.list_contains(vim.g.ts_ignore_indent or {}, filetype) then
+            vim.bo[bufnr].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+          end
 
-      --       vim.schedule(function()
-      --         -- vim.wo.foldexpr = "v:lua.vim.treesitter.foldexpr()"
-      --         vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
-      --       end)
-      --     end,
-      --   },
-      --   {
-      --     event = { "User" },
-      --     pattern = "TSUpdate",
-      --     command = function(_args)
-      --       -- local parsers = require("nvim-treesitter.parsers")
+          vim.treesitter.start(bufnr, language)
 
-      --       -- parsers.lua = {
-      --       --   tier = 0,
-      --       --
-      --       --   ---@diagnostic disable-next-line: missing-fields
-      --       --   install_info = {
-      --       --     path = "~/plugins/tree-sitter-lua",
-      --       --     files = { "src/parser.c", "src/scanner.c" },
-      --       --   },
-      --       -- }
-      --     end,
-      --   },
-      -- })
+          local ft = vim.bo[bufnr].filetype
+          if syntax_on[ft] then vim.bo[bufnr].syntax = "on" end
 
-      Augroup("mega_mvim.treesitter", {
-        {
-          -- Update the cursor column to match current window size
-          event = { "FileType" }, -- BufWinEnter instead of WinEnter?
-          command = function(args)
-            local bufnr = args.buf
-            local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr })
-            if filetype == "" then
-              return
-            end -- Stops if no filetype is detected.
-
-            local ok, parser = pcall(vim.treesitter.get_parser, bufnr)
-            if not ok or not parser then
-              -- vim.notify(string.format("Missing ts parser %s for bufnr %d", parser, bufnr), L.WARN)
-              return
-            end
-
-            pcall(vim.treesitter.start)
-            -- if vim.treesitter.language.add(filetype) then
-            --   vim.treesitter.start(bufnr, filetype)
-            -- else
-            --   vim.notify(string.format("Missing ts parser for %s", filetype), L.WARN)
-            -- end
-
-            local ft = vim.bo[bufnr].filetype
-            if syntax_on[ft] then
-              vim.bo[bufnr].syntax = "on"
-            end
-
-            vim.schedule(function()
-              -- vim.wo.foldexpr = "v:lua.vim.treesitter.foldexpr()"
-              vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
-            end)
-          end,
-        },
-        {
-          -- Update the cursor column to match current window size
-          event = { "User" }, -- BufWinEnter instead of WinEnter?
-          pattern = "TSUpdate",
-          command = function(_args)
-            -- NOTE: FOR INSTALLING CUSTOM PARSERS
-            -- local parsers = require("nvim-treesitter.parsers")
-            -- parsers.<lang> = {
-            -- ---@diagnostic disable-next-line missing-fields
-            --   install_info = {
-            --     url = 'https://github.com/<user>/tree-sitter-<lang>', -- git repo
-            --     -- path = '~/projects/tree-sitter-<lang>', -- local path
-            --     revision = '<rev-id>',
-            --   },
-            --   -- WARN: `tier = 2` is important for custom parsers
-            --   -- `norm_languages()` in config.lua checks vor `tier < 4`
-            --   -- see: https://github.com/nvim-treesitter/nvim-treesitter/blob/0140c29b31d56be040697176ae809ba0c709da02/lua/nvim-treesitter/config.lua#L95
-            --   -- tiers: 1: stable, 2: unstable, 3: unmaintained, 4 or nil: unsupported
-            --   --        supported = tier < 4
-            --   tier = 2,
-            -- }
-          end,
-        },
+          if not lsp_semantic_token_on[ft] then vim.lsp.semantic_tokens.enable(false, { bufnr = bufnr }) end
+        end,
       })
 
-      local map = vim.keymap.set
+      -- require("nvim-treesitter").setup({
+      --   auto_install = false,
+      -- })
 
-      -- Globally map Tree-sitter text object binds
-      local function textobj_map(key, query)
-        local outer = "@" .. query .. ".outer"
-        local inner = "@" .. query .. ".inner"
-        local opts = {
-          desc = "Selection for " .. query .. " text objects",
-          silent = true,
-        }
-        map("x", "i" .. key, function()
-          require("nvim-treesitter-textobjects.select").select_textobject(inner, "textobjects")
-        end, opts)
-        map("x", "a" .. key, function()
-          require("nvim-treesitter-textobjects.select").select_textobject(outer, "textobjects")
-        end, opts)
-        map("o", "i" .. key, function()
-          require("nvim-treesitter-textobjects.select").select_textobject(inner, "textobjects")
-        end, opts)
-        map("o", "a" .. key, function()
-          require("nvim-treesitter-textobjects.select").select_textobject(outer, "textobjexts")
-        end, opts)
-      end
+      -- Register filetype aliases
+      vim.treesitter.language.register("bash", "dotenv")
+      vim.treesitter.language.register("elixir", "eelixir")
+      vim.treesitter.language.register("markdown", "mdx")
 
-      textobj_map("$", "math")
-      textobj_map("m", "math")
-      textobj_map("f", "call")
-      textobj_map("F", "function")
-      textobj_map("L", "loop")
-      textobj_map("c", "conditional")
-      textobj_map("C", "class")
-      textobj_map("/", "comment")
-      textobj_map("a", "parameter") -- also applies to arguments and array elements
-      textobj_map("r", "return")
-
-      local ft_to_parser_aliases = {
-        dotenv = "bash",
-        gitcommit = "NeogitCommitMessage",
-        javascriptreact = "jsx",
-        chart = "json",
-        json = "jsonc",
-        keymap = "devicetree",
-        kittybuf = "bash",
-        livebook = "markdown",
-        typescriptreact = "tsx",
-        eelixir = "elixir",
-        ex = "elixir",
-        pl = "perl",
-        bash = "sh", -- reversing these two from the treesitter source
-        uxn = "uxntal",
-        ts = "typescript",
-        zsh = "bash",
-      }
-
-      for ft, parser in pairs(ft_to_parser_aliases) do
-        vim.treesitter.language.register(parser, ft)
-      end
-
-      -- extra icons that do not have a filetype entry in
-      -- mini.icons
-      local icon_overrides = {
-        plantuml = "",
-        ebnf = "󱘎",
-        chart = "",
-        nroff = "󰗚",
-      }
-
-      local get_icon = nil
-
-      local ft_conceal = function(match, _, source, pred, metadata)
-        ---@cast pred integer[]
-        local capture_id = pred[2]
-        if not metadata[capture_id] then
-          metadata[capture_id] = {}
-        end
-
-        local node = match[pred[2]]
-        local node_text = vim.treesitter.get_node_text(node, source)
-
-        local ft = vim.filetype.match({ filename = "a." .. node_text })
-        node_text = ft or non_filetype_match_injection_language_aliases[node_text] or node_text
-
-        if not get_icon then
-          get_icon = require("mini.icons").get
-        end
-        metadata.conceal = icon_overrides[node_text] or get_icon("filetype", node_text) or "󰡯"
-      end
-
-      vim.treesitter.query.add_directive("ft-conceal!", ft_conceal, { force = true })
+      -- Install parsers (async)
+      require("nvim-treesitter").install(parsers)
     end,
   },
+
+  -- Treesitter context (sticky function headers)
+  -- {
+  --   "nvim-treesitter/nvim-treesitter-context",
+  --   event = "VeryLazy",
+  --   opts = {
+  --     max_lines = 3,
+  --     trim_scope = "outer",
+  --     separator = "─",
+  --     multiwindow = false,
+  --   },
+  -- },
   {
-    "yorickpeterse/nvim-tree-pairs",
-    main = "tree-pairs",
-    opts = {},
-    keys = {
-      { "%", mode = { "n", "v", "o" } },
+    "nvim-treesitter/nvim-treesitter-context",
+    event = { "BufRead", "BufNewFile" },
+    dependencies = { "nvim-treesitter/nvim-treesitter" },
+    opts = {
+      enable = true,
+      max_lines = 10,
+      min_window_height = 30,
+      line_numbers = true,
+      multiline_threshold = 5,
+      trim_scope = "outer",
+      mode = "cursor",
+      separator = nil,
+      zindex = 20,
+      on_attach = nil,
     },
   },
+
+  {
+    "windwp/nvim-ts-autotag",
+    dependencies = { "nvim-treesitter/nvim-treesitter" },
+    event = { "BufReadPre", "BufNewFile", "InsertEnter" },
+    opts = {
+      aliases = {
+        ["elixir"] = "html",
+        ["heex"] = "html",
+        ["phoenix_html"] = "html",
+      },
+      opts = {
+        enable_close = true, -- Auto close tags
+        enable_rename = true, -- Auto rename pairs of tags
+        enable_close_on_slash = false, -- Auto close on trailing </
+      },
+    },
+  },
+
+  -- {
+  --   "Wansmer/treesj",
+  --   keys = {
+  --     {
+  --       "<leader>s",
+  --       mode = { "n" },
+  --       function() require("treesj").toggle() end,
+  --       desc = "Toggle treesj split join",
+  --     },
+  --   },
+  --   opts = {
+  --     use_default_keymaps = false,
+  --   },
+  -- },
+
+  {
+    "mtrajano/tssorter.nvim",
+    cmd = "TSSort",
+    ---@module "tssorter"
+    ---@type TssorterOpts
+    opts = {},
+  },
+
+  -- Textobjects (main branch)
   {
     "nvim-treesitter/nvim-treesitter-textobjects",
     branch = "main",
-    event = { "LazyFile", "VeryLazy" },
-    opts = {
-      select = {
-        include_surrounding_whitespace = function(capture)
-          return include_surrounding_whitespace[capture.query_string] or false
-        end,
-      },
-    },
+    event = "VeryLazy",
+    config = function()
+      require("nvim-treesitter-textobjects").setup({
+        select = {
+          lookahead = true,
+          include_surrounding_whitespace = false,
+        },
+      })
+
+      -- Function textobjects
+      vim.keymap.set(
+        { "x", "o" },
+        "af",
+        function() require("nvim-treesitter-textobjects.select").select_textobject("@function.outer", "textobjects") end,
+        { desc = "Select outer function" }
+      )
+      vim.keymap.set(
+        { "x", "o" },
+        "if",
+        function() require("nvim-treesitter-textobjects.select").select_textobject("@function.inner", "textobjects") end,
+        { desc = "Select inner function" }
+      )
+
+      -- Class textobjects
+      vim.keymap.set(
+        { "x", "o" },
+        "ac",
+        function() require("nvim-treesitter-textobjects.select").select_textobject("@class.outer", "textobjects") end,
+        { desc = "Select outer class" }
+      )
+      vim.keymap.set(
+        { "x", "o" },
+        "ic",
+        function() require("nvim-treesitter-textobjects.select").select_textobject("@class.inner", "textobjects") end,
+        { desc = "Select inner class" }
+      )
+
+      -- Parameter/argument textobjects
+      vim.keymap.set(
+        { "x", "o" },
+        "aa",
+        function() require("nvim-treesitter-textobjects.select").select_textobject("@parameter.outer", "textobjects") end,
+        { desc = "Select outer argument" }
+      )
+      vim.keymap.set(
+        { "x", "o" },
+        "ia",
+        function() require("nvim-treesitter-textobjects.select").select_textobject("@parameter.inner", "textobjects") end,
+        { desc = "Select inner argument" }
+      )
+
+      -- Block textobjects
+      vim.keymap.set(
+        { "x", "o" },
+        "ab",
+        function() require("nvim-treesitter-textobjects.select").select_textobject("@block.outer", "textobjects") end,
+        { desc = "Select outer block" }
+      )
+      vim.keymap.set(
+        { "x", "o" },
+        "ib",
+        function() require("nvim-treesitter-textobjects.select").select_textobject("@block.inner", "textobjects") end,
+        { desc = "Select inner block" }
+      )
+
+      -- Comment textobjects
+      vim.keymap.set(
+        { "x", "o" },
+        "a/",
+        function() require("nvim-treesitter-textobjects.select").select_textobject("@comment.outer", "textobjects") end,
+        { desc = "Select outer comment" }
+      )
+
+      -- Move to next/prev function
+      vim.keymap.set(
+        { "n", "x", "o" },
+        "]f",
+        function() require("nvim-treesitter-textobjects.move").goto_next_start("@function.outer", "textobjects") end,
+        { desc = "Next function start" }
+      )
+      vim.keymap.set(
+        { "n", "x", "o" },
+        "]F",
+        function() require("nvim-treesitter-textobjects.move").goto_next_end("@function.outer", "textobjects") end,
+        { desc = "Next function end" }
+      )
+      vim.keymap.set(
+        { "n", "x", "o" },
+        "[f",
+        function() require("nvim-treesitter-textobjects.move").goto_previous_start("@function.outer", "textobjects") end,
+        { desc = "Previous function start" }
+      )
+      vim.keymap.set(
+        { "n", "x", "o" },
+        "[F",
+        function() require("nvim-treesitter-textobjects.move").goto_previous_end("@function.outer", "textobjects") end,
+        { desc = "Previous function end" }
+      )
+
+      -- Move to next/prev class
+      vim.keymap.set(
+        { "n", "x", "o" },
+        "]c",
+        function() require("nvim-treesitter-textobjects.move").goto_next_start("@class.outer", "textobjects") end,
+        { desc = "Next class start" }
+      )
+      vim.keymap.set(
+        { "n", "x", "o" },
+        "[c",
+        function() require("nvim-treesitter-textobjects.move").goto_previous_start("@class.outer", "textobjects") end,
+        { desc = "Previous class start" }
+      )
+    end,
   },
+
+  -- Treesitter unit (select by treesitter node)
   {
     "David-Kunz/treesitter-unit",
     keys = {
-      { "iu", ':lua require"treesitter-unit".select()<CR>', mode = { "x" } },
-      { "iu", ':<c-u>lua require"treesitter-unit".select()<CR>', mode = { "o" } },
-      { "au", ':lua require"treesitter-unit".select(true)<CR>', mode = { "x" } },
-      { "au", ':<c-u>lua require"treesitter-unit".select(true)<CR>', mode = { "o" } },
+      { "iu", ':lua require"treesitter-unit".select()<CR>', mode = { "x" }, desc = "Select unit" },
+      { "iu", ':<c-u>lua require"treesitter-unit".select()<CR>', mode = { "o" }, desc = "Select unit" },
+      { "au", ':lua require"treesitter-unit".select(true)<CR>', mode = { "x" }, desc = "Select unit (outer)" },
+      { "au", ':<c-u>lua require"treesitter-unit".select(true)<CR>', mode = { "o" }, desc = "Select unit (outer)" },
     },
-    dependencies = { "nvim-treesitter/nvim-treesitter" },
   },
+
+  -- Rainbow delimiters
   {
-    "nvim-treesitter/nvim-treesitter-context",
-    dependencies = { "nvim-treesitter/nvim-treesitter" },
-    keys = {
-      {
-        "[[",
-        function()
-          require("treesitter-context").go_to_context(-vim.v.count1)
-        end,
-      },
-      {
-        "]]",
-        function()
-          require("treesitter-context").go_to_context(vim.v.count1)
-        end,
-      },
-    },
+    url = "https://gitlab.com/HiPhish/rainbow-delimiters.nvim",
+    event = { "BufReadPost", "BufNewFile" },
     config = function()
-      require("treesitter-context").setup({
-        max_lines = 3,
-        trim_scope = "outer",
-        separator = "🮏", --, "TreesitterContextBorder", -- alts: 🮑🮏▁‾▁▁ ─ ▄─▁-_‾
-        multiwindow = false,
-      })
-    end,
-  },
-  {
-    "HiPhish/rainbow-delimiters.nvim",
-    lazy = false,
-    init = function()
       vim.g.rainbow_delimiters = {
         strategy = {
           [""] = "rainbow-delimiters.strategy.global",
@@ -331,10 +372,6 @@ return {
           [""] = "rainbow-delimiters",
           lua = "rainbow-blocks",
           html = "rainbow-tags",
-        },
-        priority = {
-          [""] = 110,
-          lua = 210,
         },
         highlight = {
           "RainbowDelimiterRed",
@@ -346,6 +383,31 @@ return {
           "RainbowDelimiterCyan",
         },
       }
+    end,
+  },
+
+  { "yorickpeterse/nvim-tree-pairs", event = "VeryLazy", opts = {} },
+  {
+    "andymass/vim-matchup",
+    event = { "BufReadPost", "BufNewFile" },
+    init = function()
+      vim.g.matchup_matchparen_nomode = "i"
+      vim.g.matchup_delim_noskips = 1 -- recognize symbols within comments
+      vim.g.matchup_matchparen_deferred_show_delay = 400
+      vim.g.matchup_matchparen_deferred_hide_delay = 400
+      vim.g.matchup_matchparen_offscreen = {}
+      -- vim.g.matchup_matchparen_offscreen = {
+      --   method = "popup",
+      --   -- fullwidth = true,
+      --   highlight = "TreesitterContext",
+      --   border = "",
+      -- }
+      vim.g.matchup_matchparen_deferred = 1
+      vim.g.matchup_matchparen_timeout = 300
+      vim.g.matchup_matchparen_insert_timeout = 60
+      vim.g.matchup_surround_enabled = 1 -- defaulted 0
+      vim.g.matchup_motion_enabled = 1 -- defaulted 0
+      vim.g.matchup_text_obj_enabled = 1
     end,
   },
 }

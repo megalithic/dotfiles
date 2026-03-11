@@ -842,7 +842,7 @@ function M.handleCapture(image)
   if not image then return end
 
   -- Generate filename
-  local date = os.date("%Y-%m-%dT%H:%M:%S%z")
+  local date = os.date("%Y-%m-%dT%H-%M-%S%z")
   local imageName = fmt("cap_%s.png", date)
   local imagePath = fmt("%s/%s", M.config.capsPath, imageName)
 

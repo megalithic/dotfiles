@@ -31,7 +31,7 @@
     # shade  # FIXME: Disabled - GhosttyKit build failing, see overlays/default.nix
     slack # migrated from homebrew 2026-02-13
     spotify
-    telegram-desktop
+    # telegram-desktop
     zoom-us
   ];
 

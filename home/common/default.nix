@@ -144,6 +144,10 @@
   xdg.configFile."kitty".source = config.lib.mega.linkConfig "kitty";
   xdg.configFile."kitty".force = true;
 
+  # Kanata keyboard configs (main config set by darwin module, these are for profile switching)
+  xdg.configFile."kanata/macbook.kbd".source = config.lib.mega.linkConfig "kanata/macbook.kbd";
+  xdg.configFile."kanata/macbook-disabled.kbd".source = config.lib.mega.linkConfig "kanata/macbook-disabled.kbd";
+
   xdg.configFile."zsh".source = ./zsh;
   xdg.configFile."zsh".force = true;
 

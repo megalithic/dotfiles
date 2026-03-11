@@ -1,0 +1,14 @@
+;; Kanata config that disables the internal keyboard
+;; Used when external keyboard (Leeloo) is connected
+;; All keys are blocked (XX = no output)
+
+(defcfg
+  process-unmapped-keys no  ;; Block ALL keys, not just mapped ones
+  macos-dev-names-include (
+    "Apple Internal Keyboard / Trackpad"
+  )
+)
+
+;; Minimal defsrc - with process-unmapped-keys=no, unlisted keys are blocked
+(defsrc a)
+(deflayer disabled XX)
