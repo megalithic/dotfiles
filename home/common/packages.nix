@@ -95,28 +95,9 @@
   ];
 
   # ── fonts ──────────────────────────────────────────────────────────────────────
-  fontPkgs = with pkgs; [
-    atkinson-hyperlegible
-    emacs-all-the-icons-fonts
-    fira-code
-    fira-mono
-    font-awesome
-    inter
-    jetbrains-mono
-    maple-mono.NF
-    maple-mono.truetype
-    maple-mono.variable
-    nerd-fonts.fantasque-sans-mono
-    nerd-fonts.fira-code
-    nerd-fonts.iosevka
-    nerd-fonts.jetbrains-mono
-    nerd-fonts.symbols-only
-    nerd-fonts.victor-mono
-    # nerd-fonts.berkeley-mono
-    noto-fonts-color-emoji
-    twemoji-color-font
-    victor-mono
-  ];
+  # NOTE: Fonts moved to nix-darwin (hosts/common.nix) via fonts.packages
+  # This ensures they're installed system-wide to /Library/Fonts/Nix Fonts
+  # where macOS apps (Hammerspoon, Terminal, etc.) can find them.
 
   # ── languages & toolchains ─────────────────────────────────────────────────────
   langPkgs = with pkgs; [
@@ -185,5 +166,5 @@ in {
 
   config.mega.customApps = customApps;
 
-  config.home.packages = cliPkgs ++ fontPkgs ++ langPkgs ++ guiPkgs ++ homeManagerApps;
+  config.home.packages = cliPkgs ++ langPkgs ++ guiPkgs ++ homeManagerApps;
 }

@@ -198,6 +198,8 @@ return {
   version = "*",
   -- lazy = false,
   event = "VeryLazy",
+  -- Obsidian command triggers plugin load (uses subcommands: Obsidian today, Obsidian new, etc.)
+  cmd = { "Obsidian" },
   -- ft = "markdown",
   dependencies = {
     "nvim-lua/plenary.nvim",
@@ -431,8 +433,8 @@ return {
           end
         end, { buffer = true, desc = "go to file" })
 
-        -- gf for wiki links: follow link under cursor
-        vim.keymap.set("n", "gn", function() vim.cmd("ObsidianRename") end, { buffer = true, desc = "rename note" })
+        -- gn: rename note
+        vim.keymap.set("n", "gn", function() vim.cmd("Obsidian rename") end, { buffer = true, desc = "rename note" })
       end,
     },
   },

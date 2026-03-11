@@ -14,6 +14,30 @@
 }: let
   lang = "en_US.UTF-8";
 in {
+  # ── fonts ──────────────────────────────────────────────────────────────────────
+  # System-wide fonts via nix-darwin (installs to /Library/Fonts/Nix Fonts)
+  # Required for macOS apps like Hammerspoon, Terminal, etc.
+  fonts.packages = with pkgs; [
+    atkinson-hyperlegible
+    emacs-all-the-icons-fonts
+    fira-code
+    fira-mono
+    font-awesome
+    inter
+    jetbrains-mono
+    maple-mono.NF
+    maple-mono.truetype
+    maple-mono.variable
+    nerd-fonts.fantasque-sans-mono
+    nerd-fonts.fira-code
+    nerd-fonts.iosevka
+    nerd-fonts.jetbrains-mono
+    nerd-fonts.symbols-only
+    nerd-fonts.victor-mono
+    noto-fonts-color-emoji
+    twemoji-color-font
+    victor-mono
+  ];
   # NOTE: home-manager runs independently via homeConfigurations
   # Use `just home` for HM-only rebuilds
 
